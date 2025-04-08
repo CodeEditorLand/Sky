@@ -1,1 +1,81 @@
-var b=Object.defineProperty,h=Object.getOwnPropertyDescriptor,d=(t,e,o,s)=>{for(var r,a=s>1?void 0:s?h(e,o):e,i=t.length-1;i>=0;i--)(r=t[i])&&(a=(s?r(e,o,a):r(a))||a);return s&&a&&b(e,o,a),a},m=(t,e)=>(o,s)=>e(o,s,t);import{MainContext as E,ExtHostContext as I}from"../common/extHost.protocol.js";import"../../../base/common/themables.js";import{extHostNamedCustomer as v}from"../../services/extensions/common/extHostCustomers.js";import{DisposableStore as C,toDisposable as k}from"../../../base/common/lifecycle.js";import"../../../editor/common/languages.js";import"../../../platform/accessibility/common/accessibility.js";import"../../../base/common/htmlContent.js";import{IExtensionStatusBarItemService as T,StatusBarUpdateKind as B}from"./statusBarExtensionPoint.js";import{StatusbarAlignment as D}from"../../services/statusbar/browser/statusbar.js";import"../../../base/browser/ui/hover/hover.js";import"../../../base/common/cancellation.js";let s=class{constructor(t,e){this.statusbarService=e,this._proxy=t.getProxy(I.ExtHostStatusBar);const o=[];for(const[t,r]of e.getEntries())o.push(s(t,r));function s(t,e){return{entryId:t,name:e.entry.name,text:e.entry.text,tooltip:e.entry.tooltip,command:"string"==typeof e.entry.command?e.entry.command:"object"==typeof e.entry.command?e.entry.command.id:void 0,priority:e.priority,alignLeft:e.alignment===D.LEFT,accessibilityInformation:e.entry.ariaLabel?{label:e.entry.ariaLabel,role:e.entry.role}:void 0}}this._proxy.$acceptStaticEntries(o),this._store.add(e.onDidChange((t=>{t.added&&this._proxy.$acceptStaticEntries([s(t.added[0],t.added[1])])})))}_proxy;_store=new C;dispose(){this._store.dispose()}$setEntry(t,e,o,s,r,a,i,n,m,c,d,p,y){const l=i?{markdown:e=>this._proxy.$provideTooltip(t,e),markdownNotSupportedFallback:void 0}:a;this.statusbarService.setOrUpdateEntry(t,e,o,s,r,l,n,m,c,d,p,y)===B.DidDefine&&this._store.add(k((()=>this.statusbarService.unsetEntry(t))))}$disposeEntry(t){this.statusbarService.unsetEntry(t)}};s=d([v(E.MainThreadStatusBar),m(1,T)],s);export{s as MainThreadStatusBar};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { MainThreadStatusBarShape, MainContext, ExtHostContext, StatusBarItemDto, ExtHostStatusBarShape } from "../common/extHost.protocol.js";
+import { ThemeColor } from "../../../base/common/themables.js";
+import { extHostNamedCustomer, IExtHostContext } from "../../services/extensions/common/extHostCustomers.js";
+import { DisposableStore, toDisposable } from "../../../base/common/lifecycle.js";
+import { Command } from "../../../editor/common/languages.js";
+import { IAccessibilityInformation } from "../../../platform/accessibility/common/accessibility.js";
+import { IMarkdownString } from "../../../base/common/htmlContent.js";
+import { IExtensionStatusBarItemService, StatusBarUpdateKind } from "./statusBarExtensionPoint.js";
+import { IStatusbarEntry, StatusbarAlignment } from "../../services/statusbar/browser/statusbar.js";
+import { IManagedHoverTooltipMarkdownString } from "../../../base/browser/ui/hover/hover.js";
+import { CancellationToken } from "../../../base/common/cancellation.js";
+let MainThreadStatusBar = class {
+  constructor(extHostContext, statusbarService) {
+    this.statusbarService = statusbarService;
+    this._proxy = extHostContext.getProxy(ExtHostContext.ExtHostStatusBar);
+    const entries = [];
+    for (const [entryId, item] of statusbarService.getEntries()) {
+      entries.push(asDto(entryId, item));
+    }
+    this._proxy.$acceptStaticEntries(entries);
+    this._store.add(statusbarService.onDidChange((e) => {
+      if (e.added) {
+        this._proxy.$acceptStaticEntries([asDto(e.added[0], e.added[1])]);
+      }
+    }));
+    function asDto(entryId, item) {
+      return {
+        entryId,
+        name: item.entry.name,
+        text: item.entry.text,
+        tooltip: item.entry.tooltip,
+        command: typeof item.entry.command === "string" ? item.entry.command : typeof item.entry.command === "object" ? item.entry.command.id : void 0,
+        priority: item.priority,
+        alignLeft: item.alignment === StatusbarAlignment.LEFT,
+        accessibilityInformation: item.entry.ariaLabel ? { label: item.entry.ariaLabel, role: item.entry.role } : void 0
+      };
+    }
+    __name(asDto, "asDto");
+  }
+  _proxy;
+  _store = new DisposableStore();
+  dispose() {
+    this._store.dispose();
+  }
+  $setEntry(entryId, id, extensionId, name, text, tooltip, hasTooltipProvider, command, color, backgroundColor, alignLeft, priority, accessibilityInformation) {
+    const tooltipOrTooltipProvider = hasTooltipProvider ? {
+      markdown: /* @__PURE__ */ __name((cancellation) => {
+        return this._proxy.$provideTooltip(entryId, cancellation);
+      }, "markdown"),
+      markdownNotSupportedFallback: void 0
+    } : tooltip;
+    const kind = this.statusbarService.setOrUpdateEntry(entryId, id, extensionId, name, text, tooltipOrTooltipProvider, command, color, backgroundColor, alignLeft, priority, accessibilityInformation);
+    if (kind === StatusBarUpdateKind.DidDefine) {
+      this._store.add(toDisposable(() => this.statusbarService.unsetEntry(entryId)));
+    }
+  }
+  $disposeEntry(entryId) {
+    this.statusbarService.unsetEntry(entryId);
+  }
+};
+__name(MainThreadStatusBar, "MainThreadStatusBar");
+MainThreadStatusBar = __decorateClass([
+  extHostNamedCustomer(MainContext.MainThreadStatusBar),
+  __decorateParam(1, IExtensionStatusBarItemService)
+], MainThreadStatusBar);
+export {
+  MainThreadStatusBar
+};
+//# sourceMappingURL=mainThreadStatusBar.js.map

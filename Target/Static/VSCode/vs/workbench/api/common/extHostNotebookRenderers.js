@@ -1,1 +1,59 @@
-import{Emitter as a}from"../../../base/common/event.js";import"../../../platform/extensions/common/extensions.js";import{MainContext as d}from"./extHost.protocol.js";import"./extHostNotebook.js";import{ExtHostNotebookEditor as n}from"./extHostNotebookEditor.js";import"vscode";class l{constructor(o,e){this._extHostNotebook=e;this.proxy=o.getProxy(d.MainThreadNotebookRenderers)}_rendererMessageEmitters=new Map;proxy;$postRendererMessage(o,e,i){const t=this._extHostNotebook.getEditorById(o);this._rendererMessageEmitters.get(e)?.fire({editor:t.apiEditor,message:i})}createRendererMessaging(o,e){if(!o.contributes?.notebookRenderer?.some(t=>t.id===e))throw new Error(`Extensions may only call createRendererMessaging() for renderers they contribute (got ${e})`);return{onDidReceiveMessage:(t,r,s)=>this.getOrCreateEmitterFor(e).event(t,r,s),postMessage:(t,r)=>{n.apiEditorsToExtHost.has(t)&&([t,r]=[r,t]);const s=r&&n.apiEditorsToExtHost.get(r);return this.proxy.$postMessage(s?.id,e,t)}}}getOrCreateEmitterFor(o){let e=this._rendererMessageEmitters.get(o);return e||(e=new a({onDidRemoveLastListener:()=>{e?.dispose(),this._rendererMessageEmitters.delete(o)}}),this._rendererMessageEmitters.set(o,e),e)}}export{l as ExtHostNotebookRenderers};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Emitter } from "../../../base/common/event.js";
+import { IExtensionDescription } from "../../../platform/extensions/common/extensions.js";
+import { ExtHostNotebookRenderersShape, IMainContext, MainContext, MainThreadNotebookRenderersShape } from "./extHost.protocol.js";
+import { ExtHostNotebookController } from "./extHostNotebook.js";
+import { ExtHostNotebookEditor } from "./extHostNotebookEditor.js";
+import * as vscode from "vscode";
+class ExtHostNotebookRenderers {
+  constructor(mainContext, _extHostNotebook) {
+    this._extHostNotebook = _extHostNotebook;
+    this.proxy = mainContext.getProxy(MainContext.MainThreadNotebookRenderers);
+  }
+  static {
+    __name(this, "ExtHostNotebookRenderers");
+  }
+  _rendererMessageEmitters = /* @__PURE__ */ new Map();
+  proxy;
+  $postRendererMessage(editorId, rendererId, message) {
+    const editor = this._extHostNotebook.getEditorById(editorId);
+    this._rendererMessageEmitters.get(rendererId)?.fire({ editor: editor.apiEditor, message });
+  }
+  createRendererMessaging(manifest, rendererId) {
+    if (!manifest.contributes?.notebookRenderer?.some((r) => r.id === rendererId)) {
+      throw new Error(`Extensions may only call createRendererMessaging() for renderers they contribute (got ${rendererId})`);
+    }
+    const messaging = {
+      onDidReceiveMessage: /* @__PURE__ */ __name((listener, thisArg, disposables) => {
+        return this.getOrCreateEmitterFor(rendererId).event(listener, thisArg, disposables);
+      }, "onDidReceiveMessage"),
+      postMessage: /* @__PURE__ */ __name((message, editorOrAlias) => {
+        if (ExtHostNotebookEditor.apiEditorsToExtHost.has(message)) {
+          [message, editorOrAlias] = [editorOrAlias, message];
+        }
+        const extHostEditor = editorOrAlias && ExtHostNotebookEditor.apiEditorsToExtHost.get(editorOrAlias);
+        return this.proxy.$postMessage(extHostEditor?.id, rendererId, message);
+      }, "postMessage")
+    };
+    return messaging;
+  }
+  getOrCreateEmitterFor(rendererId) {
+    let emitter = this._rendererMessageEmitters.get(rendererId);
+    if (emitter) {
+      return emitter;
+    }
+    emitter = new Emitter({
+      onDidRemoveLastListener: /* @__PURE__ */ __name(() => {
+        emitter?.dispose();
+        this._rendererMessageEmitters.delete(rendererId);
+      }, "onDidRemoveLastListener")
+    });
+    this._rendererMessageEmitters.set(rendererId, emitter);
+    return emitter;
+  }
+}
+export {
+  ExtHostNotebookRenderers
+};
+//# sourceMappingURL=extHostNotebookRenderers.js.map

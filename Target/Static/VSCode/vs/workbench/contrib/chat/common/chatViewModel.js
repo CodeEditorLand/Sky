@@ -1,1 +1,397 @@
-var D=Object.defineProperty;var b=Object.getOwnPropertyDescriptor;var C=(s,d,e,n)=>{for(var a=n>1?void 0:n?b(d,e):d,t=s.length-1,i;t>=0;t--)(i=s[t])&&(a=(n?i(d,e,a):i(a))||a);return n&&a&&D(d,e,a),a},m=(s,d)=>(e,n)=>d(e,n,s);import{Emitter as g}from"../../../../base/common/event.js";import{hash as c}from"../../../../base/common/hash.js";import"../../../../base/common/htmlContent.js";import{Disposable as I,dispose as M}from"../../../../base/common/lifecycle.js";import*as R from"../../../../base/common/marked/marked.js";import"../../../../base/common/observable.js";import"../../../../base/common/themables.js";import"../../../../base/common/uri.js";import{IInstantiationService as x}from"../../../../platform/instantiation/common/instantiation.js";import{ILogService as w}from"../../../../platform/log/common/log.js";import{annotateVulnerabilitiesInText as S}from"./annotations.js";import{getFullyQualifiedId as T,IChatAgentNameService as k}from"./chatAgents.js";import{ChatModelInitState as f}from"./chatModel.js";import"./chatParserTypes.js";import"./chatService.js";import{countWords as A}from"./chatWordCounter.js";import"./codeBlockModelCollection.js";function _(s){return!!s&&typeof s=="object"&&"message"in s}function q(s){return!!s&&typeof s.setVote<"u"}let p=class extends I{constructor(e,n,a){super();this._model=e;this.codeBlockModelCollection=n;this.instantiationService=a;e.getRequests().forEach((t,i)=>{const o=this.instantiationService.createInstance(v,t);this._items.push(o),this.updateCodeBlockTextModels(o),t.response&&this.onAddResponse(t.response)}),this._register(e.onDidDispose(()=>this._onDidDisposeModel.fire())),this._register(e.onDidChange(t=>{if(t.kind==="addRequest"){const o=this.instantiationService.createInstance(v,t.request);this._items.push(o),this.updateCodeBlockTextModels(o),t.request.response&&this.onAddResponse(t.request.response)}else if(t.kind==="addResponse")this.onAddResponse(t.response);else if(t.kind==="removeRequest"){const o=this._items.findIndex(r=>_(r)&&r.id===t.requestId);o>=0&&this._items.splice(o,1);const h=t.responseId&&this._items.findIndex(r=>q(r)&&r.id===t.responseId);if(typeof h=="number"&&h>=0){const u=this._items.splice(h,1)[0];u instanceof l&&u.dispose()}}const i=t.kind==="addRequest"?{kind:"addRequest"}:t.kind==="initialize"?{kind:"initialize"}:t.kind==="setHidden"?{kind:"setHidden"}:null;this._onDidChange.fire(i)}))}_onDidDisposeModel=this._register(new g);onDidDisposeModel=this._onDidDisposeModel.event;_onDidChange=this._register(new g);onDidChange=this._onDidChange.event;_items=[];_inputPlaceholder=void 0;get inputPlaceholder(){return this._inputPlaceholder}get model(){return this._model}setInputPlaceholder(e){this._inputPlaceholder=e,this._onDidChange.fire({kind:"changePlaceholder"})}resetInputPlaceholder(){this._inputPlaceholder=void 0,this._onDidChange.fire({kind:"changePlaceholder"})}get sessionId(){return this._model.sessionId}get requestInProgress(){return this._model.requestInProgress}get requestPausibility(){return this._model.requestPausibility}get initState(){return this._model.initState}onAddResponse(e){const n=this.instantiationService.createInstance(l,e,this);this._register(n.onDidChange(()=>(n.isComplete&&this.updateCodeBlockTextModels(n),this._onDidChange.fire(null)))),this._items.push(n),this.updateCodeBlockTextModels(n)}getItems(){return this._items.filter(e=>!e.shouldBeRemovedOnSend||e.shouldBeRemovedOnSend.afterUndoStop)}dispose(){super.dispose(),M(this._items.filter(e=>e instanceof l))}updateCodeBlockTextModels(e){let n;_(e)?n=e.messageText:n=S(e.response.value).map(t=>t.content.value).join("");let a=0;R.walkTokens(R.lexer(n),t=>{if(t.type==="code"){const i=t.lang||"",o=t.text;this.codeBlockModelCollection.update(this._model.sessionId,e,a++,{text:o,languageId:i,isComplete:!0})}})}};p=C([m(2,x)],p);class v{constructor(d){this._model=d}get id(){return this._model.id}get dataId(){return this.id+`_${f[this._model.session.initState]}_${c(this.variables)}_${c(this.isComplete)}`}get sessionId(){return this._model.session.sessionId}get username(){return this._model.username}get avatarIcon(){return this._model.avatarIconUri}get message(){return this._model.message}get messageText(){return this.message.text}get attempt(){return this._model.attempt}get variables(){return this._model.variableData.variables}get contentReferences(){return this._model.response?.contentReferences}get confirmation(){return this._model.confirmation}get isComplete(){return this._model.response?.isComplete??!1}get isCompleteAddedRequest(){return this._model.isCompleteAddedRequest}get shouldBeRemovedOnSend(){return this._model.shouldBeRemovedOnSend}get slashCommand(){return this._model.response?.slashCommand}get agentOrSlashCommandDetected(){return this._model.response?.agentOrSlashCommandDetected??!1}currentRenderedHeight}let l=class extends I{constructor(e,n,a,t){super();this._model=e;this._chatViewModel=n;this.logService=a;this.chatAgentNameService=t;e.isComplete||(this._contentUpdateTimings={totalTime:0,lastUpdateTime:Date.now(),impliedWordLoadRate:0,lastWordCount:0}),this._register(e.onDidChange(()=>{if(this._contentUpdateTimings){const i=Date.now(),o=A(e.entireResponse.getMarkdown());if(o===this._contentUpdateTimings.lastWordCount)this.trace("onDidChange","Update- no new words");else{this._contentUpdateTimings.lastWordCount===0&&(this._contentUpdateTimings.lastUpdateTime=i);const h=Math.min(i-this._contentUpdateTimings.lastUpdateTime,1e3),r=Math.max(this._contentUpdateTimings.totalTime+h,250),u=o/(r/1e3);this.trace("onDidChange",`Update- got ${o} words over last ${r}ms = ${u} words/s`),this._contentUpdateTimings={totalTime:this._contentUpdateTimings.totalTime!==0||this.response.value.some(y=>y.kind==="markdownContent")?r:this._contentUpdateTimings.totalTime,lastUpdateTime:i,impliedWordLoadRate:u,lastWordCount:o}}}this._modelChangeCount++,this._onDidChange.fire()}))}_modelChangeCount=0;_onDidChange=this._register(new g);onDidChange=this._onDidChange.event;get model(){return this._model}get id(){return this._model.id}get dataId(){return this._model.id+`_${this._modelChangeCount}_${f[this._model.session.initState]}`+(this.isLast?"_last":"")}get sessionId(){return this._model.session.sessionId}get username(){return this.agent?this.chatAgentNameService.getAgentNameRestriction(this.agent)?this.agent.fullName||this.agent.name:T(this.agent):this._model.username}get avatarIcon(){return this._model.avatarIcon}get agent(){return this._model.agent}get slashCommand(){return this._model.slashCommand}get agentOrSlashCommandDetected(){return this._model.agentOrSlashCommandDetected}get response(){return this._model.response}get usedContext(){return this._model.usedContext}get contentReferences(){return this._model.contentReferences}get codeCitations(){return this._model.codeCitations}get progressMessages(){return this._model.progressMessages}get isComplete(){return this._model.isComplete}get isCanceled(){return this._model.isCanceled}get shouldBeRemovedOnSend(){return this._model.shouldBeRemovedOnSend}get isCompleteAddedRequest(){return this._model.isCompleteAddedRequest}get replyFollowups(){return this._model.followups?.filter(e=>e.kind==="reply")}get result(){return this._model.result}get errorDetails(){return this.result?.errorDetails}get vote(){return this._model.vote}get voteDownReason(){return this._model.voteDownReason}get requestId(){return this._model.requestId}get isStale(){return this._model.isStale}get isLast(){return this._chatViewModel.getItems().at(-1)===this}renderData=void 0;currentRenderedHeight;_usedReferencesExpanded;get usedReferencesExpanded(){if(typeof this._usedReferencesExpanded=="boolean")return this._usedReferencesExpanded}set usedReferencesExpanded(e){this._usedReferencesExpanded=e}_vulnerabilitiesListExpanded=!1;get vulnerabilitiesListExpanded(){return this._vulnerabilitiesListExpanded}set vulnerabilitiesListExpanded(e){this._vulnerabilitiesListExpanded=e}_contentUpdateTimings=void 0;get contentUpdateTimings(){return this._contentUpdateTimings}get isPaused(){return this._model.isPaused}trace(e,n){this.logService.trace(`ChatResponseViewModel#${e}: ${n}`)}setVote(e){this._modelChangeCount++,this._model.setVote(e)}setVoteDownReason(e){this._modelChangeCount++,this._model.setVoteDownReason(e)}setEditApplied(e,n){this._modelChangeCount++,this._model.setEditApplied(e,n)}};l=C([m(2,w),m(3,k)],l);export{v as ChatRequestViewModel,l as ChatResponseViewModel,p as ChatViewModel,_ as isRequestVM,q as isResponseVM};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { hash } from "../../../../base/common/hash.js";
+import { IMarkdownString } from "../../../../base/common/htmlContent.js";
+import { Disposable, dispose } from "../../../../base/common/lifecycle.js";
+import * as marked from "../../../../base/common/marked/marked.js";
+import { IObservable } from "../../../../base/common/observable.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { annotateVulnerabilitiesInText } from "./annotations.js";
+import { getFullyQualifiedId, IChatAgentCommand, IChatAgentData, IChatAgentNameService, IChatAgentResult } from "./chatAgents.js";
+import { ChatModelInitState, ChatPauseState, IChatModel, IChatProgressRenderableResponseContent, IChatRequestDisablement, IChatRequestModel, IChatRequestVariableEntry, IChatResponseModel, IChatTextEditGroup, IResponse } from "./chatModel.js";
+import { IParsedChatRequest } from "./chatParserTypes.js";
+import { ChatAgentVoteDirection, ChatAgentVoteDownReason, IChatCodeCitation, IChatContentReference, IChatFollowup, IChatProgressMessage, IChatResponseErrorDetails, IChatTask, IChatUsedContext } from "./chatService.js";
+import { countWords } from "./chatWordCounter.js";
+import { CodeBlockModelCollection } from "./codeBlockModelCollection.js";
+function isRequestVM(item) {
+  return !!item && typeof item === "object" && "message" in item;
+}
+__name(isRequestVM, "isRequestVM");
+function isResponseVM(item) {
+  return !!item && typeof item.setVote !== "undefined";
+}
+__name(isResponseVM, "isResponseVM");
+let ChatViewModel = class extends Disposable {
+  constructor(_model, codeBlockModelCollection, instantiationService) {
+    super();
+    this._model = _model;
+    this.codeBlockModelCollection = codeBlockModelCollection;
+    this.instantiationService = instantiationService;
+    _model.getRequests().forEach((request, i) => {
+      const requestModel = this.instantiationService.createInstance(ChatRequestViewModel, request);
+      this._items.push(requestModel);
+      this.updateCodeBlockTextModels(requestModel);
+      if (request.response) {
+        this.onAddResponse(request.response);
+      }
+    });
+    this._register(_model.onDidDispose(() => this._onDidDisposeModel.fire()));
+    this._register(_model.onDidChange((e) => {
+      if (e.kind === "addRequest") {
+        const requestModel = this.instantiationService.createInstance(ChatRequestViewModel, e.request);
+        this._items.push(requestModel);
+        this.updateCodeBlockTextModels(requestModel);
+        if (e.request.response) {
+          this.onAddResponse(e.request.response);
+        }
+      } else if (e.kind === "addResponse") {
+        this.onAddResponse(e.response);
+      } else if (e.kind === "removeRequest") {
+        const requestIdx = this._items.findIndex((item) => isRequestVM(item) && item.id === e.requestId);
+        if (requestIdx >= 0) {
+          this._items.splice(requestIdx, 1);
+        }
+        const responseIdx = e.responseId && this._items.findIndex((item) => isResponseVM(item) && item.id === e.responseId);
+        if (typeof responseIdx === "number" && responseIdx >= 0) {
+          const items = this._items.splice(responseIdx, 1);
+          const item = items[0];
+          if (item instanceof ChatResponseViewModel) {
+            item.dispose();
+          }
+        }
+      }
+      const modelEventToVmEvent = e.kind === "addRequest" ? { kind: "addRequest" } : e.kind === "initialize" ? { kind: "initialize" } : e.kind === "setHidden" ? { kind: "setHidden" } : null;
+      this._onDidChange.fire(modelEventToVmEvent);
+    }));
+  }
+  static {
+    __name(this, "ChatViewModel");
+  }
+  _onDidDisposeModel = this._register(new Emitter());
+  onDidDisposeModel = this._onDidDisposeModel.event;
+  _onDidChange = this._register(new Emitter());
+  onDidChange = this._onDidChange.event;
+  _items = [];
+  _inputPlaceholder = void 0;
+  get inputPlaceholder() {
+    return this._inputPlaceholder;
+  }
+  get model() {
+    return this._model;
+  }
+  setInputPlaceholder(text) {
+    this._inputPlaceholder = text;
+    this._onDidChange.fire({ kind: "changePlaceholder" });
+  }
+  resetInputPlaceholder() {
+    this._inputPlaceholder = void 0;
+    this._onDidChange.fire({ kind: "changePlaceholder" });
+  }
+  get sessionId() {
+    return this._model.sessionId;
+  }
+  get requestInProgress() {
+    return this._model.requestInProgress;
+  }
+  get requestPausibility() {
+    return this._model.requestPausibility;
+  }
+  get initState() {
+    return this._model.initState;
+  }
+  onAddResponse(responseModel) {
+    const response = this.instantiationService.createInstance(ChatResponseViewModel, responseModel, this);
+    this._register(response.onDidChange(() => {
+      if (response.isComplete) {
+        this.updateCodeBlockTextModels(response);
+      }
+      return this._onDidChange.fire(null);
+    }));
+    this._items.push(response);
+    this.updateCodeBlockTextModels(response);
+  }
+  getItems() {
+    return this._items.filter((item) => !item.shouldBeRemovedOnSend || item.shouldBeRemovedOnSend.afterUndoStop);
+  }
+  dispose() {
+    super.dispose();
+    dispose(this._items.filter((item) => item instanceof ChatResponseViewModel));
+  }
+  updateCodeBlockTextModels(model) {
+    let content;
+    if (isRequestVM(model)) {
+      content = model.messageText;
+    } else {
+      content = annotateVulnerabilitiesInText(model.response.value).map((x) => x.content.value).join("");
+    }
+    let codeBlockIndex = 0;
+    marked.walkTokens(marked.lexer(content), (token) => {
+      if (token.type === "code") {
+        const lang = token.lang || "";
+        const text = token.text;
+        this.codeBlockModelCollection.update(this._model.sessionId, model, codeBlockIndex++, { text, languageId: lang, isComplete: true });
+      }
+    });
+  }
+};
+ChatViewModel = __decorateClass([
+  __decorateParam(2, IInstantiationService)
+], ChatViewModel);
+class ChatRequestViewModel {
+  constructor(_model) {
+    this._model = _model;
+  }
+  static {
+    __name(this, "ChatRequestViewModel");
+  }
+  get id() {
+    return this._model.id;
+  }
+  get dataId() {
+    return this.id + `_${ChatModelInitState[this._model.session.initState]}_${hash(this.variables)}_${hash(this.isComplete)}`;
+  }
+  get sessionId() {
+    return this._model.session.sessionId;
+  }
+  get username() {
+    return this._model.username;
+  }
+  get avatarIcon() {
+    return this._model.avatarIconUri;
+  }
+  get message() {
+    return this._model.message;
+  }
+  get messageText() {
+    return this.message.text;
+  }
+  get attempt() {
+    return this._model.attempt;
+  }
+  get variables() {
+    return this._model.variableData.variables;
+  }
+  get contentReferences() {
+    return this._model.response?.contentReferences;
+  }
+  get confirmation() {
+    return this._model.confirmation;
+  }
+  get isComplete() {
+    return this._model.response?.isComplete ?? false;
+  }
+  get isCompleteAddedRequest() {
+    return this._model.isCompleteAddedRequest;
+  }
+  get shouldBeRemovedOnSend() {
+    return this._model.shouldBeRemovedOnSend;
+  }
+  get slashCommand() {
+    return this._model.response?.slashCommand;
+  }
+  get agentOrSlashCommandDetected() {
+    return this._model.response?.agentOrSlashCommandDetected ?? false;
+  }
+  currentRenderedHeight;
+}
+let ChatResponseViewModel = class extends Disposable {
+  constructor(_model, _chatViewModel, logService, chatAgentNameService) {
+    super();
+    this._model = _model;
+    this._chatViewModel = _chatViewModel;
+    this.logService = logService;
+    this.chatAgentNameService = chatAgentNameService;
+    if (!_model.isComplete) {
+      this._contentUpdateTimings = {
+        totalTime: 0,
+        lastUpdateTime: Date.now(),
+        impliedWordLoadRate: 0,
+        lastWordCount: 0
+      };
+    }
+    this._register(_model.onDidChange(() => {
+      if (this._contentUpdateTimings) {
+        const now = Date.now();
+        const wordCount = countWords(_model.entireResponse.getMarkdown());
+        if (wordCount === this._contentUpdateTimings.lastWordCount) {
+          this.trace("onDidChange", `Update- no new words`);
+        } else {
+          if (this._contentUpdateTimings.lastWordCount === 0) {
+            this._contentUpdateTimings.lastUpdateTime = now;
+          }
+          const timeDiff = Math.min(now - this._contentUpdateTimings.lastUpdateTime, 1e3);
+          const newTotalTime = Math.max(this._contentUpdateTimings.totalTime + timeDiff, 250);
+          const impliedWordLoadRate = wordCount / (newTotalTime / 1e3);
+          this.trace("onDidChange", `Update- got ${wordCount} words over last ${newTotalTime}ms = ${impliedWordLoadRate} words/s`);
+          this._contentUpdateTimings = {
+            totalTime: this._contentUpdateTimings.totalTime !== 0 || this.response.value.some((v) => v.kind === "markdownContent") ? newTotalTime : this._contentUpdateTimings.totalTime,
+            lastUpdateTime: now,
+            impliedWordLoadRate,
+            lastWordCount: wordCount
+          };
+        }
+      }
+      this._modelChangeCount++;
+      this._onDidChange.fire();
+    }));
+  }
+  static {
+    __name(this, "ChatResponseViewModel");
+  }
+  _modelChangeCount = 0;
+  _onDidChange = this._register(new Emitter());
+  onDidChange = this._onDidChange.event;
+  get model() {
+    return this._model;
+  }
+  get id() {
+    return this._model.id;
+  }
+  get dataId() {
+    return this._model.id + `_${this._modelChangeCount}_${ChatModelInitState[this._model.session.initState]}` + (this.isLast ? "_last" : "");
+  }
+  get sessionId() {
+    return this._model.session.sessionId;
+  }
+  get username() {
+    if (this.agent) {
+      const isAllowed = this.chatAgentNameService.getAgentNameRestriction(this.agent);
+      if (isAllowed) {
+        return this.agent.fullName || this.agent.name;
+      } else {
+        return getFullyQualifiedId(this.agent);
+      }
+    }
+    return this._model.username;
+  }
+  get avatarIcon() {
+    return this._model.avatarIcon;
+  }
+  get agent() {
+    return this._model.agent;
+  }
+  get slashCommand() {
+    return this._model.slashCommand;
+  }
+  get agentOrSlashCommandDetected() {
+    return this._model.agentOrSlashCommandDetected;
+  }
+  get response() {
+    return this._model.response;
+  }
+  get usedContext() {
+    return this._model.usedContext;
+  }
+  get contentReferences() {
+    return this._model.contentReferences;
+  }
+  get codeCitations() {
+    return this._model.codeCitations;
+  }
+  get progressMessages() {
+    return this._model.progressMessages;
+  }
+  get isComplete() {
+    return this._model.isComplete;
+  }
+  get isCanceled() {
+    return this._model.isCanceled;
+  }
+  get shouldBeRemovedOnSend() {
+    return this._model.shouldBeRemovedOnSend;
+  }
+  get isCompleteAddedRequest() {
+    return this._model.isCompleteAddedRequest;
+  }
+  get replyFollowups() {
+    return this._model.followups?.filter((f) => f.kind === "reply");
+  }
+  get result() {
+    return this._model.result;
+  }
+  get errorDetails() {
+    return this.result?.errorDetails;
+  }
+  get vote() {
+    return this._model.vote;
+  }
+  get voteDownReason() {
+    return this._model.voteDownReason;
+  }
+  get requestId() {
+    return this._model.requestId;
+  }
+  get isStale() {
+    return this._model.isStale;
+  }
+  get isLast() {
+    return this._chatViewModel.getItems().at(-1) === this;
+  }
+  renderData = void 0;
+  currentRenderedHeight;
+  _usedReferencesExpanded;
+  get usedReferencesExpanded() {
+    if (typeof this._usedReferencesExpanded === "boolean") {
+      return this._usedReferencesExpanded;
+    }
+    return void 0;
+  }
+  set usedReferencesExpanded(v) {
+    this._usedReferencesExpanded = v;
+  }
+  _vulnerabilitiesListExpanded = false;
+  get vulnerabilitiesListExpanded() {
+    return this._vulnerabilitiesListExpanded;
+  }
+  set vulnerabilitiesListExpanded(v) {
+    this._vulnerabilitiesListExpanded = v;
+  }
+  _contentUpdateTimings = void 0;
+  get contentUpdateTimings() {
+    return this._contentUpdateTimings;
+  }
+  get isPaused() {
+    return this._model.isPaused;
+  }
+  trace(tag, message) {
+    this.logService.trace(`ChatResponseViewModel#${tag}: ${message}`);
+  }
+  setVote(vote) {
+    this._modelChangeCount++;
+    this._model.setVote(vote);
+  }
+  setVoteDownReason(reason) {
+    this._modelChangeCount++;
+    this._model.setVoteDownReason(reason);
+  }
+  setEditApplied(edit, editCount) {
+    this._modelChangeCount++;
+    this._model.setEditApplied(edit, editCount);
+  }
+};
+ChatResponseViewModel = __decorateClass([
+  __decorateParam(2, ILogService),
+  __decorateParam(3, IChatAgentNameService)
+], ChatResponseViewModel);
+export {
+  ChatRequestViewModel,
+  ChatResponseViewModel,
+  ChatViewModel,
+  isRequestVM,
+  isResponseVM
+};
+//# sourceMappingURL=chatViewModel.js.map

@@ -1,1 +1,230 @@
-var D=Object.defineProperty,I=Object.getOwnPropertyDescriptor,p=(e,t,r,s)=>{for(var o,i=s>1?void 0:s?I(t,r):t,d=e.length-1;d>=0;d--)(o=e[d])&&(i=(s?o(t,r,i):o(i))||i);return s&&i&&D(t,r,i),i};import"../list/list.js";import{AbstractTree as u}from"./abstractTree.js";import{CompressibleObjectTreeModel as N}from"./compressedObjectTreeModel.js";import{ObjectTreeModel as g}from"./objectTreeModel.js";import"./tree.js";import{memoize as C}from"../../../common/decorators.js";import"../../../common/event.js";import{Iterable as c}from"../../../common/iterator.js";class h extends u{constructor(e,t,r,s,o={}){super(e,t,r,s,o),this.user=e}get onDidChangeCollapseState(){return this.model.onDidChangeCollapseState}setChildren(e,t=c.empty(),r){this.model.setChildren(e,t,r)}rerender(e){void 0!==e?this.model.rerender(e):this.view.rerender()}updateElementHeight(e,t){const r=this.model.getListIndex(e);-1!==r&&this.view.updateElementHeight(r,t)}resort(e,t=!0){this.model.resort(e,t)}hasElement(e){return this.model.has(e)}createModel(e,t){return new g(e,t)}}class b{constructor(e,t,r){this._compressedTreeNodeProvider=e,this.stickyScrollDelegate=t,this.renderer=r,this.templateId=r.templateId,r.onDidChangeTwistieState&&(this.onDidChangeTwistieState=r.onDidChangeTwistieState)}templateId;onDidChangeTwistieState;get compressedTreeNodeProvider(){return this._compressedTreeNodeProvider()}renderTemplate(e){return{compressedTreeNode:void 0,data:this.renderer.renderTemplate(e)}}renderElement(e,t,r,s){let o=this.stickyScrollDelegate.getCompressedNode(e);o||(o=this.compressedTreeNodeProvider.getCompressedTreeNode(e.element)),1===o.element.elements.length?(r.compressedTreeNode=void 0,this.renderer.renderElement(e,t,r.data,s)):(r.compressedTreeNode=o,this.renderer.renderCompressedElements(o,t,r.data,s))}disposeElement(e,t,r,s){r.compressedTreeNode?this.renderer.disposeCompressedElements?.(r.compressedTreeNode,t,r.data,s):this.renderer.disposeElement?.(e,t,r.data,s)}disposeTemplate(e){this.renderer.disposeTemplate(e.data)}renderTwistie(e,t){return!!this.renderer.renderTwistie&&this.renderer.renderTwistie(e,t)}}p([C],b.prototype,"compressedTreeNodeProvider",1);class v{constructor(e){this.modelProvider=e}compressedStickyNodes=new Map;getCompressedNode(e){return this.compressedStickyNodes.get(e)}constrainStickyScrollNodes(e,t,r){if(this.compressedStickyNodes.clear(),0===e.length)return[];for(let s=0;s<e.length;s++){const o=e[s],i=o.position+o.height;if(s+1<e.length&&i+e[s+1].height>r||s>=t-1&&t<e.length){const t=e.slice(0,s),r=e.slice(s);return[...t,this.compressStickyNodes(r)]}}return e}compressStickyNodes(e){if(0===e.length)throw new Error("Can't compress empty sticky nodes");const t=this.modelProvider();if(!t.isCompressionEnabled())return e[0];const r=[];for(let s=0;s<e.length;s++){const o=e[s],i=t.getCompressedTreeNode(o.node.element);if(i.element){if(0!==s&&i.element.incompressible)break;r.push(...i.element.elements)}}if(r.length<2)return e[0];const s=e[e.length-1],o={elements:r,incompressible:!1},i={...s.node,children:[],element:o},d=new Proxy(e[0].node,{}),n={node:d,startIndex:e[0].startIndex,endIndex:s.endIndex,position:e[0].position,height:e[0].height};return this.compressedStickyNodes.set(d,i),n}}function F(e,t){return t&&{...t,keyboardNavigationLabelProvider:t.keyboardNavigationLabelProvider&&{getKeyboardNavigationLabel(r){let s;try{s=e().getCompressedTreeNode(r)}catch{return t.keyboardNavigationLabelProvider.getKeyboardNavigationLabel(r)}return 1===s.element.elements.length?t.keyboardNavigationLabelProvider.getKeyboardNavigationLabel(r):t.keyboardNavigationLabelProvider.getCompressedNodeKeyboardNavigationLabel(s.element.elements)}}}}class Y extends h{constructor(e,t,r,s,o={}){const i=()=>this,d=new v((()=>this.model));super(e,t,r,s.map((e=>new b(i,d,e))),{...F(i,o),stickyScrollDelegate:d})}setChildren(e,t=c.empty(),r){this.model.setChildren(e,t,r)}createModel(e,t){return new N(e,t)}updateOptions(e={}){super.updateOptions(e),typeof e.compressionEnabled<"u"&&this.model.setCompressionEnabled(e.compressionEnabled)}getCompressedTreeNode(e=null){return this.model.getCompressedTreeNode(e)}}export{Y as CompressibleObjectTree,h as ObjectTree};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+import { IIdentityProvider, IKeyboardNavigationLabelProvider, IListVirtualDelegate } from "../list/list.js";
+import { AbstractTree, IAbstractTreeOptions, IAbstractTreeOptionsUpdate, IStickyScrollDelegate, StickyScrollNode } from "./abstractTree.js";
+import { CompressibleObjectTreeModel, ElementMapper, ICompressedTreeElement, ICompressedTreeNode } from "./compressedObjectTreeModel.js";
+import { IObjectTreeModel, ObjectTreeModel } from "./objectTreeModel.js";
+import { ICollapseStateChangeEvent, IObjectTreeElement, ITreeModel, ITreeNode, ITreeRenderer, ITreeSorter } from "./tree.js";
+import { memoize } from "../../../common/decorators.js";
+import { Event } from "../../../common/event.js";
+import { Iterable } from "../../../common/iterator.js";
+class ObjectTree extends AbstractTree {
+  constructor(user, container, delegate, renderers, options = {}) {
+    super(user, container, delegate, renderers, options);
+    this.user = user;
+  }
+  static {
+    __name(this, "ObjectTree");
+  }
+  get onDidChangeCollapseState() {
+    return this.model.onDidChangeCollapseState;
+  }
+  setChildren(element, children = Iterable.empty(), options) {
+    this.model.setChildren(element, children, options);
+  }
+  rerender(element) {
+    if (element === void 0) {
+      this.view.rerender();
+      return;
+    }
+    this.model.rerender(element);
+  }
+  updateElementHeight(element, height) {
+    const elementIndex = this.model.getListIndex(element);
+    if (elementIndex === -1) {
+      return;
+    }
+    this.view.updateElementHeight(elementIndex, height);
+  }
+  resort(element, recursive = true) {
+    this.model.resort(element, recursive);
+  }
+  hasElement(element) {
+    return this.model.has(element);
+  }
+  createModel(user, options) {
+    return new ObjectTreeModel(user, options);
+  }
+}
+class CompressibleRenderer {
+  constructor(_compressedTreeNodeProvider, stickyScrollDelegate, renderer) {
+    this._compressedTreeNodeProvider = _compressedTreeNodeProvider;
+    this.stickyScrollDelegate = stickyScrollDelegate;
+    this.renderer = renderer;
+    this.templateId = renderer.templateId;
+    if (renderer.onDidChangeTwistieState) {
+      this.onDidChangeTwistieState = renderer.onDidChangeTwistieState;
+    }
+  }
+  static {
+    __name(this, "CompressibleRenderer");
+  }
+  templateId;
+  onDidChangeTwistieState;
+  get compressedTreeNodeProvider() {
+    return this._compressedTreeNodeProvider();
+  }
+  renderTemplate(container) {
+    const data = this.renderer.renderTemplate(container);
+    return { compressedTreeNode: void 0, data };
+  }
+  renderElement(node, index, templateData, height) {
+    let compressedTreeNode = this.stickyScrollDelegate.getCompressedNode(node);
+    if (!compressedTreeNode) {
+      compressedTreeNode = this.compressedTreeNodeProvider.getCompressedTreeNode(node.element);
+    }
+    if (compressedTreeNode.element.elements.length === 1) {
+      templateData.compressedTreeNode = void 0;
+      this.renderer.renderElement(node, index, templateData.data, height);
+    } else {
+      templateData.compressedTreeNode = compressedTreeNode;
+      this.renderer.renderCompressedElements(compressedTreeNode, index, templateData.data, height);
+    }
+  }
+  disposeElement(node, index, templateData, height) {
+    if (templateData.compressedTreeNode) {
+      this.renderer.disposeCompressedElements?.(templateData.compressedTreeNode, index, templateData.data, height);
+    } else {
+      this.renderer.disposeElement?.(node, index, templateData.data, height);
+    }
+  }
+  disposeTemplate(templateData) {
+    this.renderer.disposeTemplate(templateData.data);
+  }
+  renderTwistie(element, twistieElement) {
+    if (this.renderer.renderTwistie) {
+      return this.renderer.renderTwistie(element, twistieElement);
+    }
+    return false;
+  }
+}
+__decorateClass([
+  memoize
+], CompressibleRenderer.prototype, "compressedTreeNodeProvider", 1);
+class CompressibleStickyScrollDelegate {
+  constructor(modelProvider) {
+    this.modelProvider = modelProvider;
+  }
+  static {
+    __name(this, "CompressibleStickyScrollDelegate");
+  }
+  compressedStickyNodes = /* @__PURE__ */ new Map();
+  getCompressedNode(node) {
+    return this.compressedStickyNodes.get(node);
+  }
+  constrainStickyScrollNodes(stickyNodes, stickyScrollMaxItemCount, maxWidgetHeight) {
+    this.compressedStickyNodes.clear();
+    if (stickyNodes.length === 0) {
+      return [];
+    }
+    for (let i = 0; i < stickyNodes.length; i++) {
+      const stickyNode = stickyNodes[i];
+      const stickyNodeBottom = stickyNode.position + stickyNode.height;
+      const followingReachesMaxHeight = i + 1 < stickyNodes.length && stickyNodeBottom + stickyNodes[i + 1].height > maxWidgetHeight;
+      if (followingReachesMaxHeight || i >= stickyScrollMaxItemCount - 1 && stickyScrollMaxItemCount < stickyNodes.length) {
+        const uncompressedStickyNodes = stickyNodes.slice(0, i);
+        const overflowingStickyNodes = stickyNodes.slice(i);
+        const compressedStickyNode = this.compressStickyNodes(overflowingStickyNodes);
+        return [...uncompressedStickyNodes, compressedStickyNode];
+      }
+    }
+    return stickyNodes;
+  }
+  compressStickyNodes(stickyNodes) {
+    if (stickyNodes.length === 0) {
+      throw new Error("Can't compress empty sticky nodes");
+    }
+    const compressionModel = this.modelProvider();
+    if (!compressionModel.isCompressionEnabled()) {
+      return stickyNodes[0];
+    }
+    const elements = [];
+    for (let i = 0; i < stickyNodes.length; i++) {
+      const stickyNode = stickyNodes[i];
+      const compressedNode2 = compressionModel.getCompressedTreeNode(stickyNode.node.element);
+      if (compressedNode2.element) {
+        if (i !== 0 && compressedNode2.element.incompressible) {
+          break;
+        }
+        elements.push(...compressedNode2.element.elements);
+      }
+    }
+    if (elements.length < 2) {
+      return stickyNodes[0];
+    }
+    const lastStickyNode = stickyNodes[stickyNodes.length - 1];
+    const compressedElement = { elements, incompressible: false };
+    const compressedNode = { ...lastStickyNode.node, children: [], element: compressedElement };
+    const stickyTreeNode = new Proxy(stickyNodes[0].node, {});
+    const compressedStickyNode = {
+      node: stickyTreeNode,
+      startIndex: stickyNodes[0].startIndex,
+      endIndex: lastStickyNode.endIndex,
+      position: stickyNodes[0].position,
+      height: stickyNodes[0].height
+    };
+    this.compressedStickyNodes.set(stickyTreeNode, compressedNode);
+    return compressedStickyNode;
+  }
+}
+function asObjectTreeOptions(compressedTreeNodeProvider, options) {
+  return options && {
+    ...options,
+    keyboardNavigationLabelProvider: options.keyboardNavigationLabelProvider && {
+      getKeyboardNavigationLabel(e) {
+        let compressedTreeNode;
+        try {
+          compressedTreeNode = compressedTreeNodeProvider().getCompressedTreeNode(e);
+        } catch {
+          return options.keyboardNavigationLabelProvider.getKeyboardNavigationLabel(e);
+        }
+        if (compressedTreeNode.element.elements.length === 1) {
+          return options.keyboardNavigationLabelProvider.getKeyboardNavigationLabel(e);
+        } else {
+          return options.keyboardNavigationLabelProvider.getCompressedNodeKeyboardNavigationLabel(compressedTreeNode.element.elements);
+        }
+      }
+    }
+  };
+}
+__name(asObjectTreeOptions, "asObjectTreeOptions");
+class CompressibleObjectTree extends ObjectTree {
+  static {
+    __name(this, "CompressibleObjectTree");
+  }
+  constructor(user, container, delegate, renderers, options = {}) {
+    const compressedTreeNodeProvider = /* @__PURE__ */ __name(() => this, "compressedTreeNodeProvider");
+    const stickyScrollDelegate = new CompressibleStickyScrollDelegate(() => this.model);
+    const compressibleRenderers = renderers.map((r) => new CompressibleRenderer(compressedTreeNodeProvider, stickyScrollDelegate, r));
+    super(user, container, delegate, compressibleRenderers, { ...asObjectTreeOptions(compressedTreeNodeProvider, options), stickyScrollDelegate });
+  }
+  setChildren(element, children = Iterable.empty(), options) {
+    this.model.setChildren(element, children, options);
+  }
+  createModel(user, options) {
+    return new CompressibleObjectTreeModel(user, options);
+  }
+  updateOptions(optionsUpdate = {}) {
+    super.updateOptions(optionsUpdate);
+    if (typeof optionsUpdate.compressionEnabled !== "undefined") {
+      this.model.setCompressionEnabled(optionsUpdate.compressionEnabled);
+    }
+  }
+  getCompressedTreeNode(element = null) {
+    return this.model.getCompressedTreeNode(element);
+  }
+}
+export {
+  CompressibleObjectTree,
+  ObjectTree
+};
+//# sourceMappingURL=objectTree.js.map

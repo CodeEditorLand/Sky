@@ -1,1 +1,292 @@
-var z=Object.defineProperty;var B=Object.getOwnPropertyDescriptor;var A=(k,c,e,i)=>{for(var r=i>1?void 0:i?B(c,e):c,t=k.length-1,o;t>=0;t--)(o=k[t])&&(r=(i?o(c,e,r):o(r))||r);return i&&r&&z(c,e,r),r},g=(k,c)=>(e,i)=>c(e,i,k);import{Action as F}from"../../../../base/common/actions.js";import{disposableTimeout as D}from"../../../../base/common/async.js";import{CancellationTokenSource as P}from"../../../../base/common/cancellation.js";import{createErrorWithActions as N}from"../../../../base/common/errorMessage.js";import{Emitter as O,Event as R}from"../../../../base/common/event.js";import{DisposableStore as K}from"../../../../base/common/lifecycle.js";import C from"../../../../base/common/severity.js";import*as a from"../../../../nls.js";import{ICommandService as V}from"../../../../platform/commands/common/commands.js";import{IConfigurationService as G}from"../../../../platform/configuration/common/configuration.js";import{IDialogService as U}from"../../../../platform/dialogs/common/dialogs.js";import{IMarkerService as Y,MarkerSeverity as q}from"../../../../platform/markers/common/markers.js";import{IProgressService as J,ProgressLocation as H}from"../../../../platform/progress/common/progress.js";import{IStorageService as j,StorageScope as _,StorageTarget as Q}from"../../../../platform/storage/common/storage.js";import"../../../../platform/workspace/common/workspace.js";import{DEBUG_CONFIGURE_COMMAND_ID as x,DEBUG_CONFIGURE_LABEL as X}from"./debugCommands.js";import"../common/debug.js";import{Markers as L}from"../../markers/common/markers.js";import{ConfiguringTask as Z,CustomTask as $,TaskEventKind as h}from"../../tasks/common/tasks.js";import{ITaskService as ee}from"../../tasks/common/taskService.js";import{IViewsService as re}from"../../../services/views/common/viewsService.js";const w=(k,c)=>R.once(R.filter(k,c));var ie=(e=>(e[e.Failure=0]="Failure",e[e.Success=1]="Success",e))(ie||{});const W="debug.taskerrorchoice",M=a.localize("abort","Abort"),oe=a.localize({key:"debugAnyway",comment:["&& denotes a mnemonic"]},"&&Debug Anyway"),ne=a.localize("debugAnywayNoMemo","Debug Anyway");let y=class{constructor(c,e,i,r,t,o,u,l){this.taskService=c;this.markerService=e;this.configurationService=i;this.viewsService=r;this.dialogService=t;this.storageService=o;this.commandService=u;this.progressService=l}globalCancellation=new P;cancel(){this.globalCancellation.dispose(!0),this.globalCancellation=new P}dispose(){this.globalCancellation.dispose(!0)}async runTaskAndCheckErrors(c,e){try{const i=await this.runTask(c,e,this.globalCancellation.token);if(i&&(i.exitCode===void 0||i.cancelled))return 0;const r=e?this.markerService.read({severities:q.Error,take:2}).length:0,t=i&&i.exitCode===0,o=i&&i.exitCode!==0,u=this.configurationService.getValue("debug").onTaskErrors;if(t||u==="debugAnyway"||r===0&&!o)return 1;if(u==="showErrors")return await this.viewsService.openView(L.MARKERS_VIEW_ID,!0),Promise.resolve(0);if(u==="abort")return Promise.resolve(0);const l=typeof e=="string"?e:e?e.name:"",p=r>1?a.localize("preLaunchTaskErrors","Errors exist after running preLaunchTask '{0}'.",l):r===1?a.localize("preLaunchTaskError","Error exists after running preLaunchTask '{0}'.",l):i&&typeof i.exitCode=="number"?a.localize("preLaunchTaskExitCode","The preLaunchTask '{0}' terminated with exit code {1}.",l,i.exitCode):a.localize("preLaunchTaskTerminated","The preLaunchTask '{0}' terminated.",l);let S;(f=>(f[f.DebugAnyway=1]="DebugAnyway",f[f.ShowErrors=2]="ShowErrors",f[f.Cancel=0]="Cancel"))(S||={});const{result:m,checkboxChecked:v}=await this.dialogService.prompt({type:C.Warning,message:p,buttons:[{label:oe,run:()=>1},{label:a.localize({key:"showErrors",comment:["&& denotes a mnemonic"]},"&&Show Errors"),run:()=>2}],cancelButton:{label:M,run:()=>0},checkbox:{label:a.localize("remember","Remember my choice in user settings")}}),n=m===1,s=m===0;return v&&this.configurationService.updateValue("debug.onTaskErrors",m===1?"debugAnyway":s?"abort":"showErrors"),s?Promise.resolve(0):n?1:(await this.viewsService.openView(L.MARKERS_VIEW_ID,!0),Promise.resolve(0))}catch(i){const r=this.taskService.configureAction(),t=JSON.parse(this.storageService.get(W,_.WORKSPACE,"{}"));let o=-1,u;if((m=>(m[m.DebugAnyway=0]="DebugAnyway",m[m.ConfigureTask=1]="ConfigureTask",m[m.Cancel=2]="Cancel"))(u||={}),t[i.message]!==void 0)o=t[i.message];else{const{result:l,checkboxChecked:p}=await this.dialogService.prompt({type:C.Error,message:i.message,buttons:[{label:a.localize({key:"debugAnyway",comment:["&& denotes a mnemonic"]},"&&Debug Anyway"),run:()=>0},{label:r.label,run:()=>1}],cancelButton:{run:()=>2},checkbox:{label:a.localize("rememberTask","Remember my choice for this task")}});o=l,p&&(t[i.message]=o,this.storageService.store(W,JSON.stringify(t),_.WORKSPACE,Q.MACHINE))}return o===1&&await r.run(),o===0?1:0}}async runTask(c,e,i=this.globalCancellation.token){if(!e)return Promise.resolve(null);if(!c)return Promise.reject(new Error(a.localize("invalidTaskReference","Task '{0}' can not be referenced from a launch configuration that is in a different workspace folder.",typeof e=="string"?e:e.type)));const r=await this.taskService.getTask(c,e);if(!r){const n=typeof e=="string"?a.localize("DebugTaskNotFoundWithTaskId","Could not find the task '{0}'.",e):a.localize("DebugTaskNotFound","Could not find the specified task.");return Promise.reject(N(n,[new F(x,X,void 0,!0,()=>this.commandService.executeCommand(x))]))}let t=!1;const o=new K,u=n=>n.getKey()??n.getMapKey(),l=u(r),p=new Promise(n=>o.add(w(this.taskService.onDidStateChange,s=>(s.kind===h.Inactive||s.kind===h.ProcessEnded&&s.exitCode===void 0)&&u(s.__task)===l)(s=>{t=!0,n(s.kind===h.ProcessEnded?{exitCode:s.exitCode}:null)})));o.add(w(this.taskService.onDidStateChange,n=>(n.kind===h.Active||n.kind===h.DependsOnStarted)&&u(n.__task)===l)(()=>{t=!0}));const S=o.add(new O);o.add(w(this.taskService.onDidStateChange,n=>n.kind===h.AcquiredInput&&u(n.__task)===l)(()=>S.fire()));const m=this.taskService.getActiveTasks().then(async n=>{if(n.find(d=>u(d)===l))return S.fire(),(await this.taskService.getBusyTasks()).find(E=>u(E)===l)?(t=!0,p):Promise.resolve(null);const s=this.taskService.run(r);return r.configurationProperties.isBackground?p:s.then(d=>d??null)}),v=new Promise((n,s)=>{m.then(d=>{t=!0,n(d)},d=>s(d)),o.add(i.onCancellationRequested(()=>{n({exitCode:void 0,cancelled:!0}),this.taskService.terminate(r).catch(()=>{})})),o.add(S.event(()=>{const d=r.configurationProperties.isBackground?5e3:1e4;o.add(D(()=>{if(!t){const T=a.localize("taskNotTracked","The task '{0}' has not exited and doesn't have a 'problemMatcher' defined. Make sure to define a problem matcher for watch tasks.",typeof e=="string"?e:JSON.stringify(e));s({severity:C.Error,message:T})}},d)),this.configurationService.getValue("debug").hideSlowPreLaunchWarning||o.add(D(()=>{const T=a.localize("runningTask","Waiting for preLaunchTask '{0}'...",r.configurationProperties.name),f=[ne,M],I=r instanceof $||r instanceof Z;I&&f.splice(1,0,a.localize("configureTask","Configure Task")),this.progressService.withProgress({location:H.Notification,title:T,buttons:f},()=>v.catch(()=>{}),b=>{b===void 0||(b===0?n({exitCode:0}):(n({exitCode:void 0,cancelled:!0}),this.taskService.terminate(r).catch(()=>{}),I&&b===1&&this.taskService.openConfig(r)))})},1e4))}))});return v.finally(()=>o.dispose())}};y=A([g(0,ee),g(1,Y),g(2,G),g(3,re),g(4,U),g(5,j),g(6,V),g(7,J)],y);export{y as DebugTaskRunner,ie as TaskRunResult};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Action } from "../../../../base/common/actions.js";
+import { disposableTimeout } from "../../../../base/common/async.js";
+import { CancellationTokenSource } from "../../../../base/common/cancellation.js";
+import { createErrorWithActions } from "../../../../base/common/errorMessage.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { DisposableStore, IDisposable } from "../../../../base/common/lifecycle.js";
+import severity from "../../../../base/common/severity.js";
+import * as nls from "../../../../nls.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IDialogService } from "../../../../platform/dialogs/common/dialogs.js";
+import { IMarkerService, MarkerSeverity } from "../../../../platform/markers/common/markers.js";
+import { IProgressService, ProgressLocation } from "../../../../platform/progress/common/progress.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { IWorkspace, IWorkspaceFolder } from "../../../../platform/workspace/common/workspace.js";
+import { DEBUG_CONFIGURE_COMMAND_ID, DEBUG_CONFIGURE_LABEL } from "./debugCommands.js";
+import { IDebugConfiguration } from "../common/debug.js";
+import { Markers } from "../../markers/common/markers.js";
+import { ConfiguringTask, CustomTask, ITaskEvent, ITaskIdentifier, Task, TaskEventKind } from "../../tasks/common/tasks.js";
+import { ITaskService, ITaskSummary } from "../../tasks/common/taskService.js";
+import { IViewsService } from "../../../services/views/common/viewsService.js";
+const onceFilter = /* @__PURE__ */ __name((event, filter) => Event.once(Event.filter(event, filter)), "onceFilter");
+var TaskRunResult = /* @__PURE__ */ ((TaskRunResult2) => {
+  TaskRunResult2[TaskRunResult2["Failure"] = 0] = "Failure";
+  TaskRunResult2[TaskRunResult2["Success"] = 1] = "Success";
+  return TaskRunResult2;
+})(TaskRunResult || {});
+const DEBUG_TASK_ERROR_CHOICE_KEY = "debug.taskerrorchoice";
+const ABORT_LABEL = nls.localize("abort", "Abort");
+const DEBUG_ANYWAY_LABEL = nls.localize({ key: "debugAnyway", comment: ["&& denotes a mnemonic"] }, "&&Debug Anyway");
+const DEBUG_ANYWAY_LABEL_NO_MEMO = nls.localize("debugAnywayNoMemo", "Debug Anyway");
+let DebugTaskRunner = class {
+  constructor(taskService, markerService, configurationService, viewsService, dialogService, storageService, commandService, progressService) {
+    this.taskService = taskService;
+    this.markerService = markerService;
+    this.configurationService = configurationService;
+    this.viewsService = viewsService;
+    this.dialogService = dialogService;
+    this.storageService = storageService;
+    this.commandService = commandService;
+    this.progressService = progressService;
+  }
+  static {
+    __name(this, "DebugTaskRunner");
+  }
+  globalCancellation = new CancellationTokenSource();
+  cancel() {
+    this.globalCancellation.dispose(true);
+    this.globalCancellation = new CancellationTokenSource();
+  }
+  dispose() {
+    this.globalCancellation.dispose(true);
+  }
+  async runTaskAndCheckErrors(root, taskId) {
+    try {
+      const taskSummary = await this.runTask(root, taskId, this.globalCancellation.token);
+      if (taskSummary && (taskSummary.exitCode === void 0 || taskSummary.cancelled)) {
+        return 0 /* Failure */;
+      }
+      const errorCount = taskId ? this.markerService.read({ severities: MarkerSeverity.Error, take: 2 }).length : 0;
+      const successExitCode = taskSummary && taskSummary.exitCode === 0;
+      const failureExitCode = taskSummary && taskSummary.exitCode !== 0;
+      const onTaskErrors = this.configurationService.getValue("debug").onTaskErrors;
+      if (successExitCode || onTaskErrors === "debugAnyway" || errorCount === 0 && !failureExitCode) {
+        return 1 /* Success */;
+      }
+      if (onTaskErrors === "showErrors") {
+        await this.viewsService.openView(Markers.MARKERS_VIEW_ID, true);
+        return Promise.resolve(0 /* Failure */);
+      }
+      if (onTaskErrors === "abort") {
+        return Promise.resolve(0 /* Failure */);
+      }
+      const taskLabel = typeof taskId === "string" ? taskId : taskId ? taskId.name : "";
+      const message = errorCount > 1 ? nls.localize("preLaunchTaskErrors", "Errors exist after running preLaunchTask '{0}'.", taskLabel) : errorCount === 1 ? nls.localize("preLaunchTaskError", "Error exists after running preLaunchTask '{0}'.", taskLabel) : taskSummary && typeof taskSummary.exitCode === "number" ? nls.localize("preLaunchTaskExitCode", "The preLaunchTask '{0}' terminated with exit code {1}.", taskLabel, taskSummary.exitCode) : nls.localize("preLaunchTaskTerminated", "The preLaunchTask '{0}' terminated.", taskLabel);
+      let DebugChoice;
+      ((DebugChoice2) => {
+        DebugChoice2[DebugChoice2["DebugAnyway"] = 1] = "DebugAnyway";
+        DebugChoice2[DebugChoice2["ShowErrors"] = 2] = "ShowErrors";
+        DebugChoice2[DebugChoice2["Cancel"] = 0] = "Cancel";
+      })(DebugChoice || (DebugChoice = {}));
+      const { result, checkboxChecked } = await this.dialogService.prompt({
+        type: severity.Warning,
+        message,
+        buttons: [
+          {
+            label: DEBUG_ANYWAY_LABEL,
+            run: /* @__PURE__ */ __name(() => 1 /* DebugAnyway */, "run")
+          },
+          {
+            label: nls.localize({ key: "showErrors", comment: ["&& denotes a mnemonic"] }, "&&Show Errors"),
+            run: /* @__PURE__ */ __name(() => 2 /* ShowErrors */, "run")
+          }
+        ],
+        cancelButton: {
+          label: ABORT_LABEL,
+          run: /* @__PURE__ */ __name(() => 0 /* Cancel */, "run")
+        },
+        checkbox: {
+          label: nls.localize("remember", "Remember my choice in user settings")
+        }
+      });
+      const debugAnyway = result === 1 /* DebugAnyway */;
+      const abort = result === 0 /* Cancel */;
+      if (checkboxChecked) {
+        this.configurationService.updateValue("debug.onTaskErrors", result === 1 /* DebugAnyway */ ? "debugAnyway" : abort ? "abort" : "showErrors");
+      }
+      if (abort) {
+        return Promise.resolve(0 /* Failure */);
+      }
+      if (debugAnyway) {
+        return 1 /* Success */;
+      }
+      await this.viewsService.openView(Markers.MARKERS_VIEW_ID, true);
+      return Promise.resolve(0 /* Failure */);
+    } catch (err) {
+      const taskConfigureAction = this.taskService.configureAction();
+      const choiceMap = JSON.parse(this.storageService.get(DEBUG_TASK_ERROR_CHOICE_KEY, StorageScope.WORKSPACE, "{}"));
+      let choice = -1;
+      let DebugChoice;
+      ((DebugChoice2) => {
+        DebugChoice2[DebugChoice2["DebugAnyway"] = 0] = "DebugAnyway";
+        DebugChoice2[DebugChoice2["ConfigureTask"] = 1] = "ConfigureTask";
+        DebugChoice2[DebugChoice2["Cancel"] = 2] = "Cancel";
+      })(DebugChoice || (DebugChoice = {}));
+      if (choiceMap[err.message] !== void 0) {
+        choice = choiceMap[err.message];
+      } else {
+        const { result, checkboxChecked } = await this.dialogService.prompt({
+          type: severity.Error,
+          message: err.message,
+          buttons: [
+            {
+              label: nls.localize({ key: "debugAnyway", comment: ["&& denotes a mnemonic"] }, "&&Debug Anyway"),
+              run: /* @__PURE__ */ __name(() => 0 /* DebugAnyway */, "run")
+            },
+            {
+              label: taskConfigureAction.label,
+              run: /* @__PURE__ */ __name(() => 1 /* ConfigureTask */, "run")
+            }
+          ],
+          cancelButton: {
+            run: /* @__PURE__ */ __name(() => 2 /* Cancel */, "run")
+          },
+          checkbox: {
+            label: nls.localize("rememberTask", "Remember my choice for this task")
+          }
+        });
+        choice = result;
+        if (checkboxChecked) {
+          choiceMap[err.message] = choice;
+          this.storageService.store(DEBUG_TASK_ERROR_CHOICE_KEY, JSON.stringify(choiceMap), StorageScope.WORKSPACE, StorageTarget.MACHINE);
+        }
+      }
+      if (choice === 1 /* ConfigureTask */) {
+        await taskConfigureAction.run();
+      }
+      return choice === 0 /* DebugAnyway */ ? 1 /* Success */ : 0 /* Failure */;
+    }
+  }
+  async runTask(root, taskId, token = this.globalCancellation.token) {
+    if (!taskId) {
+      return Promise.resolve(null);
+    }
+    if (!root) {
+      return Promise.reject(new Error(nls.localize("invalidTaskReference", "Task '{0}' can not be referenced from a launch configuration that is in a different workspace folder.", typeof taskId === "string" ? taskId : taskId.type)));
+    }
+    const task = await this.taskService.getTask(root, taskId);
+    if (!task) {
+      const errorMessage = typeof taskId === "string" ? nls.localize("DebugTaskNotFoundWithTaskId", "Could not find the task '{0}'.", taskId) : nls.localize("DebugTaskNotFound", "Could not find the specified task.");
+      return Promise.reject(createErrorWithActions(errorMessage, [new Action(DEBUG_CONFIGURE_COMMAND_ID, DEBUG_CONFIGURE_LABEL, void 0, true, () => this.commandService.executeCommand(DEBUG_CONFIGURE_COMMAND_ID))]));
+    }
+    let taskStarted = false;
+    const store = new DisposableStore();
+    const getTaskKey = /* @__PURE__ */ __name((t) => t.getKey() ?? t.getMapKey(), "getTaskKey");
+    const taskKey = getTaskKey(task);
+    const inactivePromise = new Promise((resolve) => store.add(
+      onceFilter(this.taskService.onDidStateChange, (e) => {
+        return (e.kind === TaskEventKind.Inactive || e.kind === TaskEventKind.ProcessEnded && e.exitCode === void 0) && getTaskKey(e.__task) === taskKey;
+      })((e) => {
+        taskStarted = true;
+        resolve(e.kind === TaskEventKind.ProcessEnded ? { exitCode: e.exitCode } : null);
+      })
+    ));
+    store.add(
+      onceFilter(
+        this.taskService.onDidStateChange,
+        (e) => (e.kind === TaskEventKind.Active || e.kind === TaskEventKind.DependsOnStarted) && getTaskKey(e.__task) === taskKey
+      )(() => {
+        taskStarted = true;
+      })
+    );
+    const didAcquireInput = store.add(new Emitter());
+    store.add(onceFilter(
+      this.taskService.onDidStateChange,
+      (e) => e.kind === TaskEventKind.AcquiredInput && getTaskKey(e.__task) === taskKey
+    )(() => didAcquireInput.fire()));
+    const taskDonePromise = this.taskService.getActiveTasks().then(async (tasks) => {
+      if (tasks.find((t) => getTaskKey(t) === taskKey)) {
+        didAcquireInput.fire();
+        const busyTasks = await this.taskService.getBusyTasks();
+        if (busyTasks.find((t) => getTaskKey(t) === taskKey)) {
+          taskStarted = true;
+          return inactivePromise;
+        }
+        return Promise.resolve(null);
+      }
+      const taskPromise = this.taskService.run(task);
+      if (task.configurationProperties.isBackground) {
+        return inactivePromise;
+      }
+      return taskPromise.then((x) => x ?? null);
+    });
+    const result = new Promise((resolve, reject) => {
+      taskDonePromise.then((result2) => {
+        taskStarted = true;
+        resolve(result2);
+      }, (error) => reject(error));
+      store.add(token.onCancellationRequested(() => {
+        resolve({ exitCode: void 0, cancelled: true });
+        this.taskService.terminate(task).catch(() => {
+        });
+      }));
+      store.add(didAcquireInput.event(() => {
+        const waitTime = task.configurationProperties.isBackground ? 5e3 : 1e4;
+        store.add(disposableTimeout(() => {
+          if (!taskStarted) {
+            const errorMessage = nls.localize("taskNotTracked", "The task '{0}' has not exited and doesn't have a 'problemMatcher' defined. Make sure to define a problem matcher for watch tasks.", typeof taskId === "string" ? taskId : JSON.stringify(taskId));
+            reject({ severity: severity.Error, message: errorMessage });
+          }
+        }, waitTime));
+        const hideSlowPreLaunchWarning = this.configurationService.getValue("debug").hideSlowPreLaunchWarning;
+        if (!hideSlowPreLaunchWarning) {
+          store.add(disposableTimeout(() => {
+            const message = nls.localize("runningTask", "Waiting for preLaunchTask '{0}'...", task.configurationProperties.name);
+            const buttons = [DEBUG_ANYWAY_LABEL_NO_MEMO, ABORT_LABEL];
+            const canConfigure = task instanceof CustomTask || task instanceof ConfiguringTask;
+            if (canConfigure) {
+              buttons.splice(1, 0, nls.localize("configureTask", "Configure Task"));
+            }
+            this.progressService.withProgress(
+              { location: ProgressLocation.Notification, title: message, buttons },
+              () => result.catch(() => {
+              }),
+              (choice) => {
+                if (choice === void 0) {
+                } else if (choice === 0) {
+                  resolve({ exitCode: 0 });
+                } else {
+                  resolve({ exitCode: void 0, cancelled: true });
+                  this.taskService.terminate(task).catch(() => {
+                  });
+                  if (canConfigure && choice === 1) {
+                    this.taskService.openConfig(task);
+                  }
+                }
+              }
+            );
+          }, 1e4));
+        }
+      }));
+    });
+    return result.finally(() => store.dispose());
+  }
+};
+DebugTaskRunner = __decorateClass([
+  __decorateParam(0, ITaskService),
+  __decorateParam(1, IMarkerService),
+  __decorateParam(2, IConfigurationService),
+  __decorateParam(3, IViewsService),
+  __decorateParam(4, IDialogService),
+  __decorateParam(5, IStorageService),
+  __decorateParam(6, ICommandService),
+  __decorateParam(7, IProgressService)
+], DebugTaskRunner);
+export {
+  DebugTaskRunner,
+  TaskRunResult
+};
+//# sourceMappingURL=debugTaskRunner.js.map

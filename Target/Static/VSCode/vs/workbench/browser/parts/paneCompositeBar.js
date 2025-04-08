@@ -1,8 +1,706 @@
-var L=Object.defineProperty;var E=Object.getOwnPropertyDescriptor;var I=(p,a,e,i)=>{for(var t=i>1?void 0:i?E(a,e):a,o=p.length-1,n;o>=0;o--)(n=p[o])&&(t=(i?n(a,e,t):n(t))||t);return i&&t&&L(a,e,t),t},c=(p,a)=>(e,i)=>a(e,i,p);import{localize as w}from"../../../nls.js";import{ActionsOrientation as T}from"../../../base/browser/ui/actionbar/actionbar.js";import{IActivityService as M}from"../../services/activity/common/activity.js";import{IWorkbenchLayoutService as D,Parts as g}from"../../services/layout/browser/layoutService.js";import{IInstantiationService as W}from"../../../platform/instantiation/common/instantiation.js";import{DisposableStore as H,Disposable as O,DisposableMap as F}from"../../../base/common/lifecycle.js";import"../../../platform/theme/common/themeService.js";import{CompositeBar as U,CompositeDragAndDrop as z}from"./compositeBar.js";import{Dimension as K,isMouseEvent as N}from"../../../base/browser/dom.js";import{createCSSRule as $}from"../../../base/browser/domStylesheets.js";import{asCSSUrl as J}from"../../../base/browser/cssValue.js";import{IStorageService as q,StorageScope as m,StorageTarget as S}from"../../../platform/storage/common/storage.js";import{IExtensionService as G}from"../../services/extensions/common/extensions.js";import{URI as u}from"../../../base/common/uri.js";import{ToggleCompositePinnedAction as x,ToggleCompositeBadgeAction as k,CompositeBarAction as Y}from"./compositeBarActions.js";import{IViewDescriptorService as X,ViewContainerLocation as l}from"../../common/views.js";import{IContextKeyService as j,ContextKeyExpr as Q}from"../../../platform/contextkey/common/contextkey.js";import{isString as A}from"../../../base/common/types.js";import{IWorkbenchEnvironmentService as Z}from"../../services/environment/common/environmentService.js";import{isNative as ee}from"../../../base/common/platform.js";import"../dnd.js";import{ThemeIcon as y}from"../../../base/common/themables.js";import{Separator as ie,SubmenuAction as te,toAction as B}from"../../../base/common/actions.js";import{StringSHA1 as oe}from"../../../base/common/hash.js";import"../../../base/browser/touch.js";import"./paneCompositePart.js";import{IConfigurationService as ne}from"../../../platform/configuration/common/configuration.js";import{IViewsService as se}from"../../services/views/common/viewsService.js";let V=class extends O{constructor(e,i,t,o,n,s,r,C,v,b,ce){super();this.options=e;this.part=i;this.paneCompositePart=t;this.instantiationService=o;this.storageService=n;this.extensionService=s;this.viewDescriptorService=r;this.viewService=C;this.contextKeyService=v;this.environmentService=b;this.layoutService=ce;this.location=t.partId===g.PANEL_PART?l.Panel:t.partId===g.AUXILIARYBAR_PART?l.AuxiliaryBar:l.Sidebar,this.dndHandler=new z(this.viewDescriptorService,this.location,this.options.orientation,async(d,f)=>await this.paneCompositePart.openPaneComposite(d,f)??null,(d,f,P)=>this.compositeBar.move(d,f,this.options.orientation===T.VERTICAL?P?.verticallyBefore:P?.horizontallyBefore),()=>this.compositeBar.getCompositeBarItems());const R=this.cachedViewContainers.map(d=>({id:d.id,name:d.name,visible:!this.shouldBeHidden(d.id,d),order:d.order,pinned:d.pinned}));this.compositeBar=this.createCompositeBar(R),this.onDidRegisterViewContainers(this.getViewContainers()),this.registerListeners()}viewContainerDisposables=this._register(new F);location;compositeBar;dndHandler;compositeActions=new Map;hasExtensionsRegistered=!1;createCompositeBar(e){return this._register(this.instantiationService.createInstance(U,e,{icon:this.options.icon,compact:this.options.compact,orientation:this.options.orientation,activityHoverOptions:this.options.activityHoverOptions,preventLoopNavigation:this.options.preventLoopNavigation,openComposite:async(i,t)=>await this.paneCompositePart.openPaneComposite(i,!t)??null,getActivityAction:i=>this.getCompositeActions(i).activityAction,getCompositePinnedAction:i=>this.getCompositeActions(i).pinnedAction,getCompositeBadgeAction:i=>this.getCompositeActions(i).badgeAction,getOnCompositeClickAction:i=>this.getCompositeActions(i).activityAction,fillExtraContextMenuActions:(i,t)=>this.options.fillExtraContextMenuActions(i,t),getContextMenuActionsForComposite:i=>this.getContextMenuActionsForComposite(i),getDefaultCompositeId:()=>this.viewDescriptorService.getDefaultViewContainer(this.location)?.id,dndHandler:this.dndHandler,compositeSize:this.options.compositeSize,overflowActionSize:this.options.overflowActionSize,colors:i=>this.options.colors(i)}))}getContextMenuActionsForComposite(e){const i=[new ie],t=this.viewDescriptorService.getViewContainerById(e),o=this.viewDescriptorService.getDefaultViewContainerLocation(t),n=this.viewDescriptorService.getViewContainerLocation(t),s=[];for(const r of[l.Sidebar,l.AuxiliaryBar,l.Panel])n!==r&&s.push(this.createMoveAction(t,r,o));if(i.push(new te("moveToMenu",w("moveToMenu","Move To"),s)),o!==n)i.push(B({id:"resetLocationAction",label:w("resetLocation","Reset Location"),run:()=>{this.viewDescriptorService.moveViewContainerToLocation(t,o,void 0,"resetLocationAction"),this.viewService.openViewContainer(t.id,!0)}}));else{const r=this.viewDescriptorService.getViewContainerModel(t);if(r.allViewDescriptors.length===1){const C=r.allViewDescriptors[0],v=this.viewDescriptorService.getDefaultContainerById(C.id);v!==t&&i.push(B({id:"resetLocationAction",label:w("resetLocation","Reset Location"),run:()=>{this.viewDescriptorService.moveViewsToContainer([C],v,void 0,"resetLocationAction"),this.viewService.openViewContainer(t.id,!0)}}))}}return i}createMoveAction(e,i,t){return B({id:`moveViewContainerTo${i}`,label:i===l.Panel?w("panel","Panel"):i===l.Sidebar?w("sidebar","Primary Side Bar"):w("auxiliarybar","Secondary Side Bar"),run:()=>{let o;i!==t?o=this.viewDescriptorService.getViewContainersByLocation(i).length:o=void 0,this.viewDescriptorService.moveViewContainerToLocation(e,i,o),this.viewService.openViewContainer(e.id,!0)}})}registerListeners(){this._register(this.viewDescriptorService.onDidChangeViewContainers(({added:e,removed:i})=>this.onDidChangeViewContainers(e,i))),this._register(this.viewDescriptorService.onDidChangeContainerLocation(({viewContainer:e,from:i,to:t})=>this.onDidChangeViewContainerLocation(e,i,t))),this._register(this.paneCompositePart.onDidPaneCompositeOpen(e=>this.onDidChangeViewContainerVisibility(e.getId(),!0))),this._register(this.paneCompositePart.onDidPaneCompositeClose(e=>this.onDidChangeViewContainerVisibility(e.getId(),!1))),this.extensionService.whenInstalledExtensionsRegistered().then(()=>{this._store.isDisposed||(this.onDidRegisterExtensions(),this._register(this.compositeBar.onDidChange(()=>{this.updateCompositeBarItemsFromStorage(!0),this.saveCachedViewContainers()})),this._register(this.storageService.onDidChangeValue(m.PROFILE,this.options.pinnedViewContainersKey,this._store)(()=>this.updateCompositeBarItemsFromStorage(!1))))})}onDidChangeViewContainers(e,i){i.filter(({location:t})=>t===this.location).forEach(({container:t})=>this.onDidDeregisterViewContainer(t)),this.onDidRegisterViewContainers(e.filter(({location:t})=>t===this.location).map(({container:t})=>t))}onDidChangeViewContainerLocation(e,i,t){i===this.location&&this.onDidDeregisterViewContainer(e),t===this.location&&this.onDidRegisterViewContainers([e])}onDidChangeViewContainerVisibility(e,i){i?this.onDidViewContainerVisible(e):this.compositeBar.deactivateComposite(e)}onDidRegisterExtensions(){this.hasExtensionsRegistered=!0;for(const{id:e}of this.cachedViewContainers){const i=this.getViewContainer(e);i?this.showOrHideViewContainer(i):this.viewDescriptorService.isViewContainerRemovedPermanently(e)?this.removeComposite(e):this.hideComposite(e)}this.saveCachedViewContainers()}onDidViewContainerVisible(e){const i=this.getViewContainer(e);i&&(this.addComposite(i),this.compositeBar.activateComposite(i.id),this.shouldBeHidden(i)&&this.viewDescriptorService.getViewContainerModel(i).activeViewDescriptors.length===0&&this.hideComposite(i.id))}create(e){return this.compositeBar.create(e)}getCompositeActions(e){let i=this.compositeActions.get(e);if(!i){const t=this.getViewContainer(e);if(t){const o=this.viewDescriptorService.getViewContainerModel(t);i={activityAction:this._register(this.instantiationService.createInstance(h,this.toCompositeBarActionItemFrom(o),this.part,this.paneCompositePart)),pinnedAction:this._register(new x(this.toCompositeBarActionItemFrom(o),this.compositeBar)),badgeAction:this._register(new k(this.toCompositeBarActionItemFrom(o),this.compositeBar))}}else{const o=this.cachedViewContainers.filter(n=>n.id===e)[0];i={activityAction:this._register(this.instantiationService.createInstance(re,this.toCompositeBarActionItem(e,o?.name??e,o?.icon,void 0),this.part,this.paneCompositePart)),pinnedAction:this._register(new _(e,this.compositeBar)),badgeAction:this._register(new ae(e,this.compositeBar))}}this.compositeActions.set(e,i)}return i}onDidRegisterViewContainers(e){for(const i of e){this.addComposite(i),this.cachedViewContainers.filter(({id:r})=>r===i.id)[0]||this.compositeBar.pin(i.id),this.paneCompositePart.getActivePaneComposite()?.getId()===i.id&&this.compositeBar.activateComposite(i.id);const n=this.viewDescriptorService.getViewContainerModel(i);this.updateCompositeBarActionItem(i,n),this.showOrHideViewContainer(i);const s=new H;s.add(n.onDidChangeContainerInfo(()=>this.updateCompositeBarActionItem(i,n))),s.add(n.onDidChangeActiveViewDescriptors(()=>this.showOrHideViewContainer(i))),this.viewContainerDisposables.set(i.id,s)}}onDidDeregisterViewContainer(e){this.viewContainerDisposables.deleteAndDispose(e.id),this.removeComposite(e.id)}updateCompositeBarActionItem(e,i){const t=this.toCompositeBarActionItemFrom(i),{activityAction:o,pinnedAction:n}=this.getCompositeActions(e.id);o.updateCompositeBarActionItem(t),n instanceof _&&n.setActivity(t),this.options.recomputeSizes&&this.compositeBar.recomputeSizes(),this.saveCachedViewContainers()}toCompositeBarActionItemFrom(e){return this.toCompositeBarActionItem(e.viewContainer.id,e.title,e.icon,e.keybindingId)}toCompositeBarActionItem(e,i,t,o){let n,s;if(this.options.icon)if(u.isUri(t)){s=t;const r=J(t),C=new oe;C.update(r);const v=`activity-${e.replace(/\./g,"-")}-${C.digest()}`,b=`.monaco-workbench .${this.options.partContainerClass} .monaco-action-bar .action-label.${v}`;n=[v,"uri-icon"],$(b,`
-				mask: ${r} no-repeat 50% 50%;
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { localize } from "../../../nls.js";
+import { ActionsOrientation } from "../../../base/browser/ui/actionbar/actionbar.js";
+import { IActivityService } from "../../services/activity/common/activity.js";
+import { IWorkbenchLayoutService, Parts } from "../../services/layout/browser/layoutService.js";
+import { IInstantiationService } from "../../../platform/instantiation/common/instantiation.js";
+import { IDisposable, DisposableStore, Disposable, DisposableMap } from "../../../base/common/lifecycle.js";
+import { IColorTheme } from "../../../platform/theme/common/themeService.js";
+import { CompositeBar, ICompositeBarItem, CompositeDragAndDrop } from "./compositeBar.js";
+import { Dimension, isMouseEvent } from "../../../base/browser/dom.js";
+import { createCSSRule } from "../../../base/browser/domStylesheets.js";
+import { asCSSUrl } from "../../../base/browser/cssValue.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../platform/storage/common/storage.js";
+import { IExtensionService } from "../../services/extensions/common/extensions.js";
+import { URI, UriComponents } from "../../../base/common/uri.js";
+import { ToggleCompositePinnedAction, ICompositeBarColors, IActivityHoverOptions, ToggleCompositeBadgeAction, CompositeBarAction, ICompositeBar, ICompositeBarActionItem } from "./compositeBarActions.js";
+import { IViewDescriptorService, ViewContainer, IViewContainerModel, ViewContainerLocation } from "../../common/views.js";
+import { IContextKeyService, ContextKeyExpr } from "../../../platform/contextkey/common/contextkey.js";
+import { isString } from "../../../base/common/types.js";
+import { IWorkbenchEnvironmentService } from "../../services/environment/common/environmentService.js";
+import { isNative } from "../../../base/common/platform.js";
+import { Before2D, ICompositeDragAndDrop } from "../dnd.js";
+import { ThemeIcon } from "../../../base/common/themables.js";
+import { IAction, Separator, SubmenuAction, toAction } from "../../../base/common/actions.js";
+import { StringSHA1 } from "../../../base/common/hash.js";
+import { GestureEvent } from "../../../base/browser/touch.js";
+import { IPaneCompositePart } from "./paneCompositePart.js";
+import { IConfigurationService } from "../../../platform/configuration/common/configuration.js";
+import { IViewsService } from "../../services/views/common/viewsService.js";
+let PaneCompositeBar = class extends Disposable {
+  constructor(options, part, paneCompositePart, instantiationService, storageService, extensionService, viewDescriptorService, viewService, contextKeyService, environmentService, layoutService) {
+    super();
+    this.options = options;
+    this.part = part;
+    this.paneCompositePart = paneCompositePart;
+    this.instantiationService = instantiationService;
+    this.storageService = storageService;
+    this.extensionService = extensionService;
+    this.viewDescriptorService = viewDescriptorService;
+    this.viewService = viewService;
+    this.contextKeyService = contextKeyService;
+    this.environmentService = environmentService;
+    this.layoutService = layoutService;
+    this.location = paneCompositePart.partId === Parts.PANEL_PART ? ViewContainerLocation.Panel : paneCompositePart.partId === Parts.AUXILIARYBAR_PART ? ViewContainerLocation.AuxiliaryBar : ViewContainerLocation.Sidebar;
+    this.dndHandler = new CompositeDragAndDrop(
+      this.viewDescriptorService,
+      this.location,
+      this.options.orientation,
+      async (id, focus) => {
+        return await this.paneCompositePart.openPaneComposite(id, focus) ?? null;
+      },
+      (from, to, before) => this.compositeBar.move(from, to, this.options.orientation === ActionsOrientation.VERTICAL ? before?.verticallyBefore : before?.horizontallyBefore),
+      () => this.compositeBar.getCompositeBarItems()
+    );
+    const cachedItems = this.cachedViewContainers.map((container) => ({
+      id: container.id,
+      name: container.name,
+      visible: !this.shouldBeHidden(container.id, container),
+      order: container.order,
+      pinned: container.pinned
+    }));
+    this.compositeBar = this.createCompositeBar(cachedItems);
+    this.onDidRegisterViewContainers(this.getViewContainers());
+    this.registerListeners();
+  }
+  static {
+    __name(this, "PaneCompositeBar");
+  }
+  viewContainerDisposables = this._register(new DisposableMap());
+  location;
+  compositeBar;
+  dndHandler;
+  compositeActions = /* @__PURE__ */ new Map();
+  hasExtensionsRegistered = false;
+  createCompositeBar(cachedItems) {
+    return this._register(this.instantiationService.createInstance(CompositeBar, cachedItems, {
+      icon: this.options.icon,
+      compact: this.options.compact,
+      orientation: this.options.orientation,
+      activityHoverOptions: this.options.activityHoverOptions,
+      preventLoopNavigation: this.options.preventLoopNavigation,
+      openComposite: /* @__PURE__ */ __name(async (compositeId, preserveFocus) => {
+        return await this.paneCompositePart.openPaneComposite(compositeId, !preserveFocus) ?? null;
+      }, "openComposite"),
+      getActivityAction: /* @__PURE__ */ __name((compositeId) => this.getCompositeActions(compositeId).activityAction, "getActivityAction"),
+      getCompositePinnedAction: /* @__PURE__ */ __name((compositeId) => this.getCompositeActions(compositeId).pinnedAction, "getCompositePinnedAction"),
+      getCompositeBadgeAction: /* @__PURE__ */ __name((compositeId) => this.getCompositeActions(compositeId).badgeAction, "getCompositeBadgeAction"),
+      getOnCompositeClickAction: /* @__PURE__ */ __name((compositeId) => this.getCompositeActions(compositeId).activityAction, "getOnCompositeClickAction"),
+      fillExtraContextMenuActions: /* @__PURE__ */ __name((actions, e) => this.options.fillExtraContextMenuActions(actions, e), "fillExtraContextMenuActions"),
+      getContextMenuActionsForComposite: /* @__PURE__ */ __name((compositeId) => this.getContextMenuActionsForComposite(compositeId), "getContextMenuActionsForComposite"),
+      getDefaultCompositeId: /* @__PURE__ */ __name(() => this.viewDescriptorService.getDefaultViewContainer(this.location)?.id, "getDefaultCompositeId"),
+      dndHandler: this.dndHandler,
+      compositeSize: this.options.compositeSize,
+      overflowActionSize: this.options.overflowActionSize,
+      colors: /* @__PURE__ */ __name((theme) => this.options.colors(theme), "colors")
+    }));
+  }
+  getContextMenuActionsForComposite(compositeId) {
+    const actions = [new Separator()];
+    const viewContainer = this.viewDescriptorService.getViewContainerById(compositeId);
+    const defaultLocation = this.viewDescriptorService.getDefaultViewContainerLocation(viewContainer);
+    const currentLocation = this.viewDescriptorService.getViewContainerLocation(viewContainer);
+    const moveActions = [];
+    for (const location of [ViewContainerLocation.Sidebar, ViewContainerLocation.AuxiliaryBar, ViewContainerLocation.Panel]) {
+      if (currentLocation !== location) {
+        moveActions.push(this.createMoveAction(viewContainer, location, defaultLocation));
+      }
+    }
+    actions.push(new SubmenuAction("moveToMenu", localize("moveToMenu", "Move To"), moveActions));
+    if (defaultLocation !== currentLocation) {
+      actions.push(toAction({
+        id: "resetLocationAction",
+        label: localize("resetLocation", "Reset Location"),
+        run: /* @__PURE__ */ __name(() => {
+          this.viewDescriptorService.moveViewContainerToLocation(viewContainer, defaultLocation, void 0, "resetLocationAction");
+          this.viewService.openViewContainer(viewContainer.id, true);
+        }, "run")
+      }));
+    } else {
+      const viewContainerModel = this.viewDescriptorService.getViewContainerModel(viewContainer);
+      if (viewContainerModel.allViewDescriptors.length === 1) {
+        const viewToReset = viewContainerModel.allViewDescriptors[0];
+        const defaultContainer = this.viewDescriptorService.getDefaultContainerById(viewToReset.id);
+        if (defaultContainer !== viewContainer) {
+          actions.push(toAction({
+            id: "resetLocationAction",
+            label: localize("resetLocation", "Reset Location"),
+            run: /* @__PURE__ */ __name(() => {
+              this.viewDescriptorService.moveViewsToContainer([viewToReset], defaultContainer, void 0, "resetLocationAction");
+              this.viewService.openViewContainer(viewContainer.id, true);
+            }, "run")
+          }));
+        }
+      }
+    }
+    return actions;
+  }
+  createMoveAction(viewContainer, newLocation, defaultLocation) {
+    return toAction({
+      id: `moveViewContainerTo${newLocation}`,
+      label: newLocation === ViewContainerLocation.Panel ? localize("panel", "Panel") : newLocation === ViewContainerLocation.Sidebar ? localize("sidebar", "Primary Side Bar") : localize("auxiliarybar", "Secondary Side Bar"),
+      run: /* @__PURE__ */ __name(() => {
+        let index;
+        if (newLocation !== defaultLocation) {
+          index = this.viewDescriptorService.getViewContainersByLocation(newLocation).length;
+        } else {
+          index = void 0;
+        }
+        this.viewDescriptorService.moveViewContainerToLocation(viewContainer, newLocation, index);
+        this.viewService.openViewContainer(viewContainer.id, true);
+      }, "run")
+    });
+  }
+  registerListeners() {
+    this._register(this.viewDescriptorService.onDidChangeViewContainers(({ added, removed }) => this.onDidChangeViewContainers(added, removed)));
+    this._register(this.viewDescriptorService.onDidChangeContainerLocation(({ viewContainer, from, to }) => this.onDidChangeViewContainerLocation(viewContainer, from, to)));
+    this._register(this.paneCompositePart.onDidPaneCompositeOpen((e) => this.onDidChangeViewContainerVisibility(e.getId(), true)));
+    this._register(this.paneCompositePart.onDidPaneCompositeClose((e) => this.onDidChangeViewContainerVisibility(e.getId(), false)));
+    this.extensionService.whenInstalledExtensionsRegistered().then(() => {
+      if (this._store.isDisposed) {
+        return;
+      }
+      this.onDidRegisterExtensions();
+      this._register(this.compositeBar.onDidChange(() => {
+        this.updateCompositeBarItemsFromStorage(true);
+        this.saveCachedViewContainers();
+      }));
+      this._register(this.storageService.onDidChangeValue(StorageScope.PROFILE, this.options.pinnedViewContainersKey, this._store)(() => this.updateCompositeBarItemsFromStorage(false)));
+    });
+  }
+  onDidChangeViewContainers(added, removed) {
+    removed.filter(({ location }) => location === this.location).forEach(({ container }) => this.onDidDeregisterViewContainer(container));
+    this.onDidRegisterViewContainers(added.filter(({ location }) => location === this.location).map(({ container }) => container));
+  }
+  onDidChangeViewContainerLocation(container, from, to) {
+    if (from === this.location) {
+      this.onDidDeregisterViewContainer(container);
+    }
+    if (to === this.location) {
+      this.onDidRegisterViewContainers([container]);
+    }
+  }
+  onDidChangeViewContainerVisibility(id, visible) {
+    if (visible) {
+      this.onDidViewContainerVisible(id);
+    } else {
+      this.compositeBar.deactivateComposite(id);
+    }
+  }
+  onDidRegisterExtensions() {
+    this.hasExtensionsRegistered = true;
+    for (const { id } of this.cachedViewContainers) {
+      const viewContainer = this.getViewContainer(id);
+      if (viewContainer) {
+        this.showOrHideViewContainer(viewContainer);
+      } else {
+        if (this.viewDescriptorService.isViewContainerRemovedPermanently(id)) {
+          this.removeComposite(id);
+        } else {
+          this.hideComposite(id);
+        }
+      }
+    }
+    this.saveCachedViewContainers();
+  }
+  onDidViewContainerVisible(id) {
+    const viewContainer = this.getViewContainer(id);
+    if (viewContainer) {
+      this.addComposite(viewContainer);
+      this.compositeBar.activateComposite(viewContainer.id);
+      if (this.shouldBeHidden(viewContainer)) {
+        const viewContainerModel = this.viewDescriptorService.getViewContainerModel(viewContainer);
+        if (viewContainerModel.activeViewDescriptors.length === 0) {
+          this.hideComposite(viewContainer.id);
+        }
+      }
+    }
+  }
+  create(parent) {
+    return this.compositeBar.create(parent);
+  }
+  getCompositeActions(compositeId) {
+    let compositeActions = this.compositeActions.get(compositeId);
+    if (!compositeActions) {
+      const viewContainer = this.getViewContainer(compositeId);
+      if (viewContainer) {
+        const viewContainerModel = this.viewDescriptorService.getViewContainerModel(viewContainer);
+        compositeActions = {
+          activityAction: this._register(this.instantiationService.createInstance(ViewContainerActivityAction, this.toCompositeBarActionItemFrom(viewContainerModel), this.part, this.paneCompositePart)),
+          pinnedAction: this._register(new ToggleCompositePinnedAction(this.toCompositeBarActionItemFrom(viewContainerModel), this.compositeBar)),
+          badgeAction: this._register(new ToggleCompositeBadgeAction(this.toCompositeBarActionItemFrom(viewContainerModel), this.compositeBar))
+        };
+      } else {
+        const cachedComposite = this.cachedViewContainers.filter((c) => c.id === compositeId)[0];
+        compositeActions = {
+          activityAction: this._register(this.instantiationService.createInstance(PlaceHolderViewContainerActivityAction, this.toCompositeBarActionItem(compositeId, cachedComposite?.name ?? compositeId, cachedComposite?.icon, void 0), this.part, this.paneCompositePart)),
+          pinnedAction: this._register(new PlaceHolderToggleCompositePinnedAction(compositeId, this.compositeBar)),
+          badgeAction: this._register(new PlaceHolderToggleCompositeBadgeAction(compositeId, this.compositeBar))
+        };
+      }
+      this.compositeActions.set(compositeId, compositeActions);
+    }
+    return compositeActions;
+  }
+  onDidRegisterViewContainers(viewContainers) {
+    for (const viewContainer of viewContainers) {
+      this.addComposite(viewContainer);
+      const cachedViewContainer = this.cachedViewContainers.filter(({ id }) => id === viewContainer.id)[0];
+      if (!cachedViewContainer) {
+        this.compositeBar.pin(viewContainer.id);
+      }
+      const visibleViewContainer = this.paneCompositePart.getActivePaneComposite();
+      if (visibleViewContainer?.getId() === viewContainer.id) {
+        this.compositeBar.activateComposite(viewContainer.id);
+      }
+      const viewContainerModel = this.viewDescriptorService.getViewContainerModel(viewContainer);
+      this.updateCompositeBarActionItem(viewContainer, viewContainerModel);
+      this.showOrHideViewContainer(viewContainer);
+      const disposables = new DisposableStore();
+      disposables.add(viewContainerModel.onDidChangeContainerInfo(() => this.updateCompositeBarActionItem(viewContainer, viewContainerModel)));
+      disposables.add(viewContainerModel.onDidChangeActiveViewDescriptors(() => this.showOrHideViewContainer(viewContainer)));
+      this.viewContainerDisposables.set(viewContainer.id, disposables);
+    }
+  }
+  onDidDeregisterViewContainer(viewContainer) {
+    this.viewContainerDisposables.deleteAndDispose(viewContainer.id);
+    this.removeComposite(viewContainer.id);
+  }
+  updateCompositeBarActionItem(viewContainer, viewContainerModel) {
+    const compositeBarActionItem = this.toCompositeBarActionItemFrom(viewContainerModel);
+    const { activityAction, pinnedAction } = this.getCompositeActions(viewContainer.id);
+    activityAction.updateCompositeBarActionItem(compositeBarActionItem);
+    if (pinnedAction instanceof PlaceHolderToggleCompositePinnedAction) {
+      pinnedAction.setActivity(compositeBarActionItem);
+    }
+    if (this.options.recomputeSizes) {
+      this.compositeBar.recomputeSizes();
+    }
+    this.saveCachedViewContainers();
+  }
+  toCompositeBarActionItemFrom(viewContainerModel) {
+    return this.toCompositeBarActionItem(viewContainerModel.viewContainer.id, viewContainerModel.title, viewContainerModel.icon, viewContainerModel.keybindingId);
+  }
+  toCompositeBarActionItem(id, name, icon, keybindingId) {
+    let classNames = void 0;
+    let iconUrl = void 0;
+    if (this.options.icon) {
+      if (URI.isUri(icon)) {
+        iconUrl = icon;
+        const cssUrl = asCSSUrl(icon);
+        const hash = new StringSHA1();
+        hash.update(cssUrl);
+        const iconId = `activity-${id.replace(/\./g, "-")}-${hash.digest()}`;
+        const iconClass = `.monaco-workbench .${this.options.partContainerClass} .monaco-action-bar .action-label.${iconId}`;
+        classNames = [iconId, "uri-icon"];
+        createCSSRule(iconClass, `
+				mask: ${cssUrl} no-repeat 50% 50%;
 				mask-size: ${this.options.iconSize}px;
-				-webkit-mask: ${r} no-repeat 50% 50%;
+				-webkit-mask: ${cssUrl} no-repeat 50% 50%;
 				-webkit-mask-size: ${this.options.iconSize}px;
 				mask-origin: padding;
 				-webkit-mask-origin: padding;
-			`)}else y.isThemeIcon(t)&&(n=y.asClassNameArray(t));return{id:e,name:i,classNames:n,iconUrl:s,keybindingId:o}}showOrHideViewContainer(e){this.shouldBeHidden(e)?this.hideComposite(e.id):(this.addComposite(e),this.paneCompositePart.getActivePaneComposite()?.getId()===e.id&&this.compositeBar.activateComposite(e.id))}shouldBeHidden(e,i){const t=A(e)?this.getViewContainer(e):e,o=A(e)?e:e.id;if(t)if(t.hideIfEmpty){if(this.viewService.isViewContainerActive(o))return!1}else return!1;if(!this.hasExtensionsRegistered&&!(this.part===g.SIDEBAR_PART&&this.environmentService.remoteAuthority&&ee)){if(i=i||this.cachedViewContainers.find(({id:n})=>n===o),!t&&i?.isBuiltin&&i?.visible)return!1;if(i?.views?.length)return i.views.every(({when:n})=>!!n&&!this.contextKeyService.contextMatchesRules(Q.deserialize(n)))}return!0}addComposite(e){this.compositeBar.addComposite({id:e.id,name:typeof e.title=="string"?e.title:e.title.value,order:e.order,requestedIndex:e.requestedIndex})}hideComposite(e){this.compositeBar.hideComposite(e);const i=this.compositeActions.get(e);i&&(i.activityAction.dispose(),i.pinnedAction.dispose(),this.compositeActions.delete(e))}removeComposite(e){this.compositeBar.removeComposite(e);const i=this.compositeActions.get(e);i&&(i.activityAction.dispose(),i.pinnedAction.dispose(),this.compositeActions.delete(e))}getPinnedPaneCompositeIds(){const e=this.compositeBar.getPinnedComposites().map(i=>i.id);return this.getViewContainers().filter(i=>this.compositeBar.isPinned(i.id)).sort((i,t)=>e.indexOf(i.id)-e.indexOf(t.id)).map(i=>i.id)}getVisiblePaneCompositeIds(){return this.compositeBar.getVisibleComposites().filter(e=>this.paneCompositePart.getActivePaneComposite()?.getId()===e.id||this.compositeBar.isPinned(e.id)).map(e=>e.id)}getPaneCompositeIds(){return this.compositeBar.getVisibleComposites().map(e=>e.id)}getContextMenuActions(){return this.compositeBar.getContextMenuActions()}focus(e){this.compositeBar.focus(e)}layout(e,i){this.compositeBar.layout(new K(e,i))}getViewContainer(e){const i=this.viewDescriptorService.getViewContainerById(e);return i&&this.viewDescriptorService.getViewContainerLocation(i)===this.location?i:void 0}getViewContainers(){return this.viewDescriptorService.getViewContainersByLocation(this.location)}updateCompositeBarItemsFromStorage(e){if(this.pinnedViewContainersValue===this.getStoredPinnedViewContainersValue())return;this._placeholderViewContainersValue=void 0,this._pinnedViewContainersValue=void 0,this._cachedViewContainers=void 0;const i=[],t=this.compositeBar.getCompositeBarItems();for(const o of this.cachedViewContainers)i.push({id:o.id,name:o.name,order:o.order,pinned:o.pinned,visible:o.visible&&!!this.getViewContainer(o.id)});for(const o of this.getViewContainers())if(!i.some(({id:n})=>n===o.id)){const n=t.findIndex(({id:s})=>s===o.id);if(n!==-1){const s=t[n];i.splice(n,0,{id:o.id,name:typeof o.title=="string"?o.title:o.title.value,order:s.order,pinned:s.pinned,visible:s.visible})}else i.push({id:o.id,name:typeof o.title=="string"?o.title:o.title.value,order:o.order,pinned:!0,visible:!this.shouldBeHidden(o)})}if(e)for(const o of t)i.find(({id:s})=>s===o.id)||i.push(o);this.compositeBar.setCompositeBarItems(i)}saveCachedViewContainers(){const e=[],i=this.compositeBar.getCompositeBarItems();for(const t of i){const o=this.getViewContainer(t.id);if(o){const n=this.viewDescriptorService.getViewContainerModel(o),s=[];for(const{when:r}of n.allViewDescriptors)s.push({when:r?r.serialize():void 0});e.push({id:t.id,name:n.title,icon:u.isUri(n.icon)&&this.environmentService.remoteAuthority?void 0:n.icon,views:s,pinned:t.pinned,order:t.order,visible:t.visible,isBuiltin:!o.extensionId})}else e.push({id:t.id,name:t.name,pinned:t.pinned,order:t.order,visible:!1,isBuiltin:!1})}this.storeCachedViewContainersState(e)}_cachedViewContainers=void 0;get cachedViewContainers(){if(this._cachedViewContainers===void 0){this._cachedViewContainers=this.getPinnedViewContainers();for(const e of this.getPlaceholderViewContainers()){const i=this._cachedViewContainers.find(t=>t.id===e.id);i&&(i.visible=e.visible??i.visible,i.name=e.name,i.icon=e.themeIcon?e.themeIcon:e.iconUrl?u.revive(e.iconUrl):void 0,u.isUri(i.icon)&&this.environmentService.remoteAuthority&&(i.icon=void 0),i.views=e.views,i.isBuiltin=e.isBuiltin)}for(const e of this.getViewContainersWorkspaceState()){const i=this._cachedViewContainers.find(t=>t.id===e.id);i&&(i.visible=e.visible??i.visible)}}return this._cachedViewContainers}storeCachedViewContainersState(e){const i=this.getPinnedViewContainers();this.setPinnedViewContainers(e.map(({id:t,pinned:o,order:n})=>({id:t,pinned:o,visible:!!i.find(({id:s})=>s===t)?.visible,order:n}))),this.setPlaceholderViewContainers(e.map(({id:t,icon:o,name:n,views:s,isBuiltin:r})=>({id:t,iconUrl:u.isUri(o)?o:void 0,themeIcon:y.isThemeIcon(o)?o:void 0,name:n,isBuiltin:r,views:s}))),this.setViewContainersWorkspaceState(e.map(({id:t,visible:o})=>({id:t,visible:o})))}getPinnedViewContainers(){return JSON.parse(this.pinnedViewContainersValue)}setPinnedViewContainers(e){this.pinnedViewContainersValue=JSON.stringify(e)}_pinnedViewContainersValue;get pinnedViewContainersValue(){return this._pinnedViewContainersValue||(this._pinnedViewContainersValue=this.getStoredPinnedViewContainersValue()),this._pinnedViewContainersValue}set pinnedViewContainersValue(e){this.pinnedViewContainersValue!==e&&(this._pinnedViewContainersValue=e,this.setStoredPinnedViewContainersValue(e))}getStoredPinnedViewContainersValue(){return this.storageService.get(this.options.pinnedViewContainersKey,m.PROFILE,"[]")}setStoredPinnedViewContainersValue(e){this.storageService.store(this.options.pinnedViewContainersKey,e,m.PROFILE,S.USER)}getPlaceholderViewContainers(){return JSON.parse(this.placeholderViewContainersValue)}setPlaceholderViewContainers(e){this.placeholderViewContainersValue=JSON.stringify(e)}_placeholderViewContainersValue;get placeholderViewContainersValue(){return this._placeholderViewContainersValue||(this._placeholderViewContainersValue=this.getStoredPlaceholderViewContainersValue()),this._placeholderViewContainersValue}set placeholderViewContainersValue(e){this.placeholderViewContainersValue!==e&&(this._placeholderViewContainersValue=e,this.setStoredPlaceholderViewContainersValue(e))}getStoredPlaceholderViewContainersValue(){return this.storageService.get(this.options.placeholderViewContainersKey,m.PROFILE,"[]")}setStoredPlaceholderViewContainersValue(e){this.storageService.store(this.options.placeholderViewContainersKey,e,m.PROFILE,S.MACHINE)}getViewContainersWorkspaceState(){return JSON.parse(this.viewContainersWorkspaceStateValue)}setViewContainersWorkspaceState(e){this.viewContainersWorkspaceStateValue=JSON.stringify(e)}_viewContainersWorkspaceStateValue;get viewContainersWorkspaceStateValue(){return this._viewContainersWorkspaceStateValue||(this._viewContainersWorkspaceStateValue=this.getStoredViewContainersWorkspaceStateValue()),this._viewContainersWorkspaceStateValue}set viewContainersWorkspaceStateValue(e){this.viewContainersWorkspaceStateValue!==e&&(this._viewContainersWorkspaceStateValue=e,this.setStoredViewContainersWorkspaceStateValue(e))}getStoredViewContainersWorkspaceStateValue(){return this.storageService.get(this.options.viewContainersWorkspaceStateKey,m.WORKSPACE,"[]")}setStoredViewContainersWorkspaceStateValue(e){this.storageService.store(this.options.viewContainersWorkspaceStateKey,e,m.WORKSPACE,S.MACHINE)}};V=I([c(3,W),c(4,q),c(5,G),c(6,X),c(7,se),c(8,j),c(9,Z),c(10,D)],V);let h=class extends Y{constructor(e,i,t,o,n,s){super(e);this.part=i;this.paneCompositePart=t;this.layoutService=o;this.configurationService=n;this.activityService=s;this.updateActivity(),this._register(this.activityService.onDidChangeActivity(r=>{!A(r)&&r.id===this.compositeBarActionItem.id&&this.updateActivity()}))}static preventDoubleClickDelay=300;lastRun=0;updateCompositeBarActionItem(e){this.compositeBarActionItem=e}updateActivity(){this.activities=this.activityService.getViewContainerActivities(this.compositeBarActionItem.id)}async run(e){if(N(e)&&e.button===2)return;const i=Date.now();if(i>this.lastRun&&i-this.lastRun<h.preventDoubleClickDelay)return;this.lastRun=i;const t=e&&"preserveFocus"in e?!e.preserveFocus:!0;if(this.part===g.ACTIVITYBAR_PART){const o=this.layoutService.isVisible(g.SIDEBAR_PART),n=this.paneCompositePart.getActivePaneComposite(),s=this.configurationService.getValue("workbench.activityBar.iconClickBehavior");if(o&&n?.getId()===this.compositeBarActionItem.id){switch(s){case"focus":this.paneCompositePart.openPaneComposite(this.compositeBarActionItem.id,t);break;case"toggle":default:this.layoutService.setPartHidden(!0,g.SIDEBAR_PART);break}return}}return await this.paneCompositePart.openPaneComposite(this.compositeBarActionItem.id,t),this.activate()}};h=I([c(3,D),c(4,ne),c(5,M)],h);class re extends h{}class _ extends x{constructor(a,e){super({id:a,name:a,classNames:void 0},e)}setActivity(a){this.label=a.name}}class ae extends k{constructor(a,e){super({id:a,name:a,classNames:void 0},e)}setCompositeBarActionItem(a){this.label=a.name}}export{V as PaneCompositeBar};
+			`);
+      } else if (ThemeIcon.isThemeIcon(icon)) {
+        classNames = ThemeIcon.asClassNameArray(icon);
+      }
+    }
+    return { id, name, classNames, iconUrl, keybindingId };
+  }
+  showOrHideViewContainer(viewContainer) {
+    if (this.shouldBeHidden(viewContainer)) {
+      this.hideComposite(viewContainer.id);
+    } else {
+      this.addComposite(viewContainer);
+      const activePaneComposite = this.paneCompositePart.getActivePaneComposite();
+      if (activePaneComposite?.getId() === viewContainer.id) {
+        this.compositeBar.activateComposite(viewContainer.id);
+      }
+    }
+  }
+  shouldBeHidden(viewContainerOrId, cachedViewContainer) {
+    const viewContainer = isString(viewContainerOrId) ? this.getViewContainer(viewContainerOrId) : viewContainerOrId;
+    const viewContainerId = isString(viewContainerOrId) ? viewContainerOrId : viewContainerOrId.id;
+    if (viewContainer) {
+      if (viewContainer.hideIfEmpty) {
+        if (this.viewService.isViewContainerActive(viewContainerId)) {
+          return false;
+        }
+      } else {
+        return false;
+      }
+    }
+    if (!this.hasExtensionsRegistered && !(this.part === Parts.SIDEBAR_PART && this.environmentService.remoteAuthority && isNative)) {
+      cachedViewContainer = cachedViewContainer || this.cachedViewContainers.find(({ id }) => id === viewContainerId);
+      if (!viewContainer && cachedViewContainer?.isBuiltin && cachedViewContainer?.visible) {
+        return false;
+      }
+      if (cachedViewContainer?.views?.length) {
+        return cachedViewContainer.views.every(({ when }) => !!when && !this.contextKeyService.contextMatchesRules(ContextKeyExpr.deserialize(when)));
+      }
+    }
+    return true;
+  }
+  addComposite(viewContainer) {
+    this.compositeBar.addComposite({ id: viewContainer.id, name: typeof viewContainer.title === "string" ? viewContainer.title : viewContainer.title.value, order: viewContainer.order, requestedIndex: viewContainer.requestedIndex });
+  }
+  hideComposite(compositeId) {
+    this.compositeBar.hideComposite(compositeId);
+    const compositeActions = this.compositeActions.get(compositeId);
+    if (compositeActions) {
+      compositeActions.activityAction.dispose();
+      compositeActions.pinnedAction.dispose();
+      this.compositeActions.delete(compositeId);
+    }
+  }
+  removeComposite(compositeId) {
+    this.compositeBar.removeComposite(compositeId);
+    const compositeActions = this.compositeActions.get(compositeId);
+    if (compositeActions) {
+      compositeActions.activityAction.dispose();
+      compositeActions.pinnedAction.dispose();
+      this.compositeActions.delete(compositeId);
+    }
+  }
+  getPinnedPaneCompositeIds() {
+    const pinnedCompositeIds = this.compositeBar.getPinnedComposites().map((v) => v.id);
+    return this.getViewContainers().filter((v) => this.compositeBar.isPinned(v.id)).sort((v1, v2) => pinnedCompositeIds.indexOf(v1.id) - pinnedCompositeIds.indexOf(v2.id)).map((v) => v.id);
+  }
+  getVisiblePaneCompositeIds() {
+    return this.compositeBar.getVisibleComposites().filter((v) => this.paneCompositePart.getActivePaneComposite()?.getId() === v.id || this.compositeBar.isPinned(v.id)).map((v) => v.id);
+  }
+  getPaneCompositeIds() {
+    return this.compositeBar.getVisibleComposites().map((v) => v.id);
+  }
+  getContextMenuActions() {
+    return this.compositeBar.getContextMenuActions();
+  }
+  focus(index) {
+    this.compositeBar.focus(index);
+  }
+  layout(width, height) {
+    this.compositeBar.layout(new Dimension(width, height));
+  }
+  getViewContainer(id) {
+    const viewContainer = this.viewDescriptorService.getViewContainerById(id);
+    return viewContainer && this.viewDescriptorService.getViewContainerLocation(viewContainer) === this.location ? viewContainer : void 0;
+  }
+  getViewContainers() {
+    return this.viewDescriptorService.getViewContainersByLocation(this.location);
+  }
+  updateCompositeBarItemsFromStorage(retainExisting) {
+    if (this.pinnedViewContainersValue === this.getStoredPinnedViewContainersValue()) {
+      return;
+    }
+    this._placeholderViewContainersValue = void 0;
+    this._pinnedViewContainersValue = void 0;
+    this._cachedViewContainers = void 0;
+    const newCompositeItems = [];
+    const compositeItems = this.compositeBar.getCompositeBarItems();
+    for (const cachedViewContainer of this.cachedViewContainers) {
+      newCompositeItems.push({
+        id: cachedViewContainer.id,
+        name: cachedViewContainer.name,
+        order: cachedViewContainer.order,
+        pinned: cachedViewContainer.pinned,
+        visible: cachedViewContainer.visible && !!this.getViewContainer(cachedViewContainer.id)
+      });
+    }
+    for (const viewContainer of this.getViewContainers()) {
+      if (!newCompositeItems.some(({ id }) => id === viewContainer.id)) {
+        const index = compositeItems.findIndex(({ id }) => id === viewContainer.id);
+        if (index !== -1) {
+          const compositeItem = compositeItems[index];
+          newCompositeItems.splice(index, 0, {
+            id: viewContainer.id,
+            name: typeof viewContainer.title === "string" ? viewContainer.title : viewContainer.title.value,
+            order: compositeItem.order,
+            pinned: compositeItem.pinned,
+            visible: compositeItem.visible
+          });
+        } else {
+          newCompositeItems.push({
+            id: viewContainer.id,
+            name: typeof viewContainer.title === "string" ? viewContainer.title : viewContainer.title.value,
+            order: viewContainer.order,
+            pinned: true,
+            visible: !this.shouldBeHidden(viewContainer)
+          });
+        }
+      }
+    }
+    if (retainExisting) {
+      for (const compositeItem of compositeItems) {
+        const newCompositeItem = newCompositeItems.find(({ id }) => id === compositeItem.id);
+        if (!newCompositeItem) {
+          newCompositeItems.push(compositeItem);
+        }
+      }
+    }
+    this.compositeBar.setCompositeBarItems(newCompositeItems);
+  }
+  saveCachedViewContainers() {
+    const state = [];
+    const compositeItems = this.compositeBar.getCompositeBarItems();
+    for (const compositeItem of compositeItems) {
+      const viewContainer = this.getViewContainer(compositeItem.id);
+      if (viewContainer) {
+        const viewContainerModel = this.viewDescriptorService.getViewContainerModel(viewContainer);
+        const views = [];
+        for (const { when } of viewContainerModel.allViewDescriptors) {
+          views.push({ when: when ? when.serialize() : void 0 });
+        }
+        state.push({
+          id: compositeItem.id,
+          name: viewContainerModel.title,
+          icon: URI.isUri(viewContainerModel.icon) && this.environmentService.remoteAuthority ? void 0 : viewContainerModel.icon,
+          // Do not cache uri icons with remote connection
+          views,
+          pinned: compositeItem.pinned,
+          order: compositeItem.order,
+          visible: compositeItem.visible,
+          isBuiltin: !viewContainer.extensionId
+        });
+      } else {
+        state.push({ id: compositeItem.id, name: compositeItem.name, pinned: compositeItem.pinned, order: compositeItem.order, visible: false, isBuiltin: false });
+      }
+    }
+    this.storeCachedViewContainersState(state);
+  }
+  _cachedViewContainers = void 0;
+  get cachedViewContainers() {
+    if (this._cachedViewContainers === void 0) {
+      this._cachedViewContainers = this.getPinnedViewContainers();
+      for (const placeholderViewContainer of this.getPlaceholderViewContainers()) {
+        const cachedViewContainer = this._cachedViewContainers.find((cached) => cached.id === placeholderViewContainer.id);
+        if (cachedViewContainer) {
+          cachedViewContainer.visible = placeholderViewContainer.visible ?? cachedViewContainer.visible;
+          cachedViewContainer.name = placeholderViewContainer.name;
+          cachedViewContainer.icon = placeholderViewContainer.themeIcon ? placeholderViewContainer.themeIcon : placeholderViewContainer.iconUrl ? URI.revive(placeholderViewContainer.iconUrl) : void 0;
+          if (URI.isUri(cachedViewContainer.icon) && this.environmentService.remoteAuthority) {
+            cachedViewContainer.icon = void 0;
+          }
+          cachedViewContainer.views = placeholderViewContainer.views;
+          cachedViewContainer.isBuiltin = placeholderViewContainer.isBuiltin;
+        }
+      }
+      for (const viewContainerWorkspaceState of this.getViewContainersWorkspaceState()) {
+        const cachedViewContainer = this._cachedViewContainers.find((cached) => cached.id === viewContainerWorkspaceState.id);
+        if (cachedViewContainer) {
+          cachedViewContainer.visible = viewContainerWorkspaceState.visible ?? cachedViewContainer.visible;
+        }
+      }
+    }
+    return this._cachedViewContainers;
+  }
+  storeCachedViewContainersState(cachedViewContainers) {
+    const pinnedViewContainers = this.getPinnedViewContainers();
+    this.setPinnedViewContainers(cachedViewContainers.map(({ id, pinned, order }) => ({
+      id,
+      pinned,
+      visible: Boolean(pinnedViewContainers.find(({ id: pinnedId }) => pinnedId === id)?.visible),
+      order
+    })));
+    this.setPlaceholderViewContainers(cachedViewContainers.map(({ id, icon, name, views, isBuiltin }) => ({
+      id,
+      iconUrl: URI.isUri(icon) ? icon : void 0,
+      themeIcon: ThemeIcon.isThemeIcon(icon) ? icon : void 0,
+      name,
+      isBuiltin,
+      views
+    })));
+    this.setViewContainersWorkspaceState(cachedViewContainers.map(({ id, visible }) => ({
+      id,
+      visible
+    })));
+  }
+  getPinnedViewContainers() {
+    return JSON.parse(this.pinnedViewContainersValue);
+  }
+  setPinnedViewContainers(pinnedViewContainers) {
+    this.pinnedViewContainersValue = JSON.stringify(pinnedViewContainers);
+  }
+  _pinnedViewContainersValue;
+  get pinnedViewContainersValue() {
+    if (!this._pinnedViewContainersValue) {
+      this._pinnedViewContainersValue = this.getStoredPinnedViewContainersValue();
+    }
+    return this._pinnedViewContainersValue;
+  }
+  set pinnedViewContainersValue(pinnedViewContainersValue) {
+    if (this.pinnedViewContainersValue !== pinnedViewContainersValue) {
+      this._pinnedViewContainersValue = pinnedViewContainersValue;
+      this.setStoredPinnedViewContainersValue(pinnedViewContainersValue);
+    }
+  }
+  getStoredPinnedViewContainersValue() {
+    return this.storageService.get(this.options.pinnedViewContainersKey, StorageScope.PROFILE, "[]");
+  }
+  setStoredPinnedViewContainersValue(value) {
+    this.storageService.store(this.options.pinnedViewContainersKey, value, StorageScope.PROFILE, StorageTarget.USER);
+  }
+  getPlaceholderViewContainers() {
+    return JSON.parse(this.placeholderViewContainersValue);
+  }
+  setPlaceholderViewContainers(placeholderViewContainers) {
+    this.placeholderViewContainersValue = JSON.stringify(placeholderViewContainers);
+  }
+  _placeholderViewContainersValue;
+  get placeholderViewContainersValue() {
+    if (!this._placeholderViewContainersValue) {
+      this._placeholderViewContainersValue = this.getStoredPlaceholderViewContainersValue();
+    }
+    return this._placeholderViewContainersValue;
+  }
+  set placeholderViewContainersValue(placeholderViewContainesValue) {
+    if (this.placeholderViewContainersValue !== placeholderViewContainesValue) {
+      this._placeholderViewContainersValue = placeholderViewContainesValue;
+      this.setStoredPlaceholderViewContainersValue(placeholderViewContainesValue);
+    }
+  }
+  getStoredPlaceholderViewContainersValue() {
+    return this.storageService.get(this.options.placeholderViewContainersKey, StorageScope.PROFILE, "[]");
+  }
+  setStoredPlaceholderViewContainersValue(value) {
+    this.storageService.store(this.options.placeholderViewContainersKey, value, StorageScope.PROFILE, StorageTarget.MACHINE);
+  }
+  getViewContainersWorkspaceState() {
+    return JSON.parse(this.viewContainersWorkspaceStateValue);
+  }
+  setViewContainersWorkspaceState(viewContainersWorkspaceState) {
+    this.viewContainersWorkspaceStateValue = JSON.stringify(viewContainersWorkspaceState);
+  }
+  _viewContainersWorkspaceStateValue;
+  get viewContainersWorkspaceStateValue() {
+    if (!this._viewContainersWorkspaceStateValue) {
+      this._viewContainersWorkspaceStateValue = this.getStoredViewContainersWorkspaceStateValue();
+    }
+    return this._viewContainersWorkspaceStateValue;
+  }
+  set viewContainersWorkspaceStateValue(viewContainersWorkspaceStateValue) {
+    if (this.viewContainersWorkspaceStateValue !== viewContainersWorkspaceStateValue) {
+      this._viewContainersWorkspaceStateValue = viewContainersWorkspaceStateValue;
+      this.setStoredViewContainersWorkspaceStateValue(viewContainersWorkspaceStateValue);
+    }
+  }
+  getStoredViewContainersWorkspaceStateValue() {
+    return this.storageService.get(this.options.viewContainersWorkspaceStateKey, StorageScope.WORKSPACE, "[]");
+  }
+  setStoredViewContainersWorkspaceStateValue(value) {
+    this.storageService.store(this.options.viewContainersWorkspaceStateKey, value, StorageScope.WORKSPACE, StorageTarget.MACHINE);
+  }
+};
+PaneCompositeBar = __decorateClass([
+  __decorateParam(3, IInstantiationService),
+  __decorateParam(4, IStorageService),
+  __decorateParam(5, IExtensionService),
+  __decorateParam(6, IViewDescriptorService),
+  __decorateParam(7, IViewsService),
+  __decorateParam(8, IContextKeyService),
+  __decorateParam(9, IWorkbenchEnvironmentService),
+  __decorateParam(10, IWorkbenchLayoutService)
+], PaneCompositeBar);
+let ViewContainerActivityAction = class extends CompositeBarAction {
+  constructor(compositeBarActionItem, part, paneCompositePart, layoutService, configurationService, activityService) {
+    super(compositeBarActionItem);
+    this.part = part;
+    this.paneCompositePart = paneCompositePart;
+    this.layoutService = layoutService;
+    this.configurationService = configurationService;
+    this.activityService = activityService;
+    this.updateActivity();
+    this._register(this.activityService.onDidChangeActivity((viewContainerOrAction) => {
+      if (!isString(viewContainerOrAction) && viewContainerOrAction.id === this.compositeBarActionItem.id) {
+        this.updateActivity();
+      }
+    }));
+  }
+  static {
+    __name(this, "ViewContainerActivityAction");
+  }
+  static preventDoubleClickDelay = 300;
+  lastRun = 0;
+  updateCompositeBarActionItem(compositeBarActionItem) {
+    this.compositeBarActionItem = compositeBarActionItem;
+  }
+  updateActivity() {
+    this.activities = this.activityService.getViewContainerActivities(this.compositeBarActionItem.id);
+  }
+  async run(event) {
+    if (isMouseEvent(event) && event.button === 2) {
+      return;
+    }
+    const now = Date.now();
+    if (now > this.lastRun && now - this.lastRun < ViewContainerActivityAction.preventDoubleClickDelay) {
+      return;
+    }
+    this.lastRun = now;
+    const focus = event && "preserveFocus" in event ? !event.preserveFocus : true;
+    if (this.part === Parts.ACTIVITYBAR_PART) {
+      const sideBarVisible = this.layoutService.isVisible(Parts.SIDEBAR_PART);
+      const activeViewlet = this.paneCompositePart.getActivePaneComposite();
+      const focusBehavior = this.configurationService.getValue("workbench.activityBar.iconClickBehavior");
+      if (sideBarVisible && activeViewlet?.getId() === this.compositeBarActionItem.id) {
+        switch (focusBehavior) {
+          case "focus":
+            this.paneCompositePart.openPaneComposite(this.compositeBarActionItem.id, focus);
+            break;
+          case "toggle":
+          default:
+            this.layoutService.setPartHidden(true, Parts.SIDEBAR_PART);
+            break;
+        }
+        return;
+      }
+    }
+    await this.paneCompositePart.openPaneComposite(this.compositeBarActionItem.id, focus);
+    return this.activate();
+  }
+};
+ViewContainerActivityAction = __decorateClass([
+  __decorateParam(3, IWorkbenchLayoutService),
+  __decorateParam(4, IConfigurationService),
+  __decorateParam(5, IActivityService)
+], ViewContainerActivityAction);
+class PlaceHolderViewContainerActivityAction extends ViewContainerActivityAction {
+  static {
+    __name(this, "PlaceHolderViewContainerActivityAction");
+  }
+}
+class PlaceHolderToggleCompositePinnedAction extends ToggleCompositePinnedAction {
+  static {
+    __name(this, "PlaceHolderToggleCompositePinnedAction");
+  }
+  constructor(id, compositeBar) {
+    super({ id, name: id, classNames: void 0 }, compositeBar);
+  }
+  setActivity(activity) {
+    this.label = activity.name;
+  }
+}
+class PlaceHolderToggleCompositeBadgeAction extends ToggleCompositeBadgeAction {
+  static {
+    __name(this, "PlaceHolderToggleCompositeBadgeAction");
+  }
+  constructor(id, compositeBar) {
+    super({ id, name: id, classNames: void 0 }, compositeBar);
+  }
+  setCompositeBarActionItem(actionItem) {
+    this.label = actionItem.name;
+  }
+}
+export {
+  PaneCompositeBar
+};
+//# sourceMappingURL=paneCompositeBar.js.map

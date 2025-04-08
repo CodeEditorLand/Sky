@@ -1,1 +1,448 @@
-var D=Object.defineProperty;var k=Object.getOwnPropertyDescriptor;var L=(u,d,e,i)=>{for(var t=i>1?void 0:i?k(d,e):d,r=u.length-1,n;r>=0;r--)(n=u[r])&&(t=(i?n(d,e,t):n(t))||t);return i&&t&&D(d,e,t),t},b=(u,d)=>(e,i)=>d(e,i,u);import{equalsIfDefined as A,itemEquals as B}from"../../../../../../base/common/equals.js";import{BugIndicatingError as N}from"../../../../../../base/common/errors.js";import{Event as H}from"../../../../../../base/common/event.js";import{Disposable as W}from"../../../../../../base/common/lifecycle.js";import{autorunWithStore as G,derived as h,derivedOpts as P,derivedWithStore as q,mapObservableArrayCached as U,observableValue as T}from"../../../../../../base/common/observable.js";import{IInstantiationService as j}from"../../../../../../platform/instantiation/common/instantiation.js";import"../../../../../browser/editorBrowser.js";import{observableCodeEditor as F}from"../../../../../browser/observableCodeEditor.js";import{EditorOption as w}from"../../../../../common/config/editorOptions.js";import{LineRange as X}from"../../../../../common/core/lineRange.js";import"../../../../../common/core/position.js";import{Range as I}from"../../../../../common/core/range.js";import{SingleTextEdit as m,StringText as f}from"../../../../../common/core/textEdit.js";import{TextLength as v}from"../../../../../common/core/textLength.js";import{lineRangeMappingFromRangeMappings as C,RangeMapping as $}from"../../../../../common/diff/rangeMapping.js";import{TextModel as x}from"../../../../../common/model/textModel.js";import{InlineEditsGutterIndicator as z}from"./components/gutterIndicatorView.js";import"./inlineEditWithChanges.js";import"./inlineEditsModel.js";import{InlineEditsOnboardingExperience as Z}from"./inlineEditsNewUsers.js";import{InlineEditTabAction as J}from"./inlineEditsViewInterface.js";import{InlineEditsCollapsedView as K}from"./inlineEditsViews/inlineEditsCollapsedView.js";import{InlineEditsDeletionView as Q}from"./inlineEditsViews/inlineEditsDeletionView.js";import{InlineEditsInsertionView as Y}from"./inlineEditsViews/inlineEditsInsertionView.js";import{InlineEditsLineReplacementView as ee}from"./inlineEditsViews/inlineEditsLineReplacementView.js";import{InlineEditsSideBySideView as M}from"./inlineEditsViews/inlineEditsSideBySideView.js";import{InlineEditsWordReplacementView as _}from"./inlineEditsViews/inlineEditsWordReplacementView.js";import{OriginalEditorInlineDiffView as ie}from"./inlineEditsViews/originalEditorInlineDiffView.js";import{applyEditToModifiedRangeMappings as te,createReindentEdit as ne}from"./utils/utils.js";import"./view.css";let R=class extends W{constructor(e,i,t,r,n,a){super();this._editor=e;this._host=i;this._model=t;this._ghostTextIndicator=r;this._focusIsInMenu=n;this._instantiationService=a;this._useCodeShifting=this._editorObs.getOption(w.inlineSuggest).map(s=>s.edits.allowCodeShifting),this._renderSideBySide=this._editorObs.getOption(w.inlineSuggest).map(s=>s.edits.renderSideBySide),this._useMultiLineGhostText=this._editorObs.getOption(w.inlineSuggest).map(s=>s.edits.useMultiLineGhostText),this._register(G((s,c)=>{const g=this._model.read(s);g&&c.add(H.any(this._sideBySide.onDidClick,this._deletion.onDidClick,this._lineReplacementView.onDidClick,this._insertion.onDidClick,...this._wordReplacementViews.read(s).map(o=>o.onDidClick),this._inlineDiffView.onDidClick)(o=>{this._viewHasBeenShownLongerThan(350)&&(o.preventDefault(),g.accept())}))})),this._indicator.recomputeInitiallyAndOnChange(this._store),this._wordReplacementViews.recomputeInitiallyAndOnChange(this._store),this._indicatorCyclicDependencyCircuitBreaker.set(!0,void 0),this._register(this._instantiationService.createInstance(Z,this._host,this._model,this._indicator,this._inlineCollapsedView)),this._constructorDone.set(!0,void 0)}_editorObs=F(this._editor);_useCodeShifting;_renderSideBySide;_useMultiLineGhostText;_tabAction=h(e=>this._model.read(e)?.tabAction.read(e)??J.Inactive);_previousView;_constructorDone=T(this,!1);_uiState=h(this,e=>{const i=this._model.read(e);if(!i||!this._constructorDone.read(e))return;i.handleInlineEditShown();const t=i.inlineEdit;let r=$.fromEdit(t.edit),n=t.edit.apply(t.originalText),a=C(r,t.originalText,new f(n));const s=t.originalText.lineRange.intersect(t.originalLineRange.join(X.ofLength(t.originalLineRange.startLineNumber,t.lineEdit.newLines.length)));let c=this.determineRenderState(i,e,a,new f(n),s);if(!c){i.abort(`unable to determine view: tried to render ${this._previousView?.view}`);return}if(c.kind==="sideBySide"){const o=ne(n,t.modifiedLineRange);n=o.applyToString(n),r=te(r,o),a=C(r,t.originalText,new f(n))}return this._previewTextModel.setLanguage(this._editor.getModel().getLanguageId()),this._previewTextModel.getValue()!==n&&this._previewTextModel.setValue(n),i.showCollapsed.read(e)&&!this._indicator.read(e)?.isHoverVisible.read(e)&&(c={kind:"collapsed"}),{state:c,diff:a,edit:t,newText:n,newTextLineCount:t.modifiedLineRange.length,originalDisplayRange:s}});_previewTextModel=this._register(this._instantiationService.createInstance(x,"",this._editor.getModel().getLanguageId(),{...x.DEFAULT_CREATION_OPTIONS,bracketPairColorizationOptions:{enabled:!0,independentColorPoolPerBracketType:!1}},null));_indicatorCyclicDependencyCircuitBreaker=T(this,!1);_indicator=q(this,(e,i)=>{if(!this._indicatorCyclicDependencyCircuitBreaker.read(e))return;const t=P({owner:this,equalsFn:A(B())},n=>{const a=this._ghostTextIndicator.read(n);if(a)return a.lineRange;const s=this._uiState.read(n);return s?.state?.kind==="insertionMultiLine"?this._insertion.originalLines.read(n):s?.originalDisplayRange}),r=h(this,n=>{const a=this._model.read(n);if(a)return a;const s=this._ghostTextIndicator.read(n);return s?s.model:a});return i.add(this._instantiationService.createInstance(z,this._editorObs,t,this._gutterIndicatorOffset,r,this._inlineEditsIsHovered,this._focusIsInMenu))});_inlineEditsIsHovered=h(this,e=>this._sideBySide.isHovered.read(e)||this._wordReplacementViews.read(e).some(i=>i.isHovered.read(e))||this._deletion.isHovered.read(e)||this._inlineDiffView.isHovered.read(e)||this._lineReplacementView.isHovered.read(e)||this._insertion.isHovered.read(e));_gutterIndicatorOffset=h(this,e=>this._uiState.read(e)?.state?.kind==="insertionMultiLine"?this._insertion.startLineOffset.read(e):0);_sideBySide=this._register(this._instantiationService.createInstance(M,this._editor,this._model.map(e=>e?.inlineEdit),this._previewTextModel,this._uiState.map(e=>e&&e.state?.kind==="sideBySide"?{newTextLineCount:e.newTextLineCount,originalDisplayRange:e.originalDisplayRange}:void 0),this._tabAction));_deletion=this._register(this._instantiationService.createInstance(Q,this._editor,this._model.map(e=>e?.inlineEdit),this._uiState.map(e=>e&&e.state?.kind==="deletion"?{originalRange:e.state.originalRange,deletions:e.state.deletions}:void 0),this._tabAction));_insertion=this._register(this._instantiationService.createInstance(Y,this._editor,this._uiState.map(e=>e&&e.state?.kind==="insertionMultiLine"?{lineNumber:e.state.lineNumber,startColumn:e.state.column,text:e.state.text}:void 0),this._tabAction));_inlineDiffViewState=h(this,e=>{const i=this._uiState.read(e);if(!(!i||!i.state)&&!(i.state.kind==="wordReplacements"||i.state.kind==="lineReplacement"||i.state.kind==="insertionMultiLine"||i.state.kind==="collapsed"))return{modifiedText:new f(i.newText),diff:i.diff,mode:i.state.kind,modifiedCodeEditor:this._sideBySide.previewEditor}});_inlineCollapsedView=this._register(this._instantiationService.createInstance(K,this._editor,this._model.map((e,i)=>this._uiState.read(i)?.state?.kind==="collapsed"?e?.inlineEdit:void 0)));_inlineDiffView=this._register(new ie(this._editor,this._inlineDiffViewState,this._previewTextModel));_wordReplacementViews=U(this,this._uiState.map(e=>e?.state?.kind==="wordReplacements"?e.state.replacements:[]),(e,i)=>i.add(this._instantiationService.createInstance(_,this._editorObs,e,this._tabAction)));_lineReplacementView=this._register(this._instantiationService.createInstance(ee,this._editorObs,this._uiState.map(e=>e?.state?.kind==="lineReplacement"?{originalRange:e.state.originalRange,modifiedRange:e.state.modifiedRange,modifiedLines:e.state.modifiedLines,replacements:e.state.replacements}:void 0),this._tabAction));getCacheId(e){return e.inlineEdit.inlineCompletion.id}determineView(e,i,t,r,n){const a=e.inlineEdit,s=this._previousView?.id===this.getCacheId(e),c=this._previousView?.editorWidth!==this._editorObs.layoutInfoWidth.read(i)&&(this._previousView?.view==="sideBySide"||this._previousView?.view==="lineReplacement");if(s&&!c)return this._previousView.view;const g=t.flatMap(l=>l.innerChanges??[]),o=g.length===1;if(o&&this._useCodeShifting.read(i)!=="never"&&re(t,a.cursorPosition))return"insertionInline";if(g.map(l=>({original:a.originalText.getValueOfRange(l.originalRange),modified:r.getValueOfRange(l.modifiedRange)})).every(({original:l,modified:E})=>E.trim()===""&&l.length>0&&(l.length>E.length||l.trim()!=="")))return"deletion";if(oe(t)&&this._useMultiLineGhostText.read(i)&&this._useCodeShifting.read(i)==="always")return"insertionMultiLine";const S=a.originalLineRange.length,y=a.modifiedLineRange.length;return g.every(l=>v.ofRange(l.originalRange).columnCount<_.MAX_LENGTH&&v.ofRange(l.modifiedRange).columnCount<_.MAX_LENGTH)&&o&&S===1&&y===1&&(!g.some(l=>l.originalRange.isEmpty())||!V(g.map(l=>new m(l.originalRange,"")),a.originalText).some(l=>l.range.isEmpty()&&v.ofRange(l.range).columnCount<_.MAX_LENGTH))?"wordReplacements":S>0&&y>0?this._renderSideBySide.read(i)!=="never"&&M.fitsInsideViewport(this._editor,this._previewTextModel,a,n,i)?"sideBySide":"lineReplacement":"sideBySide"}determineRenderState(e,i,t,r,n){const a=e.inlineEdit,s=this.determineView(e,i,t,r,n);switch(this._previousView={id:this.getCacheId(e),view:s,editorWidth:this._editor.getLayoutInfo().width,timestamp:Date.now()},s){case"insertionInline":return{kind:"insertionInline"};case"sideBySide":return{kind:"sideBySide"};case"collapsed":return{kind:"collapsed"}}const c=t.flatMap(o=>o.innerChanges??[]);if(s==="deletion")return{kind:"deletion",originalRange:a.originalLineRange,deletions:c.map(o=>o.originalRange)};if(s==="insertionMultiLine"){const o=c[0];return{kind:"insertionMultiLine",lineNumber:o.originalRange.startLineNumber,column:o.originalRange.startColumn,text:r.getValueOfRange(o.modifiedRange)}}const g=c.map(o=>new m(o.originalRange,r.getValueOfRange(o.modifiedRange)));if(g.length!==0){if(s==="wordReplacements"){let o=ae(g,a.originalText);return o.some(p=>p.range.isEmpty())&&(o=V(g,a.originalText)),{kind:"wordReplacements",replacements:o}}if(s==="lineReplacement")return{kind:"lineReplacement",originalRange:a.originalLineRange,modifiedRange:a.modifiedLineRange,modifiedLines:a.modifiedLineRange.mapToLineArray(o=>r.getLineAt(o)),replacements:c.map(o=>({originalRange:o.originalRange,modifiedRange:o.modifiedRange}))}}}_viewHasBeenShownLongerThan(e){const i=this._previousView?.timestamp;if(!i)throw new N("viewHasBeenShownLongThan called before a view has been shown");return Date.now()-i>=e}};R=L([b(5,j)],R);function re(u,d){if(!d)return!1;const e=d;return u.every(t=>t.innerChanges.every(r=>i(r)));function i(t){if(!t.originalRange.isEmpty()||!(t.modifiedRange.startLineNumber===t.modifiedRange.endLineNumber))return!1;const n=t.originalRange.getStartPosition();return!!(e.isBeforeOrEqual(n)||n.lineNumber<e.lineNumber)}}function oe(u){const d=u.flatMap(i=>i.innerChanges??[]);if(d.length!==1)return!1;const e=d[0];return!(!e.originalRange.isEmpty()||e.modifiedRange.startLineNumber===e.modifiedRange.endLineNumber)}function ae(u,d){return O(u,d,e=>/^[a-zA-Z]$/.test(e))}function V(u,d){return O(u,d,e=>!/^\s$/.test(e))}function O(u,d,e){const i=[];u.sort((r,n)=>I.compareRangesUsingStarts(r.range,n.range));for(const r of u){let n=r.range.startColumn-1,a=r.range.endColumn-2,s="",c="";const g=d.getLineAt(r.range.startLineNumber),o=d.getLineAt(r.range.endLineNumber);if(t(g[n]))for(;t(g[n-1]);)s=g[n-1]+s,n--;if(t(o[a])||a<n)for(;t(o[a+1]);)c+=o[a+1],a++;let p=new m(new I(r.range.startLineNumber,n+1,r.range.endLineNumber,a+2),s+r.text+c);i.length>0&&I.areIntersectingOrTouching(i[i.length-1].range,p.range)&&(p=m.joinEdits([i.pop(),p],d)),i.push(p)}function t(r){return r===void 0?!1:e(r)}return i}export{R as InlineEditsView};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { equalsIfDefined, itemEquals } from "../../../../../../base/common/equals.js";
+import { BugIndicatingError } from "../../../../../../base/common/errors.js";
+import { Event } from "../../../../../../base/common/event.js";
+import { Disposable } from "../../../../../../base/common/lifecycle.js";
+import { autorunWithStore, derived, derivedOpts, derivedWithStore, IObservable, IReader, ISettableObservable, mapObservableArrayCached, observableValue } from "../../../../../../base/common/observable.js";
+import { IInstantiationService } from "../../../../../../platform/instantiation/common/instantiation.js";
+import { ICodeEditor } from "../../../../../browser/editorBrowser.js";
+import { ObservableCodeEditor, observableCodeEditor } from "../../../../../browser/observableCodeEditor.js";
+import { EditorOption } from "../../../../../common/config/editorOptions.js";
+import { LineRange } from "../../../../../common/core/lineRange.js";
+import { Position } from "../../../../../common/core/position.js";
+import { Range } from "../../../../../common/core/range.js";
+import { AbstractText, SingleTextEdit, StringText } from "../../../../../common/core/textEdit.js";
+import { TextLength } from "../../../../../common/core/textLength.js";
+import { DetailedLineRangeMapping, lineRangeMappingFromRangeMappings, RangeMapping } from "../../../../../common/diff/rangeMapping.js";
+import { TextModel } from "../../../../../common/model/textModel.js";
+import { InlineEditsGutterIndicator } from "./components/gutterIndicatorView.js";
+import { InlineEditWithChanges } from "./inlineEditWithChanges.js";
+import { GhostTextIndicator, InlineEditHost, InlineEditModel } from "./inlineEditsModel.js";
+import { InlineEditsOnboardingExperience } from "./inlineEditsNewUsers.js";
+import { IInlineEditModel, InlineEditTabAction } from "./inlineEditsViewInterface.js";
+import { InlineEditsCollapsedView } from "./inlineEditsViews/inlineEditsCollapsedView.js";
+import { InlineEditsDeletionView } from "./inlineEditsViews/inlineEditsDeletionView.js";
+import { InlineEditsInsertionView } from "./inlineEditsViews/inlineEditsInsertionView.js";
+import { InlineEditsLineReplacementView } from "./inlineEditsViews/inlineEditsLineReplacementView.js";
+import { InlineEditsSideBySideView } from "./inlineEditsViews/inlineEditsSideBySideView.js";
+import { InlineEditsWordReplacementView } from "./inlineEditsViews/inlineEditsWordReplacementView.js";
+import { IOriginalEditorInlineDiffViewState, OriginalEditorInlineDiffView } from "./inlineEditsViews/originalEditorInlineDiffView.js";
+import { applyEditToModifiedRangeMappings, createReindentEdit } from "./utils/utils.js";
+import "./view.css";
+let InlineEditsView = class extends Disposable {
+  constructor(_editor, _host, _model, _ghostTextIndicator, _focusIsInMenu, _instantiationService) {
+    super();
+    this._editor = _editor;
+    this._host = _host;
+    this._model = _model;
+    this._ghostTextIndicator = _ghostTextIndicator;
+    this._focusIsInMenu = _focusIsInMenu;
+    this._instantiationService = _instantiationService;
+    this._useCodeShifting = this._editorObs.getOption(EditorOption.inlineSuggest).map((s) => s.edits.allowCodeShifting);
+    this._renderSideBySide = this._editorObs.getOption(EditorOption.inlineSuggest).map((s) => s.edits.renderSideBySide);
+    this._useMultiLineGhostText = this._editorObs.getOption(EditorOption.inlineSuggest).map((s) => s.edits.useMultiLineGhostText);
+    this._register(autorunWithStore((reader, store) => {
+      const model = this._model.read(reader);
+      if (!model) {
+        return;
+      }
+      store.add(
+        Event.any(
+          this._sideBySide.onDidClick,
+          this._deletion.onDidClick,
+          this._lineReplacementView.onDidClick,
+          this._insertion.onDidClick,
+          ...this._wordReplacementViews.read(reader).map((w) => w.onDidClick),
+          this._inlineDiffView.onDidClick
+        )((e) => {
+          if (this._viewHasBeenShownLongerThan(350)) {
+            e.preventDefault();
+            model.accept();
+          }
+        })
+      );
+    }));
+    this._indicator.recomputeInitiallyAndOnChange(this._store);
+    this._wordReplacementViews.recomputeInitiallyAndOnChange(this._store);
+    this._indicatorCyclicDependencyCircuitBreaker.set(true, void 0);
+    this._register(this._instantiationService.createInstance(InlineEditsOnboardingExperience, this._host, this._model, this._indicator, this._inlineCollapsedView));
+    this._constructorDone.set(true, void 0);
+  }
+  static {
+    __name(this, "InlineEditsView");
+  }
+  _editorObs = observableCodeEditor(this._editor);
+  _useCodeShifting;
+  _renderSideBySide;
+  _useMultiLineGhostText;
+  _tabAction = derived((reader) => this._model.read(reader)?.tabAction.read(reader) ?? InlineEditTabAction.Inactive);
+  _previousView;
+  _constructorDone = observableValue(this, false);
+  _uiState = derived(this, (reader) => {
+    const model = this._model.read(reader);
+    if (!model || !this._constructorDone.read(reader)) {
+      return void 0;
+    }
+    model.handleInlineEditShown();
+    const inlineEdit = model.inlineEdit;
+    let mappings = RangeMapping.fromEdit(inlineEdit.edit);
+    let newText = inlineEdit.edit.apply(inlineEdit.originalText);
+    let diff = lineRangeMappingFromRangeMappings(mappings, inlineEdit.originalText, new StringText(newText));
+    const originalDisplayRange = inlineEdit.originalText.lineRange.intersect(
+      inlineEdit.originalLineRange.join(
+        LineRange.ofLength(inlineEdit.originalLineRange.startLineNumber, inlineEdit.lineEdit.newLines.length)
+      )
+    );
+    let state = this.determineRenderState(model, reader, diff, new StringText(newText), originalDisplayRange);
+    if (!state) {
+      model.abort(`unable to determine view: tried to render ${this._previousView?.view}`);
+      return void 0;
+    }
+    if (state.kind === "sideBySide") {
+      const indentationAdjustmentEdit = createReindentEdit(newText, inlineEdit.modifiedLineRange);
+      newText = indentationAdjustmentEdit.applyToString(newText);
+      mappings = applyEditToModifiedRangeMappings(mappings, indentationAdjustmentEdit);
+      diff = lineRangeMappingFromRangeMappings(mappings, inlineEdit.originalText, new StringText(newText));
+    }
+    this._previewTextModel.setLanguage(this._editor.getModel().getLanguageId());
+    const previousNewText = this._previewTextModel.getValue();
+    if (previousNewText !== newText) {
+      this._previewTextModel.setValue(newText);
+    }
+    if (model.showCollapsed.read(reader) && !this._indicator.read(reader)?.isHoverVisible.read(reader)) {
+      state = { kind: "collapsed" };
+    }
+    return {
+      state,
+      diff,
+      edit: inlineEdit,
+      newText,
+      newTextLineCount: inlineEdit.modifiedLineRange.length,
+      originalDisplayRange
+    };
+  });
+  _previewTextModel = this._register(this._instantiationService.createInstance(
+    TextModel,
+    "",
+    this._editor.getModel().getLanguageId(),
+    { ...TextModel.DEFAULT_CREATION_OPTIONS, bracketPairColorizationOptions: { enabled: true, independentColorPoolPerBracketType: false } },
+    null
+  ));
+  _indicatorCyclicDependencyCircuitBreaker = observableValue(this, false);
+  _indicator = derivedWithStore(this, (reader, store) => {
+    if (!this._indicatorCyclicDependencyCircuitBreaker.read(reader)) {
+      return void 0;
+    }
+    const indicatorDisplayRange = derivedOpts({ owner: this, equalsFn: equalsIfDefined(itemEquals()) }, (reader2) => {
+      const ghostTextIndicator = this._ghostTextIndicator.read(reader2);
+      if (ghostTextIndicator) {
+        return ghostTextIndicator.lineRange;
+      }
+      const state = this._uiState.read(reader2);
+      if (state?.state?.kind === "insertionMultiLine") {
+        return this._insertion.originalLines.read(reader2);
+      }
+      return state?.originalDisplayRange;
+    });
+    const modelWithGhostTextSupport = derived(this, (reader2) => {
+      const model = this._model.read(reader2);
+      if (model) {
+        return model;
+      }
+      const ghostTextIndicator = this._ghostTextIndicator.read(reader2);
+      if (ghostTextIndicator) {
+        return ghostTextIndicator.model;
+      }
+      return model;
+    });
+    return store.add(this._instantiationService.createInstance(
+      InlineEditsGutterIndicator,
+      this._editorObs,
+      indicatorDisplayRange,
+      this._gutterIndicatorOffset,
+      modelWithGhostTextSupport,
+      this._inlineEditsIsHovered,
+      this._focusIsInMenu
+    ));
+  });
+  _inlineEditsIsHovered = derived(this, (reader) => {
+    return this._sideBySide.isHovered.read(reader) || this._wordReplacementViews.read(reader).some((v) => v.isHovered.read(reader)) || this._deletion.isHovered.read(reader) || this._inlineDiffView.isHovered.read(reader) || this._lineReplacementView.isHovered.read(reader) || this._insertion.isHovered.read(reader);
+  });
+  _gutterIndicatorOffset = derived(this, (reader) => {
+    if (this._uiState.read(reader)?.state?.kind === "insertionMultiLine") {
+      return this._insertion.startLineOffset.read(reader);
+    }
+    return 0;
+  });
+  _sideBySide = this._register(this._instantiationService.createInstance(
+    InlineEditsSideBySideView,
+    this._editor,
+    this._model.map((m) => m?.inlineEdit),
+    this._previewTextModel,
+    this._uiState.map((s) => s && s.state?.kind === "sideBySide" ? {
+      newTextLineCount: s.newTextLineCount,
+      originalDisplayRange: s.originalDisplayRange
+    } : void 0),
+    this._tabAction
+  ));
+  _deletion = this._register(this._instantiationService.createInstance(
+    InlineEditsDeletionView,
+    this._editor,
+    this._model.map((m) => m?.inlineEdit),
+    this._uiState.map((s) => s && s.state?.kind === "deletion" ? {
+      originalRange: s.state.originalRange,
+      deletions: s.state.deletions
+    } : void 0),
+    this._tabAction
+  ));
+  _insertion = this._register(this._instantiationService.createInstance(
+    InlineEditsInsertionView,
+    this._editor,
+    this._uiState.map((s) => s && s.state?.kind === "insertionMultiLine" ? {
+      lineNumber: s.state.lineNumber,
+      startColumn: s.state.column,
+      text: s.state.text
+    } : void 0),
+    this._tabAction
+  ));
+  _inlineDiffViewState = derived(this, (reader) => {
+    const e = this._uiState.read(reader);
+    if (!e || !e.state) {
+      return void 0;
+    }
+    if (e.state.kind === "wordReplacements" || e.state.kind === "lineReplacement" || e.state.kind === "insertionMultiLine" || e.state.kind === "collapsed") {
+      return void 0;
+    }
+    return {
+      modifiedText: new StringText(e.newText),
+      diff: e.diff,
+      mode: e.state.kind,
+      modifiedCodeEditor: this._sideBySide.previewEditor
+    };
+  });
+  _inlineCollapsedView = this._register(this._instantiationService.createInstance(
+    InlineEditsCollapsedView,
+    this._editor,
+    this._model.map((m, reader) => this._uiState.read(reader)?.state?.kind === "collapsed" ? m?.inlineEdit : void 0)
+  ));
+  _inlineDiffView = this._register(new OriginalEditorInlineDiffView(this._editor, this._inlineDiffViewState, this._previewTextModel));
+  _wordReplacementViews = mapObservableArrayCached(this, this._uiState.map((s) => s?.state?.kind === "wordReplacements" ? s.state.replacements : []), (e, store) => {
+    return store.add(this._instantiationService.createInstance(InlineEditsWordReplacementView, this._editorObs, e, this._tabAction));
+  });
+  _lineReplacementView = this._register(this._instantiationService.createInstance(
+    InlineEditsLineReplacementView,
+    this._editorObs,
+    this._uiState.map((s) => s?.state?.kind === "lineReplacement" ? {
+      originalRange: s.state.originalRange,
+      modifiedRange: s.state.modifiedRange,
+      modifiedLines: s.state.modifiedLines,
+      replacements: s.state.replacements
+    } : void 0),
+    this._tabAction
+  ));
+  getCacheId(model) {
+    return model.inlineEdit.inlineCompletion.id;
+  }
+  determineView(model, reader, diff, newText, originalDisplayRange) {
+    const inlineEdit = model.inlineEdit;
+    const canUseCache = this._previousView?.id === this.getCacheId(model);
+    const reconsiderViewEditorWidthChange = this._previousView?.editorWidth !== this._editorObs.layoutInfoWidth.read(reader) && (this._previousView?.view === "sideBySide" || this._previousView?.view === "lineReplacement");
+    if (canUseCache && !reconsiderViewEditorWidthChange) {
+      return this._previousView.view;
+    }
+    const inner = diff.flatMap((d) => d.innerChanges ?? []);
+    const isSingleInnerEdit = inner.length === 1;
+    if (isSingleInnerEdit && this._useCodeShifting.read(reader) !== "never" && isSingleLineInsertionAfterPosition(diff, inlineEdit.cursorPosition)) {
+      return "insertionInline";
+    }
+    const innerValues = inner.map((m) => ({ original: inlineEdit.originalText.getValueOfRange(m.originalRange), modified: newText.getValueOfRange(m.modifiedRange) }));
+    if (innerValues.every(({ original, modified }) => modified.trim() === "" && original.length > 0 && (original.length > modified.length || original.trim() !== ""))) {
+      return "deletion";
+    }
+    if (isSingleMultiLineInsertion(diff) && this._useMultiLineGhostText.read(reader) && this._useCodeShifting.read(reader) === "always") {
+      return "insertionMultiLine";
+    }
+    const numOriginalLines = inlineEdit.originalLineRange.length;
+    const numModifiedLines = inlineEdit.modifiedLineRange.length;
+    const allInnerChangesNotTooLong = inner.every((m) => TextLength.ofRange(m.originalRange).columnCount < InlineEditsWordReplacementView.MAX_LENGTH && TextLength.ofRange(m.modifiedRange).columnCount < InlineEditsWordReplacementView.MAX_LENGTH);
+    if (allInnerChangesNotTooLong && isSingleInnerEdit && numOriginalLines === 1 && numModifiedLines === 1) {
+      if (!inner.some((m) => m.originalRange.isEmpty()) || !growEditsUntilWhitespace(inner.map((m) => new SingleTextEdit(m.originalRange, "")), inlineEdit.originalText).some((e) => e.range.isEmpty() && TextLength.ofRange(e.range).columnCount < InlineEditsWordReplacementView.MAX_LENGTH)) {
+        return "wordReplacements";
+      }
+    }
+    if (numOriginalLines > 0 && numModifiedLines > 0) {
+      if (this._renderSideBySide.read(reader) !== "never" && InlineEditsSideBySideView.fitsInsideViewport(this._editor, this._previewTextModel, inlineEdit, originalDisplayRange, reader)) {
+        return "sideBySide";
+      }
+      return "lineReplacement";
+    }
+    return "sideBySide";
+  }
+  determineRenderState(model, reader, diff, newText, originalDisplayRange) {
+    const inlineEdit = model.inlineEdit;
+    const view = this.determineView(model, reader, diff, newText, originalDisplayRange);
+    this._previousView = { id: this.getCacheId(model), view, editorWidth: this._editor.getLayoutInfo().width, timestamp: Date.now() };
+    switch (view) {
+      case "insertionInline":
+        return { kind: "insertionInline" };
+      case "sideBySide":
+        return { kind: "sideBySide" };
+      case "collapsed":
+        return { kind: "collapsed" };
+    }
+    const inner = diff.flatMap((d) => d.innerChanges ?? []);
+    if (view === "deletion") {
+      return {
+        kind: "deletion",
+        originalRange: inlineEdit.originalLineRange,
+        deletions: inner.map((m) => m.originalRange)
+      };
+    }
+    if (view === "insertionMultiLine") {
+      const change = inner[0];
+      return {
+        kind: "insertionMultiLine",
+        lineNumber: change.originalRange.startLineNumber,
+        column: change.originalRange.startColumn,
+        text: newText.getValueOfRange(change.modifiedRange)
+      };
+    }
+    const replacements = inner.map((m) => new SingleTextEdit(m.originalRange, newText.getValueOfRange(m.modifiedRange)));
+    if (replacements.length === 0) {
+      return void 0;
+    }
+    if (view === "wordReplacements") {
+      let grownEdits = growEditsToEntireWord(replacements, inlineEdit.originalText);
+      if (grownEdits.some((e) => e.range.isEmpty())) {
+        grownEdits = growEditsUntilWhitespace(replacements, inlineEdit.originalText);
+      }
+      return {
+        kind: "wordReplacements",
+        replacements: grownEdits
+      };
+    }
+    if (view === "lineReplacement") {
+      return {
+        kind: "lineReplacement",
+        originalRange: inlineEdit.originalLineRange,
+        modifiedRange: inlineEdit.modifiedLineRange,
+        modifiedLines: inlineEdit.modifiedLineRange.mapToLineArray((line) => newText.getLineAt(line)),
+        replacements: inner.map((m) => ({ originalRange: m.originalRange, modifiedRange: m.modifiedRange }))
+      };
+    }
+    return void 0;
+  }
+  _viewHasBeenShownLongerThan(durationMs) {
+    const viewCreationTime = this._previousView?.timestamp;
+    if (!viewCreationTime) {
+      throw new BugIndicatingError("viewHasBeenShownLongThan called before a view has been shown");
+    }
+    const currentTime = Date.now();
+    return currentTime - viewCreationTime >= durationMs;
+  }
+};
+InlineEditsView = __decorateClass([
+  __decorateParam(5, IInstantiationService)
+], InlineEditsView);
+function isSingleLineInsertionAfterPosition(diff, position) {
+  if (!position) {
+    return false;
+  }
+  const pos = position;
+  return diff.every((m) => m.innerChanges.every((r) => isStableWordInsertion(r)));
+  function isStableWordInsertion(r) {
+    if (!r.originalRange.isEmpty()) {
+      return false;
+    }
+    const isInsertionWithinLine = r.modifiedRange.startLineNumber === r.modifiedRange.endLineNumber;
+    if (!isInsertionWithinLine) {
+      return false;
+    }
+    const insertPosition = r.originalRange.getStartPosition();
+    if (pos.isBeforeOrEqual(insertPosition)) {
+      return true;
+    }
+    if (insertPosition.lineNumber < pos.lineNumber) {
+      return true;
+    }
+    return false;
+  }
+  __name(isStableWordInsertion, "isStableWordInsertion");
+}
+__name(isSingleLineInsertionAfterPosition, "isSingleLineInsertionAfterPosition");
+function isSingleMultiLineInsertion(diff) {
+  const inner = diff.flatMap((d) => d.innerChanges ?? []);
+  if (inner.length !== 1) {
+    return false;
+  }
+  const change = inner[0];
+  if (!change.originalRange.isEmpty()) {
+    return false;
+  }
+  if (change.modifiedRange.startLineNumber === change.modifiedRange.endLineNumber) {
+    return false;
+  }
+  return true;
+}
+__name(isSingleMultiLineInsertion, "isSingleMultiLineInsertion");
+function growEditsToEntireWord(replacements, originalText) {
+  return _growEdits(replacements, originalText, (char) => /^[a-zA-Z]$/.test(char));
+}
+__name(growEditsToEntireWord, "growEditsToEntireWord");
+function growEditsUntilWhitespace(replacements, originalText) {
+  return _growEdits(replacements, originalText, (char) => !/^\s$/.test(char));
+}
+__name(growEditsUntilWhitespace, "growEditsUntilWhitespace");
+function _growEdits(replacements, originalText, fn) {
+  const result = [];
+  replacements.sort((a, b) => Range.compareRangesUsingStarts(a.range, b.range));
+  for (const edit of replacements) {
+    let startIndex = edit.range.startColumn - 1;
+    let endIndex = edit.range.endColumn - 2;
+    let prefix = "";
+    let suffix = "";
+    const startLineContent = originalText.getLineAt(edit.range.startLineNumber);
+    const endLineContent = originalText.getLineAt(edit.range.endLineNumber);
+    if (isIncluded(startLineContent[startIndex])) {
+      while (isIncluded(startLineContent[startIndex - 1])) {
+        prefix = startLineContent[startIndex - 1] + prefix;
+        startIndex--;
+      }
+    }
+    if (isIncluded(endLineContent[endIndex]) || endIndex < startIndex) {
+      while (isIncluded(endLineContent[endIndex + 1])) {
+        suffix += endLineContent[endIndex + 1];
+        endIndex++;
+      }
+    }
+    let newEdit = new SingleTextEdit(new Range(edit.range.startLineNumber, startIndex + 1, edit.range.endLineNumber, endIndex + 2), prefix + edit.text + suffix);
+    if (result.length > 0 && Range.areIntersectingOrTouching(result[result.length - 1].range, newEdit.range)) {
+      newEdit = SingleTextEdit.joinEdits([result.pop(), newEdit], originalText);
+    }
+    result.push(newEdit);
+  }
+  function isIncluded(c) {
+    if (c === void 0) {
+      return false;
+    }
+    return fn(c);
+  }
+  __name(isIncluded, "isIncluded");
+  return result;
+}
+__name(_growEdits, "_growEdits");
+export {
+  InlineEditsView
+};
+//# sourceMappingURL=inlineEditsView.js.map

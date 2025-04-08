@@ -1,1 +1,36 @@
-import*as o from"../../../services/extensions/common/extensionsRegistry.js";import{terminalContributionsDescriptor as a}from"./terminal.js";import{createDecorator as l}from"../../../../platform/instantiation/common/instantiation.js";import"../../../../platform/terminal/common/terminal.js";import{URI as n}from"../../../../base/common/uri.js";const s=o.ExtensionsRegistry.registerExtensionPoint(a),P=l("terminalContributionsService");class v{_terminalProfiles=[];get terminalProfiles(){return this._terminalProfiles}constructor(){s.setHandler(t=>{this._terminalProfiles=t.map(e=>e.value?.profiles?.filter(r=>m(r)).map(r=>({...r,extensionIdentifier:e.description.identifier.value}))||[]).flat()})}}function m(i){return!i.icon||typeof i.icon=="string"||n.isUri(i.icon)||"light"in i.icon&&"dark"in i.icon&&n.isUri(i.icon.light)&&n.isUri(i.icon.dark)}export{P as ITerminalContributionService,v as TerminalContributionService};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as extensionsRegistry from "../../../services/extensions/common/extensionsRegistry.js";
+import { terminalContributionsDescriptor } from "./terminal.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { IExtensionTerminalProfile, ITerminalContributions, ITerminalProfileContribution } from "../../../../platform/terminal/common/terminal.js";
+import { URI } from "../../../../base/common/uri.js";
+const terminalsExtPoint = extensionsRegistry.ExtensionsRegistry.registerExtensionPoint(terminalContributionsDescriptor);
+const ITerminalContributionService = createDecorator("terminalContributionsService");
+class TerminalContributionService {
+  static {
+    __name(this, "TerminalContributionService");
+  }
+  _terminalProfiles = [];
+  get terminalProfiles() {
+    return this._terminalProfiles;
+  }
+  constructor() {
+    terminalsExtPoint.setHandler((contributions) => {
+      this._terminalProfiles = contributions.map((c) => {
+        return c.value?.profiles?.filter((p) => hasValidTerminalIcon(p)).map((e) => {
+          return { ...e, extensionIdentifier: c.description.identifier.value };
+        }) || [];
+      }).flat();
+    });
+  }
+}
+function hasValidTerminalIcon(profile) {
+  return !profile.icon || (typeof profile.icon === "string" || URI.isUri(profile.icon) || "light" in profile.icon && "dark" in profile.icon && URI.isUri(profile.icon.light) && URI.isUri(profile.icon.dark));
+}
+__name(hasValidTerminalIcon, "hasValidTerminalIcon");
+export {
+  ITerminalContributionService,
+  TerminalContributionService
+};
+//# sourceMappingURL=terminalExtensionPoints.js.map

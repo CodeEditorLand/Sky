@@ -1,1 +1,178 @@
-import{computeLevenshteinDistance as N}from"../../../../../base/common/diff/diff.js";import"../notebookCommon.js";function G(t,i){const g={modifiedToOriginal:new Map,originalToModified:new Map},d=[],s=new Map,x=new Set,m=new Map,p=(n,e)=>{if(s.has(n))return!1;const o=m.get(n)?.dist??Number.MAX_SAFE_INTEGER;return e.editCount<o},f=(n,e)=>{s.set(e,n),x.add(n)};for(let n=0;n<t.length;n++){const e=t[n],{index:o,editCount:r,percentage:l}=_({cell:e,index:n},i,!0,g,p);o>=0&&r===0?(f(n,o),d.push({modified:n,original:o,dist:r,percentage:l,possibleOriginal:o})):(m.set(o,{dist:r,modifiedIndex:n}),d.push({modified:n,original:-1,dist:r,percentage:l,possibleOriginal:o}))}return d.forEach((n,e)=>{if(n.original>=0)return;const o=e>0?d.slice(0,e).reverse().find(a=>a.original>=0):void 0,r=o?.original??-1,l=o?.modified??-1,I=d.slice(e+1).find(a=>a.original>=0),C=new Set,c=d.findIndex((a,u)=>u>e&&a.original>=0),b=c>=0?d[c].original:-1;i.forEach((a,u)=>{if(s.has(u)){C.add(u);return}I&&u>=I.original&&C.add(u),b>=0&&u>b&&C.add(u)});const E=t[e];if(n.original===-1&&n.possibleOriginal>=0&&!C.has(n.possibleOriginal)&&p(n.possibleOriginal,{editCount:n.dist})){f(e,n.possibleOriginal),n.original=n.possibleOriginal;return}if(r>0&&l>0&&r===l&&(c>=0?c:t.length-1)===(b>=0?b:i.length-1)&&!C.has(e)&&e<i.length){const a=(c>=0?c:t.length)-l,u=(b>=0?b:i.length)-r;if(a===u&&E.cellKind===i[e].cellKind){f(e,e),n.original=e;return}}const{index:M,percentage:y}=_({cell:E,index:e},i,!1,g,(a,u)=>{if(C.has(a))return!1;if(c>0||r>0){const T=g.originalToModified.get(a);if(T&&r<a&&Array.from(T).find(([V,A])=>V===e||V>=c||x.has(e)?!1:A.editCount<u.editCount))return!1}return!C.has(a)});if(M>=0&&e>0&&d[e-1].original===M-1){f(e,M),d[e].original=M;return}const h=e>0&&i.length>d[e-1].original?d[e-1].original+1:-1,O=e>0&&h>=0&&h<i.length?i[h].getValue():void 0;if(M>=0&&e>0&&typeof O=="string"&&!s.has(h)&&(E.getValue().includes(O)||O.includes(E.getValue()))){f(e,h),d[e].original=h;return}if(y<90||e===0&&d.length===1){f(e,M),d[e].original=M;return}}),d}function _({cell:t,index:i},g,d,s,x){let m=1/0,p=-1;const f=t.internalMetadata?.internalId;if(f){const e=g.findIndex(o=>o.internalMetadata?.internalId===f);if(e>=0)return{index:e,editCount:0,percentage:Number.MAX_SAFE_INTEGER}}for(let e=0;e<g.length;e++){if(g[e].cellKind!==t.cellKind)continue;const o=g[e].getValue(),r=s.modifiedToOriginal.get(i)??new Map,l=r.get(e)??{editCount:v(t,g[e])};r.set(e,l),s.modifiedToOriginal.set(i,r);const I=s.originalToModified.get(e)??new Map;if(I.set(i,l),s.originalToModified.set(e,I),!!x(e,l)&&!(o.length===0&&d)){if(o===t.getValue()&&t.getValue().length>0)return{index:e,editCount:0,percentage:0};l.editCount<m&&(m=l.editCount,p=e)}}if(p===-1)return{index:-1,editCount:Number.MAX_SAFE_INTEGER,percentage:Number.MAX_SAFE_INTEGER};const n=!t.getValue().length&&!g[p].getValue().length?0:t.getValue().length?m*100/t.getValue().length:Number.MAX_SAFE_INTEGER;return{index:p,editCount:m,percentage:n}}function v(t,i){return t.getValue()===i.getValue()?0:N(t.getValue(),i.getValue())}export{G as matchCellBasedOnSimilarties};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { computeLevenshteinDistance } from "../../../../../base/common/diff/diff.js";
+import { CellKind } from "../notebookCommon.js";
+function matchCellBasedOnSimilarties(modifiedCells, originalCells) {
+  const cache = {
+    modifiedToOriginal: /* @__PURE__ */ new Map(),
+    originalToModified: /* @__PURE__ */ new Map()
+  };
+  const results = [];
+  const mappedOriginalCellToModifiedCell = /* @__PURE__ */ new Map();
+  const mappedModifiedIndexes = /* @__PURE__ */ new Set();
+  const originalIndexWithMostEdits = /* @__PURE__ */ new Map();
+  const canOriginalIndexBeMappedToModifiedIndex = /* @__PURE__ */ __name((originalIndex, value) => {
+    if (mappedOriginalCellToModifiedCell.has(originalIndex)) {
+      return false;
+    }
+    const existingEdits = originalIndexWithMostEdits.get(originalIndex)?.dist ?? Number.MAX_SAFE_INTEGER;
+    return value.editCount < existingEdits;
+  }, "canOriginalIndexBeMappedToModifiedIndex");
+  const trackMappedIndexes = /* @__PURE__ */ __name((modifiedIndex, originalIndex) => {
+    mappedOriginalCellToModifiedCell.set(originalIndex, modifiedIndex);
+    mappedModifiedIndexes.add(modifiedIndex);
+  }, "trackMappedIndexes");
+  for (let i = 0; i < modifiedCells.length; i++) {
+    const modifiedCell = modifiedCells[i];
+    const { index, editCount: dist, percentage } = computeClosestCell({ cell: modifiedCell, index: i }, originalCells, true, cache, canOriginalIndexBeMappedToModifiedIndex);
+    if (index >= 0 && dist === 0) {
+      trackMappedIndexes(i, index);
+      results.push({ modified: i, original: index, dist, percentage, possibleOriginal: index });
+    } else {
+      originalIndexWithMostEdits.set(index, { dist, modifiedIndex: i });
+      results.push({ modified: i, original: -1, dist, percentage, possibleOriginal: index });
+    }
+  }
+  results.forEach((result, i) => {
+    if (result.original >= 0) {
+      return;
+    }
+    const previousMatchedCell = i > 0 ? results.slice(0, i).reverse().find((r) => r.original >= 0) : void 0;
+    const previousMatchedOriginalIndex = previousMatchedCell?.original ?? -1;
+    const previousMatchedModifiedIndex = previousMatchedCell?.modified ?? -1;
+    const matchedCell = results.slice(i + 1).find((r) => r.original >= 0);
+    const unavailableIndexes = /* @__PURE__ */ new Set();
+    const nextMatchedModifiedIndex = results.findIndex((item, idx) => idx > i && item.original >= 0);
+    const nextMatchedOriginalIndex = nextMatchedModifiedIndex >= 0 ? results[nextMatchedModifiedIndex].original : -1;
+    originalCells.forEach((_, i2) => {
+      if (mappedOriginalCellToModifiedCell.has(i2)) {
+        unavailableIndexes.add(i2);
+        return;
+      }
+      if (matchedCell && i2 >= matchedCell.original) {
+        unavailableIndexes.add(i2);
+      }
+      if (nextMatchedOriginalIndex >= 0 && i2 > nextMatchedOriginalIndex) {
+        unavailableIndexes.add(i2);
+      }
+    });
+    const modifiedCell = modifiedCells[i];
+    if (result.original === -1 && result.possibleOriginal >= 0 && !unavailableIndexes.has(result.possibleOriginal) && canOriginalIndexBeMappedToModifiedIndex(result.possibleOriginal, { editCount: result.dist })) {
+      trackMappedIndexes(i, result.possibleOriginal);
+      result.original = result.possibleOriginal;
+      return;
+    }
+    if (previousMatchedOriginalIndex > 0 && previousMatchedModifiedIndex > 0 && previousMatchedOriginalIndex === previousMatchedModifiedIndex) {
+      if ((nextMatchedModifiedIndex >= 0 ? nextMatchedModifiedIndex : modifiedCells.length - 1) === (nextMatchedOriginalIndex >= 0 ? nextMatchedOriginalIndex : originalCells.length - 1) && !unavailableIndexes.has(i) && i < originalCells.length) {
+        const remainingModifiedItems = (nextMatchedModifiedIndex >= 0 ? nextMatchedModifiedIndex : modifiedCells.length) - previousMatchedModifiedIndex;
+        const remainingOriginalItems = (nextMatchedOriginalIndex >= 0 ? nextMatchedOriginalIndex : originalCells.length) - previousMatchedOriginalIndex;
+        if (remainingModifiedItems === remainingOriginalItems && modifiedCell.cellKind === originalCells[i].cellKind) {
+          trackMappedIndexes(i, i);
+          result.original = i;
+          return;
+        }
+      }
+    }
+    const { index, percentage } = computeClosestCell({ cell: modifiedCell, index: i }, originalCells, false, cache, (originalIndex, originalValue) => {
+      if (unavailableIndexes.has(originalIndex)) {
+        return false;
+      }
+      if (nextMatchedModifiedIndex > 0 || previousMatchedOriginalIndex > 0) {
+        const matchesForThisOriginalIndex = cache.originalToModified.get(originalIndex);
+        if (matchesForThisOriginalIndex && previousMatchedOriginalIndex < originalIndex) {
+          const betterMatch = Array.from(matchesForThisOriginalIndex).find(([modifiedIndex, value]) => {
+            if (modifiedIndex === i) {
+              return false;
+            }
+            if (modifiedIndex >= nextMatchedModifiedIndex) {
+              return false;
+            }
+            if (mappedModifiedIndexes.has(i)) {
+              return false;
+            }
+            return value.editCount < originalValue.editCount;
+          });
+          if (betterMatch) {
+            return false;
+          }
+        }
+      }
+      return !unavailableIndexes.has(originalIndex);
+    });
+    if (index >= 0 && i > 0 && results[i - 1].original === index - 1) {
+      trackMappedIndexes(i, index);
+      results[i].original = index;
+      return;
+    }
+    const nextOriginalCell = i > 0 && originalCells.length > results[i - 1].original ? results[i - 1].original + 1 : -1;
+    const nextOriginalCellValue = i > 0 && nextOriginalCell >= 0 && nextOriginalCell < originalCells.length ? originalCells[nextOriginalCell].getValue() : void 0;
+    if (index >= 0 && i > 0 && typeof nextOriginalCellValue === "string" && !mappedOriginalCellToModifiedCell.has(nextOriginalCell)) {
+      if (modifiedCell.getValue().includes(nextOriginalCellValue) || nextOriginalCellValue.includes(modifiedCell.getValue())) {
+        trackMappedIndexes(i, nextOriginalCell);
+        results[i].original = nextOriginalCell;
+        return;
+      }
+    }
+    if (percentage < 90 || i === 0 && results.length === 1) {
+      trackMappedIndexes(i, index);
+      results[i].original = index;
+      return;
+    }
+  });
+  return results;
+}
+__name(matchCellBasedOnSimilarties, "matchCellBasedOnSimilarties");
+function computeClosestCell({ cell, index: cellIndex }, arr, ignoreEmptyCells, cache, canOriginalIndexBeMappedToModifiedIndex) {
+  let min_edits = Infinity;
+  let min_index = -1;
+  const internalId = cell.internalMetadata?.internalId;
+  if (internalId) {
+    const internalIdIndex = arr.findIndex((cell2) => cell2.internalMetadata?.internalId === internalId);
+    if (internalIdIndex >= 0) {
+      return { index: internalIdIndex, editCount: 0, percentage: Number.MAX_SAFE_INTEGER };
+    }
+  }
+  for (let i = 0; i < arr.length; i++) {
+    if (arr[i].cellKind !== cell.cellKind) {
+      continue;
+    }
+    const str = arr[i].getValue();
+    const cacheEntry = cache.modifiedToOriginal.get(cellIndex) ?? /* @__PURE__ */ new Map();
+    const value = cacheEntry.get(i) ?? { editCount: computeNumberOfEdits(cell, arr[i]) };
+    cacheEntry.set(i, value);
+    cache.modifiedToOriginal.set(cellIndex, cacheEntry);
+    const originalCacheEntry = cache.originalToModified.get(i) ?? /* @__PURE__ */ new Map();
+    originalCacheEntry.set(cellIndex, value);
+    cache.originalToModified.set(i, originalCacheEntry);
+    if (!canOriginalIndexBeMappedToModifiedIndex(i, value)) {
+      continue;
+    }
+    if (str.length === 0 && ignoreEmptyCells) {
+      continue;
+    }
+    if (str === cell.getValue() && cell.getValue().length > 0) {
+      return { index: i, editCount: 0, percentage: 0 };
+    }
+    if (value.editCount < min_edits) {
+      min_edits = value.editCount;
+      min_index = i;
+    }
+  }
+  if (min_index === -1) {
+    return { index: -1, editCount: Number.MAX_SAFE_INTEGER, percentage: Number.MAX_SAFE_INTEGER };
+  }
+  const percentage = !cell.getValue().length && !arr[min_index].getValue().length ? 0 : cell.getValue().length ? min_edits * 100 / cell.getValue().length : Number.MAX_SAFE_INTEGER;
+  return { index: min_index, editCount: min_edits, percentage };
+}
+__name(computeClosestCell, "computeClosestCell");
+function computeNumberOfEdits(modified, original) {
+  if (modified.getValue() === original.getValue()) {
+    return 0;
+  }
+  return computeLevenshteinDistance(modified.getValue(), original.getValue());
+}
+__name(computeNumberOfEdits, "computeNumberOfEdits");
+export {
+  matchCellBasedOnSimilarties
+};
+//# sourceMappingURL=notebookCellMatching.js.map

@@ -1,1 +1,217 @@
-var _=Object.defineProperty,P=Object.getOwnPropertyDescriptor,I=(e,t,o,i)=>{for(var r,s=i>1?void 0:i?P(t,o):t,n=e.length-1;n>=0;n--)(r=e[n])&&(s=(i?r(t,o,s):r(s))||s);return i&&s&&_(t,o,s),s},u=(e,t)=>(o,i)=>t(o,i,e);import{CancellationToken as M}from"../../../../base/common/cancellation.js";import{FuzzyScore as k}from"../../../../base/common/filters.js";import{Iterable as v}from"../../../../base/common/iterator.js";import{Disposable as N,RefCountedDisposable as E}from"../../../../base/common/lifecycle.js";import"../../../browser/editorBrowser.js";import{ICodeEditorService as O}from"../../../browser/services/codeEditorService.js";import{EditorOption as h}from"../../../common/config/editorOptions.js";import"../../../common/core/editOperation.js";import"../../../common/core/position.js";import{Range as S}from"../../../common/core/range.js";import"../../../common/core/wordHelper.js";import{registerEditorFeature as F}from"../../../common/editorFeatures.js";import{CompletionItemInsertTextRule as L,CompletionTriggerKind as z}from"../../../common/languages.js";import"../../../common/model.js";import{ILanguageFeaturesService as A}from"../../../common/services/languageFeatures.js";import{CompletionModel as D,LineContext as y}from"./completionModel.js";import{CompletionOptions as W,provideSuggestionItems as B,QuickSuggestionsOptions as b}from"./suggest.js";import{ISuggestMemoryService as w}from"./suggestMemory.js";import{SuggestModel as K}from"./suggestModel.js";import{WordDistance as q}from"./wordDistance.js";import{IClipboardService as V}from"../../../../platform/clipboard/common/clipboardService.js";class Q{constructor(e,t,o,i,r,s,n){this.range=e,this.insertText=t,this.filterText=o,this.additionalTextEdits=i,this.command=r,this.action=s,this.completion=n}}let p=class extends E{constructor(e,t,o,i,r,s){super(r.disposable),this.model=e,this.line=t,this.word=o,this.completionModel=i,this._suggestMemoryService=s}canBeReused(e,t,o){return this.model===e&&this.line===t&&this.word.word.length>0&&this.word.startColumn===o.startColumn&&this.word.endColumn<o.endColumn&&0===this.completionModel.getIncompleteProvider().size}get items(){const e=[],{items:t}=this.completionModel,o=this._suggestMemoryService.select(this.model,{lineNumber:this.line,column:this.word.endColumn+this.completionModel.lineContext.characterCountDelta},t),i=v.slice(t,o),r=v.slice(t,0,o);let s=5;for(const t of v.concat(i,r)){if(t.score===k.Default)continue;const o=new S(t.editStart.lineNumber,t.editStart.column,t.editInsertEnd.lineNumber,t.editInsertEnd.column+this.completionModel.lineContext.characterCountDelta),i=t.completion.insertTextRules&&t.completion.insertTextRules&L.InsertAsSnippet?{snippet:t.completion.insertText}:t.completion.insertText;e.push(new Q(o,i,t.filterTextLow??t.labelLow,t.completion.additionalTextEdits,t.completion.command,t.completion.action,t)),s-- >=0&&t.resolve(M.None)}return e}};p=I([u(5,w)],p);let g=class extends N{constructor(e,t,o,i){super(),this._languageFeatureService=e,this._clipboardService=t,this._suggestMemoryService=o,this._editorService=i,this._store.add(e.inlineCompletionsProvider.register("*",this))}_lastResult;async provideInlineCompletions(e,t,o,i){if(o.selectedSuggestionInfo)return;let r;for(const t of this._editorService.listCodeEditors())if(t.getModel()===e){r=t;break}if(!r)return;const s=r.getOption(h.quickSuggestions);if(b.isAllOff(s))return;e.tokenization.tokenizeIfCheap(t.lineNumber);const n=e.tokenization.getLineTokens(t.lineNumber),l=n.getStandardTokenType(n.findTokenIndexAtOffset(Math.max(t.column-1-1,0)));if("inline"!==b.valueFor(s,l))return;let m,a,c=e.getWordAtPosition(t);if(c?.word||(m=this._getTriggerCharacterInfo(e,t)),!c?.word&&!m||(c||(c=e.getWordUntilPosition(t)),c.endColumn!==t.column))return;const u=e.getValueInRange(new S(t.lineNumber,1,t.lineNumber,t.column));if(!m&&this._lastResult?.canBeReused(e,t.lineNumber,c)){const e=new y(u,t.column-this._lastResult.word.endColumn);this._lastResult.completionModel.lineContext=e,this._lastResult.acquire(),a=this._lastResult}else{const o=await B(this._languageFeatureService.completionProvider,e,t,new W(void 0,K.createSuggestFilter(r).itemKind,m?.providers),m&&{triggerKind:z.TriggerCharacter,triggerCharacter:m.ch},i);let s;o.needsClipboard&&(s=await this._clipboardService.readText());const n=new D(o.items,t.column,new y(u,0),q.None,r.getOption(h.suggest),r.getOption(h.snippetSuggestions),{boostFullMatch:!1,firstMatchCanBeWeak:!1},s);a=new p(e,t.lineNumber,c,n,o,this._suggestMemoryService)}return this._lastResult=a,a}handleItemDidShow(e,t){t.completion.resolve(M.None)}freeInlineCompletions(e){e.release()}_getTriggerCharacterInfo(e,t){const o=e.getValueInRange(S.fromPositions({lineNumber:t.lineNumber,column:t.column-1},t)),i=new Set;for(const t of this._languageFeatureService.completionProvider.all(e))t.triggerCharacters?.includes(o)&&i.add(t);if(0!==i.size)return{providers:i,ch:o}}};g=I([u(0,A),u(1,V),u(2,w),u(3,O)],g),F(g);export{g as SuggestInlineCompletions};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { FuzzyScore } from "../../../../base/common/filters.js";
+import { Iterable } from "../../../../base/common/iterator.js";
+import { Disposable, RefCountedDisposable } from "../../../../base/common/lifecycle.js";
+import { ICodeEditor } from "../../../browser/editorBrowser.js";
+import { ICodeEditorService } from "../../../browser/services/codeEditorService.js";
+import { EditorOption } from "../../../common/config/editorOptions.js";
+import { ISingleEditOperation } from "../../../common/core/editOperation.js";
+import { IPosition, Position } from "../../../common/core/position.js";
+import { IRange, Range } from "../../../common/core/range.js";
+import { IWordAtPosition } from "../../../common/core/wordHelper.js";
+import { registerEditorFeature } from "../../../common/editorFeatures.js";
+import { Command, CompletionItemInsertTextRule, CompletionItemProvider, CompletionTriggerKind, InlineCompletion, InlineCompletionContext, InlineCompletions, InlineCompletionsProvider } from "../../../common/languages.js";
+import { ITextModel } from "../../../common/model.js";
+import { ILanguageFeaturesService } from "../../../common/services/languageFeatures.js";
+import { CompletionModel, LineContext } from "./completionModel.js";
+import { CompletionItem, CompletionItemModel, CompletionOptions, provideSuggestionItems, QuickSuggestionsOptions } from "./suggest.js";
+import { ISuggestMemoryService } from "./suggestMemory.js";
+import { SuggestModel } from "./suggestModel.js";
+import { WordDistance } from "./wordDistance.js";
+import { IClipboardService } from "../../../../platform/clipboard/common/clipboardService.js";
+class SuggestInlineCompletion {
+  constructor(range, insertText, filterText, additionalTextEdits, command, action, completion) {
+    this.range = range;
+    this.insertText = insertText;
+    this.filterText = filterText;
+    this.additionalTextEdits = additionalTextEdits;
+    this.command = command;
+    this.action = action;
+    this.completion = completion;
+  }
+  static {
+    __name(this, "SuggestInlineCompletion");
+  }
+}
+let InlineCompletionResults = class extends RefCountedDisposable {
+  constructor(model, line, word, completionModel, completions, _suggestMemoryService) {
+    super(completions.disposable);
+    this.model = model;
+    this.line = line;
+    this.word = word;
+    this.completionModel = completionModel;
+    this._suggestMemoryService = _suggestMemoryService;
+  }
+  static {
+    __name(this, "InlineCompletionResults");
+  }
+  canBeReused(model, line, word) {
+    return this.model === model && this.line === line && this.word.word.length > 0 && this.word.startColumn === word.startColumn && this.word.endColumn < word.endColumn && this.completionModel.getIncompleteProvider().size === 0;
+  }
+  get items() {
+    const result = [];
+    const { items } = this.completionModel;
+    const selectedIndex = this._suggestMemoryService.select(this.model, { lineNumber: this.line, column: this.word.endColumn + this.completionModel.lineContext.characterCountDelta }, items);
+    const first = Iterable.slice(items, selectedIndex);
+    const second = Iterable.slice(items, 0, selectedIndex);
+    let resolveCount = 5;
+    for (const item of Iterable.concat(first, second)) {
+      if (item.score === FuzzyScore.Default) {
+        continue;
+      }
+      const range = new Range(
+        item.editStart.lineNumber,
+        item.editStart.column,
+        item.editInsertEnd.lineNumber,
+        item.editInsertEnd.column + this.completionModel.lineContext.characterCountDelta
+        // end PLUS character delta
+      );
+      const insertText = item.completion.insertTextRules && item.completion.insertTextRules & CompletionItemInsertTextRule.InsertAsSnippet ? { snippet: item.completion.insertText } : item.completion.insertText;
+      result.push(new SuggestInlineCompletion(
+        range,
+        insertText,
+        item.filterTextLow ?? item.labelLow,
+        item.completion.additionalTextEdits,
+        item.completion.command,
+        item.completion.action,
+        item
+      ));
+      if (resolveCount-- >= 0) {
+        item.resolve(CancellationToken.None);
+      }
+    }
+    return result;
+  }
+};
+InlineCompletionResults = __decorateClass([
+  __decorateParam(5, ISuggestMemoryService)
+], InlineCompletionResults);
+let SuggestInlineCompletions = class extends Disposable {
+  constructor(_languageFeatureService, _clipboardService, _suggestMemoryService, _editorService) {
+    super();
+    this._languageFeatureService = _languageFeatureService;
+    this._clipboardService = _clipboardService;
+    this._suggestMemoryService = _suggestMemoryService;
+    this._editorService = _editorService;
+    this._store.add(_languageFeatureService.inlineCompletionsProvider.register("*", this));
+  }
+  static {
+    __name(this, "SuggestInlineCompletions");
+  }
+  _lastResult;
+  async provideInlineCompletions(model, position, context, token) {
+    if (context.selectedSuggestionInfo) {
+      return;
+    }
+    let editor;
+    for (const candidate of this._editorService.listCodeEditors()) {
+      if (candidate.getModel() === model) {
+        editor = candidate;
+        break;
+      }
+    }
+    if (!editor) {
+      return;
+    }
+    const config = editor.getOption(EditorOption.quickSuggestions);
+    if (QuickSuggestionsOptions.isAllOff(config)) {
+      return;
+    }
+    model.tokenization.tokenizeIfCheap(position.lineNumber);
+    const lineTokens = model.tokenization.getLineTokens(position.lineNumber);
+    const tokenType = lineTokens.getStandardTokenType(lineTokens.findTokenIndexAtOffset(Math.max(position.column - 1 - 1, 0)));
+    if (QuickSuggestionsOptions.valueFor(config, tokenType) !== "inline") {
+      return void 0;
+    }
+    let wordInfo = model.getWordAtPosition(position);
+    let triggerCharacterInfo;
+    if (!wordInfo?.word) {
+      triggerCharacterInfo = this._getTriggerCharacterInfo(model, position);
+    }
+    if (!wordInfo?.word && !triggerCharacterInfo) {
+      return;
+    }
+    if (!wordInfo) {
+      wordInfo = model.getWordUntilPosition(position);
+    }
+    if (wordInfo.endColumn !== position.column) {
+      return;
+    }
+    let result;
+    const leadingLineContents = model.getValueInRange(new Range(position.lineNumber, 1, position.lineNumber, position.column));
+    if (!triggerCharacterInfo && this._lastResult?.canBeReused(model, position.lineNumber, wordInfo)) {
+      const newLineContext = new LineContext(leadingLineContents, position.column - this._lastResult.word.endColumn);
+      this._lastResult.completionModel.lineContext = newLineContext;
+      this._lastResult.acquire();
+      result = this._lastResult;
+    } else {
+      const completions = await provideSuggestionItems(
+        this._languageFeatureService.completionProvider,
+        model,
+        position,
+        new CompletionOptions(void 0, SuggestModel.createSuggestFilter(editor).itemKind, triggerCharacterInfo?.providers),
+        triggerCharacterInfo && { triggerKind: CompletionTriggerKind.TriggerCharacter, triggerCharacter: triggerCharacterInfo.ch },
+        token
+      );
+      let clipboardText;
+      if (completions.needsClipboard) {
+        clipboardText = await this._clipboardService.readText();
+      }
+      const completionModel = new CompletionModel(
+        completions.items,
+        position.column,
+        new LineContext(leadingLineContents, 0),
+        WordDistance.None,
+        editor.getOption(EditorOption.suggest),
+        editor.getOption(EditorOption.snippetSuggestions),
+        { boostFullMatch: false, firstMatchCanBeWeak: false },
+        clipboardText
+      );
+      result = new InlineCompletionResults(model, position.lineNumber, wordInfo, completionModel, completions, this._suggestMemoryService);
+    }
+    this._lastResult = result;
+    return result;
+  }
+  handleItemDidShow(_completions, item) {
+    item.completion.resolve(CancellationToken.None);
+  }
+  freeInlineCompletions(result) {
+    result.release();
+  }
+  _getTriggerCharacterInfo(model, position) {
+    const ch = model.getValueInRange(Range.fromPositions({ lineNumber: position.lineNumber, column: position.column - 1 }, position));
+    const providers = /* @__PURE__ */ new Set();
+    for (const provider of this._languageFeatureService.completionProvider.all(model)) {
+      if (provider.triggerCharacters?.includes(ch)) {
+        providers.add(provider);
+      }
+    }
+    if (providers.size === 0) {
+      return void 0;
+    }
+    return { providers, ch };
+  }
+};
+SuggestInlineCompletions = __decorateClass([
+  __decorateParam(0, ILanguageFeaturesService),
+  __decorateParam(1, IClipboardService),
+  __decorateParam(2, ISuggestMemoryService),
+  __decorateParam(3, ICodeEditorService)
+], SuggestInlineCompletions);
+registerEditorFeature(SuggestInlineCompletions);
+export {
+  SuggestInlineCompletions
+};
+//# sourceMappingURL=suggestInlineCompletions.js.map

@@ -1,1 +1,212 @@
-import*as S from"os";import*as n from"../common/path.js";import*as t from"./pfs.js";const d=/^\d+$/,E=/^Microsoft.PowerShell_.*/,y=/^Microsoft.PowerShellPreview_.*/;var g=(e=>(e[e.x64=0]="x64",e[e.x86=1]="x86",e[e.ARM=2]="ARM",e))(g||{});let w,l;switch(process.arch){case"ia32":w=1;break;case"arm":case"arm64":w=2;break;default:w=0}l=process.env.PROCESSOR_ARCHITEW6432?"ARM64"===process.env.PROCESSOR_ARCHITEW6432?2:0:"ARM64"===process.env.PROCESSOR_ARCHITECTURE?2:"X86"===process.env.PROCESSOR_ARCHITECTURE?1:0;class u{constructor(e,n,s){this.exePath=e,this.displayName=n,this.knownToExist=s}async exists(){return void 0===this.knownToExist&&(this.knownToExist=await t.SymlinkSupport.existsFile(this.exePath)),this.knownToExist}}function R({useAlternateBitness:e=!1}={}){return e?0===w?process.env["ProgramFiles(x86)"]||null:0===l&&process.env.ProgramW6432||null:process.env.ProgramFiles||null}async function h({useAlternateBitness:e=!1,findPreview:s=!1}={}){const i=R({useAlternateBitness:e});if(!i)return null;const o=n.join(i,"PowerShell");if(!await t.SymlinkSupport.existsDirectory(o))return null;let r=-1,l=null;for(const e of await t.Promises.readdir(o)){let i=-1;if(s){const n=e.indexOf("-");if(n<0)continue;const s=e.substring(0,n);if(!d.test(s)||"preview"!==e.substring(n+1))continue;i=parseInt(s,10)}else{if(!d.test(e))continue;i=parseInt(e,10)}if(i<=r)continue;const a=n.join(o,e,"pwsh.exe");await t.SymlinkSupport.existsFile(a)&&(l=a,r=i)}if(!l)return null;const a=i.includes("x86")?" (x86)":"";return new u(l,`PowerShell${s?" Preview":""}${a}`,!0)}async function m({findPreview:e}={}){if(!process.env.LOCALAPPDATA)return null;const s=n.join(process.env.LOCALAPPDATA,"Microsoft","WindowsApps");if(!await t.SymlinkSupport.existsDirectory(s))return null;const{pwshMsixDirRegex:i,pwshMsixName:o}=e?{pwshMsixDirRegex:y,pwshMsixName:"PowerShell Preview (Store)"}:{pwshMsixDirRegex:E,pwshMsixName:"PowerShell (Store)"};for(const e of await t.Promises.readdir(s))if(i.test(e)){const t=n.join(s,e,"pwsh.exe");return new u(t,o)}return null}function I(){const e=n.join(S.homedir(),".dotnet","tools","pwsh.exe");return new u(e,".NET Core PowerShell Global Tool")}function v(){const e=n.join(S.homedir(),"scoop","apps"),s=n.join(e,"pwsh","current","pwsh.exe");return new u(s,"PowerShell (Scoop)")}function M(){const e=n.join(process.env.windir,1===w&&1!==l?"SysNative":"System32","WindowsPowerShell","v1.0","powershell.exe");return new u(e,"Windows PowerShell",!0)}async function*C(){let e=await h();e&&(yield e),e=await h({useAlternateBitness:!0}),e&&(yield e),e=await m(),e&&(yield e),e=I(),e&&(yield e),e=await h({findPreview:!0}),e&&(yield e),e=await m({findPreview:!0}),e&&(yield e),e=await h({useAlternateBitness:!0,findPreview:!0}),e&&(yield e),e=await v(),e&&(yield e),e=M(),e&&(yield e)}async function*D(){for await(const e of C())await e.exists()&&(yield e)}async function T(){for await(const e of D())return e;return null}export{D as enumeratePowerShellInstallations,T as getFirstAvailablePowerShellInstallation};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as os from "os";
+import * as path from "../common/path.js";
+import * as pfs from "./pfs.js";
+const IntRegex = /^\d+$/;
+const PwshMsixRegex = /^Microsoft.PowerShell_.*/;
+const PwshPreviewMsixRegex = /^Microsoft.PowerShellPreview_.*/;
+var Arch = /* @__PURE__ */ ((Arch2) => {
+  Arch2[Arch2["x64"] = 0] = "x64";
+  Arch2[Arch2["x86"] = 1] = "x86";
+  Arch2[Arch2["ARM"] = 2] = "ARM";
+  return Arch2;
+})(Arch || {});
+let processArch;
+switch (process.arch) {
+  case "ia32":
+    processArch = 1 /* x86 */;
+    break;
+  case "arm":
+  case "arm64":
+    processArch = 2 /* ARM */;
+    break;
+  default:
+    processArch = 0 /* x64 */;
+    break;
+}
+let osArch;
+if (process.env["PROCESSOR_ARCHITEW6432"]) {
+  osArch = process.env["PROCESSOR_ARCHITEW6432"] === "ARM64" ? 2 /* ARM */ : 0 /* x64 */;
+} else if (process.env["PROCESSOR_ARCHITECTURE"] === "ARM64") {
+  osArch = 2 /* ARM */;
+} else if (process.env["PROCESSOR_ARCHITECTURE"] === "X86") {
+  osArch = 1 /* x86 */;
+} else {
+  osArch = 0 /* x64 */;
+}
+class PossiblePowerShellExe {
+  constructor(exePath, displayName, knownToExist) {
+    this.exePath = exePath;
+    this.displayName = displayName;
+    this.knownToExist = knownToExist;
+  }
+  static {
+    __name(this, "PossiblePowerShellExe");
+  }
+  async exists() {
+    if (this.knownToExist === void 0) {
+      this.knownToExist = await pfs.SymlinkSupport.existsFile(this.exePath);
+    }
+    return this.knownToExist;
+  }
+}
+function getProgramFilesPath({ useAlternateBitness = false } = {}) {
+  if (!useAlternateBitness) {
+    return process.env.ProgramFiles || null;
+  }
+  if (processArch === 0 /* x64 */) {
+    return process.env["ProgramFiles(x86)"] || null;
+  }
+  if (osArch === 0 /* x64 */) {
+    return process.env.ProgramW6432 || null;
+  }
+  return null;
+}
+__name(getProgramFilesPath, "getProgramFilesPath");
+async function findPSCoreWindowsInstallation({ useAlternateBitness = false, findPreview = false } = {}) {
+  const programFilesPath = getProgramFilesPath({ useAlternateBitness });
+  if (!programFilesPath) {
+    return null;
+  }
+  const powerShellInstallBaseDir = path.join(programFilesPath, "PowerShell");
+  if (!await pfs.SymlinkSupport.existsDirectory(powerShellInstallBaseDir)) {
+    return null;
+  }
+  let highestSeenVersion = -1;
+  let pwshExePath = null;
+  for (const item of await pfs.Promises.readdir(powerShellInstallBaseDir)) {
+    let currentVersion = -1;
+    if (findPreview) {
+      const dashIndex = item.indexOf("-");
+      if (dashIndex < 0) {
+        continue;
+      }
+      const intPart = item.substring(0, dashIndex);
+      if (!IntRegex.test(intPart) || item.substring(dashIndex + 1) !== "preview") {
+        continue;
+      }
+      currentVersion = parseInt(intPart, 10);
+    } else {
+      if (!IntRegex.test(item)) {
+        continue;
+      }
+      currentVersion = parseInt(item, 10);
+    }
+    if (currentVersion <= highestSeenVersion) {
+      continue;
+    }
+    const exePath = path.join(powerShellInstallBaseDir, item, "pwsh.exe");
+    if (!await pfs.SymlinkSupport.existsFile(exePath)) {
+      continue;
+    }
+    pwshExePath = exePath;
+    highestSeenVersion = currentVersion;
+  }
+  if (!pwshExePath) {
+    return null;
+  }
+  const bitness = programFilesPath.includes("x86") ? " (x86)" : "";
+  const preview = findPreview ? " Preview" : "";
+  return new PossiblePowerShellExe(pwshExePath, `PowerShell${preview}${bitness}`, true);
+}
+__name(findPSCoreWindowsInstallation, "findPSCoreWindowsInstallation");
+async function findPSCoreMsix({ findPreview } = {}) {
+  if (!process.env.LOCALAPPDATA) {
+    return null;
+  }
+  const msixAppDir = path.join(process.env.LOCALAPPDATA, "Microsoft", "WindowsApps");
+  if (!await pfs.SymlinkSupport.existsDirectory(msixAppDir)) {
+    return null;
+  }
+  const { pwshMsixDirRegex, pwshMsixName } = findPreview ? { pwshMsixDirRegex: PwshPreviewMsixRegex, pwshMsixName: "PowerShell Preview (Store)" } : { pwshMsixDirRegex: PwshMsixRegex, pwshMsixName: "PowerShell (Store)" };
+  for (const subdir of await pfs.Promises.readdir(msixAppDir)) {
+    if (pwshMsixDirRegex.test(subdir)) {
+      const pwshMsixPath = path.join(msixAppDir, subdir, "pwsh.exe");
+      return new PossiblePowerShellExe(pwshMsixPath, pwshMsixName);
+    }
+  }
+  return null;
+}
+__name(findPSCoreMsix, "findPSCoreMsix");
+function findPSCoreDotnetGlobalTool() {
+  const dotnetGlobalToolExePath = path.join(os.homedir(), ".dotnet", "tools", "pwsh.exe");
+  return new PossiblePowerShellExe(dotnetGlobalToolExePath, ".NET Core PowerShell Global Tool");
+}
+__name(findPSCoreDotnetGlobalTool, "findPSCoreDotnetGlobalTool");
+function findPSCoreScoopInstallation() {
+  const scoopAppsDir = path.join(os.homedir(), "scoop", "apps");
+  const scoopPwsh = path.join(scoopAppsDir, "pwsh", "current", "pwsh.exe");
+  return new PossiblePowerShellExe(scoopPwsh, "PowerShell (Scoop)");
+}
+__name(findPSCoreScoopInstallation, "findPSCoreScoopInstallation");
+function findWinPS() {
+  const winPSPath = path.join(
+    process.env.windir,
+    processArch === 1 /* x86 */ && osArch !== 1 /* x86 */ ? "SysNative" : "System32",
+    "WindowsPowerShell",
+    "v1.0",
+    "powershell.exe"
+  );
+  return new PossiblePowerShellExe(winPSPath, "Windows PowerShell", true);
+}
+__name(findWinPS, "findWinPS");
+async function* enumerateDefaultPowerShellInstallations() {
+  let pwshExe = await findPSCoreWindowsInstallation();
+  if (pwshExe) {
+    yield pwshExe;
+  }
+  pwshExe = await findPSCoreWindowsInstallation({ useAlternateBitness: true });
+  if (pwshExe) {
+    yield pwshExe;
+  }
+  pwshExe = await findPSCoreMsix();
+  if (pwshExe) {
+    yield pwshExe;
+  }
+  pwshExe = findPSCoreDotnetGlobalTool();
+  if (pwshExe) {
+    yield pwshExe;
+  }
+  pwshExe = await findPSCoreWindowsInstallation({ findPreview: true });
+  if (pwshExe) {
+    yield pwshExe;
+  }
+  pwshExe = await findPSCoreMsix({ findPreview: true });
+  if (pwshExe) {
+    yield pwshExe;
+  }
+  pwshExe = await findPSCoreWindowsInstallation({ useAlternateBitness: true, findPreview: true });
+  if (pwshExe) {
+    yield pwshExe;
+  }
+  pwshExe = await findPSCoreScoopInstallation();
+  if (pwshExe) {
+    yield pwshExe;
+  }
+  pwshExe = findWinPS();
+  if (pwshExe) {
+    yield pwshExe;
+  }
+}
+__name(enumerateDefaultPowerShellInstallations, "enumerateDefaultPowerShellInstallations");
+async function* enumeratePowerShellInstallations() {
+  for await (const defaultPwsh of enumerateDefaultPowerShellInstallations()) {
+    if (await defaultPwsh.exists()) {
+      yield defaultPwsh;
+    }
+  }
+}
+__name(enumeratePowerShellInstallations, "enumeratePowerShellInstallations");
+async function getFirstAvailablePowerShellInstallation() {
+  for await (const pwsh of enumeratePowerShellInstallations()) {
+    return pwsh;
+  }
+  return null;
+}
+__name(getFirstAvailablePowerShellInstallation, "getFirstAvailablePowerShellInstallation");
+export {
+  enumeratePowerShellInstallations,
+  getFirstAvailablePowerShellInstallation
+};
+//# sourceMappingURL=powershell.js.map

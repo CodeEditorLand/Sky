@@ -1,1 +1,26 @@
-import{RawContextKey as e}from"../../../../platform/contextkey/common/contextkey.js";var n,l=(e=>(e[e.ByPosition=0]="ByPosition",e[e.ByName=1]="ByName",e[e.ByKind=2]="ByKind",e))(l||{});(n||={}).Id="outline";const a=new e("outlineFollowsCursor",!1),p=new e("outlineFiltersOnType",!1),r=new e("outlineSortMode",0),c=new e("outlineAllCollapsed",!1),x=new e("outlineFocused",!0);export{n as IOutlinePane,l as OutlineSortOrder,c as ctxAllCollapsed,p as ctxFilterOnType,x as ctxFocused,a as ctxFollowsCursor,r as ctxSortMode};
+import { RawContextKey } from "../../../../platform/contextkey/common/contextkey.js";
+var OutlineSortOrder = /* @__PURE__ */ ((OutlineSortOrder2) => {
+  OutlineSortOrder2[OutlineSortOrder2["ByPosition"] = 0] = "ByPosition";
+  OutlineSortOrder2[OutlineSortOrder2["ByName"] = 1] = "ByName";
+  OutlineSortOrder2[OutlineSortOrder2["ByKind"] = 2] = "ByKind";
+  return OutlineSortOrder2;
+})(OutlineSortOrder || {});
+var IOutlinePane;
+((IOutlinePane2) => {
+  IOutlinePane2.Id = "outline";
+})(IOutlinePane || (IOutlinePane = {}));
+const ctxFollowsCursor = new RawContextKey("outlineFollowsCursor", false);
+const ctxFilterOnType = new RawContextKey("outlineFiltersOnType", false);
+const ctxSortMode = new RawContextKey("outlineSortMode", 0 /* ByPosition */);
+const ctxAllCollapsed = new RawContextKey("outlineAllCollapsed", false);
+const ctxFocused = new RawContextKey("outlineFocused", true);
+export {
+  IOutlinePane,
+  OutlineSortOrder,
+  ctxAllCollapsed,
+  ctxFilterOnType,
+  ctxFocused,
+  ctxFollowsCursor,
+  ctxSortMode
+};
+//# sourceMappingURL=outline.js.map

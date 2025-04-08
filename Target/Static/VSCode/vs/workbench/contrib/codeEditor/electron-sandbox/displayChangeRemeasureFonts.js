@@ -1,1 +1,34 @@
-var f=Object.defineProperty,h=Object.getOwnPropertyDescriptor,b=(e,o,r,t)=>{for(var s,n=t>1?void 0:t?h(o,r):o,i=e.length-1;i>=0;i--)(s=e[i])&&(n=(t?s(o,r,n):s(n))||n);return t&&n&&f(o,r,n),n},m=(e,o)=>(r,t)=>o(r,t,e);import{Disposable as k}from"../../../../base/common/lifecycle.js";import{FontMeasurements as l}from"../../../../editor/browser/config/fontMeasurements.js";import{INativeHostService as p}from"../../../../platform/native/common/native.js";import{Registry as I}from"../../../../platform/registry/common/platform.js";import{Extensions as W}from"../../../common/contributions.js";import{LifecyclePhase as u}from"../../../services/lifecycle/common/lifecycle.js";let n=class extends k{constructor(e){super(),this._register(e.onDidChangeDisplay((()=>{l.clearAllFontInfos()})))}};n=b([m(0,p)],n),I.as(W.Workbench).registerWorkbenchContribution(n,u.Eventually);
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { FontMeasurements } from "../../../../editor/browser/config/fontMeasurements.js";
+import { INativeHostService } from "../../../../platform/native/common/native.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { Extensions as WorkbenchExtensions, IWorkbenchContribution, IWorkbenchContributionsRegistry } from "../../../common/contributions.js";
+import { LifecyclePhase } from "../../../services/lifecycle/common/lifecycle.js";
+let DisplayChangeRemeasureFonts = class extends Disposable {
+  static {
+    __name(this, "DisplayChangeRemeasureFonts");
+  }
+  constructor(nativeHostService) {
+    super();
+    this._register(nativeHostService.onDidChangeDisplay(() => {
+      FontMeasurements.clearAllFontInfos();
+    }));
+  }
+};
+DisplayChangeRemeasureFonts = __decorateClass([
+  __decorateParam(0, INativeHostService)
+], DisplayChangeRemeasureFonts);
+Registry.as(WorkbenchExtensions.Workbench).registerWorkbenchContribution(DisplayChangeRemeasureFonts, LifecyclePhase.Eventually);
+//# sourceMappingURL=displayChangeRemeasureFonts.js.map

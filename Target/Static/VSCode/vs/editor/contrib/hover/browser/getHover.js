@@ -1,1 +1,59 @@
-import{AsyncIterableObject as m}from"../../../../base/common/async.js";import{CancellationToken as s}from"../../../../base/common/cancellation.js";import{onUnexpectedExternalError as P}from"../../../../base/common/errors.js";import{registerModelAndPositionCommand as a}from"../../../browser/editorExtensions.js";import"../../../common/core/position.js";import"../../../common/model.js";import"../../../common/languages.js";import"../../../common/languageFeatureRegistry.js";import{ILanguageFeaturesService as v}from"../../../common/services/languageFeatures.js";class p{constructor(e,o,r){this.provider=e,this.hover=o,this.ordinal=r}}async function f(e,o,r,s,t){const n=await Promise.resolve(e.provideHover(r,s,t)).catch(P);if(n&&H(n))return new p(e,n,o)}function g(e,o,r,s,t=!1){const n=e.ordered(o,t).map(((e,t)=>f(e,t,o,r,s)));return m.fromPromisesResolveOrder(n).coalesce()}function c(e,o,r,s,t=!1){return g(e,o,r,s,t).map((e=>e.hover)).toPromise()}function H(e){const o=typeof e.range<"u",r=typeof e.contents<"u"&&e.contents&&e.contents.length>0;return o&&r}a("_executeHoverProvider",((e,o,r)=>c(e.get(v).hoverProvider,o,r,s.None))),a("_executeHoverProvider_recursive",((e,o,r)=>c(e.get(v).hoverProvider,o,r,s.None,!0)));export{p as HoverProviderResult,g as getHoverProviderResultsAsAsyncIterable,c as getHoversPromise};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { AsyncIterableObject } from "../../../../base/common/async.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { onUnexpectedExternalError } from "../../../../base/common/errors.js";
+import { registerModelAndPositionCommand } from "../../../browser/editorExtensions.js";
+import { Position } from "../../../common/core/position.js";
+import { ITextModel } from "../../../common/model.js";
+import { Hover, HoverProvider } from "../../../common/languages.js";
+import { LanguageFeatureRegistry } from "../../../common/languageFeatureRegistry.js";
+import { ILanguageFeaturesService } from "../../../common/services/languageFeatures.js";
+class HoverProviderResult {
+  constructor(provider, hover, ordinal) {
+    this.provider = provider;
+    this.hover = hover;
+    this.ordinal = ordinal;
+  }
+  static {
+    __name(this, "HoverProviderResult");
+  }
+}
+async function executeProvider(provider, ordinal, model, position, token) {
+  const result = await Promise.resolve(provider.provideHover(model, position, token)).catch(onUnexpectedExternalError);
+  if (!result || !isValid(result)) {
+    return void 0;
+  }
+  return new HoverProviderResult(provider, result, ordinal);
+}
+__name(executeProvider, "executeProvider");
+function getHoverProviderResultsAsAsyncIterable(registry, model, position, token, recursive = false) {
+  const providers = registry.ordered(model, recursive);
+  const promises = providers.map((provider, index) => executeProvider(provider, index, model, position, token));
+  return AsyncIterableObject.fromPromisesResolveOrder(promises).coalesce();
+}
+__name(getHoverProviderResultsAsAsyncIterable, "getHoverProviderResultsAsAsyncIterable");
+function getHoversPromise(registry, model, position, token, recursive = false) {
+  return getHoverProviderResultsAsAsyncIterable(registry, model, position, token, recursive).map((item) => item.hover).toPromise();
+}
+__name(getHoversPromise, "getHoversPromise");
+registerModelAndPositionCommand("_executeHoverProvider", (accessor, model, position) => {
+  const languageFeaturesService = accessor.get(ILanguageFeaturesService);
+  return getHoversPromise(languageFeaturesService.hoverProvider, model, position, CancellationToken.None);
+});
+registerModelAndPositionCommand("_executeHoverProvider_recursive", (accessor, model, position) => {
+  const languageFeaturesService = accessor.get(ILanguageFeaturesService);
+  return getHoversPromise(languageFeaturesService.hoverProvider, model, position, CancellationToken.None, true);
+});
+function isValid(result) {
+  const hasRange = typeof result.range !== "undefined";
+  const hasHtmlContent = typeof result.contents !== "undefined" && result.contents && result.contents.length > 0;
+  return hasRange && hasHtmlContent;
+}
+__name(isValid, "isValid");
+export {
+  HoverProviderResult,
+  getHoverProviderResultsAsAsyncIterable,
+  getHoversPromise
+};
+//# sourceMappingURL=getHover.js.map

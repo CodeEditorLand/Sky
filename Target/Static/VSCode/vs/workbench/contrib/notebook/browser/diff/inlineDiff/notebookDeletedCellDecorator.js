@@ -1,1 +1,248 @@
-var M=Object.defineProperty;var O=Object.getOwnPropertyDescriptor;var y=(p,u,n,t)=>{for(var o=t>1?void 0:t?O(u,n):u,e=p.length-1,r;e>=0;e--)(r=p[e])&&(o=(t?r(u,n,o):r(o))||o);return t&&o&&M(u,n,o),o},f=(p,u)=>(n,t)=>u(n,t,p);import{createTrustedTypesPolicy as H}from"../../../../../../base/browser/trustedTypes.js";import{Disposable as x,DisposableStore as L,dispose as N,toDisposable as C}from"../../../../../../base/common/lifecycle.js";import{splitLines as $}from"../../../../../../base/common/strings.js";import{EditorOption as V}from"../../../../../../editor/common/config/editorOptions.js";import{ILanguageService as _}from"../../../../../../editor/common/languages/language.js";import{tokenizeToString as Z}from"../../../../../../editor/common/languages/textToHtmlTokenizer.js";import"../../../common/model/notebookCellTextModel.js";import"../../../common/model/notebookTextModel.js";import{DefaultLineHeight as z}from"../diffElementViewModel.js";import"../notebookDiffViewModel.js";import{NotebookOverviewRulerLane as R}from"../../notebookBrowser.js";import*as s from"../../../../../../base/browser/dom.js";import{MenuWorkbenchToolBar as D,HiddenItemStrategy as P}from"../../../../../../platform/actions/browser/toolbar.js";import"../../../../../../platform/actions/common/actions.js";import{IInstantiationService as k}from"../../../../../../platform/instantiation/common/instantiation.js";import{ServiceCollection as F}from"../../../../../../platform/instantiation/common/serviceCollection.js";import{IContextKeyService as W}from"../../../../../../platform/contextkey/common/contextkey.js";import{overviewRulerDeletedForeground as A}from"../../../../scm/common/quickDiff.js";const B=H("notebookRenderer",{createHTML:p=>p});let v=class extends x{constructor(n,t,o,e){super();this._notebookEditor=n;this.toolbar=t;this.languageService=o;this.instantiationService=e}zoneRemover=this._register(new L);createdViewZones=new Map;deletedCellInfos=new Map;getTop(n){const t=this.deletedCellInfos.get(n);if(!t)return;if(t.previousIndex===-1)return 0;const o=this._notebookEditor.getCellsInRange({start:t.previousIndex,end:t.previousIndex+1});if(!o.length)return this._notebookEditor.getLayoutInfo().height+t.offset;const e=o[0],r=this._notebookEditor.getHeightOfElement(e);return this._notebookEditor.getAbsoluteTopOfElement(e)+r+t.offset}reveal(n){const t=this.getTop(n);if(typeof t=="number"){this._notebookEditor.focusContainer(),this._notebookEditor.revealOffsetInCenterIfOutsideViewport(t);const o=this.deletedCellInfos.get(n);if(o){const e=o.previousIndex===-1?0:o.previousIndex;this._notebookEditor.setFocus({start:e,end:e}),this._notebookEditor.setSelections([{start:e,end:e}])}}}apply(n,t){this.clear();let o=-1;const e={cells:[],index:0};n.forEach(r=>{if(r.type==="delete"){const c=t.cells[r.originalCellIndex];c&&(e.cells.push({cell:c,originalIndex:r.originalCellIndex,previousIndex:o}),e.index=o)}else e.cells.length&&(this._createWidget(e.index+1,e.cells),e.cells.length=0),o=r.modifiedCellIndex}),e.cells.length&&this._createWidget(e.index+1,e.cells)}clear(){this.deletedCellInfos.clear(),this.zoneRemover.clear()}_createWidget(n,t){this._createWidgetImpl(n,t)}async _createWidgetImpl(n,t){const o=document.createElement("div"),e=[],r=await Promise.all(t.map(async i=>{const l=new g(this._notebookEditor,this.toolbar,i.cell.getValue(),i.cell.language,o,i.originalIndex,this.languageService,this.instantiationService);e.push(l);const a=await l.render();return this.deletedCellInfos.set(i.originalIndex,{height:a,previousIndex:i.previousIndex,offset:0}),a}));Array.from(this.deletedCellInfos.keys()).sort((i,l)=>i-l).forEach(i=>{const l=this.deletedCellInfos.get(i-1);if(l){const a=this.deletedCellInfos.get(i);a&&(a.offset=l.height+l.offset)}});const c=r.reduce((i,l)=>i+l,0);this._notebookEditor.changeViewZones(i=>{const l={afterModelPosition:n,heightInPx:c+4,domNode:o},a=i.addZone(l);i.layoutZone(a),this.createdViewZones.set(n,a);const I=this._notebookEditor.deltaCellDecorations([],[{viewZoneId:a,options:{overviewRuler:{color:A,position:R.Center}}}]);this.zoneRemover.add(C(()=>{this.createdViewZones.get(n)===a&&this.createdViewZones.delete(n),this._notebookEditor.isDisposed||(this._notebookEditor.changeViewZones(m=>{m.removeZone(a),N(e)}),this._notebookEditor.deltaCellDecorations(I,[]))}))})}};v=y([f(2,_),f(3,k)],v);let g=class extends x{constructor(n,t,o,e,r,c,i,l){super();this._notebookEditor=n;this._toolbarOptions=t;this.code=o;this.language=e;this._originalIndex=c;this.languageService=i;this.instantiationService=l;this.container=s.append(r,document.createElement("div")),this._register(C(()=>{r.removeChild(this.container)}))}container;async render(){const n=this.code,t=this.language,o=await Z(this.languageService,n,t),e=this._notebookEditor.getBaseCellEditorOptions(t).value,r="--notebook-editor-font-family",c="--notebook-editor-font-size",i="--notebook-editor-font-weight",a=this._notebookEditor.codeEditors.map(d=>d[1]).find(d=>d)?.getOptions().get(V.layoutInfo),I=`font-family: var(${r});font-weight: var(${i});font-size: var(${c});`+e.lineHeight?`line-height: ${e.lineHeight}px;`:""+a?.contentLeft?`margin-left: ${a}px;`:"white-space: pre;",m=this.container;if(m.classList.add("code-cell-row"),this._toolbarOptions){const d=document.createElement("div");d.className=this._toolbarOptions?.className,m.appendChild(d);const T=this._register(this.instantiationService.createChild(new F([W,this._notebookEditor.scopedContextKeyService]))).createInstance(D,d,this._toolbarOptions.menuId,{telemetrySource:this._toolbarOptions.telemetrySource,hiddenItemStrategy:P.NoHide,toolbarOptions:{primaryGroup:()=>!0},menuOptions:{renderShortTitle:!0,arg:this._toolbarOptions.argFactory(this._originalIndex)}});this._store.add(T),d.style.position="absolute",d.style.right="40px",d.style.zIndex="10",d.classList.add("hover")}const b=s.append(m,s.$(".cell-inner-container"));b.style.position="relative";const E=s.append(b,s.$(".cell-focus-indicator.cell-focus-indicator-side.cell-focus-indicator-left")),S=s.append(b,s.$(".cell.code"));s.append(E,s.$("div.execution-count-label"));const w=s.append(S,s.$(".cell-editor-part"));let h=s.append(w,s.$(".cell-editor-container"));return h=s.append(h,s.$(".code",{style:I})),e.fontFamily&&h.style.setProperty(r,e.fontFamily),e.fontSize&&h.style.setProperty(c,`${e.fontSize}px`),e.fontWeight&&h.style.setProperty(i,e.fontWeight),h.innerHTML=B?.createHTML(o)||o,$(n).length*(e.lineHeight||z)+12+12+16+16}};g=y([f(6,_),f(7,k)],g);export{v as NotebookDeletedCellDecorator,g as NotebookDeletedCellWidget};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { createTrustedTypesPolicy } from "../../../../../../base/browser/trustedTypes.js";
+import { Disposable, DisposableStore, dispose, toDisposable } from "../../../../../../base/common/lifecycle.js";
+import { splitLines } from "../../../../../../base/common/strings.js";
+import { EditorOption } from "../../../../../../editor/common/config/editorOptions.js";
+import { ILanguageService } from "../../../../../../editor/common/languages/language.js";
+import { tokenizeToString } from "../../../../../../editor/common/languages/textToHtmlTokenizer.js";
+import { NotebookCellTextModel } from "../../../common/model/notebookCellTextModel.js";
+import { NotebookTextModel } from "../../../common/model/notebookTextModel.js";
+import { DefaultLineHeight } from "../diffElementViewModel.js";
+import { CellDiffInfo } from "../notebookDiffViewModel.js";
+import { INotebookEditor, NotebookOverviewRulerLane } from "../../notebookBrowser.js";
+import * as DOM from "../../../../../../base/browser/dom.js";
+import { MenuWorkbenchToolBar, HiddenItemStrategy } from "../../../../../../platform/actions/browser/toolbar.js";
+import { MenuId } from "../../../../../../platform/actions/common/actions.js";
+import { IInstantiationService } from "../../../../../../platform/instantiation/common/instantiation.js";
+import { ServiceCollection } from "../../../../../../platform/instantiation/common/serviceCollection.js";
+import { IContextKeyService } from "../../../../../../platform/contextkey/common/contextkey.js";
+import { overviewRulerDeletedForeground } from "../../../../scm/common/quickDiff.js";
+const ttPolicy = createTrustedTypesPolicy("notebookRenderer", { createHTML: /* @__PURE__ */ __name((value) => value, "createHTML") });
+let NotebookDeletedCellDecorator = class extends Disposable {
+  constructor(_notebookEditor, toolbar, languageService, instantiationService) {
+    super();
+    this._notebookEditor = _notebookEditor;
+    this.toolbar = toolbar;
+    this.languageService = languageService;
+    this.instantiationService = instantiationService;
+  }
+  static {
+    __name(this, "NotebookDeletedCellDecorator");
+  }
+  zoneRemover = this._register(new DisposableStore());
+  createdViewZones = /* @__PURE__ */ new Map();
+  deletedCellInfos = /* @__PURE__ */ new Map();
+  getTop(deletedIndex) {
+    const info = this.deletedCellInfos.get(deletedIndex);
+    if (!info) {
+      return;
+    }
+    if (info.previousIndex === -1) {
+      return 0;
+    }
+    const cells = this._notebookEditor.getCellsInRange({ start: info.previousIndex, end: info.previousIndex + 1 });
+    if (!cells.length) {
+      return this._notebookEditor.getLayoutInfo().height + info.offset;
+    }
+    const cell = cells[0];
+    const cellHeight = this._notebookEditor.getHeightOfElement(cell);
+    const top = this._notebookEditor.getAbsoluteTopOfElement(cell);
+    return top + cellHeight + info.offset;
+  }
+  reveal(deletedIndex) {
+    const top = this.getTop(deletedIndex);
+    if (typeof top === "number") {
+      this._notebookEditor.focusContainer();
+      this._notebookEditor.revealOffsetInCenterIfOutsideViewport(top);
+      const info = this.deletedCellInfos.get(deletedIndex);
+      if (info) {
+        const prevIndex = info.previousIndex === -1 ? 0 : info.previousIndex;
+        this._notebookEditor.setFocus({ start: prevIndex, end: prevIndex });
+        this._notebookEditor.setSelections([{ start: prevIndex, end: prevIndex }]);
+      }
+    }
+  }
+  apply(diffInfo, original) {
+    this.clear();
+    let currentIndex = -1;
+    const deletedCellsToRender = { cells: [], index: 0 };
+    diffInfo.forEach((diff) => {
+      if (diff.type === "delete") {
+        const deletedCell = original.cells[diff.originalCellIndex];
+        if (deletedCell) {
+          deletedCellsToRender.cells.push({ cell: deletedCell, originalIndex: diff.originalCellIndex, previousIndex: currentIndex });
+          deletedCellsToRender.index = currentIndex;
+        }
+      } else {
+        if (deletedCellsToRender.cells.length) {
+          this._createWidget(deletedCellsToRender.index + 1, deletedCellsToRender.cells);
+          deletedCellsToRender.cells.length = 0;
+        }
+        currentIndex = diff.modifiedCellIndex;
+      }
+    });
+    if (deletedCellsToRender.cells.length) {
+      this._createWidget(deletedCellsToRender.index + 1, deletedCellsToRender.cells);
+    }
+  }
+  clear() {
+    this.deletedCellInfos.clear();
+    this.zoneRemover.clear();
+  }
+  _createWidget(index, cells) {
+    this._createWidgetImpl(index, cells);
+  }
+  async _createWidgetImpl(index, cells) {
+    const rootContainer = document.createElement("div");
+    const widgets = [];
+    const heights = await Promise.all(cells.map(async (cell) => {
+      const widget = new NotebookDeletedCellWidget(this._notebookEditor, this.toolbar, cell.cell.getValue(), cell.cell.language, rootContainer, cell.originalIndex, this.languageService, this.instantiationService);
+      widgets.push(widget);
+      const height = await widget.render();
+      this.deletedCellInfos.set(cell.originalIndex, { height, previousIndex: cell.previousIndex, offset: 0 });
+      return height;
+    }));
+    Array.from(this.deletedCellInfos.keys()).sort((a, b) => a - b).forEach((originalIndex) => {
+      const previousDeletedCell = this.deletedCellInfos.get(originalIndex - 1);
+      if (previousDeletedCell) {
+        const deletedCell = this.deletedCellInfos.get(originalIndex);
+        if (deletedCell) {
+          deletedCell.offset = previousDeletedCell.height + previousDeletedCell.offset;
+        }
+      }
+    });
+    const totalHeight = heights.reduce((prev, curr) => prev + curr, 0);
+    this._notebookEditor.changeViewZones((accessor) => {
+      const notebookViewZone = {
+        afterModelPosition: index,
+        heightInPx: totalHeight + 4,
+        domNode: rootContainer
+      };
+      const id = accessor.addZone(notebookViewZone);
+      accessor.layoutZone(id);
+      this.createdViewZones.set(index, id);
+      const deletedCellOverviewRulereDecorationIds = this._notebookEditor.deltaCellDecorations([], [{
+        viewZoneId: id,
+        options: {
+          overviewRuler: {
+            color: overviewRulerDeletedForeground,
+            position: NotebookOverviewRulerLane.Center
+          }
+        }
+      }]);
+      this.zoneRemover.add(toDisposable(() => {
+        if (this.createdViewZones.get(index) === id) {
+          this.createdViewZones.delete(index);
+        }
+        if (!this._notebookEditor.isDisposed) {
+          this._notebookEditor.changeViewZones((accessor2) => {
+            accessor2.removeZone(id);
+            dispose(widgets);
+          });
+          this._notebookEditor.deltaCellDecorations(deletedCellOverviewRulereDecorationIds, []);
+        }
+      }));
+    });
+  }
+};
+NotebookDeletedCellDecorator = __decorateClass([
+  __decorateParam(2, ILanguageService),
+  __decorateParam(3, IInstantiationService)
+], NotebookDeletedCellDecorator);
+let NotebookDeletedCellWidget = class extends Disposable {
+  // private readonly toolbar: HTMLElement;
+  constructor(_notebookEditor, _toolbarOptions, code, language, container, _originalIndex, languageService, instantiationService) {
+    super();
+    this._notebookEditor = _notebookEditor;
+    this._toolbarOptions = _toolbarOptions;
+    this.code = code;
+    this.language = language;
+    this._originalIndex = _originalIndex;
+    this.languageService = languageService;
+    this.instantiationService = instantiationService;
+    this.container = DOM.append(container, document.createElement("div"));
+    this._register(toDisposable(() => {
+      container.removeChild(this.container);
+    }));
+  }
+  static {
+    __name(this, "NotebookDeletedCellWidget");
+  }
+  container;
+  async render() {
+    const code = this.code;
+    const languageId = this.language;
+    const codeHtml = await tokenizeToString(this.languageService, code, languageId);
+    const fontInfo = this._notebookEditor.getBaseCellEditorOptions(languageId).value;
+    const fontFamilyVar = "--notebook-editor-font-family";
+    const fontSizeVar = "--notebook-editor-font-size";
+    const fontWeightVar = "--notebook-editor-font-weight";
+    const editor = this._notebookEditor.codeEditors.map((c) => c[1]).find((c) => c);
+    const layoutInfo = editor?.getOptions().get(EditorOption.layoutInfo);
+    const style = `font-family: var(${fontFamilyVar});font-weight: var(${fontWeightVar});font-size: var(${fontSizeVar});` + fontInfo.lineHeight ? `line-height: ${fontInfo.lineHeight}px;` : "" + layoutInfo?.contentLeft ? `margin-left: ${layoutInfo}px;` : `white-space: pre;`;
+    const rootContainer = this.container;
+    rootContainer.classList.add("code-cell-row");
+    if (this._toolbarOptions) {
+      const toolbar = document.createElement("div");
+      toolbar.className = this._toolbarOptions?.className;
+      rootContainer.appendChild(toolbar);
+      const scopedInstaService = this._register(this.instantiationService.createChild(new ServiceCollection([IContextKeyService, this._notebookEditor.scopedContextKeyService])));
+      const toolbarWidget = scopedInstaService.createInstance(MenuWorkbenchToolBar, toolbar, this._toolbarOptions.menuId, {
+        telemetrySource: this._toolbarOptions.telemetrySource,
+        hiddenItemStrategy: HiddenItemStrategy.NoHide,
+        toolbarOptions: { primaryGroup: /* @__PURE__ */ __name(() => true, "primaryGroup") },
+        menuOptions: {
+          renderShortTitle: true,
+          arg: this._toolbarOptions.argFactory(this._originalIndex)
+        }
+      });
+      this._store.add(toolbarWidget);
+      toolbar.style.position = "absolute";
+      toolbar.style.right = "40px";
+      toolbar.style.zIndex = "10";
+      toolbar.classList.add("hover");
+    }
+    const container = DOM.append(rootContainer, DOM.$(".cell-inner-container"));
+    container.style.position = "relative";
+    const focusIndicatorLeft = DOM.append(container, DOM.$(".cell-focus-indicator.cell-focus-indicator-side.cell-focus-indicator-left"));
+    const cellContainer = DOM.append(container, DOM.$(".cell.code"));
+    DOM.append(focusIndicatorLeft, DOM.$("div.execution-count-label"));
+    const editorPart = DOM.append(cellContainer, DOM.$(".cell-editor-part"));
+    let editorContainer = DOM.append(editorPart, DOM.$(".cell-editor-container"));
+    editorContainer = DOM.append(editorContainer, DOM.$(".code", { style }));
+    if (fontInfo.fontFamily) {
+      editorContainer.style.setProperty(fontFamilyVar, fontInfo.fontFamily);
+    }
+    if (fontInfo.fontSize) {
+      editorContainer.style.setProperty(fontSizeVar, `${fontInfo.fontSize}px`);
+    }
+    if (fontInfo.fontWeight) {
+      editorContainer.style.setProperty(fontWeightVar, fontInfo.fontWeight);
+    }
+    editorContainer.innerHTML = ttPolicy?.createHTML(codeHtml) || codeHtml;
+    const lineCount = splitLines(code).length;
+    const height = lineCount * (fontInfo.lineHeight || DefaultLineHeight) + 12 + 12;
+    const totalHeight = height + 16 + 16;
+    return totalHeight;
+  }
+};
+NotebookDeletedCellWidget = __decorateClass([
+  __decorateParam(6, ILanguageService),
+  __decorateParam(7, IInstantiationService)
+], NotebookDeletedCellWidget);
+export {
+  NotebookDeletedCellDecorator,
+  NotebookDeletedCellWidget
+};
+//# sourceMappingURL=notebookDeletedCellDecorator.js.map

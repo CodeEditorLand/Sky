@@ -1,1 +1,46 @@
-import*as o from"fs";import{join as r}from"../../../base/common/path.js";import{Promises as d}from"../../../base/node/pfs.js";async function u(e,t){const s=Object.create(null),i=(e,o)=>{const t=JSON.parse(e);s[o]=t};if(t){const e=[],s=await d.readdir(t);for(const i of s)try{(await o.promises.stat(r(t,i))).isDirectory()&&e.push(i)}catch{}const a=[];for(const o of e)1===(await d.readdir(r(t,o))).filter((e=>"telemetry.json"===e)).length&&a.push(o);for(const e of a){i((await o.promises.readFile(r(t,e,"telemetry.json"))).toString(),e)}}let a=(await o.promises.readFile(r(e,"telemetry-core.json"))).toString();return i(a,"vscode-core"),a=(await o.promises.readFile(r(e,"telemetry-extensions.json"))).toString(),i(a,"vscode-extensions"),JSON.stringify(s,null,4)}export{u as buildTelemetryMessage};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as fs from "fs";
+import { join } from "../../../base/common/path.js";
+import { Promises } from "../../../base/node/pfs.js";
+async function buildTelemetryMessage(appRoot, extensionsPath) {
+  const mergedTelemetry = /* @__PURE__ */ Object.create(null);
+  const mergeTelemetry = /* @__PURE__ */ __name((contents2, dirName) => {
+    const telemetryData = JSON.parse(contents2);
+    mergedTelemetry[dirName] = telemetryData;
+  }, "mergeTelemetry");
+  if (extensionsPath) {
+    const dirs = [];
+    const files = await Promises.readdir(extensionsPath);
+    for (const file of files) {
+      try {
+        const fileStat = await fs.promises.stat(join(extensionsPath, file));
+        if (fileStat.isDirectory()) {
+          dirs.push(file);
+        }
+      } catch {
+      }
+    }
+    const telemetryJsonFolders = [];
+    for (const dir of dirs) {
+      const files2 = (await Promises.readdir(join(extensionsPath, dir))).filter((file) => file === "telemetry.json");
+      if (files2.length === 1) {
+        telemetryJsonFolders.push(dir);
+      }
+    }
+    for (const folder of telemetryJsonFolders) {
+      const contents2 = (await fs.promises.readFile(join(extensionsPath, folder, "telemetry.json"))).toString();
+      mergeTelemetry(contents2, folder);
+    }
+  }
+  let contents = (await fs.promises.readFile(join(appRoot, "telemetry-core.json"))).toString();
+  mergeTelemetry(contents, "vscode-core");
+  contents = (await fs.promises.readFile(join(appRoot, "telemetry-extensions.json"))).toString();
+  mergeTelemetry(contents, "vscode-extensions");
+  return JSON.stringify(mergedTelemetry, null, 4);
+}
+__name(buildTelemetryMessage, "buildTelemetryMessage");
+export {
+  buildTelemetryMessage
+};
+//# sourceMappingURL=telemetry.js.map

@@ -1,1 +1,139 @@
-var I=Object.defineProperty,y=Object.getOwnPropertyDescriptor,h=(e,t,i,s)=>{for(var o,r=s>1?void 0:s?y(t,i):t,n=e.length-1;n>=0;n--)(o=e[n])&&(r=(s?o(t,i,r):o(r))||r);return s&&r&&I(t,i,r),r},v=(e,t)=>(i,s)=>t(i,s,e);import{n as c}from"../../../../../../../base/browser/dom.js";import"../../../../../../../base/browser/mouseEvent.js";import{Emitter as O}from"../../../../../../../base/common/event.js";import{Disposable as P}from"../../../../../../../base/common/lifecycle.js";import{constObservable as p,derived as E}from"../../../../../../../base/common/observable.js";import{IAccessibilityService as w}from"../../../../../../../platform/accessibility/common/accessibility.js";import{asCssVariable as x}from"../../../../../../../platform/theme/common/colorUtils.js";import"../../../../../../browser/editorBrowser.js";import{observableCodeEditor as C}from"../../../../../../browser/observableCodeEditor.js";import{Point as Y}from"../../../../../../browser/point.js";import{singleTextRemoveCommonPrefix as T}from"../../../model/singleTextEditHelpers.js";import"../inlineEditsViewInterface.js";import"../inlineEditWithChanges.js";import{inlineEditIndicatorPrimaryBorder as H}from"../theme.js";import{PathBuilder as u}from"../utils/utils.js";let b=class extends P{constructor(e,t,i){super(),this._editor=e,this._edit=t,this._accessibilityService=i,this._editorObs=C(this._editor);const s=this._edit.map((e=>e?.edit.edits[0]??null)).map((e=>e?T(e,this._editor.getModel()).range.getStartPosition():null)),o=this._editorObs.observePosition(s,this._store),r=E((e=>{const t=o.read(e);if(!t)return null;const i=this._editorObs.layoutInfoContentLeft.read(e),s=this._editorObs.scrollLeft.read(e);return new Y(i+t.x-s,t.y)})),n=c.div({class:"inline-edits-collapsed-view",style:{position:"absolute",overflow:"visible",top:"0px",left:"0px",zIndex:"0",display:"block"}},[[this.getCollapsedIndicator(r)]]).keepUpdated(this._store).element;this._register(this._editorObs.createOverlayWidget({domNode:n,position:p(null),allowEditorOverflow:!1,minContentWidthInPx:p(0)})),this.isVisible=this._edit.map(((e,t)=>!!e&&null!==r.read(t)))}_onDidClick=this._register(new O);onDidClick=this._onDidClick.event;_editorObs;_iconRef=c.ref();isVisible;triggerAnimation(){return this._accessibilityService.isMotionReduced()?new Animation(null,null).finished:this._iconRef.element.animate([{offset:0,transform:"translateY(-3px)"},{offset:.2,transform:"translateY(1px)"},{offset:.36,transform:"translateY(-1px)"},{offset:.52,transform:"translateY(1px)"},{offset:.68,transform:"translateY(-1px)"},{offset:.84,transform:"translateY(1px)"},{offset:1,transform:"translateY(0px)"}],{duration:2e3}).finished}getCollapsedIndicator(e){const t=this._editorObs.layoutInfoContentLeft,i=e.map(((e,i)=>e?e.deltaX(-t.read(i)):null)),s=this.createIconPath(i);return c.svg({class:"collapsedView",ref:this._iconRef,style:{position:"absolute",top:0,left:t,width:this._editorObs.contentWidth,height:this._editorObs.editor.getContentHeight(),overflow:"hidden",pointerEvents:"none"}},[c.svgElem("path",{class:"collapsedViewPath",d:s,fill:x(H)})])}createIconPath(e){return e.map((e=>{if(!e)return(new u).build();const t=e.deltaX(-3).deltaY(-1),i=t.deltaX(6),s=t.deltaY(1),o=i.deltaY(1),r=s.deltaX(3).deltaY(3);return(new u).moveTo(t).lineTo(i).lineTo(o).lineTo(r).lineTo(s).lineTo(t).build()}))}isHovered=p(!1)};b=h([v(2,w)],b);export{b as InlineEditsCollapsedView};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { n } from "../../../../../../../base/browser/dom.js";
+import { IMouseEvent } from "../../../../../../../base/browser/mouseEvent.js";
+import { Emitter } from "../../../../../../../base/common/event.js";
+import { Disposable } from "../../../../../../../base/common/lifecycle.js";
+import { constObservable, derived, IObservable } from "../../../../../../../base/common/observable.js";
+import { IAccessibilityService } from "../../../../../../../platform/accessibility/common/accessibility.js";
+import { asCssVariable } from "../../../../../../../platform/theme/common/colorUtils.js";
+import { ICodeEditor } from "../../../../../../browser/editorBrowser.js";
+import { ObservableCodeEditor, observableCodeEditor } from "../../../../../../browser/observableCodeEditor.js";
+import { Point } from "../../../../../../browser/point.js";
+import { singleTextRemoveCommonPrefix } from "../../../model/singleTextEditHelpers.js";
+import { IInlineEditsView } from "../inlineEditsViewInterface.js";
+import { InlineEditWithChanges } from "../inlineEditWithChanges.js";
+import { inlineEditIndicatorPrimaryBorder } from "../theme.js";
+import { PathBuilder } from "../utils/utils.js";
+let InlineEditsCollapsedView = class extends Disposable {
+  constructor(_editor, _edit, _accessibilityService) {
+    super();
+    this._editor = _editor;
+    this._edit = _edit;
+    this._accessibilityService = _accessibilityService;
+    this._editorObs = observableCodeEditor(this._editor);
+    const firstEdit = this._edit.map((inlineEdit) => inlineEdit?.edit.edits[0] ?? null);
+    const startPosition = firstEdit.map((edit) => edit ? singleTextRemoveCommonPrefix(edit, this._editor.getModel()).range.getStartPosition() : null);
+    const observedStartPoint = this._editorObs.observePosition(startPosition, this._store);
+    const startPoint = derived((reader) => {
+      const point = observedStartPoint.read(reader);
+      if (!point) {
+        return null;
+      }
+      const contentLeft = this._editorObs.layoutInfoContentLeft.read(reader);
+      const scrollLeft = this._editorObs.scrollLeft.read(reader);
+      return new Point(contentLeft + point.x - scrollLeft, point.y);
+    });
+    const overlayElement = n.div({
+      class: "inline-edits-collapsed-view",
+      style: {
+        position: "absolute",
+        overflow: "visible",
+        top: "0px",
+        left: "0px",
+        zIndex: "0",
+        display: "block"
+      }
+    }, [
+      [this.getCollapsedIndicator(startPoint)]
+    ]).keepUpdated(this._store).element;
+    this._register(this._editorObs.createOverlayWidget({
+      domNode: overlayElement,
+      position: constObservable(null),
+      allowEditorOverflow: false,
+      minContentWidthInPx: constObservable(0)
+    }));
+    this.isVisible = this._edit.map((inlineEdit, reader) => !!inlineEdit && startPoint.read(reader) !== null);
+  }
+  static {
+    __name(this, "InlineEditsCollapsedView");
+  }
+  _onDidClick = this._register(new Emitter());
+  onDidClick = this._onDidClick.event;
+  _editorObs;
+  _iconRef = n.ref();
+  isVisible;
+  triggerAnimation() {
+    if (this._accessibilityService.isMotionReduced()) {
+      return new Animation(null, null).finished;
+    }
+    const animation = this._iconRef.element.animate([
+      { offset: 0, transform: "translateY(-3px)" },
+      { offset: 0.2, transform: "translateY(1px)" },
+      { offset: 0.36, transform: "translateY(-1px)" },
+      { offset: 0.52, transform: "translateY(1px)" },
+      { offset: 0.68, transform: "translateY(-1px)" },
+      { offset: 0.84, transform: "translateY(1px)" },
+      { offset: 1, transform: "translateY(0px)" }
+    ], { duration: 2e3 });
+    return animation.finished;
+  }
+  getCollapsedIndicator(startPoint) {
+    const contentLeft = this._editorObs.layoutInfoContentLeft;
+    const startPointTranslated = startPoint.map((p, reader) => p ? p.deltaX(-contentLeft.read(reader)) : null);
+    const iconPath = this.createIconPath(startPointTranslated);
+    return n.svg({
+      class: "collapsedView",
+      ref: this._iconRef,
+      style: {
+        position: "absolute",
+        top: 0,
+        left: contentLeft,
+        width: this._editorObs.contentWidth,
+        height: this._editorObs.editor.getContentHeight(),
+        overflow: "hidden",
+        pointerEvents: "none"
+      }
+    }, [
+      n.svgElem("path", {
+        class: "collapsedViewPath",
+        d: iconPath,
+        fill: asCssVariable(inlineEditIndicatorPrimaryBorder)
+      })
+    ]);
+  }
+  createIconPath(indicatorPoint) {
+    const width = 6;
+    const triangleHeight = 3;
+    const baseHeight = 1;
+    return indicatorPoint.map((point) => {
+      if (!point) {
+        return new PathBuilder().build();
+      }
+      const baseTopLeft = point.deltaX(-width / 2).deltaY(-baseHeight);
+      const baseTopRight = baseTopLeft.deltaX(width);
+      const baseBottomLeft = baseTopLeft.deltaY(baseHeight);
+      const baseBottomRight = baseTopRight.deltaY(baseHeight);
+      const triangleBottomCenter = baseBottomLeft.deltaX(width / 2).deltaY(triangleHeight);
+      return new PathBuilder().moveTo(baseTopLeft).lineTo(baseTopRight).lineTo(baseBottomRight).lineTo(triangleBottomCenter).lineTo(baseBottomLeft).lineTo(baseTopLeft).build();
+    });
+  }
+  isHovered = constObservable(false);
+};
+InlineEditsCollapsedView = __decorateClass([
+  __decorateParam(2, IAccessibilityService)
+], InlineEditsCollapsedView);
+export {
+  InlineEditsCollapsedView
+};
+//# sourceMappingURL=inlineEditsCollapsedView.js.map

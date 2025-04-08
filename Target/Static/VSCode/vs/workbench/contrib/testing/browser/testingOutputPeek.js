@@ -1,4 +1,1043 @@
-var fe=Object.defineProperty;var ge=Object.getOwnPropertyDescriptor;var k=(d,s,e,t)=>{for(var i=t>1?void 0:t?ge(s,e):s,r=d.length-1,o;r>=0;r--)(o=d[r])&&(i=(t?o(s,e,i):o(i))||i);return t&&i&&fe(s,e,i),i},a=(d,s)=>(e,t)=>s(e,t,d);import*as he from"../../../../base/browser/dom.js";import{alert as Ie}from"../../../../base/browser/ui/aria/aria.js";import"../../../../base/common/actions.js";import{RunOnceScheduler as ve}from"../../../../base/common/async.js";import{Codicon as y}from"../../../../base/common/codicons.js";import{Color as G}from"../../../../base/common/color.js";import{Event as J}from"../../../../base/common/event.js";import{stripIcons as Se}from"../../../../base/common/iconLabels.js";import{Iterable as ye}from"../../../../base/common/iterator.js";import{KeyCode as P,KeyMod as R}from"../../../../base/common/keyCodes.js";import{Lazy as be}from"../../../../base/common/lazy.js";import{Disposable as Q}from"../../../../base/common/lifecycle.js";import{derived as ke,disposableObservableValue as xe,observableValue as Ce}from"../../../../base/common/observable.js";import"../../../../base/common/uri.js";import{isCodeEditor as M}from"../../../../editor/browser/editorBrowser.js";import{EditorAction2 as Te}from"../../../../editor/browser/editorExtensions.js";import{ICodeEditorService as h}from"../../../../editor/browser/services/codeEditorService.js";import{EmbeddedCodeEditorWidget as Ee}from"../../../../editor/browser/widget/codeEditor/embeddedCodeEditorWidget.js";import{EmbeddedDiffEditorWidget as we}from"../../../../editor/browser/widget/diffEditor/embeddedDiffEditorWidget.js";import{EditorOption as X}from"../../../../editor/common/config/editorOptions.js";import"../../../../editor/common/core/position.js";import{Range as Pe}from"../../../../editor/common/core/range.js";import{ScrollType as Re}from"../../../../editor/common/editorCommon.js";import{EditorContextKeys as Me}from"../../../../editor/common/editorContextKeys.js";import{ITextModelService as Ue}from"../../../../editor/common/services/resolverService.js";import{IPeekViewService as Oe,PeekViewWidget as Ve,peekViewTitleForeground as Fe,peekViewTitleInfoForeground as Ae}from"../../../../editor/contrib/peekView/browser/peekView.js";import{localize as Y,localize2 as p}from"../../../../nls.js";import{Categories as x}from"../../../../platform/action/common/actionCommonCategories.js";import{fillInActionBarActions as Z}from"../../../../platform/actions/browser/menuEntryActionViewItem.js";import{Action2 as C,IMenuService as He,MenuId as f}from"../../../../platform/actions/common/actions.js";import{ICommandService as De}from"../../../../platform/commands/common/commands.js";import{IConfigurationService as $}from"../../../../platform/configuration/common/configuration.js";import{ContextKeyExpr as L,IContextKeyService as U}from"../../../../platform/contextkey/common/contextkey.js";import{IContextMenuService as Le}from"../../../../platform/contextview/browser/contextView.js";import{TextEditorSelectionRevealType as Be}from"../../../../platform/editor/common/editor.js";import{IHoverService as _e}from"../../../../platform/hover/browser/hover.js";import{IInstantiationService as B}from"../../../../platform/instantiation/common/instantiation.js";import{ServiceCollection as Ke}from"../../../../platform/instantiation/common/serviceCollection.js";import{IKeybindingService as We}from"../../../../platform/keybinding/common/keybinding.js";import{KeybindingWeight as O}from"../../../../platform/keybinding/common/keybindingsRegistry.js";import{INotificationService as Ne}from"../../../../platform/notification/common/notification.js";import{bindContextKey as je}from"../../../../platform/observable/common/platformObservableUtils.js";import{IOpenerService as ze}from"../../../../platform/opener/common/opener.js";import{IStorageService as qe,StorageScope as Ge,StorageTarget as Je}from"../../../../platform/storage/common/storage.js";import{editorBackground as Qe}from"../../../../platform/theme/common/colorRegistry.js";import{IThemeService as ee}from"../../../../platform/theme/common/themeService.js";import{IUriIdentityService as Xe}from"../../../../platform/uriIdentity/common/uriIdentity.js";import{ViewPane as Ye}from"../../../browser/parts/views/viewPane.js";import{IViewDescriptorService as Ze}from"../../../common/views.js";import{IEditorService as $e}from"../../../services/editor/common/editorService.js";import{IViewsService as et}from"../../../services/views/common/viewsService.js";import{AutoOpenPeekViewWhen as te,TestingConfigKeys as ie,getTestingConfiguration as re}from"../common/configuration.js";import{Testing as V}from"../common/constants.js";import{MutableObservableValue as tt,staticObservableValue as it}from"../common/observableValue.js";import{StoredValue as rt}from"../common/storedValue.js";import{TestResultItemChangeReason as se,resultItemParents as st}from"../common/testResult.js";import{ITestResultService as _}from"../common/testResultService.js";import{ITestService as ot}from"../common/testService.js";import{TestMessageType as F}from"../common/testTypes.js";import{TestingContextKeys as g}from"../common/testingContextKeys.js";import{ITestingPeekOpener as K}from"../common/testingPeekOpener.js";import{isFailedState as nt}from"../common/testingStates.js";import{TestUriType as I,buildTestUri as W,parseTestUri as oe}from"../common/testingUri.js";import{renderTestMessageAsText as ne}from"./testMessageColorizer.js";import{MessageSubject as v,TaskSubject as S,TestOutputSubject as b,inspectSubjectHasStack as at,mapFindTestMessage as N}from"./testResultsView/testResultsSubject.js";import{TestResultsViewContent as ae}from"./testResultsView/testResultsViewContent.js";import{testingMessagePeekBorder as dt,testingPeekBorder as ct,testingPeekHeaderBackground as lt,testingPeekMessageHeaderBackground as ut}from"./theme.js";function*de([d]){if(d)for(const s of d.tests)for(let e=0;e<s.tasks.length;e++){const t=s.tasks[e].messages;for(let i=0;i<t.length;i++)t[i].type===F.Error&&(yield{result:d,test:s,taskIndex:e,messageIndex:i})}}function j({result:d,test:s,taskIndex:e,messageIndex:t}){return W({type:I.ResultMessage,resultId:d.id,testExtId:s.item.extId,taskIndex:e,messageIndex:t})}let A=class extends Q{constructor(e,t,i,r,o,n,c,l,m){super();this.configuration=e;this.editorService=t;this.codeEditorService=i;this.testResults=r;this.testService=o;this.viewsService=c;this.commandService=l;this.notificationService=m;this._register(r.onTestChanged(this.openPeekOnFailure,this)),this.historyVisible=this._register(tt.stored(new rt({key:"testHistoryVisibleInPeek",scope:Ge.PROFILE,target:Je.USER},n),!1))}lastUri;historyVisible;async open(){let e;const t=this.editorService.activeTextEditorControl;if(M(t)&&t.getModel()?.uri){const i=t.getModel()?.uri;i&&(e=await this.getFileCandidateMessage(i,t.getPosition()))}return e||(e=this.lastUri),e||(e=this.getAnyCandidateMessage()),e?this.showPeekFromUri(e):!1}tryPeekFirstError(e,t,i){const r=this.getFailedCandidateMessage(t);return r?(this.showPeekFromUri({type:I.ResultMessage,documentUri:r.location.uri,taskIndex:r.taskId,messageIndex:r.index,resultId:e.id,testExtId:t.item.extId},void 0,{selection:r.location.range,selectionRevealType:Be.NearTopIfOutsideViewport,...i}),!0):!1}peekUri(e,t={}){const i=oe(e),r=i&&this.testResults.getResult(i.resultId);if(!i||!r||!("testExtId"in i)||!("messageIndex"in i))return!1;const o=r.getStateById(i.testExtId)?.tasks[i.taskIndex].messages[i.messageIndex];return o?.location?(this.showPeekFromUri({type:I.ResultMessage,documentUri:o.location.uri,taskIndex:i.taskIndex,messageIndex:i.messageIndex,resultId:r.id,testExtId:i.testExtId},t.inEditor,{selection:o.location.range,...t.options}),!0):!1}closeAllPeeks(){for(const e of this.codeEditorService.listCodeEditors())u.get(e)?.removePeek()}openCurrentInEditor(){const e=this.getActiveControl();if(!e)return;const t={pinned:!1,revealIfOpened:!0};if(e instanceof S||e instanceof b){this.editorService.openEditor({resource:e.outputUri,options:t});return}if(e instanceof b){this.editorService.openEditor({resource:e.outputUri,options:t});return}const i=e.message;e.isDiffable?this.editorService.openEditor({original:{resource:e.expectedUri},modified:{resource:e.actualUri},options:t}):typeof i.message=="string"?this.editorService.openEditor({resource:e.messageUri,options:t}):this.commandService.executeCommand("markdown.showPreview",e.messageUri).catch(r=>{this.notificationService.error(Y("testing.markdownPeekError",`Could not open markdown preview: {0}.
-
-Please make sure the markdown extension is enabled.`,r.message))})}getActiveControl(){const e=E(this.codeEditorService);return(e&&u.get(e))?.subject.get()??this.viewsService.getActiveViewWithId(V.ResultsViewId)?.subject}async showPeekFromUri(e,t,i){if(M(t))return this.lastUri=e,u.get(t)?.show(W(this.lastUri)),!0;const o=(await this.editorService.openEditor({resource:e.documentUri,options:{revealIfOpened:!0,...i}}))?.getControl();return M(o)?(this.lastUri=e,u.get(o)?.show(W(this.lastUri)),!0):!1}openPeekOnFailure(e){if(e.reason!==se.OwnStateChange||!this.getFailedCandidateMessage(e.item)||e.result.request.continuous&&!re(this.configuration,ie.AutoOpenPeekViewDuringContinuousRun))return;const i=this.codeEditorService.listCodeEditors();switch(re(this.configuration,ie.AutoOpenPeekView)){case te.FailureVisible:{const n=this.editorService.visibleTextEditorControls,c=new Set(n.filter(M).map(l=>l.getModel()?.uri.toString()));if(!ye.some(st(e.result,e.item),l=>l.item.uri&&c.has(l.item.uri.toString())))return;break}case te.FailureAnywhere:break;default:return}i.map(u.get).some(n=>n?.subject.get())||this.tryPeekFirstError(e.result,e.item)}async getFileCandidateMessage(e,t){let i,r=1/0;const o=e.toString();for(const n of this.testService.collection.all){const c=this.testResults.getStateById(n.item.extId);c&&N(c[1],(l,m,w,z)=>{if(m.type!==F.Error||!m.location||m.location.uri.toString()!==o)return;const q=t?Math.abs(t.lineNumber-m.location.range.startLineNumber):0;(!i||q<=r)&&(r=q,i={type:I.ResultMessage,testExtId:c[1].item.extId,resultId:c[0].id,taskIndex:z,messageIndex:w,documentUri:e})})}return i}getAnyCandidateMessage(){const e=new Set;for(const t of this.testResults.results)for(const i of t.tests){if(e.has(i.item.extId))continue;e.add(i.item.extId);const r=N(i,(o,n,c,l)=>n.location&&{type:I.ResultMessage,testExtId:i.item.extId,resultId:t.id,taskIndex:l,messageIndex:c,documentUri:n.location.uri});if(r)return r}}getFailedCandidateMessage(e){const t=e.item.uri&&e.item.range?{uri:e.item.uri,range:e.item.range}:void 0;let i;return N(e,(r,o,n,c)=>{const l=o.location||t;!nt(r.state)||!l||i&&o.type!==F.Error||(i={taskId:c,index:n,message:o,location:l})}),i}};A=k([a(0,$),a(1,$e),a(2,h),a(3,_),a(4,ot),a(5,qe),a(6,et),a(7,De),a(8,Ne)],A);let u=class extends Q{constructor(e,t,i,r,o){super();this.editor=e;this.codeEditorService=t;this.instantiationService=i;this.testResults=r;this.visible=g.isPeekVisible.bindTo(o),this._register(e.onDidChangeModel(()=>this.peek.set(void 0,void 0))),this._register(r.onResultsChanged(this.closePeekOnCertainResultEvents,this)),this._register(r.onTestChanged(this.closePeekOnTestChange,this))}static get(e){return e.getContribution(V.OutputPeekContributionId)}peek=this._register(xe("TestingOutputPeek",void 0));visible;subject=ke(e=>this.peek.read(e)?.current.read(e));async show(e){const t=this.retrieveTest(e);t&&this.showSubject(t)}async showSubject(e){if(!this.peek.get()){const t=this.instantiationService.createInstance(T,this.editor);this.peek.set(t,void 0),t.onDidClose(()=>{this.visible.set(!1),this.peek.set(void 0,void 0)}),this.visible.set(!0),t.create()}e instanceof v&&Ie(ne(e.message.message)),this.peek.get().setModel(e)}async openAndShow(e){const t=this.retrieveTest(e);if(!t)return;if(!t.revealLocation||t.revealLocation.uri.toString()===this.editor.getModel()?.uri.toString())return this.show(e);const i=await this.codeEditorService.openCodeEditor({resource:t.revealLocation.uri,options:{pinned:!1,revealIfOpened:!0}},this.editor);if(i)return u.get(i)?.removePeek(),u.get(i)?.show(e)}removePeek(){this.peek.set(void 0,void 0)}collapseStack(){this.peek.get()?.collapseStack()}next(){const e=this.peek.get()?.current.get();if(!e)return;let t,i=!1;for(const r of de(this.testResults.results)){if(t??=r,e instanceof S&&r.result.id===e.result.id&&(i=!0),i){this.openAndShow(j(r));return}e instanceof b&&e.test.item.extId===r.test.item.extId&&e.taskIndex===r.taskIndex&&e.result.id===r.result.id&&(i=!0),e instanceof v&&e.test.extId===r.test.item.extId&&e.messageIndex===r.messageIndex&&e.taskIndex===r.taskIndex&&e.result.id===r.result.id&&(i=!0)}t&&this.openAndShow(j(t))}previous(){const e=this.subject.get();if(!e)return;let t,i=!1,r;for(const n of de(this.testResults.results))if(r=n,!i){if(e instanceof S){n.result.id===e.result.id&&(i=!0);continue}if(e instanceof b){n.test.item.extId===e.test.item.extId&&n.result.id===e.result.id&&n.taskIndex===e.taskIndex&&(i=!0);continue}if(e.test.extId===n.test.item.extId&&e.messageIndex===n.messageIndex&&e.taskIndex===n.taskIndex&&e.result.id===n.result.id){i=!0;continue}t=n}const o=t||r;o&&this.openAndShow(j(o))}removeIfPeekingForTest(e){const t=this.subject.get();t&&t instanceof v&&t.test.extId===e&&this.peek.set(void 0,void 0)}closePeekOnTestChange(e){e.reason!==se.OwnStateChange||e.previousState===e.item.ownComputedState||this.removeIfPeekingForTest(e.item.item.extId)}closePeekOnCertainResultEvents(e){"started"in e&&this.peek.set(void 0,void 0),"removed"in e&&this.testResults.results.length===0&&this.peek.set(void 0,void 0)}retrieveTest(e){const t=oe(e);if(!t)return;const i=this.testResults.results.find(l=>l.id===t.resultId);if(!i)return;if(t.type===I.TaskOutput)return new S(i,t.taskIndex);if(t.type===I.TestOutput){const l=i.getStateById(t.testExtId);return l?new b(i,t.taskIndex,l):void 0}const{testExtId:r,taskIndex:o,messageIndex:n}=t,c=i?.getStateById(r);if(!(!c||!c.tasks[t.taskIndex]))return new v(i,c,o,n)}};u=k([a(1,h),a(2,B),a(3,_),a(4,U)],u);let T=class extends Ve{constructor(e,t,i,r,o,n,c,l,m,w){super(e,{showFrame:!0,frameWidth:1,showArrow:!0,isResizeable:!0,isAccessible:!0,className:"test-output-peek"},c);this.themeService=t;this.testingPeek=r;this.contextKeyService=o;this.menuService=n;this.modelService=l;this.codeEditorService=m;this.uriIdentityService=w;this._disposables.add(t.onDidColorThemeChange(this.applyTheme,this)),i.addExclusiveWidget(e,this)}current=Ce("testPeekCurrent",void 0);resizeOnNextContentHeightUpdate=!1;content;scopedContextKeyService;dimension;_getMaximumHeightInLines(){const e=super._getMaximumHeightInLines(),t=this.content?.contentHeight;if(!t||this.testingPeek.historyVisible.value)return e;const i=this.editor.getOption(X.lineHeight);return Math.min(e||1/0,(t+41)/i+1)}applyTheme(){const e=this.themeService.getColorTheme(),t=this.current.get(),i=t instanceof v&&t.message.type===F.Error,r=(i?e.getColor(ct):e.getColor(dt))||G.transparent,o=(i?e.getColor(lt):e.getColor(ut))||G.transparent,n=e.getColor(Qe);this.style({arrowColor:r,frameColor:r,headerBackgroundColor:n&&o?o.makeOpaque(n):o,primaryHeadingColor:e.getColor(Fe),secondaryHeadingColor:e.getColor(Ae)})}_fillContainer(e){if(!this.scopedContextKeyService){this.scopedContextKeyService=this._disposables.add(this.contextKeyService.createScoped(e)),g.isInPeek.bindTo(this.scopedContextKeyService).set(!0);const t=this._disposables.add(this.instantiationService.createChild(new Ke([U,this.scopedContextKeyService])));this.content=this._disposables.add(t.createInstance(ae,this.editor,{historyVisible:this.testingPeek.historyVisible,showRevealLocationOnMessages:!1,locationForProgress:V.ResultsViewId})),this._disposables.add(this.content.onClose(()=>{u.get(this.editor)?.removePeek()}))}super._fillContainer(e)}_fillHead(e){super._fillHead(e);const t=this._disposables.add(this.contextKeyService.createScoped(e));this._disposables.add(je(g.peekHasStack,t,n=>at(this.current.read(n))));const i=this.menuService.createMenu(f.TestPeekTitle,t),r=this._actionbarWidget;this._disposables.add(i.onDidChange(()=>{for(o.length=0,Z(i.getActions(),o);r.getAction(1);)r.pull(0);r.push(o,{label:!1,icon:!0,index:0})}));const o=[];Z(i.getActions(),o),r.push(o,{label:!1,icon:!0,index:0})}_fillBody(e){this.content.fillBody(e);const t=this._disposables.add(new ve(()=>{this.resizeOnNextContentHeightUpdate=!1},500));this._disposables.add(this.content.onDidChangeContentHeight(i=>{if(!this.resizeOnNextContentHeightUpdate||!i)return;const r=this._getMaximumHeightInLines();r&&(this._relayout(Math.min(r,this.getVisibleEditorLines()/2),!0),t.isScheduled()||t.schedule())})),this._disposables.add(this.content.onDidRequestReveal(i=>{u.get(this.editor)?.show(i instanceof v?i.messageUri:i.outputUri)}))}setModel(e){if(e instanceof S||e instanceof b)return this.current.set(e,void 0),this.showInPlace(e);const t=this.current,i=e.revealLocation?.range.getStartPosition();return!i&&!t?Promise.resolve():(this.current.set(e,void 0),i?(this.resizeOnNextContentHeightUpdate=!0,this.show(i,10),this.editor.revealRangeNearTopIfOutsideViewport(Pe.fromPositions(i),Re.Smooth),this.showInPlace(e)):this.showInPlace(e))}collapseStack(){this.content.collapseStack()}getVisibleEditorLines(){return Math.round(this.editor.getDomNode().clientHeight/this.editor.getOption(X.lineHeight))}async showInPlace(e){if(e instanceof v){const t=e.message;this.setTitle(pt(ne(t.message)),Se(e.test.label))}else this.setTitle(Y("testOutputTitle","Test Output"));this.applyTheme(),await this.content.reveal({subject:e,preserveFocus:!1})}_doLayoutBody(e,t){super._doLayoutBody(e,t),this.content.onLayoutBody(e,t)}_onWidth(e){super._onWidth(e),this.dimension&&(this.dimension=new he.Dimension(e,this.dimension.height)),this.content.onWidth(e)}};T=k([a(1,ee),a(2,Oe),a(3,K),a(4,U),a(5,He),a(6,B),a(7,Ue),a(8,h),a(9,Xe)],T);let H=class extends Ye{constructor(e,t,i,r,o,n,c,l,m,w,z){super(e,t,i,r,o,n,c,l,m,w);this.resultService=z}content=new be(()=>this._register(this.instantiationService.createInstance(ae,void 0,{historyVisible:it(!0),showRevealLocationOnMessages:!0,locationForProgress:V.ExplorerViewId})));get subject(){return this.content.rawValue?.current}showLatestRun(e=!1){const t=this.resultService.results.find(i=>i.tasks.length);t&&this.content.rawValue?.reveal({preserveFocus:e,subject:new S(t,0)})}renderBody(e){super.renderBody(e),this.isBodyVisible()?this.renderContent(e):this._register(J.once(J.filter(this.onDidChangeBodyVisibility,Boolean))(()=>this.renderContent(e)))}layoutBody(e,t){super.layoutBody(e,t),this.content.rawValue?.onLayoutBody(e,t)}renderContent(e){const t=this.content.value;t.fillBody(e),this._register(t.onDidRequestReveal(r=>t.reveal({preserveFocus:!0,subject:r})));const[i]=this.resultService.results;i&&i.tasks.length&&t.reveal({preserveFocus:!0,subject:new S(i,0)})}};H=k([a(1,We),a(2,Le),a(3,$),a(4,U),a(5,Ze),a(6,B),a(7,ze),a(8,ee),a(9,_e),a(10,_)],H);const pt=d=>{const s=d.indexOf(`
-`);return s===-1?d:d.slice(0,s)};function mt(d){const s=d.listDiffEditors();for(const e of s)if(e.hasTextFocus()&&e instanceof we)return e.getParentEditor();return null}class Gi extends Te{constructor(){super({id:"editor.closeTestPeek",title:p("close","Close"),icon:y.close,precondition:L.or(g.isInPeek,g.isPeekVisible),keybinding:{weight:O.EditorContrib-101,primary:P.Escape,when:L.not("config.editor.stablePeek")}})}runEditorCommand(s,e){const t=E(s.get(h));u.get(t??e)?.removePeek()}}const D=L.and(Me.focus,g.isPeekVisible),E=d=>{const s=d.getFocusedCodeEditor()||d.getActiveCodeEditor();return s&&ft(d,s)},ft=(d,s)=>{if(u.get(s)?.subject.get())return s;if(s instanceof Ee)return s.getParentEditor();const e=mt(d);return e||s};class ce extends C{static ID="testing.goToNextMessage";constructor(){super({id:ce.ID,f1:!0,title:p("testing.goToNextMessage","Go to Next Test Failure"),metadata:{description:p("testing.goToNextMessage.description","Shows the next failure message in your file")},icon:y.arrowDown,category:x.Test,keybinding:{primary:R.Alt|P.F8,weight:O.EditorContrib+1,when:D},menu:[{id:f.TestPeekTitle,group:"navigation",order:2},{id:f.CommandPalette,when:D}]})}run(s){const e=E(s.get(h));e&&u.get(e)?.next()}}class le extends C{static ID="testing.goToPreviousMessage";constructor(){super({id:le.ID,f1:!0,title:p("testing.goToPreviousMessage","Go to Previous Test Failure"),metadata:{description:p("testing.goToPreviousMessage.description","Shows the previous failure message in your file")},icon:y.arrowUp,category:x.Test,keybinding:{primary:R.Shift|R.Alt|P.F8,weight:O.EditorContrib+1,when:D},menu:[{id:f.TestPeekTitle,group:"navigation",order:1},{id:f.CommandPalette,when:D}]})}run(s){const e=E(s.get(h));e&&u.get(e)?.previous()}}class ue extends C{static ID="testing.collapsePeekStack";constructor(){super({id:ue.ID,title:p("testing.collapsePeekStack","Collapse Stack Frames"),icon:y.collapseAll,category:x.Test,menu:[{id:f.TestPeekTitle,when:g.peekHasStack,group:"navigation",order:4}]})}run(s){const e=E(s.get(h));e&&u.get(e)?.collapseStack()}}class pe extends C{static ID="testing.openMessageInEditor";constructor(){super({id:pe.ID,f1:!1,title:p("testing.openMessageInEditor","Open in Editor"),icon:y.goToFile,category:x.Test,menu:[{id:f.TestPeekTitle}]})}run(s){s.get(K).openCurrentInEditor()}}class me extends C{static ID="testing.toggleTestingPeekHistory";constructor(){super({id:me.ID,f1:!0,title:p("testing.toggleTestingPeekHistory","Toggle Test History in Peek"),metadata:{description:p("testing.toggleTestingPeekHistory.description","Shows or hides the history of test runs in the peek view")},icon:y.history,category:x.Test,menu:[{id:f.TestPeekTitle,group:"navigation",order:3}],keybinding:{weight:O.WorkbenchContrib,primary:R.Alt|P.KeyH,when:g.isPeekVisible.isEqualTo(!0)}})}run(s){const e=s.get(K);e.historyVisible.value=!e.historyVisible.value}}export{Gi as CloseTestPeek,ue as CollapsePeekStack,ce as GoToNextMessageAction,le as GoToPreviousMessageAction,pe as OpenMessageInEditorAction,H as TestResultsView,u as TestingOutputPeekController,A as TestingPeekOpener,me as ToggleTestingPeekHistory};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import * as dom from "../../../../base/browser/dom.js";
+import { alert } from "../../../../base/browser/ui/aria/aria.js";
+import { IAction } from "../../../../base/common/actions.js";
+import { RunOnceScheduler } from "../../../../base/common/async.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { Color } from "../../../../base/common/color.js";
+import { Event } from "../../../../base/common/event.js";
+import { stripIcons } from "../../../../base/common/iconLabels.js";
+import { Iterable } from "../../../../base/common/iterator.js";
+import { KeyCode, KeyMod } from "../../../../base/common/keyCodes.js";
+import { Lazy } from "../../../../base/common/lazy.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { derived, disposableObservableValue, observableValue } from "../../../../base/common/observable.js";
+import { URI } from "../../../../base/common/uri.js";
+import { ICodeEditor, isCodeEditor } from "../../../../editor/browser/editorBrowser.js";
+import { EditorAction2 } from "../../../../editor/browser/editorExtensions.js";
+import { ICodeEditorService } from "../../../../editor/browser/services/codeEditorService.js";
+import { EmbeddedCodeEditorWidget } from "../../../../editor/browser/widget/codeEditor/embeddedCodeEditorWidget.js";
+import { EmbeddedDiffEditorWidget } from "../../../../editor/browser/widget/diffEditor/embeddedDiffEditorWidget.js";
+import { EditorOption } from "../../../../editor/common/config/editorOptions.js";
+import { Position } from "../../../../editor/common/core/position.js";
+import { Range } from "../../../../editor/common/core/range.js";
+import { IEditor, IEditorContribution, ScrollType } from "../../../../editor/common/editorCommon.js";
+import { EditorContextKeys } from "../../../../editor/common/editorContextKeys.js";
+import { ITextModelService } from "../../../../editor/common/services/resolverService.js";
+import { IPeekViewService, PeekViewWidget, peekViewTitleForeground, peekViewTitleInfoForeground } from "../../../../editor/contrib/peekView/browser/peekView.js";
+import { localize, localize2 } from "../../../../nls.js";
+import { Categories } from "../../../../platform/action/common/actionCommonCategories.js";
+import { fillInActionBarActions } from "../../../../platform/actions/browser/menuEntryActionViewItem.js";
+import { Action2, IMenuService, MenuId } from "../../../../platform/actions/common/actions.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { ContextKeyExpr, IContextKey, IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IContextMenuService } from "../../../../platform/contextview/browser/contextView.js";
+import { ITextEditorOptions, TextEditorSelectionRevealType } from "../../../../platform/editor/common/editor.js";
+import { IHoverService } from "../../../../platform/hover/browser/hover.js";
+import { IInstantiationService, ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+import { ServiceCollection } from "../../../../platform/instantiation/common/serviceCollection.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { KeybindingWeight } from "../../../../platform/keybinding/common/keybindingsRegistry.js";
+import { INotificationService } from "../../../../platform/notification/common/notification.js";
+import { bindContextKey } from "../../../../platform/observable/common/platformObservableUtils.js";
+import { IOpenerService } from "../../../../platform/opener/common/opener.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { editorBackground } from "../../../../platform/theme/common/colorRegistry.js";
+import { IThemeService } from "../../../../platform/theme/common/themeService.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import { IViewPaneOptions, ViewPane } from "../../../browser/parts/views/viewPane.js";
+import { IViewDescriptorService } from "../../../common/views.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { IViewsService } from "../../../services/views/common/viewsService.js";
+import { AutoOpenPeekViewWhen, TestingConfigKeys, getTestingConfiguration } from "../common/configuration.js";
+import { Testing } from "../common/constants.js";
+import { MutableObservableValue, staticObservableValue } from "../common/observableValue.js";
+import { StoredValue } from "../common/storedValue.js";
+import { ITestResult, TestResultItemChange, TestResultItemChangeReason, resultItemParents } from "../common/testResult.js";
+import { ITestResultService, ResultChangeEvent } from "../common/testResultService.js";
+import { ITestService } from "../common/testService.js";
+import { IRichLocation, ITestMessage, TestMessageType, TestResultItem } from "../common/testTypes.js";
+import { TestingContextKeys } from "../common/testingContextKeys.js";
+import { IShowResultOptions, ITestingPeekOpener } from "../common/testingPeekOpener.js";
+import { isFailedState } from "../common/testingStates.js";
+import { ParsedTestUri, TestUriType, buildTestUri, parseTestUri } from "../common/testingUri.js";
+import { renderTestMessageAsText } from "./testMessageColorizer.js";
+import { InspectSubject, MessageSubject, TaskSubject, TestOutputSubject, inspectSubjectHasStack, mapFindTestMessage } from "./testResultsView/testResultsSubject.js";
+import { TestResultsViewContent } from "./testResultsView/testResultsViewContent.js";
+import { testingMessagePeekBorder, testingPeekBorder, testingPeekHeaderBackground, testingPeekMessageHeaderBackground } from "./theme.js";
+function* allMessages([result]) {
+  if (!result) {
+    return;
+  }
+  for (const test of result.tests) {
+    for (let taskIndex = 0; taskIndex < test.tasks.length; taskIndex++) {
+      const messages = test.tasks[taskIndex].messages;
+      for (let messageIndex = 0; messageIndex < messages.length; messageIndex++) {
+        if (messages[messageIndex].type === TestMessageType.Error) {
+          yield { result, test, taskIndex, messageIndex };
+        }
+      }
+    }
+  }
+}
+__name(allMessages, "allMessages");
+function messageItReferenceToUri({ result, test, taskIndex, messageIndex }) {
+  return buildTestUri({
+    type: TestUriType.ResultMessage,
+    resultId: result.id,
+    testExtId: test.item.extId,
+    taskIndex,
+    messageIndex
+  });
+}
+__name(messageItReferenceToUri, "messageItReferenceToUri");
+let TestingPeekOpener = class extends Disposable {
+  constructor(configuration, editorService, codeEditorService, testResults, testService, storageService, viewsService, commandService, notificationService) {
+    super();
+    this.configuration = configuration;
+    this.editorService = editorService;
+    this.codeEditorService = codeEditorService;
+    this.testResults = testResults;
+    this.testService = testService;
+    this.viewsService = viewsService;
+    this.commandService = commandService;
+    this.notificationService = notificationService;
+    this._register(testResults.onTestChanged(this.openPeekOnFailure, this));
+    this.historyVisible = this._register(MutableObservableValue.stored(new StoredValue({
+      key: "testHistoryVisibleInPeek",
+      scope: StorageScope.PROFILE,
+      target: StorageTarget.USER
+    }, storageService), false));
+  }
+  static {
+    __name(this, "TestingPeekOpener");
+  }
+  lastUri;
+  /** @inheritdoc */
+  historyVisible;
+  /** @inheritdoc */
+  async open() {
+    let uri;
+    const active = this.editorService.activeTextEditorControl;
+    if (isCodeEditor(active) && active.getModel()?.uri) {
+      const modelUri = active.getModel()?.uri;
+      if (modelUri) {
+        uri = await this.getFileCandidateMessage(modelUri, active.getPosition());
+      }
+    }
+    if (!uri) {
+      uri = this.lastUri;
+    }
+    if (!uri) {
+      uri = this.getAnyCandidateMessage();
+    }
+    if (!uri) {
+      return false;
+    }
+    return this.showPeekFromUri(uri);
+  }
+  /** @inheritdoc */
+  tryPeekFirstError(result, test, options) {
+    const candidate = this.getFailedCandidateMessage(test);
+    if (!candidate) {
+      return false;
+    }
+    this.showPeekFromUri({
+      type: TestUriType.ResultMessage,
+      documentUri: candidate.location.uri,
+      taskIndex: candidate.taskId,
+      messageIndex: candidate.index,
+      resultId: result.id,
+      testExtId: test.item.extId
+    }, void 0, { selection: candidate.location.range, selectionRevealType: TextEditorSelectionRevealType.NearTopIfOutsideViewport, ...options });
+    return true;
+  }
+  /** @inheritdoc */
+  peekUri(uri, options = {}) {
+    const parsed = parseTestUri(uri);
+    const result = parsed && this.testResults.getResult(parsed.resultId);
+    if (!parsed || !result || !("testExtId" in parsed)) {
+      return false;
+    }
+    if (!("messageIndex" in parsed)) {
+      return false;
+    }
+    const message = result.getStateById(parsed.testExtId)?.tasks[parsed.taskIndex].messages[parsed.messageIndex];
+    if (!message?.location) {
+      return false;
+    }
+    this.showPeekFromUri({
+      type: TestUriType.ResultMessage,
+      documentUri: message.location.uri,
+      taskIndex: parsed.taskIndex,
+      messageIndex: parsed.messageIndex,
+      resultId: result.id,
+      testExtId: parsed.testExtId
+    }, options.inEditor, { selection: message.location.range, ...options.options });
+    return true;
+  }
+  /** @inheritdoc */
+  closeAllPeeks() {
+    for (const editor of this.codeEditorService.listCodeEditors()) {
+      TestingOutputPeekController.get(editor)?.removePeek();
+    }
+  }
+  openCurrentInEditor() {
+    const current = this.getActiveControl();
+    if (!current) {
+      return;
+    }
+    const options = { pinned: false, revealIfOpened: true };
+    if (current instanceof TaskSubject || current instanceof TestOutputSubject) {
+      this.editorService.openEditor({ resource: current.outputUri, options });
+      return;
+    }
+    if (current instanceof TestOutputSubject) {
+      this.editorService.openEditor({ resource: current.outputUri, options });
+      return;
+    }
+    const message = current.message;
+    if (current.isDiffable) {
+      this.editorService.openEditor({
+        original: { resource: current.expectedUri },
+        modified: { resource: current.actualUri },
+        options
+      });
+    } else if (typeof message.message === "string") {
+      this.editorService.openEditor({ resource: current.messageUri, options });
+    } else {
+      this.commandService.executeCommand("markdown.showPreview", current.messageUri).catch((err) => {
+        this.notificationService.error(localize("testing.markdownPeekError", "Could not open markdown preview: {0}.\n\nPlease make sure the markdown extension is enabled.", err.message));
+      });
+    }
+  }
+  getActiveControl() {
+    const editor = getPeekedEditorFromFocus(this.codeEditorService);
+    const controller = editor && TestingOutputPeekController.get(editor);
+    return controller?.subject.get() ?? this.viewsService.getActiveViewWithId(Testing.ResultsViewId)?.subject;
+  }
+  /** @inheritdoc */
+  async showPeekFromUri(uri, editor, options) {
+    if (isCodeEditor(editor)) {
+      this.lastUri = uri;
+      TestingOutputPeekController.get(editor)?.show(buildTestUri(this.lastUri));
+      return true;
+    }
+    const pane = await this.editorService.openEditor({
+      resource: uri.documentUri,
+      options: { revealIfOpened: true, ...options }
+    });
+    const control = pane?.getControl();
+    if (!isCodeEditor(control)) {
+      return false;
+    }
+    this.lastUri = uri;
+    TestingOutputPeekController.get(control)?.show(buildTestUri(this.lastUri));
+    return true;
+  }
+  /**
+   * Opens the peek view on a test failure, based on user preferences.
+   */
+  openPeekOnFailure(evt) {
+    if (evt.reason !== TestResultItemChangeReason.OwnStateChange) {
+      return;
+    }
+    const candidate = this.getFailedCandidateMessage(evt.item);
+    if (!candidate) {
+      return;
+    }
+    if (evt.result.request.continuous && !getTestingConfiguration(this.configuration, TestingConfigKeys.AutoOpenPeekViewDuringContinuousRun)) {
+      return;
+    }
+    const editors = this.codeEditorService.listCodeEditors();
+    const cfg = getTestingConfiguration(this.configuration, TestingConfigKeys.AutoOpenPeekView);
+    switch (cfg) {
+      case AutoOpenPeekViewWhen.FailureVisible: {
+        const visibleEditors = this.editorService.visibleTextEditorControls;
+        const editorUris = new Set(visibleEditors.filter(isCodeEditor).map((e) => e.getModel()?.uri.toString()));
+        if (!Iterable.some(resultItemParents(evt.result, evt.item), (i) => i.item.uri && editorUris.has(i.item.uri.toString()))) {
+          return;
+        }
+        break;
+      }
+      case AutoOpenPeekViewWhen.FailureAnywhere:
+        break;
+      //continue
+      default:
+        return;
+    }
+    const controllers = editors.map(TestingOutputPeekController.get);
+    if (controllers.some((c) => c?.subject.get())) {
+      return;
+    }
+    this.tryPeekFirstError(evt.result, evt.item);
+  }
+  /**
+   * Gets the message closest to the given position from a test in the file.
+   */
+  async getFileCandidateMessage(uri, position) {
+    let best;
+    let bestDistance = Infinity;
+    const demandedUriStr = uri.toString();
+    for (const test of this.testService.collection.all) {
+      const result = this.testResults.getStateById(test.item.extId);
+      if (!result) {
+        continue;
+      }
+      mapFindTestMessage(result[1], (_task, message, messageIndex, taskIndex) => {
+        if (message.type !== TestMessageType.Error || !message.location || message.location.uri.toString() !== demandedUriStr) {
+          return;
+        }
+        const distance = position ? Math.abs(position.lineNumber - message.location.range.startLineNumber) : 0;
+        if (!best || distance <= bestDistance) {
+          bestDistance = distance;
+          best = {
+            type: TestUriType.ResultMessage,
+            testExtId: result[1].item.extId,
+            resultId: result[0].id,
+            taskIndex,
+            messageIndex,
+            documentUri: uri
+          };
+        }
+      });
+    }
+    return best;
+  }
+  /**
+   * Gets any possible still-relevant message from the results.
+   */
+  getAnyCandidateMessage() {
+    const seen = /* @__PURE__ */ new Set();
+    for (const result of this.testResults.results) {
+      for (const test of result.tests) {
+        if (seen.has(test.item.extId)) {
+          continue;
+        }
+        seen.add(test.item.extId);
+        const found = mapFindTestMessage(test, (task, message, messageIndex, taskIndex) => message.location && {
+          type: TestUriType.ResultMessage,
+          testExtId: test.item.extId,
+          resultId: result.id,
+          taskIndex,
+          messageIndex,
+          documentUri: message.location.uri
+        });
+        if (found) {
+          return found;
+        }
+      }
+    }
+    return void 0;
+  }
+  /**
+   * Gets the first failed message that can be displayed from the result.
+   */
+  getFailedCandidateMessage(test) {
+    const fallbackLocation = test.item.uri && test.item.range ? { uri: test.item.uri, range: test.item.range } : void 0;
+    let best;
+    mapFindTestMessage(test, (task, message, messageIndex, taskId) => {
+      const location = message.location || fallbackLocation;
+      if (!isFailedState(task.state) || !location) {
+        return;
+      }
+      if (best && message.type !== TestMessageType.Error) {
+        return;
+      }
+      best = { taskId, index: messageIndex, message, location };
+    });
+    return best;
+  }
+};
+TestingPeekOpener = __decorateClass([
+  __decorateParam(0, IConfigurationService),
+  __decorateParam(1, IEditorService),
+  __decorateParam(2, ICodeEditorService),
+  __decorateParam(3, ITestResultService),
+  __decorateParam(4, ITestService),
+  __decorateParam(5, IStorageService),
+  __decorateParam(6, IViewsService),
+  __decorateParam(7, ICommandService),
+  __decorateParam(8, INotificationService)
+], TestingPeekOpener);
+let TestingOutputPeekController = class extends Disposable {
+  constructor(editor, codeEditorService, instantiationService, testResults, contextKeyService) {
+    super();
+    this.editor = editor;
+    this.codeEditorService = codeEditorService;
+    this.instantiationService = instantiationService;
+    this.testResults = testResults;
+    this.visible = TestingContextKeys.isPeekVisible.bindTo(contextKeyService);
+    this._register(editor.onDidChangeModel(() => this.peek.set(void 0, void 0)));
+    this._register(testResults.onResultsChanged(this.closePeekOnCertainResultEvents, this));
+    this._register(testResults.onTestChanged(this.closePeekOnTestChange, this));
+  }
+  static {
+    __name(this, "TestingOutputPeekController");
+  }
+  /**
+   * Gets the controller associated with the given code editor.
+   */
+  static get(editor) {
+    return editor.getContribution(Testing.OutputPeekContributionId);
+  }
+  /**
+   * Currently-shown peek view.
+   */
+  peek = this._register(disposableObservableValue("TestingOutputPeek", void 0));
+  /**
+   * Context key updated when the peek is visible/hidden.
+   */
+  visible;
+  /**
+   * Gets the currently display subject. Undefined if the peek is not open.
+   */
+  subject = derived((reader) => this.peek.read(reader)?.current.read(reader));
+  /**
+   * Shows a peek for the message in the editor.
+   */
+  async show(uri) {
+    const subject = this.retrieveTest(uri);
+    if (subject) {
+      this.showSubject(subject);
+    }
+  }
+  /**
+   * Shows a peek for the existing inspect subject.
+   */
+  async showSubject(subject) {
+    if (!this.peek.get()) {
+      const peek = this.instantiationService.createInstance(TestResultsPeek, this.editor);
+      this.peek.set(peek, void 0);
+      peek.onDidClose(() => {
+        this.visible.set(false);
+        this.peek.set(void 0, void 0);
+      });
+      this.visible.set(true);
+      peek.create();
+    }
+    if (subject instanceof MessageSubject) {
+      alert(renderTestMessageAsText(subject.message.message));
+    }
+    this.peek.get().setModel(subject);
+  }
+  async openAndShow(uri) {
+    const subject = this.retrieveTest(uri);
+    if (!subject) {
+      return;
+    }
+    if (!subject.revealLocation || subject.revealLocation.uri.toString() === this.editor.getModel()?.uri.toString()) {
+      return this.show(uri);
+    }
+    const otherEditor = await this.codeEditorService.openCodeEditor({
+      resource: subject.revealLocation.uri,
+      options: { pinned: false, revealIfOpened: true }
+    }, this.editor);
+    if (otherEditor) {
+      TestingOutputPeekController.get(otherEditor)?.removePeek();
+      return TestingOutputPeekController.get(otherEditor)?.show(uri);
+    }
+  }
+  /**
+   * Disposes the peek view, if any.
+   */
+  removePeek() {
+    this.peek.set(void 0, void 0);
+  }
+  /**
+   * Collapses all displayed stack frames.
+   */
+  collapseStack() {
+    this.peek.get()?.collapseStack();
+  }
+  /**
+   * Shows the next message in the peek, if possible.
+   */
+  next() {
+    const subject = this.peek.get()?.current.get();
+    if (!subject) {
+      return;
+    }
+    let first;
+    let found = false;
+    for (const m of allMessages(this.testResults.results)) {
+      first ??= m;
+      if (subject instanceof TaskSubject && m.result.id === subject.result.id) {
+        found = true;
+      }
+      if (found) {
+        this.openAndShow(messageItReferenceToUri(m));
+        return;
+      }
+      if (subject instanceof TestOutputSubject && subject.test.item.extId === m.test.item.extId && subject.taskIndex === m.taskIndex && subject.result.id === m.result.id) {
+        found = true;
+      }
+      if (subject instanceof MessageSubject && subject.test.extId === m.test.item.extId && subject.messageIndex === m.messageIndex && subject.taskIndex === m.taskIndex && subject.result.id === m.result.id) {
+        found = true;
+      }
+    }
+    if (first) {
+      this.openAndShow(messageItReferenceToUri(first));
+    }
+  }
+  /**
+   * Shows the previous message in the peek, if possible.
+   */
+  previous() {
+    const subject = this.subject.get();
+    if (!subject) {
+      return;
+    }
+    let previous;
+    let previousLockedIn = false;
+    let last;
+    for (const m of allMessages(this.testResults.results)) {
+      last = m;
+      if (!previousLockedIn) {
+        if (subject instanceof TaskSubject) {
+          if (m.result.id === subject.result.id) {
+            previousLockedIn = true;
+          }
+          continue;
+        }
+        if (subject instanceof TestOutputSubject) {
+          if (m.test.item.extId === subject.test.item.extId && m.result.id === subject.result.id && m.taskIndex === subject.taskIndex) {
+            previousLockedIn = true;
+          }
+          continue;
+        }
+        if (subject.test.extId === m.test.item.extId && subject.messageIndex === m.messageIndex && subject.taskIndex === m.taskIndex && subject.result.id === m.result.id) {
+          previousLockedIn = true;
+          continue;
+        }
+        previous = m;
+      }
+    }
+    const target = previous || last;
+    if (target) {
+      this.openAndShow(messageItReferenceToUri(target));
+    }
+  }
+  /**
+   * Removes the peek view if it's being displayed on the given test ID.
+   */
+  removeIfPeekingForTest(testId) {
+    const c = this.subject.get();
+    if (c && c instanceof MessageSubject && c.test.extId === testId) {
+      this.peek.set(void 0, void 0);
+    }
+  }
+  /**
+   * If the test we're currently showing has its state change to something
+   * else, then clear the peek.
+   */
+  closePeekOnTestChange(evt) {
+    if (evt.reason !== TestResultItemChangeReason.OwnStateChange || evt.previousState === evt.item.ownComputedState) {
+      return;
+    }
+    this.removeIfPeekingForTest(evt.item.item.extId);
+  }
+  closePeekOnCertainResultEvents(evt) {
+    if ("started" in evt) {
+      this.peek.set(void 0, void 0);
+    }
+    if ("removed" in evt && this.testResults.results.length === 0) {
+      this.peek.set(void 0, void 0);
+    }
+  }
+  retrieveTest(uri) {
+    const parts = parseTestUri(uri);
+    if (!parts) {
+      return void 0;
+    }
+    const result = this.testResults.results.find((r) => r.id === parts.resultId);
+    if (!result) {
+      return;
+    }
+    if (parts.type === TestUriType.TaskOutput) {
+      return new TaskSubject(result, parts.taskIndex);
+    }
+    if (parts.type === TestUriType.TestOutput) {
+      const test2 = result.getStateById(parts.testExtId);
+      if (!test2) {
+        return;
+      }
+      return new TestOutputSubject(result, parts.taskIndex, test2);
+    }
+    const { testExtId, taskIndex, messageIndex } = parts;
+    const test = result?.getStateById(testExtId);
+    if (!test || !test.tasks[parts.taskIndex]) {
+      return;
+    }
+    return new MessageSubject(result, test, taskIndex, messageIndex);
+  }
+};
+TestingOutputPeekController = __decorateClass([
+  __decorateParam(1, ICodeEditorService),
+  __decorateParam(2, IInstantiationService),
+  __decorateParam(3, ITestResultService),
+  __decorateParam(4, IContextKeyService)
+], TestingOutputPeekController);
+let TestResultsPeek = class extends PeekViewWidget {
+  constructor(editor, themeService, peekViewService, testingPeek, contextKeyService, menuService, instantiationService, modelService, codeEditorService, uriIdentityService) {
+    super(editor, { showFrame: true, frameWidth: 1, showArrow: true, isResizeable: true, isAccessible: true, className: "test-output-peek" }, instantiationService);
+    this.themeService = themeService;
+    this.testingPeek = testingPeek;
+    this.contextKeyService = contextKeyService;
+    this.menuService = menuService;
+    this.modelService = modelService;
+    this.codeEditorService = codeEditorService;
+    this.uriIdentityService = uriIdentityService;
+    this._disposables.add(themeService.onDidColorThemeChange(this.applyTheme, this));
+    peekViewService.addExclusiveWidget(editor, this);
+  }
+  static {
+    __name(this, "TestResultsPeek");
+  }
+  current = observableValue("testPeekCurrent", void 0);
+  resizeOnNextContentHeightUpdate = false;
+  content;
+  scopedContextKeyService;
+  dimension;
+  _getMaximumHeightInLines() {
+    const defaultMaxHeight = super._getMaximumHeightInLines();
+    const contentHeight = this.content?.contentHeight;
+    if (!contentHeight) {
+      return defaultMaxHeight;
+    }
+    if (this.testingPeek.historyVisible.value) {
+      return defaultMaxHeight;
+    }
+    const lineHeight = this.editor.getOption(EditorOption.lineHeight);
+    const basePeekOverhead = 41;
+    return Math.min(defaultMaxHeight || Infinity, (contentHeight + basePeekOverhead) / lineHeight + 1);
+  }
+  applyTheme() {
+    const theme = this.themeService.getColorTheme();
+    const current = this.current.get();
+    const isError = current instanceof MessageSubject && current.message.type === TestMessageType.Error;
+    const borderColor = (isError ? theme.getColor(testingPeekBorder) : theme.getColor(testingMessagePeekBorder)) || Color.transparent;
+    const headerBg = (isError ? theme.getColor(testingPeekHeaderBackground) : theme.getColor(testingPeekMessageHeaderBackground)) || Color.transparent;
+    const editorBg = theme.getColor(editorBackground);
+    this.style({
+      arrowColor: borderColor,
+      frameColor: borderColor,
+      headerBackgroundColor: editorBg && headerBg ? headerBg.makeOpaque(editorBg) : headerBg,
+      primaryHeadingColor: theme.getColor(peekViewTitleForeground),
+      secondaryHeadingColor: theme.getColor(peekViewTitleInfoForeground)
+    });
+  }
+  _fillContainer(container) {
+    if (!this.scopedContextKeyService) {
+      this.scopedContextKeyService = this._disposables.add(this.contextKeyService.createScoped(container));
+      TestingContextKeys.isInPeek.bindTo(this.scopedContextKeyService).set(true);
+      const instaService = this._disposables.add(this.instantiationService.createChild(new ServiceCollection([IContextKeyService, this.scopedContextKeyService])));
+      this.content = this._disposables.add(instaService.createInstance(TestResultsViewContent, this.editor, { historyVisible: this.testingPeek.historyVisible, showRevealLocationOnMessages: false, locationForProgress: Testing.ResultsViewId }));
+      this._disposables.add(this.content.onClose(() => {
+        TestingOutputPeekController.get(this.editor)?.removePeek();
+      }));
+    }
+    super._fillContainer(container);
+  }
+  _fillHead(container) {
+    super._fillHead(container);
+    const menuContextKeyService = this._disposables.add(this.contextKeyService.createScoped(container));
+    this._disposables.add(bindContextKey(
+      TestingContextKeys.peekHasStack,
+      menuContextKeyService,
+      (reader) => inspectSubjectHasStack(this.current.read(reader))
+    ));
+    const menu = this.menuService.createMenu(MenuId.TestPeekTitle, menuContextKeyService);
+    const actionBar = this._actionbarWidget;
+    this._disposables.add(menu.onDidChange(() => {
+      actions.length = 0;
+      fillInActionBarActions(menu.getActions(), actions);
+      while (actionBar.getAction(1)) {
+        actionBar.pull(0);
+      }
+      actionBar.push(actions, { label: false, icon: true, index: 0 });
+    }));
+    const actions = [];
+    fillInActionBarActions(menu.getActions(), actions);
+    actionBar.push(actions, { label: false, icon: true, index: 0 });
+  }
+  _fillBody(containerElement) {
+    this.content.fillBody(containerElement);
+    const contentHeightSettleTimer = this._disposables.add(new RunOnceScheduler(() => {
+      this.resizeOnNextContentHeightUpdate = false;
+    }, 500));
+    this._disposables.add(this.content.onDidChangeContentHeight((height) => {
+      if (!this.resizeOnNextContentHeightUpdate || !height) {
+        return;
+      }
+      const displayed = this._getMaximumHeightInLines();
+      if (displayed) {
+        this._relayout(Math.min(displayed, this.getVisibleEditorLines() / 2), true);
+        if (!contentHeightSettleTimer.isScheduled()) {
+          contentHeightSettleTimer.schedule();
+        }
+      }
+    }));
+    this._disposables.add(this.content.onDidRequestReveal((sub) => {
+      TestingOutputPeekController.get(this.editor)?.show(sub instanceof MessageSubject ? sub.messageUri : sub.outputUri);
+    }));
+  }
+  /**
+   * Updates the test to be shown.
+   */
+  setModel(subject) {
+    if (subject instanceof TaskSubject || subject instanceof TestOutputSubject) {
+      this.current.set(subject, void 0);
+      return this.showInPlace(subject);
+    }
+    const previous = this.current;
+    const revealLocation = subject.revealLocation?.range.getStartPosition();
+    if (!revealLocation && !previous) {
+      return Promise.resolve();
+    }
+    this.current.set(subject, void 0);
+    if (!revealLocation) {
+      return this.showInPlace(subject);
+    }
+    this.resizeOnNextContentHeightUpdate = true;
+    this.show(revealLocation, 10);
+    this.editor.revealRangeNearTopIfOutsideViewport(Range.fromPositions(revealLocation), ScrollType.Smooth);
+    return this.showInPlace(subject);
+  }
+  /**
+   * Collapses all displayed stack frames.
+   */
+  collapseStack() {
+    this.content.collapseStack();
+  }
+  getVisibleEditorLines() {
+    return Math.round(this.editor.getDomNode().clientHeight / this.editor.getOption(EditorOption.lineHeight));
+  }
+  /**
+   * Shows a message in-place without showing or changing the peek location.
+   * This is mostly used if peeking a message without a location.
+   */
+  async showInPlace(subject) {
+    if (subject instanceof MessageSubject) {
+      const message = subject.message;
+      this.setTitle(firstLine(renderTestMessageAsText(message.message)), stripIcons(subject.test.label));
+    } else {
+      this.setTitle(localize("testOutputTitle", "Test Output"));
+    }
+    this.applyTheme();
+    await this.content.reveal({ subject, preserveFocus: false });
+  }
+  /** @override */
+  _doLayoutBody(height, width) {
+    super._doLayoutBody(height, width);
+    this.content.onLayoutBody(height, width);
+  }
+  /** @override */
+  _onWidth(width) {
+    super._onWidth(width);
+    if (this.dimension) {
+      this.dimension = new dom.Dimension(width, this.dimension.height);
+    }
+    this.content.onWidth(width);
+  }
+};
+TestResultsPeek = __decorateClass([
+  __decorateParam(1, IThemeService),
+  __decorateParam(2, IPeekViewService),
+  __decorateParam(3, ITestingPeekOpener),
+  __decorateParam(4, IContextKeyService),
+  __decorateParam(5, IMenuService),
+  __decorateParam(6, IInstantiationService),
+  __decorateParam(7, ITextModelService),
+  __decorateParam(8, ICodeEditorService),
+  __decorateParam(9, IUriIdentityService)
+], TestResultsPeek);
+let TestResultsView = class extends ViewPane {
+  constructor(options, keybindingService, contextMenuService, configurationService, contextKeyService, viewDescriptorService, instantiationService, openerService, themeService, hoverService, resultService) {
+    super(options, keybindingService, contextMenuService, configurationService, contextKeyService, viewDescriptorService, instantiationService, openerService, themeService, hoverService);
+    this.resultService = resultService;
+  }
+  static {
+    __name(this, "TestResultsView");
+  }
+  content = new Lazy(() => this._register(this.instantiationService.createInstance(TestResultsViewContent, void 0, {
+    historyVisible: staticObservableValue(true),
+    showRevealLocationOnMessages: true,
+    locationForProgress: Testing.ExplorerViewId
+  })));
+  get subject() {
+    return this.content.rawValue?.current;
+  }
+  showLatestRun(preserveFocus = false) {
+    const result = this.resultService.results.find((r) => r.tasks.length);
+    if (!result) {
+      return;
+    }
+    this.content.rawValue?.reveal({ preserveFocus, subject: new TaskSubject(result, 0) });
+  }
+  renderBody(container) {
+    super.renderBody(container);
+    if (this.isBodyVisible()) {
+      this.renderContent(container);
+    } else {
+      this._register(Event.once(Event.filter(this.onDidChangeBodyVisibility, Boolean))(() => this.renderContent(container)));
+    }
+  }
+  layoutBody(height, width) {
+    super.layoutBody(height, width);
+    this.content.rawValue?.onLayoutBody(height, width);
+  }
+  renderContent(container) {
+    const content = this.content.value;
+    content.fillBody(container);
+    this._register(content.onDidRequestReveal((subject) => content.reveal({ preserveFocus: true, subject })));
+    const [lastResult] = this.resultService.results;
+    if (lastResult && lastResult.tasks.length) {
+      content.reveal({ preserveFocus: true, subject: new TaskSubject(lastResult, 0) });
+    }
+  }
+};
+TestResultsView = __decorateClass([
+  __decorateParam(1, IKeybindingService),
+  __decorateParam(2, IContextMenuService),
+  __decorateParam(3, IConfigurationService),
+  __decorateParam(4, IContextKeyService),
+  __decorateParam(5, IViewDescriptorService),
+  __decorateParam(6, IInstantiationService),
+  __decorateParam(7, IOpenerService),
+  __decorateParam(8, IThemeService),
+  __decorateParam(9, IHoverService),
+  __decorateParam(10, ITestResultService)
+], TestResultsView);
+const firstLine = /* @__PURE__ */ __name((str) => {
+  const index = str.indexOf("\n");
+  return index === -1 ? str : str.slice(0, index);
+}, "firstLine");
+function getOuterEditorFromDiffEditor(codeEditorService) {
+  const diffEditors = codeEditorService.listDiffEditors();
+  for (const diffEditor of diffEditors) {
+    if (diffEditor.hasTextFocus() && diffEditor instanceof EmbeddedDiffEditorWidget) {
+      return diffEditor.getParentEditor();
+    }
+  }
+  return null;
+}
+__name(getOuterEditorFromDiffEditor, "getOuterEditorFromDiffEditor");
+class CloseTestPeek extends EditorAction2 {
+  static {
+    __name(this, "CloseTestPeek");
+  }
+  constructor() {
+    super({
+      id: "editor.closeTestPeek",
+      title: localize2("close", "Close"),
+      icon: Codicon.close,
+      precondition: ContextKeyExpr.or(TestingContextKeys.isInPeek, TestingContextKeys.isPeekVisible),
+      keybinding: {
+        weight: KeybindingWeight.EditorContrib - 101,
+        primary: KeyCode.Escape,
+        when: ContextKeyExpr.not("config.editor.stablePeek")
+      }
+    });
+  }
+  runEditorCommand(accessor, editor) {
+    const parent = getPeekedEditorFromFocus(accessor.get(ICodeEditorService));
+    TestingOutputPeekController.get(parent ?? editor)?.removePeek();
+  }
+}
+const navWhen = ContextKeyExpr.and(
+  EditorContextKeys.focus,
+  TestingContextKeys.isPeekVisible
+);
+const getPeekedEditorFromFocus = /* @__PURE__ */ __name((codeEditorService) => {
+  const editor = codeEditorService.getFocusedCodeEditor() || codeEditorService.getActiveCodeEditor();
+  return editor && getPeekedEditor(codeEditorService, editor);
+}, "getPeekedEditorFromFocus");
+const getPeekedEditor = /* @__PURE__ */ __name((codeEditorService, editor) => {
+  if (TestingOutputPeekController.get(editor)?.subject.get()) {
+    return editor;
+  }
+  if (editor instanceof EmbeddedCodeEditorWidget) {
+    return editor.getParentEditor();
+  }
+  const outer = getOuterEditorFromDiffEditor(codeEditorService);
+  if (outer) {
+    return outer;
+  }
+  return editor;
+}, "getPeekedEditor");
+class GoToNextMessageAction extends Action2 {
+  static {
+    __name(this, "GoToNextMessageAction");
+  }
+  static ID = "testing.goToNextMessage";
+  constructor() {
+    super({
+      id: GoToNextMessageAction.ID,
+      f1: true,
+      title: localize2("testing.goToNextMessage", "Go to Next Test Failure"),
+      metadata: {
+        description: localize2("testing.goToNextMessage.description", "Shows the next failure message in your file")
+      },
+      icon: Codicon.arrowDown,
+      category: Categories.Test,
+      keybinding: {
+        primary: KeyMod.Alt | KeyCode.F8,
+        weight: KeybindingWeight.EditorContrib + 1,
+        when: navWhen
+      },
+      menu: [{
+        id: MenuId.TestPeekTitle,
+        group: "navigation",
+        order: 2
+      }, {
+        id: MenuId.CommandPalette,
+        when: navWhen
+      }]
+    });
+  }
+  run(accessor) {
+    const editor = getPeekedEditorFromFocus(accessor.get(ICodeEditorService));
+    if (editor) {
+      TestingOutputPeekController.get(editor)?.next();
+    }
+  }
+}
+class GoToPreviousMessageAction extends Action2 {
+  static {
+    __name(this, "GoToPreviousMessageAction");
+  }
+  static ID = "testing.goToPreviousMessage";
+  constructor() {
+    super({
+      id: GoToPreviousMessageAction.ID,
+      f1: true,
+      title: localize2("testing.goToPreviousMessage", "Go to Previous Test Failure"),
+      metadata: {
+        description: localize2("testing.goToPreviousMessage.description", "Shows the previous failure message in your file")
+      },
+      icon: Codicon.arrowUp,
+      category: Categories.Test,
+      keybinding: {
+        primary: KeyMod.Shift | KeyMod.Alt | KeyCode.F8,
+        weight: KeybindingWeight.EditorContrib + 1,
+        when: navWhen
+      },
+      menu: [{
+        id: MenuId.TestPeekTitle,
+        group: "navigation",
+        order: 1
+      }, {
+        id: MenuId.CommandPalette,
+        when: navWhen
+      }]
+    });
+  }
+  run(accessor) {
+    const editor = getPeekedEditorFromFocus(accessor.get(ICodeEditorService));
+    if (editor) {
+      TestingOutputPeekController.get(editor)?.previous();
+    }
+  }
+}
+class CollapsePeekStack extends Action2 {
+  static {
+    __name(this, "CollapsePeekStack");
+  }
+  static ID = "testing.collapsePeekStack";
+  constructor() {
+    super({
+      id: CollapsePeekStack.ID,
+      title: localize2("testing.collapsePeekStack", "Collapse Stack Frames"),
+      icon: Codicon.collapseAll,
+      category: Categories.Test,
+      menu: [{
+        id: MenuId.TestPeekTitle,
+        when: TestingContextKeys.peekHasStack,
+        group: "navigation",
+        order: 4
+      }]
+    });
+  }
+  run(accessor) {
+    const editor = getPeekedEditorFromFocus(accessor.get(ICodeEditorService));
+    if (editor) {
+      TestingOutputPeekController.get(editor)?.collapseStack();
+    }
+  }
+}
+class OpenMessageInEditorAction extends Action2 {
+  static {
+    __name(this, "OpenMessageInEditorAction");
+  }
+  static ID = "testing.openMessageInEditor";
+  constructor() {
+    super({
+      id: OpenMessageInEditorAction.ID,
+      f1: false,
+      title: localize2("testing.openMessageInEditor", "Open in Editor"),
+      icon: Codicon.goToFile,
+      category: Categories.Test,
+      menu: [{ id: MenuId.TestPeekTitle }]
+    });
+  }
+  run(accessor) {
+    accessor.get(ITestingPeekOpener).openCurrentInEditor();
+  }
+}
+class ToggleTestingPeekHistory extends Action2 {
+  static {
+    __name(this, "ToggleTestingPeekHistory");
+  }
+  static ID = "testing.toggleTestingPeekHistory";
+  constructor() {
+    super({
+      id: ToggleTestingPeekHistory.ID,
+      f1: true,
+      title: localize2("testing.toggleTestingPeekHistory", "Toggle Test History in Peek"),
+      metadata: {
+        description: localize2("testing.toggleTestingPeekHistory.description", "Shows or hides the history of test runs in the peek view")
+      },
+      icon: Codicon.history,
+      category: Categories.Test,
+      menu: [{
+        id: MenuId.TestPeekTitle,
+        group: "navigation",
+        order: 3
+      }],
+      keybinding: {
+        weight: KeybindingWeight.WorkbenchContrib,
+        primary: KeyMod.Alt | KeyCode.KeyH,
+        when: TestingContextKeys.isPeekVisible.isEqualTo(true)
+      }
+    });
+  }
+  run(accessor) {
+    const opener = accessor.get(ITestingPeekOpener);
+    opener.historyVisible.value = !opener.historyVisible.value;
+  }
+}
+export {
+  CloseTestPeek,
+  CollapsePeekStack,
+  GoToNextMessageAction,
+  GoToPreviousMessageAction,
+  OpenMessageInEditorAction,
+  TestResultsView,
+  TestingOutputPeekController,
+  TestingPeekOpener,
+  ToggleTestingPeekHistory
+};
+//# sourceMappingURL=testingOutputPeek.js.map

@@ -1,1 +1,7 @@
-const e="vscode:contextmenu",t="vscode:onCloseContextMenu";export{e as CONTEXT_MENU_CHANNEL,t as CONTEXT_MENU_CLOSE_CHANNEL};
+const CONTEXT_MENU_CHANNEL = "vscode:contextmenu";
+const CONTEXT_MENU_CLOSE_CHANNEL = "vscode:onCloseContextMenu";
+export {
+  CONTEXT_MENU_CHANNEL,
+  CONTEXT_MENU_CLOSE_CHANNEL
+};
+//# sourceMappingURL=contextmenu.js.map

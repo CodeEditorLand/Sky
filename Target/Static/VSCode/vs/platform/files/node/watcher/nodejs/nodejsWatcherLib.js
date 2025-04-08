@@ -1,1 +1,450 @@
-import{watch as k,promises as $}from"fs";import{RunOnceWorker as A,ThrottledWorker as T}from"../../../../../base/common/async.js";import{CancellationTokenSource as C}from"../../../../../base/common/cancellation.js";import{isEqual as q,isEqualOrParent as x}from"../../../../../base/common/extpath.js";import{Disposable as _,DisposableStore as F,toDisposable as m}from"../../../../../base/common/lifecycle.js";import{normalizeNFC as N}from"../../../../../base/common/normalization.js";import{basename as b,dirname as S,join as H}from"../../../../../base/common/path.js";import{isLinux as w,isMacintosh as R}from"../../../../../base/common/platform.js";import{joinPath as L}from"../../../../../base/common/resources.js";import{URI as I}from"../../../../../base/common/uri.js";import{realpath as U}from"../../../../../base/node/extpath.js";import{Promises as g}from"../../../../../base/node/pfs.js";import{FileChangeType as h}from"../../../common/files.js";import{coalesceEvents as M,parseWatcherPatterns as P,isFiltered as j,isWatchRequestWithCorrelation as Y}from"../../../common/watcher.js";import{Lazy as B}from"../../../../../base/common/lazy.js";import"../../../../../base/common/glob.js";class v extends _{constructor(e,i,t,a,r,o){super();this.request=e;this.recursiveWatcher=i;this.onDidFilesChange=t;this.onDidWatchFail=a;this.onLogMessage=r;this.verboseLogging=o;this.excludes=P(this.request.path,this.request.excludes),this.includes=this.request.includes?P(this.request.path,this.request.includes):void 0,this.filter=Y(this.request)?this.request.filter:void 0,this.ready=this.watch()}static FILE_DELETE_HANDLER_DELAY=100;static FILE_CHANGES_HANDLER_DELAY=75;throttledFileChangesEmitter=this._register(new T({maxWorkChunkSize:100,throttleDelay:200,maxBufferedWork:1e4},e=>this.onDidFilesChange(e)));fileChangesAggregator=this._register(new A(e=>this.handleFileChanges(e),v.FILE_CHANGES_HANDLER_DELAY));excludes;includes;filter;cts=new C;realPath=new B(async()=>{let e=this.request.path;try{e=await U(this.request.path),this.request.path!==e&&this.trace(`correcting a path to watch that seems to be a symbolic link (original: ${this.request.path}, real: ${e})`)}catch{}return e});ready;_isReusingRecursiveWatcher=!1;get isReusingRecursiveWatcher(){return this._isReusingRecursiveWatcher}didFail=!1;get failed(){return this.didFail}async watch(){try{const e=await $.stat(this.request.path);if(this.cts.token.isCancellationRequested)return;this._register(await this.doWatch(e.isDirectory()))}catch(e){e.code!=="ENOENT"?this.error(e):this.trace(`ignoring a path for watching who's stat info failed to resolve: ${this.request.path} (error: ${e})`),this.notifyWatchFailed()}}notifyWatchFailed(){this.didFail=!0,this.onDidWatchFail?.()}async doWatch(e){const i=new F;return this.doWatchWithExistingWatcher(e,i)?(this.trace(`reusing an existing recursive watcher for ${this.request.path}`),this._isReusingRecursiveWatcher=!0):(this._isReusingRecursiveWatcher=!1,await this.doWatchWithNodeJS(e,i)),i}doWatchWithExistingWatcher(e,i){if(e)return!1;const t=I.file(this.request.path),a=this.recursiveWatcher?.subscribe(this.request.path,async(r,o)=>{if(!i.isDisposed)if(r){const l=await this.doWatch(e);i.isDisposed?l.dispose():i.add(l)}else o&&(typeof o.cId=="number"||typeof this.request.correlationId=="number")&&this.onFileChange({resource:t,type:o.type,cId:this.request.correlationId},!0)});return a?(i.add(a),!0):!1}async doWatchWithNodeJS(e,i){const t=await this.realPath.value;if(this.cts.token.isCancellationRequested)return;if(R&&x(t,"/Volumes/",!0)){this.error(`Refusing to watch ${t} for changes using fs.watch() for possibly being a network share where watching is unreliable and unstable.`);return}const a=new C(this.cts.token);i.add(m(()=>a.dispose(!0)));const r=new F;i.add(r);try{const o=I.file(this.request.path),l=b(t),d=k(t);r.add(m(()=>{d.removeAllListeners(),d.close()})),this.trace(`Started watching: '${t}'`);const u=new Set;if(e)try{for(const n of await g.readdir(t))u.add(n)}catch(n){this.error(n)}if(a.token.isCancellationRequested)return;const f=new Map;r.add(m(()=>{for(const[,n]of f)n.dispose();f.clear()})),d.on("error",(n,c)=>{a.token.isCancellationRequested||(this.error(`Failed to watch ${t} for changes using fs.watch() (${n}, ${c})`),this.notifyWatchFailed())}),d.on("change",(n,c)=>{if(a.token.isCancellationRequested)return;this.verboseLogging&&this.traceWithCorrelation(`[raw] ["${n}"] ${c}`);let s="";if(c&&(s=c.toString(),R&&(s=N(s))),!(!s||n!=="change"&&n!=="rename"))if(e)if(n==="rename"){f.get(s)?.dispose();const p=setTimeout(async()=>{if(f.delete(s),q(s,l,!w)&&!await g.exists(t)){this.onWatchedPathDeleted(o);return}if(a.token.isCancellationRequested)return;const D=await this.existsChildStrictCase(H(t,s));if(a.token.isCancellationRequested)return;let E;D?u.has(s)?E=h.UPDATED:(E=h.ADDED,u.add(s)):(u.delete(s),E=h.DELETED),this.onFileChange({resource:L(o,s),type:E,cId:this.request.correlationId})},v.FILE_DELETE_HANDLER_DELAY);f.set(s,m(()=>clearTimeout(p)))}else{let p;u.has(s)?p=h.UPDATED:(p=h.ADDED,u.add(s)),this.onFileChange({resource:L(o,s),type:p,cId:this.request.correlationId})}else if(n==="rename"||!q(s,l,!w)){const p=setTimeout(async()=>{const D=await g.exists(t);a.token.isCancellationRequested||(D?(this.onFileChange({resource:o,type:h.UPDATED,cId:this.request.correlationId},!0),r.add(await this.doWatch(!1))):this.onWatchedPathDeleted(o))},v.FILE_DELETE_HANDLER_DELAY);r.clear(),r.add(m(()=>clearTimeout(p)))}else this.onFileChange({resource:o,type:h.UPDATED,cId:this.request.correlationId},!0)})}catch(o){if(a.token.isCancellationRequested)return;this.error(`Failed to watch ${t} for changes using fs.watch() (${o.toString()})`),this.notifyWatchFailed()}}onWatchedPathDeleted(e){this.warn("Watcher shutdown because watched path got deleted"),this.onFileChange({resource:e,type:h.DELETED,cId:this.request.correlationId},!0),this.fileChangesAggregator.flush(),this.notifyWatchFailed()}onFileChange(e,i=!1){this.cts.token.isCancellationRequested||(this.verboseLogging&&this.traceWithCorrelation(`${e.type===h.ADDED?"[ADDED]":e.type===h.DELETED?"[DELETED]":"[CHANGED]"} ${e.resource.fsPath}`),!i&&this.excludes.some(t=>t(e.resource.fsPath))?this.verboseLogging&&this.traceWithCorrelation(` >> ignored (excluded) ${e.resource.fsPath}`):!i&&this.includes&&this.includes.length>0&&!this.includes.some(t=>t(e.resource.fsPath))?this.verboseLogging&&this.traceWithCorrelation(` >> ignored (not included) ${e.resource.fsPath}`):this.fileChangesAggregator.work(e))}handleFileChanges(e){const i=M(e),t=[];for(const r of i){if(j(r,this.filter)){this.verboseLogging&&this.traceWithCorrelation(` >> ignored (filtered) ${r.resource.fsPath}`);continue}t.push(r)}if(t.length===0)return;if(this.verboseLogging)for(const r of t)this.traceWithCorrelation(` >> normalized ${r.type===h.ADDED?"[ADDED]":r.type===h.DELETED?"[DELETED]":"[CHANGED]"} ${r.resource.fsPath}`);this.throttledFileChangesEmitter.work(t)?this.throttledFileChangesEmitter.pending>0&&this.trace(`started throttling events due to large amount of file change events at once (pending: ${this.throttledFileChangesEmitter.pending}, most recent change: ${t[0].resource.fsPath}). Use 'files.watcherExclude' setting to exclude folders with lots of changing files (e.g. compilation output).`):this.warn(`started ignoring events due to too many file change events at once (incoming: ${t.length}, most recent change: ${t[0].resource.fsPath}). Use 'files.watcherExclude' setting to exclude folders with lots of changing files (e.g. compilation output).`)}async existsChildStrictCase(e){if(w)return g.exists(e);try{const i=b(e);return(await g.readdir(S(e))).some(a=>a===i)}catch(i){return this.trace(i),!1}}setVerboseLogging(e){this.verboseLogging=e}error(e){this.cts.token.isCancellationRequested||this.onLogMessage?.({type:"error",message:`[File Watcher (node.js)] ${e}`})}warn(e){this.cts.token.isCancellationRequested||this.onLogMessage?.({type:"warn",message:`[File Watcher (node.js)] ${e}`})}trace(e){!this.cts.token.isCancellationRequested&&this.verboseLogging&&this.onLogMessage?.({type:"trace",message:`[File Watcher (node.js)] ${e}`})}traceWithCorrelation(e){!this.cts.token.isCancellationRequested&&this.verboseLogging&&this.trace(`${e}${typeof this.request.correlationId=="number"?` <${this.request.correlationId}> `:""}`)}dispose(){this.cts.dispose(!0),super.dispose()}}async function pe(y,W,e,i,t=512){const a=await g.open(y,"r"),r=Buffer.allocUnsafe(t),o=new C(i);let l,d=!1;const u={path:y,excludes:[],recursive:!1},f=new v(u,void 0,n=>{(async()=>{for(const{type:c}of n)if(c===h.UPDATED){if(d)return;d=!0;try{for(;!o.token.isCancellationRequested;){const{bytesRead:s}=await g.read(a,r,0,t,null);if(!s||o.token.isCancellationRequested)break;W(r.slice(0,s))}}catch(s){l=new Error(s),o.dispose(!0)}finally{d=!1}}})()});return await f.ready,e(),new Promise((n,c)=>{o.token.onCancellationRequested(async()=>{f.dispose();try{await g.close(a)}catch(s){l=new Error(s)}l?c(l):n()})})}export{v as NodeJSFileWatcherLibrary,pe as watchFileContents};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { watch, promises } from "fs";
+import { RunOnceWorker, ThrottledWorker } from "../../../../../base/common/async.js";
+import { CancellationToken, CancellationTokenSource } from "../../../../../base/common/cancellation.js";
+import { isEqual, isEqualOrParent } from "../../../../../base/common/extpath.js";
+import { Disposable, DisposableStore, IDisposable, toDisposable } from "../../../../../base/common/lifecycle.js";
+import { normalizeNFC } from "../../../../../base/common/normalization.js";
+import { basename, dirname, join } from "../../../../../base/common/path.js";
+import { isLinux, isMacintosh } from "../../../../../base/common/platform.js";
+import { joinPath } from "../../../../../base/common/resources.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { realpath } from "../../../../../base/node/extpath.js";
+import { Promises } from "../../../../../base/node/pfs.js";
+import { FileChangeFilter, FileChangeType, IFileChange } from "../../../common/files.js";
+import { ILogMessage, coalesceEvents, INonRecursiveWatchRequest, parseWatcherPatterns, IRecursiveWatcherWithSubscribe, isFiltered, isWatchRequestWithCorrelation } from "../../../common/watcher.js";
+import { Lazy } from "../../../../../base/common/lazy.js";
+import { ParsedPattern } from "../../../../../base/common/glob.js";
+class NodeJSFileWatcherLibrary extends Disposable {
+  constructor(request, recursiveWatcher, onDidFilesChange, onDidWatchFail, onLogMessage, verboseLogging) {
+    super();
+    this.request = request;
+    this.recursiveWatcher = recursiveWatcher;
+    this.onDidFilesChange = onDidFilesChange;
+    this.onDidWatchFail = onDidWatchFail;
+    this.onLogMessage = onLogMessage;
+    this.verboseLogging = verboseLogging;
+    this.excludes = parseWatcherPatterns(this.request.path, this.request.excludes);
+    this.includes = this.request.includes ? parseWatcherPatterns(this.request.path, this.request.includes) : void 0;
+    this.filter = isWatchRequestWithCorrelation(this.request) ? this.request.filter : void 0;
+    this.ready = this.watch();
+  }
+  static {
+    __name(this, "NodeJSFileWatcherLibrary");
+  }
+  // A delay in reacting to file deletes to support
+  // atomic save operations where a tool may chose
+  // to delete a file before creating it again for
+  // an update.
+  static FILE_DELETE_HANDLER_DELAY = 100;
+  // A delay for collecting file changes from node.js
+  // before collecting them for coalescing and emitting
+  // Same delay as used for the recursive watcher.
+  static FILE_CHANGES_HANDLER_DELAY = 75;
+  // Reduce likelyhood of spam from file events via throttling.
+  // These numbers are a bit more aggressive compared to the
+  // recursive watcher because we can have many individual
+  // node.js watchers per request.
+  // (https://github.com/microsoft/vscode/issues/124723)
+  throttledFileChangesEmitter = this._register(new ThrottledWorker(
+    {
+      maxWorkChunkSize: 100,
+      // only process up to 100 changes at once before...
+      throttleDelay: 200,
+      // ...resting for 200ms until we process events again...
+      maxBufferedWork: 1e4
+      // ...but never buffering more than 10000 events in memory
+    },
+    (events) => this.onDidFilesChange(events)
+  ));
+  // Aggregate file changes over FILE_CHANGES_HANDLER_DELAY
+  // to coalesce events and reduce spam.
+  fileChangesAggregator = this._register(new RunOnceWorker((events) => this.handleFileChanges(events), NodeJSFileWatcherLibrary.FILE_CHANGES_HANDLER_DELAY));
+  excludes;
+  includes;
+  filter;
+  cts = new CancellationTokenSource();
+  realPath = new Lazy(async () => {
+    let result = this.request.path;
+    try {
+      result = await realpath(this.request.path);
+      if (this.request.path !== result) {
+        this.trace(`correcting a path to watch that seems to be a symbolic link (original: ${this.request.path}, real: ${result})`);
+      }
+    } catch (error) {
+    }
+    return result;
+  });
+  ready;
+  _isReusingRecursiveWatcher = false;
+  get isReusingRecursiveWatcher() {
+    return this._isReusingRecursiveWatcher;
+  }
+  didFail = false;
+  get failed() {
+    return this.didFail;
+  }
+  async watch() {
+    try {
+      const stat = await promises.stat(this.request.path);
+      if (this.cts.token.isCancellationRequested) {
+        return;
+      }
+      this._register(await this.doWatch(stat.isDirectory()));
+    } catch (error) {
+      if (error.code !== "ENOENT") {
+        this.error(error);
+      } else {
+        this.trace(`ignoring a path for watching who's stat info failed to resolve: ${this.request.path} (error: ${error})`);
+      }
+      this.notifyWatchFailed();
+    }
+  }
+  notifyWatchFailed() {
+    this.didFail = true;
+    this.onDidWatchFail?.();
+  }
+  async doWatch(isDirectory) {
+    const disposables = new DisposableStore();
+    if (this.doWatchWithExistingWatcher(isDirectory, disposables)) {
+      this.trace(`reusing an existing recursive watcher for ${this.request.path}`);
+      this._isReusingRecursiveWatcher = true;
+    } else {
+      this._isReusingRecursiveWatcher = false;
+      await this.doWatchWithNodeJS(isDirectory, disposables);
+    }
+    return disposables;
+  }
+  doWatchWithExistingWatcher(isDirectory, disposables) {
+    if (isDirectory) {
+      return false;
+    }
+    const resource = URI.file(this.request.path);
+    const subscription = this.recursiveWatcher?.subscribe(this.request.path, async (error, change) => {
+      if (disposables.isDisposed) {
+        return;
+      }
+      if (error) {
+        const watchDisposable = await this.doWatch(isDirectory);
+        if (!disposables.isDisposed) {
+          disposables.add(watchDisposable);
+        } else {
+          watchDisposable.dispose();
+        }
+      } else if (change) {
+        if (typeof change.cId === "number" || typeof this.request.correlationId === "number") {
+          this.onFileChange(
+            { resource, type: change.type, cId: this.request.correlationId },
+            true
+            /* skip excludes/includes (file is explicitly watched) */
+          );
+        }
+      }
+    });
+    if (subscription) {
+      disposables.add(subscription);
+      return true;
+    }
+    return false;
+  }
+  async doWatchWithNodeJS(isDirectory, disposables) {
+    const realPath = await this.realPath.value;
+    if (this.cts.token.isCancellationRequested) {
+      return;
+    }
+    if (isMacintosh && isEqualOrParent(realPath, "/Volumes/", true)) {
+      this.error(`Refusing to watch ${realPath} for changes using fs.watch() for possibly being a network share where watching is unreliable and unstable.`);
+      return;
+    }
+    const cts = new CancellationTokenSource(this.cts.token);
+    disposables.add(toDisposable(() => cts.dispose(true)));
+    const watcherDisposables = new DisposableStore();
+    disposables.add(watcherDisposables);
+    try {
+      const requestResource = URI.file(this.request.path);
+      const pathBasename = basename(realPath);
+      const watcher = watch(realPath);
+      watcherDisposables.add(toDisposable(() => {
+        watcher.removeAllListeners();
+        watcher.close();
+      }));
+      this.trace(`Started watching: '${realPath}'`);
+      const folderChildren = /* @__PURE__ */ new Set();
+      if (isDirectory) {
+        try {
+          for (const child of await Promises.readdir(realPath)) {
+            folderChildren.add(child);
+          }
+        } catch (error) {
+          this.error(error);
+        }
+      }
+      if (cts.token.isCancellationRequested) {
+        return;
+      }
+      const mapPathToStatDisposable = /* @__PURE__ */ new Map();
+      watcherDisposables.add(toDisposable(() => {
+        for (const [, disposable] of mapPathToStatDisposable) {
+          disposable.dispose();
+        }
+        mapPathToStatDisposable.clear();
+      }));
+      watcher.on("error", (code, signal) => {
+        if (cts.token.isCancellationRequested) {
+          return;
+        }
+        this.error(`Failed to watch ${realPath} for changes using fs.watch() (${code}, ${signal})`);
+        this.notifyWatchFailed();
+      });
+      watcher.on("change", (type, raw) => {
+        if (cts.token.isCancellationRequested) {
+          return;
+        }
+        if (this.verboseLogging) {
+          this.traceWithCorrelation(`[raw] ["${type}"] ${raw}`);
+        }
+        let changedFileName = "";
+        if (raw) {
+          changedFileName = raw.toString();
+          if (isMacintosh) {
+            changedFileName = normalizeNFC(changedFileName);
+          }
+        }
+        if (!changedFileName || type !== "change" && type !== "rename") {
+          return;
+        }
+        if (isDirectory) {
+          if (type === "rename") {
+            mapPathToStatDisposable.get(changedFileName)?.dispose();
+            const timeoutHandle = setTimeout(async () => {
+              mapPathToStatDisposable.delete(changedFileName);
+              if (isEqual(changedFileName, pathBasename, !isLinux) && !await Promises.exists(realPath)) {
+                this.onWatchedPathDeleted(requestResource);
+                return;
+              }
+              if (cts.token.isCancellationRequested) {
+                return;
+              }
+              const fileExists = await this.existsChildStrictCase(join(realPath, changedFileName));
+              if (cts.token.isCancellationRequested) {
+                return;
+              }
+              let type2;
+              if (fileExists) {
+                if (folderChildren.has(changedFileName)) {
+                  type2 = FileChangeType.UPDATED;
+                } else {
+                  type2 = FileChangeType.ADDED;
+                  folderChildren.add(changedFileName);
+                }
+              } else {
+                folderChildren.delete(changedFileName);
+                type2 = FileChangeType.DELETED;
+              }
+              this.onFileChange({ resource: joinPath(requestResource, changedFileName), type: type2, cId: this.request.correlationId });
+            }, NodeJSFileWatcherLibrary.FILE_DELETE_HANDLER_DELAY);
+            mapPathToStatDisposable.set(changedFileName, toDisposable(() => clearTimeout(timeoutHandle)));
+          } else {
+            let type2;
+            if (folderChildren.has(changedFileName)) {
+              type2 = FileChangeType.UPDATED;
+            } else {
+              type2 = FileChangeType.ADDED;
+              folderChildren.add(changedFileName);
+            }
+            this.onFileChange({ resource: joinPath(requestResource, changedFileName), type: type2, cId: this.request.correlationId });
+          }
+        } else {
+          if (type === "rename" || !isEqual(changedFileName, pathBasename, !isLinux)) {
+            const timeoutHandle = setTimeout(async () => {
+              const fileExists = await Promises.exists(realPath);
+              if (cts.token.isCancellationRequested) {
+                return;
+              }
+              if (fileExists) {
+                this.onFileChange(
+                  { resource: requestResource, type: FileChangeType.UPDATED, cId: this.request.correlationId },
+                  true
+                  /* skip excludes/includes (file is explicitly watched) */
+                );
+                watcherDisposables.add(await this.doWatch(false));
+              } else {
+                this.onWatchedPathDeleted(requestResource);
+              }
+            }, NodeJSFileWatcherLibrary.FILE_DELETE_HANDLER_DELAY);
+            watcherDisposables.clear();
+            watcherDisposables.add(toDisposable(() => clearTimeout(timeoutHandle)));
+          } else {
+            this.onFileChange(
+              { resource: requestResource, type: FileChangeType.UPDATED, cId: this.request.correlationId },
+              true
+              /* skip excludes/includes (file is explicitly watched) */
+            );
+          }
+        }
+      });
+    } catch (error) {
+      if (cts.token.isCancellationRequested) {
+        return;
+      }
+      this.error(`Failed to watch ${realPath} for changes using fs.watch() (${error.toString()})`);
+      this.notifyWatchFailed();
+    }
+  }
+  onWatchedPathDeleted(resource) {
+    this.warn("Watcher shutdown because watched path got deleted");
+    this.onFileChange(
+      { resource, type: FileChangeType.DELETED, cId: this.request.correlationId },
+      true
+      /* skip excludes/includes (file is explicitly watched) */
+    );
+    this.fileChangesAggregator.flush();
+    this.notifyWatchFailed();
+  }
+  onFileChange(event, skipIncludeExcludeChecks = false) {
+    if (this.cts.token.isCancellationRequested) {
+      return;
+    }
+    if (this.verboseLogging) {
+      this.traceWithCorrelation(`${event.type === FileChangeType.ADDED ? "[ADDED]" : event.type === FileChangeType.DELETED ? "[DELETED]" : "[CHANGED]"} ${event.resource.fsPath}`);
+    }
+    if (!skipIncludeExcludeChecks && this.excludes.some((exclude) => exclude(event.resource.fsPath))) {
+      if (this.verboseLogging) {
+        this.traceWithCorrelation(` >> ignored (excluded) ${event.resource.fsPath}`);
+      }
+    } else if (!skipIncludeExcludeChecks && this.includes && this.includes.length > 0 && !this.includes.some((include) => include(event.resource.fsPath))) {
+      if (this.verboseLogging) {
+        this.traceWithCorrelation(` >> ignored (not included) ${event.resource.fsPath}`);
+      }
+    } else {
+      this.fileChangesAggregator.work(event);
+    }
+  }
+  handleFileChanges(fileChanges) {
+    const coalescedFileChanges = coalesceEvents(fileChanges);
+    const filteredEvents = [];
+    for (const event of coalescedFileChanges) {
+      if (isFiltered(event, this.filter)) {
+        if (this.verboseLogging) {
+          this.traceWithCorrelation(` >> ignored (filtered) ${event.resource.fsPath}`);
+        }
+        continue;
+      }
+      filteredEvents.push(event);
+    }
+    if (filteredEvents.length === 0) {
+      return;
+    }
+    if (this.verboseLogging) {
+      for (const event of filteredEvents) {
+        this.traceWithCorrelation(` >> normalized ${event.type === FileChangeType.ADDED ? "[ADDED]" : event.type === FileChangeType.DELETED ? "[DELETED]" : "[CHANGED]"} ${event.resource.fsPath}`);
+      }
+    }
+    const worked = this.throttledFileChangesEmitter.work(filteredEvents);
+    if (!worked) {
+      this.warn(`started ignoring events due to too many file change events at once (incoming: ${filteredEvents.length}, most recent change: ${filteredEvents[0].resource.fsPath}). Use 'files.watcherExclude' setting to exclude folders with lots of changing files (e.g. compilation output).`);
+    } else {
+      if (this.throttledFileChangesEmitter.pending > 0) {
+        this.trace(`started throttling events due to large amount of file change events at once (pending: ${this.throttledFileChangesEmitter.pending}, most recent change: ${filteredEvents[0].resource.fsPath}). Use 'files.watcherExclude' setting to exclude folders with lots of changing files (e.g. compilation output).`);
+      }
+    }
+  }
+  async existsChildStrictCase(path) {
+    if (isLinux) {
+      return Promises.exists(path);
+    }
+    try {
+      const pathBasename = basename(path);
+      const children = await Promises.readdir(dirname(path));
+      return children.some((child) => child === pathBasename);
+    } catch (error) {
+      this.trace(error);
+      return false;
+    }
+  }
+  setVerboseLogging(verboseLogging) {
+    this.verboseLogging = verboseLogging;
+  }
+  error(error) {
+    if (!this.cts.token.isCancellationRequested) {
+      this.onLogMessage?.({ type: "error", message: `[File Watcher (node.js)] ${error}` });
+    }
+  }
+  warn(message) {
+    if (!this.cts.token.isCancellationRequested) {
+      this.onLogMessage?.({ type: "warn", message: `[File Watcher (node.js)] ${message}` });
+    }
+  }
+  trace(message) {
+    if (!this.cts.token.isCancellationRequested && this.verboseLogging) {
+      this.onLogMessage?.({ type: "trace", message: `[File Watcher (node.js)] ${message}` });
+    }
+  }
+  traceWithCorrelation(message) {
+    if (!this.cts.token.isCancellationRequested && this.verboseLogging) {
+      this.trace(`${message}${typeof this.request.correlationId === "number" ? ` <${this.request.correlationId}> ` : ``}`);
+    }
+  }
+  dispose() {
+    this.cts.dispose(true);
+    super.dispose();
+  }
+}
+async function watchFileContents(path, onData, onReady, token, bufferSize = 512) {
+  const handle = await Promises.open(path, "r");
+  const buffer = Buffer.allocUnsafe(bufferSize);
+  const cts = new CancellationTokenSource(token);
+  let error = void 0;
+  let isReading = false;
+  const request = { path, excludes: [], recursive: false };
+  const watcher = new NodeJSFileWatcherLibrary(request, void 0, (changes) => {
+    (async () => {
+      for (const { type } of changes) {
+        if (type === FileChangeType.UPDATED) {
+          if (isReading) {
+            return;
+          }
+          isReading = true;
+          try {
+            while (!cts.token.isCancellationRequested) {
+              const { bytesRead } = await Promises.read(handle, buffer, 0, bufferSize, null);
+              if (!bytesRead || cts.token.isCancellationRequested) {
+                break;
+              }
+              onData(buffer.slice(0, bytesRead));
+            }
+          } catch (err) {
+            error = new Error(err);
+            cts.dispose(true);
+          } finally {
+            isReading = false;
+          }
+        }
+      }
+    })();
+  });
+  await watcher.ready;
+  onReady();
+  return new Promise((resolve, reject) => {
+    cts.token.onCancellationRequested(async () => {
+      watcher.dispose();
+      try {
+        await Promises.close(handle);
+      } catch (err) {
+        error = new Error(err);
+      }
+      if (error) {
+        reject(error);
+      } else {
+        resolve();
+      }
+    });
+  });
+}
+__name(watchFileContents, "watchFileContents");
+export {
+  NodeJSFileWatcherLibrary,
+  watchFileContents
+};
+//# sourceMappingURL=nodejsWatcherLib.js.map

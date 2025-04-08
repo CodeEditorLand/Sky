@@ -1,10 +1,592 @@
-var be=Object.defineProperty;var ve=Object.getOwnPropertyDescriptor;var ee=(N,M,e,t)=>{for(var i=t>1?void 0:t?ve(M,e):M,o=N.length-1,l;o>=0;o--)(l=N[o])&&(i=(t?l(M,e,i):l(i))||i);return t&&i&&be(M,e,i),i},m=(N,M)=>(e,t)=>M(e,t,N);import"./media/notebook.css";import"./media/notebookCellChat.css";import"./media/notebookCellEditorHint.css";import"./media/notebookCellInsertToolbar.css";import"./media/notebookCellStatusBar.css";import"./media/notebookCellTitleToolbar.css";import"./media/notebookFocusIndicator.css";import"./media/notebookToolbar.css";import"./media/notebookDnd.css";import"./media/notebookFolding.css";import"./media/notebookCellOutput.css";import"./media/notebookEditorStickyScroll.css";import"./media/notebookKernelActionViewItem.css";import"./media/notebookOutline.css";import"./media/notebookChatEditController.css";import"./media/notebookChatEditorOverlay.css";import*as w from"../../../../base/browser/dom.js";import*as me from"../../../../base/browser/domStylesheets.js";import"../../../../base/browser/mouseEvent.js";import"../../../../base/browser/ui/list/list.js";import{mainWindow as te}from"../../../../base/browser/window.js";import{DeferredPromise as fe,SequencerByKey as ge}from"../../../../base/common/async.js";import"../../../../base/common/cancellation.js";import{Color as x,RGBA as U}from"../../../../base/common/color.js";import{onUnexpectedError as _e}from"../../../../base/common/errors.js";import{Emitter as b,Event as Ce}from"../../../../base/common/event.js";import{combinedDisposable as ke,Disposable as ye,DisposableStore as oe,dispose as G,toDisposable as Ie}from"../../../../base/common/lifecycle.js";import{setTimeout0 as Me}from"../../../../base/common/platform.js";import{extname as Oe,isEqual as Se}from"../../../../base/common/resources.js";import"../../../../base/common/uri.js";import{generateUuid as ie}from"../../../../base/common/uuid.js";import{FontMeasurements as Ee}from"../../../../editor/browser/config/fontMeasurements.js";import"../../../../editor/browser/editorBrowser.js";import"../../../../editor/common/config/editorOptions.js";import{BareFontInfo as xe}from"../../../../editor/common/config/fontInfo.js";import{Range as F}from"../../../../editor/common/core/range.js";import"../../../../editor/common/core/selection.js";import{SuggestController as De}from"../../../../editor/contrib/suggest/browser/suggestController.js";import*as u from"../../../../nls.js";import{MenuId as D}from"../../../../platform/actions/common/actions.js";import{IConfigurationService as Te}from"../../../../platform/configuration/common/configuration.js";import{IContextKeyService as ne,RawContextKey as Ve}from"../../../../platform/contextkey/common/contextkey.js";import{IContextMenuService as Ne}from"../../../../platform/contextview/browser/contextView.js";import{IInstantiationService as Re}from"../../../../platform/instantiation/common/instantiation.js";import{ServiceCollection as Le}from"../../../../platform/instantiation/common/serviceCollection.js";import{ILayoutService as Fe}from"../../../../platform/layout/browser/layoutService.js";import{registerZIndex as g,ZIndex as _}from"../../../../platform/layout/browser/zIndexRegistry.js";import{IEditorProgressService as Be}from"../../../../platform/progress/common/progress.js";import{ITelemetryService as He}from"../../../../platform/telemetry/common/telemetry.js";import{contrastBorder as q,errorForeground as Ae,focusBorder as R,foreground as B,listInactiveSelectionBackground as Y,registerColor as p,scrollbarSliderActiveBackground as Pe,scrollbarSliderBackground as We,scrollbarSliderHoverBackground as Ke,transparent as Z}from"../../../../platform/theme/common/colorRegistry.js";import{EDITOR_PANE_BACKGROUND as le,PANEL_BORDER as se,SIDE_BAR_BACKGROUND as re}from"../../../common/theme.js";import{debugIconStartForeground as ae}from"../../debug/browser/debugColors.js";import{CellEditState as T,CellFocusMode as I,CellRevealRangeType as H,CellRevealType as A,RenderOutputType as $,ScrollToRevealBehavior as de}from"./notebookBrowser.js";import{NotebookEditorExtensionsRegistry as $e}from"./notebookEditorExtensions.js";import{INotebookEditorService as ze}from"./services/notebookEditorService.js";import{notebookDebug as Ue}from"./notebookLogger.js";import{NotebookLayoutChangedEvent as ce}from"./notebookViewEvents.js";import{CellContextKeyManager as Ge}from"./view/cellParts/cellContextKeys.js";import{CellDragAndDropController as qe}from"./view/cellParts/cellDnd.js";import{ListViewInfoAccessor as Ye,NotebookCellList as Ze,NOTEBOOK_WEBVIEW_BOUNDARY as je}from"./view/notebookCellList.js";import"./view/notebookRenderingCommon.js";import{BackLayerWebView as Qe}from"./view/renderers/backLayerWebView.js";import{CodeCellRenderer as Je,MarkupCellRenderer as Xe,NotebookCellListDelegate as et}from"./view/renderers/cellRenderer.js";import"./view/renderers/webviewMessages.js";import{CodeCellViewModel as he,outputDisplayLimit as tt}from"./viewModel/codeCellViewModel.js";import{NotebookEventDispatcher as ot}from"./viewModel/eventDispatcher.js";import{MarkupCellViewModel as P}from"./viewModel/markupCellViewModel.js";import{NotebookViewModel as it}from"./viewModel/notebookViewModelImpl.js";import{ViewContext as nt}from"./viewModel/viewContext.js";import{NotebookEditorWorkbenchToolbar as lt}from"./viewParts/notebookEditorToolbar.js";import{NotebookEditorContextKeys as st}from"./viewParts/notebookEditorWidgetContextKeys.js";import{NotebookOverviewRuler as rt}from"./viewParts/notebookOverviewRuler.js";import{ListTopCellToolbar as at}from"./viewParts/notebookTopCellToolbar.js";import"../common/model/notebookTextModel.js";import{CellEditType as dt,CellKind as C,NotebookFindScopeType as J,RENDERER_NOT_AVAILABLE as ct,SelectionStateType as W}from"../common/notebookCommon.js";import{NOTEBOOK_CURSOR_NAVIGATION_MODE as ht,NOTEBOOK_EDITOR_EDITABLE as ut,NOTEBOOK_EDITOR_FOCUSED as pt,NOTEBOOK_OUTPUT_FOCUSED as wt,NOTEBOOK_OUTPUT_INPUT_FOCUSED as bt}from"../common/notebookContextKeys.js";import{INotebookExecutionService as vt}from"../common/notebookExecutionService.js";import{INotebookKernelService as mt}from"../common/notebookKernelService.js";import{NotebookOptions as ft,OutputInnerContainerTopPadding as ue}from"./notebookOptions.js";import{cellRangesToIndexes as gt}from"../common/notebookRange.js";import{INotebookRendererMessagingService as _t}from"../common/notebookRendererMessagingService.js";import{INotebookService as Ct}from"../common/notebookService.js";import"../../webview/browser/webview.js";import{EditorExtensionsRegistry as kt}from"../../../../editor/browser/editorExtensions.js";import{IEditorGroupsService as yt}from"../../../services/editor/common/editorGroupsService.js";import"../common/notebookPerformance.js";import{BaseCellEditorOptions as It}from"./viewModel/cellEditorOptions.js";import{FloatingEditorClickMenu as Mt}from"../../../browser/codeeditor.js";import"../../../../editor/common/core/dimension.js";import{CellFindMatchModel as pe}from"./contrib/find/findModel.js";import{INotebookLoggingService as Ot}from"../common/notebookLoggingService.js";import{Schemas as St}from"../../../../base/common/network.js";import{DropIntoEditorController as Et}from"../../../../editor/contrib/dropOrPasteInto/browser/dropIntoEditorController.js";import{CopyPasteController as xt}from"../../../../editor/contrib/dropOrPasteInto/browser/copyPasteController.js";import{NotebookStickyScroll as Dt}from"./viewParts/notebookEditorStickyScroll.js";import{PixelRatio as Tt}from"../../../../base/browser/pixelRatio.js";import{PreventDefaultContextMenuItemsContextKeyName as Vt}from"../../webview/browser/webview.contribution.js";import{NotebookAccessibilityProvider as Nt}from"./notebookAccessibilityProvider.js";import{NotebookHorizontalTracker as Rt}from"./viewParts/notebookHorizontalTracker.js";import{NotebookCellEditorPool as Lt}from"./view/notebookCellEditorPool.js";import{InlineCompletionsController as Ft}from"../../../../editor/contrib/inlineCompletions/browser/controller/inlineCompletionsController.js";const Bt=w.$;function Mn(){const N=["editor.contrib.review",Mt.ID,"editor.contrib.dirtydiff","editor.contrib.testingOutputPeek","editor.contrib.testingDecorations","store.contrib.stickyScrollController","editor.contrib.findController","editor.contrib.emptyTextEditorHint"],M=kt.getEditorContributions().filter(e=>N.indexOf(e.id)===-1);return{menuIds:{notebookToolbar:D.NotebookToolbar,cellTitleToolbar:D.NotebookCellTitle,cellDeleteToolbar:D.NotebookCellDelete,cellInsertToolbar:D.NotebookCellBetween,cellTopInsertToolbar:D.NotebookCellListTop,cellExecuteToolbar:D.NotebookCellExecute,cellExecutePrimary:D.NotebookCellExecutePrimary},cellEditorContributions:M}}let j=class extends ye{constructor(e,t,i,o,l,n,s,r,d,h,f,y,L,v,S,K){super();this.creationOptions=e;this.notebookRendererMessaging=l;this.notebookEditorService=n;this.notebookKernelService=s;this._notebookService=r;this.configurationService=d;this.layoutService=f;this.contextMenuService=y;this.telemetryService=L;this.notebookExecutionService=v;this.editorProgressService=S;this.logService=K;this._dimension=t,this.isReplHistory=e.isReplHistory??!1,this._readOnly=e.isReadOnly??!1,this._overlayContainer=document.createElement("div"),this.scopedContextKeyService=this._register(h.createScoped(this._overlayContainer)),this.instantiationService=this._register(i.createChild(new Le([ne,this.scopedContextKeyService]))),this._notebookOptions=e.options??this.instantiationService.createInstance(ft,this.creationOptions?.codeWindow??te,this._readOnly,void 0),this._register(this._notebookOptions);const O=this._register(new ot);this._viewContext=new nt(this._notebookOptions,O,c=>this.getBaseCellEditorOptions(c)),this._register(this._viewContext.eventDispatcher.onDidChangeLayout(()=>{this._onDidChangeLayout.fire()})),this._register(this._viewContext.eventDispatcher.onDidChangeCellState(c=>{this._onDidChangeCellState.fire(c)})),this._register(r.onDidChangeOutputRenderers(()=>{this._updateOutputRenderers()})),this._register(this.instantiationService.createInstance(st,this)),this._register(s.onDidChangeSelectedNotebooks(c=>{Se(c.notebook,this.viewModel?.uri)&&(this._loadKernelPreloads(),this._onDidChangeActiveKernel.fire())})),this._scrollBeyondLastLine=this.configurationService.getValue("editor.scrollBeyondLastLine"),this._register(this.configurationService.onDidChangeConfiguration(c=>{c.affectsConfiguration("editor.scrollBeyondLastLine")&&(this._scrollBeyondLastLine=this.configurationService.getValue("editor.scrollBeyondLastLine"),this._dimension&&this._isVisible&&this.layout(this._dimension))})),this._register(this._notebookOptions.onDidChangeOptions(c=>{(c.cellStatusBarVisibility||c.cellToolbarLocation||c.cellToolbarInteraction)&&this._updateForNotebookConfiguration(),c.fontFamily&&this._generateFontInfo(),(c.compactView||c.focusIndicator||c.insertToolbarPosition||c.cellToolbarLocation||c.dragAndDropEnabled||c.fontSize||c.markupFontSize||c.markdownLineHeight||c.fontFamily||c.insertToolbarAlignment||c.outputFontSize||c.outputLineHeight||c.outputFontFamily||c.outputWordWrap||c.outputScrolling||c.outputLinkifyFilePaths||c.minimalError)&&(this._styleElement?.remove(),this._createLayoutStyles(),this._webview?.updateOptions({...this.notebookOptions.computeWebviewOptions(),fontFamily:this._generateFontFamily()})),this._dimension&&this._isVisible&&this.layout(this._dimension)}));const z=e.codeWindow?this.layoutService.getContainer(e.codeWindow):this.layoutService.mainContainer;this._register(o.getPart(z).onDidScroll(c=>{!this._shadowElement||!this._isVisible||(this.updateShadowElement(this._shadowElement,this._dimension),this.layoutContainerOverShadowElement(this._dimension,this._position))})),this.notebookEditorService.addNotebookEditor(this);const k=ie();this._overlayContainer.id=`notebook-${k}`,this._overlayContainer.className="notebookOverlay",this._overlayContainer.classList.add("notebook-editor"),this._overlayContainer.inert=!0,this._overlayContainer.style.visibility="hidden",z.appendChild(this._overlayContainer),this._createBody(this._overlayContainer),this._generateFontInfo(),this._isVisible=!0,this._editorFocus=pt.bindTo(this.scopedContextKeyService),this._outputFocus=wt.bindTo(this.scopedContextKeyService),this._outputInputFocus=bt.bindTo(this.scopedContextKeyService),this._editorEditable=ut.bindTo(this.scopedContextKeyService),this._cursorNavMode=ht.bindTo(this.scopedContextKeyService),new Ve(Vt,!1).bindTo(this.scopedContextKeyService).set(!0),this._editorEditable.set(!e.isReadOnly);let E;Array.isArray(this.creationOptions.contributions)?E=this.creationOptions.contributions:E=$e.getEditorContributions();for(const c of E){let a;try{a=this.instantiationService.createInstance(c.ctor,this)}catch(Q){_e(Q)}if(a)if(!this._contributions.has(c.id))this._contributions.set(c.id,a);else throw a.dispose(),new Error(`DUPLICATE notebook editor contribution: '${c.id}'`)}this._updateForNotebookConfiguration()}_onDidChangeCellState=this._register(new b);onDidChangeCellState=this._onDidChangeCellState.event;_onDidChangeViewCells=this._register(new b);onDidChangeViewCells=this._onDidChangeViewCells.event;_onWillChangeModel=this._register(new b);onWillChangeModel=this._onWillChangeModel.event;_onDidChangeModel=this._register(new b);onDidChangeModel=this._onDidChangeModel.event;_onDidAttachViewModel=this._register(new b);onDidAttachViewModel=this._onDidAttachViewModel.event;_onDidChangeOptions=this._register(new b);onDidChangeOptions=this._onDidChangeOptions.event;_onDidChangeDecorations=this._register(new b);onDidChangeDecorations=this._onDidChangeDecorations.event;_onDidScroll=this._register(new b);onDidScroll=this._onDidScroll.event;_onDidChangeLayout=this._register(new b);onDidChangeLayout=this._onDidChangeLayout.event;_onDidChangeActiveCell=this._register(new b);onDidChangeActiveCell=this._onDidChangeActiveCell.event;_onDidChangeFocus=this._register(new b);onDidChangeFocus=this._onDidChangeFocus.event;_onDidChangeSelection=this._register(new b);onDidChangeSelection=this._onDidChangeSelection.event;_onDidChangeVisibleRanges=this._register(new b);onDidChangeVisibleRanges=this._onDidChangeVisibleRanges.event;_onDidFocusEmitter=this._register(new b);onDidFocusWidget=this._onDidFocusEmitter.event;_onDidBlurEmitter=this._register(new b);onDidBlurWidget=this._onDidBlurEmitter.event;_onDidChangeActiveEditor=this._register(new b);onDidChangeActiveEditor=this._onDidChangeActiveEditor.event;_onDidChangeActiveKernel=this._register(new b);onDidChangeActiveKernel=this._onDidChangeActiveKernel.event;_onMouseUp=this._register(new b);onMouseUp=this._onMouseUp.event;_onMouseDown=this._register(new b);onMouseDown=this._onMouseDown.event;_onDidReceiveMessage=this._register(new b);onDidReceiveMessage=this._onDidReceiveMessage.event;_onDidRenderOutput=this._register(new b);onDidRenderOutput=this._onDidRenderOutput.event;_onDidRemoveOutput=this._register(new b);onDidRemoveOutput=this._onDidRemoveOutput.event;_onDidResizeOutputEmitter=this._register(new b);onDidResizeOutput=this._onDidResizeOutputEmitter.event;_overlayContainer;_notebookTopToolbarContainer;_notebookTopToolbar;_notebookStickyScrollContainer;_notebookStickyScroll;_notebookOverviewRulerContainer;_notebookOverviewRuler;_body;_styleElement;_overflowContainer;_webview=null;_webviewResolvePromise=null;_webviewTransparentCover=null;_listDelegate=null;_list;_listViewInfoAccessor;_dndController=null;_listTopCellToolbar=null;_renderedEditors=new Map;_editorPool;_viewContext;_notebookViewModel;_localStore=this._register(new oe);_localCellStateListeners=[];_fontInfo;_dimension;_position;_shadowElement;_shadowElementViewInfo=null;_editorFocus;_outputFocus;_editorEditable;_cursorNavMode;_outputInputFocus;_contributions=new Map;_scrollBeyondLastLine;_insetModifyQueueByOutputId=new ge;_cellContextKeyManager=null;_uuid=ie();_focusTracker;_webviewFocused=!1;_isVisible=!1;get isVisible(){return this._isVisible}_isDisposed=!1;get isDisposed(){return this._isDisposed}set viewModel(e){this._onWillChangeModel.fire(this._notebookViewModel?.notebookDocument),this._notebookViewModel=e,this._onDidChangeModel.fire(e?.notebookDocument)}get viewModel(){return this._notebookViewModel}get textModel(){return this._notebookViewModel?.notebookDocument}get isReadOnly(){return this._notebookViewModel?.options.isReadOnly??!1}get activeCodeEditor(){if(this._isDisposed)return;const[e]=this._list.getFocusedElements();return this._renderedEditors.get(e)}get activeCellAndCodeEditor(){if(this._isDisposed)return;const[e]=this._list.getFocusedElements(),t=this._renderedEditors.get(e);if(t)return[e,t]}get codeEditors(){return[...this._renderedEditors]}get visibleRanges(){return this._list?this._list.visibleRanges||[]:[]}_baseCellEditorOptions=new Map;isReplHistory;_readOnly;scopedContextKeyService;instantiationService;_notebookOptions;_currentProgress;get notebookOptions(){return this._notebookOptions}_debugFlag=!1;_debug(...e){this._debugFlag&&Ue(...e)}getId(){return this._uuid}getViewModel(){return this.viewModel}getLength(){return this.viewModel?.length??0}getSelections(){return this.viewModel?.getSelections()??[]}setSelections(e){if(!this.viewModel)return;const t=this.viewModel.getFocus();this.viewModel.updateSelectionsState({kind:W.Index,focus:t,selections:e})}getFocus(){return this.viewModel?.getFocus()??{start:0,end:0}}setFocus(e){if(!this.viewModel)return;const t=this.viewModel.getSelections();this.viewModel.updateSelectionsState({kind:W.Index,focus:e,selections:t})}getSelectionViewModels(){if(!this.viewModel)return[];const e=new Set;return this.viewModel.getSelections().map(t=>this.viewModel.viewCells.slice(t.start,t.end)).reduce((t,i)=>(i.forEach(o=>{e.has(o.handle)||(e.add(o.handle),t.push(o))}),t),[])}hasModel(){return!!this._notebookViewModel}showProgress(){this._currentProgress=this.editorProgressService.show(!0)}hideProgress(){this._currentProgress&&(this._currentProgress.done(),this._currentProgress=void 0)}getBaseCellEditorOptions(e){const t=this._baseCellEditorOptions.get(e);if(t)return t;{const i=new It(this,this.notebookOptions,this.configurationService,e);return this._baseCellEditorOptions.set(e,i),i}}_updateForNotebookConfiguration(){if(!this._overlayContainer)return;this._overlayContainer.classList.remove("cell-title-toolbar-left"),this._overlayContainer.classList.remove("cell-title-toolbar-right"),this._overlayContainer.classList.remove("cell-title-toolbar-hidden");const e=this._notebookOptions.computeCellToolbarLocation(this.viewModel?.viewType);this._overlayContainer.classList.add(`cell-title-toolbar-${e}`);const t=this._notebookOptions.getDisplayOptions().cellToolbarInteraction;let i="hover";this._overlayContainer.classList.remove("cell-toolbar-hover"),this._overlayContainer.classList.remove("cell-toolbar-click"),(t==="hover"||t==="click")&&(i=t),this._overlayContainer.classList.add(`cell-toolbar-${i}`)}_generateFontInfo(){const e=this.configurationService.getValue("editor"),t=w.getWindow(this.getDomNode());this._fontInfo=Ee.readFontInfo(t,xe.createFromRawSettings(e,Tt.getInstance(t).value))}_createBody(e){this._notebookTopToolbarContainer=document.createElement("div"),this._notebookTopToolbarContainer.classList.add("notebook-toolbar-container"),this._notebookTopToolbarContainer.style.display="none",w.append(e,this._notebookTopToolbarContainer),this._notebookStickyScrollContainer=document.createElement("div"),this._notebookStickyScrollContainer.classList.add("notebook-sticky-scroll-container"),w.append(e,this._notebookStickyScrollContainer),this._body=document.createElement("div"),w.append(e,this._body),this._body.classList.add("cell-list-container"),this._createLayoutStyles(),this._createCellList(),this._notebookOverviewRulerContainer=document.createElement("div"),this._notebookOverviewRulerContainer.classList.add("notebook-overview-ruler-container"),this._list.scrollableElement.appendChild(this._notebookOverviewRulerContainer),this._registerNotebookOverviewRuler(),this._register(this.instantiationService.createInstance(Rt,this,this._list.scrollableElement)),this._overflowContainer=document.createElement("div"),this._overflowContainer.classList.add("notebook-overflow-widget-container","monaco-editor"),w.append(e,this._overflowContainer)}_generateFontFamily(){return this._fontInfo?.fontFamily??'"SF Mono", Monaco, Menlo, Consolas, "Ubuntu Mono", "Liberation Mono", "DejaVu Sans Mono", "Courier New", monospace'}_createLayoutStyles(){this._styleElement=me.createStyleSheet(this._body);const{cellRightMargin:e,cellTopMargin:t,cellRunGutter:i,cellBottomMargin:o,codeCellLeftMargin:l,markdownCellGutter:n,markdownCellLeftMargin:s,markdownCellBottomMargin:r,markdownCellTopMargin:d,collapsedIndicatorHeight:h,focusIndicator:f,insertToolbarPosition:y,outputFontSize:L,focusIndicatorLeftMargin:v,focusIndicatorGap:S}=this._notebookOptions.getLayoutConfiguration(),{insertToolbarAlignment:K,compactView:O,fontSize:z}=this._notebookOptions.getDisplayOptions(),k=this._notebookOptions.getCellEditorContainerLeftMargin(),{bottomToolbarGap:E,bottomToolbarHeight:c}=this._notebookOptions.computeBottomToolbarDimensions(this.viewModel?.viewType),a=[];this._fontInfo||this._generateFontInfo();const Q=this._generateFontFamily();a.push(`
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import "./media/notebook.css";
+import "./media/notebookCellChat.css";
+import "./media/notebookCellEditorHint.css";
+import "./media/notebookCellInsertToolbar.css";
+import "./media/notebookCellStatusBar.css";
+import "./media/notebookCellTitleToolbar.css";
+import "./media/notebookFocusIndicator.css";
+import "./media/notebookToolbar.css";
+import "./media/notebookDnd.css";
+import "./media/notebookFolding.css";
+import "./media/notebookCellOutput.css";
+import "./media/notebookEditorStickyScroll.css";
+import "./media/notebookKernelActionViewItem.css";
+import "./media/notebookOutline.css";
+import "./media/notebookChatEditController.css";
+import "./media/notebookChatEditorOverlay.css";
+import * as DOM from "../../../../base/browser/dom.js";
+import * as domStylesheets from "../../../../base/browser/domStylesheets.js";
+import { IMouseWheelEvent, StandardMouseEvent } from "../../../../base/browser/mouseEvent.js";
+import { IListContextMenuEvent } from "../../../../base/browser/ui/list/list.js";
+import { mainWindow } from "../../../../base/browser/window.js";
+import { DeferredPromise, SequencerByKey } from "../../../../base/common/async.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { Color, RGBA } from "../../../../base/common/color.js";
+import { onUnexpectedError } from "../../../../base/common/errors.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { combinedDisposable, Disposable, DisposableStore, dispose, IDisposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { setTimeout0 } from "../../../../base/common/platform.js";
+import { extname, isEqual } from "../../../../base/common/resources.js";
+import { URI } from "../../../../base/common/uri.js";
+import { generateUuid } from "../../../../base/common/uuid.js";
+import { FontMeasurements } from "../../../../editor/browser/config/fontMeasurements.js";
+import { ICodeEditor } from "../../../../editor/browser/editorBrowser.js";
+import { IEditorOptions } from "../../../../editor/common/config/editorOptions.js";
+import { BareFontInfo, FontInfo } from "../../../../editor/common/config/fontInfo.js";
+import { Range } from "../../../../editor/common/core/range.js";
+import { Selection } from "../../../../editor/common/core/selection.js";
+import { SuggestController } from "../../../../editor/contrib/suggest/browser/suggestController.js";
+import * as nls from "../../../../nls.js";
+import { MenuId } from "../../../../platform/actions/common/actions.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IContextKey, IContextKeyService, RawContextKey } from "../../../../platform/contextkey/common/contextkey.js";
+import { IContextMenuService } from "../../../../platform/contextview/browser/contextView.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { ServiceCollection } from "../../../../platform/instantiation/common/serviceCollection.js";
+import { ILayoutService } from "../../../../platform/layout/browser/layoutService.js";
+import { registerZIndex, ZIndex } from "../../../../platform/layout/browser/zIndexRegistry.js";
+import { IEditorProgressService, IProgressRunner } from "../../../../platform/progress/common/progress.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { contrastBorder, errorForeground, focusBorder, foreground, listInactiveSelectionBackground, registerColor, scrollbarSliderActiveBackground, scrollbarSliderBackground, scrollbarSliderHoverBackground, transparent } from "../../../../platform/theme/common/colorRegistry.js";
+import { EDITOR_PANE_BACKGROUND, PANEL_BORDER, SIDE_BAR_BACKGROUND } from "../../../common/theme.js";
+import { debugIconStartForeground } from "../../debug/browser/debugColors.js";
+import { CellEditState, CellFindMatchWithIndex, CellFocusMode, CellLayoutContext, CellRevealRangeType, CellRevealType, IActiveNotebookEditorDelegate, IBaseCellEditorOptions, ICellOutputViewModel, ICellViewModel, ICommonCellInfo, IDisplayOutputLayoutUpdateRequest, IFocusNotebookCellOptions, IInsetRenderOutput, IModelDecorationsChangeAccessor, INotebookCellOverlayChangeAccessor, INotebookDeltaDecoration, INotebookEditor, INotebookEditorContribution, INotebookEditorContributionDescription, INotebookEditorCreationOptions, INotebookEditorDelegate, INotebookEditorMouseEvent, INotebookEditorOptions, INotebookEditorViewState, INotebookViewCellsUpdateEvent, INotebookViewZoneChangeAccessor, INotebookWebviewMessage, RenderOutputType, ScrollToRevealBehavior } from "./notebookBrowser.js";
+import { NotebookEditorExtensionsRegistry } from "./notebookEditorExtensions.js";
+import { INotebookEditorService } from "./services/notebookEditorService.js";
+import { notebookDebug } from "./notebookLogger.js";
+import { NotebookCellStateChangedEvent, NotebookLayoutChangedEvent, NotebookLayoutInfo } from "./notebookViewEvents.js";
+import { CellContextKeyManager } from "./view/cellParts/cellContextKeys.js";
+import { CellDragAndDropController } from "./view/cellParts/cellDnd.js";
+import { ListViewInfoAccessor, NotebookCellList, NOTEBOOK_WEBVIEW_BOUNDARY } from "./view/notebookCellList.js";
+import { INotebookCellList } from "./view/notebookRenderingCommon.js";
+import { BackLayerWebView } from "./view/renderers/backLayerWebView.js";
+import { CodeCellRenderer, MarkupCellRenderer, NotebookCellListDelegate } from "./view/renderers/cellRenderer.js";
+import { IAckOutputHeight, IMarkupCellInitialization } from "./view/renderers/webviewMessages.js";
+import { CodeCellViewModel, outputDisplayLimit } from "./viewModel/codeCellViewModel.js";
+import { NotebookEventDispatcher } from "./viewModel/eventDispatcher.js";
+import { MarkupCellViewModel } from "./viewModel/markupCellViewModel.js";
+import { CellViewModel, NotebookViewModel } from "./viewModel/notebookViewModelImpl.js";
+import { ViewContext } from "./viewModel/viewContext.js";
+import { NotebookEditorWorkbenchToolbar } from "./viewParts/notebookEditorToolbar.js";
+import { NotebookEditorContextKeys } from "./viewParts/notebookEditorWidgetContextKeys.js";
+import { NotebookOverviewRuler } from "./viewParts/notebookOverviewRuler.js";
+import { ListTopCellToolbar } from "./viewParts/notebookTopCellToolbar.js";
+import { NotebookTextModel } from "../common/model/notebookTextModel.js";
+import { CellEditType, CellKind, INotebookFindOptions, NotebookFindScopeType, RENDERER_NOT_AVAILABLE, SelectionStateType } from "../common/notebookCommon.js";
+import { NOTEBOOK_CURSOR_NAVIGATION_MODE, NOTEBOOK_EDITOR_EDITABLE, NOTEBOOK_EDITOR_FOCUSED, NOTEBOOK_OUTPUT_FOCUSED, NOTEBOOK_OUTPUT_INPUT_FOCUSED } from "../common/notebookContextKeys.js";
+import { INotebookExecutionService } from "../common/notebookExecutionService.js";
+import { INotebookKernelService } from "../common/notebookKernelService.js";
+import { NotebookOptions, OutputInnerContainerTopPadding } from "./notebookOptions.js";
+import { cellRangesToIndexes, ICellRange } from "../common/notebookRange.js";
+import { INotebookRendererMessagingService } from "../common/notebookRendererMessagingService.js";
+import { INotebookService } from "../common/notebookService.js";
+import { IWebviewElement } from "../../webview/browser/webview.js";
+import { EditorExtensionsRegistry } from "../../../../editor/browser/editorExtensions.js";
+import { IEditorGroupsService } from "../../../services/editor/common/editorGroupsService.js";
+import { NotebookPerfMarks } from "../common/notebookPerformance.js";
+import { BaseCellEditorOptions } from "./viewModel/cellEditorOptions.js";
+import { FloatingEditorClickMenu } from "../../../browser/codeeditor.js";
+import { IDimension } from "../../../../editor/common/core/dimension.js";
+import { CellFindMatchModel } from "./contrib/find/findModel.js";
+import { INotebookLoggingService } from "../common/notebookLoggingService.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { DropIntoEditorController } from "../../../../editor/contrib/dropOrPasteInto/browser/dropIntoEditorController.js";
+import { CopyPasteController } from "../../../../editor/contrib/dropOrPasteInto/browser/copyPasteController.js";
+import { NotebookStickyScroll } from "./viewParts/notebookEditorStickyScroll.js";
+import { PixelRatio } from "../../../../base/browser/pixelRatio.js";
+import { PreventDefaultContextMenuItemsContextKeyName } from "../../webview/browser/webview.contribution.js";
+import { NotebookAccessibilityProvider } from "./notebookAccessibilityProvider.js";
+import { NotebookHorizontalTracker } from "./viewParts/notebookHorizontalTracker.js";
+import { NotebookCellEditorPool } from "./view/notebookCellEditorPool.js";
+import { InlineCompletionsController } from "../../../../editor/contrib/inlineCompletions/browser/controller/inlineCompletionsController.js";
+const $ = DOM.$;
+function getDefaultNotebookCreationOptions() {
+  const skipContributions = [
+    "editor.contrib.review",
+    FloatingEditorClickMenu.ID,
+    "editor.contrib.dirtydiff",
+    "editor.contrib.testingOutputPeek",
+    "editor.contrib.testingDecorations",
+    "store.contrib.stickyScrollController",
+    "editor.contrib.findController",
+    "editor.contrib.emptyTextEditorHint"
+  ];
+  const contributions = EditorExtensionsRegistry.getEditorContributions().filter((c) => skipContributions.indexOf(c.id) === -1);
+  return {
+    menuIds: {
+      notebookToolbar: MenuId.NotebookToolbar,
+      cellTitleToolbar: MenuId.NotebookCellTitle,
+      cellDeleteToolbar: MenuId.NotebookCellDelete,
+      cellInsertToolbar: MenuId.NotebookCellBetween,
+      cellTopInsertToolbar: MenuId.NotebookCellListTop,
+      cellExecuteToolbar: MenuId.NotebookCellExecute,
+      cellExecutePrimary: MenuId.NotebookCellExecutePrimary
+    },
+    cellEditorContributions: contributions
+  };
+}
+__name(getDefaultNotebookCreationOptions, "getDefaultNotebookCreationOptions");
+let NotebookEditorWidget = class extends Disposable {
+  constructor(creationOptions, dimension, instantiationService, editorGroupsService, notebookRendererMessaging, notebookEditorService, notebookKernelService, _notebookService, configurationService, contextKeyService, layoutService, contextMenuService, telemetryService, notebookExecutionService, editorProgressService, logService) {
+    super();
+    this.creationOptions = creationOptions;
+    this.notebookRendererMessaging = notebookRendererMessaging;
+    this.notebookEditorService = notebookEditorService;
+    this.notebookKernelService = notebookKernelService;
+    this._notebookService = _notebookService;
+    this.configurationService = configurationService;
+    this.layoutService = layoutService;
+    this.contextMenuService = contextMenuService;
+    this.telemetryService = telemetryService;
+    this.notebookExecutionService = notebookExecutionService;
+    this.editorProgressService = editorProgressService;
+    this.logService = logService;
+    this._dimension = dimension;
+    this.isReplHistory = creationOptions.isReplHistory ?? false;
+    this._readOnly = creationOptions.isReadOnly ?? false;
+    this._overlayContainer = document.createElement("div");
+    this.scopedContextKeyService = this._register(contextKeyService.createScoped(this._overlayContainer));
+    this.instantiationService = this._register(instantiationService.createChild(new ServiceCollection([IContextKeyService, this.scopedContextKeyService])));
+    this._notebookOptions = creationOptions.options ?? this.instantiationService.createInstance(NotebookOptions, this.creationOptions?.codeWindow ?? mainWindow, this._readOnly, void 0);
+    this._register(this._notebookOptions);
+    const eventDispatcher = this._register(new NotebookEventDispatcher());
+    this._viewContext = new ViewContext(
+      this._notebookOptions,
+      eventDispatcher,
+      (language) => this.getBaseCellEditorOptions(language)
+    );
+    this._register(this._viewContext.eventDispatcher.onDidChangeLayout(() => {
+      this._onDidChangeLayout.fire();
+    }));
+    this._register(this._viewContext.eventDispatcher.onDidChangeCellState((e) => {
+      this._onDidChangeCellState.fire(e);
+    }));
+    this._register(_notebookService.onDidChangeOutputRenderers(() => {
+      this._updateOutputRenderers();
+    }));
+    this._register(this.instantiationService.createInstance(NotebookEditorContextKeys, this));
+    this._register(notebookKernelService.onDidChangeSelectedNotebooks((e) => {
+      if (isEqual(e.notebook, this.viewModel?.uri)) {
+        this._loadKernelPreloads();
+        this._onDidChangeActiveKernel.fire();
+      }
+    }));
+    this._scrollBeyondLastLine = this.configurationService.getValue("editor.scrollBeyondLastLine");
+    this._register(this.configurationService.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration("editor.scrollBeyondLastLine")) {
+        this._scrollBeyondLastLine = this.configurationService.getValue("editor.scrollBeyondLastLine");
+        if (this._dimension && this._isVisible) {
+          this.layout(this._dimension);
+        }
+      }
+    }));
+    this._register(this._notebookOptions.onDidChangeOptions((e) => {
+      if (e.cellStatusBarVisibility || e.cellToolbarLocation || e.cellToolbarInteraction) {
+        this._updateForNotebookConfiguration();
+      }
+      if (e.fontFamily) {
+        this._generateFontInfo();
+      }
+      if (e.compactView || e.focusIndicator || e.insertToolbarPosition || e.cellToolbarLocation || e.dragAndDropEnabled || e.fontSize || e.markupFontSize || e.markdownLineHeight || e.fontFamily || e.insertToolbarAlignment || e.outputFontSize || e.outputLineHeight || e.outputFontFamily || e.outputWordWrap || e.outputScrolling || e.outputLinkifyFilePaths || e.minimalError) {
+        this._styleElement?.remove();
+        this._createLayoutStyles();
+        this._webview?.updateOptions({
+          ...this.notebookOptions.computeWebviewOptions(),
+          fontFamily: this._generateFontFamily()
+        });
+      }
+      if (this._dimension && this._isVisible) {
+        this.layout(this._dimension);
+      }
+    }));
+    const container = creationOptions.codeWindow ? this.layoutService.getContainer(creationOptions.codeWindow) : this.layoutService.mainContainer;
+    this._register(editorGroupsService.getPart(container).onDidScroll((e) => {
+      if (!this._shadowElement || !this._isVisible) {
+        return;
+      }
+      this.updateShadowElement(this._shadowElement, this._dimension);
+      this.layoutContainerOverShadowElement(this._dimension, this._position);
+    }));
+    this.notebookEditorService.addNotebookEditor(this);
+    const id = generateUuid();
+    this._overlayContainer.id = `notebook-${id}`;
+    this._overlayContainer.className = "notebookOverlay";
+    this._overlayContainer.classList.add("notebook-editor");
+    this._overlayContainer.inert = true;
+    this._overlayContainer.style.visibility = "hidden";
+    container.appendChild(this._overlayContainer);
+    this._createBody(this._overlayContainer);
+    this._generateFontInfo();
+    this._isVisible = true;
+    this._editorFocus = NOTEBOOK_EDITOR_FOCUSED.bindTo(this.scopedContextKeyService);
+    this._outputFocus = NOTEBOOK_OUTPUT_FOCUSED.bindTo(this.scopedContextKeyService);
+    this._outputInputFocus = NOTEBOOK_OUTPUT_INPUT_FOCUSED.bindTo(this.scopedContextKeyService);
+    this._editorEditable = NOTEBOOK_EDITOR_EDITABLE.bindTo(this.scopedContextKeyService);
+    this._cursorNavMode = NOTEBOOK_CURSOR_NAVIGATION_MODE.bindTo(this.scopedContextKeyService);
+    new RawContextKey(PreventDefaultContextMenuItemsContextKeyName, false).bindTo(this.scopedContextKeyService).set(true);
+    this._editorEditable.set(!creationOptions.isReadOnly);
+    let contributions;
+    if (Array.isArray(this.creationOptions.contributions)) {
+      contributions = this.creationOptions.contributions;
+    } else {
+      contributions = NotebookEditorExtensionsRegistry.getEditorContributions();
+    }
+    for (const desc of contributions) {
+      let contribution;
+      try {
+        contribution = this.instantiationService.createInstance(desc.ctor, this);
+      } catch (err) {
+        onUnexpectedError(err);
+      }
+      if (contribution) {
+        if (!this._contributions.has(desc.id)) {
+          this._contributions.set(desc.id, contribution);
+        } else {
+          contribution.dispose();
+          throw new Error(`DUPLICATE notebook editor contribution: '${desc.id}'`);
+        }
+      }
+    }
+    this._updateForNotebookConfiguration();
+  }
+  static {
+    __name(this, "NotebookEditorWidget");
+  }
+  //#region Eventing
+  _onDidChangeCellState = this._register(new Emitter());
+  onDidChangeCellState = this._onDidChangeCellState.event;
+  _onDidChangeViewCells = this._register(new Emitter());
+  onDidChangeViewCells = this._onDidChangeViewCells.event;
+  _onWillChangeModel = this._register(new Emitter());
+  onWillChangeModel = this._onWillChangeModel.event;
+  _onDidChangeModel = this._register(new Emitter());
+  onDidChangeModel = this._onDidChangeModel.event;
+  _onDidAttachViewModel = this._register(new Emitter());
+  onDidAttachViewModel = this._onDidAttachViewModel.event;
+  _onDidChangeOptions = this._register(new Emitter());
+  onDidChangeOptions = this._onDidChangeOptions.event;
+  _onDidChangeDecorations = this._register(new Emitter());
+  onDidChangeDecorations = this._onDidChangeDecorations.event;
+  _onDidScroll = this._register(new Emitter());
+  onDidScroll = this._onDidScroll.event;
+  _onDidChangeLayout = this._register(new Emitter());
+  onDidChangeLayout = this._onDidChangeLayout.event;
+  _onDidChangeActiveCell = this._register(new Emitter());
+  onDidChangeActiveCell = this._onDidChangeActiveCell.event;
+  _onDidChangeFocus = this._register(new Emitter());
+  onDidChangeFocus = this._onDidChangeFocus.event;
+  _onDidChangeSelection = this._register(new Emitter());
+  onDidChangeSelection = this._onDidChangeSelection.event;
+  _onDidChangeVisibleRanges = this._register(new Emitter());
+  onDidChangeVisibleRanges = this._onDidChangeVisibleRanges.event;
+  _onDidFocusEmitter = this._register(new Emitter());
+  onDidFocusWidget = this._onDidFocusEmitter.event;
+  _onDidBlurEmitter = this._register(new Emitter());
+  onDidBlurWidget = this._onDidBlurEmitter.event;
+  _onDidChangeActiveEditor = this._register(new Emitter());
+  onDidChangeActiveEditor = this._onDidChangeActiveEditor.event;
+  _onDidChangeActiveKernel = this._register(new Emitter());
+  onDidChangeActiveKernel = this._onDidChangeActiveKernel.event;
+  _onMouseUp = this._register(new Emitter());
+  onMouseUp = this._onMouseUp.event;
+  _onMouseDown = this._register(new Emitter());
+  onMouseDown = this._onMouseDown.event;
+  _onDidReceiveMessage = this._register(new Emitter());
+  onDidReceiveMessage = this._onDidReceiveMessage.event;
+  _onDidRenderOutput = this._register(new Emitter());
+  onDidRenderOutput = this._onDidRenderOutput.event;
+  _onDidRemoveOutput = this._register(new Emitter());
+  onDidRemoveOutput = this._onDidRemoveOutput.event;
+  _onDidResizeOutputEmitter = this._register(new Emitter());
+  onDidResizeOutput = this._onDidResizeOutputEmitter.event;
+  //#endregion
+  _overlayContainer;
+  _notebookTopToolbarContainer;
+  _notebookTopToolbar;
+  _notebookStickyScrollContainer;
+  _notebookStickyScroll;
+  _notebookOverviewRulerContainer;
+  _notebookOverviewRuler;
+  _body;
+  _styleElement;
+  _overflowContainer;
+  _webview = null;
+  _webviewResolvePromise = null;
+  _webviewTransparentCover = null;
+  _listDelegate = null;
+  _list;
+  _listViewInfoAccessor;
+  _dndController = null;
+  _listTopCellToolbar = null;
+  _renderedEditors = /* @__PURE__ */ new Map();
+  _editorPool;
+  _viewContext;
+  _notebookViewModel;
+  _localStore = this._register(new DisposableStore());
+  _localCellStateListeners = [];
+  _fontInfo;
+  _dimension;
+  _position;
+  _shadowElement;
+  _shadowElementViewInfo = null;
+  _editorFocus;
+  _outputFocus;
+  _editorEditable;
+  _cursorNavMode;
+  _outputInputFocus;
+  _contributions = /* @__PURE__ */ new Map();
+  _scrollBeyondLastLine;
+  _insetModifyQueueByOutputId = new SequencerByKey();
+  _cellContextKeyManager = null;
+  _uuid = generateUuid();
+  _focusTracker;
+  _webviewFocused = false;
+  _isVisible = false;
+  get isVisible() {
+    return this._isVisible;
+  }
+  _isDisposed = false;
+  get isDisposed() {
+    return this._isDisposed;
+  }
+  set viewModel(newModel) {
+    this._onWillChangeModel.fire(this._notebookViewModel?.notebookDocument);
+    this._notebookViewModel = newModel;
+    this._onDidChangeModel.fire(newModel?.notebookDocument);
+  }
+  get viewModel() {
+    return this._notebookViewModel;
+  }
+  get textModel() {
+    return this._notebookViewModel?.notebookDocument;
+  }
+  get isReadOnly() {
+    return this._notebookViewModel?.options.isReadOnly ?? false;
+  }
+  get activeCodeEditor() {
+    if (this._isDisposed) {
+      return;
+    }
+    const [focused] = this._list.getFocusedElements();
+    return this._renderedEditors.get(focused);
+  }
+  get activeCellAndCodeEditor() {
+    if (this._isDisposed) {
+      return;
+    }
+    const [focused] = this._list.getFocusedElements();
+    const editor = this._renderedEditors.get(focused);
+    if (!editor) {
+      return;
+    }
+    return [focused, editor];
+  }
+  get codeEditors() {
+    return [...this._renderedEditors];
+  }
+  get visibleRanges() {
+    return this._list ? this._list.visibleRanges || [] : [];
+  }
+  _baseCellEditorOptions = /* @__PURE__ */ new Map();
+  isReplHistory;
+  _readOnly;
+  scopedContextKeyService;
+  instantiationService;
+  _notebookOptions;
+  _currentProgress;
+  get notebookOptions() {
+    return this._notebookOptions;
+  }
+  _debugFlag = false;
+  _debug(...args) {
+    if (!this._debugFlag) {
+      return;
+    }
+    notebookDebug(...args);
+  }
+  /**
+   * EditorId
+   */
+  getId() {
+    return this._uuid;
+  }
+  getViewModel() {
+    return this.viewModel;
+  }
+  getLength() {
+    return this.viewModel?.length ?? 0;
+  }
+  getSelections() {
+    return this.viewModel?.getSelections() ?? [];
+  }
+  setSelections(selections) {
+    if (!this.viewModel) {
+      return;
+    }
+    const focus = this.viewModel.getFocus();
+    this.viewModel.updateSelectionsState({
+      kind: SelectionStateType.Index,
+      focus,
+      selections
+    });
+  }
+  getFocus() {
+    return this.viewModel?.getFocus() ?? { start: 0, end: 0 };
+  }
+  setFocus(focus) {
+    if (!this.viewModel) {
+      return;
+    }
+    const selections = this.viewModel.getSelections();
+    this.viewModel.updateSelectionsState({
+      kind: SelectionStateType.Index,
+      focus,
+      selections
+    });
+  }
+  getSelectionViewModels() {
+    if (!this.viewModel) {
+      return [];
+    }
+    const cellsSet = /* @__PURE__ */ new Set();
+    return this.viewModel.getSelections().map((range) => this.viewModel.viewCells.slice(range.start, range.end)).reduce((a, b) => {
+      b.forEach((cell) => {
+        if (!cellsSet.has(cell.handle)) {
+          cellsSet.add(cell.handle);
+          a.push(cell);
+        }
+      });
+      return a;
+    }, []);
+  }
+  hasModel() {
+    return !!this._notebookViewModel;
+  }
+  showProgress() {
+    this._currentProgress = this.editorProgressService.show(true);
+  }
+  hideProgress() {
+    if (this._currentProgress) {
+      this._currentProgress.done();
+      this._currentProgress = void 0;
+    }
+  }
+  //#region Editor Core
+  getBaseCellEditorOptions(language) {
+    const existingOptions = this._baseCellEditorOptions.get(language);
+    if (existingOptions) {
+      return existingOptions;
+    } else {
+      const options = new BaseCellEditorOptions(this, this.notebookOptions, this.configurationService, language);
+      this._baseCellEditorOptions.set(language, options);
+      return options;
+    }
+  }
+  _updateForNotebookConfiguration() {
+    if (!this._overlayContainer) {
+      return;
+    }
+    this._overlayContainer.classList.remove("cell-title-toolbar-left");
+    this._overlayContainer.classList.remove("cell-title-toolbar-right");
+    this._overlayContainer.classList.remove("cell-title-toolbar-hidden");
+    const cellToolbarLocation = this._notebookOptions.computeCellToolbarLocation(this.viewModel?.viewType);
+    this._overlayContainer.classList.add(`cell-title-toolbar-${cellToolbarLocation}`);
+    const cellToolbarInteraction = this._notebookOptions.getDisplayOptions().cellToolbarInteraction;
+    let cellToolbarInteractionState = "hover";
+    this._overlayContainer.classList.remove("cell-toolbar-hover");
+    this._overlayContainer.classList.remove("cell-toolbar-click");
+    if (cellToolbarInteraction === "hover" || cellToolbarInteraction === "click") {
+      cellToolbarInteractionState = cellToolbarInteraction;
+    }
+    this._overlayContainer.classList.add(`cell-toolbar-${cellToolbarInteractionState}`);
+  }
+  _generateFontInfo() {
+    const editorOptions = this.configurationService.getValue("editor");
+    const targetWindow = DOM.getWindow(this.getDomNode());
+    this._fontInfo = FontMeasurements.readFontInfo(targetWindow, BareFontInfo.createFromRawSettings(editorOptions, PixelRatio.getInstance(targetWindow).value));
+  }
+  _createBody(parent) {
+    this._notebookTopToolbarContainer = document.createElement("div");
+    this._notebookTopToolbarContainer.classList.add("notebook-toolbar-container");
+    this._notebookTopToolbarContainer.style.display = "none";
+    DOM.append(parent, this._notebookTopToolbarContainer);
+    this._notebookStickyScrollContainer = document.createElement("div");
+    this._notebookStickyScrollContainer.classList.add("notebook-sticky-scroll-container");
+    DOM.append(parent, this._notebookStickyScrollContainer);
+    this._body = document.createElement("div");
+    DOM.append(parent, this._body);
+    this._body.classList.add("cell-list-container");
+    this._createLayoutStyles();
+    this._createCellList();
+    this._notebookOverviewRulerContainer = document.createElement("div");
+    this._notebookOverviewRulerContainer.classList.add("notebook-overview-ruler-container");
+    this._list.scrollableElement.appendChild(this._notebookOverviewRulerContainer);
+    this._registerNotebookOverviewRuler();
+    this._register(this.instantiationService.createInstance(NotebookHorizontalTracker, this, this._list.scrollableElement));
+    this._overflowContainer = document.createElement("div");
+    this._overflowContainer.classList.add("notebook-overflow-widget-container", "monaco-editor");
+    DOM.append(parent, this._overflowContainer);
+  }
+  _generateFontFamily() {
+    return this._fontInfo?.fontFamily ?? `"SF Mono", Monaco, Menlo, Consolas, "Ubuntu Mono", "Liberation Mono", "DejaVu Sans Mono", "Courier New", monospace`;
+  }
+  _createLayoutStyles() {
+    this._styleElement = domStylesheets.createStyleSheet(this._body);
+    const {
+      cellRightMargin,
+      cellTopMargin,
+      cellRunGutter,
+      cellBottomMargin,
+      codeCellLeftMargin,
+      markdownCellGutter,
+      markdownCellLeftMargin,
+      markdownCellBottomMargin,
+      markdownCellTopMargin,
+      collapsedIndicatorHeight,
+      focusIndicator,
+      insertToolbarPosition,
+      outputFontSize,
+      focusIndicatorLeftMargin,
+      focusIndicatorGap
+    } = this._notebookOptions.getLayoutConfiguration();
+    const {
+      insertToolbarAlignment,
+      compactView,
+      fontSize
+    } = this._notebookOptions.getDisplayOptions();
+    const getCellEditorContainerLeftMargin = this._notebookOptions.getCellEditorContainerLeftMargin();
+    const { bottomToolbarGap, bottomToolbarHeight } = this._notebookOptions.computeBottomToolbarDimensions(this.viewModel?.viewType);
+    const styleSheets = [];
+    if (!this._fontInfo) {
+      this._generateFontInfo();
+    }
+    const fontFamily = this._generateFontFamily();
+    styleSheets.push(`
 		.notebook-editor {
-			--notebook-cell-output-font-size: ${L}px;
-			--notebook-cell-input-preview-font-size: ${z}px;
-			--notebook-cell-input-preview-font-family: ${Q};
+			--notebook-cell-output-font-size: ${outputFontSize}px;
+			--notebook-cell-input-preview-font-size: ${fontSize}px;
+			--notebook-cell-input-preview-font-family: ${fontFamily};
 		}
-		`),O?a.push(`.notebookOverlay .cell-list-container > .monaco-list > .monaco-scrollable-element > .monaco-list-rows > .markdown-cell-row div.cell.code { margin-left: ${k}px; }`):a.push(`.notebookOverlay .cell-list-container > .monaco-list > .monaco-scrollable-element > .monaco-list-rows > .markdown-cell-row div.cell.code { margin-left: ${l}px; }`),f==="border"?(a.push(`
+		`);
+    if (compactView) {
+      styleSheets.push(`.notebookOverlay .cell-list-container > .monaco-list > .monaco-scrollable-element > .monaco-list-rows > .markdown-cell-row div.cell.code { margin-left: ${getCellEditorContainerLeftMargin}px; }`);
+    } else {
+      styleSheets.push(`.notebookOverlay .cell-list-container > .monaco-list > .monaco-scrollable-element > .monaco-list-rows > .markdown-cell-row div.cell.code { margin-left: ${codeCellLeftMargin}px; }`);
+    }
+    if (focusIndicator === "border") {
+      styleSheets.push(`
 			.monaco-workbench .notebookOverlay .monaco-list .monaco-list-row .cell-focus-indicator-top:before,
 			.monaco-workbench .notebookOverlay .monaco-list .monaco-list-row .cell-focus-indicator-bottom:before,
 			.monaco-workbench .notebookOverlay .monaco-list .markdown-cell-row .cell-inner-container:before,
@@ -43,18 +625,21 @@ var be=Object.defineProperty;var ve=Object.getOwnPropertyDescriptor;var ee=(N,M,
 			.monaco-workbench .notebookOverlay .monaco-list .monaco-list-row .cell-focus-indicator-right:before {
 				border-right: 1px solid transparent;
 			}
-			`),a.push(`
+			`);
+      styleSheets.push(`
 			.monaco-workbench .notebookOverlay .monaco-list .monaco-list-row.code-cell-row.focused .cell-focus-indicator-left:before,
 			.monaco-workbench .notebookOverlay .monaco-list .monaco-list-row.code-cell-row.focused .cell-focus-indicator-right:before,
 			.monaco-workbench .notebookOverlay .monaco-list.selection-multiple .monaco-list-row.code-cell-row.selected .cell-focus-indicator-left:before,
 			.monaco-workbench .notebookOverlay .monaco-list.selection-multiple .monaco-list-row.code-cell-row.selected .cell-focus-indicator-right:before {
-				top: -${t}px; height: calc(100% + ${t+o}px)
-			}`)):(a.push(`
+				top: -${cellTopMargin}px; height: calc(100% + ${cellTopMargin + cellBottomMargin}px)
+			}`);
+    } else {
+      styleSheets.push(`
 			.monaco-workbench .notebookOverlay .monaco-list .monaco-list-row .cell-focus-indicator-left .codeOutput-focus-indicator {
 				border-left: 3px solid transparent;
 				border-radius: 4px;
 				width: 0px;
-				margin-left: ${v}px;
+				margin-left: ${focusIndicatorLeftMargin}px;
 				border-color: var(--vscode-notebook-inactiveFocusedCellBorder) !important;
 			}
 
@@ -67,81 +652,2151 @@ var be=Object.defineProperty;var ve=Object.getOwnPropertyDescriptor;var ee=(N,M,
 
 			.monaco-workbench .notebookOverlay .monaco-list .monaco-list-row .cell-focus-indicator-left .codeOutput-focus-indicator-container:hover .codeOutput-focus-indicator {
 				border-left: 5px solid transparent;
-				margin-left: ${v-1}px;
+				margin-left: ${focusIndicatorLeftMargin - 1}px;
 			}
-			`),a.push(`
+			`);
+      styleSheets.push(`
 			.monaco-workbench .notebookOverlay .monaco-list .monaco-list-row.focused .cell-inner-container.cell-output-focus .cell-focus-indicator-left .codeOutput-focus-indicator,
 			.monaco-workbench .notebookOverlay .monaco-list:focus-within .monaco-list-row.focused .cell-inner-container .cell-focus-indicator-left .codeOutput-focus-indicator {
 				border-color: var(--vscode-notebook-focusedCellBorder) !important;
 			}
 
 			.monaco-workbench .notebookOverlay .monaco-list .monaco-list-row .cell-inner-container .cell-focus-indicator-left .output-focus-indicator {
-				margin-top: ${S}px;
+				margin-top: ${focusIndicatorGap}px;
 			}
-			`)),y==="betweenCells"||y==="both"?(a.push(".monaco-workbench .notebookOverlay > .cell-list-container > .monaco-list > .monaco-scrollable-element > .monaco-list-rows > .monaco-list-row .cell-bottom-toolbar-container { display: flex; }"),a.push(".monaco-workbench .notebookOverlay > .cell-list-container > .monaco-list > .monaco-scrollable-element > .monaco-list-rows > .view-zones .cell-list-top-cell-toolbar-container { display: flex; }")):(a.push(".monaco-workbench .notebookOverlay > .cell-list-container > .monaco-list > .monaco-scrollable-element > .monaco-list-rows > .monaco-list-row .cell-bottom-toolbar-container { display: none; }"),a.push(".monaco-workbench .notebookOverlay > .cell-list-container > .monaco-list > .monaco-scrollable-element > .monaco-list-rows > .view-zones .cell-list-top-cell-toolbar-container { display: none; }")),K==="left"&&(a.push(`
+			`);
+    }
+    if (insertToolbarPosition === "betweenCells" || insertToolbarPosition === "both") {
+      styleSheets.push(`.monaco-workbench .notebookOverlay > .cell-list-container > .monaco-list > .monaco-scrollable-element > .monaco-list-rows > .monaco-list-row .cell-bottom-toolbar-container { display: flex; }`);
+      styleSheets.push(`.monaco-workbench .notebookOverlay > .cell-list-container > .monaco-list > .monaco-scrollable-element > .monaco-list-rows > .view-zones .cell-list-top-cell-toolbar-container { display: flex; }`);
+    } else {
+      styleSheets.push(`.monaco-workbench .notebookOverlay > .cell-list-container > .monaco-list > .monaco-scrollable-element > .monaco-list-rows > .monaco-list-row .cell-bottom-toolbar-container { display: none; }`);
+      styleSheets.push(`.monaco-workbench .notebookOverlay > .cell-list-container > .monaco-list > .monaco-scrollable-element > .monaco-list-rows > .view-zones .cell-list-top-cell-toolbar-container { display: none; }`);
+    }
+    if (insertToolbarAlignment === "left") {
+      styleSheets.push(`
 			.monaco-workbench .notebookOverlay .cell-list-top-cell-toolbar-container .action-item:first-child,
 			.monaco-workbench .notebookOverlay .cell-list-top-cell-toolbar-container .action-item:first-child, .monaco-workbench .notebookOverlay > .cell-list-container > .monaco-list > .monaco-scrollable-element > .monaco-list-rows > .monaco-list-row .cell-bottom-toolbar-container .action-item:first-child {
 				margin-right: 0px !important;
-			}`),a.push(`
+			}`);
+      styleSheets.push(`
 			.monaco-workbench .notebookOverlay .cell-list-top-cell-toolbar-container .monaco-toolbar .action-label,
 			.monaco-workbench .notebookOverlay .cell-list-top-cell-toolbar-container .monaco-toolbar .action-label, .monaco-workbench .notebookOverlay > .cell-list-container > .monaco-list > .monaco-scrollable-element > .monaco-list-rows > .monaco-list-row .cell-bottom-toolbar-container .monaco-toolbar .action-label {
 				padding: 0px !important;
 				justify-content: center;
 				border-radius: 4px;
-			}`),a.push(`
+			}`);
+      styleSheets.push(`
 			.monaco-workbench .notebookOverlay .cell-list-top-cell-toolbar-container,
 			.monaco-workbench .notebookOverlay .cell-list-top-cell-toolbar-container, .monaco-workbench .notebookOverlay > .cell-list-container > .monaco-list > .monaco-scrollable-element > .monaco-list-rows > .monaco-list-row .cell-bottom-toolbar-container {
 				align-items: flex-start;
 				justify-content: left;
-				margin: 0 16px 0 ${8+l}px;
-			}`),a.push(`
+				margin: 0 16px 0 ${8 + codeCellLeftMargin}px;
+			}`);
+      styleSheets.push(`
 			.monaco-workbench .notebookOverlay .cell-list-top-cell-toolbar-container,
 			.notebookOverlay .cell-bottom-toolbar-container .action-item {
 				border: 0px;
-			}`)),a.push(`.notebookOverlay .cell-list-container > .monaco-list > .monaco-scrollable-element > .monaco-list-rows > .code-cell-row div.cell.code { margin-left: ${k}px; }`),a.push(`.notebookOverlay .cell-list-container > .monaco-list > .monaco-scrollable-element > .monaco-list-rows > .view-zones .code-cell-row div.cell.code { margin-left: ${k}px; }`),a.push(`.notebookOverlay .cell-list-container > .monaco-list > .monaco-scrollable-element > .monaco-list-rows > .view-zones .code-cell-row div.cell { margin-right: ${e}px; }`),a.push(`.notebookOverlay .cell-list-container > .monaco-list > .monaco-scrollable-element > .monaco-list-rows > .monaco-list-row div.cell { margin-right: ${e}px; }`),a.push(`.notebookOverlay .cell-list-container > .monaco-list > .monaco-scrollable-element > .monaco-list-rows > .monaco-list-row > .cell-inner-container { padding-top: ${t}px; }`),a.push(`.notebookOverlay .cell-list-container > .monaco-list > .monaco-scrollable-element > .monaco-list-rows > .markdown-cell-row > .cell-inner-container { padding-bottom: ${r}px; padding-top: ${d}px; }`),a.push(".notebookOverlay .cell-list-container > .monaco-list > .monaco-scrollable-element > .monaco-list-rows > .markdown-cell-row > .cell-inner-container.webview-backed-markdown-cell { padding: 0; }"),a.push(`.notebookOverlay .cell-list-container > .monaco-list > .monaco-scrollable-element > .monaco-list-rows > .markdown-cell-row > .webview-backed-markdown-cell.markdown-cell-edit-mode .cell.code { padding-bottom: ${r}px; padding-top: ${d}px; }`),a.push(`.notebookOverlay .output { margin: 0px ${e}px 0px ${k}px; }`),a.push(`.notebookOverlay .output { width: calc(100% - ${k+e}px); }`),a.push(`.notebookOverlay .cell-list-container > .monaco-list > .monaco-scrollable-element > .monaco-list-rows > .monaco-list-row .cell-comment-container { left: ${k}px; }`),a.push(`.notebookOverlay .cell-list-container > .monaco-list > .monaco-scrollable-element > .monaco-list-rows > .monaco-list-row .cell-comment-container { width: calc(100% - ${k+e}px); }`),a.push(`.monaco-workbench .notebookOverlay .output .output-collapse-container .expandButton { left: -${i}px; }`),a.push(`.monaco-workbench .notebookOverlay .output .output-collapse-container .expandButton {
+			}`);
+    }
+    styleSheets.push(`.notebookOverlay .cell-list-container > .monaco-list > .monaco-scrollable-element > .monaco-list-rows > .code-cell-row div.cell.code { margin-left: ${getCellEditorContainerLeftMargin}px; }`);
+    styleSheets.push(`.notebookOverlay .cell-list-container > .monaco-list > .monaco-scrollable-element > .monaco-list-rows > .view-zones .code-cell-row div.cell.code { margin-left: ${getCellEditorContainerLeftMargin}px; }`);
+    styleSheets.push(`.notebookOverlay .cell-list-container > .monaco-list > .monaco-scrollable-element > .monaco-list-rows > .view-zones .code-cell-row div.cell { margin-right: ${cellRightMargin}px; }`);
+    styleSheets.push(`.notebookOverlay .cell-list-container > .monaco-list > .monaco-scrollable-element > .monaco-list-rows > .monaco-list-row div.cell { margin-right: ${cellRightMargin}px; }`);
+    styleSheets.push(`.notebookOverlay .cell-list-container > .monaco-list > .monaco-scrollable-element > .monaco-list-rows > .monaco-list-row > .cell-inner-container { padding-top: ${cellTopMargin}px; }`);
+    styleSheets.push(`.notebookOverlay .cell-list-container > .monaco-list > .monaco-scrollable-element > .monaco-list-rows > .markdown-cell-row > .cell-inner-container { padding-bottom: ${markdownCellBottomMargin}px; padding-top: ${markdownCellTopMargin}px; }`);
+    styleSheets.push(`.notebookOverlay .cell-list-container > .monaco-list > .monaco-scrollable-element > .monaco-list-rows > .markdown-cell-row > .cell-inner-container.webview-backed-markdown-cell { padding: 0; }`);
+    styleSheets.push(`.notebookOverlay .cell-list-container > .monaco-list > .monaco-scrollable-element > .monaco-list-rows > .markdown-cell-row > .webview-backed-markdown-cell.markdown-cell-edit-mode .cell.code { padding-bottom: ${markdownCellBottomMargin}px; padding-top: ${markdownCellTopMargin}px; }`);
+    styleSheets.push(`.notebookOverlay .output { margin: 0px ${cellRightMargin}px 0px ${getCellEditorContainerLeftMargin}px; }`);
+    styleSheets.push(`.notebookOverlay .output { width: calc(100% - ${getCellEditorContainerLeftMargin + cellRightMargin}px); }`);
+    styleSheets.push(`.notebookOverlay .cell-list-container > .monaco-list > .monaco-scrollable-element > .monaco-list-rows > .monaco-list-row .cell-comment-container { left: ${getCellEditorContainerLeftMargin}px; }`);
+    styleSheets.push(`.notebookOverlay .cell-list-container > .monaco-list > .monaco-scrollable-element > .monaco-list-rows > .monaco-list-row .cell-comment-container { width: calc(100% - ${getCellEditorContainerLeftMargin + cellRightMargin}px); }`);
+    styleSheets.push(`.monaco-workbench .notebookOverlay .output .output-collapse-container .expandButton { left: -${cellRunGutter}px; }`);
+    styleSheets.push(`.monaco-workbench .notebookOverlay .output .output-collapse-container .expandButton {
 			position: absolute;
-			width: ${i}px;
+			width: ${cellRunGutter}px;
 			padding: 6px 0px;
-		}`),a.push(`.notebookOverlay .output-show-more-container { margin: 0px ${e}px 0px ${k}px; }`),a.push(`.notebookOverlay .output-show-more-container { width: calc(100% - ${k+e}px); }`),a.push(`.notebookOverlay .cell-list-container > .monaco-list > .monaco-scrollable-element > .monaco-list-rows > .monaco-list-row div.cell.markdown { padding-left: ${i}px; }`),a.push(`.monaco-workbench .notebookOverlay > .cell-list-container .notebook-folding-indicator { left: ${(n-20)/2+s}px; }`),a.push(`.notebookOverlay > .cell-list-container .notebook-folded-hint { left: ${n+s+8}px; }`),a.push(`.notebookOverlay .monaco-list .monaco-list-row :not(.webview-backed-markdown-cell) .cell-focus-indicator-top { height: ${t}px; }`),a.push(`.notebookOverlay .monaco-list .monaco-list-row .cell-focus-indicator-side { bottom: ${E}px; }`),a.push(`.notebookOverlay .monaco-list .monaco-list-row.code-cell-row .cell-focus-indicator-left { width: ${k}px; }`),a.push(`.notebookOverlay .monaco-list .monaco-list-row.markdown-cell-row .cell-focus-indicator-left { width: ${l}px; }`),a.push(`.notebookOverlay .monaco-list .monaco-list-row .cell-focus-indicator.cell-focus-indicator-right { width: ${e}px; }`),a.push(`.notebookOverlay .monaco-list .monaco-list-row .cell-focus-indicator-bottom { height: ${o}px; }`),a.push(`.notebookOverlay .monaco-list .monaco-list-row .cell-shadow-container-bottom { top: ${o}px; }`),a.push(`
+		}`);
+    styleSheets.push(`.notebookOverlay .output-show-more-container { margin: 0px ${cellRightMargin}px 0px ${getCellEditorContainerLeftMargin}px; }`);
+    styleSheets.push(`.notebookOverlay .output-show-more-container { width: calc(100% - ${getCellEditorContainerLeftMargin + cellRightMargin}px); }`);
+    styleSheets.push(`.notebookOverlay .cell-list-container > .monaco-list > .monaco-scrollable-element > .monaco-list-rows > .monaco-list-row div.cell.markdown { padding-left: ${cellRunGutter}px; }`);
+    styleSheets.push(`.monaco-workbench .notebookOverlay > .cell-list-container .notebook-folding-indicator { left: ${(markdownCellGutter - 20) / 2 + markdownCellLeftMargin}px; }`);
+    styleSheets.push(`.notebookOverlay > .cell-list-container .notebook-folded-hint { left: ${markdownCellGutter + markdownCellLeftMargin + 8}px; }`);
+    styleSheets.push(`.notebookOverlay .monaco-list .monaco-list-row :not(.webview-backed-markdown-cell) .cell-focus-indicator-top { height: ${cellTopMargin}px; }`);
+    styleSheets.push(`.notebookOverlay .monaco-list .monaco-list-row .cell-focus-indicator-side { bottom: ${bottomToolbarGap}px; }`);
+    styleSheets.push(`.notebookOverlay .monaco-list .monaco-list-row.code-cell-row .cell-focus-indicator-left { width: ${getCellEditorContainerLeftMargin}px; }`);
+    styleSheets.push(`.notebookOverlay .monaco-list .monaco-list-row.markdown-cell-row .cell-focus-indicator-left { width: ${codeCellLeftMargin}px; }`);
+    styleSheets.push(`.notebookOverlay .monaco-list .monaco-list-row .cell-focus-indicator.cell-focus-indicator-right { width: ${cellRightMargin}px; }`);
+    styleSheets.push(`.notebookOverlay .monaco-list .monaco-list-row .cell-focus-indicator-bottom { height: ${cellBottomMargin}px; }`);
+    styleSheets.push(`.notebookOverlay .monaco-list .monaco-list-row .cell-shadow-container-bottom { top: ${cellBottomMargin}px; }`);
+    styleSheets.push(`
 			.notebookOverlay .monaco-list.selection-multiple .monaco-list-row:has(+ .monaco-list-row.selected) .cell-focus-indicator-bottom {
-				height: ${E+o}px;
+				height: ${bottomToolbarGap + cellBottomMargin}px;
 			}
-		`),a.push(`
+		`);
+    styleSheets.push(`
 			.notebookOverlay .monaco-list .monaco-list-row.code-cell-row.nb-multiCellHighlight:has(+ .monaco-list-row.nb-multiCellHighlight) .cell-focus-indicator-bottom {
-				height: ${E+o}px;
+				height: ${bottomToolbarGap + cellBottomMargin}px;
 				background-color: var(--vscode-notebook-symbolHighlightBackground) !important;
 			}
 
 			.notebookOverlay .monaco-list .monaco-list-row.markdown-cell-row.nb-multiCellHighlight:has(+ .monaco-list-row.nb-multiCellHighlight) .cell-focus-indicator-bottom {
-				height: ${E+o-6}px;
+				height: ${bottomToolbarGap + cellBottomMargin - 6}px;
 				background-color: var(--vscode-notebook-symbolHighlightBackground) !important;
 			}
-		`),a.push(`
+		`);
+    styleSheets.push(`
 			.monaco-workbench .notebookOverlay > .cell-list-container > .monaco-list > .monaco-scrollable-element > .monaco-list-rows > .monaco-list-row .input-collapse-container .cell-collapse-preview {
-				line-height: ${h}px;
+				line-height: ${collapsedIndicatorHeight}px;
 			}
 
 			.monaco-workbench .notebookOverlay > .cell-list-container > .monaco-list > .monaco-scrollable-element > .monaco-list-rows > .monaco-list-row .input-collapse-container .cell-collapse-preview .monaco-tokenized-source {
-				max-height: ${h}px;
+				max-height: ${collapsedIndicatorHeight}px;
 			}
-		`),a.push(`.monaco-workbench .notebookOverlay > .cell-list-container > .monaco-list > .monaco-scrollable-element > .monaco-list-rows > .monaco-list-row .cell-bottom-toolbar-container .monaco-toolbar { height: ${c}px }`),a.push(`.monaco-workbench .notebookOverlay > .cell-list-container > .monaco-list > .monaco-scrollable-element > .monaco-list-rows > .view-zones .cell-list-top-cell-toolbar-container .monaco-toolbar { height: ${c}px }`),a.push(`.monaco-workbench .notebookOverlay.cell-title-toolbar-right > .cell-list-container > .monaco-list > .monaco-scrollable-element > .monaco-list-rows > .monaco-list-row .cell-title-toolbar {
-			right: ${e+26}px;
+		`);
+    styleSheets.push(`.monaco-workbench .notebookOverlay > .cell-list-container > .monaco-list > .monaco-scrollable-element > .monaco-list-rows > .monaco-list-row .cell-bottom-toolbar-container .monaco-toolbar { height: ${bottomToolbarHeight}px }`);
+    styleSheets.push(`.monaco-workbench .notebookOverlay > .cell-list-container > .monaco-list > .monaco-scrollable-element > .monaco-list-rows > .view-zones .cell-list-top-cell-toolbar-container .monaco-toolbar { height: ${bottomToolbarHeight}px }`);
+    styleSheets.push(`.monaco-workbench .notebookOverlay.cell-title-toolbar-right > .cell-list-container > .monaco-list > .monaco-scrollable-element > .monaco-list-rows > .monaco-list-row .cell-title-toolbar {
+			right: ${cellRightMargin + 26}px;
 		}
 		.monaco-workbench .notebookOverlay.cell-title-toolbar-left > .cell-list-container > .monaco-list > .monaco-scrollable-element > .monaco-list-rows > .monaco-list-row .cell-title-toolbar {
-			left: ${k+16}px;
+			left: ${getCellEditorContainerLeftMargin + 16}px;
 		}
 		.monaco-workbench .notebookOverlay.cell-title-toolbar-hidden > .cell-list-container > .monaco-list > .monaco-scrollable-element > .monaco-list-rows > .monaco-list-row .cell-title-toolbar {
 			display: none;
-		}`),a.push(`
+		}`);
+    styleSheets.push(`
 		.monaco-workbench .notebookOverlay .output > div.foreground.output-inner-container {
-			padding: ${ue}px 8px;
+			padding: ${OutputInnerContainerTopPadding}px 8px;
 		}
 		.monaco-workbench .notebookOverlay > .cell-list-container > .monaco-list > .monaco-scrollable-element > .monaco-list-rows > .monaco-list-row .output-collapse-container {
-			padding: ${ue}px 8px;
+			padding: ${OutputInnerContainerTopPadding}px 8px;
 		}
-		`),a.push(`
+		`);
+    styleSheets.push(`
 		.monaco-workbench .notebookOverlay .cell-chat-part {
-			margin: 0 ${e}px 6px 4px;
+			margin: 0 ${cellRightMargin}px 6px 4px;
 		}
-		`),this._styleElement.textContent=a.join(`
-`)}_createCellList(){this._body.classList.add("cell-list-container"),this._dndController=this._register(new qe(this,this._body));const e=o=>this._list.contextKeyService.createScoped(o);this._editorPool=this._register(this.instantiationService.createInstance(Lt,this,e));const t=[this.instantiationService.createInstance(Je,this,this._renderedEditors,this._editorPool,this._dndController,e),this.instantiationService.createInstance(Xe,this,this._dndController,this._renderedEditors,e)];t.forEach(o=>{this._register(o)}),this._listDelegate=this.instantiationService.createInstance(et,w.getWindow(this.getDomNode())),this._register(this._listDelegate);const i=this.instantiationService.createInstance(Nt,()=>this.viewModel,this.isReplHistory);this._register(i),this._list=this.instantiationService.createInstance(Ze,"NotebookCellList",this._body,this._viewContext.notebookOptions,this._listDelegate,t,this.scopedContextKeyService,{setRowLineHeight:!1,setRowHeight:!1,supportDynamicHeights:!0,horizontalScrolling:!1,keyboardSupport:!1,mouseSupport:!0,multipleSelectionSupport:!0,selectionNavigation:!0,typeNavigationEnabled:!0,paddingTop:0,paddingBottom:0,transformOptimization:!1,initialSize:this._dimension,styleController:o=>this._list,overrideStyles:{listBackground:V,listActiveSelectionBackground:V,listActiveSelectionForeground:B,listFocusAndSelectionBackground:V,listFocusAndSelectionForeground:B,listFocusBackground:V,listFocusForeground:B,listHoverForeground:B,listHoverBackground:V,listHoverOutline:R,listFocusOutline:R,listInactiveSelectionBackground:V,listInactiveSelectionForeground:B,listInactiveFocusBackground:V,listInactiveFocusOutline:V},accessibilityProvider:i}),this._dndController.setList(this._list),this._register(this._list),this._listViewInfoAccessor=new Ye(this._list),this._register(this._listViewInfoAccessor),this._register(ke(...t)),this._listTopCellToolbar=this._register(this.instantiationService.createInstance(at,this,this.notebookOptions)),this._webviewTransparentCover=w.append(this._list.rowsContainer,Bt(".webview-cover")),this._webviewTransparentCover.style.display="none",this._register(w.addStandardDisposableGenericMouseDownListener(this._overlayContainer,o=>{o.target.classList.contains("slider")&&this._webviewTransparentCover&&(this._webviewTransparentCover.style.display="block")})),this._register(w.addStandardDisposableGenericMouseUpListener(this._overlayContainer,()=>{this._webviewTransparentCover&&(this._webviewTransparentCover.style.display="none")})),this._register(this._list.onMouseDown(o=>{o.element&&this._onMouseDown.fire({event:o.browserEvent,target:o.element})})),this._register(this._list.onMouseUp(o=>{o.element&&this._onMouseUp.fire({event:o.browserEvent,target:o.element})})),this._register(this._list.onDidChangeFocus(o=>{this._onDidChangeActiveEditor.fire(this),this._onDidChangeActiveCell.fire(),this._onDidChangeFocus.fire(),this._cursorNavMode.set(!1)})),this._register(this._list.onContextMenu(o=>{this.showListContextMenu(o)})),this._register(this._list.onDidChangeVisibleRanges(()=>{this._onDidChangeVisibleRanges.fire()})),this._register(this._list.onDidScroll(o=>{o.scrollTop!==o.oldScrollTop&&(this._onDidScroll.fire(),this.clearActiveCellWidgets()),o.scrollTop===o.oldScrollTop&&o.scrollHeightChanged&&this._onDidChangeLayout.fire()})),this._focusTracker=this._register(w.trackFocus(this.getDomNode())),this._register(this._focusTracker.onDidBlur(()=>{this._editorFocus.set(!1),this.viewModel?.setEditorFocus(!1),this._onDidBlurEmitter.fire()})),this._register(this._focusTracker.onDidFocus(()=>{this._editorFocus.set(!0),this.viewModel?.setEditorFocus(!0),this._onDidFocusEmitter.fire()})),this._registerNotebookActionsToolbar(),this._registerNotebookStickyScroll(),this._register(this.configurationService.onDidChangeConfiguration(o=>{o.affectsConfiguration(i.verbositySettingId)&&(this._list.ariaLabel=i?.getWidgetAriaLabel())}))}showListContextMenu(e){this.contextMenuService.showContextMenu({menuId:D.NotebookCellTitle,menuActionOptions:{shouldForwardArgs:!0},contextKeyService:this.scopedContextKeyService,getAnchor:()=>e.anchor,getActionsContext:()=>({from:"cellContainer"})})}_registerNotebookOverviewRuler(){this._notebookOverviewRuler=this._register(this.instantiationService.createInstance(rt,this,this._notebookOverviewRulerContainer))}_registerNotebookActionsToolbar(){this._notebookTopToolbar=this._register(this.instantiationService.createInstance(lt,this,this.scopedContextKeyService,this._notebookOptions,this._notebookTopToolbarContainer)),this._register(this._notebookTopToolbar.onDidChangeVisibility(()=>{this._dimension&&this._isVisible&&this.layout(this._dimension)}))}_registerNotebookStickyScroll(){this._notebookStickyScroll=this._register(this.instantiationService.createInstance(Dt,this._notebookStickyScrollContainer,this,this._list,e=>{this.isDisposed||(this._dimension&&this._isVisible&&(e>0?(this.layout(this._dimension),this.setScrollTop(this.scrollTop+e)):e<0&&(this.setScrollTop(this.scrollTop+e),this.layout(this._dimension))),this._onDidScroll.fire())}))}_updateOutputRenderers(){!this.viewModel||!this._webview||(this._webview.updateOutputRenderers(),this.viewModel.viewCells.forEach(e=>{e.outputsViewModels.forEach(t=>{t.pickedMimeType?.rendererId===ct&&t.resetRenderer()})}))}getDomNode(){return this._overlayContainer}getOverflowContainerDomNode(){return this._overflowContainer}getInnerWebview(){return this._webview?.webview}setEditorProgressService(e){this.editorProgressService=e}setParentContextKeyService(e){this.scopedContextKeyService.updateParent(e)}async setModel(e,t,i,o){if(this.viewModel===void 0||!this.viewModel.equal(e)){const l=this._notebookOptions.computeBottomToolbarDimensions(this.viewModel?.viewType);this._detachModel(),await this._attachModel(e,o??e.viewType,t,i);const n=this._notebookOptions.computeBottomToolbarDimensions(this.viewModel?.viewType);(l.bottomToolbarGap!==n.bottomToolbarGap||l.bottomToolbarHeight!==n.bottomToolbarHeight)&&(this._styleElement?.remove(),this._createLayoutStyles(),this._webview?.updateOptions({...this.notebookOptions.computeWebviewOptions(),fontFamily:this._generateFontFamily()})),this.telemetryService.publicLog2("notebook/editorOpened",{scheme:e.uri.scheme,ext:Oe(e.uri),viewType:e.viewType,isRepl:this.isReplHistory})}else this.restoreListViewState(t);this._restoreSelectedKernel(t),this._loadKernelPreloads(),this._dndController?.clearGlobalDragState(),this._localStore.add(this._list.onDidChangeFocus(()=>{this.updateContextKeysOnFocusChange()})),this.updateContextKeysOnFocusChange(),this._backgroundMarkdownRendering()}_backgroundMarkdownRenderRunning=!1;_backgroundMarkdownRendering(){this._backgroundMarkdownRenderRunning||(this._backgroundMarkdownRenderRunning=!0,w.runWhenWindowIdle(w.getWindow(this.getDomNode()),e=>{this._backgroundMarkdownRenderingWithDeadline(e)}))}_backgroundMarkdownRenderingWithDeadline(e){const t=Date.now()+e.timeRemaining(),i=()=>{try{if(this._backgroundMarkdownRenderRunning=!0,this._isDisposed||!this.viewModel)return;const o=this.viewModel.viewCells.find(l=>l.cellKind===C.Markup&&!this._webview?.markupPreviewMapping.has(l.id)&&!this.cellIsHidden(l));if(!o)return;this.createMarkupPreview(o)}finally{this._backgroundMarkdownRenderRunning=!1}Date.now()<t?Me(i):this._backgroundMarkdownRendering()};i()}updateContextKeysOnFocusChange(){if(!this.viewModel)return;const e=this._list.getFocusedElements()[0];e&&(this._cellContextKeyManager||(this._cellContextKeyManager=this._localStore.add(this.instantiationService.createInstance(Ge,this,e))),this._cellContextKeyManager.updateForElement(e))}async setOptions(e){if(e?.isReadOnly!==void 0&&(this._readOnly=e?.isReadOnly),!this.viewModel)return;this.viewModel.updateOptions({isReadOnly:this._readOnly}),this.notebookOptions.updateOptions(this._readOnly);const t=e?.cellOptions??this._parseIndexedCellOptions(e);if(t){const i=this.viewModel.viewCells.find(o=>o.uri.toString()===t.resource.toString());if(i){this.focusElement(i);const o=t.options?.selection;o?(i.updateEditState(T.Editing,"setOptions"),i.focusMode=I.Editor,await this.revealRangeInCenterIfOutsideViewportAsync(i,new F(o.startLineNumber,o.startColumn,o.endLineNumber||o.startLineNumber,o.endColumn||o.startColumn))):this._list.revealCell(i,e?.cellRevealType??A.CenterIfOutsideViewport);const l=this._renderedEditors.get(i);if(l){if(t.options?.selection){const{selection:n}=t.options,s=new F(n.startLineNumber,n.startColumn,n.endLineNumber||n.startLineNumber,n.endColumn||n.startColumn);l.setSelection(s),l.revealPositionInCenterIfOutsideViewport({lineNumber:n.startLineNumber,column:n.startColumn}),await this.revealRangeInCenterIfOutsideViewportAsync(i,s)}t.options?.preserveFocus||l.focus()}}}if(e?.cellSelections){const i=e.cellSelections[0].start,o=this.viewModel.cellAt(i);o&&(this.viewModel.updateSelectionsState({kind:W.Index,focus:{start:i,end:i+1},selections:e.cellSelections}),this.revealInCenterIfOutsideViewport(o))}this._updateForOptions(),this._onDidChangeOptions.fire()}_parseIndexedCellOptions(e){if(e?.indexedCellOptions){const t=this.cellAt(e.indexedCellOptions.index);if(t)return{resource:t.uri,options:{selection:e.indexedCellOptions.selection,preserveFocus:!1}}}}_detachModel(){this._localStore.clear(),G(this._localCellStateListeners),this._list.detachViewModel(),this.viewModel?.dispose(),this.viewModel=void 0,this._webview?.dispose(),this._webview?.element.remove(),this._webview=null,this._list.clear()}_updateForOptions(){this.viewModel&&(this._editorEditable.set(!this.viewModel.options.isReadOnly),this._overflowContainer.classList.toggle("notebook-editor-editable",!this.viewModel.options.isReadOnly),this.getDomNode().classList.toggle("notebook-editor-editable",!this.viewModel.options.isReadOnly))}async _resolveWebview(){return this.textModel?this._webviewResolvePromise?this._webviewResolvePromise:(this._webview||this._ensureWebview(this.getId(),this.textModel.viewType,this.textModel.uri),this._webviewResolvePromise=(async()=>{if(!this._webview)throw new Error("Notebook output webview object is not created successfully.");if(await this._webview.createWebview(this.creationOptions.codeWindow??te),!this._webview.webview)throw new Error("Notebook output webview element was not created successfully.");return this._localStore.add(this._webview.webview.onDidBlur(()=>{this._outputFocus.set(!1),this._webviewFocused=!1,this.updateEditorFocus(),this.updateCellFocusMode()})),this._localStore.add(this._webview.webview.onDidFocus(()=>{this._outputFocus.set(!0),this.updateEditorFocus(),this._webviewFocused=!0})),this._localStore.add(this._webview.onMessage(e=>{this._onDidReceiveMessage.fire(e)})),this._webview})(),this._webviewResolvePromise):null}_ensureWebview(e,t,i){if(this._webview)return;const o=this;this._webview=this.instantiationService.createInstance(Qe,{get creationOptions(){return o.creationOptions},setScrollTop(l){o._list.scrollTop=l},triggerScroll(l){o._list.triggerScrollFromMouseWheelEvent(l)},getCellByInfo:o.getCellByInfo.bind(o),getCellById:o._getCellById.bind(o),toggleNotebookCellSelection:o._toggleNotebookCellSelection.bind(o),focusNotebookCell:o.focusNotebookCell.bind(o),focusNextNotebookCell:o.focusNextNotebookCell.bind(o),updateOutputHeight:o._updateOutputHeight.bind(o),scheduleOutputHeightAck:o._scheduleOutputHeightAck.bind(o),updateMarkupCellHeight:o._updateMarkupCellHeight.bind(o),setMarkupCellEditState:o._setMarkupCellEditState.bind(o),didStartDragMarkupCell:o._didStartDragMarkupCell.bind(o),didDragMarkupCell:o._didDragMarkupCell.bind(o),didDropMarkupCell:o._didDropMarkupCell.bind(o),didEndDragMarkupCell:o._didEndDragMarkupCell.bind(o),didResizeOutput:o._didResizeOutput.bind(o),updatePerformanceMetadata:o._updatePerformanceMetadata.bind(o),didFocusOutputInputChange:o._didFocusOutputInputChange.bind(o)},e,t,i,{...this._notebookOptions.computeWebviewOptions(),fontFamily:this._generateFontFamily()},this.notebookRendererMessaging.getScoped(this._uuid)),this._webview.element.style.width="100%",this._list.attachWebview(this._webview.element)}async _attachModel(e,t,i,o){this._ensureWebview(this.getId(),e.viewType,e.uri),this.viewModel=this.instantiationService.createInstance(it,t,e,this._viewContext,this.getLayoutInfo(),{isReadOnly:this._readOnly}),this._viewContext.eventDispatcher.emit([new ce({width:!0,fontInfo:!0},this.getLayoutInfo())]),this.notebookOptions.updateOptions(this._readOnly),this._updateForOptions(),this._updateForNotebookConfiguration();{this.viewModel.restoreEditorViewState(i);const n=i?.contributionsState||{};for(const[s,r]of this._contributions)typeof r.restoreViewState=="function"&&r.restoreViewState(n[s])}this._localStore.add(this.viewModel.onDidChangeViewCells(n=>{this._onDidChangeViewCells.fire(n)})),this._localStore.add(this.viewModel.onDidChangeSelection(()=>{this._onDidChangeSelection.fire(),this.updateSelectedMarkdownPreviews()})),this._localStore.add(this._list.onWillScroll(n=>{this._webview?.isResolved()&&(this._webviewTransparentCover.style.transform=`translateY(${n.scrollTop})`)}));let l=!1;this._localStore.add(this._list.onDidChangeContentHeight(()=>{l||(l=!0,this._localStore.add(w.scheduleAtNextAnimationFrame(w.getWindow(this.getDomNode()),()=>{l=!1,this._updateScrollHeight()},100)))})),this._localStore.add(this._list.onDidRemoveOutputs(n=>{n.forEach(s=>this.removeInset(s))})),this._localStore.add(this._list.onDidHideOutputs(n=>{n.forEach(s=>this.hideInset(s))})),this._localStore.add(this._list.onDidRemoveCellsFromView(n=>{const s=[],r=[];for(const d of n)if(d.cellKind===C.Markup){const h=d;this.viewModel?.viewCells.find(f=>f.handle===h.handle)?s.push(h):r.push(h)}this.hideMarkupPreviews(s),this.deleteMarkupPreviews(r)})),await this._warmupWithMarkdownRenderer(this.viewModel,i,o),o?.mark("customMarkdownLoaded"),this._localCellStateListeners=this.viewModel.viewCells.map(n=>this._bindCellListener(n)),this._lastCellWithEditorFocus=this.viewModel.viewCells.find(n=>this.getActiveCell()===n&&n.focusMode===I.Editor)??null,this._localStore.add(this.viewModel.onDidChangeViewCells(n=>{this._isDisposed||([...n.splices].reverse().forEach(s=>{const[r,d,h]=s,f=this._localCellStateListeners.splice(r,d,...h.map(y=>this._bindCellListener(y)));G(f)}),n.splices.some(s=>s[2].some(r=>r.cellKind===C.Markup))&&this._backgroundMarkdownRendering())})),this._dimension?this._list.layout(this.getBodyHeight(this._dimension.height),this._dimension.width):this._list.layout(),this._dndController?.clearGlobalDragState(),this.restoreListViewState(i)}_bindCellListener(e){const t=new oe;return t.add(e.onDidChangeLayout(i=>{(i.totalHeight||i.outerWidth)&&this.layoutNotebookCell(e,e.layoutInfo.totalHeight,i.context)})),e.cellKind===C.Code&&t.add(e.onDidRemoveOutputs(i=>{i.forEach(o=>this.removeInset(o))})),t.add(e.onDidChangeState(i=>{i.inputCollapsedChanged&&e.isInputCollapsed&&e.cellKind===C.Markup&&this.hideMarkupPreviews([e]),i.outputCollapsedChanged&&e.isOutputCollapsed&&e.cellKind===C.Code&&e.outputsViewModels.forEach(o=>this.hideInset(o)),i.focusModeChanged&&this._validateCellFocusMode(e)})),t.add(e.onCellDecorationsChanged(i=>{i.added.forEach(o=>{o.className&&this.deltaCellContainerClassNames(e.id,[o.className],[],e.cellKind),o.outputClassName&&this.deltaCellContainerClassNames(e.id,[o.outputClassName],[],e.cellKind)}),i.removed.forEach(o=>{o.className&&this.deltaCellContainerClassNames(e.id,[],[o.className],e.cellKind),o.outputClassName&&this.deltaCellContainerClassNames(e.id,[],[o.outputClassName],e.cellKind)})})),t}_lastCellWithEditorFocus=null;_validateCellFocusMode(e){e.focusMode===I.Editor&&(this._lastCellWithEditorFocus&&this._lastCellWithEditorFocus!==e&&(this._lastCellWithEditorFocus.focusMode=I.Container),this._lastCellWithEditorFocus=e)}async _warmupWithMarkdownRenderer(e,t,i){this.logService.debug("NotebookEditorWidget","warmup "+this.viewModel?.uri.toString()),await this._resolveWebview(),i?.mark("webviewCommLoaded"),this.logService.debug("NotebookEditorWidget","warmup - webview resolved"),this._webview.element.style.visibility="hidden",await this._warmupViewportMarkdownCells(e,t),this.logService.debug("NotebookEditorWidget","warmup - viewport warmed up"),this._list.layout(0,0),this._list.attachViewModel(e),this._list.scrollTop=t?.scrollPosition?.top??0,this._debug("finish initial viewport warmup and view state restore."),this._webview.element.style.visibility="visible",this.logService.debug("NotebookEditorWidget","warmup - list view model attached, set to visible"),this._onDidAttachViewModel.fire()}async _warmupViewportMarkdownCells(e,t){if(t&&t.cellTotalHeights){const i=t.cellTotalHeights,o=t.scrollPosition?.top??0,l=o+Math.max(this._dimension?.height??0,1080);let n=0;const s=[];for(let r=0;r<e.length;r++){const d=e.cellAt(r),h=i[r]??0;if(n+h<o){n+=h;continue}if(d.cellKind===C.Markup&&s.push([d,n]),n+=h,n>l)break}await this._webview.initializeMarkup(s.map(([r,d])=>this.createMarkupCellInitialization(r,d)))}else{const i=e.viewCells.filter(s=>s.cellKind===C.Markup).slice(0,5).map(s=>this.createMarkupCellInitialization(s,-1e4));await this._webview.initializeMarkup(i);let o=0;const l=[],n=Math.max(this._dimension?.height??0,1080);for(const s of e.viewCells)if(s.cellKind===C.Markup&&l.push({id:s.id,top:o}),o+=s.getHeight(this.getLayoutInfo().fontInfo.lineHeight),o>n)break;this._webview?.updateScrollTops([],l)}}createMarkupCellInitialization(e,t){return{mime:e.mime,cellId:e.id,cellHandle:e.handle,content:e.getText(),offset:t,visible:!1,metadata:e.metadata}}restoreListViewState(e){if(!this.viewModel)return;e?.scrollPosition!==void 0?(this._list.scrollTop=e.scrollPosition.top,this._list.scrollLeft=e.scrollPosition.left):(this._list.scrollTop=0,this._list.scrollLeft=0);const t=typeof e?.focus=="number"?e.focus:0;if(t<this.viewModel.length){const i=this.viewModel.cellAt(t);i&&this.viewModel?.updateSelectionsState({kind:W.Handle,primary:i.handle,selections:[i.handle]})}else this._list.length>0&&this.viewModel.updateSelectionsState({kind:W.Index,focus:{start:0,end:1},selections:[{start:0,end:1}]});if(e?.editorFocused){const i=this.viewModel.cellAt(t);i&&(i.focusMode=I.Editor)}}_restoreSelectedKernel(e){if(e?.selectedKernelId&&this.textModel){const t=this.notebookKernelService.getMatchingKernel(this.textModel),i=t.all.find(o=>o.id===e.selectedKernelId);i&&!t.selected&&this.notebookKernelService.selectKernelForNotebook(i,this.textModel)}}getEditorViewState(){const e=this.viewModel?.getEditorViewState();if(!e)return{editingCells:{},cellLineNumberStates:{},editorViewStates:{},collapsedInputCells:{},collapsedOutputCells:{}};if(this._list){e.scrollPosition={left:this._list.scrollLeft,top:this._list.scrollTop};const i={};for(let o=0;o<this.viewModel.length;o++){const l=this.viewModel.cellAt(o);i[o]=l.layoutInfo.totalHeight}if(e.cellTotalHeights=i,this.viewModel){const o=this.viewModel.getFocus(),l=this.viewModel.cellAt(o.start);if(l){const n=this._list.domElementOfElement(l),s=l.getEditState()===T.Editing&&!!(n&&n.ownerDocument.activeElement&&n.contains(n.ownerDocument.activeElement));e.editorFocused=s,e.focus=o.start}}}const t={};for(const[i,o]of this._contributions)typeof o.saveViewState=="function"&&(t[i]=o.saveViewState());return e.contributionsState=t,this.textModel?.uri.scheme===St.untitled&&(e.selectedKernelId=this.activeKernel?.id),e}_allowScrollBeyondLastLine(){return this._scrollBeyondLastLine&&!this.isReplHistory}getBodyHeight(e){return Math.max(e-(this._notebookTopToolbar?.useGlobalToolbar?26:0),0)}layout(e,t,i){if(!t&&this._shadowElementViewInfo===null){this._dimension=e,this._position=i;return}if(e.width<=0||e.height<=0){this.onWillHide();return}const o=this.layoutService.whenContainerStylesLoaded(w.getWindow(this.getDomNode()));o?o.then(()=>this.layoutNotebook(e,t,i)):this.layoutNotebook(e,t,i)}layoutNotebook(e,t,i){if(t&&this.updateShadowElement(t,e,i),this._shadowElementViewInfo&&this._shadowElementViewInfo.width<=0&&this._shadowElementViewInfo.height<=0){this.onWillHide();return}this._dimension=e,this._position=i;const o=this.getBodyHeight(e.height)-this.getLayoutInfo().stickyHeight;w.size(this._body,e.width,o);const l=o;this._list.getRenderHeight()<l?(this._list.updateOptions({paddingBottom:this._allowScrollBeyondLastLine()?Math.max(0,l-50):0,paddingTop:0}),this._list.layout(l,e.width)):(this._list.layout(l,e.width),this._list.updateOptions({paddingBottom:this._allowScrollBeyondLastLine()?Math.max(0,l-50):0,paddingTop:0})),this._overlayContainer.inert=!1,this._overlayContainer.style.visibility="visible",this._overlayContainer.style.display="block",this._overlayContainer.style.position="absolute",this._overlayContainer.style.overflow="hidden",this.layoutContainerOverShadowElement(e,i),this._webviewTransparentCover&&(this._webviewTransparentCover.style.height=`${e.height}px`,this._webviewTransparentCover.style.width=`${e.width}px`),this._notebookTopToolbar.layout(this._dimension),this._notebookOverviewRuler.layout(),this._viewContext?.eventDispatcher.emit([new ce({width:!0,fontInfo:!0},this.getLayoutInfo())])}updateShadowElement(e,t,i){if(this._shadowElement=e,t&&i)this._shadowElementViewInfo={height:t.height,width:t.width,top:i.top,left:i.left};else{const o=e.getBoundingClientRect();this._shadowElementViewInfo={height:o.height,width:o.width,top:o.top,left:o.left}}}layoutContainerOverShadowElement(e,t){if(e&&t){this._overlayContainer.style.top=`${t.top}px`,this._overlayContainer.style.left=`${t.left}px`,this._overlayContainer.style.width=`${e.width}px`,this._overlayContainer.style.height=`${e.height}px`;return}if(!this._shadowElementViewInfo)return;const i=this._overlayContainer.parentElement?.getBoundingClientRect();this._overlayContainer.style.top=`${this._shadowElementViewInfo.top-(i?.top||0)}px`,this._overlayContainer.style.left=`${this._shadowElementViewInfo.left-(i?.left||0)}px`,this._overlayContainer.style.width=`${e?e.width:this._shadowElementViewInfo.width}px`,this._overlayContainer.style.height=`${e?e.height:this._shadowElementViewInfo.height}px`}focus(){if(this._isVisible=!0,this._editorFocus.set(!0),this._webviewFocused)this._webview?.focusWebview();else{if(this.viewModel){const e=this.viewModel.getFocus(),t=this.viewModel.cellAt(e.start);if(this.hasEditorFocus()||(this.focusContainer(),this.updateEditorFocus()),t&&t.focusMode===I.Editor){t.updateEditState(T.Editing,"editorWidget.focus"),t.focusMode=I.Editor,this.focusEditor(t);return}}this._list.domFocus()}this._currentProgress&&this.showProgress()}onShow(){this._isVisible=!0}focusEditor(e){for(const[t,i]of this._renderedEditors.entries())if(t===e){i.focus();return}}focusContainer(e=!1){this._webviewFocused?this._webview?.focusWebview():this._list.focusContainer(e)}selectOutputContent(e){this._webview?.selectOutputContents(e)}selectInputContents(e){this._webview?.selectInputContents(e)}onWillHide(){this._isVisible=!1,this._editorFocus.set(!1),this._overlayContainer.inert=!0,this._overlayContainer.style.visibility="hidden",this._overlayContainer.style.left="-50000px",this._notebookTopToolbarContainer.style.display="none",this.clearActiveCellWidgets()}clearActiveCellWidgets(){this._renderedEditors.forEach((e,t)=>{this.getActiveCell()===t&&e&&(De.get(e)?.cancelSuggestWidget(),Et.get(e)?.clearWidgets(),xt.get(e)?.clearWidgets())}),this._renderedEditors.forEach((e,t)=>{Ft.get(e)?.model.get()?.inlineEditState.get()&&e.render(!0)})}editorHasDomFocus(){return w.isAncestorOfActiveElement(this.getDomNode())}updateEditorFocus(){this._focusTracker.refreshState();const e=this.editorHasDomFocus();this._editorFocus.set(e),this.viewModel?.setEditorFocus(e)}updateCellFocusMode(){const e=this.getActiveCell();e?.focusMode===I.Output&&!this._webviewFocused&&(e.focusMode=I.Container)}hasEditorFocus(){return this.updateEditorFocus(),this.editorHasDomFocus()}hasWebviewFocus(){return this._webviewFocused}hasOutputTextSelection(){if(!this.hasEditorFocus())return!1;const e=w.getWindow(this.getDomNode()).getSelection();if(e?.rangeCount!==1)return!1;const t=e.getRangeAt(0);if(t.startContainer===t.endContainer&&t.endOffset-t.startOffset===0)return!1;let i=t.commonAncestorContainer;if(!this._body.contains(i))return!1;for(;i&&i!==this._body;){if(i.classList&&i.classList.contains("output"))return!0;i=i.parentNode}return!1}_didFocusOutputInputChange(e){this._outputInputFocus.set(e)}focusElement(e){this.viewModel?.updateSelectionsState({kind:W.Handle,primary:e.handle,selections:[e.handle]})}get scrollTop(){return this._list.scrollTop}get scrollBottom(){return this._list.scrollTop+this._list.getRenderHeight()}getAbsoluteTopOfElement(e){return this._list.getCellViewScrollTop(e)}getHeightOfElement(e){return this._list.elementHeight(e)}scrollToBottom(){this._list.scrollToBottom()}setScrollTop(e){this._list.scrollTop=e}revealCellRangeInView(e){return this._list.revealCells(e)}revealInView(e){return this._list.revealCell(e,A.Default)}revealInViewAtTop(e){this._list.revealCell(e,A.Top)}revealInCenter(e){this._list.revealCell(e,A.Center)}async revealInCenterIfOutsideViewport(e){await this._list.revealCell(e,A.CenterIfOutsideViewport)}async revealFirstLineIfOutsideViewport(e){await this._list.revealCell(e,A.FirstLineIfOutsideViewport)}async revealLineInViewAsync(e,t){return this._list.revealRangeInCell(e,new F(t,1,t,1),H.Default)}async revealLineInCenterAsync(e,t){return this._list.revealRangeInCell(e,new F(t,1,t,1),H.Center)}async revealLineInCenterIfOutsideViewportAsync(e,t){return this._list.revealRangeInCell(e,new F(t,1,t,1),H.CenterIfOutsideViewport)}async revealRangeInViewAsync(e,t){return this._list.revealRangeInCell(e,t,H.Default)}async revealRangeInCenterAsync(e,t){return this._list.revealRangeInCell(e,t,H.Center)}async revealRangeInCenterIfOutsideViewportAsync(e,t){return this._list.revealRangeInCell(e,t,H.CenterIfOutsideViewport)}revealCellOffsetInCenter(e,t){return this._list.revealCellOffsetInCenter(e,t)}revealOffsetInCenterIfOutsideViewport(e){return this._list.revealOffsetInCenterIfOutsideViewport(e)}getViewIndexByModelIndex(e){if(!this._listViewInfoAccessor)return-1;const t=this.viewModel?.viewCells[e];return t?this._listViewInfoAccessor.getViewIndex(t):-1}getViewHeight(e){return this._listViewInfoAccessor?this._listViewInfoAccessor.getViewHeight(e):-1}getCellRangeFromViewRange(e,t){return this._listViewInfoAccessor.getCellRangeFromViewRange(e,t)}getCellsInRange(e){return this._listViewInfoAccessor.getCellsInRange(e)}setCellEditorSelection(e,t){this._list.setCellEditorSelection(e,t)}setHiddenAreas(e){return this._list.setHiddenAreas(e,!0)}getVisibleRangesPlusViewportAboveAndBelow(){return this._listViewInfoAccessor.getVisibleRangesPlusViewportAboveAndBelow()}deltaCellDecorations(e,t){const i=this.viewModel?.deltaCellDecorations(e,t)||[];return this._onDidChangeDecorations.fire(),i}deltaCellContainerClassNames(e,t,i,o){o===C.Markup?this._webview?.deltaMarkupPreviewClassNames(e,t,i):this._webview?.deltaCellOutputContainerClassNames(e,t,i)}changeModelDecorations(e){return this.viewModel?.changeModelDecorations(e)||null}changeViewZones(e){this._list.changeViewZones(e),this._onDidChangeLayout.fire()}getViewZoneLayoutInfo(e){return this._list.getViewZoneLayoutInfo(e)}changeCellOverlays(e){this._list.changeCellOverlays(e)}async _loadKernelPreloads(){if(!this.hasModel())return;const{selected:e}=this.notebookKernelService.getMatchingKernel(this.textModel);this._webview?.isResolved()||await this._resolveWebview(),this._webview?.updateKernelPreloads(e)}get activeKernel(){return this.textModel&&this.notebookKernelService.getSelectedOrSuggestedKernel(this.textModel)}async cancelNotebookCells(e){if(!(!this.viewModel||!this.hasModel()))return e||(e=this.viewModel.viewCells),this.notebookExecutionService.cancelNotebookCellHandles(this.textModel,Array.from(e).map(t=>t.handle))}async executeNotebookCells(e){if(!this.viewModel||!this.hasModel()){this.logService.info("notebookEditorWidget","No NotebookViewModel, cannot execute cells");return}return e||(e=this.viewModel.viewCells),this.notebookExecutionService.executeNotebookCells(this.textModel,Array.from(e).map(t=>t.model),this.scopedContextKeyService)}_pendingLayouts=new WeakMap;_layoutDisposables=new Set;async layoutNotebookCell(e,t,i){if(this._debug("layout cell",e.handle,t),this._list.getViewIndex(e)===void 0)return;this._pendingLayouts?.has(e)&&this._pendingLayouts?.get(e).dispose();const l=new fe,n=()=>{if(this._isDisposed||!this.viewModel?.hasCell(e)||this._list.getViewIndex(e)===void 0||this._list.elementHeight(e)===t)return;const s=this._pendingLayouts?.get(e);if(this._pendingLayouts?.delete(e),!this.hasEditorFocus()){const r=this.viewModel?.getCellIndex(e),d=this.visibleRanges;if(r!==void 0&&d&&d.length&&d[0].start===r&&this._list.scrollTop>this.getAbsoluteTopOfElement(e))return this._list.updateElementHeight2(e,t,Math.min(r+1,this.getLength()-1))}this._list.updateElementHeight2(e,t),l.complete(void 0),s&&(s.dispose(),this._layoutDisposables.delete(s))};if(this._list.inRenderingTransaction){const s=w.scheduleAtNextAnimationFrame(w.getWindow(this.getDomNode()),n),r=Ie(()=>{s.dispose(),l.complete(void 0)});this._pendingLayouts?.set(e,r),this._layoutDisposables.add(r)}else n();return l.p}getActiveCell(){const e=this._list.getFocusedElements();if(e&&e.length)return e[0]}_toggleNotebookCellSelection(e,t){const i=this._list.getSelectedElements(),o=i.includes(e),l=t?i[i.length-1]??e:e,n=this._list.getViewIndex(e),s=this._list.getViewIndex(l),r=this.getCellsInViewRange(n,s);o?this._list.selectElements(i.filter(d=>!r.includes(d))):(this.focusElement(e),this._list.selectElements([...i.filter(d=>!r.includes(d)),...r]))}getCellsInViewRange(e,t){const i=[];for(let o=0;o<this._list.length;++o){const l=this._list.element(o);l&&(o>=e&&o<=t||o>=t&&o<=e)&&i.push(l)}return i}async focusNotebookCell(e,t,i){if(!this._isDisposed)if(e.focusedOutputId=void 0,t==="editor"){if(e.isInputCollapsed=!1,this.focusElement(e),this._list.focusView(),e.updateEditState(T.Editing,"focusNotebookCell"),e.focusMode=I.Editor,!i?.skipReveal)if(typeof i?.focusEditorLine=="number"){this._cursorNavMode.set(!0),await this.revealLineInViewAsync(e,i.focusEditorLine);const o=this._renderedEditors.get(e),l=i.focusEditorLine;o?.setSelection({startLineNumber:l,startColumn:1,endLineNumber:l,endColumn:1})}else{const o=e.getSelectionsStartPosition();if(o?.length){const l=o[0];await this.revealRangeInViewAsync(e,F.fromPositions(l,l))}else await this.revealInView(e)}}else if(t==="output"){if(this.focusElement(e),this.hasEditorFocus()||this._list.focusView(),!this._webview)return;const o=e.outputsViewModels.find(n=>n.model.alternativeOutputId)?.model.alternativeOutputId,l=i?.outputId??o??e.id;this._webview.focusOutput(l,i?.altOutputId,i?.outputWebviewFocused||this._webviewFocused),e.updateEditState(T.Preview,"focusNotebookCell"),e.focusMode=I.Output,e.focusedOutputId=i?.outputId,this._outputFocus.set(!0),i?.skipReveal||this.revealInCenterIfOutsideViewport(e)}else{const o=this._list.domElementOfElement(e);o&&o.ownerDocument.activeElement&&o.contains(o.ownerDocument.activeElement)&&o.ownerDocument.activeElement.blur(),this._webview?.blurOutput(),e.updateEditState(T.Preview,"focusNotebookCell"),e.focusMode=I.Container,this.focusElement(e),i?.skipReveal||(typeof i?.focusEditorLine=="number"?(this._cursorNavMode.set(!0),await this.revealInView(e)):i?.revealBehavior===de.firstLine?await this.revealFirstLineIfOutsideViewport(e):i?.revealBehavior===de.fullCell?await this.revealInView(e):await this.revealInCenterIfOutsideViewport(e)),this._list.focusView(),this.updateEditorFocus()}}async focusNextNotebookCell(e,t){const i=this.viewModel?.getCellIndex(e);if(typeof i!="number")return;const o=this.viewModel?.cellAt(i+1);o&&await this.focusNotebookCell(o,t)}async _warmupCell(e){if(e.isOutputCollapsed)return;const t=e.outputsViewModels;for(const i of t.slice(0,tt)){const[o,l]=i.resolveMimeTypes(this.textModel,void 0);if(!o.find(h=>h.isTrusted)||o.length===0)continue;const n=o[l];if(!n)return;const s=this._notebookService.getRendererInfo(n.rendererId);if(!s)return;const r={type:$.Extension,renderer:s,source:i,mimeType:n.mimeType},d=this._webview?.insetMapping.get(r.source);if(!d||!d.initialized){const h=new Promise(f=>{this._register(Ce.any(this.onDidRenderOutput,this.onDidRemoveOutput)(y=>{y.model===r.source.model&&f()}))});this.createOutput(e,r,0,!1),await h}else this.createOutput(e,r,0,!1);return}}async _warmupAll(e){if(!this.hasModel()||!this.viewModel)return;const t=this.viewModel.viewCells,i=[];for(let o=0;o<t.length;o++)t[o].cellKind===C.Markup&&!this._webview.markupPreviewMapping.has(t[o].id)&&i.push(this.createMarkupPreview(t[o]));if(e&&this._list)for(let o=0;o<this._list.length;o++){const l=this._list.element(o);l?.cellKind===C.Code&&i.push(this._warmupCell(l))}return Promise.all(i)}async _warmupSelection(e,t){if(!this.hasModel()||!this.viewModel)return;const i=this.viewModel.viewCells,o=[];for(const l of t)for(let n=l.start;n<l.end;n++)i[n].cellKind===C.Markup&&!this._webview.markupPreviewMapping.has(i[n].id)&&o.push(this.createMarkupPreview(i[n]));if(e&&this._list)for(const l of t)for(let n=l.start;n<l.end;n++){const s=this._list.element(n);s?.cellKind===C.Code&&o.push(this._warmupCell(s))}return Promise.all(o)}async find(e,t,i,o=!1,l=!1,n){if(!this._notebookViewModel)return[];n||(n=this.getId());const s=this._notebookViewModel.find(e,t).filter(h=>h.length>0);if(!t.includeMarkupPreview&&!t.includeOutput||t.findScope?.findScopeType===J.Text)return this._webview?.findStop(n),s;const r={};if(s.forEach(h=>{r[h.cell.id]=h}),this._webview){const h=Date.now();t.findScope&&t.findScope.findScopeType===J.Cells&&t.findScope.selectedCellRanges?await this._warmupSelection(!!t.includeOutput,t.findScope.selectedCellRanges):await this._warmupAll(!!t.includeOutput);const f=Date.now();if(this.logService.debug("Find",`Warmup time: ${f-h}ms`),i.isCancellationRequested)return[];let y=[];t.findScope&&t.findScope.findScopeType===J.Cells&&t.findScope.selectedCellRanges&&(y=gt(t.findScope.selectedCellRanges).map(S=>this._notebookViewModel?.viewCells[S].id??""));const L=await this._webview.find(e,{caseSensitive:t.caseSensitive,wholeWord:t.wholeWord,includeMarkup:!!t.includeMarkupPreview,includeOutput:!!t.includeOutput,shouldGetSearchPreviewInfo:l,ownerID:n,findIds:y});if(i.isCancellationRequested)return[];L.forEach(v=>{const S=this._notebookViewModel.viewCells.find(O=>O.id===v.cellId);if(!S)return;if(v.type==="preview"){if(S.getEditState()===T.Preview&&!t.includeMarkupPreview||S.getEditState()===T.Editing&&t.includeMarkupInput)return}else if(!t.includeOutput)return;const K=r[v.cellId];K?K.webviewMatches.push(v):r[v.cellId]=new pe(this._notebookViewModel.viewCells.find(O=>O.id===v.cellId),this._notebookViewModel.viewCells.findIndex(O=>O.id===v.cellId),[],[v])})}const d=[];return this._notebookViewModel.viewCells.forEach((h,f)=>{r[h.id]&&d.push(new pe(h,f,r[h.id].contentMatches,r[h.id].webviewMatches))}),d}async findHighlightCurrent(e,t){return this._webview?this._webview?.findHighlightCurrent(e,t??this.getId()):0}async findUnHighlightCurrent(e,t){if(this._webview)return this._webview?.findUnHighlightCurrent(e,t??this.getId())}findStop(e){this._webview?.findStop(e??this.getId())}getLayoutInfo(){if(!this._list)throw new Error("Editor is not initalized successfully");return this._fontInfo||this._generateFontInfo(),{width:this._dimension?.width??0,height:this._dimension?.height??0,scrollHeight:this._list?.getScrollHeight()??0,fontInfo:this._fontInfo,stickyHeight:this._notebookStickyScroll?.getCurrentStickyHeight()??0}}async createMarkupPreview(e){if(!this._webview||(this._webview.isResolved()||await this._resolveWebview(),!this._webview||!this._list.webviewElement)||!this.viewModel||!this._list.viewModel||this.viewModel.getCellIndex(e)===-1||this.cellIsHidden(e))return;const t=parseInt(this._list.webviewElement.domNode.style.top,10),i=t?0-t:0,o=this._list.getCellViewScrollTop(e);await this._webview.showMarkupPreview({mime:e.mime,cellHandle:e.handle,cellId:e.id,content:e.getText(),offset:o+i,visible:!0,metadata:e.metadata})}cellIsHidden(e){const t=this.viewModel.getCellIndex(e);return this.viewModel.getHiddenRanges().some(o=>t>=o.start&&t<=o.end)}async unhideMarkupPreviews(e){this._webview&&(this._webview.isResolved()||await this._resolveWebview(),await this._webview?.unhideMarkupPreviews(e.map(t=>t.id)))}async hideMarkupPreviews(e){!this._webview||!e.length||(this._webview.isResolved()||await this._resolveWebview(),await this._webview?.hideMarkupPreviews(e.map(t=>t.id)))}async deleteMarkupPreviews(e){this._webview&&(this._webview.isResolved()||await this._resolveWebview(),await this._webview?.deleteMarkupPreviews(e.map(t=>t.id)))}async updateSelectedMarkdownPreviews(){if(!this._webview)return;this._webview.isResolved()||await this._resolveWebview();const e=this.getSelectionViewModels().map(t=>t.id);await this._webview?.updateMarkupPreviewSelections(e.length>1?e:[])}async createOutput(e,t,i,o){this._insetModifyQueueByOutputId.queue(t.source.model.outputId,async()=>{if(this._isDisposed||!this._webview||(this._webview.isResolved()||await this._resolveWebview(),!this._webview)||!this._list.webviewElement)return;t.type===$.Extension&&this.notebookRendererMessaging.prepare(t.renderer.id);const l=parseInt(this._list.webviewElement.domNode.style.top,10),n=l?0-l:0,s=this._list.getCellViewScrollTop(e)+n,r=this._webview.insetMapping.get(t.source);if(!r||!r.renderer&&t.type===$.Extension)o?this._webview.requestCreateOutputWhenWebviewIdle({cellId:e.id,cellHandle:e.handle,cellUri:e.uri,executionId:e.internalMetadata.executionId},t,s,i):this._webview.createOutput({cellId:e.id,cellHandle:e.handle,cellUri:e.uri,executionId:e.internalMetadata.executionId},t,s,i);else if(r.renderer&&t.type===$.Extension&&r.renderer.id!==t.renderer.id)this._webview.removeInsets([t.source]),this._webview.createOutput({cellId:e.id,cellHandle:e.handle,cellUri:e.uri},t,s,i);else if(r.versionId!==t.source.model.versionId)this._webview.updateOutput({cellId:e.id,cellHandle:e.handle,cellUri:e.uri,executionId:e.internalMetadata.executionId},t,s,i);else{const d=e.outputsViewModels.indexOf(t.source),h=e.getOutputOffset(d);this._webview.updateScrollTops([{cell:e,output:t.source,cellTop:s,outputOffset:h,forceDisplay:!e.isOutputCollapsed}],[])}})}async updateOutput(e,t,i){this._insetModifyQueueByOutputId.queue(t.source.model.outputId,async()=>{if(this._isDisposed||!this._webview||e.isOutputCollapsed||(this._webview.isResolved()||await this._resolveWebview(),!this._webview||!this._list.webviewElement))return;if(!this._webview.insetMapping.has(t.source))return this.createOutput(e,t,i,!1);t.type===$.Extension&&this.notebookRendererMessaging.prepare(t.renderer.id);const o=parseInt(this._list.webviewElement.domNode.style.top,10),l=o?0-o:0,n=this._list.getCellViewScrollTop(e)+l;this._webview.updateOutput({cellId:e.id,cellHandle:e.handle,cellUri:e.uri},t,n,i)})}async copyOutputImage(e){this._webview?.copyImage(e)}removeInset(e){this._insetModifyQueueByOutputId.queue(e.model.outputId,async()=>{this._isDisposed||!this._webview||(this._webview?.isResolved()&&this._webview.removeInsets([e]),this._onDidRemoveOutput.fire(e))})}hideInset(e){this._insetModifyQueueByOutputId.queue(e.model.outputId,async()=>{this._isDisposed||!this._webview||this._webview?.isResolved()&&this._webview.hideInset(e)})}postMessage(e){this._webview?.isResolved()&&this._webview.postKernelMessage(e)}addClassName(e){this._overlayContainer.classList.add(e)}removeClassName(e){this._overlayContainer.classList.remove(e)}cellAt(e){return this.viewModel?.cellAt(e)}getCellByInfo(e){const{cellHandle:t}=e;return this.viewModel?.viewCells.find(i=>i.handle===t)}getCellByHandle(e){return this.viewModel?.getCellByHandle(e)}getCellIndex(e){return this.viewModel?.getCellIndexByHandle(e.handle)}getNextVisibleCellIndex(e){return this.viewModel?.getNextVisibleCellIndex(e)}getPreviousVisibleCellIndex(e){return this.viewModel?.getPreviousVisibleCellIndex(e)}_updateScrollHeight(){if(this._isDisposed||!this._webview?.isResolved()||!this._list.webviewElement)return;const e=this._list.scrollHeight;this._webview.element.style.height=`${e+je*2}px`;const t=parseInt(this._list.webviewElement.domNode.style.top,10),i=t?0-t:0,o=[],l=[];this._webview?.insetMapping.forEach((s,r)=>{const d=this.viewModel?.getCellByHandle(s.cellInfo.cellHandle);if(!d||!(d instanceof he)||(this.viewModel?.viewCells.find(v=>v.handle===s.cellInfo.cellHandle),this._list.getViewIndex(d)===void 0))return;d.outputsViewModels.indexOf(r)<0&&l.push(r);const f=this._list.getCellViewScrollTop(d),y=d.outputsViewModels.indexOf(r),L=d.getOutputOffset(y);o.push({cell:d,output:r,cellTop:f+i,outputOffset:L,forceDisplay:!1})}),this._webview.removeInsets(l);const n=[];for(const s of this._webview.markupPreviewMapping.keys()){const r=this.viewModel?.viewCells.find(d=>d.id===s);if(r){const d=this._list.getCellViewScrollTop(r);n.push({id:s,top:d+i})}}(n.length||o.length)&&(this._debug("_list.onDidChangeContentHeight/markdown",n),this._webview?.updateScrollTops(o,n))}_updateOutputHeight(e,t,i,o,l){const n=this.viewModel?.viewCells.find(s=>s.handle===e.cellHandle);if(n&&n instanceof he){const s=n.outputsViewModels.indexOf(t);s>-1?(this._debug("update cell output",n.handle,i),n.updateOutputHeight(s,i,l),this.layoutNotebookCell(n,n.layoutInfo.totalHeight),o&&this._onDidRenderOutput.fire(t)):this._debug("tried to update cell output that does not exist")}}_pendingOutputHeightAcks=new Map;_scheduleOutputHeightAck(e,t,i){const o=this._pendingOutputHeightAcks.size===0;this._pendingOutputHeightAcks.set(t,{cellId:e.cellId,outputId:t,height:i}),o&&w.scheduleAtNextAnimationFrame(w.getWindow(this.getDomNode()),()=>{this._debug("ack height"),this._updateScrollHeight(),this._webview?.ackHeight([...this._pendingOutputHeightAcks.values()]),this._pendingOutputHeightAcks.clear()},-1)}_getCellById(e){return this.viewModel?.viewCells.find(t=>t.id===e)}_updateMarkupCellHeight(e,t,i){const o=this._getCellById(e);if(o&&o instanceof P){const{bottomToolbarGap:l}=this._notebookOptions.computeBottomToolbarDimensions(this.viewModel?.viewType);this._debug("updateMarkdownCellHeight",o.handle,t+l,i),o.renderedMarkdownHeight=t}}_setMarkupCellEditState(e,t){const i=this._getCellById(e);i instanceof P&&(this.revealInView(i),i.updateEditState(t,"setMarkdownCellEditState"))}_didStartDragMarkupCell(e,t){const i=this._getCellById(e);if(i instanceof P){const o=this._list.webviewElement?-parseInt(this._list.webviewElement.domNode.style.top,10):0;this._dndController?.startExplicitDrag(i,t.dragOffsetY-o)}}_didDragMarkupCell(e,t){const i=this._getCellById(e);if(i instanceof P){const o=this._list.webviewElement?-parseInt(this._list.webviewElement.domNode.style.top,10):0;this._dndController?.explicitDrag(i,t.dragOffsetY-o)}}_didDropMarkupCell(e,t){const i=this._getCellById(e);if(i instanceof P){const o=this._list.webviewElement?-parseInt(this._list.webviewElement.domNode.style.top,10):0;t.dragOffsetY-=o,this._dndController?.explicitDrop(i,t)}}_didEndDragMarkupCell(e){const t=this._getCellById(e);t instanceof P&&this._dndController?.endExplicitDrag(t)}_didResizeOutput(e){const t=this._getCellById(e);t&&this._onDidResizeOutputEmitter.fire(t)}_updatePerformanceMetadata(e,t,i,o){if(!this.hasModel())return;const l=this._getCellById(e),n=l?this.getCellIndex(l):void 0;if(l?.internalMetadata.executionId===t&&n!==void 0){const s=l.internalMetadata.renderDuration||{};s[o]=(s[o]??0)+i,this.textModel.applyEdits([{editType:dt.PartialInternalMetadata,index:n,internalMetadata:{executionId:t,renderDuration:s}}],!0,void 0,()=>{},void 0,!1)}}getContribution(e){return this._contributions.get(e)||null}dispose(){this._isDisposed=!0,this._webview?.dispose(),this._webview=null,this._layoutDisposables.forEach(e=>e.dispose()),this.notebookEditorService.removeNotebookEditor(this),G(this._contributions.values()),this._contributions.clear(),this._localStore.clear(),G(this._localCellStateListeners),this._list.dispose(),this._listTopCellToolbar?.dispose(),this._overlayContainer.remove(),this.viewModel?.dispose(),this._renderedEditors.clear(),this._baseCellEditorOptions.forEach(e=>e.dispose()),this._baseCellEditorOptions.clear(),this._notebookOverviewRulerContainer.remove(),super.dispose(),this._webview=null,this._webviewResolvePromise=null,this._webviewTransparentCover=null,this._dndController=null,this._listTopCellToolbar=null,this._notebookViewModel=void 0,this._cellContextKeyManager=null,this._notebookTopToolbar=null,this._list=null,this._listViewInfoAccessor=null,this._pendingLayouts=null,this._listDelegate=null}toJSON(){return{notebookUri:this.viewModel?.uri}}};j=ee([m(2,Re),m(3,yt),m(4,_t),m(5,ze),m(6,mt),m(7,Ct),m(8,Te),m(9,ne),m(10,Fe),m(11,Ne),m(12,He),m(13,vt),m(14,Be),m(15,Ot)],j),g(_.Base,5,"notebook-progress-bar"),g(_.Base,10,"notebook-list-insertion-indicator"),g(_.Base,20,"notebook-cell-editor-outline"),g(_.Base,25,"notebook-scrollbar"),g(_.Base,26,"notebook-cell-status"),g(_.Base,26,"notebook-folding-indicator"),g(_.Base,27,"notebook-output"),g(_.Base,28,"notebook-cell-bottom-toolbar-container"),g(_.Base,29,"notebook-run-button-container"),g(_.Base,29,"notebook-input-collapse-condicon"),g(_.Base,30,"notebook-cell-output-toolbar"),g(_.Sash,1,"notebook-cell-expand-part-button"),g(_.Sash,2,"notebook-cell-toolbar"),g(_.Sash,3,"notebook-cell-toolbar-dropdown-active");const X=p("notebook.cellBorderColor",{dark:Z(Y,1),light:Z(Y,1),hcDark:se,hcLight:se},u.localize("notebook.cellBorderColor","The border color for notebook cells.")),On=p("notebook.focusedEditorBorder",R,u.localize("notebook.focusedEditorBorder","The color of the notebook cell editor border.")),Sn=p("notebookStatusSuccessIcon.foreground",ae,u.localize("notebookStatusSuccessIcon.foreground","The error icon color of notebook cells in the cell status bar.")),En=p("notebookEditorOverviewRuler.runningCellForeground",ae,u.localize("notebookEditorOverviewRuler.runningCellForeground","The color of the running cell decoration in the notebook editor overview ruler.")),xn=p("notebookStatusErrorIcon.foreground",Ae,u.localize("notebookStatusErrorIcon.foreground","The error icon color of notebook cells in the cell status bar.")),Dn=p("notebookStatusRunningIcon.foreground",B,u.localize("notebookStatusRunningIcon.foreground","The running icon color of notebook cells in the cell status bar.")),Tn=p("notebook.outputContainerBorderColor",null,u.localize("notebook.outputContainerBorderColor","The border color of the notebook output container.")),Vn=p("notebook.outputContainerBackgroundColor",null,u.localize("notebook.outputContainerBackgroundColor","The color of the notebook output container background.")),Nn=p("notebook.cellToolbarSeparator",{dark:x.fromHex("#808080").transparent(.35),light:x.fromHex("#808080").transparent(.35),hcDark:q,hcLight:q},u.localize("notebook.cellToolbarSeparator","The color of the separator in the cell bottom toolbar")),we=p("notebook.focusedCellBackground",null,u.localize("focusedCellBackground","The background color of a cell when the cell is focused.")),Rn=p("notebook.selectedCellBackground",{dark:Y,light:Y,hcDark:null,hcLight:null},u.localize("selectedCellBackground","The background color of a cell when the cell is selected.")),Ln=p("notebook.cellHoverBackground",{dark:Z(we,.5),light:Z(we,.7),hcDark:null,hcLight:null},u.localize("notebook.cellHoverBackground","The background color of a cell when the cell is hovered.")),Fn=p("notebook.selectedCellBorder",{dark:X,light:X,hcDark:q,hcLight:q},u.localize("notebook.selectedCellBorder","The color of the cell's top and bottom border when the cell is selected but not focused.")),Bn=p("notebook.inactiveSelectedCellBorder",{dark:null,light:null,hcDark:R,hcLight:R},u.localize("notebook.inactiveSelectedCellBorder","The color of the cell's borders when multiple cells are selected.")),Hn=p("notebook.focusedCellBorder",R,u.localize("notebook.focusedCellBorder","The color of the cell's focus indicator borders when the cell is focused.")),An=p("notebook.inactiveFocusedCellBorder",X,u.localize("notebook.inactiveFocusedCellBorder","The color of the cell's top and bottom border when a cell is focused while the primary focus is outside of the editor.")),Pn=p("notebook.cellStatusBarItemHoverBackground",{light:new x(new U(0,0,0,.08)),dark:new x(new U(255,255,255,.15)),hcDark:new x(new U(255,255,255,.15)),hcLight:new x(new U(0,0,0,.08))},u.localize("notebook.cellStatusBarItemHoverBackground","The background color of notebook cell status bar items.")),Wn=p("notebook.cellInsertionIndicator",R,u.localize("notebook.cellInsertionIndicator","The color of the notebook cell insertion indicator.")),Kn=p("notebookScrollbarSlider.background",We,u.localize("notebookScrollbarSliderBackground","Notebook scrollbar slider background color.")),$n=p("notebookScrollbarSlider.hoverBackground",Ke,u.localize("notebookScrollbarSliderHoverBackground","Notebook scrollbar slider background color when hovering.")),zn=p("notebookScrollbarSlider.activeBackground",Pe,u.localize("notebookScrollbarSliderActiveBackground","Notebook scrollbar slider background color when clicked on.")),Un=p("notebook.symbolHighlightBackground",{dark:x.fromHex("#ffffff0b"),light:x.fromHex("#fdff0033"),hcDark:null,hcLight:null},u.localize("notebook.symbolHighlightBackground","Background color of highlighted cell")),Gn=p("notebook.cellEditorBackground",{light:re,dark:re,hcDark:null,hcLight:null},u.localize("notebook.cellEditorBackground","Cell editor background color.")),V=p("notebook.editorBackground",{light:le,dark:le,hcDark:null,hcLight:null},u.localize("notebook.editorBackground","Notebook background color."));export{Nn as CELL_TOOLBAR_SEPERATOR,j as NotebookEditorWidget,Gn as cellEditorBackground,Ln as cellHoverBackground,Wn as cellInsertionIndicator,Pn as cellStatusBarItemHover,xn as cellStatusIconError,Dn as cellStatusIconRunning,Sn as cellStatusIconSuccess,Un as cellSymbolHighlight,we as focusedCellBackground,Hn as focusedCellBorder,On as focusedEditorBorderColor,Mn as getDefaultNotebookCreationOptions,An as inactiveFocusedCellBorder,Bn as inactiveSelectedCellBorder,zn as listScrollbarSliderActiveBackground,Kn as listScrollbarSliderBackground,$n as listScrollbarSliderHoverBackground,X as notebookCellBorder,Tn as notebookOutputContainerBorderColor,Vn as notebookOutputContainerColor,En as runningCellRulerDecorationColor,Rn as selectedCellBackground,Fn as selectedCellBorder};
+		`);
+    this._styleElement.textContent = styleSheets.join("\n");
+  }
+  _createCellList() {
+    this._body.classList.add("cell-list-container");
+    this._dndController = this._register(new CellDragAndDropController(this, this._body));
+    const getScopedContextKeyService = /* @__PURE__ */ __name((container) => this._list.contextKeyService.createScoped(container), "getScopedContextKeyService");
+    this._editorPool = this._register(this.instantiationService.createInstance(NotebookCellEditorPool, this, getScopedContextKeyService));
+    const renderers = [
+      this.instantiationService.createInstance(CodeCellRenderer, this, this._renderedEditors, this._editorPool, this._dndController, getScopedContextKeyService),
+      this.instantiationService.createInstance(MarkupCellRenderer, this, this._dndController, this._renderedEditors, getScopedContextKeyService)
+    ];
+    renderers.forEach((renderer) => {
+      this._register(renderer);
+    });
+    this._listDelegate = this.instantiationService.createInstance(NotebookCellListDelegate, DOM.getWindow(this.getDomNode()));
+    this._register(this._listDelegate);
+    const accessibilityProvider = this.instantiationService.createInstance(NotebookAccessibilityProvider, () => this.viewModel, this.isReplHistory);
+    this._register(accessibilityProvider);
+    this._list = this.instantiationService.createInstance(
+      NotebookCellList,
+      "NotebookCellList",
+      this._body,
+      this._viewContext.notebookOptions,
+      this._listDelegate,
+      renderers,
+      this.scopedContextKeyService,
+      {
+        setRowLineHeight: false,
+        setRowHeight: false,
+        supportDynamicHeights: true,
+        horizontalScrolling: false,
+        keyboardSupport: false,
+        mouseSupport: true,
+        multipleSelectionSupport: true,
+        selectionNavigation: true,
+        typeNavigationEnabled: true,
+        paddingTop: 0,
+        paddingBottom: 0,
+        transformOptimization: false,
+        //(isMacintosh && isNative) || getTitleBarStyle(this.configurationService, this.environmentService) === 'native',
+        initialSize: this._dimension,
+        styleController: /* @__PURE__ */ __name((_suffix) => {
+          return this._list;
+        }, "styleController"),
+        overrideStyles: {
+          listBackground: notebookEditorBackground,
+          listActiveSelectionBackground: notebookEditorBackground,
+          listActiveSelectionForeground: foreground,
+          listFocusAndSelectionBackground: notebookEditorBackground,
+          listFocusAndSelectionForeground: foreground,
+          listFocusBackground: notebookEditorBackground,
+          listFocusForeground: foreground,
+          listHoverForeground: foreground,
+          listHoverBackground: notebookEditorBackground,
+          listHoverOutline: focusBorder,
+          listFocusOutline: focusBorder,
+          listInactiveSelectionBackground: notebookEditorBackground,
+          listInactiveSelectionForeground: foreground,
+          listInactiveFocusBackground: notebookEditorBackground,
+          listInactiveFocusOutline: notebookEditorBackground
+        },
+        accessibilityProvider
+      }
+    );
+    this._dndController.setList(this._list);
+    this._register(this._list);
+    this._listViewInfoAccessor = new ListViewInfoAccessor(this._list);
+    this._register(this._listViewInfoAccessor);
+    this._register(combinedDisposable(...renderers));
+    this._listTopCellToolbar = this._register(this.instantiationService.createInstance(ListTopCellToolbar, this, this.notebookOptions));
+    this._webviewTransparentCover = DOM.append(this._list.rowsContainer, $(".webview-cover"));
+    this._webviewTransparentCover.style.display = "none";
+    this._register(DOM.addStandardDisposableGenericMouseDownListener(this._overlayContainer, (e) => {
+      if (e.target.classList.contains("slider") && this._webviewTransparentCover) {
+        this._webviewTransparentCover.style.display = "block";
+      }
+    }));
+    this._register(DOM.addStandardDisposableGenericMouseUpListener(this._overlayContainer, () => {
+      if (this._webviewTransparentCover) {
+        this._webviewTransparentCover.style.display = "none";
+      }
+    }));
+    this._register(this._list.onMouseDown((e) => {
+      if (e.element) {
+        this._onMouseDown.fire({ event: e.browserEvent, target: e.element });
+      }
+    }));
+    this._register(this._list.onMouseUp((e) => {
+      if (e.element) {
+        this._onMouseUp.fire({ event: e.browserEvent, target: e.element });
+      }
+    }));
+    this._register(this._list.onDidChangeFocus((_e) => {
+      this._onDidChangeActiveEditor.fire(this);
+      this._onDidChangeActiveCell.fire();
+      this._onDidChangeFocus.fire();
+      this._cursorNavMode.set(false);
+    }));
+    this._register(this._list.onContextMenu((e) => {
+      this.showListContextMenu(e);
+    }));
+    this._register(this._list.onDidChangeVisibleRanges(() => {
+      this._onDidChangeVisibleRanges.fire();
+    }));
+    this._register(this._list.onDidScroll((e) => {
+      if (e.scrollTop !== e.oldScrollTop) {
+        this._onDidScroll.fire();
+        this.clearActiveCellWidgets();
+      }
+      if (e.scrollTop === e.oldScrollTop && e.scrollHeightChanged) {
+        this._onDidChangeLayout.fire();
+      }
+    }));
+    this._focusTracker = this._register(DOM.trackFocus(this.getDomNode()));
+    this._register(this._focusTracker.onDidBlur(() => {
+      this._editorFocus.set(false);
+      this.viewModel?.setEditorFocus(false);
+      this._onDidBlurEmitter.fire();
+    }));
+    this._register(this._focusTracker.onDidFocus(() => {
+      this._editorFocus.set(true);
+      this.viewModel?.setEditorFocus(true);
+      this._onDidFocusEmitter.fire();
+    }));
+    this._registerNotebookActionsToolbar();
+    this._registerNotebookStickyScroll();
+    this._register(this.configurationService.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration(accessibilityProvider.verbositySettingId)) {
+        this._list.ariaLabel = accessibilityProvider?.getWidgetAriaLabel();
+      }
+    }));
+  }
+  showListContextMenu(e) {
+    this.contextMenuService.showContextMenu({
+      menuId: MenuId.NotebookCellTitle,
+      menuActionOptions: {
+        shouldForwardArgs: true
+      },
+      contextKeyService: this.scopedContextKeyService,
+      getAnchor: /* @__PURE__ */ __name(() => e.anchor, "getAnchor"),
+      getActionsContext: /* @__PURE__ */ __name(() => {
+        return {
+          from: "cellContainer"
+        };
+      }, "getActionsContext")
+    });
+  }
+  _registerNotebookOverviewRuler() {
+    this._notebookOverviewRuler = this._register(this.instantiationService.createInstance(NotebookOverviewRuler, this, this._notebookOverviewRulerContainer));
+  }
+  _registerNotebookActionsToolbar() {
+    this._notebookTopToolbar = this._register(this.instantiationService.createInstance(NotebookEditorWorkbenchToolbar, this, this.scopedContextKeyService, this._notebookOptions, this._notebookTopToolbarContainer));
+    this._register(this._notebookTopToolbar.onDidChangeVisibility(() => {
+      if (this._dimension && this._isVisible) {
+        this.layout(this._dimension);
+      }
+    }));
+  }
+  _registerNotebookStickyScroll() {
+    this._notebookStickyScroll = this._register(this.instantiationService.createInstance(NotebookStickyScroll, this._notebookStickyScrollContainer, this, this._list, (sizeDelta) => {
+      if (this.isDisposed) {
+        return;
+      }
+      if (this._dimension && this._isVisible) {
+        if (sizeDelta > 0) {
+          this.layout(this._dimension);
+          this.setScrollTop(this.scrollTop + sizeDelta);
+        } else if (sizeDelta < 0) {
+          this.setScrollTop(this.scrollTop + sizeDelta);
+          this.layout(this._dimension);
+        }
+      }
+      this._onDidScroll.fire();
+    }));
+  }
+  _updateOutputRenderers() {
+    if (!this.viewModel || !this._webview) {
+      return;
+    }
+    this._webview.updateOutputRenderers();
+    this.viewModel.viewCells.forEach((cell) => {
+      cell.outputsViewModels.forEach((output) => {
+        if (output.pickedMimeType?.rendererId === RENDERER_NOT_AVAILABLE) {
+          output.resetRenderer();
+        }
+      });
+    });
+  }
+  getDomNode() {
+    return this._overlayContainer;
+  }
+  getOverflowContainerDomNode() {
+    return this._overflowContainer;
+  }
+  getInnerWebview() {
+    return this._webview?.webview;
+  }
+  setEditorProgressService(editorProgressService) {
+    this.editorProgressService = editorProgressService;
+  }
+  setParentContextKeyService(parentContextKeyService) {
+    this.scopedContextKeyService.updateParent(parentContextKeyService);
+  }
+  async setModel(textModel, viewState, perf, viewType) {
+    if (this.viewModel === void 0 || !this.viewModel.equal(textModel)) {
+      const oldBottomToolbarDimensions = this._notebookOptions.computeBottomToolbarDimensions(this.viewModel?.viewType);
+      this._detachModel();
+      await this._attachModel(textModel, viewType ?? textModel.viewType, viewState, perf);
+      const newBottomToolbarDimensions = this._notebookOptions.computeBottomToolbarDimensions(this.viewModel?.viewType);
+      if (oldBottomToolbarDimensions.bottomToolbarGap !== newBottomToolbarDimensions.bottomToolbarGap || oldBottomToolbarDimensions.bottomToolbarHeight !== newBottomToolbarDimensions.bottomToolbarHeight) {
+        this._styleElement?.remove();
+        this._createLayoutStyles();
+        this._webview?.updateOptions({
+          ...this.notebookOptions.computeWebviewOptions(),
+          fontFamily: this._generateFontFamily()
+        });
+      }
+      this.telemetryService.publicLog2("notebook/editorOpened", {
+        scheme: textModel.uri.scheme,
+        ext: extname(textModel.uri),
+        viewType: textModel.viewType,
+        isRepl: this.isReplHistory
+      });
+    } else {
+      this.restoreListViewState(viewState);
+    }
+    this._restoreSelectedKernel(viewState);
+    this._loadKernelPreloads();
+    this._dndController?.clearGlobalDragState();
+    this._localStore.add(this._list.onDidChangeFocus(() => {
+      this.updateContextKeysOnFocusChange();
+    }));
+    this.updateContextKeysOnFocusChange();
+    this._backgroundMarkdownRendering();
+  }
+  _backgroundMarkdownRenderRunning = false;
+  _backgroundMarkdownRendering() {
+    if (this._backgroundMarkdownRenderRunning) {
+      return;
+    }
+    this._backgroundMarkdownRenderRunning = true;
+    DOM.runWhenWindowIdle(DOM.getWindow(this.getDomNode()), (deadline) => {
+      this._backgroundMarkdownRenderingWithDeadline(deadline);
+    });
+  }
+  _backgroundMarkdownRenderingWithDeadline(deadline) {
+    const endTime = Date.now() + deadline.timeRemaining();
+    const execute = /* @__PURE__ */ __name(() => {
+      try {
+        this._backgroundMarkdownRenderRunning = true;
+        if (this._isDisposed) {
+          return;
+        }
+        if (!this.viewModel) {
+          return;
+        }
+        const firstMarkupCell = this.viewModel.viewCells.find((cell) => cell.cellKind === CellKind.Markup && !this._webview?.markupPreviewMapping.has(cell.id) && !this.cellIsHidden(cell));
+        if (!firstMarkupCell) {
+          return;
+        }
+        this.createMarkupPreview(firstMarkupCell);
+      } finally {
+        this._backgroundMarkdownRenderRunning = false;
+      }
+      if (Date.now() < endTime) {
+        setTimeout0(execute);
+      } else {
+        this._backgroundMarkdownRendering();
+      }
+    }, "execute");
+    execute();
+  }
+  updateContextKeysOnFocusChange() {
+    if (!this.viewModel) {
+      return;
+    }
+    const focused = this._list.getFocusedElements()[0];
+    if (focused) {
+      if (!this._cellContextKeyManager) {
+        this._cellContextKeyManager = this._localStore.add(this.instantiationService.createInstance(CellContextKeyManager, this, focused));
+      }
+      this._cellContextKeyManager.updateForElement(focused);
+    }
+  }
+  async setOptions(options) {
+    if (options?.isReadOnly !== void 0) {
+      this._readOnly = options?.isReadOnly;
+    }
+    if (!this.viewModel) {
+      return;
+    }
+    this.viewModel.updateOptions({ isReadOnly: this._readOnly });
+    this.notebookOptions.updateOptions(this._readOnly);
+    const cellOptions = options?.cellOptions ?? this._parseIndexedCellOptions(options);
+    if (cellOptions) {
+      const cell = this.viewModel.viewCells.find((cell2) => cell2.uri.toString() === cellOptions.resource.toString());
+      if (cell) {
+        this.focusElement(cell);
+        const selection = cellOptions.options?.selection;
+        if (selection) {
+          cell.updateEditState(CellEditState.Editing, "setOptions");
+          cell.focusMode = CellFocusMode.Editor;
+          await this.revealRangeInCenterIfOutsideViewportAsync(cell, new Range(selection.startLineNumber, selection.startColumn, selection.endLineNumber || selection.startLineNumber, selection.endColumn || selection.startColumn));
+        } else {
+          this._list.revealCell(cell, options?.cellRevealType ?? CellRevealType.CenterIfOutsideViewport);
+        }
+        const editor = this._renderedEditors.get(cell);
+        if (editor) {
+          if (cellOptions.options?.selection) {
+            const { selection: selection2 } = cellOptions.options;
+            const editorSelection = new Range(selection2.startLineNumber, selection2.startColumn, selection2.endLineNumber || selection2.startLineNumber, selection2.endColumn || selection2.startColumn);
+            editor.setSelection(editorSelection);
+            editor.revealPositionInCenterIfOutsideViewport({
+              lineNumber: selection2.startLineNumber,
+              column: selection2.startColumn
+            });
+            await this.revealRangeInCenterIfOutsideViewportAsync(cell, editorSelection);
+          }
+          if (!cellOptions.options?.preserveFocus) {
+            editor.focus();
+          }
+        }
+      }
+    }
+    if (options?.cellSelections) {
+      const focusCellIndex = options.cellSelections[0].start;
+      const focusedCell = this.viewModel.cellAt(focusCellIndex);
+      if (focusedCell) {
+        this.viewModel.updateSelectionsState({
+          kind: SelectionStateType.Index,
+          focus: { start: focusCellIndex, end: focusCellIndex + 1 },
+          selections: options.cellSelections
+        });
+        this.revealInCenterIfOutsideViewport(focusedCell);
+      }
+    }
+    this._updateForOptions();
+    this._onDidChangeOptions.fire();
+  }
+  _parseIndexedCellOptions(options) {
+    if (options?.indexedCellOptions) {
+      const cell = this.cellAt(options.indexedCellOptions.index);
+      if (cell) {
+        return {
+          resource: cell.uri,
+          options: {
+            selection: options.indexedCellOptions.selection,
+            preserveFocus: false
+          }
+        };
+      }
+    }
+    return void 0;
+  }
+  _detachModel() {
+    this._localStore.clear();
+    dispose(this._localCellStateListeners);
+    this._list.detachViewModel();
+    this.viewModel?.dispose();
+    this.viewModel = void 0;
+    this._webview?.dispose();
+    this._webview?.element.remove();
+    this._webview = null;
+    this._list.clear();
+  }
+  _updateForOptions() {
+    if (!this.viewModel) {
+      return;
+    }
+    this._editorEditable.set(!this.viewModel.options.isReadOnly);
+    this._overflowContainer.classList.toggle("notebook-editor-editable", !this.viewModel.options.isReadOnly);
+    this.getDomNode().classList.toggle("notebook-editor-editable", !this.viewModel.options.isReadOnly);
+  }
+  async _resolveWebview() {
+    if (!this.textModel) {
+      return null;
+    }
+    if (this._webviewResolvePromise) {
+      return this._webviewResolvePromise;
+    }
+    if (!this._webview) {
+      this._ensureWebview(this.getId(), this.textModel.viewType, this.textModel.uri);
+    }
+    this._webviewResolvePromise = (async () => {
+      if (!this._webview) {
+        throw new Error("Notebook output webview object is not created successfully.");
+      }
+      await this._webview.createWebview(this.creationOptions.codeWindow ?? mainWindow);
+      if (!this._webview.webview) {
+        throw new Error("Notebook output webview element was not created successfully.");
+      }
+      this._localStore.add(this._webview.webview.onDidBlur(() => {
+        this._outputFocus.set(false);
+        this._webviewFocused = false;
+        this.updateEditorFocus();
+        this.updateCellFocusMode();
+      }));
+      this._localStore.add(this._webview.webview.onDidFocus(() => {
+        this._outputFocus.set(true);
+        this.updateEditorFocus();
+        this._webviewFocused = true;
+      }));
+      this._localStore.add(this._webview.onMessage((e) => {
+        this._onDidReceiveMessage.fire(e);
+      }));
+      return this._webview;
+    })();
+    return this._webviewResolvePromise;
+  }
+  _ensureWebview(id, viewType, resource) {
+    if (this._webview) {
+      return;
+    }
+    const that = this;
+    this._webview = this.instantiationService.createInstance(BackLayerWebView, {
+      get creationOptions() {
+        return that.creationOptions;
+      },
+      setScrollTop(scrollTop) {
+        that._list.scrollTop = scrollTop;
+      },
+      triggerScroll(event) {
+        that._list.triggerScrollFromMouseWheelEvent(event);
+      },
+      getCellByInfo: that.getCellByInfo.bind(that),
+      getCellById: that._getCellById.bind(that),
+      toggleNotebookCellSelection: that._toggleNotebookCellSelection.bind(that),
+      focusNotebookCell: that.focusNotebookCell.bind(that),
+      focusNextNotebookCell: that.focusNextNotebookCell.bind(that),
+      updateOutputHeight: that._updateOutputHeight.bind(that),
+      scheduleOutputHeightAck: that._scheduleOutputHeightAck.bind(that),
+      updateMarkupCellHeight: that._updateMarkupCellHeight.bind(that),
+      setMarkupCellEditState: that._setMarkupCellEditState.bind(that),
+      didStartDragMarkupCell: that._didStartDragMarkupCell.bind(that),
+      didDragMarkupCell: that._didDragMarkupCell.bind(that),
+      didDropMarkupCell: that._didDropMarkupCell.bind(that),
+      didEndDragMarkupCell: that._didEndDragMarkupCell.bind(that),
+      didResizeOutput: that._didResizeOutput.bind(that),
+      updatePerformanceMetadata: that._updatePerformanceMetadata.bind(that),
+      didFocusOutputInputChange: that._didFocusOutputInputChange.bind(that)
+    }, id, viewType, resource, {
+      ...this._notebookOptions.computeWebviewOptions(),
+      fontFamily: this._generateFontFamily()
+    }, this.notebookRendererMessaging.getScoped(this._uuid));
+    this._webview.element.style.width = "100%";
+    this._list.attachWebview(this._webview.element);
+  }
+  async _attachModel(textModel, viewType, viewState, perf) {
+    this._ensureWebview(this.getId(), textModel.viewType, textModel.uri);
+    this.viewModel = this.instantiationService.createInstance(NotebookViewModel, viewType, textModel, this._viewContext, this.getLayoutInfo(), { isReadOnly: this._readOnly });
+    this._viewContext.eventDispatcher.emit([new NotebookLayoutChangedEvent({ width: true, fontInfo: true }, this.getLayoutInfo())]);
+    this.notebookOptions.updateOptions(this._readOnly);
+    this._updateForOptions();
+    this._updateForNotebookConfiguration();
+    {
+      this.viewModel.restoreEditorViewState(viewState);
+      const contributionsState = viewState?.contributionsState || {};
+      for (const [id, contribution] of this._contributions) {
+        if (typeof contribution.restoreViewState === "function") {
+          contribution.restoreViewState(contributionsState[id]);
+        }
+      }
+    }
+    this._localStore.add(this.viewModel.onDidChangeViewCells((e) => {
+      this._onDidChangeViewCells.fire(e);
+    }));
+    this._localStore.add(this.viewModel.onDidChangeSelection(() => {
+      this._onDidChangeSelection.fire();
+      this.updateSelectedMarkdownPreviews();
+    }));
+    this._localStore.add(this._list.onWillScroll((e) => {
+      if (this._webview?.isResolved()) {
+        this._webviewTransparentCover.style.transform = `translateY(${e.scrollTop})`;
+      }
+    }));
+    let hasPendingChangeContentHeight = false;
+    this._localStore.add(this._list.onDidChangeContentHeight(() => {
+      if (hasPendingChangeContentHeight) {
+        return;
+      }
+      hasPendingChangeContentHeight = true;
+      this._localStore.add(DOM.scheduleAtNextAnimationFrame(DOM.getWindow(this.getDomNode()), () => {
+        hasPendingChangeContentHeight = false;
+        this._updateScrollHeight();
+      }, 100));
+    }));
+    this._localStore.add(this._list.onDidRemoveOutputs((outputs) => {
+      outputs.forEach((output) => this.removeInset(output));
+    }));
+    this._localStore.add(this._list.onDidHideOutputs((outputs) => {
+      outputs.forEach((output) => this.hideInset(output));
+    }));
+    this._localStore.add(this._list.onDidRemoveCellsFromView((cells) => {
+      const hiddenCells = [];
+      const deletedCells = [];
+      for (const cell of cells) {
+        if (cell.cellKind === CellKind.Markup) {
+          const mdCell = cell;
+          if (this.viewModel?.viewCells.find((cell2) => cell2.handle === mdCell.handle)) {
+            hiddenCells.push(mdCell);
+          } else {
+            deletedCells.push(mdCell);
+          }
+        }
+      }
+      this.hideMarkupPreviews(hiddenCells);
+      this.deleteMarkupPreviews(deletedCells);
+    }));
+    await this._warmupWithMarkdownRenderer(this.viewModel, viewState, perf);
+    perf?.mark("customMarkdownLoaded");
+    this._localCellStateListeners = this.viewModel.viewCells.map((cell) => this._bindCellListener(cell));
+    this._lastCellWithEditorFocus = this.viewModel.viewCells.find((viewCell) => this.getActiveCell() === viewCell && viewCell.focusMode === CellFocusMode.Editor) ?? null;
+    this._localStore.add(this.viewModel.onDidChangeViewCells((e) => {
+      if (this._isDisposed) {
+        return;
+      }
+      [...e.splices].reverse().forEach((splice) => {
+        const [start, deleted, newCells] = splice;
+        const deletedCells = this._localCellStateListeners.splice(start, deleted, ...newCells.map((cell) => this._bindCellListener(cell)));
+        dispose(deletedCells);
+      });
+      if (e.splices.some((s) => s[2].some((cell) => cell.cellKind === CellKind.Markup))) {
+        this._backgroundMarkdownRendering();
+      }
+    }));
+    if (this._dimension) {
+      this._list.layout(this.getBodyHeight(this._dimension.height), this._dimension.width);
+    } else {
+      this._list.layout();
+    }
+    this._dndController?.clearGlobalDragState();
+    this.restoreListViewState(viewState);
+  }
+  _bindCellListener(cell) {
+    const store = new DisposableStore();
+    store.add(cell.onDidChangeLayout((e) => {
+      if (e.totalHeight || e.outerWidth) {
+        this.layoutNotebookCell(cell, cell.layoutInfo.totalHeight, e.context);
+      }
+    }));
+    if (cell.cellKind === CellKind.Code) {
+      store.add(cell.onDidRemoveOutputs((outputs) => {
+        outputs.forEach((output) => this.removeInset(output));
+      }));
+    }
+    store.add(cell.onDidChangeState((e) => {
+      if (e.inputCollapsedChanged && cell.isInputCollapsed && cell.cellKind === CellKind.Markup) {
+        this.hideMarkupPreviews([cell]);
+      }
+      if (e.outputCollapsedChanged && cell.isOutputCollapsed && cell.cellKind === CellKind.Code) {
+        cell.outputsViewModels.forEach((output) => this.hideInset(output));
+      }
+      if (e.focusModeChanged) {
+        this._validateCellFocusMode(cell);
+      }
+    }));
+    store.add(cell.onCellDecorationsChanged((e) => {
+      e.added.forEach((options) => {
+        if (options.className) {
+          this.deltaCellContainerClassNames(cell.id, [options.className], [], cell.cellKind);
+        }
+        if (options.outputClassName) {
+          this.deltaCellContainerClassNames(cell.id, [options.outputClassName], [], cell.cellKind);
+        }
+      });
+      e.removed.forEach((options) => {
+        if (options.className) {
+          this.deltaCellContainerClassNames(cell.id, [], [options.className], cell.cellKind);
+        }
+        if (options.outputClassName) {
+          this.deltaCellContainerClassNames(cell.id, [], [options.outputClassName], cell.cellKind);
+        }
+      });
+    }));
+    return store;
+  }
+  _lastCellWithEditorFocus = null;
+  _validateCellFocusMode(cell) {
+    if (cell.focusMode !== CellFocusMode.Editor) {
+      return;
+    }
+    if (this._lastCellWithEditorFocus && this._lastCellWithEditorFocus !== cell) {
+      this._lastCellWithEditorFocus.focusMode = CellFocusMode.Container;
+    }
+    this._lastCellWithEditorFocus = cell;
+  }
+  async _warmupWithMarkdownRenderer(viewModel, viewState, perf) {
+    this.logService.debug("NotebookEditorWidget", "warmup " + this.viewModel?.uri.toString());
+    await this._resolveWebview();
+    perf?.mark("webviewCommLoaded");
+    this.logService.debug("NotebookEditorWidget", "warmup - webview resolved");
+    this._webview.element.style.visibility = "hidden";
+    await this._warmupViewportMarkdownCells(viewModel, viewState);
+    this.logService.debug("NotebookEditorWidget", "warmup - viewport warmed up");
+    this._list.layout(0, 0);
+    this._list.attachViewModel(viewModel);
+    this._list.scrollTop = viewState?.scrollPosition?.top ?? 0;
+    this._debug("finish initial viewport warmup and view state restore.");
+    this._webview.element.style.visibility = "visible";
+    this.logService.debug("NotebookEditorWidget", "warmup - list view model attached, set to visible");
+    this._onDidAttachViewModel.fire();
+  }
+  async _warmupViewportMarkdownCells(viewModel, viewState) {
+    if (viewState && viewState.cellTotalHeights) {
+      const totalHeightCache = viewState.cellTotalHeights;
+      const scrollTop = viewState.scrollPosition?.top ?? 0;
+      const scrollBottom = scrollTop + Math.max(this._dimension?.height ?? 0, 1080);
+      let offset = 0;
+      const requests = [];
+      for (let i = 0; i < viewModel.length; i++) {
+        const cell = viewModel.cellAt(i);
+        const cellHeight = totalHeightCache[i] ?? 0;
+        if (offset + cellHeight < scrollTop) {
+          offset += cellHeight;
+          continue;
+        }
+        if (cell.cellKind === CellKind.Markup) {
+          requests.push([cell, offset]);
+        }
+        offset += cellHeight;
+        if (offset > scrollBottom) {
+          break;
+        }
+      }
+      await this._webview.initializeMarkup(requests.map(([model, offset2]) => this.createMarkupCellInitialization(model, offset2)));
+    } else {
+      const initRequests = viewModel.viewCells.filter((cell) => cell.cellKind === CellKind.Markup).slice(0, 5).map((cell) => this.createMarkupCellInitialization(cell, -1e4));
+      await this._webview.initializeMarkup(initRequests);
+      let offset = 0;
+      const offsetUpdateRequests = [];
+      const scrollBottom = Math.max(this._dimension?.height ?? 0, 1080);
+      for (const cell of viewModel.viewCells) {
+        if (cell.cellKind === CellKind.Markup) {
+          offsetUpdateRequests.push({ id: cell.id, top: offset });
+        }
+        offset += cell.getHeight(this.getLayoutInfo().fontInfo.lineHeight);
+        if (offset > scrollBottom) {
+          break;
+        }
+      }
+      this._webview?.updateScrollTops([], offsetUpdateRequests);
+    }
+  }
+  createMarkupCellInitialization(model, offset) {
+    return {
+      mime: model.mime,
+      cellId: model.id,
+      cellHandle: model.handle,
+      content: model.getText(),
+      offset,
+      visible: false,
+      metadata: model.metadata
+    };
+  }
+  restoreListViewState(viewState) {
+    if (!this.viewModel) {
+      return;
+    }
+    if (viewState?.scrollPosition !== void 0) {
+      this._list.scrollTop = viewState.scrollPosition.top;
+      this._list.scrollLeft = viewState.scrollPosition.left;
+    } else {
+      this._list.scrollTop = 0;
+      this._list.scrollLeft = 0;
+    }
+    const focusIdx = typeof viewState?.focus === "number" ? viewState.focus : 0;
+    if (focusIdx < this.viewModel.length) {
+      const element = this.viewModel.cellAt(focusIdx);
+      if (element) {
+        this.viewModel?.updateSelectionsState({
+          kind: SelectionStateType.Handle,
+          primary: element.handle,
+          selections: [element.handle]
+        });
+      }
+    } else if (this._list.length > 0) {
+      this.viewModel.updateSelectionsState({
+        kind: SelectionStateType.Index,
+        focus: { start: 0, end: 1 },
+        selections: [{ start: 0, end: 1 }]
+      });
+    }
+    if (viewState?.editorFocused) {
+      const cell = this.viewModel.cellAt(focusIdx);
+      if (cell) {
+        cell.focusMode = CellFocusMode.Editor;
+      }
+    }
+  }
+  _restoreSelectedKernel(viewState) {
+    if (viewState?.selectedKernelId && this.textModel) {
+      const matching = this.notebookKernelService.getMatchingKernel(this.textModel);
+      const kernel = matching.all.find((k) => k.id === viewState.selectedKernelId);
+      if (kernel && !matching.selected) {
+        this.notebookKernelService.selectKernelForNotebook(kernel, this.textModel);
+      }
+    }
+  }
+  getEditorViewState() {
+    const state = this.viewModel?.getEditorViewState();
+    if (!state) {
+      return {
+        editingCells: {},
+        cellLineNumberStates: {},
+        editorViewStates: {},
+        collapsedInputCells: {},
+        collapsedOutputCells: {}
+      };
+    }
+    if (this._list) {
+      state.scrollPosition = { left: this._list.scrollLeft, top: this._list.scrollTop };
+      const cellHeights = {};
+      for (let i = 0; i < this.viewModel.length; i++) {
+        const elm = this.viewModel.cellAt(i);
+        cellHeights[i] = elm.layoutInfo.totalHeight;
+      }
+      state.cellTotalHeights = cellHeights;
+      if (this.viewModel) {
+        const focusRange = this.viewModel.getFocus();
+        const element = this.viewModel.cellAt(focusRange.start);
+        if (element) {
+          const itemDOM = this._list.domElementOfElement(element);
+          const editorFocused = element.getEditState() === CellEditState.Editing && !!(itemDOM && itemDOM.ownerDocument.activeElement && itemDOM.contains(itemDOM.ownerDocument.activeElement));
+          state.editorFocused = editorFocused;
+          state.focus = focusRange.start;
+        }
+      }
+    }
+    const contributionsState = {};
+    for (const [id, contribution] of this._contributions) {
+      if (typeof contribution.saveViewState === "function") {
+        contributionsState[id] = contribution.saveViewState();
+      }
+    }
+    state.contributionsState = contributionsState;
+    if (this.textModel?.uri.scheme === Schemas.untitled) {
+      state.selectedKernelId = this.activeKernel?.id;
+    }
+    return state;
+  }
+  _allowScrollBeyondLastLine() {
+    return this._scrollBeyondLastLine && !this.isReplHistory;
+  }
+  getBodyHeight(dimensionHeight) {
+    return Math.max(dimensionHeight - (this._notebookTopToolbar?.useGlobalToolbar ? (
+      /** Toolbar height */
+      26
+    ) : 0), 0);
+  }
+  layout(dimension, shadowElement, position) {
+    if (!shadowElement && this._shadowElementViewInfo === null) {
+      this._dimension = dimension;
+      this._position = position;
+      return;
+    }
+    if (dimension.width <= 0 || dimension.height <= 0) {
+      this.onWillHide();
+      return;
+    }
+    const whenContainerStylesLoaded = this.layoutService.whenContainerStylesLoaded(DOM.getWindow(this.getDomNode()));
+    if (whenContainerStylesLoaded) {
+      whenContainerStylesLoaded.then(() => this.layoutNotebook(dimension, shadowElement, position));
+    } else {
+      this.layoutNotebook(dimension, shadowElement, position);
+    }
+  }
+  layoutNotebook(dimension, shadowElement, position) {
+    if (shadowElement) {
+      this.updateShadowElement(shadowElement, dimension, position);
+    }
+    if (this._shadowElementViewInfo && this._shadowElementViewInfo.width <= 0 && this._shadowElementViewInfo.height <= 0) {
+      this.onWillHide();
+      return;
+    }
+    this._dimension = dimension;
+    this._position = position;
+    const newBodyHeight = this.getBodyHeight(dimension.height) - this.getLayoutInfo().stickyHeight;
+    DOM.size(this._body, dimension.width, newBodyHeight);
+    const newCellListHeight = newBodyHeight;
+    if (this._list.getRenderHeight() < newCellListHeight) {
+      this._list.updateOptions({ paddingBottom: this._allowScrollBeyondLastLine() ? Math.max(0, newCellListHeight - 50) : 0, paddingTop: 0 });
+      this._list.layout(newCellListHeight, dimension.width);
+    } else {
+      this._list.layout(newCellListHeight, dimension.width);
+      this._list.updateOptions({ paddingBottom: this._allowScrollBeyondLastLine() ? Math.max(0, newCellListHeight - 50) : 0, paddingTop: 0 });
+    }
+    this._overlayContainer.inert = false;
+    this._overlayContainer.style.visibility = "visible";
+    this._overlayContainer.style.display = "block";
+    this._overlayContainer.style.position = "absolute";
+    this._overlayContainer.style.overflow = "hidden";
+    this.layoutContainerOverShadowElement(dimension, position);
+    if (this._webviewTransparentCover) {
+      this._webviewTransparentCover.style.height = `${dimension.height}px`;
+      this._webviewTransparentCover.style.width = `${dimension.width}px`;
+    }
+    this._notebookTopToolbar.layout(this._dimension);
+    this._notebookOverviewRuler.layout();
+    this._viewContext?.eventDispatcher.emit([new NotebookLayoutChangedEvent({ width: true, fontInfo: true }, this.getLayoutInfo())]);
+  }
+  updateShadowElement(shadowElement, dimension, position) {
+    this._shadowElement = shadowElement;
+    if (dimension && position) {
+      this._shadowElementViewInfo = {
+        height: dimension.height,
+        width: dimension.width,
+        top: position.top,
+        left: position.left
+      };
+    } else {
+      const containerRect = shadowElement.getBoundingClientRect();
+      this._shadowElementViewInfo = {
+        height: containerRect.height,
+        width: containerRect.width,
+        top: containerRect.top,
+        left: containerRect.left
+      };
+    }
+  }
+  layoutContainerOverShadowElement(dimension, position) {
+    if (dimension && position) {
+      this._overlayContainer.style.top = `${position.top}px`;
+      this._overlayContainer.style.left = `${position.left}px`;
+      this._overlayContainer.style.width = `${dimension.width}px`;
+      this._overlayContainer.style.height = `${dimension.height}px`;
+      return;
+    }
+    if (!this._shadowElementViewInfo) {
+      return;
+    }
+    const elementContainerRect = this._overlayContainer.parentElement?.getBoundingClientRect();
+    this._overlayContainer.style.top = `${this._shadowElementViewInfo.top - (elementContainerRect?.top || 0)}px`;
+    this._overlayContainer.style.left = `${this._shadowElementViewInfo.left - (elementContainerRect?.left || 0)}px`;
+    this._overlayContainer.style.width = `${dimension ? dimension.width : this._shadowElementViewInfo.width}px`;
+    this._overlayContainer.style.height = `${dimension ? dimension.height : this._shadowElementViewInfo.height}px`;
+  }
+  //#endregion
+  //#region Focus tracker
+  focus() {
+    this._isVisible = true;
+    this._editorFocus.set(true);
+    if (this._webviewFocused) {
+      this._webview?.focusWebview();
+    } else {
+      if (this.viewModel) {
+        const focusRange = this.viewModel.getFocus();
+        const element = this.viewModel.cellAt(focusRange.start);
+        if (!this.hasEditorFocus()) {
+          this.focusContainer();
+          this.updateEditorFocus();
+        }
+        if (element && element.focusMode === CellFocusMode.Editor) {
+          element.updateEditState(CellEditState.Editing, "editorWidget.focus");
+          element.focusMode = CellFocusMode.Editor;
+          this.focusEditor(element);
+          return;
+        }
+      }
+      this._list.domFocus();
+    }
+    if (this._currentProgress) {
+      this.showProgress();
+    }
+  }
+  onShow() {
+    this._isVisible = true;
+  }
+  focusEditor(activeElement) {
+    for (const [element, editor] of this._renderedEditors.entries()) {
+      if (element === activeElement) {
+        editor.focus();
+        return;
+      }
+    }
+  }
+  focusContainer(clearSelection = false) {
+    if (this._webviewFocused) {
+      this._webview?.focusWebview();
+    } else {
+      this._list.focusContainer(clearSelection);
+    }
+  }
+  selectOutputContent(cell) {
+    this._webview?.selectOutputContents(cell);
+  }
+  selectInputContents(cell) {
+    this._webview?.selectInputContents(cell);
+  }
+  onWillHide() {
+    this._isVisible = false;
+    this._editorFocus.set(false);
+    this._overlayContainer.inert = true;
+    this._overlayContainer.style.visibility = "hidden";
+    this._overlayContainer.style.left = "-50000px";
+    this._notebookTopToolbarContainer.style.display = "none";
+    this.clearActiveCellWidgets();
+  }
+  clearActiveCellWidgets() {
+    this._renderedEditors.forEach((editor, cell) => {
+      if (this.getActiveCell() === cell && editor) {
+        SuggestController.get(editor)?.cancelSuggestWidget();
+        DropIntoEditorController.get(editor)?.clearWidgets();
+        CopyPasteController.get(editor)?.clearWidgets();
+      }
+    });
+    this._renderedEditors.forEach((editor, cell) => {
+      const controller = InlineCompletionsController.get(editor);
+      if (controller?.model.get()?.inlineEditState.get()) {
+        editor.render(true);
+      }
+    });
+  }
+  editorHasDomFocus() {
+    return DOM.isAncestorOfActiveElement(this.getDomNode());
+  }
+  updateEditorFocus() {
+    this._focusTracker.refreshState();
+    const focused = this.editorHasDomFocus();
+    this._editorFocus.set(focused);
+    this.viewModel?.setEditorFocus(focused);
+  }
+  updateCellFocusMode() {
+    const activeCell = this.getActiveCell();
+    if (activeCell?.focusMode === CellFocusMode.Output && !this._webviewFocused) {
+      activeCell.focusMode = CellFocusMode.Container;
+    }
+  }
+  hasEditorFocus() {
+    this.updateEditorFocus();
+    return this.editorHasDomFocus();
+  }
+  hasWebviewFocus() {
+    return this._webviewFocused;
+  }
+  hasOutputTextSelection() {
+    if (!this.hasEditorFocus()) {
+      return false;
+    }
+    const windowSelection = DOM.getWindow(this.getDomNode()).getSelection();
+    if (windowSelection?.rangeCount !== 1) {
+      return false;
+    }
+    const activeSelection = windowSelection.getRangeAt(0);
+    if (activeSelection.startContainer === activeSelection.endContainer && activeSelection.endOffset - activeSelection.startOffset === 0) {
+      return false;
+    }
+    let container = activeSelection.commonAncestorContainer;
+    if (!this._body.contains(container)) {
+      return false;
+    }
+    while (container && container !== this._body) {
+      if (container.classList && container.classList.contains("output")) {
+        return true;
+      }
+      container = container.parentNode;
+    }
+    return false;
+  }
+  _didFocusOutputInputChange(hasFocus) {
+    this._outputInputFocus.set(hasFocus);
+  }
+  //#endregion
+  //#region Editor Features
+  focusElement(cell) {
+    this.viewModel?.updateSelectionsState({
+      kind: SelectionStateType.Handle,
+      primary: cell.handle,
+      selections: [cell.handle]
+    });
+  }
+  get scrollTop() {
+    return this._list.scrollTop;
+  }
+  get scrollBottom() {
+    return this._list.scrollTop + this._list.getRenderHeight();
+  }
+  getAbsoluteTopOfElement(cell) {
+    return this._list.getCellViewScrollTop(cell);
+  }
+  getHeightOfElement(cell) {
+    return this._list.elementHeight(cell);
+  }
+  scrollToBottom() {
+    this._list.scrollToBottom();
+  }
+  setScrollTop(scrollTop) {
+    this._list.scrollTop = scrollTop;
+  }
+  revealCellRangeInView(range) {
+    return this._list.revealCells(range);
+  }
+  revealInView(cell) {
+    return this._list.revealCell(cell, CellRevealType.Default);
+  }
+  revealInViewAtTop(cell) {
+    this._list.revealCell(cell, CellRevealType.Top);
+  }
+  revealInCenter(cell) {
+    this._list.revealCell(cell, CellRevealType.Center);
+  }
+  async revealInCenterIfOutsideViewport(cell) {
+    await this._list.revealCell(cell, CellRevealType.CenterIfOutsideViewport);
+  }
+  async revealFirstLineIfOutsideViewport(cell) {
+    await this._list.revealCell(cell, CellRevealType.FirstLineIfOutsideViewport);
+  }
+  async revealLineInViewAsync(cell, line) {
+    return this._list.revealRangeInCell(cell, new Range(line, 1, line, 1), CellRevealRangeType.Default);
+  }
+  async revealLineInCenterAsync(cell, line) {
+    return this._list.revealRangeInCell(cell, new Range(line, 1, line, 1), CellRevealRangeType.Center);
+  }
+  async revealLineInCenterIfOutsideViewportAsync(cell, line) {
+    return this._list.revealRangeInCell(cell, new Range(line, 1, line, 1), CellRevealRangeType.CenterIfOutsideViewport);
+  }
+  async revealRangeInViewAsync(cell, range) {
+    return this._list.revealRangeInCell(cell, range, CellRevealRangeType.Default);
+  }
+  async revealRangeInCenterAsync(cell, range) {
+    return this._list.revealRangeInCell(cell, range, CellRevealRangeType.Center);
+  }
+  async revealRangeInCenterIfOutsideViewportAsync(cell, range) {
+    return this._list.revealRangeInCell(cell, range, CellRevealRangeType.CenterIfOutsideViewport);
+  }
+  revealCellOffsetInCenter(cell, offset) {
+    return this._list.revealCellOffsetInCenter(cell, offset);
+  }
+  revealOffsetInCenterIfOutsideViewport(offset) {
+    return this._list.revealOffsetInCenterIfOutsideViewport(offset);
+  }
+  getViewIndexByModelIndex(index) {
+    if (!this._listViewInfoAccessor) {
+      return -1;
+    }
+    const cell = this.viewModel?.viewCells[index];
+    if (!cell) {
+      return -1;
+    }
+    return this._listViewInfoAccessor.getViewIndex(cell);
+  }
+  getViewHeight(cell) {
+    if (!this._listViewInfoAccessor) {
+      return -1;
+    }
+    return this._listViewInfoAccessor.getViewHeight(cell);
+  }
+  getCellRangeFromViewRange(startIndex, endIndex) {
+    return this._listViewInfoAccessor.getCellRangeFromViewRange(startIndex, endIndex);
+  }
+  getCellsInRange(range) {
+    return this._listViewInfoAccessor.getCellsInRange(range);
+  }
+  setCellEditorSelection(cell, range) {
+    this._list.setCellEditorSelection(cell, range);
+  }
+  setHiddenAreas(_ranges) {
+    return this._list.setHiddenAreas(_ranges, true);
+  }
+  getVisibleRangesPlusViewportAboveAndBelow() {
+    return this._listViewInfoAccessor.getVisibleRangesPlusViewportAboveAndBelow();
+  }
+  //#endregion
+  //#region Decorations
+  deltaCellDecorations(oldDecorations, newDecorations) {
+    const ret = this.viewModel?.deltaCellDecorations(oldDecorations, newDecorations) || [];
+    this._onDidChangeDecorations.fire();
+    return ret;
+  }
+  deltaCellContainerClassNames(cellId, added, removed, cellkind) {
+    if (cellkind === CellKind.Markup) {
+      this._webview?.deltaMarkupPreviewClassNames(cellId, added, removed);
+    } else {
+      this._webview?.deltaCellOutputContainerClassNames(cellId, added, removed);
+    }
+  }
+  changeModelDecorations(callback) {
+    return this.viewModel?.changeModelDecorations(callback) || null;
+  }
+  //#endregion
+  //#region View Zones
+  changeViewZones(callback) {
+    this._list.changeViewZones(callback);
+    this._onDidChangeLayout.fire();
+  }
+  getViewZoneLayoutInfo(id) {
+    return this._list.getViewZoneLayoutInfo(id);
+  }
+  //#endregion
+  //#region Overlay
+  changeCellOverlays(callback) {
+    this._list.changeCellOverlays(callback);
+  }
+  //#endregion
+  //#region Kernel/Execution
+  async _loadKernelPreloads() {
+    if (!this.hasModel()) {
+      return;
+    }
+    const { selected } = this.notebookKernelService.getMatchingKernel(this.textModel);
+    if (!this._webview?.isResolved()) {
+      await this._resolveWebview();
+    }
+    this._webview?.updateKernelPreloads(selected);
+  }
+  get activeKernel() {
+    return this.textModel && this.notebookKernelService.getSelectedOrSuggestedKernel(this.textModel);
+  }
+  async cancelNotebookCells(cells) {
+    if (!this.viewModel || !this.hasModel()) {
+      return;
+    }
+    if (!cells) {
+      cells = this.viewModel.viewCells;
+    }
+    return this.notebookExecutionService.cancelNotebookCellHandles(this.textModel, Array.from(cells).map((cell) => cell.handle));
+  }
+  async executeNotebookCells(cells) {
+    if (!this.viewModel || !this.hasModel()) {
+      this.logService.info("notebookEditorWidget", "No NotebookViewModel, cannot execute cells");
+      return;
+    }
+    if (!cells) {
+      cells = this.viewModel.viewCells;
+    }
+    return this.notebookExecutionService.executeNotebookCells(this.textModel, Array.from(cells).map((c) => c.model), this.scopedContextKeyService);
+  }
+  //#endregion
+  //#region Cell operations/layout API
+  _pendingLayouts = /* @__PURE__ */ new WeakMap();
+  _layoutDisposables = /* @__PURE__ */ new Set();
+  async layoutNotebookCell(cell, height, context) {
+    this._debug("layout cell", cell.handle, height);
+    const viewIndex = this._list.getViewIndex(cell);
+    if (viewIndex === void 0) {
+      return;
+    }
+    if (this._pendingLayouts?.has(cell)) {
+      this._pendingLayouts?.get(cell).dispose();
+    }
+    const deferred = new DeferredPromise();
+    const doLayout = /* @__PURE__ */ __name(() => {
+      if (this._isDisposed) {
+        return;
+      }
+      if (!this.viewModel?.hasCell(cell)) {
+        return;
+      }
+      if (this._list.getViewIndex(cell) === void 0) {
+        return;
+      }
+      if (this._list.elementHeight(cell) === height) {
+        return;
+      }
+      const pendingLayout = this._pendingLayouts?.get(cell);
+      this._pendingLayouts?.delete(cell);
+      if (!this.hasEditorFocus()) {
+        const cellIndex = this.viewModel?.getCellIndex(cell);
+        const visibleRanges = this.visibleRanges;
+        if (cellIndex !== void 0 && visibleRanges && visibleRanges.length && visibleRanges[0].start === cellIndex && this._list.scrollTop > this.getAbsoluteTopOfElement(cell)) {
+          return this._list.updateElementHeight2(cell, height, Math.min(cellIndex + 1, this.getLength() - 1));
+        }
+      }
+      this._list.updateElementHeight2(cell, height);
+      deferred.complete(void 0);
+      if (pendingLayout) {
+        pendingLayout.dispose();
+        this._layoutDisposables.delete(pendingLayout);
+      }
+    }, "doLayout");
+    if (this._list.inRenderingTransaction) {
+      const layoutDisposable = DOM.scheduleAtNextAnimationFrame(DOM.getWindow(this.getDomNode()), doLayout);
+      const disposable = toDisposable(() => {
+        layoutDisposable.dispose();
+        deferred.complete(void 0);
+      });
+      this._pendingLayouts?.set(cell, disposable);
+      this._layoutDisposables.add(disposable);
+    } else {
+      doLayout();
+    }
+    return deferred.p;
+  }
+  getActiveCell() {
+    const elements = this._list.getFocusedElements();
+    if (elements && elements.length) {
+      return elements[0];
+    }
+    return void 0;
+  }
+  _toggleNotebookCellSelection(selectedCell, selectFromPrevious) {
+    const currentSelections = this._list.getSelectedElements();
+    const isSelected = currentSelections.includes(selectedCell);
+    const previousSelection = selectFromPrevious ? currentSelections[currentSelections.length - 1] ?? selectedCell : selectedCell;
+    const selectedIndex = this._list.getViewIndex(selectedCell);
+    const previousIndex = this._list.getViewIndex(previousSelection);
+    const cellsInSelectionRange = this.getCellsInViewRange(selectedIndex, previousIndex);
+    if (isSelected) {
+      this._list.selectElements(currentSelections.filter((current) => !cellsInSelectionRange.includes(current)));
+    } else {
+      this.focusElement(selectedCell);
+      this._list.selectElements([...currentSelections.filter((current) => !cellsInSelectionRange.includes(current)), ...cellsInSelectionRange]);
+    }
+  }
+  getCellsInViewRange(fromInclusive, toInclusive) {
+    const selectedCellsInRange = [];
+    for (let index = 0; index < this._list.length; ++index) {
+      const cell = this._list.element(index);
+      if (cell) {
+        if (index >= fromInclusive && index <= toInclusive || index >= toInclusive && index <= fromInclusive) {
+          selectedCellsInRange.push(cell);
+        }
+      }
+    }
+    return selectedCellsInRange;
+  }
+  async focusNotebookCell(cell, focusItem, options) {
+    if (this._isDisposed) {
+      return;
+    }
+    cell.focusedOutputId = void 0;
+    if (focusItem === "editor") {
+      cell.isInputCollapsed = false;
+      this.focusElement(cell);
+      this._list.focusView();
+      cell.updateEditState(CellEditState.Editing, "focusNotebookCell");
+      cell.focusMode = CellFocusMode.Editor;
+      if (!options?.skipReveal) {
+        if (typeof options?.focusEditorLine === "number") {
+          this._cursorNavMode.set(true);
+          await this.revealLineInViewAsync(cell, options.focusEditorLine);
+          const editor = this._renderedEditors.get(cell);
+          const focusEditorLine = options.focusEditorLine;
+          editor?.setSelection({
+            startLineNumber: focusEditorLine,
+            startColumn: 1,
+            endLineNumber: focusEditorLine,
+            endColumn: 1
+          });
+        } else {
+          const selectionsStartPosition = cell.getSelectionsStartPosition();
+          if (selectionsStartPosition?.length) {
+            const firstSelectionPosition = selectionsStartPosition[0];
+            await this.revealRangeInViewAsync(cell, Range.fromPositions(firstSelectionPosition, firstSelectionPosition));
+          } else {
+            await this.revealInView(cell);
+          }
+        }
+      }
+    } else if (focusItem === "output") {
+      this.focusElement(cell);
+      if (!this.hasEditorFocus()) {
+        this._list.focusView();
+      }
+      if (!this._webview) {
+        return;
+      }
+      const firstOutputId = cell.outputsViewModels.find((o) => o.model.alternativeOutputId)?.model.alternativeOutputId;
+      const focusElementId = options?.outputId ?? firstOutputId ?? cell.id;
+      this._webview.focusOutput(focusElementId, options?.altOutputId, options?.outputWebviewFocused || this._webviewFocused);
+      cell.updateEditState(CellEditState.Preview, "focusNotebookCell");
+      cell.focusMode = CellFocusMode.Output;
+      cell.focusedOutputId = options?.outputId;
+      this._outputFocus.set(true);
+      if (!options?.skipReveal) {
+        this.revealInCenterIfOutsideViewport(cell);
+      }
+    } else {
+      const itemDOM = this._list.domElementOfElement(cell);
+      if (itemDOM && itemDOM.ownerDocument.activeElement && itemDOM.contains(itemDOM.ownerDocument.activeElement)) {
+        itemDOM.ownerDocument.activeElement.blur();
+      }
+      this._webview?.blurOutput();
+      cell.updateEditState(CellEditState.Preview, "focusNotebookCell");
+      cell.focusMode = CellFocusMode.Container;
+      this.focusElement(cell);
+      if (!options?.skipReveal) {
+        if (typeof options?.focusEditorLine === "number") {
+          this._cursorNavMode.set(true);
+          await this.revealInView(cell);
+        } else if (options?.revealBehavior === ScrollToRevealBehavior.firstLine) {
+          await this.revealFirstLineIfOutsideViewport(cell);
+        } else if (options?.revealBehavior === ScrollToRevealBehavior.fullCell) {
+          await this.revealInView(cell);
+        } else {
+          await this.revealInCenterIfOutsideViewport(cell);
+        }
+      }
+      this._list.focusView();
+      this.updateEditorFocus();
+    }
+  }
+  async focusNextNotebookCell(cell, focusItem) {
+    const idx = this.viewModel?.getCellIndex(cell);
+    if (typeof idx !== "number") {
+      return;
+    }
+    const newCell = this.viewModel?.cellAt(idx + 1);
+    if (!newCell) {
+      return;
+    }
+    await this.focusNotebookCell(newCell, focusItem);
+  }
+  //#endregion
+  //#region Find
+  async _warmupCell(viewCell) {
+    if (viewCell.isOutputCollapsed) {
+      return;
+    }
+    const outputs = viewCell.outputsViewModels;
+    for (const output of outputs.slice(0, outputDisplayLimit)) {
+      const [mimeTypes, pick] = output.resolveMimeTypes(this.textModel, void 0);
+      if (!mimeTypes.find((mimeType) => mimeType.isTrusted) || mimeTypes.length === 0) {
+        continue;
+      }
+      const pickedMimeTypeRenderer = mimeTypes[pick];
+      if (!pickedMimeTypeRenderer) {
+        return;
+      }
+      const renderer = this._notebookService.getRendererInfo(pickedMimeTypeRenderer.rendererId);
+      if (!renderer) {
+        return;
+      }
+      const result = { type: RenderOutputType.Extension, renderer, source: output, mimeType: pickedMimeTypeRenderer.mimeType };
+      const inset = this._webview?.insetMapping.get(result.source);
+      if (!inset || !inset.initialized) {
+        const p = new Promise((resolve) => {
+          this._register(Event.any(this.onDidRenderOutput, this.onDidRemoveOutput)((e) => {
+            if (e.model === result.source.model) {
+              resolve();
+            }
+          }));
+        });
+        this.createOutput(viewCell, result, 0, false);
+        await p;
+      } else {
+        this.createOutput(viewCell, result, 0, false);
+      }
+      return;
+    }
+  }
+  async _warmupAll(includeOutput) {
+    if (!this.hasModel() || !this.viewModel) {
+      return;
+    }
+    const cells = this.viewModel.viewCells;
+    const requests = [];
+    for (let i = 0; i < cells.length; i++) {
+      if (cells[i].cellKind === CellKind.Markup && !this._webview.markupPreviewMapping.has(cells[i].id)) {
+        requests.push(this.createMarkupPreview(cells[i]));
+      }
+    }
+    if (includeOutput && this._list) {
+      for (let i = 0; i < this._list.length; i++) {
+        const cell = this._list.element(i);
+        if (cell?.cellKind === CellKind.Code) {
+          requests.push(this._warmupCell(cell));
+        }
+      }
+    }
+    return Promise.all(requests);
+  }
+  async _warmupSelection(includeOutput, selectedCellRanges) {
+    if (!this.hasModel() || !this.viewModel) {
+      return;
+    }
+    const cells = this.viewModel.viewCells;
+    const requests = [];
+    for (const range of selectedCellRanges) {
+      for (let i = range.start; i < range.end; i++) {
+        if (cells[i].cellKind === CellKind.Markup && !this._webview.markupPreviewMapping.has(cells[i].id)) {
+          requests.push(this.createMarkupPreview(cells[i]));
+        }
+      }
+    }
+    if (includeOutput && this._list) {
+      for (const range of selectedCellRanges) {
+        for (let i = range.start; i < range.end; i++) {
+          const cell = this._list.element(i);
+          if (cell?.cellKind === CellKind.Code) {
+            requests.push(this._warmupCell(cell));
+          }
+        }
+      }
+    }
+    return Promise.all(requests);
+  }
+  async find(query, options, token, skipWarmup = false, shouldGetSearchPreviewInfo = false, ownerID) {
+    if (!this._notebookViewModel) {
+      return [];
+    }
+    if (!ownerID) {
+      ownerID = this.getId();
+    }
+    const findMatches = this._notebookViewModel.find(query, options).filter((match) => match.length > 0);
+    if (!options.includeMarkupPreview && !options.includeOutput || options.findScope?.findScopeType === NotebookFindScopeType.Text) {
+      this._webview?.findStop(ownerID);
+      return findMatches;
+    }
+    const matchMap = {};
+    findMatches.forEach((match) => {
+      matchMap[match.cell.id] = match;
+    });
+    if (this._webview) {
+      const start = Date.now();
+      if (options.findScope && options.findScope.findScopeType === NotebookFindScopeType.Cells && options.findScope.selectedCellRanges) {
+        await this._warmupSelection(!!options.includeOutput, options.findScope.selectedCellRanges);
+      } else {
+        await this._warmupAll(!!options.includeOutput);
+      }
+      const end = Date.now();
+      this.logService.debug("Find", `Warmup time: ${end - start}ms`);
+      if (token.isCancellationRequested) {
+        return [];
+      }
+      let findIds = [];
+      if (options.findScope && options.findScope.findScopeType === NotebookFindScopeType.Cells && options.findScope.selectedCellRanges) {
+        const selectedIndexes = cellRangesToIndexes(options.findScope.selectedCellRanges);
+        findIds = selectedIndexes.map((index) => this._notebookViewModel?.viewCells[index].id ?? "");
+      }
+      const webviewMatches = await this._webview.find(query, { caseSensitive: options.caseSensitive, wholeWord: options.wholeWord, includeMarkup: !!options.includeMarkupPreview, includeOutput: !!options.includeOutput, shouldGetSearchPreviewInfo, ownerID, findIds });
+      if (token.isCancellationRequested) {
+        return [];
+      }
+      webviewMatches.forEach((match) => {
+        const cell = this._notebookViewModel.viewCells.find((cell2) => cell2.id === match.cellId);
+        if (!cell) {
+          return;
+        }
+        if (match.type === "preview") {
+          if (cell.getEditState() === CellEditState.Preview && !options.includeMarkupPreview) {
+            return;
+          }
+          if (cell.getEditState() === CellEditState.Editing && options.includeMarkupInput) {
+            return;
+          }
+        } else {
+          if (!options.includeOutput) {
+            return;
+          }
+        }
+        const exisitingMatch = matchMap[match.cellId];
+        if (exisitingMatch) {
+          exisitingMatch.webviewMatches.push(match);
+        } else {
+          matchMap[match.cellId] = new CellFindMatchModel(
+            this._notebookViewModel.viewCells.find((cell2) => cell2.id === match.cellId),
+            this._notebookViewModel.viewCells.findIndex((cell2) => cell2.id === match.cellId),
+            [],
+            [match]
+          );
+        }
+      });
+    }
+    const ret = [];
+    this._notebookViewModel.viewCells.forEach((cell, index) => {
+      if (matchMap[cell.id]) {
+        ret.push(new CellFindMatchModel(cell, index, matchMap[cell.id].contentMatches, matchMap[cell.id].webviewMatches));
+      }
+    });
+    return ret;
+  }
+  async findHighlightCurrent(matchIndex, ownerID) {
+    if (!this._webview) {
+      return 0;
+    }
+    return this._webview?.findHighlightCurrent(matchIndex, ownerID ?? this.getId());
+  }
+  async findUnHighlightCurrent(matchIndex, ownerID) {
+    if (!this._webview) {
+      return;
+    }
+    return this._webview?.findUnHighlightCurrent(matchIndex, ownerID ?? this.getId());
+  }
+  findStop(ownerID) {
+    this._webview?.findStop(ownerID ?? this.getId());
+  }
+  //#endregion
+  //#region MISC
+  getLayoutInfo() {
+    if (!this._list) {
+      throw new Error("Editor is not initalized successfully");
+    }
+    if (!this._fontInfo) {
+      this._generateFontInfo();
+    }
+    return {
+      width: this._dimension?.width ?? 0,
+      height: this._dimension?.height ?? 0,
+      scrollHeight: this._list?.getScrollHeight() ?? 0,
+      fontInfo: this._fontInfo,
+      stickyHeight: this._notebookStickyScroll?.getCurrentStickyHeight() ?? 0
+    };
+  }
+  async createMarkupPreview(cell) {
+    if (!this._webview) {
+      return;
+    }
+    if (!this._webview.isResolved()) {
+      await this._resolveWebview();
+    }
+    if (!this._webview || !this._list.webviewElement) {
+      return;
+    }
+    if (!this.viewModel || !this._list.viewModel) {
+      return;
+    }
+    if (this.viewModel.getCellIndex(cell) === -1) {
+      return;
+    }
+    if (this.cellIsHidden(cell)) {
+      return;
+    }
+    const webviewTop = parseInt(this._list.webviewElement.domNode.style.top, 10);
+    const top = !!webviewTop ? 0 - webviewTop : 0;
+    const cellTop = this._list.getCellViewScrollTop(cell);
+    await this._webview.showMarkupPreview({
+      mime: cell.mime,
+      cellHandle: cell.handle,
+      cellId: cell.id,
+      content: cell.getText(),
+      offset: cellTop + top,
+      visible: true,
+      metadata: cell.metadata
+    });
+  }
+  cellIsHidden(cell) {
+    const modelIndex = this.viewModel.getCellIndex(cell);
+    const foldedRanges = this.viewModel.getHiddenRanges();
+    return foldedRanges.some((range) => modelIndex >= range.start && modelIndex <= range.end);
+  }
+  async unhideMarkupPreviews(cells) {
+    if (!this._webview) {
+      return;
+    }
+    if (!this._webview.isResolved()) {
+      await this._resolveWebview();
+    }
+    await this._webview?.unhideMarkupPreviews(cells.map((cell) => cell.id));
+  }
+  async hideMarkupPreviews(cells) {
+    if (!this._webview || !cells.length) {
+      return;
+    }
+    if (!this._webview.isResolved()) {
+      await this._resolveWebview();
+    }
+    await this._webview?.hideMarkupPreviews(cells.map((cell) => cell.id));
+  }
+  async deleteMarkupPreviews(cells) {
+    if (!this._webview) {
+      return;
+    }
+    if (!this._webview.isResolved()) {
+      await this._resolveWebview();
+    }
+    await this._webview?.deleteMarkupPreviews(cells.map((cell) => cell.id));
+  }
+  async updateSelectedMarkdownPreviews() {
+    if (!this._webview) {
+      return;
+    }
+    if (!this._webview.isResolved()) {
+      await this._resolveWebview();
+    }
+    const selectedCells = this.getSelectionViewModels().map((cell) => cell.id);
+    await this._webview?.updateMarkupPreviewSelections(selectedCells.length > 1 ? selectedCells : []);
+  }
+  async createOutput(cell, output, offset, createWhenIdle) {
+    this._insetModifyQueueByOutputId.queue(output.source.model.outputId, async () => {
+      if (this._isDisposed || !this._webview) {
+        return;
+      }
+      if (!this._webview.isResolved()) {
+        await this._resolveWebview();
+      }
+      if (!this._webview) {
+        return;
+      }
+      if (!this._list.webviewElement) {
+        return;
+      }
+      if (output.type === RenderOutputType.Extension) {
+        this.notebookRendererMessaging.prepare(output.renderer.id);
+      }
+      const webviewTop = parseInt(this._list.webviewElement.domNode.style.top, 10);
+      const top = !!webviewTop ? 0 - webviewTop : 0;
+      const cellTop = this._list.getCellViewScrollTop(cell) + top;
+      const existingOutput = this._webview.insetMapping.get(output.source);
+      if (!existingOutput || !existingOutput.renderer && output.type === RenderOutputType.Extension) {
+        if (createWhenIdle) {
+          this._webview.requestCreateOutputWhenWebviewIdle({ cellId: cell.id, cellHandle: cell.handle, cellUri: cell.uri, executionId: cell.internalMetadata.executionId }, output, cellTop, offset);
+        } else {
+          this._webview.createOutput({ cellId: cell.id, cellHandle: cell.handle, cellUri: cell.uri, executionId: cell.internalMetadata.executionId }, output, cellTop, offset);
+        }
+      } else if (existingOutput.renderer && output.type === RenderOutputType.Extension && existingOutput.renderer.id !== output.renderer.id) {
+        this._webview.removeInsets([output.source]);
+        this._webview.createOutput({ cellId: cell.id, cellHandle: cell.handle, cellUri: cell.uri }, output, cellTop, offset);
+      } else if (existingOutput.versionId !== output.source.model.versionId) {
+        this._webview.updateOutput({ cellId: cell.id, cellHandle: cell.handle, cellUri: cell.uri, executionId: cell.internalMetadata.executionId }, output, cellTop, offset);
+      } else {
+        const outputIndex = cell.outputsViewModels.indexOf(output.source);
+        const outputOffset = cell.getOutputOffset(outputIndex);
+        this._webview.updateScrollTops([{
+          cell,
+          output: output.source,
+          cellTop,
+          outputOffset,
+          forceDisplay: !cell.isOutputCollapsed
+        }], []);
+      }
+    });
+  }
+  async updateOutput(cell, output, offset) {
+    this._insetModifyQueueByOutputId.queue(output.source.model.outputId, async () => {
+      if (this._isDisposed || !this._webview || cell.isOutputCollapsed) {
+        return;
+      }
+      if (!this._webview.isResolved()) {
+        await this._resolveWebview();
+      }
+      if (!this._webview || !this._list.webviewElement) {
+        return;
+      }
+      if (!this._webview.insetMapping.has(output.source)) {
+        return this.createOutput(cell, output, offset, false);
+      }
+      if (output.type === RenderOutputType.Extension) {
+        this.notebookRendererMessaging.prepare(output.renderer.id);
+      }
+      const webviewTop = parseInt(this._list.webviewElement.domNode.style.top, 10);
+      const top = !!webviewTop ? 0 - webviewTop : 0;
+      const cellTop = this._list.getCellViewScrollTop(cell) + top;
+      this._webview.updateOutput({ cellId: cell.id, cellHandle: cell.handle, cellUri: cell.uri }, output, cellTop, offset);
+    });
+  }
+  async copyOutputImage(cellOutput) {
+    this._webview?.copyImage(cellOutput);
+  }
+  removeInset(output) {
+    this._insetModifyQueueByOutputId.queue(output.model.outputId, async () => {
+      if (this._isDisposed || !this._webview) {
+        return;
+      }
+      if (this._webview?.isResolved()) {
+        this._webview.removeInsets([output]);
+      }
+      this._onDidRemoveOutput.fire(output);
+    });
+  }
+  hideInset(output) {
+    this._insetModifyQueueByOutputId.queue(output.model.outputId, async () => {
+      if (this._isDisposed || !this._webview) {
+        return;
+      }
+      if (this._webview?.isResolved()) {
+        this._webview.hideInset(output);
+      }
+    });
+  }
+  //#region --- webview IPC ----
+  postMessage(message) {
+    if (this._webview?.isResolved()) {
+      this._webview.postKernelMessage(message);
+    }
+  }
+  //#endregion
+  addClassName(className) {
+    this._overlayContainer.classList.add(className);
+  }
+  removeClassName(className) {
+    this._overlayContainer.classList.remove(className);
+  }
+  cellAt(index) {
+    return this.viewModel?.cellAt(index);
+  }
+  getCellByInfo(cellInfo) {
+    const { cellHandle } = cellInfo;
+    return this.viewModel?.viewCells.find((vc) => vc.handle === cellHandle);
+  }
+  getCellByHandle(handle) {
+    return this.viewModel?.getCellByHandle(handle);
+  }
+  getCellIndex(cell) {
+    return this.viewModel?.getCellIndexByHandle(cell.handle);
+  }
+  getNextVisibleCellIndex(index) {
+    return this.viewModel?.getNextVisibleCellIndex(index);
+  }
+  getPreviousVisibleCellIndex(index) {
+    return this.viewModel?.getPreviousVisibleCellIndex(index);
+  }
+  _updateScrollHeight() {
+    if (this._isDisposed || !this._webview?.isResolved()) {
+      return;
+    }
+    if (!this._list.webviewElement) {
+      return;
+    }
+    const scrollHeight = this._list.scrollHeight;
+    this._webview.element.style.height = `${scrollHeight + NOTEBOOK_WEBVIEW_BOUNDARY * 2}px`;
+    const webviewTop = parseInt(this._list.webviewElement.domNode.style.top, 10);
+    const top = !!webviewTop ? 0 - webviewTop : 0;
+    const updateItems = [];
+    const removedItems = [];
+    this._webview?.insetMapping.forEach((value, key) => {
+      const cell = this.viewModel?.getCellByHandle(value.cellInfo.cellHandle);
+      if (!cell || !(cell instanceof CodeCellViewModel)) {
+        return;
+      }
+      this.viewModel?.viewCells.find((cell2) => cell2.handle === value.cellInfo.cellHandle);
+      const viewIndex = this._list.getViewIndex(cell);
+      if (viewIndex === void 0) {
+        return;
+      }
+      if (cell.outputsViewModels.indexOf(key) < 0) {
+        removedItems.push(key);
+      }
+      const cellTop = this._list.getCellViewScrollTop(cell);
+      const outputIndex = cell.outputsViewModels.indexOf(key);
+      const outputOffset = cell.getOutputOffset(outputIndex);
+      updateItems.push({
+        cell,
+        output: key,
+        cellTop: cellTop + top,
+        outputOffset,
+        forceDisplay: false
+      });
+    });
+    this._webview.removeInsets(removedItems);
+    const markdownUpdateItems = [];
+    for (const cellId of this._webview.markupPreviewMapping.keys()) {
+      const cell = this.viewModel?.viewCells.find((cell2) => cell2.id === cellId);
+      if (cell) {
+        const cellTop = this._list.getCellViewScrollTop(cell);
+        markdownUpdateItems.push({ id: cellId, top: cellTop + top });
+      }
+    }
+    if (markdownUpdateItems.length || updateItems.length) {
+      this._debug("_list.onDidChangeContentHeight/markdown", markdownUpdateItems);
+      this._webview?.updateScrollTops(updateItems, markdownUpdateItems);
+    }
+  }
+  //#endregion
+  //#region BacklayerWebview delegate
+  _updateOutputHeight(cellInfo, output, outputHeight, isInit, source) {
+    const cell = this.viewModel?.viewCells.find((vc) => vc.handle === cellInfo.cellHandle);
+    if (cell && cell instanceof CodeCellViewModel) {
+      const outputIndex = cell.outputsViewModels.indexOf(output);
+      if (outputIndex > -1) {
+        this._debug("update cell output", cell.handle, outputHeight);
+        cell.updateOutputHeight(outputIndex, outputHeight, source);
+        this.layoutNotebookCell(cell, cell.layoutInfo.totalHeight);
+        if (isInit) {
+          this._onDidRenderOutput.fire(output);
+        }
+      } else {
+        this._debug("tried to update cell output that does not exist");
+      }
+    }
+  }
+  _pendingOutputHeightAcks = /* @__PURE__ */ new Map();
+  _scheduleOutputHeightAck(cellInfo, outputId, height) {
+    const wasEmpty = this._pendingOutputHeightAcks.size === 0;
+    this._pendingOutputHeightAcks.set(outputId, { cellId: cellInfo.cellId, outputId, height });
+    if (wasEmpty) {
+      DOM.scheduleAtNextAnimationFrame(DOM.getWindow(this.getDomNode()), () => {
+        this._debug("ack height");
+        this._updateScrollHeight();
+        this._webview?.ackHeight([...this._pendingOutputHeightAcks.values()]);
+        this._pendingOutputHeightAcks.clear();
+      }, -1);
+    }
+  }
+  _getCellById(cellId) {
+    return this.viewModel?.viewCells.find((vc) => vc.id === cellId);
+  }
+  _updateMarkupCellHeight(cellId, height, isInit) {
+    const cell = this._getCellById(cellId);
+    if (cell && cell instanceof MarkupCellViewModel) {
+      const { bottomToolbarGap } = this._notebookOptions.computeBottomToolbarDimensions(this.viewModel?.viewType);
+      this._debug("updateMarkdownCellHeight", cell.handle, height + bottomToolbarGap, isInit);
+      cell.renderedMarkdownHeight = height;
+    }
+  }
+  _setMarkupCellEditState(cellId, editState) {
+    const cell = this._getCellById(cellId);
+    if (cell instanceof MarkupCellViewModel) {
+      this.revealInView(cell);
+      cell.updateEditState(editState, "setMarkdownCellEditState");
+    }
+  }
+  _didStartDragMarkupCell(cellId, event) {
+    const cell = this._getCellById(cellId);
+    if (cell instanceof MarkupCellViewModel) {
+      const webviewOffset = this._list.webviewElement ? -parseInt(this._list.webviewElement.domNode.style.top, 10) : 0;
+      this._dndController?.startExplicitDrag(cell, event.dragOffsetY - webviewOffset);
+    }
+  }
+  _didDragMarkupCell(cellId, event) {
+    const cell = this._getCellById(cellId);
+    if (cell instanceof MarkupCellViewModel) {
+      const webviewOffset = this._list.webviewElement ? -parseInt(this._list.webviewElement.domNode.style.top, 10) : 0;
+      this._dndController?.explicitDrag(cell, event.dragOffsetY - webviewOffset);
+    }
+  }
+  _didDropMarkupCell(cellId, event) {
+    const cell = this._getCellById(cellId);
+    if (cell instanceof MarkupCellViewModel) {
+      const webviewOffset = this._list.webviewElement ? -parseInt(this._list.webviewElement.domNode.style.top, 10) : 0;
+      event.dragOffsetY -= webviewOffset;
+      this._dndController?.explicitDrop(cell, event);
+    }
+  }
+  _didEndDragMarkupCell(cellId) {
+    const cell = this._getCellById(cellId);
+    if (cell instanceof MarkupCellViewModel) {
+      this._dndController?.endExplicitDrag(cell);
+    }
+  }
+  _didResizeOutput(cellId) {
+    const cell = this._getCellById(cellId);
+    if (cell) {
+      this._onDidResizeOutputEmitter.fire(cell);
+    }
+  }
+  _updatePerformanceMetadata(cellId, executionId, duration, rendererId) {
+    if (!this.hasModel()) {
+      return;
+    }
+    const cell = this._getCellById(cellId);
+    const cellIndex = !cell ? void 0 : this.getCellIndex(cell);
+    if (cell?.internalMetadata.executionId === executionId && cellIndex !== void 0) {
+      const renderDurationMap = cell.internalMetadata.renderDuration || {};
+      renderDurationMap[rendererId] = (renderDurationMap[rendererId] ?? 0) + duration;
+      this.textModel.applyEdits([
+        {
+          editType: CellEditType.PartialInternalMetadata,
+          index: cellIndex,
+          internalMetadata: {
+            executionId,
+            renderDuration: renderDurationMap
+          }
+        }
+      ], true, void 0, () => void 0, void 0, false);
+    }
+  }
+  //#endregion
+  //#region Editor Contributions
+  getContribution(id) {
+    return this._contributions.get(id) || null;
+  }
+  //#endregion
+  dispose() {
+    this._isDisposed = true;
+    this._webview?.dispose();
+    this._webview = null;
+    this._layoutDisposables.forEach((d) => d.dispose());
+    this.notebookEditorService.removeNotebookEditor(this);
+    dispose(this._contributions.values());
+    this._contributions.clear();
+    this._localStore.clear();
+    dispose(this._localCellStateListeners);
+    this._list.dispose();
+    this._listTopCellToolbar?.dispose();
+    this._overlayContainer.remove();
+    this.viewModel?.dispose();
+    this._renderedEditors.clear();
+    this._baseCellEditorOptions.forEach((v) => v.dispose());
+    this._baseCellEditorOptions.clear();
+    this._notebookOverviewRulerContainer.remove();
+    super.dispose();
+    this._webview = null;
+    this._webviewResolvePromise = null;
+    this._webviewTransparentCover = null;
+    this._dndController = null;
+    this._listTopCellToolbar = null;
+    this._notebookViewModel = void 0;
+    this._cellContextKeyManager = null;
+    this._notebookTopToolbar = null;
+    this._list = null;
+    this._listViewInfoAccessor = null;
+    this._pendingLayouts = null;
+    this._listDelegate = null;
+  }
+  toJSON() {
+    return {
+      notebookUri: this.viewModel?.uri
+    };
+  }
+};
+NotebookEditorWidget = __decorateClass([
+  __decorateParam(2, IInstantiationService),
+  __decorateParam(3, IEditorGroupsService),
+  __decorateParam(4, INotebookRendererMessagingService),
+  __decorateParam(5, INotebookEditorService),
+  __decorateParam(6, INotebookKernelService),
+  __decorateParam(7, INotebookService),
+  __decorateParam(8, IConfigurationService),
+  __decorateParam(9, IContextKeyService),
+  __decorateParam(10, ILayoutService),
+  __decorateParam(11, IContextMenuService),
+  __decorateParam(12, ITelemetryService),
+  __decorateParam(13, INotebookExecutionService),
+  __decorateParam(14, IEditorProgressService),
+  __decorateParam(15, INotebookLoggingService)
+], NotebookEditorWidget);
+registerZIndex(ZIndex.Base, 5, "notebook-progress-bar");
+registerZIndex(ZIndex.Base, 10, "notebook-list-insertion-indicator");
+registerZIndex(ZIndex.Base, 20, "notebook-cell-editor-outline");
+registerZIndex(ZIndex.Base, 25, "notebook-scrollbar");
+registerZIndex(ZIndex.Base, 26, "notebook-cell-status");
+registerZIndex(ZIndex.Base, 26, "notebook-folding-indicator");
+registerZIndex(ZIndex.Base, 27, "notebook-output");
+registerZIndex(ZIndex.Base, 28, "notebook-cell-bottom-toolbar-container");
+registerZIndex(ZIndex.Base, 29, "notebook-run-button-container");
+registerZIndex(ZIndex.Base, 29, "notebook-input-collapse-condicon");
+registerZIndex(ZIndex.Base, 30, "notebook-cell-output-toolbar");
+registerZIndex(ZIndex.Sash, 1, "notebook-cell-expand-part-button");
+registerZIndex(ZIndex.Sash, 2, "notebook-cell-toolbar");
+registerZIndex(ZIndex.Sash, 3, "notebook-cell-toolbar-dropdown-active");
+const notebookCellBorder = registerColor("notebook.cellBorderColor", {
+  dark: transparent(listInactiveSelectionBackground, 1),
+  light: transparent(listInactiveSelectionBackground, 1),
+  hcDark: PANEL_BORDER,
+  hcLight: PANEL_BORDER
+}, nls.localize("notebook.cellBorderColor", "The border color for notebook cells."));
+const focusedEditorBorderColor = registerColor("notebook.focusedEditorBorder", focusBorder, nls.localize("notebook.focusedEditorBorder", "The color of the notebook cell editor border."));
+const cellStatusIconSuccess = registerColor("notebookStatusSuccessIcon.foreground", debugIconStartForeground, nls.localize("notebookStatusSuccessIcon.foreground", "The error icon color of notebook cells in the cell status bar."));
+const runningCellRulerDecorationColor = registerColor("notebookEditorOverviewRuler.runningCellForeground", debugIconStartForeground, nls.localize("notebookEditorOverviewRuler.runningCellForeground", "The color of the running cell decoration in the notebook editor overview ruler."));
+const cellStatusIconError = registerColor("notebookStatusErrorIcon.foreground", errorForeground, nls.localize("notebookStatusErrorIcon.foreground", "The error icon color of notebook cells in the cell status bar."));
+const cellStatusIconRunning = registerColor("notebookStatusRunningIcon.foreground", foreground, nls.localize("notebookStatusRunningIcon.foreground", "The running icon color of notebook cells in the cell status bar."));
+const notebookOutputContainerBorderColor = registerColor("notebook.outputContainerBorderColor", null, nls.localize("notebook.outputContainerBorderColor", "The border color of the notebook output container."));
+const notebookOutputContainerColor = registerColor("notebook.outputContainerBackgroundColor", null, nls.localize("notebook.outputContainerBackgroundColor", "The color of the notebook output container background."));
+const CELL_TOOLBAR_SEPERATOR = registerColor("notebook.cellToolbarSeparator", {
+  dark: Color.fromHex("#808080").transparent(0.35),
+  light: Color.fromHex("#808080").transparent(0.35),
+  hcDark: contrastBorder,
+  hcLight: contrastBorder
+}, nls.localize("notebook.cellToolbarSeparator", "The color of the separator in the cell bottom toolbar"));
+const focusedCellBackground = registerColor("notebook.focusedCellBackground", null, nls.localize("focusedCellBackground", "The background color of a cell when the cell is focused."));
+const selectedCellBackground = registerColor("notebook.selectedCellBackground", {
+  dark: listInactiveSelectionBackground,
+  light: listInactiveSelectionBackground,
+  hcDark: null,
+  hcLight: null
+}, nls.localize("selectedCellBackground", "The background color of a cell when the cell is selected."));
+const cellHoverBackground = registerColor("notebook.cellHoverBackground", {
+  dark: transparent(focusedCellBackground, 0.5),
+  light: transparent(focusedCellBackground, 0.7),
+  hcDark: null,
+  hcLight: null
+}, nls.localize("notebook.cellHoverBackground", "The background color of a cell when the cell is hovered."));
+const selectedCellBorder = registerColor("notebook.selectedCellBorder", {
+  dark: notebookCellBorder,
+  light: notebookCellBorder,
+  hcDark: contrastBorder,
+  hcLight: contrastBorder
+}, nls.localize("notebook.selectedCellBorder", "The color of the cell's top and bottom border when the cell is selected but not focused."));
+const inactiveSelectedCellBorder = registerColor("notebook.inactiveSelectedCellBorder", {
+  dark: null,
+  light: null,
+  hcDark: focusBorder,
+  hcLight: focusBorder
+}, nls.localize("notebook.inactiveSelectedCellBorder", "The color of the cell's borders when multiple cells are selected."));
+const focusedCellBorder = registerColor("notebook.focusedCellBorder", focusBorder, nls.localize("notebook.focusedCellBorder", "The color of the cell's focus indicator borders when the cell is focused."));
+const inactiveFocusedCellBorder = registerColor("notebook.inactiveFocusedCellBorder", notebookCellBorder, nls.localize("notebook.inactiveFocusedCellBorder", "The color of the cell's top and bottom border when a cell is focused while the primary focus is outside of the editor."));
+const cellStatusBarItemHover = registerColor("notebook.cellStatusBarItemHoverBackground", {
+  light: new Color(new RGBA(0, 0, 0, 0.08)),
+  dark: new Color(new RGBA(255, 255, 255, 0.15)),
+  hcDark: new Color(new RGBA(255, 255, 255, 0.15)),
+  hcLight: new Color(new RGBA(0, 0, 0, 0.08))
+}, nls.localize("notebook.cellStatusBarItemHoverBackground", "The background color of notebook cell status bar items."));
+const cellInsertionIndicator = registerColor("notebook.cellInsertionIndicator", focusBorder, nls.localize("notebook.cellInsertionIndicator", "The color of the notebook cell insertion indicator."));
+const listScrollbarSliderBackground = registerColor("notebookScrollbarSlider.background", scrollbarSliderBackground, nls.localize("notebookScrollbarSliderBackground", "Notebook scrollbar slider background color."));
+const listScrollbarSliderHoverBackground = registerColor("notebookScrollbarSlider.hoverBackground", scrollbarSliderHoverBackground, nls.localize("notebookScrollbarSliderHoverBackground", "Notebook scrollbar slider background color when hovering."));
+const listScrollbarSliderActiveBackground = registerColor("notebookScrollbarSlider.activeBackground", scrollbarSliderActiveBackground, nls.localize("notebookScrollbarSliderActiveBackground", "Notebook scrollbar slider background color when clicked on."));
+const cellSymbolHighlight = registerColor("notebook.symbolHighlightBackground", {
+  dark: Color.fromHex("#ffffff0b"),
+  light: Color.fromHex("#fdff0033"),
+  hcDark: null,
+  hcLight: null
+}, nls.localize("notebook.symbolHighlightBackground", "Background color of highlighted cell"));
+const cellEditorBackground = registerColor("notebook.cellEditorBackground", {
+  light: SIDE_BAR_BACKGROUND,
+  dark: SIDE_BAR_BACKGROUND,
+  hcDark: null,
+  hcLight: null
+}, nls.localize("notebook.cellEditorBackground", "Cell editor background color."));
+const notebookEditorBackground = registerColor("notebook.editorBackground", {
+  light: EDITOR_PANE_BACKGROUND,
+  dark: EDITOR_PANE_BACKGROUND,
+  hcDark: null,
+  hcLight: null
+}, nls.localize("notebook.editorBackground", "Notebook background color."));
+export {
+  CELL_TOOLBAR_SEPERATOR,
+  NotebookEditorWidget,
+  cellEditorBackground,
+  cellHoverBackground,
+  cellInsertionIndicator,
+  cellStatusBarItemHover,
+  cellStatusIconError,
+  cellStatusIconRunning,
+  cellStatusIconSuccess,
+  cellSymbolHighlight,
+  focusedCellBackground,
+  focusedCellBorder,
+  focusedEditorBorderColor,
+  getDefaultNotebookCreationOptions,
+  inactiveFocusedCellBorder,
+  inactiveSelectedCellBorder,
+  listScrollbarSliderActiveBackground,
+  listScrollbarSliderBackground,
+  listScrollbarSliderHoverBackground,
+  notebookCellBorder,
+  notebookOutputContainerBorderColor,
+  notebookOutputContainerColor,
+  runningCellRulerDecorationColor,
+  selectedCellBackground,
+  selectedCellBorder
+};
+//# sourceMappingURL=notebookEditorWidget.js.map

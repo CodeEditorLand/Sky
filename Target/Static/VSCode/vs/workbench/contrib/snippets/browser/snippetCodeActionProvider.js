@@ -1,1 +1,164 @@
-var C=Object.defineProperty,A=Object.getOwnPropertyDescriptor,u=(t,e,o,i)=>{for(var n,r=i>1?void 0:i?A(e,o):e,s=t.length-1;s>=0;s--)(n=t[s])&&(r=(i?n(e,o,r):n(r))||r);return i&&r&&C(e,o,r),r},p=(t,e)=>(o,i)=>e(o,i,t);import{DisposableStore as f}from"../../../../base/common/lifecycle.js";import"../../../../editor/common/core/range.js";import{Selection as _}from"../../../../editor/common/core/selection.js";import"../../../../editor/common/languages.js";import"../../../../editor/common/model.js";import{ILanguageFeaturesService as h}from"../../../../editor/common/services/languageFeatures.js";import{CodeActionKind as c}from"../../../../editor/contrib/codeAction/common/types.js";import{localize as l}from"../../../../nls.js";import{IConfigurationService as y}from"../../../../platform/configuration/common/configuration.js";import{IInstantiationService as k}from"../../../../platform/instantiation/common/instantiation.js";import"../../../common/contributions.js";import{ApplyFileSnippetAction as w}from"./commands/fileTemplateSnippets.js";import{getSurroundableSnippets as b,SurroundWithSnippetEditorAction as I}from"./commands/surroundWithSnippet.js";import"./snippetsFile.js";import{ISnippetsService as S}from"./snippets.js";let a=class{constructor(t){this._snippetService=t}static _MAX_CODE_ACTIONS=4;static _overflowCommandCodeAction={kind:c.SurroundWith.value,title:l("more","More..."),command:{id:I.options.id,title:I.options.title.value}};async provideCodeActions(t,e){if(e.isEmpty())return;const o=_.isISelection(e)?e.getPosition():e.getStartPosition(),i=await b(this._snippetService,t,o,!1);if(!i.length)return;const n=[];for(const o of i){if(n.length>=a._MAX_CODE_ACTIONS){n.push(a._overflowCommandCodeAction);break}n.push({title:l("codeAction","{0}",o.name),kind:c.SurroundWith.value,edit:v(t,e,o)})}return{actions:n,dispose(){}}}};a=u([p(0,S)],a);let d=class{constructor(t){this._snippetService=t}static _MAX_CODE_ACTIONS=4;static _overflowCommandCodeAction={title:l("overflow.start.title","Start with Snippet"),kind:c.SurroundWith.value,command:{id:w.Id,title:""}};providedCodeActionKinds=[c.SurroundWith.value];async provideCodeActions(t){if(0!==t.getValueLength())return;const e=await this._snippetService.getSnippets(t.getLanguageId(),{fileTemplateSnippets:!0,includeNoPrefixSnippets:!0}),o=[];for(const i of e){if(o.length>=d._MAX_CODE_ACTIONS){o.push(d._overflowCommandCodeAction);break}o.push({title:l("title","Start with: {0}",i.name),kind:c.SurroundWith.value,edit:v(t,t.getFullModelRange(),i)})}return{actions:o,dispose(){}}}};function v(t,e,o){return{edits:[{versionId:t.getVersionId(),resource:t.uri,textEdit:{range:e,text:o.body,insertAsSnippet:!0}}]}}d=u([p(0,S)],d);let m=class{_store=new f;constructor(t,e,o){const i="editor.snippets.codeActions.enabled",n=new f,r=()=>{n.clear(),o.getValue(i)&&(n.add(e.codeActionProvider.register("*",t.createInstance(a))),n.add(e.codeActionProvider.register("*",t.createInstance(d))))};r(),this._store.add(o.onDidChangeConfiguration((t=>t.affectsConfiguration(i)&&r()))),this._store.add(n)}dispose(){this._store.dispose()}};m=u([p(0,k),p(1,h),p(2,y)],m);export{m as SnippetCodeActions};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { DisposableStore } from "../../../../base/common/lifecycle.js";
+import { IRange, Range } from "../../../../editor/common/core/range.js";
+import { Selection } from "../../../../editor/common/core/selection.js";
+import { CodeAction, CodeActionList, CodeActionProvider, WorkspaceEdit } from "../../../../editor/common/languages.js";
+import { ITextModel } from "../../../../editor/common/model.js";
+import { ILanguageFeaturesService } from "../../../../editor/common/services/languageFeatures.js";
+import { CodeActionKind } from "../../../../editor/contrib/codeAction/common/types.js";
+import { localize } from "../../../../nls.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IWorkbenchContribution } from "../../../common/contributions.js";
+import { ApplyFileSnippetAction } from "./commands/fileTemplateSnippets.js";
+import { getSurroundableSnippets, SurroundWithSnippetEditorAction } from "./commands/surroundWithSnippet.js";
+import { Snippet } from "./snippetsFile.js";
+import { ISnippetsService } from "./snippets.js";
+let SurroundWithSnippetCodeActionProvider = class {
+  constructor(_snippetService) {
+    this._snippetService = _snippetService;
+  }
+  static {
+    __name(this, "SurroundWithSnippetCodeActionProvider");
+  }
+  static _MAX_CODE_ACTIONS = 4;
+  static _overflowCommandCodeAction = {
+    kind: CodeActionKind.SurroundWith.value,
+    title: localize("more", "More..."),
+    command: {
+      id: SurroundWithSnippetEditorAction.options.id,
+      title: SurroundWithSnippetEditorAction.options.title.value
+    }
+  };
+  async provideCodeActions(model, range) {
+    if (range.isEmpty()) {
+      return void 0;
+    }
+    const position = Selection.isISelection(range) ? range.getPosition() : range.getStartPosition();
+    const snippets = await getSurroundableSnippets(this._snippetService, model, position, false);
+    if (!snippets.length) {
+      return void 0;
+    }
+    const actions = [];
+    for (const snippet of snippets) {
+      if (actions.length >= SurroundWithSnippetCodeActionProvider._MAX_CODE_ACTIONS) {
+        actions.push(SurroundWithSnippetCodeActionProvider._overflowCommandCodeAction);
+        break;
+      }
+      actions.push({
+        title: localize("codeAction", "{0}", snippet.name),
+        kind: CodeActionKind.SurroundWith.value,
+        edit: asWorkspaceEdit(model, range, snippet)
+      });
+    }
+    return {
+      actions,
+      dispose() {
+      }
+    };
+  }
+};
+SurroundWithSnippetCodeActionProvider = __decorateClass([
+  __decorateParam(0, ISnippetsService)
+], SurroundWithSnippetCodeActionProvider);
+let FileTemplateCodeActionProvider = class {
+  constructor(_snippetService) {
+    this._snippetService = _snippetService;
+  }
+  static {
+    __name(this, "FileTemplateCodeActionProvider");
+  }
+  static _MAX_CODE_ACTIONS = 4;
+  static _overflowCommandCodeAction = {
+    title: localize("overflow.start.title", "Start with Snippet"),
+    kind: CodeActionKind.SurroundWith.value,
+    command: {
+      id: ApplyFileSnippetAction.Id,
+      title: ""
+    }
+  };
+  providedCodeActionKinds = [CodeActionKind.SurroundWith.value];
+  async provideCodeActions(model) {
+    if (model.getValueLength() !== 0) {
+      return void 0;
+    }
+    const snippets = await this._snippetService.getSnippets(model.getLanguageId(), { fileTemplateSnippets: true, includeNoPrefixSnippets: true });
+    const actions = [];
+    for (const snippet of snippets) {
+      if (actions.length >= FileTemplateCodeActionProvider._MAX_CODE_ACTIONS) {
+        actions.push(FileTemplateCodeActionProvider._overflowCommandCodeAction);
+        break;
+      }
+      actions.push({
+        title: localize("title", "Start with: {0}", snippet.name),
+        kind: CodeActionKind.SurroundWith.value,
+        edit: asWorkspaceEdit(model, model.getFullModelRange(), snippet)
+      });
+    }
+    return {
+      actions,
+      dispose() {
+      }
+    };
+  }
+};
+FileTemplateCodeActionProvider = __decorateClass([
+  __decorateParam(0, ISnippetsService)
+], FileTemplateCodeActionProvider);
+function asWorkspaceEdit(model, range, snippet) {
+  return {
+    edits: [{
+      versionId: model.getVersionId(),
+      resource: model.uri,
+      textEdit: {
+        range,
+        text: snippet.body,
+        insertAsSnippet: true
+      }
+    }]
+  };
+}
+__name(asWorkspaceEdit, "asWorkspaceEdit");
+let SnippetCodeActions = class {
+  static {
+    __name(this, "SnippetCodeActions");
+  }
+  _store = new DisposableStore();
+  constructor(instantiationService, languageFeaturesService, configService) {
+    const setting = "editor.snippets.codeActions.enabled";
+    const sessionStore = new DisposableStore();
+    const update = /* @__PURE__ */ __name(() => {
+      sessionStore.clear();
+      if (configService.getValue(setting)) {
+        sessionStore.add(languageFeaturesService.codeActionProvider.register("*", instantiationService.createInstance(SurroundWithSnippetCodeActionProvider)));
+        sessionStore.add(languageFeaturesService.codeActionProvider.register("*", instantiationService.createInstance(FileTemplateCodeActionProvider)));
+      }
+    }, "update");
+    update();
+    this._store.add(configService.onDidChangeConfiguration((e) => e.affectsConfiguration(setting) && update()));
+    this._store.add(sessionStore);
+  }
+  dispose() {
+    this._store.dispose();
+  }
+};
+SnippetCodeActions = __decorateClass([
+  __decorateParam(0, IInstantiationService),
+  __decorateParam(1, ILanguageFeaturesService),
+  __decorateParam(2, IConfigurationService)
+], SnippetCodeActions);
+export {
+  SnippetCodeActions
+};
+//# sourceMappingURL=snippetCodeActionProvider.js.map

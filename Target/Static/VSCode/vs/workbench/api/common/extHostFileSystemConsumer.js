@@ -1,1 +1,240 @@
-var h=Object.defineProperty,f=Object.getOwnPropertyDescriptor,y=(e,r,t,i)=>{for(var s,o=i>1?void 0:i?f(r,t):r,a=e.length-1;a>=0;a--)(s=e[a])&&(o=(i?s(r,t,o):s(o))||o);return i&&o&&h(r,t,o),o},c=(e,r)=>(t,i)=>r(t,i,e);import{MainContext as p}from"./extHost.protocol.js";import*as s from"../../../platform/files/common/files.js";import{FileSystemError as a}from"./extHostTypes.js";import{VSBuffer as w}from"../../../base/common/buffer.js";import{createDecorator as F}from"../../../platform/instantiation/common/instantiation.js";import{IExtHostRpcService as P}from"./extHostRpcService.js";import{IExtHostFileSystemInfo as S}from"./extHostFileSystemInfo.js";import{toDisposable as u}from"../../../base/common/lifecycle.js";import{ResourceQueue as g}from"../../../base/common/async.js";import{extUri as v,extUriIgnorePathCase as E}from"../../../base/common/resources.js";import{Schemas as x}from"../../../base/common/network.js";import"../../../base/common/htmlContent.js";let n=class{_serviceBrand;value;_proxy;_fileSystemProvider=new Map;_writeQueue=new g;constructor(e,r){this._proxy=e.getProxy(p.MainThreadFileSystem);const t=this;this.value=Object.freeze({async stat(e){try{let r;const i=t._fileSystemProvider.get(e.scheme);return i?(await t._proxy.$ensureActivation(e.scheme),r=await i.impl.stat(e)):r=await t._proxy.$stat(e),{type:r.type,ctime:r.ctime,mtime:r.mtime,size:r.size,permissions:r.permissions===s.FilePermission.Readonly?1:void 0}}catch(e){n._handleError(e)}},async readDirectory(e){try{const r=t._fileSystemProvider.get(e.scheme);return r?(await t._proxy.$ensureActivation(e.scheme),(await r.impl.readDirectory(e)).slice()):await t._proxy.$readdir(e)}catch(e){return n._handleError(e)}},async createDirectory(e){try{const r=t._fileSystemProvider.get(e.scheme);return r&&!r.isReadonly?(await t._proxy.$ensureActivation(e.scheme),await t.mkdirp(r.impl,r.extUri,e)):await t._proxy.$mkdir(e)}catch(e){return n._handleError(e)}},async readFile(e){try{const r=t._fileSystemProvider.get(e.scheme);return r?(await t._proxy.$ensureActivation(e.scheme),(await r.impl.readFile(e)).slice()):(await t._proxy.$readFile(e)).buffer}catch(e){return n._handleError(e)}},async writeFile(e,r){try{const i=t._fileSystemProvider.get(e.scheme);return i&&!i.isReadonly?(await t._proxy.$ensureActivation(e.scheme),await t.mkdirp(i.impl,i.extUri,i.extUri.dirname(e)),await t._writeQueue.queueFor(e,(()=>Promise.resolve(i.impl.writeFile(e,r,{create:!0,overwrite:!0}))))):await t._proxy.$writeFile(e,w.wrap(r))}catch(e){return n._handleError(e)}},async delete(e,r){try{const i=t._fileSystemProvider.get(e.scheme);return!i||i.isReadonly||r?.useTrash?await t._proxy.$delete(e,{recursive:!1,useTrash:!1,atomic:!1,...r}):(await t._proxy.$ensureActivation(e.scheme),await i.impl.delete(e,{recursive:!1,...r}))}catch(e){return n._handleError(e)}},async rename(e,r,i){try{return await t._proxy.$rename(e,r,{overwrite:!1,...i})}catch(e){return n._handleError(e)}},async copy(e,r,i){try{return await t._proxy.$copy(e,r,{overwrite:!1,...i})}catch(e){return n._handleError(e)}},isWritableFileSystem(e){const t=r.getCapabilities(e);if("number"==typeof t)return!(t&s.FileSystemProviderCapabilities.Readonly)}})}async mkdirp(e,r,t){const i=[];for(;!r.isEqual(t,r.dirname(t));)try{if(!((await e.stat(t)).type&s.FileType.Directory))throw a.FileExists(`Unable to create folder '${t.scheme===x.file?t.fsPath:t.toString(!0)}' that already exists but is not a directory`);break}catch(e){if(s.toFileSystemProviderErrorCode(e)!==s.FileSystemProviderErrorCode.FileNotFound)throw e;i.push(r.basename(t)),t=r.dirname(t)}for(let o=i.length-1;o>=0;o--){t=r.joinPath(t,i[o]);try{await e.createDirectory(t)}catch(e){if(s.toFileSystemProviderErrorCode(e)!==s.FileSystemProviderErrorCode.FileExists)throw e}}}static _handleError(e){if(e instanceof a)throw e;if(e instanceof s.FileSystemProviderError)switch(e.code){case s.FileSystemProviderErrorCode.FileExists:throw a.FileExists(e.message);case s.FileSystemProviderErrorCode.FileNotFound:throw a.FileNotFound(e.message);case s.FileSystemProviderErrorCode.FileNotADirectory:throw a.FileNotADirectory(e.message);case s.FileSystemProviderErrorCode.FileIsADirectory:throw a.FileIsADirectory(e.message);case s.FileSystemProviderErrorCode.NoPermissions:throw a.NoPermissions(e.message);case s.FileSystemProviderErrorCode.Unavailable:throw a.Unavailable(e.message);default:throw new a(e.message,e.name)}if(!(e instanceof Error))throw new a(String(e));if("ENOPRO"===e.name||e.message.includes("ENOPRO"))throw a.Unavailable(e.message);switch(e.name){case s.FileSystemProviderErrorCode.FileExists:throw a.FileExists(e.message);case s.FileSystemProviderErrorCode.FileNotFound:throw a.FileNotFound(e.message);case s.FileSystemProviderErrorCode.FileNotADirectory:throw a.FileNotADirectory(e.message);case s.FileSystemProviderErrorCode.FileIsADirectory:throw a.FileIsADirectory(e.message);case s.FileSystemProviderErrorCode.NoPermissions:throw a.NoPermissions(e.message);case s.FileSystemProviderErrorCode.Unavailable:throw a.Unavailable(e.message);default:throw new a(e.message,e.name)}}addFileSystemProvider(e,r,t){return this._fileSystemProvider.set(e,{impl:r,extUri:t?.isCaseSensitive?v:E,isReadonly:!!t?.isReadonly}),u((()=>this._fileSystemProvider.delete(e)))}getFileSystemProviderExtUri(e){return this._fileSystemProvider.get(e)?.extUri??v}};n=y([c(0,P),c(1,S)],n);const j=F("IExtHostConsumerFileSystem");export{n as ExtHostConsumerFileSystem,j as IExtHostConsumerFileSystem};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { MainContext, MainThreadFileSystemShape } from "./extHost.protocol.js";
+import * as files from "../../../platform/files/common/files.js";
+import { FileSystemError } from "./extHostTypes.js";
+import { VSBuffer } from "../../../base/common/buffer.js";
+import { createDecorator } from "../../../platform/instantiation/common/instantiation.js";
+import { IExtHostRpcService } from "./extHostRpcService.js";
+import { IExtHostFileSystemInfo } from "./extHostFileSystemInfo.js";
+import { IDisposable, toDisposable } from "../../../base/common/lifecycle.js";
+import { ResourceQueue } from "../../../base/common/async.js";
+import { IExtUri, extUri, extUriIgnorePathCase } from "../../../base/common/resources.js";
+import { Schemas } from "../../../base/common/network.js";
+import { IMarkdownString } from "../../../base/common/htmlContent.js";
+let ExtHostConsumerFileSystem = class {
+  static {
+    __name(this, "ExtHostConsumerFileSystem");
+  }
+  _serviceBrand;
+  value;
+  _proxy;
+  _fileSystemProvider = /* @__PURE__ */ new Map();
+  _writeQueue = new ResourceQueue();
+  constructor(extHostRpc, fileSystemInfo) {
+    this._proxy = extHostRpc.getProxy(MainContext.MainThreadFileSystem);
+    const that = this;
+    this.value = Object.freeze({
+      async stat(uri) {
+        try {
+          let stat;
+          const provider = that._fileSystemProvider.get(uri.scheme);
+          if (provider) {
+            await that._proxy.$ensureActivation(uri.scheme);
+            stat = await provider.impl.stat(uri);
+          } else {
+            stat = await that._proxy.$stat(uri);
+          }
+          return {
+            type: stat.type,
+            ctime: stat.ctime,
+            mtime: stat.mtime,
+            size: stat.size,
+            permissions: stat.permissions === files.FilePermission.Readonly ? 1 : void 0
+          };
+        } catch (err) {
+          ExtHostConsumerFileSystem._handleError(err);
+        }
+      },
+      async readDirectory(uri) {
+        try {
+          const provider = that._fileSystemProvider.get(uri.scheme);
+          if (provider) {
+            await that._proxy.$ensureActivation(uri.scheme);
+            return (await provider.impl.readDirectory(uri)).slice();
+          } else {
+            return await that._proxy.$readdir(uri);
+          }
+        } catch (err) {
+          return ExtHostConsumerFileSystem._handleError(err);
+        }
+      },
+      async createDirectory(uri) {
+        try {
+          const provider = that._fileSystemProvider.get(uri.scheme);
+          if (provider && !provider.isReadonly) {
+            await that._proxy.$ensureActivation(uri.scheme);
+            return await that.mkdirp(provider.impl, provider.extUri, uri);
+          } else {
+            return await that._proxy.$mkdir(uri);
+          }
+        } catch (err) {
+          return ExtHostConsumerFileSystem._handleError(err);
+        }
+      },
+      async readFile(uri) {
+        try {
+          const provider = that._fileSystemProvider.get(uri.scheme);
+          if (provider) {
+            await that._proxy.$ensureActivation(uri.scheme);
+            return (await provider.impl.readFile(uri)).slice();
+          } else {
+            const buff = await that._proxy.$readFile(uri);
+            return buff.buffer;
+          }
+        } catch (err) {
+          return ExtHostConsumerFileSystem._handleError(err);
+        }
+      },
+      async writeFile(uri, content) {
+        try {
+          const provider = that._fileSystemProvider.get(uri.scheme);
+          if (provider && !provider.isReadonly) {
+            await that._proxy.$ensureActivation(uri.scheme);
+            await that.mkdirp(provider.impl, provider.extUri, provider.extUri.dirname(uri));
+            return await that._writeQueue.queueFor(uri, () => Promise.resolve(provider.impl.writeFile(uri, content, { create: true, overwrite: true })));
+          } else {
+            return await that._proxy.$writeFile(uri, VSBuffer.wrap(content));
+          }
+        } catch (err) {
+          return ExtHostConsumerFileSystem._handleError(err);
+        }
+      },
+      async delete(uri, options) {
+        try {
+          const provider = that._fileSystemProvider.get(uri.scheme);
+          if (provider && !provider.isReadonly && !options?.useTrash) {
+            await that._proxy.$ensureActivation(uri.scheme);
+            return await provider.impl.delete(uri, { recursive: false, ...options });
+          } else {
+            return await that._proxy.$delete(uri, { recursive: false, useTrash: false, atomic: false, ...options });
+          }
+        } catch (err) {
+          return ExtHostConsumerFileSystem._handleError(err);
+        }
+      },
+      async rename(oldUri, newUri, options) {
+        try {
+          return await that._proxy.$rename(oldUri, newUri, { ...{ overwrite: false }, ...options });
+        } catch (err) {
+          return ExtHostConsumerFileSystem._handleError(err);
+        }
+      },
+      async copy(source, destination, options) {
+        try {
+          return await that._proxy.$copy(source, destination, { ...{ overwrite: false }, ...options });
+        } catch (err) {
+          return ExtHostConsumerFileSystem._handleError(err);
+        }
+      },
+      isWritableFileSystem(scheme) {
+        const capabilities = fileSystemInfo.getCapabilities(scheme);
+        if (typeof capabilities === "number") {
+          return !(capabilities & files.FileSystemProviderCapabilities.Readonly);
+        }
+        return void 0;
+      }
+    });
+  }
+  async mkdirp(provider, providerExtUri, directory) {
+    const directoriesToCreate = [];
+    while (!providerExtUri.isEqual(directory, providerExtUri.dirname(directory))) {
+      try {
+        const stat = await provider.stat(directory);
+        if ((stat.type & files.FileType.Directory) === 0) {
+          throw FileSystemError.FileExists(`Unable to create folder '${directory.scheme === Schemas.file ? directory.fsPath : directory.toString(true)}' that already exists but is not a directory`);
+        }
+        break;
+      } catch (error) {
+        if (files.toFileSystemProviderErrorCode(error) !== files.FileSystemProviderErrorCode.FileNotFound) {
+          throw error;
+        }
+        directoriesToCreate.push(providerExtUri.basename(directory));
+        directory = providerExtUri.dirname(directory);
+      }
+    }
+    for (let i = directoriesToCreate.length - 1; i >= 0; i--) {
+      directory = providerExtUri.joinPath(directory, directoriesToCreate[i]);
+      try {
+        await provider.createDirectory(directory);
+      } catch (error) {
+        if (files.toFileSystemProviderErrorCode(error) !== files.FileSystemProviderErrorCode.FileExists) {
+          throw error;
+        }
+      }
+    }
+  }
+  static _handleError(err) {
+    if (err instanceof FileSystemError) {
+      throw err;
+    }
+    if (err instanceof files.FileSystemProviderError) {
+      switch (err.code) {
+        case files.FileSystemProviderErrorCode.FileExists:
+          throw FileSystemError.FileExists(err.message);
+        case files.FileSystemProviderErrorCode.FileNotFound:
+          throw FileSystemError.FileNotFound(err.message);
+        case files.FileSystemProviderErrorCode.FileNotADirectory:
+          throw FileSystemError.FileNotADirectory(err.message);
+        case files.FileSystemProviderErrorCode.FileIsADirectory:
+          throw FileSystemError.FileIsADirectory(err.message);
+        case files.FileSystemProviderErrorCode.NoPermissions:
+          throw FileSystemError.NoPermissions(err.message);
+        case files.FileSystemProviderErrorCode.Unavailable:
+          throw FileSystemError.Unavailable(err.message);
+        default:
+          throw new FileSystemError(err.message, err.name);
+      }
+    }
+    if (!(err instanceof Error)) {
+      throw new FileSystemError(String(err));
+    }
+    if (err.name === "ENOPRO" || err.message.includes("ENOPRO")) {
+      throw FileSystemError.Unavailable(err.message);
+    }
+    switch (err.name) {
+      case files.FileSystemProviderErrorCode.FileExists:
+        throw FileSystemError.FileExists(err.message);
+      case files.FileSystemProviderErrorCode.FileNotFound:
+        throw FileSystemError.FileNotFound(err.message);
+      case files.FileSystemProviderErrorCode.FileNotADirectory:
+        throw FileSystemError.FileNotADirectory(err.message);
+      case files.FileSystemProviderErrorCode.FileIsADirectory:
+        throw FileSystemError.FileIsADirectory(err.message);
+      case files.FileSystemProviderErrorCode.NoPermissions:
+        throw FileSystemError.NoPermissions(err.message);
+      case files.FileSystemProviderErrorCode.Unavailable:
+        throw FileSystemError.Unavailable(err.message);
+      default:
+        throw new FileSystemError(err.message, err.name);
+    }
+  }
+  // ---
+  addFileSystemProvider(scheme, provider, options) {
+    this._fileSystemProvider.set(scheme, { impl: provider, extUri: options?.isCaseSensitive ? extUri : extUriIgnorePathCase, isReadonly: !!options?.isReadonly });
+    return toDisposable(() => this._fileSystemProvider.delete(scheme));
+  }
+  getFileSystemProviderExtUri(scheme) {
+    return this._fileSystemProvider.get(scheme)?.extUri ?? extUri;
+  }
+};
+ExtHostConsumerFileSystem = __decorateClass([
+  __decorateParam(0, IExtHostRpcService),
+  __decorateParam(1, IExtHostFileSystemInfo)
+], ExtHostConsumerFileSystem);
+const IExtHostConsumerFileSystem = createDecorator("IExtHostConsumerFileSystem");
+export {
+  ExtHostConsumerFileSystem,
+  IExtHostConsumerFileSystem
+};
+//# sourceMappingURL=extHostFileSystemConsumer.js.map

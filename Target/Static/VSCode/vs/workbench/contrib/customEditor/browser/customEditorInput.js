@@ -1,1 +1,381 @@
-var S=Object.defineProperty;var D=Object.getOwnPropertyDescriptor;var I=(l,d,e,i)=>{for(var t=i>1?void 0:i?D(d,e):d,r=l.length-1,s;r>=0;r--)(s=l[r])&&(t=(i?s(d,e,t):s(t))||t);return i&&t&&S(d,e,t),t},o=(l,d)=>(e,i)=>d(e,i,l);import{getWindow as y}from"../../../../base/browser/dom.js";import"../../../../base/browser/window.js";import{toAction as R}from"../../../../base/common/actions.js";import{VSBuffer as w}from"../../../../base/common/buffer.js";import"../../../../base/common/htmlContent.js";import"../../../../base/common/lifecycle.js";import{Schemas as C}from"../../../../base/common/network.js";import{basename as E}from"../../../../base/common/path.js";import{dirname as v,isEqual as _}from"../../../../base/common/resources.js";import{assertIsDefined as f}from"../../../../base/common/types.js";import"../../../../base/common/uri.js";import{localize as m}from"../../../../nls.js";import"../../../../platform/contextkey/common/contextkey.js";import{IFileDialogService as T}from"../../../../platform/dialogs/common/dialogs.js";import"../../../../platform/editor/common/editor.js";import{IFileService as U}from"../../../../platform/files/common/files.js";import{IInstantiationService as L}from"../../../../platform/instantiation/common/instantiation.js";import{ILabelService as M}from"../../../../platform/label/common/label.js";import{IUndoRedoService as G}from"../../../../platform/undoRedo/common/undoRedo.js";import{EditorInputCapabilities as u,Verbosity as a,createEditorOpenError as W}from"../../../common/editor.js";import"../../../common/editor/editorInput.js";import{ICustomEditorLabelService as O}from"../../../services/editor/common/customEditorLabelService.js";import{ICustomEditorService as k}from"../common/customEditor.js";import{IWebviewService as P}from"../../webview/browser/webview.js";import{IWebviewWorkbenchService as F,LazilyResolvedWebviewEditorInput as N}from"../../webviewPanel/browser/webviewWorkbenchService.js";import{IEditorGroupsService as j}from"../../../services/editor/common/editorGroupsService.js";import{IFilesConfigurationService as H}from"../../../services/filesConfiguration/common/filesConfigurationService.js";import{IWorkbenchLayoutService as V}from"../../../services/layout/browser/layoutService.js";import{IUntitledTextEditorService as x}from"../../../services/untitled/common/untitledTextEditorService.js";let n=class extends N{constructor(e,i,t,r,s,c,p,g,b,h,B,A,z,K){super({providedId:e.viewType,viewType:e.viewType,name:""},i,r);this.instantiationService=s;this.labelService=c;this.customEditorService=p;this.fileDialogService=g;this.undoRedoService=b;this.fileService=h;this.filesConfigurationService=B;this.editorGroupsService=A;this.layoutService=z;this.customEditorLabelService=K;this._editorResource=e.resource,this.oldResource=t.oldResource,this._defaultDirtyState=t.startsDirty,this._backupId=t.backupId,this._untitledDocumentData=t.untitledDocumentData,this.registerListeners()}static create(e,i,t,r,s){return e.invokeFunction(c=>{const p=c.get(x).getValue(i),g=p?w.fromString(p):void 0,b=c.get(P).createWebviewOverlay({providedViewType:t,title:void 0,options:{customClasses:s?.customClasses},contentOptions:{},extension:void 0}),h=e.createInstance(n,{resource:i,viewType:t},b,{untitledDocumentData:g,oldResource:s?.oldResource});return typeof r<"u"&&h.updateGroup(r),h})}static typeId="workbench.editors.webviewEditor";_editorResource;oldResource;_defaultDirtyState;_backupId;_untitledDocumentData;get resource(){return this._editorResource}_modelRef;registerListeners(){this._register(this.labelService.onDidChangeFormatters(e=>this.onLabelEvent(e.scheme))),this._register(this.fileService.onDidChangeFileSystemProviderRegistrations(e=>this.onLabelEvent(e.scheme))),this._register(this.fileService.onDidChangeFileSystemProviderCapabilities(e=>this.onLabelEvent(e.scheme))),this._register(this.customEditorLabelService.onDidChange(()=>this.updateLabel())),this._register(this.filesConfigurationService.onDidChangeReadonly(()=>this._onDidChangeCapabilities.fire()))}onLabelEvent(e){e===this.resource.scheme&&this.updateLabel()}updateLabel(){this._editorName=void 0,this._shortDescription=void 0,this._mediumDescription=void 0,this._longDescription=void 0,this._shortTitle=void 0,this._mediumTitle=void 0,this._longTitle=void 0,this._onDidChangeLabel.fire()}get typeId(){return n.typeId}get editorId(){return this.viewType}get capabilities(){let e=u.None;return e|=u.CanDropIntoEditor,this.customEditorService.getCustomEditorCapabilities(this.viewType)?.supportsMultipleEditorsPerDocument||(e|=u.Singleton),this._modelRef?this._modelRef.object.isReadonly()&&(e|=u.Readonly):this.filesConfigurationService.isReadonly(this.resource)&&(e|=u.Readonly),this.resource.scheme===C.untitled&&(e|=u.Untitled),e}_editorName=void 0;getName(){return typeof this._editorName!="string"&&(this._editorName=this.customEditorLabelService.getName(this.resource)??E(this.labelService.getUriLabel(this.resource))),this._editorName}getDescription(e=a.MEDIUM){switch(e){case a.SHORT:return this.shortDescription;case a.LONG:return this.longDescription;case a.MEDIUM:default:return this.mediumDescription}}_shortDescription=void 0;get shortDescription(){return typeof this._shortDescription!="string"&&(this._shortDescription=this.labelService.getUriBasenameLabel(v(this.resource))),this._shortDescription}_mediumDescription=void 0;get mediumDescription(){return typeof this._mediumDescription!="string"&&(this._mediumDescription=this.labelService.getUriLabel(v(this.resource),{relative:!0})),this._mediumDescription}_longDescription=void 0;get longDescription(){return typeof this._longDescription!="string"&&(this._longDescription=this.labelService.getUriLabel(v(this.resource))),this._longDescription}_shortTitle=void 0;get shortTitle(){return typeof this._shortTitle!="string"&&(this._shortTitle=this.getName()),this._shortTitle}_mediumTitle=void 0;get mediumTitle(){return typeof this._mediumTitle!="string"&&(this._mediumTitle=this.labelService.getUriLabel(this.resource,{relative:!0})),this._mediumTitle}_longTitle=void 0;get longTitle(){return typeof this._longTitle!="string"&&(this._longTitle=this.labelService.getUriLabel(this.resource)),this._longTitle}getTitle(e){switch(e){case a.SHORT:return this.shortTitle;case a.LONG:return this.longTitle;default:case a.MEDIUM:return this.mediumTitle}}matches(e){return super.matches(e)?!0:this===e||e instanceof n&&this.viewType===e.viewType&&_(this.resource,e.resource)}copy(){return n.create(this.instantiationService,this.resource,this.viewType,this.group,this.webview.options)}isReadonly(){return this._modelRef?this._modelRef.object.isReadonly():this.filesConfigurationService.isReadonly(this.resource)}isDirty(){return this._modelRef?this._modelRef.object.isDirty():!!this._defaultDirtyState}async save(e,i){if(!this._modelRef)return;const t=await this._modelRef.object.saveCustomEditor(i);if(t)return _(t,this.resource)?this:{resource:t}}async saveAs(e,i){if(!this._modelRef)return;const t=this._editorResource,r=await this.fileDialogService.pickFileToSave(t,i?.availableFileSystems);if(r&&await this._modelRef.object.saveCustomEditorAs(this._editorResource,r,i))return(await this.rename(e,r))?.editor}async revert(e,i){if(this._modelRef)return this._modelRef.object.revert(i);this._defaultDirtyState=!1,this._onDidChangeDirty.fire()}async resolve(){if(await super.resolve(),this.isDisposed())return null;if(!this._modelRef){const e=this.capabilities;this._modelRef=this._register(f(await this.customEditorService.models.tryRetain(this.resource,this.viewType))),this._register(this._modelRef.object.onDidChangeDirty(()=>this._onDidChangeDirty.fire())),this._register(this._modelRef.object.onDidChangeReadonly(()=>this._onDidChangeCapabilities.fire())),this._untitledDocumentData&&(this._defaultDirtyState=!0),this.isDirty()&&this._onDidChangeDirty.fire(),this.capabilities!==e&&this._onDidChangeCapabilities.fire()}return null}async rename(e,i){return{editor:{resource:i}}}undo(){return f(this._modelRef),this.undoRedoService.undo(this.resource)}redo(){return f(this._modelRef),this.undoRedoService.redo(this.resource)}_moveHandler;onMove(e){this._moveHandler=e}transfer(e){if(super.transfer(e))return e._moveHandler=this._moveHandler,this._moveHandler=void 0,e}get backupId(){return this._modelRef?this._modelRef.object.backupId:this._backupId}get untitledDocumentData(){return this._untitledDocumentData}toUntyped(){return{resource:this.resource,options:{override:this.viewType}}}claim(e,i,t){if(this.doCanMove(i.vscodeWindowId)!==!0)throw W(m("editorUnsupportedInWindow","Unable to open the editor in this window, it contains modifications that can only be saved in the original window."),[R({id:"openInOriginalWindow",label:m("reopenInOriginalWindow","Open in Original Window"),run:async()=>{const r=this.editorGroupsService.getPart(this.layoutService.getContainer(y(this.webview.container).window));this.editorGroupsService.getPart(this.layoutService.getContainer(i.window)).activeGroup.moveEditor(this,r.activeGroup)}})],{forceMessage:!0});return super.claim(e,i,t)}canMove(e,i){const t=this.editorGroupsService.getGroup(i);if(t){const r=this.doCanMove(t.windowId);if(typeof r=="string")return r}return super.canMove(e,i)}doCanMove(e){return this.isModified()&&this._modelRef?.object.canHotExit===!1&&y(this.webview.container).vscodeWindowId!==e?m("editorCannotMove","Unable to move '{0}': The editor contains changes that can only be saved in its current window.",this.getName()):!0}};n=I([o(3,F),o(4,L),o(5,M),o(6,k),o(7,T),o(8,G),o(9,U),o(10,H),o(11,j),o(12,V),o(13,O)],n);export{n as CustomEditorInput};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { getWindow } from "../../../../base/browser/dom.js";
+import { CodeWindow } from "../../../../base/browser/window.js";
+import { toAction } from "../../../../base/common/actions.js";
+import { VSBuffer } from "../../../../base/common/buffer.js";
+import { IMarkdownString } from "../../../../base/common/htmlContent.js";
+import { IReference } from "../../../../base/common/lifecycle.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { basename } from "../../../../base/common/path.js";
+import { dirname, isEqual } from "../../../../base/common/resources.js";
+import { assertIsDefined } from "../../../../base/common/types.js";
+import { URI } from "../../../../base/common/uri.js";
+import { localize } from "../../../../nls.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IFileDialogService } from "../../../../platform/dialogs/common/dialogs.js";
+import { IResourceEditorInput } from "../../../../platform/editor/common/editor.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { ILabelService } from "../../../../platform/label/common/label.js";
+import { IUndoRedoService } from "../../../../platform/undoRedo/common/undoRedo.js";
+import { EditorInputCapabilities, GroupIdentifier, IMoveResult, IRevertOptions, ISaveOptions, IUntypedEditorInput, Verbosity, createEditorOpenError } from "../../../common/editor.js";
+import { EditorInput } from "../../../common/editor/editorInput.js";
+import { ICustomEditorLabelService } from "../../../services/editor/common/customEditorLabelService.js";
+import { ICustomEditorModel, ICustomEditorService } from "../common/customEditor.js";
+import { IOverlayWebview, IWebviewService } from "../../webview/browser/webview.js";
+import { IWebviewWorkbenchService, LazilyResolvedWebviewEditorInput } from "../../webviewPanel/browser/webviewWorkbenchService.js";
+import { IEditorGroupsService } from "../../../services/editor/common/editorGroupsService.js";
+import { IFilesConfigurationService } from "../../../services/filesConfiguration/common/filesConfigurationService.js";
+import { IWorkbenchLayoutService } from "../../../services/layout/browser/layoutService.js";
+import { IUntitledTextEditorService } from "../../../services/untitled/common/untitledTextEditorService.js";
+let CustomEditorInput = class extends LazilyResolvedWebviewEditorInput {
+  constructor(init, webview, options, webviewWorkbenchService, instantiationService, labelService, customEditorService, fileDialogService, undoRedoService, fileService, filesConfigurationService, editorGroupsService, layoutService, customEditorLabelService) {
+    super({ providedId: init.viewType, viewType: init.viewType, name: "" }, webview, webviewWorkbenchService);
+    this.instantiationService = instantiationService;
+    this.labelService = labelService;
+    this.customEditorService = customEditorService;
+    this.fileDialogService = fileDialogService;
+    this.undoRedoService = undoRedoService;
+    this.fileService = fileService;
+    this.filesConfigurationService = filesConfigurationService;
+    this.editorGroupsService = editorGroupsService;
+    this.layoutService = layoutService;
+    this.customEditorLabelService = customEditorLabelService;
+    this._editorResource = init.resource;
+    this.oldResource = options.oldResource;
+    this._defaultDirtyState = options.startsDirty;
+    this._backupId = options.backupId;
+    this._untitledDocumentData = options.untitledDocumentData;
+    this.registerListeners();
+  }
+  static {
+    __name(this, "CustomEditorInput");
+  }
+  static create(instantiationService, resource, viewType, group, options) {
+    return instantiationService.invokeFunction((accessor) => {
+      const untitledString = accessor.get(IUntitledTextEditorService).getValue(resource);
+      const untitledDocumentData = untitledString ? VSBuffer.fromString(untitledString) : void 0;
+      const webview = accessor.get(IWebviewService).createWebviewOverlay({
+        providedViewType: viewType,
+        title: void 0,
+        options: { customClasses: options?.customClasses },
+        contentOptions: {},
+        extension: void 0
+      });
+      const input = instantiationService.createInstance(CustomEditorInput, { resource, viewType }, webview, { untitledDocumentData, oldResource: options?.oldResource });
+      if (typeof group !== "undefined") {
+        input.updateGroup(group);
+      }
+      return input;
+    });
+  }
+  static typeId = "workbench.editors.webviewEditor";
+  _editorResource;
+  oldResource;
+  _defaultDirtyState;
+  _backupId;
+  _untitledDocumentData;
+  get resource() {
+    return this._editorResource;
+  }
+  _modelRef;
+  registerListeners() {
+    this._register(this.labelService.onDidChangeFormatters((e) => this.onLabelEvent(e.scheme)));
+    this._register(this.fileService.onDidChangeFileSystemProviderRegistrations((e) => this.onLabelEvent(e.scheme)));
+    this._register(this.fileService.onDidChangeFileSystemProviderCapabilities((e) => this.onLabelEvent(e.scheme)));
+    this._register(this.customEditorLabelService.onDidChange(() => this.updateLabel()));
+    this._register(this.filesConfigurationService.onDidChangeReadonly(() => this._onDidChangeCapabilities.fire()));
+  }
+  onLabelEvent(scheme) {
+    if (scheme === this.resource.scheme) {
+      this.updateLabel();
+    }
+  }
+  updateLabel() {
+    this._editorName = void 0;
+    this._shortDescription = void 0;
+    this._mediumDescription = void 0;
+    this._longDescription = void 0;
+    this._shortTitle = void 0;
+    this._mediumTitle = void 0;
+    this._longTitle = void 0;
+    this._onDidChangeLabel.fire();
+  }
+  get typeId() {
+    return CustomEditorInput.typeId;
+  }
+  get editorId() {
+    return this.viewType;
+  }
+  get capabilities() {
+    let capabilities = EditorInputCapabilities.None;
+    capabilities |= EditorInputCapabilities.CanDropIntoEditor;
+    if (!this.customEditorService.getCustomEditorCapabilities(this.viewType)?.supportsMultipleEditorsPerDocument) {
+      capabilities |= EditorInputCapabilities.Singleton;
+    }
+    if (this._modelRef) {
+      if (this._modelRef.object.isReadonly()) {
+        capabilities |= EditorInputCapabilities.Readonly;
+      }
+    } else {
+      if (this.filesConfigurationService.isReadonly(this.resource)) {
+        capabilities |= EditorInputCapabilities.Readonly;
+      }
+    }
+    if (this.resource.scheme === Schemas.untitled) {
+      capabilities |= EditorInputCapabilities.Untitled;
+    }
+    return capabilities;
+  }
+  _editorName = void 0;
+  getName() {
+    if (typeof this._editorName !== "string") {
+      this._editorName = this.customEditorLabelService.getName(this.resource) ?? basename(this.labelService.getUriLabel(this.resource));
+    }
+    return this._editorName;
+  }
+  getDescription(verbosity = Verbosity.MEDIUM) {
+    switch (verbosity) {
+      case Verbosity.SHORT:
+        return this.shortDescription;
+      case Verbosity.LONG:
+        return this.longDescription;
+      case Verbosity.MEDIUM:
+      default:
+        return this.mediumDescription;
+    }
+  }
+  _shortDescription = void 0;
+  get shortDescription() {
+    if (typeof this._shortDescription !== "string") {
+      this._shortDescription = this.labelService.getUriBasenameLabel(dirname(this.resource));
+    }
+    return this._shortDescription;
+  }
+  _mediumDescription = void 0;
+  get mediumDescription() {
+    if (typeof this._mediumDescription !== "string") {
+      this._mediumDescription = this.labelService.getUriLabel(dirname(this.resource), { relative: true });
+    }
+    return this._mediumDescription;
+  }
+  _longDescription = void 0;
+  get longDescription() {
+    if (typeof this._longDescription !== "string") {
+      this._longDescription = this.labelService.getUriLabel(dirname(this.resource));
+    }
+    return this._longDescription;
+  }
+  _shortTitle = void 0;
+  get shortTitle() {
+    if (typeof this._shortTitle !== "string") {
+      this._shortTitle = this.getName();
+    }
+    return this._shortTitle;
+  }
+  _mediumTitle = void 0;
+  get mediumTitle() {
+    if (typeof this._mediumTitle !== "string") {
+      this._mediumTitle = this.labelService.getUriLabel(this.resource, { relative: true });
+    }
+    return this._mediumTitle;
+  }
+  _longTitle = void 0;
+  get longTitle() {
+    if (typeof this._longTitle !== "string") {
+      this._longTitle = this.labelService.getUriLabel(this.resource);
+    }
+    return this._longTitle;
+  }
+  getTitle(verbosity) {
+    switch (verbosity) {
+      case Verbosity.SHORT:
+        return this.shortTitle;
+      case Verbosity.LONG:
+        return this.longTitle;
+      default:
+      case Verbosity.MEDIUM:
+        return this.mediumTitle;
+    }
+  }
+  matches(other) {
+    if (super.matches(other)) {
+      return true;
+    }
+    return this === other || other instanceof CustomEditorInput && this.viewType === other.viewType && isEqual(this.resource, other.resource);
+  }
+  copy() {
+    return CustomEditorInput.create(this.instantiationService, this.resource, this.viewType, this.group, this.webview.options);
+  }
+  isReadonly() {
+    if (!this._modelRef) {
+      return this.filesConfigurationService.isReadonly(this.resource);
+    }
+    return this._modelRef.object.isReadonly();
+  }
+  isDirty() {
+    if (!this._modelRef) {
+      return !!this._defaultDirtyState;
+    }
+    return this._modelRef.object.isDirty();
+  }
+  async save(groupId, options) {
+    if (!this._modelRef) {
+      return void 0;
+    }
+    const target = await this._modelRef.object.saveCustomEditor(options);
+    if (!target) {
+      return void 0;
+    }
+    if (!isEqual(target, this.resource)) {
+      return { resource: target };
+    }
+    return this;
+  }
+  async saveAs(groupId, options) {
+    if (!this._modelRef) {
+      return void 0;
+    }
+    const dialogPath = this._editorResource;
+    const target = await this.fileDialogService.pickFileToSave(dialogPath, options?.availableFileSystems);
+    if (!target) {
+      return void 0;
+    }
+    if (!await this._modelRef.object.saveCustomEditorAs(this._editorResource, target, options)) {
+      return void 0;
+    }
+    return (await this.rename(groupId, target))?.editor;
+  }
+  async revert(group, options) {
+    if (this._modelRef) {
+      return this._modelRef.object.revert(options);
+    }
+    this._defaultDirtyState = false;
+    this._onDidChangeDirty.fire();
+  }
+  async resolve() {
+    await super.resolve();
+    if (this.isDisposed()) {
+      return null;
+    }
+    if (!this._modelRef) {
+      const oldCapabilities = this.capabilities;
+      this._modelRef = this._register(assertIsDefined(await this.customEditorService.models.tryRetain(this.resource, this.viewType)));
+      this._register(this._modelRef.object.onDidChangeDirty(() => this._onDidChangeDirty.fire()));
+      this._register(this._modelRef.object.onDidChangeReadonly(() => this._onDidChangeCapabilities.fire()));
+      if (this._untitledDocumentData) {
+        this._defaultDirtyState = true;
+      }
+      if (this.isDirty()) {
+        this._onDidChangeDirty.fire();
+      }
+      if (this.capabilities !== oldCapabilities) {
+        this._onDidChangeCapabilities.fire();
+      }
+    }
+    return null;
+  }
+  async rename(group, newResource) {
+    return { editor: { resource: newResource } };
+  }
+  undo() {
+    assertIsDefined(this._modelRef);
+    return this.undoRedoService.undo(this.resource);
+  }
+  redo() {
+    assertIsDefined(this._modelRef);
+    return this.undoRedoService.redo(this.resource);
+  }
+  _moveHandler;
+  onMove(handler) {
+    this._moveHandler = handler;
+  }
+  transfer(other) {
+    if (!super.transfer(other)) {
+      return;
+    }
+    other._moveHandler = this._moveHandler;
+    this._moveHandler = void 0;
+    return other;
+  }
+  get backupId() {
+    if (this._modelRef) {
+      return this._modelRef.object.backupId;
+    }
+    return this._backupId;
+  }
+  get untitledDocumentData() {
+    return this._untitledDocumentData;
+  }
+  toUntyped() {
+    return {
+      resource: this.resource,
+      options: {
+        override: this.viewType
+      }
+    };
+  }
+  claim(claimant, targetWindow, scopedContextKeyService) {
+    if (this.doCanMove(targetWindow.vscodeWindowId) !== true) {
+      throw createEditorOpenError(localize("editorUnsupportedInWindow", "Unable to open the editor in this window, it contains modifications that can only be saved in the original window."), [
+        toAction({
+          id: "openInOriginalWindow",
+          label: localize("reopenInOriginalWindow", "Open in Original Window"),
+          run: /* @__PURE__ */ __name(async () => {
+            const originalPart = this.editorGroupsService.getPart(this.layoutService.getContainer(getWindow(this.webview.container).window));
+            const currentPart = this.editorGroupsService.getPart(this.layoutService.getContainer(targetWindow.window));
+            currentPart.activeGroup.moveEditor(this, originalPart.activeGroup);
+          }, "run")
+        })
+      ], { forceMessage: true });
+    }
+    return super.claim(claimant, targetWindow, scopedContextKeyService);
+  }
+  canMove(sourceGroup, targetGroup) {
+    const resolvedTargetGroup = this.editorGroupsService.getGroup(targetGroup);
+    if (resolvedTargetGroup) {
+      const canMove = this.doCanMove(resolvedTargetGroup.windowId);
+      if (typeof canMove === "string") {
+        return canMove;
+      }
+    }
+    return super.canMove(sourceGroup, targetGroup);
+  }
+  doCanMove(targetWindowId) {
+    if (this.isModified() && this._modelRef?.object.canHotExit === false) {
+      const sourceWindowId = getWindow(this.webview.container).vscodeWindowId;
+      if (sourceWindowId !== targetWindowId) {
+        return localize("editorCannotMove", "Unable to move '{0}': The editor contains changes that can only be saved in its current window.", this.getName());
+      }
+    }
+    return true;
+  }
+};
+CustomEditorInput = __decorateClass([
+  __decorateParam(3, IWebviewWorkbenchService),
+  __decorateParam(4, IInstantiationService),
+  __decorateParam(5, ILabelService),
+  __decorateParam(6, ICustomEditorService),
+  __decorateParam(7, IFileDialogService),
+  __decorateParam(8, IUndoRedoService),
+  __decorateParam(9, IFileService),
+  __decorateParam(10, IFilesConfigurationService),
+  __decorateParam(11, IEditorGroupsService),
+  __decorateParam(12, IWorkbenchLayoutService),
+  __decorateParam(13, ICustomEditorLabelService)
+], CustomEditorInput);
+export {
+  CustomEditorInput
+};
+//# sourceMappingURL=customEditorInput.js.map

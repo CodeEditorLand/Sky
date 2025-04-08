@@ -1,1 +1,23 @@
-import{Emitter as e}from"../../../base/common/event.js";class a{_tabFocus=!1;_onDidChangeTabFocus=new e;onDidChangeTabFocus=this._onDidChangeTabFocus.event;getTabFocusMode(){return this._tabFocus}setTabFocusMode(s){this._tabFocus=s,this._onDidChangeTabFocus.fire(this._tabFocus)}}const b=new a;export{b as TabFocus};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Emitter, Event } from "../../../base/common/event.js";
+class TabFocusImpl {
+  static {
+    __name(this, "TabFocusImpl");
+  }
+  _tabFocus = false;
+  _onDidChangeTabFocus = new Emitter();
+  onDidChangeTabFocus = this._onDidChangeTabFocus.event;
+  getTabFocusMode() {
+    return this._tabFocus;
+  }
+  setTabFocusMode(tabFocusMode) {
+    this._tabFocus = tabFocusMode;
+    this._onDidChangeTabFocus.fire(this._tabFocus);
+  }
+}
+const TabFocus = new TabFocusImpl();
+export {
+  TabFocus
+};
+//# sourceMappingURL=tabFocus.js.map

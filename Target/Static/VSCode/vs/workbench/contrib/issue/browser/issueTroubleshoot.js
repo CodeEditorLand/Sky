@@ -1,1 +1,357 @@
-var x=Object.defineProperty,E=Object.getOwnPropertyDescriptor,f=(e,t,s,i)=>{for(var o,r=i>1?void 0:i?E(t,s):t,a=e.length-1;a>=0;a--)(o=e[a])&&(r=(i?o(t,s,r):o(r))||r);return i&&r&&x(t,s,r),r},s=(e,t)=>(s,i)=>t(s,i,e);import{localize as i,localize2 as v}from"../../../../nls.js";import{IExtensionManagementService as T}from"../../../../platform/extensionManagement/common/extensionManagement.js";import{ExtensionType as S}from"../../../../platform/extensions/common/extensions.js";import{IProductService as R}from"../../../../platform/product/common/productService.js";import{IWorkbenchIssueService as D}from"../common/issue.js";import{Disposable as I}from"../../../../base/common/lifecycle.js";import{Action2 as g,registerAction2 as b}from"../../../../platform/actions/common/actions.js";import{IUserDataProfileImportExportService as C,IUserDataProfileManagementService as k,IUserDataProfileService as A}from"../../../services/userDataProfile/common/userDataProfile.js";import{IDialogService as N}from"../../../../platform/dialogs/common/dialogs.js";import{IExtensionBisectService as B}from"../../../services/extensionManagement/browser/extensionBisect.js";import{INotificationService as W,NotificationPriority as O,Severity as y}from"../../../../platform/notification/common/notification.js";import{IWorkbenchExtensionEnablementService as H}from"../../../services/extensionManagement/common/extensionManagement.js";import{IHostService as K}from"../../../services/host/browser/host.js";import{IUserDataProfilesService as L}from"../../../../platform/userDataProfile/common/userDataProfile.js";import{createDecorator as M}from"../../../../platform/instantiation/common/instantiation.js";import{Categories as P}from"../../../../platform/action/common/actionCommonCategories.js";import{InstantiationType as U,registerSingleton as F}from"../../../../platform/instantiation/common/extensions.js";import{ContextKeyExpr as J,IContextKeyService as X,RawContextKey as _}from"../../../../platform/contextkey/common/contextkey.js";import{Registry as $}from"../../../../platform/registry/common/platform.js";import{Extensions as q}from"../../../common/contributions.js";import{LifecyclePhase as z}from"../../../services/lifecycle/common/lifecycle.js";import{IStorageService as w,StorageScope as p,StorageTarget as G}from"../../../../platform/storage/common/storage.js";import{IOpenerService as V}from"../../../../platform/opener/common/opener.js";import{URI as Y}from"../../../../base/common/uri.js";import{RemoteNameContext as j}from"../../../common/contextkeys.js";import{IsWebContext as Q}from"../../../../platform/contextkey/common/contextkeys.js";const h=M("ITroubleshootIssueService");var Z=(e=>(e[e.EXTENSIONS=1]="EXTENSIONS",e[e.WORKBENCH=2]="WORKBENCH",e))(Z||{});class d{constructor(e,t){this.stage=e,this.profile=t}static fromJSON(e){if(e)try{const t=JSON.parse(e);if((1===t.stage||2===t.stage)&&"string"==typeof t.profile)return new d(t.stage,t.profile)}catch{}}}let a=class extends I{constructor(e,t,s,i,o,r,a,n,c,u,l,h,m,p){super(),this.userDataProfileService=e,this.userDataProfilesService=t,this.userDataProfileManagementService=s,this.userDataProfileImportExportService=i,this.dialogService=o,this.extensionBisectService=r,this.notificationService=a,this.extensionManagementService=n,this.extensionEnablementService=c,this.issueService=u,this.productService=l,this.hostService=h,this.storageService=m,this.openerService=p}_serviceBrand;static storageKey="issueTroubleshootState";notificationHandle;isActive(){return void 0!==this.state}async start(){if(this.isActive())throw new Error("invalid state");if(!(await this.dialogService.confirm({message:i("troubleshoot issue","Troubleshoot Issue"),detail:i("detail.start","Issue troubleshooting is a process to help you identify the cause for an issue. The cause for an issue can be a misconfiguration, due to an extension, or be {0} itself.\n\nDuring the process the window reloads repeatedly. Each time you must confirm if you are still seeing the issue.",this.productService.nameLong),primaryButton:i({key:"msg",comment:["&& denotes a mnemonic"]},"&&Troubleshoot Issue"),custom:!0})).confirmed)return;const e=this.userDataProfileService.currentProfile;await this.userDataProfileImportExportService.createTroubleshootProfile(),this.state=new d(1,e.id),await this.resume()}async resume(){this.isActive()&&(1===this.state?.stage&&!this.extensionBisectService.isActive&&await this.reproduceIssueWithExtensionsDisabled(),2===this.state?.stage&&await this.reproduceIssueWithEmptyProfile(),await this.stop())}async stop(){if(!this.isActive())return;this.notificationHandle&&(this.notificationHandle.close(),this.notificationHandle=void 0),this.extensionBisectService.isActive&&await this.extensionBisectService.reset();const e=this.userDataProfilesService.profiles.find((e=>e.id===this.state?.profile))??this.userDataProfilesService.defaultProfile;this.state=void 0,await this.userDataProfileManagementService.switchProfile(e)}async reproduceIssueWithExtensionsDisabled(){if(!(await this.extensionManagementService.getInstalled(S.User)).length)return void(this.state=new d(2,this.state.profile));const e=await this.askToReproduceIssue(i("profile.extensions.disabled","Issue troubleshooting is active and has temporarily disabled all installed extensions. Check if you can still reproduce the problem and proceed by selecting from these options."));if("good"===e){const e=this.userDataProfilesService.profiles.find((e=>e.id===this.state.profile))??this.userDataProfilesService.defaultProfile;await this.reproduceIssueWithExtensionsBisect(e)}"bad"===e&&(this.state=new d(2,this.state.profile)),"stop"===e&&await this.stop()}async reproduceIssueWithEmptyProfile(){await this.userDataProfileManagementService.createAndEnterTransientProfile(),this.updateState(this.state);const e=await this.askToReproduceIssue(i("empty.profile","Issue troubleshooting is active and has temporarily reset your configurations to defaults. Check if you can still reproduce the problem and proceed by selecting from these options."));"stop"===e&&await this.stop(),"good"===e&&await this.askToReportIssue(i("issue is with configuration",'Issue troubleshooting has identified that the issue is caused by your configurations. Please report the issue by exporting your configurations using "Export Profile" command and share the file in the issue report.')),"bad"===e&&await this.askToReportIssue(i("issue is in core","Issue troubleshooting has identified that the issue is with {0}.",this.productService.nameLong))}async reproduceIssueWithExtensionsBisect(e){await this.userDataProfileManagementService.switchProfile(e);const t=(await this.extensionManagementService.getInstalled(S.User)).filter((e=>this.extensionEnablementService.isEnabled(e)));await this.extensionBisectService.start(t),await this.hostService.reload()}askToReproduceIssue(e){return new Promise(((t,s)=>{const o={label:i("I cannot reproduce","I Can't Reproduce"),run:()=>t("good")},r={label:i("This is Bad","I Can Reproduce"),run:()=>t("bad")},a={label:i("Stop","Stop"),run:()=>t("stop")};this.notificationHandle=this.notificationService.prompt(y.Info,e,[o,r,a],{sticky:!0,priority:O.URGENT})}))}async askToReportIssue(e){let t=!1;if("stable"===this.productService.quality){const e=await this.askToReproduceIssueWithInsiders();if("good"===e)return void await this.dialogService.prompt({type:y.Info,message:i("troubleshoot issue","Troubleshoot Issue"),detail:i("use insiders","This likely means that the issue has been addressed already and will be available in an upcoming release. You can safely use {0} insiders until the new stable version is available.",this.productService.nameLong),custom:!0});if("stop"===e)return void await this.stop();"bad"===e&&(t=!0)}await this.issueService.openReporter({issueBody:`> ${e} ${t?`It is confirmed that the issue exists in ${this.productService.nameLong} Insiders`:""}`})}async askToReproduceIssueWithInsiders(){return(await this.dialogService.confirm({type:"info",message:i("troubleshoot issue","Troubleshoot Issue"),primaryButton:i("download insiders","Download {0} Insiders",this.productService.nameLong),cancelButton:i("report anyway","Report Issue Anyway"),detail:i("ask to download insiders","Please try to download and reproduce the issue in {0} insiders.",this.productService.nameLong),custom:{disableCloseAction:!0}})).confirmed&&await this.openerService.open(Y.parse("https://aka.ms/vscode-insiders"))?(await this.dialogService.prompt({type:"info",message:i("troubleshoot issue","Troubleshoot Issue"),buttons:[{label:i("good","I can't reproduce"),run:()=>"good"},{label:i("bad","I can reproduce"),run:()=>"bad"}],cancelButton:{label:i("stop","Stop"),run:()=>"stop"},detail:i("ask to reproduce issue","Please try to reproduce the issue in {0} insiders and confirm if the issue exists there.",this.productService.nameLong),custom:{disableCloseAction:!0}})).result:void 0}_state;get state(){if(void 0===this._state){const e=this.storageService.get(a.storageKey,p.PROFILE);this._state=d.fromJSON(e)}return this._state||void 0}set state(e){this._state=e??null,this.updateState(e)}updateState(e){e?this.storageService.store(a.storageKey,JSON.stringify(e),p.PROFILE,G.MACHINE):this.storageService.remove(a.storageKey,p.PROFILE)}};a=f([s(0,A),s(1,L),s(2,k),s(3,C),s(4,N),s(5,B),s(6,W),s(7,T),s(8,H),s(9,D),s(10,R),s(11,K),s(12,w),s(13,V)],a);let n=class extends I{constructor(e,t,s){super(),this.contextKeyService=e,this.troubleshootIssueService=t,this.updateContext(),t.isActive()&&t.resume(),this._register(s.onDidChangeValue(p.PROFILE,a.storageKey,this._store)((()=>{this.updateContext()})))}static ctxIsTroubleshootActive=new _("isIssueTroubleshootActive",!1);updateContext(){n.ctxIsTroubleshootActive.bindTo(this.contextKeyService).set(this.troubleshootIssueService.isActive())}};n=f([s(0,X),s(1,h),s(2,w)],n),$.as(q.Workbench).registerWorkbenchContribution(n,z.Restored),b(class extends g{constructor(){super({id:"workbench.action.troubleshootIssue.start",title:v("troubleshootIssue","Troubleshoot Issue..."),category:P.Help,f1:!0,precondition:J.and(n.ctxIsTroubleshootActive.negate(),j.isEqualTo(""),Q.negate())})}run(e){return e.get(h).start()}}),b(class extends g{constructor(){super({id:"workbench.action.troubleshootIssue.stop",title:v("title.stop","Stop Troubleshoot Issue"),category:P.Help,f1:!0,precondition:n.ctxIsTroubleshootActive})}async run(e){return e.get(h).stop()}}),F(h,a,U.Delayed);
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { localize, localize2 } from "../../../../nls.js";
+import { IExtensionManagementService } from "../../../../platform/extensionManagement/common/extensionManagement.js";
+import { ExtensionType } from "../../../../platform/extensions/common/extensions.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+import { IWorkbenchIssueService } from "../common/issue.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { Action2, registerAction2 } from "../../../../platform/actions/common/actions.js";
+import { IUserDataProfileImportExportService, IUserDataProfileManagementService, IUserDataProfileService } from "../../../services/userDataProfile/common/userDataProfile.js";
+import { IDialogService } from "../../../../platform/dialogs/common/dialogs.js";
+import { IExtensionBisectService } from "../../../services/extensionManagement/browser/extensionBisect.js";
+import { INotificationHandle, INotificationService, IPromptChoice, NotificationPriority, Severity } from "../../../../platform/notification/common/notification.js";
+import { IWorkbenchExtensionEnablementService } from "../../../services/extensionManagement/common/extensionManagement.js";
+import { IHostService } from "../../../services/host/browser/host.js";
+import { IUserDataProfile, IUserDataProfilesService } from "../../../../platform/userDataProfile/common/userDataProfile.js";
+import { ServicesAccessor, createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { Categories } from "../../../../platform/action/common/actionCommonCategories.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { ContextKeyExpr, IContextKeyService, RawContextKey } from "../../../../platform/contextkey/common/contextkey.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { Extensions, IWorkbenchContributionsRegistry } from "../../../common/contributions.js";
+import { LifecyclePhase } from "../../../services/lifecycle/common/lifecycle.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { IOpenerService } from "../../../../platform/opener/common/opener.js";
+import { URI } from "../../../../base/common/uri.js";
+import { RemoteNameContext } from "../../../common/contextkeys.js";
+import { IsWebContext } from "../../../../platform/contextkey/common/contextkeys.js";
+const ITroubleshootIssueService = createDecorator("ITroubleshootIssueService");
+var TroubleshootStage = /* @__PURE__ */ ((TroubleshootStage2) => {
+  TroubleshootStage2[TroubleshootStage2["EXTENSIONS"] = 1] = "EXTENSIONS";
+  TroubleshootStage2[TroubleshootStage2["WORKBENCH"] = 2] = "WORKBENCH";
+  return TroubleshootStage2;
+})(TroubleshootStage || {});
+class TroubleShootState {
+  constructor(stage, profile) {
+    this.stage = stage;
+    this.profile = profile;
+  }
+  static {
+    __name(this, "TroubleShootState");
+  }
+  static fromJSON(raw) {
+    if (!raw) {
+      return void 0;
+    }
+    try {
+      const data = JSON.parse(raw);
+      if ((data.stage === 1 /* EXTENSIONS */ || data.stage === 2 /* WORKBENCH */) && typeof data.profile === "string") {
+        return new TroubleShootState(data.stage, data.profile);
+      }
+    } catch {
+    }
+    return void 0;
+  }
+}
+let TroubleshootIssueService = class extends Disposable {
+  constructor(userDataProfileService, userDataProfilesService, userDataProfileManagementService, userDataProfileImportExportService, dialogService, extensionBisectService, notificationService, extensionManagementService, extensionEnablementService, issueService, productService, hostService, storageService, openerService) {
+    super();
+    this.userDataProfileService = userDataProfileService;
+    this.userDataProfilesService = userDataProfilesService;
+    this.userDataProfileManagementService = userDataProfileManagementService;
+    this.userDataProfileImportExportService = userDataProfileImportExportService;
+    this.dialogService = dialogService;
+    this.extensionBisectService = extensionBisectService;
+    this.notificationService = notificationService;
+    this.extensionManagementService = extensionManagementService;
+    this.extensionEnablementService = extensionEnablementService;
+    this.issueService = issueService;
+    this.productService = productService;
+    this.hostService = hostService;
+    this.storageService = storageService;
+    this.openerService = openerService;
+  }
+  static {
+    __name(this, "TroubleshootIssueService");
+  }
+  _serviceBrand;
+  static storageKey = "issueTroubleshootState";
+  notificationHandle;
+  isActive() {
+    return this.state !== void 0;
+  }
+  async start() {
+    if (this.isActive()) {
+      throw new Error("invalid state");
+    }
+    const res = await this.dialogService.confirm({
+      message: localize("troubleshoot issue", "Troubleshoot Issue"),
+      detail: localize("detail.start", "Issue troubleshooting is a process to help you identify the cause for an issue. The cause for an issue can be a misconfiguration, due to an extension, or be {0} itself.\n\nDuring the process the window reloads repeatedly. Each time you must confirm if you are still seeing the issue.", this.productService.nameLong),
+      primaryButton: localize({ key: "msg", comment: ["&& denotes a mnemonic"] }, "&&Troubleshoot Issue"),
+      custom: true
+    });
+    if (!res.confirmed) {
+      return;
+    }
+    const originalProfile = this.userDataProfileService.currentProfile;
+    await this.userDataProfileImportExportService.createTroubleshootProfile();
+    this.state = new TroubleShootState(1 /* EXTENSIONS */, originalProfile.id);
+    await this.resume();
+  }
+  async resume() {
+    if (!this.isActive()) {
+      return;
+    }
+    if (this.state?.stage === 1 /* EXTENSIONS */ && !this.extensionBisectService.isActive) {
+      await this.reproduceIssueWithExtensionsDisabled();
+    }
+    if (this.state?.stage === 2 /* WORKBENCH */) {
+      await this.reproduceIssueWithEmptyProfile();
+    }
+    await this.stop();
+  }
+  async stop() {
+    if (!this.isActive()) {
+      return;
+    }
+    if (this.notificationHandle) {
+      this.notificationHandle.close();
+      this.notificationHandle = void 0;
+    }
+    if (this.extensionBisectService.isActive) {
+      await this.extensionBisectService.reset();
+    }
+    const profile = this.userDataProfilesService.profiles.find((p) => p.id === this.state?.profile) ?? this.userDataProfilesService.defaultProfile;
+    this.state = void 0;
+    await this.userDataProfileManagementService.switchProfile(profile);
+  }
+  async reproduceIssueWithExtensionsDisabled() {
+    if (!(await this.extensionManagementService.getInstalled(ExtensionType.User)).length) {
+      this.state = new TroubleShootState(2 /* WORKBENCH */, this.state.profile);
+      return;
+    }
+    const result = await this.askToReproduceIssue(localize("profile.extensions.disabled", "Issue troubleshooting is active and has temporarily disabled all installed extensions. Check if you can still reproduce the problem and proceed by selecting from these options."));
+    if (result === "good") {
+      const profile = this.userDataProfilesService.profiles.find((p) => p.id === this.state.profile) ?? this.userDataProfilesService.defaultProfile;
+      await this.reproduceIssueWithExtensionsBisect(profile);
+    }
+    if (result === "bad") {
+      this.state = new TroubleShootState(2 /* WORKBENCH */, this.state.profile);
+    }
+    if (result === "stop") {
+      await this.stop();
+    }
+  }
+  async reproduceIssueWithEmptyProfile() {
+    await this.userDataProfileManagementService.createAndEnterTransientProfile();
+    this.updateState(this.state);
+    const result = await this.askToReproduceIssue(localize("empty.profile", "Issue troubleshooting is active and has temporarily reset your configurations to defaults. Check if you can still reproduce the problem and proceed by selecting from these options."));
+    if (result === "stop") {
+      await this.stop();
+    }
+    if (result === "good") {
+      await this.askToReportIssue(localize("issue is with configuration", 'Issue troubleshooting has identified that the issue is caused by your configurations. Please report the issue by exporting your configurations using "Export Profile" command and share the file in the issue report.'));
+    }
+    if (result === "bad") {
+      await this.askToReportIssue(localize("issue is in core", "Issue troubleshooting has identified that the issue is with {0}.", this.productService.nameLong));
+    }
+  }
+  async reproduceIssueWithExtensionsBisect(profile) {
+    await this.userDataProfileManagementService.switchProfile(profile);
+    const extensions = (await this.extensionManagementService.getInstalled(ExtensionType.User)).filter((ext) => this.extensionEnablementService.isEnabled(ext));
+    await this.extensionBisectService.start(extensions);
+    await this.hostService.reload();
+  }
+  askToReproduceIssue(message) {
+    return new Promise((c, e) => {
+      const goodPrompt = {
+        label: localize("I cannot reproduce", "I Can't Reproduce"),
+        run: /* @__PURE__ */ __name(() => c("good"), "run")
+      };
+      const badPrompt = {
+        label: localize("This is Bad", "I Can Reproduce"),
+        run: /* @__PURE__ */ __name(() => c("bad"), "run")
+      };
+      const stop = {
+        label: localize("Stop", "Stop"),
+        run: /* @__PURE__ */ __name(() => c("stop"), "run")
+      };
+      this.notificationHandle = this.notificationService.prompt(
+        Severity.Info,
+        message,
+        [goodPrompt, badPrompt, stop],
+        { sticky: true, priority: NotificationPriority.URGENT }
+      );
+    });
+  }
+  async askToReportIssue(message) {
+    let isCheckedInInsiders = false;
+    if (this.productService.quality === "stable") {
+      const res = await this.askToReproduceIssueWithInsiders();
+      if (res === "good") {
+        await this.dialogService.prompt({
+          type: Severity.Info,
+          message: localize("troubleshoot issue", "Troubleshoot Issue"),
+          detail: localize("use insiders", "This likely means that the issue has been addressed already and will be available in an upcoming release. You can safely use {0} insiders until the new stable version is available.", this.productService.nameLong),
+          custom: true
+        });
+        return;
+      }
+      if (res === "stop") {
+        await this.stop();
+        return;
+      }
+      if (res === "bad") {
+        isCheckedInInsiders = true;
+      }
+    }
+    await this.issueService.openReporter({
+      issueBody: `> ${message} ${isCheckedInInsiders ? `It is confirmed that the issue exists in ${this.productService.nameLong} Insiders` : ""}`
+    });
+  }
+  async askToReproduceIssueWithInsiders() {
+    const confirmRes = await this.dialogService.confirm({
+      type: "info",
+      message: localize("troubleshoot issue", "Troubleshoot Issue"),
+      primaryButton: localize("download insiders", "Download {0} Insiders", this.productService.nameLong),
+      cancelButton: localize("report anyway", "Report Issue Anyway"),
+      detail: localize("ask to download insiders", "Please try to download and reproduce the issue in {0} insiders.", this.productService.nameLong),
+      custom: {
+        disableCloseAction: true
+      }
+    });
+    if (!confirmRes.confirmed) {
+      return void 0;
+    }
+    const opened = await this.openerService.open(URI.parse("https://aka.ms/vscode-insiders"));
+    if (!opened) {
+      return void 0;
+    }
+    const res = await this.dialogService.prompt({
+      type: "info",
+      message: localize("troubleshoot issue", "Troubleshoot Issue"),
+      buttons: [{
+        label: localize("good", "I can't reproduce"),
+        run: /* @__PURE__ */ __name(() => "good", "run")
+      }, {
+        label: localize("bad", "I can reproduce"),
+        run: /* @__PURE__ */ __name(() => "bad", "run")
+      }],
+      cancelButton: {
+        label: localize("stop", "Stop"),
+        run: /* @__PURE__ */ __name(() => "stop", "run")
+      },
+      detail: localize("ask to reproduce issue", "Please try to reproduce the issue in {0} insiders and confirm if the issue exists there.", this.productService.nameLong),
+      custom: {
+        disableCloseAction: true
+      }
+    });
+    return res.result;
+  }
+  _state;
+  get state() {
+    if (this._state === void 0) {
+      const raw = this.storageService.get(TroubleshootIssueService.storageKey, StorageScope.PROFILE);
+      this._state = TroubleShootState.fromJSON(raw);
+    }
+    return this._state || void 0;
+  }
+  set state(state) {
+    this._state = state ?? null;
+    this.updateState(state);
+  }
+  updateState(state) {
+    if (state) {
+      this.storageService.store(TroubleshootIssueService.storageKey, JSON.stringify(state), StorageScope.PROFILE, StorageTarget.MACHINE);
+    } else {
+      this.storageService.remove(TroubleshootIssueService.storageKey, StorageScope.PROFILE);
+    }
+  }
+};
+TroubleshootIssueService = __decorateClass([
+  __decorateParam(0, IUserDataProfileService),
+  __decorateParam(1, IUserDataProfilesService),
+  __decorateParam(2, IUserDataProfileManagementService),
+  __decorateParam(3, IUserDataProfileImportExportService),
+  __decorateParam(4, IDialogService),
+  __decorateParam(5, IExtensionBisectService),
+  __decorateParam(6, INotificationService),
+  __decorateParam(7, IExtensionManagementService),
+  __decorateParam(8, IWorkbenchExtensionEnablementService),
+  __decorateParam(9, IWorkbenchIssueService),
+  __decorateParam(10, IProductService),
+  __decorateParam(11, IHostService),
+  __decorateParam(12, IStorageService),
+  __decorateParam(13, IOpenerService)
+], TroubleshootIssueService);
+let IssueTroubleshootUi = class extends Disposable {
+  constructor(contextKeyService, troubleshootIssueService, storageService) {
+    super();
+    this.contextKeyService = contextKeyService;
+    this.troubleshootIssueService = troubleshootIssueService;
+    this.updateContext();
+    if (troubleshootIssueService.isActive()) {
+      troubleshootIssueService.resume();
+    }
+    this._register(storageService.onDidChangeValue(StorageScope.PROFILE, TroubleshootIssueService.storageKey, this._store)(() => {
+      this.updateContext();
+    }));
+  }
+  static {
+    __name(this, "IssueTroubleshootUi");
+  }
+  static ctxIsTroubleshootActive = new RawContextKey("isIssueTroubleshootActive", false);
+  updateContext() {
+    IssueTroubleshootUi.ctxIsTroubleshootActive.bindTo(this.contextKeyService).set(this.troubleshootIssueService.isActive());
+  }
+};
+IssueTroubleshootUi = __decorateClass([
+  __decorateParam(0, IContextKeyService),
+  __decorateParam(1, ITroubleshootIssueService),
+  __decorateParam(2, IStorageService)
+], IssueTroubleshootUi);
+Registry.as(Extensions.Workbench).registerWorkbenchContribution(IssueTroubleshootUi, LifecyclePhase.Restored);
+registerAction2(class TroubleshootIssueAction extends Action2 {
+  static {
+    __name(this, "TroubleshootIssueAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.troubleshootIssue.start",
+      title: localize2("troubleshootIssue", "Troubleshoot Issue..."),
+      category: Categories.Help,
+      f1: true,
+      precondition: ContextKeyExpr.and(IssueTroubleshootUi.ctxIsTroubleshootActive.negate(), RemoteNameContext.isEqualTo(""), IsWebContext.negate())
+    });
+  }
+  run(accessor) {
+    return accessor.get(ITroubleshootIssueService).start();
+  }
+});
+registerAction2(class extends Action2 {
+  constructor() {
+    super({
+      id: "workbench.action.troubleshootIssue.stop",
+      title: localize2("title.stop", "Stop Troubleshoot Issue"),
+      category: Categories.Help,
+      f1: true,
+      precondition: IssueTroubleshootUi.ctxIsTroubleshootActive
+    });
+  }
+  async run(accessor) {
+    return accessor.get(ITroubleshootIssueService).stop();
+  }
+});
+registerSingleton(ITroubleshootIssueService, TroubleshootIssueService, InstantiationType.Delayed);
+//# sourceMappingURL=issueTroubleshoot.js.map

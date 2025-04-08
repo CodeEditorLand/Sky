@@ -1,1 +1,325 @@
-import{getActiveWindow as k}from"../../../../base/browser/dom.js";import{Color as D}from"../../../../base/common/color.js";import{BugIndicatingError as I}from"../../../../base/common/errors.js";import{Emitter as Y}from"../../../../base/common/event.js";import{CursorColumns as W}from"../../../common/core/cursorColumns.js";import"../../../common/viewEvents.js";import{createContentSegmenter as q}from"../contentSegmenter.js";import{BindingId as U}from"../gpu.js";import{GPULifecycle as F}from"../gpuDisposable.js";import{quadVertices as X}from"../gpuUtils.js";import"../raster/glyphRasterizer.js";import{ViewGpuContext as R}from"../viewGpuContext.js";import{BaseRenderStrategy as Z}from"./baseRenderStrategy.js";import{fullFileRenderStrategyWgsl as H}from"./fullFileRenderStrategy.wgsl.js";var J=(e=>(e[e.IndicesPerCell=6]="IndicesPerCell",e[e.CellBindBufferCapacityIncrement=32]="CellBindBufferCapacityIncrement",e[e.CellBindBufferInitialCapacity=63]="CellBindBufferInitialCapacity",e))(J||{}),K=(e=>(e[e.FloatsPerEntry=6]="FloatsPerEntry",e[e.BytesPerEntry=24]="BytesPerEntry",e[e.Offset_X=0]="Offset_X",e[e.Offset_Y=1]="Offset_Y",e[e.Offset_Unused1=2]="Offset_Unused1",e[e.Offset_Unused2=3]="Offset_Unused2",e[e.GlyphIndex=4]="GlyphIndex",e[e.TextureIndex=5]="TextureIndex",e))(K||{});class d extends Z{static maxSupportedColumns=2e3;type="viewport";wgsl=H;_cellBindBufferLineCapacity=63;_cellBindBuffer;_cellValueBuffers;_activeDoubleBufferIndex=0;_visibleObjectCount=0;_scrollOffsetBindBuffer;_scrollOffsetValueBuffer;_scrollInitialized=!1;get bindGroupEntries(){return[{binding:U.Cells,resource:{buffer:this._cellBindBuffer}},{binding:U.ScrollOffset,resource:{buffer:this._scrollOffsetBindBuffer}}]}_onDidChangeBindGroupEntries=this._register(new Y);onDidChangeBindGroupEntries=this._onDidChangeBindGroupEntries.event;constructor(e,t,r,n){super(e,t,r,n),this._rebuildCellBuffer(this._cellBindBufferLineCapacity);this._scrollOffsetBindBuffer=this._register(F.createBuffer(this._device,{label:"Monaco scroll offset buffer",size:2*Float32Array.BYTES_PER_ELEMENT,usage:GPUBufferUsage.UNIFORM|GPUBufferUsage.COPY_DST})).object,this._scrollOffsetValueBuffer=new Float32Array(2)}_rebuildCellBuffer(e){this._cellBindBuffer?.destroy();const t=32*(Math.floor(e/32)+1),r=t*d.maxSupportedColumns*6*Float32Array.BYTES_PER_ELEMENT;this._cellBindBuffer=this._register(F.createBuffer(this._device,{label:"Monaco full file cell buffer",size:r,usage:GPUBufferUsage.STORAGE|GPUBufferUsage.COPY_DST})).object,this._cellValueBuffers=[new ArrayBuffer(r),new ArrayBuffer(r)],this._cellBindBufferLineCapacity=t,this._onDidChangeBindGroupEntries.fire()}onConfigurationChanged(e){return!0}onDecorationsChanged(e){return!0}onTokensChanged(e){return!0}onLinesDeleted(e){return!0}onLinesInserted(e){return!0}onLinesChanged(e){return!0}onScrollChanged(e){const t=k().devicePixelRatio;return this._scrollOffsetValueBuffer[0]=(e?.scrollLeft??this._context.viewLayout.getCurrentScrollLeft())*t,this._scrollOffsetValueBuffer[1]=(e?.scrollTop??this._context.viewLayout.getCurrentScrollTop())*t,this._device.queue.writeBuffer(this._scrollOffsetBindBuffer,0,this._scrollOffsetValueBuffer),!0}onThemeChanged(e){return!0}onLineMappingChanged(e){return!0}onZonesChanged(e){return!0}reset(){for(const e of[0,1]){const t=new Float32Array(this._cellValueBuffers[e]);t.fill(0,0,t.length),this._device.queue.writeBuffer(this._cellBindBuffer,0,t.buffer,0,t.byteLength)}}update(e,t){let r,n,i,s,o,l,a,f,u="",c=0,m=0,h=0,B=0,p=0,g=0,_=0,C=0,b=0,y=0,x=0,w=0;const L=k().devicePixelRatio;let v;this._scrollInitialized||(this.onScrollChanged(),this._scrollInitialized=!0),this._cellBindBufferLineCapacity<e.endLineNumber-e.startLineNumber+1&&this._rebuildCellBuffer(e.endLineNumber-e.startLineNumber+1);const S=new Float32Array(this._cellValueBuffers[this._activeDoubleBufferIndex]);S.fill(0);const E=6*d.maxSupportedColumns;for(m=e.startLineNumber;m<=e.endLineNumber;m++)if(this._viewGpuContext.canRender(t,e,m)){l=e.getViewLineRenderingData(m),g=0,v=q(l,t),c=t.spaceWidth*L,B=0,f=l.tokens,C=l.minColumn-1,b=0;for(let x=0,w=f.getCount();x<w;x++)if(b=f.getEndOffset(x),!(b<=C)){for(y=f.getMetadata(x),h=C;h<b&&!(h>d.maxSupportedColumns);h++){if(r=v.getSegmentAtIndex(h),void 0===r)continue;for(a of(u=r,l.isBasicASCII&&t.useMonospaceOptimizations||(c=this.glyphRasterizer.getTextMetrics(u).width),s=void 0,i=void 0,o=void 0,l.inlineDecorations)){if(m<a.range.startLineNumber||m>a.range.endLineNumber||m===a.range.startLineNumber&&h<a.range.startColumn-1||m===a.range.endLineNumber&&h>=a.range.endColumn-1)continue;const e=R.decorationCssRuleExtractor.getStyleRules(this._viewGpuContext.canvas.domNode,a.inlineClassName);for(const t of e)for(const e of t.style){const r=t.styleMap.get(e)?.toString()??"";switch(e){case"color":{const e=D.Format.CSS.parse(r);if(!e)throw new I("Invalid color format "+r);s=e.toNumber32Bit();break}case"font-weight":i=Q(r)>=400;break;case"opacity":o=$(r);break;default:throw new I("Unexpected inline decoration style")}}}if(" "===u||"\t"===u){if(_=6*((m-1)*d.maxSupportedColumns+h),S.fill(0,_,_+6),"\t"===u){const e=h+g;g=W.nextRenderTabStop(h+g,l.tabSize),B+=c*(g-e),g-=h+1}else B+=c;continue}const f=R.decorationStyleCache.getOrCreateEntry(s,i,o);n=this._viewGpuContext.atlas.getGlyph(this.glyphRasterizer,u,y,f,B),p=Math.round(e.relativeVerticalOffset[m-e.startLineNumber]*L+Math.floor((e.lineHeight*L-(n.fontBoundingBoxAscent+n.fontBoundingBoxDescent))/2)+n.fontBoundingBoxAscent),_=6*((m-e.startLineNumber)*d.maxSupportedColumns+h),S[_+0]=Math.floor(B),S[_+1]=p,S[_+4]=n.glyphIndex,S[_+5]=n.pageIndex,B+=c}C=b}x=6*((m-e.startLineNumber)*d.maxSupportedColumns+b),w=(m-e.startLineNumber)*d.maxSupportedColumns*6,S.fill(0,x,w)}const O=(e.endLineNumber-e.startLineNumber+1)*E;return this._device.queue.writeBuffer(this._cellBindBuffer,0,S.buffer,0,(e.endLineNumber-e.startLineNumber)*E*Float32Array.BYTES_PER_ELEMENT),this._activeDoubleBufferIndex=this._activeDoubleBufferIndex?0:1,this._visibleObjectCount=O,O}draw(e,t){if(this._visibleObjectCount<=0)throw new I("Attempt to draw 0 objects");e.draw(X.length/2,this._visibleObjectCount)}}function Q(e){switch(e){case"lighter":case"normal":return 400;case"bolder":case"bold":return 700}return parseInt(e)}function $(e){return e.endsWith("%")?parseFloat(e.substring(0,e.length-1))/100:e.match(/^\d+(?:\.\d*)/)?parseFloat(e):1}export{d as ViewportRenderStrategy};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { getActiveWindow } from "../../../../base/browser/dom.js";
+import { Color } from "../../../../base/common/color.js";
+import { BugIndicatingError } from "../../../../base/common/errors.js";
+import { Emitter } from "../../../../base/common/event.js";
+import { CursorColumns } from "../../../common/core/cursorColumns.js";
+import {} from "../../../common/viewEvents.js";
+import { createContentSegmenter } from "../contentSegmenter.js";
+import { BindingId } from "../gpu.js";
+import { GPULifecycle } from "../gpuDisposable.js";
+import { quadVertices } from "../gpuUtils.js";
+import { GlyphRasterizer } from "../raster/glyphRasterizer.js";
+import { ViewGpuContext } from "../viewGpuContext.js";
+import { BaseRenderStrategy } from "./baseRenderStrategy.js";
+import { fullFileRenderStrategyWgsl } from "./fullFileRenderStrategy.wgsl.js";
+var Constants = /* @__PURE__ */ ((Constants2) => {
+  Constants2[Constants2["IndicesPerCell"] = 6] = "IndicesPerCell";
+  Constants2[Constants2["CellBindBufferCapacityIncrement"] = 32] = "CellBindBufferCapacityIncrement";
+  Constants2[Constants2["CellBindBufferInitialCapacity"] = 63] = "CellBindBufferInitialCapacity";
+  return Constants2;
+})(Constants || {});
+var CellBufferInfo = /* @__PURE__ */ ((CellBufferInfo2) => {
+  CellBufferInfo2[CellBufferInfo2["FloatsPerEntry"] = 6] = "FloatsPerEntry";
+  CellBufferInfo2[CellBufferInfo2["BytesPerEntry"] = 24] = "BytesPerEntry";
+  CellBufferInfo2[CellBufferInfo2["Offset_X"] = 0] = "Offset_X";
+  CellBufferInfo2[CellBufferInfo2["Offset_Y"] = 1] = "Offset_Y";
+  CellBufferInfo2[CellBufferInfo2["Offset_Unused1"] = 2] = "Offset_Unused1";
+  CellBufferInfo2[CellBufferInfo2["Offset_Unused2"] = 3] = "Offset_Unused2";
+  CellBufferInfo2[CellBufferInfo2["GlyphIndex"] = 4] = "GlyphIndex";
+  CellBufferInfo2[CellBufferInfo2["TextureIndex"] = 5] = "TextureIndex";
+  return CellBufferInfo2;
+})(CellBufferInfo || {});
+class ViewportRenderStrategy extends BaseRenderStrategy {
+  static {
+    __name(this, "ViewportRenderStrategy");
+  }
+  /**
+   * The hard cap for line columns that can be rendered by the GPU renderer.
+   */
+  static maxSupportedColumns = 2e3;
+  type = "viewport";
+  wgsl = fullFileRenderStrategyWgsl;
+  _cellBindBufferLineCapacity = 63 /* CellBindBufferInitialCapacity */;
+  _cellBindBuffer;
+  /**
+   * The cell value buffers, these hold the cells and their glyphs. It's double buffers such that
+   * the thread doesn't block when one is being uploaded to the GPU.
+   */
+  _cellValueBuffers;
+  _activeDoubleBufferIndex = 0;
+  _visibleObjectCount = 0;
+  _scrollOffsetBindBuffer;
+  _scrollOffsetValueBuffer;
+  _scrollInitialized = false;
+  get bindGroupEntries() {
+    return [
+      { binding: BindingId.Cells, resource: { buffer: this._cellBindBuffer } },
+      { binding: BindingId.ScrollOffset, resource: { buffer: this._scrollOffsetBindBuffer } }
+    ];
+  }
+  _onDidChangeBindGroupEntries = this._register(new Emitter());
+  onDidChangeBindGroupEntries = this._onDidChangeBindGroupEntries.event;
+  constructor(context, viewGpuContext, device, glyphRasterizer) {
+    super(context, viewGpuContext, device, glyphRasterizer);
+    this._rebuildCellBuffer(this._cellBindBufferLineCapacity);
+    const scrollOffsetBufferSize = 2;
+    this._scrollOffsetBindBuffer = this._register(GPULifecycle.createBuffer(this._device, {
+      label: "Monaco scroll offset buffer",
+      size: scrollOffsetBufferSize * Float32Array.BYTES_PER_ELEMENT,
+      usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+    })).object;
+    this._scrollOffsetValueBuffer = new Float32Array(scrollOffsetBufferSize);
+  }
+  _rebuildCellBuffer(lineCount) {
+    this._cellBindBuffer?.destroy();
+    const lineCountWithIncrement = (Math.floor(lineCount / 32 /* CellBindBufferCapacityIncrement */) + 1) * 32 /* CellBindBufferCapacityIncrement */;
+    const bufferSize = lineCountWithIncrement * ViewportRenderStrategy.maxSupportedColumns * 6 /* IndicesPerCell */ * Float32Array.BYTES_PER_ELEMENT;
+    this._cellBindBuffer = this._register(GPULifecycle.createBuffer(this._device, {
+      label: "Monaco full file cell buffer",
+      size: bufferSize,
+      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
+    })).object;
+    this._cellValueBuffers = [
+      new ArrayBuffer(bufferSize),
+      new ArrayBuffer(bufferSize)
+    ];
+    this._cellBindBufferLineCapacity = lineCountWithIncrement;
+    this._onDidChangeBindGroupEntries.fire();
+  }
+  // #region Event handlers
+  // The primary job of these handlers is to:
+  // 1. Invalidate the up to date line cache, which will cause the line to be re-rendered when
+  //    it's _within the viewport_.
+  // 2. Pass relevant events on to the render function so it can force certain line ranges to be
+  //    re-rendered even if they're not in the viewport. For example when a view zone is added,
+  //    there are lines that used to be visible but are no longer, so those ranges must be
+  //    cleared and uploaded to the GPU.
+  onConfigurationChanged(e) {
+    return true;
+  }
+  onDecorationsChanged(e) {
+    return true;
+  }
+  onTokensChanged(e) {
+    return true;
+  }
+  onLinesDeleted(e) {
+    return true;
+  }
+  onLinesInserted(e) {
+    return true;
+  }
+  onLinesChanged(e) {
+    return true;
+  }
+  onScrollChanged(e) {
+    const dpr = getActiveWindow().devicePixelRatio;
+    this._scrollOffsetValueBuffer[0] = (e?.scrollLeft ?? this._context.viewLayout.getCurrentScrollLeft()) * dpr;
+    this._scrollOffsetValueBuffer[1] = (e?.scrollTop ?? this._context.viewLayout.getCurrentScrollTop()) * dpr;
+    this._device.queue.writeBuffer(this._scrollOffsetBindBuffer, 0, this._scrollOffsetValueBuffer);
+    return true;
+  }
+  onThemeChanged(e) {
+    return true;
+  }
+  onLineMappingChanged(e) {
+    return true;
+  }
+  onZonesChanged(e) {
+    return true;
+  }
+  // #endregion
+  reset() {
+    for (const bufferIndex of [0, 1]) {
+      const buffer = new Float32Array(this._cellValueBuffers[bufferIndex]);
+      buffer.fill(0, 0, buffer.length);
+      this._device.queue.writeBuffer(this._cellBindBuffer, 0, buffer.buffer, 0, buffer.byteLength);
+    }
+  }
+  update(viewportData, viewLineOptions) {
+    let chars = "";
+    let segment;
+    let charWidth = 0;
+    let y = 0;
+    let x = 0;
+    let absoluteOffsetX = 0;
+    let absoluteOffsetY = 0;
+    let tabXOffset = 0;
+    let glyph;
+    let cellIndex = 0;
+    let tokenStartIndex = 0;
+    let tokenEndIndex = 0;
+    let tokenMetadata = 0;
+    let decorationStyleSetBold;
+    let decorationStyleSetColor;
+    let decorationStyleSetOpacity;
+    let lineData;
+    let decoration;
+    let fillStartIndex = 0;
+    let fillEndIndex = 0;
+    let tokens;
+    const dpr = getActiveWindow().devicePixelRatio;
+    let contentSegmenter;
+    if (!this._scrollInitialized) {
+      this.onScrollChanged();
+      this._scrollInitialized = true;
+    }
+    if (this._cellBindBufferLineCapacity < viewportData.endLineNumber - viewportData.startLineNumber + 1) {
+      this._rebuildCellBuffer(viewportData.endLineNumber - viewportData.startLineNumber + 1);
+    }
+    const cellBuffer = new Float32Array(this._cellValueBuffers[this._activeDoubleBufferIndex]);
+    cellBuffer.fill(0);
+    const lineIndexCount = ViewportRenderStrategy.maxSupportedColumns * 6 /* IndicesPerCell */;
+    for (y = viewportData.startLineNumber; y <= viewportData.endLineNumber; y++) {
+      if (!this._viewGpuContext.canRender(viewLineOptions, viewportData, y)) {
+        continue;
+      }
+      lineData = viewportData.getViewLineRenderingData(y);
+      tabXOffset = 0;
+      contentSegmenter = createContentSegmenter(lineData, viewLineOptions);
+      charWidth = viewLineOptions.spaceWidth * dpr;
+      absoluteOffsetX = 0;
+      tokens = lineData.tokens;
+      tokenStartIndex = lineData.minColumn - 1;
+      tokenEndIndex = 0;
+      for (let tokenIndex = 0, tokensLen = tokens.getCount(); tokenIndex < tokensLen; tokenIndex++) {
+        tokenEndIndex = tokens.getEndOffset(tokenIndex);
+        if (tokenEndIndex <= tokenStartIndex) {
+          continue;
+        }
+        tokenMetadata = tokens.getMetadata(tokenIndex);
+        for (x = tokenStartIndex; x < tokenEndIndex; x++) {
+          if (x > ViewportRenderStrategy.maxSupportedColumns) {
+            break;
+          }
+          segment = contentSegmenter.getSegmentAtIndex(x);
+          if (segment === void 0) {
+            continue;
+          }
+          chars = segment;
+          if (!(lineData.isBasicASCII && viewLineOptions.useMonospaceOptimizations)) {
+            charWidth = this.glyphRasterizer.getTextMetrics(chars).width;
+          }
+          decorationStyleSetColor = void 0;
+          decorationStyleSetBold = void 0;
+          decorationStyleSetOpacity = void 0;
+          for (decoration of lineData.inlineDecorations) {
+            if (y < decoration.range.startLineNumber || y > decoration.range.endLineNumber || y === decoration.range.startLineNumber && x < decoration.range.startColumn - 1 || y === decoration.range.endLineNumber && x >= decoration.range.endColumn - 1) {
+              continue;
+            }
+            const rules = ViewGpuContext.decorationCssRuleExtractor.getStyleRules(this._viewGpuContext.canvas.domNode, decoration.inlineClassName);
+            for (const rule of rules) {
+              for (const r of rule.style) {
+                const value = rule.styleMap.get(r)?.toString() ?? "";
+                switch (r) {
+                  case "color": {
+                    const parsedColor = Color.Format.CSS.parse(value);
+                    if (!parsedColor) {
+                      throw new BugIndicatingError("Invalid color format " + value);
+                    }
+                    decorationStyleSetColor = parsedColor.toNumber32Bit();
+                    break;
+                  }
+                  case "font-weight": {
+                    const parsedValue = parseCssFontWeight(value);
+                    if (parsedValue >= 400) {
+                      decorationStyleSetBold = true;
+                    } else {
+                      decorationStyleSetBold = false;
+                    }
+                    break;
+                  }
+                  case "opacity": {
+                    const parsedValue = parseCssOpacity(value);
+                    decorationStyleSetOpacity = parsedValue;
+                    break;
+                  }
+                  default:
+                    throw new BugIndicatingError("Unexpected inline decoration style");
+                }
+              }
+            }
+          }
+          if (chars === " " || chars === "	") {
+            cellIndex = ((y - 1) * ViewportRenderStrategy.maxSupportedColumns + x) * 6 /* IndicesPerCell */;
+            cellBuffer.fill(0, cellIndex, cellIndex + 6 /* FloatsPerEntry */);
+            if (chars === "	") {
+              const offsetBefore = x + tabXOffset;
+              tabXOffset = CursorColumns.nextRenderTabStop(x + tabXOffset, lineData.tabSize);
+              absoluteOffsetX += charWidth * (tabXOffset - offsetBefore);
+              tabXOffset -= x + 1;
+            } else {
+              absoluteOffsetX += charWidth;
+            }
+            continue;
+          }
+          const decorationStyleSetId = ViewGpuContext.decorationStyleCache.getOrCreateEntry(decorationStyleSetColor, decorationStyleSetBold, decorationStyleSetOpacity);
+          glyph = this._viewGpuContext.atlas.getGlyph(this.glyphRasterizer, chars, tokenMetadata, decorationStyleSetId, absoluteOffsetX);
+          absoluteOffsetY = Math.round(
+            // Top of layout box (includes line height)
+            viewportData.relativeVerticalOffset[y - viewportData.startLineNumber] * dpr + // Delta from top of layout box (includes line height) to top of the inline box (no line height)
+            Math.floor((viewportData.lineHeight * dpr - (glyph.fontBoundingBoxAscent + glyph.fontBoundingBoxDescent)) / 2) + // Delta from top of inline box (no line height) to top of glyph origin. If the glyph was drawn
+            // with a top baseline for example, this ends up drawing the glyph correctly using the alphabetical
+            // baseline.
+            glyph.fontBoundingBoxAscent
+          );
+          cellIndex = ((y - viewportData.startLineNumber) * ViewportRenderStrategy.maxSupportedColumns + x) * 6 /* IndicesPerCell */;
+          cellBuffer[cellIndex + 0 /* Offset_X */] = Math.floor(absoluteOffsetX);
+          cellBuffer[cellIndex + 1 /* Offset_Y */] = absoluteOffsetY;
+          cellBuffer[cellIndex + 4 /* GlyphIndex */] = glyph.glyphIndex;
+          cellBuffer[cellIndex + 5 /* TextureIndex */] = glyph.pageIndex;
+          absoluteOffsetX += charWidth;
+        }
+        tokenStartIndex = tokenEndIndex;
+      }
+      fillStartIndex = ((y - viewportData.startLineNumber) * ViewportRenderStrategy.maxSupportedColumns + tokenEndIndex) * 6 /* IndicesPerCell */;
+      fillEndIndex = (y - viewportData.startLineNumber) * ViewportRenderStrategy.maxSupportedColumns * 6 /* IndicesPerCell */;
+      cellBuffer.fill(0, fillStartIndex, fillEndIndex);
+    }
+    const visibleObjectCount = (viewportData.endLineNumber - viewportData.startLineNumber + 1) * lineIndexCount;
+    this._device.queue.writeBuffer(
+      this._cellBindBuffer,
+      0,
+      cellBuffer.buffer,
+      0,
+      (viewportData.endLineNumber - viewportData.startLineNumber) * lineIndexCount * Float32Array.BYTES_PER_ELEMENT
+    );
+    this._activeDoubleBufferIndex = this._activeDoubleBufferIndex ? 0 : 1;
+    this._visibleObjectCount = visibleObjectCount;
+    return visibleObjectCount;
+  }
+  draw(pass, viewportData) {
+    if (this._visibleObjectCount <= 0) {
+      throw new BugIndicatingError("Attempt to draw 0 objects");
+    }
+    pass.draw(quadVertices.length / 2, this._visibleObjectCount);
+  }
+}
+function parseCssFontWeight(value) {
+  switch (value) {
+    case "lighter":
+    case "normal":
+      return 400;
+    case "bolder":
+    case "bold":
+      return 700;
+  }
+  return parseInt(value);
+}
+__name(parseCssFontWeight, "parseCssFontWeight");
+function parseCssOpacity(value) {
+  if (value.endsWith("%")) {
+    return parseFloat(value.substring(0, value.length - 1)) / 100;
+  }
+  if (value.match(/^\d+(?:\.\d*)/)) {
+    return parseFloat(value);
+  }
+  return 1;
+}
+__name(parseCssOpacity, "parseCssOpacity");
+export {
+  ViewportRenderStrategy
+};
+//# sourceMappingURL=viewportRenderStrategy.js.map

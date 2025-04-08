@@ -1,1 +1,178 @@
-import{KeyCode as n,KeyMod as r}from"../../../../base/common/keyCodes.js";import{registerEditorCommand as d}from"../../../browser/editorExtensions.js";import{WordNavigationType as a,WordPartOperations as l}from"../../../common/cursor/cursorWordOperations.js";import"../../../common/core/wordCharacterClassifier.js";import"../../../common/core/position.js";import{Range as u}from"../../../common/core/range.js";import{EditorContextKeys as o}from"../../../common/editorContextKeys.js";import"../../../common/model.js";import{DeleteWordCommand as W,MoveWordCommand as g}from"../../wordOperations/browser/wordOperations.js";import{CommandsRegistry as f}from"../../../../platform/commands/common/commands.js";import{KeybindingWeight as s}from"../../../../platform/keybinding/common/keybindingsRegistry.js";class w extends W{constructor(){super({whitespaceHeuristics:!0,wordNavigationType:a.WordStart,id:"deleteWordPartLeft",precondition:o.writable,kbOpts:{kbExpr:o.textInputFocus,primary:0,mac:{primary:r.WinCtrl|r.Alt|n.Backspace},weight:s.EditorContrib}})}_delete(r,t){return l.deleteWordPartLeft(r)||new u(1,1,1,1)}}class y extends W{constructor(){super({whitespaceHeuristics:!0,wordNavigationType:a.WordEnd,id:"deleteWordPartRight",precondition:o.writable,kbOpts:{kbExpr:o.textInputFocus,primary:0,mac:{primary:r.WinCtrl|r.Alt|n.Delete},weight:s.EditorContrib}})}_delete(r,t){const o=l.deleteWordPartRight(r);if(o)return o;const e=r.model.getLineCount(),i=r.model.getLineMaxColumn(e);return new u(e,i,e,i)}}class C extends g{_move(r,t,o,e,i){return l.moveWordPartLeft(r,t,o,i)}}class P extends C{constructor(){super({inSelectionMode:!1,wordNavigationType:a.WordStart,id:"cursorWordPartLeft",precondition:void 0,kbOpts:{kbExpr:o.textInputFocus,primary:0,mac:{primary:r.WinCtrl|r.Alt|n.LeftArrow},weight:s.EditorContrib}})}}f.registerCommandAlias("cursorWordPartStartLeft","cursorWordPartLeft");class h extends C{constructor(){super({inSelectionMode:!0,wordNavigationType:a.WordStart,id:"cursorWordPartLeftSelect",precondition:void 0,kbOpts:{kbExpr:o.textInputFocus,primary:0,mac:{primary:r.WinCtrl|r.Alt|r.Shift|n.LeftArrow},weight:s.EditorContrib}})}}f.registerCommandAlias("cursorWordPartStartLeftSelect","cursorWordPartLeftSelect");class x extends g{_move(r,t,o,e,i){return l.moveWordPartRight(r,t,o)}}class b extends x{constructor(){super({inSelectionMode:!1,wordNavigationType:a.WordEnd,id:"cursorWordPartRight",precondition:void 0,kbOpts:{kbExpr:o.textInputFocus,primary:0,mac:{primary:r.WinCtrl|r.Alt|n.RightArrow},weight:s.EditorContrib}})}}class v extends x{constructor(){super({inSelectionMode:!0,wordNavigationType:a.WordEnd,id:"cursorWordPartRightSelect",precondition:void 0,kbOpts:{kbExpr:o.textInputFocus,primary:0,mac:{primary:r.WinCtrl|r.Alt|r.Shift|n.RightArrow},weight:s.EditorContrib}})}}d(new w),d(new y),d(new P),d(new h),d(new b),d(new v);export{P as CursorWordPartLeft,h as CursorWordPartLeftSelect,b as CursorWordPartRight,v as CursorWordPartRightSelect,w as DeleteWordPartLeft,y as DeleteWordPartRight,C as WordPartLeftCommand,x as WordPartRightCommand};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { KeyCode, KeyMod } from "../../../../base/common/keyCodes.js";
+import { registerEditorCommand } from "../../../browser/editorExtensions.js";
+import { DeleteWordContext, WordNavigationType, WordPartOperations } from "../../../common/cursor/cursorWordOperations.js";
+import { WordCharacterClassifier } from "../../../common/core/wordCharacterClassifier.js";
+import { Position } from "../../../common/core/position.js";
+import { Range } from "../../../common/core/range.js";
+import { EditorContextKeys } from "../../../common/editorContextKeys.js";
+import { ITextModel } from "../../../common/model.js";
+import { DeleteWordCommand, MoveWordCommand } from "../../wordOperations/browser/wordOperations.js";
+import { CommandsRegistry } from "../../../../platform/commands/common/commands.js";
+import { KeybindingWeight } from "../../../../platform/keybinding/common/keybindingsRegistry.js";
+class DeleteWordPartLeft extends DeleteWordCommand {
+  static {
+    __name(this, "DeleteWordPartLeft");
+  }
+  constructor() {
+    super({
+      whitespaceHeuristics: true,
+      wordNavigationType: WordNavigationType.WordStart,
+      id: "deleteWordPartLeft",
+      precondition: EditorContextKeys.writable,
+      kbOpts: {
+        kbExpr: EditorContextKeys.textInputFocus,
+        primary: 0,
+        mac: { primary: KeyMod.WinCtrl | KeyMod.Alt | KeyCode.Backspace },
+        weight: KeybindingWeight.EditorContrib
+      }
+    });
+  }
+  _delete(ctx, wordNavigationType) {
+    const r = WordPartOperations.deleteWordPartLeft(ctx);
+    if (r) {
+      return r;
+    }
+    return new Range(1, 1, 1, 1);
+  }
+}
+class DeleteWordPartRight extends DeleteWordCommand {
+  static {
+    __name(this, "DeleteWordPartRight");
+  }
+  constructor() {
+    super({
+      whitespaceHeuristics: true,
+      wordNavigationType: WordNavigationType.WordEnd,
+      id: "deleteWordPartRight",
+      precondition: EditorContextKeys.writable,
+      kbOpts: {
+        kbExpr: EditorContextKeys.textInputFocus,
+        primary: 0,
+        mac: { primary: KeyMod.WinCtrl | KeyMod.Alt | KeyCode.Delete },
+        weight: KeybindingWeight.EditorContrib
+      }
+    });
+  }
+  _delete(ctx, wordNavigationType) {
+    const r = WordPartOperations.deleteWordPartRight(ctx);
+    if (r) {
+      return r;
+    }
+    const lineCount = ctx.model.getLineCount();
+    const maxColumn = ctx.model.getLineMaxColumn(lineCount);
+    return new Range(lineCount, maxColumn, lineCount, maxColumn);
+  }
+}
+class WordPartLeftCommand extends MoveWordCommand {
+  static {
+    __name(this, "WordPartLeftCommand");
+  }
+  _move(wordSeparators, model, position, wordNavigationType, hasMulticursor) {
+    return WordPartOperations.moveWordPartLeft(wordSeparators, model, position, hasMulticursor);
+  }
+}
+class CursorWordPartLeft extends WordPartLeftCommand {
+  static {
+    __name(this, "CursorWordPartLeft");
+  }
+  constructor() {
+    super({
+      inSelectionMode: false,
+      wordNavigationType: WordNavigationType.WordStart,
+      id: "cursorWordPartLeft",
+      precondition: void 0,
+      kbOpts: {
+        kbExpr: EditorContextKeys.textInputFocus,
+        primary: 0,
+        mac: { primary: KeyMod.WinCtrl | KeyMod.Alt | KeyCode.LeftArrow },
+        weight: KeybindingWeight.EditorContrib
+      }
+    });
+  }
+}
+CommandsRegistry.registerCommandAlias("cursorWordPartStartLeft", "cursorWordPartLeft");
+class CursorWordPartLeftSelect extends WordPartLeftCommand {
+  static {
+    __name(this, "CursorWordPartLeftSelect");
+  }
+  constructor() {
+    super({
+      inSelectionMode: true,
+      wordNavigationType: WordNavigationType.WordStart,
+      id: "cursorWordPartLeftSelect",
+      precondition: void 0,
+      kbOpts: {
+        kbExpr: EditorContextKeys.textInputFocus,
+        primary: 0,
+        mac: { primary: KeyMod.WinCtrl | KeyMod.Alt | KeyMod.Shift | KeyCode.LeftArrow },
+        weight: KeybindingWeight.EditorContrib
+      }
+    });
+  }
+}
+CommandsRegistry.registerCommandAlias("cursorWordPartStartLeftSelect", "cursorWordPartLeftSelect");
+class WordPartRightCommand extends MoveWordCommand {
+  static {
+    __name(this, "WordPartRightCommand");
+  }
+  _move(wordSeparators, model, position, wordNavigationType, hasMulticursor) {
+    return WordPartOperations.moveWordPartRight(wordSeparators, model, position);
+  }
+}
+class CursorWordPartRight extends WordPartRightCommand {
+  static {
+    __name(this, "CursorWordPartRight");
+  }
+  constructor() {
+    super({
+      inSelectionMode: false,
+      wordNavigationType: WordNavigationType.WordEnd,
+      id: "cursorWordPartRight",
+      precondition: void 0,
+      kbOpts: {
+        kbExpr: EditorContextKeys.textInputFocus,
+        primary: 0,
+        mac: { primary: KeyMod.WinCtrl | KeyMod.Alt | KeyCode.RightArrow },
+        weight: KeybindingWeight.EditorContrib
+      }
+    });
+  }
+}
+class CursorWordPartRightSelect extends WordPartRightCommand {
+  static {
+    __name(this, "CursorWordPartRightSelect");
+  }
+  constructor() {
+    super({
+      inSelectionMode: true,
+      wordNavigationType: WordNavigationType.WordEnd,
+      id: "cursorWordPartRightSelect",
+      precondition: void 0,
+      kbOpts: {
+        kbExpr: EditorContextKeys.textInputFocus,
+        primary: 0,
+        mac: { primary: KeyMod.WinCtrl | KeyMod.Alt | KeyMod.Shift | KeyCode.RightArrow },
+        weight: KeybindingWeight.EditorContrib
+      }
+    });
+  }
+}
+registerEditorCommand(new DeleteWordPartLeft());
+registerEditorCommand(new DeleteWordPartRight());
+registerEditorCommand(new CursorWordPartLeft());
+registerEditorCommand(new CursorWordPartLeftSelect());
+registerEditorCommand(new CursorWordPartRight());
+registerEditorCommand(new CursorWordPartRightSelect());
+export {
+  CursorWordPartLeft,
+  CursorWordPartLeftSelect,
+  CursorWordPartRight,
+  CursorWordPartRightSelect,
+  DeleteWordPartLeft,
+  DeleteWordPartRight,
+  WordPartLeftCommand,
+  WordPartRightCommand
+};
+//# sourceMappingURL=wordPartOperations.js.map

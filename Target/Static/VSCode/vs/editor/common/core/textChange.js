@@ -1,1 +1,294 @@
-import*as g from"../../../base/common/buffer.js";import{decodeUTF16LE as _}from"./stringBuilder.js";function p(t){return t.replace(/\n/g,"\\n").replace(/\r/g,"\\r")}class i{constructor(t,e,i,n){this.oldPosition=t,this.oldText=e,this.newPosition=i,this.newText=n}get oldLength(){return this.oldText.length}get oldEnd(){return this.oldPosition+this.oldText.length}get newLength(){return this.newText.length}get newEnd(){return this.newPosition+this.newText.length}toString(){return 0===this.oldText.length?`(insert@${this.oldPosition} "${p(this.newText)}")`:0===this.newText.length?`(delete@${this.oldPosition} "${p(this.oldText)}")`:`(replace@${this.oldPosition} "${p(this.oldText)}" with "${p(this.newText)}")`}static _writeStringSize(t){return 4+2*t.length}static _writeString(t,e,i){const n=e.length;g.writeUInt32BE(t,n,i),i+=4;for(let r=0;r<n;r++)g.writeUInt16LE(t,e.charCodeAt(r),i),i+=2;return i}static _readString(t,e){const i=g.readUInt32BE(t,e);return _(t,e+=4,i)}writeSize(){return 8+i._writeStringSize(this.oldText)+i._writeStringSize(this.newText)}write(t,e){return g.writeUInt32BE(t,this.oldPosition,e),e+=4,g.writeUInt32BE(t,this.newPosition,e),e+=4,e=i._writeString(t,this.oldText,e),e=i._writeString(t,this.newText,e)}static read(t,e,n){const r=g.readUInt32BE(t,e);e+=4;const s=g.readUInt32BE(t,e);e+=4;const o=i._readString(t,e);e+=i._writeStringSize(o);const l=i._readString(t,e);return e+=i._writeStringSize(l),n.push(new i(r,o,s,l)),e}}function x(t,e){return null===t||0===t.length?e:new o(t,e).compress()}class o{_prevEdits;_currEdits;_result;_resultLen;_prevLen;_prevDeltaOffset;_currLen;_currDeltaOffset;constructor(t,e){this._prevEdits=t,this._currEdits=e,this._result=[],this._resultLen=0,this._prevLen=this._prevEdits.length,this._prevDeltaOffset=0,this._currLen=this._currEdits.length,this._currDeltaOffset=0}compress(){let t=0,e=0,n=this._getPrev(t),r=this._getCurr(e);for(;t<this._prevLen||e<this._currLen;){if(null===n){this._acceptCurr(r),r=this._getCurr(++e);continue}if(null===r){this._acceptPrev(n),n=this._getPrev(++t);continue}if(r.oldEnd<=n.newPosition){this._acceptCurr(r),r=this._getCurr(++e);continue}if(n.newEnd<=r.oldPosition){this._acceptPrev(n),n=this._getPrev(++t);continue}if(r.oldPosition<n.newPosition){const[t,e]=o._splitCurr(r,n.newPosition-r.oldPosition);this._acceptCurr(t),r=e;continue}if(n.newPosition<r.oldPosition){const[t,e]=o._splitPrev(n,r.oldPosition-n.newPosition);this._acceptPrev(t),n=e;continue}let s,l;if(r.oldEnd===n.newEnd)s=n,l=r,n=this._getPrev(++t),r=this._getCurr(++e);else if(r.oldEnd<n.newEnd){const[t,i]=o._splitPrev(n,r.oldLength);s=t,l=r,n=i,r=this._getCurr(++e)}else{const[e,i]=o._splitCurr(r,n.newLength);s=n,l=e,n=this._getPrev(++t),r=i}this._result[this._resultLen++]=new i(s.oldPosition,s.oldText,l.newPosition,l.newText),this._prevDeltaOffset+=s.newLength-s.oldLength,this._currDeltaOffset+=l.newLength-l.oldLength}const s=o._merge(this._result);return o._removeNoOps(s)}_acceptCurr(t){this._result[this._resultLen++]=o._rebaseCurr(this._prevDeltaOffset,t),this._currDeltaOffset+=t.newLength-t.oldLength}_getCurr(t){return t<this._currLen?this._currEdits[t]:null}_acceptPrev(t){this._result[this._resultLen++]=o._rebasePrev(this._currDeltaOffset,t),this._prevDeltaOffset+=t.newLength-t.oldLength}_getPrev(t){return t<this._prevLen?this._prevEdits[t]:null}static _rebaseCurr(t,e){return new i(e.oldPosition-t,e.oldText,e.newPosition,e.newText)}static _rebasePrev(t,e){return new i(e.oldPosition,e.oldText,e.newPosition+t,e.newText)}static _splitPrev(t,e){const n=t.newText.substr(0,e),r=t.newText.substr(e);return[new i(t.oldPosition,t.oldText,t.newPosition,n),new i(t.oldEnd,"",t.newPosition+e,r)]}static _splitCurr(t,e){const n=t.oldText.substr(0,e),r=t.oldText.substr(e);return[new i(t.oldPosition,n,t.newPosition,t.newText),new i(t.oldPosition+e,r,t.newEnd,"")]}static _merge(t){if(0===t.length)return t;const e=[];let n=0,r=t[0];for(let s=1;s<t.length;s++){const o=t[s];r.oldEnd===o.oldPosition?r=new i(r.oldPosition,r.oldText+o.oldText,r.newPosition,r.newText+o.newText):(e[n++]=r,r=o)}return e[n++]=r,e}static _removeNoOps(t){if(0===t.length)return t;const e=[];let i=0;for(let n=0;n<t.length;n++){const r=t[n];r.oldText!==r.newText&&(e[i++]=r)}return e}}export{i as TextChange,x as compressConsecutiveTextChanges};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as buffer from "../../../base/common/buffer.js";
+import { decodeUTF16LE } from "./stringBuilder.js";
+function escapeNewLine(str) {
+  return str.replace(/\n/g, "\\n").replace(/\r/g, "\\r");
+}
+__name(escapeNewLine, "escapeNewLine");
+class TextChange {
+  constructor(oldPosition, oldText, newPosition, newText) {
+    this.oldPosition = oldPosition;
+    this.oldText = oldText;
+    this.newPosition = newPosition;
+    this.newText = newText;
+  }
+  static {
+    __name(this, "TextChange");
+  }
+  get oldLength() {
+    return this.oldText.length;
+  }
+  get oldEnd() {
+    return this.oldPosition + this.oldText.length;
+  }
+  get newLength() {
+    return this.newText.length;
+  }
+  get newEnd() {
+    return this.newPosition + this.newText.length;
+  }
+  toString() {
+    if (this.oldText.length === 0) {
+      return `(insert@${this.oldPosition} "${escapeNewLine(this.newText)}")`;
+    }
+    if (this.newText.length === 0) {
+      return `(delete@${this.oldPosition} "${escapeNewLine(this.oldText)}")`;
+    }
+    return `(replace@${this.oldPosition} "${escapeNewLine(this.oldText)}" with "${escapeNewLine(this.newText)}")`;
+  }
+  static _writeStringSize(str) {
+    return 4 + 2 * str.length;
+  }
+  static _writeString(b, str, offset) {
+    const len = str.length;
+    buffer.writeUInt32BE(b, len, offset);
+    offset += 4;
+    for (let i = 0; i < len; i++) {
+      buffer.writeUInt16LE(b, str.charCodeAt(i), offset);
+      offset += 2;
+    }
+    return offset;
+  }
+  static _readString(b, offset) {
+    const len = buffer.readUInt32BE(b, offset);
+    offset += 4;
+    return decodeUTF16LE(b, offset, len);
+  }
+  writeSize() {
+    return 4 + 4 + TextChange._writeStringSize(this.oldText) + TextChange._writeStringSize(this.newText);
+  }
+  write(b, offset) {
+    buffer.writeUInt32BE(b, this.oldPosition, offset);
+    offset += 4;
+    buffer.writeUInt32BE(b, this.newPosition, offset);
+    offset += 4;
+    offset = TextChange._writeString(b, this.oldText, offset);
+    offset = TextChange._writeString(b, this.newText, offset);
+    return offset;
+  }
+  static read(b, offset, dest) {
+    const oldPosition = buffer.readUInt32BE(b, offset);
+    offset += 4;
+    const newPosition = buffer.readUInt32BE(b, offset);
+    offset += 4;
+    const oldText = TextChange._readString(b, offset);
+    offset += TextChange._writeStringSize(oldText);
+    const newText = TextChange._readString(b, offset);
+    offset += TextChange._writeStringSize(newText);
+    dest.push(new TextChange(oldPosition, oldText, newPosition, newText));
+    return offset;
+  }
+}
+function compressConsecutiveTextChanges(prevEdits, currEdits) {
+  if (prevEdits === null || prevEdits.length === 0) {
+    return currEdits;
+  }
+  const compressor = new TextChangeCompressor(prevEdits, currEdits);
+  return compressor.compress();
+}
+__name(compressConsecutiveTextChanges, "compressConsecutiveTextChanges");
+class TextChangeCompressor {
+  static {
+    __name(this, "TextChangeCompressor");
+  }
+  _prevEdits;
+  _currEdits;
+  _result;
+  _resultLen;
+  _prevLen;
+  _prevDeltaOffset;
+  _currLen;
+  _currDeltaOffset;
+  constructor(prevEdits, currEdits) {
+    this._prevEdits = prevEdits;
+    this._currEdits = currEdits;
+    this._result = [];
+    this._resultLen = 0;
+    this._prevLen = this._prevEdits.length;
+    this._prevDeltaOffset = 0;
+    this._currLen = this._currEdits.length;
+    this._currDeltaOffset = 0;
+  }
+  compress() {
+    let prevIndex = 0;
+    let currIndex = 0;
+    let prevEdit = this._getPrev(prevIndex);
+    let currEdit = this._getCurr(currIndex);
+    while (prevIndex < this._prevLen || currIndex < this._currLen) {
+      if (prevEdit === null) {
+        this._acceptCurr(currEdit);
+        currEdit = this._getCurr(++currIndex);
+        continue;
+      }
+      if (currEdit === null) {
+        this._acceptPrev(prevEdit);
+        prevEdit = this._getPrev(++prevIndex);
+        continue;
+      }
+      if (currEdit.oldEnd <= prevEdit.newPosition) {
+        this._acceptCurr(currEdit);
+        currEdit = this._getCurr(++currIndex);
+        continue;
+      }
+      if (prevEdit.newEnd <= currEdit.oldPosition) {
+        this._acceptPrev(prevEdit);
+        prevEdit = this._getPrev(++prevIndex);
+        continue;
+      }
+      if (currEdit.oldPosition < prevEdit.newPosition) {
+        const [e1, e2] = TextChangeCompressor._splitCurr(currEdit, prevEdit.newPosition - currEdit.oldPosition);
+        this._acceptCurr(e1);
+        currEdit = e2;
+        continue;
+      }
+      if (prevEdit.newPosition < currEdit.oldPosition) {
+        const [e1, e2] = TextChangeCompressor._splitPrev(prevEdit, currEdit.oldPosition - prevEdit.newPosition);
+        this._acceptPrev(e1);
+        prevEdit = e2;
+        continue;
+      }
+      let mergePrev;
+      let mergeCurr;
+      if (currEdit.oldEnd === prevEdit.newEnd) {
+        mergePrev = prevEdit;
+        mergeCurr = currEdit;
+        prevEdit = this._getPrev(++prevIndex);
+        currEdit = this._getCurr(++currIndex);
+      } else if (currEdit.oldEnd < prevEdit.newEnd) {
+        const [e1, e2] = TextChangeCompressor._splitPrev(prevEdit, currEdit.oldLength);
+        mergePrev = e1;
+        mergeCurr = currEdit;
+        prevEdit = e2;
+        currEdit = this._getCurr(++currIndex);
+      } else {
+        const [e1, e2] = TextChangeCompressor._splitCurr(currEdit, prevEdit.newLength);
+        mergePrev = prevEdit;
+        mergeCurr = e1;
+        prevEdit = this._getPrev(++prevIndex);
+        currEdit = e2;
+      }
+      this._result[this._resultLen++] = new TextChange(
+        mergePrev.oldPosition,
+        mergePrev.oldText,
+        mergeCurr.newPosition,
+        mergeCurr.newText
+      );
+      this._prevDeltaOffset += mergePrev.newLength - mergePrev.oldLength;
+      this._currDeltaOffset += mergeCurr.newLength - mergeCurr.oldLength;
+    }
+    const merged = TextChangeCompressor._merge(this._result);
+    const cleaned = TextChangeCompressor._removeNoOps(merged);
+    return cleaned;
+  }
+  _acceptCurr(currEdit) {
+    this._result[this._resultLen++] = TextChangeCompressor._rebaseCurr(this._prevDeltaOffset, currEdit);
+    this._currDeltaOffset += currEdit.newLength - currEdit.oldLength;
+  }
+  _getCurr(currIndex) {
+    return currIndex < this._currLen ? this._currEdits[currIndex] : null;
+  }
+  _acceptPrev(prevEdit) {
+    this._result[this._resultLen++] = TextChangeCompressor._rebasePrev(this._currDeltaOffset, prevEdit);
+    this._prevDeltaOffset += prevEdit.newLength - prevEdit.oldLength;
+  }
+  _getPrev(prevIndex) {
+    return prevIndex < this._prevLen ? this._prevEdits[prevIndex] : null;
+  }
+  static _rebaseCurr(prevDeltaOffset, currEdit) {
+    return new TextChange(
+      currEdit.oldPosition - prevDeltaOffset,
+      currEdit.oldText,
+      currEdit.newPosition,
+      currEdit.newText
+    );
+  }
+  static _rebasePrev(currDeltaOffset, prevEdit) {
+    return new TextChange(
+      prevEdit.oldPosition,
+      prevEdit.oldText,
+      prevEdit.newPosition + currDeltaOffset,
+      prevEdit.newText
+    );
+  }
+  static _splitPrev(edit, offset) {
+    const preText = edit.newText.substr(0, offset);
+    const postText = edit.newText.substr(offset);
+    return [
+      new TextChange(
+        edit.oldPosition,
+        edit.oldText,
+        edit.newPosition,
+        preText
+      ),
+      new TextChange(
+        edit.oldEnd,
+        "",
+        edit.newPosition + offset,
+        postText
+      )
+    ];
+  }
+  static _splitCurr(edit, offset) {
+    const preText = edit.oldText.substr(0, offset);
+    const postText = edit.oldText.substr(offset);
+    return [
+      new TextChange(
+        edit.oldPosition,
+        preText,
+        edit.newPosition,
+        edit.newText
+      ),
+      new TextChange(
+        edit.oldPosition + offset,
+        postText,
+        edit.newEnd,
+        ""
+      )
+    ];
+  }
+  static _merge(edits) {
+    if (edits.length === 0) {
+      return edits;
+    }
+    const result = [];
+    let resultLen = 0;
+    let prev = edits[0];
+    for (let i = 1; i < edits.length; i++) {
+      const curr = edits[i];
+      if (prev.oldEnd === curr.oldPosition) {
+        prev = new TextChange(
+          prev.oldPosition,
+          prev.oldText + curr.oldText,
+          prev.newPosition,
+          prev.newText + curr.newText
+        );
+      } else {
+        result[resultLen++] = prev;
+        prev = curr;
+      }
+    }
+    result[resultLen++] = prev;
+    return result;
+  }
+  static _removeNoOps(edits) {
+    if (edits.length === 0) {
+      return edits;
+    }
+    const result = [];
+    let resultLen = 0;
+    for (let i = 0; i < edits.length; i++) {
+      const edit = edits[i];
+      if (edit.oldText === edit.newText) {
+        continue;
+      }
+      result[resultLen++] = edit;
+    }
+    return result;
+  }
+}
+export {
+  TextChange,
+  compressConsecutiveTextChanges
+};
+//# sourceMappingURL=textChange.js.map

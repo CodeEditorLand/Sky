@@ -1,1 +1,165 @@
-var I=Object.defineProperty,f=Object.getOwnPropertyDescriptor,v=(e,o,r,t)=>{for(var i,s=t>1?void 0:t?f(o,r):o,n=e.length-1;n>=0;n--)(i=e[n])&&(s=(t?i(o,r,s):i(s))||s);return t&&s&&I(o,r,s),s},s=(e,o)=>(r,t)=>o(r,t,e);import{Disposable as W}from"../../../../base/common/lifecycle.js";import{Schemas as S}from"../../../../base/common/network.js";import{isEqual as w}from"../../../../base/common/resources.js";import{URI as a}from"../../../../base/common/uri.js";import{IInstantiationService as y}from"../../../../platform/instantiation/common/instantiation.js";import"../../../common/contributions.js";import"../../../common/editor/editorInput.js";import{CustomEditorInput as p}from"./customEditorInput.js";import{ICustomEditorService as k}from"../common/customEditor.js";import{NotebookEditorInput as g}from"../../notebook/common/notebookEditorInput.js";import{IWebviewService as m,WebviewContentPurpose as C}from"../../webview/browser/webview.js";import{restoreWebviewContentOptions as h,restoreWebviewOptions as E,reviveWebviewExtensionDescription as O,WebviewEditorInputSerializer as x}from"../../webviewPanel/browser/webviewEditorInputSerializer.js";import{IWebviewWorkbenchService as D}from"../../webviewPanel/browser/webviewWorkbenchService.js";import"../../../services/workingCopy/common/workingCopy.js";import{IWorkingCopyBackupService as _}from"../../../services/workingCopy/common/workingCopyBackup.js";import{IWorkingCopyEditorService as z}from"../../../services/workingCopy/common/workingCopyEditorService.js";let d=class extends x{constructor(e,o,r){super(e),this._instantiationService=o,this._webviewService=r}static ID=p.typeId;serialize(e){const o=e.isDirty(),r={...this.toJson(e),editorResource:e.resource.toJSON(),dirty:o,backupId:o?e.backupId:void 0};try{return JSON.stringify(r)}catch{return}}fromJson(e){return{...super.fromJson(e),editorResource:a.from(e.editorResource),dirty:e.dirty}}deserialize(e,o){const r=this.fromJson(JSON.parse(o)),t=l(this._webviewService,r),i=this._instantiationService.createInstance(p,{resource:r.editorResource,viewType:r.viewType},t,{startsDirty:r.dirty,backupId:r.backupId});return"number"==typeof r.group&&i.updateGroup(r.group),i}};function l(e,o){const r=e.createWebviewOverlay({providedViewType:o.viewType,origin:o.origin,title:void 0,options:{purpose:C.CustomEditor,enableFindWidget:o.webviewOptions.enableFindWidget,retainContextWhenHidden:o.webviewOptions.retainContextWhenHidden},contentOptions:o.contentOptions,extension:o.extension});return r.state=o.state,r}d=v([s(0,D),s(1,y),s(2,m)],d);let u=class extends W{constructor(e,o,r,t,i){super(),this._instantiationService=e,this._workingCopyBackupService=r,this._webviewService=t,this._register(o.registerHandler(this))}static ID="workbench.contrib.complexCustomWorkingCopyEditorHandler";handles(e){return e.resource.scheme===S.vscodeCustomEditor}isOpen(e,o){if(!this.handles(e))return!1;if("jupyter-notebook-ipynb"===e.resource.authority&&o instanceof g)try{const r=JSON.parse(e.resource.query),t=a.from(r);return w(t,o.resource)}catch{return!1}if(!(o instanceof p)||e.resource.authority!==o.viewType.replace(/[^a-z0-9\-_]/gi,"-").toLowerCase())return!1;try{const r=JSON.parse(e.resource.query),t=a.from(r);return w(t,o.resource)}catch{return!1}}async createEditor(e){const o=await this._workingCopyBackupService.resolve(e);if(!o?.meta)throw new Error(`No backup found for custom editor: ${e.resource}`);const r=o.meta,t=O(r.extension?.id,r.extension?.location),i=l(this._webviewService,{viewType:r.viewType,origin:r.webview.origin,webviewOptions:E(r.webview.options),contentOptions:h(r.webview.options),state:r.webview.state,extension:t}),s=this._instantiationService.createInstance(p,{resource:a.revive(r.editorResource),viewType:r.viewType},i,{backupId:r.backupId});return s.updateGroup(0),s}};u=v([s(0,y),s(1,z),s(2,_),s(3,m),s(4,k)],u);export{u as ComplexCustomWorkingCopyEditorHandler,d as CustomEditorInputSerializer};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { isEqual } from "../../../../base/common/resources.js";
+import { URI, UriComponents } from "../../../../base/common/uri.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IWorkbenchContribution } from "../../../common/contributions.js";
+import { EditorInput } from "../../../common/editor/editorInput.js";
+import { CustomEditorInput } from "./customEditorInput.js";
+import { ICustomEditorService } from "../common/customEditor.js";
+import { NotebookEditorInput } from "../../notebook/common/notebookEditorInput.js";
+import { IWebviewService, WebviewContentOptions, WebviewContentPurpose, WebviewExtensionDescription, WebviewOptions } from "../../webview/browser/webview.js";
+import { DeserializedWebview, restoreWebviewContentOptions, restoreWebviewOptions, reviveWebviewExtensionDescription, SerializedWebview, SerializedWebviewOptions, WebviewEditorInputSerializer } from "../../webviewPanel/browser/webviewEditorInputSerializer.js";
+import { IWebviewWorkbenchService } from "../../webviewPanel/browser/webviewWorkbenchService.js";
+import { IWorkingCopyBackupMeta, IWorkingCopyIdentifier } from "../../../services/workingCopy/common/workingCopy.js";
+import { IWorkingCopyBackupService } from "../../../services/workingCopy/common/workingCopyBackup.js";
+import { IWorkingCopyEditorHandler, IWorkingCopyEditorService } from "../../../services/workingCopy/common/workingCopyEditorService.js";
+let CustomEditorInputSerializer = class extends WebviewEditorInputSerializer {
+  constructor(webviewWorkbenchService, _instantiationService, _webviewService) {
+    super(webviewWorkbenchService);
+    this._instantiationService = _instantiationService;
+    this._webviewService = _webviewService;
+  }
+  static {
+    __name(this, "CustomEditorInputSerializer");
+  }
+  static ID = CustomEditorInput.typeId;
+  serialize(input) {
+    const dirty = input.isDirty();
+    const data = {
+      ...this.toJson(input),
+      editorResource: input.resource.toJSON(),
+      dirty,
+      backupId: dirty ? input.backupId : void 0
+    };
+    try {
+      return JSON.stringify(data);
+    } catch {
+      return void 0;
+    }
+  }
+  fromJson(data) {
+    return {
+      ...super.fromJson(data),
+      editorResource: URI.from(data.editorResource),
+      dirty: data.dirty
+    };
+  }
+  deserialize(_instantiationService, serializedEditorInput) {
+    const data = this.fromJson(JSON.parse(serializedEditorInput));
+    const webview = reviveWebview(this._webviewService, data);
+    const customInput = this._instantiationService.createInstance(CustomEditorInput, { resource: data.editorResource, viewType: data.viewType }, webview, { startsDirty: data.dirty, backupId: data.backupId });
+    if (typeof data.group === "number") {
+      customInput.updateGroup(data.group);
+    }
+    return customInput;
+  }
+};
+CustomEditorInputSerializer = __decorateClass([
+  __decorateParam(0, IWebviewWorkbenchService),
+  __decorateParam(1, IInstantiationService),
+  __decorateParam(2, IWebviewService)
+], CustomEditorInputSerializer);
+function reviveWebview(webviewService, data) {
+  const webview = webviewService.createWebviewOverlay({
+    providedViewType: data.viewType,
+    origin: data.origin,
+    title: void 0,
+    options: {
+      purpose: WebviewContentPurpose.CustomEditor,
+      enableFindWidget: data.webviewOptions.enableFindWidget,
+      retainContextWhenHidden: data.webviewOptions.retainContextWhenHidden
+    },
+    contentOptions: data.contentOptions,
+    extension: data.extension
+  });
+  webview.state = data.state;
+  return webview;
+}
+__name(reviveWebview, "reviveWebview");
+let ComplexCustomWorkingCopyEditorHandler = class extends Disposable {
+  constructor(_instantiationService, _workingCopyEditorService, _workingCopyBackupService, _webviewService, _customEditorService) {
+    super();
+    this._instantiationService = _instantiationService;
+    this._workingCopyBackupService = _workingCopyBackupService;
+    this._webviewService = _webviewService;
+    this._register(_workingCopyEditorService.registerHandler(this));
+  }
+  static {
+    __name(this, "ComplexCustomWorkingCopyEditorHandler");
+  }
+  static ID = "workbench.contrib.complexCustomWorkingCopyEditorHandler";
+  handles(workingCopy) {
+    return workingCopy.resource.scheme === Schemas.vscodeCustomEditor;
+  }
+  isOpen(workingCopy, editor) {
+    if (!this.handles(workingCopy)) {
+      return false;
+    }
+    if (workingCopy.resource.authority === "jupyter-notebook-ipynb" && editor instanceof NotebookEditorInput) {
+      try {
+        const data = JSON.parse(workingCopy.resource.query);
+        const workingCopyResource = URI.from(data);
+        return isEqual(workingCopyResource, editor.resource);
+      } catch {
+        return false;
+      }
+    }
+    if (!(editor instanceof CustomEditorInput)) {
+      return false;
+    }
+    if (workingCopy.resource.authority !== editor.viewType.replace(/[^a-z0-9\-_]/gi, "-").toLowerCase()) {
+      return false;
+    }
+    try {
+      const data = JSON.parse(workingCopy.resource.query);
+      const workingCopyResource = URI.from(data);
+      return isEqual(workingCopyResource, editor.resource);
+    } catch {
+      return false;
+    }
+  }
+  async createEditor(workingCopy) {
+    const backup = await this._workingCopyBackupService.resolve(workingCopy);
+    if (!backup?.meta) {
+      throw new Error(`No backup found for custom editor: ${workingCopy.resource}`);
+    }
+    const backupData = backup.meta;
+    const extension = reviveWebviewExtensionDescription(backupData.extension?.id, backupData.extension?.location);
+    const webview = reviveWebview(this._webviewService, {
+      viewType: backupData.viewType,
+      origin: backupData.webview.origin,
+      webviewOptions: restoreWebviewOptions(backupData.webview.options),
+      contentOptions: restoreWebviewContentOptions(backupData.webview.options),
+      state: backupData.webview.state,
+      extension
+    });
+    const editor = this._instantiationService.createInstance(CustomEditorInput, { resource: URI.revive(backupData.editorResource), viewType: backupData.viewType }, webview, { backupId: backupData.backupId });
+    editor.updateGroup(0);
+    return editor;
+  }
+};
+ComplexCustomWorkingCopyEditorHandler = __decorateClass([
+  __decorateParam(0, IInstantiationService),
+  __decorateParam(1, IWorkingCopyEditorService),
+  __decorateParam(2, IWorkingCopyBackupService),
+  __decorateParam(3, IWebviewService),
+  __decorateParam(4, ICustomEditorService)
+], ComplexCustomWorkingCopyEditorHandler);
+export {
+  ComplexCustomWorkingCopyEditorHandler,
+  CustomEditorInputSerializer
+};
+//# sourceMappingURL=customEditorInputFactory.js.map

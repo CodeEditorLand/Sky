@@ -1,1 +1,419 @@
-var B=Object.defineProperty,j=Object.getOwnPropertyDescriptor,W=(e,t,r,i)=>{for(var o,s=i>1?void 0:i?j(t,r):t,a=e.length-1;a>=0;a--)(o=e[a])&&(s=(i?o(t,r,s):o(s))||s);return i&&s&&B(t,r,s),s},D=(e,t)=>(r,i)=>t(r,i,e);import"../../../../../base/common/cancellation.js";import{Disposable as z,toDisposable as G}from"../../../../../base/common/lifecycle.js";import{basename as K}from"../../../../../base/common/path.js";import{URI as b}from"../../../../../base/common/uri.js";import{IConfigurationService as Z}from"../../../../../platform/configuration/common/configuration.js";import{IFileService as V}from"../../../../../platform/files/common/files.js";import{createDecorator as J}from"../../../../../platform/instantiation/common/instantiation.js";import{TerminalCapability as N}from"../../../../../platform/terminal/common/capabilities/capabilities.js";import{GeneralShellType as Q}from"../../../../../platform/terminal/common/terminal.js";import{TerminalSuggestSettingId as R}from"../common/terminalSuggestConfiguration.js";import{TerminalCompletionItemKind as v}from"./terminalCompletionItem.js";import{env as X}from"../../../../../base/common/process.js";import{timeout as Y}from"../../../../../base/common/async.js";const ue=J("terminalCompletionService");class Ie{resourceRequestConfig;items;constructor(e,t){this.items=e,this.resourceRequestConfig=t}}let x=class extends z{constructor(e,t){super(),this._configurationService=e,this._fileService=t}_providers=new Map;get providers(){return this._providersGenerator()}*_providersGenerator(){for(const e of this._providers.values())for(const t of e.values())yield t}set processEnv(e){this._processEnv=e}_processEnv=X;registerTerminalCompletionProvider(e,t,r,...i){let o=this._providers.get(e);return o||(o=new Map,this._providers.set(e,o)),r.triggerCharacters=i,r.id=t,o.set(t,r),G((()=>{const r=this._providers.get(e);r&&(r.delete(t),0===r.size&&this._providers.delete(e))}))}async provideCompletions(e,t,r,i,o,s,a,n){if(!this._providers||!this._providers.values||t<0)return;let l;if(a){const r=[];for(const i of this.providers)if(i.triggerCharacters)for(const o of i.triggerCharacters)if(e.substring(0,t)?.endsWith(o)){r.push(i);break}l=r}else l=[...this._providers.values()].flatMap((e=>[...e.values()]));if(n)return l=l.filter((e=>e.isBuiltin)),this._collectCompletions(l,i,e,t,r,o,s);const c=this._configurationService.getValue(R.Providers);return l=l.filter((e=>{const t=e.id;return t&&t in c&&!1!==c[t]})),l.length?this._collectCompletions(l,i,e,t,r,o,s):void 0}async _collectCompletions(e,t,r,i,o,s,a){const n=e.map((async e=>{if(e.shellTypes&&!e.shellTypes.includes(t))return;const n=await Promise.race([e.provideCompletions(r,i,o,a),Y(5e3)]);if(!n)return;const l=Array.isArray(n)?n:n.items??[];if(t===Q.PowerShell)for(const e of l)e.isFileOverride??=e.kind===v.Method&&0===e.replacementIndex;if(e.isBuiltin)for(const t of l)t.provider=e.id;if(Array.isArray(n))return l;if(n.resourceRequestConfig){const t=await this.resolveResources(n.resourceRequestConfig,r,i,e.id,s);t&&l.push(...t)}return l}));return(await Promise.all(n)).filter((e=>!!e)).flat()}async resolveResources(e,t,r,i,o){const s="\\"===e.pathSeparator;s&&(t=t.replaceAll(/[\\/]/g,e.pathSeparator));const a=(e.foldersRequested||e.filesRequested)??!1,n=e.filesRequested??!1,l=e.fileExtensions??void 0,c=b.revive(e.cwd);if(!c||!a&&!n)return;const p=[],h=t.substring(0,r),m=h.endsWith(" ")?"":h.split(/(?<!\\) /).at(-1)??"";let f;if(s){let e=-1;for(let t=m.length-1;t>=0;t--)if("\\"===m[t]&&(t===m.length-1||" "!==m[t+1])){e=t;break}f=Math.max(e,m.lastIndexOf("/"))}else f=m.lastIndexOf(e.pathSeparator);let d,u=-1===f?"":m.slice(0,f+1);s&&(u=u.replaceAll("/","\\"));const g=!!u.match(/^\.\.?[\\\/]/),S=!!u.match(/^~[\\\/]?/),_=s?/^[a-zA-Z]:[\\\/]/.test(m):m.startsWith(e.pathSeparator),C=S?"tilde":_?"absolute":"relative";switch(C){case"tilde":{const e=this._getHomeDir(s,o);e&&(d=b.joinPath(b.file(e),u.slice(1).replaceAll("\\ "," "))),d||m.match(/^~[\\\/]$/)&&(d=s?"Home directory":"$HOME");break}case"absolute":d=b.file(u.replaceAll("\\ "," "));break;case"relative":d=c}if(!d)return;if("string"==typeof d)return p.push({label:u,provider:i,kind:v.Folder,detail:d,replacementIndex:r-m.length,replacementLength:m.length}),p;const j=await this._fileService.resolve(d,{resolveSingleChildDescendants:!0});if(j?.children){if(a){let t;switch(C){case"tilde":case"absolute":t=u;break;case"relative":t=".",u.length>0&&(t=w(u,e,g))}p.push({label:t,provider:i,kind:v.Folder,detail:y(d,e.pathSeparator,v.Folder),replacementIndex:r-m.length,replacementLength:m.length})}for(const t of j.children){let o;if(a&&t.isDirectory?o=v.Folder:n&&t.isFile&&(o=v.File),void 0===o)continue;let s=u;if(s.length>0&&!s.endsWith(e.pathSeparator)&&(s+=e.pathSeparator),s+=t.name,"relative"===C&&(s=w(s,e,g)),t.isDirectory&&!s.endsWith(e.pathSeparator)&&(s+=e.pathSeparator),t.isFile&&l){const e=t.name.split(".").length>1?t.name.split(".").at(-1):void 0;if(e&&!l.includes(e))continue}p.push({label:s,provider:i,kind:o,detail:y(t.resource,e.pathSeparator,o),replacementIndex:r-m.length,replacementLength:m.length})}if("relative"===C&&a&&t.startsWith("cd ")){const t=this._configurationService.getValue(R.CdPath);if("absolute"===t||"relative"===t){const a=this._getEnvVar("CDPATH",o);if(a){const o=a.split(s?";":":");for(const s of o)try{const o=await this._fileService.resolve(b.file(s),{resolveSingleChildDescendants:!0});if(o?.children)for(const s of o.children){if(!s.isDirectory)continue;const o="relative"===t,a=v.Folder,n=o?K(s.resource.fsPath):y(s.resource,e.pathSeparator,a),l=o?`CDPATH ${y(s.resource,e.pathSeparator,a)}`:"CDPATH";p.push({label:n,provider:i,kind:a,detail:l,replacementIndex:r-m.length,replacementLength:m.length})}}catch{}}}}if("relative"===C&&a){let t=`..${e.pathSeparator}`;u.length>0&&(t=w(u+t,e,g));const o=b.joinPath(c,".."+e.pathSeparator);p.push({label:t,provider:i,kind:v.Folder,detail:y(o,e.pathSeparator,v.Folder),replacementIndex:r-m.length,replacementLength:m.length})}if("relative"===C&&!u.match(/[\\\/]/)){let t;const a=this._getHomeDir(s,o);a&&(t=b.joinPath(b.file(a),u.slice(1).replaceAll("\\ "," "))),t||(t=s?"Home directory":"$HOME"),p.push({label:"~",provider:i,kind:v.Folder,detail:"string"==typeof t?t:y(t,e.pathSeparator,v.Folder),replacementIndex:r-m.length,replacementLength:m.length})}return p}}_getEnvVar(e,t){const r=t.get(N.ShellEnvDetection)?.env?.value;return r?r[e]:this._processEnv[e]}_getHomeDir(e,t){return e?this._getEnvVar("USERPROFILE",t):this._getEnvVar("HOME",t)}};function y(e,t,r){let i=e.fsPath;return r===v.Folder&&!i.endsWith(t)&&(i+=t),"\\"===t&&i.match(/^[a-zA-Z]:\\/)&&(i=`${i[0].toUpperCase()}:${i.slice(2)}`),i}function w(e,t,r){return r?e:`.${t.pathSeparator}${e}`}x=W([D(0,Z),D(1,V)],x);export{ue as ITerminalCompletionService,Ie as TerminalCompletionList,x as TerminalCompletionService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { CancellationToken } from "../../../../../base/common/cancellation.js";
+import { Disposable, IDisposable, toDisposable } from "../../../../../base/common/lifecycle.js";
+import { basename } from "../../../../../base/common/path.js";
+import { URI, UriComponents } from "../../../../../base/common/uri.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { IFileService } from "../../../../../platform/files/common/files.js";
+import { createDecorator } from "../../../../../platform/instantiation/common/instantiation.js";
+import { TerminalCapability } from "../../../../../platform/terminal/common/capabilities/capabilities.js";
+import { GeneralShellType, TerminalShellType } from "../../../../../platform/terminal/common/terminal.js";
+import { TerminalSuggestSettingId } from "../common/terminalSuggestConfiguration.js";
+import { TerminalCompletionItemKind } from "./terminalCompletionItem.js";
+import { env as processEnv } from "../../../../../base/common/process.js";
+import { timeout } from "../../../../../base/common/async.js";
+const ITerminalCompletionService = createDecorator("terminalCompletionService");
+class TerminalCompletionList {
+  static {
+    __name(this, "TerminalCompletionList");
+  }
+  /**
+   * Resources should be shown in the completions list
+   */
+  resourceRequestConfig;
+  /**
+   * The completion items.
+   */
+  items;
+  /**
+   * Creates a new completion list.
+   *
+   * @param items The completion items.
+   * @param isIncomplete The list is not complete.
+   */
+  constructor(items, resourceRequestConfig) {
+    this.items = items;
+    this.resourceRequestConfig = resourceRequestConfig;
+  }
+}
+let TerminalCompletionService = class extends Disposable {
+  constructor(_configurationService, _fileService) {
+    super();
+    this._configurationService = _configurationService;
+    this._fileService = _fileService;
+  }
+  static {
+    __name(this, "TerminalCompletionService");
+  }
+  _providers = /* @__PURE__ */ new Map();
+  get providers() {
+    return this._providersGenerator();
+  }
+  *_providersGenerator() {
+    for (const providerMap of this._providers.values()) {
+      for (const provider of providerMap.values()) {
+        yield provider;
+      }
+    }
+  }
+  /** Overrides the environment for testing purposes. */
+  set processEnv(env) {
+    this._processEnv = env;
+  }
+  _processEnv = processEnv;
+  registerTerminalCompletionProvider(extensionIdentifier, id, provider, ...triggerCharacters) {
+    let extMap = this._providers.get(extensionIdentifier);
+    if (!extMap) {
+      extMap = /* @__PURE__ */ new Map();
+      this._providers.set(extensionIdentifier, extMap);
+    }
+    provider.triggerCharacters = triggerCharacters;
+    provider.id = id;
+    extMap.set(id, provider);
+    return toDisposable(() => {
+      const extMap2 = this._providers.get(extensionIdentifier);
+      if (extMap2) {
+        extMap2.delete(id);
+        if (extMap2.size === 0) {
+          this._providers.delete(extensionIdentifier);
+        }
+      }
+    });
+  }
+  async provideCompletions(promptValue, cursorPosition, allowFallbackCompletions, shellType, capabilities, token, triggerCharacter, skipExtensionCompletions) {
+    if (!this._providers || !this._providers.values || cursorPosition < 0) {
+      return void 0;
+    }
+    let providers;
+    if (triggerCharacter) {
+      const providersToRequest = [];
+      for (const provider of this.providers) {
+        if (!provider.triggerCharacters) {
+          continue;
+        }
+        for (const char of provider.triggerCharacters) {
+          if (promptValue.substring(0, cursorPosition)?.endsWith(char)) {
+            providersToRequest.push(provider);
+            break;
+          }
+        }
+      }
+      providers = providersToRequest;
+    } else {
+      providers = [...this._providers.values()].flatMap((providerMap) => [...providerMap.values()]);
+    }
+    if (skipExtensionCompletions) {
+      providers = providers.filter((p) => p.isBuiltin);
+      return this._collectCompletions(providers, shellType, promptValue, cursorPosition, allowFallbackCompletions, capabilities, token);
+    }
+    const providerConfig = this._configurationService.getValue(TerminalSuggestSettingId.Providers);
+    providers = providers.filter((p) => {
+      const providerId = p.id;
+      return providerId && providerId in providerConfig && providerConfig[providerId] !== false;
+    });
+    if (!providers.length) {
+      return;
+    }
+    return this._collectCompletions(providers, shellType, promptValue, cursorPosition, allowFallbackCompletions, capabilities, token);
+  }
+  async _collectCompletions(providers, shellType, promptValue, cursorPosition, allowFallbackCompletions, capabilities, token) {
+    const completionPromises = providers.map(async (provider) => {
+      if (provider.shellTypes && !provider.shellTypes.includes(shellType)) {
+        return void 0;
+      }
+      const completions = await Promise.race([
+        provider.provideCompletions(promptValue, cursorPosition, allowFallbackCompletions, token),
+        timeout(5e3)
+      ]);
+      if (!completions) {
+        return void 0;
+      }
+      const completionItems = Array.isArray(completions) ? completions : completions.items ?? [];
+      if (shellType === GeneralShellType.PowerShell) {
+        for (const completion of completionItems) {
+          completion.isFileOverride ??= completion.kind === TerminalCompletionItemKind.Method && completion.replacementIndex === 0;
+        }
+      }
+      if (provider.isBuiltin) {
+        for (const item of completionItems) {
+          item.provider = provider.id;
+        }
+      }
+      if (Array.isArray(completions)) {
+        return completionItems;
+      }
+      if (completions.resourceRequestConfig) {
+        const resourceCompletions = await this.resolveResources(completions.resourceRequestConfig, promptValue, cursorPosition, provider.id, capabilities);
+        if (resourceCompletions) {
+          completionItems.push(...resourceCompletions);
+        }
+      }
+      return completionItems;
+    });
+    const results = await Promise.all(completionPromises);
+    return results.filter((result) => !!result).flat();
+  }
+  async resolveResources(resourceRequestConfig, promptValue, cursorPosition, provider, capabilities) {
+    const useWindowsStylePath = resourceRequestConfig.pathSeparator === "\\";
+    if (useWindowsStylePath) {
+      promptValue = promptValue.replaceAll(/[\\/]/g, resourceRequestConfig.pathSeparator);
+    }
+    const foldersRequested = (resourceRequestConfig.foldersRequested || resourceRequestConfig.filesRequested) ?? false;
+    const filesRequested = resourceRequestConfig.filesRequested ?? false;
+    const fileExtensions = resourceRequestConfig.fileExtensions ?? void 0;
+    const cwd = URI.revive(resourceRequestConfig.cwd);
+    if (!cwd || !foldersRequested && !filesRequested) {
+      return;
+    }
+    const resourceCompletions = [];
+    const cursorPrefix = promptValue.substring(0, cursorPosition);
+    const lastWord = cursorPrefix.endsWith(" ") ? "" : cursorPrefix.split(/(?<!\\) /).at(-1) ?? "";
+    let lastSlashIndex;
+    if (useWindowsStylePath) {
+      let lastBackslashIndex = -1;
+      for (let i = lastWord.length - 1; i >= 0; i--) {
+        if (lastWord[i] === "\\") {
+          if (i === lastWord.length - 1 || lastWord[i + 1] !== " ") {
+            lastBackslashIndex = i;
+            break;
+          }
+        }
+      }
+      lastSlashIndex = Math.max(lastBackslashIndex, lastWord.lastIndexOf("/"));
+    } else {
+      lastSlashIndex = lastWord.lastIndexOf(resourceRequestConfig.pathSeparator);
+    }
+    let lastWordFolder = lastSlashIndex === -1 ? "" : lastWord.slice(0, lastSlashIndex + 1);
+    if (useWindowsStylePath) {
+      lastWordFolder = lastWordFolder.replaceAll("/", "\\");
+    }
+    let lastWordFolderResource;
+    const lastWordFolderHasDotPrefix = !!lastWordFolder.match(/^\.\.?[\\\/]/);
+    const lastWordFolderHasTildePrefix = !!lastWordFolder.match(/^~[\\\/]?/);
+    const isAbsolutePath = useWindowsStylePath ? /^[a-zA-Z]:[\\\/]/.test(lastWord) : lastWord.startsWith(resourceRequestConfig.pathSeparator);
+    const type = lastWordFolderHasTildePrefix ? "tilde" : isAbsolutePath ? "absolute" : "relative";
+    switch (type) {
+      case "tilde": {
+        const home = this._getHomeDir(useWindowsStylePath, capabilities);
+        if (home) {
+          lastWordFolderResource = URI.joinPath(URI.file(home), lastWordFolder.slice(1).replaceAll("\\ ", " "));
+        }
+        if (!lastWordFolderResource) {
+          if (lastWord.match(/^~[\\\/]$/)) {
+            lastWordFolderResource = useWindowsStylePath ? "Home directory" : "$HOME";
+          }
+        }
+        break;
+      }
+      case "absolute": {
+        lastWordFolderResource = URI.file(lastWordFolder.replaceAll("\\ ", " "));
+        break;
+      }
+      case "relative": {
+        lastWordFolderResource = cwd;
+        break;
+      }
+    }
+    if (!lastWordFolderResource) {
+      return void 0;
+    }
+    if (typeof lastWordFolderResource === "string") {
+      resourceCompletions.push({
+        label: lastWordFolder,
+        provider,
+        kind: TerminalCompletionItemKind.Folder,
+        detail: lastWordFolderResource,
+        replacementIndex: cursorPosition - lastWord.length,
+        replacementLength: lastWord.length
+      });
+      return resourceCompletions;
+    }
+    const stat = await this._fileService.resolve(lastWordFolderResource, { resolveSingleChildDescendants: true });
+    if (!stat?.children) {
+      return;
+    }
+    if (foldersRequested) {
+      let label;
+      switch (type) {
+        case "tilde": {
+          label = lastWordFolder;
+          break;
+        }
+        case "absolute": {
+          label = lastWordFolder;
+          break;
+        }
+        case "relative": {
+          label = ".";
+          if (lastWordFolder.length > 0) {
+            label = addPathRelativePrefix(lastWordFolder, resourceRequestConfig, lastWordFolderHasDotPrefix);
+          }
+          break;
+        }
+      }
+      resourceCompletions.push({
+        label,
+        provider,
+        kind: TerminalCompletionItemKind.Folder,
+        detail: getFriendlyPath(lastWordFolderResource, resourceRequestConfig.pathSeparator, TerminalCompletionItemKind.Folder),
+        replacementIndex: cursorPosition - lastWord.length,
+        replacementLength: lastWord.length
+      });
+    }
+    for (const child of stat.children) {
+      let kind;
+      if (foldersRequested && child.isDirectory) {
+        kind = TerminalCompletionItemKind.Folder;
+      } else if (filesRequested && child.isFile) {
+        kind = TerminalCompletionItemKind.File;
+      }
+      if (kind === void 0) {
+        continue;
+      }
+      let label = lastWordFolder;
+      if (label.length > 0 && !label.endsWith(resourceRequestConfig.pathSeparator)) {
+        label += resourceRequestConfig.pathSeparator;
+      }
+      label += child.name;
+      if (type === "relative") {
+        label = addPathRelativePrefix(label, resourceRequestConfig, lastWordFolderHasDotPrefix);
+      }
+      if (child.isDirectory && !label.endsWith(resourceRequestConfig.pathSeparator)) {
+        label += resourceRequestConfig.pathSeparator;
+      }
+      if (child.isFile && fileExtensions) {
+        const extension = child.name.split(".").length > 1 ? child.name.split(".").at(-1) : void 0;
+        if (extension && !fileExtensions.includes(extension)) {
+          continue;
+        }
+      }
+      resourceCompletions.push({
+        label,
+        provider,
+        kind,
+        detail: getFriendlyPath(child.resource, resourceRequestConfig.pathSeparator, kind),
+        replacementIndex: cursorPosition - lastWord.length,
+        replacementLength: lastWord.length
+      });
+    }
+    if (type === "relative" && foldersRequested) {
+      if (promptValue.startsWith("cd ")) {
+        const config = this._configurationService.getValue(TerminalSuggestSettingId.CdPath);
+        if (config === "absolute" || config === "relative") {
+          const cdPath = this._getEnvVar("CDPATH", capabilities);
+          if (cdPath) {
+            const cdPathEntries = cdPath.split(useWindowsStylePath ? ";" : ":");
+            for (const cdPathEntry of cdPathEntries) {
+              try {
+                const fileStat = await this._fileService.resolve(URI.file(cdPathEntry), { resolveSingleChildDescendants: true });
+                if (fileStat?.children) {
+                  for (const child of fileStat.children) {
+                    if (!child.isDirectory) {
+                      continue;
+                    }
+                    const useRelative = config === "relative";
+                    const kind = TerminalCompletionItemKind.Folder;
+                    const label = useRelative ? basename(child.resource.fsPath) : getFriendlyPath(child.resource, resourceRequestConfig.pathSeparator, kind);
+                    const detail = useRelative ? `CDPATH ${getFriendlyPath(child.resource, resourceRequestConfig.pathSeparator, kind)}` : `CDPATH`;
+                    resourceCompletions.push({
+                      label,
+                      provider,
+                      kind,
+                      detail,
+                      replacementIndex: cursorPosition - lastWord.length,
+                      replacementLength: lastWord.length
+                    });
+                  }
+                }
+              } catch {
+              }
+            }
+          }
+        }
+      }
+    }
+    if (type === "relative" && foldersRequested) {
+      let label = `..${resourceRequestConfig.pathSeparator}`;
+      if (lastWordFolder.length > 0) {
+        label = addPathRelativePrefix(lastWordFolder + label, resourceRequestConfig, lastWordFolderHasDotPrefix);
+      }
+      const parentDir = URI.joinPath(cwd, ".." + resourceRequestConfig.pathSeparator);
+      resourceCompletions.push({
+        label,
+        provider,
+        kind: TerminalCompletionItemKind.Folder,
+        detail: getFriendlyPath(parentDir, resourceRequestConfig.pathSeparator, TerminalCompletionItemKind.Folder),
+        replacementIndex: cursorPosition - lastWord.length,
+        replacementLength: lastWord.length
+      });
+    }
+    if (type === "relative" && !lastWordFolder.match(/[\\\/]/)) {
+      let homeResource;
+      const home = this._getHomeDir(useWindowsStylePath, capabilities);
+      if (home) {
+        homeResource = URI.joinPath(URI.file(home), lastWordFolder.slice(1).replaceAll("\\ ", " "));
+      }
+      if (!homeResource) {
+        homeResource = useWindowsStylePath ? "Home directory" : "$HOME";
+      }
+      resourceCompletions.push({
+        label: "~",
+        provider,
+        kind: TerminalCompletionItemKind.Folder,
+        detail: typeof homeResource === "string" ? homeResource : getFriendlyPath(homeResource, resourceRequestConfig.pathSeparator, TerminalCompletionItemKind.Folder),
+        replacementIndex: cursorPosition - lastWord.length,
+        replacementLength: lastWord.length
+      });
+    }
+    return resourceCompletions;
+  }
+  _getEnvVar(key, capabilities) {
+    const env = capabilities.get(TerminalCapability.ShellEnvDetection)?.env?.value;
+    if (env) {
+      return env[key];
+    }
+    return this._processEnv[key];
+  }
+  _getHomeDir(useWindowsStylePath, capabilities) {
+    return useWindowsStylePath ? this._getEnvVar("USERPROFILE", capabilities) : this._getEnvVar("HOME", capabilities);
+  }
+};
+TerminalCompletionService = __decorateClass([
+  __decorateParam(0, IConfigurationService),
+  __decorateParam(1, IFileService)
+], TerminalCompletionService);
+function getFriendlyPath(uri, pathSeparator, kind) {
+  let path = uri.fsPath;
+  if (kind === TerminalCompletionItemKind.Folder && !path.endsWith(pathSeparator)) {
+    path += pathSeparator;
+  }
+  if (pathSeparator === "\\" && path.match(/^[a-zA-Z]:\\/)) {
+    path = `${path[0].toUpperCase()}:${path.slice(2)}`;
+  }
+  return path;
+}
+__name(getFriendlyPath, "getFriendlyPath");
+function addPathRelativePrefix(text, resourceRequestConfig, lastWordFolderHasDotPrefix) {
+  if (!lastWordFolderHasDotPrefix) {
+    return `.${resourceRequestConfig.pathSeparator}${text}`;
+  }
+  return text;
+}
+__name(addPathRelativePrefix, "addPathRelativePrefix");
+export {
+  ITerminalCompletionService,
+  TerminalCompletionList,
+  TerminalCompletionService
+};
+//# sourceMappingURL=terminalCompletionService.js.map

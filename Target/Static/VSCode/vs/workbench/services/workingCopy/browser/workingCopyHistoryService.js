@@ -1,1 +1,50 @@
-var S=Object.defineProperty,f=Object.getOwnPropertyDescriptor,p=(o,r,e,i)=>{for(var t,n=i>1?void 0:i?f(r,e):r,m=o.length-1;m>=0;m--)(t=o[m])&&(n=(i?t(r,e,n):t(n))||n);return i&&n&&S(r,e,n),n},o=(o,r)=>(e,i)=>r(e,i,o);import{IFileService as g}from"../../../../platform/files/common/files.js";import{IRemoteAgentService as l}from"../../remote/common/remoteAgentService.js";import{IWorkbenchEnvironmentService as a}from"../../environment/common/environmentService.js";import{IUriIdentityService as s}from"../../../../platform/uriIdentity/common/uriIdentity.js";import{ILabelService as d}from"../../../../platform/label/common/label.js";import{ILogService as u}from"../../../../platform/log/common/log.js";import{IConfigurationService as y}from"../../../../platform/configuration/common/configuration.js";import{WorkingCopyHistoryService as b}from"../common/workingCopyHistoryService.js";import{InstantiationType as h,registerSingleton as C}from"../../../../platform/instantiation/common/extensions.js";import{IWorkingCopyHistoryService as L}from"../common/workingCopyHistory.js";let c=class extends b{constructor(o,r,e,i,t,n,m){super(o,r,e,i,t,n,m)}getModelOptions(){return{flushOnChange:!0}}};c=p([o(0,g),o(1,l),o(2,a),o(3,s),o(4,d),o(5,u),o(6,y)],c),C(L,c,h.Delayed);export{c as BrowserWorkingCopyHistoryService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { IRemoteAgentService } from "../../remote/common/remoteAgentService.js";
+import { IWorkbenchEnvironmentService } from "../../environment/common/environmentService.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import { ILabelService } from "../../../../platform/label/common/label.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IWorkingCopyHistoryModelOptions, WorkingCopyHistoryService } from "../common/workingCopyHistoryService.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { IWorkingCopyHistoryService } from "../common/workingCopyHistory.js";
+let BrowserWorkingCopyHistoryService = class extends WorkingCopyHistoryService {
+  static {
+    __name(this, "BrowserWorkingCopyHistoryService");
+  }
+  constructor(fileService, remoteAgentService, environmentService, uriIdentityService, labelService, logService, configurationService) {
+    super(fileService, remoteAgentService, environmentService, uriIdentityService, labelService, logService, configurationService);
+  }
+  getModelOptions() {
+    return {
+      flushOnChange: true
+      /* because browsers support no long running shutdown */
+    };
+  }
+};
+BrowserWorkingCopyHistoryService = __decorateClass([
+  __decorateParam(0, IFileService),
+  __decorateParam(1, IRemoteAgentService),
+  __decorateParam(2, IWorkbenchEnvironmentService),
+  __decorateParam(3, IUriIdentityService),
+  __decorateParam(4, ILabelService),
+  __decorateParam(5, ILogService),
+  __decorateParam(6, IConfigurationService)
+], BrowserWorkingCopyHistoryService);
+registerSingleton(IWorkingCopyHistoryService, BrowserWorkingCopyHistoryService, InstantiationType.Delayed);
+export {
+  BrowserWorkingCopyHistoryService
+};
+//# sourceMappingURL=workingCopyHistoryService.js.map

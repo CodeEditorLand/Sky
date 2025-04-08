@@ -1,1 +1,85 @@
-import{Permutation as m,compareBy as c}from"../../../../base/common/arrays.js";import"../../../../base/common/lifecycle.js";import{observableValue as l,autorun as d,transaction as f}from"../../../../base/common/observable.js";import"../../../../platform/contextkey/common/contextkey.js";import{bindContextKey as y}from"../../../../platform/observable/common/platformObservableUtils.js";import{Position as b}from"../../../common/core/position.js";import{PositionOffsetTransformer as g}from"../../../common/core/positionToOffset.js";import{Range as p}from"../../../common/core/range.js";import{TextEdit as x}from"../../../common/core/textEdit.js";const T=[];function M(){return T}function U(t,e){return new b(t.lineNumber+e.lineNumber-1,e.lineNumber===1?t.column+e.column-1:e.column)}function j(t,e){return new b(t.lineNumber-e.lineNumber+1,t.lineNumber-e.lineNumber===0?t.column-e.column+1:t.column)}function q(t,e){const n=new g(t).getOffset(e);return t.substring(n)}function z(t){return v(t).map(r=>r.getEndPosition())}function v(t){const e=m.createSortPermutation(t,c(s=>s.range,p.compareRangesUsingStarts)),n=new x(e.apply(t)).getNewRanges();return e.inverse().apply(n)}function G(t,e){const r=l("result",[]),n=[];return e.add(d(s=>{const i=t.read(s);f(a=>{if(i.length!==n.length){n.length=i.length;for(let o=0;o<n.length;o++)n[o]||(n[o]=l("item",i[o]));r.set([...n],a)}n.forEach((o,u)=>o.set(i[u],a))})})),r}class H{constructor(e){this._contextKeyService=e}bind(e,r){return y(e,this._contextKeyService,r instanceof Function?r:n=>r.read(n))}}export{H as ObservableContextKeyService,U as addPositions,G as convertItemsToStableObservables,z as getEndPositionsAfterApplying,v as getModifiedRangesAfterApplying,M as getReadonlyEmptyArray,q as substringPos,j as subtractPositions};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Permutation, compareBy } from "../../../../base/common/arrays.js";
+import { DisposableStore, IDisposable } from "../../../../base/common/lifecycle.js";
+import { IObservable, observableValue, ISettableObservable, autorun, transaction, IReader } from "../../../../base/common/observable.js";
+import { ContextKeyValue, IContextKeyService, RawContextKey } from "../../../../platform/contextkey/common/contextkey.js";
+import { bindContextKey } from "../../../../platform/observable/common/platformObservableUtils.js";
+import { Position } from "../../../common/core/position.js";
+import { PositionOffsetTransformer } from "../../../common/core/positionToOffset.js";
+import { Range } from "../../../common/core/range.js";
+import { SingleTextEdit, TextEdit } from "../../../common/core/textEdit.js";
+const array = [];
+function getReadonlyEmptyArray() {
+  return array;
+}
+__name(getReadonlyEmptyArray, "getReadonlyEmptyArray");
+function addPositions(pos1, pos2) {
+  return new Position(pos1.lineNumber + pos2.lineNumber - 1, pos2.lineNumber === 1 ? pos1.column + pos2.column - 1 : pos2.column);
+}
+__name(addPositions, "addPositions");
+function subtractPositions(pos1, pos2) {
+  return new Position(pos1.lineNumber - pos2.lineNumber + 1, pos1.lineNumber - pos2.lineNumber === 0 ? pos1.column - pos2.column + 1 : pos1.column);
+}
+__name(subtractPositions, "subtractPositions");
+function substringPos(text, pos) {
+  const transformer = new PositionOffsetTransformer(text);
+  const offset = transformer.getOffset(pos);
+  return text.substring(offset);
+}
+__name(substringPos, "substringPos");
+function getEndPositionsAfterApplying(edits) {
+  const newRanges = getModifiedRangesAfterApplying(edits);
+  return newRanges.map((range) => range.getEndPosition());
+}
+__name(getEndPositionsAfterApplying, "getEndPositionsAfterApplying");
+function getModifiedRangesAfterApplying(edits) {
+  const sortPerm = Permutation.createSortPermutation(edits, compareBy((e) => e.range, Range.compareRangesUsingStarts));
+  const edit = new TextEdit(sortPerm.apply(edits));
+  const sortedNewRanges = edit.getNewRanges();
+  return sortPerm.inverse().apply(sortedNewRanges);
+}
+__name(getModifiedRangesAfterApplying, "getModifiedRangesAfterApplying");
+function convertItemsToStableObservables(items, store) {
+  const result = observableValue("result", []);
+  const innerObservables = [];
+  store.add(autorun((reader) => {
+    const itemsValue = items.read(reader);
+    transaction((tx) => {
+      if (itemsValue.length !== innerObservables.length) {
+        innerObservables.length = itemsValue.length;
+        for (let i = 0; i < innerObservables.length; i++) {
+          if (!innerObservables[i]) {
+            innerObservables[i] = observableValue("item", itemsValue[i]);
+          }
+        }
+        result.set([...innerObservables], tx);
+      }
+      innerObservables.forEach((o, i) => o.set(itemsValue[i], tx));
+    });
+  }));
+  return result;
+}
+__name(convertItemsToStableObservables, "convertItemsToStableObservables");
+class ObservableContextKeyService {
+  constructor(_contextKeyService) {
+    this._contextKeyService = _contextKeyService;
+  }
+  static {
+    __name(this, "ObservableContextKeyService");
+  }
+  bind(key, obs) {
+    return bindContextKey(key, this._contextKeyService, obs instanceof Function ? obs : (reader) => obs.read(reader));
+  }
+}
+export {
+  ObservableContextKeyService,
+  addPositions,
+  convertItemsToStableObservables,
+  getEndPositionsAfterApplying,
+  getModifiedRangesAfterApplying,
+  getReadonlyEmptyArray,
+  substringPos,
+  subtractPositions
+};
+//# sourceMappingURL=utils.js.map

@@ -1,2 +1,620 @@
-var V=Object.defineProperty;var H=Object.getOwnPropertyDescriptor;var N=(n,a,e,t)=>{for(var i=t>1?void 0:t?H(a,e):a,r=n.length-1,h;r>=0;r--)(h=n[r])&&(i=(t?h(a,e,i):h(i))||i);return t&&i&&V(a,e,i),i},c=(n,a)=>(e,t)=>a(e,t,n);import{createDecorator as J,IInstantiationService as q}from"../../../../platform/instantiation/common/instantiation.js";import{Emitter as b}from"../../../../base/common/event.js";import{IStorageService as O,StorageScope as S,StorageTarget as I}from"../../../../platform/storage/common/storage.js";import{Memento as K}from"../../../common/memento.js";import{Action2 as X,registerAction2 as j}from"../../../../platform/actions/common/actions.js";import{ICommandService as Q}from"../../../../platform/commands/common/commands.js";import{ContextKeyExpr as p,IContextKeyService as Y,RawContextKey as Z}from"../../../../platform/contextkey/common/contextkey.js";import{Disposable as ee}from"../../../../base/common/lifecycle.js";import{IUserDataSyncEnablementService as te}from"../../../../platform/userDataSync/common/userDataSync.js";import{ExtensionIdentifier as ie}from"../../../../platform/extensions/common/extensions.js";import{URI as E}from"../../../../base/common/uri.js";import{joinPath as R}from"../../../../base/common/resources.js";import{FileAccess as l}from"../../../../base/common/network.js";import{EXTENSION_INSTALL_DEP_PACK_CONTEXT as re,EXTENSION_INSTALL_SKIP_WALKTHROUGH_CONTEXT as B,IExtensionManagementService as oe}from"../../../../platform/extensionManagement/common/extensionManagement.js";import"../../../../base/common/themables.js";import{walkthroughs as G}from"../common/gettingStartedContent.js";import{IWorkbenchAssignmentService as ne}from"../../../services/assignment/common/assignmentService.js";import{IHostService as se}from"../../../services/host/browser/host.js";import{IConfigurationService as ae}from"../../../../platform/configuration/common/configuration.js";import{parseLinkedText as he}from"../../../../base/common/linkedText.js";import{walkthroughsExtensionPoint as de}from"./gettingStartedExtensionPoint.js";import{InstantiationType as ce,registerSingleton as le}from"../../../../platform/instantiation/common/extensions.js";import{dirname as ge}from"../../../../base/common/path.js";import{coalesce as me}from"../../../../base/common/arrays.js";import{IViewsService as pe}from"../../../services/views/common/viewsService.js";import{localize as ue,localize2 as _}from"../../../../nls.js";import{ITelemetryService as ve}from"../../../../platform/telemetry/common/telemetry.js";import{checkGlobFileExists as Se}from"../../../services/extensions/common/workspaceContains.js";import{IWorkspaceContextService as fe}from"../../../../platform/workspace/common/workspace.js";import{CancellationTokenSource as ke}from"../../../../base/common/cancellation.js";import{DefaultIconPath as Ie}from"../../../services/extensionManagement/common/extensionManagement.js";import{IProductService as ye}from"../../../../platform/product/common/productService.js";import{asWebviewUri as we}from"../../webview/common/webview.js";import{IWorkbenchLayoutService as Ee,Parts as We}from"../../../services/layout/browser/layoutService.js";const xe=new Z("hasMultipleNewFileEntries",!1),$=J("walkthroughsService"),Ce="workbench.welcomePage.hiddenCategories",L="workbench.welcomePage.walkthroughMetadata",be=ue("builtin","Built-In"),Re=24*60*60*1e3,F=7*Re;let W=class extends ee{constructor(e,t,i,r,h,g,o,m,d,f,u,k,U,T){super();this.storageService=e;this.commandService=t;this.instantiationService=i;this.workspaceContextService=r;this.contextService=h;this.userDataSyncEnablementService=g;this.configurationService=o;this.extensionManagementService=m;this.hostService=d;this.viewsService=f;this.telemetryService=u;this.tasExperimentService=k;this.productService=U;this.layoutService=T;this.metadata=new Map(JSON.parse(this.storageService.get(L,S.PROFILE,"[]"))),this.memento=new K("gettingStartedService",this.storageService),this.stepProgress=this.memento.getMemento(S.PROFILE,I.USER),this.initCompletionEventListeners(),xe.bindTo(this.contextService).set(!1),this.registerWalkthroughs()}_onDidAddWalkthrough=new b;onDidAddWalkthrough=this._onDidAddWalkthrough.event;_onDidRemoveWalkthrough=new b;onDidRemoveWalkthrough=this._onDidRemoveWalkthrough.event;_onDidChangeWalkthrough=new b;onDidChangeWalkthrough=this._onDidChangeWalkthrough.event;_onDidProgressStep=new b;onDidProgressStep=this._onDidProgressStep.event;memento;stepProgress;sessionEvents=new Set;completionListeners=new Map;gettingStartedContributions=new Map;steps=new Map;sessionInstalledExtensions=new Set;categoryVisibilityContextKeys=new Set;stepCompletionContextKeyExpressions=new Set;stepCompletionContextKeys=new Set;metadata;registerWalkthroughs(){G.forEach(async(e,t)=>{this._registerWalkthrough({...e,icon:{type:"icon",icon:e.icon},order:G.length-t,source:be,when:p.deserialize(e.when)??p.true(),steps:e.content.steps.map((i,r)=>({...i,completionEvents:i.completionEvents??[],description:M(i.description),category:e.id,order:r,when:p.deserialize(i.when)??p.true(),media:i.media.type==="image"?{type:"image",altText:i.media.altText,path:Le(i.media.path)}:i.media.type==="svg"?{type:"svg",altText:i.media.altText,path:z(i.media.path).with({query:JSON.stringify({moduleId:"vs/workbench/contrib/welcomeGettingStarted/common/media/"+i.media.path})})}:i.media.type==="markdown"?{type:"markdown",path:z(i.media.path).with({query:JSON.stringify({moduleId:"vs/workbench/contrib/welcomeGettingStarted/common/media/"+i.media.path})}),base:l.asFileUri("vs/workbench/contrib/welcomeGettingStarted/common/media/"),root:l.asFileUri("vs/workbench/contrib/welcomeGettingStarted/common/media/")}:{type:"video",path:D(l.asFileUri("vs/workbench/contrib/welcomeGettingStarted/common/media/"),i.media.path),altText:i.media.altText,root:l.asFileUri("vs/workbench/contrib/welcomeGettingStarted/common/media/"),poster:i.media.poster?D(l.asFileUri("vs/workbench/contrib/welcomeGettingStarted/common/media/"),i.media.poster):void 0}}))})}),de.setHandler((e,{added:t,removed:i})=>{t.map(r=>this.registerExtensionWalkthroughContributions(r.description)),i.map(r=>this.unregisterExtensionWalkthroughContributions(r.description))})}initCompletionEventListeners(){this._register(this.commandService.onDidExecuteCommand(e=>this.progressByEvent(`onCommand:${e.commandId}`))),this.extensionManagementService.getInstalled().then(e=>{e.forEach(t=>this.progressByEvent(`extensionInstalled:${t.identifier.id.toLowerCase()}`))}),this._register(this.extensionManagementService.onDidInstallExtensions(e=>{if(e.some(t=>ie.equals(this.productService.defaultChatAgent?.extensionId,t.identifier.id)&&!t?.context?.[B])){e.forEach(t=>{this.sessionInstalledExtensions.add(t.identifier.id.toLowerCase()),this.progressByEvent(`extensionInstalled:${t.identifier.id.toLowerCase()}`)});return}for(const t of e)t?.context?.[B]||t?.context?.[re]||this.sessionInstalledExtensions.add(t.identifier.id.toLowerCase()),this.progressByEvent(`extensionInstalled:${t.identifier.id.toLowerCase()}`)})),this._register(this.contextService.onDidChangeContext(e=>{e.affectsSome(this.stepCompletionContextKeys)&&this.stepCompletionContextKeyExpressions.forEach(t=>{e.affectsSome(new Set(t.keys()))&&this.contextService.contextMatchesRules(t)&&this.progressByEvent("onContext:"+t.serialize())})})),this._register(this.viewsService.onDidChangeViewVisibility(e=>{e.visible&&this.progressByEvent("onView:"+e.id)})),this._register(this.configurationService.onDidChangeConfiguration(e=>{e.affectedKeys.forEach(t=>{this.progressByEvent("onSettingChanged:"+t)})})),this.userDataSyncEnablementService.isEnabled()&&this.progressByEvent("onEvent:sync-enabled"),this._register(this.userDataSyncEnablementService.onDidChangeEnablement(()=>{this.userDataSyncEnablementService.isEnabled()&&this.progressByEvent("onEvent:sync-enabled")}))}markWalkthroughOpened(e){const t=this.gettingStartedContributions.get(e),i=this.metadata.get(e);i&&t&&this.metadata.set(e,{...i,manaullyOpened:!0,stepIDs:t.steps.map(r=>r.id)}),this.storageService.store(L,JSON.stringify([...this.metadata.entries()]),S.PROFILE,I.USER)}async registerExtensionWalkthroughContributions(e){const t=o=>o.startsWith("https://")?E.parse(o,!0):l.uriToFileUri(R(e.extensionLocation,o)),i=o=>{const m=d=>d.startsWith("https://")?E.parse(d,!0):l.uriToBrowserUri(R(e.extensionLocation,d));if(typeof o=="string"){const d=m(o);return{hcDark:d,hcLight:d,dark:d,light:d}}else return{hcDark:m(o.hc),hcLight:m(o.hcLight??o.light),light:m(o.light),dark:m(o.dark)}};if(!e.contributes?.walkthroughs?.length)return;let r,h=Math.min();await Promise.all(e.contributes?.walkthroughs?.map(async(o,m)=>{const d=e.identifier.value+"#"+o.id,f=!this.metadata.get(d);f&&this.metadata.set(d,{firstSeen:+new Date,stepIDs:o.steps?.map(s=>s.id)??[],manaullyOpened:!1});const u=await Promise.race([this.tasExperimentService?.getTreatment(`gettingStarted.overrideCategory.${e.identifier.value+"."+o.id}.when`),new Promise(s=>setTimeout(()=>s(o.when),5e3))]);this.sessionInstalledExtensions.has(e.identifier.value.toLowerCase())&&this.contextService.contextMatchesRules(p.deserialize(u??o.when)??p.true())&&(this.sessionInstalledExtensions.delete(e.identifier.value.toLowerCase()),m<h&&f&&(r=d,h=m));const k=(o.steps??[]).map((s,C)=>{const y=M(s.description||""),P=e.identifier.value+"#"+o.id+"#"+s.id;let w;if(!s.media)throw Error("missing media in walkthrough step: "+o.id+"@"+s.id);if(s.media.image){const v=s.media.altText;v===void 0&&console.error("Walkthrough item:",P,"is missing altText for its media element."),w={type:"image",altText:v,path:i(s.media.image)}}else if(s.media.markdown)w={type:"markdown",path:t(s.media.markdown),base:t(ge(s.media.markdown)),root:l.uriToFileUri(e.extensionLocation)};else if(s.media.svg)w={type:"svg",path:t(s.media.svg),altText:s.media.svg};else if(s.media.video){const v=l.uriToFileUri(e.extensionLocation);w={type:"video",path:D(v,s.media.video),root:l.uriToFileUri(e.extensionLocation),altText:s.media.altText,poster:s.media.poster?D(v,s.media.poster):void 0}}else throw new Error("Unknown walkthrough format detected for "+P);return{description:y,media:w,completionEvents:s.completionEvents?.filter(v=>typeof v=="string")??[],id:P,title:s.title,when:p.deserialize(s.when)??p.true(),category:d,order:C}});let U=!1;if(o.featuredFor){const s=this.workspaceContextService.getWorkspace().folders.map(y=>y.uri),C=new ke;setTimeout(()=>C.cancel(),2e3),U=await this.instantiationService.invokeFunction(y=>Se(y,s,o.featuredFor,C.token))}const T=o.icon??e.icon,A={description:o.description,title:o.title,id:d,isFeatured:U,source:e.displayName??e.name,order:0,walkthroughPageTitle:e.displayName??e.name,steps:k,icon:{type:"image",path:T?l.uriToBrowserUri(R(e.extensionLocation,T)).toString(!0):Ie},when:p.deserialize(u??o.when)??p.true()};this._registerWalkthrough(A),this._onDidAddWalkthrough.fire(this.resolveWalkthrough(A))})),this.storageService.store(L,JSON.stringify([...this.metadata.entries()]),S.PROFILE,I.USER),await this.hostService.hadLastFocus()&&r&&this.configurationService.getValue("workbench.welcomePage.walkthroughs.openOnInstall")&&(this.telemetryService.publicLog2("gettingStarted.didAutoOpenWalkthrough",{id:r}),this.commandService.executeCommand("workbench.action.openWalkthrough",r,{inactive:this.layoutService.hasFocus(We.EDITOR_PART)}))}unregisterExtensionWalkthroughContributions(e){e.contributes?.walkthroughs?.length&&e.contributes?.walkthroughs?.forEach(t=>{const i=e.identifier.value+"#"+t.id;t.steps.forEach(r=>{const h=e.identifier.value+"#"+t.id+"#"+r.id;this.steps.delete(h)}),this.gettingStartedContributions.delete(i),this._onDidRemoveWalkthrough.fire(i)})}getWalkthrough(e){const t=this.gettingStartedContributions.get(e);if(!t)throw Error("Trying to get unknown walkthrough: "+e);return this.resolveWalkthrough(t)}getWalkthroughs(){return[...this.gettingStartedContributions.values()].map(i=>({...i,content:{type:"steps",steps:i.steps}})).filter(i=>i.content.type!=="steps"||i.content.steps.length).map(i=>this.resolveWalkthrough(i))}resolveWalkthrough(e){const t=e.steps.map(u=>this.getStepProgress(u)),i=this.metadata.get(e.id)?.manaullyOpened,r=this.metadata.get(e.id)?.firstSeen,h=r&&r>+new Date-F,g=this.metadata.get(e.id)?.stepIDs,o=this.gettingStartedContributions.get(e.id);if(!o)throw Error("Could not find walkthrough with id "+e.id);const m=o.steps.map(u=>u.id),d=g&&(m.length!==g.length||m.some((u,k)=>u!==g[k]));let f=0;if(r){const k=+new Date-r;f=Math.max(0,(F-k)/F)}return{...e,recencyBonus:f,steps:t,newItems:!!d,newEntry:!!(h&&!i)}}getStepProgress(e){return{...e,done:!1,...this.stepProgress[e.id]}}progressStep(e){const t=this.stepProgress[e];if(!t||t.done!==!0){this.stepProgress[e]={done:!0},this.memento.saveMemento();const i=this.getStep(e);if(!i)throw Error("Tried to progress unknown step");this._onDidProgressStep.fire(this.getStepProgress(i))}}deprogressStep(e){delete this.stepProgress[e],this.memento.saveMemento();const t=this.getStep(e);this._onDidProgressStep.fire(this.getStepProgress(t))}progressByEvent(e){this.sessionEvents.has(e)||(this.sessionEvents.add(e),this.completionListeners.get(e)?.forEach(t=>this.progressStep(t)))}registerWalkthrough(e){this._registerWalkthrough({...e,steps:e.steps.map(t=>({...t,description:M(t.description)}))})}_registerWalkthrough(e){if(this.gettingStartedContributions.get(e.id)){console.error(`Skipping attempt to overwrite walkthrough. (${e.id})`);return}this.gettingStartedContributions.set(e.id,e),e.steps.forEach(i=>{if(this.steps.has(i.id))throw Error("Attempting to register step with id "+i.id+" twice. Second is dropped.");this.steps.set(i.id,i),i.when.keys().forEach(r=>this.categoryVisibilityContextKeys.add(r)),this.registerDoneListeners(i)}),e.when.keys().forEach(i=>this.categoryVisibilityContextKeys.add(i))}registerDoneListeners(e){if(e.doneOn){console.error("wakthrough step",e,"uses deprecated 'doneOn' property. Adopt 'completionEvents' to silence this warning");return}e.completionEvents.length||(e.completionEvents=me(e.description.filter(t=>t.nodes.length===1).flatMap(t=>t.nodes.filter(i=>typeof i!="string").map(({href:i})=>{if(i.startsWith("command:"))return"onCommand:"+i.slice(8,i.includes("?")?i.indexOf("?"):void 0);if(i.startsWith("https://")||i.startsWith("http://"))return"onLink:"+i})))),e.completionEvents.length||e.completionEvents.push("stepSelected");for(let t of e.completionEvents){const[i,r,h]=/^([^:]*):?(.*)$/.exec(t)??[];if(!r){console.error(`Unknown completionEvent ${t} when registering step ${e.id}`);continue}switch(r){case"onLink":case"onEvent":case"onView":case"onSettingChanged":break;case"onContext":{const g=p.deserialize(h);g?(this.stepCompletionContextKeyExpressions.add(g),g.keys().forEach(o=>this.stepCompletionContextKeys.add(o)),t=r+":"+g.serialize(),this.contextService.contextMatchesRules(g)&&this.sessionEvents.add(t)):console.error("Unable to parse context key expression:",g,"in walkthrough step",e.id);break}case"onStepSelected":case"stepSelected":t="stepSelected:"+e.id;break;case"onCommand":t=r+":"+h.replace(/^toSide:/,"");break;case"onExtensionInstalled":case"extensionInstalled":t="extensionInstalled:"+h.toLowerCase();break;default:console.error(`Unknown completionEvent ${t} when registering step ${e.id}`);continue}this.registerCompletionListener(t,e)}}registerCompletionListener(e,t){this.completionListeners.has(e)||this.completionListeners.set(e,new Set),this.completionListeners.get(e)?.add(t.id)}getStep(e){const t=this.steps.get(e);if(!t)throw Error("Attempting to access step which does not exist in registry "+e);return t}};W=N([c(0,O),c(1,Q),c(2,q),c(3,fe),c(4,Y),c(5,te),c(6,ae),c(7,oe),c(8,se),c(9,pe),c(10,ve),c(11,ne),c(12,ye),c(13,Ee)],W);const M=n=>n.split(`
-`).filter(a=>a).map(a=>he(a)),z=n=>n.startsWith("https://")?E.parse(n,!0):l.asFileUri(`vs/workbench/contrib/welcomeGettingStarted/common/media/${n}`),x=n=>n.startsWith("https://")?E.parse(n,!0):l.asBrowserUri(`vs/workbench/contrib/welcomeGettingStarted/common/media/${n}`),Le=n=>{if(typeof n=="string"){const a=x(n);return{hcDark:a,hcLight:a,dark:a,light:a}}else return{hcDark:x(n.hc),hcLight:x(n.hcLight??n.light),light:x(n.light),dark:x(n.dark)}},D=(n,a)=>{const e=t=>t.startsWith("https://")?E.parse(t,!0):we(R(n,t));if(typeof a=="string"){const t=e(a);return{hcDark:t,hcLight:t,dark:t,light:t}}else return{hcDark:e(a.hc),hcLight:e(a.hcLight??a.light),light:e(a.light),dark:e(a.dark)}};j(class extends X{constructor(){super({id:"resetGettingStartedProgress",category:_("developer","Developer"),title:_("resetWelcomePageWalkthroughProgress","Reset Welcome Page Walkthrough Progress"),f1:!0,metadata:{description:_("resetGettingStartedProgressDescription","Reset the progress of all Walkthrough steps on the Welcome Page to make them appear as if they are being viewed for the first time, providing a fresh start to the getting started experience.")}})}run(n){const a=n.get($),e=n.get(O);e.store(Ce,JSON.stringify([]),S.PROFILE,I.USER),e.store(L,JSON.stringify([]),S.PROFILE,I.USER);const t=new K("gettingStartedService",n.get(O)),i=t.getMemento(S.PROFILE,I.USER);for(const r in i)if(Object.prototype.hasOwnProperty.call(i,r))try{a.deprogressStep(r)}catch(h){console.error(h)}t.saveMemento()}}),le($,W,ce.Delayed);export{xe as HasMultipleNewFileEntries,$ as IWalkthroughsService,W as WalkthroughsService,z as convertInternalMediaPathToFileURI,Ce as hiddenEntriesConfigurationKey,M as parseDescription,L as walkthroughMetadataConfigurationKey};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { createDecorator, IInstantiationService, ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { Memento } from "../../../common/memento.js";
+import { Action2, registerAction2 } from "../../../../platform/actions/common/actions.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { ContextKeyExpr, ContextKeyExpression, IContextKeyService, RawContextKey } from "../../../../platform/contextkey/common/contextkey.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { IUserDataSyncEnablementService } from "../../../../platform/userDataSync/common/userDataSync.js";
+import { ExtensionIdentifier, IExtensionDescription } from "../../../../platform/extensions/common/extensions.js";
+import { URI } from "../../../../base/common/uri.js";
+import { joinPath } from "../../../../base/common/resources.js";
+import { FileAccess } from "../../../../base/common/network.js";
+import { EXTENSION_INSTALL_DEP_PACK_CONTEXT, EXTENSION_INSTALL_SKIP_WALKTHROUGH_CONTEXT, IExtensionManagementService } from "../../../../platform/extensionManagement/common/extensionManagement.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { walkthroughs } from "../common/gettingStartedContent.js";
+import { IWorkbenchAssignmentService } from "../../../services/assignment/common/assignmentService.js";
+import { IHostService } from "../../../services/host/browser/host.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { ILink, LinkedText, parseLinkedText } from "../../../../base/common/linkedText.js";
+import { walkthroughsExtensionPoint } from "./gettingStartedExtensionPoint.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { dirname } from "../../../../base/common/path.js";
+import { coalesce } from "../../../../base/common/arrays.js";
+import { IViewsService } from "../../../services/views/common/viewsService.js";
+import { localize, localize2 } from "../../../../nls.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { checkGlobFileExists } from "../../../services/extensions/common/workspaceContains.js";
+import { IWorkspaceContextService } from "../../../../platform/workspace/common/workspace.js";
+import { CancellationTokenSource } from "../../../../base/common/cancellation.js";
+import { DefaultIconPath } from "../../../services/extensionManagement/common/extensionManagement.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+import { asWebviewUri } from "../../webview/common/webview.js";
+import { IWorkbenchLayoutService, Parts } from "../../../services/layout/browser/layoutService.js";
+const HasMultipleNewFileEntries = new RawContextKey("hasMultipleNewFileEntries", false);
+const IWalkthroughsService = createDecorator("walkthroughsService");
+const hiddenEntriesConfigurationKey = "workbench.welcomePage.hiddenCategories";
+const walkthroughMetadataConfigurationKey = "workbench.welcomePage.walkthroughMetadata";
+const BUILT_IN_SOURCE = localize("builtin", "Built-In");
+const DAYS = 24 * 60 * 60 * 1e3;
+const NEW_WALKTHROUGH_TIME = 7 * DAYS;
+let WalkthroughsService = class extends Disposable {
+  constructor(storageService, commandService, instantiationService, workspaceContextService, contextService, userDataSyncEnablementService, configurationService, extensionManagementService, hostService, viewsService, telemetryService, tasExperimentService, productService, layoutService) {
+    super();
+    this.storageService = storageService;
+    this.commandService = commandService;
+    this.instantiationService = instantiationService;
+    this.workspaceContextService = workspaceContextService;
+    this.contextService = contextService;
+    this.userDataSyncEnablementService = userDataSyncEnablementService;
+    this.configurationService = configurationService;
+    this.extensionManagementService = extensionManagementService;
+    this.hostService = hostService;
+    this.viewsService = viewsService;
+    this.telemetryService = telemetryService;
+    this.tasExperimentService = tasExperimentService;
+    this.productService = productService;
+    this.layoutService = layoutService;
+    this.metadata = new Map(
+      JSON.parse(
+        this.storageService.get(walkthroughMetadataConfigurationKey, StorageScope.PROFILE, "[]")
+      )
+    );
+    this.memento = new Memento("gettingStartedService", this.storageService);
+    this.stepProgress = this.memento.getMemento(StorageScope.PROFILE, StorageTarget.USER);
+    this.initCompletionEventListeners();
+    HasMultipleNewFileEntries.bindTo(this.contextService).set(false);
+    this.registerWalkthroughs();
+  }
+  static {
+    __name(this, "WalkthroughsService");
+  }
+  _onDidAddWalkthrough = new Emitter();
+  onDidAddWalkthrough = this._onDidAddWalkthrough.event;
+  _onDidRemoveWalkthrough = new Emitter();
+  onDidRemoveWalkthrough = this._onDidRemoveWalkthrough.event;
+  _onDidChangeWalkthrough = new Emitter();
+  onDidChangeWalkthrough = this._onDidChangeWalkthrough.event;
+  _onDidProgressStep = new Emitter();
+  onDidProgressStep = this._onDidProgressStep.event;
+  memento;
+  stepProgress;
+  sessionEvents = /* @__PURE__ */ new Set();
+  completionListeners = /* @__PURE__ */ new Map();
+  gettingStartedContributions = /* @__PURE__ */ new Map();
+  steps = /* @__PURE__ */ new Map();
+  sessionInstalledExtensions = /* @__PURE__ */ new Set();
+  categoryVisibilityContextKeys = /* @__PURE__ */ new Set();
+  stepCompletionContextKeyExpressions = /* @__PURE__ */ new Set();
+  stepCompletionContextKeys = /* @__PURE__ */ new Set();
+  metadata;
+  registerWalkthroughs() {
+    walkthroughs.forEach(async (category, index) => {
+      this._registerWalkthrough({
+        ...category,
+        icon: { type: "icon", icon: category.icon },
+        order: walkthroughs.length - index,
+        source: BUILT_IN_SOURCE,
+        when: ContextKeyExpr.deserialize(category.when) ?? ContextKeyExpr.true(),
+        steps: category.content.steps.map((step, index2) => {
+          return {
+            ...step,
+            completionEvents: step.completionEvents ?? [],
+            description: parseDescription(step.description),
+            category: category.id,
+            order: index2,
+            when: ContextKeyExpr.deserialize(step.when) ?? ContextKeyExpr.true(),
+            media: step.media.type === "image" ? {
+              type: "image",
+              altText: step.media.altText,
+              path: convertInternalMediaPathsToBrowserURIs(step.media.path)
+            } : step.media.type === "svg" ? {
+              type: "svg",
+              altText: step.media.altText,
+              path: convertInternalMediaPathToFileURI(step.media.path).with({ query: JSON.stringify({ moduleId: "vs/workbench/contrib/welcomeGettingStarted/common/media/" + step.media.path }) })
+            } : step.media.type === "markdown" ? {
+              type: "markdown",
+              path: convertInternalMediaPathToFileURI(step.media.path).with({ query: JSON.stringify({ moduleId: "vs/workbench/contrib/welcomeGettingStarted/common/media/" + step.media.path }) }),
+              base: FileAccess.asFileUri("vs/workbench/contrib/welcomeGettingStarted/common/media/"),
+              root: FileAccess.asFileUri("vs/workbench/contrib/welcomeGettingStarted/common/media/")
+            } : {
+              type: "video",
+              path: convertRelativeMediaPathsToWebviewURIs(FileAccess.asFileUri("vs/workbench/contrib/welcomeGettingStarted/common/media/"), step.media.path),
+              altText: step.media.altText,
+              root: FileAccess.asFileUri("vs/workbench/contrib/welcomeGettingStarted/common/media/"),
+              poster: step.media.poster ? convertRelativeMediaPathsToWebviewURIs(FileAccess.asFileUri("vs/workbench/contrib/welcomeGettingStarted/common/media/"), step.media.poster) : void 0
+            }
+          };
+        })
+      });
+    });
+    walkthroughsExtensionPoint.setHandler((_, { added, removed }) => {
+      added.map((e) => this.registerExtensionWalkthroughContributions(e.description));
+      removed.map((e) => this.unregisterExtensionWalkthroughContributions(e.description));
+    });
+  }
+  initCompletionEventListeners() {
+    this._register(this.commandService.onDidExecuteCommand((command) => this.progressByEvent(`onCommand:${command.commandId}`)));
+    this.extensionManagementService.getInstalled().then((installed) => {
+      installed.forEach((ext) => this.progressByEvent(`extensionInstalled:${ext.identifier.id.toLowerCase()}`));
+    });
+    this._register(this.extensionManagementService.onDidInstallExtensions((result) => {
+      if (result.some((e) => ExtensionIdentifier.equals(this.productService.defaultChatAgent?.extensionId, e.identifier.id) && !e?.context?.[EXTENSION_INSTALL_SKIP_WALKTHROUGH_CONTEXT])) {
+        result.forEach((e) => {
+          this.sessionInstalledExtensions.add(e.identifier.id.toLowerCase());
+          this.progressByEvent(`extensionInstalled:${e.identifier.id.toLowerCase()}`);
+        });
+        return;
+      }
+      for (const e of result) {
+        const skipWalkthrough = e?.context?.[EXTENSION_INSTALL_SKIP_WALKTHROUGH_CONTEXT] || e?.context?.[EXTENSION_INSTALL_DEP_PACK_CONTEXT];
+        if (!skipWalkthrough) {
+          this.sessionInstalledExtensions.add(e.identifier.id.toLowerCase());
+        }
+        this.progressByEvent(`extensionInstalled:${e.identifier.id.toLowerCase()}`);
+      }
+    }));
+    this._register(this.contextService.onDidChangeContext((event) => {
+      if (event.affectsSome(this.stepCompletionContextKeys)) {
+        this.stepCompletionContextKeyExpressions.forEach((expression) => {
+          if (event.affectsSome(new Set(expression.keys())) && this.contextService.contextMatchesRules(expression)) {
+            this.progressByEvent(`onContext:` + expression.serialize());
+          }
+        });
+      }
+    }));
+    this._register(this.viewsService.onDidChangeViewVisibility((e) => {
+      if (e.visible) {
+        this.progressByEvent("onView:" + e.id);
+      }
+    }));
+    this._register(this.configurationService.onDidChangeConfiguration((e) => {
+      e.affectedKeys.forEach((key) => {
+        this.progressByEvent("onSettingChanged:" + key);
+      });
+    }));
+    if (this.userDataSyncEnablementService.isEnabled()) {
+      this.progressByEvent("onEvent:sync-enabled");
+    }
+    this._register(this.userDataSyncEnablementService.onDidChangeEnablement(() => {
+      if (this.userDataSyncEnablementService.isEnabled()) {
+        this.progressByEvent("onEvent:sync-enabled");
+      }
+    }));
+  }
+  markWalkthroughOpened(id) {
+    const walkthrough = this.gettingStartedContributions.get(id);
+    const prior = this.metadata.get(id);
+    if (prior && walkthrough) {
+      this.metadata.set(id, { ...prior, manaullyOpened: true, stepIDs: walkthrough.steps.map((s) => s.id) });
+    }
+    this.storageService.store(walkthroughMetadataConfigurationKey, JSON.stringify([...this.metadata.entries()]), StorageScope.PROFILE, StorageTarget.USER);
+  }
+  async registerExtensionWalkthroughContributions(extension) {
+    const convertExtensionPathToFileURI = /* @__PURE__ */ __name((path) => path.startsWith("https://") ? URI.parse(path, true) : FileAccess.uriToFileUri(joinPath(extension.extensionLocation, path)), "convertExtensionPathToFileURI");
+    const convertExtensionRelativePathsToBrowserURIs = /* @__PURE__ */ __name((path) => {
+      const convertPath = /* @__PURE__ */ __name((path2) => path2.startsWith("https://") ? URI.parse(path2, true) : FileAccess.uriToBrowserUri(joinPath(extension.extensionLocation, path2)), "convertPath");
+      if (typeof path === "string") {
+        const converted = convertPath(path);
+        return { hcDark: converted, hcLight: converted, dark: converted, light: converted };
+      } else {
+        return {
+          hcDark: convertPath(path.hc),
+          hcLight: convertPath(path.hcLight ?? path.light),
+          light: convertPath(path.light),
+          dark: convertPath(path.dark)
+        };
+      }
+    }, "convertExtensionRelativePathsToBrowserURIs");
+    if (!extension.contributes?.walkthroughs?.length) {
+      return;
+    }
+    let sectionToOpen;
+    let sectionToOpenIndex = Math.min();
+    await Promise.all(extension.contributes?.walkthroughs?.map(async (walkthrough, index) => {
+      const categoryID = extension.identifier.value + "#" + walkthrough.id;
+      const isNewlyInstalled = !this.metadata.get(categoryID);
+      if (isNewlyInstalled) {
+        this.metadata.set(categoryID, { firstSeen: +/* @__PURE__ */ new Date(), stepIDs: walkthrough.steps?.map((s) => s.id) ?? [], manaullyOpened: false });
+      }
+      const override = await Promise.race([
+        this.tasExperimentService?.getTreatment(`gettingStarted.overrideCategory.${extension.identifier.value + "." + walkthrough.id}.when`),
+        new Promise((resolve) => setTimeout(() => resolve(walkthrough.when), 5e3))
+      ]);
+      if (this.sessionInstalledExtensions.has(extension.identifier.value.toLowerCase()) && this.contextService.contextMatchesRules(ContextKeyExpr.deserialize(override ?? walkthrough.when) ?? ContextKeyExpr.true())) {
+        this.sessionInstalledExtensions.delete(extension.identifier.value.toLowerCase());
+        if (index < sectionToOpenIndex && isNewlyInstalled) {
+          sectionToOpen = categoryID;
+          sectionToOpenIndex = index;
+        }
+      }
+      const steps = (walkthrough.steps ?? []).map((step, index2) => {
+        const description = parseDescription(step.description || "");
+        const fullyQualifiedID = extension.identifier.value + "#" + walkthrough.id + "#" + step.id;
+        let media;
+        if (!step.media) {
+          throw Error("missing media in walkthrough step: " + walkthrough.id + "@" + step.id);
+        }
+        if (step.media.image) {
+          const altText = step.media.altText;
+          if (altText === void 0) {
+            console.error("Walkthrough item:", fullyQualifiedID, "is missing altText for its media element.");
+          }
+          media = { type: "image", altText, path: convertExtensionRelativePathsToBrowserURIs(step.media.image) };
+        } else if (step.media.markdown) {
+          media = {
+            type: "markdown",
+            path: convertExtensionPathToFileURI(step.media.markdown),
+            base: convertExtensionPathToFileURI(dirname(step.media.markdown)),
+            root: FileAccess.uriToFileUri(extension.extensionLocation)
+          };
+        } else if (step.media.svg) {
+          media = {
+            type: "svg",
+            path: convertExtensionPathToFileURI(step.media.svg),
+            altText: step.media.svg
+          };
+        } else if (step.media.video) {
+          const baseURI = FileAccess.uriToFileUri(extension.extensionLocation);
+          media = {
+            type: "video",
+            path: convertRelativeMediaPathsToWebviewURIs(baseURI, step.media.video),
+            root: FileAccess.uriToFileUri(extension.extensionLocation),
+            altText: step.media.altText,
+            poster: step.media.poster ? convertRelativeMediaPathsToWebviewURIs(baseURI, step.media.poster) : void 0
+          };
+        } else {
+          throw new Error("Unknown walkthrough format detected for " + fullyQualifiedID);
+        }
+        return {
+          description,
+          media,
+          completionEvents: step.completionEvents?.filter((x) => typeof x === "string") ?? [],
+          id: fullyQualifiedID,
+          title: step.title,
+          when: ContextKeyExpr.deserialize(step.when) ?? ContextKeyExpr.true(),
+          category: categoryID,
+          order: index2
+        };
+      });
+      let isFeatured = false;
+      if (walkthrough.featuredFor) {
+        const folders = this.workspaceContextService.getWorkspace().folders.map((f) => f.uri);
+        const token = new CancellationTokenSource();
+        setTimeout(() => token.cancel(), 2e3);
+        isFeatured = await this.instantiationService.invokeFunction((a) => checkGlobFileExists(a, folders, walkthrough.featuredFor, token.token));
+      }
+      const iconStr = walkthrough.icon ?? extension.icon;
+      const walkthoughDescriptor = {
+        description: walkthrough.description,
+        title: walkthrough.title,
+        id: categoryID,
+        isFeatured,
+        source: extension.displayName ?? extension.name,
+        order: 0,
+        walkthroughPageTitle: extension.displayName ?? extension.name,
+        steps,
+        icon: {
+          type: "image",
+          path: iconStr ? FileAccess.uriToBrowserUri(joinPath(extension.extensionLocation, iconStr)).toString(true) : DefaultIconPath
+        },
+        when: ContextKeyExpr.deserialize(override ?? walkthrough.when) ?? ContextKeyExpr.true()
+      };
+      this._registerWalkthrough(walkthoughDescriptor);
+      this._onDidAddWalkthrough.fire(this.resolveWalkthrough(walkthoughDescriptor));
+    }));
+    this.storageService.store(walkthroughMetadataConfigurationKey, JSON.stringify([...this.metadata.entries()]), StorageScope.PROFILE, StorageTarget.USER);
+    const hadLastFoucs = await this.hostService.hadLastFocus();
+    if (hadLastFoucs && sectionToOpen && this.configurationService.getValue("workbench.welcomePage.walkthroughs.openOnInstall")) {
+      this.telemetryService.publicLog2("gettingStarted.didAutoOpenWalkthrough", { id: sectionToOpen });
+      this.commandService.executeCommand("workbench.action.openWalkthrough", sectionToOpen, {
+        inactive: this.layoutService.hasFocus(Parts.EDITOR_PART)
+        // do not steal the active editor away
+      });
+    }
+  }
+  unregisterExtensionWalkthroughContributions(extension) {
+    if (!extension.contributes?.walkthroughs?.length) {
+      return;
+    }
+    extension.contributes?.walkthroughs?.forEach((section) => {
+      const categoryID = extension.identifier.value + "#" + section.id;
+      section.steps.forEach((step) => {
+        const fullyQualifiedID = extension.identifier.value + "#" + section.id + "#" + step.id;
+        this.steps.delete(fullyQualifiedID);
+      });
+      this.gettingStartedContributions.delete(categoryID);
+      this._onDidRemoveWalkthrough.fire(categoryID);
+    });
+  }
+  getWalkthrough(id) {
+    const walkthrough = this.gettingStartedContributions.get(id);
+    if (!walkthrough) {
+      throw Error("Trying to get unknown walkthrough: " + id);
+    }
+    return this.resolveWalkthrough(walkthrough);
+  }
+  getWalkthroughs() {
+    const registeredCategories = [...this.gettingStartedContributions.values()];
+    const categoriesWithCompletion = registeredCategories.map((category) => {
+      return {
+        ...category,
+        content: {
+          type: "steps",
+          steps: category.steps
+        }
+      };
+    }).filter((category) => category.content.type !== "steps" || category.content.steps.length).map((category) => this.resolveWalkthrough(category));
+    return categoriesWithCompletion;
+  }
+  resolveWalkthrough(category) {
+    const stepsWithProgress = category.steps.map((step) => this.getStepProgress(step));
+    const hasOpened = this.metadata.get(category.id)?.manaullyOpened;
+    const firstSeenDate = this.metadata.get(category.id)?.firstSeen;
+    const isNew = firstSeenDate && firstSeenDate > +/* @__PURE__ */ new Date() - NEW_WALKTHROUGH_TIME;
+    const lastStepIDs = this.metadata.get(category.id)?.stepIDs;
+    const rawCategory = this.gettingStartedContributions.get(category.id);
+    if (!rawCategory) {
+      throw Error("Could not find walkthrough with id " + category.id);
+    }
+    const currentStepIds = rawCategory.steps.map((s) => s.id);
+    const hasNewSteps = lastStepIDs && (currentStepIds.length !== lastStepIDs.length || currentStepIds.some((id, index) => id !== lastStepIDs[index]));
+    let recencyBonus = 0;
+    if (firstSeenDate) {
+      const currentDate = +/* @__PURE__ */ new Date();
+      const timeSinceFirstSeen = currentDate - firstSeenDate;
+      recencyBonus = Math.max(0, (NEW_WALKTHROUGH_TIME - timeSinceFirstSeen) / NEW_WALKTHROUGH_TIME);
+    }
+    return {
+      ...category,
+      recencyBonus,
+      steps: stepsWithProgress,
+      newItems: !!hasNewSteps,
+      newEntry: !!(isNew && !hasOpened)
+    };
+  }
+  getStepProgress(step) {
+    return {
+      ...step,
+      done: false,
+      ...this.stepProgress[step.id]
+    };
+  }
+  progressStep(id) {
+    const oldProgress = this.stepProgress[id];
+    if (!oldProgress || oldProgress.done !== true) {
+      this.stepProgress[id] = { done: true };
+      this.memento.saveMemento();
+      const step = this.getStep(id);
+      if (!step) {
+        throw Error("Tried to progress unknown step");
+      }
+      this._onDidProgressStep.fire(this.getStepProgress(step));
+    }
+  }
+  deprogressStep(id) {
+    delete this.stepProgress[id];
+    this.memento.saveMemento();
+    const step = this.getStep(id);
+    this._onDidProgressStep.fire(this.getStepProgress(step));
+  }
+  progressByEvent(event) {
+    if (this.sessionEvents.has(event)) {
+      return;
+    }
+    this.sessionEvents.add(event);
+    this.completionListeners.get(event)?.forEach((id) => this.progressStep(id));
+  }
+  registerWalkthrough(walkthoughDescriptor) {
+    this._registerWalkthrough({
+      ...walkthoughDescriptor,
+      steps: walkthoughDescriptor.steps.map((step) => ({ ...step, description: parseDescription(step.description) }))
+    });
+  }
+  _registerWalkthrough(walkthroughDescriptor) {
+    const oldCategory = this.gettingStartedContributions.get(walkthroughDescriptor.id);
+    if (oldCategory) {
+      console.error(`Skipping attempt to overwrite walkthrough. (${walkthroughDescriptor.id})`);
+      return;
+    }
+    this.gettingStartedContributions.set(walkthroughDescriptor.id, walkthroughDescriptor);
+    walkthroughDescriptor.steps.forEach((step) => {
+      if (this.steps.has(step.id)) {
+        throw Error("Attempting to register step with id " + step.id + " twice. Second is dropped.");
+      }
+      this.steps.set(step.id, step);
+      step.when.keys().forEach((key) => this.categoryVisibilityContextKeys.add(key));
+      this.registerDoneListeners(step);
+    });
+    walkthroughDescriptor.when.keys().forEach((key) => this.categoryVisibilityContextKeys.add(key));
+  }
+  registerDoneListeners(step) {
+    if (step.doneOn) {
+      console.error(`wakthrough step`, step, `uses deprecated 'doneOn' property. Adopt 'completionEvents' to silence this warning`);
+      return;
+    }
+    if (!step.completionEvents.length) {
+      step.completionEvents = coalesce(
+        step.description.filter((linkedText) => linkedText.nodes.length === 1).flatMap((linkedText) => linkedText.nodes.filter((node) => typeof node !== "string").map(({ href }) => {
+          if (href.startsWith("command:")) {
+            return "onCommand:" + href.slice("command:".length, href.includes("?") ? href.indexOf("?") : void 0);
+          }
+          if (href.startsWith("https://") || href.startsWith("http://")) {
+            return "onLink:" + href;
+          }
+          return void 0;
+        }))
+      );
+    }
+    if (!step.completionEvents.length) {
+      step.completionEvents.push("stepSelected");
+    }
+    for (let event of step.completionEvents) {
+      const [_, eventType, argument] = /^([^:]*):?(.*)$/.exec(event) ?? [];
+      if (!eventType) {
+        console.error(`Unknown completionEvent ${event} when registering step ${step.id}`);
+        continue;
+      }
+      switch (eventType) {
+        case "onLink":
+        case "onEvent":
+        case "onView":
+        case "onSettingChanged":
+          break;
+        case "onContext": {
+          const expression = ContextKeyExpr.deserialize(argument);
+          if (expression) {
+            this.stepCompletionContextKeyExpressions.add(expression);
+            expression.keys().forEach((key) => this.stepCompletionContextKeys.add(key));
+            event = eventType + ":" + expression.serialize();
+            if (this.contextService.contextMatchesRules(expression)) {
+              this.sessionEvents.add(event);
+            }
+          } else {
+            console.error("Unable to parse context key expression:", expression, "in walkthrough step", step.id);
+          }
+          break;
+        }
+        case "onStepSelected":
+        case "stepSelected":
+          event = "stepSelected:" + step.id;
+          break;
+        case "onCommand":
+          event = eventType + ":" + argument.replace(/^toSide:/, "");
+          break;
+        case "onExtensionInstalled":
+        case "extensionInstalled":
+          event = "extensionInstalled:" + argument.toLowerCase();
+          break;
+        default:
+          console.error(`Unknown completionEvent ${event} when registering step ${step.id}`);
+          continue;
+      }
+      this.registerCompletionListener(event, step);
+    }
+  }
+  registerCompletionListener(event, step) {
+    if (!this.completionListeners.has(event)) {
+      this.completionListeners.set(event, /* @__PURE__ */ new Set());
+    }
+    this.completionListeners.get(event)?.add(step.id);
+  }
+  getStep(id) {
+    const step = this.steps.get(id);
+    if (!step) {
+      throw Error("Attempting to access step which does not exist in registry " + id);
+    }
+    return step;
+  }
+};
+WalkthroughsService = __decorateClass([
+  __decorateParam(0, IStorageService),
+  __decorateParam(1, ICommandService),
+  __decorateParam(2, IInstantiationService),
+  __decorateParam(3, IWorkspaceContextService),
+  __decorateParam(4, IContextKeyService),
+  __decorateParam(5, IUserDataSyncEnablementService),
+  __decorateParam(6, IConfigurationService),
+  __decorateParam(7, IExtensionManagementService),
+  __decorateParam(8, IHostService),
+  __decorateParam(9, IViewsService),
+  __decorateParam(10, ITelemetryService),
+  __decorateParam(11, IWorkbenchAssignmentService),
+  __decorateParam(12, IProductService),
+  __decorateParam(13, IWorkbenchLayoutService)
+], WalkthroughsService);
+const parseDescription = /* @__PURE__ */ __name((desc) => desc.split("\n").filter((x) => x).map((text) => parseLinkedText(text)), "parseDescription");
+const convertInternalMediaPathToFileURI = /* @__PURE__ */ __name((path) => path.startsWith("https://") ? URI.parse(path, true) : FileAccess.asFileUri(`vs/workbench/contrib/welcomeGettingStarted/common/media/${path}`), "convertInternalMediaPathToFileURI");
+const convertInternalMediaPathToBrowserURI = /* @__PURE__ */ __name((path) => path.startsWith("https://") ? URI.parse(path, true) : FileAccess.asBrowserUri(`vs/workbench/contrib/welcomeGettingStarted/common/media/${path}`), "convertInternalMediaPathToBrowserURI");
+const convertInternalMediaPathsToBrowserURIs = /* @__PURE__ */ __name((path) => {
+  if (typeof path === "string") {
+    const converted = convertInternalMediaPathToBrowserURI(path);
+    return { hcDark: converted, hcLight: converted, dark: converted, light: converted };
+  } else {
+    return {
+      hcDark: convertInternalMediaPathToBrowserURI(path.hc),
+      hcLight: convertInternalMediaPathToBrowserURI(path.hcLight ?? path.light),
+      light: convertInternalMediaPathToBrowserURI(path.light),
+      dark: convertInternalMediaPathToBrowserURI(path.dark)
+    };
+  }
+}, "convertInternalMediaPathsToBrowserURIs");
+const convertRelativeMediaPathsToWebviewURIs = /* @__PURE__ */ __name((basePath, path) => {
+  const convertPath = /* @__PURE__ */ __name((path2) => path2.startsWith("https://") ? URI.parse(path2, true) : asWebviewUri(joinPath(basePath, path2)), "convertPath");
+  if (typeof path === "string") {
+    const converted = convertPath(path);
+    return { hcDark: converted, hcLight: converted, dark: converted, light: converted };
+  } else {
+    return {
+      hcDark: convertPath(path.hc),
+      hcLight: convertPath(path.hcLight ?? path.light),
+      light: convertPath(path.light),
+      dark: convertPath(path.dark)
+    };
+  }
+}, "convertRelativeMediaPathsToWebviewURIs");
+registerAction2(class extends Action2 {
+  constructor() {
+    super({
+      id: "resetGettingStartedProgress",
+      category: localize2("developer", "Developer"),
+      title: localize2("resetWelcomePageWalkthroughProgress", "Reset Welcome Page Walkthrough Progress"),
+      f1: true,
+      metadata: {
+        description: localize2("resetGettingStartedProgressDescription", "Reset the progress of all Walkthrough steps on the Welcome Page to make them appear as if they are being viewed for the first time, providing a fresh start to the getting started experience.")
+      }
+    });
+  }
+  run(accessor) {
+    const gettingStartedService = accessor.get(IWalkthroughsService);
+    const storageService = accessor.get(IStorageService);
+    storageService.store(
+      hiddenEntriesConfigurationKey,
+      JSON.stringify([]),
+      StorageScope.PROFILE,
+      StorageTarget.USER
+    );
+    storageService.store(
+      walkthroughMetadataConfigurationKey,
+      JSON.stringify([]),
+      StorageScope.PROFILE,
+      StorageTarget.USER
+    );
+    const memento = new Memento("gettingStartedService", accessor.get(IStorageService));
+    const record = memento.getMemento(StorageScope.PROFILE, StorageTarget.USER);
+    for (const key in record) {
+      if (Object.prototype.hasOwnProperty.call(record, key)) {
+        try {
+          gettingStartedService.deprogressStep(key);
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    }
+    memento.saveMemento();
+  }
+});
+registerSingleton(IWalkthroughsService, WalkthroughsService, InstantiationType.Delayed);
+export {
+  HasMultipleNewFileEntries,
+  IWalkthroughsService,
+  WalkthroughsService,
+  convertInternalMediaPathToFileURI,
+  hiddenEntriesConfigurationKey,
+  parseDescription,
+  walkthroughMetadataConfigurationKey
+};
+//# sourceMappingURL=gettingStartedService.js.map

@@ -1,1 +1,42 @@
-var c=Object.defineProperty,f=Object.getOwnPropertyDescriptor,p=(o,r,e,t)=>{for(var s,m=t>1?void 0:t?f(r,e):r,a=o.length-1;a>=0;a--)(s=o[a])&&(m=(t?s(r,e,m):s(m))||m);return t&&m&&c(r,e,m),m},a=(o,r)=>(e,t)=>r(e,t,o);import{join as d}from"../../../base/common/path.js";import{tmpdir as x}from"os";import{generateUuid as I}from"../../../base/common/uuid.js";import{IExtHostCommands as l}from"../common/extHostCommands.js";import{Disposable as u}from"../../../base/common/lifecycle.js";import{MainContext as R}from"../common/extHost.protocol.js";import{URI as y}from"../../../base/common/uri.js";import{IExtHostRpcService as C}from"../common/extHostRpcService.js";let n=class extends u{constructor(o,r){super();const e=o.getProxy(R.MainThreadDownloadService);r.registerCommand(!1,"_workbench.downloadResource",(async o=>{const r=y.file(d(x(),I()));return await e.$download(o,r),r}))}};n=p([a(0,C),a(1,l)],n);export{n as ExtHostDownloadService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { join } from "../../../base/common/path.js";
+import { tmpdir } from "os";
+import { generateUuid } from "../../../base/common/uuid.js";
+import { IExtHostCommands } from "../common/extHostCommands.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { MainContext } from "../common/extHost.protocol.js";
+import { URI } from "../../../base/common/uri.js";
+import { IExtHostRpcService } from "../common/extHostRpcService.js";
+let ExtHostDownloadService = class extends Disposable {
+  static {
+    __name(this, "ExtHostDownloadService");
+  }
+  constructor(extHostRpc, commands) {
+    super();
+    const proxy = extHostRpc.getProxy(MainContext.MainThreadDownloadService);
+    commands.registerCommand(false, "_workbench.downloadResource", async (resource) => {
+      const location = URI.file(join(tmpdir(), generateUuid()));
+      await proxy.$download(resource, location);
+      return location;
+    });
+  }
+};
+ExtHostDownloadService = __decorateClass([
+  __decorateParam(0, IExtHostRpcService),
+  __decorateParam(1, IExtHostCommands)
+], ExtHostDownloadService);
+export {
+  ExtHostDownloadService
+};
+//# sourceMappingURL=extHostDownloadService.js.map

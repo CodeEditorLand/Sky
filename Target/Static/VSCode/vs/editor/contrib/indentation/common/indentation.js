@@ -1,1 +1,90 @@
-import*as T from"../../../../base/common/strings.js";import{ShiftCommand as x}from"../../../common/commands/shiftCommand.js";import{EditOperation as C}from"../../../common/core/editOperation.js";import{normalizeIndentation as m}from"../../../common/core/indentation.js";import{Selection as z}from"../../../common/core/selection.js";import{StandardTokenType as E}from"../../../common/encodedTokenAttributes.js";import"../../../common/languages/languageConfigurationRegistry.js";import{ProcessedIndentRulesSupport as M}from"../../../common/languages/supports/indentationLineProcessor.js";import"../../../common/model.js";function A(e,n,o,t){if(1===e.getLineCount()&&1===e.getLineMaxColumn(1))return[];const i=n.getLanguageConfiguration(e.getLanguageId()).indentRulesSupport;if(!i)return[];const s=new M(e,i,n);for(t=Math.min(t,e.getLineCount());o<=t&&s.shouldIgnore(o);)o++;if(o>t-1)return[];const{tabSize:r,indentSize:a,insertSpaces:d}=e.getOptions(),g=(e,n)=>(n=n||1,x.shiftIndent(e,e.length+n,r,a,d)),u=(e,n)=>(n=n||1,x.unshiftIndent(e,e.length+n,r,a,d)),c=[],p=e.getLineContent(o);let l=T.getLeadingWhitespace(p),f=l;s.shouldIncrease(o)?(f=g(f),l=g(l)):s.shouldIndentNextLine(o)&&(f=g(f));for(let n=++o;n<=t;n++){if(O(e,n))continue;const o=e.getLineContent(n),t=T.getLeadingWhitespace(o),i=f;s.shouldDecrease(n,i)&&(f=u(f),l=u(l)),t!==f&&c.push(C.replaceMove(new z(n,1,n,t.length+1),m(f,a,d))),!s.shouldIgnore(n)&&(s.shouldIncrease(n,i)?(l=g(l),f=l):f=s.shouldIndentNextLine(n,i)?g(f):l)}return c}function O(e,n){return!!e.tokenization.isCheapToTokenize(n)&&e.tokenization.getLineTokens(n).getStandardTokenType(0)===E.String}export{A as getReindentEditOperations};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as strings from "../../../../base/common/strings.js";
+import { ShiftCommand } from "../../../common/commands/shiftCommand.js";
+import { EditOperation, ISingleEditOperation } from "../../../common/core/editOperation.js";
+import { normalizeIndentation } from "../../../common/core/indentation.js";
+import { Selection } from "../../../common/core/selection.js";
+import { StandardTokenType } from "../../../common/encodedTokenAttributes.js";
+import { ILanguageConfigurationService } from "../../../common/languages/languageConfigurationRegistry.js";
+import { ProcessedIndentRulesSupport } from "../../../common/languages/supports/indentationLineProcessor.js";
+import { ITextModel } from "../../../common/model.js";
+function getReindentEditOperations(model, languageConfigurationService, startLineNumber, endLineNumber) {
+  if (model.getLineCount() === 1 && model.getLineMaxColumn(1) === 1) {
+    return [];
+  }
+  const indentationRulesSupport = languageConfigurationService.getLanguageConfiguration(model.getLanguageId()).indentRulesSupport;
+  if (!indentationRulesSupport) {
+    return [];
+  }
+  const processedIndentRulesSupport = new ProcessedIndentRulesSupport(model, indentationRulesSupport, languageConfigurationService);
+  endLineNumber = Math.min(endLineNumber, model.getLineCount());
+  while (startLineNumber <= endLineNumber) {
+    if (!processedIndentRulesSupport.shouldIgnore(startLineNumber)) {
+      break;
+    }
+    startLineNumber++;
+  }
+  if (startLineNumber > endLineNumber - 1) {
+    return [];
+  }
+  const { tabSize, indentSize, insertSpaces } = model.getOptions();
+  const shiftIndent = /* @__PURE__ */ __name((indentation, count) => {
+    count = count || 1;
+    return ShiftCommand.shiftIndent(indentation, indentation.length + count, tabSize, indentSize, insertSpaces);
+  }, "shiftIndent");
+  const unshiftIndent = /* @__PURE__ */ __name((indentation, count) => {
+    count = count || 1;
+    return ShiftCommand.unshiftIndent(indentation, indentation.length + count, tabSize, indentSize, insertSpaces);
+  }, "unshiftIndent");
+  const indentEdits = [];
+  const currentLineText = model.getLineContent(startLineNumber);
+  let globalIndent = strings.getLeadingWhitespace(currentLineText);
+  let idealIndentForNextLine = globalIndent;
+  if (processedIndentRulesSupport.shouldIncrease(startLineNumber)) {
+    idealIndentForNextLine = shiftIndent(idealIndentForNextLine);
+    globalIndent = shiftIndent(globalIndent);
+  } else if (processedIndentRulesSupport.shouldIndentNextLine(startLineNumber)) {
+    idealIndentForNextLine = shiftIndent(idealIndentForNextLine);
+  }
+  startLineNumber++;
+  for (let lineNumber = startLineNumber; lineNumber <= endLineNumber; lineNumber++) {
+    if (doesLineStartWithString(model, lineNumber)) {
+      continue;
+    }
+    const text = model.getLineContent(lineNumber);
+    const oldIndentation = strings.getLeadingWhitespace(text);
+    const currentIdealIndent = idealIndentForNextLine;
+    if (processedIndentRulesSupport.shouldDecrease(lineNumber, currentIdealIndent)) {
+      idealIndentForNextLine = unshiftIndent(idealIndentForNextLine);
+      globalIndent = unshiftIndent(globalIndent);
+    }
+    if (oldIndentation !== idealIndentForNextLine) {
+      indentEdits.push(EditOperation.replaceMove(new Selection(lineNumber, 1, lineNumber, oldIndentation.length + 1), normalizeIndentation(idealIndentForNextLine, indentSize, insertSpaces)));
+    }
+    if (processedIndentRulesSupport.shouldIgnore(lineNumber)) {
+      continue;
+    } else if (processedIndentRulesSupport.shouldIncrease(lineNumber, currentIdealIndent)) {
+      globalIndent = shiftIndent(globalIndent);
+      idealIndentForNextLine = globalIndent;
+    } else if (processedIndentRulesSupport.shouldIndentNextLine(lineNumber, currentIdealIndent)) {
+      idealIndentForNextLine = shiftIndent(idealIndentForNextLine);
+    } else {
+      idealIndentForNextLine = globalIndent;
+    }
+  }
+  return indentEdits;
+}
+__name(getReindentEditOperations, "getReindentEditOperations");
+function doesLineStartWithString(model, lineNumber) {
+  if (!model.tokenization.isCheapToTokenize(lineNumber)) {
+    return false;
+  }
+  const lineTokens = model.tokenization.getLineTokens(lineNumber);
+  return lineTokens.getStandardTokenType(0) === StandardTokenType.String;
+}
+__name(doesLineStartWithString, "doesLineStartWithString");
+export {
+  getReindentEditOperations
+};
+//# sourceMappingURL=indentation.js.map

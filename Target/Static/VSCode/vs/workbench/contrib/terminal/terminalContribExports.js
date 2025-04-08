@@ -1,1 +1,47 @@
-import{TerminalAccessibilityCommandId as i,defaultTerminalAccessibilityCommandsToSkipShell as t}from"../terminalContrib/accessibility/common/terminal.accessibility.js";import{terminalAccessibilityConfiguration as r}from"../terminalContrib/accessibility/common/terminalAccessibilityConfiguration.js";import{terminalAutoRepliesConfiguration as e}from"../terminalContrib/autoReplies/common/terminalAutoRepliesConfiguration.js";import{terminalInitialHintConfiguration as m}from"../terminalContrib/chat/common/terminalInitialHintConfiguration.js";import{terminalCommandGuideConfiguration as n}from"../terminalContrib/commandGuide/common/terminalCommandGuideConfiguration.js";import{TerminalDeveloperCommandId as l}from"../terminalContrib/developer/common/terminal.developer.js";import{defaultTerminalFindCommandToSkipShell as a}from"../terminalContrib/find/common/terminal.find.js";import{defaultTerminalHistoryCommandsToSkipShell as f,terminalHistoryConfiguration as s}from"../terminalContrib/history/common/terminal.history.js";import{TerminalStickyScrollSettingId as p,terminalStickyScrollConfiguration as u}from"../terminalContrib/stickyScroll/common/terminalStickyScrollConfiguration.js";import{defaultTerminalSuggestCommandsToSkipShell as c}from"../terminalContrib/suggest/common/terminal.suggest.js";import{TerminalSuggestSettingId as g,terminalSuggestConfiguration as S}from"../terminalContrib/suggest/common/terminalSuggestConfiguration.js";import{terminalTypeAheadConfiguration as d}from"../terminalContrib/typeAhead/common/terminalTypeAheadConfiguration.js";import{terminalZoomConfiguration as y}from"../terminalContrib/zoom/common/terminal.zoom.js";var C=(o=>(o[o.A11yFocusAccessibleBuffer=i.FocusAccessibleBuffer]="A11yFocusAccessibleBuffer",o[o.DeveloperRestartPtyHost=l.RestartPtyHost]="DeveloperRestartPtyHost",o))(C||{}),k=(i=>(i[i.SuggestEnabled=g.Enabled]="SuggestEnabled",i[i.StickyScrollEnabled=p.Enabled]="StickyScrollEnabled",i))(k||{});const P={...r,...e,...m,...n,...s,...u,...S,...d,...y},j=[...t,...a,...f,...c];export{C as TerminalContribCommandId,k as TerminalContribSettingId,j as defaultTerminalContribCommandsToSkipShell,P as terminalContribConfiguration};
+import { TerminalAccessibilityCommandId, defaultTerminalAccessibilityCommandsToSkipShell } from "../terminalContrib/accessibility/common/terminal.accessibility.js";
+import { terminalAccessibilityConfiguration } from "../terminalContrib/accessibility/common/terminalAccessibilityConfiguration.js";
+import { terminalAutoRepliesConfiguration } from "../terminalContrib/autoReplies/common/terminalAutoRepliesConfiguration.js";
+import { terminalInitialHintConfiguration } from "../terminalContrib/chat/common/terminalInitialHintConfiguration.js";
+import { terminalCommandGuideConfiguration } from "../terminalContrib/commandGuide/common/terminalCommandGuideConfiguration.js";
+import { TerminalDeveloperCommandId } from "../terminalContrib/developer/common/terminal.developer.js";
+import { defaultTerminalFindCommandToSkipShell } from "../terminalContrib/find/common/terminal.find.js";
+import { defaultTerminalHistoryCommandsToSkipShell, terminalHistoryConfiguration } from "../terminalContrib/history/common/terminal.history.js";
+import { TerminalStickyScrollSettingId, terminalStickyScrollConfiguration } from "../terminalContrib/stickyScroll/common/terminalStickyScrollConfiguration.js";
+import { defaultTerminalSuggestCommandsToSkipShell } from "../terminalContrib/suggest/common/terminal.suggest.js";
+import { TerminalSuggestSettingId, terminalSuggestConfiguration } from "../terminalContrib/suggest/common/terminalSuggestConfiguration.js";
+import { terminalTypeAheadConfiguration } from "../terminalContrib/typeAhead/common/terminalTypeAheadConfiguration.js";
+import { terminalZoomConfiguration } from "../terminalContrib/zoom/common/terminal.zoom.js";
+var TerminalContribCommandId = ((TerminalContribCommandId2) => {
+  TerminalContribCommandId2[TerminalContribCommandId2["A11yFocusAccessibleBuffer"] = TerminalAccessibilityCommandId.FocusAccessibleBuffer] = "A11yFocusAccessibleBuffer";
+  TerminalContribCommandId2[TerminalContribCommandId2["DeveloperRestartPtyHost"] = TerminalDeveloperCommandId.RestartPtyHost] = "DeveloperRestartPtyHost";
+  return TerminalContribCommandId2;
+})(TerminalContribCommandId || {});
+var TerminalContribSettingId = ((TerminalContribSettingId2) => {
+  TerminalContribSettingId2[TerminalContribSettingId2["SuggestEnabled"] = TerminalSuggestSettingId.Enabled] = "SuggestEnabled";
+  TerminalContribSettingId2[TerminalContribSettingId2["StickyScrollEnabled"] = TerminalStickyScrollSettingId.Enabled] = "StickyScrollEnabled";
+  return TerminalContribSettingId2;
+})(TerminalContribSettingId || {});
+const terminalContribConfiguration = {
+  ...terminalAccessibilityConfiguration,
+  ...terminalAutoRepliesConfiguration,
+  ...terminalInitialHintConfiguration,
+  ...terminalCommandGuideConfiguration,
+  ...terminalHistoryConfiguration,
+  ...terminalStickyScrollConfiguration,
+  ...terminalSuggestConfiguration,
+  ...terminalTypeAheadConfiguration,
+  ...terminalZoomConfiguration
+};
+const defaultTerminalContribCommandsToSkipShell = [
+  ...defaultTerminalAccessibilityCommandsToSkipShell,
+  ...defaultTerminalFindCommandToSkipShell,
+  ...defaultTerminalHistoryCommandsToSkipShell,
+  ...defaultTerminalSuggestCommandsToSkipShell
+];
+export {
+  TerminalContribCommandId,
+  TerminalContribSettingId,
+  defaultTerminalContribCommandsToSkipShell,
+  terminalContribConfiguration
+};
+//# sourceMappingURL=terminalContribExports.js.map

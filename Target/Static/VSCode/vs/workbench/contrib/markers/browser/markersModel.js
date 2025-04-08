@@ -1,1 +1,228 @@
-import{isNonEmptyArray as M}from"../../../../base/common/arrays.js";import{Emitter as R}from"../../../../base/common/event.js";import"../../../../base/common/filters.js";import{hash as v}from"../../../../base/common/hash.js";import{ResourceMap as _}from"../../../../base/common/map.js";import{basename as S,extUri as c}from"../../../../base/common/resources.js";import{splitLines as U}from"../../../../base/common/strings.js";import"../../../../base/common/uri.js";import{Range as C}from"../../../../editor/common/core/range.js";import{IMarkerData as w,MarkerSeverity as f}from"../../../../platform/markers/common/markers.js";import{unsupportedSchemas as B}from"../../../../platform/markers/common/markerService.js";function Q(a,e){return c.compare(a.resource,e.resource)}function x(a,e){const[r]=a.markers,[s]=e.markers;let o=0;return r&&s&&(o=f.compare(r.marker.severity,s.marker.severity)),o===0&&(o=a.path.localeCompare(e.path)||a.name.localeCompare(e.name)),o}class m{constructor(e,r){this.id=e;this.resource=r;this.path=this.resource.fsPath,this.name=S(this.resource)}path;name;_markersMap=new _;_cachedMarkers;_total=0;get markers(){return this._cachedMarkers||(this._cachedMarkers=[...this._markersMap.values()].flat().sort(m._compareMarkers)),this._cachedMarkers}has(e){return this._markersMap.has(e)}set(e,r){this.delete(e),M(r)&&(this._markersMap.set(e,r),this._total+=r.length,this._cachedMarkers=void 0)}delete(e){const r=this._markersMap.get(e);r&&(this._total-=r.length,this._cachedMarkers=void 0,this._markersMap.delete(e))}get total(){return this._total}static _compareMarkers(e,r){return f.compare(e.marker.severity,r.marker.severity)||c.compare(e.resource,r.resource)||C.compareRangesUsingStarts(e.marker,r.marker)}}class g{constructor(e,r,s=[]){this.id=e;this.marker=r;this.relatedInformation=s}get resource(){return this.marker.resource}get range(){return this.marker}_lines;get lines(){return this._lines||(this._lines=U(this.marker.message)),this._lines}toString(){return JSON.stringify({...this.marker,resource:this.marker.resource.path,relatedInformation:this.relatedInformation.length?this.relatedInformation.map(e=>({...e.raw,resource:e.raw.resource.path})):void 0},null,"	")}}class V extends g{constructor(r,s,o,d,t){super(r.id,r.marker,r.relatedInformation);this.sourceMatches=s;this.codeMatches=o;this.messageMatches=d;this.fileMatches=t}}class E{constructor(e,r,s){this.id=e;this.marker=r;this.raw=s}}class W{cachedSortedResources=void 0;_onDidChange=new R;onDidChange=this._onDidChange.event;get resourceMarkers(){return this.cachedSortedResources||(this.cachedSortedResources=[...this.resourcesByUri.values()].sort(x)),this.cachedSortedResources}resourcesByUri;constructor(){this.resourcesByUri=new Map}reset(){const e=new Set;for(const r of this.resourcesByUri.values())e.add(r);this.resourcesByUri.clear(),this._total=0,this._onDidChange.fire({removed:e,added:new Set,updated:new Set})}_total=0;get total(){return this._total}getResourceMarkers(e){return this.resourcesByUri.get(c.getComparisonKey(e,!0))??null}setResourceMarkers(e){const r={added:new Set,removed:new Set,updated:new Set};for(const[s,o]of e){if(B.has(s.scheme))continue;const d=c.getComparisonKey(s,!0);let t=this.resourcesByUri.get(d);if(M(o)){if(t)r.updated.add(t);else{const n=this.id(s.toString());t=new m(n,s.with({fragment:null})),this.resourcesByUri.set(d,t),r.added.add(t)}const h=new Map,y=o.map(n=>{const u=w.makeKey(n),l=h.get(u)||0;h.set(u,l+1);const k=this.id(t.id,u,l,n.resource.toString());let p;return n.relatedInformation&&(p=n.relatedInformation.map((i,I)=>new E(this.id(k,i.resource.toString(),i.startLineNumber,i.startColumn,i.endLineNumber,i.endColumn,I),n,i))),new g(k,n,p)});this._total-=t.total,t.set(s,y),this._total+=t.total}else t&&(this._total-=t.total,t.delete(s),this._total+=t.total,t.total===0?(this.resourcesByUri.delete(d),r.removed.add(t)):r.updated.add(t))}this.cachedSortedResources=void 0,(r.added.size||r.removed.size||r.updated.size)&&this._onDidChange.fire(r)}id(...e){return`${v(e)}`}dispose(){this._onDidChange.dispose(),this.resourcesByUri.clear()}}export{g as Marker,V as MarkerTableItem,W as MarkersModel,E as RelatedInformation,m as ResourceMarkers,Q as compareMarkersByUri};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { isNonEmptyArray } from "../../../../base/common/arrays.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { IMatch } from "../../../../base/common/filters.js";
+import { hash } from "../../../../base/common/hash.js";
+import { ResourceMap } from "../../../../base/common/map.js";
+import { basename, extUri } from "../../../../base/common/resources.js";
+import { splitLines } from "../../../../base/common/strings.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IRange, Range } from "../../../../editor/common/core/range.js";
+import { IMarker, IMarkerData, IRelatedInformation, MarkerSeverity } from "../../../../platform/markers/common/markers.js";
+import { unsupportedSchemas } from "../../../../platform/markers/common/markerService.js";
+function compareMarkersByUri(a, b) {
+  return extUri.compare(a.resource, b.resource);
+}
+__name(compareMarkersByUri, "compareMarkersByUri");
+function compareResourceMarkers(a, b) {
+  const [firstMarkerOfA] = a.markers;
+  const [firstMarkerOfB] = b.markers;
+  let res = 0;
+  if (firstMarkerOfA && firstMarkerOfB) {
+    res = MarkerSeverity.compare(firstMarkerOfA.marker.severity, firstMarkerOfB.marker.severity);
+  }
+  if (res === 0) {
+    res = a.path.localeCompare(b.path) || a.name.localeCompare(b.name);
+  }
+  return res;
+}
+__name(compareResourceMarkers, "compareResourceMarkers");
+class ResourceMarkers {
+  constructor(id, resource) {
+    this.id = id;
+    this.resource = resource;
+    this.path = this.resource.fsPath;
+    this.name = basename(this.resource);
+  }
+  static {
+    __name(this, "ResourceMarkers");
+  }
+  path;
+  name;
+  _markersMap = new ResourceMap();
+  _cachedMarkers;
+  _total = 0;
+  get markers() {
+    if (!this._cachedMarkers) {
+      this._cachedMarkers = [...this._markersMap.values()].flat().sort(ResourceMarkers._compareMarkers);
+    }
+    return this._cachedMarkers;
+  }
+  has(uri) {
+    return this._markersMap.has(uri);
+  }
+  set(uri, marker) {
+    this.delete(uri);
+    if (isNonEmptyArray(marker)) {
+      this._markersMap.set(uri, marker);
+      this._total += marker.length;
+      this._cachedMarkers = void 0;
+    }
+  }
+  delete(uri) {
+    const array = this._markersMap.get(uri);
+    if (array) {
+      this._total -= array.length;
+      this._cachedMarkers = void 0;
+      this._markersMap.delete(uri);
+    }
+  }
+  get total() {
+    return this._total;
+  }
+  static _compareMarkers(a, b) {
+    return MarkerSeverity.compare(a.marker.severity, b.marker.severity) || extUri.compare(a.resource, b.resource) || Range.compareRangesUsingStarts(a.marker, b.marker);
+  }
+}
+class Marker {
+  constructor(id, marker, relatedInformation = []) {
+    this.id = id;
+    this.marker = marker;
+    this.relatedInformation = relatedInformation;
+  }
+  static {
+    __name(this, "Marker");
+  }
+  get resource() {
+    return this.marker.resource;
+  }
+  get range() {
+    return this.marker;
+  }
+  _lines;
+  get lines() {
+    if (!this._lines) {
+      this._lines = splitLines(this.marker.message);
+    }
+    return this._lines;
+  }
+  toString() {
+    return JSON.stringify({
+      ...this.marker,
+      resource: this.marker.resource.path,
+      relatedInformation: this.relatedInformation.length ? this.relatedInformation.map((r) => ({ ...r.raw, resource: r.raw.resource.path })) : void 0
+    }, null, "	");
+  }
+}
+class MarkerTableItem extends Marker {
+  constructor(marker, sourceMatches, codeMatches, messageMatches, fileMatches) {
+    super(marker.id, marker.marker, marker.relatedInformation);
+    this.sourceMatches = sourceMatches;
+    this.codeMatches = codeMatches;
+    this.messageMatches = messageMatches;
+    this.fileMatches = fileMatches;
+  }
+  static {
+    __name(this, "MarkerTableItem");
+  }
+}
+class RelatedInformation {
+  constructor(id, marker, raw) {
+    this.id = id;
+    this.marker = marker;
+    this.raw = raw;
+  }
+  static {
+    __name(this, "RelatedInformation");
+  }
+}
+class MarkersModel {
+  static {
+    __name(this, "MarkersModel");
+  }
+  cachedSortedResources = void 0;
+  _onDidChange = new Emitter();
+  onDidChange = this._onDidChange.event;
+  get resourceMarkers() {
+    if (!this.cachedSortedResources) {
+      this.cachedSortedResources = [...this.resourcesByUri.values()].sort(compareResourceMarkers);
+    }
+    return this.cachedSortedResources;
+  }
+  resourcesByUri;
+  constructor() {
+    this.resourcesByUri = /* @__PURE__ */ new Map();
+  }
+  reset() {
+    const removed = /* @__PURE__ */ new Set();
+    for (const resourceMarker of this.resourcesByUri.values()) {
+      removed.add(resourceMarker);
+    }
+    this.resourcesByUri.clear();
+    this._total = 0;
+    this._onDidChange.fire({ removed, added: /* @__PURE__ */ new Set(), updated: /* @__PURE__ */ new Set() });
+  }
+  _total = 0;
+  get total() {
+    return this._total;
+  }
+  getResourceMarkers(resource) {
+    return this.resourcesByUri.get(extUri.getComparisonKey(resource, true)) ?? null;
+  }
+  setResourceMarkers(resourcesMarkers) {
+    const change = { added: /* @__PURE__ */ new Set(), removed: /* @__PURE__ */ new Set(), updated: /* @__PURE__ */ new Set() };
+    for (const [resource, rawMarkers] of resourcesMarkers) {
+      if (unsupportedSchemas.has(resource.scheme)) {
+        continue;
+      }
+      const key = extUri.getComparisonKey(resource, true);
+      let resourceMarkers = this.resourcesByUri.get(key);
+      if (isNonEmptyArray(rawMarkers)) {
+        if (!resourceMarkers) {
+          const resourceMarkersId = this.id(resource.toString());
+          resourceMarkers = new ResourceMarkers(resourceMarkersId, resource.with({ fragment: null }));
+          this.resourcesByUri.set(key, resourceMarkers);
+          change.added.add(resourceMarkers);
+        } else {
+          change.updated.add(resourceMarkers);
+        }
+        const markersCountByKey = /* @__PURE__ */ new Map();
+        const markers = rawMarkers.map((rawMarker) => {
+          const key2 = IMarkerData.makeKey(rawMarker);
+          const index = markersCountByKey.get(key2) || 0;
+          markersCountByKey.set(key2, index + 1);
+          const markerId = this.id(resourceMarkers.id, key2, index, rawMarker.resource.toString());
+          let relatedInformation = void 0;
+          if (rawMarker.relatedInformation) {
+            relatedInformation = rawMarker.relatedInformation.map((r, index2) => new RelatedInformation(this.id(markerId, r.resource.toString(), r.startLineNumber, r.startColumn, r.endLineNumber, r.endColumn, index2), rawMarker, r));
+          }
+          return new Marker(markerId, rawMarker, relatedInformation);
+        });
+        this._total -= resourceMarkers.total;
+        resourceMarkers.set(resource, markers);
+        this._total += resourceMarkers.total;
+      } else if (resourceMarkers) {
+        this._total -= resourceMarkers.total;
+        resourceMarkers.delete(resource);
+        this._total += resourceMarkers.total;
+        if (resourceMarkers.total === 0) {
+          this.resourcesByUri.delete(key);
+          change.removed.add(resourceMarkers);
+        } else {
+          change.updated.add(resourceMarkers);
+        }
+      }
+    }
+    this.cachedSortedResources = void 0;
+    if (change.added.size || change.removed.size || change.updated.size) {
+      this._onDidChange.fire(change);
+    }
+  }
+  id(...values) {
+    return `${hash(values)}`;
+  }
+  dispose() {
+    this._onDidChange.dispose();
+    this.resourcesByUri.clear();
+  }
+}
+export {
+  Marker,
+  MarkerTableItem,
+  MarkersModel,
+  RelatedInformation,
+  ResourceMarkers,
+  compareMarkersByUri
+};
+//# sourceMappingURL=markersModel.js.map

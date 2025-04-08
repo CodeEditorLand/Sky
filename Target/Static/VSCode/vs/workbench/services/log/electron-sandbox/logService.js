@@ -1,1 +1,29 @@
-import{ConsoleLogger as g}from"../../../../platform/log/common/log.js";import"../../environment/electron-sandbox/environmentService.js";import"../../../../platform/log/common/logIpc.js";import{DisposableStore as s}from"../../../../base/common/lifecycle.js";import{windowLogGroup as i,windowLogId as l}from"../common/logConstants.js";import{LogService as a}from"../../../../platform/log/common/logService.js";class h extends a{constructor(o,e){const r=new s,n=r.add(o.createLogger(e.logFile,{id:l,name:i.name,group:i}));let t;t=e.isExtensionDevelopment&&e.extensionTestsLocationURI?o.createConsoleMainLogger():new g(n.getLevel()),super(n,[t]),this._register(r)}}export{h as NativeLogService};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { ConsoleLogger, ILogger } from "../../../../platform/log/common/log.js";
+import { INativeWorkbenchEnvironmentService } from "../../environment/electron-sandbox/environmentService.js";
+import { LoggerChannelClient } from "../../../../platform/log/common/logIpc.js";
+import { DisposableStore } from "../../../../base/common/lifecycle.js";
+import { windowLogGroup, windowLogId } from "../common/logConstants.js";
+import { LogService } from "../../../../platform/log/common/logService.js";
+class NativeLogService extends LogService {
+  static {
+    __name(this, "NativeLogService");
+  }
+  constructor(loggerService, environmentService) {
+    const disposables = new DisposableStore();
+    const fileLogger = disposables.add(loggerService.createLogger(environmentService.logFile, { id: windowLogId, name: windowLogGroup.name, group: windowLogGroup }));
+    let consoleLogger;
+    if (environmentService.isExtensionDevelopment && !!environmentService.extensionTestsLocationURI) {
+      consoleLogger = loggerService.createConsoleMainLogger();
+    } else {
+      consoleLogger = new ConsoleLogger(fileLogger.getLevel());
+    }
+    super(fileLogger, [consoleLogger]);
+    this._register(disposables);
+  }
+}
+export {
+  NativeLogService
+};
+//# sourceMappingURL=logService.js.map

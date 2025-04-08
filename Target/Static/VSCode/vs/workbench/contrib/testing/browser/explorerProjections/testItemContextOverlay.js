@@ -1,1 +1,22 @@
-import"../../common/testTypes.js";import{capabilityContextKeys as o}from"../../common/testProfileService.js";import{TestId as m}from"../../common/testId.js";import{TestingContextKeys as e}from"../../common/testingContextKeys.js";const a=(t,s)=>{if(!t)return[];const r=m.fromString(t.item.extId);return[[e.testItemExtId.key,r.localId],[e.controllerId.key,t.controllerId],[e.testItemHasUri.key,!!t.item.uri],...o(s)]};export{a as getTestItemContextOverlay};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { InternalTestItem } from "../../common/testTypes.js";
+import { capabilityContextKeys } from "../../common/testProfileService.js";
+import { TestId } from "../../common/testId.js";
+import { TestingContextKeys } from "../../common/testingContextKeys.js";
+const getTestItemContextOverlay = /* @__PURE__ */ __name((test, capabilities) => {
+  if (!test) {
+    return [];
+  }
+  const testId = TestId.fromString(test.item.extId);
+  return [
+    [TestingContextKeys.testItemExtId.key, testId.localId],
+    [TestingContextKeys.controllerId.key, test.controllerId],
+    [TestingContextKeys.testItemHasUri.key, !!test.item.uri],
+    ...capabilityContextKeys(capabilities)
+  ];
+}, "getTestItemContextOverlay");
+export {
+  getTestItemContextOverlay
+};
+//# sourceMappingURL=testItemContextOverlay.js.map

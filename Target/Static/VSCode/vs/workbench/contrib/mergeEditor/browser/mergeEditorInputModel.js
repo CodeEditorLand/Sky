@@ -1,1 +1,432 @@
-var q=Object.defineProperty,B=Object.getOwnPropertyDescriptor,p=(e,t,o,i)=>{for(var s,r=i>1?void 0:i?B(t,o):t,a=e.length-1;a>=0;a--)(s=e[a])&&(r=(i?s(t,o,r):s(r))||r);return i&&r&&q(t,o,r),r},a=(e,t)=>(o,i)=>t(o,i,e);import{assertFn as W}from"../../../../base/common/assert.js";import{BugIndicatingError as L,onUnexpectedError as j}from"../../../../base/common/errors.js";import{Event as T}from"../../../../base/common/event.js";import{DisposableStore as E}from"../../../../base/common/lifecycle.js";import{derived as Y,observableFromEvent as b,observableValue as z}from"../../../../base/common/observable.js";import{basename as M,isEqual as G}from"../../../../base/common/resources.js";import x from"../../../../base/common/severity.js";import"../../../../base/common/uri.js";import{IModelService as w}from"../../../../editor/common/services/model.js";import{ITextModelService as D}from"../../../../editor/common/services/resolverService.js";import{localize as r}from"../../../../nls.js";import{ConfirmResult as m,IDialogService as R}from"../../../../platform/dialogs/common/dialogs.js";import{IInstantiationService as _}from"../../../../platform/instantiation/common/instantiation.js";import{IStorageService as H,StorageScope as A,StorageTarget as J}from"../../../../platform/storage/common/storage.js";import{SaveSourceRegistry as K}from"../../../common/editor.js";import{EditorModel as N}from"../../../common/editor/editorModel.js";import"./mergeEditorInput.js";import{conflictMarkers as Q}from"./mergeMarkers/mergeMarkersController.js";import{MergeDiffComputer as k}from"./model/diffComputer.js";import{MergeEditorModel as F}from"./model/mergeEditorModel.js";import"./telemetry.js";import{StorageCloseWithConflicts as P}from"../common/mergeEditor.js";import{IEditorService as X}from"../../../services/editor/common/editorService.js";import{ITextFileService as V}from"../../../services/textfile/common/textfiles.js";import"../../../../editor/common/model.js";import{ILanguageService as Z}from"../../../../editor/common/languages/language.js";let g=class{constructor(e,t,o,i){this._mergeEditorTelemetry=e,this._instantiationService=t,this._textModelService=o,this._modelService=i}async createInputModel(e){const t=new E,[o,i,s,r]=await Promise.all([this._textModelService.createModelReference(e.base),this._textModelService.createModelReference(e.result),y(e.input1,this._textModelService,t),y(e.input2,this._textModelService,t)]);t.add(o),t.add(i);const a=i.object.textEditorModel.uri.with({scheme:"merge-result"}),n=this._modelService.createModel("",{languageId:i.object.textEditorModel.getLanguageId(),onDidChange:T.None},a);t.add(n);const l=this._instantiationService.createInstance(k),d=this._instantiationService.createInstance(F,o.object.textEditorModel,s,r,n,l,{resetResult:!0},this._mergeEditorTelemetry);return t.add(d),await d.onInitialized,this._instantiationService.createInstance(f,d,t,i.object,e.result)}};g=p([a(1,_),a(2,D),a(3,w)],g);let f=class extends N{constructor(e,t,o,i,s,r,a){super(),this.model=e,this.disposable=t,this.result=o,this.resultUri=i,this.textFileService=s,this.dialogService=r,this.editorService=a}savedAltVersionId=z(this,this.model.resultTextModel.getAlternativeVersionId());altVersionId=b(this,(e=>this.model.resultTextModel.onDidChangeContent(e)),(()=>this.model.resultTextModel.getAlternativeVersionId()));isDirty=Y(this,(e=>this.altVersionId.read(e)!==this.savedAltVersionId.read(e)));finished=!1;dispose(){this.disposable.dispose(),super.dispose()}async accept(){const e=await this.model.resultTextModel.getValue();this.result.textEditorModel.setValue(e),this.savedAltVersionId.set(this.model.resultTextModel.getAlternativeVersionId(),void 0),await this.textFileService.save(this.result.textEditorModel.uri),this.finished=!0}async _discard(){await this.textFileService.revert(this.model.resultTextModel.uri),this.savedAltVersionId.set(this.model.resultTextModel.getAlternativeVersionId(),void 0),this.finished=!0}shouldConfirmClose(){return!0}async confirmClose(e){W((()=>e.some((e=>e===this))));let t;if(e.some((e=>e.isDirty.get()))){const o=e.length>1,i=o?r("messageN","Do you want keep the merge result of {0} files?",e.length):r("message1","Do you want keep the merge result of {0}?",M(e[0].model.resultTextModel.uri)),s=e.some((e=>e.model.hasUnhandledConflicts.get())),a=[{label:s?r({key:"saveWithConflict",comment:["&& denotes a mnemonic"]},"&&Save With Conflicts"):r({key:"save",comment:["&& denotes a mnemonic"]},"&&Save"),run:()=>m.SAVE},{label:r({key:"discard",comment:["&& denotes a mnemonic"]},"Do&&n't Save"),run:()=>m.DONT_SAVE}];t=(await this.dialogService.prompt({type:x.Info,message:i,detail:s?o?r("detailNConflicts","The files contain unhandled conflicts. The merge results will be lost if you don't save them."):r("detail1Conflicts","The file contains unhandled conflicts. The merge result will be lost if you don't save it."):o?r("detailN","The merge results will be lost if you don't save them."):r("detail1","The merge result will be lost if you don't save it."),buttons:a,cancelButton:{run:()=>m.CANCEL}})).result}else t=m.DONT_SAVE;return t===m.SAVE?await Promise.all(e.map((e=>e.accept()))):t===m.DONT_SAVE&&await Promise.all(e.map((e=>e._discard()))),t}async save(e){this.finished||(async()=>{const{confirmed:e}=await this.dialogService.confirm({message:r("saveTempFile.message","Do you want to accept the merge result?"),detail:r("saveTempFile.detail","This will write the merge result to the original file and close the merge editor."),primaryButton:r({key:"acceptMerge",comment:["&& denotes a mnemonic"]},"&&Accept Merge")});if(e){await this.accept();const e=this.editorService.findEditors(this.resultUri).filter((e=>"mergeEditor.Input"===e.editor.typeId));await this.editorService.closeEditors(e)}})()}async revert(e){}};f=p([a(4,V),a(5,R),a(6,X)],f);let h=class{constructor(e,t,o,i,s,r){this._mergeEditorTelemetry=e,this._instantiationService=t,this._textModelService=o,this.textFileService=i,this._modelService=s,this._languageService=r}static FILE_SAVED_SOURCE=K.registerSource("merge-editor.source",r("merge-editor.source","Before Resolving Conflicts In Merge Editor"));async createInputModel(e){const t=new E;let o;const i=t.add(new E),s=t=>{G(e.result,t.resource)&&(i.clear(),o=t)};i.add(this.textFileService.files.onDidCreate(s)),this.textFileService.files.models.forEach(s);let[r,a,n,l]=await Promise.all([this._textModelService.createModelReference(e.base).then((e=>({object:e.object.textEditorModel,dispose:()=>e.dispose()}))).catch((e=>{j(e),console.error(e)})),this._textModelService.createModelReference(e.result),y(e.input1,this._textModelService,t),y(e.input2,this._textModelService,t)]);if(void 0===r){const e=this._modelService.createModel("",this._languageService.createById(a.object.getLanguageId()));r={dispose:()=>{e.dispose()},object:e}}if(t.add(r),t.add(a),!o)throw new L;await o.save({source:h.FILE_SAVED_SOURCE});const d=o.textEditorModel.getLinesContent().some((e=>e.startsWith(Q.start))),c=this._instantiationService.createInstance(k),m=this._instantiationService.createInstance(F,r.object,n,l,a.object.textEditorModel,c,{resetResult:d},this._mergeEditorTelemetry);return t.add(m),await m.onInitialized,this._instantiationService.createInstance(S,m,t,o,this._mergeEditorTelemetry)}};h=p([a(1,_),a(2,D),a(3,V),a(4,w),a(5,Z)],h);let S=class extends N{constructor(e,t,o,i,s,r){super(),this.model=e,this.disposableStore=t,this.resultTextFileModel=o,this.telemetry=i,this._dialogService=s,this._storageService=r}isDirty=b(this,T.any(this.resultTextFileModel.onDidChangeDirty,this.resultTextFileModel.onDidSaveError),(()=>this.resultTextFileModel.isDirty()));reported=!1;dateTimeOpened=new Date;dispose(){this.disposableStore.dispose(),super.dispose(),this.reportClose(!1)}reportClose(e){if(!this.reported){const t=this.model.unhandledConflictsCount.get(),o=(new Date).getTime()-this.dateTimeOpened.getTime();this.telemetry.reportMergeEditorClosed({durationOpenedSecs:o/1e3,remainingConflictCount:t,accepted:e,conflictCount:this.model.conflictCount,combinableConflictCount:this.model.combinableConflictCount,conflictsResolvedWithBase:this.model.conflictsResolvedWithBase,conflictsResolvedWithInput1:this.model.conflictsResolvedWithInput1,conflictsResolvedWithInput2:this.model.conflictsResolvedWithInput2,conflictsResolvedWithSmartCombination:this.model.conflictsResolvedWithSmartCombination,manuallySolvedConflictCountThatEqualNone:this.model.manuallySolvedConflictCountThatEqualNone,manuallySolvedConflictCountThatEqualSmartCombine:this.model.manuallySolvedConflictCountThatEqualSmartCombine,manuallySolvedConflictCountThatEqualInput1:this.model.manuallySolvedConflictCountThatEqualInput1,manuallySolvedConflictCountThatEqualInput2:this.model.manuallySolvedConflictCountThatEqualInput2,manuallySolvedConflictCountThatEqualNoneAndStartedWithBase:this.model.manuallySolvedConflictCountThatEqualNoneAndStartedWithBase,manuallySolvedConflictCountThatEqualNoneAndStartedWithInput1:this.model.manuallySolvedConflictCountThatEqualNoneAndStartedWithInput1,manuallySolvedConflictCountThatEqualNoneAndStartedWithInput2:this.model.manuallySolvedConflictCountThatEqualNoneAndStartedWithInput2,manuallySolvedConflictCountThatEqualNoneAndStartedWithBothNonSmart:this.model.manuallySolvedConflictCountThatEqualNoneAndStartedWithBothNonSmart,manuallySolvedConflictCountThatEqualNoneAndStartedWithBothSmart:this.model.manuallySolvedConflictCountThatEqualNoneAndStartedWithBothSmart}),this.reported=!0}}async accept(){this.reportClose(!0),await this.resultTextFileModel.save()}get resultUri(){return this.resultTextFileModel.resource}async save(e){await this.resultTextFileModel.save(e)}async revert(e){await this.resultTextFileModel.revert(e)}shouldConfirmClose(){return!0}async confirmClose(e){const t=e.length>1,o=e.some((e=>e.isDirty.get())),i=e.some((e=>e.model.hasUnhandledConflicts.get()));if(o){const o=t?r("workspace.messageN","Do you want to save the changes you made to {0} files?",e.length):r("workspace.message1","Do you want to save the changes you made to {0}?",M(e[0].resultUri)),{result:s}=await this._dialogService.prompt({type:x.Info,message:o,detail:i?t?r("workspace.detailN.unhandled","The files contain unhandled conflicts. Your changes will be lost if you don't save them."):r("workspace.detail1.unhandled","The file contains unhandled conflicts. Your changes will be lost if you don't save them."):r(t?"workspace.detailN.handled":"workspace.detail1.handled","Your changes will be lost if you don't save them."),buttons:[{label:i?r({key:"workspace.saveWithConflict",comment:["&& denotes a mnemonic"]},"&&Save with Conflicts"):r({key:"workspace.save",comment:["&& denotes a mnemonic"]},"&&Save"),run:()=>m.SAVE},{label:r({key:"workspace.doNotSave",comment:["&& denotes a mnemonic"]},"Do&&n't Save"),run:()=>m.DONT_SAVE}],cancelButton:{run:()=>m.CANCEL}});return s}if(i&&!this._storageService.getBoolean(P,A.PROFILE,!1)){const{confirmed:o,checkboxChecked:s}=await this._dialogService.confirm({message:t?r("workspace.messageN.nonDirty","Do you want to close {0} merge editors?",e.length):r("workspace.message1.nonDirty","Do you want to close the merge editor for {0}?",M(e[0].resultUri)),detail:i?t?r("workspace.detailN.unhandled.nonDirty","The files contain unhandled conflicts."):r("workspace.detail1.unhandled.nonDirty","The file contains unhandled conflicts."):void 0,primaryButton:i?r({key:"workspace.closeWithConflicts",comment:["&& denotes a mnemonic"]},"&&Close with Conflicts"):r({key:"workspace.close",comment:["&& denotes a mnemonic"]},"&&Close"),checkbox:{label:r("noMoreWarn","Do not ask me again")}});return s&&this._storageService.store(P,!0,A.PROFILE,J.USER),o?m.SAVE:m.CANCEL}return m.SAVE}};async function y(e,t,o){const i=await t.createModelReference(e.uri);return o.add(i),{textModel:i.object.textEditorModel,title:e.title,description:e.description,detail:e.detail}}S=p([a(4,R),a(5,H)],S);export{g as TempFileMergeEditorModeFactory,h as WorkspaceMergeEditorModeFactory};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { assertFn } from "../../../../base/common/assert.js";
+import { BugIndicatingError, onUnexpectedError } from "../../../../base/common/errors.js";
+import { Event } from "../../../../base/common/event.js";
+import { DisposableStore, IDisposable, IReference } from "../../../../base/common/lifecycle.js";
+import { derived, IObservable, observableFromEvent, observableValue } from "../../../../base/common/observable.js";
+import { basename, isEqual } from "../../../../base/common/resources.js";
+import Severity from "../../../../base/common/severity.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IModelService } from "../../../../editor/common/services/model.js";
+import { IResolvedTextEditorModel, ITextModelService } from "../../../../editor/common/services/resolverService.js";
+import { localize } from "../../../../nls.js";
+import { ConfirmResult, IDialogService, IPromptButton } from "../../../../platform/dialogs/common/dialogs.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { IRevertOptions, SaveSourceRegistry } from "../../../common/editor.js";
+import { EditorModel } from "../../../common/editor/editorModel.js";
+import { MergeEditorInputData } from "./mergeEditorInput.js";
+import { conflictMarkers } from "./mergeMarkers/mergeMarkersController.js";
+import { MergeDiffComputer } from "./model/diffComputer.js";
+import { InputData, MergeEditorModel } from "./model/mergeEditorModel.js";
+import { MergeEditorTelemetry } from "./telemetry.js";
+import { StorageCloseWithConflicts } from "../common/mergeEditor.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { ITextFileEditorModel, ITextFileSaveOptions, ITextFileService } from "../../../services/textfile/common/textfiles.js";
+import { ITextModel } from "../../../../editor/common/model.js";
+import { ILanguageService } from "../../../../editor/common/languages/language.js";
+let TempFileMergeEditorModeFactory = class {
+  constructor(_mergeEditorTelemetry, _instantiationService, _textModelService, _modelService) {
+    this._mergeEditorTelemetry = _mergeEditorTelemetry;
+    this._instantiationService = _instantiationService;
+    this._textModelService = _textModelService;
+    this._modelService = _modelService;
+  }
+  static {
+    __name(this, "TempFileMergeEditorModeFactory");
+  }
+  async createInputModel(args) {
+    const store = new DisposableStore();
+    const [
+      base,
+      result,
+      input1Data,
+      input2Data
+    ] = await Promise.all([
+      this._textModelService.createModelReference(args.base),
+      this._textModelService.createModelReference(args.result),
+      toInputData(args.input1, this._textModelService, store),
+      toInputData(args.input2, this._textModelService, store)
+    ]);
+    store.add(base);
+    store.add(result);
+    const tempResultUri = result.object.textEditorModel.uri.with({ scheme: "merge-result" });
+    const temporaryResultModel = this._modelService.createModel(
+      "",
+      {
+        languageId: result.object.textEditorModel.getLanguageId(),
+        onDidChange: Event.None
+      },
+      tempResultUri
+    );
+    store.add(temporaryResultModel);
+    const mergeDiffComputer = this._instantiationService.createInstance(MergeDiffComputer);
+    const model = this._instantiationService.createInstance(
+      MergeEditorModel,
+      base.object.textEditorModel,
+      input1Data,
+      input2Data,
+      temporaryResultModel,
+      mergeDiffComputer,
+      {
+        resetResult: true
+      },
+      this._mergeEditorTelemetry
+    );
+    store.add(model);
+    await model.onInitialized;
+    return this._instantiationService.createInstance(TempFileMergeEditorInputModel, model, store, result.object, args.result);
+  }
+};
+TempFileMergeEditorModeFactory = __decorateClass([
+  __decorateParam(1, IInstantiationService),
+  __decorateParam(2, ITextModelService),
+  __decorateParam(3, IModelService)
+], TempFileMergeEditorModeFactory);
+let TempFileMergeEditorInputModel = class extends EditorModel {
+  constructor(model, disposable, result, resultUri, textFileService, dialogService, editorService) {
+    super();
+    this.model = model;
+    this.disposable = disposable;
+    this.result = result;
+    this.resultUri = resultUri;
+    this.textFileService = textFileService;
+    this.dialogService = dialogService;
+    this.editorService = editorService;
+  }
+  static {
+    __name(this, "TempFileMergeEditorInputModel");
+  }
+  savedAltVersionId = observableValue(this, this.model.resultTextModel.getAlternativeVersionId());
+  altVersionId = observableFromEvent(
+    this,
+    (e) => this.model.resultTextModel.onDidChangeContent(e),
+    () => (
+      /** @description getAlternativeVersionId */
+      this.model.resultTextModel.getAlternativeVersionId()
+    )
+  );
+  isDirty = derived(this, (reader) => this.altVersionId.read(reader) !== this.savedAltVersionId.read(reader));
+  finished = false;
+  dispose() {
+    this.disposable.dispose();
+    super.dispose();
+  }
+  async accept() {
+    const value = await this.model.resultTextModel.getValue();
+    this.result.textEditorModel.setValue(value);
+    this.savedAltVersionId.set(this.model.resultTextModel.getAlternativeVersionId(), void 0);
+    await this.textFileService.save(this.result.textEditorModel.uri);
+    this.finished = true;
+  }
+  async _discard() {
+    await this.textFileService.revert(this.model.resultTextModel.uri);
+    this.savedAltVersionId.set(this.model.resultTextModel.getAlternativeVersionId(), void 0);
+    this.finished = true;
+  }
+  shouldConfirmClose() {
+    return true;
+  }
+  async confirmClose(inputModels) {
+    assertFn(
+      () => inputModels.some((m) => m === this)
+    );
+    const someDirty = inputModels.some((m) => m.isDirty.get());
+    let choice;
+    if (someDirty) {
+      const isMany = inputModels.length > 1;
+      const message = isMany ? localize("messageN", "Do you want keep the merge result of {0} files?", inputModels.length) : localize("message1", "Do you want keep the merge result of {0}?", basename(inputModels[0].model.resultTextModel.uri));
+      const hasUnhandledConflicts = inputModels.some((m) => m.model.hasUnhandledConflicts.get());
+      const buttons = [
+        {
+          label: hasUnhandledConflicts ? localize({ key: "saveWithConflict", comment: ["&& denotes a mnemonic"] }, "&&Save With Conflicts") : localize({ key: "save", comment: ["&& denotes a mnemonic"] }, "&&Save"),
+          run: /* @__PURE__ */ __name(() => ConfirmResult.SAVE, "run")
+        },
+        {
+          label: localize({ key: "discard", comment: ["&& denotes a mnemonic"] }, "Do&&n't Save"),
+          run: /* @__PURE__ */ __name(() => ConfirmResult.DONT_SAVE, "run")
+        }
+      ];
+      choice = (await this.dialogService.prompt({
+        type: Severity.Info,
+        message,
+        detail: hasUnhandledConflicts ? isMany ? localize("detailNConflicts", "The files contain unhandled conflicts. The merge results will be lost if you don't save them.") : localize("detail1Conflicts", "The file contains unhandled conflicts. The merge result will be lost if you don't save it.") : isMany ? localize("detailN", "The merge results will be lost if you don't save them.") : localize("detail1", "The merge result will be lost if you don't save it."),
+        buttons,
+        cancelButton: {
+          run: /* @__PURE__ */ __name(() => ConfirmResult.CANCEL, "run")
+        }
+      })).result;
+    } else {
+      choice = ConfirmResult.DONT_SAVE;
+    }
+    if (choice === ConfirmResult.SAVE) {
+      await Promise.all(inputModels.map((m) => m.accept()));
+    } else if (choice === ConfirmResult.DONT_SAVE) {
+      await Promise.all(inputModels.map((m) => m._discard()));
+    } else {
+    }
+    return choice;
+  }
+  async save(options) {
+    if (this.finished) {
+      return;
+    }
+    (async () => {
+      const { confirmed } = await this.dialogService.confirm({
+        message: localize(
+          "saveTempFile.message",
+          "Do you want to accept the merge result?"
+        ),
+        detail: localize(
+          "saveTempFile.detail",
+          "This will write the merge result to the original file and close the merge editor."
+        ),
+        primaryButton: localize({ key: "acceptMerge", comment: ["&& denotes a mnemonic"] }, "&&Accept Merge")
+      });
+      if (confirmed) {
+        await this.accept();
+        const editors = this.editorService.findEditors(this.resultUri).filter((e) => e.editor.typeId === "mergeEditor.Input");
+        await this.editorService.closeEditors(editors);
+      }
+    })();
+  }
+  async revert(options) {
+  }
+};
+TempFileMergeEditorInputModel = __decorateClass([
+  __decorateParam(4, ITextFileService),
+  __decorateParam(5, IDialogService),
+  __decorateParam(6, IEditorService)
+], TempFileMergeEditorInputModel);
+let WorkspaceMergeEditorModeFactory = class {
+  constructor(_mergeEditorTelemetry, _instantiationService, _textModelService, textFileService, _modelService, _languageService) {
+    this._mergeEditorTelemetry = _mergeEditorTelemetry;
+    this._instantiationService = _instantiationService;
+    this._textModelService = _textModelService;
+    this.textFileService = textFileService;
+    this._modelService = _modelService;
+    this._languageService = _languageService;
+  }
+  static {
+    __name(this, "WorkspaceMergeEditorModeFactory");
+  }
+  static FILE_SAVED_SOURCE = SaveSourceRegistry.registerSource("merge-editor.source", localize("merge-editor.source", "Before Resolving Conflicts In Merge Editor"));
+  async createInputModel(args) {
+    const store = new DisposableStore();
+    let resultTextFileModel = void 0;
+    const modelListener = store.add(new DisposableStore());
+    const handleDidCreate = /* @__PURE__ */ __name((model2) => {
+      if (isEqual(args.result, model2.resource)) {
+        modelListener.clear();
+        resultTextFileModel = model2;
+      }
+    }, "handleDidCreate");
+    modelListener.add(this.textFileService.files.onDidCreate(handleDidCreate));
+    this.textFileService.files.models.forEach(handleDidCreate);
+    let [
+      base,
+      result,
+      input1Data,
+      input2Data
+    ] = await Promise.all([
+      this._textModelService.createModelReference(args.base).then((v) => ({
+        object: v.object.textEditorModel,
+        dispose: /* @__PURE__ */ __name(() => v.dispose(), "dispose")
+      })).catch((e) => {
+        onUnexpectedError(e);
+        console.error(e);
+        return void 0;
+      }),
+      this._textModelService.createModelReference(args.result),
+      toInputData(args.input1, this._textModelService, store),
+      toInputData(args.input2, this._textModelService, store)
+    ]);
+    if (base === void 0) {
+      const tm = this._modelService.createModel("", this._languageService.createById(result.object.getLanguageId()));
+      base = {
+        dispose: /* @__PURE__ */ __name(() => {
+          tm.dispose();
+        }, "dispose"),
+        object: tm
+      };
+    }
+    store.add(base);
+    store.add(result);
+    if (!resultTextFileModel) {
+      throw new BugIndicatingError();
+    }
+    await resultTextFileModel.save({ source: WorkspaceMergeEditorModeFactory.FILE_SAVED_SOURCE });
+    const lines = resultTextFileModel.textEditorModel.getLinesContent();
+    const hasConflictMarkers = lines.some((l) => l.startsWith(conflictMarkers.start));
+    const resetResult = hasConflictMarkers;
+    const mergeDiffComputer = this._instantiationService.createInstance(MergeDiffComputer);
+    const model = this._instantiationService.createInstance(
+      MergeEditorModel,
+      base.object,
+      input1Data,
+      input2Data,
+      result.object.textEditorModel,
+      mergeDiffComputer,
+      {
+        resetResult
+      },
+      this._mergeEditorTelemetry
+    );
+    store.add(model);
+    await model.onInitialized;
+    return this._instantiationService.createInstance(WorkspaceMergeEditorInputModel, model, store, resultTextFileModel, this._mergeEditorTelemetry);
+  }
+};
+WorkspaceMergeEditorModeFactory = __decorateClass([
+  __decorateParam(1, IInstantiationService),
+  __decorateParam(2, ITextModelService),
+  __decorateParam(3, ITextFileService),
+  __decorateParam(4, IModelService),
+  __decorateParam(5, ILanguageService)
+], WorkspaceMergeEditorModeFactory);
+let WorkspaceMergeEditorInputModel = class extends EditorModel {
+  constructor(model, disposableStore, resultTextFileModel, telemetry, _dialogService, _storageService) {
+    super();
+    this.model = model;
+    this.disposableStore = disposableStore;
+    this.resultTextFileModel = resultTextFileModel;
+    this.telemetry = telemetry;
+    this._dialogService = _dialogService;
+    this._storageService = _storageService;
+  }
+  static {
+    __name(this, "WorkspaceMergeEditorInputModel");
+  }
+  isDirty = observableFromEvent(
+    this,
+    Event.any(this.resultTextFileModel.onDidChangeDirty, this.resultTextFileModel.onDidSaveError),
+    () => (
+      /** @description isDirty */
+      this.resultTextFileModel.isDirty()
+    )
+  );
+  reported = false;
+  dateTimeOpened = /* @__PURE__ */ new Date();
+  dispose() {
+    this.disposableStore.dispose();
+    super.dispose();
+    this.reportClose(false);
+  }
+  reportClose(accepted) {
+    if (!this.reported) {
+      const remainingConflictCount = this.model.unhandledConflictsCount.get();
+      const durationOpenedMs = (/* @__PURE__ */ new Date()).getTime() - this.dateTimeOpened.getTime();
+      this.telemetry.reportMergeEditorClosed({
+        durationOpenedSecs: durationOpenedMs / 1e3,
+        remainingConflictCount,
+        accepted,
+        conflictCount: this.model.conflictCount,
+        combinableConflictCount: this.model.combinableConflictCount,
+        conflictsResolvedWithBase: this.model.conflictsResolvedWithBase,
+        conflictsResolvedWithInput1: this.model.conflictsResolvedWithInput1,
+        conflictsResolvedWithInput2: this.model.conflictsResolvedWithInput2,
+        conflictsResolvedWithSmartCombination: this.model.conflictsResolvedWithSmartCombination,
+        manuallySolvedConflictCountThatEqualNone: this.model.manuallySolvedConflictCountThatEqualNone,
+        manuallySolvedConflictCountThatEqualSmartCombine: this.model.manuallySolvedConflictCountThatEqualSmartCombine,
+        manuallySolvedConflictCountThatEqualInput1: this.model.manuallySolvedConflictCountThatEqualInput1,
+        manuallySolvedConflictCountThatEqualInput2: this.model.manuallySolvedConflictCountThatEqualInput2,
+        manuallySolvedConflictCountThatEqualNoneAndStartedWithBase: this.model.manuallySolvedConflictCountThatEqualNoneAndStartedWithBase,
+        manuallySolvedConflictCountThatEqualNoneAndStartedWithInput1: this.model.manuallySolvedConflictCountThatEqualNoneAndStartedWithInput1,
+        manuallySolvedConflictCountThatEqualNoneAndStartedWithInput2: this.model.manuallySolvedConflictCountThatEqualNoneAndStartedWithInput2,
+        manuallySolvedConflictCountThatEqualNoneAndStartedWithBothNonSmart: this.model.manuallySolvedConflictCountThatEqualNoneAndStartedWithBothNonSmart,
+        manuallySolvedConflictCountThatEqualNoneAndStartedWithBothSmart: this.model.manuallySolvedConflictCountThatEqualNoneAndStartedWithBothSmart
+      });
+      this.reported = true;
+    }
+  }
+  async accept() {
+    this.reportClose(true);
+    await this.resultTextFileModel.save();
+  }
+  get resultUri() {
+    return this.resultTextFileModel.resource;
+  }
+  async save(options) {
+    await this.resultTextFileModel.save(options);
+  }
+  /**
+   * If save resets the dirty state, revert must do so too.
+  */
+  async revert(options) {
+    await this.resultTextFileModel.revert(options);
+  }
+  shouldConfirmClose() {
+    return true;
+  }
+  async confirmClose(inputModels) {
+    const isMany = inputModels.length > 1;
+    const someDirty = inputModels.some((m) => m.isDirty.get());
+    const someUnhandledConflicts = inputModels.some((m) => m.model.hasUnhandledConflicts.get());
+    if (someDirty) {
+      const message = isMany ? localize("workspace.messageN", "Do you want to save the changes you made to {0} files?", inputModels.length) : localize("workspace.message1", "Do you want to save the changes you made to {0}?", basename(inputModels[0].resultUri));
+      const { result } = await this._dialogService.prompt({
+        type: Severity.Info,
+        message,
+        detail: someUnhandledConflicts ? isMany ? localize("workspace.detailN.unhandled", "The files contain unhandled conflicts. Your changes will be lost if you don't save them.") : localize("workspace.detail1.unhandled", "The file contains unhandled conflicts. Your changes will be lost if you don't save them.") : isMany ? localize("workspace.detailN.handled", "Your changes will be lost if you don't save them.") : localize("workspace.detail1.handled", "Your changes will be lost if you don't save them."),
+        buttons: [
+          {
+            label: someUnhandledConflicts ? localize({ key: "workspace.saveWithConflict", comment: ["&& denotes a mnemonic"] }, "&&Save with Conflicts") : localize({ key: "workspace.save", comment: ["&& denotes a mnemonic"] }, "&&Save"),
+            run: /* @__PURE__ */ __name(() => ConfirmResult.SAVE, "run")
+          },
+          {
+            label: localize({ key: "workspace.doNotSave", comment: ["&& denotes a mnemonic"] }, "Do&&n't Save"),
+            run: /* @__PURE__ */ __name(() => ConfirmResult.DONT_SAVE, "run")
+          }
+        ],
+        cancelButton: {
+          run: /* @__PURE__ */ __name(() => ConfirmResult.CANCEL, "run")
+        }
+      });
+      return result;
+    } else if (someUnhandledConflicts && !this._storageService.getBoolean(StorageCloseWithConflicts, StorageScope.PROFILE, false)) {
+      const { confirmed, checkboxChecked } = await this._dialogService.confirm({
+        message: isMany ? localize("workspace.messageN.nonDirty", "Do you want to close {0} merge editors?", inputModels.length) : localize("workspace.message1.nonDirty", "Do you want to close the merge editor for {0}?", basename(inputModels[0].resultUri)),
+        detail: someUnhandledConflicts ? isMany ? localize("workspace.detailN.unhandled.nonDirty", "The files contain unhandled conflicts.") : localize("workspace.detail1.unhandled.nonDirty", "The file contains unhandled conflicts.") : void 0,
+        primaryButton: someUnhandledConflicts ? localize({ key: "workspace.closeWithConflicts", comment: ["&& denotes a mnemonic"] }, "&&Close with Conflicts") : localize({ key: "workspace.close", comment: ["&& denotes a mnemonic"] }, "&&Close"),
+        checkbox: { label: localize("noMoreWarn", "Do not ask me again") }
+      });
+      if (checkboxChecked) {
+        this._storageService.store(StorageCloseWithConflicts, true, StorageScope.PROFILE, StorageTarget.USER);
+      }
+      return confirmed ? ConfirmResult.SAVE : ConfirmResult.CANCEL;
+    } else {
+      return ConfirmResult.SAVE;
+    }
+  }
+};
+WorkspaceMergeEditorInputModel = __decorateClass([
+  __decorateParam(4, IDialogService),
+  __decorateParam(5, IStorageService)
+], WorkspaceMergeEditorInputModel);
+async function toInputData(data, textModelService, store) {
+  const ref = await textModelService.createModelReference(data.uri);
+  store.add(ref);
+  return {
+    textModel: ref.object.textEditorModel,
+    title: data.title,
+    description: data.description,
+    detail: data.detail
+  };
+}
+__name(toInputData, "toInputData");
+export {
+  TempFileMergeEditorModeFactory,
+  WorkspaceMergeEditorModeFactory
+};
+//# sourceMappingURL=mergeEditorInputModel.js.map

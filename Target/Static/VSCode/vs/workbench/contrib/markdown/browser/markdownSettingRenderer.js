@@ -1,1 +1,289 @@
-var f=Object.defineProperty,y=Object.getOwnPropertyDescriptor,p=(e,t,i,r)=>{for(var s,n=r>1?void 0:r?y(t,i):t,o=e.length-1;o>=0;o--)(s=e[o])&&(n=(r?s(t,i,n):s(n))||n);return r&&n&&f(t,i,n),n},g=(e,t)=>(i,r)=>t(i,r,e);import{ActionViewItem as m}from"../../../../base/browser/ui/actionbar/actionViewItems.js";import"../../../../base/common/actions.js";import{Schemas as S}from"../../../../base/common/network.js";import"../../../../base/common/uri.js";import*as r from"../../../../nls.js";import{IClipboardService as v}from"../../../../platform/clipboard/common/clipboardService.js";import{ConfigurationTarget as h,IConfigurationService as b}from"../../../../platform/configuration/common/configuration.js";import{IContextMenuService as I}from"../../../../platform/contextview/browser/contextView.js";import{ITelemetryService as M}from"../../../../platform/telemetry/common/telemetry.js";import{IPreferencesService as w}from"../../../services/preferences/common/preferences.js";import{settingKeyToDisplayFormat as c}from"../../preferences/browser/settingsTreeModels.js";let d=class{constructor(e,t,i,r,s){this._configurationService=e,this._contextMenuService=t,this._preferencesService=i,this._telemetryService=r,this._clipboardService=s,this.codeSettingAnchorRegex=new RegExp('^<a (href)=".*code.*://settings/([^\\s"]+)"(?:\\s*codesetting="([^"]+)")?>'),this.codeSettingSimpleRegex=new RegExp("^setting\\(([^\\s:)]+)(?::([^)]+))?\\)$")}codeSettingAnchorRegex;codeSettingSimpleRegex;_updatedSettings=new Map;_encounteredSettings=new Map;_featuredSettings=new Map;get featuredSettingStates(){const e=new Map;for(const[t,i]of this._featuredSettings)e.set(t,this._configurationService.getValue(t)===i);return e}replaceAnchor(e){const t=this.codeSettingAnchorRegex.exec(e);if(t&&4===t.length){const i=t[2],r=this.render(i,t[3]);if(r)return e.replace(this.codeSettingAnchorRegex,r)}}replaceSimple(e){const t=this.codeSettingSimpleRegex.exec(e);if(t&&3===t.length){const i=t[1],r=this.render(i,t[2]);if(r)return e.replace(this.codeSettingSimpleRegex,r)}}getHtmlRenderer(){return({raw:e})=>{const t=this.replaceAnchor(e);return t&&(e=t),e}}getCodeSpanRenderer(){return({text:e})=>this.replaceSimple(e)||`<code>${e}</code>`}settingToUriString(e,t){return`${S.codeSetting}://${e}${t?`/${t}`:""}`}getSetting(e){return this._encounteredSettings.has(e)?this._encounteredSettings.get(e):this._preferencesService.getSetting(e)}parseValue(e,t){if("undefined"===t||""===t)return;const i=this.getSetting(e);if(!i)return t;switch(i.type){case"boolean":return"true"===t;case"number":return parseInt(t,10);default:return t}}render(e,t){const i=this.getSetting(e);return i?this.renderSetting(i,t):`<code>${e}</code>`}viewInSettingsMessage(e,t){if(t)return r.localize("viewInSettings","View in Settings");{const t=c(e);return r.localize("viewInSettingsDetailed",'View "{0}: {1}" in Settings',t.category,t.label)}}restorePreviousSettingMessage(e){const t=c(e);return r.localize("restorePreviousValue",'Restore value of "{0}: {1}"',t.category,t.label)}isAlreadySet(e,t){const i=this._configurationService.getValue(e.key);return i===t||void 0===i&&e.value===t}booleanSettingMessage(e,t){const i=c(e.key);return this.isAlreadySet(e,t)?t?r.localize("alreadysetBoolTrue",'"{0}: {1}" is already enabled',i.category,i.label):r.localize("alreadysetBoolFalse",'"{0}: {1}" is already disabled',i.category,i.label):t?r.localize("trueMessage",'Enable "{0}: {1}"',i.category,i.label):r.localize("falseMessage",'Disable "{0}: {1}"',i.category,i.label)}stringSettingMessage(e,t){const i=c(e.key);return this.isAlreadySet(e,t)?r.localize("alreadysetString",'"{0}: {1}" is already set to "{2}"',i.category,i.label,t):r.localize("stringValue",'Set "{0}: {1}" to "{2}"',i.category,i.label,t)}numberSettingMessage(e,t){const i=c(e.key);return this.isAlreadySet(e,t)?r.localize("alreadysetNum",'"{0}: {1}" is already set to {2}',i.category,i.label,t):r.localize("numberValue",'Set "{0}: {1}" to {2}',i.category,i.label,t)}renderSetting(e,t){return`<code tabindex="0"><a href="${this.settingToUriString(e.key,t)}" class="codesetting" title="${r.localize("changeSettingTitle","View or change setting")}" aria-role="button"><svg width="14" height="14" viewBox="0 0 15 15" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M9.1 4.4L8.6 2H7.4l-.5 2.4-.7.3-2-1.3-.9.8 1.3 2-.2.7-2.4.5v1.2l2.4.5.3.8-1.3 2 .8.8 2-1.3.8.3.4 2.3h1.2l.5-2.4.8-.3 2 1.3.8-.8-1.3-2 .3-.8 2.3-.4V7.4l-2.4-.5-.3-.8 1.3-2-.8-.8-2 1.3-.7-.2zM9.4 1l.5 2.4L12 2.1l2 2-1.4 2.1 2.4.4v2.8l-2.4.5L14 12l-2 2-2.1-1.4-.5 2.4H6.6l-.5-2.4L4 13.9l-2-2 1.4-2.1L1 9.4V6.6l2.4-.5L2.1 4l2-2 2.1 1.4.4-2.4h2.8zm.6 7c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zM8 9c.6 0 1-.4 1-1s-.4-1-1-1-1 .4-1 1 .4 1 1 1z"/></svg>\n\t\t\t<span class="separator"></span>\n\t\t\t<span class="setting-name">${e.key}</span>\n\t\t</a></code>`}getSettingMessage(e,t){return"boolean"===e.type?this.booleanSettingMessage(e,t):"string"===e.type?this.stringSettingMessage(e,t):"number"===e.type?this.numberSettingMessage(e,t):void 0}async restoreSetting(e){const t=this._updatedSettings.get(e);return this._updatedSettings.delete(e),this._configurationService.updateValue(e,t,h.USER)}async setSetting(e,t,i){return this._updatedSettings.set(e,t),this._configurationService.updateValue(e,i,h.USER)}getActions(e){if(e.scheme!==S.codeSetting)return;const t=[],i=e.authority,s=this.parseValue(e.authority,e.path.substring(1)),n=this._configurationService.inspect(i).userValue;if(void 0!==s&&s===n&&this._updatedSettings.has(i)){const e=this.restorePreviousSettingMessage(i);t.push({class:void 0,id:"restoreSetting",enabled:!0,tooltip:e,label:e,run:()=>this.restoreSetting(i)})}else if(void 0!==s){const e=this.getSetting(i),r=e?this.getSettingMessage(e,s):void 0;e&&r&&t.push({class:void 0,id:"trySetting",enabled:!this.isAlreadySet(e,s),tooltip:r,label:r,run:()=>{this.setSetting(i,n,s)}})}const o=this.viewInSettingsMessage(i,t.length>0);return t.push({class:void 0,enabled:!0,id:"viewInSettings",tooltip:o,label:o,run:()=>this._preferencesService.openApplicationSettings({query:`@id:${i}`})}),t.push({class:void 0,enabled:!0,id:"copySettingId",tooltip:r.localize("copySettingId","Copy Setting ID"),label:r.localize("copySettingId","Copy Setting ID"),run:()=>{this._clipboardService.writeText(i)}}),t}showContextMenu(e,t,i){const r=this.getActions(e);r&&this._contextMenuService.showContextMenu({getAnchor:()=>({x:t,y:i}),getActions:()=>r,getActionViewItem:e=>new m(e,e,{label:!0})})}async updateSetting(e,t,i){if(e.scheme===S.codeSetting)return this._telemetryService.publicLog2("releaseNotesSettingAction",{settingId:e.authority}),this.showContextMenu(e,t,i)}};d=p([g(0,b),g(1,I),g(2,w),g(3,M),g(4,v)],d);export{d as SimpleSettingRenderer};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { ActionViewItem } from "../../../../base/browser/ui/actionbar/actionViewItems.js";
+import { IAction } from "../../../../base/common/actions.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { URI } from "../../../../base/common/uri.js";
+import * as nls from "../../../../nls.js";
+import { IClipboardService } from "../../../../platform/clipboard/common/clipboardService.js";
+import { ConfigurationTarget, IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IContextMenuService } from "../../../../platform/contextview/browser/contextView.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { IPreferencesService, ISetting } from "../../../services/preferences/common/preferences.js";
+import { settingKeyToDisplayFormat } from "../../preferences/browser/settingsTreeModels.js";
+let SimpleSettingRenderer = class {
+  // setting ID to feature value
+  constructor(_configurationService, _contextMenuService, _preferencesService, _telemetryService, _clipboardService) {
+    this._configurationService = _configurationService;
+    this._contextMenuService = _contextMenuService;
+    this._preferencesService = _preferencesService;
+    this._telemetryService = _telemetryService;
+    this._clipboardService = _clipboardService;
+    this.codeSettingAnchorRegex = new RegExp(`^<a (href)=".*code.*://settings/([^\\s"]+)"(?:\\s*codesetting="([^"]+)")?>`);
+    this.codeSettingSimpleRegex = new RegExp(`^setting\\(([^\\s:)]+)(?::([^)]+))?\\)$`);
+  }
+  static {
+    __name(this, "SimpleSettingRenderer");
+  }
+  codeSettingAnchorRegex;
+  codeSettingSimpleRegex;
+  _updatedSettings = /* @__PURE__ */ new Map();
+  // setting ID to user's original setting value
+  _encounteredSettings = /* @__PURE__ */ new Map();
+  // setting ID to setting
+  _featuredSettings = /* @__PURE__ */ new Map();
+  get featuredSettingStates() {
+    const result = /* @__PURE__ */ new Map();
+    for (const [settingId, value] of this._featuredSettings) {
+      result.set(settingId, this._configurationService.getValue(settingId) === value);
+    }
+    return result;
+  }
+  replaceAnchor(raw) {
+    const match = this.codeSettingAnchorRegex.exec(raw);
+    if (match && match.length === 4) {
+      const settingId = match[2];
+      const rendered = this.render(settingId, match[3]);
+      if (rendered) {
+        return raw.replace(this.codeSettingAnchorRegex, rendered);
+      }
+    }
+    return void 0;
+  }
+  replaceSimple(raw) {
+    const match = this.codeSettingSimpleRegex.exec(raw);
+    if (match && match.length === 3) {
+      const settingId = match[1];
+      const rendered = this.render(settingId, match[2]);
+      if (rendered) {
+        return raw.replace(this.codeSettingSimpleRegex, rendered);
+      }
+    }
+    return void 0;
+  }
+  getHtmlRenderer() {
+    return ({ raw }) => {
+      const replacedAnchor = this.replaceAnchor(raw);
+      if (replacedAnchor) {
+        raw = replacedAnchor;
+      }
+      return raw;
+    };
+  }
+  getCodeSpanRenderer() {
+    return ({ text }) => {
+      const replacedSimple = this.replaceSimple(text);
+      if (replacedSimple) {
+        return replacedSimple;
+      }
+      return `<code>${text}</code>`;
+    };
+  }
+  settingToUriString(settingId, value) {
+    return `${Schemas.codeSetting}://${settingId}${value ? `/${value}` : ""}`;
+  }
+  getSetting(settingId) {
+    if (this._encounteredSettings.has(settingId)) {
+      return this._encounteredSettings.get(settingId);
+    }
+    return this._preferencesService.getSetting(settingId);
+  }
+  parseValue(settingId, value) {
+    if (value === "undefined" || value === "") {
+      return void 0;
+    }
+    const setting = this.getSetting(settingId);
+    if (!setting) {
+      return value;
+    }
+    switch (setting.type) {
+      case "boolean":
+        return value === "true";
+      case "number":
+        return parseInt(value, 10);
+      case "string":
+      default:
+        return value;
+    }
+  }
+  render(settingId, newValue) {
+    const setting = this.getSetting(settingId);
+    if (!setting) {
+      return `<code>${settingId}</code>`;
+    }
+    return this.renderSetting(setting, newValue);
+  }
+  viewInSettingsMessage(settingId, alreadyDisplayed) {
+    if (alreadyDisplayed) {
+      return nls.localize("viewInSettings", "View in Settings");
+    } else {
+      const displayName = settingKeyToDisplayFormat(settingId);
+      return nls.localize("viewInSettingsDetailed", 'View "{0}: {1}" in Settings', displayName.category, displayName.label);
+    }
+  }
+  restorePreviousSettingMessage(settingId) {
+    const displayName = settingKeyToDisplayFormat(settingId);
+    return nls.localize("restorePreviousValue", 'Restore value of "{0}: {1}"', displayName.category, displayName.label);
+  }
+  isAlreadySet(setting, value) {
+    const currentValue = this._configurationService.getValue(setting.key);
+    return currentValue === value || currentValue === void 0 && setting.value === value;
+  }
+  booleanSettingMessage(setting, booleanValue) {
+    const displayName = settingKeyToDisplayFormat(setting.key);
+    if (this.isAlreadySet(setting, booleanValue)) {
+      if (booleanValue) {
+        return nls.localize("alreadysetBoolTrue", '"{0}: {1}" is already enabled', displayName.category, displayName.label);
+      } else {
+        return nls.localize("alreadysetBoolFalse", '"{0}: {1}" is already disabled', displayName.category, displayName.label);
+      }
+    }
+    if (booleanValue) {
+      return nls.localize("trueMessage", 'Enable "{0}: {1}"', displayName.category, displayName.label);
+    } else {
+      return nls.localize("falseMessage", 'Disable "{0}: {1}"', displayName.category, displayName.label);
+    }
+  }
+  stringSettingMessage(setting, stringValue) {
+    const displayName = settingKeyToDisplayFormat(setting.key);
+    if (this.isAlreadySet(setting, stringValue)) {
+      return nls.localize("alreadysetString", '"{0}: {1}" is already set to "{2}"', displayName.category, displayName.label, stringValue);
+    }
+    return nls.localize("stringValue", 'Set "{0}: {1}" to "{2}"', displayName.category, displayName.label, stringValue);
+  }
+  numberSettingMessage(setting, numberValue) {
+    const displayName = settingKeyToDisplayFormat(setting.key);
+    if (this.isAlreadySet(setting, numberValue)) {
+      return nls.localize("alreadysetNum", '"{0}: {1}" is already set to {2}', displayName.category, displayName.label, numberValue);
+    }
+    return nls.localize("numberValue", 'Set "{0}: {1}" to {2}', displayName.category, displayName.label, numberValue);
+  }
+  renderSetting(setting, newValue) {
+    const href = this.settingToUriString(setting.key, newValue);
+    const title = nls.localize("changeSettingTitle", "View or change setting");
+    return `<code tabindex="0"><a href="${href}" class="codesetting" title="${title}" aria-role="button"><svg width="14" height="14" viewBox="0 0 15 15" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M9.1 4.4L8.6 2H7.4l-.5 2.4-.7.3-2-1.3-.9.8 1.3 2-.2.7-2.4.5v1.2l2.4.5.3.8-1.3 2 .8.8 2-1.3.8.3.4 2.3h1.2l.5-2.4.8-.3 2 1.3.8-.8-1.3-2 .3-.8 2.3-.4V7.4l-2.4-.5-.3-.8 1.3-2-.8-.8-2 1.3-.7-.2zM9.4 1l.5 2.4L12 2.1l2 2-1.4 2.1 2.4.4v2.8l-2.4.5L14 12l-2 2-2.1-1.4-.5 2.4H6.6l-.5-2.4L4 13.9l-2-2 1.4-2.1L1 9.4V6.6l2.4-.5L2.1 4l2-2 2.1 1.4.4-2.4h2.8zm.6 7c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zM8 9c.6 0 1-.4 1-1s-.4-1-1-1-1 .4-1 1 .4 1 1 1z"/></svg>
+			<span class="separator"></span>
+			<span class="setting-name">${setting.key}</span>
+		</a></code>`;
+  }
+  getSettingMessage(setting, newValue) {
+    if (setting.type === "boolean") {
+      return this.booleanSettingMessage(setting, newValue);
+    } else if (setting.type === "string") {
+      return this.stringSettingMessage(setting, newValue);
+    } else if (setting.type === "number") {
+      return this.numberSettingMessage(setting, newValue);
+    }
+    return void 0;
+  }
+  async restoreSetting(settingId) {
+    const userOriginalSettingValue = this._updatedSettings.get(settingId);
+    this._updatedSettings.delete(settingId);
+    return this._configurationService.updateValue(settingId, userOriginalSettingValue, ConfigurationTarget.USER);
+  }
+  async setSetting(settingId, currentSettingValue, newSettingValue) {
+    this._updatedSettings.set(settingId, currentSettingValue);
+    return this._configurationService.updateValue(settingId, newSettingValue, ConfigurationTarget.USER);
+  }
+  getActions(uri) {
+    if (uri.scheme !== Schemas.codeSetting) {
+      return;
+    }
+    const actions = [];
+    const settingId = uri.authority;
+    const newSettingValue = this.parseValue(uri.authority, uri.path.substring(1));
+    const currentSettingValue = this._configurationService.inspect(settingId).userValue;
+    if (newSettingValue !== void 0 && newSettingValue === currentSettingValue && this._updatedSettings.has(settingId)) {
+      const restoreMessage = this.restorePreviousSettingMessage(settingId);
+      actions.push({
+        class: void 0,
+        id: "restoreSetting",
+        enabled: true,
+        tooltip: restoreMessage,
+        label: restoreMessage,
+        run: /* @__PURE__ */ __name(() => {
+          return this.restoreSetting(settingId);
+        }, "run")
+      });
+    } else if (newSettingValue !== void 0) {
+      const setting = this.getSetting(settingId);
+      const trySettingMessage = setting ? this.getSettingMessage(setting, newSettingValue) : void 0;
+      if (setting && trySettingMessage) {
+        actions.push({
+          class: void 0,
+          id: "trySetting",
+          enabled: !this.isAlreadySet(setting, newSettingValue),
+          tooltip: trySettingMessage,
+          label: trySettingMessage,
+          run: /* @__PURE__ */ __name(() => {
+            this.setSetting(settingId, currentSettingValue, newSettingValue);
+          }, "run")
+        });
+      }
+    }
+    const viewInSettingsMessage = this.viewInSettingsMessage(settingId, actions.length > 0);
+    actions.push({
+      class: void 0,
+      enabled: true,
+      id: "viewInSettings",
+      tooltip: viewInSettingsMessage,
+      label: viewInSettingsMessage,
+      run: /* @__PURE__ */ __name(() => {
+        return this._preferencesService.openApplicationSettings({ query: `@id:${settingId}` });
+      }, "run")
+    });
+    actions.push({
+      class: void 0,
+      enabled: true,
+      id: "copySettingId",
+      tooltip: nls.localize("copySettingId", "Copy Setting ID"),
+      label: nls.localize("copySettingId", "Copy Setting ID"),
+      run: /* @__PURE__ */ __name(() => {
+        this._clipboardService.writeText(settingId);
+      }, "run")
+    });
+    return actions;
+  }
+  showContextMenu(uri, x, y) {
+    const actions = this.getActions(uri);
+    if (!actions) {
+      return;
+    }
+    this._contextMenuService.showContextMenu({
+      getAnchor: /* @__PURE__ */ __name(() => ({ x, y }), "getAnchor"),
+      getActions: /* @__PURE__ */ __name(() => actions, "getActions"),
+      getActionViewItem: /* @__PURE__ */ __name((action) => {
+        return new ActionViewItem(action, action, { label: true });
+      }, "getActionViewItem")
+    });
+  }
+  async updateSetting(uri, x, y) {
+    if (uri.scheme === Schemas.codeSetting) {
+      this._telemetryService.publicLog2("releaseNotesSettingAction", {
+        settingId: uri.authority
+      });
+      return this.showContextMenu(uri, x, y);
+    }
+  }
+};
+SimpleSettingRenderer = __decorateClass([
+  __decorateParam(0, IConfigurationService),
+  __decorateParam(1, IContextMenuService),
+  __decorateParam(2, IPreferencesService),
+  __decorateParam(3, ITelemetryService),
+  __decorateParam(4, IClipboardService)
+], SimpleSettingRenderer);
+export {
+  SimpleSettingRenderer
+};
+//# sourceMappingURL=markdownSettingRenderer.js.map

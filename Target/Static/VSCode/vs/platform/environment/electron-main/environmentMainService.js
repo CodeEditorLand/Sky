@@ -1,1 +1,102 @@
-var v=Object.defineProperty,m=Object.getOwnPropertyDescriptor,n=(e,t,s,n)=>{for(var o,r=n>1?void 0:n?m(t,s):t,i=e.length-1;i>=0;i--)(o=e[i])&&(r=(n?o(t,s,r):o(r))||r);return n&&r&&v(t,s,r),r};import{memoize as s}from"../../../base/common/decorators.js";import{join as d}from"../../../base/common/path.js";import{isLinux as l}from"../../../base/common/platform.js";import{createStaticIPCHandle as u}from"../../../base/parts/ipc/node/ipc.net.js";import{IEnvironmentService as h}from"../common/environment.js";import{NativeEnvironmentService as f}from"../node/environmentService.js";import{refineServiceDecorator as g}from"../../instantiation/common/instantiation.js";const k=g(h);class i extends f{_snapEnv={};get backupHome(){return d(this.userDataPath,"Backups")}get mainIPCHandle(){return u(this.userDataPath,"main",this.productService.version)}get mainLockfile(){return d(this.userDataPath,"code.lock")}get disableUpdates(){return!!this.args["disable-updates"]}get crossOriginIsolated(){return!!this.args["enable-coi"]}get codeCachePath(){return process.env.VSCODE_CODE_CACHE_PATH||void 0}get useCodeCache(){return!!this.codeCachePath}unsetSnapExportedVariables(){if(l)for(const e in process.env)if(e.endsWith("_VSCODE_SNAP_ORIG")){const t=e.slice(0,-17);if(this._snapEnv[t])continue;process.env[t]&&(this._snapEnv[t]=process.env[t]),process.env[e]?process.env[t]=process.env[e]:delete process.env[t]}}restoreSnapExportedVariables(){if(l)for(const e in this._snapEnv)process.env[e]=this._snapEnv[e],delete this._snapEnv[e]}}n([s],i.prototype,"backupHome",1),n([s],i.prototype,"mainIPCHandle",1),n([s],i.prototype,"mainLockfile",1),n([s],i.prototype,"disableUpdates",1),n([s],i.prototype,"crossOriginIsolated",1),n([s],i.prototype,"codeCachePath",1),n([s],i.prototype,"useCodeCache",1);export{i as EnvironmentMainService,k as IEnvironmentMainService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+import { memoize } from "../../../base/common/decorators.js";
+import { join } from "../../../base/common/path.js";
+import { isLinux } from "../../../base/common/platform.js";
+import { createStaticIPCHandle } from "../../../base/parts/ipc/node/ipc.net.js";
+import { IEnvironmentService, INativeEnvironmentService } from "../common/environment.js";
+import { NativeEnvironmentService } from "../node/environmentService.js";
+import { refineServiceDecorator } from "../../instantiation/common/instantiation.js";
+const IEnvironmentMainService = refineServiceDecorator(IEnvironmentService);
+class EnvironmentMainService extends NativeEnvironmentService {
+  static {
+    __name(this, "EnvironmentMainService");
+  }
+  _snapEnv = {};
+  get backupHome() {
+    return join(this.userDataPath, "Backups");
+  }
+  get mainIPCHandle() {
+    return createStaticIPCHandle(this.userDataPath, "main", this.productService.version);
+  }
+  get mainLockfile() {
+    return join(this.userDataPath, "code.lock");
+  }
+  get disableUpdates() {
+    return !!this.args["disable-updates"];
+  }
+  get crossOriginIsolated() {
+    return !!this.args["enable-coi"];
+  }
+  get codeCachePath() {
+    return process.env["VSCODE_CODE_CACHE_PATH"] || void 0;
+  }
+  get useCodeCache() {
+    return !!this.codeCachePath;
+  }
+  unsetSnapExportedVariables() {
+    if (!isLinux) {
+      return;
+    }
+    for (const key in process.env) {
+      if (key.endsWith("_VSCODE_SNAP_ORIG")) {
+        const originalKey = key.slice(0, -17);
+        if (this._snapEnv[originalKey]) {
+          continue;
+        }
+        if (process.env[originalKey]) {
+          this._snapEnv[originalKey] = process.env[originalKey];
+        }
+        if (process.env[key]) {
+          process.env[originalKey] = process.env[key];
+        } else {
+          delete process.env[originalKey];
+        }
+      }
+    }
+  }
+  restoreSnapExportedVariables() {
+    if (!isLinux) {
+      return;
+    }
+    for (const key in this._snapEnv) {
+      process.env[key] = this._snapEnv[key];
+      delete this._snapEnv[key];
+    }
+  }
+}
+__decorateClass([
+  memoize
+], EnvironmentMainService.prototype, "backupHome", 1);
+__decorateClass([
+  memoize
+], EnvironmentMainService.prototype, "mainIPCHandle", 1);
+__decorateClass([
+  memoize
+], EnvironmentMainService.prototype, "mainLockfile", 1);
+__decorateClass([
+  memoize
+], EnvironmentMainService.prototype, "disableUpdates", 1);
+__decorateClass([
+  memoize
+], EnvironmentMainService.prototype, "crossOriginIsolated", 1);
+__decorateClass([
+  memoize
+], EnvironmentMainService.prototype, "codeCachePath", 1);
+__decorateClass([
+  memoize
+], EnvironmentMainService.prototype, "useCodeCache", 1);
+export {
+  EnvironmentMainService,
+  IEnvironmentMainService
+};
+//# sourceMappingURL=environmentMainService.js.map

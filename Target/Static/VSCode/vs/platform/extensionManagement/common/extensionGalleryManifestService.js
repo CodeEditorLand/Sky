@@ -1,1 +1,224 @@
-var p=Object.defineProperty,y=Object.getOwnPropertyDescriptor,c=(e,n,a,t)=>{for(var i,s=t>1?void 0:t?y(n,a):n,r=e.length-1;r>=0;r--)(i=e[r])&&(s=(t?i(n,a,s):i(s))||s);return t&&s&&p(n,a,s),s},v=(e,n)=>(a,t)=>n(a,t,e);import{Event as x}from"../../../base/common/event.js";import{Disposable as g}from"../../../base/common/lifecycle.js";import{IProductService as U}from"../../product/common/productService.js";import{ExtensionGalleryResourceType as i,Flag as n}from"./extensionGalleryManifest.js";import{FilterType as l,SortBy as t}from"./extensionManagement.js";let d=class extends g{constructor(e){super(),this.productService=e}_serviceBrand;onDidChangeExtensionGalleryManifest=x.None;isEnabled(){return!!this.productService.extensionsGallery?.serviceUrl}async getExtensionGalleryManifest(){const e=this.productService.extensionsGallery;if(!e?.serviceUrl)return null;const a=[{id:`${e.serviceUrl}/extensionquery`,type:i.ExtensionQueryService},{id:`${e.serviceUrl}/vscode/{publisher}/{name}/latest`,type:i.ExtensionLatestVersionUri},{id:`${e.serviceUrl}/publishers/{publisher}/extensions/{name}/{version}/stats?statType={statTypeName}`,type:i.ExtensionStatisticsUri},{id:`${e.serviceUrl}/itemName/{publisher}.{name}/version/{version}/statType/{statTypeValue}/vscodewebextension`,type:i.WebExtensionStatisticsUri}];e.publisherUrl&&a.push({id:`${e.publisherUrl}/{publisher}`,type:i.PublisherViewUri}),e.itemUrl&&(a.push({id:`${e.itemUrl}/?itemName={publisher}.{name}`,type:i.ExtensionDetailsViewUri}),a.push({id:`${e.itemUrl}/?itemName={publisher}.{name}&ssr=false#review-details`,type:i.ExtensionRatingViewUri})),e.resourceUrlTemplate&&a.push({id:e.resourceUrlTemplate,type:i.ExtensionResourceUri});return{version:"",resources:a,capabilities:{extensionQuery:{filtering:[{name:l.Tag,value:1},{name:l.ExtensionId,value:4},{name:l.Category,value:5},{name:l.ExtensionName,value:7},{name:l.Target,value:8},{name:l.Featured,value:9},{name:l.SearchText,value:10},{name:l.ExcludeWithFlags,value:12}],sorting:[{name:t.NoneOrRelevance,value:0},{name:t.LastUpdatedDate,value:1},{name:t.Title,value:2},{name:t.PublisherName,value:3},{name:t.InstallCount,value:4},{name:t.AverageRating,value:6},{name:t.PublishedDate,value:10},{name:t.WeightedRating,value:12}],flags:[{name:n.None,value:0},{name:n.IncludeVersions,value:1},{name:n.IncludeFiles,value:2},{name:n.IncludeCategoryAndTags,value:4},{name:n.IncludeSharedAccounts,value:8},{name:n.IncludeVersionProperties,value:16},{name:n.ExcludeNonValidated,value:32},{name:n.IncludeInstallationTargets,value:64},{name:n.IncludeAssetUri,value:128},{name:n.IncludeStatistics,value:256},{name:n.IncludeLatestVersionOnly,value:512},{name:n.Unpublished,value:4096},{name:n.IncludeNameConflictInfo,value:32768},{name:n.IncludeLatestPrereleaseAndStableVersionOnly,value:65536}]},signing:{allRepositorySigned:!0}}}}};d=c([v(0,U)],d);export{d as ExtensionGalleryManifestService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Event } from "../../../base/common/event.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { IProductService } from "../../product/common/productService.js";
+import { ExtensionGalleryResourceType, Flag, IExtensionGalleryManifest, IExtensionGalleryManifestService } from "./extensionGalleryManifest.js";
+import { FilterType, SortBy } from "./extensionManagement.js";
+let ExtensionGalleryManifestService = class extends Disposable {
+  constructor(productService) {
+    super();
+    this.productService = productService;
+  }
+  static {
+    __name(this, "ExtensionGalleryManifestService");
+  }
+  _serviceBrand;
+  onDidChangeExtensionGalleryManifest = Event.None;
+  isEnabled() {
+    return !!this.productService.extensionsGallery?.serviceUrl;
+  }
+  async getExtensionGalleryManifest() {
+    const extensionsGallery = this.productService.extensionsGallery;
+    if (!extensionsGallery?.serviceUrl) {
+      return null;
+    }
+    const resources = [
+      {
+        id: `${extensionsGallery.serviceUrl}/extensionquery`,
+        type: ExtensionGalleryResourceType.ExtensionQueryService
+      },
+      {
+        id: `${extensionsGallery.serviceUrl}/vscode/{publisher}/{name}/latest`,
+        type: ExtensionGalleryResourceType.ExtensionLatestVersionUri
+      },
+      {
+        id: `${extensionsGallery.serviceUrl}/publishers/{publisher}/extensions/{name}/{version}/stats?statType={statTypeName}`,
+        type: ExtensionGalleryResourceType.ExtensionStatisticsUri
+      },
+      {
+        id: `${extensionsGallery.serviceUrl}/itemName/{publisher}.{name}/version/{version}/statType/{statTypeValue}/vscodewebextension`,
+        type: ExtensionGalleryResourceType.WebExtensionStatisticsUri
+      }
+    ];
+    if (extensionsGallery.publisherUrl) {
+      resources.push({
+        id: `${extensionsGallery.publisherUrl}/{publisher}`,
+        type: ExtensionGalleryResourceType.PublisherViewUri
+      });
+    }
+    if (extensionsGallery.itemUrl) {
+      resources.push({
+        id: `${extensionsGallery.itemUrl}/?itemName={publisher}.{name}`,
+        type: ExtensionGalleryResourceType.ExtensionDetailsViewUri
+      });
+      resources.push({
+        id: `${extensionsGallery.itemUrl}/?itemName={publisher}.{name}&ssr=false#review-details`,
+        type: ExtensionGalleryResourceType.ExtensionRatingViewUri
+      });
+    }
+    if (extensionsGallery.resourceUrlTemplate) {
+      resources.push({
+        id: extensionsGallery.resourceUrlTemplate,
+        type: ExtensionGalleryResourceType.ExtensionResourceUri
+      });
+    }
+    const filtering = [
+      {
+        name: FilterType.Tag,
+        value: 1
+      },
+      {
+        name: FilterType.ExtensionId,
+        value: 4
+      },
+      {
+        name: FilterType.Category,
+        value: 5
+      },
+      {
+        name: FilterType.ExtensionName,
+        value: 7
+      },
+      {
+        name: FilterType.Target,
+        value: 8
+      },
+      {
+        name: FilterType.Featured,
+        value: 9
+      },
+      {
+        name: FilterType.SearchText,
+        value: 10
+      },
+      {
+        name: FilterType.ExcludeWithFlags,
+        value: 12
+      }
+    ];
+    const sorting = [
+      {
+        name: SortBy.NoneOrRelevance,
+        value: 0
+      },
+      {
+        name: SortBy.LastUpdatedDate,
+        value: 1
+      },
+      {
+        name: SortBy.Title,
+        value: 2
+      },
+      {
+        name: SortBy.PublisherName,
+        value: 3
+      },
+      {
+        name: SortBy.InstallCount,
+        value: 4
+      },
+      {
+        name: SortBy.AverageRating,
+        value: 6
+      },
+      {
+        name: SortBy.PublishedDate,
+        value: 10
+      },
+      {
+        name: SortBy.WeightedRating,
+        value: 12
+      }
+    ];
+    const flags = [
+      {
+        name: Flag.None,
+        value: 0
+      },
+      {
+        name: Flag.IncludeVersions,
+        value: 1
+      },
+      {
+        name: Flag.IncludeFiles,
+        value: 2
+      },
+      {
+        name: Flag.IncludeCategoryAndTags,
+        value: 4
+      },
+      {
+        name: Flag.IncludeSharedAccounts,
+        value: 8
+      },
+      {
+        name: Flag.IncludeVersionProperties,
+        value: 16
+      },
+      {
+        name: Flag.ExcludeNonValidated,
+        value: 32
+      },
+      {
+        name: Flag.IncludeInstallationTargets,
+        value: 64
+      },
+      {
+        name: Flag.IncludeAssetUri,
+        value: 128
+      },
+      {
+        name: Flag.IncludeStatistics,
+        value: 256
+      },
+      {
+        name: Flag.IncludeLatestVersionOnly,
+        value: 512
+      },
+      {
+        name: Flag.Unpublished,
+        value: 4096
+      },
+      {
+        name: Flag.IncludeNameConflictInfo,
+        value: 32768
+      },
+      {
+        name: Flag.IncludeLatestPrereleaseAndStableVersionOnly,
+        value: 65536
+      }
+    ];
+    return {
+      version: "",
+      resources,
+      capabilities: {
+        extensionQuery: {
+          filtering,
+          sorting,
+          flags
+        },
+        signing: {
+          allRepositorySigned: true
+        }
+      }
+    };
+  }
+};
+ExtensionGalleryManifestService = __decorateClass([
+  __decorateParam(0, IProductService)
+], ExtensionGalleryManifestService);
+export {
+  ExtensionGalleryManifestService
+};
+//# sourceMappingURL=extensionGalleryManifestService.js.map

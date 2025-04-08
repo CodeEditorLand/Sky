@@ -1,1 +1,5 @@
-var e={};export{e as default};
+var Variable_default = {};
+export {
+  Variable_default as default
+};
+//# sourceMappingURL=Variable.js.map

@@ -1,1 +1,34 @@
-import{findNodeAtLocation as l,parseTree as a}from"../../../../base/common/json.js";import"../../../../editor/common/languages.js";import"../../../../editor/common/model.js";const f=e=>{const o=a(e.model.getValue()),t=l(o,e.pathToServers);if(!t||"object"!==t.type)return new Map;const n=new Map;for(const o of t.children||[]){if("property"!==o.type||"string"!==o.children?.[0]?.type)continue;const t=e.model.getPositionAt(o.offset),r=e.model.getPositionAt(o.offset+o.length);n.set(o.children[0].value,{uri:e.model.uri,range:{startLineNumber:t.lineNumber,startColumn:t.column,endLineNumber:r.lineNumber,endColumn:r.column}})}return n};export{f as getMcpServerMapping};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { findNodeAtLocation, parseTree as jsonParseTree } from "../../../../base/common/json.js";
+import { Location } from "../../../../editor/common/languages.js";
+import { ITextModel } from "../../../../editor/common/model.js";
+const getMcpServerMapping = /* @__PURE__ */ __name((opts) => {
+  const tree = jsonParseTree(opts.model.getValue());
+  const servers = findNodeAtLocation(tree, opts.pathToServers);
+  if (!servers || servers.type !== "object") {
+    return /* @__PURE__ */ new Map();
+  }
+  const result = /* @__PURE__ */ new Map();
+  for (const node of servers.children || []) {
+    if (node.type !== "property" || node.children?.[0]?.type !== "string") {
+      continue;
+    }
+    const start = opts.model.getPositionAt(node.offset);
+    const end = opts.model.getPositionAt(node.offset + node.length);
+    result.set(node.children[0].value, {
+      uri: opts.model.uri,
+      range: {
+        startLineNumber: start.lineNumber,
+        startColumn: start.column,
+        endLineNumber: end.lineNumber,
+        endColumn: end.column
+      }
+    });
+  }
+  return result;
+}, "getMcpServerMapping");
+export {
+  getMcpServerMapping
+};
+//# sourceMappingURL=mcpConfigFileUtils.js.map

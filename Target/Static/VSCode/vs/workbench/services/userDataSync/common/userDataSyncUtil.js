@@ -1,1 +1,64 @@
-var d=Object.defineProperty,l=Object.getOwnPropertyDescriptor,g=(e,t,r,o)=>{for(var i,s=o>1?void 0:o?l(t,r):t,n=e.length-1;n>=0;n--)(i=e[n])&&(s=(o?i(t,r,s):i(s))||s);return o&&s&&d(t,r,s),s},s=(e,t)=>(r,o)=>t(r,o,e);import{IKeybindingService as S}from"../../../../platform/keybinding/common/keybinding.js";import{IUserDataSyncUtilService as p,getDefaultIgnoredSettings as m}from"../../../../platform/userDataSync/common/userDataSync.js";import"../../../../base/common/collections.js";import{InstantiationType as v,registerSingleton as u}from"../../../../platform/instantiation/common/extensions.js";import"../../../../base/common/jsonFormatter.js";import"../../../../base/common/uri.js";import{ITextModelService as f}from"../../../../editor/common/services/resolverService.js";import{ITextResourcePropertiesService as y,ITextResourceConfigurationService as I}from"../../../../editor/common/services/textResourceConfiguration.js";let c=class{constructor(e,t,r,o){this.keybindingsService=e,this.textModelService=t,this.textResourcePropertiesService=r,this.textResourceConfigurationService=o}async resolveDefaultCoreIgnoredSettings(){return m(!0)}async resolveUserBindings(e){const t={};for(const r of e)t[r]=this.keybindingsService.resolveUserBinding(r).map((e=>e.getUserSettingsLabel())).join(" ");return t}async resolveFormattingOptions(e){try{const t=await this.textModelService.createModelReference(e),{insertSpaces:r,tabSize:o}=t.object.textEditorModel.getOptions(),i=t.object.textEditorModel.getEOL();return t.dispose(),{eol:i,insertSpaces:r,tabSize:o}}catch{}return{eol:this.textResourcePropertiesService.getEOL(e),insertSpaces:!!this.textResourceConfigurationService.getValue(e,"editor.insertSpaces"),tabSize:this.textResourceConfigurationService.getValue(e,"editor.tabSize")}}};c=g([s(0,S),s(1,f),s(2,y),s(3,I)],c),u(p,c,v.Delayed);
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { IUserDataSyncUtilService, getDefaultIgnoredSettings } from "../../../../platform/userDataSync/common/userDataSync.js";
+import { IStringDictionary } from "../../../../base/common/collections.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { FormattingOptions } from "../../../../base/common/jsonFormatter.js";
+import { URI } from "../../../../base/common/uri.js";
+import { ITextModelService } from "../../../../editor/common/services/resolverService.js";
+import { ITextResourcePropertiesService, ITextResourceConfigurationService } from "../../../../editor/common/services/textResourceConfiguration.js";
+let UserDataSyncUtilService = class {
+  constructor(keybindingsService, textModelService, textResourcePropertiesService, textResourceConfigurationService) {
+    this.keybindingsService = keybindingsService;
+    this.textModelService = textModelService;
+    this.textResourcePropertiesService = textResourcePropertiesService;
+    this.textResourceConfigurationService = textResourceConfigurationService;
+  }
+  static {
+    __name(this, "UserDataSyncUtilService");
+  }
+  async resolveDefaultCoreIgnoredSettings() {
+    return getDefaultIgnoredSettings(true);
+  }
+  async resolveUserBindings(userBindings) {
+    const keys = {};
+    for (const userbinding of userBindings) {
+      keys[userbinding] = this.keybindingsService.resolveUserBinding(userbinding).map((part) => part.getUserSettingsLabel()).join(" ");
+    }
+    return keys;
+  }
+  async resolveFormattingOptions(resource) {
+    try {
+      const modelReference = await this.textModelService.createModelReference(resource);
+      const { insertSpaces, tabSize } = modelReference.object.textEditorModel.getOptions();
+      const eol = modelReference.object.textEditorModel.getEOL();
+      modelReference.dispose();
+      return { eol, insertSpaces, tabSize };
+    } catch (e) {
+    }
+    return {
+      eol: this.textResourcePropertiesService.getEOL(resource),
+      insertSpaces: !!this.textResourceConfigurationService.getValue(resource, "editor.insertSpaces"),
+      tabSize: this.textResourceConfigurationService.getValue(resource, "editor.tabSize")
+    };
+  }
+};
+UserDataSyncUtilService = __decorateClass([
+  __decorateParam(0, IKeybindingService),
+  __decorateParam(1, ITextModelService),
+  __decorateParam(2, ITextResourcePropertiesService),
+  __decorateParam(3, ITextResourceConfigurationService)
+], UserDataSyncUtilService);
+registerSingleton(IUserDataSyncUtilService, UserDataSyncUtilService, InstantiationType.Delayed);
+//# sourceMappingURL=userDataSyncUtil.js.map

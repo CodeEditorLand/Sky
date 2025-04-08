@@ -1,1 +1,34 @@
-var m=Object.defineProperty,v=Object.getOwnPropertyDescriptor,p=(o,e,t,r)=>{for(var s,c=r>1?void 0:r?v(e,t):e,n=o.length-1;n>=0;n--)(s=o[n])&&(c=(r?s(e,t,c):s(c))||c);return r&&c&&m(e,t,c),c},n=(o,e)=>(t,r)=>e(t,r,o);import{AbstractExtHostConsoleForwarder as I}from"../common/extHostConsoleForwarder.js";import{IExtHostInitDataService as g}from"../common/extHostInitDataService.js";import{IExtHostRpcService as u}from"../common/extHostRpcService.js";let c=class extends I{constructor(o,e){super(o,e)}_nativeConsoleLogMessage(o,e,t){e.apply(console,t)}};c=p([n(0,u),n(1,g)],c);export{c as ExtHostConsoleForwarder};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { AbstractExtHostConsoleForwarder } from "../common/extHostConsoleForwarder.js";
+import { IExtHostInitDataService } from "../common/extHostInitDataService.js";
+import { IExtHostRpcService } from "../common/extHostRpcService.js";
+let ExtHostConsoleForwarder = class extends AbstractExtHostConsoleForwarder {
+  static {
+    __name(this, "ExtHostConsoleForwarder");
+  }
+  constructor(extHostRpc, initData) {
+    super(extHostRpc, initData);
+  }
+  _nativeConsoleLogMessage(_method, original, args) {
+    original.apply(console, args);
+  }
+};
+ExtHostConsoleForwarder = __decorateClass([
+  __decorateParam(0, IExtHostRpcService),
+  __decorateParam(1, IExtHostInitDataService)
+], ExtHostConsoleForwarder);
+export {
+  ExtHostConsoleForwarder
+};
+//# sourceMappingURL=extHostConsoleForwarder.js.map

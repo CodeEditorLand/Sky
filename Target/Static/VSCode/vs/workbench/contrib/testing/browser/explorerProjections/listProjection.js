@@ -1,1 +1,226 @@
-var u=Object.defineProperty,g=Object.getOwnPropertyDescriptor,I=(t,e,s,i)=>{for(var r,o=i>1?void 0:i?g(e,s):e,n=t.length-1;n>=0;n--)(r=t[n])&&(o=(i?r(e,s,o):r(o))||o);return i&&o&&u(e,s,o),o},l=(t,e)=>(s,i)=>e(s,i,t);import"../../../../../base/browser/ui/tree/objectTree.js";import{Emitter as S}from"../../../../../base/common/event.js";import"../../../../../base/common/filters.js";import{Iterable as c}from"../../../../../base/common/iterator.js";import{Disposable as v}from"../../../../../base/common/lifecycle.js";import{flatTestItemDelimiter as y}from"./display.js";import{TestItemTreeElement as b,TestTreeErrorMessage as E,getChildrenForParent as C,testIdentityProvider as x}from"./index.js";import{isCollapsedInSerializedTestTree as D}from"./testingViewState.js";import{TestId as p}from"../../common/testId.js";import{TestResultItemChangeReason as R}from"../../common/testResult.js";import{ITestResultService as w}from"../../common/testResultService.js";import{ITestService as z}from"../../common/testService.js";import{TestDiffOpType as h,TestItemExpandState as U,TestResultState as f,applyTestItemUpdate as k}from"../../common/testTypes.js";class T extends b{constructor(t,e,s){super({...t,item:{...t.item}},e),this.chain=s,this.updateErrorVisibility()}errorChild;descriptionParts=[];get description(){return this.chain.map((t=>t.item.label)).join(y)}update(t){k(this.test,t),this.updateErrorVisibility(t),this.fireChange()}fireChange(){this.changeEmitter.fire()}updateErrorVisibility(t){this.errorChild&&(!this.test.item.error||t?.item?.error)&&(this.children.delete(this.errorChild),this.errorChild=void 0),this.test.item.error&&!this.errorChild&&(this.errorChild=new E(this.test.item.error,this),this.children.add(this.errorChild))}}let m=class extends v{constructor(t,e,s){super(),this.lastState=t,this.testService=e,this.results=s,this._register(e.onDidProcessDiff((t=>this.applyDiff(t)))),this._register(s.onResultsChanged((t=>{if("removed"in t)for(const t of this.items.values()){const e=this.results.getStateById(t.test.item.extId)?.[1];t.duration=e?.ownDuration,t.state=e?.ownComputedState||f.Unset,t.fireChange()}}))),this._register(s.onTestChanged((t=>{if(t.reason===R.NewMessage)return;let e=t.item;if(e.ownComputedState===f.Unset||t.result!==s.results[0]){const t=s.getStateById(e.item.extId);t&&(e=t[1])}const i=this.items.get(e.item.extId);i&&(i.retired=!!e.retired,i.state=e.computedState,i.duration=e.ownDuration,i.fireChange())})));for(const t of e.collection.all)this.storeItem(t)}updateEmitter=new S;items=new Map;get rootsWithChildren(){const t=c.map(this.testService.collection.rootItems,(t=>this.items.get(t.item.extId)));return c.filter(t,(t=>!!t?.children.size))}onUpdate=this.updateEmitter.event;getElementByTestId(t){return this.items.get(t)}applyDiff(t){for(const e of t)switch(e.op){case h.Add:this.storeItem(e.item);break;case h.Update:this.items.get(e.item.extId)?.update(e.item);break;case h.Remove:for(const[t,s]of this.items)(t===e.itemId||p.isChild(e.itemId,t))&&this.unstoreItem(s)}0!==t.length&&this.updateEmitter.fire()}applyTo(t){t.setChildren(null,C(this.lastState,this.rootsWithChildren,null),{diffIdentityProvider:x,diffDepth:1/0})}expandElement(t,e){t instanceof T&&t.test.expand!==U.NotExpandable&&this.testService.collection.expand(t.test.item.extId,e)}unstoreItem(t){this.items.delete(t.test.item.extId),t.parent?.children.delete(t);const e=p.fromString(t.test.item.extId).parentId;if(e)for(const t of e.idsToRoot()){const s=this.testService.collection.getNodeById(t.toString());if(s){0===s.children.size&&!this.items.has(t.toString())&&this._storeItem(e,s);break}}}_storeItem(t,e){const s=t.isRoot?null:this.items.get(e.controllerId),i=[...t.idsFromRoot()].slice(1,-1).map((t=>this.testService.collection.getNodeById(t.toString()))),r=new T(e,s,i);s?.children.add(r),this.items.set(r.test.item.extId,r),(0===r.depth||!1===D(this.lastState,r.test.item.extId))&&this.expandElement(r,1/0);const o=this.results.getStateById(r.test.item.extId)?.[1];o&&(r.retired=!!o.retired,r.state=o.computedState,r.duration=o.ownDuration)}storeItem(t){const e=p.fromString(t.item.extId);for(const t of e.idsToRoot())if(!t.isRoot){const e=this.items.get(t.toString());if(e){this.unstoreItem(e);break}}this._storeItem(e,t)}};m=I([l(1,z),l(2,w)],m);export{m as ListProjection};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { ObjectTree } from "../../../../../base/browser/ui/tree/objectTree.js";
+import { Emitter } from "../../../../../base/common/event.js";
+import { FuzzyScore } from "../../../../../base/common/filters.js";
+import { Iterable } from "../../../../../base/common/iterator.js";
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { flatTestItemDelimiter } from "./display.js";
+import { ITestTreeProjection, TestExplorerTreeElement, TestItemTreeElement, TestTreeErrorMessage, getChildrenForParent, testIdentityProvider } from "./index.js";
+import { ISerializedTestTreeCollapseState, isCollapsedInSerializedTestTree } from "./testingViewState.js";
+import { TestId } from "../../common/testId.js";
+import { TestResultItemChangeReason } from "../../common/testResult.js";
+import { ITestResultService } from "../../common/testResultService.js";
+import { ITestService } from "../../common/testService.js";
+import { ITestItemUpdate, InternalTestItem, TestDiffOpType, TestItemExpandState, TestResultState, TestsDiff, applyTestItemUpdate } from "../../common/testTypes.js";
+class ListTestItemElement extends TestItemTreeElement {
+  constructor(test, parent, chain) {
+    super({ ...test, item: { ...test.item } }, parent);
+    this.chain = chain;
+    this.updateErrorVisibility();
+  }
+  static {
+    __name(this, "ListTestItemElement");
+  }
+  errorChild;
+  descriptionParts = [];
+  get description() {
+    return this.chain.map((c) => c.item.label).join(flatTestItemDelimiter);
+  }
+  update(patch) {
+    applyTestItemUpdate(this.test, patch);
+    this.updateErrorVisibility(patch);
+    this.fireChange();
+  }
+  fireChange() {
+    this.changeEmitter.fire();
+  }
+  updateErrorVisibility(patch) {
+    if (this.errorChild && (!this.test.item.error || patch?.item?.error)) {
+      this.children.delete(this.errorChild);
+      this.errorChild = void 0;
+    }
+    if (this.test.item.error && !this.errorChild) {
+      this.errorChild = new TestTreeErrorMessage(this.test.item.error, this);
+      this.children.add(this.errorChild);
+    }
+  }
+}
+let ListProjection = class extends Disposable {
+  constructor(lastState, testService, results) {
+    super();
+    this.lastState = lastState;
+    this.testService = testService;
+    this.results = results;
+    this._register(testService.onDidProcessDiff((diff) => this.applyDiff(diff)));
+    this._register(results.onResultsChanged((evt) => {
+      if (!("removed" in evt)) {
+        return;
+      }
+      for (const inTree of this.items.values()) {
+        const lookup = this.results.getStateById(inTree.test.item.extId)?.[1];
+        inTree.duration = lookup?.ownDuration;
+        inTree.state = lookup?.ownComputedState || TestResultState.Unset;
+        inTree.fireChange();
+      }
+    }));
+    this._register(results.onTestChanged((ev) => {
+      if (ev.reason === TestResultItemChangeReason.NewMessage) {
+        return;
+      }
+      let result = ev.item;
+      if (result.ownComputedState === TestResultState.Unset || ev.result !== results.results[0]) {
+        const fallback = results.getStateById(result.item.extId);
+        if (fallback) {
+          result = fallback[1];
+        }
+      }
+      const item = this.items.get(result.item.extId);
+      if (!item) {
+        return;
+      }
+      item.retired = !!result.retired;
+      item.state = result.computedState;
+      item.duration = result.ownDuration;
+      item.fireChange();
+    }));
+    for (const test of testService.collection.all) {
+      this.storeItem(test);
+    }
+  }
+  static {
+    __name(this, "ListProjection");
+  }
+  updateEmitter = new Emitter();
+  items = /* @__PURE__ */ new Map();
+  /**
+   * Gets root elements of the tree.
+   */
+  get rootsWithChildren() {
+    const rootsIt = Iterable.map(this.testService.collection.rootItems, (r) => this.items.get(r.item.extId));
+    return Iterable.filter(rootsIt, (r) => !!r?.children.size);
+  }
+  /**
+   * @inheritdoc
+   */
+  onUpdate = this.updateEmitter.event;
+  /**
+   * @inheritdoc
+   */
+  getElementByTestId(testId) {
+    return this.items.get(testId);
+  }
+  /**
+   * @inheritdoc
+   */
+  applyDiff(diff) {
+    for (const op of diff) {
+      switch (op.op) {
+        case TestDiffOpType.Add: {
+          this.storeItem(op.item);
+          break;
+        }
+        case TestDiffOpType.Update: {
+          this.items.get(op.item.extId)?.update(op.item);
+          break;
+        }
+        case TestDiffOpType.Remove: {
+          for (const [id, item] of this.items) {
+            if (id === op.itemId || TestId.isChild(op.itemId, id)) {
+              this.unstoreItem(item);
+            }
+          }
+          break;
+        }
+      }
+    }
+    if (diff.length !== 0) {
+      this.updateEmitter.fire();
+    }
+  }
+  /**
+   * @inheritdoc
+   */
+  applyTo(tree) {
+    tree.setChildren(null, getChildrenForParent(this.lastState, this.rootsWithChildren, null), {
+      diffIdentityProvider: testIdentityProvider,
+      diffDepth: Infinity
+    });
+  }
+  /**
+   * @inheritdoc
+   */
+  expandElement(element, depth) {
+    if (!(element instanceof ListTestItemElement)) {
+      return;
+    }
+    if (element.test.expand === TestItemExpandState.NotExpandable) {
+      return;
+    }
+    this.testService.collection.expand(element.test.item.extId, depth);
+  }
+  unstoreItem(treeElement) {
+    this.items.delete(treeElement.test.item.extId);
+    treeElement.parent?.children.delete(treeElement);
+    const parentId = TestId.fromString(treeElement.test.item.extId).parentId;
+    if (!parentId) {
+      return;
+    }
+    for (const id of parentId.idsToRoot()) {
+      const parentTest = this.testService.collection.getNodeById(id.toString());
+      if (parentTest) {
+        if (parentTest.children.size === 0 && !this.items.has(id.toString())) {
+          this._storeItem(parentId, parentTest);
+        }
+        break;
+      }
+    }
+  }
+  _storeItem(testId, item) {
+    const displayedParent = testId.isRoot ? null : this.items.get(item.controllerId);
+    const chain = [...testId.idsFromRoot()].slice(1, -1).map((id) => this.testService.collection.getNodeById(id.toString()));
+    const treeElement = new ListTestItemElement(item, displayedParent, chain);
+    displayedParent?.children.add(treeElement);
+    this.items.set(treeElement.test.item.extId, treeElement);
+    if (treeElement.depth === 0 || isCollapsedInSerializedTestTree(this.lastState, treeElement.test.item.extId) === false) {
+      this.expandElement(treeElement, Infinity);
+    }
+    const prevState = this.results.getStateById(treeElement.test.item.extId)?.[1];
+    if (prevState) {
+      treeElement.retired = !!prevState.retired;
+      treeElement.state = prevState.computedState;
+      treeElement.duration = prevState.ownDuration;
+    }
+  }
+  storeItem(item) {
+    const testId = TestId.fromString(item.item.extId);
+    for (const parentId of testId.idsToRoot()) {
+      if (!parentId.isRoot) {
+        const prevParent = this.items.get(parentId.toString());
+        if (prevParent) {
+          this.unstoreItem(prevParent);
+          break;
+        }
+      }
+    }
+    this._storeItem(testId, item);
+  }
+};
+ListProjection = __decorateClass([
+  __decorateParam(1, ITestService),
+  __decorateParam(2, ITestResultService)
+], ListProjection);
+export {
+  ListProjection
+};
+//# sourceMappingURL=listProjection.js.map

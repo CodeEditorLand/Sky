@@ -1,6 +1,591 @@
-import*as $ from"child_process";import{EventEmitter as k}from"events";import{StringDecoder as N}from"string_decoder";import{coalesce as W,mapArrayOrNot as _}from"../../../../base/common/arrays.js";import"../../../../base/common/cancellation.js";import{groupBy as F}from"../../../../base/common/collections.js";import{splitGlobAware as L}from"../../../../base/common/glob.js";import{createRegExp as Q,escapeRegExpCharacters as U}from"../../../../base/common/strings.js";import{URI as O}from"../../../../base/common/uri.js";import"../../../../platform/progress/common/progress.js";import{DEFAULT_MAX_SEARCH_RESULTS as z,SearchError as f,SearchErrorCode as S,serializeSearchError as I,TextSearchMatch as G}from"../common/search.js";import{Range as j,TextSearchContext2 as H,TextSearchMatch2 as J}from"../common/searchExtTypes.js";import{RegExpParser as V,RegExpVisitor as X}from"vscode-regexpp";import{rgPath as K}from"@vscode/ripgrep";import{anchorGlob as P,rangeToSearchRange as Y,searchRangeToRange as M}from"./ripgrepSearchUtils.js";import{newToOldPreviewOptions as Z}from"../common/searchExtConversionTypes.js";const D=K.replace(/\bnode_modules\.asar\b/,"node_modules.asar.unpacked");class Be{constructor(n,e){this.outputChannel=n;this._numThreads=e}provideTextSearchResults(n,e,r,i){return Promise.all(e.folderOptions.map(s=>{const a={folderOptions:s,numThreads:this._numThreads,maxResults:e.maxResults,previewOptions:e.previewOptions,maxFileSize:e.maxFileSize,surroundingContext:e.surroundingContext};return this.provideTextSearchResultsWithRgOptions(n,a,r,i)})).then(s=>({limitHit:s.some(o=>!!o&&o.limitHit)}))}provideTextSearchResultsWithRgOptions(n,e,r,i){return this.outputChannel.appendLine(`provideTextSearchResults ${n.pattern}, ${JSON.stringify({...e,folder:e.folderOptions.folder.toString()})}`),new Promise((s,a)=>{i.onCancellationRequested(()=>v());const o={...e,numThreads:this._numThreads},l=re(n,o),h=e.folderOptions.folder.fsPath,C=l.map(c=>c.match(/^-/)?c:`'${c}'`).join(" ");this.outputChannel.appendLine(`${D} ${C}
- - cwd: ${h}`);let p=$.spawn(D,l,{cwd:h});p.on("error",c=>{console.error(c),this.outputChannel.appendLine("Error: "+(c&&c.message)),a(I(new f(c&&c.message,S.rgProcessError)))});let m=!1;const u=new te(e.maxResults??z,e.folderOptions.folder,Z(e.previewOptions));u.on("result",c=>{m=!0,g="",r.report(c)});let b=!1;const v=()=>{b=!0,p?.kill(),u?.cancel()};let T=!1;u.on("hitLimit",()=>{T=!0,v()});let g="";p.stdout.on("data",c=>{u.handleData(c),m||(g+=c)});let x=!1;p.stdout.once("data",()=>x=!0);let d="";p.stderr.on("data",c=>{const R=c.toString();this.outputChannel.appendLine(R),d.length+R.length<1e6&&(d+=R)}),p.on("close",()=>{if(this.outputChannel.appendLine(x?"Got data from stdout":"No data from stdout"),this.outputChannel.appendLine(m?"Got result from parser":"No result from parser"),g&&this.outputChannel.appendLine(`Got data without result: ${g}`),this.outputChannel.appendLine(""),b)s({limitHit:T});else{u.flush(),p=null;let c;d&&!x&&(c=q(d))?a(I(new f(c.message,c.code))):s({limitHit:T})}})})}}function q(t){const n=t.split(`
-`),e=n[0].trim();if(n.some(i=>i.startsWith("regex parse error")))return new f(ee(n),S.regexParseError);const r=e.match(/grep config error: unknown encoding: (.*)/);if(r)return new f(`Unknown encoding: ${r[1]}`,S.unknownEncoding);if(e.startsWith("error parsing glob"))return new f(e.charAt(0).toUpperCase()+e.substr(1),S.globParseError);if(e.startsWith("the literal"))return new f(e.charAt(0).toUpperCase()+e.substr(1),S.invalidLiteral);if(e.startsWith("PCRE2: error compiling pattern"))return new f(e,S.regexParseError)}function ee(t){const n=["Regex parse error"],e=t.filter(r=>r.startsWith("PCRE2:"));if(e.length>=1){const r=e[0].replace("PCRE2:","");if(r.indexOf(":")!==-1&&r.split(":").length>=2){const i=r.split(":")[1];n.push(":"+i)}}return n.join("")}class te extends k{constructor(e,r,i){super();this.maxResults=e;this.root=r;this.previewOptions=i;this.stringDecoder=new N}remainder="";isDone=!1;hitLimit=!1;stringDecoder;numResults=0;cancel(){this.isDone=!0}flush(){this.handleDecodedData(this.stringDecoder.end())}on(e,r){return super.on(e,r),this}handleData(e){if(this.isDone)return;const r=typeof e=="string"?e:this.stringDecoder.write(e);this.handleDecodedData(r)}handleDecodedData(e){let r=e.indexOf(`
-`);const i=this.remainder+e;if(r>=0)r+=this.remainder.length;else{this.remainder=i;return}let s=0;for(;r>=0;)this.handleLine(i.substring(s,r).trim()),s=r+1,r=i.indexOf(`
-`,s);this.remainder=i.substring(s)}handleLine(e){if(this.isDone||!e)return;let r;try{r=JSON.parse(e)}catch{throw new Error(`malformed line from rg: ${e}`)}if(r.type==="match"){const i=E(r.data.path),s=O.joinPath(this.root,i),a=this.createTextSearchMatch(r.data,s);this.onResult(a),this.hitLimit&&(this.cancel(),this.emit("hitLimit"))}else if(r.type==="context"){const i=E(r.data.path),s=O.joinPath(this.root,i);this.createTextSearchContexts(r.data,s).forEach(o=>this.onResult(o))}}createTextSearchMatch(e,r){const i=e.line_number-1,s=E(e.lines),a=Buffer.from(s);let o=0,l=0,h=i;e.submatches.length===0&&e.submatches.push(s.length?{start:0,end:1,match:{text:s[0]}}:{start:0,end:0,match:{text:""}});const C=W(e.submatches.map((u,b)=>{if(this.hitLimit)return null;this.numResults++,this.numResults>=this.maxResults&&(this.hitLimit=!0);const v=E(u.match),T=a.slice(o,u.start).toString(),g=y(T),x=g.numLines>0?g.lastLineLength:g.lastLineLength+l,d=y(v),c=g.numLines+h,R=d.numLines+c,w=d.numLines>0?d.lastLineLength:d.lastLineLength+x;return o=u.end,l=w,h=R,new j(c,x,R,w)})),p=_(C,Y),m=new G(s,p,this.previewOptions);return new J(r,m.rangeLocations.map(u=>({sourceRange:M(u.source),previewRange:M(u.preview)})),m.previewText)}createTextSearchContexts(e,r){const i=E(e.lines),s=e.line_number;return i.replace(/\r?\n$/,"").split(`
-`).map((a,o)=>new H(r,a,s+o))}onResult(e){this.emit("result",e)}}function E(t){return t.bytes?Buffer.from(t.bytes,"base64").toString():t.text}function y(t){const n=/\n/g;let e=0,r=-1,i;for(;i=n.exec(t);)e++,r=i.index;const s=r>=0?t.length-r-1:t.length;return{numLines:e,lastLineLength:s}}function re(t,n){const e=["--hidden","--no-require-git"];e.push(t.isCaseSensitive?"--case-sensitive":"--ignore-case");const{doubleStarIncludes:r,otherIncludes:i}=F(n.folderOptions.includes,a=>a.startsWith("**")?"doubleStarIncludes":"otherIncludes");if(i&&i.length){const a=new Set;i.forEach(o=>{a.add(o)}),e.push("-g","!*"),a.forEach(o=>{ne(o).map(P).forEach(l=>{e.push("-g",l)})})}r&&r.length&&r.forEach(a=>{e.push("-g",a)}),n.folderOptions.excludes.map(a=>typeof a=="string"?a:a.pattern).map(P).forEach(a=>e.push("-g",`!${a}`)),n.maxFileSize&&e.push("--max-filesize",n.maxFileSize+""),n.folderOptions.useIgnoreFiles.local?n.folderOptions.useIgnoreFiles.parent||e.push("--no-ignore-parent"):e.push("--no-ignore"),n.folderOptions.followSymlinks&&e.push("--follow"),n.folderOptions.encoding&&n.folderOptions.encoding!=="utf8"&&e.push("--encoding",n.folderOptions.encoding),n.numThreads&&e.push("--threads",`${n.numThreads}`),t.pattern==="--"&&(t.isRegExp=!0,t.pattern="\\-\\-"),t.isMultiline&&!t.isRegExp&&(t.pattern=U(t.pattern),t.isRegExp=!0),n.usePCRE2&&e.push("--pcre2"),e.push("--crlf"),t.isRegExp&&(t.pattern=se(t.pattern),e.push("--engine","auto"));let s;if(t.isWordMatch){const o=Q(t.pattern,!!t.isRegExp,{wholeWord:t.isWordMatch}).source.replace(/\\\//g,"/");e.push("--regexp",o)}else if(t.isRegExp){let a=ie(t.pattern);a=ae(a),e.push("--regexp",a)}else s=t.pattern,e.push("--fixed-strings");return e.push("--no-config"),n.folderOptions.useIgnoreFiles.global||e.push("--no-ignore-global"),e.push("--json"),t.isMultiline&&e.push("--multiline"),n.surroundingContext&&(e.push("--before-context",n.surroundingContext+""),e.push("--after-context",n.surroundingContext+"")),e.push("--"),s&&e.push(s),e.push("."),e}function ne(t){return B(t).flatMap(e=>{const r=L(e,"/");return r.map((i,s)=>r.slice(0,s+1).join("/"))})}function se(t){const n=/((?:[^\\]|^)(?:\\\\)*)\\u([a-z0-9]{4})/gi;for(;t.match(n);)t=t.replace(n,"$1\\x{$2}");const e=/((?:[^\\]|^)(?:\\\\)*)\\u\{([a-z0-9]{4})\}/gi;for(;t.match(e);)t=t.replace(e,"$1\\x{$2}");return t}const A=t=>t.type==="Assertion"&&t.kind==="lookbehind";function ie(t){let n;try{n=new V().parsePattern(t)}catch{return t}let e="",r=0;const i=(o,l,h)=>{e+=t.slice(r,o)+h,r=l},s=[];return new X({onCharacterEnter(o){if(o.raw!=="\\n")return;const l=s[0];if(!l)i(o.start,o.end,"\\r?\\n");else if(!s.some(A))if(l.type==="CharacterClass")if(l.negate){const h=t.slice(l.start+2,o.start)+t.slice(o.end,l.end-1);l.parent?.type==="Quantifier"?i(l.start,l.end,h?`[^${h}]`:"."):i(l.start,l.end,"(?!\\r?\\n"+(h?`|[${h}]`:"")+")")}else{const h=t.slice(l.start+1,o.start)+t.slice(o.end,l.end-1);i(l.start,l.end,h===""?"\\r?\\n":`(?:[${h}]|\\r?\\n)`)}else l.type==="Quantifier"&&i(o.start,o.end,"(?:\\r?\\n)")},onQuantifierEnter(o){s.unshift(o)},onQuantifierLeave(){s.shift()},onCharacterClassRangeEnter(o){s.unshift(o)},onCharacterClassRangeLeave(){s.shift()},onCharacterClassEnter(o){s.unshift(o)},onCharacterClassLeave(){s.shift()},onAssertionEnter(o){A(o)&&s.push(o)},onAssertionLeave(o){s[0]===o&&s.shift()}}).visit(n),e+=t.slice(r),e}function ae(t){return t.replace(/\n/g,"\\r?\\n")}function oe(t){let n=!1,e=!1,r="",i="";for(let s=0;s<t.length;s++){const a=t[s];switch(a){case"\\":e?(n?i+="\\"+a:r+="\\"+a,e=!1):e=!0;break;case"{":if(e)n?i+=a:r+=a,e=!1;else{if(n)return{strInBraces:r+"{"+i+"{"+t.substring(s+1)};n=!0}break;case"}":if(e)n?i+=a:r+=a,e=!1;else{if(n)return{fixedStart:r,strInBraces:i,fixedEnd:t.substring(s+1)};r+=a}break;default:n?i+=(e?"\\":"")+a:r+=(e?"\\":"")+a,e=!1;break}}return{strInBraces:r+(n?"{"+i:"")}}function B(t){const{fixedStart:n,strInBraces:e,fixedEnd:r}=oe(t);if(n===void 0||r===void 0)return[e];let i=L(e,",");i.length||(i=[""]);const s=B(r);return i.flatMap(a=>{const o=n+a;return s.map(l=>o+l)})}export{te as RipgrepParser,Be as RipgrepTextSearchEngine,ae as fixNewline,ie as fixRegexNewline,re as getRgArgs,B as performBraceExpansionForRipgrep,se as unicodeEscapesToPCRE2};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as cp from "child_process";
+import { EventEmitter } from "events";
+import { StringDecoder } from "string_decoder";
+import { coalesce, mapArrayOrNot } from "../../../../base/common/arrays.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { groupBy } from "../../../../base/common/collections.js";
+import { splitGlobAware } from "../../../../base/common/glob.js";
+import { createRegExp, escapeRegExpCharacters } from "../../../../base/common/strings.js";
+import { URI } from "../../../../base/common/uri.js";
+import { Progress } from "../../../../platform/progress/common/progress.js";
+import { DEFAULT_MAX_SEARCH_RESULTS, IExtendedExtensionSearchOptions, ITextSearchPreviewOptions, SearchError, SearchErrorCode, serializeSearchError, TextSearchMatch } from "../common/search.js";
+import { Range, TextSearchComplete2, TextSearchContext2, TextSearchMatch2, TextSearchProviderOptions, TextSearchQuery2, TextSearchResult2 } from "../common/searchExtTypes.js";
+import { AST as ReAST, RegExpParser, RegExpVisitor } from "vscode-regexpp";
+import { rgPath } from "@vscode/ripgrep";
+import { anchorGlob, IOutputChannel, Maybe, rangeToSearchRange, searchRangeToRange } from "./ripgrepSearchUtils.js";
+import { newToOldPreviewOptions } from "../common/searchExtConversionTypes.js";
+const rgDiskPath = rgPath.replace(/\bnode_modules\.asar\b/, "node_modules.asar.unpacked");
+class RipgrepTextSearchEngine {
+  constructor(outputChannel, _numThreads) {
+    this.outputChannel = outputChannel;
+    this._numThreads = _numThreads;
+  }
+  static {
+    __name(this, "RipgrepTextSearchEngine");
+  }
+  provideTextSearchResults(query, options, progress, token) {
+    return Promise.all(options.folderOptions.map((folderOption) => {
+      const extendedOptions = {
+        folderOptions: folderOption,
+        numThreads: this._numThreads,
+        maxResults: options.maxResults,
+        previewOptions: options.previewOptions,
+        maxFileSize: options.maxFileSize,
+        surroundingContext: options.surroundingContext
+      };
+      return this.provideTextSearchResultsWithRgOptions(query, extendedOptions, progress, token);
+    })).then((e) => {
+      const complete = {
+        // todo: get this to actually check
+        limitHit: e.some((complete2) => !!complete2 && complete2.limitHit)
+      };
+      return complete;
+    });
+  }
+  provideTextSearchResultsWithRgOptions(query, options, progress, token) {
+    this.outputChannel.appendLine(`provideTextSearchResults ${query.pattern}, ${JSON.stringify({
+      ...options,
+      ...{
+        folder: options.folderOptions.folder.toString()
+      }
+    })}`);
+    return new Promise((resolve, reject) => {
+      token.onCancellationRequested(() => cancel());
+      const extendedOptions = {
+        ...options,
+        numThreads: this._numThreads
+      };
+      const rgArgs = getRgArgs(query, extendedOptions);
+      const cwd = options.folderOptions.folder.fsPath;
+      const escapedArgs = rgArgs.map((arg) => arg.match(/^-/) ? arg : `'${arg}'`).join(" ");
+      this.outputChannel.appendLine(`${rgDiskPath} ${escapedArgs}
+ - cwd: ${cwd}`);
+      let rgProc = cp.spawn(rgDiskPath, rgArgs, { cwd });
+      rgProc.on("error", (e) => {
+        console.error(e);
+        this.outputChannel.appendLine("Error: " + (e && e.message));
+        reject(serializeSearchError(new SearchError(e && e.message, SearchErrorCode.rgProcessError)));
+      });
+      let gotResult = false;
+      const ripgrepParser = new RipgrepParser(options.maxResults ?? DEFAULT_MAX_SEARCH_RESULTS, options.folderOptions.folder, newToOldPreviewOptions(options.previewOptions));
+      ripgrepParser.on("result", (match) => {
+        gotResult = true;
+        dataWithoutResult = "";
+        progress.report(match);
+      });
+      let isDone = false;
+      const cancel = /* @__PURE__ */ __name(() => {
+        isDone = true;
+        rgProc?.kill();
+        ripgrepParser?.cancel();
+      }, "cancel");
+      let limitHit = false;
+      ripgrepParser.on("hitLimit", () => {
+        limitHit = true;
+        cancel();
+      });
+      let dataWithoutResult = "";
+      rgProc.stdout.on("data", (data) => {
+        ripgrepParser.handleData(data);
+        if (!gotResult) {
+          dataWithoutResult += data;
+        }
+      });
+      let gotData = false;
+      rgProc.stdout.once("data", () => gotData = true);
+      let stderr = "";
+      rgProc.stderr.on("data", (data) => {
+        const message = data.toString();
+        this.outputChannel.appendLine(message);
+        if (stderr.length + message.length < 1e6) {
+          stderr += message;
+        }
+      });
+      rgProc.on("close", () => {
+        this.outputChannel.appendLine(gotData ? "Got data from stdout" : "No data from stdout");
+        this.outputChannel.appendLine(gotResult ? "Got result from parser" : "No result from parser");
+        if (dataWithoutResult) {
+          this.outputChannel.appendLine(`Got data without result: ${dataWithoutResult}`);
+        }
+        this.outputChannel.appendLine("");
+        if (isDone) {
+          resolve({ limitHit });
+        } else {
+          ripgrepParser.flush();
+          rgProc = null;
+          let searchError;
+          if (stderr && !gotData && (searchError = rgErrorMsgForDisplay(stderr))) {
+            reject(serializeSearchError(new SearchError(searchError.message, searchError.code)));
+          } else {
+            resolve({ limitHit });
+          }
+        }
+      });
+    });
+  }
+}
+function rgErrorMsgForDisplay(msg) {
+  const lines = msg.split("\n");
+  const firstLine = lines[0].trim();
+  if (lines.some((l) => l.startsWith("regex parse error"))) {
+    return new SearchError(buildRegexParseError(lines), SearchErrorCode.regexParseError);
+  }
+  const match = firstLine.match(/grep config error: unknown encoding: (.*)/);
+  if (match) {
+    return new SearchError(`Unknown encoding: ${match[1]}`, SearchErrorCode.unknownEncoding);
+  }
+  if (firstLine.startsWith("error parsing glob")) {
+    return new SearchError(firstLine.charAt(0).toUpperCase() + firstLine.substr(1), SearchErrorCode.globParseError);
+  }
+  if (firstLine.startsWith("the literal")) {
+    return new SearchError(firstLine.charAt(0).toUpperCase() + firstLine.substr(1), SearchErrorCode.invalidLiteral);
+  }
+  if (firstLine.startsWith("PCRE2: error compiling pattern")) {
+    return new SearchError(firstLine, SearchErrorCode.regexParseError);
+  }
+  return void 0;
+}
+__name(rgErrorMsgForDisplay, "rgErrorMsgForDisplay");
+function buildRegexParseError(lines) {
+  const errorMessage = ["Regex parse error"];
+  const pcre2ErrorLine = lines.filter((l) => l.startsWith("PCRE2:"));
+  if (pcre2ErrorLine.length >= 1) {
+    const pcre2ErrorMessage = pcre2ErrorLine[0].replace("PCRE2:", "");
+    if (pcre2ErrorMessage.indexOf(":") !== -1 && pcre2ErrorMessage.split(":").length >= 2) {
+      const pcre2ActualErrorMessage = pcre2ErrorMessage.split(":")[1];
+      errorMessage.push(":" + pcre2ActualErrorMessage);
+    }
+  }
+  return errorMessage.join("");
+}
+__name(buildRegexParseError, "buildRegexParseError");
+class RipgrepParser extends EventEmitter {
+  constructor(maxResults, root, previewOptions) {
+    super();
+    this.maxResults = maxResults;
+    this.root = root;
+    this.previewOptions = previewOptions;
+    this.stringDecoder = new StringDecoder();
+  }
+  static {
+    __name(this, "RipgrepParser");
+  }
+  remainder = "";
+  isDone = false;
+  hitLimit = false;
+  stringDecoder;
+  numResults = 0;
+  cancel() {
+    this.isDone = true;
+  }
+  flush() {
+    this.handleDecodedData(this.stringDecoder.end());
+  }
+  on(event, listener) {
+    super.on(event, listener);
+    return this;
+  }
+  handleData(data) {
+    if (this.isDone) {
+      return;
+    }
+    const dataStr = typeof data === "string" ? data : this.stringDecoder.write(data);
+    this.handleDecodedData(dataStr);
+  }
+  handleDecodedData(decodedData) {
+    let newlineIdx = decodedData.indexOf("\n");
+    const dataStr = this.remainder + decodedData;
+    if (newlineIdx >= 0) {
+      newlineIdx += this.remainder.length;
+    } else {
+      this.remainder = dataStr;
+      return;
+    }
+    let prevIdx = 0;
+    while (newlineIdx >= 0) {
+      this.handleLine(dataStr.substring(prevIdx, newlineIdx).trim());
+      prevIdx = newlineIdx + 1;
+      newlineIdx = dataStr.indexOf("\n", prevIdx);
+    }
+    this.remainder = dataStr.substring(prevIdx);
+  }
+  handleLine(outputLine) {
+    if (this.isDone || !outputLine) {
+      return;
+    }
+    let parsedLine;
+    try {
+      parsedLine = JSON.parse(outputLine);
+    } catch (e) {
+      throw new Error(`malformed line from rg: ${outputLine}`);
+    }
+    if (parsedLine.type === "match") {
+      const matchPath = bytesOrTextToString(parsedLine.data.path);
+      const uri = URI.joinPath(this.root, matchPath);
+      const result = this.createTextSearchMatch(parsedLine.data, uri);
+      this.onResult(result);
+      if (this.hitLimit) {
+        this.cancel();
+        this.emit("hitLimit");
+      }
+    } else if (parsedLine.type === "context") {
+      const contextPath = bytesOrTextToString(parsedLine.data.path);
+      const uri = URI.joinPath(this.root, contextPath);
+      const result = this.createTextSearchContexts(parsedLine.data, uri);
+      result.forEach((r) => this.onResult(r));
+    }
+  }
+  createTextSearchMatch(data, uri) {
+    const lineNumber = data.line_number - 1;
+    const fullText = bytesOrTextToString(data.lines);
+    const fullTextBytes = Buffer.from(fullText);
+    let prevMatchEnd = 0;
+    let prevMatchEndCol = 0;
+    let prevMatchEndLine = lineNumber;
+    if (data.submatches.length === 0) {
+      data.submatches.push(
+        fullText.length ? { start: 0, end: 1, match: { text: fullText[0] } } : { start: 0, end: 0, match: { text: "" } }
+      );
+    }
+    const ranges = coalesce(data.submatches.map((match, i) => {
+      if (this.hitLimit) {
+        return null;
+      }
+      this.numResults++;
+      if (this.numResults >= this.maxResults) {
+        this.hitLimit = true;
+      }
+      const matchText = bytesOrTextToString(match.match);
+      const inBetweenText = fullTextBytes.slice(prevMatchEnd, match.start).toString();
+      const inBetweenStats = getNumLinesAndLastNewlineLength(inBetweenText);
+      const startCol = inBetweenStats.numLines > 0 ? inBetweenStats.lastLineLength : inBetweenStats.lastLineLength + prevMatchEndCol;
+      const stats = getNumLinesAndLastNewlineLength(matchText);
+      const startLineNumber = inBetweenStats.numLines + prevMatchEndLine;
+      const endLineNumber = stats.numLines + startLineNumber;
+      const endCol = stats.numLines > 0 ? stats.lastLineLength : stats.lastLineLength + startCol;
+      prevMatchEnd = match.end;
+      prevMatchEndCol = endCol;
+      prevMatchEndLine = endLineNumber;
+      return new Range(startLineNumber, startCol, endLineNumber, endCol);
+    }));
+    const searchRange = mapArrayOrNot(ranges, rangeToSearchRange);
+    const internalResult = new TextSearchMatch(fullText, searchRange, this.previewOptions);
+    return new TextSearchMatch2(
+      uri,
+      internalResult.rangeLocations.map((e) => ({
+        sourceRange: searchRangeToRange(e.source),
+        previewRange: searchRangeToRange(e.preview)
+      })),
+      internalResult.previewText
+    );
+  }
+  createTextSearchContexts(data, uri) {
+    const text = bytesOrTextToString(data.lines);
+    const startLine = data.line_number;
+    return text.replace(/\r?\n$/, "").split("\n").map((line, i) => new TextSearchContext2(uri, line, startLine + i));
+  }
+  onResult(match) {
+    this.emit("result", match);
+  }
+}
+function bytesOrTextToString(obj) {
+  return obj.bytes ? Buffer.from(obj.bytes, "base64").toString() : obj.text;
+}
+__name(bytesOrTextToString, "bytesOrTextToString");
+function getNumLinesAndLastNewlineLength(text) {
+  const re = /\n/g;
+  let numLines = 0;
+  let lastNewlineIdx = -1;
+  let match;
+  while (match = re.exec(text)) {
+    numLines++;
+    lastNewlineIdx = match.index;
+  }
+  const lastLineLength = lastNewlineIdx >= 0 ? text.length - lastNewlineIdx - 1 : text.length;
+  return { numLines, lastLineLength };
+}
+__name(getNumLinesAndLastNewlineLength, "getNumLinesAndLastNewlineLength");
+function getRgArgs(query, options) {
+  const args = ["--hidden", "--no-require-git"];
+  args.push(query.isCaseSensitive ? "--case-sensitive" : "--ignore-case");
+  const { doubleStarIncludes, otherIncludes } = groupBy(
+    options.folderOptions.includes,
+    (include) => include.startsWith("**") ? "doubleStarIncludes" : "otherIncludes"
+  );
+  if (otherIncludes && otherIncludes.length) {
+    const uniqueOthers = /* @__PURE__ */ new Set();
+    otherIncludes.forEach((other) => {
+      uniqueOthers.add(other);
+    });
+    args.push("-g", "!*");
+    uniqueOthers.forEach((otherIncude) => {
+      spreadGlobComponents(otherIncude).map(anchorGlob).forEach((globArg) => {
+        args.push("-g", globArg);
+      });
+    });
+  }
+  if (doubleStarIncludes && doubleStarIncludes.length) {
+    doubleStarIncludes.forEach((globArg) => {
+      args.push("-g", globArg);
+    });
+  }
+  options.folderOptions.excludes.map((e) => typeof e === "string" ? e : e.pattern).map(anchorGlob).forEach((rgGlob) => args.push("-g", `!${rgGlob}`));
+  if (options.maxFileSize) {
+    args.push("--max-filesize", options.maxFileSize + "");
+  }
+  if (options.folderOptions.useIgnoreFiles.local) {
+    if (!options.folderOptions.useIgnoreFiles.parent) {
+      args.push("--no-ignore-parent");
+    }
+  } else {
+    args.push("--no-ignore");
+  }
+  if (options.folderOptions.followSymlinks) {
+    args.push("--follow");
+  }
+  if (options.folderOptions.encoding && options.folderOptions.encoding !== "utf8") {
+    args.push("--encoding", options.folderOptions.encoding);
+  }
+  if (options.numThreads) {
+    args.push("--threads", `${options.numThreads}`);
+  }
+  if (query.pattern === "--") {
+    query.isRegExp = true;
+    query.pattern = "\\-\\-";
+  }
+  if (query.isMultiline && !query.isRegExp) {
+    query.pattern = escapeRegExpCharacters(query.pattern);
+    query.isRegExp = true;
+  }
+  if (options.usePCRE2) {
+    args.push("--pcre2");
+  }
+  args.push("--crlf");
+  if (query.isRegExp) {
+    query.pattern = unicodeEscapesToPCRE2(query.pattern);
+    args.push("--engine", "auto");
+  }
+  let searchPatternAfterDoubleDashes;
+  if (query.isWordMatch) {
+    const regexp = createRegExp(query.pattern, !!query.isRegExp, { wholeWord: query.isWordMatch });
+    const regexpStr = regexp.source.replace(/\\\//g, "/");
+    args.push("--regexp", regexpStr);
+  } else if (query.isRegExp) {
+    let fixedRegexpQuery = fixRegexNewline(query.pattern);
+    fixedRegexpQuery = fixNewline(fixedRegexpQuery);
+    args.push("--regexp", fixedRegexpQuery);
+  } else {
+    searchPatternAfterDoubleDashes = query.pattern;
+    args.push("--fixed-strings");
+  }
+  args.push("--no-config");
+  if (!options.folderOptions.useIgnoreFiles.global) {
+    args.push("--no-ignore-global");
+  }
+  args.push("--json");
+  if (query.isMultiline) {
+    args.push("--multiline");
+  }
+  if (options.surroundingContext) {
+    args.push("--before-context", options.surroundingContext + "");
+    args.push("--after-context", options.surroundingContext + "");
+  }
+  args.push("--");
+  if (searchPatternAfterDoubleDashes) {
+    args.push(searchPatternAfterDoubleDashes);
+  }
+  args.push(".");
+  return args;
+}
+__name(getRgArgs, "getRgArgs");
+function spreadGlobComponents(globComponent) {
+  const globComponentWithBraceExpansion = performBraceExpansionForRipgrep(globComponent);
+  return globComponentWithBraceExpansion.flatMap((globArg) => {
+    const components = splitGlobAware(globArg, "/");
+    return components.map((_, i) => components.slice(0, i + 1).join("/"));
+  });
+}
+__name(spreadGlobComponents, "spreadGlobComponents");
+function unicodeEscapesToPCRE2(pattern) {
+  const unicodePattern = /((?:[^\\]|^)(?:\\\\)*)\\u([a-z0-9]{4})/gi;
+  while (pattern.match(unicodePattern)) {
+    pattern = pattern.replace(unicodePattern, `$1\\x{$2}`);
+  }
+  const unicodePatternWithBraces = /((?:[^\\]|^)(?:\\\\)*)\\u\{([a-z0-9]{4})\}/gi;
+  while (pattern.match(unicodePatternWithBraces)) {
+    pattern = pattern.replace(unicodePatternWithBraces, `$1\\x{$2}`);
+  }
+  return pattern;
+}
+__name(unicodeEscapesToPCRE2, "unicodeEscapesToPCRE2");
+const isLookBehind = /* @__PURE__ */ __name((node) => node.type === "Assertion" && node.kind === "lookbehind", "isLookBehind");
+function fixRegexNewline(pattern) {
+  let re;
+  try {
+    re = new RegExpParser().parsePattern(pattern);
+  } catch {
+    return pattern;
+  }
+  let output = "";
+  let lastEmittedIndex = 0;
+  const replace = /* @__PURE__ */ __name((start, end, text) => {
+    output += pattern.slice(lastEmittedIndex, start) + text;
+    lastEmittedIndex = end;
+  }, "replace");
+  const context = [];
+  const visitor = new RegExpVisitor({
+    onCharacterEnter(char) {
+      if (char.raw !== "\\n") {
+        return;
+      }
+      const parent = context[0];
+      if (!parent) {
+        replace(char.start, char.end, "\\r?\\n");
+      } else if (context.some(isLookBehind)) {
+      } else if (parent.type === "CharacterClass") {
+        if (parent.negate) {
+          const otherContent = pattern.slice(parent.start + 2, char.start) + pattern.slice(char.end, parent.end - 1);
+          if (parent.parent?.type === "Quantifier") {
+            replace(parent.start, parent.end, otherContent ? `[^${otherContent}]` : ".");
+          } else {
+            replace(parent.start, parent.end, "(?!\\r?\\n" + (otherContent ? `|[${otherContent}]` : "") + ")");
+          }
+        } else {
+          const otherContent = pattern.slice(parent.start + 1, char.start) + pattern.slice(char.end, parent.end - 1);
+          replace(parent.start, parent.end, otherContent === "" ? "\\r?\\n" : `(?:[${otherContent}]|\\r?\\n)`);
+        }
+      } else if (parent.type === "Quantifier") {
+        replace(char.start, char.end, "(?:\\r?\\n)");
+      }
+    },
+    onQuantifierEnter(node) {
+      context.unshift(node);
+    },
+    onQuantifierLeave() {
+      context.shift();
+    },
+    onCharacterClassRangeEnter(node) {
+      context.unshift(node);
+    },
+    onCharacterClassRangeLeave() {
+      context.shift();
+    },
+    onCharacterClassEnter(node) {
+      context.unshift(node);
+    },
+    onCharacterClassLeave() {
+      context.shift();
+    },
+    onAssertionEnter(node) {
+      if (isLookBehind(node)) {
+        context.push(node);
+      }
+    },
+    onAssertionLeave(node) {
+      if (context[0] === node) {
+        context.shift();
+      }
+    }
+  });
+  visitor.visit(re);
+  output += pattern.slice(lastEmittedIndex);
+  return output;
+}
+__name(fixRegexNewline, "fixRegexNewline");
+function fixNewline(pattern) {
+  return pattern.replace(/\n/g, "\\r?\\n");
+}
+__name(fixNewline, "fixNewline");
+function getEscapeAwareSplitStringForRipgrep(pattern) {
+  let inBraces = false;
+  let escaped = false;
+  let fixedStart = "";
+  let strInBraces = "";
+  for (let i = 0; i < pattern.length; i++) {
+    const char = pattern[i];
+    switch (char) {
+      case "\\":
+        if (escaped) {
+          if (inBraces) {
+            strInBraces += "\\" + char;
+          } else {
+            fixedStart += "\\" + char;
+          }
+          escaped = false;
+        } else {
+          escaped = true;
+        }
+        break;
+      case "{":
+        if (escaped) {
+          if (inBraces) {
+            strInBraces += char;
+          } else {
+            fixedStart += char;
+          }
+          escaped = false;
+        } else {
+          if (inBraces) {
+            return { strInBraces: fixedStart + "{" + strInBraces + "{" + pattern.substring(i + 1) };
+          } else {
+            inBraces = true;
+          }
+        }
+        break;
+      case "}":
+        if (escaped) {
+          if (inBraces) {
+            strInBraces += char;
+          } else {
+            fixedStart += char;
+          }
+          escaped = false;
+        } else if (inBraces) {
+          return { fixedStart, strInBraces, fixedEnd: pattern.substring(i + 1) };
+        } else {
+          fixedStart += char;
+        }
+        break;
+      default:
+        if (inBraces) {
+          strInBraces += (escaped ? "\\" : "") + char;
+        } else {
+          fixedStart += (escaped ? "\\" : "") + char;
+        }
+        escaped = false;
+        break;
+    }
+  }
+  return { strInBraces: fixedStart + (inBraces ? "{" + strInBraces : "") };
+}
+__name(getEscapeAwareSplitStringForRipgrep, "getEscapeAwareSplitStringForRipgrep");
+function performBraceExpansionForRipgrep(pattern) {
+  const { fixedStart, strInBraces, fixedEnd } = getEscapeAwareSplitStringForRipgrep(pattern);
+  if (fixedStart === void 0 || fixedEnd === void 0) {
+    return [strInBraces];
+  }
+  let arr = splitGlobAware(strInBraces, ",");
+  if (!arr.length) {
+    arr = [""];
+  }
+  const ends = performBraceExpansionForRipgrep(fixedEnd);
+  return arr.flatMap((elem) => {
+    const start = fixedStart + elem;
+    return ends.map((end) => {
+      return start + end;
+    });
+  });
+}
+__name(performBraceExpansionForRipgrep, "performBraceExpansionForRipgrep");
+export {
+  RipgrepParser,
+  RipgrepTextSearchEngine,
+  fixNewline,
+  fixRegexNewline,
+  getRgArgs,
+  performBraceExpansionForRipgrep,
+  unicodeEscapesToPCRE2
+};
+//# sourceMappingURL=ripgrepTextSearchEngine.js.map

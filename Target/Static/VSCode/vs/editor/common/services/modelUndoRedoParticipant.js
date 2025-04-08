@@ -1,1 +1,72 @@
-var f=Object.defineProperty,u=Object.getOwnPropertyDescriptor,a=(e,t,o,r)=>{for(var s,i=r>1?void 0:r?u(t,o):t,n=e.length-1;n>=0;n--)(s=e[n])&&(i=(r?s(t,o,i):s(i))||i);return r&&i&&f(t,o,i),i},c=(e,t)=>(o,r)=>t(o,r,e);import{IModelService as v}from"./model.js";import{ITextModelService as S}from"./resolverService.js";import{Disposable as m,dispose as g}from"../../../base/common/lifecycle.js";import{IUndoRedoService as I}from"../../../platform/undoRedo/common/undoRedo.js";import{MultiModelEditStackElement as p}from"../model/editStack.js";let d=class extends m{constructor(e,t,o){super(),this._modelService=e,this._textModelService=t,this._undoRedoService=o,this._register(this._modelService.onModelRemoved((e=>{const t=this._undoRedoService.getElements(e.uri);if(0!==t.past.length||0!==t.future.length){for(const e of t.past)e instanceof p&&e.setDelegate(this);for(const e of t.future)e instanceof p&&e.setDelegate(this)}})))}prepareUndoRedo(e){const t=e.getMissingModels();if(0===t.length)return m.None;const o=t.map((async e=>{try{return await this._textModelService.createModelReference(e)}catch{return m.None}}));return Promise.all(o).then((e=>({dispose:()=>g(e)})))}};d=a([c(0,v),c(1,S),c(2,I)],d);export{d as ModelUndoRedoParticipant};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { IModelService } from "./model.js";
+import { ITextModelService } from "./resolverService.js";
+import { Disposable, IDisposable, dispose } from "../../../base/common/lifecycle.js";
+import { IUndoRedoService } from "../../../platform/undoRedo/common/undoRedo.js";
+import { IUndoRedoDelegate, MultiModelEditStackElement } from "../model/editStack.js";
+let ModelUndoRedoParticipant = class extends Disposable {
+  constructor(_modelService, _textModelService, _undoRedoService) {
+    super();
+    this._modelService = _modelService;
+    this._textModelService = _textModelService;
+    this._undoRedoService = _undoRedoService;
+    this._register(this._modelService.onModelRemoved((model) => {
+      const elements = this._undoRedoService.getElements(model.uri);
+      if (elements.past.length === 0 && elements.future.length === 0) {
+        return;
+      }
+      for (const element of elements.past) {
+        if (element instanceof MultiModelEditStackElement) {
+          element.setDelegate(this);
+        }
+      }
+      for (const element of elements.future) {
+        if (element instanceof MultiModelEditStackElement) {
+          element.setDelegate(this);
+        }
+      }
+    }));
+  }
+  static {
+    __name(this, "ModelUndoRedoParticipant");
+  }
+  prepareUndoRedo(element) {
+    const missingModels = element.getMissingModels();
+    if (missingModels.length === 0) {
+      return Disposable.None;
+    }
+    const disposablesPromises = missingModels.map(async (uri) => {
+      try {
+        const reference = await this._textModelService.createModelReference(uri);
+        return reference;
+      } catch (err) {
+        return Disposable.None;
+      }
+    });
+    return Promise.all(disposablesPromises).then((disposables) => {
+      return {
+        dispose: /* @__PURE__ */ __name(() => dispose(disposables), "dispose")
+      };
+    });
+  }
+};
+ModelUndoRedoParticipant = __decorateClass([
+  __decorateParam(0, IModelService),
+  __decorateParam(1, ITextModelService),
+  __decorateParam(2, IUndoRedoService)
+], ModelUndoRedoParticipant);
+export {
+  ModelUndoRedoParticipant
+};
+//# sourceMappingURL=modelUndoRedoParticipant.js.map

@@ -1,1 +1,56 @@
-import"../../../base/common/collections.js";import{Emitter as c,Event as a}from"../../../base/common/event.js";import{Iterable as o}from"../../../base/common/iterator.js";import{Disposable as y}from"../../../base/common/lifecycle.js";import"../../../base/common/policy.js";import{createDecorator as s}from"../../instantiation/common/instantiation.js";const h=s("policy");class v extends y{_serviceBrand;policyDefinitions={};policies=new Map;_onDidChange=this._register(new c);onDidChange=this._onDidChange.event;async updatePolicyDefinitions(i){const e=Object.keys(this.policyDefinitions).length;return this.policyDefinitions={...i,...this.policyDefinitions},e!==Object.keys(this.policyDefinitions).length&&await this._updatePolicyDefinitions(this.policyDefinitions),o.reduce(this.policies.entries(),(n,[r,l])=>({...n,[r]:l}),{})}getPolicyValue(i){return this.policies.get(i)}serialize(){return o.reduce(Object.entries(this.policyDefinitions),(i,[e,n])=>({...i,[e]:{definition:n,value:this.policies.get(e)}}),{})}}class S{_serviceBrand;onDidChange=a.None;async updatePolicyDefinitions(){return{}}getPolicyValue(){}serialize(){}policyDefinitions={}}export{v as AbstractPolicyService,h as IPolicyService,S as NullPolicyService};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { IStringDictionary } from "../../../base/common/collections.js";
+import { Emitter, Event } from "../../../base/common/event.js";
+import { Iterable } from "../../../base/common/iterator.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { PolicyName } from "../../../base/common/policy.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+const IPolicyService = createDecorator("policy");
+class AbstractPolicyService extends Disposable {
+  static {
+    __name(this, "AbstractPolicyService");
+  }
+  _serviceBrand;
+  policyDefinitions = {};
+  policies = /* @__PURE__ */ new Map();
+  _onDidChange = this._register(new Emitter());
+  onDidChange = this._onDidChange.event;
+  async updatePolicyDefinitions(policyDefinitions) {
+    const size = Object.keys(this.policyDefinitions).length;
+    this.policyDefinitions = { ...policyDefinitions, ...this.policyDefinitions };
+    if (size !== Object.keys(this.policyDefinitions).length) {
+      await this._updatePolicyDefinitions(this.policyDefinitions);
+    }
+    return Iterable.reduce(this.policies.entries(), (r, [name, value]) => ({ ...r, [name]: value }), {});
+  }
+  getPolicyValue(name) {
+    return this.policies.get(name);
+  }
+  serialize() {
+    return Iterable.reduce(Object.entries(this.policyDefinitions), (r, [name, definition]) => ({ ...r, [name]: { definition, value: this.policies.get(name) } }), {});
+  }
+}
+class NullPolicyService {
+  static {
+    __name(this, "NullPolicyService");
+  }
+  _serviceBrand;
+  onDidChange = Event.None;
+  async updatePolicyDefinitions() {
+    return {};
+  }
+  getPolicyValue() {
+    return void 0;
+  }
+  serialize() {
+    return void 0;
+  }
+  policyDefinitions = {};
+}
+export {
+  AbstractPolicyService,
+  IPolicyService,
+  NullPolicyService
+};
+//# sourceMappingURL=policy.js.map

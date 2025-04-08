@@ -1,1 +1,64 @@
-import{Color as r,RGBA as n}from"../../../../base/common/color.js";import{localize as o}from"../../../../nls.js";import{editorWidgetBorder as u,focusBorder as p,inputBackground as d,inputBorder as i,inputForeground as g,listHoverBackground as s,registerColor as e,selectBackground as a,selectBorder as h,selectForeground as x,checkboxBackground as B,checkboxBorder as k,checkboxForeground as b,transparent as t}from"../../../../platform/theme/common/colorRegistry.js";import{PANEL_BORDER as c}from"../../../common/theme.js";const f=e("settings.headerForeground",{light:"#444444",dark:"#e7e7e7",hcDark:"#ffffff",hcLight:"#292929"},o("headerForeground","The foreground color for a section header or active title.")),F=e("settings.settingsHeaderHoverForeground",t(f,.7),o("settingsHeaderHoverForeground","The foreground color for a section header or hovered title.")),S=e("settings.modifiedItemIndicator",{light:new r(new n(102,175,224)),dark:new r(new n(12,125,157)),hcDark:new r(new n(0,73,122)),hcLight:new r(new n(102,175,224))},o("modifiedItemForeground","The color of the modified setting indicator.")),H=e("settings.headerBorder",c,o("settingsHeaderBorder","The color of the header container border.")),T=e("settings.sashBorder",c,o("settingsSashBorder","The color of the Settings editor splitview sash border.")),v=e("settings.dropdownBackground",a,o("settingsDropdownBackground","Settings editor dropdown background.")),D=e("settings.dropdownForeground",x,o("settingsDropdownForeground","Settings editor dropdown foreground.")),R=e("settings.dropdownBorder",h,o("settingsDropdownBorder","Settings editor dropdown border.")),C=e("settings.dropdownListBorder",u,o("settingsDropdownListBorder","Settings editor dropdown list border. This surrounds the options and separates the options from the description.")),L=e("settings.checkboxBackground",B,o("settingsCheckboxBackground","Settings editor checkbox background.")),N=e("settings.checkboxForeground",b,o("settingsCheckboxForeground","Settings editor checkbox foreground.")),A=e("settings.checkboxBorder",k,o("settingsCheckboxBorder","Settings editor checkbox border.")),E=e("settings.textInputBackground",d,o("textInputBoxBackground","Settings editor text input box background.")),z=e("settings.textInputForeground",g,o("textInputBoxForeground","Settings editor text input box foreground.")),G=e("settings.textInputBorder",i,o("textInputBoxBorder","Settings editor text input box border.")),O=e("settings.numberInputBackground",d,o("numberInputBoxBackground","Settings editor number input box background.")),P=e("settings.numberInputForeground",g,o("numberInputBoxForeground","Settings editor number input box foreground.")),W=e("settings.numberInputBorder",i,o("numberInputBoxBorder","Settings editor number input box border.")),_=e("settings.focusedRowBackground",{dark:t(s,.6),light:t(s,.6),hcDark:null,hcLight:null},o("focusedRowBackground","The background color of a settings row when focused.")),j=e("settings.rowHoverBackground",{dark:t(s,.3),light:t(s,.3),hcDark:null,hcLight:null},o("settings.rowHoverBackground","The background color of a settings row when hovered.")),q=e("settings.focusedRowBorder",p,o("settings.focusedRowBorder","The color of the row's top and bottom border when the row is focused."));export{_ as focusedRowBackground,q as focusedRowBorder,S as modifiedItemIndicator,j as rowHoverBackground,L as settingsCheckboxBackground,A as settingsCheckboxBorder,N as settingsCheckboxForeground,H as settingsHeaderBorder,f as settingsHeaderForeground,F as settingsHeaderHoverForeground,O as settingsNumberInputBackground,W as settingsNumberInputBorder,P as settingsNumberInputForeground,T as settingsSashBorder,v as settingsSelectBackground,R as settingsSelectBorder,D as settingsSelectForeground,C as settingsSelectListBorder,E as settingsTextInputBackground,G as settingsTextInputBorder,z as settingsTextInputForeground};
+import { Color, RGBA } from "../../../../base/common/color.js";
+import { localize } from "../../../../nls.js";
+import { editorWidgetBorder, focusBorder, inputBackground, inputBorder, inputForeground, listHoverBackground, registerColor, selectBackground, selectBorder, selectForeground, checkboxBackground, checkboxBorder, checkboxForeground, transparent } from "../../../../platform/theme/common/colorRegistry.js";
+import { PANEL_BORDER } from "../../../common/theme.js";
+const settingsHeaderForeground = registerColor("settings.headerForeground", { light: "#444444", dark: "#e7e7e7", hcDark: "#ffffff", hcLight: "#292929" }, localize("headerForeground", "The foreground color for a section header or active title."));
+const settingsHeaderHoverForeground = registerColor("settings.settingsHeaderHoverForeground", transparent(settingsHeaderForeground, 0.7), localize("settingsHeaderHoverForeground", "The foreground color for a section header or hovered title."));
+const modifiedItemIndicator = registerColor("settings.modifiedItemIndicator", {
+  light: new Color(new RGBA(102, 175, 224)),
+  dark: new Color(new RGBA(12, 125, 157)),
+  hcDark: new Color(new RGBA(0, 73, 122)),
+  hcLight: new Color(new RGBA(102, 175, 224))
+}, localize("modifiedItemForeground", "The color of the modified setting indicator."));
+const settingsHeaderBorder = registerColor("settings.headerBorder", PANEL_BORDER, localize("settingsHeaderBorder", "The color of the header container border."));
+const settingsSashBorder = registerColor("settings.sashBorder", PANEL_BORDER, localize("settingsSashBorder", "The color of the Settings editor splitview sash border."));
+const settingsSelectBackground = registerColor(`settings.dropdownBackground`, selectBackground, localize("settingsDropdownBackground", "Settings editor dropdown background."));
+const settingsSelectForeground = registerColor("settings.dropdownForeground", selectForeground, localize("settingsDropdownForeground", "Settings editor dropdown foreground."));
+const settingsSelectBorder = registerColor("settings.dropdownBorder", selectBorder, localize("settingsDropdownBorder", "Settings editor dropdown border."));
+const settingsSelectListBorder = registerColor("settings.dropdownListBorder", editorWidgetBorder, localize("settingsDropdownListBorder", "Settings editor dropdown list border. This surrounds the options and separates the options from the description."));
+const settingsCheckboxBackground = registerColor("settings.checkboxBackground", checkboxBackground, localize("settingsCheckboxBackground", "Settings editor checkbox background."));
+const settingsCheckboxForeground = registerColor("settings.checkboxForeground", checkboxForeground, localize("settingsCheckboxForeground", "Settings editor checkbox foreground."));
+const settingsCheckboxBorder = registerColor("settings.checkboxBorder", checkboxBorder, localize("settingsCheckboxBorder", "Settings editor checkbox border."));
+const settingsTextInputBackground = registerColor("settings.textInputBackground", inputBackground, localize("textInputBoxBackground", "Settings editor text input box background."));
+const settingsTextInputForeground = registerColor("settings.textInputForeground", inputForeground, localize("textInputBoxForeground", "Settings editor text input box foreground."));
+const settingsTextInputBorder = registerColor("settings.textInputBorder", inputBorder, localize("textInputBoxBorder", "Settings editor text input box border."));
+const settingsNumberInputBackground = registerColor("settings.numberInputBackground", inputBackground, localize("numberInputBoxBackground", "Settings editor number input box background."));
+const settingsNumberInputForeground = registerColor("settings.numberInputForeground", inputForeground, localize("numberInputBoxForeground", "Settings editor number input box foreground."));
+const settingsNumberInputBorder = registerColor("settings.numberInputBorder", inputBorder, localize("numberInputBoxBorder", "Settings editor number input box border."));
+const focusedRowBackground = registerColor("settings.focusedRowBackground", {
+  dark: transparent(listHoverBackground, 0.6),
+  light: transparent(listHoverBackground, 0.6),
+  hcDark: null,
+  hcLight: null
+}, localize("focusedRowBackground", "The background color of a settings row when focused."));
+const rowHoverBackground = registerColor("settings.rowHoverBackground", {
+  dark: transparent(listHoverBackground, 0.3),
+  light: transparent(listHoverBackground, 0.3),
+  hcDark: null,
+  hcLight: null
+}, localize("settings.rowHoverBackground", "The background color of a settings row when hovered."));
+const focusedRowBorder = registerColor("settings.focusedRowBorder", focusBorder, localize("settings.focusedRowBorder", "The color of the row's top and bottom border when the row is focused."));
+export {
+  focusedRowBackground,
+  focusedRowBorder,
+  modifiedItemIndicator,
+  rowHoverBackground,
+  settingsCheckboxBackground,
+  settingsCheckboxBorder,
+  settingsCheckboxForeground,
+  settingsHeaderBorder,
+  settingsHeaderForeground,
+  settingsHeaderHoverForeground,
+  settingsNumberInputBackground,
+  settingsNumberInputBorder,
+  settingsNumberInputForeground,
+  settingsSashBorder,
+  settingsSelectBackground,
+  settingsSelectBorder,
+  settingsSelectForeground,
+  settingsSelectListBorder,
+  settingsTextInputBackground,
+  settingsTextInputBorder,
+  settingsTextInputForeground
+};
+//# sourceMappingURL=settingsEditorColorRegistry.js.map

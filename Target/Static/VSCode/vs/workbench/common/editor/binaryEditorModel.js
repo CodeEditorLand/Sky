@@ -1,1 +1,71 @@
-var v=Object.defineProperty,f=Object.getOwnPropertyDescriptor,m=(e,r,t,i)=>{for(var s,o=i>1?void 0:i?f(r,t):r,m=e.length-1;m>=0;m--)(s=e[m])&&(o=(i?s(r,t,o):s(o))||o);return i&&o&&v(r,t,o),o},u=(e,r)=>(t,i)=>r(t,i,e);import{EditorModel as g}from"./editorModel.js";import"../../../base/common/uri.js";import{IFileService as c}from"../../../platform/files/common/files.js";import{Mimes as p}from"../../../base/common/mime.js";let n=class extends g{constructor(e,r,t){super(),this.resource=e,this.name=r,this.fileService=t}mime=p.binary;size;etag;getName(){return this.name}getSize(){return this.size}getMime(){return this.mime}getETag(){return this.etag}async resolve(){if(this.fileService.hasProvider(this.resource)){const e=await this.fileService.stat(this.resource);this.etag=e.etag,"number"==typeof e.size&&(this.size=e.size)}return super.resolve()}};n=m([u(2,c)],n);export{n as BinaryEditorModel};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { EditorModel } from "./editorModel.js";
+import { URI } from "../../../base/common/uri.js";
+import { IFileService } from "../../../platform/files/common/files.js";
+import { Mimes } from "../../../base/common/mime.js";
+let BinaryEditorModel = class extends EditorModel {
+  constructor(resource, name, fileService) {
+    super();
+    this.resource = resource;
+    this.name = name;
+    this.fileService = fileService;
+  }
+  static {
+    __name(this, "BinaryEditorModel");
+  }
+  mime = Mimes.binary;
+  size;
+  etag;
+  /**
+   * The name of the binary resource.
+   */
+  getName() {
+    return this.name;
+  }
+  /**
+   * The size of the binary resource if known.
+   */
+  getSize() {
+    return this.size;
+  }
+  /**
+   * The mime of the binary resource if known.
+   */
+  getMime() {
+    return this.mime;
+  }
+  /**
+   * The etag of the binary resource if known.
+   */
+  getETag() {
+    return this.etag;
+  }
+  async resolve() {
+    if (this.fileService.hasProvider(this.resource)) {
+      const stat = await this.fileService.stat(this.resource);
+      this.etag = stat.etag;
+      if (typeof stat.size === "number") {
+        this.size = stat.size;
+      }
+    }
+    return super.resolve();
+  }
+};
+BinaryEditorModel = __decorateClass([
+  __decorateParam(2, IFileService)
+], BinaryEditorModel);
+export {
+  BinaryEditorModel
+};
+//# sourceMappingURL=binaryEditorModel.js.map

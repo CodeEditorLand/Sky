@@ -1,1 +1,123 @@
-import{Event as a}from"../../../../../base/common/event.js";import{patternsEquals as i}from"../../../../../base/common/glob.js";import{BaseWatcher as n}from"../baseWatcher.js";import{isLinux as c}from"../../../../../base/common/platform.js";import"../../../common/watcher.js";import{NodeJSFileWatcherLibrary as h}from"./nodejsWatcherLib.js";import{ThrottledWorker as u}from"../../../../../base/common/async.js";import{MutableDisposable as d}from"../../../../../base/common/lifecycle.js";class S extends n{constructor(e){super();this.recursiveWatcher=e}onDidError=a.None;_watchers=new Map;get watchers(){return this._watchers.values()}worker=this._register(new d);async doWatch(e){e=this.removeDuplicateRequests(e);const r=[],s=new Set(Array.from(this.watchers));for(const t of e){const o=this._watchers.get(this.requestToWatcherKey(t));o&&i(o.request.excludes,t.excludes)&&i(o.request.includes,t.includes)?s.delete(o):r.push(t)}r.length&&this.trace(`Request to start watching: ${r.map(t=>this.requestToString(t)).join(",")}`),s.size&&this.trace(`Request to stop watching: ${Array.from(s).map(t=>this.requestToString(t.request)).join(",")}`),this.worker.clear();for(const t of s)this.stopWatching(t);this.createWatchWorker().work(r)}createWatchWorker(){return this.worker.value=new u({maxWorkChunkSize:100,throttleDelay:100,maxBufferedWork:Number.MAX_VALUE},e=>{for(const r of e)this.startWatching(r)}),this.worker.value}requestToWatcherKey(e){return typeof e.correlationId=="number"?e.correlationId:this.pathToWatcherKey(e.path)}pathToWatcherKey(e){return c?e:e.toLowerCase()}startWatching(e){const r=new h(e,this.recursiveWatcher,t=>this._onDidChangeFile.fire(t),()=>this._onDidWatchFail.fire(e),t=>this._onDidLogMessage.fire(t),this.verboseLogging),s={request:e,instance:r};this._watchers.set(this.requestToWatcherKey(e),s)}async stop(){await super.stop();for(const e of this.watchers)this.stopWatching(e)}stopWatching(e){this.trace("stopping file watcher",e),this._watchers.delete(this.requestToWatcherKey(e.request)),e.instance.dispose()}removeDuplicateRequests(e){const r=new Map;for(const s of e){let t=r.get(s.correlationId);t||(t=new Map,r.set(s.correlationId,t));const o=this.pathToWatcherKey(s.path);t.has(o)&&this.trace(`ignoring a request for watching who's path is already watched: ${this.requestToString(s)}`),t.set(o,s)}return Array.from(r.values()).map(s=>Array.from(s.values())).flat()}async setVerboseLogging(e){super.setVerboseLogging(e);for(const r of this.watchers)r.instance.setVerboseLogging(e)}trace(e,r){this.verboseLogging&&this._onDidLogMessage.fire({type:"trace",message:this.toMessage(e,r)})}warn(e){this._onDidLogMessage.fire({type:"warn",message:this.toMessage(e)})}toMessage(e,r){return r?`[File Watcher (node.js)] ${e} (${this.requestToString(r.request)})`:`[File Watcher (node.js)] ${e}`}}export{S as NodeJSWatcher};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Event } from "../../../../../base/common/event.js";
+import { patternsEquals } from "../../../../../base/common/glob.js";
+import { BaseWatcher } from "../baseWatcher.js";
+import { isLinux } from "../../../../../base/common/platform.js";
+import { INonRecursiveWatchRequest, INonRecursiveWatcher, IRecursiveWatcherWithSubscribe } from "../../../common/watcher.js";
+import { NodeJSFileWatcherLibrary } from "./nodejsWatcherLib.js";
+import { ThrottledWorker } from "../../../../../base/common/async.js";
+import { MutableDisposable } from "../../../../../base/common/lifecycle.js";
+class NodeJSWatcher extends BaseWatcher {
+  constructor(recursiveWatcher) {
+    super();
+    this.recursiveWatcher = recursiveWatcher;
+  }
+  static {
+    __name(this, "NodeJSWatcher");
+  }
+  onDidError = Event.None;
+  _watchers = /* @__PURE__ */ new Map();
+  get watchers() {
+    return this._watchers.values();
+  }
+  worker = this._register(new MutableDisposable());
+  async doWatch(requests) {
+    requests = this.removeDuplicateRequests(requests);
+    const requestsToStart = [];
+    const watchersToStop = new Set(Array.from(this.watchers));
+    for (const request of requests) {
+      const watcher = this._watchers.get(this.requestToWatcherKey(request));
+      if (watcher && patternsEquals(watcher.request.excludes, request.excludes) && patternsEquals(watcher.request.includes, request.includes)) {
+        watchersToStop.delete(watcher);
+      } else {
+        requestsToStart.push(request);
+      }
+    }
+    if (requestsToStart.length) {
+      this.trace(`Request to start watching: ${requestsToStart.map((request) => this.requestToString(request)).join(",")}`);
+    }
+    if (watchersToStop.size) {
+      this.trace(`Request to stop watching: ${Array.from(watchersToStop).map((watcher) => this.requestToString(watcher.request)).join(",")}`);
+    }
+    this.worker.clear();
+    for (const watcher of watchersToStop) {
+      this.stopWatching(watcher);
+    }
+    this.createWatchWorker().work(requestsToStart);
+  }
+  createWatchWorker() {
+    this.worker.value = new ThrottledWorker({
+      maxWorkChunkSize: 100,
+      // only start 100 watchers at once before...
+      throttleDelay: 100,
+      // ...resting for 100ms until we start watchers again...
+      maxBufferedWork: Number.MAX_VALUE
+      // ...and never refuse any work.
+    }, (requests) => {
+      for (const request of requests) {
+        this.startWatching(request);
+      }
+    });
+    return this.worker.value;
+  }
+  requestToWatcherKey(request) {
+    return typeof request.correlationId === "number" ? request.correlationId : this.pathToWatcherKey(request.path);
+  }
+  pathToWatcherKey(path) {
+    return isLinux ? path : path.toLowerCase();
+  }
+  startWatching(request) {
+    const instance = new NodeJSFileWatcherLibrary(request, this.recursiveWatcher, (changes) => this._onDidChangeFile.fire(changes), () => this._onDidWatchFail.fire(request), (msg) => this._onDidLogMessage.fire(msg), this.verboseLogging);
+    const watcher = { request, instance };
+    this._watchers.set(this.requestToWatcherKey(request), watcher);
+  }
+  async stop() {
+    await super.stop();
+    for (const watcher of this.watchers) {
+      this.stopWatching(watcher);
+    }
+  }
+  stopWatching(watcher) {
+    this.trace(`stopping file watcher`, watcher);
+    this._watchers.delete(this.requestToWatcherKey(watcher.request));
+    watcher.instance.dispose();
+  }
+  removeDuplicateRequests(requests) {
+    const mapCorrelationtoRequests = /* @__PURE__ */ new Map();
+    for (const request of requests) {
+      let requestsForCorrelation = mapCorrelationtoRequests.get(request.correlationId);
+      if (!requestsForCorrelation) {
+        requestsForCorrelation = /* @__PURE__ */ new Map();
+        mapCorrelationtoRequests.set(request.correlationId, requestsForCorrelation);
+      }
+      const path = this.pathToWatcherKey(request.path);
+      if (requestsForCorrelation.has(path)) {
+        this.trace(`ignoring a request for watching who's path is already watched: ${this.requestToString(request)}`);
+      }
+      requestsForCorrelation.set(path, request);
+    }
+    return Array.from(mapCorrelationtoRequests.values()).map((requests2) => Array.from(requests2.values())).flat();
+  }
+  async setVerboseLogging(enabled) {
+    super.setVerboseLogging(enabled);
+    for (const watcher of this.watchers) {
+      watcher.instance.setVerboseLogging(enabled);
+    }
+  }
+  trace(message, watcher) {
+    if (this.verboseLogging) {
+      this._onDidLogMessage.fire({ type: "trace", message: this.toMessage(message, watcher) });
+    }
+  }
+  warn(message) {
+    this._onDidLogMessage.fire({ type: "warn", message: this.toMessage(message) });
+  }
+  toMessage(message, watcher) {
+    return watcher ? `[File Watcher (node.js)] ${message} (${this.requestToString(watcher.request)})` : `[File Watcher (node.js)] ${message}`;
+  }
+}
+export {
+  NodeJSWatcher
+};
+//# sourceMappingURL=nodejsWatcher.js.map

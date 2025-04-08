@@ -1,1 +1,49 @@
-var h=Object.defineProperty,m=Object.getOwnPropertyDescriptor,c=(e,r,t,a)=>{for(var n,o=a>1?void 0:a?m(r,t):r,s=e.length-1;s>=0;s--)(n=e[s])&&(o=(a?n(r,t,o):n(o))||o);return a&&o&&h(r,t,o),o},p=(e,r)=>(t,a)=>r(t,a,e);import{ILogService as d}from"../../../../platform/log/common/log.js";import{SearchRange as g}from"../common/search.js";import*as u from"../common/searchExtTypes.js";function l(e){return e.startsWith("**")||e.startsWith("/")?e:`/${e}`}function v(e){return new g(e.start.line,e.start.character,e.end.line,e.end.character)}function S(e){return new u.Range(e.startLineNumber,e.startColumn,e.endLineNumber,e.endColumn)}let a=class{constructor(e,r){this.prefix=e,this.logService=r}appendLine(e){this.logService.debug(`${this.prefix}#search`,e)}};a=c([p(1,d)],a);export{a as OutputChannel,l as anchorGlob,v as rangeToSearchRange,S as searchRangeToRange};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { SearchRange } from "../common/search.js";
+import * as searchExtTypes from "../common/searchExtTypes.js";
+function anchorGlob(glob) {
+  return glob.startsWith("**") || glob.startsWith("/") ? glob : `/${glob}`;
+}
+__name(anchorGlob, "anchorGlob");
+function rangeToSearchRange(range) {
+  return new SearchRange(range.start.line, range.start.character, range.end.line, range.end.character);
+}
+__name(rangeToSearchRange, "rangeToSearchRange");
+function searchRangeToRange(range) {
+  return new searchExtTypes.Range(range.startLineNumber, range.startColumn, range.endLineNumber, range.endColumn);
+}
+__name(searchRangeToRange, "searchRangeToRange");
+let OutputChannel = class {
+  constructor(prefix, logService) {
+    this.prefix = prefix;
+    this.logService = logService;
+  }
+  static {
+    __name(this, "OutputChannel");
+  }
+  appendLine(msg) {
+    this.logService.debug(`${this.prefix}#search`, msg);
+  }
+};
+OutputChannel = __decorateClass([
+  __decorateParam(1, ILogService)
+], OutputChannel);
+export {
+  OutputChannel,
+  anchorGlob,
+  rangeToSearchRange,
+  searchRangeToRange
+};
+//# sourceMappingURL=ripgrepSearchUtils.js.map

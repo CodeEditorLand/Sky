@@ -1,1 +1,198 @@
-var P=Object.defineProperty;var w=Object.getOwnPropertyDescriptor;var I=(h,o,a,e)=>{for(var t=e>1?void 0:e?w(o,a):o,r=h.length-1,i;r>=0;r--)(i=h[r])&&(t=(e?i(o,a,t):i(t))||t);return e&&t&&P(o,a,t),t},c=(h,o)=>(a,e)=>o(a,e,h);import{Emitter as C}from"../../../base/common/event.js";import{Disposable as E}from"../../../base/common/lifecycle.js";import{isAndroid as U,isChrome as b,isEdge as x,isFirefox as R,isSafari as N,isWeb as O,Platform as D,platform as A,PlatformToString as v}from"../../../base/common/platform.js";import{escapeRegExpCharacters as $}from"../../../base/common/strings.js";import{localize as L}from"../../../nls.js";import{IEnvironmentService as F}from"../../environment/common/environment.js";import{IFileService as T}from"../../files/common/files.js";import{createDecorator as W}from"../../instantiation/common/instantiation.js";import{IProductService as V}from"../../product/common/productService.js";import{getServiceMachineId as B}from"../../externalServices/common/serviceMachineId.js";import{IStorageService as J,StorageScope as m,StorageTarget as z}from"../../storage/common/storage.js";import{IUserDataSyncLogService as H,IUserDataSyncStoreService as K}from"./userDataSync.js";const oe=W("IUserDataSyncMachinesService"),d="sync.currentMachineName",p="Safari",l="Chrome",M="Edge",S="Firefox",g="Android";function ce(h){switch(h){case p:case l:case M:case S:case g:case v(D.Web):return!0}return!1}function y(){return N?p:b?l:x?M:R?S:U?g:v(O?D.Web:A)}let s=class extends E{constructor(a,e,t,r,i,n){super();this.storageService=t;this.userDataSyncStoreService=r;this.logService=i;this.productService=n;this.currentMachineIdPromise=B(a,e,t)}static VERSION=1;static RESOURCE="machines";_serviceBrand;_onDidChange=this._register(new C);onDidChange=this._onDidChange.event;currentMachineIdPromise;userData=null;async getMachines(a){const e=await this.currentMachineIdPromise;return(await this.readMachinesData(a)).machines.map(r=>({...r,isCurrent:r.id===e}))}async addCurrentMachine(a){const e=await this.currentMachineIdPromise,t=await this.readMachinesData(a);t.machines.some(({id:r})=>r===e)||(t.machines.push({id:e,name:this.computeCurrentMachineName(t.machines),platform:y()}),await this.writeMachinesData(t))}async removeCurrentMachine(a){const e=await this.currentMachineIdPromise,t=await this.readMachinesData(a),r=t.machines.filter(({id:i})=>i!==e);r.length!==t.machines.length&&(t.machines=r,await this.writeMachinesData(t))}async renameMachine(a,e,t){const r=await this.readMachinesData(t),i=r.machines.find(({id:n})=>n===a);if(i){i.name=e,await this.writeMachinesData(r);const n=await this.currentMachineIdPromise;a===n&&this.storageService.store(d,e,m.APPLICATION,z.MACHINE)}}async setEnablements(a){const e=await this.readMachinesData();for(const[t,r]of a){const i=e.machines.find(n=>n.id===t);i&&(i.disabled=r?void 0:!0)}await this.writeMachinesData(e)}computeCurrentMachineName(a){const e=this.storageService.get(d,m.APPLICATION);if(e){if(!a.some(n=>n.name===e))return e;this.storageService.remove(d,m.APPLICATION)}const t=`${this.productService.embedderIdentifier?`${this.productService.embedderIdentifier} - `:""}${y()} (${this.productService.nameShort})`,r=new RegExp(`${$(t)}\\s#(\\d+)`);let i=0;for(const n of a){const u=r.exec(n.name),f=u?parseInt(u[1]):0;i=f>i?f:i}return`${t} #${i+1}`}async readMachinesData(a){this.userData=await this.readUserData(a);const e=this.parse(this.userData);if(e.version!==s.VERSION)throw new Error(L("error incompatible","Cannot read machines data as the current version is incompatible. Please update {0} and try again.",this.productService.nameLong));return e}async writeMachinesData(a){const e=JSON.stringify(a),t=await this.userDataSyncStoreService.writeResource(s.RESOURCE,e,this.userData?.ref||null);this.userData={ref:t,content:e},this._onDidChange.fire()}async readUserData(a){if(this.userData){const e=a&&a.latest?a.latest[s.RESOURCE]:void 0;if(this.userData.ref===e)return this.userData;if(e===void 0&&this.userData.content===null)return this.userData}return this.userDataSyncStoreService.readResource(s.RESOURCE,this.userData)}parse(a){if(a.content!==null)try{return JSON.parse(a.content)}catch(e){this.logService.error(e)}return{version:s.VERSION,machines:[]}}};s=I([c(0,F),c(1,T),c(2,J),c(3,K),c(4,H),c(5,V)],s);export{oe as IUserDataSyncMachinesService,s as UserDataSyncMachinesService,ce as isWebPlatform};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Emitter, Event } from "../../../base/common/event.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { isAndroid, isChrome, isEdge, isFirefox, isSafari, isWeb, Platform, platform, PlatformToString } from "../../../base/common/platform.js";
+import { escapeRegExpCharacters } from "../../../base/common/strings.js";
+import { localize } from "../../../nls.js";
+import { IEnvironmentService } from "../../environment/common/environment.js";
+import { IFileService } from "../../files/common/files.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+import { IProductService } from "../../product/common/productService.js";
+import { getServiceMachineId } from "../../externalServices/common/serviceMachineId.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../storage/common/storage.js";
+import { IUserData, IUserDataManifest, IUserDataSyncLogService, IUserDataSyncStoreService } from "./userDataSync.js";
+const IUserDataSyncMachinesService = createDecorator("IUserDataSyncMachinesService");
+const currentMachineNameKey = "sync.currentMachineName";
+const Safari = "Safari";
+const Chrome = "Chrome";
+const Edge = "Edge";
+const Firefox = "Firefox";
+const Android = "Android";
+function isWebPlatform(platform2) {
+  switch (platform2) {
+    case Safari:
+    case Chrome:
+    case Edge:
+    case Firefox:
+    case Android:
+    case PlatformToString(Platform.Web):
+      return true;
+  }
+  return false;
+}
+__name(isWebPlatform, "isWebPlatform");
+function getPlatformName() {
+  if (isSafari) {
+    return Safari;
+  }
+  if (isChrome) {
+    return Chrome;
+  }
+  if (isEdge) {
+    return Edge;
+  }
+  if (isFirefox) {
+    return Firefox;
+  }
+  if (isAndroid) {
+    return Android;
+  }
+  return PlatformToString(isWeb ? Platform.Web : platform);
+}
+__name(getPlatformName, "getPlatformName");
+let UserDataSyncMachinesService = class extends Disposable {
+  constructor(environmentService, fileService, storageService, userDataSyncStoreService, logService, productService) {
+    super();
+    this.storageService = storageService;
+    this.userDataSyncStoreService = userDataSyncStoreService;
+    this.logService = logService;
+    this.productService = productService;
+    this.currentMachineIdPromise = getServiceMachineId(environmentService, fileService, storageService);
+  }
+  static {
+    __name(this, "UserDataSyncMachinesService");
+  }
+  static VERSION = 1;
+  static RESOURCE = "machines";
+  _serviceBrand;
+  _onDidChange = this._register(new Emitter());
+  onDidChange = this._onDidChange.event;
+  currentMachineIdPromise;
+  userData = null;
+  async getMachines(manifest) {
+    const currentMachineId = await this.currentMachineIdPromise;
+    const machineData = await this.readMachinesData(manifest);
+    return machineData.machines.map((machine) => ({ ...machine, ...{ isCurrent: machine.id === currentMachineId } }));
+  }
+  async addCurrentMachine(manifest) {
+    const currentMachineId = await this.currentMachineIdPromise;
+    const machineData = await this.readMachinesData(manifest);
+    if (!machineData.machines.some(({ id }) => id === currentMachineId)) {
+      machineData.machines.push({ id: currentMachineId, name: this.computeCurrentMachineName(machineData.machines), platform: getPlatformName() });
+      await this.writeMachinesData(machineData);
+    }
+  }
+  async removeCurrentMachine(manifest) {
+    const currentMachineId = await this.currentMachineIdPromise;
+    const machineData = await this.readMachinesData(manifest);
+    const updatedMachines = machineData.machines.filter(({ id }) => id !== currentMachineId);
+    if (updatedMachines.length !== machineData.machines.length) {
+      machineData.machines = updatedMachines;
+      await this.writeMachinesData(machineData);
+    }
+  }
+  async renameMachine(machineId, name, manifest) {
+    const machineData = await this.readMachinesData(manifest);
+    const machine = machineData.machines.find(({ id }) => id === machineId);
+    if (machine) {
+      machine.name = name;
+      await this.writeMachinesData(machineData);
+      const currentMachineId = await this.currentMachineIdPromise;
+      if (machineId === currentMachineId) {
+        this.storageService.store(currentMachineNameKey, name, StorageScope.APPLICATION, StorageTarget.MACHINE);
+      }
+    }
+  }
+  async setEnablements(enablements) {
+    const machineData = await this.readMachinesData();
+    for (const [machineId, enabled] of enablements) {
+      const machine = machineData.machines.find((machine2) => machine2.id === machineId);
+      if (machine) {
+        machine.disabled = enabled ? void 0 : true;
+      }
+    }
+    await this.writeMachinesData(machineData);
+  }
+  computeCurrentMachineName(machines) {
+    const previousName = this.storageService.get(currentMachineNameKey, StorageScope.APPLICATION);
+    if (previousName) {
+      if (!machines.some((machine) => machine.name === previousName)) {
+        return previousName;
+      }
+      this.storageService.remove(currentMachineNameKey, StorageScope.APPLICATION);
+    }
+    const namePrefix = `${this.productService.embedderIdentifier ? `${this.productService.embedderIdentifier} - ` : ""}${getPlatformName()} (${this.productService.nameShort})`;
+    const nameRegEx = new RegExp(`${escapeRegExpCharacters(namePrefix)}\\s#(\\d+)`);
+    let nameIndex = 0;
+    for (const machine of machines) {
+      const matches = nameRegEx.exec(machine.name);
+      const index = matches ? parseInt(matches[1]) : 0;
+      nameIndex = index > nameIndex ? index : nameIndex;
+    }
+    return `${namePrefix} #${nameIndex + 1}`;
+  }
+  async readMachinesData(manifest) {
+    this.userData = await this.readUserData(manifest);
+    const machinesData = this.parse(this.userData);
+    if (machinesData.version !== UserDataSyncMachinesService.VERSION) {
+      throw new Error(localize("error incompatible", "Cannot read machines data as the current version is incompatible. Please update {0} and try again.", this.productService.nameLong));
+    }
+    return machinesData;
+  }
+  async writeMachinesData(machinesData) {
+    const content = JSON.stringify(machinesData);
+    const ref = await this.userDataSyncStoreService.writeResource(UserDataSyncMachinesService.RESOURCE, content, this.userData?.ref || null);
+    this.userData = { ref, content };
+    this._onDidChange.fire();
+  }
+  async readUserData(manifest) {
+    if (this.userData) {
+      const latestRef = manifest && manifest.latest ? manifest.latest[UserDataSyncMachinesService.RESOURCE] : void 0;
+      if (this.userData.ref === latestRef) {
+        return this.userData;
+      }
+      if (latestRef === void 0 && this.userData.content === null) {
+        return this.userData;
+      }
+    }
+    return this.userDataSyncStoreService.readResource(UserDataSyncMachinesService.RESOURCE, this.userData);
+  }
+  parse(userData) {
+    if (userData.content !== null) {
+      try {
+        return JSON.parse(userData.content);
+      } catch (e) {
+        this.logService.error(e);
+      }
+    }
+    return {
+      version: UserDataSyncMachinesService.VERSION,
+      machines: []
+    };
+  }
+};
+UserDataSyncMachinesService = __decorateClass([
+  __decorateParam(0, IEnvironmentService),
+  __decorateParam(1, IFileService),
+  __decorateParam(2, IStorageService),
+  __decorateParam(3, IUserDataSyncStoreService),
+  __decorateParam(4, IUserDataSyncLogService),
+  __decorateParam(5, IProductService)
+], UserDataSyncMachinesService);
+export {
+  IUserDataSyncMachinesService,
+  UserDataSyncMachinesService,
+  isWebPlatform
+};
+//# sourceMappingURL=userDataSyncMachines.js.map

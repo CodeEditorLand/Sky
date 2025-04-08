@@ -1,1 +1,187 @@
-var h=Object.defineProperty,y=Object.getOwnPropertyDescriptor,d=(e,t,o,i)=>{for(var n,r=i>1?void 0:i?y(t,o):t,s=e.length-1;s>=0;s--)(n=e[s])&&(r=(i?n(t,o,r):n(r))||r);return i&&r&&h(t,o,r),r},r=(e,t)=>(o,i)=>t(o,i,e);import{Separator as b}from"../../../../base/common/actions.js";import{IMenuService as A,SubmenuItemAction as f,MenuItemAction as k}from"../../../../platform/actions/common/actions.js";import{IContextKeyService as K}from"../../../../platform/contextkey/common/contextkey.js";import{IWorkspacesService as L}from"../../../../platform/workspaces/common/workspaces.js";import{isMacintosh as O}from"../../../../base/common/platform.js";import{INotificationService as w}from"../../../../platform/notification/common/notification.js";import{IKeybindingService as C}from"../../../../platform/keybinding/common/keybinding.js";import{INativeWorkbenchEnvironmentService as R}from"../../../services/environment/electron-sandbox/environmentService.js";import{IAccessibilityService as H}from"../../../../platform/accessibility/common/accessibility.js";import{IConfigurationService as N}from"../../../../platform/configuration/common/configuration.js";import{ILabelService as U}from"../../../../platform/label/common/label.js";import{IUpdateService as x}from"../../../../platform/update/common/update.js";import{MenubarControl as W}from"../../../browser/parts/titlebar/menubarControl.js";import{IStorageService as D}from"../../../../platform/storage/common/storage.js";import"../../../../platform/menubar/common/menubar.js";import{IMenubarService as E}from"../../../../platform/menubar/electron-sandbox/menubar.js";import{INativeHostService as F}from"../../../../platform/native/common/native.js";import{IHostService as j}from"../../../services/host/browser/host.js";import{IPreferencesService as q}from"../../../services/preferences/common/preferences.js";import{ICommandService as T}from"../../../../platform/commands/common/commands.js";import{OpenRecentAction as z}from"../../../browser/actions/windowActions.js";import{isICommandActionToggleInfo as B}from"../../../../platform/action/common/action.js";import{getFlatContextMenuActions as G}from"../../../../platform/actions/browser/menuEntryActionViewItem.js";let m=class extends W{constructor(e,t,o,i,n,r,s,a,m,c,l,p,u,f,b,d){super(e,t,o,i,n,r,s,a,m,c,l,p,f,d),this.menubarService=u,this.nativeHostService=b,(async()=>{this.recentlyOpened=await this.workspacesService.getRecentlyOpened(),this.doUpdateMenubar()})(),this.registerListeners()}setupMainMenu(){super.setupMainMenu();for(const e of Object.keys(this.topLevelTitles)){const t=this.menus[e];t&&this.mainMenuDisposables.add(t.onDidChange((()=>this.updateMenubar())))}}doUpdateMenubar(){if(!this.hostService.hasFocus)return;const e={menus:{},keybindings:{}};this.getMenubarMenus(e)&&this.menubarService.updateMenubar(this.nativeHostService.windowId,e)}getMenubarMenus(e){if(!e)return!1;e.keybindings=this.getAdditionalKeybindings();for(const t of Object.keys(this.topLevelTitles)){const o=this.menus[t];if(o){const i={items:[]},n=G(o.getActions({shouldForwardArgs:!0}));if(this.populateMenuItems(n,i,e.keybindings),0===i.items.length)return!1;e.menus[t]=i}}return!0}populateMenuItems(e,t,o){for(const i of e)if(i instanceof b)t.items.push({id:"vscode.menubar.separator"});else if(i instanceof k||i instanceof f){const e="string"==typeof i.item.title?i.item.title:i.item.title.mnemonicTitle??i.item.title.value;if(i instanceof f){const n={items:[]};if(this.populateMenuItems(i.actions,n,o),n.items.length>0){const o={id:i.id,label:e,submenu:n};t.items.push(o)}}else{if(i.id===z.ID){const e=this.getOpenRecentActions().map(this.transformOpenRecentAction);t.items.push(...e)}const n={id:i.id,label:e};B(i.item.toggled)&&(n.label=i.item.toggled.mnemonicTitle??i.item.toggled.title??e),i.checked&&(n.checked=!0),i.enabled||(n.enabled=!1),o[i.id]=this.getMenubarKeybinding(i.id),t.items.push(n)}}}transformOpenRecentAction(e){return e instanceof b?{id:"vscode.menubar.separator"}:{id:e.id,uri:e.uri,remoteAuthority:e.remoteAuthority,enabled:e.enabled,label:e.label}}getAdditionalKeybindings(){const e={};if(O){const t=this.getMenubarKeybinding("workbench.action.quit");t&&(e["workbench.action.quit"]=t)}return e}getMenubarKeybinding(e){const t=this.keybindingService.lookupKeybinding(e);if(!t)return;const o=t.getElectronAccelerator();if(o)return{label:o,userSettingsLabel:t.getUserSettingsLabel()??void 0};const i=t.getLabel();return i?{label:i,isNative:!1,userSettingsLabel:t.getUserSettingsLabel()??void 0}:void 0}};m=d([r(0,A),r(1,L),r(2,K),r(3,C),r(4,N),r(5,U),r(6,x),r(7,D),r(8,w),r(9,q),r(10,R),r(11,H),r(12,E),r(13,j),r(14,F),r(15,T)],m);export{m as NativeMenubarControl};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { IAction, Separator } from "../../../../base/common/actions.js";
+import { IMenuService, SubmenuItemAction, MenuItemAction } from "../../../../platform/actions/common/actions.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IWorkspacesService } from "../../../../platform/workspaces/common/workspaces.js";
+import { isMacintosh } from "../../../../base/common/platform.js";
+import { INotificationService } from "../../../../platform/notification/common/notification.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { INativeWorkbenchEnvironmentService } from "../../../services/environment/electron-sandbox/environmentService.js";
+import { IAccessibilityService } from "../../../../platform/accessibility/common/accessibility.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { ILabelService } from "../../../../platform/label/common/label.js";
+import { IUpdateService } from "../../../../platform/update/common/update.js";
+import { IOpenRecentAction, MenubarControl } from "../../../browser/parts/titlebar/menubarControl.js";
+import { IStorageService } from "../../../../platform/storage/common/storage.js";
+import { IMenubarData, IMenubarMenu, IMenubarKeybinding, IMenubarMenuItemSubmenu, IMenubarMenuItemAction, MenubarMenuItem } from "../../../../platform/menubar/common/menubar.js";
+import { IMenubarService } from "../../../../platform/menubar/electron-sandbox/menubar.js";
+import { INativeHostService } from "../../../../platform/native/common/native.js";
+import { IHostService } from "../../../services/host/browser/host.js";
+import { IPreferencesService } from "../../../services/preferences/common/preferences.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { OpenRecentAction } from "../../../browser/actions/windowActions.js";
+import { isICommandActionToggleInfo } from "../../../../platform/action/common/action.js";
+import { getFlatContextMenuActions } from "../../../../platform/actions/browser/menuEntryActionViewItem.js";
+let NativeMenubarControl = class extends MenubarControl {
+  constructor(menuService, workspacesService, contextKeyService, keybindingService, configurationService, labelService, updateService, storageService, notificationService, preferencesService, environmentService, accessibilityService, menubarService, hostService, nativeHostService, commandService) {
+    super(menuService, workspacesService, contextKeyService, keybindingService, configurationService, labelService, updateService, storageService, notificationService, preferencesService, environmentService, accessibilityService, hostService, commandService);
+    this.menubarService = menubarService;
+    this.nativeHostService = nativeHostService;
+    (async () => {
+      this.recentlyOpened = await this.workspacesService.getRecentlyOpened();
+      this.doUpdateMenubar();
+    })();
+    this.registerListeners();
+  }
+  static {
+    __name(this, "NativeMenubarControl");
+  }
+  setupMainMenu() {
+    super.setupMainMenu();
+    for (const topLevelMenuName of Object.keys(this.topLevelTitles)) {
+      const menu = this.menus[topLevelMenuName];
+      if (menu) {
+        this.mainMenuDisposables.add(menu.onDidChange(() => this.updateMenubar()));
+      }
+    }
+  }
+  doUpdateMenubar() {
+    if (!this.hostService.hasFocus) {
+      return;
+    }
+    const menubarData = { menus: {}, keybindings: {} };
+    if (this.getMenubarMenus(menubarData)) {
+      this.menubarService.updateMenubar(this.nativeHostService.windowId, menubarData);
+    }
+  }
+  getMenubarMenus(menubarData) {
+    if (!menubarData) {
+      return false;
+    }
+    menubarData.keybindings = this.getAdditionalKeybindings();
+    for (const topLevelMenuName of Object.keys(this.topLevelTitles)) {
+      const menu = this.menus[topLevelMenuName];
+      if (menu) {
+        const menubarMenu = { items: [] };
+        const menuActions = getFlatContextMenuActions(menu.getActions({ shouldForwardArgs: true }));
+        this.populateMenuItems(menuActions, menubarMenu, menubarData.keybindings);
+        if (menubarMenu.items.length === 0) {
+          return false;
+        }
+        menubarData.menus[topLevelMenuName] = menubarMenu;
+      }
+    }
+    return true;
+  }
+  populateMenuItems(menuActions, menuToPopulate, keybindings) {
+    for (const menuItem of menuActions) {
+      if (menuItem instanceof Separator) {
+        menuToPopulate.items.push({ id: "vscode.menubar.separator" });
+      } else if (menuItem instanceof MenuItemAction || menuItem instanceof SubmenuItemAction) {
+        const title = typeof menuItem.item.title === "string" ? menuItem.item.title : menuItem.item.title.mnemonicTitle ?? menuItem.item.title.value;
+        if (menuItem instanceof SubmenuItemAction) {
+          const submenu = { items: [] };
+          this.populateMenuItems(menuItem.actions, submenu, keybindings);
+          if (submenu.items.length > 0) {
+            const menubarSubmenuItem = {
+              id: menuItem.id,
+              label: title,
+              submenu
+            };
+            menuToPopulate.items.push(menubarSubmenuItem);
+          }
+        } else {
+          if (menuItem.id === OpenRecentAction.ID) {
+            const actions = this.getOpenRecentActions().map(this.transformOpenRecentAction);
+            menuToPopulate.items.push(...actions);
+          }
+          const menubarMenuItem = {
+            id: menuItem.id,
+            label: title
+          };
+          if (isICommandActionToggleInfo(menuItem.item.toggled)) {
+            menubarMenuItem.label = menuItem.item.toggled.mnemonicTitle ?? menuItem.item.toggled.title ?? title;
+          }
+          if (menuItem.checked) {
+            menubarMenuItem.checked = true;
+          }
+          if (!menuItem.enabled) {
+            menubarMenuItem.enabled = false;
+          }
+          keybindings[menuItem.id] = this.getMenubarKeybinding(menuItem.id);
+          menuToPopulate.items.push(menubarMenuItem);
+        }
+      }
+    }
+  }
+  transformOpenRecentAction(action) {
+    if (action instanceof Separator) {
+      return { id: "vscode.menubar.separator" };
+    }
+    return {
+      id: action.id,
+      uri: action.uri,
+      remoteAuthority: action.remoteAuthority,
+      enabled: action.enabled,
+      label: action.label
+    };
+  }
+  getAdditionalKeybindings() {
+    const keybindings = {};
+    if (isMacintosh) {
+      const keybinding = this.getMenubarKeybinding("workbench.action.quit");
+      if (keybinding) {
+        keybindings["workbench.action.quit"] = keybinding;
+      }
+    }
+    return keybindings;
+  }
+  getMenubarKeybinding(id) {
+    const binding = this.keybindingService.lookupKeybinding(id);
+    if (!binding) {
+      return void 0;
+    }
+    const electronAccelerator = binding.getElectronAccelerator();
+    if (electronAccelerator) {
+      return { label: electronAccelerator, userSettingsLabel: binding.getUserSettingsLabel() ?? void 0 };
+    }
+    const acceleratorLabel = binding.getLabel();
+    if (acceleratorLabel) {
+      return { label: acceleratorLabel, isNative: false, userSettingsLabel: binding.getUserSettingsLabel() ?? void 0 };
+    }
+    return void 0;
+  }
+};
+NativeMenubarControl = __decorateClass([
+  __decorateParam(0, IMenuService),
+  __decorateParam(1, IWorkspacesService),
+  __decorateParam(2, IContextKeyService),
+  __decorateParam(3, IKeybindingService),
+  __decorateParam(4, IConfigurationService),
+  __decorateParam(5, ILabelService),
+  __decorateParam(6, IUpdateService),
+  __decorateParam(7, IStorageService),
+  __decorateParam(8, INotificationService),
+  __decorateParam(9, IPreferencesService),
+  __decorateParam(10, INativeWorkbenchEnvironmentService),
+  __decorateParam(11, IAccessibilityService),
+  __decorateParam(12, IMenubarService),
+  __decorateParam(13, IHostService),
+  __decorateParam(14, INativeHostService),
+  __decorateParam(15, ICommandService)
+], NativeMenubarControl);
+export {
+  NativeMenubarControl
+};
+//# sourceMappingURL=menubarControl.js.map

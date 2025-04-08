@@ -1,7 +1,392 @@
-var N=Object.defineProperty;var _=Object.getOwnPropertyDescriptor;var F=(d,p,i,o)=>{for(var e=o>1?void 0:o?_(p,i):p,n=d.length-1,t;n>=0;n--)(t=d[n])&&(e=(o?t(p,i,e):t(e))||e);return o&&e&&N(p,i,e),e},I=(d,p)=>(i,o)=>p(i,o,d);import*as s from"../../../../../base/browser/dom.js";import{StandardMouseEvent as V}from"../../../../../base/browser/mouseEvent.js";import"../../../../../base/browser/ui/hover/hover.js";import"../../../../../base/browser/ui/hover/hoverDelegate.js";import{createInstantHoverDelegate as W}from"../../../../../base/browser/ui/hover/hoverDelegateFactory.js";import{Emitter as j}from"../../../../../base/common/event.js";import{Disposable as q,DisposableStore as R}from"../../../../../base/common/lifecycle.js";import{basename as L,dirname as B}from"../../../../../base/common/path.js";import{URI as S}from"../../../../../base/common/uri.js";import"../../../../../editor/browser/editorExtensions.js";import{Range as G}from"../../../../../editor/common/core/range.js";import{EditorContextKeys as C}from"../../../../../editor/common/editorContextKeys.js";import"../../../../../editor/common/languageFeatureRegistry.js";import"../../../../../editor/common/languages.js";import{ILanguageService as z}from"../../../../../editor/common/languages/language.js";import{ILanguageFeaturesService as X}from"../../../../../editor/common/services/languageFeatures.js";import{IModelService as J}from"../../../../../editor/common/services/model.js";import{ITextModelService as Q}from"../../../../../editor/common/services/resolverService.js";import{localize as f}from"../../../../../nls.js";import{getFlatContextMenuActions as Y}from"../../../../../platform/actions/browser/menuEntryActionViewItem.js";import{IMenuService as Z,MenuId as T}from"../../../../../platform/actions/common/actions.js";import{ICommandService as ee}from"../../../../../platform/commands/common/commands.js";import{IContextKeyService as E,RawContextKey as te}from"../../../../../platform/contextkey/common/contextkey.js";import{IContextMenuService as ie}from"../../../../../platform/contextview/browser/contextView.js";import{fillInSymbolsDragData as oe}from"../../../../../platform/dnd/browser/dnd.js";import"../../../../../platform/editor/common/editor.js";import{FileKind as M,IFileService as ne}from"../../../../../platform/files/common/files.js";import{IHoverService as re}from"../../../../../platform/hover/browser/hover.js";import{IInstantiationService as A}from"../../../../../platform/instantiation/common/instantiation.js";import{ILabelService as ae}from"../../../../../platform/label/common/label.js";import{IOpenerService as se}from"../../../../../platform/opener/common/opener.js";import{FolderThemeIcon as ce,IThemeService as le}from"../../../../../platform/theme/common/themeService.js";import{fillEditorsDragData as U}from"../../../../browser/dnd.js";import{ResourceLabels as de}from"../../../../browser/labels.js";import{ResourceContextKey as pe}from"../../../../common/contextkeys.js";import{revealInSideBarCommand as ue}from"../../../files/browser/fileActions.contribution.js";import{isImageVariableEntry as $,isPasteVariableEntry as me,OmittedState as b}from"../../common/chatModel.js";import{ChatResponseReferencePartStatusKind as P}from"../../common/chatService.js";import{convertUint8ArrayToString as ve}from"../imageUtils.js";const fe=new te("chatAttachmentResource",void 0,{type:"URI",description:f("resource","The full value of the chat attachment resource, including scheme and path")});let D=class extends q{constructor(i,o=[],e=s.$(".chat-attached-context"),n,t,r,l,h,v,g){super();this.variables=i;this.contentReferences=o;this.domNode=e;this.contextKeyService=n;this.instantiationService=t;this.openerService=r;this.hoverService=l;this.commandService=h;this.themeService=v;this.labelService=g;this.initAttachedContext(e),e.childElementCount||(this.domNode=void 0)}attachedContextDisposables=this._register(new R);_onDidChangeVisibility=this._register(new j);_contextResourceLabels=this._register(this.instantiationService.createInstance(de,{onDidChangeVisibility:this._onDidChangeVisibility.event}));initAttachedContext(i){s.clearNode(i),this.attachedContextDisposables.clear();const o=this.attachedContextDisposables.add(W());this.variables.forEach(async e=>{let n=S.isUri(e.value)?e.value:e.value&&typeof e.value=="object"&&"uri"in e.value&&S.isUri(e.value.uri)?e.value.uri:void 0,t=e.value&&typeof e.value=="object"&&"range"in e.value&&G.isIRange(e.value.range)?e.value.range:void 0;const r=s.append(i,s.$(".chat-attached-context-attachment.show-file-icons")),l=this._contextResourceLabels.create(r,{supportIcons:!0,hoverDelegate:o,hoverTargetOverride:r});this.attachedContextDisposables.add(l);const h=this.contentReferences.find(c=>typeof c.reference=="object"&&"variableName"in c.reference&&c.reference.variableName===e.name||S.isUri(c.reference)&&L(c.reference.path)===e.name),v=h?.options?.status?.kind===P.Omitted,g=v||h?.options?.status?.kind===P.Partial;let a;if(n&&(e.isFile||e.isDirectory)){const c=L(n.path),m=B(n.path),u=`${c} ${m}`;if(v?a=t?f("chat.omittedFileAttachmentWithRange","Omitted: {0}, line {1} to line {2}.",u,t.startLineNumber,t.endLineNumber):f("chat.omittedFileAttachment","Omitted: {0}.",u):g?a=t?f("chat.partialFileAttachmentWithRange","Partially attached: {0}, line {1} to line {2}.",u,t.startLineNumber,t.endLineNumber):f("chat.partialFileAttachment","Partially attached: {0}.",u):a=t?f("chat.fileAttachmentWithRange3","Attached: {0}, line {1} to line {2}.",u,t.startLineNumber,t.endLineNumber):f("chat.fileAttachment3","Attached: {0}.",u),e.omittedState===b.Full)this.customAttachment(r,u,o,a,v);else{const x={hidePath:!0,title:h?.options?.status?.description};l.setFile(n,e.isFile?{...x,fileKind:M.FILE,range:t}:{...x,fileKind:M.FOLDER,icon:this.themeService.getFileIconTheme().hasFolderIcons?void 0:ce})}this.instantiationService.invokeFunction(x=>{n&&this.attachedContextDisposables.add(H(x,r,n))})}else if($(e)){e.omittedState===b.Full?a=f("chat.omittedImageAttachment","Omitted this image: {0}",e.name):e.omittedState===b.Partial?a=f("chat.partiallyOmittedImageAttachment","Partially omitted this image: {0}",e.name):a=f("chat.imageAttachment","Attached image, {0}",e.name);const c=$(e)&&e.isURL,m=this.customAttachment(r,e.name,o,a,v,!0,c,e.value),u=e.references?.[0]?.reference;if(u&&S.isUri(u)){r.style.cursor="pointer";const w=()=>{this.openResource(u,!1,void 0)};this.attachedContextDisposables.add(s.addDisposableListener(r,"click",w))}const x=e.value,K=e.omittedState===b.Partial?b.Partial:v?b.Full:void 0;this.createImageElements(x,r,m,S.isUri(u)?u:void 0,K),this.attachedContextDisposables.add(this.hoverService.setupDelayedHover(r,{content:m,appearance:{showPointer:!0}})),r.style.position="relative"}else if(me(e)){a=f("chat.attachment","Attached context, {0}",e.name);const c=["file-icon",`${e.language}-lang-file-icon`];if(e.copiedFrom){n=e.copiedFrom.uri,t=e.copiedFrom.range;const u=L(n.path);l.setLabel(u,void 0,{extraClasses:c})}else l.setLabel(e.fileName,void 0,{extraClasses:c});r.appendChild(s.$("span.attachment-additional-info",{},`Pasted ${e.pastedLines}`)),r.style.position="relative";const m={markdown:{value:`**${e.copiedFrom?this.labelService.getUriLabel(e.copiedFrom.uri,{relative:!0}):e.fileName}**
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import * as dom from "../../../../../base/browser/dom.js";
+import { StandardMouseEvent } from "../../../../../base/browser/mouseEvent.js";
+import { IManagedHoverTooltipMarkdownString } from "../../../../../base/browser/ui/hover/hover.js";
+import { IHoverDelegate } from "../../../../../base/browser/ui/hover/hoverDelegate.js";
+import { createInstantHoverDelegate } from "../../../../../base/browser/ui/hover/hoverDelegateFactory.js";
+import { Emitter } from "../../../../../base/common/event.js";
+import { Disposable, DisposableStore, IDisposable } from "../../../../../base/common/lifecycle.js";
+import { basename, dirname } from "../../../../../base/common/path.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { ServicesAccessor } from "../../../../../editor/browser/editorExtensions.js";
+import { IRange, Range } from "../../../../../editor/common/core/range.js";
+import { EditorContextKeys } from "../../../../../editor/common/editorContextKeys.js";
+import { LanguageFeatureRegistry } from "../../../../../editor/common/languageFeatureRegistry.js";
+import { Location, SymbolKind } from "../../../../../editor/common/languages.js";
+import { ILanguageService } from "../../../../../editor/common/languages/language.js";
+import { ILanguageFeaturesService } from "../../../../../editor/common/services/languageFeatures.js";
+import { IModelService } from "../../../../../editor/common/services/model.js";
+import { ITextModelService } from "../../../../../editor/common/services/resolverService.js";
+import { localize } from "../../../../../nls.js";
+import { getFlatContextMenuActions } from "../../../../../platform/actions/browser/menuEntryActionViewItem.js";
+import { IMenuService, MenuId } from "../../../../../platform/actions/common/actions.js";
+import { ICommandService } from "../../../../../platform/commands/common/commands.js";
+import { IContextKey, IContextKeyService, IScopedContextKeyService, RawContextKey } from "../../../../../platform/contextkey/common/contextkey.js";
+import { IContextMenuService } from "../../../../../platform/contextview/browser/contextView.js";
+import { fillInSymbolsDragData } from "../../../../../platform/dnd/browser/dnd.js";
+import { ITextEditorOptions } from "../../../../../platform/editor/common/editor.js";
+import { FileKind, IFileService } from "../../../../../platform/files/common/files.js";
+import { IHoverService } from "../../../../../platform/hover/browser/hover.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { ILabelService } from "../../../../../platform/label/common/label.js";
+import { IOpenerService, OpenInternalOptions } from "../../../../../platform/opener/common/opener.js";
+import { FolderThemeIcon, IThemeService } from "../../../../../platform/theme/common/themeService.js";
+import { fillEditorsDragData } from "../../../../browser/dnd.js";
+import { ResourceLabels } from "../../../../browser/labels.js";
+import { ResourceContextKey } from "../../../../common/contextkeys.js";
+import { revealInSideBarCommand } from "../../../files/browser/fileActions.contribution.js";
+import { IChatRequestVariableEntry, isImageVariableEntry, isPasteVariableEntry, OmittedState } from "../../common/chatModel.js";
+import { ChatResponseReferencePartStatusKind, IChatContentReference } from "../../common/chatService.js";
+import { convertUint8ArrayToString } from "../imageUtils.js";
+const chatAttachmentResourceContextKey = new RawContextKey("chatAttachmentResource", void 0, { type: "URI", description: localize("resource", "The full value of the chat attachment resource, including scheme and path") });
+let ChatAttachmentsContentPart = class extends Disposable {
+  constructor(variables, contentReferences = [], domNode = dom.$(".chat-attached-context"), contextKeyService, instantiationService, openerService, hoverService, commandService, themeService, labelService) {
+    super();
+    this.variables = variables;
+    this.contentReferences = contentReferences;
+    this.domNode = domNode;
+    this.contextKeyService = contextKeyService;
+    this.instantiationService = instantiationService;
+    this.openerService = openerService;
+    this.hoverService = hoverService;
+    this.commandService = commandService;
+    this.themeService = themeService;
+    this.labelService = labelService;
+    this.initAttachedContext(domNode);
+    if (!domNode.childElementCount) {
+      this.domNode = void 0;
+    }
+  }
+  static {
+    __name(this, "ChatAttachmentsContentPart");
+  }
+  attachedContextDisposables = this._register(new DisposableStore());
+  _onDidChangeVisibility = this._register(new Emitter());
+  _contextResourceLabels = this._register(this.instantiationService.createInstance(ResourceLabels, { onDidChangeVisibility: this._onDidChangeVisibility.event }));
+  // TODO@joyceerhl adopt chat attachment widgets
+  initAttachedContext(container) {
+    dom.clearNode(container);
+    this.attachedContextDisposables.clear();
+    const hoverDelegate = this.attachedContextDisposables.add(createInstantHoverDelegate());
+    this.variables.forEach(async (attachment) => {
+      let resource = URI.isUri(attachment.value) ? attachment.value : attachment.value && typeof attachment.value === "object" && "uri" in attachment.value && URI.isUri(attachment.value.uri) ? attachment.value.uri : void 0;
+      let range = attachment.value && typeof attachment.value === "object" && "range" in attachment.value && Range.isIRange(attachment.value.range) ? attachment.value.range : void 0;
+      const widget = dom.append(container, dom.$(".chat-attached-context-attachment.show-file-icons"));
+      const label = this._contextResourceLabels.create(widget, { supportIcons: true, hoverDelegate, hoverTargetOverride: widget });
+      this.attachedContextDisposables.add(label);
+      const correspondingContentReference = this.contentReferences.find((ref) => typeof ref.reference === "object" && "variableName" in ref.reference && ref.reference.variableName === attachment.name || URI.isUri(ref.reference) && basename(ref.reference.path) === attachment.name);
+      const isAttachmentOmitted = correspondingContentReference?.options?.status?.kind === ChatResponseReferencePartStatusKind.Omitted;
+      const isAttachmentPartialOrOmitted = isAttachmentOmitted || correspondingContentReference?.options?.status?.kind === ChatResponseReferencePartStatusKind.Partial;
+      let ariaLabel;
+      if (resource && (attachment.isFile || attachment.isDirectory)) {
+        const fileBasename = basename(resource.path);
+        const fileDirname = dirname(resource.path);
+        const friendlyName = `${fileBasename} ${fileDirname}`;
+        if (isAttachmentOmitted) {
+          ariaLabel = range ? localize("chat.omittedFileAttachmentWithRange", "Omitted: {0}, line {1} to line {2}.", friendlyName, range.startLineNumber, range.endLineNumber) : localize("chat.omittedFileAttachment", "Omitted: {0}.", friendlyName);
+        } else if (isAttachmentPartialOrOmitted) {
+          ariaLabel = range ? localize("chat.partialFileAttachmentWithRange", "Partially attached: {0}, line {1} to line {2}.", friendlyName, range.startLineNumber, range.endLineNumber) : localize("chat.partialFileAttachment", "Partially attached: {0}.", friendlyName);
+        } else {
+          ariaLabel = range ? localize("chat.fileAttachmentWithRange3", "Attached: {0}, line {1} to line {2}.", friendlyName, range.startLineNumber, range.endLineNumber) : localize("chat.fileAttachment3", "Attached: {0}.", friendlyName);
+        }
+        if (attachment.omittedState === OmittedState.Full) {
+          this.customAttachment(widget, friendlyName, hoverDelegate, ariaLabel, isAttachmentOmitted);
+        } else {
+          const fileOptions = {
+            hidePath: true,
+            title: correspondingContentReference?.options?.status?.description
+          };
+          label.setFile(resource, attachment.isFile ? {
+            ...fileOptions,
+            fileKind: FileKind.FILE,
+            range
+          } : {
+            ...fileOptions,
+            fileKind: FileKind.FOLDER,
+            icon: !this.themeService.getFileIconTheme().hasFolderIcons ? FolderThemeIcon : void 0
+          });
+        }
+        this.instantiationService.invokeFunction((accessor) => {
+          if (resource) {
+            this.attachedContextDisposables.add(hookUpResourceAttachmentDragAndContextMenu(accessor, widget, resource));
+          }
+        });
+      } else if (isImageVariableEntry(attachment)) {
+        if (attachment.omittedState === OmittedState.Full) {
+          ariaLabel = localize("chat.omittedImageAttachment", "Omitted this image: {0}", attachment.name);
+        } else if (attachment.omittedState === OmittedState.Partial) {
+          ariaLabel = localize("chat.partiallyOmittedImageAttachment", "Partially omitted this image: {0}", attachment.name);
+        } else {
+          ariaLabel = localize("chat.imageAttachment", "Attached image, {0}", attachment.name);
+        }
+        const isURL = isImageVariableEntry(attachment) && attachment.isURL;
+        const hoverElement = this.customAttachment(widget, attachment.name, hoverDelegate, ariaLabel, isAttachmentOmitted, true, isURL, attachment.value);
+        const ref = attachment.references?.[0]?.reference;
+        if (ref && URI.isUri(ref)) {
+          widget.style.cursor = "pointer";
+          const clickHandler = /* @__PURE__ */ __name(() => {
+            this.openResource(ref, false, void 0);
+          }, "clickHandler");
+          this.attachedContextDisposables.add(dom.addDisposableListener(widget, "click", clickHandler));
+        }
+        const buffer = attachment.value;
+        const omissionType = attachment.omittedState === OmittedState.Partial ? OmittedState.Partial : isAttachmentOmitted ? OmittedState.Full : void 0;
+        this.createImageElements(buffer, widget, hoverElement, URI.isUri(ref) ? ref : void 0, omissionType);
+        this.attachedContextDisposables.add(this.hoverService.setupDelayedHover(widget, { content: hoverElement, appearance: { showPointer: true } }));
+        widget.style.position = "relative";
+      } else if (isPasteVariableEntry(attachment)) {
+        ariaLabel = localize("chat.attachment", "Attached context, {0}", attachment.name);
+        const classNames = ["file-icon", `${attachment.language}-lang-file-icon`];
+        if (attachment.copiedFrom) {
+          resource = attachment.copiedFrom.uri;
+          range = attachment.copiedFrom.range;
+          const filename = basename(resource.path);
+          label.setLabel(filename, void 0, { extraClasses: classNames });
+        } else {
+          label.setLabel(attachment.fileName, void 0, { extraClasses: classNames });
+        }
+        widget.appendChild(dom.$("span.attachment-additional-info", {}, `Pasted ${attachment.pastedLines}`));
+        widget.style.position = "relative";
+        const hoverContent = {
+          markdown: {
+            value: `**${attachment.copiedFrom ? this.labelService.getUriLabel(attachment.copiedFrom.uri, { relative: true }) : attachment.fileName}**
 
 ---
 
-\`\`\`${e.language}
-${e.code}
-\`\`\``},markdownNotSupportedFallback:e.code};if(!this.attachedContextDisposables.isDisposed){this.attachedContextDisposables.add(this.hoverService.setupManagedHover(o,r,m,{trapFocus:!0}));const u=e.copiedFrom?.uri;u&&this.attachedContextDisposables.add(this.instantiationService.invokeFunction(x=>H(x,r,u)))}}else{const c=e.fullName??e.name,m=e.icon?.id?`$(${e.icon.id}) ${c}`:c;l.setLabel(m,h?.options?.status?.description),a=f("chat.attachment3","Attached context: {0}.",e.name)}if(e.kind==="symbol"){const c=this.attachedContextDisposables.add(this.contextKeyService.createScoped(r));this.attachedContextDisposables.add(this.instantiationService.invokeFunction(m=>he(m,r,c,{...e,kind:e.symbolKind},T.ChatInputSymbolAttachmentContext)))}g&&r.classList.add("warning");const y=h?.options?.status?.description;if(g){a=`${a}${y?` ${y}`:""}`;for(const c of[".monaco-icon-suffix-container",".monaco-icon-name-container"]){const m=l.element.querySelector(c);m&&m.classList.add("warning")}}this.attachedContextDisposables.isDisposed||(n&&(r.style.cursor="pointer",this.attachedContextDisposables.isDisposed||this.attachedContextDisposables.add(s.addDisposableListener(r,s.EventType.CLICK,async c=>{s.EventHelper.stop(c,!0),e.isDirectory?this.openResource(n,!0):this.openResource(n,!1,t)}))),r.ariaLabel=a,r.tabIndex=0)})}customAttachment(i,o,e,n,t,r,l,h){const v=s.$("div.chat-attached-context-pill",{},s.$(t?"span.codicon.codicon-warning":"span.codicon.codicon-file-media")),g=s.$("span.chat-attached-context-custom-text",{},o);i.appendChild(v),i.appendChild(g);const a=s.$("div.chat-attached-context-hover");return a.setAttribute("aria-label",n),l&&!t&&h&&(a.textContent=f("chat.imageAttachmentHover","{0}",ve(h)),this.attachedContextDisposables.add(this.hoverService.setupDelayedHover(i,{content:a,appearance:{showPointer:!0}}))),t&&(i.classList.add("warning"),a.textContent=f("chat.fileAttachmentHover","Selected model does not support this {0} type.",r?"image":"file"),this.attachedContextDisposables.add(this.hoverService.setupDelayedHover(i,{content:a,appearance:{showPointer:!0}}))),a}openResource(i,o,e){if(o){this.commandService.executeCommand(ue.id,i);return}const t={fromUserGesture:!0,editorOptions:e?{selection:e}:void 0};this.openerService.open(i,t)}createImageElements(i,o,e,n,t){if(t===b.Full)return;t===b.Partial&&o.classList.add("partial-warning");const r=new Blob([i],{type:"image/png"}),l=URL.createObjectURL(r),h=s.$("img.chat-attached-context-pill-image",{src:l,alt:""}),v=s.$("div.chat-attached-context-pill",{},h),g=o.querySelector(".chat-attached-context-pill");g&&g.replaceWith(v);const a=s.$("img.chat-attached-context-image",{src:l,alt:""}),y=s.$("div.chat-attached-context-image-container",{},a);if(e.appendChild(y),n){const c=s.$("a.chat-attached-context-url",{},t===b.Partial?f("chat.imageAttachmentWarning","This GIF was partially omitted - current frame was be sent."):n.toString()),m=s.$("div.chat-attached-context-url-separator");this._register(s.addDisposableListener(c,"click",()=>this.openResource(n,!1,void 0))),e.append(m,c)}a.onload=()=>{URL.revokeObjectURL(l)},a.onerror=()=>{const c=s.$("div.chat-attached-context-pill",{},s.$("span.codicon.codicon-file-media")),m=s.$("div.chat-attached-context-pill",{},c),u=o.querySelector(".chat-attached-context-pill");u&&u.replaceWith(m)}}};D=F([I(3,E),I(4,A),I(5,se),I(6,re),I(7,ee),I(8,le),I(9,ae)],D);function H(d,p,i){const o=d.get(E),e=d.get(A),n=new R,t=n.add(o.createScoped(p));return n.add(O(d,t,i)),p.draggable=!0,n.add(s.addDisposableListener(p,"dragstart",r=>{e.invokeFunction(l=>U(l,[i],r)),r.dataTransfer?.setDragImage(p,0,0)})),n.add(k(d,p,t,T.ChatInputResourceAttachmentContext,i)),n}function he(d,p,i,o,e){const n=d.get(A),t=d.get(X),r=d.get(Q),l=new R;l.add(O(d,i,o.value.uri)),fe.bindTo(i).set(o.value.uri.toString()),p.draggable=!0,l.add(s.addDisposableListener(p,"dragstart",a=>{n.invokeFunction(y=>U(y,[{resource:o.value.uri,selection:o.value.range}],a)),oe([{fsPath:o.value.uri.fsPath,range:o.value.range,name:o.name,kind:o.kind}],a),a.dataTransfer?.setDragImage(p,0,0)}));const v=[[C.hasDefinitionProvider.bindTo(i),t.definitionProvider],[C.hasReferenceProvider.bindTo(i),t.referenceProvider],[C.hasImplementationProvider.bindTo(i),t.implementationProvider],[C.hasTypeDefinitionProvider.bindTo(i),t.typeDefinitionProvider]],g=async()=>{const a=await r.createModelReference(o.value.uri);try{const y=a.object.textEditorModel;for(const[c,m]of v)c.set(m.has(y))}finally{a.dispose()}};return l.add(k(d,p,i,e,o.value,g)),l}function O(d,p,i){const o=d.get(ne),e=d.get(z),n=d.get(J),t=new pe(p,o,e,n);return t.set(i),t}function k(d,p,i,o,e,n){const t=d.get(ie),r=d.get(Z);return s.addDisposableListener(p,s.EventType.CONTEXT_MENU,async l=>{const h=new V(s.getWindow(l),l);s.EventHelper.stop(l,!0);try{await n?.()}catch(v){console.error(v)}t.showContextMenu({contextKeyService:i,getAnchor:()=>h,getActions:()=>{const v=r.getMenuActions(o,i,{arg:e});return Y(v)}})})}export{D as ChatAttachmentsContentPart,fe as chatAttachmentResourceContextKey,H as hookUpResourceAttachmentDragAndContextMenu,he as hookUpSymbolAttachmentDragAndContextMenu};
+\`\`\`${attachment.language}
+${attachment.code}
+\`\`\``
+          },
+          markdownNotSupportedFallback: attachment.code
+        };
+        if (!this.attachedContextDisposables.isDisposed) {
+          this.attachedContextDisposables.add(this.hoverService.setupManagedHover(hoverDelegate, widget, hoverContent, { trapFocus: true }));
+          const resource2 = attachment.copiedFrom?.uri;
+          if (resource2) {
+            this.attachedContextDisposables.add(this.instantiationService.invokeFunction((accessor) => hookUpResourceAttachmentDragAndContextMenu(accessor, widget, resource2)));
+          }
+        }
+      } else {
+        const attachmentLabel = attachment.fullName ?? attachment.name;
+        const withIcon = attachment.icon?.id ? `$(${attachment.icon.id}) ${attachmentLabel}` : attachmentLabel;
+        label.setLabel(withIcon, correspondingContentReference?.options?.status?.description);
+        ariaLabel = localize("chat.attachment3", "Attached context: {0}.", attachment.name);
+      }
+      if (attachment.kind === "symbol") {
+        const scopedContextKeyService = this.attachedContextDisposables.add(this.contextKeyService.createScoped(widget));
+        this.attachedContextDisposables.add(this.instantiationService.invokeFunction((accessor) => hookUpSymbolAttachmentDragAndContextMenu(accessor, widget, scopedContextKeyService, { ...attachment, kind: attachment.symbolKind }, MenuId.ChatInputSymbolAttachmentContext)));
+      }
+      if (isAttachmentPartialOrOmitted) {
+        widget.classList.add("warning");
+      }
+      const description = correspondingContentReference?.options?.status?.description;
+      if (isAttachmentPartialOrOmitted) {
+        ariaLabel = `${ariaLabel}${description ? ` ${description}` : ""}`;
+        for (const selector of [".monaco-icon-suffix-container", ".monaco-icon-name-container"]) {
+          const element = label.element.querySelector(selector);
+          if (element) {
+            element.classList.add("warning");
+          }
+        }
+      }
+      if (this.attachedContextDisposables.isDisposed) {
+        return;
+      }
+      if (resource) {
+        widget.style.cursor = "pointer";
+        if (!this.attachedContextDisposables.isDisposed) {
+          this.attachedContextDisposables.add(dom.addDisposableListener(widget, dom.EventType.CLICK, async (e) => {
+            dom.EventHelper.stop(e, true);
+            if (attachment.isDirectory) {
+              this.openResource(resource, true);
+            } else {
+              this.openResource(resource, false, range);
+            }
+          }));
+        }
+      }
+      widget.ariaLabel = ariaLabel;
+      widget.tabIndex = 0;
+    });
+  }
+  customAttachment(widget, friendlyName, hoverDelegate, ariaLabel, isAttachmentOmitted, isImage, isURL, value) {
+    const pillIcon = dom.$("div.chat-attached-context-pill", {}, dom.$(isAttachmentOmitted ? "span.codicon.codicon-warning" : "span.codicon.codicon-file-media"));
+    const textLabel = dom.$("span.chat-attached-context-custom-text", {}, friendlyName);
+    widget.appendChild(pillIcon);
+    widget.appendChild(textLabel);
+    const hoverElement = dom.$("div.chat-attached-context-hover");
+    hoverElement.setAttribute("aria-label", ariaLabel);
+    if (isURL && !isAttachmentOmitted && value) {
+      hoverElement.textContent = localize("chat.imageAttachmentHover", "{0}", convertUint8ArrayToString(value));
+      this.attachedContextDisposables.add(this.hoverService.setupDelayedHover(widget, { content: hoverElement, appearance: { showPointer: true } }));
+    }
+    if (isAttachmentOmitted) {
+      widget.classList.add("warning");
+      hoverElement.textContent = localize("chat.fileAttachmentHover", "Selected model does not support this {0} type.", isImage ? "image" : "file");
+      this.attachedContextDisposables.add(this.hoverService.setupDelayedHover(widget, { content: hoverElement, appearance: { showPointer: true } }));
+    }
+    return hoverElement;
+  }
+  openResource(resource, isDirectory, range) {
+    if (isDirectory) {
+      this.commandService.executeCommand(revealInSideBarCommand.id, resource);
+      return;
+    }
+    const openTextEditorOptions = range ? { selection: range } : void 0;
+    const options = {
+      fromUserGesture: true,
+      editorOptions: openTextEditorOptions
+    };
+    this.openerService.open(resource, options);
+  }
+  // Helper function to create and replace image
+  createImageElements(buffer, widget, hoverElement, reference, omittedState) {
+    if (omittedState === OmittedState.Full) {
+      return;
+    }
+    if (omittedState === OmittedState.Partial) {
+      widget.classList.add("partial-warning");
+    }
+    const blob = new Blob([buffer], { type: "image/png" });
+    const url = URL.createObjectURL(blob);
+    const pillImg = dom.$("img.chat-attached-context-pill-image", { src: url, alt: "" });
+    const pill = dom.$("div.chat-attached-context-pill", {}, pillImg);
+    const existingPill = widget.querySelector(".chat-attached-context-pill");
+    if (existingPill) {
+      existingPill.replaceWith(pill);
+    }
+    const hoverImage = dom.$("img.chat-attached-context-image", { src: url, alt: "" });
+    const imageContainer = dom.$("div.chat-attached-context-image-container", {}, hoverImage);
+    hoverElement.appendChild(imageContainer);
+    if (reference) {
+      const urlContainer = dom.$("a.chat-attached-context-url", {}, omittedState === OmittedState.Partial ? localize("chat.imageAttachmentWarning", "This GIF was partially omitted - current frame was be sent.") : reference.toString());
+      const separator = dom.$("div.chat-attached-context-url-separator");
+      this._register(dom.addDisposableListener(urlContainer, "click", () => this.openResource(reference, false, void 0)));
+      hoverElement.append(separator, urlContainer);
+    }
+    hoverImage.onload = () => {
+      URL.revokeObjectURL(url);
+    };
+    hoverImage.onerror = () => {
+      const pillIcon = dom.$("div.chat-attached-context-pill", {}, dom.$("span.codicon.codicon-file-media"));
+      const pill2 = dom.$("div.chat-attached-context-pill", {}, pillIcon);
+      const existingPill2 = widget.querySelector(".chat-attached-context-pill");
+      if (existingPill2) {
+        existingPill2.replaceWith(pill2);
+      }
+    };
+  }
+};
+ChatAttachmentsContentPart = __decorateClass([
+  __decorateParam(3, IContextKeyService),
+  __decorateParam(4, IInstantiationService),
+  __decorateParam(5, IOpenerService),
+  __decorateParam(6, IHoverService),
+  __decorateParam(7, ICommandService),
+  __decorateParam(8, IThemeService),
+  __decorateParam(9, ILabelService)
+], ChatAttachmentsContentPart);
+function hookUpResourceAttachmentDragAndContextMenu(accessor, widget, resource) {
+  const contextKeyService = accessor.get(IContextKeyService);
+  const instantiationService = accessor.get(IInstantiationService);
+  const store = new DisposableStore();
+  const scopedContextKeyService = store.add(contextKeyService.createScoped(widget));
+  store.add(setResourceContext(accessor, scopedContextKeyService, resource));
+  widget.draggable = true;
+  store.add(dom.addDisposableListener(widget, "dragstart", (e) => {
+    instantiationService.invokeFunction((accessor2) => fillEditorsDragData(accessor2, [resource], e));
+    e.dataTransfer?.setDragImage(widget, 0, 0);
+  }));
+  store.add(addBasicContextMenu(accessor, widget, scopedContextKeyService, MenuId.ChatInputResourceAttachmentContext, resource));
+  return store;
+}
+__name(hookUpResourceAttachmentDragAndContextMenu, "hookUpResourceAttachmentDragAndContextMenu");
+function hookUpSymbolAttachmentDragAndContextMenu(accessor, widget, scopedContextKeyService, attachment, contextMenuId) {
+  const instantiationService = accessor.get(IInstantiationService);
+  const languageFeaturesService = accessor.get(ILanguageFeaturesService);
+  const textModelService = accessor.get(ITextModelService);
+  const store = new DisposableStore();
+  store.add(setResourceContext(accessor, scopedContextKeyService, attachment.value.uri));
+  const chatResourceContext = chatAttachmentResourceContextKey.bindTo(scopedContextKeyService);
+  chatResourceContext.set(attachment.value.uri.toString());
+  widget.draggable = true;
+  store.add(dom.addDisposableListener(widget, "dragstart", (e) => {
+    instantiationService.invokeFunction((accessor2) => fillEditorsDragData(accessor2, [{ resource: attachment.value.uri, selection: attachment.value.range }], e));
+    fillInSymbolsDragData([{
+      fsPath: attachment.value.uri.fsPath,
+      range: attachment.value.range,
+      name: attachment.name,
+      kind: attachment.kind
+    }], e);
+    e.dataTransfer?.setDragImage(widget, 0, 0);
+  }));
+  const providerContexts = [
+    [EditorContextKeys.hasDefinitionProvider.bindTo(scopedContextKeyService), languageFeaturesService.definitionProvider],
+    [EditorContextKeys.hasReferenceProvider.bindTo(scopedContextKeyService), languageFeaturesService.referenceProvider],
+    [EditorContextKeys.hasImplementationProvider.bindTo(scopedContextKeyService), languageFeaturesService.implementationProvider],
+    [EditorContextKeys.hasTypeDefinitionProvider.bindTo(scopedContextKeyService), languageFeaturesService.typeDefinitionProvider]
+  ];
+  const updateContextKeys = /* @__PURE__ */ __name(async () => {
+    const modelRef = await textModelService.createModelReference(attachment.value.uri);
+    try {
+      const model = modelRef.object.textEditorModel;
+      for (const [contextKey, registry] of providerContexts) {
+        contextKey.set(registry.has(model));
+      }
+    } finally {
+      modelRef.dispose();
+    }
+  }, "updateContextKeys");
+  store.add(addBasicContextMenu(accessor, widget, scopedContextKeyService, contextMenuId, attachment.value, updateContextKeys));
+  return store;
+}
+__name(hookUpSymbolAttachmentDragAndContextMenu, "hookUpSymbolAttachmentDragAndContextMenu");
+function setResourceContext(accessor, scopedContextKeyService, resource) {
+  const fileService = accessor.get(IFileService);
+  const languageService = accessor.get(ILanguageService);
+  const modelService = accessor.get(IModelService);
+  const resourceContextKey = new ResourceContextKey(scopedContextKeyService, fileService, languageService, modelService);
+  resourceContextKey.set(resource);
+  return resourceContextKey;
+}
+__name(setResourceContext, "setResourceContext");
+function addBasicContextMenu(accessor, widget, scopedContextKeyService, menuId, arg, updateContextKeys) {
+  const contextMenuService = accessor.get(IContextMenuService);
+  const menuService = accessor.get(IMenuService);
+  return dom.addDisposableListener(widget, dom.EventType.CONTEXT_MENU, async (domEvent) => {
+    const event = new StandardMouseEvent(dom.getWindow(domEvent), domEvent);
+    dom.EventHelper.stop(domEvent, true);
+    try {
+      await updateContextKeys?.();
+    } catch (e) {
+      console.error(e);
+    }
+    contextMenuService.showContextMenu({
+      contextKeyService: scopedContextKeyService,
+      getAnchor: /* @__PURE__ */ __name(() => event, "getAnchor"),
+      getActions: /* @__PURE__ */ __name(() => {
+        const menu = menuService.getMenuActions(menuId, scopedContextKeyService, { arg });
+        return getFlatContextMenuActions(menu);
+      }, "getActions")
+    });
+  });
+}
+__name(addBasicContextMenu, "addBasicContextMenu");
+export {
+  ChatAttachmentsContentPart,
+  chatAttachmentResourceContextKey,
+  hookUpResourceAttachmentDragAndContextMenu,
+  hookUpSymbolAttachmentDragAndContextMenu
+};
+//# sourceMappingURL=chatAttachmentsContentPart.js.map

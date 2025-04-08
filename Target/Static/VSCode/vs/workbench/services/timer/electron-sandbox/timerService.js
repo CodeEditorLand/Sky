@@ -1,1 +1,119 @@
-var g=Object.defineProperty,y=Object.getOwnPropertyDescriptor,S=(e,r,t,o)=>{for(var i,s=o>1?void 0:o?y(r,t):r,a=e.length-1;a>=0;a--)(i=e[a])&&(s=(o?i(r,t,s):i(s))||s);return o&&s&&g(r,t,s),s},r=(e,r)=>(t,o)=>r(t,o,e);import{INativeHostService as P}from"../../../../platform/native/common/native.js";import{INativeWorkbenchEnvironmentService as _}from"../../environment/electron-sandbox/environmentService.js";import{IWorkspaceContextService as b}from"../../../../platform/workspace/common/workspace.js";import{IExtensionService as C}from"../../extensions/common/extensions.js";import{IUpdateService as M}from"../../../../platform/update/common/update.js";import{ILifecycleService as k}from"../../lifecycle/common/lifecycle.js";import{IEditorService as w}from"../../editor/common/editorService.js";import{IAccessibilityService as A}from"../../../../platform/accessibility/common/accessibility.js";import{AbstractTimerService as H,ITimerService as W}from"../browser/timerService.js";import{ITelemetryService as E}from"../../../../platform/telemetry/common/telemetry.js";import{process as x}from"../../../../base/parts/sandbox/electron-sandbox/globals.js";import{InstantiationType as N,registerSingleton as R}from"../../../../platform/instantiation/common/extensions.js";import{IWorkbenchLayoutService as L}from"../../layout/browser/layoutService.js";import{IProductService as T}from"../../../../platform/product/common/productService.js";import{IStorageService as U,StorageScope as d,StorageTarget as O}from"../../../../platform/storage/common/storage.js";import{IPaneCompositePartService as B}from"../../panecomposite/browser/panecomposite.js";let v=class extends H{constructor(e,r,t,o,i,s,a,n,m,c,p,v,l){super(t,o,i,s,a,n,m,c,p),this._nativeHostService=e,this._environmentService=r,this._productService=v,this._storageService=l,this.setPerformanceMarks("main",r.window.perfMarks)}_isInitialStartup(){return!!this._environmentService.window.isInitialStartup}_didUseCachedData(){return D(this._productService,this._storageService,this._environmentService)}_getWindowCount(){return this._nativeHostService.getWindowCount()}async _extendStartupInfo(e){try{const[r,t,o,i]=await Promise.all([this._nativeHostService.getOSProperties(),this._nativeHostService.getOSStatistics(),this._nativeHostService.getOSVirtualMachineHint(),this._nativeHostService.isRunningUnderARM64Translation()]);e.totalmem=t.totalmem,e.freemem=t.freemem,e.platform=r.platform,e.release=r.release,e.arch=r.arch,e.loadavg=t.loadavg,e.isARM64Emulated=i;const s=await x.getProcessMemoryInfo();e.meminfo={workingSetSize:s.residentSet,privateBytes:s.private,sharedBytes:s.shared},e.isVMLikelyhood=Math.round(100*o);const a=r.cpus;a&&a.length>0&&(e.cpus={count:a.length,speed:a[0].speed,model:a[0].model})}catch{}}_shouldReportPerfMarks(){return super._shouldReportPerfMarks()||!!this._environmentService.args["prof-append-timers"]}};v=S([r(0,P),r(1,_),r(2,k),r(3,b),r(4,C),r(5,M),r(6,B),r(7,w),r(8,A),r(9,E),r(10,L),r(11,T),r(12,U)],v),R(W,v,N.Delayed);const l="perf/lastRunningCommit";let p;function D(e,r,t){return"boolean"!=typeof p&&(t.window.isCodeCaching&&e.commit?r.get(l,d.APPLICATION)===e.commit?p=!0:(r.store(l,e.commit,d.APPLICATION,O.MACHINE),p=!1):p=!1),p}export{v as TimerService,D as didUseCachedData};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { INativeHostService } from "../../../../platform/native/common/native.js";
+import { INativeWorkbenchEnvironmentService } from "../../environment/electron-sandbox/environmentService.js";
+import { IWorkspaceContextService } from "../../../../platform/workspace/common/workspace.js";
+import { IExtensionService } from "../../extensions/common/extensions.js";
+import { IUpdateService } from "../../../../platform/update/common/update.js";
+import { ILifecycleService } from "../../lifecycle/common/lifecycle.js";
+import { IEditorService } from "../../editor/common/editorService.js";
+import { IAccessibilityService } from "../../../../platform/accessibility/common/accessibility.js";
+import { IStartupMetrics, AbstractTimerService, Writeable, ITimerService } from "../browser/timerService.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { process } from "../../../../base/parts/sandbox/electron-sandbox/globals.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { IWorkbenchLayoutService } from "../../layout/browser/layoutService.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { IPaneCompositePartService } from "../../panecomposite/browser/panecomposite.js";
+let TimerService = class extends AbstractTimerService {
+  constructor(_nativeHostService, _environmentService, lifecycleService, contextService, extensionService, updateService, paneCompositeService, editorService, accessibilityService, telemetryService, layoutService, _productService, _storageService) {
+    super(lifecycleService, contextService, extensionService, updateService, paneCompositeService, editorService, accessibilityService, telemetryService, layoutService);
+    this._nativeHostService = _nativeHostService;
+    this._environmentService = _environmentService;
+    this._productService = _productService;
+    this._storageService = _storageService;
+    this.setPerformanceMarks("main", _environmentService.window.perfMarks);
+  }
+  static {
+    __name(this, "TimerService");
+  }
+  _isInitialStartup() {
+    return Boolean(this._environmentService.window.isInitialStartup);
+  }
+  _didUseCachedData() {
+    return didUseCachedData(this._productService, this._storageService, this._environmentService);
+  }
+  _getWindowCount() {
+    return this._nativeHostService.getWindowCount();
+  }
+  async _extendStartupInfo(info) {
+    try {
+      const [osProperties, osStatistics, virtualMachineHint, isARM64Emulated] = await Promise.all([
+        this._nativeHostService.getOSProperties(),
+        this._nativeHostService.getOSStatistics(),
+        this._nativeHostService.getOSVirtualMachineHint(),
+        this._nativeHostService.isRunningUnderARM64Translation()
+      ]);
+      info.totalmem = osStatistics.totalmem;
+      info.freemem = osStatistics.freemem;
+      info.platform = osProperties.platform;
+      info.release = osProperties.release;
+      info.arch = osProperties.arch;
+      info.loadavg = osStatistics.loadavg;
+      info.isARM64Emulated = isARM64Emulated;
+      const processMemoryInfo = await process.getProcessMemoryInfo();
+      info.meminfo = {
+        workingSetSize: processMemoryInfo.residentSet,
+        privateBytes: processMemoryInfo.private,
+        sharedBytes: processMemoryInfo.shared
+      };
+      info.isVMLikelyhood = Math.round(virtualMachineHint * 100);
+      const rawCpus = osProperties.cpus;
+      if (rawCpus && rawCpus.length > 0) {
+        info.cpus = { count: rawCpus.length, speed: rawCpus[0].speed, model: rawCpus[0].model };
+      }
+    } catch (error) {
+    }
+  }
+  _shouldReportPerfMarks() {
+    return super._shouldReportPerfMarks() || Boolean(this._environmentService.args["prof-append-timers"]);
+  }
+};
+TimerService = __decorateClass([
+  __decorateParam(0, INativeHostService),
+  __decorateParam(1, INativeWorkbenchEnvironmentService),
+  __decorateParam(2, ILifecycleService),
+  __decorateParam(3, IWorkspaceContextService),
+  __decorateParam(4, IExtensionService),
+  __decorateParam(5, IUpdateService),
+  __decorateParam(6, IPaneCompositePartService),
+  __decorateParam(7, IEditorService),
+  __decorateParam(8, IAccessibilityService),
+  __decorateParam(9, ITelemetryService),
+  __decorateParam(10, IWorkbenchLayoutService),
+  __decorateParam(11, IProductService),
+  __decorateParam(12, IStorageService)
+], TimerService);
+registerSingleton(ITimerService, TimerService, InstantiationType.Delayed);
+const lastRunningCommitStorageKey = "perf/lastRunningCommit";
+let _didUseCachedData = void 0;
+function didUseCachedData(productService, storageService, environmentService) {
+  if (typeof _didUseCachedData !== "boolean") {
+    if (!environmentService.window.isCodeCaching || !productService.commit) {
+      _didUseCachedData = false;
+    } else if (storageService.get(lastRunningCommitStorageKey, StorageScope.APPLICATION) === productService.commit) {
+      _didUseCachedData = true;
+    } else {
+      storageService.store(lastRunningCommitStorageKey, productService.commit, StorageScope.APPLICATION, StorageTarget.MACHINE);
+      _didUseCachedData = false;
+    }
+  }
+  return _didUseCachedData;
+}
+__name(didUseCachedData, "didUseCachedData");
+export {
+  TimerService,
+  didUseCachedData
+};
+//# sourceMappingURL=timerService.js.map

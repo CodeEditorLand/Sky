@@ -1,1 +1,70 @@
-var p=Object.defineProperty,d=Object.getOwnPropertyDescriptor,c=(i,e,t,r)=>{for(var o,s=r>1?void 0:r?d(e,t):e,n=i.length-1;n>=0;n--)(o=i[n])&&(s=(r?o(e,t,s):o(s))||s);return r&&s&&p(e,t,s),s},n=(i,e)=>(t,r)=>e(t,r,i);import*as l from"../../../../nls.js";import"../../../common/contributions.js";import{VIEWLET_ID as y}from"./files.js";import{Disposable as g,MutableDisposable as u}from"../../../../base/common/lifecycle.js";import{IActivityService as C,NumberBadge as h}from"../../../services/activity/common/activity.js";import{IWorkingCopyService as f}from"../../../services/workingCopy/common/workingCopyService.js";import{WorkingCopyCapabilities as m}from"../../../services/workingCopy/common/workingCopy.js";import{IFilesConfigurationService as b}from"../../../services/filesConfiguration/common/filesConfigurationService.js";let a=class extends g{constructor(i,e,t){super(),this.activityService=i,this.workingCopyService=e,this.filesConfigurationService=t,this.updateActivityBadge(),this.registerListeners()}static ID="workbench.contrib.dirtyFilesIndicator";badgeHandle=this._register(new u);lastKnownDirtyCount=0;registerListeners(){this._register(this.workingCopyService.onDidChangeDirty((i=>this.onWorkingCopyDidChangeDirty(i))))}onWorkingCopyDidChangeDirty(i){const e=i.isDirty();e&&!(i.capabilities&m.Untitled)&&this.filesConfigurationService.hasShortAutoSaveDelay(i.resource)||(e||this.lastKnownDirtyCount>0)&&this.updateActivityBadge()}updateActivityBadge(){const i=this.lastKnownDirtyCount=this.workingCopyService.dirtyCount;i>0?this.badgeHandle.value=this.activityService.showViewContainerActivity(y,{badge:new h(i,(e=>1===e?l.localize("dirtyFile","1 unsaved file"):l.localize("dirtyFiles","{0} unsaved files",i)))}):this.badgeHandle.clear()}};a=c([n(0,C),n(1,f),n(2,b)],a);export{a as DirtyFilesIndicator};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import * as nls from "../../../../nls.js";
+import { IWorkbenchContribution } from "../../../common/contributions.js";
+import { VIEWLET_ID } from "./files.js";
+import { Disposable, MutableDisposable } from "../../../../base/common/lifecycle.js";
+import { IActivityService, NumberBadge } from "../../../services/activity/common/activity.js";
+import { IWorkingCopyService } from "../../../services/workingCopy/common/workingCopyService.js";
+import { IWorkingCopy, WorkingCopyCapabilities } from "../../../services/workingCopy/common/workingCopy.js";
+import { IFilesConfigurationService } from "../../../services/filesConfiguration/common/filesConfigurationService.js";
+let DirtyFilesIndicator = class extends Disposable {
+  constructor(activityService, workingCopyService, filesConfigurationService) {
+    super();
+    this.activityService = activityService;
+    this.workingCopyService = workingCopyService;
+    this.filesConfigurationService = filesConfigurationService;
+    this.updateActivityBadge();
+    this.registerListeners();
+  }
+  static {
+    __name(this, "DirtyFilesIndicator");
+  }
+  static ID = "workbench.contrib.dirtyFilesIndicator";
+  badgeHandle = this._register(new MutableDisposable());
+  lastKnownDirtyCount = 0;
+  registerListeners() {
+    this._register(this.workingCopyService.onDidChangeDirty((workingCopy) => this.onWorkingCopyDidChangeDirty(workingCopy)));
+  }
+  onWorkingCopyDidChangeDirty(workingCopy) {
+    const gotDirty = workingCopy.isDirty();
+    if (gotDirty && !(workingCopy.capabilities & WorkingCopyCapabilities.Untitled) && this.filesConfigurationService.hasShortAutoSaveDelay(workingCopy.resource)) {
+      return;
+    }
+    if (gotDirty || this.lastKnownDirtyCount > 0) {
+      this.updateActivityBadge();
+    }
+  }
+  updateActivityBadge() {
+    const dirtyCount = this.lastKnownDirtyCount = this.workingCopyService.dirtyCount;
+    if (dirtyCount > 0) {
+      this.badgeHandle.value = this.activityService.showViewContainerActivity(
+        VIEWLET_ID,
+        {
+          badge: new NumberBadge(dirtyCount, (num) => num === 1 ? nls.localize("dirtyFile", "1 unsaved file") : nls.localize("dirtyFiles", "{0} unsaved files", dirtyCount))
+        }
+      );
+    } else {
+      this.badgeHandle.clear();
+    }
+  }
+};
+DirtyFilesIndicator = __decorateClass([
+  __decorateParam(0, IActivityService),
+  __decorateParam(1, IWorkingCopyService),
+  __decorateParam(2, IFilesConfigurationService)
+], DirtyFilesIndicator);
+export {
+  DirtyFilesIndicator
+};
+//# sourceMappingURL=dirtyFilesIndicator.js.map

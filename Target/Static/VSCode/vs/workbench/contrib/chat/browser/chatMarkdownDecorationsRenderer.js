@@ -1,1 +1,261 @@
-var M=Object.defineProperty,R=Object.getOwnPropertyDescriptor,p=(e,t,o,n)=>{for(var a,r=n>1?void 0:n?R(t,o):t,i=e.length-1;i>=0;i--)(a=e[i])&&(r=(n?a(t,o,r):a(r))||r);return n&&r&&M(t,o,r),r},d=(e,t)=>(o,n)=>t(o,n,e);import*as l from"../../../../base/browser/dom.js";import{Button as S}from"../../../../base/browser/ui/button/button.js";import{getDefaultHoverDelegate as f}from"../../../../base/browser/ui/hover/hoverDelegateFactory.js";import{toErrorMessage as I}from"../../../../base/common/errorMessage.js";import{Lazy as k}from"../../../../base/common/lazy.js";import{DisposableStore as w}from"../../../../base/common/lifecycle.js";import{URI as C}from"../../../../base/common/uri.js";import{ICommandService as D}from"../../../../platform/commands/common/commands.js";import{IHoverService as L}from"../../../../platform/hover/browser/hover.js";import{IInstantiationService as $}from"../../../../platform/instantiation/common/instantiation.js";import{IKeybindingService as H}from"../../../../platform/keybinding/common/keybinding.js";import{ILabelService as T}from"../../../../platform/label/common/label.js";import{ILogService as q}from"../../../../platform/log/common/log.js";import{asCssVariable as m}from"../../../../platform/theme/common/colorUtils.js";import{contentRefUrl as N}from"../common/annotations.js";import{getFullyQualifiedId as x,IChatAgentNameService as P,IChatAgentService as A}from"../common/chatAgents.js";import{chatSlashCommandBackground as b,chatSlashCommandForeground as W}from"../common/chatColors.js";import{chatAgentLeader as U,ChatRequestAgentPart as E,ChatRequestAgentSubcommandPart as O,ChatRequestDynamicVariablePart as F,ChatRequestSlashCommandPart as J,ChatRequestTextPart as B,ChatRequestToolPart as K,chatSubcommandLeader as _}from"../common/chatParserTypes.js";import{IChatService as j}from"../common/chatService.js";import{ILanguageModelToolsService as z}from"../common/languageModelToolsService.js";import{IChatWidgetService as V}from"./chat.js";import{ChatAgentHover as Q,getChatAgentHoverOptions as G}from"./chatAgentHover.js";import{IChatMarkdownAnchorService as X}from"./chatContentParts/chatMarkdownAnchorService.js";import{InlineAnchorWidget as Y}from"./chatInlineAnchorWidget.js";import"./media/chatInlineAnchorWidget.css";const u="http://_vscodedecoration_",h="http://_chatagent_",y="http://_chatslash_";function Z(e,t,o){const n=o.get(P),a=o.get(A),r=n.getAgentNameRestriction(e);let i=`${r?e.name:x(e)}`;r&&a.agentHasDupeName(e.id)&&(i+=` (${e.publisherDisplayName})`);const s={agentId:e.id,name:i,isClickable:t};return`[${e.name}](${h}?${encodeURIComponent(JSON.stringify(s))})`}function qe(e,t){const o=`${_}${t.name}`,n={agentId:e.id,command:t.name};return`[${o}](${y}?${encodeURIComponent(JSON.stringify(n))})`}let v=class{constructor(e,t,o,n,a,r,i,s,c,d,m){this.keybindingService=e,this.logService=t,this.chatAgentService=o,this.instantiationService=n,this.hoverService=a,this.chatService=r,this.chatWidgetService=i,this.commandService=s,this.labelService=c,this.toolsService=d,this.chatMarkdownAnchorService=m}convertParsedRequestToMarkdown(e){let t="";for(const o of e.parts)t+=o instanceof B?o.text:o instanceof E?this.instantiationService.invokeFunction((e=>Z(o.agent,!1,e))):this.genericDecorationToMarkdown(o);return t}genericDecorationToMarkdown(e){const t=e instanceof F&&e.data instanceof C?e.data:void 0,o={title:t?this.labelService.getUriLabel(t,{relative:!0}):e instanceof J?e.slashCommand.detail:e instanceof O?e.command.description:e instanceof K?this.toolsService.getTool(e.toolId)?.userDescription:""};return`[${e.text}](${u}?${encodeURIComponent(JSON.stringify(o))})`}walkTreeAndAnnotateReferenceLinks(e,t){const o=new w;return t.querySelectorAll("a").forEach((t=>{const n=t.getAttribute("data-href");if(n)if(n.startsWith(h)){let e;try{e=JSON.parse(decodeURIComponent(n.slice(19)))}catch(e){this.logService.error("Invalid chat widget render data JSON",I(e))}e&&t.parentElement.replaceChild(this.renderAgentWidget(e,o),t)}else if(n.startsWith(y)){let e;try{e=JSON.parse(decodeURIComponent(n.slice(19)))}catch(e){this.logService.error("Invalid chat slash command render data JSON",I(e))}e&&t.parentElement.replaceChild(this.renderSlashCommandWidget(t.textContent,e,o),t)}else if(n.startsWith(u)){let e;try{e=JSON.parse(decodeURIComponent(n.slice(26)))}catch{}t.parentElement.replaceChild(this.renderResourceWidget(t.textContent,e,o),t)}else n.startsWith(N)?this.renderFileWidget(e,n,t,o):n.startsWith("command:")&&this.injectKeybindingHint(t,n,this.keybindingService)})),o}renderAgentWidget(e,t){const o=`${U}${e.name}`;let n;if(e.isClickable){n=l.$("span.chat-agent-widget");const a=t.add(new S(n,{buttonBackground:m(b),buttonForeground:m(W),buttonHoverBackground:void 0}));a.label=o,t.add(a.onDidClick((()=>{const t=this.chatAgentService.getAgent(e.agentId),o=this.chatWidgetService.lastFocusedWidget;!o||!t||this.chatService.sendRequest(o.viewModel.sessionId,t.metadata.sampleRequest??"",{location:o.location,agentId:t.id,userSelectedModelId:o.input.currentLanguageModel,mode:o.input.currentMode})})))}else n=this.renderResourceWidget(o,void 0,t);const a=this.chatAgentService.getAgent(e.agentId),r=new k((()=>t.add(this.instantiationService.createInstance(Q))));return t.add(this.hoverService.setupManagedHover(f("element"),n,(()=>(r.value.setAgent(e.agentId),r.value.domNode)),a&&G((()=>a),this.commandService))),n}renderSlashCommandWidget(e,t,o){const n=l.$("span.chat-agent-widget.chat-command-widget"),a=this.chatAgentService.getAgent(t.agentId),r=o.add(new S(n,{buttonBackground:m(b),buttonForeground:m(W),buttonHoverBackground:void 0}));return r.label=e,o.add(r.onDidClick((()=>{const e=this.chatWidgetService.lastFocusedWidget;if(!e||!a)return;const o=a.slashCommands.find((e=>e.name===t.command));this.chatService.sendRequest(e.viewModel.sessionId,o?.sampleRequest??"",{location:e.location,agentId:a.id,slashCommand:t.command,userSelectedModelId:e.input.currentLanguageModel,mode:e.input.currentMode})}))),n}renderFileWidget(e,t,o,n){const a=C.parse(t),r=e.inlineReferences?.[a.path.slice(1)];if(!r)return void this.logService.error("Invalid chat widget render data JSON");const i=n.add(this.instantiationService.createInstance(Y,o,r));n.add(this.chatMarkdownAnchorService.register(i))}renderResourceWidget(e,t,o){const n=l.$("span.chat-resource-widget"),a=l.$("span",void 0,e);return t?.title&&o.add(this.hoverService.setupManagedHover(f("element"),n,t.title)),n.appendChild(a),n}injectKeybindingHint(e,t,o){const n=t.match(/command:([^\)]+)/)?.[1];if(n){const t=o.lookupKeybinding(n);if(t){const o=t.getLabel();o&&(e.textContent=`${e.textContent} (${o})`)}}}};v=p([d(0,H),d(1,q),d(2,A),d(3,$),d(4,L),d(5,j),d(6,V),d(7,D),d(8,T),d(9,z),d(10,X)],v);export{v as ChatMarkdownDecorationsRenderer,qe as agentSlashCommandToMarkdown,Z as agentToMarkdown};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import * as dom from "../../../../base/browser/dom.js";
+import { Button } from "../../../../base/browser/ui/button/button.js";
+import { getDefaultHoverDelegate } from "../../../../base/browser/ui/hover/hoverDelegateFactory.js";
+import { toErrorMessage } from "../../../../base/common/errorMessage.js";
+import { Lazy } from "../../../../base/common/lazy.js";
+import { DisposableStore, IDisposable } from "../../../../base/common/lifecycle.js";
+import { URI } from "../../../../base/common/uri.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { IHoverService } from "../../../../platform/hover/browser/hover.js";
+import { IInstantiationService, ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { ILabelService } from "../../../../platform/label/common/label.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { asCssVariable } from "../../../../platform/theme/common/colorUtils.js";
+import { contentRefUrl } from "../common/annotations.js";
+import { getFullyQualifiedId, IChatAgentCommand, IChatAgentData, IChatAgentNameService, IChatAgentService } from "../common/chatAgents.js";
+import { chatSlashCommandBackground, chatSlashCommandForeground } from "../common/chatColors.js";
+import { chatAgentLeader, ChatRequestAgentPart, ChatRequestAgentSubcommandPart, ChatRequestDynamicVariablePart, ChatRequestSlashCommandPart, ChatRequestTextPart, ChatRequestToolPart, chatSubcommandLeader, IParsedChatRequest, IParsedChatRequestPart } from "../common/chatParserTypes.js";
+import { IChatMarkdownContent, IChatService } from "../common/chatService.js";
+import { ILanguageModelToolsService } from "../common/languageModelToolsService.js";
+import { IChatWidgetService } from "./chat.js";
+import { ChatAgentHover, getChatAgentHoverOptions } from "./chatAgentHover.js";
+import { IChatMarkdownAnchorService } from "./chatContentParts/chatMarkdownAnchorService.js";
+import { InlineAnchorWidget } from "./chatInlineAnchorWidget.js";
+import "./media/chatInlineAnchorWidget.css";
+const decorationRefUrl = `http://_vscodedecoration_`;
+const agentRefUrl = `http://_chatagent_`;
+const agentSlashRefUrl = `http://_chatslash_`;
+function agentToMarkdown(agent, isClickable, accessor) {
+  const chatAgentNameService = accessor.get(IChatAgentNameService);
+  const chatAgentService = accessor.get(IChatAgentService);
+  const isAllowed = chatAgentNameService.getAgentNameRestriction(agent);
+  let name = `${isAllowed ? agent.name : getFullyQualifiedId(agent)}`;
+  const isDupe = isAllowed && chatAgentService.agentHasDupeName(agent.id);
+  if (isDupe) {
+    name += ` (${agent.publisherDisplayName})`;
+  }
+  const args = { agentId: agent.id, name, isClickable };
+  return `[${agent.name}](${agentRefUrl}?${encodeURIComponent(JSON.stringify(args))})`;
+}
+__name(agentToMarkdown, "agentToMarkdown");
+function agentSlashCommandToMarkdown(agent, command) {
+  const text = `${chatSubcommandLeader}${command.name}`;
+  const args = { agentId: agent.id, command: command.name };
+  return `[${text}](${agentSlashRefUrl}?${encodeURIComponent(JSON.stringify(args))})`;
+}
+__name(agentSlashCommandToMarkdown, "agentSlashCommandToMarkdown");
+let ChatMarkdownDecorationsRenderer = class {
+  constructor(keybindingService, logService, chatAgentService, instantiationService, hoverService, chatService, chatWidgetService, commandService, labelService, toolsService, chatMarkdownAnchorService) {
+    this.keybindingService = keybindingService;
+    this.logService = logService;
+    this.chatAgentService = chatAgentService;
+    this.instantiationService = instantiationService;
+    this.hoverService = hoverService;
+    this.chatService = chatService;
+    this.chatWidgetService = chatWidgetService;
+    this.commandService = commandService;
+    this.labelService = labelService;
+    this.toolsService = toolsService;
+    this.chatMarkdownAnchorService = chatMarkdownAnchorService;
+  }
+  static {
+    __name(this, "ChatMarkdownDecorationsRenderer");
+  }
+  convertParsedRequestToMarkdown(parsedRequest) {
+    let result = "";
+    for (const part of parsedRequest.parts) {
+      if (part instanceof ChatRequestTextPart) {
+        result += part.text;
+      } else if (part instanceof ChatRequestAgentPart) {
+        result += this.instantiationService.invokeFunction((accessor) => agentToMarkdown(part.agent, false, accessor));
+      } else {
+        result += this.genericDecorationToMarkdown(part);
+      }
+    }
+    return result;
+  }
+  genericDecorationToMarkdown(part) {
+    const uri = part instanceof ChatRequestDynamicVariablePart && part.data instanceof URI ? part.data : void 0;
+    const title = uri ? this.labelService.getUriLabel(uri, { relative: true }) : part instanceof ChatRequestSlashCommandPart ? part.slashCommand.detail : part instanceof ChatRequestAgentSubcommandPart ? part.command.description : part instanceof ChatRequestToolPart ? this.toolsService.getTool(part.toolId)?.userDescription : "";
+    const args = { title };
+    const text = part.text;
+    return `[${text}](${decorationRefUrl}?${encodeURIComponent(JSON.stringify(args))})`;
+  }
+  walkTreeAndAnnotateReferenceLinks(content, element) {
+    const store = new DisposableStore();
+    element.querySelectorAll("a").forEach((a) => {
+      const href = a.getAttribute("data-href");
+      if (href) {
+        if (href.startsWith(agentRefUrl)) {
+          let args;
+          try {
+            args = JSON.parse(decodeURIComponent(href.slice(agentRefUrl.length + 1)));
+          } catch (e) {
+            this.logService.error("Invalid chat widget render data JSON", toErrorMessage(e));
+          }
+          if (args) {
+            a.parentElement.replaceChild(
+              this.renderAgentWidget(args, store),
+              a
+            );
+          }
+        } else if (href.startsWith(agentSlashRefUrl)) {
+          let args;
+          try {
+            args = JSON.parse(decodeURIComponent(href.slice(agentRefUrl.length + 1)));
+          } catch (e) {
+            this.logService.error("Invalid chat slash command render data JSON", toErrorMessage(e));
+          }
+          if (args) {
+            a.parentElement.replaceChild(
+              this.renderSlashCommandWidget(a.textContent, args, store),
+              a
+            );
+          }
+        } else if (href.startsWith(decorationRefUrl)) {
+          let args;
+          try {
+            args = JSON.parse(decodeURIComponent(href.slice(decorationRefUrl.length + 1)));
+          } catch (e) {
+          }
+          a.parentElement.replaceChild(
+            this.renderResourceWidget(a.textContent, args, store),
+            a
+          );
+        } else if (href.startsWith(contentRefUrl)) {
+          this.renderFileWidget(content, href, a, store);
+        } else if (href.startsWith("command:")) {
+          this.injectKeybindingHint(a, href, this.keybindingService);
+        }
+      }
+    });
+    return store;
+  }
+  renderAgentWidget(args, store) {
+    const nameWithLeader = `${chatAgentLeader}${args.name}`;
+    let container;
+    if (args.isClickable) {
+      container = dom.$("span.chat-agent-widget");
+      const button = store.add(new Button(container, {
+        buttonBackground: asCssVariable(chatSlashCommandBackground),
+        buttonForeground: asCssVariable(chatSlashCommandForeground),
+        buttonHoverBackground: void 0
+      }));
+      button.label = nameWithLeader;
+      store.add(button.onDidClick(() => {
+        const agent2 = this.chatAgentService.getAgent(args.agentId);
+        const widget = this.chatWidgetService.lastFocusedWidget;
+        if (!widget || !agent2) {
+          return;
+        }
+        this.chatService.sendRequest(
+          widget.viewModel.sessionId,
+          agent2.metadata.sampleRequest ?? "",
+          {
+            location: widget.location,
+            agentId: agent2.id,
+            userSelectedModelId: widget.input.currentLanguageModel,
+            mode: widget.input.currentMode
+          }
+        );
+      }));
+    } else {
+      container = this.renderResourceWidget(nameWithLeader, void 0, store);
+    }
+    const agent = this.chatAgentService.getAgent(args.agentId);
+    const hover = new Lazy(() => store.add(this.instantiationService.createInstance(ChatAgentHover)));
+    store.add(this.hoverService.setupManagedHover(getDefaultHoverDelegate("element"), container, () => {
+      hover.value.setAgent(args.agentId);
+      return hover.value.domNode;
+    }, agent && getChatAgentHoverOptions(() => agent, this.commandService)));
+    return container;
+  }
+  renderSlashCommandWidget(name, args, store) {
+    const container = dom.$("span.chat-agent-widget.chat-command-widget");
+    const agent = this.chatAgentService.getAgent(args.agentId);
+    const button = store.add(new Button(container, {
+      buttonBackground: asCssVariable(chatSlashCommandBackground),
+      buttonForeground: asCssVariable(chatSlashCommandForeground),
+      buttonHoverBackground: void 0
+    }));
+    button.label = name;
+    store.add(button.onDidClick(() => {
+      const widget = this.chatWidgetService.lastFocusedWidget;
+      if (!widget || !agent) {
+        return;
+      }
+      const command = agent.slashCommands.find((c) => c.name === args.command);
+      this.chatService.sendRequest(widget.viewModel.sessionId, command?.sampleRequest ?? "", {
+        location: widget.location,
+        agentId: agent.id,
+        slashCommand: args.command,
+        userSelectedModelId: widget.input.currentLanguageModel,
+        mode: widget.input.currentMode
+      });
+    }));
+    return container;
+  }
+  renderFileWidget(content, href, a, store) {
+    const fullUri = URI.parse(href);
+    const data = content.inlineReferences?.[fullUri.path.slice(1)];
+    if (!data) {
+      this.logService.error("Invalid chat widget render data JSON");
+      return;
+    }
+    const inlineAnchor = store.add(this.instantiationService.createInstance(InlineAnchorWidget, a, data));
+    store.add(this.chatMarkdownAnchorService.register(inlineAnchor));
+  }
+  renderResourceWidget(name, args, store) {
+    const container = dom.$("span.chat-resource-widget");
+    const alias = dom.$("span", void 0, name);
+    if (args?.title) {
+      store.add(this.hoverService.setupManagedHover(getDefaultHoverDelegate("element"), container, args.title));
+    }
+    container.appendChild(alias);
+    return container;
+  }
+  injectKeybindingHint(a, href, keybindingService) {
+    const command = href.match(/command:([^\)]+)/)?.[1];
+    if (command) {
+      const kb = keybindingService.lookupKeybinding(command);
+      if (kb) {
+        const keybinding = kb.getLabel();
+        if (keybinding) {
+          a.textContent = `${a.textContent} (${keybinding})`;
+        }
+      }
+    }
+  }
+};
+ChatMarkdownDecorationsRenderer = __decorateClass([
+  __decorateParam(0, IKeybindingService),
+  __decorateParam(1, ILogService),
+  __decorateParam(2, IChatAgentService),
+  __decorateParam(3, IInstantiationService),
+  __decorateParam(4, IHoverService),
+  __decorateParam(5, IChatService),
+  __decorateParam(6, IChatWidgetService),
+  __decorateParam(7, ICommandService),
+  __decorateParam(8, ILabelService),
+  __decorateParam(9, ILanguageModelToolsService),
+  __decorateParam(10, IChatMarkdownAnchorService)
+], ChatMarkdownDecorationsRenderer);
+export {
+  ChatMarkdownDecorationsRenderer,
+  agentSlashCommandToMarkdown,
+  agentToMarkdown
+};
+//# sourceMappingURL=chatMarkdownDecorationsRenderer.js.map

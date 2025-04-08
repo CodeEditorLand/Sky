@@ -1,2 +1,63 @@
-import{localize as e}from"../../../../../nls.js";import{AccessibleViewProviderId as d,AccessibleViewType as m,AccessibleContentProvider as u}from"../../../../../platform/accessibility/browser/accessibleView.js";import"../../../../../platform/accessibility/browser/accessibleViewRegistry.js";import"../../../../../platform/instantiation/common/instantiation.js";import{IKeybindingService as p}from"../../../../../platform/keybinding/common/keybinding.js";import{AccessibilityVerbositySettingId as g}from"../../../accessibility/browser/accessibilityConfiguration.js";import{ITerminalService as y}from"../../../terminal/browser/terminal.js";import{TerminalChatCommandId as s,TerminalChatContextKeys as C}from"./terminalChat.js";import{TerminalChatController as f}from"./terminalChatController.js";class L{priority=110;name="terminalChat";when=C.focused;type=m.Help;getProvider(i){const t=i.get(y).activeInstance;if(!t)return;const a=w(i);return new u(d.TerminalChat,{type:m.Help},()=>a,()=>f.get(t)?.terminalChatWidget?.focus(),g.TerminalChat)}}function w(o){const i=o.get(p),n=[],t=i.lookupKeybinding("editor.action.accessibleView")?.getAriaLabel(),a=i.lookupKeybinding(s.RunCommand)?.getAriaLabel(),r=i.lookupKeybinding(s.InsertCommand)?.getAriaLabel(),c=i.lookupKeybinding(s.MakeRequest)?.getAriaLabel(),b=i.lookupKeybinding(s.Start)?.getAriaLabel(),l=i.lookupKeybinding("chat.action.focus")?.getAriaLabel(),h=i.lookupKeybinding("workbench.action.chat.focusInput")?.getAriaLabel();return n.push(e("inlineChat.overview","Inline chat occurs within a terminal. It is useful for suggesting terminal commands. Keep in mind that AI generated code may be incorrect.")),n.push(e("inlineChat.access","It can be activated using the command: Terminal: Start Chat ({0}), which will focus the input box.",b)),n.push(c?e("inlineChat.input","The input box is where the user can type a request and can make the request ({0}). The widget will be closed and all content will be discarded when the Escape key is pressed and the terminal will regain focus.",c):e("inlineChat.inputNoKb","The input box is where the user can type a request and can make the request by tabbing to the Make Request button, which is not currently triggerable via keybindings. The widget will be closed and all content will be discarded when the Escape key is pressed and the terminal will regain focus.")),n.push(t?e("inlineChat.inspectResponseMessage","The response can be inspected in the accessible view ({0}).",t):e("inlineChat.inspectResponseNoKb","With the input box focused, inspect the response in the accessible view via the Open Accessible View command, which is currently not triggerable by a keybinding.")),n.push(l?e("inlineChat.focusResponse","Reach the response from the input box ({0}).",l):e("inlineChat.focusResponseNoKb","Reach the response from the input box by tabbing or assigning a keybinding for the command: Focus Terminal Response.")),n.push(h?e("inlineChat.focusInput","Reach the input box from the response ({0}).",h):e("inlineChat.focusInputNoKb","Reach the response from the input box by shift+tabbing or assigning a keybinding for the command: Focus Terminal Input.")),n.push(a?e("inlineChat.runCommand","With focus in the input box or command editor, the Terminal: Run Chat Command ({0}) action.",a):e("inlineChat.runCommandNoKb","Run a command by tabbing to the button as the action is currently not triggerable by a keybinding.")),n.push(r?e("inlineChat.insertCommand","With focus in the input box command editor, the Terminal: Insert Chat Command ({0}) action.",r):e("inlineChat.insertCommandNoKb","Insert a command by tabbing to the button as the action is currently not triggerable by a keybinding.")),n.push(e("inlineChat.toolbar","Use tab to reach conditional parts like commands, status, message responses and more.")),n.push(e("chat.signals","Accessibility Signals can be changed via settings with a prefix of signals.chat. By default, if a request takes more than 4 seconds, you will hear a sound indicating that progress is still occurring.")),n.join(`
-`)}export{L as TerminalChatAccessibilityHelp,w as getAccessibilityHelpText};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { localize } from "../../../../../nls.js";
+import { AccessibleViewProviderId, AccessibleViewType, AccessibleContentProvider } from "../../../../../platform/accessibility/browser/accessibleView.js";
+import { IAccessibleViewImplementation } from "../../../../../platform/accessibility/browser/accessibleViewRegistry.js";
+import { ServicesAccessor } from "../../../../../platform/instantiation/common/instantiation.js";
+import { IKeybindingService } from "../../../../../platform/keybinding/common/keybinding.js";
+import { AccessibilityVerbositySettingId } from "../../../accessibility/browser/accessibilityConfiguration.js";
+import { ITerminalService } from "../../../terminal/browser/terminal.js";
+import { TerminalChatCommandId, TerminalChatContextKeys } from "./terminalChat.js";
+import { TerminalChatController } from "./terminalChatController.js";
+class TerminalChatAccessibilityHelp {
+  static {
+    __name(this, "TerminalChatAccessibilityHelp");
+  }
+  priority = 110;
+  name = "terminalChat";
+  when = TerminalChatContextKeys.focused;
+  type = AccessibleViewType.Help;
+  getProvider(accessor) {
+    const terminalService = accessor.get(ITerminalService);
+    const instance = terminalService.activeInstance;
+    if (!instance) {
+      return;
+    }
+    const helpText = getAccessibilityHelpText(accessor);
+    return new AccessibleContentProvider(
+      AccessibleViewProviderId.TerminalChat,
+      { type: AccessibleViewType.Help },
+      () => helpText,
+      () => TerminalChatController.get(instance)?.terminalChatWidget?.focus(),
+      AccessibilityVerbositySettingId.TerminalChat
+    );
+  }
+}
+function getAccessibilityHelpText(accessor) {
+  const keybindingService = accessor.get(IKeybindingService);
+  const content = [];
+  const openAccessibleViewKeybinding = keybindingService.lookupKeybinding("editor.action.accessibleView")?.getAriaLabel();
+  const runCommandKeybinding = keybindingService.lookupKeybinding(TerminalChatCommandId.RunCommand)?.getAriaLabel();
+  const insertCommandKeybinding = keybindingService.lookupKeybinding(TerminalChatCommandId.InsertCommand)?.getAriaLabel();
+  const makeRequestKeybinding = keybindingService.lookupKeybinding(TerminalChatCommandId.MakeRequest)?.getAriaLabel();
+  const startChatKeybinding = keybindingService.lookupKeybinding(TerminalChatCommandId.Start)?.getAriaLabel();
+  const focusResponseKeybinding = keybindingService.lookupKeybinding("chat.action.focus")?.getAriaLabel();
+  const focusInputKeybinding = keybindingService.lookupKeybinding("workbench.action.chat.focusInput")?.getAriaLabel();
+  content.push(localize("inlineChat.overview", "Inline chat occurs within a terminal. It is useful for suggesting terminal commands. Keep in mind that AI generated code may be incorrect."));
+  content.push(localize("inlineChat.access", "It can be activated using the command: Terminal: Start Chat ({0}), which will focus the input box.", startChatKeybinding));
+  content.push(makeRequestKeybinding ? localize("inlineChat.input", "The input box is where the user can type a request and can make the request ({0}). The widget will be closed and all content will be discarded when the Escape key is pressed and the terminal will regain focus.", makeRequestKeybinding) : localize("inlineChat.inputNoKb", "The input box is where the user can type a request and can make the request by tabbing to the Make Request button, which is not currently triggerable via keybindings. The widget will be closed and all content will be discarded when the Escape key is pressed and the terminal will regain focus."));
+  content.push(openAccessibleViewKeybinding ? localize("inlineChat.inspectResponseMessage", "The response can be inspected in the accessible view ({0}).", openAccessibleViewKeybinding) : localize("inlineChat.inspectResponseNoKb", "With the input box focused, inspect the response in the accessible view via the Open Accessible View command, which is currently not triggerable by a keybinding."));
+  content.push(focusResponseKeybinding ? localize("inlineChat.focusResponse", "Reach the response from the input box ({0}).", focusResponseKeybinding) : localize("inlineChat.focusResponseNoKb", "Reach the response from the input box by tabbing or assigning a keybinding for the command: Focus Terminal Response."));
+  content.push(focusInputKeybinding ? localize("inlineChat.focusInput", "Reach the input box from the response ({0}).", focusInputKeybinding) : localize("inlineChat.focusInputNoKb", "Reach the response from the input box by shift+tabbing or assigning a keybinding for the command: Focus Terminal Input."));
+  content.push(runCommandKeybinding ? localize("inlineChat.runCommand", "With focus in the input box or command editor, the Terminal: Run Chat Command ({0}) action.", runCommandKeybinding) : localize("inlineChat.runCommandNoKb", "Run a command by tabbing to the button as the action is currently not triggerable by a keybinding."));
+  content.push(insertCommandKeybinding ? localize("inlineChat.insertCommand", "With focus in the input box command editor, the Terminal: Insert Chat Command ({0}) action.", insertCommandKeybinding) : localize("inlineChat.insertCommandNoKb", "Insert a command by tabbing to the button as the action is currently not triggerable by a keybinding."));
+  content.push(localize("inlineChat.toolbar", "Use tab to reach conditional parts like commands, status, message responses and more."));
+  content.push(localize("chat.signals", "Accessibility Signals can be changed via settings with a prefix of signals.chat. By default, if a request takes more than 4 seconds, you will hear a sound indicating that progress is still occurring."));
+  return content.join("\n");
+}
+__name(getAccessibilityHelpText, "getAccessibilityHelpText");
+export {
+  TerminalChatAccessibilityHelp,
+  getAccessibilityHelpText
+};
+//# sourceMappingURL=terminalChatAccessibilityHelp.js.map

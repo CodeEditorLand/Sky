@@ -1,1 +1,45 @@
-var v=Object.defineProperty,l=Object.getOwnPropertyDescriptor,c=(r,e,o,t)=>{for(var s,i=t>1?void 0:t?l(e,o):e,c=r.length-1;c>=0;c--)(s=r[c])&&(i=(t?s(e,o,i):s(i))||i);return t&&i&&v(e,o,i),i},m=(r,e)=>(o,t)=>e(o,t,r);import"../../../base/common/event.js";import{transformOutgoingURIs as f}from"../../../base/common/uriIpc.js";import"../../../base/parts/ipc/common/ipc.js";import{INativeMcpDiscoveryHelperService as I}from"../common/nativeMcpDiscoveryHelper.js";let s=class{constructor(r,e){this.getUriTransformer=r,this.nativeMcpDiscoveryHelperService=e}listen(r,e){throw new Error("Invalid listen")}async call(r,e,o){const t=this.getUriTransformer?.(r);if("load"===e){const r=await this.nativeMcpDiscoveryHelperService.load();return t?f(r,t):r}throw new Error("Invalid call")}};s=c([m(1,I)],s);export{s as NativeMcpDiscoveryHelperChannel};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Event } from "../../../base/common/event.js";
+import { IURITransformer, transformOutgoingURIs } from "../../../base/common/uriIpc.js";
+import { IServerChannel } from "../../../base/parts/ipc/common/ipc.js";
+import { INativeMcpDiscoveryHelperService } from "../common/nativeMcpDiscoveryHelper.js";
+let NativeMcpDiscoveryHelperChannel = class {
+  constructor(getUriTransformer, nativeMcpDiscoveryHelperService) {
+    this.getUriTransformer = getUriTransformer;
+    this.nativeMcpDiscoveryHelperService = nativeMcpDiscoveryHelperService;
+  }
+  static {
+    __name(this, "NativeMcpDiscoveryHelperChannel");
+  }
+  listen(context, event) {
+    throw new Error("Invalid listen");
+  }
+  async call(context, command, args) {
+    const uriTransformer = this.getUriTransformer?.(context);
+    switch (command) {
+      case "load": {
+        const result = await this.nativeMcpDiscoveryHelperService.load();
+        return uriTransformer ? transformOutgoingURIs(result, uriTransformer) : result;
+      }
+    }
+    throw new Error("Invalid call");
+  }
+};
+NativeMcpDiscoveryHelperChannel = __decorateClass([
+  __decorateParam(1, INativeMcpDiscoveryHelperService)
+], NativeMcpDiscoveryHelperChannel);
+export {
+  NativeMcpDiscoveryHelperChannel
+};
+//# sourceMappingURL=nativeMcpDiscoveryHelperChannel.js.map

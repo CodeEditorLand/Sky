@@ -1,1 +1,512 @@
-var U=Object.defineProperty;var w=Object.getOwnPropertyDescriptor;var y=(l,o,i,e)=>{for(var s=e>1?void 0:e?w(o,i):o,r=l.length-1,t;r>=0;r--)(t=l[r])&&(s=(e?t(o,i,s):t(s))||s);return e&&s&&U(o,i,s),s},u=(l,o)=>(i,e)=>o(i,e,l);import{hash as D}from"../../../base/common/hash.js";import{Emitter as h}from"../../../base/common/event.js";import{Disposable as k}from"../../../base/common/lifecycle.js";import{basename as S,joinPath as p}from"../../../base/common/resources.js";import{URI as c}from"../../../base/common/uri.js";import{localize as b}from"../../../nls.js";import{IEnvironmentService as W}from"../../environment/common/environment.js";import{FileOperationResult as R,IFileService as x,toFileOperationResult as O}from"../../files/common/files.js";import{createDecorator as j}from"../../instantiation/common/instantiation.js";import{ILogService as E}from"../../log/common/log.js";import{isSingleFolderWorkspaceIdentifier as A,isWorkspaceIdentifier as F}from"../../workspace/common/workspace.js";import"../../../base/common/collections.js";import{IUriIdentityService as H}from"../../uriIdentity/common/uriIdentity.js";import{Promises as _}from"../../../base/common/async.js";import{generateUuid as I}from"../../../base/common/uuid.js";import{escapeRegExpCharacters as C}from"../../../base/common/strings.js";import{isString as v}from"../../../base/common/types.js";var T=(a=>(a.Settings="settings",a.Keybindings="keybindings",a.Snippets="snippets",a.Prompts="prompts",a.Tasks="tasks",a.Extensions="extensions",a.GlobalState="globalState",a))(T||{});function le(l){const o=l;return!!(o&&typeof o=="object"&&typeof o.id=="string"&&typeof o.isDefault=="boolean"&&typeof o.name=="string"&&c.isUri(o.location)&&c.isUri(o.globalStorageHome)&&c.isUri(o.settingsResource)&&c.isUri(o.keybindingsResource)&&c.isUri(o.tasksResource)&&c.isUri(o.snippetsHome)&&c.isUri(o.promptsHome)&&c.isUri(o.extensionsResource))}const fe=j("IUserDataProfilesService");function ce(l,o){return{id:l.id,isDefault:l.isDefault,name:l.name,icon:l.icon,location:c.revive(l.location).with({scheme:o}),globalStorageHome:c.revive(l.globalStorageHome).with({scheme:o}),settingsResource:c.revive(l.settingsResource).with({scheme:o}),keybindingsResource:c.revive(l.keybindingsResource).with({scheme:o}),tasksResource:c.revive(l.tasksResource).with({scheme:o}),snippetsHome:c.revive(l.snippetsHome).with({scheme:o}),promptsHome:c.revive(l.promptsHome).with({scheme:o}),extensionsResource:c.revive(l.extensionsResource).with({scheme:o}),cacheHome:c.revive(l.cacheHome).with({scheme:o}),useDefaultFlags:l.useDefaultFlags,isTransient:l.isTransient,workspaces:l.workspaces?.map(i=>c.revive(i))}}function g(l,o,i,e,s,r){return{id:l,name:o,location:i,isDefault:!1,icon:s?.icon,globalStorageHome:r&&s?.useDefaultFlags?.globalState?r.globalStorageHome:p(i,"globalStorage"),settingsResource:r&&s?.useDefaultFlags?.settings?r.settingsResource:p(i,"settings.json"),keybindingsResource:r&&s?.useDefaultFlags?.keybindings?r.keybindingsResource:p(i,"keybindings.json"),tasksResource:r&&s?.useDefaultFlags?.tasks?r.tasksResource:p(i,"tasks.json"),snippetsHome:r&&s?.useDefaultFlags?.snippets?r.snippetsHome:p(i,"snippets"),promptsHome:r&&s?.useDefaultFlags?.prompts?r.promptsHome:p(i,"prompts"),extensionsResource:r&&s?.useDefaultFlags?.extensions?r.extensionsResource:p(i,"extensions.json"),cacheHome:p(e,l),useDefaultFlags:s?.useDefaultFlags,isTransient:s?.transient,workspaces:s?.workspaces}}let m=class extends k{constructor(i,e,s,r){super();this.environmentService=i;this.fileService=e;this.uriIdentityService=s;this.logService=r;this.profilesHome=p(this.environmentService.userRoamingDataHome,"profiles"),this.profilesCacheHome=p(this.environmentService.cacheHome,"CachedProfilesData")}static PROFILES_KEY="userDataProfiles";static PROFILE_ASSOCIATIONS_KEY="profileAssociations";_serviceBrand;profilesHome;profilesCacheHome;get defaultProfile(){return this.profiles[0]}get profiles(){return[...this.profilesObject.profiles,...this.transientProfilesObject.profiles]}_onDidChangeProfiles=this._register(new h);onDidChangeProfiles=this._onDidChangeProfiles.event;_onWillCreateProfile=this._register(new h);onWillCreateProfile=this._onWillCreateProfile.event;_onWillRemoveProfile=this._register(new h);onWillRemoveProfile=this._onWillRemoveProfile.event;_onDidResetWorkspaces=this._register(new h);onDidResetWorkspaces=this._onDidResetWorkspaces.event;profileCreationPromises=new Map;transientProfilesObject={profiles:[],emptyWindows:new Map};init(){this._profilesObject=void 0}_profilesObject;get profilesObject(){if(!this._profilesObject){const i=this.createDefaultProfile(),e=[i];try{for(const r of this.getStoredProfiles()){if(!r.name||!v(r.name)||!r.location){this.logService.warn("Skipping the invalid stored profile",r.location||r.name);continue}e.push(g(S(r.location),r.name,r.location,this.profilesCacheHome,{icon:r.icon,useDefaultFlags:r.useDefaultFlags},i))}}catch(r){this.logService.error(r)}const s=new Map;if(e.length)try{const r=this.getStoredProfileAssociations();if(r.workspaces)for(const[t,a]of Object.entries(r.workspaces)){const n=c.parse(t),f=e.find(d=>d.id===a);if(f){const d=f.workspaces?f.workspaces.slice(0):[];d.push(n),f.workspaces=d}}if(r.emptyWindows)for(const[t,a]of Object.entries(r.emptyWindows)){const n=e.find(f=>f.id===a);n&&s.set(t,n)}}catch(r){this.logService.error(r)}this._profilesObject={profiles:e,emptyWindows:s}}return this._profilesObject}createDefaultProfile(){const i=g("__default__profile__",b("defaultProfile","Default"),this.environmentService.userRoamingDataHome,this.profilesCacheHome);return{...i,extensionsResource:this.getDefaultProfileExtensionsLocation()??i.extensionsResource,isDefault:!0}}async createTransientProfile(i){const e="Temp",s=new RegExp(`${C(e)}\\s(\\d+)`);let r=0;for(const a of this.profiles){const n=s.exec(a.name),f=n?parseInt(n[1]):0;r=f>r?f:r}const t=`${e} ${r+1}`;return this.createProfile(D(I()).toString(16),t,{transient:!0},i)}async createNamedProfile(i,e,s){return this.createProfile(D(I()).toString(16),i,e,s)}async createProfile(i,e,s,r){return await this.doCreateProfile(i,e,s,r)}async doCreateProfile(i,e,s,r){if(!v(e)||!e)throw new Error("Name of the profile is mandatory and must be of type `string`");let t=this.profileCreationPromises.get(e);return t||(t=(async()=>{try{if(this.profiles.find(P=>P.id===i||!P.isTransient&&!s?.transient&&P.name===e))throw new Error(`Profile with ${e} name already exists`);const n=r?this.getWorkspace(r):void 0;c.isUri(n)&&(s={...s,workspaces:[n]});const f=g(i,e,p(this.profilesHome,i),this.profilesCacheHome,s,this.defaultProfile);await this.fileService.createFolder(f.location);const d=[];return this._onWillCreateProfile.fire({profile:f,join(P){d.push(P)}}),await _.settled(d),n&&!c.isUri(n)&&this.updateEmptyWindowAssociation(n,f,!!f.isTransient),this.updateProfiles([f],[],[]),f}finally{this.profileCreationPromises.delete(e)}})(),this.profileCreationPromises.set(e,t)),t}async updateProfile(i,e){const s=[];for(const t of this.profiles){let a;if(i.id===t.id)t.isDefault?e.workspaces&&(a=t,a.workspaces=e.workspaces):a=g(t.id,e.name??t.name,t.location,this.profilesCacheHome,{icon:e.icon===null?void 0:e.icon??t.icon,transient:e.transient??t.isTransient,useDefaultFlags:e.useDefaultFlags??t.useDefaultFlags,workspaces:e.workspaces??t.workspaces},this.defaultProfile);else if(e.workspaces){const n=t.workspaces?.filter(f=>!e.workspaces?.some(d=>this.uriIdentityService.extUri.isEqual(f,d)));t.workspaces?.length!==n?.length&&(a=t,a.workspaces=n)}a&&s.push(a)}if(!s.length)throw i.isDefault?new Error("Cannot update default profile"):new Error(`Profile '${i.name}' does not exist`);this.updateProfiles([],[],s);const r=this.profiles.find(t=>t.id===i.id);if(!r)throw new Error(`Profile '${i.name}' was not updated`);return r}async removeProfile(i){if(i.isDefault)throw new Error("Cannot remove default profile");const e=this.profiles.find(r=>r.id===i.id);if(!e)throw new Error(`Profile '${i.name}' does not exist`);const s=[];this._onWillRemoveProfile.fire({profile:e,join(r){s.push(r)}});try{await Promise.allSettled(s)}catch(r){this.logService.error(r)}this.updateProfiles([],[e],[]);try{await this.fileService.del(e.cacheHome,{recursive:!0})}catch(r){O(r)!==R.FILE_NOT_FOUND&&this.logService.error(r)}}async setProfileForWorkspace(i,e){const s=this.profiles.find(t=>t.id===e.id);if(!s)throw new Error(`Profile '${e.name}' does not exist`);const r=this.getWorkspace(i);if(c.isUri(r)){const t=s.workspaces?[...s.workspaces]:[];t.some(a=>this.uriIdentityService.extUri.isEqual(a,r))||(t.push(r),await this.updateProfile(s,{workspaces:t}))}else this.updateEmptyWindowAssociation(r,s,!1),this.updateStoredProfiles(this.profiles)}unsetWorkspace(i,e=!1){const s=this.getWorkspace(i);if(c.isUri(s)){const r=this.getProfileForWorkspace(i);r&&this.updateProfile(r,{workspaces:r.workspaces?.filter(t=>!this.uriIdentityService.extUri.isEqual(t,s))})}else this.updateEmptyWindowAssociation(s,void 0,e),this.updateStoredProfiles(this.profiles)}async resetWorkspaces(){this.transientProfilesObject.emptyWindows.clear(),this.profilesObject.emptyWindows.clear();for(const i of this.profiles)i.workspaces=void 0;this.updateProfiles([],[],this.profiles),this._onDidResetWorkspaces.fire()}async cleanUp(){if(await this.fileService.exists(this.profilesHome)){const i=await this.fileService.resolve(this.profilesHome);await Promise.all((i.children||[]).filter(e=>e.isDirectory&&this.profiles.every(s=>!this.uriIdentityService.extUri.isEqual(s.location,e.resource))).map(e=>this.fileService.del(e.resource,{recursive:!0})))}}async cleanUpTransientProfiles(){const i=this.transientProfilesObject.profiles.filter(e=>!this.isProfileAssociatedToWorkspace(e));await Promise.allSettled(i.map(e=>this.removeProfile(e)))}getProfileForWorkspace(i){const e=this.getWorkspace(i);return c.isUri(e)?this.profiles.find(s=>s.workspaces?.some(r=>this.uriIdentityService.extUri.isEqual(r,e))):this.profilesObject.emptyWindows.get(e)??this.transientProfilesObject.emptyWindows.get(e)}getWorkspace(i){return A(i)?i.uri:F(i)?i.configPath:i.id}isProfileAssociatedToWorkspace(i){return!!(i.workspaces?.length||[...this.profilesObject.emptyWindows.values()].some(e=>this.uriIdentityService.extUri.isEqual(e.location,i.location))||[...this.transientProfilesObject.emptyWindows.values()].some(e=>this.uriIdentityService.extUri.isEqual(e.location,i.location)))}updateProfiles(i,e,s){const r=[...this.profiles,...i],t=this.transientProfilesObject.profiles;this.transientProfilesObject.profiles=[];const a=[];for(let n of r){if(e.some(f=>n.id===f.id)){for(const f of[...this.profilesObject.emptyWindows.keys()])n.id===this.profilesObject.emptyWindows.get(f)?.id&&this.profilesObject.emptyWindows.delete(f);continue}if(!n.isDefault){n=s.find(d=>n.id===d.id)??n;const f=t.find(d=>n.id===d.id);if(n.isTransient)this.transientProfilesObject.profiles.push(n);else if(f){for(const[d,P]of this.transientProfilesObject.emptyWindows.entries())if(n.id===P.id){this.transientProfilesObject.emptyWindows.delete(d),this.profilesObject.emptyWindows.set(d,n);break}}}n.workspaces?.length===0&&(n.workspaces=void 0),a.push(n)}this.updateStoredProfiles(a),this.triggerProfilesChanges(i,e,s)}triggerProfilesChanges(i,e,s){this._onDidChangeProfiles.fire({added:i,removed:e,updated:s,all:this.profiles})}updateEmptyWindowAssociation(i,e,s){s=e?.isTransient?!0:s,s?e?this.transientProfilesObject.emptyWindows.set(i,e):this.transientProfilesObject.emptyWindows.delete(i):(this.transientProfilesObject.emptyWindows.delete(i),e?this.profilesObject.emptyWindows.set(i,e):this.profilesObject.emptyWindows.delete(i))}updateStoredProfiles(i){const e=[],s={},r={};for(const t of i)if(!t.isTransient&&(t.isDefault||e.push({location:t.location,name:t.name,icon:t.icon,useDefaultFlags:t.useDefaultFlags}),t.workspaces))for(const a of t.workspaces)s[a.toString()]=t.id;for(const[t,a]of this.profilesObject.emptyWindows.entries())r[t.toString()]=a.id;this.saveStoredProfileAssociations({workspaces:s,emptyWindows:r}),this.saveStoredProfiles(e),this._profilesObject=void 0}getStoredProfiles(){return[]}saveStoredProfiles(i){throw new Error("not implemented")}getStoredProfileAssociations(){return{}}saveStoredProfileAssociations(i){throw new Error("not implemented")}getDefaultProfileExtensionsLocation(){}};m=y([u(0,W),u(1,x),u(2,H),u(3,E)],m);class de extends m{storedProfiles=[];getStoredProfiles(){return this.storedProfiles}saveStoredProfiles(o){this.storedProfiles=o}storedProfileAssociations={};getStoredProfileAssociations(){return this.storedProfileAssociations}saveStoredProfileAssociations(o){this.storedProfileAssociations=o}}export{fe as IUserDataProfilesService,de as InMemoryUserDataProfilesService,T as ProfileResourceType,m as UserDataProfilesService,le as isUserDataProfile,ce as reviveProfile,g as toUserDataProfile};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { hash } from "../../../base/common/hash.js";
+import { Emitter, Event } from "../../../base/common/event.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { basename, joinPath } from "../../../base/common/resources.js";
+import { URI, UriDto } from "../../../base/common/uri.js";
+import { localize } from "../../../nls.js";
+import { IEnvironmentService } from "../../environment/common/environment.js";
+import { FileOperationResult, IFileService, toFileOperationResult } from "../../files/common/files.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+import { ILogService } from "../../log/common/log.js";
+import { IAnyWorkspaceIdentifier, isSingleFolderWorkspaceIdentifier, isWorkspaceIdentifier } from "../../workspace/common/workspace.js";
+import { IStringDictionary } from "../../../base/common/collections.js";
+import { IUriIdentityService } from "../../uriIdentity/common/uriIdentity.js";
+import { Promises } from "../../../base/common/async.js";
+import { generateUuid } from "../../../base/common/uuid.js";
+import { escapeRegExpCharacters } from "../../../base/common/strings.js";
+import { isString, Mutable } from "../../../base/common/types.js";
+var ProfileResourceType = /* @__PURE__ */ ((ProfileResourceType2) => {
+  ProfileResourceType2["Settings"] = "settings";
+  ProfileResourceType2["Keybindings"] = "keybindings";
+  ProfileResourceType2["Snippets"] = "snippets";
+  ProfileResourceType2["Prompts"] = "prompts";
+  ProfileResourceType2["Tasks"] = "tasks";
+  ProfileResourceType2["Extensions"] = "extensions";
+  ProfileResourceType2["GlobalState"] = "globalState";
+  return ProfileResourceType2;
+})(ProfileResourceType || {});
+function isUserDataProfile(thing) {
+  const candidate = thing;
+  return !!(candidate && typeof candidate === "object" && typeof candidate.id === "string" && typeof candidate.isDefault === "boolean" && typeof candidate.name === "string" && URI.isUri(candidate.location) && URI.isUri(candidate.globalStorageHome) && URI.isUri(candidate.settingsResource) && URI.isUri(candidate.keybindingsResource) && URI.isUri(candidate.tasksResource) && URI.isUri(candidate.snippetsHome) && URI.isUri(candidate.promptsHome) && URI.isUri(candidate.extensionsResource));
+}
+__name(isUserDataProfile, "isUserDataProfile");
+const IUserDataProfilesService = createDecorator("IUserDataProfilesService");
+function reviveProfile(profile, scheme) {
+  return {
+    id: profile.id,
+    isDefault: profile.isDefault,
+    name: profile.name,
+    icon: profile.icon,
+    location: URI.revive(profile.location).with({ scheme }),
+    globalStorageHome: URI.revive(profile.globalStorageHome).with({ scheme }),
+    settingsResource: URI.revive(profile.settingsResource).with({ scheme }),
+    keybindingsResource: URI.revive(profile.keybindingsResource).with({ scheme }),
+    tasksResource: URI.revive(profile.tasksResource).with({ scheme }),
+    snippetsHome: URI.revive(profile.snippetsHome).with({ scheme }),
+    promptsHome: URI.revive(profile.promptsHome).with({ scheme }),
+    extensionsResource: URI.revive(profile.extensionsResource).with({ scheme }),
+    cacheHome: URI.revive(profile.cacheHome).with({ scheme }),
+    useDefaultFlags: profile.useDefaultFlags,
+    isTransient: profile.isTransient,
+    workspaces: profile.workspaces?.map((w) => URI.revive(w))
+  };
+}
+__name(reviveProfile, "reviveProfile");
+function toUserDataProfile(id, name, location, profilesCacheHome, options, defaultProfile) {
+  return {
+    id,
+    name,
+    location,
+    isDefault: false,
+    icon: options?.icon,
+    globalStorageHome: defaultProfile && options?.useDefaultFlags?.globalState ? defaultProfile.globalStorageHome : joinPath(location, "globalStorage"),
+    settingsResource: defaultProfile && options?.useDefaultFlags?.settings ? defaultProfile.settingsResource : joinPath(location, "settings.json"),
+    keybindingsResource: defaultProfile && options?.useDefaultFlags?.keybindings ? defaultProfile.keybindingsResource : joinPath(location, "keybindings.json"),
+    tasksResource: defaultProfile && options?.useDefaultFlags?.tasks ? defaultProfile.tasksResource : joinPath(location, "tasks.json"),
+    snippetsHome: defaultProfile && options?.useDefaultFlags?.snippets ? defaultProfile.snippetsHome : joinPath(location, "snippets"),
+    promptsHome: defaultProfile && options?.useDefaultFlags?.prompts ? defaultProfile.promptsHome : joinPath(location, "prompts"),
+    extensionsResource: defaultProfile && options?.useDefaultFlags?.extensions ? defaultProfile.extensionsResource : joinPath(location, "extensions.json"),
+    cacheHome: joinPath(profilesCacheHome, id),
+    useDefaultFlags: options?.useDefaultFlags,
+    isTransient: options?.transient,
+    workspaces: options?.workspaces
+  };
+}
+__name(toUserDataProfile, "toUserDataProfile");
+let UserDataProfilesService = class extends Disposable {
+  constructor(environmentService, fileService, uriIdentityService, logService) {
+    super();
+    this.environmentService = environmentService;
+    this.fileService = fileService;
+    this.uriIdentityService = uriIdentityService;
+    this.logService = logService;
+    this.profilesHome = joinPath(this.environmentService.userRoamingDataHome, "profiles");
+    this.profilesCacheHome = joinPath(this.environmentService.cacheHome, "CachedProfilesData");
+  }
+  static {
+    __name(this, "UserDataProfilesService");
+  }
+  static PROFILES_KEY = "userDataProfiles";
+  static PROFILE_ASSOCIATIONS_KEY = "profileAssociations";
+  _serviceBrand;
+  profilesHome;
+  profilesCacheHome;
+  get defaultProfile() {
+    return this.profiles[0];
+  }
+  get profiles() {
+    return [...this.profilesObject.profiles, ...this.transientProfilesObject.profiles];
+  }
+  _onDidChangeProfiles = this._register(new Emitter());
+  onDidChangeProfiles = this._onDidChangeProfiles.event;
+  _onWillCreateProfile = this._register(new Emitter());
+  onWillCreateProfile = this._onWillCreateProfile.event;
+  _onWillRemoveProfile = this._register(new Emitter());
+  onWillRemoveProfile = this._onWillRemoveProfile.event;
+  _onDidResetWorkspaces = this._register(new Emitter());
+  onDidResetWorkspaces = this._onDidResetWorkspaces.event;
+  profileCreationPromises = /* @__PURE__ */ new Map();
+  transientProfilesObject = {
+    profiles: [],
+    emptyWindows: /* @__PURE__ */ new Map()
+  };
+  init() {
+    this._profilesObject = void 0;
+  }
+  _profilesObject;
+  get profilesObject() {
+    if (!this._profilesObject) {
+      const defaultProfile = this.createDefaultProfile();
+      const profiles = [defaultProfile];
+      try {
+        for (const storedProfile of this.getStoredProfiles()) {
+          if (!storedProfile.name || !isString(storedProfile.name) || !storedProfile.location) {
+            this.logService.warn("Skipping the invalid stored profile", storedProfile.location || storedProfile.name);
+            continue;
+          }
+          profiles.push(toUserDataProfile(basename(storedProfile.location), storedProfile.name, storedProfile.location, this.profilesCacheHome, { icon: storedProfile.icon, useDefaultFlags: storedProfile.useDefaultFlags }, defaultProfile));
+        }
+      } catch (error) {
+        this.logService.error(error);
+      }
+      const emptyWindows = /* @__PURE__ */ new Map();
+      if (profiles.length) {
+        try {
+          const profileAssociaitions = this.getStoredProfileAssociations();
+          if (profileAssociaitions.workspaces) {
+            for (const [workspacePath, profileId] of Object.entries(profileAssociaitions.workspaces)) {
+              const workspace = URI.parse(workspacePath);
+              const profile = profiles.find((p) => p.id === profileId);
+              if (profile) {
+                const workspaces = profile.workspaces ? profile.workspaces.slice(0) : [];
+                workspaces.push(workspace);
+                profile.workspaces = workspaces;
+              }
+            }
+          }
+          if (profileAssociaitions.emptyWindows) {
+            for (const [windowId, profileId] of Object.entries(profileAssociaitions.emptyWindows)) {
+              const profile = profiles.find((p) => p.id === profileId);
+              if (profile) {
+                emptyWindows.set(windowId, profile);
+              }
+            }
+          }
+        } catch (error) {
+          this.logService.error(error);
+        }
+      }
+      this._profilesObject = { profiles, emptyWindows };
+    }
+    return this._profilesObject;
+  }
+  createDefaultProfile() {
+    const defaultProfile = toUserDataProfile("__default__profile__", localize("defaultProfile", "Default"), this.environmentService.userRoamingDataHome, this.profilesCacheHome);
+    return { ...defaultProfile, extensionsResource: this.getDefaultProfileExtensionsLocation() ?? defaultProfile.extensionsResource, isDefault: true };
+  }
+  async createTransientProfile(workspaceIdentifier) {
+    const namePrefix = `Temp`;
+    const nameRegEx = new RegExp(`${escapeRegExpCharacters(namePrefix)}\\s(\\d+)`);
+    let nameIndex = 0;
+    for (const profile of this.profiles) {
+      const matches = nameRegEx.exec(profile.name);
+      const index = matches ? parseInt(matches[1]) : 0;
+      nameIndex = index > nameIndex ? index : nameIndex;
+    }
+    const name = `${namePrefix} ${nameIndex + 1}`;
+    return this.createProfile(hash(generateUuid()).toString(16), name, { transient: true }, workspaceIdentifier);
+  }
+  async createNamedProfile(name, options, workspaceIdentifier) {
+    return this.createProfile(hash(generateUuid()).toString(16), name, options, workspaceIdentifier);
+  }
+  async createProfile(id, name, options, workspaceIdentifier) {
+    const profile = await this.doCreateProfile(id, name, options, workspaceIdentifier);
+    return profile;
+  }
+  async doCreateProfile(id, name, options, workspaceIdentifier) {
+    if (!isString(name) || !name) {
+      throw new Error("Name of the profile is mandatory and must be of type `string`");
+    }
+    let profileCreationPromise = this.profileCreationPromises.get(name);
+    if (!profileCreationPromise) {
+      profileCreationPromise = (async () => {
+        try {
+          const existing = this.profiles.find((p) => p.id === id || !p.isTransient && !options?.transient && p.name === name);
+          if (existing) {
+            throw new Error(`Profile with ${name} name already exists`);
+          }
+          const workspace = workspaceIdentifier ? this.getWorkspace(workspaceIdentifier) : void 0;
+          if (URI.isUri(workspace)) {
+            options = { ...options, workspaces: [workspace] };
+          }
+          const profile = toUserDataProfile(id, name, joinPath(this.profilesHome, id), this.profilesCacheHome, options, this.defaultProfile);
+          await this.fileService.createFolder(profile.location);
+          const joiners = [];
+          this._onWillCreateProfile.fire({
+            profile,
+            join(promise) {
+              joiners.push(promise);
+            }
+          });
+          await Promises.settled(joiners);
+          if (workspace && !URI.isUri(workspace)) {
+            this.updateEmptyWindowAssociation(workspace, profile, !!profile.isTransient);
+          }
+          this.updateProfiles([profile], [], []);
+          return profile;
+        } finally {
+          this.profileCreationPromises.delete(name);
+        }
+      })();
+      this.profileCreationPromises.set(name, profileCreationPromise);
+    }
+    return profileCreationPromise;
+  }
+  async updateProfile(profile, options) {
+    const profilesToUpdate = [];
+    for (const existing of this.profiles) {
+      let profileToUpdate;
+      if (profile.id === existing.id) {
+        if (!existing.isDefault) {
+          profileToUpdate = toUserDataProfile(existing.id, options.name ?? existing.name, existing.location, this.profilesCacheHome, {
+            icon: options.icon === null ? void 0 : options.icon ?? existing.icon,
+            transient: options.transient ?? existing.isTransient,
+            useDefaultFlags: options.useDefaultFlags ?? existing.useDefaultFlags,
+            workspaces: options.workspaces ?? existing.workspaces
+          }, this.defaultProfile);
+        } else if (options.workspaces) {
+          profileToUpdate = existing;
+          profileToUpdate.workspaces = options.workspaces;
+        }
+      } else if (options.workspaces) {
+        const workspaces = existing.workspaces?.filter((w1) => !options.workspaces?.some((w2) => this.uriIdentityService.extUri.isEqual(w1, w2)));
+        if (existing.workspaces?.length !== workspaces?.length) {
+          profileToUpdate = existing;
+          profileToUpdate.workspaces = workspaces;
+        }
+      }
+      if (profileToUpdate) {
+        profilesToUpdate.push(profileToUpdate);
+      }
+    }
+    if (!profilesToUpdate.length) {
+      if (profile.isDefault) {
+        throw new Error("Cannot update default profile");
+      }
+      throw new Error(`Profile '${profile.name}' does not exist`);
+    }
+    this.updateProfiles([], [], profilesToUpdate);
+    const updatedProfile = this.profiles.find((p) => p.id === profile.id);
+    if (!updatedProfile) {
+      throw new Error(`Profile '${profile.name}' was not updated`);
+    }
+    return updatedProfile;
+  }
+  async removeProfile(profileToRemove) {
+    if (profileToRemove.isDefault) {
+      throw new Error("Cannot remove default profile");
+    }
+    const profile = this.profiles.find((p) => p.id === profileToRemove.id);
+    if (!profile) {
+      throw new Error(`Profile '${profileToRemove.name}' does not exist`);
+    }
+    const joiners = [];
+    this._onWillRemoveProfile.fire({
+      profile,
+      join(promise) {
+        joiners.push(promise);
+      }
+    });
+    try {
+      await Promise.allSettled(joiners);
+    } catch (error) {
+      this.logService.error(error);
+    }
+    this.updateProfiles([], [profile], []);
+    try {
+      await this.fileService.del(profile.cacheHome, { recursive: true });
+    } catch (error) {
+      if (toFileOperationResult(error) !== FileOperationResult.FILE_NOT_FOUND) {
+        this.logService.error(error);
+      }
+    }
+  }
+  async setProfileForWorkspace(workspaceIdentifier, profileToSet) {
+    const profile = this.profiles.find((p) => p.id === profileToSet.id);
+    if (!profile) {
+      throw new Error(`Profile '${profileToSet.name}' does not exist`);
+    }
+    const workspace = this.getWorkspace(workspaceIdentifier);
+    if (URI.isUri(workspace)) {
+      const workspaces = profile.workspaces ? [...profile.workspaces] : [];
+      if (!workspaces.some((w) => this.uriIdentityService.extUri.isEqual(w, workspace))) {
+        workspaces.push(workspace);
+        await this.updateProfile(profile, { workspaces });
+      }
+    } else {
+      this.updateEmptyWindowAssociation(workspace, profile, false);
+      this.updateStoredProfiles(this.profiles);
+    }
+  }
+  unsetWorkspace(workspaceIdentifier, transient = false) {
+    const workspace = this.getWorkspace(workspaceIdentifier);
+    if (URI.isUri(workspace)) {
+      const currentlyAssociatedProfile = this.getProfileForWorkspace(workspaceIdentifier);
+      if (currentlyAssociatedProfile) {
+        this.updateProfile(currentlyAssociatedProfile, { workspaces: currentlyAssociatedProfile.workspaces?.filter((w) => !this.uriIdentityService.extUri.isEqual(w, workspace)) });
+      }
+    } else {
+      this.updateEmptyWindowAssociation(workspace, void 0, transient);
+      this.updateStoredProfiles(this.profiles);
+    }
+  }
+  async resetWorkspaces() {
+    this.transientProfilesObject.emptyWindows.clear();
+    this.profilesObject.emptyWindows.clear();
+    for (const profile of this.profiles) {
+      profile.workspaces = void 0;
+    }
+    this.updateProfiles([], [], this.profiles);
+    this._onDidResetWorkspaces.fire();
+  }
+  async cleanUp() {
+    if (await this.fileService.exists(this.profilesHome)) {
+      const stat = await this.fileService.resolve(this.profilesHome);
+      await Promise.all((stat.children || []).filter((child) => child.isDirectory && this.profiles.every((p) => !this.uriIdentityService.extUri.isEqual(p.location, child.resource))).map((child) => this.fileService.del(child.resource, { recursive: true })));
+    }
+  }
+  async cleanUpTransientProfiles() {
+    const unAssociatedTransientProfiles = this.transientProfilesObject.profiles.filter((p) => !this.isProfileAssociatedToWorkspace(p));
+    await Promise.allSettled(unAssociatedTransientProfiles.map((p) => this.removeProfile(p)));
+  }
+  getProfileForWorkspace(workspaceIdentifier) {
+    const workspace = this.getWorkspace(workspaceIdentifier);
+    return URI.isUri(workspace) ? this.profiles.find((p) => p.workspaces?.some((w) => this.uriIdentityService.extUri.isEqual(w, workspace))) : this.profilesObject.emptyWindows.get(workspace) ?? this.transientProfilesObject.emptyWindows.get(workspace);
+  }
+  getWorkspace(workspaceIdentifier) {
+    if (isSingleFolderWorkspaceIdentifier(workspaceIdentifier)) {
+      return workspaceIdentifier.uri;
+    }
+    if (isWorkspaceIdentifier(workspaceIdentifier)) {
+      return workspaceIdentifier.configPath;
+    }
+    return workspaceIdentifier.id;
+  }
+  isProfileAssociatedToWorkspace(profile) {
+    if (profile.workspaces?.length) {
+      return true;
+    }
+    if ([...this.profilesObject.emptyWindows.values()].some((windowProfile) => this.uriIdentityService.extUri.isEqual(windowProfile.location, profile.location))) {
+      return true;
+    }
+    if ([...this.transientProfilesObject.emptyWindows.values()].some((windowProfile) => this.uriIdentityService.extUri.isEqual(windowProfile.location, profile.location))) {
+      return true;
+    }
+    return false;
+  }
+  updateProfiles(added, removed, updated) {
+    const allProfiles = [...this.profiles, ...added];
+    const transientProfiles = this.transientProfilesObject.profiles;
+    this.transientProfilesObject.profiles = [];
+    const profiles = [];
+    for (let profile of allProfiles) {
+      if (removed.some((p) => profile.id === p.id)) {
+        for (const windowId of [...this.profilesObject.emptyWindows.keys()]) {
+          if (profile.id === this.profilesObject.emptyWindows.get(windowId)?.id) {
+            this.profilesObject.emptyWindows.delete(windowId);
+          }
+        }
+        continue;
+      }
+      if (!profile.isDefault) {
+        profile = updated.find((p) => profile.id === p.id) ?? profile;
+        const transientProfile = transientProfiles.find((p) => profile.id === p.id);
+        if (profile.isTransient) {
+          this.transientProfilesObject.profiles.push(profile);
+        } else {
+          if (transientProfile) {
+            for (const [windowId, p] of this.transientProfilesObject.emptyWindows.entries()) {
+              if (profile.id === p.id) {
+                this.transientProfilesObject.emptyWindows.delete(windowId);
+                this.profilesObject.emptyWindows.set(windowId, profile);
+                break;
+              }
+            }
+          }
+        }
+      }
+      if (profile.workspaces?.length === 0) {
+        profile.workspaces = void 0;
+      }
+      profiles.push(profile);
+    }
+    this.updateStoredProfiles(profiles);
+    this.triggerProfilesChanges(added, removed, updated);
+  }
+  triggerProfilesChanges(added, removed, updated) {
+    this._onDidChangeProfiles.fire({ added, removed, updated, all: this.profiles });
+  }
+  updateEmptyWindowAssociation(windowId, newProfile, transient) {
+    transient = newProfile?.isTransient ? true : transient;
+    if (transient) {
+      if (newProfile) {
+        this.transientProfilesObject.emptyWindows.set(windowId, newProfile);
+      } else {
+        this.transientProfilesObject.emptyWindows.delete(windowId);
+      }
+    } else {
+      this.transientProfilesObject.emptyWindows.delete(windowId);
+      if (newProfile) {
+        this.profilesObject.emptyWindows.set(windowId, newProfile);
+      } else {
+        this.profilesObject.emptyWindows.delete(windowId);
+      }
+    }
+  }
+  updateStoredProfiles(profiles) {
+    const storedProfiles = [];
+    const workspaces = {};
+    const emptyWindows = {};
+    for (const profile of profiles) {
+      if (profile.isTransient) {
+        continue;
+      }
+      if (!profile.isDefault) {
+        storedProfiles.push({ location: profile.location, name: profile.name, icon: profile.icon, useDefaultFlags: profile.useDefaultFlags });
+      }
+      if (profile.workspaces) {
+        for (const workspace of profile.workspaces) {
+          workspaces[workspace.toString()] = profile.id;
+        }
+      }
+    }
+    for (const [windowId, profile] of this.profilesObject.emptyWindows.entries()) {
+      emptyWindows[windowId.toString()] = profile.id;
+    }
+    this.saveStoredProfileAssociations({ workspaces, emptyWindows });
+    this.saveStoredProfiles(storedProfiles);
+    this._profilesObject = void 0;
+  }
+  getStoredProfiles() {
+    return [];
+  }
+  saveStoredProfiles(storedProfiles) {
+    throw new Error("not implemented");
+  }
+  getStoredProfileAssociations() {
+    return {};
+  }
+  saveStoredProfileAssociations(storedProfileAssociations) {
+    throw new Error("not implemented");
+  }
+  getDefaultProfileExtensionsLocation() {
+    return void 0;
+  }
+};
+UserDataProfilesService = __decorateClass([
+  __decorateParam(0, IEnvironmentService),
+  __decorateParam(1, IFileService),
+  __decorateParam(2, IUriIdentityService),
+  __decorateParam(3, ILogService)
+], UserDataProfilesService);
+class InMemoryUserDataProfilesService extends UserDataProfilesService {
+  static {
+    __name(this, "InMemoryUserDataProfilesService");
+  }
+  storedProfiles = [];
+  getStoredProfiles() {
+    return this.storedProfiles;
+  }
+  saveStoredProfiles(storedProfiles) {
+    this.storedProfiles = storedProfiles;
+  }
+  storedProfileAssociations = {};
+  getStoredProfileAssociations() {
+    return this.storedProfileAssociations;
+  }
+  saveStoredProfileAssociations(storedProfileAssociations) {
+    this.storedProfileAssociations = storedProfileAssociations;
+  }
+}
+export {
+  IUserDataProfilesService,
+  InMemoryUserDataProfilesService,
+  ProfileResourceType,
+  UserDataProfilesService,
+  isUserDataProfile,
+  reviveProfile,
+  toUserDataProfile
+};
+//# sourceMappingURL=userDataProfile.js.map

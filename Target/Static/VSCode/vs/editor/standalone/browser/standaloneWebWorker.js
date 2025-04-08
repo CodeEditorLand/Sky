@@ -1,1 +1,53 @@
-import"../../../base/common/uri.js";import{EditorWorkerClient as s}from"../../browser/services/editorWorkerService.js";import"../../common/services/model.js";function g(t,e){return new c(t,e)}class c extends s{_foreignModuleHost;_foreignProxy;constructor(e,r){super(r.worker,r.keepIdleModels||!1,e),this._foreignModuleHost=r.host||null,this._foreignProxy=this._getProxy().then(o=>new Proxy({},{get(l,n,u){if(typeof n!="string")throw new Error("Not supported");return(...i)=>o.$fmr(n,i)}}))}fhr(e,r){if(!this._foreignModuleHost||typeof this._foreignModuleHost[e]!="function")return Promise.reject(new Error("Missing method "+e+" or missing main thread foreign host."));try{return Promise.resolve(this._foreignModuleHost[e].apply(this._foreignModuleHost,r))}catch(o){return Promise.reject(o)}}getProxy(){return this._foreignProxy}withSyncedResources(e){return this.workerWithSyncedResources(e).then(r=>this.getProxy())}}export{g as createWebWorker};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { URI } from "../../../base/common/uri.js";
+import { EditorWorkerClient } from "../../browser/services/editorWorkerService.js";
+import { IModelService } from "../../common/services/model.js";
+function createWebWorker(modelService, opts) {
+  return new MonacoWebWorkerImpl(modelService, opts);
+}
+__name(createWebWorker, "createWebWorker");
+class MonacoWebWorkerImpl extends EditorWorkerClient {
+  static {
+    __name(this, "MonacoWebWorkerImpl");
+  }
+  _foreignModuleHost;
+  _foreignProxy;
+  constructor(modelService, opts) {
+    super(opts.worker, opts.keepIdleModels || false, modelService);
+    this._foreignModuleHost = opts.host || null;
+    this._foreignProxy = this._getProxy().then((proxy) => {
+      return new Proxy({}, {
+        get(target, prop, receiver) {
+          if (typeof prop !== "string") {
+            throw new Error(`Not supported`);
+          }
+          return (...args) => {
+            return proxy.$fmr(prop, args);
+          };
+        }
+      });
+    });
+  }
+  // foreign host request
+  fhr(method, args) {
+    if (!this._foreignModuleHost || typeof this._foreignModuleHost[method] !== "function") {
+      return Promise.reject(new Error("Missing method " + method + " or missing main thread foreign host."));
+    }
+    try {
+      return Promise.resolve(this._foreignModuleHost[method].apply(this._foreignModuleHost, args));
+    } catch (e) {
+      return Promise.reject(e);
+    }
+  }
+  getProxy() {
+    return this._foreignProxy;
+  }
+  withSyncedResources(resources) {
+    return this.workerWithSyncedResources(resources).then((_) => this.getProxy());
+  }
+}
+export {
+  createWebWorker
+};
+//# sourceMappingURL=standaloneWebWorker.js.map

@@ -1,1 +1,202 @@
-var _=Object.defineProperty,f=Object.getOwnPropertyDescriptor,T=(e,r,o,t)=>{for(var i,n=t>1?void 0:t?f(r,o):r,s=e.length-1;s>=0;s--)(i=e[s])&&(n=(t?i(r,o,n):i(n))||n);return t&&n&&_(r,o,n),n},c=(e,r)=>(o,t)=>r(o,t,e);import{canASAR as g}from"../../../../../amdX.js";import{DisposableStore as h,toDisposable as w}from"../../../../../base/common/lifecycle.js";import{FileAccess as v,nodeModulesAsarPath as x,nodeModulesPath as I}from"../../../../../base/common/network.js";import"../../../../../base/common/observable.js";import{isWeb as S}from"../../../../../base/common/platform.js";import{URI as y}from"../../../../../base/common/uri.js";import"../../../../../editor/common/languages.js";import{ILanguageService as b}from"../../../../../editor/common/languages/language.js";import"../../../../../editor/common/model.js";import{IConfigurationService as M}from"../../../../../platform/configuration/common/configuration.js";import{IEnvironmentService as P}from"../../../../../platform/environment/common/environment.js";import{IExtensionResourceLoaderService as W}from"../../../../../platform/extensionResourceLoader/common/extensionResourceLoader.js";import{INotificationService as C}from"../../../../../platform/notification/common/notification.js";import{ITelemetryService as z}from"../../../../../platform/telemetry/common/telemetry.js";import"./worker/textMateTokenizationWorker.worker.js";import{TextMateWorkerHost as A}from"./worker/textMateWorkerHost.js";import{TextMateWorkerTokenizerController as D}from"./textMateWorkerTokenizerController.js";import"../../common/TMScopeRegistry.js";import{createWebWorker as R}from"../../../../../base/browser/webWorkerFactory.js";import"../../../../../base/common/worker/webWorker.js";let m=class{constructor(e,r,o,t,i,n,s,a){this._reportTokenizationTime=e,this._shouldTokenizeAsync=r,this._extensionResourceLoaderService=o,this._configurationService=t,this._languageService=i,this._environmentService=n,this._notificationService=s,this._telemetryService=a}static _reportedMismatchingTokens=!1;_workerProxyPromise=null;_worker=null;_workerProxy=null;_workerTokenizerControllers=new Map;_currentTheme=null;_currentTokenColorMap=null;_grammarDefinitions=[];dispose(){this._disposeWorker()}createBackgroundTokenizer(e,r,o){if(!this._shouldTokenizeAsync()||e.isTooLargeForSyncing())return;const t=new h,i=this._getWorkerProxy().then((i=>{if(t.isDisposed||!i)return;const n={controller:void 0,worker:this._worker};return t.add(L(e,(()=>{const t=new D(e,i,this._languageService.languageIdCodec,r,this._configurationService,o);return n.controller=t,this._workerTokenizerControllers.set(t.controllerId,t),w((()=>{n.controller=void 0,this._workerTokenizerControllers.delete(t.controllerId),t.dispose()}))}))),n}));return{dispose(){t.dispose()},requestTokens:async(e,r)=>{const o=await i;o?.controller&&o.worker===this._worker&&o.controller.requestTokens(e,r)},reportMismatchingTokens:e=>{m._reportedMismatchingTokens||(m._reportedMismatchingTokens=!0,this._notificationService.error({message:"Async Tokenization Token Mismatch in line "+e,name:"Async Tokenization Token Mismatch"}),this._telemetryService.publicLog2("asyncTokenizationMismatchingTokens",{}))}}}setGrammarDefinitions(e){this._grammarDefinitions=e,this._disposeWorker()}acceptTheme(e,r){this._currentTheme=e,this._currentTokenColorMap=r,this._currentTheme&&this._currentTokenColorMap&&this._workerProxy&&this._workerProxy.$acceptTheme(this._currentTheme,this._currentTokenColorMap)}_getWorkerProxy(){return this._workerProxyPromise||(this._workerProxyPromise=this._createWorkerProxy()),this._workerProxyPromise}async _createWorkerProxy(){const e=`${I}/vscode-oniguruma`,r=`${x}/vscode-oniguruma`,o=`${g&&this._environmentService.isBuilt&&!S?r:e}/release/onig.wasm`,t={grammarDefinitions:this._grammarDefinitions,onigurumaWASMUri:v.asBrowserUri(o).toString(!0)},i=this._worker=R(v.asBrowserUri("vs/workbench/services/textMate/browser/backgroundTokenization/worker/textMateTokenizationWorker.workerMain.js"),"TextMateWorker");return A.setChannel(i,{$readFile:async e=>{const r=y.revive(e);return this._extensionResourceLoaderService.readExtensionResource(r)},$setTokensAndStates:async(e,r,o,t)=>{const i=this._workerTokenizerControllers.get(e);i&&i.setTokensAndStates(e,r,o,t)},$reportTokenizationTime:(e,r,o,t,i)=>{this._reportTokenizationTime(e,r,o,t,i)}}),await i.proxy.$init(t),this._worker!==i?null:(this._workerProxy=i.proxy,this._currentTheme&&this._currentTokenColorMap&&this._workerProxy.$acceptTheme(this._currentTheme,this._currentTokenColorMap),i.proxy)}_disposeWorker(){for(const e of this._workerTokenizerControllers.values())e.dispose();this._workerTokenizerControllers.clear(),this._worker&&(this._worker.dispose(),this._worker=null),this._workerProxy=null,this._workerProxyPromise=null}};function L(e,r){const o=new h,t=o.add(new h);function i(){e.isAttachedToEditor()?t.add(r()):t.clear()}return i(),o.add(e.onDidChangeAttached((()=>{i()}))),o}m=T([c(2,W),c(3,M),c(4,b),c(5,P),c(6,C),c(7,z)],m);export{m as ThreadedBackgroundTokenizerFactory};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { canASAR } from "../../../../../amdX.js";
+import { DisposableStore, IDisposable, toDisposable } from "../../../../../base/common/lifecycle.js";
+import { AppResourcePath, FileAccess, nodeModulesAsarPath, nodeModulesPath } from "../../../../../base/common/network.js";
+import { IObservable } from "../../../../../base/common/observable.js";
+import { isWeb } from "../../../../../base/common/platform.js";
+import { URI, UriComponents } from "../../../../../base/common/uri.js";
+import { IBackgroundTokenizationStore, IBackgroundTokenizer } from "../../../../../editor/common/languages.js";
+import { ILanguageService } from "../../../../../editor/common/languages/language.js";
+import { ITextModel } from "../../../../../editor/common/model.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { IEnvironmentService } from "../../../../../platform/environment/common/environment.js";
+import { IExtensionResourceLoaderService } from "../../../../../platform/extensionResourceLoader/common/extensionResourceLoader.js";
+import { INotificationService } from "../../../../../platform/notification/common/notification.js";
+import { ITelemetryService } from "../../../../../platform/telemetry/common/telemetry.js";
+import { ICreateData, StateDeltas, TextMateTokenizationWorker } from "./worker/textMateTokenizationWorker.worker.js";
+import { TextMateWorkerHost } from "./worker/textMateWorkerHost.js";
+import { TextMateWorkerTokenizerController } from "./textMateWorkerTokenizerController.js";
+import { IValidGrammarDefinition } from "../../common/TMScopeRegistry.js";
+import { createWebWorker } from "../../../../../base/browser/webWorkerFactory.js";
+import { IWebWorkerClient, Proxied } from "../../../../../base/common/worker/webWorker.js";
+let ThreadedBackgroundTokenizerFactory = class {
+  constructor(_reportTokenizationTime, _shouldTokenizeAsync, _extensionResourceLoaderService, _configurationService, _languageService, _environmentService, _notificationService, _telemetryService) {
+    this._reportTokenizationTime = _reportTokenizationTime;
+    this._shouldTokenizeAsync = _shouldTokenizeAsync;
+    this._extensionResourceLoaderService = _extensionResourceLoaderService;
+    this._configurationService = _configurationService;
+    this._languageService = _languageService;
+    this._environmentService = _environmentService;
+    this._notificationService = _notificationService;
+    this._telemetryService = _telemetryService;
+  }
+  static {
+    __name(this, "ThreadedBackgroundTokenizerFactory");
+  }
+  static _reportedMismatchingTokens = false;
+  _workerProxyPromise = null;
+  _worker = null;
+  _workerProxy = null;
+  _workerTokenizerControllers = /* @__PURE__ */ new Map();
+  _currentTheme = null;
+  _currentTokenColorMap = null;
+  _grammarDefinitions = [];
+  dispose() {
+    this._disposeWorker();
+  }
+  // Will be recreated after worker is disposed (because tokenizer is re-registered when languages change)
+  createBackgroundTokenizer(textModel, tokenStore, maxTokenizationLineLength) {
+    if (!this._shouldTokenizeAsync() || textModel.isTooLargeForSyncing()) {
+      return void 0;
+    }
+    const store = new DisposableStore();
+    const controllerContainer = this._getWorkerProxy().then((workerProxy) => {
+      if (store.isDisposed || !workerProxy) {
+        return void 0;
+      }
+      const controllerContainer2 = { controller: void 0, worker: this._worker };
+      store.add(keepAliveWhenAttached(textModel, () => {
+        const controller = new TextMateWorkerTokenizerController(textModel, workerProxy, this._languageService.languageIdCodec, tokenStore, this._configurationService, maxTokenizationLineLength);
+        controllerContainer2.controller = controller;
+        this._workerTokenizerControllers.set(controller.controllerId, controller);
+        return toDisposable(() => {
+          controllerContainer2.controller = void 0;
+          this._workerTokenizerControllers.delete(controller.controllerId);
+          controller.dispose();
+        });
+      }));
+      return controllerContainer2;
+    });
+    return {
+      dispose() {
+        store.dispose();
+      },
+      requestTokens: /* @__PURE__ */ __name(async (startLineNumber, endLineNumberExclusive) => {
+        const container = await controllerContainer;
+        if (container?.controller && container.worker === this._worker) {
+          container.controller.requestTokens(startLineNumber, endLineNumberExclusive);
+        }
+      }, "requestTokens"),
+      reportMismatchingTokens: /* @__PURE__ */ __name((lineNumber) => {
+        if (ThreadedBackgroundTokenizerFactory._reportedMismatchingTokens) {
+          return;
+        }
+        ThreadedBackgroundTokenizerFactory._reportedMismatchingTokens = true;
+        this._notificationService.error({
+          message: "Async Tokenization Token Mismatch in line " + lineNumber,
+          name: "Async Tokenization Token Mismatch"
+        });
+        this._telemetryService.publicLog2("asyncTokenizationMismatchingTokens", {});
+      }, "reportMismatchingTokens")
+    };
+  }
+  setGrammarDefinitions(grammarDefinitions) {
+    this._grammarDefinitions = grammarDefinitions;
+    this._disposeWorker();
+  }
+  acceptTheme(theme, colorMap) {
+    this._currentTheme = theme;
+    this._currentTokenColorMap = colorMap;
+    if (this._currentTheme && this._currentTokenColorMap && this._workerProxy) {
+      this._workerProxy.$acceptTheme(this._currentTheme, this._currentTokenColorMap);
+    }
+  }
+  _getWorkerProxy() {
+    if (!this._workerProxyPromise) {
+      this._workerProxyPromise = this._createWorkerProxy();
+    }
+    return this._workerProxyPromise;
+  }
+  async _createWorkerProxy() {
+    const onigurumaModuleLocation = `${nodeModulesPath}/vscode-oniguruma`;
+    const onigurumaModuleLocationAsar = `${nodeModulesAsarPath}/vscode-oniguruma`;
+    const useAsar = canASAR && this._environmentService.isBuilt && !isWeb;
+    const onigurumaLocation = useAsar ? onigurumaModuleLocationAsar : onigurumaModuleLocation;
+    const onigurumaWASM = `${onigurumaLocation}/release/onig.wasm`;
+    const createData = {
+      grammarDefinitions: this._grammarDefinitions,
+      onigurumaWASMUri: FileAccess.asBrowserUri(onigurumaWASM).toString(true)
+    };
+    const worker = this._worker = createWebWorker(
+      FileAccess.asBrowserUri("vs/workbench/services/textMate/browser/backgroundTokenization/worker/textMateTokenizationWorker.workerMain.js"),
+      "TextMateWorker"
+    );
+    TextMateWorkerHost.setChannel(worker, {
+      $readFile: /* @__PURE__ */ __name(async (_resource) => {
+        const resource = URI.revive(_resource);
+        return this._extensionResourceLoaderService.readExtensionResource(resource);
+      }, "$readFile"),
+      $setTokensAndStates: /* @__PURE__ */ __name(async (controllerId, versionId, tokens, lineEndStateDeltas) => {
+        const controller = this._workerTokenizerControllers.get(controllerId);
+        if (controller) {
+          controller.setTokensAndStates(controllerId, versionId, tokens, lineEndStateDeltas);
+        }
+      }, "$setTokensAndStates"),
+      $reportTokenizationTime: /* @__PURE__ */ __name((timeMs, languageId, sourceExtensionId, lineLength, isRandomSample) => {
+        this._reportTokenizationTime(timeMs, languageId, sourceExtensionId, lineLength, isRandomSample);
+      }, "$reportTokenizationTime")
+    });
+    await worker.proxy.$init(createData);
+    if (this._worker !== worker) {
+      return null;
+    }
+    this._workerProxy = worker.proxy;
+    if (this._currentTheme && this._currentTokenColorMap) {
+      this._workerProxy.$acceptTheme(this._currentTheme, this._currentTokenColorMap);
+    }
+    return worker.proxy;
+  }
+  _disposeWorker() {
+    for (const controller of this._workerTokenizerControllers.values()) {
+      controller.dispose();
+    }
+    this._workerTokenizerControllers.clear();
+    if (this._worker) {
+      this._worker.dispose();
+      this._worker = null;
+    }
+    this._workerProxy = null;
+    this._workerProxyPromise = null;
+  }
+};
+ThreadedBackgroundTokenizerFactory = __decorateClass([
+  __decorateParam(2, IExtensionResourceLoaderService),
+  __decorateParam(3, IConfigurationService),
+  __decorateParam(4, ILanguageService),
+  __decorateParam(5, IEnvironmentService),
+  __decorateParam(6, INotificationService),
+  __decorateParam(7, ITelemetryService)
+], ThreadedBackgroundTokenizerFactory);
+function keepAliveWhenAttached(textModel, factory) {
+  const disposableStore = new DisposableStore();
+  const subStore = disposableStore.add(new DisposableStore());
+  function checkAttached() {
+    if (textModel.isAttachedToEditor()) {
+      subStore.add(factory());
+    } else {
+      subStore.clear();
+    }
+  }
+  __name(checkAttached, "checkAttached");
+  checkAttached();
+  disposableStore.add(textModel.onDidChangeAttached(() => {
+    checkAttached();
+  }));
+  return disposableStore;
+}
+__name(keepAliveWhenAttached, "keepAliveWhenAttached");
+export {
+  ThreadedBackgroundTokenizerFactory
+};
+//# sourceMappingURL=threadedBackgroundTokenizerFactory.js.map

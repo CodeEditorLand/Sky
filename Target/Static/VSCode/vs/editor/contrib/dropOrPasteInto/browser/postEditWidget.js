@@ -1,3 +1,240 @@
-var W=Object.defineProperty;var N=Object.getOwnPropertyDescriptor;var E=(m,d,t,e)=>{for(var i=e>1?void 0:e?N(d,t):d,o=m.length-1,n;o>=0;o--)(n=m[o])&&(i=(e?n(d,t,i):n(i))||i);return e&&i&&W(d,t,i),i},s=(m,d)=>(t,e)=>d(t,e,m);import*as g from"../../../../base/browser/dom.js";import{Button as K}from"../../../../base/browser/ui/button/button.js";import"../../../../base/common/actions.js";import{raceCancellationError as B}from"../../../../base/common/async.js";import"../../../../base/common/cancellation.js";import{Codicon as w}from"../../../../base/common/codicons.js";import{toErrorMessage as x}from"../../../../base/common/errorMessage.js";import{isCancellationError as L}from"../../../../base/common/errors.js";import{Event as D}from"../../../../base/common/event.js";import{Disposable as T,MutableDisposable as P,toDisposable as A}from"../../../../base/common/lifecycle.js";import{ThemeIcon as M}from"../../../../base/common/themables.js";import{localize as k}from"../../../../nls.js";import{ActionListItemKind as H}from"../../../../platform/actionWidget/browser/actionList.js";import{IActionWidgetService as $}from"../../../../platform/actionWidget/browser/actionWidget.js";import{IContextKeyService as q}from"../../../../platform/contextkey/common/contextkey.js";import{IInstantiationService as O}from"../../../../platform/instantiation/common/instantiation.js";import{IKeybindingService as z}from"../../../../platform/keybinding/common/keybinding.js";import{INotificationService as F}from"../../../../platform/notification/common/notification.js";import{ContentWidgetPositionPreference as G}from"../../../browser/editorBrowser.js";import{IBulkEditService as U}from"../../../browser/services/bulkEditService.js";import"../../../common/core/range.js";import"../../../common/languages.js";import{TrackedRangeStickiness as V}from"../../../common/model.js";import{CodeEditorStateFlag as R,EditorStateCancellationTokenSource as j}from"../../editorState/browser/editorState.js";import{createCombinedWorkspaceEdit as J}from"./edit.js";import"./postEditWidget.css";let a=class extends T{constructor(t,e,i,o,n,l,c,h,u,p,f){super();this.typeId=t;this.editor=e;this.showCommand=o;this.range=n;this.edits=l;this.onSelectNewEdit=c;this.additionalActions=h;this._keybindingService=p;this._actionWidgetService=f;this.create(),this.visibleContext=i.bindTo(u),this.visibleContext.set(!0),this._register(A(()=>this.visibleContext.reset())),this.editor.addContentWidget(this),this.editor.layoutContentWidget(this),this._register(A(()=>this.editor.removeContentWidget(this))),this._register(this.editor.onDidChangeCursorPosition(I=>{this.dispose()})),this._register(D.runAndSubscribe(p.onDidUpdateKeybindings,()=>{this._updateButtonTitle()}))}static baseId="editor.widget.postEditWidget";allowEditorOverflow=!0;suppressMouseDown=!0;domNode;button;visibleContext;_updateButtonTitle(){const t=this._keybindingService.lookupKeybinding(this.showCommand.id)?.getLabel();this.button.element.title=this.showCommand.label+(t?` (${t})`:"")}create(){this.domNode=g.$(".post-edit-widget"),this.button=this._register(new K(this.domNode,{supportIcons:!0})),this.button.label="$(insert)",this._register(g.addDisposableListener(this.domNode,g.EventType.CLICK,()=>this.showSelector()))}getId(){return a.baseId+"."+this.typeId}getDomNode(){return this.domNode}getPosition(){return{position:this.range.getEndPosition(),preference:[G.BELOW]}}showSelector(){const t=g.getDomNodePagePosition(this.button.element),e={x:t.left+t.width,y:t.top+t.height};this._actionWidgetService.show("postEditWidget",!1,this.edits.allEdits.map((i,o)=>({kind:H.Action,item:i,label:i.title,disabled:!1,canPreview:!1,group:{title:"",icon:M.fromId(o===this.edits.activeEditIndex?w.check.id:w.blank.id)}})),{onHide:()=>{this.editor.focus()},onSelect:i=>{this._actionWidgetService.hide(!1);const o=this.edits.allEdits.findIndex(n=>n===i);if(o!==this.edits.activeEditIndex)return this.onSelectNewEdit(o)}},e,this.editor.getDomNode()??void 0,this.additionalActions)}};a=E([s(8,q),s(9,z),s(10,$)],a);let y=class extends T{constructor(t,e,i,o,n,l,c,h){super();this._id=t;this._editor=e;this._visibleContext=i;this._showCommand=o;this._getAdditionalActions=n;this._instantiationService=l;this._bulkEditService=c;this._notificationService=h;this._register(D.any(e.onDidChangeModel,e.onDidChangeModelContent)(()=>this.clear()))}_currentWidget=this._register(new P);async applyEditAndShowIfNeeded(t,e,i,o,n){if(!t.length||!this._editor.hasModel())return;const l=this._editor.getModel(),c=e.allEdits.at(e.activeEditIndex);if(!c)return;const h=async r=>{const v=this._editor.getModel();v&&(await v.undo(),this.applyEditAndShowIfNeeded(t,{activeEditIndex:r,allEdits:e.allEdits},i,o,n))},u=(r,v)=>{L(r)||(this._notificationService.error(v),i&&this.show(t[0],e,h))},p=new j(this._editor,R.Value|R.Selection,void 0,n);let f;try{f=await B(o(c,p.token),p.token)}catch(r){return u(r,k("resolveError",`Error resolving edit '{0}':
-{1}`,c.title,x(r)))}finally{p.dispose()}if(n.isCancellationRequested)return;const I=J(l.uri,t,f),C=t[0],b=l.deltaDecorations([],[{range:C,options:{description:"paste-line-suffix",stickiness:V.AlwaysGrowsWhenTypingAtEdges}}]);this._editor.focus();let S,_;try{S=await this._bulkEditService.apply(I,{editor:this._editor,token:n}),_=l.getDecorationRange(b[0])}catch(r){return u(r,k("applyError",`Error applying edit '{0}':
-{1}`,c.title,x(r)))}finally{l.deltaDecorations(b,[])}n.isCancellationRequested||i&&S.isApplied&&e.allEdits.length>1&&this.show(_??C,e,h)}show(t,e,i){this.clear(),this._editor.hasModel()&&(this._currentWidget.value=this._instantiationService.createInstance(a,this._id,this._editor,this._visibleContext,this._showCommand,t,e,i,this._getAdditionalActions()))}clear(){this._currentWidget.clear()}tryShowSelector(){this._currentWidget.value?.showSelector()}};y=E([s(5,O),s(6,U),s(7,F)],y);export{y as PostEditWidgetManager};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import * as dom from "../../../../base/browser/dom.js";
+import { Button } from "../../../../base/browser/ui/button/button.js";
+import { IAction } from "../../../../base/common/actions.js";
+import { raceCancellationError } from "../../../../base/common/async.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { toErrorMessage } from "../../../../base/common/errorMessage.js";
+import { isCancellationError } from "../../../../base/common/errors.js";
+import { Event } from "../../../../base/common/event.js";
+import { Disposable, MutableDisposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { localize } from "../../../../nls.js";
+import { ActionListItemKind, IActionListItem } from "../../../../platform/actionWidget/browser/actionList.js";
+import { IActionWidgetService } from "../../../../platform/actionWidget/browser/actionWidget.js";
+import { IContextKey, IContextKeyService, RawContextKey } from "../../../../platform/contextkey/common/contextkey.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { INotificationService } from "../../../../platform/notification/common/notification.js";
+import { ContentWidgetPositionPreference, ICodeEditor, IContentWidget, IContentWidgetPosition } from "../../../browser/editorBrowser.js";
+import { IBulkEditResult, IBulkEditService } from "../../../browser/services/bulkEditService.js";
+import { Range } from "../../../common/core/range.js";
+import { DocumentDropEdit, DocumentPasteEdit } from "../../../common/languages.js";
+import { TrackedRangeStickiness } from "../../../common/model.js";
+import { CodeEditorStateFlag, EditorStateCancellationTokenSource } from "../../editorState/browser/editorState.js";
+import { createCombinedWorkspaceEdit } from "./edit.js";
+import "./postEditWidget.css";
+let PostEditWidget = class extends Disposable {
+  constructor(typeId, editor, visibleContext, showCommand, range, edits, onSelectNewEdit, additionalActions, contextKeyService, _keybindingService, _actionWidgetService) {
+    super();
+    this.typeId = typeId;
+    this.editor = editor;
+    this.showCommand = showCommand;
+    this.range = range;
+    this.edits = edits;
+    this.onSelectNewEdit = onSelectNewEdit;
+    this.additionalActions = additionalActions;
+    this._keybindingService = _keybindingService;
+    this._actionWidgetService = _actionWidgetService;
+    this.create();
+    this.visibleContext = visibleContext.bindTo(contextKeyService);
+    this.visibleContext.set(true);
+    this._register(toDisposable(() => this.visibleContext.reset()));
+    this.editor.addContentWidget(this);
+    this.editor.layoutContentWidget(this);
+    this._register(toDisposable(() => this.editor.removeContentWidget(this)));
+    this._register(this.editor.onDidChangeCursorPosition((e) => {
+      this.dispose();
+    }));
+    this._register(Event.runAndSubscribe(_keybindingService.onDidUpdateKeybindings, () => {
+      this._updateButtonTitle();
+    }));
+  }
+  static {
+    __name(this, "PostEditWidget");
+  }
+  static baseId = "editor.widget.postEditWidget";
+  allowEditorOverflow = true;
+  suppressMouseDown = true;
+  domNode;
+  button;
+  visibleContext;
+  _updateButtonTitle() {
+    const binding = this._keybindingService.lookupKeybinding(this.showCommand.id)?.getLabel();
+    this.button.element.title = this.showCommand.label + (binding ? ` (${binding})` : "");
+  }
+  create() {
+    this.domNode = dom.$(".post-edit-widget");
+    this.button = this._register(new Button(this.domNode, {
+      supportIcons: true
+    }));
+    this.button.label = "$(insert)";
+    this._register(dom.addDisposableListener(this.domNode, dom.EventType.CLICK, () => this.showSelector()));
+  }
+  getId() {
+    return PostEditWidget.baseId + "." + this.typeId;
+  }
+  getDomNode() {
+    return this.domNode;
+  }
+  getPosition() {
+    return {
+      position: this.range.getEndPosition(),
+      preference: [ContentWidgetPositionPreference.BELOW]
+    };
+  }
+  showSelector() {
+    const pos = dom.getDomNodePagePosition(this.button.element);
+    const anchor = { x: pos.left + pos.width, y: pos.top + pos.height };
+    this._actionWidgetService.show(
+      "postEditWidget",
+      false,
+      this.edits.allEdits.map((edit, i) => {
+        return {
+          kind: ActionListItemKind.Action,
+          item: edit,
+          label: edit.title,
+          disabled: false,
+          canPreview: false,
+          group: { title: "", icon: ThemeIcon.fromId(i === this.edits.activeEditIndex ? Codicon.check.id : Codicon.blank.id) }
+        };
+      }),
+      {
+        onHide: /* @__PURE__ */ __name(() => {
+          this.editor.focus();
+        }, "onHide"),
+        onSelect: /* @__PURE__ */ __name((item) => {
+          this._actionWidgetService.hide(false);
+          const i = this.edits.allEdits.findIndex((edit) => edit === item);
+          if (i !== this.edits.activeEditIndex) {
+            return this.onSelectNewEdit(i);
+          }
+        }, "onSelect")
+      },
+      anchor,
+      this.editor.getDomNode() ?? void 0,
+      this.additionalActions
+    );
+  }
+};
+PostEditWidget = __decorateClass([
+  __decorateParam(8, IContextKeyService),
+  __decorateParam(9, IKeybindingService),
+  __decorateParam(10, IActionWidgetService)
+], PostEditWidget);
+let PostEditWidgetManager = class extends Disposable {
+  constructor(_id, _editor, _visibleContext, _showCommand, _getAdditionalActions, _instantiationService, _bulkEditService, _notificationService) {
+    super();
+    this._id = _id;
+    this._editor = _editor;
+    this._visibleContext = _visibleContext;
+    this._showCommand = _showCommand;
+    this._getAdditionalActions = _getAdditionalActions;
+    this._instantiationService = _instantiationService;
+    this._bulkEditService = _bulkEditService;
+    this._notificationService = _notificationService;
+    this._register(Event.any(
+      _editor.onDidChangeModel,
+      _editor.onDidChangeModelContent
+    )(() => this.clear()));
+  }
+  static {
+    __name(this, "PostEditWidgetManager");
+  }
+  _currentWidget = this._register(new MutableDisposable());
+  async applyEditAndShowIfNeeded(ranges, edits, canShowWidget, resolve, token) {
+    if (!ranges.length || !this._editor.hasModel()) {
+      return;
+    }
+    const model = this._editor.getModel();
+    const edit = edits.allEdits.at(edits.activeEditIndex);
+    if (!edit) {
+      return;
+    }
+    const onDidSelectEdit = /* @__PURE__ */ __name(async (newEditIndex) => {
+      const model2 = this._editor.getModel();
+      if (!model2) {
+        return;
+      }
+      await model2.undo();
+      this.applyEditAndShowIfNeeded(ranges, { activeEditIndex: newEditIndex, allEdits: edits.allEdits }, canShowWidget, resolve, token);
+    }, "onDidSelectEdit");
+    const handleError = /* @__PURE__ */ __name((e, message) => {
+      if (isCancellationError(e)) {
+        return;
+      }
+      this._notificationService.error(message);
+      if (canShowWidget) {
+        this.show(ranges[0], edits, onDidSelectEdit);
+      }
+    }, "handleError");
+    const editorStateCts = new EditorStateCancellationTokenSource(this._editor, CodeEditorStateFlag.Value | CodeEditorStateFlag.Selection, void 0, token);
+    let resolvedEdit;
+    try {
+      resolvedEdit = await raceCancellationError(resolve(edit, editorStateCts.token), editorStateCts.token);
+    } catch (e) {
+      return handleError(e, localize("resolveError", "Error resolving edit '{0}':\n{1}", edit.title, toErrorMessage(e)));
+    } finally {
+      editorStateCts.dispose();
+    }
+    if (token.isCancellationRequested) {
+      return;
+    }
+    const combinedWorkspaceEdit = createCombinedWorkspaceEdit(model.uri, ranges, resolvedEdit);
+    const primaryRange = ranges[0];
+    const editTrackingDecoration = model.deltaDecorations([], [{
+      range: primaryRange,
+      options: { description: "paste-line-suffix", stickiness: TrackedRangeStickiness.AlwaysGrowsWhenTypingAtEdges }
+    }]);
+    this._editor.focus();
+    let editResult;
+    let editRange;
+    try {
+      editResult = await this._bulkEditService.apply(combinedWorkspaceEdit, { editor: this._editor, token });
+      editRange = model.getDecorationRange(editTrackingDecoration[0]);
+    } catch (e) {
+      return handleError(e, localize("applyError", "Error applying edit '{0}':\n{1}", edit.title, toErrorMessage(e)));
+    } finally {
+      model.deltaDecorations(editTrackingDecoration, []);
+    }
+    if (token.isCancellationRequested) {
+      return;
+    }
+    if (canShowWidget && editResult.isApplied && edits.allEdits.length > 1) {
+      this.show(editRange ?? primaryRange, edits, onDidSelectEdit);
+    }
+  }
+  show(range, edits, onDidSelectEdit) {
+    this.clear();
+    if (this._editor.hasModel()) {
+      this._currentWidget.value = this._instantiationService.createInstance(PostEditWidget, this._id, this._editor, this._visibleContext, this._showCommand, range, edits, onDidSelectEdit, this._getAdditionalActions());
+    }
+  }
+  clear() {
+    this._currentWidget.clear();
+  }
+  tryShowSelector() {
+    this._currentWidget.value?.showSelector();
+  }
+};
+PostEditWidgetManager = __decorateClass([
+  __decorateParam(5, IInstantiationService),
+  __decorateParam(6, IBulkEditService),
+  __decorateParam(7, INotificationService)
+], PostEditWidgetManager);
+export {
+  PostEditWidgetManager
+};
+//# sourceMappingURL=postEditWidget.js.map

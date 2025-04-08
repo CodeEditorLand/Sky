@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/contrib/inlineCompletions/browser/inlineCompletions.contribution.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { EditorContributionInstantiation, registerEditorContribution } from '../../../../editor/browser/editorExtensions.js';\r\nimport { wrapInHotClass1 } from '../../../../platform/observable/common/wrapInHotClass.js';\r\nimport { InlineCompletionLanguageStatusBarContribution } from './inlineCompletionLanguageStatusBarContribution.js';\r\n\r\nregisterEditorContribution(InlineCompletionLanguageStatusBarContribution.Id, wrapInHotClass1(InlineCompletionLanguageStatusBarContribution.hot), EditorContributionInstantiation.Eventually);\r\n"],
+  "mappings": "AAKA,SAAS,iCAAiC,kCAAkC;AAC5E,SAAS,uBAAuB;AAChC,SAAS,qDAAqD;AAE9D,2BAA2B,8CAA8C,IAAI,gBAAgB,8CAA8C,GAAG,GAAG,gCAAgC,UAAU;",
+  "names": []
+}

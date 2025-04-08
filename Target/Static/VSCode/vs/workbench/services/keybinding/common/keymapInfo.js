@@ -1,1 +1,118 @@
-import{isWindows as r,isLinux as h}from"../../../../base/common/platform.js";import{getKeyboardLayoutId as s}from"../../../../platform/keyboardLayout/common/keyboardLayout.js";function c(t){const a=t,s={};for(const t in a){const e=a[t];if(e.length){const a=e[0],o=e[1],i=e[2],r=e[3],y=Number(e[4]),u=6===e.length?e[5]:void 0;s[t]={value:a,vkey:u,withShift:o,withAltGr:i,withShiftAltGr:r,valueIsDeadKey:(1&y)>0,withShiftIsDeadKey:(2&y)>0,withAltGrIsDeadKey:(4&y)>0,withShiftAltGrIsDeadKey:(8&y)>0}}else s[t]={value:"",valueIsDeadKey:!1,withShift:"",withShiftIsDeadKey:!1,withAltGr:"",withAltGrIsDeadKey:!1,withShiftAltGr:"",withShiftAltGrIsDeadKey:!1}}return s}class y{constructor(t,a,s,e){this.layout=t,this.secondaryLayouts=a,this.mapping=c(s),this.isUserKeyboardLayout=!!e,this.layout.isUserKeyboardLayout=!!e}mapping;isUserKeyboardLayout;static createKeyboardLayoutFromDebugInfo(t,a,s){const e=new y(t,[],{},!0);return e.mapping=a,e}update(t){this.layout=t.layout,this.secondaryLayouts=t.secondaryLayouts,this.mapping=t.mapping,this.isUserKeyboardLayout=t.isUserKeyboardLayout,this.layout.isUserKeyboardLayout=t.isUserKeyboardLayout}getScore(t){let a=0;for(const s in t){if(r&&("Backslash"===s||"KeyQ"===s)||h&&("Backspace"===s||"Escape"===s))continue;const e=this.mapping[s];void 0===e&&(a-=1);const o=t[s];e&&o&&e.value!==o.value&&(a-=1)}return a}equal(t){return this.isUserKeyboardLayout===t.isUserKeyboardLayout&&s(this.layout)===s(t.layout)&&this.fuzzyEqual(t.mapping)}fuzzyEqual(t){for(const a in t){if(r&&("Backslash"===a||"KeyQ"===a))continue;if(void 0===this.mapping[a])return!1;const s=this.mapping[a],e=t[a];if(s.value!==e.value)return!1}return!0}}export{y as KeymapInfo};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { isWindows, isLinux } from "../../../../base/common/platform.js";
+import { getKeyboardLayoutId, IKeyboardLayoutInfo } from "../../../../platform/keyboardLayout/common/keyboardLayout.js";
+function deserializeMapping(serializedMapping) {
+  const mapping = serializedMapping;
+  const ret = {};
+  for (const key in mapping) {
+    const result = mapping[key];
+    if (result.length) {
+      const value = result[0];
+      const withShift = result[1];
+      const withAltGr = result[2];
+      const withShiftAltGr = result[3];
+      const mask = Number(result[4]);
+      const vkey = result.length === 6 ? result[5] : void 0;
+      ret[key] = {
+        "value": value,
+        "vkey": vkey,
+        "withShift": withShift,
+        "withAltGr": withAltGr,
+        "withShiftAltGr": withShiftAltGr,
+        "valueIsDeadKey": (mask & 1) > 0,
+        "withShiftIsDeadKey": (mask & 2) > 0,
+        "withAltGrIsDeadKey": (mask & 4) > 0,
+        "withShiftAltGrIsDeadKey": (mask & 8) > 0
+      };
+    } else {
+      ret[key] = {
+        "value": "",
+        "valueIsDeadKey": false,
+        "withShift": "",
+        "withShiftIsDeadKey": false,
+        "withAltGr": "",
+        "withAltGrIsDeadKey": false,
+        "withShiftAltGr": "",
+        "withShiftAltGrIsDeadKey": false
+      };
+    }
+  }
+  return ret;
+}
+__name(deserializeMapping, "deserializeMapping");
+class KeymapInfo {
+  constructor(layout, secondaryLayouts, keyboardMapping, isUserKeyboardLayout) {
+    this.layout = layout;
+    this.secondaryLayouts = secondaryLayouts;
+    this.mapping = deserializeMapping(keyboardMapping);
+    this.isUserKeyboardLayout = !!isUserKeyboardLayout;
+    this.layout.isUserKeyboardLayout = !!isUserKeyboardLayout;
+  }
+  static {
+    __name(this, "KeymapInfo");
+  }
+  mapping;
+  isUserKeyboardLayout;
+  static createKeyboardLayoutFromDebugInfo(layout, value, isUserKeyboardLayout) {
+    const keyboardLayoutInfo = new KeymapInfo(layout, [], {}, true);
+    keyboardLayoutInfo.mapping = value;
+    return keyboardLayoutInfo;
+  }
+  update(other) {
+    this.layout = other.layout;
+    this.secondaryLayouts = other.secondaryLayouts;
+    this.mapping = other.mapping;
+    this.isUserKeyboardLayout = other.isUserKeyboardLayout;
+    this.layout.isUserKeyboardLayout = other.isUserKeyboardLayout;
+  }
+  getScore(other) {
+    let score = 0;
+    for (const key in other) {
+      if (isWindows && (key === "Backslash" || key === "KeyQ")) {
+        continue;
+      }
+      if (isLinux && (key === "Backspace" || key === "Escape")) {
+        continue;
+      }
+      const currentMapping = this.mapping[key];
+      if (currentMapping === void 0) {
+        score -= 1;
+      }
+      const otherMapping = other[key];
+      if (currentMapping && otherMapping && currentMapping.value !== otherMapping.value) {
+        score -= 1;
+      }
+    }
+    return score;
+  }
+  equal(other) {
+    if (this.isUserKeyboardLayout !== other.isUserKeyboardLayout) {
+      return false;
+    }
+    if (getKeyboardLayoutId(this.layout) !== getKeyboardLayoutId(other.layout)) {
+      return false;
+    }
+    return this.fuzzyEqual(other.mapping);
+  }
+  fuzzyEqual(other) {
+    for (const key in other) {
+      if (isWindows && (key === "Backslash" || key === "KeyQ")) {
+        continue;
+      }
+      if (this.mapping[key] === void 0) {
+        return false;
+      }
+      const currentMapping = this.mapping[key];
+      const otherMapping = other[key];
+      if (currentMapping.value !== otherMapping.value) {
+        return false;
+      }
+    }
+    return true;
+  }
+}
+export {
+  KeymapInfo
+};
+//# sourceMappingURL=keymapInfo.js.map

@@ -1,1 +1,68 @@
-var m=Object.defineProperty,p=Object.getOwnPropertyDescriptor,d=(e,a,t,i)=>{for(var o,r=i>1?void 0:i?p(a,t):a,n=e.length-1;n>=0;n--)(o=e[n])&&(r=(i?o(a,t,r):o(r))||r);return i&&r&&m(a,t,r),r},s=(e,a)=>(t,i)=>a(t,i,e);import*as c from"../../../base/common/platform.js";import{Emitter as b}from"../../../base/common/event.js";import{Disposable as L}from"../../../base/common/lifecycle.js";import{createDecorator as l}from"../../instantiation/common/instantiation.js";import"../common/keyboardLayoutService.js";import{ILifecycleMainService as h,LifecycleMainPhase as v}from"../../lifecycle/electron-main/lifecycleMainService.js";const C=l("keyboardLayoutMainService");let r=class extends L{_onDidChangeKeyboardLayout=this._register(new b);onDidChangeKeyboardLayout=this._onDidChangeKeyboardLayout.event;_initPromise;_keyboardLayoutData;constructor(e){super(),this._initPromise=null,this._keyboardLayoutData=null,e.when(v.AfterWindowOpen).then((()=>this._initialize()))}_initialize(){return this._initPromise||(this._initPromise=this._doInitialize()),this._initPromise}async _doInitialize(){const e=await import("native-keymap");this._keyboardLayoutData=u(e),c.isCI||e.onDidChangeKeyboardLayout((()=>{this._keyboardLayoutData=u(e),this._onDidChangeKeyboardLayout.fire(this._keyboardLayoutData)}))}async getKeyboardLayoutData(){return await this._initialize(),this._keyboardLayoutData}};function u(e){return{keyboardMapping:e.getKeyMap(),keyboardLayoutInfo:e.getCurrentKeyboardLayout()}}r=d([s(0,h)],r);export{C as IKeyboardLayoutMainService,r as KeyboardLayoutMainService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import * as platform from "../../../base/common/platform.js";
+import { Emitter } from "../../../base/common/event.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+import { IKeyboardLayoutData, INativeKeyboardLayoutService } from "../common/keyboardLayoutService.js";
+import { ILifecycleMainService, LifecycleMainPhase } from "../../lifecycle/electron-main/lifecycleMainService.js";
+const IKeyboardLayoutMainService = createDecorator("keyboardLayoutMainService");
+let KeyboardLayoutMainService = class extends Disposable {
+  static {
+    __name(this, "KeyboardLayoutMainService");
+  }
+  _onDidChangeKeyboardLayout = this._register(new Emitter());
+  onDidChangeKeyboardLayout = this._onDidChangeKeyboardLayout.event;
+  _initPromise;
+  _keyboardLayoutData;
+  constructor(lifecycleMainService) {
+    super();
+    this._initPromise = null;
+    this._keyboardLayoutData = null;
+    lifecycleMainService.when(LifecycleMainPhase.AfterWindowOpen).then(() => this._initialize());
+  }
+  _initialize() {
+    if (!this._initPromise) {
+      this._initPromise = this._doInitialize();
+    }
+    return this._initPromise;
+  }
+  async _doInitialize() {
+    const nativeKeymapMod = await import("native-keymap");
+    this._keyboardLayoutData = readKeyboardLayoutData(nativeKeymapMod);
+    if (!platform.isCI) {
+      nativeKeymapMod.onDidChangeKeyboardLayout(() => {
+        this._keyboardLayoutData = readKeyboardLayoutData(nativeKeymapMod);
+        this._onDidChangeKeyboardLayout.fire(this._keyboardLayoutData);
+      });
+    }
+  }
+  async getKeyboardLayoutData() {
+    await this._initialize();
+    return this._keyboardLayoutData;
+  }
+};
+KeyboardLayoutMainService = __decorateClass([
+  __decorateParam(0, ILifecycleMainService)
+], KeyboardLayoutMainService);
+function readKeyboardLayoutData(nativeKeymapMod) {
+  const keyboardMapping = nativeKeymapMod.getKeyMap();
+  const keyboardLayoutInfo = nativeKeymapMod.getCurrentKeyboardLayout();
+  return { keyboardMapping, keyboardLayoutInfo };
+}
+__name(readKeyboardLayoutData, "readKeyboardLayoutData");
+export {
+  IKeyboardLayoutMainService,
+  KeyboardLayoutMainService
+};
+//# sourceMappingURL=keyboardLayoutMainService.js.map

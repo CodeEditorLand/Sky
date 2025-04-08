@@ -1,1 +1,474 @@
-import{mapArrayOrNot as P}from"../../../../base/common/arrays.js";import"../../../../base/common/cancellation.js";import*as c from"../../../../base/common/glob.js";import"../../../../base/common/lifecycle.js";import*as h from"../../../../base/common/objects.js";import*as E from"../../../../base/common/extpath.js";import{fuzzyContains as y,getNLines as C}from"../../../../base/common/strings.js";import"../../../../base/common/uri.js";import"../../../../platform/files/common/files.js";import{createDecorator as T}from"../../../../platform/instantiation/common/instantiation.js";import"../../../../platform/telemetry/common/telemetry.js";import"../../../../base/common/event.js";import*as R from"../../../../base/common/path.js";import{isCancellationError as F}from"../../../../base/common/errors.js";import{TextSearchCompleteMessageType as v}from"./searchExtTypes.js";import{isThenable as M}from"../../../../base/common/async.js";import"../../../../base/common/map.js";const le="workbench.view.search",ce="workbench.panel.search",ue="workbench.view.search",pe="search-result",he="search.exclude",Ie=2e4,g="⟪ ",S=" characters skipped ⟫",U=56,de=T("searchService");var w=(e=>(e[e.file=0]="file",e[e.text=1]="text",e[e.aiText=2]="aiText",e))(w||{}),L=(e=>(e[e.File=1]="File",e[e.Text=2]="Text",e[e.aiText=3]="aiText",e))(L||{});function me(e){return!!e.rangeLocations&&!!e.previewText}function xe(e){return!!e.resource}function ge(e){return!!e.message}var k=(e=>(e[e.Normal=0]="Normal",e[e.NewSearchStarted=1]="NewSearchStarted",e))(k||{});class Se{constructor(e){this.resource=e}results=[]}class be{rangeLocations=[];previewText;webviewIndex;constructor(e,r,s,t){this.webviewIndex=t;const n=Array.isArray(r)?r:[r];if(s&&1===s.matchLines&&_(n)){e=C(e,s.matchLines);let r="",t=0,a=0;const o=Math.floor(s.charsPerLine/5);for(const i of n){const n=Math.max(i.startColumn-o,0),c=i.startColumn+s.charsPerLine;if(n>a+o+U){const s=g+(n-a)+S;r+=s+e.slice(n,c),t+=n-(a+s.length)}else r+=e.slice(a,c);a=c,this.rangeLocations.push({source:i,preview:new Q(0,i.startColumn-t,i.endColumn-t)})}this.previewText=r}else{const s=Array.isArray(r)?r[0].startLineNumber:r.startLineNumber,t=P(r,(e=>({preview:new b(e.startLineNumber-s,e.startColumn,e.endLineNumber-s,e.endColumn),source:e})));this.rangeLocations=Array.isArray(t)?t:[t],this.previewText=e}}}function _(e){const r=e[0].startLineNumber;for(const s of e)if(s.startLineNumber!==r||s.endLineNumber!==r)return!1;return!0}class b{startLineNumber;startColumn;endLineNumber;endColumn;constructor(e,r,s,t){this.startLineNumber=e,this.startColumn=r,this.endLineNumber=s,this.endColumn=t}}class Q extends b{constructor(e,r,s){super(e,r,e,s)}}var N=(e=>(e.List="list",e.Tree="tree",e))(N||{}),A=(e=>(e.Default="default",e.FileNames="fileNames",e.Type="type",e.Modified="modified",e.CountDescending="countDescending",e.CountAscending="countAscending",e))(A||{});function fe(e,r=!0){const s=e&&e.files&&e.files.exclude,t=r&&e&&e.search&&e.search.exclude;if(!s&&!t)return;if(!s||!t)return s||t||void 0;let n=Object.create(null);return n=h.mixin(n,h.deepClone(s)),n=h.mixin(n,h.deepClone(t),!0),n}function Pe(e,r){return(!e.excludePattern||!c.match(e.excludePattern,r))&&(!e.includePattern&&!e.usingSearchPaths||(!(!e.includePattern||!c.match(e.includePattern,r))||!!e.usingSearchPaths&&(!!e.folderQueries&&e.folderQueries.some((e=>{const s=e.folder.fsPath;if(E.isEqualOrParent(r,s)){const t=R.relative(s,r);return!e.includePattern||!!c.match(e.includePattern,t)}return!1})))))}var z=(e=>(e[e.unknownEncoding=1]="unknownEncoding",e[e.regexParseError=2]="regexParseError",e[e.globParseError=3]="globParseError",e[e.invalidLiteral=4]="invalidLiteral",e[e.rgProcessError=5]="rgProcessError",e[e.other=6]="other",e[e.canceled=7]="canceled",e))(z||{});class d extends Error{constructor(e,r){super(e),this.code=r}}function Ee(e){const r=e.message;if(F(e))return new d(r,7);try{const e=JSON.parse(r);return new d(e.message,e.code)}catch{return new d(r,6)}}function ye(e){const r={message:e.message,code:e.code};return new Error(JSON.stringify(r))}function Ce(e){return"error"===e.type||"success"===e.type}function Te(e){return"success"===e.type}function Re(e){return!!e.path}function Fe(e,r,s=!0){const t=e.searchPath?e.searchPath:e.relativePath;return s?y(t,r):c.match(r,t)}class ve{path;results;constructor(e){this.path=e,this.results=[]}addMatch(e){this.results.push(e)}serialize(){return{path:this.path,results:this.results,numMatches:this.results.length}}}function Me(e,r){const s={...e||{},...r||{}};return Object.keys(s).filter((e=>{const r=s[e];return"boolean"==typeof r&&r}))}class Ue{_excludeExpression;_parsedExcludeExpression;_parsedIncludeExpression=null;constructor(e,r){this._excludeExpression=r.excludePattern?.map((r=>({...e.excludePattern||{},...r.pattern||{}})))??[],0===this._excludeExpression.length&&(this._excludeExpression=[e.excludePattern||{}]),this._parsedExcludeExpression=this._excludeExpression.map((e=>c.parse(e)));let s=e.includePattern;r.includePattern&&(s=s?{...s,...r.includePattern}:r.includePattern),s&&(this._parsedIncludeExpression=c.parse(s))}_evalParsedExcludeExpression(e,r,s){let t=null;for(const n of this._parsedExcludeExpression){const a=n(e,r,s);if("string"==typeof a){t=a;break}}return t}matchesExcludesSync(e,r,s){return!(!this._parsedExcludeExpression||!this._evalParsedExcludeExpression(e,r,s))}includedInQuerySync(e,r,s){return!(this._parsedExcludeExpression&&this._evalParsedExcludeExpression(e,r,s)||this._parsedIncludeExpression&&!this._parsedIncludeExpression(e,r,s))}includedInQuery(e,r,s){const t=()=>!this._parsedIncludeExpression||!!this._parsedIncludeExpression(e,r,s);return Promise.all(this._parsedExcludeExpression.map((n=>{const a=n(e,r,s);return M(a)?a.then((e=>!e&&t())):t()}))).then((e=>e.some((e=>!!e))))}hasSiblingExcludeClauses(){return this._excludeExpression.reduce(((e,r)=>D(r)||e),!1)}}function D(e){for(const r in e)if("boolean"!=typeof e[r])return!0;return!1}function we(e){if(!e)return;let r;return s=>(r||(r=(e()||Promise.resolve([])).then((e=>e?f(e):{}))),r.then((e=>!!e[s])))}function Le(e){if(!e)return;let r;return s=>{if(!r){const s=e();r=s?f(s):{}}return!!r[s]}}function f(e){const r={};for(const s of e)r[s]=!0;return r}function ke(e){return e.flatMap((e=>e.patterns.map((r=>e.baseUri?{baseUri:e.baseUri,pattern:r}:r))))}const _e={matchLines:100,charsPerLine:1e4};export{Ie as DEFAULT_MAX_SEARCH_RESULTS,_e as DEFAULT_TEXT_SEARCH_PREVIEW_OPTIONS,Se as FileMatch,de as ISearchService,Q as OneLineRange,ce as PANEL_ID,Ue as QueryGlobTester,L as QueryType,he as SEARCH_EXCLUDE_CONFIG,pe as SEARCH_RESULT_LANGUAGE_ID,k as SearchCompletionExitCode,d as SearchError,z as SearchErrorCode,w as SearchProviderType,b as SearchRange,A as SearchSortOrder,ve as SerializableFileMatch,v as TextSearchCompleteMessageType,be as TextSearchMatch,le as VIEWLET_ID,ue as VIEW_ID,N as ViewMode,Ee as deserializeSearchError,ke as excludeToGlobPattern,fe as getExcludes,Le as hasSiblingFn,we as hasSiblingPromiseFn,xe as isFileMatch,Fe as isFilePatternMatch,ge as isProgressMessage,Re as isSerializedFileMatch,Ce as isSerializedSearchComplete,Te as isSerializedSearchSuccess,Pe as pathIncludedInQuery,Me as resolvePatternsForProvider,me as resultIsMatch,ye as serializeSearchError};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { mapArrayOrNot } from "../../../../base/common/arrays.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import * as glob from "../../../../base/common/glob.js";
+import { IDisposable } from "../../../../base/common/lifecycle.js";
+import * as objects from "../../../../base/common/objects.js";
+import * as extpath from "../../../../base/common/extpath.js";
+import { fuzzyContains, getNLines } from "../../../../base/common/strings.js";
+import { URI, UriComponents } from "../../../../base/common/uri.js";
+import { IFilesConfiguration } from "../../../../platform/files/common/files.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { ITelemetryData } from "../../../../platform/telemetry/common/telemetry.js";
+import { Event } from "../../../../base/common/event.js";
+import * as paths from "../../../../base/common/path.js";
+import { isCancellationError } from "../../../../base/common/errors.js";
+import { GlobPattern, TextSearchCompleteMessageType } from "./searchExtTypes.js";
+import { isThenable } from "../../../../base/common/async.js";
+import { ResourceSet } from "../../../../base/common/map.js";
+const VIEWLET_ID = "workbench.view.search";
+const PANEL_ID = "workbench.panel.search";
+const VIEW_ID = "workbench.view.search";
+const SEARCH_RESULT_LANGUAGE_ID = "search-result";
+const SEARCH_EXCLUDE_CONFIG = "search.exclude";
+const DEFAULT_MAX_SEARCH_RESULTS = 2e4;
+const SEARCH_ELIDED_PREFIX = "\u27EA ";
+const SEARCH_ELIDED_SUFFIX = " characters skipped \u27EB";
+const SEARCH_ELIDED_MIN_LEN = (SEARCH_ELIDED_PREFIX.length + SEARCH_ELIDED_SUFFIX.length + 5) * 2;
+const ISearchService = createDecorator("searchService");
+var SearchProviderType = /* @__PURE__ */ ((SearchProviderType2) => {
+  SearchProviderType2[SearchProviderType2["file"] = 0] = "file";
+  SearchProviderType2[SearchProviderType2["text"] = 1] = "text";
+  SearchProviderType2[SearchProviderType2["aiText"] = 2] = "aiText";
+  return SearchProviderType2;
+})(SearchProviderType || {});
+var QueryType = /* @__PURE__ */ ((QueryType2) => {
+  QueryType2[QueryType2["File"] = 1] = "File";
+  QueryType2[QueryType2["Text"] = 2] = "Text";
+  QueryType2[QueryType2["aiText"] = 3] = "aiText";
+  return QueryType2;
+})(QueryType || {});
+function resultIsMatch(result) {
+  return !!result.rangeLocations && !!result.previewText;
+}
+__name(resultIsMatch, "resultIsMatch");
+function isFileMatch(p) {
+  return !!p.resource;
+}
+__name(isFileMatch, "isFileMatch");
+function isProgressMessage(p) {
+  return !!p.message;
+}
+__name(isProgressMessage, "isProgressMessage");
+var SearchCompletionExitCode = /* @__PURE__ */ ((SearchCompletionExitCode2) => {
+  SearchCompletionExitCode2[SearchCompletionExitCode2["Normal"] = 0] = "Normal";
+  SearchCompletionExitCode2[SearchCompletionExitCode2["NewSearchStarted"] = 1] = "NewSearchStarted";
+  return SearchCompletionExitCode2;
+})(SearchCompletionExitCode || {});
+class FileMatch {
+  constructor(resource) {
+    this.resource = resource;
+  }
+  static {
+    __name(this, "FileMatch");
+  }
+  results = [];
+}
+class TextSearchMatch {
+  static {
+    __name(this, "TextSearchMatch");
+  }
+  rangeLocations = [];
+  previewText;
+  webviewIndex;
+  constructor(text, ranges, previewOptions, webviewIndex) {
+    this.webviewIndex = webviewIndex;
+    const rangesArr = Array.isArray(ranges) ? ranges : [ranges];
+    if (previewOptions && previewOptions.matchLines === 1 && isSingleLineRangeList(rangesArr)) {
+      text = getNLines(text, previewOptions.matchLines);
+      let result = "";
+      let shift = 0;
+      let lastEnd = 0;
+      const leadingChars = Math.floor(previewOptions.charsPerLine / 5);
+      for (const range of rangesArr) {
+        const previewStart = Math.max(range.startColumn - leadingChars, 0);
+        const previewEnd = range.startColumn + previewOptions.charsPerLine;
+        if (previewStart > lastEnd + leadingChars + SEARCH_ELIDED_MIN_LEN) {
+          const elision = SEARCH_ELIDED_PREFIX + (previewStart - lastEnd) + SEARCH_ELIDED_SUFFIX;
+          result += elision + text.slice(previewStart, previewEnd);
+          shift += previewStart - (lastEnd + elision.length);
+        } else {
+          result += text.slice(lastEnd, previewEnd);
+        }
+        lastEnd = previewEnd;
+        this.rangeLocations.push({
+          source: range,
+          preview: new OneLineRange(0, range.startColumn - shift, range.endColumn - shift)
+        });
+      }
+      this.previewText = result;
+    } else {
+      const firstMatchLine = Array.isArray(ranges) ? ranges[0].startLineNumber : ranges.startLineNumber;
+      const rangeLocs = mapArrayOrNot(ranges, (r) => ({
+        preview: new SearchRange(r.startLineNumber - firstMatchLine, r.startColumn, r.endLineNumber - firstMatchLine, r.endColumn),
+        source: r
+      }));
+      this.rangeLocations = Array.isArray(rangeLocs) ? rangeLocs : [rangeLocs];
+      this.previewText = text;
+    }
+  }
+}
+function isSingleLineRangeList(ranges) {
+  const line = ranges[0].startLineNumber;
+  for (const r of ranges) {
+    if (r.startLineNumber !== line || r.endLineNumber !== line) {
+      return false;
+    }
+  }
+  return true;
+}
+__name(isSingleLineRangeList, "isSingleLineRangeList");
+class SearchRange {
+  static {
+    __name(this, "SearchRange");
+  }
+  startLineNumber;
+  startColumn;
+  endLineNumber;
+  endColumn;
+  constructor(startLineNumber, startColumn, endLineNumber, endColumn) {
+    this.startLineNumber = startLineNumber;
+    this.startColumn = startColumn;
+    this.endLineNumber = endLineNumber;
+    this.endColumn = endColumn;
+  }
+}
+class OneLineRange extends SearchRange {
+  static {
+    __name(this, "OneLineRange");
+  }
+  constructor(lineNumber, startColumn, endColumn) {
+    super(lineNumber, startColumn, lineNumber, endColumn);
+  }
+}
+var ViewMode = /* @__PURE__ */ ((ViewMode2) => {
+  ViewMode2["List"] = "list";
+  ViewMode2["Tree"] = "tree";
+  return ViewMode2;
+})(ViewMode || {});
+var SearchSortOrder = /* @__PURE__ */ ((SearchSortOrder2) => {
+  SearchSortOrder2["Default"] = "default";
+  SearchSortOrder2["FileNames"] = "fileNames";
+  SearchSortOrder2["Type"] = "type";
+  SearchSortOrder2["Modified"] = "modified";
+  SearchSortOrder2["CountDescending"] = "countDescending";
+  SearchSortOrder2["CountAscending"] = "countAscending";
+  return SearchSortOrder2;
+})(SearchSortOrder || {});
+function getExcludes(configuration, includeSearchExcludes = true) {
+  const fileExcludes = configuration && configuration.files && configuration.files.exclude;
+  const searchExcludes = includeSearchExcludes && configuration && configuration.search && configuration.search.exclude;
+  if (!fileExcludes && !searchExcludes) {
+    return void 0;
+  }
+  if (!fileExcludes || !searchExcludes) {
+    return fileExcludes || searchExcludes || void 0;
+  }
+  let allExcludes = /* @__PURE__ */ Object.create(null);
+  allExcludes = objects.mixin(allExcludes, objects.deepClone(fileExcludes));
+  allExcludes = objects.mixin(allExcludes, objects.deepClone(searchExcludes), true);
+  return allExcludes;
+}
+__name(getExcludes, "getExcludes");
+function pathIncludedInQuery(queryProps, fsPath) {
+  if (queryProps.excludePattern && glob.match(queryProps.excludePattern, fsPath)) {
+    return false;
+  }
+  if (queryProps.includePattern || queryProps.usingSearchPaths) {
+    if (queryProps.includePattern && glob.match(queryProps.includePattern, fsPath)) {
+      return true;
+    }
+    if (queryProps.usingSearchPaths) {
+      return !!queryProps.folderQueries && queryProps.folderQueries.some((fq) => {
+        const searchPath = fq.folder.fsPath;
+        if (extpath.isEqualOrParent(fsPath, searchPath)) {
+          const relPath = paths.relative(searchPath, fsPath);
+          return !fq.includePattern || !!glob.match(fq.includePattern, relPath);
+        } else {
+          return false;
+        }
+      });
+    }
+    return false;
+  }
+  return true;
+}
+__name(pathIncludedInQuery, "pathIncludedInQuery");
+var SearchErrorCode = /* @__PURE__ */ ((SearchErrorCode2) => {
+  SearchErrorCode2[SearchErrorCode2["unknownEncoding"] = 1] = "unknownEncoding";
+  SearchErrorCode2[SearchErrorCode2["regexParseError"] = 2] = "regexParseError";
+  SearchErrorCode2[SearchErrorCode2["globParseError"] = 3] = "globParseError";
+  SearchErrorCode2[SearchErrorCode2["invalidLiteral"] = 4] = "invalidLiteral";
+  SearchErrorCode2[SearchErrorCode2["rgProcessError"] = 5] = "rgProcessError";
+  SearchErrorCode2[SearchErrorCode2["other"] = 6] = "other";
+  SearchErrorCode2[SearchErrorCode2["canceled"] = 7] = "canceled";
+  return SearchErrorCode2;
+})(SearchErrorCode || {});
+class SearchError extends Error {
+  constructor(message, code) {
+    super(message);
+    this.code = code;
+  }
+  static {
+    __name(this, "SearchError");
+  }
+}
+function deserializeSearchError(error) {
+  const errorMsg = error.message;
+  if (isCancellationError(error)) {
+    return new SearchError(errorMsg, 7 /* canceled */);
+  }
+  try {
+    const details = JSON.parse(errorMsg);
+    return new SearchError(details.message, details.code);
+  } catch (e) {
+    return new SearchError(errorMsg, 6 /* other */);
+  }
+}
+__name(deserializeSearchError, "deserializeSearchError");
+function serializeSearchError(searchError) {
+  const details = { message: searchError.message, code: searchError.code };
+  return new Error(JSON.stringify(details));
+}
+__name(serializeSearchError, "serializeSearchError");
+function isSerializedSearchComplete(arg) {
+  if (arg.type === "error") {
+    return true;
+  } else if (arg.type === "success") {
+    return true;
+  } else {
+    return false;
+  }
+}
+__name(isSerializedSearchComplete, "isSerializedSearchComplete");
+function isSerializedSearchSuccess(arg) {
+  return arg.type === "success";
+}
+__name(isSerializedSearchSuccess, "isSerializedSearchSuccess");
+function isSerializedFileMatch(arg) {
+  return !!arg.path;
+}
+__name(isSerializedFileMatch, "isSerializedFileMatch");
+function isFilePatternMatch(candidate, filePatternToUse, fuzzy = true) {
+  const pathToMatch = candidate.searchPath ? candidate.searchPath : candidate.relativePath;
+  return fuzzy ? fuzzyContains(pathToMatch, filePatternToUse) : glob.match(filePatternToUse, pathToMatch);
+}
+__name(isFilePatternMatch, "isFilePatternMatch");
+class SerializableFileMatch {
+  static {
+    __name(this, "SerializableFileMatch");
+  }
+  path;
+  results;
+  constructor(path) {
+    this.path = path;
+    this.results = [];
+  }
+  addMatch(match) {
+    this.results.push(match);
+  }
+  serialize() {
+    return {
+      path: this.path,
+      results: this.results,
+      numMatches: this.results.length
+    };
+  }
+}
+function resolvePatternsForProvider(globalPattern, folderPattern) {
+  const merged = {
+    ...globalPattern || {},
+    ...folderPattern || {}
+  };
+  return Object.keys(merged).filter((key) => {
+    const value = merged[key];
+    return typeof value === "boolean" && value;
+  });
+}
+__name(resolvePatternsForProvider, "resolvePatternsForProvider");
+class QueryGlobTester {
+  static {
+    __name(this, "QueryGlobTester");
+  }
+  _excludeExpression;
+  // TODO: evaluate globs based on baseURI of pattern
+  _parsedExcludeExpression;
+  _parsedIncludeExpression = null;
+  constructor(config, folderQuery) {
+    this._excludeExpression = folderQuery.excludePattern?.map((excludePattern) => {
+      return {
+        ...config.excludePattern || {},
+        ...excludePattern.pattern || {}
+      };
+    }) ?? [];
+    if (this._excludeExpression.length === 0) {
+      this._excludeExpression = [config.excludePattern || {}];
+    }
+    this._parsedExcludeExpression = this._excludeExpression.map((e) => glob.parse(e));
+    let includeExpression = config.includePattern;
+    if (folderQuery.includePattern) {
+      if (includeExpression) {
+        includeExpression = {
+          ...includeExpression,
+          ...folderQuery.includePattern
+        };
+      } else {
+        includeExpression = folderQuery.includePattern;
+      }
+    }
+    if (includeExpression) {
+      this._parsedIncludeExpression = glob.parse(includeExpression);
+    }
+  }
+  _evalParsedExcludeExpression(testPath, basename, hasSibling) {
+    let result = null;
+    for (const folderExclude of this._parsedExcludeExpression) {
+      const evaluation = folderExclude(testPath, basename, hasSibling);
+      if (typeof evaluation === "string") {
+        result = evaluation;
+        break;
+      }
+    }
+    return result;
+  }
+  matchesExcludesSync(testPath, basename, hasSibling) {
+    if (this._parsedExcludeExpression && this._evalParsedExcludeExpression(testPath, basename, hasSibling)) {
+      return true;
+    }
+    return false;
+  }
+  /**
+   * Guaranteed sync - siblingsFn should not return a promise.
+   */
+  includedInQuerySync(testPath, basename, hasSibling) {
+    if (this._parsedExcludeExpression && this._evalParsedExcludeExpression(testPath, basename, hasSibling)) {
+      return false;
+    }
+    if (this._parsedIncludeExpression && !this._parsedIncludeExpression(testPath, basename, hasSibling)) {
+      return false;
+    }
+    return true;
+  }
+  /**
+   * Evaluating the exclude expression is only async if it includes sibling clauses. As an optimization, avoid doing anything with Promises
+   * unless the expression is async.
+   */
+  includedInQuery(testPath, basename, hasSibling) {
+    const isIncluded = /* @__PURE__ */ __name(() => {
+      return this._parsedIncludeExpression ? !!this._parsedIncludeExpression(testPath, basename, hasSibling) : true;
+    }, "isIncluded");
+    return Promise.all(this._parsedExcludeExpression.map((e) => {
+      const excluded = e(testPath, basename, hasSibling);
+      if (isThenable(excluded)) {
+        return excluded.then((excluded2) => {
+          if (excluded2) {
+            return false;
+          }
+          return isIncluded();
+        });
+      }
+      return isIncluded();
+    })).then((e) => e.some((e2) => !!e2));
+  }
+  hasSiblingExcludeClauses() {
+    return this._excludeExpression.reduce((prev, curr) => hasSiblingClauses(curr) || prev, false);
+  }
+}
+function hasSiblingClauses(pattern) {
+  for (const key in pattern) {
+    if (typeof pattern[key] !== "boolean") {
+      return true;
+    }
+  }
+  return false;
+}
+__name(hasSiblingClauses, "hasSiblingClauses");
+function hasSiblingPromiseFn(siblingsFn) {
+  if (!siblingsFn) {
+    return void 0;
+  }
+  let siblings;
+  return (name) => {
+    if (!siblings) {
+      siblings = (siblingsFn() || Promise.resolve([])).then((list) => list ? listToMap(list) : {});
+    }
+    return siblings.then((map) => !!map[name]);
+  };
+}
+__name(hasSiblingPromiseFn, "hasSiblingPromiseFn");
+function hasSiblingFn(siblingsFn) {
+  if (!siblingsFn) {
+    return void 0;
+  }
+  let siblings;
+  return (name) => {
+    if (!siblings) {
+      const list = siblingsFn();
+      siblings = list ? listToMap(list) : {};
+    }
+    return !!siblings[name];
+  };
+}
+__name(hasSiblingFn, "hasSiblingFn");
+function listToMap(list) {
+  const map = {};
+  for (const key of list) {
+    map[key] = true;
+  }
+  return map;
+}
+__name(listToMap, "listToMap");
+function excludeToGlobPattern(excludesForFolder) {
+  return excludesForFolder.flatMap((exclude) => exclude.patterns.map((pattern) => {
+    return exclude.baseUri ? {
+      baseUri: exclude.baseUri,
+      pattern
+    } : pattern;
+  }));
+}
+__name(excludeToGlobPattern, "excludeToGlobPattern");
+const DEFAULT_TEXT_SEARCH_PREVIEW_OPTIONS = {
+  matchLines: 100,
+  charsPerLine: 1e4
+};
+export {
+  DEFAULT_MAX_SEARCH_RESULTS,
+  DEFAULT_TEXT_SEARCH_PREVIEW_OPTIONS,
+  FileMatch,
+  ISearchService,
+  OneLineRange,
+  PANEL_ID,
+  QueryGlobTester,
+  QueryType,
+  SEARCH_EXCLUDE_CONFIG,
+  SEARCH_RESULT_LANGUAGE_ID,
+  SearchCompletionExitCode,
+  SearchError,
+  SearchErrorCode,
+  SearchProviderType,
+  SearchRange,
+  SearchSortOrder,
+  SerializableFileMatch,
+  TextSearchCompleteMessageType,
+  TextSearchMatch,
+  VIEWLET_ID,
+  VIEW_ID,
+  ViewMode,
+  deserializeSearchError,
+  excludeToGlobPattern,
+  getExcludes,
+  hasSiblingFn,
+  hasSiblingPromiseFn,
+  isFileMatch,
+  isFilePatternMatch,
+  isProgressMessage,
+  isSerializedFileMatch,
+  isSerializedSearchComplete,
+  isSerializedSearchSuccess,
+  pathIncludedInQuery,
+  resolvePatternsForProvider,
+  resultIsMatch,
+  serializeSearchError
+};
+//# sourceMappingURL=search.js.map

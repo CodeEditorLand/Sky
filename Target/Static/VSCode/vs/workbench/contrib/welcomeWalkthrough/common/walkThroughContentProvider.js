@@ -1,1 +1,111 @@
-var y=Object.defineProperty,x=Object.getOwnPropertyDescriptor,f=(e,r,t,o)=>{for(var n,i=o>1?void 0:o?x(r,t):r,s=e.length-1;s>=0;s--)(n=e[s])&&(i=(o?n(r,t,i):n(i))||i);return o&&i&&y(r,t,i),i},s=(e,r)=>(t,o)=>r(t,o,e);import"../../../../base/common/uri.js";import{ITextModelService as T}from"../../../../editor/common/services/resolverService.js";import{IModelService as w}from"../../../../editor/common/services/model.js";import{DefaultEndOfLine as k,EndOfLinePreference as M}from"../../../../editor/common/model.js";import{ILanguageService as C}from"../../../../editor/common/languages/language.js";import"../../../common/contributions.js";import*as m from"../../../../base/common/marked/marked.js";import{Schemas as P}from"../../../../base/common/network.js";import{Range as R}from"../../../../editor/common/core/range.js";import{createTextBufferFactory as B}from"../../../../editor/common/model/textModel.js";import{assertIsDefined as F}from"../../../../base/common/types.js";import{IInstantiationService as L}from"../../../../platform/instantiation/common/instantiation.js";class b{providers=new Map;registerProvider(e,r){this.providers.set(e,r)}getProvider(e){return this.providers.get(e)}}const W=new b;async function E(e,r){if(!r.query)throw new Error("Walkthrough: invalid resource");const t=JSON.parse(r.query);if(!t.moduleId)throw new Error("Walkthrough: invalid resource");const o=W.getProvider(t.moduleId);if(!o)throw new Error(`Walkthrough: no provider registered for ${t.moduleId}`);return e.invokeFunction(o)}let d=class{constructor(e,r,t,o){this.textModelResolverService=e,this.languageService=r,this.modelService=t,this.instantiationService=o,this.textModelResolverService.registerTextModelContentProvider(P.walkThroughSnippet,this)}static ID="workbench.contrib.walkThroughSnippetContentProvider";loads=new Map;async textBufferFactoryFromResource(e){let r=this.loads.get(e.toString());return r||(r=E(this.instantiationService,e).then((e=>B(e))).finally((()=>this.loads.delete(e.toString()))),this.loads.set(e.toString(),r)),r}async provideTextContent(e){const r=await this.textBufferFactoryFromResource(e.with({fragment:""}));let t=this.modelService.getModel(e);if(!t){const o=parseInt(e.fragment);let n=0;const i=new m.marked.Renderer;i.code=({text:r,lang:i})=>{n++;const s="string"==typeof i&&this.languageService.getLanguageIdByLanguageName(i)||"",a=this.languageService.createById(s),m=this.modelService.createModel(r,a,e.with({fragment:`${n}.${i}`}));return n===o&&(t=m),""};const s=r.create(k.LF).textBuffer,a=s.getLineCount(),c=new R(1,1,a,s.getLineLength(a)+1),d=s.getValueInRange(c,M.TextDefined);m.marked(d,{renderer:i})}return F(t)}};d=f([s(0,T),s(1,C),s(2,w),s(3,L)],d);export{d as WalkThroughSnippetContentProvider,E as moduleToContent,W as walkThroughContentRegistry};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { URI } from "../../../../base/common/uri.js";
+import { ITextModelService, ITextModelContentProvider } from "../../../../editor/common/services/resolverService.js";
+import { IModelService } from "../../../../editor/common/services/model.js";
+import { ITextModel, DefaultEndOfLine, EndOfLinePreference, ITextBufferFactory } from "../../../../editor/common/model.js";
+import { ILanguageService } from "../../../../editor/common/languages/language.js";
+import { IWorkbenchContribution } from "../../../common/contributions.js";
+import * as marked from "../../../../base/common/marked/marked.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { Range } from "../../../../editor/common/core/range.js";
+import { createTextBufferFactory } from "../../../../editor/common/model/textModel.js";
+import { assertIsDefined } from "../../../../base/common/types.js";
+import { IInstantiationService, ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+class WalkThroughContentProviderRegistry {
+  static {
+    __name(this, "WalkThroughContentProviderRegistry");
+  }
+  providers = /* @__PURE__ */ new Map();
+  registerProvider(moduleId, provider) {
+    this.providers.set(moduleId, provider);
+  }
+  getProvider(moduleId) {
+    return this.providers.get(moduleId);
+  }
+}
+const walkThroughContentRegistry = new WalkThroughContentProviderRegistry();
+async function moduleToContent(instantiationService, resource) {
+  if (!resource.query) {
+    throw new Error("Walkthrough: invalid resource");
+  }
+  const query = JSON.parse(resource.query);
+  if (!query.moduleId) {
+    throw new Error("Walkthrough: invalid resource");
+  }
+  const provider = walkThroughContentRegistry.getProvider(query.moduleId);
+  if (!provider) {
+    throw new Error(`Walkthrough: no provider registered for ${query.moduleId}`);
+  }
+  return instantiationService.invokeFunction(provider);
+}
+__name(moduleToContent, "moduleToContent");
+let WalkThroughSnippetContentProvider = class {
+  constructor(textModelResolverService, languageService, modelService, instantiationService) {
+    this.textModelResolverService = textModelResolverService;
+    this.languageService = languageService;
+    this.modelService = modelService;
+    this.instantiationService = instantiationService;
+    this.textModelResolverService.registerTextModelContentProvider(Schemas.walkThroughSnippet, this);
+  }
+  static {
+    __name(this, "WalkThroughSnippetContentProvider");
+  }
+  static ID = "workbench.contrib.walkThroughSnippetContentProvider";
+  loads = /* @__PURE__ */ new Map();
+  async textBufferFactoryFromResource(resource) {
+    let ongoing = this.loads.get(resource.toString());
+    if (!ongoing) {
+      ongoing = moduleToContent(this.instantiationService, resource).then((content) => createTextBufferFactory(content)).finally(() => this.loads.delete(resource.toString()));
+      this.loads.set(resource.toString(), ongoing);
+    }
+    return ongoing;
+  }
+  async provideTextContent(resource) {
+    const factory = await this.textBufferFactoryFromResource(resource.with({ fragment: "" }));
+    let codeEditorModel = this.modelService.getModel(resource);
+    if (!codeEditorModel) {
+      const j = parseInt(resource.fragment);
+      let i = 0;
+      const renderer = new marked.marked.Renderer();
+      renderer.code = ({ text, lang }) => {
+        i++;
+        const languageId = typeof lang === "string" ? this.languageService.getLanguageIdByLanguageName(lang) || "" : "";
+        const languageSelection = this.languageService.createById(languageId);
+        const model = this.modelService.createModel(text, languageSelection, resource.with({ fragment: `${i}.${lang}` }));
+        if (i === j) {
+          codeEditorModel = model;
+        }
+        return "";
+      };
+      const textBuffer = factory.create(DefaultEndOfLine.LF).textBuffer;
+      const lineCount = textBuffer.getLineCount();
+      const range = new Range(1, 1, lineCount, textBuffer.getLineLength(lineCount) + 1);
+      const markdown = textBuffer.getValueInRange(range, EndOfLinePreference.TextDefined);
+      marked.marked(markdown, { renderer });
+    }
+    return assertIsDefined(codeEditorModel);
+  }
+};
+WalkThroughSnippetContentProvider = __decorateClass([
+  __decorateParam(0, ITextModelService),
+  __decorateParam(1, ILanguageService),
+  __decorateParam(2, IModelService),
+  __decorateParam(3, IInstantiationService)
+], WalkThroughSnippetContentProvider);
+export {
+  WalkThroughSnippetContentProvider,
+  moduleToContent,
+  walkThroughContentRegistry
+};
+//# sourceMappingURL=walkThroughContentProvider.js.map

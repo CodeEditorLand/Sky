@@ -1,1 +1,497 @@
-var P=Object.defineProperty,B=Object.getOwnPropertyDescriptor,b=(e,t,o,n)=>{for(var r,a=n>1?void 0:n?B(t,o):t,s=e.length-1;s>=0;s--)(r=e[s])&&(a=(n?r(t,o,a):r(a))||a);return n&&a&&P(t,o,a),a},c=(e,t)=>(o,n)=>t(o,n,e);import*as o from"../../../../base/browser/dom.js";import*as d from"../../../../nls.js";import{renderMarkdown as K}from"../../../../base/browser/markdownRenderer.js";import{DisposableStore as _}from"../../../../base/common/lifecycle.js";import{IOpenerService as z}from"../../../../platform/opener/common/opener.js";import"../../../browser/labels.js";import{CommentNode as S,ResourceWithCommentThreads as N}from"../common/commentModel.js";import{TreeVisibility as x}from"../../../../base/browser/ui/tree/tree.js";import"../../../../base/browser/ui/list/list.js";import{IConfigurationService as A}from"../../../../platform/configuration/common/configuration.js";import{IContextKeyService as U}from"../../../../platform/contextkey/common/contextkey.js";import{IListService as D,WorkbenchObjectTree as q}from"../../../../platform/list/browser/listService.js";import{IThemeService as j}from"../../../../platform/theme/common/themeService.js";import{IInstantiationService as G}from"../../../../platform/instantiation/common/instantiation.js";import{TimestampWidget as H}from"./timestamp.js";import{Codicon as E}from"../../../../base/common/codicons.js";import{ThemeIcon as $}from"../../../../base/common/themables.js";import"../../../../base/common/htmlContent.js";import{commentViewThreadStateColorVar as O,getCommentThreadStateIconColor as J}from"./commentColors.js";import{CommentThreadApplicability as Q,CommentThreadState as F}from"../../../../editor/common/languages.js";import"../../../../base/common/color.js";import"../../../../base/common/filters.js";import{FilterOptions as g}from"./commentsFilterOptions.js";import{basename as X}from"../../../../base/common/resources.js";import{openLinkFromMarkdown as Y}from"../../../../editor/browser/widget/markdownRenderer/browser/markdownRenderer.js";import"../../../../platform/theme/browser/defaultStyles.js";import"../../../../base/browser/ui/list/listWidget.js";import"../../../../platform/action/common/action.js";import{CommentsModel as Z}from"./commentsModel.js";import{getDefaultHoverDelegate as ee}from"../../../../base/browser/ui/hover/hoverDelegateFactory.js";import{ActionBar as te}from"../../../../base/browser/ui/actionbar/actionbar.js";import{createActionViewItem as re,getContextMenuActions as ne}from"../../../../platform/actions/browser/menuEntryActionViewItem.js";import{IMenuService as oe,MenuId as W}from"../../../../platform/actions/common/actions.js";import"../../../../base/common/actions.js";import{MarshalledId as V}from"../../../../base/common/marshallingIds.js";import{IContextMenuService as ie}from"../../../../platform/contextview/browser/contextView.js";import{ActionViewItem as ae}from"../../../../base/browser/ui/actionbar/actionViewItems.js";import{IKeybindingService as se}from"../../../../platform/keybinding/common/keybinding.js";import"../../../common/comments.js";import{IHoverService as me}from"../../../../platform/hover/browser/hover.js";const Ct="workbench.panel.comments",gt="Comments",Tt=d.localize2("comments.view.title","Comments");class w{static RESOURCE_ID="resource-with-comments";static COMMENT_ID="comment-node";getHeight(e){return e instanceof S&&e.hasReply()?44:22}getTemplateId(e){return e instanceof N?w.RESOURCE_ID:e instanceof S?w.COMMENT_ID:""}}class ce{constructor(e){this.labels=e}templateId="resource-with-comments";renderTemplate(e){const t=o.append(e,o.$(".resource-container")),n=this.labels.create(t),r=o.append(t,o.$(".separator"));return{resourceLabel:n,owner:t.appendChild(o.$(".owner")),separator:r}}renderElement(e,t,o,n){o.resourceLabel.setFile(e.element.resource),o.separator.innerText="·",e.element.ownerLabel?(o.owner.innerText=e.element.ownerLabel,o.separator.style.display="inline"):(o.owner.innerText="",o.separator.style.display="none")}disposeTemplate(e){e.resourceLabel.dispose()}}let T=class{constructor(e){this.menuService=e}contextKeyService;getResourceActions(e){return{actions:this.getActions(W.CommentsViewThreadActions,e).primary}}getResourceContextActions(e){return this.getActions(W.CommentsViewThreadActions,e).secondary}setContextKeyService(e){this.contextKeyService=e}getActions(e,t){if(!this.contextKeyService)return{primary:[],secondary:[]};const o=[["commentController",t.owner],["resourceScheme",t.resource.scheme],["commentThread",t.contextValue],["canReply",t.thread.canReply]],n=this.contextKeyService.createOverlay(o),r=this.menuService.getMenuActions(e,n,{shouldForwardArgs:!0});return ne(r,"inline")}dispose(){this.contextKeyService=void 0}};T=b([c(0,oe)],T);let I=class{constructor(e,t,o,n,r,a){this.actionViewItemProvider=e,this.menus=t,this.openerService=o,this.configurationService=n,this.hoverService=r,this.themeService=a}templateId="comment-node";renderTemplate(e){const t=o.append(e,o.$(".comment-thread-container")),n=o.append(t,o.$(".comment-metadata-container")),r=o.append(n,o.$(".comment-metadata")),a=o.append(r,o.$(".icon")),s=o.append(r,o.$(".user")),i=new H(this.configurationService,this.hoverService,o.append(r,o.$(".timestamp-container"))),m=o.append(r,o.$(".relevance")),c=o.append(r,o.$(".separator")),l=o.append(r,o.$(".text")),d=o.append(r,o.$(".range")),p=o.$("p");d.appendChild(p);const h={icon:a,userNames:s,timestamp:i,relevance:m,separator:c,commentPreview:l,range:p};h.separator.innerText="·";const u=o.append(n,o.$(".actions")),g=new te(u,{actionViewItemProvider:this.actionViewItemProvider}),f=o.append(t,o.$(".comment-snippet-container")),v={container:f,icon:o.append(f,o.$(".icon")),count:o.append(f,o.$(".count")),lastReplyDetail:o.append(f,o.$(".reply-detail")),separator:o.append(f,o.$(".separator")),timestamp:new H(this.configurationService,this.hoverService,o.append(f,o.$(".timestamp-container")))};v.separator.innerText="·",v.icon.classList.add(...$.asClassNameArray(E.indent));return{threadMetadata:h,repliesMetadata:v,actionBar:g,disposables:[h.timestamp,v.timestamp]}}getCountString(e){return e>2?d.localize("commentsCountReplies","{0} replies",e-1):2===e?d.localize("commentsCountReply","1 reply"):d.localize("commentCount","1 comment")}getRenderedComment(e,t){const n=K(e,{inline:!0,actionHandler:{callback:t=>Y(this.openerService,t,e.isTrusted),disposables:t}}),r=n.element.getElementsByTagName("img");for(let e=0;e<r.length;e++){const t=r[e],n=o.$("");n.textContent=t.alt?d.localize("imageWithLabel","Image: {0}",t.alt):d.localize("image","Image"),t.parentNode.replaceChild(n,t)}const a=[...n.element.getElementsByTagName("h1"),...n.element.getElementsByTagName("h2"),...n.element.getElementsByTagName("h3"),...n.element.getElementsByTagName("h4"),...n.element.getElementsByTagName("h5"),...n.element.getElementsByTagName("h6")];for(const e of a){const t=document.createTextNode(e.textContent||"");e.parentNode.replaceChild(t,e)}for(;n.element.children.length>1&&"HR"===n.element.firstElementChild?.tagName;)n.element.removeChild(n.element.firstElementChild);return n}getIcon(e){return e===F.Unresolved?E.commentUnresolved:E.comment}renderElement(e,t,o,n){o.actionBar.clear();const r=e.element.replies.length+1;if(e.element.threadRelevance===Q.Outdated?(o.threadMetadata.relevance.style.display="",o.threadMetadata.relevance.innerText=d.localize("outdated","Outdated"),o.threadMetadata.separator.style.display="none"):(o.threadMetadata.relevance.innerText="",o.threadMetadata.relevance.style.display="none",o.threadMetadata.separator.style.display=""),o.threadMetadata.icon.classList.remove(...Array.from(o.threadMetadata.icon.classList.values()).filter((e=>e.startsWith("codicon")))),o.threadMetadata.icon.classList.add(...$.asClassNameArray(this.getIcon(e.element.threadState))),void 0!==e.element.threadState){const t=this.getCommentThreadWidgetStateColor(e.element.threadState,this.themeService.getColorTheme());o.threadMetadata.icon.style.setProperty(O,`${t}`),o.threadMetadata.icon.style.color=`var(${O})`}o.threadMetadata.userNames.textContent=e.element.comment.userName,o.threadMetadata.timestamp.setTimestamp(e.element.comment.timestamp?new Date(e.element.comment.timestamp):void 0);const a=e.element;if(o.threadMetadata.commentPreview.innerText="",o.threadMetadata.commentPreview.style.height="22px","string"==typeof a.comment.body)o.threadMetadata.commentPreview.innerText=a.comment.body;else{const e=new _;o.disposables.push(e);const t=this.getRenderedComment(a.comment.body,e);o.disposables.push(t);for(let e=t.element.children.length-1;e>=1;e--)t.element.removeChild(t.element.children[e]);o.threadMetadata.commentPreview.appendChild(t.element),o.disposables.push(this.hoverService.setupManagedHover(ee("mouse"),o.threadMetadata.commentPreview,t.element.textContent??""))}e.element.range&&(e.element.range.startLineNumber===e.element.range.endLineNumber?o.threadMetadata.range.textContent=d.localize("commentLine","[Ln {0}]",e.element.range.startLineNumber):o.threadMetadata.range.textContent=d.localize("commentRange","[Ln {0}-{1}]",e.element.range.startLineNumber,e.element.range.endLineNumber));const s=this.menus.getResourceActions(e.element);if(o.actionBar.push(s.actions,{icon:!0,label:!1}),o.actionBar.context={commentControlHandle:e.element.controllerHandle,commentThreadHandle:e.element.threadHandle,$mid:V.CommentThread},!e.element.hasReply())return void(o.repliesMetadata.container.style.display="none");o.repliesMetadata.container.style.display="",o.repliesMetadata.count.textContent=this.getCountString(r);const i=e.element.replies[e.element.replies.length-1].comment;o.repliesMetadata.lastReplyDetail.textContent=d.localize("lastReplyFrom","Last reply from {0}",i.userName),o.repliesMetadata.timestamp.setTimestamp(i.timestamp?new Date(i.timestamp):void 0)}getCommentThreadWidgetStateColor(e,t){return void 0!==e?J(e,t):void 0}disposeTemplate(e){e.disposables.forEach((e=>e.dispose())),e.actionBar.dispose()}};I=b([c(2,z),c(3,A),c(4,me),c(5,j)],I);var le=(e=>(e[e.Resource=0]="Resource",e[e.Comment=1]="Comment",e))(le||{});class It{constructor(e){this.options=e}filter(e,t){return""===this.options.filter&&this.options.showResolved&&this.options.showUnresolved?x.Visible:e instanceof N?this.filterResourceMarkers(e):this.filterCommentNode(e,t)}filterResourceMarkers(e){if(this.options.textFilter.text&&!this.options.textFilter.negate){const t=g._filter(this.options.textFilter.text,X(e.resource));if(t)return{visibility:!0,data:{type:0,uriMatches:t||[]}}}return x.Recurse}filterCommentNode(e,t){if(!(void 0===e.threadState||this.options.showResolved&&F.Resolved===e.threadState||this.options.showUnresolved&&F.Unresolved===e.threadState))return!1;if(!this.options.textFilter.text)return!0;const o=g._messageFilter(this.options.textFilter.text,"string"==typeof e.comment.body?e.comment.body:e.comment.body.value)||g._messageFilter(this.options.textFilter.text,e.comment.userName)||e.replies.map((e=>g._messageFilter(this.options.textFilter.text,e.comment.userName)||g._messageFilter(this.options.textFilter.text,"string"==typeof e.comment.body?e.comment.body:e.comment.body.value))).filter((e=>!!e)).flat();return o.length&&!this.options.textFilter.negate?{visibility:!0,data:{type:1,textMatches:o}}:(!o.length||!this.options.textFilter.negate||t!==x.Recurse)&&(!(0!==o.length||!this.options.textFilter.negate||t!==x.Recurse)||t)}}let R=class extends q{constructor(e,t,o,n,r,a,s,i,m){const c=new w,l=re.bind(void 0,a),d=a.createInstance(T);d.setContextKeyService(n);super("CommentsTree",t,c,[a.createInstance(ce,e),a.createInstance(I,l,d)],{accessibilityProvider:o.accessibilityProvider,identityProvider:{getId:e=>e instanceof Z?"root":e instanceof N?`${e.uniqueOwner}-${e.id}`:e instanceof S?`${e.uniqueOwner}-${e.resource.toString()}-${e.threadId}-${e.comment.uniqueIdInThread}`+(e.isRoot?"-root":""):""},expandOnlyOnTwistieClick:!0,collapseByDefault:!1,overrideStyles:o.overrideStyles,filter:o.filter,sorter:o.sorter,findWidgetEnabled:!1,multipleSelectionSupport:!1},a,n,r,s),this.contextMenuService=i,this.keybindingService=m,this.menus=d,this.disposables.add(this.onContextMenu((e=>this.commentsOnContextMenu(e))))}menus;commentsOnContextMenu(e){const t=e.element;if(!(t instanceof S))return;const o=e.browserEvent;o.preventDefault(),o.stopPropagation(),this.setFocus([t]);const n=this.menus.getResourceContextActions(t);n.length&&this.contextMenuService.showContextMenu({getAnchor:()=>e.anchor,getActions:()=>n,getActionViewItem:e=>{const t=this.keybindingService.lookupKeybinding(e.id);if(t)return new ae(e,e,{label:!0,keybinding:t.getLabel()})},onHide:e=>{e&&this.domFocus()},getActionsContext:()=>({commentControlHandle:t.controllerHandle,commentThreadHandle:t.threadHandle,$mid:V.CommentThread,thread:t.thread})})}filterComments(){this.refilter()}getVisibleItemCount(){let e=0;const t=this.getNode();for(const o of t.children)for(const t of o.children)t.visible&&o.visible&&e++;return e}};R=b([c(3,U),c(4,D),c(5,G),c(6,A),c(7,ie),c(8,se)],R);export{Ct as COMMENTS_VIEW_ID,gt as COMMENTS_VIEW_STORAGE_ID,Tt as COMMENTS_VIEW_TITLE,I as CommentNodeRenderer,R as CommentsList,T as CommentsMenus,It as Filter,ce as ResourceWithCommentsRenderer};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import * as dom from "../../../../base/browser/dom.js";
+import * as nls from "../../../../nls.js";
+import { renderMarkdown } from "../../../../base/browser/markdownRenderer.js";
+import { IDisposable, DisposableStore } from "../../../../base/common/lifecycle.js";
+import { IOpenerService } from "../../../../platform/opener/common/opener.js";
+import { IResourceLabel, ResourceLabels } from "../../../browser/labels.js";
+import { CommentNode, ResourceWithCommentThreads } from "../common/commentModel.js";
+import { ITreeContextMenuEvent, ITreeFilter, ITreeNode, TreeFilterResult, TreeVisibility } from "../../../../base/browser/ui/tree/tree.js";
+import { IListVirtualDelegate, IListRenderer } from "../../../../base/browser/ui/list/list.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IListService, IWorkbenchAsyncDataTreeOptions, WorkbenchObjectTree } from "../../../../platform/list/browser/listService.js";
+import { IColorTheme, IThemeService } from "../../../../platform/theme/common/themeService.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { TimestampWidget } from "./timestamp.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { IMarkdownString } from "../../../../base/common/htmlContent.js";
+import { commentViewThreadStateColorVar, getCommentThreadStateIconColor } from "./commentColors.js";
+import { CommentThreadApplicability, CommentThreadState } from "../../../../editor/common/languages.js";
+import { Color } from "../../../../base/common/color.js";
+import { IMatch } from "../../../../base/common/filters.js";
+import { FilterOptions } from "./commentsFilterOptions.js";
+import { basename } from "../../../../base/common/resources.js";
+import { openLinkFromMarkdown } from "../../../../editor/browser/widget/markdownRenderer/browser/markdownRenderer.js";
+import { IStyleOverride } from "../../../../platform/theme/browser/defaultStyles.js";
+import { IListStyles } from "../../../../base/browser/ui/list/listWidget.js";
+import { ILocalizedString } from "../../../../platform/action/common/action.js";
+import { CommentsModel } from "./commentsModel.js";
+import { getDefaultHoverDelegate } from "../../../../base/browser/ui/hover/hoverDelegateFactory.js";
+import { ActionBar, IActionViewItemProvider } from "../../../../base/browser/ui/actionbar/actionbar.js";
+import { createActionViewItem, getContextMenuActions } from "../../../../platform/actions/browser/menuEntryActionViewItem.js";
+import { IMenuService, MenuId } from "../../../../platform/actions/common/actions.js";
+import { IAction } from "../../../../base/common/actions.js";
+import { MarshalledId } from "../../../../base/common/marshallingIds.js";
+import { IContextMenuService } from "../../../../platform/contextview/browser/contextView.js";
+import { ActionViewItem } from "../../../../base/browser/ui/actionbar/actionViewItems.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { MarshalledCommentThread, MarshalledCommentThreadInternal } from "../../../common/comments.js";
+import { IHoverService } from "../../../../platform/hover/browser/hover.js";
+const COMMENTS_VIEW_ID = "workbench.panel.comments";
+const COMMENTS_VIEW_STORAGE_ID = "Comments";
+const COMMENTS_VIEW_TITLE = nls.localize2("comments.view.title", "Comments");
+class CommentsModelVirtualDelegate {
+  static {
+    __name(this, "CommentsModelVirtualDelegate");
+  }
+  static RESOURCE_ID = "resource-with-comments";
+  static COMMENT_ID = "comment-node";
+  getHeight(element) {
+    if (element instanceof CommentNode && element.hasReply()) {
+      return 44;
+    }
+    return 22;
+  }
+  getTemplateId(element) {
+    if (element instanceof ResourceWithCommentThreads) {
+      return CommentsModelVirtualDelegate.RESOURCE_ID;
+    }
+    if (element instanceof CommentNode) {
+      return CommentsModelVirtualDelegate.COMMENT_ID;
+    }
+    return "";
+  }
+}
+class ResourceWithCommentsRenderer {
+  constructor(labels) {
+    this.labels = labels;
+  }
+  static {
+    __name(this, "ResourceWithCommentsRenderer");
+  }
+  templateId = "resource-with-comments";
+  renderTemplate(container) {
+    const labelContainer = dom.append(container, dom.$(".resource-container"));
+    const resourceLabel = this.labels.create(labelContainer);
+    const separator = dom.append(labelContainer, dom.$(".separator"));
+    const owner = labelContainer.appendChild(dom.$(".owner"));
+    return { resourceLabel, owner, separator };
+  }
+  renderElement(node, index, templateData, height) {
+    templateData.resourceLabel.setFile(node.element.resource);
+    templateData.separator.innerText = "\xB7";
+    if (node.element.ownerLabel) {
+      templateData.owner.innerText = node.element.ownerLabel;
+      templateData.separator.style.display = "inline";
+    } else {
+      templateData.owner.innerText = "";
+      templateData.separator.style.display = "none";
+    }
+  }
+  disposeTemplate(templateData) {
+    templateData.resourceLabel.dispose();
+  }
+}
+let CommentsMenus = class {
+  constructor(menuService) {
+    this.menuService = menuService;
+  }
+  static {
+    __name(this, "CommentsMenus");
+  }
+  contextKeyService;
+  getResourceActions(element) {
+    const actions = this.getActions(MenuId.CommentsViewThreadActions, element);
+    return { actions: actions.primary };
+  }
+  getResourceContextActions(element) {
+    return this.getActions(MenuId.CommentsViewThreadActions, element).secondary;
+  }
+  setContextKeyService(service) {
+    this.contextKeyService = service;
+  }
+  getActions(menuId, element) {
+    if (!this.contextKeyService) {
+      return { primary: [], secondary: [] };
+    }
+    const overlay = [
+      ["commentController", element.owner],
+      ["resourceScheme", element.resource.scheme],
+      ["commentThread", element.contextValue],
+      ["canReply", element.thread.canReply]
+    ];
+    const contextKeyService = this.contextKeyService.createOverlay(overlay);
+    const menu = this.menuService.getMenuActions(menuId, contextKeyService, { shouldForwardArgs: true });
+    return getContextMenuActions(menu, "inline");
+  }
+  dispose() {
+    this.contextKeyService = void 0;
+  }
+};
+CommentsMenus = __decorateClass([
+  __decorateParam(0, IMenuService)
+], CommentsMenus);
+let CommentNodeRenderer = class {
+  constructor(actionViewItemProvider, menus, openerService, configurationService, hoverService, themeService) {
+    this.actionViewItemProvider = actionViewItemProvider;
+    this.menus = menus;
+    this.openerService = openerService;
+    this.configurationService = configurationService;
+    this.hoverService = hoverService;
+    this.themeService = themeService;
+  }
+  static {
+    __name(this, "CommentNodeRenderer");
+  }
+  templateId = "comment-node";
+  renderTemplate(container) {
+    const threadContainer = dom.append(container, dom.$(".comment-thread-container"));
+    const metadataContainer = dom.append(threadContainer, dom.$(".comment-metadata-container"));
+    const metadata = dom.append(metadataContainer, dom.$(".comment-metadata"));
+    const icon = dom.append(metadata, dom.$(".icon"));
+    const userNames = dom.append(metadata, dom.$(".user"));
+    const timestamp = new TimestampWidget(this.configurationService, this.hoverService, dom.append(metadata, dom.$(".timestamp-container")));
+    const relevance = dom.append(metadata, dom.$(".relevance"));
+    const separator = dom.append(metadata, dom.$(".separator"));
+    const commentPreview = dom.append(metadata, dom.$(".text"));
+    const rangeContainer = dom.append(metadata, dom.$(".range"));
+    const range = dom.$("p");
+    rangeContainer.appendChild(range);
+    const threadMetadata = {
+      icon,
+      userNames,
+      timestamp,
+      relevance,
+      separator,
+      commentPreview,
+      range
+    };
+    threadMetadata.separator.innerText = "\xB7";
+    const actionsContainer = dom.append(metadataContainer, dom.$(".actions"));
+    const actionBar = new ActionBar(actionsContainer, {
+      actionViewItemProvider: this.actionViewItemProvider
+    });
+    const snippetContainer = dom.append(threadContainer, dom.$(".comment-snippet-container"));
+    const repliesMetadata = {
+      container: snippetContainer,
+      icon: dom.append(snippetContainer, dom.$(".icon")),
+      count: dom.append(snippetContainer, dom.$(".count")),
+      lastReplyDetail: dom.append(snippetContainer, dom.$(".reply-detail")),
+      separator: dom.append(snippetContainer, dom.$(".separator")),
+      timestamp: new TimestampWidget(this.configurationService, this.hoverService, dom.append(snippetContainer, dom.$(".timestamp-container")))
+    };
+    repliesMetadata.separator.innerText = "\xB7";
+    repliesMetadata.icon.classList.add(...ThemeIcon.asClassNameArray(Codicon.indent));
+    const disposables = [threadMetadata.timestamp, repliesMetadata.timestamp];
+    return { threadMetadata, repliesMetadata, actionBar, disposables };
+  }
+  getCountString(commentCount) {
+    if (commentCount > 2) {
+      return nls.localize("commentsCountReplies", "{0} replies", commentCount - 1);
+    } else if (commentCount === 2) {
+      return nls.localize("commentsCountReply", "1 reply");
+    } else {
+      return nls.localize("commentCount", "1 comment");
+    }
+  }
+  getRenderedComment(commentBody, disposables) {
+    const renderedComment = renderMarkdown(commentBody, {
+      inline: true,
+      actionHandler: {
+        callback: /* @__PURE__ */ __name((link) => openLinkFromMarkdown(this.openerService, link, commentBody.isTrusted), "callback"),
+        disposables
+      }
+    });
+    const images = renderedComment.element.getElementsByTagName("img");
+    for (let i = 0; i < images.length; i++) {
+      const image = images[i];
+      const textDescription = dom.$("");
+      textDescription.textContent = image.alt ? nls.localize("imageWithLabel", "Image: {0}", image.alt) : nls.localize("image", "Image");
+      image.parentNode.replaceChild(textDescription, image);
+    }
+    const headings = [...renderedComment.element.getElementsByTagName("h1"), ...renderedComment.element.getElementsByTagName("h2"), ...renderedComment.element.getElementsByTagName("h3"), ...renderedComment.element.getElementsByTagName("h4"), ...renderedComment.element.getElementsByTagName("h5"), ...renderedComment.element.getElementsByTagName("h6")];
+    for (const heading of headings) {
+      const textNode = document.createTextNode(heading.textContent || "");
+      heading.parentNode.replaceChild(textNode, heading);
+    }
+    while (renderedComment.element.children.length > 1 && renderedComment.element.firstElementChild?.tagName === "HR") {
+      renderedComment.element.removeChild(renderedComment.element.firstElementChild);
+    }
+    return renderedComment;
+  }
+  getIcon(threadState) {
+    if (threadState === CommentThreadState.Unresolved) {
+      return Codicon.commentUnresolved;
+    } else {
+      return Codicon.comment;
+    }
+  }
+  renderElement(node, index, templateData, height) {
+    templateData.actionBar.clear();
+    const commentCount = node.element.replies.length + 1;
+    if (node.element.threadRelevance === CommentThreadApplicability.Outdated) {
+      templateData.threadMetadata.relevance.style.display = "";
+      templateData.threadMetadata.relevance.innerText = nls.localize("outdated", "Outdated");
+      templateData.threadMetadata.separator.style.display = "none";
+    } else {
+      templateData.threadMetadata.relevance.innerText = "";
+      templateData.threadMetadata.relevance.style.display = "none";
+      templateData.threadMetadata.separator.style.display = "";
+    }
+    templateData.threadMetadata.icon.classList.remove(...Array.from(templateData.threadMetadata.icon.classList.values()).filter((value) => value.startsWith("codicon")));
+    templateData.threadMetadata.icon.classList.add(...ThemeIcon.asClassNameArray(this.getIcon(node.element.threadState)));
+    if (node.element.threadState !== void 0) {
+      const color = this.getCommentThreadWidgetStateColor(node.element.threadState, this.themeService.getColorTheme());
+      templateData.threadMetadata.icon.style.setProperty(commentViewThreadStateColorVar, `${color}`);
+      templateData.threadMetadata.icon.style.color = `var(${commentViewThreadStateColorVar})`;
+    }
+    templateData.threadMetadata.userNames.textContent = node.element.comment.userName;
+    templateData.threadMetadata.timestamp.setTimestamp(node.element.comment.timestamp ? new Date(node.element.comment.timestamp) : void 0);
+    const originalComment = node.element;
+    templateData.threadMetadata.commentPreview.innerText = "";
+    templateData.threadMetadata.commentPreview.style.height = "22px";
+    if (typeof originalComment.comment.body === "string") {
+      templateData.threadMetadata.commentPreview.innerText = originalComment.comment.body;
+    } else {
+      const disposables = new DisposableStore();
+      templateData.disposables.push(disposables);
+      const renderedComment = this.getRenderedComment(originalComment.comment.body, disposables);
+      templateData.disposables.push(renderedComment);
+      for (let i = renderedComment.element.children.length - 1; i >= 1; i--) {
+        renderedComment.element.removeChild(renderedComment.element.children[i]);
+      }
+      templateData.threadMetadata.commentPreview.appendChild(renderedComment.element);
+      templateData.disposables.push(this.hoverService.setupManagedHover(getDefaultHoverDelegate("mouse"), templateData.threadMetadata.commentPreview, renderedComment.element.textContent ?? ""));
+    }
+    if (node.element.range) {
+      if (node.element.range.startLineNumber === node.element.range.endLineNumber) {
+        templateData.threadMetadata.range.textContent = nls.localize("commentLine", "[Ln {0}]", node.element.range.startLineNumber);
+      } else {
+        templateData.threadMetadata.range.textContent = nls.localize("commentRange", "[Ln {0}-{1}]", node.element.range.startLineNumber, node.element.range.endLineNumber);
+      }
+    }
+    const menuActions = this.menus.getResourceActions(node.element);
+    templateData.actionBar.push(menuActions.actions, { icon: true, label: false });
+    templateData.actionBar.context = {
+      commentControlHandle: node.element.controllerHandle,
+      commentThreadHandle: node.element.threadHandle,
+      $mid: MarshalledId.CommentThread
+    };
+    if (!node.element.hasReply()) {
+      templateData.repliesMetadata.container.style.display = "none";
+      return;
+    }
+    templateData.repliesMetadata.container.style.display = "";
+    templateData.repliesMetadata.count.textContent = this.getCountString(commentCount);
+    const lastComment = node.element.replies[node.element.replies.length - 1].comment;
+    templateData.repliesMetadata.lastReplyDetail.textContent = nls.localize("lastReplyFrom", "Last reply from {0}", lastComment.userName);
+    templateData.repliesMetadata.timestamp.setTimestamp(lastComment.timestamp ? new Date(lastComment.timestamp) : void 0);
+  }
+  getCommentThreadWidgetStateColor(state, theme) {
+    return state !== void 0 ? getCommentThreadStateIconColor(state, theme) : void 0;
+  }
+  disposeTemplate(templateData) {
+    templateData.disposables.forEach((disposeable) => disposeable.dispose());
+    templateData.actionBar.dispose();
+  }
+};
+CommentNodeRenderer = __decorateClass([
+  __decorateParam(2, IOpenerService),
+  __decorateParam(3, IConfigurationService),
+  __decorateParam(4, IHoverService),
+  __decorateParam(5, IThemeService)
+], CommentNodeRenderer);
+var FilterDataType = /* @__PURE__ */ ((FilterDataType2) => {
+  FilterDataType2[FilterDataType2["Resource"] = 0] = "Resource";
+  FilterDataType2[FilterDataType2["Comment"] = 1] = "Comment";
+  return FilterDataType2;
+})(FilterDataType || {});
+class Filter {
+  constructor(options) {
+    this.options = options;
+  }
+  static {
+    __name(this, "Filter");
+  }
+  filter(element, parentVisibility) {
+    if (this.options.filter === "" && this.options.showResolved && this.options.showUnresolved) {
+      return TreeVisibility.Visible;
+    }
+    if (element instanceof ResourceWithCommentThreads) {
+      return this.filterResourceMarkers(element);
+    } else {
+      return this.filterCommentNode(element, parentVisibility);
+    }
+  }
+  filterResourceMarkers(resourceMarkers) {
+    if (this.options.textFilter.text && !this.options.textFilter.negate) {
+      const uriMatches = FilterOptions._filter(this.options.textFilter.text, basename(resourceMarkers.resource));
+      if (uriMatches) {
+        return { visibility: true, data: { type: 0 /* Resource */, uriMatches: uriMatches || [] } };
+      }
+    }
+    return TreeVisibility.Recurse;
+  }
+  filterCommentNode(comment, parentVisibility) {
+    const matchesResolvedState = comment.threadState === void 0 || this.options.showResolved && CommentThreadState.Resolved === comment.threadState || this.options.showUnresolved && CommentThreadState.Unresolved === comment.threadState;
+    if (!matchesResolvedState) {
+      return false;
+    }
+    if (!this.options.textFilter.text) {
+      return true;
+    }
+    const textMatches = (
+      // Check body of comment for value
+      FilterOptions._messageFilter(this.options.textFilter.text, typeof comment.comment.body === "string" ? comment.comment.body : comment.comment.body.value) || FilterOptions._messageFilter(this.options.textFilter.text, comment.comment.userName) || comment.replies.map((reply) => {
+        return FilterOptions._messageFilter(this.options.textFilter.text, reply.comment.userName) || FilterOptions._messageFilter(this.options.textFilter.text, typeof reply.comment.body === "string" ? reply.comment.body : reply.comment.body.value);
+      }).filter((value) => !!value).flat()
+    );
+    if (textMatches.length && !this.options.textFilter.negate) {
+      return { visibility: true, data: { type: 1 /* Comment */, textMatches } };
+    }
+    if (textMatches.length && this.options.textFilter.negate && parentVisibility === TreeVisibility.Recurse) {
+      return false;
+    }
+    if (textMatches.length === 0 && this.options.textFilter.negate && parentVisibility === TreeVisibility.Recurse) {
+      return true;
+    }
+    return parentVisibility;
+  }
+}
+let CommentsList = class extends WorkbenchObjectTree {
+  constructor(labels, container, options, contextKeyService, listService, instantiationService, configurationService, contextMenuService, keybindingService) {
+    const delegate = new CommentsModelVirtualDelegate();
+    const actionViewItemProvider = createActionViewItem.bind(void 0, instantiationService);
+    const menus = instantiationService.createInstance(CommentsMenus);
+    menus.setContextKeyService(contextKeyService);
+    const renderers = [
+      instantiationService.createInstance(ResourceWithCommentsRenderer, labels),
+      instantiationService.createInstance(CommentNodeRenderer, actionViewItemProvider, menus)
+    ];
+    super(
+      "CommentsTree",
+      container,
+      delegate,
+      renderers,
+      {
+        accessibilityProvider: options.accessibilityProvider,
+        identityProvider: {
+          getId: /* @__PURE__ */ __name((element) => {
+            if (element instanceof CommentsModel) {
+              return "root";
+            }
+            if (element instanceof ResourceWithCommentThreads) {
+              return `${element.uniqueOwner}-${element.id}`;
+            }
+            if (element instanceof CommentNode) {
+              return `${element.uniqueOwner}-${element.resource.toString()}-${element.threadId}-${element.comment.uniqueIdInThread}` + (element.isRoot ? "-root" : "");
+            }
+            return "";
+          }, "getId")
+        },
+        expandOnlyOnTwistieClick: true,
+        collapseByDefault: false,
+        overrideStyles: options.overrideStyles,
+        filter: options.filter,
+        sorter: options.sorter,
+        findWidgetEnabled: false,
+        multipleSelectionSupport: false
+      },
+      instantiationService,
+      contextKeyService,
+      listService,
+      configurationService
+    );
+    this.contextMenuService = contextMenuService;
+    this.keybindingService = keybindingService;
+    this.menus = menus;
+    this.disposables.add(this.onContextMenu((e) => this.commentsOnContextMenu(e)));
+  }
+  static {
+    __name(this, "CommentsList");
+  }
+  menus;
+  commentsOnContextMenu(treeEvent) {
+    const node = treeEvent.element;
+    if (!(node instanceof CommentNode)) {
+      return;
+    }
+    const event = treeEvent.browserEvent;
+    event.preventDefault();
+    event.stopPropagation();
+    this.setFocus([node]);
+    const actions = this.menus.getResourceContextActions(node);
+    if (!actions.length) {
+      return;
+    }
+    this.contextMenuService.showContextMenu({
+      getAnchor: /* @__PURE__ */ __name(() => treeEvent.anchor, "getAnchor"),
+      getActions: /* @__PURE__ */ __name(() => actions, "getActions"),
+      getActionViewItem: /* @__PURE__ */ __name((action) => {
+        const keybinding = this.keybindingService.lookupKeybinding(action.id);
+        if (keybinding) {
+          return new ActionViewItem(action, action, { label: true, keybinding: keybinding.getLabel() });
+        }
+        return void 0;
+      }, "getActionViewItem"),
+      onHide: /* @__PURE__ */ __name((wasCancelled) => {
+        if (wasCancelled) {
+          this.domFocus();
+        }
+      }, "onHide"),
+      getActionsContext: /* @__PURE__ */ __name(() => ({
+        commentControlHandle: node.controllerHandle,
+        commentThreadHandle: node.threadHandle,
+        $mid: MarshalledId.CommentThread,
+        thread: node.thread
+      }), "getActionsContext")
+    });
+  }
+  filterComments() {
+    this.refilter();
+  }
+  getVisibleItemCount() {
+    let filtered = 0;
+    const root = this.getNode();
+    for (const resourceNode of root.children) {
+      for (const commentNode of resourceNode.children) {
+        if (commentNode.visible && resourceNode.visible) {
+          filtered++;
+        }
+      }
+    }
+    return filtered;
+  }
+};
+CommentsList = __decorateClass([
+  __decorateParam(3, IContextKeyService),
+  __decorateParam(4, IListService),
+  __decorateParam(5, IInstantiationService),
+  __decorateParam(6, IConfigurationService),
+  __decorateParam(7, IContextMenuService),
+  __decorateParam(8, IKeybindingService)
+], CommentsList);
+export {
+  COMMENTS_VIEW_ID,
+  COMMENTS_VIEW_STORAGE_ID,
+  COMMENTS_VIEW_TITLE,
+  CommentNodeRenderer,
+  CommentsList,
+  CommentsMenus,
+  Filter,
+  ResourceWithCommentsRenderer
+};
+//# sourceMappingURL=commentsTreeViewer.js.map

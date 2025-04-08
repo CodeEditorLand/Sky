@@ -1,1 +1,50 @@
-import{PromptVariableWithData as n}from"./promptVariable.js";import{assert as o}from"../../../../../../../base/common/assert.js";import"../../../../../../../editor/common/core/range.js";import"../../../../../../../editor/common/codecs/baseToken.js";const a="file";class r extends n{constructor(e,r){super(e,a,r),this.path=r}static from(e){return o(e.name===a,`Variable name must be '${a}', got '${e.name}'.`),new r(e.range,e.data)}equals(e){return e instanceof r&&super.equals(e)}get linkRange(){return super.dataRange}}export{r as FileReference};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { PromptVariableWithData } from "./promptVariable.js";
+import { assert } from "../../../../../../../base/common/assert.js";
+import { IRange, Range } from "../../../../../../../editor/common/core/range.js";
+import { BaseToken } from "../../../../../../../editor/common/codecs/baseToken.js";
+const VARIABLE_NAME = "file";
+class FileReference extends PromptVariableWithData {
+  constructor(range, path) {
+    super(range, VARIABLE_NAME, path);
+    this.path = path;
+  }
+  static {
+    __name(this, "FileReference");
+  }
+  /**
+   * Create a {@link FileReference} from a {@link PromptVariableWithData} instance.
+   * @throws if variable name is not equal to {@link VARIABLE_NAME}.
+   */
+  static from(variable) {
+    assert(
+      variable.name === VARIABLE_NAME,
+      `Variable name must be '${VARIABLE_NAME}', got '${variable.name}'.`
+    );
+    return new FileReference(
+      variable.range,
+      variable.data
+    );
+  }
+  /**
+   * Check if this token is equal to another one.
+   */
+  equals(other) {
+    if (other instanceof FileReference === false) {
+      return false;
+    }
+    return super.equals(other);
+  }
+  /**
+   * Get the range of the `link` part of the token (e.g.,
+   * the `/path/to/file.md` part of `#file:/path/to/file.md`).
+   */
+  get linkRange() {
+    return super.dataRange;
+  }
+}
+export {
+  FileReference
+};
+//# sourceMappingURL=fileReference.js.map

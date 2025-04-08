@@ -1,1 +1,134 @@
-import{MarkdownString as l}from"../../../../base/common/htmlContent.js";import{basename as g}from"../../../../base/common/resources.js";import{URI as k}from"../../../../base/common/uri.js";import"../../../../editor/common/core/range.js";import{appendMarkdownString as f,canMergeMarkdownStrings as b}from"./chatModel.js";import"./chatService.js";const v="http://_vscodecontentref_";function N(n){let e=0;const t=[];for(const o of n){const n=t.filter((n=>"textEditGroup"!==n.kind)).at(-1),i=t.findIndex((e=>e===n));if("inlineReference"===o.kind){let s=o.name;s||(s=k.isUri(o.inlineReference)?g(o.inlineReference):"name"in o.inlineReference?o.inlineReference.name:g(o.inlineReference.uri));const r=e++,c=`[${s}](${k.parse(v).with({path:String(r)}).toString()})`,a={[r]:o};if("markdownContent"===n?.kind){const e=f(n.content,new l(c));t[i]={...n,content:e,inlineReferences:{...a,...n.inlineReferences||{}}}}else t.push({content:new l(c),inlineReferences:a,kind:"markdownContent"})}else if("markdownContent"===o.kind&&"markdownContent"===n?.kind&&b(n.content,o.content)){const e=f(n.content,o.content);t[i]={...n,content:e}}else if("markdownVuln"===o.kind){const e=`<vscode_annotation details='${encodeURIComponent(JSON.stringify(o.vulnerabilities))}'>${o.content.value}</vscode_annotation>`;if("markdownContent"===n?.kind){const o=f(n.content,new l(e));t[i]={...n,content:o}}else t.push({content:new l(e),kind:"markdownContent"})}else if("codeblockUri"===o.kind){if("markdownContent"===n?.kind){const e=`<vscode_codeblock_uri${o.isEdit?" isEdit":""}>${o.uri.toString()}</vscode_codeblock_uri>`,s=f(n.content,new l(e));t[i]={...n,content:s}}}else t.push(o)}return t}function O(n){const e=[];for(const t of n){const n=e[e.length-1];if("markdownContent"===t.kind)"markdownContent"===n?.kind?e[e.length-1]={content:new l(n.content.value+t.content.value,{isTrusted:n.content.isTrusted}),kind:"markdownContent"}:e.push(t);else if("markdownVuln"===t.kind){const o=`<vscode_annotation details='${encodeURIComponent(JSON.stringify(t.vulnerabilities))}'>${t.content.value}</vscode_annotation>`;"markdownContent"===n?.kind?e[e.length-1]={content:new l(n.content.value+o,{isTrusted:n.content.isTrusted}),kind:"markdownContent"}:e.push({content:new l(o),kind:"markdownContent"})}}return e}function A(n){const e=/<vscode_codeblock_uri( isEdit)?>(.*?)<\/vscode_codeblock_uri>/ms.exec(n);if(e){const[t,o,i]=e;if(i){return{uri:k.parse(i),textWithoutResult:n.substring(0,e.index)+n.substring(e.index+t.length),isEdit:!!o}}}}function D(n){const e=[];let t,o=n;for(;null!==(t=/<vscode_annotation details='(.*?)'>(.*?)<\/vscode_annotation>/ms.exec(o));){const[n,i,s]=t,r=t.index,c=o.substring(0,r),a=c.split("\n").length-1,d=s.split("\n").length-1,l=r-(c.lastIndexOf("\n")+1)+1,u=(c+s).lastIndexOf("\n"),m=r+s.length-(u+1)+1;try{JSON.parse(decodeURIComponent(i)).forEach((({title:n,description:t})=>e.push({title:n,description:t,range:{startLineNumber:a+1,startColumn:l,endLineNumber:a+d+1,endColumn:m}})))}catch{}o=o.substring(0,r)+s+o.substring(r+n.length)}return{newText:o,vulnerabilities:e}}export{N as annotateSpecialMarkdownContent,O as annotateVulnerabilitiesInText,v as contentRefUrl,A as extractCodeblockUrisFromText,D as extractVulnerabilitiesFromText};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { MarkdownString } from "../../../../base/common/htmlContent.js";
+import { basename } from "../../../../base/common/resources.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IRange } from "../../../../editor/common/core/range.js";
+import { IChatProgressRenderableResponseContent, IChatProgressResponseContent, appendMarkdownString, canMergeMarkdownStrings } from "./chatModel.js";
+import { IChatAgentVulnerabilityDetails, IChatMarkdownContent } from "./chatService.js";
+const contentRefUrl = "http://_vscodecontentref_";
+function annotateSpecialMarkdownContent(response) {
+  let refIdPool = 0;
+  const result = [];
+  for (const item of response) {
+    const previousItem = result.filter((p) => p.kind !== "textEditGroup").at(-1);
+    const previousItemIndex = result.findIndex((p) => p === previousItem);
+    if (item.kind === "inlineReference") {
+      let label = item.name;
+      if (!label) {
+        if (URI.isUri(item.inlineReference)) {
+          label = basename(item.inlineReference);
+        } else if ("name" in item.inlineReference) {
+          label = item.inlineReference.name;
+        } else {
+          label = basename(item.inlineReference.uri);
+        }
+      }
+      const refId = refIdPool++;
+      const printUri = URI.parse(contentRefUrl).with({ path: String(refId) });
+      const markdownText = `[${label}](${printUri.toString()})`;
+      const annotationMetadata = { [refId]: item };
+      if (previousItem?.kind === "markdownContent") {
+        const merged = appendMarkdownString(previousItem.content, new MarkdownString(markdownText));
+        result[previousItemIndex] = { ...previousItem, content: merged, inlineReferences: { ...annotationMetadata, ...previousItem.inlineReferences || {} } };
+      } else {
+        result.push({ content: new MarkdownString(markdownText), inlineReferences: annotationMetadata, kind: "markdownContent" });
+      }
+    } else if (item.kind === "markdownContent" && previousItem?.kind === "markdownContent" && canMergeMarkdownStrings(previousItem.content, item.content)) {
+      const merged = appendMarkdownString(previousItem.content, item.content);
+      result[previousItemIndex] = { ...previousItem, content: merged };
+    } else if (item.kind === "markdownVuln") {
+      const vulnText = encodeURIComponent(JSON.stringify(item.vulnerabilities));
+      const markdownText = `<vscode_annotation details='${vulnText}'>${item.content.value}</vscode_annotation>`;
+      if (previousItem?.kind === "markdownContent") {
+        const merged = appendMarkdownString(previousItem.content, new MarkdownString(markdownText));
+        result[previousItemIndex] = { ...previousItem, content: merged };
+      } else {
+        result.push({ content: new MarkdownString(markdownText), kind: "markdownContent" });
+      }
+    } else if (item.kind === "codeblockUri") {
+      if (previousItem?.kind === "markdownContent") {
+        const isEditText = item.isEdit ? ` isEdit` : "";
+        const markdownText = `<vscode_codeblock_uri${isEditText}>${item.uri.toString()}</vscode_codeblock_uri>`;
+        const merged = appendMarkdownString(previousItem.content, new MarkdownString(markdownText));
+        result[previousItemIndex] = { ...previousItem, content: merged };
+      }
+    } else {
+      result.push(item);
+    }
+  }
+  return result;
+}
+__name(annotateSpecialMarkdownContent, "annotateSpecialMarkdownContent");
+function annotateVulnerabilitiesInText(response) {
+  const result = [];
+  for (const item of response) {
+    const previousItem = result[result.length - 1];
+    if (item.kind === "markdownContent") {
+      if (previousItem?.kind === "markdownContent") {
+        result[result.length - 1] = { content: new MarkdownString(previousItem.content.value + item.content.value, { isTrusted: previousItem.content.isTrusted }), kind: "markdownContent" };
+      } else {
+        result.push(item);
+      }
+    } else if (item.kind === "markdownVuln") {
+      const vulnText = encodeURIComponent(JSON.stringify(item.vulnerabilities));
+      const markdownText = `<vscode_annotation details='${vulnText}'>${item.content.value}</vscode_annotation>`;
+      if (previousItem?.kind === "markdownContent") {
+        result[result.length - 1] = { content: new MarkdownString(previousItem.content.value + markdownText, { isTrusted: previousItem.content.isTrusted }), kind: "markdownContent" };
+      } else {
+        result.push({ content: new MarkdownString(markdownText), kind: "markdownContent" });
+      }
+    }
+  }
+  return result;
+}
+__name(annotateVulnerabilitiesInText, "annotateVulnerabilitiesInText");
+function extractCodeblockUrisFromText(text) {
+  const match = /<vscode_codeblock_uri( isEdit)?>(.*?)<\/vscode_codeblock_uri>/ms.exec(text);
+  if (match) {
+    const [all, isEdit, uriString] = match;
+    if (uriString) {
+      const result = URI.parse(uriString);
+      const textWithoutResult = text.substring(0, match.index) + text.substring(match.index + all.length);
+      return { uri: result, textWithoutResult, isEdit: !!isEdit };
+    }
+  }
+  return void 0;
+}
+__name(extractCodeblockUrisFromText, "extractCodeblockUrisFromText");
+function extractVulnerabilitiesFromText(text) {
+  const vulnerabilities = [];
+  let newText = text;
+  let match;
+  while ((match = /<vscode_annotation details='(.*?)'>(.*?)<\/vscode_annotation>/ms.exec(newText)) !== null) {
+    const [full, details, content] = match;
+    const start = match.index;
+    const textBefore = newText.substring(0, start);
+    const linesBefore = textBefore.split("\n").length - 1;
+    const linesInside = content.split("\n").length - 1;
+    const previousNewlineIdx = textBefore.lastIndexOf("\n");
+    const startColumn = start - (previousNewlineIdx + 1) + 1;
+    const endPreviousNewlineIdx = (textBefore + content).lastIndexOf("\n");
+    const endColumn = start + content.length - (endPreviousNewlineIdx + 1) + 1;
+    try {
+      const vulnDetails = JSON.parse(decodeURIComponent(details));
+      vulnDetails.forEach(({ title, description }) => vulnerabilities.push({
+        title,
+        description,
+        range: { startLineNumber: linesBefore + 1, startColumn, endLineNumber: linesBefore + linesInside + 1, endColumn }
+      }));
+    } catch (err) {
+    }
+    newText = newText.substring(0, start) + content + newText.substring(start + full.length);
+  }
+  return { newText, vulnerabilities };
+}
+__name(extractVulnerabilitiesFromText, "extractVulnerabilitiesFromText");
+export {
+  annotateSpecialMarkdownContent,
+  annotateVulnerabilitiesInText,
+  contentRefUrl,
+  extractCodeblockUrisFromText,
+  extractVulnerabilitiesFromText
+};
+//# sourceMappingURL=annotations.js.map

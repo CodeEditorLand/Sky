@@ -1,1 +1,85 @@
-var p=Object.defineProperty,f=Object.getOwnPropertyDescriptor,u=(e,t,s,o)=>{for(var i,a=o>1?void 0:o?f(t,s):t,l=e.length-1;l>=0;l--)(i=e[l])&&(a=(o?i(t,s,a):i(a))||a);return o&&a&&p(t,s,a),a},c=(e,t)=>(s,o)=>t(s,o,e);import{createHotClass as h}from"../../../../base/common/hotReloadHelpers.js";import{Disposable as m}from"../../../../base/common/lifecycle.js";import{autorunWithStore as v,debouncedObservable as S,derived as y}from"../../../../base/common/observable.js";import D from"../../../../base/common/severity.js";import"../../../../editor/browser/editorBrowser.js";import{observableCodeEditor as E}from"../../../../editor/browser/observableCodeEditor.js";import{InlineCompletionsController as I}from"../../../../editor/contrib/inlineCompletions/browser/controller/inlineCompletionsController.js";import{localize as r}from"../../../../nls.js";import{ILanguageStatusService as _}from"../../../services/languageStatus/common/languageStatusService.js";let s=class extends m{constructor(e,t){super(),this._editor=e,this._languageStatusService=t,this._register(v(((e,t)=>{const o=this._state.read(e);if(!o)return;const i=o.status.read(e),a={loading:{shortLabel:"",label:r("inlineSuggestionLoading","Loading..."),loading:!0},ghostText:{shortLabel:"$(lightbulb)",label:"$(copilot) "+r("inlineCompletionAvailable","Inline completion available"),loading:!1},inlineEdit:{shortLabel:"$(lightbulb-sparkle)",label:"$(copilot) "+r("inlineEditAvailable","Inline edit available"),loading:!1},noSuggestion:{shortLabel:"$(circle-slash)",label:"$(copilot) "+r("noInlineSuggestionAvailable","No inline suggestion available"),loading:!1}};s.languageStatusBarDisposables.forEach((e=>e.clear())),s.languageStatusBarDisposables.add(t),t.add({dispose:()=>s.languageStatusBarDisposables.delete(t)}),t.add(this._languageStatusService.addStatus({accessibilityInfo:void 0,busy:a[i].loading,command:void 0,detail:r("inlineSuggestionsSmall","Inline suggestions"),id:"inlineSuggestions",label:{value:a[i].label,shortValue:a[i].shortLabel},name:r("inlineSuggestions","Inline Suggestions"),selector:{pattern:o.model.textModel.uri.fsPath},severity:D.Info,source:"inlineSuggestions"}))})))}static hot=h(s);static Id="vs.editor.contrib.inlineCompletionLanguageStatusBarContribution";static languageStatusBarDisposables=new Set;_c=I.get(this._editor);_state=y(this,(e=>{const t=this._c?.model.read(e);if(t&&E(this._editor).isFocused.read(e))return{model:t,status:S(t.status,300)}}))};s=u([c(1,_)],s);export{s as InlineCompletionLanguageStatusBarContribution};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { createHotClass } from "../../../../base/common/hotReloadHelpers.js";
+import { Disposable, DisposableStore } from "../../../../base/common/lifecycle.js";
+import { autorunWithStore, debouncedObservable, derived } from "../../../../base/common/observable.js";
+import Severity from "../../../../base/common/severity.js";
+import { ICodeEditor } from "../../../../editor/browser/editorBrowser.js";
+import { observableCodeEditor } from "../../../../editor/browser/observableCodeEditor.js";
+import { InlineCompletionsController } from "../../../../editor/contrib/inlineCompletions/browser/controller/inlineCompletionsController.js";
+import { localize } from "../../../../nls.js";
+import { ILanguageStatusService } from "../../../services/languageStatus/common/languageStatusService.js";
+let InlineCompletionLanguageStatusBarContribution = class extends Disposable {
+  constructor(_editor, _languageStatusService) {
+    super();
+    this._editor = _editor;
+    this._languageStatusService = _languageStatusService;
+    this._register(autorunWithStore((reader, store) => {
+      const state = this._state.read(reader);
+      if (!state) {
+        return;
+      }
+      const status = state.status.read(reader);
+      const statusMap = {
+        loading: { shortLabel: "", label: localize("inlineSuggestionLoading", "Loading..."), loading: true },
+        ghostText: { shortLabel: "$(lightbulb)", label: "$(copilot) " + localize("inlineCompletionAvailable", "Inline completion available"), loading: false },
+        inlineEdit: { shortLabel: "$(lightbulb-sparkle)", label: "$(copilot) " + localize("inlineEditAvailable", "Inline edit available"), loading: false },
+        noSuggestion: { shortLabel: "$(circle-slash)", label: "$(copilot) " + localize("noInlineSuggestionAvailable", "No inline suggestion available"), loading: false }
+      };
+      InlineCompletionLanguageStatusBarContribution.languageStatusBarDisposables.forEach((d) => d.clear());
+      InlineCompletionLanguageStatusBarContribution.languageStatusBarDisposables.add(store);
+      store.add({
+        dispose: /* @__PURE__ */ __name(() => InlineCompletionLanguageStatusBarContribution.languageStatusBarDisposables.delete(store), "dispose")
+      });
+      store.add(this._languageStatusService.addStatus({
+        accessibilityInfo: void 0,
+        busy: statusMap[status].loading,
+        command: void 0,
+        detail: localize("inlineSuggestionsSmall", "Inline suggestions"),
+        id: "inlineSuggestions",
+        label: { value: statusMap[status].label, shortValue: statusMap[status].shortLabel },
+        name: localize("inlineSuggestions", "Inline Suggestions"),
+        selector: { pattern: state.model.textModel.uri.fsPath },
+        severity: Severity.Info,
+        source: "inlineSuggestions"
+      }));
+    }));
+  }
+  static {
+    __name(this, "InlineCompletionLanguageStatusBarContribution");
+  }
+  static hot = createHotClass(InlineCompletionLanguageStatusBarContribution);
+  static Id = "vs.editor.contrib.inlineCompletionLanguageStatusBarContribution";
+  static languageStatusBarDisposables = /* @__PURE__ */ new Set();
+  _c = InlineCompletionsController.get(this._editor);
+  _state = derived(this, (reader) => {
+    const model = this._c?.model.read(reader);
+    if (!model) {
+      return void 0;
+    }
+    if (!observableCodeEditor(this._editor).isFocused.read(reader)) {
+      return void 0;
+    }
+    return {
+      model,
+      status: debouncedObservable(model.status, 300)
+    };
+  });
+};
+InlineCompletionLanguageStatusBarContribution = __decorateClass([
+  __decorateParam(1, ILanguageStatusService)
+], InlineCompletionLanguageStatusBarContribution);
+export {
+  InlineCompletionLanguageStatusBarContribution
+};
+//# sourceMappingURL=inlineCompletionLanguageStatusBarContribution.js.map

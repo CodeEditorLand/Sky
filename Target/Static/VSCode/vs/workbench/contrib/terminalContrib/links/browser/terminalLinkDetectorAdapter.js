@@ -1,1 +1,127 @@
-var x=Object.defineProperty,w=Object.getOwnPropertyDescriptor,h=(e,t,i,r)=>{for(var n,o=r>1?void 0:r?w(t,i):t,s=e.length-1;s>=0;s--)(n=e[s])&&(o=(r?n(t,i,o):n(o))||o);return r&&o&&x(t,i,o),o},L=(e,t)=>(i,r)=>t(i,r,e);import{Emitter as p}from"../../../../../base/common/event.js";import{Disposable as I}from"../../../../../base/common/lifecycle.js";import{localize as c}from"../../../../../nls.js";import{IInstantiationService as g}from"../../../../../platform/instantiation/common/instantiation.js";import{TerminalBuiltinLinkType as a}from"./links.js";import{TerminalLink as T}from"./terminalLink.js";import"./terminalLinkManager.js";let d=class extends I{constructor(e,t){super(),this._detector=e,this._instantiationService=t}_activeLinks;_onDidActivateLink=this._register(new p);onDidActivateLink=this._onDidActivateLink.event;_onDidShowHover=this._register(new p);onDidShowHover=this._onDidShowHover.event;_activeProvideLinkRequests=new Map;async provideLinks(e,t){let i=this._activeProvideLinkRequests.get(e);if(i)return await i,void t(this._activeLinks);if(this._activeLinks)for(const e of this._activeLinks)e.dispose();i=this._provideLinks(e),this._activeProvideLinkRequests.set(e,i),this._activeLinks=await i,this._activeProvideLinkRequests.delete(e),t(this._activeLinks)}async _provideLinks(e){const t=[];let i=e-1,r=i;const n=[this._detector.xterm.buffer.active.getLine(i)],o=Math.max(this._detector.maxLinkLength,this._detector.xterm.cols),s=Math.ceil(o/this._detector.xterm.cols),a=Math.max(i-s,0),c=Math.min(r+s,this._detector.xterm.buffer.active.length);for(;i>=a&&this._detector.xterm.buffer.active.getLine(i)?.isWrapped;)n.unshift(this._detector.xterm.buffer.active.getLine(i-1)),i--;for(;r<c&&this._detector.xterm.buffer.active.getLine(r+1)?.isWrapped;)n.push(this._detector.xterm.buffer.active.getLine(r+1)),r++;const l=await this._detector.detect(n,i,r);for(const e of l)t.push(this._createTerminalLink(e,(async t=>this._onDidActivateLink.fire({link:e,event:t}))));return t}_createTerminalLink(e,t){return!e.disableTrimColon&&e.text.length>0&&":"===e.text.charAt(e.text.length-1)&&(e.text=e.text.slice(0,-1),e.bufferRange.end.x--),this._instantiationService.createInstance(T,this._detector.xterm,e.bufferRange,e.text,e.uri,e.parsedLink,e.actions,this._detector.xterm.buffer.active.viewportY,t,((e,t,i,r)=>this._onDidShowHover.fire({link:e,viewportRange:t,modifierDownCallback:i,modifierUpCallback:r})),e.type!==a.Search,e.label||this._getLabel(e.type),e.type)}_getLabel(e){switch(e){case a.Search:return c("searchWorkspace","Search workspace");case a.LocalFile:return c("openFile","Open file in editor");case a.LocalFolderInWorkspace:return c("focusFolder","Focus folder in explorer");case a.LocalFolderOutsideWorkspace:return c("openFolder","Open folder in new window");case a.Url:default:return c("followLink","Follow link")}}};d=h([L(1,g)],d);export{d as TerminalLinkDetectorAdapter};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Emitter } from "../../../../../base/common/event.js";
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { localize } from "../../../../../nls.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { ITerminalLinkDetector, ITerminalSimpleLink, TerminalBuiltinLinkType, TerminalLinkType } from "./links.js";
+import { TerminalLink } from "./terminalLink.js";
+import { XtermLinkMatcherHandler } from "./terminalLinkManager.js";
+let TerminalLinkDetectorAdapter = class extends Disposable {
+  constructor(_detector, _instantiationService) {
+    super();
+    this._detector = _detector;
+    this._instantiationService = _instantiationService;
+  }
+  static {
+    __name(this, "TerminalLinkDetectorAdapter");
+  }
+  _activeLinks;
+  _onDidActivateLink = this._register(new Emitter());
+  onDidActivateLink = this._onDidActivateLink.event;
+  _onDidShowHover = this._register(new Emitter());
+  onDidShowHover = this._onDidShowHover.event;
+  _activeProvideLinkRequests = /* @__PURE__ */ new Map();
+  async provideLinks(bufferLineNumber, callback) {
+    let activeRequest = this._activeProvideLinkRequests.get(bufferLineNumber);
+    if (activeRequest) {
+      await activeRequest;
+      callback(this._activeLinks);
+      return;
+    }
+    if (this._activeLinks) {
+      for (const link of this._activeLinks) {
+        link.dispose();
+      }
+    }
+    activeRequest = this._provideLinks(bufferLineNumber);
+    this._activeProvideLinkRequests.set(bufferLineNumber, activeRequest);
+    this._activeLinks = await activeRequest;
+    this._activeProvideLinkRequests.delete(bufferLineNumber);
+    callback(this._activeLinks);
+  }
+  async _provideLinks(bufferLineNumber) {
+    const links = [];
+    let startLine = bufferLineNumber - 1;
+    let endLine = startLine;
+    const lines = [
+      this._detector.xterm.buffer.active.getLine(startLine)
+    ];
+    const maxCharacterContext = Math.max(this._detector.maxLinkLength, this._detector.xterm.cols);
+    const maxLineContext = Math.ceil(maxCharacterContext / this._detector.xterm.cols);
+    const minStartLine = Math.max(startLine - maxLineContext, 0);
+    const maxEndLine = Math.min(endLine + maxLineContext, this._detector.xterm.buffer.active.length);
+    while (startLine >= minStartLine && this._detector.xterm.buffer.active.getLine(startLine)?.isWrapped) {
+      lines.unshift(this._detector.xterm.buffer.active.getLine(startLine - 1));
+      startLine--;
+    }
+    while (endLine < maxEndLine && this._detector.xterm.buffer.active.getLine(endLine + 1)?.isWrapped) {
+      lines.push(this._detector.xterm.buffer.active.getLine(endLine + 1));
+      endLine++;
+    }
+    const detectedLinks = await this._detector.detect(lines, startLine, endLine);
+    for (const link of detectedLinks) {
+      links.push(this._createTerminalLink(link, async (event) => this._onDidActivateLink.fire({ link, event })));
+    }
+    return links;
+  }
+  _createTerminalLink(l, activateCallback) {
+    if (!l.disableTrimColon && l.text.length > 0 && l.text.charAt(l.text.length - 1) === ":") {
+      l.text = l.text.slice(0, -1);
+      l.bufferRange.end.x--;
+    }
+    return this._instantiationService.createInstance(
+      TerminalLink,
+      this._detector.xterm,
+      l.bufferRange,
+      l.text,
+      l.uri,
+      l.parsedLink,
+      l.actions,
+      this._detector.xterm.buffer.active.viewportY,
+      activateCallback,
+      (link, viewportRange, modifierDownCallback, modifierUpCallback) => this._onDidShowHover.fire({
+        link,
+        viewportRange,
+        modifierDownCallback,
+        modifierUpCallback
+      }),
+      l.type !== TerminalBuiltinLinkType.Search,
+      // Only search is low confidence
+      l.label || this._getLabel(l.type),
+      l.type
+    );
+  }
+  _getLabel(type) {
+    switch (type) {
+      case TerminalBuiltinLinkType.Search:
+        return localize("searchWorkspace", "Search workspace");
+      case TerminalBuiltinLinkType.LocalFile:
+        return localize("openFile", "Open file in editor");
+      case TerminalBuiltinLinkType.LocalFolderInWorkspace:
+        return localize("focusFolder", "Focus folder in explorer");
+      case TerminalBuiltinLinkType.LocalFolderOutsideWorkspace:
+        return localize("openFolder", "Open folder in new window");
+      case TerminalBuiltinLinkType.Url:
+      default:
+        return localize("followLink", "Follow link");
+    }
+  }
+};
+TerminalLinkDetectorAdapter = __decorateClass([
+  __decorateParam(1, IInstantiationService)
+], TerminalLinkDetectorAdapter);
+export {
+  TerminalLinkDetectorAdapter
+};
+//# sourceMappingURL=terminalLinkDetectorAdapter.js.map

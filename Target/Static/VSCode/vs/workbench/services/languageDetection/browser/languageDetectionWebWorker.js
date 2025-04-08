@@ -1,1 +1,251 @@
-import{importAMDNodeModule as p}from"../../../../amdX.js";import{StopWatch as h}from"../../../../base/common/stopwatch.js";import"../../../../base/common/worker/webWorker.js";import{LanguageDetectionWorkerHost as m}from"./languageDetectionWorker.protocol.js";import{WorkerTextModelSyncServer as v}from"../../../../editor/common/services/textModelSync/textModelSync.impl.js";function _(e){return new a(e)}class a{_requestHandlerBrand;static expectedRelativeConfidence=.2;static positiveConfidenceCorrectionBucket1=.05;static positiveConfidenceCorrectionBucket2=.025;static negativeConfidenceCorrection=.5;_workerTextModelSyncServer=new v;_host;_regexpModel;_regexpLoadFailed=!1;_modelOperations;_loadFailed=!1;modelIdToCoreId=new Map;constructor(e){this._host=m.getChannel(e),this._workerTextModelSyncServer.bindToServer(e)}async $detectLanguage(e,t,o,n){const a=[],i=[],r=new h,s=this.getTextForDetection(e);if(!s)return;const c=async()=>{for await(const e of this.detectLanguagesImpl(s)){this.modelIdToCoreId.has(e.languageId)||this.modelIdToCoreId.set(e.languageId,await this._host.$getLanguageId(e.languageId));const t=this.modelIdToCoreId.get(e.languageId);t&&(!n?.length||n.includes(t))&&(a.push(t),i.push(e.confidence))}if(r.stop(),a.length)return this._host.$sendTelemetryEvent(a,i,r.elapsed()),a[0]},d=async()=>this.runRegexpModel(s,t??{},n);if(o){const e=await d();if(e)return e;const t=await c();if(t)return t}else{const e=await c();if(e)return e;const t=await d();if(t)return t}}getTextForDetection(e){const t=this._workerTextModelSyncServer.getModel(e);if(!t)return;const o=t.positionAt(1e4);return t.getValueInRange({startColumn:1,startLineNumber:1,endColumn:o.column,endLineNumber:o.lineNumber})}async getRegexpModel(){if(this._regexpLoadFailed)return;if(this._regexpModel)return this._regexpModel;const e=await this._host.$getRegexpModelUri();try{return this._regexpModel=await p(e,""),this._regexpModel}catch{return void(this._regexpLoadFailed=!0)}}async runRegexpModel(e,t,o){const n=await this.getRegexpModel();if(n){if(o?.length)for(const e of Object.keys(t))o.includes(e)?t[e]=1:t[e]=0;return n.detect(e,t,o)}}async getModelOperations(){if(this._modelOperations)return this._modelOperations;const e=await this._host.$getIndexJsUri(),{ModelOperations:t}=await p(e,"");return this._modelOperations=new t({modelJsonLoaderFunc:async()=>{const e=await fetch(await this._host.$getModelJsonUri());try{return await e.json()}catch{throw new Error("Failed to parse model JSON.")}},weightsLoaderFunc:async()=>await(await fetch(await this._host.$getWeightsUri())).arrayBuffer()}),this._modelOperations}adjustLanguageConfidence(e){switch(e.languageId){case"js":case"html":case"json":case"ts":case"css":case"py":case"xml":case"php":e.confidence+=a.positiveConfidenceCorrectionBucket1;break;case"cpp":case"sh":case"java":case"cs":case"c":e.confidence+=a.positiveConfidenceCorrectionBucket2;break;case"bat":case"ini":case"makefile":case"sql":case"csv":case"toml":e.confidence-=a.negativeConfidenceCorrection}return e}async*detectLanguagesImpl(e){if(this._loadFailed)return;let t,o;try{t=await this.getModelOperations()}catch(e){return console.log(e),void(this._loadFailed=!0)}try{o=await t.runModel(e)}catch(e){console.warn(e)}if(!o||0===o.length||o[0].confidence<a.expectedRelativeConfidence)return;const n=this.adjustLanguageConfidence(o[0]);if(n.confidence<a.expectedRelativeConfidence)return;const i=[n];for(let e of o)if(e!==n){if(e=this.adjustLanguageConfidence(e),i[i.length-1].confidence-e.confidence>=a.expectedRelativeConfidence){for(;i.length;)yield i.shift();if(e.confidence>a.expectedRelativeConfidence){i.push(e);continue}return}if(!(e.confidence>a.expectedRelativeConfidence))return;i.push(e)}}}export{a as LanguageDetectionWorker,_ as create};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { importAMDNodeModule } from "../../../../amdX.js";
+import { StopWatch } from "../../../../base/common/stopwatch.js";
+import { IWebWorkerServerRequestHandler, IWebWorkerServer } from "../../../../base/common/worker/webWorker.js";
+import { LanguageDetectionWorkerHost, ILanguageDetectionWorker } from "./languageDetectionWorker.protocol.js";
+import { WorkerTextModelSyncServer } from "../../../../editor/common/services/textModelSync/textModelSync.impl.js";
+function create(workerServer) {
+  return new LanguageDetectionWorker(workerServer);
+}
+__name(create, "create");
+class LanguageDetectionWorker {
+  static {
+    __name(this, "LanguageDetectionWorker");
+  }
+  _requestHandlerBrand;
+  static expectedRelativeConfidence = 0.2;
+  static positiveConfidenceCorrectionBucket1 = 0.05;
+  static positiveConfidenceCorrectionBucket2 = 0.025;
+  static negativeConfidenceCorrection = 0.5;
+  _workerTextModelSyncServer = new WorkerTextModelSyncServer();
+  _host;
+  _regexpModel;
+  _regexpLoadFailed = false;
+  _modelOperations;
+  _loadFailed = false;
+  modelIdToCoreId = /* @__PURE__ */ new Map();
+  constructor(workerServer) {
+    this._host = LanguageDetectionWorkerHost.getChannel(workerServer);
+    this._workerTextModelSyncServer.bindToServer(workerServer);
+  }
+  async $detectLanguage(uri, langBiases, preferHistory, supportedLangs) {
+    const languages = [];
+    const confidences = [];
+    const stopWatch = new StopWatch();
+    const documentTextSample = this.getTextForDetection(uri);
+    if (!documentTextSample) {
+      return;
+    }
+    const neuralResolver = /* @__PURE__ */ __name(async () => {
+      for await (const language of this.detectLanguagesImpl(documentTextSample)) {
+        if (!this.modelIdToCoreId.has(language.languageId)) {
+          this.modelIdToCoreId.set(language.languageId, await this._host.$getLanguageId(language.languageId));
+        }
+        const coreId = this.modelIdToCoreId.get(language.languageId);
+        if (coreId && (!supportedLangs?.length || supportedLangs.includes(coreId))) {
+          languages.push(coreId);
+          confidences.push(language.confidence);
+        }
+      }
+      stopWatch.stop();
+      if (languages.length) {
+        this._host.$sendTelemetryEvent(languages, confidences, stopWatch.elapsed());
+        return languages[0];
+      }
+      return void 0;
+    }, "neuralResolver");
+    const historicalResolver = /* @__PURE__ */ __name(async () => this.runRegexpModel(documentTextSample, langBiases ?? {}, supportedLangs), "historicalResolver");
+    if (preferHistory) {
+      const history = await historicalResolver();
+      if (history) {
+        return history;
+      }
+      const neural = await neuralResolver();
+      if (neural) {
+        return neural;
+      }
+    } else {
+      const neural = await neuralResolver();
+      if (neural) {
+        return neural;
+      }
+      const history = await historicalResolver();
+      if (history) {
+        return history;
+      }
+    }
+    return void 0;
+  }
+  getTextForDetection(uri) {
+    const editorModel = this._workerTextModelSyncServer.getModel(uri);
+    if (!editorModel) {
+      return;
+    }
+    const end = editorModel.positionAt(1e4);
+    const content = editorModel.getValueInRange({
+      startColumn: 1,
+      startLineNumber: 1,
+      endColumn: end.column,
+      endLineNumber: end.lineNumber
+    });
+    return content;
+  }
+  async getRegexpModel() {
+    if (this._regexpLoadFailed) {
+      return;
+    }
+    if (this._regexpModel) {
+      return this._regexpModel;
+    }
+    const uri = await this._host.$getRegexpModelUri();
+    try {
+      this._regexpModel = await importAMDNodeModule(uri, "");
+      return this._regexpModel;
+    } catch (e) {
+      this._regexpLoadFailed = true;
+      return;
+    }
+  }
+  async runRegexpModel(content, langBiases, supportedLangs) {
+    const regexpModel = await this.getRegexpModel();
+    if (!regexpModel) {
+      return;
+    }
+    if (supportedLangs?.length) {
+      for (const lang of Object.keys(langBiases)) {
+        if (supportedLangs.includes(lang)) {
+          langBiases[lang] = 1;
+        } else {
+          langBiases[lang] = 0;
+        }
+      }
+    }
+    const detected = regexpModel.detect(content, langBiases, supportedLangs);
+    return detected;
+  }
+  async getModelOperations() {
+    if (this._modelOperations) {
+      return this._modelOperations;
+    }
+    const uri = await this._host.$getIndexJsUri();
+    const { ModelOperations } = await importAMDNodeModule(uri, "");
+    this._modelOperations = new ModelOperations({
+      modelJsonLoaderFunc: /* @__PURE__ */ __name(async () => {
+        const response = await fetch(await this._host.$getModelJsonUri());
+        try {
+          const modelJSON = await response.json();
+          return modelJSON;
+        } catch (e) {
+          const message = `Failed to parse model JSON.`;
+          throw new Error(message);
+        }
+      }, "modelJsonLoaderFunc"),
+      weightsLoaderFunc: /* @__PURE__ */ __name(async () => {
+        const response = await fetch(await this._host.$getWeightsUri());
+        const buffer = await response.arrayBuffer();
+        return buffer;
+      }, "weightsLoaderFunc")
+    });
+    return this._modelOperations;
+  }
+  // This adjusts the language confidence scores to be more accurate based on:
+  // * VS Code's language usage
+  // * Languages with 'problematic' syntaxes that have caused incorrect language detection
+  adjustLanguageConfidence(modelResult) {
+    switch (modelResult.languageId) {
+      // For the following languages, we increase the confidence because
+      // these are commonly used languages in VS Code and supported
+      // by the model.
+      case "js":
+      case "html":
+      case "json":
+      case "ts":
+      case "css":
+      case "py":
+      case "xml":
+      case "php":
+        modelResult.confidence += LanguageDetectionWorker.positiveConfidenceCorrectionBucket1;
+        break;
+      // case 'yaml': // YAML has been know to cause incorrect language detection because the language is pretty simple. We don't want to increase the confidence for this.
+      case "cpp":
+      case "sh":
+      case "java":
+      case "cs":
+      case "c":
+        modelResult.confidence += LanguageDetectionWorker.positiveConfidenceCorrectionBucket2;
+        break;
+      // For the following languages, we need to be extra confident that the language is correct because
+      // we've had issues like #131912 that caused incorrect guesses. To enforce this, we subtract the
+      // negativeConfidenceCorrection from the confidence.
+      // languages that are provided by default in VS Code
+      case "bat":
+      case "ini":
+      case "makefile":
+      case "sql":
+      // languages that aren't provided by default in VS Code
+      case "csv":
+      case "toml":
+        modelResult.confidence -= LanguageDetectionWorker.negativeConfidenceCorrection;
+        break;
+      default:
+        break;
+    }
+    return modelResult;
+  }
+  async *detectLanguagesImpl(content) {
+    if (this._loadFailed) {
+      return;
+    }
+    let modelOperations;
+    try {
+      modelOperations = await this.getModelOperations();
+    } catch (e) {
+      console.log(e);
+      this._loadFailed = true;
+      return;
+    }
+    let modelResults;
+    try {
+      modelResults = await modelOperations.runModel(content);
+    } catch (e) {
+      console.warn(e);
+    }
+    if (!modelResults || modelResults.length === 0 || modelResults[0].confidence < LanguageDetectionWorker.expectedRelativeConfidence) {
+      return;
+    }
+    const firstModelResult = this.adjustLanguageConfidence(modelResults[0]);
+    if (firstModelResult.confidence < LanguageDetectionWorker.expectedRelativeConfidence) {
+      return;
+    }
+    const possibleLanguages = [firstModelResult];
+    for (let current of modelResults) {
+      if (current === firstModelResult) {
+        continue;
+      }
+      current = this.adjustLanguageConfidence(current);
+      const currentHighest = possibleLanguages[possibleLanguages.length - 1];
+      if (currentHighest.confidence - current.confidence >= LanguageDetectionWorker.expectedRelativeConfidence) {
+        while (possibleLanguages.length) {
+          yield possibleLanguages.shift();
+        }
+        if (current.confidence > LanguageDetectionWorker.expectedRelativeConfidence) {
+          possibleLanguages.push(current);
+          continue;
+        }
+        return;
+      } else {
+        if (current.confidence > LanguageDetectionWorker.expectedRelativeConfidence) {
+          possibleLanguages.push(current);
+          continue;
+        }
+        return;
+      }
+    }
+  }
+}
+export {
+  LanguageDetectionWorker,
+  create
+};
+//# sourceMappingURL=languageDetectionWebWorker.js.map

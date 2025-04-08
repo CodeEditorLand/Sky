@@ -1,1 +1,49 @@
-import{importAMDNodeModule as o}from"../../../../../amdX.js";const r=new Map;class n{async importAddon(a){let d=r.get(a);if(!d){switch(a){case"clipboard":d=(await o("@xterm/addon-clipboard","lib/addon-clipboard.js")).ClipboardAddon;break;case"image":d=(await o("@xterm/addon-image","lib/addon-image.js")).ImageAddon;break;case"ligatures":d=(await o("@xterm/addon-ligatures","lib/addon-ligatures.js")).LigaturesAddon;break;case"progress":d=(await o("@xterm/addon-progress","lib/addon-progress.js")).ProgressAddon;break;case"search":d=(await o("@xterm/addon-search","lib/addon-search.js")).SearchAddon;break;case"serialize":d=(await o("@xterm/addon-serialize","lib/addon-serialize.js")).SerializeAddon;break;case"unicode11":d=(await o("@xterm/addon-unicode11","lib/addon-unicode11.js")).Unicode11Addon;break;case"webgl":d=(await o("@xterm/addon-webgl","lib/addon-webgl.js")).WebglAddon}if(!d)throw new Error(`Could not load addon ${a}`);r.set(a,d)}return d}}export{n as XtermAddonImporter};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { importAMDNodeModule } from "../../../../../amdX.js";
+const importedAddons = /* @__PURE__ */ new Map();
+class XtermAddonImporter {
+  static {
+    __name(this, "XtermAddonImporter");
+  }
+  async importAddon(name) {
+    let addon = importedAddons.get(name);
+    if (!addon) {
+      switch (name) {
+        case "clipboard":
+          addon = (await importAMDNodeModule("@xterm/addon-clipboard", "lib/addon-clipboard.js")).ClipboardAddon;
+          break;
+        case "image":
+          addon = (await importAMDNodeModule("@xterm/addon-image", "lib/addon-image.js")).ImageAddon;
+          break;
+        case "ligatures":
+          addon = (await importAMDNodeModule("@xterm/addon-ligatures", "lib/addon-ligatures.js")).LigaturesAddon;
+          break;
+        case "progress":
+          addon = (await importAMDNodeModule("@xterm/addon-progress", "lib/addon-progress.js")).ProgressAddon;
+          break;
+        case "search":
+          addon = (await importAMDNodeModule("@xterm/addon-search", "lib/addon-search.js")).SearchAddon;
+          break;
+        case "serialize":
+          addon = (await importAMDNodeModule("@xterm/addon-serialize", "lib/addon-serialize.js")).SerializeAddon;
+          break;
+        case "unicode11":
+          addon = (await importAMDNodeModule("@xterm/addon-unicode11", "lib/addon-unicode11.js")).Unicode11Addon;
+          break;
+        case "webgl":
+          addon = (await importAMDNodeModule("@xterm/addon-webgl", "lib/addon-webgl.js")).WebglAddon;
+          break;
+      }
+      if (!addon) {
+        throw new Error(`Could not load addon ${name}`);
+      }
+      importedAddons.set(name, addon);
+    }
+    return addon;
+  }
+}
+export {
+  XtermAddonImporter
+};
+//# sourceMappingURL=xtermAddonImporter.js.map

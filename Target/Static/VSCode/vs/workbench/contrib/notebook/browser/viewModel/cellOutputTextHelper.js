@@ -1,3 +1,121 @@
-import"../../../../../platform/clipboard/common/clipboardService.js";import"../../../../../platform/log/common/log.js";import"../../common/model/notebookTextModel.js";import{isTextStreamMime as d}from"../../common/notebookCommon.js";import"../notebookBrowser.js";function D(o,n,l=!1){const t=[];for(let e=0;e<n.outputsViewModels.length;e++){const u=n.outputsViewModels[e],r=n.model.outputs[e],[M,k]=u.resolveMimeTypes(o,void 0),c=M[k].mimeType;let a=r.outputs.find(s=>s.mime===c);if((!a||c.startsWith("image"))&&(a=r.outputs.find(s=>!s.mime.startsWith("image"))),!a)continue;let p="";if(d(c)){const{text:s,count:m}=f(u);p=s,m>1&&(e+=m-1)}else p=g(c,a,l);t.push(p)}let i;return t.length>1?i=t.map((e,u)=>`Cell output ${u+1} of ${t.length}
-${e}`).join(`
-`):i=t[0]??"",i}function f(o){let n="";const l=o.cellViewModel;let t=l.outputsViewModels.indexOf(o),i=0;for(;t<l.model.outputs.length;){const u=l.model.outputs[t].outputs.find(r=>d(r.mime));if(!u)break;n=n+x.decode(u.data.buffer),t=t+1,i++}return{text:n.trim(),count:i}}const x=new TextDecoder;function g(o,n,l=!1){let t=`${o}`;const i=1e5;if(t=x.decode(n.data.slice(0,i).buffer),n.data.byteLength>i)t=t+"...(truncated)";else if(o==="application/vnd.code.notebook.error"){t=t.replace(/\\u001b\[[0-9;]*m/gi,"");try{const e=JSON.parse(t);!e.stack||l?t=`${e.name}: ${e.message}`:t=e.stack}catch{}}return t.trim()}async function L(o,n,l,t){const i=n.model,e=o&&b.includes(o)?i.outputs.find(r=>r.mime===o):i.outputs.find(r=>b.includes(r.mime));if(o=e?.mime,!o||!e)return;const u=d(o)?f(n).text:g(o,e);try{await l.writeText(u)}catch(r){t.error(`Failed to copy content: ${r}`)}}const b=["text/latex","text/html","application/vnd.code.notebook.error","application/vnd.code.notebook.stdout","application/x.notebook.stdout","application/x.notebook.stream","application/vnd.code.notebook.stderr","application/x.notebook.stderr","text/plain","text/markdown","application/json"];export{b as TEXT_BASED_MIMETYPES,L as copyCellOutput,D as getAllOutputsText,f as getOutputStreamText,g as getOutputText};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { IClipboardService } from "../../../../../platform/clipboard/common/clipboardService.js";
+import { ILogService } from "../../../../../platform/log/common/log.js";
+import { NotebookTextModel } from "../../common/model/notebookTextModel.js";
+import { IOutputItemDto, isTextStreamMime } from "../../common/notebookCommon.js";
+import { ICellOutputViewModel, ICellViewModel } from "../notebookBrowser.js";
+function getAllOutputsText(notebook, viewCell, shortErrors = false) {
+  const outputText = [];
+  for (let i = 0; i < viewCell.outputsViewModels.length; i++) {
+    const outputViewModel = viewCell.outputsViewModels[i];
+    const outputTextModel = viewCell.model.outputs[i];
+    const [mimeTypes, pick] = outputViewModel.resolveMimeTypes(notebook, void 0);
+    const mimeType = mimeTypes[pick].mimeType;
+    let buffer = outputTextModel.outputs.find((output) => output.mime === mimeType);
+    if (!buffer || mimeType.startsWith("image")) {
+      buffer = outputTextModel.outputs.find((output) => !output.mime.startsWith("image"));
+    }
+    if (!buffer) {
+      continue;
+    }
+    let text = "";
+    if (isTextStreamMime(mimeType)) {
+      const { text: stream, count } = getOutputStreamText(outputViewModel);
+      text = stream;
+      if (count > 1) {
+        i += count - 1;
+      }
+    } else {
+      text = getOutputText(mimeType, buffer, shortErrors);
+    }
+    outputText.push(text);
+  }
+  let outputContent;
+  if (outputText.length > 1) {
+    outputContent = outputText.map((output, i) => {
+      return `Cell output ${i + 1} of ${outputText.length}
+${output}`;
+    }).join("\n");
+  } else {
+    outputContent = outputText[0] ?? "";
+  }
+  return outputContent;
+}
+__name(getAllOutputsText, "getAllOutputsText");
+function getOutputStreamText(output) {
+  let text = "";
+  const cellViewModel = output.cellViewModel;
+  let index = cellViewModel.outputsViewModels.indexOf(output);
+  let count = 0;
+  while (index < cellViewModel.model.outputs.length) {
+    const nextCellOutput = cellViewModel.model.outputs[index];
+    const nextOutput = nextCellOutput.outputs.find((output2) => isTextStreamMime(output2.mime));
+    if (!nextOutput) {
+      break;
+    }
+    text = text + decoder.decode(nextOutput.data.buffer);
+    index = index + 1;
+    count++;
+  }
+  return { text: text.trim(), count };
+}
+__name(getOutputStreamText, "getOutputStreamText");
+const decoder = new TextDecoder();
+function getOutputText(mimeType, buffer, shortError = false) {
+  let text = `${mimeType}`;
+  const charLimit = 1e5;
+  text = decoder.decode(buffer.data.slice(0, charLimit).buffer);
+  if (buffer.data.byteLength > charLimit) {
+    text = text + "...(truncated)";
+  } else if (mimeType === "application/vnd.code.notebook.error") {
+    text = text.replace(/\\u001b\[[0-9;]*m/gi, "");
+    try {
+      const error = JSON.parse(text);
+      if (!error.stack || shortError) {
+        text = `${error.name}: ${error.message}`;
+      } else {
+        text = error.stack;
+      }
+    } catch {
+    }
+  }
+  return text.trim();
+}
+__name(getOutputText, "getOutputText");
+async function copyCellOutput(mimeType, outputViewModel, clipboardService, logService) {
+  const cellOutput = outputViewModel.model;
+  const output = mimeType && TEXT_BASED_MIMETYPES.includes(mimeType) ? cellOutput.outputs.find((output2) => output2.mime === mimeType) : cellOutput.outputs.find((output2) => TEXT_BASED_MIMETYPES.includes(output2.mime));
+  mimeType = output?.mime;
+  if (!mimeType || !output) {
+    return;
+  }
+  const text = isTextStreamMime(mimeType) ? getOutputStreamText(outputViewModel).text : getOutputText(mimeType, output);
+  try {
+    await clipboardService.writeText(text);
+  } catch (e) {
+    logService.error(`Failed to copy content: ${e}`);
+  }
+}
+__name(copyCellOutput, "copyCellOutput");
+const TEXT_BASED_MIMETYPES = [
+  "text/latex",
+  "text/html",
+  "application/vnd.code.notebook.error",
+  "application/vnd.code.notebook.stdout",
+  "application/x.notebook.stdout",
+  "application/x.notebook.stream",
+  "application/vnd.code.notebook.stderr",
+  "application/x.notebook.stderr",
+  "text/plain",
+  "text/markdown",
+  "application/json"
+];
+export {
+  TEXT_BASED_MIMETYPES,
+  copyCellOutput,
+  getAllOutputsText,
+  getOutputStreamText,
+  getOutputText
+};
+//# sourceMappingURL=cellOutputTextHelper.js.map

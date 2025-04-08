@@ -1,1 +1,111 @@
-import*as o from"../../../../base/common/glob.js";import"../../../../base/common/uri.js";import{basename as r}from"../../../../base/common/path.js";import{isDocumentExcludePattern as a}from"./notebookCommon.js";import"../../../services/editor/common/editorResolverService.js";import"../../../../platform/extensions/common/extensions.js";class s{extension;id;displayName;priority;providerDisplayName;_selectors;get selectors(){return this._selectors}_options;get options(){return this._options}constructor(e){this.extension=e.extension,this.id=e.id,this.displayName=e.displayName,this._selectors=e.selectors?.map(t=>({include:t.filenamePattern,exclude:t.excludeFileNamePattern||""}))||e._selectors||[],this.priority=e.priority,this.providerDisplayName=e.providerDisplayName,this._options={transientCellMetadata:{},transientDocumentMetadata:{},transientOutputs:!1,cellContentMetadata:{}}}update(e){e.selectors&&(this._selectors=e.selectors),e.options&&(this._options=e.options)}matches(e){return this.selectors?.some(t=>s.selectorMatches(t,e))}static selectorMatches(e,t){if(typeof e=="string"&&o.match(e.toLowerCase(),r(t.fsPath).toLowerCase())||o.isRelativePattern(e)&&o.match(e,r(t.fsPath).toLowerCase()))return!0;if(!a(e))return!1;const i=e.include,n=e.exclude;return o.match(i,r(t.fsPath).toLowerCase())?!(n&&o.match(n,r(t.fsPath).toLowerCase())):!1}static possibleFileEnding(e){for(const t of e){const i=s._possibleFileEnding(t);if(i)return i}}static _possibleFileEnding(e){const t=/^.*(\.[a-zA-Z0-9_-]+)$/;let i;if(typeof e=="string")i=e;else if(o.isRelativePattern(e))i=e.pattern;else if(e.include)return s._possibleFileEnding(e.include);if(i){const n=t.exec(i);if(n)return n[1]}}}export{s as NotebookProviderInfo};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as glob from "../../../../base/common/glob.js";
+import { URI } from "../../../../base/common/uri.js";
+import { basename } from "../../../../base/common/path.js";
+import { INotebookExclusiveDocumentFilter, isDocumentExcludePattern, TransientOptions } from "./notebookCommon.js";
+import { RegisteredEditorPriority } from "../../../services/editor/common/editorResolverService.js";
+import { ExtensionIdentifier } from "../../../../platform/extensions/common/extensions.js";
+class NotebookProviderInfo {
+  static {
+    __name(this, "NotebookProviderInfo");
+  }
+  extension;
+  id;
+  displayName;
+  priority;
+  providerDisplayName;
+  _selectors;
+  get selectors() {
+    return this._selectors;
+  }
+  _options;
+  get options() {
+    return this._options;
+  }
+  constructor(descriptor) {
+    this.extension = descriptor.extension;
+    this.id = descriptor.id;
+    this.displayName = descriptor.displayName;
+    this._selectors = descriptor.selectors?.map((selector) => ({
+      include: selector.filenamePattern,
+      exclude: selector.excludeFileNamePattern || ""
+    })) || descriptor._selectors || [];
+    this.priority = descriptor.priority;
+    this.providerDisplayName = descriptor.providerDisplayName;
+    this._options = {
+      transientCellMetadata: {},
+      transientDocumentMetadata: {},
+      transientOutputs: false,
+      cellContentMetadata: {}
+    };
+  }
+  update(args) {
+    if (args.selectors) {
+      this._selectors = args.selectors;
+    }
+    if (args.options) {
+      this._options = args.options;
+    }
+  }
+  matches(resource) {
+    return this.selectors?.some((selector) => NotebookProviderInfo.selectorMatches(selector, resource));
+  }
+  static selectorMatches(selector, resource) {
+    if (typeof selector === "string") {
+      if (glob.match(selector.toLowerCase(), basename(resource.fsPath).toLowerCase())) {
+        return true;
+      }
+    }
+    if (glob.isRelativePattern(selector)) {
+      if (glob.match(selector, basename(resource.fsPath).toLowerCase())) {
+        return true;
+      }
+    }
+    if (!isDocumentExcludePattern(selector)) {
+      return false;
+    }
+    const filenamePattern = selector.include;
+    const excludeFilenamePattern = selector.exclude;
+    if (glob.match(filenamePattern, basename(resource.fsPath).toLowerCase())) {
+      if (excludeFilenamePattern) {
+        if (glob.match(excludeFilenamePattern, basename(resource.fsPath).toLowerCase())) {
+          return false;
+        }
+      }
+      return true;
+    }
+    return false;
+  }
+  static possibleFileEnding(selectors) {
+    for (const selector of selectors) {
+      const ending = NotebookProviderInfo._possibleFileEnding(selector);
+      if (ending) {
+        return ending;
+      }
+    }
+    return void 0;
+  }
+  static _possibleFileEnding(selector) {
+    const pattern = /^.*(\.[a-zA-Z0-9_-]+)$/;
+    let candidate;
+    if (typeof selector === "string") {
+      candidate = selector;
+    } else if (glob.isRelativePattern(selector)) {
+      candidate = selector.pattern;
+    } else if (selector.include) {
+      return NotebookProviderInfo._possibleFileEnding(selector.include);
+    }
+    if (candidate) {
+      const match = pattern.exec(candidate);
+      if (match) {
+        return match[1];
+      }
+    }
+    return void 0;
+  }
+}
+export {
+  NotebookProviderInfo
+};
+//# sourceMappingURL=notebookProvider.js.map

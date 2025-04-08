@@ -1,1 +1,18 @@
-import"../../../../base/common/event.js";import"../../../../base/common/lifecycle.js";import"../../../../base/common/uri.js";import"../../../../editor/common/core/range.js";import{createDecorator as o}from"../../../../platform/instantiation/common/instantiation.js";import"./notebookCommon.js";import"./notebookExecutionService.js";var t=(o=>(o[o.cell=0]="cell",o[o.notebook=1]="notebook",o))(t||{});const f=o("INotebookExecutionStateService");export{f as INotebookExecutionStateService,t as NotebookExecutionType};
+import { Event } from "../../../../base/common/event.js";
+import { IDisposable } from "../../../../base/common/lifecycle.js";
+import { URI, UriComponents } from "../../../../base/common/uri.js";
+import { IRange } from "../../../../editor/common/core/range.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { NotebookCellExecutionState, NotebookExecutionState } from "./notebookCommon.js";
+import { CellExecutionUpdateType, ICellExecuteOutputEdit, ICellExecuteOutputItemEdit } from "./notebookExecutionService.js";
+var NotebookExecutionType = /* @__PURE__ */ ((NotebookExecutionType2) => {
+  NotebookExecutionType2[NotebookExecutionType2["cell"] = 0] = "cell";
+  NotebookExecutionType2[NotebookExecutionType2["notebook"] = 1] = "notebook";
+  return NotebookExecutionType2;
+})(NotebookExecutionType || {});
+const INotebookExecutionStateService = createDecorator("INotebookExecutionStateService");
+export {
+  INotebookExecutionStateService,
+  NotebookExecutionType
+};
+//# sourceMappingURL=notebookExecutionStateService.js.map

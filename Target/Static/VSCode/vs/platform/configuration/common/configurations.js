@@ -1,1 +1,264 @@
-var D=Object.defineProperty,_=Object.getOwnPropertyDescriptor,m=(i,o,e,t)=>{for(var n,r=t>1?void 0:t?_(o,e):o,s=i.length-1;s>=0;s--)(n=i[s])&&(r=(t?n(o,e,r):n(r))||r);return t&&r&&D(o,e,r),r},C=(i,o)=>(e,t)=>o(e,t,i);import{coalesce as S}from"../../../base/common/arrays.js";import"../../../base/common/collections.js";import{Emitter as v,Event as E}from"../../../base/common/event.js";import{Disposable as M}from"../../../base/common/lifecycle.js";import{deepClone as I,equals as b}from"../../../base/common/objects.js";import{isEmptyObject as R,isString as V}from"../../../base/common/types.js";import{ConfigurationModel as c}from"./configurationModels.js";import{Extensions as d}from"./configurationRegistry.js";import{ILogService as w,NullLogService as j}from"../../log/common/log.js";import{IPolicyService as x}from"../../policy/common/policy.js";import{Registry as p}from"../../registry/common/platform.js";import{getErrorMessage as P}from"../../../base/common/errors.js";import*as O from"../../../base/common/json.js";import"../../../base/common/policy.js";class Z extends M{constructor(i){super(),this.logService=i,this._configurationModel=c.createEmptyModel(i)}_onDidChangeConfiguration=this._register(new v);onDidChangeConfiguration=this._onDidChangeConfiguration.event;_configurationModel;get configurationModel(){return this._configurationModel}async initialize(){return this.resetConfigurationModel(),this._register(p.as(d.Configuration).onDidUpdateConfiguration((({properties:i,defaultsOverrides:o})=>this.onDidUpdateConfiguration(Array.from(i),o)))),this.configurationModel}reload(){return this.resetConfigurationModel(),this.configurationModel}onDidUpdateConfiguration(i,o){this.updateConfigurationModel(i,p.as(d.Configuration).getConfigurationProperties()),this._onDidChangeConfiguration.fire({defaults:this.configurationModel,properties:i})}getConfigurationDefaultOverrides(){return{}}resetConfigurationModel(){this._configurationModel=c.createEmptyModel(this.logService);const i=p.as(d.Configuration).getConfigurationProperties();this.updateConfigurationModel(Object.keys(i),i)}updateConfigurationModel(i,o){const e=this.getConfigurationDefaultOverrides();for(const t of i){const i=e[t],n=o[t];void 0!==i?this._configurationModel.setValue(t,i):n?this._configurationModel.setValue(t,I(n.default)):this._configurationModel.removeValue(t)}}}class ii{onDidChangeConfiguration=E.None;configurationModel=c.createEmptyModel(new j);async initialize(){return this.configurationModel}}let y=class extends M{constructor(i,o,e){super(),this.defaultConfiguration=i,this.policyService=o,this.logService=e,this._configurationModel=c.createEmptyModel(this.logService),this.configurationRegistry=p.as(d.Configuration)}_onDidChangeConfiguration=this._register(new v);onDidChangeConfiguration=this._onDidChangeConfiguration.event;configurationRegistry;_configurationModel;get configurationModel(){return this._configurationModel}async initialize(){return this.logService.trace("PolicyConfiguration#initialize"),this.update(await this.updatePolicyDefinitions(this.defaultConfiguration.configurationModel.keys),!1),this.update(await this.updatePolicyDefinitions(Object.keys(this.configurationRegistry.getExcludedConfigurationProperties())),!1),this._register(this.policyService.onDidChange((i=>this.onDidChangePolicies(i)))),this._register(this.defaultConfiguration.onDidChangeConfiguration((async({properties:i})=>this.update(await this.updatePolicyDefinitions(i),!0)))),this._configurationModel}async updatePolicyDefinitions(i){this.logService.trace("PolicyConfiguration#updatePolicyDefinitions",i);const o={},e=[],t=this.configurationRegistry.getConfigurationProperties(),n=this.configurationRegistry.getExcludedConfigurationProperties();for(const r of i){const i=t[r]??n[r];if(i){if(i.policy){if("string"!==i.type&&"number"!==i.type&&"array"!==i.type&&"object"!==i.type&&"boolean"!==i.type){this.logService.warn(`Policy ${i.policy.name} has unsupported type ${i.type}`);continue}const{defaultValue:t,previewFeature:n}=i.policy;e.push(r),o[i.policy.name]={type:"number"===i.type?"number":"boolean"===i.type?"boolean":"string",previewFeature:n,defaultValue:t}}}else e.push(r)}return R(o)||await this.policyService.updatePolicyDefinitions(o),e}onDidChangePolicies(i){this.logService.trace("PolicyConfiguration#onDidChangePolicies",i);const o=this.configurationRegistry.getPolicyConfigurations(),e=S(i.map((i=>o.get(i))));this.update(e,!0)}update(i,o){this.logService.trace("PolicyConfiguration#update",i);const e=this.configurationRegistry.getConfigurationProperties(),t=this.configurationRegistry.getExcludedConfigurationProperties(),n=[],r=this._configurationModel.isEmpty();for(const o of i){const i=e[o]??t[o],s=i?.policy?.name;if(s){let e=this.policyService.getPolicyValue(s);if(V(e)&&"string"!==i.type)try{e=this.parse(e)}catch(i){this.logService.error(`Error parsing policy value ${s}:`,P(i));continue}(r?void 0!==e:!b(this._configurationModel.getValue(o),e))&&n.push([o,e])}else void 0!==this._configurationModel.getValue(o)&&n.push([o,void 0])}if(n.length){this.logService.trace("PolicyConfiguration#changed",n);const i=this._configurationModel;this._configurationModel=c.createEmptyModel(this.logService);for(const o of i.keys)this._configurationModel.setValue(o,i.getValue(o));for(const[i,o]of n)void 0===o?this._configurationModel.removeValue(i):this._configurationModel.setValue(i,o);o&&this._onDidChangeConfiguration.fire(this._configurationModel)}}parse(i){let o={},e=null,t=[];const n=[],r=[];function s(i){if(Array.isArray(t))t.push(i);else if(null!==e){if(void 0!==t[e])throw new Error(`Duplicate property found: ${e}`);t[e]=i}}const a={onObjectBegin:()=>{const i={};s(i),n.push(t),t=i,e=null},onObjectProperty:i=>{e=i},onObjectEnd:()=>{t=n.pop()},onArrayBegin:()=>{const i=[];s(i),n.push(t),t=i,e=null},onArrayEnd:()=>{t=n.pop()},onLiteralValue:s,onError:(i,o,e)=>{r.push({error:i,offset:o,length:e})}};if(i&&(O.visit(i,a),o=t[0]||{}),r.length>0)throw new Error(r.map((i=>P(i.error))).join("\n"));return o}};y=m([C(1,x),C(2,w)],y);export{Z as DefaultConfiguration,ii as NullPolicyConfiguration,y as PolicyConfiguration};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { coalesce } from "../../../base/common/arrays.js";
+import { IStringDictionary } from "../../../base/common/collections.js";
+import { Emitter, Event } from "../../../base/common/event.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { deepClone, equals } from "../../../base/common/objects.js";
+import { isEmptyObject, isString } from "../../../base/common/types.js";
+import { ConfigurationModel } from "./configurationModels.js";
+import { Extensions, IConfigurationRegistry, IRegisteredConfigurationPropertySchema } from "./configurationRegistry.js";
+import { ILogService, NullLogService } from "../../log/common/log.js";
+import { IPolicyService, PolicyDefinition } from "../../policy/common/policy.js";
+import { Registry } from "../../registry/common/platform.js";
+import { getErrorMessage } from "../../../base/common/errors.js";
+import * as json from "../../../base/common/json.js";
+import { PolicyName } from "../../../base/common/policy.js";
+class DefaultConfiguration extends Disposable {
+  constructor(logService) {
+    super();
+    this.logService = logService;
+    this._configurationModel = ConfigurationModel.createEmptyModel(logService);
+  }
+  static {
+    __name(this, "DefaultConfiguration");
+  }
+  _onDidChangeConfiguration = this._register(new Emitter());
+  onDidChangeConfiguration = this._onDidChangeConfiguration.event;
+  _configurationModel;
+  get configurationModel() {
+    return this._configurationModel;
+  }
+  async initialize() {
+    this.resetConfigurationModel();
+    this._register(Registry.as(Extensions.Configuration).onDidUpdateConfiguration(({ properties, defaultsOverrides }) => this.onDidUpdateConfiguration(Array.from(properties), defaultsOverrides)));
+    return this.configurationModel;
+  }
+  reload() {
+    this.resetConfigurationModel();
+    return this.configurationModel;
+  }
+  onDidUpdateConfiguration(properties, defaultsOverrides) {
+    this.updateConfigurationModel(properties, Registry.as(Extensions.Configuration).getConfigurationProperties());
+    this._onDidChangeConfiguration.fire({ defaults: this.configurationModel, properties });
+  }
+  getConfigurationDefaultOverrides() {
+    return {};
+  }
+  resetConfigurationModel() {
+    this._configurationModel = ConfigurationModel.createEmptyModel(this.logService);
+    const properties = Registry.as(Extensions.Configuration).getConfigurationProperties();
+    this.updateConfigurationModel(Object.keys(properties), properties);
+  }
+  updateConfigurationModel(properties, configurationProperties) {
+    const configurationDefaultsOverrides = this.getConfigurationDefaultOverrides();
+    for (const key of properties) {
+      const defaultOverrideValue = configurationDefaultsOverrides[key];
+      const propertySchema = configurationProperties[key];
+      if (defaultOverrideValue !== void 0) {
+        this._configurationModel.setValue(key, defaultOverrideValue);
+      } else if (propertySchema) {
+        this._configurationModel.setValue(key, deepClone(propertySchema.default));
+      } else {
+        this._configurationModel.removeValue(key);
+      }
+    }
+  }
+}
+class NullPolicyConfiguration {
+  static {
+    __name(this, "NullPolicyConfiguration");
+  }
+  onDidChangeConfiguration = Event.None;
+  configurationModel = ConfigurationModel.createEmptyModel(new NullLogService());
+  async initialize() {
+    return this.configurationModel;
+  }
+}
+let PolicyConfiguration = class extends Disposable {
+  constructor(defaultConfiguration, policyService, logService) {
+    super();
+    this.defaultConfiguration = defaultConfiguration;
+    this.policyService = policyService;
+    this.logService = logService;
+    this._configurationModel = ConfigurationModel.createEmptyModel(this.logService);
+    this.configurationRegistry = Registry.as(Extensions.Configuration);
+  }
+  static {
+    __name(this, "PolicyConfiguration");
+  }
+  _onDidChangeConfiguration = this._register(new Emitter());
+  onDidChangeConfiguration = this._onDidChangeConfiguration.event;
+  configurationRegistry;
+  _configurationModel;
+  get configurationModel() {
+    return this._configurationModel;
+  }
+  async initialize() {
+    this.logService.trace("PolicyConfiguration#initialize");
+    this.update(await this.updatePolicyDefinitions(this.defaultConfiguration.configurationModel.keys), false);
+    this.update(await this.updatePolicyDefinitions(Object.keys(this.configurationRegistry.getExcludedConfigurationProperties())), false);
+    this._register(this.policyService.onDidChange((policyNames) => this.onDidChangePolicies(policyNames)));
+    this._register(this.defaultConfiguration.onDidChangeConfiguration(async ({ properties }) => this.update(await this.updatePolicyDefinitions(properties), true)));
+    return this._configurationModel;
+  }
+  async updatePolicyDefinitions(properties) {
+    this.logService.trace("PolicyConfiguration#updatePolicyDefinitions", properties);
+    const policyDefinitions = {};
+    const keys = [];
+    const configurationProperties = this.configurationRegistry.getConfigurationProperties();
+    const excludedConfigurationProperties = this.configurationRegistry.getExcludedConfigurationProperties();
+    for (const key of properties) {
+      const config = configurationProperties[key] ?? excludedConfigurationProperties[key];
+      if (!config) {
+        keys.push(key);
+        continue;
+      }
+      if (config.policy) {
+        if (config.type !== "string" && config.type !== "number" && config.type !== "array" && config.type !== "object" && config.type !== "boolean") {
+          this.logService.warn(`Policy ${config.policy.name} has unsupported type ${config.type}`);
+          continue;
+        }
+        const { defaultValue, previewFeature } = config.policy;
+        keys.push(key);
+        policyDefinitions[config.policy.name] = {
+          type: config.type === "number" ? "number" : config.type === "boolean" ? "boolean" : "string",
+          previewFeature,
+          defaultValue
+        };
+      }
+    }
+    if (!isEmptyObject(policyDefinitions)) {
+      await this.policyService.updatePolicyDefinitions(policyDefinitions);
+    }
+    return keys;
+  }
+  onDidChangePolicies(policyNames) {
+    this.logService.trace("PolicyConfiguration#onDidChangePolicies", policyNames);
+    const policyConfigurations = this.configurationRegistry.getPolicyConfigurations();
+    const keys = coalesce(policyNames.map((policyName) => policyConfigurations.get(policyName)));
+    this.update(keys, true);
+  }
+  update(keys, trigger) {
+    this.logService.trace("PolicyConfiguration#update", keys);
+    const configurationProperties = this.configurationRegistry.getConfigurationProperties();
+    const excludedConfigurationProperties = this.configurationRegistry.getExcludedConfigurationProperties();
+    const changed = [];
+    const wasEmpty = this._configurationModel.isEmpty();
+    for (const key of keys) {
+      const proprety = configurationProperties[key] ?? excludedConfigurationProperties[key];
+      const policyName = proprety?.policy?.name;
+      if (policyName) {
+        let policyValue = this.policyService.getPolicyValue(policyName);
+        if (isString(policyValue) && proprety.type !== "string") {
+          try {
+            policyValue = this.parse(policyValue);
+          } catch (e) {
+            this.logService.error(`Error parsing policy value ${policyName}:`, getErrorMessage(e));
+            continue;
+          }
+        }
+        if (wasEmpty ? policyValue !== void 0 : !equals(this._configurationModel.getValue(key), policyValue)) {
+          changed.push([key, policyValue]);
+        }
+      } else {
+        if (this._configurationModel.getValue(key) !== void 0) {
+          changed.push([key, void 0]);
+        }
+      }
+    }
+    if (changed.length) {
+      this.logService.trace("PolicyConfiguration#changed", changed);
+      const old = this._configurationModel;
+      this._configurationModel = ConfigurationModel.createEmptyModel(this.logService);
+      for (const key of old.keys) {
+        this._configurationModel.setValue(key, old.getValue(key));
+      }
+      for (const [key, policyValue] of changed) {
+        if (policyValue === void 0) {
+          this._configurationModel.removeValue(key);
+        } else {
+          this._configurationModel.setValue(key, policyValue);
+        }
+      }
+      if (trigger) {
+        this._onDidChangeConfiguration.fire(this._configurationModel);
+      }
+    }
+  }
+  parse(content) {
+    let raw = {};
+    let currentProperty = null;
+    let currentParent = [];
+    const previousParents = [];
+    const parseErrors = [];
+    function onValue(value) {
+      if (Array.isArray(currentParent)) {
+        currentParent.push(value);
+      } else if (currentProperty !== null) {
+        if (currentParent[currentProperty] !== void 0) {
+          throw new Error(`Duplicate property found: ${currentProperty}`);
+        }
+        currentParent[currentProperty] = value;
+      }
+    }
+    __name(onValue, "onValue");
+    const visitor = {
+      onObjectBegin: /* @__PURE__ */ __name(() => {
+        const object = {};
+        onValue(object);
+        previousParents.push(currentParent);
+        currentParent = object;
+        currentProperty = null;
+      }, "onObjectBegin"),
+      onObjectProperty: /* @__PURE__ */ __name((name) => {
+        currentProperty = name;
+      }, "onObjectProperty"),
+      onObjectEnd: /* @__PURE__ */ __name(() => {
+        currentParent = previousParents.pop();
+      }, "onObjectEnd"),
+      onArrayBegin: /* @__PURE__ */ __name(() => {
+        const array = [];
+        onValue(array);
+        previousParents.push(currentParent);
+        currentParent = array;
+        currentProperty = null;
+      }, "onArrayBegin"),
+      onArrayEnd: /* @__PURE__ */ __name(() => {
+        currentParent = previousParents.pop();
+      }, "onArrayEnd"),
+      onLiteralValue: onValue,
+      onError: /* @__PURE__ */ __name((error, offset, length) => {
+        parseErrors.push({ error, offset, length });
+      }, "onError")
+    };
+    if (content) {
+      json.visit(content, visitor);
+      raw = currentParent[0] || {};
+    }
+    if (parseErrors.length > 0) {
+      throw new Error(parseErrors.map((e) => getErrorMessage(e.error)).join("\n"));
+    }
+    return raw;
+  }
+};
+PolicyConfiguration = __decorateClass([
+  __decorateParam(1, IPolicyService),
+  __decorateParam(2, ILogService)
+], PolicyConfiguration);
+export {
+  DefaultConfiguration,
+  NullPolicyConfiguration,
+  PolicyConfiguration
+};
+//# sourceMappingURL=configurations.js.map

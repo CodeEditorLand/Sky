@@ -1,1 +1,98 @@
-var p=Object.defineProperty,b=Object.getOwnPropertyDescriptor,l=(e,r,t,o)=>{for(var i,s=o>1?void 0:o?b(r,t):r,n=e.length-1;n>=0;n--)(i=e[n])&&(s=(o?i(r,t,s):i(s))||s);return o&&s&&p(r,t,s),s},m=(e,r)=>(t,o)=>r(t,o,e);import{createDecorator as v}from"../../../../platform/instantiation/common/instantiation.js";import"../../../../base/common/cancellation.js";import{createCancelablePromise as g,raceCancellablePromises as E,timeout as u}from"../../../../base/common/async.js";import"../../../../base/common/lifecycle.js";import{InstantiationType as h,registerSingleton as f}from"../../../../platform/instantiation/common/extensions.js";import{StopWatch as I}from"../../../../base/common/stopwatch.js";import{ILogService as P}from"../../../../platform/log/common/log.js";const y=v("IAiEmbeddingVectorService");let s=class{constructor(e){this.logService=e}_serviceBrand;static DEFAULT_TIMEOUT=1e4;_providers=[];isEnabled(){return this._providers.length>0}registerAiEmbeddingVectorProvider(e,r){return this._providers.push(r),{dispose:()=>{const e=this._providers.indexOf(r);e>=0&&this._providers.splice(e,1)}}}async getEmbeddingVector(e,r){if(0===this._providers.length)throw new Error("No embedding vector providers registered");const t=I.create(),o=[],i=u(s.DEFAULT_TIMEOUT),n=r.onCancellationRequested((()=>{n.dispose(),i.cancel()}));for(const r of this._providers)o.push(g((async t=>{try{return await r.provideAiEmbeddingVector(Array.isArray(e)?e:[e],t)}catch{}throw await i,new Error("Embedding vector provider timed out")})));o.push(g((async e=>{const r=e.onCancellationRequested((()=>{i.cancel(),r.dispose()}));throw await i,new Error("Embedding vector provider timed out")})));try{const e=await E(o);return 1===e.length?e[0]:e}finally{t.stop(),this.logService.trace(`[AiEmbeddingVectorService]: getEmbeddingVector took ${t.elapsed()}ms`)}}};s=l([m(0,P)],s),f(y,s,h.Delayed);export{s as AiEmbeddingVectorService,y as IAiEmbeddingVectorService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { CancelablePromise, createCancelablePromise, raceCancellablePromises, timeout } from "../../../../base/common/async.js";
+import { IDisposable } from "../../../../base/common/lifecycle.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { StopWatch } from "../../../../base/common/stopwatch.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+const IAiEmbeddingVectorService = createDecorator("IAiEmbeddingVectorService");
+let AiEmbeddingVectorService = class {
+  constructor(logService) {
+    this.logService = logService;
+  }
+  static {
+    __name(this, "AiEmbeddingVectorService");
+  }
+  _serviceBrand;
+  static DEFAULT_TIMEOUT = 1e3 * 10;
+  // 10 seconds
+  _providers = [];
+  isEnabled() {
+    return this._providers.length > 0;
+  }
+  registerAiEmbeddingVectorProvider(model, provider) {
+    this._providers.push(provider);
+    return {
+      dispose: /* @__PURE__ */ __name(() => {
+        const index = this._providers.indexOf(provider);
+        if (index >= 0) {
+          this._providers.splice(index, 1);
+        }
+      }, "dispose")
+    };
+  }
+  async getEmbeddingVector(strings, token) {
+    if (this._providers.length === 0) {
+      throw new Error("No embedding vector providers registered");
+    }
+    const stopwatch = StopWatch.create();
+    const cancellablePromises = [];
+    const timer = timeout(AiEmbeddingVectorService.DEFAULT_TIMEOUT);
+    const disposable = token.onCancellationRequested(() => {
+      disposable.dispose();
+      timer.cancel();
+    });
+    for (const provider of this._providers) {
+      cancellablePromises.push(createCancelablePromise(async (t) => {
+        try {
+          return await provider.provideAiEmbeddingVector(
+            Array.isArray(strings) ? strings : [strings],
+            t
+          );
+        } catch (e) {
+        }
+        await timer;
+        throw new Error("Embedding vector provider timed out");
+      }));
+    }
+    cancellablePromises.push(createCancelablePromise(async (t) => {
+      const disposable2 = t.onCancellationRequested(() => {
+        timer.cancel();
+        disposable2.dispose();
+      });
+      await timer;
+      throw new Error("Embedding vector provider timed out");
+    }));
+    try {
+      const result = await raceCancellablePromises(cancellablePromises);
+      if (result.length === 1) {
+        return result[0];
+      }
+      return result;
+    } finally {
+      stopwatch.stop();
+      this.logService.trace(`[AiEmbeddingVectorService]: getEmbeddingVector took ${stopwatch.elapsed()}ms`);
+    }
+  }
+};
+AiEmbeddingVectorService = __decorateClass([
+  __decorateParam(0, ILogService)
+], AiEmbeddingVectorService);
+registerSingleton(IAiEmbeddingVectorService, AiEmbeddingVectorService, InstantiationType.Delayed);
+export {
+  AiEmbeddingVectorService,
+  IAiEmbeddingVectorService
+};
+//# sourceMappingURL=aiEmbeddingVectorService.js.map

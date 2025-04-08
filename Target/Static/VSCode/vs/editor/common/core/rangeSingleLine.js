@@ -1,1 +1,26 @@
-import{ColumnRange as u}from"./columnRange.js";import{Range as r}from"./range.js";class e{constructor(e,n){this.lineNumber=e,this.columnRange=n}static fromRange(n){if(n.endLineNumber===n.startLineNumber)return new e(n.startLineNumber,new u(n.startColumn,n.endColumn))}toRange(){return new r(this.lineNumber,this.columnRange.startColumn,this.lineNumber,this.columnRange.endColumnExclusive)}}export{e as RangeSingleLine};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { ColumnRange } from "./columnRange.js";
+import { Range } from "./range.js";
+class RangeSingleLine {
+  constructor(lineNumber, columnRange) {
+    this.lineNumber = lineNumber;
+    this.columnRange = columnRange;
+  }
+  static {
+    __name(this, "RangeSingleLine");
+  }
+  static fromRange(range) {
+    if (range.endLineNumber !== range.startLineNumber) {
+      return void 0;
+    }
+    return new RangeSingleLine(range.startLineNumber, new ColumnRange(range.startColumn, range.endColumn));
+  }
+  toRange() {
+    return new Range(this.lineNumber, this.columnRange.startColumn, this.lineNumber, this.columnRange.endColumnExclusive);
+  }
+}
+export {
+  RangeSingleLine
+};
+//# sourceMappingURL=rangeSingleLine.js.map

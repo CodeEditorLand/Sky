@@ -1,1 +1,237 @@
-import"../list/list.js";import{IndexTreeModel as p}from"./indexTreeModel.js";import{ObjectTreeElementCollapseState as d,TreeError as c}from"./tree.js";import"../../../common/event.js";import{Iterable as T}from"../../../common/iterator.js";class P{constructor(e,t={}){this.user=e,this.model=new p(e,null,t),this.onDidSpliceModel=this.model.onDidSpliceModel,this.onDidSpliceRenderedNodes=this.model.onDidSpliceRenderedNodes,this.onDidChangeCollapseState=this.model.onDidChangeCollapseState,this.onDidChangeRenderNodeCount=this.model.onDidChangeRenderNodeCount,t.sorter&&(this.sorter={compare:(e,o)=>t.sorter.compare(e.element,o.element)}),this.identityProvider=t.identityProvider}rootRef=null;model;nodes=new Map;nodesByIdentity=new Map;identityProvider;sorter;onDidSpliceModel;onDidSpliceRenderedNodes;onDidChangeCollapseState;onDidChangeRenderNodeCount;get size(){return this.nodes.size}setChildren(e,t=T.empty(),o={}){const s=this.getElementLocation(e);this._setChildren(s,this.preserveCollapseState(t),o)}_setChildren(e,t=T.empty(),o){const s=new Set,n=new Set;this.model.splice([...e,0],Number.MAX_VALUE,t,{...o,onDidCreateNode:e=>{if(null===e.element)return;const t=e;if(s.add(t.element),this.nodes.set(t.element,t),this.identityProvider){const e=this.identityProvider.getId(t.element).toString();n.add(e),this.nodesByIdentity.set(e,t)}o.onDidCreateNode?.(t)},onDidDeleteNode:e=>{if(null===e.element)return;const t=e;if(s.has(t.element)||this.nodes.delete(t.element),this.identityProvider){const e=this.identityProvider.getId(t.element).toString();n.has(e)||this.nodesByIdentity.delete(e)}o.onDidDeleteNode?.(t)}})}preserveCollapseState(e=T.empty()){return this.sorter&&(e=[...e].sort(this.sorter.compare.bind(this.sorter))),T.map(e,(e=>{let t=this.nodes.get(e.element);if(!t&&this.identityProvider){const o=this.identityProvider.getId(e.element).toString();t=this.nodesByIdentity.get(o)}if(!t){let t;return t=typeof e.collapsed>"u"?void 0:e.collapsed===d.Collapsed||e.collapsed===d.PreserveOrCollapsed||e.collapsed!==d.Expanded&&e.collapsed!==d.PreserveOrExpanded&&!!e.collapsed,{...e,children:this.preserveCollapseState(e.children),collapsed:t}}const o="boolean"==typeof e.collapsible?e.collapsible:t.collapsible;let s;return s=typeof e.collapsed>"u"||e.collapsed===d.PreserveOrCollapsed||e.collapsed===d.PreserveOrExpanded?t.collapsed:e.collapsed===d.Collapsed||e.collapsed!==d.Expanded&&!!e.collapsed,{...e,collapsible:o,collapsed:s,children:this.preserveCollapseState(e.children)}}))}rerender(e){const t=this.getElementLocation(e);this.model.rerender(t)}resort(e=null,t=!0){if(!this.sorter)return;const o=this.getElementLocation(e),s=this.model.getNode(o);this._setChildren(o,this.resortChildren(s,t),{})}resortChildren(e,t,o=!0){let s=[...e.children];return(t||o)&&(s=s.sort(this.sorter.compare.bind(this.sorter))),T.map(s,(e=>({element:e.element,collapsible:e.collapsible,collapsed:e.collapsed,children:this.resortChildren(e,t,!1)})))}getFirstElementChild(e=null){const t=this.getElementLocation(e);return this.model.getFirstElementChild(t)}getLastElementAncestor(e=null){const t=this.getElementLocation(e);return this.model.getLastElementAncestor(t)}has(e){return this.nodes.has(e)}getListIndex(e){const t=this.getElementLocation(e);return this.model.getListIndex(t)}getListRenderCount(e){const t=this.getElementLocation(e);return this.model.getListRenderCount(t)}isCollapsible(e){const t=this.getElementLocation(e);return this.model.isCollapsible(t)}setCollapsible(e,t){const o=this.getElementLocation(e);return this.model.setCollapsible(o,t)}isCollapsed(e){const t=this.getElementLocation(e);return this.model.isCollapsed(t)}setCollapsed(e,t,o){const s=this.getElementLocation(e);return this.model.setCollapsed(s,t,o)}expandTo(e){const t=this.getElementLocation(e);this.model.expandTo(t)}refilter(){this.model.refilter()}getNode(e=null){if(null===e)return this.model.getNode(this.model.rootRef);const t=this.nodes.get(e);if(!t)throw new c(this.user,`Tree element not found: ${e}`);return t}getNodeLocation(e){return e.element}getParentNodeLocation(e){if(null===e)throw new c(this.user,"Invalid getParentNodeLocation call");const t=this.nodes.get(e);if(!t)throw new c(this.user,`Tree element not found: ${e}`);const o=this.model.getNodeLocation(t),s=this.model.getParentNodeLocation(o);return this.model.getNode(s).element}getElementLocation(e){if(null===e)return[];const t=this.nodes.get(e);if(!t)throw new c(this.user,`Tree element not found: ${e}`);return this.model.getNodeLocation(t)}}export{P as ObjectTreeModel};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { IIdentityProvider } from "../list/list.js";
+import { IIndexTreeModelOptions, IIndexTreeModelSpliceOptions, IndexTreeModel } from "./indexTreeModel.js";
+import { ICollapseStateChangeEvent, IObjectTreeElement, ITreeElement, ITreeListSpliceData, ITreeModel, ITreeModelSpliceEvent, ITreeNode, ITreeSorter, ObjectTreeElementCollapseState, TreeError } from "./tree.js";
+import { Event } from "../../../common/event.js";
+import { Iterable } from "../../../common/iterator.js";
+class ObjectTreeModel {
+  constructor(user, options = {}) {
+    this.user = user;
+    this.model = new IndexTreeModel(user, null, options);
+    this.onDidSpliceModel = this.model.onDidSpliceModel;
+    this.onDidSpliceRenderedNodes = this.model.onDidSpliceRenderedNodes;
+    this.onDidChangeCollapseState = this.model.onDidChangeCollapseState;
+    this.onDidChangeRenderNodeCount = this.model.onDidChangeRenderNodeCount;
+    if (options.sorter) {
+      this.sorter = {
+        compare(a, b) {
+          return options.sorter.compare(a.element, b.element);
+        }
+      };
+    }
+    this.identityProvider = options.identityProvider;
+  }
+  static {
+    __name(this, "ObjectTreeModel");
+  }
+  rootRef = null;
+  model;
+  nodes = /* @__PURE__ */ new Map();
+  nodesByIdentity = /* @__PURE__ */ new Map();
+  identityProvider;
+  sorter;
+  onDidSpliceModel;
+  onDidSpliceRenderedNodes;
+  onDidChangeCollapseState;
+  onDidChangeRenderNodeCount;
+  get size() {
+    return this.nodes.size;
+  }
+  setChildren(element, children = Iterable.empty(), options = {}) {
+    const location = this.getElementLocation(element);
+    this._setChildren(location, this.preserveCollapseState(children), options);
+  }
+  _setChildren(location, children = Iterable.empty(), options) {
+    const insertedElements = /* @__PURE__ */ new Set();
+    const insertedElementIds = /* @__PURE__ */ new Set();
+    const onDidCreateNode = /* @__PURE__ */ __name((node) => {
+      if (node.element === null) {
+        return;
+      }
+      const tnode = node;
+      insertedElements.add(tnode.element);
+      this.nodes.set(tnode.element, tnode);
+      if (this.identityProvider) {
+        const id = this.identityProvider.getId(tnode.element).toString();
+        insertedElementIds.add(id);
+        this.nodesByIdentity.set(id, tnode);
+      }
+      options.onDidCreateNode?.(tnode);
+    }, "onDidCreateNode");
+    const onDidDeleteNode = /* @__PURE__ */ __name((node) => {
+      if (node.element === null) {
+        return;
+      }
+      const tnode = node;
+      if (!insertedElements.has(tnode.element)) {
+        this.nodes.delete(tnode.element);
+      }
+      if (this.identityProvider) {
+        const id = this.identityProvider.getId(tnode.element).toString();
+        if (!insertedElementIds.has(id)) {
+          this.nodesByIdentity.delete(id);
+        }
+      }
+      options.onDidDeleteNode?.(tnode);
+    }, "onDidDeleteNode");
+    this.model.splice(
+      [...location, 0],
+      Number.MAX_VALUE,
+      children,
+      { ...options, onDidCreateNode, onDidDeleteNode }
+    );
+  }
+  preserveCollapseState(elements = Iterable.empty()) {
+    if (this.sorter) {
+      elements = [...elements].sort(this.sorter.compare.bind(this.sorter));
+    }
+    return Iterable.map(elements, (treeElement) => {
+      let node = this.nodes.get(treeElement.element);
+      if (!node && this.identityProvider) {
+        const id = this.identityProvider.getId(treeElement.element).toString();
+        node = this.nodesByIdentity.get(id);
+      }
+      if (!node) {
+        let collapsed2;
+        if (typeof treeElement.collapsed === "undefined") {
+          collapsed2 = void 0;
+        } else if (treeElement.collapsed === ObjectTreeElementCollapseState.Collapsed || treeElement.collapsed === ObjectTreeElementCollapseState.PreserveOrCollapsed) {
+          collapsed2 = true;
+        } else if (treeElement.collapsed === ObjectTreeElementCollapseState.Expanded || treeElement.collapsed === ObjectTreeElementCollapseState.PreserveOrExpanded) {
+          collapsed2 = false;
+        } else {
+          collapsed2 = Boolean(treeElement.collapsed);
+        }
+        return {
+          ...treeElement,
+          children: this.preserveCollapseState(treeElement.children),
+          collapsed: collapsed2
+        };
+      }
+      const collapsible = typeof treeElement.collapsible === "boolean" ? treeElement.collapsible : node.collapsible;
+      let collapsed;
+      if (typeof treeElement.collapsed === "undefined" || treeElement.collapsed === ObjectTreeElementCollapseState.PreserveOrCollapsed || treeElement.collapsed === ObjectTreeElementCollapseState.PreserveOrExpanded) {
+        collapsed = node.collapsed;
+      } else if (treeElement.collapsed === ObjectTreeElementCollapseState.Collapsed) {
+        collapsed = true;
+      } else if (treeElement.collapsed === ObjectTreeElementCollapseState.Expanded) {
+        collapsed = false;
+      } else {
+        collapsed = Boolean(treeElement.collapsed);
+      }
+      return {
+        ...treeElement,
+        collapsible,
+        collapsed,
+        children: this.preserveCollapseState(treeElement.children)
+      };
+    });
+  }
+  rerender(element) {
+    const location = this.getElementLocation(element);
+    this.model.rerender(location);
+  }
+  resort(element = null, recursive = true) {
+    if (!this.sorter) {
+      return;
+    }
+    const location = this.getElementLocation(element);
+    const node = this.model.getNode(location);
+    this._setChildren(location, this.resortChildren(node, recursive), {});
+  }
+  resortChildren(node, recursive, first = true) {
+    let childrenNodes = [...node.children];
+    if (recursive || first) {
+      childrenNodes = childrenNodes.sort(this.sorter.compare.bind(this.sorter));
+    }
+    return Iterable.map(childrenNodes, (node2) => ({
+      element: node2.element,
+      collapsible: node2.collapsible,
+      collapsed: node2.collapsed,
+      children: this.resortChildren(node2, recursive, false)
+    }));
+  }
+  getFirstElementChild(ref = null) {
+    const location = this.getElementLocation(ref);
+    return this.model.getFirstElementChild(location);
+  }
+  getLastElementAncestor(ref = null) {
+    const location = this.getElementLocation(ref);
+    return this.model.getLastElementAncestor(location);
+  }
+  has(element) {
+    return this.nodes.has(element);
+  }
+  getListIndex(element) {
+    const location = this.getElementLocation(element);
+    return this.model.getListIndex(location);
+  }
+  getListRenderCount(element) {
+    const location = this.getElementLocation(element);
+    return this.model.getListRenderCount(location);
+  }
+  isCollapsible(element) {
+    const location = this.getElementLocation(element);
+    return this.model.isCollapsible(location);
+  }
+  setCollapsible(element, collapsible) {
+    const location = this.getElementLocation(element);
+    return this.model.setCollapsible(location, collapsible);
+  }
+  isCollapsed(element) {
+    const location = this.getElementLocation(element);
+    return this.model.isCollapsed(location);
+  }
+  setCollapsed(element, collapsed, recursive) {
+    const location = this.getElementLocation(element);
+    return this.model.setCollapsed(location, collapsed, recursive);
+  }
+  expandTo(element) {
+    const location = this.getElementLocation(element);
+    this.model.expandTo(location);
+  }
+  refilter() {
+    this.model.refilter();
+  }
+  getNode(element = null) {
+    if (element === null) {
+      return this.model.getNode(this.model.rootRef);
+    }
+    const node = this.nodes.get(element);
+    if (!node) {
+      throw new TreeError(this.user, `Tree element not found: ${element}`);
+    }
+    return node;
+  }
+  getNodeLocation(node) {
+    return node.element;
+  }
+  getParentNodeLocation(element) {
+    if (element === null) {
+      throw new TreeError(this.user, `Invalid getParentNodeLocation call`);
+    }
+    const node = this.nodes.get(element);
+    if (!node) {
+      throw new TreeError(this.user, `Tree element not found: ${element}`);
+    }
+    const location = this.model.getNodeLocation(node);
+    const parentLocation = this.model.getParentNodeLocation(location);
+    const parent = this.model.getNode(parentLocation);
+    return parent.element;
+  }
+  getElementLocation(element) {
+    if (element === null) {
+      return [];
+    }
+    const node = this.nodes.get(element);
+    if (!node) {
+      throw new TreeError(this.user, `Tree element not found: ${element}`);
+    }
+    return this.model.getNodeLocation(node);
+  }
+}
+export {
+  ObjectTreeModel
+};
+//# sourceMappingURL=objectTreeModel.js.map

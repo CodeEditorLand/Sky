@@ -1,1 +1,422 @@
-var T=Object.defineProperty;var I=Object.getOwnPropertyDescriptor;var R=(p,d,e,o)=>{for(var i=o>1?void 0:o?I(d,e):d,t=p.length-1,r;t>=0;t--)(r=p[t])&&(i=(o?r(d,e,i):r(i))||i);return o&&i&&T(d,e,i),i},v=(p,d)=>(e,o)=>d(e,o,p);import{localize as C}from"../../../../nls.js";import{toErrorMessage as F}from"../../../../base/common/errorMessage.js";import{Event as M,Emitter as n}from"../../../../base/common/event.js";import{URI as E}from"../../../../base/common/uri.js";import{TextFileEditorModel as S}from"./textFileEditorModel.js";import{dispose as h,Disposable as P,DisposableStore as x}from"../../../../base/common/lifecycle.js";import"./textfiles.js";import{IInstantiationService as _}from"../../../../platform/instantiation/common/instantiation.js";import{ResourceMap as c}from"../../../../base/common/map.js";import{IFileService as w,FileOperation as l,FileChangeType as f}from"../../../../platform/files/common/files.js";import{Promises as k,ResourceQueue as L}from"../../../../base/common/async.js";import{onUnexpectedError as D}from"../../../../base/common/errors.js";import{TextFileSaveParticipant as O}from"./textFileSaveParticipant.js";import"../../../../base/common/cancellation.js";import{INotificationService as U}from"../../../../platform/notification/common/notification.js";import{IWorkingCopyFileService as W}from"../../workingCopy/common/workingCopyFileService.js";import"../../../../editor/common/model.js";import{extname as b,joinPath as q}from"../../../../base/common/resources.js";import{createTextBufferFactoryFromSnapshot as A}from"../../../../editor/common/model/textModel.js";import{PLAINTEXT_EXTENSION as N,PLAINTEXT_LANGUAGE_ID as m}from"../../../../editor/common/languages/modesRegistry.js";import{IUriIdentityService as j}from"../../../../platform/uriIdentity/common/uriIdentity.js";import"../../../../platform/progress/common/progress.js";let g=class extends P{constructor(e,o,i,t,r){super();this.instantiationService=e;this.fileService=o;this.notificationService=i;this.workingCopyFileService=t;this.uriIdentityService=r;this.saveParticipants=this._register(this.instantiationService.createInstance(O)),this.registerListeners()}_onDidCreate=this._register(new n({leakWarningThreshold:500}));onDidCreate=this._onDidCreate.event;_onDidResolve=this._register(new n);onDidResolve=this._onDidResolve.event;_onDidRemove=this._register(new n);onDidRemove=this._onDidRemove.event;_onDidChangeDirty=this._register(new n);onDidChangeDirty=this._onDidChangeDirty.event;_onDidChangeReadonly=this._register(new n);onDidChangeReadonly=this._onDidChangeReadonly.event;_onDidChangeOrphaned=this._register(new n);onDidChangeOrphaned=this._onDidChangeOrphaned.event;_onDidSaveError=this._register(new n);onDidSaveError=this._onDidSaveError.event;_onDidSave=this._register(new n);onDidSave=this._onDidSave.event;_onDidRevert=this._register(new n);onDidRevert=this._onDidRevert.event;_onDidChangeEncoding=this._register(new n);onDidChangeEncoding=this._onDidChangeEncoding.event;mapResourceToModel=new c;mapResourceToModelListeners=new c;mapResourceToDisposeListener=new c;mapResourceToPendingModelResolvers=new c;modelResolveQueue=this._register(new L);saveErrorHandler=(()=>{const e=this.notificationService;return{onSaveError(o,i){e.error(C({key:"genericSaveError",comment:["{0} is the resource that failed to save and {1} the error message"]},"Failed to save '{0}': {1}",i.name,F(o,!1)))}}})();get models(){return[...this.mapResourceToModel.values()]}registerListeners(){this._register(this.fileService.onDidFilesChange(e=>this.onDidFilesChange(e))),this._register(this.fileService.onDidChangeFileSystemProviderCapabilities(e=>this.onDidChangeFileSystemProviderCapabilities(e))),this._register(this.fileService.onDidChangeFileSystemProviderRegistrations(e=>this.onDidChangeFileSystemProviderRegistrations(e))),this._register(this.workingCopyFileService.onWillRunWorkingCopyFileOperation(e=>this.onWillRunWorkingCopyFileOperation(e))),this._register(this.workingCopyFileService.onDidFailWorkingCopyFileOperation(e=>this.onDidFailWorkingCopyFileOperation(e))),this._register(this.workingCopyFileService.onDidRunWorkingCopyFileOperation(e=>this.onDidRunWorkingCopyFileOperation(e)))}onDidFilesChange(e){for(const o of this.models)o.isDirty()||e.contains(o.resource,f.UPDATED,f.ADDED)&&this.queueModelReload(o)}onDidChangeFileSystemProviderCapabilities(e){this.queueModelReloads(e.scheme)}onDidChangeFileSystemProviderRegistrations(e){e.added&&this.queueModelReloads(e.scheme)}queueModelReloads(e){for(const o of this.models)o.isDirty()||e===o.resource.scheme&&this.queueModelReload(o)}queueModelReload(e){this.modelResolveQueue.queueSize(e.resource)<=1&&this.modelResolveQueue.queueFor(e.resource,async()=>{try{await this.reload(e)}catch(i){D(i)}})}mapCorrelationIdToModelsToRestore=new Map;onWillRunWorkingCopyFileOperation(e){if(e.operation===l.MOVE||e.operation===l.COPY){const o=[];for(const{source:i,target:t}of e.files)if(i){if(this.uriIdentityService.extUri.isEqual(i,t))continue;const r=[];for(const s of this.models)this.uriIdentityService.extUri.isEqualOrParent(s.resource,i)&&r.push(s);for(const s of r){const a=s.resource;let u;this.uriIdentityService.extUri.isEqual(a,i)?u=t:u=q(t,a.path.substr(i.path.length+1));const y=s.getLanguageId();o.push({source:a,target:u,language:y?{id:y,explicit:s.languageChangeSource==="user"}:void 0,encoding:s.getEncoding(),snapshot:s.isDirty()?s.createSnapshot():void 0})}}this.mapCorrelationIdToModelsToRestore.set(e.correlationId,o)}}onDidFailWorkingCopyFileOperation(e){if(e.operation===l.MOVE||e.operation===l.COPY){const o=this.mapCorrelationIdToModelsToRestore.get(e.correlationId);o&&(this.mapCorrelationIdToModelsToRestore.delete(e.correlationId),o.forEach(i=>{i.snapshot&&this.get(i.source)?.setDirty(!0)}))}}onDidRunWorkingCopyFileOperation(e){switch(e.operation){case l.CREATE:e.waitUntil((async()=>{for(const{target:o}of e.files){const i=this.get(o);i&&!i.isDisposed()&&await i.revert()}})());break;case l.MOVE:case l.COPY:e.waitUntil((async()=>{const o=this.mapCorrelationIdToModelsToRestore.get(e.correlationId);o&&(this.mapCorrelationIdToModelsToRestore.delete(e.correlationId),await k.settled(o.map(async i=>{const t=this.uriIdentityService.asCanonicalUri(i.target),r=await this.resolve(t,{reload:{async:!1},contents:i.snapshot?A(i.snapshot):void 0,encoding:i.encoding});i.language?.id&&i.language.id!==m&&(i.language.explicit?r.setLanguageId(i.language.id):r.getLanguageId()===m&&b(t)!==N&&r.updateTextEditorModel(void 0,i.language.id))})))})());break}}get(e){return this.mapResourceToModel.get(e)}has(e){return this.mapResourceToModel.has(e)}async reload(e){await this.joinPendingResolves(e.resource),!(e.isDirty()||e.isDisposed()||!this.has(e.resource))&&await this.doResolve(e,{reload:{async:!1}})}async resolve(e,o){const i=this.joinPendingResolves(e);return i&&await i,this.doResolve(e,o)}async doResolve(e,o){let i,t;E.isUri(e)?(t=e,i=this.get(t)):(t=e.resource,i=e);let r,s=!1;if(i)o?.contents?r=i.resolve(o):o?.reload?o.reload.async?(r=Promise.resolve(),(async()=>{try{await i.resolve(o)}catch(a){i.isDisposed()||D(a)}})()):r=i.resolve(o):r=Promise.resolve();else{s=!0;const a=i=this.instantiationService.createInstance(S,t,o?o.encoding:void 0,o?o.languageId:void 0);r=i.resolve(o),this.registerModel(a)}this.mapResourceToPendingModelResolvers.set(t,r),this.add(t,i),s&&(this._onDidCreate.fire(i),i.isDirty()&&this._onDidChangeDirty.fire(i));try{await r}catch(a){throw s&&i.dispose(),a}finally{this.mapResourceToPendingModelResolvers.delete(t)}return o?.languageId&&i.setLanguageId(o.languageId),s&&i.isDirty()&&this._onDidChangeDirty.fire(i),i}joinPendingResolves(e){if(this.mapResourceToPendingModelResolvers.get(e))return this.doJoinPendingResolves(e)}async doJoinPendingResolves(e){let o;for(;this.mapResourceToPendingModelResolvers.has(e);){const i=this.mapResourceToPendingModelResolvers.get(e);if(i===o)return;o=i;try{await i}catch{}}}registerModel(e){const o=new x;o.add(e.onDidResolve(i=>this._onDidResolve.fire({model:e,reason:i}))),o.add(e.onDidChangeDirty(()=>this._onDidChangeDirty.fire(e))),o.add(e.onDidChangeReadonly(()=>this._onDidChangeReadonly.fire(e))),o.add(e.onDidChangeOrphaned(()=>this._onDidChangeOrphaned.fire(e))),o.add(e.onDidSaveError(()=>this._onDidSaveError.fire(e))),o.add(e.onDidSave(i=>this._onDidSave.fire({model:e,...i}))),o.add(e.onDidRevert(()=>this._onDidRevert.fire(e))),o.add(e.onDidChangeEncoding(()=>this._onDidChangeEncoding.fire(e))),this.mapResourceToModelListeners.set(e.resource,o)}add(e,o){if(this.mapResourceToModel.get(e)===o)return;this.mapResourceToDisposeListener.get(e)?.dispose(),this.mapResourceToModel.set(e,o),this.mapResourceToDisposeListener.set(e,o.onWillDispose(()=>this.remove(e)))}remove(e){const o=this.mapResourceToModel.delete(e),i=this.mapResourceToDisposeListener.get(e);i&&(h(i),this.mapResourceToDisposeListener.delete(e));const t=this.mapResourceToModelListeners.get(e);t&&(h(t),this.mapResourceToModelListeners.delete(e)),o&&this._onDidRemove.fire(e)}saveParticipants;addSaveParticipant(e){return this.saveParticipants.addSaveParticipant(e)}runSaveParticipants(e,o,i,t){return this.saveParticipants.participate(e,o,i,t)}canDispose(e){return e.isDisposed()||!this.mapResourceToPendingModelResolvers.has(e.resource)&&!e.isDirty()?!0:this.doCanDispose(e)}async doCanDispose(e){const o=this.joinPendingResolves(e.resource);return o?(await o,this.canDispose(e)):e.isDirty()?(await M.toPromise(e.onDidChangeDirty),this.canDispose(e)):!0}dispose(){super.dispose(),this.mapResourceToModel.clear(),this.mapResourceToPendingModelResolvers.clear(),h(this.mapResourceToDisposeListener.values()),this.mapResourceToDisposeListener.clear(),h(this.mapResourceToModelListeners.values()),this.mapResourceToModelListeners.clear()}};g=R([v(0,_),v(1,w),v(2,U),v(3,W),v(4,j)],g);export{g as TextFileEditorModelManager};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { localize } from "../../../../nls.js";
+import { toErrorMessage } from "../../../../base/common/errorMessage.js";
+import { Event, Emitter } from "../../../../base/common/event.js";
+import { URI } from "../../../../base/common/uri.js";
+import { TextFileEditorModel } from "./textFileEditorModel.js";
+import { dispose, IDisposable, Disposable, DisposableStore } from "../../../../base/common/lifecycle.js";
+import { ITextFileEditorModel, ITextFileEditorModelManager, ITextFileEditorModelResolveOrCreateOptions, ITextFileResolveEvent, ITextFileSaveEvent, ITextFileSaveParticipant } from "./textfiles.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { ResourceMap } from "../../../../base/common/map.js";
+import { IFileService, FileChangesEvent, FileOperation, FileChangeType, IFileSystemProviderRegistrationEvent, IFileSystemProviderCapabilitiesChangeEvent } from "../../../../platform/files/common/files.js";
+import { Promises, ResourceQueue } from "../../../../base/common/async.js";
+import { onUnexpectedError } from "../../../../base/common/errors.js";
+import { TextFileSaveParticipant } from "./textFileSaveParticipant.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { INotificationService } from "../../../../platform/notification/common/notification.js";
+import { IStoredFileWorkingCopySaveParticipantContext, IWorkingCopyFileService, WorkingCopyFileEvent } from "../../workingCopy/common/workingCopyFileService.js";
+import { ITextSnapshot } from "../../../../editor/common/model.js";
+import { extname, joinPath } from "../../../../base/common/resources.js";
+import { createTextBufferFactoryFromSnapshot } from "../../../../editor/common/model/textModel.js";
+import { PLAINTEXT_EXTENSION, PLAINTEXT_LANGUAGE_ID } from "../../../../editor/common/languages/modesRegistry.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import { IProgress, IProgressStep } from "../../../../platform/progress/common/progress.js";
+let TextFileEditorModelManager = class extends Disposable {
+  constructor(instantiationService, fileService, notificationService, workingCopyFileService, uriIdentityService) {
+    super();
+    this.instantiationService = instantiationService;
+    this.fileService = fileService;
+    this.notificationService = notificationService;
+    this.workingCopyFileService = workingCopyFileService;
+    this.uriIdentityService = uriIdentityService;
+    this.saveParticipants = this._register(this.instantiationService.createInstance(TextFileSaveParticipant));
+    this.registerListeners();
+  }
+  static {
+    __name(this, "TextFileEditorModelManager");
+  }
+  _onDidCreate = this._register(new Emitter({
+    leakWarningThreshold: 500
+    /* increased for users with hundreds of inputs opened */
+  }));
+  onDidCreate = this._onDidCreate.event;
+  _onDidResolve = this._register(new Emitter());
+  onDidResolve = this._onDidResolve.event;
+  _onDidRemove = this._register(new Emitter());
+  onDidRemove = this._onDidRemove.event;
+  _onDidChangeDirty = this._register(new Emitter());
+  onDidChangeDirty = this._onDidChangeDirty.event;
+  _onDidChangeReadonly = this._register(new Emitter());
+  onDidChangeReadonly = this._onDidChangeReadonly.event;
+  _onDidChangeOrphaned = this._register(new Emitter());
+  onDidChangeOrphaned = this._onDidChangeOrphaned.event;
+  _onDidSaveError = this._register(new Emitter());
+  onDidSaveError = this._onDidSaveError.event;
+  _onDidSave = this._register(new Emitter());
+  onDidSave = this._onDidSave.event;
+  _onDidRevert = this._register(new Emitter());
+  onDidRevert = this._onDidRevert.event;
+  _onDidChangeEncoding = this._register(new Emitter());
+  onDidChangeEncoding = this._onDidChangeEncoding.event;
+  mapResourceToModel = new ResourceMap();
+  mapResourceToModelListeners = new ResourceMap();
+  mapResourceToDisposeListener = new ResourceMap();
+  mapResourceToPendingModelResolvers = new ResourceMap();
+  modelResolveQueue = this._register(new ResourceQueue());
+  saveErrorHandler = (() => {
+    const notificationService = this.notificationService;
+    return {
+      onSaveError(error, model) {
+        notificationService.error(localize({ key: "genericSaveError", comment: ["{0} is the resource that failed to save and {1} the error message"] }, "Failed to save '{0}': {1}", model.name, toErrorMessage(error, false)));
+      }
+    };
+  })();
+  get models() {
+    return [...this.mapResourceToModel.values()];
+  }
+  registerListeners() {
+    this._register(this.fileService.onDidFilesChange((e) => this.onDidFilesChange(e)));
+    this._register(this.fileService.onDidChangeFileSystemProviderCapabilities((e) => this.onDidChangeFileSystemProviderCapabilities(e)));
+    this._register(this.fileService.onDidChangeFileSystemProviderRegistrations((e) => this.onDidChangeFileSystemProviderRegistrations(e)));
+    this._register(this.workingCopyFileService.onWillRunWorkingCopyFileOperation((e) => this.onWillRunWorkingCopyFileOperation(e)));
+    this._register(this.workingCopyFileService.onDidFailWorkingCopyFileOperation((e) => this.onDidFailWorkingCopyFileOperation(e)));
+    this._register(this.workingCopyFileService.onDidRunWorkingCopyFileOperation((e) => this.onDidRunWorkingCopyFileOperation(e)));
+  }
+  onDidFilesChange(e) {
+    for (const model of this.models) {
+      if (model.isDirty()) {
+        continue;
+      }
+      if (e.contains(model.resource, FileChangeType.UPDATED, FileChangeType.ADDED)) {
+        this.queueModelReload(model);
+      }
+    }
+  }
+  onDidChangeFileSystemProviderCapabilities(e) {
+    this.queueModelReloads(e.scheme);
+  }
+  onDidChangeFileSystemProviderRegistrations(e) {
+    if (!e.added) {
+      return;
+    }
+    this.queueModelReloads(e.scheme);
+  }
+  queueModelReloads(scheme) {
+    for (const model of this.models) {
+      if (model.isDirty()) {
+        continue;
+      }
+      if (scheme === model.resource.scheme) {
+        this.queueModelReload(model);
+      }
+    }
+  }
+  queueModelReload(model) {
+    const queueSize = this.modelResolveQueue.queueSize(model.resource);
+    if (queueSize <= 1) {
+      this.modelResolveQueue.queueFor(model.resource, async () => {
+        try {
+          await this.reload(model);
+        } catch (error) {
+          onUnexpectedError(error);
+        }
+      });
+    }
+  }
+  mapCorrelationIdToModelsToRestore = /* @__PURE__ */ new Map();
+  onWillRunWorkingCopyFileOperation(e) {
+    if (e.operation === FileOperation.MOVE || e.operation === FileOperation.COPY) {
+      const modelsToRestore = [];
+      for (const { source, target } of e.files) {
+        if (source) {
+          if (this.uriIdentityService.extUri.isEqual(source, target)) {
+            continue;
+          }
+          const sourceModels = [];
+          for (const model of this.models) {
+            if (this.uriIdentityService.extUri.isEqualOrParent(model.resource, source)) {
+              sourceModels.push(model);
+            }
+          }
+          for (const sourceModel of sourceModels) {
+            const sourceModelResource = sourceModel.resource;
+            let targetModelResource;
+            if (this.uriIdentityService.extUri.isEqual(sourceModelResource, source)) {
+              targetModelResource = target;
+            } else {
+              targetModelResource = joinPath(target, sourceModelResource.path.substr(source.path.length + 1));
+            }
+            const languageId = sourceModel.getLanguageId();
+            modelsToRestore.push({
+              source: sourceModelResource,
+              target: targetModelResource,
+              language: languageId ? {
+                id: languageId,
+                explicit: sourceModel.languageChangeSource === "user"
+              } : void 0,
+              encoding: sourceModel.getEncoding(),
+              snapshot: sourceModel.isDirty() ? sourceModel.createSnapshot() : void 0
+            });
+          }
+        }
+      }
+      this.mapCorrelationIdToModelsToRestore.set(e.correlationId, modelsToRestore);
+    }
+  }
+  onDidFailWorkingCopyFileOperation(e) {
+    if (e.operation === FileOperation.MOVE || e.operation === FileOperation.COPY) {
+      const modelsToRestore = this.mapCorrelationIdToModelsToRestore.get(e.correlationId);
+      if (modelsToRestore) {
+        this.mapCorrelationIdToModelsToRestore.delete(e.correlationId);
+        modelsToRestore.forEach((model) => {
+          if (model.snapshot) {
+            this.get(model.source)?.setDirty(true);
+          }
+        });
+      }
+    }
+  }
+  onDidRunWorkingCopyFileOperation(e) {
+    switch (e.operation) {
+      // Create: Revert existing models
+      case FileOperation.CREATE:
+        e.waitUntil((async () => {
+          for (const { target } of e.files) {
+            const model = this.get(target);
+            if (model && !model.isDisposed()) {
+              await model.revert();
+            }
+          }
+        })());
+        break;
+      // Move/Copy: restore models that were resolved before the operation took place
+      case FileOperation.MOVE:
+      case FileOperation.COPY:
+        e.waitUntil((async () => {
+          const modelsToRestore = this.mapCorrelationIdToModelsToRestore.get(e.correlationId);
+          if (modelsToRestore) {
+            this.mapCorrelationIdToModelsToRestore.delete(e.correlationId);
+            await Promises.settled(modelsToRestore.map(async (modelToRestore) => {
+              const target = this.uriIdentityService.asCanonicalUri(modelToRestore.target);
+              const restoredModel = await this.resolve(target, {
+                reload: { async: false },
+                // enforce a reload
+                contents: modelToRestore.snapshot ? createTextBufferFactoryFromSnapshot(modelToRestore.snapshot) : void 0,
+                encoding: modelToRestore.encoding
+              });
+              if (modelToRestore.language?.id && modelToRestore.language.id !== PLAINTEXT_LANGUAGE_ID) {
+                if (modelToRestore.language.explicit) {
+                  restoredModel.setLanguageId(modelToRestore.language.id);
+                } else if (restoredModel.getLanguageId() === PLAINTEXT_LANGUAGE_ID && extname(target) !== PLAINTEXT_EXTENSION) {
+                  restoredModel.updateTextEditorModel(void 0, modelToRestore.language.id);
+                }
+              }
+            }));
+          }
+        })());
+        break;
+    }
+  }
+  get(resource) {
+    return this.mapResourceToModel.get(resource);
+  }
+  has(resource) {
+    return this.mapResourceToModel.has(resource);
+  }
+  async reload(model) {
+    await this.joinPendingResolves(model.resource);
+    if (model.isDirty() || model.isDisposed() || !this.has(model.resource)) {
+      return;
+    }
+    await this.doResolve(model, { reload: { async: false } });
+  }
+  async resolve(resource, options) {
+    const pendingResolve = this.joinPendingResolves(resource);
+    if (pendingResolve) {
+      await pendingResolve;
+    }
+    return this.doResolve(resource, options);
+  }
+  async doResolve(resourceOrModel, options) {
+    let model;
+    let resource;
+    if (URI.isUri(resourceOrModel)) {
+      resource = resourceOrModel;
+      model = this.get(resource);
+    } else {
+      resource = resourceOrModel.resource;
+      model = resourceOrModel;
+    }
+    let modelResolve;
+    let didCreateModel = false;
+    if (model) {
+      if (options?.contents) {
+        modelResolve = model.resolve(options);
+      } else if (options?.reload) {
+        if (options.reload.async) {
+          modelResolve = Promise.resolve();
+          (async () => {
+            try {
+              await model.resolve(options);
+            } catch (error) {
+              if (!model.isDisposed()) {
+                onUnexpectedError(error);
+              }
+            }
+          })();
+        } else {
+          modelResolve = model.resolve(options);
+        }
+      } else {
+        modelResolve = Promise.resolve();
+      }
+    } else {
+      didCreateModel = true;
+      const newModel = model = this.instantiationService.createInstance(TextFileEditorModel, resource, options ? options.encoding : void 0, options ? options.languageId : void 0);
+      modelResolve = model.resolve(options);
+      this.registerModel(newModel);
+    }
+    this.mapResourceToPendingModelResolvers.set(resource, modelResolve);
+    this.add(resource, model);
+    if (didCreateModel) {
+      this._onDidCreate.fire(model);
+      if (model.isDirty()) {
+        this._onDidChangeDirty.fire(model);
+      }
+    }
+    try {
+      await modelResolve;
+    } catch (error) {
+      if (didCreateModel) {
+        model.dispose();
+      }
+      throw error;
+    } finally {
+      this.mapResourceToPendingModelResolvers.delete(resource);
+    }
+    if (options?.languageId) {
+      model.setLanguageId(options.languageId);
+    }
+    if (didCreateModel && model.isDirty()) {
+      this._onDidChangeDirty.fire(model);
+    }
+    return model;
+  }
+  joinPendingResolves(resource) {
+    const pendingModelResolve = this.mapResourceToPendingModelResolvers.get(resource);
+    if (!pendingModelResolve) {
+      return;
+    }
+    return this.doJoinPendingResolves(resource);
+  }
+  async doJoinPendingResolves(resource) {
+    let currentModelCopyResolve;
+    while (this.mapResourceToPendingModelResolvers.has(resource)) {
+      const nextPendingModelResolve = this.mapResourceToPendingModelResolvers.get(resource);
+      if (nextPendingModelResolve === currentModelCopyResolve) {
+        return;
+      }
+      currentModelCopyResolve = nextPendingModelResolve;
+      try {
+        await nextPendingModelResolve;
+      } catch (error) {
+      }
+    }
+  }
+  registerModel(model) {
+    const modelListeners = new DisposableStore();
+    modelListeners.add(model.onDidResolve((reason) => this._onDidResolve.fire({ model, reason })));
+    modelListeners.add(model.onDidChangeDirty(() => this._onDidChangeDirty.fire(model)));
+    modelListeners.add(model.onDidChangeReadonly(() => this._onDidChangeReadonly.fire(model)));
+    modelListeners.add(model.onDidChangeOrphaned(() => this._onDidChangeOrphaned.fire(model)));
+    modelListeners.add(model.onDidSaveError(() => this._onDidSaveError.fire(model)));
+    modelListeners.add(model.onDidSave((e) => this._onDidSave.fire({ model, ...e })));
+    modelListeners.add(model.onDidRevert(() => this._onDidRevert.fire(model)));
+    modelListeners.add(model.onDidChangeEncoding(() => this._onDidChangeEncoding.fire(model)));
+    this.mapResourceToModelListeners.set(model.resource, modelListeners);
+  }
+  add(resource, model) {
+    const knownModel = this.mapResourceToModel.get(resource);
+    if (knownModel === model) {
+      return;
+    }
+    const disposeListener = this.mapResourceToDisposeListener.get(resource);
+    disposeListener?.dispose();
+    this.mapResourceToModel.set(resource, model);
+    this.mapResourceToDisposeListener.set(resource, model.onWillDispose(() => this.remove(resource)));
+  }
+  remove(resource) {
+    const removed = this.mapResourceToModel.delete(resource);
+    const disposeListener = this.mapResourceToDisposeListener.get(resource);
+    if (disposeListener) {
+      dispose(disposeListener);
+      this.mapResourceToDisposeListener.delete(resource);
+    }
+    const modelListener = this.mapResourceToModelListeners.get(resource);
+    if (modelListener) {
+      dispose(modelListener);
+      this.mapResourceToModelListeners.delete(resource);
+    }
+    if (removed) {
+      this._onDidRemove.fire(resource);
+    }
+  }
+  //#region Save participants
+  saveParticipants;
+  addSaveParticipant(participant) {
+    return this.saveParticipants.addSaveParticipant(participant);
+  }
+  runSaveParticipants(model, context, progress, token) {
+    return this.saveParticipants.participate(model, context, progress, token);
+  }
+  //#endregion
+  canDispose(model) {
+    if (model.isDisposed() || !this.mapResourceToPendingModelResolvers.has(model.resource) && !model.isDirty()) {
+      return true;
+    }
+    return this.doCanDispose(model);
+  }
+  async doCanDispose(model) {
+    const pendingResolve = this.joinPendingResolves(model.resource);
+    if (pendingResolve) {
+      await pendingResolve;
+      return this.canDispose(model);
+    }
+    if (model.isDirty()) {
+      await Event.toPromise(model.onDidChangeDirty);
+      return this.canDispose(model);
+    }
+    return true;
+  }
+  dispose() {
+    super.dispose();
+    this.mapResourceToModel.clear();
+    this.mapResourceToPendingModelResolvers.clear();
+    dispose(this.mapResourceToDisposeListener.values());
+    this.mapResourceToDisposeListener.clear();
+    dispose(this.mapResourceToModelListeners.values());
+    this.mapResourceToModelListeners.clear();
+  }
+};
+TextFileEditorModelManager = __decorateClass([
+  __decorateParam(0, IInstantiationService),
+  __decorateParam(1, IFileService),
+  __decorateParam(2, INotificationService),
+  __decorateParam(3, IWorkingCopyFileService),
+  __decorateParam(4, IUriIdentityService)
+], TextFileEditorModelManager);
+export {
+  TextFileEditorModelManager
+};
+//# sourceMappingURL=textFileEditorModelManager.js.map

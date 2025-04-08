@@ -1,1 +1,85 @@
-var v=Object.defineProperty,p=Object.getOwnPropertyDescriptor,g=(e,i,t,o)=>{for(var r,n=o>1?void 0:o?p(i,t):i,s=e.length-1;s>=0;s--)(r=e[s])&&(n=(o?r(i,t,n):r(n))||n);return o&&n&&v(i,t,n),n},l=(e,i)=>(t,o)=>i(t,o,e);import{getErrorMessage as m}from"../../../base/common/errors.js";import{isDefined as S}from"../../../base/common/types.js";import"../../extensions/common/extensions.js";import{createDecorator as x}from"../../instantiation/common/instantiation.js";import{ILogService as y,LogLevel as h}from"../../log/common/log.js";import{ITelemetryService as E}from"../../telemetry/common/telemetry.js";import{ExtensionSignatureVerificationCode as P}from"../common/extensionManagement.js";const F=x("IExtensionSignatureVerificationService");let c=class{constructor(e,i){this.logService=e,this.telemetryService=i}moduleLoadingPromise;vsceSign(){return this.moduleLoadingPromise||(this.moduleLoadingPromise=this.resolveVsceSign()),this.moduleLoadingPromise}async resolveVsceSign(){return import("@vscode/vsce-sign")}async verify(e,i,t,o,r){let n;try{n=await this.vsceSign()}catch(i){return this.logService.error("Could not load vsce-sign module",m(i)),void this.logService.info(`Extension signature verification is not done: ${e}`)}const s=(new Date).getTime();let c;try{this.logService.trace(`Verifying extension signature for ${e}...`),c=await n.verify(t,o,this.logService.getLevel()===h.Trace)}catch(e){c={code:P.UnknownError,didExecute:!1,output:m(e)}}const a=(new Date).getTime()-s;return this.logService.info(`Extension signature verification result for ${e}: ${c.code}. ${S(c.internalCode)?`Internal Code: ${c.internalCode}. `:""}Executed: ${c.didExecute}. Duration: ${a}ms.`),this.logService.trace(`Extension signature verification output for ${e}:\n${c.output}`),this.telemetryService.publicLog2("extensionsignature:verification",{extensionId:e,extensionVersion:i,code:c.code,internalCode:c.internalCode,duration:a,didExecute:c.didExecute,clientTargetPlatform:r}),{code:c.code}}};c=g([l(0,y),l(1,E)],c);export{c as ExtensionSignatureVerificationService,F as IExtensionSignatureVerificationService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { getErrorMessage } from "../../../base/common/errors.js";
+import { isDefined } from "../../../base/common/types.js";
+import { TargetPlatform } from "../../extensions/common/extensions.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+import { ILogService, LogLevel } from "../../log/common/log.js";
+import { ITelemetryService } from "../../telemetry/common/telemetry.js";
+import { ExtensionSignatureVerificationCode } from "../common/extensionManagement.js";
+const IExtensionSignatureVerificationService = createDecorator("IExtensionSignatureVerificationService");
+let ExtensionSignatureVerificationService = class {
+  constructor(logService, telemetryService) {
+    this.logService = logService;
+    this.telemetryService = telemetryService;
+  }
+  static {
+    __name(this, "ExtensionSignatureVerificationService");
+  }
+  moduleLoadingPromise;
+  vsceSign() {
+    if (!this.moduleLoadingPromise) {
+      this.moduleLoadingPromise = this.resolveVsceSign();
+    }
+    return this.moduleLoadingPromise;
+  }
+  async resolveVsceSign() {
+    const mod = "@vscode/vsce-sign";
+    return import(mod);
+  }
+  async verify(extensionId, version, vsixFilePath, signatureArchiveFilePath, clientTargetPlatform) {
+    let module;
+    try {
+      module = await this.vsceSign();
+    } catch (error) {
+      this.logService.error("Could not load vsce-sign module", getErrorMessage(error));
+      this.logService.info(`Extension signature verification is not done: ${extensionId}`);
+      return void 0;
+    }
+    const startTime = (/* @__PURE__ */ new Date()).getTime();
+    let result;
+    try {
+      this.logService.trace(`Verifying extension signature for ${extensionId}...`);
+      result = await module.verify(vsixFilePath, signatureArchiveFilePath, this.logService.getLevel() === LogLevel.Trace);
+    } catch (e) {
+      result = {
+        code: ExtensionSignatureVerificationCode.UnknownError,
+        didExecute: false,
+        output: getErrorMessage(e)
+      };
+    }
+    const duration = (/* @__PURE__ */ new Date()).getTime() - startTime;
+    this.logService.info(`Extension signature verification result for ${extensionId}: ${result.code}. ${isDefined(result.internalCode) ? `Internal Code: ${result.internalCode}. ` : ""}Executed: ${result.didExecute}. Duration: ${duration}ms.`);
+    this.logService.trace(`Extension signature verification output for ${extensionId}:
+${result.output}`);
+    this.telemetryService.publicLog2("extensionsignature:verification", {
+      extensionId,
+      extensionVersion: version,
+      code: result.code,
+      internalCode: result.internalCode,
+      duration,
+      didExecute: result.didExecute,
+      clientTargetPlatform
+    });
+    return { code: result.code };
+  }
+};
+ExtensionSignatureVerificationService = __decorateClass([
+  __decorateParam(0, ILogService),
+  __decorateParam(1, ITelemetryService)
+], ExtensionSignatureVerificationService);
+export {
+  ExtensionSignatureVerificationService,
+  IExtensionSignatureVerificationService
+};
+//# sourceMappingURL=extensionSignatureVerificationService.js.map

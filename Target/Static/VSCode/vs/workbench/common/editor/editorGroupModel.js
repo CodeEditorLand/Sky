@@ -1,1 +1,814 @@
-var D=Object.defineProperty,M=Object.getOwnPropertyDescriptor,g=(i,t,e,s)=>{for(var r,n=s>1?void 0:s?M(t,e):t,o=i.length-1;o>=0;o--)(r=i[o])&&(n=(s?r(t,e,n):r(n))||n);return s&&n&&D(t,e,n),n},I=(i,t)=>(e,s)=>t(e,s,i);import{Event as G,Emitter as T}from"../../../base/common/event.js";import{EditorsOrder as S,EditorExtensions as m,SideBySideEditor as k,EditorCloseContext as v,GroupModelChangeKind as h}from"../editor.js";import{EditorInput as _}from"./editorInput.js";import{SideBySideEditorInput as f}from"./sideBySideEditorInput.js";import{IInstantiationService as R}from"../../../platform/instantiation/common/instantiation.js";import{IConfigurationService as w}from"../../../platform/configuration/common/configuration.js";import{dispose as C,Disposable as A,DisposableStore as L}from"../../../base/common/lifecycle.js";import{Registry as b}from"../../../platform/registry/common/platform.js";import{coalesce as x}from"../../../base/common/arrays.js";const y={LEFT:"left",RIGHT:"right",FIRST:"first",LAST:"last"};function P(i){const t=i;return!!(t&&"object"==typeof t&&Array.isArray(t.editors)&&Array.isArray(t.mru))}function Z(i){const t=i;return t.editor&&void 0!==t.editorIndex}function $(i){const t=i;return t.kind===h.EDITOR_OPEN&&void 0!==t.editorIndex}function ee(i){const t=i;return t.kind===h.EDITOR_MOVE&&void 0!==t.editorIndex&&void 0!==t.oldEditorIndex}function te(i){const t=i;return t.kind===h.EDITOR_CLOSE&&void 0!==t.editorIndex&&void 0!==t.context&&void 0!==t.sticky}let c=class extends A{constructor(i,t,e){super(),this.instantiationService=t,this.configurationService=e,P(i)?this._id=this.deserialize(i):this._id=c.IDS++,this.onConfigurationUpdated(),this.registerListeners()}static IDS=0;_onDidModelChange=this._register(new T({leakWarningThreshold:500}));onDidModelChange=this._onDidModelChange.event;_id;get id(){return this._id}editors=[];mru=[];editorListeners=new Set;locked=!1;selection=[];get active(){return this.selection[0]??null}preview=null;sticky=-1;transient=new Set;editorOpenPositioning;focusRecentEditorAfterClose;registerListeners(){this._register(this.configurationService.onDidChangeConfiguration((i=>this.onConfigurationUpdated(i))))}onConfigurationUpdated(i){i&&!i.affectsConfiguration("workbench.editor.openPositioning")&&!i.affectsConfiguration("workbench.editor.focusRecentEditorAfterClose")||(this.editorOpenPositioning=this.configurationService.getValue("workbench.editor.openPositioning"),this.focusRecentEditorAfterClose=this.configurationService.getValue("workbench.editor.focusRecentEditorAfterClose"))}get count(){return this.editors.length}get stickyCount(){return this.sticky+1}getEditors(i,t){const e=i===S.MOST_RECENTLY_ACTIVE?this.mru.slice(0):this.editors.slice(0);return t?.excludeSticky?i===S.MOST_RECENTLY_ACTIVE?e.filter((i=>!this.isSticky(i))):e.slice(this.sticky+1):e}getEditorByIndex(i){return this.editors[i]}get activeEditor(){return this.active}isActive(i){return this.matches(this.active,i)}get previewEditor(){return this.preview}openEditor(i,t){const e=t?.sticky||"number"==typeof t?.index&&this.isSticky(t.index),s=t?.pinned||t?.sticky,r=!!t?.transient,n=t?.active||!this.activeEditor||!s&&this.preview===this.activeEditor,o=this.findEditor(i,t);if(o){const[i,d]=o;return this.doSetTransient(i,d,!1!==r&&this.isTransient(i)),s&&this.doPin(i,d),this.setSelection(n?i:this.activeEditor,t?.inactiveSelection??[]),t&&"number"==typeof t.index&&this.moveEditor(i,t.index),e&&this.doStick(i,this.indexOf(i)),{editor:i,isNew:!1}}{const o=i,d=this.indexOf(this.active);let c;if(t&&"number"==typeof t.index?c=t.index:this.editorOpenPositioning===y.FIRST?(c=0,!e&&this.isSticky(c)&&(c=this.sticky+1)):this.editorOpenPositioning===y.LAST?c=this.editors.length:(c=this.editorOpenPositioning===y.LEFT?0!==d&&this.editors.length?d:0:d+1,!e&&this.isSticky(c)&&(c=this.sticky+1)),e&&(this.sticky++,this.isSticky(c)||(c=this.sticky)),(s||!this.preview)&&this.splice(c,!1,o),r&&this.doSetTransient(o,c,!0),!s){if(this.preview){c>this.indexOf(this.preview)&&c--,this.replaceEditor(this.preview,o,c,!n)}this.preview=o}this.registerEditorListeners(o);const a={kind:h.EDITOR_OPEN,editor:o,editorIndex:c};return this._onDidModelChange.fire(a),this.setSelection(n?o:this.activeEditor,t?.inactiveSelection??[]),{editor:o,isNew:!0}}}registerEditorListeners(i){const t=new L;this.editorListeners.add(t),t.add(G.once(i.onWillDispose)((()=>{const t=this.editors.indexOf(i);if(t>=0){const e={kind:h.EDITOR_WILL_DISPOSE,editor:i,editorIndex:t};this._onDidModelChange.fire(e)}}))),t.add(i.onDidChangeDirty((()=>{const t={kind:h.EDITOR_DIRTY,editor:i,editorIndex:this.editors.indexOf(i)};this._onDidModelChange.fire(t)}))),t.add(i.onDidChangeLabel((()=>{const t={kind:h.EDITOR_LABEL,editor:i,editorIndex:this.editors.indexOf(i)};this._onDidModelChange.fire(t)}))),t.add(i.onDidChangeCapabilities((()=>{const t={kind:h.EDITOR_CAPABILITIES,editor:i,editorIndex:this.editors.indexOf(i)};this._onDidModelChange.fire(t)}))),t.add(this.onDidModelChange((e=>{e.kind===h.EDITOR_CLOSE&&e.editor?.matches(i)&&(C(t),this.editorListeners.delete(t))})))}replaceEditor(i,t,e,s=!0){const r=this.doCloseEditor(i,v.REPLACE,s);if(this.splice(e,!1,t),r){const i={kind:h.EDITOR_CLOSE,...r};this._onDidModelChange.fire(i)}}closeEditor(i,t=v.UNKNOWN,e=!0){const s=this.doCloseEditor(i,t,e);if(s){const i={kind:h.EDITOR_CLOSE,...s};return this._onDidModelChange.fire(i),s}}doCloseEditor(i,t,e){const s=this.indexOf(i);if(-1===s)return;const r=this.editors[s],n=this.isSticky(s),o=this.active===r;if(e&&o)if(this.mru.length>1){let i;i=this.focusRecentEditorAfterClose?this.mru[1]:s===this.editors.length-1?this.editors[s-1]:this.editors[s+1];const t=this.selection.filter((t=>t!==r&&t!==i));this.doSetSelection(i,this.editors.indexOf(i),t)}else this.doSetSelection(null,void 0,[]);else if(!o&&this.doIsSelected(r)){const i=this.selection.filter((i=>i!==r&&i!==this.activeEditor));this.doSetSelection(this.activeEditor,this.indexOf(this.activeEditor),i)}return this.preview===r&&(this.preview=null),this.transient.delete(r),this.splice(s,!0),{editor:r,sticky:n,editorIndex:s,context:t}}moveEditor(i,t){t>=this.editors.length?t=this.editors.length-1:t<0&&(t=0);const e=this.indexOf(i);if(e<0||t===e)return;const s=this.editors[e],r=this.sticky;this.isSticky(e)&&t>this.sticky?this.sticky--:!this.isSticky(e)&&t<=this.sticky&&this.sticky++,this.editors.splice(e,1),this.editors.splice(t,0,s);const n={kind:h.EDITOR_MOVE,editor:s,oldEditorIndex:e,editorIndex:t};if(this._onDidModelChange.fire(n),r!==this.sticky){const i={kind:h.EDITOR_STICKY,editor:s,editorIndex:t};this._onDidModelChange.fire(i)}return s}setActive(i){let t;return i?t=this.setEditorActive(i):this.setGroupActive(),t}setGroupActive(){this._onDidModelChange.fire({kind:h.GROUP_ACTIVE})}setEditorActive(i){const t=this.findEditor(i);if(!t)return;const[e,s]=t;return this.doSetSelection(e,s,[]),e}get selectedEditors(){return this.editors.filter((i=>this.doIsSelected(i)))}isSelected(i){let t;return t="number"==typeof i?this.editors[i]:this.findEditor(i)?.[0],!!t&&this.doIsSelected(t)}doIsSelected(i){return this.selection.includes(i)}setSelection(i,t){const e=this.findEditor(i);if(!e)return;const[s,r]=e,n=new Set;for(const i of t){const t=this.findEditor(i);if(!t)return;const[e]=t;e!==s&&n.add(e)}this.doSetSelection(s,r,Array.from(n))}doSetSelection(i,t,e){const s=this.activeEditor,r=this.selection;let n;n=i?[i,...e]:[],this.selection=n;const o=i&&"number"==typeof t&&s!==i;if(o){const e=this.indexOf(i,this.mru);this.mru.splice(e,1),this.mru.unshift(i);const s={kind:h.EDITOR_ACTIVE,editor:i,editorIndex:t};this._onDidModelChange.fire(s)}if(o||r.length!==n.length||r.some((i=>!n.includes(i)))){const i={kind:h.EDITORS_SELECTION};this._onDidModelChange.fire(i)}}setIndex(i){this._onDidModelChange.fire({kind:h.GROUP_INDEX})}setLabel(i){this._onDidModelChange.fire({kind:h.GROUP_LABEL})}pin(i){const t=this.findEditor(i);if(!t)return;const[e,s]=t;return this.doPin(e,s),e}doPin(i,t){if(this.isPinned(i))return;this.setTransient(i,!1),this.preview=null;const e={kind:h.EDITOR_PIN,editor:i,editorIndex:t};this._onDidModelChange.fire(e)}unpin(i){const t=this.findEditor(i);if(!t)return;const[e,s]=t;return this.doUnpin(e,s),e}doUnpin(i,t){if(!this.isPinned(i))return;const e=this.preview;this.preview=i;const s={kind:h.EDITOR_PIN,editor:i,editorIndex:t};this._onDidModelChange.fire(s),e&&this.closeEditor(e,v.UNPIN)}isPinned(i){let t;return t="number"==typeof i?this.editors[i]:i,!this.matches(this.preview,t)}stick(i){const t=this.findEditor(i);if(!t)return;const[e,s]=t;return this.doStick(e,s),e}doStick(i,t){if(this.isSticky(t))return;this.pin(i);const e=this.sticky+1;this.moveEditor(i,e),this.sticky++;const s={kind:h.EDITOR_STICKY,editor:i,editorIndex:e};this._onDidModelChange.fire(s)}unstick(i){const t=this.findEditor(i);if(!t)return;const[e,s]=t;return this.doUnstick(e,s),e}doUnstick(i,t){if(!this.isSticky(t))return;const e=this.sticky;this.moveEditor(i,e),this.sticky--;const s={kind:h.EDITOR_STICKY,editor:i,editorIndex:e};this._onDidModelChange.fire(s)}isSticky(i){if(this.sticky<0)return!1;let t;return t="number"==typeof i?i:this.indexOf(i),!(t<0)&&t<=this.sticky}setTransient(i,t){if(!t&&0===this.transient.size)return;const e=this.findEditor(i);if(!e)return;const[s,r]=e;return this.doSetTransient(s,r,t),s}doSetTransient(i,t,e){if(e){if(this.transient.has(i))return;this.transient.add(i)}else{if(!this.transient.has(i))return;this.transient.delete(i)}const s={kind:h.EDITOR_TRANSIENT,editor:i,editorIndex:t};this._onDidModelChange.fire(s)}isTransient(i){if(0===this.transient.size)return!1;let t;return t="number"==typeof i?this.editors[i]:this.findEditor(i)?.[0],!!t&&this.transient.has(t)}splice(i,t,e){const s=this.editors[i];if(t&&this.isSticky(i)&&this.sticky--,e?this.editors.splice(i,t?1:0,e):this.editors.splice(i,t?1:0),!t&&e)0===this.mru.length?this.mru.push(e):this.mru.splice(1,0,e);else{const i=this.indexOf(s,this.mru);t&&!e?this.mru.splice(i,1):t&&e&&this.mru.splice(i,1,e)}}indexOf(i,t=this.editors,e){let s=-1;if(!i)return s;for(let r=0;r<t.length;r++){const n=t[r];if(this.matches(n,i,e)){if(!(e?.supportSideBySide&&n instanceof f)||i instanceof f){s=r;break}s=r}}return s}findEditor(i,t){const e=this.indexOf(i,this.editors,t);if(-1!==e)return[this.editors[e],e]}isFirst(i,t=this.editors){return this.matches(t[0],i)}isLast(i,t=this.editors){return this.matches(t[t.length-1],i)}contains(i,t){return-1!==this.indexOf(i,this.editors,t)}matches(i,t,e){if(!i||!t)return!1;if(e?.supportSideBySide&&i instanceof f&&!(t instanceof f))switch(e.supportSideBySide){case k.ANY:if(this.matches(i.primary,t,e)||this.matches(i.secondary,t,e))return!0;break;case k.BOTH:if(this.matches(i.primary,t,e)&&this.matches(i.secondary,t,e))return!0}const s=i===t;return e?.strictEquals?s:s||i.matches(t)}get isLocked(){return this.locked}lock(i){this.isLocked!==i&&(this.locked=i,this._onDidModelChange.fire({kind:h.GROUP_LOCKED}))}clone(){const i=this.instantiationService.createInstance(c,void 0);i.editors=this.editors.slice(0),i.mru=this.mru.slice(0),i.preview=this.preview,i.selection=this.selection.slice(0),i.sticky=this.sticky;for(const t of i.editors)i.registerEditorListeners(t);return i}serialize(){const i=b.as(m.EditorFactory),t=[],e=[];let s,r=this.sticky;for(let n=0;n<this.editors.length;n++){const o=this.editors[n];let d=!1;const h=i.getEditorSerializer(o);if(h){const i=h.canSerialize(o)?h.serialize(o):void 0;"string"==typeof i?(d=!0,e.push({id:o.typeId,value:i}),t.push(o),this.preview===o&&(s=t.length-1)):d=!1}!d&&this.isSticky(n)&&r--}const n=this.mru.map((i=>this.indexOf(i,t))).filter((i=>i>=0));return{id:this.id,locked:!!this.locked||void 0,editors:e,mru:n,preview:s,sticky:r>=0?r:void 0}}deserialize(i){const t=b.as(m.EditorFactory);return"number"==typeof i.id?(this._id=i.id,c.IDS=Math.max(i.id+1,c.IDS)):this._id=c.IDS++,i.locked&&(this.locked=!0),this.editors=x(i.editors.map(((e,s)=>{let r;const n=t.getEditorSerializer(e.id);if(n){const i=n.deserialize(this.instantiationService,e.value);i instanceof _&&(r=i,this.registerEditorListeners(r))}return!r&&"number"==typeof i.sticky&&s<=i.sticky&&i.sticky--,r}))),this.mru=x(i.mru.map((i=>this.editors[i]))),this.selection=this.mru.length>0?[this.mru[0]]:[],"number"==typeof i.preview&&(this.preview=this.editors[i.preview]),"number"==typeof i.sticky&&(this.sticky=i.sticky),this._id}dispose(){C(Array.from(this.editorListeners)),this.editorListeners.clear(),this.transient.clear(),super.dispose()}};c=g([I(1,R),I(2,w)],c);export{c as EditorGroupModel,Z as isGroupEditorChangeEvent,te as isGroupEditorCloseEvent,ee as isGroupEditorMoveEvent,$ as isGroupEditorOpenEvent,P as isSerializedEditorGroupModel};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Event, Emitter } from "../../../base/common/event.js";
+import { IEditorFactoryRegistry, GroupIdentifier, EditorsOrder, EditorExtensions, IUntypedEditorInput, SideBySideEditor, EditorCloseContext, IMatchEditorOptions, GroupModelChangeKind } from "../editor.js";
+import { EditorInput } from "./editorInput.js";
+import { SideBySideEditorInput } from "./sideBySideEditorInput.js";
+import { IInstantiationService } from "../../../platform/instantiation/common/instantiation.js";
+import { IConfigurationChangeEvent, IConfigurationService } from "../../../platform/configuration/common/configuration.js";
+import { dispose, Disposable, DisposableStore } from "../../../base/common/lifecycle.js";
+import { Registry } from "../../../platform/registry/common/platform.js";
+import { coalesce } from "../../../base/common/arrays.js";
+const EditorOpenPositioning = {
+  LEFT: "left",
+  RIGHT: "right",
+  FIRST: "first",
+  LAST: "last"
+};
+function isSerializedEditorGroupModel(group) {
+  const candidate = group;
+  return !!(candidate && typeof candidate === "object" && Array.isArray(candidate.editors) && Array.isArray(candidate.mru));
+}
+__name(isSerializedEditorGroupModel, "isSerializedEditorGroupModel");
+function isGroupEditorChangeEvent(e) {
+  const candidate = e;
+  return candidate.editor && candidate.editorIndex !== void 0;
+}
+__name(isGroupEditorChangeEvent, "isGroupEditorChangeEvent");
+function isGroupEditorOpenEvent(e) {
+  const candidate = e;
+  return candidate.kind === GroupModelChangeKind.EDITOR_OPEN && candidate.editorIndex !== void 0;
+}
+__name(isGroupEditorOpenEvent, "isGroupEditorOpenEvent");
+function isGroupEditorMoveEvent(e) {
+  const candidate = e;
+  return candidate.kind === GroupModelChangeKind.EDITOR_MOVE && candidate.editorIndex !== void 0 && candidate.oldEditorIndex !== void 0;
+}
+__name(isGroupEditorMoveEvent, "isGroupEditorMoveEvent");
+function isGroupEditorCloseEvent(e) {
+  const candidate = e;
+  return candidate.kind === GroupModelChangeKind.EDITOR_CLOSE && candidate.editorIndex !== void 0 && candidate.context !== void 0 && candidate.sticky !== void 0;
+}
+__name(isGroupEditorCloseEvent, "isGroupEditorCloseEvent");
+let EditorGroupModel = class extends Disposable {
+  constructor(labelOrSerializedGroup, instantiationService, configurationService) {
+    super();
+    this.instantiationService = instantiationService;
+    this.configurationService = configurationService;
+    if (isSerializedEditorGroupModel(labelOrSerializedGroup)) {
+      this._id = this.deserialize(labelOrSerializedGroup);
+    } else {
+      this._id = EditorGroupModel.IDS++;
+    }
+    this.onConfigurationUpdated();
+    this.registerListeners();
+  }
+  static {
+    __name(this, "EditorGroupModel");
+  }
+  static IDS = 0;
+  //#region events
+  _onDidModelChange = this._register(new Emitter({
+    leakWarningThreshold: 500
+    /* increased for users with hundreds of inputs opened */
+  }));
+  onDidModelChange = this._onDidModelChange.event;
+  //#endregion
+  _id;
+  get id() {
+    return this._id;
+  }
+  editors = [];
+  mru = [];
+  editorListeners = /* @__PURE__ */ new Set();
+  locked = false;
+  selection = [];
+  // editors in selected state, first one is active
+  get active() {
+    return this.selection[0] ?? null;
+  }
+  preview = null;
+  // editor in preview state
+  sticky = -1;
+  // index of first editor in sticky state
+  transient = /* @__PURE__ */ new Set();
+  // editors in transient state
+  editorOpenPositioning;
+  focusRecentEditorAfterClose;
+  registerListeners() {
+    this._register(this.configurationService.onDidChangeConfiguration((e) => this.onConfigurationUpdated(e)));
+  }
+  onConfigurationUpdated(e) {
+    if (e && !e.affectsConfiguration("workbench.editor.openPositioning") && !e.affectsConfiguration("workbench.editor.focusRecentEditorAfterClose")) {
+      return;
+    }
+    this.editorOpenPositioning = this.configurationService.getValue("workbench.editor.openPositioning");
+    this.focusRecentEditorAfterClose = this.configurationService.getValue("workbench.editor.focusRecentEditorAfterClose");
+  }
+  get count() {
+    return this.editors.length;
+  }
+  get stickyCount() {
+    return this.sticky + 1;
+  }
+  getEditors(order, options) {
+    const editors = order === EditorsOrder.MOST_RECENTLY_ACTIVE ? this.mru.slice(0) : this.editors.slice(0);
+    if (options?.excludeSticky) {
+      if (order === EditorsOrder.MOST_RECENTLY_ACTIVE) {
+        return editors.filter((editor) => !this.isSticky(editor));
+      }
+      return editors.slice(this.sticky + 1);
+    }
+    return editors;
+  }
+  getEditorByIndex(index) {
+    return this.editors[index];
+  }
+  get activeEditor() {
+    return this.active;
+  }
+  isActive(candidate) {
+    return this.matches(this.active, candidate);
+  }
+  get previewEditor() {
+    return this.preview;
+  }
+  openEditor(candidate, options) {
+    const makeSticky = options?.sticky || typeof options?.index === "number" && this.isSticky(options.index);
+    const makePinned = options?.pinned || options?.sticky;
+    const makeTransient = !!options?.transient;
+    const makeActive = options?.active || !this.activeEditor || !makePinned && this.preview === this.activeEditor;
+    const existingEditorAndIndex = this.findEditor(candidate, options);
+    if (!existingEditorAndIndex) {
+      const newEditor = candidate;
+      const indexOfActive = this.indexOf(this.active);
+      let targetIndex;
+      if (options && typeof options.index === "number") {
+        targetIndex = options.index;
+      } else if (this.editorOpenPositioning === EditorOpenPositioning.FIRST) {
+        targetIndex = 0;
+        if (!makeSticky && this.isSticky(targetIndex)) {
+          targetIndex = this.sticky + 1;
+        }
+      } else if (this.editorOpenPositioning === EditorOpenPositioning.LAST) {
+        targetIndex = this.editors.length;
+      } else {
+        if (this.editorOpenPositioning === EditorOpenPositioning.LEFT) {
+          if (indexOfActive === 0 || !this.editors.length) {
+            targetIndex = 0;
+          } else {
+            targetIndex = indexOfActive;
+          }
+        } else {
+          targetIndex = indexOfActive + 1;
+        }
+        if (!makeSticky && this.isSticky(targetIndex)) {
+          targetIndex = this.sticky + 1;
+        }
+      }
+      if (makeSticky) {
+        this.sticky++;
+        if (!this.isSticky(targetIndex)) {
+          targetIndex = this.sticky;
+        }
+      }
+      if (makePinned || !this.preview) {
+        this.splice(targetIndex, false, newEditor);
+      }
+      if (makeTransient) {
+        this.doSetTransient(newEditor, targetIndex, true);
+      }
+      if (!makePinned) {
+        if (this.preview) {
+          const indexOfPreview = this.indexOf(this.preview);
+          if (targetIndex > indexOfPreview) {
+            targetIndex--;
+          }
+          this.replaceEditor(this.preview, newEditor, targetIndex, !makeActive);
+        }
+        this.preview = newEditor;
+      }
+      this.registerEditorListeners(newEditor);
+      const event = {
+        kind: GroupModelChangeKind.EDITOR_OPEN,
+        editor: newEditor,
+        editorIndex: targetIndex
+      };
+      this._onDidModelChange.fire(event);
+      this.setSelection(makeActive ? newEditor : this.activeEditor, options?.inactiveSelection ?? []);
+      return {
+        editor: newEditor,
+        isNew: true
+      };
+    } else {
+      const [existingEditor, existingEditorIndex] = existingEditorAndIndex;
+      this.doSetTransient(existingEditor, existingEditorIndex, makeTransient === false ? false : this.isTransient(existingEditor));
+      if (makePinned) {
+        this.doPin(existingEditor, existingEditorIndex);
+      }
+      this.setSelection(makeActive ? existingEditor : this.activeEditor, options?.inactiveSelection ?? []);
+      if (options && typeof options.index === "number") {
+        this.moveEditor(existingEditor, options.index);
+      }
+      if (makeSticky) {
+        this.doStick(existingEditor, this.indexOf(existingEditor));
+      }
+      return {
+        editor: existingEditor,
+        isNew: false
+      };
+    }
+  }
+  registerEditorListeners(editor) {
+    const listeners = new DisposableStore();
+    this.editorListeners.add(listeners);
+    listeners.add(Event.once(editor.onWillDispose)(() => {
+      const editorIndex = this.editors.indexOf(editor);
+      if (editorIndex >= 0) {
+        const event = {
+          kind: GroupModelChangeKind.EDITOR_WILL_DISPOSE,
+          editor,
+          editorIndex
+        };
+        this._onDidModelChange.fire(event);
+      }
+    }));
+    listeners.add(editor.onDidChangeDirty(() => {
+      const event = {
+        kind: GroupModelChangeKind.EDITOR_DIRTY,
+        editor,
+        editorIndex: this.editors.indexOf(editor)
+      };
+      this._onDidModelChange.fire(event);
+    }));
+    listeners.add(editor.onDidChangeLabel(() => {
+      const event = {
+        kind: GroupModelChangeKind.EDITOR_LABEL,
+        editor,
+        editorIndex: this.editors.indexOf(editor)
+      };
+      this._onDidModelChange.fire(event);
+    }));
+    listeners.add(editor.onDidChangeCapabilities(() => {
+      const event = {
+        kind: GroupModelChangeKind.EDITOR_CAPABILITIES,
+        editor,
+        editorIndex: this.editors.indexOf(editor)
+      };
+      this._onDidModelChange.fire(event);
+    }));
+    listeners.add(this.onDidModelChange((event) => {
+      if (event.kind === GroupModelChangeKind.EDITOR_CLOSE && event.editor?.matches(editor)) {
+        dispose(listeners);
+        this.editorListeners.delete(listeners);
+      }
+    }));
+  }
+  replaceEditor(toReplace, replaceWith, replaceIndex, openNext = true) {
+    const closeResult = this.doCloseEditor(toReplace, EditorCloseContext.REPLACE, openNext);
+    this.splice(replaceIndex, false, replaceWith);
+    if (closeResult) {
+      const event = {
+        kind: GroupModelChangeKind.EDITOR_CLOSE,
+        ...closeResult
+      };
+      this._onDidModelChange.fire(event);
+    }
+  }
+  closeEditor(candidate, context = EditorCloseContext.UNKNOWN, openNext = true) {
+    const closeResult = this.doCloseEditor(candidate, context, openNext);
+    if (closeResult) {
+      const event = {
+        kind: GroupModelChangeKind.EDITOR_CLOSE,
+        ...closeResult
+      };
+      this._onDidModelChange.fire(event);
+      return closeResult;
+    }
+    return void 0;
+  }
+  doCloseEditor(candidate, context, openNext) {
+    const index = this.indexOf(candidate);
+    if (index === -1) {
+      return void 0;
+    }
+    const editor = this.editors[index];
+    const sticky = this.isSticky(index);
+    const isActiveEditor = this.active === editor;
+    if (openNext && isActiveEditor) {
+      if (this.mru.length > 1) {
+        let newActive;
+        if (this.focusRecentEditorAfterClose) {
+          newActive = this.mru[1];
+        } else {
+          if (index === this.editors.length - 1) {
+            newActive = this.editors[index - 1];
+          } else {
+            newActive = this.editors[index + 1];
+          }
+        }
+        const newInactiveSelectedEditors = this.selection.filter((selected) => selected !== editor && selected !== newActive);
+        this.doSetSelection(newActive, this.editors.indexOf(newActive), newInactiveSelectedEditors);
+      } else {
+        this.doSetSelection(null, void 0, []);
+      }
+    } else if (!isActiveEditor) {
+      if (this.doIsSelected(editor)) {
+        const newInactiveSelectedEditors = this.selection.filter((selected) => selected !== editor && selected !== this.activeEditor);
+        this.doSetSelection(this.activeEditor, this.indexOf(this.activeEditor), newInactiveSelectedEditors);
+      }
+    }
+    if (this.preview === editor) {
+      this.preview = null;
+    }
+    this.transient.delete(editor);
+    this.splice(index, true);
+    return { editor, sticky, editorIndex: index, context };
+  }
+  moveEditor(candidate, toIndex) {
+    if (toIndex >= this.editors.length) {
+      toIndex = this.editors.length - 1;
+    } else if (toIndex < 0) {
+      toIndex = 0;
+    }
+    const index = this.indexOf(candidate);
+    if (index < 0 || toIndex === index) {
+      return;
+    }
+    const editor = this.editors[index];
+    const sticky = this.sticky;
+    if (this.isSticky(index) && toIndex > this.sticky) {
+      this.sticky--;
+    } else if (!this.isSticky(index) && toIndex <= this.sticky) {
+      this.sticky++;
+    }
+    this.editors.splice(index, 1);
+    this.editors.splice(toIndex, 0, editor);
+    const event = {
+      kind: GroupModelChangeKind.EDITOR_MOVE,
+      editor,
+      oldEditorIndex: index,
+      editorIndex: toIndex
+    };
+    this._onDidModelChange.fire(event);
+    if (sticky !== this.sticky) {
+      const event2 = {
+        kind: GroupModelChangeKind.EDITOR_STICKY,
+        editor,
+        editorIndex: toIndex
+      };
+      this._onDidModelChange.fire(event2);
+    }
+    return editor;
+  }
+  setActive(candidate) {
+    let result = void 0;
+    if (!candidate) {
+      this.setGroupActive();
+    } else {
+      result = this.setEditorActive(candidate);
+    }
+    return result;
+  }
+  setGroupActive() {
+    this._onDidModelChange.fire({ kind: GroupModelChangeKind.GROUP_ACTIVE });
+  }
+  setEditorActive(candidate) {
+    const res = this.findEditor(candidate);
+    if (!res) {
+      return;
+    }
+    const [editor, editorIndex] = res;
+    this.doSetSelection(editor, editorIndex, []);
+    return editor;
+  }
+  get selectedEditors() {
+    return this.editors.filter((editor) => this.doIsSelected(editor));
+  }
+  isSelected(editorCandidateOrIndex) {
+    let editor;
+    if (typeof editorCandidateOrIndex === "number") {
+      editor = this.editors[editorCandidateOrIndex];
+    } else {
+      editor = this.findEditor(editorCandidateOrIndex)?.[0];
+    }
+    return !!editor && this.doIsSelected(editor);
+  }
+  doIsSelected(editor) {
+    return this.selection.includes(editor);
+  }
+  setSelection(activeSelectedEditorCandidate, inactiveSelectedEditorCandidates) {
+    const res = this.findEditor(activeSelectedEditorCandidate);
+    if (!res) {
+      return;
+    }
+    const [activeSelectedEditor, activeSelectedEditorIndex] = res;
+    const inactiveSelectedEditors = /* @__PURE__ */ new Set();
+    for (const inactiveSelectedEditorCandidate of inactiveSelectedEditorCandidates) {
+      const res2 = this.findEditor(inactiveSelectedEditorCandidate);
+      if (!res2) {
+        return;
+      }
+      const [inactiveSelectedEditor] = res2;
+      if (inactiveSelectedEditor === activeSelectedEditor) {
+        continue;
+      }
+      inactiveSelectedEditors.add(inactiveSelectedEditor);
+    }
+    this.doSetSelection(activeSelectedEditor, activeSelectedEditorIndex, Array.from(inactiveSelectedEditors));
+  }
+  doSetSelection(activeSelectedEditor, activeSelectedEditorIndex, inactiveSelectedEditors) {
+    const previousActiveEditor = this.activeEditor;
+    const previousSelection = this.selection;
+    let newSelection;
+    if (activeSelectedEditor) {
+      newSelection = [activeSelectedEditor, ...inactiveSelectedEditors];
+    } else {
+      newSelection = [];
+    }
+    this.selection = newSelection;
+    const activeEditorChanged = activeSelectedEditor && typeof activeSelectedEditorIndex === "number" && previousActiveEditor !== activeSelectedEditor;
+    if (activeEditorChanged) {
+      const mruIndex = this.indexOf(activeSelectedEditor, this.mru);
+      this.mru.splice(mruIndex, 1);
+      this.mru.unshift(activeSelectedEditor);
+      const event = {
+        kind: GroupModelChangeKind.EDITOR_ACTIVE,
+        editor: activeSelectedEditor,
+        editorIndex: activeSelectedEditorIndex
+      };
+      this._onDidModelChange.fire(event);
+    }
+    if (activeEditorChanged || previousSelection.length !== newSelection.length || previousSelection.some((editor) => !newSelection.includes(editor))) {
+      const event = {
+        kind: GroupModelChangeKind.EDITORS_SELECTION
+      };
+      this._onDidModelChange.fire(event);
+    }
+  }
+  setIndex(index) {
+    this._onDidModelChange.fire({ kind: GroupModelChangeKind.GROUP_INDEX });
+  }
+  setLabel(label) {
+    this._onDidModelChange.fire({ kind: GroupModelChangeKind.GROUP_LABEL });
+  }
+  pin(candidate) {
+    const res = this.findEditor(candidate);
+    if (!res) {
+      return;
+    }
+    const [editor, editorIndex] = res;
+    this.doPin(editor, editorIndex);
+    return editor;
+  }
+  doPin(editor, editorIndex) {
+    if (this.isPinned(editor)) {
+      return;
+    }
+    this.setTransient(editor, false);
+    this.preview = null;
+    const event = {
+      kind: GroupModelChangeKind.EDITOR_PIN,
+      editor,
+      editorIndex
+    };
+    this._onDidModelChange.fire(event);
+  }
+  unpin(candidate) {
+    const res = this.findEditor(candidate);
+    if (!res) {
+      return;
+    }
+    const [editor, editorIndex] = res;
+    this.doUnpin(editor, editorIndex);
+    return editor;
+  }
+  doUnpin(editor, editorIndex) {
+    if (!this.isPinned(editor)) {
+      return;
+    }
+    const oldPreview = this.preview;
+    this.preview = editor;
+    const event = {
+      kind: GroupModelChangeKind.EDITOR_PIN,
+      editor,
+      editorIndex
+    };
+    this._onDidModelChange.fire(event);
+    if (oldPreview) {
+      this.closeEditor(oldPreview, EditorCloseContext.UNPIN);
+    }
+  }
+  isPinned(editorCandidateOrIndex) {
+    let editor;
+    if (typeof editorCandidateOrIndex === "number") {
+      editor = this.editors[editorCandidateOrIndex];
+    } else {
+      editor = editorCandidateOrIndex;
+    }
+    return !this.matches(this.preview, editor);
+  }
+  stick(candidate) {
+    const res = this.findEditor(candidate);
+    if (!res) {
+      return;
+    }
+    const [editor, editorIndex] = res;
+    this.doStick(editor, editorIndex);
+    return editor;
+  }
+  doStick(editor, editorIndex) {
+    if (this.isSticky(editorIndex)) {
+      return;
+    }
+    this.pin(editor);
+    const newEditorIndex = this.sticky + 1;
+    this.moveEditor(editor, newEditorIndex);
+    this.sticky++;
+    const event = {
+      kind: GroupModelChangeKind.EDITOR_STICKY,
+      editor,
+      editorIndex: newEditorIndex
+    };
+    this._onDidModelChange.fire(event);
+  }
+  unstick(candidate) {
+    const res = this.findEditor(candidate);
+    if (!res) {
+      return;
+    }
+    const [editor, editorIndex] = res;
+    this.doUnstick(editor, editorIndex);
+    return editor;
+  }
+  doUnstick(editor, editorIndex) {
+    if (!this.isSticky(editorIndex)) {
+      return;
+    }
+    const newEditorIndex = this.sticky;
+    this.moveEditor(editor, newEditorIndex);
+    this.sticky--;
+    const event = {
+      kind: GroupModelChangeKind.EDITOR_STICKY,
+      editor,
+      editorIndex: newEditorIndex
+    };
+    this._onDidModelChange.fire(event);
+  }
+  isSticky(candidateOrIndex) {
+    if (this.sticky < 0) {
+      return false;
+    }
+    let index;
+    if (typeof candidateOrIndex === "number") {
+      index = candidateOrIndex;
+    } else {
+      index = this.indexOf(candidateOrIndex);
+    }
+    if (index < 0) {
+      return false;
+    }
+    return index <= this.sticky;
+  }
+  setTransient(candidate, transient) {
+    if (!transient && this.transient.size === 0) {
+      return;
+    }
+    const res = this.findEditor(candidate);
+    if (!res) {
+      return;
+    }
+    const [editor, editorIndex] = res;
+    this.doSetTransient(editor, editorIndex, transient);
+    return editor;
+  }
+  doSetTransient(editor, editorIndex, transient) {
+    if (transient) {
+      if (this.transient.has(editor)) {
+        return;
+      }
+      this.transient.add(editor);
+    } else {
+      if (!this.transient.has(editor)) {
+        return;
+      }
+      this.transient.delete(editor);
+    }
+    const event = {
+      kind: GroupModelChangeKind.EDITOR_TRANSIENT,
+      editor,
+      editorIndex
+    };
+    this._onDidModelChange.fire(event);
+  }
+  isTransient(editorCandidateOrIndex) {
+    if (this.transient.size === 0) {
+      return false;
+    }
+    let editor;
+    if (typeof editorCandidateOrIndex === "number") {
+      editor = this.editors[editorCandidateOrIndex];
+    } else {
+      editor = this.findEditor(editorCandidateOrIndex)?.[0];
+    }
+    return !!editor && this.transient.has(editor);
+  }
+  splice(index, del, editor) {
+    const editorToDeleteOrReplace = this.editors[index];
+    if (del && this.isSticky(index)) {
+      this.sticky--;
+    }
+    if (editor) {
+      this.editors.splice(index, del ? 1 : 0, editor);
+    } else {
+      this.editors.splice(index, del ? 1 : 0);
+    }
+    {
+      if (!del && editor) {
+        if (this.mru.length === 0) {
+          this.mru.push(editor);
+        } else {
+          this.mru.splice(1, 0, editor);
+        }
+      } else {
+        const indexInMRU = this.indexOf(editorToDeleteOrReplace, this.mru);
+        if (del && !editor) {
+          this.mru.splice(indexInMRU, 1);
+        } else if (del && editor) {
+          this.mru.splice(indexInMRU, 1, editor);
+        }
+      }
+    }
+  }
+  indexOf(candidate, editors = this.editors, options) {
+    let index = -1;
+    if (!candidate) {
+      return index;
+    }
+    for (let i = 0; i < editors.length; i++) {
+      const editor = editors[i];
+      if (this.matches(editor, candidate, options)) {
+        if (options?.supportSideBySide && editor instanceof SideBySideEditorInput && !(candidate instanceof SideBySideEditorInput)) {
+          index = i;
+        } else {
+          index = i;
+          break;
+        }
+      }
+    }
+    return index;
+  }
+  findEditor(candidate, options) {
+    const index = this.indexOf(candidate, this.editors, options);
+    if (index === -1) {
+      return void 0;
+    }
+    return [this.editors[index], index];
+  }
+  isFirst(candidate, editors = this.editors) {
+    return this.matches(editors[0], candidate);
+  }
+  isLast(candidate, editors = this.editors) {
+    return this.matches(editors[editors.length - 1], candidate);
+  }
+  contains(candidate, options) {
+    return this.indexOf(candidate, this.editors, options) !== -1;
+  }
+  matches(editor, candidate, options) {
+    if (!editor || !candidate) {
+      return false;
+    }
+    if (options?.supportSideBySide && editor instanceof SideBySideEditorInput && !(candidate instanceof SideBySideEditorInput)) {
+      switch (options.supportSideBySide) {
+        case SideBySideEditor.ANY:
+          if (this.matches(editor.primary, candidate, options) || this.matches(editor.secondary, candidate, options)) {
+            return true;
+          }
+          break;
+        case SideBySideEditor.BOTH:
+          if (this.matches(editor.primary, candidate, options) && this.matches(editor.secondary, candidate, options)) {
+            return true;
+          }
+          break;
+      }
+    }
+    const strictEquals = editor === candidate;
+    if (options?.strictEquals) {
+      return strictEquals;
+    }
+    return strictEquals || editor.matches(candidate);
+  }
+  get isLocked() {
+    return this.locked;
+  }
+  lock(locked) {
+    if (this.isLocked !== locked) {
+      this.locked = locked;
+      this._onDidModelChange.fire({ kind: GroupModelChangeKind.GROUP_LOCKED });
+    }
+  }
+  clone() {
+    const clone = this.instantiationService.createInstance(EditorGroupModel, void 0);
+    clone.editors = this.editors.slice(0);
+    clone.mru = this.mru.slice(0);
+    clone.preview = this.preview;
+    clone.selection = this.selection.slice(0);
+    clone.sticky = this.sticky;
+    for (const editor of clone.editors) {
+      clone.registerEditorListeners(editor);
+    }
+    return clone;
+  }
+  serialize() {
+    const registry = Registry.as(EditorExtensions.EditorFactory);
+    const serializableEditors = [];
+    const serializedEditors = [];
+    let serializablePreviewIndex;
+    let serializableSticky = this.sticky;
+    for (let i = 0; i < this.editors.length; i++) {
+      const editor = this.editors[i];
+      let canSerializeEditor = false;
+      const editorSerializer = registry.getEditorSerializer(editor);
+      if (editorSerializer) {
+        const value = editorSerializer.canSerialize(editor) ? editorSerializer.serialize(editor) : void 0;
+        if (typeof value === "string") {
+          canSerializeEditor = true;
+          serializedEditors.push({ id: editor.typeId, value });
+          serializableEditors.push(editor);
+          if (this.preview === editor) {
+            serializablePreviewIndex = serializableEditors.length - 1;
+          }
+        } else {
+          canSerializeEditor = false;
+        }
+      }
+      if (!canSerializeEditor && this.isSticky(i)) {
+        serializableSticky--;
+      }
+    }
+    const serializableMru = this.mru.map((editor) => this.indexOf(editor, serializableEditors)).filter((i) => i >= 0);
+    return {
+      id: this.id,
+      locked: this.locked ? true : void 0,
+      editors: serializedEditors,
+      mru: serializableMru,
+      preview: serializablePreviewIndex,
+      sticky: serializableSticky >= 0 ? serializableSticky : void 0
+    };
+  }
+  deserialize(data) {
+    const registry = Registry.as(EditorExtensions.EditorFactory);
+    if (typeof data.id === "number") {
+      this._id = data.id;
+      EditorGroupModel.IDS = Math.max(data.id + 1, EditorGroupModel.IDS);
+    } else {
+      this._id = EditorGroupModel.IDS++;
+    }
+    if (data.locked) {
+      this.locked = true;
+    }
+    this.editors = coalesce(data.editors.map((e, index) => {
+      let editor = void 0;
+      const editorSerializer = registry.getEditorSerializer(e.id);
+      if (editorSerializer) {
+        const deserializedEditor = editorSerializer.deserialize(this.instantiationService, e.value);
+        if (deserializedEditor instanceof EditorInput) {
+          editor = deserializedEditor;
+          this.registerEditorListeners(editor);
+        }
+      }
+      if (!editor && typeof data.sticky === "number" && index <= data.sticky) {
+        data.sticky--;
+      }
+      return editor;
+    }));
+    this.mru = coalesce(data.mru.map((i) => this.editors[i]));
+    this.selection = this.mru.length > 0 ? [this.mru[0]] : [];
+    if (typeof data.preview === "number") {
+      this.preview = this.editors[data.preview];
+    }
+    if (typeof data.sticky === "number") {
+      this.sticky = data.sticky;
+    }
+    return this._id;
+  }
+  dispose() {
+    dispose(Array.from(this.editorListeners));
+    this.editorListeners.clear();
+    this.transient.clear();
+    super.dispose();
+  }
+};
+EditorGroupModel = __decorateClass([
+  __decorateParam(1, IInstantiationService),
+  __decorateParam(2, IConfigurationService)
+], EditorGroupModel);
+export {
+  EditorGroupModel,
+  isGroupEditorChangeEvent,
+  isGroupEditorCloseEvent,
+  isGroupEditorMoveEvent,
+  isGroupEditorOpenEvent,
+  isSerializedEditorGroupModel
+};
+//# sourceMappingURL=editorGroupModel.js.map

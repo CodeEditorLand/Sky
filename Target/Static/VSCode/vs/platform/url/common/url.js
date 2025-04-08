@@ -1,1 +1,8 @@
-import"../../../base/common/lifecycle.js";import"../../../base/common/uri.js";import{createDecorator as e}from"../../instantiation/common/instantiation.js";const p=e("urlService");export{p as IURLService};
+import { IDisposable } from "../../../base/common/lifecycle.js";
+import { URI, UriComponents } from "../../../base/common/uri.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+const IURLService = createDecorator("urlService");
+export {
+  IURLService
+};
+//# sourceMappingURL=url.js.map

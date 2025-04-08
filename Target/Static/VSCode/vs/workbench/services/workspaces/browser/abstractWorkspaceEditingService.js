@@ -1,1 +1,336 @@
-var y=Object.defineProperty,P=Object.getOwnPropertyDescriptor,m=(e,r,i,t)=>{for(var o,s=t>1?void 0:t?P(r,i):r,a=e.length-1;a>=0;a--)(o=e[a])&&(s=(t?o(r,i,s):o(s))||s);return t&&s&&y(r,i,s),s},s=(e,r)=>(i,t)=>r(i,t,e);import"../common/workspaceEditing.js";import"../../../../base/common/uri.js";import{localize as u}from"../../../../nls.js";import{hasWorkspaceFileExtension as F,isSavedWorkspace as E,isUntitledWorkspace as W,isWorkspaceIdentifier as C,IWorkspaceContextService as D,toWorkspaceIdentifier as b,WorkbenchState as p,WORKSPACE_EXTENSION as h,WORKSPACE_FILTER as R}from"../../../../platform/workspace/common/workspace.js";import{IJSONEditingService as U,JSONEditingErrorCode as x}from"../../configuration/common/jsonEditing.js";import{IWorkspacesService as T,rewriteWorkspaceFileForNewLocation as g}from"../../../../platform/workspaces/common/workspaces.js";import"../../configuration/browser/configurationService.js";import{ConfigurationScope as A,Extensions as O}from"../../../../platform/configuration/common/configurationRegistry.js";import{Registry as N}from"../../../../platform/registry/common/platform.js";import{ICommandService as L}from"../../../../platform/commands/common/commands.js";import{distinct as M}from"../../../../base/common/arrays.js";import{basename as I,isEqual as J,isEqualAuthority as K,joinPath as V,removeTrailingPathSeparator as w}from"../../../../base/common/resources.js";import{INotificationService as _,Severity as $}from"../../../../platform/notification/common/notification.js";import{IFileService as q}from"../../../../platform/files/common/files.js";import{IWorkbenchEnvironmentService as j}from"../../environment/common/environmentService.js";import{IFileDialogService as z,IDialogService as H}from"../../../../platform/dialogs/common/dialogs.js";import{ITextFileService as X}from"../../textfile/common/textfiles.js";import{IHostService as Y}from"../../host/browser/host.js";import{Schemas as S}from"../../../../base/common/network.js";import{SaveReason as B}from"../../../common/editor.js";import{IUriIdentityService as G}from"../../../../platform/uriIdentity/common/uriIdentity.js";import{IWorkspaceTrustManagementService as Q}from"../../../../platform/workspace/common/workspaceTrust.js";import{IWorkbenchConfigurationService as Z}from"../../configuration/common/configuration.js";import{IUserDataProfilesService as ee}from"../../../../platform/userDataProfile/common/userDataProfile.js";import{IUserDataProfileService as re}from"../../userDataProfile/common/userDataProfile.js";import{Disposable as ie}from"../../../../base/common/lifecycle.js";let k=class extends ie{constructor(e,r,i,t,o,s,a,n,c,p,m,l,f,h,u,v){super(),this.jsonEditingService=e,this.contextService=r,this.configurationService=i,this.notificationService=t,this.commandService=o,this.fileService=s,this.textFileService=a,this.workspacesService=n,this.environmentService=c,this.fileDialogService=p,this.dialogService=m,this.hostService=l,this.uriIdentityService=f,this.workspaceTrustManagementService=h,this.userDataProfilesService=u,this.userDataProfileService=v}async pickNewWorkspacePath(){const e=[S.file];this.environmentService.remoteAuthority&&e.unshift(S.vscodeRemote);let r=await this.fileDialogService.showSaveDialog({saveLabel:u("save","Save"),title:u("saveWorkspace","Save Workspace"),filters:R,defaultUri:V(await this.fileDialogService.defaultWorkspacePath(),this.getNewWorkspaceName()),availableFileSystems:e});if(r)return F(r)||(r=r.with({path:`${r.path}.${h}`})),r}getNewWorkspaceName(){const e=this.getCurrentWorkspaceIdentifier()?.configPath;if(e&&E(e,this.environmentService))return I(e);const r=this.contextService.getWorkspace().folders.at(0);return r?`${I(r.uri)}.${h}`:`workspace.${h}`}async updateFolders(e,r,i,t){const o=this.contextService.getWorkspace().folders;let s=[];"number"==typeof r&&(s=o.slice(e,e+r).map((e=>e.uri)));let a=[];Array.isArray(i)&&(a=i.map((e=>({uri:w(e.uri),name:e.name}))));const n=s.length>0,c=a.length>0;if(c||n)return c&&!n?this.doAddFolders(a,e,t):n&&!c?this.removeFolders(s):this.includesSingleFolderWorkspace(s)?this.createAndEnterWorkspace(a):this.contextService.getWorkbenchState()!==p.WORKSPACE?this.doAddFolders(a,e,t):this.doUpdateFolders(a,s,e,t)}async doUpdateFolders(e,r,i,t=!1){try{await this.contextService.updateFolders(e,r,i)}catch(e){if(t)throw e;this.handleWorkspaceConfigurationEditingError(e)}}addFolders(e,r=!1){const i=e.map((e=>({uri:w(e.uri),name:e.name})));return this.doAddFolders(i,void 0,r)}async doAddFolders(e,r,i=!1){const t=this.contextService.getWorkbenchState(),o=this.environmentService.remoteAuthority;if(o&&(e=e.filter((e=>e.uri.scheme!==S.file&&(e.uri.scheme!==S.vscodeRemote||K(e.uri.authority,o))))),t!==p.WORKSPACE){let i=this.contextService.getWorkspace().folders.map((e=>({uri:e.uri})));return i.splice("number"==typeof r?r:i.length,0,...e),i=M(i,(e=>this.uriIdentityService.extUri.getComparisonKey(e.uri))),t===p.EMPTY&&0===i.length||t===p.FOLDER&&1===i.length?void 0:this.createAndEnterWorkspace(i)}try{await this.contextService.addFolders(e,r)}catch(e){if(i)throw e;this.handleWorkspaceConfigurationEditingError(e)}}async removeFolders(e,r=!1){if(this.includesSingleFolderWorkspace(e))return this.createAndEnterWorkspace([]);try{await this.contextService.removeFolders(e)}catch(e){if(r)throw e;this.handleWorkspaceConfigurationEditingError(e)}}includesSingleFolderWorkspace(e){if(this.contextService.getWorkbenchState()===p.FOLDER){const r=this.contextService.getWorkspace().folders[0];return e.some((e=>this.uriIdentityService.extUri.isEqual(e,r.uri)))}return!1}async createAndEnterWorkspace(e,r){if(r&&!await this.isValidTargetWorkspacePath(r))return;const i=this.environmentService.remoteAuthority,t=await this.workspacesService.createUntitledWorkspace(e,i);if(r)try{await this.saveWorkspaceAs(t,r)}finally{await this.workspacesService.deleteUntitledWorkspace(t)}else r=t.configPath,this.userDataProfileService.currentProfile.isDefault||await this.userDataProfilesService.setProfileForWorkspace(t,this.userDataProfileService.currentProfile);return this.enterWorkspace(r)}async saveAndEnterWorkspace(e){const r=this.getCurrentWorkspaceIdentifier();if(r){if(J(r.configPath,e))return this.saveWorkspace(r);if(await this.isValidTargetWorkspacePath(e))return await this.saveWorkspaceAs(r,e),this.enterWorkspace(e)}}async isValidTargetWorkspacePath(e){return!0}async saveWorkspaceAs(e,r){const i=e.configPath;if(!W(r,this.environmentService)&&!this.userDataProfileService.currentProfile.isDefault){const e=await this.workspacesService.getWorkspaceIdentifier(r);await this.userDataProfilesService.setProfileForWorkspace(e,this.userDataProfileService.currentProfile)}if(this.uriIdentityService.extUri.isEqual(i,r))return;const t=W(i,this.environmentService),o=await this.fileService.readFile(i),s=g(o.value.toString(),i,t,r,this.uriIdentityService.extUri);await this.textFileService.create([{resource:r,value:s,options:{overwrite:!0}}]),await this.trustWorkspaceConfiguration(r)}async saveWorkspace(e){const r=e.configPath,i=this.textFileService.files.get(r);if(i)return void await i.save({force:!0,reason:B.EXPLICIT});if(await this.fileService.exists(r))return;const t=g(JSON.stringify({folders:[]},null,"\t"),r,!1,r,this.uriIdentityService.extUri);await this.textFileService.create([{resource:r,value:t}])}handleWorkspaceConfigurationEditingError(e){if(e.code===x.ERROR_INVALID_FILE)this.onInvalidWorkspaceConfigurationFileError();else this.notificationService.error(e.message)}onInvalidWorkspaceConfigurationFileError(){const e=u("errorInvalidTaskConfiguration","Unable to write into workspace configuration file. Please open the file to correct errors/warnings in it and try again.");this.askToOpenWorkspaceConfigurationFile(e)}askToOpenWorkspaceConfigurationFile(e){this.notificationService.prompt($.Error,e,[{label:u("openWorkspaceConfigurationFile","Open Workspace Configuration"),run:()=>this.commandService.executeCommand("workbench.action.openWorkspaceConfigFile")}])}async doEnterWorkspace(e){if(this.environmentService.extensionTestsLocationURI)throw new Error("Entering a new workspace is not possible in tests.");const r=await this.workspacesService.getWorkspaceIdentifier(e);return this.contextService.getWorkbenchState()===p.FOLDER&&await this.migrateWorkspaceSettings(r),await this.configurationService.initialize(r),this.workspacesService.enterWorkspace(e)}migrateWorkspaceSettings(e){return this.doCopyWorkspaceSettings(e,(e=>e.scope===A.WINDOW))}copyWorkspaceSettings(e){return this.doCopyWorkspaceSettings(e)}doCopyWorkspaceSettings(e,r){const i=N.as(O.Configuration).getConfigurationProperties(),t={};for(const e of this.configurationService.keys().workspace)if(i[e]){if(r&&!r(i[e]))continue;t[e]=this.configurationService.inspect(e).workspaceValue}return this.jsonEditingService.write(e.configPath,[{path:["settings"],value:t}],!0)}async trustWorkspaceConfiguration(e){this.contextService.getWorkbenchState()!==p.EMPTY&&this.workspaceTrustManagementService.isWorkspaceTrusted()&&await this.workspaceTrustManagementService.setUrisTrust([e],!0)}getCurrentWorkspaceIdentifier(){const e=b(this.contextService.getWorkspace());if(C(e))return e}};k=m([s(0,U),s(1,D),s(2,Z),s(3,_),s(4,L),s(5,q),s(6,X),s(7,T),s(8,j),s(9,z),s(10,H),s(11,Y),s(12,G),s(13,Q),s(14,ee),s(15,re)],k);export{k as AbstractWorkspaceEditingService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { IWorkspaceEditingService } from "../common/workspaceEditing.js";
+import { URI } from "../../../../base/common/uri.js";
+import { localize } from "../../../../nls.js";
+import { hasWorkspaceFileExtension, isSavedWorkspace, isUntitledWorkspace, isWorkspaceIdentifier, IWorkspaceContextService, IWorkspaceIdentifier, toWorkspaceIdentifier, WorkbenchState, WORKSPACE_EXTENSION, WORKSPACE_FILTER } from "../../../../platform/workspace/common/workspace.js";
+import { IJSONEditingService, JSONEditingError, JSONEditingErrorCode } from "../../configuration/common/jsonEditing.js";
+import { IWorkspaceFolderCreationData, IWorkspacesService, rewriteWorkspaceFileForNewLocation, IEnterWorkspaceResult, IStoredWorkspace } from "../../../../platform/workspaces/common/workspaces.js";
+import { WorkspaceService } from "../../configuration/browser/configurationService.js";
+import { ConfigurationScope, IConfigurationRegistry, Extensions as ConfigurationExtensions, IConfigurationPropertySchema } from "../../../../platform/configuration/common/configurationRegistry.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { distinct } from "../../../../base/common/arrays.js";
+import { basename, isEqual, isEqualAuthority, joinPath, removeTrailingPathSeparator } from "../../../../base/common/resources.js";
+import { INotificationService, Severity } from "../../../../platform/notification/common/notification.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { IWorkbenchEnvironmentService } from "../../environment/common/environmentService.js";
+import { IFileDialogService, IDialogService } from "../../../../platform/dialogs/common/dialogs.js";
+import { ITextFileService } from "../../textfile/common/textfiles.js";
+import { IHostService } from "../../host/browser/host.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { SaveReason } from "../../../common/editor.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import { IWorkspaceTrustManagementService } from "../../../../platform/workspace/common/workspaceTrust.js";
+import { IWorkbenchConfigurationService } from "../../configuration/common/configuration.js";
+import { IUserDataProfilesService } from "../../../../platform/userDataProfile/common/userDataProfile.js";
+import { IUserDataProfileService } from "../../userDataProfile/common/userDataProfile.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+let AbstractWorkspaceEditingService = class extends Disposable {
+  constructor(jsonEditingService, contextService, configurationService, notificationService, commandService, fileService, textFileService, workspacesService, environmentService, fileDialogService, dialogService, hostService, uriIdentityService, workspaceTrustManagementService, userDataProfilesService, userDataProfileService) {
+    super();
+    this.jsonEditingService = jsonEditingService;
+    this.contextService = contextService;
+    this.configurationService = configurationService;
+    this.notificationService = notificationService;
+    this.commandService = commandService;
+    this.fileService = fileService;
+    this.textFileService = textFileService;
+    this.workspacesService = workspacesService;
+    this.environmentService = environmentService;
+    this.fileDialogService = fileDialogService;
+    this.dialogService = dialogService;
+    this.hostService = hostService;
+    this.uriIdentityService = uriIdentityService;
+    this.workspaceTrustManagementService = workspaceTrustManagementService;
+    this.userDataProfilesService = userDataProfilesService;
+    this.userDataProfileService = userDataProfileService;
+  }
+  static {
+    __name(this, "AbstractWorkspaceEditingService");
+  }
+  async pickNewWorkspacePath() {
+    const availableFileSystems = [Schemas.file];
+    if (this.environmentService.remoteAuthority) {
+      availableFileSystems.unshift(Schemas.vscodeRemote);
+    }
+    let workspacePath = await this.fileDialogService.showSaveDialog({
+      saveLabel: localize("save", "Save"),
+      title: localize("saveWorkspace", "Save Workspace"),
+      filters: WORKSPACE_FILTER,
+      defaultUri: joinPath(await this.fileDialogService.defaultWorkspacePath(), this.getNewWorkspaceName()),
+      availableFileSystems
+    });
+    if (!workspacePath) {
+      return;
+    }
+    if (!hasWorkspaceFileExtension(workspacePath)) {
+      workspacePath = workspacePath.with({ path: `${workspacePath.path}.${WORKSPACE_EXTENSION}` });
+    }
+    return workspacePath;
+  }
+  getNewWorkspaceName() {
+    const configPathURI = this.getCurrentWorkspaceIdentifier()?.configPath;
+    if (configPathURI && isSavedWorkspace(configPathURI, this.environmentService)) {
+      return basename(configPathURI);
+    }
+    const folder = this.contextService.getWorkspace().folders.at(0);
+    if (folder) {
+      return `${basename(folder.uri)}.${WORKSPACE_EXTENSION}`;
+    }
+    return `workspace.${WORKSPACE_EXTENSION}`;
+  }
+  async updateFolders(index, deleteCount, foldersToAddCandidates, donotNotifyError) {
+    const folders = this.contextService.getWorkspace().folders;
+    let foldersToDelete = [];
+    if (typeof deleteCount === "number") {
+      foldersToDelete = folders.slice(index, index + deleteCount).map((folder) => folder.uri);
+    }
+    let foldersToAdd = [];
+    if (Array.isArray(foldersToAddCandidates)) {
+      foldersToAdd = foldersToAddCandidates.map((folderToAdd) => ({ uri: removeTrailingPathSeparator(folderToAdd.uri), name: folderToAdd.name }));
+    }
+    const wantsToDelete = foldersToDelete.length > 0;
+    const wantsToAdd = foldersToAdd.length > 0;
+    if (!wantsToAdd && !wantsToDelete) {
+      return;
+    }
+    if (wantsToAdd && !wantsToDelete) {
+      return this.doAddFolders(foldersToAdd, index, donotNotifyError);
+    }
+    if (wantsToDelete && !wantsToAdd) {
+      return this.removeFolders(foldersToDelete);
+    } else {
+      if (this.includesSingleFolderWorkspace(foldersToDelete)) {
+        return this.createAndEnterWorkspace(foldersToAdd);
+      }
+      if (this.contextService.getWorkbenchState() !== WorkbenchState.WORKSPACE) {
+        return this.doAddFolders(foldersToAdd, index, donotNotifyError);
+      }
+      return this.doUpdateFolders(foldersToAdd, foldersToDelete, index, donotNotifyError);
+    }
+  }
+  async doUpdateFolders(foldersToAdd, foldersToDelete, index, donotNotifyError = false) {
+    try {
+      await this.contextService.updateFolders(foldersToAdd, foldersToDelete, index);
+    } catch (error) {
+      if (donotNotifyError) {
+        throw error;
+      }
+      this.handleWorkspaceConfigurationEditingError(error);
+    }
+  }
+  addFolders(foldersToAddCandidates, donotNotifyError = false) {
+    const foldersToAdd = foldersToAddCandidates.map((folderToAdd) => ({ uri: removeTrailingPathSeparator(folderToAdd.uri), name: folderToAdd.name }));
+    return this.doAddFolders(foldersToAdd, void 0, donotNotifyError);
+  }
+  async doAddFolders(foldersToAdd, index, donotNotifyError = false) {
+    const state = this.contextService.getWorkbenchState();
+    const remoteAuthority = this.environmentService.remoteAuthority;
+    if (remoteAuthority) {
+      foldersToAdd = foldersToAdd.filter((folder) => folder.uri.scheme !== Schemas.file && (folder.uri.scheme !== Schemas.vscodeRemote || isEqualAuthority(folder.uri.authority, remoteAuthority)));
+    }
+    if (state !== WorkbenchState.WORKSPACE) {
+      let newWorkspaceFolders = this.contextService.getWorkspace().folders.map((folder) => ({ uri: folder.uri }));
+      newWorkspaceFolders.splice(typeof index === "number" ? index : newWorkspaceFolders.length, 0, ...foldersToAdd);
+      newWorkspaceFolders = distinct(newWorkspaceFolders, (folder) => this.uriIdentityService.extUri.getComparisonKey(folder.uri));
+      if (state === WorkbenchState.EMPTY && newWorkspaceFolders.length === 0 || state === WorkbenchState.FOLDER && newWorkspaceFolders.length === 1) {
+        return;
+      }
+      return this.createAndEnterWorkspace(newWorkspaceFolders);
+    }
+    try {
+      await this.contextService.addFolders(foldersToAdd, index);
+    } catch (error) {
+      if (donotNotifyError) {
+        throw error;
+      }
+      this.handleWorkspaceConfigurationEditingError(error);
+    }
+  }
+  async removeFolders(foldersToRemove, donotNotifyError = false) {
+    if (this.includesSingleFolderWorkspace(foldersToRemove)) {
+      return this.createAndEnterWorkspace([]);
+    }
+    try {
+      await this.contextService.removeFolders(foldersToRemove);
+    } catch (error) {
+      if (donotNotifyError) {
+        throw error;
+      }
+      this.handleWorkspaceConfigurationEditingError(error);
+    }
+  }
+  includesSingleFolderWorkspace(folders) {
+    if (this.contextService.getWorkbenchState() === WorkbenchState.FOLDER) {
+      const workspaceFolder = this.contextService.getWorkspace().folders[0];
+      return folders.some((folder) => this.uriIdentityService.extUri.isEqual(folder, workspaceFolder.uri));
+    }
+    return false;
+  }
+  async createAndEnterWorkspace(folders, path) {
+    if (path && !await this.isValidTargetWorkspacePath(path)) {
+      return;
+    }
+    const remoteAuthority = this.environmentService.remoteAuthority;
+    const untitledWorkspace = await this.workspacesService.createUntitledWorkspace(folders, remoteAuthority);
+    if (path) {
+      try {
+        await this.saveWorkspaceAs(untitledWorkspace, path);
+      } finally {
+        await this.workspacesService.deleteUntitledWorkspace(untitledWorkspace);
+      }
+    } else {
+      path = untitledWorkspace.configPath;
+      if (!this.userDataProfileService.currentProfile.isDefault) {
+        await this.userDataProfilesService.setProfileForWorkspace(untitledWorkspace, this.userDataProfileService.currentProfile);
+      }
+    }
+    return this.enterWorkspace(path);
+  }
+  async saveAndEnterWorkspace(workspaceUri) {
+    const workspaceIdentifier = this.getCurrentWorkspaceIdentifier();
+    if (!workspaceIdentifier) {
+      return;
+    }
+    if (isEqual(workspaceIdentifier.configPath, workspaceUri)) {
+      return this.saveWorkspace(workspaceIdentifier);
+    }
+    if (!await this.isValidTargetWorkspacePath(workspaceUri)) {
+      return;
+    }
+    await this.saveWorkspaceAs(workspaceIdentifier, workspaceUri);
+    return this.enterWorkspace(workspaceUri);
+  }
+  async isValidTargetWorkspacePath(workspaceUri) {
+    return true;
+  }
+  async saveWorkspaceAs(workspace, targetConfigPathURI) {
+    const configPathURI = workspace.configPath;
+    const isNotUntitledWorkspace = !isUntitledWorkspace(targetConfigPathURI, this.environmentService);
+    if (isNotUntitledWorkspace && !this.userDataProfileService.currentProfile.isDefault) {
+      const newWorkspace = await this.workspacesService.getWorkspaceIdentifier(targetConfigPathURI);
+      await this.userDataProfilesService.setProfileForWorkspace(newWorkspace, this.userDataProfileService.currentProfile);
+    }
+    if (this.uriIdentityService.extUri.isEqual(configPathURI, targetConfigPathURI)) {
+      return;
+    }
+    const isFromUntitledWorkspace = isUntitledWorkspace(configPathURI, this.environmentService);
+    const raw = await this.fileService.readFile(configPathURI);
+    const newRawWorkspaceContents = rewriteWorkspaceFileForNewLocation(raw.value.toString(), configPathURI, isFromUntitledWorkspace, targetConfigPathURI, this.uriIdentityService.extUri);
+    await this.textFileService.create([{ resource: targetConfigPathURI, value: newRawWorkspaceContents, options: { overwrite: true } }]);
+    await this.trustWorkspaceConfiguration(targetConfigPathURI);
+  }
+  async saveWorkspace(workspace) {
+    const configPathURI = workspace.configPath;
+    const existingModel = this.textFileService.files.get(configPathURI);
+    if (existingModel) {
+      await existingModel.save({ force: true, reason: SaveReason.EXPLICIT });
+      return;
+    }
+    const workspaceFileExists = await this.fileService.exists(configPathURI);
+    if (workspaceFileExists) {
+      return;
+    }
+    const newWorkspace = { folders: [] };
+    const newRawWorkspaceContents = rewriteWorkspaceFileForNewLocation(JSON.stringify(newWorkspace, null, "	"), configPathURI, false, configPathURI, this.uriIdentityService.extUri);
+    await this.textFileService.create([{ resource: configPathURI, value: newRawWorkspaceContents }]);
+  }
+  handleWorkspaceConfigurationEditingError(error) {
+    switch (error.code) {
+      case JSONEditingErrorCode.ERROR_INVALID_FILE:
+        this.onInvalidWorkspaceConfigurationFileError();
+        break;
+      default:
+        this.notificationService.error(error.message);
+    }
+  }
+  onInvalidWorkspaceConfigurationFileError() {
+    const message = localize("errorInvalidTaskConfiguration", "Unable to write into workspace configuration file. Please open the file to correct errors/warnings in it and try again.");
+    this.askToOpenWorkspaceConfigurationFile(message);
+  }
+  askToOpenWorkspaceConfigurationFile(message) {
+    this.notificationService.prompt(
+      Severity.Error,
+      message,
+      [{
+        label: localize("openWorkspaceConfigurationFile", "Open Workspace Configuration"),
+        run: /* @__PURE__ */ __name(() => this.commandService.executeCommand("workbench.action.openWorkspaceConfigFile"), "run")
+      }]
+    );
+  }
+  async doEnterWorkspace(workspaceUri) {
+    if (!!this.environmentService.extensionTestsLocationURI) {
+      throw new Error("Entering a new workspace is not possible in tests.");
+    }
+    const workspace = await this.workspacesService.getWorkspaceIdentifier(workspaceUri);
+    if (this.contextService.getWorkbenchState() === WorkbenchState.FOLDER) {
+      await this.migrateWorkspaceSettings(workspace);
+    }
+    await this.configurationService.initialize(workspace);
+    return this.workspacesService.enterWorkspace(workspaceUri);
+  }
+  migrateWorkspaceSettings(toWorkspace) {
+    return this.doCopyWorkspaceSettings(toWorkspace, (setting) => setting.scope === ConfigurationScope.WINDOW);
+  }
+  copyWorkspaceSettings(toWorkspace) {
+    return this.doCopyWorkspaceSettings(toWorkspace);
+  }
+  doCopyWorkspaceSettings(toWorkspace, filter) {
+    const configurationProperties = Registry.as(ConfigurationExtensions.Configuration).getConfigurationProperties();
+    const targetWorkspaceConfiguration = {};
+    for (const key of this.configurationService.keys().workspace) {
+      if (configurationProperties[key]) {
+        if (filter && !filter(configurationProperties[key])) {
+          continue;
+        }
+        targetWorkspaceConfiguration[key] = this.configurationService.inspect(key).workspaceValue;
+      }
+    }
+    return this.jsonEditingService.write(toWorkspace.configPath, [{ path: ["settings"], value: targetWorkspaceConfiguration }], true);
+  }
+  async trustWorkspaceConfiguration(configPathURI) {
+    if (this.contextService.getWorkbenchState() !== WorkbenchState.EMPTY && this.workspaceTrustManagementService.isWorkspaceTrusted()) {
+      await this.workspaceTrustManagementService.setUrisTrust([configPathURI], true);
+    }
+  }
+  getCurrentWorkspaceIdentifier() {
+    const identifier = toWorkspaceIdentifier(this.contextService.getWorkspace());
+    if (isWorkspaceIdentifier(identifier)) {
+      return identifier;
+    }
+    return void 0;
+  }
+};
+AbstractWorkspaceEditingService = __decorateClass([
+  __decorateParam(0, IJSONEditingService),
+  __decorateParam(1, IWorkspaceContextService),
+  __decorateParam(2, IWorkbenchConfigurationService),
+  __decorateParam(3, INotificationService),
+  __decorateParam(4, ICommandService),
+  __decorateParam(5, IFileService),
+  __decorateParam(6, ITextFileService),
+  __decorateParam(7, IWorkspacesService),
+  __decorateParam(8, IWorkbenchEnvironmentService),
+  __decorateParam(9, IFileDialogService),
+  __decorateParam(10, IDialogService),
+  __decorateParam(11, IHostService),
+  __decorateParam(12, IUriIdentityService),
+  __decorateParam(13, IWorkspaceTrustManagementService),
+  __decorateParam(14, IUserDataProfilesService),
+  __decorateParam(15, IUserDataProfileService)
+], AbstractWorkspaceEditingService);
+export {
+  AbstractWorkspaceEditingService
+};
+//# sourceMappingURL=abstractWorkspaceEditingService.js.map

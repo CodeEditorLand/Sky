@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/platform/remote/common/remoteExtensionsScanner.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { InstallExtensionSummary } from '../../extensionManagement/common/extensionManagement.js';\r\nimport { IExtensionDescription } from '../../extensions/common/extensions.js';\r\nimport { createDecorator } from '../../instantiation/common/instantiation.js';\r\n\r\nexport const IRemoteExtensionsScannerService = createDecorator<IRemoteExtensionsScannerService>('IRemoteExtensionsScannerService');\r\n\r\nexport const RemoteExtensionsScannerChannelName = 'remoteExtensionsScanner';\r\n\r\nexport interface IRemoteExtensionsScannerService {\r\n\treadonly _serviceBrand: undefined;\r\n\r\n\t/**\r\n\t * Returns a promise that resolves to an array of extension identifiers that failed to install\r\n\t */\r\n\twhenExtensionsReady(): Promise<InstallExtensionSummary>;\r\n\tscanExtensions(): Promise<IExtensionDescription[]>;\r\n}\r\n"],
+  "mappings": "AAKA,SAAS,+BAA+B;AACxC,SAAS,6BAA6B;AACtC,SAAS,uBAAuB;AAEzB,MAAM,kCAAkC,gBAAiD,iCAAiC;AAE1H,MAAM,qCAAqC;",
+  "names": []
+}

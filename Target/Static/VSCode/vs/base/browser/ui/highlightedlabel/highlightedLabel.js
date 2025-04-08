@@ -1,1 +1,132 @@
-import*as a from"../../dom.js";import"../hover/hoverDelegate.js";import{getBaseLayerHoverDelegate as d}from"../hover/hoverDelegate2.js";import{getDefaultHoverDelegate as p}from"../hover/hoverDelegateFactory.js";import{renderLabelWithIcons as h}from"../iconLabel/iconLabels.js";import{Disposable as g}from"../../../common/lifecycle.js";import*as u from"../../../common/objects.js";class l extends g{constructor(t,e){super(),this.options=e,this.supportIcons=e?.supportIcons??!1,this.domNode=a.append(t,a.$("span.monaco-highlighted-label"))}domNode;text="";title="";highlights=[];supportIcons;didEverRender=!1;customHover;get element(){return this.domNode}set(t,e=[],s="",o){t||(t=""),o&&(t=l.escapeNewLines(t,e)),(!this.didEverRender||this.text!==t||this.title!==s||!u.equals(this.highlights,e))&&(this.text=t,this.title=s,this.highlights=e,this.render())}render(){const t=[];let e=0;for(const s of this.highlights){if(s.end===s.start)continue;if(e<s.start){const o=this.text.substring(e,s.start);this.supportIcons?t.push(...h(o)):t.push(o),e=s.start}const o=this.text.substring(e,s.end),i=a.$("span.highlight",void 0,...this.supportIcons?h(o):[o]);s.extraClasses&&i.classList.add(...s.extraClasses),t.push(i),e=s.end}if(e<this.text.length){const s=this.text.substring(e);this.supportIcons?t.push(...h(s)):t.push(s)}if(a.reset(this.domNode,...t),this.options?.hoverDelegate?.showNativeHover)this.domNode.title=this.title;else if(this.customHover||""===this.title)this.customHover&&this.customHover.update(this.title);else{const t=this.options?.hoverDelegate??p("mouse");this.customHover=this._register(d().setupManagedHover(t,this.domNode,this.title))}this.didEverRender=!0}static escapeNewLines(t,e){let s=0,o=0;return t.replace(/\r\n|\r|\n/g,((t,i)=>{o="\r\n"===t?-1:0,i+=s;for(const t of e)t.end<=i||(t.start>=i&&(t.start+=o),t.end>=i&&(t.end+=o));return s+=o,"⏎"}))}}export{l as HighlightedLabel};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as dom from "../../dom.js";
+import { IHoverDelegate } from "../hover/hoverDelegate.js";
+import { getBaseLayerHoverDelegate } from "../hover/hoverDelegate2.js";
+import { getDefaultHoverDelegate } from "../hover/hoverDelegateFactory.js";
+import { renderLabelWithIcons } from "../iconLabel/iconLabels.js";
+import { Disposable } from "../../../common/lifecycle.js";
+import * as objects from "../../../common/objects.js";
+class HighlightedLabel extends Disposable {
+  /**
+   * Create a new {@link HighlightedLabel}.
+   *
+   * @param container The parent container to append to.
+   */
+  constructor(container, options) {
+    super();
+    this.options = options;
+    this.supportIcons = options?.supportIcons ?? false;
+    this.domNode = dom.append(container, dom.$("span.monaco-highlighted-label"));
+  }
+  static {
+    __name(this, "HighlightedLabel");
+  }
+  domNode;
+  text = "";
+  title = "";
+  highlights = [];
+  supportIcons;
+  didEverRender = false;
+  customHover;
+  /**
+   * The label's DOM node.
+   */
+  get element() {
+    return this.domNode;
+  }
+  /**
+   * Set the label and highlights.
+   *
+   * @param text The label to display.
+   * @param highlights The ranges to highlight.
+   * @param title An optional title for the hover tooltip.
+   * @param escapeNewLines Whether to escape new lines.
+   * @returns
+   */
+  set(text, highlights = [], title = "", escapeNewLines) {
+    if (!text) {
+      text = "";
+    }
+    if (escapeNewLines) {
+      text = HighlightedLabel.escapeNewLines(text, highlights);
+    }
+    if (this.didEverRender && this.text === text && this.title === title && objects.equals(this.highlights, highlights)) {
+      return;
+    }
+    this.text = text;
+    this.title = title;
+    this.highlights = highlights;
+    this.render();
+  }
+  render() {
+    const children = [];
+    let pos = 0;
+    for (const highlight of this.highlights) {
+      if (highlight.end === highlight.start) {
+        continue;
+      }
+      if (pos < highlight.start) {
+        const substring2 = this.text.substring(pos, highlight.start);
+        if (this.supportIcons) {
+          children.push(...renderLabelWithIcons(substring2));
+        } else {
+          children.push(substring2);
+        }
+        pos = highlight.start;
+      }
+      const substring = this.text.substring(pos, highlight.end);
+      const element = dom.$("span.highlight", void 0, ...this.supportIcons ? renderLabelWithIcons(substring) : [substring]);
+      if (highlight.extraClasses) {
+        element.classList.add(...highlight.extraClasses);
+      }
+      children.push(element);
+      pos = highlight.end;
+    }
+    if (pos < this.text.length) {
+      const substring = this.text.substring(pos);
+      if (this.supportIcons) {
+        children.push(...renderLabelWithIcons(substring));
+      } else {
+        children.push(substring);
+      }
+    }
+    dom.reset(this.domNode, ...children);
+    if (this.options?.hoverDelegate?.showNativeHover) {
+      this.domNode.title = this.title;
+    } else {
+      if (!this.customHover && this.title !== "") {
+        const hoverDelegate = this.options?.hoverDelegate ?? getDefaultHoverDelegate("mouse");
+        this.customHover = this._register(getBaseLayerHoverDelegate().setupManagedHover(hoverDelegate, this.domNode, this.title));
+      } else if (this.customHover) {
+        this.customHover.update(this.title);
+      }
+    }
+    this.didEverRender = true;
+  }
+  static escapeNewLines(text, highlights) {
+    let total = 0;
+    let extra = 0;
+    return text.replace(/\r\n|\r|\n/g, (match, offset) => {
+      extra = match === "\r\n" ? -1 : 0;
+      offset += total;
+      for (const highlight of highlights) {
+        if (highlight.end <= offset) {
+          continue;
+        }
+        if (highlight.start >= offset) {
+          highlight.start += extra;
+        }
+        if (highlight.end >= offset) {
+          highlight.end += extra;
+        }
+      }
+      total += extra;
+      return "\u23CE";
+    });
+  }
+}
+export {
+  HighlightedLabel
+};
+//# sourceMappingURL=highlightedLabel.js.map

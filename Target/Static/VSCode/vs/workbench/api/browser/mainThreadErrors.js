@@ -1,1 +1,32 @@
-var s=Object.defineProperty,d=Object.getOwnPropertyDescriptor,p=(r,o,e,t)=>{for(var i,n=t>1?void 0:t?d(o,e):o,a=r.length-1;a>=0;a--)(i=r[a])&&(n=(t?i(o,e,n):i(n))||n);return t&&n&&s(o,e,n),n};import{onUnexpectedError as E,transformErrorFromSerialization as f}from"../../../base/common/errors.js";import{extHostNamedCustomer as l}from"../../services/extensions/common/extHostCustomers.js";import{MainContext as x}from"../common/extHost.protocol.js";let i=class{dispose(){}$onUnexpectedError(r){r&&r.$isError&&(r=f(r)),E(r)}};i=p([l(x.MainThreadErrors)],i);export{i as MainThreadErrors};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+import { SerializedError, onUnexpectedError, transformErrorFromSerialization } from "../../../base/common/errors.js";
+import { extHostNamedCustomer } from "../../services/extensions/common/extHostCustomers.js";
+import { MainContext, MainThreadErrorsShape } from "../common/extHost.protocol.js";
+let MainThreadErrors = class {
+  dispose() {
+  }
+  $onUnexpectedError(err) {
+    if (err && err.$isError) {
+      err = transformErrorFromSerialization(err);
+    }
+    onUnexpectedError(err);
+  }
+};
+__name(MainThreadErrors, "MainThreadErrors");
+MainThreadErrors = __decorateClass([
+  extHostNamedCustomer(MainContext.MainThreadErrors)
+], MainThreadErrors);
+export {
+  MainThreadErrors
+};
+//# sourceMappingURL=mainThreadErrors.js.map

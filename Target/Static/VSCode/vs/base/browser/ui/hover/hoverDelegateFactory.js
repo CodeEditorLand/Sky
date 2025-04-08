@@ -1,1 +1,38 @@
-import"./hoverDelegate.js";import{Lazy as o}from"../../../common/lazy.js";const r=()=>({get delay(){return-1},dispose:()=>{},showHover:()=>{}});let e=r;const l=new o(()=>e("mouse",!1)),n=new o(()=>e("element",!1));function g(t){e=t}function s(t){return t==="element"?n.value:l.value}function H(){return e("element",!0)}export{H as createInstantHoverDelegate,s as getDefaultHoverDelegate,g as setHoverDelegateFactory};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { IHoverDelegate, IScopedHoverDelegate } from "./hoverDelegate.js";
+import { Lazy } from "../../../common/lazy.js";
+const nullHoverDelegateFactory = /* @__PURE__ */ __name(() => ({
+  get delay() {
+    return -1;
+  },
+  dispose: /* @__PURE__ */ __name(() => {
+  }, "dispose"),
+  showHover: /* @__PURE__ */ __name(() => {
+    return void 0;
+  }, "showHover")
+}), "nullHoverDelegateFactory");
+let hoverDelegateFactory = nullHoverDelegateFactory;
+const defaultHoverDelegateMouse = new Lazy(() => hoverDelegateFactory("mouse", false));
+const defaultHoverDelegateElement = new Lazy(() => hoverDelegateFactory("element", false));
+function setHoverDelegateFactory(hoverDelegateProvider) {
+  hoverDelegateFactory = hoverDelegateProvider;
+}
+__name(setHoverDelegateFactory, "setHoverDelegateFactory");
+function getDefaultHoverDelegate(placement) {
+  if (placement === "element") {
+    return defaultHoverDelegateElement.value;
+  }
+  return defaultHoverDelegateMouse.value;
+}
+__name(getDefaultHoverDelegate, "getDefaultHoverDelegate");
+function createInstantHoverDelegate() {
+  return hoverDelegateFactory("element", true);
+}
+__name(createInstantHoverDelegate, "createInstantHoverDelegate");
+export {
+  createInstantHoverDelegate,
+  getDefaultHoverDelegate,
+  setHoverDelegateFactory
+};
+//# sourceMappingURL=hoverDelegateFactory.js.map

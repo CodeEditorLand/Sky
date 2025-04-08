@@ -1,1 +1,449 @@
-var E=Object.defineProperty;var T=Object.getOwnPropertyDescriptor;var v=(u,e,i,s)=>{for(var o=s>1?void 0:s?T(e,i):e,t=u.length-1,n;t>=0;t--)(n=u[t])&&(o=(s?n(e,i,o):n(o))||o);return s&&o&&E(e,i,o),o},L=(u,e)=>(i,s)=>e(i,s,u);import{createCancelablePromise as y,disposableTimeout as F,RunOnceScheduler as b}from"../../../../base/common/async.js";import{onUnexpectedError as D,onUnexpectedExternalError as N}from"../../../../base/common/errors.js";import{DisposableStore as f,toDisposable as S}from"../../../../base/common/lifecycle.js";import{StableEditorScrollState as I}from"../../../browser/stableEditorScroll.js";import{MouseTargetType as x}from"../../../browser/editorBrowser.js";import{EditorAction as O,EditorContributionInstantiation as V,registerEditorAction as A,registerEditorContribution as H}from"../../../browser/editorExtensions.js";import{EditorOption as m,EDITOR_FONT_DEFAULTS as z}from"../../../common/config/editorOptions.js";import"../../../common/editorCommon.js";import{EditorContextKeys as R}from"../../../common/editorContextKeys.js";import"../../../common/model.js";import"../../../common/languages.js";import{getCodeLensModel as k}from"./codelens.js";import{ICodeLensCache as W}from"./codeLensCache.js";import{CodeLensHelper as g,CodeLensWidget as M}from"./codelensWidget.js";import{localize as U,localize2 as G}from"../../../../nls.js";import{ICommandService as P}from"../../../../platform/commands/common/commands.js";import{INotificationService as w}from"../../../../platform/notification/common/notification.js";import{IQuickInputService as Z}from"../../../../platform/quickinput/common/quickInput.js";import{ILanguageFeatureDebounceService as $}from"../../../common/services/languageFeatureDebounce.js";import{ILanguageFeaturesService as B}from"../../../common/services/languageFeatures.js";let p=class{constructor(e,i,s,o,t,n){this._editor=e;this._languageFeaturesService=i;this._commandService=o;this._notificationService=t;this._codeLensCache=n;this._provideCodeLensDebounce=s.for(i.codeLensProvider,"CodeLensProvide",{min:250}),this._resolveCodeLensesDebounce=s.for(i.codeLensProvider,"CodeLensResolve",{min:250,salt:"resolve"}),this._resolveCodeLensesScheduler=new b(()=>this._resolveCodeLensesInViewport(),this._resolveCodeLensesDebounce.default()),this._disposables.add(this._editor.onDidChangeModel(()=>this._onModelChange())),this._disposables.add(this._editor.onDidChangeModelLanguage(()=>this._onModelChange())),this._disposables.add(this._editor.onDidChangeConfiguration(r=>{(r.hasChanged(m.fontInfo)||r.hasChanged(m.codeLensFontSize)||r.hasChanged(m.codeLensFontFamily))&&this._updateLensStyle(),r.hasChanged(m.codeLens)&&this._onModelChange()})),this._disposables.add(i.codeLensProvider.onDidChange(this._onModelChange,this)),this._onModelChange(),this._updateLensStyle()}static ID="css.editor.codeLens";_disposables=new f;_localToDispose=new f;_lenses=[];_provideCodeLensDebounce;_resolveCodeLensesDebounce;_resolveCodeLensesScheduler;_getCodeLensModelPromise;_oldCodeLensModels=new f;_currentCodeLensModel;_resolveCodeLensesPromise;dispose(){this._localDispose(),this._localToDispose.dispose(),this._disposables.dispose(),this._oldCodeLensModels.dispose(),this._currentCodeLensModel?.dispose()}_getLayoutInfo(){const e=Math.max(1.3,this._editor.getOption(m.lineHeight)/this._editor.getOption(m.fontSize));let i=this._editor.getOption(m.codeLensFontSize);return(!i||i<5)&&(i=this._editor.getOption(m.fontSize)*.9|0),{fontSize:i,codeLensHeight:i*e|0}}_updateLensStyle(){const{codeLensHeight:e,fontSize:i}=this._getLayoutInfo(),s=this._editor.getOption(m.codeLensFontFamily),o=this._editor.getOption(m.fontInfo),{style:t}=this._editor.getContainerDomNode();t.setProperty("--vscode-editorCodeLens-lineHeight",`${e}px`),t.setProperty("--vscode-editorCodeLens-fontSize",`${i}px`),t.setProperty("--vscode-editorCodeLens-fontFeatureSettings",o.fontFeatureSettings),s&&(t.setProperty("--vscode-editorCodeLens-fontFamily",s),t.setProperty("--vscode-editorCodeLens-fontFamilyDefault",z.fontFamily)),this._editor.changeViewZones(n=>{for(const r of this._lenses)r.updateHeight(e,n)})}_localDispose(){this._getCodeLensModelPromise?.cancel(),this._getCodeLensModelPromise=void 0,this._resolveCodeLensesPromise?.cancel(),this._resolveCodeLensesPromise=void 0,this._localToDispose.clear(),this._oldCodeLensModels.clear(),this._currentCodeLensModel?.dispose()}_onModelChange(){this._localDispose();const e=this._editor.getModel();if(!e||!this._editor.getOption(m.codeLens)||e.isTooLargeForTokenization())return;const i=this._codeLensCache.get(e);if(i&&this._renderCodeLensSymbols(i),!this._languageFeaturesService.codeLensProvider.has(e)){i&&F(()=>{const o=this._codeLensCache.get(e);i===o&&(this._codeLensCache.delete(e),this._onModelChange())},30*1e3,this._localToDispose);return}for(const o of this._languageFeaturesService.codeLensProvider.all(e))if(typeof o.onDidChange=="function"){const t=o.onDidChange(()=>s.schedule());this._localToDispose.add(t)}const s=new b(()=>{const o=Date.now();this._getCodeLensModelPromise?.cancel(),this._getCodeLensModelPromise=y(t=>k(this._languageFeaturesService.codeLensProvider,e,t)),this._getCodeLensModelPromise.then(t=>{this._currentCodeLensModel&&this._oldCodeLensModels.add(this._currentCodeLensModel),this._currentCodeLensModel=t,this._codeLensCache.put(e,t);const n=this._provideCodeLensDebounce.update(e,Date.now()-o);s.delay=n,this._renderCodeLensSymbols(t),this._resolveCodeLensesInViewportSoon()},D)},this._provideCodeLensDebounce.get(e));this._localToDispose.add(s),this._localToDispose.add(S(()=>this._resolveCodeLensesScheduler.cancel())),this._localToDispose.add(this._editor.onDidChangeModelContent(()=>{this._editor.changeDecorations(o=>{this._editor.changeViewZones(t=>{const n=[];let r=-1;this._lenses.forEach(d=>{!d.isValid()||r===d.getLineNumber()?n.push(d):(d.update(t),r=d.getLineNumber())});const l=new g;n.forEach(d=>{d.dispose(l,t),this._lenses.splice(this._lenses.indexOf(d),1)}),l.commit(o)})}),s.schedule(),this._resolveCodeLensesScheduler.cancel(),this._resolveCodeLensesPromise?.cancel(),this._resolveCodeLensesPromise=void 0})),this._localToDispose.add(this._editor.onDidFocusEditorText(()=>{s.schedule()})),this._localToDispose.add(this._editor.onDidBlurEditorText(()=>{s.cancel()})),this._localToDispose.add(this._editor.onDidScrollChange(o=>{o.scrollTopChanged&&this._lenses.length>0&&this._resolveCodeLensesInViewportSoon()})),this._localToDispose.add(this._editor.onDidLayoutChange(()=>{this._resolveCodeLensesInViewportSoon()})),this._localToDispose.add(S(()=>{if(this._editor.getModel()){const o=I.capture(this._editor);this._editor.changeDecorations(t=>{this._editor.changeViewZones(n=>{this._disposeAllLenses(t,n)})}),o.restore(this._editor)}else this._disposeAllLenses(void 0,void 0)})),this._localToDispose.add(this._editor.onMouseDown(o=>{if(o.target.type!==x.CONTENT_WIDGET)return;let t=o.target.element;if(t?.tagName==="SPAN"&&(t=t.parentElement),t?.tagName==="A")for(const n of this._lenses){const r=n.getCommand(t);if(r){this._commandService.executeCommand(r.id,...r.arguments||[]).catch(l=>this._notificationService.error(l));break}}})),s.schedule()}_disposeAllLenses(e,i){const s=new g;for(const o of this._lenses)o.dispose(s,i);e&&s.commit(e),this._lenses.length=0}_renderCodeLensSymbols(e){if(!this._editor.hasModel())return;const i=this._editor.getModel().getLineCount(),s=[];let o;for(const r of e.lenses){const l=r.symbol.range.startLineNumber;l<1||l>i||(o&&o[o.length-1].symbol.range.startLineNumber===l?o.push(r):(o=[r],s.push(o)))}if(!s.length&&!this._lenses.length)return;const t=I.capture(this._editor),n=this._getLayoutInfo();this._editor.changeDecorations(r=>{this._editor.changeViewZones(l=>{const d=new g;let a=0,c=0;for(;c<s.length&&a<this._lenses.length;){const h=s[c][0].symbol.range.startLineNumber,_=this._lenses[a].getLineNumber();_<h?(this._lenses[a].dispose(d,l),this._lenses.splice(a,1)):_===h?(this._lenses[a].updateCodeLensSymbols(s[c],d),c++,a++):(this._lenses.splice(a,0,new M(s[c],this._editor,d,l,n.codeLensHeight,()=>this._resolveCodeLensesInViewportSoon())),a++,c++)}for(;a<this._lenses.length;)this._lenses[a].dispose(d,l),this._lenses.splice(a,1);for(;c<s.length;)this._lenses.push(new M(s[c],this._editor,d,l,n.codeLensHeight,()=>this._resolveCodeLensesInViewportSoon())),c++;d.commit(r)})}),t.restore(this._editor)}_resolveCodeLensesInViewportSoon(){this._editor.getModel()&&this._resolveCodeLensesScheduler.schedule()}_resolveCodeLensesInViewport(){this._resolveCodeLensesPromise?.cancel(),this._resolveCodeLensesPromise=void 0;const e=this._editor.getModel();if(!e)return;const i=[],s=[];if(this._lenses.forEach(n=>{const r=n.computeIfNecessary(e);r&&(i.push(r),s.push(n))}),i.length===0)return;const o=Date.now(),t=y(n=>{const r=i.map((l,d)=>{const a=new Array(l.length),c=l.map((h,_)=>!h.symbol.command&&typeof h.provider.resolveCodeLens=="function"?Promise.resolve(h.provider.resolveCodeLens(e,h.symbol,n)).then(C=>{a[_]=C},N):(a[_]=h.symbol,Promise.resolve(void 0)));return Promise.all(c).then(()=>{!n.isCancellationRequested&&!s[d].isDisposed()&&s[d].updateCommands(a)})});return Promise.all(r)});this._resolveCodeLensesPromise=t,this._resolveCodeLensesPromise.then(()=>{const n=this._resolveCodeLensesDebounce.update(e,Date.now()-o);this._resolveCodeLensesScheduler.delay=n,this._currentCodeLensModel&&this._codeLensCache.put(e,this._currentCodeLensModel),this._oldCodeLensModels.clear(),t===this._resolveCodeLensesPromise&&(this._resolveCodeLensesPromise=void 0)},n=>{D(n),t===this._resolveCodeLensesPromise&&(this._resolveCodeLensesPromise=void 0)})}async getModel(){return await this._getCodeLensModelPromise,await this._resolveCodeLensesPromise,this._currentCodeLensModel?.isDisposed?void 0:this._currentCodeLensModel}};p=v([L(1,B),L(2,$),L(3,P),L(4,w),L(5,W)],p),H(p.ID,p,V.AfterFirstRender),A(class extends O{constructor(){super({id:"codelens.showLensesInCurrentLine",precondition:R.hasCodeLensProvider,label:G("showLensOnLine","Show CodeLens Commands for Current Line")})}async run(e,i){if(!i.hasModel())return;const s=e.get(Z),o=e.get(P),t=e.get(w),n=i.getSelection().positionLineNumber,r=i.getContribution(p.ID);if(!r)return;const l=await r.getModel();if(!l)return;const d=[];for(const h of l.lenses)h.symbol.command&&h.symbol.range.startLineNumber===n&&d.push({label:h.symbol.command.title,command:h.symbol.command});if(d.length===0)return;const a=await s.pick(d,{canPickMany:!1,placeHolder:U("placeHolder","Select a command")});if(!a)return;let c=a.command;if(l.isDisposed){const _=(await r.getModel())?.lenses.find(C=>C.symbol.range.startLineNumber===n&&C.symbol.command?.title===c.title);if(!_||!_.symbol.command)return;c=_.symbol.command}try{await o.executeCommand(c.id,...c.arguments||[])}catch(h){t.error(h)}}});export{p as CodeLensContribution};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { CancelablePromise, createCancelablePromise, disposableTimeout, RunOnceScheduler } from "../../../../base/common/async.js";
+import { onUnexpectedError, onUnexpectedExternalError } from "../../../../base/common/errors.js";
+import { DisposableStore, toDisposable } from "../../../../base/common/lifecycle.js";
+import { StableEditorScrollState } from "../../../browser/stableEditorScroll.js";
+import { IActiveCodeEditor, ICodeEditor, IViewZoneChangeAccessor, MouseTargetType } from "../../../browser/editorBrowser.js";
+import { EditorAction, EditorContributionInstantiation, registerEditorAction, registerEditorContribution, ServicesAccessor } from "../../../browser/editorExtensions.js";
+import { EditorOption, EDITOR_FONT_DEFAULTS } from "../../../common/config/editorOptions.js";
+import { IEditorContribution } from "../../../common/editorCommon.js";
+import { EditorContextKeys } from "../../../common/editorContextKeys.js";
+import { IModelDecorationsChangeAccessor } from "../../../common/model.js";
+import { CodeLens, Command } from "../../../common/languages.js";
+import { CodeLensItem, CodeLensModel, getCodeLensModel } from "./codelens.js";
+import { ICodeLensCache } from "./codeLensCache.js";
+import { CodeLensHelper, CodeLensWidget } from "./codelensWidget.js";
+import { localize, localize2 } from "../../../../nls.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { INotificationService } from "../../../../platform/notification/common/notification.js";
+import { IQuickInputService } from "../../../../platform/quickinput/common/quickInput.js";
+import { IFeatureDebounceInformation, ILanguageFeatureDebounceService } from "../../../common/services/languageFeatureDebounce.js";
+import { ILanguageFeaturesService } from "../../../common/services/languageFeatures.js";
+let CodeLensContribution = class {
+  constructor(_editor, _languageFeaturesService, debounceService, _commandService, _notificationService, _codeLensCache) {
+    this._editor = _editor;
+    this._languageFeaturesService = _languageFeaturesService;
+    this._commandService = _commandService;
+    this._notificationService = _notificationService;
+    this._codeLensCache = _codeLensCache;
+    this._provideCodeLensDebounce = debounceService.for(_languageFeaturesService.codeLensProvider, "CodeLensProvide", { min: 250 });
+    this._resolveCodeLensesDebounce = debounceService.for(_languageFeaturesService.codeLensProvider, "CodeLensResolve", { min: 250, salt: "resolve" });
+    this._resolveCodeLensesScheduler = new RunOnceScheduler(() => this._resolveCodeLensesInViewport(), this._resolveCodeLensesDebounce.default());
+    this._disposables.add(this._editor.onDidChangeModel(() => this._onModelChange()));
+    this._disposables.add(this._editor.onDidChangeModelLanguage(() => this._onModelChange()));
+    this._disposables.add(this._editor.onDidChangeConfiguration((e) => {
+      if (e.hasChanged(EditorOption.fontInfo) || e.hasChanged(EditorOption.codeLensFontSize) || e.hasChanged(EditorOption.codeLensFontFamily)) {
+        this._updateLensStyle();
+      }
+      if (e.hasChanged(EditorOption.codeLens)) {
+        this._onModelChange();
+      }
+    }));
+    this._disposables.add(_languageFeaturesService.codeLensProvider.onDidChange(this._onModelChange, this));
+    this._onModelChange();
+    this._updateLensStyle();
+  }
+  static {
+    __name(this, "CodeLensContribution");
+  }
+  static ID = "css.editor.codeLens";
+  _disposables = new DisposableStore();
+  _localToDispose = new DisposableStore();
+  _lenses = [];
+  _provideCodeLensDebounce;
+  _resolveCodeLensesDebounce;
+  _resolveCodeLensesScheduler;
+  _getCodeLensModelPromise;
+  _oldCodeLensModels = new DisposableStore();
+  _currentCodeLensModel;
+  _resolveCodeLensesPromise;
+  dispose() {
+    this._localDispose();
+    this._localToDispose.dispose();
+    this._disposables.dispose();
+    this._oldCodeLensModels.dispose();
+    this._currentCodeLensModel?.dispose();
+  }
+  _getLayoutInfo() {
+    const lineHeightFactor = Math.max(1.3, this._editor.getOption(EditorOption.lineHeight) / this._editor.getOption(EditorOption.fontSize));
+    let fontSize = this._editor.getOption(EditorOption.codeLensFontSize);
+    if (!fontSize || fontSize < 5) {
+      fontSize = this._editor.getOption(EditorOption.fontSize) * 0.9 | 0;
+    }
+    return {
+      fontSize,
+      codeLensHeight: fontSize * lineHeightFactor | 0
+    };
+  }
+  _updateLensStyle() {
+    const { codeLensHeight, fontSize } = this._getLayoutInfo();
+    const fontFamily = this._editor.getOption(EditorOption.codeLensFontFamily);
+    const editorFontInfo = this._editor.getOption(EditorOption.fontInfo);
+    const { style } = this._editor.getContainerDomNode();
+    style.setProperty("--vscode-editorCodeLens-lineHeight", `${codeLensHeight}px`);
+    style.setProperty("--vscode-editorCodeLens-fontSize", `${fontSize}px`);
+    style.setProperty("--vscode-editorCodeLens-fontFeatureSettings", editorFontInfo.fontFeatureSettings);
+    if (fontFamily) {
+      style.setProperty("--vscode-editorCodeLens-fontFamily", fontFamily);
+      style.setProperty("--vscode-editorCodeLens-fontFamilyDefault", EDITOR_FONT_DEFAULTS.fontFamily);
+    }
+    this._editor.changeViewZones((accessor) => {
+      for (const lens of this._lenses) {
+        lens.updateHeight(codeLensHeight, accessor);
+      }
+    });
+  }
+  _localDispose() {
+    this._getCodeLensModelPromise?.cancel();
+    this._getCodeLensModelPromise = void 0;
+    this._resolveCodeLensesPromise?.cancel();
+    this._resolveCodeLensesPromise = void 0;
+    this._localToDispose.clear();
+    this._oldCodeLensModels.clear();
+    this._currentCodeLensModel?.dispose();
+  }
+  _onModelChange() {
+    this._localDispose();
+    const model = this._editor.getModel();
+    if (!model) {
+      return;
+    }
+    if (!this._editor.getOption(EditorOption.codeLens) || model.isTooLargeForTokenization()) {
+      return;
+    }
+    const cachedLenses = this._codeLensCache.get(model);
+    if (cachedLenses) {
+      this._renderCodeLensSymbols(cachedLenses);
+    }
+    if (!this._languageFeaturesService.codeLensProvider.has(model)) {
+      if (cachedLenses) {
+        disposableTimeout(() => {
+          const cachedLensesNow = this._codeLensCache.get(model);
+          if (cachedLenses === cachedLensesNow) {
+            this._codeLensCache.delete(model);
+            this._onModelChange();
+          }
+        }, 30 * 1e3, this._localToDispose);
+      }
+      return;
+    }
+    for (const provider of this._languageFeaturesService.codeLensProvider.all(model)) {
+      if (typeof provider.onDidChange === "function") {
+        const registration = provider.onDidChange(() => scheduler.schedule());
+        this._localToDispose.add(registration);
+      }
+    }
+    const scheduler = new RunOnceScheduler(() => {
+      const t1 = Date.now();
+      this._getCodeLensModelPromise?.cancel();
+      this._getCodeLensModelPromise = createCancelablePromise((token) => getCodeLensModel(this._languageFeaturesService.codeLensProvider, model, token));
+      this._getCodeLensModelPromise.then((result) => {
+        if (this._currentCodeLensModel) {
+          this._oldCodeLensModels.add(this._currentCodeLensModel);
+        }
+        this._currentCodeLensModel = result;
+        this._codeLensCache.put(model, result);
+        const newDelay = this._provideCodeLensDebounce.update(model, Date.now() - t1);
+        scheduler.delay = newDelay;
+        this._renderCodeLensSymbols(result);
+        this._resolveCodeLensesInViewportSoon();
+      }, onUnexpectedError);
+    }, this._provideCodeLensDebounce.get(model));
+    this._localToDispose.add(scheduler);
+    this._localToDispose.add(toDisposable(() => this._resolveCodeLensesScheduler.cancel()));
+    this._localToDispose.add(this._editor.onDidChangeModelContent(() => {
+      this._editor.changeDecorations((decorationsAccessor) => {
+        this._editor.changeViewZones((viewZonesAccessor) => {
+          const toDispose = [];
+          let lastLensLineNumber = -1;
+          this._lenses.forEach((lens) => {
+            if (!lens.isValid() || lastLensLineNumber === lens.getLineNumber()) {
+              toDispose.push(lens);
+            } else {
+              lens.update(viewZonesAccessor);
+              lastLensLineNumber = lens.getLineNumber();
+            }
+          });
+          const helper = new CodeLensHelper();
+          toDispose.forEach((l) => {
+            l.dispose(helper, viewZonesAccessor);
+            this._lenses.splice(this._lenses.indexOf(l), 1);
+          });
+          helper.commit(decorationsAccessor);
+        });
+      });
+      scheduler.schedule();
+      this._resolveCodeLensesScheduler.cancel();
+      this._resolveCodeLensesPromise?.cancel();
+      this._resolveCodeLensesPromise = void 0;
+    }));
+    this._localToDispose.add(this._editor.onDidFocusEditorText(() => {
+      scheduler.schedule();
+    }));
+    this._localToDispose.add(this._editor.onDidBlurEditorText(() => {
+      scheduler.cancel();
+    }));
+    this._localToDispose.add(this._editor.onDidScrollChange((e) => {
+      if (e.scrollTopChanged && this._lenses.length > 0) {
+        this._resolveCodeLensesInViewportSoon();
+      }
+    }));
+    this._localToDispose.add(this._editor.onDidLayoutChange(() => {
+      this._resolveCodeLensesInViewportSoon();
+    }));
+    this._localToDispose.add(toDisposable(() => {
+      if (this._editor.getModel()) {
+        const scrollState = StableEditorScrollState.capture(this._editor);
+        this._editor.changeDecorations((decorationsAccessor) => {
+          this._editor.changeViewZones((viewZonesAccessor) => {
+            this._disposeAllLenses(decorationsAccessor, viewZonesAccessor);
+          });
+        });
+        scrollState.restore(this._editor);
+      } else {
+        this._disposeAllLenses(void 0, void 0);
+      }
+    }));
+    this._localToDispose.add(this._editor.onMouseDown((e) => {
+      if (e.target.type !== MouseTargetType.CONTENT_WIDGET) {
+        return;
+      }
+      let target = e.target.element;
+      if (target?.tagName === "SPAN") {
+        target = target.parentElement;
+      }
+      if (target?.tagName === "A") {
+        for (const lens of this._lenses) {
+          const command = lens.getCommand(target);
+          if (command) {
+            this._commandService.executeCommand(command.id, ...command.arguments || []).catch((err) => this._notificationService.error(err));
+            break;
+          }
+        }
+      }
+    }));
+    scheduler.schedule();
+  }
+  _disposeAllLenses(decChangeAccessor, viewZoneChangeAccessor) {
+    const helper = new CodeLensHelper();
+    for (const lens of this._lenses) {
+      lens.dispose(helper, viewZoneChangeAccessor);
+    }
+    if (decChangeAccessor) {
+      helper.commit(decChangeAccessor);
+    }
+    this._lenses.length = 0;
+  }
+  _renderCodeLensSymbols(symbols) {
+    if (!this._editor.hasModel()) {
+      return;
+    }
+    const maxLineNumber = this._editor.getModel().getLineCount();
+    const groups = [];
+    let lastGroup;
+    for (const symbol of symbols.lenses) {
+      const line = symbol.symbol.range.startLineNumber;
+      if (line < 1 || line > maxLineNumber) {
+        continue;
+      } else if (lastGroup && lastGroup[lastGroup.length - 1].symbol.range.startLineNumber === line) {
+        lastGroup.push(symbol);
+      } else {
+        lastGroup = [symbol];
+        groups.push(lastGroup);
+      }
+    }
+    if (!groups.length && !this._lenses.length) {
+      return;
+    }
+    const scrollState = StableEditorScrollState.capture(this._editor);
+    const layoutInfo = this._getLayoutInfo();
+    this._editor.changeDecorations((decorationsAccessor) => {
+      this._editor.changeViewZones((viewZoneAccessor) => {
+        const helper = new CodeLensHelper();
+        let codeLensIndex = 0;
+        let groupsIndex = 0;
+        while (groupsIndex < groups.length && codeLensIndex < this._lenses.length) {
+          const symbolsLineNumber = groups[groupsIndex][0].symbol.range.startLineNumber;
+          const codeLensLineNumber = this._lenses[codeLensIndex].getLineNumber();
+          if (codeLensLineNumber < symbolsLineNumber) {
+            this._lenses[codeLensIndex].dispose(helper, viewZoneAccessor);
+            this._lenses.splice(codeLensIndex, 1);
+          } else if (codeLensLineNumber === symbolsLineNumber) {
+            this._lenses[codeLensIndex].updateCodeLensSymbols(groups[groupsIndex], helper);
+            groupsIndex++;
+            codeLensIndex++;
+          } else {
+            this._lenses.splice(codeLensIndex, 0, new CodeLensWidget(groups[groupsIndex], this._editor, helper, viewZoneAccessor, layoutInfo.codeLensHeight, () => this._resolveCodeLensesInViewportSoon()));
+            codeLensIndex++;
+            groupsIndex++;
+          }
+        }
+        while (codeLensIndex < this._lenses.length) {
+          this._lenses[codeLensIndex].dispose(helper, viewZoneAccessor);
+          this._lenses.splice(codeLensIndex, 1);
+        }
+        while (groupsIndex < groups.length) {
+          this._lenses.push(new CodeLensWidget(groups[groupsIndex], this._editor, helper, viewZoneAccessor, layoutInfo.codeLensHeight, () => this._resolveCodeLensesInViewportSoon()));
+          groupsIndex++;
+        }
+        helper.commit(decorationsAccessor);
+      });
+    });
+    scrollState.restore(this._editor);
+  }
+  _resolveCodeLensesInViewportSoon() {
+    const model = this._editor.getModel();
+    if (model) {
+      this._resolveCodeLensesScheduler.schedule();
+    }
+  }
+  _resolveCodeLensesInViewport() {
+    this._resolveCodeLensesPromise?.cancel();
+    this._resolveCodeLensesPromise = void 0;
+    const model = this._editor.getModel();
+    if (!model) {
+      return;
+    }
+    const toResolve = [];
+    const lenses = [];
+    this._lenses.forEach((lens) => {
+      const request = lens.computeIfNecessary(model);
+      if (request) {
+        toResolve.push(request);
+        lenses.push(lens);
+      }
+    });
+    if (toResolve.length === 0) {
+      return;
+    }
+    const t1 = Date.now();
+    const resolvePromise = createCancelablePromise((token) => {
+      const promises = toResolve.map((request, i) => {
+        const resolvedSymbols = new Array(request.length);
+        const promises2 = request.map((request2, i2) => {
+          if (!request2.symbol.command && typeof request2.provider.resolveCodeLens === "function") {
+            return Promise.resolve(request2.provider.resolveCodeLens(model, request2.symbol, token)).then((symbol) => {
+              resolvedSymbols[i2] = symbol;
+            }, onUnexpectedExternalError);
+          } else {
+            resolvedSymbols[i2] = request2.symbol;
+            return Promise.resolve(void 0);
+          }
+        });
+        return Promise.all(promises2).then(() => {
+          if (!token.isCancellationRequested && !lenses[i].isDisposed()) {
+            lenses[i].updateCommands(resolvedSymbols);
+          }
+        });
+      });
+      return Promise.all(promises);
+    });
+    this._resolveCodeLensesPromise = resolvePromise;
+    this._resolveCodeLensesPromise.then(() => {
+      const newDelay = this._resolveCodeLensesDebounce.update(model, Date.now() - t1);
+      this._resolveCodeLensesScheduler.delay = newDelay;
+      if (this._currentCodeLensModel) {
+        this._codeLensCache.put(model, this._currentCodeLensModel);
+      }
+      this._oldCodeLensModels.clear();
+      if (resolvePromise === this._resolveCodeLensesPromise) {
+        this._resolveCodeLensesPromise = void 0;
+      }
+    }, (err) => {
+      onUnexpectedError(err);
+      if (resolvePromise === this._resolveCodeLensesPromise) {
+        this._resolveCodeLensesPromise = void 0;
+      }
+    });
+  }
+  async getModel() {
+    await this._getCodeLensModelPromise;
+    await this._resolveCodeLensesPromise;
+    return !this._currentCodeLensModel?.isDisposed ? this._currentCodeLensModel : void 0;
+  }
+};
+CodeLensContribution = __decorateClass([
+  __decorateParam(1, ILanguageFeaturesService),
+  __decorateParam(2, ILanguageFeatureDebounceService),
+  __decorateParam(3, ICommandService),
+  __decorateParam(4, INotificationService),
+  __decorateParam(5, ICodeLensCache)
+], CodeLensContribution);
+registerEditorContribution(CodeLensContribution.ID, CodeLensContribution, EditorContributionInstantiation.AfterFirstRender);
+registerEditorAction(class ShowLensesInCurrentLine extends EditorAction {
+  static {
+    __name(this, "ShowLensesInCurrentLine");
+  }
+  constructor() {
+    super({
+      id: "codelens.showLensesInCurrentLine",
+      precondition: EditorContextKeys.hasCodeLensProvider,
+      label: localize2("showLensOnLine", "Show CodeLens Commands for Current Line")
+    });
+  }
+  async run(accessor, editor) {
+    if (!editor.hasModel()) {
+      return;
+    }
+    const quickInputService = accessor.get(IQuickInputService);
+    const commandService = accessor.get(ICommandService);
+    const notificationService = accessor.get(INotificationService);
+    const lineNumber = editor.getSelection().positionLineNumber;
+    const codelensController = editor.getContribution(CodeLensContribution.ID);
+    if (!codelensController) {
+      return;
+    }
+    const model = await codelensController.getModel();
+    if (!model) {
+      return;
+    }
+    const items = [];
+    for (const lens of model.lenses) {
+      if (lens.symbol.command && lens.symbol.range.startLineNumber === lineNumber) {
+        items.push({
+          label: lens.symbol.command.title,
+          command: lens.symbol.command
+        });
+      }
+    }
+    if (items.length === 0) {
+      return;
+    }
+    const item = await quickInputService.pick(items, {
+      canPickMany: false,
+      placeHolder: localize("placeHolder", "Select a command")
+    });
+    if (!item) {
+      return;
+    }
+    let command = item.command;
+    if (model.isDisposed) {
+      const newModel = await codelensController.getModel();
+      const newLens = newModel?.lenses.find((lens) => lens.symbol.range.startLineNumber === lineNumber && lens.symbol.command?.title === command.title);
+      if (!newLens || !newLens.symbol.command) {
+        return;
+      }
+      command = newLens.symbol.command;
+    }
+    try {
+      await commandService.executeCommand(command.id, ...command.arguments || []);
+    } catch (err) {
+      notificationService.error(err);
+    }
+  }
+});
+export {
+  CodeLensContribution
+};
+//# sourceMappingURL=codelensController.js.map

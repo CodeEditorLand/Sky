@@ -1,1 +1,1141 @@
-import*as L from"./process.js";const y=65,H=97,z=90,T=122,R=46,m=47,b=92,P=58,W=63;class j extends Error{code;constructor(e,t,r){let o;"string"==typeof t&&0===t.indexOf("not ")?(o="must not be",t=t.replace(/^not /,"")):o="must be";const n=-1!==e.indexOf(".")?"property":"argument";let a=`The "${e}" ${n} ${o} of type ${t}`;a+=". Received type "+typeof r,super(a),this.code="ERR_INVALID_ARG_TYPE"}}function U(e,t){if(null===e||"object"!=typeof e)throw new j(t,"Object",e)}function h(e,t){if("string"!=typeof e)throw new j(t,"string",e)}const $="win32"===L.platform;function a(e){return e===m||e===b}function N(e){return e===m}function S(e){return e>=y&&e<=z||e>=H&&e<=T}function I(e,t,r,o){let n="",a=0,l=-1,i=0,h=0;for(let s=0;s<=e.length;++s){if(s<e.length)h=e.charCodeAt(s);else{if(o(h))break;h=m}if(o(h)){if(l!==s-1&&1!==i)if(2===i){if(n.length<2||2!==a||n.charCodeAt(n.length-1)!==R||n.charCodeAt(n.length-2)!==R){if(n.length>2){const e=n.lastIndexOf(r);-1===e?(n="",a=0):(n=n.slice(0,e),a=n.length-1-n.lastIndexOf(r)),l=s,i=0;continue}if(0!==n.length){n="",a=0,l=s,i=0;continue}}t&&(n+=n.length>0?`${r}..`:"..",a=2)}else n.length>0?n+=`${r}${e.slice(l+1,s)}`:n=e.slice(l+1,s),a=s-l-1;l=s,i=0}else h===R&&-1!==i?++i:i=-1}return n}function G(e){return e?`${"."===e[0]?"":"."}${e}`:""}function O(e,t){U(t,"pathObject");const r=t.dir||t.root,o=t.base||`${t.name||""}${G(t.ext)}`;return r?r===t.root?`${r}${o}`:`${r}${e}${o}`:o}const A={resolve(...e){let t="",r="",o=!1;for(let n=e.length-1;n>=-1;n--){let l;if(n>=0){if(l=e[n],h(l,`paths[${n}]`),0===l.length)continue}else 0===t.length?l=L.cwd():(l=L.env[`=${t}`]||L.cwd(),(void 0===l||l.slice(0,2).toLowerCase()!==t.toLowerCase()&&l.charCodeAt(2)===b)&&(l=`${t}\\`));const i=l.length;let s=0,c="",f=!1;const d=l.charCodeAt(0);if(1===i)a(d)&&(s=1,f=!0);else if(a(d))if(f=!0,a(l.charCodeAt(1))){let e=2,t=e;for(;e<i&&!a(l.charCodeAt(e));)e++;if(e<i&&e!==t){const r=l.slice(t,e);for(t=e;e<i&&a(l.charCodeAt(e));)e++;if(e<i&&e!==t){for(t=e;e<i&&!a(l.charCodeAt(e));)e++;(e===i||e!==t)&&(c=`\\\\${r}\\${l.slice(t,e)}`,s=e)}}}else s=1;else S(d)&&l.charCodeAt(1)===P&&(c=l.slice(0,2),s=2,i>2&&a(l.charCodeAt(2))&&(f=!0,s=3));if(c.length>0)if(t.length>0){if(c.toLowerCase()!==t.toLowerCase())continue}else t=c;if(o){if(t.length>0)break}else if(r=`${l.slice(s)}\\${r}`,o=f,f&&t.length>0)break}return r=I(r,!o,"\\",a),o?`${t}\\${r}`:`${t}${r}`||"."},normalize(e){h(e,"path");const t=e.length;if(0===t)return".";let r,o=0,n=!1;const l=e.charCodeAt(0);if(1===t)return N(l)?"\\":e;if(a(l))if(n=!0,a(e.charCodeAt(1))){let n=2,l=n;for(;n<t&&!a(e.charCodeAt(n));)n++;if(n<t&&n!==l){const i=e.slice(l,n);for(l=n;n<t&&a(e.charCodeAt(n));)n++;if(n<t&&n!==l){for(l=n;n<t&&!a(e.charCodeAt(n));)n++;if(n===t)return`\\\\${i}\\${e.slice(l)}\\`;n!==l&&(r=`\\\\${i}\\${e.slice(l,n)}`,o=n)}}}else o=1;else S(l)&&e.charCodeAt(1)===P&&(r=e.slice(0,2),o=2,t>2&&a(e.charCodeAt(2))&&(n=!0,o=3));let i=o<t?I(e.slice(o),!n,"\\",a):"";if(0===i.length&&!n&&(i="."),i.length>0&&a(e.charCodeAt(t-1))&&(i+="\\"),!n&&void 0===r&&e.includes(":")){if(i.length>=2&&S(i.charCodeAt(0))&&i.charCodeAt(1)===P)return`.\\${i}`;let r=e.indexOf(":");do{if(r===t-1||a(e.charCodeAt(r+1)))return`.\\${i}`}while(-1!==(r=e.indexOf(":",r+1)))}return void 0===r?n?`\\${i}`:i:n?`${r}\\${i}`:`${r}${i}`},isAbsolute(e){h(e,"path");const t=e.length;if(0===t)return!1;const r=e.charCodeAt(0);return a(r)||t>2&&S(r)&&e.charCodeAt(1)===P&&a(e.charCodeAt(2))},join(...e){if(0===e.length)return".";let t,r;for(let o=0;o<e.length;++o){const n=e[o];h(n,"path"),n.length>0&&(void 0===t?t=r=n:t+=`\\${n}`)}if(void 0===t)return".";let o=!0,n=0;if("string"==typeof r&&a(r.charCodeAt(0))){++n;const e=r.length;e>1&&a(r.charCodeAt(1))&&(++n,e>2&&(a(r.charCodeAt(2))?++n:o=!1))}if(o){for(;n<t.length&&a(t.charCodeAt(n));)n++;n>=2&&(t=`\\${t.slice(n)}`)}return A.normalize(t)},relative(e,t){if(h(e,"from"),h(t,"to"),e===t)return"";const r=A.resolve(e),o=A.resolve(t);if(r===o||(e=r.toLowerCase())===(t=o.toLowerCase()))return"";if(r.length!==e.length||o.length!==t.length){const e=r.split("\\"),t=o.split("\\");""===e[e.length-1]&&e.pop(),""===t[t.length-1]&&t.pop();const n=e.length,a=t.length,l=n<a?n:a;let i;for(i=0;i<l&&e[i].toLowerCase()===t[i].toLowerCase();i++);return 0===i?o:i===l?a>l?t.slice(i).join("\\"):n>l?"..\\".repeat(n-1-i)+"..":"":"..\\".repeat(n-i)+t.slice(i).join("\\")}let n=0;for(;n<e.length&&e.charCodeAt(n)===b;)n++;let a=e.length;for(;a-1>n&&e.charCodeAt(a-1)===b;)a--;const l=a-n;let i=0;for(;i<t.length&&t.charCodeAt(i)===b;)i++;let s=t.length;for(;s-1>i&&t.charCodeAt(s-1)===b;)s--;const c=s-i,f=l<c?l:c;let d=-1,C=0;for(;C<f;C++){const r=e.charCodeAt(n+C);if(r!==t.charCodeAt(i+C))break;r===b&&(d=C)}if(C!==f){if(-1===d)return o}else{if(c>f){if(t.charCodeAt(i+C)===b)return o.slice(i+C+1);if(2===C)return o.slice(i+C)}l>f&&(e.charCodeAt(n+C)===b?d=C:2===C&&(d=3)),-1===d&&(d=0)}let u="";for(C=n+d+1;C<=a;++C)(C===a||e.charCodeAt(C)===b)&&(u+=0===u.length?"..":"\\..");return i+=d,u.length>0?`${u}${o.slice(i,s)}`:(o.charCodeAt(i)===b&&++i,o.slice(i,s))},toNamespacedPath(e){if("string"!=typeof e||0===e.length)return e;const t=A.resolve(e);if(t.length<=2)return e;if(t.charCodeAt(0)===b){if(t.charCodeAt(1)===b){const e=t.charCodeAt(2);if(e!==W&&e!==R)return`\\\\?\\UNC\\${t.slice(2)}`}}else if(S(t.charCodeAt(0))&&t.charCodeAt(1)===P&&t.charCodeAt(2)===b)return`\\\\?\\${t}`;return t},dirname(e){h(e,"path");const t=e.length;if(0===t)return".";let r=-1,o=0;const n=e.charCodeAt(0);if(1===t)return a(n)?e:".";if(a(n)){if(r=o=1,a(e.charCodeAt(1))){let n=2,l=n;for(;n<t&&!a(e.charCodeAt(n));)n++;if(n<t&&n!==l){for(l=n;n<t&&a(e.charCodeAt(n));)n++;if(n<t&&n!==l){for(l=n;n<t&&!a(e.charCodeAt(n));)n++;if(n===t)return e;n!==l&&(r=o=n+1)}}}}else S(n)&&e.charCodeAt(1)===P&&(r=t>2&&a(e.charCodeAt(2))?3:2,o=r);let l=-1,i=!0;for(let r=t-1;r>=o;--r)if(a(e.charCodeAt(r))){if(!i){l=r;break}}else i=!1;if(-1===l){if(-1===r)return".";l=r}return e.slice(0,l)},basename(e,t){void 0!==t&&h(t,"suffix"),h(e,"path");let r,o=0,n=-1,l=!0;if(e.length>=2&&S(e.charCodeAt(0))&&e.charCodeAt(1)===P&&(o=2),void 0!==t&&t.length>0&&t.length<=e.length){if(t===e)return"";let i=t.length-1,h=-1;for(r=e.length-1;r>=o;--r){const s=e.charCodeAt(r);if(a(s)){if(!l){o=r+1;break}}else-1===h&&(l=!1,h=r+1),i>=0&&(s===t.charCodeAt(i)?-1==--i&&(n=r):(i=-1,n=h))}return o===n?n=h:-1===n&&(n=e.length),e.slice(o,n)}for(r=e.length-1;r>=o;--r)if(a(e.charCodeAt(r))){if(!l){o=r+1;break}}else-1===n&&(l=!1,n=r+1);return-1===n?"":e.slice(o,n)},extname(e){h(e,"path");let t=0,r=-1,o=0,n=-1,l=!0,i=0;e.length>=2&&e.charCodeAt(1)===P&&S(e.charCodeAt(0))&&(t=o=2);for(let h=e.length-1;h>=t;--h){const t=e.charCodeAt(h);if(a(t)){if(!l){o=h+1;break}}else-1===n&&(l=!1,n=h+1),t===R?-1===r?r=h:1!==i&&(i=1):-1!==r&&(i=-1)}return-1===r||-1===n||0===i||1===i&&r===n-1&&r===o+1?"":e.slice(r,n)},format:O.bind(null,"\\"),parse(e){h(e,"path");const t={root:"",dir:"",base:"",ext:"",name:""};if(0===e.length)return t;const r=e.length;let o=0,n=e.charCodeAt(0);if(1===r)return a(n)?(t.root=t.dir=e,t):(t.base=t.name=e,t);if(a(n)){if(o=1,a(e.charCodeAt(1))){let t=2,n=t;for(;t<r&&!a(e.charCodeAt(t));)t++;if(t<r&&t!==n){for(n=t;t<r&&a(e.charCodeAt(t));)t++;if(t<r&&t!==n){for(n=t;t<r&&!a(e.charCodeAt(t));)t++;t===r?o=t:t!==n&&(o=t+1)}}}}else if(S(n)&&e.charCodeAt(1)===P){if(r<=2)return t.root=t.dir=e,t;if(o=2,a(e.charCodeAt(2))){if(3===r)return t.root=t.dir=e,t;o=3}}o>0&&(t.root=e.slice(0,o));let l=-1,i=o,s=-1,c=!0,f=e.length-1,d=0;for(;f>=o;--f)if(n=e.charCodeAt(f),a(n)){if(!c){i=f+1;break}}else-1===s&&(c=!1,s=f+1),n===R?-1===l?l=f:1!==d&&(d=1):-1!==l&&(d=-1);return-1!==s&&(-1===l||0===d||1===d&&l===s-1&&l===i+1?t.base=t.name=e.slice(i,s):(t.name=e.slice(i,l),t.base=e.slice(i,s),t.ext=e.slice(l,s))),t.dir=i>0&&i!==o?e.slice(0,i-1):t.root,t},sep:"\\",delimiter:";",win32:null,posix:null},K=(()=>{if($){const e=/\\/g;return()=>{const t=L.cwd().replace(e,"/");return t.slice(t.indexOf("/"))}}return()=>L.cwd()})(),C={resolve(...e){let t="",r=!1;for(let o=e.length-1;o>=0&&!r;o--){const n=e[o];h(n,`paths[${o}]`),0!==n.length&&(t=`${n}/${t}`,r=n.charCodeAt(0)===m)}if(!r){const e=K();t=`${e}/${t}`,r=e.charCodeAt(0)===m}return t=I(t,!r,"/",N),r?`/${t}`:t.length>0?t:"."},normalize(e){if(h(e,"path"),0===e.length)return".";const t=e.charCodeAt(0)===m,r=e.charCodeAt(e.length-1)===m;return 0===(e=I(e,!t,"/",N)).length?t?"/":r?"./":".":(r&&(e+="/"),t?`/${e}`:e)},isAbsolute:e=>(h(e,"path"),e.length>0&&e.charCodeAt(0)===m),join(...e){if(0===e.length)return".";const t=[];for(let r=0;r<e.length;++r){const o=e[r];h(o,"path"),o.length>0&&t.push(o)}return 0===t.length?".":C.normalize(t.join("/"))},relative(e,t){if(h(e,"from"),h(t,"to"),e===t||(e=C.resolve(e))===(t=C.resolve(t)))return"";const r=e.length,o=r-1,n=t.length-1,a=o<n?o:n;let l=-1,i=0;for(;i<a;i++){const r=e.charCodeAt(1+i);if(r!==t.charCodeAt(1+i))break;r===m&&(l=i)}if(i===a)if(n>a){if(t.charCodeAt(1+i)===m)return t.slice(1+i+1);if(0===i)return t.slice(1+i)}else o>a&&(e.charCodeAt(1+i)===m?l=i:0===i&&(l=0));let s="";for(i=1+l+1;i<=r;++i)(i===r||e.charCodeAt(i)===m)&&(s+=0===s.length?"..":"/..");return`${s}${t.slice(1+l)}`},toNamespacedPath:e=>e,dirname(e){if(h(e,"path"),0===e.length)return".";const t=e.charCodeAt(0)===m;let r=-1,o=!0;for(let t=e.length-1;t>=1;--t)if(e.charCodeAt(t)===m){if(!o){r=t;break}}else o=!1;return-1===r?t?"/":".":t&&1===r?"//":e.slice(0,r)},basename(e,t){void 0!==t&&h(t,"suffix"),h(e,"path");let r,o=0,n=-1,a=!0;if(void 0!==t&&t.length>0&&t.length<=e.length){if(t===e)return"";let l=t.length-1,i=-1;for(r=e.length-1;r>=0;--r){const h=e.charCodeAt(r);if(h===m){if(!a){o=r+1;break}}else-1===i&&(a=!1,i=r+1),l>=0&&(h===t.charCodeAt(l)?-1==--l&&(n=r):(l=-1,n=i))}return o===n?n=i:-1===n&&(n=e.length),e.slice(o,n)}for(r=e.length-1;r>=0;--r)if(e.charCodeAt(r)===m){if(!a){o=r+1;break}}else-1===n&&(a=!1,n=r+1);return-1===n?"":e.slice(o,n)},extname(e){h(e,"path");let t=-1,r=0,o=-1,n=!0,a=0;for(let l=e.length-1;l>=0;--l){const i=e[l];if("/"!==i)-1===o&&(n=!1,o=l+1),"."===i?-1===t?t=l:1!==a&&(a=1):-1!==t&&(a=-1);else if(!n){r=l+1;break}}return-1===t||-1===o||0===a||1===a&&t===o-1&&t===r+1?"":e.slice(t,o)},format:O.bind(null,"/"),parse(e){h(e,"path");const t={root:"",dir:"",base:"",ext:"",name:""};if(0===e.length)return t;const r=e.charCodeAt(0)===m;let o;r?(t.root="/",o=1):o=0;let n=-1,a=0,l=-1,i=!0,s=e.length-1,c=0;for(;s>=o;--s){const t=e.charCodeAt(s);if(t!==m)-1===l&&(i=!1,l=s+1),t===R?-1===n?n=s:1!==c&&(c=1):-1!==n&&(c=-1);else if(!i){a=s+1;break}}if(-1!==l){const o=0===a&&r?1:a;-1===n||0===c||1===c&&n===l-1&&n===a+1?t.base=t.name=e.slice(o,l):(t.name=e.slice(o,n),t.base=e.slice(o,l),t.ext=e.slice(n,l))}return a>0?t.dir=e.slice(0,a-1):r&&(t.dir="/"),t},sep:"/",delimiter:":",win32:null,posix:null};C.win32=A.win32=A,C.posix=A.posix=C;const V=$?A.normalize:C.normalize,Y=$?A.isAbsolute:C.isAbsolute,Z=$?A.join:C.join,B=$?A.resolve:C.resolve,F=$?A.relative:C.relative,M=$?A.dirname:C.dirname,Q=$?A.basename:C.basename,q=$?A.extname:C.extname,J=$?A.format:C.format,X=$?A.parse:C.parse,p=$?A.toNamespacedPath:C.toNamespacedPath,ee=$?A.sep:C.sep,te=$?A.delimiter:C.delimiter;export{Q as basename,te as delimiter,M as dirname,q as extname,J as format,Y as isAbsolute,Z as join,V as normalize,X as parse,C as posix,F as relative,B as resolve,ee as sep,p as toNamespacedPath,A as win32};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as process from "./process.js";
+const CHAR_UPPERCASE_A = 65;
+const CHAR_LOWERCASE_A = 97;
+const CHAR_UPPERCASE_Z = 90;
+const CHAR_LOWERCASE_Z = 122;
+const CHAR_DOT = 46;
+const CHAR_FORWARD_SLASH = 47;
+const CHAR_BACKWARD_SLASH = 92;
+const CHAR_COLON = 58;
+const CHAR_QUESTION_MARK = 63;
+class ErrorInvalidArgType extends Error {
+  static {
+    __name(this, "ErrorInvalidArgType");
+  }
+  code;
+  constructor(name, expected, actual) {
+    let determiner;
+    if (typeof expected === "string" && expected.indexOf("not ") === 0) {
+      determiner = "must not be";
+      expected = expected.replace(/^not /, "");
+    } else {
+      determiner = "must be";
+    }
+    const type = name.indexOf(".") !== -1 ? "property" : "argument";
+    let msg = `The "${name}" ${type} ${determiner} of type ${expected}`;
+    msg += `. Received type ${typeof actual}`;
+    super(msg);
+    this.code = "ERR_INVALID_ARG_TYPE";
+  }
+}
+function validateObject(pathObject, name) {
+  if (pathObject === null || typeof pathObject !== "object") {
+    throw new ErrorInvalidArgType(name, "Object", pathObject);
+  }
+}
+__name(validateObject, "validateObject");
+function validateString(value, name) {
+  if (typeof value !== "string") {
+    throw new ErrorInvalidArgType(name, "string", value);
+  }
+}
+__name(validateString, "validateString");
+const platformIsWin32 = process.platform === "win32";
+function isPathSeparator(code) {
+  return code === CHAR_FORWARD_SLASH || code === CHAR_BACKWARD_SLASH;
+}
+__name(isPathSeparator, "isPathSeparator");
+function isPosixPathSeparator(code) {
+  return code === CHAR_FORWARD_SLASH;
+}
+__name(isPosixPathSeparator, "isPosixPathSeparator");
+function isWindowsDeviceRoot(code) {
+  return code >= CHAR_UPPERCASE_A && code <= CHAR_UPPERCASE_Z || code >= CHAR_LOWERCASE_A && code <= CHAR_LOWERCASE_Z;
+}
+__name(isWindowsDeviceRoot, "isWindowsDeviceRoot");
+function normalizeString(path, allowAboveRoot, separator, isPathSeparator2) {
+  let res = "";
+  let lastSegmentLength = 0;
+  let lastSlash = -1;
+  let dots = 0;
+  let code = 0;
+  for (let i = 0; i <= path.length; ++i) {
+    if (i < path.length) {
+      code = path.charCodeAt(i);
+    } else if (isPathSeparator2(code)) {
+      break;
+    } else {
+      code = CHAR_FORWARD_SLASH;
+    }
+    if (isPathSeparator2(code)) {
+      if (lastSlash === i - 1 || dots === 1) {
+      } else if (dots === 2) {
+        if (res.length < 2 || lastSegmentLength !== 2 || res.charCodeAt(res.length - 1) !== CHAR_DOT || res.charCodeAt(res.length - 2) !== CHAR_DOT) {
+          if (res.length > 2) {
+            const lastSlashIndex = res.lastIndexOf(separator);
+            if (lastSlashIndex === -1) {
+              res = "";
+              lastSegmentLength = 0;
+            } else {
+              res = res.slice(0, lastSlashIndex);
+              lastSegmentLength = res.length - 1 - res.lastIndexOf(separator);
+            }
+            lastSlash = i;
+            dots = 0;
+            continue;
+          } else if (res.length !== 0) {
+            res = "";
+            lastSegmentLength = 0;
+            lastSlash = i;
+            dots = 0;
+            continue;
+          }
+        }
+        if (allowAboveRoot) {
+          res += res.length > 0 ? `${separator}..` : "..";
+          lastSegmentLength = 2;
+        }
+      } else {
+        if (res.length > 0) {
+          res += `${separator}${path.slice(lastSlash + 1, i)}`;
+        } else {
+          res = path.slice(lastSlash + 1, i);
+        }
+        lastSegmentLength = i - lastSlash - 1;
+      }
+      lastSlash = i;
+      dots = 0;
+    } else if (code === CHAR_DOT && dots !== -1) {
+      ++dots;
+    } else {
+      dots = -1;
+    }
+  }
+  return res;
+}
+__name(normalizeString, "normalizeString");
+function formatExt(ext) {
+  return ext ? `${ext[0] === "." ? "" : "."}${ext}` : "";
+}
+__name(formatExt, "formatExt");
+function _format(sep2, pathObject) {
+  validateObject(pathObject, "pathObject");
+  const dir = pathObject.dir || pathObject.root;
+  const base = pathObject.base || `${pathObject.name || ""}${formatExt(pathObject.ext)}`;
+  if (!dir) {
+    return base;
+  }
+  return dir === pathObject.root ? `${dir}${base}` : `${dir}${sep2}${base}`;
+}
+__name(_format, "_format");
+const win32 = {
+  // path.resolve([from ...], to)
+  resolve(...pathSegments) {
+    let resolvedDevice = "";
+    let resolvedTail = "";
+    let resolvedAbsolute = false;
+    for (let i = pathSegments.length - 1; i >= -1; i--) {
+      let path;
+      if (i >= 0) {
+        path = pathSegments[i];
+        validateString(path, `paths[${i}]`);
+        if (path.length === 0) {
+          continue;
+        }
+      } else if (resolvedDevice.length === 0) {
+        path = process.cwd();
+      } else {
+        path = process.env[`=${resolvedDevice}`] || process.cwd();
+        if (path === void 0 || path.slice(0, 2).toLowerCase() !== resolvedDevice.toLowerCase() && path.charCodeAt(2) === CHAR_BACKWARD_SLASH) {
+          path = `${resolvedDevice}\\`;
+        }
+      }
+      const len = path.length;
+      let rootEnd = 0;
+      let device = "";
+      let isAbsolute2 = false;
+      const code = path.charCodeAt(0);
+      if (len === 1) {
+        if (isPathSeparator(code)) {
+          rootEnd = 1;
+          isAbsolute2 = true;
+        }
+      } else if (isPathSeparator(code)) {
+        isAbsolute2 = true;
+        if (isPathSeparator(path.charCodeAt(1))) {
+          let j = 2;
+          let last = j;
+          while (j < len && !isPathSeparator(path.charCodeAt(j))) {
+            j++;
+          }
+          if (j < len && j !== last) {
+            const firstPart = path.slice(last, j);
+            last = j;
+            while (j < len && isPathSeparator(path.charCodeAt(j))) {
+              j++;
+            }
+            if (j < len && j !== last) {
+              last = j;
+              while (j < len && !isPathSeparator(path.charCodeAt(j))) {
+                j++;
+              }
+              if (j === len || j !== last) {
+                device = `\\\\${firstPart}\\${path.slice(last, j)}`;
+                rootEnd = j;
+              }
+            }
+          }
+        } else {
+          rootEnd = 1;
+        }
+      } else if (isWindowsDeviceRoot(code) && path.charCodeAt(1) === CHAR_COLON) {
+        device = path.slice(0, 2);
+        rootEnd = 2;
+        if (len > 2 && isPathSeparator(path.charCodeAt(2))) {
+          isAbsolute2 = true;
+          rootEnd = 3;
+        }
+      }
+      if (device.length > 0) {
+        if (resolvedDevice.length > 0) {
+          if (device.toLowerCase() !== resolvedDevice.toLowerCase()) {
+            continue;
+          }
+        } else {
+          resolvedDevice = device;
+        }
+      }
+      if (resolvedAbsolute) {
+        if (resolvedDevice.length > 0) {
+          break;
+        }
+      } else {
+        resolvedTail = `${path.slice(rootEnd)}\\${resolvedTail}`;
+        resolvedAbsolute = isAbsolute2;
+        if (isAbsolute2 && resolvedDevice.length > 0) {
+          break;
+        }
+      }
+    }
+    resolvedTail = normalizeString(
+      resolvedTail,
+      !resolvedAbsolute,
+      "\\",
+      isPathSeparator
+    );
+    return resolvedAbsolute ? `${resolvedDevice}\\${resolvedTail}` : `${resolvedDevice}${resolvedTail}` || ".";
+  },
+  normalize(path) {
+    validateString(path, "path");
+    const len = path.length;
+    if (len === 0) {
+      return ".";
+    }
+    let rootEnd = 0;
+    let device;
+    let isAbsolute2 = false;
+    const code = path.charCodeAt(0);
+    if (len === 1) {
+      return isPosixPathSeparator(code) ? "\\" : path;
+    }
+    if (isPathSeparator(code)) {
+      isAbsolute2 = true;
+      if (isPathSeparator(path.charCodeAt(1))) {
+        let j = 2;
+        let last = j;
+        while (j < len && !isPathSeparator(path.charCodeAt(j))) {
+          j++;
+        }
+        if (j < len && j !== last) {
+          const firstPart = path.slice(last, j);
+          last = j;
+          while (j < len && isPathSeparator(path.charCodeAt(j))) {
+            j++;
+          }
+          if (j < len && j !== last) {
+            last = j;
+            while (j < len && !isPathSeparator(path.charCodeAt(j))) {
+              j++;
+            }
+            if (j === len) {
+              return `\\\\${firstPart}\\${path.slice(last)}\\`;
+            }
+            if (j !== last) {
+              device = `\\\\${firstPart}\\${path.slice(last, j)}`;
+              rootEnd = j;
+            }
+          }
+        }
+      } else {
+        rootEnd = 1;
+      }
+    } else if (isWindowsDeviceRoot(code) && path.charCodeAt(1) === CHAR_COLON) {
+      device = path.slice(0, 2);
+      rootEnd = 2;
+      if (len > 2 && isPathSeparator(path.charCodeAt(2))) {
+        isAbsolute2 = true;
+        rootEnd = 3;
+      }
+    }
+    let tail = rootEnd < len ? normalizeString(path.slice(rootEnd), !isAbsolute2, "\\", isPathSeparator) : "";
+    if (tail.length === 0 && !isAbsolute2) {
+      tail = ".";
+    }
+    if (tail.length > 0 && isPathSeparator(path.charCodeAt(len - 1))) {
+      tail += "\\";
+    }
+    if (!isAbsolute2 && device === void 0 && path.includes(":")) {
+      if (tail.length >= 2 && isWindowsDeviceRoot(tail.charCodeAt(0)) && tail.charCodeAt(1) === CHAR_COLON) {
+        return `.\\${tail}`;
+      }
+      let index = path.indexOf(":");
+      do {
+        if (index === len - 1 || isPathSeparator(path.charCodeAt(index + 1))) {
+          return `.\\${tail}`;
+        }
+      } while ((index = path.indexOf(":", index + 1)) !== -1);
+    }
+    if (device === void 0) {
+      return isAbsolute2 ? `\\${tail}` : tail;
+    }
+    return isAbsolute2 ? `${device}\\${tail}` : `${device}${tail}`;
+  },
+  isAbsolute(path) {
+    validateString(path, "path");
+    const len = path.length;
+    if (len === 0) {
+      return false;
+    }
+    const code = path.charCodeAt(0);
+    return isPathSeparator(code) || // Possible device root
+    len > 2 && isWindowsDeviceRoot(code) && path.charCodeAt(1) === CHAR_COLON && isPathSeparator(path.charCodeAt(2));
+  },
+  join(...paths) {
+    if (paths.length === 0) {
+      return ".";
+    }
+    let joined;
+    let firstPart;
+    for (let i = 0; i < paths.length; ++i) {
+      const arg = paths[i];
+      validateString(arg, "path");
+      if (arg.length > 0) {
+        if (joined === void 0) {
+          joined = firstPart = arg;
+        } else {
+          joined += `\\${arg}`;
+        }
+      }
+    }
+    if (joined === void 0) {
+      return ".";
+    }
+    let needsReplace = true;
+    let slashCount = 0;
+    if (typeof firstPart === "string" && isPathSeparator(firstPart.charCodeAt(0))) {
+      ++slashCount;
+      const firstLen = firstPart.length;
+      if (firstLen > 1 && isPathSeparator(firstPart.charCodeAt(1))) {
+        ++slashCount;
+        if (firstLen > 2) {
+          if (isPathSeparator(firstPart.charCodeAt(2))) {
+            ++slashCount;
+          } else {
+            needsReplace = false;
+          }
+        }
+      }
+    }
+    if (needsReplace) {
+      while (slashCount < joined.length && isPathSeparator(joined.charCodeAt(slashCount))) {
+        slashCount++;
+      }
+      if (slashCount >= 2) {
+        joined = `\\${joined.slice(slashCount)}`;
+      }
+    }
+    return win32.normalize(joined);
+  },
+  // It will solve the relative path from `from` to `to`, for instance:
+  //  from = 'C:\\orandea\\test\\aaa'
+  //  to = 'C:\\orandea\\impl\\bbb'
+  // The output of the function should be: '..\\..\\impl\\bbb'
+  relative(from, to) {
+    validateString(from, "from");
+    validateString(to, "to");
+    if (from === to) {
+      return "";
+    }
+    const fromOrig = win32.resolve(from);
+    const toOrig = win32.resolve(to);
+    if (fromOrig === toOrig) {
+      return "";
+    }
+    from = fromOrig.toLowerCase();
+    to = toOrig.toLowerCase();
+    if (from === to) {
+      return "";
+    }
+    if (fromOrig.length !== from.length || toOrig.length !== to.length) {
+      const fromSplit = fromOrig.split("\\");
+      const toSplit = toOrig.split("\\");
+      if (fromSplit[fromSplit.length - 1] === "") {
+        fromSplit.pop();
+      }
+      if (toSplit[toSplit.length - 1] === "") {
+        toSplit.pop();
+      }
+      const fromLen2 = fromSplit.length;
+      const toLen2 = toSplit.length;
+      const length2 = fromLen2 < toLen2 ? fromLen2 : toLen2;
+      let i2;
+      for (i2 = 0; i2 < length2; i2++) {
+        if (fromSplit[i2].toLowerCase() !== toSplit[i2].toLowerCase()) {
+          break;
+        }
+      }
+      if (i2 === 0) {
+        return toOrig;
+      } else if (i2 === length2) {
+        if (toLen2 > length2) {
+          return toSplit.slice(i2).join("\\");
+        }
+        if (fromLen2 > length2) {
+          return "..\\".repeat(fromLen2 - 1 - i2) + "..";
+        }
+        return "";
+      }
+      return "..\\".repeat(fromLen2 - i2) + toSplit.slice(i2).join("\\");
+    }
+    let fromStart = 0;
+    while (fromStart < from.length && from.charCodeAt(fromStart) === CHAR_BACKWARD_SLASH) {
+      fromStart++;
+    }
+    let fromEnd = from.length;
+    while (fromEnd - 1 > fromStart && from.charCodeAt(fromEnd - 1) === CHAR_BACKWARD_SLASH) {
+      fromEnd--;
+    }
+    const fromLen = fromEnd - fromStart;
+    let toStart = 0;
+    while (toStart < to.length && to.charCodeAt(toStart) === CHAR_BACKWARD_SLASH) {
+      toStart++;
+    }
+    let toEnd = to.length;
+    while (toEnd - 1 > toStart && to.charCodeAt(toEnd - 1) === CHAR_BACKWARD_SLASH) {
+      toEnd--;
+    }
+    const toLen = toEnd - toStart;
+    const length = fromLen < toLen ? fromLen : toLen;
+    let lastCommonSep = -1;
+    let i = 0;
+    for (; i < length; i++) {
+      const fromCode = from.charCodeAt(fromStart + i);
+      if (fromCode !== to.charCodeAt(toStart + i)) {
+        break;
+      } else if (fromCode === CHAR_BACKWARD_SLASH) {
+        lastCommonSep = i;
+      }
+    }
+    if (i !== length) {
+      if (lastCommonSep === -1) {
+        return toOrig;
+      }
+    } else {
+      if (toLen > length) {
+        if (to.charCodeAt(toStart + i) === CHAR_BACKWARD_SLASH) {
+          return toOrig.slice(toStart + i + 1);
+        }
+        if (i === 2) {
+          return toOrig.slice(toStart + i);
+        }
+      }
+      if (fromLen > length) {
+        if (from.charCodeAt(fromStart + i) === CHAR_BACKWARD_SLASH) {
+          lastCommonSep = i;
+        } else if (i === 2) {
+          lastCommonSep = 3;
+        }
+      }
+      if (lastCommonSep === -1) {
+        lastCommonSep = 0;
+      }
+    }
+    let out = "";
+    for (i = fromStart + lastCommonSep + 1; i <= fromEnd; ++i) {
+      if (i === fromEnd || from.charCodeAt(i) === CHAR_BACKWARD_SLASH) {
+        out += out.length === 0 ? ".." : "\\..";
+      }
+    }
+    toStart += lastCommonSep;
+    if (out.length > 0) {
+      return `${out}${toOrig.slice(toStart, toEnd)}`;
+    }
+    if (toOrig.charCodeAt(toStart) === CHAR_BACKWARD_SLASH) {
+      ++toStart;
+    }
+    return toOrig.slice(toStart, toEnd);
+  },
+  toNamespacedPath(path) {
+    if (typeof path !== "string" || path.length === 0) {
+      return path;
+    }
+    const resolvedPath = win32.resolve(path);
+    if (resolvedPath.length <= 2) {
+      return path;
+    }
+    if (resolvedPath.charCodeAt(0) === CHAR_BACKWARD_SLASH) {
+      if (resolvedPath.charCodeAt(1) === CHAR_BACKWARD_SLASH) {
+        const code = resolvedPath.charCodeAt(2);
+        if (code !== CHAR_QUESTION_MARK && code !== CHAR_DOT) {
+          return `\\\\?\\UNC\\${resolvedPath.slice(2)}`;
+        }
+      }
+    } else if (isWindowsDeviceRoot(resolvedPath.charCodeAt(0)) && resolvedPath.charCodeAt(1) === CHAR_COLON && resolvedPath.charCodeAt(2) === CHAR_BACKWARD_SLASH) {
+      return `\\\\?\\${resolvedPath}`;
+    }
+    return resolvedPath;
+  },
+  dirname(path) {
+    validateString(path, "path");
+    const len = path.length;
+    if (len === 0) {
+      return ".";
+    }
+    let rootEnd = -1;
+    let offset = 0;
+    const code = path.charCodeAt(0);
+    if (len === 1) {
+      return isPathSeparator(code) ? path : ".";
+    }
+    if (isPathSeparator(code)) {
+      rootEnd = offset = 1;
+      if (isPathSeparator(path.charCodeAt(1))) {
+        let j = 2;
+        let last = j;
+        while (j < len && !isPathSeparator(path.charCodeAt(j))) {
+          j++;
+        }
+        if (j < len && j !== last) {
+          last = j;
+          while (j < len && isPathSeparator(path.charCodeAt(j))) {
+            j++;
+          }
+          if (j < len && j !== last) {
+            last = j;
+            while (j < len && !isPathSeparator(path.charCodeAt(j))) {
+              j++;
+            }
+            if (j === len) {
+              return path;
+            }
+            if (j !== last) {
+              rootEnd = offset = j + 1;
+            }
+          }
+        }
+      }
+    } else if (isWindowsDeviceRoot(code) && path.charCodeAt(1) === CHAR_COLON) {
+      rootEnd = len > 2 && isPathSeparator(path.charCodeAt(2)) ? 3 : 2;
+      offset = rootEnd;
+    }
+    let end = -1;
+    let matchedSlash = true;
+    for (let i = len - 1; i >= offset; --i) {
+      if (isPathSeparator(path.charCodeAt(i))) {
+        if (!matchedSlash) {
+          end = i;
+          break;
+        }
+      } else {
+        matchedSlash = false;
+      }
+    }
+    if (end === -1) {
+      if (rootEnd === -1) {
+        return ".";
+      }
+      end = rootEnd;
+    }
+    return path.slice(0, end);
+  },
+  basename(path, suffix) {
+    if (suffix !== void 0) {
+      validateString(suffix, "suffix");
+    }
+    validateString(path, "path");
+    let start = 0;
+    let end = -1;
+    let matchedSlash = true;
+    let i;
+    if (path.length >= 2 && isWindowsDeviceRoot(path.charCodeAt(0)) && path.charCodeAt(1) === CHAR_COLON) {
+      start = 2;
+    }
+    if (suffix !== void 0 && suffix.length > 0 && suffix.length <= path.length) {
+      if (suffix === path) {
+        return "";
+      }
+      let extIdx = suffix.length - 1;
+      let firstNonSlashEnd = -1;
+      for (i = path.length - 1; i >= start; --i) {
+        const code = path.charCodeAt(i);
+        if (isPathSeparator(code)) {
+          if (!matchedSlash) {
+            start = i + 1;
+            break;
+          }
+        } else {
+          if (firstNonSlashEnd === -1) {
+            matchedSlash = false;
+            firstNonSlashEnd = i + 1;
+          }
+          if (extIdx >= 0) {
+            if (code === suffix.charCodeAt(extIdx)) {
+              if (--extIdx === -1) {
+                end = i;
+              }
+            } else {
+              extIdx = -1;
+              end = firstNonSlashEnd;
+            }
+          }
+        }
+      }
+      if (start === end) {
+        end = firstNonSlashEnd;
+      } else if (end === -1) {
+        end = path.length;
+      }
+      return path.slice(start, end);
+    }
+    for (i = path.length - 1; i >= start; --i) {
+      if (isPathSeparator(path.charCodeAt(i))) {
+        if (!matchedSlash) {
+          start = i + 1;
+          break;
+        }
+      } else if (end === -1) {
+        matchedSlash = false;
+        end = i + 1;
+      }
+    }
+    if (end === -1) {
+      return "";
+    }
+    return path.slice(start, end);
+  },
+  extname(path) {
+    validateString(path, "path");
+    let start = 0;
+    let startDot = -1;
+    let startPart = 0;
+    let end = -1;
+    let matchedSlash = true;
+    let preDotState = 0;
+    if (path.length >= 2 && path.charCodeAt(1) === CHAR_COLON && isWindowsDeviceRoot(path.charCodeAt(0))) {
+      start = startPart = 2;
+    }
+    for (let i = path.length - 1; i >= start; --i) {
+      const code = path.charCodeAt(i);
+      if (isPathSeparator(code)) {
+        if (!matchedSlash) {
+          startPart = i + 1;
+          break;
+        }
+        continue;
+      }
+      if (end === -1) {
+        matchedSlash = false;
+        end = i + 1;
+      }
+      if (code === CHAR_DOT) {
+        if (startDot === -1) {
+          startDot = i;
+        } else if (preDotState !== 1) {
+          preDotState = 1;
+        }
+      } else if (startDot !== -1) {
+        preDotState = -1;
+      }
+    }
+    if (startDot === -1 || end === -1 || // We saw a non-dot character immediately before the dot
+    preDotState === 0 || // The (right-most) trimmed path component is exactly '..'
+    preDotState === 1 && startDot === end - 1 && startDot === startPart + 1) {
+      return "";
+    }
+    return path.slice(startDot, end);
+  },
+  format: _format.bind(null, "\\"),
+  parse(path) {
+    validateString(path, "path");
+    const ret = { root: "", dir: "", base: "", ext: "", name: "" };
+    if (path.length === 0) {
+      return ret;
+    }
+    const len = path.length;
+    let rootEnd = 0;
+    let code = path.charCodeAt(0);
+    if (len === 1) {
+      if (isPathSeparator(code)) {
+        ret.root = ret.dir = path;
+        return ret;
+      }
+      ret.base = ret.name = path;
+      return ret;
+    }
+    if (isPathSeparator(code)) {
+      rootEnd = 1;
+      if (isPathSeparator(path.charCodeAt(1))) {
+        let j = 2;
+        let last = j;
+        while (j < len && !isPathSeparator(path.charCodeAt(j))) {
+          j++;
+        }
+        if (j < len && j !== last) {
+          last = j;
+          while (j < len && isPathSeparator(path.charCodeAt(j))) {
+            j++;
+          }
+          if (j < len && j !== last) {
+            last = j;
+            while (j < len && !isPathSeparator(path.charCodeAt(j))) {
+              j++;
+            }
+            if (j === len) {
+              rootEnd = j;
+            } else if (j !== last) {
+              rootEnd = j + 1;
+            }
+          }
+        }
+      }
+    } else if (isWindowsDeviceRoot(code) && path.charCodeAt(1) === CHAR_COLON) {
+      if (len <= 2) {
+        ret.root = ret.dir = path;
+        return ret;
+      }
+      rootEnd = 2;
+      if (isPathSeparator(path.charCodeAt(2))) {
+        if (len === 3) {
+          ret.root = ret.dir = path;
+          return ret;
+        }
+        rootEnd = 3;
+      }
+    }
+    if (rootEnd > 0) {
+      ret.root = path.slice(0, rootEnd);
+    }
+    let startDot = -1;
+    let startPart = rootEnd;
+    let end = -1;
+    let matchedSlash = true;
+    let i = path.length - 1;
+    let preDotState = 0;
+    for (; i >= rootEnd; --i) {
+      code = path.charCodeAt(i);
+      if (isPathSeparator(code)) {
+        if (!matchedSlash) {
+          startPart = i + 1;
+          break;
+        }
+        continue;
+      }
+      if (end === -1) {
+        matchedSlash = false;
+        end = i + 1;
+      }
+      if (code === CHAR_DOT) {
+        if (startDot === -1) {
+          startDot = i;
+        } else if (preDotState !== 1) {
+          preDotState = 1;
+        }
+      } else if (startDot !== -1) {
+        preDotState = -1;
+      }
+    }
+    if (end !== -1) {
+      if (startDot === -1 || // We saw a non-dot character immediately before the dot
+      preDotState === 0 || // The (right-most) trimmed path component is exactly '..'
+      preDotState === 1 && startDot === end - 1 && startDot === startPart + 1) {
+        ret.base = ret.name = path.slice(startPart, end);
+      } else {
+        ret.name = path.slice(startPart, startDot);
+        ret.base = path.slice(startPart, end);
+        ret.ext = path.slice(startDot, end);
+      }
+    }
+    if (startPart > 0 && startPart !== rootEnd) {
+      ret.dir = path.slice(0, startPart - 1);
+    } else {
+      ret.dir = ret.root;
+    }
+    return ret;
+  },
+  sep: "\\",
+  delimiter: ";",
+  win32: null,
+  posix: null
+};
+const posixCwd = (() => {
+  if (platformIsWin32) {
+    const regexp = /\\/g;
+    return () => {
+      const cwd = process.cwd().replace(regexp, "/");
+      return cwd.slice(cwd.indexOf("/"));
+    };
+  }
+  return () => process.cwd();
+})();
+const posix = {
+  // path.resolve([from ...], to)
+  resolve(...pathSegments) {
+    let resolvedPath = "";
+    let resolvedAbsolute = false;
+    for (let i = pathSegments.length - 1; i >= 0 && !resolvedAbsolute; i--) {
+      const path = pathSegments[i];
+      validateString(path, `paths[${i}]`);
+      if (path.length === 0) {
+        continue;
+      }
+      resolvedPath = `${path}/${resolvedPath}`;
+      resolvedAbsolute = path.charCodeAt(0) === CHAR_FORWARD_SLASH;
+    }
+    if (!resolvedAbsolute) {
+      const cwd = posixCwd();
+      resolvedPath = `${cwd}/${resolvedPath}`;
+      resolvedAbsolute = cwd.charCodeAt(0) === CHAR_FORWARD_SLASH;
+    }
+    resolvedPath = normalizeString(
+      resolvedPath,
+      !resolvedAbsolute,
+      "/",
+      isPosixPathSeparator
+    );
+    if (resolvedAbsolute) {
+      return `/${resolvedPath}`;
+    }
+    return resolvedPath.length > 0 ? resolvedPath : ".";
+  },
+  normalize(path) {
+    validateString(path, "path");
+    if (path.length === 0) {
+      return ".";
+    }
+    const isAbsolute2 = path.charCodeAt(0) === CHAR_FORWARD_SLASH;
+    const trailingSeparator = path.charCodeAt(path.length - 1) === CHAR_FORWARD_SLASH;
+    path = normalizeString(path, !isAbsolute2, "/", isPosixPathSeparator);
+    if (path.length === 0) {
+      if (isAbsolute2) {
+        return "/";
+      }
+      return trailingSeparator ? "./" : ".";
+    }
+    if (trailingSeparator) {
+      path += "/";
+    }
+    return isAbsolute2 ? `/${path}` : path;
+  },
+  isAbsolute(path) {
+    validateString(path, "path");
+    return path.length > 0 && path.charCodeAt(0) === CHAR_FORWARD_SLASH;
+  },
+  join(...paths) {
+    if (paths.length === 0) {
+      return ".";
+    }
+    const path = [];
+    for (let i = 0; i < paths.length; ++i) {
+      const arg = paths[i];
+      validateString(arg, "path");
+      if (arg.length > 0) {
+        path.push(arg);
+      }
+    }
+    if (path.length === 0) {
+      return ".";
+    }
+    return posix.normalize(path.join("/"));
+  },
+  relative(from, to) {
+    validateString(from, "from");
+    validateString(to, "to");
+    if (from === to) {
+      return "";
+    }
+    from = posix.resolve(from);
+    to = posix.resolve(to);
+    if (from === to) {
+      return "";
+    }
+    const fromStart = 1;
+    const fromEnd = from.length;
+    const fromLen = fromEnd - fromStart;
+    const toStart = 1;
+    const toLen = to.length - toStart;
+    const length = fromLen < toLen ? fromLen : toLen;
+    let lastCommonSep = -1;
+    let i = 0;
+    for (; i < length; i++) {
+      const fromCode = from.charCodeAt(fromStart + i);
+      if (fromCode !== to.charCodeAt(toStart + i)) {
+        break;
+      } else if (fromCode === CHAR_FORWARD_SLASH) {
+        lastCommonSep = i;
+      }
+    }
+    if (i === length) {
+      if (toLen > length) {
+        if (to.charCodeAt(toStart + i) === CHAR_FORWARD_SLASH) {
+          return to.slice(toStart + i + 1);
+        }
+        if (i === 0) {
+          return to.slice(toStart + i);
+        }
+      } else if (fromLen > length) {
+        if (from.charCodeAt(fromStart + i) === CHAR_FORWARD_SLASH) {
+          lastCommonSep = i;
+        } else if (i === 0) {
+          lastCommonSep = 0;
+        }
+      }
+    }
+    let out = "";
+    for (i = fromStart + lastCommonSep + 1; i <= fromEnd; ++i) {
+      if (i === fromEnd || from.charCodeAt(i) === CHAR_FORWARD_SLASH) {
+        out += out.length === 0 ? ".." : "/..";
+      }
+    }
+    return `${out}${to.slice(toStart + lastCommonSep)}`;
+  },
+  toNamespacedPath(path) {
+    return path;
+  },
+  dirname(path) {
+    validateString(path, "path");
+    if (path.length === 0) {
+      return ".";
+    }
+    const hasRoot = path.charCodeAt(0) === CHAR_FORWARD_SLASH;
+    let end = -1;
+    let matchedSlash = true;
+    for (let i = path.length - 1; i >= 1; --i) {
+      if (path.charCodeAt(i) === CHAR_FORWARD_SLASH) {
+        if (!matchedSlash) {
+          end = i;
+          break;
+        }
+      } else {
+        matchedSlash = false;
+      }
+    }
+    if (end === -1) {
+      return hasRoot ? "/" : ".";
+    }
+    if (hasRoot && end === 1) {
+      return "//";
+    }
+    return path.slice(0, end);
+  },
+  basename(path, suffix) {
+    if (suffix !== void 0) {
+      validateString(suffix, "suffix");
+    }
+    validateString(path, "path");
+    let start = 0;
+    let end = -1;
+    let matchedSlash = true;
+    let i;
+    if (suffix !== void 0 && suffix.length > 0 && suffix.length <= path.length) {
+      if (suffix === path) {
+        return "";
+      }
+      let extIdx = suffix.length - 1;
+      let firstNonSlashEnd = -1;
+      for (i = path.length - 1; i >= 0; --i) {
+        const code = path.charCodeAt(i);
+        if (code === CHAR_FORWARD_SLASH) {
+          if (!matchedSlash) {
+            start = i + 1;
+            break;
+          }
+        } else {
+          if (firstNonSlashEnd === -1) {
+            matchedSlash = false;
+            firstNonSlashEnd = i + 1;
+          }
+          if (extIdx >= 0) {
+            if (code === suffix.charCodeAt(extIdx)) {
+              if (--extIdx === -1) {
+                end = i;
+              }
+            } else {
+              extIdx = -1;
+              end = firstNonSlashEnd;
+            }
+          }
+        }
+      }
+      if (start === end) {
+        end = firstNonSlashEnd;
+      } else if (end === -1) {
+        end = path.length;
+      }
+      return path.slice(start, end);
+    }
+    for (i = path.length - 1; i >= 0; --i) {
+      if (path.charCodeAt(i) === CHAR_FORWARD_SLASH) {
+        if (!matchedSlash) {
+          start = i + 1;
+          break;
+        }
+      } else if (end === -1) {
+        matchedSlash = false;
+        end = i + 1;
+      }
+    }
+    if (end === -1) {
+      return "";
+    }
+    return path.slice(start, end);
+  },
+  extname(path) {
+    validateString(path, "path");
+    let startDot = -1;
+    let startPart = 0;
+    let end = -1;
+    let matchedSlash = true;
+    let preDotState = 0;
+    for (let i = path.length - 1; i >= 0; --i) {
+      const char = path[i];
+      if (char === "/") {
+        if (!matchedSlash) {
+          startPart = i + 1;
+          break;
+        }
+        continue;
+      }
+      if (end === -1) {
+        matchedSlash = false;
+        end = i + 1;
+      }
+      if (char === ".") {
+        if (startDot === -1) {
+          startDot = i;
+        } else if (preDotState !== 1) {
+          preDotState = 1;
+        }
+      } else if (startDot !== -1) {
+        preDotState = -1;
+      }
+    }
+    if (startDot === -1 || end === -1 || // We saw a non-dot character immediately before the dot
+    preDotState === 0 || // The (right-most) trimmed path component is exactly '..'
+    preDotState === 1 && startDot === end - 1 && startDot === startPart + 1) {
+      return "";
+    }
+    return path.slice(startDot, end);
+  },
+  format: _format.bind(null, "/"),
+  parse(path) {
+    validateString(path, "path");
+    const ret = { root: "", dir: "", base: "", ext: "", name: "" };
+    if (path.length === 0) {
+      return ret;
+    }
+    const isAbsolute2 = path.charCodeAt(0) === CHAR_FORWARD_SLASH;
+    let start;
+    if (isAbsolute2) {
+      ret.root = "/";
+      start = 1;
+    } else {
+      start = 0;
+    }
+    let startDot = -1;
+    let startPart = 0;
+    let end = -1;
+    let matchedSlash = true;
+    let i = path.length - 1;
+    let preDotState = 0;
+    for (; i >= start; --i) {
+      const code = path.charCodeAt(i);
+      if (code === CHAR_FORWARD_SLASH) {
+        if (!matchedSlash) {
+          startPart = i + 1;
+          break;
+        }
+        continue;
+      }
+      if (end === -1) {
+        matchedSlash = false;
+        end = i + 1;
+      }
+      if (code === CHAR_DOT) {
+        if (startDot === -1) {
+          startDot = i;
+        } else if (preDotState !== 1) {
+          preDotState = 1;
+        }
+      } else if (startDot !== -1) {
+        preDotState = -1;
+      }
+    }
+    if (end !== -1) {
+      const start2 = startPart === 0 && isAbsolute2 ? 1 : startPart;
+      if (startDot === -1 || // We saw a non-dot character immediately before the dot
+      preDotState === 0 || // The (right-most) trimmed path component is exactly '..'
+      preDotState === 1 && startDot === end - 1 && startDot === startPart + 1) {
+        ret.base = ret.name = path.slice(start2, end);
+      } else {
+        ret.name = path.slice(start2, startDot);
+        ret.base = path.slice(start2, end);
+        ret.ext = path.slice(startDot, end);
+      }
+    }
+    if (startPart > 0) {
+      ret.dir = path.slice(0, startPart - 1);
+    } else if (isAbsolute2) {
+      ret.dir = "/";
+    }
+    return ret;
+  },
+  sep: "/",
+  delimiter: ":",
+  win32: null,
+  posix: null
+};
+posix.win32 = win32.win32 = win32;
+posix.posix = win32.posix = posix;
+const normalize = platformIsWin32 ? win32.normalize : posix.normalize;
+const isAbsolute = platformIsWin32 ? win32.isAbsolute : posix.isAbsolute;
+const join = platformIsWin32 ? win32.join : posix.join;
+const resolve = platformIsWin32 ? win32.resolve : posix.resolve;
+const relative = platformIsWin32 ? win32.relative : posix.relative;
+const dirname = platformIsWin32 ? win32.dirname : posix.dirname;
+const basename = platformIsWin32 ? win32.basename : posix.basename;
+const extname = platformIsWin32 ? win32.extname : posix.extname;
+const format = platformIsWin32 ? win32.format : posix.format;
+const parse = platformIsWin32 ? win32.parse : posix.parse;
+const toNamespacedPath = platformIsWin32 ? win32.toNamespacedPath : posix.toNamespacedPath;
+const sep = platformIsWin32 ? win32.sep : posix.sep;
+const delimiter = platformIsWin32 ? win32.delimiter : posix.delimiter;
+export {
+  basename,
+  delimiter,
+  dirname,
+  extname,
+  format,
+  isAbsolute,
+  join,
+  normalize,
+  parse,
+  posix,
+  relative,
+  resolve,
+  sep,
+  toNamespacedPath,
+  win32
+};
+//# sourceMappingURL=path.js.map

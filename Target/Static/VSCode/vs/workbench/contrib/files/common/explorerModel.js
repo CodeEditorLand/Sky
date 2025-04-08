@@ -1,1 +1,432 @@
-var I=Object.defineProperty;var y=Object.getOwnPropertyDescriptor;var p=(h,e,r,s)=>{for(var t=s>1?void 0:s?y(e,r):e,i=h.length-1,o;i>=0;i--)(o=h[i])&&(t=(s?o(e,r,t):o(t))||t);return s&&t&&I(e,r,t),t};import{URI as C}from"../../../../base/common/uri.js";import{isEqual as _}from"../../../../base/common/extpath.js";import{posix as m}from"../../../../base/common/path.js";import{ResourceMap as E}from"../../../../base/common/map.js";import{FileSystemProviderCapabilities as g}from"../../../../platform/files/common/files.js";import{rtrim as v,startsWithIgnoreCase as S,equalsIgnoreCase as x}from"../../../../base/common/strings.js";import{coalesce as b}from"../../../../base/common/arrays.js";import"../../../../platform/workspace/common/workspace.js";import{dispose as D}from"../../../../base/common/lifecycle.js";import{memoize as R}from"../../../../base/common/decorators.js";import{Emitter as F}from"../../../../base/common/event.js";import{joinPath as N,isEqualOrParent as A,basenameOrAuthority as P}from"../../../../base/common/resources.js";import{SortOrder as k}from"./files.js";import"../../../../platform/uriIdentity/common/uriIdentity.js";import{ExplorerFileNestingTrie as L}from"./explorerFileNestingTrie.js";import"../../../../platform/configuration/common/configuration.js";import{assertIsDefined as w}from"../../../../base/common/types.js";import"../../../services/filesConfiguration/common/filesConfigurationService.js";import"../../../../base/common/htmlContent.js";class ue{constructor(e,r,s,t,i){this.contextService=e;this.uriIdentityService=r;const o=()=>this._roots=this.contextService.getWorkspace().folders.map(n=>new u(n.uri,s,t,i,void 0,!0,!1,!1,!1,n.name));o(),this._listener=this.contextService.onDidChangeWorkspaceFolders(()=>{o(),this._onDidChangeRoots.fire()})}_roots;_listener;_onDidChangeRoots=new F;get roots(){return this._roots}get onDidChangeRoots(){return this._onDidChangeRoots.event}findAll(e){return b(this.roots.map(r=>r.find(e)))}findClosest(e){const r=this.contextService.getWorkspaceFolder(e);if(r){const s=this.roots.find(t=>this.uriIdentityService.extUri.isEqual(t.resource,r.uri));if(s)return s.find(e)}return null}dispose(){D(this._listener)}}const a=class a{constructor(e,r,s,t,i,o,n,l,d,c=P(e),f,U=!1){this.resource=e;this.fileService=r;this.configService=s;this.filesConfigService=t;this._parent=i;this._isDirectory=o;this._isSymbolicLink=n;this._readonly=l;this._locked=d;this._name=c;this._mtime=f;this._unknown=U;this._isDirectoryResolved=!1}_isDirectoryResolved;error=void 0;_isExcluded=!1;nestedParent;nestedChildren;get isExcluded(){return this._isExcluded?!0:this._parent?this._parent.isExcluded:!1}set isExcluded(e){this._isExcluded=e}hasChildren(e){return this.hasNests?this.nestedChildren?.some(r=>e(r))??!1:this.isDirectory}get hasNests(){return!!this.nestedChildren?.length}get isDirectoryResolved(){return this._isDirectoryResolved}get isSymbolicLink(){return!!this._isSymbolicLink}get isDirectory(){return!!this._isDirectory}get isReadonly(){return this.filesConfigService.isReadonly(this.resource,{resource:this.resource,name:this.name,readonly:this._readonly,locked:this._locked})}get mtime(){return this._mtime}get name(){return this._name}get isUnknown(){return this._unknown}get parent(){return this._parent}get root(){return this._parent?this._parent.root:this}get children(){return new Map}updateName(e){this._parent?.removeChild(this),this._name=e,this._parent?.addChild(this)}getId(){let e=this.root.resource.toString()+"::"+this.resource.toString();return this.isMarkedAsFiltered()&&(e+="::findFilterResult"),e}toString(){return`ExplorerItem: ${this.name}`}get isRoot(){return this===this.root}static create(e,r,s,t,i,o){const n=new a(t.resource,e,r,s,i,t.isDirectory,t.isSymbolicLink,t.readonly,t.locked,t.name,t.mtime,!t.isFile&&!t.isDirectory);if(n.isDirectory&&(n._isDirectoryResolved=!!t.children||!!o&&o.some(l=>A(l,n.resource)),t.children))for(let l=0,d=t.children.length;l<d;l++){const c=a.create(e,r,s,t.children[l],n,o);n.addChild(c)}return n}static mergeLocalWithDisk(e,r){if(e.resource.toString()!==r.resource.toString())return;const s=e.isDirectory||r.isDirectory;if(!(s&&r._isDirectoryResolved&&!e._isDirectoryResolved)&&(r.resource=e.resource,r.isRoot||r.updateName(e.name),r._isDirectory=e.isDirectory,r._mtime=e.mtime,r._isDirectoryResolved=e._isDirectoryResolved,r._isSymbolicLink=e.isSymbolicLink,r.error=e.error,s&&e._isDirectoryResolved)){const t=new E;r.children.forEach(i=>{t.set(i.resource,i)}),r.children.clear(),e.children.forEach(i=>{const o=t.get(i.resource);o?(a.mergeLocalWithDisk(i,o),r.addChild(o),t.delete(i.resource)):r.addChild(i)}),t.forEach(i=>{i instanceof M&&r.addChild(i)})}}addChild(e){e._parent=this,e.updateResource(!1),this.children.set(this.getPlatformAwareName(e.name),e)}getChild(e){return this.children.get(this.getPlatformAwareName(e))}fetchChildren(e){const r=this.configService.getValue({resource:this.root.resource}).explorer.fileNesting;return r.enabled&&this.nestedChildren?this.nestedChildren:(async()=>{if(!this._isDirectoryResolved){const t=e===k.Modified;this.error=void 0;try{const i=await this.fileService.resolve(this.resource,{resolveSingleChildDescendants:!0,resolveMetadata:t}),o=a.create(this.fileService,this.configService,this.filesConfigService,i,this);a.mergeLocalWithDisk(o,this)}catch(i){throw this.error=i,i}this._isDirectoryResolved=!0}const s=[];if(r.enabled){const t=[],i=[];for(const n of this.children.entries())n[1].nestedParent=void 0,n[1].isDirectory?i.push(n):t.push(n);const o=this.fileNester.nest(t.map(([n])=>n),this.getPlatformAwareName(this.name));for(const[n,l]of t){const d=o.get(n);if(d!==void 0){l.nestedChildren=[];for(const c of d.keys()){const f=w(this.children.get(c));l.nestedChildren.push(f),f.nestedParent=l}s.push(l)}else l.nestedChildren=void 0}for(const[n,l]of i.values())s.push(l)}else this.children.forEach(t=>{s.push(t)});return s})()}_fileNester;get fileNester(){if(!this.root._fileNester){const e=this.configService.getValue({resource:this.root.resource}).explorer.fileNesting,r=Object.entries(e.patterns).filter(s=>typeof s[0]=="string"&&typeof s[1]=="string"&&s[0]&&s[1]).map(([s,t])=>[this.getPlatformAwareName(s.trim()),t.split(",").map(i=>this.getPlatformAwareName(i.trim().replace(/\u200b/g,"").trim())).filter(i=>i!=="")]);this.root._fileNester=new L(r)}return this.root._fileNester}removeChild(e){this.nestedChildren=void 0,this.children.delete(this.getPlatformAwareName(e.name))}forgetChildren(){this.children.clear(),this.nestedChildren=void 0,this._isDirectoryResolved=!1,this._fileNester=void 0}getPlatformAwareName(e){return this.fileService.hasCapability(this.resource,g.PathCaseSensitive)?e:e.toLowerCase()}move(e){this.nestedParent?.removeChild(this),this._parent?.removeChild(this),e.removeChild(this),e.addChild(this),this.updateResource(!0)}updateResource(e){this._parent&&(this.resource=N(this._parent.resource,this.name)),e&&this.isDirectory&&this.children.forEach(r=>{r.updateResource(!0)})}rename(e){this.updateName(e.name),this._mtime=e.mtime,this.updateResource(!0)}find(e){const r=!this.fileService.hasCapability(e,g.PathCaseSensitive);return e&&this.resource.scheme===e.scheme&&x(this.resource.authority,e.authority)&&(r?S(e.path,this.resource.path):e.path.startsWith(this.resource.path))?this.findByPath(v(e.path,m.sep),this.resource.path.length,r):null}findByPath(e,r,s){if(_(v(this.resource.path,m.sep),e,s))return this;if(this.isDirectory){for(;r<e.length&&e[r]===m.sep;)r++;let t=e.indexOf(m.sep,r);t===-1&&(t=e.length);const i=e.substring(r,t),o=this.children.get(this.getPlatformAwareName(i));if(o)return o.findByPath(e,t,s)}return null}markedAsFindResult=!1;isMarkedAsFiltered(){return this.markedAsFindResult}markItemAndParentsAsFiltered(){this.markedAsFindResult=!0,this.parent?.markItemAndParentsAsFiltered()}unmarkItemAndChildren(){this.markedAsFindResult=!1,this.children.forEach(e=>e.unmarkItemAndChildren())}};p([R],a.prototype,"children",1);let u=a;class M extends u{constructor(e,r,s,t,i){super(C.file(""),e,r,s,t,i),this._isDirectoryResolved=!0}}export{u as ExplorerItem,ue as ExplorerModel,M as NewExplorerItem};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+import { URI } from "../../../../base/common/uri.js";
+import { isEqual } from "../../../../base/common/extpath.js";
+import { posix } from "../../../../base/common/path.js";
+import { ResourceMap } from "../../../../base/common/map.js";
+import { IFileStat, IFileService, FileSystemProviderCapabilities } from "../../../../platform/files/common/files.js";
+import { rtrim, startsWithIgnoreCase, equalsIgnoreCase } from "../../../../base/common/strings.js";
+import { coalesce } from "../../../../base/common/arrays.js";
+import { IWorkspaceContextService } from "../../../../platform/workspace/common/workspace.js";
+import { IDisposable, dispose } from "../../../../base/common/lifecycle.js";
+import { memoize } from "../../../../base/common/decorators.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { joinPath, isEqualOrParent, basenameOrAuthority } from "../../../../base/common/resources.js";
+import { IFilesConfiguration, SortOrder } from "./files.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import { ExplorerFileNestingTrie } from "./explorerFileNestingTrie.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { assertIsDefined } from "../../../../base/common/types.js";
+import { IFilesConfigurationService } from "../../../services/filesConfiguration/common/filesConfigurationService.js";
+import { IMarkdownString } from "../../../../base/common/htmlContent.js";
+class ExplorerModel {
+  constructor(contextService, uriIdentityService, fileService, configService, filesConfigService) {
+    this.contextService = contextService;
+    this.uriIdentityService = uriIdentityService;
+    const setRoots = /* @__PURE__ */ __name(() => this._roots = this.contextService.getWorkspace().folders.map((folder) => new ExplorerItem(folder.uri, fileService, configService, filesConfigService, void 0, true, false, false, false, folder.name)), "setRoots");
+    setRoots();
+    this._listener = this.contextService.onDidChangeWorkspaceFolders(() => {
+      setRoots();
+      this._onDidChangeRoots.fire();
+    });
+  }
+  static {
+    __name(this, "ExplorerModel");
+  }
+  _roots;
+  _listener;
+  _onDidChangeRoots = new Emitter();
+  get roots() {
+    return this._roots;
+  }
+  get onDidChangeRoots() {
+    return this._onDidChangeRoots.event;
+  }
+  /**
+   * Returns an array of child stat from this stat that matches with the provided path.
+   * Starts matching from the first root.
+   * Will return empty array in case the FileStat does not exist.
+   */
+  findAll(resource) {
+    return coalesce(this.roots.map((root) => root.find(resource)));
+  }
+  /**
+   * Returns a FileStat that matches the passed resource.
+   * In case multiple FileStat are matching the resource (same folder opened multiple times) returns the FileStat that has the closest root.
+   * Will return undefined in case the FileStat does not exist.
+   */
+  findClosest(resource) {
+    const folder = this.contextService.getWorkspaceFolder(resource);
+    if (folder) {
+      const root = this.roots.find((r) => this.uriIdentityService.extUri.isEqual(r.resource, folder.uri));
+      if (root) {
+        return root.find(resource);
+      }
+    }
+    return null;
+  }
+  dispose() {
+    dispose(this._listener);
+  }
+}
+const _ExplorerItem = class _ExplorerItem {
+  constructor(resource, fileService, configService, filesConfigService, _parent, _isDirectory, _isSymbolicLink, _readonly, _locked, _name = basenameOrAuthority(resource), _mtime, _unknown = false) {
+    this.resource = resource;
+    this.fileService = fileService;
+    this.configService = configService;
+    this.filesConfigService = filesConfigService;
+    this._parent = _parent;
+    this._isDirectory = _isDirectory;
+    this._isSymbolicLink = _isSymbolicLink;
+    this._readonly = _readonly;
+    this._locked = _locked;
+    this._name = _name;
+    this._mtime = _mtime;
+    this._unknown = _unknown;
+    this._isDirectoryResolved = false;
+  }
+  static {
+    __name(this, "ExplorerItem");
+  }
+  _isDirectoryResolved;
+  // used in tests
+  error = void 0;
+  _isExcluded = false;
+  nestedParent;
+  nestedChildren;
+  get isExcluded() {
+    if (this._isExcluded) {
+      return true;
+    }
+    if (!this._parent) {
+      return false;
+    }
+    return this._parent.isExcluded;
+  }
+  set isExcluded(value) {
+    this._isExcluded = value;
+  }
+  hasChildren(filter) {
+    if (this.hasNests) {
+      return this.nestedChildren?.some((c) => filter(c)) ?? false;
+    } else {
+      return this.isDirectory;
+    }
+  }
+  get hasNests() {
+    return !!this.nestedChildren?.length;
+  }
+  get isDirectoryResolved() {
+    return this._isDirectoryResolved;
+  }
+  get isSymbolicLink() {
+    return !!this._isSymbolicLink;
+  }
+  get isDirectory() {
+    return !!this._isDirectory;
+  }
+  get isReadonly() {
+    return this.filesConfigService.isReadonly(this.resource, { resource: this.resource, name: this.name, readonly: this._readonly, locked: this._locked });
+  }
+  get mtime() {
+    return this._mtime;
+  }
+  get name() {
+    return this._name;
+  }
+  get isUnknown() {
+    return this._unknown;
+  }
+  get parent() {
+    return this._parent;
+  }
+  get root() {
+    if (!this._parent) {
+      return this;
+    }
+    return this._parent.root;
+  }
+  get children() {
+    return /* @__PURE__ */ new Map();
+  }
+  updateName(value) {
+    this._parent?.removeChild(this);
+    this._name = value;
+    this._parent?.addChild(this);
+  }
+  getId() {
+    let id = this.root.resource.toString() + "::" + this.resource.toString();
+    if (this.isMarkedAsFiltered()) {
+      id += "::findFilterResult";
+    }
+    return id;
+  }
+  toString() {
+    return `ExplorerItem: ${this.name}`;
+  }
+  get isRoot() {
+    return this === this.root;
+  }
+  static create(fileService, configService, filesConfigService, raw, parent, resolveTo) {
+    const stat = new _ExplorerItem(raw.resource, fileService, configService, filesConfigService, parent, raw.isDirectory, raw.isSymbolicLink, raw.readonly, raw.locked, raw.name, raw.mtime, !raw.isFile && !raw.isDirectory);
+    if (stat.isDirectory) {
+      stat._isDirectoryResolved = !!raw.children || !!resolveTo && resolveTo.some((r) => {
+        return isEqualOrParent(r, stat.resource);
+      });
+      if (raw.children) {
+        for (let i = 0, len = raw.children.length; i < len; i++) {
+          const child = _ExplorerItem.create(fileService, configService, filesConfigService, raw.children[i], stat, resolveTo);
+          stat.addChild(child);
+        }
+      }
+    }
+    return stat;
+  }
+  /**
+   * Merges the stat which was resolved from the disk with the local stat by copying over properties
+   * and children. The merge will only consider resolved stat elements to avoid overwriting data which
+   * exists locally.
+   */
+  static mergeLocalWithDisk(disk, local) {
+    if (disk.resource.toString() !== local.resource.toString()) {
+      return;
+    }
+    const mergingDirectories = disk.isDirectory || local.isDirectory;
+    if (mergingDirectories && local._isDirectoryResolved && !disk._isDirectoryResolved) {
+      return;
+    }
+    local.resource = disk.resource;
+    if (!local.isRoot) {
+      local.updateName(disk.name);
+    }
+    local._isDirectory = disk.isDirectory;
+    local._mtime = disk.mtime;
+    local._isDirectoryResolved = disk._isDirectoryResolved;
+    local._isSymbolicLink = disk.isSymbolicLink;
+    local.error = disk.error;
+    if (mergingDirectories && disk._isDirectoryResolved) {
+      const oldLocalChildren = new ResourceMap();
+      local.children.forEach((child) => {
+        oldLocalChildren.set(child.resource, child);
+      });
+      local.children.clear();
+      disk.children.forEach((diskChild) => {
+        const formerLocalChild = oldLocalChildren.get(diskChild.resource);
+        if (formerLocalChild) {
+          _ExplorerItem.mergeLocalWithDisk(diskChild, formerLocalChild);
+          local.addChild(formerLocalChild);
+          oldLocalChildren.delete(diskChild.resource);
+        } else {
+          local.addChild(diskChild);
+        }
+      });
+      oldLocalChildren.forEach((oldChild) => {
+        if (oldChild instanceof NewExplorerItem) {
+          local.addChild(oldChild);
+        }
+      });
+    }
+  }
+  /**
+   * Adds a child element to this folder.
+   */
+  addChild(child) {
+    child._parent = this;
+    child.updateResource(false);
+    this.children.set(this.getPlatformAwareName(child.name), child);
+  }
+  getChild(name) {
+    return this.children.get(this.getPlatformAwareName(name));
+  }
+  fetchChildren(sortOrder) {
+    const nestingConfig = this.configService.getValue({ resource: this.root.resource }).explorer.fileNesting;
+    if (nestingConfig.enabled && this.nestedChildren) {
+      return this.nestedChildren;
+    }
+    return (async () => {
+      if (!this._isDirectoryResolved) {
+        const resolveMetadata = sortOrder === SortOrder.Modified;
+        this.error = void 0;
+        try {
+          const stat = await this.fileService.resolve(this.resource, { resolveSingleChildDescendants: true, resolveMetadata });
+          const resolved = _ExplorerItem.create(this.fileService, this.configService, this.filesConfigService, stat, this);
+          _ExplorerItem.mergeLocalWithDisk(resolved, this);
+        } catch (e) {
+          this.error = e;
+          throw e;
+        }
+        this._isDirectoryResolved = true;
+      }
+      const items = [];
+      if (nestingConfig.enabled) {
+        const fileChildren = [];
+        const dirChildren = [];
+        for (const child of this.children.entries()) {
+          child[1].nestedParent = void 0;
+          if (child[1].isDirectory) {
+            dirChildren.push(child);
+          } else {
+            fileChildren.push(child);
+          }
+        }
+        const nested = this.fileNester.nest(
+          fileChildren.map(([name]) => name),
+          this.getPlatformAwareName(this.name)
+        );
+        for (const [fileEntryName, fileEntryItem] of fileChildren) {
+          const nestedItems = nested.get(fileEntryName);
+          if (nestedItems !== void 0) {
+            fileEntryItem.nestedChildren = [];
+            for (const name of nestedItems.keys()) {
+              const child = assertIsDefined(this.children.get(name));
+              fileEntryItem.nestedChildren.push(child);
+              child.nestedParent = fileEntryItem;
+            }
+            items.push(fileEntryItem);
+          } else {
+            fileEntryItem.nestedChildren = void 0;
+          }
+        }
+        for (const [_, dirEntryItem] of dirChildren.values()) {
+          items.push(dirEntryItem);
+        }
+      } else {
+        this.children.forEach((child) => {
+          items.push(child);
+        });
+      }
+      return items;
+    })();
+  }
+  _fileNester;
+  get fileNester() {
+    if (!this.root._fileNester) {
+      const nestingConfig = this.configService.getValue({ resource: this.root.resource }).explorer.fileNesting;
+      const patterns = Object.entries(nestingConfig.patterns).filter((entry) => typeof entry[0] === "string" && typeof entry[1] === "string" && entry[0] && entry[1]).map(([parentPattern, childrenPatterns]) => [
+        this.getPlatformAwareName(parentPattern.trim()),
+        childrenPatterns.split(",").map((p) => this.getPlatformAwareName(p.trim().replace(/\u200b/g, "").trim())).filter((p) => p !== "")
+      ]);
+      this.root._fileNester = new ExplorerFileNestingTrie(patterns);
+    }
+    return this.root._fileNester;
+  }
+  /**
+   * Removes a child element from this folder.
+   */
+  removeChild(child) {
+    this.nestedChildren = void 0;
+    this.children.delete(this.getPlatformAwareName(child.name));
+  }
+  forgetChildren() {
+    this.children.clear();
+    this.nestedChildren = void 0;
+    this._isDirectoryResolved = false;
+    this._fileNester = void 0;
+  }
+  getPlatformAwareName(name) {
+    return this.fileService.hasCapability(this.resource, FileSystemProviderCapabilities.PathCaseSensitive) ? name : name.toLowerCase();
+  }
+  /**
+   * Moves this element under a new parent element.
+   */
+  move(newParent) {
+    this.nestedParent?.removeChild(this);
+    this._parent?.removeChild(this);
+    newParent.removeChild(this);
+    newParent.addChild(this);
+    this.updateResource(true);
+  }
+  updateResource(recursive) {
+    if (this._parent) {
+      this.resource = joinPath(this._parent.resource, this.name);
+    }
+    if (recursive) {
+      if (this.isDirectory) {
+        this.children.forEach((child) => {
+          child.updateResource(true);
+        });
+      }
+    }
+  }
+  /**
+   * Tells this stat that it was renamed. This requires changes to all children of this stat (if any)
+   * so that the path property can be updated properly.
+   */
+  rename(renamedStat) {
+    this.updateName(renamedStat.name);
+    this._mtime = renamedStat.mtime;
+    this.updateResource(true);
+  }
+  /**
+   * Returns a child stat from this stat that matches with the provided path.
+   * Will return "null" in case the child does not exist.
+   */
+  find(resource) {
+    const ignoreCase = !this.fileService.hasCapability(resource, FileSystemProviderCapabilities.PathCaseSensitive);
+    if (resource && this.resource.scheme === resource.scheme && equalsIgnoreCase(this.resource.authority, resource.authority) && (ignoreCase ? startsWithIgnoreCase(resource.path, this.resource.path) : resource.path.startsWith(this.resource.path))) {
+      return this.findByPath(rtrim(resource.path, posix.sep), this.resource.path.length, ignoreCase);
+    }
+    return null;
+  }
+  findByPath(path, index, ignoreCase) {
+    if (isEqual(rtrim(this.resource.path, posix.sep), path, ignoreCase)) {
+      return this;
+    }
+    if (this.isDirectory) {
+      while (index < path.length && path[index] === posix.sep) {
+        index++;
+      }
+      let indexOfNextSep = path.indexOf(posix.sep, index);
+      if (indexOfNextSep === -1) {
+        indexOfNextSep = path.length;
+      }
+      const name = path.substring(index, indexOfNextSep);
+      const child = this.children.get(this.getPlatformAwareName(name));
+      if (child) {
+        return child.findByPath(path, indexOfNextSep, ignoreCase);
+      }
+    }
+    return null;
+  }
+  // Find
+  markedAsFindResult = false;
+  isMarkedAsFiltered() {
+    return this.markedAsFindResult;
+  }
+  markItemAndParentsAsFiltered() {
+    this.markedAsFindResult = true;
+    this.parent?.markItemAndParentsAsFiltered();
+  }
+  unmarkItemAndChildren() {
+    this.markedAsFindResult = false;
+    this.children.forEach((child) => child.unmarkItemAndChildren());
+  }
+};
+__decorateClass([
+  memoize
+], _ExplorerItem.prototype, "children", 1);
+let ExplorerItem = _ExplorerItem;
+class NewExplorerItem extends ExplorerItem {
+  static {
+    __name(this, "NewExplorerItem");
+  }
+  constructor(fileService, configService, filesConfigService, parent, isDirectory) {
+    super(URI.file(""), fileService, configService, filesConfigService, parent, isDirectory);
+    this._isDirectoryResolved = true;
+  }
+}
+export {
+  ExplorerItem,
+  ExplorerModel,
+  NewExplorerItem
+};
+//# sourceMappingURL=explorerModel.js.map

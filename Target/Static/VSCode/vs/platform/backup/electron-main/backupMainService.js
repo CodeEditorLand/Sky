@@ -1,1 +1,326 @@
-var I=Object.defineProperty;var B=Object.getOwnPropertyDescriptor;var l=(d,e,r,t)=>{for(var a=t>1?void 0:t?B(e,r):e,o=d.length-1,i;o>=0;o--)(i=d[o])&&(a=(t?i(e,r,a):i(a))||a);return t&&a&&I(e,r,a),a},n=(d,e)=>(r,t)=>e(r,t,d);import{createHash as w}from"crypto";import{isEqual as g}from"../../../base/common/extpath.js";import{Schemas as k}from"../../../base/common/network.js";import{join as s}from"../../../base/common/path.js";import{isLinux as m}from"../../../base/common/platform.js";import{extUriBiasedIgnorePathCase as W}from"../../../base/common/resources.js";import{Promises as p,RimRafMode as y}from"../../../base/node/pfs.js";import"./backup.js";import{isEmptyWindowBackupInfo as v,deserializeWorkspaceInfos as E,deserializeFolderInfos as S}from"../node/backup.js";import{IConfigurationService as b}from"../../configuration/common/configuration.js";import{IEnvironmentMainService as F}from"../../environment/electron-main/environmentMainService.js";import{IStateService as H}from"../../state/node/state.js";import{HotExitConfiguration as f}from"../../files/common/files.js";import{ILogService as C}from"../../log/common/log.js";import{isFolderBackupInfo as P}from"../common/backup.js";import{isWorkspaceIdentifier as x}from"../../workspace/common/workspace.js";import{createEmptyWorkspaceIdentifier as h}from"../../workspaces/node/workspaces.js";let c=class{constructor(e,r,t,a){this.configurationService=r;this.logService=t;this.stateService=a;this.backupHome=e.backupHome}static backupWorkspacesMetadataStorageKey="backupWorkspaces";backupHome;workspaces=[];folders=[];emptyWindows=[];backupUriComparer=W;backupPathComparer={isEqual:(e,r)=>g(e,r,!m)};async initialize(){const e=this.stateService.getItem(c.backupWorkspacesMetadataStorageKey)??{workspaces:[],folders:[],emptyWindows:[]};this.emptyWindows=await this.validateEmptyWorkspaces(e.emptyWindows),this.workspaces=await this.validateWorkspaces(E(e)),this.folders=await this.validateFolders(S(e)),this.storeWorkspacesMetadata()}getWorkspaceBackups(){return this.isHotExitOnExitAndWindowClose()?[]:this.workspaces.slice(0)}getFolderBackups(){return this.isHotExitOnExitAndWindowClose()?[]:this.folders.slice(0)}isHotExitEnabled(){return this.getHotExitConfig()!==f.OFF}isHotExitOnExitAndWindowClose(){return this.getHotExitConfig()===f.ON_EXIT_AND_WINDOW_CLOSE}getHotExitConfig(){return this.configurationService.getValue()?.files?.hotExit||f.ON_EXIT}getEmptyWindowBackups(){return this.emptyWindows.slice(0)}registerWorkspaceBackup(e,r){this.workspaces.some(a=>e.workspace.id===a.workspace.id)||(this.workspaces.push(e),this.storeWorkspacesMetadata());const t=s(this.backupHome,e.workspace.id);return r?this.moveBackupFolder(t,r).then(()=>t):t}async moveBackupFolder(e,r){if(await p.exists(e)&&await this.convertToEmptyWindowBackup(e),await p.exists(r))try{await p.rename(r,e,!1)}catch(t){this.logService.error(`Backup: Could not move backup folder to new location: ${t.toString()}`)}}registerFolderBackup(e){return this.folders.some(r=>this.backupUriComparer.isEqual(e.folderUri,r.folderUri))||(this.folders.push(e),this.storeWorkspacesMetadata()),s(this.backupHome,this.getFolderHash(e))}registerEmptyWindowBackup(e){return this.emptyWindows.some(r=>!!r.backupFolder&&this.backupPathComparer.isEqual(r.backupFolder,e.backupFolder))||(this.emptyWindows.push(e),this.storeWorkspacesMetadata()),s(this.backupHome,e.backupFolder)}async validateWorkspaces(e){if(!Array.isArray(e))return[];const r=new Set,t=[];for(const a of e){const o=a.workspace;if(!x(o))return[];if(!r.has(o.id)){r.add(o.id);const i=s(this.backupHome,o.id);await this.doHasBackups(i)?o.configPath.scheme!==k.file||await p.exists(o.configPath.fsPath)?t.push(a):await this.convertToEmptyWindowBackup(i):await this.deleteStaleBackup(i)}}return t}async validateFolders(e){if(!Array.isArray(e))return[];const r=[],t=new Set;for(const a of e){const o=a.folderUri,i=this.backupUriComparer.getComparisonKey(o);if(!t.has(i)){t.add(i);const u=s(this.backupHome,this.getFolderHash(a));await this.doHasBackups(u)?o.scheme!==k.file||await p.exists(o.fsPath)?r.push(a):await this.convertToEmptyWindowBackup(u):await this.deleteStaleBackup(u)}}return r}async validateEmptyWorkspaces(e){if(!Array.isArray(e))return[];const r=[],t=new Set;for(const a of e){const o=a.backupFolder;if(typeof o!="string")return[];if(!t.has(o)){t.add(o);const i=s(this.backupHome,o);await this.doHasBackups(i)?r.push(a):await this.deleteStaleBackup(i)}}return r}async deleteStaleBackup(e){try{await p.rm(e,y.MOVE)}catch(r){this.logService.error(`Backup: Could not delete stale backup: ${r.toString()}`)}}prepareNewEmptyWindowBackup(){let e=h();for(;this.emptyWindows.some(r=>!!r.backupFolder&&this.backupPathComparer.isEqual(r.backupFolder,e.id));)e=h();return{backupFolder:e.id}}async convertToEmptyWindowBackup(e){const r=this.prepareNewEmptyWindowBackup(),t=s(this.backupHome,r.backupFolder);try{await p.rename(e,t,!1)}catch(a){return this.logService.error(`Backup: Could not rename backup folder: ${a.toString()}`),!1}return this.emptyWindows.push(r),!0}async getDirtyWorkspaces(){const e=[];for(const r of this.workspaces)await this.hasBackups(r)&&e.push(r);for(const r of this.folders)await this.hasBackups(r)&&e.push(r);return e}hasBackups(e){let r;return v(e)?r=s(this.backupHome,e.backupFolder):P(e)?r=s(this.backupHome,this.getFolderHash(e)):r=s(this.backupHome,e.workspace.id),this.doHasBackups(r)}async doHasBackups(e){try{const r=await p.readdir(e);for(const t of r)try{if((await p.readdir(s(e,t))).length>0)return!0}catch{}}catch{}return!1}storeWorkspacesMetadata(){const e={workspaces:this.workspaces.map(({workspace:r,remoteAuthority:t})=>{const a={id:r.id,configURIPath:r.configPath.toString()};return t&&(a.remoteAuthority=t),a}),folders:this.folders.map(({folderUri:r,remoteAuthority:t})=>{const a={folderUri:r.toString()};return t&&(a.remoteAuthority=t),a}),emptyWindows:this.emptyWindows.map(({backupFolder:r,remoteAuthority:t})=>{const a={backupFolder:r};return t&&(a.remoteAuthority=t),a})};this.stateService.setItem(c.backupWorkspacesMetadataStorageKey,e)}getFolderHash(e){const r=e.folderUri;let t;return r.scheme===k.file?t=m?r.fsPath:r.fsPath.toLowerCase():t=r.toString().toLowerCase(),w("md5").update(t).digest("hex")}};c=l([n(0,F),n(1,b),n(2,C),n(3,H)],c);export{c as BackupMainService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { createHash } from "crypto";
+import { isEqual } from "../../../base/common/extpath.js";
+import { Schemas } from "../../../base/common/network.js";
+import { join } from "../../../base/common/path.js";
+import { isLinux } from "../../../base/common/platform.js";
+import { extUriBiasedIgnorePathCase } from "../../../base/common/resources.js";
+import { Promises, RimRafMode } from "../../../base/node/pfs.js";
+import { IBackupMainService } from "./backup.js";
+import { ISerializedBackupWorkspaces, IEmptyWindowBackupInfo, isEmptyWindowBackupInfo, deserializeWorkspaceInfos, deserializeFolderInfos, ISerializedWorkspaceBackupInfo, ISerializedFolderBackupInfo, ISerializedEmptyWindowBackupInfo } from "../node/backup.js";
+import { IConfigurationService } from "../../configuration/common/configuration.js";
+import { IEnvironmentMainService } from "../../environment/electron-main/environmentMainService.js";
+import { IStateService } from "../../state/node/state.js";
+import { HotExitConfiguration, IFilesConfiguration } from "../../files/common/files.js";
+import { ILogService } from "../../log/common/log.js";
+import { IFolderBackupInfo, isFolderBackupInfo, IWorkspaceBackupInfo } from "../common/backup.js";
+import { isWorkspaceIdentifier } from "../../workspace/common/workspace.js";
+import { createEmptyWorkspaceIdentifier } from "../../workspaces/node/workspaces.js";
+let BackupMainService = class {
+  constructor(environmentMainService, configurationService, logService, stateService) {
+    this.configurationService = configurationService;
+    this.logService = logService;
+    this.stateService = stateService;
+    this.backupHome = environmentMainService.backupHome;
+  }
+  static {
+    __name(this, "BackupMainService");
+  }
+  static backupWorkspacesMetadataStorageKey = "backupWorkspaces";
+  backupHome;
+  workspaces = [];
+  folders = [];
+  emptyWindows = [];
+  // Comparers for paths and resources that will
+  // - ignore path casing on Windows/macOS
+  // - respect path casing on Linux
+  backupUriComparer = extUriBiasedIgnorePathCase;
+  backupPathComparer = { isEqual: /* @__PURE__ */ __name((pathA, pathB) => isEqual(pathA, pathB, !isLinux), "isEqual") };
+  async initialize() {
+    const serializedBackupWorkspaces = this.stateService.getItem(BackupMainService.backupWorkspacesMetadataStorageKey) ?? { workspaces: [], folders: [], emptyWindows: [] };
+    this.emptyWindows = await this.validateEmptyWorkspaces(serializedBackupWorkspaces.emptyWindows);
+    this.workspaces = await this.validateWorkspaces(deserializeWorkspaceInfos(serializedBackupWorkspaces));
+    this.folders = await this.validateFolders(deserializeFolderInfos(serializedBackupWorkspaces));
+    this.storeWorkspacesMetadata();
+  }
+  getWorkspaceBackups() {
+    if (this.isHotExitOnExitAndWindowClose()) {
+      return [];
+    }
+    return this.workspaces.slice(0);
+  }
+  getFolderBackups() {
+    if (this.isHotExitOnExitAndWindowClose()) {
+      return [];
+    }
+    return this.folders.slice(0);
+  }
+  isHotExitEnabled() {
+    return this.getHotExitConfig() !== HotExitConfiguration.OFF;
+  }
+  isHotExitOnExitAndWindowClose() {
+    return this.getHotExitConfig() === HotExitConfiguration.ON_EXIT_AND_WINDOW_CLOSE;
+  }
+  getHotExitConfig() {
+    const config = this.configurationService.getValue();
+    return config?.files?.hotExit || HotExitConfiguration.ON_EXIT;
+  }
+  getEmptyWindowBackups() {
+    return this.emptyWindows.slice(0);
+  }
+  registerWorkspaceBackup(workspaceInfo, migrateFrom) {
+    if (!this.workspaces.some((workspace) => workspaceInfo.workspace.id === workspace.workspace.id)) {
+      this.workspaces.push(workspaceInfo);
+      this.storeWorkspacesMetadata();
+    }
+    const backupPath = join(this.backupHome, workspaceInfo.workspace.id);
+    if (migrateFrom) {
+      return this.moveBackupFolder(backupPath, migrateFrom).then(() => backupPath);
+    }
+    return backupPath;
+  }
+  async moveBackupFolder(backupPath, moveFromPath) {
+    if (await Promises.exists(backupPath)) {
+      await this.convertToEmptyWindowBackup(backupPath);
+    }
+    if (await Promises.exists(moveFromPath)) {
+      try {
+        await Promises.rename(
+          moveFromPath,
+          backupPath,
+          false
+          /* no retry */
+        );
+      } catch (error) {
+        this.logService.error(`Backup: Could not move backup folder to new location: ${error.toString()}`);
+      }
+    }
+  }
+  registerFolderBackup(folderInfo) {
+    if (!this.folders.some((folder) => this.backupUriComparer.isEqual(folderInfo.folderUri, folder.folderUri))) {
+      this.folders.push(folderInfo);
+      this.storeWorkspacesMetadata();
+    }
+    return join(this.backupHome, this.getFolderHash(folderInfo));
+  }
+  registerEmptyWindowBackup(emptyWindowInfo) {
+    if (!this.emptyWindows.some((emptyWindow) => !!emptyWindow.backupFolder && this.backupPathComparer.isEqual(emptyWindow.backupFolder, emptyWindowInfo.backupFolder))) {
+      this.emptyWindows.push(emptyWindowInfo);
+      this.storeWorkspacesMetadata();
+    }
+    return join(this.backupHome, emptyWindowInfo.backupFolder);
+  }
+  async validateWorkspaces(rootWorkspaces) {
+    if (!Array.isArray(rootWorkspaces)) {
+      return [];
+    }
+    const seenIds = /* @__PURE__ */ new Set();
+    const result = [];
+    for (const workspaceInfo of rootWorkspaces) {
+      const workspace = workspaceInfo.workspace;
+      if (!isWorkspaceIdentifier(workspace)) {
+        return [];
+      }
+      if (!seenIds.has(workspace.id)) {
+        seenIds.add(workspace.id);
+        const backupPath = join(this.backupHome, workspace.id);
+        const hasBackups = await this.doHasBackups(backupPath);
+        if (hasBackups) {
+          if (workspace.configPath.scheme !== Schemas.file || await Promises.exists(workspace.configPath.fsPath)) {
+            result.push(workspaceInfo);
+          } else {
+            await this.convertToEmptyWindowBackup(backupPath);
+          }
+        } else {
+          await this.deleteStaleBackup(backupPath);
+        }
+      }
+    }
+    return result;
+  }
+  async validateFolders(folderWorkspaces) {
+    if (!Array.isArray(folderWorkspaces)) {
+      return [];
+    }
+    const result = [];
+    const seenIds = /* @__PURE__ */ new Set();
+    for (const folderInfo of folderWorkspaces) {
+      const folderURI = folderInfo.folderUri;
+      const key = this.backupUriComparer.getComparisonKey(folderURI);
+      if (!seenIds.has(key)) {
+        seenIds.add(key);
+        const backupPath = join(this.backupHome, this.getFolderHash(folderInfo));
+        const hasBackups = await this.doHasBackups(backupPath);
+        if (hasBackups) {
+          if (folderURI.scheme !== Schemas.file || await Promises.exists(folderURI.fsPath)) {
+            result.push(folderInfo);
+          } else {
+            await this.convertToEmptyWindowBackup(backupPath);
+          }
+        } else {
+          await this.deleteStaleBackup(backupPath);
+        }
+      }
+    }
+    return result;
+  }
+  async validateEmptyWorkspaces(emptyWorkspaces) {
+    if (!Array.isArray(emptyWorkspaces)) {
+      return [];
+    }
+    const result = [];
+    const seenIds = /* @__PURE__ */ new Set();
+    for (const backupInfo of emptyWorkspaces) {
+      const backupFolder = backupInfo.backupFolder;
+      if (typeof backupFolder !== "string") {
+        return [];
+      }
+      if (!seenIds.has(backupFolder)) {
+        seenIds.add(backupFolder);
+        const backupPath = join(this.backupHome, backupFolder);
+        if (await this.doHasBackups(backupPath)) {
+          result.push(backupInfo);
+        } else {
+          await this.deleteStaleBackup(backupPath);
+        }
+      }
+    }
+    return result;
+  }
+  async deleteStaleBackup(backupPath) {
+    try {
+      await Promises.rm(backupPath, RimRafMode.MOVE);
+    } catch (error) {
+      this.logService.error(`Backup: Could not delete stale backup: ${error.toString()}`);
+    }
+  }
+  prepareNewEmptyWindowBackup() {
+    let emptyWorkspaceIdentifier = createEmptyWorkspaceIdentifier();
+    while (this.emptyWindows.some((emptyWindow) => !!emptyWindow.backupFolder && this.backupPathComparer.isEqual(emptyWindow.backupFolder, emptyWorkspaceIdentifier.id))) {
+      emptyWorkspaceIdentifier = createEmptyWorkspaceIdentifier();
+    }
+    return { backupFolder: emptyWorkspaceIdentifier.id };
+  }
+  async convertToEmptyWindowBackup(backupPath) {
+    const newEmptyWindowBackupInfo = this.prepareNewEmptyWindowBackup();
+    const newEmptyWindowBackupPath = join(this.backupHome, newEmptyWindowBackupInfo.backupFolder);
+    try {
+      await Promises.rename(
+        backupPath,
+        newEmptyWindowBackupPath,
+        false
+        /* no retry */
+      );
+    } catch (error) {
+      this.logService.error(`Backup: Could not rename backup folder: ${error.toString()}`);
+      return false;
+    }
+    this.emptyWindows.push(newEmptyWindowBackupInfo);
+    return true;
+  }
+  async getDirtyWorkspaces() {
+    const dirtyWorkspaces = [];
+    for (const workspace of this.workspaces) {
+      if (await this.hasBackups(workspace)) {
+        dirtyWorkspaces.push(workspace);
+      }
+    }
+    for (const folder of this.folders) {
+      if (await this.hasBackups(folder)) {
+        dirtyWorkspaces.push(folder);
+      }
+    }
+    return dirtyWorkspaces;
+  }
+  hasBackups(backupLocation) {
+    let backupPath;
+    if (isEmptyWindowBackupInfo(backupLocation)) {
+      backupPath = join(this.backupHome, backupLocation.backupFolder);
+    } else if (isFolderBackupInfo(backupLocation)) {
+      backupPath = join(this.backupHome, this.getFolderHash(backupLocation));
+    } else {
+      backupPath = join(this.backupHome, backupLocation.workspace.id);
+    }
+    return this.doHasBackups(backupPath);
+  }
+  async doHasBackups(backupPath) {
+    try {
+      const backupSchemas = await Promises.readdir(backupPath);
+      for (const backupSchema of backupSchemas) {
+        try {
+          const backupSchemaChildren = await Promises.readdir(join(backupPath, backupSchema));
+          if (backupSchemaChildren.length > 0) {
+            return true;
+          }
+        } catch (error) {
+        }
+      }
+    } catch (error) {
+    }
+    return false;
+  }
+  storeWorkspacesMetadata() {
+    const serializedBackupWorkspaces = {
+      workspaces: this.workspaces.map(({ workspace, remoteAuthority }) => {
+        const serializedWorkspaceBackupInfo = {
+          id: workspace.id,
+          configURIPath: workspace.configPath.toString()
+        };
+        if (remoteAuthority) {
+          serializedWorkspaceBackupInfo.remoteAuthority = remoteAuthority;
+        }
+        return serializedWorkspaceBackupInfo;
+      }),
+      folders: this.folders.map(({ folderUri, remoteAuthority }) => {
+        const serializedFolderBackupInfo = {
+          folderUri: folderUri.toString()
+        };
+        if (remoteAuthority) {
+          serializedFolderBackupInfo.remoteAuthority = remoteAuthority;
+        }
+        return serializedFolderBackupInfo;
+      }),
+      emptyWindows: this.emptyWindows.map(({ backupFolder, remoteAuthority }) => {
+        const serializedEmptyWindowBackupInfo = {
+          backupFolder
+        };
+        if (remoteAuthority) {
+          serializedEmptyWindowBackupInfo.remoteAuthority = remoteAuthority;
+        }
+        return serializedEmptyWindowBackupInfo;
+      })
+    };
+    this.stateService.setItem(BackupMainService.backupWorkspacesMetadataStorageKey, serializedBackupWorkspaces);
+  }
+  getFolderHash(folder) {
+    const folderUri = folder.folderUri;
+    let key;
+    if (folderUri.scheme === Schemas.file) {
+      key = isLinux ? folderUri.fsPath : folderUri.fsPath.toLowerCase();
+    } else {
+      key = folderUri.toString().toLowerCase();
+    }
+    return createHash("md5").update(key).digest("hex");
+  }
+};
+BackupMainService = __decorateClass([
+  __decorateParam(0, IEnvironmentMainService),
+  __decorateParam(1, IConfigurationService),
+  __decorateParam(2, ILogService),
+  __decorateParam(3, IStateService)
+], BackupMainService);
+export {
+  BackupMainService
+};
+//# sourceMappingURL=backupMainService.js.map

@@ -1,1 +1,91 @@
-import"../../../base/common/cancellation.js";import"../../../base/common/event.js";import{createDecorator as r}from"../../instantiation/common/instantiation.js";import"./quickAccess.js";import"../../../base/common/filters.js";import"../../../base/common/fuzzyScorer.js";import"../../../base/common/keybindings.js";import"../../../base/common/lifecycle.js";import{Schemas as a}from"../../../base/common/network.js";import"../../../base/common/severity.js";import"../../../base/common/uri.js";import"../../../base/common/htmlContent.js";const w={ctrlCmd:!1,alt:!1};var c=(e=>(e[e.Blur=1]="Blur",e[e.Gesture=2]="Gesture",e[e.Other=3]="Other",e))(c||{}),u=(e=>(e.QuickPick="quickPick",e.InputBox="inputBox",e.QuickWidget="quickWidget",e))(u||{}),d=(e=>(e[e.NONE=0]="NONE",e[e.FIRST=1]="FIRST",e[e.SECOND=2]="SECOND",e[e.LAST=3]="LAST",e))(d||{}),s=(e=>(e[e.First=1]="First",e[e.Second=2]="Second",e[e.Last=3]="Last",e[e.Next=4]="Next",e[e.Previous=5]="Previous",e[e.NextPage=6]="NextPage",e[e.PreviousPage=7]="PreviousPage",e[e.NextSeparator=8]="NextSeparator",e[e.PreviousSeparator=9]="PreviousSeparator",e))(s||{}),l=(e=>(e[e.Title=1]="Title",e[e.Inline=2]="Inline",e))(l||{});class p{constructor(e){this.options=e}getItemLabel(e){return e.label}getItemDescription(e){if(!this.options?.skipDescription)return e.description}getItemPath(e){if(!this.options?.skipPath)return e.resource?.scheme===a.file?e.resource.fsPath:e.resource?.path}}const K=new p,N=r("quickInputService");export{N as IQuickInputService,d as ItemActivation,w as NO_KEY_MODS,l as QuickInputButtonLocation,c as QuickInputHideReason,u as QuickInputType,s as QuickPickFocus,p as QuickPickItemScorerAccessor,K as quickPickItemScorerAccessor};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { CancellationToken } from "../../../base/common/cancellation.js";
+import { Event } from "../../../base/common/event.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+import { IQuickAccessController } from "./quickAccess.js";
+import { IMatch } from "../../../base/common/filters.js";
+import { IItemAccessor } from "../../../base/common/fuzzyScorer.js";
+import { ResolvedKeybinding } from "../../../base/common/keybindings.js";
+import { IDisposable } from "../../../base/common/lifecycle.js";
+import { Schemas } from "../../../base/common/network.js";
+import Severity from "../../../base/common/severity.js";
+import { URI } from "../../../base/common/uri.js";
+import { IMarkdownString } from "../../../base/common/htmlContent.js";
+const NO_KEY_MODS = { ctrlCmd: false, alt: false };
+var QuickInputHideReason = /* @__PURE__ */ ((QuickInputHideReason2) => {
+  QuickInputHideReason2[QuickInputHideReason2["Blur"] = 1] = "Blur";
+  QuickInputHideReason2[QuickInputHideReason2["Gesture"] = 2] = "Gesture";
+  QuickInputHideReason2[QuickInputHideReason2["Other"] = 3] = "Other";
+  return QuickInputHideReason2;
+})(QuickInputHideReason || {});
+var QuickInputType = /* @__PURE__ */ ((QuickInputType2) => {
+  QuickInputType2["QuickPick"] = "quickPick";
+  QuickInputType2["InputBox"] = "inputBox";
+  QuickInputType2["QuickWidget"] = "quickWidget";
+  return QuickInputType2;
+})(QuickInputType || {});
+var ItemActivation = /* @__PURE__ */ ((ItemActivation2) => {
+  ItemActivation2[ItemActivation2["NONE"] = 0] = "NONE";
+  ItemActivation2[ItemActivation2["FIRST"] = 1] = "FIRST";
+  ItemActivation2[ItemActivation2["SECOND"] = 2] = "SECOND";
+  ItemActivation2[ItemActivation2["LAST"] = 3] = "LAST";
+  return ItemActivation2;
+})(ItemActivation || {});
+var QuickPickFocus = /* @__PURE__ */ ((QuickPickFocus2) => {
+  QuickPickFocus2[QuickPickFocus2["First"] = 1] = "First";
+  QuickPickFocus2[QuickPickFocus2["Second"] = 2] = "Second";
+  QuickPickFocus2[QuickPickFocus2["Last"] = 3] = "Last";
+  QuickPickFocus2[QuickPickFocus2["Next"] = 4] = "Next";
+  QuickPickFocus2[QuickPickFocus2["Previous"] = 5] = "Previous";
+  QuickPickFocus2[QuickPickFocus2["NextPage"] = 6] = "NextPage";
+  QuickPickFocus2[QuickPickFocus2["PreviousPage"] = 7] = "PreviousPage";
+  QuickPickFocus2[QuickPickFocus2["NextSeparator"] = 8] = "NextSeparator";
+  QuickPickFocus2[QuickPickFocus2["PreviousSeparator"] = 9] = "PreviousSeparator";
+  return QuickPickFocus2;
+})(QuickPickFocus || {});
+var QuickInputButtonLocation = /* @__PURE__ */ ((QuickInputButtonLocation2) => {
+  QuickInputButtonLocation2[QuickInputButtonLocation2["Title"] = 1] = "Title";
+  QuickInputButtonLocation2[QuickInputButtonLocation2["Inline"] = 2] = "Inline";
+  return QuickInputButtonLocation2;
+})(QuickInputButtonLocation || {});
+class QuickPickItemScorerAccessor {
+  constructor(options) {
+    this.options = options;
+  }
+  static {
+    __name(this, "QuickPickItemScorerAccessor");
+  }
+  getItemLabel(entry) {
+    return entry.label;
+  }
+  getItemDescription(entry) {
+    if (this.options?.skipDescription) {
+      return void 0;
+    }
+    return entry.description;
+  }
+  getItemPath(entry) {
+    if (this.options?.skipPath) {
+      return void 0;
+    }
+    if (entry.resource?.scheme === Schemas.file) {
+      return entry.resource.fsPath;
+    }
+    return entry.resource?.path;
+  }
+}
+const quickPickItemScorerAccessor = new QuickPickItemScorerAccessor();
+const IQuickInputService = createDecorator("quickInputService");
+export {
+  IQuickInputService,
+  ItemActivation,
+  NO_KEY_MODS,
+  QuickInputButtonLocation,
+  QuickInputHideReason,
+  QuickInputType,
+  QuickPickFocus,
+  QuickPickItemScorerAccessor,
+  quickPickItemScorerAccessor
+};
+//# sourceMappingURL=quickInput.js.map

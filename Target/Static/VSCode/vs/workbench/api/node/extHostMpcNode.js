@@ -1,4 +1,139 @@
-var b=Object.defineProperty;var $=Object.getOwnPropertyDescriptor;var m=(a,e,r,o)=>{for(var n=o>1?void 0:o?$(e,r):e,i=a.length-1,s;i>=0;i--)(s=a[i])&&(n=(o?s(e,r,n):s(n))||n);return o&&n&&b(e,r,n),n},g=(a,e)=>(r,o)=>e(r,o,a);import{spawn as w}from"child_process";import{readFile as y}from"fs/promises";import{homedir as v}from"os";import{parseEnvFile as x}from"../../../base/common/envfile.js";import{URI as S}from"../../../base/common/uri.js";import{StreamSplitter as f}from"../../../base/node/nodeStreams.js";import{LogLevel as h}from"../../../platform/log/common/log.js";import{McpConnectionState as p,McpServerTransportType as C}from"../../contrib/mcp/common/mcpTypes.js";import{ExtHostMcpService as M}from"../common/extHostMcp.js";import{IExtHostRpcService as _}from"../common/extHostRpcService.js";import{findExecutable as D}from"../../../base/node/processes.js";let c=class extends M{constructor(e){super(e)}nodeServers=new Map;_startMcp(e,r){r.type===C.Stdio?this.startNodeMpc(e,r):super._startMcp(e,r)}$stopMcp(e){const r=this.nodeServers.get(e);r?(r.abortCtrl.abort(),this.nodeServers.delete(e)):super.$stopMcp(e)}$sendMessage(e,r){const o=this.nodeServers.get(e);o?o.child.stdin.write(r+`
-`):super.$sendMessage(e,r)}async startNodeMpc(e,r){const o=t=>this._proxy.$onDidChangeState(e,{state:p.Kind.Error,message:typeof t=="string"?t:t.message}),n={...process.env};if(r.envFile)try{for(const[t,d]of x(await y(r.envFile,"utf-8")))n[t]=d}catch(t){o(`Failed to read envFile '${r.envFile}': ${t.message}`);return}for(const[t,d]of Object.entries(r.env))n[t]=d===null?void 0:String(d);const i=new AbortController;let s;try{const t=r.cwd?S.revive(r.cwd).fsPath:v(),{executable:d,args:l,shell:u}=await R(r.command,r.args,t,n);this._proxy.$onDidPublishLog(e,h.Debug,`Server command line: ${d} ${l.join(" ")}`),s=w(d,l,{stdio:"pipe",cwd:r.cwd?S.revive(r.cwd).fsPath:v(),signal:i.signal,env:n,shell:u})}catch(t){o(t),i.abort();return}this._proxy.$onDidChangeState(e,{state:p.Kind.Starting}),s.stdout.pipe(new f(`
-`)).on("data",t=>this._proxy.$onDidReceiveMessage(e,t.toString())),s.stdin.on("error",o),s.stdout.on("error",o),s.stderr.pipe(new f(`
-`)).on("data",t=>this._proxy.$onDidPublishLog(e,h.Warning,`[server stderr] ${t.toString().trimEnd()}`)),s.on("spawn",()=>this._proxy.$onDidChangeState(e,{state:p.Kind.Running})),s.on("error",t=>{i.signal.aborted?this._proxy.$onDidChangeState(e,{state:p.Kind.Stopped}):o(t)}),s.on("exit",t=>t===0||i.signal.aborted?this._proxy.$onDidChangeState(e,{state:p.Kind.Stopped}):this._proxy.$onDidChangeState(e,{state:p.Kind.Error,message:`Process exited with code ${t}`})),this.nodeServers.set(e,{abortCtrl:i,child:s})}};c=m([g(0,_)],c);const P=/\.(bat|cmd)$/i,R=async(a,e,r,o)=>{if(process.platform!=="win32")return{executable:a,args:e,shell:!1};const n=await D(a,r,void 0,o);if(n&&P.test(n)){const i=s=>s.includes(" ")?`"${s}"`:s;return{executable:i(n),args:e.map(i),shell:!0}}return{executable:a,args:e,shell:!1}};export{c as NodeExtHostMpcService,R as formatSubprocessArguments};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { ChildProcessWithoutNullStreams, spawn } from "child_process";
+import { readFile } from "fs/promises";
+import { homedir } from "os";
+import { parseEnvFile } from "../../../base/common/envfile.js";
+import { URI } from "../../../base/common/uri.js";
+import { StreamSplitter } from "../../../base/node/nodeStreams.js";
+import { LogLevel } from "../../../platform/log/common/log.js";
+import { McpConnectionState, McpServerLaunch, McpServerTransportStdio, McpServerTransportType } from "../../contrib/mcp/common/mcpTypes.js";
+import { ExtHostMcpService } from "../common/extHostMcp.js";
+import { IExtHostRpcService } from "../common/extHostRpcService.js";
+import { findExecutable } from "../../../base/node/processes.js";
+let NodeExtHostMpcService = class extends ExtHostMcpService {
+  static {
+    __name(this, "NodeExtHostMpcService");
+  }
+  constructor(extHostRpc) {
+    super(extHostRpc);
+  }
+  nodeServers = /* @__PURE__ */ new Map();
+  _startMcp(id, launch) {
+    if (launch.type === McpServerTransportType.Stdio) {
+      this.startNodeMpc(id, launch);
+    } else {
+      super._startMcp(id, launch);
+    }
+  }
+  $stopMcp(id) {
+    const nodeServer = this.nodeServers.get(id);
+    if (nodeServer) {
+      nodeServer.abortCtrl.abort();
+      this.nodeServers.delete(id);
+    } else {
+      super.$stopMcp(id);
+    }
+  }
+  $sendMessage(id, message) {
+    const nodeServer = this.nodeServers.get(id);
+    if (nodeServer) {
+      nodeServer.child.stdin.write(message + "\n");
+    } else {
+      super.$sendMessage(id, message);
+    }
+  }
+  async startNodeMpc(id, launch) {
+    const onError = /* @__PURE__ */ __name((err) => this._proxy.$onDidChangeState(id, {
+      state: McpConnectionState.Kind.Error,
+      message: typeof err === "string" ? err : err.message
+    }), "onError");
+    const env = { ...process.env };
+    if (launch.envFile) {
+      try {
+        for (const [key, value] of parseEnvFile(await readFile(launch.envFile, "utf-8"))) {
+          env[key] = value;
+        }
+      } catch (e) {
+        onError(`Failed to read envFile '${launch.envFile}': ${e.message}`);
+        return;
+      }
+    }
+    for (const [key, value] of Object.entries(launch.env)) {
+      env[key] = value === null ? void 0 : String(value);
+    }
+    const abortCtrl = new AbortController();
+    let child;
+    try {
+      const cwd = launch.cwd ? URI.revive(launch.cwd).fsPath : homedir();
+      const { executable, args, shell } = await formatSubprocessArguments(launch.command, launch.args, cwd, env);
+      this._proxy.$onDidPublishLog(id, LogLevel.Debug, `Server command line: ${executable} ${args.join(" ")}`);
+      child = spawn(executable, args, {
+        stdio: "pipe",
+        cwd: launch.cwd ? URI.revive(launch.cwd).fsPath : homedir(),
+        signal: abortCtrl.signal,
+        env,
+        shell
+      });
+    } catch (e) {
+      onError(e);
+      abortCtrl.abort();
+      return;
+    }
+    this._proxy.$onDidChangeState(id, { state: McpConnectionState.Kind.Starting });
+    child.stdout.pipe(new StreamSplitter("\n")).on("data", (line) => this._proxy.$onDidReceiveMessage(id, line.toString()));
+    child.stdin.on("error", onError);
+    child.stdout.on("error", onError);
+    child.stderr.pipe(new StreamSplitter("\n")).on("data", (line) => this._proxy.$onDidPublishLog(id, LogLevel.Warning, `[server stderr] ${line.toString().trimEnd()}`));
+    child.on("spawn", () => this._proxy.$onDidChangeState(id, { state: McpConnectionState.Kind.Running }));
+    child.on("error", (e) => {
+      if (abortCtrl.signal.aborted) {
+        this._proxy.$onDidChangeState(id, { state: McpConnectionState.Kind.Stopped });
+      } else {
+        onError(e);
+      }
+    });
+    child.on(
+      "exit",
+      (code) => code === 0 || abortCtrl.signal.aborted ? this._proxy.$onDidChangeState(id, { state: McpConnectionState.Kind.Stopped }) : this._proxy.$onDidChangeState(id, {
+        state: McpConnectionState.Kind.Error,
+        message: `Process exited with code ${code}`
+      })
+    );
+    this.nodeServers.set(id, { abortCtrl, child });
+  }
+};
+NodeExtHostMpcService = __decorateClass([
+  __decorateParam(0, IExtHostRpcService)
+], NodeExtHostMpcService);
+const windowsShellScriptRe = /\.(bat|cmd)$/i;
+const formatSubprocessArguments = /* @__PURE__ */ __name(async (executable, args, cwd, env) => {
+  if (process.platform !== "win32") {
+    return { executable, args, shell: false };
+  }
+  const found = await findExecutable(executable, cwd, void 0, env);
+  if (found && windowsShellScriptRe.test(found)) {
+    const quote = /* @__PURE__ */ __name((s) => s.includes(" ") ? `"${s}"` : s, "quote");
+    return {
+      executable: quote(found),
+      args: args.map(quote),
+      shell: true
+    };
+  }
+  return { executable, args, shell: false };
+}, "formatSubprocessArguments");
+export {
+  NodeExtHostMpcService,
+  formatSubprocessArguments
+};
+//# sourceMappingURL=extHostMpcNode.js.map

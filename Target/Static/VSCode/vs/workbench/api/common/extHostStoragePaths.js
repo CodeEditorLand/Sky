@@ -1,1 +1,90 @@
-var m=Object.defineProperty,p=Object.getOwnPropertyDescriptor,l=(e,t,o,r)=>{for(var a,i=r>1?void 0:r?p(t,o):t,s=e.length-1;s>=0;s--)(a=e[s])&&(i=(r?a(t,o,i):a(i))||i);return r&&i&&m(t,o,i),i},a=(e,t)=>(o,r)=>t(o,r,e);import"../../../platform/extensions/common/extensions.js";import{createDecorator as u}from"../../../platform/instantiation/common/instantiation.js";import{IExtHostInitDataService as v}from"./extHostInitDataService.js";import{ILogService as h}from"../../../platform/log/common/log.js";import"../../services/extensions/common/extensionHostProtocol.js";import{IExtHostConsumerFileSystem as g}from"./extHostFileSystemConsumer.js";import{URI as n}from"../../../base/common/uri.js";const P=u("IExtensionStoragePaths");let s=class{constructor(e,t,o){this._logService=t,this._extHostFileSystem=o,this._workspace=e.workspace??void 0,this._environment=e.environment,this.whenReady=this._getOrCreateWorkspaceStoragePath().then((e=>this._value=e))}_serviceBrand;_workspace;_environment;whenReady;_value;async _getWorkspaceStorageURI(e){return n.joinPath(this._environment.workspaceStorageHome,e)}async _getOrCreateWorkspaceStoragePath(){if(!this._workspace)return Promise.resolve(void 0);const e=this._workspace.id,t=await this._getWorkspaceStorageURI(e);try{return await this._extHostFileSystem.value.stat(t),this._logService.trace("[ExtHostStorage] storage dir already exists",t),t}catch{}try{return this._logService.trace("[ExtHostStorage] creating dir and metadata-file",t),await this._extHostFileSystem.value.createDirectory(t),await this._extHostFileSystem.value.writeFile(n.joinPath(t,"meta.json"),(new TextEncoder).encode(JSON.stringify({id:this._workspace.id,configuration:n.revive(this._workspace.configuration)?.toString(),name:this._workspace.name},void 0,2))),t}catch(e){return void this._logService.error("[ExtHostStorage]",e)}}workspaceValue(e){if(this._value)return n.joinPath(this._value,e.identifier.value)}globalValue(e){return n.joinPath(this._environment.globalStorageHome,e.identifier.value.toLowerCase())}onWillDeactivateAll(){}};s=l([a(0,v),a(1,h),a(2,g)],s);export{s as ExtensionStoragePaths,P as IExtensionStoragePaths};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { IExtensionDescription } from "../../../platform/extensions/common/extensions.js";
+import { createDecorator } from "../../../platform/instantiation/common/instantiation.js";
+import { IExtHostInitDataService } from "./extHostInitDataService.js";
+import { ILogService } from "../../../platform/log/common/log.js";
+import { IEnvironment, IStaticWorkspaceData } from "../../services/extensions/common/extensionHostProtocol.js";
+import { IExtHostConsumerFileSystem } from "./extHostFileSystemConsumer.js";
+import { URI } from "../../../base/common/uri.js";
+const IExtensionStoragePaths = createDecorator("IExtensionStoragePaths");
+let ExtensionStoragePaths = class {
+  constructor(initData, _logService, _extHostFileSystem) {
+    this._logService = _logService;
+    this._extHostFileSystem = _extHostFileSystem;
+    this._workspace = initData.workspace ?? void 0;
+    this._environment = initData.environment;
+    this.whenReady = this._getOrCreateWorkspaceStoragePath().then((value) => this._value = value);
+  }
+  static {
+    __name(this, "ExtensionStoragePaths");
+  }
+  _serviceBrand;
+  _workspace;
+  _environment;
+  whenReady;
+  _value;
+  async _getWorkspaceStorageURI(storageName) {
+    return URI.joinPath(this._environment.workspaceStorageHome, storageName);
+  }
+  async _getOrCreateWorkspaceStoragePath() {
+    if (!this._workspace) {
+      return Promise.resolve(void 0);
+    }
+    const storageName = this._workspace.id;
+    const storageUri = await this._getWorkspaceStorageURI(storageName);
+    try {
+      await this._extHostFileSystem.value.stat(storageUri);
+      this._logService.trace("[ExtHostStorage] storage dir already exists", storageUri);
+      return storageUri;
+    } catch {
+    }
+    try {
+      this._logService.trace("[ExtHostStorage] creating dir and metadata-file", storageUri);
+      await this._extHostFileSystem.value.createDirectory(storageUri);
+      await this._extHostFileSystem.value.writeFile(
+        URI.joinPath(storageUri, "meta.json"),
+        new TextEncoder().encode(JSON.stringify({
+          id: this._workspace.id,
+          configuration: URI.revive(this._workspace.configuration)?.toString(),
+          name: this._workspace.name
+        }, void 0, 2))
+      );
+      return storageUri;
+    } catch (e) {
+      this._logService.error("[ExtHostStorage]", e);
+      return void 0;
+    }
+  }
+  workspaceValue(extension) {
+    if (this._value) {
+      return URI.joinPath(this._value, extension.identifier.value);
+    }
+    return void 0;
+  }
+  globalValue(extension) {
+    return URI.joinPath(this._environment.globalStorageHome, extension.identifier.value.toLowerCase());
+  }
+  onWillDeactivateAll() {
+  }
+};
+ExtensionStoragePaths = __decorateClass([
+  __decorateParam(0, IExtHostInitDataService),
+  __decorateParam(1, ILogService),
+  __decorateParam(2, IExtHostConsumerFileSystem)
+], ExtensionStoragePaths);
+export {
+  ExtensionStoragePaths,
+  IExtensionStoragePaths
+};
+//# sourceMappingURL=extHostStoragePaths.js.map

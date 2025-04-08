@@ -1,2 +1,130 @@
-import{BugIndicatingError as u}from"../../../../base/common/errors.js";import{ensureNonNullable as l}from"../gpuUtils.js";import{UsagePreviewColors as c}from"./atlas.js";class d{constructor(e,r){this._canvas=e;this._textureIndex=r;this._ctx=l(this._canvas.getContext("2d",{willReadFrequently:!0}))}_ctx;_currentRow={x:0,y:0,h:0};_allocatedGlyphs=new Set;_nextIndex=0;allocate(e){const r=e.boundingBox.right-e.boundingBox.left+1,s=e.boundingBox.bottom-e.boundingBox.top+1;if(r>this._canvas.width||s>this._canvas.height)throw new u("Glyph is too large for the atlas page");if(e.boundingBox.right-e.boundingBox.left+1>this._canvas.width-this._currentRow.x&&(this._currentRow.x=0,this._currentRow.y+=this._currentRow.h,this._currentRow.h=1),this._currentRow.y+e.boundingBox.bottom-e.boundingBox.top+1>this._canvas.height)return;this._ctx.drawImage(e.source,e.boundingBox.left,e.boundingBox.top,r,s,this._currentRow.x,this._currentRow.y,r,s);const o={pageIndex:this._textureIndex,glyphIndex:this._nextIndex++,x:this._currentRow.x,y:this._currentRow.y,w:r,h:s,originOffsetX:e.originOffset.x,originOffsetY:e.originOffset.y,fontBoundingBoxAscent:e.fontBoundingBoxAscent,fontBoundingBoxDescent:e.fontBoundingBoxDescent};return this._currentRow.x+=r,this._currentRow.h=Math.max(this._currentRow.h,s),this._allocatedGlyphs.add(o),o}getUsagePreview(){const e=this._canvas.width,r=this._canvas.height,s=new OffscreenCanvas(e,r),o=l(s.getContext("2d"));o.fillStyle=c.Unused,o.fillRect(0,0,e,r);const i=new Map,a=new Map;for(const t of this._allocatedGlyphs)i.set(t.y,Math.max(i.get(t.y)??0,t.h)),a.set(t.y,Math.max(a.get(t.y)??0,t.x+t.w));for(const t of this._allocatedGlyphs)o.fillStyle=c.Used,o.fillRect(t.x,t.y,t.w,t.h),o.fillStyle=c.Wasted,o.fillRect(t.x,t.y+t.h,t.w,i.get(t.y)-t.h);for(const[t,n]of a.entries())t!==this._currentRow.y&&(o.fillStyle=c.Wasted,o.fillRect(n,t,e-n,i.get(t)));return s.convertToBlob()}getStats(){const e=this._canvas.width,r=this._canvas.height;let s=0,o=0;const i=e*r,a=new Map,t=new Map;for(const n of this._allocatedGlyphs)a.set(n.y,Math.max(a.get(n.y)??0,n.h)),t.set(n.y,Math.max(t.get(n.y)??0,n.x+n.w));for(const n of this._allocatedGlyphs)s+=n.w*n.h,o+=n.w*(a.get(n.y)-n.h);for(const[n,h]of t.entries())n!==this._currentRow.y&&(o+=(e-h)*a.get(n));return[`page${this._textureIndex}:`,`     Total: ${i} (${e}x${r})`,`      Used: ${s} (${(s/i*100).toPrecision(2)}%)`,`    Wasted: ${o} (${(o/i*100).toPrecision(2)}%)`,`Efficiency: ${(s/(s+o)*100).toPrecision(2)}%`].join(`
-`)}}export{d as TextureAtlasShelfAllocator};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { BugIndicatingError } from "../../../../base/common/errors.js";
+import { ensureNonNullable } from "../gpuUtils.js";
+import { UsagePreviewColors } from "./atlas.js";
+class TextureAtlasShelfAllocator {
+  constructor(_canvas, _textureIndex) {
+    this._canvas = _canvas;
+    this._textureIndex = _textureIndex;
+    this._ctx = ensureNonNullable(this._canvas.getContext("2d", {
+      willReadFrequently: true
+    }));
+  }
+  static {
+    __name(this, "TextureAtlasShelfAllocator");
+  }
+  _ctx;
+  _currentRow = {
+    x: 0,
+    y: 0,
+    h: 0
+  };
+  /** A set of all glyphs allocated, this is only tracked to enable debug related functionality */
+  _allocatedGlyphs = /* @__PURE__ */ new Set();
+  _nextIndex = 0;
+  allocate(rasterizedGlyph) {
+    const glyphWidth = rasterizedGlyph.boundingBox.right - rasterizedGlyph.boundingBox.left + 1;
+    const glyphHeight = rasterizedGlyph.boundingBox.bottom - rasterizedGlyph.boundingBox.top + 1;
+    if (glyphWidth > this._canvas.width || glyphHeight > this._canvas.height) {
+      throw new BugIndicatingError("Glyph is too large for the atlas page");
+    }
+    if (rasterizedGlyph.boundingBox.right - rasterizedGlyph.boundingBox.left + 1 > this._canvas.width - this._currentRow.x) {
+      this._currentRow.x = 0;
+      this._currentRow.y += this._currentRow.h;
+      this._currentRow.h = 1;
+    }
+    if (this._currentRow.y + rasterizedGlyph.boundingBox.bottom - rasterizedGlyph.boundingBox.top + 1 > this._canvas.height) {
+      return void 0;
+    }
+    this._ctx.drawImage(
+      rasterizedGlyph.source,
+      // source
+      rasterizedGlyph.boundingBox.left,
+      rasterizedGlyph.boundingBox.top,
+      glyphWidth,
+      glyphHeight,
+      // destination
+      this._currentRow.x,
+      this._currentRow.y,
+      glyphWidth,
+      glyphHeight
+    );
+    const glyph = {
+      pageIndex: this._textureIndex,
+      glyphIndex: this._nextIndex++,
+      x: this._currentRow.x,
+      y: this._currentRow.y,
+      w: glyphWidth,
+      h: glyphHeight,
+      originOffsetX: rasterizedGlyph.originOffset.x,
+      originOffsetY: rasterizedGlyph.originOffset.y,
+      fontBoundingBoxAscent: rasterizedGlyph.fontBoundingBoxAscent,
+      fontBoundingBoxDescent: rasterizedGlyph.fontBoundingBoxDescent
+    };
+    this._currentRow.x += glyphWidth;
+    this._currentRow.h = Math.max(this._currentRow.h, glyphHeight);
+    this._allocatedGlyphs.add(glyph);
+    return glyph;
+  }
+  getUsagePreview() {
+    const w = this._canvas.width;
+    const h = this._canvas.height;
+    const canvas = new OffscreenCanvas(w, h);
+    const ctx = ensureNonNullable(canvas.getContext("2d"));
+    ctx.fillStyle = UsagePreviewColors.Unused;
+    ctx.fillRect(0, 0, w, h);
+    const rowHeight = /* @__PURE__ */ new Map();
+    const rowWidth = /* @__PURE__ */ new Map();
+    for (const g of this._allocatedGlyphs) {
+      rowHeight.set(g.y, Math.max(rowHeight.get(g.y) ?? 0, g.h));
+      rowWidth.set(g.y, Math.max(rowWidth.get(g.y) ?? 0, g.x + g.w));
+    }
+    for (const g of this._allocatedGlyphs) {
+      ctx.fillStyle = UsagePreviewColors.Used;
+      ctx.fillRect(g.x, g.y, g.w, g.h);
+      ctx.fillStyle = UsagePreviewColors.Wasted;
+      ctx.fillRect(g.x, g.y + g.h, g.w, rowHeight.get(g.y) - g.h);
+    }
+    for (const [rowY, rowW] of rowWidth.entries()) {
+      if (rowY !== this._currentRow.y) {
+        ctx.fillStyle = UsagePreviewColors.Wasted;
+        ctx.fillRect(rowW, rowY, w - rowW, rowHeight.get(rowY));
+      }
+    }
+    return canvas.convertToBlob();
+  }
+  getStats() {
+    const w = this._canvas.width;
+    const h = this._canvas.height;
+    let usedPixels = 0;
+    let wastedPixels = 0;
+    const totalPixels = w * h;
+    const rowHeight = /* @__PURE__ */ new Map();
+    const rowWidth = /* @__PURE__ */ new Map();
+    for (const g of this._allocatedGlyphs) {
+      rowHeight.set(g.y, Math.max(rowHeight.get(g.y) ?? 0, g.h));
+      rowWidth.set(g.y, Math.max(rowWidth.get(g.y) ?? 0, g.x + g.w));
+    }
+    for (const g of this._allocatedGlyphs) {
+      usedPixels += g.w * g.h;
+      wastedPixels += g.w * (rowHeight.get(g.y) - g.h);
+    }
+    for (const [rowY, rowW] of rowWidth.entries()) {
+      if (rowY !== this._currentRow.y) {
+        wastedPixels += (w - rowW) * rowHeight.get(rowY);
+      }
+    }
+    return [
+      `page${this._textureIndex}:`,
+      `     Total: ${totalPixels} (${w}x${h})`,
+      `      Used: ${usedPixels} (${(usedPixels / totalPixels * 100).toPrecision(2)}%)`,
+      `    Wasted: ${wastedPixels} (${(wastedPixels / totalPixels * 100).toPrecision(2)}%)`,
+      `Efficiency: ${(usedPixels / (usedPixels + wastedPixels) * 100).toPrecision(2)}%`
+    ].join("\n");
+  }
+}
+export {
+  TextureAtlasShelfAllocator
+};
+//# sourceMappingURL=textureAtlasShelfAllocator.js.map

@@ -1,1 +1,114 @@
-var w=Object.defineProperty,c=Object.getOwnPropertyDescriptor,p=(e,t,o,s)=>{for(var r,i=s>1?void 0:s?c(t,o):t,n=e.length-1;n>=0;n--)(r=e[n])&&(i=(s?r(t,o,i):r(i))||i);return s&&i&&w(t,o,i),i},h=(e,t)=>(o,s)=>t(o,s,e);import{Emitter as i}from"../../../../base/common/event.js";import{Barrier as _}from"../../../../base/common/async.js";import{Disposable as f}from"../../../../base/common/lifecycle.js";import{StartupKind as S,LifecyclePhase as v,LifecyclePhaseToString as g,ShutdownReason as u}from"./lifecycle.js";import{ILogService as E}from"../../../../platform/log/common/log.js";import{mark as y}from"../../../../base/common/performance.js";import{IStorageService as K,StorageScope as l,StorageTarget as W,WillSaveStateReason as m}from"../../../../platform/storage/common/storage.js";let o=class extends f{constructor(e,t){super(),this.logService=e,this.storageService=t,this._startupKind=this.resolveStartupKind(),this._register(this.storageService.onWillSaveState((e=>{e.reason===m.SHUTDOWN&&this.storageService.store(o.LAST_SHUTDOWN_REASON_KEY,this.shutdownReason,l.WORKSPACE,W.MACHINE)})))}static LAST_SHUTDOWN_REASON_KEY="lifecyle.lastShutdownReason";_onBeforeShutdown=this._register(new i);onBeforeShutdown=this._onBeforeShutdown.event;_onWillShutdown=this._register(new i);onWillShutdown=this._onWillShutdown.event;_onDidShutdown=this._register(new i);onDidShutdown=this._onDidShutdown.event;_onBeforeShutdownError=this._register(new i);onBeforeShutdownError=this._onBeforeShutdownError.event;_onShutdownVeto=this._register(new i);onShutdownVeto=this._onShutdownVeto.event;_startupKind;get startupKind(){return this._startupKind}_phase=v.Starting;get phase(){return this._phase}_willShutdown=!1;get willShutdown(){return this._willShutdown}phaseWhen=new Map;shutdownReason;resolveStartupKind(){const e=this.doResolveStartupKind()??S.NewWindow;return this.logService.trace(`[lifecycle] starting up (startup kind: ${e})`),e}doResolveStartupKind(){const e=this.storageService.getNumber(o.LAST_SHUTDOWN_REASON_KEY,l.WORKSPACE);let t;switch(this.storageService.remove(o.LAST_SHUTDOWN_REASON_KEY,l.WORKSPACE),e){case u.RELOAD:t=S.ReloadedWindow;break;case u.LOAD:t=S.ReopenedWindow}return t}set phase(e){if(e<this.phase)throw new Error("Lifecycle cannot go backwards");if(this._phase===e)return;this.logService.trace(`lifecycle: phase changed (value: ${e})`),this._phase=e,y(`code/LifecyclePhase/${g(e)}`);const t=this.phaseWhen.get(this._phase);t&&(t.open(),this.phaseWhen.delete(this._phase))}async when(e){if(e<=this._phase)return;let t=this.phaseWhen.get(e);t||(t=new _,this.phaseWhen.set(e,t)),await t.wait()}};o=p([h(0,E),h(1,K)],o);export{o as AbstractLifecycleService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Emitter } from "../../../../base/common/event.js";
+import { Barrier } from "../../../../base/common/async.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { ILifecycleService, WillShutdownEvent, StartupKind, LifecyclePhase, LifecyclePhaseToString, ShutdownReason, BeforeShutdownErrorEvent, InternalBeforeShutdownEvent } from "./lifecycle.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { mark } from "../../../../base/common/performance.js";
+import { IStorageService, StorageScope, StorageTarget, WillSaveStateReason } from "../../../../platform/storage/common/storage.js";
+let AbstractLifecycleService = class extends Disposable {
+  constructor(logService, storageService) {
+    super();
+    this.logService = logService;
+    this.storageService = storageService;
+    this._startupKind = this.resolveStartupKind();
+    this._register(this.storageService.onWillSaveState((e) => {
+      if (e.reason === WillSaveStateReason.SHUTDOWN) {
+        this.storageService.store(AbstractLifecycleService.LAST_SHUTDOWN_REASON_KEY, this.shutdownReason, StorageScope.WORKSPACE, StorageTarget.MACHINE);
+      }
+    }));
+  }
+  static {
+    __name(this, "AbstractLifecycleService");
+  }
+  static LAST_SHUTDOWN_REASON_KEY = "lifecyle.lastShutdownReason";
+  _onBeforeShutdown = this._register(new Emitter());
+  onBeforeShutdown = this._onBeforeShutdown.event;
+  _onWillShutdown = this._register(new Emitter());
+  onWillShutdown = this._onWillShutdown.event;
+  _onDidShutdown = this._register(new Emitter());
+  onDidShutdown = this._onDidShutdown.event;
+  _onBeforeShutdownError = this._register(new Emitter());
+  onBeforeShutdownError = this._onBeforeShutdownError.event;
+  _onShutdownVeto = this._register(new Emitter());
+  onShutdownVeto = this._onShutdownVeto.event;
+  _startupKind;
+  get startupKind() {
+    return this._startupKind;
+  }
+  _phase = LifecyclePhase.Starting;
+  get phase() {
+    return this._phase;
+  }
+  _willShutdown = false;
+  get willShutdown() {
+    return this._willShutdown;
+  }
+  phaseWhen = /* @__PURE__ */ new Map();
+  shutdownReason;
+  resolveStartupKind() {
+    const startupKind = this.doResolveStartupKind() ?? StartupKind.NewWindow;
+    this.logService.trace(`[lifecycle] starting up (startup kind: ${startupKind})`);
+    return startupKind;
+  }
+  doResolveStartupKind() {
+    const lastShutdownReason = this.storageService.getNumber(AbstractLifecycleService.LAST_SHUTDOWN_REASON_KEY, StorageScope.WORKSPACE);
+    this.storageService.remove(AbstractLifecycleService.LAST_SHUTDOWN_REASON_KEY, StorageScope.WORKSPACE);
+    let startupKind = void 0;
+    switch (lastShutdownReason) {
+      case ShutdownReason.RELOAD:
+        startupKind = StartupKind.ReloadedWindow;
+        break;
+      case ShutdownReason.LOAD:
+        startupKind = StartupKind.ReopenedWindow;
+        break;
+    }
+    return startupKind;
+  }
+  set phase(value) {
+    if (value < this.phase) {
+      throw new Error("Lifecycle cannot go backwards");
+    }
+    if (this._phase === value) {
+      return;
+    }
+    this.logService.trace(`lifecycle: phase changed (value: ${value})`);
+    this._phase = value;
+    mark(`code/LifecyclePhase/${LifecyclePhaseToString(value)}`);
+    const barrier = this.phaseWhen.get(this._phase);
+    if (barrier) {
+      barrier.open();
+      this.phaseWhen.delete(this._phase);
+    }
+  }
+  async when(phase) {
+    if (phase <= this._phase) {
+      return;
+    }
+    let barrier = this.phaseWhen.get(phase);
+    if (!barrier) {
+      barrier = new Barrier();
+      this.phaseWhen.set(phase, barrier);
+    }
+    await barrier.wait();
+  }
+};
+AbstractLifecycleService = __decorateClass([
+  __decorateParam(0, ILogService),
+  __decorateParam(1, IStorageService)
+], AbstractLifecycleService);
+export {
+  AbstractLifecycleService
+};
+//# sourceMappingURL=lifecycleService.js.map

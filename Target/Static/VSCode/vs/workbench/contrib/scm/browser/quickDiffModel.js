@@ -1,1 +1,391 @@
-var b=Object.defineProperty;var E=Object.getOwnPropertyDescriptor;var p=(h,f,e,t)=>{for(var i=t>1?void 0:t?E(f,e):f,r=h.length-1,o;r>=0;r--)(o=h[r])&&(i=(t?o(f,e,i):o(i))||i);return t&&i&&b(f,e,i),i},d=(h,f)=>(e,t)=>f(e,t,h);import{ResourceMap as R}from"../../../../base/common/map.js";import{createDecorator as x,IInstantiationService as v}from"../../../../platform/instantiation/common/instantiation.js";import{EncodingMode as Q,isTextFileEditorModel as T,ITextFileService as P}from"../../../services/textfile/common/textfiles.js";import{Disposable as q,DisposableMap as w,DisposableStore as _,ReferenceCollection as O}from"../../../../base/common/lifecycle.js";import{IEditorWorkerService as F}from"../../../../editor/common/services/editorWorker.js";import{IUriIdentityService as W}from"../../../../platform/uriIdentity/common/uriIdentity.js";import"../../../../base/common/uri.js";import"../../../../editor/common/diff/legacyLinesDiffComputer.js";import{ITextModelService as U}from"../../../../editor/common/services/resolverService.js";import{shouldSynchronizeModel as A}from"../../../../editor/common/model.js";import{compareChanges as M,getModifiedEndLineNumber as S,IQuickDiffService as L}from"../common/quickDiff.js";import{ThrottledDelayer as N}from"../../../../base/common/async.js";import{ISCMService as j}from"../common/scm.js";import{sortedDiff as B,equals as z}from"../../../../base/common/arrays.js";import{onUnexpectedError as V}from"../../../../base/common/errors.js";import{Iterable as G}from"../../../../base/common/iterator.js";import"../../../../base/common/sequence.js";import{DiffState as J}from"../../../../editor/browser/widget/diffEditor/diffEditorViewModel.js";import{toLineChanges as X}from"../../../../editor/browser/widget/diffEditor/diffEditorWidget.js";import"../../../../editor/common/diff/rangeMapping.js";import"../../../../editor/common/editorCommon.js";import{IConfigurationService as H}from"../../../../platform/configuration/common/configuration.js";import{IProgressService as K,ProgressLocation as Y}from"../../../../platform/progress/common/progress.js";import{IChatEditingService as Z,ModifiedFileEntryState as $}from"../../chat/common/chatEditingService.js";import{Emitter as ee,Event as I}from"../../../../base/common/event.js";import{autorun as ie,autorunWithStore as te}from"../../../../base/common/observable.js";const Ge=x("IQuickDiffModelService"),re={algorithm:"legacy",maxComputationTimeMs:1e3};let g=class extends O{constructor(e){super();this._instantiationService=e}createReferencedObject(e,t,i){return this._instantiationService.createInstance(u,t,i)}destroyReferencedObject(e,t){t.dispose()}};g=p([d(0,v)],g);let m=class{constructor(f,e,t){this.instantiationService=f;this.textFileService=e;this.uriIdentityService=t;this._references=this.instantiationService.createInstance(g)}_serviceBrand;_references;createQuickDiffModelReference(f,e=re){const t=this.textFileService.files.get(f);if(t?.isResolved())return f=this.uriIdentityService.asCanonicalUri(f).with({query:JSON.stringify(e)}),this._references.acquire(f.toString(),t,e)}};m=p([d(0,v),d(1,P),d(2,W)],m);let u=class extends q{constructor(e,t,i,r,o,s,l,a,n){super();this.options=t;this.scmService=i;this.quickDiffService=r;this.editorWorkerService=o;this.configurationService=s;this.textModelResolverService=l;this._chatEditingService=a;this.progressService=n;this._model=e,this._register(e.textEditorModel.onDidChangeContent(()=>this.triggerDiff())),this._register(I.filter(s.onDidChangeConfiguration,c=>c.affectsConfiguration("scm.diffDecorationsIgnoreTrimWhitespace")||c.affectsConfiguration("diffEditor.ignoreTrimWhitespace"))(this.triggerDiff,this)),this._register(i.onDidAddRepository(this.onDidAddRepository,this));for(const c of i.repositories)this.onDidAddRepository(c);this._register(this._model.onDidChangeEncoding(()=>{this._diffDelayer.cancel(),this._quickDiffs=[],this._originalEditorModels.clear(),this._quickDiffsPromise=void 0,this.setChanges([],new Map),this.triggerDiff()})),this._register(this.quickDiffService.onDidChangeQuickDiffProviders(()=>this.triggerDiff())),this._register(te((c,y)=>{for(const C of this._chatEditingService.editingSessionsObs.read(c))y.add(ie(D=>{for(const k of C.entries.read(D))k.state.read(D);this.triggerDiff()}))})),this.triggerDiff()}_model;_originalEditorModels=new R;_originalEditorModelsDisposables=this._register(new _);get originalTextModels(){return G.map(this._originalEditorModels.values(),e=>e.textEditorModel)}_disposed=!1;_quickDiffs=[];_quickDiffsPromise;_diffDelayer=new N(200);_onDidChange=new ee;onDidChange=this._onDidChange.event;_changes=[];get changes(){return this._changes}_quickDiffChanges=new Map;get quickDiffChanges(){return this._quickDiffChanges}_repositoryDisposables=new w;get quickDiffs(){return this._quickDiffs}getQuickDiffResults(){return this._quickDiffs.map(e=>{const t=this.changes.filter(i=>i.label===e.label);return{label:e.label,original:e.originalResource,modified:this._model.resource,changes:t.map(i=>i.change),changes2:t.map(i=>i.change2)}})}getDiffEditorModel(e){const t=this._originalEditorModels.get(e);return t?{modified:this._model.textEditorModel,original:t.textEditorModel}:void 0}onDidAddRepository(e){const t=new _;t.add(e.provider.onDidChangeResources(this.triggerDiff,this));const i=I.filter(this.scmService.onDidRemoveRepository,r=>r===e);t.add(i(()=>this._repositoryDisposables.deleteAndDispose(e))),this._repositoryDisposables.set(e,t),this.triggerDiff()}triggerDiff(){this._diffDelayer&&this._diffDelayer.trigger(async()=>{const e=await this.diff(),t=Array.from(this._originalEditorModels.values());!e||this._disposed||this._model.isDisposed()||t.some(i=>i.isDisposed())||this.setChanges(e.changes,e.mapChanges)}).catch(e=>V(e))}setChanges(e,t){const i=B(this.changes,e,(r,o)=>M(r.change,o.change));this._changes=e,this._quickDiffChanges=t,this._onDidChange.fire({changes:e,diff:i})}diff(){return this.progressService.withProgress({location:Y.Scm,delay:250},async()=>{const e=await this.getQuickDiffsPromise();if(this._disposed||this._model.isDisposed()||e.length===0)return Promise.resolve({changes:[],mapChanges:new Map});const t=e.filter(a=>this.editorWorkerService.canComputeDirtyDiff(a.originalResource,this._model.resource));if(t.length===0)return Promise.resolve({changes:[],mapChanges:new Map});const i=this.configurationService.getValue("scm.diffDecorationsIgnoreTrimWhitespace"),r=i==="inherit"?this.configurationService.getValue("diffEditor.ignoreTrimWhitespace"):i!=="false",o=[];for(const a of t){const n=await this._diff(a.originalResource,this._model.resource,r);if(n.changes&&n.changes2&&n.changes.length===n.changes2.length)for(let c=0;c<n.changes.length;c++)o.push({label:a.label,original:a.originalResource,modified:this._model.resource,change:n.changes[c],change2:n.changes2[c]})}const s=o.sort((a,n)=>M(a.change,n.change)),l=new Map;for(let a=0;a<s.length;a++){const n=s[a].label;l.has(n)||l.set(n,[]),l.get(n).push(a)}return{changes:s,mapChanges:l}})}async _diff(e,t,i){const r=this.options.maxComputationTimeMs??Number.MAX_SAFE_INTEGER,o=await this.editorWorkerService.computeDiff(e,t,{computeMoves:!1,ignoreTrimWhitespace:i,maxComputationTimeMs:r},this.options.algorithm);return{changes:o?X(J.fromDiffResult(o)):null,changes2:o?.changes??null}}getQuickDiffsPromise(){return this._quickDiffsPromise?this._quickDiffsPromise:(this._quickDiffsPromise=this.getOriginalResource().then(async e=>this._disposed?[]:e.length===0?(this._quickDiffs=[],this._originalEditorModels.clear(),[]):z(this._quickDiffs,e,(t,i)=>t.originalResource.toString()===i.originalResource.toString()&&t.label===i.label)?e:(this._quickDiffs=e,this._originalEditorModels.clear(),this._originalEditorModelsDisposables.clear(),(await Promise.all(e.map(async t=>{try{const i=await this.textModelResolverService.createModelReference(t.originalResource);if(this._disposed)return i.dispose(),[];if(this._originalEditorModels.set(t.originalResource,i.object),T(i.object)){const r=this._model.getEncoding();r&&i.object.setEncoding(r,Q.Decode)}return this._originalEditorModelsDisposables.add(i),this._originalEditorModelsDisposables.add(i.object.textEditorModel.onDidChangeContent(()=>this.triggerDiff())),t}catch{return[]}}))).flat())),this._quickDiffsPromise.finally(()=>{this._quickDiffsPromise=void 0}))}async getOriginalResource(){if(this._disposed)return Promise.resolve([]);const e=this._model.resource;if(this._chatEditingService.editingSessionsObs.get().some(r=>r.getEntry(e)?.state.get()===$.Modified))return Promise.resolve([]);const i=this._model.textEditorModel?A(this._model.textEditorModel):void 0;return this.quickDiffService.getQuickDiffs(e,this._model.getLanguageId(),i)}findNextClosestChange(e,t=!0,i){let r;!i&&t&&(r=this.quickDiffs.find(s=>s.isSCM)?.label);const o=[];for(let s=0;s<this.changes.length;s++){if(i&&this.changes[s].label!==i||!this.quickDiffs.find(n=>n.label===this.changes[s].label)?.visible)continue;const l=this.changes[s],a=o.length;if(t){if(S(l.change)>=e)if(r&&l.label!==r)o.push(s);else return s}else if(l.change.modifiedStartLineNumber>e)return s;if(o.length>0&&o.length===a)return o[0]}return o.length>0?o[0]:0}findPreviousClosestChange(e,t=!0,i){for(let r=this.changes.length-1;r>=0;r--){if(i&&this.changes[r].label!==i||!this.quickDiffs.find(s=>s.label===this.changes[r].label)?.visible)continue;const o=this.changes[r].change;if(t){if(o.modifiedStartLineNumber<=e)return r}else if(S(o)<e)return r}return this.changes.length-1}dispose(){this._disposed=!0,this._quickDiffs=[],this._diffDelayer.cancel(),this._originalEditorModels.clear(),this._repositoryDisposables.dispose(),super.dispose()}};u=p([d(2,j),d(3,L),d(4,F),d(5,H),d(6,U),d(7,Z),d(8,K)],u);export{Ge as IQuickDiffModelService,u as QuickDiffModel,m as QuickDiffModelService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { ResourceMap } from "../../../../base/common/map.js";
+import { createDecorator, IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { EncodingMode, IResolvedTextFileEditorModel, isTextFileEditorModel, ITextFileEditorModel, ITextFileService } from "../../../services/textfile/common/textfiles.js";
+import { Disposable, DisposableMap, DisposableStore, IReference, ReferenceCollection } from "../../../../base/common/lifecycle.js";
+import { DiffAlgorithmName, IEditorWorkerService } from "../../../../editor/common/services/editorWorker.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IChange } from "../../../../editor/common/diff/legacyLinesDiffComputer.js";
+import { IResolvedTextEditorModel, ITextModelService } from "../../../../editor/common/services/resolverService.js";
+import { ITextModel, shouldSynchronizeModel } from "../../../../editor/common/model.js";
+import { compareChanges, getModifiedEndLineNumber, IQuickDiffService, QuickDiff, QuickDiffChange, QuickDiffResult } from "../common/quickDiff.js";
+import { ThrottledDelayer } from "../../../../base/common/async.js";
+import { ISCMRepository, ISCMService } from "../common/scm.js";
+import { sortedDiff, equals } from "../../../../base/common/arrays.js";
+import { onUnexpectedError } from "../../../../base/common/errors.js";
+import { Iterable } from "../../../../base/common/iterator.js";
+import { ISplice } from "../../../../base/common/sequence.js";
+import { DiffState } from "../../../../editor/browser/widget/diffEditor/diffEditorViewModel.js";
+import { toLineChanges } from "../../../../editor/browser/widget/diffEditor/diffEditorWidget.js";
+import { LineRangeMapping } from "../../../../editor/common/diff/rangeMapping.js";
+import { IDiffEditorModel } from "../../../../editor/common/editorCommon.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IProgressService, ProgressLocation } from "../../../../platform/progress/common/progress.js";
+import { IChatEditingService, ModifiedFileEntryState } from "../../chat/common/chatEditingService.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { autorun, autorunWithStore } from "../../../../base/common/observable.js";
+const IQuickDiffModelService = createDecorator("IQuickDiffModelService");
+const decoratorQuickDiffModelOptions = {
+  algorithm: "legacy",
+  maxComputationTimeMs: 1e3
+};
+let QuickDiffModelReferenceCollection = class extends ReferenceCollection {
+  constructor(_instantiationService) {
+    super();
+    this._instantiationService = _instantiationService;
+  }
+  static {
+    __name(this, "QuickDiffModelReferenceCollection");
+  }
+  createReferencedObject(_key, textFileModel, options) {
+    return this._instantiationService.createInstance(QuickDiffModel, textFileModel, options);
+  }
+  destroyReferencedObject(_key, object) {
+    object.dispose();
+  }
+};
+QuickDiffModelReferenceCollection = __decorateClass([
+  __decorateParam(0, IInstantiationService)
+], QuickDiffModelReferenceCollection);
+let QuickDiffModelService = class {
+  constructor(instantiationService, textFileService, uriIdentityService) {
+    this.instantiationService = instantiationService;
+    this.textFileService = textFileService;
+    this.uriIdentityService = uriIdentityService;
+    this._references = this.instantiationService.createInstance(QuickDiffModelReferenceCollection);
+  }
+  static {
+    __name(this, "QuickDiffModelService");
+  }
+  _serviceBrand;
+  _references;
+  createQuickDiffModelReference(resource, options = decoratorQuickDiffModelOptions) {
+    const textFileModel = this.textFileService.files.get(resource);
+    if (!textFileModel?.isResolved()) {
+      return void 0;
+    }
+    resource = this.uriIdentityService.asCanonicalUri(resource).with({ query: JSON.stringify(options) });
+    return this._references.acquire(resource.toString(), textFileModel, options);
+  }
+};
+QuickDiffModelService = __decorateClass([
+  __decorateParam(0, IInstantiationService),
+  __decorateParam(1, ITextFileService),
+  __decorateParam(2, IUriIdentityService)
+], QuickDiffModelService);
+let QuickDiffModel = class extends Disposable {
+  constructor(textFileModel, options, scmService, quickDiffService, editorWorkerService, configurationService, textModelResolverService, _chatEditingService, progressService) {
+    super();
+    this.options = options;
+    this.scmService = scmService;
+    this.quickDiffService = quickDiffService;
+    this.editorWorkerService = editorWorkerService;
+    this.configurationService = configurationService;
+    this.textModelResolverService = textModelResolverService;
+    this._chatEditingService = _chatEditingService;
+    this.progressService = progressService;
+    this._model = textFileModel;
+    this._register(textFileModel.textEditorModel.onDidChangeContent(() => this.triggerDiff()));
+    this._register(
+      Event.filter(
+        configurationService.onDidChangeConfiguration,
+        (e) => e.affectsConfiguration("scm.diffDecorationsIgnoreTrimWhitespace") || e.affectsConfiguration("diffEditor.ignoreTrimWhitespace")
+      )(this.triggerDiff, this)
+    );
+    this._register(scmService.onDidAddRepository(this.onDidAddRepository, this));
+    for (const r of scmService.repositories) {
+      this.onDidAddRepository(r);
+    }
+    this._register(this._model.onDidChangeEncoding(() => {
+      this._diffDelayer.cancel();
+      this._quickDiffs = [];
+      this._originalEditorModels.clear();
+      this._quickDiffsPromise = void 0;
+      this.setChanges([], /* @__PURE__ */ new Map());
+      this.triggerDiff();
+    }));
+    this._register(this.quickDiffService.onDidChangeQuickDiffProviders(() => this.triggerDiff()));
+    this._register(autorunWithStore((r, store) => {
+      for (const session of this._chatEditingService.editingSessionsObs.read(r)) {
+        store.add(autorun((r2) => {
+          for (const entry of session.entries.read(r2)) {
+            entry.state.read(r2);
+          }
+          this.triggerDiff();
+        }));
+      }
+    }));
+    this.triggerDiff();
+  }
+  static {
+    __name(this, "QuickDiffModel");
+  }
+  _model;
+  _originalEditorModels = new ResourceMap();
+  _originalEditorModelsDisposables = this._register(new DisposableStore());
+  get originalTextModels() {
+    return Iterable.map(this._originalEditorModels.values(), (editorModel) => editorModel.textEditorModel);
+  }
+  _disposed = false;
+  _quickDiffs = [];
+  _quickDiffsPromise;
+  _diffDelayer = new ThrottledDelayer(200);
+  _onDidChange = new Emitter();
+  onDidChange = this._onDidChange.event;
+  _changes = [];
+  get changes() {
+    return this._changes;
+  }
+  /**
+   * Map of quick diff name to the index of the change in `this.changes`
+   */
+  _quickDiffChanges = /* @__PURE__ */ new Map();
+  get quickDiffChanges() {
+    return this._quickDiffChanges;
+  }
+  _repositoryDisposables = new DisposableMap();
+  get quickDiffs() {
+    return this._quickDiffs;
+  }
+  getQuickDiffResults() {
+    return this._quickDiffs.map((quickDiff) => {
+      const changes = this.changes.filter((change) => change.label === quickDiff.label);
+      return {
+        label: quickDiff.label,
+        original: quickDiff.originalResource,
+        modified: this._model.resource,
+        changes: changes.map((change) => change.change),
+        changes2: changes.map((change) => change.change2)
+      };
+    });
+  }
+  getDiffEditorModel(originalUri) {
+    const editorModel = this._originalEditorModels.get(originalUri);
+    return editorModel ? {
+      modified: this._model.textEditorModel,
+      original: editorModel.textEditorModel
+    } : void 0;
+  }
+  onDidAddRepository(repository) {
+    const disposables = new DisposableStore();
+    disposables.add(repository.provider.onDidChangeResources(this.triggerDiff, this));
+    const onDidRemoveRepository = Event.filter(this.scmService.onDidRemoveRepository, (r) => r === repository);
+    disposables.add(onDidRemoveRepository(() => this._repositoryDisposables.deleteAndDispose(repository)));
+    this._repositoryDisposables.set(repository, disposables);
+    this.triggerDiff();
+  }
+  triggerDiff() {
+    if (!this._diffDelayer) {
+      return;
+    }
+    this._diffDelayer.trigger(async () => {
+      const result = await this.diff();
+      const editorModels = Array.from(this._originalEditorModels.values());
+      if (!result || this._disposed || this._model.isDisposed() || editorModels.some((editorModel) => editorModel.isDisposed())) {
+        return;
+      }
+      this.setChanges(result.changes, result.mapChanges);
+    }).catch((err) => onUnexpectedError(err));
+  }
+  setChanges(changes, mapChanges) {
+    const diff = sortedDiff(this.changes, changes, (a, b) => compareChanges(a.change, b.change));
+    this._changes = changes;
+    this._quickDiffChanges = mapChanges;
+    this._onDidChange.fire({ changes, diff });
+  }
+  diff() {
+    return this.progressService.withProgress({ location: ProgressLocation.Scm, delay: 250 }, async () => {
+      const originalURIs = await this.getQuickDiffsPromise();
+      if (this._disposed || this._model.isDisposed() || originalURIs.length === 0) {
+        return Promise.resolve({ changes: [], mapChanges: /* @__PURE__ */ new Map() });
+      }
+      const filteredToDiffable = originalURIs.filter((quickDiff) => this.editorWorkerService.canComputeDirtyDiff(quickDiff.originalResource, this._model.resource));
+      if (filteredToDiffable.length === 0) {
+        return Promise.resolve({ changes: [], mapChanges: /* @__PURE__ */ new Map() });
+      }
+      const ignoreTrimWhitespaceSetting = this.configurationService.getValue("scm.diffDecorationsIgnoreTrimWhitespace");
+      const ignoreTrimWhitespace = ignoreTrimWhitespaceSetting === "inherit" ? this.configurationService.getValue("diffEditor.ignoreTrimWhitespace") : ignoreTrimWhitespaceSetting !== "false";
+      const allDiffs = [];
+      for (const quickDiff of filteredToDiffable) {
+        const diff = await this._diff(quickDiff.originalResource, this._model.resource, ignoreTrimWhitespace);
+        if (diff.changes && diff.changes2 && diff.changes.length === diff.changes2.length) {
+          for (let index = 0; index < diff.changes.length; index++) {
+            allDiffs.push({
+              label: quickDiff.label,
+              original: quickDiff.originalResource,
+              modified: this._model.resource,
+              change: diff.changes[index],
+              change2: diff.changes2[index]
+            });
+          }
+        }
+      }
+      const sorted = allDiffs.sort((a, b) => compareChanges(a.change, b.change));
+      const map = /* @__PURE__ */ new Map();
+      for (let i = 0; i < sorted.length; i++) {
+        const label = sorted[i].label;
+        if (!map.has(label)) {
+          map.set(label, []);
+        }
+        map.get(label).push(i);
+      }
+      return { changes: sorted, mapChanges: map };
+    });
+  }
+  async _diff(original, modified, ignoreTrimWhitespace) {
+    const maxComputationTimeMs = this.options.maxComputationTimeMs ?? Number.MAX_SAFE_INTEGER;
+    const result = await this.editorWorkerService.computeDiff(original, modified, {
+      computeMoves: false,
+      ignoreTrimWhitespace,
+      maxComputationTimeMs
+    }, this.options.algorithm);
+    return { changes: result ? toLineChanges(DiffState.fromDiffResult(result)) : null, changes2: result?.changes ?? null };
+  }
+  getQuickDiffsPromise() {
+    if (this._quickDiffsPromise) {
+      return this._quickDiffsPromise;
+    }
+    this._quickDiffsPromise = this.getOriginalResource().then(async (quickDiffs) => {
+      if (this._disposed) {
+        return [];
+      }
+      if (quickDiffs.length === 0) {
+        this._quickDiffs = [];
+        this._originalEditorModels.clear();
+        return [];
+      }
+      if (equals(this._quickDiffs, quickDiffs, (a, b) => a.originalResource.toString() === b.originalResource.toString() && a.label === b.label)) {
+        return quickDiffs;
+      }
+      this._quickDiffs = quickDiffs;
+      this._originalEditorModels.clear();
+      this._originalEditorModelsDisposables.clear();
+      return (await Promise.all(quickDiffs.map(async (quickDiff) => {
+        try {
+          const ref = await this.textModelResolverService.createModelReference(quickDiff.originalResource);
+          if (this._disposed) {
+            ref.dispose();
+            return [];
+          }
+          this._originalEditorModels.set(quickDiff.originalResource, ref.object);
+          if (isTextFileEditorModel(ref.object)) {
+            const encoding = this._model.getEncoding();
+            if (encoding) {
+              ref.object.setEncoding(encoding, EncodingMode.Decode);
+            }
+          }
+          this._originalEditorModelsDisposables.add(ref);
+          this._originalEditorModelsDisposables.add(ref.object.textEditorModel.onDidChangeContent(() => this.triggerDiff()));
+          return quickDiff;
+        } catch (error) {
+          return [];
+        }
+      }))).flat();
+    });
+    return this._quickDiffsPromise.finally(() => {
+      this._quickDiffsPromise = void 0;
+    });
+  }
+  async getOriginalResource() {
+    if (this._disposed) {
+      return Promise.resolve([]);
+    }
+    const uri = this._model.resource;
+    const isBeingModifiedByChatEdits = this._chatEditingService.editingSessionsObs.get().some((session) => session.getEntry(uri)?.state.get() === ModifiedFileEntryState.Modified);
+    if (isBeingModifiedByChatEdits) {
+      return Promise.resolve([]);
+    }
+    const isSynchronized = this._model.textEditorModel ? shouldSynchronizeModel(this._model.textEditorModel) : void 0;
+    return this.quickDiffService.getQuickDiffs(uri, this._model.getLanguageId(), isSynchronized);
+  }
+  findNextClosestChange(lineNumber, inclusive = true, provider) {
+    let preferredProvider;
+    if (!provider && inclusive) {
+      preferredProvider = this.quickDiffs.find((value) => value.isSCM)?.label;
+    }
+    const possibleChanges = [];
+    for (let i = 0; i < this.changes.length; i++) {
+      if (provider && this.changes[i].label !== provider) {
+        continue;
+      }
+      if (!this.quickDiffs.find((quickDiff) => quickDiff.label === this.changes[i].label)?.visible) {
+        continue;
+      }
+      const change = this.changes[i];
+      const possibleChangesLength = possibleChanges.length;
+      if (inclusive) {
+        if (getModifiedEndLineNumber(change.change) >= lineNumber) {
+          if (preferredProvider && change.label !== preferredProvider) {
+            possibleChanges.push(i);
+          } else {
+            return i;
+          }
+        }
+      } else {
+        if (change.change.modifiedStartLineNumber > lineNumber) {
+          return i;
+        }
+      }
+      if (possibleChanges.length > 0 && possibleChanges.length === possibleChangesLength) {
+        return possibleChanges[0];
+      }
+    }
+    return possibleChanges.length > 0 ? possibleChanges[0] : 0;
+  }
+  findPreviousClosestChange(lineNumber, inclusive = true, provider) {
+    for (let i = this.changes.length - 1; i >= 0; i--) {
+      if (provider && this.changes[i].label !== provider) {
+        continue;
+      }
+      if (!this.quickDiffs.find((quickDiff) => quickDiff.label === this.changes[i].label)?.visible) {
+        continue;
+      }
+      const change = this.changes[i].change;
+      if (inclusive) {
+        if (change.modifiedStartLineNumber <= lineNumber) {
+          return i;
+        }
+      } else {
+        if (getModifiedEndLineNumber(change) < lineNumber) {
+          return i;
+        }
+      }
+    }
+    return this.changes.length - 1;
+  }
+  dispose() {
+    this._disposed = true;
+    this._quickDiffs = [];
+    this._diffDelayer.cancel();
+    this._originalEditorModels.clear();
+    this._repositoryDisposables.dispose();
+    super.dispose();
+  }
+};
+QuickDiffModel = __decorateClass([
+  __decorateParam(2, ISCMService),
+  __decorateParam(3, IQuickDiffService),
+  __decorateParam(4, IEditorWorkerService),
+  __decorateParam(5, IConfigurationService),
+  __decorateParam(6, ITextModelService),
+  __decorateParam(7, IChatEditingService),
+  __decorateParam(8, IProgressService)
+], QuickDiffModel);
+export {
+  IQuickDiffModelService,
+  QuickDiffModel,
+  QuickDiffModelService
+};
+//# sourceMappingURL=quickDiffModel.js.map

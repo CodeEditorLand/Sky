@@ -1,1 +1,267 @@
-import*as d from"os";import{FileAccess as O}from"../../../base/common/network.js";import*as c from"../../../base/common/path.js";import{isMacintosh as V,isWindows as x}from"../../../base/common/platform.js";import*as j from"../../../base/common/process.js";import{format as u}from"../../../base/common/strings.js";import"../../log/common/log.js";import"../../product/common/productService.js";import{ShellIntegrationInjectionFailureReason as a}from"../common/terminal.js";import{EnvironmentVariableMutatorType as D}from"../common/environmentVariable.js";import{deserializeEnvironmentVariableCollections as F}from"../common/environmentVariableShared.js";import{MergedEnvironmentVariableCollection as _}from"../common/environmentVariableCollection.js";function L(){const e=/(\d+)\.(\d+)\.(\d+)/g.exec(d.release());let n=0;return e&&4===e.length&&(n=parseInt(e[3])),n}function Q(e,n,t,s,r){if(!n.shellIntegration.enabled)return{type:"failure",reason:a.InjectionSettingDisabled};if(!e.executable)return{type:"failure",reason:a.NoExecutable};if(e.isFeatureTerminal&&!e.forceShellIntegration)return{type:"failure",reason:a.FeatureTerminal};if(e.ignoreShellIntegration)return{type:"failure",reason:a.IgnoreShellIntegrationFlag};if(x&&(!n.windowsEnableConpty||L()<18309))return{type:"failure",reason:a.Winpty};const i=e.args,l="win32"===j.platform?c.basename(e.executable).toLowerCase():c.basename(e.executable),h=c.dirname(O.asFileUri("").fsPath),g="injection";let m;const p={VSCODE_INJECTION:"1"};if(n.shellIntegration.nonce&&(p.VSCODE_NONCE=n.shellIntegration.nonce),e.shellIntegrationEnvironmentReporting&&(x?(n.windowsUseConptyDll||n.windowsEnableConpty&&L()>=22631&&"bash.exe"!==l)&&(p.VSCODE_SHELL_ENV_REPORTING="1"):p.VSCODE_SHELL_ENV_REPORTING="1"),x)return"pwsh.exe"===l||"powershell.exe"===l?(!i||C(i)?m=o.get("windows-pwsh"):P(i)&&(m=o.get("windows-pwsh-login")),m?(m=[...m],m[m.length-1]=u(m[m.length-1],h,""),p.VSCODE_STABLE="stable"===r.quality?"1":"0",n.shellIntegration.suggestEnabled&&(p.VSCODE_SUGGEST="1"),{type:g,newArgs:m,envMixin:p}):{type:"failure",reason:a.UnsupportedArgs}):"bash.exe"===l?(i&&0!==i.length?S(i)&&(p.VSCODE_SHELL_LOGIN="1",b(n,p,l),m=o.get("bash")):m=o.get("bash"),m?(m=[...m],m[m.length-1]=u(m[m.length-1],h),p.VSCODE_STABLE="stable"===r.quality?"1":"0",{type:g,newArgs:m,envMixin:p}):{type:"failure",reason:a.UnsupportedArgs}):(s.warn(`Shell integration cannot be enabled for executable "${e.executable}" and args`,e.args),{type:"failure",reason:a.UnsupportedShell});switch(l){case"bash":return i&&0!==i.length?S(i)&&(p.VSCODE_SHELL_LOGIN="1",b(n,p,l),m=o.get("bash")):m=o.get("bash"),m?(m=[...m],m[m.length-1]=u(m[m.length-1],h),p.VSCODE_STABLE="stable"===r.quality?"1":"0",{type:g,newArgs:m,envMixin:p}):{type:"failure",reason:a.UnsupportedArgs};case"fish":return i&&0!==i.length?S(i)?m=o.get("fish-login"):(i===o.get("fish")||i===o.get("fish-login"))&&(m=i):m=o.get("fish"),m?(b(n,p,l),m=[...m],m[m.length-1]=u(m[m.length-1],h),{type:g,newArgs:m,envMixin:p}):{type:"failure",reason:a.UnsupportedArgs};case"pwsh":return!i||C(i)?m=o.get("pwsh"):P(i)&&(m=o.get("pwsh-login")),m?(n.shellIntegration.suggestEnabled&&(p.VSCODE_SUGGEST="1"),m=[...m],m[m.length-1]=u(m[m.length-1],h,""),p.VSCODE_STABLE="stable"===r.quality?"1":"0",{type:g,newArgs:m,envMixin:p}):{type:"failure",reason:a.UnsupportedArgs};case"zsh":{if(i&&0!==i.length?S(i)?(m=o.get("zsh-login"),b(n,p,l)):(i===o.get("zsh")||i===o.get("zsh-login"))&&(m=i):m=o.get("zsh"),!m)return{type:"failure",reason:a.UnsupportedArgs};let e;m=[...m],m[m.length-1]=u(m[m.length-1],h);try{e=d.userInfo().username}catch{e="unknown"}const s=c.join(d.tmpdir(),`${e}-${r.applicationName}-zsh`);p.ZDOTDIR=s;const w=t?.ZDOTDIR??d.homedir()??"~";p.USER_ZDOTDIR=w;const f=[];return f.push({source:c.join(h,"out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-rc.zsh"),dest:c.join(s,".zshrc")}),f.push({source:c.join(h,"out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-profile.zsh"),dest:c.join(s,".zprofile")}),f.push({source:c.join(h,"out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-env.zsh"),dest:c.join(s,".zshenv")}),f.push({source:c.join(h,"out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-login.zsh"),dest:c.join(s,".zlogin")}),{type:g,newArgs:m,envMixin:p,filesToCopy:f}}}return s.warn(`Shell integration cannot be enabled for executable "${e.executable}" and args`,e.args),{type:"failure",reason:a.UnsupportedShell}}function b(e,n,o){if((V||"fish"===o)&&e.environmentVariableCollections){const o=F(e.environmentVariableCollections),t=new _(o).getVariableMap({workspaceFolder:e.workspaceFolder}).get("PATH"),s=[];if(t)for(const e of t)e.type===D.Prepend&&s.push(e.value);s.length>0&&(n.VSCODE_PATH_PREFIX=s.join(""))}}var z=(e=>(e.WindowsPwsh="windows-pwsh",e.WindowsPwshLogin="windows-pwsh-login",e.Pwsh="pwsh",e.PwshLogin="pwsh-login",e.Zsh="zsh",e.ZshLogin="zsh-login",e.Bash="bash",e.Fish="fish",e.FishLogin="fish-login",e))(z||{});const o=new Map;o.set("windows-pwsh",["-noexit","-command",'try { . "{0}\\out\\vs\\workbench\\contrib\\terminal\\common\\scripts\\shellIntegration.ps1" } catch {}{1}']),o.set("windows-pwsh-login",["-l","-noexit","-command",'try { . "{0}\\out\\vs\\workbench\\contrib\\terminal\\common\\scripts\\shellIntegration.ps1" } catch {}{1}']),o.set("pwsh",["-noexit","-command",'. "{0}/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration.ps1"{1}']),o.set("pwsh-login",["-l","-noexit","-command",'. "{0}/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration.ps1"']),o.set("zsh",["-i"]),o.set("zsh-login",["-il"]),o.set("bash",["--init-file","{0}/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh"]),o.set("fish",["--init-command",'source "{0}/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration.fish"']),o.set("fish-login",["-l","--init-command",'source "{0}/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration.fish"']);const w=["-login","-l"],v=["--login","-l"],R=["-i","--interactive"],E=["-nol","-nologo"];function P(e){return"string"==typeof e?w.includes(e.toLowerCase()):1===e.length&&w.includes(e[0].toLowerCase())||2===e.length&&(w.includes(e[0].toLowerCase())||w.includes(e[1].toLowerCase()))&&(E.includes(e[0].toLowerCase())||E.includes(e[1].toLowerCase()))}function C(e){return"string"==typeof e?E.includes(e.toLowerCase()):0===e.length||1===e?.length&&E.includes(e[0].toLowerCase())}function S(e){return"string"!=typeof e&&(e=e.filter((e=>!R.includes(e.toLowerCase())))),"string"===e&&v.includes(e.toLowerCase())||"string"!=typeof e&&1===e.length&&v.includes(e[0].toLowerCase())}export{Q as getShellIntegrationInjection,L as getWindowsBuildNumber};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as os from "os";
+import { FileAccess } from "../../../base/common/network.js";
+import * as path from "../../../base/common/path.js";
+import { IProcessEnvironment, isMacintosh, isWindows } from "../../../base/common/platform.js";
+import * as process from "../../../base/common/process.js";
+import { format } from "../../../base/common/strings.js";
+import { ILogService } from "../../log/common/log.js";
+import { IProductService } from "../../product/common/productService.js";
+import { IShellLaunchConfig, ITerminalEnvironment, ITerminalProcessOptions, ShellIntegrationInjectionFailureReason } from "../common/terminal.js";
+import { EnvironmentVariableMutatorType } from "../common/environmentVariable.js";
+import { deserializeEnvironmentVariableCollections } from "../common/environmentVariableShared.js";
+import { MergedEnvironmentVariableCollection } from "../common/environmentVariableCollection.js";
+function getWindowsBuildNumber() {
+  const osVersion = /(\d+)\.(\d+)\.(\d+)/g.exec(os.release());
+  let buildNumber = 0;
+  if (osVersion && osVersion.length === 4) {
+    buildNumber = parseInt(osVersion[3]);
+  }
+  return buildNumber;
+}
+__name(getWindowsBuildNumber, "getWindowsBuildNumber");
+function getShellIntegrationInjection(shellLaunchConfig, options, env, logService, productService) {
+  if (!options.shellIntegration.enabled) {
+    return { type: "failure", reason: ShellIntegrationInjectionFailureReason.InjectionSettingDisabled };
+  }
+  if (!shellLaunchConfig.executable) {
+    return { type: "failure", reason: ShellIntegrationInjectionFailureReason.NoExecutable };
+  }
+  if (shellLaunchConfig.isFeatureTerminal && !shellLaunchConfig.forceShellIntegration) {
+    return { type: "failure", reason: ShellIntegrationInjectionFailureReason.FeatureTerminal };
+  }
+  if (shellLaunchConfig.ignoreShellIntegration) {
+    return { type: "failure", reason: ShellIntegrationInjectionFailureReason.IgnoreShellIntegrationFlag };
+  }
+  if (isWindows && (!options.windowsEnableConpty || getWindowsBuildNumber() < 18309)) {
+    return { type: "failure", reason: ShellIntegrationInjectionFailureReason.Winpty };
+  }
+  const originalArgs = shellLaunchConfig.args;
+  const shell = process.platform === "win32" ? path.basename(shellLaunchConfig.executable).toLowerCase() : path.basename(shellLaunchConfig.executable);
+  const appRoot = path.dirname(FileAccess.asFileUri("").fsPath);
+  const type = "injection";
+  let newArgs;
+  const envMixin = {
+    "VSCODE_INJECTION": "1"
+  };
+  if (options.shellIntegration.nonce) {
+    envMixin["VSCODE_NONCE"] = options.shellIntegration.nonce;
+  }
+  if (shellLaunchConfig.shellIntegrationEnvironmentReporting) {
+    if (isWindows) {
+      const enableWindowsEnvReporting = options.windowsUseConptyDll || options.windowsEnableConpty && getWindowsBuildNumber() >= 22631 && shell !== "bash.exe";
+      if (enableWindowsEnvReporting) {
+        envMixin["VSCODE_SHELL_ENV_REPORTING"] = "1";
+      }
+    } else {
+      envMixin["VSCODE_SHELL_ENV_REPORTING"] = "1";
+    }
+  }
+  if (isWindows) {
+    if (shell === "pwsh.exe" || shell === "powershell.exe") {
+      if (!originalArgs || arePwshImpliedArgs(originalArgs)) {
+        newArgs = shellIntegrationArgs.get("windows-pwsh" /* WindowsPwsh */);
+      } else if (arePwshLoginArgs(originalArgs)) {
+        newArgs = shellIntegrationArgs.get("windows-pwsh-login" /* WindowsPwshLogin */);
+      }
+      if (!newArgs) {
+        return { type: "failure", reason: ShellIntegrationInjectionFailureReason.UnsupportedArgs };
+      }
+      newArgs = [...newArgs];
+      newArgs[newArgs.length - 1] = format(newArgs[newArgs.length - 1], appRoot, "");
+      envMixin["VSCODE_STABLE"] = productService.quality === "stable" ? "1" : "0";
+      if (options.shellIntegration.suggestEnabled) {
+        envMixin["VSCODE_SUGGEST"] = "1";
+      }
+      return { type, newArgs, envMixin };
+    } else if (shell === "bash.exe") {
+      if (!originalArgs || originalArgs.length === 0) {
+        newArgs = shellIntegrationArgs.get("bash" /* Bash */);
+      } else if (areZshBashFishLoginArgs(originalArgs)) {
+        envMixin["VSCODE_SHELL_LOGIN"] = "1";
+        addEnvMixinPathPrefix(options, envMixin, shell);
+        newArgs = shellIntegrationArgs.get("bash" /* Bash */);
+      }
+      if (!newArgs) {
+        return { type: "failure", reason: ShellIntegrationInjectionFailureReason.UnsupportedArgs };
+      }
+      newArgs = [...newArgs];
+      newArgs[newArgs.length - 1] = format(newArgs[newArgs.length - 1], appRoot);
+      envMixin["VSCODE_STABLE"] = productService.quality === "stable" ? "1" : "0";
+      return { type, newArgs, envMixin };
+    }
+    logService.warn(`Shell integration cannot be enabled for executable "${shellLaunchConfig.executable}" and args`, shellLaunchConfig.args);
+    return { type: "failure", reason: ShellIntegrationInjectionFailureReason.UnsupportedShell };
+  }
+  switch (shell) {
+    case "bash": {
+      if (!originalArgs || originalArgs.length === 0) {
+        newArgs = shellIntegrationArgs.get("bash" /* Bash */);
+      } else if (areZshBashFishLoginArgs(originalArgs)) {
+        envMixin["VSCODE_SHELL_LOGIN"] = "1";
+        addEnvMixinPathPrefix(options, envMixin, shell);
+        newArgs = shellIntegrationArgs.get("bash" /* Bash */);
+      }
+      if (!newArgs) {
+        return { type: "failure", reason: ShellIntegrationInjectionFailureReason.UnsupportedArgs };
+      }
+      newArgs = [...newArgs];
+      newArgs[newArgs.length - 1] = format(newArgs[newArgs.length - 1], appRoot);
+      envMixin["VSCODE_STABLE"] = productService.quality === "stable" ? "1" : "0";
+      return { type, newArgs, envMixin };
+    }
+    case "fish": {
+      if (!originalArgs || originalArgs.length === 0) {
+        newArgs = shellIntegrationArgs.get("fish" /* Fish */);
+      } else if (areZshBashFishLoginArgs(originalArgs)) {
+        newArgs = shellIntegrationArgs.get("fish-login" /* FishLogin */);
+      } else if (originalArgs === shellIntegrationArgs.get("fish" /* Fish */) || originalArgs === shellIntegrationArgs.get("fish-login" /* FishLogin */)) {
+        newArgs = originalArgs;
+      }
+      if (!newArgs) {
+        return { type: "failure", reason: ShellIntegrationInjectionFailureReason.UnsupportedArgs };
+      }
+      addEnvMixinPathPrefix(options, envMixin, shell);
+      newArgs = [...newArgs];
+      newArgs[newArgs.length - 1] = format(newArgs[newArgs.length - 1], appRoot);
+      return { type, newArgs, envMixin };
+    }
+    case "pwsh": {
+      if (!originalArgs || arePwshImpliedArgs(originalArgs)) {
+        newArgs = shellIntegrationArgs.get("pwsh" /* Pwsh */);
+      } else if (arePwshLoginArgs(originalArgs)) {
+        newArgs = shellIntegrationArgs.get("pwsh-login" /* PwshLogin */);
+      }
+      if (!newArgs) {
+        return { type: "failure", reason: ShellIntegrationInjectionFailureReason.UnsupportedArgs };
+      }
+      if (options.shellIntegration.suggestEnabled) {
+        envMixin["VSCODE_SUGGEST"] = "1";
+      }
+      newArgs = [...newArgs];
+      newArgs[newArgs.length - 1] = format(newArgs[newArgs.length - 1], appRoot, "");
+      envMixin["VSCODE_STABLE"] = productService.quality === "stable" ? "1" : "0";
+      return { type, newArgs, envMixin };
+    }
+    case "zsh": {
+      if (!originalArgs || originalArgs.length === 0) {
+        newArgs = shellIntegrationArgs.get("zsh" /* Zsh */);
+      } else if (areZshBashFishLoginArgs(originalArgs)) {
+        newArgs = shellIntegrationArgs.get("zsh-login" /* ZshLogin */);
+        addEnvMixinPathPrefix(options, envMixin, shell);
+      } else if (originalArgs === shellIntegrationArgs.get("zsh" /* Zsh */) || originalArgs === shellIntegrationArgs.get("zsh-login" /* ZshLogin */)) {
+        newArgs = originalArgs;
+      }
+      if (!newArgs) {
+        return { type: "failure", reason: ShellIntegrationInjectionFailureReason.UnsupportedArgs };
+      }
+      newArgs = [...newArgs];
+      newArgs[newArgs.length - 1] = format(newArgs[newArgs.length - 1], appRoot);
+      let username;
+      try {
+        username = os.userInfo().username;
+      } catch {
+        username = "unknown";
+      }
+      const zdotdir = path.join(os.tmpdir(), `${username}-${productService.applicationName}-zsh`);
+      envMixin["ZDOTDIR"] = zdotdir;
+      const userZdotdir = env?.ZDOTDIR ?? os.homedir() ?? `~`;
+      envMixin["USER_ZDOTDIR"] = userZdotdir;
+      const filesToCopy = [];
+      filesToCopy.push({
+        source: path.join(appRoot, "out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-rc.zsh"),
+        dest: path.join(zdotdir, ".zshrc")
+      });
+      filesToCopy.push({
+        source: path.join(appRoot, "out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-profile.zsh"),
+        dest: path.join(zdotdir, ".zprofile")
+      });
+      filesToCopy.push({
+        source: path.join(appRoot, "out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-env.zsh"),
+        dest: path.join(zdotdir, ".zshenv")
+      });
+      filesToCopy.push({
+        source: path.join(appRoot, "out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-login.zsh"),
+        dest: path.join(zdotdir, ".zlogin")
+      });
+      return { type, newArgs, envMixin, filesToCopy };
+    }
+  }
+  logService.warn(`Shell integration cannot be enabled for executable "${shellLaunchConfig.executable}" and args`, shellLaunchConfig.args);
+  return { type: "failure", reason: ShellIntegrationInjectionFailureReason.UnsupportedShell };
+}
+__name(getShellIntegrationInjection, "getShellIntegrationInjection");
+function addEnvMixinPathPrefix(options, envMixin, shell) {
+  if ((isMacintosh || shell === "fish") && options.environmentVariableCollections) {
+    const deserialized = deserializeEnvironmentVariableCollections(options.environmentVariableCollections);
+    const merged = new MergedEnvironmentVariableCollection(deserialized);
+    const pathEntry = merged.getVariableMap({ workspaceFolder: options.workspaceFolder }).get("PATH");
+    const prependToPath = [];
+    if (pathEntry) {
+      for (const mutator of pathEntry) {
+        if (mutator.type === EnvironmentVariableMutatorType.Prepend) {
+          prependToPath.push(mutator.value);
+        }
+      }
+    }
+    if (prependToPath.length > 0) {
+      envMixin["VSCODE_PATH_PREFIX"] = prependToPath.join("");
+    }
+  }
+}
+__name(addEnvMixinPathPrefix, "addEnvMixinPathPrefix");
+var ShellIntegrationExecutable = /* @__PURE__ */ ((ShellIntegrationExecutable2) => {
+  ShellIntegrationExecutable2["WindowsPwsh"] = "windows-pwsh";
+  ShellIntegrationExecutable2["WindowsPwshLogin"] = "windows-pwsh-login";
+  ShellIntegrationExecutable2["Pwsh"] = "pwsh";
+  ShellIntegrationExecutable2["PwshLogin"] = "pwsh-login";
+  ShellIntegrationExecutable2["Zsh"] = "zsh";
+  ShellIntegrationExecutable2["ZshLogin"] = "zsh-login";
+  ShellIntegrationExecutable2["Bash"] = "bash";
+  ShellIntegrationExecutable2["Fish"] = "fish";
+  ShellIntegrationExecutable2["FishLogin"] = "fish-login";
+  return ShellIntegrationExecutable2;
+})(ShellIntegrationExecutable || {});
+const shellIntegrationArgs = /* @__PURE__ */ new Map();
+shellIntegrationArgs.set("windows-pwsh" /* WindowsPwsh */, ["-noexit", "-command", 'try { . "{0}\\out\\vs\\workbench\\contrib\\terminal\\common\\scripts\\shellIntegration.ps1" } catch {}{1}']);
+shellIntegrationArgs.set("windows-pwsh-login" /* WindowsPwshLogin */, ["-l", "-noexit", "-command", 'try { . "{0}\\out\\vs\\workbench\\contrib\\terminal\\common\\scripts\\shellIntegration.ps1" } catch {}{1}']);
+shellIntegrationArgs.set("pwsh" /* Pwsh */, ["-noexit", "-command", '. "{0}/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration.ps1"{1}']);
+shellIntegrationArgs.set("pwsh-login" /* PwshLogin */, ["-l", "-noexit", "-command", '. "{0}/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration.ps1"']);
+shellIntegrationArgs.set("zsh" /* Zsh */, ["-i"]);
+shellIntegrationArgs.set("zsh-login" /* ZshLogin */, ["-il"]);
+shellIntegrationArgs.set("bash" /* Bash */, ["--init-file", "{0}/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh"]);
+shellIntegrationArgs.set("fish" /* Fish */, ["--init-command", 'source "{0}/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration.fish"']);
+shellIntegrationArgs.set("fish-login" /* FishLogin */, ["-l", "--init-command", 'source "{0}/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration.fish"']);
+const pwshLoginArgs = ["-login", "-l"];
+const shLoginArgs = ["--login", "-l"];
+const shInteractiveArgs = ["-i", "--interactive"];
+const pwshImpliedArgs = ["-nol", "-nologo"];
+function arePwshLoginArgs(originalArgs) {
+  if (typeof originalArgs === "string") {
+    return pwshLoginArgs.includes(originalArgs.toLowerCase());
+  } else {
+    return originalArgs.length === 1 && pwshLoginArgs.includes(originalArgs[0].toLowerCase()) || originalArgs.length === 2 && (pwshLoginArgs.includes(originalArgs[0].toLowerCase()) || pwshLoginArgs.includes(originalArgs[1].toLowerCase())) && (pwshImpliedArgs.includes(originalArgs[0].toLowerCase()) || pwshImpliedArgs.includes(originalArgs[1].toLowerCase()));
+  }
+}
+__name(arePwshLoginArgs, "arePwshLoginArgs");
+function arePwshImpliedArgs(originalArgs) {
+  if (typeof originalArgs === "string") {
+    return pwshImpliedArgs.includes(originalArgs.toLowerCase());
+  } else {
+    return originalArgs.length === 0 || originalArgs?.length === 1 && pwshImpliedArgs.includes(originalArgs[0].toLowerCase());
+  }
+}
+__name(arePwshImpliedArgs, "arePwshImpliedArgs");
+function areZshBashFishLoginArgs(originalArgs) {
+  if (typeof originalArgs !== "string") {
+    originalArgs = originalArgs.filter((arg) => !shInteractiveArgs.includes(arg.toLowerCase()));
+  }
+  return originalArgs === "string" && shLoginArgs.includes(originalArgs.toLowerCase()) || typeof originalArgs !== "string" && originalArgs.length === 1 && shLoginArgs.includes(originalArgs[0].toLowerCase());
+}
+__name(areZshBashFishLoginArgs, "areZshBashFishLoginArgs");
+export {
+  getShellIntegrationInjection,
+  getWindowsBuildNumber
+};
+//# sourceMappingURL=terminalEnvironment.js.map

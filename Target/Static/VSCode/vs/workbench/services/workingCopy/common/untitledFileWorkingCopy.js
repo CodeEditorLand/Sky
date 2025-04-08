@@ -1,1 +1,176 @@
-var y=Object.defineProperty,C=Object.getOwnPropertyDescriptor,h=(e,i,t,s)=>{for(var o,r=s>1?void 0:s?C(i,t):i,n=e.length-1;n>=0;n--)(o=e[n])&&(r=(s?o(i,t,r):o(r))||r);return s&&r&&y(i,t,r),r},l=(e,i)=>(t,s)=>i(t,s,e);import{Emitter as r}from"../../../../base/common/event.js";import"../../../../base/common/buffer.js";import{WorkingCopyCapabilities as p}from"./workingCopy.js";import{SnapshotContext as c}from"./fileWorkingCopy.js";import{Disposable as g}from"../../../../base/common/lifecycle.js";import"../../../../base/common/uri.js";import{IWorkingCopyService as f}from"./workingCopyService.js";import{CancellationToken as m}from"../../../../base/common/cancellation.js";import"../../../common/editor.js";import{raceCancellation as k}from"../../../../base/common/async.js";import{ILogService as u}from"../../../../platform/log/common/log.js";import{IWorkingCopyBackupService as M}from"./workingCopyBackup.js";import{emptyStream as I}from"../../../../base/common/stream.js";let d=class extends g{constructor(e,i,t,s,o,r,n,a,h,d,l){super(),this.typeId=e,this.resource=i,this.name=t,this.hasAssociatedFilePath=s,this.isScratchpad=o,this.initialContents=r,this.modelFactory=n,this.saveDelegate=a,this.workingCopyBackupService=d,this.logService=l,this.capabilities=this.isScratchpad?p.Untitled|p.Scratchpad:p.Untitled,this.modified=this.hasAssociatedFilePath||!(!this.initialContents||!1===this.initialContents.markModified),this._register(h.registerWorkingCopy(this))}capabilities;_model=void 0;get model(){return this._model}_onDidChangeContent=this._register(new r);onDidChangeContent=this._onDidChangeContent.event;_onDidChangeDirty=this._register(new r);onDidChangeDirty=this._onDidChangeDirty.event;_onDidSave=this._register(new r);onDidSave=this._onDidSave.event;_onDidRevert=this._register(new r);onDidRevert=this._onDidRevert.event;_onWillDispose=this._register(new r);onWillDispose=this._onWillDispose.event;modified;isDirty(){return this.modified&&!this.isScratchpad}isModified(){return this.modified}setModified(e){this.modified!==e&&(this.modified=e,this.isScratchpad||this._onDidChangeDirty.fire())}async resolve(){if(this.trace("resolve()"),this.isResolved())return void this.trace("resolve() - exit (already resolved)");let e;const i=await this.workingCopyBackupService.resolve(this);i?(this.trace("resolve() - with backup"),e=i.value):this.initialContents?.value?(this.trace("resolve() - with initial contents"),e=this.initialContents.value):(this.trace("resolve() - empty"),e=I()),await this.doCreateModel(e),this.setModified(this.hasAssociatedFilePath||!!i||!(!this.initialContents||!1===this.initialContents.markModified)),(i||this.initialContents)&&this._onDidChangeContent.fire()}async doCreateModel(e){this.trace("doCreateModel()"),this._model=this._register(await this.modelFactory.createModel(this.resource,e,m.None)),this.installModelListeners(this._model)}installModelListeners(e){this._register(e.onDidChangeContent((e=>this.onModelContentChanged(e)))),this._register(e.onWillDispose((()=>this.dispose())))}onModelContentChanged(e){!this.hasAssociatedFilePath&&e.isInitial?this.setModified(!1):this.setModified(!0),this._onDidChangeContent.fire()}isResolved(){return!!this.model}get backupDelay(){return this.model?.configuration?.backupDelay}async backup(e){let i;return this.isResolved()?i=await k(this.model.snapshot(c.Backup,e),e):this.initialContents&&(i=this.initialContents.value),{content:i}}async save(e){this.trace("save()");const i=await this.saveDelegate(this,e);return i&&this._onDidSave.fire({reason:e?.reason,source:e?.source}),i}async revert(){this.trace("revert()"),this.setModified(!1),this._onDidRevert.fire(),this.dispose()}dispose(){this.trace("dispose()"),this._onWillDispose.fire(),super.dispose()}trace(e){this.logService.trace(`[untitled file working copy] ${e}`,this.resource.toString(),this.typeId)}};d=h([l(8,f),l(9,M),l(10,u)],d);export{d as UntitledFileWorkingCopy};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Event, Emitter } from "../../../../base/common/event.js";
+import { VSBufferReadableStream } from "../../../../base/common/buffer.js";
+import { IWorkingCopyBackup, IWorkingCopySaveEvent, WorkingCopyCapabilities } from "./workingCopy.js";
+import { IFileWorkingCopy, IFileWorkingCopyModel, IFileWorkingCopyModelFactory, SnapshotContext } from "./fileWorkingCopy.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IWorkingCopyService } from "./workingCopyService.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { ISaveOptions } from "../../../common/editor.js";
+import { raceCancellation } from "../../../../base/common/async.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { IWorkingCopyBackupService } from "./workingCopyBackup.js";
+import { emptyStream } from "../../../../base/common/stream.js";
+let UntitledFileWorkingCopy = class extends Disposable {
+  //#endregion
+  constructor(typeId, resource, name, hasAssociatedFilePath, isScratchpad, initialContents, modelFactory, saveDelegate, workingCopyService, workingCopyBackupService, logService) {
+    super();
+    this.typeId = typeId;
+    this.resource = resource;
+    this.name = name;
+    this.hasAssociatedFilePath = hasAssociatedFilePath;
+    this.isScratchpad = isScratchpad;
+    this.initialContents = initialContents;
+    this.modelFactory = modelFactory;
+    this.saveDelegate = saveDelegate;
+    this.workingCopyBackupService = workingCopyBackupService;
+    this.logService = logService;
+    this.capabilities = this.isScratchpad ? WorkingCopyCapabilities.Untitled | WorkingCopyCapabilities.Scratchpad : WorkingCopyCapabilities.Untitled;
+    this.modified = this.hasAssociatedFilePath || Boolean(this.initialContents && this.initialContents.markModified !== false);
+    this._register(workingCopyService.registerWorkingCopy(this));
+  }
+  static {
+    __name(this, "UntitledFileWorkingCopy");
+  }
+  capabilities;
+  _model = void 0;
+  get model() {
+    return this._model;
+  }
+  //#region Events
+  _onDidChangeContent = this._register(new Emitter());
+  onDidChangeContent = this._onDidChangeContent.event;
+  _onDidChangeDirty = this._register(new Emitter());
+  onDidChangeDirty = this._onDidChangeDirty.event;
+  _onDidSave = this._register(new Emitter());
+  onDidSave = this._onDidSave.event;
+  _onDidRevert = this._register(new Emitter());
+  onDidRevert = this._onDidRevert.event;
+  _onWillDispose = this._register(new Emitter());
+  onWillDispose = this._onWillDispose.event;
+  //#region Dirty/Modified
+  modified;
+  isDirty() {
+    return this.modified && !this.isScratchpad;
+  }
+  isModified() {
+    return this.modified;
+  }
+  setModified(modified) {
+    if (this.modified === modified) {
+      return;
+    }
+    this.modified = modified;
+    if (!this.isScratchpad) {
+      this._onDidChangeDirty.fire();
+    }
+  }
+  //#endregion
+  //#region Resolve
+  async resolve() {
+    this.trace("resolve()");
+    if (this.isResolved()) {
+      this.trace("resolve() - exit (already resolved)");
+      return;
+    }
+    let untitledContents;
+    const backup = await this.workingCopyBackupService.resolve(this);
+    if (backup) {
+      this.trace("resolve() - with backup");
+      untitledContents = backup.value;
+    } else if (this.initialContents?.value) {
+      this.trace("resolve() - with initial contents");
+      untitledContents = this.initialContents.value;
+    } else {
+      this.trace("resolve() - empty");
+      untitledContents = emptyStream();
+    }
+    await this.doCreateModel(untitledContents);
+    this.setModified(this.hasAssociatedFilePath || !!backup || Boolean(this.initialContents && this.initialContents.markModified !== false));
+    if (!!backup || this.initialContents) {
+      this._onDidChangeContent.fire();
+    }
+  }
+  async doCreateModel(contents) {
+    this.trace("doCreateModel()");
+    this._model = this._register(await this.modelFactory.createModel(this.resource, contents, CancellationToken.None));
+    this.installModelListeners(this._model);
+  }
+  installModelListeners(model) {
+    this._register(model.onDidChangeContent((e) => this.onModelContentChanged(e)));
+    this._register(model.onWillDispose(() => this.dispose()));
+  }
+  onModelContentChanged(e) {
+    if (!this.hasAssociatedFilePath && e.isInitial) {
+      this.setModified(false);
+    } else {
+      this.setModified(true);
+    }
+    this._onDidChangeContent.fire();
+  }
+  isResolved() {
+    return !!this.model;
+  }
+  //#endregion
+  //#region Backup
+  get backupDelay() {
+    return this.model?.configuration?.backupDelay;
+  }
+  async backup(token) {
+    let content = void 0;
+    if (this.isResolved()) {
+      content = await raceCancellation(this.model.snapshot(SnapshotContext.Backup, token), token);
+    } else if (this.initialContents) {
+      content = this.initialContents.value;
+    }
+    return { content };
+  }
+  //#endregion
+  //#region Save
+  async save(options) {
+    this.trace("save()");
+    const result = await this.saveDelegate(this, options);
+    if (result) {
+      this._onDidSave.fire({ reason: options?.reason, source: options?.source });
+    }
+    return result;
+  }
+  //#endregion
+  //#region Revert
+  async revert() {
+    this.trace("revert()");
+    this.setModified(false);
+    this._onDidRevert.fire();
+    this.dispose();
+  }
+  //#endregion
+  dispose() {
+    this.trace("dispose()");
+    this._onWillDispose.fire();
+    super.dispose();
+  }
+  trace(msg) {
+    this.logService.trace(`[untitled file working copy] ${msg}`, this.resource.toString(), this.typeId);
+  }
+};
+UntitledFileWorkingCopy = __decorateClass([
+  __decorateParam(8, IWorkingCopyService),
+  __decorateParam(9, IWorkingCopyBackupService),
+  __decorateParam(10, ILogService)
+], UntitledFileWorkingCopy);
+export {
+  UntitledFileWorkingCopy
+};
+//# sourceMappingURL=untitledFileWorkingCopy.js.map

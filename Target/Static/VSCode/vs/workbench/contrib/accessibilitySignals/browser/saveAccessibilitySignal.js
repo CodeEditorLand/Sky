@@ -1,1 +1,37 @@
-var l=Object.defineProperty,m=Object.getOwnPropertyDescriptor,p=(i,e,s,r)=>{for(var o,c=r>1?void 0:r?m(e,s):e,t=i.length-1;t>=0;t--)(o=i[t])&&(c=(r?o(e,s,c):o(c))||c);return r&&c&&l(e,s,c),c},a=(i,e)=>(s,r)=>e(s,r,i);import{Disposable as v}from"../../../../base/common/lifecycle.js";import{AccessibilitySignal as y,IAccessibilitySignalService as S}from"../../../../platform/accessibilitySignal/browser/accessibilitySignalService.js";import"../../../common/contributions.js";import{SaveReason as g}from"../../../common/editor.js";import{IWorkingCopyService as I}from"../../../services/workingCopy/common/workingCopyService.js";let c=class extends v{constructor(i,e){super(),this._accessibilitySignalService=i,this._workingCopyService=e,this._register(this._workingCopyService.onDidSave((i=>this._accessibilitySignalService.playSignal(y.save,{userGesture:i.reason===g.EXPLICIT}))))}static ID="workbench.contrib.saveAccessibilitySignal"};c=p([a(0,S),a(1,I)],c);export{c as SaveAccessibilitySignalContribution};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { AccessibilitySignal, IAccessibilitySignalService } from "../../../../platform/accessibilitySignal/browser/accessibilitySignalService.js";
+import { IWorkbenchContribution } from "../../../common/contributions.js";
+import { SaveReason } from "../../../common/editor.js";
+import { IWorkingCopyService } from "../../../services/workingCopy/common/workingCopyService.js";
+let SaveAccessibilitySignalContribution = class extends Disposable {
+  constructor(_accessibilitySignalService, _workingCopyService) {
+    super();
+    this._accessibilitySignalService = _accessibilitySignalService;
+    this._workingCopyService = _workingCopyService;
+    this._register(this._workingCopyService.onDidSave((e) => this._accessibilitySignalService.playSignal(AccessibilitySignal.save, { userGesture: e.reason === SaveReason.EXPLICIT })));
+  }
+  static {
+    __name(this, "SaveAccessibilitySignalContribution");
+  }
+  static ID = "workbench.contrib.saveAccessibilitySignal";
+};
+SaveAccessibilitySignalContribution = __decorateClass([
+  __decorateParam(0, IAccessibilitySignalService),
+  __decorateParam(1, IWorkingCopyService)
+], SaveAccessibilitySignalContribution);
+export {
+  SaveAccessibilitySignalContribution
+};
+//# sourceMappingURL=saveAccessibilitySignal.js.map

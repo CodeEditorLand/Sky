@@ -1,1 +1,21 @@
-import{createDecorator as e}from"../../../../platform/instantiation/common/instantiation.js";import"../../../../base/common/platform.js";import{process as n}from"../../../../base/parts/sandbox/electron-sandbox/globals.js";import{InstantiationType as r,registerSingleton as o}from"../../../../platform/instantiation/common/extensions.js";const i=e("shellEnvironmentService");class t{getShellEnv(){return n.shellEnv()}}o(i,t,r.Delayed);export{i as IShellEnvironmentService,t as ShellEnvironmentService};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { IProcessEnvironment } from "../../../../base/common/platform.js";
+import { process } from "../../../../base/parts/sandbox/electron-sandbox/globals.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+const IShellEnvironmentService = createDecorator("shellEnvironmentService");
+class ShellEnvironmentService {
+  static {
+    __name(this, "ShellEnvironmentService");
+  }
+  getShellEnv() {
+    return process.shellEnv();
+  }
+}
+registerSingleton(IShellEnvironmentService, ShellEnvironmentService, InstantiationType.Delayed);
+export {
+  IShellEnvironmentService,
+  ShellEnvironmentService
+};
+//# sourceMappingURL=shellEnvironmentService.js.map

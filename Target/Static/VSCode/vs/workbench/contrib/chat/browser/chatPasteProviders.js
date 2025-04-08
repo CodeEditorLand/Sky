@@ -1,1 +1,367 @@
-var L=Object.defineProperty,W=Object.getOwnPropertyDescriptor,T=(e,t,i,r)=>{for(var a,s=r>1?void 0:r?W(t,i):t,n=e.length-1;n>=0;n--)(a=e[n])&&(s=(r?a(t,i,s):a(s))||s);return r&&s&&L(t,i,s),s},d=(e,t)=>(i,r)=>t(i,r,e);import{VSBuffer as q}from"../../../../base/common/buffer.js";import"../../../../base/common/cancellation.js";import{Codicon as b}from"../../../../base/common/codicons.js";import{createStringDataTransferItem as H,VSDataTransfer as _}from"../../../../base/common/dataTransfer.js";import{HierarchicalKind as w}from"../../../../base/common/hierarchicalKind.js";import{Disposable as O}from"../../../../base/common/lifecycle.js";import{Mimes as M}from"../../../../base/common/mime.js";import{basename as B,joinPath as R}from"../../../../base/common/resources.js";import{URI as A}from"../../../../base/common/uri.js";import"../../../../editor/common/core/range.js";import"../../../../editor/common/languages.js";import"../../../../editor/common/model.js";import{ILanguageFeaturesService as j}from"../../../../editor/common/services/languageFeatures.js";import{IModelService as z}from"../../../../editor/common/services/model.js";import{localize as I}from"../../../../nls.js";import{IEnvironmentService as F}from"../../../../platform/environment/common/environment.js";import{IFileService as U}from"../../../../platform/files/common/files.js";import{ILogService as N}from"../../../../platform/log/common/log.js";import{IExtensionService as K,isProposedApiEnabled as J}from"../../../services/extensions/common/extensions.js";import"../common/chatModel.js";import{IChatWidgetService as Y}from"./chat.js";import{ChatInputPart as C}from"./chatInputPart.js";import{resizeImage as G}from"./imageUtils.js";const E="application/vnd.code.additional-editor-data";let v=class{constructor(e,t,i,r,a){this.chatWidgetService=e,this.extensionService=t,this.fileService=i,this.environmentService=r,this.logService=a,this.imagesFolder=R(this.environmentService.workspaceStorageHome,"vscode-chat-images"),this.cleanupOldImages()}imagesFolder;kind=new w("chat.attach.image");providedPasteEditKinds=[this.kind];copyMimeTypes=[];pasteMimeTypes=["image/*"];async provideDocumentPasteEdits(e,t,i,r,a){if(!this.extensionService.extensions.some((e=>J(e,"chatReferenceBinaryData"))))return;const s=["image/png","image/jpeg","image/jpg","image/bmp","image/gif","image/tiff"];let n,o;for(const e of s)if(o=i.get(e),o){n=e;break}if(!o||!n)return;const c=await(o.asFile()?.data());if(a.isCancellationRequested||!c)return;const m=this.chatWidgetService.getWidgetByInputUri(e.uri);if(!m)return;const d=m.attachmentModel.attachments,l=I("pastedImageName","Pasted Image");let p=l;for(let e=2;d.some((e=>e.name===p));e++)p=`${l} ${e}`;const g=await this.createFileForMedia(c,n);if(a.isCancellationRequested||!g)return;const u=await G(c);if(a.isCancellationRequested||!u)return;const f=await Q(u,n,a,p,g);if(a.isCancellationRequested||!f||(m.attachmentModel.addContext(f),m.attachmentModel.getAttachmentIDs().has(f.id)))return;return $(k(e,f,n,this.kind,I("pastedImageAttachment","Pasted Image Attachment"),this.chatWidgetService))}async createFileForMedia(e,t){await this.fileService.exists(this.imagesFolder)||await this.fileService.createFolder(this.imagesFolder);const i=t.split("/")[1]||"png",r=`image-${Date.now()}.${i}`,a=R(this.imagesFolder,r),s=q.wrap(e);return await this.fileService.writeFile(a,s),a}async cleanupOldImages(){if(!await this.fileService.exists(this.imagesFolder))return;const e=await this.fileService.resolve(this.imagesFolder);e.children&&await Promise.all(e.children.map((async e=>{try{const t=this.getTimestampFromFilename(e.name);t&&Date.now()-t>6048e5&&await this.fileService.del(e.resource)}catch(e){this.logService.error("Failed to clean up old images",e)}})))}getTimestampFromFilename(e){const t=e.match(/image-(\d+)\./);if(t)return parseInt(t[1],10)}};async function Q(e,t,i,r,a){const s=await X(e);if(!i.isCancellationRequested)return{kind:"image",value:e,id:s,name:r,icon:b.fileMedia,mimeType:t,isPasted:!0,references:[{reference:a,kind:"reference"}]}}async function X(e){const t=await crypto.subtle.digest("SHA-256",e);return Array.from(new Uint8Array(t)).map((e=>e.toString(16).padStart(2,"0"))).join("")}function Le(e){return!(e.length<4)&&Object.values({png:[137,80,78,71,13,10,26,10],jpeg:[255,216,255],bmp:[66,77],gif:[71,73,70,56],tiff:[73,73,42,0]}).some((t=>t.every(((t,i)=>e[i]===t))))}v=T([d(2,U),d(3,F),d(4,N)],v);class Z{providedPasteEditKinds=[];copyMimeTypes=[E];pasteMimeTypes=[];async prepareDocumentPaste(e,t,i,r){if(e.uri.scheme===C.INPUT_SCHEME)return;const a=new _,s={range:t[0],uri:e.uri.toJSON()};return a.append(E,H(JSON.stringify(s))),a}}class ee{constructor(e,t){this.chatWidgetService=e,this.modelService=t}kind=new w("chat.attach.text");providedPasteEditKinds=[this.kind];copyMimeTypes=[];pasteMimeTypes=[E];async provideDocumentPasteEdits(e,t,i,r,a){if(e.uri.scheme!==C.INPUT_SCHEME)return;const s=i.get(M.text),n=i.get("vscode-editor-data"),o=i.get(E);if(!n||!s||!o)return;const c=await s.asString(),m=JSON.parse(await n.asString()),d=JSON.parse(await o.asString()),l=this.chatWidgetService.getWidgetByInputUri(e.uri);if(!l)return;const p=d.range.startLineNumber;if(p===d.range.endLineNumber){const e=this.modelService.getModel(A.revive(d.uri));if(!e||e.getLineContent(p)!==c)return}const g=te(c,A.revive(d.uri),m.mode,d.range);if(a.isCancellationRequested||!g||l.attachmentModel.getAttachmentIDs().has(g.id))return;const u=k(e,g,M.text,this.kind,I("pastedCodeAttachment","Pasted Code Attachment"),this.chatWidgetService);return u.yieldTo=[{kind:w.Empty.append("text","plain")}],$(u)}}function te(e,t,i,r){const a=B(t),s=r.startLineNumber,n=r.endLineNumber,o=`Copied Selection of Code: \n\n\n From the file: ${a} From lines ${s} to ${n} \n \`\`\`${e}\`\`\``,c=s===n?I("pastedAttachment.oneLine","1 line"):I("pastedAttachment.multipleLines","{0} lines",n+1-s);return{kind:"paste",value:o,id:`${a}${s}${n}${r.startColumn}${r.endColumn}`,name:`${a} ${c}`,icon:b.code,pastedLines:c,language:i,fileName:t.toString(),copiedFrom:{uri:t,range:r},code:e,references:[{reference:t,kind:"reference"}]}}function k(e,t,i,r,a,s){return{insertText:"",title:a,kind:r,handledMimeType:i,additionalEdit:{edits:[{resource:e.uri,variable:t,undo:()=>{const i=s.getWidgetByInputUri(e.uri);if(!i)throw new Error("No widget found for undo");i.attachmentModel.delete(t.id)},redo:()=>{const i=s.getWidgetByInputUri(e.uri);if(!i)throw new Error("No widget found for redo");i.attachmentModel.addContext(t)},metadata:{needsConfirmation:!1,label:t.name}}]}}}function $(e){return{edits:[e],dispose:()=>{}}}let P=class extends O{constructor(e,t,i,r,a,s,n){super(),this._register(e.documentPasteEditProvider.register({scheme:C.INPUT_SCHEME,pattern:"*",hasAccessToAllModels:!0},new v(t,i,r,s,n))),this._register(e.documentPasteEditProvider.register({scheme:C.INPUT_SCHEME,pattern:"*",hasAccessToAllModels:!0},new ee(t,a))),this._register(e.documentPasteEditProvider.register("*",new Z))}};P=T([d(0,j),d(1,Y),d(2,K),d(3,U),d(4,z),d(5,F),d(6,N)],P);export{P as ChatPasteProvidersFeature,Z as CopyTextProvider,v as PasteImageProvider,ee as PasteTextProvider,X as imageToHash,Le as isImage};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { VSBuffer } from "../../../../base/common/buffer.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { createStringDataTransferItem, IDataTransferItem, IReadonlyVSDataTransfer, VSDataTransfer } from "../../../../base/common/dataTransfer.js";
+import { HierarchicalKind } from "../../../../base/common/hierarchicalKind.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { Mimes } from "../../../../base/common/mime.js";
+import { basename, joinPath } from "../../../../base/common/resources.js";
+import { URI, UriComponents } from "../../../../base/common/uri.js";
+import { IRange } from "../../../../editor/common/core/range.js";
+import { DocumentPasteContext, DocumentPasteEdit, DocumentPasteEditProvider, DocumentPasteEditsSession } from "../../../../editor/common/languages.js";
+import { ITextModel } from "../../../../editor/common/model.js";
+import { ILanguageFeaturesService } from "../../../../editor/common/services/languageFeatures.js";
+import { IModelService } from "../../../../editor/common/services/model.js";
+import { localize } from "../../../../nls.js";
+import { IEnvironmentService } from "../../../../platform/environment/common/environment.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { IExtensionService, isProposedApiEnabled } from "../../../services/extensions/common/extensions.js";
+import { IChatRequestPasteVariableEntry, IChatRequestVariableEntry } from "../common/chatModel.js";
+import { IChatWidgetService } from "./chat.js";
+import { ChatInputPart } from "./chatInputPart.js";
+import { resizeImage } from "./imageUtils.js";
+const COPY_MIME_TYPES = "application/vnd.code.additional-editor-data";
+let PasteImageProvider = class {
+  constructor(chatWidgetService, extensionService, fileService, environmentService, logService) {
+    this.chatWidgetService = chatWidgetService;
+    this.extensionService = extensionService;
+    this.fileService = fileService;
+    this.environmentService = environmentService;
+    this.logService = logService;
+    this.imagesFolder = joinPath(this.environmentService.workspaceStorageHome, "vscode-chat-images");
+    this.cleanupOldImages();
+  }
+  static {
+    __name(this, "PasteImageProvider");
+  }
+  imagesFolder;
+  kind = new HierarchicalKind("chat.attach.image");
+  providedPasteEditKinds = [this.kind];
+  copyMimeTypes = [];
+  pasteMimeTypes = ["image/*"];
+  async provideDocumentPasteEdits(model, ranges, dataTransfer, context, token) {
+    if (!this.extensionService.extensions.some((ext) => isProposedApiEnabled(ext, "chatReferenceBinaryData"))) {
+      return;
+    }
+    const supportedMimeTypes = [
+      "image/png",
+      "image/jpeg",
+      "image/jpg",
+      "image/bmp",
+      "image/gif",
+      "image/tiff"
+    ];
+    let mimeType;
+    let imageItem;
+    for (const type of supportedMimeTypes) {
+      imageItem = dataTransfer.get(type);
+      if (imageItem) {
+        mimeType = type;
+        break;
+      }
+    }
+    if (!imageItem || !mimeType) {
+      return;
+    }
+    const currClipboard = await imageItem.asFile()?.data();
+    if (token.isCancellationRequested || !currClipboard) {
+      return;
+    }
+    const widget = this.chatWidgetService.getWidgetByInputUri(model.uri);
+    if (!widget) {
+      return;
+    }
+    const attachedVariables = widget.attachmentModel.attachments;
+    const displayName = localize("pastedImageName", "Pasted Image");
+    let tempDisplayName = displayName;
+    for (let appendValue = 2; attachedVariables.some((attachment) => attachment.name === tempDisplayName); appendValue++) {
+      tempDisplayName = `${displayName} ${appendValue}`;
+    }
+    const fileReference = await this.createFileForMedia(currClipboard, mimeType);
+    if (token.isCancellationRequested || !fileReference) {
+      return;
+    }
+    const scaledImageData = await resizeImage(currClipboard);
+    if (token.isCancellationRequested || !scaledImageData) {
+      return;
+    }
+    const scaledImageContext = await getImageAttachContext(scaledImageData, mimeType, token, tempDisplayName, fileReference);
+    if (token.isCancellationRequested || !scaledImageContext) {
+      return;
+    }
+    widget.attachmentModel.addContext(scaledImageContext);
+    const currentContextIds = widget.attachmentModel.getAttachmentIDs();
+    if (currentContextIds.has(scaledImageContext.id)) {
+      return;
+    }
+    const edit = createCustomPasteEdit(model, scaledImageContext, mimeType, this.kind, localize("pastedImageAttachment", "Pasted Image Attachment"), this.chatWidgetService);
+    return createEditSession(edit);
+  }
+  async createFileForMedia(dataTransfer, mimeType) {
+    const exists = await this.fileService.exists(this.imagesFolder);
+    if (!exists) {
+      await this.fileService.createFolder(this.imagesFolder);
+    }
+    const ext = mimeType.split("/")[1] || "png";
+    const filename = `image-${Date.now()}.${ext}`;
+    const fileUri = joinPath(this.imagesFolder, filename);
+    const buffer = VSBuffer.wrap(dataTransfer);
+    await this.fileService.writeFile(fileUri, buffer);
+    return fileUri;
+  }
+  async cleanupOldImages() {
+    const exists = await this.fileService.exists(this.imagesFolder);
+    if (!exists) {
+      return;
+    }
+    const duration = 7 * 24 * 60 * 60 * 1e3;
+    const files = await this.fileService.resolve(this.imagesFolder);
+    if (!files.children) {
+      return;
+    }
+    await Promise.all(files.children.map(async (file) => {
+      try {
+        const timestamp = this.getTimestampFromFilename(file.name);
+        if (timestamp && Date.now() - timestamp > duration) {
+          await this.fileService.del(file.resource);
+        }
+      } catch (err) {
+        this.logService.error("Failed to clean up old images", err);
+      }
+    }));
+  }
+  getTimestampFromFilename(filename) {
+    const match = filename.match(/image-(\d+)\./);
+    if (match) {
+      return parseInt(match[1], 10);
+    }
+    return void 0;
+  }
+};
+PasteImageProvider = __decorateClass([
+  __decorateParam(2, IFileService),
+  __decorateParam(3, IEnvironmentService),
+  __decorateParam(4, ILogService)
+], PasteImageProvider);
+async function getImageAttachContext(data, mimeType, token, displayName, resource) {
+  const imageHash = await imageToHash(data);
+  if (token.isCancellationRequested) {
+    return void 0;
+  }
+  return {
+    kind: "image",
+    value: data,
+    id: imageHash,
+    name: displayName,
+    icon: Codicon.fileMedia,
+    mimeType,
+    isPasted: true,
+    references: [{ reference: resource, kind: "reference" }]
+  };
+}
+__name(getImageAttachContext, "getImageAttachContext");
+async function imageToHash(data) {
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+__name(imageToHash, "imageToHash");
+function isImage(array) {
+  if (array.length < 4) {
+    return false;
+  }
+  const identifier = {
+    png: [137, 80, 78, 71, 13, 10, 26, 10],
+    jpeg: [255, 216, 255],
+    bmp: [66, 77],
+    gif: [71, 73, 70, 56],
+    tiff: [73, 73, 42, 0]
+  };
+  return Object.values(identifier).some(
+    (signature) => signature.every((byte, index) => array[index] === byte)
+  );
+}
+__name(isImage, "isImage");
+class CopyTextProvider {
+  static {
+    __name(this, "CopyTextProvider");
+  }
+  providedPasteEditKinds = [];
+  copyMimeTypes = [COPY_MIME_TYPES];
+  pasteMimeTypes = [];
+  async prepareDocumentPaste(model, ranges, dataTransfer, token) {
+    if (model.uri.scheme === ChatInputPart.INPUT_SCHEME) {
+      return;
+    }
+    const customDataTransfer = new VSDataTransfer();
+    const data = { range: ranges[0], uri: model.uri.toJSON() };
+    customDataTransfer.append(COPY_MIME_TYPES, createStringDataTransferItem(JSON.stringify(data)));
+    return customDataTransfer;
+  }
+}
+class PasteTextProvider {
+  constructor(chatWidgetService, modelService) {
+    this.chatWidgetService = chatWidgetService;
+    this.modelService = modelService;
+  }
+  static {
+    __name(this, "PasteTextProvider");
+  }
+  kind = new HierarchicalKind("chat.attach.text");
+  providedPasteEditKinds = [this.kind];
+  copyMimeTypes = [];
+  pasteMimeTypes = [COPY_MIME_TYPES];
+  async provideDocumentPasteEdits(model, ranges, dataTransfer, context, token) {
+    if (model.uri.scheme !== ChatInputPart.INPUT_SCHEME) {
+      return;
+    }
+    const text = dataTransfer.get(Mimes.text);
+    const editorData = dataTransfer.get("vscode-editor-data");
+    const additionalEditorData = dataTransfer.get(COPY_MIME_TYPES);
+    if (!editorData || !text || !additionalEditorData) {
+      return;
+    }
+    const textdata = await text.asString();
+    const metadata = JSON.parse(await editorData.asString());
+    const additionalData = JSON.parse(await additionalEditorData.asString());
+    const widget = this.chatWidgetService.getWidgetByInputUri(model.uri);
+    if (!widget) {
+      return;
+    }
+    const start = additionalData.range.startLineNumber;
+    const end = additionalData.range.endLineNumber;
+    if (start === end) {
+      const textModel = this.modelService.getModel(URI.revive(additionalData.uri));
+      if (!textModel) {
+        return;
+      }
+      const lineContent = textModel.getLineContent(start);
+      if (lineContent !== textdata) {
+        return;
+      }
+    }
+    const copiedContext = getCopiedContext(textdata, URI.revive(additionalData.uri), metadata.mode, additionalData.range);
+    if (token.isCancellationRequested || !copiedContext) {
+      return;
+    }
+    const currentContextIds = widget.attachmentModel.getAttachmentIDs();
+    if (currentContextIds.has(copiedContext.id)) {
+      return;
+    }
+    const edit = createCustomPasteEdit(model, copiedContext, Mimes.text, this.kind, localize("pastedCodeAttachment", "Pasted Code Attachment"), this.chatWidgetService);
+    edit.yieldTo = [{ kind: HierarchicalKind.Empty.append("text", "plain") }];
+    return createEditSession(edit);
+  }
+}
+function getCopiedContext(code, file, language, range) {
+  const fileName = basename(file);
+  const start = range.startLineNumber;
+  const end = range.endLineNumber;
+  const resultText = `Copied Selection of Code: 
+
+
+ From the file: ${fileName} From lines ${start} to ${end} 
+ \`\`\`${code}\`\`\``;
+  const pastedLines = start === end ? localize("pastedAttachment.oneLine", "1 line") : localize("pastedAttachment.multipleLines", "{0} lines", end + 1 - start);
+  return {
+    kind: "paste",
+    value: resultText,
+    id: `${fileName}${start}${end}${range.startColumn}${range.endColumn}`,
+    name: `${fileName} ${pastedLines}`,
+    icon: Codicon.code,
+    pastedLines,
+    language,
+    fileName: file.toString(),
+    copiedFrom: {
+      uri: file,
+      range
+    },
+    code,
+    references: [{
+      reference: file,
+      kind: "reference"
+    }]
+  };
+}
+__name(getCopiedContext, "getCopiedContext");
+function createCustomPasteEdit(model, context, handledMimeType, kind, title, chatWidgetService) {
+  const customEdit = {
+    resource: model.uri,
+    variable: context,
+    undo: /* @__PURE__ */ __name(() => {
+      const widget = chatWidgetService.getWidgetByInputUri(model.uri);
+      if (!widget) {
+        throw new Error("No widget found for undo");
+      }
+      widget.attachmentModel.delete(context.id);
+    }, "undo"),
+    redo: /* @__PURE__ */ __name(() => {
+      const widget = chatWidgetService.getWidgetByInputUri(model.uri);
+      if (!widget) {
+        throw new Error("No widget found for redo");
+      }
+      widget.attachmentModel.addContext(context);
+    }, "redo"),
+    metadata: { needsConfirmation: false, label: context.name }
+  };
+  return {
+    insertText: "",
+    title,
+    kind,
+    handledMimeType,
+    additionalEdit: {
+      edits: [customEdit]
+    }
+  };
+}
+__name(createCustomPasteEdit, "createCustomPasteEdit");
+function createEditSession(edit) {
+  return {
+    edits: [edit],
+    dispose: /* @__PURE__ */ __name(() => {
+    }, "dispose")
+  };
+}
+__name(createEditSession, "createEditSession");
+let ChatPasteProvidersFeature = class extends Disposable {
+  static {
+    __name(this, "ChatPasteProvidersFeature");
+  }
+  constructor(languageFeaturesService, chatWidgetService, extensionService, fileService, modelService, environmentService, logService) {
+    super();
+    this._register(languageFeaturesService.documentPasteEditProvider.register({ scheme: ChatInputPart.INPUT_SCHEME, pattern: "*", hasAccessToAllModels: true }, new PasteImageProvider(chatWidgetService, extensionService, fileService, environmentService, logService)));
+    this._register(languageFeaturesService.documentPasteEditProvider.register({ scheme: ChatInputPart.INPUT_SCHEME, pattern: "*", hasAccessToAllModels: true }, new PasteTextProvider(chatWidgetService, modelService)));
+    this._register(languageFeaturesService.documentPasteEditProvider.register("*", new CopyTextProvider()));
+  }
+};
+ChatPasteProvidersFeature = __decorateClass([
+  __decorateParam(0, ILanguageFeaturesService),
+  __decorateParam(1, IChatWidgetService),
+  __decorateParam(2, IExtensionService),
+  __decorateParam(3, IFileService),
+  __decorateParam(4, IModelService),
+  __decorateParam(5, IEnvironmentService),
+  __decorateParam(6, ILogService)
+], ChatPasteProvidersFeature);
+export {
+  ChatPasteProvidersFeature,
+  CopyTextProvider,
+  PasteImageProvider,
+  PasteTextProvider,
+  imageToHash,
+  isImage
+};
+//# sourceMappingURL=chatPasteProviders.js.map

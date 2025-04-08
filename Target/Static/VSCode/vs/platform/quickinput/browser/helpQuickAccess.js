@@ -1,1 +1,71 @@
-var a=Object.defineProperty;var I=Object.getOwnPropertyDescriptor;var u=(t,r,e,i)=>{for(var c=i>1?void 0:i?I(r,e):r,o=t.length-1,n;o>=0;o--)(n=t[o])&&(c=(i?n(r,e,c):n(c))||c);return i&&c&&a(r,e,c),c},p=(t,r)=>(e,i)=>r(e,i,t);import{localize as k}from"../../../nls.js";import{Registry as d}from"../../registry/common/platform.js";import{DisposableStore as m}from"../../../base/common/lifecycle.js";import{IKeybindingService as f}from"../../keybinding/common/keybinding.js";import{Extensions as l}from"../common/quickAccess.js";import{IQuickInputService as v}from"../common/quickInput.js";let s=class{constructor(r,e){this.quickInputService=r;this.keybindingService=e}static PREFIX="?";registry=d.as(l.Quickaccess);provide(r){const e=new m;return e.add(r.onDidAccept(()=>{const[i]=r.selectedItems;i&&this.quickInputService.quickAccess.show(i.prefix,{preserveValue:!0})})),e.add(r.onDidChangeValue(i=>{const c=this.registry.getQuickAccessProvider(i.substr(s.PREFIX.length));c&&c.prefix&&c.prefix!==s.PREFIX&&this.quickInputService.quickAccess.show(c.prefix,{preserveValue:!0})})),r.items=this.getQuickAccessProviders().filter(i=>i.prefix!==s.PREFIX),e}getQuickAccessProviders(){return this.registry.getQuickAccessProviders().sort((e,i)=>e.prefix.localeCompare(i.prefix)).flatMap(e=>this.createPicks(e))}createPicks(r){return r.helpEntries.map(e=>{const i=e.prefix||r.prefix,c=i||"\u2026";return{prefix:i,label:c,keybinding:e.commandId?this.keybindingService.lookupKeybinding(e.commandId):void 0,ariaLabel:k("helpPickAriaLabel","{0}, {1}",c,e.description),description:e.description}})}};s=u([p(0,v),p(1,f)],s);export{s as HelpQuickAccessProvider};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { localize } from "../../../nls.js";
+import { Registry } from "../../registry/common/platform.js";
+import { DisposableStore, IDisposable } from "../../../base/common/lifecycle.js";
+import { IKeybindingService } from "../../keybinding/common/keybinding.js";
+import { Extensions, IQuickAccessProvider, IQuickAccessProviderDescriptor, IQuickAccessRegistry } from "../common/quickAccess.js";
+import { IQuickInputService, IQuickPick, IQuickPickItem } from "../common/quickInput.js";
+let HelpQuickAccessProvider = class {
+  constructor(quickInputService, keybindingService) {
+    this.quickInputService = quickInputService;
+    this.keybindingService = keybindingService;
+  }
+  static {
+    __name(this, "HelpQuickAccessProvider");
+  }
+  static PREFIX = "?";
+  registry = Registry.as(Extensions.Quickaccess);
+  provide(picker) {
+    const disposables = new DisposableStore();
+    disposables.add(picker.onDidAccept(() => {
+      const [item] = picker.selectedItems;
+      if (item) {
+        this.quickInputService.quickAccess.show(item.prefix, { preserveValue: true });
+      }
+    }));
+    disposables.add(picker.onDidChangeValue((value) => {
+      const providerDescriptor = this.registry.getQuickAccessProvider(value.substr(HelpQuickAccessProvider.PREFIX.length));
+      if (providerDescriptor && providerDescriptor.prefix && providerDescriptor.prefix !== HelpQuickAccessProvider.PREFIX) {
+        this.quickInputService.quickAccess.show(providerDescriptor.prefix, { preserveValue: true });
+      }
+    }));
+    picker.items = this.getQuickAccessProviders().filter((p) => p.prefix !== HelpQuickAccessProvider.PREFIX);
+    return disposables;
+  }
+  getQuickAccessProviders() {
+    const providers = this.registry.getQuickAccessProviders().sort((providerA, providerB) => providerA.prefix.localeCompare(providerB.prefix)).flatMap((provider) => this.createPicks(provider));
+    return providers;
+  }
+  createPicks(provider) {
+    return provider.helpEntries.map((helpEntry) => {
+      const prefix = helpEntry.prefix || provider.prefix;
+      const label = prefix || "\u2026";
+      return {
+        prefix,
+        label,
+        keybinding: helpEntry.commandId ? this.keybindingService.lookupKeybinding(helpEntry.commandId) : void 0,
+        ariaLabel: localize("helpPickAriaLabel", "{0}, {1}", label, helpEntry.description),
+        description: helpEntry.description
+      };
+    });
+  }
+};
+HelpQuickAccessProvider = __decorateClass([
+  __decorateParam(0, IQuickInputService),
+  __decorateParam(1, IKeybindingService)
+], HelpQuickAccessProvider);
+export {
+  HelpQuickAccessProvider
+};
+//# sourceMappingURL=helpQuickAccess.js.map

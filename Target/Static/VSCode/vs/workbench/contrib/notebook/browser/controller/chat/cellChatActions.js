@@ -1,1 +1,672 @@
-import{Codicon as f}from"../../../../../../base/common/codicons.js";import{KeyChord as X,KeyCode as i,KeyMod as p}from"../../../../../../base/common/keyCodes.js";import{EditorContextKeys as x}from"../../../../../../editor/common/editorContextKeys.js";import{localize as r,localize2 as k}from"../../../../../../nls.js";import{CONTEXT_ACCESSIBILITY_MODE_ENABLED as w}from"../../../../../../platform/accessibility/common/accessibility.js";import{MenuId as S,MenuRegistry as V,registerAction2 as s}from"../../../../../../platform/actions/common/actions.js";import{ICommandService as Y}from"../../../../../../platform/commands/common/commands.js";import{IConfigurationService as j}from"../../../../../../platform/configuration/common/configuration.js";import{ContextKeyExpr as o}from"../../../../../../platform/contextkey/common/contextkey.js";import{InputFocusedContextKey as T}from"../../../../../../platform/contextkey/common/contextkeys.js";import"../../../../../../platform/instantiation/common/instantiation.js";import{KeybindingWeight as c}from"../../../../../../platform/keybinding/common/keybindingsRegistry.js";import{CTX_INLINE_CHAT_FOCUSED as b,CTX_INLINE_CHAT_INNER_CURSOR_FIRST as z,CTX_INLINE_CHAT_INNER_CURSOR_LAST as Q,CTX_INLINE_CHAT_REQUEST_IN_PROGRESS as J,CTX_INLINE_CHAT_RESPONSE_TYPE as R,CTX_INLINE_CHAT_VISIBLE as Z,InlineChatResponseType as q,MENU_INLINE_CHAT_WIDGET_STATUS as ee}from"../../../../inlineChat/common/inlineChat.js";import{CTX_NOTEBOOK_CELL_CHAT_FOCUSED as g,CTX_NOTEBOOK_CHAT_HAS_ACTIVE_REQUEST as U,CTX_NOTEBOOK_CHAT_HAS_AGENT as N,CTX_NOTEBOOK_CHAT_OUTER_FOCUS_POSITION as W,CTX_NOTEBOOK_CHAT_USER_DID_EDIT as H,MENU_CELL_CHAT_INPUT as F,MENU_CELL_CHAT_WIDGET as oe,MENU_CELL_CHAT_WIDGET_STATUS as K}from"./notebookChatContext.js";import{NotebookChatController as l}from"./notebookChatController.js";import{CELL_TITLE_CELL_GROUP_ID as te,NotebookAction as d,NotebookCellAction as O,getContextFromActiveEditor as ne,getEditorFromArgsOrActivePane as G}from"../coreActions.js";import{insertNewCell as re}from"../insertCellActions.js";import{CellEditState as ie}from"../../notebookBrowser.js";import{CellKind as B,NOTEBOOK_EDITOR_CURSOR_BOUNDARY as v,NotebookSetting as h}from"../../../common/notebookCommon.js";import{IS_COMPOSITE_NOTEBOOK as P,NOTEBOOK_CELL_EDITOR_FOCUSED as m,NOTEBOOK_CELL_GENERATED_BY_CHAT as se,NOTEBOOK_EDITOR_EDITABLE as A,NOTEBOOK_EDITOR_FOCUSED as I}from"../../../common/notebookContextKeys.js";import{Iterable as ce}from"../../../../../../base/common/iterator.js";import"../../../../../../editor/browser/editorBrowser.js";import{IEditorService as ae}from"../../../../../services/editor/common/editorService.js";import{ChatContextKeys as le}from"../../../../chat/common/chatContextKeys.js";import{InlineChatController as de}from"../../../../inlineChat/browser/inlineChatController.js";import{EditorAction2 as Ce}from"../../../../../../editor/browser/editorExtensions.js";s(class extends d{constructor(){super({id:"notebook.cell.chat.accept",title:k("notebook.cell.chat.accept","Make Request"),icon:f.send,keybinding:{when:o.and(g,b,m.negate()),weight:c.WorkbenchContrib,primary:i.Enter},menu:{id:F,group:"navigation",order:1,when:U.negate()},f1:!1})}async runWithContext(t,e){l.get(e.notebookEditor)?.acceptInput()}}),s(class extends O{constructor(){super({id:"notebook.cell.chat.arrowOutUp",title:r("arrowUp","Cursor Up"),keybinding:{when:o.and(g,b,z,m.negate(),w.negate()),weight:c.EditorCore+7,primary:p.CtrlCmd|i.UpArrow},f1:!1})}async runWithContext(t,e){const n=e.notebookEditor,C=e.cell,u=n.getCellIndex(C);if(typeof u!="number"||u<1||n.getLength()===0)return;const a=n.cellAt(u-1),E=a.cellKind===B.Markup&&a.getEditState()===ie.Preview?"container":"editor",_=a.textBuffer.getLineCount();await n.focusNotebookCell(a,E,{focusEditorLine:_})}}),s(class extends d{constructor(){super({id:"notebook.cell.chat.arrowOutDown",title:r("arrowDown","Cursor Down"),keybinding:{when:o.and(g,b,Q,m.negate(),w.negate()),weight:c.EditorCore+7,primary:p.CtrlCmd|i.DownArrow},f1:!1})}async runWithContext(t,e){await l.get(e.notebookEditor)?.focusNext()}}),s(class extends O{constructor(){super({id:"notebook.cell.focusChatWidget",title:r("focusChatWidget","Focus Chat Widget"),keybinding:{when:o.and(I,w.negate(),o.and(o.has(T),x.editorTextFocus,v.notEqualsTo("bottom"),v.notEqualsTo("none")),x.isEmbeddedDiffEditor.negate()),weight:c.EditorCore+7,primary:p.CtrlCmd|i.UpArrow},f1:!1})}async runWithContext(t,e){const n=e.notebookEditor.getCellIndex(e.cell);await l.get(e.notebookEditor)?.focusNearestWidget(n,"above")}}),s(class extends O{constructor(){super({id:"notebook.cell.focusNextChatWidget",title:r("focusNextChatWidget","Focus Next Cell Chat Widget"),keybinding:{when:o.and(w.negate(),o.and(o.has(T),x.editorTextFocus,v.notEqualsTo("top"),v.notEqualsTo("none")),x.isEmbeddedDiffEditor.negate()),weight:c.EditorCore+7,primary:p.CtrlCmd|i.DownArrow},f1:!1,precondition:o.or(o.and(P.negate(),m),o.and(P,m.negate()))})}async runWithContext(t,e){const n=e.notebookEditor.getCellIndex(e.cell);await l.get(e.notebookEditor)?.focusNearestWidget(n,"below")}}),s(class extends d{constructor(){super({id:"notebook.cell.chat.stop",title:k("notebook.cell.chat.stop","Stop Request"),icon:f.debugStop,menu:{id:F,group:"navigation",order:1,when:U},f1:!1})}async runWithContext(t,e){l.get(e.notebookEditor)?.cancelCurrentRequest(!1)}}),s(class extends d{constructor(){super({id:"notebook.cell.chat.close",title:k("notebook.cell.chat.close","Close Chat"),icon:f.close,menu:{id:oe,group:"navigation",order:2},f1:!1})}async runWithContext(t,e){l.get(e.notebookEditor)?.dismiss(!1)}}),s(class extends d{constructor(){super({id:"notebook.cell.chat.acceptChanges",title:k("apply1","Accept Changes"),shortTitle:r("apply2","Accept"),icon:f.check,tooltip:r("apply3","Accept Changes"),keybinding:[{when:o.and(g,b,m.negate()),weight:c.EditorContrib+10,primary:p.CtrlCmd|i.Enter},{when:o.and(g,b,H,m.negate()),weight:c.EditorCore+10,primary:i.Escape},{when:o.and(I,o.not(T),m.negate(),W.isEqualTo("below")),primary:p.CtrlCmd|i.Enter,weight:c.WorkbenchContrib}],menu:[{id:K,group:"0_main",order:0,when:R.notEqualsTo(q.Messages)}],f1:!1})}async runWithContext(t,e){l.get(e.notebookEditor)?.acceptSession()}}),s(class extends d{constructor(){super({id:"notebook.cell.chat.discard",title:r("discard","Discard"),icon:f.discard,keybinding:{when:o.and(g,b,H.negate(),m.negate()),weight:c.EditorContrib,primary:i.Escape},menu:{id:K,group:"0_main",order:1},f1:!1})}async runWithContext(t,e){l.get(e.notebookEditor)?.discard()}});async function M(t,e,n,C,u,a){const E=t.get(j),_=t.get(Y);if(E.getValue(h.cellGenerate)||E.getValue(h.cellChat)){const L=e.notebookEditor.getActiveCell(),y=L?.getTextLength()===0&&a!=="insertToolbar"?L:await re(t,e,B.Code,"below",!0);if(y){y.enableAutoLanguageDetection(),await e.notebookEditor.revealFirstLineIfOutsideViewport(y);const D=e.notebookEditor.codeEditors.find($=>$[0]===y)?.[1];D&&(D.focus(),_.executeCommand("inlineChat.start"))}}}s(class extends d{constructor(){super({id:"notebook.cell.chat.start",title:{value:"$(sparkle) "+r("notebookActions.menu.insertCodeCellWithChat","Generate"),original:"$(sparkle) Generate"},tooltip:r("notebookActions.menu.insertCodeCellWithChat.tooltip","Start Chat to Generate Code"),metadata:{description:r("notebookActions.menu.insertCodeCellWithChat.tooltip","Start Chat to Generate Code"),args:[{name:"args",schema:{type:"object",required:["index"],properties:{index:{type:"number"},input:{type:"string"},autoSend:{type:"boolean"}}}}]},f1:!1,keybinding:{when:o.and(I,A.isEqualTo(!0),o.not(T),N,o.or(o.equals(`config.${h.cellChat}`,!0),o.equals(`config.${h.cellGenerate}`,!0))),weight:c.WorkbenchContrib,primary:p.CtrlCmd|i.KeyI,secondary:[X(p.CtrlCmd|i.KeyK,i.KeyI)]},menu:[{id:S.NotebookCellBetween,group:"inline",order:-1,when:o.and(A.isEqualTo(!0),N,o.or(o.equals(`config.${h.cellChat}`,!0),o.equals(`config.${h.cellGenerate}`,!0)))}]})}getEditorContextFromArgsOrActive(t,...e){const[n]=e;if(!n){const a=G(t);if(!a)return;const E=a.getActiveCell();return E?{cell:E,notebookEditor:a,input:void 0,autoSend:void 0}:void 0}if(typeof n!="object"||typeof n.index!="number")return;const C=G(t);return C?{cell:n.index<=0?void 0:C.cellAt(n.index-1),notebookEditor:C,input:n.input,autoSend:n.autoSend}:void 0}async runWithContext(t,e){const n=Math.max(0,e.cell?e.notebookEditor.getCellIndex(e.cell)+1:0);await M(t,e,n,e.input,e.autoSend,e.source)}}),s(class extends d{constructor(){super({id:"notebook.cell.chat.startAtTop",title:{value:"$(sparkle) "+r("notebookActions.menu.insertCodeCellWithChat","Generate"),original:"$(sparkle) Generate"},tooltip:r("notebookActions.menu.insertCodeCellWithChat.tooltip","Start Chat to Generate Code"),f1:!1,menu:[{id:S.NotebookCellListTop,group:"inline",order:-1,when:o.and(A.isEqualTo(!0),N,o.or(o.equals(`config.${h.cellChat}`,!0),o.equals(`config.${h.cellGenerate}`,!0)))}]})}async runWithContext(t,e){await M(t,e,0,"",!1)}}),V.appendMenuItem(S.NotebookToolbar,{command:{id:"notebook.cell.chat.start",icon:f.sparkle,title:r("notebookActions.menu.insertCode.ontoolbar","Generate"),tooltip:r("notebookActions.menu.insertCode.tooltip","Start Chat to Generate Code")},order:-10,group:"navigation/add",when:o.and(A.isEqualTo(!0),o.notEquals("config.notebook.insertToolbarLocation","betweenCells"),o.notEquals("config.notebook.insertToolbarLocation","hidden"),N,o.or(o.equals(`config.${h.cellChat}`,!0),o.equals(`config.${h.cellGenerate}`,!0)))}),s(class extends d{constructor(){super({id:"notebook.cell.chat.focus",title:r("focusNotebookChat","Focus Chat"),keybinding:[{when:o.and(I,o.not(T),W.isEqualTo("above")),primary:p.CtrlCmd|i.DownArrow,weight:c.WorkbenchContrib},{when:o.and(I,o.not(T),W.isEqualTo("below")),primary:p.CtrlCmd|i.UpArrow,weight:c.WorkbenchContrib}],f1:!1})}async runWithContext(t,e){l.get(e.notebookEditor)?.focus()}}),s(class extends d{constructor(){super({id:"notebook.cell.chat.focusNextCell",title:r("focusNextCell","Focus Next Cell"),keybinding:[{when:o.and(g,b),primary:p.CtrlCmd|i.DownArrow,weight:c.WorkbenchContrib}],f1:!1})}async runWithContext(t,e){l.get(e.notebookEditor)?.focusNext()}}),s(class extends d{constructor(){super({id:"notebook.cell.chat.focusPreviousCell",title:r("focusPreviousCell","Focus Previous Cell"),keybinding:[{when:o.and(g,b),primary:p.CtrlCmd|i.UpArrow,weight:c.WorkbenchContrib}],f1:!1})}async runWithContext(t,e){l.get(e.notebookEditor)?.focusAbove()}}),s(class extends d{constructor(){super({id:"notebook.cell.chat.previousFromHistory",title:k("notebook.cell.chat.previousFromHistory","Previous From History"),precondition:o.and(g,b),keybinding:{when:o.and(g,b),weight:c.EditorCore+10,primary:i.UpArrow},f1:!1})}async runWithContext(t,e){l.get(e.notebookEditor)?.populateHistory(!0)}}),s(class extends d{constructor(){super({id:"notebook.cell.chat.nextFromHistory",title:k("notebook.cell.chat.nextFromHistory","Next From History"),precondition:o.and(g,b),keybinding:{when:o.and(g,b),weight:c.EditorCore+10,primary:i.DownArrow},f1:!1})}async runWithContext(t,e){l.get(e.notebookEditor)?.populateHistory(!1)}}),s(class extends O{constructor(){super({id:"notebook.cell.chat.restore",title:k("notebookActions.restoreCellprompt","Generate"),icon:f.sparkle,menu:{id:S.NotebookCellTitle,group:te,order:0,when:o.and(A.isEqualTo(!0),N,se,o.equals(`config.${h.cellChat}`,!0))},f1:!1})}async runWithContext(t,e){const n=e.cell;if(!n)return;const C=e.notebookEditor,u=l.get(C);if(!u)return;const a=u.getPromptFromCache(n);a&&u.restore(n,a)}});class ue extends Ce{constructor(){super({id:"notebook.inlineChat.acceptChangesAndRun",title:k("notebook.apply1","Accept and Run"),shortTitle:r("notebook.apply2","Accept & Run"),tooltip:r("notebook.apply3","Accept the changes and run the cell"),icon:f.check,f1:!0,precondition:o.and(A.isEqualTo(!0),Z),keybinding:void 0,menu:[{id:ee,group:"0_main",order:2,when:o.and(A.isEqualTo(!0),le.inputHasText.toNegated(),J.toNegated(),R.isEqualTo(q.MessagesAndEdits))}]})}runEditorCommand(e,n){const C=ne(e.get(ae)),u=de.get(n);if(!C||!u)return;const E=C.notebookEditor.codeEditors.find(_=>_[1]===n)?.[0];if(E)return u.acceptSession(),C.notebookEditor.executeNotebookCells(ce.single(E))}}s(ue);export{ue as AcceptChangesAndRun};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Codicon } from "../../../../../../base/common/codicons.js";
+import { KeyChord, KeyCode, KeyMod } from "../../../../../../base/common/keyCodes.js";
+import { EditorContextKeys } from "../../../../../../editor/common/editorContextKeys.js";
+import { localize, localize2 } from "../../../../../../nls.js";
+import { CONTEXT_ACCESSIBILITY_MODE_ENABLED } from "../../../../../../platform/accessibility/common/accessibility.js";
+import { MenuId, MenuRegistry, registerAction2 } from "../../../../../../platform/actions/common/actions.js";
+import { ICommandService } from "../../../../../../platform/commands/common/commands.js";
+import { IConfigurationService } from "../../../../../../platform/configuration/common/configuration.js";
+import { ContextKeyExpr } from "../../../../../../platform/contextkey/common/contextkey.js";
+import { InputFocusedContextKey } from "../../../../../../platform/contextkey/common/contextkeys.js";
+import { ServicesAccessor } from "../../../../../../platform/instantiation/common/instantiation.js";
+import { KeybindingWeight } from "../../../../../../platform/keybinding/common/keybindingsRegistry.js";
+import { CTX_INLINE_CHAT_FOCUSED, CTX_INLINE_CHAT_INNER_CURSOR_FIRST, CTX_INLINE_CHAT_INNER_CURSOR_LAST, CTX_INLINE_CHAT_REQUEST_IN_PROGRESS, CTX_INLINE_CHAT_RESPONSE_TYPE, CTX_INLINE_CHAT_VISIBLE, InlineChatResponseType, MENU_INLINE_CHAT_WIDGET_STATUS } from "../../../../inlineChat/common/inlineChat.js";
+import { CTX_NOTEBOOK_CELL_CHAT_FOCUSED, CTX_NOTEBOOK_CHAT_HAS_ACTIVE_REQUEST, CTX_NOTEBOOK_CHAT_HAS_AGENT, CTX_NOTEBOOK_CHAT_OUTER_FOCUS_POSITION, CTX_NOTEBOOK_CHAT_USER_DID_EDIT, MENU_CELL_CHAT_INPUT, MENU_CELL_CHAT_WIDGET, MENU_CELL_CHAT_WIDGET_STATUS } from "./notebookChatContext.js";
+import { NotebookChatController } from "./notebookChatController.js";
+import { CELL_TITLE_CELL_GROUP_ID, INotebookActionContext, INotebookCellActionContext, NotebookAction, NotebookCellAction, getContextFromActiveEditor, getEditorFromArgsOrActivePane } from "../coreActions.js";
+import { insertNewCell } from "../insertCellActions.js";
+import { CellEditState } from "../../notebookBrowser.js";
+import { CellKind, NOTEBOOK_EDITOR_CURSOR_BOUNDARY, NotebookSetting } from "../../../common/notebookCommon.js";
+import { IS_COMPOSITE_NOTEBOOK, NOTEBOOK_CELL_EDITOR_FOCUSED, NOTEBOOK_CELL_GENERATED_BY_CHAT, NOTEBOOK_EDITOR_EDITABLE, NOTEBOOK_EDITOR_FOCUSED } from "../../../common/notebookContextKeys.js";
+import { Iterable } from "../../../../../../base/common/iterator.js";
+import { ICodeEditor } from "../../../../../../editor/browser/editorBrowser.js";
+import { IEditorService } from "../../../../../services/editor/common/editorService.js";
+import { ChatContextKeys } from "../../../../chat/common/chatContextKeys.js";
+import { InlineChatController } from "../../../../inlineChat/browser/inlineChatController.js";
+import { EditorAction2 } from "../../../../../../editor/browser/editorExtensions.js";
+registerAction2(class extends NotebookAction {
+  constructor() {
+    super(
+      {
+        id: "notebook.cell.chat.accept",
+        title: localize2("notebook.cell.chat.accept", "Make Request"),
+        icon: Codicon.send,
+        keybinding: {
+          when: ContextKeyExpr.and(CTX_NOTEBOOK_CELL_CHAT_FOCUSED, CTX_INLINE_CHAT_FOCUSED, NOTEBOOK_CELL_EDITOR_FOCUSED.negate()),
+          weight: KeybindingWeight.WorkbenchContrib,
+          primary: KeyCode.Enter
+        },
+        menu: {
+          id: MENU_CELL_CHAT_INPUT,
+          group: "navigation",
+          order: 1,
+          when: CTX_NOTEBOOK_CHAT_HAS_ACTIVE_REQUEST.negate()
+        },
+        f1: false
+      }
+    );
+  }
+  async runWithContext(accessor, context) {
+    NotebookChatController.get(context.notebookEditor)?.acceptInput();
+  }
+});
+registerAction2(class extends NotebookCellAction {
+  constructor() {
+    super(
+      {
+        id: "notebook.cell.chat.arrowOutUp",
+        title: localize("arrowUp", "Cursor Up"),
+        keybinding: {
+          when: ContextKeyExpr.and(
+            CTX_NOTEBOOK_CELL_CHAT_FOCUSED,
+            CTX_INLINE_CHAT_FOCUSED,
+            CTX_INLINE_CHAT_INNER_CURSOR_FIRST,
+            NOTEBOOK_CELL_EDITOR_FOCUSED.negate(),
+            CONTEXT_ACCESSIBILITY_MODE_ENABLED.negate()
+          ),
+          weight: KeybindingWeight.EditorCore + 7,
+          primary: KeyMod.CtrlCmd | KeyCode.UpArrow
+        },
+        f1: false
+      }
+    );
+  }
+  async runWithContext(accessor, context) {
+    const editor = context.notebookEditor;
+    const activeCell = context.cell;
+    const idx = editor.getCellIndex(activeCell);
+    if (typeof idx !== "number") {
+      return;
+    }
+    if (idx < 1 || editor.getLength() === 0) {
+      return;
+    }
+    const newCell = editor.cellAt(idx - 1);
+    const newFocusMode = newCell.cellKind === CellKind.Markup && newCell.getEditState() === CellEditState.Preview ? "container" : "editor";
+    const focusEditorLine = newCell.textBuffer.getLineCount();
+    await editor.focusNotebookCell(newCell, newFocusMode, { focusEditorLine });
+  }
+});
+registerAction2(class extends NotebookAction {
+  constructor() {
+    super(
+      {
+        id: "notebook.cell.chat.arrowOutDown",
+        title: localize("arrowDown", "Cursor Down"),
+        keybinding: {
+          when: ContextKeyExpr.and(
+            CTX_NOTEBOOK_CELL_CHAT_FOCUSED,
+            CTX_INLINE_CHAT_FOCUSED,
+            CTX_INLINE_CHAT_INNER_CURSOR_LAST,
+            NOTEBOOK_CELL_EDITOR_FOCUSED.negate(),
+            CONTEXT_ACCESSIBILITY_MODE_ENABLED.negate()
+          ),
+          weight: KeybindingWeight.EditorCore + 7,
+          primary: KeyMod.CtrlCmd | KeyCode.DownArrow
+        },
+        f1: false
+      }
+    );
+  }
+  async runWithContext(accessor, context) {
+    await NotebookChatController.get(context.notebookEditor)?.focusNext();
+  }
+});
+registerAction2(class extends NotebookCellAction {
+  constructor() {
+    super(
+      {
+        id: "notebook.cell.focusChatWidget",
+        title: localize("focusChatWidget", "Focus Chat Widget"),
+        keybinding: {
+          when: ContextKeyExpr.and(
+            NOTEBOOK_EDITOR_FOCUSED,
+            CONTEXT_ACCESSIBILITY_MODE_ENABLED.negate(),
+            ContextKeyExpr.and(
+              ContextKeyExpr.has(InputFocusedContextKey),
+              EditorContextKeys.editorTextFocus,
+              NOTEBOOK_EDITOR_CURSOR_BOUNDARY.notEqualsTo("bottom"),
+              NOTEBOOK_EDITOR_CURSOR_BOUNDARY.notEqualsTo("none")
+            ),
+            EditorContextKeys.isEmbeddedDiffEditor.negate()
+          ),
+          weight: KeybindingWeight.EditorCore + 7,
+          primary: KeyMod.CtrlCmd | KeyCode.UpArrow
+        },
+        f1: false
+      }
+    );
+  }
+  async runWithContext(accessor, context) {
+    const index = context.notebookEditor.getCellIndex(context.cell);
+    await NotebookChatController.get(context.notebookEditor)?.focusNearestWidget(index, "above");
+  }
+});
+registerAction2(class extends NotebookCellAction {
+  constructor() {
+    super(
+      {
+        id: "notebook.cell.focusNextChatWidget",
+        title: localize("focusNextChatWidget", "Focus Next Cell Chat Widget"),
+        keybinding: {
+          when: ContextKeyExpr.and(
+            CONTEXT_ACCESSIBILITY_MODE_ENABLED.negate(),
+            ContextKeyExpr.and(
+              ContextKeyExpr.has(InputFocusedContextKey),
+              EditorContextKeys.editorTextFocus,
+              NOTEBOOK_EDITOR_CURSOR_BOUNDARY.notEqualsTo("top"),
+              NOTEBOOK_EDITOR_CURSOR_BOUNDARY.notEqualsTo("none")
+            ),
+            EditorContextKeys.isEmbeddedDiffEditor.negate()
+          ),
+          weight: KeybindingWeight.EditorCore + 7,
+          primary: KeyMod.CtrlCmd | KeyCode.DownArrow
+        },
+        f1: false,
+        precondition: ContextKeyExpr.or(
+          ContextKeyExpr.and(IS_COMPOSITE_NOTEBOOK.negate(), NOTEBOOK_CELL_EDITOR_FOCUSED),
+          ContextKeyExpr.and(IS_COMPOSITE_NOTEBOOK, NOTEBOOK_CELL_EDITOR_FOCUSED.negate())
+        )
+      }
+    );
+  }
+  async runWithContext(accessor, context) {
+    const index = context.notebookEditor.getCellIndex(context.cell);
+    await NotebookChatController.get(context.notebookEditor)?.focusNearestWidget(index, "below");
+  }
+});
+registerAction2(class extends NotebookAction {
+  constructor() {
+    super(
+      {
+        id: "notebook.cell.chat.stop",
+        title: localize2("notebook.cell.chat.stop", "Stop Request"),
+        icon: Codicon.debugStop,
+        menu: {
+          id: MENU_CELL_CHAT_INPUT,
+          group: "navigation",
+          order: 1,
+          when: CTX_NOTEBOOK_CHAT_HAS_ACTIVE_REQUEST
+        },
+        f1: false
+      }
+    );
+  }
+  async runWithContext(accessor, context) {
+    NotebookChatController.get(context.notebookEditor)?.cancelCurrentRequest(false);
+  }
+});
+registerAction2(class extends NotebookAction {
+  constructor() {
+    super(
+      {
+        id: "notebook.cell.chat.close",
+        title: localize2("notebook.cell.chat.close", "Close Chat"),
+        icon: Codicon.close,
+        menu: {
+          id: MENU_CELL_CHAT_WIDGET,
+          group: "navigation",
+          order: 2
+        },
+        f1: false
+      }
+    );
+  }
+  async runWithContext(accessor, context) {
+    NotebookChatController.get(context.notebookEditor)?.dismiss(false);
+  }
+});
+registerAction2(class extends NotebookAction {
+  constructor() {
+    super(
+      {
+        id: "notebook.cell.chat.acceptChanges",
+        title: localize2("apply1", "Accept Changes"),
+        shortTitle: localize("apply2", "Accept"),
+        icon: Codicon.check,
+        tooltip: localize("apply3", "Accept Changes"),
+        keybinding: [
+          {
+            when: ContextKeyExpr.and(CTX_NOTEBOOK_CELL_CHAT_FOCUSED, CTX_INLINE_CHAT_FOCUSED, NOTEBOOK_CELL_EDITOR_FOCUSED.negate()),
+            weight: KeybindingWeight.EditorContrib + 10,
+            primary: KeyMod.CtrlCmd | KeyCode.Enter
+          },
+          {
+            when: ContextKeyExpr.and(CTX_NOTEBOOK_CELL_CHAT_FOCUSED, CTX_INLINE_CHAT_FOCUSED, CTX_NOTEBOOK_CHAT_USER_DID_EDIT, NOTEBOOK_CELL_EDITOR_FOCUSED.negate()),
+            weight: KeybindingWeight.EditorCore + 10,
+            primary: KeyCode.Escape
+          },
+          {
+            when: ContextKeyExpr.and(
+              NOTEBOOK_EDITOR_FOCUSED,
+              ContextKeyExpr.not(InputFocusedContextKey),
+              NOTEBOOK_CELL_EDITOR_FOCUSED.negate(),
+              CTX_NOTEBOOK_CHAT_OUTER_FOCUS_POSITION.isEqualTo("below")
+            ),
+            primary: KeyMod.CtrlCmd | KeyCode.Enter,
+            weight: KeybindingWeight.WorkbenchContrib
+          }
+        ],
+        menu: [
+          {
+            id: MENU_CELL_CHAT_WIDGET_STATUS,
+            group: "0_main",
+            order: 0,
+            when: CTX_INLINE_CHAT_RESPONSE_TYPE.notEqualsTo(InlineChatResponseType.Messages)
+          }
+        ],
+        f1: false
+      }
+    );
+  }
+  async runWithContext(accessor, context) {
+    NotebookChatController.get(context.notebookEditor)?.acceptSession();
+  }
+});
+registerAction2(class extends NotebookAction {
+  constructor() {
+    super(
+      {
+        id: "notebook.cell.chat.discard",
+        title: localize("discard", "Discard"),
+        icon: Codicon.discard,
+        keybinding: {
+          when: ContextKeyExpr.and(CTX_NOTEBOOK_CELL_CHAT_FOCUSED, CTX_INLINE_CHAT_FOCUSED, CTX_NOTEBOOK_CHAT_USER_DID_EDIT.negate(), NOTEBOOK_CELL_EDITOR_FOCUSED.negate()),
+          weight: KeybindingWeight.EditorContrib,
+          primary: KeyCode.Escape
+        },
+        menu: {
+          id: MENU_CELL_CHAT_WIDGET_STATUS,
+          group: "0_main",
+          order: 1
+        },
+        f1: false
+      }
+    );
+  }
+  async runWithContext(accessor, context) {
+    NotebookChatController.get(context.notebookEditor)?.discard();
+  }
+});
+async function startChat(accessor, context, index, input, autoSend, source) {
+  const configurationService = accessor.get(IConfigurationService);
+  const commandService = accessor.get(ICommandService);
+  if (configurationService.getValue(NotebookSetting.cellGenerate) || configurationService.getValue(NotebookSetting.cellChat)) {
+    const activeCell = context.notebookEditor.getActiveCell();
+    const targetCell = activeCell?.getTextLength() === 0 && source !== "insertToolbar" ? activeCell : await insertNewCell(accessor, context, CellKind.Code, "below", true);
+    if (targetCell) {
+      targetCell.enableAutoLanguageDetection();
+      await context.notebookEditor.revealFirstLineIfOutsideViewport(targetCell);
+      const codeEditor = context.notebookEditor.codeEditors.find((ce) => ce[0] === targetCell)?.[1];
+      if (codeEditor) {
+        codeEditor.focus();
+        commandService.executeCommand("inlineChat.start");
+      }
+    }
+  }
+}
+__name(startChat, "startChat");
+registerAction2(class extends NotebookAction {
+  constructor() {
+    super(
+      {
+        id: "notebook.cell.chat.start",
+        title: {
+          value: "$(sparkle) " + localize("notebookActions.menu.insertCodeCellWithChat", "Generate"),
+          original: "$(sparkle) Generate"
+        },
+        tooltip: localize("notebookActions.menu.insertCodeCellWithChat.tooltip", "Start Chat to Generate Code"),
+        metadata: {
+          description: localize("notebookActions.menu.insertCodeCellWithChat.tooltip", "Start Chat to Generate Code"),
+          args: [
+            {
+              name: "args",
+              schema: {
+                type: "object",
+                required: ["index"],
+                properties: {
+                  "index": {
+                    type: "number"
+                  },
+                  "input": {
+                    type: "string"
+                  },
+                  "autoSend": {
+                    type: "boolean"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        f1: false,
+        keybinding: {
+          when: ContextKeyExpr.and(
+            NOTEBOOK_EDITOR_FOCUSED,
+            NOTEBOOK_EDITOR_EDITABLE.isEqualTo(true),
+            ContextKeyExpr.not(InputFocusedContextKey),
+            CTX_NOTEBOOK_CHAT_HAS_AGENT,
+            ContextKeyExpr.or(
+              ContextKeyExpr.equals(`config.${NotebookSetting.cellChat}`, true),
+              ContextKeyExpr.equals(`config.${NotebookSetting.cellGenerate}`, true)
+            )
+          ),
+          weight: KeybindingWeight.WorkbenchContrib,
+          primary: KeyMod.CtrlCmd | KeyCode.KeyI,
+          secondary: [KeyChord(KeyMod.CtrlCmd | KeyCode.KeyK, KeyCode.KeyI)]
+        },
+        menu: [
+          {
+            id: MenuId.NotebookCellBetween,
+            group: "inline",
+            order: -1,
+            when: ContextKeyExpr.and(
+              NOTEBOOK_EDITOR_EDITABLE.isEqualTo(true),
+              CTX_NOTEBOOK_CHAT_HAS_AGENT,
+              ContextKeyExpr.or(
+                ContextKeyExpr.equals(`config.${NotebookSetting.cellChat}`, true),
+                ContextKeyExpr.equals(`config.${NotebookSetting.cellGenerate}`, true)
+              )
+            )
+          }
+        ]
+      }
+    );
+  }
+  getEditorContextFromArgsOrActive(accessor, ...args) {
+    const [firstArg] = args;
+    if (!firstArg) {
+      const notebookEditor2 = getEditorFromArgsOrActivePane(accessor);
+      if (!notebookEditor2) {
+        return void 0;
+      }
+      const activeCell = notebookEditor2.getActiveCell();
+      if (!activeCell) {
+        return void 0;
+      }
+      return {
+        cell: activeCell,
+        notebookEditor: notebookEditor2,
+        input: void 0,
+        autoSend: void 0
+      };
+    }
+    if (typeof firstArg !== "object" || typeof firstArg.index !== "number") {
+      return void 0;
+    }
+    const notebookEditor = getEditorFromArgsOrActivePane(accessor);
+    if (!notebookEditor) {
+      return void 0;
+    }
+    const cell = firstArg.index <= 0 ? void 0 : notebookEditor.cellAt(firstArg.index - 1);
+    return {
+      cell,
+      notebookEditor,
+      input: firstArg.input,
+      autoSend: firstArg.autoSend
+    };
+  }
+  async runWithContext(accessor, context) {
+    const index = Math.max(0, context.cell ? context.notebookEditor.getCellIndex(context.cell) + 1 : 0);
+    await startChat(accessor, context, index, context.input, context.autoSend, context.source);
+  }
+});
+registerAction2(class extends NotebookAction {
+  constructor() {
+    super(
+      {
+        id: "notebook.cell.chat.startAtTop",
+        title: {
+          value: "$(sparkle) " + localize("notebookActions.menu.insertCodeCellWithChat", "Generate"),
+          original: "$(sparkle) Generate"
+        },
+        tooltip: localize("notebookActions.menu.insertCodeCellWithChat.tooltip", "Start Chat to Generate Code"),
+        f1: false,
+        menu: [
+          {
+            id: MenuId.NotebookCellListTop,
+            group: "inline",
+            order: -1,
+            when: ContextKeyExpr.and(
+              NOTEBOOK_EDITOR_EDITABLE.isEqualTo(true),
+              CTX_NOTEBOOK_CHAT_HAS_AGENT,
+              ContextKeyExpr.or(
+                ContextKeyExpr.equals(`config.${NotebookSetting.cellChat}`, true),
+                ContextKeyExpr.equals(`config.${NotebookSetting.cellGenerate}`, true)
+              )
+            )
+          }
+        ]
+      }
+    );
+  }
+  async runWithContext(accessor, context) {
+    await startChat(accessor, context, 0, "", false);
+  }
+});
+MenuRegistry.appendMenuItem(MenuId.NotebookToolbar, {
+  command: {
+    id: "notebook.cell.chat.start",
+    icon: Codicon.sparkle,
+    title: localize("notebookActions.menu.insertCode.ontoolbar", "Generate"),
+    tooltip: localize("notebookActions.menu.insertCode.tooltip", "Start Chat to Generate Code")
+  },
+  order: -10,
+  group: "navigation/add",
+  when: ContextKeyExpr.and(
+    NOTEBOOK_EDITOR_EDITABLE.isEqualTo(true),
+    ContextKeyExpr.notEquals("config.notebook.insertToolbarLocation", "betweenCells"),
+    ContextKeyExpr.notEquals("config.notebook.insertToolbarLocation", "hidden"),
+    CTX_NOTEBOOK_CHAT_HAS_AGENT,
+    ContextKeyExpr.or(
+      ContextKeyExpr.equals(`config.${NotebookSetting.cellChat}`, true),
+      ContextKeyExpr.equals(`config.${NotebookSetting.cellGenerate}`, true)
+    )
+  )
+});
+registerAction2(class extends NotebookAction {
+  constructor() {
+    super({
+      id: "notebook.cell.chat.focus",
+      title: localize("focusNotebookChat", "Focus Chat"),
+      keybinding: [
+        {
+          when: ContextKeyExpr.and(
+            NOTEBOOK_EDITOR_FOCUSED,
+            ContextKeyExpr.not(InputFocusedContextKey),
+            CTX_NOTEBOOK_CHAT_OUTER_FOCUS_POSITION.isEqualTo("above")
+          ),
+          primary: KeyMod.CtrlCmd | KeyCode.DownArrow,
+          weight: KeybindingWeight.WorkbenchContrib
+        },
+        {
+          when: ContextKeyExpr.and(
+            NOTEBOOK_EDITOR_FOCUSED,
+            ContextKeyExpr.not(InputFocusedContextKey),
+            CTX_NOTEBOOK_CHAT_OUTER_FOCUS_POSITION.isEqualTo("below")
+          ),
+          primary: KeyMod.CtrlCmd | KeyCode.UpArrow,
+          weight: KeybindingWeight.WorkbenchContrib
+        }
+      ],
+      f1: false
+    });
+  }
+  async runWithContext(accessor, context) {
+    NotebookChatController.get(context.notebookEditor)?.focus();
+  }
+});
+registerAction2(class extends NotebookAction {
+  constructor() {
+    super({
+      id: "notebook.cell.chat.focusNextCell",
+      title: localize("focusNextCell", "Focus Next Cell"),
+      keybinding: [
+        {
+          when: ContextKeyExpr.and(
+            CTX_NOTEBOOK_CELL_CHAT_FOCUSED,
+            CTX_INLINE_CHAT_FOCUSED
+          ),
+          primary: KeyMod.CtrlCmd | KeyCode.DownArrow,
+          weight: KeybindingWeight.WorkbenchContrib
+        }
+      ],
+      f1: false
+    });
+  }
+  async runWithContext(accessor, context) {
+    NotebookChatController.get(context.notebookEditor)?.focusNext();
+  }
+});
+registerAction2(class extends NotebookAction {
+  constructor() {
+    super({
+      id: "notebook.cell.chat.focusPreviousCell",
+      title: localize("focusPreviousCell", "Focus Previous Cell"),
+      keybinding: [
+        {
+          when: ContextKeyExpr.and(
+            CTX_NOTEBOOK_CELL_CHAT_FOCUSED,
+            CTX_INLINE_CHAT_FOCUSED
+          ),
+          primary: KeyMod.CtrlCmd | KeyCode.UpArrow,
+          weight: KeybindingWeight.WorkbenchContrib
+        }
+      ],
+      f1: false
+    });
+  }
+  async runWithContext(accessor, context) {
+    NotebookChatController.get(context.notebookEditor)?.focusAbove();
+  }
+});
+registerAction2(class extends NotebookAction {
+  constructor() {
+    super(
+      {
+        id: "notebook.cell.chat.previousFromHistory",
+        title: localize2("notebook.cell.chat.previousFromHistory", "Previous From History"),
+        precondition: ContextKeyExpr.and(CTX_NOTEBOOK_CELL_CHAT_FOCUSED, CTX_INLINE_CHAT_FOCUSED),
+        keybinding: {
+          when: ContextKeyExpr.and(CTX_NOTEBOOK_CELL_CHAT_FOCUSED, CTX_INLINE_CHAT_FOCUSED),
+          weight: KeybindingWeight.EditorCore + 10,
+          primary: KeyCode.UpArrow
+        },
+        f1: false
+      }
+    );
+  }
+  async runWithContext(accessor, context) {
+    NotebookChatController.get(context.notebookEditor)?.populateHistory(true);
+  }
+});
+registerAction2(class extends NotebookAction {
+  constructor() {
+    super(
+      {
+        id: "notebook.cell.chat.nextFromHistory",
+        title: localize2("notebook.cell.chat.nextFromHistory", "Next From History"),
+        precondition: ContextKeyExpr.and(CTX_NOTEBOOK_CELL_CHAT_FOCUSED, CTX_INLINE_CHAT_FOCUSED),
+        keybinding: {
+          when: ContextKeyExpr.and(CTX_NOTEBOOK_CELL_CHAT_FOCUSED, CTX_INLINE_CHAT_FOCUSED),
+          weight: KeybindingWeight.EditorCore + 10,
+          primary: KeyCode.DownArrow
+        },
+        f1: false
+      }
+    );
+  }
+  async runWithContext(accessor, context) {
+    NotebookChatController.get(context.notebookEditor)?.populateHistory(false);
+  }
+});
+registerAction2(class extends NotebookCellAction {
+  constructor() {
+    super(
+      {
+        id: "notebook.cell.chat.restore",
+        title: localize2("notebookActions.restoreCellprompt", "Generate"),
+        icon: Codicon.sparkle,
+        menu: {
+          id: MenuId.NotebookCellTitle,
+          group: CELL_TITLE_CELL_GROUP_ID,
+          order: 0,
+          when: ContextKeyExpr.and(
+            NOTEBOOK_EDITOR_EDITABLE.isEqualTo(true),
+            CTX_NOTEBOOK_CHAT_HAS_AGENT,
+            NOTEBOOK_CELL_GENERATED_BY_CHAT,
+            ContextKeyExpr.equals(`config.${NotebookSetting.cellChat}`, true)
+          )
+        },
+        f1: false
+      }
+    );
+  }
+  async runWithContext(accessor, context) {
+    const cell = context.cell;
+    if (!cell) {
+      return;
+    }
+    const notebookEditor = context.notebookEditor;
+    const controller = NotebookChatController.get(notebookEditor);
+    if (!controller) {
+      return;
+    }
+    const prompt = controller.getPromptFromCache(cell);
+    if (prompt) {
+      controller.restore(cell, prompt);
+    }
+  }
+});
+class AcceptChangesAndRun extends EditorAction2 {
+  static {
+    __name(this, "AcceptChangesAndRun");
+  }
+  constructor() {
+    super({
+      id: "notebook.inlineChat.acceptChangesAndRun",
+      title: localize2("notebook.apply1", "Accept and Run"),
+      shortTitle: localize("notebook.apply2", "Accept & Run"),
+      tooltip: localize("notebook.apply3", "Accept the changes and run the cell"),
+      icon: Codicon.check,
+      f1: true,
+      precondition: ContextKeyExpr.and(
+        NOTEBOOK_EDITOR_EDITABLE.isEqualTo(true),
+        CTX_INLINE_CHAT_VISIBLE
+      ),
+      keybinding: void 0,
+      menu: [{
+        id: MENU_INLINE_CHAT_WIDGET_STATUS,
+        group: "0_main",
+        order: 2,
+        when: ContextKeyExpr.and(
+          NOTEBOOK_EDITOR_EDITABLE.isEqualTo(true),
+          ChatContextKeys.inputHasText.toNegated(),
+          CTX_INLINE_CHAT_REQUEST_IN_PROGRESS.toNegated(),
+          CTX_INLINE_CHAT_RESPONSE_TYPE.isEqualTo(InlineChatResponseType.MessagesAndEdits)
+        )
+      }]
+    });
+  }
+  runEditorCommand(accessor, codeEditor) {
+    const editor = getContextFromActiveEditor(accessor.get(IEditorService));
+    const ctrl = InlineChatController.get(codeEditor);
+    if (!editor || !ctrl) {
+      return;
+    }
+    const matchedCell = editor.notebookEditor.codeEditors.find((e) => e[1] === codeEditor);
+    const cell = matchedCell?.[0];
+    if (!cell) {
+      return;
+    }
+    ctrl.acceptSession();
+    return editor.notebookEditor.executeNotebookCells(Iterable.single(cell));
+  }
+}
+registerAction2(AcceptChangesAndRun);
+export {
+  AcceptChangesAndRun
+};
+//# sourceMappingURL=cellChatActions.js.map

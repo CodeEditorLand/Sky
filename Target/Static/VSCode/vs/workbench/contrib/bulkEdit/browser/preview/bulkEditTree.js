@@ -1,1 +1,642 @@
-var H=Object.defineProperty,z=Object.getOwnPropertyDescriptor,g=(e,t,i,s)=>{for(var r,a=s>1?void 0:s?z(t,i):t,n=e.length-1;n>=0;n--)(r=e[n])&&(a=(s?r(t,i,a):r(a))||a);return s&&a&&H(t,i,a),a},p=(e,t)=>(i,s)=>t(i,s,e);import"../../../../../base/browser/ui/tree/tree.js";import{ITextModelService as A}from"../../../../../editor/common/services/resolverService.js";import{createMatches as O}from"../../../../../base/common/filters.js";import"../../../../browser/labels.js";import{HighlightedLabel as R}from"../../../../../base/browser/ui/highlightedlabel/highlightedLabel.js";import"../../../../../base/browser/ui/list/list.js";import{Range as B}from"../../../../../editor/common/core/range.js";import*as U from"../../../../../base/browser/dom.js";import"../../../../../editor/common/model.js";import{DisposableStore as S}from"../../../../../base/common/lifecycle.js";import{TextModel as w}from"../../../../../editor/common/model/textModel.js";import{BulkFileOperations as K,BulkFileOperationType as c}from"./bulkEditPreview.js";import{FileKind as V}from"../../../../../platform/files/common/files.js";import{localize as n}from"../../../../../nls.js";import{ILabelService as P}from"../../../../../platform/label/common/label.js";import{IconLabel as j}from"../../../../../base/browser/ui/iconLabel/iconLabel.js";import{basename as G}from"../../../../../base/common/resources.js";import{IThemeService as F}from"../../../../../platform/theme/common/themeService.js";import{ThemeIcon as C}from"../../../../../base/common/themables.js";import{compare as J}from"../../../../../base/common/strings.js";import{URI as M}from"../../../../../base/common/uri.js";import{ResourceFileEdit as I}from"../../../../../editor/browser/services/bulkEditService.js";import{PLAINTEXT_LANGUAGE_ID as W}from"../../../../../editor/common/languages/modesRegistry.js";import{SnippetParser as $}from"../../../../../editor/contrib/snippet/browser/snippetParser.js";import"../../../../../base/browser/ui/aria/aria.js";import{IInstantiationService as X}from"../../../../../platform/instantiation/common/instantiation.js";import*as f from"../../../../../base/browser/cssValue.js";class d{constructor(e,t){this.parent=e,this.category=t}isChecked(){const e=this.parent;let t=!0;for(const i of this.category.fileOperations)for(const s of i.originalEdits.values())t=t&&e.checked.isChecked(s);return t}setChecked(e){const t=this.parent;for(const i of this.category.fileOperations)for(const s of i.originalEdits.values())t.checked.updateChecked(s,e)}}class h{constructor(e,t){this.parent=e,this.edit=t}isChecked(){const e=this.parent instanceof d?this.parent.parent:this.parent;let t=!0;this.edit.type===c.TextEdit&&(t=!this.edit.textEdits.every((t=>!e.checked.isChecked(t.textEdit))));for(const i of this.edit.originalEdits.values())i instanceof I&&(t=t&&e.checked.isChecked(i));if(this.parent instanceof d&&this.edit.type===c.TextEdit)for(const i of e.categories)for(const s of i.fileOperations)if(s.uri.toString()===this.edit.uri.toString())for(const i of s.originalEdits.values())i instanceof I&&(t=t&&e.checked.isChecked(i));return t}setChecked(e){const t=this.parent instanceof d?this.parent.parent:this.parent;for(const i of this.edit.originalEdits.values())t.checked.updateChecked(i,e);if(this.parent instanceof d&&this.edit.type!==c.TextEdit)for(const i of t.categories)for(const s of i.fileOperations)if(s.uri.toString()===this.edit.uri.toString())for(const i of s.originalEdits.values())t.checked.updateChecked(i,e)}isDisabled(){if(this.parent instanceof d&&this.edit.type===c.TextEdit){const e=this.parent.parent;let t=!0;for(const i of e.categories)for(const s of i.fileOperations)if(s.uri.toString()===this.edit.uri.toString())for(const i of s.originalEdits.values())i instanceof I&&(t=t&&e.checked.isChecked(i));return!t}return!1}}class m{constructor(e,t,i,s,r,a,n){this.parent=e,this.idx=t,this.edit=i,this.prefix=s,this.selecting=r,this.inserting=a,this.suffix=n}isChecked(){let e=this.parent.parent;return e instanceof d&&(e=e.parent),e.checked.isChecked(this.edit.textEdit)}setChecked(e){let t=this.parent.parent;if(t instanceof d&&(t=t.parent),t.checked.updateChecked(this.edit.textEdit,e),e)for(const i of this.parent.edit.originalEdits.values())i instanceof I&&t.checked.updateChecked(i,e)}isDisabled(){return this.parent.isDisabled()}}let T=class{constructor(e,t){this._textModelService=e,this._instantiationService=t}groupByFile=!0;hasChildren(e){return e instanceof h?e.edit.textEdits.length>0:!(e instanceof m)}async getChildren(e){if(e instanceof K)return this.groupByFile?e.fileOperations.map((t=>new h(e,t))):e.categories.map((t=>new d(e,t)));if(e instanceof d)return Array.from(e.category.fileOperations,(t=>new h(e,t)));if(e instanceof h&&e.edit.textEdits.length>0){let t,i;try{const s=await this._textModelService.createModelReference(e.edit.uri);t=s.object.textEditorModel,i=s}catch{t=this._instantiationService.createInstance(w,"",W,w.DEFAULT_CREATION_OPTIONS,null),i=t}const s=e.edit.textEdits.map(((i,s)=>{const r=t.validateRange(i.textEdit.textEdit.range),a=t.tokenization.getLineTokens(r.startLineNumber);let n=23;for(let e=a.findTokenIndexAtOffset(r.startColumn-1)-1;n<50&&e>=0;e--)n=r.startColumn-a.getStartOffset(e);const o=t.tokenization.getLineTokens(r.endLineNumber);let l=0;for(let e=o.findTokenIndexAtOffset(r.endColumn-1);l<50&&e<o.getCount();e++)l+=o.getEndOffset(e)-o.getStartOffset(e);return new m(e,s,i,t.getValueInRange(new B(r.startLineNumber,r.startColumn-n,r.startLineNumber,r.startColumn)),t.getValueInRange(r),i.textEdit.textEdit.insertAsSnippet?$.asInsertText(i.textEdit.textEdit.text):i.textEdit.textEdit.text,t.getValueInRange(new B(r.endLineNumber,r.endColumn,r.endLineNumber,r.endColumn+l)))}));return i.dispose(),s}return[]}};T=g([p(0,A),p(1,X)],T);class Re{compare(e,t){return e instanceof h&&t instanceof h?q(e.edit,t.edit):e instanceof m&&t instanceof m?B.compareRangesUsingStarts(e.edit.textEdit.textEdit.range,t.edit.textEdit.textEdit.range):0}}function q(e,t){return J(e.uri.toString(),t.uri.toString())}let L=class{constructor(e){this._labelService=e}getWidgetAriaLabel(){return n("bulkEdit","Bulk Edit")}getRole(e){return"checkbox"}getAriaLabel(e){if(e instanceof h){if(e.edit.textEdits.length>0)return e.edit.type&c.Rename&&e.edit.newUri?n("aria.renameAndEdit","Renaming {0} to {1}, also making text edits",this._labelService.getUriLabel(e.edit.uri,{relative:!0}),this._labelService.getUriLabel(e.edit.newUri,{relative:!0})):e.edit.type&c.Create?n("aria.createAndEdit","Creating {0}, also making text edits",this._labelService.getUriLabel(e.edit.uri,{relative:!0})):e.edit.type&c.Delete?n("aria.deleteAndEdit","Deleting {0}, also making text edits",this._labelService.getUriLabel(e.edit.uri,{relative:!0})):n("aria.editOnly","{0}, making text edits",this._labelService.getUriLabel(e.edit.uri,{relative:!0}));if(e.edit.type&c.Rename&&e.edit.newUri)return n("aria.rename","Renaming {0} to {1}",this._labelService.getUriLabel(e.edit.uri,{relative:!0}),this._labelService.getUriLabel(e.edit.newUri,{relative:!0}));if(e.edit.type&c.Create)return n("aria.create","Creating {0}",this._labelService.getUriLabel(e.edit.uri,{relative:!0}));if(e.edit.type&c.Delete)return n("aria.delete","Deleting {0}",this._labelService.getUriLabel(e.edit.uri,{relative:!0}))}if(e instanceof m){if(e.selecting.length>0&&e.inserting.length>0)return n("aria.replace","line {0}, replacing {1} with {2}",e.edit.textEdit.textEdit.range.startLineNumber,e.selecting,e.inserting);if(e.selecting.length>0&&0===e.inserting.length)return n("aria.del","line {0}, removing {1}",e.edit.textEdit.textEdit.range.startLineNumber,e.selecting);if(0===e.selecting.length&&e.inserting.length>0)return n("aria.insert","line {0}, inserting {1}",e.edit.textEdit.textEdit.range.startLineNumber,e.selecting)}return null}};L=g([p(0,P)],L);class Ke{getId(e){return e instanceof h?e.edit.uri+(e.parent instanceof d?JSON.stringify(e.parent.category.metadata):""):e instanceof m?e.parent.edit.uri.toString()+e.idx:JSON.stringify(e.category.metadata)}}class Q{icon;label;constructor(e){e.classList.add("category"),this.icon=document.createElement("div"),e.appendChild(this.icon),this.label=new j(e)}}let k=class{constructor(e){this._themeService=e}static id="CategoryElementRenderer";templateId=k.id;renderTemplate(e){return new Q(e)}renderElement(e,t,i){i.icon.style.setProperty("--background-dark",null),i.icon.style.setProperty("--background-light",null),i.icon.style.color="";const{metadata:s}=e.element.category;if(C.isThemeIcon(s.iconPath)){const e=C.asClassName(s.iconPath);i.icon.className=e?`theme-icon ${e}`:"",i.icon.style.color=s.iconPath.color?this._themeService.getColorTheme().getColor(s.iconPath.color.id)?.toString()??"":""}else M.isUri(s.iconPath)?(i.icon.className="uri-icon",i.icon.style.setProperty("--background-dark",f.asCSSUrl(s.iconPath)),i.icon.style.setProperty("--background-light",f.asCSSUrl(s.iconPath))):s.iconPath&&(i.icon.className="uri-icon",i.icon.style.setProperty("--background-dark",f.asCSSUrl(s.iconPath.dark)),i.icon.style.setProperty("--background-light",f.asCSSUrl(s.iconPath.light)));i.label.setLabel(s.label,s.description,{descriptionMatches:O(e.filterData)})}disposeTemplate(e){e.label.dispose()}};k=g([p(0,F)],k);let E=class{constructor(e,t,i){this._labelService=i,this._checkbox=document.createElement("input"),this._checkbox.className="edit-checkbox",this._checkbox.type="checkbox",this._checkbox.setAttribute("role","checkbox"),e.appendChild(this._checkbox),this._label=t.create(e,{supportHighlights:!0}),this._details=document.createElement("span"),this._details.className="details",e.appendChild(this._details)}_disposables=new S;_localDisposables=new S;_checkbox;_label;_details;dispose(){this._localDisposables.dispose(),this._disposables.dispose(),this._label.dispose()}set(e,t){if(this._localDisposables.clear(),this._checkbox.checked=e.isChecked(),this._checkbox.disabled=e.isDisabled(),this._localDisposables.add(U.addDisposableListener(this._checkbox,"change",(()=>{e.setChecked(this._checkbox.checked)}))),e.edit.type&c.Rename&&e.edit.newUri)this._label.setResource({resource:e.edit.uri,name:n("rename.label","{0} → {1}",this._labelService.getUriLabel(e.edit.uri,{relative:!0}),this._labelService.getUriLabel(e.edit.newUri,{relative:!0}))},{fileDecorations:{colors:!0,badges:!1}}),this._details.innerText=n("detail.rename","(renaming)");else{const i={matches:O(t),fileKind:V.FILE,fileDecorations:{colors:!0,badges:!1},extraClasses:[]};e.edit.type&c.Create?this._details.innerText=n("detail.create","(creating)"):e.edit.type&c.Delete?(this._details.innerText=n("detail.del","(deleting)"),i.extraClasses.push("delete")):this._details.innerText="",this._label.setFile(e.edit.uri,i)}}};E=g([p(2,P)],E);let y=class{constructor(e,t){this._resourceLabels=e,this._labelService=t}static id="FileElementRenderer";templateId=y.id;renderTemplate(e){return new E(e,this._resourceLabels,this._labelService)}renderElement(e,t,i){i.set(e.element,e.filterData)}disposeTemplate(e){e.dispose()}};y=g([p(1,P)],y);let v=class{constructor(e,t){this._themeService=t,e.classList.add("textedit"),this._checkbox=document.createElement("input"),this._checkbox.className="edit-checkbox",this._checkbox.type="checkbox",this._checkbox.setAttribute("role","checkbox"),e.appendChild(this._checkbox),this._icon=document.createElement("div"),e.appendChild(this._icon),this._label=this._disposables.add(new R(e))}_disposables=new S;_localDisposables=new S;_checkbox;_icon;_label;dispose(){this._localDisposables.dispose(),this._disposables.dispose()}set(e){this._localDisposables.clear(),this._localDisposables.add(U.addDisposableListener(this._checkbox,"change",(t=>{e.setChecked(this._checkbox.checked),t.preventDefault()}))),e.parent.isChecked(),this._checkbox.checked=e.isChecked(),this._checkbox.disabled=e.isDisabled();let t="";t+=e.prefix,t+=e.selecting,t+=e.inserting,t+=e.suffix;const i={start:e.prefix.length,end:e.prefix.length+e.selecting.length,extraClasses:["remove"]},s={start:i.end,end:i.end+e.inserting.length,extraClasses:["insert"]};let r;const{metadata:a}=e.edit.textEdit;a&&a.description?r=n("title","{0} - {1}",a.label,a.description):a&&(r=a.label);const o=a?.iconPath;if(o)if(this._icon.style.display="block",this._icon.style.setProperty("--background-dark",null),this._icon.style.setProperty("--background-light",null),C.isThemeIcon(o)){const e=C.asClassName(o);this._icon.className=e?`theme-icon ${e}`:"",this._icon.style.color=o.color?this._themeService.getColorTheme().getColor(o.color.id)?.toString()??"":""}else M.isUri(o)?(this._icon.className="uri-icon",this._icon.style.setProperty("--background-dark",f.asCSSUrl(o)),this._icon.style.setProperty("--background-light",f.asCSSUrl(o))):(this._icon.className="uri-icon",this._icon.style.setProperty("--background-dark",f.asCSSUrl(o.dark)),this._icon.style.setProperty("--background-light",f.asCSSUrl(o.light)));else this._icon.style.display="none";this._label.set(t,[i,s],r,!0),this._icon.title=r||""}};v=g([p(1,F)],v);let x=class{constructor(e){this._themeService=e}static id="TextEditElementRenderer";templateId=x.id;renderTemplate(e){return new v(e,this._themeService)}renderElement({element:e},t,i){i.set(e)}disposeTemplate(e){}};x=g([p(0,F)],x);class Ve{getHeight(){return 23}getTemplateId(e){return e instanceof h?y.id:e instanceof m?x.id:k.id}}class je{getKeyboardNavigationLabel(e){return e instanceof h?G(e.edit.uri):e instanceof d?e.category.metadata.label:void 0}}export{L as BulkEditAccessibilityProvider,T as BulkEditDataSource,Ve as BulkEditDelegate,Ke as BulkEditIdentityProvider,je as BulkEditNaviLabelProvider,Re as BulkEditSorter,d as CategoryElement,k as CategoryElementRenderer,h as FileElement,y as FileElementRenderer,m as TextEditElement,x as TextEditElementRenderer,q as compareBulkFileOperations};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { IAsyncDataSource, ITreeRenderer, ITreeNode, ITreeSorter } from "../../../../../base/browser/ui/tree/tree.js";
+import { ITextModelService } from "../../../../../editor/common/services/resolverService.js";
+import { FuzzyScore, createMatches } from "../../../../../base/common/filters.js";
+import { IResourceLabel, ResourceLabels } from "../../../../browser/labels.js";
+import { HighlightedLabel, IHighlight } from "../../../../../base/browser/ui/highlightedlabel/highlightedLabel.js";
+import { IIdentityProvider, IListVirtualDelegate, IKeyboardNavigationLabelProvider } from "../../../../../base/browser/ui/list/list.js";
+import { Range } from "../../../../../editor/common/core/range.js";
+import * as dom from "../../../../../base/browser/dom.js";
+import { ITextModel } from "../../../../../editor/common/model.js";
+import { IDisposable, DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { TextModel } from "../../../../../editor/common/model/textModel.js";
+import { BulkFileOperations, BulkFileOperation, BulkFileOperationType, BulkTextEdit, BulkCategory } from "./bulkEditPreview.js";
+import { FileKind } from "../../../../../platform/files/common/files.js";
+import { localize } from "../../../../../nls.js";
+import { ILabelService } from "../../../../../platform/label/common/label.js";
+import { IconLabel } from "../../../../../base/browser/ui/iconLabel/iconLabel.js";
+import { basename } from "../../../../../base/common/resources.js";
+import { IThemeService } from "../../../../../platform/theme/common/themeService.js";
+import { ThemeIcon } from "../../../../../base/common/themables.js";
+import { compare } from "../../../../../base/common/strings.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { ResourceFileEdit } from "../../../../../editor/browser/services/bulkEditService.js";
+import { PLAINTEXT_LANGUAGE_ID } from "../../../../../editor/common/languages/modesRegistry.js";
+import { SnippetParser } from "../../../../../editor/contrib/snippet/browser/snippetParser.js";
+import { AriaRole } from "../../../../../base/browser/ui/aria/aria.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import * as css from "../../../../../base/browser/cssValue.js";
+class CategoryElement {
+  constructor(parent, category) {
+    this.parent = parent;
+    this.category = category;
+  }
+  static {
+    __name(this, "CategoryElement");
+  }
+  isChecked() {
+    const model = this.parent;
+    let checked = true;
+    for (const file of this.category.fileOperations) {
+      for (const edit of file.originalEdits.values()) {
+        checked = checked && model.checked.isChecked(edit);
+      }
+    }
+    return checked;
+  }
+  setChecked(value) {
+    const model = this.parent;
+    for (const file of this.category.fileOperations) {
+      for (const edit of file.originalEdits.values()) {
+        model.checked.updateChecked(edit, value);
+      }
+    }
+  }
+}
+class FileElement {
+  constructor(parent, edit) {
+    this.parent = parent;
+    this.edit = edit;
+  }
+  static {
+    __name(this, "FileElement");
+  }
+  isChecked() {
+    const model = this.parent instanceof CategoryElement ? this.parent.parent : this.parent;
+    let checked = true;
+    if (this.edit.type === BulkFileOperationType.TextEdit) {
+      checked = !this.edit.textEdits.every((edit) => !model.checked.isChecked(edit.textEdit));
+    }
+    for (const edit of this.edit.originalEdits.values()) {
+      if (edit instanceof ResourceFileEdit) {
+        checked = checked && model.checked.isChecked(edit);
+      }
+    }
+    if (this.parent instanceof CategoryElement && this.edit.type === BulkFileOperationType.TextEdit) {
+      for (const category of model.categories) {
+        for (const file of category.fileOperations) {
+          if (file.uri.toString() === this.edit.uri.toString()) {
+            for (const edit of file.originalEdits.values()) {
+              if (edit instanceof ResourceFileEdit) {
+                checked = checked && model.checked.isChecked(edit);
+              }
+            }
+          }
+        }
+      }
+    }
+    return checked;
+  }
+  setChecked(value) {
+    const model = this.parent instanceof CategoryElement ? this.parent.parent : this.parent;
+    for (const edit of this.edit.originalEdits.values()) {
+      model.checked.updateChecked(edit, value);
+    }
+    if (this.parent instanceof CategoryElement && this.edit.type !== BulkFileOperationType.TextEdit) {
+      for (const category of model.categories) {
+        for (const file of category.fileOperations) {
+          if (file.uri.toString() === this.edit.uri.toString()) {
+            for (const edit of file.originalEdits.values()) {
+              model.checked.updateChecked(edit, value);
+            }
+          }
+        }
+      }
+    }
+  }
+  isDisabled() {
+    if (this.parent instanceof CategoryElement && this.edit.type === BulkFileOperationType.TextEdit) {
+      const model = this.parent.parent;
+      let checked = true;
+      for (const category of model.categories) {
+        for (const file of category.fileOperations) {
+          if (file.uri.toString() === this.edit.uri.toString()) {
+            for (const edit of file.originalEdits.values()) {
+              if (edit instanceof ResourceFileEdit) {
+                checked = checked && model.checked.isChecked(edit);
+              }
+            }
+          }
+        }
+      }
+      return !checked;
+    }
+    return false;
+  }
+}
+class TextEditElement {
+  constructor(parent, idx, edit, prefix, selecting, inserting, suffix) {
+    this.parent = parent;
+    this.idx = idx;
+    this.edit = edit;
+    this.prefix = prefix;
+    this.selecting = selecting;
+    this.inserting = inserting;
+    this.suffix = suffix;
+  }
+  static {
+    __name(this, "TextEditElement");
+  }
+  isChecked() {
+    let model = this.parent.parent;
+    if (model instanceof CategoryElement) {
+      model = model.parent;
+    }
+    return model.checked.isChecked(this.edit.textEdit);
+  }
+  setChecked(value) {
+    let model = this.parent.parent;
+    if (model instanceof CategoryElement) {
+      model = model.parent;
+    }
+    model.checked.updateChecked(this.edit.textEdit, value);
+    if (value) {
+      for (const edit of this.parent.edit.originalEdits.values()) {
+        if (edit instanceof ResourceFileEdit) {
+          model.checked.updateChecked(edit, value);
+        }
+      }
+    }
+  }
+  isDisabled() {
+    return this.parent.isDisabled();
+  }
+}
+let BulkEditDataSource = class {
+  constructor(_textModelService, _instantiationService) {
+    this._textModelService = _textModelService;
+    this._instantiationService = _instantiationService;
+  }
+  static {
+    __name(this, "BulkEditDataSource");
+  }
+  groupByFile = true;
+  hasChildren(element) {
+    if (element instanceof FileElement) {
+      return element.edit.textEdits.length > 0;
+    }
+    if (element instanceof TextEditElement) {
+      return false;
+    }
+    return true;
+  }
+  async getChildren(element) {
+    if (element instanceof BulkFileOperations) {
+      return this.groupByFile ? element.fileOperations.map((op) => new FileElement(element, op)) : element.categories.map((cat) => new CategoryElement(element, cat));
+    }
+    if (element instanceof CategoryElement) {
+      return Array.from(element.category.fileOperations, (op) => new FileElement(element, op));
+    }
+    if (element instanceof FileElement && element.edit.textEdits.length > 0) {
+      let textModel;
+      let textModelDisposable;
+      try {
+        const ref = await this._textModelService.createModelReference(element.edit.uri);
+        textModel = ref.object.textEditorModel;
+        textModelDisposable = ref;
+      } catch {
+        textModel = this._instantiationService.createInstance(TextModel, "", PLAINTEXT_LANGUAGE_ID, TextModel.DEFAULT_CREATION_OPTIONS, null);
+        textModelDisposable = textModel;
+      }
+      const result = element.edit.textEdits.map((edit, idx) => {
+        const range = textModel.validateRange(edit.textEdit.textEdit.range);
+        const startTokens = textModel.tokenization.getLineTokens(range.startLineNumber);
+        let prefixLen = 23;
+        for (let idx2 = startTokens.findTokenIndexAtOffset(range.startColumn - 1) - 1; prefixLen < 50 && idx2 >= 0; idx2--) {
+          prefixLen = range.startColumn - startTokens.getStartOffset(idx2);
+        }
+        const endTokens = textModel.tokenization.getLineTokens(range.endLineNumber);
+        let suffixLen = 0;
+        for (let idx2 = endTokens.findTokenIndexAtOffset(range.endColumn - 1); suffixLen < 50 && idx2 < endTokens.getCount(); idx2++) {
+          suffixLen += endTokens.getEndOffset(idx2) - endTokens.getStartOffset(idx2);
+        }
+        return new TextEditElement(
+          element,
+          idx,
+          edit,
+          textModel.getValueInRange(new Range(range.startLineNumber, range.startColumn - prefixLen, range.startLineNumber, range.startColumn)),
+          textModel.getValueInRange(range),
+          !edit.textEdit.textEdit.insertAsSnippet ? edit.textEdit.textEdit.text : SnippetParser.asInsertText(edit.textEdit.textEdit.text),
+          textModel.getValueInRange(new Range(range.endLineNumber, range.endColumn, range.endLineNumber, range.endColumn + suffixLen))
+        );
+      });
+      textModelDisposable.dispose();
+      return result;
+    }
+    return [];
+  }
+};
+BulkEditDataSource = __decorateClass([
+  __decorateParam(0, ITextModelService),
+  __decorateParam(1, IInstantiationService)
+], BulkEditDataSource);
+class BulkEditSorter {
+  static {
+    __name(this, "BulkEditSorter");
+  }
+  compare(a, b) {
+    if (a instanceof FileElement && b instanceof FileElement) {
+      return compareBulkFileOperations(a.edit, b.edit);
+    }
+    if (a instanceof TextEditElement && b instanceof TextEditElement) {
+      return Range.compareRangesUsingStarts(a.edit.textEdit.textEdit.range, b.edit.textEdit.textEdit.range);
+    }
+    return 0;
+  }
+}
+function compareBulkFileOperations(a, b) {
+  return compare(a.uri.toString(), b.uri.toString());
+}
+__name(compareBulkFileOperations, "compareBulkFileOperations");
+let BulkEditAccessibilityProvider = class {
+  constructor(_labelService) {
+    this._labelService = _labelService;
+  }
+  static {
+    __name(this, "BulkEditAccessibilityProvider");
+  }
+  getWidgetAriaLabel() {
+    return localize("bulkEdit", "Bulk Edit");
+  }
+  getRole(_element) {
+    return "checkbox";
+  }
+  getAriaLabel(element) {
+    if (element instanceof FileElement) {
+      if (element.edit.textEdits.length > 0) {
+        if (element.edit.type & BulkFileOperationType.Rename && element.edit.newUri) {
+          return localize(
+            "aria.renameAndEdit",
+            "Renaming {0} to {1}, also making text edits",
+            this._labelService.getUriLabel(element.edit.uri, { relative: true }),
+            this._labelService.getUriLabel(element.edit.newUri, { relative: true })
+          );
+        } else if (element.edit.type & BulkFileOperationType.Create) {
+          return localize(
+            "aria.createAndEdit",
+            "Creating {0}, also making text edits",
+            this._labelService.getUriLabel(element.edit.uri, { relative: true })
+          );
+        } else if (element.edit.type & BulkFileOperationType.Delete) {
+          return localize(
+            "aria.deleteAndEdit",
+            "Deleting {0}, also making text edits",
+            this._labelService.getUriLabel(element.edit.uri, { relative: true })
+          );
+        } else {
+          return localize(
+            "aria.editOnly",
+            "{0}, making text edits",
+            this._labelService.getUriLabel(element.edit.uri, { relative: true })
+          );
+        }
+      } else {
+        if (element.edit.type & BulkFileOperationType.Rename && element.edit.newUri) {
+          return localize(
+            "aria.rename",
+            "Renaming {0} to {1}",
+            this._labelService.getUriLabel(element.edit.uri, { relative: true }),
+            this._labelService.getUriLabel(element.edit.newUri, { relative: true })
+          );
+        } else if (element.edit.type & BulkFileOperationType.Create) {
+          return localize(
+            "aria.create",
+            "Creating {0}",
+            this._labelService.getUriLabel(element.edit.uri, { relative: true })
+          );
+        } else if (element.edit.type & BulkFileOperationType.Delete) {
+          return localize(
+            "aria.delete",
+            "Deleting {0}",
+            this._labelService.getUriLabel(element.edit.uri, { relative: true })
+          );
+        }
+      }
+    }
+    if (element instanceof TextEditElement) {
+      if (element.selecting.length > 0 && element.inserting.length > 0) {
+        return localize("aria.replace", "line {0}, replacing {1} with {2}", element.edit.textEdit.textEdit.range.startLineNumber, element.selecting, element.inserting);
+      } else if (element.selecting.length > 0 && element.inserting.length === 0) {
+        return localize("aria.del", "line {0}, removing {1}", element.edit.textEdit.textEdit.range.startLineNumber, element.selecting);
+      } else if (element.selecting.length === 0 && element.inserting.length > 0) {
+        return localize("aria.insert", "line {0}, inserting {1}", element.edit.textEdit.textEdit.range.startLineNumber, element.selecting);
+      }
+    }
+    return null;
+  }
+};
+BulkEditAccessibilityProvider = __decorateClass([
+  __decorateParam(0, ILabelService)
+], BulkEditAccessibilityProvider);
+class BulkEditIdentityProvider {
+  static {
+    __name(this, "BulkEditIdentityProvider");
+  }
+  getId(element) {
+    if (element instanceof FileElement) {
+      return element.edit.uri + (element.parent instanceof CategoryElement ? JSON.stringify(element.parent.category.metadata) : "");
+    } else if (element instanceof TextEditElement) {
+      return element.parent.edit.uri.toString() + element.idx;
+    } else {
+      return JSON.stringify(element.category.metadata);
+    }
+  }
+}
+class CategoryElementTemplate {
+  static {
+    __name(this, "CategoryElementTemplate");
+  }
+  icon;
+  label;
+  constructor(container) {
+    container.classList.add("category");
+    this.icon = document.createElement("div");
+    container.appendChild(this.icon);
+    this.label = new IconLabel(container);
+  }
+}
+let CategoryElementRenderer = class {
+  constructor(_themeService) {
+    this._themeService = _themeService;
+  }
+  static {
+    __name(this, "CategoryElementRenderer");
+  }
+  static id = "CategoryElementRenderer";
+  templateId = CategoryElementRenderer.id;
+  renderTemplate(container) {
+    return new CategoryElementTemplate(container);
+  }
+  renderElement(node, _index, template) {
+    template.icon.style.setProperty("--background-dark", null);
+    template.icon.style.setProperty("--background-light", null);
+    template.icon.style.color = "";
+    const { metadata } = node.element.category;
+    if (ThemeIcon.isThemeIcon(metadata.iconPath)) {
+      const className = ThemeIcon.asClassName(metadata.iconPath);
+      template.icon.className = className ? `theme-icon ${className}` : "";
+      template.icon.style.color = metadata.iconPath.color ? this._themeService.getColorTheme().getColor(metadata.iconPath.color.id)?.toString() ?? "" : "";
+    } else if (URI.isUri(metadata.iconPath)) {
+      template.icon.className = "uri-icon";
+      template.icon.style.setProperty("--background-dark", css.asCSSUrl(metadata.iconPath));
+      template.icon.style.setProperty("--background-light", css.asCSSUrl(metadata.iconPath));
+    } else if (metadata.iconPath) {
+      template.icon.className = "uri-icon";
+      template.icon.style.setProperty("--background-dark", css.asCSSUrl(metadata.iconPath.dark));
+      template.icon.style.setProperty("--background-light", css.asCSSUrl(metadata.iconPath.light));
+    }
+    template.label.setLabel(metadata.label, metadata.description, {
+      descriptionMatches: createMatches(node.filterData)
+    });
+  }
+  disposeTemplate(template) {
+    template.label.dispose();
+  }
+};
+CategoryElementRenderer = __decorateClass([
+  __decorateParam(0, IThemeService)
+], CategoryElementRenderer);
+let FileElementTemplate = class {
+  constructor(container, resourceLabels, _labelService) {
+    this._labelService = _labelService;
+    this._checkbox = document.createElement("input");
+    this._checkbox.className = "edit-checkbox";
+    this._checkbox.type = "checkbox";
+    this._checkbox.setAttribute("role", "checkbox");
+    container.appendChild(this._checkbox);
+    this._label = resourceLabels.create(container, { supportHighlights: true });
+    this._details = document.createElement("span");
+    this._details.className = "details";
+    container.appendChild(this._details);
+  }
+  static {
+    __name(this, "FileElementTemplate");
+  }
+  _disposables = new DisposableStore();
+  _localDisposables = new DisposableStore();
+  _checkbox;
+  _label;
+  _details;
+  dispose() {
+    this._localDisposables.dispose();
+    this._disposables.dispose();
+    this._label.dispose();
+  }
+  set(element, score) {
+    this._localDisposables.clear();
+    this._checkbox.checked = element.isChecked();
+    this._checkbox.disabled = element.isDisabled();
+    this._localDisposables.add(dom.addDisposableListener(this._checkbox, "change", () => {
+      element.setChecked(this._checkbox.checked);
+    }));
+    if (element.edit.type & BulkFileOperationType.Rename && element.edit.newUri) {
+      this._label.setResource({
+        resource: element.edit.uri,
+        name: localize("rename.label", "{0} \u2192 {1}", this._labelService.getUriLabel(element.edit.uri, { relative: true }), this._labelService.getUriLabel(element.edit.newUri, { relative: true }))
+      }, {
+        fileDecorations: { colors: true, badges: false }
+      });
+      this._details.innerText = localize("detail.rename", "(renaming)");
+    } else {
+      const options = {
+        matches: createMatches(score),
+        fileKind: FileKind.FILE,
+        fileDecorations: { colors: true, badges: false },
+        extraClasses: []
+      };
+      if (element.edit.type & BulkFileOperationType.Create) {
+        this._details.innerText = localize("detail.create", "(creating)");
+      } else if (element.edit.type & BulkFileOperationType.Delete) {
+        this._details.innerText = localize("detail.del", "(deleting)");
+        options.extraClasses.push("delete");
+      } else {
+        this._details.innerText = "";
+      }
+      this._label.setFile(element.edit.uri, options);
+    }
+  }
+};
+FileElementTemplate = __decorateClass([
+  __decorateParam(2, ILabelService)
+], FileElementTemplate);
+let FileElementRenderer = class {
+  constructor(_resourceLabels, _labelService) {
+    this._resourceLabels = _resourceLabels;
+    this._labelService = _labelService;
+  }
+  static {
+    __name(this, "FileElementRenderer");
+  }
+  static id = "FileElementRenderer";
+  templateId = FileElementRenderer.id;
+  renderTemplate(container) {
+    return new FileElementTemplate(container, this._resourceLabels, this._labelService);
+  }
+  renderElement(node, _index, template) {
+    template.set(node.element, node.filterData);
+  }
+  disposeTemplate(template) {
+    template.dispose();
+  }
+};
+FileElementRenderer = __decorateClass([
+  __decorateParam(1, ILabelService)
+], FileElementRenderer);
+let TextEditElementTemplate = class {
+  constructor(container, _themeService) {
+    this._themeService = _themeService;
+    container.classList.add("textedit");
+    this._checkbox = document.createElement("input");
+    this._checkbox.className = "edit-checkbox";
+    this._checkbox.type = "checkbox";
+    this._checkbox.setAttribute("role", "checkbox");
+    container.appendChild(this._checkbox);
+    this._icon = document.createElement("div");
+    container.appendChild(this._icon);
+    this._label = this._disposables.add(new HighlightedLabel(container));
+  }
+  static {
+    __name(this, "TextEditElementTemplate");
+  }
+  _disposables = new DisposableStore();
+  _localDisposables = new DisposableStore();
+  _checkbox;
+  _icon;
+  _label;
+  dispose() {
+    this._localDisposables.dispose();
+    this._disposables.dispose();
+  }
+  set(element) {
+    this._localDisposables.clear();
+    this._localDisposables.add(dom.addDisposableListener(this._checkbox, "change", (e) => {
+      element.setChecked(this._checkbox.checked);
+      e.preventDefault();
+    }));
+    if (element.parent.isChecked()) {
+      this._checkbox.checked = element.isChecked();
+      this._checkbox.disabled = element.isDisabled();
+    } else {
+      this._checkbox.checked = element.isChecked();
+      this._checkbox.disabled = element.isDisabled();
+    }
+    let value = "";
+    value += element.prefix;
+    value += element.selecting;
+    value += element.inserting;
+    value += element.suffix;
+    const selectHighlight = { start: element.prefix.length, end: element.prefix.length + element.selecting.length, extraClasses: ["remove"] };
+    const insertHighlight = { start: selectHighlight.end, end: selectHighlight.end + element.inserting.length, extraClasses: ["insert"] };
+    let title;
+    const { metadata } = element.edit.textEdit;
+    if (metadata && metadata.description) {
+      title = localize("title", "{0} - {1}", metadata.label, metadata.description);
+    } else if (metadata) {
+      title = metadata.label;
+    }
+    const iconPath = metadata?.iconPath;
+    if (!iconPath) {
+      this._icon.style.display = "none";
+    } else {
+      this._icon.style.display = "block";
+      this._icon.style.setProperty("--background-dark", null);
+      this._icon.style.setProperty("--background-light", null);
+      if (ThemeIcon.isThemeIcon(iconPath)) {
+        const className = ThemeIcon.asClassName(iconPath);
+        this._icon.className = className ? `theme-icon ${className}` : "";
+        this._icon.style.color = iconPath.color ? this._themeService.getColorTheme().getColor(iconPath.color.id)?.toString() ?? "" : "";
+      } else if (URI.isUri(iconPath)) {
+        this._icon.className = "uri-icon";
+        this._icon.style.setProperty("--background-dark", css.asCSSUrl(iconPath));
+        this._icon.style.setProperty("--background-light", css.asCSSUrl(iconPath));
+      } else {
+        this._icon.className = "uri-icon";
+        this._icon.style.setProperty("--background-dark", css.asCSSUrl(iconPath.dark));
+        this._icon.style.setProperty("--background-light", css.asCSSUrl(iconPath.light));
+      }
+    }
+    this._label.set(value, [selectHighlight, insertHighlight], title, true);
+    this._icon.title = title || "";
+  }
+};
+TextEditElementTemplate = __decorateClass([
+  __decorateParam(1, IThemeService)
+], TextEditElementTemplate);
+let TextEditElementRenderer = class {
+  constructor(_themeService) {
+    this._themeService = _themeService;
+  }
+  static {
+    __name(this, "TextEditElementRenderer");
+  }
+  static id = "TextEditElementRenderer";
+  templateId = TextEditElementRenderer.id;
+  renderTemplate(container) {
+    return new TextEditElementTemplate(container, this._themeService);
+  }
+  renderElement({ element }, _index, template) {
+    template.set(element);
+  }
+  disposeTemplate(_template) {
+  }
+};
+TextEditElementRenderer = __decorateClass([
+  __decorateParam(0, IThemeService)
+], TextEditElementRenderer);
+class BulkEditDelegate {
+  static {
+    __name(this, "BulkEditDelegate");
+  }
+  getHeight() {
+    return 23;
+  }
+  getTemplateId(element) {
+    if (element instanceof FileElement) {
+      return FileElementRenderer.id;
+    } else if (element instanceof TextEditElement) {
+      return TextEditElementRenderer.id;
+    } else {
+      return CategoryElementRenderer.id;
+    }
+  }
+}
+class BulkEditNaviLabelProvider {
+  static {
+    __name(this, "BulkEditNaviLabelProvider");
+  }
+  getKeyboardNavigationLabel(element) {
+    if (element instanceof FileElement) {
+      return basename(element.edit.uri);
+    } else if (element instanceof CategoryElement) {
+      return element.category.metadata.label;
+    }
+    return void 0;
+  }
+}
+export {
+  BulkEditAccessibilityProvider,
+  BulkEditDataSource,
+  BulkEditDelegate,
+  BulkEditIdentityProvider,
+  BulkEditNaviLabelProvider,
+  BulkEditSorter,
+  CategoryElement,
+  CategoryElementRenderer,
+  FileElement,
+  FileElementRenderer,
+  TextEditElement,
+  TextEditElementRenderer,
+  compareBulkFileOperations
+};
+//# sourceMappingURL=bulkEditTree.js.map

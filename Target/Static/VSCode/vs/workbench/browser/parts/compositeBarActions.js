@@ -1,1 +1,620 @@
-var W=Object.defineProperty,Y=Object.getOwnPropertyDescriptor,A=(t,e,i,o)=>{for(var s,n=o>1?void 0:o?Y(e,i):e,a=t.length-1;a>=0;a--)(s=t[a])&&(n=(o?s(e,i,n):s(n))||n);return o&&n&&W(e,i,n),n},a=(t,e)=>(i,o)=>e(i,o,t);import{localize as p}from"../../../nls.js";import{Action as T,Separator as j}from"../../../base/common/actions.js";import{$ as y,addDisposableListener as x,append as B,clearNode as q,EventHelper as K,EventType as P,getDomNodePagePosition as G,hide as U,show as k}from"../../../base/browser/dom.js";import{ICommandService as J}from"../../../platform/commands/common/commands.js";import{toDisposable as F,DisposableStore as Q,MutableDisposable as Z}from"../../../base/common/lifecycle.js";import{IContextMenuService as V}from"../../../platform/contextview/browser/contextView.js";import{IThemeService as L}from"../../../platform/theme/common/themeService.js";import{NumberBadge as _,ProgressBadge as ee,IconBadge as te}from"../../services/activity/common/activity.js";import{IInstantiationService as ie}from"../../../platform/instantiation/common/instantiation.js";import{DelayedDragHandler as oe}from"../../../base/browser/dnd.js";import{IKeybindingService as M}from"../../../platform/keybinding/common/keybinding.js";import{Emitter as z,Event as se}from"../../../base/common/event.js";import{CompositeDragAndDropObserver as ne,toggleDropEffect as re}from"../dnd.js";import"../../../base/common/color.js";import{BaseActionViewItem as ae}from"../../../base/browser/ui/actionbar/actionViewItems.js";import{Codicon as de}from"../../../base/common/codicons.js";import{ThemeIcon as R}from"../../../base/common/themables.js";import{IHoverService as E}from"../../../platform/hover/browser/hover.js";import{IConfigurationService as w}from"../../../platform/configuration/common/configuration.js";import"../../../base/browser/ui/hover/hoverWidget.js";import"../../../base/common/uri.js";import{badgeBackground as ce,badgeForeground as le,contrastBorder as pe}from"../../../platform/theme/common/colorRegistry.js";import{Action2 as ge}from"../../../platform/actions/common/actions.js";import"../../common/views.js";import{IPaneCompositePartService as he}from"../../services/panecomposite/browser/panecomposite.js";import{createConfigureKeybindingAction as me}from"../../../platform/actions/common/menuService.js";class H extends T{constructor(t){super(t.id,t.name,t.classNames?.join(" "),!0),this.item=t}_onDidChangeCompositeBarActionItem=this._register(new z);onDidChangeCompositeBarActionItem=this._onDidChangeCompositeBarActionItem.event;_onDidChangeActivity=this._register(new z);onDidChangeActivity=this._onDidChangeActivity.event;_activities=[];get compositeBarActionItem(){return this.item}set compositeBarActionItem(t){this._label=t.name,this.item=t,this._onDidChangeCompositeBarActionItem.fire(this)}get activities(){return this._activities}set activities(t){this._activities=t,this._onDidChangeActivity.fire(t)}activate(){this.checked||this._setChecked(!0)}deactivate(){this.checked&&this._setChecked(!1)}}let u=class extends ae{constructor(t,e,i,o,s,n,a){super(null,t,e),this.badgesEnabled=i,this.themeService=o,this.hoverService=s,this.configurationService=n,this.keybindingService=a,this.options=e,this._register(this.themeService.onDidColorThemeChange(this.onThemeChange,this)),this._register(t.onDidChangeCompositeBarActionItem((()=>this.update()))),this._register(se.filter(a.onDidUpdateKeybindings,(()=>this.keybindingLabel!==this.computeKeybindingLabel()))((()=>this.updateTitle()))),this._register(t.onDidChangeActivity((()=>this.updateActivity())))}container;label;badge;options;badgeContent;badgeDisposable=this._register(new Z);mouseUpTimeout;keybindingLabel;get compositeBarActionItem(){return this._action.compositeBarActionItem}updateStyles(){const t=this.themeService.getColorTheme(),e=this.options.colors(t);if(this.label){if(this.options.icon){const t=this._action.checked?e.activeForegroundColor:e.inactiveForegroundColor;this.compositeBarActionItem.iconUrl?(this.label.style.backgroundColor=t?t.toString():"",this.label.style.color=""):(this.label.style.color=t?t.toString():"",this.label.style.backgroundColor="")}else{const t=this._action.checked?e.activeForegroundColor:e.inactiveForegroundColor,i=this._action.checked?e.activeBorderBottomColor:null;this.label.style.color=t?t.toString():"",this.label.style.borderBottomColor=i?i.toString():""}this.container.style.setProperty("--insert-border-color",e.dragAndDropBorder?e.dragAndDropBorder.toString():"")}if(this.badgeContent){const i=this.getActivities()[0]?.badge.getColors(t),o=i?.badgeForeground??e.badgeForeground??t.getColor(le),s=i?.badgeBackground??e.badgeBackground??t.getColor(ce),n=i?.badgeBorder??t.getColor(pe);this.badgeContent.style.color=o?o.toString():"",this.badgeContent.style.backgroundColor=s?s.toString():"",this.badgeContent.style.borderStyle=n&&!this.options.compact?"solid":"",this.badgeContent.style.borderWidth=n?"1px":"",this.badgeContent.style.borderColor=n?n.toString():""}}render(t){super.render(t),this.container=t,this.options.icon&&this.container.classList.add("icon"),this.options.hasPopup?(this.container.setAttribute("role","button"),this.container.setAttribute("aria-haspopup","true")):this.container.setAttribute("role","tab"),this._register(x(this.container,P.MOUSE_DOWN,(()=>{this.container.classList.add("clicked")}))),this._register(x(this.container,P.MOUSE_UP,(()=>{this.mouseUpTimeout&&clearTimeout(this.mouseUpTimeout),this.mouseUpTimeout=setTimeout((()=>{this.container.classList.remove("clicked")}),800)}))),this._register(this.hoverService.setupDelayedHover(this.container,(()=>({content:this.computeTitle(),position:{hoverPosition:this.options.hoverOptions.position()},persistence:{hideOnKeyDown:!0},appearance:{showPointer:!0,compact:!0}})),{groupId:"composite-bar-actions"})),this.label=B(t,y("a")),this.badge=B(t,y(".badge")),this.badgeContent=B(this.badge,y(".badge-content")),B(t,y(".active-item-indicator")),U(this.badge),this.update(),this.updateStyles(),this.updateTitle()}onThemeChange(t){this.updateStyles()}update(){this.updateLabel(),this.updateActivity(),this.updateTitle(),this.updateStyles()}getActivities(){return this._action instanceof H?this._action.activities:[]}updateActivity(){if(!(this.badge&&this.badgeContent&&this._action instanceof H))return;const{badges:t,type:e}=this.getVisibleBadges(this.getActivities());this.badgeDisposable.value=new Q,q(this.badgeContent),U(this.badge);const i=this.badgesEnabled(this.compositeBarActionItem.id);if(t.length>0&&i){const i=[];if(this.options.compact&&i.push("compact"),"progress"===e)k(this.badge),i.push("progress-badge");else if("number"===e){const e=t.reduce(((t,e)=>t+(e instanceof _?e.number:0)),0);if(e>0){let t=e.toString();if(e>999){const i=e/1e3,o=Math.floor(i);t=i>o?`${o}K+`:`${i}K`}this.options.compact&&t.length>=3&&i.push("compact-content"),this.badgeContent.textContent=t,k(this.badge)}}else if("icon"===e){i.push("icon-badge");const e=["icon-overlay",...R.asClassNameArray(t[0].icon)];this.badgeContent.classList.add(...e),this.badgeDisposable.value.add(F((()=>this.badgeContent?.classList.remove(...e)))),k(this.badge)}i.length&&(this.badge.classList.add(...i),this.badgeDisposable.value.add(F((()=>this.badge.classList.remove(...i)))))}this.updateTitle(),this.updateStyles()}getVisibleBadges(t){const e=t.filter((t=>t.badge instanceof ee)).map((t=>t.badge));if(e.length>0)return{badges:e,type:"progress"};const i=t.filter((t=>t.badge instanceof te)).map((t=>t.badge));if(i.length>0)return{badges:i,type:"icon"};const o=t.filter((t=>t.badge instanceof _)).map((t=>t.badge));return o.length>0?{badges:o,type:"number"}:{badges:[],type:void 0}}updateLabel(){this.label.className="action-label",this.compositeBarActionItem.classNames&&this.label.classList.add(...this.compositeBarActionItem.classNames),this.options.icon||(this.label.textContent=this.action.label)}updateTitle(){const t=this.computeTitle();[this.label,this.badge,this.container].forEach((e=>{e&&(e.setAttribute("aria-label",t),e.setAttribute("title",""),e.removeAttribute("title"))}))}computeTitle(){this.keybindingLabel=this.computeKeybindingLabel();let t=this.keybindingLabel?p("titleKeybinding","{0} ({1})",this.compositeBarActionItem.name,this.keybindingLabel):this.compositeBarActionItem.name;const e=this.getVisibleBadges(this.action.activities).badges;for(const i of e)i.getDescription()&&(t=`${t} - ${i.getDescription()}`);return t}computeKeybindingLabel(){return(this.compositeBarActionItem.keybindingId?this.keybindingService.lookupKeybinding(this.compositeBarActionItem.keybindingId):null)?.getLabel()}dispose(){super.dispose(),this.mouseUpTimeout&&clearTimeout(this.mouseUpTimeout),this.badge.remove()}};u=A([a(3,L),a(4,E),a(5,w),a(6,M)],u);class tt extends H{constructor(t){super({id:"additionalComposites.action",name:p("additionalViews","Additional Views"),classNames:R.asClassNameArray(de.more)}),this.showMenu=t}async run(){this.showMenu()}}let D=class extends u{constructor(t,e,i,o,s,n,a,r,c,h,d,m){super(t,{icon:!0,colors:n,hasPopup:!0,hoverOptions:a},(()=>!0),c,h,d,m),this.getOverflowingComposites=e,this.getActiveCompositeId=i,this.getBadge=o,this.getCompositeOpenAction=s,this.contextMenuService=r}showMenu(){this.contextMenuService.showContextMenu({getAnchor:()=>this.container,getActions:()=>this.getActions(),getCheckedActionsRepresentation:()=>"radio"})}getActions(){return this.getOverflowingComposites().map((t=>{const e=this.getCompositeOpenAction(t.id);e.checked=this.getActiveCompositeId()===e.id;const i=this.getBadge(t.id);let o;return i instanceof _&&(o=i.number),e.label=o?p("numberBadge","{0} ({1})",t.name,o):t.name||"",e}))}};D=A([a(7,V),a(8,L),a(9,E),a(10,w),a(11,M)],D);let S=class extends u{constructor(t,e,i,o,s,n,a,r,c,h,d,m,l,g,p){super(e,t,r.areBadgesEnabled.bind(r),m,l,g,h),this.toggleCompositePinnedAction=i,this.toggleCompositeBadgeAction=o,this.compositeContextMenuActionsProvider=s,this.contextMenuActionsProvider=n,this.dndHandler=a,this.compositeBar=r,this.contextMenuService=c,this.commandService=p}render(t){let e;super.render(t),this.updateChecked(),this.updateEnabled(),this._register(x(this.container,P.CONTEXT_MENU,(e=>{K.stop(e,!0),this.showContextMenu(t)}))),this._register(ne.INSTANCE.registerDraggable(this.container,(()=>({type:"composite",id:this.compositeBarActionItem.id})),{onDragOver:i=>{const o=i.dragAndDropData.getData().id!==this.compositeBarActionItem.id&&this.dndHandler.onDragOver(i.dragAndDropData,this.compositeBarActionItem.id,i.eventData);re(i.eventData.dataTransfer,"move",o),e=this.updateFromDragging(t,o,i.eventData)},onDragLeave:i=>{e=this.updateFromDragging(t,!1,i.eventData)},onDragEnd:i=>{e=this.updateFromDragging(t,!1,i.eventData)},onDrop:i=>{K.stop(i.eventData,!0),this.dndHandler.drop(i.dragAndDropData,this.compositeBarActionItem.id,i.eventData,e),e=this.updateFromDragging(t,!1,i.eventData)},onDragStart:t=>{t.dragAndDropData.getData().id===this.compositeBarActionItem.id&&(t.eventData.dataTransfer&&(t.eventData.dataTransfer.effectAllowed="move"),this.blur())}})),[this.badge,this.label].forEach((t=>this._register(new oe(t,(()=>{this.action.checked||this.action.run()}))))),this.updateStyles()}updateFromDragging(t,e,i){const o=t.getBoundingClientRect(),s=i.clientX,n=i.clientY,a=o.bottom-o.top,r=o.right-o.left,c=n<=o.top+.4*a,h=n>o.bottom-.4*a,d=n<=o.top+.5*a,m=s<=o.left+.4*r,l=s>o.right-.4*r,g=s<=o.left+.5*r,p=t.classList,b=p.contains("top")?"top":p.contains("bottom")?"bottom":void 0,u=p.contains("left")?"left":p.contains("right")?"right":void 0,v=c||d&&!b||!h&&"top"===b,A=h||!d&&!b||!c&&"bottom"===b,C=m||g&&!u||!l&&"left"===u,f=l||!g&&!u||!m&&"right"===u;if(t.classList.toggle("top",e&&v),t.classList.toggle("bottom",e&&A),t.classList.toggle("left",e&&C),t.classList.toggle("right",e&&f),e)return{verticallyBefore:v,horizontallyBefore:C}}showContextMenu(t){const e=[];this.compositeBarActionItem.keybindingId&&e.push(me(this.commandService,this.keybindingService,this.compositeBarActionItem.keybindingId)),e.push(this.toggleCompositePinnedAction,this.toggleCompositeBadgeAction);const i=this.compositeContextMenuActionsProvider(this.compositeBarActionItem.id);i.length&&e.push(...i),this.compositeBar.isPinned(this.compositeBarActionItem.id)?(this.toggleCompositePinnedAction.label=p("hide","Hide '{0}'",this.compositeBarActionItem.name),this.toggleCompositePinnedAction.checked=!1,this.toggleCompositePinnedAction.enabled=this.compositeBar.getPinnedCompositeIds().length>1):(this.toggleCompositePinnedAction.label=p("keep","Keep '{0}'",this.compositeBarActionItem.name),this.toggleCompositePinnedAction.enabled=!0),this.compositeBar.areBadgesEnabled(this.compositeBarActionItem.id)?this.toggleCompositeBadgeAction.label=p("hideBadge","Hide Badge"):this.toggleCompositeBadgeAction.label=p("showBadge","Show Badge");const o=this.contextMenuActionsProvider();o.length&&(e.push(new j),e.push(...o));const s=G(t),n={x:Math.floor(s.left+s.width/2),y:s.top+s.height};this.contextMenuService.showContextMenu({getAnchor:()=>n,getActions:()=>e,getActionsContext:()=>this.compositeBarActionItem.id})}updateChecked(){this.action.checked?(this.container.classList.add("checked"),this.container.setAttribute("aria-label",this.getTooltip()??this.container.title),this.container.setAttribute("aria-expanded","true"),this.container.setAttribute("aria-selected","true")):(this.container.classList.remove("checked"),this.container.setAttribute("aria-label",this.getTooltip()??this.container.title),this.container.setAttribute("aria-expanded","false"),this.container.setAttribute("aria-selected","false")),this.updateStyles()}updateEnabled(){this.element&&(this.action.enabled?this.element.classList.remove("disabled"):this.element.classList.add("disabled"))}dispose(){super.dispose(),this.label.remove()}};S=A([a(8,V),a(9,M),a(10,ie),a(11,L),a(12,E),a(13,w),a(14,J)],S);class it extends T{constructor(t,e){super("show.toggleCompositePinned",t?t.name:p("toggle","Toggle View Pinned")),this.activity=t,this.compositeBar=e,this.checked=!!this.activity&&this.compositeBar.isPinned(this.activity.id)}async run(t){const e=this.activity?this.activity.id:t;this.compositeBar.isPinned(e)?this.compositeBar.unpin(e):this.compositeBar.pin(e)}}class ot extends T{constructor(t,e){super("show.toggleCompositeBadge",t?t.name:p("toggleBadge","Toggle View Badge")),this.compositeBarActionItem=t,this.compositeBar=e,this.checked=!1}async run(t){const e=this.compositeBarActionItem?this.compositeBarActionItem.id:t;this.compositeBar.toggleBadgeEnablement(e)}}class st extends ge{constructor(t,e,i){super(t),this.location=e,this.offset=i}async run(t){const e=t.get(he),i=e.getActivePaneComposite(this.location);if(!i)return;let o;const s=e.getVisiblePaneCompositeIds(this.location);for(let t=0;t<s.length;t++)if(s[t]===i.getId()){o=s[(t+s.length+this.offset)%s.length];break}typeof o<"u"&&await e.openPaneComposite(o,this.location,!0)}}export{S as CompositeActionViewItem,H as CompositeBarAction,u as CompositeBarActionViewItem,tt as CompositeOverflowActivityAction,D as CompositeOverflowActivityActionViewItem,st as SwitchCompositeViewAction,ot as ToggleCompositeBadgeAction,it as ToggleCompositePinnedAction};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { localize } from "../../../nls.js";
+import { Action, IAction, Separator } from "../../../base/common/actions.js";
+import { $, addDisposableListener, append, clearNode, EventHelper, EventType, getDomNodePagePosition, hide, show } from "../../../base/browser/dom.js";
+import { ICommandService } from "../../../platform/commands/common/commands.js";
+import { toDisposable, DisposableStore, MutableDisposable } from "../../../base/common/lifecycle.js";
+import { IContextMenuService } from "../../../platform/contextview/browser/contextView.js";
+import { IThemeService, IColorTheme } from "../../../platform/theme/common/themeService.js";
+import { NumberBadge, IBadge, IActivity, ProgressBadge, IconBadge } from "../../services/activity/common/activity.js";
+import { IInstantiationService, ServicesAccessor } from "../../../platform/instantiation/common/instantiation.js";
+import { DelayedDragHandler } from "../../../base/browser/dnd.js";
+import { IKeybindingService } from "../../../platform/keybinding/common/keybinding.js";
+import { Emitter, Event } from "../../../base/common/event.js";
+import { CompositeDragAndDropObserver, ICompositeDragAndDrop, Before2D, toggleDropEffect } from "../dnd.js";
+import { Color } from "../../../base/common/color.js";
+import { BaseActionViewItem, IActionViewItemOptions } from "../../../base/browser/ui/actionbar/actionViewItems.js";
+import { Codicon } from "../../../base/common/codicons.js";
+import { ThemeIcon } from "../../../base/common/themables.js";
+import { IHoverService } from "../../../platform/hover/browser/hover.js";
+import { IConfigurationService } from "../../../platform/configuration/common/configuration.js";
+import { HoverPosition } from "../../../base/browser/ui/hover/hoverWidget.js";
+import { URI } from "../../../base/common/uri.js";
+import { badgeBackground, badgeForeground, contrastBorder } from "../../../platform/theme/common/colorRegistry.js";
+import { Action2, IAction2Options } from "../../../platform/actions/common/actions.js";
+import { ViewContainerLocation } from "../../common/views.js";
+import { IPaneCompositePartService } from "../../services/panecomposite/browser/panecomposite.js";
+import { createConfigureKeybindingAction } from "../../../platform/actions/common/menuService.js";
+class CompositeBarAction extends Action {
+  constructor(item) {
+    super(item.id, item.name, item.classNames?.join(" "), true);
+    this.item = item;
+  }
+  static {
+    __name(this, "CompositeBarAction");
+  }
+  _onDidChangeCompositeBarActionItem = this._register(new Emitter());
+  onDidChangeCompositeBarActionItem = this._onDidChangeCompositeBarActionItem.event;
+  _onDidChangeActivity = this._register(new Emitter());
+  onDidChangeActivity = this._onDidChangeActivity.event;
+  _activities = [];
+  get compositeBarActionItem() {
+    return this.item;
+  }
+  set compositeBarActionItem(item) {
+    this._label = item.name;
+    this.item = item;
+    this._onDidChangeCompositeBarActionItem.fire(this);
+  }
+  get activities() {
+    return this._activities;
+  }
+  set activities(activities) {
+    this._activities = activities;
+    this._onDidChangeActivity.fire(activities);
+  }
+  activate() {
+    if (!this.checked) {
+      this._setChecked(true);
+    }
+  }
+  deactivate() {
+    if (this.checked) {
+      this._setChecked(false);
+    }
+  }
+}
+let CompositeBarActionViewItem = class extends BaseActionViewItem {
+  constructor(action, options, badgesEnabled, themeService, hoverService, configurationService, keybindingService) {
+    super(null, action, options);
+    this.badgesEnabled = badgesEnabled;
+    this.themeService = themeService;
+    this.hoverService = hoverService;
+    this.configurationService = configurationService;
+    this.keybindingService = keybindingService;
+    this.options = options;
+    this._register(this.themeService.onDidColorThemeChange(this.onThemeChange, this));
+    this._register(action.onDidChangeCompositeBarActionItem(() => this.update()));
+    this._register(Event.filter(keybindingService.onDidUpdateKeybindings, () => this.keybindingLabel !== this.computeKeybindingLabel())(() => this.updateTitle()));
+    this._register(action.onDidChangeActivity(() => this.updateActivity()));
+  }
+  static {
+    __name(this, "CompositeBarActionViewItem");
+  }
+  container;
+  label;
+  badge;
+  options;
+  badgeContent;
+  badgeDisposable = this._register(new MutableDisposable());
+  mouseUpTimeout;
+  keybindingLabel;
+  get compositeBarActionItem() {
+    return this._action.compositeBarActionItem;
+  }
+  updateStyles() {
+    const theme = this.themeService.getColorTheme();
+    const colors = this.options.colors(theme);
+    if (this.label) {
+      if (this.options.icon) {
+        const foreground = this._action.checked ? colors.activeForegroundColor : colors.inactiveForegroundColor;
+        if (this.compositeBarActionItem.iconUrl) {
+          this.label.style.backgroundColor = foreground ? foreground.toString() : "";
+          this.label.style.color = "";
+        } else {
+          this.label.style.color = foreground ? foreground.toString() : "";
+          this.label.style.backgroundColor = "";
+        }
+      } else {
+        const foreground = this._action.checked ? colors.activeForegroundColor : colors.inactiveForegroundColor;
+        const borderBottomColor = this._action.checked ? colors.activeBorderBottomColor : null;
+        this.label.style.color = foreground ? foreground.toString() : "";
+        this.label.style.borderBottomColor = borderBottomColor ? borderBottomColor.toString() : "";
+      }
+      this.container.style.setProperty("--insert-border-color", colors.dragAndDropBorder ? colors.dragAndDropBorder.toString() : "");
+    }
+    if (this.badgeContent) {
+      const badgeStyles = this.getActivities()[0]?.badge.getColors(theme);
+      const badgeFg = badgeStyles?.badgeForeground ?? colors.badgeForeground ?? theme.getColor(badgeForeground);
+      const badgeBg = badgeStyles?.badgeBackground ?? colors.badgeBackground ?? theme.getColor(badgeBackground);
+      const contrastBorderColor = badgeStyles?.badgeBorder ?? theme.getColor(contrastBorder);
+      this.badgeContent.style.color = badgeFg ? badgeFg.toString() : "";
+      this.badgeContent.style.backgroundColor = badgeBg ? badgeBg.toString() : "";
+      this.badgeContent.style.borderStyle = contrastBorderColor && !this.options.compact ? "solid" : "";
+      this.badgeContent.style.borderWidth = contrastBorderColor ? "1px" : "";
+      this.badgeContent.style.borderColor = contrastBorderColor ? contrastBorderColor.toString() : "";
+    }
+  }
+  render(container) {
+    super.render(container);
+    this.container = container;
+    if (this.options.icon) {
+      this.container.classList.add("icon");
+    }
+    if (this.options.hasPopup) {
+      this.container.setAttribute("role", "button");
+      this.container.setAttribute("aria-haspopup", "true");
+    } else {
+      this.container.setAttribute("role", "tab");
+    }
+    this._register(addDisposableListener(this.container, EventType.MOUSE_DOWN, () => {
+      this.container.classList.add("clicked");
+    }));
+    this._register(addDisposableListener(this.container, EventType.MOUSE_UP, () => {
+      if (this.mouseUpTimeout) {
+        clearTimeout(this.mouseUpTimeout);
+      }
+      this.mouseUpTimeout = setTimeout(() => {
+        this.container.classList.remove("clicked");
+      }, 800);
+    }));
+    this._register(this.hoverService.setupDelayedHover(this.container, () => ({
+      content: this.computeTitle(),
+      position: {
+        hoverPosition: this.options.hoverOptions.position()
+      },
+      persistence: {
+        hideOnKeyDown: true
+      },
+      appearance: {
+        showPointer: true,
+        compact: true
+      }
+    }), { groupId: "composite-bar-actions" }));
+    this.label = append(container, $("a"));
+    this.badge = append(container, $(".badge"));
+    this.badgeContent = append(this.badge, $(".badge-content"));
+    append(container, $(".active-item-indicator"));
+    hide(this.badge);
+    this.update();
+    this.updateStyles();
+    this.updateTitle();
+  }
+  onThemeChange(theme) {
+    this.updateStyles();
+  }
+  update() {
+    this.updateLabel();
+    this.updateActivity();
+    this.updateTitle();
+    this.updateStyles();
+  }
+  getActivities() {
+    if (this._action instanceof CompositeBarAction) {
+      return this._action.activities;
+    }
+    return [];
+  }
+  updateActivity() {
+    if (!this.badge || !this.badgeContent || !(this._action instanceof CompositeBarAction)) {
+      return;
+    }
+    const { badges, type } = this.getVisibleBadges(this.getActivities());
+    this.badgeDisposable.value = new DisposableStore();
+    clearNode(this.badgeContent);
+    hide(this.badge);
+    const shouldRenderBadges = this.badgesEnabled(this.compositeBarActionItem.id);
+    if (badges.length > 0 && shouldRenderBadges) {
+      const classes = [];
+      if (this.options.compact) {
+        classes.push("compact");
+      }
+      if (type === "progress") {
+        show(this.badge);
+        classes.push("progress-badge");
+      } else if (type === "number") {
+        const total = badges.reduce((r, b) => r + (b instanceof NumberBadge ? b.number : 0), 0);
+        if (total > 0) {
+          let badgeNumber = total.toString();
+          if (total > 999) {
+            const noOfThousands = total / 1e3;
+            const floor = Math.floor(noOfThousands);
+            badgeNumber = noOfThousands > floor ? `${floor}K+` : `${noOfThousands}K`;
+          }
+          if (this.options.compact && badgeNumber.length >= 3) {
+            classes.push("compact-content");
+          }
+          this.badgeContent.textContent = badgeNumber;
+          show(this.badge);
+        }
+      } else if (type === "icon") {
+        classes.push("icon-badge");
+        const badgeContentClassess = ["icon-overlay", ...ThemeIcon.asClassNameArray(badges[0].icon)];
+        this.badgeContent.classList.add(...badgeContentClassess);
+        this.badgeDisposable.value.add(toDisposable(() => this.badgeContent?.classList.remove(...badgeContentClassess)));
+        show(this.badge);
+      }
+      if (classes.length) {
+        this.badge.classList.add(...classes);
+        this.badgeDisposable.value.add(toDisposable(() => this.badge.classList.remove(...classes)));
+      }
+    }
+    this.updateTitle();
+    this.updateStyles();
+  }
+  getVisibleBadges(activities) {
+    const progressBadges = activities.filter((activity) => activity.badge instanceof ProgressBadge).map((activity) => activity.badge);
+    if (progressBadges.length > 0) {
+      return { badges: progressBadges, type: "progress" };
+    }
+    const iconBadges = activities.filter((activity) => activity.badge instanceof IconBadge).map((activity) => activity.badge);
+    if (iconBadges.length > 0) {
+      return { badges: iconBadges, type: "icon" };
+    }
+    const numberBadges = activities.filter((activity) => activity.badge instanceof NumberBadge).map((activity) => activity.badge);
+    if (numberBadges.length > 0) {
+      return { badges: numberBadges, type: "number" };
+    }
+    return { badges: [], type: void 0 };
+  }
+  updateLabel() {
+    this.label.className = "action-label";
+    if (this.compositeBarActionItem.classNames) {
+      this.label.classList.add(...this.compositeBarActionItem.classNames);
+    }
+    if (!this.options.icon) {
+      this.label.textContent = this.action.label;
+    }
+  }
+  updateTitle() {
+    const title = this.computeTitle();
+    [this.label, this.badge, this.container].forEach((element) => {
+      if (element) {
+        element.setAttribute("aria-label", title);
+        element.setAttribute("title", "");
+        element.removeAttribute("title");
+      }
+    });
+  }
+  computeTitle() {
+    this.keybindingLabel = this.computeKeybindingLabel();
+    let title = this.keybindingLabel ? localize("titleKeybinding", "{0} ({1})", this.compositeBarActionItem.name, this.keybindingLabel) : this.compositeBarActionItem.name;
+    const badges = this.getVisibleBadges(this.action.activities).badges;
+    for (const badge of badges) {
+      const description = badge.getDescription();
+      if (!description) {
+        continue;
+      }
+      title = `${title} - ${badge.getDescription()}`;
+    }
+    return title;
+  }
+  computeKeybindingLabel() {
+    const keybinding = this.compositeBarActionItem.keybindingId ? this.keybindingService.lookupKeybinding(this.compositeBarActionItem.keybindingId) : null;
+    return keybinding?.getLabel();
+  }
+  dispose() {
+    super.dispose();
+    if (this.mouseUpTimeout) {
+      clearTimeout(this.mouseUpTimeout);
+    }
+    this.badge.remove();
+  }
+};
+CompositeBarActionViewItem = __decorateClass([
+  __decorateParam(3, IThemeService),
+  __decorateParam(4, IHoverService),
+  __decorateParam(5, IConfigurationService),
+  __decorateParam(6, IKeybindingService)
+], CompositeBarActionViewItem);
+class CompositeOverflowActivityAction extends CompositeBarAction {
+  constructor(showMenu) {
+    super({
+      id: "additionalComposites.action",
+      name: localize("additionalViews", "Additional Views"),
+      classNames: ThemeIcon.asClassNameArray(Codicon.more)
+    });
+    this.showMenu = showMenu;
+  }
+  static {
+    __name(this, "CompositeOverflowActivityAction");
+  }
+  async run() {
+    this.showMenu();
+  }
+}
+let CompositeOverflowActivityActionViewItem = class extends CompositeBarActionViewItem {
+  constructor(action, getOverflowingComposites, getActiveCompositeId, getBadge, getCompositeOpenAction, colors, hoverOptions, contextMenuService, themeService, hoverService, configurationService, keybindingService) {
+    super(action, { icon: true, colors, hasPopup: true, hoverOptions }, () => true, themeService, hoverService, configurationService, keybindingService);
+    this.getOverflowingComposites = getOverflowingComposites;
+    this.getActiveCompositeId = getActiveCompositeId;
+    this.getBadge = getBadge;
+    this.getCompositeOpenAction = getCompositeOpenAction;
+    this.contextMenuService = contextMenuService;
+  }
+  static {
+    __name(this, "CompositeOverflowActivityActionViewItem");
+  }
+  showMenu() {
+    this.contextMenuService.showContextMenu({
+      getAnchor: /* @__PURE__ */ __name(() => this.container, "getAnchor"),
+      getActions: /* @__PURE__ */ __name(() => this.getActions(), "getActions"),
+      getCheckedActionsRepresentation: /* @__PURE__ */ __name(() => "radio", "getCheckedActionsRepresentation")
+    });
+  }
+  getActions() {
+    return this.getOverflowingComposites().map((composite) => {
+      const action = this.getCompositeOpenAction(composite.id);
+      action.checked = this.getActiveCompositeId() === action.id;
+      const badge = this.getBadge(composite.id);
+      let suffix;
+      if (badge instanceof NumberBadge) {
+        suffix = badge.number;
+      }
+      if (suffix) {
+        action.label = localize("numberBadge", "{0} ({1})", composite.name, suffix);
+      } else {
+        action.label = composite.name || "";
+      }
+      return action;
+    });
+  }
+};
+CompositeOverflowActivityActionViewItem = __decorateClass([
+  __decorateParam(7, IContextMenuService),
+  __decorateParam(8, IThemeService),
+  __decorateParam(9, IHoverService),
+  __decorateParam(10, IConfigurationService),
+  __decorateParam(11, IKeybindingService)
+], CompositeOverflowActivityActionViewItem);
+let CompositeActionViewItem = class extends CompositeBarActionViewItem {
+  constructor(options, compositeActivityAction, toggleCompositePinnedAction, toggleCompositeBadgeAction, compositeContextMenuActionsProvider, contextMenuActionsProvider, dndHandler, compositeBar, contextMenuService, keybindingService, instantiationService, themeService, hoverService, configurationService, commandService) {
+    super(
+      compositeActivityAction,
+      options,
+      compositeBar.areBadgesEnabled.bind(compositeBar),
+      themeService,
+      hoverService,
+      configurationService,
+      keybindingService
+    );
+    this.toggleCompositePinnedAction = toggleCompositePinnedAction;
+    this.toggleCompositeBadgeAction = toggleCompositeBadgeAction;
+    this.compositeContextMenuActionsProvider = compositeContextMenuActionsProvider;
+    this.contextMenuActionsProvider = contextMenuActionsProvider;
+    this.dndHandler = dndHandler;
+    this.compositeBar = compositeBar;
+    this.contextMenuService = contextMenuService;
+    this.commandService = commandService;
+  }
+  static {
+    __name(this, "CompositeActionViewItem");
+  }
+  render(container) {
+    super.render(container);
+    this.updateChecked();
+    this.updateEnabled();
+    this._register(addDisposableListener(this.container, EventType.CONTEXT_MENU, (e) => {
+      EventHelper.stop(e, true);
+      this.showContextMenu(container);
+    }));
+    let insertDropBefore = void 0;
+    this._register(CompositeDragAndDropObserver.INSTANCE.registerDraggable(this.container, () => {
+      return { type: "composite", id: this.compositeBarActionItem.id };
+    }, {
+      onDragOver: /* @__PURE__ */ __name((e) => {
+        const isValidMove = e.dragAndDropData.getData().id !== this.compositeBarActionItem.id && this.dndHandler.onDragOver(e.dragAndDropData, this.compositeBarActionItem.id, e.eventData);
+        toggleDropEffect(e.eventData.dataTransfer, "move", isValidMove);
+        insertDropBefore = this.updateFromDragging(container, isValidMove, e.eventData);
+      }, "onDragOver"),
+      onDragLeave: /* @__PURE__ */ __name((e) => {
+        insertDropBefore = this.updateFromDragging(container, false, e.eventData);
+      }, "onDragLeave"),
+      onDragEnd: /* @__PURE__ */ __name((e) => {
+        insertDropBefore = this.updateFromDragging(container, false, e.eventData);
+      }, "onDragEnd"),
+      onDrop: /* @__PURE__ */ __name((e) => {
+        EventHelper.stop(e.eventData, true);
+        this.dndHandler.drop(e.dragAndDropData, this.compositeBarActionItem.id, e.eventData, insertDropBefore);
+        insertDropBefore = this.updateFromDragging(container, false, e.eventData);
+      }, "onDrop"),
+      onDragStart: /* @__PURE__ */ __name((e) => {
+        if (e.dragAndDropData.getData().id !== this.compositeBarActionItem.id) {
+          return;
+        }
+        if (e.eventData.dataTransfer) {
+          e.eventData.dataTransfer.effectAllowed = "move";
+        }
+        this.blur();
+      }, "onDragStart")
+    }));
+    [this.badge, this.label].forEach((element) => this._register(new DelayedDragHandler(element, () => {
+      if (!this.action.checked) {
+        this.action.run();
+      }
+    })));
+    this.updateStyles();
+  }
+  updateFromDragging(element, showFeedback, event) {
+    const rect = element.getBoundingClientRect();
+    const posX = event.clientX;
+    const posY = event.clientY;
+    const height = rect.bottom - rect.top;
+    const width = rect.right - rect.left;
+    const forceTop = posY <= rect.top + height * 0.4;
+    const forceBottom = posY > rect.bottom - height * 0.4;
+    const preferTop = posY <= rect.top + height * 0.5;
+    const forceLeft = posX <= rect.left + width * 0.4;
+    const forceRight = posX > rect.right - width * 0.4;
+    const preferLeft = posX <= rect.left + width * 0.5;
+    const classes = element.classList;
+    const lastClasses = {
+      vertical: classes.contains("top") ? "top" : classes.contains("bottom") ? "bottom" : void 0,
+      horizontal: classes.contains("left") ? "left" : classes.contains("right") ? "right" : void 0
+    };
+    const top = forceTop || preferTop && !lastClasses.vertical || !forceBottom && lastClasses.vertical === "top";
+    const bottom = forceBottom || !preferTop && !lastClasses.vertical || !forceTop && lastClasses.vertical === "bottom";
+    const left = forceLeft || preferLeft && !lastClasses.horizontal || !forceRight && lastClasses.horizontal === "left";
+    const right = forceRight || !preferLeft && !lastClasses.horizontal || !forceLeft && lastClasses.horizontal === "right";
+    element.classList.toggle("top", showFeedback && top);
+    element.classList.toggle("bottom", showFeedback && bottom);
+    element.classList.toggle("left", showFeedback && left);
+    element.classList.toggle("right", showFeedback && right);
+    if (!showFeedback) {
+      return void 0;
+    }
+    return { verticallyBefore: top, horizontallyBefore: left };
+  }
+  showContextMenu(container) {
+    const actions = [];
+    if (this.compositeBarActionItem.keybindingId) {
+      actions.push(createConfigureKeybindingAction(this.commandService, this.keybindingService, this.compositeBarActionItem.keybindingId));
+    }
+    actions.push(this.toggleCompositePinnedAction, this.toggleCompositeBadgeAction);
+    const compositeContextMenuActions = this.compositeContextMenuActionsProvider(this.compositeBarActionItem.id);
+    if (compositeContextMenuActions.length) {
+      actions.push(...compositeContextMenuActions);
+    }
+    const isPinned = this.compositeBar.isPinned(this.compositeBarActionItem.id);
+    if (isPinned) {
+      this.toggleCompositePinnedAction.label = localize("hide", "Hide '{0}'", this.compositeBarActionItem.name);
+      this.toggleCompositePinnedAction.checked = false;
+      this.toggleCompositePinnedAction.enabled = this.compositeBar.getPinnedCompositeIds().length > 1;
+    } else {
+      this.toggleCompositePinnedAction.label = localize("keep", "Keep '{0}'", this.compositeBarActionItem.name);
+      this.toggleCompositePinnedAction.enabled = true;
+    }
+    const isBadgeEnabled = this.compositeBar.areBadgesEnabled(this.compositeBarActionItem.id);
+    if (isBadgeEnabled) {
+      this.toggleCompositeBadgeAction.label = localize("hideBadge", "Hide Badge");
+    } else {
+      this.toggleCompositeBadgeAction.label = localize("showBadge", "Show Badge");
+    }
+    const otherActions = this.contextMenuActionsProvider();
+    if (otherActions.length) {
+      actions.push(new Separator());
+      actions.push(...otherActions);
+    }
+    const elementPosition = getDomNodePagePosition(container);
+    const anchor = {
+      x: Math.floor(elementPosition.left + elementPosition.width / 2),
+      y: elementPosition.top + elementPosition.height
+    };
+    this.contextMenuService.showContextMenu({
+      getAnchor: /* @__PURE__ */ __name(() => anchor, "getAnchor"),
+      getActions: /* @__PURE__ */ __name(() => actions, "getActions"),
+      getActionsContext: /* @__PURE__ */ __name(() => this.compositeBarActionItem.id, "getActionsContext")
+    });
+  }
+  updateChecked() {
+    if (this.action.checked) {
+      this.container.classList.add("checked");
+      this.container.setAttribute("aria-label", this.getTooltip() ?? this.container.title);
+      this.container.setAttribute("aria-expanded", "true");
+      this.container.setAttribute("aria-selected", "true");
+    } else {
+      this.container.classList.remove("checked");
+      this.container.setAttribute("aria-label", this.getTooltip() ?? this.container.title);
+      this.container.setAttribute("aria-expanded", "false");
+      this.container.setAttribute("aria-selected", "false");
+    }
+    this.updateStyles();
+  }
+  updateEnabled() {
+    if (!this.element) {
+      return;
+    }
+    if (this.action.enabled) {
+      this.element.classList.remove("disabled");
+    } else {
+      this.element.classList.add("disabled");
+    }
+  }
+  dispose() {
+    super.dispose();
+    this.label.remove();
+  }
+};
+CompositeActionViewItem = __decorateClass([
+  __decorateParam(8, IContextMenuService),
+  __decorateParam(9, IKeybindingService),
+  __decorateParam(10, IInstantiationService),
+  __decorateParam(11, IThemeService),
+  __decorateParam(12, IHoverService),
+  __decorateParam(13, IConfigurationService),
+  __decorateParam(14, ICommandService)
+], CompositeActionViewItem);
+class ToggleCompositePinnedAction extends Action {
+  constructor(activity, compositeBar) {
+    super("show.toggleCompositePinned", activity ? activity.name : localize("toggle", "Toggle View Pinned"));
+    this.activity = activity;
+    this.compositeBar = compositeBar;
+    this.checked = !!this.activity && this.compositeBar.isPinned(this.activity.id);
+  }
+  static {
+    __name(this, "ToggleCompositePinnedAction");
+  }
+  async run(context) {
+    const id = this.activity ? this.activity.id : context;
+    if (this.compositeBar.isPinned(id)) {
+      this.compositeBar.unpin(id);
+    } else {
+      this.compositeBar.pin(id);
+    }
+  }
+}
+class ToggleCompositeBadgeAction extends Action {
+  constructor(compositeBarActionItem, compositeBar) {
+    super("show.toggleCompositeBadge", compositeBarActionItem ? compositeBarActionItem.name : localize("toggleBadge", "Toggle View Badge"));
+    this.compositeBarActionItem = compositeBarActionItem;
+    this.compositeBar = compositeBar;
+    this.checked = false;
+  }
+  static {
+    __name(this, "ToggleCompositeBadgeAction");
+  }
+  async run(context) {
+    const id = this.compositeBarActionItem ? this.compositeBarActionItem.id : context;
+    this.compositeBar.toggleBadgeEnablement(id);
+  }
+}
+class SwitchCompositeViewAction extends Action2 {
+  constructor(desc, location, offset) {
+    super(desc);
+    this.location = location;
+    this.offset = offset;
+  }
+  static {
+    __name(this, "SwitchCompositeViewAction");
+  }
+  async run(accessor) {
+    const paneCompositeService = accessor.get(IPaneCompositePartService);
+    const activeComposite = paneCompositeService.getActivePaneComposite(this.location);
+    if (!activeComposite) {
+      return;
+    }
+    let targetCompositeId;
+    const visibleCompositeIds = paneCompositeService.getVisiblePaneCompositeIds(this.location);
+    for (let i = 0; i < visibleCompositeIds.length; i++) {
+      if (visibleCompositeIds[i] === activeComposite.getId()) {
+        targetCompositeId = visibleCompositeIds[(i + visibleCompositeIds.length + this.offset) % visibleCompositeIds.length];
+        break;
+      }
+    }
+    if (typeof targetCompositeId !== "undefined") {
+      await paneCompositeService.openPaneComposite(targetCompositeId, this.location, true);
+    }
+  }
+}
+export {
+  CompositeActionViewItem,
+  CompositeBarAction,
+  CompositeBarActionViewItem,
+  CompositeOverflowActivityAction,
+  CompositeOverflowActivityActionViewItem,
+  SwitchCompositeViewAction,
+  ToggleCompositeBadgeAction,
+  ToggleCompositePinnedAction
+};
+//# sourceMappingURL=compositeBarActions.js.map

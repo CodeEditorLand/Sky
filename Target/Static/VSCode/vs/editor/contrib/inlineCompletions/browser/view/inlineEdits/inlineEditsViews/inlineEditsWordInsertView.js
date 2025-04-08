@@ -1,1 +1,124 @@
-import{n as o}from"../../../../../../../base/browser/dom.js";import"../../../../../../../base/browser/mouseEvent.js";import{Emitter as g}from"../../../../../../../base/common/event.js";import{Disposable as v}from"../../../../../../../base/common/lifecycle.js";import{constObservable as s,derived as a}from"../../../../../../../base/common/observable.js";import{asCssVariable as u}from"../../../../../../../platform/theme/common/colorUtils.js";import"../../../../../../browser/observableCodeEditor.js";import{Point as b}from"../../../../../../browser/point.js";import{Rect as p}from"../../../../../../browser/rect.js";import{EditorOption as r}from"../../../../../../common/config/editorOptions.js";import{OffsetRange as _}from"../../../../../../common/core/offsetRange.js";import"../../../../../../common/core/textEdit.js";import"../inlineEditsViewInterface.js";import{getModifiedBorderColor as y}from"../theme.js";import{mapOutFalsy as E,rectToProps as c}from"../utils/utils.js";class X extends v{constructor(i,e,n){super();this._editor=i;this._edit=e;this._tabAction=n;this._register(this._editor.createOverlayWidget({domNode:this._div.element,minContentWidthInPx:s(0),position:s({preference:{top:0,left:0}}),allowEditorOverflow:!1}))}_onDidClick=this._register(new g);onDidClick=this._onDidClick.event;_start=this._editor.observePosition(s(this._edit.range.getStartPosition()),this._store);_layout=a(this,i=>{const e=this._start.read(i);if(!e)return;const n=this._editor.layoutInfoContentLeft.read(i),t=this._editor.getOption(r.lineHeight).read(i),f=this._editor.getOption(r.fontInfo).read(i).typicalHalfwidthCharacterWidth,m=this._edit.text.length*f+5,d=new b(n+e.x+f/2-this._editor.scrollLeft.read(i),e.y),l=p.fromLeftTopWidthHeight(d.x-m/2,d.y+t+5,m,t),h=p.hull([p.fromPoint(d),l]).withMargin(4);return{modified:l,center:d,background:h,lowerBackground:h.intersectVertical(new _(l.top-2,Number.MAX_SAFE_INTEGER))}});_div=o.div({class:"word-insert"},[a(i=>{const e=E(this._layout).read(i);if(!e)return[];const n=u(y(this._tabAction).read(i));return[o.div({style:{position:"absolute",...c(t=>e.read(t).lowerBackground),borderRadius:"4px",background:"var(--vscode-editor-background)"}},[]),o.div({style:{position:"absolute",...c(t=>e.read(t).modified),borderRadius:"4px",padding:"0px",textAlign:"center",background:"var(--vscode-inlineEdit-modifiedChangedTextBackground)",fontFamily:this._editor.getOption(r.fontFamily),fontSize:this._editor.getOption(r.fontSize),fontWeight:this._editor.getOption(r.fontWeight)}},[this._edit.text]),o.div({style:{position:"absolute",...c(t=>e.read(t).background),borderRadius:"4px",border:`1px solid ${n}`,background:"var(--vscode-inlineEdit-wordReplacementView-background)"}},[]),o.svg({viewBox:"0 0 12 18",width:12,height:18,fill:"none",style:{position:"absolute",left:a(t=>e.read(t).center.x-9),top:a(t=>e.read(t).center.y+4),transform:"scale(1.4, 1.4)"}},[o.svgElem("path",{d:"M5.06445 0H7.35759C7.35759 0 7.35759 8.47059 7.35759 11.1176C7.35759 13.7647 9.4552 18 13.4674 18C17.4795 18 -2.58445 18 0.281373 18C3.14719 18 5.06477 14.2941 5.06477 11.1176C5.06477 7.94118 5.06445 0 5.06445 0Z",fill:"var(--vscode-inlineEdit-modifiedChangedTextBackground)"})])]})]).keepUpdated(this._store);isHovered=s(!1)}export{X as InlineEditsWordInsertView};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { n } from "../../../../../../../base/browser/dom.js";
+import { IMouseEvent } from "../../../../../../../base/browser/mouseEvent.js";
+import { Emitter } from "../../../../../../../base/common/event.js";
+import { Disposable } from "../../../../../../../base/common/lifecycle.js";
+import { constObservable, derived, IObservable } from "../../../../../../../base/common/observable.js";
+import { asCssVariable } from "../../../../../../../platform/theme/common/colorUtils.js";
+import { ObservableCodeEditor } from "../../../../../../browser/observableCodeEditor.js";
+import { Point } from "../../../../../../browser/point.js";
+import { Rect } from "../../../../../../browser/rect.js";
+import { EditorOption } from "../../../../../../common/config/editorOptions.js";
+import { OffsetRange } from "../../../../../../common/core/offsetRange.js";
+import { SingleTextEdit } from "../../../../../../common/core/textEdit.js";
+import { IInlineEditsView, InlineEditTabAction } from "../inlineEditsViewInterface.js";
+import { getModifiedBorderColor } from "../theme.js";
+import { mapOutFalsy, rectToProps } from "../utils/utils.js";
+class InlineEditsWordInsertView extends Disposable {
+  constructor(_editor, _edit, _tabAction) {
+    super();
+    this._editor = _editor;
+    this._edit = _edit;
+    this._tabAction = _tabAction;
+    this._register(this._editor.createOverlayWidget({
+      domNode: this._div.element,
+      minContentWidthInPx: constObservable(0),
+      position: constObservable({ preference: { top: 0, left: 0 } }),
+      allowEditorOverflow: false
+    }));
+  }
+  static {
+    __name(this, "InlineEditsWordInsertView");
+  }
+  _onDidClick = this._register(new Emitter());
+  onDidClick = this._onDidClick.event;
+  _start = this._editor.observePosition(constObservable(this._edit.range.getStartPosition()), this._store);
+  _layout = derived(this, (reader) => {
+    const start = this._start.read(reader);
+    if (!start) {
+      return void 0;
+    }
+    const contentLeft = this._editor.layoutInfoContentLeft.read(reader);
+    const lineHeight = this._editor.getOption(EditorOption.lineHeight).read(reader);
+    const w = this._editor.getOption(EditorOption.fontInfo).read(reader).typicalHalfwidthCharacterWidth;
+    const width = this._edit.text.length * w + 5;
+    const center = new Point(contentLeft + start.x + w / 2 - this._editor.scrollLeft.read(reader), start.y);
+    const modified = Rect.fromLeftTopWidthHeight(center.x - width / 2, center.y + lineHeight + 5, width, lineHeight);
+    const background = Rect.hull([Rect.fromPoint(center), modified]).withMargin(4);
+    return {
+      modified,
+      center,
+      background,
+      lowerBackground: background.intersectVertical(new OffsetRange(modified.top - 2, Number.MAX_SAFE_INTEGER))
+    };
+  });
+  _div = n.div({
+    class: "word-insert"
+  }, [
+    derived((reader) => {
+      const layout = mapOutFalsy(this._layout).read(reader);
+      if (!layout) {
+        return [];
+      }
+      const modifiedBorderColor = asCssVariable(getModifiedBorderColor(this._tabAction).read(reader));
+      return [
+        n.div({
+          style: {
+            position: "absolute",
+            ...rectToProps((reader2) => layout.read(reader2).lowerBackground),
+            borderRadius: "4px",
+            background: "var(--vscode-editor-background)"
+          }
+        }, []),
+        n.div({
+          style: {
+            position: "absolute",
+            ...rectToProps((reader2) => layout.read(reader2).modified),
+            borderRadius: "4px",
+            padding: "0px",
+            textAlign: "center",
+            background: "var(--vscode-inlineEdit-modifiedChangedTextBackground)",
+            fontFamily: this._editor.getOption(EditorOption.fontFamily),
+            fontSize: this._editor.getOption(EditorOption.fontSize),
+            fontWeight: this._editor.getOption(EditorOption.fontWeight)
+          }
+        }, [
+          this._edit.text
+        ]),
+        n.div({
+          style: {
+            position: "absolute",
+            ...rectToProps((reader2) => layout.read(reader2).background),
+            borderRadius: "4px",
+            border: `1px solid ${modifiedBorderColor}`,
+            //background: 'rgba(122, 122, 122, 0.12)', looks better
+            background: "var(--vscode-inlineEdit-wordReplacementView-background)"
+          }
+        }, []),
+        n.svg({
+          viewBox: "0 0 12 18",
+          width: 12,
+          height: 18,
+          fill: "none",
+          style: {
+            position: "absolute",
+            left: derived((reader2) => layout.read(reader2).center.x - 9),
+            top: derived((reader2) => layout.read(reader2).center.y + 4),
+            transform: "scale(1.4, 1.4)"
+          }
+        }, [
+          n.svgElem("path", {
+            d: "M5.06445 0H7.35759C7.35759 0 7.35759 8.47059 7.35759 11.1176C7.35759 13.7647 9.4552 18 13.4674 18C17.4795 18 -2.58445 18 0.281373 18C3.14719 18 5.06477 14.2941 5.06477 11.1176C5.06477 7.94118 5.06445 0 5.06445 0Z",
+            fill: "var(--vscode-inlineEdit-modifiedChangedTextBackground)"
+          })
+        ])
+      ];
+    })
+  ]).keepUpdated(this._store);
+  isHovered = constObservable(false);
+}
+export {
+  InlineEditsWordInsertView
+};
+//# sourceMappingURL=inlineEditsWordInsertView.js.map

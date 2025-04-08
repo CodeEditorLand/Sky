@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/platform/keyboardLayout/common/keyboardLayoutService.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { Event } from '../../../base/common/event.js';\r\nimport { IKeyboardLayoutInfo, IKeyboardMapping } from './keyboardLayout.js';\r\n\r\nexport interface IKeyboardLayoutData {\r\n\tkeyboardLayoutInfo: IKeyboardLayoutInfo;\r\n\tkeyboardMapping: IKeyboardMapping;\r\n}\r\n\r\nexport interface INativeKeyboardLayoutService {\r\n\treadonly _serviceBrand: undefined;\r\n\treadonly onDidChangeKeyboardLayout: Event<IKeyboardLayoutData>;\r\n\tgetKeyboardLayoutData(): Promise<IKeyboardLayoutData>;\r\n}\r\n"],
+  "mappings": "AAKA,SAAS,aAAa;AACtB,SAAS,qBAAqB,wBAAwB;",
+  "names": []
+}

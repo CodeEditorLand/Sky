@@ -1,1 +1,291 @@
-import{createTrustedTypesPolicy as X}from"../../../base/browser/trustedTypes.js";import{CharCode as d}from"../../../base/common/charCode.js";import*as F from"../../../base/common/strings.js";import{assertIsDefined as J}from"../../../base/common/types.js";import{applyFontInfo as K}from"../config/domFontInfo.js";import{WrappingIndent as j}from"../../common/config/editorOptions.js";import"../../common/config/fontInfo.js";import{StringBuilder as Q}from"../../common/core/stringBuilder.js";import"../../common/model.js";import{ModelLineProjectionData as R}from"../../common/modelLineProjectionData.js";import{LineInjectedText as E}from"../../common/textModelEvents.js";const Y=X("domLineBreaksComputer",{createHTML:e=>e});class H{constructor(e){this.targetWindow=e}static create(e){return new H(new WeakRef(e))}createLineBreaksComputer(e,t,n,r,o){const a=[],s=[];return{addRequest:(e,t,n)=>{a.push(e),s.push(t)},finalize:()=>Z(J(this.targetWindow.deref()),a,e,t,n,r,o,s)}}}function Z(e,t,n,r,o,a,s,i){function p(e){const n=i[e];if(n){const r=E.applyInjectedText(t[e],n),o=n.map((e=>e.options)),a=n.map((e=>e.column-1));return new R(a,o,[r.length],[],0)}return null}if(-1===o){const e=[];for(let n=0,r=t.length;n<r;n++)e[n]=p(n);return e}const l=Math.round(o*n.typicalHalfwidthCharacterWidth),c=a===j.DeepIndent?2:a===j.Indent?1:0,h=Math.round(r*c),m=Math.ceil(n.spaceWidth*h),u=document.createElement("div");K(u,n);const f=new Q(1e4),g=[],C=[],S=[],y=[],b=[];for(let e=0;e<t.length;e++){const o=E.applyInjectedText(t[e],i[e]);let s=0,p=0,c=l;if(a!==j.None)if(s=F.firstNonWhitespaceIndex(o),-1===s)s=0;else{for(let e=0;e<s;e++){p+=o.charCodeAt(e)===d.Tab?r-p%r:1}const e=Math.ceil(n.spaceWidth*p);e+n.typicalFullwidthCharacterWidth>l?(s=0,p=0):c=l-e}const h=o.substr(s),u=z(h,p,r,c,f,m);g[e]=s,C[e]=p,S[e]=h,y[e]=u[0],b[e]=u[1]}const I=f.build(),w=Y?.createHTML(I)??I;u.innerHTML=w,u.style.position="absolute",u.style.top="10000","keepAll"===s?(u.style.wordBreak="keep-all",u.style.overflowWrap="anywhere"):(u.style.wordBreak="inherit",u.style.overflowWrap="break-word"),e.document.body.appendChild(u);const T=document.createRange(),A=Array.prototype.slice.call(u.children,0),k=[];for(let e=0;e<t.length;e++){const t=q(T,A[e],S[e],y[e]);if(null===t){k[e]=p(e);continue}const n=g[e],r=C[e]+h,o=b[e],a=[];for(let e=0,n=t.length;e<n;e++)a[e]=o[t[e]];if(0!==n)for(let e=0,r=t.length;e<r;e++)t[e]+=n;let s,d;const l=i[e];l?(s=l.map((e=>e.options)),d=l.map((e=>e.column-1))):(s=null,d=null),k[e]=new R(d,s,t,a,r)}return u.remove(),k}var $=(e=>(e[e.SPAN_MODULO_LIMIT=16384]="SPAN_MODULO_LIMIT",e))($||{});function z(e,t,n,r,o,a){if(0!==a){const e=String(a);o.appendString('<div style="text-indent: -'),o.appendString(e),o.appendString("px; padding-left: "),o.appendString(e),o.appendString("px; box-sizing: border-box; width:")}else o.appendString('<div style="width:');o.appendString(String(r)),o.appendString('px;">');const s=e.length;let i=t,p=0;const l=[],c=[];let h=0<s?e.charCodeAt(0):d.Null;o.appendString("<span>");for(let t=0;t<s;t++){0!==t&&t%16384==0&&o.appendString("</span><span>"),l[t]=p,c[t]=i;const r=h;h=t+1<s?e.charCodeAt(t+1):d.Null;let a=1,m=1;switch(r){case d.Tab:a=n-i%n,m=a;for(let e=1;e<=a;e++)e<a?o.appendCharCode(160):o.appendASCIICharCode(d.Space);break;case d.Space:h===d.Space?o.appendCharCode(160):o.appendASCIICharCode(d.Space);break;case d.LessThan:o.appendString("&lt;");break;case d.GreaterThan:o.appendString("&gt;");break;case d.Ampersand:o.appendString("&amp;");break;case d.Null:o.appendString("&#00;");break;case d.UTF8_BOM:case d.LINE_SEPARATOR:case d.PARAGRAPH_SEPARATOR:case d.NEXT_LINE:o.appendCharCode(65533);break;default:F.isFullWidthCharacter(r)&&m++,r<32?o.appendCharCode(9216+r):o.appendCharCode(r)}p+=a,i+=m}return o.appendString("</span>"),l[e.length]=p,c[e.length]=i,o.appendString("</div>"),[l,c]}function q(e,t,n,r){if(n.length<=1)return null;const o=Array.prototype.slice.call(t.children,0),a=[];try{N(e,o,r,0,null,n.length-1,null,a)}catch(e){return console.log(e),null}return 0===a.length?null:(a.push(n.length),a)}function N(e,t,n,r,o,a,s,i){if(r===a||(o=o||P(e,t,n[r],n[r+1]),s=s||P(e,t,n[a],n[a+1]),Math.abs(o[0].top-s[0].top)<=.1))return;if(r+1===a)return void i.push(a);const p=r+(a-r)/2|0,d=P(e,t,n[p],n[p+1]);N(e,t,n,r,o,p,d,i),N(e,t,n,p,d,a,s,i)}function P(e,t,n,r){return e.setStart(t[n/16384|0].firstChild,n%16384),e.setEnd(t[r/16384|0].firstChild,r%16384),e.getClientRects()}export{H as DOMLineBreaksComputerFactory};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { createTrustedTypesPolicy } from "../../../base/browser/trustedTypes.js";
+import { CharCode } from "../../../base/common/charCode.js";
+import * as strings from "../../../base/common/strings.js";
+import { assertIsDefined } from "../../../base/common/types.js";
+import { applyFontInfo } from "../config/domFontInfo.js";
+import { WrappingIndent } from "../../common/config/editorOptions.js";
+import { FontInfo } from "../../common/config/fontInfo.js";
+import { StringBuilder } from "../../common/core/stringBuilder.js";
+import { InjectedTextOptions } from "../../common/model.js";
+import { ILineBreaksComputer, ILineBreaksComputerFactory, ModelLineProjectionData } from "../../common/modelLineProjectionData.js";
+import { LineInjectedText } from "../../common/textModelEvents.js";
+const ttPolicy = createTrustedTypesPolicy("domLineBreaksComputer", { createHTML: /* @__PURE__ */ __name((value) => value, "createHTML") });
+class DOMLineBreaksComputerFactory {
+  constructor(targetWindow) {
+    this.targetWindow = targetWindow;
+  }
+  static {
+    __name(this, "DOMLineBreaksComputerFactory");
+  }
+  static create(targetWindow) {
+    return new DOMLineBreaksComputerFactory(new WeakRef(targetWindow));
+  }
+  createLineBreaksComputer(fontInfo, tabSize, wrappingColumn, wrappingIndent, wordBreak) {
+    const requests = [];
+    const injectedTexts = [];
+    return {
+      addRequest: /* @__PURE__ */ __name((lineText, injectedText, previousLineBreakData) => {
+        requests.push(lineText);
+        injectedTexts.push(injectedText);
+      }, "addRequest"),
+      finalize: /* @__PURE__ */ __name(() => {
+        return createLineBreaks(assertIsDefined(this.targetWindow.deref()), requests, fontInfo, tabSize, wrappingColumn, wrappingIndent, wordBreak, injectedTexts);
+      }, "finalize")
+    };
+  }
+}
+function createLineBreaks(targetWindow, requests, fontInfo, tabSize, firstLineBreakColumn, wrappingIndent, wordBreak, injectedTextsPerLine) {
+  function createEmptyLineBreakWithPossiblyInjectedText(requestIdx) {
+    const injectedTexts = injectedTextsPerLine[requestIdx];
+    if (injectedTexts) {
+      const lineText = LineInjectedText.applyInjectedText(requests[requestIdx], injectedTexts);
+      const injectionOptions = injectedTexts.map((t) => t.options);
+      const injectionOffsets = injectedTexts.map((text) => text.column - 1);
+      return new ModelLineProjectionData(injectionOffsets, injectionOptions, [lineText.length], [], 0);
+    } else {
+      return null;
+    }
+  }
+  __name(createEmptyLineBreakWithPossiblyInjectedText, "createEmptyLineBreakWithPossiblyInjectedText");
+  if (firstLineBreakColumn === -1) {
+    const result2 = [];
+    for (let i = 0, len = requests.length; i < len; i++) {
+      result2[i] = createEmptyLineBreakWithPossiblyInjectedText(i);
+    }
+    return result2;
+  }
+  const overallWidth = Math.round(firstLineBreakColumn * fontInfo.typicalHalfwidthCharacterWidth);
+  const additionalIndent = wrappingIndent === WrappingIndent.DeepIndent ? 2 : wrappingIndent === WrappingIndent.Indent ? 1 : 0;
+  const additionalIndentSize = Math.round(tabSize * additionalIndent);
+  const additionalIndentLength = Math.ceil(fontInfo.spaceWidth * additionalIndentSize);
+  const containerDomNode = document.createElement("div");
+  applyFontInfo(containerDomNode, fontInfo);
+  const sb = new StringBuilder(1e4);
+  const firstNonWhitespaceIndices = [];
+  const wrappedTextIndentLengths = [];
+  const renderLineContents = [];
+  const allCharOffsets = [];
+  const allVisibleColumns = [];
+  for (let i = 0; i < requests.length; i++) {
+    const lineContent = LineInjectedText.applyInjectedText(requests[i], injectedTextsPerLine[i]);
+    let firstNonWhitespaceIndex = 0;
+    let wrappedTextIndentLength = 0;
+    let width = overallWidth;
+    if (wrappingIndent !== WrappingIndent.None) {
+      firstNonWhitespaceIndex = strings.firstNonWhitespaceIndex(lineContent);
+      if (firstNonWhitespaceIndex === -1) {
+        firstNonWhitespaceIndex = 0;
+      } else {
+        for (let i2 = 0; i2 < firstNonWhitespaceIndex; i2++) {
+          const charWidth = lineContent.charCodeAt(i2) === CharCode.Tab ? tabSize - wrappedTextIndentLength % tabSize : 1;
+          wrappedTextIndentLength += charWidth;
+        }
+        const indentWidth = Math.ceil(fontInfo.spaceWidth * wrappedTextIndentLength);
+        if (indentWidth + fontInfo.typicalFullwidthCharacterWidth > overallWidth) {
+          firstNonWhitespaceIndex = 0;
+          wrappedTextIndentLength = 0;
+        } else {
+          width = overallWidth - indentWidth;
+        }
+      }
+    }
+    const renderLineContent = lineContent.substr(firstNonWhitespaceIndex);
+    const tmp = renderLine(renderLineContent, wrappedTextIndentLength, tabSize, width, sb, additionalIndentLength);
+    firstNonWhitespaceIndices[i] = firstNonWhitespaceIndex;
+    wrappedTextIndentLengths[i] = wrappedTextIndentLength;
+    renderLineContents[i] = renderLineContent;
+    allCharOffsets[i] = tmp[0];
+    allVisibleColumns[i] = tmp[1];
+  }
+  const html = sb.build();
+  const trustedhtml = ttPolicy?.createHTML(html) ?? html;
+  containerDomNode.innerHTML = trustedhtml;
+  containerDomNode.style.position = "absolute";
+  containerDomNode.style.top = "10000";
+  if (wordBreak === "keepAll") {
+    containerDomNode.style.wordBreak = "keep-all";
+    containerDomNode.style.overflowWrap = "anywhere";
+  } else {
+    containerDomNode.style.wordBreak = "inherit";
+    containerDomNode.style.overflowWrap = "break-word";
+  }
+  targetWindow.document.body.appendChild(containerDomNode);
+  const range = document.createRange();
+  const lineDomNodes = Array.prototype.slice.call(containerDomNode.children, 0);
+  const result = [];
+  for (let i = 0; i < requests.length; i++) {
+    const lineDomNode = lineDomNodes[i];
+    const breakOffsets = readLineBreaks(range, lineDomNode, renderLineContents[i], allCharOffsets[i]);
+    if (breakOffsets === null) {
+      result[i] = createEmptyLineBreakWithPossiblyInjectedText(i);
+      continue;
+    }
+    const firstNonWhitespaceIndex = firstNonWhitespaceIndices[i];
+    const wrappedTextIndentLength = wrappedTextIndentLengths[i] + additionalIndentSize;
+    const visibleColumns = allVisibleColumns[i];
+    const breakOffsetsVisibleColumn = [];
+    for (let j = 0, len = breakOffsets.length; j < len; j++) {
+      breakOffsetsVisibleColumn[j] = visibleColumns[breakOffsets[j]];
+    }
+    if (firstNonWhitespaceIndex !== 0) {
+      for (let j = 0, len = breakOffsets.length; j < len; j++) {
+        breakOffsets[j] += firstNonWhitespaceIndex;
+      }
+    }
+    let injectionOptions;
+    let injectionOffsets;
+    const curInjectedTexts = injectedTextsPerLine[i];
+    if (curInjectedTexts) {
+      injectionOptions = curInjectedTexts.map((t) => t.options);
+      injectionOffsets = curInjectedTexts.map((text) => text.column - 1);
+    } else {
+      injectionOptions = null;
+      injectionOffsets = null;
+    }
+    result[i] = new ModelLineProjectionData(injectionOffsets, injectionOptions, breakOffsets, breakOffsetsVisibleColumn, wrappedTextIndentLength);
+  }
+  containerDomNode.remove();
+  return result;
+}
+__name(createLineBreaks, "createLineBreaks");
+var Constants = /* @__PURE__ */ ((Constants2) => {
+  Constants2[Constants2["SPAN_MODULO_LIMIT"] = 16384] = "SPAN_MODULO_LIMIT";
+  return Constants2;
+})(Constants || {});
+function renderLine(lineContent, initialVisibleColumn, tabSize, width, sb, wrappingIndentLength) {
+  if (wrappingIndentLength !== 0) {
+    const hangingOffset = String(wrappingIndentLength);
+    sb.appendString('<div style="text-indent: -');
+    sb.appendString(hangingOffset);
+    sb.appendString("px; padding-left: ");
+    sb.appendString(hangingOffset);
+    sb.appendString("px; box-sizing: border-box; width:");
+  } else {
+    sb.appendString('<div style="width:');
+  }
+  sb.appendString(String(width));
+  sb.appendString('px;">');
+  const len = lineContent.length;
+  let visibleColumn = initialVisibleColumn;
+  let charOffset = 0;
+  const charOffsets = [];
+  const visibleColumns = [];
+  let nextCharCode = 0 < len ? lineContent.charCodeAt(0) : CharCode.Null;
+  sb.appendString("<span>");
+  for (let charIndex = 0; charIndex < len; charIndex++) {
+    if (charIndex !== 0 && charIndex % 16384 /* SPAN_MODULO_LIMIT */ === 0) {
+      sb.appendString("</span><span>");
+    }
+    charOffsets[charIndex] = charOffset;
+    visibleColumns[charIndex] = visibleColumn;
+    const charCode = nextCharCode;
+    nextCharCode = charIndex + 1 < len ? lineContent.charCodeAt(charIndex + 1) : CharCode.Null;
+    let producedCharacters = 1;
+    let charWidth = 1;
+    switch (charCode) {
+      case CharCode.Tab:
+        producedCharacters = tabSize - visibleColumn % tabSize;
+        charWidth = producedCharacters;
+        for (let space = 1; space <= producedCharacters; space++) {
+          if (space < producedCharacters) {
+            sb.appendCharCode(160);
+          } else {
+            sb.appendASCIICharCode(CharCode.Space);
+          }
+        }
+        break;
+      case CharCode.Space:
+        if (nextCharCode === CharCode.Space) {
+          sb.appendCharCode(160);
+        } else {
+          sb.appendASCIICharCode(CharCode.Space);
+        }
+        break;
+      case CharCode.LessThan:
+        sb.appendString("&lt;");
+        break;
+      case CharCode.GreaterThan:
+        sb.appendString("&gt;");
+        break;
+      case CharCode.Ampersand:
+        sb.appendString("&amp;");
+        break;
+      case CharCode.Null:
+        sb.appendString("&#00;");
+        break;
+      case CharCode.UTF8_BOM:
+      case CharCode.LINE_SEPARATOR:
+      case CharCode.PARAGRAPH_SEPARATOR:
+      case CharCode.NEXT_LINE:
+        sb.appendCharCode(65533);
+        break;
+      default:
+        if (strings.isFullWidthCharacter(charCode)) {
+          charWidth++;
+        }
+        if (charCode < 32) {
+          sb.appendCharCode(9216 + charCode);
+        } else {
+          sb.appendCharCode(charCode);
+        }
+    }
+    charOffset += producedCharacters;
+    visibleColumn += charWidth;
+  }
+  sb.appendString("</span>");
+  charOffsets[lineContent.length] = charOffset;
+  visibleColumns[lineContent.length] = visibleColumn;
+  sb.appendString("</div>");
+  return [charOffsets, visibleColumns];
+}
+__name(renderLine, "renderLine");
+function readLineBreaks(range, lineDomNode, lineContent, charOffsets) {
+  if (lineContent.length <= 1) {
+    return null;
+  }
+  const spans = Array.prototype.slice.call(lineDomNode.children, 0);
+  const breakOffsets = [];
+  try {
+    discoverBreaks(range, spans, charOffsets, 0, null, lineContent.length - 1, null, breakOffsets);
+  } catch (err) {
+    console.log(err);
+    return null;
+  }
+  if (breakOffsets.length === 0) {
+    return null;
+  }
+  breakOffsets.push(lineContent.length);
+  return breakOffsets;
+}
+__name(readLineBreaks, "readLineBreaks");
+function discoverBreaks(range, spans, charOffsets, low, lowRects, high, highRects, result) {
+  if (low === high) {
+    return;
+  }
+  lowRects = lowRects || readClientRect(range, spans, charOffsets[low], charOffsets[low + 1]);
+  highRects = highRects || readClientRect(range, spans, charOffsets[high], charOffsets[high + 1]);
+  if (Math.abs(lowRects[0].top - highRects[0].top) <= 0.1) {
+    return;
+  }
+  if (low + 1 === high) {
+    result.push(high);
+    return;
+  }
+  const mid = low + (high - low) / 2 | 0;
+  const midRects = readClientRect(range, spans, charOffsets[mid], charOffsets[mid + 1]);
+  discoverBreaks(range, spans, charOffsets, low, lowRects, mid, midRects, result);
+  discoverBreaks(range, spans, charOffsets, mid, midRects, high, highRects, result);
+}
+__name(discoverBreaks, "discoverBreaks");
+function readClientRect(range, spans, startOffset, endOffset) {
+  range.setStart(spans[startOffset / 16384 /* SPAN_MODULO_LIMIT */ | 0].firstChild, startOffset % 16384 /* SPAN_MODULO_LIMIT */);
+  range.setEnd(spans[endOffset / 16384 /* SPAN_MODULO_LIMIT */ | 0].firstChild, endOffset % 16384 /* SPAN_MODULO_LIMIT */);
+  return range.getClientRects();
+}
+__name(readClientRect, "readClientRect");
+export {
+  DOMLineBreaksComputerFactory
+};
+//# sourceMappingURL=domLineBreaksComputer.js.map

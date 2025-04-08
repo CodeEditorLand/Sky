@@ -1,1 +1,82 @@
-var y=Object.defineProperty;var u=Object.getOwnPropertyDescriptor;var l=(t,i,e,d)=>{for(var n=d>1?void 0:d?u(i,e):i,o=t.length-1,c;o>=0;o--)(c=t[o])&&(n=(d?c(i,e,n):c(n))||n);return d&&n&&y(i,e,n),n},m=(t,i)=>(e,d)=>i(e,d,t);import{HierarchicalKind as a}from"../../../../base/common/hierarchicalKind.js";import"../../../../base/common/keybindings.js";import{Lazy as b}from"../../../../base/common/lazy.js";import"../../../common/languages.js";import{codeActionCommandId as v,fixAllCommandId as s,organizeImportsCommandId as f,refactorCommandId as A,sourceActionCommandId as p}from"./codeAction.js";import{CodeActionAutoApply as C,CodeActionCommandArgs as K,CodeActionKind as g}from"../common/types.js";import{IKeybindingService as k}from"../../../../platform/keybinding/common/keybinding.js";let r=class{constructor(i){this.keybindingService=i}static codeActionCommands=[A,v,p,f,s];getResolver(){const i=new b(()=>this.keybindingService.getKeybindings().filter(e=>r.codeActionCommands.indexOf(e.command)>=0).filter(e=>e.resolvedKeybinding).map(e=>{let d=e.commandArgs;return e.command===f?d={kind:g.SourceOrganizeImports.value}:e.command===s&&(d={kind:g.SourceFixAll.value}),{resolvedKeybinding:e.resolvedKeybinding,...K.fromUser(d,{kind:a.None,apply:C.Never})}}));return e=>{if(e.kind)return this.bestKeybindingForCodeAction(e,i.value)?.resolvedKeybinding}}bestKeybindingForCodeAction(i,e){if(!i.kind)return;const d=new a(i.kind);return e.filter(n=>n.kind.contains(d)).filter(n=>n.preferred?i.isPreferred:!0).reduceRight((n,o)=>n?n.kind.contains(o.kind)?o:n:o,void 0)}};r=l([m(0,k)],r);export{r as CodeActionKeybindingResolver};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { HierarchicalKind } from "../../../../base/common/hierarchicalKind.js";
+import { ResolvedKeybinding } from "../../../../base/common/keybindings.js";
+import { Lazy } from "../../../../base/common/lazy.js";
+import { CodeAction } from "../../../common/languages.js";
+import { codeActionCommandId, fixAllCommandId, organizeImportsCommandId, refactorCommandId, sourceActionCommandId } from "./codeAction.js";
+import { CodeActionAutoApply, CodeActionCommandArgs, CodeActionKind } from "../common/types.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+let CodeActionKeybindingResolver = class {
+  constructor(keybindingService) {
+    this.keybindingService = keybindingService;
+  }
+  static {
+    __name(this, "CodeActionKeybindingResolver");
+  }
+  static codeActionCommands = [
+    refactorCommandId,
+    codeActionCommandId,
+    sourceActionCommandId,
+    organizeImportsCommandId,
+    fixAllCommandId
+  ];
+  getResolver() {
+    const allCodeActionBindings = new Lazy(() => this.keybindingService.getKeybindings().filter((item) => CodeActionKeybindingResolver.codeActionCommands.indexOf(item.command) >= 0).filter((item) => item.resolvedKeybinding).map((item) => {
+      let commandArgs = item.commandArgs;
+      if (item.command === organizeImportsCommandId) {
+        commandArgs = { kind: CodeActionKind.SourceOrganizeImports.value };
+      } else if (item.command === fixAllCommandId) {
+        commandArgs = { kind: CodeActionKind.SourceFixAll.value };
+      }
+      return {
+        resolvedKeybinding: item.resolvedKeybinding,
+        ...CodeActionCommandArgs.fromUser(commandArgs, {
+          kind: HierarchicalKind.None,
+          apply: CodeActionAutoApply.Never
+        })
+      };
+    }));
+    return (action) => {
+      if (action.kind) {
+        const binding = this.bestKeybindingForCodeAction(action, allCodeActionBindings.value);
+        return binding?.resolvedKeybinding;
+      }
+      return void 0;
+    };
+  }
+  bestKeybindingForCodeAction(action, candidates) {
+    if (!action.kind) {
+      return void 0;
+    }
+    const kind = new HierarchicalKind(action.kind);
+    return candidates.filter((candidate) => candidate.kind.contains(kind)).filter((candidate) => {
+      if (candidate.preferred) {
+        return action.isPreferred;
+      }
+      return true;
+    }).reduceRight((currentBest, candidate) => {
+      if (!currentBest) {
+        return candidate;
+      }
+      return currentBest.kind.contains(candidate.kind) ? candidate : currentBest;
+    }, void 0);
+  }
+};
+CodeActionKeybindingResolver = __decorateClass([
+  __decorateParam(0, IKeybindingService)
+], CodeActionKeybindingResolver);
+export {
+  CodeActionKeybindingResolver
+};
+//# sourceMappingURL=codeActionKeybindingResolver.js.map

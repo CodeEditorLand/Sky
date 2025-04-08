@@ -1,1 +1,191 @@
-import{importAMDNodeModule as L}from"../../../../../amdX.js";import{Disposable as S}from"../../../../../base/common/lifecycle.js";import{autorun as I,keepObserved as C}from"../../../../../base/common/observable.js";import"../../../../../base/common/worker/webWorker.js";import{countEOL as b}from"../../../../../editor/common/core/eolCounter.js";import{LineRange as T}from"../../../../../editor/common/core/lineRange.js";import{Range as v}from"../../../../../editor/common/core/range.js";import"../../../../../editor/common/languages.js";import"../../../../../editor/common/model.js";import{TokenizationStateStore as y}from"../../../../../editor/common/model/textModelTokens.js";import"../../../../../editor/common/textModelEvents.js";import{ContiguousMultilineTokensBuilder as u}from"../../../../../editor/common/tokens/contiguousMultilineTokensBuilder.js";import"../../../../../platform/configuration/common/configuration.js";import{observableConfigValue as x}from"../../../../../platform/observable/common/platformObservableUtils.js";import{ArrayEdit as z,MonotonousIndexTransformer as f,SingleArrayEdit as M}from"../arrayOperation.js";class k extends S{constructor(g,s,c,l,r,p){super();this._model=g;this._worker=s;this._languageIdCodec=c;this._backgroundTokenizationStore=l;this._configurationService=r;this._maxTokenizationLineLength=p;this._register(C(this._loggingEnabled)),this._register(this._model.onDidChangeContent(t=>{this._shouldLog&&console.log("model change",{fileName:this._model.uri.fsPath.split("\\").pop(),changes:h(t.changes)}),this._worker.$acceptModelChanged(this.controllerId,t),this._pendingChanges.push(t)})),this._register(this._model.onDidChangeLanguage(t=>{const n=this._model.getLanguageId(),i=this._languageIdCodec.encodeLanguageId(n);this._worker.$acceptModelLanguageChanged(this.controllerId,n,i)}));const e=this._model.getLanguageId(),o=this._languageIdCodec.encodeLanguageId(e);this._worker.$acceptNewModel({uri:this._model.uri,versionId:this._model.getVersionId(),lines:this._model.getLinesContent(),EOL:this._model.getEOL(),languageId:e,encodedLanguageId:o,maxTokenizationLineLength:this._maxTokenizationLineLength.get(),controllerId:this.controllerId}),this._register(I(t=>{const n=this._maxTokenizationLineLength.read(t);this._worker.$acceptMaxTokenizationLineLength(this.controllerId,n)}))}static _id=0;controllerId=k._id++;_pendingChanges=[];_states=new y;_loggingEnabled=x("editor.experimental.asyncTokenizationLogging",!1,this._configurationService);_applyStateStackDiffFn;_initialState;dispose(){super.dispose(),this._worker.$acceptRemovedModel(this.controllerId)}requestTokens(g,s){this._worker.$retokenize(this.controllerId,g,s)}async setTokensAndStates(g,s,c,l){if(this.controllerId!==g)return;let r=u.deserialize(new Uint8Array(c));if(this._shouldLog&&console.log("received background tokenization result",{fileName:this._model.uri.fsPath.split("\\").pop(),updatedTokenLines:r.map(e=>e.getLineRange()).join(" & "),updatedStateLines:l.map(e=>new T(e.startLineNumber,e.startLineNumber+e.stateDeltas.length).toString()).join(" & ")}),this._shouldLog){const e=this._pendingChanges.filter(o=>o.versionId<=s).map(o=>o.changes).map(o=>h(o)).join(" then ");console.log("Applying changes to local states",e)}for(;this._pendingChanges.length>0&&this._pendingChanges[0].versionId<=s;){const e=this._pendingChanges.shift();this._states.acceptChanges(e.changes)}if(this._pendingChanges.length>0){if(this._shouldLog){const t=this._pendingChanges.map(n=>n.changes).map(n=>h(n)).join(" then ");console.log("Considering non-processed changes",t)}const e=f.fromMany(this._pendingChanges.map(t=>_(t.changes))),o=new u;for(const t of r)for(let n=t.startLineNumber;n<=t.endLineNumber;n++)e.transform(n-1)!==void 0&&o.add(n,t.getLineTokens(n));r=o.finalize();for(const t of this._pendingChanges)for(const n of t.changes)for(let i=0;i<r.length;i++)r[i].applyEdit(n.range,n.text)}const p=f.fromMany(this._pendingChanges.map(e=>_(e.changes)));if(!this._applyStateStackDiffFn||!this._initialState){const{applyStateStackDiff:e,INITIAL:o}=await L("vscode-textmate","release/main.js");this._applyStateStackDiffFn=e,this._initialState=o}for(const e of l){let o=e.startLineNumber<=1?this._initialState:this._states.getEndState(e.startLineNumber-1);for(let t=0;t<e.stateDeltas.length;t++){const n=e.stateDeltas[t];let i;n?(i=this._applyStateStackDiffFn(o,n),this._states.setEndState(e.startLineNumber+t,i)):i=this._states.getEndState(e.startLineNumber+t);const m=p.transform(e.startLineNumber+t-1);m!==void 0&&this._backgroundTokenizationStore.setEndState(m+1,i),e.startLineNumber+t>=this._model.getLineCount()-1&&this._backgroundTokenizationStore.backgroundTokenizationFinished(),o=i}}this._backgroundTokenizationStore.setTokens(r)}get _shouldLog(){return this._loggingEnabled.get()}}function _(d){return new z(d.map(a=>new M(a.range.startLineNumber-1,a.range.endLineNumber-a.range.startLineNumber+1,b(a.text)[0]+1)))}function h(d){return d.map(a=>v.lift(a.range).toString()+" => "+a.text).join(" & ")}export{k as TextMateWorkerTokenizerController};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { importAMDNodeModule } from "../../../../../amdX.js";
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { IObservable, autorun, keepObserved } from "../../../../../base/common/observable.js";
+import { Proxied } from "../../../../../base/common/worker/webWorker.js";
+import { countEOL } from "../../../../../editor/common/core/eolCounter.js";
+import { LineRange } from "../../../../../editor/common/core/lineRange.js";
+import { Range } from "../../../../../editor/common/core/range.js";
+import { IBackgroundTokenizationStore, ILanguageIdCodec } from "../../../../../editor/common/languages.js";
+import { ITextModel } from "../../../../../editor/common/model.js";
+import { TokenizationStateStore } from "../../../../../editor/common/model/textModelTokens.js";
+import { IModelContentChange, IModelContentChangedEvent } from "../../../../../editor/common/textModelEvents.js";
+import { ContiguousMultilineTokensBuilder } from "../../../../../editor/common/tokens/contiguousMultilineTokensBuilder.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { observableConfigValue } from "../../../../../platform/observable/common/platformObservableUtils.js";
+import { ArrayEdit, MonotonousIndexTransformer, SingleArrayEdit } from "../arrayOperation.js";
+class TextMateWorkerTokenizerController extends Disposable {
+  constructor(_model, _worker, _languageIdCodec, _backgroundTokenizationStore, _configurationService, _maxTokenizationLineLength) {
+    super();
+    this._model = _model;
+    this._worker = _worker;
+    this._languageIdCodec = _languageIdCodec;
+    this._backgroundTokenizationStore = _backgroundTokenizationStore;
+    this._configurationService = _configurationService;
+    this._maxTokenizationLineLength = _maxTokenizationLineLength;
+    this._register(keepObserved(this._loggingEnabled));
+    this._register(this._model.onDidChangeContent((e) => {
+      if (this._shouldLog) {
+        console.log("model change", {
+          fileName: this._model.uri.fsPath.split("\\").pop(),
+          changes: changesToString(e.changes)
+        });
+      }
+      this._worker.$acceptModelChanged(this.controllerId, e);
+      this._pendingChanges.push(e);
+    }));
+    this._register(this._model.onDidChangeLanguage((e) => {
+      const languageId2 = this._model.getLanguageId();
+      const encodedLanguageId2 = this._languageIdCodec.encodeLanguageId(languageId2);
+      this._worker.$acceptModelLanguageChanged(
+        this.controllerId,
+        languageId2,
+        encodedLanguageId2
+      );
+    }));
+    const languageId = this._model.getLanguageId();
+    const encodedLanguageId = this._languageIdCodec.encodeLanguageId(languageId);
+    this._worker.$acceptNewModel({
+      uri: this._model.uri,
+      versionId: this._model.getVersionId(),
+      lines: this._model.getLinesContent(),
+      EOL: this._model.getEOL(),
+      languageId,
+      encodedLanguageId,
+      maxTokenizationLineLength: this._maxTokenizationLineLength.get(),
+      controllerId: this.controllerId
+    });
+    this._register(autorun((reader) => {
+      const maxTokenizationLineLength = this._maxTokenizationLineLength.read(reader);
+      this._worker.$acceptMaxTokenizationLineLength(this.controllerId, maxTokenizationLineLength);
+    }));
+  }
+  static {
+    __name(this, "TextMateWorkerTokenizerController");
+  }
+  static _id = 0;
+  controllerId = TextMateWorkerTokenizerController._id++;
+  _pendingChanges = [];
+  /**
+   * These states will eventually equal the worker states.
+   * _states[i] stores the state at the end of line number i+1.
+   */
+  _states = new TokenizationStateStore();
+  _loggingEnabled = observableConfigValue("editor.experimental.asyncTokenizationLogging", false, this._configurationService);
+  _applyStateStackDiffFn;
+  _initialState;
+  dispose() {
+    super.dispose();
+    this._worker.$acceptRemovedModel(this.controllerId);
+  }
+  requestTokens(startLineNumber, endLineNumberExclusive) {
+    this._worker.$retokenize(this.controllerId, startLineNumber, endLineNumberExclusive);
+  }
+  /**
+   * This method is called from the worker through the worker host.
+   */
+  async setTokensAndStates(controllerId, versionId, rawTokens, stateDeltas) {
+    if (this.controllerId !== controllerId) {
+      return;
+    }
+    let tokens = ContiguousMultilineTokensBuilder.deserialize(
+      new Uint8Array(rawTokens)
+    );
+    if (this._shouldLog) {
+      console.log("received background tokenization result", {
+        fileName: this._model.uri.fsPath.split("\\").pop(),
+        updatedTokenLines: tokens.map((t) => t.getLineRange()).join(" & "),
+        updatedStateLines: stateDeltas.map((s) => new LineRange(s.startLineNumber, s.startLineNumber + s.stateDeltas.length).toString()).join(" & ")
+      });
+    }
+    if (this._shouldLog) {
+      const changes = this._pendingChanges.filter((c) => c.versionId <= versionId).map((c) => c.changes).map((c) => changesToString(c)).join(" then ");
+      console.log("Applying changes to local states", changes);
+    }
+    while (this._pendingChanges.length > 0 && this._pendingChanges[0].versionId <= versionId) {
+      const change = this._pendingChanges.shift();
+      this._states.acceptChanges(change.changes);
+    }
+    if (this._pendingChanges.length > 0) {
+      if (this._shouldLog) {
+        const changes = this._pendingChanges.map((c) => c.changes).map((c) => changesToString(c)).join(" then ");
+        console.log("Considering non-processed changes", changes);
+      }
+      const curToFutureTransformerTokens = MonotonousIndexTransformer.fromMany(
+        this._pendingChanges.map((c) => fullLineArrayEditFromModelContentChange(c.changes))
+      );
+      const b = new ContiguousMultilineTokensBuilder();
+      for (const t of tokens) {
+        for (let i = t.startLineNumber; i <= t.endLineNumber; i++) {
+          const result = curToFutureTransformerTokens.transform(i - 1);
+          if (result !== void 0) {
+            b.add(i, t.getLineTokens(i));
+          }
+        }
+      }
+      tokens = b.finalize();
+      for (const change of this._pendingChanges) {
+        for (const innerChanges of change.changes) {
+          for (let j = 0; j < tokens.length; j++) {
+            tokens[j].applyEdit(innerChanges.range, innerChanges.text);
+          }
+        }
+      }
+    }
+    const curToFutureTransformerStates = MonotonousIndexTransformer.fromMany(
+      this._pendingChanges.map((c) => fullLineArrayEditFromModelContentChange(c.changes))
+    );
+    if (!this._applyStateStackDiffFn || !this._initialState) {
+      const { applyStateStackDiff, INITIAL } = await importAMDNodeModule("vscode-textmate", "release/main.js");
+      this._applyStateStackDiffFn = applyStateStackDiff;
+      this._initialState = INITIAL;
+    }
+    for (const d of stateDeltas) {
+      let prevState = d.startLineNumber <= 1 ? this._initialState : this._states.getEndState(d.startLineNumber - 1);
+      for (let i = 0; i < d.stateDeltas.length; i++) {
+        const delta = d.stateDeltas[i];
+        let state;
+        if (delta) {
+          state = this._applyStateStackDiffFn(prevState, delta);
+          this._states.setEndState(d.startLineNumber + i, state);
+        } else {
+          state = this._states.getEndState(d.startLineNumber + i);
+        }
+        const offset = curToFutureTransformerStates.transform(d.startLineNumber + i - 1);
+        if (offset !== void 0) {
+          this._backgroundTokenizationStore.setEndState(offset + 1, state);
+        }
+        if (d.startLineNumber + i >= this._model.getLineCount() - 1) {
+          this._backgroundTokenizationStore.backgroundTokenizationFinished();
+        }
+        prevState = state;
+      }
+    }
+    this._backgroundTokenizationStore.setTokens(tokens);
+  }
+  get _shouldLog() {
+    return this._loggingEnabled.get();
+  }
+}
+function fullLineArrayEditFromModelContentChange(c) {
+  return new ArrayEdit(
+    c.map(
+      (c2) => new SingleArrayEdit(
+        c2.range.startLineNumber - 1,
+        // Expand the edit range to include the entire line
+        c2.range.endLineNumber - c2.range.startLineNumber + 1,
+        countEOL(c2.text)[0] + 1
+      )
+    )
+  );
+}
+__name(fullLineArrayEditFromModelContentChange, "fullLineArrayEditFromModelContentChange");
+function changesToString(changes) {
+  return changes.map((c) => Range.lift(c.range).toString() + " => " + c.text).join(" & ");
+}
+__name(changesToString, "changesToString");
+export {
+  TextMateWorkerTokenizerController
+};
+//# sourceMappingURL=textMateWorkerTokenizerController.js.map

@@ -1,1 +1,50 @@
-import*as c from"../../../../nls.js";import"../../../../platform/instantiation/common/instantiation.js";import*as n from"../common/constants.js";import{Action2 as s,registerAction2 as a}from"../../../../platform/actions/common/actions.js";import{category as m}from"./searchActionsBase.js";import{IQuickInputService as u}from"../../../../platform/quickinput/common/quickInput.js";import{TEXT_SEARCH_QUICK_ACCESS_PREFIX as S}from"./quickTextSearch/textSearchQuickAccess.js";import{IEditorService as l}from"../../../services/editor/common/editorService.js";import"../../../../editor/common/editorCommon.js";import{IConfigurationService as d}from"../../../../platform/configuration/common/configuration.js";import{getSelectionTextFromEditor as f}from"./searchView.js";import"./searchTreeModel/searchTreeCommon.js";function p(o){const t=o.get(l),r=o.get(d),e=t.activeTextEditorControl;return e&&e.hasTextFocus()&&r.getValue("editor.find.seedSearchStringFromSelection")?f(!1,e):null}a(class extends s{constructor(){super({id:n.SearchCommandIds.QuickTextSearchActionId,title:c.localize2("quickTextSearch","Quick Search"),category:m,f1:!0})}async run(o,t){const r=o.get(u),e=p(o)??"";r.quickAccess.show(S+e,{preserveValue:!!e})}});
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as nls from "../../../../nls.js";
+import { ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+import * as Constants from "../common/constants.js";
+import { Action2, registerAction2 } from "../../../../platform/actions/common/actions.js";
+import { category } from "./searchActionsBase.js";
+import { IQuickInputService } from "../../../../platform/quickinput/common/quickInput.js";
+import { TEXT_SEARCH_QUICK_ACCESS_PREFIX } from "./quickTextSearch/textSearchQuickAccess.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { IEditor } from "../../../../editor/common/editorCommon.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { getSelectionTextFromEditor } from "./searchView.js";
+import { RenderableMatch } from "./searchTreeModel/searchTreeCommon.js";
+registerAction2(class TextSearchQuickAccessAction extends Action2 {
+  static {
+    __name(this, "TextSearchQuickAccessAction");
+  }
+  constructor() {
+    super({
+      id: Constants.SearchCommandIds.QuickTextSearchActionId,
+      title: nls.localize2("quickTextSearch", "Quick Search"),
+      category,
+      f1: true
+    });
+  }
+  async run(accessor, match) {
+    const quickInputService = accessor.get(IQuickInputService);
+    const searchText = getSearchText(accessor) ?? "";
+    quickInputService.quickAccess.show(TEXT_SEARCH_QUICK_ACCESS_PREFIX + searchText, { preserveValue: !!searchText });
+  }
+});
+function getSearchText(accessor) {
+  const editorService = accessor.get(IEditorService);
+  const configurationService = accessor.get(IConfigurationService);
+  const activeEditor = editorService.activeTextEditorControl;
+  if (!activeEditor) {
+    return null;
+  }
+  if (!activeEditor.hasTextFocus()) {
+    return null;
+  }
+  const seedSearchStringFromSelection = configurationService.getValue("editor.find.seedSearchStringFromSelection");
+  if (!seedSearchStringFromSelection) {
+    return null;
+  }
+  return getSelectionTextFromEditor(false, activeEditor);
+}
+__name(getSearchText, "getSearchText");
+//# sourceMappingURL=searchActionsTextQuickAccess.js.map

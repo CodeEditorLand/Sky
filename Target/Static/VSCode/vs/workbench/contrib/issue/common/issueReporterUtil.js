@@ -1,1 +1,21 @@
-import{rtrim as t}from"../../../../base/common/strings.js";function n(s){return s.endsWith(".git")&&(s=s.substr(0,s.length-4)),(s=t(s,"/")).endsWith("/new")&&(s=t(s,"/new")),s.endsWith("/issues")&&(s=t(s,"/issues")),s}export{n as normalizeGitHubUrl};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { rtrim } from "../../../../base/common/strings.js";
+function normalizeGitHubUrl(url) {
+  if (url.endsWith(".git")) {
+    url = url.substr(0, url.length - 4);
+  }
+  url = rtrim(url, "/");
+  if (url.endsWith("/new")) {
+    url = rtrim(url, "/new");
+  }
+  if (url.endsWith("/issues")) {
+    url = rtrim(url, "/issues");
+  }
+  return url;
+}
+__name(normalizeGitHubUrl, "normalizeGitHubUrl");
+export {
+  normalizeGitHubUrl
+};
+//# sourceMappingURL=issueReporterUtil.js.map

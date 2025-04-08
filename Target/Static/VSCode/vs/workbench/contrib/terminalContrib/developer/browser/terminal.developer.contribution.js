@@ -1,2 +1,351 @@
-var A=Object.defineProperty;var R=Object.getOwnPropertyDescriptor;var y=(d,o,a,t)=>{for(var n=t>1?void 0:t?R(o,a):o,e=d.length-1,i;e>=0;e--)(i=d[e])&&(n=(t?i(o,a,n):i(n))||n);return t&&n&&A(o,a,n),n},I=(d,o)=>(a,t)=>o(a,t,d);import{Delayer as E}from"../../../../../base/common/async.js";import{VSBuffer as O}from"../../../../../base/common/buffer.js";import{Event as S}from"../../../../../base/common/event.js";import{Disposable as F,DisposableMap as W,DisposableStore as T,MutableDisposable as B,combinedDisposable as _,dispose as P}from"../../../../../base/common/lifecycle.js";import{URI as L}from"../../../../../base/common/uri.js";import{localize as k,localize2 as h}from"../../../../../nls.js";import{Categories as v}from"../../../../../platform/action/common/actionCommonCategories.js";import{IClipboardService as X}from"../../../../../platform/clipboard/common/clipboardService.js";import{ICommandService as H}from"../../../../../platform/commands/common/commands.js";import{IConfigurationService as q}from"../../../../../platform/configuration/common/configuration.js";import{ContextKeyExpr as z}from"../../../../../platform/contextkey/common/contextkey.js";import{IFileService as U}from"../../../../../platform/files/common/files.js";import{IOpenerService as K}from"../../../../../platform/opener/common/opener.js";import{IQuickInputService as V}from"../../../../../platform/quickinput/common/quickInput.js";import{TerminalCapability as w}from"../../../../../platform/terminal/common/capabilities/capabilities.js";import{ITerminalLogService as $,TerminalSettingId as M}from"../../../../../platform/terminal/common/terminal.js";import{IWorkspaceContextService as j}from"../../../../../platform/workspace/common/workspace.js";import{IStatusbarService as J,StatusbarAlignment as N}from"../../../../services/statusbar/browser/statusbar.js";import"../../../terminal/browser/terminal.js";import{registerTerminalAction as b}from"../../../terminal/browser/terminalActions.js";import{registerTerminalContribution as Q}from"../../../terminal/browser/terminalExtensions.js";import{TerminalContextKeys as G}from"../../../terminal/common/terminalContextKey.js";import{TerminalDeveloperCommandId as x}from"../common/terminal.developer.js";import"./media/developer.css";b({id:x.ShowTextureAtlas,title:h("workbench.action.terminal.showTextureAtlas","Show Terminal Texture Atlas"),category:v.Developer,precondition:z.or(G.isOpen),run:async(d,o)=>{const a=o.get(U),t=o.get(K),n=o.get(j),e=await d.service.activeInstance?.xterm?.textureAtlas;if(!e)return;const i=n.getWorkspace().folders[0].uri,s=L.joinPath(i,"textureAtlas.png"),l=document.createElement("canvas");l.width=e.width,l.height=e.height;const r=l.getContext("bitmaprenderer");if(!r)return;r.transferFromImageBitmap(e);const c=await new Promise(p=>l.toBlob(p));c&&(await a.writeFile(s,O.wrap(new Uint8Array(await c.arrayBuffer()))),t.open(s))}}),b({id:x.WriteDataToTerminal,title:h("workbench.action.terminal.writeDataToTerminal","Write Data to Terminal"),category:v.Developer,run:async(d,o)=>{const a=o.get(V),t=await d.service.getActiveOrCreateInstance();if(await d.service.revealActiveTerminal(),await t.processReady,!t.xterm)throw new Error("Cannot write data to terminal if xterm isn't initialized");const n=await a.input({value:"",placeHolder:"Enter data, use \\x to escape",prompt:k("workbench.action.terminal.writeDataToTerminal.prompt","Enter data to write directly to the terminal, bypassing the pty")});if(!n)return;let e=n.replace(/\\n/g,`
-`).replace(/\\r/g,"\r");for(;;){const s=e.match(/\\x([0-9a-fA-F]{2})/);if(s===null||s.index===void 0||s.length<2)break;e=e.slice(0,s.index)+String.fromCharCode(parseInt(s[1],16))+e.slice(s.index+4)}t.xterm._writeText(e)}}),b({id:x.RecordSession,title:h("workbench.action.terminal.recordSession","Record Terminal Session"),category:v.Developer,run:async(d,o)=>{const a=o.get(X),t=o.get(H),n=o.get(J),e=new T,i=k("workbench.action.terminal.recordSession.recording","Recording terminal session..."),s={text:i,name:i,ariaLabel:i,showProgress:!0},l=n.addEntry(s,"recordSession",N.LEFT);e.add(l);const r=await d.service.createTerminal();return d.service.setActiveInstance(r),await d.service.revealActiveTerminal(),await Promise.all([r.processReady,r.focusWhenReady(!0)]),new Promise(c=>{const p=[],f=()=>{const m=JSON.stringify(p,null,2);a.writeText(m),e.dispose(),c()},g=e.add(new E(5e3));e.add(S.runAndSubscribe(r.onDimensionsChanged,()=>{p.push({type:"resize",cols:r.cols,rows:r.rows}),g.trigger(f)})),e.add(t.onWillExecuteCommand(m=>{p.push({type:"command",id:m.commandId}),g.trigger(f)})),e.add(r.onWillData(m=>{p.push({type:"output",data:m}),g.trigger(f)})),e.add(r.onDidSendText(m=>{p.push({type:"sendText",data:m}),g.trigger(f)})),e.add(r.xterm.raw.onData(m=>{p.push({type:"input",data:m}),g.trigger(f)}));let C=!1;e.add(S.runAndSubscribe(r.capabilities.onDidAddCapability,m=>{if(C)return;const D=r.capabilities.get(w.CommandDetection);D&&(e.add(D.promptInputModel.onDidChangeInput(Z=>{p.push({type:"promptInputChange",data:D.promptInputModel.getCombinedString()}),g.trigger(f)})),C=!0)}))})}}),b({id:x.RestartPtyHost,title:h("workbench.action.terminal.restartPtyHost","Restart Pty Host"),category:v.Developer,run:async(d,o)=>{const a=o.get($),t=Array.from(d.instanceService.getRegisteredBackends()),n=t.filter(i=>!i.isResponsive),e=n.length>0?n:t;for(const i of e)a.warn(`Restarting pty host for authority "${i.remoteAuthority}"`),i.restartPtyHost()}});var Y=(t=>(t[t.Off=0]="Off",t[t.WaitingForCapability=1]="WaitingForCapability",t[t.On=2]="On",t))(Y||{});let u=class extends F{constructor(a,t){super();this._ctx=a;this._configurationService=t;this._register(this._configurationService.onDidChangeConfiguration(n=>{n.affectsConfiguration(M.DevMode)&&this._updateDevMode()}))}static ID="terminal.devMode";static get(a){return a.getContribution(u.ID)}_xterm;_activeDevModeDisposables=this._register(new B);_currentColor=0;_state=0;xtermReady(a){this._xterm=a,this._updateDevMode()}_updateDevMode(){const a=this._isEnabled();this._xterm?.raw.element?.classList.toggle("dev-mode",a);const t=this._ctx.instance.capabilities.get(w.CommandDetection);if(a)if(t){if(this._state===2)return;this._state=2;const n=new W,e=new T;this._activeDevModeDisposables.value=_(n,e,this._ctx.instance.onDidBlur(()=>this._updateDevMode()),this._ctx.instance.onDidFocus(()=>this._updateDevMode()),t.promptInputModel.onDidChangeInput(()=>this._updateDevMode()),t.onCommandFinished(i=>{const s=`color-${this._currentColor}`,l=[];if(n.set(i,_(...l)),i.promptStartMarker){const r=this._ctx.instance.xterm.raw?.registerDecoration({marker:i.promptStartMarker});r&&(l.push(r),e.add(r.onRender(c=>{c.textContent="A",c.classList.add("xterm-sequence-decoration","top","left",s)})))}if(i.marker){const r=this._ctx.instance.xterm.raw?.registerDecoration({marker:i.marker,x:i.startX});r&&(l.push(r),e.add(r.onRender(c=>{c.textContent="B",c.classList.add("xterm-sequence-decoration","top","right",s)})))}if(i.executedMarker){const r=this._ctx.instance.xterm.raw?.registerDecoration({marker:i.executedMarker,x:i.executedX});r&&(l.push(r),e.add(r.onRender(c=>{c.textContent="C",c.classList.add("xterm-sequence-decoration","bottom","left",s)})))}if(i.endMarker){const r=this._ctx.instance.xterm.raw?.registerDecoration({marker:i.endMarker});r&&(l.push(r),e.add(r.onRender(c=>{c.textContent="D",c.classList.add("xterm-sequence-decoration","bottom","right",s)})))}this._currentColor=(this._currentColor+1)%2}),t.onCommandInvalidated(i=>{for(const s of i){const l=n.get(s);l&&P(l),n.deleteAndDispose(s)}}))}else{if(this._state===1)return;this._state=1,this._activeDevModeDisposables.value=this._ctx.instance.capabilities.onDidAddCapabilityType(n=>{n===w.CommandDetection&&this._updateDevMode()})}else{if(this._state===0)return;this._state=0,this._activeDevModeDisposables.clear()}}_isEnabled(){return this._configurationService.getValue(M.DevMode)||!1}};u=y([I(1,q)],u),Q(u.ID,u);
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Delayer } from "../../../../../base/common/async.js";
+import { VSBuffer } from "../../../../../base/common/buffer.js";
+import { Event } from "../../../../../base/common/event.js";
+import { Disposable, DisposableMap, DisposableStore, IDisposable, MutableDisposable, combinedDisposable, dispose } from "../../../../../base/common/lifecycle.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { localize, localize2 } from "../../../../../nls.js";
+import { Categories } from "../../../../../platform/action/common/actionCommonCategories.js";
+import { IClipboardService } from "../../../../../platform/clipboard/common/clipboardService.js";
+import { ICommandService } from "../../../../../platform/commands/common/commands.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { ContextKeyExpr } from "../../../../../platform/contextkey/common/contextkey.js";
+import { IFileService } from "../../../../../platform/files/common/files.js";
+import { IOpenerService } from "../../../../../platform/opener/common/opener.js";
+import { IQuickInputService } from "../../../../../platform/quickinput/common/quickInput.js";
+import { ITerminalCommand, TerminalCapability } from "../../../../../platform/terminal/common/capabilities/capabilities.js";
+import { ITerminalLogService, TerminalSettingId } from "../../../../../platform/terminal/common/terminal.js";
+import { IWorkspaceContextService } from "../../../../../platform/workspace/common/workspace.js";
+import { IStatusbarService, StatusbarAlignment } from "../../../../services/statusbar/browser/statusbar.js";
+import { IInternalXtermTerminal, ITerminalContribution, ITerminalInstance, IXtermTerminal } from "../../../terminal/browser/terminal.js";
+import { registerTerminalAction } from "../../../terminal/browser/terminalActions.js";
+import { registerTerminalContribution } from "../../../terminal/browser/terminalExtensions.js";
+import { TerminalContextKeys } from "../../../terminal/common/terminalContextKey.js";
+import { TerminalDeveloperCommandId } from "../common/terminal.developer.js";
+import "./media/developer.css";
+registerTerminalAction({
+  id: TerminalDeveloperCommandId.ShowTextureAtlas,
+  title: localize2("workbench.action.terminal.showTextureAtlas", "Show Terminal Texture Atlas"),
+  category: Categories.Developer,
+  precondition: ContextKeyExpr.or(TerminalContextKeys.isOpen),
+  run: /* @__PURE__ */ __name(async (c, accessor) => {
+    const fileService = accessor.get(IFileService);
+    const openerService = accessor.get(IOpenerService);
+    const workspaceContextService = accessor.get(IWorkspaceContextService);
+    const bitmap = await c.service.activeInstance?.xterm?.textureAtlas;
+    if (!bitmap) {
+      return;
+    }
+    const cwdUri = workspaceContextService.getWorkspace().folders[0].uri;
+    const fileUri = URI.joinPath(cwdUri, "textureAtlas.png");
+    const canvas = document.createElement("canvas");
+    canvas.width = bitmap.width;
+    canvas.height = bitmap.height;
+    const ctx = canvas.getContext("bitmaprenderer");
+    if (!ctx) {
+      return;
+    }
+    ctx.transferFromImageBitmap(bitmap);
+    const blob = await new Promise((res) => canvas.toBlob(res));
+    if (!blob) {
+      return;
+    }
+    await fileService.writeFile(fileUri, VSBuffer.wrap(new Uint8Array(await blob.arrayBuffer())));
+    openerService.open(fileUri);
+  }, "run")
+});
+registerTerminalAction({
+  id: TerminalDeveloperCommandId.WriteDataToTerminal,
+  title: localize2("workbench.action.terminal.writeDataToTerminal", "Write Data to Terminal"),
+  category: Categories.Developer,
+  run: /* @__PURE__ */ __name(async (c, accessor) => {
+    const quickInputService = accessor.get(IQuickInputService);
+    const instance = await c.service.getActiveOrCreateInstance();
+    await c.service.revealActiveTerminal();
+    await instance.processReady;
+    if (!instance.xterm) {
+      throw new Error("Cannot write data to terminal if xterm isn't initialized");
+    }
+    const data = await quickInputService.input({
+      value: "",
+      placeHolder: "Enter data, use \\x to escape",
+      prompt: localize("workbench.action.terminal.writeDataToTerminal.prompt", "Enter data to write directly to the terminal, bypassing the pty")
+    });
+    if (!data) {
+      return;
+    }
+    let escapedData = data.replace(/\\n/g, "\n").replace(/\\r/g, "\r");
+    while (true) {
+      const match = escapedData.match(/\\x([0-9a-fA-F]{2})/);
+      if (match === null || match.index === void 0 || match.length < 2) {
+        break;
+      }
+      escapedData = escapedData.slice(0, match.index) + String.fromCharCode(parseInt(match[1], 16)) + escapedData.slice(match.index + 4);
+    }
+    const xterm = instance.xterm;
+    xterm._writeText(escapedData);
+  }, "run")
+});
+registerTerminalAction({
+  id: TerminalDeveloperCommandId.RecordSession,
+  title: localize2("workbench.action.terminal.recordSession", "Record Terminal Session"),
+  category: Categories.Developer,
+  run: /* @__PURE__ */ __name(async (c, accessor) => {
+    const clipboardService = accessor.get(IClipboardService);
+    const commandService = accessor.get(ICommandService);
+    const statusbarService = accessor.get(IStatusbarService);
+    const store = new DisposableStore();
+    const text = localize("workbench.action.terminal.recordSession.recording", "Recording terminal session...");
+    const statusbarEntry = {
+      text,
+      name: text,
+      ariaLabel: text,
+      showProgress: true
+    };
+    const statusbarHandle = statusbarService.addEntry(statusbarEntry, "recordSession", StatusbarAlignment.LEFT);
+    store.add(statusbarHandle);
+    const instance = await c.service.createTerminal();
+    c.service.setActiveInstance(instance);
+    await c.service.revealActiveTerminal();
+    await Promise.all([
+      instance.processReady,
+      instance.focusWhenReady(true)
+    ]);
+    return new Promise((resolve) => {
+      const events = [];
+      const endRecording = /* @__PURE__ */ __name(() => {
+        const session = JSON.stringify(events, null, 2);
+        clipboardService.writeText(session);
+        store.dispose();
+        resolve();
+      }, "endRecording");
+      const timer = store.add(new Delayer(5e3));
+      store.add(Event.runAndSubscribe(instance.onDimensionsChanged, () => {
+        events.push({
+          type: "resize",
+          cols: instance.cols,
+          rows: instance.rows
+        });
+        timer.trigger(endRecording);
+      }));
+      store.add(commandService.onWillExecuteCommand((e) => {
+        events.push({
+          type: "command",
+          id: e.commandId
+        });
+        timer.trigger(endRecording);
+      }));
+      store.add(instance.onWillData((data) => {
+        events.push({
+          type: "output",
+          data
+        });
+        timer.trigger(endRecording);
+      }));
+      store.add(instance.onDidSendText((data) => {
+        events.push({
+          type: "sendText",
+          data
+        });
+        timer.trigger(endRecording);
+      }));
+      store.add(instance.xterm.raw.onData((data) => {
+        events.push({
+          type: "input",
+          data
+        });
+        timer.trigger(endRecording);
+      }));
+      let commandDetectedRegistered = false;
+      store.add(Event.runAndSubscribe(instance.capabilities.onDidAddCapability, (e) => {
+        if (commandDetectedRegistered) {
+          return;
+        }
+        const commandDetection = instance.capabilities.get(TerminalCapability.CommandDetection);
+        if (!commandDetection) {
+          return;
+        }
+        store.add(commandDetection.promptInputModel.onDidChangeInput((e2) => {
+          events.push({
+            type: "promptInputChange",
+            data: commandDetection.promptInputModel.getCombinedString()
+          });
+          timer.trigger(endRecording);
+        }));
+        commandDetectedRegistered = true;
+      }));
+    });
+  }, "run")
+});
+registerTerminalAction({
+  id: TerminalDeveloperCommandId.RestartPtyHost,
+  title: localize2("workbench.action.terminal.restartPtyHost", "Restart Pty Host"),
+  category: Categories.Developer,
+  run: /* @__PURE__ */ __name(async (c, accessor) => {
+    const logService = accessor.get(ITerminalLogService);
+    const backends = Array.from(c.instanceService.getRegisteredBackends());
+    const unresponsiveBackends = backends.filter((e) => !e.isResponsive);
+    const restartCandidates = unresponsiveBackends.length > 0 ? unresponsiveBackends : backends;
+    for (const backend of restartCandidates) {
+      logService.warn(`Restarting pty host for authority "${backend.remoteAuthority}"`);
+      backend.restartPtyHost();
+    }
+  }, "run")
+});
+var DevModeContributionState = /* @__PURE__ */ ((DevModeContributionState2) => {
+  DevModeContributionState2[DevModeContributionState2["Off"] = 0] = "Off";
+  DevModeContributionState2[DevModeContributionState2["WaitingForCapability"] = 1] = "WaitingForCapability";
+  DevModeContributionState2[DevModeContributionState2["On"] = 2] = "On";
+  return DevModeContributionState2;
+})(DevModeContributionState || {});
+let DevModeContribution = class extends Disposable {
+  constructor(_ctx, _configurationService) {
+    super();
+    this._ctx = _ctx;
+    this._configurationService = _configurationService;
+    this._register(this._configurationService.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration(TerminalSettingId.DevMode)) {
+        this._updateDevMode();
+      }
+    }));
+  }
+  static {
+    __name(this, "DevModeContribution");
+  }
+  static ID = "terminal.devMode";
+  static get(instance) {
+    return instance.getContribution(DevModeContribution.ID);
+  }
+  _xterm;
+  _activeDevModeDisposables = this._register(new MutableDisposable());
+  _currentColor = 0;
+  _state = 0 /* Off */;
+  xtermReady(xterm) {
+    this._xterm = xterm;
+    this._updateDevMode();
+  }
+  _updateDevMode() {
+    const devMode = this._isEnabled();
+    this._xterm?.raw.element?.classList.toggle("dev-mode", devMode);
+    const commandDetection = this._ctx.instance.capabilities.get(TerminalCapability.CommandDetection);
+    if (devMode) {
+      if (commandDetection) {
+        if (this._state === 2 /* On */) {
+          return;
+        }
+        this._state = 2 /* On */;
+        const commandDecorations = new DisposableMap();
+        const otherDisposables = new DisposableStore();
+        this._activeDevModeDisposables.value = combinedDisposable(
+          commandDecorations,
+          otherDisposables,
+          // Prompt input
+          this._ctx.instance.onDidBlur(() => this._updateDevMode()),
+          this._ctx.instance.onDidFocus(() => this._updateDevMode()),
+          commandDetection.promptInputModel.onDidChangeInput(() => this._updateDevMode()),
+          // Sequence markers
+          commandDetection.onCommandFinished((command) => {
+            const colorClass = `color-${this._currentColor}`;
+            const decorations = [];
+            commandDecorations.set(command, combinedDisposable(...decorations));
+            if (command.promptStartMarker) {
+              const d = this._ctx.instance.xterm.raw?.registerDecoration({
+                marker: command.promptStartMarker
+              });
+              if (d) {
+                decorations.push(d);
+                otherDisposables.add(d.onRender((e) => {
+                  e.textContent = "A";
+                  e.classList.add("xterm-sequence-decoration", "top", "left", colorClass);
+                }));
+              }
+            }
+            if (command.marker) {
+              const d = this._ctx.instance.xterm.raw?.registerDecoration({
+                marker: command.marker,
+                x: command.startX
+              });
+              if (d) {
+                decorations.push(d);
+                otherDisposables.add(d.onRender((e) => {
+                  e.textContent = "B";
+                  e.classList.add("xterm-sequence-decoration", "top", "right", colorClass);
+                }));
+              }
+            }
+            if (command.executedMarker) {
+              const d = this._ctx.instance.xterm.raw?.registerDecoration({
+                marker: command.executedMarker,
+                x: command.executedX
+              });
+              if (d) {
+                decorations.push(d);
+                otherDisposables.add(d.onRender((e) => {
+                  e.textContent = "C";
+                  e.classList.add("xterm-sequence-decoration", "bottom", "left", colorClass);
+                }));
+              }
+            }
+            if (command.endMarker) {
+              const d = this._ctx.instance.xterm.raw?.registerDecoration({
+                marker: command.endMarker
+              });
+              if (d) {
+                decorations.push(d);
+                otherDisposables.add(d.onRender((e) => {
+                  e.textContent = "D";
+                  e.classList.add("xterm-sequence-decoration", "bottom", "right", colorClass);
+                }));
+              }
+            }
+            this._currentColor = (this._currentColor + 1) % 2;
+          }),
+          commandDetection.onCommandInvalidated((commands) => {
+            for (const c of commands) {
+              const decorations = commandDecorations.get(c);
+              if (decorations) {
+                dispose(decorations);
+              }
+              commandDecorations.deleteAndDispose(c);
+            }
+          })
+        );
+      } else {
+        if (this._state === 1 /* WaitingForCapability */) {
+          return;
+        }
+        this._state = 1 /* WaitingForCapability */;
+        this._activeDevModeDisposables.value = this._ctx.instance.capabilities.onDidAddCapabilityType((e) => {
+          if (e === TerminalCapability.CommandDetection) {
+            this._updateDevMode();
+          }
+        });
+      }
+    } else {
+      if (this._state === 0 /* Off */) {
+        return;
+      }
+      this._state = 0 /* Off */;
+      this._activeDevModeDisposables.clear();
+    }
+  }
+  _isEnabled() {
+    return this._configurationService.getValue(TerminalSettingId.DevMode) || false;
+  }
+};
+DevModeContribution = __decorateClass([
+  __decorateParam(1, IConfigurationService)
+], DevModeContribution);
+registerTerminalContribution(DevModeContribution.ID, DevModeContribution);
+//# sourceMappingURL=terminal.developer.contribution.js.map

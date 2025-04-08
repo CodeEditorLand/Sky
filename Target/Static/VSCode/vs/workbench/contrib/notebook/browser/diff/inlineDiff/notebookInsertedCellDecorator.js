@@ -1,1 +1,49 @@
-import{Disposable as l,DisposableStore as s,toDisposable as d}from"../../../../../../base/common/lifecycle.js";import"../notebookDiffViewModel.js";import{NotebookOverviewRulerLane as n}from"../../notebookBrowser.js";import{overviewRulerAddedForeground as a}from"../../../../scm/common/quickDiff.js";class D extends l{constructor(e){super();this.notebookEditor=e}decorators=this._register(new s);apply(e){const t=this.notebookEditor.textModel;if(!t)return;const r=e.filter(o=>o.type==="insert").map(o=>t.cells[o.modifiedCellIndex]),i=this.notebookEditor.deltaCellDecorations([],r.map(o=>({handle:o.handle,options:{className:"nb-insertHighlight",outputClassName:"nb-insertHighlight",overviewRuler:{color:a,modelRanges:[],includeOutput:!0,position:n.Full}}})));this.clear(),this.decorators.add(d(()=>{this.notebookEditor.isDisposed||this.notebookEditor.deltaCellDecorations(i,[])}))}clear(){this.decorators.clear()}}export{D as NotebookInsertedCellDecorator};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Disposable, DisposableStore, toDisposable } from "../../../../../../base/common/lifecycle.js";
+import { CellDiffInfo } from "../notebookDiffViewModel.js";
+import { INotebookEditor, NotebookOverviewRulerLane } from "../../notebookBrowser.js";
+import { overviewRulerAddedForeground } from "../../../../scm/common/quickDiff.js";
+class NotebookInsertedCellDecorator extends Disposable {
+  constructor(notebookEditor) {
+    super();
+    this.notebookEditor = notebookEditor;
+  }
+  static {
+    __name(this, "NotebookInsertedCellDecorator");
+  }
+  decorators = this._register(new DisposableStore());
+  apply(diffInfo) {
+    const model = this.notebookEditor.textModel;
+    if (!model) {
+      return;
+    }
+    const cells = diffInfo.filter((diff) => diff.type === "insert").map((diff) => model.cells[diff.modifiedCellIndex]);
+    const ids = this.notebookEditor.deltaCellDecorations([], cells.map((cell) => ({
+      handle: cell.handle,
+      options: {
+        className: "nb-insertHighlight",
+        outputClassName: "nb-insertHighlight",
+        overviewRuler: {
+          color: overviewRulerAddedForeground,
+          modelRanges: [],
+          includeOutput: true,
+          position: NotebookOverviewRulerLane.Full
+        }
+      }
+    })));
+    this.clear();
+    this.decorators.add(toDisposable(() => {
+      if (!this.notebookEditor.isDisposed) {
+        this.notebookEditor.deltaCellDecorations(ids, []);
+      }
+    }));
+  }
+  clear() {
+    this.decorators.clear();
+  }
+}
+export {
+  NotebookInsertedCellDecorator
+};
+//# sourceMappingURL=notebookInsertedCellDecorator.js.map

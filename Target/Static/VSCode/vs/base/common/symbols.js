@@ -1,1 +1,5 @@
-const o=Symbol("MicrotaskDelay");export{o as MicrotaskDelay};
+const MicrotaskDelay = Symbol("MicrotaskDelay");
+export {
+  MicrotaskDelay
+};
+//# sourceMappingURL=symbols.js.map

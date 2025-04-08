@@ -1,1 +1,180 @@
-var h=Object.defineProperty,m=Object.getOwnPropertyDescriptor,u=(e,s,o,r)=>{for(var t,i=r>1?void 0:r?m(s,o):s,n=e.length-1;n>=0;n--)(t=e[n])&&(i=(r?t(s,o,i):t(i))||i);return r&&i&&h(s,o,i),i},x=(e,s)=>(o,r)=>s(o,r,e);import{URI as F}from"../../base/common/uri.js";import{equals as g}from"../../base/common/objects.js";import{isAbsolute as v}from"../../base/common/path.js";import{Emitter as C}from"../../base/common/event.js";import{relativePath as c}from"../../base/common/resources.js";import{Disposable as T}from"../../base/common/lifecycle.js";import{parse as E}from"../../base/common/glob.js";import{IWorkspaceContextService as P}from"../../platform/workspace/common/workspace.js";import{IConfigurationService as O}from"../../platform/configuration/common/configuration.js";import{Schemas as I}from"../../base/common/network.js";import{ResourceSet as L}from"../../base/common/map.js";import{getDriveLetter as S}from"../../base/common/extpath.js";let n=class extends T{constructor(e,s,o,r){super(),this.getExpression=e,this.shouldUpdate=s,this.contextService=o,this.configurationService=r,this.updateExpressions(!1),this.registerListeners()}static NO_FOLDER=null;_onExpressionChange=this._register(new C);onExpressionChange=this._onExpressionChange.event;mapFolderToParsedExpression=new Map;mapFolderToConfiguredExpression=new Map;registerListeners(){this._register(this.configurationService.onDidChangeConfiguration((e=>{this.shouldUpdate(e)&&this.updateExpressions(!0)}))),this._register(this.contextService.onDidChangeWorkspaceFolders((()=>this.updateExpressions(!0))))}updateExpressions(e){let s=!1;for(const e of this.contextService.getWorkspace().folders){const o=e.uri.toString(),r=this.doGetExpression(e.uri),t=this.mapFolderToConfiguredExpression.get(o);r?(!t||!g(t.expression,r.expression))&&(s=!0,this.mapFolderToParsedExpression.set(o,E(r.expression)),this.mapFolderToConfiguredExpression.set(o,r)):t&&(s=!0,this.mapFolderToParsedExpression.delete(o),this.mapFolderToConfiguredExpression.delete(o))}const o=new L(this.contextService.getWorkspace().folders.map((e=>e.uri)));for(const[e]of this.mapFolderToConfiguredExpression)e!==n.NO_FOLDER&&(o.has(F.parse(e))||(this.mapFolderToParsedExpression.delete(e),this.mapFolderToConfiguredExpression.delete(e),s=!0));const r=this.doGetExpression(void 0),t=this.mapFolderToConfiguredExpression.get(n.NO_FOLDER);r?(!t||!g(t.expression,r.expression))&&(s=!0,this.mapFolderToParsedExpression.set(n.NO_FOLDER,E(r.expression)),this.mapFolderToConfiguredExpression.set(n.NO_FOLDER,r)):t&&(s=!0,this.mapFolderToParsedExpression.delete(n.NO_FOLDER),this.mapFolderToConfiguredExpression.delete(n.NO_FOLDER)),e&&s&&this._onExpressionChange.fire()}doGetExpression(e){const s=this.getExpression(e);if(!s)return;const o=Object.keys(s);if(0===o.length)return;let r=!1;const t=Object.create(null);for(const e of o){r||(r=v(e));let o=e;const i=S(o,!0);if(i){const e=i.toLowerCase();i!==i.toLowerCase()&&(o=`${e}${o.substring(1)}`)}t[o]=s[e]}return{expression:t,hasAbsolutePath:r}}matches(e,s){if(0===this.mapFolderToParsedExpression.size)return!1;const o=this.contextService.getWorkspaceFolder(e);let r,t,i;return o&&this.mapFolderToParsedExpression.has(o.uri.toString())?(r=this.mapFolderToParsedExpression.get(o.uri.toString()),t=this.mapFolderToConfiguredExpression.get(o.uri.toString())):(r=this.mapFolderToParsedExpression.get(n.NO_FOLDER),t=this.mapFolderToConfiguredExpression.get(n.NO_FOLDER)),!!r&&(i=o?c(o.uri,e):this.uriToPath(e),!("string"!=typeof i||!r(i,void 0,s))||!(i===this.uriToPath(e)||!t?.hasAbsolutePath)&&!!r(this.uriToPath(e),void 0,s))}uriToPath(e){return e.scheme===I.file?e.fsPath:e.path}};n=u([x(2,P),x(3,O)],n);export{n as ResourceGlobMatcher};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { URI } from "../../base/common/uri.js";
+import { equals } from "../../base/common/objects.js";
+import { isAbsolute } from "../../base/common/path.js";
+import { Emitter } from "../../base/common/event.js";
+import { relativePath } from "../../base/common/resources.js";
+import { Disposable } from "../../base/common/lifecycle.js";
+import { ParsedExpression, IExpression, parse } from "../../base/common/glob.js";
+import { IWorkspaceContextService } from "../../platform/workspace/common/workspace.js";
+import { IConfigurationService, IConfigurationChangeEvent } from "../../platform/configuration/common/configuration.js";
+import { Schemas } from "../../base/common/network.js";
+import { ResourceSet } from "../../base/common/map.js";
+import { getDriveLetter } from "../../base/common/extpath.js";
+let ResourceGlobMatcher = class extends Disposable {
+  constructor(getExpression, shouldUpdate, contextService, configurationService) {
+    super();
+    this.getExpression = getExpression;
+    this.shouldUpdate = shouldUpdate;
+    this.contextService = contextService;
+    this.configurationService = configurationService;
+    this.updateExpressions(false);
+    this.registerListeners();
+  }
+  static {
+    __name(this, "ResourceGlobMatcher");
+  }
+  static NO_FOLDER = null;
+  _onExpressionChange = this._register(new Emitter());
+  onExpressionChange = this._onExpressionChange.event;
+  mapFolderToParsedExpression = /* @__PURE__ */ new Map();
+  mapFolderToConfiguredExpression = /* @__PURE__ */ new Map();
+  registerListeners() {
+    this._register(this.configurationService.onDidChangeConfiguration((e) => {
+      if (this.shouldUpdate(e)) {
+        this.updateExpressions(true);
+      }
+    }));
+    this._register(this.contextService.onDidChangeWorkspaceFolders(() => this.updateExpressions(true)));
+  }
+  updateExpressions(fromEvent) {
+    let changed = false;
+    for (const folder of this.contextService.getWorkspace().folders) {
+      const folderUriStr = folder.uri.toString();
+      const newExpression = this.doGetExpression(folder.uri);
+      const currentExpression = this.mapFolderToConfiguredExpression.get(folderUriStr);
+      if (newExpression) {
+        if (!currentExpression || !equals(currentExpression.expression, newExpression.expression)) {
+          changed = true;
+          this.mapFolderToParsedExpression.set(folderUriStr, parse(newExpression.expression));
+          this.mapFolderToConfiguredExpression.set(folderUriStr, newExpression);
+        }
+      } else {
+        if (currentExpression) {
+          changed = true;
+          this.mapFolderToParsedExpression.delete(folderUriStr);
+          this.mapFolderToConfiguredExpression.delete(folderUriStr);
+        }
+      }
+    }
+    const foldersMap = new ResourceSet(this.contextService.getWorkspace().folders.map((folder) => folder.uri));
+    for (const [folder] of this.mapFolderToConfiguredExpression) {
+      if (folder === ResourceGlobMatcher.NO_FOLDER) {
+        continue;
+      }
+      if (!foldersMap.has(URI.parse(folder))) {
+        this.mapFolderToParsedExpression.delete(folder);
+        this.mapFolderToConfiguredExpression.delete(folder);
+        changed = true;
+      }
+    }
+    const globalNewExpression = this.doGetExpression(void 0);
+    const globalCurrentExpression = this.mapFolderToConfiguredExpression.get(ResourceGlobMatcher.NO_FOLDER);
+    if (globalNewExpression) {
+      if (!globalCurrentExpression || !equals(globalCurrentExpression.expression, globalNewExpression.expression)) {
+        changed = true;
+        this.mapFolderToParsedExpression.set(ResourceGlobMatcher.NO_FOLDER, parse(globalNewExpression.expression));
+        this.mapFolderToConfiguredExpression.set(ResourceGlobMatcher.NO_FOLDER, globalNewExpression);
+      }
+    } else {
+      if (globalCurrentExpression) {
+        changed = true;
+        this.mapFolderToParsedExpression.delete(ResourceGlobMatcher.NO_FOLDER);
+        this.mapFolderToConfiguredExpression.delete(ResourceGlobMatcher.NO_FOLDER);
+      }
+    }
+    if (fromEvent && changed) {
+      this._onExpressionChange.fire();
+    }
+  }
+  doGetExpression(resource) {
+    const expression = this.getExpression(resource);
+    if (!expression) {
+      return void 0;
+    }
+    const keys = Object.keys(expression);
+    if (keys.length === 0) {
+      return void 0;
+    }
+    let hasAbsolutePath = false;
+    const massagedExpression = /* @__PURE__ */ Object.create(null);
+    for (const key of keys) {
+      if (!hasAbsolutePath) {
+        hasAbsolutePath = isAbsolute(key);
+      }
+      let massagedKey = key;
+      const driveLetter = getDriveLetter(
+        massagedKey,
+        true
+        /* probe for windows */
+      );
+      if (driveLetter) {
+        const driveLetterLower = driveLetter.toLowerCase();
+        if (driveLetter !== driveLetter.toLowerCase()) {
+          massagedKey = `${driveLetterLower}${massagedKey.substring(1)}`;
+        }
+      }
+      massagedExpression[massagedKey] = expression[key];
+    }
+    return {
+      expression: massagedExpression,
+      hasAbsolutePath
+    };
+  }
+  matches(resource, hasSibling) {
+    if (this.mapFolderToParsedExpression.size === 0) {
+      return false;
+    }
+    const folder = this.contextService.getWorkspaceFolder(resource);
+    let expressionForFolder;
+    let expressionConfigForFolder;
+    if (folder && this.mapFolderToParsedExpression.has(folder.uri.toString())) {
+      expressionForFolder = this.mapFolderToParsedExpression.get(folder.uri.toString());
+      expressionConfigForFolder = this.mapFolderToConfiguredExpression.get(folder.uri.toString());
+    } else {
+      expressionForFolder = this.mapFolderToParsedExpression.get(ResourceGlobMatcher.NO_FOLDER);
+      expressionConfigForFolder = this.mapFolderToConfiguredExpression.get(ResourceGlobMatcher.NO_FOLDER);
+    }
+    if (!expressionForFolder) {
+      return false;
+    }
+    let resourcePathToMatch;
+    if (folder) {
+      resourcePathToMatch = relativePath(folder.uri, resource);
+    } else {
+      resourcePathToMatch = this.uriToPath(resource);
+    }
+    if (typeof resourcePathToMatch === "string" && !!expressionForFolder(resourcePathToMatch, void 0, hasSibling)) {
+      return true;
+    }
+    if (resourcePathToMatch !== this.uriToPath(resource) && expressionConfigForFolder?.hasAbsolutePath) {
+      return !!expressionForFolder(this.uriToPath(resource), void 0, hasSibling);
+    }
+    return false;
+  }
+  uriToPath(uri) {
+    if (uri.scheme === Schemas.file) {
+      return uri.fsPath;
+    }
+    return uri.path;
+  }
+};
+ResourceGlobMatcher = __decorateClass([
+  __decorateParam(2, IWorkspaceContextService),
+  __decorateParam(3, IConfigurationService)
+], ResourceGlobMatcher);
+export {
+  ResourceGlobMatcher
+};
+//# sourceMappingURL=resources.js.map

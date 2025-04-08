@@ -1,1 +1,20 @@
-import{ActionRunner as o}from"../../../../base/common/actions.js";class s extends o{constructor(t){super(),this._getContext=t}runAction(t,n){const o=this._getContext();return super.runAction(t,o)}}export{s as ActionRunnerWithContext};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { ActionRunner, IAction } from "../../../../base/common/actions.js";
+class ActionRunnerWithContext extends ActionRunner {
+  constructor(_getContext) {
+    super();
+    this._getContext = _getContext;
+  }
+  static {
+    __name(this, "ActionRunnerWithContext");
+  }
+  runAction(action, _context) {
+    const ctx = this._getContext();
+    return super.runAction(action, ctx);
+  }
+}
+export {
+  ActionRunnerWithContext
+};
+//# sourceMappingURL=utils.js.map

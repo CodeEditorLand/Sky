@@ -1,1 +1,240 @@
-var F=Object.defineProperty,K=Object.getOwnPropertyDescriptor,L=(e,t,n,i)=>{for(var s,o=i>1?void 0:i?K(t,n):t,a=e.length-1;a>=0;a--)(s=e[a])&&(o=(i?s(t,n,o):s(o))||o);return i&&o&&F(t,n,o),o},m=(e,t)=>(n,i)=>t(n,i,e);import"./media/extension.css";import{append as o,$ as s,addDisposableListener as _}from"../../../../base/browser/dom.js";import{dispose as I,combinedDisposable as z}from"../../../../base/common/lifecycle.js";import"../../../../base/common/actions.js";import{ActionBar as $}from"../../../../base/browser/ui/actionbar/actionbar.js";import{IInstantiationService as G}from"../../../../platform/instantiation/common/instantiation.js";import"../../../../base/browser/ui/list/list.js";import"../../../../base/browser/ui/list/listPaging.js";import{ExtensionContainers as j,ExtensionState as W,IExtensionsWorkbenchService as q}from"../common/extensions.js";import{ManageExtensionAction as X,ExtensionRuntimeStateAction as J,ExtensionStatusLabelAction as Q,RemoteInstallAction as Y,ExtensionStatusAction as Z,LocalInstallAction as ee,ButtonWithDropDownExtensionAction as te,InstallDropdownAction as ne,InstallingLabelAction as ie,ButtonWithDropdownExtensionActionViewItem as oe,DropDownExtensionAction as se,WebInstallAction as re,MigrateDeprecatedExtensionAction as ae,SetLanguageAction as ce,ClearLanguageAction as le,UpdateAction as pe}from"./extensionsActions.js";import{areSameExtensions as b}from"../../../../platform/extensionManagement/common/extensionManagementUtil.js";import{RatingsWidget as me,InstallCountWidget as de,RecommendationWidget as Ie,RemoteBadgeWidget as T,ExtensionPackCountWidget as ve,SyncIgnoredWidget as ue,ExtensionHoverWidget as ge,ExtensionRuntimeStatusWidget as be,PreReleaseBookmarkWidget as he,PublisherWidget as xe,ExtensionKindIndicatorWidget as Se}from"./extensionsWidgets.js";import{IExtensionService as fe}from"../../../services/extensions/common/extensions.js";import{IWorkbenchExtensionEnablementService as Ee}from"../../../services/extensionManagement/common/extensionManagement.js";import{INotificationService as De}from"../../../../platform/notification/common/notification.js";import{registerThemingParticipant as Ce}from"../../../../platform/theme/common/themeService.js";import{ThemeIcon as ye}from"../../../../base/common/themables.js";import{WORKBENCH_BACKGROUND as Ae}from"../../../common/theme.js";import{IContextMenuService as Le}from"../../../../platform/contextview/browser/contextView.js";import"../../../../base/browser/ui/hover/hoverWidget.js";import"../../../../base/browser/ui/actionbar/actionViewItems.js";import{extensionVerifiedPublisherIconColor as We,verifiedPublisherIcon as Te}from"../../../services/extensionManagement/common/extensionsIcons.js";const we=72;class pt{getHeight(){return 72}getTemplateId(){return"extension"}}let v=class{constructor(e,t,n,i,s,o,a,r){this.extensionViewState=e,this.options=t,this.instantiationService=n,this.notificationService=i,this.extensionService=s,this.extensionsWorkbenchService=o,this.extensionEnablementService=a,this.contextMenuService=r}get templateId(){return"extension"}renderTemplate(e){const t=this.instantiationService.createInstance(Ie,o(e,s(".extension-bookmark-container"))),n=this.instantiationService.createInstance(he,o(e,s(".extension-bookmark-container"))),i=o(e,s(".extension-list-item")),a=o(i,s(".icon-container")),r=o(a,s("img.icon",{alt:""})),c=this.instantiationService.createInstance(T,a,!1),l=this.instantiationService.createInstance(ve,a),m=o(i,s(".details")),p=o(m,s(".header-container")),d=o(p,s(".header")),b=o(d,s("span.name")),h=o(d,s("span.install-count")),x=o(d,s("span.ratings")),v=o(d,s("span.sync-ignored")),g=o(d,s("span")),I=o(d,s("span.activation-status")),S=this.instantiationService.createInstance(T,d,!1),u=o(m,s(".description.ellipsis")),f=o(m,s(".footer")),A=this.instantiationService.createInstance(xe,o(f,s(".publisher-container")),!0),D=new $(f,{actionViewItemProvider:(e,t)=>e instanceof te?new oe(e,{...t,icon:!0,label:!0,menuActionsOrProvider:{getActions:()=>e.menuActions},menuActionClassNames:e.menuActionClassNames},this.contextMenuService):e instanceof se?e.createActionViewItem(t):void 0,focusOnlyEnabledItems:!0});D.setFocusable(!1);const E=D.onDidRun((({error:e})=>e&&this.notificationService.error(e))),y=this.instantiationService.createInstance(Z),w=[this.instantiationService.createInstance(Q),this.instantiationService.createInstance(ae,!0),this.instantiationService.createInstance(J),this.instantiationService.createInstance(pe,!1),this.instantiationService.createInstance(ne),this.instantiationService.createInstance(ie),this.instantiationService.createInstance(ce),this.instantiationService.createInstance(le),this.instantiationService.createInstance(Y,!1),this.instantiationService.createInstance(ee),this.instantiationService.createInstance(re),y,this.instantiationService.createInstance(X)],W=[t,n,c,l,S,A,this.instantiationService.createInstance(ge,{target:e,position:this.options.hoverOptions.position},y),this.instantiationService.createInstance(ue,v),this.instantiationService.createInstance(be,this.extensionViewState,I),this.instantiationService.createInstance(de,h,!0),this.instantiationService.createInstance(me,x,!0),this.instantiationService.createInstance(Se,g,!0)],C=this.instantiationService.createInstance(j,[...w,...W]);D.push(w,{icon:!0,label:!0});return{root:e,element:i,icon:r,name:b,installCount:h,ratings:x,description:u,disposables:[z(...w,...W,D,E,C)],actionbar:D,extensionDisposables:[],set extension(e){C.extension=e}}}renderPlaceholder(e,t){t.element.classList.add("loading"),t.root.removeAttribute("aria-label"),t.root.removeAttribute("data-extension-id"),t.extensionDisposables=I(t.extensionDisposables),t.icon.src="",t.name.textContent="",t.description.textContent="",t.installCount.style.display="none",t.ratings.style.display="none",t.extension=null}renderElement(e,t,n){n.element.classList.remove("loading"),n.root.setAttribute("data-extension-id",e.identifier.id),e.state!==W.Uninstalled&&!e.server&&(e=this.extensionsWorkbenchService.local.filter((t=>t.server===e.server&&b(t.identifier,e.identifier)))[0]||e),n.extensionDisposables=I(n.extensionDisposables);const i=()=>{const t=e.state===W.Installed&&e.local&&!this.extensionEnablementService.isEnabled(e.local),i=!!e.deprecationInfo;n.element.classList.toggle("deprecated",i),n.root.classList.toggle("disabled",t)};i(),this.extensionService.onDidChangeExtensions((()=>i()),this,n.extensionDisposables),n.extensionDisposables.push(_(n.icon,"error",(()=>n.icon.src=e.iconUrlFallback),{once:!0})),n.icon.src=e.iconUrl,n.icon.complete?n.icon.style.visibility="inherit":(n.icon.style.visibility="hidden",n.icon.onload=()=>n.icon.style.visibility="inherit"),n.name.textContent=e.displayName,n.description.textContent=e.description,n.installCount.style.display="",n.ratings.style.display="",n.extension=e,e.gallery&&e.gallery.properties&&e.gallery.properties.localizedLanguages&&e.gallery.properties.localizedLanguages.length&&(n.description.textContent=e.gallery.properties.localizedLanguages.map((e=>e[0].toLocaleUpperCase()+e.slice(1))).join(", ")),this.extensionViewState.onFocus((t=>{b(e.identifier,t.identifier)&&n.actionbar.setFocusable(!0)}),this,n.extensionDisposables),this.extensionViewState.onBlur((t=>{b(e.identifier,t.identifier)&&n.actionbar.setFocusable(!1)}),this,n.extensionDisposables)}disposeElement(e,t,n){n.extensionDisposables=I(n.extensionDisposables)}disposeTemplate(e){e.extensionDisposables=I(e.extensionDisposables),e.disposables=I(e.disposables)}};v=L([m(2,G),m(3,De),m(4,fe),m(5,q),m(6,Ee),m(7,Le)],v),Ce(((e,t)=>{const n=e.getColor(We);if(n){const i=n.transparent(.5).makeOpaque(Ae(e));t.addRule(`.extensions-list .monaco-list .monaco-list-row.disabled:not(.selected) .author .verified-publisher ${ye.asCSSSelector(Te)} { color: ${i}; }`)}}));export{pt as Delegate,v as Renderer};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import "./media/extension.css";
+import { append, $, addDisposableListener } from "../../../../base/browser/dom.js";
+import { IDisposable, dispose, combinedDisposable } from "../../../../base/common/lifecycle.js";
+import { IAction } from "../../../../base/common/actions.js";
+import { ActionBar } from "../../../../base/browser/ui/actionbar/actionbar.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IListVirtualDelegate } from "../../../../base/browser/ui/list/list.js";
+import { IPagedRenderer } from "../../../../base/browser/ui/list/listPaging.js";
+import { IExtension, ExtensionContainers, ExtensionState, IExtensionsWorkbenchService, IExtensionsViewState } from "../common/extensions.js";
+import { ManageExtensionAction, ExtensionRuntimeStateAction, ExtensionStatusLabelAction, RemoteInstallAction, ExtensionStatusAction, LocalInstallAction, ButtonWithDropDownExtensionAction, InstallDropdownAction, InstallingLabelAction, ButtonWithDropdownExtensionActionViewItem, DropDownExtensionAction, WebInstallAction, MigrateDeprecatedExtensionAction, SetLanguageAction, ClearLanguageAction, UpdateAction } from "./extensionsActions.js";
+import { areSameExtensions } from "../../../../platform/extensionManagement/common/extensionManagementUtil.js";
+import { RatingsWidget, InstallCountWidget, RecommendationWidget, RemoteBadgeWidget, ExtensionPackCountWidget as ExtensionPackBadgeWidget, SyncIgnoredWidget, ExtensionHoverWidget, ExtensionRuntimeStatusWidget, PreReleaseBookmarkWidget, PublisherWidget, ExtensionKindIndicatorWidget } from "./extensionsWidgets.js";
+import { IExtensionService } from "../../../services/extensions/common/extensions.js";
+import { IWorkbenchExtensionEnablementService } from "../../../services/extensionManagement/common/extensionManagement.js";
+import { INotificationService } from "../../../../platform/notification/common/notification.js";
+import { registerThemingParticipant, IColorTheme, ICssStyleCollector } from "../../../../platform/theme/common/themeService.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { WORKBENCH_BACKGROUND } from "../../../common/theme.js";
+import { IContextMenuService } from "../../../../platform/contextview/browser/contextView.js";
+import { HoverPosition } from "../../../../base/browser/ui/hover/hoverWidget.js";
+import { IActionViewItemOptions } from "../../../../base/browser/ui/actionbar/actionViewItems.js";
+import { extensionVerifiedPublisherIconColor, verifiedPublisherIcon } from "../../../services/extensionManagement/common/extensionsIcons.js";
+const EXTENSION_LIST_ELEMENT_HEIGHT = 72;
+class Delegate {
+  static {
+    __name(this, "Delegate");
+  }
+  getHeight() {
+    return EXTENSION_LIST_ELEMENT_HEIGHT;
+  }
+  getTemplateId() {
+    return "extension";
+  }
+}
+let Renderer = class {
+  constructor(extensionViewState, options, instantiationService, notificationService, extensionService, extensionsWorkbenchService, extensionEnablementService, contextMenuService) {
+    this.extensionViewState = extensionViewState;
+    this.options = options;
+    this.instantiationService = instantiationService;
+    this.notificationService = notificationService;
+    this.extensionService = extensionService;
+    this.extensionsWorkbenchService = extensionsWorkbenchService;
+    this.extensionEnablementService = extensionEnablementService;
+    this.contextMenuService = contextMenuService;
+  }
+  static {
+    __name(this, "Renderer");
+  }
+  get templateId() {
+    return "extension";
+  }
+  renderTemplate(root) {
+    const recommendationWidget = this.instantiationService.createInstance(RecommendationWidget, append(root, $(".extension-bookmark-container")));
+    const preReleaseWidget = this.instantiationService.createInstance(PreReleaseBookmarkWidget, append(root, $(".extension-bookmark-container")));
+    const element = append(root, $(".extension-list-item"));
+    const iconContainer = append(element, $(".icon-container"));
+    const icon = append(iconContainer, $("img.icon", { alt: "" }));
+    const iconRemoteBadgeWidget = this.instantiationService.createInstance(RemoteBadgeWidget, iconContainer, false);
+    const extensionPackBadgeWidget = this.instantiationService.createInstance(ExtensionPackBadgeWidget, iconContainer);
+    const details = append(element, $(".details"));
+    const headerContainer = append(details, $(".header-container"));
+    const header = append(headerContainer, $(".header"));
+    const name = append(header, $("span.name"));
+    const installCount = append(header, $("span.install-count"));
+    const ratings = append(header, $("span.ratings"));
+    const syncIgnore = append(header, $("span.sync-ignored"));
+    const extensionKindIndicator = append(header, $("span"));
+    const activationStatus = append(header, $("span.activation-status"));
+    const headerRemoteBadgeWidget = this.instantiationService.createInstance(RemoteBadgeWidget, header, false);
+    const description = append(details, $(".description.ellipsis"));
+    const footer = append(details, $(".footer"));
+    const publisherWidget = this.instantiationService.createInstance(PublisherWidget, append(footer, $(".publisher-container")), true);
+    const actionbar = new ActionBar(footer, {
+      actionViewItemProvider: /* @__PURE__ */ __name((action, options) => {
+        if (action instanceof ButtonWithDropDownExtensionAction) {
+          return new ButtonWithDropdownExtensionActionViewItem(
+            action,
+            {
+              ...options,
+              icon: true,
+              label: true,
+              menuActionsOrProvider: { getActions: /* @__PURE__ */ __name(() => action.menuActions, "getActions") },
+              menuActionClassNames: action.menuActionClassNames
+            },
+            this.contextMenuService
+          );
+        }
+        if (action instanceof DropDownExtensionAction) {
+          return action.createActionViewItem(options);
+        }
+        return void 0;
+      }, "actionViewItemProvider"),
+      focusOnlyEnabledItems: true
+    });
+    actionbar.setFocusable(false);
+    const actionBarListener = actionbar.onDidRun(({ error }) => error && this.notificationService.error(error));
+    const extensionStatusIconAction = this.instantiationService.createInstance(ExtensionStatusAction);
+    const actions = [
+      this.instantiationService.createInstance(ExtensionStatusLabelAction),
+      this.instantiationService.createInstance(MigrateDeprecatedExtensionAction, true),
+      this.instantiationService.createInstance(ExtensionRuntimeStateAction),
+      this.instantiationService.createInstance(UpdateAction, false),
+      this.instantiationService.createInstance(InstallDropdownAction),
+      this.instantiationService.createInstance(InstallingLabelAction),
+      this.instantiationService.createInstance(SetLanguageAction),
+      this.instantiationService.createInstance(ClearLanguageAction),
+      this.instantiationService.createInstance(RemoteInstallAction, false),
+      this.instantiationService.createInstance(LocalInstallAction),
+      this.instantiationService.createInstance(WebInstallAction),
+      extensionStatusIconAction,
+      this.instantiationService.createInstance(ManageExtensionAction)
+    ];
+    const extensionHoverWidget = this.instantiationService.createInstance(ExtensionHoverWidget, { target: root, position: this.options.hoverOptions.position }, extensionStatusIconAction);
+    const widgets = [
+      recommendationWidget,
+      preReleaseWidget,
+      iconRemoteBadgeWidget,
+      extensionPackBadgeWidget,
+      headerRemoteBadgeWidget,
+      publisherWidget,
+      extensionHoverWidget,
+      this.instantiationService.createInstance(SyncIgnoredWidget, syncIgnore),
+      this.instantiationService.createInstance(ExtensionRuntimeStatusWidget, this.extensionViewState, activationStatus),
+      this.instantiationService.createInstance(InstallCountWidget, installCount, true),
+      this.instantiationService.createInstance(RatingsWidget, ratings, true),
+      this.instantiationService.createInstance(ExtensionKindIndicatorWidget, extensionKindIndicator, true)
+    ];
+    const extensionContainers = this.instantiationService.createInstance(ExtensionContainers, [...actions, ...widgets]);
+    actionbar.push(actions, { icon: true, label: true });
+    const disposable = combinedDisposable(...actions, ...widgets, actionbar, actionBarListener, extensionContainers);
+    return {
+      root,
+      element,
+      icon,
+      name,
+      installCount,
+      ratings,
+      description,
+      disposables: [disposable],
+      actionbar,
+      extensionDisposables: [],
+      set extension(extension) {
+        extensionContainers.extension = extension;
+      }
+    };
+  }
+  renderPlaceholder(index, data) {
+    data.element.classList.add("loading");
+    data.root.removeAttribute("aria-label");
+    data.root.removeAttribute("data-extension-id");
+    data.extensionDisposables = dispose(data.extensionDisposables);
+    data.icon.src = "";
+    data.name.textContent = "";
+    data.description.textContent = "";
+    data.installCount.style.display = "none";
+    data.ratings.style.display = "none";
+    data.extension = null;
+  }
+  renderElement(extension, index, data) {
+    data.element.classList.remove("loading");
+    data.root.setAttribute("data-extension-id", extension.identifier.id);
+    if (extension.state !== ExtensionState.Uninstalled && !extension.server) {
+      extension = this.extensionsWorkbenchService.local.filter((e) => e.server === extension.server && areSameExtensions(e.identifier, extension.identifier))[0] || extension;
+    }
+    data.extensionDisposables = dispose(data.extensionDisposables);
+    const updateEnablement = /* @__PURE__ */ __name(() => {
+      const disabled = extension.state === ExtensionState.Installed && extension.local && !this.extensionEnablementService.isEnabled(extension.local);
+      const deprecated = !!extension.deprecationInfo;
+      data.element.classList.toggle("deprecated", deprecated);
+      data.root.classList.toggle("disabled", disabled);
+    }, "updateEnablement");
+    updateEnablement();
+    this.extensionService.onDidChangeExtensions(() => updateEnablement(), this, data.extensionDisposables);
+    data.extensionDisposables.push(addDisposableListener(data.icon, "error", () => data.icon.src = extension.iconUrlFallback, { once: true }));
+    data.icon.src = extension.iconUrl;
+    if (!data.icon.complete) {
+      data.icon.style.visibility = "hidden";
+      data.icon.onload = () => data.icon.style.visibility = "inherit";
+    } else {
+      data.icon.style.visibility = "inherit";
+    }
+    data.name.textContent = extension.displayName;
+    data.description.textContent = extension.description;
+    data.installCount.style.display = "";
+    data.ratings.style.display = "";
+    data.extension = extension;
+    if (extension.gallery && extension.gallery.properties && extension.gallery.properties.localizedLanguages && extension.gallery.properties.localizedLanguages.length) {
+      data.description.textContent = extension.gallery.properties.localizedLanguages.map((name) => name[0].toLocaleUpperCase() + name.slice(1)).join(", ");
+    }
+    this.extensionViewState.onFocus((e) => {
+      if (areSameExtensions(extension.identifier, e.identifier)) {
+        data.actionbar.setFocusable(true);
+      }
+    }, this, data.extensionDisposables);
+    this.extensionViewState.onBlur((e) => {
+      if (areSameExtensions(extension.identifier, e.identifier)) {
+        data.actionbar.setFocusable(false);
+      }
+    }, this, data.extensionDisposables);
+  }
+  disposeElement(extension, index, data) {
+    data.extensionDisposables = dispose(data.extensionDisposables);
+  }
+  disposeTemplate(data) {
+    data.extensionDisposables = dispose(data.extensionDisposables);
+    data.disposables = dispose(data.disposables);
+  }
+};
+Renderer = __decorateClass([
+  __decorateParam(2, IInstantiationService),
+  __decorateParam(3, INotificationService),
+  __decorateParam(4, IExtensionService),
+  __decorateParam(5, IExtensionsWorkbenchService),
+  __decorateParam(6, IWorkbenchExtensionEnablementService),
+  __decorateParam(7, IContextMenuService)
+], Renderer);
+registerThemingParticipant((theme, collector) => {
+  const verifiedPublisherIconColor = theme.getColor(extensionVerifiedPublisherIconColor);
+  if (verifiedPublisherIconColor) {
+    const disabledVerifiedPublisherIconColor = verifiedPublisherIconColor.transparent(0.5).makeOpaque(WORKBENCH_BACKGROUND(theme));
+    collector.addRule(`.extensions-list .monaco-list .monaco-list-row.disabled:not(.selected) .author .verified-publisher ${ThemeIcon.asCSSSelector(verifiedPublisherIcon)} { color: ${disabledVerifiedPublisherIconColor}; }`);
+  }
+});
+export {
+  Delegate,
+  Renderer
+};
+//# sourceMappingURL=extensionsList.js.map

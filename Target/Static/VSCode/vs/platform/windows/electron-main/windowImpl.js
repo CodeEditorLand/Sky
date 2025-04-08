@@ -1,5 +1,1086 @@
-var z=Object.defineProperty;var $=Object.getOwnPropertyDescriptor;var P=(v,p,e,i)=>{for(var t=i>1?void 0:i?$(p,e):p,n=v.length-1,o;n>=0;n--)(o=v[n])&&(t=(i?o(p,e,t):o(t))||t);return i&&t&&z(p,e,t),t},r=(v,p)=>(e,i)=>p(e,i,v);import u from"electron";import{DeferredPromise as G,RunOnceScheduler as T,timeout as Z,Delayer as Y}from"../../../base/common/async.js";import{CancellationToken as b}from"../../../base/common/cancellation.js";import{toErrorMessage as J}from"../../../base/common/errorMessage.js";import{Emitter as m,Event as l}from"../../../base/common/event.js";import{Disposable as q}from"../../../base/common/lifecycle.js";import{FileAccess as N,Schemas as _}from"../../../base/common/network.js";import{getMarks as K,mark as S}from"../../../base/common/performance.js";import{isBigSurOrNewer as X,isMacintosh as s,isWindows as F}from"../../../base/common/platform.js";import{URI as B}from"../../../base/common/uri.js";import{localize as a}from"../../../nls.js";import{release as Q}from"os";import"../../action/common/action.js";import{IBackupMainService as ee}from"../../backup/electron-main/backup.js";import{IConfigurationService as ie}from"../../configuration/common/configuration.js";import{IDialogMainService as te}from"../../dialogs/electron-main/dialogMainService.js";import"../../environment/common/argv.js";import{IEnvironmentMainService as ne}from"../../environment/electron-main/environmentMainService.js";import{isLaunchedFromCli as L}from"../../environment/node/argvHelper.js";import{IFileService as oe}from"../../files/common/files.js";import{ILifecycleMainService as re}from"../../lifecycle/electron-main/lifecycleMainService.js";import{ILogService as se}from"../../log/common/log.js";import{IProductService as ae}from"../../product/common/productService.js";import{IProtocolMainService as de}from"../../protocol/electron-main/protocol.js";import{resolveMarketplaceHeaders as le}from"../../externalServices/common/marketplace.js";import{IApplicationStorageMainService as ce,IStorageMainService as he}from"../../storage/electron-main/storageMainService.js";import{ITelemetryService as ue}from"../../telemetry/common/telemetry.js";import{ThemeIcon as pe}from"../../../base/common/themables.js";import{IThemeMainService as me}from"../../theme/electron-main/themeMainService.js";import{getMenuBarVisibility as ve,hasNativeTitlebar as fe,useNativeFullScreen as we,useWindowControlsOverlay as O,DEFAULT_CUSTOM_TITLEBAR_HEIGHT as Se,TitlebarStyle as ge}from"../../window/common/window.js";import{defaultBrowserWindowOptions as ye,getAllWindowsExcludingOffscreen as be,IWindowsMainService as Ce,OpenContext as Ee,WindowStateValidator as _e}from"./windows.js";import{isSingleFolderWorkspaceIdentifier as R,isWorkspaceIdentifier as H,toWorkspaceIdentifier as Ie}from"../../workspace/common/workspace.js";import{IWorkspacesManagementMainService as Me}from"../../workspaces/electron-main/workspacesManagementMainService.js";import{WindowMode as h,WindowError as c,LoadReason as I,defaultWindowState as M}from"../../window/electron-main/window.js";import{IPolicyService as ke}from"../../policy/common/policy.js";import"../../userDataProfile/common/userDataProfile.js";import{IStateService as xe}from"../../state/node/state.js";import{IUserDataProfilesMainService as We}from"../../userDataProfile/electron-main/userDataProfile.js";import{ILoggerMainService as De}from"../../log/electron-main/loggerService.js";import{IInstantiationService as Pe}from"../../instantiation/common/instantiation.js";import{VSBuffer as Te}from"../../../base/common/buffer.js";import{errorHandler as Ne}from"../../../base/common/errors.js";var Fe=(i=>(i[i.NONE=0]="NONE",i[i.NAVIGATING=1]="NAVIGATING",i[i.READY=2]="READY",i))(Fe||{});class k extends q{constructor(e,i,t,n){super();this.configurationService=e;this.stateService=i;this.environmentMainService=t;this.logService=n}_onDidClose=this._register(new m);onDidClose=this._onDidClose.event;_onDidMaximize=this._register(new m);onDidMaximize=this._onDidMaximize.event;_onDidUnmaximize=this._register(new m);onDidUnmaximize=this._onDidUnmaximize.event;_onDidTriggerSystemContextMenu=this._register(new m);onDidTriggerSystemContextMenu=this._onDidTriggerSystemContextMenu.event;_onDidEnterFullScreen=this._register(new m);onDidEnterFullScreen=this._onDidEnterFullScreen.event;_onDidLeaveFullScreen=this._register(new m);onDidLeaveFullScreen=this._onDidLeaveFullScreen.event;_lastFocusTime=Date.now();get lastFocusTime(){return this._lastFocusTime}_win=null;get win(){return this._win}setWin(e,i){this._win=e,this._register(l.fromNodeEventEmitter(e,"maximize")(()=>this._onDidMaximize.fire())),this._register(l.fromNodeEventEmitter(e,"unmaximize")(()=>this._onDidUnmaximize.fire())),this._register(l.fromNodeEventEmitter(e,"closed")(()=>{this._onDidClose.fire(),this.dispose()})),this._register(l.fromNodeEventEmitter(e,"focus")(()=>{this._lastFocusTime=Date.now()})),this._register(l.fromNodeEventEmitter(this._win,"enter-full-screen")(()=>this._onDidEnterFullScreen.fire())),this._register(l.fromNodeEventEmitter(this._win,"leave-full-screen")(()=>this._onDidLeaveFullScreen.fire()));const t=!fe(this.configurationService,i?.titleBarStyle==="hidden"?ge.CUSTOM:void 0);if(s&&t&&e.setSheetOffset(X(Q())?28:22),t&&O(this.configurationService)){const n=this.stateService.getItem(k.windowControlHeightStateStorageKey);n?this.updateWindowControls({height:n}):this.updateWindowControls({height:Se})}F&&t&&this._register(l.fromNodeEventEmitter(e,"system-context-menu",(n,o)=>({event:n,point:o}))(n=>{const[o,d]=e.getPosition(),C=u.screen.screenToDipPoint(n.point),E=Math.floor(C.x)-o,y=Math.floor(C.y)-d;!(E>30&&y>=0&&y<=Math.max(e.getBounds().height*.15,35))||(n.event.preventDefault(),this._onDidTriggerSystemContextMenu.fire({x:E,y}))})),this.environmentMainService.args["open-devtools"]===!0&&e.webContents.openDevTools(),s&&(this._register(this.onDidEnterFullScreen(()=>{this.joinNativeFullScreenTransition?.complete(!0)})),this._register(this.onDidLeaveFullScreen(()=>{this.joinNativeFullScreenTransition?.complete(!0)})))}applyState(e,i=u.screen.getAllDisplays().length>0){const t=this.configurationService.getValue("window"),n=s&&t?.nativeTabs===!0;(s||F)&&i&&(!n||be().length===1)&&[e.width,e.height,e.x,e.y].every(o=>typeof o=="number")&&this._win?.setBounds({width:e.width,height:e.height,x:e.x,y:e.y}),(e.mode===h.Maximized||e.mode===h.Fullscreen)&&(this._win?.maximize(),e.mode===h.Fullscreen&&this.setFullScreen(!0,!0),this._win?.show())}representedFilename;setRepresentedFilename(e){s?this.win?.setRepresentedFilename(e):this.representedFilename=e}getRepresentedFilename(){return s?this.win?.getRepresentedFilename():this.representedFilename}documentEdited;setDocumentEdited(e){s&&this.win?.setDocumentEdited(e),this.documentEdited=e}isDocumentEdited(){return s?!!this.win?.isDocumentEdited():!!this.documentEdited}focus(e){s&&e?.force&&u.app.focus({steal:!0});const i=this.win;i&&(i.isMinimized()&&i.restore(),i.focus())}static windowControlHeightStateStorageKey="windowControlHeight";updateWindowControls(e){const i=this.win;if(i){if(e.height&&this.stateService.setItem(g.windowControlHeightStateStorageKey,e.height),!s&&O(this.configurationService))i.setTitleBarOverlay({color:e.backgroundColor?.trim()===""?void 0:e.backgroundColor,symbolColor:e.foregroundColor?.trim()===""?void 0:e.foregroundColor,height:e.height?e.height-1:void 0});else if(s&&e.height!==void 0){const t=Math.floor((e.height-16)/2);t?i.setWindowButtonPosition({x:t+1,y:t}):i.setWindowButtonPosition(null)}}}transientIsNativeFullScreen=void 0;joinNativeFullScreenTransition=void 0;toggleFullScreen(){this.setFullScreen(!this.isFullScreen,!1)}setFullScreen(e,i){we(this.configurationService)?this.setNativeFullScreen(e,i):this.setSimpleFullScreen(e)}get isFullScreen(){if(s&&typeof this.transientIsNativeFullScreen=="boolean")return this.transientIsNativeFullScreen;const e=this.win,i=e?.isFullScreen(),t=e?.isSimpleFullScreen();return!!(i||t)}setNativeFullScreen(e,i){const t=this.win;t?.isSimpleFullScreen()&&t?.setSimpleFullScreen(!1),this.doSetNativeFullScreen(e,i)}doSetNativeFullScreen(e,i){if(s){this.transientIsNativeFullScreen=e;const n=this.joinNativeFullScreenTransition=new G;(async()=>{const o=await Promise.race([n.p,Z(1e4).then(()=>!1)]);this.joinNativeFullScreenTransition===n&&(this.transientIsNativeFullScreen=void 0,this.joinNativeFullScreenTransition=void 0,!o&&e&&i&&this.win&&!this.win.isFullScreen()&&(this.logService.warn("window: native macOS fullscreen transition did not happen within 10s from restoring"),this._onDidLeaveFullScreen.fire()))})()}this.win?.setFullScreen(e)}setSimpleFullScreen(e){const i=this.win;i?.isFullScreen()&&this.doSetNativeFullScreen(!1,!1),i?.setSimpleFullScreen(e),i?.webContents.focus()}dispose(){super.dispose(),this._win=null}}let g=class extends k{constructor(e,i,t,n,o,d,C,E,y,x,Le,Oe,Re,He,Ae,Ve,je,A,Ue,V,j){super(x,V,n,i);this.loggerMainService=t;this.policyService=o;this.userDataProfilesService=d;this.fileService=C;this.applicationStorageMainService=E;this.storageMainService=y;this.themeMainService=Le;this.workspacesManagementMainService=Oe;this.backupMainService=Re;this.telemetryService=He;this.dialogMainService=Ae;this.lifecycleMainService=Ve;this.productService=je;this.windowsMainService=Ue;{this.configObjectUrl=this._register(A.createIPCObjectUrl());const[W,U]=this.restoreWindowState(e.state);this.windowState=W,this.logService.trace("window#ctor: using window state",W);const D=j.invokeFunction(ye,this.windowState,void 0,{preload:N.asFileUri("vs/base/parts/sandbox/electron-sandbox/preload.js").fsPath,additionalArguments:[`--vscode-window-config=${this.configObjectUrl.resource.toString()}`],v8CacheOptions:this.environmentMainService.useCodeCache?"bypassHeatCheck":"none"});S("code/willCreateCodeBrowserWindow"),this._win=new u.BrowserWindow(D),S("code/didCreateCodeBrowserWindow"),this._id=this._win.id,this.setWin(this._win,D),this.applyState(this.windowState,U),this._lastFocusTime=Date.now()}let f=parseInt(this.environmentMainService.args["unresponsive-sample-interval"]||"1000"),w=parseInt(this.environmentMainService.args["unresponsive-sample-period"]||"15000");(f<=0||w<=0||f>w)&&(this.logService.warn(`Invalid unresponsive sample interval (${f}ms) or period (${w}ms), using defaults.`),f=1e3,w=15e3),this.jsCallStackMap=new Map,this.jsCallStackEffectiveSampleCount=Math.round(f/w),this.jsCallStackCollector=this._register(new Y(f)),this.jsCallStackCollectorStopScheduler=this._register(new T(()=>{this.stopCollectingJScallStacks()},w)),this.onConfigurationUpdated(),this.createTouchBar(),this.registerListeners()}_onWillLoad=this._register(new m);onWillLoad=this._onWillLoad.event;_onDidSignalReady=this._register(new m);onDidSignalReady=this._onDidSignalReady.event;_onDidDestroy=this._register(new m);onDidDestroy=this._onDidDestroy.event;_id;get id(){return this._id}_win;get backupPath(){return this._config?.backupPath}get openedWorkspace(){return this._config?.workspace}get profile(){if(!this.config)return;const e=this.userDataProfilesService.profiles.find(i=>i.id===this.config?.profiles.profile.id);return this.isExtensionDevelopmentHost&&e?e:this.userDataProfilesService.getProfileForWorkspace(this.config.workspace??Ie(this.backupPath,this.isExtensionDevelopmentHost))??this.userDataProfilesService.defaultProfile}get remoteAuthority(){return this._config?.remoteAuthority}_config;get config(){return this._config}get isExtensionDevelopmentHost(){return!!this._config?.extensionDevelopmentPath}get isExtensionTestHost(){return!!this._config?.extensionTestsPath}get isExtensionDevelopmentTestFromCli(){return this.isExtensionDevelopmentHost&&this.isExtensionTestHost&&!this._config?.debugId}windowState;currentMenuBarVisibility;whenReadyCallbacks=[];touchBarGroups=[];currentHttpProxy=void 0;currentNoProxy=void 0;customZoomLevel=void 0;configObjectUrl;pendingLoadConfig;wasLoaded=!1;jsCallStackMap;jsCallStackEffectiveSampleCount;jsCallStackCollector;jsCallStackCollectorStopScheduler;readyState=0;setReady(){for(this.logService.trace(`window#load: window reported ready (id: ${this._id})`),this.readyState=2;this.whenReadyCallbacks.length;)this.whenReadyCallbacks.pop()(this);this._onDidSignalReady.fire()}ready(){return new Promise(e=>{if(this.isReady)return e(this);this.whenReadyCallbacks.push(e)})}get isReady(){return this.readyState===2}get whenClosedOrLoaded(){return new Promise(e=>{function i(){t.dispose(),n.dispose(),e()}const t=this.onDidClose(()=>i()),n=this.onWillLoad(()=>i())})}registerListeners(){this._register(l.fromNodeEventEmitter(this._win,"unresponsive")(()=>this.onWindowError(c.UNRESPONSIVE))),this._register(l.fromNodeEventEmitter(this._win,"responsive")(()=>this.onWindowError(c.RESPONSIVE))),this._register(l.fromNodeEventEmitter(this._win.webContents,"render-process-gone",(i,t)=>t)(i=>this.onWindowError(c.PROCESS_GONE,{...i}))),this._register(l.fromNodeEventEmitter(this._win.webContents,"did-fail-load",(i,t,n)=>({exitCode:t,reason:n}))(({exitCode:i,reason:t})=>this.onWindowError(c.LOAD,{reason:t,exitCode:i}))),this._register(l.fromNodeEventEmitter(this._win.webContents,"will-prevent-unload")(i=>i.preventDefault())),this._register(l.fromNodeEventEmitter(this._win.webContents,"did-finish-load")(()=>{this.pendingLoadConfig&&(this._config=this.pendingLoadConfig,this.pendingLoadConfig=void 0)})),this._register(this.onDidMaximize(()=>{this._config&&(this._config.maximized=!0)})),this._register(this.onDidUnmaximize(()=>{this._config&&(this._config.maximized=!1)})),this._register(this.onDidEnterFullScreen(()=>{this.sendWhenReady("vscode:enterFullScreen",b.None)})),this._register(this.onDidLeaveFullScreen(()=>{this.sendWhenReady("vscode:leaveFullScreen",b.None)})),this._register(this.configurationService.onDidChangeConfiguration(i=>this.onConfigurationUpdated(i))),this._register(this.workspacesManagementMainService.onDidDeleteUntitledWorkspace(i=>this.onDidDeleteUntitledWorkspace(i)));const e=["https://marketplace.visualstudio.com/*","https://*.vsassets.io/*"];this._win.webContents.session.webRequest.onBeforeSendHeaders({urls:e},async(i,t)=>{const n=await this.getMarketplaceHeaders();t({cancel:!1,requestHeaders:Object.assign(i.requestHeaders,n)})})}marketplaceHeadersPromise;getMarketplaceHeaders(){return this.marketplaceHeadersPromise||(this.marketplaceHeadersPromise=le(this.productService.version,this.productService,this.environmentMainService,this.configurationService,this.fileService,this.applicationStorageMainService,this.telemetryService)),this.marketplaceHeadersPromise}async onWindowError(e,i){switch(e){case c.PROCESS_GONE:this.logService.error(`CodeWindow: renderer process gone (reason: ${i?.reason||"<unknown>"}, code: ${i?.exitCode||"<unknown>"})`);break;case c.UNRESPONSIVE:this.logService.error("CodeWindow: detected unresponsive");break;case c.RESPONSIVE:this.logService.error("CodeWindow: recovered from unresponsive");break;case c.LOAD:this.logService.error(`CodeWindow: failed to load (reason: ${i?.reason||"<unknown>"}, code: ${i?.exitCode||"<unknown>"})`);break}switch(this.telemetryService.publicLog2("windowerror",{type:e,reason:i?.reason,code:i?.exitCode}),e){case c.UNRESPONSIVE:case c.PROCESS_GONE:if(this.isExtensionDevelopmentTestFromCli){this.lifecycleMainService.kill(1);return}if(this.environmentMainService.args["enable-smoke-test-driver"]){await this.destroyWindow(!1,!1),this.lifecycleMainService.quit();return}if(e===c.UNRESPONSIVE){if(this.isExtensionDevelopmentHost||this.isExtensionTestHost||this._win&&this._win.webContents&&this._win.webContents.isDevToolsOpened())return;this.jsCallStackCollector.trigger(()=>this.startCollectingJScallStacks()),this.jsCallStackCollectorStopScheduler.schedule();const{response:t,checkboxChecked:n}=await this.dialogMainService.showMessageBox({type:"warning",buttons:[a({key:"reopen",comment:["&& denotes a mnemonic"]},"&&Reopen"),a({key:"close",comment:["&& denotes a mnemonic"]},"&&Close"),a({key:"wait",comment:["&& denotes a mnemonic"]},"&&Keep Waiting")],message:a("appStalled","The window is not responding"),detail:a("appStalledDetail","You can reopen or close the window or keep waiting."),checkboxLabel:this._config?.workspace?a("doNotRestoreEditors","Don't restore editors"):void 0},this._win);if(t!==2){const o=t===0;this.stopCollectingJScallStacks(),await this.destroyWindow(o,n)}}else if(e===c.PROCESS_GONE){let t;i?t=a("appGoneDetails","The window terminated unexpectedly (reason: '{0}', code: '{1}')",i.reason,i.exitCode??"<unknown>"):t=a("appGone","The window terminated unexpectedly");const{response:n,checkboxChecked:o}=await this.dialogMainService.showMessageBox({type:"warning",buttons:[this._config?.workspace?a({key:"reopen",comment:["&& denotes a mnemonic"]},"&&Reopen"):a({key:"newWindow",comment:["&& denotes a mnemonic"]},"&&New Window"),a({key:"close",comment:["&& denotes a mnemonic"]},"&&Close")],message:t,detail:this._config?.workspace?a("appGoneDetailWorkspace","We are sorry for the inconvenience. You can reopen the window to continue where you left off."):a("appGoneDetailEmptyWindow","We are sorry for the inconvenience. You can open a new empty window to start again."),checkboxLabel:this._config?.workspace?a("doNotRestoreEditors","Don't restore editors"):void 0},this._win),d=n===0;await this.destroyWindow(d,o)}break;case c.RESPONSIVE:this.stopCollectingJScallStacks();break}}async destroyWindow(e,i){const t=this._config?.workspace;if(i&&t)try{const n=this.storageMainService.workspaceStorage(t);await n.init(),n.delete("memento/workbench.parts.editor"),await n.close()}catch(n){this.logService.error(n)}this._onDidDestroy.fire();try{if(e&&this._config){let n,o;R(t)?n={folderUri:t.uri}:H(t)?n={workspaceUri:t.configPath}:o=!0,(await this.windowsMainService.open({context:Ee.API,userEnv:this._config.userEnv,cli:{...this.environmentMainService.args,_:[]},urisToOpen:n?[n]:void 0,forceEmpty:o,forceNewWindow:!0,remoteAuthority:this.remoteAuthority})).at(0)?.focus()}}finally{this._win?.destroy()}}onDidDeleteUntitledWorkspace(e){this._config?.workspace?.id===e.id&&(this._config.workspace=void 0)}onConfigurationUpdated(e){if(!e||e.affectsConfiguration("window.menuBarVisibility")){const i=this.getMenuBarVisibility();i!==this.currentMenuBarVisibility&&(this.currentMenuBarVisibility=i,this.setMenuBarVisibility(i))}if(!e||e.affectsConfiguration("http.proxy")||e.affectsConfiguration("http.noProxy")){let t=(this.configurationService.inspect("http.proxy").userLocalValue||"").trim()||(process.env.https_proxy||process.env.HTTPS_PROXY||process.env.http_proxy||process.env.HTTP_PROXY||"").trim()||void 0;if(t?.indexOf("@")!==-1){const o=B.parse(t),d=o.authority.indexOf("@");d!==-1&&(t=o.with({authority:o.authority.substring(d+1)}).toString())}t?.endsWith("/")&&(t=t.substr(0,t.length-1));const n=(this.configurationService.getValue("http.noProxy")||[]).map(o=>o.trim()).join(",")||(process.env.no_proxy||process.env.NO_PROXY||"").trim()||void 0;if((t||"").indexOf("@")===-1&&(t!==this.currentHttpProxy||n!==this.currentNoProxy)){this.currentHttpProxy=t,this.currentNoProxy=n;const o=t||"",d=n?`${n},<local>`:"<local>";this.logService.trace(`Setting proxy to '${o}', bypassing '${d}'`),this._win.webContents.session.setProxy({proxyRules:o,proxyBypassRules:d,pacScript:""}),u.app.setProxy({proxyRules:o,proxyBypassRules:d,pacScript:""})}}}addTabbedWindow(e){s&&e.win&&this._win.addTabbedWindow(e.win)}load(e,i=Object.create(null)){this.logService.trace(`window#load: attempt to load window (id: ${this._id})`),this.isDocumentEdited()&&(!i.isReload||!this.backupMainService.isHotExitEnabled())&&this.setDocumentEdited(!1),i.isReload||(this.getRepresentedFilename()&&this.setRepresentedFilename(""),this._win.setTitle(this.productService.nameLong)),this.updateConfiguration(e,i),this.readyState===0?this._config=e:this.pendingLoadConfig=e,this.readyState=1,this._win.loadURL(N.asBrowserUri(`vs/code/electron-sandbox/workbench/workbench${this.environmentMainService.isBuilt?"":"-dev"}.html`).toString(!0));const t=this.wasLoaded;this.wasLoaded=!0,!this.environmentMainService.isBuilt&&!this.environmentMainService.extensionTestsLocationURI&&this._register(new T(()=>{this._win&&!this._win.isVisible()&&!this._win.isMinimized()&&(this._win.show(),this.focus({force:!0}),this._win.webContents.openDevTools())},1e4)).schedule(),this._onWillLoad.fire({workspace:e.workspace,reason:i.isReload?I.RELOAD:t?I.LOAD:I.INITIAL})}updateConfiguration(e,i){const t=(this._config??this.pendingLoadConfig)?.userEnv;if(t){const n=L(t)&&!L(e.userEnv),o=this.isExtensionDevelopmentHost;(n||o)&&(e.userEnv={...t,...e.userEnv})}process.env.CHROME_CRASHPAD_PIPE_NAME&&Object.assign(e.userEnv,{CHROME_CRASHPAD_PIPE_NAME:process.env.CHROME_CRASHPAD_PIPE_NAME}),i.disableExtensions!==void 0&&(e["disable-extensions"]=i.disableExtensions);try{e.handle=Te.wrap(this._win.getNativeWindowHandle())}catch(n){this.logService.error(`Error getting native window handle: ${n}`)}e.fullscreen=this.isFullScreen,e.maximized=this._win.isMaximized(),e.partsSplash=this.themeMainService.getWindowSplash(e.workspace),e.zoomLevel=this.getZoomLevel(),e.isCustomZoomLevel=typeof this.customZoomLevel=="number",e.isCustomZoomLevel&&e.partsSplash&&(e.partsSplash.zoomLevel=e.zoomLevel),S("code/willOpenNewWindow"),e.perfMarks=K(),this.configObjectUrl.update(e)}async reload(e){const i=Object.assign({},this._config);i.workspace=await this.validateWorkspaceBeforeReload(i),delete i.filesToOpenOrCreate,delete i.filesToDiff,delete i.filesToMerge,delete i.filesToWait,this.isExtensionDevelopmentHost&&e&&(i.verbose=e.verbose,i.debugId=e.debugId,i.extensionEnvironment=e.extensionEnvironment,i["inspect-extensions"]=e["inspect-extensions"],i["inspect-brk-extensions"]=e["inspect-brk-extensions"],i["extensions-dir"]=e["extensions-dir"]),i.accessibilitySupport=u.app.isAccessibilitySupportEnabled(),i.isInitialStartup=!1,i.policiesData=this.policyService.serialize(),i.continueOn=this.environmentMainService.continueOn,i.profiles={all:this.userDataProfilesService.profiles,profile:this.profile||this.userDataProfilesService.defaultProfile,home:this.userDataProfilesService.profilesHome},i.logLevel=this.loggerMainService.getLogLevel(),i.loggers=this.loggerMainService.getGlobalLoggers(),this.load(i,{isReload:!0,disableExtensions:e?.["disable-extensions"]})}async validateWorkspaceBeforeReload(e){if(H(e.workspace)){const i=e.workspace.configPath;if(i.scheme===_.file&&!await this.fileService.exists(i))return}else if(R(e.workspace)){const i=e.workspace.uri;if(i.scheme===_.file&&!await this.fileService.exists(i))return}return e.workspace}serializeWindowState(){if(!this._win)return M();if(this.isFullScreen){let t;try{t=u.screen.getDisplayMatching(this.getBounds())}catch{}const n=M();return{mode:h.Fullscreen,display:t?t.id:void 0,width:this.windowState.width||n.width,height:this.windowState.height||n.height,x:this.windowState.x||0,y:this.windowState.y||0,zoomLevel:this.customZoomLevel}}const e=Object.create(null);let i;if(!s&&this._win.isMaximized()?i=h.Maximized:i=h.Normal,i===h.Maximized?e.mode=h.Maximized:e.mode=h.Normal,i===h.Normal||i===h.Maximized){let t;i===h.Normal?t=this.getBounds():t=this._win.getNormalBounds(),e.x=t.x,e.y=t.y,e.width=t.width,e.height=t.height}return e.zoomLevel=this.customZoomLevel,e}restoreWindowState(e){S("code/willRestoreCodeWindowState");let i=!1;if(e){this.customZoomLevel=e.zoomLevel;try{const t=u.screen.getAllDisplays();i=t.length>1,e=_e.validateWindowState(this.logService,e,t)}catch(t){this.logService.warn(`Unexpected error validating window state: ${t}
-${t.stack}`)}}return S("code/didRestoreCodeWindowState"),[e||M(),i]}getBounds(){const[e,i]=this._win.getPosition(),[t,n]=this._win.getSize();return{x:e,y:i,width:t,height:n}}setFullScreen(e,i){super.setFullScreen(e,i),this.sendWhenReady(e?"vscode:enterFullScreen":"vscode:leaveFullScreen",b.None),this.currentMenuBarVisibility&&this.setMenuBarVisibility(this.currentMenuBarVisibility,!1)}getMenuBarVisibility(){let e=ve(this.configurationService);return["visible","toggle","hidden"].indexOf(e)<0&&(e="classic"),e}setMenuBarVisibility(e,i=!0){s||(e==="toggle"&&i&&this.send("vscode:showInfoMessage",a("hiddenMenuBar","You can still access the menu bar by pressing the Alt-key.")),e==="hidden"?setTimeout(()=>{this.doSetMenuBarVisibility(e)}):this.doSetMenuBarVisibility(e))}doSetMenuBarVisibility(e){const i=this.isFullScreen;switch(e){case"classic":this._win.setMenuBarVisibility(!i),this._win.autoHideMenuBar=i;break;case"visible":this._win.setMenuBarVisibility(!0),this._win.autoHideMenuBar=!1;break;case"toggle":this._win.setMenuBarVisibility(!1),this._win.autoHideMenuBar=!0;break;case"hidden":this._win.setMenuBarVisibility(!1),this._win.autoHideMenuBar=!1;break}}notifyZoomLevel(e){this.customZoomLevel=e}getZoomLevel(){return typeof this.customZoomLevel=="number"?this.customZoomLevel:this.configurationService.getValue("window")?.zoomLevel}close(){this._win?.close()}sendWhenReady(e,i,...t){this.isReady?this.send(e,...t):this.ready().then(()=>{i.isCancellationRequested||this.send(e,...t)})}send(e,...i){if(this._win){if(this._win.isDestroyed()||this._win.webContents.isDestroyed()){this.logService.warn(`Sending IPC message to channel '${e}' for window that is destroyed`);return}try{this._win.webContents.send(e,...i)}catch(t){this.logService.warn(`Error sending IPC message to channel '${e}' of window ${this._id}: ${J(t)}`)}}}updateTouchBar(e){s&&this.touchBarGroups.forEach((i,t)=>{const n=e[t];i.segments=this.createTouchBarGroupSegments(n)})}createTouchBar(){if(s){for(let e=0;e<10;e++){const i=this.createTouchBarGroup();this.touchBarGroups.push(i)}this._win.setTouchBar(new u.TouchBar({items:this.touchBarGroups}))}}createTouchBarGroup(e=[]){const i=this.createTouchBarGroupSegments(e),t=new u.TouchBar.TouchBarSegmentedControl({segments:i,mode:"buttons",segmentStyle:"automatic",change:n=>{this.sendWhenReady("vscode:runAction",b.None,{id:t.segments[n].id,from:"touchbar"})}});return t}createTouchBarGroupSegments(e=[]){return e.map(t=>{let n;t.icon&&!pe.isThemeIcon(t.icon)&&t.icon?.dark?.scheme===_.file&&(n=u.nativeImage.createFromPath(B.revive(t.icon.dark).fsPath),n.isEmpty()&&(n=void 0));let o;return typeof t.title=="string"?o=t.title:o=t.title.value,{id:t.id,label:n?void 0:o,icon:n}})}async startCollectingJScallStacks(){if(!this.jsCallStackCollector.isTriggered()){const e=await this._win.webContents.mainFrame.collectJavaScriptCallStack();if(e){const i=this.jsCallStackMap.get(e)||0;this.jsCallStackMap.set(e,i+1)}this.jsCallStackCollector.trigger(()=>this.startCollectingJScallStacks())}}stopCollectingJScallStacks(){if(this.jsCallStackCollectorStopScheduler.cancel(),this.jsCallStackCollector.cancel(),this.jsCallStackMap.size){let e=`CodeWindow unresponsive samples:
-`,i=0;const t=Array.from(this.jsCallStackMap.entries()).sort((n,o)=>o[1]-n[1]);for(const[n,o]of t){if(i+=o,Math.round(o*100/this.jsCallStackEffectiveSampleCount)>20){const d=new Be(n,this.id,this.win?.webContents.getOSProcessId());Ne.onUnexpectedError(d)}e+=`<${o}> ${n}
-`}e+=`Total Samples: ${i}
-`,e+="For full overview of the unresponsive period, capture cpu profile via https://aka.ms/vscode-tracing-cpu-profile",this.logService.error(e)}this.jsCallStackMap.clear()}matches(e){return this._win?.webContents.id===e.id}dispose(){super.dispose(),this.loggerMainService.deregisterLoggers(this.id)}};g=P([r(1,se),r(2,De),r(3,ne),r(4,ke),r(5,We),r(6,oe),r(7,ce),r(8,he),r(9,ie),r(10,me),r(11,Me),r(12,ee),r(13,ue),r(14,te),r(15,re),r(16,ae),r(17,de),r(18,Ce),r(19,xe),r(20,Pe)],g);class Be extends Error{constructor(p,e,i=0){const t=Error.stackTraceLimit;Error.stackTraceLimit=0,super(`UnresponsiveSampleError: from window with ID ${e} belonging to process with pid ${i}`),Error.stackTraceLimit=t,this.name="UnresponsiveSampleError",this.stack=p}}export{k as BaseWindow,g as CodeWindow};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import electron, { BrowserWindowConstructorOptions } from "electron";
+import { DeferredPromise, RunOnceScheduler, timeout, Delayer } from "../../../base/common/async.js";
+import { CancellationToken } from "../../../base/common/cancellation.js";
+import { toErrorMessage } from "../../../base/common/errorMessage.js";
+import { Emitter, Event } from "../../../base/common/event.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { FileAccess, Schemas } from "../../../base/common/network.js";
+import { getMarks, mark } from "../../../base/common/performance.js";
+import { isBigSurOrNewer, isMacintosh, isWindows } from "../../../base/common/platform.js";
+import { URI } from "../../../base/common/uri.js";
+import { localize } from "../../../nls.js";
+import { release } from "os";
+import { ISerializableCommandAction } from "../../action/common/action.js";
+import { IBackupMainService } from "../../backup/electron-main/backup.js";
+import { IConfigurationChangeEvent, IConfigurationService } from "../../configuration/common/configuration.js";
+import { IDialogMainService } from "../../dialogs/electron-main/dialogMainService.js";
+import { NativeParsedArgs } from "../../environment/common/argv.js";
+import { IEnvironmentMainService } from "../../environment/electron-main/environmentMainService.js";
+import { isLaunchedFromCli } from "../../environment/node/argvHelper.js";
+import { IFileService } from "../../files/common/files.js";
+import { ILifecycleMainService } from "../../lifecycle/electron-main/lifecycleMainService.js";
+import { ILogService } from "../../log/common/log.js";
+import { IProductService } from "../../product/common/productService.js";
+import { IIPCObjectUrl, IProtocolMainService } from "../../protocol/electron-main/protocol.js";
+import { resolveMarketplaceHeaders } from "../../externalServices/common/marketplace.js";
+import { IApplicationStorageMainService, IStorageMainService } from "../../storage/electron-main/storageMainService.js";
+import { ITelemetryService } from "../../telemetry/common/telemetry.js";
+import { ThemeIcon } from "../../../base/common/themables.js";
+import { IThemeMainService } from "../../theme/electron-main/themeMainService.js";
+import { getMenuBarVisibility, IFolderToOpen, INativeWindowConfiguration, IWindowSettings, IWorkspaceToOpen, MenuBarVisibility, hasNativeTitlebar, useNativeFullScreen, useWindowControlsOverlay, DEFAULT_CUSTOM_TITLEBAR_HEIGHT, TitlebarStyle } from "../../window/common/window.js";
+import { defaultBrowserWindowOptions, getAllWindowsExcludingOffscreen, IWindowsMainService, OpenContext, WindowStateValidator } from "./windows.js";
+import { ISingleFolderWorkspaceIdentifier, IWorkspaceIdentifier, isSingleFolderWorkspaceIdentifier, isWorkspaceIdentifier, toWorkspaceIdentifier } from "../../workspace/common/workspace.js";
+import { IWorkspacesManagementMainService } from "../../workspaces/electron-main/workspacesManagementMainService.js";
+import { IWindowState, ICodeWindow, ILoadEvent, WindowMode, WindowError, LoadReason, defaultWindowState, IBaseWindow } from "../../window/electron-main/window.js";
+import { IPolicyService } from "../../policy/common/policy.js";
+import { IUserDataProfile } from "../../userDataProfile/common/userDataProfile.js";
+import { IStateService } from "../../state/node/state.js";
+import { IUserDataProfilesMainService } from "../../userDataProfile/electron-main/userDataProfile.js";
+import { ILoggerMainService } from "../../log/electron-main/loggerService.js";
+import { IInstantiationService } from "../../instantiation/common/instantiation.js";
+import { VSBuffer } from "../../../base/common/buffer.js";
+import { errorHandler } from "../../../base/common/errors.js";
+var ReadyState = /* @__PURE__ */ ((ReadyState2) => {
+  ReadyState2[ReadyState2["NONE"] = 0] = "NONE";
+  ReadyState2[ReadyState2["NAVIGATING"] = 1] = "NAVIGATING";
+  ReadyState2[ReadyState2["READY"] = 2] = "READY";
+  return ReadyState2;
+})(ReadyState || {});
+class BaseWindow extends Disposable {
+  constructor(configurationService, stateService, environmentMainService, logService) {
+    super();
+    this.configurationService = configurationService;
+    this.stateService = stateService;
+    this.environmentMainService = environmentMainService;
+    this.logService = logService;
+  }
+  static {
+    __name(this, "BaseWindow");
+  }
+  //#region Events
+  _onDidClose = this._register(new Emitter());
+  onDidClose = this._onDidClose.event;
+  _onDidMaximize = this._register(new Emitter());
+  onDidMaximize = this._onDidMaximize.event;
+  _onDidUnmaximize = this._register(new Emitter());
+  onDidUnmaximize = this._onDidUnmaximize.event;
+  _onDidTriggerSystemContextMenu = this._register(new Emitter());
+  onDidTriggerSystemContextMenu = this._onDidTriggerSystemContextMenu.event;
+  _onDidEnterFullScreen = this._register(new Emitter());
+  onDidEnterFullScreen = this._onDidEnterFullScreen.event;
+  _onDidLeaveFullScreen = this._register(new Emitter());
+  onDidLeaveFullScreen = this._onDidLeaveFullScreen.event;
+  _lastFocusTime = Date.now();
+  // window is shown on creation so take current time
+  get lastFocusTime() {
+    return this._lastFocusTime;
+  }
+  _win = null;
+  get win() {
+    return this._win;
+  }
+  setWin(win, options) {
+    this._win = win;
+    this._register(Event.fromNodeEventEmitter(win, "maximize")(() => this._onDidMaximize.fire()));
+    this._register(Event.fromNodeEventEmitter(win, "unmaximize")(() => this._onDidUnmaximize.fire()));
+    this._register(Event.fromNodeEventEmitter(win, "closed")(() => {
+      this._onDidClose.fire();
+      this.dispose();
+    }));
+    this._register(Event.fromNodeEventEmitter(win, "focus")(() => {
+      this._lastFocusTime = Date.now();
+    }));
+    this._register(Event.fromNodeEventEmitter(this._win, "enter-full-screen")(() => this._onDidEnterFullScreen.fire()));
+    this._register(Event.fromNodeEventEmitter(this._win, "leave-full-screen")(() => this._onDidLeaveFullScreen.fire()));
+    const useCustomTitleStyle = !hasNativeTitlebar(
+      this.configurationService,
+      options?.titleBarStyle === "hidden" ? TitlebarStyle.CUSTOM : void 0
+      /* unknown */
+    );
+    if (isMacintosh && useCustomTitleStyle) {
+      win.setSheetOffset(isBigSurOrNewer(release()) ? 28 : 22);
+    }
+    if (useCustomTitleStyle && useWindowControlsOverlay(this.configurationService)) {
+      const cachedWindowControlHeight = this.stateService.getItem(BaseWindow.windowControlHeightStateStorageKey);
+      if (cachedWindowControlHeight) {
+        this.updateWindowControls({ height: cachedWindowControlHeight });
+      } else {
+        this.updateWindowControls({ height: DEFAULT_CUSTOM_TITLEBAR_HEIGHT });
+      }
+    }
+    if (isWindows && useCustomTitleStyle) {
+      this._register(Event.fromNodeEventEmitter(win, "system-context-menu", (event, point) => ({ event, point }))((e) => {
+        const [x, y] = win.getPosition();
+        const cursorPos = electron.screen.screenToDipPoint(e.point);
+        const cx = Math.floor(cursorPos.x) - x;
+        const cy = Math.floor(cursorPos.y) - y;
+        const shouldTriggerDefaultSystemContextMenu = /* @__PURE__ */ __name(() => {
+          if (cx > 30 && cy >= 0 && cy <= Math.max(win.getBounds().height * 0.15, 35)) {
+            return false;
+          }
+          return true;
+        }, "shouldTriggerDefaultSystemContextMenu");
+        if (!shouldTriggerDefaultSystemContextMenu()) {
+          e.event.preventDefault();
+          this._onDidTriggerSystemContextMenu.fire({ x: cx, y: cy });
+        }
+      }));
+    }
+    if (this.environmentMainService.args["open-devtools"] === true) {
+      win.webContents.openDevTools();
+    }
+    if (isMacintosh) {
+      this._register(this.onDidEnterFullScreen(() => {
+        this.joinNativeFullScreenTransition?.complete(true);
+      }));
+      this._register(this.onDidLeaveFullScreen(() => {
+        this.joinNativeFullScreenTransition?.complete(true);
+      }));
+    }
+  }
+  applyState(state, hasMultipleDisplays = electron.screen.getAllDisplays().length > 0) {
+    const windowSettings = this.configurationService.getValue("window");
+    const useNativeTabs = isMacintosh && windowSettings?.nativeTabs === true;
+    if ((isMacintosh || isWindows) && hasMultipleDisplays && (!useNativeTabs || getAllWindowsExcludingOffscreen().length === 1)) {
+      if ([state.width, state.height, state.x, state.y].every((value) => typeof value === "number")) {
+        this._win?.setBounds({
+          width: state.width,
+          height: state.height,
+          x: state.x,
+          y: state.y
+        });
+      }
+    }
+    if (state.mode === WindowMode.Maximized || state.mode === WindowMode.Fullscreen) {
+      this._win?.maximize();
+      if (state.mode === WindowMode.Fullscreen) {
+        this.setFullScreen(true, true);
+      }
+      this._win?.show();
+    }
+  }
+  representedFilename;
+  setRepresentedFilename(filename) {
+    if (isMacintosh) {
+      this.win?.setRepresentedFilename(filename);
+    } else {
+      this.representedFilename = filename;
+    }
+  }
+  getRepresentedFilename() {
+    if (isMacintosh) {
+      return this.win?.getRepresentedFilename();
+    }
+    return this.representedFilename;
+  }
+  documentEdited;
+  setDocumentEdited(edited) {
+    if (isMacintosh) {
+      this.win?.setDocumentEdited(edited);
+    }
+    this.documentEdited = edited;
+  }
+  isDocumentEdited() {
+    if (isMacintosh) {
+      return Boolean(this.win?.isDocumentEdited());
+    }
+    return !!this.documentEdited;
+  }
+  focus(options) {
+    if (isMacintosh && options?.force) {
+      electron.app.focus({ steal: true });
+    }
+    const win = this.win;
+    if (!win) {
+      return;
+    }
+    if (win.isMinimized()) {
+      win.restore();
+    }
+    win.focus();
+  }
+  //#region Window Control Overlays
+  static windowControlHeightStateStorageKey = "windowControlHeight";
+  updateWindowControls(options) {
+    const win = this.win;
+    if (!win) {
+      return;
+    }
+    if (options.height) {
+      this.stateService.setItem(CodeWindow.windowControlHeightStateStorageKey, options.height);
+    }
+    if (!isMacintosh && useWindowControlsOverlay(this.configurationService)) {
+      win.setTitleBarOverlay({
+        color: options.backgroundColor?.trim() === "" ? void 0 : options.backgroundColor,
+        symbolColor: options.foregroundColor?.trim() === "" ? void 0 : options.foregroundColor,
+        height: options.height ? options.height - 1 : void 0
+        // account for window border
+      });
+    } else if (isMacintosh && options.height !== void 0) {
+      const offset = Math.floor((options.height - 16) / 2);
+      if (!offset) {
+        win.setWindowButtonPosition(null);
+      } else {
+        win.setWindowButtonPosition({ x: offset + 1, y: offset });
+      }
+    }
+  }
+  //#endregion
+  //#region Fullscreen
+  transientIsNativeFullScreen = void 0;
+  joinNativeFullScreenTransition = void 0;
+  toggleFullScreen() {
+    this.setFullScreen(!this.isFullScreen, false);
+  }
+  setFullScreen(fullscreen, fromRestore) {
+    if (useNativeFullScreen(this.configurationService)) {
+      this.setNativeFullScreen(fullscreen, fromRestore);
+    } else {
+      this.setSimpleFullScreen(fullscreen);
+    }
+  }
+  get isFullScreen() {
+    if (isMacintosh && typeof this.transientIsNativeFullScreen === "boolean") {
+      return this.transientIsNativeFullScreen;
+    }
+    const win = this.win;
+    const isFullScreen = win?.isFullScreen();
+    const isSimpleFullScreen = win?.isSimpleFullScreen();
+    return Boolean(isFullScreen || isSimpleFullScreen);
+  }
+  setNativeFullScreen(fullscreen, fromRestore) {
+    const win = this.win;
+    if (win?.isSimpleFullScreen()) {
+      win?.setSimpleFullScreen(false);
+    }
+    this.doSetNativeFullScreen(fullscreen, fromRestore);
+  }
+  doSetNativeFullScreen(fullscreen, fromRestore) {
+    if (isMacintosh) {
+      this.transientIsNativeFullScreen = fullscreen;
+      const joinNativeFullScreenTransition = this.joinNativeFullScreenTransition = new DeferredPromise();
+      (async () => {
+        const transitioned = await Promise.race([
+          joinNativeFullScreenTransition.p,
+          timeout(1e4).then(() => false)
+        ]);
+        if (this.joinNativeFullScreenTransition !== joinNativeFullScreenTransition) {
+          return;
+        }
+        this.transientIsNativeFullScreen = void 0;
+        this.joinNativeFullScreenTransition = void 0;
+        if (!transitioned && fullscreen && fromRestore && this.win && !this.win.isFullScreen()) {
+          this.logService.warn("window: native macOS fullscreen transition did not happen within 10s from restoring");
+          this._onDidLeaveFullScreen.fire();
+        }
+      })();
+    }
+    const win = this.win;
+    win?.setFullScreen(fullscreen);
+  }
+  setSimpleFullScreen(fullscreen) {
+    const win = this.win;
+    if (win?.isFullScreen()) {
+      this.doSetNativeFullScreen(false, false);
+    }
+    win?.setSimpleFullScreen(fullscreen);
+    win?.webContents.focus();
+  }
+  dispose() {
+    super.dispose();
+    this._win = null;
+  }
+}
+let CodeWindow = class extends BaseWindow {
+  constructor(config, logService, loggerMainService, environmentMainService, policyService, userDataProfilesService, fileService, applicationStorageMainService, storageMainService, configurationService, themeMainService, workspacesManagementMainService, backupMainService, telemetryService, dialogMainService, lifecycleMainService, productService, protocolMainService, windowsMainService, stateService, instantiationService) {
+    super(configurationService, stateService, environmentMainService, logService);
+    this.loggerMainService = loggerMainService;
+    this.policyService = policyService;
+    this.userDataProfilesService = userDataProfilesService;
+    this.fileService = fileService;
+    this.applicationStorageMainService = applicationStorageMainService;
+    this.storageMainService = storageMainService;
+    this.themeMainService = themeMainService;
+    this.workspacesManagementMainService = workspacesManagementMainService;
+    this.backupMainService = backupMainService;
+    this.telemetryService = telemetryService;
+    this.dialogMainService = dialogMainService;
+    this.lifecycleMainService = lifecycleMainService;
+    this.productService = productService;
+    this.windowsMainService = windowsMainService;
+    {
+      this.configObjectUrl = this._register(protocolMainService.createIPCObjectUrl());
+      const [state, hasMultipleDisplays] = this.restoreWindowState(config.state);
+      this.windowState = state;
+      this.logService.trace("window#ctor: using window state", state);
+      const options = instantiationService.invokeFunction(defaultBrowserWindowOptions, this.windowState, void 0, {
+        preload: FileAccess.asFileUri("vs/base/parts/sandbox/electron-sandbox/preload.js").fsPath,
+        additionalArguments: [`--vscode-window-config=${this.configObjectUrl.resource.toString()}`],
+        v8CacheOptions: this.environmentMainService.useCodeCache ? "bypassHeatCheck" : "none"
+      });
+      mark("code/willCreateCodeBrowserWindow");
+      this._win = new electron.BrowserWindow(options);
+      mark("code/didCreateCodeBrowserWindow");
+      this._id = this._win.id;
+      this.setWin(this._win, options);
+      this.applyState(this.windowState, hasMultipleDisplays);
+      this._lastFocusTime = Date.now();
+    }
+    let sampleInterval = parseInt(this.environmentMainService.args["unresponsive-sample-interval"] || "1000");
+    let samplePeriod = parseInt(this.environmentMainService.args["unresponsive-sample-period"] || "15000");
+    if (sampleInterval <= 0 || samplePeriod <= 0 || sampleInterval > samplePeriod) {
+      this.logService.warn(`Invalid unresponsive sample interval (${sampleInterval}ms) or period (${samplePeriod}ms), using defaults.`);
+      sampleInterval = 1e3;
+      samplePeriod = 15e3;
+    }
+    this.jsCallStackMap = /* @__PURE__ */ new Map();
+    this.jsCallStackEffectiveSampleCount = Math.round(sampleInterval / samplePeriod);
+    this.jsCallStackCollector = this._register(new Delayer(sampleInterval));
+    this.jsCallStackCollectorStopScheduler = this._register(new RunOnceScheduler(() => {
+      this.stopCollectingJScallStacks();
+    }, samplePeriod));
+    this.onConfigurationUpdated();
+    this.createTouchBar();
+    this.registerListeners();
+  }
+  static {
+    __name(this, "CodeWindow");
+  }
+  //#region Events
+  _onWillLoad = this._register(new Emitter());
+  onWillLoad = this._onWillLoad.event;
+  _onDidSignalReady = this._register(new Emitter());
+  onDidSignalReady = this._onDidSignalReady.event;
+  _onDidDestroy = this._register(new Emitter());
+  onDidDestroy = this._onDidDestroy.event;
+  //#endregion
+  //#region Properties
+  _id;
+  get id() {
+    return this._id;
+  }
+  _win;
+  get backupPath() {
+    return this._config?.backupPath;
+  }
+  get openedWorkspace() {
+    return this._config?.workspace;
+  }
+  get profile() {
+    if (!this.config) {
+      return void 0;
+    }
+    const profile = this.userDataProfilesService.profiles.find((profile2) => profile2.id === this.config?.profiles.profile.id);
+    if (this.isExtensionDevelopmentHost && profile) {
+      return profile;
+    }
+    return this.userDataProfilesService.getProfileForWorkspace(this.config.workspace ?? toWorkspaceIdentifier(this.backupPath, this.isExtensionDevelopmentHost)) ?? this.userDataProfilesService.defaultProfile;
+  }
+  get remoteAuthority() {
+    return this._config?.remoteAuthority;
+  }
+  _config;
+  get config() {
+    return this._config;
+  }
+  get isExtensionDevelopmentHost() {
+    return !!this._config?.extensionDevelopmentPath;
+  }
+  get isExtensionTestHost() {
+    return !!this._config?.extensionTestsPath;
+  }
+  get isExtensionDevelopmentTestFromCli() {
+    return this.isExtensionDevelopmentHost && this.isExtensionTestHost && !this._config?.debugId;
+  }
+  //#endregion
+  windowState;
+  currentMenuBarVisibility;
+  whenReadyCallbacks = [];
+  touchBarGroups = [];
+  currentHttpProxy = void 0;
+  currentNoProxy = void 0;
+  customZoomLevel = void 0;
+  configObjectUrl;
+  pendingLoadConfig;
+  wasLoaded = false;
+  jsCallStackMap;
+  jsCallStackEffectiveSampleCount;
+  jsCallStackCollector;
+  jsCallStackCollectorStopScheduler;
+  readyState = 0 /* NONE */;
+  setReady() {
+    this.logService.trace(`window#load: window reported ready (id: ${this._id})`);
+    this.readyState = 2 /* READY */;
+    while (this.whenReadyCallbacks.length) {
+      this.whenReadyCallbacks.pop()(this);
+    }
+    this._onDidSignalReady.fire();
+  }
+  ready() {
+    return new Promise((resolve) => {
+      if (this.isReady) {
+        return resolve(this);
+      }
+      this.whenReadyCallbacks.push(resolve);
+    });
+  }
+  get isReady() {
+    return this.readyState === 2 /* READY */;
+  }
+  get whenClosedOrLoaded() {
+    return new Promise((resolve) => {
+      function handle() {
+        closeListener.dispose();
+        loadListener.dispose();
+        resolve();
+      }
+      __name(handle, "handle");
+      const closeListener = this.onDidClose(() => handle());
+      const loadListener = this.onWillLoad(() => handle());
+    });
+  }
+  registerListeners() {
+    this._register(Event.fromNodeEventEmitter(this._win, "unresponsive")(() => this.onWindowError(WindowError.UNRESPONSIVE)));
+    this._register(Event.fromNodeEventEmitter(this._win, "responsive")(() => this.onWindowError(WindowError.RESPONSIVE)));
+    this._register(Event.fromNodeEventEmitter(this._win.webContents, "render-process-gone", (event, details) => details)((details) => this.onWindowError(WindowError.PROCESS_GONE, { ...details })));
+    this._register(Event.fromNodeEventEmitter(this._win.webContents, "did-fail-load", (event, exitCode, reason) => ({ exitCode, reason }))(({ exitCode, reason }) => this.onWindowError(WindowError.LOAD, { reason, exitCode })));
+    this._register(Event.fromNodeEventEmitter(this._win.webContents, "will-prevent-unload")((event) => event.preventDefault()));
+    this._register(Event.fromNodeEventEmitter(this._win.webContents, "did-finish-load")(() => {
+      if (this.pendingLoadConfig) {
+        this._config = this.pendingLoadConfig;
+        this.pendingLoadConfig = void 0;
+      }
+    }));
+    this._register(this.onDidMaximize(() => {
+      if (this._config) {
+        this._config.maximized = true;
+      }
+    }));
+    this._register(this.onDidUnmaximize(() => {
+      if (this._config) {
+        this._config.maximized = false;
+      }
+    }));
+    this._register(this.onDidEnterFullScreen(() => {
+      this.sendWhenReady("vscode:enterFullScreen", CancellationToken.None);
+    }));
+    this._register(this.onDidLeaveFullScreen(() => {
+      this.sendWhenReady("vscode:leaveFullScreen", CancellationToken.None);
+    }));
+    this._register(this.configurationService.onDidChangeConfiguration((e) => this.onConfigurationUpdated(e)));
+    this._register(this.workspacesManagementMainService.onDidDeleteUntitledWorkspace((e) => this.onDidDeleteUntitledWorkspace(e)));
+    const urls = ["https://marketplace.visualstudio.com/*", "https://*.vsassets.io/*"];
+    this._win.webContents.session.webRequest.onBeforeSendHeaders({ urls }, async (details, cb) => {
+      const headers = await this.getMarketplaceHeaders();
+      cb({ cancel: false, requestHeaders: Object.assign(details.requestHeaders, headers) });
+    });
+  }
+  marketplaceHeadersPromise;
+  getMarketplaceHeaders() {
+    if (!this.marketplaceHeadersPromise) {
+      this.marketplaceHeadersPromise = resolveMarketplaceHeaders(
+        this.productService.version,
+        this.productService,
+        this.environmentMainService,
+        this.configurationService,
+        this.fileService,
+        this.applicationStorageMainService,
+        this.telemetryService
+      );
+    }
+    return this.marketplaceHeadersPromise;
+  }
+  async onWindowError(type, details) {
+    switch (type) {
+      case WindowError.PROCESS_GONE:
+        this.logService.error(`CodeWindow: renderer process gone (reason: ${details?.reason || "<unknown>"}, code: ${details?.exitCode || "<unknown>"})`);
+        break;
+      case WindowError.UNRESPONSIVE:
+        this.logService.error("CodeWindow: detected unresponsive");
+        break;
+      case WindowError.RESPONSIVE:
+        this.logService.error("CodeWindow: recovered from unresponsive");
+        break;
+      case WindowError.LOAD:
+        this.logService.error(`CodeWindow: failed to load (reason: ${details?.reason || "<unknown>"}, code: ${details?.exitCode || "<unknown>"})`);
+        break;
+    }
+    this.telemetryService.publicLog2("windowerror", {
+      type,
+      reason: details?.reason,
+      code: details?.exitCode
+    });
+    switch (type) {
+      case WindowError.UNRESPONSIVE:
+      case WindowError.PROCESS_GONE:
+        if (this.isExtensionDevelopmentTestFromCli) {
+          this.lifecycleMainService.kill(1);
+          return;
+        }
+        if (this.environmentMainService.args["enable-smoke-test-driver"]) {
+          await this.destroyWindow(false, false);
+          this.lifecycleMainService.quit();
+          return;
+        }
+        if (type === WindowError.UNRESPONSIVE) {
+          if (this.isExtensionDevelopmentHost || this.isExtensionTestHost || this._win && this._win.webContents && this._win.webContents.isDevToolsOpened()) {
+            return;
+          }
+          this.jsCallStackCollector.trigger(() => this.startCollectingJScallStacks());
+          this.jsCallStackCollectorStopScheduler.schedule();
+          const { response, checkboxChecked } = await this.dialogMainService.showMessageBox({
+            type: "warning",
+            buttons: [
+              localize({ key: "reopen", comment: ["&& denotes a mnemonic"] }, "&&Reopen"),
+              localize({ key: "close", comment: ["&& denotes a mnemonic"] }, "&&Close"),
+              localize({ key: "wait", comment: ["&& denotes a mnemonic"] }, "&&Keep Waiting")
+            ],
+            message: localize("appStalled", "The window is not responding"),
+            detail: localize("appStalledDetail", "You can reopen or close the window or keep waiting."),
+            checkboxLabel: this._config?.workspace ? localize("doNotRestoreEditors", "Don't restore editors") : void 0
+          }, this._win);
+          if (response !== 2) {
+            const reopen = response === 0;
+            this.stopCollectingJScallStacks();
+            await this.destroyWindow(reopen, checkboxChecked);
+          }
+        } else if (type === WindowError.PROCESS_GONE) {
+          let message;
+          if (!details) {
+            message = localize("appGone", "The window terminated unexpectedly");
+          } else {
+            message = localize("appGoneDetails", "The window terminated unexpectedly (reason: '{0}', code: '{1}')", details.reason, details.exitCode ?? "<unknown>");
+          }
+          const { response, checkboxChecked } = await this.dialogMainService.showMessageBox({
+            type: "warning",
+            buttons: [
+              this._config?.workspace ? localize({ key: "reopen", comment: ["&& denotes a mnemonic"] }, "&&Reopen") : localize({ key: "newWindow", comment: ["&& denotes a mnemonic"] }, "&&New Window"),
+              localize({ key: "close", comment: ["&& denotes a mnemonic"] }, "&&Close")
+            ],
+            message,
+            detail: this._config?.workspace ? localize("appGoneDetailWorkspace", "We are sorry for the inconvenience. You can reopen the window to continue where you left off.") : localize("appGoneDetailEmptyWindow", "We are sorry for the inconvenience. You can open a new empty window to start again."),
+            checkboxLabel: this._config?.workspace ? localize("doNotRestoreEditors", "Don't restore editors") : void 0
+          }, this._win);
+          const reopen = response === 0;
+          await this.destroyWindow(reopen, checkboxChecked);
+        }
+        break;
+      case WindowError.RESPONSIVE:
+        this.stopCollectingJScallStacks();
+        break;
+    }
+  }
+  async destroyWindow(reopen, skipRestoreEditors) {
+    const workspace = this._config?.workspace;
+    if (skipRestoreEditors && workspace) {
+      try {
+        const workspaceStorage = this.storageMainService.workspaceStorage(workspace);
+        await workspaceStorage.init();
+        workspaceStorage.delete("memento/workbench.parts.editor");
+        await workspaceStorage.close();
+      } catch (error) {
+        this.logService.error(error);
+      }
+    }
+    this._onDidDestroy.fire();
+    try {
+      if (reopen && this._config) {
+        let uriToOpen = void 0;
+        let forceEmpty = void 0;
+        if (isSingleFolderWorkspaceIdentifier(workspace)) {
+          uriToOpen = { folderUri: workspace.uri };
+        } else if (isWorkspaceIdentifier(workspace)) {
+          uriToOpen = { workspaceUri: workspace.configPath };
+        } else {
+          forceEmpty = true;
+        }
+        const window = (await this.windowsMainService.open({
+          context: OpenContext.API,
+          userEnv: this._config.userEnv,
+          cli: {
+            ...this.environmentMainService.args,
+            _: []
+            // we pass in the workspace to open explicitly via `urisToOpen`
+          },
+          urisToOpen: uriToOpen ? [uriToOpen] : void 0,
+          forceEmpty,
+          forceNewWindow: true,
+          remoteAuthority: this.remoteAuthority
+        })).at(0);
+        window?.focus();
+      }
+    } finally {
+      this._win?.destroy();
+    }
+  }
+  onDidDeleteUntitledWorkspace(workspace) {
+    if (this._config?.workspace?.id === workspace.id) {
+      this._config.workspace = void 0;
+    }
+  }
+  onConfigurationUpdated(e) {
+    if (!e || e.affectsConfiguration("window.menuBarVisibility")) {
+      const newMenuBarVisibility = this.getMenuBarVisibility();
+      if (newMenuBarVisibility !== this.currentMenuBarVisibility) {
+        this.currentMenuBarVisibility = newMenuBarVisibility;
+        this.setMenuBarVisibility(newMenuBarVisibility);
+      }
+    }
+    if (!e || e.affectsConfiguration("http.proxy") || e.affectsConfiguration("http.noProxy")) {
+      const inspect = this.configurationService.inspect("http.proxy");
+      let newHttpProxy = (inspect.userLocalValue || "").trim() || (process.env["https_proxy"] || process.env["HTTPS_PROXY"] || process.env["http_proxy"] || process.env["HTTP_PROXY"] || "").trim() || void 0;
+      if (newHttpProxy?.indexOf("@") !== -1) {
+        const uri = URI.parse(newHttpProxy);
+        const i = uri.authority.indexOf("@");
+        if (i !== -1) {
+          newHttpProxy = uri.with({ authority: uri.authority.substring(i + 1) }).toString();
+        }
+      }
+      if (newHttpProxy?.endsWith("/")) {
+        newHttpProxy = newHttpProxy.substr(0, newHttpProxy.length - 1);
+      }
+      const newNoProxy = (this.configurationService.getValue("http.noProxy") || []).map((item) => item.trim()).join(",") || (process.env["no_proxy"] || process.env["NO_PROXY"] || "").trim() || void 0;
+      if ((newHttpProxy || "").indexOf("@") === -1 && (newHttpProxy !== this.currentHttpProxy || newNoProxy !== this.currentNoProxy)) {
+        this.currentHttpProxy = newHttpProxy;
+        this.currentNoProxy = newNoProxy;
+        const proxyRules = newHttpProxy || "";
+        const proxyBypassRules = newNoProxy ? `${newNoProxy},<local>` : "<local>";
+        this.logService.trace(`Setting proxy to '${proxyRules}', bypassing '${proxyBypassRules}'`);
+        this._win.webContents.session.setProxy({ proxyRules, proxyBypassRules, pacScript: "" });
+        electron.app.setProxy({ proxyRules, proxyBypassRules, pacScript: "" });
+      }
+    }
+  }
+  addTabbedWindow(window) {
+    if (isMacintosh && window.win) {
+      this._win.addTabbedWindow(window.win);
+    }
+  }
+  load(configuration, options = /* @__PURE__ */ Object.create(null)) {
+    this.logService.trace(`window#load: attempt to load window (id: ${this._id})`);
+    if (this.isDocumentEdited()) {
+      if (!options.isReload || !this.backupMainService.isHotExitEnabled()) {
+        this.setDocumentEdited(false);
+      }
+    }
+    if (!options.isReload) {
+      if (this.getRepresentedFilename()) {
+        this.setRepresentedFilename("");
+      }
+      this._win.setTitle(this.productService.nameLong);
+    }
+    this.updateConfiguration(configuration, options);
+    if (this.readyState === 0 /* NONE */) {
+      this._config = configuration;
+    } else {
+      this.pendingLoadConfig = configuration;
+    }
+    this.readyState = 1 /* NAVIGATING */;
+    this._win.loadURL(FileAccess.asBrowserUri(`vs/code/electron-sandbox/workbench/workbench${this.environmentMainService.isBuilt ? "" : "-dev"}.html`).toString(true));
+    const wasLoaded = this.wasLoaded;
+    this.wasLoaded = true;
+    if (!this.environmentMainService.isBuilt && !this.environmentMainService.extensionTestsLocationURI) {
+      this._register(new RunOnceScheduler(() => {
+        if (this._win && !this._win.isVisible() && !this._win.isMinimized()) {
+          this._win.show();
+          this.focus({ force: true });
+          this._win.webContents.openDevTools();
+        }
+      }, 1e4)).schedule();
+    }
+    this._onWillLoad.fire({ workspace: configuration.workspace, reason: options.isReload ? LoadReason.RELOAD : wasLoaded ? LoadReason.LOAD : LoadReason.INITIAL });
+  }
+  updateConfiguration(configuration, options) {
+    const currentUserEnv = (this._config ?? this.pendingLoadConfig)?.userEnv;
+    if (currentUserEnv) {
+      const shouldPreserveLaunchCliEnvironment = isLaunchedFromCli(currentUserEnv) && !isLaunchedFromCli(configuration.userEnv);
+      const shouldPreserveDebugEnvironmnet = this.isExtensionDevelopmentHost;
+      if (shouldPreserveLaunchCliEnvironment || shouldPreserveDebugEnvironmnet) {
+        configuration.userEnv = { ...currentUserEnv, ...configuration.userEnv };
+      }
+    }
+    if (process.env["CHROME_CRASHPAD_PIPE_NAME"]) {
+      Object.assign(configuration.userEnv, {
+        CHROME_CRASHPAD_PIPE_NAME: process.env["CHROME_CRASHPAD_PIPE_NAME"]
+      });
+    }
+    if (options.disableExtensions !== void 0) {
+      configuration["disable-extensions"] = options.disableExtensions;
+    }
+    try {
+      configuration.handle = VSBuffer.wrap(this._win.getNativeWindowHandle());
+    } catch (error) {
+      this.logService.error(`Error getting native window handle: ${error}`);
+    }
+    configuration.fullscreen = this.isFullScreen;
+    configuration.maximized = this._win.isMaximized();
+    configuration.partsSplash = this.themeMainService.getWindowSplash(configuration.workspace);
+    configuration.zoomLevel = this.getZoomLevel();
+    configuration.isCustomZoomLevel = typeof this.customZoomLevel === "number";
+    if (configuration.isCustomZoomLevel && configuration.partsSplash) {
+      configuration.partsSplash.zoomLevel = configuration.zoomLevel;
+    }
+    mark("code/willOpenNewWindow");
+    configuration.perfMarks = getMarks();
+    this.configObjectUrl.update(configuration);
+  }
+  async reload(cli) {
+    const configuration = Object.assign({}, this._config);
+    configuration.workspace = await this.validateWorkspaceBeforeReload(configuration);
+    delete configuration.filesToOpenOrCreate;
+    delete configuration.filesToDiff;
+    delete configuration.filesToMerge;
+    delete configuration.filesToWait;
+    if (this.isExtensionDevelopmentHost && cli) {
+      configuration.verbose = cli.verbose;
+      configuration.debugId = cli.debugId;
+      configuration.extensionEnvironment = cli.extensionEnvironment;
+      configuration["inspect-extensions"] = cli["inspect-extensions"];
+      configuration["inspect-brk-extensions"] = cli["inspect-brk-extensions"];
+      configuration["extensions-dir"] = cli["extensions-dir"];
+    }
+    configuration.accessibilitySupport = electron.app.isAccessibilitySupportEnabled();
+    configuration.isInitialStartup = false;
+    configuration.policiesData = this.policyService.serialize();
+    configuration.continueOn = this.environmentMainService.continueOn;
+    configuration.profiles = {
+      all: this.userDataProfilesService.profiles,
+      profile: this.profile || this.userDataProfilesService.defaultProfile,
+      home: this.userDataProfilesService.profilesHome
+    };
+    configuration.logLevel = this.loggerMainService.getLogLevel();
+    configuration.loggers = this.loggerMainService.getGlobalLoggers();
+    this.load(configuration, { isReload: true, disableExtensions: cli?.["disable-extensions"] });
+  }
+  async validateWorkspaceBeforeReload(configuration) {
+    if (isWorkspaceIdentifier(configuration.workspace)) {
+      const configPath = configuration.workspace.configPath;
+      if (configPath.scheme === Schemas.file) {
+        const workspaceExists = await this.fileService.exists(configPath);
+        if (!workspaceExists) {
+          return void 0;
+        }
+      }
+    } else if (isSingleFolderWorkspaceIdentifier(configuration.workspace)) {
+      const uri = configuration.workspace.uri;
+      if (uri.scheme === Schemas.file) {
+        const folderExists = await this.fileService.exists(uri);
+        if (!folderExists) {
+          return void 0;
+        }
+      }
+    }
+    return configuration.workspace;
+  }
+  serializeWindowState() {
+    if (!this._win) {
+      return defaultWindowState();
+    }
+    if (this.isFullScreen) {
+      let display;
+      try {
+        display = electron.screen.getDisplayMatching(this.getBounds());
+      } catch (error) {
+      }
+      const defaultState = defaultWindowState();
+      return {
+        mode: WindowMode.Fullscreen,
+        display: display ? display.id : void 0,
+        // Still carry over window dimensions from previous sessions
+        // if we can compute it in fullscreen state.
+        // does not seem possible in all cases on Linux for example
+        // (https://github.com/microsoft/vscode/issues/58218) so we
+        // fallback to the defaults in that case.
+        width: this.windowState.width || defaultState.width,
+        height: this.windowState.height || defaultState.height,
+        x: this.windowState.x || 0,
+        y: this.windowState.y || 0,
+        zoomLevel: this.customZoomLevel
+      };
+    }
+    const state = /* @__PURE__ */ Object.create(null);
+    let mode;
+    if (!isMacintosh && this._win.isMaximized()) {
+      mode = WindowMode.Maximized;
+    } else {
+      mode = WindowMode.Normal;
+    }
+    if (mode === WindowMode.Maximized) {
+      state.mode = WindowMode.Maximized;
+    } else {
+      state.mode = WindowMode.Normal;
+    }
+    if (mode === WindowMode.Normal || mode === WindowMode.Maximized) {
+      let bounds;
+      if (mode === WindowMode.Normal) {
+        bounds = this.getBounds();
+      } else {
+        bounds = this._win.getNormalBounds();
+      }
+      state.x = bounds.x;
+      state.y = bounds.y;
+      state.width = bounds.width;
+      state.height = bounds.height;
+    }
+    state.zoomLevel = this.customZoomLevel;
+    return state;
+  }
+  restoreWindowState(state) {
+    mark("code/willRestoreCodeWindowState");
+    let hasMultipleDisplays = false;
+    if (state) {
+      this.customZoomLevel = state.zoomLevel;
+      try {
+        const displays = electron.screen.getAllDisplays();
+        hasMultipleDisplays = displays.length > 1;
+        state = WindowStateValidator.validateWindowState(this.logService, state, displays);
+      } catch (err) {
+        this.logService.warn(`Unexpected error validating window state: ${err}
+${err.stack}`);
+      }
+    }
+    mark("code/didRestoreCodeWindowState");
+    return [state || defaultWindowState(), hasMultipleDisplays];
+  }
+  getBounds() {
+    const [x, y] = this._win.getPosition();
+    const [width, height] = this._win.getSize();
+    return { x, y, width, height };
+  }
+  setFullScreen(fullscreen, fromRestore) {
+    super.setFullScreen(fullscreen, fromRestore);
+    this.sendWhenReady(fullscreen ? "vscode:enterFullScreen" : "vscode:leaveFullScreen", CancellationToken.None);
+    if (this.currentMenuBarVisibility) {
+      this.setMenuBarVisibility(this.currentMenuBarVisibility, false);
+    }
+  }
+  getMenuBarVisibility() {
+    let menuBarVisibility = getMenuBarVisibility(this.configurationService);
+    if (["visible", "toggle", "hidden"].indexOf(menuBarVisibility) < 0) {
+      menuBarVisibility = "classic";
+    }
+    return menuBarVisibility;
+  }
+  setMenuBarVisibility(visibility, notify = true) {
+    if (isMacintosh) {
+      return;
+    }
+    if (visibility === "toggle") {
+      if (notify) {
+        this.send("vscode:showInfoMessage", localize("hiddenMenuBar", "You can still access the menu bar by pressing the Alt-key."));
+      }
+    }
+    if (visibility === "hidden") {
+      setTimeout(() => {
+        this.doSetMenuBarVisibility(visibility);
+      });
+    } else {
+      this.doSetMenuBarVisibility(visibility);
+    }
+  }
+  doSetMenuBarVisibility(visibility) {
+    const isFullscreen = this.isFullScreen;
+    switch (visibility) {
+      case "classic":
+        this._win.setMenuBarVisibility(!isFullscreen);
+        this._win.autoHideMenuBar = isFullscreen;
+        break;
+      case "visible":
+        this._win.setMenuBarVisibility(true);
+        this._win.autoHideMenuBar = false;
+        break;
+      case "toggle":
+        this._win.setMenuBarVisibility(false);
+        this._win.autoHideMenuBar = true;
+        break;
+      case "hidden":
+        this._win.setMenuBarVisibility(false);
+        this._win.autoHideMenuBar = false;
+        break;
+    }
+  }
+  notifyZoomLevel(zoomLevel) {
+    this.customZoomLevel = zoomLevel;
+  }
+  getZoomLevel() {
+    if (typeof this.customZoomLevel === "number") {
+      return this.customZoomLevel;
+    }
+    const windowSettings = this.configurationService.getValue("window");
+    return windowSettings?.zoomLevel;
+  }
+  close() {
+    this._win?.close();
+  }
+  sendWhenReady(channel, token, ...args) {
+    if (this.isReady) {
+      this.send(channel, ...args);
+    } else {
+      this.ready().then(() => {
+        if (!token.isCancellationRequested) {
+          this.send(channel, ...args);
+        }
+      });
+    }
+  }
+  send(channel, ...args) {
+    if (this._win) {
+      if (this._win.isDestroyed() || this._win.webContents.isDestroyed()) {
+        this.logService.warn(`Sending IPC message to channel '${channel}' for window that is destroyed`);
+        return;
+      }
+      try {
+        this._win.webContents.send(channel, ...args);
+      } catch (error) {
+        this.logService.warn(`Error sending IPC message to channel '${channel}' of window ${this._id}: ${toErrorMessage(error)}`);
+      }
+    }
+  }
+  updateTouchBar(groups) {
+    if (!isMacintosh) {
+      return;
+    }
+    this.touchBarGroups.forEach((touchBarGroup, index) => {
+      const commands = groups[index];
+      touchBarGroup.segments = this.createTouchBarGroupSegments(commands);
+    });
+  }
+  createTouchBar() {
+    if (!isMacintosh) {
+      return;
+    }
+    for (let i = 0; i < 10; i++) {
+      const groupTouchBar = this.createTouchBarGroup();
+      this.touchBarGroups.push(groupTouchBar);
+    }
+    this._win.setTouchBar(new electron.TouchBar({ items: this.touchBarGroups }));
+  }
+  createTouchBarGroup(items = []) {
+    const segments = this.createTouchBarGroupSegments(items);
+    const control = new electron.TouchBar.TouchBarSegmentedControl({
+      segments,
+      mode: "buttons",
+      segmentStyle: "automatic",
+      change: /* @__PURE__ */ __name((selectedIndex) => {
+        this.sendWhenReady("vscode:runAction", CancellationToken.None, { id: control.segments[selectedIndex].id, from: "touchbar" });
+      }, "change")
+    });
+    return control;
+  }
+  createTouchBarGroupSegments(items = []) {
+    const segments = items.map((item) => {
+      let icon;
+      if (item.icon && !ThemeIcon.isThemeIcon(item.icon) && item.icon?.dark?.scheme === Schemas.file) {
+        icon = electron.nativeImage.createFromPath(URI.revive(item.icon.dark).fsPath);
+        if (icon.isEmpty()) {
+          icon = void 0;
+        }
+      }
+      let title;
+      if (typeof item.title === "string") {
+        title = item.title;
+      } else {
+        title = item.title.value;
+      }
+      return {
+        id: item.id,
+        label: !icon ? title : void 0,
+        icon
+      };
+    });
+    return segments;
+  }
+  async startCollectingJScallStacks() {
+    if (!this.jsCallStackCollector.isTriggered()) {
+      const stack = await this._win.webContents.mainFrame.collectJavaScriptCallStack();
+      if (stack) {
+        const count = this.jsCallStackMap.get(stack) || 0;
+        this.jsCallStackMap.set(stack, count + 1);
+      }
+      this.jsCallStackCollector.trigger(() => this.startCollectingJScallStacks());
+    }
+  }
+  stopCollectingJScallStacks() {
+    this.jsCallStackCollectorStopScheduler.cancel();
+    this.jsCallStackCollector.cancel();
+    if (this.jsCallStackMap.size) {
+      let logMessage = `CodeWindow unresponsive samples:
+`;
+      let samples = 0;
+      const sortedEntries = Array.from(this.jsCallStackMap.entries()).sort((a, b) => b[1] - a[1]);
+      for (const [stack, count] of sortedEntries) {
+        samples += count;
+        if (Math.round(count * 100 / this.jsCallStackEffectiveSampleCount) > 20) {
+          const fakeError = new UnresponsiveError(stack, this.id, this.win?.webContents.getOSProcessId());
+          errorHandler.onUnexpectedError(fakeError);
+        }
+        logMessage += `<${count}> ${stack}
+`;
+      }
+      logMessage += `Total Samples: ${samples}
+`;
+      logMessage += "For full overview of the unresponsive period, capture cpu profile via https://aka.ms/vscode-tracing-cpu-profile";
+      this.logService.error(logMessage);
+    }
+    this.jsCallStackMap.clear();
+  }
+  matches(webContents) {
+    return this._win?.webContents.id === webContents.id;
+  }
+  dispose() {
+    super.dispose();
+    this.loggerMainService.deregisterLoggers(this.id);
+  }
+};
+CodeWindow = __decorateClass([
+  __decorateParam(1, ILogService),
+  __decorateParam(2, ILoggerMainService),
+  __decorateParam(3, IEnvironmentMainService),
+  __decorateParam(4, IPolicyService),
+  __decorateParam(5, IUserDataProfilesMainService),
+  __decorateParam(6, IFileService),
+  __decorateParam(7, IApplicationStorageMainService),
+  __decorateParam(8, IStorageMainService),
+  __decorateParam(9, IConfigurationService),
+  __decorateParam(10, IThemeMainService),
+  __decorateParam(11, IWorkspacesManagementMainService),
+  __decorateParam(12, IBackupMainService),
+  __decorateParam(13, ITelemetryService),
+  __decorateParam(14, IDialogMainService),
+  __decorateParam(15, ILifecycleMainService),
+  __decorateParam(16, IProductService),
+  __decorateParam(17, IProtocolMainService),
+  __decorateParam(18, IWindowsMainService),
+  __decorateParam(19, IStateService),
+  __decorateParam(20, IInstantiationService)
+], CodeWindow);
+class UnresponsiveError extends Error {
+  static {
+    __name(this, "UnresponsiveError");
+  }
+  constructor(sample, windowId, pid = 0) {
+    const stackTraceLimit = Error.stackTraceLimit;
+    Error.stackTraceLimit = 0;
+    super(`UnresponsiveSampleError: from window with ID ${windowId} belonging to process with pid ${pid}`);
+    Error.stackTraceLimit = stackTraceLimit;
+    this.name = "UnresponsiveSampleError";
+    this.stack = sample;
+  }
+}
+export {
+  BaseWindow,
+  CodeWindow
+};
+//# sourceMappingURL=windowImpl.js.map

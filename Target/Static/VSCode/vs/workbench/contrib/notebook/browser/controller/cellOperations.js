@@ -1,1 +1,664 @@
-import{ResourceTextEdit as N}from"../../../../../editor/browser/services/bulkEditService.js";import{Position as k}from"../../../../../editor/common/core/position.js";import{Range as E}from"../../../../../editor/common/core/range.js";import{EndOfLinePreference as T}from"../../../../../editor/common/model.js";import{PLAINTEXT_LANGUAGE_ID as h}from"../../../../../editor/common/languages/modesRegistry.js";import"../../../../../editor/common/languages/language.js";import{ResourceNotebookCellEdit as b}from"../../../bulkEdit/browser/bulkCellEdits.js";import"./coreActions.js";import{CellEditState as v,CellFocusMode as w,expandCellRangesWithHiddenCells as A}from"../notebookBrowser.js";import"../viewModel/notebookViewModelImpl.js";import{cloneNotebookCellTextModel as y}from"../../common/model/notebookCellTextModel.js";import{CellEditType as p,CellKind as S,SelectionStateType as g}from"../../common/notebookCommon.js";import{cellRangeContains as M,cellRangesToIndexes as L}from"../../common/notebookRange.js";import{localize as F}from"../../../../../nls.js";import"../../../../../platform/notification/common/notification.js";import"../../common/notebookKernelService.js";async function be(l,o,t,i){const{notebookEditor:e}=o;if(e.hasModel()&&!e.isReadOnly){if(o.ui&&o.cell){const{cell:s}=o;if(s.cellKind===l)return;const c=s.getText(),n=e.getCellIndex(s);t===void 0&&(t=(e.activeKernel?.supportedLanguages??[])[0]??h),e.textModel.applyEdits([{editType:p.Replace,index:n,count:1,cells:[{cellKind:l,source:c,language:t,mime:i??s.mime,outputs:s.model.outputs,metadata:s.metadata}]}],!0,{kind:g.Index,focus:e.getFocus(),selections:e.getSelections()},()=>({kind:g.Index,focus:e.getFocus(),selections:e.getSelections()}),void 0,!0);const d=e.cellAt(n);await e.focusNotebookCell(d,s.getEditState()===v.Editing?"editor":"container")}else if(o.selectedCells){const s=o.selectedCells,c=[];s.forEach(n=>{if(n.cellKind===l)return;const d=n.getText(),u=e.getCellIndex(n);t===void 0&&(t=(e.activeKernel?.supportedLanguages??[])[0]??h),c.push({editType:p.Replace,index:u,count:1,cells:[{cellKind:l,source:d,language:t,mime:i??n.mime,outputs:n.model.outputs,metadata:n.metadata}]})}),e.textModel.applyEdits(c,!0,{kind:g.Index,focus:e.getFocus(),selections:e.getSelections()},()=>({kind:g.Index,focus:e.getFocus(),selections:e.getSelections()}),void 0,!0)}}}function we(l,o){const t=l.textModel,i=l.getSelections(),e=l.getCellIndex(o),s=i.find(n=>n.start<=e&&e<n.end),c=!l.isReadOnly||t.viewType==="interactive";if(s){const n=i.reverse().map(u=>({editType:p.Replace,index:u.start,count:u.end-u.start,cells:[]})),d=s.end>=l.getLength()?void 0:l.cellAt(s.end);t.applyEdits(n,!0,{kind:g.Index,focus:l.getFocus(),selections:l.getSelections()},()=>{if(d){const u=t.cells.findIndex(r=>r.handle===d.handle);return{kind:g.Index,focus:{start:u,end:u+1},selections:[{start:u,end:u+1}]}}else if(t.length){const u=t.length-1;return{kind:g.Index,focus:{start:u,end:u+1},selections:[{start:u,end:u+1}]}}else return{kind:g.Index,focus:{start:0,end:0},selections:[{start:0,end:0}]}},void 0,c)}else{const n=l.getFocus(),d=[{editType:p.Replace,index:e,count:1,cells:[]}],u=[];for(let r=0;r<i.length;r++){const a=i[r];a.end<=e?u.push(a):a.start>e?u.push({start:a.start-1,end:a.end-1}):u.push({start:e,end:e+1})}if(l.cellAt(n.start)===o){const r=n.end===t.length?{start:n.start-1,end:n.end-1}:n;t.applyEdits(d,!0,{kind:g.Index,focus:l.getFocus(),selections:l.getSelections()},()=>({kind:g.Index,focus:r,selections:u}),void 0,c)}else{const r=n.start>e?{start:n.start-1,end:n.end-1}:n;t.applyEdits(d,!0,{kind:g.Index,focus:l.getFocus(),selections:l.getSelections()},()=>({kind:g.Index,focus:r,selections:u}),void 0,c)}}}async function Se(l,o){if(!l.notebookEditor.hasModel())return;const t=l.notebookEditor,i=t.textModel;if(t.isReadOnly)return;let e;if(l.cell){const s=t.getCellIndex(l.cell);e={start:s,end:s+1}}else{const s=t.getSelections();e=A(t,s)[0]}if(!(!e||e.start===e.end))if(o==="up"){if(e.start===0)return;const s=e.start-1,c={start:e.start-1,end:e.end-1},n=l.notebookEditor.getFocus(),d=M(e,n)?{start:n.start-1,end:n.end-1}:{start:e.start-1,end:e.start};i.applyEdits([{editType:p.Move,index:s,length:1,newIdx:e.end-1}],!0,{kind:g.Index,focus:t.getFocus(),selections:t.getSelections()},()=>({kind:g.Index,focus:d,selections:[c]}),void 0,!0);const u=t.getSelections()[0]??t.getFocus();t.revealCellRangeInView(u)}else{if(e.end>=i.length)return;const s=e.end,c={start:e.start+1,end:e.end+1},n=t.getFocus(),d=M(e,n)?{start:n.start+1,end:n.end+1}:{start:e.start+1,end:e.start+2};i.applyEdits([{editType:p.Move,index:s,length:1,newIdx:e.start}],!0,{kind:g.Index,focus:t.getFocus(),selections:t.getSelections()},()=>({kind:g.Index,focus:d,selections:[c]}),void 0,!0);const u=t.getSelections()[0]??t.getFocus();t.revealCellRangeInView(u)}}async function Re(l,o){const t=l.notebookEditor;if(!t.hasModel())return;const i=t.textModel;if(t.isReadOnly)return;let e;if(l.ui){const s=l.cell,c=t.getCellIndex(s);e={start:c,end:c+1}}else{const s=t.getSelections();e=A(t,s)[0]}if(!(!e||e.start===e.end))if(o==="up"){const s=t.getFocus(),c=t.getSelections();i.applyEdits([{editType:p.Replace,index:e.end,count:0,cells:L([e]).map(n=>y(t.cellAt(n).model))}],!0,{kind:g.Index,focus:s,selections:c},()=>({kind:g.Index,focus:s,selections:c}),void 0,!0)}else{const s=t.getFocus(),c=t.getSelections(),d=L([e]).map(f=>y(t.cellAt(f).model)).length,u=l.ui?s:{start:s.start+d,end:s.end+d},r=l.ui?c:[{start:e.start+d,end:e.end+d}];i.applyEdits([{editType:p.Replace,index:e.end,count:0,cells:L([e]).map(f=>y(t.cellAt(f).model))}],!0,{kind:g.Index,focus:s,selections:c},()=>({kind:g.Index,focus:u,selections:r}),void 0,!0);const a=t.getSelections()[0]??t.getFocus();t.revealCellRangeInView(a)}}async function ke(l,o,t){const i=t.notebookEditor;if(i.isReadOnly)return;const e=[],s=[];for(const a of i.getSelections())s.push(...i.getCellsInRange(a));if(s.length<=1)return;const c=s[0].cellKind;if(!s.every(a=>a.cellKind===c)){const a=F("notebookActions.joinSelectedCells","Cannot join cells of different kinds");return o.warn(a)}const d=s[0],u=s.map(a=>a.getText()).join(d.textBuffer.getEOL()),r=i.getSelections()[0];e.push(new b(i.textModel.uri,{editType:p.Replace,index:r.start,count:r.end-r.start,cells:[{cellKind:d.cellKind,source:u,language:d.language,mime:d.mime,outputs:d.model.outputs,metadata:d.metadata}]}));for(const a of i.getSelections().slice(1))e.push(new b(i.textModel.uri,{editType:p.Replace,index:a.start,count:a.end-a.start,cells:[]}));e.length&&await l.apply(e,{quotableLabel:F("notebookActions.joinSelectedCells.label","Join Notebook Cells")})}async function K(l,o,t,i){if(l.isReadOnly)return null;const e=l.textModel,s=l.getCellsInRange(o);if(!s.length||o.start===0&&t==="above"||o.end===e.length&&t==="below")return null;for(let c=0;c<s.length;c++){const n=s[c];if(i&&n.cellKind!==i)return null}if(t==="above"){const c=l.cellAt(o.start-1);if(i&&c.cellKind!==i)return null;const n=s.map(r=>(r.textBuffer.getEOL()??"")+r.getText()).join(""),d=c.textBuffer.getLineCount(),u=c.textBuffer.getLineLength(d);return{edits:[new N(c.uri,{range:new E(d,u+1,d,u+1),text:n}),new b(e.uri,{editType:p.Replace,index:o.start,count:o.end-o.start,cells:[]})],cell:c,endFocus:{start:o.start-1,end:o.start},endSelections:[{start:o.start-1,end:o.start}]}}else{const c=l.cellAt(o.end);if(i&&c.cellKind!==i)return null;const n=s[0],u=[...s.slice(1),c].map(f=>(f.textBuffer.getEOL()??"")+f.getText()).join(""),r=n.textBuffer.getLineCount(),a=n.textBuffer.getLineLength(r);return{edits:[new N(n.uri,{range:new E(r,a+1,r,a+1),text:u}),new b(e.uri,{editType:p.Replace,index:o.start+1,count:o.end-o.start,cells:[]})],cell:n,endFocus:{start:o.start,end:o.start+1},endSelections:[{start:o.start,end:o.start+1}]}}}async function Ee(l,o,t){const i=o.notebookEditor,e=i.textModel,s=i.getViewModel();let c=null;if(o.ui){const n=o.cell.focusMode,d=i.getCellIndex(o.cell);if(c=await K(i,{start:d,end:d+1},t),!c)return;await l.apply(c?.edits,{quotableLabel:"Join Notebook Cells"}),s.updateSelectionsState({kind:g.Index,focus:c.endFocus,selections:c.endSelections}),c.cell.updateEditState(v.Editing,"joinCellsWithSurrounds"),i.revealCellRangeInView(i.getFocus()),n===w.Editor&&(c.cell.focusMode=w.Editor)}else{const n=i.getSelections();if(!n.length)return;const d=i.getFocus(),u=i.cellAt(d.start)?.focusMode,r=[];let a=null;const f=[];for(let I=n.length-1;I>=0;I--){const C=n[I],m=M(C,d);if(C.end>=e.length&&t==="below"||C.start===0&&t==="above"){m&&(a=i.cellAt(d.start)),f.push(...i.getCellsInRange(C));continue}const x=await K(i,C,t);if(!x)return;r.push(...x.edits),f.push(x.cell),m&&(a=x.cell)}if(!r.length||!a||!f.length)return;await l.apply(r,{quotableLabel:"Join Notebook Cells"}),f.forEach(I=>{I.updateEditState(v.Editing,"joinCellsWithSurrounds")}),s.updateSelectionsState({kind:g.Handle,primary:a.handle,selections:f.map(I=>I.handle)}),i.revealCellRangeInView(i.getFocus());const R=i.cellAt(i.getFocus().start);u===w.Editor&&R&&(R.focusMode=w.Editor)}}function V(l,o){const t=[],i=o.getLineCount(),e=n=>o.getLineLength(n);l=l.sort((n,d)=>{const u=n.lineNumber-d.lineNumber,r=n.column-d.column;return u!==0?u:r});for(let n of l)e(n.lineNumber)+1===n.column&&n.column!==1&&n.lineNumber<i&&(n=new k(n.lineNumber+1,1)),B(t,n);if(t.length===0)return null;const s=new k(1,1),c=new k(i,e(i)+1);return[s,...t,c]}function B(l,o){const t=l.length>0?l[l.length-1]:void 0;(!t||t.lineNumber!==o.lineNumber||t.column!==o.column)&&l.push(o)}function he(l,o){const t=V(o,l.textBuffer);if(!t)return null;const i=[];for(let e=1;e<t.length;e++){const s=t[e-1],c=t[e];i.push(l.textBuffer.getValueInRange(new E(s.lineNumber,s.column,c.lineNumber,c.column),T.TextDefined))}return i}function ve(l,o,t,i,e="above",s="",c=!1,n){const d=o.getViewModel(),u=o.activeKernel;if(d.options.isReadOnly)return null;const r=o.cellAt(t),a=c?d.getNextVisibleCellIndex(t):t+1;let f;if(i===S.Code){const I=u?.supportedLanguages??l.getRegisteredLanguageIds(),C=I[0]||h;if(r?.cellKind===S.Code)f=r.language;else if(r?.cellKind===S.Markup){const m=d.nearestCodeCellIndex(t);m>-1?f=d.cellAt(m).language:f=C}else if(!r&&d.length===0){const m=n?.getKernels(d.notebookDocument);m?.all.length?f=m.all[0].supportedLanguages[0]||C:f=C}else r===void 0&&e==="above"?f=d.viewCells.find(m=>m.cellKind===S.Code)?.language||C:f=C;I.includes(f)||(f=C)}else f="markdown";return O(d,r?e==="above"?t:a:t,s,f,i,void 0,[],!0,!0)}function O(l,o,t,i,e,s,c,n,d){const u={kind:g.Index,focus:{start:o,end:o+1},selections:[{start:o,end:o+1}]};return l.notebookDocument.applyEdits([{editType:p.Replace,index:o,count:0,cells:[{cellKind:e,language:i,mime:void 0,outputs:c,metadata:s,source:t}]}],n,{kind:g.Index,focus:l.getFocus(),selections:l.getSelections()},()=>u,void 0,d&&!l.options.isReadOnly),l.cellAt(o)}export{be as changeCellToKind,he as computeCellLinesContents,Re as copyCellRange,ve as insertCell,O as insertCellAtIndex,Ee as joinCellsWithSurrounds,K as joinNotebookCells,ke as joinSelectedCells,Se as moveCellRange,we as runDeleteAction};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { IBulkEditService, ResourceEdit, ResourceTextEdit } from "../../../../../editor/browser/services/bulkEditService.js";
+import { IPosition, Position } from "../../../../../editor/common/core/position.js";
+import { Range } from "../../../../../editor/common/core/range.js";
+import { EndOfLinePreference, IReadonlyTextBuffer } from "../../../../../editor/common/model.js";
+import { PLAINTEXT_LANGUAGE_ID } from "../../../../../editor/common/languages/modesRegistry.js";
+import { ILanguageService } from "../../../../../editor/common/languages/language.js";
+import { ResourceNotebookCellEdit } from "../../../bulkEdit/browser/bulkCellEdits.js";
+import { INotebookActionContext, INotebookCellActionContext } from "./coreActions.js";
+import { CellEditState, CellFocusMode, expandCellRangesWithHiddenCells, IActiveNotebookEditor, ICellViewModel } from "../notebookBrowser.js";
+import { CellViewModel, NotebookViewModel } from "../viewModel/notebookViewModelImpl.js";
+import { cloneNotebookCellTextModel } from "../../common/model/notebookCellTextModel.js";
+import { CellEditType, CellKind, ICellEditOperation, ICellReplaceEdit, IOutputDto, ISelectionState, NotebookCellMetadata, SelectionStateType } from "../../common/notebookCommon.js";
+import { cellRangeContains, cellRangesToIndexes, ICellRange } from "../../common/notebookRange.js";
+import { localize } from "../../../../../nls.js";
+import { INotificationService } from "../../../../../platform/notification/common/notification.js";
+import { INotebookKernelHistoryService } from "../../common/notebookKernelService.js";
+async function changeCellToKind(kind, context, language, mime) {
+  const { notebookEditor } = context;
+  if (!notebookEditor.hasModel()) {
+    return;
+  }
+  if (notebookEditor.isReadOnly) {
+    return;
+  }
+  if (context.ui && context.cell) {
+    const { cell } = context;
+    if (cell.cellKind === kind) {
+      return;
+    }
+    const text = cell.getText();
+    const idx = notebookEditor.getCellIndex(cell);
+    if (language === void 0) {
+      const availableLanguages = notebookEditor.activeKernel?.supportedLanguages ?? [];
+      language = availableLanguages[0] ?? PLAINTEXT_LANGUAGE_ID;
+    }
+    notebookEditor.textModel.applyEdits([
+      {
+        editType: CellEditType.Replace,
+        index: idx,
+        count: 1,
+        cells: [{
+          cellKind: kind,
+          source: text,
+          language,
+          mime: mime ?? cell.mime,
+          outputs: cell.model.outputs,
+          metadata: cell.metadata
+        }]
+      }
+    ], true, {
+      kind: SelectionStateType.Index,
+      focus: notebookEditor.getFocus(),
+      selections: notebookEditor.getSelections()
+    }, () => {
+      return {
+        kind: SelectionStateType.Index,
+        focus: notebookEditor.getFocus(),
+        selections: notebookEditor.getSelections()
+      };
+    }, void 0, true);
+    const newCell = notebookEditor.cellAt(idx);
+    await notebookEditor.focusNotebookCell(newCell, cell.getEditState() === CellEditState.Editing ? "editor" : "container");
+  } else if (context.selectedCells) {
+    const selectedCells = context.selectedCells;
+    const rawEdits = [];
+    selectedCells.forEach((cell) => {
+      if (cell.cellKind === kind) {
+        return;
+      }
+      const text = cell.getText();
+      const idx = notebookEditor.getCellIndex(cell);
+      if (language === void 0) {
+        const availableLanguages = notebookEditor.activeKernel?.supportedLanguages ?? [];
+        language = availableLanguages[0] ?? PLAINTEXT_LANGUAGE_ID;
+      }
+      rawEdits.push(
+        {
+          editType: CellEditType.Replace,
+          index: idx,
+          count: 1,
+          cells: [{
+            cellKind: kind,
+            source: text,
+            language,
+            mime: mime ?? cell.mime,
+            outputs: cell.model.outputs,
+            metadata: cell.metadata
+          }]
+        }
+      );
+    });
+    notebookEditor.textModel.applyEdits(rawEdits, true, {
+      kind: SelectionStateType.Index,
+      focus: notebookEditor.getFocus(),
+      selections: notebookEditor.getSelections()
+    }, () => {
+      return {
+        kind: SelectionStateType.Index,
+        focus: notebookEditor.getFocus(),
+        selections: notebookEditor.getSelections()
+      };
+    }, void 0, true);
+  }
+}
+__name(changeCellToKind, "changeCellToKind");
+function runDeleteAction(editor, cell) {
+  const textModel = editor.textModel;
+  const selections = editor.getSelections();
+  const targetCellIndex = editor.getCellIndex(cell);
+  const containingSelection = selections.find((selection) => selection.start <= targetCellIndex && targetCellIndex < selection.end);
+  const computeUndoRedo = !editor.isReadOnly || textModel.viewType === "interactive";
+  if (containingSelection) {
+    const edits = selections.reverse().map((selection) => ({
+      editType: CellEditType.Replace,
+      index: selection.start,
+      count: selection.end - selection.start,
+      cells: []
+    }));
+    const nextCellAfterContainingSelection = containingSelection.end >= editor.getLength() ? void 0 : editor.cellAt(containingSelection.end);
+    textModel.applyEdits(edits, true, { kind: SelectionStateType.Index, focus: editor.getFocus(), selections: editor.getSelections() }, () => {
+      if (nextCellAfterContainingSelection) {
+        const cellIndex = textModel.cells.findIndex((cell2) => cell2.handle === nextCellAfterContainingSelection.handle);
+        return { kind: SelectionStateType.Index, focus: { start: cellIndex, end: cellIndex + 1 }, selections: [{ start: cellIndex, end: cellIndex + 1 }] };
+      } else {
+        if (textModel.length) {
+          const lastCellIndex = textModel.length - 1;
+          return { kind: SelectionStateType.Index, focus: { start: lastCellIndex, end: lastCellIndex + 1 }, selections: [{ start: lastCellIndex, end: lastCellIndex + 1 }] };
+        } else {
+          return { kind: SelectionStateType.Index, focus: { start: 0, end: 0 }, selections: [{ start: 0, end: 0 }] };
+        }
+      }
+    }, void 0, computeUndoRedo);
+  } else {
+    const focus = editor.getFocus();
+    const edits = [{
+      editType: CellEditType.Replace,
+      index: targetCellIndex,
+      count: 1,
+      cells: []
+    }];
+    const finalSelections = [];
+    for (let i = 0; i < selections.length; i++) {
+      const selection = selections[i];
+      if (selection.end <= targetCellIndex) {
+        finalSelections.push(selection);
+      } else if (selection.start > targetCellIndex) {
+        finalSelections.push({ start: selection.start - 1, end: selection.end - 1 });
+      } else {
+        finalSelections.push({ start: targetCellIndex, end: targetCellIndex + 1 });
+      }
+    }
+    if (editor.cellAt(focus.start) === cell) {
+      const newFocus = focus.end === textModel.length ? { start: focus.start - 1, end: focus.end - 1 } : focus;
+      textModel.applyEdits(edits, true, { kind: SelectionStateType.Index, focus: editor.getFocus(), selections: editor.getSelections() }, () => ({
+        kind: SelectionStateType.Index,
+        focus: newFocus,
+        selections: finalSelections
+      }), void 0, computeUndoRedo);
+    } else {
+      const newFocus = focus.start > targetCellIndex ? { start: focus.start - 1, end: focus.end - 1 } : focus;
+      textModel.applyEdits(edits, true, { kind: SelectionStateType.Index, focus: editor.getFocus(), selections: editor.getSelections() }, () => ({
+        kind: SelectionStateType.Index,
+        focus: newFocus,
+        selections: finalSelections
+      }), void 0, computeUndoRedo);
+    }
+  }
+}
+__name(runDeleteAction, "runDeleteAction");
+async function moveCellRange(context, direction) {
+  if (!context.notebookEditor.hasModel()) {
+    return;
+  }
+  const editor = context.notebookEditor;
+  const textModel = editor.textModel;
+  if (editor.isReadOnly) {
+    return;
+  }
+  let range = void 0;
+  if (context.cell) {
+    const idx = editor.getCellIndex(context.cell);
+    range = { start: idx, end: idx + 1 };
+  } else {
+    const selections = editor.getSelections();
+    const modelRanges = expandCellRangesWithHiddenCells(editor, selections);
+    range = modelRanges[0];
+  }
+  if (!range || range.start === range.end) {
+    return;
+  }
+  if (direction === "up") {
+    if (range.start === 0) {
+      return;
+    }
+    const indexAbove = range.start - 1;
+    const finalSelection = { start: range.start - 1, end: range.end - 1 };
+    const focus = context.notebookEditor.getFocus();
+    const newFocus = cellRangeContains(range, focus) ? { start: focus.start - 1, end: focus.end - 1 } : { start: range.start - 1, end: range.start };
+    textModel.applyEdits(
+      [
+        {
+          editType: CellEditType.Move,
+          index: indexAbove,
+          length: 1,
+          newIdx: range.end - 1
+        }
+      ],
+      true,
+      {
+        kind: SelectionStateType.Index,
+        focus: editor.getFocus(),
+        selections: editor.getSelections()
+      },
+      () => ({ kind: SelectionStateType.Index, focus: newFocus, selections: [finalSelection] }),
+      void 0,
+      true
+    );
+    const focusRange = editor.getSelections()[0] ?? editor.getFocus();
+    editor.revealCellRangeInView(focusRange);
+  } else {
+    if (range.end >= textModel.length) {
+      return;
+    }
+    const indexBelow = range.end;
+    const finalSelection = { start: range.start + 1, end: range.end + 1 };
+    const focus = editor.getFocus();
+    const newFocus = cellRangeContains(range, focus) ? { start: focus.start + 1, end: focus.end + 1 } : { start: range.start + 1, end: range.start + 2 };
+    textModel.applyEdits(
+      [
+        {
+          editType: CellEditType.Move,
+          index: indexBelow,
+          length: 1,
+          newIdx: range.start
+        }
+      ],
+      true,
+      {
+        kind: SelectionStateType.Index,
+        focus: editor.getFocus(),
+        selections: editor.getSelections()
+      },
+      () => ({ kind: SelectionStateType.Index, focus: newFocus, selections: [finalSelection] }),
+      void 0,
+      true
+    );
+    const focusRange = editor.getSelections()[0] ?? editor.getFocus();
+    editor.revealCellRangeInView(focusRange);
+  }
+}
+__name(moveCellRange, "moveCellRange");
+async function copyCellRange(context, direction) {
+  const editor = context.notebookEditor;
+  if (!editor.hasModel()) {
+    return;
+  }
+  const textModel = editor.textModel;
+  if (editor.isReadOnly) {
+    return;
+  }
+  let range = void 0;
+  if (context.ui) {
+    const targetCell = context.cell;
+    const targetCellIndex = editor.getCellIndex(targetCell);
+    range = { start: targetCellIndex, end: targetCellIndex + 1 };
+  } else {
+    const selections = editor.getSelections();
+    const modelRanges = expandCellRangesWithHiddenCells(editor, selections);
+    range = modelRanges[0];
+  }
+  if (!range || range.start === range.end) {
+    return;
+  }
+  if (direction === "up") {
+    const focus = editor.getFocus();
+    const selections = editor.getSelections();
+    textModel.applyEdits(
+      [
+        {
+          editType: CellEditType.Replace,
+          index: range.end,
+          count: 0,
+          cells: cellRangesToIndexes([range]).map((index) => cloneNotebookCellTextModel(editor.cellAt(index).model))
+        }
+      ],
+      true,
+      {
+        kind: SelectionStateType.Index,
+        focus,
+        selections
+      },
+      () => ({ kind: SelectionStateType.Index, focus, selections }),
+      void 0,
+      true
+    );
+  } else {
+    const focus = editor.getFocus();
+    const selections = editor.getSelections();
+    const newCells = cellRangesToIndexes([range]).map((index) => cloneNotebookCellTextModel(editor.cellAt(index).model));
+    const countDelta = newCells.length;
+    const newFocus = context.ui ? focus : { start: focus.start + countDelta, end: focus.end + countDelta };
+    const newSelections = context.ui ? selections : [{ start: range.start + countDelta, end: range.end + countDelta }];
+    textModel.applyEdits(
+      [
+        {
+          editType: CellEditType.Replace,
+          index: range.end,
+          count: 0,
+          cells: cellRangesToIndexes([range]).map((index) => cloneNotebookCellTextModel(editor.cellAt(index).model))
+        }
+      ],
+      true,
+      {
+        kind: SelectionStateType.Index,
+        focus,
+        selections
+      },
+      () => ({ kind: SelectionStateType.Index, focus: newFocus, selections: newSelections }),
+      void 0,
+      true
+    );
+    const focusRange = editor.getSelections()[0] ?? editor.getFocus();
+    editor.revealCellRangeInView(focusRange);
+  }
+}
+__name(copyCellRange, "copyCellRange");
+async function joinSelectedCells(bulkEditService, notificationService, context) {
+  const editor = context.notebookEditor;
+  if (editor.isReadOnly) {
+    return;
+  }
+  const edits = [];
+  const cells = [];
+  for (const selection of editor.getSelections()) {
+    cells.push(...editor.getCellsInRange(selection));
+  }
+  if (cells.length <= 1) {
+    return;
+  }
+  const cellKind = cells[0].cellKind;
+  const isSameKind = cells.every((cell) => cell.cellKind === cellKind);
+  if (!isSameKind) {
+    const message = localize("notebookActions.joinSelectedCells", "Cannot join cells of different kinds");
+    return notificationService.warn(message);
+  }
+  const firstCell = cells[0];
+  const insertContent = cells.map((cell) => cell.getText()).join(firstCell.textBuffer.getEOL());
+  const firstSelection = editor.getSelections()[0];
+  edits.push(
+    new ResourceNotebookCellEdit(
+      editor.textModel.uri,
+      {
+        editType: CellEditType.Replace,
+        index: firstSelection.start,
+        count: firstSelection.end - firstSelection.start,
+        cells: [{
+          cellKind: firstCell.cellKind,
+          source: insertContent,
+          language: firstCell.language,
+          mime: firstCell.mime,
+          outputs: firstCell.model.outputs,
+          metadata: firstCell.metadata
+        }]
+      }
+    )
+  );
+  for (const selection of editor.getSelections().slice(1)) {
+    edits.push(new ResourceNotebookCellEdit(
+      editor.textModel.uri,
+      {
+        editType: CellEditType.Replace,
+        index: selection.start,
+        count: selection.end - selection.start,
+        cells: []
+      }
+    ));
+  }
+  if (edits.length) {
+    await bulkEditService.apply(
+      edits,
+      { quotableLabel: localize("notebookActions.joinSelectedCells.label", "Join Notebook Cells") }
+    );
+  }
+}
+__name(joinSelectedCells, "joinSelectedCells");
+async function joinNotebookCells(editor, range, direction, constraint) {
+  if (editor.isReadOnly) {
+    return null;
+  }
+  const textModel = editor.textModel;
+  const cells = editor.getCellsInRange(range);
+  if (!cells.length) {
+    return null;
+  }
+  if (range.start === 0 && direction === "above") {
+    return null;
+  }
+  if (range.end === textModel.length && direction === "below") {
+    return null;
+  }
+  for (let i = 0; i < cells.length; i++) {
+    const cell = cells[i];
+    if (constraint && cell.cellKind !== constraint) {
+      return null;
+    }
+  }
+  if (direction === "above") {
+    const above = editor.cellAt(range.start - 1);
+    if (constraint && above.cellKind !== constraint) {
+      return null;
+    }
+    const insertContent = cells.map((cell) => (cell.textBuffer.getEOL() ?? "") + cell.getText()).join("");
+    const aboveCellLineCount = above.textBuffer.getLineCount();
+    const aboveCellLastLineEndColumn = above.textBuffer.getLineLength(aboveCellLineCount);
+    return {
+      edits: [
+        new ResourceTextEdit(above.uri, { range: new Range(aboveCellLineCount, aboveCellLastLineEndColumn + 1, aboveCellLineCount, aboveCellLastLineEndColumn + 1), text: insertContent }),
+        new ResourceNotebookCellEdit(
+          textModel.uri,
+          {
+            editType: CellEditType.Replace,
+            index: range.start,
+            count: range.end - range.start,
+            cells: []
+          }
+        )
+      ],
+      cell: above,
+      endFocus: { start: range.start - 1, end: range.start },
+      endSelections: [{ start: range.start - 1, end: range.start }]
+    };
+  } else {
+    const below = editor.cellAt(range.end);
+    if (constraint && below.cellKind !== constraint) {
+      return null;
+    }
+    const cell = cells[0];
+    const restCells = [...cells.slice(1), below];
+    const insertContent = restCells.map((cl) => (cl.textBuffer.getEOL() ?? "") + cl.getText()).join("");
+    const cellLineCount = cell.textBuffer.getLineCount();
+    const cellLastLineEndColumn = cell.textBuffer.getLineLength(cellLineCount);
+    return {
+      edits: [
+        new ResourceTextEdit(cell.uri, { range: new Range(cellLineCount, cellLastLineEndColumn + 1, cellLineCount, cellLastLineEndColumn + 1), text: insertContent }),
+        new ResourceNotebookCellEdit(
+          textModel.uri,
+          {
+            editType: CellEditType.Replace,
+            index: range.start + 1,
+            count: range.end - range.start,
+            cells: []
+          }
+        )
+      ],
+      cell,
+      endFocus: { start: range.start, end: range.start + 1 },
+      endSelections: [{ start: range.start, end: range.start + 1 }]
+    };
+  }
+}
+__name(joinNotebookCells, "joinNotebookCells");
+async function joinCellsWithSurrounds(bulkEditService, context, direction) {
+  const editor = context.notebookEditor;
+  const textModel = editor.textModel;
+  const viewModel = editor.getViewModel();
+  let ret = null;
+  if (context.ui) {
+    const focusMode = context.cell.focusMode;
+    const cellIndex = editor.getCellIndex(context.cell);
+    ret = await joinNotebookCells(editor, { start: cellIndex, end: cellIndex + 1 }, direction);
+    if (!ret) {
+      return;
+    }
+    await bulkEditService.apply(
+      ret?.edits,
+      { quotableLabel: "Join Notebook Cells" }
+    );
+    viewModel.updateSelectionsState({ kind: SelectionStateType.Index, focus: ret.endFocus, selections: ret.endSelections });
+    ret.cell.updateEditState(CellEditState.Editing, "joinCellsWithSurrounds");
+    editor.revealCellRangeInView(editor.getFocus());
+    if (focusMode === CellFocusMode.Editor) {
+      ret.cell.focusMode = CellFocusMode.Editor;
+    }
+  } else {
+    const selections = editor.getSelections();
+    if (!selections.length) {
+      return;
+    }
+    const focus = editor.getFocus();
+    const focusMode = editor.cellAt(focus.start)?.focusMode;
+    const edits = [];
+    let cell = null;
+    const cells = [];
+    for (let i = selections.length - 1; i >= 0; i--) {
+      const selection = selections[i];
+      const containFocus = cellRangeContains(selection, focus);
+      if (selection.end >= textModel.length && direction === "below" || selection.start === 0 && direction === "above") {
+        if (containFocus) {
+          cell = editor.cellAt(focus.start);
+        }
+        cells.push(...editor.getCellsInRange(selection));
+        continue;
+      }
+      const singleRet = await joinNotebookCells(editor, selection, direction);
+      if (!singleRet) {
+        return;
+      }
+      edits.push(...singleRet.edits);
+      cells.push(singleRet.cell);
+      if (containFocus) {
+        cell = singleRet.cell;
+      }
+    }
+    if (!edits.length) {
+      return;
+    }
+    if (!cell || !cells.length) {
+      return;
+    }
+    await bulkEditService.apply(
+      edits,
+      { quotableLabel: "Join Notebook Cells" }
+    );
+    cells.forEach((cell2) => {
+      cell2.updateEditState(CellEditState.Editing, "joinCellsWithSurrounds");
+    });
+    viewModel.updateSelectionsState({ kind: SelectionStateType.Handle, primary: cell.handle, selections: cells.map((cell2) => cell2.handle) });
+    editor.revealCellRangeInView(editor.getFocus());
+    const newFocusedCell = editor.cellAt(editor.getFocus().start);
+    if (focusMode === CellFocusMode.Editor && newFocusedCell) {
+      newFocusedCell.focusMode = CellFocusMode.Editor;
+    }
+  }
+}
+__name(joinCellsWithSurrounds, "joinCellsWithSurrounds");
+function _splitPointsToBoundaries(splitPoints, textBuffer) {
+  const boundaries = [];
+  const lineCnt = textBuffer.getLineCount();
+  const getLineLen = /* @__PURE__ */ __name((lineNumber) => {
+    return textBuffer.getLineLength(lineNumber);
+  }, "getLineLen");
+  splitPoints = splitPoints.sort((l, r) => {
+    const lineDiff = l.lineNumber - r.lineNumber;
+    const columnDiff = l.column - r.column;
+    return lineDiff !== 0 ? lineDiff : columnDiff;
+  });
+  for (let sp of splitPoints) {
+    if (getLineLen(sp.lineNumber) + 1 === sp.column && sp.column !== 1 && sp.lineNumber < lineCnt) {
+      sp = new Position(sp.lineNumber + 1, 1);
+    }
+    _pushIfAbsent(boundaries, sp);
+  }
+  if (boundaries.length === 0) {
+    return null;
+  }
+  const modelStart = new Position(1, 1);
+  const modelEnd = new Position(lineCnt, getLineLen(lineCnt) + 1);
+  return [modelStart, ...boundaries, modelEnd];
+}
+__name(_splitPointsToBoundaries, "_splitPointsToBoundaries");
+function _pushIfAbsent(positions, p) {
+  const last = positions.length > 0 ? positions[positions.length - 1] : void 0;
+  if (!last || last.lineNumber !== p.lineNumber || last.column !== p.column) {
+    positions.push(p);
+  }
+}
+__name(_pushIfAbsent, "_pushIfAbsent");
+function computeCellLinesContents(cell, splitPoints) {
+  const rangeBoundaries = _splitPointsToBoundaries(splitPoints, cell.textBuffer);
+  if (!rangeBoundaries) {
+    return null;
+  }
+  const newLineModels = [];
+  for (let i = 1; i < rangeBoundaries.length; i++) {
+    const start = rangeBoundaries[i - 1];
+    const end = rangeBoundaries[i];
+    newLineModels.push(cell.textBuffer.getValueInRange(new Range(start.lineNumber, start.column, end.lineNumber, end.column), EndOfLinePreference.TextDefined));
+  }
+  return newLineModels;
+}
+__name(computeCellLinesContents, "computeCellLinesContents");
+function insertCell(languageService, editor, index, type, direction = "above", initialText = "", ui = false, kernelHistoryService) {
+  const viewModel = editor.getViewModel();
+  const activeKernel = editor.activeKernel;
+  if (viewModel.options.isReadOnly) {
+    return null;
+  }
+  const cell = editor.cellAt(index);
+  const nextIndex = ui ? viewModel.getNextVisibleCellIndex(index) : index + 1;
+  let language;
+  if (type === CellKind.Code) {
+    const supportedLanguages = activeKernel?.supportedLanguages ?? languageService.getRegisteredLanguageIds();
+    const defaultLanguage = supportedLanguages[0] || PLAINTEXT_LANGUAGE_ID;
+    if (cell?.cellKind === CellKind.Code) {
+      language = cell.language;
+    } else if (cell?.cellKind === CellKind.Markup) {
+      const nearestCodeCellIndex = viewModel.nearestCodeCellIndex(index);
+      if (nearestCodeCellIndex > -1) {
+        language = viewModel.cellAt(nearestCodeCellIndex).language;
+      } else {
+        language = defaultLanguage;
+      }
+    } else if (!cell && viewModel.length === 0) {
+      const lastKernels = kernelHistoryService?.getKernels(viewModel.notebookDocument);
+      if (lastKernels?.all.length) {
+        const lastKernel = lastKernels.all[0];
+        language = lastKernel.supportedLanguages[0] || defaultLanguage;
+      } else {
+        language = defaultLanguage;
+      }
+    } else {
+      if (cell === void 0 && direction === "above") {
+        language = viewModel.viewCells.find((cell2) => cell2.cellKind === CellKind.Code)?.language || defaultLanguage;
+      } else {
+        language = defaultLanguage;
+      }
+    }
+    if (!supportedLanguages.includes(language)) {
+      language = defaultLanguage;
+    }
+  } else {
+    language = "markdown";
+  }
+  const insertIndex = cell ? direction === "above" ? index : nextIndex : index;
+  return insertCellAtIndex(viewModel, insertIndex, initialText, language, type, void 0, [], true, true);
+}
+__name(insertCell, "insertCell");
+function insertCellAtIndex(viewModel, index, source, language, type, metadata, outputs, synchronous, pushUndoStop) {
+  const endSelections = { kind: SelectionStateType.Index, focus: { start: index, end: index + 1 }, selections: [{ start: index, end: index + 1 }] };
+  viewModel.notebookDocument.applyEdits([
+    {
+      editType: CellEditType.Replace,
+      index,
+      count: 0,
+      cells: [
+        {
+          cellKind: type,
+          language,
+          mime: void 0,
+          outputs,
+          metadata,
+          source
+        }
+      ]
+    }
+  ], synchronous, { kind: SelectionStateType.Index, focus: viewModel.getFocus(), selections: viewModel.getSelections() }, () => endSelections, void 0, pushUndoStop && !viewModel.options.isReadOnly);
+  return viewModel.cellAt(index);
+}
+__name(insertCellAtIndex, "insertCellAtIndex");
+export {
+  changeCellToKind,
+  computeCellLinesContents,
+  copyCellRange,
+  insertCell,
+  insertCellAtIndex,
+  joinCellsWithSurrounds,
+  joinNotebookCells,
+  joinSelectedCells,
+  moveCellRange,
+  runDeleteAction
+};
+//# sourceMappingURL=cellOperations.js.map

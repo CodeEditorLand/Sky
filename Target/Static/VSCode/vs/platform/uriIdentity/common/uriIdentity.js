@@ -1,1 +1,8 @@
-import"../../../base/common/uri.js";import{createDecorator as r}from"../../instantiation/common/instantiation.js";import"../../../base/common/resources.js";const I=r("IUriIdentityService");export{I as IUriIdentityService};
+import { URI } from "../../../base/common/uri.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+import { IExtUri } from "../../../base/common/resources.js";
+const IUriIdentityService = createDecorator("IUriIdentityService");
+export {
+  IUriIdentityService
+};
+//# sourceMappingURL=uriIdentity.js.map

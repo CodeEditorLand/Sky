@@ -1,1 +1,102 @@
-import{EndOfLinePreference as s}from"../../../common/model.js";import"../../../common/core/position.js";import{Range as u}from"../../../common/core/range.js";import{EditorOption as S}from"../../../common/config/editorOptions.js";import"../../../../platform/keybinding/common/keybinding.js";import{AccessibilitySupport as A}from"../../../../platform/accessibility/common/accessibility.js";import*as m from"../../../../nls.js";class b{static _getPageOfLine(e,n){return Math.floor((e-1)/n)}static _getRangeForPage(e,n){const t=e*n;return new u(t+1,1,t+n+1,1)}static fromEditorSelection(e,n,t,i){const o=b._getPageOfLine(n.startLineNumber,t),a=b._getRangeForPage(o,t),r=b._getPageOfLine(n.endLineNumber,t),c=b._getRangeForPage(r,t);let g=a.intersectRanges(new u(1,1,n.startLineNumber,n.startColumn));if(i&&e.getValueLengthInRange(g,s.LF)>500){const n=e.modifyPosition(g.getEndPosition(),-500);g=u.fromPositions(n,g.getEndPosition())}const l=e.getValueInRange(g,s.LF),m=e.getLineCount(),d=e.getLineMaxColumn(m);let f=c.intersectRanges(new u(n.endLineNumber,n.endColumn,m,d));if(i&&e.getValueLengthInRange(f,s.LF)>500){const n=e.modifyPosition(f.getStartPosition(),500);f=u.fromPositions(f.getStartPosition(),n)}const L=e.getValueInRange(f,s.LF);let p;if(o===r||o+1===r)p=e.getValueInRange(n,s.LF);else{const t=a.intersectRanges(n),i=c.intersectRanges(n);p=e.getValueInRange(t,s.LF)+"…"+e.getValueInRange(i,s.LF)}return i&&p.length>1e3&&(p=p.substring(0,500)+"…"+p.substring(p.length-500,p.length)),{value:l+p+L,selection:n,selectionStart:l.length,selectionEnd:l.length+p.length,startPositionWithinEditor:g.getStartPosition(),newlineCountBeforeSelection:g.endLineNumber-g.startLineNumber}}}function T(e,n){if(e.get(S.accessibilitySupport)===A.Disabled){const e=n.lookupKeybinding("editor.action.toggleScreenReaderAccessibilityMode")?.getAriaLabel(),t=n.lookupKeybinding("workbench.action.showCommands")?.getAriaLabel(),i=n.lookupKeybinding("workbench.action.openGlobalKeybindings")?.getAriaLabel(),o=m.localize("accessibilityModeOff","The editor is not accessible at this time.");return e?m.localize("accessibilityOffAriaLabel","{0} To enable screen reader optimized mode, use {1}",o,e):t?m.localize("accessibilityOffAriaLabelNoKb","{0} To enable screen reader optimized mode, open the quick pick with {1} and run the command Toggle Screen Reader Accessibility Mode, which is currently not triggerable via keyboard.",o,t):i?m.localize("accessibilityOffAriaLabelNoKbs","{0} Please assign a keybinding for the command Toggle Screen Reader Accessibility Mode by accessing the keybindings editor with {1} and run it.",o,i):o}return e.get(S.ariaLabel)}function k(e){let n=0,t=-1;for(;;){if(t=e.indexOf("\n",t+1),-1===t)break;n++}return n}export{b as PagedScreenReaderStrategy,T as ariaLabelForScreenReaderContent,k as newlinecount};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { EndOfLinePreference } from "../../../common/model.js";
+import { Position } from "../../../common/core/position.js";
+import { Range } from "../../../common/core/range.js";
+import { EditorOption, IComputedEditorOptions } from "../../../common/config/editorOptions.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { AccessibilitySupport } from "../../../../platform/accessibility/common/accessibility.js";
+import * as nls from "../../../../nls.js";
+class PagedScreenReaderStrategy {
+  static {
+    __name(this, "PagedScreenReaderStrategy");
+  }
+  static _getPageOfLine(lineNumber, linesPerPage) {
+    return Math.floor((lineNumber - 1) / linesPerPage);
+  }
+  static _getRangeForPage(page, linesPerPage) {
+    const offset = page * linesPerPage;
+    const startLineNumber = offset + 1;
+    const endLineNumber = offset + linesPerPage;
+    return new Range(startLineNumber, 1, endLineNumber + 1, 1);
+  }
+  static fromEditorSelection(model, selection, linesPerPage, trimLongText) {
+    const LIMIT_CHARS = 500;
+    const selectionStartPage = PagedScreenReaderStrategy._getPageOfLine(selection.startLineNumber, linesPerPage);
+    const selectionStartPageRange = PagedScreenReaderStrategy._getRangeForPage(selectionStartPage, linesPerPage);
+    const selectionEndPage = PagedScreenReaderStrategy._getPageOfLine(selection.endLineNumber, linesPerPage);
+    const selectionEndPageRange = PagedScreenReaderStrategy._getRangeForPage(selectionEndPage, linesPerPage);
+    let pretextRange = selectionStartPageRange.intersectRanges(new Range(1, 1, selection.startLineNumber, selection.startColumn));
+    if (trimLongText && model.getValueLengthInRange(pretextRange, EndOfLinePreference.LF) > LIMIT_CHARS) {
+      const pretextStart = model.modifyPosition(pretextRange.getEndPosition(), -LIMIT_CHARS);
+      pretextRange = Range.fromPositions(pretextStart, pretextRange.getEndPosition());
+    }
+    const pretext = model.getValueInRange(pretextRange, EndOfLinePreference.LF);
+    const lastLine = model.getLineCount();
+    const lastLineMaxColumn = model.getLineMaxColumn(lastLine);
+    let posttextRange = selectionEndPageRange.intersectRanges(new Range(selection.endLineNumber, selection.endColumn, lastLine, lastLineMaxColumn));
+    if (trimLongText && model.getValueLengthInRange(posttextRange, EndOfLinePreference.LF) > LIMIT_CHARS) {
+      const posttextEnd = model.modifyPosition(posttextRange.getStartPosition(), LIMIT_CHARS);
+      posttextRange = Range.fromPositions(posttextRange.getStartPosition(), posttextEnd);
+    }
+    const posttext = model.getValueInRange(posttextRange, EndOfLinePreference.LF);
+    let text;
+    if (selectionStartPage === selectionEndPage || selectionStartPage + 1 === selectionEndPage) {
+      text = model.getValueInRange(selection, EndOfLinePreference.LF);
+    } else {
+      const selectionRange1 = selectionStartPageRange.intersectRanges(selection);
+      const selectionRange2 = selectionEndPageRange.intersectRanges(selection);
+      text = model.getValueInRange(selectionRange1, EndOfLinePreference.LF) + String.fromCharCode(8230) + model.getValueInRange(selectionRange2, EndOfLinePreference.LF);
+    }
+    if (trimLongText && text.length > 2 * LIMIT_CHARS) {
+      text = text.substring(0, LIMIT_CHARS) + String.fromCharCode(8230) + text.substring(text.length - LIMIT_CHARS, text.length);
+    }
+    return {
+      value: pretext + text + posttext,
+      selection,
+      selectionStart: pretext.length,
+      selectionEnd: pretext.length + text.length,
+      startPositionWithinEditor: pretextRange.getStartPosition(),
+      newlineCountBeforeSelection: pretextRange.endLineNumber - pretextRange.startLineNumber
+    };
+  }
+}
+function ariaLabelForScreenReaderContent(options, keybindingService) {
+  const accessibilitySupport = options.get(EditorOption.accessibilitySupport);
+  if (accessibilitySupport === AccessibilitySupport.Disabled) {
+    const toggleKeybindingLabel = keybindingService.lookupKeybinding("editor.action.toggleScreenReaderAccessibilityMode")?.getAriaLabel();
+    const runCommandKeybindingLabel = keybindingService.lookupKeybinding("workbench.action.showCommands")?.getAriaLabel();
+    const keybindingEditorKeybindingLabel = keybindingService.lookupKeybinding("workbench.action.openGlobalKeybindings")?.getAriaLabel();
+    const editorNotAccessibleMessage = nls.localize("accessibilityModeOff", "The editor is not accessible at this time.");
+    if (toggleKeybindingLabel) {
+      return nls.localize("accessibilityOffAriaLabel", "{0} To enable screen reader optimized mode, use {1}", editorNotAccessibleMessage, toggleKeybindingLabel);
+    } else if (runCommandKeybindingLabel) {
+      return nls.localize("accessibilityOffAriaLabelNoKb", "{0} To enable screen reader optimized mode, open the quick pick with {1} and run the command Toggle Screen Reader Accessibility Mode, which is currently not triggerable via keyboard.", editorNotAccessibleMessage, runCommandKeybindingLabel);
+    } else if (keybindingEditorKeybindingLabel) {
+      return nls.localize("accessibilityOffAriaLabelNoKbs", "{0} Please assign a keybinding for the command Toggle Screen Reader Accessibility Mode by accessing the keybindings editor with {1} and run it.", editorNotAccessibleMessage, keybindingEditorKeybindingLabel);
+    } else {
+      return editorNotAccessibleMessage;
+    }
+  }
+  return options.get(EditorOption.ariaLabel);
+}
+__name(ariaLabelForScreenReaderContent, "ariaLabelForScreenReaderContent");
+function newlinecount(text) {
+  let result = 0;
+  let startIndex = -1;
+  do {
+    startIndex = text.indexOf("\n", startIndex + 1);
+    if (startIndex === -1) {
+      break;
+    }
+    result++;
+  } while (true);
+  return result;
+}
+__name(newlinecount, "newlinecount");
+export {
+  PagedScreenReaderStrategy,
+  ariaLabelForScreenReaderContent,
+  newlinecount
+};
+//# sourceMappingURL=screenReaderUtils.js.map

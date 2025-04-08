@@ -1,1 +1,119 @@
-class D{constructor(e,t,n){this.owner=e,this.debugNameSource=t,this.referenceFn=n}getDebugName(e){return a(e,this)}}const s=new Map,o=new WeakMap;function a(e,t){const n=o.get(e);if(n)return n;const r=b(e,t);if(r){let t=s.get(r)??0;t++,s.set(r,t);const n=1===t?r:`${r}#${t}`;return o.set(e,n),n}}function b(e,t){const n=o.get(e);if(n)return n;const r=t.owner?l(t.owner)+".":"";let s;const c=t.debugNameSource;if(void 0!==c){if("function"!=typeof c)return r+c;if(s=c(),void 0!==s)return r+s}const i=t.referenceFn;if(void 0!==i&&(s=N(i),void 0!==s))return r+s;if(void 0!==t.owner){const n=m(t.owner,e);if(void 0!==n)return r+n}}function m(e,t){for(const n in e)if(e[n]===t)return n}const f=new Map,g=new WeakMap;function l(e){const t=g.get(e);if(t)return t;const n=p(e)??"Object";let o=f.get(n)??0;o++,f.set(n,o);const r=1===o?n:`${n}#${o}`;return g.set(e,r),r}function p(e){const t=e.constructor;if(t)return"Object"===t.name?void 0:t.name}function N(e){const t=e.toString(),n=/\/\*\*\s*@description\s*([^*]*)\*\//.exec(t);return(n?n[1]:void 0)?.trim()}export{D as DebugNameData,p as getClassName,a as getDebugName,N as getFunctionName};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+class DebugNameData {
+  constructor(owner, debugNameSource, referenceFn) {
+    this.owner = owner;
+    this.debugNameSource = debugNameSource;
+    this.referenceFn = referenceFn;
+  }
+  static {
+    __name(this, "DebugNameData");
+  }
+  getDebugName(target) {
+    return getDebugName(target, this);
+  }
+}
+const countPerName = /* @__PURE__ */ new Map();
+const cachedDebugName = /* @__PURE__ */ new WeakMap();
+function getDebugName(target, data) {
+  const cached = cachedDebugName.get(target);
+  if (cached) {
+    return cached;
+  }
+  const dbgName = computeDebugName(target, data);
+  if (dbgName) {
+    let count = countPerName.get(dbgName) ?? 0;
+    count++;
+    countPerName.set(dbgName, count);
+    const result = count === 1 ? dbgName : `${dbgName}#${count}`;
+    cachedDebugName.set(target, result);
+    return result;
+  }
+  return void 0;
+}
+__name(getDebugName, "getDebugName");
+function computeDebugName(self, data) {
+  const cached = cachedDebugName.get(self);
+  if (cached) {
+    return cached;
+  }
+  const ownerStr = data.owner ? formatOwner(data.owner) + `.` : "";
+  let result;
+  const debugNameSource = data.debugNameSource;
+  if (debugNameSource !== void 0) {
+    if (typeof debugNameSource === "function") {
+      result = debugNameSource();
+      if (result !== void 0) {
+        return ownerStr + result;
+      }
+    } else {
+      return ownerStr + debugNameSource;
+    }
+  }
+  const referenceFn = data.referenceFn;
+  if (referenceFn !== void 0) {
+    result = getFunctionName(referenceFn);
+    if (result !== void 0) {
+      return ownerStr + result;
+    }
+  }
+  if (data.owner !== void 0) {
+    const key = findKey(data.owner, self);
+    if (key !== void 0) {
+      return ownerStr + key;
+    }
+  }
+  return void 0;
+}
+__name(computeDebugName, "computeDebugName");
+function findKey(obj, value) {
+  for (const key in obj) {
+    if (obj[key] === value) {
+      return key;
+    }
+  }
+  return void 0;
+}
+__name(findKey, "findKey");
+const countPerClassName = /* @__PURE__ */ new Map();
+const ownerId = /* @__PURE__ */ new WeakMap();
+function formatOwner(owner) {
+  const id = ownerId.get(owner);
+  if (id) {
+    return id;
+  }
+  const className = getClassName(owner) ?? "Object";
+  let count = countPerClassName.get(className) ?? 0;
+  count++;
+  countPerClassName.set(className, count);
+  const result = count === 1 ? className : `${className}#${count}`;
+  ownerId.set(owner, result);
+  return result;
+}
+__name(formatOwner, "formatOwner");
+function getClassName(obj) {
+  const ctor = obj.constructor;
+  if (ctor) {
+    if (ctor.name === "Object") {
+      return void 0;
+    }
+    return ctor.name;
+  }
+  return void 0;
+}
+__name(getClassName, "getClassName");
+function getFunctionName(fn) {
+  const fnSrc = fn.toString();
+  const regexp = /\/\*\*\s*@description\s*([^*]*)\*\//;
+  const match = regexp.exec(fnSrc);
+  const result = match ? match[1] : void 0;
+  return result?.trim();
+}
+__name(getFunctionName, "getFunctionName");
+export {
+  DebugNameData,
+  getClassName,
+  getDebugName,
+  getFunctionName
+};
+//# sourceMappingURL=debugName.js.map

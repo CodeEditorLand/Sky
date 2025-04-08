@@ -1,3 +1,872 @@
-var ee=Object.defineProperty;var te=Object.getOwnPropertyDescriptor;var N=(_,g,e,t)=>{for(var i=t>1?void 0:t?te(g,e):g,n=_.length-1,o;n>=0;n--)(o=_[n])&&(i=(t?o(g,e,i):o(i))||i);return t&&i&&ee(g,e,i),i},E=(_,g)=>(e,t)=>g(e,t,_);import{mapFindFirst as ie}from"../../../../../base/common/arraysFind.js";import{itemsEquals as F}from"../../../../../base/common/equals.js";import{BugIndicatingError as O,onUnexpectedError as ne,onUnexpectedExternalError as oe}from"../../../../../base/common/errors.js";import{Emitter as se}from"../../../../../base/common/event.js";import{Disposable as q}from"../../../../../base/common/lifecycle.js";import{autorun as b,constObservable as le,derived as h,derivedHandleChanges as G,derivedOpts as v,observableSignal as w,observableValue as P,recomputeInitiallyAndOnChange as re,subtransaction as L,transaction as V}from"../../../../../base/common/observable.js";import{commonPrefixLength as de,firstNonWhitespaceIndex as ae}from"../../../../../base/common/strings.js";import{isDefined as U}from"../../../../../base/common/types.js";import{IAccessibilityService as ce}from"../../../../../platform/accessibility/common/accessibility.js";import{ICommandService as pe}from"../../../../../platform/commands/common/commands.js";import{IInstantiationService as me}from"../../../../../platform/instantiation/common/instantiation.js";import"../../../../browser/editorBrowser.js";import{observableCodeEditor as K}from"../../../../browser/observableCodeEditor.js";import{EditorOption as S}from"../../../../common/config/editorOptions.js";import{CursorColumns as ue}from"../../../../common/core/cursorColumns.js";import{EditOperation as W}from"../../../../common/core/editOperation.js";import{LineRange as ge}from"../../../../common/core/lineRange.js";import{Position as j}from"../../../../common/core/position.js";import{Range as x}from"../../../../common/core/range.js";import{Selection as z}from"../../../../common/core/selection.js";import{SingleTextEdit as B,TextEdit as J}from"../../../../common/core/textEdit.js";import{TextLength as he}from"../../../../common/core/textLength.js";import{ScrollType as $}from"../../../../common/editorCommon.js";import{InlineCompletionTriggerKind as R,PartialAcceptTriggerKind as k}from"../../../../common/languages.js";import{ILanguageConfigurationService as fe}from"../../../../common/languages/languageConfigurationRegistry.js";import{EndOfLinePreference as H}from"../../../../common/model.js";import{TextModelText as Ie}from"../../../../common/model/textModelText.js";import"../../../../common/services/languageFeatureDebounce.js";import"../../../../common/textModelEvents.js";import{SnippetController2 as Ce}from"../../../snippet/browser/snippetController2.js";import{addPositions as _e,getEndPositionsAfterApplying as Q,substringPos as xe,subtractPositions as X}from"../utils.js";import{AnimatedValue as be,easeOutCubic as ve,ObservableAnimatedValue as Ee}from"./animation.js";import{computeGhostText as Y}from"./computeGhostText.js";import{GhostText as Se,ghostTextOrReplacementEquals as ye,ghostTextsOrReplacementsEqual as Z}from"./ghostText.js";import{InlineCompletionsSource as Te}from"./inlineCompletionsSource.js";import{InlineEdit as we}from"./inlineEdit.js";import"./provideInlineCompletions.js";import{singleTextEditAugments as Pe,singleTextRemoveCommonPrefix as A}from"./singleTextEditHelpers.js";import"./suggestWidgetAdapter.js";let M=class extends q{constructor(e,t,i,n,o,s,l,d,r,c,a){super();this.textModel=e;this._selectedSuggestItem=t;this._textModelVersionId=i;this._positions=n;this._debounceValue=o;this._enabled=s;this._editor=l;this._instantiationService=d;this._commandService=r;this._languageConfigurationService=c;this._accessibilityService=a;this._register(re(this._fetchInlineCompletionsPromise));let m;this._register(b(p=>{const u=this.inlineCompletionState.read(p)?.inlineCompletion;if(u?.semanticId!==m?.semanticId&&(m=u,u)){const C=u.inlineCompletion,y=C.source;y.provider.handleItemDidShow?.(y.inlineCompletions,C.sourceInlineCompletion,C.insertText)}})),this._register(b(p=>{const I=this._source.inlineCompletions.read(p);if(I){for(const u of I.inlineCompletions)if(u.updatedEdit.read(p)===void 0){this.stop();break}}})),this._register(b(p=>{this._editorObs.versionId.read(p),this._inAcceptFlow.set(!1,void 0)})),this._register(b(p=>{this.state.map((u,C)=>!u||u.kind==="inlineEdit"&&!u.cursorAtInlineEdit.read(C)).read(p)&&this._jumpedToId.set(void 0,void 0)}));const f=this.inlineEditState.map(p=>p?.inlineCompletion.semanticId);this._register(b(p=>{f.read(p)&&(this._editor.pushUndoStop(),this._lastShownInlineCompletionInfo={alternateTextModelVersionId:this.textModel.getAlternativeVersionId(),inlineCompletion:this.state.get().inlineCompletion.inlineCompletion})})),this._didUndoInlineEdits.recomputeInitiallyAndOnChange(this._store)}_source=this._register(this._instantiationService.createInstance(Te,this.textModel,this._textModelVersionId,this._debounceValue));_isActive=P(this,!1);_onlyRequestInlineEditsSignal=w(this);_forceUpdateExplicitlySignal=w(this);_noDelaySignal=w(this);_selectedInlineCompletionId=P(this,void 0);primaryPosition=h(this,e=>this._positions.read(e)[0]??new j(1,1));_isAcceptingPartially=!1;get isAcceptingPartially(){return this._isAcceptingPartially}_onDidAccept=new se;onDidAccept=this._onDidAccept.event;_editorObs=K(this._editor);_suggestPreviewEnabled=this._editorObs.getOption(S.suggest).map(e=>e.preview);_suggestPreviewMode=this._editorObs.getOption(S.suggest).map(e=>e.previewMode);_inlineSuggestMode=this._editorObs.getOption(S.inlineSuggest).map(e=>e.mode);_inlineEditsEnabled=this._editorObs.getOption(S.inlineSuggest).map(e=>!!e.edits.enabled);_inlineEditsShowCollapsedEnabled=this._editorObs.getOption(S.inlineSuggest).map(e=>e.edits.showCollapsed);_lastShownInlineCompletionInfo=void 0;_lastAcceptedInlineCompletionInfo=void 0;_didUndoInlineEdits=G({owner:this,changeTracker:{createChangeSummary:()=>({didUndo:!1}),handleChange:(e,t)=>(t.didUndo=e.didChange(this._textModelVersionId)&&!!e.change?.isUndoing,!0)}},(e,t)=>{const i=this._textModelVersionId.read(e);return i!==null&&this._lastAcceptedInlineCompletionInfo&&this._lastAcceptedInlineCompletionInfo.textModelVersionIdAfter===i-1&&this._lastAcceptedInlineCompletionInfo.inlineCompletion.isInlineEdit&&t.didUndo?(this._lastAcceptedInlineCompletionInfo=void 0,!0):!1});debugGetSelectedSuggestItem(){return this._selectedSuggestItem}getIndentationInfo(e){let t=!1,i=!0;const n=this?.primaryGhostText.read(e);if(this?._selectedSuggestItem&&n&&n.parts.length>0){const{column:o,lines:s}=n.parts[0],l=s[0].line,d=this.textModel.getLineIndentColumn(n.lineNumber);if(o<=d){let c=ae(l);c===-1&&(c=l.length-1),t=c>0;const a=this.textModel.getOptions().tabSize;i=ue.visibleColumnFromColumn(l,c+1,a)<a}}return{startsWithIndentation:t,startsWithIndentationLessThanTabSize:i}}_preserveCurrentCompletionReasons=new Set([1,0,2]);_getReason(e){return e?.isUndoing?0:e?.isRedoing?1:this.isAcceptingPartially?2:3}dontRefetchSignal=w(this);_fetchInlineCompletionsPromise=G({owner:this,changeTracker:{createChangeSummary:()=>({dontRefetch:!1,preserveCurrentCompletion:!1,inlineCompletionTriggerKind:R.Automatic,onlyRequestInlineEdits:!1,shouldDebounce:!0}),handleChange:(e,t)=>(e.didChange(this._textModelVersionId)&&this._preserveCurrentCompletionReasons.has(this._getReason(e.change))?t.preserveCurrentCompletion=!0:e.didChange(this._forceUpdateExplicitlySignal)?t.inlineCompletionTriggerKind=R.Explicit:e.didChange(this.dontRefetchSignal)?t.dontRefetch=!0:e.didChange(this._onlyRequestInlineEditsSignal)?t.onlyRequestInlineEdits=!0:e.didChange(this._noDelaySignal)&&(t.shouldDebounce=!1),!0)}},(e,t)=>{if(this._source.clearOperationOnTextModelChange.read(e),this._noDelaySignal.read(e),this.dontRefetchSignal.read(e),this._onlyRequestInlineEditsSignal.read(e),this._forceUpdateExplicitlySignal.read(e),!(this._enabled.read(e)&&this._selectedSuggestItem.read(e)||this._isActive.read(e))){this._source.cancelUpdate();return}this._textModelVersionId.read(e);const n=this._source.suggestWidgetInlineCompletions.get(),o=this._selectedSuggestItem.read(e);if(n&&!o){const a=this._source.inlineCompletions.get();V(m=>{(!a||n.request.versionId>a.request.versionId)&&this._source.inlineCompletions.set(n.clone(),m),this._source.clearSuggestWidgetInlineCompletions(m)})}const s=this.primaryPosition.get();if(t.dontRefetch)return Promise.resolve(!0);if(this._didUndoInlineEdits.read(e)){V(a=>{this._source.clear(a)});return}let l={triggerKind:t.inlineCompletionTriggerKind,selectedSuggestionInfo:o?.toSelectedSuggestionInfo(),includeInlineCompletions:!t.onlyRequestInlineEdits,includeInlineEdits:this._inlineEditsEnabled.read(e)};l.triggerKind===R.Automatic&&this.textModel.getAlternativeVersionId()===this._lastShownInlineCompletionInfo?.alternateTextModelVersionId&&(l={...l,includeInlineCompletions:!this._lastShownInlineCompletionInfo.inlineCompletion.isInlineEdit,includeInlineEdits:this._lastShownInlineCompletionInfo.inlineCompletion.isInlineEdit});const d=this.selectedInlineCompletion.get()??this._inlineCompletionItems.get()?.inlineEdit,r=t.preserveCurrentCompletion||d?.forwardStable?d:void 0,c=this._jumpedToId.map(a=>!!a&&a===this._inlineCompletionItems.get()?.inlineEdit?.semanticId);return this._source.fetch(s,l,r,t.shouldDebounce,c)});async trigger(e,t){L(e,i=>{t?.onlyFetchInlineEdits&&this._onlyRequestInlineEditsSignal.trigger(i),t?.noDelay&&this._noDelaySignal.trigger(i),this._isActive.set(!0,i)}),await this._fetchInlineCompletionsPromise.get()}async triggerExplicitly(e,t=!1){L(e,i=>{t&&this._onlyRequestInlineEditsSignal.trigger(i),this._isActive.set(!0,i),this._inAcceptFlow.set(!0,i),this._forceUpdateExplicitlySignal.trigger(i)}),await this._fetchInlineCompletionsPromise.get()}stop(e="automatic",t){L(t,i=>{if(e==="explicitCancel"){const n=this.state.get()?.inlineCompletion,o=n?.source,s=n?.sourceInlineCompletion;s&&o?.provider.handleRejection&&o.provider.handleRejection(o.inlineCompletions,s)}this._isActive.set(!1,i),this._source.clear(i)})}_inlineCompletionItems=v({owner:this},e=>{const t=this._source.inlineCompletions.read(e);if(!t)return;const i=this.primaryPosition.read(e);let n;const o=[];for(const s of t.inlineCompletions)s.sourceInlineCompletion.isInlineEdit?n=s:s.isVisible(this.textModel,i,e)&&o.push(s);return o.length!==0&&(n=void 0),{inlineCompletions:o,inlineEdit:n}});_filteredInlineCompletionItems=v({owner:this,equalsFn:F()},e=>this._inlineCompletionItems.read(e)?.inlineCompletions??[]);selectedInlineCompletionIndex=h(this,e=>{const t=this._selectedInlineCompletionId.read(e),i=this._filteredInlineCompletionItems.read(e),n=this._selectedInlineCompletionId===void 0?-1:i.findIndex(o=>o.semanticId===t);return n===-1?(this._selectedInlineCompletionId.set(void 0,void 0),0):n});selectedInlineCompletion=h(this,e=>{const t=this._filteredInlineCompletionItems.read(e),i=this.selectedInlineCompletionIndex.read(e);return t[i]});activeCommands=v({owner:this,equalsFn:F()},e=>this.selectedInlineCompletion.read(e)?.source.inlineCompletions.commands??[]);lastTriggerKind=this._source.inlineCompletions.map(this,e=>e?.request.context.triggerKind);inlineCompletionsCount=h(this,e=>{if(this.lastTriggerKind.read(e)===R.Explicit)return this._filteredInlineCompletionItems.read(e).length});_hasVisiblePeekWidgets=h(this,e=>this._editorObs.openedPeekWidgets.read(e)>0);state=v({owner:this,equalsFn:(e,t)=>!e||!t?e===t:e.kind==="ghostText"&&t.kind==="ghostText"?Z(e.ghostTexts,t.ghostTexts)&&e.inlineCompletion===t.inlineCompletion&&e.suggestItem===t.suggestItem:e.kind==="inlineEdit"&&t.kind==="inlineEdit"?e.inlineEdit.equals(t.inlineEdit):!1},e=>{const t=this.textModel,n=this._inlineCompletionItems.read(e)?.inlineEdit;if(n){if(this._hasVisiblePeekWidgets.read(e))return;let s=n.toSingleTextEdit(e);s=A(s,t);const l=this.primaryPosition.map(m=>ge.fromRangeInclusive(s.range).addMargin(1,1).contains(m.lineNumber)),d=n.inlineCompletion.source.inlineCompletions.commands,r=new we(s,d??[],n.inlineCompletion),c=n.updatedEdit.read(e),a=c?J.fromOffsetEdit(c,new Ie(this.textModel)).edits:[s];return{kind:"inlineEdit",inlineEdit:r,inlineCompletion:n,edits:a,cursorAtInlineEdit:l}}const o=this._selectedSuggestItem.read(e);if(o){const s=A(o.toSingleTextEdit(),t),l=this._computeAugmentation(s,e);if(!this._suggestPreviewEnabled.read(e)&&!l)return;const r=l?.edit??s,c=l?l.edit.text.length-s.text.length:0,a=this._suggestPreviewMode.read(e),m=this._positions.read(e),f=[r,...D(this.textModel,m,r)],p=f.map((u,C)=>Y(u,t,a,m[C],c)).filter(U),I=p[0]??new Se(r.range.endLineNumber,[]);return{kind:"ghostText",edits:f,primaryGhostText:I,ghostTexts:p,inlineCompletion:l?.completion,suggestItem:o}}else{if(!this._isActive.read(e))return;const s=this.selectedInlineCompletion.read(e);if(!s)return;const l=s.toSingleTextEdit(e),d=this._inlineSuggestMode.read(e),r=this._positions.read(e),c=[l,...D(this.textModel,r,l)],a=c.map((m,f)=>Y(m,t,d,r[f],0)).filter(U);return a[0]?{kind:"ghostText",edits:c,primaryGhostText:a[0],ghostTexts:a,inlineCompletion:s,suggestItem:void 0}:void 0}});status=h(this,e=>{if(this._source.loading.read(e))return"loading";const t=this.state.read(e);return t?.kind==="ghostText"?"ghostText":t?.kind==="inlineEdit"?"inlineEdit":"noSuggestion"});inlineCompletionState=h(this,e=>{const t=this.state.read(e);if(!(!t||t.kind!=="ghostText")&&!this._editorObs.inComposition.read(e))return t});inlineEditState=h(this,e=>{const t=this.state.read(e);if(!(!t||t.kind!=="inlineEdit"))return t});inlineEditAvailable=h(this,e=>!!this.inlineEditState.read(e));_computeAugmentation(e,t){const i=this.textModel,n=this._source.suggestWidgetInlineCompletions.read(t),o=n?n.inlineCompletions:[this.selectedInlineCompletion.read(t)].filter(U);return ie(o,l=>{let d=l.toSingleTextEdit(t);return d=A(d,i,x.fromPositions(d.range.getStartPosition(),e.range.getEndPosition())),Pe(d,e)?{completion:l,edit:d}:void 0})}warning=h(this,e=>this.inlineCompletionState.read(e)?.inlineCompletion?.sourceInlineCompletion.warning);ghostTexts=v({owner:this,equalsFn:Z},e=>{const t=this.inlineCompletionState.read(e);if(t)return t.ghostTexts});primaryGhostText=v({owner:this,equalsFn:ye},e=>{const t=this.inlineCompletionState.read(e);if(t)return t?.primaryGhostText});showCollapsed=h(this,e=>{const t=this.state.read(e);if(!t||t.kind!=="inlineEdit")return!1;const i=t.inlineCompletion.updatedEditModelVersion===this._textModelVersionId.read(e);return(this._inlineEditsShowCollapsedEnabled.read(e)||!i)&&this._jumpedToId.read(e)!==t.inlineCompletion.semanticId&&!this._inAcceptFlow.read(e)});_tabShouldIndent=h(this,e=>{if(this._inAcceptFlow.read(e))return!1;function t(o){return o.startLineNumber!==o.endLineNumber}function i(o,s){const l=o.getLineIndentColumn(s),d=o.getLineLastNonWhitespaceColumn(s),r=Math.max(d,l);return new x(s,l,s,r)}return this._editorObs.selections.read(e)?.some(o=>o.isEmpty()?this.textModel.getLineLength(o.startLineNumber)===0:t(o)||o.containsRange(i(this.textModel,o.startLineNumber)))});tabShouldJumpToInlineEdit=h(this,e=>{if(this._tabShouldIndent.read(e))return!1;const t=this.inlineEditState.read(e);return t?this.showCollapsed.read(e)?!0:!t.cursorAtInlineEdit.read(e):!1});tabShouldAcceptInlineEdit=h(this,e=>{const t=this.inlineEditState.read(e);return!t||this.showCollapsed.read(e)?!1:t.inlineEdit.range.startLineNumber===this._editorObs.cursorLineNumber.read(e)||this._jumpedToId.read(e)===t.inlineCompletion.semanticId?!0:this._tabShouldIndent.read(e)?!1:t.cursorAtInlineEdit.read(e)});async _deltaSelectedInlineCompletionIndex(e){await this.triggerExplicitly();const t=this._filteredInlineCompletionItems.get()||[];if(t.length>0){const i=(this.selectedInlineCompletionIndex.get()+e+t.length)%t.length;this._selectedInlineCompletionId.set(t[i].semanticId,void 0)}else this._selectedInlineCompletionId.set(void 0,void 0)}async next(){await this._deltaSelectedInlineCompletionIndex(1)}async previous(){await this._deltaSelectedInlineCompletionIndex(-1)}async accept(e=this._editor){if(e.getModel()!==this.textModel)throw new O;let t;const i=this.state.get();if(i?.kind==="ghostText"){if(!i||i.primaryGhostText.isEmpty()||!i.inlineCompletion)return;t=i.inlineCompletion}else if(i?.kind==="inlineEdit")t=i.inlineCompletion;else return;const n=t.toInlineCompletion(void 0);if(n.command&&n.source.addRef(),e.pushUndoStop(),n.snippetInfo)e.executeEdits("inlineSuggestion.accept",[W.replace(n.range,""),...n.additionalTextEdits]),e.setPosition(n.snippetInfo.range.getStartPosition(),"inlineCompletionAccept"),Ce.get(e)?.insert(n.snippetInfo.snippet,{undoStopBefore:!1});else{const o=i.edits,s=Q(o).map(l=>z.fromPositions(l));if(e.executeEdits("inlineSuggestion.accept",[...o.map(l=>W.replace(l.range,l.text)),...n.additionalTextEdits]),e.setSelections(i.kind==="inlineEdit"?s.slice(-1):s,"inlineCompletionAccept"),i.kind==="inlineEdit"&&!this._accessibilityService.isMotionReduced()){const l=new J(o).getNewRanges(),d=this._store.add(new Ae(e,l,()=>{this._store.delete(d)}))}}this._onDidAccept.fire(),this.stop(),n.command&&(await this._commandService.executeCommand(n.command.id,...n.command.arguments||[]).then(void 0,oe),n.source.removeRef()),this._inAcceptFlow.set(!0,void 0),this._lastAcceptedInlineCompletionInfo={textModelVersionIdAfter:this.textModel.getVersionId(),inlineCompletion:n}}async acceptNextWord(){await this._acceptNext(this._editor,(e,t)=>{const i=this.textModel.getLanguageIdAtPosition(e.lineNumber,e.column),n=this._languageConfigurationService.getLanguageConfiguration(i),o=new RegExp(n.wordDefinition.source,n.wordDefinition.flags.replace("g","")),s=t.match(o);let l=0;s&&s.index!==void 0?s.index===0?l=s[0].length:l=s.index:l=t.length;const r=/\s+/g.exec(t);return r&&r.index!==void 0&&r.index+r[0].length<l&&(l=r.index+r[0].length),l},k.Word)}async acceptNextLine(){await this._acceptNext(this._editor,(e,t)=>{const i=t.match(/\n/);return i&&i.index!==void 0?i.index+1:t.length},k.Line)}async _acceptNext(e,t,i){if(e.getModel()!==this.textModel)throw new O;const n=this.inlineCompletionState.get();if(!n||n.primaryGhostText.isEmpty()||!n.inlineCompletion)return;const o=n.primaryGhostText,s=n.inlineCompletion.toInlineCompletion(void 0);if(s.snippetInfo||s.filterText!==s.insertText){await this.accept(e);return}const l=o.parts[0],d=new j(o.lineNumber,l.column),r=l.text,c=t(d,r);if(c===r.length&&o.parts.length===1){this.accept(e);return}const a=r.substring(0,c),m=this._positions.get(),f=m[0];s.source.addRef();try{this._isAcceptingPartially=!0;try{e.pushUndoStop();const p=x.fromPositions(f,d),I=e.getModel().getValueInRange(p)+a,u=new B(p,I),C=[u,...D(this.textModel,m,u)],y=Q(C).map(T=>z.fromPositions(T));e.executeEdits("inlineSuggestion.accept",C.map(T=>W.replace(T.range,T.text))),e.setSelections(y,"inlineCompletionPartialAccept"),e.revealPositionInCenterIfOutsideViewport(e.getPosition(),$.Immediate)}finally{this._isAcceptingPartially=!1}if(s.source.provider.handlePartialAccept){const p=x.fromPositions(s.range.getStartPosition(),he.ofText(a).addToPosition(d)),u=e.getModel().getValueInRange(p,H.LF).length;s.source.provider.handlePartialAccept(s.source.inlineCompletions,s.sourceInlineCompletion,u,{kind:i,acceptedLength:u})}}finally{s.source.removeRef()}}handleSuggestAccepted(e){const t=A(e.toSingleTextEdit(),this.textModel),i=this._computeAugmentation(t,void 0);if(!i)return;const n=i.completion.source,o=i.completion.sourceInlineCompletion,s=i.completion.toInlineCompletion(void 0),d=this.textModel.getValueInRange(s.range,H.LF).length+t.text.length;n.provider.handlePartialAccept?.(n.inlineCompletions,o,t.text.length,{kind:k.Suggest,acceptedLength:d})}extractReproSample(){const e=this.textModel.getValue(),t=this.state.get()?.inlineCompletion?.toInlineCompletion(void 0);return{documentValue:e,inlineCompletion:t?.sourceInlineCompletion}}_jumpedToId=P(this,void 0);_inAcceptFlow=P(this,!1);inAcceptFlow=this._inAcceptFlow;jump(){const e=this.inlineEditState.get();e&&V(t=>{this._jumpedToId.set(e.inlineCompletion.semanticId,t),this.dontRefetchSignal.trigger(t);const i=e.inlineCompletion.toSingleTextEdit(void 0);if(this._editor.setPosition(i.range.getStartPosition(),"inlineCompletions.jump"),i.range.startLineNumber===i.range.endLineNumber&&!i.text.includes(`
-`))this._editor.revealPosition(i.range.getStartPosition());else{const o=new x(i.range.startLineNumber-1,1,i.range.endLineNumber+1,1);this._editor.revealRange(o,$.Immediate)}this._editor.focus()})}async handleInlineEditShown(e){e.didShow||(e.markAsShown(),e.source.provider.handleItemDidShow?.(e.source.inlineCompletions,e.sourceInlineCompletion,e.insertText),e.shownCommand&&await this._commandService.executeCommand(e.shownCommand.id,...e.shownCommand.arguments||[]))}};M=N([E(7,me),E(8,pe),E(9,fe),E(10,ce)],M);var Re=(i=>(i[i.Undo=0]="Undo",i[i.Redo=1]="Redo",i[i.AcceptWord=2]="AcceptWord",i[i.Other=3]="Other",i))(Re||{});function D(_,g,e){if(g.length===1)return[];const t=g[0],i=g.slice(1),n=e.range.getStartPosition(),o=e.range.getEndPosition(),s=_.getValueInRange(x.fromPositions(t,o)),l=X(t,n);if(l.lineNumber<1)return ne(new O(`positionWithinTextEdit line number should be bigger than 0.
-			Invalid subtraction between ${t.toString()} and ${n.toString()}`)),[];const d=xe(e.text,l);return i.map(r=>{const c=_e(X(r,n),o),a=_.getValueInRange(x.fromPositions(r,c)),m=de(s,a),f=x.fromPositions(r,r.delta(0,m));return new B(f,d)})}class Ae extends q{constructor(g,e,t){super(),t&&this._register({dispose:()=>t()}),this._register(K(g).setDecorations(le(e.map(o=>({range:o,options:{description:"animation",className:"edits-fadeout-decoration",zIndex:1}})))));const i=new be(1,0,1e3,ve),n=new Ee(i);this._register(b(o=>{const s=n.getValue(o);g.getContainerDomNode().style.setProperty("--animation-opacity",s.toString()),i.isFinished()&&this.dispose()}))}}export{M as InlineCompletionsModel,Re as VersionIdChangeReason,D as getSecondaryEdits};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { mapFindFirst } from "../../../../../base/common/arraysFind.js";
+import { itemsEquals } from "../../../../../base/common/equals.js";
+import { BugIndicatingError, onUnexpectedError, onUnexpectedExternalError } from "../../../../../base/common/errors.js";
+import { Emitter } from "../../../../../base/common/event.js";
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { IObservable, IObservableWithChange, IReader, ITransaction, autorun, constObservable, derived, derivedHandleChanges, derivedOpts, observableSignal, observableValue, recomputeInitiallyAndOnChange, subtransaction, transaction } from "../../../../../base/common/observable.js";
+import { commonPrefixLength, firstNonWhitespaceIndex } from "../../../../../base/common/strings.js";
+import { isDefined } from "../../../../../base/common/types.js";
+import { IAccessibilityService } from "../../../../../platform/accessibility/common/accessibility.js";
+import { ICommandService } from "../../../../../platform/commands/common/commands.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { ICodeEditor } from "../../../../browser/editorBrowser.js";
+import { observableCodeEditor } from "../../../../browser/observableCodeEditor.js";
+import { EditorOption } from "../../../../common/config/editorOptions.js";
+import { CursorColumns } from "../../../../common/core/cursorColumns.js";
+import { EditOperation } from "../../../../common/core/editOperation.js";
+import { LineRange } from "../../../../common/core/lineRange.js";
+import { Position } from "../../../../common/core/position.js";
+import { Range } from "../../../../common/core/range.js";
+import { Selection } from "../../../../common/core/selection.js";
+import { SingleTextEdit, TextEdit } from "../../../../common/core/textEdit.js";
+import { TextLength } from "../../../../common/core/textLength.js";
+import { ScrollType } from "../../../../common/editorCommon.js";
+import { Command, InlineCompletion, InlineCompletionContext, InlineCompletionTriggerKind, PartialAcceptTriggerKind } from "../../../../common/languages.js";
+import { ILanguageConfigurationService } from "../../../../common/languages/languageConfigurationRegistry.js";
+import { EndOfLinePreference, IModelDeltaDecoration, ITextModel } from "../../../../common/model.js";
+import { TextModelText } from "../../../../common/model/textModelText.js";
+import { IFeatureDebounceInformation } from "../../../../common/services/languageFeatureDebounce.js";
+import { IModelContentChangedEvent } from "../../../../common/textModelEvents.js";
+import { SnippetController2 } from "../../../snippet/browser/snippetController2.js";
+import { addPositions, getEndPositionsAfterApplying, substringPos, subtractPositions } from "../utils.js";
+import { AnimatedValue, easeOutCubic, ObservableAnimatedValue } from "./animation.js";
+import { computeGhostText } from "./computeGhostText.js";
+import { GhostText, GhostTextOrReplacement, ghostTextOrReplacementEquals, ghostTextsOrReplacementsEqual } from "./ghostText.js";
+import { InlineCompletionWithUpdatedRange, InlineCompletionsSource } from "./inlineCompletionsSource.js";
+import { InlineEdit } from "./inlineEdit.js";
+import { InlineCompletionItem } from "./provideInlineCompletions.js";
+import { singleTextEditAugments, singleTextRemoveCommonPrefix } from "./singleTextEditHelpers.js";
+import { SuggestItemInfo } from "./suggestWidgetAdapter.js";
+let InlineCompletionsModel = class extends Disposable {
+  constructor(textModel, _selectedSuggestItem, _textModelVersionId, _positions, _debounceValue, _enabled, _editor, _instantiationService, _commandService, _languageConfigurationService, _accessibilityService) {
+    super();
+    this.textModel = textModel;
+    this._selectedSuggestItem = _selectedSuggestItem;
+    this._textModelVersionId = _textModelVersionId;
+    this._positions = _positions;
+    this._debounceValue = _debounceValue;
+    this._enabled = _enabled;
+    this._editor = _editor;
+    this._instantiationService = _instantiationService;
+    this._commandService = _commandService;
+    this._languageConfigurationService = _languageConfigurationService;
+    this._accessibilityService = _accessibilityService;
+    this._register(recomputeInitiallyAndOnChange(this._fetchInlineCompletionsPromise));
+    let lastItem = void 0;
+    this._register(autorun((reader) => {
+      const item = this.inlineCompletionState.read(reader);
+      const completion = item?.inlineCompletion;
+      if (completion?.semanticId !== lastItem?.semanticId) {
+        lastItem = completion;
+        if (completion) {
+          const i = completion.inlineCompletion;
+          const src = i.source;
+          src.provider.handleItemDidShow?.(src.inlineCompletions, i.sourceInlineCompletion, i.insertText);
+        }
+      }
+    }));
+    this._register(autorun((reader) => {
+      const inlineCompletions = this._source.inlineCompletions.read(reader);
+      if (!inlineCompletions) {
+        return;
+      }
+      for (const inlineCompletion of inlineCompletions.inlineCompletions) {
+        if (inlineCompletion.updatedEdit.read(reader) === void 0) {
+          this.stop();
+          break;
+        }
+      }
+    }));
+    this._register(autorun((reader) => {
+      this._editorObs.versionId.read(reader);
+      this._inAcceptFlow.set(false, void 0);
+    }));
+    this._register(autorun((reader) => {
+      const jumpToReset = this.state.map((s, reader2) => !s || s.kind === "inlineEdit" && !s.cursorAtInlineEdit.read(reader2)).read(reader);
+      if (jumpToReset) {
+        this._jumpedToId.set(void 0, void 0);
+      }
+    }));
+    const inlineEditSemanticId = this.inlineEditState.map((s) => s?.inlineCompletion.semanticId);
+    this._register(autorun((reader) => {
+      const id = inlineEditSemanticId.read(reader);
+      if (id) {
+        this._editor.pushUndoStop();
+        this._lastShownInlineCompletionInfo = {
+          alternateTextModelVersionId: this.textModel.getAlternativeVersionId(),
+          inlineCompletion: this.state.get().inlineCompletion.inlineCompletion
+        };
+      }
+    }));
+    this._didUndoInlineEdits.recomputeInitiallyAndOnChange(this._store);
+  }
+  static {
+    __name(this, "InlineCompletionsModel");
+  }
+  _source = this._register(this._instantiationService.createInstance(InlineCompletionsSource, this.textModel, this._textModelVersionId, this._debounceValue));
+  _isActive = observableValue(this, false);
+  _onlyRequestInlineEditsSignal = observableSignal(this);
+  _forceUpdateExplicitlySignal = observableSignal(this);
+  _noDelaySignal = observableSignal(this);
+  // We use a semantic id to keep the same inline completion selected even if the provider reorders the completions.
+  _selectedInlineCompletionId = observableValue(this, void 0);
+  primaryPosition = derived(this, (reader) => this._positions.read(reader)[0] ?? new Position(1, 1));
+  _isAcceptingPartially = false;
+  get isAcceptingPartially() {
+    return this._isAcceptingPartially;
+  }
+  _onDidAccept = new Emitter();
+  onDidAccept = this._onDidAccept.event;
+  _editorObs = observableCodeEditor(this._editor);
+  _suggestPreviewEnabled = this._editorObs.getOption(EditorOption.suggest).map((v) => v.preview);
+  _suggestPreviewMode = this._editorObs.getOption(EditorOption.suggest).map((v) => v.previewMode);
+  _inlineSuggestMode = this._editorObs.getOption(EditorOption.inlineSuggest).map((v) => v.mode);
+  _inlineEditsEnabled = this._editorObs.getOption(EditorOption.inlineSuggest).map((v) => !!v.edits.enabled);
+  _inlineEditsShowCollapsedEnabled = this._editorObs.getOption(EditorOption.inlineSuggest).map((s) => s.edits.showCollapsed);
+  _lastShownInlineCompletionInfo = void 0;
+  _lastAcceptedInlineCompletionInfo = void 0;
+  _didUndoInlineEdits = derivedHandleChanges({
+    owner: this,
+    changeTracker: {
+      createChangeSummary: /* @__PURE__ */ __name(() => ({ didUndo: false }), "createChangeSummary"),
+      handleChange: /* @__PURE__ */ __name((ctx, changeSummary) => {
+        changeSummary.didUndo = ctx.didChange(this._textModelVersionId) && !!ctx.change?.isUndoing;
+        return true;
+      }, "handleChange")
+    }
+  }, (reader, changeSummary) => {
+    const versionId = this._textModelVersionId.read(reader);
+    if (versionId !== null && this._lastAcceptedInlineCompletionInfo && this._lastAcceptedInlineCompletionInfo.textModelVersionIdAfter === versionId - 1 && this._lastAcceptedInlineCompletionInfo.inlineCompletion.isInlineEdit && changeSummary.didUndo) {
+      this._lastAcceptedInlineCompletionInfo = void 0;
+      return true;
+    }
+    return false;
+  });
+  debugGetSelectedSuggestItem() {
+    return this._selectedSuggestItem;
+  }
+  getIndentationInfo(reader) {
+    let startsWithIndentation = false;
+    let startsWithIndentationLessThanTabSize = true;
+    const ghostText = this?.primaryGhostText.read(reader);
+    if (!!this?._selectedSuggestItem && ghostText && ghostText.parts.length > 0) {
+      const { column, lines } = ghostText.parts[0];
+      const firstLine = lines[0].line;
+      const indentationEndColumn = this.textModel.getLineIndentColumn(ghostText.lineNumber);
+      const inIndentation = column <= indentationEndColumn;
+      if (inIndentation) {
+        let firstNonWsIdx = firstNonWhitespaceIndex(firstLine);
+        if (firstNonWsIdx === -1) {
+          firstNonWsIdx = firstLine.length - 1;
+        }
+        startsWithIndentation = firstNonWsIdx > 0;
+        const tabSize = this.textModel.getOptions().tabSize;
+        const visibleColumnIndentation = CursorColumns.visibleColumnFromColumn(firstLine, firstNonWsIdx + 1, tabSize);
+        startsWithIndentationLessThanTabSize = visibleColumnIndentation < tabSize;
+      }
+    }
+    return {
+      startsWithIndentation,
+      startsWithIndentationLessThanTabSize
+    };
+  }
+  _preserveCurrentCompletionReasons = /* @__PURE__ */ new Set([
+    1 /* Redo */,
+    0 /* Undo */,
+    2 /* AcceptWord */
+  ]);
+  _getReason(e) {
+    if (e?.isUndoing) {
+      return 0 /* Undo */;
+    }
+    if (e?.isRedoing) {
+      return 1 /* Redo */;
+    }
+    if (this.isAcceptingPartially) {
+      return 2 /* AcceptWord */;
+    }
+    return 3 /* Other */;
+  }
+  dontRefetchSignal = observableSignal(this);
+  _fetchInlineCompletionsPromise = derivedHandleChanges({
+    owner: this,
+    changeTracker: {
+      createChangeSummary: /* @__PURE__ */ __name(() => ({
+        dontRefetch: false,
+        preserveCurrentCompletion: false,
+        inlineCompletionTriggerKind: InlineCompletionTriggerKind.Automatic,
+        onlyRequestInlineEdits: false,
+        shouldDebounce: true
+      }), "createChangeSummary"),
+      handleChange: /* @__PURE__ */ __name((ctx, changeSummary) => {
+        if (ctx.didChange(this._textModelVersionId) && this._preserveCurrentCompletionReasons.has(this._getReason(ctx.change))) {
+          changeSummary.preserveCurrentCompletion = true;
+        } else if (ctx.didChange(this._forceUpdateExplicitlySignal)) {
+          changeSummary.inlineCompletionTriggerKind = InlineCompletionTriggerKind.Explicit;
+        } else if (ctx.didChange(this.dontRefetchSignal)) {
+          changeSummary.dontRefetch = true;
+        } else if (ctx.didChange(this._onlyRequestInlineEditsSignal)) {
+          changeSummary.onlyRequestInlineEdits = true;
+        } else if (ctx.didChange(this._noDelaySignal)) {
+          changeSummary.shouldDebounce = false;
+        }
+        return true;
+      }, "handleChange")
+    }
+  }, (reader, changeSummary) => {
+    this._source.clearOperationOnTextModelChange.read(reader);
+    this._noDelaySignal.read(reader);
+    this.dontRefetchSignal.read(reader);
+    this._onlyRequestInlineEditsSignal.read(reader);
+    this._forceUpdateExplicitlySignal.read(reader);
+    const shouldUpdate = this._enabled.read(reader) && this._selectedSuggestItem.read(reader) || this._isActive.read(reader);
+    if (!shouldUpdate) {
+      this._source.cancelUpdate();
+      return void 0;
+    }
+    this._textModelVersionId.read(reader);
+    const suggestWidgetInlineCompletions = this._source.suggestWidgetInlineCompletions.get();
+    const suggestItem = this._selectedSuggestItem.read(reader);
+    if (suggestWidgetInlineCompletions && !suggestItem) {
+      const inlineCompletions = this._source.inlineCompletions.get();
+      transaction((tx) => {
+        if (!inlineCompletions || suggestWidgetInlineCompletions.request.versionId > inlineCompletions.request.versionId) {
+          this._source.inlineCompletions.set(suggestWidgetInlineCompletions.clone(), tx);
+        }
+        this._source.clearSuggestWidgetInlineCompletions(tx);
+      });
+    }
+    const cursorPosition = this.primaryPosition.get();
+    if (changeSummary.dontRefetch) {
+      return Promise.resolve(true);
+    }
+    if (this._didUndoInlineEdits.read(reader)) {
+      transaction((tx) => {
+        this._source.clear(tx);
+      });
+      return void 0;
+    }
+    let context = {
+      triggerKind: changeSummary.inlineCompletionTriggerKind,
+      selectedSuggestionInfo: suggestItem?.toSelectedSuggestionInfo(),
+      includeInlineCompletions: !changeSummary.onlyRequestInlineEdits,
+      includeInlineEdits: this._inlineEditsEnabled.read(reader)
+    };
+    if (context.triggerKind === InlineCompletionTriggerKind.Automatic) {
+      if (this.textModel.getAlternativeVersionId() === this._lastShownInlineCompletionInfo?.alternateTextModelVersionId) {
+        context = {
+          ...context,
+          includeInlineCompletions: !this._lastShownInlineCompletionInfo.inlineCompletion.isInlineEdit,
+          includeInlineEdits: this._lastShownInlineCompletionInfo.inlineCompletion.isInlineEdit
+        };
+      }
+    }
+    const itemToPreserveCandidate = this.selectedInlineCompletion.get() ?? this._inlineCompletionItems.get()?.inlineEdit;
+    const itemToPreserve = changeSummary.preserveCurrentCompletion || itemToPreserveCandidate?.forwardStable ? itemToPreserveCandidate : void 0;
+    const userJumpedToActiveCompletion = this._jumpedToId.map((jumpedTo) => !!jumpedTo && jumpedTo === this._inlineCompletionItems.get()?.inlineEdit?.semanticId);
+    return this._source.fetch(cursorPosition, context, itemToPreserve, changeSummary.shouldDebounce, userJumpedToActiveCompletion);
+  });
+  async trigger(tx, options) {
+    subtransaction(tx, (tx2) => {
+      if (options?.onlyFetchInlineEdits) {
+        this._onlyRequestInlineEditsSignal.trigger(tx2);
+      }
+      if (options?.noDelay) {
+        this._noDelaySignal.trigger(tx2);
+      }
+      this._isActive.set(true, tx2);
+    });
+    await this._fetchInlineCompletionsPromise.get();
+  }
+  async triggerExplicitly(tx, onlyFetchInlineEdits = false) {
+    subtransaction(tx, (tx2) => {
+      if (onlyFetchInlineEdits) {
+        this._onlyRequestInlineEditsSignal.trigger(tx2);
+      }
+      this._isActive.set(true, tx2);
+      this._inAcceptFlow.set(true, tx2);
+      this._forceUpdateExplicitlySignal.trigger(tx2);
+    });
+    await this._fetchInlineCompletionsPromise.get();
+  }
+  stop(stopReason = "automatic", tx) {
+    subtransaction(tx, (tx2) => {
+      if (stopReason === "explicitCancel") {
+        const inlineCompletion = this.state.get()?.inlineCompletion;
+        const source = inlineCompletion?.source;
+        const sourceInlineCompletion = inlineCompletion?.sourceInlineCompletion;
+        if (sourceInlineCompletion && source?.provider.handleRejection) {
+          source.provider.handleRejection(source.inlineCompletions, sourceInlineCompletion);
+        }
+      }
+      this._isActive.set(false, tx2);
+      this._source.clear(tx2);
+    });
+  }
+  _inlineCompletionItems = derivedOpts({ owner: this }, (reader) => {
+    const c = this._source.inlineCompletions.read(reader);
+    if (!c) {
+      return void 0;
+    }
+    const cursorPosition = this.primaryPosition.read(reader);
+    let inlineEdit = void 0;
+    const visibleCompletions = [];
+    for (const completion of c.inlineCompletions) {
+      if (!completion.sourceInlineCompletion.isInlineEdit) {
+        if (completion.isVisible(this.textModel, cursorPosition, reader)) {
+          visibleCompletions.push(completion);
+        }
+      } else {
+        inlineEdit = completion;
+      }
+    }
+    if (visibleCompletions.length !== 0) {
+      inlineEdit = void 0;
+    }
+    return {
+      inlineCompletions: visibleCompletions,
+      inlineEdit
+    };
+  });
+  _filteredInlineCompletionItems = derivedOpts({ owner: this, equalsFn: itemsEquals() }, (reader) => {
+    const c = this._inlineCompletionItems.read(reader);
+    return c?.inlineCompletions ?? [];
+  });
+  selectedInlineCompletionIndex = derived(this, (reader) => {
+    const selectedInlineCompletionId = this._selectedInlineCompletionId.read(reader);
+    const filteredCompletions = this._filteredInlineCompletionItems.read(reader);
+    const idx = this._selectedInlineCompletionId === void 0 ? -1 : filteredCompletions.findIndex((v) => v.semanticId === selectedInlineCompletionId);
+    if (idx === -1) {
+      this._selectedInlineCompletionId.set(void 0, void 0);
+      return 0;
+    }
+    return idx;
+  });
+  selectedInlineCompletion = derived(this, (reader) => {
+    const filteredCompletions = this._filteredInlineCompletionItems.read(reader);
+    const idx = this.selectedInlineCompletionIndex.read(reader);
+    return filteredCompletions[idx];
+  });
+  activeCommands = derivedOpts(
+    { owner: this, equalsFn: itemsEquals() },
+    (r) => this.selectedInlineCompletion.read(r)?.source.inlineCompletions.commands ?? []
+  );
+  lastTriggerKind = this._source.inlineCompletions.map(this, (v) => v?.request.context.triggerKind);
+  inlineCompletionsCount = derived(this, (reader) => {
+    if (this.lastTriggerKind.read(reader) === InlineCompletionTriggerKind.Explicit) {
+      return this._filteredInlineCompletionItems.read(reader).length;
+    } else {
+      return void 0;
+    }
+  });
+  _hasVisiblePeekWidgets = derived(this, (reader) => this._editorObs.openedPeekWidgets.read(reader) > 0);
+  state = derivedOpts({
+    owner: this,
+    equalsFn: /* @__PURE__ */ __name((a, b) => {
+      if (!a || !b) {
+        return a === b;
+      }
+      if (a.kind === "ghostText" && b.kind === "ghostText") {
+        return ghostTextsOrReplacementsEqual(a.ghostTexts, b.ghostTexts) && a.inlineCompletion === b.inlineCompletion && a.suggestItem === b.suggestItem;
+      } else if (a.kind === "inlineEdit" && b.kind === "inlineEdit") {
+        return a.inlineEdit.equals(b.inlineEdit);
+      }
+      return false;
+    }, "equalsFn")
+  }, (reader) => {
+    const model = this.textModel;
+    const item = this._inlineCompletionItems.read(reader);
+    const inlineEditResult = item?.inlineEdit;
+    if (inlineEditResult) {
+      if (this._hasVisiblePeekWidgets.read(reader)) {
+        return void 0;
+      }
+      let edit = inlineEditResult.toSingleTextEdit(reader);
+      edit = singleTextRemoveCommonPrefix(edit, model);
+      const cursorAtInlineEdit = this.primaryPosition.map((cursorPos) => LineRange.fromRangeInclusive(edit.range).addMargin(1, 1).contains(cursorPos.lineNumber));
+      const commands = inlineEditResult.inlineCompletion.source.inlineCompletions.commands;
+      const inlineEdit = new InlineEdit(edit, commands ?? [], inlineEditResult.inlineCompletion);
+      const edits = inlineEditResult.updatedEdit.read(reader);
+      const e = edits ? TextEdit.fromOffsetEdit(edits, new TextModelText(this.textModel)).edits : [edit];
+      return { kind: "inlineEdit", inlineEdit, inlineCompletion: inlineEditResult, edits: e, cursorAtInlineEdit };
+    }
+    const suggestItem = this._selectedSuggestItem.read(reader);
+    if (suggestItem) {
+      const suggestCompletionEdit = singleTextRemoveCommonPrefix(suggestItem.toSingleTextEdit(), model);
+      const augmentation = this._computeAugmentation(suggestCompletionEdit, reader);
+      const isSuggestionPreviewEnabled = this._suggestPreviewEnabled.read(reader);
+      if (!isSuggestionPreviewEnabled && !augmentation) {
+        return void 0;
+      }
+      const fullEdit = augmentation?.edit ?? suggestCompletionEdit;
+      const fullEditPreviewLength = augmentation ? augmentation.edit.text.length - suggestCompletionEdit.text.length : 0;
+      const mode = this._suggestPreviewMode.read(reader);
+      const positions = this._positions.read(reader);
+      const edits = [fullEdit, ...getSecondaryEdits(this.textModel, positions, fullEdit)];
+      const ghostTexts = edits.map((edit, idx) => computeGhostText(edit, model, mode, positions[idx], fullEditPreviewLength)).filter(isDefined);
+      const primaryGhostText = ghostTexts[0] ?? new GhostText(fullEdit.range.endLineNumber, []);
+      return { kind: "ghostText", edits, primaryGhostText, ghostTexts, inlineCompletion: augmentation?.completion, suggestItem };
+    } else {
+      if (!this._isActive.read(reader)) {
+        return void 0;
+      }
+      const inlineCompletion = this.selectedInlineCompletion.read(reader);
+      if (!inlineCompletion) {
+        return void 0;
+      }
+      const replacement = inlineCompletion.toSingleTextEdit(reader);
+      const mode = this._inlineSuggestMode.read(reader);
+      const positions = this._positions.read(reader);
+      const edits = [replacement, ...getSecondaryEdits(this.textModel, positions, replacement)];
+      const ghostTexts = edits.map((edit, idx) => computeGhostText(edit, model, mode, positions[idx], 0)).filter(isDefined);
+      if (!ghostTexts[0]) {
+        return void 0;
+      }
+      return { kind: "ghostText", edits, primaryGhostText: ghostTexts[0], ghostTexts, inlineCompletion, suggestItem: void 0 };
+    }
+  });
+  status = derived(this, (reader) => {
+    if (this._source.loading.read(reader)) {
+      return "loading";
+    }
+    const s = this.state.read(reader);
+    if (s?.kind === "ghostText") {
+      return "ghostText";
+    }
+    if (s?.kind === "inlineEdit") {
+      return "inlineEdit";
+    }
+    return "noSuggestion";
+  });
+  inlineCompletionState = derived(this, (reader) => {
+    const s = this.state.read(reader);
+    if (!s || s.kind !== "ghostText") {
+      return void 0;
+    }
+    if (this._editorObs.inComposition.read(reader)) {
+      return void 0;
+    }
+    return s;
+  });
+  inlineEditState = derived(this, (reader) => {
+    const s = this.state.read(reader);
+    if (!s || s.kind !== "inlineEdit") {
+      return void 0;
+    }
+    return s;
+  });
+  inlineEditAvailable = derived(this, (reader) => {
+    const s = this.inlineEditState.read(reader);
+    return !!s;
+  });
+  _computeAugmentation(suggestCompletion, reader) {
+    const model = this.textModel;
+    const suggestWidgetInlineCompletions = this._source.suggestWidgetInlineCompletions.read(reader);
+    const candidateInlineCompletions = suggestWidgetInlineCompletions ? suggestWidgetInlineCompletions.inlineCompletions : [this.selectedInlineCompletion.read(reader)].filter(isDefined);
+    const augmentedCompletion = mapFindFirst(candidateInlineCompletions, (completion) => {
+      let r = completion.toSingleTextEdit(reader);
+      r = singleTextRemoveCommonPrefix(
+        r,
+        model,
+        Range.fromPositions(r.range.getStartPosition(), suggestCompletion.range.getEndPosition())
+      );
+      return singleTextEditAugments(r, suggestCompletion) ? { completion, edit: r } : void 0;
+    });
+    return augmentedCompletion;
+  }
+  warning = derived(this, (reader) => {
+    return this.inlineCompletionState.read(reader)?.inlineCompletion?.sourceInlineCompletion.warning;
+  });
+  ghostTexts = derivedOpts({ owner: this, equalsFn: ghostTextsOrReplacementsEqual }, (reader) => {
+    const v = this.inlineCompletionState.read(reader);
+    if (!v) {
+      return void 0;
+    }
+    return v.ghostTexts;
+  });
+  primaryGhostText = derivedOpts({ owner: this, equalsFn: ghostTextOrReplacementEquals }, (reader) => {
+    const v = this.inlineCompletionState.read(reader);
+    if (!v) {
+      return void 0;
+    }
+    return v?.primaryGhostText;
+  });
+  showCollapsed = derived(this, (reader) => {
+    const state = this.state.read(reader);
+    if (!state || state.kind !== "inlineEdit") {
+      return false;
+    }
+    const isCurrentModelVersion = state.inlineCompletion.updatedEditModelVersion === this._textModelVersionId.read(reader);
+    return (this._inlineEditsShowCollapsedEnabled.read(reader) || !isCurrentModelVersion) && this._jumpedToId.read(reader) !== state.inlineCompletion.semanticId && !this._inAcceptFlow.read(reader);
+  });
+  _tabShouldIndent = derived(this, (reader) => {
+    if (this._inAcceptFlow.read(reader)) {
+      return false;
+    }
+    function isMultiLine(range) {
+      return range.startLineNumber !== range.endLineNumber;
+    }
+    __name(isMultiLine, "isMultiLine");
+    function getNonIndentationRange(model, lineNumber) {
+      const columnStart = model.getLineIndentColumn(lineNumber);
+      const lastNonWsColumn = model.getLineLastNonWhitespaceColumn(lineNumber);
+      const columnEnd = Math.max(lastNonWsColumn, columnStart);
+      return new Range(lineNumber, columnStart, lineNumber, columnEnd);
+    }
+    __name(getNonIndentationRange, "getNonIndentationRange");
+    const selections = this._editorObs.selections.read(reader);
+    return selections?.some((s) => {
+      if (s.isEmpty()) {
+        return this.textModel.getLineLength(s.startLineNumber) === 0;
+      } else {
+        return isMultiLine(s) || s.containsRange(getNonIndentationRange(this.textModel, s.startLineNumber));
+      }
+    });
+  });
+  tabShouldJumpToInlineEdit = derived(this, (reader) => {
+    if (this._tabShouldIndent.read(reader)) {
+      return false;
+    }
+    const s = this.inlineEditState.read(reader);
+    if (!s) {
+      return false;
+    }
+    if (this.showCollapsed.read(reader)) {
+      return true;
+    }
+    return !s.cursorAtInlineEdit.read(reader);
+  });
+  tabShouldAcceptInlineEdit = derived(this, (reader) => {
+    const s = this.inlineEditState.read(reader);
+    if (!s) {
+      return false;
+    }
+    if (this.showCollapsed.read(reader)) {
+      return false;
+    }
+    if (s.inlineEdit.range.startLineNumber === this._editorObs.cursorLineNumber.read(reader)) {
+      return true;
+    }
+    if (this._jumpedToId.read(reader) === s.inlineCompletion.semanticId) {
+      return true;
+    }
+    if (this._tabShouldIndent.read(reader)) {
+      return false;
+    }
+    return s.cursorAtInlineEdit.read(reader);
+  });
+  async _deltaSelectedInlineCompletionIndex(delta) {
+    await this.triggerExplicitly();
+    const completions = this._filteredInlineCompletionItems.get() || [];
+    if (completions.length > 0) {
+      const newIdx = (this.selectedInlineCompletionIndex.get() + delta + completions.length) % completions.length;
+      this._selectedInlineCompletionId.set(completions[newIdx].semanticId, void 0);
+    } else {
+      this._selectedInlineCompletionId.set(void 0, void 0);
+    }
+  }
+  async next() {
+    await this._deltaSelectedInlineCompletionIndex(1);
+  }
+  async previous() {
+    await this._deltaSelectedInlineCompletionIndex(-1);
+  }
+  async accept(editor = this._editor) {
+    if (editor.getModel() !== this.textModel) {
+      throw new BugIndicatingError();
+    }
+    let completionWithUpdatedRange;
+    const state = this.state.get();
+    if (state?.kind === "ghostText") {
+      if (!state || state.primaryGhostText.isEmpty() || !state.inlineCompletion) {
+        return;
+      }
+      completionWithUpdatedRange = state.inlineCompletion;
+    } else if (state?.kind === "inlineEdit") {
+      completionWithUpdatedRange = state.inlineCompletion;
+    } else {
+      return;
+    }
+    const completion = completionWithUpdatedRange.toInlineCompletion(void 0);
+    if (completion.command) {
+      completion.source.addRef();
+    }
+    editor.pushUndoStop();
+    if (completion.snippetInfo) {
+      editor.executeEdits(
+        "inlineSuggestion.accept",
+        [
+          EditOperation.replace(completion.range, ""),
+          ...completion.additionalTextEdits
+        ]
+      );
+      editor.setPosition(completion.snippetInfo.range.getStartPosition(), "inlineCompletionAccept");
+      SnippetController2.get(editor)?.insert(completion.snippetInfo.snippet, { undoStopBefore: false });
+    } else {
+      const edits = state.edits;
+      const selections = getEndPositionsAfterApplying(edits).map((p) => Selection.fromPositions(p));
+      editor.executeEdits("inlineSuggestion.accept", [
+        ...edits.map((edit) => EditOperation.replace(edit.range, edit.text)),
+        ...completion.additionalTextEdits
+      ]);
+      editor.setSelections(state.kind === "inlineEdit" ? selections.slice(-1) : selections, "inlineCompletionAccept");
+      if (state.kind === "inlineEdit" && !this._accessibilityService.isMotionReduced()) {
+        const editRanges = new TextEdit(edits).getNewRanges();
+        const dec = this._store.add(new FadeoutDecoration(editor, editRanges, () => {
+          this._store.delete(dec);
+        }));
+      }
+    }
+    this._onDidAccept.fire();
+    this.stop();
+    if (completion.command) {
+      await this._commandService.executeCommand(completion.command.id, ...completion.command.arguments || []).then(void 0, onUnexpectedExternalError);
+      completion.source.removeRef();
+    }
+    this._inAcceptFlow.set(true, void 0);
+    this._lastAcceptedInlineCompletionInfo = { textModelVersionIdAfter: this.textModel.getVersionId(), inlineCompletion: completion };
+  }
+  async acceptNextWord() {
+    await this._acceptNext(this._editor, (pos, text) => {
+      const langId = this.textModel.getLanguageIdAtPosition(pos.lineNumber, pos.column);
+      const config = this._languageConfigurationService.getLanguageConfiguration(langId);
+      const wordRegExp = new RegExp(config.wordDefinition.source, config.wordDefinition.flags.replace("g", ""));
+      const m1 = text.match(wordRegExp);
+      let acceptUntilIndexExclusive = 0;
+      if (m1 && m1.index !== void 0) {
+        if (m1.index === 0) {
+          acceptUntilIndexExclusive = m1[0].length;
+        } else {
+          acceptUntilIndexExclusive = m1.index;
+        }
+      } else {
+        acceptUntilIndexExclusive = text.length;
+      }
+      const wsRegExp = /\s+/g;
+      const m2 = wsRegExp.exec(text);
+      if (m2 && m2.index !== void 0) {
+        if (m2.index + m2[0].length < acceptUntilIndexExclusive) {
+          acceptUntilIndexExclusive = m2.index + m2[0].length;
+        }
+      }
+      return acceptUntilIndexExclusive;
+    }, PartialAcceptTriggerKind.Word);
+  }
+  async acceptNextLine() {
+    await this._acceptNext(this._editor, (pos, text) => {
+      const m = text.match(/\n/);
+      if (m && m.index !== void 0) {
+        return m.index + 1;
+      }
+      return text.length;
+    }, PartialAcceptTriggerKind.Line);
+  }
+  async _acceptNext(editor, getAcceptUntilIndex, kind) {
+    if (editor.getModel() !== this.textModel) {
+      throw new BugIndicatingError();
+    }
+    const state = this.inlineCompletionState.get();
+    if (!state || state.primaryGhostText.isEmpty() || !state.inlineCompletion) {
+      return;
+    }
+    const ghostText = state.primaryGhostText;
+    const completion = state.inlineCompletion.toInlineCompletion(void 0);
+    if (completion.snippetInfo || completion.filterText !== completion.insertText) {
+      await this.accept(editor);
+      return;
+    }
+    const firstPart = ghostText.parts[0];
+    const ghostTextPos = new Position(ghostText.lineNumber, firstPart.column);
+    const ghostTextVal = firstPart.text;
+    const acceptUntilIndexExclusive = getAcceptUntilIndex(ghostTextPos, ghostTextVal);
+    if (acceptUntilIndexExclusive === ghostTextVal.length && ghostText.parts.length === 1) {
+      this.accept(editor);
+      return;
+    }
+    const partialGhostTextVal = ghostTextVal.substring(0, acceptUntilIndexExclusive);
+    const positions = this._positions.get();
+    const cursorPosition = positions[0];
+    completion.source.addRef();
+    try {
+      this._isAcceptingPartially = true;
+      try {
+        editor.pushUndoStop();
+        const replaceRange = Range.fromPositions(cursorPosition, ghostTextPos);
+        const newText = editor.getModel().getValueInRange(replaceRange) + partialGhostTextVal;
+        const primaryEdit = new SingleTextEdit(replaceRange, newText);
+        const edits = [primaryEdit, ...getSecondaryEdits(this.textModel, positions, primaryEdit)];
+        const selections = getEndPositionsAfterApplying(edits).map((p) => Selection.fromPositions(p));
+        editor.executeEdits("inlineSuggestion.accept", edits.map((edit) => EditOperation.replace(edit.range, edit.text)));
+        editor.setSelections(selections, "inlineCompletionPartialAccept");
+        editor.revealPositionInCenterIfOutsideViewport(editor.getPosition(), ScrollType.Immediate);
+      } finally {
+        this._isAcceptingPartially = false;
+      }
+      if (completion.source.provider.handlePartialAccept) {
+        const acceptedRange = Range.fromPositions(completion.range.getStartPosition(), TextLength.ofText(partialGhostTextVal).addToPosition(ghostTextPos));
+        const text = editor.getModel().getValueInRange(acceptedRange, EndOfLinePreference.LF);
+        const acceptedLength = text.length;
+        completion.source.provider.handlePartialAccept(
+          completion.source.inlineCompletions,
+          completion.sourceInlineCompletion,
+          acceptedLength,
+          { kind, acceptedLength }
+        );
+      }
+    } finally {
+      completion.source.removeRef();
+    }
+  }
+  handleSuggestAccepted(item) {
+    const itemEdit = singleTextRemoveCommonPrefix(item.toSingleTextEdit(), this.textModel);
+    const augmentedCompletion = this._computeAugmentation(itemEdit, void 0);
+    if (!augmentedCompletion) {
+      return;
+    }
+    const source = augmentedCompletion.completion.source;
+    const sourceInlineCompletion = augmentedCompletion.completion.sourceInlineCompletion;
+    const completion = augmentedCompletion.completion.toInlineCompletion(void 0);
+    const alreadyAcceptedLength = this.textModel.getValueInRange(completion.range, EndOfLinePreference.LF).length;
+    const acceptedLength = alreadyAcceptedLength + itemEdit.text.length;
+    source.provider.handlePartialAccept?.(
+      source.inlineCompletions,
+      sourceInlineCompletion,
+      itemEdit.text.length,
+      {
+        kind: PartialAcceptTriggerKind.Suggest,
+        acceptedLength
+      }
+    );
+  }
+  extractReproSample() {
+    const value = this.textModel.getValue();
+    const item = this.state.get()?.inlineCompletion?.toInlineCompletion(void 0);
+    return {
+      documentValue: value,
+      inlineCompletion: item?.sourceInlineCompletion
+    };
+  }
+  _jumpedToId = observableValue(this, void 0);
+  _inAcceptFlow = observableValue(this, false);
+  inAcceptFlow = this._inAcceptFlow;
+  jump() {
+    const s = this.inlineEditState.get();
+    if (!s) {
+      return;
+    }
+    transaction((tx) => {
+      this._jumpedToId.set(s.inlineCompletion.semanticId, tx);
+      this.dontRefetchSignal.trigger(tx);
+      const edit = s.inlineCompletion.toSingleTextEdit(void 0);
+      this._editor.setPosition(edit.range.getStartPosition(), "inlineCompletions.jump");
+      const isSingleLineChange = edit.range.startLineNumber === edit.range.endLineNumber && !edit.text.includes("\n");
+      if (isSingleLineChange) {
+        this._editor.revealPosition(edit.range.getStartPosition());
+      } else {
+        const revealRange = new Range(edit.range.startLineNumber - 1, 1, edit.range.endLineNumber + 1, 1);
+        this._editor.revealRange(revealRange, ScrollType.Immediate);
+      }
+      this._editor.focus();
+    });
+  }
+  async handleInlineEditShown(inlineCompletion) {
+    if (inlineCompletion.didShow) {
+      return;
+    }
+    inlineCompletion.markAsShown();
+    inlineCompletion.source.provider.handleItemDidShow?.(inlineCompletion.source.inlineCompletions, inlineCompletion.sourceInlineCompletion, inlineCompletion.insertText);
+    if (inlineCompletion.shownCommand) {
+      await this._commandService.executeCommand(inlineCompletion.shownCommand.id, ...inlineCompletion.shownCommand.arguments || []);
+    }
+  }
+};
+InlineCompletionsModel = __decorateClass([
+  __decorateParam(7, IInstantiationService),
+  __decorateParam(8, ICommandService),
+  __decorateParam(9, ILanguageConfigurationService),
+  __decorateParam(10, IAccessibilityService)
+], InlineCompletionsModel);
+var VersionIdChangeReason = /* @__PURE__ */ ((VersionIdChangeReason2) => {
+  VersionIdChangeReason2[VersionIdChangeReason2["Undo"] = 0] = "Undo";
+  VersionIdChangeReason2[VersionIdChangeReason2["Redo"] = 1] = "Redo";
+  VersionIdChangeReason2[VersionIdChangeReason2["AcceptWord"] = 2] = "AcceptWord";
+  VersionIdChangeReason2[VersionIdChangeReason2["Other"] = 3] = "Other";
+  return VersionIdChangeReason2;
+})(VersionIdChangeReason || {});
+function getSecondaryEdits(textModel, positions, primaryEdit) {
+  if (positions.length === 1) {
+    return [];
+  }
+  const primaryPosition = positions[0];
+  const secondaryPositions = positions.slice(1);
+  const primaryEditStartPosition = primaryEdit.range.getStartPosition();
+  const primaryEditEndPosition = primaryEdit.range.getEndPosition();
+  const replacedTextAfterPrimaryCursor = textModel.getValueInRange(
+    Range.fromPositions(primaryPosition, primaryEditEndPosition)
+  );
+  const positionWithinTextEdit = subtractPositions(primaryPosition, primaryEditStartPosition);
+  if (positionWithinTextEdit.lineNumber < 1) {
+    onUnexpectedError(new BugIndicatingError(
+      `positionWithinTextEdit line number should be bigger than 0.
+			Invalid subtraction between ${primaryPosition.toString()} and ${primaryEditStartPosition.toString()}`
+    ));
+    return [];
+  }
+  const secondaryEditText = substringPos(primaryEdit.text, positionWithinTextEdit);
+  return secondaryPositions.map((pos) => {
+    const posEnd = addPositions(subtractPositions(pos, primaryEditStartPosition), primaryEditEndPosition);
+    const textAfterSecondaryCursor = textModel.getValueInRange(
+      Range.fromPositions(pos, posEnd)
+    );
+    const l = commonPrefixLength(replacedTextAfterPrimaryCursor, textAfterSecondaryCursor);
+    const range = Range.fromPositions(pos, pos.delta(0, l));
+    return new SingleTextEdit(range, secondaryEditText);
+  });
+}
+__name(getSecondaryEdits, "getSecondaryEdits");
+class FadeoutDecoration extends Disposable {
+  static {
+    __name(this, "FadeoutDecoration");
+  }
+  constructor(editor, ranges, onDispose) {
+    super();
+    if (onDispose) {
+      this._register({ dispose: /* @__PURE__ */ __name(() => onDispose(), "dispose") });
+    }
+    this._register(observableCodeEditor(editor).setDecorations(constObservable(ranges.map((range) => ({
+      range,
+      options: {
+        description: "animation",
+        className: "edits-fadeout-decoration",
+        zIndex: 1
+      }
+    })))));
+    const animation = new AnimatedValue(1, 0, 1e3, easeOutCubic);
+    const val = new ObservableAnimatedValue(animation);
+    this._register(autorun((reader) => {
+      const opacity = val.getValue(reader);
+      editor.getContainerDomNode().style.setProperty("--animation-opacity", opacity.toString());
+      if (animation.isFinished()) {
+        this.dispose();
+      }
+    }));
+  }
+}
+export {
+  InlineCompletionsModel,
+  VersionIdChangeReason,
+  getSecondaryEdits
+};
+//# sourceMappingURL=inlineCompletionsModel.js.map

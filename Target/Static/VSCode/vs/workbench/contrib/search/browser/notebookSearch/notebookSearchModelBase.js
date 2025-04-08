@@ -1,1 +1,21 @@
-import"../../../../services/search/common/search.js";import"../../../notebook/browser/notebookBrowser.js";import"../../../notebook/browser/notebookEditorWidget.js";import"../../common/searchNotebookHelpers.js";import{isSearchTreeFileMatch as t}from"../searchTreeModel/searchTreeCommon.js";import"./searchNotebookHelpers.js";function f(o){return o&&"function"==typeof o.bindNotebookEditorWidget&&"function"==typeof o.updateMatchesForEditorWidget&&"function"==typeof o.unbindNotebookEditorWidget&&"function"==typeof o.updateNotebookHighlights&&t(o)}function p(o){return!("object"!=typeof o||null===o||"function"!=typeof o.parent||"object"!=typeof o.cellParent||"function"!=typeof o.isWebviewMatch||"number"!=typeof o.cellIndex||"number"!=typeof o.webviewIndex&&void 0!==o.webviewIndex||"object"!=typeof o.cell&&void 0!==o.cell)}export{p as isIMatchInNotebook,f as isNotebookFileMatch};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { ITextSearchMatch } from "../../../../services/search/common/search.js";
+import { ICellViewModel } from "../../../notebook/browser/notebookBrowser.js";
+import { NotebookEditorWidget } from "../../../notebook/browser/notebookEditorWidget.js";
+import { INotebookCellMatchNoModel } from "../../common/searchNotebookHelpers.js";
+import { ISearchTreeFileMatch, ISearchTreeMatch, isSearchTreeFileMatch } from "../searchTreeModel/searchTreeCommon.js";
+import { INotebookCellMatchWithModel } from "./searchNotebookHelpers.js";
+function isNotebookFileMatch(obj) {
+  return obj && typeof obj.bindNotebookEditorWidget === "function" && typeof obj.updateMatchesForEditorWidget === "function" && typeof obj.unbindNotebookEditorWidget === "function" && typeof obj.updateNotebookHighlights === "function" && isSearchTreeFileMatch(obj);
+}
+__name(isNotebookFileMatch, "isNotebookFileMatch");
+function isIMatchInNotebook(obj) {
+  return typeof obj === "object" && obj !== null && typeof obj.parent === "function" && typeof obj.cellParent === "object" && typeof obj.isWebviewMatch === "function" && typeof obj.cellIndex === "number" && (typeof obj.webviewIndex === "number" || obj.webviewIndex === void 0) && (typeof obj.cell === "object" || obj.cell === void 0);
+}
+__name(isIMatchInNotebook, "isIMatchInNotebook");
+export {
+  isIMatchInNotebook,
+  isNotebookFileMatch
+};
+//# sourceMappingURL=notebookSearchModelBase.js.map

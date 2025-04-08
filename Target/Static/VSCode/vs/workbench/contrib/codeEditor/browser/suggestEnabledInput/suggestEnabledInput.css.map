@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/contrib/codeEditor/browser/suggestEnabledInput/suggestEnabledInput.css"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\n.suggest-input-container {\r\n\tpadding: 2px 6px;\r\n\tborder-radius: 2px;\r\n}\r\n\r\n.suggest-input-container .monaco-editor-background,\r\n.suggest-input-container .monaco-editor,\r\n.suggest-input-container .mtk1 {\r\n\tcolor: inherit;\r\n}\r\n\r\n.suggest-input-container .suggest-input-placeholder {\r\n\tposition: absolute;\r\n\tz-index: 1;\r\n\toverflow: hidden;\r\n\twhite-space: nowrap;\r\n\ttext-overflow: ellipsis;\r\n\tpointer-events: none;\r\n\tmargin-top: 1px;\r\n}\r\n\r\n.suggest-input-container .monaco-editor,\r\n.suggest-input-container .monaco-editor .lines-content {\r\n\tbackground: none !important;\r\n}\r\n"],
+  "mappings": "AAKA,CAAC;AACA,WAAS,IAAI;AACb,iBAAe;AAChB;AAEA,CALC,wBAKwB,CAAC;AAC1B,CANC,wBAMwB,CAAC;AAC1B,CAPC,wBAOwB,CAAC;AACzB,SAAO;AACR;AAEA,CAXC,wBAWwB,CAAC;AACzB,YAAU;AACV,WAAS;AACT,YAAU;AACV,eAAa;AACb,iBAAe;AACf,kBAAgB;AAChB,cAAY;AACb;AAEA,CArBC,wBAqBwB,CAfC;AAgB1B,CAtBC,wBAsBwB,CAhBC,cAgBc,CAAC;AACxC,cAAY;AACb;",
+  "names": []
+}

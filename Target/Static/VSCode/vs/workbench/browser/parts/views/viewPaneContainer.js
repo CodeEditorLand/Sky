@@ -1,1 +1,1104 @@
-var oe=Object.defineProperty;var re=Object.getOwnPropertyDescriptor;var k=(V,v,e,t)=>{for(var i=t>1?void 0:t?re(v,e):v,n=V.length-1,o;n>=0;n--)(o=V[n])&&(i=(t?o(v,e,i):o(i))||i);return t&&i&&oe(v,e,i),i},u=(V,v)=>(e,t)=>v(e,t,V);import{$ as Z,addDisposableListener as R,DragAndDropObserver as ae,EventType as Y,getWindow as K,isAncestor as de}from"../../../../base/browser/dom.js";import{StandardMouseEvent as G}from"../../../../base/browser/mouseEvent.js";import{EventType as he,Gesture as ce}from"../../../../base/browser/touch.js";import"../../../../base/browser/ui/actionbar/actionbar.js";import{Orientation as I}from"../../../../base/browser/ui/sash/sash.js";import{PaneView as pe}from"../../../../base/browser/ui/splitview/paneview.js";import"../../../../base/common/actions.js";import{RunOnceScheduler as le}from"../../../../base/common/async.js";import{Emitter as b,Event as $}from"../../../../base/common/event.js";import{KeyChord as L,KeyCode as S,KeyMod as B}from"../../../../base/common/keyCodes.js";import{combinedDisposable as X,DisposableStore as ve,toDisposable as we}from"../../../../base/common/lifecycle.js";import{assertIsDefined as P}from"../../../../base/common/types.js";import"./media/paneviewlet.css";import*as A from"../../../../nls.js";import{createActionViewItem as ue}from"../../../../platform/actions/browser/menuEntryActionViewItem.js";import{Action2 as j,IMenuService as ge,MenuId as z,MenuRegistry as fe,registerAction2 as M}from"../../../../platform/actions/common/actions.js";import{IConfigurationService as me}from"../../../../platform/configuration/common/configuration.js";import{IContextKeyService as J}from"../../../../platform/contextkey/common/contextkey.js";import{IContextMenuService as Ve}from"../../../../platform/contextview/browser/contextView.js";import{IInstantiationService as De}from"../../../../platform/instantiation/common/instantiation.js";import{KeybindingWeight as W}from"../../../../platform/keybinding/common/keybindingsRegistry.js";import{IStorageService as Ce,StorageScope as Q,StorageTarget as Ie}from"../../../../platform/storage/common/storage.js";import{ITelemetryService as ye}from"../../../../platform/telemetry/common/telemetry.js";import{activeContrastBorder as Se,asCssVariable as T}from"../../../../platform/theme/common/colorRegistry.js";import{IThemeService as be,Themable as Pe}from"../../../../platform/theme/common/themeService.js";import{IWorkspaceContextService as Ae}from"../../../../platform/workspace/common/workspace.js";import{CompositeMenuActions as Ee}from"../../actions.js";import{CompositeDragAndDropObserver as q,toggleDropEffect as ee}from"../../dnd.js";import"./viewPane.js";import"./viewsViewlet.js";import{Component as Me}from"../../../common/component.js";import{PANEL_SECTION_BORDER as Te,PANEL_SECTION_DRAG_AND_DROP_BACKGROUND as ie,PANEL_SECTION_HEADER_BACKGROUND as xe,PANEL_SECTION_HEADER_BORDER as _e,PANEL_SECTION_HEADER_FOREGROUND as Oe,SIDE_BAR_DRAG_AND_DROP_BACKGROUND as te,SIDE_BAR_SECTION_HEADER_BACKGROUND as Re,SIDE_BAR_SECTION_HEADER_BORDER as Le,SIDE_BAR_SECTION_HEADER_FOREGROUND as Be}from"../../../common/theme.js";import{IViewDescriptorService as N,ViewContainerLocation as x,ViewContainerLocationToString as ne,ViewVisibilityState as ze}from"../../../common/views.js";import{IViewsService as se}from"../../../services/views/common/viewsService.js";import{FocusedViewContext as _}from"../../../common/contextkeys.js";import{IExtensionService as We}from"../../../services/extensions/common/extensions.js";import{isHorizontal as Ne,IWorkbenchLayoutService as Fe,LayoutSettings as He}from"../../../services/layout/browser/layoutService.js";import"../../../../base/browser/ui/actionbar/actionViewItems.js";import{ILogService as Ue}from"../../../../platform/log/common/log.js";const ke=new z("Views");fe.appendMenuItem(z.ViewContainerTitle,{submenu:ke,title:A.localize("views","Views"),order:1});var Ke=(i=>(i[i.UP=0]="UP",i[i.DOWN=1]="DOWN",i[i.LEFT=2]="LEFT",i[i.RIGHT=3]="RIGHT",i))(Ke||{});class E extends Pe{constructor(e,t,i,n,o){super(o);this.paneElement=e;this.orientation=t;this.bounds=i;this.location=n;this.cleanupOverlayScheduler=this._register(new le(()=>this.dispose(),300)),this.create()}static OVERLAY_ID="monaco-pane-drop-overlay";container;overlay;_currentDropOperation;_disposed;cleanupOverlayScheduler;get currentDropOperation(){return this._currentDropOperation}get disposed(){return!!this._disposed}create(){this.container=Z("div",{id:E.OVERLAY_ID}),this.container.style.top="0px",this.paneElement.appendChild(this.container),this.paneElement.classList.add("dragged-over"),this._register(we(()=>{this.container.remove(),this.paneElement.classList.remove("dragged-over")})),this.overlay=Z(".pane-overlay-indicator"),this.container.appendChild(this.overlay),this.registerListeners(),this.updateStyles()}updateStyles(){this.overlay.style.backgroundColor=this.getColor(this.location===x.Panel?ie:te)||"";const e=this.getColor(Se);this.overlay.style.outlineColor=e||"",this.overlay.style.outlineOffset=e?"-2px":"",this.overlay.style.outlineStyle=e?"dashed":"",this.overlay.style.outlineWidth=e?"2px":"",this.overlay.style.borderColor=e||"",this.overlay.style.borderStyle="solid",this.overlay.style.borderWidth="0px"}registerListeners(){this._register(new ae(this.container,{onDragOver:e=>{this.positionOverlay(e.offsetX,e.offsetY),this.cleanupOverlayScheduler.isScheduled()&&this.cleanupOverlayScheduler.cancel()},onDragLeave:e=>this.dispose(),onDragEnd:e=>this.dispose(),onDrop:e=>{this.dispose()}})),this._register(R(this.container,Y.MOUSE_OVER,()=>{this.cleanupOverlayScheduler.isScheduled()||this.cleanupOverlayScheduler.schedule()}))}positionOverlay(e,t){const i=this.paneElement.clientWidth,n=this.paneElement.clientHeight,o=i/2,d=n/2;let p;switch(this.orientation===I.VERTICAL?t<d?p=0:t>=d&&(p=1):this.orientation===I.HORIZONTAL&&(e<o?p=2:e>=o&&(p=3)),p){case 0:this.doPositionOverlay({top:"0",left:"0",width:"100%",height:"50%"});break;case 1:this.doPositionOverlay({bottom:"0",left:"0",width:"100%",height:"50%"});break;case 2:this.doPositionOverlay({top:"0",left:"0",width:"50%",height:"100%"});break;case 3:this.doPositionOverlay({top:"0",right:"0",width:"50%",height:"100%"});break;default:{let s="0",r="0",h="100%",c="100%";if(this.bounds){const D=this.container.getBoundingClientRect();s=`${this.bounds.top-D.top}px`,r=`${this.bounds.left-D.left}px`,c=`${this.bounds.bottom-this.bounds.top}px`,h=`${this.bounds.right-this.bounds.left}px`}this.doPositionOverlay({top:s,left:r,width:h,height:c})}}this.orientation===I.VERTICAL&&n<=25||this.orientation===I.HORIZONTAL&&i<=25?this.doUpdateOverlayBorder(p):this.doUpdateOverlayBorder(void 0),this.overlay.style.opacity="1",setTimeout(()=>this.overlay.classList.add("overlay-move-transition"),0),this._currentDropOperation=p}doUpdateOverlayBorder(e){this.overlay.style.borderTopWidth=e===0?"2px":"0px",this.overlay.style.borderLeftWidth=e===2?"2px":"0px",this.overlay.style.borderBottomWidth=e===1?"2px":"0px",this.overlay.style.borderRightWidth=e===3?"2px":"0px"}doPositionOverlay(e){this.container.style.height="100%",this.overlay.style.top=e.top||"",this.overlay.style.left=e.left||"",this.overlay.style.bottom=e.bottom||"",this.overlay.style.right=e.right||"",this.overlay.style.width=e.width,this.overlay.style.height=e.height}contains(e){return e===this.container||e===this.overlay}dispose(){super.dispose(),this._disposed=!0}}let O=class extends Ee{constructor(v,e,t,i,n){const o=i.createScoped(v);o.createKey("viewContainer",e.id);const d=o.createKey("viewContainerLocation",ne(t.getViewContainerLocation(e)));super(z.ViewContainerTitle,z.ViewContainerTitleContext,{shouldForwardArgs:!0,renderShortTitle:!0},o,n),this._register(o),this._register($.filter(t.onDidChangeContainerLocation,p=>p.viewContainer===e)(()=>d.set(ne(t.getViewContainerLocation(e)))))}};O=k([u(2,N),u(3,J),u(4,ge)],O);let F=class extends Me{constructor(e,t,i,n,o,d,p,s,r,h,c,D,l){super(e,r,h);this.options=t;this.instantiationService=i;this.configurationService=n;this.layoutService=o;this.contextMenuService=d;this.telemetryService=p;this.extensionService=s;this.storageService=h;this.contextService=c;this.viewDescriptorService=D;this.logService=l;const g=this.viewDescriptorService.getViewContainerById(e);if(!g)throw new Error("Could not find container");this.viewContainer=g,this.visibleViewsStorageId=`${e}.numberOfVisibleViews`,this.visibleViewsCountFromCache=this.storageService.getNumber(this.visibleViewsStorageId,Q.WORKSPACE,void 0),this.viewContainerModel=this.viewDescriptorService.getViewContainerModel(g)}viewContainer;lastFocusedPane;lastMergedCollapsedPane;paneItems=[];paneview;visible=!1;areExtensionsReady=!1;didLayout=!1;dimension;_boundarySashes;visibleViewsCountFromCache;visibleViewsStorageId;viewContainerModel;_onTitleAreaUpdate=this._register(new b);onTitleAreaUpdate=this._onTitleAreaUpdate.event;_onDidChangeVisibility=this._register(new b);onDidChangeVisibility=this._onDidChangeVisibility.event;_onDidAddViews=this._register(new b);onDidAddViews=this._onDidAddViews.event;_onDidRemoveViews=this._register(new b);onDidRemoveViews=this._onDidRemoveViews.event;_onDidChangeViewVisibility=this._register(new b);onDidChangeViewVisibility=this._onDidChangeViewVisibility.event;_onDidFocusView=this._register(new b);onDidFocusView=this._onDidFocusView.event;_onDidBlurView=this._register(new b);onDidBlurView=this._onDidBlurView.event;get onDidSashChange(){return P(this.paneview).onDidSashChange}get panes(){return this.paneItems.map(e=>e.pane)}get views(){return this.panes}get length(){return this.paneItems.length}_menuActions;get menuActions(){return this._menuActions}create(e){const t=this.options;t.orientation=this.orientation,this.paneview=this._register(new pe(e,this.options)),this._boundarySashes&&this.paneview.setBoundarySashes(this._boundarySashes),this._register(this.paneview.onDidDrop(({from:s,to:r})=>this.movePane(s,r))),this._register(this.paneview.onDidScroll(s=>this.onDidScrollPane())),this._register(this.paneview.onDidSashReset(s=>this.onDidSashReset(s))),this._register(R(e,Y.CONTEXT_MENU,s=>this.showContextMenu(new G(K(e),s)))),this._register(ce.addTarget(e)),this._register(R(e,he.Contextmenu,s=>this.showContextMenu(new G(K(e),s)))),this._menuActions=this._register(this.instantiationService.createInstance(O,this.paneview.element,this.viewContainer)),this._register(this._menuActions.onDidChange(()=>this.updateTitleArea()));let i;const n=()=>{const s=e.getBoundingClientRect(),r=this.panes[this.panes.length-1].element.getBoundingClientRect(),h=this.orientation===I.VERTICAL?r.bottom:s.top,c=this.orientation===I.HORIZONTAL?r.right:s.left;return{top:h,bottom:s.bottom,left:c,right:s.right}},o=(s,r)=>r.x>=s.left&&r.x<=s.right&&r.y>=s.top&&r.y<=s.bottom;let d;this._register(q.INSTANCE.registerTarget(e,{onDragEnter:s=>{if(d=n(),i&&i.disposed&&(i=void 0),!i&&o(d,s.eventData)){const r=s.dragAndDropData.getData();if(r.type==="view"){const h=this.viewDescriptorService.getViewContainerByViewId(r.id),c=this.viewDescriptorService.getViewDescriptorById(r.id);if(h!==this.viewContainer&&(!c||!c.canMoveView||this.viewContainer.rejectAddedViews))return;i=new E(e,void 0,d,this.viewDescriptorService.getViewContainerLocation(this.viewContainer),this.themeService)}if(r.type==="composite"&&r.id!==this.viewContainer.id){const h=this.viewDescriptorService.getViewContainerById(r.id),c=this.viewDescriptorService.getViewContainerModel(h).allViewDescriptors;!c.some(D=>!D.canMoveView)&&c.length>0&&(i=new E(e,void 0,d,this.viewDescriptorService.getViewContainerLocation(this.viewContainer),this.themeService))}}},onDragOver:s=>{i&&i.disposed&&(i=void 0),i&&!o(d,s.eventData)&&(i.dispose(),i=void 0),o(d,s.eventData)&&ee(s.eventData.dataTransfer,"move",i!==void 0)},onDragLeave:s=>{i?.dispose(),i=void 0},onDrop:s=>{if(i){const r=s.dragAndDropData.getData(),h=[];if(r.type==="composite"&&r.id!==this.viewContainer.id){const D=this.viewDescriptorService.getViewContainerById(r.id),l=this.viewDescriptorService.getViewContainerModel(D).allViewDescriptors;l.some(g=>!g.canMoveView)||h.push(...l)}else if(r.type==="view"){const D=this.viewDescriptorService.getViewContainerByViewId(r.id),l=this.viewDescriptorService.getViewDescriptorById(r.id);D!==this.viewContainer&&l&&l.canMoveView&&this.viewDescriptorService.moveViewsToContainer([l],this.viewContainer,void 0,"dnd")}const c=this.panes.length;if(h.length>0&&this.viewDescriptorService.moveViewsToContainer(h,this.viewContainer,void 0,"dnd"),c>0)for(const D of h){const l=this.panes.find(g=>g.id===D.id);l&&this.movePane(l,this.panes[this.panes.length-1])}}i?.dispose(),i=void 0}})),this._register(this.onDidSashChange(()=>this.saveViewSizes())),this._register(this.viewContainerModel.onDidAddVisibleViewDescriptors(s=>this.onDidAddViewDescriptors(s))),this._register(this.viewContainerModel.onDidRemoveVisibleViewDescriptors(s=>this.onDidRemoveViewDescriptors(s)));const p=this.viewContainerModel.visibleViewDescriptors.map((s,r)=>{const h=this.viewContainerModel.getSize(s.id),c=this.viewContainerModel.isCollapsed(s.id);return{viewDescriptor:s,index:r,size:h,collapsed:c}});p.length&&this.onDidAddViewDescriptors(p),this.extensionService.whenInstalledExtensionsRegistered().then(()=>{this.areExtensionsReady=!0,this.panes.length&&(this.updateTitleArea(),this.updateViewHeaders()),this._register(this.configurationService.onDidChangeConfiguration(s=>{s.affectsConfiguration(He.ACTIVITY_BAR_LOCATION)&&this.updateViewHeaders()}))}),this._register(this.viewContainerModel.onDidChangeActiveViewDescriptors(()=>this._onTitleAreaUpdate.fire()))}getTitle(){const e=this.viewContainerModel.title;if(this.isViewMergedWithContainer()){const t=this.paneItems[0].pane.singleViewPaneContainerTitle;if(t)return t;const i=this.paneItems[0].pane.title;return e===i?i:i?`${e}: ${i}`:e}return e}showContextMenu(e){for(const t of this.paneItems)if(de(e.target,t.pane.element))return;e.stopPropagation(),e.preventDefault(),this.contextMenuService.showContextMenu({getAnchor:()=>e,getActions:()=>this.menuActions?.getContextMenuActions()??[]})}getActionsContext(){if(this.isViewMergedWithContainer())return this.panes[0].getActionsContext()}getActionViewItem(e,t){return this.isViewMergedWithContainer()?this.paneItems[0].pane.createActionViewItem(e,t):ue(this.instantiationService,e,t)}focus(){let e;if(this.lastFocusedPane)e=this.lastFocusedPane;else if(this.paneItems.length>0){for(const{pane:t}of this.paneItems)if(t.isExpanded()){e=t;break}}e&&e.focus()}get orientation(){switch(this.viewDescriptorService.getViewContainerLocation(this.viewContainer)){case x.Sidebar:case x.AuxiliaryBar:return I.VERTICAL;case x.Panel:return Ne(this.layoutService.getPanelPosition())?I.HORIZONTAL:I.VERTICAL}return I.VERTICAL}layout(e){this.paneview&&(this.paneview.orientation!==this.orientation&&this.paneview.flipOrientation(e.height,e.width),this.paneview.layout(e.height,e.width)),this.dimension=e,this.didLayout?this.saveViewSizes():(this.didLayout=!0,this.restoreViewSizes())}setBoundarySashes(e){this._boundarySashes=e,this.paneview?.setBoundarySashes(e)}getOptimalWidth(){return Math.max(...this.panes.map(i=>i.getOptimalWidth()||0))+16}addPanes(e){const t=this.isViewMergedWithContainer();for(const{pane:i,size:n,index:o,disposable:d}of e)this.addPane(i,n,d,o);this.updateViewHeaders(),this.isViewMergedWithContainer()!==t&&this.updateTitleArea(),this._onDidAddViews.fire(e.map(({pane:i})=>i))}setVisible(e){this.visible!==!!e&&(this.visible=e,this._onDidChangeVisibility.fire(e)),this.panes.filter(t=>t.isVisible()!==e).map(t=>t.setVisible(e))}isVisible(){return this.visible}updateTitleArea(){this._onTitleAreaUpdate.fire()}createView(e,t){return this.instantiationService.createInstance(e.ctorDescriptor.ctor,...e.ctorDescriptor.staticArguments||[],t)}getView(e){return this.panes.filter(t=>t.id===e)[0]}saveViewSizes(){this.didLayout&&this.viewContainerModel.setSizes(this.panes.map(e=>({id:e.id,size:this.getPaneSize(e)})))}restoreViewSizes(){if(this.didLayout){let e;for(let t=0;t<this.viewContainerModel.visibleViewDescriptors.length;t++){const i=this.panes[t],n=this.viewContainerModel.visibleViewDescriptors[t],o=this.viewContainerModel.getSize(n.id);typeof o=="number"?this.resizePane(i,o):(e=e||this.computeInitialSizes(),this.resizePane(i,e.get(i.id)||200))}}}computeInitialSizes(){const e=new Map;if(this.dimension){const t=this.viewContainerModel.visibleViewDescriptors.reduce((i,{weight:n})=>i+(n||20),0);for(const i of this.viewContainerModel.visibleViewDescriptors)this.orientation===I.VERTICAL?e.set(i.id,this.dimension.height*(i.weight||20)/t):e.set(i.id,this.dimension.width*(i.weight||20)/t)}return e}saveState(){this.panes.forEach(e=>e.saveState()),this.storageService.store(this.visibleViewsStorageId,this.length,Q.WORKSPACE,Ie.MACHINE)}onContextMenu(e,t){e.stopPropagation(),e.preventDefault();const i=t.menuActions.getContextMenuActions();this.contextMenuService.showContextMenu({getAnchor:()=>e,getActions:()=>i})}openView(e,t){let i=this.getView(e);return i||this.toggleViewVisibility(e),i=this.getView(e),i&&(i.setExpanded(!0),t&&i.focus()),i}onDidAddViewDescriptors(e){const t=[];for(const{viewDescriptor:n,collapsed:o,index:d,size:p}of e){const s=this.createView(n,{id:n.id,title:n.name.value,fromExtensionId:n.extensionId,expanded:!o,singleViewPaneContainerTitle:n.singleViewPaneContainerTitle});try{s.render()}catch(r){this.logService.error(`Fail to render view ${n.id}`,r);continue}if(s.draggableElement){const r=R(s.draggableElement,"contextmenu",c=>{c.stopPropagation(),c.preventDefault(),this.onContextMenu(new G(K(s.draggableElement),c),s)}),h=$.latch($.map(s.onDidChange,()=>!s.isExpanded()))(c=>{this.viewContainerModel.setCollapsed(n.id,c)});t.push({pane:s,size:p||s.minimumSize,index:d,disposable:X(r,h)})}}this.addPanes(t),this.restoreViewSizes();const i=[];for(const{pane:n}of t)n.setVisible(this.isVisible()),i.push(n);return i}onDidRemoveViewDescriptors(e){e=e.sort((i,n)=>n.index-i.index);const t=[];for(const{index:i}of e)this.paneItems[i]&&t.push(this.paneItems[i].pane);if(t.length){this.removePanes(t);for(const i of t)i.setVisible(!1)}}toggleViewVisibility(e){if(this.viewContainerModel.activeViewDescriptors.some(t=>t.id===e)){const t=!this.viewContainerModel.isVisible(e);this.viewContainerModel.setVisible(e,t)}}addPane(e,t,i,n=this.paneItems.length-1){const o=e.onDidFocus(()=>{this._onDidFocusView.fire(e),this.lastFocusedPane=e}),d=e.onDidBlur(()=>this._onDidBlurView.fire(e)),p=e.onDidChangeTitleArea(()=>{this.isViewMergedWithContainer()&&this.updateTitleArea()}),s=e.onDidChangeBodyVisibility(()=>this._onDidChangeViewVisibility.fire(e)),r=e.onDidChange(()=>{e===this.lastFocusedPane&&!e.isExpanded()&&(this.lastFocusedPane=void 0)}),h=this.viewDescriptorService.getViewContainerLocation(this.viewContainer)===x.Panel;e.style({headerForeground:T(h?Oe:Be),headerBackground:T(h?xe:Re),headerBorder:T(h?_e:Le),dropBackground:T(h?ie:te),leftBorder:h?T(Te):void 0});const c=new ve;c.add(i),c.add(X(e,o,d,p,r,s));const D={pane:e,disposable:c};this.paneItems.splice(n,0,D),P(this.paneview).addPane(e,t,n);let l;e.draggableElement&&c.add(q.INSTANCE.registerDraggable(e.draggableElement,()=>({type:"view",id:e.id}),{})),c.add(q.INSTANCE.registerTarget(e.dropTargetElement,{onDragEnter:g=>{if(!l){const f=g.dragAndDropData.getData();if(f.type==="view"&&f.id!==e.id){const y=this.viewDescriptorService.getViewContainerByViewId(f.id),C=this.viewDescriptorService.getViewDescriptorById(f.id);if(y!==this.viewContainer&&(!C||!C.canMoveView||this.viewContainer.rejectAddedViews))return;l=new E(e.dropTargetElement,this.orientation??I.VERTICAL,void 0,this.viewDescriptorService.getViewContainerLocation(this.viewContainer),this.themeService)}if(f.type==="composite"&&f.id!==this.viewContainer.id&&!this.viewContainer.rejectAddedViews){const y=this.viewDescriptorService.getViewContainerById(f.id),C=this.viewDescriptorService.getViewContainerModel(y).allViewDescriptors;!C.some(w=>!w.canMoveView)&&C.length>0&&(l=new E(e.dropTargetElement,this.orientation??I.VERTICAL,void 0,this.viewDescriptorService.getViewContainerLocation(this.viewContainer),this.themeService))}}},onDragOver:g=>{ee(g.eventData.dataTransfer,"move",l!==void 0)},onDragLeave:g=>{l?.dispose(),l=void 0},onDrop:g=>{if(l){const f=g.dragAndDropData.getData(),y=[];let C;if(f.type==="composite"&&f.id!==this.viewContainer.id&&!this.viewContainer.rejectAddedViews){const w=this.viewDescriptorService.getViewContainerById(f.id),a=this.viewDescriptorService.getViewContainerModel(w).allViewDescriptors;a.length>0&&!a.some(m=>!m.canMoveView)&&(y.push(...a),C=a[0])}else if(f.type==="view"){const w=this.viewDescriptorService.getViewContainerByViewId(f.id),a=this.viewDescriptorService.getViewDescriptorById(f.id);w!==this.viewContainer&&a&&a.canMoveView&&!this.viewContainer.rejectAddedViews&&y.push(a),a&&(C=a)}if(y&&this.viewDescriptorService.moveViewsToContainer(y,this.viewContainer,void 0,"dnd"),C){if(l.currentDropOperation===1||l.currentDropOperation===3){const w=this.panes.findIndex(m=>m.id===C.id);let a=this.panes.findIndex(m=>m.id===e.id);w>=0&&a>=0&&(w>a&&a++,a<this.panes.length&&a!==w&&this.movePane(this.panes[w],this.panes[a]))}if(l.currentDropOperation===0||l.currentDropOperation===2){const w=this.panes.findIndex(m=>m.id===C.id);let a=this.panes.findIndex(m=>m.id===e.id);w>=0&&a>=0&&(w<a&&a--,a>=0&&a!==w&&this.movePane(this.panes[w],this.panes[a]))}y.length>1&&y.slice(1).forEach(w=>{let a=this.panes.findIndex(U=>U.id===C.id);const m=this.panes.findIndex(U=>U.id===w.id);m>=0&&a>=0&&(m>a&&a++,a<this.panes.length&&a!==m&&(this.movePane(this.panes[m],this.panes[a]),C=w))})}}l?.dispose(),l=void 0}}))}removePanes(e){const t=this.isViewMergedWithContainer();e.forEach(i=>this.removePane(i)),this.updateViewHeaders(),t!==this.isViewMergedWithContainer()&&this.updateTitleArea(),this._onDidRemoveViews.fire(e)}removePane(e){const t=this.paneItems.findIndex(n=>n.pane===e);if(t===-1)return;this.lastFocusedPane===e&&(this.lastFocusedPane=void 0),P(this.paneview).removePane(e);const[i]=this.paneItems.splice(t,1);i.disposable.dispose()}movePane(e,t){const i=this.paneItems.findIndex(s=>s.pane===e),n=this.paneItems.findIndex(s=>s.pane===t),o=this.viewContainerModel.visibleViewDescriptors[i],d=this.viewContainerModel.visibleViewDescriptors[n];if(i<0||i>=this.paneItems.length||n<0||n>=this.paneItems.length)return;const[p]=this.paneItems.splice(i,1);this.paneItems.splice(n,0,p),P(this.paneview).movePane(e,t),this.viewContainerModel.move(o.id,d.id),this.updateTitleArea()}resizePane(e,t){P(this.paneview).resizePane(e,t)}getPaneSize(e){return P(this.paneview).getPaneSize(e)}updateViewHeaders(){this.isViewMergedWithContainer()?(this.paneItems[0].pane.isExpanded()?this.lastMergedCollapsedPane=void 0:(this.lastMergedCollapsedPane=this.paneItems[0].pane,this.paneItems[0].pane.setExpanded(!0)),this.paneItems[0].pane.headerVisible=!1,this.paneItems[0].pane.collapsible=!0):(this.paneItems.length===1?(this.paneItems[0].pane.headerVisible=!0,this.paneItems[0].pane===this.lastMergedCollapsedPane&&this.paneItems[0].pane.setExpanded(!1),this.paneItems[0].pane.collapsible=!1):this.paneItems.forEach(e=>{e.pane.headerVisible=!0,e.pane.collapsible=!0,e.pane===this.lastMergedCollapsedPane&&e.pane.setExpanded(!1)}),this.lastMergedCollapsedPane=void 0)}isViewMergedWithContainer(){return this.options.mergeViewWithContainerWhenSingleView&&this.paneItems.length===1?this.areExtensionsReady?!0:this.visibleViewsCountFromCache===void 0?this.paneItems[0].pane.isExpanded():this.visibleViewsCountFromCache===1:!1}onDidScrollPane(){for(const e of this.panes)e.onDidScrollRoot()}onDidSashReset(e){let t,i;for(let n=e;n>=0;n--)if(this.paneItems[n].pane?.isVisible()&&this.paneItems[n]?.pane.isExpanded()){t=this.paneItems[n].pane;break}for(let n=e+1;n<this.paneItems.length;n++)if(this.paneItems[n].pane?.isVisible()&&this.paneItems[n]?.pane.isExpanded()){i=this.paneItems[n].pane;break}if(t&&i){const n=this.getPaneSize(t),o=this.getPaneSize(i),d=Math.ceil((n+o)/2),p=Math.floor((n+o)/2);n>o?(this.resizePane(t,d),this.resizePane(i,p)):(this.resizePane(i,p),this.resizePane(t,d))}}dispose(){super.dispose(),this.paneItems.forEach(e=>e.disposable.dispose()),this.paneview&&this.paneview.dispose()}};F=k([u(2,De),u(3,me),u(4,Fe),u(5,Ve),u(6,ye),u(7,We),u(8,be),u(9,Ce),u(10,Ae),u(11,N),u(12,Ue)],F);class Yi extends j{desc;constructor(v){super(v),this.desc=v}run(v,...e){const t=v.get(se).getActiveViewPaneContainerWithId(this.desc.viewPaneContainerId);if(t)return this.runInViewPaneContainer(v,t,...e)}}class H extends j{constructor(e,t){super(e);this.offset=t}async run(e){const t=e.get(N),i=e.get(J),n=_.getValue(i);if(n===void 0)return;const o=t.getViewContainerByViewId(n),d=t.getViewContainerModel(o),p=d.visibleViewDescriptors.find(h=>h.id===n),s=d.visibleViewDescriptors.indexOf(p);if(s+this.offset<0||s+this.offset>=d.visibleViewDescriptors.length)return;const r=d.visibleViewDescriptors[s+this.offset];d.move(p.id,r.id)}}M(class extends H{constructor(){super({id:"views.moveViewUp",title:A.localize("viewMoveUp","Move View Up"),keybinding:{primary:L(B.CtrlCmd+S.KeyK,S.UpArrow),weight:W.WorkbenchContrib+1,when:_.notEqualsTo("")}},-1)}}),M(class extends H{constructor(){super({id:"views.moveViewLeft",title:A.localize("viewMoveLeft","Move View Left"),keybinding:{primary:L(B.CtrlCmd+S.KeyK,S.LeftArrow),weight:W.WorkbenchContrib+1,when:_.notEqualsTo("")}},-1)}}),M(class extends H{constructor(){super({id:"views.moveViewDown",title:A.localize("viewMoveDown","Move View Down"),keybinding:{primary:L(B.CtrlCmd+S.KeyK,S.DownArrow),weight:W.WorkbenchContrib+1,when:_.notEqualsTo("")}},1)}}),M(class extends H{constructor(){super({id:"views.moveViewRight",title:A.localize("viewMoveRight","Move View Right"),keybinding:{primary:L(B.CtrlCmd+S.KeyK,S.RightArrow),weight:W.WorkbenchContrib+1,when:_.notEqualsTo("")}},1)}}),M(class extends j{constructor(){super({id:"vscode.moveViews",title:A.localize("viewsMove","Move Views")})}async run(v,e){if(!Array.isArray(e?.viewIds)||typeof e?.destinationId!="string")return Promise.reject("Invalid arguments");const t=v.get(N),i=t.getViewContainerById(e.destinationId);if(i){for(const n of e.viewIds){const o=t.getViewDescriptorById(n);o?.canMoveView&&t.moveViewsToContainer([o],i,ze.Default,this.desc.id)}await v.get(se).openViewContainer(i.id,!0)}}});export{F as ViewPaneContainer,Yi as ViewPaneContainerAction,ke as ViewsSubMenu};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { $, addDisposableListener, Dimension, DragAndDropObserver, EventType, getWindow, isAncestor } from "../../../../base/browser/dom.js";
+import { StandardMouseEvent } from "../../../../base/browser/mouseEvent.js";
+import { EventType as TouchEventType, Gesture } from "../../../../base/browser/touch.js";
+import { IActionViewItem } from "../../../../base/browser/ui/actionbar/actionbar.js";
+import { IBoundarySashes, Orientation } from "../../../../base/browser/ui/sash/sash.js";
+import { IPaneViewOptions, PaneView } from "../../../../base/browser/ui/splitview/paneview.js";
+import { IAction } from "../../../../base/common/actions.js";
+import { RunOnceScheduler } from "../../../../base/common/async.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { KeyChord, KeyCode, KeyMod } from "../../../../base/common/keyCodes.js";
+import { combinedDisposable, DisposableStore, IDisposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { assertIsDefined } from "../../../../base/common/types.js";
+import "./media/paneviewlet.css";
+import * as nls from "../../../../nls.js";
+import { createActionViewItem } from "../../../../platform/actions/browser/menuEntryActionViewItem.js";
+import { Action2, IAction2Options, IMenuService, ISubmenuItem, MenuId, MenuRegistry, registerAction2 } from "../../../../platform/actions/common/actions.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IContextMenuService } from "../../../../platform/contextview/browser/contextView.js";
+import { IInstantiationService, ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+import { KeybindingWeight } from "../../../../platform/keybinding/common/keybindingsRegistry.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { activeContrastBorder, asCssVariable } from "../../../../platform/theme/common/colorRegistry.js";
+import { IThemeService, Themable } from "../../../../platform/theme/common/themeService.js";
+import { IWorkspaceContextService } from "../../../../platform/workspace/common/workspace.js";
+import { CompositeMenuActions } from "../../actions.js";
+import { CompositeDragAndDropObserver, toggleDropEffect } from "../../dnd.js";
+import { ViewPane } from "./viewPane.js";
+import { IViewletViewOptions } from "./viewsViewlet.js";
+import { Component } from "../../../common/component.js";
+import { PANEL_SECTION_BORDER, PANEL_SECTION_DRAG_AND_DROP_BACKGROUND, PANEL_SECTION_HEADER_BACKGROUND, PANEL_SECTION_HEADER_BORDER, PANEL_SECTION_HEADER_FOREGROUND, SIDE_BAR_DRAG_AND_DROP_BACKGROUND, SIDE_BAR_SECTION_HEADER_BACKGROUND, SIDE_BAR_SECTION_HEADER_BORDER, SIDE_BAR_SECTION_HEADER_FOREGROUND } from "../../../common/theme.js";
+import { IAddedViewDescriptorRef, ICustomViewDescriptor, IView, IViewContainerModel, IViewDescriptor, IViewDescriptorRef, IViewDescriptorService, IViewPaneContainer, ViewContainer, ViewContainerLocation, ViewContainerLocationToString, ViewVisibilityState } from "../../../common/views.js";
+import { IViewsService } from "../../../services/views/common/viewsService.js";
+import { FocusedViewContext } from "../../../common/contextkeys.js";
+import { IExtensionService } from "../../../services/extensions/common/extensions.js";
+import { isHorizontal, IWorkbenchLayoutService, LayoutSettings } from "../../../services/layout/browser/layoutService.js";
+import { IBaseActionViewItemOptions } from "../../../../base/browser/ui/actionbar/actionViewItems.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+const ViewsSubMenu = new MenuId("Views");
+MenuRegistry.appendMenuItem(MenuId.ViewContainerTitle, {
+  submenu: ViewsSubMenu,
+  title: nls.localize("views", "Views"),
+  order: 1
+});
+var DropDirection = /* @__PURE__ */ ((DropDirection2) => {
+  DropDirection2[DropDirection2["UP"] = 0] = "UP";
+  DropDirection2[DropDirection2["DOWN"] = 1] = "DOWN";
+  DropDirection2[DropDirection2["LEFT"] = 2] = "LEFT";
+  DropDirection2[DropDirection2["RIGHT"] = 3] = "RIGHT";
+  return DropDirection2;
+})(DropDirection || {});
+class ViewPaneDropOverlay extends Themable {
+  constructor(paneElement, orientation, bounds, location, themeService) {
+    super(themeService);
+    this.paneElement = paneElement;
+    this.orientation = orientation;
+    this.bounds = bounds;
+    this.location = location;
+    this.cleanupOverlayScheduler = this._register(new RunOnceScheduler(() => this.dispose(), 300));
+    this.create();
+  }
+  static {
+    __name(this, "ViewPaneDropOverlay");
+  }
+  static OVERLAY_ID = "monaco-pane-drop-overlay";
+  container;
+  overlay;
+  _currentDropOperation;
+  // private currentDropOperation: IDropOperation | undefined;
+  _disposed;
+  cleanupOverlayScheduler;
+  get currentDropOperation() {
+    return this._currentDropOperation;
+  }
+  get disposed() {
+    return !!this._disposed;
+  }
+  create() {
+    this.container = $("div", { id: ViewPaneDropOverlay.OVERLAY_ID });
+    this.container.style.top = "0px";
+    this.paneElement.appendChild(this.container);
+    this.paneElement.classList.add("dragged-over");
+    this._register(toDisposable(() => {
+      this.container.remove();
+      this.paneElement.classList.remove("dragged-over");
+    }));
+    this.overlay = $(".pane-overlay-indicator");
+    this.container.appendChild(this.overlay);
+    this.registerListeners();
+    this.updateStyles();
+  }
+  updateStyles() {
+    this.overlay.style.backgroundColor = this.getColor(this.location === ViewContainerLocation.Panel ? PANEL_SECTION_DRAG_AND_DROP_BACKGROUND : SIDE_BAR_DRAG_AND_DROP_BACKGROUND) || "";
+    const activeContrastBorderColor = this.getColor(activeContrastBorder);
+    this.overlay.style.outlineColor = activeContrastBorderColor || "";
+    this.overlay.style.outlineOffset = activeContrastBorderColor ? "-2px" : "";
+    this.overlay.style.outlineStyle = activeContrastBorderColor ? "dashed" : "";
+    this.overlay.style.outlineWidth = activeContrastBorderColor ? "2px" : "";
+    this.overlay.style.borderColor = activeContrastBorderColor || "";
+    this.overlay.style.borderStyle = "solid";
+    this.overlay.style.borderWidth = "0px";
+  }
+  registerListeners() {
+    this._register(new DragAndDropObserver(this.container, {
+      onDragOver: /* @__PURE__ */ __name((e) => {
+        this.positionOverlay(e.offsetX, e.offsetY);
+        if (this.cleanupOverlayScheduler.isScheduled()) {
+          this.cleanupOverlayScheduler.cancel();
+        }
+      }, "onDragOver"),
+      onDragLeave: /* @__PURE__ */ __name((e) => this.dispose(), "onDragLeave"),
+      onDragEnd: /* @__PURE__ */ __name((e) => this.dispose(), "onDragEnd"),
+      onDrop: /* @__PURE__ */ __name((e) => {
+        this.dispose();
+      }, "onDrop")
+    }));
+    this._register(addDisposableListener(this.container, EventType.MOUSE_OVER, () => {
+      if (!this.cleanupOverlayScheduler.isScheduled()) {
+        this.cleanupOverlayScheduler.schedule();
+      }
+    }));
+  }
+  positionOverlay(mousePosX, mousePosY) {
+    const paneWidth = this.paneElement.clientWidth;
+    const paneHeight = this.paneElement.clientHeight;
+    const splitWidthThreshold = paneWidth / 2;
+    const splitHeightThreshold = paneHeight / 2;
+    let dropDirection;
+    if (this.orientation === Orientation.VERTICAL) {
+      if (mousePosY < splitHeightThreshold) {
+        dropDirection = 0 /* UP */;
+      } else if (mousePosY >= splitHeightThreshold) {
+        dropDirection = 1 /* DOWN */;
+      }
+    } else if (this.orientation === Orientation.HORIZONTAL) {
+      if (mousePosX < splitWidthThreshold) {
+        dropDirection = 2 /* LEFT */;
+      } else if (mousePosX >= splitWidthThreshold) {
+        dropDirection = 3 /* RIGHT */;
+      }
+    }
+    switch (dropDirection) {
+      case 0 /* UP */:
+        this.doPositionOverlay({ top: "0", left: "0", width: "100%", height: "50%" });
+        break;
+      case 1 /* DOWN */:
+        this.doPositionOverlay({ bottom: "0", left: "0", width: "100%", height: "50%" });
+        break;
+      case 2 /* LEFT */:
+        this.doPositionOverlay({ top: "0", left: "0", width: "50%", height: "100%" });
+        break;
+      case 3 /* RIGHT */:
+        this.doPositionOverlay({ top: "0", right: "0", width: "50%", height: "100%" });
+        break;
+      default: {
+        let top = "0";
+        let left = "0";
+        let width = "100%";
+        let height = "100%";
+        if (this.bounds) {
+          const boundingRect = this.container.getBoundingClientRect();
+          top = `${this.bounds.top - boundingRect.top}px`;
+          left = `${this.bounds.left - boundingRect.left}px`;
+          height = `${this.bounds.bottom - this.bounds.top}px`;
+          width = `${this.bounds.right - this.bounds.left}px`;
+        }
+        this.doPositionOverlay({ top, left, width, height });
+      }
+    }
+    if (this.orientation === Orientation.VERTICAL && paneHeight <= 25 || this.orientation === Orientation.HORIZONTAL && paneWidth <= 25) {
+      this.doUpdateOverlayBorder(dropDirection);
+    } else {
+      this.doUpdateOverlayBorder(void 0);
+    }
+    this.overlay.style.opacity = "1";
+    setTimeout(() => this.overlay.classList.add("overlay-move-transition"), 0);
+    this._currentDropOperation = dropDirection;
+  }
+  doUpdateOverlayBorder(direction) {
+    this.overlay.style.borderTopWidth = direction === 0 /* UP */ ? "2px" : "0px";
+    this.overlay.style.borderLeftWidth = direction === 2 /* LEFT */ ? "2px" : "0px";
+    this.overlay.style.borderBottomWidth = direction === 1 /* DOWN */ ? "2px" : "0px";
+    this.overlay.style.borderRightWidth = direction === 3 /* RIGHT */ ? "2px" : "0px";
+  }
+  doPositionOverlay(options) {
+    this.container.style.height = "100%";
+    this.overlay.style.top = options.top || "";
+    this.overlay.style.left = options.left || "";
+    this.overlay.style.bottom = options.bottom || "";
+    this.overlay.style.right = options.right || "";
+    this.overlay.style.width = options.width;
+    this.overlay.style.height = options.height;
+  }
+  contains(element) {
+    return element === this.container || element === this.overlay;
+  }
+  dispose() {
+    super.dispose();
+    this._disposed = true;
+  }
+}
+let ViewContainerMenuActions = class extends CompositeMenuActions {
+  static {
+    __name(this, "ViewContainerMenuActions");
+  }
+  constructor(element, viewContainer, viewDescriptorService, contextKeyService, menuService) {
+    const scopedContextKeyService = contextKeyService.createScoped(element);
+    scopedContextKeyService.createKey("viewContainer", viewContainer.id);
+    const viewContainerLocationKey = scopedContextKeyService.createKey("viewContainerLocation", ViewContainerLocationToString(viewDescriptorService.getViewContainerLocation(viewContainer)));
+    super(MenuId.ViewContainerTitle, MenuId.ViewContainerTitleContext, { shouldForwardArgs: true, renderShortTitle: true }, scopedContextKeyService, menuService);
+    this._register(scopedContextKeyService);
+    this._register(Event.filter(viewDescriptorService.onDidChangeContainerLocation, (e) => e.viewContainer === viewContainer)(() => viewContainerLocationKey.set(ViewContainerLocationToString(viewDescriptorService.getViewContainerLocation(viewContainer)))));
+  }
+};
+ViewContainerMenuActions = __decorateClass([
+  __decorateParam(2, IViewDescriptorService),
+  __decorateParam(3, IContextKeyService),
+  __decorateParam(4, IMenuService)
+], ViewContainerMenuActions);
+let ViewPaneContainer = class extends Component {
+  constructor(id, options, instantiationService, configurationService, layoutService, contextMenuService, telemetryService, extensionService, themeService, storageService, contextService, viewDescriptorService, logService) {
+    super(id, themeService, storageService);
+    this.options = options;
+    this.instantiationService = instantiationService;
+    this.configurationService = configurationService;
+    this.layoutService = layoutService;
+    this.contextMenuService = contextMenuService;
+    this.telemetryService = telemetryService;
+    this.extensionService = extensionService;
+    this.storageService = storageService;
+    this.contextService = contextService;
+    this.viewDescriptorService = viewDescriptorService;
+    this.logService = logService;
+    const container = this.viewDescriptorService.getViewContainerById(id);
+    if (!container) {
+      throw new Error("Could not find container");
+    }
+    this.viewContainer = container;
+    this.visibleViewsStorageId = `${id}.numberOfVisibleViews`;
+    this.visibleViewsCountFromCache = this.storageService.getNumber(this.visibleViewsStorageId, StorageScope.WORKSPACE, void 0);
+    this.viewContainerModel = this.viewDescriptorService.getViewContainerModel(container);
+  }
+  static {
+    __name(this, "ViewPaneContainer");
+  }
+  viewContainer;
+  lastFocusedPane;
+  lastMergedCollapsedPane;
+  paneItems = [];
+  paneview;
+  visible = false;
+  areExtensionsReady = false;
+  didLayout = false;
+  dimension;
+  _boundarySashes;
+  visibleViewsCountFromCache;
+  visibleViewsStorageId;
+  viewContainerModel;
+  _onTitleAreaUpdate = this._register(new Emitter());
+  onTitleAreaUpdate = this._onTitleAreaUpdate.event;
+  _onDidChangeVisibility = this._register(new Emitter());
+  onDidChangeVisibility = this._onDidChangeVisibility.event;
+  _onDidAddViews = this._register(new Emitter());
+  onDidAddViews = this._onDidAddViews.event;
+  _onDidRemoveViews = this._register(new Emitter());
+  onDidRemoveViews = this._onDidRemoveViews.event;
+  _onDidChangeViewVisibility = this._register(new Emitter());
+  onDidChangeViewVisibility = this._onDidChangeViewVisibility.event;
+  _onDidFocusView = this._register(new Emitter());
+  onDidFocusView = this._onDidFocusView.event;
+  _onDidBlurView = this._register(new Emitter());
+  onDidBlurView = this._onDidBlurView.event;
+  get onDidSashChange() {
+    return assertIsDefined(this.paneview).onDidSashChange;
+  }
+  get panes() {
+    return this.paneItems.map((i) => i.pane);
+  }
+  get views() {
+    return this.panes;
+  }
+  get length() {
+    return this.paneItems.length;
+  }
+  _menuActions;
+  get menuActions() {
+    return this._menuActions;
+  }
+  create(parent) {
+    const options = this.options;
+    options.orientation = this.orientation;
+    this.paneview = this._register(new PaneView(parent, this.options));
+    if (this._boundarySashes) {
+      this.paneview.setBoundarySashes(this._boundarySashes);
+    }
+    this._register(this.paneview.onDidDrop(({ from, to }) => this.movePane(from, to)));
+    this._register(this.paneview.onDidScroll((_) => this.onDidScrollPane()));
+    this._register(this.paneview.onDidSashReset((index) => this.onDidSashReset(index)));
+    this._register(addDisposableListener(parent, EventType.CONTEXT_MENU, (e) => this.showContextMenu(new StandardMouseEvent(getWindow(parent), e))));
+    this._register(Gesture.addTarget(parent));
+    this._register(addDisposableListener(parent, TouchEventType.Contextmenu, (e) => this.showContextMenu(new StandardMouseEvent(getWindow(parent), e))));
+    this._menuActions = this._register(this.instantiationService.createInstance(ViewContainerMenuActions, this.paneview.element, this.viewContainer));
+    this._register(this._menuActions.onDidChange(() => this.updateTitleArea()));
+    let overlay;
+    const getOverlayBounds = /* @__PURE__ */ __name(() => {
+      const fullSize = parent.getBoundingClientRect();
+      const lastPane = this.panes[this.panes.length - 1].element.getBoundingClientRect();
+      const top = this.orientation === Orientation.VERTICAL ? lastPane.bottom : fullSize.top;
+      const left = this.orientation === Orientation.HORIZONTAL ? lastPane.right : fullSize.left;
+      return {
+        top,
+        bottom: fullSize.bottom,
+        left,
+        right: fullSize.right
+      };
+    }, "getOverlayBounds");
+    const inBounds = /* @__PURE__ */ __name((bounds2, pos) => {
+      return pos.x >= bounds2.left && pos.x <= bounds2.right && pos.y >= bounds2.top && pos.y <= bounds2.bottom;
+    }, "inBounds");
+    let bounds;
+    this._register(CompositeDragAndDropObserver.INSTANCE.registerTarget(parent, {
+      onDragEnter: /* @__PURE__ */ __name((e) => {
+        bounds = getOverlayBounds();
+        if (overlay && overlay.disposed) {
+          overlay = void 0;
+        }
+        if (!overlay && inBounds(bounds, e.eventData)) {
+          const dropData = e.dragAndDropData.getData();
+          if (dropData.type === "view") {
+            const oldViewContainer = this.viewDescriptorService.getViewContainerByViewId(dropData.id);
+            const viewDescriptor = this.viewDescriptorService.getViewDescriptorById(dropData.id);
+            if (oldViewContainer !== this.viewContainer && (!viewDescriptor || !viewDescriptor.canMoveView || this.viewContainer.rejectAddedViews)) {
+              return;
+            }
+            overlay = new ViewPaneDropOverlay(parent, void 0, bounds, this.viewDescriptorService.getViewContainerLocation(this.viewContainer), this.themeService);
+          }
+          if (dropData.type === "composite" && dropData.id !== this.viewContainer.id) {
+            const container = this.viewDescriptorService.getViewContainerById(dropData.id);
+            const viewsToMove = this.viewDescriptorService.getViewContainerModel(container).allViewDescriptors;
+            if (!viewsToMove.some((v) => !v.canMoveView) && viewsToMove.length > 0) {
+              overlay = new ViewPaneDropOverlay(parent, void 0, bounds, this.viewDescriptorService.getViewContainerLocation(this.viewContainer), this.themeService);
+            }
+          }
+        }
+      }, "onDragEnter"),
+      onDragOver: /* @__PURE__ */ __name((e) => {
+        if (overlay && overlay.disposed) {
+          overlay = void 0;
+        }
+        if (overlay && !inBounds(bounds, e.eventData)) {
+          overlay.dispose();
+          overlay = void 0;
+        }
+        if (inBounds(bounds, e.eventData)) {
+          toggleDropEffect(e.eventData.dataTransfer, "move", overlay !== void 0);
+        }
+      }, "onDragOver"),
+      onDragLeave: /* @__PURE__ */ __name((e) => {
+        overlay?.dispose();
+        overlay = void 0;
+      }, "onDragLeave"),
+      onDrop: /* @__PURE__ */ __name((e) => {
+        if (overlay) {
+          const dropData = e.dragAndDropData.getData();
+          const viewsToMove = [];
+          if (dropData.type === "composite" && dropData.id !== this.viewContainer.id) {
+            const container = this.viewDescriptorService.getViewContainerById(dropData.id);
+            const allViews = this.viewDescriptorService.getViewContainerModel(container).allViewDescriptors;
+            if (!allViews.some((v) => !v.canMoveView)) {
+              viewsToMove.push(...allViews);
+            }
+          } else if (dropData.type === "view") {
+            const oldViewContainer = this.viewDescriptorService.getViewContainerByViewId(dropData.id);
+            const viewDescriptor = this.viewDescriptorService.getViewDescriptorById(dropData.id);
+            if (oldViewContainer !== this.viewContainer && viewDescriptor && viewDescriptor.canMoveView) {
+              this.viewDescriptorService.moveViewsToContainer([viewDescriptor], this.viewContainer, void 0, "dnd");
+            }
+          }
+          const paneCount = this.panes.length;
+          if (viewsToMove.length > 0) {
+            this.viewDescriptorService.moveViewsToContainer(viewsToMove, this.viewContainer, void 0, "dnd");
+          }
+          if (paneCount > 0) {
+            for (const view of viewsToMove) {
+              const paneToMove = this.panes.find((p) => p.id === view.id);
+              if (paneToMove) {
+                this.movePane(paneToMove, this.panes[this.panes.length - 1]);
+              }
+            }
+          }
+        }
+        overlay?.dispose();
+        overlay = void 0;
+      }, "onDrop")
+    }));
+    this._register(this.onDidSashChange(() => this.saveViewSizes()));
+    this._register(this.viewContainerModel.onDidAddVisibleViewDescriptors((added) => this.onDidAddViewDescriptors(added)));
+    this._register(this.viewContainerModel.onDidRemoveVisibleViewDescriptors((removed) => this.onDidRemoveViewDescriptors(removed)));
+    const addedViews = this.viewContainerModel.visibleViewDescriptors.map((viewDescriptor, index) => {
+      const size = this.viewContainerModel.getSize(viewDescriptor.id);
+      const collapsed = this.viewContainerModel.isCollapsed(viewDescriptor.id);
+      return { viewDescriptor, index, size, collapsed };
+    });
+    if (addedViews.length) {
+      this.onDidAddViewDescriptors(addedViews);
+    }
+    this.extensionService.whenInstalledExtensionsRegistered().then(() => {
+      this.areExtensionsReady = true;
+      if (this.panes.length) {
+        this.updateTitleArea();
+        this.updateViewHeaders();
+      }
+      this._register(this.configurationService.onDidChangeConfiguration((e) => {
+        if (e.affectsConfiguration(LayoutSettings.ACTIVITY_BAR_LOCATION)) {
+          this.updateViewHeaders();
+        }
+      }));
+    });
+    this._register(this.viewContainerModel.onDidChangeActiveViewDescriptors(() => this._onTitleAreaUpdate.fire()));
+  }
+  getTitle() {
+    const containerTitle = this.viewContainerModel.title;
+    if (this.isViewMergedWithContainer()) {
+      const singleViewPaneContainerTitle = this.paneItems[0].pane.singleViewPaneContainerTitle;
+      if (singleViewPaneContainerTitle) {
+        return singleViewPaneContainerTitle;
+      }
+      const paneItemTitle = this.paneItems[0].pane.title;
+      if (containerTitle === paneItemTitle) {
+        return paneItemTitle;
+      }
+      return paneItemTitle ? `${containerTitle}: ${paneItemTitle}` : containerTitle;
+    }
+    return containerTitle;
+  }
+  showContextMenu(event) {
+    for (const paneItem of this.paneItems) {
+      if (isAncestor(event.target, paneItem.pane.element)) {
+        return;
+      }
+    }
+    event.stopPropagation();
+    event.preventDefault();
+    this.contextMenuService.showContextMenu({
+      getAnchor: /* @__PURE__ */ __name(() => event, "getAnchor"),
+      getActions: /* @__PURE__ */ __name(() => this.menuActions?.getContextMenuActions() ?? [], "getActions")
+    });
+  }
+  getActionsContext() {
+    if (this.isViewMergedWithContainer()) {
+      return this.panes[0].getActionsContext();
+    }
+    return void 0;
+  }
+  getActionViewItem(action, options) {
+    if (this.isViewMergedWithContainer()) {
+      return this.paneItems[0].pane.createActionViewItem(action, options);
+    }
+    return createActionViewItem(this.instantiationService, action, options);
+  }
+  focus() {
+    let paneToFocus = void 0;
+    if (this.lastFocusedPane) {
+      paneToFocus = this.lastFocusedPane;
+    } else if (this.paneItems.length > 0) {
+      for (const { pane } of this.paneItems) {
+        if (pane.isExpanded()) {
+          paneToFocus = pane;
+          break;
+        }
+      }
+    }
+    if (paneToFocus) {
+      paneToFocus.focus();
+    }
+  }
+  get orientation() {
+    switch (this.viewDescriptorService.getViewContainerLocation(this.viewContainer)) {
+      case ViewContainerLocation.Sidebar:
+      case ViewContainerLocation.AuxiliaryBar:
+        return Orientation.VERTICAL;
+      case ViewContainerLocation.Panel: {
+        return isHorizontal(this.layoutService.getPanelPosition()) ? Orientation.HORIZONTAL : Orientation.VERTICAL;
+      }
+    }
+    return Orientation.VERTICAL;
+  }
+  layout(dimension) {
+    if (this.paneview) {
+      if (this.paneview.orientation !== this.orientation) {
+        this.paneview.flipOrientation(dimension.height, dimension.width);
+      }
+      this.paneview.layout(dimension.height, dimension.width);
+    }
+    this.dimension = dimension;
+    if (this.didLayout) {
+      this.saveViewSizes();
+    } else {
+      this.didLayout = true;
+      this.restoreViewSizes();
+    }
+  }
+  setBoundarySashes(sashes) {
+    this._boundarySashes = sashes;
+    this.paneview?.setBoundarySashes(sashes);
+  }
+  getOptimalWidth() {
+    const additionalMargin = 16;
+    const optimalWidth = Math.max(...this.panes.map((view) => view.getOptimalWidth() || 0));
+    return optimalWidth + additionalMargin;
+  }
+  addPanes(panes) {
+    const wasMerged = this.isViewMergedWithContainer();
+    for (const { pane, size, index, disposable } of panes) {
+      this.addPane(pane, size, disposable, index);
+    }
+    this.updateViewHeaders();
+    if (this.isViewMergedWithContainer() !== wasMerged) {
+      this.updateTitleArea();
+    }
+    this._onDidAddViews.fire(panes.map(({ pane }) => pane));
+  }
+  setVisible(visible) {
+    if (this.visible !== !!visible) {
+      this.visible = visible;
+      this._onDidChangeVisibility.fire(visible);
+    }
+    this.panes.filter((view) => view.isVisible() !== visible).map((view) => view.setVisible(visible));
+  }
+  isVisible() {
+    return this.visible;
+  }
+  updateTitleArea() {
+    this._onTitleAreaUpdate.fire();
+  }
+  createView(viewDescriptor, options) {
+    return this.instantiationService.createInstance(viewDescriptor.ctorDescriptor.ctor, ...viewDescriptor.ctorDescriptor.staticArguments || [], options);
+  }
+  getView(id) {
+    return this.panes.filter((view) => view.id === id)[0];
+  }
+  saveViewSizes() {
+    if (this.didLayout) {
+      this.viewContainerModel.setSizes(this.panes.map((view) => ({ id: view.id, size: this.getPaneSize(view) })));
+    }
+  }
+  restoreViewSizes() {
+    if (this.didLayout) {
+      let initialSizes;
+      for (let i = 0; i < this.viewContainerModel.visibleViewDescriptors.length; i++) {
+        const pane = this.panes[i];
+        const viewDescriptor = this.viewContainerModel.visibleViewDescriptors[i];
+        const size = this.viewContainerModel.getSize(viewDescriptor.id);
+        if (typeof size === "number") {
+          this.resizePane(pane, size);
+        } else {
+          initialSizes = initialSizes ? initialSizes : this.computeInitialSizes();
+          this.resizePane(pane, initialSizes.get(pane.id) || 200);
+        }
+      }
+    }
+  }
+  computeInitialSizes() {
+    const sizes = /* @__PURE__ */ new Map();
+    if (this.dimension) {
+      const totalWeight = this.viewContainerModel.visibleViewDescriptors.reduce((totalWeight2, { weight }) => totalWeight2 + (weight || 20), 0);
+      for (const viewDescriptor of this.viewContainerModel.visibleViewDescriptors) {
+        if (this.orientation === Orientation.VERTICAL) {
+          sizes.set(viewDescriptor.id, this.dimension.height * (viewDescriptor.weight || 20) / totalWeight);
+        } else {
+          sizes.set(viewDescriptor.id, this.dimension.width * (viewDescriptor.weight || 20) / totalWeight);
+        }
+      }
+    }
+    return sizes;
+  }
+  saveState() {
+    this.panes.forEach((view) => view.saveState());
+    this.storageService.store(this.visibleViewsStorageId, this.length, StorageScope.WORKSPACE, StorageTarget.MACHINE);
+  }
+  onContextMenu(event, viewPane) {
+    event.stopPropagation();
+    event.preventDefault();
+    const actions = viewPane.menuActions.getContextMenuActions();
+    this.contextMenuService.showContextMenu({
+      getAnchor: /* @__PURE__ */ __name(() => event, "getAnchor"),
+      getActions: /* @__PURE__ */ __name(() => actions, "getActions")
+    });
+  }
+  openView(id, focus) {
+    let view = this.getView(id);
+    if (!view) {
+      this.toggleViewVisibility(id);
+    }
+    view = this.getView(id);
+    if (view) {
+      view.setExpanded(true);
+      if (focus) {
+        view.focus();
+      }
+    }
+    return view;
+  }
+  onDidAddViewDescriptors(added) {
+    const panesToAdd = [];
+    for (const { viewDescriptor, collapsed, index, size } of added) {
+      const pane = this.createView(
+        viewDescriptor,
+        {
+          id: viewDescriptor.id,
+          title: viewDescriptor.name.value,
+          fromExtensionId: viewDescriptor.extensionId,
+          expanded: !collapsed,
+          singleViewPaneContainerTitle: viewDescriptor.singleViewPaneContainerTitle
+        }
+      );
+      try {
+        pane.render();
+      } catch (error) {
+        this.logService.error(`Fail to render view ${viewDescriptor.id}`, error);
+        continue;
+      }
+      if (pane.draggableElement) {
+        const contextMenuDisposable = addDisposableListener(pane.draggableElement, "contextmenu", (e) => {
+          e.stopPropagation();
+          e.preventDefault();
+          this.onContextMenu(new StandardMouseEvent(getWindow(pane.draggableElement), e), pane);
+        });
+        const collapseDisposable = Event.latch(Event.map(pane.onDidChange, () => !pane.isExpanded()))((collapsed2) => {
+          this.viewContainerModel.setCollapsed(viewDescriptor.id, collapsed2);
+        });
+        panesToAdd.push({ pane, size: size || pane.minimumSize, index, disposable: combinedDisposable(contextMenuDisposable, collapseDisposable) });
+      }
+    }
+    this.addPanes(panesToAdd);
+    this.restoreViewSizes();
+    const panes = [];
+    for (const { pane } of panesToAdd) {
+      pane.setVisible(this.isVisible());
+      panes.push(pane);
+    }
+    return panes;
+  }
+  onDidRemoveViewDescriptors(removed) {
+    removed = removed.sort((a, b) => b.index - a.index);
+    const panesToRemove = [];
+    for (const { index } of removed) {
+      const paneItem = this.paneItems[index];
+      if (paneItem) {
+        panesToRemove.push(this.paneItems[index].pane);
+      }
+    }
+    if (panesToRemove.length) {
+      this.removePanes(panesToRemove);
+      for (const pane of panesToRemove) {
+        pane.setVisible(false);
+      }
+    }
+  }
+  toggleViewVisibility(viewId) {
+    if (this.viewContainerModel.activeViewDescriptors.some((viewDescriptor) => viewDescriptor.id === viewId)) {
+      const visible = !this.viewContainerModel.isVisible(viewId);
+      this.viewContainerModel.setVisible(viewId, visible);
+    }
+  }
+  addPane(pane, size, disposable, index = this.paneItems.length - 1) {
+    const onDidFocus = pane.onDidFocus(() => {
+      this._onDidFocusView.fire(pane);
+      this.lastFocusedPane = pane;
+    });
+    const onDidBlur = pane.onDidBlur(() => this._onDidBlurView.fire(pane));
+    const onDidChangeTitleArea = pane.onDidChangeTitleArea(() => {
+      if (this.isViewMergedWithContainer()) {
+        this.updateTitleArea();
+      }
+    });
+    const onDidChangeVisibility = pane.onDidChangeBodyVisibility(() => this._onDidChangeViewVisibility.fire(pane));
+    const onDidChange = pane.onDidChange(() => {
+      if (pane === this.lastFocusedPane && !pane.isExpanded()) {
+        this.lastFocusedPane = void 0;
+      }
+    });
+    const isPanel = this.viewDescriptorService.getViewContainerLocation(this.viewContainer) === ViewContainerLocation.Panel;
+    pane.style({
+      headerForeground: asCssVariable(isPanel ? PANEL_SECTION_HEADER_FOREGROUND : SIDE_BAR_SECTION_HEADER_FOREGROUND),
+      headerBackground: asCssVariable(isPanel ? PANEL_SECTION_HEADER_BACKGROUND : SIDE_BAR_SECTION_HEADER_BACKGROUND),
+      headerBorder: asCssVariable(isPanel ? PANEL_SECTION_HEADER_BORDER : SIDE_BAR_SECTION_HEADER_BORDER),
+      dropBackground: asCssVariable(isPanel ? PANEL_SECTION_DRAG_AND_DROP_BACKGROUND : SIDE_BAR_DRAG_AND_DROP_BACKGROUND),
+      leftBorder: isPanel ? asCssVariable(PANEL_SECTION_BORDER) : void 0
+    });
+    const store = new DisposableStore();
+    store.add(disposable);
+    store.add(combinedDisposable(pane, onDidFocus, onDidBlur, onDidChangeTitleArea, onDidChange, onDidChangeVisibility));
+    const paneItem = { pane, disposable: store };
+    this.paneItems.splice(index, 0, paneItem);
+    assertIsDefined(this.paneview).addPane(pane, size, index);
+    let overlay;
+    if (pane.draggableElement) {
+      store.add(CompositeDragAndDropObserver.INSTANCE.registerDraggable(pane.draggableElement, () => {
+        return { type: "view", id: pane.id };
+      }, {}));
+    }
+    store.add(CompositeDragAndDropObserver.INSTANCE.registerTarget(pane.dropTargetElement, {
+      onDragEnter: /* @__PURE__ */ __name((e) => {
+        if (!overlay) {
+          const dropData = e.dragAndDropData.getData();
+          if (dropData.type === "view" && dropData.id !== pane.id) {
+            const oldViewContainer = this.viewDescriptorService.getViewContainerByViewId(dropData.id);
+            const viewDescriptor = this.viewDescriptorService.getViewDescriptorById(dropData.id);
+            if (oldViewContainer !== this.viewContainer && (!viewDescriptor || !viewDescriptor.canMoveView || this.viewContainer.rejectAddedViews)) {
+              return;
+            }
+            overlay = new ViewPaneDropOverlay(pane.dropTargetElement, this.orientation ?? Orientation.VERTICAL, void 0, this.viewDescriptorService.getViewContainerLocation(this.viewContainer), this.themeService);
+          }
+          if (dropData.type === "composite" && dropData.id !== this.viewContainer.id && !this.viewContainer.rejectAddedViews) {
+            const container = this.viewDescriptorService.getViewContainerById(dropData.id);
+            const viewsToMove = this.viewDescriptorService.getViewContainerModel(container).allViewDescriptors;
+            if (!viewsToMove.some((v) => !v.canMoveView) && viewsToMove.length > 0) {
+              overlay = new ViewPaneDropOverlay(pane.dropTargetElement, this.orientation ?? Orientation.VERTICAL, void 0, this.viewDescriptorService.getViewContainerLocation(this.viewContainer), this.themeService);
+            }
+          }
+        }
+      }, "onDragEnter"),
+      onDragOver: /* @__PURE__ */ __name((e) => {
+        toggleDropEffect(e.eventData.dataTransfer, "move", overlay !== void 0);
+      }, "onDragOver"),
+      onDragLeave: /* @__PURE__ */ __name((e) => {
+        overlay?.dispose();
+        overlay = void 0;
+      }, "onDragLeave"),
+      onDrop: /* @__PURE__ */ __name((e) => {
+        if (overlay) {
+          const dropData = e.dragAndDropData.getData();
+          const viewsToMove = [];
+          let anchorView;
+          if (dropData.type === "composite" && dropData.id !== this.viewContainer.id && !this.viewContainer.rejectAddedViews) {
+            const container = this.viewDescriptorService.getViewContainerById(dropData.id);
+            const allViews = this.viewDescriptorService.getViewContainerModel(container).allViewDescriptors;
+            if (allViews.length > 0 && !allViews.some((v) => !v.canMoveView)) {
+              viewsToMove.push(...allViews);
+              anchorView = allViews[0];
+            }
+          } else if (dropData.type === "view") {
+            const oldViewContainer = this.viewDescriptorService.getViewContainerByViewId(dropData.id);
+            const viewDescriptor = this.viewDescriptorService.getViewDescriptorById(dropData.id);
+            if (oldViewContainer !== this.viewContainer && viewDescriptor && viewDescriptor.canMoveView && !this.viewContainer.rejectAddedViews) {
+              viewsToMove.push(viewDescriptor);
+            }
+            if (viewDescriptor) {
+              anchorView = viewDescriptor;
+            }
+          }
+          if (viewsToMove) {
+            this.viewDescriptorService.moveViewsToContainer(viewsToMove, this.viewContainer, void 0, "dnd");
+          }
+          if (anchorView) {
+            if (overlay.currentDropOperation === 1 /* DOWN */ || overlay.currentDropOperation === 3 /* RIGHT */) {
+              const fromIndex = this.panes.findIndex((p) => p.id === anchorView.id);
+              let toIndex = this.panes.findIndex((p) => p.id === pane.id);
+              if (fromIndex >= 0 && toIndex >= 0) {
+                if (fromIndex > toIndex) {
+                  toIndex++;
+                }
+                if (toIndex < this.panes.length && toIndex !== fromIndex) {
+                  this.movePane(this.panes[fromIndex], this.panes[toIndex]);
+                }
+              }
+            }
+            if (overlay.currentDropOperation === 0 /* UP */ || overlay.currentDropOperation === 2 /* LEFT */) {
+              const fromIndex = this.panes.findIndex((p) => p.id === anchorView.id);
+              let toIndex = this.panes.findIndex((p) => p.id === pane.id);
+              if (fromIndex >= 0 && toIndex >= 0) {
+                if (fromIndex < toIndex) {
+                  toIndex--;
+                }
+                if (toIndex >= 0 && toIndex !== fromIndex) {
+                  this.movePane(this.panes[fromIndex], this.panes[toIndex]);
+                }
+              }
+            }
+            if (viewsToMove.length > 1) {
+              viewsToMove.slice(1).forEach((view) => {
+                let toIndex = this.panes.findIndex((p) => p.id === anchorView.id);
+                const fromIndex = this.panes.findIndex((p) => p.id === view.id);
+                if (fromIndex >= 0 && toIndex >= 0) {
+                  if (fromIndex > toIndex) {
+                    toIndex++;
+                  }
+                  if (toIndex < this.panes.length && toIndex !== fromIndex) {
+                    this.movePane(this.panes[fromIndex], this.panes[toIndex]);
+                    anchorView = view;
+                  }
+                }
+              });
+            }
+          }
+        }
+        overlay?.dispose();
+        overlay = void 0;
+      }, "onDrop")
+    }));
+  }
+  removePanes(panes) {
+    const wasMerged = this.isViewMergedWithContainer();
+    panes.forEach((pane) => this.removePane(pane));
+    this.updateViewHeaders();
+    if (wasMerged !== this.isViewMergedWithContainer()) {
+      this.updateTitleArea();
+    }
+    this._onDidRemoveViews.fire(panes);
+  }
+  removePane(pane) {
+    const index = this.paneItems.findIndex((i) => i.pane === pane);
+    if (index === -1) {
+      return;
+    }
+    if (this.lastFocusedPane === pane) {
+      this.lastFocusedPane = void 0;
+    }
+    assertIsDefined(this.paneview).removePane(pane);
+    const [paneItem] = this.paneItems.splice(index, 1);
+    paneItem.disposable.dispose();
+  }
+  movePane(from, to) {
+    const fromIndex = this.paneItems.findIndex((item) => item.pane === from);
+    const toIndex = this.paneItems.findIndex((item) => item.pane === to);
+    const fromViewDescriptor = this.viewContainerModel.visibleViewDescriptors[fromIndex];
+    const toViewDescriptor = this.viewContainerModel.visibleViewDescriptors[toIndex];
+    if (fromIndex < 0 || fromIndex >= this.paneItems.length) {
+      return;
+    }
+    if (toIndex < 0 || toIndex >= this.paneItems.length) {
+      return;
+    }
+    const [paneItem] = this.paneItems.splice(fromIndex, 1);
+    this.paneItems.splice(toIndex, 0, paneItem);
+    assertIsDefined(this.paneview).movePane(from, to);
+    this.viewContainerModel.move(fromViewDescriptor.id, toViewDescriptor.id);
+    this.updateTitleArea();
+  }
+  resizePane(pane, size) {
+    assertIsDefined(this.paneview).resizePane(pane, size);
+  }
+  getPaneSize(pane) {
+    return assertIsDefined(this.paneview).getPaneSize(pane);
+  }
+  updateViewHeaders() {
+    if (this.isViewMergedWithContainer()) {
+      if (this.paneItems[0].pane.isExpanded()) {
+        this.lastMergedCollapsedPane = void 0;
+      } else {
+        this.lastMergedCollapsedPane = this.paneItems[0].pane;
+        this.paneItems[0].pane.setExpanded(true);
+      }
+      this.paneItems[0].pane.headerVisible = false;
+      this.paneItems[0].pane.collapsible = true;
+    } else {
+      if (this.paneItems.length === 1) {
+        this.paneItems[0].pane.headerVisible = true;
+        if (this.paneItems[0].pane === this.lastMergedCollapsedPane) {
+          this.paneItems[0].pane.setExpanded(false);
+        }
+        this.paneItems[0].pane.collapsible = false;
+      } else {
+        this.paneItems.forEach((i) => {
+          i.pane.headerVisible = true;
+          i.pane.collapsible = true;
+          if (i.pane === this.lastMergedCollapsedPane) {
+            i.pane.setExpanded(false);
+          }
+        });
+      }
+      this.lastMergedCollapsedPane = void 0;
+    }
+  }
+  isViewMergedWithContainer() {
+    if (!(this.options.mergeViewWithContainerWhenSingleView && this.paneItems.length === 1)) {
+      return false;
+    }
+    if (!this.areExtensionsReady) {
+      if (this.visibleViewsCountFromCache === void 0) {
+        return this.paneItems[0].pane.isExpanded();
+      }
+      return this.visibleViewsCountFromCache === 1;
+    }
+    return true;
+  }
+  onDidScrollPane() {
+    for (const pane of this.panes) {
+      pane.onDidScrollRoot();
+    }
+  }
+  onDidSashReset(index) {
+    let firstPane = void 0;
+    let secondPane = void 0;
+    for (let i = index; i >= 0; i--) {
+      if (this.paneItems[i].pane?.isVisible() && this.paneItems[i]?.pane.isExpanded()) {
+        firstPane = this.paneItems[i].pane;
+        break;
+      }
+    }
+    for (let i = index + 1; i < this.paneItems.length; i++) {
+      if (this.paneItems[i].pane?.isVisible() && this.paneItems[i]?.pane.isExpanded()) {
+        secondPane = this.paneItems[i].pane;
+        break;
+      }
+    }
+    if (firstPane && secondPane) {
+      const firstPaneSize = this.getPaneSize(firstPane);
+      const secondPaneSize = this.getPaneSize(secondPane);
+      const newFirstPaneSize = Math.ceil((firstPaneSize + secondPaneSize) / 2);
+      const newSecondPaneSize = Math.floor((firstPaneSize + secondPaneSize) / 2);
+      if (firstPaneSize > secondPaneSize) {
+        this.resizePane(firstPane, newFirstPaneSize);
+        this.resizePane(secondPane, newSecondPaneSize);
+      } else {
+        this.resizePane(secondPane, newSecondPaneSize);
+        this.resizePane(firstPane, newFirstPaneSize);
+      }
+    }
+  }
+  dispose() {
+    super.dispose();
+    this.paneItems.forEach((i) => i.disposable.dispose());
+    if (this.paneview) {
+      this.paneview.dispose();
+    }
+  }
+};
+ViewPaneContainer = __decorateClass([
+  __decorateParam(2, IInstantiationService),
+  __decorateParam(3, IConfigurationService),
+  __decorateParam(4, IWorkbenchLayoutService),
+  __decorateParam(5, IContextMenuService),
+  __decorateParam(6, ITelemetryService),
+  __decorateParam(7, IExtensionService),
+  __decorateParam(8, IThemeService),
+  __decorateParam(9, IStorageService),
+  __decorateParam(10, IWorkspaceContextService),
+  __decorateParam(11, IViewDescriptorService),
+  __decorateParam(12, ILogService)
+], ViewPaneContainer);
+class ViewPaneContainerAction extends Action2 {
+  static {
+    __name(this, "ViewPaneContainerAction");
+  }
+  desc;
+  constructor(desc) {
+    super(desc);
+    this.desc = desc;
+  }
+  run(accessor, ...args) {
+    const viewPaneContainer = accessor.get(IViewsService).getActiveViewPaneContainerWithId(this.desc.viewPaneContainerId);
+    if (viewPaneContainer) {
+      return this.runInViewPaneContainer(accessor, viewPaneContainer, ...args);
+    }
+    return void 0;
+  }
+}
+class MoveViewPosition extends Action2 {
+  constructor(desc, offset) {
+    super(desc);
+    this.offset = offset;
+  }
+  static {
+    __name(this, "MoveViewPosition");
+  }
+  async run(accessor) {
+    const viewDescriptorService = accessor.get(IViewDescriptorService);
+    const contextKeyService = accessor.get(IContextKeyService);
+    const viewId = FocusedViewContext.getValue(contextKeyService);
+    if (viewId === void 0) {
+      return;
+    }
+    const viewContainer = viewDescriptorService.getViewContainerByViewId(viewId);
+    const model = viewDescriptorService.getViewContainerModel(viewContainer);
+    const viewDescriptor = model.visibleViewDescriptors.find((vd) => vd.id === viewId);
+    const currentIndex = model.visibleViewDescriptors.indexOf(viewDescriptor);
+    if (currentIndex + this.offset < 0 || currentIndex + this.offset >= model.visibleViewDescriptors.length) {
+      return;
+    }
+    const newPosition = model.visibleViewDescriptors[currentIndex + this.offset];
+    model.move(viewDescriptor.id, newPosition.id);
+  }
+}
+registerAction2(
+  class MoveViewUp extends MoveViewPosition {
+    static {
+      __name(this, "MoveViewUp");
+    }
+    constructor() {
+      super({
+        id: "views.moveViewUp",
+        title: nls.localize("viewMoveUp", "Move View Up"),
+        keybinding: {
+          primary: KeyChord(KeyMod.CtrlCmd + KeyCode.KeyK, KeyCode.UpArrow),
+          weight: KeybindingWeight.WorkbenchContrib + 1,
+          when: FocusedViewContext.notEqualsTo("")
+        }
+      }, -1);
+    }
+  }
+);
+registerAction2(
+  class MoveViewLeft extends MoveViewPosition {
+    static {
+      __name(this, "MoveViewLeft");
+    }
+    constructor() {
+      super({
+        id: "views.moveViewLeft",
+        title: nls.localize("viewMoveLeft", "Move View Left"),
+        keybinding: {
+          primary: KeyChord(KeyMod.CtrlCmd + KeyCode.KeyK, KeyCode.LeftArrow),
+          weight: KeybindingWeight.WorkbenchContrib + 1,
+          when: FocusedViewContext.notEqualsTo("")
+        }
+      }, -1);
+    }
+  }
+);
+registerAction2(
+  class MoveViewDown extends MoveViewPosition {
+    static {
+      __name(this, "MoveViewDown");
+    }
+    constructor() {
+      super({
+        id: "views.moveViewDown",
+        title: nls.localize("viewMoveDown", "Move View Down"),
+        keybinding: {
+          primary: KeyChord(KeyMod.CtrlCmd + KeyCode.KeyK, KeyCode.DownArrow),
+          weight: KeybindingWeight.WorkbenchContrib + 1,
+          when: FocusedViewContext.notEqualsTo("")
+        }
+      }, 1);
+    }
+  }
+);
+registerAction2(
+  class MoveViewRight extends MoveViewPosition {
+    static {
+      __name(this, "MoveViewRight");
+    }
+    constructor() {
+      super({
+        id: "views.moveViewRight",
+        title: nls.localize("viewMoveRight", "Move View Right"),
+        keybinding: {
+          primary: KeyChord(KeyMod.CtrlCmd + KeyCode.KeyK, KeyCode.RightArrow),
+          weight: KeybindingWeight.WorkbenchContrib + 1,
+          when: FocusedViewContext.notEqualsTo("")
+        }
+      }, 1);
+    }
+  }
+);
+registerAction2(class MoveViews extends Action2 {
+  static {
+    __name(this, "MoveViews");
+  }
+  constructor() {
+    super({
+      id: "vscode.moveViews",
+      title: nls.localize("viewsMove", "Move Views")
+    });
+  }
+  async run(accessor, options) {
+    if (!Array.isArray(options?.viewIds) || typeof options?.destinationId !== "string") {
+      return Promise.reject("Invalid arguments");
+    }
+    const viewDescriptorService = accessor.get(IViewDescriptorService);
+    const destination = viewDescriptorService.getViewContainerById(options.destinationId);
+    if (!destination) {
+      return;
+    }
+    for (const viewId of options.viewIds) {
+      const viewDescriptor = viewDescriptorService.getViewDescriptorById(viewId);
+      if (viewDescriptor?.canMoveView) {
+        viewDescriptorService.moveViewsToContainer([viewDescriptor], destination, ViewVisibilityState.Default, this.desc.id);
+      }
+    }
+    await accessor.get(IViewsService).openViewContainer(destination.id, true);
+  }
+});
+export {
+  ViewPaneContainer,
+  ViewPaneContainerAction,
+  ViewsSubMenu
+};
+//# sourceMappingURL=viewPaneContainer.js.map

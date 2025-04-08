@@ -1,2 +1,2579 @@
-import"../../dnd.js";import{$ as m,append as L,clearNode as oe,h as A,hasParentWithClass as H,isActiveElement as ne,isKeyboardEvent as y,addDisposableListener as $,isEditableElement as G}from"../../dom.js";import{createStyleSheet as se}from"../../domStylesheets.js";import{asCssValueWithDefault as K}from"../../cssValue.js";import{DomEmitter as re}from"../../event.js";import{StandardKeyboardEvent as U}from"../../keyboardEvent.js";import{ActionBar as le}from"../actionbar/actionbar.js";import"../contextview/contextview.js";import{FindInput as ae}from"../findinput/findInput.js";import{MessageType as q,unthemedInboxStyles as de}from"../inputbox/inputBox.js";import"../list/list.js";import{ElementsDragAndDropData as j}from"../list/listView.js";import{isActionItem as ce,isButton as he,isMonacoCustomToggle as ue,isMonacoEditor as Te,isStickyScrollContainer as w,isStickyScrollElement as C,List as pe,MouseController as ge}from"../list/listWidget.js";import{Toggle as fe,unthemedToggleStyles as ve}from"../toggle/toggle.js";import{getVisibleState as me,isFilterResult as ye}from"./indexTreeModel.js";import{TreeDragOverBubble as be,TreeError as De,TreeMouseEventTarget as N,TreeVisibility as E}from"./tree.js";import{Action as Se}from"../../../common/actions.js";import{distinct as X,equals as O,insertInto as Fe,range as Ie}from"../../../common/arrays.js";import{Delayer as we,disposableTimeout as Ce,timeout as Ne}from"../../../common/async.js";import{Codicon as R}from"../../../common/codicons.js";import{ThemeIcon as J}from"../../../common/themables.js";import{SetMap as Ee}from"../../../common/map.js";import{Emitter as g,Event as h,EventBufferer as xe,Relay as x}from"../../../common/event.js";import{fuzzyScore as Me,FuzzyScore as M}from"../../../common/filters.js";import{KeyCode as S}from"../../../common/keyCodes.js";import{Disposable as b,DisposableStore as f,dispose as V,toDisposable as z}from"../../../common/lifecycle.js";import{clamp as Q}from"../../../common/numbers.js";import"../../../common/scrollable.js";import"./media/tree.css";import{localize as v}from"../../../../nls.js";import"../hover/hoverDelegate.js";import{createInstantHoverDelegate as ke}from"../hover/hoverDelegateFactory.js";import{autorun as Le,constObservable as Re}from"../../../common/observable.js";import{alert as Y}from"../aria/aria.js";class _e extends j{constructor(e){super(e.elements.map(i=>i.element));this.data=e}set context(e){this.data.context=e}get context(){return this.data.context}}function W(a){return a instanceof j?new _e(a):a}class Pe{constructor(t,e){this.modelProvider=t;this.dnd=e}autoExpandNode;autoExpandDisposable=b.None;disposables=new f;getDragURI(t){return this.dnd.getDragURI(t.element)}getDragLabel(t,e){if(this.dnd.getDragLabel)return this.dnd.getDragLabel(t.map(i=>i.element),e)}onDragStart(t,e){this.dnd.onDragStart?.(W(t),e)}onDragOver(t,e,i,o,n,s=!0){const r=this.dnd.onDragOver(W(t),e&&e.element,i,o,n),l=this.autoExpandNode!==e;if(l&&(this.autoExpandDisposable.dispose(),this.autoExpandNode=e),typeof e>"u")return r;if(l&&typeof r!="boolean"&&r.autoExpand&&(this.autoExpandDisposable=Ce(()=>{const T=this.modelProvider(),u=T.getNodeLocation(e);T.isCollapsed(u)&&T.setCollapsed(u,!1),this.autoExpandNode=void 0},500,this.disposables)),typeof r=="boolean"||!r.accept||typeof r.bubble>"u"||r.feedback){if(!s){const T=typeof r=="boolean"?r:r.accept,u=typeof r=="boolean"?void 0:r.effect;return{accept:T,effect:u,feedback:[i]}}return r}if(r.bubble===be.Up){const T=this.modelProvider(),u=T.getNodeLocation(e),I=T.getParentNodeLocation(u),te=T.getNode(I),ie=I&&T.getListIndex(I);return this.onDragOver(t,te,ie,o,n,!1)}const d=this.modelProvider(),c=d.getNodeLocation(e),p=d.getListIndex(c),D=d.getListRenderCount(c);return{...r,feedback:Ie(p,p+D)}}drop(t,e,i,o,n){this.autoExpandDisposable.dispose(),this.autoExpandNode=void 0,this.dnd.drop(W(t),e&&e.element,i,o,n)}onDragEnd(t){this.dnd.onDragEnd?.(t)}dispose(){this.disposables.dispose(),this.dnd.dispose()}}function Ae(a,t,e){return e&&{...e,identityProvider:e.identityProvider&&{getId(i){return e.identityProvider.getId(i.element)}},dnd:e.dnd&&t.add(new Pe(a,e.dnd)),multipleSelectionController:e.multipleSelectionController&&{isSelectionSingleChangeEvent(i){return e.multipleSelectionController.isSelectionSingleChangeEvent({...i,element:i.element})},isSelectionRangeChangeEvent(i){return e.multipleSelectionController.isSelectionRangeChangeEvent({...i,element:i.element})}},accessibilityProvider:e.accessibilityProvider&&{...e.accessibilityProvider,getSetSize(i){const o=a(),n=o.getNodeLocation(i),s=o.getParentNodeLocation(n);return o.getNode(s).visibleChildrenCount},getPosInSet(i){return i.visibleChildIndex+1},isChecked:e.accessibilityProvider&&e.accessibilityProvider.isChecked?i=>e.accessibilityProvider.isChecked(i.element):void 0,getRole:e.accessibilityProvider&&e.accessibilityProvider.getRole?i=>e.accessibilityProvider.getRole(i.element):()=>"treeitem",getAriaLabel(i){return e.accessibilityProvider.getAriaLabel(i.element)},getWidgetAriaLabel(){return e.accessibilityProvider.getWidgetAriaLabel()},getWidgetRole:e.accessibilityProvider&&e.accessibilityProvider.getWidgetRole?()=>e.accessibilityProvider.getWidgetRole():()=>"tree",getAriaLevel:e.accessibilityProvider&&e.accessibilityProvider.getAriaLevel?i=>e.accessibilityProvider.getAriaLevel(i.element):i=>i.depth,getActiveDescendantId:e.accessibilityProvider.getActiveDescendantId&&(i=>e.accessibilityProvider.getActiveDescendantId(i.element))},keyboardNavigationLabelProvider:e.keyboardNavigationLabelProvider&&{...e.keyboardNavigationLabelProvider,getKeyboardNavigationLabel(i){return e.keyboardNavigationLabelProvider.getKeyboardNavigationLabel(i.element)}}}}class He{constructor(t){this.delegate=t}getHeight(t){return this.delegate.getHeight(t.element)}getTemplateId(t){return this.delegate.getTemplateId(t.element)}hasDynamicHeight(t){return!!this.delegate.hasDynamicHeight&&this.delegate.hasDynamicHeight(t.element)}setDynamicHeight(t,e){this.delegate.setDynamicHeight?.(t.element,e)}}class k{focus;selection;expanded;scrollTop;static lift(t){return t instanceof k?t:new k(t)}static empty(t=0){return new k({focus:[],selection:[],expanded:Object.create(null),scrollTop:t})}constructor(t){if(this.focus=new Set(t.focus),this.selection=new Set(t.selection),t.expanded instanceof Array){this.expanded=Object.create(null);for(const e of t.expanded)this.expanded[e]=1}else this.expanded=t.expanded;this.expanded=t.expanded,this.scrollTop=t.scrollTop}toJSON(){return{focus:Array.from(this.focus),selection:Array.from(this.selection),expanded:this.expanded,scrollTop:this.scrollTop}}}var Oe=(i=>(i.None="none",i.OnHover="onHover",i.Always="always",i))(Oe||{});class Ve{constructor(t,e=[]){this._elements=e;this.onDidChange=h.forEach(t,i=>this._elements=i,this.disposables)}disposables=new f;onDidChange;get elements(){return this._elements}dispose(){this.disposables.dispose()}}class P{constructor(t,e,i,o,n,s={}){this.renderer=t;this.model=e;this.activeNodes=o;this.renderedIndentGuides=n;this.templateId=t.templateId,this.updateOptions(s),h.map(i,r=>r.node)(this.onDidChangeNodeTwistieState,this,this.disposables),t.onDidChangeTwistieState?.(this.onDidChangeTwistieState,this,this.disposables)}static DefaultIndent=8;templateId;renderedElements=new Map;renderedNodes=new Map;indent=P.DefaultIndent;hideTwistiesOfChildlessElements=!1;shouldRenderIndentGuides=!1;activeIndentNodes=new Set;indentGuidesDisposable=b.None;disposables=new f;updateOptions(t={}){if(typeof t.indent<"u"){const e=Q(t.indent,0,40);if(e!==this.indent){this.indent=e;for(const[i,o]of this.renderedNodes)this.renderTreeElement(i,o)}}if(typeof t.renderIndentGuides<"u"){const e=t.renderIndentGuides!=="none";if(e!==this.shouldRenderIndentGuides){this.shouldRenderIndentGuides=e;for(const[i,o]of this.renderedNodes)this._renderIndentGuides(i,o);if(this.indentGuidesDisposable.dispose(),e){const i=new f;this.activeNodes.onDidChange(this._onDidChangeActiveNodes,this,i),this.indentGuidesDisposable=i,this._onDidChangeActiveNodes(this.activeNodes.elements)}}}typeof t.hideTwistiesOfChildlessElements<"u"&&(this.hideTwistiesOfChildlessElements=t.hideTwistiesOfChildlessElements)}renderTemplate(t){const e=L(t,m(".monaco-tl-row")),i=L(e,m(".monaco-tl-indent")),o=L(e,m(".monaco-tl-twistie")),n=L(e,m(".monaco-tl-contents")),s=this.renderer.renderTemplate(n);return{container:t,indent:i,twistie:o,indentGuidesDisposable:b.None,templateData:s}}renderElement(t,e,i,o){this.renderedNodes.set(t,i),this.renderedElements.set(t.element,t),this.renderTreeElement(t,i),this.renderer.renderElement(t,e,i.templateData,o)}disposeElement(t,e,i,o){i.indentGuidesDisposable.dispose(),this.renderer.disposeElement?.(t,e,i.templateData,o),typeof o=="number"&&(this.renderedNodes.delete(t),this.renderedElements.delete(t.element))}disposeTemplate(t){this.renderer.disposeTemplate(t.templateData)}onDidChangeTwistieState(t){const e=this.renderedElements.get(t);e&&this.onDidChangeNodeTwistieState(e)}onDidChangeNodeTwistieState(t){const e=this.renderedNodes.get(t);e&&(this._onDidChangeActiveNodes(this.activeNodes.elements),this.renderTreeElement(t,e))}renderTreeElement(t,e){const i=P.DefaultIndent+(t.depth-1)*this.indent;e.twistie.style.paddingLeft=`${i}px`,e.indent.style.width=`${i+this.indent-16}px`,t.collapsible?e.container.setAttribute("aria-expanded",String(!t.collapsed)):e.container.removeAttribute("aria-expanded"),e.twistie.classList.remove(...J.asClassNameArray(R.treeItemExpanded));let o=!1;this.renderer.renderTwistie&&(o=this.renderer.renderTwistie(t.element,e.twistie)),t.collapsible&&(!this.hideTwistiesOfChildlessElements||t.visibleChildrenCount>0)?(o||e.twistie.classList.add(...J.asClassNameArray(R.treeItemExpanded)),e.twistie.classList.add("collapsible"),e.twistie.classList.toggle("collapsed",t.collapsed)):e.twistie.classList.remove("collapsible","collapsed"),this._renderIndentGuides(t,e)}_renderIndentGuides(t,e){if(oe(e.indent),e.indentGuidesDisposable.dispose(),!this.shouldRenderIndentGuides)return;const i=new f;for(;;){const o=this.model.getNodeLocation(t),n=this.model.getParentNodeLocation(o);if(!n)break;const s=this.model.getNode(n),r=m(".indent-guide",{style:`width: ${this.indent}px`});this.activeIndentNodes.has(s)&&r.classList.add("active"),e.indent.childElementCount===0?e.indent.appendChild(r):e.indent.insertBefore(r,e.indent.firstElementChild),this.renderedIndentGuides.add(s,r),i.add(z(()=>this.renderedIndentGuides.delete(s,r))),t=s}e.indentGuidesDisposable=i}_onDidChangeActiveNodes(t){if(!this.shouldRenderIndentGuides)return;const e=new Set;t.forEach(i=>{const o=this.model.getNodeLocation(i);try{const n=this.model.getParentNodeLocation(o);i.collapsible&&i.children.length>0&&!i.collapsed?e.add(i):n&&e.add(this.model.getNode(n))}catch{}}),this.activeIndentNodes.forEach(i=>{e.has(i)||this.renderedIndentGuides.forEach(i,o=>o.classList.remove("active"))}),e.forEach(i=>{this.activeIndentNodes.has(i)||this.renderedIndentGuides.forEach(i,o=>o.classList.add("active"))}),this.activeIndentNodes=e}dispose(){this.renderedNodes.clear(),this.renderedElements.clear(),this.indentGuidesDisposable.dispose(),V(this.disposables)}}function ze(a,t){const e=t.toLowerCase().indexOf(a);let i;if(e>-1){i=[Number.MAX_SAFE_INTEGER,0];for(let o=a.length;o>0;o--)i.push(e+o-1)}return i}class We{constructor(t,e,i){this._keyboardNavigationLabelProvider=t;this._filter=e;this._defaultFindVisibility=i}_totalCount=0;get totalCount(){return this._totalCount}_matchCount=0;get matchCount(){return this._matchCount}_findMatchType=0;set findMatchType(t){this._findMatchType=t}get findMatchType(){return this._findMatchType}_findMode=0;set findMode(t){this._findMode=t}get findMode(){return this._findMode}_pattern="";_lowercasePattern="";disposables=new f;set pattern(t){this._pattern=t,this._lowercasePattern=t.toLowerCase()}filter(t,e){let i=E.Visible;if(this._filter){const s=this._filter.filter(t,e);if(typeof s=="boolean"?i=s?E.Visible:E.Hidden:ye(s)?i=me(s.visibility):i=s,i===E.Hidden)return!1}if(this._totalCount++,!this._pattern)return this._matchCount++,{data:M.Default,visibility:i};const o=this._keyboardNavigationLabelProvider.getKeyboardNavigationLabel(t),n=Array.isArray(o)?o:[o];for(const s of n){const r=s&&s.toString();if(typeof r>"u")return{data:M.Default,visibility:i};let l;if(this._findMatchType===1?l=ze(this._lowercasePattern,r.toLowerCase()):l=Me(this._pattern,this._lowercasePattern,0,r,r.toLowerCase(),0,{firstMatchCanBeWeak:!0,boostFullMatch:!0}),l)return this._matchCount++,n.length===1?{data:l,visibility:i}:{data:{label:r,score:l},visibility:i}}return this._findMode===1?typeof this._defaultFindVisibility=="number"?this._defaultFindVisibility:this._defaultFindVisibility?this._defaultFindVisibility(t):E.Recurse:{data:M.Default,visibility:i}}reset(){this._totalCount=0,this._matchCount=0}dispose(){V(this.disposables)}}class Be extends fe{id;constructor(t,e,i){super({icon:t.icon,title:t.title,isChecked:t.isChecked,inputActiveOptionBorder:e.inputActiveOptionBorder,inputActiveOptionForeground:e.inputActiveOptionForeground,inputActiveOptionBackground:e.inputActiveOptionBackground,hoverDelegate:i}),this.id=t.id}}class $e{stateMap;constructor(t){this.stateMap=new Map(t.map(e=>[e.id,{...e}]))}states(){return Array.from(this.stateMap.values())}get(t){const e=this.stateMap.get(t);if(e===void 0)throw new Error(`No state found for toggle id ${t}`);return e.isChecked}set(t,e){const i=this.stateMap.get(t);if(i===void 0)throw new Error(`No state found for toggle id ${t}`);return i.isChecked===e?!1:(i.isChecked=e,!0)}}const Ge={inputBoxStyles:de,toggleStyles:ve,listFilterWidgetBackground:void 0,listFilterWidgetNoMatchesOutline:void 0,listFilterWidgetOutline:void 0,listFilterWidgetShadow:void 0};var Ke=(e=>(e[e.Highlight=0]="Highlight",e[e.Filter=1]="Filter",e))(Ke||{}),Ue=(e=>(e[e.Fuzzy=0]="Fuzzy",e[e.Contiguous=1]="Contiguous",e))(Ue||{});class qe extends b{constructor(e,i,o,n,s=[],r){super();this.tree=i;e.appendChild(this.elements.root),this._register(z(()=>this.elements.root.remove()));const l=r?.styles??Ge;l.listFilterWidgetBackground&&(this.elements.root.style.backgroundColor=l.listFilterWidgetBackground),l.listFilterWidgetShadow&&(this.elements.root.style.boxShadow=`0 0 8px 2px ${l.listFilterWidgetShadow}`);const d=this._register(ke());this.toggles=s.map(u=>this._register(new Be(u,l.toggleStyles,d))),this.onDidToggleChange=h.any(...this.toggles.map(u=>h.map(u.onChange,()=>({id:u.id,isChecked:u.checked}))));const c=r?.history||[];this.findInput=this._register(new ae(this.elements.findInput,o,{label:v("type to search","Type to search"),placeholder:n,additionalToggles:this.toggles,showCommonFindToggles:!1,inputBoxStyles:l.inputBoxStyles,toggleStyles:l.toggleStyles,history:new Set(c)})),this.actionbar=this._register(new le(this.elements.actionbar));const p=this._register(new re(this.findInput.inputBox.inputElement,"keydown")),D=h.chain(p.event,u=>u.map(I=>new U(I)));this._register(D(u=>{if(u.equals(S.Enter)){u.preventDefault(),u.stopPropagation(),this.findInput.inputBox.addToHistory(),this.tree.domFocus();return}if(u.equals(S.DownArrow)){u.preventDefault(),u.stopPropagation(),this.findInput.inputBox.isAtLastInHistory()||this.findInput.inputBox.isNowhereInHistory()?(this.findInput.inputBox.addToHistory(),this.tree.domFocus()):this.findInput.inputBox.showNextValue();return}if(u.equals(S.UpArrow)){u.preventDefault(),u.stopPropagation(),this.findInput.inputBox.showPreviousValue();return}}));const T=this._register(new Se("close",v("close","Close"),"codicon codicon-close",!0,()=>this.dispose()));this.actionbar.push(T,{icon:!0,label:!1}),this.onDidChangeValue=this.findInput.onDidChange}elements=A(".monaco-tree-type-filter",[A(".monaco-tree-type-filter-input@findInput"),A(".monaco-tree-type-filter-actionbar@actionbar")]);get value(){return this.findInput.inputBox.value}set value(e){this.findInput.inputBox.value=e}findInput;actionbar;toggles=[];_onDidDisable=new g;onDidDisable=this._onDidDisable.event;onDidChangeValue;onDidToggleChange;setToggleState(e,i){const o=this.toggles.find(n=>n.id===e);o&&(o.checked=i)}setPlaceHolder(e){this.findInput.inputBox.setPlaceHolder(e)}getHistory(){return this.findInput.inputBox.getHistory()}focus(){this.findInput.focus()}select(){this.findInput.select(),this.findInput.inputBox.addToHistory(!0)}showMessage(e){this.findInput.showMessage(e)}clearMessage(){this.findInput.clearMessage()}async dispose(){this._onDidDisable.fire(),this.elements.root.classList.add("disabled"),await Ne(300),super.dispose()}}var je=(e=>(e.Mode="mode",e.MatchType="matchType",e))(je||{});class Xe{constructor(t,e,i,o={}){this.tree=t;this.filter=e;this.contextViewProvider=i;this.options=o;this.toggles=new $e(o.toggles??[]),this._placeholder=o.placeholder??v("type to search","Type to search")}_history;_pattern="";get pattern(){return this._pattern}previousPattern="";toggles;_placeholder;get placeholder(){return this._placeholder}set placeholder(t){this._placeholder=t,this.widget?.setPlaceHolder(t)}widget;_onDidChangePattern=new g;onDidChangePattern=this._onDidChangePattern.event;_onDidChangeOpenState=new g;onDidChangeOpenState=this._onDidChangeOpenState.event;enabledDisposables=new f;disposables=new f;isOpened(){return!!this.widget}open(){if(this.widget){this.widget.focus(),this.widget.select();return}this.tree.updateOptions({paddingTop:30}),this.widget=new qe(this.tree.getHTMLElement(),this.tree,this.contextViewProvider,this.placeholder,this.toggles.states(),{...this.options,history:this._history}),this.enabledDisposables.add(this.widget),this.widget.onDidChangeValue(this.onDidChangeValue,this,this.enabledDisposables),this.widget.onDidDisable(this.close,this,this.enabledDisposables),this.widget.onDidToggleChange(this.onDidToggleChange,this,this.enabledDisposables),this.widget.focus(),this.widget.value=this.previousPattern,this.widget.select(),this._onDidChangeOpenState.fire(!0)}close(){this.widget&&(this.tree.updateOptions({paddingTop:0}),this._history=this.widget.getHistory(),this.widget=void 0,this.enabledDisposables.clear(),this.previousPattern=this.pattern,this.onDidChangeValue(""),this.tree.domFocus(),this._onDidChangeOpenState.fire(!1))}onDidChangeValue(t){this._pattern=t,this._onDidChangePattern.fire(t),this.filter.pattern=t,this.applyPattern(t)}onDidToggleChange(t){this.toggles.set(t.id,t.isChecked)}updateToggleState(t,e){this.toggles.set(t,e),this.widget?.setToggleState(t,e)}renderMessage(t,e){t?this.tree.options.showNotFoundMessage??!0?this.widget?.showMessage({type:q.WARNING,content:e??v("not found","No results found.")}):this.widget?.showMessage({type:q.WARNING}):this.widget?.clearMessage()}alertResults(t){t?Y(v("foundResults","{0} results",t)):Y(v("replFindNoResults","No results"))}dispose(){this._history=void 0,this._onDidChangePattern.dispose(),this.enabledDisposables.dispose(),this.disposables.dispose()}}class Je extends Xe{constructor(e,i,o,n={}){const s=n.defaultFindMode??0,r=n.defaultFindMatchType??0,l=[{id:"mode",icon:R.listFilter,title:v("filter","Filter"),isChecked:s===1},{id:"matchType",icon:R.searchFuzzy,title:v("fuzzySearch","Fuzzy Match"),isChecked:r===0}];i.findMatchType=r,i.findMode=s;super(e,i,o,{...n,toggles:l});this.filter=i;this.disposables.add(this.tree.onDidChangeModel(()=>{this.isOpened()&&(this.pattern.length!==0&&this.tree.refilter(),this.render())})),this.disposables.add(this.tree.onWillRefilter(()=>this.filter.reset()))}get mode(){return this.toggles.get("mode")?1:0}set mode(e){if(e===this.mode)return;const i=e===1;this.updateToggleState("mode",i),this.placeholder=i?v("type to filter","Type to filter"):v("type to search","Type to search"),this.filter.findMode=e,this.tree.refilter(),this.render(),this._onDidChangeMode.fire(e)}get matchType(){return this.toggles.get("matchType")?0:1}set matchType(e){e!==this.matchType&&(this.updateToggleState("matchType",e===0),this.filter.findMatchType=e,this.tree.refilter(),this.render(),this._onDidChangeMatchType.fire(e))}_onDidChangeMode=new g;onDidChangeMode=this._onDidChangeMode.event;_onDidChangeMatchType=new g;onDidChangeMatchType=this._onDidChangeMatchType.event;updateOptions(e={}){e.defaultFindMode!==void 0&&(this.mode=e.defaultFindMode),e.defaultFindMatchType!==void 0&&(this.matchType=e.defaultFindMatchType)}applyPattern(e){this.tree.refilter(),e&&this.tree.focusNext(0,!0,void 0,o=>!M.isDefault(o.filterData));const i=this.tree.getFocus();if(i.length>0){const o=i[0];this.tree.getRelativeTop(o)===null&&this.tree.reveal(o,.5)}this.render()}shouldAllowFocus(e){return!this.isOpened()||!this.pattern||this.filter.totalCount>0&&this.filter.matchCount<=1?!0:!M.isDefault(e.filterData)}onDidToggleChange(e){e.id==="mode"?this.mode=e.isChecked?1:0:e.id==="matchType"&&(this.matchType=e.isChecked?0:1)}render(){const i=this.filter.matchCount===0&&this.filter.totalCount>0&&this.pattern.length>0;this.renderMessage(i),this.pattern.length&&this.alertResults(this.filter.matchCount)}}function Qe(a,t){return a.position===t.position&&Z(a,t)}function Z(a,t){return a.node.element===t.node.element&&a.startIndex===t.startIndex&&a.height===t.height&&a.endIndex===t.endIndex}class Ye{constructor(t=[]){this.stickyNodes=t}get count(){return this.stickyNodes.length}equal(t){return O(this.stickyNodes,t.stickyNodes,Qe)}contains(t){return this.stickyNodes.some(e=>e.node.element===t.element)}lastNodePartiallyVisible(){if(this.count===0)return!1;const t=this.stickyNodes[this.count-1];if(this.count===1)return t.position!==0;const e=this.stickyNodes[this.count-2];return e.position+e.height!==t.position}animationStateChanged(t){if(!O(this.stickyNodes,t.stickyNodes,Z)||this.count===0)return!1;const e=this.stickyNodes[this.count-1],i=t.stickyNodes[t.count-1];return e.position!==i.position}}class Ze{constrainStickyScrollNodes(t,e,i){for(let o=0;o<t.length;o++){const n=t[o];if(n.position+n.height>i||o>=e)return t.slice(0,o)}return t}}class ee extends b{constructor(e,i,o,n,s,r={}){super();this.tree=e;this.model=i;this.view=o;this.treeDelegate=s;const l=this.validateStickySettings(r);this.stickyScrollMaxItemCount=l.stickyScrollMaxItemCount,this.stickyScrollDelegate=r.stickyScrollDelegate??new Ze,this.paddingTop=r.paddingTop??0,this._widget=this._register(new et(o.getScrollableElement(),o,e,n,s,r.accessibilityProvider)),this.onDidChangeHasFocus=this._widget.onDidChangeHasFocus,this.onContextMenu=this._widget.onContextMenu,this._register(o.onDidScroll(()=>this.update())),this._register(o.onDidChangeContentHeight(()=>this.update())),this._register(e.onDidChangeCollapseState(()=>this.update())),this._register(i.onDidSpliceRenderedNodes(d=>{const c=this._widget.state;if(!c)return;if(d.deleteCount>0&&c.stickyNodes.some(T=>!this.model.has(this.model.getNodeLocation(T.node)))){this.update();return}c.stickyNodes.some(T=>{const u=this.model.getListIndex(this.model.getNodeLocation(T.node));return u>=d.start&&u<d.start+d.deleteCount&&c.contains(T.node)})&&this._widget.rerender()})),this.update()}onDidChangeHasFocus;onContextMenu;stickyScrollDelegate;stickyScrollMaxItemCount;maxWidgetViewRatio=.4;_widget;paddingTop;get height(){return this._widget.height}get count(){return this._widget.count}getNode(e){return this._widget.getNode(e)}getNodeAtHeight(e){let i;if(e===0?i=this.view.firstVisibleIndex:i=this.view.indexAt(e+this.view.scrollTop),!(i<0||i>=this.view.length))return this.view.element(i)}update(){const e=this.getNodeAtHeight(this.paddingTop);if(!e||this.tree.scrollTop<=this.paddingTop){this._widget.setState(void 0);return}const i=this.findStickyState(e);this._widget.setState(i)}findStickyState(e){const i=[];let o=e,n=0,s=this.getNextStickyNode(o,void 0,n);for(;s&&(i.push(s),n+=s.height,!(i.length<=this.stickyScrollMaxItemCount&&(o=this.getNextVisibleNode(s),!o)));)s=this.getNextStickyNode(o,s.node,n);const r=this.constrainStickyNodes(i);return r.length?new Ye(r):void 0}getNextVisibleNode(e){return this.getNodeAtHeight(e.position+e.height)}getNextStickyNode(e,i,o){const n=this.getAncestorUnderPrevious(e,i);if(n&&!(n===e&&(!this.nodeIsUncollapsedParent(e)||this.nodeTopAlignsWithStickyNodesBottom(e,o))))return this.createStickyScrollNode(n,o)}nodeTopAlignsWithStickyNodesBottom(e,i){const o=this.getNodeIndex(e),n=this.view.getElementTop(o),s=i;return this.view.scrollTop===n-s}createStickyScrollNode(e,i){const o=this.treeDelegate.getHeight(e),{startIndex:n,endIndex:s}=this.getNodeRange(e),r=this.calculateStickyNodePosition(s,i,o);return{node:e,position:r,height:o,startIndex:n,endIndex:s}}getAncestorUnderPrevious(e,i=void 0){let o=e,n=this.getParentNode(o);for(;n;){if(n===i)return o;o=n,n=this.getParentNode(o)}if(i===void 0)return o}calculateStickyNodePosition(e,i,o){let n=this.view.getRelativeTop(e);if(n===null&&this.view.firstVisibleIndex===e&&e+1<this.view.length){const c=this.treeDelegate.getHeight(this.view.element(e)),p=this.view.getRelativeTop(e+1);n=p?p-c/this.view.renderHeight:null}if(n===null)return i;const s=this.view.element(e),r=this.treeDelegate.getHeight(s),d=n*this.view.renderHeight+r;return i+o>d&&i<=d?d-o:i}constrainStickyNodes(e){if(e.length===0)return[];const i=this.view.renderHeight*this.maxWidgetViewRatio,o=e[e.length-1];if(e.length<=this.stickyScrollMaxItemCount&&o.position+o.height<=i)return e;const n=this.stickyScrollDelegate.constrainStickyScrollNodes(e,this.stickyScrollMaxItemCount,i);if(!n.length)return[];const s=n[n.length-1];if(n.length>this.stickyScrollMaxItemCount||s.position+s.height>i)throw new Error("stickyScrollDelegate violates constraints");return n}getParentNode(e){const i=this.model.getNodeLocation(e),o=this.model.getParentNodeLocation(i);return o?this.model.getNode(o):void 0}nodeIsUncollapsedParent(e){const i=this.model.getNodeLocation(e);return this.model.getListRenderCount(i)>1}getNodeIndex(e){const i=this.model.getNodeLocation(e);return this.model.getListIndex(i)}getNodeRange(e){const i=this.model.getNodeLocation(e),o=this.model.getListIndex(i);if(o<0)throw new Error("Node not found in tree");const n=this.model.getListRenderCount(i),s=o+n-1;return{startIndex:o,endIndex:s}}nodePositionTopBelowWidget(e){const i=[];let o=this.getParentNode(e);for(;o;)i.push(o),o=this.getParentNode(o);let n=0;for(let s=0;s<i.length&&s<this.stickyScrollMaxItemCount;s++)n+=this.treeDelegate.getHeight(i[s]);return n}getFocus(){return this._widget.getFocus()}domFocus(){this._widget.domFocus()}focusedLast(){return this._widget.focusedLast()}updateOptions(e={}){if(e.paddingTop!==void 0&&(this.paddingTop=e.paddingTop),e.stickyScrollMaxItemCount!==void 0){const i=this.validateStickySettings(e);this.stickyScrollMaxItemCount!==i.stickyScrollMaxItemCount&&(this.stickyScrollMaxItemCount=i.stickyScrollMaxItemCount,this.update())}}validateStickySettings(e){let i=7;return typeof e.stickyScrollMaxItemCount=="number"&&(i=Math.max(e.stickyScrollMaxItemCount,1)),{stickyScrollMaxItemCount:i}}}class et{constructor(t,e,i,o,n,s){this.view=e;this.tree=i;this.treeRenderers=o;this.treeDelegate=n;this.accessibilityProvider=s;this._rootDomNode=m(".monaco-tree-sticky-container.empty"),t.appendChild(this._rootDomNode);const r=m(".monaco-tree-sticky-container-shadow");this._rootDomNode.appendChild(r),this.stickyScrollFocus=new tt(this._rootDomNode,e),this.onDidChangeHasFocus=this.stickyScrollFocus.onDidChangeHasFocus,this.onContextMenu=this.stickyScrollFocus.onContextMenu}_rootDomNode;_previousState;_previousElements=[];_previousStateDisposables=new f;get state(){return this._previousState}stickyScrollFocus;onDidChangeHasFocus;onContextMenu;get height(){if(!this._previousState)return 0;const t=this._previousState.stickyNodes[this._previousState.count-1];return t.position+t.height}get count(){return this._previousState?.count??0}getNode(t){return this._previousState?.stickyNodes.find(e=>e.node===t)}setState(t){const e=!!this._previousState&&this._previousState.count>0,i=!!t&&t.count>0;if(!e&&!i||e&&i&&this._previousState.equal(t))return;if(e!==i&&this.setVisible(i),!i){this._previousState=void 0,this._previousElements=[],this._previousStateDisposables.clear();return}const o=t.stickyNodes[t.count-1];this._previousState&&t.animationStateChanged(this._previousState)?this._previousElements[this._previousState.count-1].style.top=`${o.position}px`:this.renderState(t),this._previousState=t,this._rootDomNode.style.height=`${o.position+o.height}px`}renderState(t){this._previousStateDisposables.clear();const e=Array(t.count);for(let i=t.count-1;i>=0;i--){const o=t.stickyNodes[i],{element:n,disposable:s}=this.createElement(o,i,t.count);e[i]=n,this._rootDomNode.appendChild(n),this._previousStateDisposables.add(s)}this.stickyScrollFocus.updateElements(e,t),this._previousElements=e}rerender(){this._previousState&&this.renderState(this._previousState)}createElement(t,e,i){const o=t.startIndex,n=document.createElement("div");n.style.top=`${t.position}px`,this.tree.options.setRowHeight!==!1&&(n.style.height=`${t.height}px`),this.tree.options.setRowLineHeight!==!1&&(n.style.lineHeight=`${t.height}px`),n.classList.add("monaco-tree-sticky-row"),n.classList.add("monaco-list-row"),n.setAttribute("data-index",`${o}`),n.setAttribute("data-parity",o%2===0?"even":"odd"),n.setAttribute("id",this.view.getElementID(o));const s=this.setAccessibilityAttributes(n,t.node.element,e,i),r=this.treeDelegate.getTemplateId(t.node),l=this.treeRenderers.find(D=>D.templateId===r);if(!l)throw new Error(`No renderer found for template id ${r}`);let d=t.node;d===this.tree.getNode(this.tree.getNodeLocation(t.node))&&(d=new Proxy(t.node,{}));const c=l.renderTemplate(n);l.renderElement(d,t.startIndex,c,t.height);const p=z(()=>{s.dispose(),l.disposeElement(d,t.startIndex,c,t.height),l.disposeTemplate(c),n.remove()});return{element:n,disposable:p}}setAccessibilityAttributes(t,e,i,o){if(!this.accessibilityProvider)return b.None;this.accessibilityProvider.getSetSize&&t.setAttribute("aria-setsize",String(this.accessibilityProvider.getSetSize(e,i,o))),this.accessibilityProvider.getPosInSet&&t.setAttribute("aria-posinset",String(this.accessibilityProvider.getPosInSet(e,i))),this.accessibilityProvider.getRole&&t.setAttribute("role",this.accessibilityProvider.getRole(e)??"treeitem");const n=this.accessibilityProvider.getAriaLabel(e),s=n&&typeof n!="string"?n:Re(n),r=Le(d=>{const c=d.readObservable(s);c?t.setAttribute("aria-label",c):t.removeAttribute("aria-label")});typeof n=="string"||n&&t.setAttribute("aria-label",n.get());const l=this.accessibilityProvider.getAriaLevel&&this.accessibilityProvider.getAriaLevel(e);return typeof l=="number"&&t.setAttribute("aria-level",`${l}`),t.setAttribute("aria-selected",String(!1)),r}setVisible(t){this._rootDomNode.classList.toggle("empty",!t),t||this.stickyScrollFocus.updateElements([],void 0)}getFocus(){return this.stickyScrollFocus.getFocus()}domFocus(){this.stickyScrollFocus.domFocus()}focusedLast(){return this.stickyScrollFocus.focusedLast()}dispose(){this.stickyScrollFocus.dispose(),this._previousStateDisposables.dispose(),this._rootDomNode.remove()}}class tt extends b{constructor(e,i){super();this.container=e;this.view=i;this._register($(this.container,"focus",()=>this.onFocus())),this._register($(this.container,"blur",()=>this.onBlur())),this._register(this.view.onDidFocus(()=>this.toggleStickyScrollFocused(!1))),this._register(this.view.onKeyDown(o=>this.onKeyDown(o))),this._register(this.view.onMouseDown(o=>this.onMouseDown(o))),this._register(this.view.onContextMenu(o=>this.handleContextMenu(o)))}focusedIndex=-1;elements=[];state;_onDidChangeHasFocus=new g;onDidChangeHasFocus=this._onDidChangeHasFocus.event;_onContextMenu=new g;onContextMenu=this._onContextMenu.event;_domHasFocus=!1;get domHasFocus(){return this._domHasFocus}set domHasFocus(e){e!==this._domHasFocus&&(this._onDidChangeHasFocus.fire(e),this._domHasFocus=e)}handleContextMenu(e){const i=e.browserEvent.target;if(!w(i)&&!C(i)){this.focusedLast()&&this.view.domFocus();return}if(!y(e.browserEvent)){if(!this.state)throw new Error("Context menu should not be triggered when state is undefined");const r=this.state.stickyNodes.findIndex(l=>l.node.element===e.element?.element);if(r===-1)throw new Error("Context menu should not be triggered when element is not in sticky scroll widget");this.container.focus(),this.setFocus(r);return}if(!this.state||this.focusedIndex<0)throw new Error("Context menu key should not be triggered when focus is not in sticky scroll widget");const n=this.state.stickyNodes[this.focusedIndex].node.element,s=this.elements[this.focusedIndex];this._onContextMenu.fire({element:n,anchor:s,browserEvent:e.browserEvent,isStickyScroll:!0})}onKeyDown(e){if(this.domHasFocus&&this.state){if(e.key==="ArrowUp")this.setFocusedElement(Math.max(0,this.focusedIndex-1)),e.preventDefault(),e.stopPropagation();else if(e.key==="ArrowDown"||e.key==="ArrowRight"){if(this.focusedIndex>=this.state.count-1){const i=this.state.stickyNodes[this.state.count-1].startIndex+1;this.view.domFocus(),this.view.setFocus([i]),this.scrollNodeUnderWidget(i,this.state)}else this.setFocusedElement(this.focusedIndex+1);e.preventDefault(),e.stopPropagation()}}}onMouseDown(e){const i=e.browserEvent.target;!w(i)&&!C(i)||(e.browserEvent.preventDefault(),e.browserEvent.stopPropagation())}updateElements(e,i){if(i&&i.count===0)throw new Error("Sticky scroll state must be undefined when there are no sticky nodes");if(i&&i.count!==e.length)throw new Error("Sticky scroll focus received illigel state");const o=this.focusedIndex;if(this.removeFocus(),this.elements=e,this.state=i,i){const n=Q(o,0,i.count-1);this.setFocus(n)}else this.domHasFocus&&this.view.domFocus();this.container.tabIndex=i?0:-1}setFocusedElement(e){const i=this.state;if(!i)throw new Error("Cannot set focus when state is undefined");if(this.setFocus(e),!(e<i.count-1)&&i.lastNodePartiallyVisible()){const o=i.stickyNodes[e];this.scrollNodeUnderWidget(o.endIndex+1,i)}}scrollNodeUnderWidget(e,i){const o=i.stickyNodes[i.count-1],n=i.count>1?i.stickyNodes[i.count-2]:void 0,s=this.view.getElementTop(e),r=n?n.position+n.height+o.height:o.height;this.view.scrollTop=s-r}getFocus(){if(!(!this.state||this.focusedIndex===-1))return this.state.stickyNodes[this.focusedIndex].node.element}domFocus(){if(!this.state)throw new Error("Cannot focus when state is undefined");this.container.focus()}focusedLast(){return this.state?this.view.getHTMLElement().classList.contains("sticky-scroll-focused"):!1}removeFocus(){this.focusedIndex!==-1&&(this.toggleElementFocus(this.elements[this.focusedIndex],!1),this.focusedIndex=-1)}setFocus(e){if(0>e)throw new Error("addFocus() can not remove focus");if(!this.state&&e>=0)throw new Error("Cannot set focus index when state is undefined");if(this.state&&e>=this.state.count)throw new Error("Cannot set focus index to an index that does not exist");const i=this.focusedIndex;i>=0&&this.toggleElementFocus(this.elements[i],!1),e>=0&&this.toggleElementFocus(this.elements[e],!0),this.focusedIndex=e}toggleElementFocus(e,i){this.toggleElementActiveFocus(e,i&&this.domHasFocus),this.toggleElementPassiveFocus(e,i)}toggleCurrentElementActiveFocus(e){this.focusedIndex!==-1&&this.toggleElementActiveFocus(this.elements[this.focusedIndex],e)}toggleElementActiveFocus(e,i){e.classList.toggle("focused",i)}toggleElementPassiveFocus(e,i){e.classList.toggle("passive-focused",i)}toggleStickyScrollFocused(e){this.view.getHTMLElement().classList.toggle("sticky-scroll-focused",e)}onFocus(){if(!this.state||this.elements.length===0)throw new Error("Cannot focus when state is undefined or elements are empty");this.domHasFocus=!0,this.toggleStickyScrollFocused(!0),this.toggleCurrentElementActiveFocus(!0),this.focusedIndex===-1&&this.setFocus(0)}onBlur(){this.domHasFocus=!1,this.toggleCurrentElementActiveFocus(!1)}dispose(){this.toggleStickyScrollFocused(!1),this._onDidChangeHasFocus.fire(!1),super.dispose()}}function F(a){let t=N.Unknown;return H(a.browserEvent.target,"monaco-tl-twistie","monaco-tl-row")?t=N.Twistie:H(a.browserEvent.target,"monaco-tl-contents","monaco-tl-row")?t=N.Element:H(a.browserEvent.target,"monaco-tree-type-filter","monaco-list")&&(t=N.Filter),{browserEvent:a.browserEvent,element:a.element?a.element.element:null,target:t}}function it(a){const t=w(a.browserEvent.target);return{element:a.element?a.element.element:null,browserEvent:a.browserEvent,anchor:a.anchor,isStickyScroll:t}}function _(a,t){t(a),a.children.forEach(e=>_(e,t))}class B{constructor(t,e){this.getFirstViewElementWithTrait=t;this.identityProvider=e}nodes=[];elements;_onDidChange=new g;onDidChange=this._onDidChange.event;_nodeSet;get nodeSet(){return this._nodeSet||(this._nodeSet=this.createNodeSet()),this._nodeSet}set(t,e){!e?.__forceEvent&&O(this.nodes,t)||this._set(t,!1,e)}_set(t,e,i){if(this.nodes=[...t],this.elements=void 0,this._nodeSet=void 0,!e){const o=this;this._onDidChange.fire({get elements(){return o.get()},browserEvent:i})}}get(){return this.elements||(this.elements=this.nodes.map(t=>t.element)),[...this.elements]}getNodes(){return this.nodes}has(t){return this.nodeSet.has(t)}onDidModelSplice({insertedNodes:t,deletedNodes:e}){if(!this.identityProvider){const l=this.createNodeSet(),d=c=>l.delete(c);e.forEach(c=>_(c,d)),this.set([...l.values()]);return}const i=new Set,o=l=>i.add(this.identityProvider.getId(l.element).toString());e.forEach(l=>_(l,o));const n=new Map,s=l=>n.set(this.identityProvider.getId(l.element).toString(),l);t.forEach(l=>_(l,s));const r=[];for(const l of this.nodes){const d=this.identityProvider.getId(l.element).toString();if(!i.has(d))r.push(l);else{const p=n.get(d);p&&p.visible&&r.push(p)}}if(this.nodes.length>0&&r.length===0){const l=this.getFirstViewElementWithTrait();l&&r.push(l)}this._set(r,!0)}createNodeSet(){const t=new Set;for(const e of this.nodes)t.add(e);return t}}class ot extends ge{constructor(e,i,o){super(e);this.tree=i;this.stickyScrollProvider=o}onViewPointer(e){if(he(e.browserEvent.target)||G(e.browserEvent.target)||Te(e.browserEvent.target)||e.browserEvent.isHandledByList)return;const i=e.element;if(!i)return super.onViewPointer(e);if(this.isSelectionRangeChangeEvent(e)||this.isSelectionSingleChangeEvent(e))return super.onViewPointer(e);const o=e.browserEvent.target,n=o.classList.contains("monaco-tl-twistie")||o.classList.contains("monaco-icon-label")&&o.classList.contains("folder-icon")&&e.browserEvent.offsetX<16,s=C(e.browserEvent.target);let r=!1;if(s?r=!0:typeof this.tree.expandOnlyOnTwistieClick=="function"?r=this.tree.expandOnlyOnTwistieClick(i.element):r=!!this.tree.expandOnlyOnTwistieClick,s)this.handleStickyScrollMouseEvent(e,i);else{if(r&&!n&&e.browserEvent.detail!==2)return super.onViewPointer(e);if(!this.tree.expandOnDoubleClick&&e.browserEvent.detail===2)return super.onViewPointer(e)}if(i.collapsible&&(!s||n)){const l=this.tree.getNodeLocation(i),d=e.browserEvent.altKey;if(this.tree.setFocus([l]),this.tree.toggleCollapsed(l,d),n){e.browserEvent.isHandledByList=!0;return}}s||super.onViewPointer(e)}handleStickyScrollMouseEvent(e,i){if(ue(e.browserEvent.target)||ce(e.browserEvent.target))return;const o=this.stickyScrollProvider();if(!o)throw new Error("Sticky scroll controller not found");const n=this.list.indexOf(i),s=this.list.getElementTop(n),r=o.nodePositionTopBelowWidget(i);this.tree.scrollTop=s-r,this.list.domFocus(),this.list.setFocus([n]),this.list.setSelection([n])}onDoubleClick(e){e.browserEvent.target.classList.contains("monaco-tl-twistie")||!this.tree.expandOnDoubleClick||e.browserEvent.isHandledByList||super.onDoubleClick(e)}onMouseDown(e){const i=e.browserEvent.target;if(!w(i)&&!C(i)){super.onMouseDown(e);return}}onContextMenu(e){const i=e.browserEvent.target;if(!w(i)&&!C(i)){super.onContextMenu(e);return}}}class nt extends pe{constructor(e,i,o,n,s,r,l,d){super(e,i,o,n,d);this.focusTrait=s;this.selectionTrait=r;this.anchorTrait=l}createMouseController(e){return new ot(this,e.tree,e.stickyScrollProvider)}splice(e,i,o=[]){if(super.splice(e,i,o),o.length===0)return;const n=[],s=[];let r;o.forEach((l,d)=>{this.focusTrait.has(l)&&n.push(e+d),this.selectionTrait.has(l)&&s.push(e+d),this.anchorTrait.has(l)&&(r=e+d)}),n.length>0&&super.setFocus(X([...super.getFocus(),...n])),s.length>0&&super.setSelection(X([...super.getSelection(),...s])),typeof r=="number"&&super.setAnchor(r)}setFocus(e,i,o=!1){super.setFocus(e,i),o||this.focusTrait.set(e.map(n=>this.element(n)),i)}setSelection(e,i,o=!1){super.setSelection(e,i),o||this.selectionTrait.set(e.map(n=>this.element(n)),i)}setAnchor(e,i=!1){super.setAnchor(e),i||(typeof e>"u"?this.anchorTrait.set([]):this.anchorTrait.set([this.element(e)]))}}var st=(e=>(e[e.Tree=0]="Tree",e[e.StickyScroll=1]="StickyScroll",e))(st||{});class Di{constructor(t,e,i,o,n={}){this._user=t;this._options=n;n.keyboardNavigationLabelProvider&&(n.findWidgetEnabled??!0)&&(this.findFilter=new We(n.keyboardNavigationLabelProvider,n.filter,n.defaultFindVisibility),n={...n,filter:this.findFilter},this.disposables.add(this.findFilter)),this.model=this.createModel(t,n),this.treeDelegate=new He(i);const s=this.disposables.add(new Ve(this.onDidChangeActiveNodesRelay.event)),r=new Ee;this.renderers=o.map(l=>new P(l,this.model,this.onDidChangeCollapseStateRelay.event,s,r,n));for(const l of this.renderers)this.disposables.add(l);if(this.focus=new B(()=>this.view.getFocusedElements()[0],n.identityProvider),this.selection=new B(()=>this.view.getSelectedElements()[0],n.identityProvider),this.anchor=new B(()=>this.view.getAnchorElement(),n.identityProvider),this.view=new nt(t,e,this.treeDelegate,this.renderers,this.focus,this.selection,this.anchor,{...Ae(()=>this.model,this.disposables,n),tree:this,stickyScrollProvider:()=>this.stickyScrollController}),this.setupModel(this.model),n.keyboardSupport!==!1){const l=h.chain(this.view.onKeyDown,d=>d.filter(c=>!G(c.target)).map(c=>new U(c)));h.chain(l,d=>d.filter(c=>c.keyCode===S.LeftArrow))(this.onLeftArrow,this,this.disposables),h.chain(l,d=>d.filter(c=>c.keyCode===S.RightArrow))(this.onRightArrow,this,this.disposables),h.chain(l,d=>d.filter(c=>c.keyCode===S.Space))(this.onSpace,this,this.disposables)}if((n.findWidgetEnabled??!0)&&n.keyboardNavigationLabelProvider&&n.contextViewProvider){const l={styles:n.findWidgetStyles,defaultFindMode:n.defaultFindMode,defaultFindMatchType:n.defaultFindMatchType,showNotFoundMessage:n.showNotFoundMessage};this.findController=this.disposables.add(new Je(this,this.findFilter,n.contextViewProvider,l)),this.focusNavigationFilter=d=>this.findController.shouldAllowFocus(d),this.onDidChangeFindOpenState=this.findController.onDidChangeOpenState,this.onDidChangeFindMode=this.findController.onDidChangeMode,this.onDidChangeFindMatchType=this.findController.onDidChangeMatchType}else this.onDidChangeFindMode=h.None,this.onDidChangeFindMatchType=h.None;n.enableStickyScroll&&(this.stickyScrollController=new ee(this,this.model,this.view,this.renderers,this.treeDelegate,n),this.onDidChangeStickyScrollFocused=this.stickyScrollController.onDidChangeHasFocus),this.styleElement=se(this.view.getHTMLElement()),this.getHTMLElement().classList.toggle("always",this._options.renderIndentGuides==="always")}view;renderers;model;treeDelegate;focus;selection;anchor;eventBufferer=new xe;findController;findFilter;onDidChangeFindOpenState=h.None;onDidChangeStickyScrollFocused=h.None;focusNavigationFilter;stickyScrollController;styleElement;disposables=new f;get onDidScroll(){return this.view.onDidScroll}get onDidChangeFocus(){return this.eventBufferer.wrapEvent(this.focus.onDidChange)}get onDidChangeSelection(){return this.eventBufferer.wrapEvent(this.selection.onDidChange)}get onMouseClick(){return h.map(this.view.onMouseClick,F)}get onMouseDblClick(){return h.filter(h.map(this.view.onMouseDblClick,F),t=>t.target!==N.Filter)}get onMouseOver(){return h.map(this.view.onMouseOver,F)}get onMouseOut(){return h.map(this.view.onMouseOut,F)}get onContextMenu(){return h.any(h.filter(h.map(this.view.onContextMenu,it),t=>!t.isStickyScroll),this.stickyScrollController?.onContextMenu??h.None)}get onTap(){return h.map(this.view.onTap,F)}get onPointer(){return h.map(this.view.onPointer,F)}get onKeyDown(){return this.view.onKeyDown}get onKeyUp(){return this.view.onKeyUp}get onKeyPress(){return this.view.onKeyPress}get onDidFocus(){return this.view.onDidFocus}get onDidBlur(){return this.view.onDidBlur}onDidSwapModel=this.disposables.add(new g);onDidChangeModelRelay=this.disposables.add(new x);onDidSpliceModelRelay=this.disposables.add(new x);onDidChangeCollapseStateRelay=this.disposables.add(new x);onDidChangeRenderNodeCountRelay=this.disposables.add(new x);onDidChangeActiveNodesRelay=this.disposables.add(new x);get onDidChangeModel(){return h.any(this.onDidChangeModelRelay.event,this.onDidSwapModel.event)}get onDidChangeCollapseState(){return this.onDidChangeCollapseStateRelay.event}get onDidChangeRenderNodeCount(){return this.onDidChangeRenderNodeCountRelay.event}_onWillRefilter=new g;onWillRefilter=this._onWillRefilter.event;get findMode(){return this.findController?.mode??0}set findMode(t){this.findController&&(this.findController.mode=t)}onDidChangeFindMode;get findMatchType(){return this.findController?.matchType??0}set findMatchType(t){this.findController&&(this.findController.matchType=t)}onDidChangeFindMatchType;get onDidChangeFindPattern(){return this.findController?this.findController.onDidChangePattern:h.None}get expandOnDoubleClick(){return typeof this._options.expandOnDoubleClick>"u"?!0:this._options.expandOnDoubleClick}get expandOnlyOnTwistieClick(){return typeof this._options.expandOnlyOnTwistieClick>"u"?!0:this._options.expandOnlyOnTwistieClick}_onDidUpdateOptions=new g;onDidUpdateOptions=this._onDidUpdateOptions.event;get onDidDispose(){return this.view.onDidDispose}updateOptions(t={}){this._options={...this._options,...t};for(const e of this.renderers)e.updateOptions(t);this.view.updateOptions(this._options),this.findController?.updateOptions(t),this.updateStickyScroll(t),this._onDidUpdateOptions.fire(this._options),this.getHTMLElement().classList.toggle("always",this._options.renderIndentGuides==="always")}get options(){return this._options}updateStickyScroll(t){!this.stickyScrollController&&this._options.enableStickyScroll?(this.stickyScrollController=new ee(this,this.model,this.view,this.renderers,this.treeDelegate,this._options),this.onDidChangeStickyScrollFocused=this.stickyScrollController.onDidChangeHasFocus):this.stickyScrollController&&!this._options.enableStickyScroll&&(this.onDidChangeStickyScrollFocused=h.None,this.stickyScrollController.dispose(),this.stickyScrollController=void 0),this.stickyScrollController?.updateOptions(t)}updateWidth(t){const e=this.model.getListIndex(t);e!==-1&&this.view.updateWidth(e)}getHTMLElement(){return this.view.getHTMLElement()}get contentHeight(){return this.view.contentHeight}get contentWidth(){return this.view.contentWidth}get onDidChangeContentHeight(){return this.view.onDidChangeContentHeight}get onDidChangeContentWidth(){return this.view.onDidChangeContentWidth}get scrollTop(){return this.view.scrollTop}set scrollTop(t){this.view.scrollTop=t}get scrollLeft(){return this.view.scrollLeft}set scrollLeft(t){this.view.scrollLeft=t}get scrollHeight(){return this.view.scrollHeight}get renderHeight(){return this.view.renderHeight}get firstVisibleElement(){let t=this.view.firstVisibleIndex;return this.stickyScrollController&&(t+=this.stickyScrollController.count),t<0||t>=this.view.length?void 0:this.view.element(t).element}get lastVisibleElement(){const t=this.view.lastVisibleIndex;return this.view.element(t).element}get ariaLabel(){return this.view.ariaLabel}set ariaLabel(t){this.view.ariaLabel=t}get selectionSize(){return this.selection.getNodes().length}domFocus(){this.stickyScrollController?.focusedLast()?this.stickyScrollController.domFocus():this.view.domFocus()}isDOMFocused(){return ne(this.getHTMLElement())}layout(t,e){this.view.layout(t,e)}style(t){const e=`.${this.view.domId}`,i=[];t.treeIndentGuidesStroke&&(i.push(`.monaco-list${e}:hover .monaco-tl-indent > .indent-guide, .monaco-list${e}.always .monaco-tl-indent > .indent-guide  { border-color: ${t.treeInactiveIndentGuidesStroke}; }`),i.push(`.monaco-list${e} .monaco-tl-indent > .indent-guide.active { border-color: ${t.treeIndentGuidesStroke}; }`));const o=t.treeStickyScrollBackground??t.listBackground;o&&(i.push(`.monaco-list${e} .monaco-scrollable-element .monaco-tree-sticky-container { background-color: ${o}; }`),i.push(`.monaco-list${e} .monaco-scrollable-element .monaco-tree-sticky-container .monaco-tree-sticky-row { background-color: ${o}; }`)),t.treeStickyScrollBorder&&i.push(`.monaco-list${e} .monaco-scrollable-element .monaco-tree-sticky-container { border-bottom: 1px solid ${t.treeStickyScrollBorder}; }`),t.treeStickyScrollShadow&&i.push(`.monaco-list${e} .monaco-scrollable-element .monaco-tree-sticky-container .monaco-tree-sticky-container-shadow { box-shadow: ${t.treeStickyScrollShadow} 0 6px 6px -6px inset; height: 3px; }`),t.listFocusForeground&&(i.push(`.monaco-list${e}.sticky-scroll-focused .monaco-scrollable-element .monaco-tree-sticky-container:focus .monaco-list-row.focused { color: ${t.listFocusForeground}; }`),i.push(`.monaco-list${e}:not(.sticky-scroll-focused) .monaco-scrollable-element .monaco-tree-sticky-container .monaco-list-row.focused { color: inherit; }`));const n=K(t.listFocusAndSelectionOutline,K(t.listSelectionOutline,t.listFocusOutline??""));n&&(i.push(`.monaco-list${e}.sticky-scroll-focused .monaco-scrollable-element .monaco-tree-sticky-container:focus .monaco-list-row.focused.selected { outline: 1px solid ${n}; outline-offset: -1px;}`),i.push(`.monaco-list${e}:not(.sticky-scroll-focused) .monaco-scrollable-element .monaco-tree-sticky-container .monaco-list-row.focused.selected { outline: inherit;}`)),t.listFocusOutline&&(i.push(`.monaco-list${e}.sticky-scroll-focused .monaco-scrollable-element .monaco-tree-sticky-container:focus .monaco-list-row.focused { outline: 1px solid ${t.listFocusOutline}; outline-offset: -1px; }`),i.push(`.monaco-list${e}:not(.sticky-scroll-focused) .monaco-scrollable-element .monaco-tree-sticky-container .monaco-list-row.focused { outline: inherit; }`),i.push(`.monaco-workbench.context-menu-visible .monaco-list${e}.last-focused.sticky-scroll-focused .monaco-scrollable-element .monaco-tree-sticky-container .monaco-list-row.passive-focused { outline: 1px solid ${t.listFocusOutline}; outline-offset: -1px; }`),i.push(`.monaco-workbench.context-menu-visible .monaco-list${e}.last-focused.sticky-scroll-focused .monaco-list-rows .monaco-list-row.focused { outline: inherit; }`),i.push(`.monaco-workbench.context-menu-visible .monaco-list${e}.last-focused:not(.sticky-scroll-focused) .monaco-tree-sticky-container .monaco-list-rows .monaco-list-row.focused { outline: inherit; }`)),this.styleElement.textContent=i.join(`
-`),this.view.style(t)}getParentElement(t){const e=this.model.getParentNodeLocation(t);return this.model.getNode(e).element}getFirstElementChild(t){return this.model.getFirstElementChild(t)}getNode(t){return this.model.getNode(t)}getNodeLocation(t){return this.model.getNodeLocation(t)}collapse(t,e=!1){return this.model.setCollapsed(t,!0,e)}expand(t,e=!1){return this.model.setCollapsed(t,!1,e)}toggleCollapsed(t,e=!1){return this.model.setCollapsed(t,void 0,e)}expandAll(){this.model.setCollapsed(this.model.rootRef,!1,!0)}collapseAll(){this.model.setCollapsed(this.model.rootRef,!0,!0)}isCollapsible(t){return this.model.isCollapsible(t)}setCollapsible(t,e){return this.model.setCollapsible(t,e)}isCollapsed(t){return this.model.isCollapsed(t)}expandTo(t){this.model.expandTo(t)}triggerTypeNavigation(){this.view.triggerTypeNavigation()}openFind(){this.findController?.open()}closeFind(){this.findController?.close()}refilter(){this._onWillRefilter.fire(void 0),this.model.refilter()}setAnchor(t){if(typeof t>"u")return this.view.setAnchor(void 0);this.eventBufferer.bufferEvents(()=>{const e=this.model.getNode(t);this.anchor.set([e]);const i=this.model.getListIndex(t);i>-1&&this.view.setAnchor(i,!0)})}getAnchor(){return this.anchor.get().at(0)}setSelection(t,e){this.eventBufferer.bufferEvents(()=>{const i=t.map(n=>this.model.getNode(n));this.selection.set(i,e);const o=t.map(n=>this.model.getListIndex(n)).filter(n=>n>-1);this.view.setSelection(o,e,!0)})}getSelection(){return this.selection.get()}setFocus(t,e){this.eventBufferer.bufferEvents(()=>{const i=t.map(n=>this.model.getNode(n));this.focus.set(i,e);const o=t.map(n=>this.model.getListIndex(n)).filter(n=>n>-1);this.view.setFocus(o,e,!0)})}focusNext(t=1,e=!1,i,o=y(i)&&i.altKey?void 0:this.focusNavigationFilter){this.view.focusNext(t,e,i,o)}focusPrevious(t=1,e=!1,i,o=y(i)&&i.altKey?void 0:this.focusNavigationFilter){this.view.focusPrevious(t,e,i,o)}focusNextPage(t,e=y(t)&&t.altKey?void 0:this.focusNavigationFilter){return this.view.focusNextPage(t,e)}focusPreviousPage(t,e=y(t)&&t.altKey?void 0:this.focusNavigationFilter){return this.view.focusPreviousPage(t,e,()=>this.stickyScrollController?.height??0)}focusLast(t,e=y(t)&&t.altKey?void 0:this.focusNavigationFilter){this.view.focusLast(t,e)}focusFirst(t,e=y(t)&&t.altKey?void 0:this.focusNavigationFilter){this.view.focusFirst(t,e)}getFocus(){return this.focus.get()}getStickyScrollFocus(){const t=this.stickyScrollController?.getFocus();return t!==void 0?[t]:[]}getFocusedPart(){return this.stickyScrollController?.focusedLast()?1:0}reveal(t,e){this.model.expandTo(t);const i=this.model.getListIndex(t);if(i!==-1)if(!this.stickyScrollController)this.view.reveal(i,e);else{const o=this.stickyScrollController.nodePositionTopBelowWidget(this.getNode(t));this.view.reveal(i,e,o)}}getRelativeTop(t){const e=this.model.getListIndex(t);if(e===-1)return null;const i=this.stickyScrollController?.getNode(this.getNode(t));return this.view.getRelativeTop(e,i?.position??this.stickyScrollController?.height)}getViewState(t=this.options.identityProvider){if(!t)throw new De(this._user,"Can't get tree view state without an identity provider");const e=s=>t.getId(s).toString(),i=k.empty(this.scrollTop);for(const s of this.getFocus())i.focus.add(e(s));for(const s of this.getSelection())i.selection.add(e(s));const o=this.model.getNode(),n=[o];for(;n.length>0;){const s=n.pop();s!==o&&s.collapsible&&(i.expanded[e(s.element)]=s.collapsed?0:1),Fe(n,n.length,s.children)}return i}onLeftArrow(t){t.preventDefault(),t.stopPropagation();const e=this.view.getFocusedElements();if(e.length===0)return;const i=e[0],o=this.model.getNodeLocation(i);if(!this.model.setCollapsed(o,!0)){const s=this.model.getParentNodeLocation(o);if(!s)return;const r=this.model.getListIndex(s);this.view.reveal(r),this.view.setFocus([r])}}onRightArrow(t){t.preventDefault(),t.stopPropagation();const e=this.view.getFocusedElements();if(e.length===0)return;const i=e[0],o=this.model.getNodeLocation(i);if(!this.model.setCollapsed(o,!1)){if(!i.children.some(l=>l.visible))return;const[s]=this.view.getFocus(),r=s+1;this.view.reveal(r),this.view.setFocus([r])}}onSpace(t){t.preventDefault(),t.stopPropagation();const e=this.view.getFocusedElements();if(e.length===0)return;const i=e[0],o=this.model.getNodeLocation(i),n=t.browserEvent.altKey;this.model.setCollapsed(o,void 0,n)}modelDisposables=new f;setupModel(t){this.modelDisposables.clear(),this.modelDisposables.add(t.onDidSpliceRenderedNodes(({start:n,deleteCount:s,elements:r})=>this.view.splice(n,s,r)));const e=h.forEach(t.onDidSpliceModel,n=>{this.eventBufferer.bufferEvents(()=>{this.focus.onDidModelSplice(n),this.selection.onDidModelSplice(n)})},this.modelDisposables);e(()=>null,null,this.modelDisposables);const i=this.modelDisposables.add(new g),o=this.modelDisposables.add(new we(0));this.modelDisposables.add(h.any(e,this.focus.onDidChange,this.selection.onDidChange)(()=>{o.trigger(()=>{const n=new Set;for(const s of this.focus.getNodes())n.add(s);for(const s of this.selection.getNodes())n.add(s);i.fire([...n.values()])})})),this.onDidChangeActiveNodesRelay.input=i.event,this.onDidChangeModelRelay.input=h.signal(t.onDidSpliceModel),this.onDidChangeCollapseStateRelay.input=t.onDidChangeCollapseState,this.onDidChangeRenderNodeCountRelay.input=t.onDidChangeRenderNodeCount,this.onDidSpliceModelRelay.input=t.onDidSpliceModel}navigate(t){return new rt(this.view,this.model,t)}dispose(){V(this.disposables),this.stickyScrollController?.dispose(),this.view.dispose(),this.modelDisposables.dispose()}}class rt{constructor(t,e,i){this.view=t;this.model=e;i?this.index=this.model.getListIndex(i):this.index=-1}index;current(){return this.index<0||this.index>=this.view.length?null:this.view.element(this.index).element}previous(){return this.index--,this.current()}next(){return this.index++,this.current()}first(){return this.index=0,this.current()}last(){return this.index=this.view.length-1,this.current()}}export{Xe as AbstractFindController,Di as AbstractTree,st as AbstractTreePart,k as AbstractTreeViewState,He as ComposedTreeDelegate,Je as FindController,We as FindFilter,$e as FindToggles,Oe as RenderIndentGuides,Ue as TreeFindMatchType,Ke as TreeFindMode,P as TreeRenderer,ze as contiguousFuzzyScore};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { IDragAndDropData } from "../../dnd.js";
+import { $, append, clearNode, h, hasParentWithClass, isActiveElement, isKeyboardEvent, addDisposableListener, isEditableElement } from "../../dom.js";
+import { createStyleSheet } from "../../domStylesheets.js";
+import { asCssValueWithDefault } from "../../cssValue.js";
+import { DomEmitter } from "../../event.js";
+import { StandardKeyboardEvent } from "../../keyboardEvent.js";
+import { ActionBar } from "../actionbar/actionbar.js";
+import { IContextViewProvider } from "../contextview/contextview.js";
+import { FindInput } from "../findinput/findInput.js";
+import { IInputBoxStyles, IMessage, MessageType, unthemedInboxStyles } from "../inputbox/inputBox.js";
+import { IIdentityProvider, IKeyboardNavigationLabelProvider, IListContextMenuEvent, IListDragAndDrop, IListDragOverReaction, IListMouseEvent, IListRenderer, IListTouchEvent, IListVirtualDelegate } from "../list/list.js";
+import { ElementsDragAndDropData, ListViewTargetSector } from "../list/listView.js";
+import { IListAccessibilityProvider, IListOptions, IListStyles, isActionItem, isButton, isMonacoCustomToggle, isMonacoEditor, isStickyScrollContainer, isStickyScrollElement, List, MouseController, TypeNavigationMode } from "../list/listWidget.js";
+import { IToggleStyles, Toggle, unthemedToggleStyles } from "../toggle/toggle.js";
+import { getVisibleState, isFilterResult } from "./indexTreeModel.js";
+import { ICollapseStateChangeEvent, ITreeContextMenuEvent, ITreeDragAndDrop, ITreeEvent, ITreeFilter, ITreeModel, ITreeModelSpliceEvent, ITreeMouseEvent, ITreeNavigator, ITreeNode, ITreeRenderer, TreeDragOverBubble, TreeError, TreeFilterResult, TreeMouseEventTarget, TreeVisibility } from "./tree.js";
+import { Action } from "../../../common/actions.js";
+import { distinct, equals, insertInto, range } from "../../../common/arrays.js";
+import { Delayer, disposableTimeout, timeout } from "../../../common/async.js";
+import { Codicon } from "../../../common/codicons.js";
+import { ThemeIcon } from "../../../common/themables.js";
+import { SetMap } from "../../../common/map.js";
+import { Emitter, Event, EventBufferer, Relay } from "../../../common/event.js";
+import { fuzzyScore, FuzzyScore } from "../../../common/filters.js";
+import { KeyCode } from "../../../common/keyCodes.js";
+import { Disposable, DisposableStore, dispose, IDisposable, toDisposable } from "../../../common/lifecycle.js";
+import { clamp } from "../../../common/numbers.js";
+import { ScrollEvent } from "../../../common/scrollable.js";
+import "./media/tree.css";
+import { localize } from "../../../../nls.js";
+import { IHoverDelegate } from "../hover/hoverDelegate.js";
+import { createInstantHoverDelegate } from "../hover/hoverDelegateFactory.js";
+import { autorun, constObservable } from "../../../common/observable.js";
+import { alert } from "../aria/aria.js";
+class TreeElementsDragAndDropData extends ElementsDragAndDropData {
+  constructor(data) {
+    super(data.elements.map((node) => node.element));
+    this.data = data;
+  }
+  static {
+    __name(this, "TreeElementsDragAndDropData");
+  }
+  set context(context) {
+    this.data.context = context;
+  }
+  get context() {
+    return this.data.context;
+  }
+}
+function asTreeDragAndDropData(data) {
+  if (data instanceof ElementsDragAndDropData) {
+    return new TreeElementsDragAndDropData(data);
+  }
+  return data;
+}
+__name(asTreeDragAndDropData, "asTreeDragAndDropData");
+class TreeNodeListDragAndDrop {
+  constructor(modelProvider, dnd) {
+    this.modelProvider = modelProvider;
+    this.dnd = dnd;
+  }
+  static {
+    __name(this, "TreeNodeListDragAndDrop");
+  }
+  autoExpandNode;
+  autoExpandDisposable = Disposable.None;
+  disposables = new DisposableStore();
+  getDragURI(node) {
+    return this.dnd.getDragURI(node.element);
+  }
+  getDragLabel(nodes, originalEvent) {
+    if (this.dnd.getDragLabel) {
+      return this.dnd.getDragLabel(nodes.map((node) => node.element), originalEvent);
+    }
+    return void 0;
+  }
+  onDragStart(data, originalEvent) {
+    this.dnd.onDragStart?.(asTreeDragAndDropData(data), originalEvent);
+  }
+  onDragOver(data, targetNode, targetIndex, targetSector, originalEvent, raw = true) {
+    const result = this.dnd.onDragOver(asTreeDragAndDropData(data), targetNode && targetNode.element, targetIndex, targetSector, originalEvent);
+    const didChangeAutoExpandNode = this.autoExpandNode !== targetNode;
+    if (didChangeAutoExpandNode) {
+      this.autoExpandDisposable.dispose();
+      this.autoExpandNode = targetNode;
+    }
+    if (typeof targetNode === "undefined") {
+      return result;
+    }
+    if (didChangeAutoExpandNode && typeof result !== "boolean" && result.autoExpand) {
+      this.autoExpandDisposable = disposableTimeout(() => {
+        const model2 = this.modelProvider();
+        const ref2 = model2.getNodeLocation(targetNode);
+        if (model2.isCollapsed(ref2)) {
+          model2.setCollapsed(ref2, false);
+        }
+        this.autoExpandNode = void 0;
+      }, 500, this.disposables);
+    }
+    if (typeof result === "boolean" || !result.accept || typeof result.bubble === "undefined" || result.feedback) {
+      if (!raw) {
+        const accept = typeof result === "boolean" ? result : result.accept;
+        const effect = typeof result === "boolean" ? void 0 : result.effect;
+        return { accept, effect, feedback: [targetIndex] };
+      }
+      return result;
+    }
+    if (result.bubble === TreeDragOverBubble.Up) {
+      const model2 = this.modelProvider();
+      const ref2 = model2.getNodeLocation(targetNode);
+      const parentRef = model2.getParentNodeLocation(ref2);
+      const parentNode = model2.getNode(parentRef);
+      const parentIndex = parentRef && model2.getListIndex(parentRef);
+      return this.onDragOver(data, parentNode, parentIndex, targetSector, originalEvent, false);
+    }
+    const model = this.modelProvider();
+    const ref = model.getNodeLocation(targetNode);
+    const start = model.getListIndex(ref);
+    const length = model.getListRenderCount(ref);
+    return { ...result, feedback: range(start, start + length) };
+  }
+  drop(data, targetNode, targetIndex, targetSector, originalEvent) {
+    this.autoExpandDisposable.dispose();
+    this.autoExpandNode = void 0;
+    this.dnd.drop(asTreeDragAndDropData(data), targetNode && targetNode.element, targetIndex, targetSector, originalEvent);
+  }
+  onDragEnd(originalEvent) {
+    this.dnd.onDragEnd?.(originalEvent);
+  }
+  dispose() {
+    this.disposables.dispose();
+    this.dnd.dispose();
+  }
+}
+function asListOptions(modelProvider, disposableStore, options) {
+  return options && {
+    ...options,
+    identityProvider: options.identityProvider && {
+      getId(el) {
+        return options.identityProvider.getId(el.element);
+      }
+    },
+    dnd: options.dnd && disposableStore.add(new TreeNodeListDragAndDrop(modelProvider, options.dnd)),
+    multipleSelectionController: options.multipleSelectionController && {
+      isSelectionSingleChangeEvent(e) {
+        return options.multipleSelectionController.isSelectionSingleChangeEvent({ ...e, element: e.element });
+      },
+      isSelectionRangeChangeEvent(e) {
+        return options.multipleSelectionController.isSelectionRangeChangeEvent({ ...e, element: e.element });
+      }
+    },
+    accessibilityProvider: options.accessibilityProvider && {
+      ...options.accessibilityProvider,
+      getSetSize(node) {
+        const model = modelProvider();
+        const ref = model.getNodeLocation(node);
+        const parentRef = model.getParentNodeLocation(ref);
+        const parentNode = model.getNode(parentRef);
+        return parentNode.visibleChildrenCount;
+      },
+      getPosInSet(node) {
+        return node.visibleChildIndex + 1;
+      },
+      isChecked: options.accessibilityProvider && options.accessibilityProvider.isChecked ? (node) => {
+        return options.accessibilityProvider.isChecked(node.element);
+      } : void 0,
+      getRole: options.accessibilityProvider && options.accessibilityProvider.getRole ? (node) => {
+        return options.accessibilityProvider.getRole(node.element);
+      } : () => "treeitem",
+      getAriaLabel(e) {
+        return options.accessibilityProvider.getAriaLabel(e.element);
+      },
+      getWidgetAriaLabel() {
+        return options.accessibilityProvider.getWidgetAriaLabel();
+      },
+      getWidgetRole: options.accessibilityProvider && options.accessibilityProvider.getWidgetRole ? () => options.accessibilityProvider.getWidgetRole() : () => "tree",
+      getAriaLevel: options.accessibilityProvider && options.accessibilityProvider.getAriaLevel ? (node) => options.accessibilityProvider.getAriaLevel(node.element) : (node) => {
+        return node.depth;
+      },
+      getActiveDescendantId: options.accessibilityProvider.getActiveDescendantId && ((node) => {
+        return options.accessibilityProvider.getActiveDescendantId(node.element);
+      })
+    },
+    keyboardNavigationLabelProvider: options.keyboardNavigationLabelProvider && {
+      ...options.keyboardNavigationLabelProvider,
+      getKeyboardNavigationLabel(node) {
+        return options.keyboardNavigationLabelProvider.getKeyboardNavigationLabel(node.element);
+      }
+    }
+  };
+}
+__name(asListOptions, "asListOptions");
+class ComposedTreeDelegate {
+  constructor(delegate) {
+    this.delegate = delegate;
+  }
+  static {
+    __name(this, "ComposedTreeDelegate");
+  }
+  getHeight(element) {
+    return this.delegate.getHeight(element.element);
+  }
+  getTemplateId(element) {
+    return this.delegate.getTemplateId(element.element);
+  }
+  hasDynamicHeight(element) {
+    return !!this.delegate.hasDynamicHeight && this.delegate.hasDynamicHeight(element.element);
+  }
+  setDynamicHeight(element, height) {
+    this.delegate.setDynamicHeight?.(element.element, height);
+  }
+}
+class AbstractTreeViewState {
+  static {
+    __name(this, "AbstractTreeViewState");
+  }
+  focus;
+  selection;
+  expanded;
+  scrollTop;
+  static lift(state) {
+    return state instanceof AbstractTreeViewState ? state : new AbstractTreeViewState(state);
+  }
+  static empty(scrollTop = 0) {
+    return new AbstractTreeViewState({
+      focus: [],
+      selection: [],
+      expanded: /* @__PURE__ */ Object.create(null),
+      scrollTop
+    });
+  }
+  constructor(state) {
+    this.focus = new Set(state.focus);
+    this.selection = new Set(state.selection);
+    if (state.expanded instanceof Array) {
+      this.expanded = /* @__PURE__ */ Object.create(null);
+      for (const id of state.expanded) {
+        this.expanded[id] = 1;
+      }
+    } else {
+      this.expanded = state.expanded;
+    }
+    this.expanded = state.expanded;
+    this.scrollTop = state.scrollTop;
+  }
+  toJSON() {
+    return {
+      focus: Array.from(this.focus),
+      selection: Array.from(this.selection),
+      expanded: this.expanded,
+      scrollTop: this.scrollTop
+    };
+  }
+}
+var RenderIndentGuides = /* @__PURE__ */ ((RenderIndentGuides2) => {
+  RenderIndentGuides2["None"] = "none";
+  RenderIndentGuides2["OnHover"] = "onHover";
+  RenderIndentGuides2["Always"] = "always";
+  return RenderIndentGuides2;
+})(RenderIndentGuides || {});
+class EventCollection {
+  constructor(onDidChange, _elements = []) {
+    this._elements = _elements;
+    this.onDidChange = Event.forEach(onDidChange, (elements) => this._elements = elements, this.disposables);
+  }
+  static {
+    __name(this, "EventCollection");
+  }
+  disposables = new DisposableStore();
+  onDidChange;
+  get elements() {
+    return this._elements;
+  }
+  dispose() {
+    this.disposables.dispose();
+  }
+}
+class TreeRenderer {
+  constructor(renderer, model, onDidChangeCollapseState, activeNodes, renderedIndentGuides, options = {}) {
+    this.renderer = renderer;
+    this.model = model;
+    this.activeNodes = activeNodes;
+    this.renderedIndentGuides = renderedIndentGuides;
+    this.templateId = renderer.templateId;
+    this.updateOptions(options);
+    Event.map(onDidChangeCollapseState, (e) => e.node)(this.onDidChangeNodeTwistieState, this, this.disposables);
+    renderer.onDidChangeTwistieState?.(this.onDidChangeTwistieState, this, this.disposables);
+  }
+  static {
+    __name(this, "TreeRenderer");
+  }
+  static DefaultIndent = 8;
+  templateId;
+  renderedElements = /* @__PURE__ */ new Map();
+  renderedNodes = /* @__PURE__ */ new Map();
+  indent = TreeRenderer.DefaultIndent;
+  hideTwistiesOfChildlessElements = false;
+  shouldRenderIndentGuides = false;
+  activeIndentNodes = /* @__PURE__ */ new Set();
+  indentGuidesDisposable = Disposable.None;
+  disposables = new DisposableStore();
+  updateOptions(options = {}) {
+    if (typeof options.indent !== "undefined") {
+      const indent = clamp(options.indent, 0, 40);
+      if (indent !== this.indent) {
+        this.indent = indent;
+        for (const [node, templateData] of this.renderedNodes) {
+          this.renderTreeElement(node, templateData);
+        }
+      }
+    }
+    if (typeof options.renderIndentGuides !== "undefined") {
+      const shouldRenderIndentGuides = options.renderIndentGuides !== "none" /* None */;
+      if (shouldRenderIndentGuides !== this.shouldRenderIndentGuides) {
+        this.shouldRenderIndentGuides = shouldRenderIndentGuides;
+        for (const [node, templateData] of this.renderedNodes) {
+          this._renderIndentGuides(node, templateData);
+        }
+        this.indentGuidesDisposable.dispose();
+        if (shouldRenderIndentGuides) {
+          const disposables = new DisposableStore();
+          this.activeNodes.onDidChange(this._onDidChangeActiveNodes, this, disposables);
+          this.indentGuidesDisposable = disposables;
+          this._onDidChangeActiveNodes(this.activeNodes.elements);
+        }
+      }
+    }
+    if (typeof options.hideTwistiesOfChildlessElements !== "undefined") {
+      this.hideTwistiesOfChildlessElements = options.hideTwistiesOfChildlessElements;
+    }
+  }
+  renderTemplate(container) {
+    const el = append(container, $(".monaco-tl-row"));
+    const indent = append(el, $(".monaco-tl-indent"));
+    const twistie = append(el, $(".monaco-tl-twistie"));
+    const contents = append(el, $(".monaco-tl-contents"));
+    const templateData = this.renderer.renderTemplate(contents);
+    return { container, indent, twistie, indentGuidesDisposable: Disposable.None, templateData };
+  }
+  renderElement(node, index, templateData, height) {
+    this.renderedNodes.set(node, templateData);
+    this.renderedElements.set(node.element, node);
+    this.renderTreeElement(node, templateData);
+    this.renderer.renderElement(node, index, templateData.templateData, height);
+  }
+  disposeElement(node, index, templateData, height) {
+    templateData.indentGuidesDisposable.dispose();
+    this.renderer.disposeElement?.(node, index, templateData.templateData, height);
+    if (typeof height === "number") {
+      this.renderedNodes.delete(node);
+      this.renderedElements.delete(node.element);
+    }
+  }
+  disposeTemplate(templateData) {
+    this.renderer.disposeTemplate(templateData.templateData);
+  }
+  onDidChangeTwistieState(element) {
+    const node = this.renderedElements.get(element);
+    if (!node) {
+      return;
+    }
+    this.onDidChangeNodeTwistieState(node);
+  }
+  onDidChangeNodeTwistieState(node) {
+    const templateData = this.renderedNodes.get(node);
+    if (!templateData) {
+      return;
+    }
+    this._onDidChangeActiveNodes(this.activeNodes.elements);
+    this.renderTreeElement(node, templateData);
+  }
+  renderTreeElement(node, templateData) {
+    const indent = TreeRenderer.DefaultIndent + (node.depth - 1) * this.indent;
+    templateData.twistie.style.paddingLeft = `${indent}px`;
+    templateData.indent.style.width = `${indent + this.indent - 16}px`;
+    if (node.collapsible) {
+      templateData.container.setAttribute("aria-expanded", String(!node.collapsed));
+    } else {
+      templateData.container.removeAttribute("aria-expanded");
+    }
+    templateData.twistie.classList.remove(...ThemeIcon.asClassNameArray(Codicon.treeItemExpanded));
+    let twistieRendered = false;
+    if (this.renderer.renderTwistie) {
+      twistieRendered = this.renderer.renderTwistie(node.element, templateData.twistie);
+    }
+    if (node.collapsible && (!this.hideTwistiesOfChildlessElements || node.visibleChildrenCount > 0)) {
+      if (!twistieRendered) {
+        templateData.twistie.classList.add(...ThemeIcon.asClassNameArray(Codicon.treeItemExpanded));
+      }
+      templateData.twistie.classList.add("collapsible");
+      templateData.twistie.classList.toggle("collapsed", node.collapsed);
+    } else {
+      templateData.twistie.classList.remove("collapsible", "collapsed");
+    }
+    this._renderIndentGuides(node, templateData);
+  }
+  _renderIndentGuides(node, templateData) {
+    clearNode(templateData.indent);
+    templateData.indentGuidesDisposable.dispose();
+    if (!this.shouldRenderIndentGuides) {
+      return;
+    }
+    const disposableStore = new DisposableStore();
+    while (true) {
+      const ref = this.model.getNodeLocation(node);
+      const parentRef = this.model.getParentNodeLocation(ref);
+      if (!parentRef) {
+        break;
+      }
+      const parent = this.model.getNode(parentRef);
+      const guide = $(".indent-guide", { style: `width: ${this.indent}px` });
+      if (this.activeIndentNodes.has(parent)) {
+        guide.classList.add("active");
+      }
+      if (templateData.indent.childElementCount === 0) {
+        templateData.indent.appendChild(guide);
+      } else {
+        templateData.indent.insertBefore(guide, templateData.indent.firstElementChild);
+      }
+      this.renderedIndentGuides.add(parent, guide);
+      disposableStore.add(toDisposable(() => this.renderedIndentGuides.delete(parent, guide)));
+      node = parent;
+    }
+    templateData.indentGuidesDisposable = disposableStore;
+  }
+  _onDidChangeActiveNodes(nodes) {
+    if (!this.shouldRenderIndentGuides) {
+      return;
+    }
+    const set = /* @__PURE__ */ new Set();
+    nodes.forEach((node) => {
+      const ref = this.model.getNodeLocation(node);
+      try {
+        const parentRef = this.model.getParentNodeLocation(ref);
+        if (node.collapsible && node.children.length > 0 && !node.collapsed) {
+          set.add(node);
+        } else if (parentRef) {
+          set.add(this.model.getNode(parentRef));
+        }
+      } catch {
+      }
+    });
+    this.activeIndentNodes.forEach((node) => {
+      if (!set.has(node)) {
+        this.renderedIndentGuides.forEach(node, (line) => line.classList.remove("active"));
+      }
+    });
+    set.forEach((node) => {
+      if (!this.activeIndentNodes.has(node)) {
+        this.renderedIndentGuides.forEach(node, (line) => line.classList.add("active"));
+      }
+    });
+    this.activeIndentNodes = set;
+  }
+  dispose() {
+    this.renderedNodes.clear();
+    this.renderedElements.clear();
+    this.indentGuidesDisposable.dispose();
+    dispose(this.disposables);
+  }
+}
+function contiguousFuzzyScore(patternLower, wordLower) {
+  const index = wordLower.toLowerCase().indexOf(patternLower);
+  let score;
+  if (index > -1) {
+    score = [Number.MAX_SAFE_INTEGER, 0];
+    for (let i = patternLower.length; i > 0; i--) {
+      score.push(index + i - 1);
+    }
+  }
+  return score;
+}
+__name(contiguousFuzzyScore, "contiguousFuzzyScore");
+class FindFilter {
+  constructor(_keyboardNavigationLabelProvider, _filter, _defaultFindVisibility) {
+    this._keyboardNavigationLabelProvider = _keyboardNavigationLabelProvider;
+    this._filter = _filter;
+    this._defaultFindVisibility = _defaultFindVisibility;
+  }
+  static {
+    __name(this, "FindFilter");
+  }
+  _totalCount = 0;
+  get totalCount() {
+    return this._totalCount;
+  }
+  _matchCount = 0;
+  get matchCount() {
+    return this._matchCount;
+  }
+  _findMatchType = 0 /* Fuzzy */;
+  set findMatchType(type) {
+    this._findMatchType = type;
+  }
+  get findMatchType() {
+    return this._findMatchType;
+  }
+  _findMode = 0 /* Highlight */;
+  set findMode(mode) {
+    this._findMode = mode;
+  }
+  get findMode() {
+    return this._findMode;
+  }
+  _pattern = "";
+  _lowercasePattern = "";
+  disposables = new DisposableStore();
+  set pattern(pattern) {
+    this._pattern = pattern;
+    this._lowercasePattern = pattern.toLowerCase();
+  }
+  filter(element, parentVisibility) {
+    let visibility = TreeVisibility.Visible;
+    if (this._filter) {
+      const result = this._filter.filter(element, parentVisibility);
+      if (typeof result === "boolean") {
+        visibility = result ? TreeVisibility.Visible : TreeVisibility.Hidden;
+      } else if (isFilterResult(result)) {
+        visibility = getVisibleState(result.visibility);
+      } else {
+        visibility = result;
+      }
+      if (visibility === TreeVisibility.Hidden) {
+        return false;
+      }
+    }
+    this._totalCount++;
+    if (!this._pattern) {
+      this._matchCount++;
+      return { data: FuzzyScore.Default, visibility };
+    }
+    const label = this._keyboardNavigationLabelProvider.getKeyboardNavigationLabel(element);
+    const labels = Array.isArray(label) ? label : [label];
+    for (const l of labels) {
+      const labelStr = l && l.toString();
+      if (typeof labelStr === "undefined") {
+        return { data: FuzzyScore.Default, visibility };
+      }
+      let score;
+      if (this._findMatchType === 1 /* Contiguous */) {
+        score = contiguousFuzzyScore(this._lowercasePattern, labelStr.toLowerCase());
+      } else {
+        score = fuzzyScore(this._pattern, this._lowercasePattern, 0, labelStr, labelStr.toLowerCase(), 0, { firstMatchCanBeWeak: true, boostFullMatch: true });
+      }
+      if (score) {
+        this._matchCount++;
+        return labels.length === 1 ? { data: score, visibility } : { data: { label: labelStr, score }, visibility };
+      }
+    }
+    if (this._findMode === 1 /* Filter */) {
+      if (typeof this._defaultFindVisibility === "number") {
+        return this._defaultFindVisibility;
+      } else if (this._defaultFindVisibility) {
+        return this._defaultFindVisibility(element);
+      } else {
+        return TreeVisibility.Recurse;
+      }
+    } else {
+      return { data: FuzzyScore.Default, visibility };
+    }
+  }
+  reset() {
+    this._totalCount = 0;
+    this._matchCount = 0;
+  }
+  dispose() {
+    dispose(this.disposables);
+  }
+}
+class TreeFindToggle extends Toggle {
+  static {
+    __name(this, "TreeFindToggle");
+  }
+  id;
+  constructor(contribution, opts, hoverDelegate) {
+    super({
+      icon: contribution.icon,
+      title: contribution.title,
+      isChecked: contribution.isChecked,
+      inputActiveOptionBorder: opts.inputActiveOptionBorder,
+      inputActiveOptionForeground: opts.inputActiveOptionForeground,
+      inputActiveOptionBackground: opts.inputActiveOptionBackground,
+      hoverDelegate
+    });
+    this.id = contribution.id;
+  }
+}
+class FindToggles {
+  static {
+    __name(this, "FindToggles");
+  }
+  stateMap;
+  constructor(startStates) {
+    this.stateMap = new Map(startStates.map((state) => [state.id, { ...state }]));
+  }
+  states() {
+    return Array.from(this.stateMap.values());
+  }
+  get(id) {
+    const state = this.stateMap.get(id);
+    if (state === void 0) {
+      throw new Error(`No state found for toggle id ${id}`);
+    }
+    return state.isChecked;
+  }
+  set(id, value) {
+    const state = this.stateMap.get(id);
+    if (state === void 0) {
+      throw new Error(`No state found for toggle id ${id}`);
+    }
+    if (state.isChecked === value) {
+      return false;
+    }
+    state.isChecked = value;
+    return true;
+  }
+}
+const unthemedFindWidgetStyles = {
+  inputBoxStyles: unthemedInboxStyles,
+  toggleStyles: unthemedToggleStyles,
+  listFilterWidgetBackground: void 0,
+  listFilterWidgetNoMatchesOutline: void 0,
+  listFilterWidgetOutline: void 0,
+  listFilterWidgetShadow: void 0
+};
+var TreeFindMode = /* @__PURE__ */ ((TreeFindMode2) => {
+  TreeFindMode2[TreeFindMode2["Highlight"] = 0] = "Highlight";
+  TreeFindMode2[TreeFindMode2["Filter"] = 1] = "Filter";
+  return TreeFindMode2;
+})(TreeFindMode || {});
+var TreeFindMatchType = /* @__PURE__ */ ((TreeFindMatchType2) => {
+  TreeFindMatchType2[TreeFindMatchType2["Fuzzy"] = 0] = "Fuzzy";
+  TreeFindMatchType2[TreeFindMatchType2["Contiguous"] = 1] = "Contiguous";
+  return TreeFindMatchType2;
+})(TreeFindMatchType || {});
+class FindWidget extends Disposable {
+  constructor(container, tree, contextViewProvider, placeholder, toggleContributions = [], options) {
+    super();
+    this.tree = tree;
+    container.appendChild(this.elements.root);
+    this._register(toDisposable(() => this.elements.root.remove()));
+    const styles = options?.styles ?? unthemedFindWidgetStyles;
+    if (styles.listFilterWidgetBackground) {
+      this.elements.root.style.backgroundColor = styles.listFilterWidgetBackground;
+    }
+    if (styles.listFilterWidgetShadow) {
+      this.elements.root.style.boxShadow = `0 0 8px 2px ${styles.listFilterWidgetShadow}`;
+    }
+    const toggleHoverDelegate = this._register(createInstantHoverDelegate());
+    this.toggles = toggleContributions.map((contribution) => this._register(new TreeFindToggle(contribution, styles.toggleStyles, toggleHoverDelegate)));
+    this.onDidToggleChange = Event.any(...this.toggles.map((toggle) => Event.map(toggle.onChange, () => ({ id: toggle.id, isChecked: toggle.checked }))));
+    const history = options?.history || [];
+    this.findInput = this._register(new FindInput(this.elements.findInput, contextViewProvider, {
+      label: localize("type to search", "Type to search"),
+      placeholder,
+      additionalToggles: this.toggles,
+      showCommonFindToggles: false,
+      inputBoxStyles: styles.inputBoxStyles,
+      toggleStyles: styles.toggleStyles,
+      history: new Set(history)
+    }));
+    this.actionbar = this._register(new ActionBar(this.elements.actionbar));
+    const emitter = this._register(new DomEmitter(this.findInput.inputBox.inputElement, "keydown"));
+    const onKeyDown = Event.chain(emitter.event, ($2) => $2.map((e) => new StandardKeyboardEvent(e)));
+    this._register(onKeyDown((e) => {
+      if (e.equals(KeyCode.Enter)) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.findInput.inputBox.addToHistory();
+        this.tree.domFocus();
+        return;
+      }
+      if (e.equals(KeyCode.DownArrow)) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (this.findInput.inputBox.isAtLastInHistory() || this.findInput.inputBox.isNowhereInHistory()) {
+          this.findInput.inputBox.addToHistory();
+          this.tree.domFocus();
+        } else {
+          this.findInput.inputBox.showNextValue();
+        }
+        return;
+      }
+      if (e.equals(KeyCode.UpArrow)) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.findInput.inputBox.showPreviousValue();
+        return;
+      }
+    }));
+    const closeAction = this._register(new Action("close", localize("close", "Close"), "codicon codicon-close", true, () => this.dispose()));
+    this.actionbar.push(closeAction, { icon: true, label: false });
+    this.onDidChangeValue = this.findInput.onDidChange;
+  }
+  static {
+    __name(this, "FindWidget");
+  }
+  elements = h(".monaco-tree-type-filter", [
+    h(".monaco-tree-type-filter-input@findInput"),
+    h(".monaco-tree-type-filter-actionbar@actionbar")
+  ]);
+  get value() {
+    return this.findInput.inputBox.value;
+  }
+  set value(value) {
+    this.findInput.inputBox.value = value;
+  }
+  findInput;
+  actionbar;
+  toggles = [];
+  _onDidDisable = new Emitter();
+  onDidDisable = this._onDidDisable.event;
+  onDidChangeValue;
+  onDidToggleChange;
+  setToggleState(id, checked) {
+    const toggle = this.toggles.find((toggle2) => toggle2.id === id);
+    if (toggle) {
+      toggle.checked = checked;
+    }
+  }
+  setPlaceHolder(placeHolder) {
+    this.findInput.inputBox.setPlaceHolder(placeHolder);
+  }
+  getHistory() {
+    return this.findInput.inputBox.getHistory();
+  }
+  focus() {
+    this.findInput.focus();
+  }
+  select() {
+    this.findInput.select();
+    this.findInput.inputBox.addToHistory(true);
+  }
+  showMessage(message) {
+    this.findInput.showMessage(message);
+  }
+  clearMessage() {
+    this.findInput.clearMessage();
+  }
+  async dispose() {
+    this._onDidDisable.fire();
+    this.elements.root.classList.add("disabled");
+    await timeout(300);
+    super.dispose();
+  }
+}
+var DefaultTreeToggles = /* @__PURE__ */ ((DefaultTreeToggles2) => {
+  DefaultTreeToggles2["Mode"] = "mode";
+  DefaultTreeToggles2["MatchType"] = "matchType";
+  return DefaultTreeToggles2;
+})(DefaultTreeToggles || {});
+class AbstractFindController {
+  constructor(tree, filter, contextViewProvider, options = {}) {
+    this.tree = tree;
+    this.filter = filter;
+    this.contextViewProvider = contextViewProvider;
+    this.options = options;
+    this.toggles = new FindToggles(options.toggles ?? []);
+    this._placeholder = options.placeholder ?? localize("type to search", "Type to search");
+  }
+  static {
+    __name(this, "AbstractFindController");
+  }
+  _history;
+  _pattern = "";
+  get pattern() {
+    return this._pattern;
+  }
+  previousPattern = "";
+  toggles;
+  _placeholder;
+  get placeholder() {
+    return this._placeholder;
+  }
+  set placeholder(value) {
+    this._placeholder = value;
+    this.widget?.setPlaceHolder(value);
+  }
+  widget;
+  _onDidChangePattern = new Emitter();
+  onDidChangePattern = this._onDidChangePattern.event;
+  _onDidChangeOpenState = new Emitter();
+  onDidChangeOpenState = this._onDidChangeOpenState.event;
+  enabledDisposables = new DisposableStore();
+  disposables = new DisposableStore();
+  isOpened() {
+    return !!this.widget;
+  }
+  open() {
+    if (this.widget) {
+      this.widget.focus();
+      this.widget.select();
+      return;
+    }
+    this.tree.updateOptions({ paddingTop: 30 });
+    this.widget = new FindWidget(this.tree.getHTMLElement(), this.tree, this.contextViewProvider, this.placeholder, this.toggles.states(), { ...this.options, history: this._history });
+    this.enabledDisposables.add(this.widget);
+    this.widget.onDidChangeValue(this.onDidChangeValue, this, this.enabledDisposables);
+    this.widget.onDidDisable(this.close, this, this.enabledDisposables);
+    this.widget.onDidToggleChange(this.onDidToggleChange, this, this.enabledDisposables);
+    this.widget.focus();
+    this.widget.value = this.previousPattern;
+    this.widget.select();
+    this._onDidChangeOpenState.fire(true);
+  }
+  close() {
+    if (!this.widget) {
+      return;
+    }
+    this.tree.updateOptions({ paddingTop: 0 });
+    this._history = this.widget.getHistory();
+    this.widget = void 0;
+    this.enabledDisposables.clear();
+    this.previousPattern = this.pattern;
+    this.onDidChangeValue("");
+    this.tree.domFocus();
+    this._onDidChangeOpenState.fire(false);
+  }
+  onDidChangeValue(pattern) {
+    this._pattern = pattern;
+    this._onDidChangePattern.fire(pattern);
+    this.filter.pattern = pattern;
+    this.applyPattern(pattern);
+  }
+  onDidToggleChange(e) {
+    this.toggles.set(e.id, e.isChecked);
+  }
+  updateToggleState(id, checked) {
+    this.toggles.set(id, checked);
+    this.widget?.setToggleState(id, checked);
+  }
+  renderMessage(showNotFound, warningMessage) {
+    if (showNotFound) {
+      if (this.tree.options.showNotFoundMessage ?? true) {
+        this.widget?.showMessage({ type: MessageType.WARNING, content: warningMessage ?? localize("not found", "No results found.") });
+      } else {
+        this.widget?.showMessage({ type: MessageType.WARNING });
+      }
+    } else {
+      this.widget?.clearMessage();
+    }
+  }
+  alertResults(results) {
+    if (!results) {
+      alert(localize("replFindNoResults", "No results"));
+    } else {
+      alert(localize("foundResults", "{0} results", results));
+    }
+  }
+  dispose() {
+    this._history = void 0;
+    this._onDidChangePattern.dispose();
+    this.enabledDisposables.dispose();
+    this.disposables.dispose();
+  }
+}
+class FindController extends AbstractFindController {
+  constructor(tree, filter, contextViewProvider, options = {}) {
+    const defaultFindMode = options.defaultFindMode ?? 0 /* Highlight */;
+    const defaultFindMatchType = options.defaultFindMatchType ?? 0 /* Fuzzy */;
+    const toggleContributions = [{
+      id: "mode" /* Mode */,
+      icon: Codicon.listFilter,
+      title: localize("filter", "Filter"),
+      isChecked: defaultFindMode === 1 /* Filter */
+    }, {
+      id: "matchType" /* MatchType */,
+      icon: Codicon.searchFuzzy,
+      title: localize("fuzzySearch", "Fuzzy Match"),
+      isChecked: defaultFindMatchType === 0 /* Fuzzy */
+    }];
+    filter.findMatchType = defaultFindMatchType;
+    filter.findMode = defaultFindMode;
+    super(tree, filter, contextViewProvider, { ...options, toggles: toggleContributions });
+    this.filter = filter;
+    this.disposables.add(this.tree.onDidChangeModel(() => {
+      if (!this.isOpened()) {
+        return;
+      }
+      if (this.pattern.length !== 0) {
+        this.tree.refilter();
+      }
+      this.render();
+    }));
+    this.disposables.add(this.tree.onWillRefilter(() => this.filter.reset()));
+  }
+  static {
+    __name(this, "FindController");
+  }
+  get mode() {
+    return this.toggles.get("mode" /* Mode */) ? 1 /* Filter */ : 0 /* Highlight */;
+  }
+  set mode(mode) {
+    if (mode === this.mode) {
+      return;
+    }
+    const isFilterMode = mode === 1 /* Filter */;
+    this.updateToggleState("mode" /* Mode */, isFilterMode);
+    this.placeholder = isFilterMode ? localize("type to filter", "Type to filter") : localize("type to search", "Type to search");
+    this.filter.findMode = mode;
+    this.tree.refilter();
+    this.render();
+    this._onDidChangeMode.fire(mode);
+  }
+  get matchType() {
+    return this.toggles.get("matchType" /* MatchType */) ? 0 /* Fuzzy */ : 1 /* Contiguous */;
+  }
+  set matchType(matchType) {
+    if (matchType === this.matchType) {
+      return;
+    }
+    this.updateToggleState("matchType" /* MatchType */, matchType === 0 /* Fuzzy */);
+    this.filter.findMatchType = matchType;
+    this.tree.refilter();
+    this.render();
+    this._onDidChangeMatchType.fire(matchType);
+  }
+  _onDidChangeMode = new Emitter();
+  onDidChangeMode = this._onDidChangeMode.event;
+  _onDidChangeMatchType = new Emitter();
+  onDidChangeMatchType = this._onDidChangeMatchType.event;
+  updateOptions(optionsUpdate = {}) {
+    if (optionsUpdate.defaultFindMode !== void 0) {
+      this.mode = optionsUpdate.defaultFindMode;
+    }
+    if (optionsUpdate.defaultFindMatchType !== void 0) {
+      this.matchType = optionsUpdate.defaultFindMatchType;
+    }
+  }
+  applyPattern(pattern) {
+    this.tree.refilter();
+    if (pattern) {
+      this.tree.focusNext(0, true, void 0, (node) => !FuzzyScore.isDefault(node.filterData));
+    }
+    const focus = this.tree.getFocus();
+    if (focus.length > 0) {
+      const element = focus[0];
+      if (this.tree.getRelativeTop(element) === null) {
+        this.tree.reveal(element, 0.5);
+      }
+    }
+    this.render();
+  }
+  shouldAllowFocus(node) {
+    if (!this.isOpened() || !this.pattern) {
+      return true;
+    }
+    if (this.filter.totalCount > 0 && this.filter.matchCount <= 1) {
+      return true;
+    }
+    return !FuzzyScore.isDefault(node.filterData);
+  }
+  onDidToggleChange(e) {
+    if (e.id === "mode" /* Mode */) {
+      this.mode = e.isChecked ? 1 /* Filter */ : 0 /* Highlight */;
+    } else if (e.id === "matchType" /* MatchType */) {
+      this.matchType = e.isChecked ? 0 /* Fuzzy */ : 1 /* Contiguous */;
+    }
+  }
+  render() {
+    const noMatches = this.filter.matchCount === 0 && this.filter.totalCount > 0;
+    const showNotFound = noMatches && this.pattern.length > 0;
+    this.renderMessage(showNotFound);
+    if (this.pattern.length) {
+      this.alertResults(this.filter.matchCount);
+    }
+  }
+}
+function stickyScrollNodeStateEquals(node1, node2) {
+  return node1.position === node2.position && stickyScrollNodeEquals(node1, node2);
+}
+__name(stickyScrollNodeStateEquals, "stickyScrollNodeStateEquals");
+function stickyScrollNodeEquals(node1, node2) {
+  return node1.node.element === node2.node.element && node1.startIndex === node2.startIndex && node1.height === node2.height && node1.endIndex === node2.endIndex;
+}
+__name(stickyScrollNodeEquals, "stickyScrollNodeEquals");
+class StickyScrollState {
+  constructor(stickyNodes = []) {
+    this.stickyNodes = stickyNodes;
+  }
+  static {
+    __name(this, "StickyScrollState");
+  }
+  get count() {
+    return this.stickyNodes.length;
+  }
+  equal(state) {
+    return equals(this.stickyNodes, state.stickyNodes, stickyScrollNodeStateEquals);
+  }
+  contains(element) {
+    return this.stickyNodes.some((node) => node.node.element === element.element);
+  }
+  lastNodePartiallyVisible() {
+    if (this.count === 0) {
+      return false;
+    }
+    const lastStickyNode = this.stickyNodes[this.count - 1];
+    if (this.count === 1) {
+      return lastStickyNode.position !== 0;
+    }
+    const secondLastStickyNode = this.stickyNodes[this.count - 2];
+    return secondLastStickyNode.position + secondLastStickyNode.height !== lastStickyNode.position;
+  }
+  animationStateChanged(previousState) {
+    if (!equals(this.stickyNodes, previousState.stickyNodes, stickyScrollNodeEquals)) {
+      return false;
+    }
+    if (this.count === 0) {
+      return false;
+    }
+    const lastStickyNode = this.stickyNodes[this.count - 1];
+    const previousLastStickyNode = previousState.stickyNodes[previousState.count - 1];
+    return lastStickyNode.position !== previousLastStickyNode.position;
+  }
+}
+class DefaultStickyScrollDelegate {
+  static {
+    __name(this, "DefaultStickyScrollDelegate");
+  }
+  constrainStickyScrollNodes(stickyNodes, stickyScrollMaxItemCount, maxWidgetHeight) {
+    for (let i = 0; i < stickyNodes.length; i++) {
+      const stickyNode = stickyNodes[i];
+      const stickyNodeBottom = stickyNode.position + stickyNode.height;
+      if (stickyNodeBottom > maxWidgetHeight || i >= stickyScrollMaxItemCount) {
+        return stickyNodes.slice(0, i);
+      }
+    }
+    return stickyNodes;
+  }
+}
+class StickyScrollController extends Disposable {
+  constructor(tree, model, view, renderers, treeDelegate, options = {}) {
+    super();
+    this.tree = tree;
+    this.model = model;
+    this.view = view;
+    this.treeDelegate = treeDelegate;
+    const stickyScrollOptions = this.validateStickySettings(options);
+    this.stickyScrollMaxItemCount = stickyScrollOptions.stickyScrollMaxItemCount;
+    this.stickyScrollDelegate = options.stickyScrollDelegate ?? new DefaultStickyScrollDelegate();
+    this.paddingTop = options.paddingTop ?? 0;
+    this._widget = this._register(new StickyScrollWidget(view.getScrollableElement(), view, tree, renderers, treeDelegate, options.accessibilityProvider));
+    this.onDidChangeHasFocus = this._widget.onDidChangeHasFocus;
+    this.onContextMenu = this._widget.onContextMenu;
+    this._register(view.onDidScroll(() => this.update()));
+    this._register(view.onDidChangeContentHeight(() => this.update()));
+    this._register(tree.onDidChangeCollapseState(() => this.update()));
+    this._register(model.onDidSpliceRenderedNodes((e) => {
+      const state = this._widget.state;
+      if (!state) {
+        return;
+      }
+      const hasRemovedStickyNode = e.deleteCount > 0 && state.stickyNodes.some((stickyNode) => !this.model.has(this.model.getNodeLocation(stickyNode.node)));
+      if (hasRemovedStickyNode) {
+        this.update();
+        return;
+      }
+      const shouldRerenderStickyNodes = state.stickyNodes.some((stickyNode) => {
+        const listIndex = this.model.getListIndex(this.model.getNodeLocation(stickyNode.node));
+        return listIndex >= e.start && listIndex < e.start + e.deleteCount && state.contains(stickyNode.node);
+      });
+      if (shouldRerenderStickyNodes) {
+        this._widget.rerender();
+      }
+    }));
+    this.update();
+  }
+  static {
+    __name(this, "StickyScrollController");
+  }
+  onDidChangeHasFocus;
+  onContextMenu;
+  stickyScrollDelegate;
+  stickyScrollMaxItemCount;
+  maxWidgetViewRatio = 0.4;
+  _widget;
+  paddingTop;
+  get height() {
+    return this._widget.height;
+  }
+  get count() {
+    return this._widget.count;
+  }
+  getNode(node) {
+    return this._widget.getNode(node);
+  }
+  getNodeAtHeight(height) {
+    let index;
+    if (height === 0) {
+      index = this.view.firstVisibleIndex;
+    } else {
+      index = this.view.indexAt(height + this.view.scrollTop);
+    }
+    if (index < 0 || index >= this.view.length) {
+      return void 0;
+    }
+    return this.view.element(index);
+  }
+  update() {
+    const firstVisibleNode = this.getNodeAtHeight(this.paddingTop);
+    if (!firstVisibleNode || this.tree.scrollTop <= this.paddingTop) {
+      this._widget.setState(void 0);
+      return;
+    }
+    const stickyState = this.findStickyState(firstVisibleNode);
+    this._widget.setState(stickyState);
+  }
+  findStickyState(firstVisibleNode) {
+    const stickyNodes = [];
+    let firstVisibleNodeUnderWidget = firstVisibleNode;
+    let stickyNodesHeight = 0;
+    let nextStickyNode = this.getNextStickyNode(firstVisibleNodeUnderWidget, void 0, stickyNodesHeight);
+    while (nextStickyNode) {
+      stickyNodes.push(nextStickyNode);
+      stickyNodesHeight += nextStickyNode.height;
+      if (stickyNodes.length <= this.stickyScrollMaxItemCount) {
+        firstVisibleNodeUnderWidget = this.getNextVisibleNode(nextStickyNode);
+        if (!firstVisibleNodeUnderWidget) {
+          break;
+        }
+      }
+      nextStickyNode = this.getNextStickyNode(firstVisibleNodeUnderWidget, nextStickyNode.node, stickyNodesHeight);
+    }
+    const contrainedStickyNodes = this.constrainStickyNodes(stickyNodes);
+    return contrainedStickyNodes.length ? new StickyScrollState(contrainedStickyNodes) : void 0;
+  }
+  getNextVisibleNode(previousStickyNode) {
+    return this.getNodeAtHeight(previousStickyNode.position + previousStickyNode.height);
+  }
+  getNextStickyNode(firstVisibleNodeUnderWidget, previousStickyNode, stickyNodesHeight) {
+    const nextStickyNode = this.getAncestorUnderPrevious(firstVisibleNodeUnderWidget, previousStickyNode);
+    if (!nextStickyNode) {
+      return void 0;
+    }
+    if (nextStickyNode === firstVisibleNodeUnderWidget) {
+      if (!this.nodeIsUncollapsedParent(firstVisibleNodeUnderWidget)) {
+        return void 0;
+      }
+      if (this.nodeTopAlignsWithStickyNodesBottom(firstVisibleNodeUnderWidget, stickyNodesHeight)) {
+        return void 0;
+      }
+    }
+    return this.createStickyScrollNode(nextStickyNode, stickyNodesHeight);
+  }
+  nodeTopAlignsWithStickyNodesBottom(node, stickyNodesHeight) {
+    const nodeIndex = this.getNodeIndex(node);
+    const elementTop = this.view.getElementTop(nodeIndex);
+    const stickyPosition = stickyNodesHeight;
+    return this.view.scrollTop === elementTop - stickyPosition;
+  }
+  createStickyScrollNode(node, currentStickyNodesHeight) {
+    const height = this.treeDelegate.getHeight(node);
+    const { startIndex, endIndex } = this.getNodeRange(node);
+    const position = this.calculateStickyNodePosition(endIndex, currentStickyNodesHeight, height);
+    return { node, position, height, startIndex, endIndex };
+  }
+  getAncestorUnderPrevious(node, previousAncestor = void 0) {
+    let currentAncestor = node;
+    let parentOfcurrentAncestor = this.getParentNode(currentAncestor);
+    while (parentOfcurrentAncestor) {
+      if (parentOfcurrentAncestor === previousAncestor) {
+        return currentAncestor;
+      }
+      currentAncestor = parentOfcurrentAncestor;
+      parentOfcurrentAncestor = this.getParentNode(currentAncestor);
+    }
+    if (previousAncestor === void 0) {
+      return currentAncestor;
+    }
+    return void 0;
+  }
+  calculateStickyNodePosition(lastDescendantIndex, stickyRowPositionTop, stickyNodeHeight) {
+    let lastChildRelativeTop = this.view.getRelativeTop(lastDescendantIndex);
+    if (lastChildRelativeTop === null && this.view.firstVisibleIndex === lastDescendantIndex && lastDescendantIndex + 1 < this.view.length) {
+      const nodeHeight = this.treeDelegate.getHeight(this.view.element(lastDescendantIndex));
+      const nextNodeRelativeTop = this.view.getRelativeTop(lastDescendantIndex + 1);
+      lastChildRelativeTop = nextNodeRelativeTop ? nextNodeRelativeTop - nodeHeight / this.view.renderHeight : null;
+    }
+    if (lastChildRelativeTop === null) {
+      return stickyRowPositionTop;
+    }
+    const lastChildNode = this.view.element(lastDescendantIndex);
+    const lastChildHeight = this.treeDelegate.getHeight(lastChildNode);
+    const topOfLastChild = lastChildRelativeTop * this.view.renderHeight;
+    const bottomOfLastChild = topOfLastChild + lastChildHeight;
+    if (stickyRowPositionTop + stickyNodeHeight > bottomOfLastChild && stickyRowPositionTop <= bottomOfLastChild) {
+      return bottomOfLastChild - stickyNodeHeight;
+    }
+    return stickyRowPositionTop;
+  }
+  constrainStickyNodes(stickyNodes) {
+    if (stickyNodes.length === 0) {
+      return [];
+    }
+    const maximumStickyWidgetHeight = this.view.renderHeight * this.maxWidgetViewRatio;
+    const lastStickyNode = stickyNodes[stickyNodes.length - 1];
+    if (stickyNodes.length <= this.stickyScrollMaxItemCount && lastStickyNode.position + lastStickyNode.height <= maximumStickyWidgetHeight) {
+      return stickyNodes;
+    }
+    const constrainedStickyNodes = this.stickyScrollDelegate.constrainStickyScrollNodes(stickyNodes, this.stickyScrollMaxItemCount, maximumStickyWidgetHeight);
+    if (!constrainedStickyNodes.length) {
+      return [];
+    }
+    const lastConstrainedStickyNode = constrainedStickyNodes[constrainedStickyNodes.length - 1];
+    if (constrainedStickyNodes.length > this.stickyScrollMaxItemCount || lastConstrainedStickyNode.position + lastConstrainedStickyNode.height > maximumStickyWidgetHeight) {
+      throw new Error("stickyScrollDelegate violates constraints");
+    }
+    return constrainedStickyNodes;
+  }
+  getParentNode(node) {
+    const nodeLocation = this.model.getNodeLocation(node);
+    const parentLocation = this.model.getParentNodeLocation(nodeLocation);
+    return parentLocation ? this.model.getNode(parentLocation) : void 0;
+  }
+  nodeIsUncollapsedParent(node) {
+    const nodeLocation = this.model.getNodeLocation(node);
+    return this.model.getListRenderCount(nodeLocation) > 1;
+  }
+  getNodeIndex(node) {
+    const nodeLocation = this.model.getNodeLocation(node);
+    const nodeIndex = this.model.getListIndex(nodeLocation);
+    return nodeIndex;
+  }
+  getNodeRange(node) {
+    const nodeLocation = this.model.getNodeLocation(node);
+    const startIndex = this.model.getListIndex(nodeLocation);
+    if (startIndex < 0) {
+      throw new Error("Node not found in tree");
+    }
+    const renderCount = this.model.getListRenderCount(nodeLocation);
+    const endIndex = startIndex + renderCount - 1;
+    return { startIndex, endIndex };
+  }
+  nodePositionTopBelowWidget(node) {
+    const ancestors = [];
+    let currentAncestor = this.getParentNode(node);
+    while (currentAncestor) {
+      ancestors.push(currentAncestor);
+      currentAncestor = this.getParentNode(currentAncestor);
+    }
+    let widgetHeight = 0;
+    for (let i = 0; i < ancestors.length && i < this.stickyScrollMaxItemCount; i++) {
+      widgetHeight += this.treeDelegate.getHeight(ancestors[i]);
+    }
+    return widgetHeight;
+  }
+  getFocus() {
+    return this._widget.getFocus();
+  }
+  domFocus() {
+    this._widget.domFocus();
+  }
+  // Whether sticky scroll was the last focused part in the tree or not
+  focusedLast() {
+    return this._widget.focusedLast();
+  }
+  updateOptions(optionsUpdate = {}) {
+    if (optionsUpdate.paddingTop !== void 0) {
+      this.paddingTop = optionsUpdate.paddingTop;
+    }
+    if (optionsUpdate.stickyScrollMaxItemCount !== void 0) {
+      const validatedOptions = this.validateStickySettings(optionsUpdate);
+      if (this.stickyScrollMaxItemCount !== validatedOptions.stickyScrollMaxItemCount) {
+        this.stickyScrollMaxItemCount = validatedOptions.stickyScrollMaxItemCount;
+        this.update();
+      }
+    }
+  }
+  validateStickySettings(options) {
+    let stickyScrollMaxItemCount = 7;
+    if (typeof options.stickyScrollMaxItemCount === "number") {
+      stickyScrollMaxItemCount = Math.max(options.stickyScrollMaxItemCount, 1);
+    }
+    return { stickyScrollMaxItemCount };
+  }
+}
+class StickyScrollWidget {
+  constructor(container, view, tree, treeRenderers, treeDelegate, accessibilityProvider) {
+    this.view = view;
+    this.tree = tree;
+    this.treeRenderers = treeRenderers;
+    this.treeDelegate = treeDelegate;
+    this.accessibilityProvider = accessibilityProvider;
+    this._rootDomNode = $(".monaco-tree-sticky-container.empty");
+    container.appendChild(this._rootDomNode);
+    const shadow = $(".monaco-tree-sticky-container-shadow");
+    this._rootDomNode.appendChild(shadow);
+    this.stickyScrollFocus = new StickyScrollFocus(this._rootDomNode, view);
+    this.onDidChangeHasFocus = this.stickyScrollFocus.onDidChangeHasFocus;
+    this.onContextMenu = this.stickyScrollFocus.onContextMenu;
+  }
+  static {
+    __name(this, "StickyScrollWidget");
+  }
+  _rootDomNode;
+  _previousState;
+  _previousElements = [];
+  _previousStateDisposables = new DisposableStore();
+  get state() {
+    return this._previousState;
+  }
+  stickyScrollFocus;
+  onDidChangeHasFocus;
+  onContextMenu;
+  get height() {
+    if (!this._previousState) {
+      return 0;
+    }
+    const lastElement = this._previousState.stickyNodes[this._previousState.count - 1];
+    return lastElement.position + lastElement.height;
+  }
+  get count() {
+    return this._previousState?.count ?? 0;
+  }
+  getNode(node) {
+    return this._previousState?.stickyNodes.find((stickyNode) => stickyNode.node === node);
+  }
+  setState(state) {
+    const wasVisible = !!this._previousState && this._previousState.count > 0;
+    const isVisible = !!state && state.count > 0;
+    if (!wasVisible && !isVisible || wasVisible && isVisible && this._previousState.equal(state)) {
+      return;
+    }
+    if (wasVisible !== isVisible) {
+      this.setVisible(isVisible);
+    }
+    if (!isVisible) {
+      this._previousState = void 0;
+      this._previousElements = [];
+      this._previousStateDisposables.clear();
+      return;
+    }
+    const lastStickyNode = state.stickyNodes[state.count - 1];
+    if (this._previousState && state.animationStateChanged(this._previousState)) {
+      this._previousElements[this._previousState.count - 1].style.top = `${lastStickyNode.position}px`;
+    } else {
+      this.renderState(state);
+    }
+    this._previousState = state;
+    this._rootDomNode.style.height = `${lastStickyNode.position + lastStickyNode.height}px`;
+  }
+  renderState(state) {
+    this._previousStateDisposables.clear();
+    const elements = Array(state.count);
+    for (let stickyIndex = state.count - 1; stickyIndex >= 0; stickyIndex--) {
+      const stickyNode = state.stickyNodes[stickyIndex];
+      const { element, disposable } = this.createElement(stickyNode, stickyIndex, state.count);
+      elements[stickyIndex] = element;
+      this._rootDomNode.appendChild(element);
+      this._previousStateDisposables.add(disposable);
+    }
+    this.stickyScrollFocus.updateElements(elements, state);
+    this._previousElements = elements;
+  }
+  rerender() {
+    if (this._previousState) {
+      this.renderState(this._previousState);
+    }
+  }
+  createElement(stickyNode, stickyIndex, stickyNodesTotal) {
+    const nodeIndex = stickyNode.startIndex;
+    const stickyElement = document.createElement("div");
+    stickyElement.style.top = `${stickyNode.position}px`;
+    if (this.tree.options.setRowHeight !== false) {
+      stickyElement.style.height = `${stickyNode.height}px`;
+    }
+    if (this.tree.options.setRowLineHeight !== false) {
+      stickyElement.style.lineHeight = `${stickyNode.height}px`;
+    }
+    stickyElement.classList.add("monaco-tree-sticky-row");
+    stickyElement.classList.add("monaco-list-row");
+    stickyElement.setAttribute("data-index", `${nodeIndex}`);
+    stickyElement.setAttribute("data-parity", nodeIndex % 2 === 0 ? "even" : "odd");
+    stickyElement.setAttribute("id", this.view.getElementID(nodeIndex));
+    const accessibilityDisposable = this.setAccessibilityAttributes(stickyElement, stickyNode.node.element, stickyIndex, stickyNodesTotal);
+    const nodeTemplateId = this.treeDelegate.getTemplateId(stickyNode.node);
+    const renderer = this.treeRenderers.find((renderer2) => renderer2.templateId === nodeTemplateId);
+    if (!renderer) {
+      throw new Error(`No renderer found for template id ${nodeTemplateId}`);
+    }
+    let nodeCopy = stickyNode.node;
+    if (nodeCopy === this.tree.getNode(this.tree.getNodeLocation(stickyNode.node))) {
+      nodeCopy = new Proxy(stickyNode.node, {});
+    }
+    const templateData = renderer.renderTemplate(stickyElement);
+    renderer.renderElement(nodeCopy, stickyNode.startIndex, templateData, stickyNode.height);
+    const disposable = toDisposable(() => {
+      accessibilityDisposable.dispose();
+      renderer.disposeElement(nodeCopy, stickyNode.startIndex, templateData, stickyNode.height);
+      renderer.disposeTemplate(templateData);
+      stickyElement.remove();
+    });
+    return { element: stickyElement, disposable };
+  }
+  setAccessibilityAttributes(container, element, stickyIndex, stickyNodesTotal) {
+    if (!this.accessibilityProvider) {
+      return Disposable.None;
+    }
+    if (this.accessibilityProvider.getSetSize) {
+      container.setAttribute("aria-setsize", String(this.accessibilityProvider.getSetSize(element, stickyIndex, stickyNodesTotal)));
+    }
+    if (this.accessibilityProvider.getPosInSet) {
+      container.setAttribute("aria-posinset", String(this.accessibilityProvider.getPosInSet(element, stickyIndex)));
+    }
+    if (this.accessibilityProvider.getRole) {
+      container.setAttribute("role", this.accessibilityProvider.getRole(element) ?? "treeitem");
+    }
+    const ariaLabel = this.accessibilityProvider.getAriaLabel(element);
+    const observable = ariaLabel && typeof ariaLabel !== "string" ? ariaLabel : constObservable(ariaLabel);
+    const result = autorun((reader) => {
+      const value = reader.readObservable(observable);
+      if (value) {
+        container.setAttribute("aria-label", value);
+      } else {
+        container.removeAttribute("aria-label");
+      }
+    });
+    if (typeof ariaLabel === "string") {
+    } else if (ariaLabel) {
+      container.setAttribute("aria-label", ariaLabel.get());
+    }
+    const ariaLevel = this.accessibilityProvider.getAriaLevel && this.accessibilityProvider.getAriaLevel(element);
+    if (typeof ariaLevel === "number") {
+      container.setAttribute("aria-level", `${ariaLevel}`);
+    }
+    container.setAttribute("aria-selected", String(false));
+    return result;
+  }
+  setVisible(visible) {
+    this._rootDomNode.classList.toggle("empty", !visible);
+    if (!visible) {
+      this.stickyScrollFocus.updateElements([], void 0);
+    }
+  }
+  getFocus() {
+    return this.stickyScrollFocus.getFocus();
+  }
+  domFocus() {
+    this.stickyScrollFocus.domFocus();
+  }
+  focusedLast() {
+    return this.stickyScrollFocus.focusedLast();
+  }
+  dispose() {
+    this.stickyScrollFocus.dispose();
+    this._previousStateDisposables.dispose();
+    this._rootDomNode.remove();
+  }
+}
+class StickyScrollFocus extends Disposable {
+  constructor(container, view) {
+    super();
+    this.container = container;
+    this.view = view;
+    this._register(addDisposableListener(this.container, "focus", () => this.onFocus()));
+    this._register(addDisposableListener(this.container, "blur", () => this.onBlur()));
+    this._register(this.view.onDidFocus(() => this.toggleStickyScrollFocused(false)));
+    this._register(this.view.onKeyDown((e) => this.onKeyDown(e)));
+    this._register(this.view.onMouseDown((e) => this.onMouseDown(e)));
+    this._register(this.view.onContextMenu((e) => this.handleContextMenu(e)));
+  }
+  static {
+    __name(this, "StickyScrollFocus");
+  }
+  focusedIndex = -1;
+  elements = [];
+  state;
+  _onDidChangeHasFocus = new Emitter();
+  onDidChangeHasFocus = this._onDidChangeHasFocus.event;
+  _onContextMenu = new Emitter();
+  onContextMenu = this._onContextMenu.event;
+  _domHasFocus = false;
+  get domHasFocus() {
+    return this._domHasFocus;
+  }
+  set domHasFocus(hasFocus) {
+    if (hasFocus !== this._domHasFocus) {
+      this._onDidChangeHasFocus.fire(hasFocus);
+      this._domHasFocus = hasFocus;
+    }
+  }
+  handleContextMenu(e) {
+    const target = e.browserEvent.target;
+    if (!isStickyScrollContainer(target) && !isStickyScrollElement(target)) {
+      if (this.focusedLast()) {
+        this.view.domFocus();
+      }
+      return;
+    }
+    if (!isKeyboardEvent(e.browserEvent)) {
+      if (!this.state) {
+        throw new Error("Context menu should not be triggered when state is undefined");
+      }
+      const stickyIndex = this.state.stickyNodes.findIndex((stickyNode2) => stickyNode2.node.element === e.element?.element);
+      if (stickyIndex === -1) {
+        throw new Error("Context menu should not be triggered when element is not in sticky scroll widget");
+      }
+      this.container.focus();
+      this.setFocus(stickyIndex);
+      return;
+    }
+    if (!this.state || this.focusedIndex < 0) {
+      throw new Error("Context menu key should not be triggered when focus is not in sticky scroll widget");
+    }
+    const stickyNode = this.state.stickyNodes[this.focusedIndex];
+    const element = stickyNode.node.element;
+    const anchor = this.elements[this.focusedIndex];
+    this._onContextMenu.fire({ element, anchor, browserEvent: e.browserEvent, isStickyScroll: true });
+  }
+  onKeyDown(e) {
+    if (this.domHasFocus && this.state) {
+      if (e.key === "ArrowUp") {
+        this.setFocusedElement(Math.max(0, this.focusedIndex - 1));
+        e.preventDefault();
+        e.stopPropagation();
+      } else if (e.key === "ArrowDown" || e.key === "ArrowRight") {
+        if (this.focusedIndex >= this.state.count - 1) {
+          const nodeIndexToFocus = this.state.stickyNodes[this.state.count - 1].startIndex + 1;
+          this.view.domFocus();
+          this.view.setFocus([nodeIndexToFocus]);
+          this.scrollNodeUnderWidget(nodeIndexToFocus, this.state);
+        } else {
+          this.setFocusedElement(this.focusedIndex + 1);
+        }
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    }
+  }
+  onMouseDown(e) {
+    const target = e.browserEvent.target;
+    if (!isStickyScrollContainer(target) && !isStickyScrollElement(target)) {
+      return;
+    }
+    e.browserEvent.preventDefault();
+    e.browserEvent.stopPropagation();
+  }
+  updateElements(elements, state) {
+    if (state && state.count === 0) {
+      throw new Error("Sticky scroll state must be undefined when there are no sticky nodes");
+    }
+    if (state && state.count !== elements.length) {
+      throw new Error("Sticky scroll focus received illigel state");
+    }
+    const previousIndex = this.focusedIndex;
+    this.removeFocus();
+    this.elements = elements;
+    this.state = state;
+    if (state) {
+      const newFocusedIndex = clamp(previousIndex, 0, state.count - 1);
+      this.setFocus(newFocusedIndex);
+    } else {
+      if (this.domHasFocus) {
+        this.view.domFocus();
+      }
+    }
+    this.container.tabIndex = state ? 0 : -1;
+  }
+  setFocusedElement(stickyIndex) {
+    const state = this.state;
+    if (!state) {
+      throw new Error("Cannot set focus when state is undefined");
+    }
+    this.setFocus(stickyIndex);
+    if (stickyIndex < state.count - 1) {
+      return;
+    }
+    if (state.lastNodePartiallyVisible()) {
+      const lastStickyNode = state.stickyNodes[stickyIndex];
+      this.scrollNodeUnderWidget(lastStickyNode.endIndex + 1, state);
+    }
+  }
+  scrollNodeUnderWidget(nodeIndex, state) {
+    const lastStickyNode = state.stickyNodes[state.count - 1];
+    const secondLastStickyNode = state.count > 1 ? state.stickyNodes[state.count - 2] : void 0;
+    const elementScrollTop = this.view.getElementTop(nodeIndex);
+    const elementTargetViewTop = secondLastStickyNode ? secondLastStickyNode.position + secondLastStickyNode.height + lastStickyNode.height : lastStickyNode.height;
+    this.view.scrollTop = elementScrollTop - elementTargetViewTop;
+  }
+  getFocus() {
+    if (!this.state || this.focusedIndex === -1) {
+      return void 0;
+    }
+    return this.state.stickyNodes[this.focusedIndex].node.element;
+  }
+  domFocus() {
+    if (!this.state) {
+      throw new Error("Cannot focus when state is undefined");
+    }
+    this.container.focus();
+  }
+  focusedLast() {
+    if (!this.state) {
+      return false;
+    }
+    return this.view.getHTMLElement().classList.contains("sticky-scroll-focused");
+  }
+  removeFocus() {
+    if (this.focusedIndex === -1) {
+      return;
+    }
+    this.toggleElementFocus(this.elements[this.focusedIndex], false);
+    this.focusedIndex = -1;
+  }
+  setFocus(newFocusIndex) {
+    if (0 > newFocusIndex) {
+      throw new Error("addFocus() can not remove focus");
+    }
+    if (!this.state && newFocusIndex >= 0) {
+      throw new Error("Cannot set focus index when state is undefined");
+    }
+    if (this.state && newFocusIndex >= this.state.count) {
+      throw new Error("Cannot set focus index to an index that does not exist");
+    }
+    const oldIndex = this.focusedIndex;
+    if (oldIndex >= 0) {
+      this.toggleElementFocus(this.elements[oldIndex], false);
+    }
+    if (newFocusIndex >= 0) {
+      this.toggleElementFocus(this.elements[newFocusIndex], true);
+    }
+    this.focusedIndex = newFocusIndex;
+  }
+  toggleElementFocus(element, focused) {
+    this.toggleElementActiveFocus(element, focused && this.domHasFocus);
+    this.toggleElementPassiveFocus(element, focused);
+  }
+  toggleCurrentElementActiveFocus(focused) {
+    if (this.focusedIndex === -1) {
+      return;
+    }
+    this.toggleElementActiveFocus(this.elements[this.focusedIndex], focused);
+  }
+  toggleElementActiveFocus(element, focused) {
+    element.classList.toggle("focused", focused);
+  }
+  toggleElementPassiveFocus(element, focused) {
+    element.classList.toggle("passive-focused", focused);
+  }
+  toggleStickyScrollFocused(focused) {
+    this.view.getHTMLElement().classList.toggle("sticky-scroll-focused", focused);
+  }
+  onFocus() {
+    if (!this.state || this.elements.length === 0) {
+      throw new Error("Cannot focus when state is undefined or elements are empty");
+    }
+    this.domHasFocus = true;
+    this.toggleStickyScrollFocused(true);
+    this.toggleCurrentElementActiveFocus(true);
+    if (this.focusedIndex === -1) {
+      this.setFocus(0);
+    }
+  }
+  onBlur() {
+    this.domHasFocus = false;
+    this.toggleCurrentElementActiveFocus(false);
+  }
+  dispose() {
+    this.toggleStickyScrollFocused(false);
+    this._onDidChangeHasFocus.fire(false);
+    super.dispose();
+  }
+}
+function asTreeMouseEvent(event) {
+  let target = TreeMouseEventTarget.Unknown;
+  if (hasParentWithClass(event.browserEvent.target, "monaco-tl-twistie", "monaco-tl-row")) {
+    target = TreeMouseEventTarget.Twistie;
+  } else if (hasParentWithClass(event.browserEvent.target, "monaco-tl-contents", "monaco-tl-row")) {
+    target = TreeMouseEventTarget.Element;
+  } else if (hasParentWithClass(event.browserEvent.target, "monaco-tree-type-filter", "monaco-list")) {
+    target = TreeMouseEventTarget.Filter;
+  }
+  return {
+    browserEvent: event.browserEvent,
+    element: event.element ? event.element.element : null,
+    target
+  };
+}
+__name(asTreeMouseEvent, "asTreeMouseEvent");
+function asTreeContextMenuEvent(event) {
+  const isStickyScroll = isStickyScrollContainer(event.browserEvent.target);
+  return {
+    element: event.element ? event.element.element : null,
+    browserEvent: event.browserEvent,
+    anchor: event.anchor,
+    isStickyScroll
+  };
+}
+__name(asTreeContextMenuEvent, "asTreeContextMenuEvent");
+function dfs(node, fn) {
+  fn(node);
+  node.children.forEach((child) => dfs(child, fn));
+}
+__name(dfs, "dfs");
+class Trait {
+  constructor(getFirstViewElementWithTrait, identityProvider) {
+    this.getFirstViewElementWithTrait = getFirstViewElementWithTrait;
+    this.identityProvider = identityProvider;
+  }
+  static {
+    __name(this, "Trait");
+  }
+  nodes = [];
+  elements;
+  _onDidChange = new Emitter();
+  onDidChange = this._onDidChange.event;
+  _nodeSet;
+  get nodeSet() {
+    if (!this._nodeSet) {
+      this._nodeSet = this.createNodeSet();
+    }
+    return this._nodeSet;
+  }
+  set(nodes, browserEvent) {
+    if (!browserEvent?.__forceEvent && equals(this.nodes, nodes)) {
+      return;
+    }
+    this._set(nodes, false, browserEvent);
+  }
+  _set(nodes, silent, browserEvent) {
+    this.nodes = [...nodes];
+    this.elements = void 0;
+    this._nodeSet = void 0;
+    if (!silent) {
+      const that = this;
+      this._onDidChange.fire({ get elements() {
+        return that.get();
+      }, browserEvent });
+    }
+  }
+  get() {
+    if (!this.elements) {
+      this.elements = this.nodes.map((node) => node.element);
+    }
+    return [...this.elements];
+  }
+  getNodes() {
+    return this.nodes;
+  }
+  has(node) {
+    return this.nodeSet.has(node);
+  }
+  onDidModelSplice({ insertedNodes, deletedNodes }) {
+    if (!this.identityProvider) {
+      const set = this.createNodeSet();
+      const visit = /* @__PURE__ */ __name((node) => set.delete(node), "visit");
+      deletedNodes.forEach((node) => dfs(node, visit));
+      this.set([...set.values()]);
+      return;
+    }
+    const deletedNodesIdSet = /* @__PURE__ */ new Set();
+    const deletedNodesVisitor = /* @__PURE__ */ __name((node) => deletedNodesIdSet.add(this.identityProvider.getId(node.element).toString()), "deletedNodesVisitor");
+    deletedNodes.forEach((node) => dfs(node, deletedNodesVisitor));
+    const insertedNodesMap = /* @__PURE__ */ new Map();
+    const insertedNodesVisitor = /* @__PURE__ */ __name((node) => insertedNodesMap.set(this.identityProvider.getId(node.element).toString(), node), "insertedNodesVisitor");
+    insertedNodes.forEach((node) => dfs(node, insertedNodesVisitor));
+    const nodes = [];
+    for (const node of this.nodes) {
+      const id = this.identityProvider.getId(node.element).toString();
+      const wasDeleted = deletedNodesIdSet.has(id);
+      if (!wasDeleted) {
+        nodes.push(node);
+      } else {
+        const insertedNode = insertedNodesMap.get(id);
+        if (insertedNode && insertedNode.visible) {
+          nodes.push(insertedNode);
+        }
+      }
+    }
+    if (this.nodes.length > 0 && nodes.length === 0) {
+      const node = this.getFirstViewElementWithTrait();
+      if (node) {
+        nodes.push(node);
+      }
+    }
+    this._set(nodes, true);
+  }
+  createNodeSet() {
+    const set = /* @__PURE__ */ new Set();
+    for (const node of this.nodes) {
+      set.add(node);
+    }
+    return set;
+  }
+}
+class TreeNodeListMouseController extends MouseController {
+  constructor(list, tree, stickyScrollProvider) {
+    super(list);
+    this.tree = tree;
+    this.stickyScrollProvider = stickyScrollProvider;
+  }
+  static {
+    __name(this, "TreeNodeListMouseController");
+  }
+  onViewPointer(e) {
+    if (isButton(e.browserEvent.target) || isEditableElement(e.browserEvent.target) || isMonacoEditor(e.browserEvent.target)) {
+      return;
+    }
+    if (e.browserEvent.isHandledByList) {
+      return;
+    }
+    const node = e.element;
+    if (!node) {
+      return super.onViewPointer(e);
+    }
+    if (this.isSelectionRangeChangeEvent(e) || this.isSelectionSingleChangeEvent(e)) {
+      return super.onViewPointer(e);
+    }
+    const target = e.browserEvent.target;
+    const onTwistie = target.classList.contains("monaco-tl-twistie") || target.classList.contains("monaco-icon-label") && target.classList.contains("folder-icon") && e.browserEvent.offsetX < 16;
+    const isStickyElement = isStickyScrollElement(e.browserEvent.target);
+    let expandOnlyOnTwistieClick = false;
+    if (isStickyElement) {
+      expandOnlyOnTwistieClick = true;
+    } else if (typeof this.tree.expandOnlyOnTwistieClick === "function") {
+      expandOnlyOnTwistieClick = this.tree.expandOnlyOnTwistieClick(node.element);
+    } else {
+      expandOnlyOnTwistieClick = !!this.tree.expandOnlyOnTwistieClick;
+    }
+    if (!isStickyElement) {
+      if (expandOnlyOnTwistieClick && !onTwistie && e.browserEvent.detail !== 2) {
+        return super.onViewPointer(e);
+      }
+      if (!this.tree.expandOnDoubleClick && e.browserEvent.detail === 2) {
+        return super.onViewPointer(e);
+      }
+    } else {
+      this.handleStickyScrollMouseEvent(e, node);
+    }
+    if (node.collapsible && (!isStickyElement || onTwistie)) {
+      const location = this.tree.getNodeLocation(node);
+      const recursive = e.browserEvent.altKey;
+      this.tree.setFocus([location]);
+      this.tree.toggleCollapsed(location, recursive);
+      if (onTwistie) {
+        e.browserEvent.isHandledByList = true;
+        return;
+      }
+    }
+    if (!isStickyElement) {
+      super.onViewPointer(e);
+    }
+  }
+  handleStickyScrollMouseEvent(e, node) {
+    if (isMonacoCustomToggle(e.browserEvent.target) || isActionItem(e.browserEvent.target)) {
+      return;
+    }
+    const stickyScrollController = this.stickyScrollProvider();
+    if (!stickyScrollController) {
+      throw new Error("Sticky scroll controller not found");
+    }
+    const nodeIndex = this.list.indexOf(node);
+    const elementScrollTop = this.list.getElementTop(nodeIndex);
+    const elementTargetViewTop = stickyScrollController.nodePositionTopBelowWidget(node);
+    this.tree.scrollTop = elementScrollTop - elementTargetViewTop;
+    this.list.domFocus();
+    this.list.setFocus([nodeIndex]);
+    this.list.setSelection([nodeIndex]);
+  }
+  onDoubleClick(e) {
+    const onTwistie = e.browserEvent.target.classList.contains("monaco-tl-twistie");
+    if (onTwistie || !this.tree.expandOnDoubleClick) {
+      return;
+    }
+    if (e.browserEvent.isHandledByList) {
+      return;
+    }
+    super.onDoubleClick(e);
+  }
+  // to make sure dom focus is not stolen (for example with context menu)
+  onMouseDown(e) {
+    const target = e.browserEvent.target;
+    if (!isStickyScrollContainer(target) && !isStickyScrollElement(target)) {
+      super.onMouseDown(e);
+      return;
+    }
+  }
+  onContextMenu(e) {
+    const target = e.browserEvent.target;
+    if (!isStickyScrollContainer(target) && !isStickyScrollElement(target)) {
+      super.onContextMenu(e);
+      return;
+    }
+  }
+}
+class TreeNodeList extends List {
+  constructor(user, container, virtualDelegate, renderers, focusTrait, selectionTrait, anchorTrait, options) {
+    super(user, container, virtualDelegate, renderers, options);
+    this.focusTrait = focusTrait;
+    this.selectionTrait = selectionTrait;
+    this.anchorTrait = anchorTrait;
+  }
+  static {
+    __name(this, "TreeNodeList");
+  }
+  createMouseController(options) {
+    return new TreeNodeListMouseController(this, options.tree, options.stickyScrollProvider);
+  }
+  splice(start, deleteCount, elements = []) {
+    super.splice(start, deleteCount, elements);
+    if (elements.length === 0) {
+      return;
+    }
+    const additionalFocus = [];
+    const additionalSelection = [];
+    let anchor;
+    elements.forEach((node, index) => {
+      if (this.focusTrait.has(node)) {
+        additionalFocus.push(start + index);
+      }
+      if (this.selectionTrait.has(node)) {
+        additionalSelection.push(start + index);
+      }
+      if (this.anchorTrait.has(node)) {
+        anchor = start + index;
+      }
+    });
+    if (additionalFocus.length > 0) {
+      super.setFocus(distinct([...super.getFocus(), ...additionalFocus]));
+    }
+    if (additionalSelection.length > 0) {
+      super.setSelection(distinct([...super.getSelection(), ...additionalSelection]));
+    }
+    if (typeof anchor === "number") {
+      super.setAnchor(anchor);
+    }
+  }
+  setFocus(indexes, browserEvent, fromAPI = false) {
+    super.setFocus(indexes, browserEvent);
+    if (!fromAPI) {
+      this.focusTrait.set(indexes.map((i) => this.element(i)), browserEvent);
+    }
+  }
+  setSelection(indexes, browserEvent, fromAPI = false) {
+    super.setSelection(indexes, browserEvent);
+    if (!fromAPI) {
+      this.selectionTrait.set(indexes.map((i) => this.element(i)), browserEvent);
+    }
+  }
+  setAnchor(index, fromAPI = false) {
+    super.setAnchor(index);
+    if (!fromAPI) {
+      if (typeof index === "undefined") {
+        this.anchorTrait.set([]);
+      } else {
+        this.anchorTrait.set([this.element(index)]);
+      }
+    }
+  }
+}
+var AbstractTreePart = /* @__PURE__ */ ((AbstractTreePart2) => {
+  AbstractTreePart2[AbstractTreePart2["Tree"] = 0] = "Tree";
+  AbstractTreePart2[AbstractTreePart2["StickyScroll"] = 1] = "StickyScroll";
+  return AbstractTreePart2;
+})(AbstractTreePart || {});
+class AbstractTree {
+  constructor(_user, container, delegate, renderers, _options = {}) {
+    this._user = _user;
+    this._options = _options;
+    if (_options.keyboardNavigationLabelProvider && (_options.findWidgetEnabled ?? true)) {
+      this.findFilter = new FindFilter(_options.keyboardNavigationLabelProvider, _options.filter, _options.defaultFindVisibility);
+      _options = { ..._options, filter: this.findFilter };
+      this.disposables.add(this.findFilter);
+    }
+    this.model = this.createModel(_user, _options);
+    this.treeDelegate = new ComposedTreeDelegate(delegate);
+    const activeNodes = this.disposables.add(new EventCollection(this.onDidChangeActiveNodesRelay.event));
+    const renderedIndentGuides = new SetMap();
+    this.renderers = renderers.map((r) => new TreeRenderer(r, this.model, this.onDidChangeCollapseStateRelay.event, activeNodes, renderedIndentGuides, _options));
+    for (const r of this.renderers) {
+      this.disposables.add(r);
+    }
+    this.focus = new Trait(() => this.view.getFocusedElements()[0], _options.identityProvider);
+    this.selection = new Trait(() => this.view.getSelectedElements()[0], _options.identityProvider);
+    this.anchor = new Trait(() => this.view.getAnchorElement(), _options.identityProvider);
+    this.view = new TreeNodeList(_user, container, this.treeDelegate, this.renderers, this.focus, this.selection, this.anchor, { ...asListOptions(() => this.model, this.disposables, _options), tree: this, stickyScrollProvider: /* @__PURE__ */ __name(() => this.stickyScrollController, "stickyScrollProvider") });
+    this.setupModel(this.model);
+    if (_options.keyboardSupport !== false) {
+      const onKeyDown = Event.chain(
+        this.view.onKeyDown,
+        ($2) => $2.filter((e) => !isEditableElement(e.target)).map((e) => new StandardKeyboardEvent(e))
+      );
+      Event.chain(onKeyDown, ($2) => $2.filter((e) => e.keyCode === KeyCode.LeftArrow))(this.onLeftArrow, this, this.disposables);
+      Event.chain(onKeyDown, ($2) => $2.filter((e) => e.keyCode === KeyCode.RightArrow))(this.onRightArrow, this, this.disposables);
+      Event.chain(onKeyDown, ($2) => $2.filter((e) => e.keyCode === KeyCode.Space))(this.onSpace, this, this.disposables);
+    }
+    if ((_options.findWidgetEnabled ?? true) && _options.keyboardNavigationLabelProvider && _options.contextViewProvider) {
+      const findOptions = {
+        styles: _options.findWidgetStyles,
+        defaultFindMode: _options.defaultFindMode,
+        defaultFindMatchType: _options.defaultFindMatchType,
+        showNotFoundMessage: _options.showNotFoundMessage
+      };
+      this.findController = this.disposables.add(new FindController(this, this.findFilter, _options.contextViewProvider, findOptions));
+      this.focusNavigationFilter = (node) => this.findController.shouldAllowFocus(node);
+      this.onDidChangeFindOpenState = this.findController.onDidChangeOpenState;
+      this.onDidChangeFindMode = this.findController.onDidChangeMode;
+      this.onDidChangeFindMatchType = this.findController.onDidChangeMatchType;
+    } else {
+      this.onDidChangeFindMode = Event.None;
+      this.onDidChangeFindMatchType = Event.None;
+    }
+    if (_options.enableStickyScroll) {
+      this.stickyScrollController = new StickyScrollController(this, this.model, this.view, this.renderers, this.treeDelegate, _options);
+      this.onDidChangeStickyScrollFocused = this.stickyScrollController.onDidChangeHasFocus;
+    }
+    this.styleElement = createStyleSheet(this.view.getHTMLElement());
+    this.getHTMLElement().classList.toggle("always", this._options.renderIndentGuides === "always" /* Always */);
+  }
+  static {
+    __name(this, "AbstractTree");
+  }
+  view;
+  renderers;
+  model;
+  treeDelegate;
+  focus;
+  selection;
+  anchor;
+  eventBufferer = new EventBufferer();
+  findController;
+  findFilter;
+  onDidChangeFindOpenState = Event.None;
+  onDidChangeStickyScrollFocused = Event.None;
+  focusNavigationFilter;
+  stickyScrollController;
+  styleElement;
+  disposables = new DisposableStore();
+  get onDidScroll() {
+    return this.view.onDidScroll;
+  }
+  get onDidChangeFocus() {
+    return this.eventBufferer.wrapEvent(this.focus.onDidChange);
+  }
+  get onDidChangeSelection() {
+    return this.eventBufferer.wrapEvent(this.selection.onDidChange);
+  }
+  get onMouseClick() {
+    return Event.map(this.view.onMouseClick, asTreeMouseEvent);
+  }
+  get onMouseDblClick() {
+    return Event.filter(Event.map(this.view.onMouseDblClick, asTreeMouseEvent), (e) => e.target !== TreeMouseEventTarget.Filter);
+  }
+  get onMouseOver() {
+    return Event.map(this.view.onMouseOver, asTreeMouseEvent);
+  }
+  get onMouseOut() {
+    return Event.map(this.view.onMouseOut, asTreeMouseEvent);
+  }
+  get onContextMenu() {
+    return Event.any(Event.filter(Event.map(this.view.onContextMenu, asTreeContextMenuEvent), (e) => !e.isStickyScroll), this.stickyScrollController?.onContextMenu ?? Event.None);
+  }
+  get onTap() {
+    return Event.map(this.view.onTap, asTreeMouseEvent);
+  }
+  get onPointer() {
+    return Event.map(this.view.onPointer, asTreeMouseEvent);
+  }
+  get onKeyDown() {
+    return this.view.onKeyDown;
+  }
+  get onKeyUp() {
+    return this.view.onKeyUp;
+  }
+  get onKeyPress() {
+    return this.view.onKeyPress;
+  }
+  get onDidFocus() {
+    return this.view.onDidFocus;
+  }
+  get onDidBlur() {
+    return this.view.onDidBlur;
+  }
+  onDidSwapModel = this.disposables.add(new Emitter());
+  onDidChangeModelRelay = this.disposables.add(new Relay());
+  onDidSpliceModelRelay = this.disposables.add(new Relay());
+  onDidChangeCollapseStateRelay = this.disposables.add(new Relay());
+  onDidChangeRenderNodeCountRelay = this.disposables.add(new Relay());
+  onDidChangeActiveNodesRelay = this.disposables.add(new Relay());
+  get onDidChangeModel() {
+    return Event.any(this.onDidChangeModelRelay.event, this.onDidSwapModel.event);
+  }
+  get onDidChangeCollapseState() {
+    return this.onDidChangeCollapseStateRelay.event;
+  }
+  get onDidChangeRenderNodeCount() {
+    return this.onDidChangeRenderNodeCountRelay.event;
+  }
+  _onWillRefilter = new Emitter();
+  onWillRefilter = this._onWillRefilter.event;
+  get findMode() {
+    return this.findController?.mode ?? 0 /* Highlight */;
+  }
+  set findMode(findMode) {
+    if (this.findController) {
+      this.findController.mode = findMode;
+    }
+  }
+  onDidChangeFindMode;
+  get findMatchType() {
+    return this.findController?.matchType ?? 0 /* Fuzzy */;
+  }
+  set findMatchType(findFuzzy) {
+    if (this.findController) {
+      this.findController.matchType = findFuzzy;
+    }
+  }
+  onDidChangeFindMatchType;
+  get onDidChangeFindPattern() {
+    return this.findController ? this.findController.onDidChangePattern : Event.None;
+  }
+  get expandOnDoubleClick() {
+    return typeof this._options.expandOnDoubleClick === "undefined" ? true : this._options.expandOnDoubleClick;
+  }
+  get expandOnlyOnTwistieClick() {
+    return typeof this._options.expandOnlyOnTwistieClick === "undefined" ? true : this._options.expandOnlyOnTwistieClick;
+  }
+  _onDidUpdateOptions = new Emitter();
+  onDidUpdateOptions = this._onDidUpdateOptions.event;
+  get onDidDispose() {
+    return this.view.onDidDispose;
+  }
+  updateOptions(optionsUpdate = {}) {
+    this._options = { ...this._options, ...optionsUpdate };
+    for (const renderer of this.renderers) {
+      renderer.updateOptions(optionsUpdate);
+    }
+    this.view.updateOptions(this._options);
+    this.findController?.updateOptions(optionsUpdate);
+    this.updateStickyScroll(optionsUpdate);
+    this._onDidUpdateOptions.fire(this._options);
+    this.getHTMLElement().classList.toggle("always", this._options.renderIndentGuides === "always" /* Always */);
+  }
+  get options() {
+    return this._options;
+  }
+  updateStickyScroll(optionsUpdate) {
+    if (!this.stickyScrollController && this._options.enableStickyScroll) {
+      this.stickyScrollController = new StickyScrollController(this, this.model, this.view, this.renderers, this.treeDelegate, this._options);
+      this.onDidChangeStickyScrollFocused = this.stickyScrollController.onDidChangeHasFocus;
+    } else if (this.stickyScrollController && !this._options.enableStickyScroll) {
+      this.onDidChangeStickyScrollFocused = Event.None;
+      this.stickyScrollController.dispose();
+      this.stickyScrollController = void 0;
+    }
+    this.stickyScrollController?.updateOptions(optionsUpdate);
+  }
+  updateWidth(element) {
+    const index = this.model.getListIndex(element);
+    if (index === -1) {
+      return;
+    }
+    this.view.updateWidth(index);
+  }
+  // Widget
+  getHTMLElement() {
+    return this.view.getHTMLElement();
+  }
+  get contentHeight() {
+    return this.view.contentHeight;
+  }
+  get contentWidth() {
+    return this.view.contentWidth;
+  }
+  get onDidChangeContentHeight() {
+    return this.view.onDidChangeContentHeight;
+  }
+  get onDidChangeContentWidth() {
+    return this.view.onDidChangeContentWidth;
+  }
+  get scrollTop() {
+    return this.view.scrollTop;
+  }
+  set scrollTop(scrollTop) {
+    this.view.scrollTop = scrollTop;
+  }
+  get scrollLeft() {
+    return this.view.scrollLeft;
+  }
+  set scrollLeft(scrollLeft) {
+    this.view.scrollLeft = scrollLeft;
+  }
+  get scrollHeight() {
+    return this.view.scrollHeight;
+  }
+  get renderHeight() {
+    return this.view.renderHeight;
+  }
+  get firstVisibleElement() {
+    let index = this.view.firstVisibleIndex;
+    if (this.stickyScrollController) {
+      index += this.stickyScrollController.count;
+    }
+    if (index < 0 || index >= this.view.length) {
+      return void 0;
+    }
+    const node = this.view.element(index);
+    return node.element;
+  }
+  get lastVisibleElement() {
+    const index = this.view.lastVisibleIndex;
+    const node = this.view.element(index);
+    return node.element;
+  }
+  get ariaLabel() {
+    return this.view.ariaLabel;
+  }
+  set ariaLabel(value) {
+    this.view.ariaLabel = value;
+  }
+  get selectionSize() {
+    return this.selection.getNodes().length;
+  }
+  domFocus() {
+    if (this.stickyScrollController?.focusedLast()) {
+      this.stickyScrollController.domFocus();
+    } else {
+      this.view.domFocus();
+    }
+  }
+  isDOMFocused() {
+    return isActiveElement(this.getHTMLElement());
+  }
+  layout(height, width) {
+    this.view.layout(height, width);
+  }
+  style(styles) {
+    const suffix = `.${this.view.domId}`;
+    const content = [];
+    if (styles.treeIndentGuidesStroke) {
+      content.push(`.monaco-list${suffix}:hover .monaco-tl-indent > .indent-guide, .monaco-list${suffix}.always .monaco-tl-indent > .indent-guide  { border-color: ${styles.treeInactiveIndentGuidesStroke}; }`);
+      content.push(`.monaco-list${suffix} .monaco-tl-indent > .indent-guide.active { border-color: ${styles.treeIndentGuidesStroke}; }`);
+    }
+    const stickyScrollBackground = styles.treeStickyScrollBackground ?? styles.listBackground;
+    if (stickyScrollBackground) {
+      content.push(`.monaco-list${suffix} .monaco-scrollable-element .monaco-tree-sticky-container { background-color: ${stickyScrollBackground}; }`);
+      content.push(`.monaco-list${suffix} .monaco-scrollable-element .monaco-tree-sticky-container .monaco-tree-sticky-row { background-color: ${stickyScrollBackground}; }`);
+    }
+    if (styles.treeStickyScrollBorder) {
+      content.push(`.monaco-list${suffix} .monaco-scrollable-element .monaco-tree-sticky-container { border-bottom: 1px solid ${styles.treeStickyScrollBorder}; }`);
+    }
+    if (styles.treeStickyScrollShadow) {
+      content.push(`.monaco-list${suffix} .monaco-scrollable-element .monaco-tree-sticky-container .monaco-tree-sticky-container-shadow { box-shadow: ${styles.treeStickyScrollShadow} 0 6px 6px -6px inset; height: 3px; }`);
+    }
+    if (styles.listFocusForeground) {
+      content.push(`.monaco-list${suffix}.sticky-scroll-focused .monaco-scrollable-element .monaco-tree-sticky-container:focus .monaco-list-row.focused { color: ${styles.listFocusForeground}; }`);
+      content.push(`.monaco-list${suffix}:not(.sticky-scroll-focused) .monaco-scrollable-element .monaco-tree-sticky-container .monaco-list-row.focused { color: inherit; }`);
+    }
+    const focusAndSelectionOutline = asCssValueWithDefault(styles.listFocusAndSelectionOutline, asCssValueWithDefault(styles.listSelectionOutline, styles.listFocusOutline ?? ""));
+    if (focusAndSelectionOutline) {
+      content.push(`.monaco-list${suffix}.sticky-scroll-focused .monaco-scrollable-element .monaco-tree-sticky-container:focus .monaco-list-row.focused.selected { outline: 1px solid ${focusAndSelectionOutline}; outline-offset: -1px;}`);
+      content.push(`.monaco-list${suffix}:not(.sticky-scroll-focused) .monaco-scrollable-element .monaco-tree-sticky-container .monaco-list-row.focused.selected { outline: inherit;}`);
+    }
+    if (styles.listFocusOutline) {
+      content.push(`.monaco-list${suffix}.sticky-scroll-focused .monaco-scrollable-element .monaco-tree-sticky-container:focus .monaco-list-row.focused { outline: 1px solid ${styles.listFocusOutline}; outline-offset: -1px; }`);
+      content.push(`.monaco-list${suffix}:not(.sticky-scroll-focused) .monaco-scrollable-element .monaco-tree-sticky-container .monaco-list-row.focused { outline: inherit; }`);
+      content.push(`.monaco-workbench.context-menu-visible .monaco-list${suffix}.last-focused.sticky-scroll-focused .monaco-scrollable-element .monaco-tree-sticky-container .monaco-list-row.passive-focused { outline: 1px solid ${styles.listFocusOutline}; outline-offset: -1px; }`);
+      content.push(`.monaco-workbench.context-menu-visible .monaco-list${suffix}.last-focused.sticky-scroll-focused .monaco-list-rows .monaco-list-row.focused { outline: inherit; }`);
+      content.push(`.monaco-workbench.context-menu-visible .monaco-list${suffix}.last-focused:not(.sticky-scroll-focused) .monaco-tree-sticky-container .monaco-list-rows .monaco-list-row.focused { outline: inherit; }`);
+    }
+    this.styleElement.textContent = content.join("\n");
+    this.view.style(styles);
+  }
+  // Tree navigation
+  getParentElement(location) {
+    const parentRef = this.model.getParentNodeLocation(location);
+    const parentNode = this.model.getNode(parentRef);
+    return parentNode.element;
+  }
+  getFirstElementChild(location) {
+    return this.model.getFirstElementChild(location);
+  }
+  // Tree
+  getNode(location) {
+    return this.model.getNode(location);
+  }
+  getNodeLocation(node) {
+    return this.model.getNodeLocation(node);
+  }
+  collapse(location, recursive = false) {
+    return this.model.setCollapsed(location, true, recursive);
+  }
+  expand(location, recursive = false) {
+    return this.model.setCollapsed(location, false, recursive);
+  }
+  toggleCollapsed(location, recursive = false) {
+    return this.model.setCollapsed(location, void 0, recursive);
+  }
+  expandAll() {
+    this.model.setCollapsed(this.model.rootRef, false, true);
+  }
+  collapseAll() {
+    this.model.setCollapsed(this.model.rootRef, true, true);
+  }
+  isCollapsible(location) {
+    return this.model.isCollapsible(location);
+  }
+  setCollapsible(location, collapsible) {
+    return this.model.setCollapsible(location, collapsible);
+  }
+  isCollapsed(location) {
+    return this.model.isCollapsed(location);
+  }
+  expandTo(location) {
+    this.model.expandTo(location);
+  }
+  triggerTypeNavigation() {
+    this.view.triggerTypeNavigation();
+  }
+  openFind() {
+    this.findController?.open();
+  }
+  closeFind() {
+    this.findController?.close();
+  }
+  refilter() {
+    this._onWillRefilter.fire(void 0);
+    this.model.refilter();
+  }
+  setAnchor(element) {
+    if (typeof element === "undefined") {
+      return this.view.setAnchor(void 0);
+    }
+    this.eventBufferer.bufferEvents(() => {
+      const node = this.model.getNode(element);
+      this.anchor.set([node]);
+      const index = this.model.getListIndex(element);
+      if (index > -1) {
+        this.view.setAnchor(index, true);
+      }
+    });
+  }
+  getAnchor() {
+    return this.anchor.get().at(0);
+  }
+  setSelection(elements, browserEvent) {
+    this.eventBufferer.bufferEvents(() => {
+      const nodes = elements.map((e) => this.model.getNode(e));
+      this.selection.set(nodes, browserEvent);
+      const indexes = elements.map((e) => this.model.getListIndex(e)).filter((i) => i > -1);
+      this.view.setSelection(indexes, browserEvent, true);
+    });
+  }
+  getSelection() {
+    return this.selection.get();
+  }
+  setFocus(elements, browserEvent) {
+    this.eventBufferer.bufferEvents(() => {
+      const nodes = elements.map((e) => this.model.getNode(e));
+      this.focus.set(nodes, browserEvent);
+      const indexes = elements.map((e) => this.model.getListIndex(e)).filter((i) => i > -1);
+      this.view.setFocus(indexes, browserEvent, true);
+    });
+  }
+  focusNext(n = 1, loop = false, browserEvent, filter = isKeyboardEvent(browserEvent) && browserEvent.altKey ? void 0 : this.focusNavigationFilter) {
+    this.view.focusNext(n, loop, browserEvent, filter);
+  }
+  focusPrevious(n = 1, loop = false, browserEvent, filter = isKeyboardEvent(browserEvent) && browserEvent.altKey ? void 0 : this.focusNavigationFilter) {
+    this.view.focusPrevious(n, loop, browserEvent, filter);
+  }
+  focusNextPage(browserEvent, filter = isKeyboardEvent(browserEvent) && browserEvent.altKey ? void 0 : this.focusNavigationFilter) {
+    return this.view.focusNextPage(browserEvent, filter);
+  }
+  focusPreviousPage(browserEvent, filter = isKeyboardEvent(browserEvent) && browserEvent.altKey ? void 0 : this.focusNavigationFilter) {
+    return this.view.focusPreviousPage(browserEvent, filter, () => this.stickyScrollController?.height ?? 0);
+  }
+  focusLast(browserEvent, filter = isKeyboardEvent(browserEvent) && browserEvent.altKey ? void 0 : this.focusNavigationFilter) {
+    this.view.focusLast(browserEvent, filter);
+  }
+  focusFirst(browserEvent, filter = isKeyboardEvent(browserEvent) && browserEvent.altKey ? void 0 : this.focusNavigationFilter) {
+    this.view.focusFirst(browserEvent, filter);
+  }
+  getFocus() {
+    return this.focus.get();
+  }
+  getStickyScrollFocus() {
+    const focus = this.stickyScrollController?.getFocus();
+    return focus !== void 0 ? [focus] : [];
+  }
+  getFocusedPart() {
+    return this.stickyScrollController?.focusedLast() ? 1 /* StickyScroll */ : 0 /* Tree */;
+  }
+  reveal(location, relativeTop) {
+    this.model.expandTo(location);
+    const index = this.model.getListIndex(location);
+    if (index === -1) {
+      return;
+    }
+    if (!this.stickyScrollController) {
+      this.view.reveal(index, relativeTop);
+    } else {
+      const paddingTop = this.stickyScrollController.nodePositionTopBelowWidget(this.getNode(location));
+      this.view.reveal(index, relativeTop, paddingTop);
+    }
+  }
+  /**
+   * Returns the relative position of an element rendered in the list.
+   * Returns `null` if the element isn't *entirely* in the visible viewport.
+   */
+  getRelativeTop(location) {
+    const index = this.model.getListIndex(location);
+    if (index === -1) {
+      return null;
+    }
+    const stickyScrollNode = this.stickyScrollController?.getNode(this.getNode(location));
+    return this.view.getRelativeTop(index, stickyScrollNode?.position ?? this.stickyScrollController?.height);
+  }
+  getViewState(identityProvider = this.options.identityProvider) {
+    if (!identityProvider) {
+      throw new TreeError(this._user, "Can't get tree view state without an identity provider");
+    }
+    const getId = /* @__PURE__ */ __name((element) => identityProvider.getId(element).toString(), "getId");
+    const state = AbstractTreeViewState.empty(this.scrollTop);
+    for (const focus of this.getFocus()) {
+      state.focus.add(getId(focus));
+    }
+    for (const selection of this.getSelection()) {
+      state.selection.add(getId(selection));
+    }
+    const root = this.model.getNode();
+    const stack = [root];
+    while (stack.length > 0) {
+      const node = stack.pop();
+      if (node !== root && node.collapsible) {
+        state.expanded[getId(node.element)] = node.collapsed ? 0 : 1;
+      }
+      insertInto(stack, stack.length, node.children);
+    }
+    return state;
+  }
+  // List
+  onLeftArrow(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const nodes = this.view.getFocusedElements();
+    if (nodes.length === 0) {
+      return;
+    }
+    const node = nodes[0];
+    const location = this.model.getNodeLocation(node);
+    const didChange = this.model.setCollapsed(location, true);
+    if (!didChange) {
+      const parentLocation = this.model.getParentNodeLocation(location);
+      if (!parentLocation) {
+        return;
+      }
+      const parentListIndex = this.model.getListIndex(parentLocation);
+      this.view.reveal(parentListIndex);
+      this.view.setFocus([parentListIndex]);
+    }
+  }
+  onRightArrow(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const nodes = this.view.getFocusedElements();
+    if (nodes.length === 0) {
+      return;
+    }
+    const node = nodes[0];
+    const location = this.model.getNodeLocation(node);
+    const didChange = this.model.setCollapsed(location, false);
+    if (!didChange) {
+      if (!node.children.some((child) => child.visible)) {
+        return;
+      }
+      const [focusedIndex] = this.view.getFocus();
+      const firstChildIndex = focusedIndex + 1;
+      this.view.reveal(firstChildIndex);
+      this.view.setFocus([firstChildIndex]);
+    }
+  }
+  onSpace(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const nodes = this.view.getFocusedElements();
+    if (nodes.length === 0) {
+      return;
+    }
+    const node = nodes[0];
+    const location = this.model.getNodeLocation(node);
+    const recursive = e.browserEvent.altKey;
+    this.model.setCollapsed(location, void 0, recursive);
+  }
+  modelDisposables = new DisposableStore();
+  setupModel(model) {
+    this.modelDisposables.clear();
+    this.modelDisposables.add(model.onDidSpliceRenderedNodes(({ start, deleteCount, elements }) => this.view.splice(start, deleteCount, elements)));
+    const onDidModelSplice = Event.forEach(model.onDidSpliceModel, (e) => {
+      this.eventBufferer.bufferEvents(() => {
+        this.focus.onDidModelSplice(e);
+        this.selection.onDidModelSplice(e);
+      });
+    }, this.modelDisposables);
+    onDidModelSplice(() => null, null, this.modelDisposables);
+    const activeNodesEmitter = this.modelDisposables.add(new Emitter());
+    const activeNodesDebounce = this.modelDisposables.add(new Delayer(0));
+    this.modelDisposables.add(Event.any(onDidModelSplice, this.focus.onDidChange, this.selection.onDidChange)(() => {
+      activeNodesDebounce.trigger(() => {
+        const set = /* @__PURE__ */ new Set();
+        for (const node of this.focus.getNodes()) {
+          set.add(node);
+        }
+        for (const node of this.selection.getNodes()) {
+          set.add(node);
+        }
+        activeNodesEmitter.fire([...set.values()]);
+      });
+    }));
+    this.onDidChangeActiveNodesRelay.input = activeNodesEmitter.event;
+    this.onDidChangeModelRelay.input = Event.signal(model.onDidSpliceModel);
+    this.onDidChangeCollapseStateRelay.input = model.onDidChangeCollapseState;
+    this.onDidChangeRenderNodeCountRelay.input = model.onDidChangeRenderNodeCount;
+    this.onDidSpliceModelRelay.input = model.onDidSpliceModel;
+  }
+  navigate(start) {
+    return new TreeNavigator(this.view, this.model, start);
+  }
+  dispose() {
+    dispose(this.disposables);
+    this.stickyScrollController?.dispose();
+    this.view.dispose();
+    this.modelDisposables.dispose();
+  }
+}
+class TreeNavigator {
+  constructor(view, model, start) {
+    this.view = view;
+    this.model = model;
+    if (start) {
+      this.index = this.model.getListIndex(start);
+    } else {
+      this.index = -1;
+    }
+  }
+  static {
+    __name(this, "TreeNavigator");
+  }
+  index;
+  current() {
+    if (this.index < 0 || this.index >= this.view.length) {
+      return null;
+    }
+    return this.view.element(this.index).element;
+  }
+  previous() {
+    this.index--;
+    return this.current();
+  }
+  next() {
+    this.index++;
+    return this.current();
+  }
+  first() {
+    this.index = 0;
+    return this.current();
+  }
+  last() {
+    this.index = this.view.length - 1;
+    return this.current();
+  }
+}
+export {
+  AbstractFindController,
+  AbstractTree,
+  AbstractTreePart,
+  AbstractTreeViewState,
+  ComposedTreeDelegate,
+  FindController,
+  FindFilter,
+  FindToggles,
+  RenderIndentGuides,
+  TreeFindMatchType,
+  TreeFindMode,
+  TreeRenderer,
+  contiguousFuzzyScore
+};
+//# sourceMappingURL=abstractTree.js.map

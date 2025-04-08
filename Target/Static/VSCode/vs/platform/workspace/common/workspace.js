@@ -1,1 +1,229 @@
-import{localize as s}from"../../../nls.js";import"../../../base/common/event.js";import{basename as d,extname as p}from"../../../base/common/path.js";import{TernarySearchTree as t}from"../../../base/common/ternarySearchTree.js";import{extname as c,basenameOrAuthority as f,joinPath as l,extUriBiasedIgnorePathCase as I}from"../../../base/common/resources.js";import{URI as n}from"../../../base/common/uri.js";import{createDecorator as W}from"../../instantiation/common/instantiation.js";import"../../environment/common/environment.js";import{Schemas as u}from"../../../base/common/network.js";const B=W("contextService");function k(t){const i=t;return"string"==typeof i?.id&&n.isUri(i.uri)}function K(t){return"string"==typeof t?.id&&!k(t)&&!x(t)}const g={id:"ext-dev"},m={id:"empty-window"};function j(t,i){if("string"==typeof t||typeof t>"u")return"string"==typeof t?{id:d(t)}:i?g:m;const r=t;return r.configuration?{id:r.id,configPath:r.configuration}:1===r.folders.length?{id:r.id,uri:r.folders[0].uri}:{id:r.id}}function x(t){const i=t;return"string"==typeof i?.id&&n.isUri(i.configPath)}function L(t){const i=t;if(i?.uri)return{id:i.id,uri:n.revive(i.uri)};const r=t;return r?.configPath?{id:r.id,configPath:n.revive(r.configPath)}:t?.id?{id:t.id}:void 0}var y=(t=>(t[t.EMPTY=1]="EMPTY",t[t.FOLDER=2]="FOLDER",t[t.WORKSPACE=3]="WORKSPACE",t))(y||{});function X(t){const i=t;return!(!i||"object"!=typeof i||"string"!=typeof i.id||!Array.isArray(i.folders))}function Y(t){const i=t;return!(!i||"object"!=typeof i||!n.isUri(i.uri)||"string"!=typeof i.name||"function"!=typeof i.toResource)}class J{constructor(i,r,e,s,n){this._id=i,this._transient=e,this._configuration=s,this.ignorePathCasing=n,this.foldersMap=t.forUris(this.ignorePathCasing,(()=>!0)),this.folders=r}foldersMap;_folders;get folders(){return this._folders}set folders(t){this._folders=t,this.updateFoldersMap()}update(t){this._id=t.id,this._configuration=t.configuration,this._transient=t.transient,this.ignorePathCasing=t.ignorePathCasing,this.folders=t.folders}get id(){return this._id}get transient(){return this._transient}get configuration(){return this._configuration}set configuration(t){this._configuration=t}getFolder(t){return t&&this.foldersMap.findSubstr(t)||null}updateFoldersMap(){this.foldersMap=t.forUris(this.ignorePathCasing,(()=>!0));for(const t of this.folders)this.foldersMap.set(t.uri,t)}toJSON(){return{id:this.id,folders:this.folders,transient:this.transient,configuration:this.configuration}}}class h{constructor(t,i){this.raw=i,this.uri=t.uri,this.index=t.index,this.name=t.name}uri;name;index;toResource(t){return l(this.uri,t)}toJSON(){return{uri:this.uri,name:this.name,index:this.index}}}function q(t){return new h({uri:t,index:0,name:f(t)},{uri:t.toString()})}const a="code-workspace",F=`.${a}`,H=[{name:s("codeWorkspace","Code Workspace"),extensions:[a]}],V="workspace.json";function v(t,i){return I.isEqualOrParent(t,i.untitledWorkspacesHome)}function E(t){let i;return i=n.isUri(t)?t:t.configuration,i?.scheme===u.tmp}const S="4064f6ec-cb38-4ad0-af64-ee6467e63c82";function $(t){return t.id===S}function G(t,i){return!v(t,i)&&!E(t)}function Q(t){return("string"==typeof t?p(t):c(t))===F}export{g as EXTENSION_DEVELOPMENT_EMPTY_WINDOW_WORKSPACE,B as IWorkspaceContextService,S as STANDALONE_EDITOR_WORKSPACE_ID,m as UNKNOWN_EMPTY_WINDOW_WORKSPACE,V as UNTITLED_WORKSPACE_NAME,a as WORKSPACE_EXTENSION,H as WORKSPACE_FILTER,F as WORKSPACE_SUFFIX,y as WorkbenchState,J as Workspace,h as WorkspaceFolder,Q as hasWorkspaceFileExtension,K as isEmptyWorkspaceIdentifier,G as isSavedWorkspace,k as isSingleFolderWorkspaceIdentifier,$ as isStandaloneEditorWorkspace,E as isTemporaryWorkspace,v as isUntitledWorkspace,X as isWorkspace,Y as isWorkspaceFolder,x as isWorkspaceIdentifier,L as reviveIdentifier,q as toWorkspaceFolder,j as toWorkspaceIdentifier};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { localize } from "../../../nls.js";
+import { Event } from "../../../base/common/event.js";
+import { basename, extname } from "../../../base/common/path.js";
+import { TernarySearchTree } from "../../../base/common/ternarySearchTree.js";
+import { extname as resourceExtname, basenameOrAuthority, joinPath, extUriBiasedIgnorePathCase } from "../../../base/common/resources.js";
+import { URI, UriComponents } from "../../../base/common/uri.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+import { IEnvironmentService } from "../../environment/common/environment.js";
+import { Schemas } from "../../../base/common/network.js";
+const IWorkspaceContextService = createDecorator("contextService");
+function isSingleFolderWorkspaceIdentifier(obj) {
+  const singleFolderIdentifier = obj;
+  return typeof singleFolderIdentifier?.id === "string" && URI.isUri(singleFolderIdentifier.uri);
+}
+__name(isSingleFolderWorkspaceIdentifier, "isSingleFolderWorkspaceIdentifier");
+function isEmptyWorkspaceIdentifier(obj) {
+  const emptyWorkspaceIdentifier = obj;
+  return typeof emptyWorkspaceIdentifier?.id === "string" && !isSingleFolderWorkspaceIdentifier(obj) && !isWorkspaceIdentifier(obj);
+}
+__name(isEmptyWorkspaceIdentifier, "isEmptyWorkspaceIdentifier");
+const EXTENSION_DEVELOPMENT_EMPTY_WINDOW_WORKSPACE = { id: "ext-dev" };
+const UNKNOWN_EMPTY_WINDOW_WORKSPACE = { id: "empty-window" };
+function toWorkspaceIdentifier(arg0, isExtensionDevelopment) {
+  if (typeof arg0 === "string" || typeof arg0 === "undefined") {
+    if (typeof arg0 === "string") {
+      return {
+        id: basename(arg0)
+      };
+    }
+    if (isExtensionDevelopment) {
+      return EXTENSION_DEVELOPMENT_EMPTY_WINDOW_WORKSPACE;
+    }
+    return UNKNOWN_EMPTY_WINDOW_WORKSPACE;
+  }
+  const workspace = arg0;
+  if (workspace.configuration) {
+    return {
+      id: workspace.id,
+      configPath: workspace.configuration
+    };
+  }
+  if (workspace.folders.length === 1) {
+    return {
+      id: workspace.id,
+      uri: workspace.folders[0].uri
+    };
+  }
+  return {
+    id: workspace.id
+  };
+}
+__name(toWorkspaceIdentifier, "toWorkspaceIdentifier");
+function isWorkspaceIdentifier(obj) {
+  const workspaceIdentifier = obj;
+  return typeof workspaceIdentifier?.id === "string" && URI.isUri(workspaceIdentifier.configPath);
+}
+__name(isWorkspaceIdentifier, "isWorkspaceIdentifier");
+function reviveIdentifier(identifier) {
+  const singleFolderIdentifierCandidate = identifier;
+  if (singleFolderIdentifierCandidate?.uri) {
+    return { id: singleFolderIdentifierCandidate.id, uri: URI.revive(singleFolderIdentifierCandidate.uri) };
+  }
+  const workspaceIdentifierCandidate = identifier;
+  if (workspaceIdentifierCandidate?.configPath) {
+    return { id: workspaceIdentifierCandidate.id, configPath: URI.revive(workspaceIdentifierCandidate.configPath) };
+  }
+  if (identifier?.id) {
+    return { id: identifier.id };
+  }
+  return void 0;
+}
+__name(reviveIdentifier, "reviveIdentifier");
+var WorkbenchState = /* @__PURE__ */ ((WorkbenchState2) => {
+  WorkbenchState2[WorkbenchState2["EMPTY"] = 1] = "EMPTY";
+  WorkbenchState2[WorkbenchState2["FOLDER"] = 2] = "FOLDER";
+  WorkbenchState2[WorkbenchState2["WORKSPACE"] = 3] = "WORKSPACE";
+  return WorkbenchState2;
+})(WorkbenchState || {});
+function isWorkspace(thing) {
+  const candidate = thing;
+  return !!(candidate && typeof candidate === "object" && typeof candidate.id === "string" && Array.isArray(candidate.folders));
+}
+__name(isWorkspace, "isWorkspace");
+function isWorkspaceFolder(thing) {
+  const candidate = thing;
+  return !!(candidate && typeof candidate === "object" && URI.isUri(candidate.uri) && typeof candidate.name === "string" && typeof candidate.toResource === "function");
+}
+__name(isWorkspaceFolder, "isWorkspaceFolder");
+class Workspace {
+  constructor(_id, folders, _transient, _configuration, ignorePathCasing) {
+    this._id = _id;
+    this._transient = _transient;
+    this._configuration = _configuration;
+    this.ignorePathCasing = ignorePathCasing;
+    this.foldersMap = TernarySearchTree.forUris(this.ignorePathCasing, () => true);
+    this.folders = folders;
+  }
+  static {
+    __name(this, "Workspace");
+  }
+  foldersMap;
+  _folders;
+  get folders() {
+    return this._folders;
+  }
+  set folders(folders) {
+    this._folders = folders;
+    this.updateFoldersMap();
+  }
+  update(workspace) {
+    this._id = workspace.id;
+    this._configuration = workspace.configuration;
+    this._transient = workspace.transient;
+    this.ignorePathCasing = workspace.ignorePathCasing;
+    this.folders = workspace.folders;
+  }
+  get id() {
+    return this._id;
+  }
+  get transient() {
+    return this._transient;
+  }
+  get configuration() {
+    return this._configuration;
+  }
+  set configuration(configuration) {
+    this._configuration = configuration;
+  }
+  getFolder(resource) {
+    if (!resource) {
+      return null;
+    }
+    return this.foldersMap.findSubstr(resource) || null;
+  }
+  updateFoldersMap() {
+    this.foldersMap = TernarySearchTree.forUris(this.ignorePathCasing, () => true);
+    for (const folder of this.folders) {
+      this.foldersMap.set(folder.uri, folder);
+    }
+  }
+  toJSON() {
+    return { id: this.id, folders: this.folders, transient: this.transient, configuration: this.configuration };
+  }
+}
+class WorkspaceFolder {
+  constructor(data, raw) {
+    this.raw = raw;
+    this.uri = data.uri;
+    this.index = data.index;
+    this.name = data.name;
+  }
+  static {
+    __name(this, "WorkspaceFolder");
+  }
+  uri;
+  name;
+  index;
+  toResource(relativePath) {
+    return joinPath(this.uri, relativePath);
+  }
+  toJSON() {
+    return { uri: this.uri, name: this.name, index: this.index };
+  }
+}
+function toWorkspaceFolder(resource) {
+  return new WorkspaceFolder({ uri: resource, index: 0, name: basenameOrAuthority(resource) }, { uri: resource.toString() });
+}
+__name(toWorkspaceFolder, "toWorkspaceFolder");
+const WORKSPACE_EXTENSION = "code-workspace";
+const WORKSPACE_SUFFIX = `.${WORKSPACE_EXTENSION}`;
+const WORKSPACE_FILTER = [{ name: localize("codeWorkspace", "Code Workspace"), extensions: [WORKSPACE_EXTENSION] }];
+const UNTITLED_WORKSPACE_NAME = "workspace.json";
+function isUntitledWorkspace(path, environmentService) {
+  return extUriBiasedIgnorePathCase.isEqualOrParent(path, environmentService.untitledWorkspacesHome);
+}
+__name(isUntitledWorkspace, "isUntitledWorkspace");
+function isTemporaryWorkspace(arg1) {
+  let path;
+  if (URI.isUri(arg1)) {
+    path = arg1;
+  } else {
+    path = arg1.configuration;
+  }
+  return path?.scheme === Schemas.tmp;
+}
+__name(isTemporaryWorkspace, "isTemporaryWorkspace");
+const STANDALONE_EDITOR_WORKSPACE_ID = "4064f6ec-cb38-4ad0-af64-ee6467e63c82";
+function isStandaloneEditorWorkspace(workspace) {
+  return workspace.id === STANDALONE_EDITOR_WORKSPACE_ID;
+}
+__name(isStandaloneEditorWorkspace, "isStandaloneEditorWorkspace");
+function isSavedWorkspace(path, environmentService) {
+  return !isUntitledWorkspace(path, environmentService) && !isTemporaryWorkspace(path);
+}
+__name(isSavedWorkspace, "isSavedWorkspace");
+function hasWorkspaceFileExtension(path) {
+  const ext = typeof path === "string" ? extname(path) : resourceExtname(path);
+  return ext === WORKSPACE_SUFFIX;
+}
+__name(hasWorkspaceFileExtension, "hasWorkspaceFileExtension");
+export {
+  EXTENSION_DEVELOPMENT_EMPTY_WINDOW_WORKSPACE,
+  IWorkspaceContextService,
+  STANDALONE_EDITOR_WORKSPACE_ID,
+  UNKNOWN_EMPTY_WINDOW_WORKSPACE,
+  UNTITLED_WORKSPACE_NAME,
+  WORKSPACE_EXTENSION,
+  WORKSPACE_FILTER,
+  WORKSPACE_SUFFIX,
+  WorkbenchState,
+  Workspace,
+  WorkspaceFolder,
+  hasWorkspaceFileExtension,
+  isEmptyWorkspaceIdentifier,
+  isSavedWorkspace,
+  isSingleFolderWorkspaceIdentifier,
+  isStandaloneEditorWorkspace,
+  isTemporaryWorkspace,
+  isUntitledWorkspace,
+  isWorkspace,
+  isWorkspaceFolder,
+  isWorkspaceIdentifier,
+  reviveIdentifier,
+  toWorkspaceFolder,
+  toWorkspaceIdentifier
+};
+//# sourceMappingURL=workspace.js.map

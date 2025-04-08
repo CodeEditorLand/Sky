@@ -1,1 +1,63 @@
-import{VSBuffer as a}from"./buffer.js";import{URI as s}from"./uri.js";import{MarshalledId as t}from"./marshallingIds.js";function l(r){return JSON.stringify(r,f)}function o(r){let e=JSON.parse(r);return e=i(e),e}function f(r,e){return e instanceof RegExp?{$mid:t.Regexp,source:e.source,flags:e.flags}:e}function i(r,e=0){if(!r||e>200)return r;if("object"==typeof r){switch(r.$mid){case t.Uri:return s.revive(r);case t.Regexp:return new RegExp(r.source,r.flags);case t.Date:return new Date(r.source)}if(r instanceof a||r instanceof Uint8Array)return r;if(Array.isArray(r))for(let t=0;t<r.length;++t)r[t]=i(r[t],e+1);else for(const t in r)Object.hasOwnProperty.call(r,t)&&(r[t]=i(r[t],e+1))}return r}export{o as parse,i as revive,l as stringify};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { VSBuffer } from "./buffer.js";
+import { URI, UriComponents } from "./uri.js";
+import { MarshalledId } from "./marshallingIds.js";
+function stringify(obj) {
+  return JSON.stringify(obj, replacer);
+}
+__name(stringify, "stringify");
+function parse(text) {
+  let data = JSON.parse(text);
+  data = revive(data);
+  return data;
+}
+__name(parse, "parse");
+function replacer(key, value) {
+  if (value instanceof RegExp) {
+    return {
+      $mid: MarshalledId.Regexp,
+      source: value.source,
+      flags: value.flags
+    };
+  }
+  return value;
+}
+__name(replacer, "replacer");
+function revive(obj, depth = 0) {
+  if (!obj || depth > 200) {
+    return obj;
+  }
+  if (typeof obj === "object") {
+    switch (obj.$mid) {
+      case MarshalledId.Uri:
+        return URI.revive(obj);
+      case MarshalledId.Regexp:
+        return new RegExp(obj.source, obj.flags);
+      case MarshalledId.Date:
+        return new Date(obj.source);
+    }
+    if (obj instanceof VSBuffer || obj instanceof Uint8Array) {
+      return obj;
+    }
+    if (Array.isArray(obj)) {
+      for (let i = 0; i < obj.length; ++i) {
+        obj[i] = revive(obj[i], depth + 1);
+      }
+    } else {
+      for (const key in obj) {
+        if (Object.hasOwnProperty.call(obj, key)) {
+          obj[key] = revive(obj[key], depth + 1);
+        }
+      }
+    }
+  }
+  return obj;
+}
+__name(revive, "revive");
+export {
+  parse,
+  revive,
+  stringify
+};
+//# sourceMappingURL=marshalling.js.map

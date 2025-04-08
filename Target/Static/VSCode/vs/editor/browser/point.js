@@ -1,1 +1,30 @@
-class n{constructor(t,n){this.x=t,this.y=n}static equals(t,n){return t.x===n.x&&t.y===n.y}add(t){return new n(this.x+t.x,this.y+t.y)}deltaX(t){return new n(this.x+t,this.y)}deltaY(t){return new n(this.x,this.y+t)}toString(){return`(${this.x},${this.y})`}}export{n as Point};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+class Point {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+  }
+  static {
+    __name(this, "Point");
+  }
+  static equals(a, b) {
+    return a.x === b.x && a.y === b.y;
+  }
+  add(other) {
+    return new Point(this.x + other.x, this.y + other.y);
+  }
+  deltaX(delta) {
+    return new Point(this.x + delta, this.y);
+  }
+  deltaY(delta) {
+    return new Point(this.x, this.y + delta);
+  }
+  toString() {
+    return `(${this.x},${this.y})`;
+  }
+}
+export {
+  Point
+};
+//# sourceMappingURL=point.js.map

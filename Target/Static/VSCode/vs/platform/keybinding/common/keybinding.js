@@ -1,1 +1,13 @@
-import"../../../base/common/event.js";import"../../../base/common/jsonSchema.js";import"../../../base/common/keyCodes.js";import"../../../base/common/keybindings.js";import"../../contextkey/common/contextkey.js";import{createDecorator as e}from"../../instantiation/common/instantiation.js";import"./keybindingResolver.js";import"./resolvedKeybindingItem.js";const I=e("keybindingService");export{I as IKeybindingService};
+import { Event } from "../../../base/common/event.js";
+import { IJSONSchema } from "../../../base/common/jsonSchema.js";
+import { KeyCode } from "../../../base/common/keyCodes.js";
+import { ResolvedKeybinding, Keybinding } from "../../../base/common/keybindings.js";
+import { IContextKeyService, IContextKeyServiceTarget } from "../../contextkey/common/contextkey.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+import { ResolutionResult } from "./keybindingResolver.js";
+import { ResolvedKeybindingItem } from "./resolvedKeybindingItem.js";
+const IKeybindingService = createDecorator("keybindingService");
+export {
+  IKeybindingService
+};
+//# sourceMappingURL=keybinding.js.map

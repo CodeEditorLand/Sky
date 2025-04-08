@@ -1,1 +1,194 @@
-var C=Object.defineProperty,y=Object.getOwnPropertyDescriptor,d=(e,i,t,s)=>{for(var o,r=s>1?void 0:s?y(i,t):i,n=e.length-1;n>=0;n--)(o=e[n])&&(r=(s?o(i,t,r):o(r))||r);return s&&r&&C(i,t,r),r},c=(e,i)=>(t,s)=>i(t,s,e);import"./media/scm.css";import{localize as b}from"../../../../nls.js";import{Event as M}from"../../../../base/common/event.js";import{ViewPane as L}from"../../../browser/parts/views/viewPane.js";import{append as w,$ as R}from"../../../../base/browser/dom.js";import"../../../../base/browser/ui/list/list.js";import{ISCMViewService as V}from"../common/scm.js";import{IInstantiationService as x}from"../../../../platform/instantiation/common/instantiation.js";import{IContextMenuService as D}from"../../../../platform/contextview/browser/contextView.js";import{IContextKeyService as T}from"../../../../platform/contextkey/common/contextkey.js";import{IKeybindingService as E}from"../../../../platform/keybinding/common/keybinding.js";import{IThemeService as A}from"../../../../platform/theme/common/themeService.js";import{WorkbenchList as B}from"../../../../platform/list/browser/listService.js";import{IConfigurationService as O}from"../../../../platform/configuration/common/configuration.js";import{IViewDescriptorService as _}from"../../../common/views.js";import{IOpenerService as z}from"../../../../platform/opener/common/opener.js";import{RepositoryActionRunner as F,RepositoryRenderer as m}from"./scmRepositoryRenderer.js";import{collectContextMenuActions as N,getActionViewItemProvider as P}from"./util.js";import{Orientation as v}from"../../../../base/browser/ui/sash/sash.js";import{Iterable as p}from"../../../../base/common/iterator.js";import{DisposableStore as H}from"../../../../base/common/lifecycle.js";import{MenuId as u}from"../../../../platform/actions/common/actions.js";import{IHoverService as W}from"../../../../platform/hover/browser/hover.js";class K{getHeight(){return 22}getTemplateId(){return m.TEMPLATE_ID}}let h=class extends L{constructor(e,i,t,s,o,r,n,c,a,m,l){super({...e,titleMenuId:u.SCMSourceControlTitle},t,s,c,n,r,o,a,m,l),this.scmViewService=i}list;disposables=new H;renderBody(e){super.renderBody(e);const i=w(e,R(".scm-view.scm-repositories-view")),t=()=>{const e=this.configurationService.getValue("scm.providerCountBadge");i.classList.toggle("hide-provider-counts","hidden"===e),i.classList.toggle("auto-provider-counts","auto"===e)};this._register(M.filter(this.configurationService.onDidChangeConfiguration,(e=>e.affectsConfiguration("scm.providerCountBadge")),this.disposables)(t)),t();const s=new K,o=this.instantiationService.createInstance(m,u.SCMSourceControlInline,P(this.instantiationService));this.list=this.instantiationService.createInstance(B,"SCM Main",i,s,[o],{identityProvider:{getId:e=>e.provider.id},horizontalScrolling:!1,overrideStyles:this.getLocationBasedColors().listOverrideStyles,accessibilityProvider:{getAriaLabel:e=>e.provider.label,getWidgetAriaLabel:()=>b("scm","Source Control Repositories")}}),this._register(this.list),this._register(this.list.onDidChangeSelection(this.onListSelectionChange,this)),this._register(this.list.onDidChangeFocus(this.onDidChangeFocus,this)),this._register(this.list.onContextMenu(this.onListContextMenu,this)),this._register(this.scmViewService.onDidChangeRepositories(this.onDidChangeRepositories,this)),this._register(this.scmViewService.onDidChangeVisibleRepositories(this.updateListSelection,this)),this.orientation===v.VERTICAL&&this._register(this.configurationService.onDidChangeConfiguration((e=>{e.affectsConfiguration("scm.repositories.visible")&&this.updateBodySize()}))),this.onDidChangeRepositories(),this.updateListSelection()}onDidChangeRepositories(){this.list.splice(0,this.list.length,this.scmViewService.repositories),this.updateBodySize()}focus(){super.focus(),this.list.domFocus()}layoutBody(e,i){super.layoutBody(e,i),this.list.layout(e,i)}updateBodySize(){if(this.orientation===v.HORIZONTAL)return;const e=this.configurationService.getValue("scm.repositories.visible"),i=0===this.list.length,t=22*Math.min(this.list.length,e);this.minimumBodySize=0===e?22:t,this.maximumBodySize=0===e||i?Number.POSITIVE_INFINITY:t}onListContextMenu(e){if(!e.element)return;const i=e.element.provider,t=this.scmViewService.menus.getRepositoryMenus(i).repositoryContextMenu,s=N(t),o=new F((()=>this.list.getSelectedElements()));o.onWillRun((()=>this.list.domFocus())),this.contextMenuService.showContextMenu({actionRunner:o,getAnchor:()=>e.anchor,getActions:()=>s,getActionsContext:()=>i,onHide:()=>o.dispose()})}onListSelectionChange(e){if(e.browserEvent&&e.elements.length>0){const i=this.list.scrollTop;this.scmViewService.visibleRepositories=e.elements,this.list.scrollTop=i}}onDidChangeFocus(e){e.browserEvent&&e.elements.length>0&&this.scmViewService.focus(e.elements[0])}updateListSelection(){const e=this.list.getSelection(),i=new Set(p.map(e,(e=>this.list.element(e)))),t=new Set(this.scmViewService.visibleRepositories),s=new Set(p.filter(t,(e=>!i.has(e)))),o=new Set(p.filter(i,(e=>!t.has(e))));if(0===s.size&&0===o.size)return;const r=e.filter((e=>!o.has(this.list.element(e))));for(let e=0;e<this.list.length;e++)s.has(this.list.element(e))&&r.push(e);this.list.setSelection(r),r.length>0&&-1===r.indexOf(this.list.getFocus()[0])&&(this.list.setAnchor(r[0]),this.list.setFocus([r[0]]))}dispose(){this.disposables.dispose(),super.dispose()}};h=d([c(1,V),c(2,E),c(3,D),c(4,x),c(5,_),c(6,T),c(7,O),c(8,z),c(9,A),c(10,W)],h);export{h as SCMRepositoriesViewPane};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import "./media/scm.css";
+import { localize } from "../../../../nls.js";
+import { Event } from "../../../../base/common/event.js";
+import { ViewPane, IViewPaneOptions } from "../../../browser/parts/views/viewPane.js";
+import { append, $ } from "../../../../base/browser/dom.js";
+import { IListVirtualDelegate, IListContextMenuEvent, IListEvent } from "../../../../base/browser/ui/list/list.js";
+import { ISCMRepository, ISCMViewService } from "../common/scm.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IContextMenuService } from "../../../../platform/contextview/browser/contextView.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { IThemeService } from "../../../../platform/theme/common/themeService.js";
+import { WorkbenchList } from "../../../../platform/list/browser/listService.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IViewDescriptorService } from "../../../common/views.js";
+import { IOpenerService } from "../../../../platform/opener/common/opener.js";
+import { RepositoryActionRunner, RepositoryRenderer } from "./scmRepositoryRenderer.js";
+import { collectContextMenuActions, getActionViewItemProvider } from "./util.js";
+import { Orientation } from "../../../../base/browser/ui/sash/sash.js";
+import { Iterable } from "../../../../base/common/iterator.js";
+import { DisposableStore } from "../../../../base/common/lifecycle.js";
+import { MenuId } from "../../../../platform/actions/common/actions.js";
+import { IHoverService } from "../../../../platform/hover/browser/hover.js";
+class ListDelegate {
+  static {
+    __name(this, "ListDelegate");
+  }
+  getHeight() {
+    return 22;
+  }
+  getTemplateId() {
+    return RepositoryRenderer.TEMPLATE_ID;
+  }
+}
+let SCMRepositoriesViewPane = class extends ViewPane {
+  constructor(options, scmViewService, keybindingService, contextMenuService, instantiationService, viewDescriptorService, contextKeyService, configurationService, openerService, themeService, hoverService) {
+    super({ ...options, titleMenuId: MenuId.SCMSourceControlTitle }, keybindingService, contextMenuService, configurationService, contextKeyService, viewDescriptorService, instantiationService, openerService, themeService, hoverService);
+    this.scmViewService = scmViewService;
+  }
+  static {
+    __name(this, "SCMRepositoriesViewPane");
+  }
+  list;
+  disposables = new DisposableStore();
+  renderBody(container) {
+    super.renderBody(container);
+    const listContainer = append(container, $(".scm-view.scm-repositories-view"));
+    const updateProviderCountVisibility = /* @__PURE__ */ __name(() => {
+      const value = this.configurationService.getValue("scm.providerCountBadge");
+      listContainer.classList.toggle("hide-provider-counts", value === "hidden");
+      listContainer.classList.toggle("auto-provider-counts", value === "auto");
+    }, "updateProviderCountVisibility");
+    this._register(Event.filter(this.configurationService.onDidChangeConfiguration, (e) => e.affectsConfiguration("scm.providerCountBadge"), this.disposables)(updateProviderCountVisibility));
+    updateProviderCountVisibility();
+    const delegate = new ListDelegate();
+    const renderer = this.instantiationService.createInstance(RepositoryRenderer, MenuId.SCMSourceControlInline, getActionViewItemProvider(this.instantiationService));
+    const identityProvider = { getId: /* @__PURE__ */ __name((r) => r.provider.id, "getId") };
+    this.list = this.instantiationService.createInstance(WorkbenchList, `SCM Main`, listContainer, delegate, [renderer], {
+      identityProvider,
+      horizontalScrolling: false,
+      overrideStyles: this.getLocationBasedColors().listOverrideStyles,
+      accessibilityProvider: {
+        getAriaLabel(r) {
+          return r.provider.label;
+        },
+        getWidgetAriaLabel() {
+          return localize("scm", "Source Control Repositories");
+        }
+      }
+    });
+    this._register(this.list);
+    this._register(this.list.onDidChangeSelection(this.onListSelectionChange, this));
+    this._register(this.list.onDidChangeFocus(this.onDidChangeFocus, this));
+    this._register(this.list.onContextMenu(this.onListContextMenu, this));
+    this._register(this.scmViewService.onDidChangeRepositories(this.onDidChangeRepositories, this));
+    this._register(this.scmViewService.onDidChangeVisibleRepositories(this.updateListSelection, this));
+    if (this.orientation === Orientation.VERTICAL) {
+      this._register(this.configurationService.onDidChangeConfiguration((e) => {
+        if (e.affectsConfiguration("scm.repositories.visible")) {
+          this.updateBodySize();
+        }
+      }));
+    }
+    this.onDidChangeRepositories();
+    this.updateListSelection();
+  }
+  onDidChangeRepositories() {
+    this.list.splice(0, this.list.length, this.scmViewService.repositories);
+    this.updateBodySize();
+  }
+  focus() {
+    super.focus();
+    this.list.domFocus();
+  }
+  layoutBody(height, width) {
+    super.layoutBody(height, width);
+    this.list.layout(height, width);
+  }
+  updateBodySize() {
+    if (this.orientation === Orientation.HORIZONTAL) {
+      return;
+    }
+    const visibleCount = this.configurationService.getValue("scm.repositories.visible");
+    const empty = this.list.length === 0;
+    const size = Math.min(this.list.length, visibleCount) * 22;
+    this.minimumBodySize = visibleCount === 0 ? 22 : size;
+    this.maximumBodySize = visibleCount === 0 ? Number.POSITIVE_INFINITY : empty ? Number.POSITIVE_INFINITY : size;
+  }
+  onListContextMenu(e) {
+    if (!e.element) {
+      return;
+    }
+    const provider = e.element.provider;
+    const menus = this.scmViewService.menus.getRepositoryMenus(provider);
+    const menu = menus.repositoryContextMenu;
+    const actions = collectContextMenuActions(menu);
+    const actionRunner = new RepositoryActionRunner(() => {
+      return this.list.getSelectedElements();
+    });
+    actionRunner.onWillRun(() => this.list.domFocus());
+    this.contextMenuService.showContextMenu({
+      actionRunner,
+      getAnchor: /* @__PURE__ */ __name(() => e.anchor, "getAnchor"),
+      getActions: /* @__PURE__ */ __name(() => actions, "getActions"),
+      getActionsContext: /* @__PURE__ */ __name(() => provider, "getActionsContext"),
+      onHide: /* @__PURE__ */ __name(() => actionRunner.dispose(), "onHide")
+    });
+  }
+  onListSelectionChange(e) {
+    if (e.browserEvent && e.elements.length > 0) {
+      const scrollTop = this.list.scrollTop;
+      this.scmViewService.visibleRepositories = e.elements;
+      this.list.scrollTop = scrollTop;
+    }
+  }
+  onDidChangeFocus(e) {
+    if (e.browserEvent && e.elements.length > 0) {
+      this.scmViewService.focus(e.elements[0]);
+    }
+  }
+  updateListSelection() {
+    const oldSelection = this.list.getSelection();
+    const oldSet = new Set(Iterable.map(oldSelection, (i) => this.list.element(i)));
+    const set = new Set(this.scmViewService.visibleRepositories);
+    const added = new Set(Iterable.filter(set, (r) => !oldSet.has(r)));
+    const removed = new Set(Iterable.filter(oldSet, (r) => !set.has(r)));
+    if (added.size === 0 && removed.size === 0) {
+      return;
+    }
+    const selection = oldSelection.filter((i) => !removed.has(this.list.element(i)));
+    for (let i = 0; i < this.list.length; i++) {
+      if (added.has(this.list.element(i))) {
+        selection.push(i);
+      }
+    }
+    this.list.setSelection(selection);
+    if (selection.length > 0 && selection.indexOf(this.list.getFocus()[0]) === -1) {
+      this.list.setAnchor(selection[0]);
+      this.list.setFocus([selection[0]]);
+    }
+  }
+  dispose() {
+    this.disposables.dispose();
+    super.dispose();
+  }
+};
+SCMRepositoriesViewPane = __decorateClass([
+  __decorateParam(1, ISCMViewService),
+  __decorateParam(2, IKeybindingService),
+  __decorateParam(3, IContextMenuService),
+  __decorateParam(4, IInstantiationService),
+  __decorateParam(5, IViewDescriptorService),
+  __decorateParam(6, IContextKeyService),
+  __decorateParam(7, IConfigurationService),
+  __decorateParam(8, IOpenerService),
+  __decorateParam(9, IThemeService),
+  __decorateParam(10, IHoverService)
+], SCMRepositoriesViewPane);
+export {
+  SCMRepositoriesViewPane
+};
+//# sourceMappingURL=scmRepositoriesViewPane.js.map

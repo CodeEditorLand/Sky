@@ -1,1 +1,126 @@
-var S=Object.defineProperty,u=Object.getOwnPropertyDescriptor,l=(e,i,t,r)=>{for(var o,s=r>1?void 0:r?u(i,t):i,a=e.length-1;a>=0;a--)(o=e[a])&&(s=(r?o(i,t,s):o(s))||s);return r&&s&&S(i,t,s),s},o=(e,i)=>(t,r)=>i(t,r,e);import{Disposable as f,MutableDisposable as m}from"../../../../base/common/lifecycle.js";import{Event as h}from"../../../../base/common/event.js";import v from"../../../../base/common/severity.js";import{localize as n}from"../../../../nls.js";import{IAccessibilityService as R}from"../../../../platform/accessibility/common/accessibility.js";import{CommandsRegistry as b}from"../../../../platform/commands/common/commands.js";import{ConfigurationTarget as p,IConfigurationService as g}from"../../../../platform/configuration/common/configuration.js";import{INotificationService as y,NotificationPriority as E}from"../../../../platform/notification/common/notification.js";import"../../../common/contributions.js";import{IStatusbarService as I,StatusbarAlignment as N}from"../../../services/statusbar/browser/statusbar.js";import{IOpenerService as C}from"../../../../platform/opener/common/opener.js";let d=class extends f{constructor(e,i,t,r,o){super(),this.configurationService=e,this.notificationService=i,this.accessibilityService=t,this.statusbarService=r,this.openerService=o,this._register(b.registerCommand({id:"showEditorScreenReaderNotification",handler:()=>this.showScreenReaderNotification()})),this.updateScreenReaderModeElement(this.accessibilityService.isScreenReaderOptimized()),this.registerListeners()}static ID="workbench.contrib.accessibilityStatus";screenReaderNotification=null;promptedScreenReader=!1;screenReaderModeElement=this._register(new m);registerListeners(){this._register(this.accessibilityService.onDidChangeScreenReaderOptimized((()=>this.onScreenReaderModeChange()))),this._register(this.configurationService.onDidChangeConfiguration((e=>{e.affectsConfiguration("editor.accessibilitySupport")&&this.onScreenReaderModeChange()})))}showScreenReaderNotification(){this.screenReaderNotification=this.notificationService.prompt(v.Info,n("screenReaderDetectedExplanation.question","Screen reader usage detected. Do you want to enable {0} to optimize the editor for screen reader usage?","editor.accessibilitySupport"),[{label:n("screenReaderDetectedExplanation.answerYes","Yes"),run:()=>{this.configurationService.updateValue("editor.accessibilitySupport","on",p.USER)}},{label:n("screenReaderDetectedExplanation.answerNo","No"),run:()=>{this.configurationService.updateValue("editor.accessibilitySupport","off",p.USER)}},{label:n("screenReaderDetectedExplanation.answerLearnMore","Learn More"),run:()=>{this.openerService.open("https://code.visualstudio.com/docs/editor/accessibility#_screen-readers")}}],{sticky:!0,priority:E.URGENT}),h.once(this.screenReaderNotification.onDidClose)((()=>this.screenReaderNotification=null))}updateScreenReaderModeElement(e){if(e){if(!this.screenReaderModeElement.value){const e=n("screenReaderDetected","Screen Reader Optimized");this.screenReaderModeElement.value=this.statusbarService.addEntry({name:n("status.editor.screenReaderMode","Screen Reader Mode"),text:e,ariaLabel:e,command:"showEditorScreenReaderNotification",kind:"prominent",showInAllWindows:!0},"status.editor.screenReaderMode",N.RIGHT,100.6)}}else this.screenReaderModeElement.clear()}onScreenReaderModeChange(){this.accessibilityService.isScreenReaderOptimized()&&"auto"===this.configurationService.getValue("editor.accessibilitySupport")&&(this.promptedScreenReader||(this.promptedScreenReader=!0,setTimeout((()=>this.showScreenReaderNotification()),100))),this.screenReaderNotification&&this.screenReaderNotification.close(),this.updateScreenReaderModeElement(this.accessibilityService.isScreenReaderOptimized())}};d=l([o(0,g),o(1,y),o(2,R),o(3,I),o(4,C)],d);export{d as AccessibilityStatus};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Disposable, MutableDisposable } from "../../../../base/common/lifecycle.js";
+import { Event } from "../../../../base/common/event.js";
+import Severity from "../../../../base/common/severity.js";
+import { localize } from "../../../../nls.js";
+import { IAccessibilityService } from "../../../../platform/accessibility/common/accessibility.js";
+import { CommandsRegistry } from "../../../../platform/commands/common/commands.js";
+import { ConfigurationTarget, IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { INotificationHandle, INotificationService, NotificationPriority } from "../../../../platform/notification/common/notification.js";
+import { IWorkbenchContribution } from "../../../common/contributions.js";
+import { IStatusbarEntryAccessor, IStatusbarService, StatusbarAlignment } from "../../../services/statusbar/browser/statusbar.js";
+import { IOpenerService } from "../../../../platform/opener/common/opener.js";
+let AccessibilityStatus = class extends Disposable {
+  constructor(configurationService, notificationService, accessibilityService, statusbarService, openerService) {
+    super();
+    this.configurationService = configurationService;
+    this.notificationService = notificationService;
+    this.accessibilityService = accessibilityService;
+    this.statusbarService = statusbarService;
+    this.openerService = openerService;
+    this._register(CommandsRegistry.registerCommand({ id: "showEditorScreenReaderNotification", handler: /* @__PURE__ */ __name(() => this.showScreenReaderNotification(), "handler") }));
+    this.updateScreenReaderModeElement(this.accessibilityService.isScreenReaderOptimized());
+    this.registerListeners();
+  }
+  static {
+    __name(this, "AccessibilityStatus");
+  }
+  static ID = "workbench.contrib.accessibilityStatus";
+  screenReaderNotification = null;
+  promptedScreenReader = false;
+  screenReaderModeElement = this._register(new MutableDisposable());
+  registerListeners() {
+    this._register(this.accessibilityService.onDidChangeScreenReaderOptimized(() => this.onScreenReaderModeChange()));
+    this._register(this.configurationService.onDidChangeConfiguration((c) => {
+      if (c.affectsConfiguration("editor.accessibilitySupport")) {
+        this.onScreenReaderModeChange();
+      }
+    }));
+  }
+  showScreenReaderNotification() {
+    this.screenReaderNotification = this.notificationService.prompt(
+      Severity.Info,
+      localize("screenReaderDetectedExplanation.question", "Screen reader usage detected. Do you want to enable {0} to optimize the editor for screen reader usage?", "editor.accessibilitySupport"),
+      [
+        {
+          label: localize("screenReaderDetectedExplanation.answerYes", "Yes"),
+          run: /* @__PURE__ */ __name(() => {
+            this.configurationService.updateValue("editor.accessibilitySupport", "on", ConfigurationTarget.USER);
+          }, "run")
+        },
+        {
+          label: localize("screenReaderDetectedExplanation.answerNo", "No"),
+          run: /* @__PURE__ */ __name(() => {
+            this.configurationService.updateValue("editor.accessibilitySupport", "off", ConfigurationTarget.USER);
+          }, "run")
+        },
+        {
+          label: localize("screenReaderDetectedExplanation.answerLearnMore", "Learn More"),
+          run: /* @__PURE__ */ __name(() => {
+            this.openerService.open("https://code.visualstudio.com/docs/editor/accessibility#_screen-readers");
+          }, "run")
+        }
+      ],
+      {
+        sticky: true,
+        priority: NotificationPriority.URGENT
+      }
+    );
+    Event.once(this.screenReaderNotification.onDidClose)(() => this.screenReaderNotification = null);
+  }
+  updateScreenReaderModeElement(visible) {
+    if (visible) {
+      if (!this.screenReaderModeElement.value) {
+        const text = localize("screenReaderDetected", "Screen Reader Optimized");
+        this.screenReaderModeElement.value = this.statusbarService.addEntry({
+          name: localize("status.editor.screenReaderMode", "Screen Reader Mode"),
+          text,
+          ariaLabel: text,
+          command: "showEditorScreenReaderNotification",
+          kind: "prominent",
+          showInAllWindows: true
+        }, "status.editor.screenReaderMode", StatusbarAlignment.RIGHT, 100.6);
+      }
+    } else {
+      this.screenReaderModeElement.clear();
+    }
+  }
+  onScreenReaderModeChange() {
+    const screenReaderDetected = this.accessibilityService.isScreenReaderOptimized();
+    if (screenReaderDetected) {
+      const screenReaderConfiguration = this.configurationService.getValue("editor.accessibilitySupport");
+      if (screenReaderConfiguration === "auto") {
+        if (!this.promptedScreenReader) {
+          this.promptedScreenReader = true;
+          setTimeout(() => this.showScreenReaderNotification(), 100);
+        }
+      }
+    }
+    if (this.screenReaderNotification) {
+      this.screenReaderNotification.close();
+    }
+    this.updateScreenReaderModeElement(this.accessibilityService.isScreenReaderOptimized());
+  }
+};
+AccessibilityStatus = __decorateClass([
+  __decorateParam(0, IConfigurationService),
+  __decorateParam(1, INotificationService),
+  __decorateParam(2, IAccessibilityService),
+  __decorateParam(3, IStatusbarService),
+  __decorateParam(4, IOpenerService)
+], AccessibilityStatus);
+export {
+  AccessibilityStatus
+};
+//# sourceMappingURL=accessibilityStatus.js.map

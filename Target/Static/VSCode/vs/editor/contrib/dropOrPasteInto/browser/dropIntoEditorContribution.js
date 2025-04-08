@@ -1,1 +1,40 @@
-import{KeyCode as e,KeyMod as c}from"../../../../base/common/keyCodes.js";import{KeybindingWeight as i}from"../../../../platform/keybinding/common/keybindingsRegistry.js";import"../../../browser/editorBrowser.js";import{EditorCommand as t,EditorContributionInstantiation as m,registerEditorCommand as d,registerEditorContribution as a}from"../../../browser/editorExtensions.js";import{registerEditorFeature as g}from"../../../common/editorFeatures.js";import{DefaultDropProvidersFeature as C}from"./defaultProviders.js";import{DropIntoEditorController as r,changeDropTypeCommandId as u,dropWidgetVisibleCtx as n}from"./dropIntoEditorController.js";a(r.ID,r,m.BeforeFirstInteraction),g(C),d(new class extends t{constructor(){super({id:u,precondition:n,kbOpts:{weight:i.EditorContrib,primary:c.CtrlCmd|e.Period}})}runEditorCommand(o,t,e){r.get(t)?.changeDropType()}}),d(new class extends t{constructor(){super({id:"editor.hideDropWidget",precondition:n,kbOpts:{weight:i.EditorContrib,primary:e.Escape}})}runEditorCommand(o,t,e){r.get(t)?.clearWidgets()}});
+import { KeyCode, KeyMod } from "../../../../base/common/keyCodes.js";
+import { KeybindingWeight } from "../../../../platform/keybinding/common/keybindingsRegistry.js";
+import { ICodeEditor } from "../../../browser/editorBrowser.js";
+import { EditorCommand, EditorContributionInstantiation, ServicesAccessor, registerEditorCommand, registerEditorContribution } from "../../../browser/editorExtensions.js";
+import { registerEditorFeature } from "../../../common/editorFeatures.js";
+import { DefaultDropProvidersFeature } from "./defaultProviders.js";
+import { DropIntoEditorController, changeDropTypeCommandId, dropWidgetVisibleCtx } from "./dropIntoEditorController.js";
+registerEditorContribution(DropIntoEditorController.ID, DropIntoEditorController, EditorContributionInstantiation.BeforeFirstInteraction);
+registerEditorFeature(DefaultDropProvidersFeature);
+registerEditorCommand(new class extends EditorCommand {
+  constructor() {
+    super({
+      id: changeDropTypeCommandId,
+      precondition: dropWidgetVisibleCtx,
+      kbOpts: {
+        weight: KeybindingWeight.EditorContrib,
+        primary: KeyMod.CtrlCmd | KeyCode.Period
+      }
+    });
+  }
+  runEditorCommand(_accessor, editor, _args) {
+    DropIntoEditorController.get(editor)?.changeDropType();
+  }
+}());
+registerEditorCommand(new class extends EditorCommand {
+  constructor() {
+    super({
+      id: "editor.hideDropWidget",
+      precondition: dropWidgetVisibleCtx,
+      kbOpts: {
+        weight: KeybindingWeight.EditorContrib,
+        primary: KeyCode.Escape
+      }
+    });
+  }
+  runEditorCommand(_accessor, editor, _args) {
+    DropIntoEditorController.get(editor)?.clearWidgets();
+  }
+}());
+//# sourceMappingURL=dropIntoEditorContribution.js.map

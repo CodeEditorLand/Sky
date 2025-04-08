@@ -1,3 +1,129 @@
-var x=Object.defineProperty;var y=Object.getOwnPropertyDescriptor;var h=(c,n,e,t)=>{for(var i=t>1?void 0:t?y(n,e):n,o=c.length-1,l;o>=0;o--)(l=c[o])&&(i=(t?l(n,e,i):l(i))||i);return t&&i&&x(n,e,i),i},d=(c,n)=>(e,t)=>n(e,t,c);import"../../../../base/browser/ui/list/listWidget.js";import{Event as m,Emitter as C}from"../../../../base/common/event.js";import{Disposable as E}from"../../../../base/common/lifecycle.js";import{observableFromEvent as I}from"../../../../base/common/observable.js";import*as p from"../../../../nls.js";import{IConfigurationService as L}from"../../../../platform/configuration/common/configuration.js";import{IKeybindingService as w}from"../../../../platform/keybinding/common/keybinding.js";import{AccessibilityVerbositySettingId as f}from"../../accessibility/browser/accessibilityConfiguration.js";import{AccessibilityCommandId as k}from"../../accessibility/common/accessibilityCommands.js";import"./viewModel/notebookViewModelImpl.js";import{CellKind as A,NotebookCellExecutionState as S}from"../common/notebookCommon.js";import{INotebookExecutionStateService as H,NotebookExecutionType as M}from"../common/notebookExecutionStateService.js";import{getAllOutputsText as N}from"./viewModel/cellOutputTextHelper.js";import{IAccessibilityService as V}from"../../../../platform/accessibility/common/accessibility.js";import{alert as R}from"../../../../base/browser/ui/aria/aria.js";let b=class extends E{constructor(e,t,i,o,l,g){super();this.viewModel=e;this.isReplHistory=t;this.notebookExecutionStateService=i;this.keybindingService=o;this.configurationService=l;this.accessibilityService=g;this._register(m.debounce(this.notebookExecutionStateService.onDidChangeExecution,(r,a)=>this.mergeEvents(r,a),100)(r=>{if(!r.length)return;const a=this.viewModel();if(a){for(const s of r){const u=a.getCellByHandle(s.cellHandle);u&&this._onDidAriaLabelChange.fire(u)}const v=r[r.length-1];if(this.shouldReadCellOutputs(v.state)){const s=a.getCellByHandle(v.cellHandle);if(s&&s.outputsViewModels.length){const u=N(a.notebookDocument,s,!0);R(u)}}}},this))}_onDidAriaLabelChange=new C;onDidAriaLabelChange=this._onDidAriaLabelChange.event;shouldReadCellOutputs(e){return e===void 0&&this.isReplHistory&&this.accessibilityService.isScreenReaderOptimized()&&this.configurationService.getValue("accessibility.replEditor.readLastExecutionOutput")}get verbositySettingId(){return this.isReplHistory?f.ReplEditor:f.Notebook}getAriaLabel(e){const t=m.filter(this.onDidAriaLabelChange,i=>i===e);return I(this,t,()=>{const i=this.viewModel();return i&&i.getCellIndex(e)>=0?this.getLabel(e):""})}createItemLabel(e,t){return this.isReplHistory?`cell${e}`:`${t===A.Markup?"markdown":"code"} cell${e}`}getLabel(e){const t=this.notebookExecutionStateService.getCellExecution(e.uri)?.state,i=t===S.Executing?", executing":t===S.Pending?", pending":"";return this.createItemLabel(i,e.cellKind)}get widgetAriaLabelName(){return this.isReplHistory?p.localize("replHistoryTreeAriaLabel","REPL Editor History"):p.localize("notebookTreeAriaLabel","Notebook")}getWidgetAriaLabel(){const e=this.keybindingService.lookupKeybinding(k.OpenAccessibilityHelp)?.getLabel();return this.configurationService.getValue(this.verbositySettingId)?e?p.localize("notebookTreeAriaLabelHelp",`{0}
-Use {1} for accessibility help`,this.widgetAriaLabelName,e):p.localize("notebookTreeAriaLabelHelpNoKb",`{0}
-Run the Open Accessibility Help command for more information`,this.widgetAriaLabelName):this.widgetAriaLabelName}mergeEvents(e,t){const i=this.viewModel(),o=e||[];if(i&&t.type===M.cell&&t.affectsNotebook(i.uri)){const l=o.findIndex(g=>g.cellHandle===t.cellHandle);l>=0&&o.splice(l,1),o.push({cellHandle:t.cellHandle,state:t.changed?.state})}return o}};b=h([d(2,H),d(3,w),d(4,L),d(5,V)],b);export{b as NotebookAccessibilityProvider};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { IListAccessibilityProvider } from "../../../../base/browser/ui/list/listWidget.js";
+import { Event, Emitter } from "../../../../base/common/event.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { observableFromEvent } from "../../../../base/common/observable.js";
+import * as nls from "../../../../nls.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { AccessibilityVerbositySettingId } from "../../accessibility/browser/accessibilityConfiguration.js";
+import { AccessibilityCommandId } from "../../accessibility/common/accessibilityCommands.js";
+import { CellViewModel, NotebookViewModel } from "./viewModel/notebookViewModelImpl.js";
+import { CellKind, NotebookCellExecutionState } from "../common/notebookCommon.js";
+import { ICellExecutionStateChangedEvent, IExecutionStateChangedEvent, INotebookExecutionStateService, NotebookExecutionType } from "../common/notebookExecutionStateService.js";
+import { getAllOutputsText } from "./viewModel/cellOutputTextHelper.js";
+import { IAccessibilityService } from "../../../../platform/accessibility/common/accessibility.js";
+import { alert } from "../../../../base/browser/ui/aria/aria.js";
+let NotebookAccessibilityProvider = class extends Disposable {
+  constructor(viewModel, isReplHistory, notebookExecutionStateService, keybindingService, configurationService, accessibilityService) {
+    super();
+    this.viewModel = viewModel;
+    this.isReplHistory = isReplHistory;
+    this.notebookExecutionStateService = notebookExecutionStateService;
+    this.keybindingService = keybindingService;
+    this.configurationService = configurationService;
+    this.accessibilityService = accessibilityService;
+    this._register(Event.debounce(
+      this.notebookExecutionStateService.onDidChangeExecution,
+      (last, e) => this.mergeEvents(last, e),
+      100
+    )((updates) => {
+      if (!updates.length) {
+        return;
+      }
+      const viewModel2 = this.viewModel();
+      if (viewModel2) {
+        for (const update of updates) {
+          const cellModel = viewModel2.getCellByHandle(update.cellHandle);
+          if (cellModel) {
+            this._onDidAriaLabelChange.fire(cellModel);
+          }
+        }
+        const lastUpdate = updates[updates.length - 1];
+        if (this.shouldReadCellOutputs(lastUpdate.state)) {
+          const cell = viewModel2.getCellByHandle(lastUpdate.cellHandle);
+          if (cell && cell.outputsViewModels.length) {
+            const text = getAllOutputsText(viewModel2.notebookDocument, cell, true);
+            alert(text);
+          }
+        }
+      }
+    }, this));
+  }
+  static {
+    __name(this, "NotebookAccessibilityProvider");
+  }
+  _onDidAriaLabelChange = new Emitter();
+  onDidAriaLabelChange = this._onDidAriaLabelChange.event;
+  shouldReadCellOutputs(state) {
+    return state === void 0 && this.isReplHistory && this.accessibilityService.isScreenReaderOptimized() && this.configurationService.getValue("accessibility.replEditor.readLastExecutionOutput");
+  }
+  get verbositySettingId() {
+    return this.isReplHistory ? AccessibilityVerbositySettingId.ReplEditor : AccessibilityVerbositySettingId.Notebook;
+  }
+  getAriaLabel(element) {
+    const event = Event.filter(this.onDidAriaLabelChange, (e) => e === element);
+    return observableFromEvent(this, event, () => {
+      const viewModel = this.viewModel();
+      if (!viewModel) {
+        return "";
+      }
+      const index = viewModel.getCellIndex(element);
+      if (index >= 0) {
+        return this.getLabel(element);
+      }
+      return "";
+    });
+  }
+  createItemLabel(executionLabel, cellKind) {
+    return this.isReplHistory ? `cell${executionLabel}` : `${cellKind === CellKind.Markup ? "markdown" : "code"} cell${executionLabel}`;
+  }
+  getLabel(element) {
+    const executionState = this.notebookExecutionStateService.getCellExecution(element.uri)?.state;
+    const executionLabel = executionState === NotebookCellExecutionState.Executing ? ", executing" : executionState === NotebookCellExecutionState.Pending ? ", pending" : "";
+    return this.createItemLabel(executionLabel, element.cellKind);
+  }
+  get widgetAriaLabelName() {
+    return this.isReplHistory ? nls.localize("replHistoryTreeAriaLabel", "REPL Editor History") : nls.localize("notebookTreeAriaLabel", "Notebook");
+  }
+  getWidgetAriaLabel() {
+    const keybinding = this.keybindingService.lookupKeybinding(AccessibilityCommandId.OpenAccessibilityHelp)?.getLabel();
+    if (this.configurationService.getValue(this.verbositySettingId)) {
+      return keybinding ? nls.localize("notebookTreeAriaLabelHelp", "{0}\nUse {1} for accessibility help", this.widgetAriaLabelName, keybinding) : nls.localize("notebookTreeAriaLabelHelpNoKb", "{0}\nRun the Open Accessibility Help command for more information", this.widgetAriaLabelName);
+    }
+    return this.widgetAriaLabelName;
+  }
+  mergeEvents(last, e) {
+    const viewModel = this.viewModel();
+    const result = last || [];
+    if (viewModel && e.type === NotebookExecutionType.cell && e.affectsNotebook(viewModel.uri)) {
+      const index = result.findIndex((update) => update.cellHandle === e.cellHandle);
+      if (index >= 0) {
+        result.splice(index, 1);
+      }
+      result.push({ cellHandle: e.cellHandle, state: e.changed?.state });
+    }
+    return result;
+  }
+};
+NotebookAccessibilityProvider = __decorateClass([
+  __decorateParam(2, INotebookExecutionStateService),
+  __decorateParam(3, IKeybindingService),
+  __decorateParam(4, IConfigurationService),
+  __decorateParam(5, IAccessibilityService)
+], NotebookAccessibilityProvider);
+export {
+  NotebookAccessibilityProvider
+};
+//# sourceMappingURL=notebookAccessibilityProvider.js.map

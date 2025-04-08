@@ -1,1 +1,41 @@
-import"../../../terminal/browser/terminal.js";import"./links.js";import{Emitter as r}from"../../../../../base/common/event.js";import"../../../../../base/common/lifecycle.js";class P{_linkProviders=new Set;get linkProviders(){return this._linkProviders}_onDidAddLinkProvider=new r;get onDidAddLinkProvider(){return this._onDidAddLinkProvider.event}_onDidRemoveLinkProvider=new r;get onDidRemoveLinkProvider(){return this._onDidRemoveLinkProvider.event}registerLinkProvider(e){const i=[];return this._linkProviders.add(e),this._onDidAddLinkProvider.fire(e),{dispose:()=>{for(const e of i)e.dispose();this._linkProviders.delete(e),this._onDidRemoveLinkProvider.fire(e)}}}}export{P as TerminalLinkProviderService};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { ITerminalExternalLinkProvider } from "../../../terminal/browser/terminal.js";
+import { ITerminalLinkProviderService } from "./links.js";
+import { Emitter, Event } from "../../../../../base/common/event.js";
+import { IDisposable } from "../../../../../base/common/lifecycle.js";
+class TerminalLinkProviderService {
+  static {
+    __name(this, "TerminalLinkProviderService");
+  }
+  _linkProviders = /* @__PURE__ */ new Set();
+  get linkProviders() {
+    return this._linkProviders;
+  }
+  _onDidAddLinkProvider = new Emitter();
+  get onDidAddLinkProvider() {
+    return this._onDidAddLinkProvider.event;
+  }
+  _onDidRemoveLinkProvider = new Emitter();
+  get onDidRemoveLinkProvider() {
+    return this._onDidRemoveLinkProvider.event;
+  }
+  registerLinkProvider(linkProvider) {
+    const disposables = [];
+    this._linkProviders.add(linkProvider);
+    this._onDidAddLinkProvider.fire(linkProvider);
+    return {
+      dispose: /* @__PURE__ */ __name(() => {
+        for (const disposable of disposables) {
+          disposable.dispose();
+        }
+        this._linkProviders.delete(linkProvider);
+        this._onDidRemoveLinkProvider.fire(linkProvider);
+      }, "dispose")
+    };
+  }
+}
+export {
+  TerminalLinkProviderService
+};
+//# sourceMappingURL=terminalLinkProviderService.js.map

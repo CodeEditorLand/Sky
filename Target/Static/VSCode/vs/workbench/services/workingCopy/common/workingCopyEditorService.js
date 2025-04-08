@@ -1,1 +1,63 @@
-var l=Object.defineProperty,I=Object.getOwnPropertyDescriptor,s=(e,r,t,o)=>{for(var i,s=o>1?void 0:o?I(r,t):r,n=e.length-1;n>=0;n--)(i=e[n])&&(s=(o?i(r,t,s):i(s))||s);return o&&s&&l(r,t,s),s},a=(e,r)=>(t,o)=>r(t,o,e);import{Emitter as f}from"../../../../base/common/event.js";import{createDecorator as g}from"../../../../platform/instantiation/common/instantiation.js";import{InstantiationType as y,registerSingleton as E}from"../../../../platform/instantiation/common/extensions.js";import{EditorsOrder as C}from"../../../common/editor.js";import"../../../common/editor/editorInput.js";import"./workingCopy.js";import{Disposable as m,toDisposable as c}from"../../../../base/common/lifecycle.js";import{IEditorService as k}from"../../editor/common/editorService.js";const u=g("workingCopyEditorService");let t=class extends m{constructor(e){super(),this.editorService=e}_onDidRegisterHandler=this._register(new f);onDidRegisterHandler=this._onDidRegisterHandler.event;handlers=new Set;registerHandler(e){return this.handlers.add(e),this._onDidRegisterHandler.fire(e),c((()=>this.handlers.delete(e)))}findEditor(e){for(const r of this.editorService.getEditors(C.MOST_RECENTLY_ACTIVE))if(this.isOpen(e,r.editor))return r}isOpen(e,r){for(const t of this.handlers)if(t.isOpen(e,r))return!0;return!1}};t=s([a(0,k)],t),E(u,t,y.Delayed);export{u as IWorkingCopyEditorService,t as WorkingCopyEditorService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { EditorsOrder, IEditorIdentifier } from "../../../common/editor.js";
+import { EditorInput } from "../../../common/editor/editorInput.js";
+import { IWorkingCopy, IWorkingCopyIdentifier } from "./workingCopy.js";
+import { Disposable, IDisposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { IEditorService } from "../../editor/common/editorService.js";
+const IWorkingCopyEditorService = createDecorator("workingCopyEditorService");
+let WorkingCopyEditorService = class extends Disposable {
+  constructor(editorService) {
+    super();
+    this.editorService = editorService;
+  }
+  static {
+    __name(this, "WorkingCopyEditorService");
+  }
+  _onDidRegisterHandler = this._register(new Emitter());
+  onDidRegisterHandler = this._onDidRegisterHandler.event;
+  handlers = /* @__PURE__ */ new Set();
+  registerHandler(handler) {
+    this.handlers.add(handler);
+    this._onDidRegisterHandler.fire(handler);
+    return toDisposable(() => this.handlers.delete(handler));
+  }
+  findEditor(workingCopy) {
+    for (const editorIdentifier of this.editorService.getEditors(EditorsOrder.MOST_RECENTLY_ACTIVE)) {
+      if (this.isOpen(workingCopy, editorIdentifier.editor)) {
+        return editorIdentifier;
+      }
+    }
+    return void 0;
+  }
+  isOpen(workingCopy, editor) {
+    for (const handler of this.handlers) {
+      if (handler.isOpen(workingCopy, editor)) {
+        return true;
+      }
+    }
+    return false;
+  }
+};
+WorkingCopyEditorService = __decorateClass([
+  __decorateParam(0, IEditorService)
+], WorkingCopyEditorService);
+registerSingleton(IWorkingCopyEditorService, WorkingCopyEditorService, InstantiationType.Delayed);
+export {
+  IWorkingCopyEditorService,
+  WorkingCopyEditorService
+};
+//# sourceMappingURL=workingCopyEditorService.js.map

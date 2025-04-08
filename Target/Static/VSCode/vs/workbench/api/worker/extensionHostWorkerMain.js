@@ -1,1 +1,4 @@
-import{create as e}from"./extensionHostWorker.js";const s=e();self.onmessage=e=>s.onmessage(e.data);
+import { create } from "./extensionHostWorker.js";
+const data = create();
+self.onmessage = (e) => data.onmessage(e.data);
+//# sourceMappingURL=extensionHostWorkerMain.js.map

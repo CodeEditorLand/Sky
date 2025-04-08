@@ -1,1 +1,26 @@
-import"../../../../base/common/actions.js";import"../../../../base/common/async.js";import"../../../../base/common/cancellation.js";import"../../../../base/common/event.js";import"../../../../base/common/lifecycle.js";import"../../../../base/common/uri.js";import"../../../../platform/contextkey/common/contextkey.js";import"../../../../platform/extensions/common/extensions.js";import{createDecorator as o}from"../../../../platform/instantiation/common/instantiation.js";import"./notebookCommon.js";const y=100;var n=(o=>(o[o.Disconnected=1]="Disconnected",o[o.Connected=2]="Connected",o[o.Initializing=3]="Initializing",o))(n||{});const x=o("INotebookKernelService"),S=o("INotebookKernelHistoryService");export{S as INotebookKernelHistoryService,x as INotebookKernelService,n as ProxyKernelState,y as variablePageSize};
+import { IAction } from "../../../../base/common/actions.js";
+import { AsyncIterableObject } from "../../../../base/common/async.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { Event } from "../../../../base/common/event.js";
+import { IDisposable } from "../../../../base/common/lifecycle.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { ExtensionIdentifier } from "../../../../platform/extensions/common/extensions.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { INotebookKernelSourceAction } from "./notebookCommon.js";
+const variablePageSize = 100;
+var ProxyKernelState = /* @__PURE__ */ ((ProxyKernelState2) => {
+  ProxyKernelState2[ProxyKernelState2["Disconnected"] = 1] = "Disconnected";
+  ProxyKernelState2[ProxyKernelState2["Connected"] = 2] = "Connected";
+  ProxyKernelState2[ProxyKernelState2["Initializing"] = 3] = "Initializing";
+  return ProxyKernelState2;
+})(ProxyKernelState || {});
+const INotebookKernelService = createDecorator("INotebookKernelService");
+const INotebookKernelHistoryService = createDecorator("INotebookKernelHistoryService");
+export {
+  INotebookKernelHistoryService,
+  INotebookKernelService,
+  ProxyKernelState,
+  variablePageSize
+};
+//# sourceMappingURL=notebookKernelService.js.map

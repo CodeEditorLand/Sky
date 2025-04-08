@@ -1,1 +1,42 @@
-var I=Object.defineProperty,c=Object.getOwnPropertyDescriptor,w=(e,t,s,r)=>{for(var i,a=r>1?void 0:r?c(t,s):t,n=e.length-1;n>=0;n--)(i=e[n])&&(a=(r?i(t,s,a):i(a))||a);return r&&a&&I(t,s,a),a},p=(e,t)=>(s,r)=>t(s,r,e);import{Disposable as d}from"../../../base/common/lifecycle.js";import{IInstantiationService as h}from"../../../platform/instantiation/common/instantiation.js";import{MainThreadCustomEditors as C}from"./mainThreadCustomEditors.js";import{MainThreadWebviewPanels as f}from"./mainThreadWebviewPanels.js";import{MainThreadWebviews as b}from"./mainThreadWebviews.js";import{MainThreadWebviewsViews as l}from"./mainThreadWebviewViews.js";import*as m from"../common/extHost.protocol.js";import{extHostCustomer as u}from"../../services/extensions/common/extHostCustomers.js";let n=class extends d{constructor(e,t){super();const s=this._register(t.createInstance(b,e));e.set(m.MainContext.MainThreadWebviews,s);const r=this._register(t.createInstance(f,e,s));e.set(m.MainContext.MainThreadWebviewPanels,r);const i=this._register(t.createInstance(C,e,s,r));e.set(m.MainContext.MainThreadCustomEditors,i);const a=this._register(t.createInstance(l,e,s));e.set(m.MainContext.MainThreadWebviewViews,a)}};n=w([u,p(1,h)],n);export{n as MainThreadWebviewManager};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { IInstantiationService } from "../../../platform/instantiation/common/instantiation.js";
+import { MainThreadCustomEditors } from "./mainThreadCustomEditors.js";
+import { MainThreadWebviewPanels } from "./mainThreadWebviewPanels.js";
+import { MainThreadWebviews } from "./mainThreadWebviews.js";
+import { MainThreadWebviewsViews } from "./mainThreadWebviewViews.js";
+import * as extHostProtocol from "../common/extHost.protocol.js";
+import { extHostCustomer, IExtHostContext } from "../../services/extensions/common/extHostCustomers.js";
+let MainThreadWebviewManager = class extends Disposable {
+  constructor(context, instantiationService) {
+    super();
+    const webviews = this._register(instantiationService.createInstance(MainThreadWebviews, context));
+    context.set(extHostProtocol.MainContext.MainThreadWebviews, webviews);
+    const webviewPanels = this._register(instantiationService.createInstance(MainThreadWebviewPanels, context, webviews));
+    context.set(extHostProtocol.MainContext.MainThreadWebviewPanels, webviewPanels);
+    const customEditors = this._register(instantiationService.createInstance(MainThreadCustomEditors, context, webviews, webviewPanels));
+    context.set(extHostProtocol.MainContext.MainThreadCustomEditors, customEditors);
+    const webviewViews = this._register(instantiationService.createInstance(MainThreadWebviewsViews, context, webviews));
+    context.set(extHostProtocol.MainContext.MainThreadWebviewViews, webviewViews);
+  }
+};
+__name(MainThreadWebviewManager, "MainThreadWebviewManager");
+MainThreadWebviewManager = __decorateClass([
+  extHostCustomer,
+  __decorateParam(1, IInstantiationService)
+], MainThreadWebviewManager);
+export {
+  MainThreadWebviewManager
+};
+//# sourceMappingURL=mainThreadWebviewManager.js.map

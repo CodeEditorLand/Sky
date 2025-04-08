@@ -1,3 +1,1314 @@
-var _e=Object.defineProperty;var Te=Object.getOwnPropertyDescriptor;var x=(s,i,e,t)=>{for(var n=t>1?void 0:t?Te(i,e):i,o=s.length-1,r;o>=0;o--)(r=s[o])&&(n=(t?r(i,e,n):r(n))||n);return t&&n&&_e(i,e,n),n},m=(s,i)=>(e,t)=>i(e,t,s);import"./media/editorstatus.css";import{localize as a,localize2 as ie}from"../../../../nls.js";import{getWindowById as xe,runAtThisOrScheduleAtNextAnimationFrame as Be}from"../../../../base/browser/dom.js";import{format as K,compare as Ue,splitLines as Ne}from"../../../../base/common/strings.js";import{extname as pe,basename as he,isEqual as me}from"../../../../base/common/resources.js";import{areFunctions as We,assertIsDefined as R}from"../../../../base/common/types.js";import{URI as He}from"../../../../base/common/uri.js";import{Action as Ge}from"../../../../base/common/actions.js";import{Language as fe}from"../../../../base/common/platform.js";import{UntitledTextEditorInput as oe}from"../../../services/untitled/common/untitledTextEditorInput.js";import{EditorResourceAccessor as $,SideBySideEditor as j}from"../../../common/editor.js";import"../../../common/editor/editorInput.js";import{Disposable as N,MutableDisposable as y,DisposableStore as Se}from"../../../../base/common/lifecycle.js";import"../../../../editor/common/editorCommon.js";import{EndOfLineSequence as Ee}from"../../../../editor/common/model.js";import{TrimTrailingWhitespaceAction as Qe}from"../../../../editor/contrib/linesOperations/browser/linesOperations.js";import{IndentUsingSpaces as Ve,IndentUsingTabs as ze,ChangeTabDisplaySize as qe,DetectIndentation as Ke,IndentationToSpacesAction as $e,IndentationToTabsAction as je}from"../../../../editor/contrib/indentation/browser/indentation.js";import{BaseBinaryResourceEditor as Y}from"./binaryEditor.js";import{BinaryResourceDiffEditor as ae}from"./binaryDiffEditor.js";import{IEditorService as J}from"../../../services/editor/common/editorService.js";import{IFileService as Ye,FILES_ASSOCIATIONS_CONFIG as ve}from"../../../../platform/files/common/files.js";import{IInstantiationService as Ie}from"../../../../platform/instantiation/common/instantiation.js";import{ILanguageService as be}from"../../../../editor/common/languages/language.js";import{Range as re}from"../../../../editor/common/core/range.js";import{Selection as Je}from"../../../../editor/common/core/selection.js";import{ICommandService as Xe,CommandsRegistry as Ze}from"../../../../platform/commands/common/commands.js";import{IExtensionGalleryService as et}from"../../../../platform/extensionManagement/common/extensionManagement.js";import{EncodingMode as ye,ITextFileService as se}from"../../../services/textfile/common/textfiles.js";import{SUPPORTED_ENCODINGS as L}from"../../../services/textfile/common/encoding.js";import{EditorOption as de}from"../../../../editor/common/config/editorOptions.js";import{ITextResourceConfigurationService as tt}from"../../../../editor/common/services/textResourceConfiguration.js";import{ConfigurationTarget as ce,IConfigurationService as X}from"../../../../platform/configuration/common/configuration.js";import{deepClone as nt}from"../../../../base/common/objects.js";import{getCodeEditor as k}from"../../../../editor/browser/editorBrowser.js";import{Schemas as W}from"../../../../base/common/network.js";import{IPreferencesService as it}from"../../../services/preferences/common/preferences.js";import{IQuickInputService as Z}from"../../../../platform/quickinput/common/quickInput.js";import{getIconClassesForLanguageId as Me}from"../../../../editor/common/services/getIconClasses.js";import{Promises as ot,timeout as at}from"../../../../base/common/async.js";import{Emitter as Ce,Event as B}from"../../../../base/common/event.js";import"../../../common/contributions.js";import{IStatusbarService as Le,StatusbarAlignment as C}from"../../../services/statusbar/browser/statusbar.js";import{IMarkerService as rt,MarkerSeverity as P,IMarkerData as ke}from"../../../../platform/markers/common/markers.js";import{ITelemetryService as st}from"../../../../platform/telemetry/common/telemetry.js";import{SideBySideEditorInput as De}from"../../../common/editor/sideBySideEditorInput.js";import{AutomaticLanguageDetectionLikelyWrongId as dt,ILanguageDetectionService as ct}from"../../../services/languageDetection/common/languageDetectionWorkerService.js";import{ContextKeyExpr as ut}from"../../../../platform/contextkey/common/contextkey.js";import{Action2 as ue}from"../../../../platform/actions/common/actions.js";import"../../../../editor/browser/editorExtensions.js";import{KeybindingWeight as lt}from"../../../../platform/keybinding/common/keybindingsRegistry.js";import{KeyChord as gt,KeyCode as Fe,KeyMod as pt}from"../../../../base/common/keyCodes.js";import{TabFocus as le}from"../../../../editor/browser/config/tabFocus.js";import{IEditorGroupsService as ht}from"../../../services/editor/common/editorGroupsService.js";import{InputMode as we}from"../../../../editor/common/inputMode.js";class mt{constructor(i,e){this.primary=i;this.secondary=e}getEncoding(){return this.primary.getEncoding()}async setEncoding(i,e){await ot.settled([this.primary,this.secondary].map(t=>t.setEncoding(i,e)))}}class ft{constructor(i,e){this.primary=i;this.secondary=e}setLanguageId(i,e){[this.primary,this.secondary].forEach(t=>t.setLanguageId(i,e))}}function H(s){if(s instanceof oe)return s;if(s instanceof De){const e=H(s.primary),t=H(s.secondary);return e&&t?new mt(e,t):e}const i=s;return We(i.setEncoding,i.getEncoding)?i:null}function ee(s){if(s instanceof oe)return s;if(s instanceof De){const e=ee(s.primary),t=ee(s.secondary);return e&&t?new ft(e,t):e}const i=s;return typeof i.setLanguageId=="function"?i:null}class St{indentation=!1;selectionStatus=!1;languageId=!1;languageStatus=!1;encoding=!1;EOL=!1;tabFocusMode=!1;inputMode=!1;columnSelectionMode=!1;metadata=!1;combine(i){this.indentation=this.indentation||i.indentation,this.selectionStatus=this.selectionStatus||i.selectionStatus,this.languageId=this.languageId||i.languageId,this.languageStatus=this.languageStatus||i.languageStatus,this.encoding=this.encoding||i.encoding,this.EOL=this.EOL||i.EOL,this.tabFocusMode=this.tabFocusMode||i.tabFocusMode,this.inputMode=this.inputMode||i.inputMode,this.columnSelectionMode=this.columnSelectionMode||i.columnSelectionMode,this.metadata=this.metadata||i.metadata}hasChanges(){return this.indentation||this.selectionStatus||this.languageId||this.languageStatus||this.encoding||this.EOL||this.tabFocusMode||this.inputMode||this.columnSelectionMode||this.metadata}}class Et{_selectionStatus;get selectionStatus(){return this._selectionStatus}_languageId;get languageId(){return this._languageId}_encoding;get encoding(){return this._encoding}_EOL;get EOL(){return this._EOL}_indentation;get indentation(){return this._indentation}_tabFocusMode;get tabFocusMode(){return this._tabFocusMode}_inputMode;get inputMode(){return this._inputMode}_columnSelectionMode;get columnSelectionMode(){return this._columnSelectionMode}_metadata;get metadata(){return this._metadata}update(i){const e=new St;switch(i.type){case"selectionStatus":this._selectionStatus!==i.selectionStatus&&(this._selectionStatus=i.selectionStatus,e.selectionStatus=!0);break;case"indentation":this._indentation!==i.indentation&&(this._indentation=i.indentation,e.indentation=!0);break;case"languageId":this._languageId!==i.languageId&&(this._languageId=i.languageId,e.languageId=!0);break;case"encoding":this._encoding!==i.encoding&&(this._encoding=i.encoding,e.encoding=!0);break;case"EOL":this._EOL!==i.EOL&&(this._EOL=i.EOL,e.EOL=!0);break;case"tabFocusMode":this._tabFocusMode!==i.tabFocusMode&&(this._tabFocusMode=i.tabFocusMode,e.tabFocusMode=!0);break;case"inputMode":this._inputMode!==i.inputMode&&(this._inputMode=i.inputMode,e.inputMode=!0);break;case"columnSelectionMode":this._columnSelectionMode!==i.columnSelectionMode&&(this._columnSelectionMode=i.columnSelectionMode,e.columnSelectionMode=!0);break;case"metadata":this._metadata!==i.metadata&&(this._metadata=i.metadata,e.metadata=!0);break}return e}}let G=class extends N{constructor(e){super();this.configurationService=e;this.registerListeners();const t=e.getValue("editor.tabFocusMode")===!0;le.setTabFocusMode(t)}_onDidChange=this._register(new Ce);onDidChange=this._onDidChange.event;registerListeners(){this._register(le.onDidChangeTabFocus(e=>this._onDidChange.fire(e))),this._register(this.configurationService.onDidChangeConfiguration(e=>{if(e.affectsConfiguration("editor.tabFocusMode")){const t=this.configurationService.getValue("editor.tabFocusMode")===!0;le.setTabFocusMode(t),this._onDidChange.fire(t)}}))}};G=x([m(0,X)],G);class vt extends N{_onDidChange=this._register(new Ce);onDidChange=this._onDidChange.event;constructor(){super(),we.setInputMode("insert"),this._register(we.onDidChangeInputMode(i=>this._onDidChange.fire(i)))}}const It=a("singleSelectionRange","Ln {0}, Col {1} ({2} selected)"),bt=a("singleSelection","Ln {0}, Col {1}"),yt=a("multiSelectionRange","{0} selections ({1} characters selected)"),Mt=a("multiSelection","{0} selections"),Ae=a("endOfLineLineFeed","LF"),Oe=a("endOfLineCarriageReturnLineFeed","CRLF");let Q=class extends N{constructor(e,t,n,o,r,u,h,f){super();this.targetWindowId=e;this.editorService=t;this.quickInputService=n;this.languageService=o;this.textFileService=r;this.statusbarService=u;this.configurationService=f;this.currentMarkerStatus=this._register(h.createInstance(V)),this.tabFocusMode=this._register(h.createInstance(G)),this.inputMode=this._register(h.createInstance(vt)),this.registerCommands(),this.registerListeners()}tabFocusModeElement=this._register(new y);inputModeElement=this._register(new y);columnSelectionModeElement=this._register(new y);indentationElement=this._register(new y);selectionElement=this._register(new y);encodingElement=this._register(new y);eolElement=this._register(new y);languageElement=this._register(new y);metadataElement=this._register(new y);currentMarkerStatus;tabFocusMode;inputMode;state=new Et;toRender=void 0;activeEditorListeners=this._register(new Se);delayedRender=this._register(new y);registerListeners(){this._register(this.editorService.onDidActiveEditorChange(()=>this.updateStatusBar())),this._register(this.textFileService.untitled.onDidChangeEncoding(e=>this.onResourceEncodingChange(e.resource))),this._register(this.textFileService.files.onDidChangeEncoding(e=>this.onResourceEncodingChange(e.resource))),this._register(B.runAndSubscribe(this.tabFocusMode.onDidChange,e=>{e!==void 0?this.onTabFocusModeChange(e):this.onTabFocusModeChange(this.configurationService.getValue("editor.tabFocusMode"))})),this._register(B.runAndSubscribe(this.inputMode.onDidChange,e=>this.onInputModeChange(e??"insert")))}registerCommands(){this._register(Ze.registerCommand({id:`changeEditorIndentation${this.targetWindowId}`,handler:()=>this.showIndentationPicker()}))}async showIndentationPicker(){const e=k(this.editorService.activeTextEditorControl);if(!e)return this.quickInputService.pick([{label:a("noEditor","No text editor active at this time")}]);if(this.editorService.activeEditor?.isReadonly())return this.quickInputService.pick([{label:a("noWritableCodeEditor","The active code editor is read-only.")}]);const t=[R(e.getAction(Ve.ID)),R(e.getAction(ze.ID)),R(e.getAction(qe.ID)),R(e.getAction(Ke.ID)),R(e.getAction($e.ID)),R(e.getAction(je.ID)),R(e.getAction(Qe.ID))].map(o=>({id:o.id,label:o.label,detail:fe.isDefaultVariant()||o.label===o.alias?void 0:o.alias,run:()=>{e.focus(),o.run()}}));return t.splice(3,0,{type:"separator",label:a("indentConvert","convert file")}),t.unshift({type:"separator",label:a("indentView","change view")}),(await this.quickInputService.pick(t,{placeHolder:a("pickAction","Select Action"),matchOnDetail:!0}))?.run()}updateTabFocusModeElement(e){if(e){if(!this.tabFocusModeElement.value){const t=a("tabFocusModeEnabled","Tab Moves Focus");this.tabFocusModeElement.value=this.statusbarService.addEntry({name:a("status.editor.tabFocusMode","Accessibility Mode"),text:t,ariaLabel:t,tooltip:a("disableTabMode","Disable Accessibility Mode"),command:"editor.action.toggleTabFocusMode",kind:"prominent"},"status.editor.tabFocusMode",C.RIGHT,100.7)}}else this.tabFocusModeElement.clear()}updateInputModeElement(e){if(e==="overtype"){if(!this.inputModeElement.value){const t=a("inputModeOvertype","OVR"),n=a("status.editor.enableInsertMode","Enable Insert Mode");this.inputModeElement.value=this.statusbarService.addEntry({name:n,text:t,ariaLabel:t,tooltip:n,command:"editor.action.toggleOvertypeInsertMode",kind:"prominent"},"status.editor.inputMode",C.RIGHT,100.6)}}else this.inputModeElement.clear()}updateColumnSelectionModeElement(e){if(e){if(!this.columnSelectionModeElement.value){const t=a("columnSelectionModeEnabled","Column Selection");this.columnSelectionModeElement.value=this.statusbarService.addEntry({name:a("status.editor.columnSelectionMode","Column Selection Mode"),text:t,ariaLabel:t,tooltip:a("disableColumnSelectionMode","Disable Column Selection Mode"),command:"editor.action.toggleColumnSelection",kind:"prominent"},"status.editor.columnSelectionMode",C.RIGHT,100.8)}}else this.columnSelectionModeElement.clear()}updateSelectionElement(e){if(!e){this.selectionElement.clear();return}if(k(this.editorService.activeTextEditorControl)?.getModel()?.uri?.scheme===W.vscodeNotebookCell){this.selectionElement.clear();return}const n={name:a("status.editor.selection","Editor Selection"),text:e,ariaLabel:e,tooltip:a("gotoLine","Go to Line/Column"),command:"workbench.action.gotoLine"};this.updateElement(this.selectionElement,n,"status.editor.selection",C.RIGHT,100.5)}updateIndentationElement(e){if(!e){this.indentationElement.clear();return}if(k(this.editorService.activeTextEditorControl)?.getModel()?.uri?.scheme===W.vscodeNotebookCell){this.indentationElement.clear();return}const n={name:a("status.editor.indentation","Editor Indentation"),text:e,ariaLabel:e,tooltip:a("selectIndentation","Select Indentation"),command:`changeEditorIndentation${this.targetWindowId}`};this.updateElement(this.indentationElement,n,"status.editor.indentation",C.RIGHT,100.4)}updateEncodingElement(e){if(!e){this.encodingElement.clear();return}const t={name:a("status.editor.encoding","Editor Encoding"),text:e,ariaLabel:e,tooltip:a("selectEncoding","Select Encoding"),command:"workbench.action.editor.changeEncoding"};this.updateElement(this.encodingElement,t,"status.editor.encoding",C.RIGHT,100.3)}updateEOLElement(e){if(!e){this.eolElement.clear();return}const t={name:a("status.editor.eol","Editor End of Line"),text:e,ariaLabel:e,tooltip:a("selectEOL","Select End of Line Sequence"),command:"workbench.action.editor.changeEOL"};this.updateElement(this.eolElement,t,"status.editor.eol",C.RIGHT,100.2)}updateLanguageIdElement(e){if(!e){this.languageElement.clear();return}const t={name:a("status.editor.mode","Editor Language"),text:e,ariaLabel:e,tooltip:a("selectLanguageMode","Select Language Mode"),command:"workbench.action.editor.changeLanguageMode"};this.updateElement(this.languageElement,t,"status.editor.mode",C.RIGHT,100.1)}updateMetadataElement(e){if(!e){this.metadataElement.clear();return}const t={name:a("status.editor.info","File Information"),text:e,ariaLabel:e,tooltip:a("fileInfo","File Information")};this.updateElement(this.metadataElement,t,"status.editor.info",C.RIGHT,100)}updateElement(e,t,n,o,r){e.value?e.value.update(t):e.value=this.statusbarService.addEntry(t,n,o,r)}updateState(e){const t=this.state.update(e);t.hasChanges()&&(this.toRender?this.toRender.combine(t):(this.toRender=t,this.delayedRender.value=Be(xe(this.targetWindowId,!0).window,()=>{this.delayedRender.clear();const n=this.toRender;this.toRender=void 0,n&&this.doRenderNow()})))}doRenderNow(){this.updateTabFocusModeElement(!!this.state.tabFocusMode),this.updateInputModeElement(this.state.inputMode),this.updateColumnSelectionModeElement(!!this.state.columnSelectionMode),this.updateIndentationElement(this.state.indentation),this.updateSelectionElement(this.state.selectionStatus),this.updateEncodingElement(this.state.encoding),this.updateEOLElement(this.state.EOL?this.state.EOL===`\r
-`?Oe:Ae:void 0),this.updateLanguageIdElement(this.state.languageId),this.updateMetadataElement(this.state.metadata)}getSelectionLabel(e){if(!(!e||!e.selections)){if(e.selections.length===1)return e.charactersSelected?K(It,e.selections[0].positionLineNumber,e.selections[0].positionColumn,e.charactersSelected):K(bt,e.selections[0].positionLineNumber,e.selections[0].positionColumn);if(e.charactersSelected)return K(yt,e.selections.length,e.charactersSelected);if(e.selections.length>0)return K(Mt,e.selections.length)}}updateStatusBar(){const e=this.editorService.activeEditor,t=this.editorService.activeEditorPane,n=t?k(t.getControl())??void 0:void 0;if(this.onColumnSelectionModeChange(n),this.onSelectionChange(n),this.onLanguageChange(n,e),this.onEOLChange(n),this.onEncodingChange(t,n),this.onIndentationChange(n),this.onMetadataChange(t),this.currentMarkerStatus.update(n),this.activeEditorListeners.clear(),t&&this.activeEditorListeners.add(t.onDidChangeControl(()=>{this.updateStatusBar()})),n)this.activeEditorListeners.add(n.onDidChangeConfiguration(o=>{o.hasChanged(de.columnSelection)&&this.onColumnSelectionModeChange(n)})),this.activeEditorListeners.add(B.defer(n.onDidChangeCursorPosition)(()=>{this.onSelectionChange(n),this.currentMarkerStatus.update(n)})),this.activeEditorListeners.add(n.onDidChangeModelLanguage(()=>{this.onLanguageChange(n,e)})),this.activeEditorListeners.add(B.accumulate(n.onDidChangeModelContent)(o=>{this.onEOLChange(n),this.currentMarkerStatus.update(n);const r=n.getSelections();if(r){for(const u of o)for(const h of u.changes)if(r.some(f=>re.areIntersecting(f,h.range))){this.onSelectionChange(n);break}}})),this.activeEditorListeners.add(n.onDidChangeModelOptions(()=>{this.onIndentationChange(n)}));else if(t instanceof Y||t instanceof ae){const o=[];if(t instanceof ae){const r=t.getPrimaryEditorPane();r instanceof Y&&o.push(r);const u=t.getSecondaryEditorPane();u instanceof Y&&o.push(u)}else o.push(t);for(const r of o)this.activeEditorListeners.add(r.onDidChangeMetadata(()=>{this.onMetadataChange(t)})),this.activeEditorListeners.add(r.onDidOpenInPlace(()=>{this.updateStatusBar()}))}}onLanguageChange(e,t){const n={type:"languageId",languageId:void 0};if(e&&t&&ee(t)){const o=e.getModel();if(o){const r=o.getLanguageId();n.languageId=this.languageService.getLanguageName(r)??void 0}}this.updateState(n)}onIndentationChange(e){const t={type:"indentation",indentation:void 0};if(e){const n=e.getModel();if(n){const o=n.getOptions();t.indentation=o.insertSpaces?o.tabSize===o.indentSize?a("spacesSize","Spaces: {0}",o.indentSize):a("spacesAndTabsSize","Spaces: {0} (Tab Size: {1})",o.indentSize,o.tabSize):a({key:"tabSize",comment:["Tab corresponds to the tab key"]},"Tab Size: {0}",o.tabSize)}}this.updateState(t)}onMetadataChange(e){const t={type:"metadata",metadata:void 0};(e instanceof Y||e instanceof ae)&&(t.metadata=e.getMetadata()),this.updateState(t)}onColumnSelectionModeChange(e){const t={type:"columnSelectionMode",columnSelectionMode:!1};e?.getOption(de.columnSelection)&&(t.columnSelectionMode=!0),this.updateState(t)}onSelectionChange(e){const t=Object.create(null);if(e){t.selections=e.getSelections()||[],t.charactersSelected=0;const n=e.getModel();if(n)for(const o of t.selections)typeof t.charactersSelected!="number"&&(t.charactersSelected=0),t.charactersSelected+=n.getCharacterCountInRange(o);if(t.selections.length===1){const o=e.getPosition(),r=new Je(t.selections[0].selectionStartLineNumber,t.selections[0].selectionStartColumn,t.selections[0].positionLineNumber,o?e.getStatusbarColumn(o):t.selections[0].positionColumn);t.selections[0]=r}}this.updateState({type:"selectionStatus",selectionStatus:this.getSelectionLabel(t)})}onEOLChange(e){const t={type:"EOL",EOL:void 0};if(e&&!e.getOption(de.readOnly)){const n=e.getModel();n&&(t.EOL=n.getEOL())}this.updateState(t)}onEncodingChange(e,t){if(e&&!this.isActiveEditor(e))return;const n={type:"encoding",encoding:void 0};if(e&&t?.hasModel()){const o=e.input?H(e.input):null;if(o){const r=o.getEncoding(),u=typeof r=="string"?L[r]:void 0;u?n.encoding=u.labelShort:n.encoding=r}}this.updateState(n)}onResourceEncodingChange(e){const t=this.editorService.activeEditorPane;if(t){const n=$.getCanonicalUri(t.input,{supportSideBySide:j.PRIMARY});if(n&&me(n,e)){const o=k(t.getControl())??void 0;return this.onEncodingChange(t,o)}}}onTabFocusModeChange(e){const t={type:"tabFocusMode",tabFocusMode:e};this.updateState(t)}onInputModeChange(e){const t={type:"inputMode",inputMode:e};this.updateState(t)}isActiveEditor(e){const t=this.editorService.activeEditorPane;return!!t&&t===e}};Q=x([m(1,J),m(2,Z),m(3,be),m(4,se),m(5,Le),m(6,Ie),m(7,X)],Q);let te=class extends N{constructor(e){super();this.editorGroupService=e;for(const t of e.parts)this.createEditorStatus(t);this._register(e.onDidCreateAuxiliaryEditorPart(t=>this.createEditorStatus(t)))}static ID="workbench.contrib.editorStatus";createEditorStatus(e){const t=new Se;B.once(e.onWillDispose)(()=>t.dispose());const n=this.editorGroupService.getScopedInstantiationService(e);t.add(n.createInstance(Q,e.windowId))}};te=x([m(0,ht)],te);let V=class extends N{constructor(e,t,n){super();this.statusbarService=e;this.markerService=t;this.configurationService=n;this.statusBarEntryAccessor=this._register(new y),this._register(t.onMarkerChanged(o=>this.onMarkerChanged(o))),this._register(B.filter(n.onDidChangeConfiguration,o=>o.affectsConfiguration("problems.showCurrentInStatus"))(()=>this.updateStatus()))}statusBarEntryAccessor;editor=void 0;markers=[];currentMarker=null;update(e){this.editor=e,this.updateMarkers(),this.updateStatus()}updateStatus(){const e=this.currentMarker;if(this.currentMarker=this.getMarker(),this.hasToUpdateStatus(e,this.currentMarker))if(this.currentMarker){const t=Ne(this.currentMarker.message)[0],n=`${this.getType(this.currentMarker)} ${t}`;this.statusBarEntryAccessor.value?this.statusBarEntryAccessor.value.update({name:a("currentProblem","Current Problem"),text:n,ariaLabel:n}):this.statusBarEntryAccessor.value=this.statusbarService.addEntry({name:a("currentProblem","Current Problem"),text:n,ariaLabel:n},"statusbar.currentProblem",C.LEFT)}else this.statusBarEntryAccessor.clear()}hasToUpdateStatus(e,t){return!t||!e?!0:ke.makeKey(e)!==ke.makeKey(t)}getType(e){switch(e.severity){case P.Error:return"$(error)";case P.Warning:return"$(warning)";case P.Info:return"$(info)"}return""}getMarker(){if(!this.configurationService.getValue("problems.showCurrentInStatus")||!this.editor||!this.editor.getModel())return null;const t=this.editor.getPosition();return t&&this.markers.find(n=>re.containsPosition(n,t))||null}onMarkerChanged(e){if(!this.editor)return;const t=this.editor.getModel();t&&(t&&!e.some(n=>me(t.uri,n))||this.updateMarkers())}updateMarkers(){if(!this.editor)return;const e=this.editor.getModel();e&&(e?(this.markers=this.markerService.read({resource:e.uri,severities:P.Error|P.Warning|P.Info}),this.markers.sort(this.compareMarker)):this.markers=[],this.updateStatus())}compareMarker(e,t){let n=Ue(e.resource.toString(),t.resource.toString());return n===0&&(n=P.compare(e.severity,t.severity)),n===0&&(n=re.compareRangesUsingStarts(e,t)),n}};V=x([m(0,Le),m(1,rt),m(2,X)],V);let _=class extends Ge{constructor(e,t,n){super(_.ID,a("showLanguageExtensions","Search Marketplace Extensions for '{0}'...",e));this.fileExtension=e;this.commandService=t;this.enabled=n.isEnabled()}static ID="workbench.action.showLanguageExtensions";async run(){await this.commandService.executeCommand("workbench.extensions.action.showExtensionsForLanguage",this.fileExtension)}};_=x([m(1,Xe),m(2,et)],_);class ge extends ue{static ID="workbench.action.editor.changeLanguageMode";constructor(){super({id:ge.ID,title:ie("changeMode","Change Language Mode"),f1:!0,keybinding:{weight:lt.WorkbenchContrib,primary:gt(pt.CtrlCmd|Fe.KeyK,Fe.KeyM)},precondition:ut.not("notebookEditorFocused"),metadata:{description:a("changeLanguageMode.description","Change the language mode of the active text editor."),args:[{name:a("changeLanguageMode.arg.name","The name of the language mode to change to."),constraint:i=>typeof i=="string"}]}})}async run(i,e){const t=i.get(Z),n=i.get(J),o=i.get(be),r=i.get(ct),u=i.get(se),h=i.get(it),f=i.get(Ie),E=i.get(X),l=i.get(st),S=k(n.activeTextEditorControl);if(!S){await t.pick([{label:a("noEditor","No text editor active at this time")}]);return}const g=S.getModel(),d=$.getOriginalUri(n.activeEditor,{supportSideBySide:j.PRIMARY});let D,v;g&&(v=g.getLanguageId(),D=o.getLanguageName(v)??void 0);let T=!!d;d?.scheme===W.untitled&&!u.untitled.get(d)?.hasAssociatedFilePath&&(T=!1);const I=o.getSortedRegisteredLanguageNames().map(({languageName:w,languageId:M})=>{const q=o.getExtensions(M).join(" ");let b;return D===w?b=a("languageDescription","({0}) - Configured Language",M):b=a("languageDescriptionConfigured","({0})",M),{label:w,meta:q,iconClasses:Me(M),description:b}});I.unshift({type:"separator",label:a("languagesPicks","languages (identifier)")});let U,A,F;if(T&&d){const w=pe(d)||he(d);F=f.createInstance(_,w),F.enabled&&I.unshift(F),A={label:a("configureModeSettings","Configure '{0}' language based settings...",D)},I.unshift(A),U={label:a("configureAssociationsExt","Configure File Association for '{0}'...",w)},I.unshift(U)}const c={label:a("autoDetect","Auto Detect")};I.unshift(c);const p=typeof e=="string"?{label:e}:await t.pick(I,{placeHolder:a("pickLanguage","Select Language Mode"),matchOnDescription:!0});if(!p)return;if(p===F){F.run();return}if(p===U){d&&this.configureFileAssociation(d,o,t,E);return}if(p===A){h.openUserSettings({jsonEditor:!0,revealSetting:{key:`[${v??null}]`,edit:!0}});return}const ne=n.activeEditor;if(ne){const w=ee(ne);if(w){let M,q;if(p===c){if(g){const b=$.getOriginalUri(ne,{supportSideBySide:j.PRIMARY});if(b){let O=o.guessLanguageIdByFilepathOrFirstLine(b,g.getLineContent(1))??void 0;(!O||O==="unknown")&&(q=await r.detectLanguage(b),O=q),O&&(M=o.createById(O))}}}else{const b=o.getLanguageIdByLanguageName(p.label);M=o.createById(b),d&&r.detectLanguage(d).then(O=>{const Re=o.getLanguageIdByLanguageName(p.label)||"unknown";if(O===v&&v!==Re){const Pe=E.getValue("workbench.editor.preferHistoryBasedLanguageDetection")?"history":"classic";l.publicLog2(dt,{currentLanguageId:D??"unknown",nextLanguageId:p.label,lineCount:g?.getLineCount()??-1,modelPreference:Pe})}})}if(typeof M<"u"&&(w.setLanguageId(M.languageId,ge.ID),d?.scheme===W.untitled)){const b=E.getValue("workbench.editor.preferHistoryBasedLanguageDetection")?"history":"classic";l.publicLog2("setUntitledDocumentLanguage",{to:M.languageId,from:v??"none",modelPreference:b})}}S.focus()}}configureFileAssociation(i,e,t,n){const o=pe(i),r=he(i),u=e.guessLanguageIdByFilepathOrFirstLine(He.file(r)),f=e.getSortedRegisteredLanguageNames().map(({languageName:E,languageId:l})=>({id:l,label:E,iconClasses:Me(l),description:l===u?a("currentAssociation","Current Association"):void 0}));setTimeout(async()=>{const E=await t.pick(f,{placeHolder:a("pickLanguageToConfigure","Select Language Mode to Associate with '{0}'",o||r)});if(E){const l=n.inspect(ve);let S;o&&r[0]!=="."?S=`*${o}`:S=r;let g=ce.USER;l.workspaceValue&&l.workspaceValue[S]&&(g=ce.WORKSPACE);const d=nt(g===ce.WORKSPACE?l.workspaceValue:l.userValue)||Object.create(null);d[S]=E.id,n.updateValue(ve,d,g)}},50)}}class zn extends ue{constructor(){super({id:"workbench.action.editor.changeEOL",title:ie("changeEndOfLine","Change End of Line Sequence"),f1:!0})}async run(i){const e=i.get(J),t=i.get(Z),n=k(e.activeTextEditorControl);if(!n){await t.pick([{label:a("noEditor","No text editor active at this time")}]);return}if(e.activeEditor?.isReadonly()){await t.pick([{label:a("noWritableCodeEditor","The active code editor is read-only.")}]);return}let o=n.getModel();const r=[{label:Ae,eol:Ee.LF},{label:Oe,eol:Ee.CRLF}],u=o?.getEOL()===`
-`?0:1,h=await t.pick(r,{placeHolder:a("pickEndOfLine","Select End of Line Sequence"),activeItem:r[u]});if(h){const f=k(e.activeTextEditorControl);f?.hasModel()&&!e.activeEditor?.isReadonly()&&(o=f.getModel(),o.pushStackElement(),o.pushEOL(h.eol),o.pushStackElement())}n.focus()}}class qn extends ue{constructor(){super({id:"workbench.action.editor.changeEncoding",title:ie("changeEncoding","Change File Encoding"),f1:!0})}async run(i){const e=i.get(J),t=i.get(Z),n=i.get(Ye),o=i.get(se),r=i.get(tt),u=k(e.activeTextEditorControl);if(!u){await t.pick([{label:a("noEditor","No text editor active at this time")}]);return}const h=e.activeEditorPane;if(!h){await t.pick([{label:a("noEditor","No text editor active at this time")}]);return}const f=H(h.input);if(!f){await t.pick([{label:a("noFileEditor","No file active at this time")}]);return}const E={label:a("saveWithEncoding","Save with Encoding")},l={label:a("reopenWithEncoding","Reopen with Encoding")};if(!fe.isDefaultVariant()){const c="Save with Encoding";c!==E.label&&(E.detail=c);const p="Reopen with Encoding";p!==l.label&&(l.detail=p)}let S;if(f instanceof oe?S=E:h.input.isReadonly()?S=l:S=await t.pick([l,E],{placeHolder:a("pickAction","Select Action"),matchOnDetail:!0}),!S)return;await at(50);const g=$.getOriginalUri(h.input,{supportSideBySide:j.PRIMARY});if(!g||!n.hasProvider(g)&&g.scheme!==W.untitled)return;let d;n.hasProvider(g)&&(d=(await o.readStream(g,{autoGuessEncoding:!0,candidateGuessEncodings:r.getValue(g,"files.candidateGuessEncodings")})).encoding);const D=S===l,v=r.getValue(g,"files.encoding");let T,z;const I=Object.keys(L).sort((c,p)=>c===v?-1:p===v?1:L[c].order-L[p].order).filter(c=>c===d&&d!==v?!1:!D||!L[c].encodeOnly).map((c,p)=>(c===f.getEncoding()?T=p:L[c].alias===f.getEncoding()&&(z=p),{id:c,label:L[c].labelLong,description:c})),U=I.slice();d&&v!==d&&L[d]&&(I.unshift({type:"separator"}),I.unshift({id:d,label:L[d].labelLong,description:a("guessedEncoding","Guessed from content")}));const A=await t.pick(I,{placeHolder:D?a("pickEncodingForReopen","Select File Encoding to Reopen File"):a("pickEncodingForSave","Select File Encoding to Save with"),activeItem:U[typeof T=="number"?T:typeof z=="number"?z:-1]});if(!A||!e.activeEditorPane)return;const F=H(e.activeEditorPane.input);typeof A.id<"u"&&F&&await F.setEncoding(A.id,D?ye.Decode:ye.Encode),u.focus()}}export{zn as ChangeEOLAction,qn as ChangeEncodingAction,ge as ChangeLanguageAction,te as EditorStatusContribution,_ as ShowLanguageExtensionsAction};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import "./media/editorstatus.css";
+import { localize, localize2 } from "../../../../nls.js";
+import { getWindowById, runAtThisOrScheduleAtNextAnimationFrame } from "../../../../base/browser/dom.js";
+import { format, compare, splitLines } from "../../../../base/common/strings.js";
+import { extname, basename, isEqual } from "../../../../base/common/resources.js";
+import { areFunctions, assertIsDefined } from "../../../../base/common/types.js";
+import { URI } from "../../../../base/common/uri.js";
+import { Action } from "../../../../base/common/actions.js";
+import { Language } from "../../../../base/common/platform.js";
+import { UntitledTextEditorInput } from "../../../services/untitled/common/untitledTextEditorInput.js";
+import { IFileEditorInput, EditorResourceAccessor, IEditorPane, SideBySideEditor } from "../../../common/editor.js";
+import { EditorInput } from "../../../common/editor/editorInput.js";
+import { Disposable, MutableDisposable, DisposableStore } from "../../../../base/common/lifecycle.js";
+import { IEditorAction } from "../../../../editor/common/editorCommon.js";
+import { EndOfLineSequence } from "../../../../editor/common/model.js";
+import { TrimTrailingWhitespaceAction } from "../../../../editor/contrib/linesOperations/browser/linesOperations.js";
+import { IndentUsingSpaces, IndentUsingTabs, ChangeTabDisplaySize, DetectIndentation, IndentationToSpacesAction, IndentationToTabsAction } from "../../../../editor/contrib/indentation/browser/indentation.js";
+import { BaseBinaryResourceEditor } from "./binaryEditor.js";
+import { BinaryResourceDiffEditor } from "./binaryDiffEditor.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { IFileService, FILES_ASSOCIATIONS_CONFIG } from "../../../../platform/files/common/files.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { ILanguageService, ILanguageSelection } from "../../../../editor/common/languages/language.js";
+import { Range } from "../../../../editor/common/core/range.js";
+import { Selection } from "../../../../editor/common/core/selection.js";
+import { ICommandService, CommandsRegistry } from "../../../../platform/commands/common/commands.js";
+import { IExtensionGalleryService } from "../../../../platform/extensionManagement/common/extensionManagement.js";
+import { EncodingMode, IEncodingSupport, ILanguageSupport, ITextFileService } from "../../../services/textfile/common/textfiles.js";
+import { SUPPORTED_ENCODINGS } from "../../../services/textfile/common/encoding.js";
+import { ConfigurationChangedEvent, EditorOption } from "../../../../editor/common/config/editorOptions.js";
+import { ITextResourceConfigurationService } from "../../../../editor/common/services/textResourceConfiguration.js";
+import { ConfigurationTarget, IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { deepClone } from "../../../../base/common/objects.js";
+import { ICodeEditor, getCodeEditor } from "../../../../editor/browser/editorBrowser.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { IPreferencesService } from "../../../services/preferences/common/preferences.js";
+import { IQuickInputService, IQuickPickItem, QuickPickInput } from "../../../../platform/quickinput/common/quickInput.js";
+import { getIconClassesForLanguageId } from "../../../../editor/common/services/getIconClasses.js";
+import { Promises, timeout } from "../../../../base/common/async.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { IWorkbenchContribution } from "../../../common/contributions.js";
+import { IStatusbarEntryAccessor, IStatusbarService, StatusbarAlignment, IStatusbarEntry } from "../../../services/statusbar/browser/statusbar.js";
+import { IMarker, IMarkerService, MarkerSeverity, IMarkerData } from "../../../../platform/markers/common/markers.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { SideBySideEditorInput } from "../../../common/editor/sideBySideEditorInput.js";
+import { AutomaticLanguageDetectionLikelyWrongClassification, AutomaticLanguageDetectionLikelyWrongId, IAutomaticLanguageDetectionLikelyWrongData, ILanguageDetectionService } from "../../../services/languageDetection/common/languageDetectionWorkerService.js";
+import { ContextKeyExpr } from "../../../../platform/contextkey/common/contextkey.js";
+import { Action2 } from "../../../../platform/actions/common/actions.js";
+import { ServicesAccessor } from "../../../../editor/browser/editorExtensions.js";
+import { KeybindingWeight } from "../../../../platform/keybinding/common/keybindingsRegistry.js";
+import { KeyChord, KeyCode, KeyMod } from "../../../../base/common/keyCodes.js";
+import { TabFocus } from "../../../../editor/browser/config/tabFocus.js";
+import { IEditorGroupsService, IEditorPart } from "../../../services/editor/common/editorGroupsService.js";
+import { InputMode } from "../../../../editor/common/inputMode.js";
+class SideBySideEditorEncodingSupport {
+  constructor(primary, secondary) {
+    this.primary = primary;
+    this.secondary = secondary;
+  }
+  static {
+    __name(this, "SideBySideEditorEncodingSupport");
+  }
+  getEncoding() {
+    return this.primary.getEncoding();
+  }
+  async setEncoding(encoding, mode) {
+    await Promises.settled([this.primary, this.secondary].map((editor) => editor.setEncoding(encoding, mode)));
+  }
+}
+class SideBySideEditorLanguageSupport {
+  constructor(primary, secondary) {
+    this.primary = primary;
+    this.secondary = secondary;
+  }
+  static {
+    __name(this, "SideBySideEditorLanguageSupport");
+  }
+  setLanguageId(languageId, source) {
+    [this.primary, this.secondary].forEach((editor) => editor.setLanguageId(languageId, source));
+  }
+}
+function toEditorWithEncodingSupport(input) {
+  if (input instanceof UntitledTextEditorInput) {
+    return input;
+  }
+  if (input instanceof SideBySideEditorInput) {
+    const primaryEncodingSupport = toEditorWithEncodingSupport(input.primary);
+    const secondaryEncodingSupport = toEditorWithEncodingSupport(input.secondary);
+    if (primaryEncodingSupport && secondaryEncodingSupport) {
+      return new SideBySideEditorEncodingSupport(primaryEncodingSupport, secondaryEncodingSupport);
+    }
+    return primaryEncodingSupport;
+  }
+  const encodingSupport = input;
+  if (areFunctions(encodingSupport.setEncoding, encodingSupport.getEncoding)) {
+    return encodingSupport;
+  }
+  return null;
+}
+__name(toEditorWithEncodingSupport, "toEditorWithEncodingSupport");
+function toEditorWithLanguageSupport(input) {
+  if (input instanceof UntitledTextEditorInput) {
+    return input;
+  }
+  if (input instanceof SideBySideEditorInput) {
+    const primaryLanguageSupport = toEditorWithLanguageSupport(input.primary);
+    const secondaryLanguageSupport = toEditorWithLanguageSupport(input.secondary);
+    if (primaryLanguageSupport && secondaryLanguageSupport) {
+      return new SideBySideEditorLanguageSupport(primaryLanguageSupport, secondaryLanguageSupport);
+    }
+    return primaryLanguageSupport;
+  }
+  const languageSupport = input;
+  if (typeof languageSupport.setLanguageId === "function") {
+    return languageSupport;
+  }
+  return null;
+}
+__name(toEditorWithLanguageSupport, "toEditorWithLanguageSupport");
+class StateChange {
+  static {
+    __name(this, "StateChange");
+  }
+  indentation = false;
+  selectionStatus = false;
+  languageId = false;
+  languageStatus = false;
+  encoding = false;
+  EOL = false;
+  tabFocusMode = false;
+  inputMode = false;
+  columnSelectionMode = false;
+  metadata = false;
+  combine(other) {
+    this.indentation = this.indentation || other.indentation;
+    this.selectionStatus = this.selectionStatus || other.selectionStatus;
+    this.languageId = this.languageId || other.languageId;
+    this.languageStatus = this.languageStatus || other.languageStatus;
+    this.encoding = this.encoding || other.encoding;
+    this.EOL = this.EOL || other.EOL;
+    this.tabFocusMode = this.tabFocusMode || other.tabFocusMode;
+    this.inputMode = this.inputMode || other.inputMode;
+    this.columnSelectionMode = this.columnSelectionMode || other.columnSelectionMode;
+    this.metadata = this.metadata || other.metadata;
+  }
+  hasChanges() {
+    return this.indentation || this.selectionStatus || this.languageId || this.languageStatus || this.encoding || this.EOL || this.tabFocusMode || this.inputMode || this.columnSelectionMode || this.metadata;
+  }
+}
+class State {
+  static {
+    __name(this, "State");
+  }
+  _selectionStatus;
+  get selectionStatus() {
+    return this._selectionStatus;
+  }
+  _languageId;
+  get languageId() {
+    return this._languageId;
+  }
+  _encoding;
+  get encoding() {
+    return this._encoding;
+  }
+  _EOL;
+  get EOL() {
+    return this._EOL;
+  }
+  _indentation;
+  get indentation() {
+    return this._indentation;
+  }
+  _tabFocusMode;
+  get tabFocusMode() {
+    return this._tabFocusMode;
+  }
+  _inputMode;
+  get inputMode() {
+    return this._inputMode;
+  }
+  _columnSelectionMode;
+  get columnSelectionMode() {
+    return this._columnSelectionMode;
+  }
+  _metadata;
+  get metadata() {
+    return this._metadata;
+  }
+  update(update) {
+    const change = new StateChange();
+    switch (update.type) {
+      case "selectionStatus":
+        if (this._selectionStatus !== update.selectionStatus) {
+          this._selectionStatus = update.selectionStatus;
+          change.selectionStatus = true;
+        }
+        break;
+      case "indentation":
+        if (this._indentation !== update.indentation) {
+          this._indentation = update.indentation;
+          change.indentation = true;
+        }
+        break;
+      case "languageId":
+        if (this._languageId !== update.languageId) {
+          this._languageId = update.languageId;
+          change.languageId = true;
+        }
+        break;
+      case "encoding":
+        if (this._encoding !== update.encoding) {
+          this._encoding = update.encoding;
+          change.encoding = true;
+        }
+        break;
+      case "EOL":
+        if (this._EOL !== update.EOL) {
+          this._EOL = update.EOL;
+          change.EOL = true;
+        }
+        break;
+      case "tabFocusMode":
+        if (this._tabFocusMode !== update.tabFocusMode) {
+          this._tabFocusMode = update.tabFocusMode;
+          change.tabFocusMode = true;
+        }
+        break;
+      case "inputMode":
+        if (this._inputMode !== update.inputMode) {
+          this._inputMode = update.inputMode;
+          change.inputMode = true;
+        }
+        break;
+      case "columnSelectionMode":
+        if (this._columnSelectionMode !== update.columnSelectionMode) {
+          this._columnSelectionMode = update.columnSelectionMode;
+          change.columnSelectionMode = true;
+        }
+        break;
+      case "metadata":
+        if (this._metadata !== update.metadata) {
+          this._metadata = update.metadata;
+          change.metadata = true;
+        }
+        break;
+    }
+    return change;
+  }
+}
+let TabFocusMode = class extends Disposable {
+  constructor(configurationService) {
+    super();
+    this.configurationService = configurationService;
+    this.registerListeners();
+    const tabFocusModeConfig = configurationService.getValue("editor.tabFocusMode") === true ? true : false;
+    TabFocus.setTabFocusMode(tabFocusModeConfig);
+  }
+  static {
+    __name(this, "TabFocusMode");
+  }
+  _onDidChange = this._register(new Emitter());
+  onDidChange = this._onDidChange.event;
+  registerListeners() {
+    this._register(TabFocus.onDidChangeTabFocus((tabFocusMode) => this._onDidChange.fire(tabFocusMode)));
+    this._register(this.configurationService.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration("editor.tabFocusMode")) {
+        const tabFocusModeConfig = this.configurationService.getValue("editor.tabFocusMode") === true ? true : false;
+        TabFocus.setTabFocusMode(tabFocusModeConfig);
+        this._onDidChange.fire(tabFocusModeConfig);
+      }
+    }));
+  }
+};
+TabFocusMode = __decorateClass([
+  __decorateParam(0, IConfigurationService)
+], TabFocusMode);
+class StatusInputMode extends Disposable {
+  static {
+    __name(this, "StatusInputMode");
+  }
+  _onDidChange = this._register(new Emitter());
+  onDidChange = this._onDidChange.event;
+  constructor() {
+    super();
+    InputMode.setInputMode("insert");
+    this._register(InputMode.onDidChangeInputMode((inputMode) => this._onDidChange.fire(inputMode)));
+  }
+}
+const nlsSingleSelectionRange = localize("singleSelectionRange", "Ln {0}, Col {1} ({2} selected)");
+const nlsSingleSelection = localize("singleSelection", "Ln {0}, Col {1}");
+const nlsMultiSelectionRange = localize("multiSelectionRange", "{0} selections ({1} characters selected)");
+const nlsMultiSelection = localize("multiSelection", "{0} selections");
+const nlsEOLLF = localize("endOfLineLineFeed", "LF");
+const nlsEOLCRLF = localize("endOfLineCarriageReturnLineFeed", "CRLF");
+let EditorStatus = class extends Disposable {
+  constructor(targetWindowId, editorService, quickInputService, languageService, textFileService, statusbarService, instantiationService, configurationService) {
+    super();
+    this.targetWindowId = targetWindowId;
+    this.editorService = editorService;
+    this.quickInputService = quickInputService;
+    this.languageService = languageService;
+    this.textFileService = textFileService;
+    this.statusbarService = statusbarService;
+    this.configurationService = configurationService;
+    this.currentMarkerStatus = this._register(instantiationService.createInstance(ShowCurrentMarkerInStatusbarContribution));
+    this.tabFocusMode = this._register(instantiationService.createInstance(TabFocusMode));
+    this.inputMode = this._register(instantiationService.createInstance(StatusInputMode));
+    this.registerCommands();
+    this.registerListeners();
+  }
+  static {
+    __name(this, "EditorStatus");
+  }
+  tabFocusModeElement = this._register(new MutableDisposable());
+  inputModeElement = this._register(new MutableDisposable());
+  columnSelectionModeElement = this._register(new MutableDisposable());
+  indentationElement = this._register(new MutableDisposable());
+  selectionElement = this._register(new MutableDisposable());
+  encodingElement = this._register(new MutableDisposable());
+  eolElement = this._register(new MutableDisposable());
+  languageElement = this._register(new MutableDisposable());
+  metadataElement = this._register(new MutableDisposable());
+  currentMarkerStatus;
+  tabFocusMode;
+  inputMode;
+  state = new State();
+  toRender = void 0;
+  activeEditorListeners = this._register(new DisposableStore());
+  delayedRender = this._register(new MutableDisposable());
+  registerListeners() {
+    this._register(this.editorService.onDidActiveEditorChange(() => this.updateStatusBar()));
+    this._register(this.textFileService.untitled.onDidChangeEncoding((model) => this.onResourceEncodingChange(model.resource)));
+    this._register(this.textFileService.files.onDidChangeEncoding((model) => this.onResourceEncodingChange(model.resource)));
+    this._register(Event.runAndSubscribe(this.tabFocusMode.onDidChange, (tabFocusMode) => {
+      if (tabFocusMode !== void 0) {
+        this.onTabFocusModeChange(tabFocusMode);
+      } else {
+        this.onTabFocusModeChange(this.configurationService.getValue("editor.tabFocusMode"));
+      }
+    }));
+    this._register(Event.runAndSubscribe(this.inputMode.onDidChange, (inputMode) => this.onInputModeChange(inputMode ?? "insert")));
+  }
+  registerCommands() {
+    this._register(CommandsRegistry.registerCommand({ id: `changeEditorIndentation${this.targetWindowId}`, handler: /* @__PURE__ */ __name(() => this.showIndentationPicker(), "handler") }));
+  }
+  async showIndentationPicker() {
+    const activeTextEditorControl = getCodeEditor(this.editorService.activeTextEditorControl);
+    if (!activeTextEditorControl) {
+      return this.quickInputService.pick([{ label: localize("noEditor", "No text editor active at this time") }]);
+    }
+    if (this.editorService.activeEditor?.isReadonly()) {
+      return this.quickInputService.pick([{ label: localize("noWritableCodeEditor", "The active code editor is read-only.") }]);
+    }
+    const picks = [
+      assertIsDefined(activeTextEditorControl.getAction(IndentUsingSpaces.ID)),
+      assertIsDefined(activeTextEditorControl.getAction(IndentUsingTabs.ID)),
+      assertIsDefined(activeTextEditorControl.getAction(ChangeTabDisplaySize.ID)),
+      assertIsDefined(activeTextEditorControl.getAction(DetectIndentation.ID)),
+      assertIsDefined(activeTextEditorControl.getAction(IndentationToSpacesAction.ID)),
+      assertIsDefined(activeTextEditorControl.getAction(IndentationToTabsAction.ID)),
+      assertIsDefined(activeTextEditorControl.getAction(TrimTrailingWhitespaceAction.ID))
+    ].map((a) => {
+      return {
+        id: a.id,
+        label: a.label,
+        detail: Language.isDefaultVariant() || a.label === a.alias ? void 0 : a.alias,
+        run: /* @__PURE__ */ __name(() => {
+          activeTextEditorControl.focus();
+          a.run();
+        }, "run")
+      };
+    });
+    picks.splice(3, 0, { type: "separator", label: localize("indentConvert", "convert file") });
+    picks.unshift({ type: "separator", label: localize("indentView", "change view") });
+    const action = await this.quickInputService.pick(picks, { placeHolder: localize("pickAction", "Select Action"), matchOnDetail: true });
+    return action?.run();
+  }
+  updateTabFocusModeElement(visible) {
+    if (visible) {
+      if (!this.tabFocusModeElement.value) {
+        const text = localize("tabFocusModeEnabled", "Tab Moves Focus");
+        this.tabFocusModeElement.value = this.statusbarService.addEntry({
+          name: localize("status.editor.tabFocusMode", "Accessibility Mode"),
+          text,
+          ariaLabel: text,
+          tooltip: localize("disableTabMode", "Disable Accessibility Mode"),
+          command: "editor.action.toggleTabFocusMode",
+          kind: "prominent"
+        }, "status.editor.tabFocusMode", StatusbarAlignment.RIGHT, 100.7);
+      }
+    } else {
+      this.tabFocusModeElement.clear();
+    }
+  }
+  updateInputModeElement(inputMode) {
+    if (inputMode === "overtype") {
+      if (!this.inputModeElement.value) {
+        const text = localize("inputModeOvertype", "OVR");
+        const name = localize("status.editor.enableInsertMode", "Enable Insert Mode");
+        this.inputModeElement.value = this.statusbarService.addEntry({
+          name,
+          text,
+          ariaLabel: text,
+          tooltip: name,
+          command: "editor.action.toggleOvertypeInsertMode",
+          kind: "prominent"
+        }, "status.editor.inputMode", StatusbarAlignment.RIGHT, 100.6);
+      }
+    } else {
+      this.inputModeElement.clear();
+    }
+  }
+  updateColumnSelectionModeElement(visible) {
+    if (visible) {
+      if (!this.columnSelectionModeElement.value) {
+        const text = localize("columnSelectionModeEnabled", "Column Selection");
+        this.columnSelectionModeElement.value = this.statusbarService.addEntry({
+          name: localize("status.editor.columnSelectionMode", "Column Selection Mode"),
+          text,
+          ariaLabel: text,
+          tooltip: localize("disableColumnSelectionMode", "Disable Column Selection Mode"),
+          command: "editor.action.toggleColumnSelection",
+          kind: "prominent"
+        }, "status.editor.columnSelectionMode", StatusbarAlignment.RIGHT, 100.8);
+      }
+    } else {
+      this.columnSelectionModeElement.clear();
+    }
+  }
+  updateSelectionElement(text) {
+    if (!text) {
+      this.selectionElement.clear();
+      return;
+    }
+    const editorURI = getCodeEditor(this.editorService.activeTextEditorControl)?.getModel()?.uri;
+    if (editorURI?.scheme === Schemas.vscodeNotebookCell) {
+      this.selectionElement.clear();
+      return;
+    }
+    const props = {
+      name: localize("status.editor.selection", "Editor Selection"),
+      text,
+      ariaLabel: text,
+      tooltip: localize("gotoLine", "Go to Line/Column"),
+      command: "workbench.action.gotoLine"
+    };
+    this.updateElement(this.selectionElement, props, "status.editor.selection", StatusbarAlignment.RIGHT, 100.5);
+  }
+  updateIndentationElement(text) {
+    if (!text) {
+      this.indentationElement.clear();
+      return;
+    }
+    const editorURI = getCodeEditor(this.editorService.activeTextEditorControl)?.getModel()?.uri;
+    if (editorURI?.scheme === Schemas.vscodeNotebookCell) {
+      this.indentationElement.clear();
+      return;
+    }
+    const props = {
+      name: localize("status.editor.indentation", "Editor Indentation"),
+      text,
+      ariaLabel: text,
+      tooltip: localize("selectIndentation", "Select Indentation"),
+      command: `changeEditorIndentation${this.targetWindowId}`
+    };
+    this.updateElement(this.indentationElement, props, "status.editor.indentation", StatusbarAlignment.RIGHT, 100.4);
+  }
+  updateEncodingElement(text) {
+    if (!text) {
+      this.encodingElement.clear();
+      return;
+    }
+    const props = {
+      name: localize("status.editor.encoding", "Editor Encoding"),
+      text,
+      ariaLabel: text,
+      tooltip: localize("selectEncoding", "Select Encoding"),
+      command: "workbench.action.editor.changeEncoding"
+    };
+    this.updateElement(this.encodingElement, props, "status.editor.encoding", StatusbarAlignment.RIGHT, 100.3);
+  }
+  updateEOLElement(text) {
+    if (!text) {
+      this.eolElement.clear();
+      return;
+    }
+    const props = {
+      name: localize("status.editor.eol", "Editor End of Line"),
+      text,
+      ariaLabel: text,
+      tooltip: localize("selectEOL", "Select End of Line Sequence"),
+      command: "workbench.action.editor.changeEOL"
+    };
+    this.updateElement(this.eolElement, props, "status.editor.eol", StatusbarAlignment.RIGHT, 100.2);
+  }
+  updateLanguageIdElement(text) {
+    if (!text) {
+      this.languageElement.clear();
+      return;
+    }
+    const props = {
+      name: localize("status.editor.mode", "Editor Language"),
+      text,
+      ariaLabel: text,
+      tooltip: localize("selectLanguageMode", "Select Language Mode"),
+      command: "workbench.action.editor.changeLanguageMode"
+    };
+    this.updateElement(this.languageElement, props, "status.editor.mode", StatusbarAlignment.RIGHT, 100.1);
+  }
+  updateMetadataElement(text) {
+    if (!text) {
+      this.metadataElement.clear();
+      return;
+    }
+    const props = {
+      name: localize("status.editor.info", "File Information"),
+      text,
+      ariaLabel: text,
+      tooltip: localize("fileInfo", "File Information")
+    };
+    this.updateElement(this.metadataElement, props, "status.editor.info", StatusbarAlignment.RIGHT, 100);
+  }
+  updateElement(element, props, id, alignment, priority) {
+    if (!element.value) {
+      element.value = this.statusbarService.addEntry(props, id, alignment, priority);
+    } else {
+      element.value.update(props);
+    }
+  }
+  updateState(update) {
+    const changed = this.state.update(update);
+    if (!changed.hasChanges()) {
+      return;
+    }
+    if (!this.toRender) {
+      this.toRender = changed;
+      this.delayedRender.value = runAtThisOrScheduleAtNextAnimationFrame(getWindowById(this.targetWindowId, true).window, () => {
+        this.delayedRender.clear();
+        const toRender = this.toRender;
+        this.toRender = void 0;
+        if (toRender) {
+          this.doRenderNow();
+        }
+      });
+    } else {
+      this.toRender.combine(changed);
+    }
+  }
+  doRenderNow() {
+    this.updateTabFocusModeElement(!!this.state.tabFocusMode);
+    this.updateInputModeElement(this.state.inputMode);
+    this.updateColumnSelectionModeElement(!!this.state.columnSelectionMode);
+    this.updateIndentationElement(this.state.indentation);
+    this.updateSelectionElement(this.state.selectionStatus);
+    this.updateEncodingElement(this.state.encoding);
+    this.updateEOLElement(this.state.EOL ? this.state.EOL === "\r\n" ? nlsEOLCRLF : nlsEOLLF : void 0);
+    this.updateLanguageIdElement(this.state.languageId);
+    this.updateMetadataElement(this.state.metadata);
+  }
+  getSelectionLabel(info) {
+    if (!info || !info.selections) {
+      return void 0;
+    }
+    if (info.selections.length === 1) {
+      if (info.charactersSelected) {
+        return format(nlsSingleSelectionRange, info.selections[0].positionLineNumber, info.selections[0].positionColumn, info.charactersSelected);
+      }
+      return format(nlsSingleSelection, info.selections[0].positionLineNumber, info.selections[0].positionColumn);
+    }
+    if (info.charactersSelected) {
+      return format(nlsMultiSelectionRange, info.selections.length, info.charactersSelected);
+    }
+    if (info.selections.length > 0) {
+      return format(nlsMultiSelection, info.selections.length);
+    }
+    return void 0;
+  }
+  updateStatusBar() {
+    const activeInput = this.editorService.activeEditor;
+    const activeEditorPane = this.editorService.activeEditorPane;
+    const activeCodeEditor = activeEditorPane ? getCodeEditor(activeEditorPane.getControl()) ?? void 0 : void 0;
+    this.onColumnSelectionModeChange(activeCodeEditor);
+    this.onSelectionChange(activeCodeEditor);
+    this.onLanguageChange(activeCodeEditor, activeInput);
+    this.onEOLChange(activeCodeEditor);
+    this.onEncodingChange(activeEditorPane, activeCodeEditor);
+    this.onIndentationChange(activeCodeEditor);
+    this.onMetadataChange(activeEditorPane);
+    this.currentMarkerStatus.update(activeCodeEditor);
+    this.activeEditorListeners.clear();
+    if (activeEditorPane) {
+      this.activeEditorListeners.add(activeEditorPane.onDidChangeControl(() => {
+        this.updateStatusBar();
+      }));
+    }
+    if (activeCodeEditor) {
+      this.activeEditorListeners.add(activeCodeEditor.onDidChangeConfiguration((event) => {
+        if (event.hasChanged(EditorOption.columnSelection)) {
+          this.onColumnSelectionModeChange(activeCodeEditor);
+        }
+      }));
+      this.activeEditorListeners.add(Event.defer(activeCodeEditor.onDidChangeCursorPosition)(() => {
+        this.onSelectionChange(activeCodeEditor);
+        this.currentMarkerStatus.update(activeCodeEditor);
+      }));
+      this.activeEditorListeners.add(activeCodeEditor.onDidChangeModelLanguage(() => {
+        this.onLanguageChange(activeCodeEditor, activeInput);
+      }));
+      this.activeEditorListeners.add(Event.accumulate(activeCodeEditor.onDidChangeModelContent)((e) => {
+        this.onEOLChange(activeCodeEditor);
+        this.currentMarkerStatus.update(activeCodeEditor);
+        const selections = activeCodeEditor.getSelections();
+        if (selections) {
+          for (const inner of e) {
+            for (const change of inner.changes) {
+              if (selections.some((selection) => Range.areIntersecting(selection, change.range))) {
+                this.onSelectionChange(activeCodeEditor);
+                break;
+              }
+            }
+          }
+        }
+      }));
+      this.activeEditorListeners.add(activeCodeEditor.onDidChangeModelOptions(() => {
+        this.onIndentationChange(activeCodeEditor);
+      }));
+    } else if (activeEditorPane instanceof BaseBinaryResourceEditor || activeEditorPane instanceof BinaryResourceDiffEditor) {
+      const binaryEditors = [];
+      if (activeEditorPane instanceof BinaryResourceDiffEditor) {
+        const primary = activeEditorPane.getPrimaryEditorPane();
+        if (primary instanceof BaseBinaryResourceEditor) {
+          binaryEditors.push(primary);
+        }
+        const secondary = activeEditorPane.getSecondaryEditorPane();
+        if (secondary instanceof BaseBinaryResourceEditor) {
+          binaryEditors.push(secondary);
+        }
+      } else {
+        binaryEditors.push(activeEditorPane);
+      }
+      for (const editor of binaryEditors) {
+        this.activeEditorListeners.add(editor.onDidChangeMetadata(() => {
+          this.onMetadataChange(activeEditorPane);
+        }));
+        this.activeEditorListeners.add(editor.onDidOpenInPlace(() => {
+          this.updateStatusBar();
+        }));
+      }
+    }
+  }
+  onLanguageChange(editorWidget, editorInput) {
+    const info = { type: "languageId", languageId: void 0 };
+    if (editorWidget && editorInput && toEditorWithLanguageSupport(editorInput)) {
+      const textModel = editorWidget.getModel();
+      if (textModel) {
+        const languageId = textModel.getLanguageId();
+        info.languageId = this.languageService.getLanguageName(languageId) ?? void 0;
+      }
+    }
+    this.updateState(info);
+  }
+  onIndentationChange(editorWidget) {
+    const update = { type: "indentation", indentation: void 0 };
+    if (editorWidget) {
+      const model = editorWidget.getModel();
+      if (model) {
+        const modelOpts = model.getOptions();
+        update.indentation = modelOpts.insertSpaces ? modelOpts.tabSize === modelOpts.indentSize ? localize("spacesSize", "Spaces: {0}", modelOpts.indentSize) : localize("spacesAndTabsSize", "Spaces: {0} (Tab Size: {1})", modelOpts.indentSize, modelOpts.tabSize) : localize({ key: "tabSize", comment: ["Tab corresponds to the tab key"] }, "Tab Size: {0}", modelOpts.tabSize);
+      }
+    }
+    this.updateState(update);
+  }
+  onMetadataChange(editor) {
+    const update = { type: "metadata", metadata: void 0 };
+    if (editor instanceof BaseBinaryResourceEditor || editor instanceof BinaryResourceDiffEditor) {
+      update.metadata = editor.getMetadata();
+    }
+    this.updateState(update);
+  }
+  onColumnSelectionModeChange(editorWidget) {
+    const info = { type: "columnSelectionMode", columnSelectionMode: false };
+    if (editorWidget?.getOption(EditorOption.columnSelection)) {
+      info.columnSelectionMode = true;
+    }
+    this.updateState(info);
+  }
+  onSelectionChange(editorWidget) {
+    const info = /* @__PURE__ */ Object.create(null);
+    if (editorWidget) {
+      info.selections = editorWidget.getSelections() || [];
+      info.charactersSelected = 0;
+      const textModel = editorWidget.getModel();
+      if (textModel) {
+        for (const selection of info.selections) {
+          if (typeof info.charactersSelected !== "number") {
+            info.charactersSelected = 0;
+          }
+          info.charactersSelected += textModel.getCharacterCountInRange(selection);
+        }
+      }
+      if (info.selections.length === 1) {
+        const editorPosition = editorWidget.getPosition();
+        const selectionClone = new Selection(
+          info.selections[0].selectionStartLineNumber,
+          info.selections[0].selectionStartColumn,
+          info.selections[0].positionLineNumber,
+          editorPosition ? editorWidget.getStatusbarColumn(editorPosition) : info.selections[0].positionColumn
+        );
+        info.selections[0] = selectionClone;
+      }
+    }
+    this.updateState({ type: "selectionStatus", selectionStatus: this.getSelectionLabel(info) });
+  }
+  onEOLChange(editorWidget) {
+    const info = { type: "EOL", EOL: void 0 };
+    if (editorWidget && !editorWidget.getOption(EditorOption.readOnly)) {
+      const codeEditorModel = editorWidget.getModel();
+      if (codeEditorModel) {
+        info.EOL = codeEditorModel.getEOL();
+      }
+    }
+    this.updateState(info);
+  }
+  onEncodingChange(editor, editorWidget) {
+    if (editor && !this.isActiveEditor(editor)) {
+      return;
+    }
+    const info = { type: "encoding", encoding: void 0 };
+    if (editor && editorWidget?.hasModel()) {
+      const encodingSupport = editor.input ? toEditorWithEncodingSupport(editor.input) : null;
+      if (encodingSupport) {
+        const rawEncoding = encodingSupport.getEncoding();
+        const encodingInfo = typeof rawEncoding === "string" ? SUPPORTED_ENCODINGS[rawEncoding] : void 0;
+        if (encodingInfo) {
+          info.encoding = encodingInfo.labelShort;
+        } else {
+          info.encoding = rawEncoding;
+        }
+      }
+    }
+    this.updateState(info);
+  }
+  onResourceEncodingChange(resource) {
+    const activeEditorPane = this.editorService.activeEditorPane;
+    if (activeEditorPane) {
+      const activeResource = EditorResourceAccessor.getCanonicalUri(activeEditorPane.input, { supportSideBySide: SideBySideEditor.PRIMARY });
+      if (activeResource && isEqual(activeResource, resource)) {
+        const activeCodeEditor = getCodeEditor(activeEditorPane.getControl()) ?? void 0;
+        return this.onEncodingChange(activeEditorPane, activeCodeEditor);
+      }
+    }
+  }
+  onTabFocusModeChange(tabFocusMode) {
+    const info = { type: "tabFocusMode", tabFocusMode };
+    this.updateState(info);
+  }
+  onInputModeChange(inputMode) {
+    const info = { type: "inputMode", inputMode };
+    this.updateState(info);
+  }
+  isActiveEditor(control) {
+    const activeEditorPane = this.editorService.activeEditorPane;
+    return !!activeEditorPane && activeEditorPane === control;
+  }
+};
+EditorStatus = __decorateClass([
+  __decorateParam(1, IEditorService),
+  __decorateParam(2, IQuickInputService),
+  __decorateParam(3, ILanguageService),
+  __decorateParam(4, ITextFileService),
+  __decorateParam(5, IStatusbarService),
+  __decorateParam(6, IInstantiationService),
+  __decorateParam(7, IConfigurationService)
+], EditorStatus);
+let EditorStatusContribution = class extends Disposable {
+  constructor(editorGroupService) {
+    super();
+    this.editorGroupService = editorGroupService;
+    for (const part of editorGroupService.parts) {
+      this.createEditorStatus(part);
+    }
+    this._register(editorGroupService.onDidCreateAuxiliaryEditorPart((part) => this.createEditorStatus(part)));
+  }
+  static {
+    __name(this, "EditorStatusContribution");
+  }
+  static ID = "workbench.contrib.editorStatus";
+  createEditorStatus(part) {
+    const disposables = new DisposableStore();
+    Event.once(part.onWillDispose)(() => disposables.dispose());
+    const scopedInstantiationService = this.editorGroupService.getScopedInstantiationService(part);
+    disposables.add(scopedInstantiationService.createInstance(EditorStatus, part.windowId));
+  }
+};
+EditorStatusContribution = __decorateClass([
+  __decorateParam(0, IEditorGroupsService)
+], EditorStatusContribution);
+let ShowCurrentMarkerInStatusbarContribution = class extends Disposable {
+  constructor(statusbarService, markerService, configurationService) {
+    super();
+    this.statusbarService = statusbarService;
+    this.markerService = markerService;
+    this.configurationService = configurationService;
+    this.statusBarEntryAccessor = this._register(new MutableDisposable());
+    this._register(markerService.onMarkerChanged((changedResources) => this.onMarkerChanged(changedResources)));
+    this._register(Event.filter(configurationService.onDidChangeConfiguration, (e) => e.affectsConfiguration("problems.showCurrentInStatus"))(() => this.updateStatus()));
+  }
+  static {
+    __name(this, "ShowCurrentMarkerInStatusbarContribution");
+  }
+  statusBarEntryAccessor;
+  editor = void 0;
+  markers = [];
+  currentMarker = null;
+  update(editor) {
+    this.editor = editor;
+    this.updateMarkers();
+    this.updateStatus();
+  }
+  updateStatus() {
+    const previousMarker = this.currentMarker;
+    this.currentMarker = this.getMarker();
+    if (this.hasToUpdateStatus(previousMarker, this.currentMarker)) {
+      if (this.currentMarker) {
+        const line = splitLines(this.currentMarker.message)[0];
+        const text = `${this.getType(this.currentMarker)} ${line}`;
+        if (!this.statusBarEntryAccessor.value) {
+          this.statusBarEntryAccessor.value = this.statusbarService.addEntry({ name: localize("currentProblem", "Current Problem"), text, ariaLabel: text }, "statusbar.currentProblem", StatusbarAlignment.LEFT);
+        } else {
+          this.statusBarEntryAccessor.value.update({ name: localize("currentProblem", "Current Problem"), text, ariaLabel: text });
+        }
+      } else {
+        this.statusBarEntryAccessor.clear();
+      }
+    }
+  }
+  hasToUpdateStatus(previousMarker, currentMarker) {
+    if (!currentMarker) {
+      return true;
+    }
+    if (!previousMarker) {
+      return true;
+    }
+    return IMarkerData.makeKey(previousMarker) !== IMarkerData.makeKey(currentMarker);
+  }
+  getType(marker) {
+    switch (marker.severity) {
+      case MarkerSeverity.Error:
+        return "$(error)";
+      case MarkerSeverity.Warning:
+        return "$(warning)";
+      case MarkerSeverity.Info:
+        return "$(info)";
+    }
+    return "";
+  }
+  getMarker() {
+    if (!this.configurationService.getValue("problems.showCurrentInStatus")) {
+      return null;
+    }
+    if (!this.editor) {
+      return null;
+    }
+    const model = this.editor.getModel();
+    if (!model) {
+      return null;
+    }
+    const position = this.editor.getPosition();
+    if (!position) {
+      return null;
+    }
+    return this.markers.find((marker) => Range.containsPosition(marker, position)) || null;
+  }
+  onMarkerChanged(changedResources) {
+    if (!this.editor) {
+      return;
+    }
+    const model = this.editor.getModel();
+    if (!model) {
+      return;
+    }
+    if (model && !changedResources.some((r) => isEqual(model.uri, r))) {
+      return;
+    }
+    this.updateMarkers();
+  }
+  updateMarkers() {
+    if (!this.editor) {
+      return;
+    }
+    const model = this.editor.getModel();
+    if (!model) {
+      return;
+    }
+    if (model) {
+      this.markers = this.markerService.read({
+        resource: model.uri,
+        severities: MarkerSeverity.Error | MarkerSeverity.Warning | MarkerSeverity.Info
+      });
+      this.markers.sort(this.compareMarker);
+    } else {
+      this.markers = [];
+    }
+    this.updateStatus();
+  }
+  compareMarker(a, b) {
+    let res = compare(a.resource.toString(), b.resource.toString());
+    if (res === 0) {
+      res = MarkerSeverity.compare(a.severity, b.severity);
+    }
+    if (res === 0) {
+      res = Range.compareRangesUsingStarts(a, b);
+    }
+    return res;
+  }
+};
+ShowCurrentMarkerInStatusbarContribution = __decorateClass([
+  __decorateParam(0, IStatusbarService),
+  __decorateParam(1, IMarkerService),
+  __decorateParam(2, IConfigurationService)
+], ShowCurrentMarkerInStatusbarContribution);
+let ShowLanguageExtensionsAction = class extends Action {
+  constructor(fileExtension, commandService, galleryService) {
+    super(ShowLanguageExtensionsAction.ID, localize("showLanguageExtensions", "Search Marketplace Extensions for '{0}'...", fileExtension));
+    this.fileExtension = fileExtension;
+    this.commandService = commandService;
+    this.enabled = galleryService.isEnabled();
+  }
+  static {
+    __name(this, "ShowLanguageExtensionsAction");
+  }
+  static ID = "workbench.action.showLanguageExtensions";
+  async run() {
+    await this.commandService.executeCommand("workbench.extensions.action.showExtensionsForLanguage", this.fileExtension);
+  }
+};
+ShowLanguageExtensionsAction = __decorateClass([
+  __decorateParam(1, ICommandService),
+  __decorateParam(2, IExtensionGalleryService)
+], ShowLanguageExtensionsAction);
+class ChangeLanguageAction extends Action2 {
+  static {
+    __name(this, "ChangeLanguageAction");
+  }
+  static ID = "workbench.action.editor.changeLanguageMode";
+  constructor() {
+    super({
+      id: ChangeLanguageAction.ID,
+      title: localize2("changeMode", "Change Language Mode"),
+      f1: true,
+      keybinding: {
+        weight: KeybindingWeight.WorkbenchContrib,
+        primary: KeyChord(KeyMod.CtrlCmd | KeyCode.KeyK, KeyCode.KeyM)
+      },
+      precondition: ContextKeyExpr.not("notebookEditorFocused"),
+      metadata: {
+        description: localize("changeLanguageMode.description", "Change the language mode of the active text editor."),
+        args: [
+          {
+            name: localize("changeLanguageMode.arg.name", "The name of the language mode to change to."),
+            constraint: /* @__PURE__ */ __name((value) => typeof value === "string", "constraint")
+          }
+        ]
+      }
+    });
+  }
+  async run(accessor, languageMode) {
+    const quickInputService = accessor.get(IQuickInputService);
+    const editorService = accessor.get(IEditorService);
+    const languageService = accessor.get(ILanguageService);
+    const languageDetectionService = accessor.get(ILanguageDetectionService);
+    const textFileService = accessor.get(ITextFileService);
+    const preferencesService = accessor.get(IPreferencesService);
+    const instantiationService = accessor.get(IInstantiationService);
+    const configurationService = accessor.get(IConfigurationService);
+    const telemetryService = accessor.get(ITelemetryService);
+    const activeTextEditorControl = getCodeEditor(editorService.activeTextEditorControl);
+    if (!activeTextEditorControl) {
+      await quickInputService.pick([{ label: localize("noEditor", "No text editor active at this time") }]);
+      return;
+    }
+    const textModel = activeTextEditorControl.getModel();
+    const resource = EditorResourceAccessor.getOriginalUri(editorService.activeEditor, { supportSideBySide: SideBySideEditor.PRIMARY });
+    let currentLanguageName;
+    let currentLanguageId;
+    if (textModel) {
+      currentLanguageId = textModel.getLanguageId();
+      currentLanguageName = languageService.getLanguageName(currentLanguageId) ?? void 0;
+    }
+    let hasLanguageSupport = !!resource;
+    if (resource?.scheme === Schemas.untitled && !textFileService.untitled.get(resource)?.hasAssociatedFilePath) {
+      hasLanguageSupport = false;
+    }
+    const languages = languageService.getSortedRegisteredLanguageNames();
+    const picks = languages.map(({ languageName, languageId }) => {
+      const extensions = languageService.getExtensions(languageId).join(" ");
+      let description;
+      if (currentLanguageName === languageName) {
+        description = localize("languageDescription", "({0}) - Configured Language", languageId);
+      } else {
+        description = localize("languageDescriptionConfigured", "({0})", languageId);
+      }
+      return {
+        label: languageName,
+        meta: extensions,
+        iconClasses: getIconClassesForLanguageId(languageId),
+        description
+      };
+    });
+    picks.unshift({ type: "separator", label: localize("languagesPicks", "languages (identifier)") });
+    let configureLanguageAssociations;
+    let configureLanguageSettings;
+    let galleryAction;
+    if (hasLanguageSupport && resource) {
+      const ext = extname(resource) || basename(resource);
+      galleryAction = instantiationService.createInstance(ShowLanguageExtensionsAction, ext);
+      if (galleryAction.enabled) {
+        picks.unshift(galleryAction);
+      }
+      configureLanguageSettings = { label: localize("configureModeSettings", "Configure '{0}' language based settings...", currentLanguageName) };
+      picks.unshift(configureLanguageSettings);
+      configureLanguageAssociations = { label: localize("configureAssociationsExt", "Configure File Association for '{0}'...", ext) };
+      picks.unshift(configureLanguageAssociations);
+    }
+    const autoDetectLanguage = {
+      label: localize("autoDetect", "Auto Detect")
+    };
+    picks.unshift(autoDetectLanguage);
+    const pick = typeof languageMode === "string" ? { label: languageMode } : await quickInputService.pick(picks, { placeHolder: localize("pickLanguage", "Select Language Mode"), matchOnDescription: true });
+    if (!pick) {
+      return;
+    }
+    if (pick === galleryAction) {
+      galleryAction.run();
+      return;
+    }
+    if (pick === configureLanguageAssociations) {
+      if (resource) {
+        this.configureFileAssociation(resource, languageService, quickInputService, configurationService);
+      }
+      return;
+    }
+    if (pick === configureLanguageSettings) {
+      preferencesService.openUserSettings({ jsonEditor: true, revealSetting: { key: `[${currentLanguageId ?? null}]`, edit: true } });
+      return;
+    }
+    const activeEditor = editorService.activeEditor;
+    if (activeEditor) {
+      const languageSupport = toEditorWithLanguageSupport(activeEditor);
+      if (languageSupport) {
+        let languageSelection;
+        let detectedLanguage;
+        if (pick === autoDetectLanguage) {
+          if (textModel) {
+            const resource2 = EditorResourceAccessor.getOriginalUri(activeEditor, { supportSideBySide: SideBySideEditor.PRIMARY });
+            if (resource2) {
+              let languageId = languageService.guessLanguageIdByFilepathOrFirstLine(resource2, textModel.getLineContent(1)) ?? void 0;
+              if (!languageId || languageId === "unknown") {
+                detectedLanguage = await languageDetectionService.detectLanguage(resource2);
+                languageId = detectedLanguage;
+              }
+              if (languageId) {
+                languageSelection = languageService.createById(languageId);
+              }
+            }
+          }
+        } else {
+          const languageId = languageService.getLanguageIdByLanguageName(pick.label);
+          languageSelection = languageService.createById(languageId);
+          if (resource) {
+            languageDetectionService.detectLanguage(resource).then((detectedLanguageId) => {
+              const chosenLanguageId = languageService.getLanguageIdByLanguageName(pick.label) || "unknown";
+              if (detectedLanguageId === currentLanguageId && currentLanguageId !== chosenLanguageId) {
+                const modelPreference = configurationService.getValue("workbench.editor.preferHistoryBasedLanguageDetection") ? "history" : "classic";
+                telemetryService.publicLog2(AutomaticLanguageDetectionLikelyWrongId, {
+                  currentLanguageId: currentLanguageName ?? "unknown",
+                  nextLanguageId: pick.label,
+                  lineCount: textModel?.getLineCount() ?? -1,
+                  modelPreference
+                });
+              }
+            });
+          }
+        }
+        if (typeof languageSelection !== "undefined") {
+          languageSupport.setLanguageId(languageSelection.languageId, ChangeLanguageAction.ID);
+          if (resource?.scheme === Schemas.untitled) {
+            const modelPreference = configurationService.getValue("workbench.editor.preferHistoryBasedLanguageDetection") ? "history" : "classic";
+            telemetryService.publicLog2("setUntitledDocumentLanguage", {
+              to: languageSelection.languageId,
+              from: currentLanguageId ?? "none",
+              modelPreference
+            });
+          }
+        }
+      }
+      activeTextEditorControl.focus();
+    }
+  }
+  configureFileAssociation(resource, languageService, quickInputService, configurationService) {
+    const extension = extname(resource);
+    const base = basename(resource);
+    const currentAssociation = languageService.guessLanguageIdByFilepathOrFirstLine(URI.file(base));
+    const languages = languageService.getSortedRegisteredLanguageNames();
+    const picks = languages.map(({ languageName, languageId }) => {
+      return {
+        id: languageId,
+        label: languageName,
+        iconClasses: getIconClassesForLanguageId(languageId),
+        description: languageId === currentAssociation ? localize("currentAssociation", "Current Association") : void 0
+      };
+    });
+    setTimeout(
+      async () => {
+        const language = await quickInputService.pick(picks, { placeHolder: localize("pickLanguageToConfigure", "Select Language Mode to Associate with '{0}'", extension || base) });
+        if (language) {
+          const fileAssociationsConfig = configurationService.inspect(FILES_ASSOCIATIONS_CONFIG);
+          let associationKey;
+          if (extension && base[0] !== ".") {
+            associationKey = `*${extension}`;
+          } else {
+            associationKey = base;
+          }
+          let target = ConfigurationTarget.USER;
+          if (fileAssociationsConfig.workspaceValue && !!fileAssociationsConfig.workspaceValue[associationKey]) {
+            target = ConfigurationTarget.WORKSPACE;
+          }
+          const currentAssociations = deepClone(target === ConfigurationTarget.WORKSPACE ? fileAssociationsConfig.workspaceValue : fileAssociationsConfig.userValue) || /* @__PURE__ */ Object.create(null);
+          currentAssociations[associationKey] = language.id;
+          configurationService.updateValue(FILES_ASSOCIATIONS_CONFIG, currentAssociations, target);
+        }
+      },
+      50
+      /* quick input is sensitive to being opened so soon after another */
+    );
+  }
+}
+class ChangeEOLAction extends Action2 {
+  static {
+    __name(this, "ChangeEOLAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.editor.changeEOL",
+      title: localize2("changeEndOfLine", "Change End of Line Sequence"),
+      f1: true
+    });
+  }
+  async run(accessor) {
+    const editorService = accessor.get(IEditorService);
+    const quickInputService = accessor.get(IQuickInputService);
+    const activeTextEditorControl = getCodeEditor(editorService.activeTextEditorControl);
+    if (!activeTextEditorControl) {
+      await quickInputService.pick([{ label: localize("noEditor", "No text editor active at this time") }]);
+      return;
+    }
+    if (editorService.activeEditor?.isReadonly()) {
+      await quickInputService.pick([{ label: localize("noWritableCodeEditor", "The active code editor is read-only.") }]);
+      return;
+    }
+    let textModel = activeTextEditorControl.getModel();
+    const EOLOptions = [
+      { label: nlsEOLLF, eol: EndOfLineSequence.LF },
+      { label: nlsEOLCRLF, eol: EndOfLineSequence.CRLF }
+    ];
+    const selectedIndex = textModel?.getEOL() === "\n" ? 0 : 1;
+    const eol = await quickInputService.pick(EOLOptions, { placeHolder: localize("pickEndOfLine", "Select End of Line Sequence"), activeItem: EOLOptions[selectedIndex] });
+    if (eol) {
+      const activeCodeEditor = getCodeEditor(editorService.activeTextEditorControl);
+      if (activeCodeEditor?.hasModel() && !editorService.activeEditor?.isReadonly()) {
+        textModel = activeCodeEditor.getModel();
+        textModel.pushStackElement();
+        textModel.pushEOL(eol.eol);
+        textModel.pushStackElement();
+      }
+    }
+    activeTextEditorControl.focus();
+  }
+}
+class ChangeEncodingAction extends Action2 {
+  static {
+    __name(this, "ChangeEncodingAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.editor.changeEncoding",
+      title: localize2("changeEncoding", "Change File Encoding"),
+      f1: true
+    });
+  }
+  async run(accessor) {
+    const editorService = accessor.get(IEditorService);
+    const quickInputService = accessor.get(IQuickInputService);
+    const fileService = accessor.get(IFileService);
+    const textFileService = accessor.get(ITextFileService);
+    const textResourceConfigurationService = accessor.get(ITextResourceConfigurationService);
+    const activeTextEditorControl = getCodeEditor(editorService.activeTextEditorControl);
+    if (!activeTextEditorControl) {
+      await quickInputService.pick([{ label: localize("noEditor", "No text editor active at this time") }]);
+      return;
+    }
+    const activeEditorPane = editorService.activeEditorPane;
+    if (!activeEditorPane) {
+      await quickInputService.pick([{ label: localize("noEditor", "No text editor active at this time") }]);
+      return;
+    }
+    const encodingSupport = toEditorWithEncodingSupport(activeEditorPane.input);
+    if (!encodingSupport) {
+      await quickInputService.pick([{ label: localize("noFileEditor", "No file active at this time") }]);
+      return;
+    }
+    const saveWithEncodingPick = { label: localize("saveWithEncoding", "Save with Encoding") };
+    const reopenWithEncodingPick = { label: localize("reopenWithEncoding", "Reopen with Encoding") };
+    if (!Language.isDefaultVariant()) {
+      const saveWithEncodingAlias = "Save with Encoding";
+      if (saveWithEncodingAlias !== saveWithEncodingPick.label) {
+        saveWithEncodingPick.detail = saveWithEncodingAlias;
+      }
+      const reopenWithEncodingAlias = "Reopen with Encoding";
+      if (reopenWithEncodingAlias !== reopenWithEncodingPick.label) {
+        reopenWithEncodingPick.detail = reopenWithEncodingAlias;
+      }
+    }
+    let action;
+    if (encodingSupport instanceof UntitledTextEditorInput) {
+      action = saveWithEncodingPick;
+    } else if (activeEditorPane.input.isReadonly()) {
+      action = reopenWithEncodingPick;
+    } else {
+      action = await quickInputService.pick([reopenWithEncodingPick, saveWithEncodingPick], { placeHolder: localize("pickAction", "Select Action"), matchOnDetail: true });
+    }
+    if (!action) {
+      return;
+    }
+    await timeout(50);
+    const resource = EditorResourceAccessor.getOriginalUri(activeEditorPane.input, { supportSideBySide: SideBySideEditor.PRIMARY });
+    if (!resource || !fileService.hasProvider(resource) && resource.scheme !== Schemas.untitled) {
+      return;
+    }
+    let guessedEncoding = void 0;
+    if (fileService.hasProvider(resource)) {
+      const content = await textFileService.readStream(resource, {
+        autoGuessEncoding: true,
+        candidateGuessEncodings: textResourceConfigurationService.getValue(resource, "files.candidateGuessEncodings")
+      });
+      guessedEncoding = content.encoding;
+    }
+    const isReopenWithEncoding = action === reopenWithEncodingPick;
+    const configuredEncoding = textResourceConfigurationService.getValue(resource, "files.encoding");
+    let directMatchIndex;
+    let aliasMatchIndex;
+    const picks = Object.keys(SUPPORTED_ENCODINGS).sort((k1, k2) => {
+      if (k1 === configuredEncoding) {
+        return -1;
+      } else if (k2 === configuredEncoding) {
+        return 1;
+      }
+      return SUPPORTED_ENCODINGS[k1].order - SUPPORTED_ENCODINGS[k2].order;
+    }).filter((k) => {
+      if (k === guessedEncoding && guessedEncoding !== configuredEncoding) {
+        return false;
+      }
+      return !isReopenWithEncoding || !SUPPORTED_ENCODINGS[k].encodeOnly;
+    }).map((key, index) => {
+      if (key === encodingSupport.getEncoding()) {
+        directMatchIndex = index;
+      } else if (SUPPORTED_ENCODINGS[key].alias === encodingSupport.getEncoding()) {
+        aliasMatchIndex = index;
+      }
+      return { id: key, label: SUPPORTED_ENCODINGS[key].labelLong, description: key };
+    });
+    const items = picks.slice();
+    if (guessedEncoding && configuredEncoding !== guessedEncoding && SUPPORTED_ENCODINGS[guessedEncoding]) {
+      picks.unshift({ type: "separator" });
+      picks.unshift({ id: guessedEncoding, label: SUPPORTED_ENCODINGS[guessedEncoding].labelLong, description: localize("guessedEncoding", "Guessed from content") });
+    }
+    const encoding = await quickInputService.pick(picks, {
+      placeHolder: isReopenWithEncoding ? localize("pickEncodingForReopen", "Select File Encoding to Reopen File") : localize("pickEncodingForSave", "Select File Encoding to Save with"),
+      activeItem: items[typeof directMatchIndex === "number" ? directMatchIndex : typeof aliasMatchIndex === "number" ? aliasMatchIndex : -1]
+    });
+    if (!encoding) {
+      return;
+    }
+    if (!editorService.activeEditorPane) {
+      return;
+    }
+    const activeEncodingSupport = toEditorWithEncodingSupport(editorService.activeEditorPane.input);
+    if (typeof encoding.id !== "undefined" && activeEncodingSupport) {
+      await activeEncodingSupport.setEncoding(encoding.id, isReopenWithEncoding ? EncodingMode.Decode : EncodingMode.Encode);
+    }
+    activeTextEditorControl.focus();
+  }
+}
+export {
+  ChangeEOLAction,
+  ChangeEncodingAction,
+  ChangeLanguageAction,
+  EditorStatusContribution,
+  ShowLanguageExtensionsAction
+};
+//# sourceMappingURL=editorStatus.js.map

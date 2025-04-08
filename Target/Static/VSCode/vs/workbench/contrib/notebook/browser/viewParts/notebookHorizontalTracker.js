@@ -1,1 +1,72 @@
-import{addDisposableListener as m,EventType as p,getWindow as E}from"../../../../../base/browser/dom.js";import"../../../../../base/browser/mouseEvent.js";import{Disposable as D}from"../../../../../base/common/lifecycle.js";import{isChrome as f,isMacintosh as u}from"../../../../../base/common/platform.js";import"../../../../../editor/browser/widget/codeEditor/codeEditorWidget.js";import"../notebookBrowser.js";class H extends D{constructor(y,M){super();this._notebookEditor=y;this._listViewScrollablement=M;this._register(m(this._listViewScrollablement,p.MOUSE_WHEEL,e=>{let t=e.deltaX,i=e.deltaY,o=e.wheelDeltaX,r=e.wheelDeltaY;const l=e.wheelDelta;if(!u&&e.shiftKey&&!t&&(t=i,i=0,o=r,r=0),t===0)return;const a=this._notebookEditor.codeEditors.find(s=>{const n=s[1].getLayoutInfo();if(n.contentWidth===n.width)return!1;const h=s[1].getDomNode();return!!(h&&h.contains(e.target))});if(!a)return;const d=E(e),c={deltaMode:e.deltaMode,deltaX:t,deltaY:0,deltaZ:0,wheelDelta:l&&f?l/d.devicePixelRatio:l,wheelDeltaX:o&&f?o/d.devicePixelRatio:o,wheelDeltaY:0,detail:e.detail,shiftKey:e.shiftKey,type:e.type,defaultPrevented:!1,preventDefault:()=>{},stopPropagation:()=>{}};a[1].delegateScrollFromMouseWheelEvent(c)}))}}export{H as NotebookHorizontalTracker};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { addDisposableListener, EventType, getWindow } from "../../../../../base/browser/dom.js";
+import { IMouseWheelEvent } from "../../../../../base/browser/mouseEvent.js";
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { isChrome, isMacintosh } from "../../../../../base/common/platform.js";
+import { CodeEditorWidget } from "../../../../../editor/browser/widget/codeEditor/codeEditorWidget.js";
+import { INotebookEditorDelegate } from "../notebookBrowser.js";
+class NotebookHorizontalTracker extends Disposable {
+  constructor(_notebookEditor, _listViewScrollablement) {
+    super();
+    this._notebookEditor = _notebookEditor;
+    this._listViewScrollablement = _listViewScrollablement;
+    this._register(addDisposableListener(this._listViewScrollablement, EventType.MOUSE_WHEEL, (event) => {
+      let deltaX = event.deltaX;
+      let deltaY = event.deltaY;
+      let wheelDeltaX = event.wheelDeltaX;
+      let wheelDeltaY = event.wheelDeltaY;
+      const wheelDelta = event.wheelDelta;
+      const shiftConvert = !isMacintosh && event.shiftKey;
+      if (shiftConvert && !deltaX) {
+        deltaX = deltaY;
+        deltaY = 0;
+        wheelDeltaX = wheelDeltaY;
+        wheelDeltaY = 0;
+      }
+      if (deltaX === 0) {
+        return;
+      }
+      const hoveringOnEditor = this._notebookEditor.codeEditors.find((editor) => {
+        const editorLayout = editor[1].getLayoutInfo();
+        if (editorLayout.contentWidth === editorLayout.width) {
+          return false;
+        }
+        const editorDOM = editor[1].getDomNode();
+        if (editorDOM && editorDOM.contains(event.target)) {
+          return true;
+        }
+        return false;
+      });
+      if (!hoveringOnEditor) {
+        return;
+      }
+      const targetWindow = getWindow(event);
+      const evt = {
+        deltaMode: event.deltaMode,
+        deltaX,
+        deltaY: 0,
+        deltaZ: 0,
+        wheelDelta: wheelDelta && isChrome ? wheelDelta / targetWindow.devicePixelRatio : wheelDelta,
+        wheelDeltaX: wheelDeltaX && isChrome ? wheelDeltaX / targetWindow.devicePixelRatio : wheelDeltaX,
+        wheelDeltaY: 0,
+        detail: event.detail,
+        shiftKey: event.shiftKey,
+        type: event.type,
+        defaultPrevented: false,
+        preventDefault: /* @__PURE__ */ __name(() => {
+        }, "preventDefault"),
+        stopPropagation: /* @__PURE__ */ __name(() => {
+        }, "stopPropagation")
+      };
+      hoveringOnEditor[1].delegateScrollFromMouseWheelEvent(evt);
+    }));
+  }
+  static {
+    __name(this, "NotebookHorizontalTracker");
+  }
+}
+export {
+  NotebookHorizontalTracker
+};
+//# sourceMappingURL=notebookHorizontalTracker.js.map

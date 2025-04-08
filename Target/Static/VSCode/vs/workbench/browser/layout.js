@@ -1,1 +1,2024 @@
-import{Disposable as $,DisposableMap as fe,DisposableStore as pe,toDisposable as J}from"../../base/common/lifecycle.js";import{Emitter as V}from"../../base/common/event.js";import{EventType as ve,addDisposableListener as q,getClientArea as U,position as Te,size as Ee,isAncestorUsingFlowTo as Pe,computeScreenAwareSize as Q,getActiveDocument as we,getWindows as Re,getActiveWindow as Y,isActiveDocument as Ve,getWindow as D,getWindowId as ee,getActiveElement as ye,Dimension as be}from"../../base/browser/dom.js";import{onDidChangeFullscreen as _e,isFullscreen as ie,isWCOEnabled as De}from"../../base/browser/browser.js";import{IWorkingCopyBackupService as Ce}from"../services/workingCopy/common/workingCopyBackup.js";import{isWindows as Z,isLinux as te,isMacintosh as Be,isWeb as B,isIOS as ae}from"../../base/common/platform.js";import{EditorInputCapabilities as Le,isResourceEditorInput as z,pathsToEditors as K}from"../common/editor.js";import{SidebarPart as Ne}from"./parts/sidebar/sidebarPart.js";import{PanelPart as Me}from"./parts/panel/panelPart.js";import{Position as m,Parts as r,PanelOpensMaximizedOptions as re,positionFromString as H,positionToString as L,panelOpensMaximizedFromString as Oe,ActivityBarPosition as W,LayoutSettings as p,ZenModeSettings as E,EditorActionsLocation as ze,shouldShowCustomTitleBar as y,isHorizontal as v,isMultiWindowPart as He}from"../services/layout/browser/layoutService.js";import{isTemporaryWorkspace as We,IWorkspaceContextService as xe,WorkbenchState as ne}from"../../platform/workspace/common/workspace.js";import{IStorageService as Ge,StorageScope as I,StorageTarget as f}from"../../platform/storage/common/storage.js";import{IConfigurationService as ke}from"../../platform/configuration/common/configuration.js";import{ITitleService as Fe}from"../services/title/browser/titleService.js";import"../../platform/instantiation/common/instantiation.js";import{StartupKind as Ue,ILifecycleService as Ye}from"../services/lifecycle/common/lifecycle.js";import{getMenuBarVisibility as se,hasNativeTitlebar as X,hasCustomTitlebar as Ze,TitleBarSetting as x,CustomTitleBarVisibility as oe,useWindowControlsOverlay as Ke,DEFAULT_WINDOW_SIZE as le}from"../../platform/window/common/window.js";import{IHostService as Xe}from"../services/host/browser/host.js";import{IBrowserWorkbenchEnvironmentService as je}from"../services/environment/browser/environmentService.js";import{IEditorService as $e}from"../services/editor/common/editorService.js";import{GroupOrientation as Je,GroupsOrder as qe,IEditorGroupsService as Qe}from"../services/editor/common/editorGroupsService.js";import{SerializableGrid as ei,Orientation as ii,Direction as w,Sizing as N}from"../../base/browser/ui/grid/grid.js";import{Part as ti}from"./part.js";import{IStatusbarService as ai}from"../services/statusbar/browser/statusbar.js";import{IFileService as ri}from"../../platform/files/common/files.js";import{isCodeEditor as ni}from"../../editor/browser/editorBrowser.js";import{coalesce as G}from"../../base/common/arrays.js";import{assertIsDefined as k}from"../../base/common/types.js";import{INotificationService as si,NotificationsFilter as M}from"../../platform/notification/common/notification.js";import{IThemeService as oi}from"../../platform/theme/common/themeService.js";import{WINDOW_ACTIVE_BORDER as li,WINDOW_INACTIVE_BORDER as di}from"../common/theme.js";import"../../editor/common/config/editorOptions.js";import{URI as hi}from"../../base/common/uri.js";import{IViewDescriptorService as ui,ViewContainerLocation as g}from"../common/views.js";import{DiffEditorInput as ci}from"../common/editor/diffEditorInput.js";import{mark as R}from"../../base/common/performance.js";import{IExtensionService as gi}from"../services/extensions/common/extensions.js";import{ILogService as Si}from"../../platform/log/common/log.js";import{DeferredPromise as de,Promises as he}from"../../base/common/async.js";import{IBannerService as Ii}from"../services/banner/browser/bannerService.js";import{IPaneCompositePartService as mi}from"../services/panecomposite/browser/panecomposite.js";import{AuxiliaryBarPart as Ai}from"./parts/auxiliarybar/auxiliaryBarPart.js";import{ITelemetryService as fi}from"../../platform/telemetry/common/telemetry.js";import{IAuxiliaryWindowService as pi}from"../services/auxiliaryWindow/browser/auxiliaryWindowService.js";import{mainWindow as A}from"../../base/browser/window.js";var vi=(e=>(e.SIDEBAR_HIDDEN="nosidebar",e.MAIN_EDITOR_AREA_HIDDEN="nomaineditorarea",e.PANEL_HIDDEN="nopanel",e.AUXILIARYBAR_HIDDEN="noauxiliarybar",e.STATUSBAR_HIDDEN="nostatusbar",e.FULLSCREEN="fullscreen",e.MAXIMIZED="maximized",e.WINDOW_BORDER="border",e))(vi||{});const Ti=["chat.commandCenter.enabled","workbench.navigationControl.enabled","workbench.experimental.share.enabled"],Ei=[p.ACTIVITY_BAR_LOCATION,p.COMMAND_CENTER,...Ti,p.EDITOR_ACTIONS_LOCATION,p.LAYOUT_ACTIONS,"window.menuBarVisibility",x.TITLE_BAR_STYLE,x.CUSTOM_TITLE_BAR_VISIBILITY],ue=new be(le.width,le.height);class zt extends ${constructor(e){super(),this.parent=e}_onDidChangeZenMode=this._register(new V);onDidChangeZenMode=this._onDidChangeZenMode.event;_onDidChangeMainEditorCenteredLayout=this._register(new V);onDidChangeMainEditorCenteredLayout=this._onDidChangeMainEditorCenteredLayout.event;_onDidChangePanelAlignment=this._register(new V);onDidChangePanelAlignment=this._onDidChangePanelAlignment.event;_onDidChangeWindowMaximized=this._register(new V);onDidChangeWindowMaximized=this._onDidChangeWindowMaximized.event;_onDidChangePanelPosition=this._register(new V);onDidChangePanelPosition=this._onDidChangePanelPosition.event;_onDidChangePartVisibility=this._register(new V);onDidChangePartVisibility=this._onDidChangePartVisibility.event;_onDidChangeNotificationsVisibility=this._register(new V);onDidChangeNotificationsVisibility=this._onDidChangeNotificationsVisibility.event;_onDidLayoutMainContainer=this._register(new V);onDidLayoutMainContainer=this._onDidLayoutMainContainer.event;_onDidLayoutActiveContainer=this._register(new V);onDidLayoutActiveContainer=this._onDidLayoutActiveContainer.event;_onDidLayoutContainer=this._register(new V);onDidLayoutContainer=this._onDidLayoutContainer.event;_onDidAddContainer=this._register(new V);onDidAddContainer=this._onDidAddContainer.event;_onDidChangeActiveContainer=this._register(new V);onDidChangeActiveContainer=this._onDidChangeActiveContainer.event;mainContainer=document.createElement("div");get activeContainer(){return this.getContainerFromDocument(we())}get containers(){const e=[];for(const{window:i}of Re())e.push(this.getContainerFromDocument(i.document));return e}getContainerFromDocument(e){return e===this.mainContainer.ownerDocument?this.mainContainer:e.body.getElementsByClassName("monaco-workbench")[0]}containerStylesLoaded=new Map;whenContainerStylesLoaded(e){return this.containerStylesLoaded.get(e.vscodeWindowId)}_mainContainerDimension;get mainContainerDimension(){return this._mainContainerDimension}get activeContainerDimension(){return this.getContainerDimension(this.activeContainer)}getContainerDimension(e){return e===this.mainContainer?this.mainContainerDimension:U(e)}get mainContainerOffset(){return this.computeContainerOffset(A)}get activeContainerOffset(){return this.computeContainerOffset(D(this.activeContainer))}computeContainerOffset(e){let i=0,t=0;this.isVisible(r.BANNER_PART)&&(i=this.getPart(r.BANNER_PART).maximumHeight,t=i);const s=this.isVisible(r.TITLEBAR_PART,e);return s&&(i+=this.getPart(r.TITLEBAR_PART).maximumHeight,t=i),s&&!1!==this.configurationService.getValue(p.COMMAND_CENTER)&&(t=6),{top:i,quickPickTop:t}}parts=new Map;initialized=!1;workbenchGrid;titleBarPartView;bannerPartView;activityBarPartView;sideBarPartView;panelPartView;auxiliaryBarPartView;editorPartView;statusBarPartView;environmentService;extensionService;configurationService;storageService;hostService;editorService;mainPartEditorService;editorGroupService;paneCompositeService;titleService;viewDescriptorService;contextService;workingCopyBackupService;notificationService;themeService;statusBarService;logService;telemetryService;auxiliaryWindowService;state;stateModel;disposed=!1;initLayout(e){this.environmentService=e.get(je),this.configurationService=e.get(ke),this.hostService=e.get(Xe),this.contextService=e.get(xe),this.storageService=e.get(Ge),this.workingCopyBackupService=e.get(Ce),this.themeService=e.get(oi),this.extensionService=e.get(gi),this.logService=e.get(Si),this.telemetryService=e.get(fi),this.auxiliaryWindowService=e.get(pi),this.editorService=e.get($e),this.mainPartEditorService=this.editorService.createScoped("main",this._store),this.editorGroupService=e.get(Qe),this.paneCompositeService=e.get(mi),this.viewDescriptorService=e.get(ui),this.titleService=e.get(Fe),this.notificationService=e.get(si),this.statusBarService=e.get(ai),e.get(Ii),this.registerLayoutListeners(),this.initLayoutState(e.get(Ye),e.get(ri))}registerLayoutListeners(){const e=()=>{this.isVisible(r.EDITOR_PART,A)||this.toggleMaximizedPanel()};this.editorGroupService.whenRestored.then((()=>{this._register(this.mainPartEditorService.onDidVisibleEditorsChange(e)),this._register(this.editorGroupService.mainPart.onDidActivateGroup(e)),this._register(this.mainPartEditorService.onDidActiveEditorChange((()=>this.centerMainEditorLayout(this.stateModel.getRuntimeValue(a.MAIN_EDITOR_CENTERED)))))})),this._register(this.configurationService.onDidChangeConfiguration((e=>{if([...Ei,"workbench.sideBar.location","workbench.statusBar.visible"].some((i=>e.affectsConfiguration(i)))){const i=e.affectsConfiguration("workbench.experimental.share.enabled")&&this.configurationService.getValue("workbench.experimental.share.enabled"),t=e.affectsConfiguration("workbench.navigationControl.enabled")&&this.configurationService.getValue("workbench.navigationControl.enabled");if((i||t)&&!1===this.configurationService.getValue(p.COMMAND_CENTER))return void this.configurationService.updateValue(p.COMMAND_CENTER,!0);const s=e.affectsConfiguration(p.EDITOR_ACTIONS_LOCATION)&&this.configurationService.getValue(p.EDITOR_ACTIONS_LOCATION)===ze.TITLEBAR,a=e.affectsConfiguration(p.COMMAND_CENTER)&&this.configurationService.getValue(p.COMMAND_CENTER),r=e.affectsConfiguration(p.LAYOUT_ACTIONS)&&this.configurationService.getValue(p.LAYOUT_ACTIONS);if((e.affectsConfiguration(p.ACTIVITY_BAR_LOCATION)&&[W.TOP,W.BOTTOM].includes(this.configurationService.getValue(p.ACTIVITY_BAR_LOCATION))||s||a||r)&&this.configurationService.getValue(x.CUSTOM_TITLE_BAR_VISIBILITY)===oe.NEVER)return void this.configurationService.updateValue(x.CUSTOM_TITLE_BAR_VISIBILITY,oe.AUTO);this.doUpdateLayoutConfiguration()}}))),this._register(_e((e=>this.onFullscreenChanged(e)))),this._register(this.editorGroupService.mainPart.onDidAddGroup((()=>this.centerMainEditorLayout(this.stateModel.getRuntimeValue(a.MAIN_EDITOR_CENTERED))))),this._register(this.editorGroupService.mainPart.onDidRemoveGroup((()=>this.centerMainEditorLayout(this.stateModel.getRuntimeValue(a.MAIN_EDITOR_CENTERED))))),this._register(this.editorGroupService.mainPart.onDidChangeGroupMaximized((()=>this.centerMainEditorLayout(this.stateModel.getRuntimeValue(a.MAIN_EDITOR_CENTERED))))),this._register(q(this.mainContainer,ve.SCROLL,(()=>this.mainContainer.scrollTop=0))),(Z||te||B)&&!X(this.configurationService)&&this._register(this.titleService.onMenubarVisibilityChange((e=>this.onMenubarToggled(e)))),this._register(this.themeService.onDidColorThemeChange((()=>this.updateWindowsBorder()))),this._register(this.hostService.onDidChangeFocus((e=>this.onWindowFocusChanged(e)))),this._register(this.hostService.onDidChangeActiveWindow((()=>this.onActiveWindowChanged()))),B&&"object"==typeof navigator.windowControlsOverlay&&this._register(q(navigator.windowControlsOverlay,"geometrychange",(()=>this.onDidChangeWCO()))),this._register(this.auxiliaryWindowService.onDidOpenAuxiliaryWindow((({window:e,disposables:i})=>{const t=e.window.vscodeWindowId;this.containerStylesLoaded.set(t,e.whenStylesHaveLoaded),e.whenStylesHaveLoaded.then((()=>this.containerStylesLoaded.delete(t))),i.add(J((()=>this.containerStylesLoaded.delete(t))));const s=i.add(new pe);this._onDidAddContainer.fire({container:e.container,disposables:s}),i.add(e.onDidLayout((i=>this.handleContainerDidLayout(e.container,i))))})))}onMenubarToggled(e){if(e!==this.state.runtime.menuBar.toggled){this.state.runtime.menuBar.toggled=e;const i=se(this.configurationService);(B&&"toggle"===i||this.state.runtime.mainWindowFullscreen&&("toggle"===i||"classic"===i))&&this.workbenchGrid.setViewVisible(this.titleBarPartView,y(this.configurationService,A,this.state.runtime.menuBar.toggled)),this.handleContainerDidLayout(this.mainContainer,this._mainContainerDimension)}}handleContainerDidLayout(e,i){e===this.mainContainer&&this._onDidLayoutMainContainer.fire(i),Ve(e)&&this._onDidLayoutActiveContainer.fire(i),this._onDidLayoutContainer.fire({container:e,dimension:i})}onFullscreenChanged(e){e===A.vscodeWindowId&&(this.state.runtime.mainWindowFullscreen=ie(A),this.state.runtime.mainWindowFullscreen?this.mainContainer.classList.add("fullscreen"):(this.mainContainer.classList.remove("fullscreen"),this.stateModel.getRuntimeValue(a.ZEN_MODE_EXIT_INFO).transitionedToFullScreen&&this.isZenModeActive()&&this.toggleZenMode()),this.workbenchGrid.edgeSnapping=this.state.runtime.mainWindowFullscreen,Ze(this.configurationService)&&(this.workbenchGrid.setViewVisible(this.titleBarPartView,y(this.configurationService,A,this.state.runtime.menuBar.toggled)),this.updateWindowsBorder(!0)))}onActiveWindowChanged(){const e=this.getActiveContainerId();this.state.runtime.activeContainerId!==e&&(this.state.runtime.activeContainerId=e,this.updateWindowsBorder(),this._onDidChangeActiveContainer.fire())}onWindowFocusChanged(e){this.state.runtime.hasFocus!==e&&(this.state.runtime.hasFocus=e,this.updateWindowsBorder())}getActiveContainerId(){const e=this.activeContainer;return D(e).vscodeWindowId}doUpdateLayoutConfiguration(e){this.updateCustomTitleBarVisibility(),this.updateMenubarVisibility(!!e),this.editorGroupService.whenRestored.then((()=>this.centerMainEditorLayout(this.stateModel.getRuntimeValue(a.MAIN_EDITOR_CENTERED),e)))}setSideBarPosition(e){const i=this.getPart(r.ACTIVITYBAR_PART),t=this.getPart(r.SIDEBAR_PART),s=this.getPart(r.AUXILIARYBAR_PART),n=e===m.LEFT?"left":"right",o=e===m.RIGHT?"left":"right",h=this.getPanelAlignment(),d=this.getPanelPosition();this.stateModel.setRuntimeValue(a.SIDEBAR_POSITON,e);const l=k(i.getContainer()),c=k(t.getContainer()),u=k(s.getContainer());l.classList.remove(o),c.classList.remove(o),l.classList.add(n),c.classList.add(n),u.classList.remove(n),u.classList.add(o),i.updateStyles(),t.updateStyles(),s.updateStyles(),this.adjustPartPositions(e,h,d)}updateWindowsBorder(e=!1){if(B||Z||(Z||te)&&Ke(this.configurationService)||X(this.configurationService))return;const i=this.themeService.getColorTheme(),t=i.getColor(li),s=i.getColor(di),a=this.hasMainWindowBorder();for(const e of this.containers){const i=e===this.mainContainer,a=this.activeContainer===e;let r=!1;if(!this.state.runtime.mainWindowFullscreen&&(t||s)){r=!0;const i=a&&this.state.runtime.hasFocus?t:s??t;e.style.setProperty("--window-border-color",i?.toString()??"transparent")}i&&(this.state.runtime.mainWindowBorder=r),e.classList.toggle("border",r)}!e&&a!==this.hasMainWindowBorder()&&this.layout()}initLayoutState(e,i){this._mainContainerDimension=U(this.parent,ue),this.stateModel=new O(this.storageService,this.configurationService,this.contextService),this.stateModel.load(this._mainContainerDimension),this.stateModel.getRuntimeValue(a.PANEL_HIDDEN)&&this.stateModel.getRuntimeValue(a.EDITOR_HIDDEN)&&this.stateModel.setRuntimeValue(a.EDITOR_HIDDEN,!1),this._register(this.stateModel.onDidChangeState((e=>{e.key===a.ACTIVITYBAR_HIDDEN&&this.setActivityBarHidden(e.value),e.key===a.STATUSBAR_HIDDEN&&this.setStatusBarHidden(e.value),e.key===a.SIDEBAR_POSITON&&this.setSideBarPosition(e.value),e.key===a.PANEL_POSITION&&this.setPanelPosition(e.value),e.key===a.PANEL_ALIGNMENT&&this.setPanelAlignment(e.value),this.doUpdateLayoutConfiguration()})));const t=this.getInitialEditorsState();t&&this.logService.trace("Initial editor state",t);const s={layout:{editors:t?.layout},editor:{restoreEditors:this.shouldRestoreEditors(this.contextService,t),editorsToOpen:this.resolveEditorsToOpen(i,t)},views:{defaults:this.getDefaultLayoutViews(this.environmentService,this.storageService),containerToRestore:{}}},n={activeContainerId:this.getActiveContainerId(),mainWindowFullscreen:ie(A),hasFocus:this.hostService.hasFocus,maximized:new Set,mainWindowBorder:!1,menuBar:{toggled:!1},zenMode:{transitionDisposables:new fe}};if(this.state={initialization:s,runtime:n},this.isVisible(r.SIDEBAR_PART)){let i;i=!this.environmentService.isBuilt||e.startupKind===Ue.ReloadedWindow||this.environmentService.isExtensionDevelopment&&!this.environmentService.extensionTestsLocationURI?this.storageService.get(Ne.activeViewletSettingsKey,I.WORKSPACE,this.viewDescriptorService.getDefaultViewContainer(g.Sidebar)?.id):this.viewDescriptorService.getDefaultViewContainer(g.Sidebar)?.id,i?this.state.initialization.views.containerToRestore.sideBar=i:this.stateModel.setRuntimeValue(a.SIDEBAR_HIDDEN,!0)}if(this.isVisible(r.PANEL_PART)){const e=this.storageService.get(Me.activePanelSettingsKey,I.WORKSPACE,this.viewDescriptorService.getDefaultViewContainer(g.Panel)?.id);e?this.state.initialization.views.containerToRestore.panel=e:this.stateModel.setRuntimeValue(a.PANEL_HIDDEN,!0)}if(this.isVisible(r.AUXILIARYBAR_PART)){const e=this.storageService.get(Ai.activeViewSettingsKey,I.WORKSPACE,this.viewDescriptorService.getDefaultViewContainer(g.AuxiliaryBar)?.id);e?this.state.initialization.views.containerToRestore.auxiliaryBar=e:this.stateModel.setRuntimeValue(a.AUXILIARYBAR_HIDDEN,!0)}this.updateWindowsBorder(!0)}getDefaultLayoutViews(e,i){const t=e.options?.defaultLayout;if(!t||!t.force&&!i.isNew(I.WORKSPACE))return;const{views:s}=t;return s?.length?s.map((e=>e.id)):void 0}shouldRestoreEditors(e,i){return!We(e.getWorkspace())&&(!("preserve"!==this.configurationService.getValue("window.restoreWindows"))||void 0===i)}willRestoreEditors(){return this.state.initialization.editor.restoreEditors}async resolveEditorsToOpen(e,i){if(i){const t=G(await K(i.filesToMerge,e,this.logService));if(4===t.length&&z(t[0])&&z(t[1])&&z(t[2])&&z(t[3]))return[{editor:{input1:{resource:t[0].resource},input2:{resource:t[1].resource},base:{resource:t[2].resource},result:{resource:t[3].resource},options:{pinned:!0}}}];const s=G(await K(i.filesToDiff,e,this.logService));if(2===s.length)return[{editor:{original:{resource:s[0].resource},modified:{resource:s[1].resource},options:{pinned:!0}}}];const a=[],r=await K(i.filesToOpenOrCreate,e,this.logService);for(let e=0;e<r.length;e++){const t=r[e];t&&a.push({editor:t,viewColumn:i.filesToOpenOrCreate?.[e].viewColumn})}return a}return this.contextService.getWorkbenchState()===ne.EMPTY&&"newUntitledFile"===this.configurationService.getValue("workbench.startupEditor")?this.editorGroupService.hasRestorableState||await this.workingCopyBackupService.hasBackups()?[]:[{editor:{resource:void 0}}]:[]}_openedDefaultEditors=!1;get openedDefaultEditors(){return this._openedDefaultEditors}getInitialEditorsState(){const e=this.environmentService.options?.defaultLayout;if((e?.editors?.length||e?.layout?.editors)&&(e.force||this.storageService.isNew(I.WORKSPACE)))return this._openedDefaultEditors=!0,{layout:e.layout?.editors,filesToOpenOrCreate:e?.editors?.map((e=>({viewColumn:e.viewColumn,fileUri:hi.revive(e.uri),openOnlyIfExists:e.openOnlyIfExists,options:e.options})))};const{filesToOpenOrCreate:i,filesToDiff:t,filesToMerge:s}=this.environmentService;return i||t||s?{filesToOpenOrCreate:i,filesToDiff:t,filesToMerge:s}:void 0}whenReadyPromise=new de;whenReady=this.whenReadyPromise.p;whenRestoredPromise=new de;whenRestored=this.whenRestoredPromise.p;restored=!1;isRestored(){return this.restored}restoreParts(){const e=[],i=[];e.push((async()=>{R("code/willRestoreEditors"),await this.editorGroupService.whenReady,R("code/restoreEditors/editorGroupsReady"),this.state.initialization.layout?.editors&&this.editorGroupService.mainPart.applyLayout(this.state.initialization.layout.editors);const e=await this.state.initialization.editor.editorsToOpen;let t;if(R("code/restoreEditors/editorsToOpenResolved"),e.length){const i=this.editorGroupService.mainPart.getGroups(qe.GRID_APPEARANCE),s=new Map;for(const t of e){const e=i[(t.viewColumn??1)-1];let a=s.get(e.id);a||(a=new Set,s.set(e.id,a)),a.add(t.editor)}t=Promise.all(Array.from(s).map((async([e,i])=>{try{await this.editorService.openEditors(Array.from(i),e,{validateTrust:!0})}catch(e){this.logService.error(e)}})))}i.push(Promise.all([t?.finally((()=>R("code/restoreEditors/editorsOpened"))),this.editorGroupService.whenRestored.finally((()=>R("code/restoreEditors/editorGroupsRestored")))]).finally((()=>{R("code/didRestoreEditors")})))})());const t=(async()=>{if(this.state.initialization.views.defaults?.length){R("code/willOpenDefaultViews");const e=[],i=i=>{const t=this.viewDescriptorService.getViewLocationById(i.id);if(null!==t){const s=this.viewDescriptorService.getViewContainerByViewId(i.id);if(s){i.order>=(e?.[t]?.order??0)&&(e[t]={id:s.id,order:i.order});const a=this.viewDescriptorService.getViewContainerModel(s);return a.setCollapsed(i.id,!1),a.setVisible(i.id,!0),!0}}return!1},t=[...this.state.initialization.views.defaults].reverse().map(((e,i)=>({id:e,order:i})));let s=t.length;for(;s;)s--,i(t[s])&&t.splice(s,1);if(t.length){await this.extensionService.whenInstalledExtensionsRegistered();let e=t.length;for(;e;)e--,i(t[e])&&t.splice(e,1)}e[g.Sidebar]&&(this.state.initialization.views.containerToRestore.sideBar=e[g.Sidebar].id),e[g.Panel]&&(this.state.initialization.views.containerToRestore.panel=e[g.Panel].id),e[g.AuxiliaryBar]&&(this.state.initialization.views.containerToRestore.auxiliaryBar=e[g.AuxiliaryBar].id),R("code/didOpenDefaultViews")}})();e.push(t),e.push((async()=>{await t,this.state.initialization.views.containerToRestore.sideBar&&(R("code/willRestoreViewlet"),await this.openViewContainer(g.Sidebar,this.state.initialization.views.containerToRestore.sideBar),R("code/didRestoreViewlet"))})()),e.push((async()=>{await t,this.state.initialization.views.containerToRestore.panel&&(R("code/willRestorePanel"),await this.openViewContainer(g.Panel,this.state.initialization.views.containerToRestore.panel),R("code/didRestorePanel"))})()),e.push((async()=>{await t,this.state.initialization.views.containerToRestore.auxiliaryBar&&(R("code/willRestoreAuxiliaryBar"),await this.openViewContainer(g.AuxiliaryBar,this.state.initialization.views.containerToRestore.auxiliaryBar),R("code/didRestoreAuxiliaryBar"))})());const s=this.isZenModeActive(),r=ce(this.configurationService).restore;s&&(this.setZenModeActive(!r),this.toggleZenMode(!1,!0)),this.stateModel.getRuntimeValue(a.MAIN_EDITOR_CENTERED)&&this.centerMainEditorLayout(!0,!0),he.settled(e).finally((()=>{this.whenReadyPromise.complete(),he.settled(i).finally((()=>{this.restored=!0,this.whenRestoredPromise.complete()}))}))}async openViewContainer(e,i,t){let s=await this.paneCompositeService.openPaneComposite(i,e,t);s||(s=await this.paneCompositeService.openPaneComposite(this.viewDescriptorService.getDefaultViewContainer(e)?.id,e,t),!s&&await this.paneCompositeService.openPaneComposite(this.paneCompositeService.getVisiblePaneCompositeIds(e).at(0),e,t))}registerPart(e){const i=e.getId();return this.parts.set(i,e),J((()=>this.parts.delete(i)))}getPart(e){const i=this.parts.get(e);if(!i)throw new Error(`Unknown part ${e}`);return i}registerNotifications(e){this._register(e.onDidChangeNotificationsVisibility((e=>this._onDidChangeNotificationsVisibility.fire(e))))}hasFocus(e){const i=this.getContainer(Y(),e);if(!i)return!1;const t=ye();return!!t&&Pe(t,i)}_getFocusedPart(){for(const e of this.parts.keys())if(this.hasFocus(e))return e}focusPart(e,i=A){const t=this.getContainer(i,e)??this.mainContainer;switch(e){case r.EDITOR_PART:this.editorGroupService.getPart(t).activeGroup.focus();break;case r.PANEL_PART:this.paneCompositeService.getActivePaneComposite(g.Panel)?.focus();break;case r.SIDEBAR_PART:this.paneCompositeService.getActivePaneComposite(g.Sidebar)?.focus();break;case r.AUXILIARYBAR_PART:this.paneCompositeService.getActivePaneComposite(g.AuxiliaryBar)?.focus();break;case r.ACTIVITYBAR_PART:this.getPart(r.SIDEBAR_PART).focusActivityBar();break;case r.STATUSBAR_PART:this.statusBarService.getPart(t).focus();break;default:t?.focus()}}getContainer(e,i){if(typeof i>"u")return this.getContainerFromDocument(e.document);if(e===A)return this.getPart(i).getContainer();let t;return i===r.EDITOR_PART?t=this.editorGroupService.getPart(this.getContainerFromDocument(e.document)):i===r.STATUSBAR_PART?t=this.statusBarService.getPart(this.getContainerFromDocument(e.document)):i===r.TITLEBAR_PART&&(t=this.titleService.getPart(this.getContainerFromDocument(e.document))),t instanceof ti?t.getContainer():void 0}isVisible(e,i=A){if(i!==A&&e===r.EDITOR_PART)return!0;switch(e){case r.TITLEBAR_PART:return this.initialized?this.workbenchGrid.isViewVisible(this.titleBarPartView):y(this.configurationService,A,this.state.runtime.menuBar.toggled);case r.SIDEBAR_PART:return!this.stateModel.getRuntimeValue(a.SIDEBAR_HIDDEN);case r.PANEL_PART:return!this.stateModel.getRuntimeValue(a.PANEL_HIDDEN);case r.AUXILIARYBAR_PART:return!this.stateModel.getRuntimeValue(a.AUXILIARYBAR_HIDDEN);case r.STATUSBAR_PART:return!this.stateModel.getRuntimeValue(a.STATUSBAR_HIDDEN);case r.ACTIVITYBAR_PART:return!this.stateModel.getRuntimeValue(a.ACTIVITYBAR_HIDDEN);case r.EDITOR_PART:return!this.stateModel.getRuntimeValue(a.EDITOR_HIDDEN);case r.BANNER_PART:return!!this.initialized&&this.workbenchGrid.isViewVisible(this.bannerPartView);default:return!1}}shouldShowBannerFirst(){return B&&!De()}focus(){this.isPanelMaximized()&&this.mainContainer===this.activeContainer?this.focusPart(r.PANEL_PART):this.focusPart(r.EDITOR_PART,D(this.activeContainer))}focusPanelOrEditor(){const e=this.paneCompositeService.getActivePaneComposite(g.Panel);!this.hasFocus(r.PANEL_PART)&&this.isVisible(r.EDITOR_PART)||!e?this.focus():e.focus()}getMaximumEditorDimensions(e){const i=D(e),t=this.getContainerDimension(e);if(e===this.mainContainer){const e=v(this.getPanelPosition()),s=(this.isVisible(r.ACTIVITYBAR_PART)?this.activityBarPartView.minimumWidth:0)+(this.isVisible(r.SIDEBAR_PART)?this.sideBarPartView.minimumWidth:0)+(this.isVisible(r.PANEL_PART)&&!e?this.panelPartView.minimumWidth:0)+(this.isVisible(r.AUXILIARYBAR_PART)?this.auxiliaryBarPartView.minimumWidth:0),a=(this.isVisible(r.TITLEBAR_PART,i)?this.titleBarPartView.minimumHeight:0)+(this.isVisible(r.STATUSBAR_PART,i)?this.statusBarPartView.minimumHeight:0)+(this.isVisible(r.PANEL_PART)&&e?this.panelPartView.minimumHeight:0);return{width:t.width-s,height:t.height-a}}{const e=(this.isVisible(r.TITLEBAR_PART,i)?this.titleBarPartView.minimumHeight:0)+(this.isVisible(r.STATUSBAR_PART,i)?this.statusBarPartView.minimumHeight:0);return{width:t.width,height:t.height-e}}}isZenModeActive(){return this.stateModel.getRuntimeValue(a.ZEN_MODE_ACTIVE)}setZenModeActive(e){this.stateModel.setRuntimeValue(a.ZEN_MODE_ACTIVE,e)}toggleZenMode(e,i=!1){const t=this._getFocusedPart();this.setZenModeActive(!this.isZenModeActive()),this.state.runtime.zenMode.transitionDisposables.clearAndDisposeAll();const s=e=>{for(const i of this.mainPartEditorService.visibleTextEditorControls){if(!e&&ni(i)&&i.hasModel()){const t=i.getModel();e=this.configurationService.getValue("editor.lineNumbers",{resource:t.uri,overrideIdentifier:t.getLanguageId()})}e||(e=this.configurationService.getValue("editor.lineNumbers")),i.updateOptions({lineNumbers:e})}};let n=!1;const o=ce(this.configurationService),h=this.stateModel.getRuntimeValue(a.ZEN_MODE_EXIT_INFO);this.isZenModeActive()?(n=!this.state.runtime.mainWindowFullscreen&&o.fullScreen&&!ae,i||(h.transitionedToFullScreen=n,h.transitionedToCenteredEditorLayout=!this.isMainEditorLayoutCentered()&&o.centerLayout,h.handleNotificationsDoNotDisturbMode=this.notificationService.getFilter()===M.OFF,h.wasVisible.sideBar=this.isVisible(r.SIDEBAR_PART),h.wasVisible.panel=this.isVisible(r.PANEL_PART),h.wasVisible.auxiliaryBar=this.isVisible(r.AUXILIARYBAR_PART),this.stateModel.setRuntimeValue(a.ZEN_MODE_EXIT_INFO,h)),this.setPanelHidden(!0,!0),this.setAuxiliaryBarHidden(!0,!0),this.setSideBarHidden(!0),o.hideActivityBar&&this.setActivityBarHidden(!0),o.hideStatusBar&&this.setStatusBarHidden(!0),o.hideLineNumbers&&(s("off"),this.state.runtime.zenMode.transitionDisposables.set(E.HIDE_LINENUMBERS,this.mainPartEditorService.onDidVisibleEditorsChange((()=>s("off"))))),o.showTabs!==this.editorGroupService.partOptions.showTabs&&this.state.runtime.zenMode.transitionDisposables.set(E.SHOW_TABS,this.editorGroupService.mainPart.enforcePartOptions({showTabs:o.showTabs})),o.silentNotifications&&h.handleNotificationsDoNotDisturbMode&&this.notificationService.setFilter(M.ERROR),o.centerLayout&&this.centerMainEditorLayout(!0,!0),this.state.runtime.zenMode.transitionDisposables.set("configurationChange",this.configurationService.onDidChangeConfiguration((e=>{if(e.affectsConfiguration(E.HIDE_ACTIVITYBAR)){const e=this.configurationService.getValue(E.HIDE_ACTIVITYBAR);this.setActivityBarHidden(e)}if(e.affectsConfiguration(E.HIDE_STATUSBAR)){const e=this.configurationService.getValue(E.HIDE_STATUSBAR);this.setStatusBarHidden(e)}if(e.affectsConfiguration(E.CENTER_LAYOUT)){const e=this.configurationService.getValue(E.CENTER_LAYOUT);this.centerMainEditorLayout(e,!0)}if(e.affectsConfiguration(E.SHOW_TABS)){const e=this.configurationService.getValue(E.SHOW_TABS)??"multiple";this.state.runtime.zenMode.transitionDisposables.set(E.SHOW_TABS,this.editorGroupService.mainPart.enforcePartOptions({showTabs:e}))}if(e.affectsConfiguration(E.SILENT_NOTIFICATIONS)){const e=!!this.configurationService.getValue(E.SILENT_NOTIFICATIONS);h.handleNotificationsDoNotDisturbMode&&this.notificationService.setFilter(e?M.ERROR:M.OFF)}if(e.affectsConfiguration(E.HIDE_LINENUMBERS)){const e=this.configurationService.getValue(E.HIDE_LINENUMBERS)?"off":void 0;s(e),this.state.runtime.zenMode.transitionDisposables.set(E.HIDE_LINENUMBERS,this.mainPartEditorService.onDidVisibleEditorsChange((()=>s(e))))}})))):(h.wasVisible.panel&&this.setPanelHidden(!1,!0),h.wasVisible.auxiliaryBar&&this.setAuxiliaryBarHidden(!1,!0),h.wasVisible.sideBar&&this.setSideBarHidden(!1),this.stateModel.getRuntimeValue(a.ACTIVITYBAR_HIDDEN,!0)||this.setActivityBarHidden(!1),this.stateModel.getRuntimeValue(a.STATUSBAR_HIDDEN,!0)||this.setStatusBarHidden(!1),h.transitionedToCenteredEditorLayout&&this.centerMainEditorLayout(!1,!0),h.handleNotificationsDoNotDisturbMode&&this.notificationService.setFilter(M.OFF),s(),n=h.transitionedToFullScreen&&this.state.runtime.mainWindowFullscreen),e||this.layout(),n&&this.hostService.toggleFullScreen(A),t&&this.isVisible(t,D(this.activeContainer))?He(t)?this.focusPart(t,D(this.activeContainer)):this.focusPart(t):this.focus(),this._onDidChangeZenMode.fire(this.isZenModeActive())}setStatusBarHidden(e){this.stateModel.setRuntimeValue(a.STATUSBAR_HIDDEN,e),e?this.mainContainer.classList.add("nostatusbar"):this.mainContainer.classList.remove("nostatusbar"),this.workbenchGrid.setViewVisible(this.statusBarPartView,!e)}createWorkbenchLayout(){const e=this.getPart(r.TITLEBAR_PART),i=this.getPart(r.BANNER_PART),t=this.getPart(r.EDITOR_PART),s=this.getPart(r.ACTIVITYBAR_PART),n=this.getPart(r.PANEL_PART),o=this.getPart(r.AUXILIARYBAR_PART),h=this.getPart(r.SIDEBAR_PART),d=this.getPart(r.STATUSBAR_PART);this.titleBarPartView=e,this.bannerPartView=i,this.sideBarPartView=h,this.activityBarPartView=s,this.editorPartView=t,this.panelPartView=n,this.auxiliaryBarPartView=o,this.statusBarPartView=d;const l={[r.ACTIVITYBAR_PART]:this.activityBarPartView,[r.BANNER_PART]:this.bannerPartView,[r.TITLEBAR_PART]:this.titleBarPartView,[r.EDITOR_PART]:this.editorPartView,[r.PANEL_PART]:this.panelPartView,[r.SIDEBAR_PART]:this.sideBarPartView,[r.STATUSBAR_PART]:this.statusBarPartView,[r.AUXILIARYBAR_PART]:this.auxiliaryBarPartView},c=ei.deserialize(this.createGridDescriptor(),{fromJSON:({type:e})=>l[e]},{proportionalLayout:!1});this.mainContainer.prepend(c.element),this.mainContainer.setAttribute("role","application"),this.workbenchGrid=c,this.workbenchGrid.edgeSnapping=this.state.runtime.mainWindowFullscreen;for(const a of[e,t,s,n,h,d,o,i])this._register(a.onDidVisibilityChange((e=>{a===h?this.setSideBarHidden(!e):a===n?this.setPanelHidden(!e,!0):a===o?this.setAuxiliaryBarHidden(!e,!0):a===t&&this.setEditorHidden(!e),this._onDidChangePartVisibility.fire(),this.handleContainerDidLayout(this.mainContainer,this._mainContainerDimension)})));this._register(this.storageService.onWillSaveState((e=>{const i=this.stateModel.getRuntimeValue(a.SIDEBAR_HIDDEN)?this.workbenchGrid.getViewCachedVisibleSize(this.sideBarPartView):this.workbenchGrid.getViewSize(this.sideBarPartView).width;this.stateModel.setInitializationValue(a.SIDEBAR_SIZE,i);const t=this.stateModel.getRuntimeValue(a.PANEL_HIDDEN)?this.workbenchGrid.getViewCachedVisibleSize(this.panelPartView):v(this.stateModel.getRuntimeValue(a.PANEL_POSITION))?this.workbenchGrid.getViewSize(this.panelPartView).height:this.workbenchGrid.getViewSize(this.panelPartView).width;this.stateModel.setInitializationValue(a.PANEL_SIZE,t);const s=this.stateModel.getRuntimeValue(a.AUXILIARYBAR_HIDDEN)?this.workbenchGrid.getViewCachedVisibleSize(this.auxiliaryBarPartView):this.workbenchGrid.getViewSize(this.auxiliaryBarPartView).width;this.stateModel.setInitializationValue(a.AUXILIARYBAR_SIZE,s),this.stateModel.save(!0,!0)})))}layout(){this.disposed||(this._mainContainerDimension=U(this.state.runtime.mainWindowFullscreen?A.document.body:this.parent,ue),this.logService.trace(`Layout#layout, height: ${this._mainContainerDimension.height}, width: ${this._mainContainerDimension.width}`),Te(this.mainContainer,0,0,0,0,"relative"),Ee(this.mainContainer,this._mainContainerDimension.width,this._mainContainerDimension.height),this.workbenchGrid.layout(this._mainContainerDimension.width,this._mainContainerDimension.height),this.initialized=!0,this.handleContainerDidLayout(this.mainContainer,this._mainContainerDimension))}isMainEditorLayoutCentered(){return this.stateModel.getRuntimeValue(a.MAIN_EDITOR_CENTERED)}centerMainEditorLayout(e,i){this.stateModel.setRuntimeValue(a.MAIN_EDITOR_CENTERED,e);const t=G(this.editorGroupService.mainPart.groups.map((e=>e.activeEditor))).some((e=>e instanceof ci?this.configurationService.getValue("diffEditor.renderSideBySide"):!!e?.hasCapability(Le.MultipleEditors))),s=this.editorGroupService.getLayout();let r=!1;r=s.orientation===Je.HORIZONTAL?s.groups.length>1:s.groups.some((e=>e.groups&&e.groups.length>1)),this.configurationService.getValue("workbench.editor.centeredLayoutAutoResize")&&(r&&!this.editorGroupService.mainPart.hasMaximizedGroup()||t)&&(e=!1),this.editorGroupService.mainPart.isLayoutCentered()!==e&&(this.editorGroupService.mainPart.centerLayout(e),i||this.layout()),this._onDidChangeMainEditorCenteredLayout.fire(this.stateModel.getRuntimeValue(a.MAIN_EDITOR_CENTERED))}getSize(e){return this.workbenchGrid.getViewSize(this.getPart(e))}setSize(e,i){this.workbenchGrid.resizeView(this.getPart(e),i)}resizePart(e,i,t){const s=Math.sign(i)*Q(Y(),Math.abs(i)),a=Math.sign(t)*Q(Y(),Math.abs(t));let n;switch(e){case r.SIDEBAR_PART:n=this.workbenchGrid.getViewSize(this.sideBarPartView),this.workbenchGrid.resizeView(this.sideBarPartView,{width:n.width+s,height:n.height});break;case r.PANEL_PART:n=this.workbenchGrid.getViewSize(this.panelPartView),this.workbenchGrid.resizeView(this.panelPartView,{width:n.width+(v(this.getPanelPosition())?0:s),height:n.height+(v(this.getPanelPosition())?a:0)});break;case r.AUXILIARYBAR_PART:n=this.workbenchGrid.getViewSize(this.auxiliaryBarPartView),this.workbenchGrid.resizeView(this.auxiliaryBarPartView,{width:n.width+s,height:n.height});break;case r.EDITOR_PART:if(n=this.workbenchGrid.getViewSize(this.editorPartView),1===this.editorGroupService.mainPart.count)this.workbenchGrid.resizeView(this.editorPartView,{width:n.width+s,height:n.height+a});else{const e=this.editorGroupService.mainPart.activeGroup,{width:i,height:t}=this.editorGroupService.mainPart.getSize(e);this.editorGroupService.mainPart.setSize(e,{width:i+s,height:t+a});const{width:r,height:o}=this.editorGroupService.mainPart.getSize(e);(a&&t===o||s&&i===r)&&this.workbenchGrid.resizeView(this.editorPartView,{width:n.width+(s&&i===r?s:0),height:n.height+(a&&t===o?a:0)})}break;default:return}}setActivityBarHidden(e){this.stateModel.setRuntimeValue(a.ACTIVITYBAR_HIDDEN,e),this.workbenchGrid.setViewVisible(this.activityBarPartView,!e)}setBannerHidden(e){this.workbenchGrid.setViewVisible(this.bannerPartView,!e)}setEditorHidden(e){this.stateModel.setRuntimeValue(a.EDITOR_HIDDEN,e),e?this.mainContainer.classList.add("nomaineditorarea"):this.mainContainer.classList.remove("nomaineditorarea"),this.workbenchGrid.setViewVisible(this.editorPartView,!e),e&&!this.isVisible(r.PANEL_PART)&&this.setPanelHidden(!1,!0)}getLayoutClasses(){return G([this.isVisible(r.SIDEBAR_PART)?void 0:"nosidebar",this.isVisible(r.EDITOR_PART,A)?void 0:"nomaineditorarea",this.isVisible(r.PANEL_PART)?void 0:"nopanel",this.isVisible(r.AUXILIARYBAR_PART)?void 0:"noauxiliarybar",this.isVisible(r.STATUSBAR_PART)?void 0:"nostatusbar",this.state.runtime.mainWindowFullscreen?"fullscreen":void 0])}setSideBarHidden(e){if(this.stateModel.setRuntimeValue(a.SIDEBAR_HIDDEN,e),e?this.mainContainer.classList.add("nosidebar"):this.mainContainer.classList.remove("nosidebar"),e&&this.paneCompositeService.getActivePaneComposite(g.Sidebar))this.paneCompositeService.hideActivePaneComposite(g.Sidebar),this.focusPanelOrEditor();else if(!e&&!this.paneCompositeService.getActivePaneComposite(g.Sidebar)){const e=this.paneCompositeService.getLastActivePaneCompositeId(g.Sidebar);e&&this.openViewContainer(g.Sidebar,e,!0)}this.workbenchGrid.setViewVisible(this.sideBarPartView,!e)}hasViews(e){const i=this.viewDescriptorService.getViewContainerById(e);if(!i)return!1;const t=this.viewDescriptorService.getViewContainerModel(i);return!!t&&t.activeViewDescriptors.length>=1}adjustPartPositions(e,i,t){const s=!v(t),a=s||!("center"===i||e===m.LEFT&&"right"===i||e===m.RIGHT&&"left"===i),n=s||!("center"===i||e===m.RIGHT&&"right"===i||e===m.LEFT&&"left"===i),o=this.isVisible(r.PANEL_PART)?this.workbenchGrid.getViewSize(this.panelPartView).width:N.Invisible(this.workbenchGrid.getViewCachedVisibleSize(this.panelPartView)??this.panelPartView.minimumWidth),h=this.isVisible(r.PANEL_PART)?this.workbenchGrid.getViewSize(this.panelPartView).height:N.Invisible(this.workbenchGrid.getViewCachedVisibleSize(this.panelPartView)??this.panelPartView.minimumHeight),d=this.isVisible(r.SIDEBAR_PART)?this.workbenchGrid.getViewSize(this.sideBarPartView).width:N.Invisible(this.workbenchGrid.getViewCachedVisibleSize(this.sideBarPartView)??this.sideBarPartView.minimumWidth),l=this.isVisible(r.AUXILIARYBAR_PART)?this.workbenchGrid.getViewSize(this.auxiliaryBarPartView).width:N.Invisible(this.workbenchGrid.getViewCachedVisibleSize(this.auxiliaryBarPartView)??this.auxiliaryBarPartView.minimumWidth),c=[r.PANEL_PART,r.SIDEBAR_PART,r.AUXILIARYBAR_PART].find((e=>this.hasFocus(e)));e===m.LEFT?(this.workbenchGrid.moveViewTo(this.activityBarPartView,[2,0]),this.workbenchGrid.moveView(this.sideBarPartView,d,a?this.editorPartView:this.activityBarPartView,a?w.Left:w.Right),n?this.workbenchGrid.moveView(this.auxiliaryBarPartView,l,this.editorPartView,w.Right):this.workbenchGrid.moveViewTo(this.auxiliaryBarPartView,[2,-1])):(this.workbenchGrid.moveViewTo(this.activityBarPartView,[2,-1]),this.workbenchGrid.moveView(this.sideBarPartView,d,a?this.editorPartView:this.activityBarPartView,a?w.Right:w.Left),n?this.workbenchGrid.moveView(this.auxiliaryBarPartView,l,this.editorPartView,w.Left):this.workbenchGrid.moveViewTo(this.auxiliaryBarPartView,[2,0])),c&&this.focusPart(c),s&&(this.workbenchGrid.moveView(this.panelPartView,o,this.editorPartView,t===m.LEFT?w.Left:w.Right),this.workbenchGrid.resizeView(this.panelPartView,{height:h,width:o})),this.isVisible(r.SIDEBAR_PART)&&this.workbenchGrid.resizeView(this.sideBarPartView,{height:this.workbenchGrid.getViewSize(this.sideBarPartView).height,width:d}),this.isVisible(r.AUXILIARYBAR_PART)&&this.workbenchGrid.resizeView(this.auxiliaryBarPartView,{height:this.workbenchGrid.getViewSize(this.auxiliaryBarPartView).height,width:l})}setPanelAlignment(e){v(this.getPanelPosition())||this.setPanelPosition(m.BOTTOM),"center"!==e&&this.isPanelMaximized()&&this.toggleMaximizedPanel(),this.stateModel.setRuntimeValue(a.PANEL_ALIGNMENT,e),this.adjustPartPositions(this.getSideBarPosition(),e,this.getPanelPosition()),this._onDidChangePanelAlignment.fire(e)}setPanelHidden(e,i){if(!this.workbenchGrid)return;const t=!this.isVisible(r.PANEL_PART);this.stateModel.setRuntimeValue(a.PANEL_HIDDEN,e);const s=this.isPanelMaximized(),n=this.panelOpensMaximized();e?this.mainContainer.classList.add("nopanel"):this.mainContainer.classList.remove("nopanel");let o=!1;if(e&&this.paneCompositeService.getActivePaneComposite(g.Panel))this.paneCompositeService.hideActivePaneComposite(g.Panel),o=!ae;else if(!e&&!this.paneCompositeService.getActivePaneComposite(g.Panel)){let e=this.paneCompositeService.getLastActivePaneCompositeId(g.Panel);(!e||!this.hasViews(e))&&(e=this.viewDescriptorService.getViewContainersByLocation(g.Panel).find((e=>this.hasViews(e.id)))?.id),e&&this.openViewContainer(g.Panel,e,!i)}e&&s&&this.toggleMaximizedPanel(),t!==e&&(this.workbenchGrid.setViewVisible(this.panelPartView,!e),e?this.stateModel.setRuntimeValue(a.PANEL_WAS_LAST_MAXIMIZED,s):!i&&s!==n&&this.toggleMaximizedPanel(),o&&this.editorGroupService.mainPart.activeGroup.focus())}toggleMaximizedPanel(){const e=this.workbenchGrid.getViewSize(this.panelPartView),i=this.getPanelPosition(),t=this.isPanelMaximized();t?(this.setEditorHidden(!1),this.workbenchGrid.resizeView(this.panelPartView,{width:v(i)?e.width:this.stateModel.getRuntimeValue(a.PANEL_LAST_NON_MAXIMIZED_WIDTH),height:v(i)?this.stateModel.getRuntimeValue(a.PANEL_LAST_NON_MAXIMIZED_HEIGHT):e.height})):(this.isVisible(r.PANEL_PART)&&(v(i)?this.stateModel.setRuntimeValue(a.PANEL_LAST_NON_MAXIMIZED_HEIGHT,e.height):this.stateModel.setRuntimeValue(a.PANEL_LAST_NON_MAXIMIZED_WIDTH,e.width)),this.setEditorHidden(!0)),this.stateModel.setRuntimeValue(a.PANEL_WAS_LAST_MAXIMIZED,!t)}panelOpensMaximized(){if("center"!==this.getPanelAlignment()&&v(this.getPanelPosition()))return!1;const e=Oe(this.configurationService.getValue("workbench.panel.opensMaximized")),i=this.stateModel.getRuntimeValue(a.PANEL_WAS_LAST_MAXIMIZED);return e===re.ALWAYS||e===re.REMEMBER_LAST&&i}setAuxiliaryBarHidden(e,i){if(this.stateModel.setRuntimeValue(a.AUXILIARYBAR_HIDDEN,e),e?this.mainContainer.classList.add("noauxiliarybar"):this.mainContainer.classList.remove("noauxiliarybar"),e&&this.paneCompositeService.getActivePaneComposite(g.AuxiliaryBar))this.paneCompositeService.hideActivePaneComposite(g.AuxiliaryBar),this.focusPanelOrEditor();else if(!e&&!this.paneCompositeService.getActivePaneComposite(g.AuxiliaryBar)){let e=this.paneCompositeService.getLastActivePaneCompositeId(g.AuxiliaryBar);(!e||!this.hasViews(e))&&(e=this.viewDescriptorService.getViewContainersByLocation(g.AuxiliaryBar).find((e=>this.hasViews(e.id)))?.id),e&&this.openViewContainer(g.AuxiliaryBar,e,!i)}this.workbenchGrid.setViewVisible(this.auxiliaryBarPartView,!e)}setPartHidden(e,i){switch(i){case r.ACTIVITYBAR_PART:return this.setActivityBarHidden(e);case r.SIDEBAR_PART:return this.setSideBarHidden(e);case r.EDITOR_PART:return this.setEditorHidden(e);case r.BANNER_PART:return this.setBannerHidden(e);case r.AUXILIARYBAR_PART:return this.setAuxiliaryBarHidden(e);case r.PANEL_PART:return this.setPanelHidden(e)}}hasMainWindowBorder(){return this.state.runtime.mainWindowBorder}getMainWindowBorderRadius(){return this.state.runtime.mainWindowBorder&&Be?"10px":void 0}isPanelMaximized(){return!("center"!==this.getPanelAlignment()&&v(this.getPanelPosition())||this.isVisible(r.EDITOR_PART,A))}getSideBarPosition(){return this.stateModel.getRuntimeValue(a.SIDEBAR_POSITON)}getPanelAlignment(){return this.stateModel.getRuntimeValue(a.PANEL_ALIGNMENT)}updateMenubarVisibility(e){const i=y(this.configurationService,A,this.state.runtime.menuBar.toggled);!e&&this.workbenchGrid&&i!==this.isVisible(r.TITLEBAR_PART,A)&&this.workbenchGrid.setViewVisible(this.titleBarPartView,i)}updateCustomTitleBarVisibility(){const e=y(this.configurationService,A,this.state.runtime.menuBar.toggled);e!==this.isVisible(r.TITLEBAR_PART)&&this.workbenchGrid.setViewVisible(this.titleBarPartView,e)}toggleMenuBar(){let e,i=se(this.configurationService);"string"!=typeof i&&(i="classic"),e="visible"===i||"classic"===i?X(this.configurationService)?"toggle":"compact":"classic",this.configurationService.updateValue("window.menuBarVisibility",e)}getPanelPosition(){return this.stateModel.getRuntimeValue(a.PANEL_POSITION)}setPanelPosition(e){this.isVisible(r.PANEL_PART)||this.setPanelHidden(!1);const i=this.getPart(r.PANEL_PART),t=L(this.getPanelPosition()),s=L(e),n=k(i.getContainer());n.classList.remove(t),n.classList.add(s),i.updateStyles();const o=this.workbenchGrid.getViewSize(this.panelPartView),h=this.workbenchGrid.getViewSize(this.sideBarPartView),d=this.workbenchGrid.getViewSize(this.auxiliaryBarPartView);let l=!this.isVisible(r.EDITOR_PART,A);s!==t&&!l&&(v(e)?this.stateModel.setRuntimeValue(a.PANEL_LAST_NON_MAXIMIZED_WIDTH,o.width):v(H(t))&&this.stateModel.setRuntimeValue(a.PANEL_LAST_NON_MAXIMIZED_HEIGHT,o.height)),v(e)&&"center"!==this.getPanelAlignment()&&l&&(this.toggleMaximizedPanel(),l=!1),this.stateModel.setRuntimeValue(a.PANEL_POSITION,e);const c=this.isVisible(r.SIDEBAR_PART),u=this.isVisible(r.AUXILIARYBAR_PART),g=this.hasFocus(r.PANEL_PART);e===m.BOTTOM?this.workbenchGrid.moveView(this.panelPartView,l?o.height:this.stateModel.getRuntimeValue(a.PANEL_LAST_NON_MAXIMIZED_HEIGHT),this.editorPartView,w.Down):e===m.TOP?this.workbenchGrid.moveView(this.panelPartView,l?o.height:this.stateModel.getRuntimeValue(a.PANEL_LAST_NON_MAXIMIZED_HEIGHT),this.editorPartView,w.Up):e===m.RIGHT?this.workbenchGrid.moveView(this.panelPartView,l?o.width:this.stateModel.getRuntimeValue(a.PANEL_LAST_NON_MAXIMIZED_WIDTH),this.editorPartView,w.Right):this.workbenchGrid.moveView(this.panelPartView,l?o.width:this.stateModel.getRuntimeValue(a.PANEL_LAST_NON_MAXIMIZED_WIDTH),this.editorPartView,w.Left),g&&this.focusPart(r.PANEL_PART),this.workbenchGrid.resizeView(this.sideBarPartView,h),c||this.setSideBarHidden(!0),this.workbenchGrid.resizeView(this.auxiliaryBarPartView,d),u||this.setAuxiliaryBarHidden(!0),v(e)&&this.adjustPartPositions(this.getSideBarPosition(),this.getPanelAlignment(),e),this._onDidChangePanelPosition.fire(s)}isWindowMaximized(e){return this.state.runtime.maximized.has(ee(e))}updateWindowMaximizedState(e,i){this.mainContainer.classList.toggle("maximized",i);const t=ee(e);i!==this.state.runtime.maximized.has(t)&&(i?this.state.runtime.maximized.add(t):this.state.runtime.maximized.delete(t),this.updateWindowsBorder(),this._onDidChangeWindowMaximized.fire({windowId:t,maximized:i}))}getVisibleNeighborPart(e,i){if(!this.workbenchGrid||!this.isVisible(e,A))return;const t=this.workbenchGrid.getNeighborViews(this.getPart(e),i,!1);if(t)for(const e of t){const i=[r.ACTIVITYBAR_PART,r.EDITOR_PART,r.PANEL_PART,r.AUXILIARYBAR_PART,r.SIDEBAR_PART,r.STATUSBAR_PART,r.TITLEBAR_PART].find((i=>this.getPart(i)===e&&this.isVisible(i,A)));if(void 0!==i)return i}}onDidChangeWCO(){const e=this.workbenchGrid.getNeighborViews(this.titleBarPartView,w.Up,!1).length>0,i=this.shouldShowBannerFirst();e!==i&&this.workbenchGrid.moveView(this.bannerPartView,N.Distribute,this.titleBarPartView,i?w.Up:w.Down),this.workbenchGrid.setViewVisible(this.titleBarPartView,y(this.configurationService,A,this.state.runtime.menuBar.toggled))}arrangeEditorNodes(e,i,t){if(!e.sideBar&&!e.auxiliaryBar)return e.editor.size=i,e.editor;const s=[e.editor];return e.editor.size=t,e.sideBar&&(this.stateModel.getRuntimeValue(a.SIDEBAR_POSITON)===m.LEFT?s.splice(0,0,e.sideBar):s.push(e.sideBar),e.editor.size-=this.stateModel.getRuntimeValue(a.SIDEBAR_HIDDEN)?0:e.sideBar.size),e.auxiliaryBar&&(this.stateModel.getRuntimeValue(a.SIDEBAR_POSITON)===m.RIGHT?s.splice(0,0,e.auxiliaryBar):s.push(e.auxiliaryBar),e.editor.size-=this.stateModel.getRuntimeValue(a.AUXILIARYBAR_HIDDEN)?0:e.auxiliaryBar.size),{type:"branch",data:s,size:i}}arrangeMiddleSectionNodes(e,i,t){const s=this.stateModel.getRuntimeValue(a.ACTIVITYBAR_HIDDEN)?0:e.activityBar.size,r=this.stateModel.getRuntimeValue(a.SIDEBAR_HIDDEN)?0:e.sideBar.size,n=this.stateModel.getRuntimeValue(a.AUXILIARYBAR_HIDDEN)?0:e.auxiliaryBar.size,o=this.stateModel.getInitializationValue(a.PANEL_SIZE)?0:e.panel.size,h=this.stateModel.getRuntimeValue(a.PANEL_POSITION),d=this.stateModel.getRuntimeValue(a.SIDEBAR_POSITON),l=[];if(v(h)){const c=this.stateModel.getRuntimeValue(a.PANEL_ALIGNMENT),u=!("center"===c||d===m.LEFT&&"right"===c||d===m.RIGHT&&"left"===c),g=!("center"===c||d===m.RIGHT&&"right"===c||d===m.LEFT&&"left"===c),A=i-s-(u?0:r)-(g?0:n),w=this.arrangeEditorNodes({editor:e.editor,sideBar:u?e.sideBar:void 0,auxiliaryBar:g?e.auxiliaryBar:void 0},t-o,A);l.push({type:"branch",data:h===m.BOTTOM?[w,e.panel]:[e.panel,w],size:A}),u||(d===m.LEFT?l.splice(0,0,e.sideBar):l.push(e.sideBar)),g||(d===m.RIGHT?l.splice(0,0,e.auxiliaryBar):l.push(e.auxiliaryBar)),d===m.LEFT?l.splice(0,0,e.activityBar):l.push(e.activityBar)}else l.push(e.editor),e.editor.size=i-s-r-o-n,h===m.RIGHT?l.push(e.panel):l.splice(0,0,e.panel),d===m.LEFT?(l.push(e.auxiliaryBar),l.splice(0,0,e.sideBar),l.splice(0,0,e.activityBar)):(l.splice(0,0,e.auxiliaryBar),l.push(e.sideBar),l.push(e.activityBar));return l}createGridDescriptor(){const{width:e,height:i}=this._mainContainerDimension,t=this.stateModel.getInitializationValue(a.SIDEBAR_SIZE),s=this.stateModel.getInitializationValue(a.AUXILIARYBAR_SIZE),n=this.stateModel.getInitializationValue(a.PANEL_SIZE),o=this.titleBarPartView.minimumHeight,h=this.bannerPartView.minimumHeight,d=this.statusBarPartView.minimumHeight,l=this.activityBarPartView.minimumWidth,c=i-o-d,u=[{type:"leaf",data:{type:r.TITLEBAR_PART},size:o,visible:this.isVisible(r.TITLEBAR_PART,A)},{type:"leaf",data:{type:r.BANNER_PART},size:h,visible:!1}],m={type:"leaf",data:{type:r.ACTIVITYBAR_PART},size:l,visible:!this.stateModel.getRuntimeValue(a.ACTIVITYBAR_HIDDEN)},g={type:"leaf",data:{type:r.SIDEBAR_PART},size:t,visible:!this.stateModel.getRuntimeValue(a.SIDEBAR_HIDDEN)},w={type:"leaf",data:{type:r.AUXILIARYBAR_PART},size:s,visible:this.isVisible(r.AUXILIARYBAR_PART)},I={type:"leaf",data:{type:r.EDITOR_PART},size:0,visible:!this.stateModel.getRuntimeValue(a.EDITOR_HIDDEN)},S={type:"leaf",data:{type:r.PANEL_PART},size:n,visible:!this.stateModel.getRuntimeValue(a.PANEL_HIDDEN)},R=this.arrangeMiddleSectionNodes({activityBar:m,auxiliaryBar:w,editor:I,panel:S,sideBar:g},e,c),P={root:{type:"branch",size:e,data:[...this.shouldShowBannerFirst()?u.reverse():u,{type:"branch",data:R,size:c},{type:"leaf",data:{type:r.STATUSBAR_PART},size:d,visible:!this.stateModel.getRuntimeValue(a.STATUSBAR_HIDDEN)}]},orientation:ii.VERTICAL,width:e,height:i},E={activityBarVisible:!this.stateModel.getRuntimeValue(a.ACTIVITYBAR_HIDDEN),sideBarVisible:!this.stateModel.getRuntimeValue(a.SIDEBAR_HIDDEN),auxiliaryBarVisible:!this.stateModel.getRuntimeValue(a.AUXILIARYBAR_HIDDEN),panelVisible:!this.stateModel.getRuntimeValue(a.PANEL_HIDDEN),statusbarVisible:!this.stateModel.getRuntimeValue(a.STATUSBAR_HIDDEN),sideBarPosition:L(this.stateModel.getRuntimeValue(a.SIDEBAR_POSITON)),panelPosition:L(this.stateModel.getRuntimeValue(a.PANEL_POSITION))};return this.telemetryService.publicLog2("startupLayout",E),P}dispose(){super.dispose(),this.disposed=!0}}function ce(e){return e.getValue("zenMode")}class ge{constructor(e,i,t,s){this.name=e,this.scope=i,this.target=t,this.defaultValue=s}}class T extends ge{constructor(e,i,t,s,a){super(e,i,t,s),this.zenModeIgnore=a}runtime=!0}class j extends ge{runtime=!1}const a={MAIN_EDITOR_CENTERED:new T("editor.centered",I.WORKSPACE,f.MACHINE,!1),ZEN_MODE_ACTIVE:new T("zenMode.active",I.WORKSPACE,f.MACHINE,!1),ZEN_MODE_EXIT_INFO:new T("zenMode.exitInfo",I.WORKSPACE,f.MACHINE,{transitionedToCenteredEditorLayout:!1,transitionedToFullScreen:!1,handleNotificationsDoNotDisturbMode:!1,wasVisible:{auxiliaryBar:!1,panel:!1,sideBar:!1}}),SIDEBAR_SIZE:new j("sideBar.size",I.PROFILE,f.MACHINE,200),AUXILIARYBAR_SIZE:new j("auxiliaryBar.size",I.PROFILE,f.MACHINE,200),PANEL_SIZE:new j("panel.size",I.PROFILE,f.MACHINE,300),PANEL_LAST_NON_MAXIMIZED_HEIGHT:new T("panel.lastNonMaximizedHeight",I.PROFILE,f.MACHINE,300),PANEL_LAST_NON_MAXIMIZED_WIDTH:new T("panel.lastNonMaximizedWidth",I.PROFILE,f.MACHINE,300),PANEL_WAS_LAST_MAXIMIZED:new T("panel.wasLastMaximized",I.WORKSPACE,f.MACHINE,!1),SIDEBAR_POSITON:new T("sideBar.position",I.WORKSPACE,f.MACHINE,m.LEFT),PANEL_POSITION:new T("panel.position",I.WORKSPACE,f.MACHINE,m.BOTTOM),PANEL_ALIGNMENT:new T("panel.alignment",I.PROFILE,f.USER,"center"),ACTIVITYBAR_HIDDEN:new T("activityBar.hidden",I.WORKSPACE,f.MACHINE,!1,!0),SIDEBAR_HIDDEN:new T("sideBar.hidden",I.WORKSPACE,f.MACHINE,!1),EDITOR_HIDDEN:new T("editor.hidden",I.WORKSPACE,f.MACHINE,!1),PANEL_HIDDEN:new T("panel.hidden",I.WORKSPACE,f.MACHINE,!0),AUXILIARYBAR_HIDDEN:new T("auxiliaryBar.hidden",I.WORKSPACE,f.MACHINE,!0),STATUSBAR_HIDDEN:new T("statusBar.hidden",I.WORKSPACE,f.MACHINE,!1,!0)};var Pi=(e=>(e.PANEL_POSITION="workbench.panel.defaultLocation",e.PANEL_OPENS_MAXIMIZED="workbench.panel.opensMaximized",e.ZEN_MODE_CONFIG="zenMode",e.EDITOR_CENTERED_LAYOUT_AUTO_RESIZE="workbench.editor.centeredLayoutAutoResize",e))(Pi||{}),wi=(e=>(e.STATUSBAR_VISIBLE="workbench.statusBar.visible",e.SIDEBAR_POSITION="workbench.sideBar.location",e))(wi||{});class O extends ${constructor(e,i,t){super(),this.storageService=e,this.configurationService=i,this.contextService=t,this._register(this.configurationService.onDidChangeConfiguration((e=>this.updateStateFromLegacySettings(e))))}static STORAGE_PREFIX="workbench.";_onDidChangeState=this._register(new V);onDidChangeState=this._onDidChangeState.event;stateCache=new Map;updateStateFromLegacySettings(e){e.affectsConfiguration(p.ACTIVITY_BAR_LOCATION)&&this.setRuntimeValueAndFire(a.ACTIVITYBAR_HIDDEN,this.isActivityBarHidden()),e.affectsConfiguration("workbench.statusBar.visible")&&this.setRuntimeValueAndFire(a.STATUSBAR_HIDDEN,!this.configurationService.getValue("workbench.statusBar.visible")),e.affectsConfiguration("workbench.sideBar.location")&&this.setRuntimeValueAndFire(a.SIDEBAR_POSITON,H(this.configurationService.getValue("workbench.sideBar.location")??"left"))}updateLegacySettingsFromState(e,i){const t=this.getRuntimeValue(a.ZEN_MODE_ACTIVE);e.zenModeIgnore&&t||(e===a.ACTIVITYBAR_HIDDEN?this.configurationService.updateValue(p.ACTIVITY_BAR_LOCATION,i?W.HIDDEN:void 0):e===a.STATUSBAR_HIDDEN?this.configurationService.updateValue("workbench.statusBar.visible",!i):e===a.SIDEBAR_POSITON&&this.configurationService.updateValue("workbench.sideBar.location",L(i)))}load(e){let i;for(i in a){const e=a[i],t=this.loadKeyFromStorage(e);void 0!==t&&this.stateCache.set(e.name,t)}for(i in this.stateCache.set(a.ACTIVITYBAR_HIDDEN.name,this.isActivityBarHidden()),this.stateCache.set(a.STATUSBAR_HIDDEN.name,!this.configurationService.getValue("workbench.statusBar.visible")),this.stateCache.set(a.SIDEBAR_POSITON.name,H(this.configurationService.getValue("workbench.sideBar.location")??"left")),a.PANEL_POSITION.defaultValue=H(this.configurationService.getValue("workbench.panel.defaultLocation")??"bottom"),a.SIDEBAR_SIZE.defaultValue=Math.min(300,e.width/4),a.AUXILIARYBAR_SIZE.defaultValue=Math.min(300,e.width/4),a.PANEL_SIZE.defaultValue=this.stateCache.get(a.PANEL_POSITION.name)??v(a.PANEL_POSITION.defaultValue)?e.height/3:e.width/4,a.SIDEBAR_HIDDEN.defaultValue=this.contextService.getWorkbenchState()===ne.EMPTY,a){const e=a[i];void 0===this.stateCache.get(e.name)&&this.stateCache.set(e.name,e.defaultValue)}this._register(this.storageService.onDidChangeValue(I.PROFILE,void 0,this._store)((e=>{let i;for(i in a){const t=a[i];if(t instanceof T&&t.scope===I.PROFILE&&t.target===f.USER&&`${O.STORAGE_PREFIX}${t.name}`===e.key){const e=this.loadKeyFromStorage(t)??t.defaultValue;this.stateCache.get(t.name)!==e&&(this.stateCache.set(t.name,e),this._onDidChangeState.fire({key:t,value:e}))}}})))}save(e,i){let t;const s=this.getRuntimeValue(a.ZEN_MODE_ACTIVE);for(t in a){const r=a[t];if(e&&r.scope===I.WORKSPACE||i&&r.scope===I.PROFILE){if(s&&r instanceof T&&r.zenModeIgnore)continue;this.saveKeyToStorage(r)}}}getInitializationValue(e){return this.stateCache.get(e.name)}setInitializationValue(e,i){this.stateCache.set(e.name,i)}getRuntimeValue(e,i){if(i)switch(e){case a.ACTIVITYBAR_HIDDEN:this.stateCache.set(e.name,this.isActivityBarHidden());break;case a.STATUSBAR_HIDDEN:this.stateCache.set(e.name,!this.configurationService.getValue("workbench.statusBar.visible"));break;case a.SIDEBAR_POSITON:this.stateCache.set(e.name,this.configurationService.getValue("workbench.sideBar.location")??"left")}return this.stateCache.get(e.name)}setRuntimeValue(e,i){this.stateCache.set(e.name,i);const t=this.getRuntimeValue(a.ZEN_MODE_ACTIVE);e.scope===I.PROFILE&&(!t||!e.zenModeIgnore)&&(this.saveKeyToStorage(e),this.updateLegacySettingsFromState(e,i))}isActivityBarHidden(){const e=this.configurationService.getValue("workbench.activityBar.visible");return void 0!==e?!e:this.configurationService.getValue(p.ACTIVITY_BAR_LOCATION)!==W.DEFAULT}setRuntimeValueAndFire(e,i){this.stateCache.get(e.name)!==i&&(this.setRuntimeValue(e,i),this._onDidChangeState.fire({key:e,value:i}))}saveKeyToStorage(e){const i=this.stateCache.get(e.name);this.storageService.store(`${O.STORAGE_PREFIX}${e.name}`,"object"==typeof i?JSON.stringify(i):i,e.scope,e.target)}loadKeyFromStorage(e){let i=this.storageService.get(`${O.STORAGE_PREFIX}${e.name}`,e.scope);if(void 0!==i)switch(typeof e.defaultValue){case"boolean":i="true"===i;break;case"number":i=parseInt(i);break;case"object":i=JSON.parse(i)}return i}}export{zt as Layout,Ei as TITLE_BAR_SETTINGS};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Disposable, DisposableMap, DisposableStore, IDisposable, toDisposable } from "../../base/common/lifecycle.js";
+import { Event, Emitter } from "../../base/common/event.js";
+import { EventType, addDisposableListener, getClientArea, position, size, IDimension, isAncestorUsingFlowTo, computeScreenAwareSize, getActiveDocument, getWindows, getActiveWindow, isActiveDocument, getWindow, getWindowId, getActiveElement, Dimension } from "../../base/browser/dom.js";
+import { onDidChangeFullscreen, isFullscreen, isWCOEnabled } from "../../base/browser/browser.js";
+import { IWorkingCopyBackupService } from "../services/workingCopy/common/workingCopyBackup.js";
+import { isWindows, isLinux, isMacintosh, isWeb, isIOS } from "../../base/common/platform.js";
+import { EditorInputCapabilities, GroupIdentifier, isResourceEditorInput, IUntypedEditorInput, pathsToEditors } from "../common/editor.js";
+import { SidebarPart } from "./parts/sidebar/sidebarPart.js";
+import { PanelPart } from "./parts/panel/panelPart.js";
+import { Position, Parts, PanelOpensMaximizedOptions, IWorkbenchLayoutService, positionFromString, positionToString, panelOpensMaximizedFromString, PanelAlignment, ActivityBarPosition, LayoutSettings, MULTI_WINDOW_PARTS, SINGLE_WINDOW_PARTS, ZenModeSettings, EditorTabsMode, EditorActionsLocation, shouldShowCustomTitleBar, isHorizontal, isMultiWindowPart } from "../services/layout/browser/layoutService.js";
+import { isTemporaryWorkspace, IWorkspaceContextService, WorkbenchState } from "../../platform/workspace/common/workspace.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../platform/storage/common/storage.js";
+import { IConfigurationChangeEvent, IConfigurationService } from "../../platform/configuration/common/configuration.js";
+import { ITitleService } from "../services/title/browser/titleService.js";
+import { ServicesAccessor } from "../../platform/instantiation/common/instantiation.js";
+import { StartupKind, ILifecycleService } from "../services/lifecycle/common/lifecycle.js";
+import { getMenuBarVisibility, IPath, hasNativeTitlebar, hasCustomTitlebar, TitleBarSetting, CustomTitleBarVisibility, useWindowControlsOverlay, DEFAULT_WINDOW_SIZE } from "../../platform/window/common/window.js";
+import { IHostService } from "../services/host/browser/host.js";
+import { IBrowserWorkbenchEnvironmentService } from "../services/environment/browser/environmentService.js";
+import { IEditorService } from "../services/editor/common/editorService.js";
+import { EditorGroupLayout, GroupOrientation, GroupsOrder, IEditorGroupsService } from "../services/editor/common/editorGroupsService.js";
+import { SerializableGrid, ISerializableView, ISerializedGrid, Orientation, ISerializedNode, ISerializedLeafNode, Direction, IViewSize, Sizing } from "../../base/browser/ui/grid/grid.js";
+import { Part } from "./part.js";
+import { IStatusbarService } from "../services/statusbar/browser/statusbar.js";
+import { IFileService } from "../../platform/files/common/files.js";
+import { isCodeEditor } from "../../editor/browser/editorBrowser.js";
+import { coalesce } from "../../base/common/arrays.js";
+import { assertIsDefined } from "../../base/common/types.js";
+import { INotificationService, NotificationsFilter } from "../../platform/notification/common/notification.js";
+import { IThemeService } from "../../platform/theme/common/themeService.js";
+import { WINDOW_ACTIVE_BORDER, WINDOW_INACTIVE_BORDER } from "../common/theme.js";
+import { LineNumbersType } from "../../editor/common/config/editorOptions.js";
+import { URI } from "../../base/common/uri.js";
+import { IViewDescriptorService, ViewContainerLocation } from "../common/views.js";
+import { DiffEditorInput } from "../common/editor/diffEditorInput.js";
+import { mark } from "../../base/common/performance.js";
+import { IExtensionService } from "../services/extensions/common/extensions.js";
+import { ILogService } from "../../platform/log/common/log.js";
+import { DeferredPromise, Promises } from "../../base/common/async.js";
+import { IBannerService } from "../services/banner/browser/bannerService.js";
+import { IPaneCompositePartService } from "../services/panecomposite/browser/panecomposite.js";
+import { AuxiliaryBarPart } from "./parts/auxiliarybar/auxiliaryBarPart.js";
+import { ITelemetryService } from "../../platform/telemetry/common/telemetry.js";
+import { IAuxiliaryWindowService } from "../services/auxiliaryWindow/browser/auxiliaryWindowService.js";
+import { CodeWindow, mainWindow } from "../../base/browser/window.js";
+var LayoutClasses = /* @__PURE__ */ ((LayoutClasses2) => {
+  LayoutClasses2["SIDEBAR_HIDDEN"] = "nosidebar";
+  LayoutClasses2["MAIN_EDITOR_AREA_HIDDEN"] = "nomaineditorarea";
+  LayoutClasses2["PANEL_HIDDEN"] = "nopanel";
+  LayoutClasses2["AUXILIARYBAR_HIDDEN"] = "noauxiliarybar";
+  LayoutClasses2["STATUSBAR_HIDDEN"] = "nostatusbar";
+  LayoutClasses2["FULLSCREEN"] = "fullscreen";
+  LayoutClasses2["MAXIMIZED"] = "maximized";
+  LayoutClasses2["WINDOW_BORDER"] = "border";
+  return LayoutClasses2;
+})(LayoutClasses || {});
+const COMMAND_CENTER_SETTINGS = [
+  "chat.commandCenter.enabled",
+  "workbench.navigationControl.enabled",
+  "workbench.experimental.share.enabled"
+];
+const TITLE_BAR_SETTINGS = [
+  LayoutSettings.ACTIVITY_BAR_LOCATION,
+  LayoutSettings.COMMAND_CENTER,
+  ...COMMAND_CENTER_SETTINGS,
+  LayoutSettings.EDITOR_ACTIONS_LOCATION,
+  LayoutSettings.LAYOUT_ACTIONS,
+  "window.menuBarVisibility",
+  TitleBarSetting.TITLE_BAR_STYLE,
+  TitleBarSetting.CUSTOM_TITLE_BAR_VISIBILITY
+];
+const DEFAULT_WINDOW_DIMENSIONS = new Dimension(DEFAULT_WINDOW_SIZE.width, DEFAULT_WINDOW_SIZE.height);
+class Layout extends Disposable {
+  constructor(parent) {
+    super();
+    this.parent = parent;
+  }
+  static {
+    __name(this, "Layout");
+  }
+  //#region Events
+  _onDidChangeZenMode = this._register(new Emitter());
+  onDidChangeZenMode = this._onDidChangeZenMode.event;
+  _onDidChangeMainEditorCenteredLayout = this._register(new Emitter());
+  onDidChangeMainEditorCenteredLayout = this._onDidChangeMainEditorCenteredLayout.event;
+  _onDidChangePanelAlignment = this._register(new Emitter());
+  onDidChangePanelAlignment = this._onDidChangePanelAlignment.event;
+  _onDidChangeWindowMaximized = this._register(new Emitter());
+  onDidChangeWindowMaximized = this._onDidChangeWindowMaximized.event;
+  _onDidChangePanelPosition = this._register(new Emitter());
+  onDidChangePanelPosition = this._onDidChangePanelPosition.event;
+  _onDidChangePartVisibility = this._register(new Emitter());
+  onDidChangePartVisibility = this._onDidChangePartVisibility.event;
+  _onDidChangeNotificationsVisibility = this._register(new Emitter());
+  onDidChangeNotificationsVisibility = this._onDidChangeNotificationsVisibility.event;
+  _onDidLayoutMainContainer = this._register(new Emitter());
+  onDidLayoutMainContainer = this._onDidLayoutMainContainer.event;
+  _onDidLayoutActiveContainer = this._register(new Emitter());
+  onDidLayoutActiveContainer = this._onDidLayoutActiveContainer.event;
+  _onDidLayoutContainer = this._register(new Emitter());
+  onDidLayoutContainer = this._onDidLayoutContainer.event;
+  _onDidAddContainer = this._register(new Emitter());
+  onDidAddContainer = this._onDidAddContainer.event;
+  _onDidChangeActiveContainer = this._register(new Emitter());
+  onDidChangeActiveContainer = this._onDidChangeActiveContainer.event;
+  //#endregion
+  //#region Properties
+  mainContainer = document.createElement("div");
+  get activeContainer() {
+    return this.getContainerFromDocument(getActiveDocument());
+  }
+  get containers() {
+    const containers = [];
+    for (const { window } of getWindows()) {
+      containers.push(this.getContainerFromDocument(window.document));
+    }
+    return containers;
+  }
+  getContainerFromDocument(targetDocument) {
+    if (targetDocument === this.mainContainer.ownerDocument) {
+      return this.mainContainer;
+    } else {
+      return targetDocument.body.getElementsByClassName("monaco-workbench")[0];
+    }
+  }
+  containerStylesLoaded = /* @__PURE__ */ new Map();
+  whenContainerStylesLoaded(window) {
+    return this.containerStylesLoaded.get(window.vscodeWindowId);
+  }
+  _mainContainerDimension;
+  get mainContainerDimension() {
+    return this._mainContainerDimension;
+  }
+  get activeContainerDimension() {
+    return this.getContainerDimension(this.activeContainer);
+  }
+  getContainerDimension(container) {
+    if (container === this.mainContainer) {
+      return this.mainContainerDimension;
+    } else {
+      return getClientArea(container);
+    }
+  }
+  get mainContainerOffset() {
+    return this.computeContainerOffset(mainWindow);
+  }
+  get activeContainerOffset() {
+    return this.computeContainerOffset(getWindow(this.activeContainer));
+  }
+  computeContainerOffset(targetWindow) {
+    let top = 0;
+    let quickPickTop = 0;
+    if (this.isVisible(Parts.BANNER_PART)) {
+      top = this.getPart(Parts.BANNER_PART).maximumHeight;
+      quickPickTop = top;
+    }
+    const titlebarVisible = this.isVisible(Parts.TITLEBAR_PART, targetWindow);
+    if (titlebarVisible) {
+      top += this.getPart(Parts.TITLEBAR_PART).maximumHeight;
+      quickPickTop = top;
+    }
+    const isCommandCenterVisible = titlebarVisible && this.configurationService.getValue(LayoutSettings.COMMAND_CENTER) !== false;
+    if (isCommandCenterVisible) {
+      quickPickTop = 6;
+    }
+    return { top, quickPickTop };
+  }
+  //#endregion
+  parts = /* @__PURE__ */ new Map();
+  initialized = false;
+  workbenchGrid;
+  titleBarPartView;
+  bannerPartView;
+  activityBarPartView;
+  sideBarPartView;
+  panelPartView;
+  auxiliaryBarPartView;
+  editorPartView;
+  statusBarPartView;
+  environmentService;
+  extensionService;
+  configurationService;
+  storageService;
+  hostService;
+  editorService;
+  mainPartEditorService;
+  editorGroupService;
+  paneCompositeService;
+  titleService;
+  viewDescriptorService;
+  contextService;
+  workingCopyBackupService;
+  notificationService;
+  themeService;
+  statusBarService;
+  logService;
+  telemetryService;
+  auxiliaryWindowService;
+  state;
+  stateModel;
+  disposed = false;
+  initLayout(accessor) {
+    this.environmentService = accessor.get(IBrowserWorkbenchEnvironmentService);
+    this.configurationService = accessor.get(IConfigurationService);
+    this.hostService = accessor.get(IHostService);
+    this.contextService = accessor.get(IWorkspaceContextService);
+    this.storageService = accessor.get(IStorageService);
+    this.workingCopyBackupService = accessor.get(IWorkingCopyBackupService);
+    this.themeService = accessor.get(IThemeService);
+    this.extensionService = accessor.get(IExtensionService);
+    this.logService = accessor.get(ILogService);
+    this.telemetryService = accessor.get(ITelemetryService);
+    this.auxiliaryWindowService = accessor.get(IAuxiliaryWindowService);
+    this.editorService = accessor.get(IEditorService);
+    this.mainPartEditorService = this.editorService.createScoped("main", this._store);
+    this.editorGroupService = accessor.get(IEditorGroupsService);
+    this.paneCompositeService = accessor.get(IPaneCompositePartService);
+    this.viewDescriptorService = accessor.get(IViewDescriptorService);
+    this.titleService = accessor.get(ITitleService);
+    this.notificationService = accessor.get(INotificationService);
+    this.statusBarService = accessor.get(IStatusbarService);
+    accessor.get(IBannerService);
+    this.registerLayoutListeners();
+    this.initLayoutState(accessor.get(ILifecycleService), accessor.get(IFileService));
+  }
+  registerLayoutListeners() {
+    const showEditorIfHidden = /* @__PURE__ */ __name(() => {
+      if (!this.isVisible(Parts.EDITOR_PART, mainWindow)) {
+        this.toggleMaximizedPanel();
+      }
+    }, "showEditorIfHidden");
+    this.editorGroupService.whenRestored.then(() => {
+      this._register(this.mainPartEditorService.onDidVisibleEditorsChange(showEditorIfHidden));
+      this._register(this.editorGroupService.mainPart.onDidActivateGroup(showEditorIfHidden));
+      this._register(this.mainPartEditorService.onDidActiveEditorChange(() => this.centerMainEditorLayout(this.stateModel.getRuntimeValue(LayoutStateKeys.MAIN_EDITOR_CENTERED))));
+    });
+    this._register(this.configurationService.onDidChangeConfiguration((e) => {
+      if ([
+        ...TITLE_BAR_SETTINGS,
+        "workbench.sideBar.location" /* SIDEBAR_POSITION */,
+        "workbench.statusBar.visible" /* STATUSBAR_VISIBLE */
+      ].some((setting) => e.affectsConfiguration(setting))) {
+        const shareEnabled = e.affectsConfiguration("workbench.experimental.share.enabled") && this.configurationService.getValue("workbench.experimental.share.enabled");
+        const navigationControlEnabled = e.affectsConfiguration("workbench.navigationControl.enabled") && this.configurationService.getValue("workbench.navigationControl.enabled");
+        if (shareEnabled || navigationControlEnabled) {
+          if (this.configurationService.getValue(LayoutSettings.COMMAND_CENTER) === false) {
+            this.configurationService.updateValue(LayoutSettings.COMMAND_CENTER, true);
+            return;
+          }
+        }
+        const editorActionsMovedToTitlebar = e.affectsConfiguration(LayoutSettings.EDITOR_ACTIONS_LOCATION) && this.configurationService.getValue(LayoutSettings.EDITOR_ACTIONS_LOCATION) === EditorActionsLocation.TITLEBAR;
+        const commandCenterEnabled = e.affectsConfiguration(LayoutSettings.COMMAND_CENTER) && this.configurationService.getValue(LayoutSettings.COMMAND_CENTER);
+        const layoutControlsEnabled = e.affectsConfiguration(LayoutSettings.LAYOUT_ACTIONS) && this.configurationService.getValue(LayoutSettings.LAYOUT_ACTIONS);
+        const activityBarMovedToTopOrBottom = e.affectsConfiguration(LayoutSettings.ACTIVITY_BAR_LOCATION) && [ActivityBarPosition.TOP, ActivityBarPosition.BOTTOM].includes(this.configurationService.getValue(LayoutSettings.ACTIVITY_BAR_LOCATION));
+        if (activityBarMovedToTopOrBottom || editorActionsMovedToTitlebar || commandCenterEnabled || layoutControlsEnabled) {
+          if (this.configurationService.getValue(TitleBarSetting.CUSTOM_TITLE_BAR_VISIBILITY) === CustomTitleBarVisibility.NEVER) {
+            this.configurationService.updateValue(TitleBarSetting.CUSTOM_TITLE_BAR_VISIBILITY, CustomTitleBarVisibility.AUTO);
+            return;
+          }
+        }
+        this.doUpdateLayoutConfiguration();
+      }
+    }));
+    this._register(onDidChangeFullscreen((windowId) => this.onFullscreenChanged(windowId)));
+    this._register(this.editorGroupService.mainPart.onDidAddGroup(() => this.centerMainEditorLayout(this.stateModel.getRuntimeValue(LayoutStateKeys.MAIN_EDITOR_CENTERED))));
+    this._register(this.editorGroupService.mainPart.onDidRemoveGroup(() => this.centerMainEditorLayout(this.stateModel.getRuntimeValue(LayoutStateKeys.MAIN_EDITOR_CENTERED))));
+    this._register(this.editorGroupService.mainPart.onDidChangeGroupMaximized(() => this.centerMainEditorLayout(this.stateModel.getRuntimeValue(LayoutStateKeys.MAIN_EDITOR_CENTERED))));
+    this._register(addDisposableListener(this.mainContainer, EventType.SCROLL, () => this.mainContainer.scrollTop = 0));
+    const showingCustomMenu = (isWindows || isLinux || isWeb) && !hasNativeTitlebar(this.configurationService);
+    if (showingCustomMenu) {
+      this._register(this.titleService.onMenubarVisibilityChange((visible) => this.onMenubarToggled(visible)));
+    }
+    this._register(this.themeService.onDidColorThemeChange(() => this.updateWindowsBorder()));
+    this._register(this.hostService.onDidChangeFocus((focused) => this.onWindowFocusChanged(focused)));
+    this._register(this.hostService.onDidChangeActiveWindow(() => this.onActiveWindowChanged()));
+    if (isWeb && typeof navigator.windowControlsOverlay === "object") {
+      this._register(addDisposableListener(navigator.windowControlsOverlay, "geometrychange", () => this.onDidChangeWCO()));
+    }
+    this._register(this.auxiliaryWindowService.onDidOpenAuxiliaryWindow(({ window, disposables }) => {
+      const windowId = window.window.vscodeWindowId;
+      this.containerStylesLoaded.set(windowId, window.whenStylesHaveLoaded);
+      window.whenStylesHaveLoaded.then(() => this.containerStylesLoaded.delete(windowId));
+      disposables.add(toDisposable(() => this.containerStylesLoaded.delete(windowId)));
+      const eventDisposables = disposables.add(new DisposableStore());
+      this._onDidAddContainer.fire({ container: window.container, disposables: eventDisposables });
+      disposables.add(window.onDidLayout((dimension) => this.handleContainerDidLayout(window.container, dimension)));
+    }));
+  }
+  onMenubarToggled(visible) {
+    if (visible !== this.state.runtime.menuBar.toggled) {
+      this.state.runtime.menuBar.toggled = visible;
+      const menuBarVisibility = getMenuBarVisibility(this.configurationService);
+      if (isWeb && menuBarVisibility === "toggle") {
+        this.workbenchGrid.setViewVisible(this.titleBarPartView, shouldShowCustomTitleBar(this.configurationService, mainWindow, this.state.runtime.menuBar.toggled));
+      } else if (this.state.runtime.mainWindowFullscreen && (menuBarVisibility === "toggle" || menuBarVisibility === "classic")) {
+        this.workbenchGrid.setViewVisible(this.titleBarPartView, shouldShowCustomTitleBar(this.configurationService, mainWindow, this.state.runtime.menuBar.toggled));
+      }
+      this.handleContainerDidLayout(this.mainContainer, this._mainContainerDimension);
+    }
+  }
+  handleContainerDidLayout(container, dimension) {
+    if (container === this.mainContainer) {
+      this._onDidLayoutMainContainer.fire(dimension);
+    }
+    if (isActiveDocument(container)) {
+      this._onDidLayoutActiveContainer.fire(dimension);
+    }
+    this._onDidLayoutContainer.fire({ container, dimension });
+  }
+  onFullscreenChanged(windowId) {
+    if (windowId !== mainWindow.vscodeWindowId) {
+      return;
+    }
+    this.state.runtime.mainWindowFullscreen = isFullscreen(mainWindow);
+    if (this.state.runtime.mainWindowFullscreen) {
+      this.mainContainer.classList.add("fullscreen" /* FULLSCREEN */);
+    } else {
+      this.mainContainer.classList.remove("fullscreen" /* FULLSCREEN */);
+      const zenModeExitInfo = this.stateModel.getRuntimeValue(LayoutStateKeys.ZEN_MODE_EXIT_INFO);
+      if (zenModeExitInfo.transitionedToFullScreen && this.isZenModeActive()) {
+        this.toggleZenMode();
+      }
+    }
+    this.workbenchGrid.edgeSnapping = this.state.runtime.mainWindowFullscreen;
+    if (hasCustomTitlebar(this.configurationService)) {
+      this.workbenchGrid.setViewVisible(this.titleBarPartView, shouldShowCustomTitleBar(this.configurationService, mainWindow, this.state.runtime.menuBar.toggled));
+      this.updateWindowsBorder(true);
+    }
+  }
+  onActiveWindowChanged() {
+    const activeContainerId = this.getActiveContainerId();
+    if (this.state.runtime.activeContainerId !== activeContainerId) {
+      this.state.runtime.activeContainerId = activeContainerId;
+      this.updateWindowsBorder();
+      this._onDidChangeActiveContainer.fire();
+    }
+  }
+  onWindowFocusChanged(hasFocus) {
+    if (this.state.runtime.hasFocus !== hasFocus) {
+      this.state.runtime.hasFocus = hasFocus;
+      this.updateWindowsBorder();
+    }
+  }
+  getActiveContainerId() {
+    const activeContainer = this.activeContainer;
+    return getWindow(activeContainer).vscodeWindowId;
+  }
+  doUpdateLayoutConfiguration(skipLayout) {
+    this.updateCustomTitleBarVisibility();
+    this.updateMenubarVisibility(!!skipLayout);
+    this.editorGroupService.whenRestored.then(() => this.centerMainEditorLayout(this.stateModel.getRuntimeValue(LayoutStateKeys.MAIN_EDITOR_CENTERED), skipLayout));
+  }
+  setSideBarPosition(position2) {
+    const activityBar = this.getPart(Parts.ACTIVITYBAR_PART);
+    const sideBar = this.getPart(Parts.SIDEBAR_PART);
+    const auxiliaryBar = this.getPart(Parts.AUXILIARYBAR_PART);
+    const newPositionValue = position2 === Position.LEFT ? "left" : "right";
+    const oldPositionValue = position2 === Position.RIGHT ? "left" : "right";
+    const panelAlignment = this.getPanelAlignment();
+    const panelPosition = this.getPanelPosition();
+    this.stateModel.setRuntimeValue(LayoutStateKeys.SIDEBAR_POSITON, position2);
+    const activityBarContainer = assertIsDefined(activityBar.getContainer());
+    const sideBarContainer = assertIsDefined(sideBar.getContainer());
+    const auxiliaryBarContainer = assertIsDefined(auxiliaryBar.getContainer());
+    activityBarContainer.classList.remove(oldPositionValue);
+    sideBarContainer.classList.remove(oldPositionValue);
+    activityBarContainer.classList.add(newPositionValue);
+    sideBarContainer.classList.add(newPositionValue);
+    auxiliaryBarContainer.classList.remove(newPositionValue);
+    auxiliaryBarContainer.classList.add(oldPositionValue);
+    activityBar.updateStyles();
+    sideBar.updateStyles();
+    auxiliaryBar.updateStyles();
+    this.adjustPartPositions(position2, panelAlignment, panelPosition);
+  }
+  updateWindowsBorder(skipLayout = false) {
+    if (isWeb || isWindows || // not working well with zooming (border often not visible)
+    (isWindows || isLinux) && useWindowControlsOverlay(this.configurationService) || hasNativeTitlebar(this.configurationService)) {
+      return;
+    }
+    const theme = this.themeService.getColorTheme();
+    const activeBorder = theme.getColor(WINDOW_ACTIVE_BORDER);
+    const inactiveBorder = theme.getColor(WINDOW_INACTIVE_BORDER);
+    const didHaveMainWindowBorder = this.hasMainWindowBorder();
+    for (const container of this.containers) {
+      const isMainContainer = container === this.mainContainer;
+      const isActiveContainer = this.activeContainer === container;
+      let windowBorder = false;
+      if (!this.state.runtime.mainWindowFullscreen && (activeBorder || inactiveBorder)) {
+        windowBorder = true;
+        const borderColor = isActiveContainer && this.state.runtime.hasFocus ? activeBorder : inactiveBorder ?? activeBorder;
+        container.style.setProperty("--window-border-color", borderColor?.toString() ?? "transparent");
+      }
+      if (isMainContainer) {
+        this.state.runtime.mainWindowBorder = windowBorder;
+      }
+      container.classList.toggle("border" /* WINDOW_BORDER */, windowBorder);
+    }
+    if (!skipLayout && didHaveMainWindowBorder !== this.hasMainWindowBorder()) {
+      this.layout();
+    }
+  }
+  initLayoutState(lifecycleService, fileService) {
+    this._mainContainerDimension = getClientArea(this.parent, DEFAULT_WINDOW_DIMENSIONS);
+    this.stateModel = new LayoutStateModel(this.storageService, this.configurationService, this.contextService);
+    this.stateModel.load(this._mainContainerDimension);
+    if (this.stateModel.getRuntimeValue(LayoutStateKeys.PANEL_HIDDEN) && this.stateModel.getRuntimeValue(LayoutStateKeys.EDITOR_HIDDEN)) {
+      this.stateModel.setRuntimeValue(LayoutStateKeys.EDITOR_HIDDEN, false);
+    }
+    this._register(this.stateModel.onDidChangeState((change) => {
+      if (change.key === LayoutStateKeys.ACTIVITYBAR_HIDDEN) {
+        this.setActivityBarHidden(change.value);
+      }
+      if (change.key === LayoutStateKeys.STATUSBAR_HIDDEN) {
+        this.setStatusBarHidden(change.value);
+      }
+      if (change.key === LayoutStateKeys.SIDEBAR_POSITON) {
+        this.setSideBarPosition(change.value);
+      }
+      if (change.key === LayoutStateKeys.PANEL_POSITION) {
+        this.setPanelPosition(change.value);
+      }
+      if (change.key === LayoutStateKeys.PANEL_ALIGNMENT) {
+        this.setPanelAlignment(change.value);
+      }
+      this.doUpdateLayoutConfiguration();
+    }));
+    const initialEditorsState = this.getInitialEditorsState();
+    if (initialEditorsState) {
+      this.logService.trace("Initial editor state", initialEditorsState);
+    }
+    const initialLayoutState = {
+      layout: {
+        editors: initialEditorsState?.layout
+      },
+      editor: {
+        restoreEditors: this.shouldRestoreEditors(this.contextService, initialEditorsState),
+        editorsToOpen: this.resolveEditorsToOpen(fileService, initialEditorsState)
+      },
+      views: {
+        defaults: this.getDefaultLayoutViews(this.environmentService, this.storageService),
+        containerToRestore: {}
+      }
+    };
+    const layoutRuntimeState = {
+      activeContainerId: this.getActiveContainerId(),
+      mainWindowFullscreen: isFullscreen(mainWindow),
+      hasFocus: this.hostService.hasFocus,
+      maximized: /* @__PURE__ */ new Set(),
+      mainWindowBorder: false,
+      menuBar: {
+        toggled: false
+      },
+      zenMode: {
+        transitionDisposables: new DisposableMap()
+      }
+    };
+    this.state = {
+      initialization: initialLayoutState,
+      runtime: layoutRuntimeState
+    };
+    if (this.isVisible(Parts.SIDEBAR_PART)) {
+      let viewContainerToRestore;
+      if (!this.environmentService.isBuilt || lifecycleService.startupKind === StartupKind.ReloadedWindow || this.environmentService.isExtensionDevelopment && !this.environmentService.extensionTestsLocationURI) {
+        viewContainerToRestore = this.storageService.get(SidebarPart.activeViewletSettingsKey, StorageScope.WORKSPACE, this.viewDescriptorService.getDefaultViewContainer(ViewContainerLocation.Sidebar)?.id);
+      } else {
+        viewContainerToRestore = this.viewDescriptorService.getDefaultViewContainer(ViewContainerLocation.Sidebar)?.id;
+      }
+      if (viewContainerToRestore) {
+        this.state.initialization.views.containerToRestore.sideBar = viewContainerToRestore;
+      } else {
+        this.stateModel.setRuntimeValue(LayoutStateKeys.SIDEBAR_HIDDEN, true);
+      }
+    }
+    if (this.isVisible(Parts.PANEL_PART)) {
+      const viewContainerToRestore = this.storageService.get(PanelPart.activePanelSettingsKey, StorageScope.WORKSPACE, this.viewDescriptorService.getDefaultViewContainer(ViewContainerLocation.Panel)?.id);
+      if (viewContainerToRestore) {
+        this.state.initialization.views.containerToRestore.panel = viewContainerToRestore;
+      } else {
+        this.stateModel.setRuntimeValue(LayoutStateKeys.PANEL_HIDDEN, true);
+      }
+    }
+    if (this.isVisible(Parts.AUXILIARYBAR_PART)) {
+      const viewContainerToRestore = this.storageService.get(AuxiliaryBarPart.activeViewSettingsKey, StorageScope.WORKSPACE, this.viewDescriptorService.getDefaultViewContainer(ViewContainerLocation.AuxiliaryBar)?.id);
+      if (viewContainerToRestore) {
+        this.state.initialization.views.containerToRestore.auxiliaryBar = viewContainerToRestore;
+      } else {
+        this.stateModel.setRuntimeValue(LayoutStateKeys.AUXILIARYBAR_HIDDEN, true);
+      }
+    }
+    this.updateWindowsBorder(true);
+  }
+  getDefaultLayoutViews(environmentService, storageService) {
+    const defaultLayout = environmentService.options?.defaultLayout;
+    if (!defaultLayout) {
+      return void 0;
+    }
+    if (!defaultLayout.force && !storageService.isNew(StorageScope.WORKSPACE)) {
+      return void 0;
+    }
+    const { views } = defaultLayout;
+    if (views?.length) {
+      return views.map((view) => view.id);
+    }
+    return void 0;
+  }
+  shouldRestoreEditors(contextService, initialEditorsState) {
+    if (isTemporaryWorkspace(contextService.getWorkspace())) {
+      return false;
+    }
+    const forceRestoreEditors = this.configurationService.getValue("window.restoreWindows") === "preserve";
+    return !!forceRestoreEditors || initialEditorsState === void 0;
+  }
+  willRestoreEditors() {
+    return this.state.initialization.editor.restoreEditors;
+  }
+  async resolveEditorsToOpen(fileService, initialEditorsState) {
+    if (initialEditorsState) {
+      const filesToMerge = coalesce(await pathsToEditors(initialEditorsState.filesToMerge, fileService, this.logService));
+      if (filesToMerge.length === 4 && isResourceEditorInput(filesToMerge[0]) && isResourceEditorInput(filesToMerge[1]) && isResourceEditorInput(filesToMerge[2]) && isResourceEditorInput(filesToMerge[3])) {
+        return [{
+          editor: {
+            input1: { resource: filesToMerge[0].resource },
+            input2: { resource: filesToMerge[1].resource },
+            base: { resource: filesToMerge[2].resource },
+            result: { resource: filesToMerge[3].resource },
+            options: { pinned: true }
+          }
+        }];
+      }
+      const filesToDiff = coalesce(await pathsToEditors(initialEditorsState.filesToDiff, fileService, this.logService));
+      if (filesToDiff.length === 2) {
+        return [{
+          editor: {
+            original: { resource: filesToDiff[0].resource },
+            modified: { resource: filesToDiff[1].resource },
+            options: { pinned: true }
+          }
+        }];
+      }
+      const filesToOpenOrCreate = [];
+      const resolvedFilesToOpenOrCreate = await pathsToEditors(initialEditorsState.filesToOpenOrCreate, fileService, this.logService);
+      for (let i = 0; i < resolvedFilesToOpenOrCreate.length; i++) {
+        const resolvedFileToOpenOrCreate = resolvedFilesToOpenOrCreate[i];
+        if (resolvedFileToOpenOrCreate) {
+          filesToOpenOrCreate.push({
+            editor: resolvedFileToOpenOrCreate,
+            viewColumn: initialEditorsState.filesToOpenOrCreate?.[i].viewColumn
+            // take over `viewColumn` from initial state
+          });
+        }
+      }
+      return filesToOpenOrCreate;
+    } else if (this.contextService.getWorkbenchState() === WorkbenchState.EMPTY && this.configurationService.getValue("workbench.startupEditor") === "newUntitledFile") {
+      if (this.editorGroupService.hasRestorableState) {
+        return [];
+      }
+      const hasBackups = await this.workingCopyBackupService.hasBackups();
+      if (hasBackups) {
+        return [];
+      }
+      return [{
+        editor: { resource: void 0 }
+        // open empty untitled file
+      }];
+    }
+    return [];
+  }
+  _openedDefaultEditors = false;
+  get openedDefaultEditors() {
+    return this._openedDefaultEditors;
+  }
+  getInitialEditorsState() {
+    const defaultLayout = this.environmentService.options?.defaultLayout;
+    if ((defaultLayout?.editors?.length || defaultLayout?.layout?.editors) && (defaultLayout.force || this.storageService.isNew(StorageScope.WORKSPACE))) {
+      this._openedDefaultEditors = true;
+      return {
+        layout: defaultLayout.layout?.editors,
+        filesToOpenOrCreate: defaultLayout?.editors?.map((editor) => {
+          return {
+            viewColumn: editor.viewColumn,
+            fileUri: URI.revive(editor.uri),
+            openOnlyIfExists: editor.openOnlyIfExists,
+            options: editor.options
+          };
+        })
+      };
+    }
+    const { filesToOpenOrCreate, filesToDiff, filesToMerge } = this.environmentService;
+    if (filesToOpenOrCreate || filesToDiff || filesToMerge) {
+      return { filesToOpenOrCreate, filesToDiff, filesToMerge };
+    }
+    return void 0;
+  }
+  whenReadyPromise = new DeferredPromise();
+  whenReady = this.whenReadyPromise.p;
+  whenRestoredPromise = new DeferredPromise();
+  whenRestored = this.whenRestoredPromise.p;
+  restored = false;
+  isRestored() {
+    return this.restored;
+  }
+  restoreParts() {
+    const layoutReadyPromises = [];
+    const layoutRestoredPromises = [];
+    layoutReadyPromises.push((async () => {
+      mark("code/willRestoreEditors");
+      await this.editorGroupService.whenReady;
+      mark("code/restoreEditors/editorGroupsReady");
+      if (this.state.initialization.layout?.editors) {
+        this.editorGroupService.mainPart.applyLayout(this.state.initialization.layout.editors);
+      }
+      const editors = await this.state.initialization.editor.editorsToOpen;
+      mark("code/restoreEditors/editorsToOpenResolved");
+      let openEditorsPromise = void 0;
+      if (editors.length) {
+        const editorGroupsInVisualOrder = this.editorGroupService.mainPart.getGroups(GroupsOrder.GRID_APPEARANCE);
+        const mapEditorsToGroup = /* @__PURE__ */ new Map();
+        for (const editor of editors) {
+          const group = editorGroupsInVisualOrder[(editor.viewColumn ?? 1) - 1];
+          let editorsByGroup = mapEditorsToGroup.get(group.id);
+          if (!editorsByGroup) {
+            editorsByGroup = /* @__PURE__ */ new Set();
+            mapEditorsToGroup.set(group.id, editorsByGroup);
+          }
+          editorsByGroup.add(editor.editor);
+        }
+        openEditorsPromise = Promise.all(Array.from(mapEditorsToGroup).map(async ([groupId, editors2]) => {
+          try {
+            await this.editorService.openEditors(Array.from(editors2), groupId, { validateTrust: true });
+          } catch (error) {
+            this.logService.error(error);
+          }
+        }));
+      }
+      layoutRestoredPromises.push(
+        Promise.all([
+          openEditorsPromise?.finally(() => mark("code/restoreEditors/editorsOpened")),
+          this.editorGroupService.whenRestored.finally(() => mark("code/restoreEditors/editorGroupsRestored"))
+        ]).finally(() => {
+          mark("code/didRestoreEditors");
+        })
+      );
+    })());
+    const restoreDefaultViewsPromise = (async () => {
+      if (this.state.initialization.views.defaults?.length) {
+        mark("code/willOpenDefaultViews");
+        const locationsRestored = [];
+        const tryOpenView = /* @__PURE__ */ __name((view) => {
+          const location = this.viewDescriptorService.getViewLocationById(view.id);
+          if (location !== null) {
+            const container = this.viewDescriptorService.getViewContainerByViewId(view.id);
+            if (container) {
+              if (view.order >= (locationsRestored?.[location]?.order ?? 0)) {
+                locationsRestored[location] = { id: container.id, order: view.order };
+              }
+              const containerModel = this.viewDescriptorService.getViewContainerModel(container);
+              containerModel.setCollapsed(view.id, false);
+              containerModel.setVisible(view.id, true);
+              return true;
+            }
+          }
+          return false;
+        }, "tryOpenView");
+        const defaultViews = [...this.state.initialization.views.defaults].reverse().map((v, index) => ({ id: v, order: index }));
+        let i = defaultViews.length;
+        while (i) {
+          i--;
+          if (tryOpenView(defaultViews[i])) {
+            defaultViews.splice(i, 1);
+          }
+        }
+        if (defaultViews.length) {
+          await this.extensionService.whenInstalledExtensionsRegistered();
+          let i2 = defaultViews.length;
+          while (i2) {
+            i2--;
+            if (tryOpenView(defaultViews[i2])) {
+              defaultViews.splice(i2, 1);
+            }
+          }
+        }
+        if (locationsRestored[ViewContainerLocation.Sidebar]) {
+          this.state.initialization.views.containerToRestore.sideBar = locationsRestored[ViewContainerLocation.Sidebar].id;
+        }
+        if (locationsRestored[ViewContainerLocation.Panel]) {
+          this.state.initialization.views.containerToRestore.panel = locationsRestored[ViewContainerLocation.Panel].id;
+        }
+        if (locationsRestored[ViewContainerLocation.AuxiliaryBar]) {
+          this.state.initialization.views.containerToRestore.auxiliaryBar = locationsRestored[ViewContainerLocation.AuxiliaryBar].id;
+        }
+        mark("code/didOpenDefaultViews");
+      }
+    })();
+    layoutReadyPromises.push(restoreDefaultViewsPromise);
+    layoutReadyPromises.push((async () => {
+      await restoreDefaultViewsPromise;
+      if (!this.state.initialization.views.containerToRestore.sideBar) {
+        return;
+      }
+      mark("code/willRestoreViewlet");
+      await this.openViewContainer(ViewContainerLocation.Sidebar, this.state.initialization.views.containerToRestore.sideBar);
+      mark("code/didRestoreViewlet");
+    })());
+    layoutReadyPromises.push((async () => {
+      await restoreDefaultViewsPromise;
+      if (!this.state.initialization.views.containerToRestore.panel) {
+        return;
+      }
+      mark("code/willRestorePanel");
+      await this.openViewContainer(ViewContainerLocation.Panel, this.state.initialization.views.containerToRestore.panel);
+      mark("code/didRestorePanel");
+    })());
+    layoutReadyPromises.push((async () => {
+      await restoreDefaultViewsPromise;
+      if (!this.state.initialization.views.containerToRestore.auxiliaryBar) {
+        return;
+      }
+      mark("code/willRestoreAuxiliaryBar");
+      await this.openViewContainer(ViewContainerLocation.AuxiliaryBar, this.state.initialization.views.containerToRestore.auxiliaryBar);
+      mark("code/didRestoreAuxiliaryBar");
+    })());
+    const zenModeWasActive = this.isZenModeActive();
+    const restoreZenMode = getZenModeConfiguration(this.configurationService).restore;
+    if (zenModeWasActive) {
+      this.setZenModeActive(!restoreZenMode);
+      this.toggleZenMode(false, true);
+    }
+    if (this.stateModel.getRuntimeValue(LayoutStateKeys.MAIN_EDITOR_CENTERED)) {
+      this.centerMainEditorLayout(true, true);
+    }
+    Promises.settled(layoutReadyPromises).finally(() => {
+      this.whenReadyPromise.complete();
+      Promises.settled(layoutRestoredPromises).finally(() => {
+        this.restored = true;
+        this.whenRestoredPromise.complete();
+      });
+    });
+  }
+  async openViewContainer(location, id, focus) {
+    let viewContainer = await this.paneCompositeService.openPaneComposite(id, location, focus);
+    if (viewContainer) {
+      return;
+    }
+    viewContainer = await this.paneCompositeService.openPaneComposite(this.viewDescriptorService.getDefaultViewContainer(location)?.id, location, focus);
+    if (viewContainer) {
+      return;
+    }
+    await this.paneCompositeService.openPaneComposite(this.paneCompositeService.getVisiblePaneCompositeIds(location).at(0), location, focus);
+  }
+  registerPart(part) {
+    const id = part.getId();
+    this.parts.set(id, part);
+    return toDisposable(() => this.parts.delete(id));
+  }
+  getPart(key) {
+    const part = this.parts.get(key);
+    if (!part) {
+      throw new Error(`Unknown part ${key}`);
+    }
+    return part;
+  }
+  registerNotifications(delegate) {
+    this._register(delegate.onDidChangeNotificationsVisibility((visible) => this._onDidChangeNotificationsVisibility.fire(visible)));
+  }
+  hasFocus(part) {
+    const container = this.getContainer(getActiveWindow(), part);
+    if (!container) {
+      return false;
+    }
+    const activeElement = getActiveElement();
+    if (!activeElement) {
+      return false;
+    }
+    return isAncestorUsingFlowTo(activeElement, container);
+  }
+  _getFocusedPart() {
+    for (const part of this.parts.keys()) {
+      if (this.hasFocus(part)) {
+        return part;
+      }
+    }
+    return void 0;
+  }
+  focusPart(part, targetWindow = mainWindow) {
+    const container = this.getContainer(targetWindow, part) ?? this.mainContainer;
+    switch (part) {
+      case Parts.EDITOR_PART:
+        this.editorGroupService.getPart(container).activeGroup.focus();
+        break;
+      case Parts.PANEL_PART: {
+        this.paneCompositeService.getActivePaneComposite(ViewContainerLocation.Panel)?.focus();
+        break;
+      }
+      case Parts.SIDEBAR_PART: {
+        this.paneCompositeService.getActivePaneComposite(ViewContainerLocation.Sidebar)?.focus();
+        break;
+      }
+      case Parts.AUXILIARYBAR_PART: {
+        this.paneCompositeService.getActivePaneComposite(ViewContainerLocation.AuxiliaryBar)?.focus();
+        break;
+      }
+      case Parts.ACTIVITYBAR_PART:
+        this.getPart(Parts.SIDEBAR_PART).focusActivityBar();
+        break;
+      case Parts.STATUSBAR_PART:
+        this.statusBarService.getPart(container).focus();
+        break;
+      default: {
+        container?.focus();
+      }
+    }
+  }
+  getContainer(targetWindow, part) {
+    if (typeof part === "undefined") {
+      return this.getContainerFromDocument(targetWindow.document);
+    }
+    if (targetWindow === mainWindow) {
+      return this.getPart(part).getContainer();
+    }
+    let partCandidate;
+    if (part === Parts.EDITOR_PART) {
+      partCandidate = this.editorGroupService.getPart(this.getContainerFromDocument(targetWindow.document));
+    } else if (part === Parts.STATUSBAR_PART) {
+      partCandidate = this.statusBarService.getPart(this.getContainerFromDocument(targetWindow.document));
+    } else if (part === Parts.TITLEBAR_PART) {
+      partCandidate = this.titleService.getPart(this.getContainerFromDocument(targetWindow.document));
+    }
+    if (partCandidate instanceof Part) {
+      return partCandidate.getContainer();
+    }
+    return void 0;
+  }
+  isVisible(part, targetWindow = mainWindow) {
+    if (targetWindow !== mainWindow && part === Parts.EDITOR_PART) {
+      return true;
+    }
+    switch (part) {
+      case Parts.TITLEBAR_PART:
+        return this.initialized ? this.workbenchGrid.isViewVisible(this.titleBarPartView) : shouldShowCustomTitleBar(this.configurationService, mainWindow, this.state.runtime.menuBar.toggled);
+      case Parts.SIDEBAR_PART:
+        return !this.stateModel.getRuntimeValue(LayoutStateKeys.SIDEBAR_HIDDEN);
+      case Parts.PANEL_PART:
+        return !this.stateModel.getRuntimeValue(LayoutStateKeys.PANEL_HIDDEN);
+      case Parts.AUXILIARYBAR_PART:
+        return !this.stateModel.getRuntimeValue(LayoutStateKeys.AUXILIARYBAR_HIDDEN);
+      case Parts.STATUSBAR_PART:
+        return !this.stateModel.getRuntimeValue(LayoutStateKeys.STATUSBAR_HIDDEN);
+      case Parts.ACTIVITYBAR_PART:
+        return !this.stateModel.getRuntimeValue(LayoutStateKeys.ACTIVITYBAR_HIDDEN);
+      case Parts.EDITOR_PART:
+        return !this.stateModel.getRuntimeValue(LayoutStateKeys.EDITOR_HIDDEN);
+      case Parts.BANNER_PART:
+        return this.initialized ? this.workbenchGrid.isViewVisible(this.bannerPartView) : false;
+      default:
+        return false;
+    }
+  }
+  shouldShowBannerFirst() {
+    return isWeb && !isWCOEnabled();
+  }
+  focus() {
+    if (this.isPanelMaximized() && this.mainContainer === this.activeContainer) {
+      this.focusPart(Parts.PANEL_PART);
+    } else {
+      this.focusPart(Parts.EDITOR_PART, getWindow(this.activeContainer));
+    }
+  }
+  focusPanelOrEditor() {
+    const activePanel = this.paneCompositeService.getActivePaneComposite(ViewContainerLocation.Panel);
+    if ((this.hasFocus(Parts.PANEL_PART) || !this.isVisible(Parts.EDITOR_PART)) && activePanel) {
+      activePanel.focus();
+    } else {
+      this.focus();
+    }
+  }
+  getMaximumEditorDimensions(container) {
+    const targetWindow = getWindow(container);
+    const containerDimension = this.getContainerDimension(container);
+    if (container === this.mainContainer) {
+      const isPanelHorizontal = isHorizontal(this.getPanelPosition());
+      const takenWidth = (this.isVisible(Parts.ACTIVITYBAR_PART) ? this.activityBarPartView.minimumWidth : 0) + (this.isVisible(Parts.SIDEBAR_PART) ? this.sideBarPartView.minimumWidth : 0) + (this.isVisible(Parts.PANEL_PART) && !isPanelHorizontal ? this.panelPartView.minimumWidth : 0) + (this.isVisible(Parts.AUXILIARYBAR_PART) ? this.auxiliaryBarPartView.minimumWidth : 0);
+      const takenHeight = (this.isVisible(Parts.TITLEBAR_PART, targetWindow) ? this.titleBarPartView.minimumHeight : 0) + (this.isVisible(Parts.STATUSBAR_PART, targetWindow) ? this.statusBarPartView.minimumHeight : 0) + (this.isVisible(Parts.PANEL_PART) && isPanelHorizontal ? this.panelPartView.minimumHeight : 0);
+      const availableWidth = containerDimension.width - takenWidth;
+      const availableHeight = containerDimension.height - takenHeight;
+      return { width: availableWidth, height: availableHeight };
+    } else {
+      const takenHeight = (this.isVisible(Parts.TITLEBAR_PART, targetWindow) ? this.titleBarPartView.minimumHeight : 0) + (this.isVisible(Parts.STATUSBAR_PART, targetWindow) ? this.statusBarPartView.minimumHeight : 0);
+      return { width: containerDimension.width, height: containerDimension.height - takenHeight };
+    }
+  }
+  isZenModeActive() {
+    return this.stateModel.getRuntimeValue(LayoutStateKeys.ZEN_MODE_ACTIVE);
+  }
+  setZenModeActive(active) {
+    this.stateModel.setRuntimeValue(LayoutStateKeys.ZEN_MODE_ACTIVE, active);
+  }
+  toggleZenMode(skipLayout, restoring = false) {
+    const focusedPartPreTransition = this._getFocusedPart();
+    this.setZenModeActive(!this.isZenModeActive());
+    this.state.runtime.zenMode.transitionDisposables.clearAndDisposeAll();
+    const setLineNumbers = /* @__PURE__ */ __name((lineNumbers) => {
+      for (const editor of this.mainPartEditorService.visibleTextEditorControls) {
+        if (!lineNumbers && isCodeEditor(editor) && editor.hasModel()) {
+          const model = editor.getModel();
+          lineNumbers = this.configurationService.getValue("editor.lineNumbers", { resource: model.uri, overrideIdentifier: model.getLanguageId() });
+        }
+        if (!lineNumbers) {
+          lineNumbers = this.configurationService.getValue("editor.lineNumbers");
+        }
+        editor.updateOptions({ lineNumbers });
+      }
+    }, "setLineNumbers");
+    let toggleMainWindowFullScreen = false;
+    const config = getZenModeConfiguration(this.configurationService);
+    const zenModeExitInfo = this.stateModel.getRuntimeValue(LayoutStateKeys.ZEN_MODE_EXIT_INFO);
+    if (this.isZenModeActive()) {
+      toggleMainWindowFullScreen = !this.state.runtime.mainWindowFullscreen && config.fullScreen && !isIOS;
+      if (!restoring) {
+        zenModeExitInfo.transitionedToFullScreen = toggleMainWindowFullScreen;
+        zenModeExitInfo.transitionedToCenteredEditorLayout = !this.isMainEditorLayoutCentered() && config.centerLayout;
+        zenModeExitInfo.handleNotificationsDoNotDisturbMode = this.notificationService.getFilter() === NotificationsFilter.OFF;
+        zenModeExitInfo.wasVisible.sideBar = this.isVisible(Parts.SIDEBAR_PART);
+        zenModeExitInfo.wasVisible.panel = this.isVisible(Parts.PANEL_PART);
+        zenModeExitInfo.wasVisible.auxiliaryBar = this.isVisible(Parts.AUXILIARYBAR_PART);
+        this.stateModel.setRuntimeValue(LayoutStateKeys.ZEN_MODE_EXIT_INFO, zenModeExitInfo);
+      }
+      this.setPanelHidden(true, true);
+      this.setAuxiliaryBarHidden(true, true);
+      this.setSideBarHidden(true);
+      if (config.hideActivityBar) {
+        this.setActivityBarHidden(true);
+      }
+      if (config.hideStatusBar) {
+        this.setStatusBarHidden(true);
+      }
+      if (config.hideLineNumbers) {
+        setLineNumbers("off");
+        this.state.runtime.zenMode.transitionDisposables.set(ZenModeSettings.HIDE_LINENUMBERS, this.mainPartEditorService.onDidVisibleEditorsChange(() => setLineNumbers("off")));
+      }
+      if (config.showTabs !== this.editorGroupService.partOptions.showTabs) {
+        this.state.runtime.zenMode.transitionDisposables.set(ZenModeSettings.SHOW_TABS, this.editorGroupService.mainPart.enforcePartOptions({ showTabs: config.showTabs }));
+      }
+      if (config.silentNotifications && zenModeExitInfo.handleNotificationsDoNotDisturbMode) {
+        this.notificationService.setFilter(NotificationsFilter.ERROR);
+      }
+      if (config.centerLayout) {
+        this.centerMainEditorLayout(true, true);
+      }
+      this.state.runtime.zenMode.transitionDisposables.set("configurationChange", this.configurationService.onDidChangeConfiguration((e) => {
+        if (e.affectsConfiguration(ZenModeSettings.HIDE_ACTIVITYBAR)) {
+          const zenModeHideActivityBar = this.configurationService.getValue(ZenModeSettings.HIDE_ACTIVITYBAR);
+          this.setActivityBarHidden(zenModeHideActivityBar);
+        }
+        if (e.affectsConfiguration(ZenModeSettings.HIDE_STATUSBAR)) {
+          const zenModeHideStatusBar = this.configurationService.getValue(ZenModeSettings.HIDE_STATUSBAR);
+          this.setStatusBarHidden(zenModeHideStatusBar);
+        }
+        if (e.affectsConfiguration(ZenModeSettings.CENTER_LAYOUT)) {
+          const zenModeCenterLayout = this.configurationService.getValue(ZenModeSettings.CENTER_LAYOUT);
+          this.centerMainEditorLayout(zenModeCenterLayout, true);
+        }
+        if (e.affectsConfiguration(ZenModeSettings.SHOW_TABS)) {
+          const zenModeShowTabs = this.configurationService.getValue(ZenModeSettings.SHOW_TABS) ?? "multiple";
+          this.state.runtime.zenMode.transitionDisposables.set(ZenModeSettings.SHOW_TABS, this.editorGroupService.mainPart.enforcePartOptions({ showTabs: zenModeShowTabs }));
+        }
+        if (e.affectsConfiguration(ZenModeSettings.SILENT_NOTIFICATIONS)) {
+          const zenModeSilentNotifications = !!this.configurationService.getValue(ZenModeSettings.SILENT_NOTIFICATIONS);
+          if (zenModeExitInfo.handleNotificationsDoNotDisturbMode) {
+            this.notificationService.setFilter(zenModeSilentNotifications ? NotificationsFilter.ERROR : NotificationsFilter.OFF);
+          }
+        }
+        if (e.affectsConfiguration(ZenModeSettings.HIDE_LINENUMBERS)) {
+          const lineNumbersType = this.configurationService.getValue(ZenModeSettings.HIDE_LINENUMBERS) ? "off" : void 0;
+          setLineNumbers(lineNumbersType);
+          this.state.runtime.zenMode.transitionDisposables.set(ZenModeSettings.HIDE_LINENUMBERS, this.mainPartEditorService.onDidVisibleEditorsChange(() => setLineNumbers(lineNumbersType)));
+        }
+      }));
+    } else {
+      if (zenModeExitInfo.wasVisible.panel) {
+        this.setPanelHidden(false, true);
+      }
+      if (zenModeExitInfo.wasVisible.auxiliaryBar) {
+        this.setAuxiliaryBarHidden(false, true);
+      }
+      if (zenModeExitInfo.wasVisible.sideBar) {
+        this.setSideBarHidden(false);
+      }
+      if (!this.stateModel.getRuntimeValue(LayoutStateKeys.ACTIVITYBAR_HIDDEN, true)) {
+        this.setActivityBarHidden(false);
+      }
+      if (!this.stateModel.getRuntimeValue(LayoutStateKeys.STATUSBAR_HIDDEN, true)) {
+        this.setStatusBarHidden(false);
+      }
+      if (zenModeExitInfo.transitionedToCenteredEditorLayout) {
+        this.centerMainEditorLayout(false, true);
+      }
+      if (zenModeExitInfo.handleNotificationsDoNotDisturbMode) {
+        this.notificationService.setFilter(NotificationsFilter.OFF);
+      }
+      setLineNumbers();
+      toggleMainWindowFullScreen = zenModeExitInfo.transitionedToFullScreen && this.state.runtime.mainWindowFullscreen;
+    }
+    if (!skipLayout) {
+      this.layout();
+    }
+    if (toggleMainWindowFullScreen) {
+      this.hostService.toggleFullScreen(mainWindow);
+    }
+    if (focusedPartPreTransition && this.isVisible(focusedPartPreTransition, getWindow(this.activeContainer))) {
+      if (isMultiWindowPart(focusedPartPreTransition)) {
+        this.focusPart(focusedPartPreTransition, getWindow(this.activeContainer));
+      } else {
+        this.focusPart(focusedPartPreTransition);
+      }
+    } else {
+      this.focus();
+    }
+    this._onDidChangeZenMode.fire(this.isZenModeActive());
+  }
+  setStatusBarHidden(hidden) {
+    this.stateModel.setRuntimeValue(LayoutStateKeys.STATUSBAR_HIDDEN, hidden);
+    if (hidden) {
+      this.mainContainer.classList.add("nostatusbar" /* STATUSBAR_HIDDEN */);
+    } else {
+      this.mainContainer.classList.remove("nostatusbar" /* STATUSBAR_HIDDEN */);
+    }
+    this.workbenchGrid.setViewVisible(this.statusBarPartView, !hidden);
+  }
+  createWorkbenchLayout() {
+    const titleBar = this.getPart(Parts.TITLEBAR_PART);
+    const bannerPart = this.getPart(Parts.BANNER_PART);
+    const editorPart = this.getPart(Parts.EDITOR_PART);
+    const activityBar = this.getPart(Parts.ACTIVITYBAR_PART);
+    const panelPart = this.getPart(Parts.PANEL_PART);
+    const auxiliaryBarPart = this.getPart(Parts.AUXILIARYBAR_PART);
+    const sideBar = this.getPart(Parts.SIDEBAR_PART);
+    const statusBar = this.getPart(Parts.STATUSBAR_PART);
+    this.titleBarPartView = titleBar;
+    this.bannerPartView = bannerPart;
+    this.sideBarPartView = sideBar;
+    this.activityBarPartView = activityBar;
+    this.editorPartView = editorPart;
+    this.panelPartView = panelPart;
+    this.auxiliaryBarPartView = auxiliaryBarPart;
+    this.statusBarPartView = statusBar;
+    const viewMap = {
+      [Parts.ACTIVITYBAR_PART]: this.activityBarPartView,
+      [Parts.BANNER_PART]: this.bannerPartView,
+      [Parts.TITLEBAR_PART]: this.titleBarPartView,
+      [Parts.EDITOR_PART]: this.editorPartView,
+      [Parts.PANEL_PART]: this.panelPartView,
+      [Parts.SIDEBAR_PART]: this.sideBarPartView,
+      [Parts.STATUSBAR_PART]: this.statusBarPartView,
+      [Parts.AUXILIARYBAR_PART]: this.auxiliaryBarPartView
+    };
+    const fromJSON = /* @__PURE__ */ __name(({ type }) => viewMap[type], "fromJSON");
+    const workbenchGrid = SerializableGrid.deserialize(
+      this.createGridDescriptor(),
+      { fromJSON },
+      { proportionalLayout: false }
+    );
+    this.mainContainer.prepend(workbenchGrid.element);
+    this.mainContainer.setAttribute("role", "application");
+    this.workbenchGrid = workbenchGrid;
+    this.workbenchGrid.edgeSnapping = this.state.runtime.mainWindowFullscreen;
+    for (const part of [titleBar, editorPart, activityBar, panelPart, sideBar, statusBar, auxiliaryBarPart, bannerPart]) {
+      this._register(part.onDidVisibilityChange((visible) => {
+        if (part === sideBar) {
+          this.setSideBarHidden(!visible);
+        } else if (part === panelPart) {
+          this.setPanelHidden(!visible, true);
+        } else if (part === auxiliaryBarPart) {
+          this.setAuxiliaryBarHidden(!visible, true);
+        } else if (part === editorPart) {
+          this.setEditorHidden(!visible);
+        }
+        this._onDidChangePartVisibility.fire();
+        this.handleContainerDidLayout(this.mainContainer, this._mainContainerDimension);
+      }));
+    }
+    this._register(this.storageService.onWillSaveState((e) => {
+      const sideBarSize = this.stateModel.getRuntimeValue(LayoutStateKeys.SIDEBAR_HIDDEN) ? this.workbenchGrid.getViewCachedVisibleSize(this.sideBarPartView) : this.workbenchGrid.getViewSize(this.sideBarPartView).width;
+      this.stateModel.setInitializationValue(LayoutStateKeys.SIDEBAR_SIZE, sideBarSize);
+      const panelSize = this.stateModel.getRuntimeValue(LayoutStateKeys.PANEL_HIDDEN) ? this.workbenchGrid.getViewCachedVisibleSize(this.panelPartView) : isHorizontal(this.stateModel.getRuntimeValue(LayoutStateKeys.PANEL_POSITION)) ? this.workbenchGrid.getViewSize(this.panelPartView).height : this.workbenchGrid.getViewSize(this.panelPartView).width;
+      this.stateModel.setInitializationValue(LayoutStateKeys.PANEL_SIZE, panelSize);
+      const auxiliaryBarSize = this.stateModel.getRuntimeValue(LayoutStateKeys.AUXILIARYBAR_HIDDEN) ? this.workbenchGrid.getViewCachedVisibleSize(this.auxiliaryBarPartView) : this.workbenchGrid.getViewSize(this.auxiliaryBarPartView).width;
+      this.stateModel.setInitializationValue(LayoutStateKeys.AUXILIARYBAR_SIZE, auxiliaryBarSize);
+      this.stateModel.save(true, true);
+    }));
+  }
+  layout() {
+    if (!this.disposed) {
+      this._mainContainerDimension = getClientArea(
+        this.state.runtime.mainWindowFullscreen ? mainWindow.document.body : (
+          // in fullscreen mode, make sure to use <body> element because
+          this.parent
+        ),
+        // in that case the workbench will span the entire site
+        DEFAULT_WINDOW_DIMENSIONS
+        // running with fallback to ensure no error is thrown (https://github.com/microsoft/vscode/issues/240242)
+      );
+      this.logService.trace(`Layout#layout, height: ${this._mainContainerDimension.height}, width: ${this._mainContainerDimension.width}`);
+      position(this.mainContainer, 0, 0, 0, 0, "relative");
+      size(this.mainContainer, this._mainContainerDimension.width, this._mainContainerDimension.height);
+      this.workbenchGrid.layout(this._mainContainerDimension.width, this._mainContainerDimension.height);
+      this.initialized = true;
+      this.handleContainerDidLayout(this.mainContainer, this._mainContainerDimension);
+    }
+  }
+  isMainEditorLayoutCentered() {
+    return this.stateModel.getRuntimeValue(LayoutStateKeys.MAIN_EDITOR_CENTERED);
+  }
+  centerMainEditorLayout(active, skipLayout) {
+    this.stateModel.setRuntimeValue(LayoutStateKeys.MAIN_EDITOR_CENTERED, active);
+    const mainVisibleEditors = coalesce(this.editorGroupService.mainPart.groups.map((group) => group.activeEditor));
+    const isEditorComplex = mainVisibleEditors.some((editor) => {
+      if (editor instanceof DiffEditorInput) {
+        return this.configurationService.getValue("diffEditor.renderSideBySide");
+      }
+      if (editor?.hasCapability(EditorInputCapabilities.MultipleEditors)) {
+        return true;
+      }
+      return false;
+    });
+    const layout = this.editorGroupService.getLayout();
+    let hasMoreThanOneColumn = false;
+    if (layout.orientation === GroupOrientation.HORIZONTAL) {
+      hasMoreThanOneColumn = layout.groups.length > 1;
+    } else {
+      hasMoreThanOneColumn = layout.groups.some((group) => group.groups && group.groups.length > 1);
+    }
+    const isCenteredLayoutAutoResizing = this.configurationService.getValue("workbench.editor.centeredLayoutAutoResize");
+    if (isCenteredLayoutAutoResizing && (hasMoreThanOneColumn && !this.editorGroupService.mainPart.hasMaximizedGroup() || isEditorComplex)) {
+      active = false;
+    }
+    if (this.editorGroupService.mainPart.isLayoutCentered() !== active) {
+      this.editorGroupService.mainPart.centerLayout(active);
+      if (!skipLayout) {
+        this.layout();
+      }
+    }
+    this._onDidChangeMainEditorCenteredLayout.fire(this.stateModel.getRuntimeValue(LayoutStateKeys.MAIN_EDITOR_CENTERED));
+  }
+  getSize(part) {
+    return this.workbenchGrid.getViewSize(this.getPart(part));
+  }
+  setSize(part, size2) {
+    this.workbenchGrid.resizeView(this.getPart(part), size2);
+  }
+  resizePart(part, sizeChangeWidth, sizeChangeHeight) {
+    const sizeChangePxWidth = Math.sign(sizeChangeWidth) * computeScreenAwareSize(getActiveWindow(), Math.abs(sizeChangeWidth));
+    const sizeChangePxHeight = Math.sign(sizeChangeHeight) * computeScreenAwareSize(getActiveWindow(), Math.abs(sizeChangeHeight));
+    let viewSize;
+    switch (part) {
+      case Parts.SIDEBAR_PART:
+        viewSize = this.workbenchGrid.getViewSize(this.sideBarPartView);
+        this.workbenchGrid.resizeView(
+          this.sideBarPartView,
+          {
+            width: viewSize.width + sizeChangePxWidth,
+            height: viewSize.height
+          }
+        );
+        break;
+      case Parts.PANEL_PART:
+        viewSize = this.workbenchGrid.getViewSize(this.panelPartView);
+        this.workbenchGrid.resizeView(
+          this.panelPartView,
+          {
+            width: viewSize.width + (isHorizontal(this.getPanelPosition()) ? 0 : sizeChangePxWidth),
+            height: viewSize.height + (isHorizontal(this.getPanelPosition()) ? sizeChangePxHeight : 0)
+          }
+        );
+        break;
+      case Parts.AUXILIARYBAR_PART:
+        viewSize = this.workbenchGrid.getViewSize(this.auxiliaryBarPartView);
+        this.workbenchGrid.resizeView(
+          this.auxiliaryBarPartView,
+          {
+            width: viewSize.width + sizeChangePxWidth,
+            height: viewSize.height
+          }
+        );
+        break;
+      case Parts.EDITOR_PART:
+        viewSize = this.workbenchGrid.getViewSize(this.editorPartView);
+        if (this.editorGroupService.mainPart.count === 1) {
+          this.workbenchGrid.resizeView(
+            this.editorPartView,
+            {
+              width: viewSize.width + sizeChangePxWidth,
+              height: viewSize.height + sizeChangePxHeight
+            }
+          );
+        } else {
+          const activeGroup = this.editorGroupService.mainPart.activeGroup;
+          const { width, height } = this.editorGroupService.mainPart.getSize(activeGroup);
+          this.editorGroupService.mainPart.setSize(activeGroup, { width: width + sizeChangePxWidth, height: height + sizeChangePxHeight });
+          const { width: newWidth, height: newHeight } = this.editorGroupService.mainPart.getSize(activeGroup);
+          if (sizeChangePxHeight && height === newHeight || sizeChangePxWidth && width === newWidth) {
+            this.workbenchGrid.resizeView(
+              this.editorPartView,
+              {
+                width: viewSize.width + (sizeChangePxWidth && width === newWidth ? sizeChangePxWidth : 0),
+                height: viewSize.height + (sizeChangePxHeight && height === newHeight ? sizeChangePxHeight : 0)
+              }
+            );
+          }
+        }
+        break;
+      default:
+        return;
+    }
+  }
+  setActivityBarHidden(hidden) {
+    this.stateModel.setRuntimeValue(LayoutStateKeys.ACTIVITYBAR_HIDDEN, hidden);
+    this.workbenchGrid.setViewVisible(this.activityBarPartView, !hidden);
+  }
+  setBannerHidden(hidden) {
+    this.workbenchGrid.setViewVisible(this.bannerPartView, !hidden);
+  }
+  setEditorHidden(hidden) {
+    this.stateModel.setRuntimeValue(LayoutStateKeys.EDITOR_HIDDEN, hidden);
+    if (hidden) {
+      this.mainContainer.classList.add("nomaineditorarea" /* MAIN_EDITOR_AREA_HIDDEN */);
+    } else {
+      this.mainContainer.classList.remove("nomaineditorarea" /* MAIN_EDITOR_AREA_HIDDEN */);
+    }
+    this.workbenchGrid.setViewVisible(this.editorPartView, !hidden);
+    if (hidden && !this.isVisible(Parts.PANEL_PART)) {
+      this.setPanelHidden(false, true);
+    }
+  }
+  getLayoutClasses() {
+    return coalesce([
+      !this.isVisible(Parts.SIDEBAR_PART) ? "nosidebar" /* SIDEBAR_HIDDEN */ : void 0,
+      !this.isVisible(Parts.EDITOR_PART, mainWindow) ? "nomaineditorarea" /* MAIN_EDITOR_AREA_HIDDEN */ : void 0,
+      !this.isVisible(Parts.PANEL_PART) ? "nopanel" /* PANEL_HIDDEN */ : void 0,
+      !this.isVisible(Parts.AUXILIARYBAR_PART) ? "noauxiliarybar" /* AUXILIARYBAR_HIDDEN */ : void 0,
+      !this.isVisible(Parts.STATUSBAR_PART) ? "nostatusbar" /* STATUSBAR_HIDDEN */ : void 0,
+      this.state.runtime.mainWindowFullscreen ? "fullscreen" /* FULLSCREEN */ : void 0
+    ]);
+  }
+  setSideBarHidden(hidden) {
+    this.stateModel.setRuntimeValue(LayoutStateKeys.SIDEBAR_HIDDEN, hidden);
+    if (hidden) {
+      this.mainContainer.classList.add("nosidebar" /* SIDEBAR_HIDDEN */);
+    } else {
+      this.mainContainer.classList.remove("nosidebar" /* SIDEBAR_HIDDEN */);
+    }
+    if (hidden && this.paneCompositeService.getActivePaneComposite(ViewContainerLocation.Sidebar)) {
+      this.paneCompositeService.hideActivePaneComposite(ViewContainerLocation.Sidebar);
+      this.focusPanelOrEditor();
+    } else if (!hidden && !this.paneCompositeService.getActivePaneComposite(ViewContainerLocation.Sidebar)) {
+      const viewletToOpen = this.paneCompositeService.getLastActivePaneCompositeId(ViewContainerLocation.Sidebar);
+      if (viewletToOpen) {
+        this.openViewContainer(ViewContainerLocation.Sidebar, viewletToOpen, true);
+      }
+    }
+    this.workbenchGrid.setViewVisible(this.sideBarPartView, !hidden);
+  }
+  hasViews(id) {
+    const viewContainer = this.viewDescriptorService.getViewContainerById(id);
+    if (!viewContainer) {
+      return false;
+    }
+    const viewContainerModel = this.viewDescriptorService.getViewContainerModel(viewContainer);
+    if (!viewContainerModel) {
+      return false;
+    }
+    return viewContainerModel.activeViewDescriptors.length >= 1;
+  }
+  adjustPartPositions(sideBarPosition, panelAlignment, panelPosition) {
+    const isPanelVertical = !isHorizontal(panelPosition);
+    const sideBarSiblingToEditor = isPanelVertical || !(panelAlignment === "center" || sideBarPosition === Position.LEFT && panelAlignment === "right" || sideBarPosition === Position.RIGHT && panelAlignment === "left");
+    const auxiliaryBarSiblingToEditor = isPanelVertical || !(panelAlignment === "center" || sideBarPosition === Position.RIGHT && panelAlignment === "right" || sideBarPosition === Position.LEFT && panelAlignment === "left");
+    const preMovePanelWidth = !this.isVisible(Parts.PANEL_PART) ? Sizing.Invisible(this.workbenchGrid.getViewCachedVisibleSize(this.panelPartView) ?? this.panelPartView.minimumWidth) : this.workbenchGrid.getViewSize(this.panelPartView).width;
+    const preMovePanelHeight = !this.isVisible(Parts.PANEL_PART) ? Sizing.Invisible(this.workbenchGrid.getViewCachedVisibleSize(this.panelPartView) ?? this.panelPartView.minimumHeight) : this.workbenchGrid.getViewSize(this.panelPartView).height;
+    const preMoveSideBarSize = !this.isVisible(Parts.SIDEBAR_PART) ? Sizing.Invisible(this.workbenchGrid.getViewCachedVisibleSize(this.sideBarPartView) ?? this.sideBarPartView.minimumWidth) : this.workbenchGrid.getViewSize(this.sideBarPartView).width;
+    const preMoveAuxiliaryBarSize = !this.isVisible(Parts.AUXILIARYBAR_PART) ? Sizing.Invisible(this.workbenchGrid.getViewCachedVisibleSize(this.auxiliaryBarPartView) ?? this.auxiliaryBarPartView.minimumWidth) : this.workbenchGrid.getViewSize(this.auxiliaryBarPartView).width;
+    const focusedPart = [Parts.PANEL_PART, Parts.SIDEBAR_PART, Parts.AUXILIARYBAR_PART].find((part) => this.hasFocus(part));
+    if (sideBarPosition === Position.LEFT) {
+      this.workbenchGrid.moveViewTo(this.activityBarPartView, [2, 0]);
+      this.workbenchGrid.moveView(this.sideBarPartView, preMoveSideBarSize, sideBarSiblingToEditor ? this.editorPartView : this.activityBarPartView, sideBarSiblingToEditor ? Direction.Left : Direction.Right);
+      if (auxiliaryBarSiblingToEditor) {
+        this.workbenchGrid.moveView(this.auxiliaryBarPartView, preMoveAuxiliaryBarSize, this.editorPartView, Direction.Right);
+      } else {
+        this.workbenchGrid.moveViewTo(this.auxiliaryBarPartView, [2, -1]);
+      }
+    } else {
+      this.workbenchGrid.moveViewTo(this.activityBarPartView, [2, -1]);
+      this.workbenchGrid.moveView(this.sideBarPartView, preMoveSideBarSize, sideBarSiblingToEditor ? this.editorPartView : this.activityBarPartView, sideBarSiblingToEditor ? Direction.Right : Direction.Left);
+      if (auxiliaryBarSiblingToEditor) {
+        this.workbenchGrid.moveView(this.auxiliaryBarPartView, preMoveAuxiliaryBarSize, this.editorPartView, Direction.Left);
+      } else {
+        this.workbenchGrid.moveViewTo(this.auxiliaryBarPartView, [2, 0]);
+      }
+    }
+    if (focusedPart) {
+      this.focusPart(focusedPart);
+    }
+    if (isPanelVertical) {
+      this.workbenchGrid.moveView(this.panelPartView, preMovePanelWidth, this.editorPartView, panelPosition === Position.LEFT ? Direction.Left : Direction.Right);
+      this.workbenchGrid.resizeView(this.panelPartView, {
+        height: preMovePanelHeight,
+        width: preMovePanelWidth
+      });
+    }
+    if (this.isVisible(Parts.SIDEBAR_PART)) {
+      this.workbenchGrid.resizeView(this.sideBarPartView, {
+        height: this.workbenchGrid.getViewSize(this.sideBarPartView).height,
+        width: preMoveSideBarSize
+      });
+    }
+    if (this.isVisible(Parts.AUXILIARYBAR_PART)) {
+      this.workbenchGrid.resizeView(this.auxiliaryBarPartView, {
+        height: this.workbenchGrid.getViewSize(this.auxiliaryBarPartView).height,
+        width: preMoveAuxiliaryBarSize
+      });
+    }
+  }
+  setPanelAlignment(alignment) {
+    if (!isHorizontal(this.getPanelPosition())) {
+      this.setPanelPosition(Position.BOTTOM);
+    }
+    if (alignment !== "center" && this.isPanelMaximized()) {
+      this.toggleMaximizedPanel();
+    }
+    this.stateModel.setRuntimeValue(LayoutStateKeys.PANEL_ALIGNMENT, alignment);
+    this.adjustPartPositions(this.getSideBarPosition(), alignment, this.getPanelPosition());
+    this._onDidChangePanelAlignment.fire(alignment);
+  }
+  setPanelHidden(hidden, skipLayout) {
+    if (!this.workbenchGrid) {
+      return;
+    }
+    const wasHidden = !this.isVisible(Parts.PANEL_PART);
+    this.stateModel.setRuntimeValue(LayoutStateKeys.PANEL_HIDDEN, hidden);
+    const isPanelMaximized = this.isPanelMaximized();
+    const panelOpensMaximized = this.panelOpensMaximized();
+    if (hidden) {
+      this.mainContainer.classList.add("nopanel" /* PANEL_HIDDEN */);
+    } else {
+      this.mainContainer.classList.remove("nopanel" /* PANEL_HIDDEN */);
+    }
+    let focusEditor = false;
+    if (hidden && this.paneCompositeService.getActivePaneComposite(ViewContainerLocation.Panel)) {
+      this.paneCompositeService.hideActivePaneComposite(ViewContainerLocation.Panel);
+      focusEditor = isIOS ? false : true;
+    } else if (!hidden && !this.paneCompositeService.getActivePaneComposite(ViewContainerLocation.Panel)) {
+      let panelToOpen = this.paneCompositeService.getLastActivePaneCompositeId(ViewContainerLocation.Panel);
+      if (!panelToOpen || !this.hasViews(panelToOpen)) {
+        panelToOpen = this.viewDescriptorService.getViewContainersByLocation(ViewContainerLocation.Panel).find((viewContainer) => this.hasViews(viewContainer.id))?.id;
+      }
+      if (panelToOpen) {
+        this.openViewContainer(ViewContainerLocation.Panel, panelToOpen, !skipLayout);
+      }
+    }
+    if (hidden && isPanelMaximized) {
+      this.toggleMaximizedPanel();
+    }
+    if (wasHidden === hidden) {
+      return;
+    }
+    this.workbenchGrid.setViewVisible(this.panelPartView, !hidden);
+    if (!hidden) {
+      if (!skipLayout && isPanelMaximized !== panelOpensMaximized) {
+        this.toggleMaximizedPanel();
+      }
+    } else {
+      this.stateModel.setRuntimeValue(LayoutStateKeys.PANEL_WAS_LAST_MAXIMIZED, isPanelMaximized);
+    }
+    if (focusEditor) {
+      this.editorGroupService.mainPart.activeGroup.focus();
+    }
+  }
+  toggleMaximizedPanel() {
+    const size2 = this.workbenchGrid.getViewSize(this.panelPartView);
+    const panelPosition = this.getPanelPosition();
+    const isMaximized = this.isPanelMaximized();
+    if (!isMaximized) {
+      if (this.isVisible(Parts.PANEL_PART)) {
+        if (isHorizontal(panelPosition)) {
+          this.stateModel.setRuntimeValue(LayoutStateKeys.PANEL_LAST_NON_MAXIMIZED_HEIGHT, size2.height);
+        } else {
+          this.stateModel.setRuntimeValue(LayoutStateKeys.PANEL_LAST_NON_MAXIMIZED_WIDTH, size2.width);
+        }
+      }
+      this.setEditorHidden(true);
+    } else {
+      this.setEditorHidden(false);
+      this.workbenchGrid.resizeView(this.panelPartView, {
+        width: isHorizontal(panelPosition) ? size2.width : this.stateModel.getRuntimeValue(LayoutStateKeys.PANEL_LAST_NON_MAXIMIZED_WIDTH),
+        height: isHorizontal(panelPosition) ? this.stateModel.getRuntimeValue(LayoutStateKeys.PANEL_LAST_NON_MAXIMIZED_HEIGHT) : size2.height
+      });
+    }
+    this.stateModel.setRuntimeValue(LayoutStateKeys.PANEL_WAS_LAST_MAXIMIZED, !isMaximized);
+  }
+  panelOpensMaximized() {
+    if (this.getPanelAlignment() !== "center" && isHorizontal(this.getPanelPosition())) {
+      return false;
+    }
+    const panelOpensMaximized = panelOpensMaximizedFromString(this.configurationService.getValue("workbench.panel.opensMaximized" /* PANEL_OPENS_MAXIMIZED */));
+    const panelLastIsMaximized = this.stateModel.getRuntimeValue(LayoutStateKeys.PANEL_WAS_LAST_MAXIMIZED);
+    return panelOpensMaximized === PanelOpensMaximizedOptions.ALWAYS || panelOpensMaximized === PanelOpensMaximizedOptions.REMEMBER_LAST && panelLastIsMaximized;
+  }
+  setAuxiliaryBarHidden(hidden, skipLayout) {
+    this.stateModel.setRuntimeValue(LayoutStateKeys.AUXILIARYBAR_HIDDEN, hidden);
+    if (hidden) {
+      this.mainContainer.classList.add("noauxiliarybar" /* AUXILIARYBAR_HIDDEN */);
+    } else {
+      this.mainContainer.classList.remove("noauxiliarybar" /* AUXILIARYBAR_HIDDEN */);
+    }
+    if (hidden && this.paneCompositeService.getActivePaneComposite(ViewContainerLocation.AuxiliaryBar)) {
+      this.paneCompositeService.hideActivePaneComposite(ViewContainerLocation.AuxiliaryBar);
+      this.focusPanelOrEditor();
+    } else if (!hidden && !this.paneCompositeService.getActivePaneComposite(ViewContainerLocation.AuxiliaryBar)) {
+      let viewletToOpen = this.paneCompositeService.getLastActivePaneCompositeId(ViewContainerLocation.AuxiliaryBar);
+      if (!viewletToOpen || !this.hasViews(viewletToOpen)) {
+        viewletToOpen = this.viewDescriptorService.getViewContainersByLocation(ViewContainerLocation.AuxiliaryBar).find((viewContainer) => this.hasViews(viewContainer.id))?.id;
+      }
+      if (viewletToOpen) {
+        this.openViewContainer(ViewContainerLocation.AuxiliaryBar, viewletToOpen, !skipLayout);
+      }
+    }
+    this.workbenchGrid.setViewVisible(this.auxiliaryBarPartView, !hidden);
+  }
+  setPartHidden(hidden, part) {
+    switch (part) {
+      case Parts.ACTIVITYBAR_PART:
+        return this.setActivityBarHidden(hidden);
+      case Parts.SIDEBAR_PART:
+        return this.setSideBarHidden(hidden);
+      case Parts.EDITOR_PART:
+        return this.setEditorHidden(hidden);
+      case Parts.BANNER_PART:
+        return this.setBannerHidden(hidden);
+      case Parts.AUXILIARYBAR_PART:
+        return this.setAuxiliaryBarHidden(hidden);
+      case Parts.PANEL_PART:
+        return this.setPanelHidden(hidden);
+    }
+  }
+  hasMainWindowBorder() {
+    return this.state.runtime.mainWindowBorder;
+  }
+  getMainWindowBorderRadius() {
+    return this.state.runtime.mainWindowBorder && isMacintosh ? "10px" : void 0;
+  }
+  isPanelMaximized() {
+    return (this.getPanelAlignment() === "center" || !isHorizontal(this.getPanelPosition())) && !this.isVisible(Parts.EDITOR_PART, mainWindow);
+  }
+  getSideBarPosition() {
+    return this.stateModel.getRuntimeValue(LayoutStateKeys.SIDEBAR_POSITON);
+  }
+  getPanelAlignment() {
+    return this.stateModel.getRuntimeValue(LayoutStateKeys.PANEL_ALIGNMENT);
+  }
+  updateMenubarVisibility(skipLayout) {
+    const shouldShowTitleBar = shouldShowCustomTitleBar(this.configurationService, mainWindow, this.state.runtime.menuBar.toggled);
+    if (!skipLayout && this.workbenchGrid && shouldShowTitleBar !== this.isVisible(Parts.TITLEBAR_PART, mainWindow)) {
+      this.workbenchGrid.setViewVisible(this.titleBarPartView, shouldShowTitleBar);
+    }
+  }
+  updateCustomTitleBarVisibility() {
+    const shouldShowTitleBar = shouldShowCustomTitleBar(this.configurationService, mainWindow, this.state.runtime.menuBar.toggled);
+    const titlebarVisible = this.isVisible(Parts.TITLEBAR_PART);
+    if (shouldShowTitleBar !== titlebarVisible) {
+      this.workbenchGrid.setViewVisible(this.titleBarPartView, shouldShowTitleBar);
+    }
+  }
+  toggleMenuBar() {
+    let currentVisibilityValue = getMenuBarVisibility(this.configurationService);
+    if (typeof currentVisibilityValue !== "string") {
+      currentVisibilityValue = "classic";
+    }
+    let newVisibilityValue;
+    if (currentVisibilityValue === "visible" || currentVisibilityValue === "classic") {
+      newVisibilityValue = hasNativeTitlebar(this.configurationService) ? "toggle" : "compact";
+    } else {
+      newVisibilityValue = "classic";
+    }
+    this.configurationService.updateValue("window.menuBarVisibility", newVisibilityValue);
+  }
+  getPanelPosition() {
+    return this.stateModel.getRuntimeValue(LayoutStateKeys.PANEL_POSITION);
+  }
+  setPanelPosition(position2) {
+    if (!this.isVisible(Parts.PANEL_PART)) {
+      this.setPanelHidden(false);
+    }
+    const panelPart = this.getPart(Parts.PANEL_PART);
+    const oldPositionValue = positionToString(this.getPanelPosition());
+    const newPositionValue = positionToString(position2);
+    const panelContainer = assertIsDefined(panelPart.getContainer());
+    panelContainer.classList.remove(oldPositionValue);
+    panelContainer.classList.add(newPositionValue);
+    panelPart.updateStyles();
+    const size2 = this.workbenchGrid.getViewSize(this.panelPartView);
+    const sideBarSize = this.workbenchGrid.getViewSize(this.sideBarPartView);
+    const auxiliaryBarSize = this.workbenchGrid.getViewSize(this.auxiliaryBarPartView);
+    let editorHidden = !this.isVisible(Parts.EDITOR_PART, mainWindow);
+    if (newPositionValue !== oldPositionValue && !editorHidden) {
+      if (isHorizontal(position2)) {
+        this.stateModel.setRuntimeValue(LayoutStateKeys.PANEL_LAST_NON_MAXIMIZED_WIDTH, size2.width);
+      } else if (isHorizontal(positionFromString(oldPositionValue))) {
+        this.stateModel.setRuntimeValue(LayoutStateKeys.PANEL_LAST_NON_MAXIMIZED_HEIGHT, size2.height);
+      }
+    }
+    if (isHorizontal(position2) && this.getPanelAlignment() !== "center" && editorHidden) {
+      this.toggleMaximizedPanel();
+      editorHidden = false;
+    }
+    this.stateModel.setRuntimeValue(LayoutStateKeys.PANEL_POSITION, position2);
+    const sideBarVisible = this.isVisible(Parts.SIDEBAR_PART);
+    const auxiliaryBarVisible = this.isVisible(Parts.AUXILIARYBAR_PART);
+    const hadFocus = this.hasFocus(Parts.PANEL_PART);
+    if (position2 === Position.BOTTOM) {
+      this.workbenchGrid.moveView(this.panelPartView, editorHidden ? size2.height : this.stateModel.getRuntimeValue(LayoutStateKeys.PANEL_LAST_NON_MAXIMIZED_HEIGHT), this.editorPartView, Direction.Down);
+    } else if (position2 === Position.TOP) {
+      this.workbenchGrid.moveView(this.panelPartView, editorHidden ? size2.height : this.stateModel.getRuntimeValue(LayoutStateKeys.PANEL_LAST_NON_MAXIMIZED_HEIGHT), this.editorPartView, Direction.Up);
+    } else if (position2 === Position.RIGHT) {
+      this.workbenchGrid.moveView(this.panelPartView, editorHidden ? size2.width : this.stateModel.getRuntimeValue(LayoutStateKeys.PANEL_LAST_NON_MAXIMIZED_WIDTH), this.editorPartView, Direction.Right);
+    } else {
+      this.workbenchGrid.moveView(this.panelPartView, editorHidden ? size2.width : this.stateModel.getRuntimeValue(LayoutStateKeys.PANEL_LAST_NON_MAXIMIZED_WIDTH), this.editorPartView, Direction.Left);
+    }
+    if (hadFocus) {
+      this.focusPart(Parts.PANEL_PART);
+    }
+    this.workbenchGrid.resizeView(this.sideBarPartView, sideBarSize);
+    if (!sideBarVisible) {
+      this.setSideBarHidden(true);
+    }
+    this.workbenchGrid.resizeView(this.auxiliaryBarPartView, auxiliaryBarSize);
+    if (!auxiliaryBarVisible) {
+      this.setAuxiliaryBarHidden(true);
+    }
+    if (isHorizontal(position2)) {
+      this.adjustPartPositions(this.getSideBarPosition(), this.getPanelAlignment(), position2);
+    }
+    this._onDidChangePanelPosition.fire(newPositionValue);
+  }
+  isWindowMaximized(targetWindow) {
+    return this.state.runtime.maximized.has(getWindowId(targetWindow));
+  }
+  updateWindowMaximizedState(targetWindow, maximized) {
+    this.mainContainer.classList.toggle("maximized" /* MAXIMIZED */, maximized);
+    const targetWindowId = getWindowId(targetWindow);
+    if (maximized === this.state.runtime.maximized.has(targetWindowId)) {
+      return;
+    }
+    if (maximized) {
+      this.state.runtime.maximized.add(targetWindowId);
+    } else {
+      this.state.runtime.maximized.delete(targetWindowId);
+    }
+    this.updateWindowsBorder();
+    this._onDidChangeWindowMaximized.fire({ windowId: targetWindowId, maximized });
+  }
+  getVisibleNeighborPart(part, direction) {
+    if (!this.workbenchGrid) {
+      return void 0;
+    }
+    if (!this.isVisible(part, mainWindow)) {
+      return void 0;
+    }
+    const neighborViews = this.workbenchGrid.getNeighborViews(this.getPart(part), direction, false);
+    if (!neighborViews) {
+      return void 0;
+    }
+    for (const neighborView of neighborViews) {
+      const neighborPart = [Parts.ACTIVITYBAR_PART, Parts.EDITOR_PART, Parts.PANEL_PART, Parts.AUXILIARYBAR_PART, Parts.SIDEBAR_PART, Parts.STATUSBAR_PART, Parts.TITLEBAR_PART].find((partId) => this.getPart(partId) === neighborView && this.isVisible(partId, mainWindow));
+      if (neighborPart !== void 0) {
+        return neighborPart;
+      }
+    }
+    return void 0;
+  }
+  onDidChangeWCO() {
+    const bannerFirst = this.workbenchGrid.getNeighborViews(this.titleBarPartView, Direction.Up, false).length > 0;
+    const shouldBannerBeFirst = this.shouldShowBannerFirst();
+    if (bannerFirst !== shouldBannerBeFirst) {
+      this.workbenchGrid.moveView(this.bannerPartView, Sizing.Distribute, this.titleBarPartView, shouldBannerBeFirst ? Direction.Up : Direction.Down);
+    }
+    this.workbenchGrid.setViewVisible(this.titleBarPartView, shouldShowCustomTitleBar(this.configurationService, mainWindow, this.state.runtime.menuBar.toggled));
+  }
+  arrangeEditorNodes(nodes, availableHeight, availableWidth) {
+    if (!nodes.sideBar && !nodes.auxiliaryBar) {
+      nodes.editor.size = availableHeight;
+      return nodes.editor;
+    }
+    const result = [nodes.editor];
+    nodes.editor.size = availableWidth;
+    if (nodes.sideBar) {
+      if (this.stateModel.getRuntimeValue(LayoutStateKeys.SIDEBAR_POSITON) === Position.LEFT) {
+        result.splice(0, 0, nodes.sideBar);
+      } else {
+        result.push(nodes.sideBar);
+      }
+      nodes.editor.size -= this.stateModel.getRuntimeValue(LayoutStateKeys.SIDEBAR_HIDDEN) ? 0 : nodes.sideBar.size;
+    }
+    if (nodes.auxiliaryBar) {
+      if (this.stateModel.getRuntimeValue(LayoutStateKeys.SIDEBAR_POSITON) === Position.RIGHT) {
+        result.splice(0, 0, nodes.auxiliaryBar);
+      } else {
+        result.push(nodes.auxiliaryBar);
+      }
+      nodes.editor.size -= this.stateModel.getRuntimeValue(LayoutStateKeys.AUXILIARYBAR_HIDDEN) ? 0 : nodes.auxiliaryBar.size;
+    }
+    return {
+      type: "branch",
+      data: result,
+      size: availableHeight
+    };
+  }
+  arrangeMiddleSectionNodes(nodes, availableWidth, availableHeight) {
+    const activityBarSize = this.stateModel.getRuntimeValue(LayoutStateKeys.ACTIVITYBAR_HIDDEN) ? 0 : nodes.activityBar.size;
+    const sideBarSize = this.stateModel.getRuntimeValue(LayoutStateKeys.SIDEBAR_HIDDEN) ? 0 : nodes.sideBar.size;
+    const auxiliaryBarSize = this.stateModel.getRuntimeValue(LayoutStateKeys.AUXILIARYBAR_HIDDEN) ? 0 : nodes.auxiliaryBar.size;
+    const panelSize = this.stateModel.getInitializationValue(LayoutStateKeys.PANEL_SIZE) ? 0 : nodes.panel.size;
+    const panelPostion = this.stateModel.getRuntimeValue(LayoutStateKeys.PANEL_POSITION);
+    const sideBarPosition = this.stateModel.getRuntimeValue(LayoutStateKeys.SIDEBAR_POSITON);
+    const result = [];
+    if (!isHorizontal(panelPostion)) {
+      result.push(nodes.editor);
+      nodes.editor.size = availableWidth - activityBarSize - sideBarSize - panelSize - auxiliaryBarSize;
+      if (panelPostion === Position.RIGHT) {
+        result.push(nodes.panel);
+      } else {
+        result.splice(0, 0, nodes.panel);
+      }
+      if (sideBarPosition === Position.LEFT) {
+        result.push(nodes.auxiliaryBar);
+        result.splice(0, 0, nodes.sideBar);
+        result.splice(0, 0, nodes.activityBar);
+      } else {
+        result.splice(0, 0, nodes.auxiliaryBar);
+        result.push(nodes.sideBar);
+        result.push(nodes.activityBar);
+      }
+    } else {
+      const panelAlignment = this.stateModel.getRuntimeValue(LayoutStateKeys.PANEL_ALIGNMENT);
+      const sideBarNextToEditor = !(panelAlignment === "center" || sideBarPosition === Position.LEFT && panelAlignment === "right" || sideBarPosition === Position.RIGHT && panelAlignment === "left");
+      const auxiliaryBarNextToEditor = !(panelAlignment === "center" || sideBarPosition === Position.RIGHT && panelAlignment === "right" || sideBarPosition === Position.LEFT && panelAlignment === "left");
+      const editorSectionWidth = availableWidth - activityBarSize - (sideBarNextToEditor ? 0 : sideBarSize) - (auxiliaryBarNextToEditor ? 0 : auxiliaryBarSize);
+      const editorNodes = this.arrangeEditorNodes({
+        editor: nodes.editor,
+        sideBar: sideBarNextToEditor ? nodes.sideBar : void 0,
+        auxiliaryBar: auxiliaryBarNextToEditor ? nodes.auxiliaryBar : void 0
+      }, availableHeight - panelSize, editorSectionWidth);
+      result.push({
+        type: "branch",
+        data: panelPostion === Position.BOTTOM ? [editorNodes, nodes.panel] : [nodes.panel, editorNodes],
+        size: editorSectionWidth
+      });
+      if (!sideBarNextToEditor) {
+        if (sideBarPosition === Position.LEFT) {
+          result.splice(0, 0, nodes.sideBar);
+        } else {
+          result.push(nodes.sideBar);
+        }
+      }
+      if (!auxiliaryBarNextToEditor) {
+        if (sideBarPosition === Position.RIGHT) {
+          result.splice(0, 0, nodes.auxiliaryBar);
+        } else {
+          result.push(nodes.auxiliaryBar);
+        }
+      }
+      if (sideBarPosition === Position.LEFT) {
+        result.splice(0, 0, nodes.activityBar);
+      } else {
+        result.push(nodes.activityBar);
+      }
+    }
+    return result;
+  }
+  createGridDescriptor() {
+    const { width, height } = this._mainContainerDimension;
+    const sideBarSize = this.stateModel.getInitializationValue(LayoutStateKeys.SIDEBAR_SIZE);
+    const auxiliaryBarPartSize = this.stateModel.getInitializationValue(LayoutStateKeys.AUXILIARYBAR_SIZE);
+    const panelSize = this.stateModel.getInitializationValue(LayoutStateKeys.PANEL_SIZE);
+    const titleBarHeight = this.titleBarPartView.minimumHeight;
+    const bannerHeight = this.bannerPartView.minimumHeight;
+    const statusBarHeight = this.statusBarPartView.minimumHeight;
+    const activityBarWidth = this.activityBarPartView.minimumWidth;
+    const middleSectionHeight = height - titleBarHeight - statusBarHeight;
+    const titleAndBanner = [
+      {
+        type: "leaf",
+        data: { type: Parts.TITLEBAR_PART },
+        size: titleBarHeight,
+        visible: this.isVisible(Parts.TITLEBAR_PART, mainWindow)
+      },
+      {
+        type: "leaf",
+        data: { type: Parts.BANNER_PART },
+        size: bannerHeight,
+        visible: false
+      }
+    ];
+    const activityBarNode = {
+      type: "leaf",
+      data: { type: Parts.ACTIVITYBAR_PART },
+      size: activityBarWidth,
+      visible: !this.stateModel.getRuntimeValue(LayoutStateKeys.ACTIVITYBAR_HIDDEN)
+    };
+    const sideBarNode = {
+      type: "leaf",
+      data: { type: Parts.SIDEBAR_PART },
+      size: sideBarSize,
+      visible: !this.stateModel.getRuntimeValue(LayoutStateKeys.SIDEBAR_HIDDEN)
+    };
+    const auxiliaryBarNode = {
+      type: "leaf",
+      data: { type: Parts.AUXILIARYBAR_PART },
+      size: auxiliaryBarPartSize,
+      visible: this.isVisible(Parts.AUXILIARYBAR_PART)
+    };
+    const editorNode = {
+      type: "leaf",
+      data: { type: Parts.EDITOR_PART },
+      size: 0,
+      // Update based on sibling sizes
+      visible: !this.stateModel.getRuntimeValue(LayoutStateKeys.EDITOR_HIDDEN)
+    };
+    const panelNode = {
+      type: "leaf",
+      data: { type: Parts.PANEL_PART },
+      size: panelSize,
+      visible: !this.stateModel.getRuntimeValue(LayoutStateKeys.PANEL_HIDDEN)
+    };
+    const middleSection = this.arrangeMiddleSectionNodes({
+      activityBar: activityBarNode,
+      auxiliaryBar: auxiliaryBarNode,
+      editor: editorNode,
+      panel: panelNode,
+      sideBar: sideBarNode
+    }, width, middleSectionHeight);
+    const result = {
+      root: {
+        type: "branch",
+        size: width,
+        data: [
+          ...this.shouldShowBannerFirst() ? titleAndBanner.reverse() : titleAndBanner,
+          {
+            type: "branch",
+            data: middleSection,
+            size: middleSectionHeight
+          },
+          {
+            type: "leaf",
+            data: { type: Parts.STATUSBAR_PART },
+            size: statusBarHeight,
+            visible: !this.stateModel.getRuntimeValue(LayoutStateKeys.STATUSBAR_HIDDEN)
+          }
+        ]
+      },
+      orientation: Orientation.VERTICAL,
+      width,
+      height
+    };
+    const layoutDescriptor = {
+      activityBarVisible: !this.stateModel.getRuntimeValue(LayoutStateKeys.ACTIVITYBAR_HIDDEN),
+      sideBarVisible: !this.stateModel.getRuntimeValue(LayoutStateKeys.SIDEBAR_HIDDEN),
+      auxiliaryBarVisible: !this.stateModel.getRuntimeValue(LayoutStateKeys.AUXILIARYBAR_HIDDEN),
+      panelVisible: !this.stateModel.getRuntimeValue(LayoutStateKeys.PANEL_HIDDEN),
+      statusbarVisible: !this.stateModel.getRuntimeValue(LayoutStateKeys.STATUSBAR_HIDDEN),
+      sideBarPosition: positionToString(this.stateModel.getRuntimeValue(LayoutStateKeys.SIDEBAR_POSITON)),
+      panelPosition: positionToString(this.stateModel.getRuntimeValue(LayoutStateKeys.PANEL_POSITION))
+    };
+    this.telemetryService.publicLog2("startupLayout", layoutDescriptor);
+    return result;
+  }
+  dispose() {
+    super.dispose();
+    this.disposed = true;
+  }
+}
+function getZenModeConfiguration(configurationService) {
+  return configurationService.getValue("zenMode" /* ZEN_MODE_CONFIG */);
+}
+__name(getZenModeConfiguration, "getZenModeConfiguration");
+class WorkbenchLayoutStateKey {
+  constructor(name, scope, target, defaultValue) {
+    this.name = name;
+    this.scope = scope;
+    this.target = target;
+    this.defaultValue = defaultValue;
+  }
+  static {
+    __name(this, "WorkbenchLayoutStateKey");
+  }
+}
+class RuntimeStateKey extends WorkbenchLayoutStateKey {
+  constructor(name, scope, target, defaultValue, zenModeIgnore) {
+    super(name, scope, target, defaultValue);
+    this.zenModeIgnore = zenModeIgnore;
+  }
+  static {
+    __name(this, "RuntimeStateKey");
+  }
+  runtime = true;
+}
+class InitializationStateKey extends WorkbenchLayoutStateKey {
+  static {
+    __name(this, "InitializationStateKey");
+  }
+  runtime = false;
+}
+const LayoutStateKeys = {
+  // Editor
+  MAIN_EDITOR_CENTERED: new RuntimeStateKey("editor.centered", StorageScope.WORKSPACE, StorageTarget.MACHINE, false),
+  // Zen Mode
+  ZEN_MODE_ACTIVE: new RuntimeStateKey("zenMode.active", StorageScope.WORKSPACE, StorageTarget.MACHINE, false),
+  ZEN_MODE_EXIT_INFO: new RuntimeStateKey("zenMode.exitInfo", StorageScope.WORKSPACE, StorageTarget.MACHINE, {
+    transitionedToCenteredEditorLayout: false,
+    transitionedToFullScreen: false,
+    handleNotificationsDoNotDisturbMode: false,
+    wasVisible: {
+      auxiliaryBar: false,
+      panel: false,
+      sideBar: false
+    }
+  }),
+  // Part Sizing
+  SIDEBAR_SIZE: new InitializationStateKey("sideBar.size", StorageScope.PROFILE, StorageTarget.MACHINE, 200),
+  AUXILIARYBAR_SIZE: new InitializationStateKey("auxiliaryBar.size", StorageScope.PROFILE, StorageTarget.MACHINE, 200),
+  PANEL_SIZE: new InitializationStateKey("panel.size", StorageScope.PROFILE, StorageTarget.MACHINE, 300),
+  PANEL_LAST_NON_MAXIMIZED_HEIGHT: new RuntimeStateKey("panel.lastNonMaximizedHeight", StorageScope.PROFILE, StorageTarget.MACHINE, 300),
+  PANEL_LAST_NON_MAXIMIZED_WIDTH: new RuntimeStateKey("panel.lastNonMaximizedWidth", StorageScope.PROFILE, StorageTarget.MACHINE, 300),
+  PANEL_WAS_LAST_MAXIMIZED: new RuntimeStateKey("panel.wasLastMaximized", StorageScope.WORKSPACE, StorageTarget.MACHINE, false),
+  // Part Positions
+  SIDEBAR_POSITON: new RuntimeStateKey("sideBar.position", StorageScope.WORKSPACE, StorageTarget.MACHINE, Position.LEFT),
+  PANEL_POSITION: new RuntimeStateKey("panel.position", StorageScope.WORKSPACE, StorageTarget.MACHINE, Position.BOTTOM),
+  PANEL_ALIGNMENT: new RuntimeStateKey("panel.alignment", StorageScope.PROFILE, StorageTarget.USER, "center"),
+  // Part Visibility
+  ACTIVITYBAR_HIDDEN: new RuntimeStateKey("activityBar.hidden", StorageScope.WORKSPACE, StorageTarget.MACHINE, false, true),
+  SIDEBAR_HIDDEN: new RuntimeStateKey("sideBar.hidden", StorageScope.WORKSPACE, StorageTarget.MACHINE, false),
+  EDITOR_HIDDEN: new RuntimeStateKey("editor.hidden", StorageScope.WORKSPACE, StorageTarget.MACHINE, false),
+  PANEL_HIDDEN: new RuntimeStateKey("panel.hidden", StorageScope.WORKSPACE, StorageTarget.MACHINE, true),
+  AUXILIARYBAR_HIDDEN: new RuntimeStateKey("auxiliaryBar.hidden", StorageScope.WORKSPACE, StorageTarget.MACHINE, true),
+  STATUSBAR_HIDDEN: new RuntimeStateKey("statusBar.hidden", StorageScope.WORKSPACE, StorageTarget.MACHINE, false, true)
+};
+var WorkbenchLayoutSettings = /* @__PURE__ */ ((WorkbenchLayoutSettings2) => {
+  WorkbenchLayoutSettings2["PANEL_POSITION"] = "workbench.panel.defaultLocation";
+  WorkbenchLayoutSettings2["PANEL_OPENS_MAXIMIZED"] = "workbench.panel.opensMaximized";
+  WorkbenchLayoutSettings2["ZEN_MODE_CONFIG"] = "zenMode";
+  WorkbenchLayoutSettings2["EDITOR_CENTERED_LAYOUT_AUTO_RESIZE"] = "workbench.editor.centeredLayoutAutoResize";
+  return WorkbenchLayoutSettings2;
+})(WorkbenchLayoutSettings || {});
+var LegacyWorkbenchLayoutSettings = /* @__PURE__ */ ((LegacyWorkbenchLayoutSettings2) => {
+  LegacyWorkbenchLayoutSettings2["STATUSBAR_VISIBLE"] = "workbench.statusBar.visible";
+  LegacyWorkbenchLayoutSettings2["SIDEBAR_POSITION"] = "workbench.sideBar.location";
+  return LegacyWorkbenchLayoutSettings2;
+})(LegacyWorkbenchLayoutSettings || {});
+class LayoutStateModel extends Disposable {
+  constructor(storageService, configurationService, contextService) {
+    super();
+    this.storageService = storageService;
+    this.configurationService = configurationService;
+    this.contextService = contextService;
+    this._register(this.configurationService.onDidChangeConfiguration((configurationChange) => this.updateStateFromLegacySettings(configurationChange)));
+  }
+  static {
+    __name(this, "LayoutStateModel");
+  }
+  static STORAGE_PREFIX = "workbench.";
+  _onDidChangeState = this._register(new Emitter());
+  onDidChangeState = this._onDidChangeState.event;
+  stateCache = /* @__PURE__ */ new Map();
+  updateStateFromLegacySettings(configurationChangeEvent) {
+    if (configurationChangeEvent.affectsConfiguration(LayoutSettings.ACTIVITY_BAR_LOCATION)) {
+      this.setRuntimeValueAndFire(LayoutStateKeys.ACTIVITYBAR_HIDDEN, this.isActivityBarHidden());
+    }
+    if (configurationChangeEvent.affectsConfiguration("workbench.statusBar.visible" /* STATUSBAR_VISIBLE */)) {
+      this.setRuntimeValueAndFire(LayoutStateKeys.STATUSBAR_HIDDEN, !this.configurationService.getValue("workbench.statusBar.visible" /* STATUSBAR_VISIBLE */));
+    }
+    if (configurationChangeEvent.affectsConfiguration("workbench.sideBar.location" /* SIDEBAR_POSITION */)) {
+      this.setRuntimeValueAndFire(LayoutStateKeys.SIDEBAR_POSITON, positionFromString(this.configurationService.getValue("workbench.sideBar.location" /* SIDEBAR_POSITION */) ?? "left"));
+    }
+  }
+  updateLegacySettingsFromState(key, value) {
+    const isZenMode = this.getRuntimeValue(LayoutStateKeys.ZEN_MODE_ACTIVE);
+    if (key.zenModeIgnore && isZenMode) {
+      return;
+    }
+    if (key === LayoutStateKeys.ACTIVITYBAR_HIDDEN) {
+      this.configurationService.updateValue(LayoutSettings.ACTIVITY_BAR_LOCATION, value ? ActivityBarPosition.HIDDEN : void 0);
+    } else if (key === LayoutStateKeys.STATUSBAR_HIDDEN) {
+      this.configurationService.updateValue("workbench.statusBar.visible" /* STATUSBAR_VISIBLE */, !value);
+    } else if (key === LayoutStateKeys.SIDEBAR_POSITON) {
+      this.configurationService.updateValue("workbench.sideBar.location" /* SIDEBAR_POSITION */, positionToString(value));
+    }
+  }
+  load(mainContainerDimension) {
+    let key;
+    for (key in LayoutStateKeys) {
+      const stateKey = LayoutStateKeys[key];
+      const value = this.loadKeyFromStorage(stateKey);
+      if (value !== void 0) {
+        this.stateCache.set(stateKey.name, value);
+      }
+    }
+    this.stateCache.set(LayoutStateKeys.ACTIVITYBAR_HIDDEN.name, this.isActivityBarHidden());
+    this.stateCache.set(LayoutStateKeys.STATUSBAR_HIDDEN.name, !this.configurationService.getValue("workbench.statusBar.visible" /* STATUSBAR_VISIBLE */));
+    this.stateCache.set(LayoutStateKeys.SIDEBAR_POSITON.name, positionFromString(this.configurationService.getValue("workbench.sideBar.location" /* SIDEBAR_POSITION */) ?? "left"));
+    LayoutStateKeys.PANEL_POSITION.defaultValue = positionFromString(this.configurationService.getValue("workbench.panel.defaultLocation" /* PANEL_POSITION */) ?? "bottom");
+    LayoutStateKeys.SIDEBAR_SIZE.defaultValue = Math.min(300, mainContainerDimension.width / 4);
+    LayoutStateKeys.AUXILIARYBAR_SIZE.defaultValue = Math.min(300, mainContainerDimension.width / 4);
+    LayoutStateKeys.PANEL_SIZE.defaultValue = this.stateCache.get(LayoutStateKeys.PANEL_POSITION.name) ?? isHorizontal(LayoutStateKeys.PANEL_POSITION.defaultValue) ? mainContainerDimension.height / 3 : mainContainerDimension.width / 4;
+    LayoutStateKeys.SIDEBAR_HIDDEN.defaultValue = this.contextService.getWorkbenchState() === WorkbenchState.EMPTY;
+    for (key in LayoutStateKeys) {
+      const stateKey = LayoutStateKeys[key];
+      if (this.stateCache.get(stateKey.name) === void 0) {
+        this.stateCache.set(stateKey.name, stateKey.defaultValue);
+      }
+    }
+    this._register(this.storageService.onDidChangeValue(StorageScope.PROFILE, void 0, this._store)((storageChangeEvent) => {
+      let key2;
+      for (key2 in LayoutStateKeys) {
+        const stateKey = LayoutStateKeys[key2];
+        if (stateKey instanceof RuntimeStateKey && stateKey.scope === StorageScope.PROFILE && stateKey.target === StorageTarget.USER) {
+          if (`${LayoutStateModel.STORAGE_PREFIX}${stateKey.name}` === storageChangeEvent.key) {
+            const value = this.loadKeyFromStorage(stateKey) ?? stateKey.defaultValue;
+            if (this.stateCache.get(stateKey.name) !== value) {
+              this.stateCache.set(stateKey.name, value);
+              this._onDidChangeState.fire({ key: stateKey, value });
+            }
+          }
+        }
+      }
+    }));
+  }
+  save(workspace, global) {
+    let key;
+    const isZenMode = this.getRuntimeValue(LayoutStateKeys.ZEN_MODE_ACTIVE);
+    for (key in LayoutStateKeys) {
+      const stateKey = LayoutStateKeys[key];
+      if (workspace && stateKey.scope === StorageScope.WORKSPACE || global && stateKey.scope === StorageScope.PROFILE) {
+        if (isZenMode && stateKey instanceof RuntimeStateKey && stateKey.zenModeIgnore) {
+          continue;
+        }
+        this.saveKeyToStorage(stateKey);
+      }
+    }
+  }
+  getInitializationValue(key) {
+    return this.stateCache.get(key.name);
+  }
+  setInitializationValue(key, value) {
+    this.stateCache.set(key.name, value);
+  }
+  getRuntimeValue(key, fallbackToSetting) {
+    if (fallbackToSetting) {
+      switch (key) {
+        case LayoutStateKeys.ACTIVITYBAR_HIDDEN:
+          this.stateCache.set(key.name, this.isActivityBarHidden());
+          break;
+        case LayoutStateKeys.STATUSBAR_HIDDEN:
+          this.stateCache.set(key.name, !this.configurationService.getValue("workbench.statusBar.visible" /* STATUSBAR_VISIBLE */));
+          break;
+        case LayoutStateKeys.SIDEBAR_POSITON:
+          this.stateCache.set(key.name, this.configurationService.getValue("workbench.sideBar.location" /* SIDEBAR_POSITION */) ?? "left");
+          break;
+      }
+    }
+    return this.stateCache.get(key.name);
+  }
+  setRuntimeValue(key, value) {
+    this.stateCache.set(key.name, value);
+    const isZenMode = this.getRuntimeValue(LayoutStateKeys.ZEN_MODE_ACTIVE);
+    if (key.scope === StorageScope.PROFILE) {
+      if (!isZenMode || !key.zenModeIgnore) {
+        this.saveKeyToStorage(key);
+        this.updateLegacySettingsFromState(key, value);
+      }
+    }
+  }
+  isActivityBarHidden() {
+    const oldValue = this.configurationService.getValue("workbench.activityBar.visible");
+    if (oldValue !== void 0) {
+      return !oldValue;
+    }
+    return this.configurationService.getValue(LayoutSettings.ACTIVITY_BAR_LOCATION) !== ActivityBarPosition.DEFAULT;
+  }
+  setRuntimeValueAndFire(key, value) {
+    const previousValue = this.stateCache.get(key.name);
+    if (previousValue === value) {
+      return;
+    }
+    this.setRuntimeValue(key, value);
+    this._onDidChangeState.fire({ key, value });
+  }
+  saveKeyToStorage(key) {
+    const value = this.stateCache.get(key.name);
+    this.storageService.store(`${LayoutStateModel.STORAGE_PREFIX}${key.name}`, typeof value === "object" ? JSON.stringify(value) : value, key.scope, key.target);
+  }
+  loadKeyFromStorage(key) {
+    let value = this.storageService.get(`${LayoutStateModel.STORAGE_PREFIX}${key.name}`, key.scope);
+    if (value !== void 0) {
+      switch (typeof key.defaultValue) {
+        case "boolean":
+          value = value === "true";
+          break;
+        case "number":
+          value = parseInt(value);
+          break;
+        case "object":
+          value = JSON.parse(value);
+          break;
+      }
+    }
+    return value;
+  }
+}
+export {
+  Layout,
+  TITLE_BAR_SETTINGS
+};
+//# sourceMappingURL=layout.js.map

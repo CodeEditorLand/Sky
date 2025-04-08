@@ -1,1 +1,25 @@
-import{StorageScope as n}from"../../../../platform/storage/common/storage.js";import{resolveCommonProperties as P}from"../../../../platform/telemetry/common/commonProperties.js";import{firstSessionDateStorageKey as p,lastSessionDateStorageKey as v}from"../../../../platform/telemetry/common/telemetry.js";import{cleanRemoteAuthority as C}from"../../../../platform/telemetry/common/telemetryUtils.js";import"../../../../base/common/platform.js";function O(o,e,m,r,t,s,a,i,c,l,f){const S=P(e,m,l.arch,r,t,s,a,i,c),y=o.get(p,n.APPLICATION),g=o.get(v,n.APPLICATION);return S["common.version.shell"]=l.versions?.electron,S["common.version.renderer"]=l.versions?.chrome,S["common.firstSessionDate"]=y,S["common.lastSessionDate"]=g||"",S["common.isNewSession"]=g?"0":"1",S["common.remoteAuthority"]=C(f),S["common.cli"]=!!l.env.VSCODE_CLI,S}export{O as resolveWorkbenchCommonProperties};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { IStorageService, StorageScope } from "../../../../platform/storage/common/storage.js";
+import { resolveCommonProperties } from "../../../../platform/telemetry/common/commonProperties.js";
+import { ICommonProperties, firstSessionDateStorageKey, lastSessionDateStorageKey } from "../../../../platform/telemetry/common/telemetry.js";
+import { cleanRemoteAuthority } from "../../../../platform/telemetry/common/telemetryUtils.js";
+import { INodeProcess } from "../../../../base/common/platform.js";
+function resolveWorkbenchCommonProperties(storageService, release, hostname, commit, version, machineId, sqmId, devDeviceId, isInternalTelemetry, process, remoteAuthority) {
+  const result = resolveCommonProperties(release, hostname, process.arch, commit, version, machineId, sqmId, devDeviceId, isInternalTelemetry);
+  const firstSessionDate = storageService.get(firstSessionDateStorageKey, StorageScope.APPLICATION);
+  const lastSessionDate = storageService.get(lastSessionDateStorageKey, StorageScope.APPLICATION);
+  result["common.version.shell"] = process.versions?.["electron"];
+  result["common.version.renderer"] = process.versions?.["chrome"];
+  result["common.firstSessionDate"] = firstSessionDate;
+  result["common.lastSessionDate"] = lastSessionDate || "";
+  result["common.isNewSession"] = !lastSessionDate ? "1" : "0";
+  result["common.remoteAuthority"] = cleanRemoteAuthority(remoteAuthority);
+  result["common.cli"] = !!process.env["VSCODE_CLI"];
+  return result;
+}
+__name(resolveWorkbenchCommonProperties, "resolveWorkbenchCommonProperties");
+export {
+  resolveWorkbenchCommonProperties
+};
+//# sourceMappingURL=workbenchCommonProperties.js.map

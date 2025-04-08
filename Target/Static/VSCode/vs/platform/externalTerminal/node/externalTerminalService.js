@@ -1,3 +1,320 @@
-var N=Object.defineProperty;var _=Object.getOwnPropertyDescriptor;var D=(p,n,e,a)=>{for(var r=a>1?void 0:a?_(n,e):n,t=p.length-1,s;t>=0;t--)(s=p[t])&&(r=(a?s(n,e,r):s(r))||r);return a&&r&&N(n,e,r),r};import*as I from"child_process";import{memoize as M}from"../../../base/common/decorators.js";import{FileAccess as W}from"../../../base/common/network.js";import*as R from"../../../base/common/path.js";import*as U from"../../../base/common/platform.js";import{sanitizeProcessEnvironment as C}from"../../../base/common/processes.js";import*as F from"../../../base/node/pfs.js";import*as y from"../../../base/node/processes.js";import*as v from"../../../nls.js";import{DEFAULT_TERMINAL_OSX as S}from"../common/externalTerminal.js";import"../../terminal/common/terminal.js";const L=v.localize("console.title","VS Code Console");class P{_serviceBrand;async getDefaultTerminalForPlatforms(){return{windows:A.getDefaultTerminalWindows(),linux:await T.getDefaultTerminalLinuxReady(),osx:"xterm"}}}const E=class E extends P{static CMD="cmd.exe";static _DEFAULT_TERMINAL_WINDOWS;openTerminal(n,e){return this.spawnTerminal(I,n,y.getWindowsShell(),e)}spawnTerminal(n,e,a,r){const t=e.windowsExec||E.getDefaultTerminalWindows();r&&r[1]===":"&&(r=r[0].toUpperCase()+r.substr(1));const s=R.basename(t,".exe").toLowerCase();if(s==="cmder")return n.spawn(t,r?[r]:void 0),Promise.resolve(void 0);const l=["/c","start","/wait"];return t.indexOf(" ")>=0&&l.push(t),l.push(t),s==="wt"&&l.push("-d ."),new Promise((m,o)=>{const g=h(process),c=n.spawn(a,l,{cwd:r,env:g,detached:!0});c.on("error",o),c.on("exit",()=>m())})}async runInTerminal(n,e,a,r,t){const s="windowsExec"in t&&t.windowsExec?t.windowsExec:E.getDefaultTerminalWindows(),l=await E.getWtExePath();return new Promise((m,o)=>{const g=`"${e} - ${L}"`,c=`"${a.join('" "')}" & pause`,f=Object.assign({},h(process),r);Object.keys(f).filter(w=>f[w]===null).forEach(w=>delete f[w]);const x={cwd:e,env:f,windowsVerbatimArguments:!0};let i,u;R.basename(s,".exe")==="wt"?(i=s,u=["-d",".",E.CMD,"/c",c]):l?(i=l,u=["-d",".",s,"/c",c]):(i=E.CMD,u=["/c","start",g,"/wait",s,"/c",`"${c}"`]),I.spawn(i,u,x).on("error",w=>{o(b(w))}),m(void 0)})}static getDefaultTerminalWindows(){if(!E._DEFAULT_TERMINAL_WINDOWS){const n=!!process.env.hasOwnProperty("PROCESSOR_ARCHITEW6432");E._DEFAULT_TERMINAL_WINDOWS=`${process.env.windir?process.env.windir:"C:\\Windows"}\\${n?"Sysnative":"System32"}\\cmd.exe`}return E._DEFAULT_TERMINAL_WINDOWS}static async getWtExePath(){try{return await y.findExecutable("wt")}catch{return}}};D([M],E,"getWtExePath",1);let A=E;class O extends P{static OSASCRIPT="/usr/bin/osascript";openTerminal(n,e){return this.spawnTerminal(I,n,e)}runInTerminal(n,e,a,r,t){const s=t.osxExec||S;return new Promise((l,m)=>{if(s===S||s==="iTerm.app"){const o=s===S?"TerminalHelper":"iTermHelper",c=[W.asFileUri(`vs/workbench/contrib/externalTerminal/node/${o}.scpt`).fsPath,"-t",n||L,"-w",e];for(const i of a)c.push("-a"),c.push(i);if(r){const i=Object.assign({},h(process),r);for(const u in i){const d=i[u];d===null?(c.push("-u"),c.push(u)):(c.push("-e"),c.push(`${u}=${d}`))}}let f="";const x=I.spawn(O.OSASCRIPT,c);x.on("error",i=>{m(b(i))}),x.stderr.on("data",i=>{f+=i.toString()}),x.on("exit",i=>{if(i===0)l(void 0);else if(f){const u=f.split(`
-`,1);m(new Error(u[0]))}else m(new Error(v.localize("mac.terminal.script.failed","Script '{0}' failed with exit code {1}",o,i)))})}else m(new Error(v.localize("mac.terminal.type.not.supported","'{0}' not supported",s)))})}spawnTerminal(n,e,a){const r=e.osxExec||S;return new Promise((t,s)=>{const l=["-a",r];a&&l.push(a);const m=h(process),o=n.spawn("/usr/bin/open",l,{cwd:a,env:m});o.on("error",s),o.on("exit",()=>t())})}}class T extends P{static WAIT_MESSAGE=v.localize("press.any.key","Press any key to continue...");openTerminal(n,e){return this.spawnTerminal(I,n,e)}runInTerminal(n,e,a,r,t){const s=t.linuxExec?Promise.resolve(t.linuxExec):T.getDefaultTerminalLinuxReady();return new Promise((l,m)=>{const o=[];s.then(g=>{g.indexOf("gnome-terminal")>=0?o.push("-x"):o.push("-e"),o.push("bash"),o.push("-c");const c=`${$(a)}; echo; read -p "${T.WAIT_MESSAGE}" -n1;`;o.push(`''${c}''`);const f=Object.assign({},h(process),r);Object.keys(f).filter(d=>f[d]===null).forEach(d=>delete f[d]);const x={cwd:e,env:f};let i="";const u=I.spawn(g,o,x);u.on("error",d=>{m(b(d))}),u.stderr.on("data",d=>{i+=d.toString()}),u.on("exit",d=>{if(d===0)l(void 0);else if(i){const w=i.split(`
-`,1);m(new Error(w[0]))}else m(new Error(v.localize("linux.term.failed","'{0}' failed with exit code {1}",g,d)))})})})}static _DEFAULT_TERMINAL_LINUX_READY;static async getDefaultTerminalLinuxReady(){if(!T._DEFAULT_TERMINAL_LINUX_READY)if(!U.isLinux)T._DEFAULT_TERMINAL_LINUX_READY=Promise.resolve("xterm");else{const n=await F.Promises.exists("/etc/debian_version");T._DEFAULT_TERMINAL_LINUX_READY=new Promise(e=>{n?e("x-terminal-emulator"):process.env.DESKTOP_SESSION==="gnome"||process.env.DESKTOP_SESSION==="gnome-classic"?e("gnome-terminal"):process.env.DESKTOP_SESSION==="kde-plasma"?e("konsole"):process.env.COLORTERM?e(process.env.COLORTERM):process.env.TERM?e(process.env.TERM):e("xterm")})}return T._DEFAULT_TERMINAL_LINUX_READY}spawnTerminal(n,e,a){const r=e.linuxExec?Promise.resolve(e.linuxExec):T.getDefaultTerminalLinuxReady();return new Promise((t,s)=>{r.then(l=>{const m=h(process),o=n.spawn(l,[],{cwd:a,env:m});o.on("error",s),o.on("exit",()=>t())})})}}function h(p){const n={...p.env};return C(n),n}function b(p){return"errno"in p&&p.errno==="ENOENT"&&"path"in p&&typeof p.path=="string"?new Error(v.localize("ext.term.app.not.found","can't find terminal application '{0}'",p.path)):p}function $(p){let n="";for(const e of p)e.indexOf(" ")>=0?n+='"'+e+'"':n+=e,n+=" ";return n}export{T as LinuxExternalTerminalService,O as MacExternalTerminalService,A as WindowsExternalTerminalService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+import * as cp from "child_process";
+import { memoize } from "../../../base/common/decorators.js";
+import { FileAccess } from "../../../base/common/network.js";
+import * as path from "../../../base/common/path.js";
+import * as env from "../../../base/common/platform.js";
+import { sanitizeProcessEnvironment } from "../../../base/common/processes.js";
+import * as pfs from "../../../base/node/pfs.js";
+import * as processes from "../../../base/node/processes.js";
+import * as nls from "../../../nls.js";
+import { DEFAULT_TERMINAL_OSX, IExternalTerminalService, IExternalTerminalSettings, ITerminalForPlatform } from "../common/externalTerminal.js";
+import { ITerminalEnvironment } from "../../terminal/common/terminal.js";
+const TERMINAL_TITLE = nls.localize("console.title", "VS Code Console");
+class ExternalTerminalService {
+  static {
+    __name(this, "ExternalTerminalService");
+  }
+  _serviceBrand;
+  async getDefaultTerminalForPlatforms() {
+    return {
+      windows: WindowsExternalTerminalService.getDefaultTerminalWindows(),
+      linux: await LinuxExternalTerminalService.getDefaultTerminalLinuxReady(),
+      osx: "xterm"
+    };
+  }
+}
+const _WindowsExternalTerminalService = class _WindowsExternalTerminalService extends ExternalTerminalService {
+  static {
+    __name(this, "WindowsExternalTerminalService");
+  }
+  static CMD = "cmd.exe";
+  static _DEFAULT_TERMINAL_WINDOWS;
+  openTerminal(configuration, cwd) {
+    return this.spawnTerminal(cp, configuration, processes.getWindowsShell(), cwd);
+  }
+  spawnTerminal(spawner, configuration, command, cwd) {
+    const exec = configuration.windowsExec || _WindowsExternalTerminalService.getDefaultTerminalWindows();
+    if (cwd && cwd[1] === ":") {
+      cwd = cwd[0].toUpperCase() + cwd.substr(1);
+    }
+    const basename = path.basename(exec, ".exe").toLowerCase();
+    if (basename === "cmder") {
+      spawner.spawn(exec, cwd ? [cwd] : void 0);
+      return Promise.resolve(void 0);
+    }
+    const cmdArgs = ["/c", "start", "/wait"];
+    if (exec.indexOf(" ") >= 0) {
+      cmdArgs.push(exec);
+    }
+    cmdArgs.push(exec);
+    if (basename === "wt") {
+      cmdArgs.push("-d .");
+    }
+    return new Promise((c, e) => {
+      const env2 = getSanitizedEnvironment(process);
+      const child = spawner.spawn(command, cmdArgs, { cwd, env: env2, detached: true });
+      child.on("error", e);
+      child.on("exit", () => c());
+    });
+  }
+  async runInTerminal(title, dir, args, envVars, settings) {
+    const exec = "windowsExec" in settings && settings.windowsExec ? settings.windowsExec : _WindowsExternalTerminalService.getDefaultTerminalWindows();
+    const wt = await _WindowsExternalTerminalService.getWtExePath();
+    return new Promise((resolve, reject) => {
+      const title2 = `"${dir} - ${TERMINAL_TITLE}"`;
+      const command = `"${args.join('" "')}" & pause`;
+      const env2 = Object.assign({}, getSanitizedEnvironment(process), envVars);
+      Object.keys(env2).filter((v) => env2[v] === null).forEach((key) => delete env2[key]);
+      const options = {
+        cwd: dir,
+        env: env2,
+        windowsVerbatimArguments: true
+      };
+      let spawnExec;
+      let cmdArgs;
+      if (path.basename(exec, ".exe") === "wt") {
+        spawnExec = exec;
+        cmdArgs = ["-d", ".", _WindowsExternalTerminalService.CMD, "/c", command];
+      } else if (wt) {
+        spawnExec = wt;
+        cmdArgs = ["-d", ".", exec, "/c", command];
+      } else {
+        spawnExec = _WindowsExternalTerminalService.CMD;
+        cmdArgs = ["/c", "start", title2, "/wait", exec, "/c", `"${command}"`];
+      }
+      const cmd = cp.spawn(spawnExec, cmdArgs, options);
+      cmd.on("error", (err) => {
+        reject(improveError(err));
+      });
+      resolve(void 0);
+    });
+  }
+  static getDefaultTerminalWindows() {
+    if (!_WindowsExternalTerminalService._DEFAULT_TERMINAL_WINDOWS) {
+      const isWoW64 = !!process.env.hasOwnProperty("PROCESSOR_ARCHITEW6432");
+      _WindowsExternalTerminalService._DEFAULT_TERMINAL_WINDOWS = `${process.env.windir ? process.env.windir : "C:\\Windows"}\\${isWoW64 ? "Sysnative" : "System32"}\\cmd.exe`;
+    }
+    return _WindowsExternalTerminalService._DEFAULT_TERMINAL_WINDOWS;
+  }
+  static async getWtExePath() {
+    try {
+      return await processes.findExecutable("wt");
+    } catch {
+      return void 0;
+    }
+  }
+};
+__decorateClass([
+  memoize
+], _WindowsExternalTerminalService, "getWtExePath", 1);
+let WindowsExternalTerminalService = _WindowsExternalTerminalService;
+class MacExternalTerminalService extends ExternalTerminalService {
+  static {
+    __name(this, "MacExternalTerminalService");
+  }
+  static OSASCRIPT = "/usr/bin/osascript";
+  // osascript is the AppleScript interpreter on OS X
+  openTerminal(configuration, cwd) {
+    return this.spawnTerminal(cp, configuration, cwd);
+  }
+  runInTerminal(title, dir, args, envVars, settings) {
+    const terminalApp = settings.osxExec || DEFAULT_TERMINAL_OSX;
+    return new Promise((resolve, reject) => {
+      if (terminalApp === DEFAULT_TERMINAL_OSX || terminalApp === "iTerm.app") {
+        const script = terminalApp === DEFAULT_TERMINAL_OSX ? "TerminalHelper" : "iTermHelper";
+        const scriptpath = FileAccess.asFileUri(`vs/workbench/contrib/externalTerminal/node/${script}.scpt`).fsPath;
+        const osaArgs = [
+          scriptpath,
+          "-t",
+          title || TERMINAL_TITLE,
+          "-w",
+          dir
+        ];
+        for (const a of args) {
+          osaArgs.push("-a");
+          osaArgs.push(a);
+        }
+        if (envVars) {
+          const env2 = Object.assign({}, getSanitizedEnvironment(process), envVars);
+          for (const key in env2) {
+            const value = env2[key];
+            if (value === null) {
+              osaArgs.push("-u");
+              osaArgs.push(key);
+            } else {
+              osaArgs.push("-e");
+              osaArgs.push(`${key}=${value}`);
+            }
+          }
+        }
+        let stderr = "";
+        const osa = cp.spawn(MacExternalTerminalService.OSASCRIPT, osaArgs);
+        osa.on("error", (err) => {
+          reject(improveError(err));
+        });
+        osa.stderr.on("data", (data) => {
+          stderr += data.toString();
+        });
+        osa.on("exit", (code) => {
+          if (code === 0) {
+            resolve(void 0);
+          } else {
+            if (stderr) {
+              const lines = stderr.split("\n", 1);
+              reject(new Error(lines[0]));
+            } else {
+              reject(new Error(nls.localize("mac.terminal.script.failed", "Script '{0}' failed with exit code {1}", script, code)));
+            }
+          }
+        });
+      } else {
+        reject(new Error(nls.localize("mac.terminal.type.not.supported", "'{0}' not supported", terminalApp)));
+      }
+    });
+  }
+  spawnTerminal(spawner, configuration, cwd) {
+    const terminalApp = configuration.osxExec || DEFAULT_TERMINAL_OSX;
+    return new Promise((c, e) => {
+      const args = ["-a", terminalApp];
+      if (cwd) {
+        args.push(cwd);
+      }
+      const env2 = getSanitizedEnvironment(process);
+      const child = spawner.spawn("/usr/bin/open", args, { cwd, env: env2 });
+      child.on("error", e);
+      child.on("exit", () => c());
+    });
+  }
+}
+class LinuxExternalTerminalService extends ExternalTerminalService {
+  static {
+    __name(this, "LinuxExternalTerminalService");
+  }
+  static WAIT_MESSAGE = nls.localize("press.any.key", "Press any key to continue...");
+  openTerminal(configuration, cwd) {
+    return this.spawnTerminal(cp, configuration, cwd);
+  }
+  runInTerminal(title, dir, args, envVars, settings) {
+    const execPromise = settings.linuxExec ? Promise.resolve(settings.linuxExec) : LinuxExternalTerminalService.getDefaultTerminalLinuxReady();
+    return new Promise((resolve, reject) => {
+      const termArgs = [];
+      execPromise.then((exec) => {
+        if (exec.indexOf("gnome-terminal") >= 0) {
+          termArgs.push("-x");
+        } else {
+          termArgs.push("-e");
+        }
+        termArgs.push("bash");
+        termArgs.push("-c");
+        const bashCommand = `${quote(args)}; echo; read -p "${LinuxExternalTerminalService.WAIT_MESSAGE}" -n1;`;
+        termArgs.push(`''${bashCommand}''`);
+        const env2 = Object.assign({}, getSanitizedEnvironment(process), envVars);
+        Object.keys(env2).filter((v) => env2[v] === null).forEach((key) => delete env2[key]);
+        const options = {
+          cwd: dir,
+          env: env2
+        };
+        let stderr = "";
+        const cmd = cp.spawn(exec, termArgs, options);
+        cmd.on("error", (err) => {
+          reject(improveError(err));
+        });
+        cmd.stderr.on("data", (data) => {
+          stderr += data.toString();
+        });
+        cmd.on("exit", (code) => {
+          if (code === 0) {
+            resolve(void 0);
+          } else {
+            if (stderr) {
+              const lines = stderr.split("\n", 1);
+              reject(new Error(lines[0]));
+            } else {
+              reject(new Error(nls.localize("linux.term.failed", "'{0}' failed with exit code {1}", exec, code)));
+            }
+          }
+        });
+      });
+    });
+  }
+  static _DEFAULT_TERMINAL_LINUX_READY;
+  static async getDefaultTerminalLinuxReady() {
+    if (!LinuxExternalTerminalService._DEFAULT_TERMINAL_LINUX_READY) {
+      if (!env.isLinux) {
+        LinuxExternalTerminalService._DEFAULT_TERMINAL_LINUX_READY = Promise.resolve("xterm");
+      } else {
+        const isDebian = await pfs.Promises.exists("/etc/debian_version");
+        LinuxExternalTerminalService._DEFAULT_TERMINAL_LINUX_READY = new Promise((r) => {
+          if (isDebian) {
+            r("x-terminal-emulator");
+          } else if (process.env.DESKTOP_SESSION === "gnome" || process.env.DESKTOP_SESSION === "gnome-classic") {
+            r("gnome-terminal");
+          } else if (process.env.DESKTOP_SESSION === "kde-plasma") {
+            r("konsole");
+          } else if (process.env.COLORTERM) {
+            r(process.env.COLORTERM);
+          } else if (process.env.TERM) {
+            r(process.env.TERM);
+          } else {
+            r("xterm");
+          }
+        });
+      }
+    }
+    return LinuxExternalTerminalService._DEFAULT_TERMINAL_LINUX_READY;
+  }
+  spawnTerminal(spawner, configuration, cwd) {
+    const execPromise = configuration.linuxExec ? Promise.resolve(configuration.linuxExec) : LinuxExternalTerminalService.getDefaultTerminalLinuxReady();
+    return new Promise((c, e) => {
+      execPromise.then((exec) => {
+        const env2 = getSanitizedEnvironment(process);
+        const child = spawner.spawn(exec, [], { cwd, env: env2 });
+        child.on("error", e);
+        child.on("exit", () => c());
+      });
+    });
+  }
+}
+function getSanitizedEnvironment(process2) {
+  const env2 = { ...process2.env };
+  sanitizeProcessEnvironment(env2);
+  return env2;
+}
+__name(getSanitizedEnvironment, "getSanitizedEnvironment");
+function improveError(err) {
+  if ("errno" in err && err["errno"] === "ENOENT" && "path" in err && typeof err["path"] === "string") {
+    return new Error(nls.localize("ext.term.app.not.found", "can't find terminal application '{0}'", err["path"]));
+  }
+  return err;
+}
+__name(improveError, "improveError");
+function quote(args) {
+  let r = "";
+  for (const a of args) {
+    if (a.indexOf(" ") >= 0) {
+      r += '"' + a + '"';
+    } else {
+      r += a;
+    }
+    r += " ";
+  }
+  return r;
+}
+__name(quote, "quote");
+export {
+  LinuxExternalTerminalService,
+  MacExternalTerminalService,
+  WindowsExternalTerminalService
+};
+//# sourceMappingURL=externalTerminalService.js.map

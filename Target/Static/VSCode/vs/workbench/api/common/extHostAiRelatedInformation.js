@@ -1,1 +1,44 @@
-import"../../../platform/extensions/common/extensions.js";import{MainContext as n}from"./extHost.protocol.js";import{Disposable as i}from"./extHostTypes.js";class x{_relatedInformationProviders=new Map;_nextHandle=0;_proxy;constructor(t){this._proxy=t.getProxy(n.MainThreadAiRelatedInformation)}async $provideAiRelatedInformation(t,o,r){if(this._relatedInformationProviders.size===0)throw new Error("No related information providers registered");const e=this._relatedInformationProviders.get(t);if(!e)throw new Error("related information provider not found");return await e.provideRelatedInformation(o,r)??[]}getRelatedInformation(t,o,r){return this._proxy.$getAiRelatedInformation(o,r)}registerRelatedInformationProvider(t,o,r){const e=this._nextHandle;return this._nextHandle++,this._relatedInformationProviders.set(e,r),this._proxy.$registerAiRelatedInformationProvider(e,o),new i(()=>{this._proxy.$unregisterAiRelatedInformationProvider(e),this._relatedInformationProviders.delete(e)})}}export{x as ExtHostRelatedInformation};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { IExtensionDescription } from "../../../platform/extensions/common/extensions.js";
+import { ExtHostAiRelatedInformationShape, IMainContext, MainContext, MainThreadAiRelatedInformationShape } from "./extHost.protocol.js";
+import { Disposable } from "./extHostTypes.js";
+class ExtHostRelatedInformation {
+  static {
+    __name(this, "ExtHostRelatedInformation");
+  }
+  _relatedInformationProviders = /* @__PURE__ */ new Map();
+  _nextHandle = 0;
+  _proxy;
+  constructor(mainContext) {
+    this._proxy = mainContext.getProxy(MainContext.MainThreadAiRelatedInformation);
+  }
+  async $provideAiRelatedInformation(handle, query, token) {
+    if (this._relatedInformationProviders.size === 0) {
+      throw new Error("No related information providers registered");
+    }
+    const provider = this._relatedInformationProviders.get(handle);
+    if (!provider) {
+      throw new Error("related information provider not found");
+    }
+    const result = await provider.provideRelatedInformation(query, token) ?? [];
+    return result;
+  }
+  getRelatedInformation(extension, query, types) {
+    return this._proxy.$getAiRelatedInformation(query, types);
+  }
+  registerRelatedInformationProvider(extension, type, provider) {
+    const handle = this._nextHandle;
+    this._nextHandle++;
+    this._relatedInformationProviders.set(handle, provider);
+    this._proxy.$registerAiRelatedInformationProvider(handle, type);
+    return new Disposable(() => {
+      this._proxy.$unregisterAiRelatedInformationProvider(handle);
+      this._relatedInformationProviders.delete(handle);
+    });
+  }
+}
+export {
+  ExtHostRelatedInformation
+};
+//# sourceMappingURL=extHostAiRelatedInformation.js.map

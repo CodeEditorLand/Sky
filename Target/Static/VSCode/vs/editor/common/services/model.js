@@ -1,1 +1,11 @@
-import"../../../base/common/event.js";import"../../../base/common/uri.js";import"../model.js";import"../languages/language.js";import{createDecorator as e}from"../../../platform/instantiation/common/instantiation.js";import"../languages.js";const M=e("modelService");export{M as IModelService};
+import { Event } from "../../../base/common/event.js";
+import { URI } from "../../../base/common/uri.js";
+import { ITextBufferFactory, ITextModel, ITextModelCreationOptions } from "../model.js";
+import { ILanguageSelection } from "../languages/language.js";
+import { createDecorator } from "../../../platform/instantiation/common/instantiation.js";
+import { DocumentSemanticTokensProvider, DocumentRangeSemanticTokensProvider } from "../languages.js";
+const IModelService = createDecorator("modelService");
+export {
+  IModelService
+};
+//# sourceMappingURL=model.js.map

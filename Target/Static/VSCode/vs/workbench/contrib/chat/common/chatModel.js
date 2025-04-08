@@ -1,7 +1,1211 @@
-var U=Object.defineProperty;var w=Object.getOwnPropertyDescriptor;var D=(i,e,t,n)=>{for(var s=n>1?void 0:n?w(e,t):e,o=i.length-1,a;o>=0;o--)(a=i[o])&&(s=(n?a(e,t,s):a(s))||s);return n&&s&&U(e,t,s),s},g=(i,e)=>(t,n)=>e(t,n,i);import{asArray as T}from"../../../../base/common/arrays.js";import{DeferredPromise as q}from"../../../../base/common/async.js";import{Codicon as z}from"../../../../base/common/codicons.js";import{Emitter as f}from"../../../../base/common/event.js";import{MarkdownString as S,isMarkdownString as x}from"../../../../base/common/htmlContent.js";import{Disposable as k}from"../../../../base/common/lifecycle.js";import{revive as v}from"../../../../base/common/marshalling.js";import{Schemas as y}from"../../../../base/common/network.js";import{equals as O}from"../../../../base/common/objects.js";import{ObservablePromise as B,observableValue as F}from"../../../../base/common/observable.js";import{basename as E,isEqual as L}from"../../../../base/common/resources.js";import"../../../../base/common/themables.js";import{URI as _,isUriComponents as N}from"../../../../base/common/uri.js";import{generateUuid as m}from"../../../../base/common/uuid.js";import{OffsetRange as A}from"../../../../editor/common/core/offsetRange.js";import"../../../../editor/common/core/range.js";import{TextEdit as G}from"../../../../editor/common/languages.js";import{localize as I}from"../../../../nls.js";import{ILogService as H}from"../../../../platform/log/common/log.js";import"../../../../platform/markers/common/markers.js";import{CellUri as j}from"../../notebook/common/notebookCommon.js";import{IChatAgentService as W,reviveSerializedAgent as J}from"./chatAgents.js";import{IChatEditingService as $}from"./chatEditingService.js";import{ChatRequestTextPart as K,reviveParsedChatRequest as Q}from"./chatParserTypes.js";import{isIUsedContext as Y}from"./chatService.js";import"./chatVariables.js";import{ChatAgentLocation as X}from"./constants.js";var Z=(n=>(n[n.NotOmitted=0]="NotOmitted",n[n.Partial=1]="Partial",n[n.Full=2]="Full",n))(Z||{}),ee;(o=>{o.icon=z.error;function e(a){return{filterUri:a.resource,owner:a.owner,problemMessage:a.message,filterRange:{startLineNumber:a.startLineNumber,endLineNumber:a.endLineNumber,startColumn:a.startColumn,endColumn:a.endColumn}}}o.fromMarker=e;function t(a){return{id:n(a),name:s(a),icon:o.icon,value:a,kind:"diagnostic",range:a.filterRange?new A(a.filterRange.startLineNumber,a.filterRange.endLineNumber):void 0,...a}}o.toEntry=t;function n(a){return[a.filterUri,a.owner,a.filterSeverity,a.filterRange?.startLineNumber].join(":")}o.id=n;function s(a){let r;if((p=>(p[p.MaxChars=30]="MaxChars",p[p.MaxSpaceLookback=10]="MaxSpaceLookback"))(r||={}),a.problemMessage){if(a.problemMessage.length<30)return a.problemMessage;const d=a.problemMessage.lastIndexOf(" ",30);return d===-1||d+10<30?a.problemMessage.substring(0,30)+"\u2026":a.problemMessage.substring(0,d)+"\u2026"}let h=I("chat.attachment.problems.all","All Problems");return a.filterUri&&(h=I("chat.attachment.problems.inFile","Problems in {0}",E(a.filterUri))),h}o.label=s})(ee||={});function Pt(i){return i.kind==="implicit"}function Vt(i){return i.kind==="paste"}function Ut(i){return i.kind==="image"}function wt(i){return i.kind==="diagnostic"}function Tt(i){const e=i;return typeof e=="object"&&e!==null&&typeof e.id=="string"&&typeof e.name=="string"}function zt(i){const e=i;return!!e&&!!e.edit&&!!e.uri&&_.isUri(e.uri)}const te=new Set(["toolInvocation","toolInvocationSerialized"]);function ne(i){return!te.has(i.kind)}function Ot(i){return i.filter(ne)}const l={reason:"other"};class M{id;response;shouldBeRemovedOnSend;timestamp;message;isCompleteAddedRequest;modelId;_session;_attempt;_variableData;_confirmation;_locationData;_attachedContext;get session(){return this._session}get username(){return this.session.requesterUsername}get avatarIconUri(){return this.session.requesterAvatarIconUri}get attempt(){return this._attempt}get variableData(){return this._variableData}set variableData(e){this._variableData=e}get confirmation(){return this._confirmation}get locationData(){return this._locationData}get attachedContext(){return this._attachedContext}constructor(e){this._session=e.session,this.message=e.message,this._variableData=e.variableData,this.timestamp=e.timestamp,this._attempt=e.attempt??0,this._confirmation=e.confirmation,this._locationData=e.locationData,this._attachedContext=e.attachedContext,this.isCompleteAddedRequest=e.isCompleteAddedRequest??!1,this.modelId=e.modelId,this.id=e.restoredId??"request_"+m()}adoptTo(e){this._session=e}}class P{_responseParts;_responseRepr="";_markdownContent="";get value(){return this._responseParts}constructor(e){this._responseParts=e,this._updateRepr()}toString(){return this._responseRepr}getMarkdown(){return this._markdownContent}_updateRepr(){this._responseRepr=this.partsToRepr(this._responseParts),this._markdownContent=this._responseParts.map(e=>e.kind==="inlineReference"?this.inlineRefToRepr(e):e.kind==="markdownContent"||e.kind==="markdownVuln"?e.content.value:"").filter(e=>e.length>0).join("")}partsToRepr(e){const t=[];let n=[];for(const s of e){let o;switch(s.kind){case"treeData":case"progressMessage":case"codeblockUri":case"toolInvocation":case"toolInvocationSerialized":case"undoStop":continue;case"inlineReference":o={text:this.inlineRefToRepr(s)};break;case"command":o={text:s.command.title,isBlock:!0};break;case"textEditGroup":case"notebookEditGroup":o={text:I("editsSummary","Made changes."),isBlock:!0};break;case"confirmation":o={text:`${s.title}
-${s.message}`,isBlock:!0};break;default:o={text:s.content.value};break}o.isBlock?(n.length&&(t.push(n.join("")),n=[]),t.push(o.text)):n.push(o.text)}return n.length&&t.push(n.join("")),t.join(`
-
-`)}inlineRefToRepr(e){return"uri"in e.inlineReference?this.uriToRepr(e.inlineReference.uri):"name"in e.inlineReference?"`"+e.inlineReference.name+"`":this.uriToRepr(e.inlineReference)}uriToRepr(e){return e.scheme===y.http||e.scheme===y.https?e.toString(!1):E(e)}}class se extends P{constructor(t,n){const s=t.value.findIndex(o=>o.kind==="undoStop"&&o.id===n);super(s===-1?t.value.slice():t.value.slice(0,s));this.undoStop=n}}class ie extends P{_onDidChangeValue=new f;get onDidChangeValue(){return this._onDidChangeValue.event}_citations=[];constructor(e){super(T(e).map(t=>x(t)?{content:t,kind:"markdownContent"}:"kind"in t?t:{kind:"treeData",treeData:t}))}dispose(){this._onDidChangeValue.dispose()}clear(){this._responseParts=[],this._updateRepr(!0)}updateContent(e,t){if(e.kind==="markdownContent"){const n=this._responseParts.filter(s=>s.kind!=="textEditGroup").at(-1);if(!n||n.kind!=="markdownContent"||!ue(n.content,e.content))this._responseParts.push(e);else{const s=this._responseParts.indexOf(n);this._responseParts[s]={...n,content:he(n.content,e.content)}}this._updateRepr(t)}else if(e.kind==="textEdit"||e.kind==="notebookEdit"){const s=e.uri.scheme===y.vscodeNotebookCell&&!this._responseParts.find(d=>d.kind==="notebookEditGroup")?void 0:j.parse(e.uri)?.notebook,o=s??e.uri;let a=!1;const r=e.kind==="textEdit"&&!s?"textEditGroup":"notebookEditGroup",h=r==="textEditGroup"?e.edits:e.edits.map(d=>G.isTextEdit(d)?{uri:e.uri,edit:d}:d);for(let d=0;!a&&d<this._responseParts.length;d++){const u=this._responseParts[d];u.kind===r&&!u.done&&L(u.uri,o)&&(u.edits.push(h),u.done=e.done,a=!0)}a||this._responseParts.push({kind:r,uri:o,edits:r==="textEditGroup"?[h]:h,done:e.done}),this._updateRepr(t)}else if(e.kind==="progressTask"){const n=this._responseParts.push(e)-1;this._updateRepr(t);const s=e.onDidAddProgress(()=>{this._updateRepr(!1)});e.task?.().then(o=>{s.dispose(),typeof o=="string"&&(this._responseParts[n].content=new S(o)),this._updateRepr(!1)})}else e.kind==="toolInvocation"?(e.confirmationMessages&&e.confirmed.p.then(()=>{this._updateRepr(!1)}),e.isCompletePromise.then(()=>{this._updateRepr(!1)}),this._responseParts.push(e),this._updateRepr(t)):(this._responseParts.push(e),this._updateRepr(t))}addCitation(e){this._citations.push(e),this._updateRepr()}_updateRepr(e){super._updateRepr(),this._onDidChangeValue&&(this._responseRepr+=this._citations.length?`
-
-`+pe(this._citations):"",e||this._onDidChangeValue.fire())}}class R extends k{_onDidChange=this._register(new f);onDidChange=this._onDidChange.event;id;requestId;_session;_agent;_slashCommand;_isComplete;_isCanceled;_vote;_voteDownReason;_result;_shouldBeRemovedOnSend;isCompleteAddedRequest;get session(){return this._session}get shouldBeRemovedOnSend(){return this._shouldBeRemovedOnSend}get isComplete(){return this._isComplete}set shouldBeRemovedOnSend(e){this._shouldBeRemovedOnSend=e,this._onDidChange.fire(l)}get isCanceled(){return this._isCanceled}get vote(){return this._vote}get voteDownReason(){return this._voteDownReason}get followups(){return this._followups}_response;_finalizedResponse;get entireResponse(){return this._finalizedResponse||this._response}get result(){return this._result}get username(){return this.session.responderUsername}get avatarIcon(){return this.session.responderAvatarIcon}_followups;get agent(){return this._agent}get slashCommand(){return this._slashCommand}_agentOrSlashCommandDetected;get agentOrSlashCommandDetected(){return this._agentOrSlashCommandDetected??!1}_usedContext;get usedContext(){return this._usedContext}_contentReferences=[];get contentReferences(){return Array.from(this._contentReferences)}_codeCitations=[];get codeCitations(){return this._codeCitations}_progressMessages=[];get progressMessages(){return this._progressMessages}_isStale=!1;get isStale(){return this._isStale}_isPaused=F("isPaused",!1);get isPaused(){return this._isPaused}get isPendingConfirmation(){return this._response.value.some(e=>e.kind==="toolInvocation"&&e.isConfirmed===void 0||e.kind==="confirmation"&&e.isUsed===!1)}_responseView;get response(){const e=this._shouldBeRemovedOnSend?.afterUndoStop;return e?(this._responseView?.undoStop!==e&&(this._responseView=new se(this._response,e)),this._responseView):this._finalizedResponse||this._response}bufferedPauseContent;constructor(e){super(),this._session=e.session,this._agent=e.agent,this._slashCommand=e.slashCommand,this.requestId=e.requestId,this._isComplete=e.isComplete??!1,this._isCanceled=e.isCanceled??!1,this._vote=e.vote,this._voteDownReason=e.voteDownReason,this._result=e.result,this._followups=e.followups?[...e.followups]:void 0,this.isCompleteAddedRequest=e.isCompleteAddedRequest??!1,this._shouldBeRemovedOnSend=e.shouldBeRemovedOnSend,this._isStale=Array.isArray(e.responseContent)&&(e.responseContent.length!==0||x(e.responseContent)&&e.responseContent.value.length!==0),this._response=this._register(new ie(e.responseContent)),this._register(this._response.onDidChangeValue(()=>this._onDidChange.fire(l))),this.id=e.restoredId??"response_"+m()}updateContent(e,t){this.bufferWhenPaused(()=>this._response.updateContent(e,t))}addUndoStop(e){this.bufferWhenPaused(()=>{this._onDidChange.fire({reason:"undoStop",id:e.id}),this._response.updateContent(e,!0)})}applyReference(e){e.kind==="usedContext"?this._usedContext=e:e.kind==="reference"&&(this._contentReferences.push(e),this._onDidChange.fire(l))}applyCodeCitation(e){this._codeCitations.push(e),this._response.addCitation(e),this._onDidChange.fire(l)}setAgent(e,t){this._agent=e,this._slashCommand=t,this._agentOrSlashCommandDetected=!e.isDefault||!!t,this._onDidChange.fire(l)}setResult(e){this._result=e,this._onDidChange.fire(l)}complete(){this._result?.errorDetails?.responseIsRedacted&&this._response.clear(),this._isComplete=!0,this._onDidChange.fire(l)}cancel(){this._isComplete=!0,this._isCanceled=!0,this._onDidChange.fire(l)}setFollowups(e){this._followups=e,this._onDidChange.fire(l)}setVote(e){this._vote=e,this._onDidChange.fire(l)}setVoteDownReason(e){this._voteDownReason=e,this._onDidChange.fire(l)}setEditApplied(e,t){return!this.response.value.includes(e)||!e.state?!1:(e.state.applied=t,this._onDidChange.fire(l),!0)}adoptTo(e){this._session=e,this._onDidChange.fire(l)}setPaused(e,t){this._isPaused.set(e,t),this._onDidChange.fire(l),this.bufferedPauseContent?.forEach(n=>n()),this.bufferedPauseContent=void 0}finalizeUndoState(){this._finalizedResponse=this.response,this._responseView=void 0,this._shouldBeRemovedOnSend=void 0}bufferWhenPaused(e){this._isPaused.get()?(this.bufferedPauseContent??=[],this.bufferedPauseContent.push(e)):e()}}var ae=(n=>(n[n.NotPausable=0]="NotPausable",n[n.Paused=1]="Paused",n[n.Unpaused=2]="Unpaused",n))(ae||{});function Bt(i){return oe(i),"version"in i?i.version===2?{...i,version:3,customTitle:i.computedTitle}:i:{version:3,...i,lastMessageDate:i.creationDate,customTitle:void 0}}function oe(i){i.sessionId||(i.sessionId=m()),i.creationDate||(i.creationDate=V()),"version"in i&&(i.version===2||i.version===3)&&(i.lastMessageDate||(i.lastMessageDate=V()))}function V(){const i=new Date;return i.setFullYear(i.getFullYear()-1),i.getTime()}function re(i){const e=i;return typeof e=="object"&&typeof e.requesterUsername=="string"}function de(i){const e=i;return re(i)&&typeof e.creationDate=="number"&&typeof e.sessionId=="string"&&i.requests.every(t=>!t.usedContext||Y(t.usedContext))}var le=(n=>(n[n.Removal=0]="Removal",n[n.Resend=1]="Resend",n[n.Adoption=2]="Adoption",n))(le||{}),b=(n=>(n[n.Created=0]="Created",n[n.Initializing=1]="Initializing",n[n.Initialized=2]="Initialized",n))(b||{});let C=class extends k{constructor(t,n,s,o,a){super();this.initialData=t;this._initialLocation=n;this.logService=s;this.chatAgentService=o;this.chatEditingService=a;const r=de(t);t&&!r&&this.logService.warn(`ChatModel#constructor: Loaded malformed session data: ${JSON.stringify(t)}`),this._isImported=!!t&&!r||(t?.isImported??!1),this._sessionId=r&&t.sessionId||m(),this._requests=t?this._deserialize(t):[],this._creationDate=r&&t.creationDate||Date.now(),this._lastMessageDate=r&&t.lastMessageDate||this._creationDate,this._customTitle=r?t.customTitle:void 0,this._initialRequesterAvatarIconUri=t?.requesterAvatarIconUri&&_.revive(t.requesterAvatarIconUri),this._initialResponderAvatarIconUri=N(t?.responderAvatarIconUri)?_.revive(t.responderAvatarIconUri):t?.responderAvatarIconUri}static getDefaultTitle(t){const n=t.at(0)?.message??"";return(typeof n=="string"?n:n.text).split(`
-`)[0].substring(0,50)}_onDidDispose=this._register(new f);onDidDispose=this._onDidDispose.event;_onDidChange=this._register(new f);onDidChange=this._onDidChange.event;_requests;_initState=0;_isInitializedDeferred=new q;_sampleQuestions;get sampleQuestions(){return this._sampleQuestions}_sessionId;get sessionId(){return this._sessionId}get requestInProgress(){const t=this.lastRequest;return!t?.response||t.response.isPendingConfirmation?!1:!t.response.isComplete}get requestPausibility(){const t=this.lastRequest;return!t?.response?.agent||t.response.isComplete||t.response.isPendingConfirmation?0:t.response.isPaused.get()?1:2}get hasRequests(){return this._requests.length>0}get lastRequest(){return this._requests.at(-1)}_creationDate;get creationDate(){return this._creationDate}_lastMessageDate;get lastMessageDate(){return this._lastMessageDate}get _defaultAgent(){return this.chatAgentService.getDefaultAgent(X.Panel)}get requesterUsername(){return this._defaultAgent?.metadata.requester?.name??this.initialData?.requesterUsername??""}get responderUsername(){return this._defaultAgent?.fullName??this.initialData?.responderUsername??""}_initialRequesterAvatarIconUri;get requesterAvatarIconUri(){return this._defaultAgent?.metadata.requester?.icon??this._initialRequesterAvatarIconUri}_initialResponderAvatarIconUri;get responderAvatarIcon(){return this._defaultAgent?.metadata.themeIcon??this._initialResponderAvatarIconUri}get initState(){return this._initState}_isImported=!1;get isImported(){return this._isImported}_customTitle;get customTitle(){return this._customTitle}get title(){return this._customTitle||C.getDefaultTitle(this._requests)}get initialLocation(){return this._initialLocation}_editingSession;get editingSessionObs(){return this._editingSession}get editingSession(){return this._editingSession?.promiseResult.get()?.data}startEditingSession(t){const n=t?this.chatEditingService.startOrContinueGlobalEditingSession(this):this.chatEditingService.createEditingSession(this);this._editingSession=new B(n),this._editingSession.promise.then(s=>this._store.isDisposed?s.dispose():this._register(s))}_deserialize(t){const n=t.requests;if(!Array.isArray(n))return this.logService.error(`Ignoring malformed session data: ${JSON.stringify(t)}`),[];try{return n.map(s=>{const o=typeof s.message=="string"?this.getParsedRequestFromString(s.message):Q(s.message),a=this.reviveVariableData(s.variableData),r=new M({session:this,message:o,variableData:a,timestamp:s.timestamp??-1,restoredId:s.requestId});if(r.shouldBeRemovedOnSend=s.isHidden?{requestId:s.requestId}:s.shouldBeRemovedOnSend,s.response||s.result||s.responseErrorDetails){const h=s.agent&&"metadata"in s.agent?J(s.agent):void 0,d="responseErrorDetails"in s?{errorDetails:s.responseErrorDetails}:s.result;r.response=new R({responseContent:s.response??[new S(s.response)],session:this,agent:h,slashCommand:s.slashCommand,requestId:r.id,isComplete:!0,isCanceled:s.isCanceled,vote:s.vote,voteDownReason:s.voteDownReason,result:d,followups:s.followups,restoredId:s.responseId}),r.response.shouldBeRemovedOnSend=s.isHidden?{requestId:s.requestId}:s.shouldBeRemovedOnSend,s.usedContext&&r.response.applyReference(v(s.usedContext)),s.contentReferences?.forEach(u=>r.response.applyReference(v(u))),s.codeCitations?.forEach(u=>r.response.applyCodeCitation(v(u)))}return r})}catch(s){return this.logService.error("Failed to parse chat data",s),[]}}reviveVariableData(t){const n=t&&Array.isArray(t.variables)?t:{variables:[]};return n.variables=n.variables.map(s=>s&&"values"in s&&Array.isArray(s.values)?{id:s.id??"",name:s.name,value:s.values[0]?.value,range:s.range,modelDescription:s.modelDescription,references:s.references}:s),n}getParsedRequestFromString(t){const n=[new K(new A(0,t.length),{startColumn:1,startLineNumber:1,endColumn:1,endLineNumber:1},t)];return{text:t,parts:n}}toggleLastRequestPaused(t){if(this.requestPausibility!==0&&this.lastRequest?.response?.agent){const n=t??!this.lastRequest.response.isPaused.get();this.lastRequest.response.setPaused(n),this.chatAgentService.setRequestPaused(this.lastRequest.response.agent.id,this.lastRequest.id,n),this._onDidChange.fire({kind:"changedRequest",request:this.lastRequest})}}startInitialize(){if(this.initState!==0)throw new Error(`ChatModel is in the wrong state for startInitialize: ${b[this.initState]}`);this._initState=1}deinitialize(){this._initState=0,this._isInitializedDeferred=new q}initialize(t){if(this.initState!==1)throw new Error(`ChatModel is in the wrong state for initialize: ${b[this.initState]}`);this._initState=2,this._sampleQuestions=t,this._isInitializedDeferred.complete(),this._onDidChange.fire({kind:"initialize"})}setInitializationError(t){if(this.initState!==1)throw new Error(`ChatModel is in the wrong state for setInitializationError: ${b[this.initState]}`);this._isInitializedDeferred.isSettled||this._isInitializedDeferred.error(t)}waitForInitialization(){return this._isInitializedDeferred.p}getRequests(){return this._requests}_checkpoint=void 0;get checkpoint(){return this._checkpoint}setDisabledRequests(t){this._requests.forEach(n=>{const s=t.find(o=>o.requestId===n.id);n.shouldBeRemovedOnSend=s,n.response&&(n.response.shouldBeRemovedOnSend=s)}),this._onDidChange.fire({kind:"setHidden",hiddenRequestIds:t})}addRequest(t,n,s,o,a,r,h,d,u,p){const c=new M({session:this,message:t,variableData:n,timestamp:Date.now(),attempt:s,confirmation:r,locationData:h,attachedContext:d,isCompleteAddedRequest:u,modelId:p});return c.response=new R({responseContent:[],session:this,agent:o,slashCommand:a,requestId:c.id,isCompleteAddedRequest:u}),this._requests.push(c),this._lastMessageDate=Date.now(),this._onDidChange.fire({kind:"addRequest",request:c}),c}setCustomTitle(t){this._customTitle=t}updateRequest(t,n){t.variableData=n,this._onDidChange.fire({kind:"changedRequest",request:t})}adoptRequest(t){const n=t.session,s=n._requests.findIndex(o=>o.id===t.id);s!==-1&&(n._requests.splice(s,1),t.adoptTo(this),t.response?.adoptTo(this),this._requests.push(t),n._onDidChange.fire({kind:"removeRequest",requestId:t.id,responseId:t.response?.id,reason:2}),this._onDidChange.fire({kind:"addRequest",request:t}))}acceptResponseProgress(t,n,s){if(t.response||(t.response=new R({responseContent:[],session:this,requestId:t.id})),t.response.isComplete)throw new Error("acceptResponseProgress: Adding progress to a completed response");n.kind==="markdownContent"||n.kind==="treeData"||n.kind==="inlineReference"||n.kind==="codeblockUri"||n.kind==="markdownVuln"||n.kind==="progressMessage"||n.kind==="command"||n.kind==="textEdit"||n.kind==="notebookEdit"||n.kind==="warning"||n.kind==="progressTask"||n.kind==="confirmation"||n.kind==="toolInvocation"?t.response.updateContent(n,s):n.kind==="usedContext"||n.kind==="reference"?t.response.applyReference(n):n.kind==="codeCitation"?t.response.applyCodeCitation(n):n.kind==="move"?this._onDidChange.fire({kind:"move",target:n.uri,range:n.range}):n.kind==="undoStop"?t.response.addUndoStop(n):this.logService.error(`Couldn't handle progress: ${JSON.stringify(n)}`)}removeRequest(t,n=0){const s=this._requests.findIndex(a=>a.id===t),o=this._requests[s];s!==-1&&(this._onDidChange.fire({kind:"removeRequest",requestId:o.id,responseId:o.response?.id,reason:n}),this._requests.splice(s,1),o.response?.dispose())}cancelRequest(t){t.response&&t.response.cancel()}setResponse(t,n){t.response||(t.response=new R({responseContent:[],session:this,requestId:t.id})),t.response.setResult(n)}completeResponse(t){if(!t.response)throw new Error("Call setResponse before completeResponse");t.response.complete(),this._onDidChange.fire({kind:"completedRequest",request:t})}setFollowups(t,n){t.response&&t.response.setFollowups(n)}setResponseModel(t,n){t.response=n,this._onDidChange.fire({kind:"addResponse",response:n})}toExport(){return{requesterUsername:this.requesterUsername,requesterAvatarIconUri:this.requesterAvatarIconUri,responderUsername:this.responderUsername,responderAvatarIconUri:this.responderAvatarIcon,initialLocation:this.initialLocation,requests:this._requests.map(t=>{const n={...t.message,parts:t.message.parts.map(a=>a&&"toJSON"in a?a.toJSON():a)},s=t.response?.agent,o=s&&"toJSON"in s?s.toJSON():s?{...s}:void 0;return{requestId:t.id,message:n,variableData:t.variableData,response:t.response?t.response.entireResponse.value.map(a=>a.kind==="treeData"?a.treeData:a.kind==="markdownContent"?a.content:a):void 0,responseId:t.response?.id,shouldBeRemovedOnSend:t.shouldBeRemovedOnSend,result:t.response?.result,followups:t.response?.followups,isCanceled:t.response?.isCanceled,vote:t.response?.vote,voteDownReason:t.response?.voteDownReason,agent:o,slashCommand:t.response?.slashCommand,usedContext:t.response?.usedContext,contentReferences:t.response?.contentReferences,codeCitations:t.response?.codeCitations,timestamp:t.timestamp}})}}toJSON(){return{version:3,...this.toExport(),sessionId:this.sessionId,creationDate:this._creationDate,isImported:this._isImported,lastMessageDate:this._lastMessageDate,customTitle:this._customTitle}}dispose(){this._requests.forEach(t=>t.response?.dispose()),this._onDidDispose.fire(),super.dispose()}};C=D([g(2,H),g(3,W),g(4,$)],C);function Ft(i,e){return{variables:i.variables.map(t=>({...t,range:t.range&&{start:t.range.start-e,endExclusive:t.range.endExclusive-e}}))}}function ue(i,e){if(i.baseUri&&e.baseUri){if(!(i.baseUri.scheme===e.baseUri.scheme&&i.baseUri.authority===e.baseUri.authority&&i.baseUri.path===e.baseUri.path&&i.baseUri.query===e.baseUri.query&&i.baseUri.fragment===e.baseUri.fragment))return!1}else if(i.baseUri||e.baseUri)return!1;return O(i.isTrusted,e.isTrusted)&&i.supportHtml===e.supportHtml&&i.supportThemeIcons===e.supportThemeIcons}function he(i,e){const t=typeof e=="string"?e:e.value;return{value:i.value+t,isTrusted:i.isTrusted,supportThemeIcons:i.supportThemeIcons,supportHtml:i.supportHtml,baseUri:i.baseUri}}function pe(i){if(i.length===0)return"";const e=i.reduce((n,s)=>n.add(s.license),new Set);return e.size===1?I("codeCitation","Similar code found with 1 license type",e.size):I("codeCitations","Similar code found with {0} license types",e.size)}export{C as ChatModel,b as ChatModelInitState,ae as ChatPauseState,M as ChatRequestModel,le as ChatRequestRemovalReason,R as ChatResponseModel,ee as IDiagnosticVariableEntryFilterData,Z as OmittedState,ie as Response,he as appendMarkdownString,ue as canMergeMarkdownStrings,pe as getCodeCitationsMessage,zt as isCellTextEditOperation,Tt as isChatRequestVariableEntry,wt as isDiagnosticsVariableEntry,re as isExportableSessionData,Ut as isImageVariableEntry,Pt as isImplicitVariableEntry,Vt as isPasteVariableEntry,de as isSerializableSessionData,Bt as normalizeSerializableChatData,Ot as toChatHistoryContent,Ft as updateRanges};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { asArray } from "../../../../base/common/arrays.js";
+import { DeferredPromise } from "../../../../base/common/async.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { IMarkdownString, MarkdownString, isMarkdownString } from "../../../../base/common/htmlContent.js";
+import { Disposable, IDisposable } from "../../../../base/common/lifecycle.js";
+import { revive } from "../../../../base/common/marshalling.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { equals } from "../../../../base/common/objects.js";
+import { IObservable, ITransaction, ObservablePromise, observableValue } from "../../../../base/common/observable.js";
+import { basename, isEqual } from "../../../../base/common/resources.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { URI, UriComponents, UriDto, isUriComponents } from "../../../../base/common/uri.js";
+import { generateUuid } from "../../../../base/common/uuid.js";
+import { IOffsetRange, OffsetRange } from "../../../../editor/common/core/offsetRange.js";
+import { IRange } from "../../../../editor/common/core/range.js";
+import { Location, SymbolKind, TextEdit } from "../../../../editor/common/languages.js";
+import { localize } from "../../../../nls.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { IMarker, MarkerSeverity } from "../../../../platform/markers/common/markers.js";
+import { CellUri, ICellEditOperation } from "../../notebook/common/notebookCommon.js";
+import { IChatAgentCommand, IChatAgentData, IChatAgentResult, IChatAgentService, reviveSerializedAgent } from "./chatAgents.js";
+import { IChatEditingService, IChatEditingSession } from "./chatEditingService.js";
+import { ChatRequestTextPart, IParsedChatRequest, reviveParsedChatRequest } from "./chatParserTypes.js";
+import { ChatAgentVoteDirection, ChatAgentVoteDownReason, IChatAgentMarkdownContentWithVulnerability, IChatCodeCitation, IChatCommandButton, IChatConfirmation, IChatContentInlineReference, IChatContentReference, IChatFollowup, IChatLocationData, IChatMarkdownContent, IChatNotebookEdit, IChatProgress, IChatProgressMessage, IChatResponseCodeblockUriPart, IChatResponseProgressFileTreeData, IChatTask, IChatTextEdit, IChatToolInvocation, IChatToolInvocationSerialized, IChatTreeData, IChatUndoStop, IChatUsedContext, IChatWarningMessage, isIUsedContext } from "./chatService.js";
+import { IChatRequestVariableValue } from "./chatVariables.js";
+import { ChatAgentLocation } from "./constants.js";
+var OmittedState = /* @__PURE__ */ ((OmittedState2) => {
+  OmittedState2[OmittedState2["NotOmitted"] = 0] = "NotOmitted";
+  OmittedState2[OmittedState2["Partial"] = 1] = "Partial";
+  OmittedState2[OmittedState2["Full"] = 2] = "Full";
+  return OmittedState2;
+})(OmittedState || {});
+var IDiagnosticVariableEntryFilterData;
+((IDiagnosticVariableEntryFilterData2) => {
+  IDiagnosticVariableEntryFilterData2.icon = Codicon.error;
+  function fromMarker(marker) {
+    return {
+      filterUri: marker.resource,
+      owner: marker.owner,
+      problemMessage: marker.message,
+      filterRange: { startLineNumber: marker.startLineNumber, endLineNumber: marker.endLineNumber, startColumn: marker.startColumn, endColumn: marker.endColumn }
+    };
+  }
+  IDiagnosticVariableEntryFilterData2.fromMarker = fromMarker;
+  __name(fromMarker, "fromMarker");
+  function toEntry(data) {
+    return {
+      id: id(data),
+      name: label(data),
+      icon: IDiagnosticVariableEntryFilterData2.icon,
+      value: data,
+      kind: "diagnostic",
+      range: data.filterRange ? new OffsetRange(data.filterRange.startLineNumber, data.filterRange.endLineNumber) : void 0,
+      ...data
+    };
+  }
+  IDiagnosticVariableEntryFilterData2.toEntry = toEntry;
+  __name(toEntry, "toEntry");
+  function id(data) {
+    return [data.filterUri, data.owner, data.filterSeverity, data.filterRange?.startLineNumber].join(":");
+  }
+  IDiagnosticVariableEntryFilterData2.id = id;
+  __name(id, "id");
+  function label(data) {
+    let TrimThreshold;
+    ((TrimThreshold2) => {
+      TrimThreshold2[TrimThreshold2["MaxChars"] = 30] = "MaxChars";
+      TrimThreshold2[TrimThreshold2["MaxSpaceLookback"] = 10] = "MaxSpaceLookback";
+    })(TrimThreshold || (TrimThreshold = {}));
+    if (data.problemMessage) {
+      if (data.problemMessage.length < 30 /* MaxChars */) {
+        return data.problemMessage;
+      }
+      const lastSpace = data.problemMessage.lastIndexOf(" ", 30 /* MaxChars */);
+      if (lastSpace === -1 || lastSpace + 10 /* MaxSpaceLookback */ < 30 /* MaxChars */) {
+        return data.problemMessage.substring(0, 30 /* MaxChars */) + "\u2026";
+      }
+      return data.problemMessage.substring(0, lastSpace) + "\u2026";
+    }
+    let labelStr = localize("chat.attachment.problems.all", "All Problems");
+    if (data.filterUri) {
+      labelStr = localize("chat.attachment.problems.inFile", "Problems in {0}", basename(data.filterUri));
+    }
+    return labelStr;
+  }
+  IDiagnosticVariableEntryFilterData2.label = label;
+  __name(label, "label");
+})(IDiagnosticVariableEntryFilterData || (IDiagnosticVariableEntryFilterData = {}));
+function isImplicitVariableEntry(obj) {
+  return obj.kind === "implicit";
+}
+__name(isImplicitVariableEntry, "isImplicitVariableEntry");
+function isPasteVariableEntry(obj) {
+  return obj.kind === "paste";
+}
+__name(isPasteVariableEntry, "isPasteVariableEntry");
+function isImageVariableEntry(obj) {
+  return obj.kind === "image";
+}
+__name(isImageVariableEntry, "isImageVariableEntry");
+function isDiagnosticsVariableEntry(obj) {
+  return obj.kind === "diagnostic";
+}
+__name(isDiagnosticsVariableEntry, "isDiagnosticsVariableEntry");
+function isChatRequestVariableEntry(obj) {
+  const entry = obj;
+  return typeof entry === "object" && entry !== null && typeof entry.id === "string" && typeof entry.name === "string";
+}
+__name(isChatRequestVariableEntry, "isChatRequestVariableEntry");
+function isCellTextEditOperation(value) {
+  const candidate = value;
+  return !!candidate && !!candidate.edit && !!candidate.uri && URI.isUri(candidate.uri);
+}
+__name(isCellTextEditOperation, "isCellTextEditOperation");
+const nonHistoryKinds = /* @__PURE__ */ new Set(["toolInvocation", "toolInvocationSerialized"]);
+function isChatProgressHistoryResponseContent(content) {
+  return !nonHistoryKinds.has(content.kind);
+}
+__name(isChatProgressHistoryResponseContent, "isChatProgressHistoryResponseContent");
+function toChatHistoryContent(content) {
+  return content.filter(isChatProgressHistoryResponseContent);
+}
+__name(toChatHistoryContent, "toChatHistoryContent");
+const defaultChatResponseModelChangeReason = { reason: "other" };
+class ChatRequestModel {
+  static {
+    __name(this, "ChatRequestModel");
+  }
+  id;
+  response;
+  shouldBeRemovedOnSend;
+  timestamp;
+  message;
+  isCompleteAddedRequest;
+  modelId;
+  _session;
+  _attempt;
+  _variableData;
+  _confirmation;
+  _locationData;
+  _attachedContext;
+  get session() {
+    return this._session;
+  }
+  get username() {
+    return this.session.requesterUsername;
+  }
+  get avatarIconUri() {
+    return this.session.requesterAvatarIconUri;
+  }
+  get attempt() {
+    return this._attempt;
+  }
+  get variableData() {
+    return this._variableData;
+  }
+  set variableData(v) {
+    this._variableData = v;
+  }
+  get confirmation() {
+    return this._confirmation;
+  }
+  get locationData() {
+    return this._locationData;
+  }
+  get attachedContext() {
+    return this._attachedContext;
+  }
+  constructor(params) {
+    this._session = params.session;
+    this.message = params.message;
+    this._variableData = params.variableData;
+    this.timestamp = params.timestamp;
+    this._attempt = params.attempt ?? 0;
+    this._confirmation = params.confirmation;
+    this._locationData = params.locationData;
+    this._attachedContext = params.attachedContext;
+    this.isCompleteAddedRequest = params.isCompleteAddedRequest ?? false;
+    this.modelId = params.modelId;
+    this.id = params.restoredId ?? "request_" + generateUuid();
+  }
+  adoptTo(session) {
+    this._session = session;
+  }
+}
+class AbstractResponse {
+  static {
+    __name(this, "AbstractResponse");
+  }
+  _responseParts;
+  /**
+   * A stringified representation of response data which might be presented to a screenreader or used when copying a response.
+   */
+  _responseRepr = "";
+  /**
+   * Just the markdown content of the response, used for determining the rendering rate of markdown
+   */
+  _markdownContent = "";
+  get value() {
+    return this._responseParts;
+  }
+  constructor(value) {
+    this._responseParts = value;
+    this._updateRepr();
+  }
+  toString() {
+    return this._responseRepr;
+  }
+  /**
+   * _Just_ the content of markdown parts in the response
+   */
+  getMarkdown() {
+    return this._markdownContent;
+  }
+  _updateRepr() {
+    this._responseRepr = this.partsToRepr(this._responseParts);
+    this._markdownContent = this._responseParts.map((part) => {
+      if (part.kind === "inlineReference") {
+        return this.inlineRefToRepr(part);
+      } else if (part.kind === "markdownContent" || part.kind === "markdownVuln") {
+        return part.content.value;
+      } else {
+        return "";
+      }
+    }).filter((s) => s.length > 0).join("");
+  }
+  partsToRepr(parts) {
+    const blocks = [];
+    let currentBlockSegments = [];
+    for (const part of parts) {
+      let segment;
+      switch (part.kind) {
+        case "treeData":
+        case "progressMessage":
+        case "codeblockUri":
+        case "toolInvocation":
+        case "toolInvocationSerialized":
+        case "undoStop":
+          continue;
+        case "inlineReference":
+          segment = { text: this.inlineRefToRepr(part) };
+          break;
+        case "command":
+          segment = { text: part.command.title, isBlock: true };
+          break;
+        case "textEditGroup":
+        case "notebookEditGroup":
+          segment = { text: localize("editsSummary", "Made changes."), isBlock: true };
+          break;
+        case "confirmation":
+          segment = { text: `${part.title}
+${part.message}`, isBlock: true };
+          break;
+        default:
+          segment = { text: part.content.value };
+          break;
+      }
+      if (segment.isBlock) {
+        if (currentBlockSegments.length) {
+          blocks.push(currentBlockSegments.join(""));
+          currentBlockSegments = [];
+        }
+        blocks.push(segment.text);
+      } else {
+        currentBlockSegments.push(segment.text);
+      }
+    }
+    if (currentBlockSegments.length) {
+      blocks.push(currentBlockSegments.join(""));
+    }
+    return blocks.join("\n\n");
+  }
+  inlineRefToRepr(part) {
+    if ("uri" in part.inlineReference) {
+      return this.uriToRepr(part.inlineReference.uri);
+    }
+    return "name" in part.inlineReference ? "`" + part.inlineReference.name + "`" : this.uriToRepr(part.inlineReference);
+  }
+  uriToRepr(uri) {
+    if (uri.scheme === Schemas.http || uri.scheme === Schemas.https) {
+      return uri.toString(false);
+    }
+    return basename(uri);
+  }
+}
+class ResponseView extends AbstractResponse {
+  constructor(_response, undoStop) {
+    const idx = _response.value.findIndex((v) => v.kind === "undoStop" && v.id === undoStop);
+    super(idx === -1 ? _response.value.slice() : _response.value.slice(0, idx));
+    this.undoStop = undoStop;
+  }
+  static {
+    __name(this, "ResponseView");
+  }
+}
+class Response extends AbstractResponse {
+  static {
+    __name(this, "Response");
+  }
+  _onDidChangeValue = new Emitter();
+  get onDidChangeValue() {
+    return this._onDidChangeValue.event;
+  }
+  _citations = [];
+  constructor(value) {
+    super(asArray(value).map((v) => isMarkdownString(v) ? { content: v, kind: "markdownContent" } : "kind" in v ? v : { kind: "treeData", treeData: v }));
+  }
+  dispose() {
+    this._onDidChangeValue.dispose();
+  }
+  clear() {
+    this._responseParts = [];
+    this._updateRepr(true);
+  }
+  updateContent(progress, quiet) {
+    if (progress.kind === "markdownContent") {
+      const lastResponsePart = this._responseParts.filter((p) => p.kind !== "textEditGroup").at(-1);
+      if (!lastResponsePart || lastResponsePart.kind !== "markdownContent" || !canMergeMarkdownStrings(lastResponsePart.content, progress.content)) {
+        this._responseParts.push(progress);
+      } else {
+        const idx = this._responseParts.indexOf(lastResponsePart);
+        this._responseParts[idx] = { ...lastResponsePart, content: appendMarkdownString(lastResponsePart.content, progress.content) };
+      }
+      this._updateRepr(quiet);
+    } else if (progress.kind === "textEdit" || progress.kind === "notebookEdit") {
+      const useOldApproachForInlineNotebook = progress.uri.scheme === Schemas.vscodeNotebookCell && !this._responseParts.find((part) => part.kind === "notebookEditGroup");
+      const notebookUri = useOldApproachForInlineNotebook ? void 0 : CellUri.parse(progress.uri)?.notebook;
+      const uri = notebookUri ?? progress.uri;
+      let found = false;
+      const groupKind = progress.kind === "textEdit" && !notebookUri ? "textEditGroup" : "notebookEditGroup";
+      const edits = groupKind === "textEditGroup" ? progress.edits : progress.edits.map((edit) => TextEdit.isTextEdit(edit) ? { uri: progress.uri, edit } : edit);
+      for (let i = 0; !found && i < this._responseParts.length; i++) {
+        const candidate = this._responseParts[i];
+        if (candidate.kind === groupKind && !candidate.done && isEqual(candidate.uri, uri)) {
+          candidate.edits.push(edits);
+          candidate.done = progress.done;
+          found = true;
+        }
+      }
+      if (!found) {
+        this._responseParts.push({
+          kind: groupKind,
+          uri,
+          edits: groupKind === "textEditGroup" ? [edits] : edits,
+          done: progress.done
+        });
+      }
+      this._updateRepr(quiet);
+    } else if (progress.kind === "progressTask") {
+      const responsePosition = this._responseParts.push(progress) - 1;
+      this._updateRepr(quiet);
+      const disp = progress.onDidAddProgress(() => {
+        this._updateRepr(false);
+      });
+      progress.task?.().then((content) => {
+        disp.dispose();
+        if (typeof content === "string") {
+          this._responseParts[responsePosition].content = new MarkdownString(content);
+        }
+        this._updateRepr(false);
+      });
+    } else if (progress.kind === "toolInvocation") {
+      if (progress.confirmationMessages) {
+        progress.confirmed.p.then(() => {
+          this._updateRepr(false);
+        });
+      }
+      progress.isCompletePromise.then(() => {
+        this._updateRepr(false);
+      });
+      this._responseParts.push(progress);
+      this._updateRepr(quiet);
+    } else {
+      this._responseParts.push(progress);
+      this._updateRepr(quiet);
+    }
+  }
+  addCitation(citation) {
+    this._citations.push(citation);
+    this._updateRepr();
+  }
+  _updateRepr(quiet) {
+    super._updateRepr();
+    if (!this._onDidChangeValue) {
+      return;
+    }
+    this._responseRepr += this._citations.length ? "\n\n" + getCodeCitationsMessage(this._citations) : "";
+    if (!quiet) {
+      this._onDidChangeValue.fire();
+    }
+  }
+}
+class ChatResponseModel extends Disposable {
+  static {
+    __name(this, "ChatResponseModel");
+  }
+  _onDidChange = this._register(new Emitter());
+  onDidChange = this._onDidChange.event;
+  id;
+  requestId;
+  _session;
+  _agent;
+  _slashCommand;
+  _isComplete;
+  _isCanceled;
+  _vote;
+  _voteDownReason;
+  _result;
+  _shouldBeRemovedOnSend;
+  isCompleteAddedRequest;
+  get session() {
+    return this._session;
+  }
+  get shouldBeRemovedOnSend() {
+    return this._shouldBeRemovedOnSend;
+  }
+  get isComplete() {
+    return this._isComplete;
+  }
+  set shouldBeRemovedOnSend(disablement) {
+    this._shouldBeRemovedOnSend = disablement;
+    this._onDidChange.fire(defaultChatResponseModelChangeReason);
+  }
+  get isCanceled() {
+    return this._isCanceled;
+  }
+  get vote() {
+    return this._vote;
+  }
+  get voteDownReason() {
+    return this._voteDownReason;
+  }
+  get followups() {
+    return this._followups;
+  }
+  _response;
+  _finalizedResponse;
+  get entireResponse() {
+    return this._finalizedResponse || this._response;
+  }
+  get result() {
+    return this._result;
+  }
+  get username() {
+    return this.session.responderUsername;
+  }
+  get avatarIcon() {
+    return this.session.responderAvatarIcon;
+  }
+  _followups;
+  get agent() {
+    return this._agent;
+  }
+  get slashCommand() {
+    return this._slashCommand;
+  }
+  _agentOrSlashCommandDetected;
+  get agentOrSlashCommandDetected() {
+    return this._agentOrSlashCommandDetected ?? false;
+  }
+  _usedContext;
+  get usedContext() {
+    return this._usedContext;
+  }
+  _contentReferences = [];
+  get contentReferences() {
+    return Array.from(this._contentReferences);
+  }
+  _codeCitations = [];
+  get codeCitations() {
+    return this._codeCitations;
+  }
+  _progressMessages = [];
+  get progressMessages() {
+    return this._progressMessages;
+  }
+  _isStale = false;
+  get isStale() {
+    return this._isStale;
+  }
+  _isPaused = observableValue("isPaused", false);
+  get isPaused() {
+    return this._isPaused;
+  }
+  get isPendingConfirmation() {
+    return this._response.value.some((part) => part.kind === "toolInvocation" && part.isConfirmed === void 0 || part.kind === "confirmation" && part.isUsed === false);
+  }
+  _responseView;
+  get response() {
+    const undoStop = this._shouldBeRemovedOnSend?.afterUndoStop;
+    if (!undoStop) {
+      return this._finalizedResponse || this._response;
+    }
+    if (this._responseView?.undoStop !== undoStop) {
+      this._responseView = new ResponseView(this._response, undoStop);
+    }
+    return this._responseView;
+  }
+  /** Functions run once the chat response is unpaused. */
+  bufferedPauseContent;
+  constructor(params) {
+    super();
+    this._session = params.session;
+    this._agent = params.agent;
+    this._slashCommand = params.slashCommand;
+    this.requestId = params.requestId;
+    this._isComplete = params.isComplete ?? false;
+    this._isCanceled = params.isCanceled ?? false;
+    this._vote = params.vote;
+    this._voteDownReason = params.voteDownReason;
+    this._result = params.result;
+    this._followups = params.followups ? [...params.followups] : void 0;
+    this.isCompleteAddedRequest = params.isCompleteAddedRequest ?? false;
+    this._shouldBeRemovedOnSend = params.shouldBeRemovedOnSend;
+    this._isStale = Array.isArray(params.responseContent) && (params.responseContent.length !== 0 || isMarkdownString(params.responseContent) && params.responseContent.value.length !== 0);
+    this._response = this._register(new Response(params.responseContent));
+    this._register(this._response.onDidChangeValue(() => this._onDidChange.fire(defaultChatResponseModelChangeReason)));
+    this.id = params.restoredId ?? "response_" + generateUuid();
+  }
+  /**
+   * Apply a progress update to the actual response content.
+   */
+  updateContent(responsePart, quiet) {
+    this.bufferWhenPaused(() => this._response.updateContent(responsePart, quiet));
+  }
+  /**
+   * Adds an undo stop at the current position in the stream.
+   */
+  addUndoStop(undoStop) {
+    this.bufferWhenPaused(() => {
+      this._onDidChange.fire({ reason: "undoStop", id: undoStop.id });
+      this._response.updateContent(undoStop, true);
+    });
+  }
+  /**
+   * Apply one of the progress updates that are not part of the actual response content.
+   */
+  applyReference(progress) {
+    if (progress.kind === "usedContext") {
+      this._usedContext = progress;
+    } else if (progress.kind === "reference") {
+      this._contentReferences.push(progress);
+      this._onDidChange.fire(defaultChatResponseModelChangeReason);
+    }
+  }
+  applyCodeCitation(progress) {
+    this._codeCitations.push(progress);
+    this._response.addCitation(progress);
+    this._onDidChange.fire(defaultChatResponseModelChangeReason);
+  }
+  setAgent(agent, slashCommand) {
+    this._agent = agent;
+    this._slashCommand = slashCommand;
+    this._agentOrSlashCommandDetected = !agent.isDefault || !!slashCommand;
+    this._onDidChange.fire(defaultChatResponseModelChangeReason);
+  }
+  setResult(result) {
+    this._result = result;
+    this._onDidChange.fire(defaultChatResponseModelChangeReason);
+  }
+  complete() {
+    if (this._result?.errorDetails?.responseIsRedacted) {
+      this._response.clear();
+    }
+    this._isComplete = true;
+    this._onDidChange.fire(defaultChatResponseModelChangeReason);
+  }
+  cancel() {
+    this._isComplete = true;
+    this._isCanceled = true;
+    this._onDidChange.fire(defaultChatResponseModelChangeReason);
+  }
+  setFollowups(followups) {
+    this._followups = followups;
+    this._onDidChange.fire(defaultChatResponseModelChangeReason);
+  }
+  setVote(vote) {
+    this._vote = vote;
+    this._onDidChange.fire(defaultChatResponseModelChangeReason);
+  }
+  setVoteDownReason(reason) {
+    this._voteDownReason = reason;
+    this._onDidChange.fire(defaultChatResponseModelChangeReason);
+  }
+  setEditApplied(edit, editCount) {
+    if (!this.response.value.includes(edit)) {
+      return false;
+    }
+    if (!edit.state) {
+      return false;
+    }
+    edit.state.applied = editCount;
+    this._onDidChange.fire(defaultChatResponseModelChangeReason);
+    return true;
+  }
+  adoptTo(session) {
+    this._session = session;
+    this._onDidChange.fire(defaultChatResponseModelChangeReason);
+  }
+  setPaused(isPause, tx) {
+    this._isPaused.set(isPause, tx);
+    this._onDidChange.fire(defaultChatResponseModelChangeReason);
+    this.bufferedPauseContent?.forEach((f) => f());
+    this.bufferedPauseContent = void 0;
+  }
+  finalizeUndoState() {
+    this._finalizedResponse = this.response;
+    this._responseView = void 0;
+    this._shouldBeRemovedOnSend = void 0;
+  }
+  bufferWhenPaused(apply) {
+    if (!this._isPaused.get()) {
+      apply();
+    } else {
+      this.bufferedPauseContent ??= [];
+      this.bufferedPauseContent.push(apply);
+    }
+  }
+}
+var ChatPauseState = /* @__PURE__ */ ((ChatPauseState2) => {
+  ChatPauseState2[ChatPauseState2["NotPausable"] = 0] = "NotPausable";
+  ChatPauseState2[ChatPauseState2["Paused"] = 1] = "Paused";
+  ChatPauseState2[ChatPauseState2["Unpaused"] = 2] = "Unpaused";
+  return ChatPauseState2;
+})(ChatPauseState || {});
+function normalizeSerializableChatData(raw) {
+  normalizeOldFields(raw);
+  if (!("version" in raw)) {
+    return {
+      version: 3,
+      ...raw,
+      lastMessageDate: raw.creationDate,
+      customTitle: void 0
+    };
+  }
+  if (raw.version === 2) {
+    return {
+      ...raw,
+      version: 3,
+      customTitle: raw.computedTitle
+    };
+  }
+  return raw;
+}
+__name(normalizeSerializableChatData, "normalizeSerializableChatData");
+function normalizeOldFields(raw) {
+  if (!raw.sessionId) {
+    raw.sessionId = generateUuid();
+  }
+  if (!raw.creationDate) {
+    raw.creationDate = getLastYearDate();
+  }
+  if ("version" in raw && (raw.version === 2 || raw.version === 3)) {
+    if (!raw.lastMessageDate) {
+      raw.lastMessageDate = getLastYearDate();
+    }
+  }
+}
+__name(normalizeOldFields, "normalizeOldFields");
+function getLastYearDate() {
+  const lastYearDate = /* @__PURE__ */ new Date();
+  lastYearDate.setFullYear(lastYearDate.getFullYear() - 1);
+  return lastYearDate.getTime();
+}
+__name(getLastYearDate, "getLastYearDate");
+function isExportableSessionData(obj) {
+  const data = obj;
+  return typeof data === "object" && typeof data.requesterUsername === "string";
+}
+__name(isExportableSessionData, "isExportableSessionData");
+function isSerializableSessionData(obj) {
+  const data = obj;
+  return isExportableSessionData(obj) && typeof data.creationDate === "number" && typeof data.sessionId === "string" && obj.requests.every(
+    (request) => !request.usedContext || isIUsedContext(request.usedContext)
+  );
+}
+__name(isSerializableSessionData, "isSerializableSessionData");
+var ChatRequestRemovalReason = /* @__PURE__ */ ((ChatRequestRemovalReason2) => {
+  ChatRequestRemovalReason2[ChatRequestRemovalReason2["Removal"] = 0] = "Removal";
+  ChatRequestRemovalReason2[ChatRequestRemovalReason2["Resend"] = 1] = "Resend";
+  ChatRequestRemovalReason2[ChatRequestRemovalReason2["Adoption"] = 2] = "Adoption";
+  return ChatRequestRemovalReason2;
+})(ChatRequestRemovalReason || {});
+var ChatModelInitState = /* @__PURE__ */ ((ChatModelInitState2) => {
+  ChatModelInitState2[ChatModelInitState2["Created"] = 0] = "Created";
+  ChatModelInitState2[ChatModelInitState2["Initializing"] = 1] = "Initializing";
+  ChatModelInitState2[ChatModelInitState2["Initialized"] = 2] = "Initialized";
+  return ChatModelInitState2;
+})(ChatModelInitState || {});
+let ChatModel = class extends Disposable {
+  constructor(initialData, _initialLocation, logService, chatAgentService, chatEditingService) {
+    super();
+    this.initialData = initialData;
+    this._initialLocation = _initialLocation;
+    this.logService = logService;
+    this.chatAgentService = chatAgentService;
+    this.chatEditingService = chatEditingService;
+    const isValid = isSerializableSessionData(initialData);
+    if (initialData && !isValid) {
+      this.logService.warn(`ChatModel#constructor: Loaded malformed session data: ${JSON.stringify(initialData)}`);
+    }
+    this._isImported = !!initialData && !isValid || (initialData?.isImported ?? false);
+    this._sessionId = isValid && initialData.sessionId || generateUuid();
+    this._requests = initialData ? this._deserialize(initialData) : [];
+    this._creationDate = isValid && initialData.creationDate || Date.now();
+    this._lastMessageDate = isValid && initialData.lastMessageDate || this._creationDate;
+    this._customTitle = isValid ? initialData.customTitle : void 0;
+    this._initialRequesterAvatarIconUri = initialData?.requesterAvatarIconUri && URI.revive(initialData.requesterAvatarIconUri);
+    this._initialResponderAvatarIconUri = isUriComponents(initialData?.responderAvatarIconUri) ? URI.revive(initialData.responderAvatarIconUri) : initialData?.responderAvatarIconUri;
+  }
+  static {
+    __name(this, "ChatModel");
+  }
+  static getDefaultTitle(requests) {
+    const firstRequestMessage = requests.at(0)?.message ?? "";
+    const message = typeof firstRequestMessage === "string" ? firstRequestMessage : firstRequestMessage.text;
+    return message.split("\n")[0].substring(0, 50);
+  }
+  _onDidDispose = this._register(new Emitter());
+  onDidDispose = this._onDidDispose.event;
+  _onDidChange = this._register(new Emitter());
+  onDidChange = this._onDidChange.event;
+  _requests;
+  _initState = 0 /* Created */;
+  _isInitializedDeferred = new DeferredPromise();
+  _sampleQuestions;
+  get sampleQuestions() {
+    return this._sampleQuestions;
+  }
+  // TODO to be clear, this is not the same as the id from the session object, which belongs to the provider.
+  // It's easier to be able to identify this model before its async initialization is complete
+  _sessionId;
+  get sessionId() {
+    return this._sessionId;
+  }
+  get requestInProgress() {
+    const lastRequest = this.lastRequest;
+    if (!lastRequest?.response) {
+      return false;
+    }
+    if (lastRequest.response.isPendingConfirmation) {
+      return false;
+    }
+    return !lastRequest.response.isComplete;
+  }
+  get requestPausibility() {
+    const lastRequest = this.lastRequest;
+    if (!lastRequest?.response?.agent || lastRequest.response.isComplete || lastRequest.response.isPendingConfirmation) {
+      return 0 /* NotPausable */;
+    }
+    return lastRequest.response.isPaused.get() ? 1 /* Paused */ : 2 /* Unpaused */;
+  }
+  get hasRequests() {
+    return this._requests.length > 0;
+  }
+  get lastRequest() {
+    return this._requests.at(-1);
+  }
+  _creationDate;
+  get creationDate() {
+    return this._creationDate;
+  }
+  _lastMessageDate;
+  get lastMessageDate() {
+    return this._lastMessageDate;
+  }
+  get _defaultAgent() {
+    return this.chatAgentService.getDefaultAgent(ChatAgentLocation.Panel);
+  }
+  get requesterUsername() {
+    return this._defaultAgent?.metadata.requester?.name ?? this.initialData?.requesterUsername ?? "";
+  }
+  get responderUsername() {
+    return this._defaultAgent?.fullName ?? this.initialData?.responderUsername ?? "";
+  }
+  _initialRequesterAvatarIconUri;
+  get requesterAvatarIconUri() {
+    return this._defaultAgent?.metadata.requester?.icon ?? this._initialRequesterAvatarIconUri;
+  }
+  _initialResponderAvatarIconUri;
+  get responderAvatarIcon() {
+    return this._defaultAgent?.metadata.themeIcon ?? this._initialResponderAvatarIconUri;
+  }
+  get initState() {
+    return this._initState;
+  }
+  _isImported = false;
+  get isImported() {
+    return this._isImported;
+  }
+  _customTitle;
+  get customTitle() {
+    return this._customTitle;
+  }
+  get title() {
+    return this._customTitle || ChatModel.getDefaultTitle(this._requests);
+  }
+  get initialLocation() {
+    return this._initialLocation;
+  }
+  _editingSession;
+  get editingSessionObs() {
+    return this._editingSession;
+  }
+  get editingSession() {
+    return this._editingSession?.promiseResult.get()?.data;
+  }
+  startEditingSession(isGlobalEditingSession) {
+    const editingSessionPromise = isGlobalEditingSession ? this.chatEditingService.startOrContinueGlobalEditingSession(this) : this.chatEditingService.createEditingSession(this);
+    this._editingSession = new ObservablePromise(editingSessionPromise);
+    this._editingSession.promise.then((editingSession) => this._store.isDisposed ? editingSession.dispose() : this._register(editingSession));
+  }
+  _deserialize(obj) {
+    const requests = obj.requests;
+    if (!Array.isArray(requests)) {
+      this.logService.error(`Ignoring malformed session data: ${JSON.stringify(obj)}`);
+      return [];
+    }
+    try {
+      return requests.map((raw) => {
+        const parsedRequest = typeof raw.message === "string" ? this.getParsedRequestFromString(raw.message) : reviveParsedChatRequest(raw.message);
+        const variableData = this.reviveVariableData(raw.variableData);
+        const request = new ChatRequestModel({
+          session: this,
+          message: parsedRequest,
+          variableData,
+          timestamp: raw.timestamp ?? -1,
+          restoredId: raw.requestId
+        });
+        request.shouldBeRemovedOnSend = raw.isHidden ? { requestId: raw.requestId } : raw.shouldBeRemovedOnSend;
+        if (raw.response || raw.result || raw.responseErrorDetails) {
+          const agent = raw.agent && "metadata" in raw.agent ? (
+            // Check for the new format, ignore entries in the old format
+            reviveSerializedAgent(raw.agent)
+          ) : void 0;
+          const result = "responseErrorDetails" in raw ? (
+            // eslint-disable-next-line local/code-no-dangerous-type-assertions
+            { errorDetails: raw.responseErrorDetails }
+          ) : raw.result;
+          request.response = new ChatResponseModel({
+            responseContent: raw.response ?? [new MarkdownString(raw.response)],
+            session: this,
+            agent,
+            slashCommand: raw.slashCommand,
+            requestId: request.id,
+            isComplete: true,
+            isCanceled: raw.isCanceled,
+            vote: raw.vote,
+            voteDownReason: raw.voteDownReason,
+            result,
+            followups: raw.followups,
+            restoredId: raw.responseId
+          });
+          request.response.shouldBeRemovedOnSend = raw.isHidden ? { requestId: raw.requestId } : raw.shouldBeRemovedOnSend;
+          if (raw.usedContext) {
+            request.response.applyReference(revive(raw.usedContext));
+          }
+          raw.contentReferences?.forEach((r) => request.response.applyReference(revive(r)));
+          raw.codeCitations?.forEach((c) => request.response.applyCodeCitation(revive(c)));
+        }
+        return request;
+      });
+    } catch (error) {
+      this.logService.error("Failed to parse chat data", error);
+      return [];
+    }
+  }
+  reviveVariableData(raw) {
+    const variableData = raw && Array.isArray(raw.variables) ? raw : { variables: [] };
+    variableData.variables = variableData.variables.map((v) => {
+      if (v && "values" in v && Array.isArray(v.values)) {
+        return {
+          id: v.id ?? "",
+          name: v.name,
+          value: v.values[0]?.value,
+          range: v.range,
+          modelDescription: v.modelDescription,
+          references: v.references
+        };
+      } else {
+        return v;
+      }
+    });
+    return variableData;
+  }
+  getParsedRequestFromString(message) {
+    const parts = [new ChatRequestTextPart(new OffsetRange(0, message.length), { startColumn: 1, startLineNumber: 1, endColumn: 1, endLineNumber: 1 }, message)];
+    return {
+      text: message,
+      parts
+    };
+  }
+  toggleLastRequestPaused(isPaused) {
+    if (this.requestPausibility !== 0 /* NotPausable */ && this.lastRequest?.response?.agent) {
+      const pausedValue = isPaused ?? !this.lastRequest.response.isPaused.get();
+      this.lastRequest.response.setPaused(pausedValue);
+      this.chatAgentService.setRequestPaused(this.lastRequest.response.agent.id, this.lastRequest.id, pausedValue);
+      this._onDidChange.fire({ kind: "changedRequest", request: this.lastRequest });
+    }
+  }
+  startInitialize() {
+    if (this.initState !== 0 /* Created */) {
+      throw new Error(`ChatModel is in the wrong state for startInitialize: ${ChatModelInitState[this.initState]}`);
+    }
+    this._initState = 1 /* Initializing */;
+  }
+  deinitialize() {
+    this._initState = 0 /* Created */;
+    this._isInitializedDeferred = new DeferredPromise();
+  }
+  initialize(sampleQuestions) {
+    if (this.initState !== 1 /* Initializing */) {
+      throw new Error(`ChatModel is in the wrong state for initialize: ${ChatModelInitState[this.initState]}`);
+    }
+    this._initState = 2 /* Initialized */;
+    this._sampleQuestions = sampleQuestions;
+    this._isInitializedDeferred.complete();
+    this._onDidChange.fire({ kind: "initialize" });
+  }
+  setInitializationError(error) {
+    if (this.initState !== 1 /* Initializing */) {
+      throw new Error(`ChatModel is in the wrong state for setInitializationError: ${ChatModelInitState[this.initState]}`);
+    }
+    if (!this._isInitializedDeferred.isSettled) {
+      this._isInitializedDeferred.error(error);
+    }
+  }
+  waitForInitialization() {
+    return this._isInitializedDeferred.p;
+  }
+  getRequests() {
+    return this._requests;
+  }
+  _checkpoint = void 0;
+  get checkpoint() {
+    return this._checkpoint;
+  }
+  setDisabledRequests(requestIds) {
+    this._requests.forEach((request) => {
+      const shouldBeRemovedOnSend = requestIds.find((r) => r.requestId === request.id);
+      request.shouldBeRemovedOnSend = shouldBeRemovedOnSend;
+      if (request.response) {
+        request.response.shouldBeRemovedOnSend = shouldBeRemovedOnSend;
+      }
+    });
+    this._onDidChange.fire({
+      kind: "setHidden",
+      hiddenRequestIds: requestIds
+    });
+  }
+  addRequest(message, variableData, attempt, chatAgent, slashCommand, confirmation, locationData, attachments, isCompleteAddedRequest, modelId) {
+    const request = new ChatRequestModel({
+      session: this,
+      message,
+      variableData,
+      timestamp: Date.now(),
+      attempt,
+      confirmation,
+      locationData,
+      attachedContext: attachments,
+      isCompleteAddedRequest,
+      modelId
+    });
+    request.response = new ChatResponseModel({
+      responseContent: [],
+      session: this,
+      agent: chatAgent,
+      slashCommand,
+      requestId: request.id,
+      isCompleteAddedRequest
+    });
+    this._requests.push(request);
+    this._lastMessageDate = Date.now();
+    this._onDidChange.fire({ kind: "addRequest", request });
+    return request;
+  }
+  setCustomTitle(title) {
+    this._customTitle = title;
+  }
+  updateRequest(request, variableData) {
+    request.variableData = variableData;
+    this._onDidChange.fire({ kind: "changedRequest", request });
+  }
+  adoptRequest(request) {
+    const oldOwner = request.session;
+    const index = oldOwner._requests.findIndex((candidate) => candidate.id === request.id);
+    if (index === -1) {
+      return;
+    }
+    oldOwner._requests.splice(index, 1);
+    request.adoptTo(this);
+    request.response?.adoptTo(this);
+    this._requests.push(request);
+    oldOwner._onDidChange.fire({ kind: "removeRequest", requestId: request.id, responseId: request.response?.id, reason: 2 /* Adoption */ });
+    this._onDidChange.fire({ kind: "addRequest", request });
+  }
+  acceptResponseProgress(request, progress, quiet) {
+    if (!request.response) {
+      request.response = new ChatResponseModel({
+        responseContent: [],
+        session: this,
+        requestId: request.id
+      });
+    }
+    if (request.response.isComplete) {
+      throw new Error("acceptResponseProgress: Adding progress to a completed response");
+    }
+    if (progress.kind === "markdownContent" || progress.kind === "treeData" || progress.kind === "inlineReference" || progress.kind === "codeblockUri" || progress.kind === "markdownVuln" || progress.kind === "progressMessage" || progress.kind === "command" || progress.kind === "textEdit" || progress.kind === "notebookEdit" || progress.kind === "warning" || progress.kind === "progressTask" || progress.kind === "confirmation" || progress.kind === "toolInvocation") {
+      request.response.updateContent(progress, quiet);
+    } else if (progress.kind === "usedContext" || progress.kind === "reference") {
+      request.response.applyReference(progress);
+    } else if (progress.kind === "codeCitation") {
+      request.response.applyCodeCitation(progress);
+    } else if (progress.kind === "move") {
+      this._onDidChange.fire({ kind: "move", target: progress.uri, range: progress.range });
+    } else if (progress.kind === "undoStop") {
+      request.response.addUndoStop(progress);
+    } else {
+      this.logService.error(`Couldn't handle progress: ${JSON.stringify(progress)}`);
+    }
+  }
+  removeRequest(id, reason = 0 /* Removal */) {
+    const index = this._requests.findIndex((request2) => request2.id === id);
+    const request = this._requests[index];
+    if (index !== -1) {
+      this._onDidChange.fire({ kind: "removeRequest", requestId: request.id, responseId: request.response?.id, reason });
+      this._requests.splice(index, 1);
+      request.response?.dispose();
+    }
+  }
+  cancelRequest(request) {
+    if (request.response) {
+      request.response.cancel();
+    }
+  }
+  setResponse(request, result) {
+    if (!request.response) {
+      request.response = new ChatResponseModel({
+        responseContent: [],
+        session: this,
+        requestId: request.id
+      });
+    }
+    request.response.setResult(result);
+  }
+  completeResponse(request) {
+    if (!request.response) {
+      throw new Error("Call setResponse before completeResponse");
+    }
+    request.response.complete();
+    this._onDidChange.fire({ kind: "completedRequest", request });
+  }
+  setFollowups(request, followups) {
+    if (!request.response) {
+      return;
+    }
+    request.response.setFollowups(followups);
+  }
+  setResponseModel(request, response) {
+    request.response = response;
+    this._onDidChange.fire({ kind: "addResponse", response });
+  }
+  toExport() {
+    return {
+      requesterUsername: this.requesterUsername,
+      requesterAvatarIconUri: this.requesterAvatarIconUri,
+      responderUsername: this.responderUsername,
+      responderAvatarIconUri: this.responderAvatarIcon,
+      initialLocation: this.initialLocation,
+      requests: this._requests.map((r) => {
+        const message = {
+          ...r.message,
+          parts: r.message.parts.map((p) => p && "toJSON" in p ? p.toJSON() : p)
+        };
+        const agent = r.response?.agent;
+        const agentJson = agent && "toJSON" in agent ? agent.toJSON() : agent ? { ...agent } : void 0;
+        return {
+          requestId: r.id,
+          message,
+          variableData: r.variableData,
+          response: r.response ? r.response.entireResponse.value.map((item) => {
+            if (item.kind === "treeData") {
+              return item.treeData;
+            } else if (item.kind === "markdownContent") {
+              return item.content;
+            } else {
+              return item;
+            }
+          }) : void 0,
+          responseId: r.response?.id,
+          shouldBeRemovedOnSend: r.shouldBeRemovedOnSend,
+          result: r.response?.result,
+          followups: r.response?.followups,
+          isCanceled: r.response?.isCanceled,
+          vote: r.response?.vote,
+          voteDownReason: r.response?.voteDownReason,
+          agent: agentJson,
+          slashCommand: r.response?.slashCommand,
+          usedContext: r.response?.usedContext,
+          contentReferences: r.response?.contentReferences,
+          codeCitations: r.response?.codeCitations,
+          timestamp: r.timestamp
+        };
+      })
+    };
+  }
+  toJSON() {
+    return {
+      version: 3,
+      ...this.toExport(),
+      sessionId: this.sessionId,
+      creationDate: this._creationDate,
+      isImported: this._isImported,
+      lastMessageDate: this._lastMessageDate,
+      customTitle: this._customTitle
+    };
+  }
+  dispose() {
+    this._requests.forEach((r) => r.response?.dispose());
+    this._onDidDispose.fire();
+    super.dispose();
+  }
+};
+ChatModel = __decorateClass([
+  __decorateParam(2, ILogService),
+  __decorateParam(3, IChatAgentService),
+  __decorateParam(4, IChatEditingService)
+], ChatModel);
+function updateRanges(variableData, diff) {
+  return {
+    variables: variableData.variables.map((v) => ({
+      ...v,
+      range: v.range && {
+        start: v.range.start - diff,
+        endExclusive: v.range.endExclusive - diff
+      }
+    }))
+  };
+}
+__name(updateRanges, "updateRanges");
+function canMergeMarkdownStrings(md1, md2) {
+  if (md1.baseUri && md2.baseUri) {
+    const baseUriEquals = md1.baseUri.scheme === md2.baseUri.scheme && md1.baseUri.authority === md2.baseUri.authority && md1.baseUri.path === md2.baseUri.path && md1.baseUri.query === md2.baseUri.query && md1.baseUri.fragment === md2.baseUri.fragment;
+    if (!baseUriEquals) {
+      return false;
+    }
+  } else if (md1.baseUri || md2.baseUri) {
+    return false;
+  }
+  return equals(md1.isTrusted, md2.isTrusted) && md1.supportHtml === md2.supportHtml && md1.supportThemeIcons === md2.supportThemeIcons;
+}
+__name(canMergeMarkdownStrings, "canMergeMarkdownStrings");
+function appendMarkdownString(md1, md2) {
+  const appendedValue = typeof md2 === "string" ? md2 : md2.value;
+  return {
+    value: md1.value + appendedValue,
+    isTrusted: md1.isTrusted,
+    supportThemeIcons: md1.supportThemeIcons,
+    supportHtml: md1.supportHtml,
+    baseUri: md1.baseUri
+  };
+}
+__name(appendMarkdownString, "appendMarkdownString");
+function getCodeCitationsMessage(citations) {
+  if (citations.length === 0) {
+    return "";
+  }
+  const licenseTypes = citations.reduce((set, c) => set.add(c.license), /* @__PURE__ */ new Set());
+  const label = licenseTypes.size === 1 ? localize("codeCitation", "Similar code found with 1 license type", licenseTypes.size) : localize("codeCitations", "Similar code found with {0} license types", licenseTypes.size);
+  return label;
+}
+__name(getCodeCitationsMessage, "getCodeCitationsMessage");
+export {
+  ChatModel,
+  ChatModelInitState,
+  ChatPauseState,
+  ChatRequestModel,
+  ChatRequestRemovalReason,
+  ChatResponseModel,
+  IDiagnosticVariableEntryFilterData,
+  OmittedState,
+  Response,
+  appendMarkdownString,
+  canMergeMarkdownStrings,
+  getCodeCitationsMessage,
+  isCellTextEditOperation,
+  isChatRequestVariableEntry,
+  isDiagnosticsVariableEntry,
+  isExportableSessionData,
+  isImageVariableEntry,
+  isImplicitVariableEntry,
+  isPasteVariableEntry,
+  isSerializableSessionData,
+  normalizeSerializableChatData,
+  toChatHistoryContent,
+  updateRanges
+};
+//# sourceMappingURL=chatModel.js.map

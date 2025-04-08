@@ -1,1 +1,70 @@
-var c=Object.defineProperty;var l=Object.getOwnPropertyDescriptor;var m=(a,o,t,e)=>{for(var i=e>1?void 0:e?l(o,t):o,r=a.length-1,d;r>=0;r--)(d=a[r])&&(i=(e?d(o,t,i):d(i))||i);return e&&i&&c(o,t,i),i},s=(a,o)=>(t,e)=>o(t,e,a);import{DisposableStore as p,toDisposable as h}from"../../../../../base/common/lifecycle.js";import{IConfigurationService as f}from"../../../../../platform/configuration/common/configuration.js";import{IInstantiationService as I}from"../../../../../platform/instantiation/common/instantiation.js";import"../../../terminal/browser/terminal.js";import{registerTerminalContribution as u}from"../../../terminal/browser/terminalExtensions.js";import{TERMINAL_CONFIG_SECTION as T}from"../../../terminal/common/terminal.js";import{TerminalTypeAheadSettingId as _}from"../common/terminalTypeAheadConfiguration.js";import{TypeAheadAddon as g}from"./terminalTypeAheadAddon.js";let n=class extends p{constructor(t,e,i){super();this._ctx=t;this._configurationService=e;this._instantiationService=i;this.add(h(()=>this._addon?.dispose()))}static ID="terminal.typeAhead";static get(t){return t.getContribution(n.ID)}_addon;xtermReady(t){this._loadTypeAheadAddon(t.raw),this.add(this._configurationService.onDidChangeConfiguration(e=>{e.affectsConfiguration(_.LocalEchoEnabled)&&this._loadTypeAheadAddon(t.raw)})),this.add(this._ctx.processManager.onProcessReady(()=>{this._addon?.reset()}))}_loadTypeAheadAddon(t){const e=this._configurationService.getValue(T).localEchoEnabled,i=!!this._ctx.processManager.remoteAuthority;if(e==="off"||e==="auto"&&!i){this._addon?.dispose(),this._addon=void 0;return}this._addon||(e==="on"||e==="auto"&&i)&&(this._addon=this._instantiationService.createInstance(g,this._ctx.processManager),t.loadAddon(this._addon))}};n=m([s(1,f),s(2,I)],n),u(n.ID,n);
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { DisposableStore, toDisposable } from "../../../../../base/common/lifecycle.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { ITerminalContribution, ITerminalInstance, IXtermTerminal } from "../../../terminal/browser/terminal.js";
+import { registerTerminalContribution } from "../../../terminal/browser/terminalExtensions.js";
+import { TERMINAL_CONFIG_SECTION } from "../../../terminal/common/terminal.js";
+import { TerminalTypeAheadSettingId } from "../common/terminalTypeAheadConfiguration.js";
+import { TypeAheadAddon } from "./terminalTypeAheadAddon.js";
+let TerminalTypeAheadContribution = class extends DisposableStore {
+  constructor(_ctx, _configurationService, _instantiationService) {
+    super();
+    this._ctx = _ctx;
+    this._configurationService = _configurationService;
+    this._instantiationService = _instantiationService;
+    this.add(toDisposable(() => this._addon?.dispose()));
+  }
+  static {
+    __name(this, "TerminalTypeAheadContribution");
+  }
+  static ID = "terminal.typeAhead";
+  static get(instance) {
+    return instance.getContribution(TerminalTypeAheadContribution.ID);
+  }
+  _addon;
+  xtermReady(xterm) {
+    this._loadTypeAheadAddon(xterm.raw);
+    this.add(this._configurationService.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration(TerminalTypeAheadSettingId.LocalEchoEnabled)) {
+        this._loadTypeAheadAddon(xterm.raw);
+      }
+    }));
+    this.add(this._ctx.processManager.onProcessReady(() => {
+      this._addon?.reset();
+    }));
+  }
+  _loadTypeAheadAddon(xterm) {
+    const enabled = this._configurationService.getValue(TERMINAL_CONFIG_SECTION).localEchoEnabled;
+    const isRemote = !!this._ctx.processManager.remoteAuthority;
+    if (enabled === "off" || enabled === "auto" && !isRemote) {
+      this._addon?.dispose();
+      this._addon = void 0;
+      return;
+    }
+    if (this._addon) {
+      return;
+    }
+    if (enabled === "on" || enabled === "auto" && isRemote) {
+      this._addon = this._instantiationService.createInstance(TypeAheadAddon, this._ctx.processManager);
+      xterm.loadAddon(this._addon);
+    }
+  }
+};
+TerminalTypeAheadContribution = __decorateClass([
+  __decorateParam(1, IConfigurationService),
+  __decorateParam(2, IInstantiationService)
+], TerminalTypeAheadContribution);
+registerTerminalContribution(TerminalTypeAheadContribution.ID, TerminalTypeAheadContribution);
+//# sourceMappingURL=terminal.typeAhead.contribution.js.map

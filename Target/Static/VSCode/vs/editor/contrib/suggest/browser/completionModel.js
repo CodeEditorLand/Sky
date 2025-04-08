@@ -1,1 +1,205 @@
-import{quickSelect as S}from"../../../../base/common/arrays.js";import{CharCode as _}from"../../../../base/common/charCode.js";import{anyScore as v,fuzzyScore as g,FuzzyScore as I,fuzzyScoreGracefulAggressive as x,FuzzyScoreOptions as y}from"../../../../base/common/filters.js";import{compareIgnoreCase as z}from"../../../../base/common/strings.js";import"../../../common/config/editorOptions.js";import{CompletionItemKind as h}from"../../../common/languages.js";import"./wordDistance.js";import"./suggest.js";class q{constructor(t,e){this.leadingLineContent=t,this.characterCountDelta=e}}var L=(t=>(t[t.Nothing=0]="Nothing",t[t.All=1]="All",t[t.Incr=2]="Incr",t))(L||{});class c{constructor(t,e,i,o,n,s,r=y.default,a=void 0){this.clipboardText=a,this._items=t,this._column=e,this._wordDistance=o,this._options=n,this._refilterKind=1,this._lineContext=i,this._fuzzyScoreOptions=r,"top"===s?this._snippetCompareFn=c._compareCompletionItemsSnippetsUp:"bottom"===s&&(this._snippetCompareFn=c._compareCompletionItemsSnippetsDown)}_items;_column;_wordDistance;_options;_snippetCompareFn=c._compareCompletionItems;_fuzzyScoreOptions;_lineContext;_refilterKind;_filteredItems;_itemsByProvider;_stats;get lineContext(){return this._lineContext}set lineContext(t){(this._lineContext.leadingLineContent!==t.leadingLineContent||this._lineContext.characterCountDelta!==t.characterCountDelta)&&(this._refilterKind=this._lineContext.characterCountDelta<t.characterCountDelta&&this._filteredItems?2:1,this._lineContext=t)}get items(){return this._ensureCachedState(),this._filteredItems}getItemsByProvider(){return this._ensureCachedState(),this._itemsByProvider}getIncompleteProvider(){this._ensureCachedState();const t=new Set;for(const[e,i]of this.getItemsByProvider())i.length>0&&i[0].container.incomplete&&t.add(e);return t}get stats(){return this._ensureCachedState(),this._stats}_ensureCachedState(){0!==this._refilterKind&&this._createCachedState()}_createCachedState(){this._itemsByProvider=new Map;const t=[],{leadingLineContent:e,characterCountDelta:i}=this._lineContext;let o="",n="";const s=1===this._refilterKind?this._items:this._filteredItems,r=[],c=!this._options.filterGraceful||s.length>2e3?g:x;for(let a=0;a<s.length;a++){const l=s[a];if(l.isInvalid)continue;const p=this._itemsByProvider.get(l.provider);p?p.push(l):this._itemsByProvider.set(l.provider,[l]);const m=l.position.column-l.editStart.column,h=m+i-(l.position.column-this._column);if(o.length!==h&&(o=0===h?"":e.slice(-h),n=o.toLowerCase()),l.word=o,0===h)l.score=I.Default;else{let t=0;for(;t<m;){const e=o.charCodeAt(t);if(e!==_.Space&&e!==_.Tab)break;t+=1}if(t>=h)l.score=I.Default;else if("string"==typeof l.completion.filterText){const e=c(o,n,t,l.completion.filterText,l.filterTextLow,0,this._fuzzyScoreOptions);if(!e)continue;0===z(l.completion.filterText,l.textLabel)?l.score=e:(l.score=v(o,n,t,l.textLabel,l.labelLow,0),l.score[0]=e[0])}else{const e=c(o,n,t,l.textLabel,l.labelLow,0,this._fuzzyScoreOptions);if(!e)continue;l.score=e}}l.idx=a,l.distance=this._wordDistance.distance(l.position,l.completion),r.push(l),t.push(l.textLabel.length)}this._filteredItems=r.sort(this._snippetCompareFn),this._refilterKind=0,this._stats={pLabelLen:t.length?S(t.length-.85,t,((t,e)=>t-e)):0}}static _compareCompletionItems(t,e){return t.score[0]>e.score[0]?-1:t.score[0]<e.score[0]?1:t.distance<e.distance?-1:t.distance>e.distance?1:t.idx<e.idx?-1:t.idx>e.idx?1:0}static _compareCompletionItemsSnippetsDown(t,e){if(t.completion.kind!==e.completion.kind){if(t.completion.kind===h.Snippet)return 1;if(e.completion.kind===h.Snippet)return-1}return c._compareCompletionItems(t,e)}static _compareCompletionItemsSnippetsUp(t,e){if(t.completion.kind!==e.completion.kind){if(t.completion.kind===h.Snippet)return-1;if(e.completion.kind===h.Snippet)return 1}return c._compareCompletionItems(t,e)}}export{c as CompletionModel,q as LineContext};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { quickSelect } from "../../../../base/common/arrays.js";
+import { CharCode } from "../../../../base/common/charCode.js";
+import { anyScore, fuzzyScore, FuzzyScore, fuzzyScoreGracefulAggressive, FuzzyScoreOptions, FuzzyScorer } from "../../../../base/common/filters.js";
+import { compareIgnoreCase } from "../../../../base/common/strings.js";
+import { InternalSuggestOptions } from "../../../common/config/editorOptions.js";
+import { CompletionItemKind, CompletionItemProvider } from "../../../common/languages.js";
+import { WordDistance } from "./wordDistance.js";
+import { CompletionItem } from "./suggest.js";
+class LineContext {
+  constructor(leadingLineContent, characterCountDelta) {
+    this.leadingLineContent = leadingLineContent;
+    this.characterCountDelta = characterCountDelta;
+  }
+  static {
+    __name(this, "LineContext");
+  }
+}
+var Refilter = /* @__PURE__ */ ((Refilter2) => {
+  Refilter2[Refilter2["Nothing"] = 0] = "Nothing";
+  Refilter2[Refilter2["All"] = 1] = "All";
+  Refilter2[Refilter2["Incr"] = 2] = "Incr";
+  return Refilter2;
+})(Refilter || {});
+class CompletionModel {
+  constructor(items, column, lineContext, wordDistance, options, snippetSuggestions, fuzzyScoreOptions = FuzzyScoreOptions.default, clipboardText = void 0) {
+    this.clipboardText = clipboardText;
+    this._items = items;
+    this._column = column;
+    this._wordDistance = wordDistance;
+    this._options = options;
+    this._refilterKind = 1 /* All */;
+    this._lineContext = lineContext;
+    this._fuzzyScoreOptions = fuzzyScoreOptions;
+    if (snippetSuggestions === "top") {
+      this._snippetCompareFn = CompletionModel._compareCompletionItemsSnippetsUp;
+    } else if (snippetSuggestions === "bottom") {
+      this._snippetCompareFn = CompletionModel._compareCompletionItemsSnippetsDown;
+    }
+  }
+  static {
+    __name(this, "CompletionModel");
+  }
+  _items;
+  _column;
+  _wordDistance;
+  _options;
+  _snippetCompareFn = CompletionModel._compareCompletionItems;
+  _fuzzyScoreOptions;
+  _lineContext;
+  _refilterKind;
+  _filteredItems;
+  _itemsByProvider;
+  _stats;
+  get lineContext() {
+    return this._lineContext;
+  }
+  set lineContext(value) {
+    if (this._lineContext.leadingLineContent !== value.leadingLineContent || this._lineContext.characterCountDelta !== value.characterCountDelta) {
+      this._refilterKind = this._lineContext.characterCountDelta < value.characterCountDelta && this._filteredItems ? 2 /* Incr */ : 1 /* All */;
+      this._lineContext = value;
+    }
+  }
+  get items() {
+    this._ensureCachedState();
+    return this._filteredItems;
+  }
+  getItemsByProvider() {
+    this._ensureCachedState();
+    return this._itemsByProvider;
+  }
+  getIncompleteProvider() {
+    this._ensureCachedState();
+    const result = /* @__PURE__ */ new Set();
+    for (const [provider, items] of this.getItemsByProvider()) {
+      if (items.length > 0 && items[0].container.incomplete) {
+        result.add(provider);
+      }
+    }
+    return result;
+  }
+  get stats() {
+    this._ensureCachedState();
+    return this._stats;
+  }
+  _ensureCachedState() {
+    if (this._refilterKind !== 0 /* Nothing */) {
+      this._createCachedState();
+    }
+  }
+  _createCachedState() {
+    this._itemsByProvider = /* @__PURE__ */ new Map();
+    const labelLengths = [];
+    const { leadingLineContent, characterCountDelta } = this._lineContext;
+    let word = "";
+    let wordLow = "";
+    const source = this._refilterKind === 1 /* All */ ? this._items : this._filteredItems;
+    const target = [];
+    const scoreFn = !this._options.filterGraceful || source.length > 2e3 ? fuzzyScore : fuzzyScoreGracefulAggressive;
+    for (let i = 0; i < source.length; i++) {
+      const item = source[i];
+      if (item.isInvalid) {
+        continue;
+      }
+      const arr = this._itemsByProvider.get(item.provider);
+      if (arr) {
+        arr.push(item);
+      } else {
+        this._itemsByProvider.set(item.provider, [item]);
+      }
+      const overwriteBefore = item.position.column - item.editStart.column;
+      const wordLen = overwriteBefore + characterCountDelta - (item.position.column - this._column);
+      if (word.length !== wordLen) {
+        word = wordLen === 0 ? "" : leadingLineContent.slice(-wordLen);
+        wordLow = word.toLowerCase();
+      }
+      item.word = word;
+      if (wordLen === 0) {
+        item.score = FuzzyScore.Default;
+      } else {
+        let wordPos = 0;
+        while (wordPos < overwriteBefore) {
+          const ch = word.charCodeAt(wordPos);
+          if (ch === CharCode.Space || ch === CharCode.Tab) {
+            wordPos += 1;
+          } else {
+            break;
+          }
+        }
+        if (wordPos >= wordLen) {
+          item.score = FuzzyScore.Default;
+        } else if (typeof item.completion.filterText === "string") {
+          const match = scoreFn(word, wordLow, wordPos, item.completion.filterText, item.filterTextLow, 0, this._fuzzyScoreOptions);
+          if (!match) {
+            continue;
+          }
+          if (compareIgnoreCase(item.completion.filterText, item.textLabel) === 0) {
+            item.score = match;
+          } else {
+            item.score = anyScore(word, wordLow, wordPos, item.textLabel, item.labelLow, 0);
+            item.score[0] = match[0];
+          }
+        } else {
+          const match = scoreFn(word, wordLow, wordPos, item.textLabel, item.labelLow, 0, this._fuzzyScoreOptions);
+          if (!match) {
+            continue;
+          }
+          item.score = match;
+        }
+      }
+      item.idx = i;
+      item.distance = this._wordDistance.distance(item.position, item.completion);
+      target.push(item);
+      labelLengths.push(item.textLabel.length);
+    }
+    this._filteredItems = target.sort(this._snippetCompareFn);
+    this._refilterKind = 0 /* Nothing */;
+    this._stats = {
+      pLabelLen: labelLengths.length ? quickSelect(labelLengths.length - 0.85, labelLengths, (a, b) => a - b) : 0
+    };
+  }
+  static _compareCompletionItems(a, b) {
+    if (a.score[0] > b.score[0]) {
+      return -1;
+    } else if (a.score[0] < b.score[0]) {
+      return 1;
+    } else if (a.distance < b.distance) {
+      return -1;
+    } else if (a.distance > b.distance) {
+      return 1;
+    } else if (a.idx < b.idx) {
+      return -1;
+    } else if (a.idx > b.idx) {
+      return 1;
+    } else {
+      return 0;
+    }
+  }
+  static _compareCompletionItemsSnippetsDown(a, b) {
+    if (a.completion.kind !== b.completion.kind) {
+      if (a.completion.kind === CompletionItemKind.Snippet) {
+        return 1;
+      } else if (b.completion.kind === CompletionItemKind.Snippet) {
+        return -1;
+      }
+    }
+    return CompletionModel._compareCompletionItems(a, b);
+  }
+  static _compareCompletionItemsSnippetsUp(a, b) {
+    if (a.completion.kind !== b.completion.kind) {
+      if (a.completion.kind === CompletionItemKind.Snippet) {
+        return -1;
+      } else if (b.completion.kind === CompletionItemKind.Snippet) {
+        return 1;
+      }
+    }
+    return CompletionModel._compareCompletionItems(a, b);
+  }
+}
+export {
+  CompletionModel,
+  LineContext
+};
+//# sourceMappingURL=completionModel.js.map

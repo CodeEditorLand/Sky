@@ -1,1 +1,303 @@
-var f=Object.defineProperty,u=Object.getOwnPropertyDescriptor,h=(e,t,o,i)=>{for(var n,r=i>1?void 0:i?u(t,o):t,s=e.length-1;s>=0;s--)(n=e[s])&&(r=(i?n(t,o,r):n(r))||r);return i&&r&&f(t,o,r),r},d=(e,t)=>(o,i)=>t(o,i,e);import{createDecorator as E}from"../../../platform/instantiation/common/instantiation.js";import{Emitter as g}from"../../../base/common/event.js";import"./extHost.protocol.js";import{TelemetryLevel as a}from"../../../platform/telemetry/common/telemetry.js";import{ILoggerService as b}from"../../../platform/log/common/log.js";import{IExtHostInitDataService as v}from"./extHostInitDataService.js";import"../../../platform/extensions/common/extensions.js";import{UIKind as c}from"../../services/extensions/common/extensionHostProtocol.js";import{getRemoteName as _}from"../../../platform/remote/common/remoteHosts.js";import{cleanData as p,cleanRemoteAuthority as T,TelemetryLogGroup as D}from"../../../platform/telemetry/common/telemetryUtils.js";import{mixin as y}from"../../../base/common/objects.js";import{Disposable as C}from"../../../base/common/lifecycle.js";import{localize as L}from"../../../nls.js";let m=class extends C{constructor(e,t,o){super(),this.initData=t,this._inLoggingOnlyMode=this.initData.environment.isExtensionTelemetryLoggingOnly;const i=t.remote.isRemote?"remoteExtHostTelemetry":e?"workerExtHostTelemetry":"extHostTelemetry";this._outputLogger=this._register(o.createLogger(i,{name:L("extensionTelemetryLog","Extension Telemetry{0}",this._inLoggingOnlyMode?" (Not Sent)":""),hidden:!0,group:D}))}_serviceBrand;_onDidChangeTelemetryEnabled=this._register(new g);onDidChangeTelemetryEnabled=this._onDidChangeTelemetryEnabled.event;_onDidChangeTelemetryConfiguration=this._register(new g);onDidChangeTelemetryConfiguration=this._onDidChangeTelemetryConfiguration.event;_productConfig={usage:!0,error:!0};_level=a.NONE;_oldTelemetryEnablement;_inLoggingOnlyMode=!1;_outputLogger;_telemetryLoggers=new Map;getTelemetryConfiguration(){return this._level===a.USAGE}getTelemetryDetails(){return{isCrashEnabled:this._level>=a.CRASH,isErrorsEnabled:!!this._productConfig.error&&this._level>=a.ERROR,isUsageEnabled:!!this._productConfig.usage&&this._level>=a.USAGE}}instantiateLogger(e,t,o){const i=this.getTelemetryDetails(),n=new I(t,o,e,this._outputLogger,this._inLoggingOnlyMode,this.getBuiltInCommonProperties(e),{isUsageEnabled:i.isUsageEnabled,isErrorsEnabled:i.isErrorsEnabled}),r=this._telemetryLoggers.get(e.identifier.value)??[];return this._telemetryLoggers.set(e.identifier.value,[...r,n]),n.apiTelemetryLogger}$initializeTelemetryLevel(e,t,o){this._level=e,this._productConfig=o??{usage:!0,error:!0}}getBuiltInCommonProperties(e){const t=Object.create(null);switch(t["common.extname"]=`${e.publisher}.${e.name}`,t["common.extversion"]=e.version,t["common.vscodemachineid"]=this.initData.telemetryInfo.machineId,t["common.vscodesessionid"]=this.initData.telemetryInfo.sessionId,t["common.vscodecommithash"]=this.initData.commit,t["common.sqmid"]=this.initData.telemetryInfo.sqmId,t["common.devDeviceId"]=this.initData.telemetryInfo.devDeviceId,t["common.vscodeversion"]=this.initData.version,t["common.isnewappinstall"]=x(this.initData.telemetryInfo.firstSessionDate),t["common.product"]=this.initData.environment.appHost,this.initData.uiKind){case c.Web:t["common.uikind"]="web";break;case c.Desktop:t["common.uikind"]="desktop";break;default:t["common.uikind"]="unknown"}return t["common.remotename"]=_(T(this.initData.remote.authority)),t}$onDidChangeTelemetryLevel(e){this._oldTelemetryEnablement=this.getTelemetryConfiguration(),this._level=e;const t=this.getTelemetryDetails();this._telemetryLoggers.forEach(((e,t)=>{const o=e.filter((e=>!e.isDisposed));0===o.length?this._telemetryLoggers.delete(t):this._telemetryLoggers.set(t,o)})),this._telemetryLoggers.forEach((e=>{for(const o of e)o.updateTelemetryEnablements(t.isUsageEnabled,t.isErrorsEnabled)})),this._oldTelemetryEnablement!==this.getTelemetryConfiguration()&&this._onDidChangeTelemetryEnabled.fire(this.getTelemetryConfiguration()),this._onDidChangeTelemetryConfiguration.fire(this.getTelemetryDetails())}onExtensionError(e,t){const o=this._telemetryLoggers.get(e.value)?.filter((e=>!e.isDisposed));if(!o)return this._telemetryLoggers.delete(e.value),!1;let i=!1;for(const e of o)e.ignoreUnhandledExtHostErrors||(e.logError(t),i=!0);return i}};m=h([d(1,v),d(2,b)],m);class I{constructor(e,t,o,i,n,r,s){this._extension=o,this._logger=i,this._inLoggingOnlyMode=n,this._commonProperties=r,this.ignoreUnhandledExtHostErrors=t?.ignoreUnhandledErrors??!1,this._ignoreBuiltinCommonProperties=t?.ignoreBuiltInCommonProperties??!1,this._additionalCommonProperties=t?.additionalCommonProperties,this._sender=e,this._telemetryEnablements={isUsageEnabled:s.isUsageEnabled,isErrorsEnabled:s.isErrorsEnabled}}static validateSender(e){if("object"!=typeof e)throw new TypeError("TelemetrySender argument is invalid");if("function"!=typeof e.sendEventData)throw new TypeError("TelemetrySender.sendEventData must be a function");if("function"!=typeof e.sendErrorData)throw new TypeError("TelemetrySender.sendErrorData must be a function");if(typeof e.flush<"u"&&"function"!=typeof e.flush)throw new TypeError("TelemetrySender.flush must be a function or undefined")}_onDidChangeEnableStates=new g;_ignoreBuiltinCommonProperties;_additionalCommonProperties;ignoreUnhandledExtHostErrors;_telemetryEnablements;_apiObject;_sender;updateTelemetryEnablements(e,t){this._apiObject&&(this._telemetryEnablements={isUsageEnabled:e,isErrorsEnabled:t},this._onDidChangeEnableStates.fire(this._apiObject))}mixInCommonPropsAndCleanData(e){let t="properties"in e?e.properties??{}:e;return t=p(t,[]),this._additionalCommonProperties&&(t=y(t,this._additionalCommonProperties)),this._ignoreBuiltinCommonProperties||(t=y(t,this._commonProperties)),"properties"in e?e.properties=t:e=t,e}logEvent(e,t){this._sender&&(e="vscode"===this._extension.publisher?this._extension.name+"/"+e:this._extension.identifier.value+"/"+e,t=this.mixInCommonPropsAndCleanData(t||{}),this._inLoggingOnlyMode||this._sender?.sendEventData(e,t),this._logger.trace(e,t))}logUsage(e,t){this._telemetryEnablements.isUsageEnabled&&this.logEvent(e,t)}logError(e,t){if(this._telemetryEnablements.isErrorsEnabled&&this._sender)if("string"==typeof e)this.logEvent(e,t);else{const o={name:e.name,message:e.message,stack:e.stack,cause:e.cause},i=p(o,[]),n=new Error(i.message,{cause:i.cause});n.stack=i.stack,n.name=i.name,t=this.mixInCommonPropsAndCleanData(t||{}),this._inLoggingOnlyMode||this._sender.sendErrorData(n,t),this._logger.trace("exception",t)}}get apiTelemetryLogger(){if(!this._apiObject){const e=this,t={logUsage:e.logUsage.bind(e),get isUsageEnabled(){return e._telemetryEnablements.isUsageEnabled},get isErrorsEnabled(){return e._telemetryEnablements.isErrorsEnabled},logError:e.logError.bind(e),dispose:e.dispose.bind(e),onDidChangeEnableStates:e._onDidChangeEnableStates.event.bind(e)};this._apiObject=Object.freeze(t)}return this._apiObject}get isDisposed(){return!this._sender}dispose(){if(this._sender?.flush){let e=this._sender;this._sender=void 0,Promise.resolve(e.flush()).then(e=void 0),this._apiObject=void 0}else this._sender=void 0}}function x(e){const t=Date.now()-new Date(e).getTime();return!isNaN(t)&&t<864e5}const Q=E("IExtHostTelemetry");export{m as ExtHostTelemetry,I as ExtHostTelemetryLogger,Q as IExtHostTelemetry,x as isNewAppInstall};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { createDecorator } from "../../../platform/instantiation/common/instantiation.js";
+import { Event, Emitter } from "../../../base/common/event.js";
+import { ExtHostTelemetryShape } from "./extHost.protocol.js";
+import { ICommonProperties, TelemetryLevel } from "../../../platform/telemetry/common/telemetry.js";
+import { ILogger, ILoggerService } from "../../../platform/log/common/log.js";
+import { IExtHostInitDataService } from "./extHostInitDataService.js";
+import { ExtensionIdentifier, IExtensionDescription } from "../../../platform/extensions/common/extensions.js";
+import { UIKind } from "../../services/extensions/common/extensionHostProtocol.js";
+import { getRemoteName } from "../../../platform/remote/common/remoteHosts.js";
+import { cleanData, cleanRemoteAuthority, TelemetryLogGroup } from "../../../platform/telemetry/common/telemetryUtils.js";
+import { mixin } from "../../../base/common/objects.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { localize } from "../../../nls.js";
+let ExtHostTelemetry = class extends Disposable {
+  constructor(isWorker, initData, loggerService) {
+    super();
+    this.initData = initData;
+    this._inLoggingOnlyMode = this.initData.environment.isExtensionTelemetryLoggingOnly;
+    const id = initData.remote.isRemote ? "remoteExtHostTelemetry" : isWorker ? "workerExtHostTelemetry" : "extHostTelemetry";
+    this._outputLogger = this._register(loggerService.createLogger(
+      id,
+      {
+        name: localize("extensionTelemetryLog", "Extension Telemetry{0}", this._inLoggingOnlyMode ? " (Not Sent)" : ""),
+        hidden: true,
+        group: TelemetryLogGroup
+      }
+    ));
+  }
+  static {
+    __name(this, "ExtHostTelemetry");
+  }
+  _serviceBrand;
+  _onDidChangeTelemetryEnabled = this._register(new Emitter());
+  onDidChangeTelemetryEnabled = this._onDidChangeTelemetryEnabled.event;
+  _onDidChangeTelemetryConfiguration = this._register(new Emitter());
+  onDidChangeTelemetryConfiguration = this._onDidChangeTelemetryConfiguration.event;
+  _productConfig = { usage: true, error: true };
+  _level = TelemetryLevel.NONE;
+  _oldTelemetryEnablement;
+  _inLoggingOnlyMode = false;
+  _outputLogger;
+  _telemetryLoggers = /* @__PURE__ */ new Map();
+  getTelemetryConfiguration() {
+    return this._level === TelemetryLevel.USAGE;
+  }
+  getTelemetryDetails() {
+    return {
+      isCrashEnabled: this._level >= TelemetryLevel.CRASH,
+      isErrorsEnabled: this._productConfig.error ? this._level >= TelemetryLevel.ERROR : false,
+      isUsageEnabled: this._productConfig.usage ? this._level >= TelemetryLevel.USAGE : false
+    };
+  }
+  instantiateLogger(extension, sender, options) {
+    const telemetryDetails = this.getTelemetryDetails();
+    const logger = new ExtHostTelemetryLogger(
+      sender,
+      options,
+      extension,
+      this._outputLogger,
+      this._inLoggingOnlyMode,
+      this.getBuiltInCommonProperties(extension),
+      { isUsageEnabled: telemetryDetails.isUsageEnabled, isErrorsEnabled: telemetryDetails.isErrorsEnabled }
+    );
+    const loggers = this._telemetryLoggers.get(extension.identifier.value) ?? [];
+    this._telemetryLoggers.set(extension.identifier.value, [...loggers, logger]);
+    return logger.apiTelemetryLogger;
+  }
+  $initializeTelemetryLevel(level, supportsTelemetry, productConfig) {
+    this._level = level;
+    this._productConfig = productConfig ?? { usage: true, error: true };
+  }
+  getBuiltInCommonProperties(extension) {
+    const commonProperties = /* @__PURE__ */ Object.create(null);
+    commonProperties["common.extname"] = `${extension.publisher}.${extension.name}`;
+    commonProperties["common.extversion"] = extension.version;
+    commonProperties["common.vscodemachineid"] = this.initData.telemetryInfo.machineId;
+    commonProperties["common.vscodesessionid"] = this.initData.telemetryInfo.sessionId;
+    commonProperties["common.vscodecommithash"] = this.initData.commit;
+    commonProperties["common.sqmid"] = this.initData.telemetryInfo.sqmId;
+    commonProperties["common.devDeviceId"] = this.initData.telemetryInfo.devDeviceId;
+    commonProperties["common.vscodeversion"] = this.initData.version;
+    commonProperties["common.isnewappinstall"] = isNewAppInstall(this.initData.telemetryInfo.firstSessionDate);
+    commonProperties["common.product"] = this.initData.environment.appHost;
+    switch (this.initData.uiKind) {
+      case UIKind.Web:
+        commonProperties["common.uikind"] = "web";
+        break;
+      case UIKind.Desktop:
+        commonProperties["common.uikind"] = "desktop";
+        break;
+      default:
+        commonProperties["common.uikind"] = "unknown";
+    }
+    commonProperties["common.remotename"] = getRemoteName(cleanRemoteAuthority(this.initData.remote.authority));
+    return commonProperties;
+  }
+  $onDidChangeTelemetryLevel(level) {
+    this._oldTelemetryEnablement = this.getTelemetryConfiguration();
+    this._level = level;
+    const telemetryDetails = this.getTelemetryDetails();
+    this._telemetryLoggers.forEach((loggers, key) => {
+      const newLoggers = loggers.filter((l) => !l.isDisposed);
+      if (newLoggers.length === 0) {
+        this._telemetryLoggers.delete(key);
+      } else {
+        this._telemetryLoggers.set(key, newLoggers);
+      }
+    });
+    this._telemetryLoggers.forEach((loggers) => {
+      for (const logger of loggers) {
+        logger.updateTelemetryEnablements(telemetryDetails.isUsageEnabled, telemetryDetails.isErrorsEnabled);
+      }
+    });
+    if (this._oldTelemetryEnablement !== this.getTelemetryConfiguration()) {
+      this._onDidChangeTelemetryEnabled.fire(this.getTelemetryConfiguration());
+    }
+    this._onDidChangeTelemetryConfiguration.fire(this.getTelemetryDetails());
+  }
+  onExtensionError(extension, error) {
+    const loggers = this._telemetryLoggers.get(extension.value);
+    const nonDisposedLoggers = loggers?.filter((l) => !l.isDisposed);
+    if (!nonDisposedLoggers) {
+      this._telemetryLoggers.delete(extension.value);
+      return false;
+    }
+    let errorEmitted = false;
+    for (const logger of nonDisposedLoggers) {
+      if (logger.ignoreUnhandledExtHostErrors) {
+        continue;
+      }
+      logger.logError(error);
+      errorEmitted = true;
+    }
+    return errorEmitted;
+  }
+};
+ExtHostTelemetry = __decorateClass([
+  __decorateParam(1, IExtHostInitDataService),
+  __decorateParam(2, ILoggerService)
+], ExtHostTelemetry);
+class ExtHostTelemetryLogger {
+  constructor(sender, options, _extension, _logger, _inLoggingOnlyMode, _commonProperties, telemetryEnablements) {
+    this._extension = _extension;
+    this._logger = _logger;
+    this._inLoggingOnlyMode = _inLoggingOnlyMode;
+    this._commonProperties = _commonProperties;
+    this.ignoreUnhandledExtHostErrors = options?.ignoreUnhandledErrors ?? false;
+    this._ignoreBuiltinCommonProperties = options?.ignoreBuiltInCommonProperties ?? false;
+    this._additionalCommonProperties = options?.additionalCommonProperties;
+    this._sender = sender;
+    this._telemetryEnablements = { isUsageEnabled: telemetryEnablements.isUsageEnabled, isErrorsEnabled: telemetryEnablements.isErrorsEnabled };
+  }
+  static {
+    __name(this, "ExtHostTelemetryLogger");
+  }
+  static validateSender(sender) {
+    if (typeof sender !== "object") {
+      throw new TypeError("TelemetrySender argument is invalid");
+    }
+    if (typeof sender.sendEventData !== "function") {
+      throw new TypeError("TelemetrySender.sendEventData must be a function");
+    }
+    if (typeof sender.sendErrorData !== "function") {
+      throw new TypeError("TelemetrySender.sendErrorData must be a function");
+    }
+    if (typeof sender.flush !== "undefined" && typeof sender.flush !== "function") {
+      throw new TypeError("TelemetrySender.flush must be a function or undefined");
+    }
+  }
+  _onDidChangeEnableStates = new Emitter();
+  _ignoreBuiltinCommonProperties;
+  _additionalCommonProperties;
+  ignoreUnhandledExtHostErrors;
+  _telemetryEnablements;
+  _apiObject;
+  _sender;
+  updateTelemetryEnablements(isUsageEnabled, isErrorsEnabled) {
+    if (this._apiObject) {
+      this._telemetryEnablements = { isUsageEnabled, isErrorsEnabled };
+      this._onDidChangeEnableStates.fire(this._apiObject);
+    }
+  }
+  mixInCommonPropsAndCleanData(data) {
+    let updatedData = "properties" in data ? data.properties ?? {} : data;
+    updatedData = cleanData(updatedData, []);
+    if (this._additionalCommonProperties) {
+      updatedData = mixin(updatedData, this._additionalCommonProperties);
+    }
+    if (!this._ignoreBuiltinCommonProperties) {
+      updatedData = mixin(updatedData, this._commonProperties);
+    }
+    if ("properties" in data) {
+      data.properties = updatedData;
+    } else {
+      data = updatedData;
+    }
+    return data;
+  }
+  logEvent(eventName, data) {
+    if (!this._sender) {
+      return;
+    }
+    if (this._extension.publisher === "vscode") {
+      eventName = this._extension.name + "/" + eventName;
+    } else {
+      eventName = this._extension.identifier.value + "/" + eventName;
+    }
+    data = this.mixInCommonPropsAndCleanData(data || {});
+    if (!this._inLoggingOnlyMode) {
+      this._sender?.sendEventData(eventName, data);
+    }
+    this._logger.trace(eventName, data);
+  }
+  logUsage(eventName, data) {
+    if (!this._telemetryEnablements.isUsageEnabled) {
+      return;
+    }
+    this.logEvent(eventName, data);
+  }
+  logError(eventNameOrException, data) {
+    if (!this._telemetryEnablements.isErrorsEnabled || !this._sender) {
+      return;
+    }
+    if (typeof eventNameOrException === "string") {
+      this.logEvent(eventNameOrException, data);
+    } else {
+      const errorData = {
+        name: eventNameOrException.name,
+        message: eventNameOrException.message,
+        stack: eventNameOrException.stack,
+        cause: eventNameOrException.cause
+      };
+      const cleanedErrorData = cleanData(errorData, []);
+      const cleanedError = new Error(cleanedErrorData.message, {
+        cause: cleanedErrorData.cause
+      });
+      cleanedError.stack = cleanedErrorData.stack;
+      cleanedError.name = cleanedErrorData.name;
+      data = this.mixInCommonPropsAndCleanData(data || {});
+      if (!this._inLoggingOnlyMode) {
+        this._sender.sendErrorData(cleanedError, data);
+      }
+      this._logger.trace("exception", data);
+    }
+  }
+  get apiTelemetryLogger() {
+    if (!this._apiObject) {
+      const that = this;
+      const obj = {
+        logUsage: that.logUsage.bind(that),
+        get isUsageEnabled() {
+          return that._telemetryEnablements.isUsageEnabled;
+        },
+        get isErrorsEnabled() {
+          return that._telemetryEnablements.isErrorsEnabled;
+        },
+        logError: that.logError.bind(that),
+        dispose: that.dispose.bind(that),
+        onDidChangeEnableStates: that._onDidChangeEnableStates.event.bind(that)
+      };
+      this._apiObject = Object.freeze(obj);
+    }
+    return this._apiObject;
+  }
+  get isDisposed() {
+    return !this._sender;
+  }
+  dispose() {
+    if (this._sender?.flush) {
+      let tempSender = this._sender;
+      this._sender = void 0;
+      Promise.resolve(tempSender.flush()).then(tempSender = void 0);
+      this._apiObject = void 0;
+    } else {
+      this._sender = void 0;
+    }
+  }
+}
+function isNewAppInstall(firstSessionDate) {
+  const installAge = Date.now() - new Date(firstSessionDate).getTime();
+  return isNaN(installAge) ? false : installAge < 1e3 * 60 * 60 * 24;
+}
+__name(isNewAppInstall, "isNewAppInstall");
+const IExtHostTelemetry = createDecorator("IExtHostTelemetry");
+export {
+  ExtHostTelemetry,
+  ExtHostTelemetryLogger,
+  IExtHostTelemetry,
+  isNewAppInstall
+};
+//# sourceMappingURL=extHostTelemetry.js.map

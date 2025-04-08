@@ -1,1 +1,67 @@
-import*as d from"../../../../base/browser/dom.js";import"../../../../base/common/keybindings.js";import*as h from"../../../../nls.js";import"../../../../platform/list/browser/listService.js";import"../../../services/views/common/viewsService.js";import"./searchView.js";import{VIEW_ID as a}from"../../../services/search/common/search.js";import{isSearchTreeMatch as o,isSearchTreeFileMatch as c,isSearchTreeFolderMatch as l}from"./searchTreeModel/searchTreeCommon.js";import{searchComparer as p}from"./searchCompare.js";const T=h.localize2("search","Search");function F(r){const e=u(r);return!!(e&&d.isAncestorOfActiveElement(e.getContainer()))}function K(r,e){return b(r,e)}function u(r){return r.getActiveViewWithId(a)}function O(r,e,i){let n=r.getSelection().filter(t=>t!==null).sort((t,s)=>p(t,s,i.sortOrder));return e&&!(n.length>1&&n.includes(e))&&(n=[e]),n}function W(r,e){return e?!e||r.includes(e)||f(r,e):!1}function f(r,e){for(const i of r)if(c(i)&&o(e)&&i.matches().includes(e)||l(i)&&(c(e)&&i.getDownstreamFileMatch(e.resource)||o(e)&&i.getDownstreamFileMatch(e.parent().resource)))return!0;return!1}function L(r,e){return r.openView(a,e).then(i=>i??void 0)}function b(r,e){return e?r+" ("+e.getLabel()+")":r}export{K as appendKeyBindingLabel,T as category,O as getElementsToOperateOn,u as getSearchView,F as isSearchViewFocused,L as openSearchView,W as shouldRefocus};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as DOM from "../../../../base/browser/dom.js";
+import { ResolvedKeybinding } from "../../../../base/common/keybindings.js";
+import * as nls from "../../../../nls.js";
+import { WorkbenchCompressibleAsyncDataTree } from "../../../../platform/list/browser/listService.js";
+import { IViewsService } from "../../../services/views/common/viewsService.js";
+import { SearchView } from "./searchView.js";
+import { ISearchConfigurationProperties, VIEW_ID } from "../../../services/search/common/search.js";
+import { isSearchTreeMatch, RenderableMatch, ISearchResult, isSearchTreeFileMatch, isSearchTreeFolderMatch } from "./searchTreeModel/searchTreeCommon.js";
+import { searchComparer } from "./searchCompare.js";
+const category = nls.localize2("search", "Search");
+function isSearchViewFocused(viewsService) {
+  const searchView = getSearchView(viewsService);
+  return !!(searchView && DOM.isAncestorOfActiveElement(searchView.getContainer()));
+}
+__name(isSearchViewFocused, "isSearchViewFocused");
+function appendKeyBindingLabel(label, inputKeyBinding) {
+  return doAppendKeyBindingLabel(label, inputKeyBinding);
+}
+__name(appendKeyBindingLabel, "appendKeyBindingLabel");
+function getSearchView(viewsService) {
+  return viewsService.getActiveViewWithId(VIEW_ID);
+}
+__name(getSearchView, "getSearchView");
+function getElementsToOperateOn(viewer, currElement, sortConfig) {
+  let elements = viewer.getSelection().filter((x) => x !== null).sort((a, b) => searchComparer(a, b, sortConfig.sortOrder));
+  if (currElement && !(elements.length > 1 && elements.includes(currElement))) {
+    elements = [currElement];
+  }
+  return elements;
+}
+__name(getElementsToOperateOn, "getElementsToOperateOn");
+function shouldRefocus(elements, focusElement) {
+  if (!focusElement) {
+    return false;
+  }
+  return !focusElement || elements.includes(focusElement) || hasDownstreamMatch(elements, focusElement);
+}
+__name(shouldRefocus, "shouldRefocus");
+function hasDownstreamMatch(elements, focusElement) {
+  for (const elem of elements) {
+    if (isSearchTreeFileMatch(elem) && isSearchTreeMatch(focusElement) && elem.matches().includes(focusElement) || isSearchTreeFolderMatch(elem) && (isSearchTreeFileMatch(focusElement) && elem.getDownstreamFileMatch(focusElement.resource) || isSearchTreeMatch(focusElement) && elem.getDownstreamFileMatch(focusElement.parent().resource))) {
+      return true;
+    }
+  }
+  return false;
+}
+__name(hasDownstreamMatch, "hasDownstreamMatch");
+function openSearchView(viewsService, focus) {
+  return viewsService.openView(VIEW_ID, focus).then((view) => view ?? void 0);
+}
+__name(openSearchView, "openSearchView");
+function doAppendKeyBindingLabel(label, keyBinding) {
+  return keyBinding ? label + " (" + keyBinding.getLabel() + ")" : label;
+}
+__name(doAppendKeyBindingLabel, "doAppendKeyBindingLabel");
+export {
+  appendKeyBindingLabel,
+  category,
+  getElementsToOperateOn,
+  getSearchView,
+  isSearchViewFocused,
+  openSearchView,
+  shouldRefocus
+};
+//# sourceMappingURL=searchActionsBase.js.map

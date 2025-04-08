@@ -1,1 +1,11 @@
-import{createDecorator as o}from"../../../../platform/instantiation/common/instantiation.js";import"../../../../base/common/event.js";import"../../../browser/panecomposite.js";import"../../../../platform/progress/common/progress.js";import"../../../common/panecomposite.js";import"../../../common/views.js";const d=o("paneCompositePartService");export{d as IPaneCompositePartService};
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { Event } from "../../../../base/common/event.js";
+import { PaneCompositeDescriptor } from "../../../browser/panecomposite.js";
+import { IProgressIndicator } from "../../../../platform/progress/common/progress.js";
+import { IPaneComposite } from "../../../common/panecomposite.js";
+import { ViewContainerLocation } from "../../../common/views.js";
+const IPaneCompositePartService = createDecorator("paneCompositePartService");
+export {
+  IPaneCompositePartService
+};
+//# sourceMappingURL=panecomposite.js.map

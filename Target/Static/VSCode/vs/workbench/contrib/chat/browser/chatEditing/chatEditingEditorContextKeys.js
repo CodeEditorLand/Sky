@@ -1,1 +1,164 @@
-var q=Object.defineProperty;var G=Object.getOwnPropertyDescriptor;var x=(a,e,o,s)=>{for(var n=s>1?void 0:s?G(e,o):e,r=a.length-1,t;r>=0;r--)(t=a[r])&&(n=(s?t(e,o,n):t(n))||n);return s&&n&&q(e,o,n),n},d=(a,e)=>(o,s)=>e(o,s,a);import{Event as D}from"../../../../../base/common/event.js";import{DisposableMap as H,DisposableStore as C}from"../../../../../base/common/lifecycle.js";import{autorun as g,constObservable as y,derived as P,observableFromEvent as u}from"../../../../../base/common/observable.js";import"../../../../../base/common/uri.js";import{localize as I}from"../../../../../nls.js";import{RawContextKey as f}from"../../../../../platform/contextkey/common/contextkey.js";import{IInstantiationService as T}from"../../../../../platform/instantiation/common/instantiation.js";import"../../../../common/contributions.js";import{EditorResourceAccessor as K,SideBySideEditor as B}from"../../../../common/editor.js";import{IEditorGroupsService as O}from"../../../../services/editor/common/editorGroupsService.js";import{IInlineChatSessionService as _}from"../../../inlineChat/browser/inlineChatSessionService.js";import{IChatEditingService as R,ModifiedFileEntryState as A}from"../../common/chatEditingService.js";import{IChatService as F}from"../../common/chatService.js";const k=new f("chatEdits.isGlobalEditingSession",void 0,I("chat.ctxEditSessionIsGlobal","The current editor is part of the global edit session")),U=new f("chatEdits.hasEditorModifications",void 0,I("chat.hasEditorModifications","The current editor contains chat modifications")),W=new f("chatEdits.isReviewModeEnabled",!0,I("chat.ctxReviewModeEnabled","Review mode for chat changes is enabled")),z=new f("chatEdits.isRequestInProgress",!1,I("chat.ctxHasRequestInProgress","The current editor shows a file from an edit session which is still in progress")),Y=new f("chatEdits.requestCount",0,I("chatEdits.requestCount","The number of turns the editing session in this editor has"));let S=class{static ID="chat.edits.editorContextKeys";_store=new C;constructor(e,o){const s=this._store.add(new H),n=u(this,D.any(o.onDidAddGroup,o.onDidRemoveGroup),()=>o.groups);this._store.add(g(r=>{const t=new Set(s.keys());for(const i of n.read(r))t.delete(i),!s.has(i)&&s.set(i,e.createInstance(p,i));for(const i of t)s.deleteAndDispose(i)}))}dispose(){this._store.dispose()}};S=x([d(0,T),d(1,O)],S);let p=class{_ctxIsGlobalEditingSession;_ctxHasEditorModification;_ctxHasRequestInProgress;_ctxReviewModeEnabled;_ctxRequestCount;_store=new C;constructor(e,o,s,n){this._ctxIsGlobalEditingSession=k.bindTo(e.scopedContextKeyService),this._ctxHasEditorModification=U.bindTo(e.scopedContextKeyService),this._ctxHasRequestInProgress=z.bindTo(e.scopedContextKeyService),this._ctxReviewModeEnabled=W.bindTo(e.scopedContextKeyService),this._ctxRequestCount=Y.bindTo(e.scopedContextKeyService);const r=u(this,e.onDidModelChange,()=>e.activeEditor);this._store.add(g(t=>{const i=r.read(t),l=K.getOriginalUri(i,{supportSideBySide:B.PRIMARY});if(!l){this._reset();return}const h=new b(l,s,o).value.read(t);if(!h){this._reset();return}const{session:E,entry:v,isInlineChat:m}=h,c=n.getSession(E.chatSessionId),M=c?u(this,c.onDidChange,()=>c.requestInProgress):y(!1);this._ctxHasEditorModification.set(m||v?.state.read(t)===A.Modified),this._ctxIsGlobalEditingSession.set(E.isGlobalEditingSession),this._ctxReviewModeEnabled.set(v?v.reviewMode.read(t):!1),this._ctxHasRequestInProgress.set(!!v?.isCurrentlyBeingModifiedBy.read(t)||m&&M.read(t));const w=c?u(this,c.onDidChange,()=>c.getRequests().length):y(0);this._ctxRequestCount.set(w.read(t))}))}_reset(){this._ctxIsGlobalEditingSession.reset(),this._ctxHasEditorModification.reset(),this._ctxHasRequestInProgress.reset(),this._ctxReviewModeEnabled.reset(),this._ctxRequestCount.reset()}dispose(){this._store.dispose(),this._reset()}};p=x([d(1,_),d(2,R),d(3,F)],p);let b=class{value;constructor(e,o,s){const n=u(this,s.onDidChangeSessions,()=>s.getSession2(e)),r=o.editingSessionsObs.map((t,i)=>{for(const l of t){const h=l.readEntry(e,i);if(h)return{session:l,entry:h,isInlineChat:!1}}});this.value=P(t=>{const i=n.read(t);return i?{session:i.editingSession,entry:i.editingSession.readEntry(e,t),isInlineChat:!0}:r.read(t)})}};b=x([d(1,R),d(2,_)],b);export{S as ChatEditingEditorContextKeys,b as ObservableEditorSession,U as ctxHasEditorModification,z as ctxHasRequestInProgress,k as ctxIsGlobalEditingSession,Y as ctxRequestCount,W as ctxReviewModeEnabled};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Event } from "../../../../../base/common/event.js";
+import { DisposableMap, DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { autorun, constObservable, derived, IObservable, observableFromEvent } from "../../../../../base/common/observable.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { localize } from "../../../../../nls.js";
+import { IContextKey, RawContextKey } from "../../../../../platform/contextkey/common/contextkey.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { IWorkbenchContribution } from "../../../../common/contributions.js";
+import { EditorResourceAccessor, SideBySideEditor } from "../../../../common/editor.js";
+import { IEditorGroup, IEditorGroupsService } from "../../../../services/editor/common/editorGroupsService.js";
+import { IInlineChatSessionService } from "../../../inlineChat/browser/inlineChatSessionService.js";
+import { IChatEditingService, IChatEditingSession, IModifiedFileEntry, ModifiedFileEntryState } from "../../common/chatEditingService.js";
+import { IChatService } from "../../common/chatService.js";
+const ctxIsGlobalEditingSession = new RawContextKey("chatEdits.isGlobalEditingSession", void 0, localize("chat.ctxEditSessionIsGlobal", "The current editor is part of the global edit session"));
+const ctxHasEditorModification = new RawContextKey("chatEdits.hasEditorModifications", void 0, localize("chat.hasEditorModifications", "The current editor contains chat modifications"));
+const ctxReviewModeEnabled = new RawContextKey("chatEdits.isReviewModeEnabled", true, localize("chat.ctxReviewModeEnabled", "Review mode for chat changes is enabled"));
+const ctxHasRequestInProgress = new RawContextKey("chatEdits.isRequestInProgress", false, localize("chat.ctxHasRequestInProgress", "The current editor shows a file from an edit session which is still in progress"));
+const ctxRequestCount = new RawContextKey("chatEdits.requestCount", 0, localize("chatEdits.requestCount", "The number of turns the editing session in this editor has"));
+let ChatEditingEditorContextKeys = class {
+  static {
+    __name(this, "ChatEditingEditorContextKeys");
+  }
+  static ID = "chat.edits.editorContextKeys";
+  _store = new DisposableStore();
+  constructor(instaService, editorGroupsService) {
+    const editorGroupCtx = this._store.add(new DisposableMap());
+    const editorGroups = observableFromEvent(
+      this,
+      Event.any(editorGroupsService.onDidAddGroup, editorGroupsService.onDidRemoveGroup),
+      () => editorGroupsService.groups
+    );
+    this._store.add(autorun((r) => {
+      const toDispose = new Set(editorGroupCtx.keys());
+      for (const group of editorGroups.read(r)) {
+        toDispose.delete(group);
+        if (editorGroupCtx.has(group)) {
+          continue;
+        }
+        editorGroupCtx.set(group, instaService.createInstance(ContextKeyGroup, group));
+      }
+      for (const item of toDispose) {
+        editorGroupCtx.deleteAndDispose(item);
+      }
+    }));
+  }
+  dispose() {
+    this._store.dispose();
+  }
+};
+ChatEditingEditorContextKeys = __decorateClass([
+  __decorateParam(0, IInstantiationService),
+  __decorateParam(1, IEditorGroupsService)
+], ChatEditingEditorContextKeys);
+let ContextKeyGroup = class {
+  static {
+    __name(this, "ContextKeyGroup");
+  }
+  _ctxIsGlobalEditingSession;
+  _ctxHasEditorModification;
+  _ctxHasRequestInProgress;
+  _ctxReviewModeEnabled;
+  _ctxRequestCount;
+  _store = new DisposableStore();
+  constructor(group, inlineChatSessionService, chatEditingService, chatService) {
+    this._ctxIsGlobalEditingSession = ctxIsGlobalEditingSession.bindTo(group.scopedContextKeyService);
+    this._ctxHasEditorModification = ctxHasEditorModification.bindTo(group.scopedContextKeyService);
+    this._ctxHasRequestInProgress = ctxHasRequestInProgress.bindTo(group.scopedContextKeyService);
+    this._ctxReviewModeEnabled = ctxReviewModeEnabled.bindTo(group.scopedContextKeyService);
+    this._ctxRequestCount = ctxRequestCount.bindTo(group.scopedContextKeyService);
+    const editorObs = observableFromEvent(this, group.onDidModelChange, () => group.activeEditor);
+    this._store.add(autorun((r) => {
+      const editor = editorObs.read(r);
+      const uri = EditorResourceAccessor.getOriginalUri(editor, { supportSideBySide: SideBySideEditor.PRIMARY });
+      if (!uri) {
+        this._reset();
+        return;
+      }
+      const tuple = new ObservableEditorSession(uri, chatEditingService, inlineChatSessionService).value.read(r);
+      if (!tuple) {
+        this._reset();
+        return;
+      }
+      const { session, entry, isInlineChat } = tuple;
+      const chatModel = chatService.getSession(session.chatSessionId);
+      const isRequestInProgress = chatModel ? observableFromEvent(this, chatModel.onDidChange, () => chatModel.requestInProgress) : constObservable(false);
+      this._ctxHasEditorModification.set(isInlineChat || entry?.state.read(r) === ModifiedFileEntryState.Modified);
+      this._ctxIsGlobalEditingSession.set(session.isGlobalEditingSession);
+      this._ctxReviewModeEnabled.set(entry ? entry.reviewMode.read(r) : false);
+      this._ctxHasRequestInProgress.set(
+        Boolean(entry?.isCurrentlyBeingModifiedBy.read(r)) || isInlineChat && isRequestInProgress.read(r)
+        // inline chat request
+      );
+      const requestCount = chatModel ? observableFromEvent(this, chatModel.onDidChange, () => chatModel.getRequests().length) : constObservable(0);
+      this._ctxRequestCount.set(requestCount.read(r));
+    }));
+  }
+  _reset() {
+    this._ctxIsGlobalEditingSession.reset();
+    this._ctxHasEditorModification.reset();
+    this._ctxHasRequestInProgress.reset();
+    this._ctxReviewModeEnabled.reset();
+    this._ctxRequestCount.reset();
+  }
+  dispose() {
+    this._store.dispose();
+    this._reset();
+  }
+};
+ContextKeyGroup = __decorateClass([
+  __decorateParam(1, IInlineChatSessionService),
+  __decorateParam(2, IChatEditingService),
+  __decorateParam(3, IChatService)
+], ContextKeyGroup);
+let ObservableEditorSession = class {
+  static {
+    __name(this, "ObservableEditorSession");
+  }
+  value;
+  constructor(uri, chatEditingService, inlineChatService) {
+    const inlineSessionObs = observableFromEvent(this, inlineChatService.onDidChangeSessions, () => inlineChatService.getSession2(uri));
+    const sessionObs = chatEditingService.editingSessionsObs.map((value, r) => {
+      for (const session of value) {
+        const entry = session.readEntry(uri, r);
+        if (entry) {
+          return { session, entry, isInlineChat: false };
+        }
+      }
+      return void 0;
+    });
+    this.value = derived((r) => {
+      const inlineSession = inlineSessionObs.read(r);
+      if (inlineSession) {
+        return { session: inlineSession.editingSession, entry: inlineSession.editingSession.readEntry(uri, r), isInlineChat: true };
+      }
+      return sessionObs.read(r);
+    });
+  }
+};
+ObservableEditorSession = __decorateClass([
+  __decorateParam(1, IChatEditingService),
+  __decorateParam(2, IInlineChatSessionService)
+], ObservableEditorSession);
+export {
+  ChatEditingEditorContextKeys,
+  ObservableEditorSession,
+  ctxHasEditorModification,
+  ctxHasRequestInProgress,
+  ctxIsGlobalEditingSession,
+  ctxRequestCount,
+  ctxReviewModeEnabled
+};
+//# sourceMappingURL=chatEditingEditorContextKeys.js.map

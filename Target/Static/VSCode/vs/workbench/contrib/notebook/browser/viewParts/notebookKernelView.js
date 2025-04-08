@@ -1,1 +1,186 @@
-var v=Object.defineProperty,K=Object.getOwnPropertyDescriptor,m=(e,o,t,i)=>{for(var n,r=i>1?void 0:i?K(o,t):o,s=e.length-1;s>=0;s--)(n=e[s])&&(r=(i?n(o,t,r):n(r))||r);return i&&r&&v(o,t,r),r},c=(e,o)=>(t,i)=>o(t,i,e);import{ActionViewItem as y}from"../../../../../base/browser/ui/actionbar/actionViewItems.js";import{Action as T}from"../../../../../base/common/actions.js";import"../../../../../base/common/event.js";import{localize as C,localize2 as A}from"../../../../../nls.js";import{Action2 as N,MenuId as u,registerAction2 as S}from"../../../../../platform/actions/common/actions.js";import{ContextKeyExpr as p}from"../../../../../platform/contextkey/common/contextkey.js";import{ExtensionIdentifier as L}from"../../../../../platform/extensions/common/extensions.js";import{IInstantiationService as O}from"../../../../../platform/instantiation/common/instantiation.js";import{ThemeIcon as x}from"../../../../../base/common/themables.js";import{NOTEBOOK_ACTIONS_CATEGORY as M,SELECT_KERNEL_ID as D}from"../controller/coreActions.js";import{getNotebookEditorFromEditorPane as h}from"../notebookBrowser.js";import{selectKernelIcon as k}from"../notebookIcons.js";import{KernelPickerMRUStrategy as b}from"./notebookKernelQuickPickStrategy.js";import"../../common/model/notebookTextModel.js";import{NOTEBOOK_IS_ACTIVE_EDITOR as g,NOTEBOOK_KERNEL_COUNT as P}from"../../common/notebookContextKeys.js";import{INotebookKernelHistoryService as w,INotebookKernelService as E}from"../../common/notebookKernelService.js";import{IEditorService as R}from"../../../../services/editor/common/editorService.js";function H(e,o){let t;if(void 0!==o&&"notebookEditorId"in o){const i=o.notebookEditorId,n=e.visibleEditorPanes.find((e=>h(e)?.getId()===i));t=h(n)}else t=void 0!==o&&"notebookEditor"in o?o?.notebookEditor:h(e.activeEditorPane);return t}S(class extends N{constructor(){super({id:D,category:M,title:A("notebookActions.selectKernel","Select Notebook Kernel"),icon:k,f1:!0,precondition:g,menu:[{id:u.EditorTitle,when:p.and(g,p.notEquals("config.notebook.globalToolbar",!0)),group:"navigation",order:-10},{id:u.NotebookToolbar,when:p.equals("config.notebook.globalToolbar",!0),group:"status",order:-10},{id:u.InteractiveToolbar,when:P.notEqualsTo(0),group:"status",order:-10}],metadata:{description:C("notebookActions.selectKernel.args","Notebook Kernel Args"),args:[{name:"kernelInfo",description:"The kernel info",schema:{type:"object",required:["id","extension"],properties:{id:{type:"string"},extension:{type:"string"},notebookEditorId:{type:"string"}}}}]}})}async run(e,o){const t=e.get(O),i=H(e.get(R),o);if(!i||!i.hasModel())return!1;let n=o&&"id"in o?o.id:void 0,r=o&&"extension"in o?o.extension:void 0;n&&("string"!=typeof n||"string"!=typeof r)&&(n=void 0,r=void 0);const s=i.textModel,a=e.get(E).getMatchingKernel(s),{selected:c}=a;if(c&&n&&c.id===n&&L.equals(c.extension,r))return!0;const l=n?`${r}/${n}`:void 0;return t.createInstance(b).showQuickPick(i,l)}});let a=class extends y{constructor(e,o,t,i,n){const r=new T("fakeAction",void 0,x.asClassName(k),!0,(o=>e.run(o)));super(void 0,r,{...t,label:!1,icon:!0}),this._editor=o,this._notebookKernelService=i,this._notebookKernelHistoryService=n,this._register(r),this._register(o.onDidChangeModel(this._update,this)),this._register(i.onDidAddKernel(this._update,this)),this._register(i.onDidRemoveKernel(this._update,this)),this._register(i.onDidChangeNotebookAffinity(this._update,this)),this._register(i.onDidChangeSelectedNotebooks(this._update,this)),this._register(i.onDidChangeSourceActions(this._update,this)),this._register(i.onDidChangeKernelDetectionTasks(this._update,this))}_kernelLabel;render(e){this._update(),super.render(e),e.classList.add("kernel-action-view-item"),this._kernelLabel=document.createElement("a"),e.appendChild(this._kernelLabel),this.updateLabel()}updateLabel(){this._kernelLabel&&(this._kernelLabel.classList.add("kernel-label"),this._kernelLabel.innerText=this._action.label)}_update(){const e=this._editor.textModel;e?(b.updateKernelStatusAction(e,this._action,this._notebookKernelService,this._notebookKernelHistoryService),this.updateClass()):this._resetAction()}_resetAction(){this._action.enabled=!1,this._action.label="",this._action.class=""}};a=m([c(3,E),c(4,w)],a);export{a as NotebooKernelActionViewItem};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { ActionViewItem, IActionViewItemOptions } from "../../../../../base/browser/ui/actionbar/actionViewItems.js";
+import { Action, IAction } from "../../../../../base/common/actions.js";
+import { Event } from "../../../../../base/common/event.js";
+import { localize, localize2 } from "../../../../../nls.js";
+import { Action2, MenuId, registerAction2 } from "../../../../../platform/actions/common/actions.js";
+import { ContextKeyExpr, IContextKeyService } from "../../../../../platform/contextkey/common/contextkey.js";
+import { ExtensionIdentifier } from "../../../../../platform/extensions/common/extensions.js";
+import { IInstantiationService, ServicesAccessor } from "../../../../../platform/instantiation/common/instantiation.js";
+import { ThemeIcon } from "../../../../../base/common/themables.js";
+import { NOTEBOOK_ACTIONS_CATEGORY, SELECT_KERNEL_ID } from "../controller/coreActions.js";
+import { getNotebookEditorFromEditorPane, INotebookEditor } from "../notebookBrowser.js";
+import { selectKernelIcon } from "../notebookIcons.js";
+import { KernelPickerMRUStrategy, KernelQuickPickContext } from "./notebookKernelQuickPickStrategy.js";
+import { NotebookTextModel } from "../../common/model/notebookTextModel.js";
+import { NOTEBOOK_IS_ACTIVE_EDITOR, NOTEBOOK_KERNEL_COUNT } from "../../common/notebookContextKeys.js";
+import { INotebookKernelHistoryService, INotebookKernelService } from "../../common/notebookKernelService.js";
+import { IEditorService } from "../../../../services/editor/common/editorService.js";
+function getEditorFromContext(editorService, context) {
+  let editor;
+  if (context !== void 0 && "notebookEditorId" in context) {
+    const editorId = context.notebookEditorId;
+    const matchingEditor = editorService.visibleEditorPanes.find((editorPane) => {
+      const notebookEditor = getNotebookEditorFromEditorPane(editorPane);
+      return notebookEditor?.getId() === editorId;
+    });
+    editor = getNotebookEditorFromEditorPane(matchingEditor);
+  } else if (context !== void 0 && "notebookEditor" in context) {
+    editor = context?.notebookEditor;
+  } else {
+    editor = getNotebookEditorFromEditorPane(editorService.activeEditorPane);
+  }
+  return editor;
+}
+__name(getEditorFromContext, "getEditorFromContext");
+registerAction2(class extends Action2 {
+  constructor() {
+    super({
+      id: SELECT_KERNEL_ID,
+      category: NOTEBOOK_ACTIONS_CATEGORY,
+      title: localize2("notebookActions.selectKernel", "Select Notebook Kernel"),
+      icon: selectKernelIcon,
+      f1: true,
+      precondition: NOTEBOOK_IS_ACTIVE_EDITOR,
+      menu: [{
+        id: MenuId.EditorTitle,
+        when: ContextKeyExpr.and(
+          NOTEBOOK_IS_ACTIVE_EDITOR,
+          ContextKeyExpr.notEquals("config.notebook.globalToolbar", true)
+        ),
+        group: "navigation",
+        order: -10
+      }, {
+        id: MenuId.NotebookToolbar,
+        when: ContextKeyExpr.equals("config.notebook.globalToolbar", true),
+        group: "status",
+        order: -10
+      }, {
+        id: MenuId.InteractiveToolbar,
+        when: NOTEBOOK_KERNEL_COUNT.notEqualsTo(0),
+        group: "status",
+        order: -10
+      }],
+      metadata: {
+        description: localize("notebookActions.selectKernel.args", "Notebook Kernel Args"),
+        args: [
+          {
+            name: "kernelInfo",
+            description: "The kernel info",
+            schema: {
+              "type": "object",
+              "required": ["id", "extension"],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "extension": {
+                  "type": "string"
+                },
+                "notebookEditorId": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ]
+      }
+    });
+  }
+  async run(accessor, context) {
+    const instantiationService = accessor.get(IInstantiationService);
+    const editorService = accessor.get(IEditorService);
+    const editor = getEditorFromContext(editorService, context);
+    if (!editor || !editor.hasModel()) {
+      return false;
+    }
+    let controllerId = context && "id" in context ? context.id : void 0;
+    let extensionId = context && "extension" in context ? context.extension : void 0;
+    if (controllerId && (typeof controllerId !== "string" || typeof extensionId !== "string")) {
+      controllerId = void 0;
+      extensionId = void 0;
+    }
+    const notebook = editor.textModel;
+    const notebookKernelService = accessor.get(INotebookKernelService);
+    const matchResult = notebookKernelService.getMatchingKernel(notebook);
+    const { selected } = matchResult;
+    if (selected && controllerId && selected.id === controllerId && ExtensionIdentifier.equals(selected.extension, extensionId)) {
+      return true;
+    }
+    const wantedKernelId = controllerId ? `${extensionId}/${controllerId}` : void 0;
+    const strategy = instantiationService.createInstance(KernelPickerMRUStrategy);
+    return strategy.showQuickPick(editor, wantedKernelId);
+  }
+});
+let NotebooKernelActionViewItem = class extends ActionViewItem {
+  constructor(actualAction, _editor, options, _notebookKernelService, _notebookKernelHistoryService) {
+    const action = new Action("fakeAction", void 0, ThemeIcon.asClassName(selectKernelIcon), true, (event) => actualAction.run(event));
+    super(
+      void 0,
+      action,
+      { ...options, label: false, icon: true }
+    );
+    this._editor = _editor;
+    this._notebookKernelService = _notebookKernelService;
+    this._notebookKernelHistoryService = _notebookKernelHistoryService;
+    this._register(action);
+    this._register(_editor.onDidChangeModel(this._update, this));
+    this._register(_notebookKernelService.onDidAddKernel(this._update, this));
+    this._register(_notebookKernelService.onDidRemoveKernel(this._update, this));
+    this._register(_notebookKernelService.onDidChangeNotebookAffinity(this._update, this));
+    this._register(_notebookKernelService.onDidChangeSelectedNotebooks(this._update, this));
+    this._register(_notebookKernelService.onDidChangeSourceActions(this._update, this));
+    this._register(_notebookKernelService.onDidChangeKernelDetectionTasks(this._update, this));
+  }
+  static {
+    __name(this, "NotebooKernelActionViewItem");
+  }
+  _kernelLabel;
+  render(container) {
+    this._update();
+    super.render(container);
+    container.classList.add("kernel-action-view-item");
+    this._kernelLabel = document.createElement("a");
+    container.appendChild(this._kernelLabel);
+    this.updateLabel();
+  }
+  updateLabel() {
+    if (this._kernelLabel) {
+      this._kernelLabel.classList.add("kernel-label");
+      this._kernelLabel.innerText = this._action.label;
+    }
+  }
+  _update() {
+    const notebook = this._editor.textModel;
+    if (!notebook) {
+      this._resetAction();
+      return;
+    }
+    KernelPickerMRUStrategy.updateKernelStatusAction(notebook, this._action, this._notebookKernelService, this._notebookKernelHistoryService);
+    this.updateClass();
+  }
+  _resetAction() {
+    this._action.enabled = false;
+    this._action.label = "";
+    this._action.class = "";
+  }
+};
+NotebooKernelActionViewItem = __decorateClass([
+  __decorateParam(3, INotebookKernelService),
+  __decorateParam(4, INotebookKernelHistoryService)
+], NotebooKernelActionViewItem);
+export {
+  NotebooKernelActionViewItem
+};
+//# sourceMappingURL=notebookKernelView.js.map

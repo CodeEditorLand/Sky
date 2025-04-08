@@ -1,2 +1,425 @@
-import{LcsDiff as V}from"../../../../../base/common/diff/diff.js";import{doHash as m,hash as K,numberHash as k}from"../../../../../base/common/hash.js";import"../../../../../base/common/lifecycle.js";import{URI as v}from"../../../../../base/common/uri.js";import"../../../../../base/common/worker/webWorker.js";import{PieceTreeTextBufferBuilder as $}from"../../../../../editor/common/model/pieceTreeTextBuffer/pieceTreeTextBufferBuilder.js";import{CellKind as q,NotebookCellsChangeType as p}from"../notebookCommon.js";import{Range as T}from"../../../../../editor/common/core/range.js";import{SearchParams as B}from"../../../../../editor/common/model/textModelSearch.js";import{MirrorModel as F}from"../../../../../editor/common/services/textModelSync/textModelSync.impl.js";import{DefaultEndOfLine as L}from"../../../../../editor/common/model.js";import"../../../../../editor/common/model/mirrorTextModel.js";import{filter as W}from"../../../../../base/common/objects.js";import{matchCellBasedOnSimilarties as P}from"./notebookCellMatching.js";import{generateUuid as _}from"../../../../../base/common/uuid.js";import{DiffChange as N}from"../../../../../base/common/diff/diffChange.js";import{computeDiff as S}from"../notebookDiff.js";const O="unmatchedOriginalCell";class R{constructor(t,n,a,l,e,r,c,h,I,d){this.handle=t;this._eol=l;this.language=r;this.cellKind=c;this.outputs=h;this.metadata=I;this.internalMetadata=d;this.textModel=new F(n,a,l,e)}textModel;_hash;get eol(){return this._eol===`\r
-`?L.CRLF:L.LF}onEvents(t){this.textModel.onEvents(t),this._hash=void 0}getValue(){return this.textModel.getValue()}getLinesContent(){return this.textModel.getLinesContent()}getComparisonValue(){return this._hash??=this._getHash()}_getHash(){let t=k(104579,0);t=m(this.language,t),t=m(this.getValue(),t),t=m(this.metadata,t),t=m(this.internalMetadata?.internalId||"",t);for(const a of this.outputs){t=m(a.metadata,t);for(const l of a.outputs)t=m(l.mime,t)}const n=this.outputs.flatMap(a=>a.outputs.map(l=>K(Array.from(l.data.buffer))));for(const a of n)t=k(a,t);return t}}class U{constructor(t,n,a,l){this.uri=t;this.cells=n;this.metadata=a;this.transientDocumentMetadata=l}acceptModelChanged(t){t.rawEvents.forEach(n=>{if(n.kind===p.ModelChange)this._spliceNotebookCells(n.changes);else if(n.kind===p.Move){const a=this.cells.splice(n.index,1);this.cells.splice(n.newIdx,0,...a)}else if(n.kind===p.Output){const a=this.cells[n.index];a.outputs=n.outputs}else if(n.kind===p.ChangeCellLanguage){this._assertIndex(n.index);const a=this.cells[n.index];a.language=n.language}else if(n.kind===p.ChangeCellMetadata){this._assertIndex(n.index);const a=this.cells[n.index];a.metadata=n.metadata}else if(n.kind===p.ChangeCellInternalMetadata){this._assertIndex(n.index);const a=this.cells[n.index];a.internalMetadata=n.internalMetadata}else n.kind===p.ChangeDocumentMetadata&&(this.metadata=n.metadata)})}_assertIndex(t){if(t<0||t>=this.cells.length)throw new Error(`Illegal index ${t}. Cells length: ${this.cells.length}`)}_spliceNotebookCells(t){t.reverse().forEach(n=>{const l=n[2].map(e=>new R(e.handle,v.parse(e.url),e.source,e.eol,e.versionId,e.language,e.cellKind,e.outputs,e.metadata));this.cells.splice(n[0],n[1],...l)})}}class C{constructor(t){this.hashValue=t}static create(t){const n=t.cells.map(a=>a.getComparisonValue());return new C(n)}static createWithCellId(t,n){const a=t.map(l=>n?`${m(l.internalMetadata?.internalId,k(104579,0))}#${l.getComparisonValue()}`:`${m(l.internalMetadata?.internalId,k(104579,0))}}`);return new C(a)}getElements(){return this.hashValue}}class A{_requestHandlerBrand;_models;constructor(){this._models=Object.create(null)}dispose(){}$acceptNewModel(t,n,a,l){this._models[t]=new U(v.parse(t),l.map(e=>new R(e.handle,v.parse(e.url),e.source,e.eol,e.versionId,e.language,e.cellKind,e.outputs,e.metadata,e.internalMetadata)),n,a)}$acceptModelChanged(t,n){this._models[t]?.acceptModelChanged(n)}$acceptCellModelChanged(t,n,a){this._models[t].cells.find(e=>e.handle===n)?.onEvents(a)}$acceptRemovedModel(t){this._models[t]&&delete this._models[t]}async $computeDiff(t,n){const a=this._getModel(t),l=this._getModel(n),e=new H(a),r=new H(l),c=W(a.metadata,o=>!a.transientDocumentMetadata[o]),h=W(l.metadata,o=>!l.transientDocumentMetadata[o]),I=JSON.stringify(c)!==JSON.stringify(h),d=new V(C.create(a),C.create(l)).ComputeDiff(!1);if(d.changes.length===0)return{metadataChanged:I,cellsDiff:d};if(S(e,r,{cellsDiff:{changes:d.changes,quitEarly:!1},metadataChanged:!1}).cellDiffInfo.every(o=>o.type==="modified"))return{metadataChanged:I,cellsDiff:d};let M=this.canComputeDiffWithCellIds(a,l);if(!M){const o=P(l.cells,a.cells);o.some(s=>s.original!==-1)&&(this.updateCellIdsBasedOnMappings(o,a.cells,l.cells),M=!0)}if(!M)return{metadataChanged:I,cellsDiff:d};const y=new V(C.createWithCellId(a.cells),C.createWithCellId(l.cells)).ComputeDiff(!1),u=S(e,r,{cellsDiff:{changes:y.changes,quitEarly:!1},metadataChanged:!1}).cellDiffInfo;let g=0;const f=[];return y.changes.forEach(o=>{if(!o.originalLength&&o.modifiedLength){const s=u.findIndex(i=>i.type==="insert"&&i.modifiedCellIndex===o.modifiedStart);u.slice(g,s).forEach(i=>{if(i.type==="unchanged"||i.type==="modified"){const b=a.cells[i.originalCellIndex],x=l.cells[i.modifiedCellIndex];(i.type==="modified"||b.getComparisonValue()!==x.getComparisonValue())&&f.push(new N(i.originalCellIndex,1,i.modifiedCellIndex,1))}}),f.push(o),g=s+1}else if(o.originalLength&&!o.modifiedLength){const s=u.findIndex(i=>i.type==="delete"&&i.originalCellIndex===o.originalStart);u.slice(g,s).forEach(i=>{if(i.type==="unchanged"||i.type==="modified"){const b=a.cells[i.originalCellIndex],x=l.cells[i.modifiedCellIndex];(i.type==="modified"||b.getComparisonValue()!==x.getComparisonValue())&&f.push(new N(i.originalCellIndex,1,i.modifiedCellIndex,1))}}),f.push(o),g=s+1}else{const s=u.findIndex(i=>i.type==="delete"&&i.originalCellIndex===o.originalStart||i.type==="insert"&&i.modifiedCellIndex===o.modifiedStart);u.slice(g,s).forEach(i=>{if(i.type==="unchanged"||i.type==="modified"){const b=a.cells[i.originalCellIndex],x=l.cells[i.modifiedCellIndex];(i.type==="modified"||b.getComparisonValue()!==x.getComparisonValue())&&f.push(new N(i.originalCellIndex,1,i.modifiedCellIndex,1))}}),f.push(o),g=s+1}}),u.slice(g).forEach(o=>{if(o.type==="unchanged"||o.type==="modified"){const s=a.cells[o.originalCellIndex],i=l.cells[o.modifiedCellIndex];(o.type==="modified"||s.getComparisonValue()!==i.getComparisonValue())&&f.push(new N(o.originalCellIndex,1,o.modifiedCellIndex,1))}}),{metadataChanged:I,cellsDiff:{changes:f,quitEarly:!1}}}canComputeDiffWithCellIds(t,n){return this.canComputeDiffWithCellInternalIds(t,n)||this.canComputeDiffWithCellMetadataIds(t,n)}canComputeDiffWithCellInternalIds(t,n){const a=t.cells.map((e,r)=>({index:r,id:e.internalMetadata?.internalId||""})),l=n.cells.map((e,r)=>({index:r,id:e.internalMetadata?.internalId||""}));return a.some(e=>!e.id)||l.some(e=>!e.id)?!1:a.some(e=>l.find(r=>r.id===e.id))}canComputeDiffWithCellMetadataIds(t,n){const a=t.cells.map((e,r)=>({index:r,id:e.metadata?.id||""})),l=n.cells.map((e,r)=>({index:r,id:e.metadata?.id||""}));return a.some(e=>!e.id)||l.some(e=>!e.id)||a.every(e=>!l.find(r=>r.id===e.id))?!1:(t.cells.map((e,r)=>{e.internalMetadata=e.internalMetadata||{},e.internalMetadata.internalId=e.metadata?.id||""}),n.cells.map((e,r)=>{e.internalMetadata=e.internalMetadata||{},e.internalMetadata.internalId=e.metadata?.id||""}),!0)}isOriginalCellMatchedWithModifiedCell(t){return(t.internalMetadata?.internalId||"").startsWith(O)}updateCellIdsBasedOnMappings(t,n,a){const l=new Map;return n.map((e,r)=>{e.internalMetadata=e.internalMetadata||{internalId:""},e.internalMetadata.internalId=`${O}${_()}`;const c=t.find(h=>h.original===r);c&&(e.internalMetadata.internalId=_(),l.set(c.modified,e.internalMetadata.internalId))}),a.map((e,r)=>{e.internalMetadata=e.internalMetadata||{internalId:""},e.internalMetadata.internalId=l.get(r)??_()}),!0}$canPromptRecommendation(t){const a=this._getModel(t).cells;for(let l=0;l<a.length;l++){const e=a[l];if(e.cellKind===q.Markup||e.language!=="python")continue;const c=new B("import\\s*pandas|from\\s*pandas",!0,!1,null).parseSearchRequest();if(!c)continue;const h=new $;h.acceptChunk(e.getValue());const d=h.finish(!0).create(e.eol).textBuffer,w=d.getLineCount(),M=Math.min(w,20),y=new T(1,1,M,d.getLineLength(M)+1);if(d.findMatchesLineByLine(y,c,!0,1).length>0)return!0}return!1}_getModel(t){return this._models[t]}}function ke(){return new A}class H{constructor(t){this.notebook=t;this.cells=t.cells.map(n=>new J(n))}cells}class J{constructor(t){this.cell=t}get cellKind(){return this.cell.cellKind}getHashValue(){return this.cell.getComparisonValue()}equal(t){return t.cellKind!==this.cellKind?!1:this.getHashValue()===t.getHashValue()}}export{A as NotebookWorker,ke as create};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { IDiffChange, ISequence, LcsDiff } from "../../../../../base/common/diff/diff.js";
+import { doHash, hash, numberHash } from "../../../../../base/common/hash.js";
+import { IDisposable } from "../../../../../base/common/lifecycle.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { IWebWorkerServerRequestHandler } from "../../../../../base/common/worker/webWorker.js";
+import { PieceTreeTextBufferBuilder } from "../../../../../editor/common/model/pieceTreeTextBuffer/pieceTreeTextBufferBuilder.js";
+import { CellKind, IMainCellDto, INotebookDiffResult, IOutputDto, NotebookCellInternalMetadata, NotebookCellMetadata, NotebookCellsChangedEventDto, NotebookCellsChangeType, NotebookCellTextModelSplice, NotebookDocumentMetadata, TransientDocumentMetadata } from "../notebookCommon.js";
+import { Range } from "../../../../../editor/common/core/range.js";
+import { SearchParams } from "../../../../../editor/common/model/textModelSearch.js";
+import { MirrorModel } from "../../../../../editor/common/services/textModelSync/textModelSync.impl.js";
+import { DefaultEndOfLine } from "../../../../../editor/common/model.js";
+import { IModelChangedEvent } from "../../../../../editor/common/model/mirrorTextModel.js";
+import { filter } from "../../../../../base/common/objects.js";
+import { matchCellBasedOnSimilarties } from "./notebookCellMatching.js";
+import { generateUuid } from "../../../../../base/common/uuid.js";
+import { DiffChange } from "../../../../../base/common/diff/diffChange.js";
+import { computeDiff } from "../notebookDiff.js";
+const PREFIX_FOR_UNMATCHED_ORIGINAL_CELLS = `unmatchedOriginalCell`;
+class MirrorCell {
+  constructor(handle, uri, source, _eol, versionId, language, cellKind, outputs, metadata, internalMetadata) {
+    this.handle = handle;
+    this._eol = _eol;
+    this.language = language;
+    this.cellKind = cellKind;
+    this.outputs = outputs;
+    this.metadata = metadata;
+    this.internalMetadata = internalMetadata;
+    this.textModel = new MirrorModel(uri, source, _eol, versionId);
+  }
+  static {
+    __name(this, "MirrorCell");
+  }
+  textModel;
+  _hash;
+  get eol() {
+    return this._eol === "\r\n" ? DefaultEndOfLine.CRLF : DefaultEndOfLine.LF;
+  }
+  onEvents(e) {
+    this.textModel.onEvents(e);
+    this._hash = void 0;
+  }
+  getValue() {
+    return this.textModel.getValue();
+  }
+  getLinesContent() {
+    return this.textModel.getLinesContent();
+  }
+  getComparisonValue() {
+    return this._hash ??= this._getHash();
+  }
+  _getHash() {
+    let hashValue = numberHash(104579, 0);
+    hashValue = doHash(this.language, hashValue);
+    hashValue = doHash(this.getValue(), hashValue);
+    hashValue = doHash(this.metadata, hashValue);
+    hashValue = doHash(this.internalMetadata?.internalId || "", hashValue);
+    for (const op of this.outputs) {
+      hashValue = doHash(op.metadata, hashValue);
+      for (const output of op.outputs) {
+        hashValue = doHash(output.mime, hashValue);
+      }
+    }
+    const digests = this.outputs.flatMap(
+      (op) => op.outputs.map((o) => hash(Array.from(o.data.buffer)))
+    );
+    for (const digest of digests) {
+      hashValue = numberHash(digest, hashValue);
+    }
+    return hashValue;
+  }
+}
+class MirrorNotebookDocument {
+  constructor(uri, cells, metadata, transientDocumentMetadata) {
+    this.uri = uri;
+    this.cells = cells;
+    this.metadata = metadata;
+    this.transientDocumentMetadata = transientDocumentMetadata;
+  }
+  static {
+    __name(this, "MirrorNotebookDocument");
+  }
+  acceptModelChanged(event) {
+    event.rawEvents.forEach((e) => {
+      if (e.kind === NotebookCellsChangeType.ModelChange) {
+        this._spliceNotebookCells(e.changes);
+      } else if (e.kind === NotebookCellsChangeType.Move) {
+        const cells = this.cells.splice(e.index, 1);
+        this.cells.splice(e.newIdx, 0, ...cells);
+      } else if (e.kind === NotebookCellsChangeType.Output) {
+        const cell = this.cells[e.index];
+        cell.outputs = e.outputs;
+      } else if (e.kind === NotebookCellsChangeType.ChangeCellLanguage) {
+        this._assertIndex(e.index);
+        const cell = this.cells[e.index];
+        cell.language = e.language;
+      } else if (e.kind === NotebookCellsChangeType.ChangeCellMetadata) {
+        this._assertIndex(e.index);
+        const cell = this.cells[e.index];
+        cell.metadata = e.metadata;
+      } else if (e.kind === NotebookCellsChangeType.ChangeCellInternalMetadata) {
+        this._assertIndex(e.index);
+        const cell = this.cells[e.index];
+        cell.internalMetadata = e.internalMetadata;
+      } else if (e.kind === NotebookCellsChangeType.ChangeDocumentMetadata) {
+        this.metadata = e.metadata;
+      }
+    });
+  }
+  _assertIndex(index) {
+    if (index < 0 || index >= this.cells.length) {
+      throw new Error(`Illegal index ${index}. Cells length: ${this.cells.length}`);
+    }
+  }
+  _spliceNotebookCells(splices) {
+    splices.reverse().forEach((splice) => {
+      const cellDtos = splice[2];
+      const newCells = cellDtos.map((cell) => {
+        return new MirrorCell(
+          cell.handle,
+          URI.parse(cell.url),
+          cell.source,
+          cell.eol,
+          cell.versionId,
+          cell.language,
+          cell.cellKind,
+          cell.outputs,
+          cell.metadata
+        );
+      });
+      this.cells.splice(splice[0], splice[1], ...newCells);
+    });
+  }
+}
+class CellSequence {
+  constructor(hashValue) {
+    this.hashValue = hashValue;
+  }
+  static {
+    __name(this, "CellSequence");
+  }
+  static create(textModel) {
+    const hashValue = textModel.cells.map((c) => c.getComparisonValue());
+    return new CellSequence(hashValue);
+  }
+  static createWithCellId(cells, includeCellContents) {
+    const hashValue = cells.map((c) => {
+      if (includeCellContents) {
+        return `${doHash(c.internalMetadata?.internalId, numberHash(104579, 0))}#${c.getComparisonValue()}`;
+      } else {
+        return `${doHash(c.internalMetadata?.internalId, numberHash(104579, 0))}}`;
+      }
+    });
+    return new CellSequence(hashValue);
+  }
+  getElements() {
+    return this.hashValue;
+  }
+}
+class NotebookWorker {
+  static {
+    __name(this, "NotebookWorker");
+  }
+  _requestHandlerBrand;
+  _models;
+  constructor() {
+    this._models = /* @__PURE__ */ Object.create(null);
+  }
+  dispose() {
+  }
+  $acceptNewModel(uri, metadata, transientDocumentMetadata, cells) {
+    this._models[uri] = new MirrorNotebookDocument(URI.parse(uri), cells.map((dto) => new MirrorCell(
+      dto.handle,
+      URI.parse(dto.url),
+      dto.source,
+      dto.eol,
+      dto.versionId,
+      dto.language,
+      dto.cellKind,
+      dto.outputs,
+      dto.metadata,
+      dto.internalMetadata
+    )), metadata, transientDocumentMetadata);
+  }
+  $acceptModelChanged(strURL, event) {
+    const model = this._models[strURL];
+    model?.acceptModelChanged(event);
+  }
+  $acceptCellModelChanged(strURL, handle, event) {
+    const model = this._models[strURL];
+    model.cells.find((cell) => cell.handle === handle)?.onEvents(event);
+  }
+  $acceptRemovedModel(strURL) {
+    if (!this._models[strURL]) {
+      return;
+    }
+    delete this._models[strURL];
+  }
+  async $computeDiff(originalUrl, modifiedUrl) {
+    const original = this._getModel(originalUrl);
+    const modified = this._getModel(modifiedUrl);
+    const originalModel = new NotebookTextModelFacade(original);
+    const modifiedModel = new NotebookTextModelFacade(modified);
+    const originalMetadata = filter(original.metadata, (key) => !original.transientDocumentMetadata[key]);
+    const modifiedMetadata = filter(modified.metadata, (key) => !modified.transientDocumentMetadata[key]);
+    const metadataChanged = JSON.stringify(originalMetadata) !== JSON.stringify(modifiedMetadata);
+    const originalDiff = new LcsDiff(CellSequence.create(original), CellSequence.create(modified)).ComputeDiff(false);
+    if (originalDiff.changes.length === 0) {
+      return {
+        metadataChanged,
+        cellsDiff: originalDiff
+      };
+    }
+    const cellMapping = computeDiff(originalModel, modifiedModel, { cellsDiff: { changes: originalDiff.changes, quitEarly: false }, metadataChanged: false }).cellDiffInfo;
+    if (cellMapping.every((c) => c.type === "modified")) {
+      return {
+        metadataChanged,
+        cellsDiff: originalDiff
+      };
+    }
+    let diffUsingCellIds = this.canComputeDiffWithCellIds(original, modified);
+    if (!diffUsingCellIds) {
+      const result = matchCellBasedOnSimilarties(modified.cells, original.cells);
+      if (result.some((c) => c.original !== -1)) {
+        this.updateCellIdsBasedOnMappings(result, original.cells, modified.cells);
+        diffUsingCellIds = true;
+      }
+    }
+    if (!diffUsingCellIds) {
+      return {
+        metadataChanged,
+        cellsDiff: originalDiff
+      };
+    }
+    const cellsInsertedOrDeletedDiff = new LcsDiff(CellSequence.createWithCellId(original.cells), CellSequence.createWithCellId(modified.cells)).ComputeDiff(false);
+    const cellDiffInfo = computeDiff(originalModel, modifiedModel, { cellsDiff: { changes: cellsInsertedOrDeletedDiff.changes, quitEarly: false }, metadataChanged: false }).cellDiffInfo;
+    let processedIndex = 0;
+    const changes = [];
+    cellsInsertedOrDeletedDiff.changes.forEach((change) => {
+      if (!change.originalLength && change.modifiedLength) {
+        const changeIndex = cellDiffInfo.findIndex((c) => c.type === "insert" && c.modifiedCellIndex === change.modifiedStart);
+        cellDiffInfo.slice(processedIndex, changeIndex).forEach((c) => {
+          if (c.type === "unchanged" || c.type === "modified") {
+            const originalCell = original.cells[c.originalCellIndex];
+            const modifiedCell = modified.cells[c.modifiedCellIndex];
+            const changed = c.type === "modified" || originalCell.getComparisonValue() !== modifiedCell.getComparisonValue();
+            if (changed) {
+              changes.push(new DiffChange(c.originalCellIndex, 1, c.modifiedCellIndex, 1));
+            }
+          }
+        });
+        changes.push(change);
+        processedIndex = changeIndex + 1;
+      } else if (change.originalLength && !change.modifiedLength) {
+        const changeIndex = cellDiffInfo.findIndex((c) => c.type === "delete" && c.originalCellIndex === change.originalStart);
+        cellDiffInfo.slice(processedIndex, changeIndex).forEach((c) => {
+          if (c.type === "unchanged" || c.type === "modified") {
+            const originalCell = original.cells[c.originalCellIndex];
+            const modifiedCell = modified.cells[c.modifiedCellIndex];
+            const changed = c.type === "modified" || originalCell.getComparisonValue() !== modifiedCell.getComparisonValue();
+            if (changed) {
+              changes.push(new DiffChange(c.originalCellIndex, 1, c.modifiedCellIndex, 1));
+            }
+          }
+        });
+        changes.push(change);
+        processedIndex = changeIndex + 1;
+      } else {
+        const changeIndex = cellDiffInfo.findIndex((c) => c.type === "delete" && c.originalCellIndex === change.originalStart || c.type === "insert" && c.modifiedCellIndex === change.modifiedStart);
+        cellDiffInfo.slice(processedIndex, changeIndex).forEach((c) => {
+          if (c.type === "unchanged" || c.type === "modified") {
+            const originalCell = original.cells[c.originalCellIndex];
+            const modifiedCell = modified.cells[c.modifiedCellIndex];
+            const changed = c.type === "modified" || originalCell.getComparisonValue() !== modifiedCell.getComparisonValue();
+            if (changed) {
+              changes.push(new DiffChange(c.originalCellIndex, 1, c.modifiedCellIndex, 1));
+            }
+          }
+        });
+        changes.push(change);
+        processedIndex = changeIndex + 1;
+      }
+    });
+    cellDiffInfo.slice(processedIndex).forEach((c) => {
+      if (c.type === "unchanged" || c.type === "modified") {
+        const originalCell = original.cells[c.originalCellIndex];
+        const modifiedCell = modified.cells[c.modifiedCellIndex];
+        const changed = c.type === "modified" || originalCell.getComparisonValue() !== modifiedCell.getComparisonValue();
+        if (changed) {
+          changes.push(new DiffChange(c.originalCellIndex, 1, c.modifiedCellIndex, 1));
+        }
+      }
+    });
+    return {
+      metadataChanged,
+      cellsDiff: {
+        changes,
+        quitEarly: false
+      }
+    };
+  }
+  canComputeDiffWithCellIds(original, modified) {
+    return this.canComputeDiffWithCellInternalIds(original, modified) || this.canComputeDiffWithCellMetadataIds(original, modified);
+  }
+  canComputeDiffWithCellInternalIds(original, modified) {
+    const originalCellIndexIds = original.cells.map((cell, index) => ({ index, id: cell.internalMetadata?.internalId || "" }));
+    const modifiedCellIndexIds = modified.cells.map((cell, index) => ({ index, id: cell.internalMetadata?.internalId || "" }));
+    if (originalCellIndexIds.some((c) => !c.id) || modifiedCellIndexIds.some((c) => !c.id)) {
+      return false;
+    }
+    return originalCellIndexIds.some((c) => modifiedCellIndexIds.find((m) => m.id === c.id));
+  }
+  canComputeDiffWithCellMetadataIds(original, modified) {
+    const originalCellIndexIds = original.cells.map((cell, index) => ({ index, id: cell.metadata?.id || "" }));
+    const modifiedCellIndexIds = modified.cells.map((cell, index) => ({ index, id: cell.metadata?.id || "" }));
+    if (originalCellIndexIds.some((c) => !c.id) || modifiedCellIndexIds.some((c) => !c.id)) {
+      return false;
+    }
+    if (originalCellIndexIds.every((c) => !modifiedCellIndexIds.find((m) => m.id === c.id))) {
+      return false;
+    }
+    original.cells.map((cell, index) => {
+      cell.internalMetadata = cell.internalMetadata || {};
+      cell.internalMetadata.internalId = cell.metadata?.id || "";
+    });
+    modified.cells.map((cell, index) => {
+      cell.internalMetadata = cell.internalMetadata || {};
+      cell.internalMetadata.internalId = cell.metadata?.id || "";
+    });
+    return true;
+  }
+  isOriginalCellMatchedWithModifiedCell(originalCell) {
+    return (originalCell.internalMetadata?.internalId || "").startsWith(PREFIX_FOR_UNMATCHED_ORIGINAL_CELLS);
+  }
+  updateCellIdsBasedOnMappings(mappings, originalCells, modifiedCells) {
+    const uuids = /* @__PURE__ */ new Map();
+    originalCells.map((cell, index) => {
+      cell.internalMetadata = cell.internalMetadata || { internalId: "" };
+      cell.internalMetadata.internalId = `${PREFIX_FOR_UNMATCHED_ORIGINAL_CELLS}${generateUuid()}`;
+      const found = mappings.find((r) => r.original === index);
+      if (found) {
+        cell.internalMetadata.internalId = generateUuid();
+        uuids.set(found.modified, cell.internalMetadata.internalId);
+      }
+    });
+    modifiedCells.map((cell, index) => {
+      cell.internalMetadata = cell.internalMetadata || { internalId: "" };
+      cell.internalMetadata.internalId = uuids.get(index) ?? generateUuid();
+    });
+    return true;
+  }
+  $canPromptRecommendation(modelUrl) {
+    const model = this._getModel(modelUrl);
+    const cells = model.cells;
+    for (let i = 0; i < cells.length; i++) {
+      const cell = cells[i];
+      if (cell.cellKind === CellKind.Markup) {
+        continue;
+      }
+      if (cell.language !== "python") {
+        continue;
+      }
+      const searchParams = new SearchParams("import\\s*pandas|from\\s*pandas", true, false, null);
+      const searchData = searchParams.parseSearchRequest();
+      if (!searchData) {
+        continue;
+      }
+      const builder = new PieceTreeTextBufferBuilder();
+      builder.acceptChunk(cell.getValue());
+      const bufferFactory = builder.finish(true);
+      const textBuffer = bufferFactory.create(cell.eol).textBuffer;
+      const lineCount = textBuffer.getLineCount();
+      const maxLineCount = Math.min(lineCount, 20);
+      const range = new Range(1, 1, maxLineCount, textBuffer.getLineLength(maxLineCount) + 1);
+      const cellMatches = textBuffer.findMatchesLineByLine(range, searchData, true, 1);
+      if (cellMatches.length > 0) {
+        return true;
+      }
+    }
+    return false;
+  }
+  _getModel(uri) {
+    return this._models[uri];
+  }
+}
+function create() {
+  return new NotebookWorker();
+}
+__name(create, "create");
+class NotebookTextModelFacade {
+  constructor(notebook) {
+    this.notebook = notebook;
+    this.cells = notebook.cells.map((cell) => new NotebookCellTextModelFacade(cell));
+  }
+  static {
+    __name(this, "NotebookTextModelFacade");
+  }
+  cells;
+}
+class NotebookCellTextModelFacade {
+  constructor(cell) {
+    this.cell = cell;
+  }
+  static {
+    __name(this, "NotebookCellTextModelFacade");
+  }
+  get cellKind() {
+    return this.cell.cellKind;
+  }
+  getHashValue() {
+    return this.cell.getComparisonValue();
+  }
+  equal(cell) {
+    if (cell.cellKind !== this.cellKind) {
+      return false;
+    }
+    return this.getHashValue() === cell.getHashValue();
+  }
+}
+export {
+  NotebookWorker,
+  create
+};
+//# sourceMappingURL=notebookWebWorker.js.map

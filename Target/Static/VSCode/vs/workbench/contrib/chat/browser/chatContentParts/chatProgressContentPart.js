@@ -1,1 +1,128 @@
-var b=Object.defineProperty,y=Object.getOwnPropertyDescriptor,C=(e,s,t,r)=>{for(var o,i=r>1?void 0:r?y(s,t):s,n=e.length-1;n>=0;n--)(o=e[n])&&(i=(r?o(s,t,i):o(i))||i);return r&&i&&b(s,t,i),i},d=(e,s)=>(t,r)=>s(t,r,e);import{$ as m,append as h}from"../../../../../base/browser/dom.js";import{alert as N}from"../../../../../base/browser/ui/aria/aria.js";import{Codicon as I}from"../../../../../base/common/codicons.js";import{MarkdownString as M}from"../../../../../base/common/htmlContent.js";import{Disposable as x}from"../../../../../base/common/lifecycle.js";import{ThemeIcon as f}from"../../../../../base/common/themables.js";import{URI as A}from"../../../../../base/common/uri.js";import"../../../../../editor/browser/widget/markdownRenderer/browser/markdownRenderer.js";import{localize as k}from"../../../../../nls.js";import{IInstantiationService as w}from"../../../../../platform/instantiation/common/instantiation.js";import"../../common/chatService.js";import{isResponseVM as H}from"../../common/chatViewModel.js";import"../chat.js";import{InlineAnchorWidget as L}from"../chatInlineAnchorWidget.js";import"./chatContentParts.js";import{IChatMarkdownAnchorService as S}from"./chatMarkdownAnchorService.js";let c=class extends x{constructor(e,s,t,r,o,i,n,a){super(),this.instantiationService=n,this.chatMarkdownAnchorService=a;const d=t.content.slice(t.contentIndex+1);if(this.showSpinner=r??v(d,t.element),this.isHidden=!0!==o&&d.some((e=>"progressMessage"!==e.kind)),this.isHidden)return void(this.domNode=m(""));this.showSpinner&&N(e.content.value);const c=i||(this.showSpinner?f.modify(I.loading,"spin"):I.check),p=this._register(s.render(e.content));p.element.classList.add("progress-step"),this.renderFileWidgets(p.element),this.domNode=m(".progress-container");const l=m("div");l.classList.add(...f.asClassNameArray(c)),h(this.domNode,l),h(this.domNode,p.element)}domNode;showSpinner;isHidden;renderFileWidgets(e){e.querySelectorAll("a").forEach((e=>{if(!e.textContent?.trim()){const s=e.getAttribute("data-href"),t=s?A.parse(s):void 0;if(t?.scheme){const s=this._register(this.instantiationService.createInstance(L,e,{kind:"inlineReference",inlineReference:t}));this._register(this.chatMarkdownAnchorService.register(s))}}}))}hasSameContent(e,s,t){if(s.some((e=>"progressMessage"!==e.kind))&&!this.isHidden)return!1;const r=v(s,t);return"progressMessage"===e.kind&&this.showSpinner===r}};function v(e,s){return H(s)&&!s.isComplete&&0===e.length}c=C([d(6,w),d(7,S)],c);let l=class extends c{constructor(e,s,t,r,o){super({kind:"progressMessage",content:e.isPaused?(new M).appendText(k("pausedMessage","Paused")):(new M).appendText(k("workingMessage","Working..."))},s,t,void 0,void 0,e.isPaused?I.debugPause:void 0,r,o),this.workingProgress=e}hasSameContent(e,s,t){return"working"===e.kind&&this.workingProgress.isPaused===e.isPaused}};l=C([d(3,w),d(4,S)],l);class ie{domNode;constructor(e,s){this.domNode=m(".progress-container");const t=m("div");t.classList.add(...f.asClassNameArray(s)),h(this.domNode,t),e.classList.add("progress-step"),h(this.domNode,e)}}export{ie as ChatCustomProgressPart,c as ChatProgressContentPart,l as ChatWorkingProgressContentPart};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { $, append } from "../../../../../base/browser/dom.js";
+import { alert } from "../../../../../base/browser/ui/aria/aria.js";
+import { Codicon } from "../../../../../base/common/codicons.js";
+import { MarkdownString } from "../../../../../base/common/htmlContent.js";
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { ThemeIcon } from "../../../../../base/common/themables.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { MarkdownRenderer } from "../../../../../editor/browser/widget/markdownRenderer/browser/markdownRenderer.js";
+import { localize } from "../../../../../nls.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { IChatProgressMessage, IChatTask } from "../../common/chatService.js";
+import { IChatRendererContent, IChatWorkingProgress, isResponseVM } from "../../common/chatViewModel.js";
+import { ChatTreeItem } from "../chat.js";
+import { InlineAnchorWidget } from "../chatInlineAnchorWidget.js";
+import { IChatContentPart, IChatContentPartRenderContext } from "./chatContentParts.js";
+import { IChatMarkdownAnchorService } from "./chatMarkdownAnchorService.js";
+let ChatProgressContentPart = class extends Disposable {
+  constructor(progress, renderer, context, forceShowSpinner, forceShowMessage, icon, instantiationService, chatMarkdownAnchorService) {
+    super();
+    this.instantiationService = instantiationService;
+    this.chatMarkdownAnchorService = chatMarkdownAnchorService;
+    const followingContent = context.content.slice(context.contentIndex + 1);
+    this.showSpinner = forceShowSpinner ?? shouldShowSpinner(followingContent, context.element);
+    this.isHidden = forceShowMessage !== true && followingContent.some((part) => part.kind !== "progressMessage");
+    if (this.isHidden) {
+      this.domNode = $("");
+      return;
+    }
+    if (this.showSpinner) {
+      alert(progress.content.value);
+    }
+    const codicon = icon ? icon : this.showSpinner ? ThemeIcon.modify(Codicon.loading, "spin") : Codicon.check;
+    const result = this._register(renderer.render(progress.content));
+    result.element.classList.add("progress-step");
+    this.renderFileWidgets(result.element);
+    this.domNode = $(".progress-container");
+    const iconElement = $("div");
+    iconElement.classList.add(...ThemeIcon.asClassNameArray(codicon));
+    append(this.domNode, iconElement);
+    append(this.domNode, result.element);
+  }
+  static {
+    __name(this, "ChatProgressContentPart");
+  }
+  domNode;
+  showSpinner;
+  isHidden;
+  renderFileWidgets(element) {
+    const links = element.querySelectorAll("a");
+    links.forEach((a) => {
+      if (!a.textContent?.trim()) {
+        const href = a.getAttribute("data-href");
+        const uri = href ? URI.parse(href) : void 0;
+        if (uri?.scheme) {
+          const widget = this._register(this.instantiationService.createInstance(InlineAnchorWidget, a, { kind: "inlineReference", inlineReference: uri }));
+          this._register(this.chatMarkdownAnchorService.register(widget));
+        }
+      }
+    });
+  }
+  hasSameContent(other, followingContent, element) {
+    if (followingContent.some((part) => part.kind !== "progressMessage") && !this.isHidden) {
+      return false;
+    }
+    const showSpinner = shouldShowSpinner(followingContent, element);
+    return other.kind === "progressMessage" && this.showSpinner === showSpinner;
+  }
+};
+ChatProgressContentPart = __decorateClass([
+  __decorateParam(6, IInstantiationService),
+  __decorateParam(7, IChatMarkdownAnchorService)
+], ChatProgressContentPart);
+function shouldShowSpinner(followingContent, element) {
+  return isResponseVM(element) && !element.isComplete && followingContent.length === 0;
+}
+__name(shouldShowSpinner, "shouldShowSpinner");
+let ChatWorkingProgressContentPart = class extends ChatProgressContentPart {
+  constructor(workingProgress, renderer, context, instantiationService, chatMarkdownAnchorService) {
+    const progressMessage = {
+      kind: "progressMessage",
+      content: workingProgress.isPaused ? new MarkdownString().appendText(localize("pausedMessage", "Paused")) : new MarkdownString().appendText(localize("workingMessage", "Working..."))
+    };
+    super(progressMessage, renderer, context, void 0, void 0, workingProgress.isPaused ? Codicon.debugPause : void 0, instantiationService, chatMarkdownAnchorService);
+    this.workingProgress = workingProgress;
+  }
+  static {
+    __name(this, "ChatWorkingProgressContentPart");
+  }
+  hasSameContent(other, followingContent, element) {
+    return other.kind === "working" && this.workingProgress.isPaused === other.isPaused;
+  }
+};
+ChatWorkingProgressContentPart = __decorateClass([
+  __decorateParam(3, IInstantiationService),
+  __decorateParam(4, IChatMarkdownAnchorService)
+], ChatWorkingProgressContentPart);
+class ChatCustomProgressPart {
+  static {
+    __name(this, "ChatCustomProgressPart");
+  }
+  domNode;
+  constructor(messageElement, icon) {
+    this.domNode = $(".progress-container");
+    const iconElement = $("div");
+    iconElement.classList.add(...ThemeIcon.asClassNameArray(icon));
+    append(this.domNode, iconElement);
+    messageElement.classList.add("progress-step");
+    append(this.domNode, messageElement);
+  }
+}
+export {
+  ChatCustomProgressPart,
+  ChatProgressContentPart,
+  ChatWorkingProgressContentPart
+};
+//# sourceMappingURL=chatProgressContentPart.js.map

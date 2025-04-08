@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/contrib/markers/browser/markersViewActions.css"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\n.markers-panel-action-filter > .markers-panel-filter-controls > .monaco-action-bar .action-label.markers-filters.checked {\r\n\tborder-color: var(--vscode-inputOption-activeBorder);\r\n\tcolor: var(--vscode-inputOption-activeForeground);\r\n\tbackground-color: var(--vscode-inputOption-activeBackground);\r\n}\r\n"],
+  "mappings": "AAKA,CAAC,4BAA4B,EAAE,CAAC,8BAA8B,EAAE,CAAC,kBAAkB,CAAC,YAAY,CAAC,eAAe,CAAC;AAChH,gBAAc,IAAI;AAClB,SAAO,IAAI;AACX,oBAAkB,IAAI;AACvB;",
+  "names": []
+}

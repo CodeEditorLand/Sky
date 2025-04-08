@@ -1,1 +1,113 @@
-import"../colorPicker.css";import*as i from"../../../../../base/browser/dom.js";import{GlobalPointerMoveMonitor as g}from"../../../../../base/browser/globalPointerMoveMonitor.js";import{Color as l,RGBA as p}from"../../../../../base/common/color.js";import{Emitter as h}from"../../../../../base/common/event.js";import{Disposable as c}from"../../../../../base/common/lifecycle.js";import"../colorPickerModel.js";import{ColorPickerWidgetType as u}from"../colorPickerParticipantUtils.js";const n=i.$;class m extends c{constructor(e,o,r){super();this.model=o;r===u.Standalone?(this.domNode=i.append(e,n(".standalone-strip")),this.overlay=i.append(this.domNode,n(".standalone-overlay"))):(this.domNode=i.append(e,n(".strip")),this.overlay=i.append(this.domNode,n(".overlay"))),this.slider=i.append(this.domNode,n(".slider")),this.slider.style.top="0px",this._register(i.addDisposableListener(this.domNode,i.EventType.POINTER_DOWN,s=>this.onPointerDown(s))),this._register(o.onDidChangeColor(this.onDidChangeColor,this)),this.layout()}domNode;overlay;slider;height;_onDidChange=new h;onDidChange=this._onDidChange.event;_onColorFlushed=new h;onColorFlushed=this._onColorFlushed.event;layout(){this.height=this.domNode.offsetHeight-this.slider.offsetHeight;const e=this.getValue(this.model.color);this.updateSliderPosition(e)}onDidChangeColor(e){const o=this.getValue(e);this.updateSliderPosition(o)}onPointerDown(e){if(!e.target||!(e.target instanceof Element))return;const o=this._register(new g),r=i.getDomNodePagePosition(this.domNode);this.domNode.classList.add("grabbing"),e.target!==this.slider&&this.onDidChangeTop(e.offsetY),o.startMonitoring(e.target,e.pointerId,e.buttons,d=>this.onDidChangeTop(d.pageY-r.top),()=>null);const s=i.addDisposableListener(e.target.ownerDocument,i.EventType.POINTER_UP,()=>{this._onColorFlushed.fire(),s.dispose(),o.stopMonitoring(!0),this.domNode.classList.remove("grabbing")},!0)}onDidChangeTop(e){const o=Math.max(0,Math.min(1,1-e/this.height));this.updateSliderPosition(o),this._onDidChange.fire(o)}updateSliderPosition(e){this.slider.style.top=`${(1-e)*this.height}px`}}class E extends m{constructor(t,e,o){super(t,e,o),this.domNode.classList.add("opacity-strip"),this.onDidChangeColor(this.model.color)}onDidChangeColor(t){super.onDidChangeColor(t);const{r:e,g:o,b:r}=t.rgba,s=new l(new p(e,o,r,1)),d=new l(new p(e,o,r,0));this.overlay.style.background=`linear-gradient(to bottom, ${s} 0%, ${d} 100%)`}getValue(t){return t.hsva.a}}class M extends m{constructor(t,e,o){super(t,e,o),this.domNode.classList.add("hue-strip")}getValue(t){return 1-t.hsva.h/360}}export{M as HueStrip,E as OpacityStrip,m as Strip};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import "../colorPicker.css";
+import * as dom from "../../../../../base/browser/dom.js";
+import { GlobalPointerMoveMonitor } from "../../../../../base/browser/globalPointerMoveMonitor.js";
+import { Color, RGBA } from "../../../../../base/common/color.js";
+import { Emitter, Event } from "../../../../../base/common/event.js";
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { ColorPickerModel } from "../colorPickerModel.js";
+import { ColorPickerWidgetType } from "../colorPickerParticipantUtils.js";
+const $ = dom.$;
+class Strip extends Disposable {
+  constructor(container, model, type) {
+    super();
+    this.model = model;
+    if (type === ColorPickerWidgetType.Standalone) {
+      this.domNode = dom.append(container, $(".standalone-strip"));
+      this.overlay = dom.append(this.domNode, $(".standalone-overlay"));
+    } else {
+      this.domNode = dom.append(container, $(".strip"));
+      this.overlay = dom.append(this.domNode, $(".overlay"));
+    }
+    this.slider = dom.append(this.domNode, $(".slider"));
+    this.slider.style.top = `0px`;
+    this._register(dom.addDisposableListener(this.domNode, dom.EventType.POINTER_DOWN, (e) => this.onPointerDown(e)));
+    this._register(model.onDidChangeColor(this.onDidChangeColor, this));
+    this.layout();
+  }
+  static {
+    __name(this, "Strip");
+  }
+  domNode;
+  overlay;
+  slider;
+  height;
+  _onDidChange = new Emitter();
+  onDidChange = this._onDidChange.event;
+  _onColorFlushed = new Emitter();
+  onColorFlushed = this._onColorFlushed.event;
+  layout() {
+    this.height = this.domNode.offsetHeight - this.slider.offsetHeight;
+    const value = this.getValue(this.model.color);
+    this.updateSliderPosition(value);
+  }
+  onDidChangeColor(color) {
+    const value = this.getValue(color);
+    this.updateSliderPosition(value);
+  }
+  onPointerDown(e) {
+    if (!e.target || !(e.target instanceof Element)) {
+      return;
+    }
+    const monitor = this._register(new GlobalPointerMoveMonitor());
+    const origin = dom.getDomNodePagePosition(this.domNode);
+    this.domNode.classList.add("grabbing");
+    if (e.target !== this.slider) {
+      this.onDidChangeTop(e.offsetY);
+    }
+    monitor.startMonitoring(e.target, e.pointerId, e.buttons, (event) => this.onDidChangeTop(event.pageY - origin.top), () => null);
+    const pointerUpListener = dom.addDisposableListener(e.target.ownerDocument, dom.EventType.POINTER_UP, () => {
+      this._onColorFlushed.fire();
+      pointerUpListener.dispose();
+      monitor.stopMonitoring(true);
+      this.domNode.classList.remove("grabbing");
+    }, true);
+  }
+  onDidChangeTop(top) {
+    const value = Math.max(0, Math.min(1, 1 - top / this.height));
+    this.updateSliderPosition(value);
+    this._onDidChange.fire(value);
+  }
+  updateSliderPosition(value) {
+    this.slider.style.top = `${(1 - value) * this.height}px`;
+  }
+}
+class OpacityStrip extends Strip {
+  static {
+    __name(this, "OpacityStrip");
+  }
+  constructor(container, model, type) {
+    super(container, model, type);
+    this.domNode.classList.add("opacity-strip");
+    this.onDidChangeColor(this.model.color);
+  }
+  onDidChangeColor(color) {
+    super.onDidChangeColor(color);
+    const { r, g, b } = color.rgba;
+    const opaque = new Color(new RGBA(r, g, b, 1));
+    const transparent = new Color(new RGBA(r, g, b, 0));
+    this.overlay.style.background = `linear-gradient(to bottom, ${opaque} 0%, ${transparent} 100%)`;
+  }
+  getValue(color) {
+    return color.hsva.a;
+  }
+}
+class HueStrip extends Strip {
+  static {
+    __name(this, "HueStrip");
+  }
+  constructor(container, model, type) {
+    super(container, model, type);
+    this.domNode.classList.add("hue-strip");
+  }
+  getValue(color) {
+    return 1 - color.hsva.h / 360;
+  }
+}
+export {
+  HueStrip,
+  OpacityStrip,
+  Strip
+};
+//# sourceMappingURL=colorPickerStrip.js.map

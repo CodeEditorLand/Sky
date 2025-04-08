@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/editor/standalone/browser/iPadShowKeyboard/iPadShowKeyboard.css"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\n.monaco-editor .iPadShowKeyboard {\r\n\twidth: 58px;\r\n\tmin-width: 0;\r\n\theight: 36px;\r\n\tmin-height: 0;\r\n\tmargin: 0;\r\n\tpadding: 0;\r\n\tposition: absolute;\r\n\tresize: none;\r\n\toverflow: hidden;\r\n\tbackground: url('keyboard-light.svg') center center no-repeat;\r\n\tborder: 4px solid #F6F6F6;\r\n\tborder-radius: 4px;\r\n}\r\n\r\n.monaco-editor.vs-dark .iPadShowKeyboard {\r\n\tbackground: url('keyboard-dark.svg') center center no-repeat;\r\n\tborder: 4px solid #252526;\r\n}"],
+  "mappings": "AAKA,CAAC,cAAc,CAAC;AACf,SAAO;AACP,aAAW;AACX,UAAQ;AACR,cAAY;AACZ,UAAQ;AACR,WAAS;AACT,YAAU;AACV,UAAQ;AACR,YAAU;AACV,cAAY,wBAA0B,OAAO,OAAO;AACpD,UAAQ,IAAI,MAAM;AAClB,iBAAe;AAChB;AAEA,CAfC,aAea,CAAC,QAAQ,CAfP;AAgBf,cAAY,uBAAyB,OAAO,OAAO;AACnD,UAAQ,IAAI,MAAM;AACnB;",
+  "names": []
+}

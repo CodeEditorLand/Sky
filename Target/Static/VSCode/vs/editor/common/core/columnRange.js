@@ -1,1 +1,33 @@
-import{BugIndicatingError as r}from"../../../base/common/errors.js";import{OffsetRange as o}from"./offsetRange.js";import{Range as u}from"./range.js";class t{constructor(t,e){if(this.startColumn=t,this.endColumnExclusive=e,t>e)throw new r(`startColumn ${t} cannot be after endColumnExclusive ${e}`)}static fromOffsetRange(e){return new t(e.start+1,e.endExclusive+1)}toRange(t){return new u(t,this.startColumn,t,this.endColumnExclusive)}equals(t){return this.startColumn===t.startColumn&&this.endColumnExclusive===t.endColumnExclusive}toZeroBasedOffsetRange(){return new o(this.startColumn-1,this.endColumnExclusive-1)}}export{t as ColumnRange};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { BugIndicatingError } from "../../../base/common/errors.js";
+import { OffsetRange } from "./offsetRange.js";
+import { Range } from "./range.js";
+class ColumnRange {
+  constructor(startColumn, endColumnExclusive) {
+    this.startColumn = startColumn;
+    this.endColumnExclusive = endColumnExclusive;
+    if (startColumn > endColumnExclusive) {
+      throw new BugIndicatingError(`startColumn ${startColumn} cannot be after endColumnExclusive ${endColumnExclusive}`);
+    }
+  }
+  static {
+    __name(this, "ColumnRange");
+  }
+  static fromOffsetRange(offsetRange) {
+    return new ColumnRange(offsetRange.start + 1, offsetRange.endExclusive + 1);
+  }
+  toRange(lineNumber) {
+    return new Range(lineNumber, this.startColumn, lineNumber, this.endColumnExclusive);
+  }
+  equals(other) {
+    return this.startColumn === other.startColumn && this.endColumnExclusive === other.endColumnExclusive;
+  }
+  toZeroBasedOffsetRange() {
+    return new OffsetRange(this.startColumn - 1, this.endColumnExclusive - 1);
+  }
+}
+export {
+  ColumnRange
+};
+//# sourceMappingURL=columnRange.js.map

@@ -1,1 +1,54 @@
-import{Disposable as d,DisposableStore as s,toDisposable as n}from"../../../../../../base/common/lifecycle.js";import"../notebookDiffViewModel.js";import{NotebookOverviewRulerLane as a}from"../../notebookBrowser.js";import"../../../common/model/notebookCellTextModel.js";import{overviewRulerModifiedForeground as c}from"../../../../scm/common/quickDiff.js";class E extends d{constructor(e){super();this.notebookEditor=e}decorators=this._register(new s);apply(e){const t=this.notebookEditor.textModel;if(!t)return;const i=[];for(const o of e)if(o.type==="modified"){const l=t.cells[o.modifiedCellIndex];i.push(l)}const r=this.notebookEditor.deltaCellDecorations([],i.map(o=>({handle:o.handle,options:{overviewRuler:{color:c,modelRanges:[],includeOutput:!0,position:a.Full}}})));this.clear(),this.decorators.add(n(()=>{this.notebookEditor.isDisposed||this.notebookEditor.deltaCellDecorations(r,[])}))}clear(){this.decorators.clear()}}export{E as NotebookModifiedCellDecorator};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Disposable, DisposableStore, toDisposable } from "../../../../../../base/common/lifecycle.js";
+import { CellDiffInfo } from "../notebookDiffViewModel.js";
+import { INotebookEditor, NotebookOverviewRulerLane } from "../../notebookBrowser.js";
+import { NotebookCellTextModel } from "../../../common/model/notebookCellTextModel.js";
+import { overviewRulerModifiedForeground } from "../../../../scm/common/quickDiff.js";
+class NotebookModifiedCellDecorator extends Disposable {
+  constructor(notebookEditor) {
+    super();
+    this.notebookEditor = notebookEditor;
+  }
+  static {
+    __name(this, "NotebookModifiedCellDecorator");
+  }
+  decorators = this._register(new DisposableStore());
+  apply(diffInfo) {
+    const model = this.notebookEditor.textModel;
+    if (!model) {
+      return;
+    }
+    const modifiedCells = [];
+    for (const diff of diffInfo) {
+      if (diff.type === "modified") {
+        const cell = model.cells[diff.modifiedCellIndex];
+        modifiedCells.push(cell);
+      }
+    }
+    const ids = this.notebookEditor.deltaCellDecorations([], modifiedCells.map((cell) => ({
+      handle: cell.handle,
+      options: {
+        overviewRuler: {
+          color: overviewRulerModifiedForeground,
+          modelRanges: [],
+          includeOutput: true,
+          position: NotebookOverviewRulerLane.Full
+        }
+      }
+    })));
+    this.clear();
+    this.decorators.add(toDisposable(() => {
+      if (!this.notebookEditor.isDisposed) {
+        this.notebookEditor.deltaCellDecorations(ids, []);
+      }
+    }));
+  }
+  clear() {
+    this.decorators.clear();
+  }
+}
+export {
+  NotebookModifiedCellDecorator
+};
+//# sourceMappingURL=notebookModifiedCellDecorator.js.map

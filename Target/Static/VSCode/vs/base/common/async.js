@@ -1,1 +1,1608 @@
-import{CancellationTokenSource as p}from"./cancellation.js";import{BugIndicatingError as c,CancellationError as d}from"./errors.js";import{Emitter as T,Event as m}from"./event.js";import{Disposable as k,DisposableMap as _,isDisposable as g,MutableDisposable as I,toDisposable as v}from"./lifecycle.js";import{extUri as f}from"./resources.js";import"./uri.js";import{setTimeout0 as w}from"./platform.js";import{MicrotaskDelay as x}from"./symbols.js";import{Lazy as R}from"./lazy.js";function D(s){return!!s&&typeof s.then=="function"}function q(s){const e=new p,t=s(e.token);let i=!1;const r=new Promise((n,o)=>{const a=e.token.onCancellationRequested(()=>{i=!0,a.dispose(),o(new d)});Promise.resolve(t).then(u=>{a.dispose(),e.dispose(),i?g(u)&&u.dispose():n(u)},u=>{a.dispose(),e.dispose(),o(u)})});return new class{cancel(){e.cancel(),e.dispose()}then(n,o){return r.then(n,o)}catch(n){return this.then(void 0,n)}finally(n){return r.finally(n)}}}function oe(s,e,t){return new Promise((i,r)=>{const n=e.onCancellationRequested(()=>{n.dispose(),i(t)});s.then(i,r).finally(()=>n.dispose())})}function ae(s,e){return new Promise((t,i)=>{const r=e.onCancellationRequested(()=>{r.dispose(),i(new d)});s.then(t,i).finally(()=>r.dispose())})}async function le(s){let e=-1;const t=s.map((i,r)=>i.then(n=>(e=r,n)));try{return await Promise.race(t)}finally{s.forEach((i,r)=>{r!==e&&i.cancel()})}}function ue(s,e,t){let i;const r=setTimeout(()=>{i?.(void 0),t?.()},e);return Promise.race([s.finally(()=>clearTimeout(r)),new Promise(n=>i=n)])}function de(s,e){return new Promise((t,i)=>{if(s.length===0){t(void 0);return}let r=!1,n=s.length;for(const o of s)o.then(a=>{n--,r||(e(a)?(r=!0,t(a)):n===0&&t(void 0))}).catch(i)})}function ce(s){return new Promise((e,t)=>{const i=s();D(i)?i.then(e,t):e(i)})}function C(){let s,e;return{promise:new Promise((i,r)=>{s=i,e=r}),resolve:s,reject:e}}class S{activePromise;queuedPromise;queuedPromiseFactory;isDisposed=!1;constructor(){this.activePromise=null,this.queuedPromise=null,this.queuedPromiseFactory=null}queue(e){if(this.isDisposed)return Promise.reject(new Error("Throttler is disposed"));if(this.activePromise){if(this.queuedPromiseFactory=e,!this.queuedPromise){const t=()=>{if(this.queuedPromise=null,this.isDisposed)return;const i=this.queue(this.queuedPromiseFactory);return this.queuedPromiseFactory=null,i};this.queuedPromise=new Promise(i=>{this.activePromise.then(t,t).then(i)})}return new Promise((t,i)=>{this.queuedPromise.then(t,i)})}return this.activePromise=e(),new Promise((t,i)=>{this.activePromise.then(r=>{this.activePromise=null,t(r)},r=>{this.activePromise=null,i(r)})})}dispose(){this.isDisposed=!0}}class he{current=Promise.resolve(null);queue(e){return this.current=this.current.then(()=>e(),()=>e())}}class me{promiseMap=new Map;queue(e,t){const r=(this.promiseMap.get(e)??Promise.resolve()).catch(()=>{}).then(t).finally(()=>{this.promiseMap.get(e)===r&&this.promiseMap.delete(e)});return this.promiseMap.set(e,r),r}keys(){return this.promiseMap.keys()}}const E=(s,e)=>{let t=!0;const i=setTimeout(()=>{t=!1,e()},s);return{isTriggered:()=>t,dispose:()=>{clearTimeout(i),t=!1}}},O=s=>{let e=!0;return queueMicrotask(()=>{e&&(e=!1,s())}),{isTriggered:()=>e,dispose:()=>{e=!1}}};class A{constructor(e){this.defaultDelay=e;this.deferred=null,this.completionPromise=null,this.doResolve=null,this.doReject=null,this.task=null}deferred;completionPromise;doResolve;doReject;task;trigger(e,t=this.defaultDelay){this.task=e,this.cancelTimeout(),this.completionPromise||(this.completionPromise=new Promise((r,n)=>{this.doResolve=r,this.doReject=n}).then(()=>{if(this.completionPromise=null,this.doResolve=null,this.task){const r=this.task;return this.task=null,r()}}));const i=()=>{this.deferred=null,this.doResolve?.(null)};return this.deferred=t===x?O(i):E(t,i),this.completionPromise}isTriggered(){return!!this.deferred?.isTriggered()}cancel(){this.cancelTimeout(),this.completionPromise&&(this.doReject?.(new d),this.completionPromise=null)}cancelTimeout(){this.deferred?.dispose(),this.deferred=null}dispose(){this.cancel()}}class pe{delayer;throttler;constructor(e){this.delayer=new A(e),this.throttler=new S}trigger(e,t){return this.delayer.trigger(()=>this.throttler.queue(e),t)}isTriggered(){return this.delayer.isTriggered()}cancel(){this.delayer.cancel()}dispose(){this.delayer.dispose(),this.throttler.dispose()}}class j{_isOpen;_promise;_completePromise;constructor(){this._isOpen=!1,this._promise=new Promise((e,t)=>{this._completePromise=e})}isOpen(){return this._isOpen}open(){this._isOpen=!0,this._completePromise(!0)}wait(){return this._promise}}class Te extends j{_timeout;constructor(e){super(),this._timeout=setTimeout(()=>this.open(),e)}open(){clearTimeout(this._timeout),super.open()}}function P(s,e){return e?new Promise((t,i)=>{const r=setTimeout(()=>{n.dispose(),t()},s),n=e.onCancellationRequested(()=>{clearTimeout(r),n.dispose(),i(new d)})}):q(t=>P(s,t))}function ve(s,e=0,t){const i=setTimeout(()=>{s(),t&&r.dispose()},e),r=v(()=>{clearTimeout(i),t?.delete(r)});return t?.add(r),r}function fe(s){const e=[];let t=0;const i=s.length;function r(){return t<i?s[t++]():null}function n(o){o!=null&&e.push(o);const a=r();return a?a.then(n):Promise.resolve(e)}return Promise.resolve(null).then(n)}function Pe(s,e=i=>!!i,t=null){let i=0;const r=s.length,n=()=>{if(i>=r)return Promise.resolve(t);const o=s[i++];return Promise.resolve(o()).then(u=>e(u)?Promise.resolve(u):n())};return n()}function be(s,e=i=>!!i,t=null){if(s.length===0)return Promise.resolve(t);let i=s.length;const r=()=>{i=-1;for(const n of s)n.cancel?.()};return new Promise((n,o)=>{for(const a of s)a.then(u=>{--i>=0&&e(u)?(r(),n(u)):i===0&&n(t)}).catch(u=>{--i>=0&&(r(),o(u))})})}class W{_size=0;_isDisposed=!1;runningPromises;maxDegreeOfParalellism;outstandingPromises;_onDrained;constructor(e){this.maxDegreeOfParalellism=e,this.outstandingPromises=[],this.runningPromises=0,this._onDrained=new T}whenIdle(){return this.size>0?m.toPromise(this.onDrained):Promise.resolve()}get onDrained(){return this._onDrained.event}get size(){return this._size}queue(e){if(this._isDisposed)throw new Error("Object has been disposed");return this._size++,new Promise((t,i)=>{this.outstandingPromises.push({factory:e,c:t,e:i}),this.consume()})}consume(){for(;this.outstandingPromises.length&&this.runningPromises<this.maxDegreeOfParalellism;){const e=this.outstandingPromises.shift();this.runningPromises++;const t=e.factory();t.then(e.c,e.e),t.then(()=>this.consumed(),()=>this.consumed())}}consumed(){this._isDisposed||(this.runningPromises--,--this._size===0&&this._onDrained.fire(),this.outstandingPromises.length>0&&this.consume())}clear(){if(this._isDisposed)throw new Error("Object has been disposed");this.outstandingPromises.length=0,this._size=this.runningPromises}dispose(){this._isDisposed=!0,this.outstandingPromises.length=0,this._size=0,this._onDrained.dispose()}}class z extends W{constructor(){super(1)}}class ye{sequentializer=new F;tasks=0;queue(e){return this.sequentializer.isRunning()?this.sequentializer.queue(()=>this.sequentializer.run(this.tasks++,e())):this.sequentializer.run(this.tasks++,e())}}class ke{queues=new Map;drainers=new Set;drainListeners=void 0;drainListenerCount=0;async whenDrained(){if(this.isDrained())return;const e=new y;return this.drainers.add(e),e.p}isDrained(){for(const[,e]of this.queues)if(e.size>0)return!1;return!0}queueSize(e,t=f){const i=t.getComparisonKey(e);return this.queues.get(i)?.size??0}queueFor(e,t,i=f){const r=i.getComparisonKey(e);let n=this.queues.get(r);if(!n){n=new z;const o=this.drainListenerCount++,a=m.once(n.onDrained)(()=>{n?.dispose(),this.queues.delete(r),this.onDidQueueDrain(),this.drainListeners?.deleteAndDispose(o),this.drainListeners?.size===0&&(this.drainListeners.dispose(),this.drainListeners=void 0)});this.drainListeners||(this.drainListeners=new _),this.drainListeners.set(o,a),this.queues.set(r,n)}return n.queue(t)}onDidQueueDrain(){this.isDrained()&&this.releaseDrainers()}releaseDrainers(){for(const e of this.drainers)e.complete();this.drainers.clear()}dispose(){for(const[,e]of this.queues)e.dispose();this.queues.clear(),this.releaseDrainers(),this.drainListeners?.dispose()}}class _e{_token;_isDisposed=!1;constructor(e,t){this._token=-1,typeof e=="function"&&typeof t=="number"&&this.setIfNotSet(e,t)}dispose(){this.cancel(),this._isDisposed=!0}cancel(){this._token!==-1&&(clearTimeout(this._token),this._token=-1)}cancelAndSet(e,t){if(this._isDisposed)throw new c("Calling 'cancelAndSet' on a disposed TimeoutTimer");this.cancel(),this._token=setTimeout(()=>{this._token=-1,e()},t)}setIfNotSet(e,t){if(this._isDisposed)throw new c("Calling 'setIfNotSet' on a disposed TimeoutTimer");this._token===-1&&(this._token=setTimeout(()=>{this._token=-1,e()},t))}}class ge{disposable=void 0;isDisposed=!1;cancel(){this.disposable?.dispose(),this.disposable=void 0}cancelAndSet(e,t,i=globalThis){if(this.isDisposed)throw new c("Calling 'cancelAndSet' on a disposed IntervalTimer");this.cancel();const r=i.setInterval(()=>{e()},t);this.disposable=v(()=>{i.clearInterval(r),this.disposable=void 0})}dispose(){this.cancel(),this.isDisposed=!0}}class b{runner;timeoutToken;timeout;timeoutHandler;constructor(e,t){this.timeoutToken=-1,this.runner=e,this.timeout=t,this.timeoutHandler=this.onTimeout.bind(this)}dispose(){this.cancel(),this.runner=null}cancel(){this.isScheduled()&&(clearTimeout(this.timeoutToken),this.timeoutToken=-1)}schedule(e=this.timeout){this.cancel(),this.timeoutToken=setTimeout(this.timeoutHandler,e)}get delay(){return this.timeout}set delay(e){this.timeout=e}isScheduled(){return this.timeoutToken!==-1}flush(){this.isScheduled()&&(this.cancel(),this.doRun())}onTimeout(){this.timeoutToken=-1,this.runner&&this.doRun()}doRun(){this.runner?.()}}class Ie{runner;timeout;counter;intervalToken;intervalHandler;constructor(e,t){t%1e3!==0&&console.warn(`ProcessTimeRunOnceScheduler resolution is 1s, ${t}ms is not a multiple of 1000ms.`),this.runner=e,this.timeout=t,this.counter=0,this.intervalToken=-1,this.intervalHandler=this.onInterval.bind(this)}dispose(){this.cancel(),this.runner=null}cancel(){this.isScheduled()&&(clearInterval(this.intervalToken),this.intervalToken=-1)}schedule(e=this.timeout){e%1e3!==0&&console.warn(`ProcessTimeRunOnceScheduler resolution is 1s, ${e}ms is not a multiple of 1000ms.`),this.cancel(),this.counter=Math.ceil(e/1e3),this.intervalToken=setInterval(this.intervalHandler,1e3)}isScheduled(){return this.intervalToken!==-1}onInterval(){this.counter--,!(this.counter>0)&&(clearInterval(this.intervalToken),this.intervalToken=-1,this.runner?.())}}class we extends b{units=[];constructor(e,t){super(e,t)}work(e){this.units.push(e),this.isScheduled()||this.schedule()}doRun(){const e=this.units;this.units=[],this.runner?.(e)}dispose(){this.units=[],super.dispose()}}class xe extends k{constructor(t,i){super();this.options=t;this.handler=i}pendingWork=[];throttler=this._register(new I);disposed=!1;lastExecutionTime=0;get pending(){return this.pendingWork.length}work(t){if(this.disposed)return!1;if(typeof this.options.maxBufferedWork=="number"){if(this.throttler.value){if(this.pending+t.length>this.options.maxBufferedWork)return!1}else if(this.pending+t.length-this.options.maxWorkChunkSize>this.options.maxBufferedWork)return!1}for(const r of t)this.pendingWork.push(r);const i=Date.now()-this.lastExecutionTime;return!this.throttler.value&&(!this.options.waitThrottleDelayBetweenWorkUnits||i>=this.options.throttleDelay)?this.doWork():!this.throttler.value&&this.options.waitThrottleDelayBetweenWorkUnits&&this.scheduleThrottler(Math.max(this.options.throttleDelay-i,0)),!0}doWork(){this.lastExecutionTime=Date.now(),this.handler(this.pendingWork.splice(0,this.options.maxWorkChunkSize)),this.pendingWork.length>0&&this.scheduleThrottler()}scheduleThrottler(t=this.options.throttleDelay){this.throttler.value=new b(()=>{this.throttler.clear(),this.doWork()},t),this.throttler.value.schedule()}dispose(){super.dispose(),this.pendingWork.length=0,this.disposed=!0}}let L,h;(function(){typeof globalThis.requestIdleCallback!="function"||typeof globalThis.cancelIdleCallback!="function"?h=(s,e,t)=>{w(()=>{if(i)return;const r=Date.now()+15;e(Object.freeze({didTimeout:!0,timeRemaining(){return Math.max(0,r-Date.now())}}))});let i=!1;return{dispose(){i||(i=!0)}}}:h=(s,e,t)=>{const i=s.requestIdleCallback(e,typeof t=="number"?{timeout:t}:void 0);let r=!1;return{dispose(){r||(r=!0,s.cancelIdleCallback(i))}}},L=(s,e)=>h(globalThis,s,e)})();class M{_executor;_handle;_didRun=!1;_value;_error;constructor(e,t){this._executor=()=>{try{this._value=t()}catch(i){this._error=i}finally{this._didRun=!0}},this._handle=h(e,()=>this._executor())}dispose(){this._handle.dispose()}get value(){if(this._didRun||(this._handle.dispose(),this._executor()),this._error)throw this._error;return this._value}get isInitialized(){return this._didRun}}class Re extends M{constructor(e){super(globalThis,e)}}async function De(s,e,t){let i;for(let r=0;r<t;r++)try{return await s()}catch(n){i=n,await P(e)}throw i}class F{_running;_queued;isRunning(e){return typeof e=="number"?this._running?.taskId===e:!!this._running}get running(){return this._running?.promise}cancelRunning(){this._running?.cancel()}run(e,t,i){return this._running={taskId:e,cancel:()=>i?.(),promise:t},t.then(()=>this.doneRunning(e),()=>this.doneRunning(e)),t}doneRunning(e){this._running&&e===this._running.taskId&&(this._running=void 0,this.runQueued())}runQueued(){if(this._queued){const e=this._queued;this._queued=void 0,e.run().then(e.promiseResolve,e.promiseReject)}}queue(e){if(this._queued)this._queued.run=e;else{const{promise:t,resolve:i,reject:r}=C();this._queued={run:e,promise:t,promiseResolve:i,promiseReject:r}}return this._queued.promise}hasQueued(){return!!this._queued}async join(){return this._queued?.promise??this._running?.promise}}class qe{constructor(e,t=()=>Date.now()){this.interval=e;this.nowFn=t}lastIncrementTime=0;value=0;increment(){const e=this.nowFn();return e-this.lastIncrementTime>this.interval&&(this.lastIncrementTime=e,this.value=0),this.value++,this.value}}var Q=(t=>(t[t.Resolved=0]="Resolved",t[t.Rejected=1]="Rejected",t))(Q||{});class y{completeCallback;errorCallback;outcome;get isRejected(){return this.outcome?.outcome===1}get isResolved(){return this.outcome?.outcome===0}get isSettled(){return!!this.outcome}get value(){return this.outcome?.outcome===0?this.outcome?.value:void 0}p;constructor(){this.p=new Promise((e,t)=>{this.completeCallback=e,this.errorCallback=t})}complete(e){return new Promise(t=>{this.completeCallback(e),this.outcome={outcome:0,value:e},t()})}error(e){return new Promise(t=>{this.errorCallback(e),this.outcome={outcome:1,value:e},t()})}cancel(){return this.error(new d)}}var B;(t=>{async function s(i){let r;const n=await Promise.all(i.map(o=>o.then(a=>a,a=>{r||(r=a)})));if(typeof r<"u")throw r;return n}t.settled=s;function e(i){return new Promise(async(r,n)=>{try{await i(r,n)}catch(o){n(o)}})}t.withAsyncBody=e})(B||={});class U{_value=void 0;get value(){return this._value}_error=void 0;get error(){return this._error}_isResolved=!1;get isResolved(){return this._isResolved}promise;constructor(e){this.promise=e.then(t=>(this._value=t,this._isResolved=!0,t),t=>{throw this._error=t,this._isResolved=!0,t})}requireValue(){if(!this._isResolved)throw new c("Promise is not resolved yet");if(this._error)throw this._error;return this._value}}class Ce{constructor(e){this._compute=e}_promise=new R(()=>new U(this._compute()));requireValue(){return this._promise.value.requireValue()}getPromise(){return this._promise.value.promise}get currentValue(){return this._promise.rawValue?.value}}var V=(i=>(i[i.Initial=0]="Initial",i[i.DoneOK=1]="DoneOK",i[i.DoneError=2]="DoneError",i))(V||{});class l{static fromArray(e){return new l(t=>{t.emitMany(e)})}static fromPromise(e){return new l(async t=>{t.emitMany(await e)})}static fromPromisesResolveOrder(e){return new l(async t=>{await Promise.all(e.map(async i=>t.emitOne(await i)))})}static merge(e){return new l(async t=>{await Promise.all(e.map(async i=>{for await(const r of i)t.emitOne(r)}))})}static EMPTY=l.fromArray([]);_state;_results;_error;_onReturn;_onStateChanged;constructor(e,t){this._state=0,this._results=[],this._error=null,this._onReturn=t,this._onStateChanged=new T,queueMicrotask(async()=>{const i={emitOne:r=>this.emitOne(r),emitMany:r=>this.emitMany(r),reject:r=>this.reject(r)};try{await Promise.resolve(e(i)),this.resolve()}catch(r){this.reject(r)}finally{i.emitOne=void 0,i.emitMany=void 0,i.reject=void 0}})}[Symbol.asyncIterator](){let e=0;return{next:async()=>{do{if(this._state===2)throw this._error;if(e<this._results.length)return{done:!1,value:this._results[e++]};if(this._state===1)return{done:!0,value:void 0};await m.toPromise(this._onStateChanged.event)}while(!0)},return:async()=>(this._onReturn?.(),{done:!0,value:void 0})}}static map(e,t){return new l(async i=>{for await(const r of e)i.emitOne(t(r))})}map(e){return l.map(this,e)}static filter(e,t){return new l(async i=>{for await(const r of e)t(r)&&i.emitOne(r)})}filter(e){return l.filter(this,e)}static coalesce(e){return l.filter(e,t=>!!t)}coalesce(){return l.coalesce(this)}static async toPromise(e){const t=[];for await(const i of e)t.push(i);return t}toPromise(){return l.toPromise(this)}emitOne(e){this._state===0&&(this._results.push(e),this._onStateChanged.fire())}emitMany(e){this._state===0&&(this._results=this._results.concat(e),this._onStateChanged.fire())}resolve(){this._state===0&&(this._state=1,this._onStateChanged.fire())}reject(e){this._state===0&&(this._state=2,this._error=e,this._onStateChanged.fire())}}class K extends l{constructor(t,i){super(i);this._source=t}cancel(){this._source.cancel()}}function Se(s){const e=new p,t=s(e.token);return new K(e,async i=>{const r=e.token.onCancellationRequested(()=>{r.dispose(),e.dispose(),i.reject(new d)});try{for await(const n of t){if(e.token.isCancellationRequested)return;i.emitOne(n)}r.dispose(),e.dispose()}catch(n){r.dispose(),e.dispose(),i.reject(n)}})}class Ee{_deferred=new y;_asyncIterable;_errorFn;_emitFn;constructor(e){this._asyncIterable=new l(r=>{if(t){r.reject(t);return}return i&&r.emitMany(i),this._errorFn=n=>r.reject(n),this._emitFn=n=>r.emitOne(n),this._deferred.p},e);let t,i;this._emitFn=r=>{i||(i=[]),i.push(r)},this._errorFn=r=>{t||(t=r)}}get asyncIterable(){return this._asyncIterable}resolve(){this._deferred.complete()}reject(e){this._errorFn(e),this._deferred.complete()}emitOne(e){this._emitFn(e)}}export{M as AbstractIdleValue,l as AsyncIterableObject,Ee as AsyncIterableSource,Te as AutoOpenBarrier,j as Barrier,K as CancelableAsyncIterableObject,y as DeferredPromise,A as Delayer,Re as GlobalIdleValue,qe as IntervalCounter,ge as IntervalTimer,Ce as LazyStatefulPromise,ye as LimitedQueue,W as Limiter,Ie as ProcessTimeRunOnceScheduler,B as Promises,z as Queue,ke as ResourceQueue,b as RunOnceScheduler,we as RunOnceWorker,he as Sequencer,me as SequencerByKey,U as StatefulPromise,F as TaskSequentializer,pe as ThrottledDelayer,xe as ThrottledWorker,S as Throttler,_e as TimeoutTimer,h as _runWhenIdle,ce as asPromise,Se as createCancelableAsyncIterable,q as createCancelablePromise,ve as disposableTimeout,Pe as first,be as firstParallel,D as isThenable,C as promiseWithResolvers,le as raceCancellablePromises,oe as raceCancellation,ae as raceCancellationError,de as raceFilter,ue as raceTimeout,De as retry,L as runWhenGlobalIdle,fe as sequence,P as timeout};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { CancellationToken, CancellationTokenSource } from "./cancellation.js";
+import { BugIndicatingError, CancellationError } from "./errors.js";
+import { Emitter, Event } from "./event.js";
+import { Disposable, DisposableMap, DisposableStore, IDisposable, isDisposable, MutableDisposable, toDisposable } from "./lifecycle.js";
+import { extUri as defaultExtUri, IExtUri } from "./resources.js";
+import { URI } from "./uri.js";
+import { setTimeout0 } from "./platform.js";
+import { MicrotaskDelay } from "./symbols.js";
+import { Lazy } from "./lazy.js";
+function isThenable(obj) {
+  return !!obj && typeof obj.then === "function";
+}
+__name(isThenable, "isThenable");
+function createCancelablePromise(callback) {
+  const source = new CancellationTokenSource();
+  const thenable = callback(source.token);
+  let isCancelled = false;
+  const promise = new Promise((resolve, reject) => {
+    const subscription = source.token.onCancellationRequested(() => {
+      isCancelled = true;
+      subscription.dispose();
+      reject(new CancellationError());
+    });
+    Promise.resolve(thenable).then((value) => {
+      subscription.dispose();
+      source.dispose();
+      if (!isCancelled) {
+        resolve(value);
+      } else if (isDisposable(value)) {
+        value.dispose();
+      }
+    }, (err) => {
+      subscription.dispose();
+      source.dispose();
+      reject(err);
+    });
+  });
+  return new class {
+    cancel() {
+      source.cancel();
+      source.dispose();
+    }
+    then(resolve, reject) {
+      return promise.then(resolve, reject);
+    }
+    catch(reject) {
+      return this.then(void 0, reject);
+    }
+    finally(onfinally) {
+      return promise.finally(onfinally);
+    }
+  }();
+}
+__name(createCancelablePromise, "createCancelablePromise");
+function raceCancellation(promise, token, defaultValue) {
+  return new Promise((resolve, reject) => {
+    const ref = token.onCancellationRequested(() => {
+      ref.dispose();
+      resolve(defaultValue);
+    });
+    promise.then(resolve, reject).finally(() => ref.dispose());
+  });
+}
+__name(raceCancellation, "raceCancellation");
+function raceCancellationError(promise, token) {
+  return new Promise((resolve, reject) => {
+    const ref = token.onCancellationRequested(() => {
+      ref.dispose();
+      reject(new CancellationError());
+    });
+    promise.then(resolve, reject).finally(() => ref.dispose());
+  });
+}
+__name(raceCancellationError, "raceCancellationError");
+async function raceCancellablePromises(cancellablePromises) {
+  let resolvedPromiseIndex = -1;
+  const promises = cancellablePromises.map((promise, index) => promise.then((result) => {
+    resolvedPromiseIndex = index;
+    return result;
+  }));
+  try {
+    const result = await Promise.race(promises);
+    return result;
+  } finally {
+    cancellablePromises.forEach((cancellablePromise, index) => {
+      if (index !== resolvedPromiseIndex) {
+        cancellablePromise.cancel();
+      }
+    });
+  }
+}
+__name(raceCancellablePromises, "raceCancellablePromises");
+function raceTimeout(promise, timeout2, onTimeout) {
+  let promiseResolve = void 0;
+  const timer = setTimeout(() => {
+    promiseResolve?.(void 0);
+    onTimeout?.();
+  }, timeout2);
+  return Promise.race([
+    promise.finally(() => clearTimeout(timer)),
+    new Promise((resolve) => promiseResolve = resolve)
+  ]);
+}
+__name(raceTimeout, "raceTimeout");
+function raceFilter(promises, filter) {
+  return new Promise((resolve, reject) => {
+    if (promises.length === 0) {
+      resolve(void 0);
+      return;
+    }
+    let resolved = false;
+    let unresolvedCount = promises.length;
+    for (const promise of promises) {
+      promise.then((result) => {
+        unresolvedCount--;
+        if (!resolved) {
+          if (filter(result)) {
+            resolved = true;
+            resolve(result);
+          } else if (unresolvedCount === 0) {
+            resolve(void 0);
+          }
+        }
+      }).catch(reject);
+    }
+  });
+}
+__name(raceFilter, "raceFilter");
+function asPromise(callback) {
+  return new Promise((resolve, reject) => {
+    const item = callback();
+    if (isThenable(item)) {
+      item.then(resolve, reject);
+    } else {
+      resolve(item);
+    }
+  });
+}
+__name(asPromise, "asPromise");
+function promiseWithResolvers() {
+  let resolve;
+  let reject;
+  const promise = new Promise((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+  return { promise, resolve, reject };
+}
+__name(promiseWithResolvers, "promiseWithResolvers");
+class Throttler {
+  static {
+    __name(this, "Throttler");
+  }
+  activePromise;
+  queuedPromise;
+  queuedPromiseFactory;
+  isDisposed = false;
+  constructor() {
+    this.activePromise = null;
+    this.queuedPromise = null;
+    this.queuedPromiseFactory = null;
+  }
+  queue(promiseFactory) {
+    if (this.isDisposed) {
+      return Promise.reject(new Error("Throttler is disposed"));
+    }
+    if (this.activePromise) {
+      this.queuedPromiseFactory = promiseFactory;
+      if (!this.queuedPromise) {
+        const onComplete = /* @__PURE__ */ __name(() => {
+          this.queuedPromise = null;
+          if (this.isDisposed) {
+            return;
+          }
+          const result = this.queue(this.queuedPromiseFactory);
+          this.queuedPromiseFactory = null;
+          return result;
+        }, "onComplete");
+        this.queuedPromise = new Promise((resolve) => {
+          this.activePromise.then(onComplete, onComplete).then(resolve);
+        });
+      }
+      return new Promise((resolve, reject) => {
+        this.queuedPromise.then(resolve, reject);
+      });
+    }
+    this.activePromise = promiseFactory();
+    return new Promise((resolve, reject) => {
+      this.activePromise.then((result) => {
+        this.activePromise = null;
+        resolve(result);
+      }, (err) => {
+        this.activePromise = null;
+        reject(err);
+      });
+    });
+  }
+  dispose() {
+    this.isDisposed = true;
+  }
+}
+class Sequencer {
+  static {
+    __name(this, "Sequencer");
+  }
+  current = Promise.resolve(null);
+  queue(promiseTask) {
+    return this.current = this.current.then(() => promiseTask(), () => promiseTask());
+  }
+}
+class SequencerByKey {
+  static {
+    __name(this, "SequencerByKey");
+  }
+  promiseMap = /* @__PURE__ */ new Map();
+  queue(key, promiseTask) {
+    const runningPromise = this.promiseMap.get(key) ?? Promise.resolve();
+    const newPromise = runningPromise.catch(() => {
+    }).then(promiseTask).finally(() => {
+      if (this.promiseMap.get(key) === newPromise) {
+        this.promiseMap.delete(key);
+      }
+    });
+    this.promiseMap.set(key, newPromise);
+    return newPromise;
+  }
+  keys() {
+    return this.promiseMap.keys();
+  }
+}
+const timeoutDeferred = /* @__PURE__ */ __name((timeout2, fn) => {
+  let scheduled = true;
+  const handle = setTimeout(() => {
+    scheduled = false;
+    fn();
+  }, timeout2);
+  return {
+    isTriggered: /* @__PURE__ */ __name(() => scheduled, "isTriggered"),
+    dispose: /* @__PURE__ */ __name(() => {
+      clearTimeout(handle);
+      scheduled = false;
+    }, "dispose")
+  };
+}, "timeoutDeferred");
+const microtaskDeferred = /* @__PURE__ */ __name((fn) => {
+  let scheduled = true;
+  queueMicrotask(() => {
+    if (scheduled) {
+      scheduled = false;
+      fn();
+    }
+  });
+  return {
+    isTriggered: /* @__PURE__ */ __name(() => scheduled, "isTriggered"),
+    dispose: /* @__PURE__ */ __name(() => {
+      scheduled = false;
+    }, "dispose")
+  };
+}, "microtaskDeferred");
+class Delayer {
+  constructor(defaultDelay) {
+    this.defaultDelay = defaultDelay;
+    this.deferred = null;
+    this.completionPromise = null;
+    this.doResolve = null;
+    this.doReject = null;
+    this.task = null;
+  }
+  static {
+    __name(this, "Delayer");
+  }
+  deferred;
+  completionPromise;
+  doResolve;
+  doReject;
+  task;
+  trigger(task, delay = this.defaultDelay) {
+    this.task = task;
+    this.cancelTimeout();
+    if (!this.completionPromise) {
+      this.completionPromise = new Promise((resolve, reject) => {
+        this.doResolve = resolve;
+        this.doReject = reject;
+      }).then(() => {
+        this.completionPromise = null;
+        this.doResolve = null;
+        if (this.task) {
+          const task2 = this.task;
+          this.task = null;
+          return task2();
+        }
+        return void 0;
+      });
+    }
+    const fn = /* @__PURE__ */ __name(() => {
+      this.deferred = null;
+      this.doResolve?.(null);
+    }, "fn");
+    this.deferred = delay === MicrotaskDelay ? microtaskDeferred(fn) : timeoutDeferred(delay, fn);
+    return this.completionPromise;
+  }
+  isTriggered() {
+    return !!this.deferred?.isTriggered();
+  }
+  cancel() {
+    this.cancelTimeout();
+    if (this.completionPromise) {
+      this.doReject?.(new CancellationError());
+      this.completionPromise = null;
+    }
+  }
+  cancelTimeout() {
+    this.deferred?.dispose();
+    this.deferred = null;
+  }
+  dispose() {
+    this.cancel();
+  }
+}
+class ThrottledDelayer {
+  static {
+    __name(this, "ThrottledDelayer");
+  }
+  delayer;
+  throttler;
+  constructor(defaultDelay) {
+    this.delayer = new Delayer(defaultDelay);
+    this.throttler = new Throttler();
+  }
+  trigger(promiseFactory, delay) {
+    return this.delayer.trigger(() => this.throttler.queue(promiseFactory), delay);
+  }
+  isTriggered() {
+    return this.delayer.isTriggered();
+  }
+  cancel() {
+    this.delayer.cancel();
+  }
+  dispose() {
+    this.delayer.dispose();
+    this.throttler.dispose();
+  }
+}
+class Barrier {
+  static {
+    __name(this, "Barrier");
+  }
+  _isOpen;
+  _promise;
+  _completePromise;
+  constructor() {
+    this._isOpen = false;
+    this._promise = new Promise((c, e) => {
+      this._completePromise = c;
+    });
+  }
+  isOpen() {
+    return this._isOpen;
+  }
+  open() {
+    this._isOpen = true;
+    this._completePromise(true);
+  }
+  wait() {
+    return this._promise;
+  }
+}
+class AutoOpenBarrier extends Barrier {
+  static {
+    __name(this, "AutoOpenBarrier");
+  }
+  _timeout;
+  constructor(autoOpenTimeMs) {
+    super();
+    this._timeout = setTimeout(() => this.open(), autoOpenTimeMs);
+  }
+  open() {
+    clearTimeout(this._timeout);
+    super.open();
+  }
+}
+function timeout(millis, token) {
+  if (!token) {
+    return createCancelablePromise((token2) => timeout(millis, token2));
+  }
+  return new Promise((resolve, reject) => {
+    const handle = setTimeout(() => {
+      disposable.dispose();
+      resolve();
+    }, millis);
+    const disposable = token.onCancellationRequested(() => {
+      clearTimeout(handle);
+      disposable.dispose();
+      reject(new CancellationError());
+    });
+  });
+}
+__name(timeout, "timeout");
+function disposableTimeout(handler, timeout2 = 0, store) {
+  const timer = setTimeout(() => {
+    handler();
+    if (store) {
+      disposable.dispose();
+    }
+  }, timeout2);
+  const disposable = toDisposable(() => {
+    clearTimeout(timer);
+    store?.delete(disposable);
+  });
+  store?.add(disposable);
+  return disposable;
+}
+__name(disposableTimeout, "disposableTimeout");
+function sequence(promiseFactories) {
+  const results = [];
+  let index = 0;
+  const len = promiseFactories.length;
+  function next() {
+    return index < len ? promiseFactories[index++]() : null;
+  }
+  __name(next, "next");
+  function thenHandler(result) {
+    if (result !== void 0 && result !== null) {
+      results.push(result);
+    }
+    const n = next();
+    if (n) {
+      return n.then(thenHandler);
+    }
+    return Promise.resolve(results);
+  }
+  __name(thenHandler, "thenHandler");
+  return Promise.resolve(null).then(thenHandler);
+}
+__name(sequence, "sequence");
+function first(promiseFactories, shouldStop = (t) => !!t, defaultValue = null) {
+  let index = 0;
+  const len = promiseFactories.length;
+  const loop = /* @__PURE__ */ __name(() => {
+    if (index >= len) {
+      return Promise.resolve(defaultValue);
+    }
+    const factory = promiseFactories[index++];
+    const promise = Promise.resolve(factory());
+    return promise.then((result) => {
+      if (shouldStop(result)) {
+        return Promise.resolve(result);
+      }
+      return loop();
+    });
+  }, "loop");
+  return loop();
+}
+__name(first, "first");
+function firstParallel(promiseList, shouldStop = (t) => !!t, defaultValue = null) {
+  if (promiseList.length === 0) {
+    return Promise.resolve(defaultValue);
+  }
+  let todo = promiseList.length;
+  const finish = /* @__PURE__ */ __name(() => {
+    todo = -1;
+    for (const promise of promiseList) {
+      promise.cancel?.();
+    }
+  }, "finish");
+  return new Promise((resolve, reject) => {
+    for (const promise of promiseList) {
+      promise.then((result) => {
+        if (--todo >= 0 && shouldStop(result)) {
+          finish();
+          resolve(result);
+        } else if (todo === 0) {
+          resolve(defaultValue);
+        }
+      }).catch((err) => {
+        if (--todo >= 0) {
+          finish();
+          reject(err);
+        }
+      });
+    }
+  });
+}
+__name(firstParallel, "firstParallel");
+class Limiter {
+  static {
+    __name(this, "Limiter");
+  }
+  _size = 0;
+  _isDisposed = false;
+  runningPromises;
+  maxDegreeOfParalellism;
+  outstandingPromises;
+  _onDrained;
+  constructor(maxDegreeOfParalellism) {
+    this.maxDegreeOfParalellism = maxDegreeOfParalellism;
+    this.outstandingPromises = [];
+    this.runningPromises = 0;
+    this._onDrained = new Emitter();
+  }
+  /**
+   *
+   * @returns A promise that resolved when all work is done (onDrained) or when
+   * there is nothing to do
+   */
+  whenIdle() {
+    return this.size > 0 ? Event.toPromise(this.onDrained) : Promise.resolve();
+  }
+  get onDrained() {
+    return this._onDrained.event;
+  }
+  get size() {
+    return this._size;
+  }
+  queue(factory) {
+    if (this._isDisposed) {
+      throw new Error("Object has been disposed");
+    }
+    this._size++;
+    return new Promise((c, e) => {
+      this.outstandingPromises.push({ factory, c, e });
+      this.consume();
+    });
+  }
+  consume() {
+    while (this.outstandingPromises.length && this.runningPromises < this.maxDegreeOfParalellism) {
+      const iLimitedTask = this.outstandingPromises.shift();
+      this.runningPromises++;
+      const promise = iLimitedTask.factory();
+      promise.then(iLimitedTask.c, iLimitedTask.e);
+      promise.then(() => this.consumed(), () => this.consumed());
+    }
+  }
+  consumed() {
+    if (this._isDisposed) {
+      return;
+    }
+    this.runningPromises--;
+    if (--this._size === 0) {
+      this._onDrained.fire();
+    }
+    if (this.outstandingPromises.length > 0) {
+      this.consume();
+    }
+  }
+  clear() {
+    if (this._isDisposed) {
+      throw new Error("Object has been disposed");
+    }
+    this.outstandingPromises.length = 0;
+    this._size = this.runningPromises;
+  }
+  dispose() {
+    this._isDisposed = true;
+    this.outstandingPromises.length = 0;
+    this._size = 0;
+    this._onDrained.dispose();
+  }
+}
+class Queue extends Limiter {
+  static {
+    __name(this, "Queue");
+  }
+  constructor() {
+    super(1);
+  }
+}
+class LimitedQueue {
+  static {
+    __name(this, "LimitedQueue");
+  }
+  sequentializer = new TaskSequentializer();
+  tasks = 0;
+  queue(factory) {
+    if (!this.sequentializer.isRunning()) {
+      return this.sequentializer.run(this.tasks++, factory());
+    }
+    return this.sequentializer.queue(() => {
+      return this.sequentializer.run(this.tasks++, factory());
+    });
+  }
+}
+class ResourceQueue {
+  static {
+    __name(this, "ResourceQueue");
+  }
+  queues = /* @__PURE__ */ new Map();
+  drainers = /* @__PURE__ */ new Set();
+  drainListeners = void 0;
+  drainListenerCount = 0;
+  async whenDrained() {
+    if (this.isDrained()) {
+      return;
+    }
+    const promise = new DeferredPromise();
+    this.drainers.add(promise);
+    return promise.p;
+  }
+  isDrained() {
+    for (const [, queue] of this.queues) {
+      if (queue.size > 0) {
+        return false;
+      }
+    }
+    return true;
+  }
+  queueSize(resource, extUri = defaultExtUri) {
+    const key = extUri.getComparisonKey(resource);
+    return this.queues.get(key)?.size ?? 0;
+  }
+  queueFor(resource, factory, extUri = defaultExtUri) {
+    const key = extUri.getComparisonKey(resource);
+    let queue = this.queues.get(key);
+    if (!queue) {
+      queue = new Queue();
+      const drainListenerId = this.drainListenerCount++;
+      const drainListener = Event.once(queue.onDrained)(() => {
+        queue?.dispose();
+        this.queues.delete(key);
+        this.onDidQueueDrain();
+        this.drainListeners?.deleteAndDispose(drainListenerId);
+        if (this.drainListeners?.size === 0) {
+          this.drainListeners.dispose();
+          this.drainListeners = void 0;
+        }
+      });
+      if (!this.drainListeners) {
+        this.drainListeners = new DisposableMap();
+      }
+      this.drainListeners.set(drainListenerId, drainListener);
+      this.queues.set(key, queue);
+    }
+    return queue.queue(factory);
+  }
+  onDidQueueDrain() {
+    if (!this.isDrained()) {
+      return;
+    }
+    this.releaseDrainers();
+  }
+  releaseDrainers() {
+    for (const drainer of this.drainers) {
+      drainer.complete();
+    }
+    this.drainers.clear();
+  }
+  dispose() {
+    for (const [, queue] of this.queues) {
+      queue.dispose();
+    }
+    this.queues.clear();
+    this.releaseDrainers();
+    this.drainListeners?.dispose();
+  }
+}
+class TimeoutTimer {
+  static {
+    __name(this, "TimeoutTimer");
+  }
+  _token;
+  _isDisposed = false;
+  constructor(runner, timeout2) {
+    this._token = -1;
+    if (typeof runner === "function" && typeof timeout2 === "number") {
+      this.setIfNotSet(runner, timeout2);
+    }
+  }
+  dispose() {
+    this.cancel();
+    this._isDisposed = true;
+  }
+  cancel() {
+    if (this._token !== -1) {
+      clearTimeout(this._token);
+      this._token = -1;
+    }
+  }
+  cancelAndSet(runner, timeout2) {
+    if (this._isDisposed) {
+      throw new BugIndicatingError(`Calling 'cancelAndSet' on a disposed TimeoutTimer`);
+    }
+    this.cancel();
+    this._token = setTimeout(() => {
+      this._token = -1;
+      runner();
+    }, timeout2);
+  }
+  setIfNotSet(runner, timeout2) {
+    if (this._isDisposed) {
+      throw new BugIndicatingError(`Calling 'setIfNotSet' on a disposed TimeoutTimer`);
+    }
+    if (this._token !== -1) {
+      return;
+    }
+    this._token = setTimeout(() => {
+      this._token = -1;
+      runner();
+    }, timeout2);
+  }
+}
+class IntervalTimer {
+  static {
+    __name(this, "IntervalTimer");
+  }
+  disposable = void 0;
+  isDisposed = false;
+  cancel() {
+    this.disposable?.dispose();
+    this.disposable = void 0;
+  }
+  cancelAndSet(runner, interval, context = globalThis) {
+    if (this.isDisposed) {
+      throw new BugIndicatingError(`Calling 'cancelAndSet' on a disposed IntervalTimer`);
+    }
+    this.cancel();
+    const handle = context.setInterval(() => {
+      runner();
+    }, interval);
+    this.disposable = toDisposable(() => {
+      context.clearInterval(handle);
+      this.disposable = void 0;
+    });
+  }
+  dispose() {
+    this.cancel();
+    this.isDisposed = true;
+  }
+}
+class RunOnceScheduler {
+  static {
+    __name(this, "RunOnceScheduler");
+  }
+  runner;
+  timeoutToken;
+  timeout;
+  timeoutHandler;
+  constructor(runner, delay) {
+    this.timeoutToken = -1;
+    this.runner = runner;
+    this.timeout = delay;
+    this.timeoutHandler = this.onTimeout.bind(this);
+  }
+  /**
+   * Dispose RunOnceScheduler
+   */
+  dispose() {
+    this.cancel();
+    this.runner = null;
+  }
+  /**
+   * Cancel current scheduled runner (if any).
+   */
+  cancel() {
+    if (this.isScheduled()) {
+      clearTimeout(this.timeoutToken);
+      this.timeoutToken = -1;
+    }
+  }
+  /**
+   * Cancel previous runner (if any) & schedule a new runner.
+   */
+  schedule(delay = this.timeout) {
+    this.cancel();
+    this.timeoutToken = setTimeout(this.timeoutHandler, delay);
+  }
+  get delay() {
+    return this.timeout;
+  }
+  set delay(value) {
+    this.timeout = value;
+  }
+  /**
+   * Returns true if scheduled.
+   */
+  isScheduled() {
+    return this.timeoutToken !== -1;
+  }
+  flush() {
+    if (this.isScheduled()) {
+      this.cancel();
+      this.doRun();
+    }
+  }
+  onTimeout() {
+    this.timeoutToken = -1;
+    if (this.runner) {
+      this.doRun();
+    }
+  }
+  doRun() {
+    this.runner?.();
+  }
+}
+class ProcessTimeRunOnceScheduler {
+  static {
+    __name(this, "ProcessTimeRunOnceScheduler");
+  }
+  runner;
+  timeout;
+  counter;
+  intervalToken;
+  intervalHandler;
+  constructor(runner, delay) {
+    if (delay % 1e3 !== 0) {
+      console.warn(`ProcessTimeRunOnceScheduler resolution is 1s, ${delay}ms is not a multiple of 1000ms.`);
+    }
+    this.runner = runner;
+    this.timeout = delay;
+    this.counter = 0;
+    this.intervalToken = -1;
+    this.intervalHandler = this.onInterval.bind(this);
+  }
+  dispose() {
+    this.cancel();
+    this.runner = null;
+  }
+  cancel() {
+    if (this.isScheduled()) {
+      clearInterval(this.intervalToken);
+      this.intervalToken = -1;
+    }
+  }
+  /**
+   * Cancel previous runner (if any) & schedule a new runner.
+   */
+  schedule(delay = this.timeout) {
+    if (delay % 1e3 !== 0) {
+      console.warn(`ProcessTimeRunOnceScheduler resolution is 1s, ${delay}ms is not a multiple of 1000ms.`);
+    }
+    this.cancel();
+    this.counter = Math.ceil(delay / 1e3);
+    this.intervalToken = setInterval(this.intervalHandler, 1e3);
+  }
+  /**
+   * Returns true if scheduled.
+   */
+  isScheduled() {
+    return this.intervalToken !== -1;
+  }
+  onInterval() {
+    this.counter--;
+    if (this.counter > 0) {
+      return;
+    }
+    clearInterval(this.intervalToken);
+    this.intervalToken = -1;
+    this.runner?.();
+  }
+}
+class RunOnceWorker extends RunOnceScheduler {
+  static {
+    __name(this, "RunOnceWorker");
+  }
+  units = [];
+  constructor(runner, timeout2) {
+    super(runner, timeout2);
+  }
+  work(unit) {
+    this.units.push(unit);
+    if (!this.isScheduled()) {
+      this.schedule();
+    }
+  }
+  doRun() {
+    const units = this.units;
+    this.units = [];
+    this.runner?.(units);
+  }
+  dispose() {
+    this.units = [];
+    super.dispose();
+  }
+}
+class ThrottledWorker extends Disposable {
+  constructor(options, handler) {
+    super();
+    this.options = options;
+    this.handler = handler;
+  }
+  static {
+    __name(this, "ThrottledWorker");
+  }
+  pendingWork = [];
+  throttler = this._register(new MutableDisposable());
+  disposed = false;
+  lastExecutionTime = 0;
+  /**
+   * The number of work units that are pending to be processed.
+   */
+  get pending() {
+    return this.pendingWork.length;
+  }
+  /**
+   * Add units to be worked on. Use `pending` to figure out
+   * how many units are not yet processed after this method
+   * was called.
+   *
+   * @returns whether the work was accepted or not. If the
+   * worker is disposed, it will not accept any more work.
+   * If the number of pending units would become larger
+   * than `maxPendingWork`, more work will also not be accepted.
+   */
+  work(units) {
+    if (this.disposed) {
+      return false;
+    }
+    if (typeof this.options.maxBufferedWork === "number") {
+      if (this.throttler.value) {
+        if (this.pending + units.length > this.options.maxBufferedWork) {
+          return false;
+        }
+      } else {
+        if (this.pending + units.length - this.options.maxWorkChunkSize > this.options.maxBufferedWork) {
+          return false;
+        }
+      }
+    }
+    for (const unit of units) {
+      this.pendingWork.push(unit);
+    }
+    const timeSinceLastExecution = Date.now() - this.lastExecutionTime;
+    if (!this.throttler.value && (!this.options.waitThrottleDelayBetweenWorkUnits || timeSinceLastExecution >= this.options.throttleDelay)) {
+      this.doWork();
+    } else if (!this.throttler.value && this.options.waitThrottleDelayBetweenWorkUnits) {
+      this.scheduleThrottler(Math.max(this.options.throttleDelay - timeSinceLastExecution, 0));
+    } else {
+    }
+    return true;
+  }
+  doWork() {
+    this.lastExecutionTime = Date.now();
+    this.handler(this.pendingWork.splice(0, this.options.maxWorkChunkSize));
+    if (this.pendingWork.length > 0) {
+      this.scheduleThrottler();
+    }
+  }
+  scheduleThrottler(delay = this.options.throttleDelay) {
+    this.throttler.value = new RunOnceScheduler(() => {
+      this.throttler.clear();
+      this.doWork();
+    }, delay);
+    this.throttler.value.schedule();
+  }
+  dispose() {
+    super.dispose();
+    this.pendingWork.length = 0;
+    this.disposed = true;
+  }
+}
+let runWhenGlobalIdle;
+let _runWhenIdle;
+(function() {
+  if (typeof globalThis.requestIdleCallback !== "function" || typeof globalThis.cancelIdleCallback !== "function") {
+    _runWhenIdle = /* @__PURE__ */ __name((_targetWindow, runner, timeout2) => {
+      setTimeout0(() => {
+        if (disposed) {
+          return;
+        }
+        const end = Date.now() + 15;
+        const deadline = {
+          didTimeout: true,
+          timeRemaining() {
+            return Math.max(0, end - Date.now());
+          }
+        };
+        runner(Object.freeze(deadline));
+      });
+      let disposed = false;
+      return {
+        dispose() {
+          if (disposed) {
+            return;
+          }
+          disposed = true;
+        }
+      };
+    }, "_runWhenIdle");
+  } else {
+    _runWhenIdle = /* @__PURE__ */ __name((targetWindow, runner, timeout2) => {
+      const handle = targetWindow.requestIdleCallback(runner, typeof timeout2 === "number" ? { timeout: timeout2 } : void 0);
+      let disposed = false;
+      return {
+        dispose() {
+          if (disposed) {
+            return;
+          }
+          disposed = true;
+          targetWindow.cancelIdleCallback(handle);
+        }
+      };
+    }, "_runWhenIdle");
+  }
+  runWhenGlobalIdle = /* @__PURE__ */ __name((runner, timeout2) => _runWhenIdle(globalThis, runner, timeout2), "runWhenGlobalIdle");
+})();
+class AbstractIdleValue {
+  static {
+    __name(this, "AbstractIdleValue");
+  }
+  _executor;
+  _handle;
+  _didRun = false;
+  _value;
+  _error;
+  constructor(targetWindow, executor) {
+    this._executor = () => {
+      try {
+        this._value = executor();
+      } catch (err) {
+        this._error = err;
+      } finally {
+        this._didRun = true;
+      }
+    };
+    this._handle = _runWhenIdle(targetWindow, () => this._executor());
+  }
+  dispose() {
+    this._handle.dispose();
+  }
+  get value() {
+    if (!this._didRun) {
+      this._handle.dispose();
+      this._executor();
+    }
+    if (this._error) {
+      throw this._error;
+    }
+    return this._value;
+  }
+  get isInitialized() {
+    return this._didRun;
+  }
+}
+class GlobalIdleValue extends AbstractIdleValue {
+  static {
+    __name(this, "GlobalIdleValue");
+  }
+  constructor(executor) {
+    super(globalThis, executor);
+  }
+}
+async function retry(task, delay, retries) {
+  let lastError;
+  for (let i = 0; i < retries; i++) {
+    try {
+      return await task();
+    } catch (error) {
+      lastError = error;
+      await timeout(delay);
+    }
+  }
+  throw lastError;
+}
+__name(retry, "retry");
+class TaskSequentializer {
+  static {
+    __name(this, "TaskSequentializer");
+  }
+  _running;
+  _queued;
+  isRunning(taskId) {
+    if (typeof taskId === "number") {
+      return this._running?.taskId === taskId;
+    }
+    return !!this._running;
+  }
+  get running() {
+    return this._running?.promise;
+  }
+  cancelRunning() {
+    this._running?.cancel();
+  }
+  run(taskId, promise, onCancel) {
+    this._running = { taskId, cancel: /* @__PURE__ */ __name(() => onCancel?.(), "cancel"), promise };
+    promise.then(() => this.doneRunning(taskId), () => this.doneRunning(taskId));
+    return promise;
+  }
+  doneRunning(taskId) {
+    if (this._running && taskId === this._running.taskId) {
+      this._running = void 0;
+      this.runQueued();
+    }
+  }
+  runQueued() {
+    if (this._queued) {
+      const queued = this._queued;
+      this._queued = void 0;
+      queued.run().then(queued.promiseResolve, queued.promiseReject);
+    }
+  }
+  /**
+   * Note: the promise to schedule as next run MUST itself call `run`.
+   *       Otherwise, this sequentializer will report `false` for `isRunning`
+   *       even when this task is running. Missing this detail means that
+   *       suddenly multiple tasks will run in parallel.
+   */
+  queue(run) {
+    if (!this._queued) {
+      const { promise, resolve: promiseResolve, reject: promiseReject } = promiseWithResolvers();
+      this._queued = {
+        run,
+        promise,
+        promiseResolve,
+        promiseReject
+      };
+    } else {
+      this._queued.run = run;
+    }
+    return this._queued.promise;
+  }
+  hasQueued() {
+    return !!this._queued;
+  }
+  async join() {
+    return this._queued?.promise ?? this._running?.promise;
+  }
+}
+class IntervalCounter {
+  constructor(interval, nowFn = () => Date.now()) {
+    this.interval = interval;
+    this.nowFn = nowFn;
+  }
+  static {
+    __name(this, "IntervalCounter");
+  }
+  lastIncrementTime = 0;
+  value = 0;
+  increment() {
+    const now = this.nowFn();
+    if (now - this.lastIncrementTime > this.interval) {
+      this.lastIncrementTime = now;
+      this.value = 0;
+    }
+    this.value++;
+    return this.value;
+  }
+}
+var DeferredOutcome = /* @__PURE__ */ ((DeferredOutcome2) => {
+  DeferredOutcome2[DeferredOutcome2["Resolved"] = 0] = "Resolved";
+  DeferredOutcome2[DeferredOutcome2["Rejected"] = 1] = "Rejected";
+  return DeferredOutcome2;
+})(DeferredOutcome || {});
+class DeferredPromise {
+  static {
+    __name(this, "DeferredPromise");
+  }
+  completeCallback;
+  errorCallback;
+  outcome;
+  get isRejected() {
+    return this.outcome?.outcome === 1 /* Rejected */;
+  }
+  get isResolved() {
+    return this.outcome?.outcome === 0 /* Resolved */;
+  }
+  get isSettled() {
+    return !!this.outcome;
+  }
+  get value() {
+    return this.outcome?.outcome === 0 /* Resolved */ ? this.outcome?.value : void 0;
+  }
+  p;
+  constructor() {
+    this.p = new Promise((c, e) => {
+      this.completeCallback = c;
+      this.errorCallback = e;
+    });
+  }
+  complete(value) {
+    return new Promise((resolve) => {
+      this.completeCallback(value);
+      this.outcome = { outcome: 0 /* Resolved */, value };
+      resolve();
+    });
+  }
+  error(err) {
+    return new Promise((resolve) => {
+      this.errorCallback(err);
+      this.outcome = { outcome: 1 /* Rejected */, value: err };
+      resolve();
+    });
+  }
+  cancel() {
+    return this.error(new CancellationError());
+  }
+}
+var Promises;
+((Promises2) => {
+  async function settled(promises) {
+    let firstError = void 0;
+    const result = await Promise.all(promises.map((promise) => promise.then((value) => value, (error) => {
+      if (!firstError) {
+        firstError = error;
+      }
+      return void 0;
+    })));
+    if (typeof firstError !== "undefined") {
+      throw firstError;
+    }
+    return result;
+  }
+  Promises2.settled = settled;
+  __name(settled, "settled");
+  function withAsyncBody(bodyFn) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        await bodyFn(resolve, reject);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+  Promises2.withAsyncBody = withAsyncBody;
+  __name(withAsyncBody, "withAsyncBody");
+})(Promises || (Promises = {}));
+class StatefulPromise {
+  static {
+    __name(this, "StatefulPromise");
+  }
+  _value = void 0;
+  get value() {
+    return this._value;
+  }
+  _error = void 0;
+  get error() {
+    return this._error;
+  }
+  _isResolved = false;
+  get isResolved() {
+    return this._isResolved;
+  }
+  promise;
+  constructor(promise) {
+    this.promise = promise.then(
+      (value) => {
+        this._value = value;
+        this._isResolved = true;
+        return value;
+      },
+      (error) => {
+        this._error = error;
+        this._isResolved = true;
+        throw error;
+      }
+    );
+  }
+  /**
+   * Returns the resolved value.
+   * Throws if the promise is not resolved yet.
+   */
+  requireValue() {
+    if (!this._isResolved) {
+      throw new BugIndicatingError("Promise is not resolved yet");
+    }
+    if (this._error) {
+      throw this._error;
+    }
+    return this._value;
+  }
+}
+class LazyStatefulPromise {
+  constructor(_compute) {
+    this._compute = _compute;
+  }
+  static {
+    __name(this, "LazyStatefulPromise");
+  }
+  _promise = new Lazy(() => new StatefulPromise(this._compute()));
+  /**
+   * Returns the resolved value.
+   * Throws if the promise is not resolved yet.
+   */
+  requireValue() {
+    return this._promise.value.requireValue();
+  }
+  /**
+   * Returns the promise (and triggers a computation of the promise if not yet done so).
+   */
+  getPromise() {
+    return this._promise.value.promise;
+  }
+  /**
+   * Reads the current value without triggering a computation of the promise.
+   */
+  get currentValue() {
+    return this._promise.rawValue?.value;
+  }
+}
+var AsyncIterableSourceState = /* @__PURE__ */ ((AsyncIterableSourceState2) => {
+  AsyncIterableSourceState2[AsyncIterableSourceState2["Initial"] = 0] = "Initial";
+  AsyncIterableSourceState2[AsyncIterableSourceState2["DoneOK"] = 1] = "DoneOK";
+  AsyncIterableSourceState2[AsyncIterableSourceState2["DoneError"] = 2] = "DoneError";
+  return AsyncIterableSourceState2;
+})(AsyncIterableSourceState || {});
+class AsyncIterableObject {
+  static {
+    __name(this, "AsyncIterableObject");
+  }
+  static fromArray(items) {
+    return new AsyncIterableObject((writer) => {
+      writer.emitMany(items);
+    });
+  }
+  static fromPromise(promise) {
+    return new AsyncIterableObject(async (emitter) => {
+      emitter.emitMany(await promise);
+    });
+  }
+  static fromPromisesResolveOrder(promises) {
+    return new AsyncIterableObject(async (emitter) => {
+      await Promise.all(promises.map(async (p) => emitter.emitOne(await p)));
+    });
+  }
+  static merge(iterables) {
+    return new AsyncIterableObject(async (emitter) => {
+      await Promise.all(iterables.map(async (iterable) => {
+        for await (const item of iterable) {
+          emitter.emitOne(item);
+        }
+      }));
+    });
+  }
+  static EMPTY = AsyncIterableObject.fromArray([]);
+  _state;
+  _results;
+  _error;
+  _onReturn;
+  _onStateChanged;
+  constructor(executor, onReturn) {
+    this._state = 0 /* Initial */;
+    this._results = [];
+    this._error = null;
+    this._onReturn = onReturn;
+    this._onStateChanged = new Emitter();
+    queueMicrotask(async () => {
+      const writer = {
+        emitOne: /* @__PURE__ */ __name((item) => this.emitOne(item), "emitOne"),
+        emitMany: /* @__PURE__ */ __name((items) => this.emitMany(items), "emitMany"),
+        reject: /* @__PURE__ */ __name((error) => this.reject(error), "reject")
+      };
+      try {
+        await Promise.resolve(executor(writer));
+        this.resolve();
+      } catch (err) {
+        this.reject(err);
+      } finally {
+        writer.emitOne = void 0;
+        writer.emitMany = void 0;
+        writer.reject = void 0;
+      }
+    });
+  }
+  [Symbol.asyncIterator]() {
+    let i = 0;
+    return {
+      next: /* @__PURE__ */ __name(async () => {
+        do {
+          if (this._state === 2 /* DoneError */) {
+            throw this._error;
+          }
+          if (i < this._results.length) {
+            return { done: false, value: this._results[i++] };
+          }
+          if (this._state === 1 /* DoneOK */) {
+            return { done: true, value: void 0 };
+          }
+          await Event.toPromise(this._onStateChanged.event);
+        } while (true);
+      }, "next"),
+      return: /* @__PURE__ */ __name(async () => {
+        this._onReturn?.();
+        return { done: true, value: void 0 };
+      }, "return")
+    };
+  }
+  static map(iterable, mapFn) {
+    return new AsyncIterableObject(async (emitter) => {
+      for await (const item of iterable) {
+        emitter.emitOne(mapFn(item));
+      }
+    });
+  }
+  map(mapFn) {
+    return AsyncIterableObject.map(this, mapFn);
+  }
+  static filter(iterable, filterFn) {
+    return new AsyncIterableObject(async (emitter) => {
+      for await (const item of iterable) {
+        if (filterFn(item)) {
+          emitter.emitOne(item);
+        }
+      }
+    });
+  }
+  filter(filterFn) {
+    return AsyncIterableObject.filter(this, filterFn);
+  }
+  static coalesce(iterable) {
+    return AsyncIterableObject.filter(iterable, (item) => !!item);
+  }
+  coalesce() {
+    return AsyncIterableObject.coalesce(this);
+  }
+  static async toPromise(iterable) {
+    const result = [];
+    for await (const item of iterable) {
+      result.push(item);
+    }
+    return result;
+  }
+  toPromise() {
+    return AsyncIterableObject.toPromise(this);
+  }
+  /**
+   * The value will be appended at the end.
+   *
+   * **NOTE** If `resolve()` or `reject()` have already been called, this method has no effect.
+   */
+  emitOne(value) {
+    if (this._state !== 0 /* Initial */) {
+      return;
+    }
+    this._results.push(value);
+    this._onStateChanged.fire();
+  }
+  /**
+   * The values will be appended at the end.
+   *
+   * **NOTE** If `resolve()` or `reject()` have already been called, this method has no effect.
+   */
+  emitMany(values) {
+    if (this._state !== 0 /* Initial */) {
+      return;
+    }
+    this._results = this._results.concat(values);
+    this._onStateChanged.fire();
+  }
+  /**
+   * Calling `resolve()` will mark the result array as complete.
+   *
+   * **NOTE** `resolve()` must be called, otherwise all consumers of this iterable will hang indefinitely, similar to a non-resolved promise.
+   * **NOTE** If `resolve()` or `reject()` have already been called, this method has no effect.
+   */
+  resolve() {
+    if (this._state !== 0 /* Initial */) {
+      return;
+    }
+    this._state = 1 /* DoneOK */;
+    this._onStateChanged.fire();
+  }
+  /**
+   * Writing an error will permanently invalidate this iterable.
+   * The current users will receive an error thrown, as will all future users.
+   *
+   * **NOTE** If `resolve()` or `reject()` have already been called, this method has no effect.
+   */
+  reject(error) {
+    if (this._state !== 0 /* Initial */) {
+      return;
+    }
+    this._state = 2 /* DoneError */;
+    this._error = error;
+    this._onStateChanged.fire();
+  }
+}
+class CancelableAsyncIterableObject extends AsyncIterableObject {
+  constructor(_source, executor) {
+    super(executor);
+    this._source = _source;
+  }
+  static {
+    __name(this, "CancelableAsyncIterableObject");
+  }
+  cancel() {
+    this._source.cancel();
+  }
+}
+function createCancelableAsyncIterable(callback) {
+  const source = new CancellationTokenSource();
+  const innerIterable = callback(source.token);
+  return new CancelableAsyncIterableObject(source, async (emitter) => {
+    const subscription = source.token.onCancellationRequested(() => {
+      subscription.dispose();
+      source.dispose();
+      emitter.reject(new CancellationError());
+    });
+    try {
+      for await (const item of innerIterable) {
+        if (source.token.isCancellationRequested) {
+          return;
+        }
+        emitter.emitOne(item);
+      }
+      subscription.dispose();
+      source.dispose();
+    } catch (err) {
+      subscription.dispose();
+      source.dispose();
+      emitter.reject(err);
+    }
+  });
+}
+__name(createCancelableAsyncIterable, "createCancelableAsyncIterable");
+class AsyncIterableSource {
+  static {
+    __name(this, "AsyncIterableSource");
+  }
+  _deferred = new DeferredPromise();
+  _asyncIterable;
+  _errorFn;
+  _emitFn;
+  /**
+   *
+   * @param onReturn A function that will be called when consuming the async iterable
+   * has finished by the consumer, e.g the for-await-loop has be existed (break, return) early.
+   * This is NOT called when resolving this source by its owner.
+   */
+  constructor(onReturn) {
+    this._asyncIterable = new AsyncIterableObject((emitter) => {
+      if (earlyError) {
+        emitter.reject(earlyError);
+        return;
+      }
+      if (earlyItems) {
+        emitter.emitMany(earlyItems);
+      }
+      this._errorFn = (error) => emitter.reject(error);
+      this._emitFn = (item) => emitter.emitOne(item);
+      return this._deferred.p;
+    }, onReturn);
+    let earlyError;
+    let earlyItems;
+    this._emitFn = (item) => {
+      if (!earlyItems) {
+        earlyItems = [];
+      }
+      earlyItems.push(item);
+    };
+    this._errorFn = (error) => {
+      if (!earlyError) {
+        earlyError = error;
+      }
+    };
+  }
+  get asyncIterable() {
+    return this._asyncIterable;
+  }
+  resolve() {
+    this._deferred.complete();
+  }
+  reject(error) {
+    this._errorFn(error);
+    this._deferred.complete();
+  }
+  emitOne(item) {
+    this._emitFn(item);
+  }
+}
+export {
+  AbstractIdleValue,
+  AsyncIterableObject,
+  AsyncIterableSource,
+  AutoOpenBarrier,
+  Barrier,
+  CancelableAsyncIterableObject,
+  DeferredPromise,
+  Delayer,
+  GlobalIdleValue,
+  IntervalCounter,
+  IntervalTimer,
+  LazyStatefulPromise,
+  LimitedQueue,
+  Limiter,
+  ProcessTimeRunOnceScheduler,
+  Promises,
+  Queue,
+  ResourceQueue,
+  RunOnceScheduler,
+  RunOnceWorker,
+  Sequencer,
+  SequencerByKey,
+  StatefulPromise,
+  TaskSequentializer,
+  ThrottledDelayer,
+  ThrottledWorker,
+  Throttler,
+  TimeoutTimer,
+  _runWhenIdle,
+  asPromise,
+  createCancelableAsyncIterable,
+  createCancelablePromise,
+  disposableTimeout,
+  first,
+  firstParallel,
+  isThenable,
+  promiseWithResolvers,
+  raceCancellablePromises,
+  raceCancellation,
+  raceCancellationError,
+  raceFilter,
+  raceTimeout,
+  retry,
+  runWhenGlobalIdle,
+  sequence,
+  timeout
+};
+//# sourceMappingURL=async.js.map

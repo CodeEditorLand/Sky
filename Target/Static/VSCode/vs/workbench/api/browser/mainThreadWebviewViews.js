@@ -1,1 +1,119 @@
-var m=Object.defineProperty,W=Object.getOwnPropertyDescriptor,p=(e,i,s,t)=>{for(var r,o=t>1?void 0:t?W(i,s):i,w=e.length-1;w>=0;w--)(r=e[w])&&(o=(t?r(i,s,o):r(o))||o);return t&&o&&m(i,s,o),o},b=(e,i)=>(s,t)=>i(s,t,e);import"../../../base/common/cancellation.js";import{onUnexpectedError as x}from"../../../base/common/errors.js";import{Disposable as V,DisposableMap as h,DisposableStore as f}from"../../../base/common/lifecycle.js";import{generateUuid as u}from"../../../base/common/uuid.js";import{reviveWebviewExtension as y}from"./mainThreadWebviews.js";import*as _ from"../common/extHost.protocol.js";import"../../common/views.js";import{IWebviewViewService as H}from"../../contrib/webviewView/browser/webviewViewService.js";import{ITelemetryService as P}from"../../../platform/telemetry/common/telemetry.js";import"../../services/extensions/common/extHostCustomers.js";let d=class extends V{constructor(e,i,s,t){super(),this.mainThreadWebviews=i,this._telemetryService=s,this._webviewViewService=t,this._proxy=e.getProxy(_.ExtHostContext.ExtHostWebviewViews)}_proxy;_webviewViews=this._register(new h);_webviewViewProviders=this._register(new h);$setWebviewViewTitle(e,i){this.getWebviewView(e).title=i}$setWebviewViewDescription(e,i){this.getWebviewView(e).description=i}$setWebviewViewBadge(e,i){this.getWebviewView(e).badge=i}$show(e,i){this.getWebviewView(e).show(i)}$registerWebviewViewProvider(e,i,s){if(this._webviewViewProviders.has(i))throw new Error(`View provider for ${i} already registered`);const t=y(e),r=this._webviewViewService.register(i,{resolve:async(e,r)=>{const o=u();let w;if(this._webviewViews.set(o,e),this.mainThreadWebviews.addWebview(o,e.webview,{serializeBuffersForPostMessage:s.serializeBuffersForPostMessage}),e.webview.state)try{w=JSON.parse(e.webview.state)}catch(i){console.error("Could not load webview state",i,e.webview.state)}e.webview.extension=t,s&&(e.webview.options=s);const v=new f;v.add(e.onDidChangeVisibility((e=>{this._proxy.$onDidChangeWebviewViewVisibility(o,e)}))),v.add(e.onDispose((()=>{this._proxy.$disposeWebviewView(o),this._webviewViews.deleteAndDispose(o),v.dispose()}))),this._telemetryService.publicLog2("webviews:createWebviewView",{extensionId:t.id.value,id:i});try{await this._proxy.$resolveWebviewView(o,i,e.title,w,r)}catch(s){x(s),e.webview.setHtml(this.mainThreadWebviews.getWebviewResolvedFailedContent(i))}}});this._webviewViewProviders.set(i,r)}$unregisterWebviewViewProvider(e){if(!this._webviewViewProviders.has(e))throw new Error(`No view provider for ${e} registered`);this._webviewViewProviders.deleteAndDispose(e)}getWebviewView(e){const i=this._webviewViews.get(e);if(!i)throw new Error("unknown webview view");return i}};d=p([b(2,P),b(3,H)],d);export{d as MainThreadWebviewsViews};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { CancellationToken } from "../../../base/common/cancellation.js";
+import { onUnexpectedError } from "../../../base/common/errors.js";
+import { Disposable, DisposableMap, DisposableStore } from "../../../base/common/lifecycle.js";
+import { generateUuid } from "../../../base/common/uuid.js";
+import { MainThreadWebviews, reviveWebviewExtension } from "./mainThreadWebviews.js";
+import * as extHostProtocol from "../common/extHost.protocol.js";
+import { IViewBadge } from "../../common/views.js";
+import { IWebviewViewService, WebviewView } from "../../contrib/webviewView/browser/webviewViewService.js";
+import { ITelemetryService } from "../../../platform/telemetry/common/telemetry.js";
+import { IExtHostContext } from "../../services/extensions/common/extHostCustomers.js";
+let MainThreadWebviewsViews = class extends Disposable {
+  constructor(context, mainThreadWebviews, _telemetryService, _webviewViewService) {
+    super();
+    this.mainThreadWebviews = mainThreadWebviews;
+    this._telemetryService = _telemetryService;
+    this._webviewViewService = _webviewViewService;
+    this._proxy = context.getProxy(extHostProtocol.ExtHostContext.ExtHostWebviewViews);
+  }
+  static {
+    __name(this, "MainThreadWebviewsViews");
+  }
+  _proxy;
+  _webviewViews = this._register(new DisposableMap());
+  _webviewViewProviders = this._register(new DisposableMap());
+  $setWebviewViewTitle(handle, value) {
+    const webviewView = this.getWebviewView(handle);
+    webviewView.title = value;
+  }
+  $setWebviewViewDescription(handle, value) {
+    const webviewView = this.getWebviewView(handle);
+    webviewView.description = value;
+  }
+  $setWebviewViewBadge(handle, badge) {
+    const webviewView = this.getWebviewView(handle);
+    webviewView.badge = badge;
+  }
+  $show(handle, preserveFocus) {
+    const webviewView = this.getWebviewView(handle);
+    webviewView.show(preserveFocus);
+  }
+  $registerWebviewViewProvider(extensionData, viewType, options) {
+    if (this._webviewViewProviders.has(viewType)) {
+      throw new Error(`View provider for ${viewType} already registered`);
+    }
+    const extension = reviveWebviewExtension(extensionData);
+    const registration = this._webviewViewService.register(viewType, {
+      resolve: /* @__PURE__ */ __name(async (webviewView, cancellation) => {
+        const handle = generateUuid();
+        this._webviewViews.set(handle, webviewView);
+        this.mainThreadWebviews.addWebview(handle, webviewView.webview, { serializeBuffersForPostMessage: options.serializeBuffersForPostMessage });
+        let state = void 0;
+        if (webviewView.webview.state) {
+          try {
+            state = JSON.parse(webviewView.webview.state);
+          } catch (e) {
+            console.error("Could not load webview state", e, webviewView.webview.state);
+          }
+        }
+        webviewView.webview.extension = extension;
+        if (options) {
+          webviewView.webview.options = options;
+        }
+        const subscriptions = new DisposableStore();
+        subscriptions.add(webviewView.onDidChangeVisibility((visible) => {
+          this._proxy.$onDidChangeWebviewViewVisibility(handle, visible);
+        }));
+        subscriptions.add(webviewView.onDispose(() => {
+          this._proxy.$disposeWebviewView(handle);
+          this._webviewViews.deleteAndDispose(handle);
+          subscriptions.dispose();
+        }));
+        this._telemetryService.publicLog2("webviews:createWebviewView", {
+          extensionId: extension.id.value,
+          id: viewType
+        });
+        try {
+          await this._proxy.$resolveWebviewView(handle, viewType, webviewView.title, state, cancellation);
+        } catch (error) {
+          onUnexpectedError(error);
+          webviewView.webview.setHtml(this.mainThreadWebviews.getWebviewResolvedFailedContent(viewType));
+        }
+      }, "resolve")
+    });
+    this._webviewViewProviders.set(viewType, registration);
+  }
+  $unregisterWebviewViewProvider(viewType) {
+    if (!this._webviewViewProviders.has(viewType)) {
+      throw new Error(`No view provider for ${viewType} registered`);
+    }
+    this._webviewViewProviders.deleteAndDispose(viewType);
+  }
+  getWebviewView(handle) {
+    const webviewView = this._webviewViews.get(handle);
+    if (!webviewView) {
+      throw new Error("unknown webview view");
+    }
+    return webviewView;
+  }
+};
+MainThreadWebviewsViews = __decorateClass([
+  __decorateParam(2, ITelemetryService),
+  __decorateParam(3, IWebviewViewService)
+], MainThreadWebviewsViews);
+export {
+  MainThreadWebviewsViews
+};
+//# sourceMappingURL=mainThreadWebviewViews.js.map

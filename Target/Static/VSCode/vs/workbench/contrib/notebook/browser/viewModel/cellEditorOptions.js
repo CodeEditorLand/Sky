@@ -1,1 +1,100 @@
-import{Emitter as n}from"../../../../../base/common/event.js";import{Disposable as a,DisposableStore as d}from"../../../../../base/common/lifecycle.js";import{deepClone as l}from"../../../../../base/common/objects.js";import"../../../../../editor/common/config/editorOptions.js";import"../../../../../platform/configuration/common/configuration.js";import"../notebookBrowser.js";import"../notebookOptions.js";class r extends a{constructor(e,t,i,s){super();this.notebookEditor=e;this.notebookOptions=t;this.configurationService=i;this.language=s;this._register(i.onDidChangeConfiguration(o=>{(o.affectsConfiguration("editor")||o.affectsConfiguration("notebook"))&&this._recomputeOptions()})),this._register(t.onDidChangeOptions(o=>{(o.cellStatusBarVisibility||o.editorTopPadding||o.editorOptionsCustomizations)&&this._recomputeOptions()})),this._register(this.notebookEditor.onDidChangeModel(()=>{this._localDisposableStore.clear(),this.notebookEditor.hasModel()&&(this._localDisposableStore.add(this.notebookEditor.onDidChangeOptions(()=>{this._recomputeOptions()})),this._recomputeOptions())})),this.notebookEditor.hasModel()&&this._localDisposableStore.add(this.notebookEditor.onDidChangeOptions(()=>{this._recomputeOptions()})),this._value=this._computeEditorOptions()}static fixedEditorOptions={scrollBeyondLastLine:!1,scrollbar:{verticalScrollbarSize:14,horizontal:"auto",useShadows:!0,verticalHasArrows:!1,horizontalHasArrows:!1,alwaysConsumeMouseWheel:!1},renderLineHighlightOnlyWhenFocus:!0,overviewRulerLanes:0,lineDecorationsWidth:0,folding:!0,fixedOverflowWidgets:!0,minimap:{enabled:!1},renderValidationDecorations:"on",lineNumbersMinChars:3};_localDisposableStore=this._register(new d);_onDidChange=this._register(new n);onDidChange=this._onDidChange.event;_value;get value(){return this._value}_recomputeOptions(){this._value=this._computeEditorOptions(),this._onDidChange.fire()}_computeEditorOptions(){const e=l(this.configurationService.getValue("editor",{overrideIdentifier:this.language})),t=this.notebookOptions.getDisplayOptions().editorOptionsCustomizations,i={};if(t)for(const o in t)o.indexOf("editor.")===0&&(i[o.substring(7)]=t[o]);return Object.freeze({...e,...r.fixedEditorOptions,...i,padding:{top:12,bottom:12},readOnly:this.notebookEditor.isReadOnly})}}export{r as BaseCellEditorOptions};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Emitter, Event } from "../../../../../base/common/event.js";
+import { Disposable, DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { deepClone } from "../../../../../base/common/objects.js";
+import { IEditorOptions } from "../../../../../editor/common/config/editorOptions.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { IBaseCellEditorOptions, INotebookEditorDelegate } from "../notebookBrowser.js";
+import { NotebookOptions } from "../notebookOptions.js";
+class BaseCellEditorOptions extends Disposable {
+  constructor(notebookEditor, notebookOptions, configurationService, language) {
+    super();
+    this.notebookEditor = notebookEditor;
+    this.notebookOptions = notebookOptions;
+    this.configurationService = configurationService;
+    this.language = language;
+    this._register(configurationService.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration("editor") || e.affectsConfiguration("notebook")) {
+        this._recomputeOptions();
+      }
+    }));
+    this._register(notebookOptions.onDidChangeOptions((e) => {
+      if (e.cellStatusBarVisibility || e.editorTopPadding || e.editorOptionsCustomizations) {
+        this._recomputeOptions();
+      }
+    }));
+    this._register(this.notebookEditor.onDidChangeModel(() => {
+      this._localDisposableStore.clear();
+      if (this.notebookEditor.hasModel()) {
+        this._localDisposableStore.add(this.notebookEditor.onDidChangeOptions(() => {
+          this._recomputeOptions();
+        }));
+        this._recomputeOptions();
+      }
+    }));
+    if (this.notebookEditor.hasModel()) {
+      this._localDisposableStore.add(this.notebookEditor.onDidChangeOptions(() => {
+        this._recomputeOptions();
+      }));
+    }
+    this._value = this._computeEditorOptions();
+  }
+  static {
+    __name(this, "BaseCellEditorOptions");
+  }
+  static fixedEditorOptions = {
+    scrollBeyondLastLine: false,
+    scrollbar: {
+      verticalScrollbarSize: 14,
+      horizontal: "auto",
+      useShadows: true,
+      verticalHasArrows: false,
+      horizontalHasArrows: false,
+      alwaysConsumeMouseWheel: false
+    },
+    renderLineHighlightOnlyWhenFocus: true,
+    overviewRulerLanes: 0,
+    lineDecorationsWidth: 0,
+    folding: true,
+    fixedOverflowWidgets: true,
+    minimap: { enabled: false },
+    renderValidationDecorations: "on",
+    lineNumbersMinChars: 3
+  };
+  _localDisposableStore = this._register(new DisposableStore());
+  _onDidChange = this._register(new Emitter());
+  onDidChange = this._onDidChange.event;
+  _value;
+  get value() {
+    return this._value;
+  }
+  _recomputeOptions() {
+    this._value = this._computeEditorOptions();
+    this._onDidChange.fire();
+  }
+  _computeEditorOptions() {
+    const editorOptions = deepClone(this.configurationService.getValue("editor", { overrideIdentifier: this.language }));
+    const editorOptionsOverrideRaw = this.notebookOptions.getDisplayOptions().editorOptionsCustomizations;
+    const editorOptionsOverride = {};
+    if (editorOptionsOverrideRaw) {
+      for (const key in editorOptionsOverrideRaw) {
+        if (key.indexOf("editor.") === 0) {
+          editorOptionsOverride[key.substring(7)] = editorOptionsOverrideRaw[key];
+        }
+      }
+    }
+    const computed = Object.freeze({
+      ...editorOptions,
+      ...BaseCellEditorOptions.fixedEditorOptions,
+      ...editorOptionsOverride,
+      ...{ padding: { top: 12, bottom: 12 } },
+      readOnly: this.notebookEditor.isReadOnly
+    });
+    return computed;
+  }
+}
+export {
+  BaseCellEditorOptions
+};
+//# sourceMappingURL=cellEditorOptions.js.map

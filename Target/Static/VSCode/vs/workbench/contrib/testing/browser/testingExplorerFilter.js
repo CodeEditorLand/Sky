@@ -1,1 +1,247 @@
-var A=Object.defineProperty;var F=Object.getOwnPropertyDescriptor;var f=(d,a,e,r)=>{for(var s=r>1?void 0:r?F(a,e):a,i=d.length-1,t;i>=0;i--)(t=d[i])&&(s=(r?t(a,e,s):t(s))||s);return r&&s&&A(a,e,s),s},u=(d,a)=>(e,r)=>a(e,r,d);import*as m from"../../../../base/browser/dom.js";import{ActionBar as T}from"../../../../base/browser/ui/actionbar/actionbar.js";import{BaseActionViewItem as b}from"../../../../base/browser/ui/actionbar/actionViewItems.js";import{AnchorAlignment as w}from"../../../../base/browser/ui/contextview/contextview.js";import{DropdownMenuActionViewItem as E}from"../../../../base/browser/ui/dropdown/dropdownActionViewItem.js";import{Action as H,Separator as v}from"../../../../base/common/actions.js";import{Delayer as C}from"../../../../base/common/async.js";import{Emitter as O}from"../../../../base/common/event.js";import{Iterable as V}from"../../../../base/common/iterator.js";import{localize as o}from"../../../../nls.js";import{IContextMenuService as z}from"../../../../platform/contextview/browser/contextView.js";import{IInstantiationService as _}from"../../../../platform/instantiation/common/instantiation.js";import{StorageScope as k,StorageTarget as D}from"../../../../platform/storage/common/storage.js";import{ThemeIcon as R}from"../../../../base/common/themables.js";import{ContextScopedSuggestEnabledInputWithHistory as $}from"../../codeEditor/browser/suggestEnabledInput/suggestEnabledInput.js";import{testingFilterIcon as L}from"./icons.js";import{StoredValue as M}from"../common/storedValue.js";import{ITestExplorerFilterState as P,TestFilterTerm as l}from"../common/testExplorerFilterState.js";import{ITestService as y}from"../common/testService.js";import{denamespaceTestTag as B}from"../common/testTypes.js";const S={[l.Failed]:o("testing.filters.showOnlyFailed","Show Only Failed Tests"),[l.Executed]:o("testing.filters.showOnlyExecuted","Show Only Executed Tests"),[l.CurrentDoc]:o("testing.filters.currentFile","Show in Active File Only"),[l.OpenedFiles]:o("testing.filters.openedFiles","Show in Opened Files Only"),[l.Hidden]:o("testing.filters.showExcludedTests","Show Hidden Tests")};let g=class extends b{constructor(e,r,s,i,t){super(null,e,r);this.state=s;this.instantiationService=i;this.testService=t;this.history=this._register(i.createInstance(M,{key:"testing.filterHistory2",scope:k.WORKSPACE,target:D.MACHINE})),this.updateFilterActiveState(),this._register(t.excluded.onTestExclusionsChanged(this.updateFilterActiveState,this))}input;wrapper;focusEmitter=this._register(new O);onDidFocus=this.focusEmitter.event;history;filtersAction=new H("markersFiltersAction",o("testing.filters.menu","More Filters..."),"testing-filter-button "+R.asClassName(L));render(e){e.classList.add("testing-filter-action-item");const r=this._register(new C(400)),s=this.wrapper=m.$(".testing-filter-wrapper");e.appendChild(s);let i=this.history.get({lastValue:"",values:[]});i instanceof Array&&(i={lastValue:"",values:i}),i.lastValue&&this.state.setText(i.lastValue);const t=this.input=this._register(this.instantiationService.createInstance($,{id:"testing.explorer.filter",ariaLabel:o("testExplorerFilterLabel","Filter text for tests in the explorer"),parent:s,suggestionProvider:{triggerCharacters:["@"],provideResults:()=>[...Object.entries(S).map(([n,c])=>({label:n,detail:c})),...V.map(this.testService.collection.tags.values(),n=>{const{ctrlId:c,tagId:h}=B(n.id),x=`@${c}:${h}`;return{label:`@${c}:${h}`,detail:this.testService.collection.getNodeById(c)?.item.label,insertText:h.includes(" ")?`@${c}:"${h.replace(/(["\\])/g,"\\$1")}"`:x}})].filter(n=>!this.state.text.value.includes(n.label))},resourceHandle:"testing:filter",suggestOptions:{value:this.state.text.value,placeholderText:o("testExplorerFilter","Filter (e.g. text, !exclude, @tag)")},history:i.values}));this._register(this.state.text.onDidChange(n=>{t.getValue()!==n&&t.setValue(n)})),this._register(this.state.onDidRequestInputFocus(()=>{t.focus()})),this._register(t.onDidFocus(()=>{this.focusEmitter.fire()})),this._register(t.onInputDidChange(()=>r.trigger(()=>{t.addToHistory(),this.state.setText(t.getValue())}))),this._register(new T(e,{actionViewItemProvider:(n,c)=>{if(n.id===this.filtersAction.id)return this.instantiationService.createInstance(p,n,c,this.state,this.actionRunner)}})).push(this.filtersAction,{icon:!0,label:!1}),this.layout(this.wrapper.clientWidth)}layout(e){this.input.layout(new m.Dimension(e-24-8-22,20))}focus(){this.input.focus()}saveState(){this.history.store({lastValue:this.input.getValue(),values:this.input.getHistory()})}dispose(){this.saveState(),super.dispose()}updateFilterActiveState(){this.filtersAction.checked=this.testService.excluded.hasAny}};g=f([u(2,P),u(3,_),u(4,y)],g);let p=class extends E{constructor(e,r,s,i,t,I){super(e,{getActions:()=>this.getActions()},t,{actionRunner:i,classNames:e.class,anchorAlignmentProvider:()=>w.RIGHT,menuAsChild:!0});this.filters=s;this.testService=I}render(e){super.render(e),this.updateChecked()}getActions(){return[...[l.Failed,l.Executed,l.CurrentDoc,l.OpenedFiles].map(e=>({checked:this.filters.isFilteringFor(e),class:void 0,enabled:!0,id:e,label:S[e],run:()=>this.filters.toggleFilteringFor(e),tooltip:"",dispose:()=>null})),new v,{checked:this.filters.fuzzy.value,class:void 0,enabled:!0,id:"fuzzy",label:o("testing.filters.fuzzyMatch","Fuzzy Match"),run:()=>this.filters.fuzzy.value=!this.filters.fuzzy.value,tooltip:""},new v,{checked:this.filters.isFilteringFor(l.Hidden),class:void 0,enabled:this.testService.excluded.hasAny,id:"showExcluded",label:o("testing.filters.showExcludedTests","Show Hidden Tests"),run:()=>this.filters.toggleFilteringFor(l.Hidden),tooltip:""},{class:void 0,enabled:this.testService.excluded.hasAny,id:"removeExcluded",label:o("testing.filters.removeTestExclusions","Unhide All Tests"),run:async()=>this.testService.excluded.clear(),tooltip:""}]}updateChecked(){this.element.classList.toggle("checked",this._action.checked)}};p=f([u(4,z),u(5,y)],p);export{g as TestingExplorerFilter};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import * as dom from "../../../../base/browser/dom.js";
+import { ActionBar } from "../../../../base/browser/ui/actionbar/actionbar.js";
+import { BaseActionViewItem, IActionViewItemOptions, IBaseActionViewItemOptions } from "../../../../base/browser/ui/actionbar/actionViewItems.js";
+import { AnchorAlignment } from "../../../../base/browser/ui/contextview/contextview.js";
+import { DropdownMenuActionViewItem } from "../../../../base/browser/ui/dropdown/dropdownActionViewItem.js";
+import { Action, IAction, IActionRunner, Separator } from "../../../../base/common/actions.js";
+import { Delayer } from "../../../../base/common/async.js";
+import { Emitter } from "../../../../base/common/event.js";
+import { Iterable } from "../../../../base/common/iterator.js";
+import { localize } from "../../../../nls.js";
+import { IContextMenuService } from "../../../../platform/contextview/browser/contextView.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { ContextScopedSuggestEnabledInputWithHistory, SuggestEnabledInputWithHistory, SuggestResultsProvider } from "../../codeEditor/browser/suggestEnabledInput/suggestEnabledInput.js";
+import { testingFilterIcon } from "./icons.js";
+import { StoredValue } from "../common/storedValue.js";
+import { ITestExplorerFilterState, TestFilterTerm } from "../common/testExplorerFilterState.js";
+import { ITestService } from "../common/testService.js";
+import { denamespaceTestTag } from "../common/testTypes.js";
+const testFilterDescriptions = {
+  [TestFilterTerm.Failed]: localize("testing.filters.showOnlyFailed", "Show Only Failed Tests"),
+  [TestFilterTerm.Executed]: localize("testing.filters.showOnlyExecuted", "Show Only Executed Tests"),
+  [TestFilterTerm.CurrentDoc]: localize("testing.filters.currentFile", "Show in Active File Only"),
+  [TestFilterTerm.OpenedFiles]: localize("testing.filters.openedFiles", "Show in Opened Files Only"),
+  [TestFilterTerm.Hidden]: localize("testing.filters.showExcludedTests", "Show Hidden Tests")
+};
+let TestingExplorerFilter = class extends BaseActionViewItem {
+  constructor(action, options, state, instantiationService, testService) {
+    super(null, action, options);
+    this.state = state;
+    this.instantiationService = instantiationService;
+    this.testService = testService;
+    this.history = this._register(instantiationService.createInstance(StoredValue, {
+      key: "testing.filterHistory2",
+      scope: StorageScope.WORKSPACE,
+      target: StorageTarget.MACHINE
+    }));
+    this.updateFilterActiveState();
+    this._register(testService.excluded.onTestExclusionsChanged(this.updateFilterActiveState, this));
+  }
+  static {
+    __name(this, "TestingExplorerFilter");
+  }
+  input;
+  wrapper;
+  focusEmitter = this._register(new Emitter());
+  onDidFocus = this.focusEmitter.event;
+  history;
+  filtersAction = new Action("markersFiltersAction", localize("testing.filters.menu", "More Filters..."), "testing-filter-button " + ThemeIcon.asClassName(testingFilterIcon));
+  /**
+   * @override
+   */
+  render(container) {
+    container.classList.add("testing-filter-action-item");
+    const updateDelayer = this._register(new Delayer(400));
+    const wrapper = this.wrapper = dom.$(".testing-filter-wrapper");
+    container.appendChild(wrapper);
+    let history = this.history.get({ lastValue: "", values: [] });
+    if (history instanceof Array) {
+      history = { lastValue: "", values: history };
+    }
+    if (history.lastValue) {
+      this.state.setText(history.lastValue);
+    }
+    const input = this.input = this._register(this.instantiationService.createInstance(ContextScopedSuggestEnabledInputWithHistory, {
+      id: "testing.explorer.filter",
+      ariaLabel: localize("testExplorerFilterLabel", "Filter text for tests in the explorer"),
+      parent: wrapper,
+      suggestionProvider: {
+        triggerCharacters: ["@"],
+        provideResults: /* @__PURE__ */ __name(() => [
+          ...Object.entries(testFilterDescriptions).map(([label, detail]) => ({ label, detail })),
+          ...Iterable.map(this.testService.collection.tags.values(), (tag) => {
+            const { ctrlId, tagId } = denamespaceTestTag(tag.id);
+            const insertText = `@${ctrlId}:${tagId}`;
+            return {
+              label: `@${ctrlId}:${tagId}`,
+              detail: this.testService.collection.getNodeById(ctrlId)?.item.label,
+              insertText: tagId.includes(" ") ? `@${ctrlId}:"${tagId.replace(/(["\\])/g, "\\$1")}"` : insertText
+            };
+          })
+        ].filter((r) => !this.state.text.value.includes(r.label)), "provideResults")
+      },
+      resourceHandle: "testing:filter",
+      suggestOptions: {
+        value: this.state.text.value,
+        placeholderText: localize("testExplorerFilter", "Filter (e.g. text, !exclude, @tag)")
+      },
+      history: history.values
+    }));
+    this._register(this.state.text.onDidChange((newValue) => {
+      if (input.getValue() !== newValue) {
+        input.setValue(newValue);
+      }
+    }));
+    this._register(this.state.onDidRequestInputFocus(() => {
+      input.focus();
+    }));
+    this._register(input.onDidFocus(() => {
+      this.focusEmitter.fire();
+    }));
+    this._register(input.onInputDidChange(() => updateDelayer.trigger(() => {
+      input.addToHistory();
+      this.state.setText(input.getValue());
+    })));
+    const actionbar = this._register(new ActionBar(container, {
+      actionViewItemProvider: /* @__PURE__ */ __name((action, options) => {
+        if (action.id === this.filtersAction.id) {
+          return this.instantiationService.createInstance(FiltersDropdownMenuActionViewItem, action, options, this.state, this.actionRunner);
+        }
+        return void 0;
+      }, "actionViewItemProvider")
+    }));
+    actionbar.push(this.filtersAction, { icon: true, label: false });
+    this.layout(this.wrapper.clientWidth);
+  }
+  layout(width) {
+    this.input.layout(new dom.Dimension(
+      width - /* horizontal padding */
+      24 - /* editor padding */
+      8 - /* filter button padding */
+      22,
+      20
+      // line height from suggestEnabledInput.ts
+    ));
+  }
+  /**
+   * Focuses the filter input.
+   */
+  focus() {
+    this.input.focus();
+  }
+  /**
+   * Persists changes to the input history.
+   */
+  saveState() {
+    this.history.store({ lastValue: this.input.getValue(), values: this.input.getHistory() });
+  }
+  /**
+   * @override
+   */
+  dispose() {
+    this.saveState();
+    super.dispose();
+  }
+  /**
+   * Updates the 'checked' state of the filter submenu.
+   */
+  updateFilterActiveState() {
+    this.filtersAction.checked = this.testService.excluded.hasAny;
+  }
+};
+TestingExplorerFilter = __decorateClass([
+  __decorateParam(2, ITestExplorerFilterState),
+  __decorateParam(3, IInstantiationService),
+  __decorateParam(4, ITestService)
+], TestingExplorerFilter);
+let FiltersDropdownMenuActionViewItem = class extends DropdownMenuActionViewItem {
+  constructor(action, options, filters, actionRunner, contextMenuService, testService) {
+    super(
+      action,
+      { getActions: /* @__PURE__ */ __name(() => this.getActions(), "getActions") },
+      contextMenuService,
+      {
+        actionRunner,
+        classNames: action.class,
+        anchorAlignmentProvider: /* @__PURE__ */ __name(() => AnchorAlignment.RIGHT, "anchorAlignmentProvider"),
+        menuAsChild: true
+      }
+    );
+    this.filters = filters;
+    this.testService = testService;
+  }
+  static {
+    __name(this, "FiltersDropdownMenuActionViewItem");
+  }
+  render(container) {
+    super.render(container);
+    this.updateChecked();
+  }
+  getActions() {
+    return [
+      ...[TestFilterTerm.Failed, TestFilterTerm.Executed, TestFilterTerm.CurrentDoc, TestFilterTerm.OpenedFiles].map((term) => ({
+        checked: this.filters.isFilteringFor(term),
+        class: void 0,
+        enabled: true,
+        id: term,
+        label: testFilterDescriptions[term],
+        run: /* @__PURE__ */ __name(() => this.filters.toggleFilteringFor(term), "run"),
+        tooltip: "",
+        dispose: /* @__PURE__ */ __name(() => null, "dispose")
+      })),
+      new Separator(),
+      {
+        checked: this.filters.fuzzy.value,
+        class: void 0,
+        enabled: true,
+        id: "fuzzy",
+        label: localize("testing.filters.fuzzyMatch", "Fuzzy Match"),
+        run: /* @__PURE__ */ __name(() => this.filters.fuzzy.value = !this.filters.fuzzy.value, "run"),
+        tooltip: ""
+      },
+      new Separator(),
+      {
+        checked: this.filters.isFilteringFor(TestFilterTerm.Hidden),
+        class: void 0,
+        enabled: this.testService.excluded.hasAny,
+        id: "showExcluded",
+        label: localize("testing.filters.showExcludedTests", "Show Hidden Tests"),
+        run: /* @__PURE__ */ __name(() => this.filters.toggleFilteringFor(TestFilterTerm.Hidden), "run"),
+        tooltip: ""
+      },
+      {
+        class: void 0,
+        enabled: this.testService.excluded.hasAny,
+        id: "removeExcluded",
+        label: localize("testing.filters.removeTestExclusions", "Unhide All Tests"),
+        run: /* @__PURE__ */ __name(async () => this.testService.excluded.clear(), "run"),
+        tooltip: ""
+      }
+    ];
+  }
+  updateChecked() {
+    this.element.classList.toggle("checked", this._action.checked);
+  }
+};
+FiltersDropdownMenuActionViewItem = __decorateClass([
+  __decorateParam(4, IContextMenuService),
+  __decorateParam(5, ITestService)
+], FiltersDropdownMenuActionViewItem);
+export {
+  TestingExplorerFilter
+};
+//# sourceMappingURL=testingExplorerFilter.js.map

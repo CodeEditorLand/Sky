@@ -1,1 +1,2635 @@
-var $e=Object.defineProperty,eo=Object.getOwnPropertyDescriptor,z=(o,t,e,r)=>{for(var i,s=r>1?void 0:r?eo(t,e):t,n=o.length-1;n>=0;n--)(i=o[n])&&(s=(r?i(t,e,s):i(s))||s);return r&&s&&$e(t,e,s),s},q=(o,t)=>(e,r)=>t(e,r,o);import{localize as G,localize2 as n}from"../../../../nls.js";import{Action as te}from"../../../../base/common/actions.js";import{CloseDirection as oo,SaveReason as Q,EditorsOrder as x,EditorInputCapabilities as ve,DEFAULT_EDITOR_ASSOCIATION as to,EditorResourceAccessor as ge}from"../../../common/editor.js";import"../../../common/editor/editorInput.js";import{SideBySideEditorInput as ro}from"../../../common/editor/sideBySideEditorInput.js";import{IWorkbenchLayoutService as re,Parts as U}from"../../../services/layout/browser/layoutService.js";import{GoFilter as h,IHistoryService as f}from"../../../services/history/common/history.js";import{IKeybindingService as Ee}from"../../../../platform/keybinding/common/keybinding.js";import{ICommandService as ie}from"../../../../platform/commands/common/commands.js";import{CLOSE_EDITOR_COMMAND_ID as io,MOVE_ACTIVE_EDITOR_COMMAND_ID as C,SPLIT_EDITOR_LEFT as ye,SPLIT_EDITOR_RIGHT as me,SPLIT_EDITOR_UP as we,SPLIT_EDITOR_DOWN as Ge,splitEditor as no,LAYOUT_EDITOR_GROUPS_COMMAND_ID as k,UNPIN_EDITOR_COMMAND_ID as so,COPY_ACTIVE_EDITOR_COMMAND_ID as T,SPLIT_EDITOR as co,TOGGLE_MAXIMIZE_EDITOR_GROUP as ao,MOVE_EDITOR_INTO_NEW_WINDOW_COMMAND_ID as uo,COPY_EDITOR_INTO_NEW_WINDOW_COMMAND_ID as po,MOVE_EDITOR_GROUP_INTO_NEW_WINDOW_COMMAND_ID as lo,COPY_EDITOR_GROUP_INTO_NEW_WINDOW_COMMAND_ID as vo,NEW_EMPTY_EDITOR_WINDOW_COMMAND_ID as go}from"./editorCommands.js";import{IEditorGroupsService as y,GroupsArrangement as X,GroupLocation as D,GroupDirection as v,preferredSideBySideGroupDirection as fe,GroupOrientation as L,GroupsOrder as ne,MergeGroupMode as Ae}from"../../../services/editor/common/editorGroupsService.js";import{IEditorService as b}from"../../../services/editor/common/editorService.js";import{IConfigurationService as Eo}from"../../../../platform/configuration/common/configuration.js";import{IWorkspacesService as yo}from"../../../../platform/workspaces/common/workspaces.js";import{IFileDialogService as mo,ConfirmResult as W,IDialogService as he}from"../../../../platform/dialogs/common/dialogs.js";import{ItemActivation as Ie,IQuickInputService as _}from"../../../../platform/quickinput/common/quickInput.js";import{AllEditorsByMostRecentlyUsedQuickAccess as se,ActiveGroupEditorsByMostRecentlyUsedQuickAccess as ce,AllEditorsByAppearanceQuickAccess as wo}from"./editorQuickAccess.js";import{Codicon as O}from"../../../../base/common/codicons.js";import{ThemeIcon as de}from"../../../../base/common/themables.js";import{IFilesConfigurationService as Go,AutoSaveMode as Ce}from"../../../services/filesConfiguration/common/filesConfigurationService.js";import{IEditorResolverService as fo}from"../../../services/editor/common/editorResolverService.js";import{isLinux as Ao,isNative as ho,isWindows as Io}from"../../../../base/common/platform.js";import{Action2 as p,MenuId as V}from"../../../../platform/actions/common/actions.js";import"../../../../platform/instantiation/common/instantiation.js";import{ContextKeyExpr as R}from"../../../../platform/contextkey/common/contextkey.js";import{KeyChord as w,KeyCode as d,KeyMod as s}from"../../../../base/common/keyCodes.js";import{KeybindingWeight as l}from"../../../../platform/keybinding/common/keybindingsRegistry.js";import{ILogService as Se}from"../../../../platform/log/common/log.js";import{Categories as c}from"../../../../platform/action/common/actionCommonCategories.js";import{ActiveEditorAvailableEditorIdsContext as xe,ActiveEditorContext as Co,ActiveEditorGroupEmptyContext as be,AuxiliaryBarVisibleContext as ke,EditorPartMaximizedEditorGroupContext as K,EditorPartMultipleEditorGroupsContext as Te,IsAuxiliaryWindowFocusedContext as So,MultipleEditorGroupsContext as Le,SideBarVisibleContext as Re}from"../../../common/contextkeys.js";import{getActiveDocument as xo}from"../../../../base/browser/dom.js";import"../../../../platform/action/common/action.js";import{IProgressService as bo,ProgressLocation as ko}from"../../../../platform/progress/common/progress.js";import{resolveCommandsContext as ae}from"./editorCommandsContext.js";import{IListService as ue}from"../../../../platform/list/browser/listService.js";import{prepareMoveCopyEditors as To}from"./editor.js";class E extends p{constructor(o,t,e){super(o),this.commandId=t,this.commandArgs=e}run(o){return o.get(ie).executeCommand(this.commandId,this.commandArgs)}}class Ne extends p{getDirection(o){return fe(o)}async run(o,...t){const e=o.get(y),r=o.get(Eo),i=o.get(b),s=o.get(ue),n=this.getDirection(r),c=ae(t,i,e,s);no(e,n,c)}}class We extends Ne{static ID=co;constructor(){super({id:We.ID,title:n("splitEditor","Split Editor"),f1:!0,keybinding:{weight:l.WorkbenchContrib,primary:s.CtrlCmd|d.Backslash},category:c.View})}}class St extends Ne{constructor(){super({id:"workbench.action.splitEditorOrthogonal",title:n("splitEditorOrthogonal","Split Editor Orthogonal"),f1:!0,keybinding:{weight:l.WorkbenchContrib,primary:w(s.CtrlCmd|d.KeyK,s.CtrlCmd|d.Backslash)},category:c.View})}getDirection(o){return fe(o)===v.RIGHT?v.DOWN:v.RIGHT}}class xt extends E{constructor(){super({id:ye,title:n("splitEditorGroupLeft","Split Editor Left"),f1:!0,keybinding:{weight:l.WorkbenchContrib,primary:w(s.CtrlCmd|d.KeyK,s.CtrlCmd|d.Backslash)},category:c.View},ye)}}class bt extends E{constructor(){super({id:me,title:n("splitEditorGroupRight","Split Editor Right"),f1:!0,keybinding:{weight:l.WorkbenchContrib,primary:w(s.CtrlCmd|d.KeyK,s.CtrlCmd|d.Backslash)},category:c.View},me)}}class kt extends E{static LABEL=G("splitEditorGroupUp","Split Editor Up");constructor(){super({id:we,title:n("splitEditorGroupUp","Split Editor Up"),f1:!0,keybinding:{weight:l.WorkbenchContrib,primary:w(s.CtrlCmd|d.KeyK,s.CtrlCmd|d.Backslash)},category:c.View},we)}}class Tt extends E{static LABEL=G("splitEditorGroupDown","Split Editor Down");constructor(){super({id:Ge,title:n("splitEditorGroupDown","Split Editor Down"),f1:!0,keybinding:{weight:l.WorkbenchContrib,primary:w(s.CtrlCmd|d.KeyK,s.CtrlCmd|d.Backslash)},category:c.View},Ge)}}class Lt extends p{constructor(){super({id:"workbench.action.joinTwoGroups",title:n("joinTwoGroups","Join Editor Group with Next Group"),f1:!0,category:c.View})}async run(o,t){const e=o.get(y);let r;if(r=t&&"number"==typeof t.groupId?e.getGroup(t.groupId):e.activeGroup,r){const o=[v.RIGHT,v.DOWN,v.LEFT,v.UP];for(const t of o){const o=e.findGroup({direction:t},r);if(o&&r!==o){e.mergeGroup(r,o);break}}}}}class Rt extends p{constructor(){super({id:"workbench.action.joinAllGroups",title:n("joinAllGroups","Join All Editor Groups"),f1:!0,category:c.View})}async run(o){const t=o.get(y);t.mergeAllGroups(t.activeGroup)}}class Nt extends p{constructor(){super({id:"workbench.action.navigateEditorGroups",title:n("navigateEditorGroups","Navigate Between Editor Groups"),f1:!0,category:c.View})}async run(o){const t=o.get(y);t.findGroup({location:D.NEXT},t.activeGroup,!0)?.focus()}}class Pt extends p{constructor(){super({id:"workbench.action.focusActiveEditorGroup",title:n("focusActiveEditorGroup","Focus Active Editor Group"),f1:!0,category:c.View})}async run(o){o.get(y).activeGroup.focus()}}class N extends p{constructor(o,t){super(o),this.scope=t}async run(o){const t=o.get(y);t.findGroup(this.scope,t.activeGroup,!0)?.focus()}}class Dt extends N{constructor(){super({id:"workbench.action.focusFirstEditorGroup",title:n("focusFirstEditorGroup","Focus First Editor Group"),f1:!0,keybinding:{weight:l.WorkbenchContrib,primary:s.CtrlCmd|d.Digit1},category:c.View},{location:D.FIRST})}}class Ot extends N{constructor(){super({id:"workbench.action.focusLastEditorGroup",title:n("focusLastEditorGroup","Focus Last Editor Group"),f1:!0,category:c.View},{location:D.LAST})}}class Mt extends N{constructor(){super({id:"workbench.action.focusNextGroup",title:n("focusNextGroup","Focus Next Editor Group"),f1:!0,category:c.View},{location:D.NEXT})}}class Wt extends N{constructor(){super({id:"workbench.action.focusPreviousGroup",title:n("focusPreviousGroup","Focus Previous Editor Group"),f1:!0,category:c.View},{location:D.PREVIOUS})}}class Vt extends N{constructor(){super({id:"workbench.action.focusLeftGroup",title:n("focusLeftGroup","Focus Left Editor Group"),f1:!0,keybinding:{weight:l.WorkbenchContrib,primary:w(s.CtrlCmd|d.KeyK,s.CtrlCmd|d.LeftArrow)},category:c.View},{direction:v.LEFT})}}class Bt extends N{constructor(){super({id:"workbench.action.focusRightGroup",title:n("focusRightGroup","Focus Right Editor Group"),f1:!0,keybinding:{weight:l.WorkbenchContrib,primary:w(s.CtrlCmd|d.KeyK,s.CtrlCmd|d.RightArrow)},category:c.View},{direction:v.RIGHT})}}class Ft extends N{constructor(){super({id:"workbench.action.focusAboveGroup",title:n("focusAboveGroup","Focus Editor Group Above"),f1:!0,keybinding:{weight:l.WorkbenchContrib,primary:w(s.CtrlCmd|d.KeyK,s.CtrlCmd|d.UpArrow)},category:c.View},{direction:v.UP})}}class Ut extends N{constructor(){super({id:"workbench.action.focusBelowGroup",title:n("focusBelowGroup","Focus Editor Group Below"),f1:!0,keybinding:{weight:l.WorkbenchContrib,primary:w(s.CtrlCmd|d.KeyK,s.CtrlCmd|d.DownArrow)},category:c.View},{direction:v.DOWN})}}let Y=class extends te{constructor(o,t,e){super(o,t,de.asClassName(O.close)),this.commandService=e}static ID="workbench.action.closeActiveEditor";static LABEL=G("closeEditor","Close Editor");run(o){return this.commandService.executeCommand(io,void 0,o)}};Y=z([q(2,ie)],Y);let Z=class extends te{constructor(o,t,e){super(o,t,de.asClassName(O.pinned)),this.commandService=e}static ID="workbench.action.unpinActiveEditor";static LABEL=G("unpinEditor","Unpin Editor");run(o){return this.commandService.executeCommand(so,void 0,o)}};Z=z([q(2,ie)],Z);let j=class extends te{constructor(o,t,e){super(o,t,de.asClassName(O.close)),this.editorGroupService=e}static ID="workbench.action.closeActiveEditor";static LABEL=G("closeOneEditor","Close");async run(o){const t=o?this.editorGroupService.getGroup(o.groupId):this.editorGroupService.activeGroup;if(!t)return;const e=void 0!==o?.editorIndex?t.getEditorByIndex(o.editorIndex):t.activeEditor;if(!e)return;const r=[];t.isSelected(e)?r.push(...t.selectedEditors):r.push(e);for(const e of r)await t.closeEditor(e,{preserveFocus:o?.preserveFocus})}};j=z([q(2,y)],j);class _t extends p{constructor(){super({id:"workbench.action.revertAndCloseActiveEditor",title:n("revertAndCloseActiveEditor","Revert and Close Editor"),f1:!0,category:c.View})}async run(o){const t=o.get(b),e=o.get(Se),r=t.activeEditorPane;if(r){const o=r.input,i=r.group;try{await t.revert({editor:o,groupId:i.id})}catch(r){e.error(r),await t.revert({editor:o,groupId:i.id},{soft:!0})}await i.closeEditor(o)}}}class Kt extends p{constructor(){super({id:"workbench.action.closeEditorsToTheLeft",title:n("closeEditorsToTheLeft","Close Editors to the Left in Group"),f1:!0,category:c.View})}async run(o,t){const e=o.get(y),{group:r,editor:i}=this.getTarget(e,t);r&&i&&await r.closeEditors({direction:oo.LEFT,except:i,excludeSticky:!0})}getTarget(o,t){return t?{editor:t.editor,group:o.getGroup(t.groupId)}:{group:o.activeGroup,editor:o.activeGroup.activeEditor}}}class Pe extends p{groupsToClose(o){const t=[],e=o.getGroups(ne.GRID_APPEARANCE);for(let o=e.length-1;o>=0;o--)t.push(e[o]);return t}async run(o){const t=o.get(b),e=o.get(Se),r=o.get(bo),i=o.get(y),s=o.get(Go),n=o.get(mo),c=new Set,a=new Set,d=new Set,u=new Map;for(const{editor:o,groupId:e}of t.getEditors(x.SEQUENTIAL,{excludeSticky:this.excludeSticky})){let t=!1;if(t=o.closeHandler?o.closeHandler.showConfirm():o.isDirty()&&!o.isSaving(),t)if("function"==typeof o.closeHandler?.confirm){let t=u.get(o.typeId);t||(t=new Set,u.set(o.typeId,t)),t.add({editor:o,groupId:e})}else o.hasCapability(ve.Untitled)||s.getAutoSaveMode(o).mode!==Ce.ON_FOCUS_CHANGE?ho&&(Io||Ao)&&!o.hasCapability(ve.Untitled)&&s.getAutoSaveMode(o).mode===Ce.ON_WINDOW_CHANGE?d.add({editor:o,groupId:e}):c.add({editor:o,groupId:e}):a.add({editor:o,groupId:e})}if(c.size>0){const o=Array.from(c.values());switch(await this.revealEditorsToConfirm(o,i),await n.showSaveConfirm(o.map((({editor:o})=>o instanceof ro?o.primary.getName():o.getName())))){case W.CANCEL:return;case W.DONT_SAVE:await this.revertEditors(t,e,r,o);break;case W.SAVE:await t.save(o,{reason:Q.EXPLICIT})}}for(const[,o]of u){const s=Array.from(o.values());await this.revealEditorsToConfirm(s,i);const n=await(s.at(0)?.editor.closeHandler?.confirm?.(s));if("number"==typeof n)switch(n){case W.CANCEL:return;case W.DONT_SAVE:await this.revertEditors(t,e,r,s);break;case W.SAVE:await t.save(s,{reason:Q.EXPLICIT})}}if(a.size>0){const o=Array.from(a.values());await t.save(o,{reason:Q.FOCUS_CHANGE})}if(d.size>0){const o=Array.from(d.values());await t.save(o,{reason:Q.WINDOW_CHANGE})}return this.doCloseAll(i)}revertEditors(o,t,e,r){return e.withProgress({location:ko.Window,delay:800,title:G("reverting","Reverting Editors...")},(()=>this.doRevertEditors(o,t,r)))}async doRevertEditors(o,t,e){try{await o.revert(e)}catch(r){t.error(r),await o.revert(e,{soft:!0})}}async revealEditorsToConfirm(o,t){try{const e=new Set;for(const{editor:r,groupId:i}of o)e.has(i)||(e.add(i),await(t.getGroup(i)?.openEditor(r)))}catch{}}async doCloseAll(o){await Promise.all(this.groupsToClose(o).map((o=>o.closeAllEditors({excludeSticky:this.excludeSticky}))))}}class pe extends Pe{static ID="workbench.action.closeAllEditors";static LABEL=n("closeAllEditors","Close All Editors");constructor(){super({id:pe.ID,title:pe.LABEL,f1:!0,keybinding:{weight:l.WorkbenchContrib,primary:w(s.CtrlCmd|d.KeyK,s.CtrlCmd|d.KeyW)},icon:O.closeAll,category:c.View})}get excludeSticky(){return!0}}class Ht extends Pe{constructor(){super({id:"workbench.action.closeAllGroups",title:n("closeAllGroups","Close All Editor Groups"),f1:!0,keybinding:{weight:l.WorkbenchContrib,primary:w(s.CtrlCmd|d.KeyK,s.CtrlCmd|s.Shift|d.KeyW)},category:c.View})}get excludeSticky(){return!1}async doCloseAll(o){await super.doCloseAll(o);for(const t of this.groupsToClose(o))o.removeGroup(t)}}class zt extends p{constructor(){super({id:"workbench.action.closeEditorsInOtherGroups",title:n("closeEditorsInOtherGroups","Close Editors in Other Groups"),f1:!0,category:c.View})}async run(o,t){const e=o.get(y),r=t?e.getGroup(t.groupId):e.activeGroup;await Promise.all(e.getGroups(ne.MOST_RECENTLY_ACTIVE).map((async o=>{if(!r||o.id!==r.id)return o.closeAllEditors({excludeSticky:!0})})))}}class qt extends p{constructor(){super({id:"workbench.action.closeEditorInAllGroups",title:n("closeEditorInAllGroups","Close Editor in All Groups"),f1:!0,category:c.View})}async run(o){const t=o.get(b),e=o.get(y),r=t.activeEditor;r&&await Promise.all(e.getGroups(ne.MOST_RECENTLY_ACTIVE).map((o=>o.closeEditor(r))))}}class De extends p{constructor(o,t,e){super(o),this.direction=t,this.isMove=e}async run(o,t){const e=o.get(y);let r;if(r=t&&"number"==typeof t.groupId?e.getGroup(t.groupId):e.activeGroup,r){let o;if(this.isMove){const t=this.findTargetGroup(e,r);t&&(o=e.moveGroup(r,t,this.direction))}else o=e.copyGroup(r,r,this.direction);o&&e.activateGroup(o)}}findTargetGroup(o,t){const e=[this.direction];switch(this.direction){case v.LEFT:case v.RIGHT:e.push(v.UP,v.DOWN);break;case v.UP:case v.DOWN:e.push(v.LEFT,v.RIGHT)}for(const r of e){const e=o.findGroup({direction:r},t);if(e)return e}}}class J extends De{constructor(o,t){super(o,t,!0)}}class Qt extends J{constructor(){super({id:"workbench.action.moveActiveEditorGroupLeft",title:n("moveActiveGroupLeft","Move Editor Group Left"),f1:!0,keybinding:{weight:l.WorkbenchContrib,primary:w(s.CtrlCmd|d.KeyK,d.LeftArrow)},category:c.View},v.LEFT)}}class Xt extends J{constructor(){super({id:"workbench.action.moveActiveEditorGroupRight",title:n("moveActiveGroupRight","Move Editor Group Right"),f1:!0,keybinding:{weight:l.WorkbenchContrib,primary:w(s.CtrlCmd|d.KeyK,d.RightArrow)},category:c.View},v.RIGHT)}}class Yt extends J{constructor(){super({id:"workbench.action.moveActiveEditorGroupUp",title:n("moveActiveGroupUp","Move Editor Group Up"),f1:!0,keybinding:{weight:l.WorkbenchContrib,primary:w(s.CtrlCmd|d.KeyK,d.UpArrow)},category:c.View},v.UP)}}class Zt extends J{constructor(){super({id:"workbench.action.moveActiveEditorGroupDown",title:n("moveActiveGroupDown","Move Editor Group Down"),f1:!0,keybinding:{weight:l.WorkbenchContrib,primary:w(s.CtrlCmd|d.KeyK,d.DownArrow)},category:c.View},v.DOWN)}}class $ extends De{constructor(o,t){super(o,t,!1)}}class jt extends ${constructor(){super({id:"workbench.action.duplicateActiveEditorGroupLeft",title:n("duplicateActiveGroupLeft","Duplicate Editor Group Left"),f1:!0,category:c.View},v.LEFT)}}class Jt extends ${constructor(){super({id:"workbench.action.duplicateActiveEditorGroupRight",title:n("duplicateActiveGroupRight","Duplicate Editor Group Right"),f1:!0,category:c.View},v.RIGHT)}}class $t extends ${constructor(){super({id:"workbench.action.duplicateActiveEditorGroupUp",title:n("duplicateActiveGroupUp","Duplicate Editor Group Up"),f1:!0,category:c.View},v.UP)}}class er extends ${constructor(){super({id:"workbench.action.duplicateActiveEditorGroupDown",title:n("duplicateActiveGroupDown","Duplicate Editor Group Down"),f1:!0,category:c.View},v.DOWN)}}class or extends p{constructor(){super({id:"workbench.action.minimizeOtherEditors",title:n("minimizeOtherEditorGroups","Expand Editor Group"),f1:!0,category:c.View,precondition:Le})}async run(o){o.get(y).arrangeGroups(X.EXPAND)}}class tr extends p{constructor(){super({id:"workbench.action.minimizeOtherEditorsHideSidebar",title:n("minimizeOtherEditorGroupsHideSidebar","Expand Editor Group and Hide Side Bars"),f1:!0,category:c.View,precondition:R.or(Le,Re,ke)})}async run(o){const t=o.get(y),e=o.get(re);e.setPartHidden(!0,U.SIDEBAR_PART),e.setPartHidden(!0,U.AUXILIARYBAR_PART),t.arrangeGroups(X.EXPAND)}}class rr extends p{constructor(){super({id:"workbench.action.evenEditorWidths",title:n("evenEditorGroups","Reset Editor Group Sizes"),f1:!0,category:c.View})}async run(o){o.get(y).arrangeGroups(X.EVEN)}}class ir extends p{constructor(){super({id:"workbench.action.toggleEditorWidths",title:n("toggleEditorWidths","Toggle Editor Group Sizes"),f1:!0,category:c.View})}async run(o){o.get(y).toggleExpandGroup()}}class nr extends p{constructor(){super({id:"workbench.action.maximizeEditorHideSidebar",title:n("maximizeEditorHideSidebar","Maximize Editor Group and Hide Side Bars"),f1:!0,category:c.View,precondition:R.or(R.and(K.negate(),Te),Re,ke)})}async run(o){const t=o.get(re),e=o.get(y);o.get(b).activeEditor&&(t.setPartHidden(!0,U.SIDEBAR_PART),t.setPartHidden(!0,U.AUXILIARYBAR_PART),e.arrangeGroups(X.MAXIMIZE))}}class sr extends p{constructor(){super({id:ao,title:n("toggleMaximizeEditorGroup","Toggle Maximize Editor Group"),f1:!0,category:c.View,precondition:R.or(Te,K),keybinding:{weight:l.WorkbenchContrib,primary:w(s.CtrlCmd|d.KeyK,s.CtrlCmd|d.KeyM)},menu:[{id:V.EditorTitle,order:-1e4,group:"navigation",when:K},{id:V.EmptyEditorGroup,order:-1e4,group:"navigation",when:K}],icon:O.screenFull,toggled:K})}async run(o,...t){const e=o.get(y),r=o.get(b),i=o.get(ue),s=ae(t,r,e,i);s.groupedEditors.length&&e.toggleMaximizeGroup(s.groupedEditors[0].group)}}class B extends p{async run(o){const t=o.get(y),e=this.navigate(t);if(!e)return;const{groupId:r,editor:i}=e;if(!i)return;const s=t.getGroup(r);s&&await s.openEditor(i)}}class cr extends B{constructor(){super({id:"workbench.action.nextEditor",title:n("openNextEditor","Open Next Editor"),f1:!0,keybinding:{weight:l.WorkbenchContrib,primary:s.CtrlCmd|d.PageDown,mac:{primary:s.CtrlCmd|s.Alt|d.RightArrow,secondary:[s.CtrlCmd|s.Shift|d.BracketRight]}},category:c.View})}navigate(o){const t=o.activeGroup,e=t.getEditors(x.SEQUENTIAL),r=t.activeEditor?e.indexOf(t.activeEditor):-1;if(r+1<e.length)return{editor:e[r+1],groupId:t.id};const i=new Set;let s=o.activeGroup;for(;s&&!i.has(s.id);)if(s=o.findGroup({location:D.NEXT},s,!0),s){i.add(s.id);const o=s.getEditors(x.SEQUENTIAL);if(o.length>0)return{editor:o[0],groupId:s.id}}}}class dr extends B{constructor(){super({id:"workbench.action.previousEditor",title:n("openPreviousEditor","Open Previous Editor"),f1:!0,keybinding:{weight:l.WorkbenchContrib,primary:s.CtrlCmd|d.PageUp,mac:{primary:s.CtrlCmd|s.Alt|d.LeftArrow,secondary:[s.CtrlCmd|s.Shift|d.BracketLeft]}},category:c.View})}navigate(o){const t=o.activeGroup,e=t.getEditors(x.SEQUENTIAL),r=t.activeEditor?e.indexOf(t.activeEditor):-1;if(r>0)return{editor:e[r-1],groupId:t.id};const i=new Set;let s=o.activeGroup;for(;s&&!i.has(s.id);)if(s=o.findGroup({location:D.PREVIOUS},s,!0),s){i.add(s.id);const o=s.getEditors(x.SEQUENTIAL);if(o.length>0)return{editor:o[o.length-1],groupId:s.id}}}}class ar extends B{constructor(){super({id:"workbench.action.nextEditorInGroup",title:n("nextEditorInGroup","Open Next Editor in Group"),f1:!0,keybinding:{weight:l.WorkbenchContrib,primary:w(s.CtrlCmd|d.KeyK,s.CtrlCmd|d.PageDown),mac:{primary:w(s.CtrlCmd|d.KeyK,s.CtrlCmd|s.Alt|d.RightArrow)}},category:c.View})}navigate(o){const t=o.activeGroup,e=t.getEditors(x.SEQUENTIAL),r=t.activeEditor?e.indexOf(t.activeEditor):-1;return{editor:r+1<e.length?e[r+1]:e[0],groupId:t.id}}}class ur extends B{constructor(){super({id:"workbench.action.previousEditorInGroup",title:n("openPreviousEditorInGroup","Open Previous Editor in Group"),f1:!0,keybinding:{weight:l.WorkbenchContrib,primary:w(s.CtrlCmd|d.KeyK,s.CtrlCmd|d.PageUp),mac:{primary:w(s.CtrlCmd|d.KeyK,s.CtrlCmd|s.Alt|d.LeftArrow)}},category:c.View})}navigate(o){const t=o.activeGroup,e=t.getEditors(x.SEQUENTIAL),r=t.activeEditor?e.indexOf(t.activeEditor):-1;return{editor:r>0?e[r-1]:e[e.length-1],groupId:t.id}}}class pr extends B{constructor(){super({id:"workbench.action.firstEditorInGroup",title:n("firstEditorInGroup","Open First Editor in Group"),f1:!0,category:c.View})}navigate(o){const t=o.activeGroup;return{editor:t.getEditors(x.SEQUENTIAL)[0],groupId:t.id}}}class lr extends B{constructor(){super({id:"workbench.action.lastEditorInGroup",title:n("lastEditorInGroup","Open Last Editor in Group"),f1:!0,keybinding:{weight:l.WorkbenchContrib,primary:s.Alt|d.Digit0,secondary:[s.CtrlCmd|d.Digit9],mac:{primary:s.WinCtrl|d.Digit0,secondary:[s.CtrlCmd|d.Digit9]}},category:c.View})}navigate(o){const t=o.activeGroup,e=t.getEditors(x.SEQUENTIAL);return{editor:e[e.length-1],groupId:t.id}}}class Ve extends p{static ID="workbench.action.navigateForward";static LABEL=G("navigateForward","Go Forward");constructor(){super({id:Ve.ID,title:{...n("navigateForward","Go Forward"),mnemonicTitle:G({key:"miForward",comment:["&& denotes a mnemonic"]},"&&Forward")},f1:!0,icon:O.arrowRight,precondition:R.has("canNavigateForward"),keybinding:{weight:l.WorkbenchContrib,win:{primary:s.Alt|d.RightArrow,secondary:[d.BrowserForward]},mac:{primary:s.WinCtrl|s.Shift|d.Minus,secondary:[d.BrowserForward]},linux:{primary:s.CtrlCmd|s.Shift|d.Minus,secondary:[d.BrowserForward]}},menu:[{id:V.MenubarGoMenu,group:"1_history_nav",order:2},{id:V.CommandCenter,order:2,when:R.has("config.workbench.navigationControl.enabled")}]})}async run(o){await o.get(f).goForward(h.NONE)}}class Be extends p{static ID="workbench.action.navigateBack";static LABEL=G("navigateBack","Go Back");constructor(){super({id:Be.ID,title:{...n("navigateBack","Go Back"),mnemonicTitle:G({key:"miBack",comment:["&& denotes a mnemonic"]},"&&Back")},f1:!0,precondition:R.has("canNavigateBack"),icon:O.arrowLeft,keybinding:{weight:l.WorkbenchContrib,win:{primary:s.Alt|d.LeftArrow,secondary:[d.BrowserBack]},mac:{primary:s.WinCtrl|d.Minus,secondary:[d.BrowserBack]},linux:{primary:s.CtrlCmd|s.Alt|d.Minus,secondary:[d.BrowserBack]}},menu:[{id:V.MenubarGoMenu,group:"1_history_nav",order:1},{id:V.CommandCenter,order:1,when:R.has("config.workbench.navigationControl.enabled")}]})}async run(o){await o.get(f).goBack(h.NONE)}}class vr extends p{constructor(){super({id:"workbench.action.navigateLast",title:n("navigatePrevious","Go Previous"),f1:!0})}async run(o){await o.get(f).goPrevious(h.NONE)}}class gr extends p{constructor(){super({id:"workbench.action.navigateForwardInEditLocations",title:n("navigateForwardInEdits","Go Forward in Edit Locations"),f1:!0})}async run(o){await o.get(f).goForward(h.EDITS)}}class Er extends p{constructor(){super({id:"workbench.action.navigateBackInEditLocations",title:n("navigateBackInEdits","Go Back in Edit Locations"),f1:!0})}async run(o){await o.get(f).goBack(h.EDITS)}}class yr extends p{constructor(){super({id:"workbench.action.navigatePreviousInEditLocations",title:n("navigatePreviousInEdits","Go Previous in Edit Locations"),f1:!0})}async run(o){await o.get(f).goPrevious(h.EDITS)}}class mr extends p{constructor(){super({id:"workbench.action.navigateToLastEditLocation",title:n("navigateToLastEditLocation","Go to Last Edit Location"),f1:!0,keybinding:{weight:l.WorkbenchContrib,primary:w(s.CtrlCmd|d.KeyK,s.CtrlCmd|d.KeyQ)}})}async run(o){await o.get(f).goLast(h.EDITS)}}class wr extends p{constructor(){super({id:"workbench.action.navigateForwardInNavigationLocations",title:n("navigateForwardInNavigations","Go Forward in Navigation Locations"),f1:!0})}async run(o){await o.get(f).goForward(h.NAVIGATION)}}class Gr extends p{constructor(){super({id:"workbench.action.navigateBackInNavigationLocations",title:n("navigateBackInNavigations","Go Back in Navigation Locations"),f1:!0})}async run(o){await o.get(f).goBack(h.NAVIGATION)}}class fr extends p{constructor(){super({id:"workbench.action.navigatePreviousInNavigationLocations",title:n("navigatePreviousInNavigationLocations","Go Previous in Navigation Locations"),f1:!0})}async run(o){await o.get(f).goPrevious(h.NAVIGATION)}}class Ar extends p{constructor(){super({id:"workbench.action.navigateToLastNavigationLocation",title:n("navigateToLastNavigationLocation","Go to Last Navigation Location"),f1:!0})}async run(o){await o.get(f).goLast(h.NAVIGATION)}}class Fe extends p{static ID="workbench.action.reopenClosedEditor";constructor(){super({id:Fe.ID,title:n("reopenClosedEditor","Reopen Closed Editor"),f1:!0,keybinding:{weight:l.WorkbenchContrib,primary:s.CtrlCmd|s.Shift|d.KeyT},category:c.View})}async run(o){await o.get(f).reopenLastClosedEditor()}}class Ue extends p{static ID="workbench.action.clearRecentFiles";constructor(){super({id:Ue.ID,title:n("clearRecentFiles","Clear Recently Opened..."),f1:!0,category:c.File})}async run(o){const t=o.get(he),e=o.get(yo),r=o.get(f),{confirmed:i}=await t.confirm({type:"warning",message:G("confirmClearRecentsMessage","Do you want to clear all recently opened files and workspaces?"),detail:G("confirmClearDetail","This action is irreversible!"),primaryButton:G({key:"clearButtonLabel",comment:["&& denotes a mnemonic"]},"&&Clear")});i&&(e.clearRecentlyOpened(),r.clearRecentlyOpened())}}class _e extends p{static ID="workbench.action.showEditorsInActiveGroup";constructor(){super({id:_e.ID,title:n("showEditorsInActiveGroup","Show Editors in Active Group By Most Recently Used"),f1:!0,category:c.View})}async run(o){o.get(_).quickAccess.show(ce.PREFIX)}}class Ke extends p{static ID="workbench.action.showAllEditors";constructor(){super({id:Ke.ID,title:n("showAllEditors","Show All Editors By Appearance"),f1:!0,keybinding:{weight:l.WorkbenchContrib,primary:w(s.CtrlCmd|d.KeyK,s.CtrlCmd|d.KeyP),mac:{primary:s.CtrlCmd|s.Alt|d.Tab}},category:c.File})}async run(o){o.get(_).quickAccess.show(wo.PREFIX)}}class He extends p{static ID="workbench.action.showAllEditorsByMostRecentlyUsed";constructor(){super({id:He.ID,title:n("showAllEditorsByMostRecentlyUsed","Show All Editors By Most Recently Used"),f1:!0,category:c.View})}async run(o){o.get(_).quickAccess.show(se.PREFIX)}}class ee extends p{constructor(o,t,e){super(o),this.prefix=t,this.itemActivation=e}async run(o){const t=o.get(Ee),e=o.get(_),r=t.lookupKeybindings(this.desc.id);e.quickAccess.show(this.prefix,{quickNavigateConfiguration:{keybindings:r},itemActivation:this.itemActivation})}}class hr extends ee{constructor(){super({id:"workbench.action.quickOpenPreviousRecentlyUsedEditor",title:n("quickOpenPreviousRecentlyUsedEditor","Quick Open Previous Recently Used Editor"),f1:!0,category:c.View},se.PREFIX,void 0)}}class Ir extends ee{constructor(){super({id:"workbench.action.quickOpenLeastRecentlyUsedEditor",title:n("quickOpenLeastRecentlyUsedEditor","Quick Open Least Recently Used Editor"),f1:!0,category:c.View},se.PREFIX,void 0)}}class Cr extends ee{constructor(){super({id:"workbench.action.quickOpenPreviousRecentlyUsedEditorInGroup",title:n("quickOpenPreviousRecentlyUsedEditorInGroup","Quick Open Previous Recently Used Editor in Group"),f1:!0,keybinding:{weight:l.WorkbenchContrib,primary:s.CtrlCmd|d.Tab,mac:{primary:s.WinCtrl|d.Tab}},precondition:be.toNegated(),category:c.View},ce.PREFIX,void 0)}}class Sr extends ee{constructor(){super({id:"workbench.action.quickOpenLeastRecentlyUsedEditorInGroup",title:n("quickOpenLeastRecentlyUsedEditorInGroup","Quick Open Least Recently Used Editor in Group"),f1:!0,keybinding:{weight:l.WorkbenchContrib,primary:s.CtrlCmd|s.Shift|d.Tab,mac:{primary:s.WinCtrl|s.Shift|d.Tab}},precondition:be.toNegated(),category:c.View},ce.PREFIX,Ie.LAST)}}class le extends p{static ID="workbench.action.openPreviousEditorFromHistory";constructor(){super({id:le.ID,title:n("navigateEditorHistoryByInput","Quick Open Previous Editor from History"),f1:!0})}async run(o){const t=o.get(Ee),e=o.get(_),r=o.get(y),i=t.lookupKeybindings(le.ID);let s;0===r.activeGroup.count&&(s=Ie.FIRST),e.quickAccess.show("",{quickNavigateConfiguration:{keybindings:i},itemActivation:s})}}class xr extends p{constructor(){super({id:"workbench.action.openNextRecentlyUsedEditor",title:n("openNextRecentlyUsedEditor","Open Next Recently Used Editor"),f1:!0,category:c.View})}async run(o){o.get(f).openNextRecentlyUsedEditor()}}class br extends p{constructor(){super({id:"workbench.action.openPreviousRecentlyUsedEditor",title:n("openPreviousRecentlyUsedEditor","Open Previous Recently Used Editor"),f1:!0,category:c.View})}async run(o){o.get(f).openPreviouslyUsedEditor()}}class kr extends p{constructor(){super({id:"workbench.action.openNextRecentlyUsedEditorInGroup",title:n("openNextRecentlyUsedEditorInGroup","Open Next Recently Used Editor In Group"),f1:!0,category:c.View})}async run(o){const t=o.get(f),e=o.get(y);t.openNextRecentlyUsedEditor(e.activeGroup.id)}}class Tr extends p{constructor(){super({id:"workbench.action.openPreviousRecentlyUsedEditorInGroup",title:n("openPreviousRecentlyUsedEditorInGroup","Open Previous Recently Used Editor In Group"),f1:!0,category:c.View})}async run(o){const t=o.get(f),e=o.get(y);t.openPreviouslyUsedEditor(e.activeGroup.id)}}class Lr extends p{constructor(){super({id:"workbench.action.clearEditorHistory",title:n("clearEditorHistory","Clear Editor History"),f1:!0})}async run(o){const t=o.get(he),e=o.get(f),{confirmed:r}=await t.confirm({type:"warning",message:G("confirmClearEditorHistoryMessage","Do you want to clear the history of recently opened editors?"),detail:G("confirmClearDetail","This action is irreversible!"),primaryButton:G({key:"clearButtonLabel",comment:["&& denotes a mnemonic"]},"&&Clear")});r&&e.clear()}}class Rr extends E{constructor(){super({id:"workbench.action.moveEditorLeftInGroup",title:n("moveEditorLeft","Move Editor Left"),keybinding:{weight:l.WorkbenchContrib,primary:s.CtrlCmd|s.Shift|d.PageUp,mac:{primary:w(s.CtrlCmd|d.KeyK,s.CtrlCmd|s.Shift|d.LeftArrow)}},f1:!0,category:c.View},C,{to:"left"})}}class Nr extends E{constructor(){super({id:"workbench.action.moveEditorRightInGroup",title:n("moveEditorRight","Move Editor Right"),keybinding:{weight:l.WorkbenchContrib,primary:s.CtrlCmd|s.Shift|d.PageDown,mac:{primary:w(s.CtrlCmd|d.KeyK,s.CtrlCmd|s.Shift|d.RightArrow)}},f1:!0,category:c.View},C,{to:"right"})}}class Pr extends E{constructor(){super({id:"workbench.action.moveEditorToPreviousGroup",title:n("moveEditorToPreviousGroup","Move Editor into Previous Group"),keybinding:{weight:l.WorkbenchContrib,primary:s.CtrlCmd|s.Alt|d.LeftArrow,mac:{primary:s.CtrlCmd|s.WinCtrl|d.LeftArrow}},f1:!0,category:c.View},C,{to:"previous",by:"group"})}}class Dr extends E{constructor(){super({id:"workbench.action.moveEditorToNextGroup",title:n("moveEditorToNextGroup","Move Editor into Next Group"),f1:!0,keybinding:{weight:l.WorkbenchContrib,primary:s.CtrlCmd|s.Alt|d.RightArrow,mac:{primary:s.CtrlCmd|s.WinCtrl|d.RightArrow}},category:c.View},C,{to:"next",by:"group"})}}class Or extends E{constructor(){super({id:"workbench.action.moveEditorToAboveGroup",title:n("moveEditorToAboveGroup","Move Editor into Group Above"),f1:!0,category:c.View},C,{to:"up",by:"group"})}}class Mr extends E{constructor(){super({id:"workbench.action.moveEditorToBelowGroup",title:n("moveEditorToBelowGroup","Move Editor into Group Below"),f1:!0,category:c.View},C,{to:"down",by:"group"})}}class Wr extends E{constructor(){super({id:"workbench.action.moveEditorToLeftGroup",title:n("moveEditorToLeftGroup","Move Editor into Left Group"),f1:!0,category:c.View},C,{to:"left",by:"group"})}}class Vr extends E{constructor(){super({id:"workbench.action.moveEditorToRightGroup",title:n("moveEditorToRightGroup","Move Editor into Right Group"),f1:!0,category:c.View},C,{to:"right",by:"group"})}}class Br extends E{constructor(){super({id:"workbench.action.moveEditorToFirstGroup",title:n("moveEditorToFirstGroup","Move Editor into First Group"),f1:!0,keybinding:{weight:l.WorkbenchContrib,primary:s.Shift|s.Alt|d.Digit1,mac:{primary:s.CtrlCmd|s.WinCtrl|d.Digit1}},category:c.View},C,{to:"first",by:"group"})}}class Fr extends E{constructor(){super({id:"workbench.action.moveEditorToLastGroup",title:n("moveEditorToLastGroup","Move Editor into Last Group"),f1:!0,keybinding:{weight:l.WorkbenchContrib,primary:s.Shift|s.Alt|d.Digit9,mac:{primary:s.CtrlCmd|s.WinCtrl|d.Digit9}},category:c.View},C,{to:"last",by:"group"})}}class Ur extends E{constructor(){super({id:"workbench.action.splitEditorToPreviousGroup",title:n("splitEditorToPreviousGroup","Split Editor into Previous Group"),f1:!0,category:c.View},T,{to:"previous",by:"group"})}}class _r extends E{constructor(){super({id:"workbench.action.splitEditorToNextGroup",title:n("splitEditorToNextGroup","Split Editor into Next Group"),f1:!0,category:c.View},T,{to:"next",by:"group"})}}class Kr extends E{constructor(){super({id:"workbench.action.splitEditorToAboveGroup",title:n("splitEditorToAboveGroup","Split Editor into Group Above"),f1:!0,category:c.View},T,{to:"up",by:"group"})}}class Hr extends E{constructor(){super({id:"workbench.action.splitEditorToBelowGroup",title:n("splitEditorToBelowGroup","Split Editor into Group Below"),f1:!0,category:c.View},T,{to:"down",by:"group"})}}class zr extends E{static ID="workbench.action.splitEditorToLeftGroup";static LABEL=G("splitEditorToLeftGroup","Split Editor into Left Group");constructor(){super({id:"workbench.action.splitEditorToLeftGroup",title:n("splitEditorToLeftGroup","Split Editor into Left Group"),f1:!0,category:c.View},T,{to:"left",by:"group"})}}class qr extends E{constructor(){super({id:"workbench.action.splitEditorToRightGroup",title:n("splitEditorToRightGroup","Split Editor into Right Group"),f1:!0,category:c.View},T,{to:"right",by:"group"})}}class Qr extends E{constructor(){super({id:"workbench.action.splitEditorToFirstGroup",title:n("splitEditorToFirstGroup","Split Editor into First Group"),f1:!0,category:c.View},T,{to:"first",by:"group"})}}class Xr extends E{constructor(){super({id:"workbench.action.splitEditorToLastGroup",title:n("splitEditorToLastGroup","Split Editor into Last Group"),f1:!0,category:c.View},T,{to:"last",by:"group"})}}class ze extends E{static ID="workbench.action.editorLayoutSingle";constructor(){super({id:ze.ID,title:n("editorLayoutSingle","Single Column Editor Layout"),f1:!0,category:c.View},k,{groups:[{}],orientation:L.HORIZONTAL})}}class qe extends E{static ID="workbench.action.editorLayoutTwoColumns";constructor(){super({id:qe.ID,title:n("editorLayoutTwoColumns","Two Columns Editor Layout"),f1:!0,category:c.View},k,{groups:[{},{}],orientation:L.HORIZONTAL})}}class Qe extends E{static ID="workbench.action.editorLayoutThreeColumns";constructor(){super({id:Qe.ID,title:n("editorLayoutThreeColumns","Three Columns Editor Layout"),f1:!0,category:c.View},k,{groups:[{},{},{}],orientation:L.HORIZONTAL})}}class Xe extends E{static ID="workbench.action.editorLayoutTwoRows";constructor(){super({id:Xe.ID,title:n("editorLayoutTwoRows","Two Rows Editor Layout"),f1:!0,category:c.View},k,{groups:[{},{}],orientation:L.VERTICAL})}}class Ye extends E{static ID="workbench.action.editorLayoutThreeRows";constructor(){super({id:Ye.ID,title:n("editorLayoutThreeRows","Three Rows Editor Layout"),f1:!0,category:c.View},k,{groups:[{},{},{}],orientation:L.VERTICAL})}}class Ze extends E{static ID="workbench.action.editorLayoutTwoByTwoGrid";constructor(){super({id:Ze.ID,title:n("editorLayoutTwoByTwoGrid","Grid Editor Layout (2x2)"),f1:!0,category:c.View},k,{groups:[{groups:[{},{}]},{groups:[{},{}]}],orientation:L.HORIZONTAL})}}class je extends E{static ID="workbench.action.editorLayoutTwoColumnsBottom";constructor(){super({id:je.ID,title:n("editorLayoutTwoColumnsBottom","Two Columns Bottom Editor Layout"),f1:!0,category:c.View},k,{groups:[{},{groups:[{},{}]}],orientation:L.VERTICAL})}}class Je extends E{static ID="workbench.action.editorLayoutTwoRowsRight";constructor(){super({id:Je.ID,title:n("editorLayoutTwoRowsRight","Two Rows Right Editor Layout"),f1:!0,category:c.View},k,{groups:[{},{groups:[{},{}]}],orientation:L.HORIZONTAL})}}class oe extends p{constructor(o,t){super(o),this.direction=t}async run(o){const t=o.get(y),e=o.get(re),r=xo(),i=e.hasFocus(U.EDITOR_PART)||r.activeElement===r.body,s=t.addGroup(t.activeGroup,this.direction);t.activateGroup(s),i&&s.focus()}}class Yr extends oe{constructor(){super({id:"workbench.action.newGroupLeft",title:n("newGroupLeft","New Editor Group to the Left"),f1:!0,category:c.View},v.LEFT)}}class Zr extends oe{constructor(){super({id:"workbench.action.newGroupRight",title:n("newGroupRight","New Editor Group to the Right"),f1:!0,category:c.View},v.RIGHT)}}class jr extends oe{constructor(){super({id:"workbench.action.newGroupAbove",title:n("newGroupAbove","New Editor Group Above"),f1:!0,category:c.View},v.UP)}}class Jr extends oe{constructor(){super({id:"workbench.action.newGroupBelow",title:n("newGroupBelow","New Editor Group Below"),f1:!0,category:c.View},v.DOWN)}}class $r extends p{constructor(){super({id:"workbench.action.toggleEditorType",title:n("toggleEditorType","Toggle Editor Type"),f1:!0,category:c.View,precondition:xe})}async run(o){const t=o.get(b),e=o.get(fo),r=t.activeEditorPane;if(!r)return;const i=ge.getCanonicalUri(r.input);if(!i)return;const s=e.getEditors(i).map((o=>o.id)).filter((o=>o!==r.input.editorId));0!==s.length&&await t.replaceEditors([{editor:r.input,replacement:{resource:i,options:{override:s[0]}}}],r.group)}}class ei extends p{constructor(){super({id:"workbench.action.reopenTextEditor",title:n("reopenTextEditor","Reopen Editor with Text Editor"),f1:!0,category:c.View,precondition:xe})}async run(o){const t=o.get(b),e=t.activeEditorPane;if(!e)return;const r=ge.getCanonicalUri(e.input);r&&await t.replaceEditors([{editor:e.input,replacement:{resource:r,options:{override:to.id}}}],e.group)}}class Oe extends p{constructor(o,t,e,r){super({id:o,title:t,category:c.View,precondition:Co,keybinding:e,f1:!0}),this.move=r}async run(o,...t){const e=o.get(y),r=o.get(b),i=o.get(ue),s=ae(t,r,e,i);if(!s.groupedEditors.length)return;const n=await e.createAuxiliaryEditorPart(),{group:c,editors:a}=s.groupedEditors[0],d=To(c,a,s.preserveFocus);this.move?c.moveEditors(d,n.activeGroup):c.copyEditors(d,n.activeGroup),n.activeGroup.focus()}}class oi extends Oe{constructor(){super(uo,{...n("moveEditorToNewWindow","Move Editor into New Window"),mnemonicTitle:G({key:"miMoveEditorToNewWindow",comment:["&& denotes a mnemonic"]},"&&Move Editor into New Window")},void 0,!0)}}class ti extends Oe{constructor(){super(po,{...n("copyEditorToNewWindow","Copy Editor into New Window"),mnemonicTitle:G({key:"miCopyEditorToNewWindow",comment:["&& denotes a mnemonic"]},"&&Copy Editor into New Window")},{primary:w(s.CtrlCmd|d.KeyK,d.KeyO),weight:l.WorkbenchContrib},!1)}}class Me extends p{constructor(o,t,e){super({id:o,title:t,category:c.View,f1:!0}),this.move=e}async run(o){const t=o.get(y),e=t.activeGroup,r=await t.createAuxiliaryEditorPart();t.mergeGroup(e,r.activeGroup,{mode:this.move?Ae.MOVE_EDITORS:Ae.COPY_EDITORS}),r.activeGroup.focus()}}class ri extends Me{constructor(){super(lo,{...n("moveEditorGroupToNewWindow","Move Editor Group into New Window"),mnemonicTitle:G({key:"miMoveEditorGroupToNewWindow",comment:["&& denotes a mnemonic"]},"&&Move Editor Group into New Window")},!0)}}class ii extends Me{constructor(){super(vo,{...n("copyEditorGroupToNewWindow","Copy Editor Group into New Window"),mnemonicTitle:G({key:"miCopyEditorGroupToNewWindow",comment:["&& denotes a mnemonic"]},"&&Copy Editor Group into New Window")},!1)}}class ni extends p{constructor(){super({id:"workbench.action.restoreEditorsToMainWindow",title:{...n("restoreEditorsToMainWindow","Restore Editors into Main Window"),mnemonicTitle:G({key:"miRestoreEditorsToMainWindow",comment:["&& denotes a mnemonic"]},"&&Restore Editors into Main Window")},f1:!0,precondition:So,category:c.View})}async run(o){const t=o.get(y);t.mergeAllGroups(t.mainPart.activeGroup)}}class si extends p{constructor(){super({id:go,title:{...n("newEmptyEditorWindow","New Empty Editor Window"),mnemonicTitle:G({key:"miNewEmptyEditorWindow",comment:["&& denotes a mnemonic"]},"&&New Empty Editor Window")},f1:!0,category:c.View})}async run(o){(await o.get(y).createAuxiliaryEditorPart()).activeGroup.focus()}}export{Lr as ClearEditorHistoryAction,Ue as ClearRecentFilesAction,Ht as CloseAllEditorGroupsAction,pe as CloseAllEditorsAction,Y as CloseEditorAction,qt as CloseEditorInAllGroupsAction,j as CloseEditorTabAction,zt as CloseEditorsInOtherGroupsAction,Kt as CloseLeftEditorsInGroupAction,ii as CopyEditorGroupToNewWindowAction,ti as CopyEditorToNewindowAction,er as DuplicateGroupDownAction,jt as DuplicateGroupLeftAction,Jt as DuplicateGroupRightAction,$t as DuplicateGroupUpAction,ze as EditorLayoutSingleAction,Qe as EditorLayoutThreeColumnsAction,Ye as EditorLayoutThreeRowsAction,Ze as EditorLayoutTwoByTwoGridAction,qe as EditorLayoutTwoColumnsAction,je as EditorLayoutTwoColumnsBottomAction,Xe as EditorLayoutTwoRowsAction,Je as EditorLayoutTwoRowsRightAction,Ft as FocusAboveGroup,Pt as FocusActiveGroupAction,Ut as FocusBelowGroup,Dt as FocusFirstGroupAction,Ot as FocusLastGroupAction,Vt as FocusLeftGroup,Mt as FocusNextGroup,Wt as FocusPreviousGroup,Bt as FocusRightGroup,Rt as JoinAllGroupsAction,Lt as JoinTwoGroupsAction,nr as MaximizeGroupHideSidebarAction,or as MinimizeOtherGroupsAction,tr as MinimizeOtherGroupsHideSidebarAction,ri as MoveEditorGroupToNewWindowAction,Rr as MoveEditorLeftInGroupAction,Nr as MoveEditorRightInGroupAction,Or as MoveEditorToAboveGroupAction,Mr as MoveEditorToBelowGroupAction,Br as MoveEditorToFirstGroupAction,Fr as MoveEditorToLastGroupAction,Wr as MoveEditorToLeftGroupAction,oi as MoveEditorToNewWindowAction,Dr as MoveEditorToNextGroupAction,Pr as MoveEditorToPreviousGroupAction,Vr as MoveEditorToRightGroupAction,Zt as MoveGroupDownAction,Qt as MoveGroupLeftAction,Xt as MoveGroupRightAction,Yt as MoveGroupUpAction,Be as NavigateBackwardsAction,Er as NavigateBackwardsInEditsAction,Gr as NavigateBackwardsInNavigationsAction,Nt as NavigateBetweenGroupsAction,Ve as NavigateForwardAction,gr as NavigateForwardInEditsAction,wr as NavigateForwardInNavigationsAction,vr as NavigatePreviousAction,yr as NavigatePreviousInEditsAction,fr as NavigatePreviousInNavigationsAction,mr as NavigateToLastEditLocationAction,Ar as NavigateToLastNavigationLocationAction,jr as NewEditorGroupAboveAction,Jr as NewEditorGroupBelowAction,Yr as NewEditorGroupLeftAction,Zr as NewEditorGroupRightAction,si as NewEmptyEditorWindowAction,pr as OpenFirstEditorInGroup,lr as OpenLastEditorInGroup,cr as OpenNextEditor,ar as OpenNextEditorInGroup,xr as OpenNextRecentlyUsedEditorAction,kr as OpenNextRecentlyUsedEditorInGroupAction,dr as OpenPreviousEditor,ur as OpenPreviousEditorInGroup,br as OpenPreviousRecentlyUsedEditorAction,Tr as OpenPreviousRecentlyUsedEditorInGroupAction,Ir as QuickAccessLeastRecentlyUsedEditorAction,Sr as QuickAccessLeastRecentlyUsedEditorInGroupAction,le as QuickAccessPreviousEditorFromHistoryAction,hr as QuickAccessPreviousRecentlyUsedEditorAction,Cr as QuickAccessPreviousRecentlyUsedEditorInGroupAction,ei as ReOpenInTextEditorAction,Fe as ReopenClosedEditorAction,rr as ResetGroupSizesAction,ni as RestoreEditorsToMainWindowAction,_t as RevertAndCloseEditorAction,Ke as ShowAllEditorsByAppearanceAction,He as ShowAllEditorsByMostRecentlyUsedAction,_e as ShowEditorsInActiveGroupByMostRecentlyUsedAction,We as SplitEditorAction,Tt as SplitEditorDownAction,xt as SplitEditorLeftAction,St as SplitEditorOrthogonalAction,bt as SplitEditorRightAction,Kr as SplitEditorToAboveGroupAction,Hr as SplitEditorToBelowGroupAction,Qr as SplitEditorToFirstGroupAction,Xr as SplitEditorToLastGroupAction,zr as SplitEditorToLeftGroupAction,_r as SplitEditorToNextGroupAction,Ur as SplitEditorToPreviousGroupAction,qr as SplitEditorToRightGroupAction,kt as SplitEditorUpAction,$r as ToggleEditorTypeAction,ir as ToggleGroupSizesAction,sr as ToggleMaximizeEditorGroupAction,Z as UnpinEditorAction};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { localize, localize2 } from "../../../../nls.js";
+import { Action } from "../../../../base/common/actions.js";
+import { IEditorIdentifier, IEditorCommandsContext, CloseDirection, SaveReason, EditorsOrder, EditorInputCapabilities, DEFAULT_EDITOR_ASSOCIATION, GroupIdentifier, EditorResourceAccessor } from "../../../common/editor.js";
+import { EditorInput } from "../../../common/editor/editorInput.js";
+import { SideBySideEditorInput } from "../../../common/editor/sideBySideEditorInput.js";
+import { IWorkbenchLayoutService, Parts } from "../../../services/layout/browser/layoutService.js";
+import { GoFilter, IHistoryService } from "../../../services/history/common/history.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { CLOSE_EDITOR_COMMAND_ID, MOVE_ACTIVE_EDITOR_COMMAND_ID, SelectedEditorsMoveCopyArguments, SPLIT_EDITOR_LEFT, SPLIT_EDITOR_RIGHT, SPLIT_EDITOR_UP, SPLIT_EDITOR_DOWN, splitEditor, LAYOUT_EDITOR_GROUPS_COMMAND_ID, UNPIN_EDITOR_COMMAND_ID, COPY_ACTIVE_EDITOR_COMMAND_ID, SPLIT_EDITOR, TOGGLE_MAXIMIZE_EDITOR_GROUP, MOVE_EDITOR_INTO_NEW_WINDOW_COMMAND_ID, COPY_EDITOR_INTO_NEW_WINDOW_COMMAND_ID, MOVE_EDITOR_GROUP_INTO_NEW_WINDOW_COMMAND_ID, COPY_EDITOR_GROUP_INTO_NEW_WINDOW_COMMAND_ID, NEW_EMPTY_EDITOR_WINDOW_COMMAND_ID } from "./editorCommands.js";
+import { IEditorGroupsService, IEditorGroup, GroupsArrangement, GroupLocation, GroupDirection, preferredSideBySideGroupDirection, IFindGroupScope, GroupOrientation, EditorGroupLayout, GroupsOrder, MergeGroupMode } from "../../../services/editor/common/editorGroupsService.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IWorkspacesService } from "../../../../platform/workspaces/common/workspaces.js";
+import { IFileDialogService, ConfirmResult, IDialogService } from "../../../../platform/dialogs/common/dialogs.js";
+import { ItemActivation, IQuickInputService } from "../../../../platform/quickinput/common/quickInput.js";
+import { AllEditorsByMostRecentlyUsedQuickAccess, ActiveGroupEditorsByMostRecentlyUsedQuickAccess, AllEditorsByAppearanceQuickAccess } from "./editorQuickAccess.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { IFilesConfigurationService, AutoSaveMode } from "../../../services/filesConfiguration/common/filesConfigurationService.js";
+import { IEditorResolverService } from "../../../services/editor/common/editorResolverService.js";
+import { isLinux, isNative, isWindows } from "../../../../base/common/platform.js";
+import { Action2, IAction2Options, MenuId } from "../../../../platform/actions/common/actions.js";
+import { ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+import { ContextKeyExpr } from "../../../../platform/contextkey/common/contextkey.js";
+import { KeyChord, KeyCode, KeyMod } from "../../../../base/common/keyCodes.js";
+import { IKeybindingRule, KeybindingWeight } from "../../../../platform/keybinding/common/keybindingsRegistry.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { Categories } from "../../../../platform/action/common/actionCommonCategories.js";
+import { ActiveEditorAvailableEditorIdsContext, ActiveEditorContext, ActiveEditorGroupEmptyContext, AuxiliaryBarVisibleContext, EditorPartMaximizedEditorGroupContext, EditorPartMultipleEditorGroupsContext, IsAuxiliaryWindowFocusedContext, MultipleEditorGroupsContext, SideBarVisibleContext } from "../../../common/contextkeys.js";
+import { getActiveDocument } from "../../../../base/browser/dom.js";
+import { ICommandActionTitle } from "../../../../platform/action/common/action.js";
+import { IProgressService, ProgressLocation } from "../../../../platform/progress/common/progress.js";
+import { resolveCommandsContext } from "./editorCommandsContext.js";
+import { IListService } from "../../../../platform/list/browser/listService.js";
+import { prepareMoveCopyEditors } from "./editor.js";
+class ExecuteCommandAction extends Action2 {
+  constructor(desc, commandId, commandArgs) {
+    super(desc);
+    this.commandId = commandId;
+    this.commandArgs = commandArgs;
+  }
+  static {
+    __name(this, "ExecuteCommandAction");
+  }
+  run(accessor) {
+    const commandService = accessor.get(ICommandService);
+    return commandService.executeCommand(this.commandId, this.commandArgs);
+  }
+}
+class AbstractSplitEditorAction extends Action2 {
+  static {
+    __name(this, "AbstractSplitEditorAction");
+  }
+  getDirection(configurationService) {
+    return preferredSideBySideGroupDirection(configurationService);
+  }
+  async run(accessor, ...args) {
+    const editorGroupsService = accessor.get(IEditorGroupsService);
+    const configurationService = accessor.get(IConfigurationService);
+    const editorService = accessor.get(IEditorService);
+    const listService = accessor.get(IListService);
+    const direction = this.getDirection(configurationService);
+    const commandContext = resolveCommandsContext(args, editorService, editorGroupsService, listService);
+    splitEditor(editorGroupsService, direction, commandContext);
+  }
+}
+class SplitEditorAction extends AbstractSplitEditorAction {
+  static {
+    __name(this, "SplitEditorAction");
+  }
+  static ID = SPLIT_EDITOR;
+  constructor() {
+    super({
+      id: SplitEditorAction.ID,
+      title: localize2("splitEditor", "Split Editor"),
+      f1: true,
+      keybinding: {
+        weight: KeybindingWeight.WorkbenchContrib,
+        primary: KeyMod.CtrlCmd | KeyCode.Backslash
+      },
+      category: Categories.View
+    });
+  }
+}
+class SplitEditorOrthogonalAction extends AbstractSplitEditorAction {
+  static {
+    __name(this, "SplitEditorOrthogonalAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.splitEditorOrthogonal",
+      title: localize2("splitEditorOrthogonal", "Split Editor Orthogonal"),
+      f1: true,
+      keybinding: {
+        weight: KeybindingWeight.WorkbenchContrib,
+        primary: KeyChord(KeyMod.CtrlCmd | KeyCode.KeyK, KeyMod.CtrlCmd | KeyCode.Backslash)
+      },
+      category: Categories.View
+    });
+  }
+  getDirection(configurationService) {
+    const direction = preferredSideBySideGroupDirection(configurationService);
+    return direction === GroupDirection.RIGHT ? GroupDirection.DOWN : GroupDirection.RIGHT;
+  }
+}
+class SplitEditorLeftAction extends ExecuteCommandAction {
+  static {
+    __name(this, "SplitEditorLeftAction");
+  }
+  constructor() {
+    super({
+      id: SPLIT_EDITOR_LEFT,
+      title: localize2("splitEditorGroupLeft", "Split Editor Left"),
+      f1: true,
+      keybinding: {
+        weight: KeybindingWeight.WorkbenchContrib,
+        primary: KeyChord(KeyMod.CtrlCmd | KeyCode.KeyK, KeyMod.CtrlCmd | KeyCode.Backslash)
+      },
+      category: Categories.View
+    }, SPLIT_EDITOR_LEFT);
+  }
+}
+class SplitEditorRightAction extends ExecuteCommandAction {
+  static {
+    __name(this, "SplitEditorRightAction");
+  }
+  constructor() {
+    super({
+      id: SPLIT_EDITOR_RIGHT,
+      title: localize2("splitEditorGroupRight", "Split Editor Right"),
+      f1: true,
+      keybinding: {
+        weight: KeybindingWeight.WorkbenchContrib,
+        primary: KeyChord(KeyMod.CtrlCmd | KeyCode.KeyK, KeyMod.CtrlCmd | KeyCode.Backslash)
+      },
+      category: Categories.View
+    }, SPLIT_EDITOR_RIGHT);
+  }
+}
+class SplitEditorUpAction extends ExecuteCommandAction {
+  static {
+    __name(this, "SplitEditorUpAction");
+  }
+  static LABEL = localize("splitEditorGroupUp", "Split Editor Up");
+  constructor() {
+    super({
+      id: SPLIT_EDITOR_UP,
+      title: localize2("splitEditorGroupUp", "Split Editor Up"),
+      f1: true,
+      keybinding: {
+        weight: KeybindingWeight.WorkbenchContrib,
+        primary: KeyChord(KeyMod.CtrlCmd | KeyCode.KeyK, KeyMod.CtrlCmd | KeyCode.Backslash)
+      },
+      category: Categories.View
+    }, SPLIT_EDITOR_UP);
+  }
+}
+class SplitEditorDownAction extends ExecuteCommandAction {
+  static {
+    __name(this, "SplitEditorDownAction");
+  }
+  static LABEL = localize("splitEditorGroupDown", "Split Editor Down");
+  constructor() {
+    super({
+      id: SPLIT_EDITOR_DOWN,
+      title: localize2("splitEditorGroupDown", "Split Editor Down"),
+      f1: true,
+      keybinding: {
+        weight: KeybindingWeight.WorkbenchContrib,
+        primary: KeyChord(KeyMod.CtrlCmd | KeyCode.KeyK, KeyMod.CtrlCmd | KeyCode.Backslash)
+      },
+      category: Categories.View
+    }, SPLIT_EDITOR_DOWN);
+  }
+}
+class JoinTwoGroupsAction extends Action2 {
+  static {
+    __name(this, "JoinTwoGroupsAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.joinTwoGroups",
+      title: localize2("joinTwoGroups", "Join Editor Group with Next Group"),
+      f1: true,
+      category: Categories.View
+    });
+  }
+  async run(accessor, context) {
+    const editorGroupService = accessor.get(IEditorGroupsService);
+    let sourceGroup;
+    if (context && typeof context.groupId === "number") {
+      sourceGroup = editorGroupService.getGroup(context.groupId);
+    } else {
+      sourceGroup = editorGroupService.activeGroup;
+    }
+    if (sourceGroup) {
+      const targetGroupDirections = [GroupDirection.RIGHT, GroupDirection.DOWN, GroupDirection.LEFT, GroupDirection.UP];
+      for (const targetGroupDirection of targetGroupDirections) {
+        const targetGroup = editorGroupService.findGroup({ direction: targetGroupDirection }, sourceGroup);
+        if (targetGroup && sourceGroup !== targetGroup) {
+          editorGroupService.mergeGroup(sourceGroup, targetGroup);
+          break;
+        }
+      }
+    }
+  }
+}
+class JoinAllGroupsAction extends Action2 {
+  static {
+    __name(this, "JoinAllGroupsAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.joinAllGroups",
+      title: localize2("joinAllGroups", "Join All Editor Groups"),
+      f1: true,
+      category: Categories.View
+    });
+  }
+  async run(accessor) {
+    const editorGroupService = accessor.get(IEditorGroupsService);
+    editorGroupService.mergeAllGroups(editorGroupService.activeGroup);
+  }
+}
+class NavigateBetweenGroupsAction extends Action2 {
+  static {
+    __name(this, "NavigateBetweenGroupsAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.navigateEditorGroups",
+      title: localize2("navigateEditorGroups", "Navigate Between Editor Groups"),
+      f1: true,
+      category: Categories.View
+    });
+  }
+  async run(accessor) {
+    const editorGroupService = accessor.get(IEditorGroupsService);
+    const nextGroup = editorGroupService.findGroup({ location: GroupLocation.NEXT }, editorGroupService.activeGroup, true);
+    nextGroup?.focus();
+  }
+}
+class FocusActiveGroupAction extends Action2 {
+  static {
+    __name(this, "FocusActiveGroupAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.focusActiveEditorGroup",
+      title: localize2("focusActiveEditorGroup", "Focus Active Editor Group"),
+      f1: true,
+      category: Categories.View
+    });
+  }
+  async run(accessor) {
+    const editorGroupService = accessor.get(IEditorGroupsService);
+    editorGroupService.activeGroup.focus();
+  }
+}
+class AbstractFocusGroupAction extends Action2 {
+  constructor(desc, scope) {
+    super(desc);
+    this.scope = scope;
+  }
+  static {
+    __name(this, "AbstractFocusGroupAction");
+  }
+  async run(accessor) {
+    const editorGroupService = accessor.get(IEditorGroupsService);
+    const group = editorGroupService.findGroup(this.scope, editorGroupService.activeGroup, true);
+    group?.focus();
+  }
+}
+class FocusFirstGroupAction extends AbstractFocusGroupAction {
+  static {
+    __name(this, "FocusFirstGroupAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.focusFirstEditorGroup",
+      title: localize2("focusFirstEditorGroup", "Focus First Editor Group"),
+      f1: true,
+      keybinding: {
+        weight: KeybindingWeight.WorkbenchContrib,
+        primary: KeyMod.CtrlCmd | KeyCode.Digit1
+      },
+      category: Categories.View
+    }, { location: GroupLocation.FIRST });
+  }
+}
+class FocusLastGroupAction extends AbstractFocusGroupAction {
+  static {
+    __name(this, "FocusLastGroupAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.focusLastEditorGroup",
+      title: localize2("focusLastEditorGroup", "Focus Last Editor Group"),
+      f1: true,
+      category: Categories.View
+    }, { location: GroupLocation.LAST });
+  }
+}
+class FocusNextGroup extends AbstractFocusGroupAction {
+  static {
+    __name(this, "FocusNextGroup");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.focusNextGroup",
+      title: localize2("focusNextGroup", "Focus Next Editor Group"),
+      f1: true,
+      category: Categories.View
+    }, { location: GroupLocation.NEXT });
+  }
+}
+class FocusPreviousGroup extends AbstractFocusGroupAction {
+  static {
+    __name(this, "FocusPreviousGroup");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.focusPreviousGroup",
+      title: localize2("focusPreviousGroup", "Focus Previous Editor Group"),
+      f1: true,
+      category: Categories.View
+    }, { location: GroupLocation.PREVIOUS });
+  }
+}
+class FocusLeftGroup extends AbstractFocusGroupAction {
+  static {
+    __name(this, "FocusLeftGroup");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.focusLeftGroup",
+      title: localize2("focusLeftGroup", "Focus Left Editor Group"),
+      f1: true,
+      keybinding: {
+        weight: KeybindingWeight.WorkbenchContrib,
+        primary: KeyChord(KeyMod.CtrlCmd | KeyCode.KeyK, KeyMod.CtrlCmd | KeyCode.LeftArrow)
+      },
+      category: Categories.View
+    }, { direction: GroupDirection.LEFT });
+  }
+}
+class FocusRightGroup extends AbstractFocusGroupAction {
+  static {
+    __name(this, "FocusRightGroup");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.focusRightGroup",
+      title: localize2("focusRightGroup", "Focus Right Editor Group"),
+      f1: true,
+      keybinding: {
+        weight: KeybindingWeight.WorkbenchContrib,
+        primary: KeyChord(KeyMod.CtrlCmd | KeyCode.KeyK, KeyMod.CtrlCmd | KeyCode.RightArrow)
+      },
+      category: Categories.View
+    }, { direction: GroupDirection.RIGHT });
+  }
+}
+class FocusAboveGroup extends AbstractFocusGroupAction {
+  static {
+    __name(this, "FocusAboveGroup");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.focusAboveGroup",
+      title: localize2("focusAboveGroup", "Focus Editor Group Above"),
+      f1: true,
+      keybinding: {
+        weight: KeybindingWeight.WorkbenchContrib,
+        primary: KeyChord(KeyMod.CtrlCmd | KeyCode.KeyK, KeyMod.CtrlCmd | KeyCode.UpArrow)
+      },
+      category: Categories.View
+    }, { direction: GroupDirection.UP });
+  }
+}
+class FocusBelowGroup extends AbstractFocusGroupAction {
+  static {
+    __name(this, "FocusBelowGroup");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.focusBelowGroup",
+      title: localize2("focusBelowGroup", "Focus Editor Group Below"),
+      f1: true,
+      keybinding: {
+        weight: KeybindingWeight.WorkbenchContrib,
+        primary: KeyChord(KeyMod.CtrlCmd | KeyCode.KeyK, KeyMod.CtrlCmd | KeyCode.DownArrow)
+      },
+      category: Categories.View
+    }, { direction: GroupDirection.DOWN });
+  }
+}
+let CloseEditorAction = class extends Action {
+  constructor(id, label, commandService) {
+    super(id, label, ThemeIcon.asClassName(Codicon.close));
+    this.commandService = commandService;
+  }
+  static {
+    __name(this, "CloseEditorAction");
+  }
+  static ID = "workbench.action.closeActiveEditor";
+  static LABEL = localize("closeEditor", "Close Editor");
+  run(context) {
+    return this.commandService.executeCommand(CLOSE_EDITOR_COMMAND_ID, void 0, context);
+  }
+};
+CloseEditorAction = __decorateClass([
+  __decorateParam(2, ICommandService)
+], CloseEditorAction);
+let UnpinEditorAction = class extends Action {
+  constructor(id, label, commandService) {
+    super(id, label, ThemeIcon.asClassName(Codicon.pinned));
+    this.commandService = commandService;
+  }
+  static {
+    __name(this, "UnpinEditorAction");
+  }
+  static ID = "workbench.action.unpinActiveEditor";
+  static LABEL = localize("unpinEditor", "Unpin Editor");
+  run(context) {
+    return this.commandService.executeCommand(UNPIN_EDITOR_COMMAND_ID, void 0, context);
+  }
+};
+UnpinEditorAction = __decorateClass([
+  __decorateParam(2, ICommandService)
+], UnpinEditorAction);
+let CloseEditorTabAction = class extends Action {
+  constructor(id, label, editorGroupService) {
+    super(id, label, ThemeIcon.asClassName(Codicon.close));
+    this.editorGroupService = editorGroupService;
+  }
+  static {
+    __name(this, "CloseEditorTabAction");
+  }
+  static ID = "workbench.action.closeActiveEditor";
+  static LABEL = localize("closeOneEditor", "Close");
+  async run(context) {
+    const group = context ? this.editorGroupService.getGroup(context.groupId) : this.editorGroupService.activeGroup;
+    if (!group) {
+      return;
+    }
+    const targetEditor = context?.editorIndex !== void 0 ? group.getEditorByIndex(context.editorIndex) : group.activeEditor;
+    if (!targetEditor) {
+      return;
+    }
+    const editors = [];
+    if (group.isSelected(targetEditor)) {
+      editors.push(...group.selectedEditors);
+    } else {
+      editors.push(targetEditor);
+    }
+    for (const editor of editors) {
+      await group.closeEditor(editor, { preserveFocus: context?.preserveFocus });
+    }
+  }
+};
+CloseEditorTabAction = __decorateClass([
+  __decorateParam(2, IEditorGroupsService)
+], CloseEditorTabAction);
+class RevertAndCloseEditorAction extends Action2 {
+  static {
+    __name(this, "RevertAndCloseEditorAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.revertAndCloseActiveEditor",
+      title: localize2("revertAndCloseActiveEditor", "Revert and Close Editor"),
+      f1: true,
+      category: Categories.View
+    });
+  }
+  async run(accessor) {
+    const editorService = accessor.get(IEditorService);
+    const logService = accessor.get(ILogService);
+    const activeEditorPane = editorService.activeEditorPane;
+    if (activeEditorPane) {
+      const editor = activeEditorPane.input;
+      const group = activeEditorPane.group;
+      try {
+        await editorService.revert({ editor, groupId: group.id });
+      } catch (error) {
+        logService.error(error);
+        await editorService.revert({ editor, groupId: group.id }, { soft: true });
+      }
+      await group.closeEditor(editor);
+    }
+  }
+}
+class CloseLeftEditorsInGroupAction extends Action2 {
+  static {
+    __name(this, "CloseLeftEditorsInGroupAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.closeEditorsToTheLeft",
+      title: localize2("closeEditorsToTheLeft", "Close Editors to the Left in Group"),
+      f1: true,
+      category: Categories.View
+    });
+  }
+  async run(accessor, context) {
+    const editorGroupService = accessor.get(IEditorGroupsService);
+    const { group, editor } = this.getTarget(editorGroupService, context);
+    if (group && editor) {
+      await group.closeEditors({ direction: CloseDirection.LEFT, except: editor, excludeSticky: true });
+    }
+  }
+  getTarget(editorGroupService, context) {
+    if (context) {
+      return { editor: context.editor, group: editorGroupService.getGroup(context.groupId) };
+    }
+    return { group: editorGroupService.activeGroup, editor: editorGroupService.activeGroup.activeEditor };
+  }
+}
+class AbstractCloseAllAction extends Action2 {
+  static {
+    __name(this, "AbstractCloseAllAction");
+  }
+  groupsToClose(editorGroupService) {
+    const groupsToClose = [];
+    const groups = editorGroupService.getGroups(GroupsOrder.GRID_APPEARANCE);
+    for (let i = groups.length - 1; i >= 0; i--) {
+      groupsToClose.push(groups[i]);
+    }
+    return groupsToClose;
+  }
+  async run(accessor) {
+    const editorService = accessor.get(IEditorService);
+    const logService = accessor.get(ILogService);
+    const progressService = accessor.get(IProgressService);
+    const editorGroupService = accessor.get(IEditorGroupsService);
+    const filesConfigurationService = accessor.get(IFilesConfigurationService);
+    const fileDialogService = accessor.get(IFileDialogService);
+    const dirtyEditorsWithDefaultConfirm = /* @__PURE__ */ new Set();
+    const dirtyAutoSaveOnFocusChangeEditors = /* @__PURE__ */ new Set();
+    const dirtyAutoSaveOnWindowChangeEditors = /* @__PURE__ */ new Set();
+    const editorsWithCustomConfirm = /* @__PURE__ */ new Map();
+    for (const { editor, groupId } of editorService.getEditors(EditorsOrder.SEQUENTIAL, { excludeSticky: this.excludeSticky })) {
+      let confirmClose = false;
+      if (editor.closeHandler) {
+        confirmClose = editor.closeHandler.showConfirm();
+      } else {
+        confirmClose = editor.isDirty() && !editor.isSaving();
+      }
+      if (!confirmClose) {
+        continue;
+      }
+      if (typeof editor.closeHandler?.confirm === "function") {
+        let customEditorsToConfirm = editorsWithCustomConfirm.get(editor.typeId);
+        if (!customEditorsToConfirm) {
+          customEditorsToConfirm = /* @__PURE__ */ new Set();
+          editorsWithCustomConfirm.set(editor.typeId, customEditorsToConfirm);
+        }
+        customEditorsToConfirm.add({ editor, groupId });
+      } else if (!editor.hasCapability(EditorInputCapabilities.Untitled) && filesConfigurationService.getAutoSaveMode(editor).mode === AutoSaveMode.ON_FOCUS_CHANGE) {
+        dirtyAutoSaveOnFocusChangeEditors.add({ editor, groupId });
+      } else if (isNative && (isWindows || isLinux) && !editor.hasCapability(EditorInputCapabilities.Untitled) && filesConfigurationService.getAutoSaveMode(editor).mode === AutoSaveMode.ON_WINDOW_CHANGE) {
+        dirtyAutoSaveOnWindowChangeEditors.add({ editor, groupId });
+      } else {
+        dirtyEditorsWithDefaultConfirm.add({ editor, groupId });
+      }
+    }
+    if (dirtyEditorsWithDefaultConfirm.size > 0) {
+      const editors = Array.from(dirtyEditorsWithDefaultConfirm.values());
+      await this.revealEditorsToConfirm(editors, editorGroupService);
+      const confirmation = await fileDialogService.showSaveConfirm(editors.map(({ editor }) => {
+        if (editor instanceof SideBySideEditorInput) {
+          return editor.primary.getName();
+        }
+        return editor.getName();
+      }));
+      switch (confirmation) {
+        case ConfirmResult.CANCEL:
+          return;
+        case ConfirmResult.DONT_SAVE:
+          await this.revertEditors(editorService, logService, progressService, editors);
+          break;
+        case ConfirmResult.SAVE:
+          await editorService.save(editors, { reason: SaveReason.EXPLICIT });
+          break;
+      }
+    }
+    for (const [, editorIdentifiers] of editorsWithCustomConfirm) {
+      const editors = Array.from(editorIdentifiers.values());
+      await this.revealEditorsToConfirm(editors, editorGroupService);
+      const confirmation = await editors.at(0)?.editor.closeHandler?.confirm?.(editors);
+      if (typeof confirmation === "number") {
+        switch (confirmation) {
+          case ConfirmResult.CANCEL:
+            return;
+          case ConfirmResult.DONT_SAVE:
+            await this.revertEditors(editorService, logService, progressService, editors);
+            break;
+          case ConfirmResult.SAVE:
+            await editorService.save(editors, { reason: SaveReason.EXPLICIT });
+            break;
+        }
+      }
+    }
+    if (dirtyAutoSaveOnFocusChangeEditors.size > 0) {
+      const editors = Array.from(dirtyAutoSaveOnFocusChangeEditors.values());
+      await editorService.save(editors, { reason: SaveReason.FOCUS_CHANGE });
+    }
+    if (dirtyAutoSaveOnWindowChangeEditors.size > 0) {
+      const editors = Array.from(dirtyAutoSaveOnWindowChangeEditors.values());
+      await editorService.save(editors, { reason: SaveReason.WINDOW_CHANGE });
+    }
+    return this.doCloseAll(editorGroupService);
+  }
+  revertEditors(editorService, logService, progressService, editors) {
+    return progressService.withProgress({
+      location: ProgressLocation.Window,
+      // use window progress to not be too annoying about this operation
+      delay: 800,
+      // delay so that it only appears when operation takes a long time
+      title: localize("reverting", "Reverting Editors...")
+    }, () => this.doRevertEditors(editorService, logService, editors));
+  }
+  async doRevertEditors(editorService, logService, editors) {
+    try {
+      await editorService.revert(editors);
+    } catch (error) {
+      logService.error(error);
+      await editorService.revert(editors, { soft: true });
+    }
+  }
+  async revealEditorsToConfirm(editors, editorGroupService) {
+    try {
+      const handledGroups = /* @__PURE__ */ new Set();
+      for (const { editor, groupId } of editors) {
+        if (handledGroups.has(groupId)) {
+          continue;
+        }
+        handledGroups.add(groupId);
+        const group = editorGroupService.getGroup(groupId);
+        await group?.openEditor(editor);
+      }
+    } catch (error) {
+    }
+  }
+  async doCloseAll(editorGroupService) {
+    await Promise.all(this.groupsToClose(editorGroupService).map((group) => group.closeAllEditors({ excludeSticky: this.excludeSticky })));
+  }
+}
+class CloseAllEditorsAction extends AbstractCloseAllAction {
+  static {
+    __name(this, "CloseAllEditorsAction");
+  }
+  static ID = "workbench.action.closeAllEditors";
+  static LABEL = localize2("closeAllEditors", "Close All Editors");
+  constructor() {
+    super({
+      id: CloseAllEditorsAction.ID,
+      title: CloseAllEditorsAction.LABEL,
+      f1: true,
+      keybinding: {
+        weight: KeybindingWeight.WorkbenchContrib,
+        primary: KeyChord(KeyMod.CtrlCmd | KeyCode.KeyK, KeyMod.CtrlCmd | KeyCode.KeyW)
+      },
+      icon: Codicon.closeAll,
+      category: Categories.View
+    });
+  }
+  get excludeSticky() {
+    return true;
+  }
+}
+class CloseAllEditorGroupsAction extends AbstractCloseAllAction {
+  static {
+    __name(this, "CloseAllEditorGroupsAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.closeAllGroups",
+      title: localize2("closeAllGroups", "Close All Editor Groups"),
+      f1: true,
+      keybinding: {
+        weight: KeybindingWeight.WorkbenchContrib,
+        primary: KeyChord(KeyMod.CtrlCmd | KeyCode.KeyK, KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyW)
+      },
+      category: Categories.View
+    });
+  }
+  get excludeSticky() {
+    return false;
+  }
+  async doCloseAll(editorGroupService) {
+    await super.doCloseAll(editorGroupService);
+    for (const groupToClose of this.groupsToClose(editorGroupService)) {
+      editorGroupService.removeGroup(groupToClose);
+    }
+  }
+}
+class CloseEditorsInOtherGroupsAction extends Action2 {
+  static {
+    __name(this, "CloseEditorsInOtherGroupsAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.closeEditorsInOtherGroups",
+      title: localize2("closeEditorsInOtherGroups", "Close Editors in Other Groups"),
+      f1: true,
+      category: Categories.View
+    });
+  }
+  async run(accessor, context) {
+    const editorGroupService = accessor.get(IEditorGroupsService);
+    const groupToSkip = context ? editorGroupService.getGroup(context.groupId) : editorGroupService.activeGroup;
+    await Promise.all(editorGroupService.getGroups(GroupsOrder.MOST_RECENTLY_ACTIVE).map(async (group) => {
+      if (groupToSkip && group.id === groupToSkip.id) {
+        return;
+      }
+      return group.closeAllEditors({ excludeSticky: true });
+    }));
+  }
+}
+class CloseEditorInAllGroupsAction extends Action2 {
+  static {
+    __name(this, "CloseEditorInAllGroupsAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.closeEditorInAllGroups",
+      title: localize2("closeEditorInAllGroups", "Close Editor in All Groups"),
+      f1: true,
+      category: Categories.View
+    });
+  }
+  async run(accessor) {
+    const editorService = accessor.get(IEditorService);
+    const editorGroupService = accessor.get(IEditorGroupsService);
+    const activeEditor = editorService.activeEditor;
+    if (activeEditor) {
+      await Promise.all(editorGroupService.getGroups(GroupsOrder.MOST_RECENTLY_ACTIVE).map((group) => group.closeEditor(activeEditor)));
+    }
+  }
+}
+class AbstractMoveCopyGroupAction extends Action2 {
+  constructor(desc, direction, isMove) {
+    super(desc);
+    this.direction = direction;
+    this.isMove = isMove;
+  }
+  static {
+    __name(this, "AbstractMoveCopyGroupAction");
+  }
+  async run(accessor, context) {
+    const editorGroupService = accessor.get(IEditorGroupsService);
+    let sourceGroup;
+    if (context && typeof context.groupId === "number") {
+      sourceGroup = editorGroupService.getGroup(context.groupId);
+    } else {
+      sourceGroup = editorGroupService.activeGroup;
+    }
+    if (sourceGroup) {
+      let resultGroup = void 0;
+      if (this.isMove) {
+        const targetGroup = this.findTargetGroup(editorGroupService, sourceGroup);
+        if (targetGroup) {
+          resultGroup = editorGroupService.moveGroup(sourceGroup, targetGroup, this.direction);
+        }
+      } else {
+        resultGroup = editorGroupService.copyGroup(sourceGroup, sourceGroup, this.direction);
+      }
+      if (resultGroup) {
+        editorGroupService.activateGroup(resultGroup);
+      }
+    }
+  }
+  findTargetGroup(editorGroupService, sourceGroup) {
+    const targetNeighbours = [this.direction];
+    switch (this.direction) {
+      case GroupDirection.LEFT:
+      case GroupDirection.RIGHT:
+        targetNeighbours.push(GroupDirection.UP, GroupDirection.DOWN);
+        break;
+      case GroupDirection.UP:
+      case GroupDirection.DOWN:
+        targetNeighbours.push(GroupDirection.LEFT, GroupDirection.RIGHT);
+        break;
+    }
+    for (const targetNeighbour of targetNeighbours) {
+      const targetNeighbourGroup = editorGroupService.findGroup({ direction: targetNeighbour }, sourceGroup);
+      if (targetNeighbourGroup) {
+        return targetNeighbourGroup;
+      }
+    }
+    return void 0;
+  }
+}
+class AbstractMoveGroupAction extends AbstractMoveCopyGroupAction {
+  static {
+    __name(this, "AbstractMoveGroupAction");
+  }
+  constructor(desc, direction) {
+    super(desc, direction, true);
+  }
+}
+class MoveGroupLeftAction extends AbstractMoveGroupAction {
+  static {
+    __name(this, "MoveGroupLeftAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.moveActiveEditorGroupLeft",
+      title: localize2("moveActiveGroupLeft", "Move Editor Group Left"),
+      f1: true,
+      keybinding: {
+        weight: KeybindingWeight.WorkbenchContrib,
+        primary: KeyChord(KeyMod.CtrlCmd | KeyCode.KeyK, KeyCode.LeftArrow)
+      },
+      category: Categories.View
+    }, GroupDirection.LEFT);
+  }
+}
+class MoveGroupRightAction extends AbstractMoveGroupAction {
+  static {
+    __name(this, "MoveGroupRightAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.moveActiveEditorGroupRight",
+      title: localize2("moveActiveGroupRight", "Move Editor Group Right"),
+      f1: true,
+      keybinding: {
+        weight: KeybindingWeight.WorkbenchContrib,
+        primary: KeyChord(KeyMod.CtrlCmd | KeyCode.KeyK, KeyCode.RightArrow)
+      },
+      category: Categories.View
+    }, GroupDirection.RIGHT);
+  }
+}
+class MoveGroupUpAction extends AbstractMoveGroupAction {
+  static {
+    __name(this, "MoveGroupUpAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.moveActiveEditorGroupUp",
+      title: localize2("moveActiveGroupUp", "Move Editor Group Up"),
+      f1: true,
+      keybinding: {
+        weight: KeybindingWeight.WorkbenchContrib,
+        primary: KeyChord(KeyMod.CtrlCmd | KeyCode.KeyK, KeyCode.UpArrow)
+      },
+      category: Categories.View
+    }, GroupDirection.UP);
+  }
+}
+class MoveGroupDownAction extends AbstractMoveGroupAction {
+  static {
+    __name(this, "MoveGroupDownAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.moveActiveEditorGroupDown",
+      title: localize2("moveActiveGroupDown", "Move Editor Group Down"),
+      f1: true,
+      keybinding: {
+        weight: KeybindingWeight.WorkbenchContrib,
+        primary: KeyChord(KeyMod.CtrlCmd | KeyCode.KeyK, KeyCode.DownArrow)
+      },
+      category: Categories.View
+    }, GroupDirection.DOWN);
+  }
+}
+class AbstractDuplicateGroupAction extends AbstractMoveCopyGroupAction {
+  static {
+    __name(this, "AbstractDuplicateGroupAction");
+  }
+  constructor(desc, direction) {
+    super(desc, direction, false);
+  }
+}
+class DuplicateGroupLeftAction extends AbstractDuplicateGroupAction {
+  static {
+    __name(this, "DuplicateGroupLeftAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.duplicateActiveEditorGroupLeft",
+      title: localize2("duplicateActiveGroupLeft", "Duplicate Editor Group Left"),
+      f1: true,
+      category: Categories.View
+    }, GroupDirection.LEFT);
+  }
+}
+class DuplicateGroupRightAction extends AbstractDuplicateGroupAction {
+  static {
+    __name(this, "DuplicateGroupRightAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.duplicateActiveEditorGroupRight",
+      title: localize2("duplicateActiveGroupRight", "Duplicate Editor Group Right"),
+      f1: true,
+      category: Categories.View
+    }, GroupDirection.RIGHT);
+  }
+}
+class DuplicateGroupUpAction extends AbstractDuplicateGroupAction {
+  static {
+    __name(this, "DuplicateGroupUpAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.duplicateActiveEditorGroupUp",
+      title: localize2("duplicateActiveGroupUp", "Duplicate Editor Group Up"),
+      f1: true,
+      category: Categories.View
+    }, GroupDirection.UP);
+  }
+}
+class DuplicateGroupDownAction extends AbstractDuplicateGroupAction {
+  static {
+    __name(this, "DuplicateGroupDownAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.duplicateActiveEditorGroupDown",
+      title: localize2("duplicateActiveGroupDown", "Duplicate Editor Group Down"),
+      f1: true,
+      category: Categories.View
+    }, GroupDirection.DOWN);
+  }
+}
+class MinimizeOtherGroupsAction extends Action2 {
+  static {
+    __name(this, "MinimizeOtherGroupsAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.minimizeOtherEditors",
+      title: localize2("minimizeOtherEditorGroups", "Expand Editor Group"),
+      f1: true,
+      category: Categories.View,
+      precondition: MultipleEditorGroupsContext
+    });
+  }
+  async run(accessor) {
+    const editorGroupService = accessor.get(IEditorGroupsService);
+    editorGroupService.arrangeGroups(GroupsArrangement.EXPAND);
+  }
+}
+class MinimizeOtherGroupsHideSidebarAction extends Action2 {
+  static {
+    __name(this, "MinimizeOtherGroupsHideSidebarAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.minimizeOtherEditorsHideSidebar",
+      title: localize2("minimizeOtherEditorGroupsHideSidebar", "Expand Editor Group and Hide Side Bars"),
+      f1: true,
+      category: Categories.View,
+      precondition: ContextKeyExpr.or(MultipleEditorGroupsContext, SideBarVisibleContext, AuxiliaryBarVisibleContext)
+    });
+  }
+  async run(accessor) {
+    const editorGroupService = accessor.get(IEditorGroupsService);
+    const layoutService = accessor.get(IWorkbenchLayoutService);
+    layoutService.setPartHidden(true, Parts.SIDEBAR_PART);
+    layoutService.setPartHidden(true, Parts.AUXILIARYBAR_PART);
+    editorGroupService.arrangeGroups(GroupsArrangement.EXPAND);
+  }
+}
+class ResetGroupSizesAction extends Action2 {
+  static {
+    __name(this, "ResetGroupSizesAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.evenEditorWidths",
+      title: localize2("evenEditorGroups", "Reset Editor Group Sizes"),
+      f1: true,
+      category: Categories.View
+    });
+  }
+  async run(accessor) {
+    const editorGroupService = accessor.get(IEditorGroupsService);
+    editorGroupService.arrangeGroups(GroupsArrangement.EVEN);
+  }
+}
+class ToggleGroupSizesAction extends Action2 {
+  static {
+    __name(this, "ToggleGroupSizesAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.toggleEditorWidths",
+      title: localize2("toggleEditorWidths", "Toggle Editor Group Sizes"),
+      f1: true,
+      category: Categories.View
+    });
+  }
+  async run(accessor) {
+    const editorGroupService = accessor.get(IEditorGroupsService);
+    editorGroupService.toggleExpandGroup();
+  }
+}
+class MaximizeGroupHideSidebarAction extends Action2 {
+  static {
+    __name(this, "MaximizeGroupHideSidebarAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.maximizeEditorHideSidebar",
+      title: localize2("maximizeEditorHideSidebar", "Maximize Editor Group and Hide Side Bars"),
+      f1: true,
+      category: Categories.View,
+      precondition: ContextKeyExpr.or(ContextKeyExpr.and(EditorPartMaximizedEditorGroupContext.negate(), EditorPartMultipleEditorGroupsContext), SideBarVisibleContext, AuxiliaryBarVisibleContext)
+    });
+  }
+  async run(accessor) {
+    const layoutService = accessor.get(IWorkbenchLayoutService);
+    const editorGroupService = accessor.get(IEditorGroupsService);
+    const editorService = accessor.get(IEditorService);
+    if (editorService.activeEditor) {
+      layoutService.setPartHidden(true, Parts.SIDEBAR_PART);
+      layoutService.setPartHidden(true, Parts.AUXILIARYBAR_PART);
+      editorGroupService.arrangeGroups(GroupsArrangement.MAXIMIZE);
+    }
+  }
+}
+class ToggleMaximizeEditorGroupAction extends Action2 {
+  static {
+    __name(this, "ToggleMaximizeEditorGroupAction");
+  }
+  constructor() {
+    super({
+      id: TOGGLE_MAXIMIZE_EDITOR_GROUP,
+      title: localize2("toggleMaximizeEditorGroup", "Toggle Maximize Editor Group"),
+      f1: true,
+      category: Categories.View,
+      precondition: ContextKeyExpr.or(EditorPartMultipleEditorGroupsContext, EditorPartMaximizedEditorGroupContext),
+      keybinding: {
+        weight: KeybindingWeight.WorkbenchContrib,
+        primary: KeyChord(KeyMod.CtrlCmd | KeyCode.KeyK, KeyMod.CtrlCmd | KeyCode.KeyM)
+      },
+      menu: [
+        {
+          id: MenuId.EditorTitle,
+          order: -1e4,
+          // towards the front
+          group: "navigation",
+          when: EditorPartMaximizedEditorGroupContext
+        },
+        {
+          id: MenuId.EmptyEditorGroup,
+          order: -1e4,
+          // towards the front
+          group: "navigation",
+          when: EditorPartMaximizedEditorGroupContext
+        }
+      ],
+      icon: Codicon.screenFull,
+      toggled: EditorPartMaximizedEditorGroupContext
+    });
+  }
+  async run(accessor, ...args) {
+    const editorGroupsService = accessor.get(IEditorGroupsService);
+    const editorService = accessor.get(IEditorService);
+    const listService = accessor.get(IListService);
+    const resolvedContext = resolveCommandsContext(args, editorService, editorGroupsService, listService);
+    if (resolvedContext.groupedEditors.length) {
+      editorGroupsService.toggleMaximizeGroup(resolvedContext.groupedEditors[0].group);
+    }
+  }
+}
+class AbstractNavigateEditorAction extends Action2 {
+  static {
+    __name(this, "AbstractNavigateEditorAction");
+  }
+  async run(accessor) {
+    const editorGroupService = accessor.get(IEditorGroupsService);
+    const result = this.navigate(editorGroupService);
+    if (!result) {
+      return;
+    }
+    const { groupId, editor } = result;
+    if (!editor) {
+      return;
+    }
+    const group = editorGroupService.getGroup(groupId);
+    if (group) {
+      await group.openEditor(editor);
+    }
+  }
+}
+class OpenNextEditor extends AbstractNavigateEditorAction {
+  static {
+    __name(this, "OpenNextEditor");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.nextEditor",
+      title: localize2("openNextEditor", "Open Next Editor"),
+      f1: true,
+      keybinding: {
+        weight: KeybindingWeight.WorkbenchContrib,
+        primary: KeyMod.CtrlCmd | KeyCode.PageDown,
+        mac: {
+          primary: KeyMod.CtrlCmd | KeyMod.Alt | KeyCode.RightArrow,
+          secondary: [KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.BracketRight]
+        }
+      },
+      category: Categories.View
+    });
+  }
+  navigate(editorGroupService) {
+    const activeGroup = editorGroupService.activeGroup;
+    const activeGroupEditors = activeGroup.getEditors(EditorsOrder.SEQUENTIAL);
+    const activeEditorIndex = activeGroup.activeEditor ? activeGroupEditors.indexOf(activeGroup.activeEditor) : -1;
+    if (activeEditorIndex + 1 < activeGroupEditors.length) {
+      return { editor: activeGroupEditors[activeEditorIndex + 1], groupId: activeGroup.id };
+    }
+    const handledGroups = /* @__PURE__ */ new Set();
+    let currentGroup = editorGroupService.activeGroup;
+    while (currentGroup && !handledGroups.has(currentGroup.id)) {
+      currentGroup = editorGroupService.findGroup({ location: GroupLocation.NEXT }, currentGroup, true);
+      if (currentGroup) {
+        handledGroups.add(currentGroup.id);
+        const groupEditors = currentGroup.getEditors(EditorsOrder.SEQUENTIAL);
+        if (groupEditors.length > 0) {
+          return { editor: groupEditors[0], groupId: currentGroup.id };
+        }
+      }
+    }
+    return void 0;
+  }
+}
+class OpenPreviousEditor extends AbstractNavigateEditorAction {
+  static {
+    __name(this, "OpenPreviousEditor");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.previousEditor",
+      title: localize2("openPreviousEditor", "Open Previous Editor"),
+      f1: true,
+      keybinding: {
+        weight: KeybindingWeight.WorkbenchContrib,
+        primary: KeyMod.CtrlCmd | KeyCode.PageUp,
+        mac: {
+          primary: KeyMod.CtrlCmd | KeyMod.Alt | KeyCode.LeftArrow,
+          secondary: [KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.BracketLeft]
+        }
+      },
+      category: Categories.View
+    });
+  }
+  navigate(editorGroupService) {
+    const activeGroup = editorGroupService.activeGroup;
+    const activeGroupEditors = activeGroup.getEditors(EditorsOrder.SEQUENTIAL);
+    const activeEditorIndex = activeGroup.activeEditor ? activeGroupEditors.indexOf(activeGroup.activeEditor) : -1;
+    if (activeEditorIndex > 0) {
+      return { editor: activeGroupEditors[activeEditorIndex - 1], groupId: activeGroup.id };
+    }
+    const handledGroups = /* @__PURE__ */ new Set();
+    let currentGroup = editorGroupService.activeGroup;
+    while (currentGroup && !handledGroups.has(currentGroup.id)) {
+      currentGroup = editorGroupService.findGroup({ location: GroupLocation.PREVIOUS }, currentGroup, true);
+      if (currentGroup) {
+        handledGroups.add(currentGroup.id);
+        const groupEditors = currentGroup.getEditors(EditorsOrder.SEQUENTIAL);
+        if (groupEditors.length > 0) {
+          return { editor: groupEditors[groupEditors.length - 1], groupId: currentGroup.id };
+        }
+      }
+    }
+    return void 0;
+  }
+}
+class OpenNextEditorInGroup extends AbstractNavigateEditorAction {
+  static {
+    __name(this, "OpenNextEditorInGroup");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.nextEditorInGroup",
+      title: localize2("nextEditorInGroup", "Open Next Editor in Group"),
+      f1: true,
+      keybinding: {
+        weight: KeybindingWeight.WorkbenchContrib,
+        primary: KeyChord(KeyMod.CtrlCmd | KeyCode.KeyK, KeyMod.CtrlCmd | KeyCode.PageDown),
+        mac: {
+          primary: KeyChord(KeyMod.CtrlCmd | KeyCode.KeyK, KeyMod.CtrlCmd | KeyMod.Alt | KeyCode.RightArrow)
+        }
+      },
+      category: Categories.View
+    });
+  }
+  navigate(editorGroupService) {
+    const group = editorGroupService.activeGroup;
+    const editors = group.getEditors(EditorsOrder.SEQUENTIAL);
+    const index = group.activeEditor ? editors.indexOf(group.activeEditor) : -1;
+    return { editor: index + 1 < editors.length ? editors[index + 1] : editors[0], groupId: group.id };
+  }
+}
+class OpenPreviousEditorInGroup extends AbstractNavigateEditorAction {
+  static {
+    __name(this, "OpenPreviousEditorInGroup");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.previousEditorInGroup",
+      title: localize2("openPreviousEditorInGroup", "Open Previous Editor in Group"),
+      f1: true,
+      keybinding: {
+        weight: KeybindingWeight.WorkbenchContrib,
+        primary: KeyChord(KeyMod.CtrlCmd | KeyCode.KeyK, KeyMod.CtrlCmd | KeyCode.PageUp),
+        mac: {
+          primary: KeyChord(KeyMod.CtrlCmd | KeyCode.KeyK, KeyMod.CtrlCmd | KeyMod.Alt | KeyCode.LeftArrow)
+        }
+      },
+      category: Categories.View
+    });
+  }
+  navigate(editorGroupService) {
+    const group = editorGroupService.activeGroup;
+    const editors = group.getEditors(EditorsOrder.SEQUENTIAL);
+    const index = group.activeEditor ? editors.indexOf(group.activeEditor) : -1;
+    return { editor: index > 0 ? editors[index - 1] : editors[editors.length - 1], groupId: group.id };
+  }
+}
+class OpenFirstEditorInGroup extends AbstractNavigateEditorAction {
+  static {
+    __name(this, "OpenFirstEditorInGroup");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.firstEditorInGroup",
+      title: localize2("firstEditorInGroup", "Open First Editor in Group"),
+      f1: true,
+      category: Categories.View
+    });
+  }
+  navigate(editorGroupService) {
+    const group = editorGroupService.activeGroup;
+    const editors = group.getEditors(EditorsOrder.SEQUENTIAL);
+    return { editor: editors[0], groupId: group.id };
+  }
+}
+class OpenLastEditorInGroup extends AbstractNavigateEditorAction {
+  static {
+    __name(this, "OpenLastEditorInGroup");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.lastEditorInGroup",
+      title: localize2("lastEditorInGroup", "Open Last Editor in Group"),
+      f1: true,
+      keybinding: {
+        weight: KeybindingWeight.WorkbenchContrib,
+        primary: KeyMod.Alt | KeyCode.Digit0,
+        secondary: [KeyMod.CtrlCmd | KeyCode.Digit9],
+        mac: {
+          primary: KeyMod.WinCtrl | KeyCode.Digit0,
+          secondary: [KeyMod.CtrlCmd | KeyCode.Digit9]
+        }
+      },
+      category: Categories.View
+    });
+  }
+  navigate(editorGroupService) {
+    const group = editorGroupService.activeGroup;
+    const editors = group.getEditors(EditorsOrder.SEQUENTIAL);
+    return { editor: editors[editors.length - 1], groupId: group.id };
+  }
+}
+class NavigateForwardAction extends Action2 {
+  static {
+    __name(this, "NavigateForwardAction");
+  }
+  static ID = "workbench.action.navigateForward";
+  static LABEL = localize("navigateForward", "Go Forward");
+  constructor() {
+    super({
+      id: NavigateForwardAction.ID,
+      title: {
+        ...localize2("navigateForward", "Go Forward"),
+        mnemonicTitle: localize({ key: "miForward", comment: ["&& denotes a mnemonic"] }, "&&Forward")
+      },
+      f1: true,
+      icon: Codicon.arrowRight,
+      precondition: ContextKeyExpr.has("canNavigateForward"),
+      keybinding: {
+        weight: KeybindingWeight.WorkbenchContrib,
+        win: { primary: KeyMod.Alt | KeyCode.RightArrow, secondary: [KeyCode.BrowserForward] },
+        mac: { primary: KeyMod.WinCtrl | KeyMod.Shift | KeyCode.Minus, secondary: [KeyCode.BrowserForward] },
+        linux: { primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.Minus, secondary: [KeyCode.BrowserForward] }
+      },
+      menu: [
+        { id: MenuId.MenubarGoMenu, group: "1_history_nav", order: 2 },
+        { id: MenuId.CommandCenter, order: 2, when: ContextKeyExpr.has("config.workbench.navigationControl.enabled") }
+      ]
+    });
+  }
+  async run(accessor) {
+    const historyService = accessor.get(IHistoryService);
+    await historyService.goForward(GoFilter.NONE);
+  }
+}
+class NavigateBackwardsAction extends Action2 {
+  static {
+    __name(this, "NavigateBackwardsAction");
+  }
+  static ID = "workbench.action.navigateBack";
+  static LABEL = localize("navigateBack", "Go Back");
+  constructor() {
+    super({
+      id: NavigateBackwardsAction.ID,
+      title: {
+        ...localize2("navigateBack", "Go Back"),
+        mnemonicTitle: localize({ key: "miBack", comment: ["&& denotes a mnemonic"] }, "&&Back")
+      },
+      f1: true,
+      precondition: ContextKeyExpr.has("canNavigateBack"),
+      icon: Codicon.arrowLeft,
+      keybinding: {
+        weight: KeybindingWeight.WorkbenchContrib,
+        win: { primary: KeyMod.Alt | KeyCode.LeftArrow, secondary: [KeyCode.BrowserBack] },
+        mac: { primary: KeyMod.WinCtrl | KeyCode.Minus, secondary: [KeyCode.BrowserBack] },
+        linux: { primary: KeyMod.CtrlCmd | KeyMod.Alt | KeyCode.Minus, secondary: [KeyCode.BrowserBack] }
+      },
+      menu: [
+        { id: MenuId.MenubarGoMenu, group: "1_history_nav", order: 1 },
+        { id: MenuId.CommandCenter, order: 1, when: ContextKeyExpr.has("config.workbench.navigationControl.enabled") }
+      ]
+    });
+  }
+  async run(accessor) {
+    const historyService = accessor.get(IHistoryService);
+    await historyService.goBack(GoFilter.NONE);
+  }
+}
+class NavigatePreviousAction extends Action2 {
+  static {
+    __name(this, "NavigatePreviousAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.navigateLast",
+      title: localize2("navigatePrevious", "Go Previous"),
+      f1: true
+    });
+  }
+  async run(accessor) {
+    const historyService = accessor.get(IHistoryService);
+    await historyService.goPrevious(GoFilter.NONE);
+  }
+}
+class NavigateForwardInEditsAction extends Action2 {
+  static {
+    __name(this, "NavigateForwardInEditsAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.navigateForwardInEditLocations",
+      title: localize2("navigateForwardInEdits", "Go Forward in Edit Locations"),
+      f1: true
+    });
+  }
+  async run(accessor) {
+    const historyService = accessor.get(IHistoryService);
+    await historyService.goForward(GoFilter.EDITS);
+  }
+}
+class NavigateBackwardsInEditsAction extends Action2 {
+  static {
+    __name(this, "NavigateBackwardsInEditsAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.navigateBackInEditLocations",
+      title: localize2("navigateBackInEdits", "Go Back in Edit Locations"),
+      f1: true
+    });
+  }
+  async run(accessor) {
+    const historyService = accessor.get(IHistoryService);
+    await historyService.goBack(GoFilter.EDITS);
+  }
+}
+class NavigatePreviousInEditsAction extends Action2 {
+  static {
+    __name(this, "NavigatePreviousInEditsAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.navigatePreviousInEditLocations",
+      title: localize2("navigatePreviousInEdits", "Go Previous in Edit Locations"),
+      f1: true
+    });
+  }
+  async run(accessor) {
+    const historyService = accessor.get(IHistoryService);
+    await historyService.goPrevious(GoFilter.EDITS);
+  }
+}
+class NavigateToLastEditLocationAction extends Action2 {
+  static {
+    __name(this, "NavigateToLastEditLocationAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.navigateToLastEditLocation",
+      title: localize2("navigateToLastEditLocation", "Go to Last Edit Location"),
+      f1: true,
+      keybinding: {
+        weight: KeybindingWeight.WorkbenchContrib,
+        primary: KeyChord(KeyMod.CtrlCmd | KeyCode.KeyK, KeyMod.CtrlCmd | KeyCode.KeyQ)
+      }
+    });
+  }
+  async run(accessor) {
+    const historyService = accessor.get(IHistoryService);
+    await historyService.goLast(GoFilter.EDITS);
+  }
+}
+class NavigateForwardInNavigationsAction extends Action2 {
+  static {
+    __name(this, "NavigateForwardInNavigationsAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.navigateForwardInNavigationLocations",
+      title: localize2("navigateForwardInNavigations", "Go Forward in Navigation Locations"),
+      f1: true
+    });
+  }
+  async run(accessor) {
+    const historyService = accessor.get(IHistoryService);
+    await historyService.goForward(GoFilter.NAVIGATION);
+  }
+}
+class NavigateBackwardsInNavigationsAction extends Action2 {
+  static {
+    __name(this, "NavigateBackwardsInNavigationsAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.navigateBackInNavigationLocations",
+      title: localize2("navigateBackInNavigations", "Go Back in Navigation Locations"),
+      f1: true
+    });
+  }
+  async run(accessor) {
+    const historyService = accessor.get(IHistoryService);
+    await historyService.goBack(GoFilter.NAVIGATION);
+  }
+}
+class NavigatePreviousInNavigationsAction extends Action2 {
+  static {
+    __name(this, "NavigatePreviousInNavigationsAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.navigatePreviousInNavigationLocations",
+      title: localize2("navigatePreviousInNavigationLocations", "Go Previous in Navigation Locations"),
+      f1: true
+    });
+  }
+  async run(accessor) {
+    const historyService = accessor.get(IHistoryService);
+    await historyService.goPrevious(GoFilter.NAVIGATION);
+  }
+}
+class NavigateToLastNavigationLocationAction extends Action2 {
+  static {
+    __name(this, "NavigateToLastNavigationLocationAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.navigateToLastNavigationLocation",
+      title: localize2("navigateToLastNavigationLocation", "Go to Last Navigation Location"),
+      f1: true
+    });
+  }
+  async run(accessor) {
+    const historyService = accessor.get(IHistoryService);
+    await historyService.goLast(GoFilter.NAVIGATION);
+  }
+}
+class ReopenClosedEditorAction extends Action2 {
+  static {
+    __name(this, "ReopenClosedEditorAction");
+  }
+  static ID = "workbench.action.reopenClosedEditor";
+  constructor() {
+    super({
+      id: ReopenClosedEditorAction.ID,
+      title: localize2("reopenClosedEditor", "Reopen Closed Editor"),
+      f1: true,
+      keybinding: {
+        weight: KeybindingWeight.WorkbenchContrib,
+        primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyT
+      },
+      category: Categories.View
+    });
+  }
+  async run(accessor) {
+    const historyService = accessor.get(IHistoryService);
+    await historyService.reopenLastClosedEditor();
+  }
+}
+class ClearRecentFilesAction extends Action2 {
+  static {
+    __name(this, "ClearRecentFilesAction");
+  }
+  static ID = "workbench.action.clearRecentFiles";
+  constructor() {
+    super({
+      id: ClearRecentFilesAction.ID,
+      title: localize2("clearRecentFiles", "Clear Recently Opened..."),
+      f1: true,
+      category: Categories.File
+    });
+  }
+  async run(accessor) {
+    const dialogService = accessor.get(IDialogService);
+    const workspacesService = accessor.get(IWorkspacesService);
+    const historyService = accessor.get(IHistoryService);
+    const { confirmed } = await dialogService.confirm({
+      type: "warning",
+      message: localize("confirmClearRecentsMessage", "Do you want to clear all recently opened files and workspaces?"),
+      detail: localize("confirmClearDetail", "This action is irreversible!"),
+      primaryButton: localize({ key: "clearButtonLabel", comment: ["&& denotes a mnemonic"] }, "&&Clear")
+    });
+    if (!confirmed) {
+      return;
+    }
+    workspacesService.clearRecentlyOpened();
+    historyService.clearRecentlyOpened();
+  }
+}
+class ShowEditorsInActiveGroupByMostRecentlyUsedAction extends Action2 {
+  static {
+    __name(this, "ShowEditorsInActiveGroupByMostRecentlyUsedAction");
+  }
+  static ID = "workbench.action.showEditorsInActiveGroup";
+  constructor() {
+    super({
+      id: ShowEditorsInActiveGroupByMostRecentlyUsedAction.ID,
+      title: localize2("showEditorsInActiveGroup", "Show Editors in Active Group By Most Recently Used"),
+      f1: true,
+      category: Categories.View
+    });
+  }
+  async run(accessor) {
+    const quickInputService = accessor.get(IQuickInputService);
+    quickInputService.quickAccess.show(ActiveGroupEditorsByMostRecentlyUsedQuickAccess.PREFIX);
+  }
+}
+class ShowAllEditorsByAppearanceAction extends Action2 {
+  static {
+    __name(this, "ShowAllEditorsByAppearanceAction");
+  }
+  static ID = "workbench.action.showAllEditors";
+  constructor() {
+    super({
+      id: ShowAllEditorsByAppearanceAction.ID,
+      title: localize2("showAllEditors", "Show All Editors By Appearance"),
+      f1: true,
+      keybinding: {
+        weight: KeybindingWeight.WorkbenchContrib,
+        primary: KeyChord(KeyMod.CtrlCmd | KeyCode.KeyK, KeyMod.CtrlCmd | KeyCode.KeyP),
+        mac: {
+          primary: KeyMod.CtrlCmd | KeyMod.Alt | KeyCode.Tab
+        }
+      },
+      category: Categories.File
+    });
+  }
+  async run(accessor) {
+    const quickInputService = accessor.get(IQuickInputService);
+    quickInputService.quickAccess.show(AllEditorsByAppearanceQuickAccess.PREFIX);
+  }
+}
+class ShowAllEditorsByMostRecentlyUsedAction extends Action2 {
+  static {
+    __name(this, "ShowAllEditorsByMostRecentlyUsedAction");
+  }
+  static ID = "workbench.action.showAllEditorsByMostRecentlyUsed";
+  constructor() {
+    super({
+      id: ShowAllEditorsByMostRecentlyUsedAction.ID,
+      title: localize2("showAllEditorsByMostRecentlyUsed", "Show All Editors By Most Recently Used"),
+      f1: true,
+      category: Categories.View
+    });
+  }
+  async run(accessor) {
+    const quickInputService = accessor.get(IQuickInputService);
+    quickInputService.quickAccess.show(AllEditorsByMostRecentlyUsedQuickAccess.PREFIX);
+  }
+}
+class AbstractQuickAccessEditorAction extends Action2 {
+  constructor(desc, prefix, itemActivation) {
+    super(desc);
+    this.prefix = prefix;
+    this.itemActivation = itemActivation;
+  }
+  static {
+    __name(this, "AbstractQuickAccessEditorAction");
+  }
+  async run(accessor) {
+    const keybindingService = accessor.get(IKeybindingService);
+    const quickInputService = accessor.get(IQuickInputService);
+    const keybindings = keybindingService.lookupKeybindings(this.desc.id);
+    quickInputService.quickAccess.show(this.prefix, {
+      quickNavigateConfiguration: { keybindings },
+      itemActivation: this.itemActivation
+    });
+  }
+}
+class QuickAccessPreviousRecentlyUsedEditorAction extends AbstractQuickAccessEditorAction {
+  static {
+    __name(this, "QuickAccessPreviousRecentlyUsedEditorAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.quickOpenPreviousRecentlyUsedEditor",
+      title: localize2("quickOpenPreviousRecentlyUsedEditor", "Quick Open Previous Recently Used Editor"),
+      f1: true,
+      category: Categories.View
+    }, AllEditorsByMostRecentlyUsedQuickAccess.PREFIX, void 0);
+  }
+}
+class QuickAccessLeastRecentlyUsedEditorAction extends AbstractQuickAccessEditorAction {
+  static {
+    __name(this, "QuickAccessLeastRecentlyUsedEditorAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.quickOpenLeastRecentlyUsedEditor",
+      title: localize2("quickOpenLeastRecentlyUsedEditor", "Quick Open Least Recently Used Editor"),
+      f1: true,
+      category: Categories.View
+    }, AllEditorsByMostRecentlyUsedQuickAccess.PREFIX, void 0);
+  }
+}
+class QuickAccessPreviousRecentlyUsedEditorInGroupAction extends AbstractQuickAccessEditorAction {
+  static {
+    __name(this, "QuickAccessPreviousRecentlyUsedEditorInGroupAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.quickOpenPreviousRecentlyUsedEditorInGroup",
+      title: localize2("quickOpenPreviousRecentlyUsedEditorInGroup", "Quick Open Previous Recently Used Editor in Group"),
+      f1: true,
+      keybinding: {
+        weight: KeybindingWeight.WorkbenchContrib,
+        primary: KeyMod.CtrlCmd | KeyCode.Tab,
+        mac: {
+          primary: KeyMod.WinCtrl | KeyCode.Tab
+        }
+      },
+      precondition: ActiveEditorGroupEmptyContext.toNegated(),
+      category: Categories.View
+    }, ActiveGroupEditorsByMostRecentlyUsedQuickAccess.PREFIX, void 0);
+  }
+}
+class QuickAccessLeastRecentlyUsedEditorInGroupAction extends AbstractQuickAccessEditorAction {
+  static {
+    __name(this, "QuickAccessLeastRecentlyUsedEditorInGroupAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.quickOpenLeastRecentlyUsedEditorInGroup",
+      title: localize2("quickOpenLeastRecentlyUsedEditorInGroup", "Quick Open Least Recently Used Editor in Group"),
+      f1: true,
+      keybinding: {
+        weight: KeybindingWeight.WorkbenchContrib,
+        primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.Tab,
+        mac: {
+          primary: KeyMod.WinCtrl | KeyMod.Shift | KeyCode.Tab
+        }
+      },
+      precondition: ActiveEditorGroupEmptyContext.toNegated(),
+      category: Categories.View
+    }, ActiveGroupEditorsByMostRecentlyUsedQuickAccess.PREFIX, ItemActivation.LAST);
+  }
+}
+class QuickAccessPreviousEditorFromHistoryAction extends Action2 {
+  static {
+    __name(this, "QuickAccessPreviousEditorFromHistoryAction");
+  }
+  static ID = "workbench.action.openPreviousEditorFromHistory";
+  constructor() {
+    super({
+      id: QuickAccessPreviousEditorFromHistoryAction.ID,
+      title: localize2("navigateEditorHistoryByInput", "Quick Open Previous Editor from History"),
+      f1: true
+    });
+  }
+  async run(accessor) {
+    const keybindingService = accessor.get(IKeybindingService);
+    const quickInputService = accessor.get(IQuickInputService);
+    const editorGroupService = accessor.get(IEditorGroupsService);
+    const keybindings = keybindingService.lookupKeybindings(QuickAccessPreviousEditorFromHistoryAction.ID);
+    let itemActivation = void 0;
+    if (editorGroupService.activeGroup.count === 0) {
+      itemActivation = ItemActivation.FIRST;
+    }
+    quickInputService.quickAccess.show("", { quickNavigateConfiguration: { keybindings }, itemActivation });
+  }
+}
+class OpenNextRecentlyUsedEditorAction extends Action2 {
+  static {
+    __name(this, "OpenNextRecentlyUsedEditorAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.openNextRecentlyUsedEditor",
+      title: localize2("openNextRecentlyUsedEditor", "Open Next Recently Used Editor"),
+      f1: true,
+      category: Categories.View
+    });
+  }
+  async run(accessor) {
+    const historyService = accessor.get(IHistoryService);
+    historyService.openNextRecentlyUsedEditor();
+  }
+}
+class OpenPreviousRecentlyUsedEditorAction extends Action2 {
+  static {
+    __name(this, "OpenPreviousRecentlyUsedEditorAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.openPreviousRecentlyUsedEditor",
+      title: localize2("openPreviousRecentlyUsedEditor", "Open Previous Recently Used Editor"),
+      f1: true,
+      category: Categories.View
+    });
+  }
+  async run(accessor) {
+    const historyService = accessor.get(IHistoryService);
+    historyService.openPreviouslyUsedEditor();
+  }
+}
+class OpenNextRecentlyUsedEditorInGroupAction extends Action2 {
+  static {
+    __name(this, "OpenNextRecentlyUsedEditorInGroupAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.openNextRecentlyUsedEditorInGroup",
+      title: localize2("openNextRecentlyUsedEditorInGroup", "Open Next Recently Used Editor In Group"),
+      f1: true,
+      category: Categories.View
+    });
+  }
+  async run(accessor) {
+    const historyService = accessor.get(IHistoryService);
+    const editorGroupsService = accessor.get(IEditorGroupsService);
+    historyService.openNextRecentlyUsedEditor(editorGroupsService.activeGroup.id);
+  }
+}
+class OpenPreviousRecentlyUsedEditorInGroupAction extends Action2 {
+  static {
+    __name(this, "OpenPreviousRecentlyUsedEditorInGroupAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.openPreviousRecentlyUsedEditorInGroup",
+      title: localize2("openPreviousRecentlyUsedEditorInGroup", "Open Previous Recently Used Editor In Group"),
+      f1: true,
+      category: Categories.View
+    });
+  }
+  async run(accessor) {
+    const historyService = accessor.get(IHistoryService);
+    const editorGroupsService = accessor.get(IEditorGroupsService);
+    historyService.openPreviouslyUsedEditor(editorGroupsService.activeGroup.id);
+  }
+}
+class ClearEditorHistoryAction extends Action2 {
+  static {
+    __name(this, "ClearEditorHistoryAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.clearEditorHistory",
+      title: localize2("clearEditorHistory", "Clear Editor History"),
+      f1: true
+    });
+  }
+  async run(accessor) {
+    const dialogService = accessor.get(IDialogService);
+    const historyService = accessor.get(IHistoryService);
+    const { confirmed } = await dialogService.confirm({
+      type: "warning",
+      message: localize("confirmClearEditorHistoryMessage", "Do you want to clear the history of recently opened editors?"),
+      detail: localize("confirmClearDetail", "This action is irreversible!"),
+      primaryButton: localize({ key: "clearButtonLabel", comment: ["&& denotes a mnemonic"] }, "&&Clear")
+    });
+    if (!confirmed) {
+      return;
+    }
+    historyService.clear();
+  }
+}
+class MoveEditorLeftInGroupAction extends ExecuteCommandAction {
+  static {
+    __name(this, "MoveEditorLeftInGroupAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.moveEditorLeftInGroup",
+      title: localize2("moveEditorLeft", "Move Editor Left"),
+      keybinding: {
+        weight: KeybindingWeight.WorkbenchContrib,
+        primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.PageUp,
+        mac: {
+          primary: KeyChord(KeyMod.CtrlCmd | KeyCode.KeyK, KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.LeftArrow)
+        }
+      },
+      f1: true,
+      category: Categories.View
+    }, MOVE_ACTIVE_EDITOR_COMMAND_ID, { to: "left" });
+  }
+}
+class MoveEditorRightInGroupAction extends ExecuteCommandAction {
+  static {
+    __name(this, "MoveEditorRightInGroupAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.moveEditorRightInGroup",
+      title: localize2("moveEditorRight", "Move Editor Right"),
+      keybinding: {
+        weight: KeybindingWeight.WorkbenchContrib,
+        primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.PageDown,
+        mac: {
+          primary: KeyChord(KeyMod.CtrlCmd | KeyCode.KeyK, KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.RightArrow)
+        }
+      },
+      f1: true,
+      category: Categories.View
+    }, MOVE_ACTIVE_EDITOR_COMMAND_ID, { to: "right" });
+  }
+}
+class MoveEditorToPreviousGroupAction extends ExecuteCommandAction {
+  static {
+    __name(this, "MoveEditorToPreviousGroupAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.moveEditorToPreviousGroup",
+      title: localize2("moveEditorToPreviousGroup", "Move Editor into Previous Group"),
+      keybinding: {
+        weight: KeybindingWeight.WorkbenchContrib,
+        primary: KeyMod.CtrlCmd | KeyMod.Alt | KeyCode.LeftArrow,
+        mac: {
+          primary: KeyMod.CtrlCmd | KeyMod.WinCtrl | KeyCode.LeftArrow
+        }
+      },
+      f1: true,
+      category: Categories.View
+    }, MOVE_ACTIVE_EDITOR_COMMAND_ID, { to: "previous", by: "group" });
+  }
+}
+class MoveEditorToNextGroupAction extends ExecuteCommandAction {
+  static {
+    __name(this, "MoveEditorToNextGroupAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.moveEditorToNextGroup",
+      title: localize2("moveEditorToNextGroup", "Move Editor into Next Group"),
+      f1: true,
+      keybinding: {
+        weight: KeybindingWeight.WorkbenchContrib,
+        primary: KeyMod.CtrlCmd | KeyMod.Alt | KeyCode.RightArrow,
+        mac: {
+          primary: KeyMod.CtrlCmd | KeyMod.WinCtrl | KeyCode.RightArrow
+        }
+      },
+      category: Categories.View
+    }, MOVE_ACTIVE_EDITOR_COMMAND_ID, { to: "next", by: "group" });
+  }
+}
+class MoveEditorToAboveGroupAction extends ExecuteCommandAction {
+  static {
+    __name(this, "MoveEditorToAboveGroupAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.moveEditorToAboveGroup",
+      title: localize2("moveEditorToAboveGroup", "Move Editor into Group Above"),
+      f1: true,
+      category: Categories.View
+    }, MOVE_ACTIVE_EDITOR_COMMAND_ID, { to: "up", by: "group" });
+  }
+}
+class MoveEditorToBelowGroupAction extends ExecuteCommandAction {
+  static {
+    __name(this, "MoveEditorToBelowGroupAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.moveEditorToBelowGroup",
+      title: localize2("moveEditorToBelowGroup", "Move Editor into Group Below"),
+      f1: true,
+      category: Categories.View
+    }, MOVE_ACTIVE_EDITOR_COMMAND_ID, { to: "down", by: "group" });
+  }
+}
+class MoveEditorToLeftGroupAction extends ExecuteCommandAction {
+  static {
+    __name(this, "MoveEditorToLeftGroupAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.moveEditorToLeftGroup",
+      title: localize2("moveEditorToLeftGroup", "Move Editor into Left Group"),
+      f1: true,
+      category: Categories.View
+    }, MOVE_ACTIVE_EDITOR_COMMAND_ID, { to: "left", by: "group" });
+  }
+}
+class MoveEditorToRightGroupAction extends ExecuteCommandAction {
+  static {
+    __name(this, "MoveEditorToRightGroupAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.moveEditorToRightGroup",
+      title: localize2("moveEditorToRightGroup", "Move Editor into Right Group"),
+      f1: true,
+      category: Categories.View
+    }, MOVE_ACTIVE_EDITOR_COMMAND_ID, { to: "right", by: "group" });
+  }
+}
+class MoveEditorToFirstGroupAction extends ExecuteCommandAction {
+  static {
+    __name(this, "MoveEditorToFirstGroupAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.moveEditorToFirstGroup",
+      title: localize2("moveEditorToFirstGroup", "Move Editor into First Group"),
+      f1: true,
+      keybinding: {
+        weight: KeybindingWeight.WorkbenchContrib,
+        primary: KeyMod.Shift | KeyMod.Alt | KeyCode.Digit1,
+        mac: {
+          primary: KeyMod.CtrlCmd | KeyMod.WinCtrl | KeyCode.Digit1
+        }
+      },
+      category: Categories.View
+    }, MOVE_ACTIVE_EDITOR_COMMAND_ID, { to: "first", by: "group" });
+  }
+}
+class MoveEditorToLastGroupAction extends ExecuteCommandAction {
+  static {
+    __name(this, "MoveEditorToLastGroupAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.moveEditorToLastGroup",
+      title: localize2("moveEditorToLastGroup", "Move Editor into Last Group"),
+      f1: true,
+      keybinding: {
+        weight: KeybindingWeight.WorkbenchContrib,
+        primary: KeyMod.Shift | KeyMod.Alt | KeyCode.Digit9,
+        mac: {
+          primary: KeyMod.CtrlCmd | KeyMod.WinCtrl | KeyCode.Digit9
+        }
+      },
+      category: Categories.View
+    }, MOVE_ACTIVE_EDITOR_COMMAND_ID, { to: "last", by: "group" });
+  }
+}
+class SplitEditorToPreviousGroupAction extends ExecuteCommandAction {
+  static {
+    __name(this, "SplitEditorToPreviousGroupAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.splitEditorToPreviousGroup",
+      title: localize2("splitEditorToPreviousGroup", "Split Editor into Previous Group"),
+      f1: true,
+      category: Categories.View
+    }, COPY_ACTIVE_EDITOR_COMMAND_ID, { to: "previous", by: "group" });
+  }
+}
+class SplitEditorToNextGroupAction extends ExecuteCommandAction {
+  static {
+    __name(this, "SplitEditorToNextGroupAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.splitEditorToNextGroup",
+      title: localize2("splitEditorToNextGroup", "Split Editor into Next Group"),
+      f1: true,
+      category: Categories.View
+    }, COPY_ACTIVE_EDITOR_COMMAND_ID, { to: "next", by: "group" });
+  }
+}
+class SplitEditorToAboveGroupAction extends ExecuteCommandAction {
+  static {
+    __name(this, "SplitEditorToAboveGroupAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.splitEditorToAboveGroup",
+      title: localize2("splitEditorToAboveGroup", "Split Editor into Group Above"),
+      f1: true,
+      category: Categories.View
+    }, COPY_ACTIVE_EDITOR_COMMAND_ID, { to: "up", by: "group" });
+  }
+}
+class SplitEditorToBelowGroupAction extends ExecuteCommandAction {
+  static {
+    __name(this, "SplitEditorToBelowGroupAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.splitEditorToBelowGroup",
+      title: localize2("splitEditorToBelowGroup", "Split Editor into Group Below"),
+      f1: true,
+      category: Categories.View
+    }, COPY_ACTIVE_EDITOR_COMMAND_ID, { to: "down", by: "group" });
+  }
+}
+class SplitEditorToLeftGroupAction extends ExecuteCommandAction {
+  static {
+    __name(this, "SplitEditorToLeftGroupAction");
+  }
+  static ID = "workbench.action.splitEditorToLeftGroup";
+  static LABEL = localize("splitEditorToLeftGroup", "Split Editor into Left Group");
+  constructor() {
+    super({
+      id: "workbench.action.splitEditorToLeftGroup",
+      title: localize2("splitEditorToLeftGroup", "Split Editor into Left Group"),
+      f1: true,
+      category: Categories.View
+    }, COPY_ACTIVE_EDITOR_COMMAND_ID, { to: "left", by: "group" });
+  }
+}
+class SplitEditorToRightGroupAction extends ExecuteCommandAction {
+  static {
+    __name(this, "SplitEditorToRightGroupAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.splitEditorToRightGroup",
+      title: localize2("splitEditorToRightGroup", "Split Editor into Right Group"),
+      f1: true,
+      category: Categories.View
+    }, COPY_ACTIVE_EDITOR_COMMAND_ID, { to: "right", by: "group" });
+  }
+}
+class SplitEditorToFirstGroupAction extends ExecuteCommandAction {
+  static {
+    __name(this, "SplitEditorToFirstGroupAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.splitEditorToFirstGroup",
+      title: localize2("splitEditorToFirstGroup", "Split Editor into First Group"),
+      f1: true,
+      category: Categories.View
+    }, COPY_ACTIVE_EDITOR_COMMAND_ID, { to: "first", by: "group" });
+  }
+}
+class SplitEditorToLastGroupAction extends ExecuteCommandAction {
+  static {
+    __name(this, "SplitEditorToLastGroupAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.splitEditorToLastGroup",
+      title: localize2("splitEditorToLastGroup", "Split Editor into Last Group"),
+      f1: true,
+      category: Categories.View
+    }, COPY_ACTIVE_EDITOR_COMMAND_ID, { to: "last", by: "group" });
+  }
+}
+class EditorLayoutSingleAction extends ExecuteCommandAction {
+  static {
+    __name(this, "EditorLayoutSingleAction");
+  }
+  static ID = "workbench.action.editorLayoutSingle";
+  constructor() {
+    super({
+      id: EditorLayoutSingleAction.ID,
+      title: localize2("editorLayoutSingle", "Single Column Editor Layout"),
+      f1: true,
+      category: Categories.View
+    }, LAYOUT_EDITOR_GROUPS_COMMAND_ID, { groups: [{}], orientation: GroupOrientation.HORIZONTAL });
+  }
+}
+class EditorLayoutTwoColumnsAction extends ExecuteCommandAction {
+  static {
+    __name(this, "EditorLayoutTwoColumnsAction");
+  }
+  static ID = "workbench.action.editorLayoutTwoColumns";
+  constructor() {
+    super({
+      id: EditorLayoutTwoColumnsAction.ID,
+      title: localize2("editorLayoutTwoColumns", "Two Columns Editor Layout"),
+      f1: true,
+      category: Categories.View
+    }, LAYOUT_EDITOR_GROUPS_COMMAND_ID, { groups: [{}, {}], orientation: GroupOrientation.HORIZONTAL });
+  }
+}
+class EditorLayoutThreeColumnsAction extends ExecuteCommandAction {
+  static {
+    __name(this, "EditorLayoutThreeColumnsAction");
+  }
+  static ID = "workbench.action.editorLayoutThreeColumns";
+  constructor() {
+    super({
+      id: EditorLayoutThreeColumnsAction.ID,
+      title: localize2("editorLayoutThreeColumns", "Three Columns Editor Layout"),
+      f1: true,
+      category: Categories.View
+    }, LAYOUT_EDITOR_GROUPS_COMMAND_ID, { groups: [{}, {}, {}], orientation: GroupOrientation.HORIZONTAL });
+  }
+}
+class EditorLayoutTwoRowsAction extends ExecuteCommandAction {
+  static {
+    __name(this, "EditorLayoutTwoRowsAction");
+  }
+  static ID = "workbench.action.editorLayoutTwoRows";
+  constructor() {
+    super({
+      id: EditorLayoutTwoRowsAction.ID,
+      title: localize2("editorLayoutTwoRows", "Two Rows Editor Layout"),
+      f1: true,
+      category: Categories.View
+    }, LAYOUT_EDITOR_GROUPS_COMMAND_ID, { groups: [{}, {}], orientation: GroupOrientation.VERTICAL });
+  }
+}
+class EditorLayoutThreeRowsAction extends ExecuteCommandAction {
+  static {
+    __name(this, "EditorLayoutThreeRowsAction");
+  }
+  static ID = "workbench.action.editorLayoutThreeRows";
+  constructor() {
+    super({
+      id: EditorLayoutThreeRowsAction.ID,
+      title: localize2("editorLayoutThreeRows", "Three Rows Editor Layout"),
+      f1: true,
+      category: Categories.View
+    }, LAYOUT_EDITOR_GROUPS_COMMAND_ID, { groups: [{}, {}, {}], orientation: GroupOrientation.VERTICAL });
+  }
+}
+class EditorLayoutTwoByTwoGridAction extends ExecuteCommandAction {
+  static {
+    __name(this, "EditorLayoutTwoByTwoGridAction");
+  }
+  static ID = "workbench.action.editorLayoutTwoByTwoGrid";
+  constructor() {
+    super({
+      id: EditorLayoutTwoByTwoGridAction.ID,
+      title: localize2("editorLayoutTwoByTwoGrid", "Grid Editor Layout (2x2)"),
+      f1: true,
+      category: Categories.View
+    }, LAYOUT_EDITOR_GROUPS_COMMAND_ID, { groups: [{ groups: [{}, {}] }, { groups: [{}, {}] }], orientation: GroupOrientation.HORIZONTAL });
+  }
+}
+class EditorLayoutTwoColumnsBottomAction extends ExecuteCommandAction {
+  static {
+    __name(this, "EditorLayoutTwoColumnsBottomAction");
+  }
+  static ID = "workbench.action.editorLayoutTwoColumnsBottom";
+  constructor() {
+    super({
+      id: EditorLayoutTwoColumnsBottomAction.ID,
+      title: localize2("editorLayoutTwoColumnsBottom", "Two Columns Bottom Editor Layout"),
+      f1: true,
+      category: Categories.View
+    }, LAYOUT_EDITOR_GROUPS_COMMAND_ID, { groups: [{}, { groups: [{}, {}] }], orientation: GroupOrientation.VERTICAL });
+  }
+}
+class EditorLayoutTwoRowsRightAction extends ExecuteCommandAction {
+  static {
+    __name(this, "EditorLayoutTwoRowsRightAction");
+  }
+  static ID = "workbench.action.editorLayoutTwoRowsRight";
+  constructor() {
+    super({
+      id: EditorLayoutTwoRowsRightAction.ID,
+      title: localize2("editorLayoutTwoRowsRight", "Two Rows Right Editor Layout"),
+      f1: true,
+      category: Categories.View
+    }, LAYOUT_EDITOR_GROUPS_COMMAND_ID, { groups: [{}, { groups: [{}, {}] }], orientation: GroupOrientation.HORIZONTAL });
+  }
+}
+class AbstractCreateEditorGroupAction extends Action2 {
+  constructor(desc, direction) {
+    super(desc);
+    this.direction = direction;
+  }
+  static {
+    __name(this, "AbstractCreateEditorGroupAction");
+  }
+  async run(accessor) {
+    const editorGroupService = accessor.get(IEditorGroupsService);
+    const layoutService = accessor.get(IWorkbenchLayoutService);
+    const activeDocument = getActiveDocument();
+    const focusNewGroup = layoutService.hasFocus(Parts.EDITOR_PART) || activeDocument.activeElement === activeDocument.body;
+    const group = editorGroupService.addGroup(editorGroupService.activeGroup, this.direction);
+    editorGroupService.activateGroup(group);
+    if (focusNewGroup) {
+      group.focus();
+    }
+  }
+}
+class NewEditorGroupLeftAction extends AbstractCreateEditorGroupAction {
+  static {
+    __name(this, "NewEditorGroupLeftAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.newGroupLeft",
+      title: localize2("newGroupLeft", "New Editor Group to the Left"),
+      f1: true,
+      category: Categories.View
+    }, GroupDirection.LEFT);
+  }
+}
+class NewEditorGroupRightAction extends AbstractCreateEditorGroupAction {
+  static {
+    __name(this, "NewEditorGroupRightAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.newGroupRight",
+      title: localize2("newGroupRight", "New Editor Group to the Right"),
+      f1: true,
+      category: Categories.View
+    }, GroupDirection.RIGHT);
+  }
+}
+class NewEditorGroupAboveAction extends AbstractCreateEditorGroupAction {
+  static {
+    __name(this, "NewEditorGroupAboveAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.newGroupAbove",
+      title: localize2("newGroupAbove", "New Editor Group Above"),
+      f1: true,
+      category: Categories.View
+    }, GroupDirection.UP);
+  }
+}
+class NewEditorGroupBelowAction extends AbstractCreateEditorGroupAction {
+  static {
+    __name(this, "NewEditorGroupBelowAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.newGroupBelow",
+      title: localize2("newGroupBelow", "New Editor Group Below"),
+      f1: true,
+      category: Categories.View
+    }, GroupDirection.DOWN);
+  }
+}
+class ToggleEditorTypeAction extends Action2 {
+  static {
+    __name(this, "ToggleEditorTypeAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.toggleEditorType",
+      title: localize2("toggleEditorType", "Toggle Editor Type"),
+      f1: true,
+      category: Categories.View,
+      precondition: ActiveEditorAvailableEditorIdsContext
+    });
+  }
+  async run(accessor) {
+    const editorService = accessor.get(IEditorService);
+    const editorResolverService = accessor.get(IEditorResolverService);
+    const activeEditorPane = editorService.activeEditorPane;
+    if (!activeEditorPane) {
+      return;
+    }
+    const activeEditorResource = EditorResourceAccessor.getCanonicalUri(activeEditorPane.input);
+    if (!activeEditorResource) {
+      return;
+    }
+    const editorIds = editorResolverService.getEditors(activeEditorResource).map((editor) => editor.id).filter((id) => id !== activeEditorPane.input.editorId);
+    if (editorIds.length === 0) {
+      return;
+    }
+    await editorService.replaceEditors([
+      {
+        editor: activeEditorPane.input,
+        replacement: {
+          resource: activeEditorResource,
+          options: {
+            override: editorIds[0]
+          }
+        }
+      }
+    ], activeEditorPane.group);
+  }
+}
+class ReOpenInTextEditorAction extends Action2 {
+  static {
+    __name(this, "ReOpenInTextEditorAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.reopenTextEditor",
+      title: localize2("reopenTextEditor", "Reopen Editor with Text Editor"),
+      f1: true,
+      category: Categories.View,
+      precondition: ActiveEditorAvailableEditorIdsContext
+    });
+  }
+  async run(accessor) {
+    const editorService = accessor.get(IEditorService);
+    const activeEditorPane = editorService.activeEditorPane;
+    if (!activeEditorPane) {
+      return;
+    }
+    const activeEditorResource = EditorResourceAccessor.getCanonicalUri(activeEditorPane.input);
+    if (!activeEditorResource) {
+      return;
+    }
+    await editorService.replaceEditors([
+      {
+        editor: activeEditorPane.input,
+        replacement: {
+          resource: activeEditorResource,
+          options: {
+            override: DEFAULT_EDITOR_ASSOCIATION.id
+          }
+        }
+      }
+    ], activeEditorPane.group);
+  }
+}
+class BaseMoveCopyEditorToNewWindowAction extends Action2 {
+  constructor(id, title, keybinding, move) {
+    super({
+      id,
+      title,
+      category: Categories.View,
+      precondition: ActiveEditorContext,
+      keybinding,
+      f1: true
+    });
+    this.move = move;
+  }
+  static {
+    __name(this, "BaseMoveCopyEditorToNewWindowAction");
+  }
+  async run(accessor, ...args) {
+    const editorGroupsService = accessor.get(IEditorGroupsService);
+    const editorService = accessor.get(IEditorService);
+    const listService = accessor.get(IListService);
+    const resolvedContext = resolveCommandsContext(args, editorService, editorGroupsService, listService);
+    if (!resolvedContext.groupedEditors.length) {
+      return;
+    }
+    const auxiliaryEditorPart = await editorGroupsService.createAuxiliaryEditorPart();
+    const { group, editors } = resolvedContext.groupedEditors[0];
+    const editorsWithOptions = prepareMoveCopyEditors(group, editors, resolvedContext.preserveFocus);
+    if (this.move) {
+      group.moveEditors(editorsWithOptions, auxiliaryEditorPart.activeGroup);
+    } else {
+      group.copyEditors(editorsWithOptions, auxiliaryEditorPart.activeGroup);
+    }
+    auxiliaryEditorPart.activeGroup.focus();
+  }
+}
+class MoveEditorToNewWindowAction extends BaseMoveCopyEditorToNewWindowAction {
+  static {
+    __name(this, "MoveEditorToNewWindowAction");
+  }
+  constructor() {
+    super(
+      MOVE_EDITOR_INTO_NEW_WINDOW_COMMAND_ID,
+      {
+        ...localize2("moveEditorToNewWindow", "Move Editor into New Window"),
+        mnemonicTitle: localize({ key: "miMoveEditorToNewWindow", comment: ["&& denotes a mnemonic"] }, "&&Move Editor into New Window")
+      },
+      void 0,
+      true
+    );
+  }
+}
+class CopyEditorToNewindowAction extends BaseMoveCopyEditorToNewWindowAction {
+  static {
+    __name(this, "CopyEditorToNewindowAction");
+  }
+  constructor() {
+    super(
+      COPY_EDITOR_INTO_NEW_WINDOW_COMMAND_ID,
+      {
+        ...localize2("copyEditorToNewWindow", "Copy Editor into New Window"),
+        mnemonicTitle: localize({ key: "miCopyEditorToNewWindow", comment: ["&& denotes a mnemonic"] }, "&&Copy Editor into New Window")
+      },
+      { primary: KeyChord(KeyMod.CtrlCmd | KeyCode.KeyK, KeyCode.KeyO), weight: KeybindingWeight.WorkbenchContrib },
+      false
+    );
+  }
+}
+class BaseMoveCopyEditorGroupToNewWindowAction extends Action2 {
+  constructor(id, title, move) {
+    super({
+      id,
+      title,
+      category: Categories.View,
+      f1: true
+    });
+    this.move = move;
+  }
+  static {
+    __name(this, "BaseMoveCopyEditorGroupToNewWindowAction");
+  }
+  async run(accessor) {
+    const editorGroupService = accessor.get(IEditorGroupsService);
+    const activeGroup = editorGroupService.activeGroup;
+    const auxiliaryEditorPart = await editorGroupService.createAuxiliaryEditorPart();
+    editorGroupService.mergeGroup(activeGroup, auxiliaryEditorPart.activeGroup, {
+      mode: this.move ? MergeGroupMode.MOVE_EDITORS : MergeGroupMode.COPY_EDITORS
+    });
+    auxiliaryEditorPart.activeGroup.focus();
+  }
+}
+class MoveEditorGroupToNewWindowAction extends BaseMoveCopyEditorGroupToNewWindowAction {
+  static {
+    __name(this, "MoveEditorGroupToNewWindowAction");
+  }
+  constructor() {
+    super(
+      MOVE_EDITOR_GROUP_INTO_NEW_WINDOW_COMMAND_ID,
+      {
+        ...localize2("moveEditorGroupToNewWindow", "Move Editor Group into New Window"),
+        mnemonicTitle: localize({ key: "miMoveEditorGroupToNewWindow", comment: ["&& denotes a mnemonic"] }, "&&Move Editor Group into New Window")
+      },
+      true
+    );
+  }
+}
+class CopyEditorGroupToNewWindowAction extends BaseMoveCopyEditorGroupToNewWindowAction {
+  static {
+    __name(this, "CopyEditorGroupToNewWindowAction");
+  }
+  constructor() {
+    super(
+      COPY_EDITOR_GROUP_INTO_NEW_WINDOW_COMMAND_ID,
+      {
+        ...localize2("copyEditorGroupToNewWindow", "Copy Editor Group into New Window"),
+        mnemonicTitle: localize({ key: "miCopyEditorGroupToNewWindow", comment: ["&& denotes a mnemonic"] }, "&&Copy Editor Group into New Window")
+      },
+      false
+    );
+  }
+}
+class RestoreEditorsToMainWindowAction extends Action2 {
+  static {
+    __name(this, "RestoreEditorsToMainWindowAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.restoreEditorsToMainWindow",
+      title: {
+        ...localize2("restoreEditorsToMainWindow", "Restore Editors into Main Window"),
+        mnemonicTitle: localize({ key: "miRestoreEditorsToMainWindow", comment: ["&& denotes a mnemonic"] }, "&&Restore Editors into Main Window")
+      },
+      f1: true,
+      precondition: IsAuxiliaryWindowFocusedContext,
+      category: Categories.View
+    });
+  }
+  async run(accessor) {
+    const editorGroupService = accessor.get(IEditorGroupsService);
+    editorGroupService.mergeAllGroups(editorGroupService.mainPart.activeGroup);
+  }
+}
+class NewEmptyEditorWindowAction extends Action2 {
+  static {
+    __name(this, "NewEmptyEditorWindowAction");
+  }
+  constructor() {
+    super({
+      id: NEW_EMPTY_EDITOR_WINDOW_COMMAND_ID,
+      title: {
+        ...localize2("newEmptyEditorWindow", "New Empty Editor Window"),
+        mnemonicTitle: localize({ key: "miNewEmptyEditorWindow", comment: ["&& denotes a mnemonic"] }, "&&New Empty Editor Window")
+      },
+      f1: true,
+      category: Categories.View
+    });
+  }
+  async run(accessor) {
+    const editorGroupService = accessor.get(IEditorGroupsService);
+    const auxiliaryEditorPart = await editorGroupService.createAuxiliaryEditorPart();
+    auxiliaryEditorPart.activeGroup.focus();
+  }
+}
+export {
+  ClearEditorHistoryAction,
+  ClearRecentFilesAction,
+  CloseAllEditorGroupsAction,
+  CloseAllEditorsAction,
+  CloseEditorAction,
+  CloseEditorInAllGroupsAction,
+  CloseEditorTabAction,
+  CloseEditorsInOtherGroupsAction,
+  CloseLeftEditorsInGroupAction,
+  CopyEditorGroupToNewWindowAction,
+  CopyEditorToNewindowAction,
+  DuplicateGroupDownAction,
+  DuplicateGroupLeftAction,
+  DuplicateGroupRightAction,
+  DuplicateGroupUpAction,
+  EditorLayoutSingleAction,
+  EditorLayoutThreeColumnsAction,
+  EditorLayoutThreeRowsAction,
+  EditorLayoutTwoByTwoGridAction,
+  EditorLayoutTwoColumnsAction,
+  EditorLayoutTwoColumnsBottomAction,
+  EditorLayoutTwoRowsAction,
+  EditorLayoutTwoRowsRightAction,
+  FocusAboveGroup,
+  FocusActiveGroupAction,
+  FocusBelowGroup,
+  FocusFirstGroupAction,
+  FocusLastGroupAction,
+  FocusLeftGroup,
+  FocusNextGroup,
+  FocusPreviousGroup,
+  FocusRightGroup,
+  JoinAllGroupsAction,
+  JoinTwoGroupsAction,
+  MaximizeGroupHideSidebarAction,
+  MinimizeOtherGroupsAction,
+  MinimizeOtherGroupsHideSidebarAction,
+  MoveEditorGroupToNewWindowAction,
+  MoveEditorLeftInGroupAction,
+  MoveEditorRightInGroupAction,
+  MoveEditorToAboveGroupAction,
+  MoveEditorToBelowGroupAction,
+  MoveEditorToFirstGroupAction,
+  MoveEditorToLastGroupAction,
+  MoveEditorToLeftGroupAction,
+  MoveEditorToNewWindowAction,
+  MoveEditorToNextGroupAction,
+  MoveEditorToPreviousGroupAction,
+  MoveEditorToRightGroupAction,
+  MoveGroupDownAction,
+  MoveGroupLeftAction,
+  MoveGroupRightAction,
+  MoveGroupUpAction,
+  NavigateBackwardsAction,
+  NavigateBackwardsInEditsAction,
+  NavigateBackwardsInNavigationsAction,
+  NavigateBetweenGroupsAction,
+  NavigateForwardAction,
+  NavigateForwardInEditsAction,
+  NavigateForwardInNavigationsAction,
+  NavigatePreviousAction,
+  NavigatePreviousInEditsAction,
+  NavigatePreviousInNavigationsAction,
+  NavigateToLastEditLocationAction,
+  NavigateToLastNavigationLocationAction,
+  NewEditorGroupAboveAction,
+  NewEditorGroupBelowAction,
+  NewEditorGroupLeftAction,
+  NewEditorGroupRightAction,
+  NewEmptyEditorWindowAction,
+  OpenFirstEditorInGroup,
+  OpenLastEditorInGroup,
+  OpenNextEditor,
+  OpenNextEditorInGroup,
+  OpenNextRecentlyUsedEditorAction,
+  OpenNextRecentlyUsedEditorInGroupAction,
+  OpenPreviousEditor,
+  OpenPreviousEditorInGroup,
+  OpenPreviousRecentlyUsedEditorAction,
+  OpenPreviousRecentlyUsedEditorInGroupAction,
+  QuickAccessLeastRecentlyUsedEditorAction,
+  QuickAccessLeastRecentlyUsedEditorInGroupAction,
+  QuickAccessPreviousEditorFromHistoryAction,
+  QuickAccessPreviousRecentlyUsedEditorAction,
+  QuickAccessPreviousRecentlyUsedEditorInGroupAction,
+  ReOpenInTextEditorAction,
+  ReopenClosedEditorAction,
+  ResetGroupSizesAction,
+  RestoreEditorsToMainWindowAction,
+  RevertAndCloseEditorAction,
+  ShowAllEditorsByAppearanceAction,
+  ShowAllEditorsByMostRecentlyUsedAction,
+  ShowEditorsInActiveGroupByMostRecentlyUsedAction,
+  SplitEditorAction,
+  SplitEditorDownAction,
+  SplitEditorLeftAction,
+  SplitEditorOrthogonalAction,
+  SplitEditorRightAction,
+  SplitEditorToAboveGroupAction,
+  SplitEditorToBelowGroupAction,
+  SplitEditorToFirstGroupAction,
+  SplitEditorToLastGroupAction,
+  SplitEditorToLeftGroupAction,
+  SplitEditorToNextGroupAction,
+  SplitEditorToPreviousGroupAction,
+  SplitEditorToRightGroupAction,
+  SplitEditorUpAction,
+  ToggleEditorTypeAction,
+  ToggleGroupSizesAction,
+  ToggleMaximizeEditorGroupAction,
+  UnpinEditorAction
+};
+//# sourceMappingURL=editorActions.js.map

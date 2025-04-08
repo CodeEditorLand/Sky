@@ -1,1 +1,48 @@
-import{EditorOption as t}from"../../../common/config/editorOptions.js";class d{themeType;renderWhitespace;renderControlCharacters;spaceWidth;middotWidth;wsmiddotWidth;useMonospaceOptimizations;canUseHalfwidthRightwardsArrow;lineHeight;stopRenderingLineAfter;fontLigatures;useGpu;constructor(e,i){this.themeType=i;const s=e.options,r=s.get(t.fontInfo);"off"===s.get(t.experimentalWhitespaceRendering)?this.renderWhitespace=s.get(t.renderWhitespace):this.renderWhitespace="none",this.renderControlCharacters=s.get(t.renderControlCharacters),this.spaceWidth=r.spaceWidth,this.middotWidth=r.middotWidth,this.wsmiddotWidth=r.wsmiddotWidth,this.useMonospaceOptimizations=r.isMonospace&&!s.get(t.disableMonospaceOptimizations),this.canUseHalfwidthRightwardsArrow=r.canUseHalfwidthRightwardsArrow,this.lineHeight=s.get(t.lineHeight),this.stopRenderingLineAfter=s.get(t.stopRenderingLineAfter),this.fontLigatures=s.get(t.fontLigatures),this.useGpu="on"===s.get(t.experimentalGpuAcceleration)}equals(t){return this.themeType===t.themeType&&this.renderWhitespace===t.renderWhitespace&&this.renderControlCharacters===t.renderControlCharacters&&this.spaceWidth===t.spaceWidth&&this.middotWidth===t.middotWidth&&this.wsmiddotWidth===t.wsmiddotWidth&&this.useMonospaceOptimizations===t.useMonospaceOptimizations&&this.canUseHalfwidthRightwardsArrow===t.canUseHalfwidthRightwardsArrow&&this.lineHeight===t.lineHeight&&this.stopRenderingLineAfter===t.stopRenderingLineAfter&&this.fontLigatures===t.fontLigatures&&this.useGpu===t.useGpu}}export{d as ViewLineOptions};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { EditorOption } from "../../../common/config/editorOptions.js";
+class ViewLineOptions {
+  static {
+    __name(this, "ViewLineOptions");
+  }
+  themeType;
+  renderWhitespace;
+  renderControlCharacters;
+  spaceWidth;
+  middotWidth;
+  wsmiddotWidth;
+  useMonospaceOptimizations;
+  canUseHalfwidthRightwardsArrow;
+  lineHeight;
+  stopRenderingLineAfter;
+  fontLigatures;
+  useGpu;
+  constructor(config, themeType) {
+    this.themeType = themeType;
+    const options = config.options;
+    const fontInfo = options.get(EditorOption.fontInfo);
+    const experimentalWhitespaceRendering = options.get(EditorOption.experimentalWhitespaceRendering);
+    if (experimentalWhitespaceRendering === "off") {
+      this.renderWhitespace = options.get(EditorOption.renderWhitespace);
+    } else {
+      this.renderWhitespace = "none";
+    }
+    this.renderControlCharacters = options.get(EditorOption.renderControlCharacters);
+    this.spaceWidth = fontInfo.spaceWidth;
+    this.middotWidth = fontInfo.middotWidth;
+    this.wsmiddotWidth = fontInfo.wsmiddotWidth;
+    this.useMonospaceOptimizations = fontInfo.isMonospace && !options.get(EditorOption.disableMonospaceOptimizations);
+    this.canUseHalfwidthRightwardsArrow = fontInfo.canUseHalfwidthRightwardsArrow;
+    this.lineHeight = options.get(EditorOption.lineHeight);
+    this.stopRenderingLineAfter = options.get(EditorOption.stopRenderingLineAfter);
+    this.fontLigatures = options.get(EditorOption.fontLigatures);
+    this.useGpu = options.get(EditorOption.experimentalGpuAcceleration) === "on";
+  }
+  equals(other) {
+    return this.themeType === other.themeType && this.renderWhitespace === other.renderWhitespace && this.renderControlCharacters === other.renderControlCharacters && this.spaceWidth === other.spaceWidth && this.middotWidth === other.middotWidth && this.wsmiddotWidth === other.wsmiddotWidth && this.useMonospaceOptimizations === other.useMonospaceOptimizations && this.canUseHalfwidthRightwardsArrow === other.canUseHalfwidthRightwardsArrow && this.lineHeight === other.lineHeight && this.stopRenderingLineAfter === other.stopRenderingLineAfter && this.fontLigatures === other.fontLigatures && this.useGpu === other.useGpu;
+  }
+}
+export {
+  ViewLineOptions
+};
+//# sourceMappingURL=viewLineOptions.js.map

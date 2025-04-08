@@ -1,1 +1,82 @@
-var d=Object.defineProperty,p=Object.getOwnPropertyDescriptor,s=(e,t,o,r)=>{for(var n,s=r>1?void 0:r?p(t,o):t,i=e.length-1;i>=0;i--)(n=e[i])&&(s=(r?n(t,o,s):n(s))||s);return r&&s&&d(t,o,s),s},c=(e,t)=>(o,r)=>t(o,r,e);import{VSBuffer as x}from"../../../../../../base/common/buffer.js";import"../../../../../../editor/common/languages.js";import"../../../../notebook/common/model/notebookTextModel.js";import{CellEditType as f}from"../../../../notebook/common/notebookCommon.js";import{INotebookService as u}from"../../../../notebook/common/notebookService.js";let l=class{constructor(e,t){this.notebook=e,this._notebookService=t}textEdits=[];acceptTextEdits(e){e.length&&this.textEdits.push(...e)}async generateEdits(){if(this.notebook.cells.length)return console.error("Notebook edits not generated as notebook already has cells"),[];const e=this.generateContent();if(!e)return[];const t=[];try{const{serializer:o}=await this._notebookService.withNotebookDataProvider(this.notebook.viewType),r=await o.dataToNotebook(x.fromString(e));for(let e=0;e<r.cells.length;e++)t.push({editType:f.Replace,index:e,count:0,cells:[r.cells[e]]})}catch(t){return console.error(`Failed to generate notebook edits from text edits ${e}`,t),[]}return t}generateContent(){try{return m(this.textEdits)}catch(e){return console.error("Failed to generate content from text edits",e),""}}};function m(e){let t="";for(const o of e)t=t.slice(0,o.range.startColumn)+o.text+t.slice(o.range.endColumn);return t}l=s([c(1,u)],l);export{l as ChatEditingNewNotebookContentEdits};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { VSBuffer } from "../../../../../../base/common/buffer.js";
+import { TextEdit } from "../../../../../../editor/common/languages.js";
+import { NotebookTextModel } from "../../../../notebook/common/model/notebookTextModel.js";
+import { CellEditType, ICellEditOperation } from "../../../../notebook/common/notebookCommon.js";
+import { INotebookService } from "../../../../notebook/common/notebookService.js";
+let ChatEditingNewNotebookContentEdits = class {
+  constructor(notebook, _notebookService) {
+    this.notebook = notebook;
+    this._notebookService = _notebookService;
+  }
+  static {
+    __name(this, "ChatEditingNewNotebookContentEdits");
+  }
+  textEdits = [];
+  acceptTextEdits(edits) {
+    if (edits.length) {
+      this.textEdits.push(...edits);
+    }
+  }
+  async generateEdits() {
+    if (this.notebook.cells.length) {
+      console.error(`Notebook edits not generated as notebook already has cells`);
+      return [];
+    }
+    const content = this.generateContent();
+    if (!content) {
+      return [];
+    }
+    const notebookEdits = [];
+    try {
+      const { serializer } = await this._notebookService.withNotebookDataProvider(this.notebook.viewType);
+      const data = await serializer.dataToNotebook(VSBuffer.fromString(content));
+      for (let i = 0; i < data.cells.length; i++) {
+        notebookEdits.push({
+          editType: CellEditType.Replace,
+          index: i,
+          count: 0,
+          cells: [data.cells[i]]
+        });
+      }
+    } catch (ex) {
+      console.error(`Failed to generate notebook edits from text edits ${content}`, ex);
+      return [];
+    }
+    return notebookEdits;
+  }
+  generateContent() {
+    try {
+      return applyTextEdits(this.textEdits);
+    } catch (ex) {
+      console.error("Failed to generate content from text edits", ex);
+      return "";
+    }
+  }
+};
+ChatEditingNewNotebookContentEdits = __decorateClass([
+  __decorateParam(1, INotebookService)
+], ChatEditingNewNotebookContentEdits);
+function applyTextEdits(edits) {
+  let output = "";
+  for (const edit of edits) {
+    output = output.slice(0, edit.range.startColumn) + edit.text + output.slice(edit.range.endColumn);
+  }
+  return output;
+}
+__name(applyTextEdits, "applyTextEdits");
+export {
+  ChatEditingNewNotebookContentEdits
+};
+//# sourceMappingURL=chatEditingNewNotebookContentEdits.js.map

@@ -1,1 +1,545 @@
-var p=Object.defineProperty;var b=Object.getOwnPropertyDescriptor;var u=(c,o,i,s)=>{for(var t=s>1?void 0:s?b(o,i):o,l=c.length-1,r;l>=0;l--)(r=c[l])&&(t=(s?r(o,i,t):r(t))||t);return s&&t&&p(o,i,t),t},d=(c,o)=>(i,s)=>o(i,s,c);import{CachedFunction as y}from"../../../base/common/cache.js";import{getStructuralKey as S}from"../../../base/common/equals.js";import"../../../base/common/event.js";import{Disposable as f,toDisposable as h}from"../../../base/common/lifecycle.js";import{FileAccess as v}from"../../../base/common/network.js";import{derived as C,observableFromEvent as K,ValueWithChangeEventFromObservable as k}from"../../../base/common/observable.js";import{localize as n}from"../../../nls.js";import{IAccessibilityService as A}from"../../accessibility/common/accessibility.js";import{IConfigurationService as M}from"../../configuration/common/configuration.js";import{createDecorator as R}from"../../instantiation/common/instantiation.js";import{observableConfigValue as F}from"../../observable/common/platformObservableUtils.js";import{ITelemetryService as E}from"../../telemetry/common/telemetry.js";const $=R("accessibilitySignalService"),j=Symbol("AcknowledgeDocCommentsToken");let g=class extends f{constructor(i,s,t){super();this.configurationService=i;this.accessibilityService=s;this.telemetryService=t}_serviceBrand;sounds=new Map;screenReaderAttached=K(this,this.accessibilityService.onDidChangeScreenReaderOptimized,()=>this.accessibilityService.isScreenReaderOptimized());sentTelemetry=new Set;getEnabledState(i,s,t){return new k(this._signalEnabledState.get({signal:i,userGesture:s,modality:t}))}async playSignal(i,s={}){const t=s.modality==="announcement"||s.modality===void 0,l=i.announcementMessage;t&&this.isAnnouncementEnabled(i,s.userGesture)&&l&&this.accessibilityService.status(l),(s.modality==="sound"||s.modality===void 0)&&this.isSoundEnabled(i,s.userGesture)&&(this.sendSignalTelemetry(i,s.source),await this.playSound(i.sound.getSound(),s.allowManyInParallel))}async playSignals(i){for(const r of i)this.sendSignalTelemetry("signal"in r?r.signal:r,"source"in r?r.source:void 0);const s=i.map(r=>"signal"in r?r.signal:r),t=s.filter(r=>this.isAnnouncementEnabled(r)).map(r=>r.announcementMessage);t.length&&this.accessibilityService.status(t.join(", "));const l=new Set(s.filter(r=>this.isSoundEnabled(r)).map(r=>r.sound.getSound()));await Promise.all(Array.from(l).map(r=>this.playSound(r,!0)))}sendSignalTelemetry(i,s){const t=this.accessibilityService.isScreenReaderOptimized(),l=i.name+(s?`::${s}`:"")+(t?"{screenReaderOptimized}":"");this.sentTelemetry.has(l)||this.getVolumeInPercent()===0||(this.sentTelemetry.add(l),this.telemetryService.publicLog2("signal.played",{signal:i.name,source:s??"",isScreenReaderOptimized:t}))}getVolumeInPercent(){const i=this.configurationService.getValue("accessibility.signalOptions.volume");return typeof i!="number"?50:Math.max(Math.min(i,100),0)}playingSounds=new Set;async playSound(i,s=!1){if(!s&&this.playingSounds.has(i))return;this.playingSounds.add(i);const t=v.asBrowserUri(`vs/platform/accessibilitySignal/browser/media/${i.fileName}`).toString(!0);try{const l=this.sounds.get(t);if(l)l.volume=this.getVolumeInPercent()/100,l.currentTime=0,await l.play();else{const r=await I(t,this.getVolumeInPercent()/100);this.sounds.set(t,r)}}catch(l){l.message.includes("play() can only be initiated by a user gesture")||console.error("Error while playing sound",l)}finally{this.playingSounds.delete(i)}}playSignalLoop(i,s){let t=!0;const l=()=>{t&&this.playSignal(i,{allowManyInParallel:!0}).finally(()=>{setTimeout(()=>{t&&l()},s)})};return l(),h(()=>t=!1)}_signalConfigValue=new y(i=>F(i.settingsKey,{sound:"off",announcement:"off"},this.configurationService));_signalEnabledState=new y({getCacheKey:S},i=>C(s=>{const t=this._signalConfigValue.get(i.signal).read(s);return!!((i.modality==="sound"||i.modality===void 0)&&m(t.sound,()=>this.screenReaderAttached.read(s),i.userGesture)||(i.modality==="announcement"||i.modality===void 0)&&m(t.announcement,()=>this.screenReaderAttached.read(s),i.userGesture))}).recomputeInitiallyAndOnChange(this._store));isAnnouncementEnabled(i,s){return i.announcementMessage?this._signalEnabledState.get({signal:i,userGesture:!!s,modality:"announcement"}).get():!1}isSoundEnabled(i,s){return this._signalEnabledState.get({signal:i,userGesture:!!s,modality:"sound"}).get()}onSoundEnabledChanged(i){return this.getEnabledState(i,!1).onDidChange}getDelayMs(i,s,t){if(!this.configurationService.getValue("accessibility.signalOptions.debouncePositionChanges"))return 0;let l;return i.name===a.errorAtPosition.name&&t==="positional"?l=this.configurationService.getValue("accessibility.signalOptions.experimental.delays.errorAtPosition"):i.name===a.warningAtPosition.name&&t==="positional"?l=this.configurationService.getValue("accessibility.signalOptions.experimental.delays.warningAtPosition"):l=this.configurationService.getValue("accessibility.signalOptions.experimental.delays.general"),s==="sound"?l.sound:l.announcement}};g=u([d(0,M),d(1,A),d(2,E)],g);function m(c,o,i){return c==="on"||c==="always"||c==="auto"&&o()||c==="userGesture"&&i}function I(c,o){return new Promise((i,s)=>{const t=new Audio(c);t.volume=o,t.addEventListener("ended",()=>{i(t)}),t.addEventListener("error",l=>{s(l.error)}),t.play().catch(l=>{s(l)})})}class e{constructor(o){this.fileName=o}static register(o){return new e(o.fileName)}static error=e.register({fileName:"error.mp3"});static warning=e.register({fileName:"warning.mp3"});static success=e.register({fileName:"success.mp3"});static foldedArea=e.register({fileName:"foldedAreas.mp3"});static break=e.register({fileName:"break.mp3"});static quickFixes=e.register({fileName:"quickFixes.mp3"});static taskCompleted=e.register({fileName:"taskCompleted.mp3"});static taskFailed=e.register({fileName:"taskFailed.mp3"});static terminalBell=e.register({fileName:"terminalBell.mp3"});static diffLineInserted=e.register({fileName:"diffLineInserted.mp3"});static diffLineDeleted=e.register({fileName:"diffLineDeleted.mp3"});static diffLineModified=e.register({fileName:"diffLineModified.mp3"});static requestSent=e.register({fileName:"requestSent.mp3"});static responseReceived1=e.register({fileName:"responseReceived1.mp3"});static responseReceived2=e.register({fileName:"responseReceived2.mp3"});static responseReceived3=e.register({fileName:"responseReceived3.mp3"});static responseReceived4=e.register({fileName:"responseReceived4.mp3"});static clear=e.register({fileName:"clear.mp3"});static save=e.register({fileName:"save.mp3"});static format=e.register({fileName:"format.mp3"});static voiceRecordingStarted=e.register({fileName:"voiceRecordingStarted.mp3"});static voiceRecordingStopped=e.register({fileName:"voiceRecordingStopped.mp3"});static progress=e.register({fileName:"progress.mp3"});static chatEditModifiedFile=e.register({fileName:"chatEditModifiedFile.mp3"});static editsKept=e.register({fileName:"editsKept.mp3"});static editsUndone=e.register({fileName:"editsUndone.mp3"})}class w{constructor(o){this.randomOneOf=o}getSound(o=!1){if(o||this.randomOneOf.length===1)return this.randomOneOf[0];{const i=Math.floor(Math.random()*this.randomOneOf.length);return this.randomOneOf[i]}}}class a{constructor(o,i,s,t,l,r){this.sound=o;this.name=i;this.legacySoundSettingsKey=s;this.settingsKey=t;this.legacyAnnouncementSettingsKey=l;this.announcementMessage=r}static _signals=new Set;static register(o){const i=new w("randomOneOf"in o.sound?o.sound.randomOneOf:[o.sound]),s=new a(i,o.name,o.legacySoundSettingsKey,o.settingsKey,o.legacyAnnouncementSettingsKey,o.announcementMessage);return a._signals.add(s),s}static get allAccessibilitySignals(){return[...this._signals]}static errorAtPosition=a.register({name:n("accessibilitySignals.positionHasError.name","Error at Position"),sound:e.error,announcementMessage:n("accessibility.signals.positionHasError","Error"),settingsKey:"accessibility.signals.positionHasError",delaySettingsKey:"accessibility.signalOptions.delays.errorAtPosition"});static warningAtPosition=a.register({name:n("accessibilitySignals.positionHasWarning.name","Warning at Position"),sound:e.warning,announcementMessage:n("accessibility.signals.positionHasWarning","Warning"),settingsKey:"accessibility.signals.positionHasWarning",delaySettingsKey:"accessibility.signalOptions.delays.warningAtPosition"});static errorOnLine=a.register({name:n("accessibilitySignals.lineHasError.name","Error on Line"),sound:e.error,legacySoundSettingsKey:"audioCues.lineHasError",legacyAnnouncementSettingsKey:"accessibility.alert.error",announcementMessage:n("accessibility.signals.lineHasError","Error on Line"),settingsKey:"accessibility.signals.lineHasError"});static warningOnLine=a.register({name:n("accessibilitySignals.lineHasWarning.name","Warning on Line"),sound:e.warning,legacySoundSettingsKey:"audioCues.lineHasWarning",legacyAnnouncementSettingsKey:"accessibility.alert.warning",announcementMessage:n("accessibility.signals.lineHasWarning","Warning on Line"),settingsKey:"accessibility.signals.lineHasWarning"});static foldedArea=a.register({name:n("accessibilitySignals.lineHasFoldedArea.name","Folded Area on Line"),sound:e.foldedArea,legacySoundSettingsKey:"audioCues.lineHasFoldedArea",legacyAnnouncementSettingsKey:"accessibility.alert.foldedArea",announcementMessage:n("accessibility.signals.lineHasFoldedArea","Folded"),settingsKey:"accessibility.signals.lineHasFoldedArea"});static break=a.register({name:n("accessibilitySignals.lineHasBreakpoint.name","Breakpoint on Line"),sound:e.break,legacySoundSettingsKey:"audioCues.lineHasBreakpoint",legacyAnnouncementSettingsKey:"accessibility.alert.breakpoint",announcementMessage:n("accessibility.signals.lineHasBreakpoint","Breakpoint"),settingsKey:"accessibility.signals.lineHasBreakpoint"});static inlineSuggestion=a.register({name:n("accessibilitySignals.lineHasInlineSuggestion.name","Inline Suggestion on Line"),sound:e.quickFixes,legacySoundSettingsKey:"audioCues.lineHasInlineSuggestion",settingsKey:"accessibility.signals.lineHasInlineSuggestion"});static terminalQuickFix=a.register({name:n("accessibilitySignals.terminalQuickFix.name","Terminal Quick Fix"),sound:e.quickFixes,legacySoundSettingsKey:"audioCues.terminalQuickFix",legacyAnnouncementSettingsKey:"accessibility.alert.terminalQuickFix",announcementMessage:n("accessibility.signals.terminalQuickFix","Quick Fix"),settingsKey:"accessibility.signals.terminalQuickFix"});static onDebugBreak=a.register({name:n("accessibilitySignals.onDebugBreak.name","Debugger Stopped on Breakpoint"),sound:e.break,legacySoundSettingsKey:"audioCues.onDebugBreak",legacyAnnouncementSettingsKey:"accessibility.alert.onDebugBreak",announcementMessage:n("accessibility.signals.onDebugBreak","Breakpoint"),settingsKey:"accessibility.signals.onDebugBreak"});static noInlayHints=a.register({name:n("accessibilitySignals.noInlayHints","No Inlay Hints on Line"),sound:e.error,legacySoundSettingsKey:"audioCues.noInlayHints",legacyAnnouncementSettingsKey:"accessibility.alert.noInlayHints",announcementMessage:n("accessibility.signals.noInlayHints","No Inlay Hints"),settingsKey:"accessibility.signals.noInlayHints"});static taskCompleted=a.register({name:n("accessibilitySignals.taskCompleted","Task Completed"),sound:e.taskCompleted,legacySoundSettingsKey:"audioCues.taskCompleted",legacyAnnouncementSettingsKey:"accessibility.alert.taskCompleted",announcementMessage:n("accessibility.signals.taskCompleted","Task Completed"),settingsKey:"accessibility.signals.taskCompleted"});static taskFailed=a.register({name:n("accessibilitySignals.taskFailed","Task Failed"),sound:e.taskFailed,legacySoundSettingsKey:"audioCues.taskFailed",legacyAnnouncementSettingsKey:"accessibility.alert.taskFailed",announcementMessage:n("accessibility.signals.taskFailed","Task Failed"),settingsKey:"accessibility.signals.taskFailed"});static terminalCommandFailed=a.register({name:n("accessibilitySignals.terminalCommandFailed","Terminal Command Failed"),sound:e.error,legacySoundSettingsKey:"audioCues.terminalCommandFailed",legacyAnnouncementSettingsKey:"accessibility.alert.terminalCommandFailed",announcementMessage:n("accessibility.signals.terminalCommandFailed","Command Failed"),settingsKey:"accessibility.signals.terminalCommandFailed"});static terminalCommandSucceeded=a.register({name:n("accessibilitySignals.terminalCommandSucceeded","Terminal Command Succeeded"),sound:e.success,announcementMessage:n("accessibility.signals.terminalCommandSucceeded","Command Succeeded"),settingsKey:"accessibility.signals.terminalCommandSucceeded"});static terminalBell=a.register({name:n("accessibilitySignals.terminalBell","Terminal Bell"),sound:e.terminalBell,legacySoundSettingsKey:"audioCues.terminalBell",legacyAnnouncementSettingsKey:"accessibility.alert.terminalBell",announcementMessage:n("accessibility.signals.terminalBell","Terminal Bell"),settingsKey:"accessibility.signals.terminalBell"});static notebookCellCompleted=a.register({name:n("accessibilitySignals.notebookCellCompleted","Notebook Cell Completed"),sound:e.taskCompleted,legacySoundSettingsKey:"audioCues.notebookCellCompleted",legacyAnnouncementSettingsKey:"accessibility.alert.notebookCellCompleted",announcementMessage:n("accessibility.signals.notebookCellCompleted","Notebook Cell Completed"),settingsKey:"accessibility.signals.notebookCellCompleted"});static notebookCellFailed=a.register({name:n("accessibilitySignals.notebookCellFailed","Notebook Cell Failed"),sound:e.taskFailed,legacySoundSettingsKey:"audioCues.notebookCellFailed",legacyAnnouncementSettingsKey:"accessibility.alert.notebookCellFailed",announcementMessage:n("accessibility.signals.notebookCellFailed","Notebook Cell Failed"),settingsKey:"accessibility.signals.notebookCellFailed"});static diffLineInserted=a.register({name:n("accessibilitySignals.diffLineInserted","Diff Line Inserted"),sound:e.diffLineInserted,legacySoundSettingsKey:"audioCues.diffLineInserted",settingsKey:"accessibility.signals.diffLineInserted"});static diffLineDeleted=a.register({name:n("accessibilitySignals.diffLineDeleted","Diff Line Deleted"),sound:e.diffLineDeleted,legacySoundSettingsKey:"audioCues.diffLineDeleted",settingsKey:"accessibility.signals.diffLineDeleted"});static diffLineModified=a.register({name:n("accessibilitySignals.diffLineModified","Diff Line Modified"),sound:e.diffLineModified,legacySoundSettingsKey:"audioCues.diffLineModified",settingsKey:"accessibility.signals.diffLineModified"});static chatEditModifiedFile=a.register({name:n("accessibilitySignals.chatEditModifiedFile","Chat Edit Modified File"),sound:e.chatEditModifiedFile,announcementMessage:n("accessibility.signals.chatEditModifiedFile","File Modified from Chat Edits"),settingsKey:"accessibility.signals.chatEditModifiedFile"});static chatRequestSent=a.register({name:n("accessibilitySignals.chatRequestSent","Chat Request Sent"),sound:e.requestSent,legacySoundSettingsKey:"audioCues.chatRequestSent",legacyAnnouncementSettingsKey:"accessibility.alert.chatRequestSent",announcementMessage:n("accessibility.signals.chatRequestSent","Chat Request Sent"),settingsKey:"accessibility.signals.chatRequestSent"});static chatResponseReceived=a.register({name:n("accessibilitySignals.chatResponseReceived","Chat Response Received"),legacySoundSettingsKey:"audioCues.chatResponseReceived",sound:{randomOneOf:[e.responseReceived1,e.responseReceived2,e.responseReceived3,e.responseReceived4]},settingsKey:"accessibility.signals.chatResponseReceived"});static codeActionTriggered=a.register({name:n("accessibilitySignals.codeActionRequestTriggered","Code Action Request Triggered"),sound:e.voiceRecordingStarted,legacySoundSettingsKey:"audioCues.codeActionRequestTriggered",legacyAnnouncementSettingsKey:"accessibility.alert.codeActionRequestTriggered",announcementMessage:n("accessibility.signals.codeActionRequestTriggered","Code Action Request Triggered"),settingsKey:"accessibility.signals.codeActionTriggered"});static codeActionApplied=a.register({name:n("accessibilitySignals.codeActionApplied","Code Action Applied"),legacySoundSettingsKey:"audioCues.codeActionApplied",sound:e.voiceRecordingStopped,settingsKey:"accessibility.signals.codeActionApplied"});static progress=a.register({name:n("accessibilitySignals.progress","Progress"),sound:e.progress,legacySoundSettingsKey:"audioCues.chatResponsePending",legacyAnnouncementSettingsKey:"accessibility.alert.progress",announcementMessage:n("accessibility.signals.progress","Progress"),settingsKey:"accessibility.signals.progress"});static clear=a.register({name:n("accessibilitySignals.clear","Clear"),sound:e.clear,legacySoundSettingsKey:"audioCues.clear",legacyAnnouncementSettingsKey:"accessibility.alert.clear",announcementMessage:n("accessibility.signals.clear","Clear"),settingsKey:"accessibility.signals.clear"});static save=a.register({name:n("accessibilitySignals.save","Save"),sound:e.save,legacySoundSettingsKey:"audioCues.save",legacyAnnouncementSettingsKey:"accessibility.alert.save",announcementMessage:n("accessibility.signals.save","Save"),settingsKey:"accessibility.signals.save"});static format=a.register({name:n("accessibilitySignals.format","Format"),sound:e.format,legacySoundSettingsKey:"audioCues.format",legacyAnnouncementSettingsKey:"accessibility.alert.format",announcementMessage:n("accessibility.signals.format","Format"),settingsKey:"accessibility.signals.format"});static voiceRecordingStarted=a.register({name:n("accessibilitySignals.voiceRecordingStarted","Voice Recording Started"),sound:e.voiceRecordingStarted,legacySoundSettingsKey:"audioCues.voiceRecordingStarted",settingsKey:"accessibility.signals.voiceRecordingStarted"});static voiceRecordingStopped=a.register({name:n("accessibilitySignals.voiceRecordingStopped","Voice Recording Stopped"),sound:e.voiceRecordingStopped,legacySoundSettingsKey:"audioCues.voiceRecordingStopped",settingsKey:"accessibility.signals.voiceRecordingStopped"});static editsKept=a.register({name:n("accessibilitySignals.editsKept","Edits Kept"),sound:e.editsKept,announcementMessage:n("accessibility.signals.editsKept","Edits Kept"),settingsKey:"accessibility.signals.editsKept"});static editsUndone=a.register({name:n("accessibilitySignals.editsUndone","Undo Edits"),sound:e.editsUndone,announcementMessage:n("accessibility.signals.editsUndone","Edits Undone"),settingsKey:"accessibility.signals.editsUndone"})}export{a as AccessibilitySignal,g as AccessibilitySignalService,j as AcknowledgeDocCommentsToken,$ as IAccessibilitySignalService,e as Sound,w as SoundSource};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { CachedFunction } from "../../../base/common/cache.js";
+import { getStructuralKey } from "../../../base/common/equals.js";
+import { Event, IValueWithChangeEvent } from "../../../base/common/event.js";
+import { Disposable, IDisposable, toDisposable } from "../../../base/common/lifecycle.js";
+import { FileAccess } from "../../../base/common/network.js";
+import { derived, observableFromEvent, ValueWithChangeEventFromObservable } from "../../../base/common/observable.js";
+import { localize } from "../../../nls.js";
+import { IAccessibilityService } from "../../accessibility/common/accessibility.js";
+import { IConfigurationService } from "../../configuration/common/configuration.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+import { observableConfigValue } from "../../observable/common/platformObservableUtils.js";
+import { ITelemetryService } from "../../telemetry/common/telemetry.js";
+const IAccessibilitySignalService = createDecorator("accessibilitySignalService");
+const AcknowledgeDocCommentsToken = Symbol("AcknowledgeDocCommentsToken");
+let AccessibilitySignalService = class extends Disposable {
+  constructor(configurationService, accessibilityService, telemetryService) {
+    super();
+    this.configurationService = configurationService;
+    this.accessibilityService = accessibilityService;
+    this.telemetryService = telemetryService;
+  }
+  static {
+    __name(this, "AccessibilitySignalService");
+  }
+  _serviceBrand;
+  sounds = /* @__PURE__ */ new Map();
+  screenReaderAttached = observableFromEvent(
+    this,
+    this.accessibilityService.onDidChangeScreenReaderOptimized,
+    () => (
+      /** @description accessibilityService.onDidChangeScreenReaderOptimized */
+      this.accessibilityService.isScreenReaderOptimized()
+    )
+  );
+  sentTelemetry = /* @__PURE__ */ new Set();
+  getEnabledState(signal, userGesture, modality) {
+    return new ValueWithChangeEventFromObservable(this._signalEnabledState.get({ signal, userGesture, modality }));
+  }
+  async playSignal(signal, options = {}) {
+    const shouldPlayAnnouncement = options.modality === "announcement" || options.modality === void 0;
+    const announcementMessage = signal.announcementMessage;
+    if (shouldPlayAnnouncement && this.isAnnouncementEnabled(signal, options.userGesture) && announcementMessage) {
+      this.accessibilityService.status(announcementMessage);
+    }
+    const shouldPlaySound = options.modality === "sound" || options.modality === void 0;
+    if (shouldPlaySound && this.isSoundEnabled(signal, options.userGesture)) {
+      this.sendSignalTelemetry(signal, options.source);
+      await this.playSound(signal.sound.getSound(), options.allowManyInParallel);
+    }
+  }
+  async playSignals(signals) {
+    for (const signal of signals) {
+      this.sendSignalTelemetry("signal" in signal ? signal.signal : signal, "source" in signal ? signal.source : void 0);
+    }
+    const signalArray = signals.map((s) => "signal" in s ? s.signal : s);
+    const announcements = signalArray.filter((signal) => this.isAnnouncementEnabled(signal)).map((s) => s.announcementMessage);
+    if (announcements.length) {
+      this.accessibilityService.status(announcements.join(", "));
+    }
+    const sounds = new Set(signalArray.filter((signal) => this.isSoundEnabled(signal)).map((signal) => signal.sound.getSound()));
+    await Promise.all(Array.from(sounds).map((sound) => this.playSound(sound, true)));
+  }
+  sendSignalTelemetry(signal, source) {
+    const isScreenReaderOptimized = this.accessibilityService.isScreenReaderOptimized();
+    const key = signal.name + (source ? `::${source}` : "") + (isScreenReaderOptimized ? "{screenReaderOptimized}" : "");
+    if (this.sentTelemetry.has(key) || this.getVolumeInPercent() === 0) {
+      return;
+    }
+    this.sentTelemetry.add(key);
+    this.telemetryService.publicLog2("signal.played", {
+      signal: signal.name,
+      source: source ?? "",
+      isScreenReaderOptimized
+    });
+  }
+  getVolumeInPercent() {
+    const volume = this.configurationService.getValue("accessibility.signalOptions.volume");
+    if (typeof volume !== "number") {
+      return 50;
+    }
+    return Math.max(Math.min(volume, 100), 0);
+  }
+  playingSounds = /* @__PURE__ */ new Set();
+  async playSound(sound, allowManyInParallel = false) {
+    if (!allowManyInParallel && this.playingSounds.has(sound)) {
+      return;
+    }
+    this.playingSounds.add(sound);
+    const url = FileAccess.asBrowserUri(`vs/platform/accessibilitySignal/browser/media/${sound.fileName}`).toString(true);
+    try {
+      const sound2 = this.sounds.get(url);
+      if (sound2) {
+        sound2.volume = this.getVolumeInPercent() / 100;
+        sound2.currentTime = 0;
+        await sound2.play();
+      } else {
+        const playedSound = await playAudio(url, this.getVolumeInPercent() / 100);
+        this.sounds.set(url, playedSound);
+      }
+    } catch (e) {
+      if (!e.message.includes("play() can only be initiated by a user gesture")) {
+        console.error("Error while playing sound", e);
+      }
+    } finally {
+      this.playingSounds.delete(sound);
+    }
+  }
+  playSignalLoop(signal, milliseconds) {
+    let playing = true;
+    const playSound = /* @__PURE__ */ __name(() => {
+      if (playing) {
+        this.playSignal(signal, { allowManyInParallel: true }).finally(() => {
+          setTimeout(() => {
+            if (playing) {
+              playSound();
+            }
+          }, milliseconds);
+        });
+      }
+    }, "playSound");
+    playSound();
+    return toDisposable(() => playing = false);
+  }
+  _signalConfigValue = new CachedFunction((signal) => observableConfigValue(signal.settingsKey, { sound: "off", announcement: "off" }, this.configurationService));
+  _signalEnabledState = new CachedFunction(
+    { getCacheKey: getStructuralKey },
+    (arg) => {
+      return derived((reader) => {
+        const setting = this._signalConfigValue.get(arg.signal).read(reader);
+        if (arg.modality === "sound" || arg.modality === void 0) {
+          if (checkEnabledState(setting.sound, () => this.screenReaderAttached.read(reader), arg.userGesture)) {
+            return true;
+          }
+        }
+        if (arg.modality === "announcement" || arg.modality === void 0) {
+          if (checkEnabledState(setting.announcement, () => this.screenReaderAttached.read(reader), arg.userGesture)) {
+            return true;
+          }
+        }
+        return false;
+      }).recomputeInitiallyAndOnChange(this._store);
+    }
+  );
+  isAnnouncementEnabled(signal, userGesture) {
+    if (!signal.announcementMessage) {
+      return false;
+    }
+    return this._signalEnabledState.get({ signal, userGesture: !!userGesture, modality: "announcement" }).get();
+  }
+  isSoundEnabled(signal, userGesture) {
+    return this._signalEnabledState.get({ signal, userGesture: !!userGesture, modality: "sound" }).get();
+  }
+  onSoundEnabledChanged(signal) {
+    return this.getEnabledState(signal, false).onDidChange;
+  }
+  getDelayMs(signal, modality, mode) {
+    if (!this.configurationService.getValue("accessibility.signalOptions.debouncePositionChanges")) {
+      return 0;
+    }
+    let value;
+    if (signal.name === AccessibilitySignal.errorAtPosition.name && mode === "positional") {
+      value = this.configurationService.getValue("accessibility.signalOptions.experimental.delays.errorAtPosition");
+    } else if (signal.name === AccessibilitySignal.warningAtPosition.name && mode === "positional") {
+      value = this.configurationService.getValue("accessibility.signalOptions.experimental.delays.warningAtPosition");
+    } else {
+      value = this.configurationService.getValue("accessibility.signalOptions.experimental.delays.general");
+    }
+    return modality === "sound" ? value.sound : value.announcement;
+  }
+};
+AccessibilitySignalService = __decorateClass([
+  __decorateParam(0, IConfigurationService),
+  __decorateParam(1, IAccessibilityService),
+  __decorateParam(2, ITelemetryService)
+], AccessibilitySignalService);
+function checkEnabledState(state, getScreenReaderAttached, isTriggeredByUserGesture) {
+  return state === "on" || state === "always" || state === "auto" && getScreenReaderAttached() || state === "userGesture" && isTriggeredByUserGesture;
+}
+__name(checkEnabledState, "checkEnabledState");
+function playAudio(url, volume) {
+  return new Promise((resolve, reject) => {
+    const audio = new Audio(url);
+    audio.volume = volume;
+    audio.addEventListener("ended", () => {
+      resolve(audio);
+    });
+    audio.addEventListener("error", (e) => {
+      reject(e.error);
+    });
+    audio.play().catch((e) => {
+      reject(e);
+    });
+  });
+}
+__name(playAudio, "playAudio");
+class Sound {
+  constructor(fileName) {
+    this.fileName = fileName;
+  }
+  static {
+    __name(this, "Sound");
+  }
+  static register(options) {
+    const sound = new Sound(options.fileName);
+    return sound;
+  }
+  static error = Sound.register({ fileName: "error.mp3" });
+  static warning = Sound.register({ fileName: "warning.mp3" });
+  static success = Sound.register({ fileName: "success.mp3" });
+  static foldedArea = Sound.register({ fileName: "foldedAreas.mp3" });
+  static break = Sound.register({ fileName: "break.mp3" });
+  static quickFixes = Sound.register({ fileName: "quickFixes.mp3" });
+  static taskCompleted = Sound.register({ fileName: "taskCompleted.mp3" });
+  static taskFailed = Sound.register({ fileName: "taskFailed.mp3" });
+  static terminalBell = Sound.register({ fileName: "terminalBell.mp3" });
+  static diffLineInserted = Sound.register({ fileName: "diffLineInserted.mp3" });
+  static diffLineDeleted = Sound.register({ fileName: "diffLineDeleted.mp3" });
+  static diffLineModified = Sound.register({ fileName: "diffLineModified.mp3" });
+  static requestSent = Sound.register({ fileName: "requestSent.mp3" });
+  static responseReceived1 = Sound.register({ fileName: "responseReceived1.mp3" });
+  static responseReceived2 = Sound.register({ fileName: "responseReceived2.mp3" });
+  static responseReceived3 = Sound.register({ fileName: "responseReceived3.mp3" });
+  static responseReceived4 = Sound.register({ fileName: "responseReceived4.mp3" });
+  static clear = Sound.register({ fileName: "clear.mp3" });
+  static save = Sound.register({ fileName: "save.mp3" });
+  static format = Sound.register({ fileName: "format.mp3" });
+  static voiceRecordingStarted = Sound.register({ fileName: "voiceRecordingStarted.mp3" });
+  static voiceRecordingStopped = Sound.register({ fileName: "voiceRecordingStopped.mp3" });
+  static progress = Sound.register({ fileName: "progress.mp3" });
+  static chatEditModifiedFile = Sound.register({ fileName: "chatEditModifiedFile.mp3" });
+  static editsKept = Sound.register({ fileName: "editsKept.mp3" });
+  static editsUndone = Sound.register({ fileName: "editsUndone.mp3" });
+}
+class SoundSource {
+  constructor(randomOneOf) {
+    this.randomOneOf = randomOneOf;
+  }
+  static {
+    __name(this, "SoundSource");
+  }
+  getSound(deterministic = false) {
+    if (deterministic || this.randomOneOf.length === 1) {
+      return this.randomOneOf[0];
+    } else {
+      const index = Math.floor(Math.random() * this.randomOneOf.length);
+      return this.randomOneOf[index];
+    }
+  }
+}
+class AccessibilitySignal {
+  constructor(sound, name, legacySoundSettingsKey, settingsKey, legacyAnnouncementSettingsKey, announcementMessage) {
+    this.sound = sound;
+    this.name = name;
+    this.legacySoundSettingsKey = legacySoundSettingsKey;
+    this.settingsKey = settingsKey;
+    this.legacyAnnouncementSettingsKey = legacyAnnouncementSettingsKey;
+    this.announcementMessage = announcementMessage;
+  }
+  static {
+    __name(this, "AccessibilitySignal");
+  }
+  static _signals = /* @__PURE__ */ new Set();
+  static register(options) {
+    const soundSource = new SoundSource("randomOneOf" in options.sound ? options.sound.randomOneOf : [options.sound]);
+    const signal = new AccessibilitySignal(
+      soundSource,
+      options.name,
+      options.legacySoundSettingsKey,
+      options.settingsKey,
+      options.legacyAnnouncementSettingsKey,
+      options.announcementMessage
+    );
+    AccessibilitySignal._signals.add(signal);
+    return signal;
+  }
+  static get allAccessibilitySignals() {
+    return [...this._signals];
+  }
+  static errorAtPosition = AccessibilitySignal.register({
+    name: localize("accessibilitySignals.positionHasError.name", "Error at Position"),
+    sound: Sound.error,
+    announcementMessage: localize("accessibility.signals.positionHasError", "Error"),
+    settingsKey: "accessibility.signals.positionHasError",
+    delaySettingsKey: "accessibility.signalOptions.delays.errorAtPosition"
+  });
+  static warningAtPosition = AccessibilitySignal.register({
+    name: localize("accessibilitySignals.positionHasWarning.name", "Warning at Position"),
+    sound: Sound.warning,
+    announcementMessage: localize("accessibility.signals.positionHasWarning", "Warning"),
+    settingsKey: "accessibility.signals.positionHasWarning",
+    delaySettingsKey: "accessibility.signalOptions.delays.warningAtPosition"
+  });
+  static errorOnLine = AccessibilitySignal.register({
+    name: localize("accessibilitySignals.lineHasError.name", "Error on Line"),
+    sound: Sound.error,
+    legacySoundSettingsKey: "audioCues.lineHasError",
+    legacyAnnouncementSettingsKey: "accessibility.alert.error",
+    announcementMessage: localize("accessibility.signals.lineHasError", "Error on Line"),
+    settingsKey: "accessibility.signals.lineHasError"
+  });
+  static warningOnLine = AccessibilitySignal.register({
+    name: localize("accessibilitySignals.lineHasWarning.name", "Warning on Line"),
+    sound: Sound.warning,
+    legacySoundSettingsKey: "audioCues.lineHasWarning",
+    legacyAnnouncementSettingsKey: "accessibility.alert.warning",
+    announcementMessage: localize("accessibility.signals.lineHasWarning", "Warning on Line"),
+    settingsKey: "accessibility.signals.lineHasWarning"
+  });
+  static foldedArea = AccessibilitySignal.register({
+    name: localize("accessibilitySignals.lineHasFoldedArea.name", "Folded Area on Line"),
+    sound: Sound.foldedArea,
+    legacySoundSettingsKey: "audioCues.lineHasFoldedArea",
+    legacyAnnouncementSettingsKey: "accessibility.alert.foldedArea",
+    announcementMessage: localize("accessibility.signals.lineHasFoldedArea", "Folded"),
+    settingsKey: "accessibility.signals.lineHasFoldedArea"
+  });
+  static break = AccessibilitySignal.register({
+    name: localize("accessibilitySignals.lineHasBreakpoint.name", "Breakpoint on Line"),
+    sound: Sound.break,
+    legacySoundSettingsKey: "audioCues.lineHasBreakpoint",
+    legacyAnnouncementSettingsKey: "accessibility.alert.breakpoint",
+    announcementMessage: localize("accessibility.signals.lineHasBreakpoint", "Breakpoint"),
+    settingsKey: "accessibility.signals.lineHasBreakpoint"
+  });
+  static inlineSuggestion = AccessibilitySignal.register({
+    name: localize("accessibilitySignals.lineHasInlineSuggestion.name", "Inline Suggestion on Line"),
+    sound: Sound.quickFixes,
+    legacySoundSettingsKey: "audioCues.lineHasInlineSuggestion",
+    settingsKey: "accessibility.signals.lineHasInlineSuggestion"
+  });
+  static terminalQuickFix = AccessibilitySignal.register({
+    name: localize("accessibilitySignals.terminalQuickFix.name", "Terminal Quick Fix"),
+    sound: Sound.quickFixes,
+    legacySoundSettingsKey: "audioCues.terminalQuickFix",
+    legacyAnnouncementSettingsKey: "accessibility.alert.terminalQuickFix",
+    announcementMessage: localize("accessibility.signals.terminalQuickFix", "Quick Fix"),
+    settingsKey: "accessibility.signals.terminalQuickFix"
+  });
+  static onDebugBreak = AccessibilitySignal.register({
+    name: localize("accessibilitySignals.onDebugBreak.name", "Debugger Stopped on Breakpoint"),
+    sound: Sound.break,
+    legacySoundSettingsKey: "audioCues.onDebugBreak",
+    legacyAnnouncementSettingsKey: "accessibility.alert.onDebugBreak",
+    announcementMessage: localize("accessibility.signals.onDebugBreak", "Breakpoint"),
+    settingsKey: "accessibility.signals.onDebugBreak"
+  });
+  static noInlayHints = AccessibilitySignal.register({
+    name: localize("accessibilitySignals.noInlayHints", "No Inlay Hints on Line"),
+    sound: Sound.error,
+    legacySoundSettingsKey: "audioCues.noInlayHints",
+    legacyAnnouncementSettingsKey: "accessibility.alert.noInlayHints",
+    announcementMessage: localize("accessibility.signals.noInlayHints", "No Inlay Hints"),
+    settingsKey: "accessibility.signals.noInlayHints"
+  });
+  static taskCompleted = AccessibilitySignal.register({
+    name: localize("accessibilitySignals.taskCompleted", "Task Completed"),
+    sound: Sound.taskCompleted,
+    legacySoundSettingsKey: "audioCues.taskCompleted",
+    legacyAnnouncementSettingsKey: "accessibility.alert.taskCompleted",
+    announcementMessage: localize("accessibility.signals.taskCompleted", "Task Completed"),
+    settingsKey: "accessibility.signals.taskCompleted"
+  });
+  static taskFailed = AccessibilitySignal.register({
+    name: localize("accessibilitySignals.taskFailed", "Task Failed"),
+    sound: Sound.taskFailed,
+    legacySoundSettingsKey: "audioCues.taskFailed",
+    legacyAnnouncementSettingsKey: "accessibility.alert.taskFailed",
+    announcementMessage: localize("accessibility.signals.taskFailed", "Task Failed"),
+    settingsKey: "accessibility.signals.taskFailed"
+  });
+  static terminalCommandFailed = AccessibilitySignal.register({
+    name: localize("accessibilitySignals.terminalCommandFailed", "Terminal Command Failed"),
+    sound: Sound.error,
+    legacySoundSettingsKey: "audioCues.terminalCommandFailed",
+    legacyAnnouncementSettingsKey: "accessibility.alert.terminalCommandFailed",
+    announcementMessage: localize("accessibility.signals.terminalCommandFailed", "Command Failed"),
+    settingsKey: "accessibility.signals.terminalCommandFailed"
+  });
+  static terminalCommandSucceeded = AccessibilitySignal.register({
+    name: localize("accessibilitySignals.terminalCommandSucceeded", "Terminal Command Succeeded"),
+    sound: Sound.success,
+    announcementMessage: localize("accessibility.signals.terminalCommandSucceeded", "Command Succeeded"),
+    settingsKey: "accessibility.signals.terminalCommandSucceeded"
+  });
+  static terminalBell = AccessibilitySignal.register({
+    name: localize("accessibilitySignals.terminalBell", "Terminal Bell"),
+    sound: Sound.terminalBell,
+    legacySoundSettingsKey: "audioCues.terminalBell",
+    legacyAnnouncementSettingsKey: "accessibility.alert.terminalBell",
+    announcementMessage: localize("accessibility.signals.terminalBell", "Terminal Bell"),
+    settingsKey: "accessibility.signals.terminalBell"
+  });
+  static notebookCellCompleted = AccessibilitySignal.register({
+    name: localize("accessibilitySignals.notebookCellCompleted", "Notebook Cell Completed"),
+    sound: Sound.taskCompleted,
+    legacySoundSettingsKey: "audioCues.notebookCellCompleted",
+    legacyAnnouncementSettingsKey: "accessibility.alert.notebookCellCompleted",
+    announcementMessage: localize("accessibility.signals.notebookCellCompleted", "Notebook Cell Completed"),
+    settingsKey: "accessibility.signals.notebookCellCompleted"
+  });
+  static notebookCellFailed = AccessibilitySignal.register({
+    name: localize("accessibilitySignals.notebookCellFailed", "Notebook Cell Failed"),
+    sound: Sound.taskFailed,
+    legacySoundSettingsKey: "audioCues.notebookCellFailed",
+    legacyAnnouncementSettingsKey: "accessibility.alert.notebookCellFailed",
+    announcementMessage: localize("accessibility.signals.notebookCellFailed", "Notebook Cell Failed"),
+    settingsKey: "accessibility.signals.notebookCellFailed"
+  });
+  static diffLineInserted = AccessibilitySignal.register({
+    name: localize("accessibilitySignals.diffLineInserted", "Diff Line Inserted"),
+    sound: Sound.diffLineInserted,
+    legacySoundSettingsKey: "audioCues.diffLineInserted",
+    settingsKey: "accessibility.signals.diffLineInserted"
+  });
+  static diffLineDeleted = AccessibilitySignal.register({
+    name: localize("accessibilitySignals.diffLineDeleted", "Diff Line Deleted"),
+    sound: Sound.diffLineDeleted,
+    legacySoundSettingsKey: "audioCues.diffLineDeleted",
+    settingsKey: "accessibility.signals.diffLineDeleted"
+  });
+  static diffLineModified = AccessibilitySignal.register({
+    name: localize("accessibilitySignals.diffLineModified", "Diff Line Modified"),
+    sound: Sound.diffLineModified,
+    legacySoundSettingsKey: "audioCues.diffLineModified",
+    settingsKey: "accessibility.signals.diffLineModified"
+  });
+  static chatEditModifiedFile = AccessibilitySignal.register({
+    name: localize("accessibilitySignals.chatEditModifiedFile", "Chat Edit Modified File"),
+    sound: Sound.chatEditModifiedFile,
+    announcementMessage: localize("accessibility.signals.chatEditModifiedFile", "File Modified from Chat Edits"),
+    settingsKey: "accessibility.signals.chatEditModifiedFile"
+  });
+  static chatRequestSent = AccessibilitySignal.register({
+    name: localize("accessibilitySignals.chatRequestSent", "Chat Request Sent"),
+    sound: Sound.requestSent,
+    legacySoundSettingsKey: "audioCues.chatRequestSent",
+    legacyAnnouncementSettingsKey: "accessibility.alert.chatRequestSent",
+    announcementMessage: localize("accessibility.signals.chatRequestSent", "Chat Request Sent"),
+    settingsKey: "accessibility.signals.chatRequestSent"
+  });
+  static chatResponseReceived = AccessibilitySignal.register({
+    name: localize("accessibilitySignals.chatResponseReceived", "Chat Response Received"),
+    legacySoundSettingsKey: "audioCues.chatResponseReceived",
+    sound: {
+      randomOneOf: [
+        Sound.responseReceived1,
+        Sound.responseReceived2,
+        Sound.responseReceived3,
+        Sound.responseReceived4
+      ]
+    },
+    settingsKey: "accessibility.signals.chatResponseReceived"
+  });
+  static codeActionTriggered = AccessibilitySignal.register({
+    name: localize("accessibilitySignals.codeActionRequestTriggered", "Code Action Request Triggered"),
+    sound: Sound.voiceRecordingStarted,
+    legacySoundSettingsKey: "audioCues.codeActionRequestTriggered",
+    legacyAnnouncementSettingsKey: "accessibility.alert.codeActionRequestTriggered",
+    announcementMessage: localize("accessibility.signals.codeActionRequestTriggered", "Code Action Request Triggered"),
+    settingsKey: "accessibility.signals.codeActionTriggered"
+  });
+  static codeActionApplied = AccessibilitySignal.register({
+    name: localize("accessibilitySignals.codeActionApplied", "Code Action Applied"),
+    legacySoundSettingsKey: "audioCues.codeActionApplied",
+    sound: Sound.voiceRecordingStopped,
+    settingsKey: "accessibility.signals.codeActionApplied"
+  });
+  static progress = AccessibilitySignal.register({
+    name: localize("accessibilitySignals.progress", "Progress"),
+    sound: Sound.progress,
+    legacySoundSettingsKey: "audioCues.chatResponsePending",
+    legacyAnnouncementSettingsKey: "accessibility.alert.progress",
+    announcementMessage: localize("accessibility.signals.progress", "Progress"),
+    settingsKey: "accessibility.signals.progress"
+  });
+  static clear = AccessibilitySignal.register({
+    name: localize("accessibilitySignals.clear", "Clear"),
+    sound: Sound.clear,
+    legacySoundSettingsKey: "audioCues.clear",
+    legacyAnnouncementSettingsKey: "accessibility.alert.clear",
+    announcementMessage: localize("accessibility.signals.clear", "Clear"),
+    settingsKey: "accessibility.signals.clear"
+  });
+  static save = AccessibilitySignal.register({
+    name: localize("accessibilitySignals.save", "Save"),
+    sound: Sound.save,
+    legacySoundSettingsKey: "audioCues.save",
+    legacyAnnouncementSettingsKey: "accessibility.alert.save",
+    announcementMessage: localize("accessibility.signals.save", "Save"),
+    settingsKey: "accessibility.signals.save"
+  });
+  static format = AccessibilitySignal.register({
+    name: localize("accessibilitySignals.format", "Format"),
+    sound: Sound.format,
+    legacySoundSettingsKey: "audioCues.format",
+    legacyAnnouncementSettingsKey: "accessibility.alert.format",
+    announcementMessage: localize("accessibility.signals.format", "Format"),
+    settingsKey: "accessibility.signals.format"
+  });
+  static voiceRecordingStarted = AccessibilitySignal.register({
+    name: localize("accessibilitySignals.voiceRecordingStarted", "Voice Recording Started"),
+    sound: Sound.voiceRecordingStarted,
+    legacySoundSettingsKey: "audioCues.voiceRecordingStarted",
+    settingsKey: "accessibility.signals.voiceRecordingStarted"
+  });
+  static voiceRecordingStopped = AccessibilitySignal.register({
+    name: localize("accessibilitySignals.voiceRecordingStopped", "Voice Recording Stopped"),
+    sound: Sound.voiceRecordingStopped,
+    legacySoundSettingsKey: "audioCues.voiceRecordingStopped",
+    settingsKey: "accessibility.signals.voiceRecordingStopped"
+  });
+  static editsKept = AccessibilitySignal.register({
+    name: localize("accessibilitySignals.editsKept", "Edits Kept"),
+    sound: Sound.editsKept,
+    announcementMessage: localize("accessibility.signals.editsKept", "Edits Kept"),
+    settingsKey: "accessibility.signals.editsKept"
+  });
+  static editsUndone = AccessibilitySignal.register({
+    name: localize("accessibilitySignals.editsUndone", "Undo Edits"),
+    sound: Sound.editsUndone,
+    announcementMessage: localize("accessibility.signals.editsUndone", "Edits Undone"),
+    settingsKey: "accessibility.signals.editsUndone"
+  });
+}
+export {
+  AccessibilitySignal,
+  AccessibilitySignalService,
+  AcknowledgeDocCommentsToken,
+  IAccessibilitySignalService,
+  Sound,
+  SoundSource
+};
+//# sourceMappingURL=accessibilitySignalService.js.map

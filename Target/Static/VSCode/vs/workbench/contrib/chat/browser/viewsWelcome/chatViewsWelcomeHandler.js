@@ -1,1 +1,88 @@
-var p=Object.defineProperty,w=Object.getOwnPropertyDescriptor,m=(e,o,t,s)=>{for(var i,n=s>1?void 0:s?w(o,t):o,r=e.length-1;r>=0;r--)(i=e[r])&&(n=(s?i(o,t,n):i(n))||n);return s&&n&&p(o,t,n),n},l=(e,o)=>(t,s)=>o(t,s,e);import{MarkdownString as d}from"../../../../../base/common/htmlContent.js";import{ThemeIcon as g}from"../../../../../base/common/themables.js";import{localize as c}from"../../../../../nls.js";import{ContextKeyExpr as f}from"../../../../../platform/contextkey/common/contextkey.js";import{ILogService as u}from"../../../../../platform/log/common/log.js";import{Registry as b}from"../../../../../platform/registry/common/platform.js";import"../../../../common/contributions.js";import{checkProposedApiEnabled as y}from"../../../../services/extensions/common/extensions.js";import*as W from"../../../../services/extensions/common/extensionsRegistry.js";import{ChatViewsWelcomeExtensions as C}from"./chatViewsWelcome.js";const V=W.ExtensionsRegistry.registerExtensionPoint({extensionPoint:"chatViewsWelcome",jsonSchema:{description:c("vscode.extension.contributes.chatViewsWelcome","Contributes a welcome message to a chat view"),type:"array",items:{additionalProperties:!1,type:"object",properties:{icon:{type:"string",description:c("chatViewsWelcome.icon","The icon for the welcome message.")},title:{type:"string",description:c("chatViewsWelcome.title","The title of the welcome message.")},content:{type:"string",description:c("chatViewsWelcome.content","The content of the welcome message. The first command link will be rendered as a button.")},when:{type:"string",description:c("chatViewsWelcome.when","Condition when the welcome message is shown.")}}},required:["icon","title","contents","when"]}});let a=class{constructor(e){this.logService=e,V.setHandler(((e,o)=>{for(const e of o.added)for(const o of e.value){y(e.description,"chatParticipantPrivate");const t=f.deserialize(o.when);if(!t){this.logService.error(`Could not deserialize 'when' clause for chatViewsWelcome contribution: ${o.when}`);continue}const s={...o,when:t,icon:g.fromString(o.icon),content:new d(o.content,{isTrusted:!0})};b.as(C.ChatViewsWelcomeRegistry).register(s)}}))}static ID="workbench.contrib.chatViewsWelcomeHandler"};a=m([l(0,u)],a);export{a as ChatViewsWelcomeHandler};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { MarkdownString } from "../../../../../base/common/htmlContent.js";
+import { ThemeIcon } from "../../../../../base/common/themables.js";
+import { localize } from "../../../../../nls.js";
+import { ContextKeyExpr } from "../../../../../platform/contextkey/common/contextkey.js";
+import { ILogService } from "../../../../../platform/log/common/log.js";
+import { Registry } from "../../../../../platform/registry/common/platform.js";
+import { IWorkbenchContribution } from "../../../../common/contributions.js";
+import { checkProposedApiEnabled } from "../../../../services/extensions/common/extensions.js";
+import * as extensionsRegistry from "../../../../services/extensions/common/extensionsRegistry.js";
+import { ChatViewsWelcomeExtensions, IChatViewsWelcomeContributionRegistry, IChatViewsWelcomeDescriptor } from "./chatViewsWelcome.js";
+const chatViewsWelcomeExtensionPoint = extensionsRegistry.ExtensionsRegistry.registerExtensionPoint({
+  extensionPoint: "chatViewsWelcome",
+  jsonSchema: {
+    description: localize("vscode.extension.contributes.chatViewsWelcome", "Contributes a welcome message to a chat view"),
+    type: "array",
+    items: {
+      additionalProperties: false,
+      type: "object",
+      properties: {
+        icon: {
+          type: "string",
+          description: localize("chatViewsWelcome.icon", "The icon for the welcome message.")
+        },
+        title: {
+          type: "string",
+          description: localize("chatViewsWelcome.title", "The title of the welcome message.")
+        },
+        content: {
+          type: "string",
+          description: localize("chatViewsWelcome.content", "The content of the welcome message. The first command link will be rendered as a button.")
+        },
+        when: {
+          type: "string",
+          description: localize("chatViewsWelcome.when", "Condition when the welcome message is shown.")
+        }
+      }
+    },
+    required: ["icon", "title", "contents", "when"]
+  }
+});
+let ChatViewsWelcomeHandler = class {
+  constructor(logService) {
+    this.logService = logService;
+    chatViewsWelcomeExtensionPoint.setHandler((extensions, delta) => {
+      for (const extension of delta.added) {
+        for (const providerDescriptor of extension.value) {
+          checkProposedApiEnabled(extension.description, "chatParticipantPrivate");
+          const when = ContextKeyExpr.deserialize(providerDescriptor.when);
+          if (!when) {
+            this.logService.error(`Could not deserialize 'when' clause for chatViewsWelcome contribution: ${providerDescriptor.when}`);
+            continue;
+          }
+          const descriptor = {
+            ...providerDescriptor,
+            when,
+            icon: ThemeIcon.fromString(providerDescriptor.icon),
+            content: new MarkdownString(providerDescriptor.content, { isTrusted: true })
+            // private API with command links
+          };
+          Registry.as(ChatViewsWelcomeExtensions.ChatViewsWelcomeRegistry).register(descriptor);
+        }
+      }
+    });
+  }
+  static {
+    __name(this, "ChatViewsWelcomeHandler");
+  }
+  static ID = "workbench.contrib.chatViewsWelcomeHandler";
+};
+ChatViewsWelcomeHandler = __decorateClass([
+  __decorateParam(0, ILogService)
+], ChatViewsWelcomeHandler);
+export {
+  ChatViewsWelcomeHandler
+};
+//# sourceMappingURL=chatViewsWelcomeHandler.js.map

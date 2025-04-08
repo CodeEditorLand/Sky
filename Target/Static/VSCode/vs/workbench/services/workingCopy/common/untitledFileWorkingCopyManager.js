@@ -1,1 +1,155 @@
-var W=Object.defineProperty,k=Object.getOwnPropertyDescriptor,y=(e,o,s,t)=>{for(var r,i=t>1?void 0:t?k(o,s):o,a=e.length-1;a>=0;a--)(r=e[a])&&(i=(t?r(o,s,i):r(i))||i);return t&&i&&W(o,s,i),i},n=(e,o)=>(s,t)=>o(s,t,e);import{DisposableStore as v,dispose as g}from"../../../../base/common/lifecycle.js";import{URI as c}from"../../../../base/common/uri.js";import{UntitledFileWorkingCopy as u}from"./untitledFileWorkingCopy.js";import{Emitter as p}from"../../../../base/common/event.js";import{Schemas as d}from"../../../../base/common/network.js";import{IWorkingCopyService as h}from"./workingCopyService.js";import{ILabelService as U}from"../../../../platform/label/common/label.js";import{ILogService as m}from"../../../../platform/log/common/log.js";import{IWorkingCopyBackupService as F}from"./workingCopyBackup.js";import{IFileService as R}from"../../../../platform/files/common/files.js";import{BaseFileWorkingCopyManager as f}from"./abstractFileWorkingCopyManager.js";import{ResourceMap as S}from"../../../../base/common/map.js";let a=class extends f{constructor(e,o,s,t,r,i,a,n){super(t,i,a),this.workingCopyTypeId=e,this.modelFactory=o,this.saveDelegate=s,this.labelService=r,this.workingCopyService=n}_onDidSave=this._register(new p);onDidSave=this._onDidSave.event;_onDidChangeDirty=this._register(new p);onDidChangeDirty=this._onDidChangeDirty.event;_onWillDispose=this._register(new p);onWillDispose=this._onWillDispose.event;mapResourceToWorkingCopyListeners=new S;async resolve(e){const o=this.doCreateOrGet(e);return await o.resolve(),o}doCreateOrGet(e=Object.create(null)){const o=this.massageOptions(e);if(o.untitledResource){const e=this.get(o.untitledResource);if(e)return e}return this.doCreate(o)}massageOptions(e){const o=Object.create(null);return e.associatedResource?(o.untitledResource=c.from({scheme:d.untitled,authority:e.associatedResource.authority,fragment:e.associatedResource.fragment,path:e.associatedResource.path,query:e.associatedResource.query}),o.associatedResource=e.associatedResource):(e.untitledResource?.scheme===d.untitled&&(o.untitledResource=e.untitledResource),o.isScratchpad=e.isScratchpad),o.contents=e.contents,o}doCreate(e){let o=e.untitledResource;if(!o){let s=1;do{o=c.from({scheme:d.untitled,path:e.isScratchpad?`Scratchpad-${s}`:`Untitled-${s}`,query:this.workingCopyTypeId?`typeId=${this.workingCopyTypeId}`:void 0}),s++}while(this.has(o))}const s=new u(this.workingCopyTypeId,o,this.labelService.getUriBasenameLabel(o),!!e.associatedResource,!!e.isScratchpad,e.contents,this.modelFactory,this.saveDelegate,this.workingCopyService,this.workingCopyBackupService,this.logService);return this.registerWorkingCopy(s),s}registerWorkingCopy(e){const o=new v;o.add(e.onDidChangeDirty((()=>this._onDidChangeDirty.fire(e)))),o.add(e.onWillDispose((()=>this._onWillDispose.fire(e)))),this.mapResourceToWorkingCopyListeners.set(e.resource,o),this.add(e.resource,e),e.isDirty()&&this._onDidChangeDirty.fire(e)}remove(e){const o=super.remove(e),s=this.mapResourceToWorkingCopyListeners.get(e);return s&&(g(s),this.mapResourceToWorkingCopyListeners.delete(e)),o}dispose(){super.dispose(),g(this.mapResourceToWorkingCopyListeners.values()),this.mapResourceToWorkingCopyListeners.clear()}notifyDidSave(e,o){this._onDidSave.fire({source:e,target:o})}};a=y([n(3,R),n(4,U),n(5,m),n(6,F),n(7,h)],a);export{a as UntitledFileWorkingCopyManager};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { DisposableStore, dispose, IDisposable } from "../../../../base/common/lifecycle.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IUntitledFileWorkingCopy, IUntitledFileWorkingCopyInitialContents, IUntitledFileWorkingCopyModel, IUntitledFileWorkingCopyModelFactory, IUntitledFileWorkingCopySaveDelegate, UntitledFileWorkingCopy } from "./untitledFileWorkingCopy.js";
+import { Event, Emitter } from "../../../../base/common/event.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { IWorkingCopyService } from "./workingCopyService.js";
+import { ILabelService } from "../../../../platform/label/common/label.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { IWorkingCopyBackupService } from "./workingCopyBackup.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { BaseFileWorkingCopyManager, IBaseFileWorkingCopyManager } from "./abstractFileWorkingCopyManager.js";
+import { ResourceMap } from "../../../../base/common/map.js";
+let UntitledFileWorkingCopyManager = class extends BaseFileWorkingCopyManager {
+  constructor(workingCopyTypeId, modelFactory, saveDelegate, fileService, labelService, logService, workingCopyBackupService, workingCopyService) {
+    super(fileService, logService, workingCopyBackupService);
+    this.workingCopyTypeId = workingCopyTypeId;
+    this.modelFactory = modelFactory;
+    this.saveDelegate = saveDelegate;
+    this.labelService = labelService;
+    this.workingCopyService = workingCopyService;
+  }
+  static {
+    __name(this, "UntitledFileWorkingCopyManager");
+  }
+  //#region Events
+  _onDidSave = this._register(new Emitter());
+  onDidSave = this._onDidSave.event;
+  _onDidChangeDirty = this._register(new Emitter());
+  onDidChangeDirty = this._onDidChangeDirty.event;
+  _onWillDispose = this._register(new Emitter());
+  onWillDispose = this._onWillDispose.event;
+  //#endregion
+  mapResourceToWorkingCopyListeners = new ResourceMap();
+  async resolve(options) {
+    const workingCopy = this.doCreateOrGet(options);
+    await workingCopy.resolve();
+    return workingCopy;
+  }
+  doCreateOrGet(options = /* @__PURE__ */ Object.create(null)) {
+    const massagedOptions = this.massageOptions(options);
+    if (massagedOptions.untitledResource) {
+      const existingWorkingCopy = this.get(massagedOptions.untitledResource);
+      if (existingWorkingCopy) {
+        return existingWorkingCopy;
+      }
+    }
+    return this.doCreate(massagedOptions);
+  }
+  massageOptions(options) {
+    const massagedOptions = /* @__PURE__ */ Object.create(null);
+    if (options.associatedResource) {
+      massagedOptions.untitledResource = URI.from({
+        scheme: Schemas.untitled,
+        authority: options.associatedResource.authority,
+        fragment: options.associatedResource.fragment,
+        path: options.associatedResource.path,
+        query: options.associatedResource.query
+      });
+      massagedOptions.associatedResource = options.associatedResource;
+    } else {
+      if (options.untitledResource?.scheme === Schemas.untitled) {
+        massagedOptions.untitledResource = options.untitledResource;
+      }
+      massagedOptions.isScratchpad = options.isScratchpad;
+    }
+    massagedOptions.contents = options.contents;
+    return massagedOptions;
+  }
+  doCreate(options) {
+    let untitledResource = options.untitledResource;
+    if (!untitledResource) {
+      let counter = 1;
+      do {
+        untitledResource = URI.from({
+          scheme: Schemas.untitled,
+          path: options.isScratchpad ? `Scratchpad-${counter}` : `Untitled-${counter}`,
+          query: this.workingCopyTypeId ? `typeId=${this.workingCopyTypeId}` : (
+            // distinguish untitled resources among others by encoding the `typeId` as query param
+            void 0
+          )
+          // keep untitled resources for text files as they are (when `typeId === ''`)
+        });
+        counter++;
+      } while (this.has(untitledResource));
+    }
+    const workingCopy = new UntitledFileWorkingCopy(
+      this.workingCopyTypeId,
+      untitledResource,
+      this.labelService.getUriBasenameLabel(untitledResource),
+      !!options.associatedResource,
+      !!options.isScratchpad,
+      options.contents,
+      this.modelFactory,
+      this.saveDelegate,
+      this.workingCopyService,
+      this.workingCopyBackupService,
+      this.logService
+    );
+    this.registerWorkingCopy(workingCopy);
+    return workingCopy;
+  }
+  registerWorkingCopy(workingCopy) {
+    const workingCopyListeners = new DisposableStore();
+    workingCopyListeners.add(workingCopy.onDidChangeDirty(() => this._onDidChangeDirty.fire(workingCopy)));
+    workingCopyListeners.add(workingCopy.onWillDispose(() => this._onWillDispose.fire(workingCopy)));
+    this.mapResourceToWorkingCopyListeners.set(workingCopy.resource, workingCopyListeners);
+    this.add(workingCopy.resource, workingCopy);
+    if (workingCopy.isDirty()) {
+      this._onDidChangeDirty.fire(workingCopy);
+    }
+  }
+  remove(resource) {
+    const removed = super.remove(resource);
+    const workingCopyListener = this.mapResourceToWorkingCopyListeners.get(resource);
+    if (workingCopyListener) {
+      dispose(workingCopyListener);
+      this.mapResourceToWorkingCopyListeners.delete(resource);
+    }
+    return removed;
+  }
+  //#endregion
+  //#region Lifecycle
+  dispose() {
+    super.dispose();
+    dispose(this.mapResourceToWorkingCopyListeners.values());
+    this.mapResourceToWorkingCopyListeners.clear();
+  }
+  //#endregion
+  notifyDidSave(source, target) {
+    this._onDidSave.fire({ source, target });
+  }
+};
+UntitledFileWorkingCopyManager = __decorateClass([
+  __decorateParam(3, IFileService),
+  __decorateParam(4, ILabelService),
+  __decorateParam(5, ILogService),
+  __decorateParam(6, IWorkingCopyBackupService),
+  __decorateParam(7, IWorkingCopyService)
+], UntitledFileWorkingCopyManager);
+export {
+  UntitledFileWorkingCopyManager
+};
+//# sourceMappingURL=untitledFileWorkingCopyManager.js.map

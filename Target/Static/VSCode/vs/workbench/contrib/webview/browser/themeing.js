@@ -1,1 +1,111 @@
-var C=Object.defineProperty,y=Object.getOwnPropertyDescriptor,u=(e,t,o,i)=>{for(var r,s=i>1?void 0:i?y(t,o):t,n=e.length-1;n>=0;n--)(r=e[n])&&(s=(i?r(t,o,s):r(s))||s);return i&&s&&C(t,o,s),s},d=(e,t)=>(o,i)=>t(o,i,e);import{DEFAULT_FONT_FAMILY as b}from"../../../../base/browser/fonts.js";import{Emitter as S}from"../../../../base/common/event.js";import{Disposable as D}from"../../../../base/common/lifecycle.js";import{EDITOR_FONT_DEFAULTS as l}from"../../../../editor/common/config/editorOptions.js";import{IConfigurationService as I}from"../../../../platform/configuration/common/configuration.js";import*as W from"../../../../platform/theme/common/colorRegistry.js";import{ColorScheme as h}from"../../../../platform/theme/common/theme.js";import{IWorkbenchThemeService as w}from"../../../services/themes/common/workbenchThemeService.js";import"./webview.js";let c=class extends D{constructor(e,t){super(),this._themeService=e,this._configurationService=t,this._register(this._themeService.onDidColorThemeChange((()=>{this._reset()})));const o=["editor.fontFamily","editor.fontWeight","editor.fontSize","accessibility.underlineLinks"];this._register(this._configurationService.onDidChangeConfiguration((e=>{o.some((t=>e.affectsConfiguration(t)))&&this._reset()})))}_cachedWebViewThemeData=void 0;_onThemeDataChanged=this._register(new S);onThemeDataChanged=this._onThemeDataChanged.event;getTheme(){return this._themeService.getColorTheme()}getWebviewThemeData(){if(!this._cachedWebViewThemeData){const e=this._configurationService.getValue("editor"),t=e.fontFamily||l.fontFamily,o=e.fontWeight||l.fontWeight,i=e.fontSize||l.fontSize,r=this._configurationService.getValue("accessibility.underlineLinks"),s=this._themeService.getColorTheme(),n=W.getColorRegistry().getColors().reduce(((e,t)=>{const o=s.getColor(t.id);return o&&(e["vscode-"+t.id.replace(".","-")]=o.toString()),e}),{}),h={"vscode-font-family":b,"vscode-font-weight":"normal","vscode-font-size":"13px","vscode-editor-font-family":t,"vscode-editor-font-weight":o,"vscode-editor-font-size":i+"px","text-link-decoration":r?"underline":"none",...n},a=m.fromTheme(s);this._cachedWebViewThemeData={styles:h,activeTheme:a,themeLabel:s.label,themeId:s.settingsId}}return this._cachedWebViewThemeData}_reset(){this._cachedWebViewThemeData=void 0,this._onThemeDataChanged.fire()}};c=u([d(0,w),d(1,I)],c);var m=(e=>(e.light="vscode-light",e.dark="vscode-dark",e.highContrast="vscode-high-contrast",e.highContrastLight="vscode-high-contrast-light",e))(m||{});(m||={}).fromTheme=function(e){switch(e.type){case h.LIGHT:return"vscode-light";case h.DARK:return"vscode-dark";case h.HIGH_CONTRAST_DARK:return"vscode-high-contrast";case h.HIGH_CONTRAST_LIGHT:return"vscode-high-contrast-light"}};export{c as WebviewThemeDataProvider};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { DEFAULT_FONT_FAMILY } from "../../../../base/browser/fonts.js";
+import { Emitter } from "../../../../base/common/event.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { EDITOR_FONT_DEFAULTS, IEditorOptions } from "../../../../editor/common/config/editorOptions.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import * as colorRegistry from "../../../../platform/theme/common/colorRegistry.js";
+import { ColorScheme } from "../../../../platform/theme/common/theme.js";
+import { IWorkbenchColorTheme, IWorkbenchThemeService } from "../../../services/themes/common/workbenchThemeService.js";
+import { WebviewStyles } from "./webview.js";
+let WebviewThemeDataProvider = class extends Disposable {
+  constructor(_themeService, _configurationService) {
+    super();
+    this._themeService = _themeService;
+    this._configurationService = _configurationService;
+    this._register(this._themeService.onDidColorThemeChange(() => {
+      this._reset();
+    }));
+    const webviewConfigurationKeys = ["editor.fontFamily", "editor.fontWeight", "editor.fontSize", "accessibility.underlineLinks"];
+    this._register(this._configurationService.onDidChangeConfiguration((e) => {
+      if (webviewConfigurationKeys.some((key) => e.affectsConfiguration(key))) {
+        this._reset();
+      }
+    }));
+  }
+  static {
+    __name(this, "WebviewThemeDataProvider");
+  }
+  _cachedWebViewThemeData = void 0;
+  _onThemeDataChanged = this._register(new Emitter());
+  onThemeDataChanged = this._onThemeDataChanged.event;
+  getTheme() {
+    return this._themeService.getColorTheme();
+  }
+  getWebviewThemeData() {
+    if (!this._cachedWebViewThemeData) {
+      const configuration = this._configurationService.getValue("editor");
+      const editorFontFamily = configuration.fontFamily || EDITOR_FONT_DEFAULTS.fontFamily;
+      const editorFontWeight = configuration.fontWeight || EDITOR_FONT_DEFAULTS.fontWeight;
+      const editorFontSize = configuration.fontSize || EDITOR_FONT_DEFAULTS.fontSize;
+      const linkUnderlines = this._configurationService.getValue("accessibility.underlineLinks");
+      const theme = this._themeService.getColorTheme();
+      const exportedColors = colorRegistry.getColorRegistry().getColors().reduce((colors, entry) => {
+        const color = theme.getColor(entry.id);
+        if (color) {
+          colors["vscode-" + entry.id.replace(".", "-")] = color.toString();
+        }
+        return colors;
+      }, {});
+      const styles = {
+        "vscode-font-family": DEFAULT_FONT_FAMILY,
+        "vscode-font-weight": "normal",
+        "vscode-font-size": "13px",
+        "vscode-editor-font-family": editorFontFamily,
+        "vscode-editor-font-weight": editorFontWeight,
+        "vscode-editor-font-size": editorFontSize + "px",
+        "text-link-decoration": linkUnderlines ? "underline" : "none",
+        ...exportedColors
+      };
+      const activeTheme = ApiThemeClassName.fromTheme(theme);
+      this._cachedWebViewThemeData = { styles, activeTheme, themeLabel: theme.label, themeId: theme.settingsId };
+    }
+    return this._cachedWebViewThemeData;
+  }
+  _reset() {
+    this._cachedWebViewThemeData = void 0;
+    this._onThemeDataChanged.fire();
+  }
+};
+WebviewThemeDataProvider = __decorateClass([
+  __decorateParam(0, IWorkbenchThemeService),
+  __decorateParam(1, IConfigurationService)
+], WebviewThemeDataProvider);
+var ApiThemeClassName = /* @__PURE__ */ ((ApiThemeClassName2) => {
+  ApiThemeClassName2["light"] = "vscode-light";
+  ApiThemeClassName2["dark"] = "vscode-dark";
+  ApiThemeClassName2["highContrast"] = "vscode-high-contrast";
+  ApiThemeClassName2["highContrastLight"] = "vscode-high-contrast-light";
+  return ApiThemeClassName2;
+})(ApiThemeClassName || {});
+((ApiThemeClassName2) => {
+  function fromTheme(theme) {
+    switch (theme.type) {
+      case ColorScheme.LIGHT:
+        return "vscode-light" /* light */;
+      case ColorScheme.DARK:
+        return "vscode-dark" /* dark */;
+      case ColorScheme.HIGH_CONTRAST_DARK:
+        return "vscode-high-contrast" /* highContrast */;
+      case ColorScheme.HIGH_CONTRAST_LIGHT:
+        return "vscode-high-contrast-light" /* highContrastLight */;
+    }
+  }
+  ApiThemeClassName2.fromTheme = fromTheme;
+  __name(fromTheme, "fromTheme");
+})(ApiThemeClassName || (ApiThemeClassName = {}));
+export {
+  WebviewThemeDataProvider
+};
+//# sourceMappingURL=themeing.js.map

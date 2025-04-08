@@ -1,1 +1,274 @@
-import{CharCode as f}from"./charCode.js";import*as g from"./extpath.js";import{Schemas as p}from"./network.js";import*as s from"./path.js";import{isLinux as b,isWindows as A}from"./platform.js";import{compare as y,equalsIgnoreCase as T}from"./strings.js";import{URI as u,uriToFsPath as E}from"./uri.js";function l(t){return E(t,!0)}class I{constructor(t){this._ignorePathCasing=t}compare(t,a,e=!1){return t===a?0:y(this.getComparisonKey(t,e),this.getComparisonKey(a,e))}isEqual(t,a,e=!1){return t===a||!(!t||!a)&&this.getComparisonKey(t,e)===this.getComparisonKey(a,e)}getComparisonKey(t,a=!1){return t.with({path:this._ignorePathCasing(t)?t.path.toLowerCase():void 0,fragment:a?null:void 0}).toString()}ignorePathCasing(t){return this._ignorePathCasing(t)}isEqualOrParent(t,a,e=!1){if(t.scheme===a.scheme){if(t.scheme===p.file)return g.isEqualOrParent(l(t),l(a),this._ignorePathCasing(t))&&t.query===a.query&&(e||t.fragment===a.fragment);if(U(t.authority,a.authority))return g.isEqualOrParent(t.path,a.path,this._ignorePathCasing(t),"/")&&t.query===a.query&&(e||t.fragment===a.fragment)}return!1}joinPath(t,...a){return u.joinPath(t,...a)}basenameOrAuthority(t){return S(t)||t.authority}basename(t){return s.posix.basename(t.path)}extname(t){return s.posix.extname(t.path)}dirname(t){if(0===t.path.length)return t;let a;return t.scheme===p.file?a=u.file(s.dirname(l(t))).path:(a=s.posix.dirname(t.path),t.authority&&a.length&&a.charCodeAt(0)!==f.Slash&&(console.error(`dirname("${t.toString})) resulted in a relative path`),a="/")),t.with({path:a})}normalizePath(t){if(!t.path.length)return t;let a;return a=t.scheme===p.file?u.file(s.normalize(l(t))).path:s.posix.normalize(t.path),t.with({path:a})}relativePath(t,a){if(t.scheme!==a.scheme||!U(t.authority,a.authority))return;if(t.scheme===p.file){const e=s.relative(l(t),l(a));return A?g.toSlashes(e):e}let e=t.path||"/";const r=a.path||"/";if(this._ignorePathCasing(t)){let t=0;for(const a=Math.min(e.length,r.length);t<a&&(e.charCodeAt(t)===r.charCodeAt(t)||e.charAt(t).toLowerCase()===r.charAt(t).toLowerCase());t++);e=r.substr(0,t)+e.substr(t)}return s.posix.relative(e,r)}resolvePath(t,a){if(t.scheme===p.file){const e=u.file(s.resolve(l(t),a));return t.with({authority:e.authority,path:e.path})}return a=g.toPosixPath(a),t.with({path:s.posix.resolve(t.path,a)})}isAbsolutePath(t){return!!t.path&&"/"===t.path[0]}isEqualAuthority(t,a){return t===a||void 0!==t&&void 0!==a&&T(t,a)}hasTrailingPathSeparator(t,a=s.sep){if(t.scheme===p.file){const e=l(t);return e.length>g.getRoot(e).length&&e[e.length-1]===a}{const a=t.path;return a.length>1&&a.charCodeAt(a.length-1)===f.Slash&&!/^[a-zA-Z]:(\/$|\\$)/.test(t.fsPath)}}removeTrailingPathSeparator(t,a=s.sep){return c(t,a)?t.with({path:t.path.substr(0,t.path.length-1)}):t}addTrailingPathSeparator(t,a=s.sep){let e=!1;if(t.scheme===p.file){const r=l(t);e=void 0!==r&&r.length===g.getRoot(r).length&&r[r.length-1]===a}else{a="/";const r=t.path;e=1===r.length&&r.charCodeAt(r.length-1)===f.Slash}return e||c(t,a)?t:t.with({path:t.path+"/"})}}const r=new I((()=>!1)),K=new I((t=>t.scheme!==p.file||!b)),L=new I((t=>!0)),j=r.isEqual.bind(r),C=r.isEqualOrParent.bind(r),F=r.getComparisonKey.bind(r),$=r.basenameOrAuthority.bind(r),S=r.basename.bind(r),k=r.extname.bind(r),B=r.dirname.bind(r),Z=r.joinPath.bind(r),D=r.normalizePath.bind(r),N=r.relativePath.bind(r),W=r.resolvePath.bind(r),G=r.isAbsolutePath.bind(r),U=r.isEqualAuthority.bind(r),c=r.hasTrailingPathSeparator.bind(r),H=r.removeTrailingPathSeparator.bind(r),J=r.addTrailingPathSeparator.bind(r);function Q(t,a){const e=[];for(let r=0;r<t.length;r++){const s=a(t[r]);t.some(((t,e)=>e!==r&&C(s,a(t))))||e.push(t[r])}return e}var v;function V(t,a,e){if(a){let r=t.path;return r&&r[0]!==s.posix.sep&&(r=s.posix.sep+r),t.with({scheme:e,authority:a,path:r})}return t.with({scheme:e})}(t=>{t.META_DATA_LABEL="label",t.META_DATA_DESCRIPTION="description",t.META_DATA_SIZE="size",t.META_DATA_MIME="mime",t.parseMetaData=function(a){const e=new Map;a.path.substring(a.path.indexOf(";")+1,a.path.lastIndexOf(";")).split(";").forEach((t=>{const[a,r]=t.split(":");a&&r&&e.set(a,r)}));const r=a.path.substring(0,a.path.indexOf(";"));return r&&e.set(t.META_DATA_MIME,r),e}})(v||={});export{v as DataUri,I as ExtUri,J as addTrailingPathSeparator,S as basename,$ as basenameOrAuthority,B as dirname,Q as distinctParents,r as extUri,K as extUriBiasedIgnorePathCase,L as extUriIgnorePathCase,k as extname,F as getComparisonKey,c as hasTrailingPathSeparator,G as isAbsolutePath,j as isEqual,U as isEqualAuthority,C as isEqualOrParent,Z as joinPath,D as normalizePath,l as originalFSPath,N as relativePath,H as removeTrailingPathSeparator,W as resolvePath,V as toLocalResource};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { CharCode } from "./charCode.js";
+import * as extpath from "./extpath.js";
+import { Schemas } from "./network.js";
+import * as paths from "./path.js";
+import { isLinux, isWindows } from "./platform.js";
+import { compare as strCompare, equalsIgnoreCase } from "./strings.js";
+import { URI, uriToFsPath } from "./uri.js";
+function originalFSPath(uri) {
+  return uriToFsPath(uri, true);
+}
+__name(originalFSPath, "originalFSPath");
+class ExtUri {
+  constructor(_ignorePathCasing) {
+    this._ignorePathCasing = _ignorePathCasing;
+  }
+  static {
+    __name(this, "ExtUri");
+  }
+  compare(uri1, uri2, ignoreFragment = false) {
+    if (uri1 === uri2) {
+      return 0;
+    }
+    return strCompare(this.getComparisonKey(uri1, ignoreFragment), this.getComparisonKey(uri2, ignoreFragment));
+  }
+  isEqual(uri1, uri2, ignoreFragment = false) {
+    if (uri1 === uri2) {
+      return true;
+    }
+    if (!uri1 || !uri2) {
+      return false;
+    }
+    return this.getComparisonKey(uri1, ignoreFragment) === this.getComparisonKey(uri2, ignoreFragment);
+  }
+  getComparisonKey(uri, ignoreFragment = false) {
+    return uri.with({
+      path: this._ignorePathCasing(uri) ? uri.path.toLowerCase() : void 0,
+      fragment: ignoreFragment ? null : void 0
+    }).toString();
+  }
+  ignorePathCasing(uri) {
+    return this._ignorePathCasing(uri);
+  }
+  isEqualOrParent(base, parentCandidate, ignoreFragment = false) {
+    if (base.scheme === parentCandidate.scheme) {
+      if (base.scheme === Schemas.file) {
+        return extpath.isEqualOrParent(originalFSPath(base), originalFSPath(parentCandidate), this._ignorePathCasing(base)) && base.query === parentCandidate.query && (ignoreFragment || base.fragment === parentCandidate.fragment);
+      }
+      if (isEqualAuthority(base.authority, parentCandidate.authority)) {
+        return extpath.isEqualOrParent(base.path, parentCandidate.path, this._ignorePathCasing(base), "/") && base.query === parentCandidate.query && (ignoreFragment || base.fragment === parentCandidate.fragment);
+      }
+    }
+    return false;
+  }
+  // --- path math
+  joinPath(resource, ...pathFragment) {
+    return URI.joinPath(resource, ...pathFragment);
+  }
+  basenameOrAuthority(resource) {
+    return basename(resource) || resource.authority;
+  }
+  basename(resource) {
+    return paths.posix.basename(resource.path);
+  }
+  extname(resource) {
+    return paths.posix.extname(resource.path);
+  }
+  dirname(resource) {
+    if (resource.path.length === 0) {
+      return resource;
+    }
+    let dirname2;
+    if (resource.scheme === Schemas.file) {
+      dirname2 = URI.file(paths.dirname(originalFSPath(resource))).path;
+    } else {
+      dirname2 = paths.posix.dirname(resource.path);
+      if (resource.authority && dirname2.length && dirname2.charCodeAt(0) !== CharCode.Slash) {
+        console.error(`dirname("${resource.toString})) resulted in a relative path`);
+        dirname2 = "/";
+      }
+    }
+    return resource.with({
+      path: dirname2
+    });
+  }
+  normalizePath(resource) {
+    if (!resource.path.length) {
+      return resource;
+    }
+    let normalizedPath;
+    if (resource.scheme === Schemas.file) {
+      normalizedPath = URI.file(paths.normalize(originalFSPath(resource))).path;
+    } else {
+      normalizedPath = paths.posix.normalize(resource.path);
+    }
+    return resource.with({
+      path: normalizedPath
+    });
+  }
+  relativePath(from, to) {
+    if (from.scheme !== to.scheme || !isEqualAuthority(from.authority, to.authority)) {
+      return void 0;
+    }
+    if (from.scheme === Schemas.file) {
+      const relativePath2 = paths.relative(originalFSPath(from), originalFSPath(to));
+      return isWindows ? extpath.toSlashes(relativePath2) : relativePath2;
+    }
+    let fromPath = from.path || "/";
+    const toPath = to.path || "/";
+    if (this._ignorePathCasing(from)) {
+      let i = 0;
+      for (const len = Math.min(fromPath.length, toPath.length); i < len; i++) {
+        if (fromPath.charCodeAt(i) !== toPath.charCodeAt(i)) {
+          if (fromPath.charAt(i).toLowerCase() !== toPath.charAt(i).toLowerCase()) {
+            break;
+          }
+        }
+      }
+      fromPath = toPath.substr(0, i) + fromPath.substr(i);
+    }
+    return paths.posix.relative(fromPath, toPath);
+  }
+  resolvePath(base, path) {
+    if (base.scheme === Schemas.file) {
+      const newURI = URI.file(paths.resolve(originalFSPath(base), path));
+      return base.with({
+        authority: newURI.authority,
+        path: newURI.path
+      });
+    }
+    path = extpath.toPosixPath(path);
+    return base.with({
+      path: paths.posix.resolve(base.path, path)
+    });
+  }
+  // --- misc
+  isAbsolutePath(resource) {
+    return !!resource.path && resource.path[0] === "/";
+  }
+  isEqualAuthority(a1, a2) {
+    return a1 === a2 || a1 !== void 0 && a2 !== void 0 && equalsIgnoreCase(a1, a2);
+  }
+  hasTrailingPathSeparator(resource, sep = paths.sep) {
+    if (resource.scheme === Schemas.file) {
+      const fsp = originalFSPath(resource);
+      return fsp.length > extpath.getRoot(fsp).length && fsp[fsp.length - 1] === sep;
+    } else {
+      const p = resource.path;
+      return p.length > 1 && p.charCodeAt(p.length - 1) === CharCode.Slash && !/^[a-zA-Z]:(\/$|\\$)/.test(resource.fsPath);
+    }
+  }
+  removeTrailingPathSeparator(resource, sep = paths.sep) {
+    if (hasTrailingPathSeparator(resource, sep)) {
+      return resource.with({ path: resource.path.substr(0, resource.path.length - 1) });
+    }
+    return resource;
+  }
+  addTrailingPathSeparator(resource, sep = paths.sep) {
+    let isRootSep = false;
+    if (resource.scheme === Schemas.file) {
+      const fsp = originalFSPath(resource);
+      isRootSep = fsp !== void 0 && fsp.length === extpath.getRoot(fsp).length && fsp[fsp.length - 1] === sep;
+    } else {
+      sep = "/";
+      const p = resource.path;
+      isRootSep = p.length === 1 && p.charCodeAt(p.length - 1) === CharCode.Slash;
+    }
+    if (!isRootSep && !hasTrailingPathSeparator(resource, sep)) {
+      return resource.with({ path: resource.path + "/" });
+    }
+    return resource;
+  }
+}
+const extUri = new ExtUri(() => false);
+const extUriBiasedIgnorePathCase = new ExtUri((uri) => {
+  return uri.scheme === Schemas.file ? !isLinux : true;
+});
+const extUriIgnorePathCase = new ExtUri((_) => true);
+const isEqual = extUri.isEqual.bind(extUri);
+const isEqualOrParent = extUri.isEqualOrParent.bind(extUri);
+const getComparisonKey = extUri.getComparisonKey.bind(extUri);
+const basenameOrAuthority = extUri.basenameOrAuthority.bind(extUri);
+const basename = extUri.basename.bind(extUri);
+const extname = extUri.extname.bind(extUri);
+const dirname = extUri.dirname.bind(extUri);
+const joinPath = extUri.joinPath.bind(extUri);
+const normalizePath = extUri.normalizePath.bind(extUri);
+const relativePath = extUri.relativePath.bind(extUri);
+const resolvePath = extUri.resolvePath.bind(extUri);
+const isAbsolutePath = extUri.isAbsolutePath.bind(extUri);
+const isEqualAuthority = extUri.isEqualAuthority.bind(extUri);
+const hasTrailingPathSeparator = extUri.hasTrailingPathSeparator.bind(extUri);
+const removeTrailingPathSeparator = extUri.removeTrailingPathSeparator.bind(extUri);
+const addTrailingPathSeparator = extUri.addTrailingPathSeparator.bind(extUri);
+function distinctParents(items, resourceAccessor) {
+  const distinctParents2 = [];
+  for (let i = 0; i < items.length; i++) {
+    const candidateResource = resourceAccessor(items[i]);
+    if (items.some((otherItem, index) => {
+      if (index === i) {
+        return false;
+      }
+      return isEqualOrParent(candidateResource, resourceAccessor(otherItem));
+    })) {
+      continue;
+    }
+    distinctParents2.push(items[i]);
+  }
+  return distinctParents2;
+}
+__name(distinctParents, "distinctParents");
+var DataUri;
+((DataUri2) => {
+  DataUri2.META_DATA_LABEL = "label";
+  DataUri2.META_DATA_DESCRIPTION = "description";
+  DataUri2.META_DATA_SIZE = "size";
+  DataUri2.META_DATA_MIME = "mime";
+  function parseMetaData(dataUri) {
+    const metadata = /* @__PURE__ */ new Map();
+    const meta = dataUri.path.substring(dataUri.path.indexOf(";") + 1, dataUri.path.lastIndexOf(";"));
+    meta.split(";").forEach((property) => {
+      const [key, value] = property.split(":");
+      if (key && value) {
+        metadata.set(key, value);
+      }
+    });
+    const mime = dataUri.path.substring(0, dataUri.path.indexOf(";"));
+    if (mime) {
+      metadata.set(DataUri2.META_DATA_MIME, mime);
+    }
+    return metadata;
+  }
+  DataUri2.parseMetaData = parseMetaData;
+  __name(parseMetaData, "parseMetaData");
+})(DataUri || (DataUri = {}));
+function toLocalResource(resource, authority, localScheme) {
+  if (authority) {
+    let path = resource.path;
+    if (path && path[0] !== paths.posix.sep) {
+      path = paths.posix.sep + path;
+    }
+    return resource.with({ scheme: localScheme, authority, path });
+  }
+  return resource.with({ scheme: localScheme });
+}
+__name(toLocalResource, "toLocalResource");
+export {
+  DataUri,
+  ExtUri,
+  addTrailingPathSeparator,
+  basename,
+  basenameOrAuthority,
+  dirname,
+  distinctParents,
+  extUri,
+  extUriBiasedIgnorePathCase,
+  extUriIgnorePathCase,
+  extname,
+  getComparisonKey,
+  hasTrailingPathSeparator,
+  isAbsolutePath,
+  isEqual,
+  isEqualAuthority,
+  isEqualOrParent,
+  joinPath,
+  normalizePath,
+  originalFSPath,
+  relativePath,
+  removeTrailingPathSeparator,
+  resolvePath,
+  toLocalResource
+};
+//# sourceMappingURL=resources.js.map

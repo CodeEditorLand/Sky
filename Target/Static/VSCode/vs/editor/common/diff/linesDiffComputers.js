@@ -1,1 +1,13 @@
-import{LegacyLinesDiffComputer as e}from"./legacyLinesDiffComputer.js";import{DefaultLinesDiffComputer as f}from"./defaultLinesDiffComputer/defaultLinesDiffComputer.js";import"./linesDiffComputer.js";const m={getLegacy:()=>new e,getDefault:()=>new f};export{m as linesDiffComputers};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { LegacyLinesDiffComputer } from "./legacyLinesDiffComputer.js";
+import { DefaultLinesDiffComputer } from "./defaultLinesDiffComputer/defaultLinesDiffComputer.js";
+import { ILinesDiffComputer } from "./linesDiffComputer.js";
+const linesDiffComputers = {
+  getLegacy: /* @__PURE__ */ __name(() => new LegacyLinesDiffComputer(), "getLegacy"),
+  getDefault: /* @__PURE__ */ __name(() => new DefaultLinesDiffComputer(), "getDefault")
+};
+export {
+  linesDiffComputers
+};
+//# sourceMappingURL=linesDiffComputers.js.map

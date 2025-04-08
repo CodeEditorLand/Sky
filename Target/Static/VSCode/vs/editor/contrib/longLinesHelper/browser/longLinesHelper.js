@@ -1,1 +1,30 @@
-import{Disposable as r}from"../../../../base/common/lifecycle.js";import{MouseTargetType as n}from"../../../browser/editorBrowser.js";import{EditorContributionInstantiation as s,registerEditorContribution as p}from"../../../browser/editorExtensions.js";import{EditorOption as d}from"../../../common/config/editorOptions.js";import"../../../common/editorCommon.js";class t extends r{constructor(o){super();this._editor=o;this._register(this._editor.onMouseDown(i=>{const e=this._editor.getOption(d.stopRenderingLineAfter);e>=0&&i.target.type===n.CONTENT_TEXT&&i.target.position.column>=e&&this._editor.updateOptions({stopRenderingLineAfter:-1})}))}static ID="editor.contrib.longLinesHelper";static get(o){return o.getContribution(t.ID)}}p(t.ID,t,s.BeforeFirstInteraction);
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { ICodeEditor, MouseTargetType } from "../../../browser/editorBrowser.js";
+import { EditorContributionInstantiation, registerEditorContribution } from "../../../browser/editorExtensions.js";
+import { EditorOption } from "../../../common/config/editorOptions.js";
+import { IEditorContribution } from "../../../common/editorCommon.js";
+class LongLinesHelper extends Disposable {
+  constructor(_editor) {
+    super();
+    this._editor = _editor;
+    this._register(this._editor.onMouseDown((e) => {
+      const stopRenderingLineAfter = this._editor.getOption(EditorOption.stopRenderingLineAfter);
+      if (stopRenderingLineAfter >= 0 && e.target.type === MouseTargetType.CONTENT_TEXT && e.target.position.column >= stopRenderingLineAfter) {
+        this._editor.updateOptions({
+          stopRenderingLineAfter: -1
+        });
+      }
+    }));
+  }
+  static {
+    __name(this, "LongLinesHelper");
+  }
+  static ID = "editor.contrib.longLinesHelper";
+  static get(editor) {
+    return editor.getContribution(LongLinesHelper.ID);
+  }
+}
+registerEditorContribution(LongLinesHelper.ID, LongLinesHelper, EditorContributionInstantiation.BeforeFirstInteraction);
+//# sourceMappingURL=longLinesHelper.js.map

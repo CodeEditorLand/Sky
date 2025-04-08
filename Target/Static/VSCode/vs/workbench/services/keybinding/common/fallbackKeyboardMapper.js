@@ -1,1 +1,39 @@
-import{KeyCodeChord as i,Keybinding as l}from"../../../../base/common/keybindings.js";import"../../../../base/common/platform.js";import"../../../../platform/keybinding/common/keybinding.js";import{USLayoutResolvedKeybinding as n}from"../../../../platform/keybinding/common/usLayoutResolvedKeybinding.js";import"../../../../platform/keyboardLayout/common/keyboardMapper.js";class h{constructor(e,o){this._mapAltGrToCtrlAlt=e,this._OS=o}dumpDebugInfo(){return"FallbackKeyboardMapper dispatching on keyCode"}resolveKeyboardEvent(e){const o=e.ctrlKey||this._mapAltGrToCtrlAlt&&e.altGraphKey,r=e.altKey||this._mapAltGrToCtrlAlt&&e.altGraphKey,t=new i(o,e.shiftKey,r,e.metaKey,e.keyCode);return this.resolveKeybinding(new l([t]))[0]}resolveKeybinding(e){return n.resolveKeybinding(e,this._OS)}}export{h as FallbackKeyboardMapper};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { ResolvedKeybinding, KeyCodeChord, Keybinding } from "../../../../base/common/keybindings.js";
+import { OperatingSystem } from "../../../../base/common/platform.js";
+import { IKeyboardEvent } from "../../../../platform/keybinding/common/keybinding.js";
+import { USLayoutResolvedKeybinding } from "../../../../platform/keybinding/common/usLayoutResolvedKeybinding.js";
+import { IKeyboardMapper } from "../../../../platform/keyboardLayout/common/keyboardMapper.js";
+class FallbackKeyboardMapper {
+  constructor(_mapAltGrToCtrlAlt, _OS) {
+    this._mapAltGrToCtrlAlt = _mapAltGrToCtrlAlt;
+    this._OS = _OS;
+  }
+  static {
+    __name(this, "FallbackKeyboardMapper");
+  }
+  dumpDebugInfo() {
+    return "FallbackKeyboardMapper dispatching on keyCode";
+  }
+  resolveKeyboardEvent(keyboardEvent) {
+    const ctrlKey = keyboardEvent.ctrlKey || this._mapAltGrToCtrlAlt && keyboardEvent.altGraphKey;
+    const altKey = keyboardEvent.altKey || this._mapAltGrToCtrlAlt && keyboardEvent.altGraphKey;
+    const chord = new KeyCodeChord(
+      ctrlKey,
+      keyboardEvent.shiftKey,
+      altKey,
+      keyboardEvent.metaKey,
+      keyboardEvent.keyCode
+    );
+    const result = this.resolveKeybinding(new Keybinding([chord]));
+    return result[0];
+  }
+  resolveKeybinding(keybinding) {
+    return USLayoutResolvedKeybinding.resolveKeybinding(keybinding, this._OS);
+  }
+}
+export {
+  FallbackKeyboardMapper
+};
+//# sourceMappingURL=fallbackKeyboardMapper.js.map

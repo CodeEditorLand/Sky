@@ -1,1 +1,315 @@
-var C=Object.defineProperty;var y=Object.getOwnPropertyDescriptor;var l=(n,e,t,i)=>{for(var o=i>1?void 0:i?y(e,t):e,r=n.length-1,a;r>=0;r--)(a=n[r])&&(o=(i?a(e,t,o):a(o))||o);return i&&o&&C(e,t,o),o},c=(n,e)=>(t,i)=>e(t,i,n);import*as p from"../../../base/browser/browser.js";import*as E from"../../../base/common/arrays.js";import{Emitter as m}from"../../../base/common/event.js";import{Disposable as I}from"../../../base/common/lifecycle.js";import*as w from"../../../base/common/objects.js";import*as D from"../../../base/common/platform.js";import{ElementSizeObserver as M}from"./elementSizeObserver.js";import{FontMeasurements as h}from"./fontMeasurements.js";import{migrateOptions as S}from"./migrateOptions.js";import{TabFocus as g}from"./tabFocus.js";import{ComputeOptionsMemory as L,ConfigurationChangedEvent as x,EditorOption as F,editorOptionsRegistry as d}from"../../common/config/editorOptions.js";import{EditorZoom as T}from"../../common/config/editorZoom.js";import{BareFontInfo as W}from"../../common/config/fontInfo.js";import"../../common/core/dimension.js";import"../../common/config/editorConfiguration.js";import{AccessibilitySupport as R,IAccessibilityService as A}from"../../../platform/accessibility/common/accessibility.js";import{getWindow as _,getWindowById as O}from"../../../base/browser/dom.js";import{PixelRatio as v}from"../../../base/browser/pixelRatio.js";import"../../../platform/actions/common/actions.js";import{InputMode as b}from"../../common/inputMode.js";let u=class extends I{constructor(t,i,o,r,a){super();this._accessibilityService=a;this.isSimpleWidget=t,this.contextMenuId=i,this._containerObserver=this._register(new M(r,o.dimension)),this._targetWindowId=_(r).vscodeWindowId,this._rawOptions=f(o),this._validatedOptions=s.validateOptions(this._rawOptions),this.options=this._computeOptions(),this.options.get(F.automaticLayout)&&this._containerObserver.startObserving(),this._register(T.onDidChangeZoomLevel(()=>this._recomputeOptions())),this._register(g.onDidChangeTabFocus(()=>this._recomputeOptions())),this._register(this._containerObserver.onDidChange(()=>this._recomputeOptions())),this._register(h.onDidChange(()=>this._recomputeOptions())),this._register(v.getInstance(_(r)).onDidChange(()=>this._recomputeOptions())),this._register(this._accessibilityService.onDidChangeScreenReaderOptimized(()=>this._recomputeOptions())),this._register(b.onDidChangeInputMode(()=>this._recomputeOptions()))}_onDidChange=this._register(new m);onDidChange=this._onDidChange.event;_onDidChangeFast=this._register(new m);onDidChangeFast=this._onDidChangeFast.event;isSimpleWidget;contextMenuId;_containerObserver;_isDominatedByLongLines=!1;_viewLineCount=1;_lineNumbersDigitCount=1;_reservedHeight=0;_glyphMarginDecorationLaneCount=1;_targetWindowId;_computeOptionsMemory=new L;_rawOptions;_validatedOptions;options;_recomputeOptions(){const t=this._computeOptions(),i=s.checkEquals(this.options,t);i!==null&&(this.options=t,this._onDidChangeFast.fire(i),this._onDidChange.fire(i))}_computeOptions(){const t=this._readEnvConfiguration(),i=W.createFromValidatedSettings(this._validatedOptions,t.pixelRatio,this.isSimpleWidget),o=this._readFontInfo(i),r={memory:this._computeOptionsMemory,outerWidth:t.outerWidth,outerHeight:t.outerHeight-this._reservedHeight,fontInfo:o,extraEditorClassName:t.extraEditorClassName,isDominatedByLongLines:this._isDominatedByLongLines,viewLineCount:this._viewLineCount,lineNumbersDigitCount:this._lineNumbersDigitCount,emptySelectionClipboard:t.emptySelectionClipboard,pixelRatio:t.pixelRatio,tabFocusMode:g.getTabFocusMode(),inputMode:b.getInputMode(),accessibilitySupport:t.accessibilitySupport,glyphMarginDecorationLaneCount:this._glyphMarginDecorationLaneCount};return s.computeOptions(this._validatedOptions,r)}_readEnvConfiguration(){return{extraEditorClassName:N(),outerWidth:this._containerObserver.getWidth(),outerHeight:this._containerObserver.getHeight(),emptySelectionClipboard:p.isWebKit||p.isFirefox,pixelRatio:v.getInstance(O(this._targetWindowId,!0).window).value,accessibilitySupport:this._accessibilityService.isScreenReaderOptimized()?R.Enabled:this._accessibilityService.getAccessibilitySupport()}}_readFontInfo(t){return h.readFontInfo(O(this._targetWindowId,!0).window,t)}getRawOptions(){return this._rawOptions}updateOptions(t){const i=f(t);s.applyUpdate(this._rawOptions,i)&&(this._validatedOptions=s.validateOptions(this._rawOptions),this._recomputeOptions())}observeContainer(t){this._containerObserver.observe(t)}setIsDominatedByLongLines(t){this._isDominatedByLongLines!==t&&(this._isDominatedByLongLines=t,this._recomputeOptions())}setModelLineCount(t){const i=V(t);this._lineNumbersDigitCount!==i&&(this._lineNumbersDigitCount=i,this._recomputeOptions())}setViewLineCount(t){this._viewLineCount!==t&&(this._viewLineCount=t,this._recomputeOptions())}setReservedHeight(t){this._reservedHeight!==t&&(this._reservedHeight=t,this._recomputeOptions())}setGlyphMarginDecorationLaneCount(t){this._glyphMarginDecorationLaneCount!==t&&(this._glyphMarginDecorationLaneCount=t,this._recomputeOptions())}};u=l([c(4,A)],u);function V(n){let e=0;for(;n;)n=Math.floor(n/10),e++;return e||1}function N(){let n="";return!p.isSafari&&!p.isWebkitWebView&&(n+="no-user-select "),p.isSafari&&(n+="no-minimap-shadow ",n+="enable-user-select "),D.isMacintosh&&(n+="mac "),n}class B{_values=[];_read(e){return this._values[e]}get(e){return this._values[e]}_write(e,t){this._values[e]=t}}class H{_values=[];_read(e){if(e>=this._values.length)throw new Error("Cannot read uninitialized value");return this._values[e]}get(e){return this._read(e)}_write(e,t){this._values[e]=t}}class s{static validateOptions(e){const t=new B;for(const i of d){const o=i.name==="_never_"?void 0:e[i.name];t._write(i.id,i.validate(o))}return t}static computeOptions(e,t){const i=new H;for(const o of d)i._write(o.id,o.compute(t,i,e._read(o.id)));return i}static _deepEquals(e,t){if(typeof e!="object"||typeof t!="object"||!e||!t)return e===t;if(Array.isArray(e)||Array.isArray(t))return Array.isArray(e)&&Array.isArray(t)?E.equals(e,t):!1;if(Object.keys(e).length!==Object.keys(t).length)return!1;for(const i in e)if(!s._deepEquals(e[i],t[i]))return!1;return!0}static checkEquals(e,t){const i=[];let o=!1;for(const r of d){const a=!s._deepEquals(e._read(r.id),t._read(r.id));i[r.id]=a,a&&(o=!0)}return o?new x(i):null}static applyUpdate(e,t){let i=!1;for(const o of d)if(t.hasOwnProperty(o.name)){const r=o.applyUpdate(e[o.name],t[o.name]);e[o.name]=r.newValue,i=i||r.didChange}return i}}function f(n){const e=w.deepClone(n);return S(e),e}export{H as ComputedEditorOptions,u as EditorConfiguration};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import * as browser from "../../../base/browser/browser.js";
+import * as arrays from "../../../base/common/arrays.js";
+import { Emitter, Event } from "../../../base/common/event.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import * as objects from "../../../base/common/objects.js";
+import * as platform from "../../../base/common/platform.js";
+import { ElementSizeObserver } from "./elementSizeObserver.js";
+import { FontMeasurements } from "./fontMeasurements.js";
+import { migrateOptions } from "./migrateOptions.js";
+import { TabFocus } from "./tabFocus.js";
+import { ComputeOptionsMemory, ConfigurationChangedEvent, EditorOption, editorOptionsRegistry, FindComputedEditorOptionValueById, IComputedEditorOptions, IEditorOptions, IEnvironmentalOptions } from "../../common/config/editorOptions.js";
+import { EditorZoom } from "../../common/config/editorZoom.js";
+import { BareFontInfo, FontInfo, IValidatedEditorOptions } from "../../common/config/fontInfo.js";
+import { IDimension } from "../../common/core/dimension.js";
+import { IEditorConfiguration } from "../../common/config/editorConfiguration.js";
+import { AccessibilitySupport, IAccessibilityService } from "../../../platform/accessibility/common/accessibility.js";
+import { getWindow, getWindowById } from "../../../base/browser/dom.js";
+import { PixelRatio } from "../../../base/browser/pixelRatio.js";
+import { MenuId } from "../../../platform/actions/common/actions.js";
+import { InputMode } from "../../common/inputMode.js";
+let EditorConfiguration = class extends Disposable {
+  constructor(isSimpleWidget, contextMenuId, options, container, _accessibilityService) {
+    super();
+    this._accessibilityService = _accessibilityService;
+    this.isSimpleWidget = isSimpleWidget;
+    this.contextMenuId = contextMenuId;
+    this._containerObserver = this._register(new ElementSizeObserver(container, options.dimension));
+    this._targetWindowId = getWindow(container).vscodeWindowId;
+    this._rawOptions = deepCloneAndMigrateOptions(options);
+    this._validatedOptions = EditorOptionsUtil.validateOptions(this._rawOptions);
+    this.options = this._computeOptions();
+    if (this.options.get(EditorOption.automaticLayout)) {
+      this._containerObserver.startObserving();
+    }
+    this._register(EditorZoom.onDidChangeZoomLevel(() => this._recomputeOptions()));
+    this._register(TabFocus.onDidChangeTabFocus(() => this._recomputeOptions()));
+    this._register(this._containerObserver.onDidChange(() => this._recomputeOptions()));
+    this._register(FontMeasurements.onDidChange(() => this._recomputeOptions()));
+    this._register(PixelRatio.getInstance(getWindow(container)).onDidChange(() => this._recomputeOptions()));
+    this._register(this._accessibilityService.onDidChangeScreenReaderOptimized(() => this._recomputeOptions()));
+    this._register(InputMode.onDidChangeInputMode(() => this._recomputeOptions()));
+  }
+  static {
+    __name(this, "EditorConfiguration");
+  }
+  _onDidChange = this._register(new Emitter());
+  onDidChange = this._onDidChange.event;
+  _onDidChangeFast = this._register(new Emitter());
+  onDidChangeFast = this._onDidChangeFast.event;
+  isSimpleWidget;
+  contextMenuId;
+  _containerObserver;
+  _isDominatedByLongLines = false;
+  _viewLineCount = 1;
+  _lineNumbersDigitCount = 1;
+  _reservedHeight = 0;
+  _glyphMarginDecorationLaneCount = 1;
+  _targetWindowId;
+  _computeOptionsMemory = new ComputeOptionsMemory();
+  /**
+   * Raw options as they were passed in and merged with all calls to `updateOptions`.
+   */
+  _rawOptions;
+  /**
+   * Validated version of `_rawOptions`.
+   */
+  _validatedOptions;
+  /**
+   * Complete options which are a combination of passed in options and env values.
+   */
+  options;
+  _recomputeOptions() {
+    const newOptions = this._computeOptions();
+    const changeEvent = EditorOptionsUtil.checkEquals(this.options, newOptions);
+    if (changeEvent === null) {
+      return;
+    }
+    this.options = newOptions;
+    this._onDidChangeFast.fire(changeEvent);
+    this._onDidChange.fire(changeEvent);
+  }
+  _computeOptions() {
+    const partialEnv = this._readEnvConfiguration();
+    const bareFontInfo = BareFontInfo.createFromValidatedSettings(this._validatedOptions, partialEnv.pixelRatio, this.isSimpleWidget);
+    const fontInfo = this._readFontInfo(bareFontInfo);
+    const env = {
+      memory: this._computeOptionsMemory,
+      outerWidth: partialEnv.outerWidth,
+      outerHeight: partialEnv.outerHeight - this._reservedHeight,
+      fontInfo,
+      extraEditorClassName: partialEnv.extraEditorClassName,
+      isDominatedByLongLines: this._isDominatedByLongLines,
+      viewLineCount: this._viewLineCount,
+      lineNumbersDigitCount: this._lineNumbersDigitCount,
+      emptySelectionClipboard: partialEnv.emptySelectionClipboard,
+      pixelRatio: partialEnv.pixelRatio,
+      tabFocusMode: TabFocus.getTabFocusMode(),
+      inputMode: InputMode.getInputMode(),
+      accessibilitySupport: partialEnv.accessibilitySupport,
+      glyphMarginDecorationLaneCount: this._glyphMarginDecorationLaneCount
+    };
+    return EditorOptionsUtil.computeOptions(this._validatedOptions, env);
+  }
+  _readEnvConfiguration() {
+    return {
+      extraEditorClassName: getExtraEditorClassName(),
+      outerWidth: this._containerObserver.getWidth(),
+      outerHeight: this._containerObserver.getHeight(),
+      emptySelectionClipboard: browser.isWebKit || browser.isFirefox,
+      pixelRatio: PixelRatio.getInstance(getWindowById(this._targetWindowId, true).window).value,
+      accessibilitySupport: this._accessibilityService.isScreenReaderOptimized() ? AccessibilitySupport.Enabled : this._accessibilityService.getAccessibilitySupport()
+    };
+  }
+  _readFontInfo(bareFontInfo) {
+    return FontMeasurements.readFontInfo(getWindowById(this._targetWindowId, true).window, bareFontInfo);
+  }
+  getRawOptions() {
+    return this._rawOptions;
+  }
+  updateOptions(_newOptions) {
+    const newOptions = deepCloneAndMigrateOptions(_newOptions);
+    const didChange = EditorOptionsUtil.applyUpdate(this._rawOptions, newOptions);
+    if (!didChange) {
+      return;
+    }
+    this._validatedOptions = EditorOptionsUtil.validateOptions(this._rawOptions);
+    this._recomputeOptions();
+  }
+  observeContainer(dimension) {
+    this._containerObserver.observe(dimension);
+  }
+  setIsDominatedByLongLines(isDominatedByLongLines) {
+    if (this._isDominatedByLongLines === isDominatedByLongLines) {
+      return;
+    }
+    this._isDominatedByLongLines = isDominatedByLongLines;
+    this._recomputeOptions();
+  }
+  setModelLineCount(modelLineCount) {
+    const lineNumbersDigitCount = digitCount(modelLineCount);
+    if (this._lineNumbersDigitCount === lineNumbersDigitCount) {
+      return;
+    }
+    this._lineNumbersDigitCount = lineNumbersDigitCount;
+    this._recomputeOptions();
+  }
+  setViewLineCount(viewLineCount) {
+    if (this._viewLineCount === viewLineCount) {
+      return;
+    }
+    this._viewLineCount = viewLineCount;
+    this._recomputeOptions();
+  }
+  setReservedHeight(reservedHeight) {
+    if (this._reservedHeight === reservedHeight) {
+      return;
+    }
+    this._reservedHeight = reservedHeight;
+    this._recomputeOptions();
+  }
+  setGlyphMarginDecorationLaneCount(decorationLaneCount) {
+    if (this._glyphMarginDecorationLaneCount === decorationLaneCount) {
+      return;
+    }
+    this._glyphMarginDecorationLaneCount = decorationLaneCount;
+    this._recomputeOptions();
+  }
+};
+EditorConfiguration = __decorateClass([
+  __decorateParam(4, IAccessibilityService)
+], EditorConfiguration);
+function digitCount(n) {
+  let r = 0;
+  while (n) {
+    n = Math.floor(n / 10);
+    r++;
+  }
+  return r ? r : 1;
+}
+__name(digitCount, "digitCount");
+function getExtraEditorClassName() {
+  let extra = "";
+  if (!browser.isSafari && !browser.isWebkitWebView) {
+    extra += "no-user-select ";
+  }
+  if (browser.isSafari) {
+    extra += "no-minimap-shadow ";
+    extra += "enable-user-select ";
+  }
+  if (platform.isMacintosh) {
+    extra += "mac ";
+  }
+  return extra;
+}
+__name(getExtraEditorClassName, "getExtraEditorClassName");
+class ValidatedEditorOptions {
+  static {
+    __name(this, "ValidatedEditorOptions");
+  }
+  _values = [];
+  _read(option) {
+    return this._values[option];
+  }
+  get(id) {
+    return this._values[id];
+  }
+  _write(option, value) {
+    this._values[option] = value;
+  }
+}
+class ComputedEditorOptions {
+  static {
+    __name(this, "ComputedEditorOptions");
+  }
+  _values = [];
+  _read(id) {
+    if (id >= this._values.length) {
+      throw new Error("Cannot read uninitialized value");
+    }
+    return this._values[id];
+  }
+  get(id) {
+    return this._read(id);
+  }
+  _write(id, value) {
+    this._values[id] = value;
+  }
+}
+class EditorOptionsUtil {
+  static {
+    __name(this, "EditorOptionsUtil");
+  }
+  static validateOptions(options) {
+    const result = new ValidatedEditorOptions();
+    for (const editorOption of editorOptionsRegistry) {
+      const value = editorOption.name === "_never_" ? void 0 : options[editorOption.name];
+      result._write(editorOption.id, editorOption.validate(value));
+    }
+    return result;
+  }
+  static computeOptions(options, env) {
+    const result = new ComputedEditorOptions();
+    for (const editorOption of editorOptionsRegistry) {
+      result._write(editorOption.id, editorOption.compute(env, result, options._read(editorOption.id)));
+    }
+    return result;
+  }
+  static _deepEquals(a, b) {
+    if (typeof a !== "object" || typeof b !== "object" || !a || !b) {
+      return a === b;
+    }
+    if (Array.isArray(a) || Array.isArray(b)) {
+      return Array.isArray(a) && Array.isArray(b) ? arrays.equals(a, b) : false;
+    }
+    if (Object.keys(a).length !== Object.keys(b).length) {
+      return false;
+    }
+    for (const key in a) {
+      if (!EditorOptionsUtil._deepEquals(a[key], b[key])) {
+        return false;
+      }
+    }
+    return true;
+  }
+  static checkEquals(a, b) {
+    const result = [];
+    let somethingChanged = false;
+    for (const editorOption of editorOptionsRegistry) {
+      const changed = !EditorOptionsUtil._deepEquals(a._read(editorOption.id), b._read(editorOption.id));
+      result[editorOption.id] = changed;
+      if (changed) {
+        somethingChanged = true;
+      }
+    }
+    return somethingChanged ? new ConfigurationChangedEvent(result) : null;
+  }
+  /**
+   * Returns true if something changed.
+   * Modifies `options`.
+  */
+  static applyUpdate(options, update) {
+    let changed = false;
+    for (const editorOption of editorOptionsRegistry) {
+      if (update.hasOwnProperty(editorOption.name)) {
+        const result = editorOption.applyUpdate(options[editorOption.name], update[editorOption.name]);
+        options[editorOption.name] = result.newValue;
+        changed = changed || result.didChange;
+      }
+    }
+    return changed;
+  }
+}
+function deepCloneAndMigrateOptions(_options) {
+  const options = objects.deepClone(_options);
+  migrateOptions(options);
+  return options;
+}
+__name(deepCloneAndMigrateOptions, "deepCloneAndMigrateOptions");
+export {
+  ComputedEditorOptions,
+  EditorConfiguration
+};
+//# sourceMappingURL=editorConfiguration.js.map

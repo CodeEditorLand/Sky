@@ -1,1 +1,64 @@
-var S=Object.defineProperty,l=Object.getOwnPropertyDescriptor,h=(e,r,s,o)=>{for(var t,i=o>1?void 0:o?l(r,s):r,a=e.length-1;a>=0;a--)(t=e[a])&&(i=(o?t(r,s,i):t(i))||i);return o&&i&&S(r,s,i),i},d=(e,r)=>(s,o)=>r(s,o,e);import{CancellationToken as b}from"../../../base/common/cancellation.js";import{dispose as c}from"../../../base/common/lifecycle.js";import{URI as x}from"../../../base/common/uri.js";import{ExtHostContext as I,MainContext as u}from"../common/extHost.protocol.js";import{IShareService as D}from"../../contrib/share/common/share.js";import{extHostNamedCustomer as f}from"../../services/extensions/common/extHostCustomers.js";let p=class{constructor(e,r){this.shareService=r,this.proxy=e.getProxy(I.ExtHostShare)}proxy;providers=new Map;providerDisposables=new Map;$registerShareProvider(e,r,s,o,t){const i={id:s,label:o,selector:r,priority:t,provideShare:async r=>{const s=await this.proxy.$provideShare(e,r,b.None);return"string"==typeof s?s:x.revive(s)}};this.providers.set(e,i);const a=this.shareService.registerShareProvider(i);this.providerDisposables.set(e,a)}$unregisterShareProvider(e){this.providers.has(e)&&this.providers.delete(e),this.providerDisposables.has(e)&&this.providerDisposables.delete(e)}dispose(){this.providers.clear(),c(this.providerDisposables.values()),this.providerDisposables.clear()}};p=h([f(u.MainThreadShare),d(1,D)],p);export{p as MainThreadShare};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { CancellationToken } from "../../../base/common/cancellation.js";
+import { IDisposable, dispose } from "../../../base/common/lifecycle.js";
+import { URI } from "../../../base/common/uri.js";
+import { ExtHostContext, ExtHostShareShape, IDocumentFilterDto, MainContext, MainThreadShareShape } from "../common/extHost.protocol.js";
+import { IShareProvider, IShareService, IShareableItem } from "../../contrib/share/common/share.js";
+import { IExtHostContext, extHostNamedCustomer } from "../../services/extensions/common/extHostCustomers.js";
+let MainThreadShare = class {
+  constructor(extHostContext, shareService) {
+    this.shareService = shareService;
+    this.proxy = extHostContext.getProxy(ExtHostContext.ExtHostShare);
+  }
+  proxy;
+  providers = /* @__PURE__ */ new Map();
+  providerDisposables = /* @__PURE__ */ new Map();
+  $registerShareProvider(handle, selector, id, label, priority) {
+    const provider = {
+      id,
+      label,
+      selector,
+      priority,
+      provideShare: /* @__PURE__ */ __name(async (item) => {
+        const result = await this.proxy.$provideShare(handle, item, CancellationToken.None);
+        return typeof result === "string" ? result : URI.revive(result);
+      }, "provideShare")
+    };
+    this.providers.set(handle, provider);
+    const disposable = this.shareService.registerShareProvider(provider);
+    this.providerDisposables.set(handle, disposable);
+  }
+  $unregisterShareProvider(handle) {
+    if (this.providers.has(handle)) {
+      this.providers.delete(handle);
+    }
+    if (this.providerDisposables.has(handle)) {
+      this.providerDisposables.delete(handle);
+    }
+  }
+  dispose() {
+    this.providers.clear();
+    dispose(this.providerDisposables.values());
+    this.providerDisposables.clear();
+  }
+};
+__name(MainThreadShare, "MainThreadShare");
+MainThreadShare = __decorateClass([
+  extHostNamedCustomer(MainContext.MainThreadShare),
+  __decorateParam(1, IShareService)
+], MainThreadShare);
+export {
+  MainThreadShare
+};
+//# sourceMappingURL=mainThreadShare.js.map

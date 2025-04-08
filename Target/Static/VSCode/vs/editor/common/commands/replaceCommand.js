@@ -1,1 +1,208 @@
-import{Position as d}from"../core/position.js";import{Range as c}from"../core/range.js";import{Selection as s,SelectionDirection as m}from"../core/selection.js";import"../editorCommon.js";import"../model.js";class C{_range;_text;insertsAutoWhitespace;constructor(t,e,s=!1){this._range=t,this._text=e,this.insertsAutoWhitespace=s}getEditOperations(t,e){e.addTrackedEditOperation(this._range,this._text)}computeCursorState(t,e){const i=e.getInverseEditOperations()[0].range;return s.fromPositions(i.getEndPosition())}}class f{_range;_text;insertsAutoWhitespace;constructor(t,e,s=!1){this._range=t,this._text=e,this.insertsAutoWhitespace=s}getEditOperations(t,e){const s=this._range.getStartPosition(),i=this._range.getEndPosition(),n=i.lineNumber;let o=p(t,i,this._text.length+(this._range.isEmpty()?0:-1));o.lineNumber>n&&(o=new d(n,t.getLineMaxColumn(n)));const r=c.fromPositions(s,o);e.addTrackedEditOperation(r,this._text)}computeCursorState(t,e){const i=e.getInverseEditOperations()[0].range;return s.fromPositions(i.getEndPosition())}}class S{_range;_text;constructor(t,e){this._range=t,this._text=e}getEditOperations(t,e){e.addTrackedEditOperation(this._range,this._text)}computeCursorState(t,e){const i=e.getInverseEditOperations()[0].range;return s.fromRange(i,m.LTR)}}class R{_range;_text;insertsAutoWhitespace;constructor(t,e,s=!1){this._range=t,this._text=e,this.insertsAutoWhitespace=s}getEditOperations(t,e){e.addTrackedEditOperation(this._range,this._text)}computeCursorState(t,e){const i=e.getInverseEditOperations()[0].range;return s.fromPositions(i.getStartPosition())}}class T{_range;_text;_columnDeltaOffset;_lineNumberDeltaOffset;insertsAutoWhitespace;constructor(t,e,s,i,n=!1){this._range=t,this._text=e,this._columnDeltaOffset=i,this._lineNumberDeltaOffset=s,this.insertsAutoWhitespace=n}getEditOperations(t,e){e.addTrackedEditOperation(this._range,this._text)}computeCursorState(t,e){const i=e.getInverseEditOperations()[0].range;return s.fromPositions(i.getEndPosition().delta(this._lineNumberDeltaOffset,this._columnDeltaOffset))}}class M{_range;constructor(t){this._range=t}getEditOperations(t,e){const s=t.getValueInRange(this._range),i=this._range.getEndPosition(),n=i.lineNumber;let o=p(t,i,s.length);o.lineNumber>n&&(o=new d(n,t.getLineMaxColumn(n)));const r=c.fromPositions(i,o);e.addTrackedEditOperation(r,"")}computeCursorState(t,e){const i=e.getInverseEditOperations()[0].range;return s.fromPositions(i.getEndPosition())}}class P{_range;_text;_initialSelection;_forceMoveMarkers;_selectionId;constructor(t,e,s,i=!1){this._range=t,this._text=e,this._initialSelection=s,this._forceMoveMarkers=i,this._selectionId=null}getEditOperations(t,e){e.addTrackedEditOperation(this._range,this._text,this._forceMoveMarkers),this._selectionId=e.trackSelection(this._initialSelection)}computeCursorState(t,e){return e.getTrackedSelection(this._selectionId)}}function p(t,e,s){if(s<0)throw new Error("Unexpected negative delta");const i=t.getLineCount();let n=new d(i,t.getLineMaxColumn(i));for(let o=e.lineNumber;o<=i;o++)if(o===e.lineNumber){const i=s-t.getLineMaxColumn(e.lineNumber)+e.column;if(i<=0){n=new d(e.lineNumber,e.column+s);break}s=i}else{const e=s-t.getLineMaxColumn(o);if(e<=0){n=new d(o,s);break}s=e}return n}export{C as ReplaceCommand,P as ReplaceCommandThatPreservesSelection,S as ReplaceCommandThatSelectsText,T as ReplaceCommandWithOffsetCursorState,R as ReplaceCommandWithoutChangingPosition,f as ReplaceOvertypeCommand,M as ReplaceOvertypeCommandOnCompositionEnd};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Position } from "../core/position.js";
+import { Range } from "../core/range.js";
+import { Selection, SelectionDirection } from "../core/selection.js";
+import { ICommand, ICursorStateComputerData, IEditOperationBuilder } from "../editorCommon.js";
+import { ITextModel } from "../model.js";
+class ReplaceCommand {
+  static {
+    __name(this, "ReplaceCommand");
+  }
+  _range;
+  _text;
+  insertsAutoWhitespace;
+  constructor(range, text, insertsAutoWhitespace = false) {
+    this._range = range;
+    this._text = text;
+    this.insertsAutoWhitespace = insertsAutoWhitespace;
+  }
+  getEditOperations(model, builder) {
+    builder.addTrackedEditOperation(this._range, this._text);
+  }
+  computeCursorState(model, helper) {
+    const inverseEditOperations = helper.getInverseEditOperations();
+    const srcRange = inverseEditOperations[0].range;
+    return Selection.fromPositions(srcRange.getEndPosition());
+  }
+}
+class ReplaceOvertypeCommand {
+  static {
+    __name(this, "ReplaceOvertypeCommand");
+  }
+  _range;
+  _text;
+  insertsAutoWhitespace;
+  constructor(range, text, insertsAutoWhitespace = false) {
+    this._range = range;
+    this._text = text;
+    this.insertsAutoWhitespace = insertsAutoWhitespace;
+  }
+  getEditOperations(model, builder) {
+    const intialStartPosition = this._range.getStartPosition();
+    const initialEndPosition = this._range.getEndPosition();
+    const initialEndLineNumber = initialEndPosition.lineNumber;
+    const offsetDelta = this._text.length + (this._range.isEmpty() ? 0 : -1);
+    let endPosition = addPositiveOffsetToModelPosition(model, initialEndPosition, offsetDelta);
+    if (endPosition.lineNumber > initialEndLineNumber) {
+      endPosition = new Position(initialEndLineNumber, model.getLineMaxColumn(initialEndLineNumber));
+    }
+    const replaceRange = Range.fromPositions(intialStartPosition, endPosition);
+    builder.addTrackedEditOperation(replaceRange, this._text);
+  }
+  computeCursorState(model, helper) {
+    const inverseEditOperations = helper.getInverseEditOperations();
+    const srcRange = inverseEditOperations[0].range;
+    return Selection.fromPositions(srcRange.getEndPosition());
+  }
+}
+class ReplaceCommandThatSelectsText {
+  static {
+    __name(this, "ReplaceCommandThatSelectsText");
+  }
+  _range;
+  _text;
+  constructor(range, text) {
+    this._range = range;
+    this._text = text;
+  }
+  getEditOperations(model, builder) {
+    builder.addTrackedEditOperation(this._range, this._text);
+  }
+  computeCursorState(model, helper) {
+    const inverseEditOperations = helper.getInverseEditOperations();
+    const srcRange = inverseEditOperations[0].range;
+    return Selection.fromRange(srcRange, SelectionDirection.LTR);
+  }
+}
+class ReplaceCommandWithoutChangingPosition {
+  static {
+    __name(this, "ReplaceCommandWithoutChangingPosition");
+  }
+  _range;
+  _text;
+  insertsAutoWhitespace;
+  constructor(range, text, insertsAutoWhitespace = false) {
+    this._range = range;
+    this._text = text;
+    this.insertsAutoWhitespace = insertsAutoWhitespace;
+  }
+  getEditOperations(model, builder) {
+    builder.addTrackedEditOperation(this._range, this._text);
+  }
+  computeCursorState(model, helper) {
+    const inverseEditOperations = helper.getInverseEditOperations();
+    const srcRange = inverseEditOperations[0].range;
+    return Selection.fromPositions(srcRange.getStartPosition());
+  }
+}
+class ReplaceCommandWithOffsetCursorState {
+  static {
+    __name(this, "ReplaceCommandWithOffsetCursorState");
+  }
+  _range;
+  _text;
+  _columnDeltaOffset;
+  _lineNumberDeltaOffset;
+  insertsAutoWhitespace;
+  constructor(range, text, lineNumberDeltaOffset, columnDeltaOffset, insertsAutoWhitespace = false) {
+    this._range = range;
+    this._text = text;
+    this._columnDeltaOffset = columnDeltaOffset;
+    this._lineNumberDeltaOffset = lineNumberDeltaOffset;
+    this.insertsAutoWhitespace = insertsAutoWhitespace;
+  }
+  getEditOperations(model, builder) {
+    builder.addTrackedEditOperation(this._range, this._text);
+  }
+  computeCursorState(model, helper) {
+    const inverseEditOperations = helper.getInverseEditOperations();
+    const srcRange = inverseEditOperations[0].range;
+    return Selection.fromPositions(srcRange.getEndPosition().delta(this._lineNumberDeltaOffset, this._columnDeltaOffset));
+  }
+}
+class ReplaceOvertypeCommandOnCompositionEnd {
+  static {
+    __name(this, "ReplaceOvertypeCommandOnCompositionEnd");
+  }
+  _range;
+  constructor(range) {
+    this._range = range;
+  }
+  getEditOperations(model, builder) {
+    const text = model.getValueInRange(this._range);
+    const initialEndPosition = this._range.getEndPosition();
+    const initialEndLineNumber = initialEndPosition.lineNumber;
+    let endPosition = addPositiveOffsetToModelPosition(model, initialEndPosition, text.length);
+    if (endPosition.lineNumber > initialEndLineNumber) {
+      endPosition = new Position(initialEndLineNumber, model.getLineMaxColumn(initialEndLineNumber));
+    }
+    const replaceRange = Range.fromPositions(initialEndPosition, endPosition);
+    builder.addTrackedEditOperation(replaceRange, "");
+  }
+  computeCursorState(model, helper) {
+    const inverseEditOperations = helper.getInverseEditOperations();
+    const srcRange = inverseEditOperations[0].range;
+    return Selection.fromPositions(srcRange.getEndPosition());
+  }
+}
+class ReplaceCommandThatPreservesSelection {
+  static {
+    __name(this, "ReplaceCommandThatPreservesSelection");
+  }
+  _range;
+  _text;
+  _initialSelection;
+  _forceMoveMarkers;
+  _selectionId;
+  constructor(editRange, text, initialSelection, forceMoveMarkers = false) {
+    this._range = editRange;
+    this._text = text;
+    this._initialSelection = initialSelection;
+    this._forceMoveMarkers = forceMoveMarkers;
+    this._selectionId = null;
+  }
+  getEditOperations(model, builder) {
+    builder.addTrackedEditOperation(this._range, this._text, this._forceMoveMarkers);
+    this._selectionId = builder.trackSelection(this._initialSelection);
+  }
+  computeCursorState(model, helper) {
+    return helper.getTrackedSelection(this._selectionId);
+  }
+}
+function addPositiveOffsetToModelPosition(model, position, offset) {
+  if (offset < 0) {
+    throw new Error("Unexpected negative delta");
+  }
+  const lineCount = model.getLineCount();
+  let endPosition = new Position(lineCount, model.getLineMaxColumn(lineCount));
+  for (let lineNumber = position.lineNumber; lineNumber <= lineCount; lineNumber++) {
+    if (lineNumber === position.lineNumber) {
+      const futureOffset = offset - model.getLineMaxColumn(position.lineNumber) + position.column;
+      if (futureOffset <= 0) {
+        endPosition = new Position(position.lineNumber, position.column + offset);
+        break;
+      }
+      offset = futureOffset;
+    } else {
+      const futureOffset = offset - model.getLineMaxColumn(lineNumber);
+      if (futureOffset <= 0) {
+        endPosition = new Position(lineNumber, offset);
+        break;
+      }
+      offset = futureOffset;
+    }
+  }
+  return endPosition;
+}
+__name(addPositiveOffsetToModelPosition, "addPositiveOffsetToModelPosition");
+export {
+  ReplaceCommand,
+  ReplaceCommandThatPreservesSelection,
+  ReplaceCommandThatSelectsText,
+  ReplaceCommandWithOffsetCursorState,
+  ReplaceCommandWithoutChangingPosition,
+  ReplaceOvertypeCommand,
+  ReplaceOvertypeCommandOnCompositionEnd
+};
+//# sourceMappingURL=replaceCommand.js.map

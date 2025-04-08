@@ -1,1 +1,122 @@
-var I=Object.defineProperty;var m=Object.getOwnPropertyDescriptor;var v=(c,r,e,t)=>{for(var s=t>1?void 0:t?m(r,e):r,n=c.length-1,i;n>=0;n--)(i=c[n])&&(s=(t?i(r,e,s):i(s))||s);return t&&s&&I(r,e,s),s},g=(c,r)=>(e,t)=>r(e,t,c);import{Queue as l}from"../../../../base/common/async.js";import{Disposable as p}from"../../../../base/common/lifecycle.js";import{InstantiationType as x,registerSingleton as S}from"../../../../platform/instantiation/common/extensions.js";import{createDecorator as U}from"../../../../platform/instantiation/common/instantiation.js";import{ILogService as f}from"../../../../platform/log/common/log.js";import{IProductService as _}from"../../../../platform/product/common/productService.js";import{IStorageService as y,StorageScope as d,StorageTarget as P}from"../../../../platform/storage/common/storage.js";import{IAuthenticationService as C}from"../common/authentication.js";const N=U("IAuthenticationUsageService");let u=class extends p{constructor(e,t,s,n){super();this._storageService=e;this._authenticationService=t;this._logService=s;const i=n.trustedExtensionAuthAccess;if(Array.isArray(i))for(const o of i)this._extensionsUsingAuth.add(o);else if(i)for(const o of Object.values(i))for(const a of o)this._extensionsUsingAuth.add(a);this._register(this._authenticationService.onDidRegisterAuthenticationProvider(o=>this._queue.queue(()=>this._addExtensionsToCache(o.id))))}_serviceBrand;_queue=new l;_extensionsUsingAuth=new Set;async initializeExtensionUsageCache(){await this._queue.queue(()=>Promise.all(this._authenticationService.getProviderIds().map(e=>this._addExtensionsToCache(e))))}async extensionUsesAuth(e){return await this._queue.whenIdle(),this._extensionsUsingAuth.has(e)}readAccountUsages(e,t){const s=`${e}-${t}-usages`,n=this._storageService.get(s,d.APPLICATION);let i=[];if(n)try{i=JSON.parse(n)}catch{}return i}removeAccountUsage(e,t){const s=`${e}-${t}-usages`;this._storageService.remove(s,d.APPLICATION)}addAccountUsage(e,t,s,n,i){const o=`${e}-${t}-usages`,a=this.readAccountUsages(e,t),h=a.findIndex(A=>A.extensionId===n);h>-1?a.splice(h,1,{extensionId:n,extensionName:i,scopes:s,lastUsed:Date.now()}):a.push({extensionId:n,extensionName:i,scopes:s,lastUsed:Date.now()}),this._storageService.store(o,JSON.stringify(a),d.APPLICATION,P.MACHINE),this._extensionsUsingAuth.add(n)}async _addExtensionsToCache(e){try{const t=await this._authenticationService.getAccounts(e);for(const s of t){const n=this.readAccountUsages(e,s.label);for(const i of n)this._extensionsUsingAuth.add(i.extensionId)}}catch(t){this._logService.error(t)}}};u=v([g(0,y),g(1,C),g(2,f),g(3,_)],u),S(N,u,x.Delayed);export{u as AuthenticationUsageService,N as IAuthenticationUsageService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Queue } from "../../../../base/common/async.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { IAuthenticationService } from "../common/authentication.js";
+const IAuthenticationUsageService = createDecorator("IAuthenticationUsageService");
+let AuthenticationUsageService = class extends Disposable {
+  constructor(_storageService, _authenticationService, _logService, productService) {
+    super();
+    this._storageService = _storageService;
+    this._authenticationService = _authenticationService;
+    this._logService = _logService;
+    const trustedExtensionAuthAccess = productService.trustedExtensionAuthAccess;
+    if (Array.isArray(trustedExtensionAuthAccess)) {
+      for (const extensionId of trustedExtensionAuthAccess) {
+        this._extensionsUsingAuth.add(extensionId);
+      }
+    } else if (trustedExtensionAuthAccess) {
+      for (const extensions of Object.values(trustedExtensionAuthAccess)) {
+        for (const extensionId of extensions) {
+          this._extensionsUsingAuth.add(extensionId);
+        }
+      }
+    }
+    this._register(this._authenticationService.onDidRegisterAuthenticationProvider(
+      (provider) => this._queue.queue(
+        () => this._addExtensionsToCache(provider.id)
+      )
+    ));
+  }
+  static {
+    __name(this, "AuthenticationUsageService");
+  }
+  _serviceBrand;
+  _queue = new Queue();
+  _extensionsUsingAuth = /* @__PURE__ */ new Set();
+  async initializeExtensionUsageCache() {
+    await this._queue.queue(() => Promise.all(this._authenticationService.getProviderIds().map((providerId) => this._addExtensionsToCache(providerId))));
+  }
+  async extensionUsesAuth(extensionId) {
+    await this._queue.whenIdle();
+    return this._extensionsUsingAuth.has(extensionId);
+  }
+  readAccountUsages(providerId, accountName) {
+    const accountKey = `${providerId}-${accountName}-usages`;
+    const storedUsages = this._storageService.get(accountKey, StorageScope.APPLICATION);
+    let usages = [];
+    if (storedUsages) {
+      try {
+        usages = JSON.parse(storedUsages);
+      } catch (e) {
+      }
+    }
+    return usages;
+  }
+  removeAccountUsage(providerId, accountName) {
+    const accountKey = `${providerId}-${accountName}-usages`;
+    this._storageService.remove(accountKey, StorageScope.APPLICATION);
+  }
+  addAccountUsage(providerId, accountName, scopes, extensionId, extensionName) {
+    const accountKey = `${providerId}-${accountName}-usages`;
+    const usages = this.readAccountUsages(providerId, accountName);
+    const existingUsageIndex = usages.findIndex((usage) => usage.extensionId === extensionId);
+    if (existingUsageIndex > -1) {
+      usages.splice(existingUsageIndex, 1, {
+        extensionId,
+        extensionName,
+        scopes,
+        lastUsed: Date.now()
+      });
+    } else {
+      usages.push({
+        extensionId,
+        extensionName,
+        scopes,
+        lastUsed: Date.now()
+      });
+    }
+    this._storageService.store(accountKey, JSON.stringify(usages), StorageScope.APPLICATION, StorageTarget.MACHINE);
+    this._extensionsUsingAuth.add(extensionId);
+  }
+  async _addExtensionsToCache(providerId) {
+    try {
+      const accounts = await this._authenticationService.getAccounts(providerId);
+      for (const account of accounts) {
+        const usage = this.readAccountUsages(providerId, account.label);
+        for (const u of usage) {
+          this._extensionsUsingAuth.add(u.extensionId);
+        }
+      }
+    } catch (e) {
+      this._logService.error(e);
+    }
+  }
+};
+AuthenticationUsageService = __decorateClass([
+  __decorateParam(0, IStorageService),
+  __decorateParam(1, IAuthenticationService),
+  __decorateParam(2, ILogService),
+  __decorateParam(3, IProductService)
+], AuthenticationUsageService);
+registerSingleton(IAuthenticationUsageService, AuthenticationUsageService, InstantiationType.Delayed);
+export {
+  AuthenticationUsageService,
+  IAuthenticationUsageService
+};
+//# sourceMappingURL=authenticationUsageService.js.map

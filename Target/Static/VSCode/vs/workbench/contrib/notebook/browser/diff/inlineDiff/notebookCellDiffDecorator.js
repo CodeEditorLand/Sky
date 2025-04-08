@@ -1,1 +1,311 @@
-var Z=Object.defineProperty;var W=Object.getOwnPropertyDescriptor;var L=(a,n,e,i)=>{for(var o=i>1?void 0:i?W(n,e):n,l=a.length-1,s;l>=0;l--)(s=a[l])&&(o=(i?s(n,e,o):s(o))||o);return i&&o&&Z(n,e,o),o},I=(a,n)=>(e,i)=>n(e,i,a);import{DisposableStore as w,toDisposable as S}from"../../../../../../base/common/lifecycle.js";import{autorunWithStore as V,derived as G,observableFromEvent as q}from"../../../../../../base/common/observable.js";import"../../notebookBrowser.js";import{ThrottledDelayer as B}from"../../../../../../base/common/async.js";import"../../../../../../editor/browser/editorBrowser.js";import{IEditorWorkerService as P}from"../../../../../../editor/common/services/editorWorker.js";import{EditorOption as M}from"../../../../../../editor/common/config/editorOptions.js";import{themeColorFromId as N}from"../../../../../../base/common/themables.js";import{RenderOptions as z,LineSource as H,renderLines as j}from"../../../../../../editor/browser/widget/diffEditor/components/diffEditorViewZones/renderLines.js";import{diffAddDecoration as K,diffWholeLineAddDecoration as X,diffDeleteDecoration as J}from"../../../../../../editor/browser/widget/diffEditor/registrations.contribution.js";import"../../../../../../editor/common/diff/documentDiffProvider.js";import{TrackedRangeStickiness as T,MinimapPosition as Q,OverviewRulerLane as U}from"../../../../../../editor/common/model.js";import{ModelDecorationOptions as R}from"../../../../../../editor/common/model/textModel.js";import{InlineDecoration as Y,InlineDecorationType as $}from"../../../../../../editor/common/viewModel.js";import{Range as ee}from"../../../../../../editor/common/core/range.js";import"../../../common/model/notebookCellTextModel.js";import"../../../../../../editor/common/diff/rangeMapping.js";import{minimapGutterAddedBackground as ie,minimapGutterDeletedBackground as oe,minimapGutterModifiedBackground as ne,overviewRulerAddedForeground as te,overviewRulerDeletedForeground as re,overviewRulerModifiedForeground as ae}from"../../../../scm/common/quickDiff.js";import{INotebookOriginalCellModelFactory as se}from"./notebookOriginalCellModelFactory.js";let D=class extends w{constructor(e,i,o,l,s,f){super();this.modifiedCell=i;this.originalCell=o;this.editor=l;this._editorWorkerService=s;this.originalCellModelFactory=f;const v=q(e.onDidChangeVisibleRanges,()=>e.visibleRanges),p=G(m=>{if(!v.read(m).map(t=>e.getCellsInRange(t)).flat().map(t=>t.handle).includes(i.handle))return;const d=e.codeEditors.find(t=>t[0].handle===i.handle)?.[1];if(d?.getModel()===this.modifiedCell.textModel)return d});this.add(V((m,u)=>{const g=p.read(m);this.perEditorDisposables.clear(),g&&(u.add(g.onDidChangeModel(()=>{this.perEditorDisposables.clear()})),u.add(g.onDidChangeModelContent(()=>{this.update(g)})),u.add(g.onDidChangeConfiguration(d=>{(d.hasChanged(M.fontInfo)||d.hasChanged(M.lineHeight))&&this.update(g)})),this.update(g))}))}_viewZones=[];throttledDecorator=new B(50);diffForPreviouslyAppliedDecorators;perEditorDisposables=this.add(new w);update(e){this.throttledDecorator.trigger(()=>this._updateImpl(e))}async _updateImpl(e){if(this.isDisposed)return;if(e.getOption(M.inDiffEditor)){this.perEditorDisposables.clear();return}const i=e.getModel();if(!i||i!==this.modifiedCell.textModel){this.perEditorDisposables.clear();return}const o=this.getOrCreateOriginalModel(e);if(!o){this.perEditorDisposables.clear();return}const l=i.getVersionId(),s=await this._editorWorkerService.computeDiff(o.uri,i.uri,{computeMoves:!0,ignoreTrimWhitespace:!1,maxComputationTimeMs:Number.MAX_SAFE_INTEGER},"advanced");this.isDisposed||(s&&!s.identical&&this.modifiedCell.textModel&&o&&i===e.getModel()&&e.getModel()?.getVersionId()===l?this._updateWithDiff(e,o,s,this.modifiedCell.textModel):this.perEditorDisposables.clear())}_originalModel;getOrCreateOriginalModel(e){if(!this._originalModel){const i=e.getModel();if(!i)return;this._originalModel=this.add(this.originalCellModelFactory.getOrCreate(i.uri,this.originalCell.getValue(),i.getLanguageId(),this.modifiedCell.cellKind)).object}return this._originalModel}_updateWithDiff(e,i,o,l){if(de(o,this.diffForPreviouslyAppliedDecorators))return;this.perEditorDisposables.clear();const s=e.createDecorationsCollection();this.perEditorDisposables.add(S(()=>{e.changeViewZones(d=>{for(const t of this._viewZones)d.removeZone(t)}),this._viewZones=[],s.clear(),this.diffForPreviouslyAppliedDecorators=void 0})),this.diffForPreviouslyAppliedDecorators=o;const f=R.createDynamic({...K,stickiness:T.NeverGrowsWhenTypingAtEdges}),v=R.createDynamic({...X,stickiness:T.NeverGrowsWhenTypingAtEdges}),p=(d,t)=>R.createDynamic({description:"chat-editing-decoration",overviewRuler:{color:N(d),position:U.Left},minimap:{color:N(t),position:Q.Gutter}}),m=p(ae,ne),u=p(te,ie),g=p(re,oe);e.changeViewZones(d=>{for(const r of this._viewZones)d.removeZone(r);this._viewZones=[];const t=[],_=i.mightContainNonBasicASCII(),k=i.mightContainRTL(),A=z.fromEditor(this.editor),E=l.getLineCount();for(const r of o.changes){const b=r.original;i.tokenization.forceTokenization(Math.max(1,b.endLineNumberExclusive-1));const O=new H(b.mapToLineArray(c=>i.tokenization.getLineTokens(c)),[],_,k),h=[];for(const c of r.innerChanges||[])h.push(new Y(c.originalRange.delta(-(r.original.startLineNumber-1)),J.className,$.Regular)),!(c.originalRange.isEmpty()&&c.originalRange.startLineNumber===1&&c.modifiedRange.endLineNumber===E)&&!c.modifiedRange.isEmpty()&&t.push({range:c.modifiedRange,options:f});const y=h.length===1&&h[0].range.isEmpty()&&r.original.startLineNumber===1;!r.modified.isEmpty&&!(y&&r.modified.endLineNumberExclusive-1===E)&&t.push({range:r.modified.toInclusiveRange(),options:v}),r.original.isEmpty?t.push({range:r.modified.toInclusiveRange(),options:u}):r.modified.isEmpty?t.push({range:new ee(r.modified.startLineNumber-1,1,r.modified.startLineNumber,1),options:g}):t.push({range:r.modified.toInclusiveRange(),options:m});const C=document.createElement("div");C.className="chat-editing-original-zone view-lines line-delete monaco-mouse-cursor-text";const F=j(O,A,h,C);if(!y){const c={afterLineNumber:r.modified.startLineNumber-1,heightInLines:F.heightInLines,domNode:C,ordinal:50002};this._viewZones.push(d.addZone(c))}}s.set(t)})}};D=L([I(4,P),I(5,se)],D);function de(a,n){return a&&n?!(a.changes.length!==n.changes.length||a.moves.length!==n.moves.length||!x(a.changes,n.changes)||!a.moves.some((e,i)=>{const o=n.moves[i];return!x(e.changes,o.changes)||e.lineRangeMapping.changedLineCount!==o.lineRangeMapping.changedLineCount||!e.lineRangeMapping.modified.equals(o.lineRangeMapping.modified)||!e.lineRangeMapping.original.equals(o.lineRangeMapping.original)})):!a&&!n}function x(a,n){return!(a.length!==n.length||a.some((e,i)=>{const o=n[i];return!!(e.changedLineCount!==o.changedLineCount||(e.innerChanges||[]).length!==(o.innerChanges||[]).length||(e.innerChanges||[]).some((l,s)=>{const f=o.innerChanges[s];return!l.modifiedRange.equalsRange(f.modifiedRange)||!l.originalRange.equalsRange(f.originalRange)}))}))}export{D as NotebookCellDiffDecorator};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { DisposableStore, toDisposable } from "../../../../../../base/common/lifecycle.js";
+import { autorunWithStore, derived, observableFromEvent } from "../../../../../../base/common/observable.js";
+import { INotebookEditor } from "../../notebookBrowser.js";
+import { ThrottledDelayer } from "../../../../../../base/common/async.js";
+import { ICodeEditor, IViewZone } from "../../../../../../editor/browser/editorBrowser.js";
+import { IEditorWorkerService } from "../../../../../../editor/common/services/editorWorker.js";
+import { EditorOption } from "../../../../../../editor/common/config/editorOptions.js";
+import { themeColorFromId } from "../../../../../../base/common/themables.js";
+import { RenderOptions, LineSource, renderLines } from "../../../../../../editor/browser/widget/diffEditor/components/diffEditorViewZones/renderLines.js";
+import { diffAddDecoration, diffWholeLineAddDecoration, diffDeleteDecoration } from "../../../../../../editor/browser/widget/diffEditor/registrations.contribution.js";
+import { IDocumentDiff } from "../../../../../../editor/common/diff/documentDiffProvider.js";
+import { ITextModel, TrackedRangeStickiness, MinimapPosition, IModelDeltaDecoration, OverviewRulerLane } from "../../../../../../editor/common/model.js";
+import { ModelDecorationOptions } from "../../../../../../editor/common/model/textModel.js";
+import { InlineDecoration, InlineDecorationType } from "../../../../../../editor/common/viewModel.js";
+import { Range } from "../../../../../../editor/common/core/range.js";
+import { NotebookCellTextModel } from "../../../common/model/notebookCellTextModel.js";
+import { DetailedLineRangeMapping } from "../../../../../../editor/common/diff/rangeMapping.js";
+import { minimapGutterAddedBackground, minimapGutterDeletedBackground, minimapGutterModifiedBackground, overviewRulerAddedForeground, overviewRulerDeletedForeground, overviewRulerModifiedForeground } from "../../../../scm/common/quickDiff.js";
+import { INotebookOriginalCellModelFactory } from "./notebookOriginalCellModelFactory.js";
+let NotebookCellDiffDecorator = class extends DisposableStore {
+  constructor(notebookEditor, modifiedCell, originalCell, editor, _editorWorkerService, originalCellModelFactory) {
+    super();
+    this.modifiedCell = modifiedCell;
+    this.originalCell = originalCell;
+    this.editor = editor;
+    this._editorWorkerService = _editorWorkerService;
+    this.originalCellModelFactory = originalCellModelFactory;
+    const onDidChangeVisibleRanges = observableFromEvent(notebookEditor.onDidChangeVisibleRanges, () => notebookEditor.visibleRanges);
+    const editorObs = derived((r) => {
+      const visibleRanges = onDidChangeVisibleRanges.read(r);
+      const visibleCellHandles = visibleRanges.map((range) => notebookEditor.getCellsInRange(range)).flat().map((c) => c.handle);
+      if (!visibleCellHandles.includes(modifiedCell.handle)) {
+        return;
+      }
+      const editor2 = notebookEditor.codeEditors.find((item) => item[0].handle === modifiedCell.handle)?.[1];
+      if (editor2?.getModel() !== this.modifiedCell.textModel) {
+        return;
+      }
+      return editor2;
+    });
+    this.add(autorunWithStore((r, store) => {
+      const editor2 = editorObs.read(r);
+      this.perEditorDisposables.clear();
+      if (editor2) {
+        store.add(editor2.onDidChangeModel(() => {
+          this.perEditorDisposables.clear();
+        }));
+        store.add(editor2.onDidChangeModelContent(() => {
+          this.update(editor2);
+        }));
+        store.add(editor2.onDidChangeConfiguration((e) => {
+          if (e.hasChanged(EditorOption.fontInfo) || e.hasChanged(EditorOption.lineHeight)) {
+            this.update(editor2);
+          }
+        }));
+        this.update(editor2);
+      }
+    }));
+  }
+  static {
+    __name(this, "NotebookCellDiffDecorator");
+  }
+  _viewZones = [];
+  throttledDecorator = new ThrottledDelayer(50);
+  diffForPreviouslyAppliedDecorators;
+  perEditorDisposables = this.add(new DisposableStore());
+  update(editor) {
+    this.throttledDecorator.trigger(() => this._updateImpl(editor));
+  }
+  async _updateImpl(editor) {
+    if (this.isDisposed) {
+      return;
+    }
+    if (editor.getOption(EditorOption.inDiffEditor)) {
+      this.perEditorDisposables.clear();
+      return;
+    }
+    const model = editor.getModel();
+    if (!model || model !== this.modifiedCell.textModel) {
+      this.perEditorDisposables.clear();
+      return;
+    }
+    const originalModel = this.getOrCreateOriginalModel(editor);
+    if (!originalModel) {
+      this.perEditorDisposables.clear();
+      return;
+    }
+    const version = model.getVersionId();
+    const diff = await this._editorWorkerService.computeDiff(
+      originalModel.uri,
+      model.uri,
+      { computeMoves: true, ignoreTrimWhitespace: false, maxComputationTimeMs: Number.MAX_SAFE_INTEGER },
+      "advanced"
+    );
+    if (this.isDisposed) {
+      return;
+    }
+    if (diff && !diff.identical && this.modifiedCell.textModel && originalModel && model === editor.getModel() && editor.getModel()?.getVersionId() === version) {
+      this._updateWithDiff(editor, originalModel, diff, this.modifiedCell.textModel);
+    } else {
+      this.perEditorDisposables.clear();
+    }
+  }
+  _originalModel;
+  getOrCreateOriginalModel(editor) {
+    if (!this._originalModel) {
+      const model = editor.getModel();
+      if (!model) {
+        return;
+      }
+      this._originalModel = this.add(this.originalCellModelFactory.getOrCreate(model.uri, this.originalCell.getValue(), model.getLanguageId(), this.modifiedCell.cellKind)).object;
+    }
+    return this._originalModel;
+  }
+  _updateWithDiff(editor, originalModel, diff, currentModel) {
+    if (areDiffsEqual(diff, this.diffForPreviouslyAppliedDecorators)) {
+      return;
+    }
+    this.perEditorDisposables.clear();
+    const decorations = editor.createDecorationsCollection();
+    this.perEditorDisposables.add(toDisposable(() => {
+      editor.changeViewZones((viewZoneChangeAccessor) => {
+        for (const id of this._viewZones) {
+          viewZoneChangeAccessor.removeZone(id);
+        }
+      });
+      this._viewZones = [];
+      decorations.clear();
+      this.diffForPreviouslyAppliedDecorators = void 0;
+    }));
+    this.diffForPreviouslyAppliedDecorators = diff;
+    const chatDiffAddDecoration = ModelDecorationOptions.createDynamic({
+      ...diffAddDecoration,
+      stickiness: TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges
+    });
+    const chatDiffWholeLineAddDecoration = ModelDecorationOptions.createDynamic({
+      ...diffWholeLineAddDecoration,
+      stickiness: TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges
+    });
+    const createOverviewDecoration = /* @__PURE__ */ __name((overviewRulerColor, minimapColor) => {
+      return ModelDecorationOptions.createDynamic({
+        description: "chat-editing-decoration",
+        overviewRuler: { color: themeColorFromId(overviewRulerColor), position: OverviewRulerLane.Left },
+        minimap: { color: themeColorFromId(minimapColor), position: MinimapPosition.Gutter }
+      });
+    }, "createOverviewDecoration");
+    const modifiedDecoration = createOverviewDecoration(overviewRulerModifiedForeground, minimapGutterModifiedBackground);
+    const addedDecoration = createOverviewDecoration(overviewRulerAddedForeground, minimapGutterAddedBackground);
+    const deletedDecoration = createOverviewDecoration(overviewRulerDeletedForeground, minimapGutterDeletedBackground);
+    editor.changeViewZones((viewZoneChangeAccessor) => {
+      for (const id of this._viewZones) {
+        viewZoneChangeAccessor.removeZone(id);
+      }
+      this._viewZones = [];
+      const modifiedVisualDecorations = [];
+      const mightContainNonBasicASCII = originalModel.mightContainNonBasicASCII();
+      const mightContainRTL = originalModel.mightContainRTL();
+      const renderOptions = RenderOptions.fromEditor(this.editor);
+      const editorLineCount = currentModel.getLineCount();
+      for (const diffEntry of diff.changes) {
+        const originalRange = diffEntry.original;
+        originalModel.tokenization.forceTokenization(Math.max(1, originalRange.endLineNumberExclusive - 1));
+        const source = new LineSource(
+          originalRange.mapToLineArray((l) => originalModel.tokenization.getLineTokens(l)),
+          [],
+          mightContainNonBasicASCII,
+          mightContainRTL
+        );
+        const decorations2 = [];
+        for (const i of diffEntry.innerChanges || []) {
+          decorations2.push(new InlineDecoration(
+            i.originalRange.delta(-(diffEntry.original.startLineNumber - 1)),
+            diffDeleteDecoration.className,
+            InlineDecorationType.Regular
+          ));
+          if (!(i.originalRange.isEmpty() && i.originalRange.startLineNumber === 1 && i.modifiedRange.endLineNumber === editorLineCount) && !i.modifiedRange.isEmpty()) {
+            modifiedVisualDecorations.push({
+              range: i.modifiedRange,
+              options: chatDiffAddDecoration
+            });
+          }
+        }
+        const isCreatedContent = decorations2.length === 1 && decorations2[0].range.isEmpty() && diffEntry.original.startLineNumber === 1;
+        if (!diffEntry.modified.isEmpty && !(isCreatedContent && diffEntry.modified.endLineNumberExclusive - 1 === editorLineCount)) {
+          modifiedVisualDecorations.push({
+            range: diffEntry.modified.toInclusiveRange(),
+            options: chatDiffWholeLineAddDecoration
+          });
+        }
+        if (diffEntry.original.isEmpty) {
+          modifiedVisualDecorations.push({
+            range: diffEntry.modified.toInclusiveRange(),
+            options: addedDecoration
+          });
+        } else if (diffEntry.modified.isEmpty) {
+          modifiedVisualDecorations.push({
+            range: new Range(diffEntry.modified.startLineNumber - 1, 1, diffEntry.modified.startLineNumber, 1),
+            options: deletedDecoration
+          });
+        } else {
+          modifiedVisualDecorations.push({
+            range: diffEntry.modified.toInclusiveRange(),
+            options: modifiedDecoration
+          });
+        }
+        const domNode = document.createElement("div");
+        domNode.className = "chat-editing-original-zone view-lines line-delete monaco-mouse-cursor-text";
+        const result = renderLines(source, renderOptions, decorations2, domNode);
+        if (!isCreatedContent) {
+          const viewZoneData = {
+            afterLineNumber: diffEntry.modified.startLineNumber - 1,
+            heightInLines: result.heightInLines,
+            domNode,
+            ordinal: 5e4 + 2
+            // more than https://github.com/microsoft/vscode/blob/bf52a5cfb2c75a7327c9adeaefbddc06d529dcad/src/vs/workbench/contrib/inlineChat/browser/inlineChatZoneWidget.ts#L42
+          };
+          this._viewZones.push(viewZoneChangeAccessor.addZone(viewZoneData));
+        }
+      }
+      decorations.set(modifiedVisualDecorations);
+    });
+  }
+};
+NotebookCellDiffDecorator = __decorateClass([
+  __decorateParam(4, IEditorWorkerService),
+  __decorateParam(5, INotebookOriginalCellModelFactory)
+], NotebookCellDiffDecorator);
+function areDiffsEqual(a, b) {
+  if (a && b) {
+    if (a.changes.length !== b.changes.length) {
+      return false;
+    }
+    if (a.moves.length !== b.moves.length) {
+      return false;
+    }
+    if (!areLineRangeMappinsEqual(a.changes, b.changes)) {
+      return false;
+    }
+    if (!a.moves.some((move, i) => {
+      const bMove = b.moves[i];
+      if (!areLineRangeMappinsEqual(move.changes, bMove.changes)) {
+        return true;
+      }
+      if (move.lineRangeMapping.changedLineCount !== bMove.lineRangeMapping.changedLineCount) {
+        return true;
+      }
+      if (!move.lineRangeMapping.modified.equals(bMove.lineRangeMapping.modified)) {
+        return true;
+      }
+      if (!move.lineRangeMapping.original.equals(bMove.lineRangeMapping.original)) {
+        return true;
+      }
+      return false;
+    })) {
+      return false;
+    }
+    return true;
+  } else if (!a && !b) {
+    return true;
+  } else {
+    return false;
+  }
+}
+__name(areDiffsEqual, "areDiffsEqual");
+function areLineRangeMappinsEqual(a, b) {
+  if (a.length !== b.length) {
+    return false;
+  }
+  if (a.some((c, i) => {
+    const bChange = b[i];
+    if (c.changedLineCount !== bChange.changedLineCount) {
+      return true;
+    }
+    if ((c.innerChanges || []).length !== (bChange.innerChanges || []).length) {
+      return true;
+    }
+    if ((c.innerChanges || []).some((innerC, innerIdx) => {
+      const bInnerC = bChange.innerChanges[innerIdx];
+      if (!innerC.modifiedRange.equalsRange(bInnerC.modifiedRange)) {
+        return true;
+      }
+      if (!innerC.originalRange.equalsRange(bInnerC.originalRange)) {
+        return true;
+      }
+      return false;
+    })) {
+      return true;
+    }
+    return false;
+  })) {
+    return false;
+  }
+  return true;
+}
+__name(areLineRangeMappinsEqual, "areLineRangeMappinsEqual");
+export {
+  NotebookCellDiffDecorator
+};
+//# sourceMappingURL=notebookCellDiffDecorator.js.map

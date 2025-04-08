@@ -1,1 +1,50 @@
-import{EditOperation as c}from"../core/editOperation.js";import{Range as m}from"../core/range.js";import{OffsetEdit as s,SingleOffsetEdit as a}from"../core/offsetEdit.js";import{OffsetRange as g}from"../core/offsetRange.js";import"../diff/rangeMapping.js";import"../model.js";import"../textModelEvents.js";class T{constructor(){}static asEditOperations(n,t){const i=[];for(const e of n.edits){const o=m.fromPositions(t.getPositionAt(e.replaceRange.start),t.getPositionAt(e.replaceRange.start+e.replaceRange.length));i.push(c.replace(o,e.newText))}return i}static fromContentChanges(n){const t=n.map(e=>new a(g.ofStartAndLength(e.rangeOffset,e.rangeLength),e.text));return t.reverse(),new s(t)}static fromLineRangeMapping(n,t,i){const e=[];for(const o of i)for(const r of o.innerChanges??[]){const f=t.getValueInRange(r.modifiedRange),d=n.getOffsetAt(r.originalRange.getStartPosition()),p=n.getOffsetAt(r.originalRange.getEndPosition()),l=new g(d,p);e.push(new a(l,f))}return new s(e)}}export{T as OffsetEdits};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { EditOperation } from "../core/editOperation.js";
+import { Range } from "../core/range.js";
+import { OffsetEdit, SingleOffsetEdit } from "../core/offsetEdit.js";
+import { OffsetRange } from "../core/offsetRange.js";
+import { DetailedLineRangeMapping } from "../diff/rangeMapping.js";
+import { ITextModel, IIdentifiedSingleEditOperation } from "../model.js";
+import { IModelContentChange } from "../textModelEvents.js";
+class OffsetEdits {
+  static {
+    __name(this, "OffsetEdits");
+  }
+  constructor() {
+  }
+  static asEditOperations(offsetEdit, doc) {
+    const edits = [];
+    for (const singleEdit of offsetEdit.edits) {
+      const range = Range.fromPositions(
+        doc.getPositionAt(singleEdit.replaceRange.start),
+        doc.getPositionAt(singleEdit.replaceRange.start + singleEdit.replaceRange.length)
+      );
+      edits.push(EditOperation.replace(range, singleEdit.newText));
+    }
+    return edits;
+  }
+  static fromContentChanges(contentChanges) {
+    const editsArr = contentChanges.map((c) => new SingleOffsetEdit(OffsetRange.ofStartAndLength(c.rangeOffset, c.rangeLength), c.text));
+    editsArr.reverse();
+    const edits = new OffsetEdit(editsArr);
+    return edits;
+  }
+  static fromLineRangeMapping(original, modified, changes) {
+    const edits = [];
+    for (const c of changes) {
+      for (const i of c.innerChanges ?? []) {
+        const newText = modified.getValueInRange(i.modifiedRange);
+        const startOrig = original.getOffsetAt(i.originalRange.getStartPosition());
+        const endExOrig = original.getOffsetAt(i.originalRange.getEndPosition());
+        const origRange = new OffsetRange(startOrig, endExOrig);
+        edits.push(new SingleOffsetEdit(origRange, newText));
+      }
+    }
+    return new OffsetEdit(edits);
+  }
+}
+export {
+  OffsetEdits
+};
+//# sourceMappingURL=textModelOffsetEdit.js.map

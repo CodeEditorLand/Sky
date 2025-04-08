@@ -1,1 +1,97 @@
-var g=Object.defineProperty;var b=Object.getOwnPropertyDescriptor;var S=(s,i,e,o)=>{for(var r=o>1?void 0:o?b(i,e):i,c=s.length-1,m;c>=0;c--)(m=s[c])&&(r=(o?m(i,e,r):m(r))||r);return o&&r&&g(i,e,r),r},n=(s,i)=>(e,o)=>i(e,o,s);import{Extensions as I}from"../../../common/contributions.js";import{Registry as k}from"../../../../platform/registry/common/platform.js";import{LifecyclePhase as d}from"../../../services/lifecycle/common/lifecycle.js";import{UserDataSyncWorkbenchContribution as C}from"./userDataSync.js";import{IUserDataAutoSyncService as E,UserDataSyncErrorCode as h}from"../../../../platform/userDataSync/common/userDataSync.js";import{INotificationService as W,Severity as l}from"../../../../platform/notification/common/notification.js";import{Disposable as w}from"../../../../base/common/lifecycle.js";import{localize as t}from"../../../../nls.js";import{isWeb as p}from"../../../../base/common/platform.js";import{UserDataSyncTrigger as L}from"./userDataSyncTrigger.js";import{toAction as y}from"../../../../base/common/actions.js";import{IProductService as q}from"../../../../platform/product/common/productService.js";import{ICommandService as D}from"../../../../platform/commands/common/commands.js";import{IHostService as R}from"../../../services/host/browser/host.js";import{SHOW_SYNC_LOG_COMMAND_ID as v}from"../../../services/userDataSync/common/userDataSync.js";let a=class extends w{constructor(e,o,r,c,m){super();this.notificationService=o;this.productService=r;this.commandService=c;this.hostService=m;this._register(e.onError(f=>this.onAutoSyncError(f)))}onAutoSyncError(e){switch(e.code){case h.LocalTooManyRequests:{const o=p?t({key:"local too many requests - reload",comment:["Settings Sync is the name of the feature"]},"Settings sync is suspended temporarily because the current device is making too many requests. Please reload {0} to resume.",this.productService.nameLong):t({key:"local too many requests - restart",comment:["Settings Sync is the name of the feature"]},"Settings sync is suspended temporarily because the current device is making too many requests. Please restart {0} to resume.",this.productService.nameLong);this.notificationService.notify({severity:l.Error,message:o,actions:{primary:[y({id:"Show Sync Logs",label:t("show sync logs","Show Log"),run:()=>this.commandService.executeCommand(v)}),y({id:"Restart",label:p?t("reload","Reload"):t("restart","Restart"),run:()=>this.hostService.restart()})]}});return}case h.TooManyRequests:{const o=e.operationId?t("operationId","Operation Id: {0}",e.operationId):void 0,r=t({key:"server too many requests",comment:["Settings Sync is the name of the feature"]},"Settings sync is disabled because the current device is making too many requests. Please wait for 10 minutes and turn on sync.");this.notificationService.notify({severity:l.Error,message:o?`${r} ${o}`:r,source:e.operationId?t("settings sync","Settings Sync. Operation Id: {0}",e.operationId):void 0,actions:{primary:[y({id:"Show Sync Logs",label:t("show sync logs","Show Log"),run:()=>this.commandService.executeCommand(v)})]}});return}}}};a=S([n(0,E),n(1,W),n(2,q),n(3,D),n(4,R)],a);const u=k.as(I.Workbench);u.registerWorkbenchContribution(C,d.Restored),u.registerWorkbenchContribution(L,d.Eventually),u.registerWorkbenchContribution(a,d.Eventually);
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { IWorkbenchContributionsRegistry, Extensions as WorkbenchExtensions, IWorkbenchContribution } from "../../../common/contributions.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { LifecyclePhase } from "../../../services/lifecycle/common/lifecycle.js";
+import { UserDataSyncWorkbenchContribution } from "./userDataSync.js";
+import { IUserDataAutoSyncService, UserDataSyncError, UserDataSyncErrorCode } from "../../../../platform/userDataSync/common/userDataSync.js";
+import { INotificationService, Severity } from "../../../../platform/notification/common/notification.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { localize } from "../../../../nls.js";
+import { isWeb } from "../../../../base/common/platform.js";
+import { UserDataSyncTrigger } from "./userDataSyncTrigger.js";
+import { toAction } from "../../../../base/common/actions.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { IHostService } from "../../../services/host/browser/host.js";
+import { SHOW_SYNC_LOG_COMMAND_ID } from "../../../services/userDataSync/common/userDataSync.js";
+let UserDataSyncReportIssueContribution = class extends Disposable {
+  constructor(userDataAutoSyncService, notificationService, productService, commandService, hostService) {
+    super();
+    this.notificationService = notificationService;
+    this.productService = productService;
+    this.commandService = commandService;
+    this.hostService = hostService;
+    this._register(userDataAutoSyncService.onError((error) => this.onAutoSyncError(error)));
+  }
+  static {
+    __name(this, "UserDataSyncReportIssueContribution");
+  }
+  onAutoSyncError(error) {
+    switch (error.code) {
+      case UserDataSyncErrorCode.LocalTooManyRequests: {
+        const message = isWeb ? localize({ key: "local too many requests - reload", comment: ["Settings Sync is the name of the feature"] }, "Settings sync is suspended temporarily because the current device is making too many requests. Please reload {0} to resume.", this.productService.nameLong) : localize({ key: "local too many requests - restart", comment: ["Settings Sync is the name of the feature"] }, "Settings sync is suspended temporarily because the current device is making too many requests. Please restart {0} to resume.", this.productService.nameLong);
+        this.notificationService.notify({
+          severity: Severity.Error,
+          message,
+          actions: {
+            primary: [
+              toAction({
+                id: "Show Sync Logs",
+                label: localize("show sync logs", "Show Log"),
+                run: /* @__PURE__ */ __name(() => this.commandService.executeCommand(SHOW_SYNC_LOG_COMMAND_ID), "run")
+              }),
+              toAction({
+                id: "Restart",
+                label: isWeb ? localize("reload", "Reload") : localize("restart", "Restart"),
+                run: /* @__PURE__ */ __name(() => this.hostService.restart(), "run")
+              })
+            ]
+          }
+        });
+        return;
+      }
+      case UserDataSyncErrorCode.TooManyRequests: {
+        const operationId = error.operationId ? localize("operationId", "Operation Id: {0}", error.operationId) : void 0;
+        const message = localize({ key: "server too many requests", comment: ["Settings Sync is the name of the feature"] }, "Settings sync is disabled because the current device is making too many requests. Please wait for 10 minutes and turn on sync.");
+        this.notificationService.notify({
+          severity: Severity.Error,
+          message: operationId ? `${message} ${operationId}` : message,
+          source: error.operationId ? localize("settings sync", "Settings Sync. Operation Id: {0}", error.operationId) : void 0,
+          actions: {
+            primary: [
+              toAction({
+                id: "Show Sync Logs",
+                label: localize("show sync logs", "Show Log"),
+                run: /* @__PURE__ */ __name(() => this.commandService.executeCommand(SHOW_SYNC_LOG_COMMAND_ID), "run")
+              })
+            ]
+          }
+        });
+        return;
+      }
+    }
+  }
+};
+UserDataSyncReportIssueContribution = __decorateClass([
+  __decorateParam(0, IUserDataAutoSyncService),
+  __decorateParam(1, INotificationService),
+  __decorateParam(2, IProductService),
+  __decorateParam(3, ICommandService),
+  __decorateParam(4, IHostService)
+], UserDataSyncReportIssueContribution);
+const workbenchRegistry = Registry.as(WorkbenchExtensions.Workbench);
+workbenchRegistry.registerWorkbenchContribution(UserDataSyncWorkbenchContribution, LifecyclePhase.Restored);
+workbenchRegistry.registerWorkbenchContribution(UserDataSyncTrigger, LifecyclePhase.Eventually);
+workbenchRegistry.registerWorkbenchContribution(UserDataSyncReportIssueContribution, LifecyclePhase.Eventually);
+//# sourceMappingURL=userDataSync.contribution.js.map

@@ -1,1 +1,35 @@
-var b=Object.defineProperty,m=Object.getOwnPropertyDescriptor,p=(t,o,e,r)=>{for(var i,s=r>1?void 0:r?m(o,e):o,n=t.length-1;n>=0;n--)(i=t[n])&&(s=(r?i(o,e,s):i(s))||s);return r&&s&&b(o,e,s),s},s=(t,o)=>(e,r)=>o(e,r,t);import{IContextKeyService as u}from"../../../../platform/contextkey/common/contextkey.js";import{WorkbenchPhase as l,registerWorkbenchContribution2 as h}from"../../../common/contributions.js";import{registerAction2 as k}from"../../../../platform/actions/common/actions.js";import{ListResizeColumnAction as y}from"./listResizeColumnAction.js";let e=class{static ID="workbench.contrib.listContext";constructor(t){t.createKey("listSupportsTypeNavigation",!0),t.createKey("listSupportsKeyboardNavigation",!0)}};e=p([s(0,u)],e),h(e.ID,e,l.BlockStartup),k(y);export{e as ListContext};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IWorkbenchContribution, WorkbenchPhase, registerWorkbenchContribution2 } from "../../../common/contributions.js";
+import { registerAction2 } from "../../../../platform/actions/common/actions.js";
+import { ListResizeColumnAction } from "./listResizeColumnAction.js";
+let ListContext = class {
+  static {
+    __name(this, "ListContext");
+  }
+  static ID = "workbench.contrib.listContext";
+  constructor(contextKeyService) {
+    contextKeyService.createKey("listSupportsTypeNavigation", true);
+    contextKeyService.createKey("listSupportsKeyboardNavigation", true);
+  }
+};
+ListContext = __decorateClass([
+  __decorateParam(0, IContextKeyService)
+], ListContext);
+registerWorkbenchContribution2(ListContext.ID, ListContext, WorkbenchPhase.BlockStartup);
+registerAction2(ListResizeColumnAction);
+export {
+  ListContext
+};
+//# sourceMappingURL=list.contribution.js.map

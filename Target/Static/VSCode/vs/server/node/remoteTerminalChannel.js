@@ -1,1 +1,341 @@
-import*as I from"os";import{Emitter as F,Event as u}from"../../base/common/event.js";import{cloneAndChange as R}from"../../base/common/objects.js";import{Disposable as U}from"../../base/common/lifecycle.js";import*as V from"../../base/common/path.js";import*as H from"../../base/common/platform.js";import{URI as d}from"../../base/common/uri.js";import"../../base/common/uriIpc.js";import"../../base/parts/ipc/common/ipc.js";import{createRandomIPCHandle as k}from"../../base/parts/ipc/node/ipc.net.js";import"../../platform/remote/common/remoteAgentEnvironment.js";import"../../platform/terminal/common/terminal.js";import"../../platform/terminal/common/terminalProcess.js";import"../../platform/workspace/common/workspace.js";import{createURITransformer as W}from"../../workbench/api/node/uriTransformer.js";import{CLIServerBase as G}from"../../workbench/api/node/extHostCLIServer.js";import"../../platform/terminal/common/environmentVariable.js";import{MergedEnvironmentVariableCollection as N}from"../../platform/terminal/common/environmentVariableCollection.js";import{deserializeEnvironmentDescriptionMap as M,deserializeEnvironmentVariableCollection as q}from"../../platform/terminal/common/environmentVariableShared.js";import{RemoteTerminalChannelEvent as c,RemoteTerminalChannelRequest as n}from"../../workbench/contrib/terminal/common/remote/terminal.js";import*as C from"../../workbench/contrib/terminal/common/terminalEnvironment.js";import{AbstractVariableResolverService as z}from"../../workbench/services/configurationResolver/common/variableResolver.js";import{buildUserEnvironment as B}from"./extensionHostConnection.js";import"./serverEnvironmentService.js";import"../../platform/product/common/productService.js";import"../../platform/extensionManagement/common/extensionManagement.js";import"../../platform/configuration/common/configuration.js";import"../../platform/log/common/log.js";import{promiseWithResolvers as $}from"../../base/common/async.js";import{shouldUseEnvironmentVariableCollection as K}from"../../platform/terminal/common/terminalEnvironment.js";class Q extends z{constructor(e,t,r,s,n){super({getFolderUri:e=>{const r=t.filter((t=>t.name===e));if(r&&r.length>0)return r[0].uri},getWorkspaceFolderCount:()=>t.length,getConfigurationValue:(e,t)=>s[`config:${t}`],getExecPath:()=>e.VSCODE_EXEC_PATH,getAppRoot:()=>e.VSCODE_CWD,getFilePath:()=>{if(r)return V.normalize(r.fsPath)},getSelectedText:()=>s.selectedText,getLineNumber:()=>s.lineNumber,getColumnNumber:()=>s.columnNumber,getExtension:async e=>{const t=(await n.getInstalled()).find((t=>t.identifier.id===e));return t&&{extensionLocation:t.location}}},void 0,Promise.resolve(I.homedir()),Promise.resolve(e))}}class Ge extends U{constructor(e,t,r,s,n,o){super(),this._environmentService=e,this._logService=t,this._ptyHostService=r,this._productService=s,this._extensionManagementService=n,this._configurationService=o}_lastReqId=0;_pendingCommands=new Map;_onExecuteCommand=this._register(new F);onExecuteCommand=this._onExecuteCommand.event;async call(e,t,r){switch(t){case n.RestartPtyHost:return this._ptyHostService.restartPtyHost.apply(this._ptyHostService,r);case n.CreateProcess:{const t=W(e.remoteAuthority);return this._createProcess(t,r)}case n.AttachToProcess:return this._ptyHostService.attachToProcess.apply(this._ptyHostService,r);case n.DetachFromProcess:return this._ptyHostService.detachFromProcess.apply(this._ptyHostService,r);case n.ListProcesses:return this._ptyHostService.listProcesses.apply(this._ptyHostService,r);case n.GetLatency:return this._ptyHostService.getLatency.apply(this._ptyHostService,r);case n.GetPerformanceMarks:return this._ptyHostService.getPerformanceMarks.apply(this._ptyHostService,r);case n.OrphanQuestionReply:return this._ptyHostService.orphanQuestionReply.apply(this._ptyHostService,r);case n.AcceptPtyHostResolvedVariables:return this._ptyHostService.acceptPtyHostResolvedVariables.apply(this._ptyHostService,r);case n.Start:return this._ptyHostService.start.apply(this._ptyHostService,r);case n.Input:return this._ptyHostService.input.apply(this._ptyHostService,r);case n.AcknowledgeDataEvent:return this._ptyHostService.acknowledgeDataEvent.apply(this._ptyHostService,r);case n.Shutdown:return this._ptyHostService.shutdown.apply(this._ptyHostService,r);case n.Resize:return this._ptyHostService.resize.apply(this._ptyHostService,r);case n.ClearBuffer:return this._ptyHostService.clearBuffer.apply(this._ptyHostService,r);case n.GetInitialCwd:return this._ptyHostService.getInitialCwd.apply(this._ptyHostService,r);case n.GetCwd:return this._ptyHostService.getCwd.apply(this._ptyHostService,r);case n.ProcessBinary:return this._ptyHostService.processBinary.apply(this._ptyHostService,r);case n.SendCommandResult:return this._sendCommandResult(r[0],r[1],r[2]);case n.InstallAutoReply:return this._ptyHostService.installAutoReply.apply(this._ptyHostService,r);case n.UninstallAllAutoReplies:return this._ptyHostService.uninstallAllAutoReplies.apply(this._ptyHostService,r);case n.GetDefaultSystemShell:return this._getDefaultSystemShell.apply(this,r);case n.GetProfiles:return this._getProfiles.apply(this,r);case n.GetEnvironment:return this._getEnvironment();case n.GetWslPath:return this._getWslPath(r[0],r[1]);case n.GetTerminalLayoutInfo:return this._ptyHostService.getTerminalLayoutInfo(r);case n.SetTerminalLayoutInfo:return this._ptyHostService.setTerminalLayoutInfo(r);case n.SerializeTerminalState:return this._ptyHostService.serializeTerminalState.apply(this._ptyHostService,r);case n.ReviveTerminalProcesses:return this._ptyHostService.reviveTerminalProcesses.apply(this._ptyHostService,r);case n.GetRevivedPtyNewId:return this._ptyHostService.getRevivedPtyNewId.apply(this._ptyHostService,r);case n.SetUnicodeVersion:return this._ptyHostService.setUnicodeVersion.apply(this._ptyHostService,r);case n.ReduceConnectionGraceTime:return this._reduceConnectionGraceTime();case n.UpdateIcon:return this._ptyHostService.updateIcon.apply(this._ptyHostService,r);case n.UpdateTitle:return this._ptyHostService.updateTitle.apply(this._ptyHostService,r);case n.UpdateProperty:return this._ptyHostService.updateProperty.apply(this._ptyHostService,r);case n.RefreshProperty:return this._ptyHostService.refreshProperty.apply(this._ptyHostService,r);case n.RequestDetachInstance:return this._ptyHostService.requestDetachInstance(r[0],r[1]);case n.AcceptDetachedInstance:return this._ptyHostService.acceptDetachInstanceReply(r[0],r[1]);case n.FreePortKillProcess:return this._ptyHostService.freePortKillProcess.apply(this._ptyHostService,r);case n.AcceptDetachInstanceReply:return this._ptyHostService.acceptDetachInstanceReply.apply(this._ptyHostService,r)}throw new Error(`IPC Command ${t} not found`)}listen(e,t,r){switch(t){case c.OnPtyHostExitEvent:return this._ptyHostService.onPtyHostExit||u.None;case c.OnPtyHostStartEvent:return this._ptyHostService.onPtyHostStart||u.None;case c.OnPtyHostUnresponsiveEvent:return this._ptyHostService.onPtyHostUnresponsive||u.None;case c.OnPtyHostResponsiveEvent:return this._ptyHostService.onPtyHostResponsive||u.None;case c.OnPtyHostRequestResolveVariablesEvent:return this._ptyHostService.onPtyHostRequestResolveVariables||u.None;case c.OnProcessDataEvent:return this._ptyHostService.onProcessData;case c.OnProcessReadyEvent:return this._ptyHostService.onProcessReady;case c.OnProcessExitEvent:return this._ptyHostService.onProcessExit;case c.OnProcessReplayEvent:return this._ptyHostService.onProcessReplay;case c.OnProcessOrphanQuestion:return this._ptyHostService.onProcessOrphanQuestion;case c.OnExecuteCommand:return this.onExecuteCommand;case c.OnDidRequestDetach:return this._ptyHostService.onDidRequestDetach||u.None;case c.OnDidChangeProperty:return this._ptyHostService.onDidChangeProperty}throw new Error(`IPC Command ${t} not found`)}async _createProcess(e,t){const r={name:t.shellLaunchConfig.name,executable:t.shellLaunchConfig.executable,args:t.shellLaunchConfig.args,cwd:"string"==typeof t.shellLaunchConfig.cwd||typeof t.shellLaunchConfig.cwd>"u"?t.shellLaunchConfig.cwd:d.revive(e.transformIncoming(t.shellLaunchConfig.cwd)),env:t.shellLaunchConfig.env,useShellEnvironment:t.shellLaunchConfig.useShellEnvironment,reconnectionProperties:t.shellLaunchConfig.reconnectionProperties,type:t.shellLaunchConfig.type,isFeatureTerminal:t.shellLaunchConfig.isFeatureTerminal,tabActions:t.shellLaunchConfig.tabActions,shellIntegrationEnvironmentReporting:t.shellLaunchConfig.shellIntegrationEnvironmentReporting},s=await B(t.resolverEnv,!!t.shellLaunchConfig.useShellEnvironment,H.language,this._environmentService,this._logService,this._configurationService);this._logService.trace("baseEnv",s);const n=t=>({uri:d.revive(e.transformIncoming(t.uri)),name:t.name,index:t.index,toResource:()=>{throw new Error("Not implemented")}}),o=t.workspaceFolders.map(n),i=t.activeWorkspaceFolder?n(t.activeWorkspaceFolder):void 0,a=t.activeFileResource?d.revive(e.transformIncoming(t.activeFileResource)):void 0,c=new Q(s,o,a,t.resolvedVariables,this._extensionManagementService),l=C.createVariableResolver(i,process.env,c),p=await C.getCwd(r,I.homedir(),l,i?.uri,t.configuration["terminal.integrated.cwd"],this._logService);r.cwd=p;const m=H.isWindows?"terminal.integrated.env.windows":H.isMacintosh?"terminal.integrated.env.osx":"terminal.integrated.env.linux",h=t.configuration[m],v=await C.createTerminalEnvironment(r,h,l,this._productService.version,t.configuration["terminal.integrated.detectLocale"],s);if(K(r)){const e=[];for(const[r,s,n]of t.envVariableCollections)e.push([r,{map:q(s),descriptionMap:M(n)}]);const r=new Map(e),s=new N(r),n=i?i??void 0:void 0;await s.applyToProcessEnvironment(v,{workspaceFolder:n},l)}this._logService.debug("Terminal process launching on remote agent",{shellLaunchConfig:r,initialCwd:p,cols:t.cols,rows:t.rows,env:v});const u=k();v.VSCODE_IPC_HOOK_CLI=u;const y=await this._ptyHostService.createProcess(r,p,t.cols,t.rows,t.unicodeVersion,v,s,t.options,t.shouldPersistTerminal,t.workspaceId,t.workspaceName),S=new G({executeCommand:(t,...r)=>this._executeCommand(y,t,r,e)},this._logService,u);return this._ptyHostService.onProcessExit((e=>e.id===y&&S.dispose())),{persistentTerminalId:y,resolvedShellLaunchConfig:r}}_executeCommand(e,t,r,s){const{resolve:n,reject:o,promise:i}=$(),a=++this._lastReqId;this._pendingCommands.set(a,{resolve:n,reject:o,uriTransformer:s});const c=R(r,(e=>e&&1===e.$mid?s.transformOutgoing(e):e&&e instanceof d?s.transformOutgoingURI(e):void 0));return this._onExecuteCommand.fire({reqId:a,persistentProcessId:e,commandId:t,commandArgs:c}),i}_sendCommandResult(e,t,r){const s=this._pendingCommands.get(e);if(!s)return;this._pendingCommands.delete(e);const n=R(r,(e=>{if(e&&1===e.$mid)return s.uriTransformer.transformIncoming(e)}));t?s.reject(n):s.resolve(n)}_getDefaultSystemShell(e){return this._ptyHostService.getDefaultSystemShell(e)}async _getProfiles(e,t,r,s){return this._ptyHostService.getProfiles(e,t,r,s)||[]}_getEnvironment(){return{...process.env}}_getWslPath(e,t){return this._ptyHostService.getWslPath(e,t)}_reduceConnectionGraceTime(){return this._ptyHostService.reduceConnectionGraceTime()}}export{Ge as RemoteTerminalChannel};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as os from "os";
+import { Emitter, Event } from "../../base/common/event.js";
+import { cloneAndChange } from "../../base/common/objects.js";
+import { Disposable } from "../../base/common/lifecycle.js";
+import * as path from "../../base/common/path.js";
+import * as platform from "../../base/common/platform.js";
+import { URI } from "../../base/common/uri.js";
+import { IURITransformer } from "../../base/common/uriIpc.js";
+import { IServerChannel } from "../../base/parts/ipc/common/ipc.js";
+import { createRandomIPCHandle } from "../../base/parts/ipc/node/ipc.net.js";
+import { RemoteAgentConnectionContext } from "../../platform/remote/common/remoteAgentEnvironment.js";
+import { IPtyHostService, IShellLaunchConfig, ITerminalProfile } from "../../platform/terminal/common/terminal.js";
+import { IGetTerminalLayoutInfoArgs, ISetTerminalLayoutInfoArgs } from "../../platform/terminal/common/terminalProcess.js";
+import { IWorkspaceFolder } from "../../platform/workspace/common/workspace.js";
+import { createURITransformer } from "../../workbench/api/node/uriTransformer.js";
+import { CLIServerBase, ICommandsExecuter } from "../../workbench/api/node/extHostCLIServer.js";
+import { IEnvironmentVariableCollection } from "../../platform/terminal/common/environmentVariable.js";
+import { MergedEnvironmentVariableCollection } from "../../platform/terminal/common/environmentVariableCollection.js";
+import { deserializeEnvironmentDescriptionMap, deserializeEnvironmentVariableCollection } from "../../platform/terminal/common/environmentVariableShared.js";
+import { ICreateTerminalProcessArguments, ICreateTerminalProcessResult, IWorkspaceFolderData, RemoteTerminalChannelEvent, RemoteTerminalChannelRequest } from "../../workbench/contrib/terminal/common/remote/terminal.js";
+import * as terminalEnvironment from "../../workbench/contrib/terminal/common/terminalEnvironment.js";
+import { AbstractVariableResolverService } from "../../workbench/services/configurationResolver/common/variableResolver.js";
+import { buildUserEnvironment } from "./extensionHostConnection.js";
+import { IServerEnvironmentService } from "./serverEnvironmentService.js";
+import { IProductService } from "../../platform/product/common/productService.js";
+import { IExtensionManagementService } from "../../platform/extensionManagement/common/extensionManagement.js";
+import { IConfigurationService } from "../../platform/configuration/common/configuration.js";
+import { ILogService } from "../../platform/log/common/log.js";
+import { promiseWithResolvers } from "../../base/common/async.js";
+import { shouldUseEnvironmentVariableCollection } from "../../platform/terminal/common/terminalEnvironment.js";
+class CustomVariableResolver extends AbstractVariableResolverService {
+  static {
+    __name(this, "CustomVariableResolver");
+  }
+  constructor(env, workspaceFolders, activeFileResource, resolvedVariables, extensionService) {
+    super({
+      getFolderUri: /* @__PURE__ */ __name((folderName) => {
+        const found = workspaceFolders.filter((f) => f.name === folderName);
+        if (found && found.length > 0) {
+          return found[0].uri;
+        }
+        return void 0;
+      }, "getFolderUri"),
+      getWorkspaceFolderCount: /* @__PURE__ */ __name(() => {
+        return workspaceFolders.length;
+      }, "getWorkspaceFolderCount"),
+      getConfigurationValue: /* @__PURE__ */ __name((folderUri, section) => {
+        return resolvedVariables[`config:${section}`];
+      }, "getConfigurationValue"),
+      getExecPath: /* @__PURE__ */ __name(() => {
+        return env["VSCODE_EXEC_PATH"];
+      }, "getExecPath"),
+      getAppRoot: /* @__PURE__ */ __name(() => {
+        return env["VSCODE_CWD"];
+      }, "getAppRoot"),
+      getFilePath: /* @__PURE__ */ __name(() => {
+        if (activeFileResource) {
+          return path.normalize(activeFileResource.fsPath);
+        }
+        return void 0;
+      }, "getFilePath"),
+      getSelectedText: /* @__PURE__ */ __name(() => {
+        return resolvedVariables["selectedText"];
+      }, "getSelectedText"),
+      getLineNumber: /* @__PURE__ */ __name(() => {
+        return resolvedVariables["lineNumber"];
+      }, "getLineNumber"),
+      getColumnNumber: /* @__PURE__ */ __name(() => {
+        return resolvedVariables["columnNumber"];
+      }, "getColumnNumber"),
+      getExtension: /* @__PURE__ */ __name(async (id) => {
+        const installed = await extensionService.getInstalled();
+        const found = installed.find((e) => e.identifier.id === id);
+        return found && { extensionLocation: found.location };
+      }, "getExtension")
+    }, void 0, Promise.resolve(os.homedir()), Promise.resolve(env));
+  }
+}
+class RemoteTerminalChannel extends Disposable {
+  constructor(_environmentService, _logService, _ptyHostService, _productService, _extensionManagementService, _configurationService) {
+    super();
+    this._environmentService = _environmentService;
+    this._logService = _logService;
+    this._ptyHostService = _ptyHostService;
+    this._productService = _productService;
+    this._extensionManagementService = _extensionManagementService;
+    this._configurationService = _configurationService;
+  }
+  static {
+    __name(this, "RemoteTerminalChannel");
+  }
+  _lastReqId = 0;
+  _pendingCommands = /* @__PURE__ */ new Map();
+  _onExecuteCommand = this._register(new Emitter());
+  onExecuteCommand = this._onExecuteCommand.event;
+  async call(ctx, command, args) {
+    switch (command) {
+      case RemoteTerminalChannelRequest.RestartPtyHost:
+        return this._ptyHostService.restartPtyHost.apply(this._ptyHostService, args);
+      case RemoteTerminalChannelRequest.CreateProcess: {
+        const uriTransformer = createURITransformer(ctx.remoteAuthority);
+        return this._createProcess(uriTransformer, args);
+      }
+      case RemoteTerminalChannelRequest.AttachToProcess:
+        return this._ptyHostService.attachToProcess.apply(this._ptyHostService, args);
+      case RemoteTerminalChannelRequest.DetachFromProcess:
+        return this._ptyHostService.detachFromProcess.apply(this._ptyHostService, args);
+      case RemoteTerminalChannelRequest.ListProcesses:
+        return this._ptyHostService.listProcesses.apply(this._ptyHostService, args);
+      case RemoteTerminalChannelRequest.GetLatency:
+        return this._ptyHostService.getLatency.apply(this._ptyHostService, args);
+      case RemoteTerminalChannelRequest.GetPerformanceMarks:
+        return this._ptyHostService.getPerformanceMarks.apply(this._ptyHostService, args);
+      case RemoteTerminalChannelRequest.OrphanQuestionReply:
+        return this._ptyHostService.orphanQuestionReply.apply(this._ptyHostService, args);
+      case RemoteTerminalChannelRequest.AcceptPtyHostResolvedVariables:
+        return this._ptyHostService.acceptPtyHostResolvedVariables.apply(this._ptyHostService, args);
+      case RemoteTerminalChannelRequest.Start:
+        return this._ptyHostService.start.apply(this._ptyHostService, args);
+      case RemoteTerminalChannelRequest.Input:
+        return this._ptyHostService.input.apply(this._ptyHostService, args);
+      case RemoteTerminalChannelRequest.AcknowledgeDataEvent:
+        return this._ptyHostService.acknowledgeDataEvent.apply(this._ptyHostService, args);
+      case RemoteTerminalChannelRequest.Shutdown:
+        return this._ptyHostService.shutdown.apply(this._ptyHostService, args);
+      case RemoteTerminalChannelRequest.Resize:
+        return this._ptyHostService.resize.apply(this._ptyHostService, args);
+      case RemoteTerminalChannelRequest.ClearBuffer:
+        return this._ptyHostService.clearBuffer.apply(this._ptyHostService, args);
+      case RemoteTerminalChannelRequest.GetInitialCwd:
+        return this._ptyHostService.getInitialCwd.apply(this._ptyHostService, args);
+      case RemoteTerminalChannelRequest.GetCwd:
+        return this._ptyHostService.getCwd.apply(this._ptyHostService, args);
+      case RemoteTerminalChannelRequest.ProcessBinary:
+        return this._ptyHostService.processBinary.apply(this._ptyHostService, args);
+      case RemoteTerminalChannelRequest.SendCommandResult:
+        return this._sendCommandResult(args[0], args[1], args[2]);
+      case RemoteTerminalChannelRequest.InstallAutoReply:
+        return this._ptyHostService.installAutoReply.apply(this._ptyHostService, args);
+      case RemoteTerminalChannelRequest.UninstallAllAutoReplies:
+        return this._ptyHostService.uninstallAllAutoReplies.apply(this._ptyHostService, args);
+      case RemoteTerminalChannelRequest.GetDefaultSystemShell:
+        return this._getDefaultSystemShell.apply(this, args);
+      case RemoteTerminalChannelRequest.GetProfiles:
+        return this._getProfiles.apply(this, args);
+      case RemoteTerminalChannelRequest.GetEnvironment:
+        return this._getEnvironment();
+      case RemoteTerminalChannelRequest.GetWslPath:
+        return this._getWslPath(args[0], args[1]);
+      case RemoteTerminalChannelRequest.GetTerminalLayoutInfo:
+        return this._ptyHostService.getTerminalLayoutInfo(args);
+      case RemoteTerminalChannelRequest.SetTerminalLayoutInfo:
+        return this._ptyHostService.setTerminalLayoutInfo(args);
+      case RemoteTerminalChannelRequest.SerializeTerminalState:
+        return this._ptyHostService.serializeTerminalState.apply(this._ptyHostService, args);
+      case RemoteTerminalChannelRequest.ReviveTerminalProcesses:
+        return this._ptyHostService.reviveTerminalProcesses.apply(this._ptyHostService, args);
+      case RemoteTerminalChannelRequest.GetRevivedPtyNewId:
+        return this._ptyHostService.getRevivedPtyNewId.apply(this._ptyHostService, args);
+      case RemoteTerminalChannelRequest.SetUnicodeVersion:
+        return this._ptyHostService.setUnicodeVersion.apply(this._ptyHostService, args);
+      case RemoteTerminalChannelRequest.ReduceConnectionGraceTime:
+        return this._reduceConnectionGraceTime();
+      case RemoteTerminalChannelRequest.UpdateIcon:
+        return this._ptyHostService.updateIcon.apply(this._ptyHostService, args);
+      case RemoteTerminalChannelRequest.UpdateTitle:
+        return this._ptyHostService.updateTitle.apply(this._ptyHostService, args);
+      case RemoteTerminalChannelRequest.UpdateProperty:
+        return this._ptyHostService.updateProperty.apply(this._ptyHostService, args);
+      case RemoteTerminalChannelRequest.RefreshProperty:
+        return this._ptyHostService.refreshProperty.apply(this._ptyHostService, args);
+      case RemoteTerminalChannelRequest.RequestDetachInstance:
+        return this._ptyHostService.requestDetachInstance(args[0], args[1]);
+      case RemoteTerminalChannelRequest.AcceptDetachedInstance:
+        return this._ptyHostService.acceptDetachInstanceReply(args[0], args[1]);
+      case RemoteTerminalChannelRequest.FreePortKillProcess:
+        return this._ptyHostService.freePortKillProcess.apply(this._ptyHostService, args);
+      case RemoteTerminalChannelRequest.AcceptDetachInstanceReply:
+        return this._ptyHostService.acceptDetachInstanceReply.apply(this._ptyHostService, args);
+    }
+    throw new Error(`IPC Command ${command} not found`);
+  }
+  listen(_, event, arg) {
+    switch (event) {
+      case RemoteTerminalChannelEvent.OnPtyHostExitEvent:
+        return this._ptyHostService.onPtyHostExit || Event.None;
+      case RemoteTerminalChannelEvent.OnPtyHostStartEvent:
+        return this._ptyHostService.onPtyHostStart || Event.None;
+      case RemoteTerminalChannelEvent.OnPtyHostUnresponsiveEvent:
+        return this._ptyHostService.onPtyHostUnresponsive || Event.None;
+      case RemoteTerminalChannelEvent.OnPtyHostResponsiveEvent:
+        return this._ptyHostService.onPtyHostResponsive || Event.None;
+      case RemoteTerminalChannelEvent.OnPtyHostRequestResolveVariablesEvent:
+        return this._ptyHostService.onPtyHostRequestResolveVariables || Event.None;
+      case RemoteTerminalChannelEvent.OnProcessDataEvent:
+        return this._ptyHostService.onProcessData;
+      case RemoteTerminalChannelEvent.OnProcessReadyEvent:
+        return this._ptyHostService.onProcessReady;
+      case RemoteTerminalChannelEvent.OnProcessExitEvent:
+        return this._ptyHostService.onProcessExit;
+      case RemoteTerminalChannelEvent.OnProcessReplayEvent:
+        return this._ptyHostService.onProcessReplay;
+      case RemoteTerminalChannelEvent.OnProcessOrphanQuestion:
+        return this._ptyHostService.onProcessOrphanQuestion;
+      case RemoteTerminalChannelEvent.OnExecuteCommand:
+        return this.onExecuteCommand;
+      case RemoteTerminalChannelEvent.OnDidRequestDetach:
+        return this._ptyHostService.onDidRequestDetach || Event.None;
+      case RemoteTerminalChannelEvent.OnDidChangeProperty:
+        return this._ptyHostService.onDidChangeProperty;
+    }
+    throw new Error(`IPC Command ${event} not found`);
+  }
+  async _createProcess(uriTransformer, args) {
+    const shellLaunchConfig = {
+      name: args.shellLaunchConfig.name,
+      executable: args.shellLaunchConfig.executable,
+      args: args.shellLaunchConfig.args,
+      cwd: typeof args.shellLaunchConfig.cwd === "string" || typeof args.shellLaunchConfig.cwd === "undefined" ? args.shellLaunchConfig.cwd : URI.revive(uriTransformer.transformIncoming(args.shellLaunchConfig.cwd)),
+      env: args.shellLaunchConfig.env,
+      useShellEnvironment: args.shellLaunchConfig.useShellEnvironment,
+      reconnectionProperties: args.shellLaunchConfig.reconnectionProperties,
+      type: args.shellLaunchConfig.type,
+      isFeatureTerminal: args.shellLaunchConfig.isFeatureTerminal,
+      tabActions: args.shellLaunchConfig.tabActions,
+      shellIntegrationEnvironmentReporting: args.shellLaunchConfig.shellIntegrationEnvironmentReporting
+    };
+    const baseEnv = await buildUserEnvironment(args.resolverEnv, !!args.shellLaunchConfig.useShellEnvironment, platform.language, this._environmentService, this._logService, this._configurationService);
+    this._logService.trace("baseEnv", baseEnv);
+    const reviveWorkspaceFolder = /* @__PURE__ */ __name((workspaceData) => {
+      return {
+        uri: URI.revive(uriTransformer.transformIncoming(workspaceData.uri)),
+        name: workspaceData.name,
+        index: workspaceData.index,
+        toResource: /* @__PURE__ */ __name(() => {
+          throw new Error("Not implemented");
+        }, "toResource")
+      };
+    }, "reviveWorkspaceFolder");
+    const workspaceFolders = args.workspaceFolders.map(reviveWorkspaceFolder);
+    const activeWorkspaceFolder = args.activeWorkspaceFolder ? reviveWorkspaceFolder(args.activeWorkspaceFolder) : void 0;
+    const activeFileResource = args.activeFileResource ? URI.revive(uriTransformer.transformIncoming(args.activeFileResource)) : void 0;
+    const customVariableResolver = new CustomVariableResolver(baseEnv, workspaceFolders, activeFileResource, args.resolvedVariables, this._extensionManagementService);
+    const variableResolver = terminalEnvironment.createVariableResolver(activeWorkspaceFolder, process.env, customVariableResolver);
+    const initialCwd = await terminalEnvironment.getCwd(shellLaunchConfig, os.homedir(), variableResolver, activeWorkspaceFolder?.uri, args.configuration["terminal.integrated.cwd"], this._logService);
+    shellLaunchConfig.cwd = initialCwd;
+    const envPlatformKey = platform.isWindows ? "terminal.integrated.env.windows" : platform.isMacintosh ? "terminal.integrated.env.osx" : "terminal.integrated.env.linux";
+    const envFromConfig = args.configuration[envPlatformKey];
+    const env = await terminalEnvironment.createTerminalEnvironment(
+      shellLaunchConfig,
+      envFromConfig,
+      variableResolver,
+      this._productService.version,
+      args.configuration["terminal.integrated.detectLocale"],
+      baseEnv
+    );
+    if (shouldUseEnvironmentVariableCollection(shellLaunchConfig)) {
+      const entries = [];
+      for (const [k, v, d] of args.envVariableCollections) {
+        entries.push([k, { map: deserializeEnvironmentVariableCollection(v), descriptionMap: deserializeEnvironmentDescriptionMap(d) }]);
+      }
+      const envVariableCollections = new Map(entries);
+      const mergedCollection = new MergedEnvironmentVariableCollection(envVariableCollections);
+      const workspaceFolder = activeWorkspaceFolder ? activeWorkspaceFolder ?? void 0 : void 0;
+      await mergedCollection.applyToProcessEnvironment(env, { workspaceFolder }, variableResolver);
+    }
+    this._logService.debug(`Terminal process launching on remote agent`, { shellLaunchConfig, initialCwd, cols: args.cols, rows: args.rows, env });
+    const ipcHandlePath = createRandomIPCHandle();
+    env.VSCODE_IPC_HOOK_CLI = ipcHandlePath;
+    const persistentProcessId = await this._ptyHostService.createProcess(shellLaunchConfig, initialCwd, args.cols, args.rows, args.unicodeVersion, env, baseEnv, args.options, args.shouldPersistTerminal, args.workspaceId, args.workspaceName);
+    const commandsExecuter = {
+      executeCommand: /* @__PURE__ */ __name((id, ...args2) => this._executeCommand(persistentProcessId, id, args2, uriTransformer), "executeCommand")
+    };
+    const cliServer = new CLIServerBase(commandsExecuter, this._logService, ipcHandlePath);
+    this._ptyHostService.onProcessExit((e) => e.id === persistentProcessId && cliServer.dispose());
+    return {
+      persistentTerminalId: persistentProcessId,
+      resolvedShellLaunchConfig: shellLaunchConfig
+    };
+  }
+  _executeCommand(persistentProcessId, commandId, commandArgs, uriTransformer) {
+    const { resolve, reject, promise } = promiseWithResolvers();
+    const reqId = ++this._lastReqId;
+    this._pendingCommands.set(reqId, { resolve, reject, uriTransformer });
+    const serializedCommandArgs = cloneAndChange(commandArgs, (obj) => {
+      if (obj && obj.$mid === 1) {
+        return uriTransformer.transformOutgoing(obj);
+      }
+      if (obj && obj instanceof URI) {
+        return uriTransformer.transformOutgoingURI(obj);
+      }
+      return void 0;
+    });
+    this._onExecuteCommand.fire({
+      reqId,
+      persistentProcessId,
+      commandId,
+      commandArgs: serializedCommandArgs
+    });
+    return promise;
+  }
+  _sendCommandResult(reqId, isError, serializedPayload) {
+    const data = this._pendingCommands.get(reqId);
+    if (!data) {
+      return;
+    }
+    this._pendingCommands.delete(reqId);
+    const payload = cloneAndChange(serializedPayload, (obj) => {
+      if (obj && obj.$mid === 1) {
+        return data.uriTransformer.transformIncoming(obj);
+      }
+      return void 0;
+    });
+    if (isError) {
+      data.reject(payload);
+    } else {
+      data.resolve(payload);
+    }
+  }
+  _getDefaultSystemShell(osOverride) {
+    return this._ptyHostService.getDefaultSystemShell(osOverride);
+  }
+  async _getProfiles(workspaceId, profiles, defaultProfile, includeDetectedProfiles) {
+    return this._ptyHostService.getProfiles(workspaceId, profiles, defaultProfile, includeDetectedProfiles) || [];
+  }
+  _getEnvironment() {
+    return { ...process.env };
+  }
+  _getWslPath(original, direction) {
+    return this._ptyHostService.getWslPath(original, direction);
+  }
+  _reduceConnectionGraceTime() {
+    return this._ptyHostService.reduceConnectionGraceTime();
+  }
+}
+export {
+  RemoteTerminalChannel
+};
+//# sourceMappingURL=remoteTerminalChannel.js.map

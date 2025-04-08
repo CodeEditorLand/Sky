@@ -1,1 +1,107 @@
-var E=Object.defineProperty,L=Object.getOwnPropertyDescriptor,s=(e,r,i,o)=>{for(var t,s=o>1?void 0:o?L(r,i):r,n=e.length-1;n>=0;n--)(t=e[n])&&(s=(o?t(r,i,s):t(s))||s);return o&&s&&E(r,i,s),s},r=(e,r)=>(i,o)=>r(i,o,e);import{localize as R}from"../../../../nls.js";import{AbstractTextFileService as y}from"../browser/textFileService.js";import{ITextFileService as C,TextFileEditorModelState as c}from"../common/textfiles.js";import{InstantiationType as M,registerSingleton as O}from"../../../../platform/instantiation/common/extensions.js";import"../../../../base/common/uri.js";import{IFileService as P}from"../../../../platform/files/common/files.js";import{ITextResourceConfigurationService as D}from"../../../../editor/common/services/textResourceConfiguration.js";import{IUntitledTextEditorService as U}from"../../untitled/common/untitledTextEditorService.js";import{ILifecycleService as W}from"../../lifecycle/common/lifecycle.js";import{IInstantiationService as b}from"../../../../platform/instantiation/common/instantiation.js";import{IModelService as j}from"../../../../editor/common/services/model.js";import{INativeWorkbenchEnvironmentService as k}from"../../environment/electron-sandbox/environmentService.js";import{IDialogService as w,IFileDialogService as N}from"../../../../platform/dialogs/common/dialogs.js";import{IFilesConfigurationService as A}from"../../filesConfiguration/common/filesConfigurationService.js";import{ICodeEditorService as _}from"../../../../editor/browser/services/codeEditorService.js";import{IPathService as G}from"../../path/common/pathService.js";import{IWorkingCopyFileService as V}from"../../workingCopy/common/workingCopyFileService.js";import{IUriIdentityService as z}from"../../../../platform/uriIdentity/common/uriIdentity.js";import{ILanguageService as q}from"../../../../editor/common/languages/language.js";import{IElevatedFileService as B}from"../../files/common/elevatedFileService.js";import{ILogService as H}from"../../../../platform/log/common/log.js";import{Promises as J}from"../../../../base/common/async.js";import{IDecorationsService as K}from"../../decorations/common/decorations.js";let a=class extends y{environmentService;constructor(e,r,i,o,t,s,n,m,a,c,l,f,v,S,p,d,j,g){super(e,r,i,o,t,s,n,m,a,c,l,f,v,S,p,j,d,g),this.environmentService=s,this.registerListeners()}registerListeners(){this._register(this.lifecycleService.onWillShutdown((e=>e.join(this.onWillShutdown(),{id:"join.textFiles",label:R("join.textFiles","Saving text files")}))))}async onWillShutdown(){let e;for(;(e=this.files.models.filter((e=>e.hasState(c.PENDING_SAVE)))).length>0;)await J.settled(e.map((e=>e.joinState(c.PENDING_SAVE))))}async read(e,r){return r=this.ensureLimits(r),super.read(e,r)}async readStream(e,r){return r=this.ensureLimits(r),super.readStream(e,r)}ensureLimits(e){let r,i;return r=e||Object.create(null),r.limits?i=r.limits:(i=Object.create(null),r={...r,limits:i}),r}};a=s([r(0,P),r(1,U),r(2,W),r(3,b),r(4,j),r(5,k),r(6,w),r(7,N),r(8,D),r(9,A),r(10,_),r(11,G),r(12,V),r(13,z),r(14,q),r(15,B),r(16,H),r(17,K)],a),O(C,a,M.Eager);export{a as NativeTextFileService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { localize } from "../../../../nls.js";
+import { AbstractTextFileService } from "../browser/textFileService.js";
+import { ITextFileService, ITextFileStreamContent, ITextFileContent, IReadTextFileOptions, TextFileEditorModelState, ITextFileEditorModel } from "../common/textfiles.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IFileService, IFileReadLimits } from "../../../../platform/files/common/files.js";
+import { ITextResourceConfigurationService } from "../../../../editor/common/services/textResourceConfiguration.js";
+import { IUntitledTextEditorModelManager, IUntitledTextEditorService } from "../../untitled/common/untitledTextEditorService.js";
+import { ILifecycleService } from "../../lifecycle/common/lifecycle.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IModelService } from "../../../../editor/common/services/model.js";
+import { INativeWorkbenchEnvironmentService } from "../../environment/electron-sandbox/environmentService.js";
+import { IDialogService, IFileDialogService } from "../../../../platform/dialogs/common/dialogs.js";
+import { IFilesConfigurationService } from "../../filesConfiguration/common/filesConfigurationService.js";
+import { ICodeEditorService } from "../../../../editor/browser/services/codeEditorService.js";
+import { IPathService } from "../../path/common/pathService.js";
+import { IWorkingCopyFileService } from "../../workingCopy/common/workingCopyFileService.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import { ILanguageService } from "../../../../editor/common/languages/language.js";
+import { IElevatedFileService } from "../../files/common/elevatedFileService.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { Promises } from "../../../../base/common/async.js";
+import { IDecorationsService } from "../../decorations/common/decorations.js";
+let NativeTextFileService = class extends AbstractTextFileService {
+  static {
+    __name(this, "NativeTextFileService");
+  }
+  environmentService;
+  constructor(fileService, untitledTextEditorService, lifecycleService, instantiationService, modelService, environmentService, dialogService, fileDialogService, textResourceConfigurationService, filesConfigurationService, codeEditorService, pathService, workingCopyFileService, uriIdentityService, languageService, elevatedFileService, logService, decorationsService) {
+    super(fileService, untitledTextEditorService, lifecycleService, instantiationService, modelService, environmentService, dialogService, fileDialogService, textResourceConfigurationService, filesConfigurationService, codeEditorService, pathService, workingCopyFileService, uriIdentityService, languageService, logService, elevatedFileService, decorationsService);
+    this.environmentService = environmentService;
+    this.registerListeners();
+  }
+  registerListeners() {
+    this._register(this.lifecycleService.onWillShutdown((event) => event.join(this.onWillShutdown(), { id: "join.textFiles", label: localize("join.textFiles", "Saving text files") })));
+  }
+  async onWillShutdown() {
+    let modelsPendingToSave;
+    while ((modelsPendingToSave = this.files.models.filter((model) => model.hasState(TextFileEditorModelState.PENDING_SAVE))).length > 0) {
+      await Promises.settled(modelsPendingToSave.map((model) => model.joinState(TextFileEditorModelState.PENDING_SAVE)));
+    }
+  }
+  async read(resource, options) {
+    options = this.ensureLimits(options);
+    return super.read(resource, options);
+  }
+  async readStream(resource, options) {
+    options = this.ensureLimits(options);
+    return super.readStream(resource, options);
+  }
+  ensureLimits(options) {
+    let ensuredOptions;
+    if (!options) {
+      ensuredOptions = /* @__PURE__ */ Object.create(null);
+    } else {
+      ensuredOptions = options;
+    }
+    let ensuredLimits;
+    if (!ensuredOptions.limits) {
+      ensuredLimits = /* @__PURE__ */ Object.create(null);
+      ensuredOptions = {
+        ...ensuredOptions,
+        limits: ensuredLimits
+      };
+    } else {
+      ensuredLimits = ensuredOptions.limits;
+    }
+    return ensuredOptions;
+  }
+};
+NativeTextFileService = __decorateClass([
+  __decorateParam(0, IFileService),
+  __decorateParam(1, IUntitledTextEditorService),
+  __decorateParam(2, ILifecycleService),
+  __decorateParam(3, IInstantiationService),
+  __decorateParam(4, IModelService),
+  __decorateParam(5, INativeWorkbenchEnvironmentService),
+  __decorateParam(6, IDialogService),
+  __decorateParam(7, IFileDialogService),
+  __decorateParam(8, ITextResourceConfigurationService),
+  __decorateParam(9, IFilesConfigurationService),
+  __decorateParam(10, ICodeEditorService),
+  __decorateParam(11, IPathService),
+  __decorateParam(12, IWorkingCopyFileService),
+  __decorateParam(13, IUriIdentityService),
+  __decorateParam(14, ILanguageService),
+  __decorateParam(15, IElevatedFileService),
+  __decorateParam(16, ILogService),
+  __decorateParam(17, IDecorationsService)
+], NativeTextFileService);
+registerSingleton(ITextFileService, NativeTextFileService, InstantiationType.Eager);
+export {
+  NativeTextFileService
+};
+//# sourceMappingURL=nativeTextFileService.js.map

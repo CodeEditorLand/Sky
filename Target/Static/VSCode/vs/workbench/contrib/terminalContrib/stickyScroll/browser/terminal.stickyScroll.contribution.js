@@ -1,1 +1,35 @@
-import"./media/stickyScroll.css";import{localize as e,localize2 as n}from"../../../../../nls.js";import{MenuId as c}from"../../../../../platform/actions/common/actions.js";import{IConfigurationService as m}from"../../../../../platform/configuration/common/configuration.js";import{ContextKeyExpr as S}from"../../../../../platform/contextkey/common/contextkey.js";import{registerTerminalAction as a}from"../../../terminal/browser/terminalActions.js";import{registerTerminalContribution as g}from"../../../terminal/browser/terminalExtensions.js";import{TerminalStickyScrollContribution as r}from"./terminalStickyScrollContribution.js";import{TerminalStickyScrollSettingId as t}from"../common/terminalStickyScrollConfiguration.js";g(r.ID,r);var k=(o=>(o.ToggleStickyScroll="workbench.action.terminal.toggleStickyScroll",o))(k||{});a({id:"workbench.action.terminal.toggleStickyScroll",title:n("workbench.action.terminal.toggleStickyScroll","Toggle Sticky Scroll"),toggled:{condition:S.equals(`config.${t.Enabled}`,!0),title:e("stickyScroll","Sticky Scroll"),mnemonicTitle:e({key:"miStickyScroll",comment:["&& denotes a mnemonic"]},"&&Sticky Scroll")},run:(o,i)=>{const r=i.get(m),l=!r.getValue(t.Enabled);return r.updateValue(t.Enabled,l)},menu:[{id:c.TerminalStickyScrollContext}]});import"./terminalStickyScrollColorRegistry.js";
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import "./media/stickyScroll.css";
+import { localize, localize2 } from "../../../../../nls.js";
+import { MenuId } from "../../../../../platform/actions/common/actions.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { ContextKeyExpr } from "../../../../../platform/contextkey/common/contextkey.js";
+import { registerTerminalAction } from "../../../terminal/browser/terminalActions.js";
+import { registerTerminalContribution } from "../../../terminal/browser/terminalExtensions.js";
+import { TerminalStickyScrollContribution } from "./terminalStickyScrollContribution.js";
+import { TerminalStickyScrollSettingId } from "../common/terminalStickyScrollConfiguration.js";
+registerTerminalContribution(TerminalStickyScrollContribution.ID, TerminalStickyScrollContribution);
+var TerminalStickyScrollCommandId = /* @__PURE__ */ ((TerminalStickyScrollCommandId2) => {
+  TerminalStickyScrollCommandId2["ToggleStickyScroll"] = "workbench.action.terminal.toggleStickyScroll";
+  return TerminalStickyScrollCommandId2;
+})(TerminalStickyScrollCommandId || {});
+registerTerminalAction({
+  id: "workbench.action.terminal.toggleStickyScroll" /* ToggleStickyScroll */,
+  title: localize2("workbench.action.terminal.toggleStickyScroll", "Toggle Sticky Scroll"),
+  toggled: {
+    condition: ContextKeyExpr.equals(`config.${TerminalStickyScrollSettingId.Enabled}`, true),
+    title: localize("stickyScroll", "Sticky Scroll"),
+    mnemonicTitle: localize({ key: "miStickyScroll", comment: ["&& denotes a mnemonic"] }, "&&Sticky Scroll")
+  },
+  run: /* @__PURE__ */ __name((c, accessor) => {
+    const configurationService = accessor.get(IConfigurationService);
+    const newValue = !configurationService.getValue(TerminalStickyScrollSettingId.Enabled);
+    return configurationService.updateValue(TerminalStickyScrollSettingId.Enabled, newValue);
+  }, "run"),
+  menu: [
+    { id: MenuId.TerminalStickyScrollContext }
+  ]
+});
+import "./terminalStickyScrollColorRegistry.js";
+//# sourceMappingURL=terminal.stickyScroll.contribution.js.map

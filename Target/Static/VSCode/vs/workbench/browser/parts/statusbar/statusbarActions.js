@@ -1,1 +1,154 @@
-var S=Object.defineProperty,y=Object.getOwnPropertyDescriptor,f=(e,o,s,t)=>{for(var r,i=t>1?void 0:t?y(o,s):o,n=e.length-1;n>=0;n--)(r=e[n])&&(i=(t?r(o,s,i):r(i))||i);return t&&i&&S(o,s,i),i},g=(e,o)=>(s,t)=>o(s,t,e);import{localize as l,localize2 as b}from"../../../../nls.js";import{IStatusbarService as n}from"../../../services/statusbar/browser/statusbar.js";import{Action as v}from"../../../../base/common/actions.js";import{Parts as p,IWorkbenchLayoutService as w}from"../../../services/layout/browser/layoutService.js";import{KeyCode as o}from"../../../../base/common/keyCodes.js";import{KeybindingsRegistry as c,KeybindingWeight as a}from"../../../../platform/keybinding/common/keybindingsRegistry.js";import"../../../../editor/browser/editorExtensions.js";import{Action2 as A,registerAction2 as B}from"../../../../platform/actions/common/actions.js";import{Categories as C}from"../../../../platform/action/common/actionCommonCategories.js";import{IEditorService as x}from"../../../services/editor/common/editorService.js";import"./statusbarModel.js";import{StatusBarFocused as d}from"../../../common/contextkeys.js";import{getActiveWindow as k}from"../../../../base/browser/dom.js";import{ICommandService as P}from"../../../../platform/commands/common/commands.js";class G extends v{constructor(e,o,s){super(e,o,void 0,!0),this.model=s,this.checked=!s.isHidden(e)}async run(){this.model.isHidden(this.id)?this.model.show(this.id):this.model.hide(this.id)}}class J extends v{constructor(e,o,s){super(e,l("hide","Hide '{0}'",o),void 0,!0),this.model=s}async run(){this.model.hide(this.id)}}let u=class extends v{constructor(e,o){super("statusbar.manage.extension",l("manageExtension","Manage Extension")),this.extensionId=e,this.commandService=o}run(){return this.commandService.executeCommand("_extensions.manage",this.extensionId)}};u=f([g(1,P)],u),c.registerCommandAndKeybindingRule({id:"workbench.statusBar.focusPrevious",weight:a.WorkbenchContrib,primary:o.LeftArrow,secondary:[o.UpArrow],when:d,handler:e=>{e.get(n).focusPreviousEntry()}}),c.registerCommandAndKeybindingRule({id:"workbench.statusBar.focusNext",weight:a.WorkbenchContrib,primary:o.RightArrow,secondary:[o.DownArrow],when:d,handler:e=>{e.get(n).focusNextEntry()}}),c.registerCommandAndKeybindingRule({id:"workbench.statusBar.focusFirst",weight:a.WorkbenchContrib,primary:o.Home,when:d,handler:e=>{const o=e.get(n);o.focus(!1),o.focusNextEntry()}}),c.registerCommandAndKeybindingRule({id:"workbench.statusBar.focusLast",weight:a.WorkbenchContrib,primary:o.End,when:d,handler:e=>{const o=e.get(n);o.focus(!1),o.focusPreviousEntry()}}),c.registerCommandAndKeybindingRule({id:"workbench.statusBar.clearFocus",weight:a.WorkbenchContrib,primary:o.Escape,when:d,handler:e=>{const o=e.get(n),s=e.get(x);o.isEntryFocused()?o.focus(!1):s.activeEditorPane&&s.activeEditorPane.focus()}});class E extends A{constructor(){super({id:"workbench.action.focusStatusBar",title:b("focusStatusBar","Focus Status Bar"),category:C.View,f1:!0})}async run(e){e.get(w).focusPart(p.STATUSBAR_PART,k())}}B(E);export{J as HideStatusbarEntryAction,u as ManageExtensionAction,G as ToggleStatusbarEntryVisibilityAction};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { localize, localize2 } from "../../../../nls.js";
+import { IStatusbarService } from "../../../services/statusbar/browser/statusbar.js";
+import { Action } from "../../../../base/common/actions.js";
+import { Parts, IWorkbenchLayoutService } from "../../../services/layout/browser/layoutService.js";
+import { KeyCode } from "../../../../base/common/keyCodes.js";
+import { KeybindingsRegistry, KeybindingWeight } from "../../../../platform/keybinding/common/keybindingsRegistry.js";
+import { ServicesAccessor } from "../../../../editor/browser/editorExtensions.js";
+import { Action2, registerAction2 } from "../../../../platform/actions/common/actions.js";
+import { Categories } from "../../../../platform/action/common/actionCommonCategories.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { StatusbarViewModel } from "./statusbarModel.js";
+import { StatusBarFocused } from "../../../common/contextkeys.js";
+import { getActiveWindow } from "../../../../base/browser/dom.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+class ToggleStatusbarEntryVisibilityAction extends Action {
+  constructor(id, label, model) {
+    super(id, label, void 0, true);
+    this.model = model;
+    this.checked = !model.isHidden(id);
+  }
+  static {
+    __name(this, "ToggleStatusbarEntryVisibilityAction");
+  }
+  async run() {
+    if (this.model.isHidden(this.id)) {
+      this.model.show(this.id);
+    } else {
+      this.model.hide(this.id);
+    }
+  }
+}
+class HideStatusbarEntryAction extends Action {
+  constructor(id, name, model) {
+    super(id, localize("hide", "Hide '{0}'", name), void 0, true);
+    this.model = model;
+  }
+  static {
+    __name(this, "HideStatusbarEntryAction");
+  }
+  async run() {
+    this.model.hide(this.id);
+  }
+}
+let ManageExtensionAction = class extends Action {
+  constructor(extensionId, commandService) {
+    super("statusbar.manage.extension", localize("manageExtension", "Manage Extension"));
+    this.extensionId = extensionId;
+    this.commandService = commandService;
+  }
+  static {
+    __name(this, "ManageExtensionAction");
+  }
+  run() {
+    return this.commandService.executeCommand("_extensions.manage", this.extensionId);
+  }
+};
+ManageExtensionAction = __decorateClass([
+  __decorateParam(1, ICommandService)
+], ManageExtensionAction);
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  id: "workbench.statusBar.focusPrevious",
+  weight: KeybindingWeight.WorkbenchContrib,
+  primary: KeyCode.LeftArrow,
+  secondary: [KeyCode.UpArrow],
+  when: StatusBarFocused,
+  handler: /* @__PURE__ */ __name((accessor) => {
+    const statusBarService = accessor.get(IStatusbarService);
+    statusBarService.focusPreviousEntry();
+  }, "handler")
+});
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  id: "workbench.statusBar.focusNext",
+  weight: KeybindingWeight.WorkbenchContrib,
+  primary: KeyCode.RightArrow,
+  secondary: [KeyCode.DownArrow],
+  when: StatusBarFocused,
+  handler: /* @__PURE__ */ __name((accessor) => {
+    const statusBarService = accessor.get(IStatusbarService);
+    statusBarService.focusNextEntry();
+  }, "handler")
+});
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  id: "workbench.statusBar.focusFirst",
+  weight: KeybindingWeight.WorkbenchContrib,
+  primary: KeyCode.Home,
+  when: StatusBarFocused,
+  handler: /* @__PURE__ */ __name((accessor) => {
+    const statusBarService = accessor.get(IStatusbarService);
+    statusBarService.focus(false);
+    statusBarService.focusNextEntry();
+  }, "handler")
+});
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  id: "workbench.statusBar.focusLast",
+  weight: KeybindingWeight.WorkbenchContrib,
+  primary: KeyCode.End,
+  when: StatusBarFocused,
+  handler: /* @__PURE__ */ __name((accessor) => {
+    const statusBarService = accessor.get(IStatusbarService);
+    statusBarService.focus(false);
+    statusBarService.focusPreviousEntry();
+  }, "handler")
+});
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  id: "workbench.statusBar.clearFocus",
+  weight: KeybindingWeight.WorkbenchContrib,
+  primary: KeyCode.Escape,
+  when: StatusBarFocused,
+  handler: /* @__PURE__ */ __name((accessor) => {
+    const statusBarService = accessor.get(IStatusbarService);
+    const editorService = accessor.get(IEditorService);
+    if (statusBarService.isEntryFocused()) {
+      statusBarService.focus(false);
+    } else if (editorService.activeEditorPane) {
+      editorService.activeEditorPane.focus();
+    }
+  }, "handler")
+});
+class FocusStatusBarAction extends Action2 {
+  static {
+    __name(this, "FocusStatusBarAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.focusStatusBar",
+      title: localize2("focusStatusBar", "Focus Status Bar"),
+      category: Categories.View,
+      f1: true
+    });
+  }
+  async run(accessor) {
+    const layoutService = accessor.get(IWorkbenchLayoutService);
+    layoutService.focusPart(Parts.STATUSBAR_PART, getActiveWindow());
+  }
+}
+registerAction2(FocusStatusBarAction);
+export {
+  HideStatusbarEntryAction,
+  ManageExtensionAction,
+  ToggleStatusbarEntryVisibilityAction
+};
+//# sourceMappingURL=statusbarActions.js.map

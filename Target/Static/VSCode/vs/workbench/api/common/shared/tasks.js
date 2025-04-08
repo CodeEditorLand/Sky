@@ -1,1 +1,23 @@
-import"../../../../base/common/uri.js";import"../../../../platform/extensions/common/extensions.js";import"../../../contrib/tasks/common/tasks.js";var t=(e=>(e.Changed="changed",e.ProcessStarted="processStarted",e.ProcessEnded="processEnded",e.Terminated="terminated",e.Start="start",e.AcquiredInput="acquiredInput",e.DependsOnStarted="dependsOnStarted",e.Active="active",e.Inactive="inactive",e.End="end",e.ProblemMatcherStarted="problemMatcherStarted",e.ProblemMatcherEnded="problemMatcherEnded",e.ProblemMatcherFoundErrors="problemMatcherFoundErrors",e))(t||{});export{t as TaskEventKind};
+import { UriComponents } from "../../../../base/common/uri.js";
+import { IExtensionDescription } from "../../../../platform/extensions/common/extensions.js";
+import { ITaskExecution } from "../../../contrib/tasks/common/tasks.js";
+var TaskEventKind = /* @__PURE__ */ ((TaskEventKind2) => {
+  TaskEventKind2["Changed"] = "changed";
+  TaskEventKind2["ProcessStarted"] = "processStarted";
+  TaskEventKind2["ProcessEnded"] = "processEnded";
+  TaskEventKind2["Terminated"] = "terminated";
+  TaskEventKind2["Start"] = "start";
+  TaskEventKind2["AcquiredInput"] = "acquiredInput";
+  TaskEventKind2["DependsOnStarted"] = "dependsOnStarted";
+  TaskEventKind2["Active"] = "active";
+  TaskEventKind2["Inactive"] = "inactive";
+  TaskEventKind2["End"] = "end";
+  TaskEventKind2["ProblemMatcherStarted"] = "problemMatcherStarted";
+  TaskEventKind2["ProblemMatcherEnded"] = "problemMatcherEnded";
+  TaskEventKind2["ProblemMatcherFoundErrors"] = "problemMatcherFoundErrors";
+  return TaskEventKind2;
+})(TaskEventKind || {});
+export {
+  TaskEventKind
+};
+//# sourceMappingURL=tasks.js.map

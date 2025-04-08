@@ -1,1 +1,468 @@
-import*as L from"../../../../base/browser/dom.js";import*as c from"../../../../base/browser/domStylesheets.js";import{Orientation as C,Sash as N,SashState as g}from"../../../../base/browser/ui/sash/sash.js";import{Color as Z,RGBA as H}from"../../../../base/common/color.js";import{IdGenerator as E}from"../../../../base/common/idGenerator.js";import{DisposableStore as W}from"../../../../base/common/lifecycle.js";import*as b from"../../../../base/common/objects.js";import"./zoneWidget.css";import"../../../browser/editorBrowser.js";import{EditorOption as l}from"../../../common/config/editorOptions.js";import"../../../common/core/position.js";import{Range as s}from"../../../common/core/range.js";import{ScrollType as y}from"../../../common/editorCommon.js";import{TrackedRangeStickiness as x}from"../../../common/model.js";import{ModelDecorationOptions as I}from"../../../common/model/textModel.js";const S=new Z(new H(0,122,204)),M={showArrow:!0,showFrame:!0,className:"",frameColor:S,arrowColor:S,keepEditorSelection:!1},z="vs.editor.contrib.zoneWidget";class R{domNode;id="";afterLineNumber;afterColumn;heightInLines;showInHiddenAreas;ordinal;_onDomNodeTop;_onComputedHeight;constructor(e,t,i,o,n,h,a,d){this.domNode=e,this.afterLineNumber=t,this.afterColumn=i,this.heightInLines=o,this.showInHiddenAreas=a,this.ordinal=d,this._onDomNodeTop=n,this._onComputedHeight=h}onDomNodeTop(e){this._onDomNodeTop(e)}onComputedHeight(e){this._onComputedHeight(e)}}class D{_id;_domNode;constructor(e,t){this._id=e,this._domNode=t}getId(){return this._id}getDomNode(){return this._domNode}getPosition(){return null}}class _{constructor(e){this._editor=e;this._decorations=this._editor.createDecorationsCollection()}static _IdGenerator=new E(".arrow-decoration-");_ruleName=_._IdGenerator.nextId();_decorations;_color=null;_height=-1;dispose(){this.hide(),c.removeCSSRulesContainingSelector(this._ruleName)}set color(e){this._color!==e&&(this._color=e,this._updateStyle())}set height(e){this._height!==e&&(this._height=e,this._updateStyle())}_updateStyle(){c.removeCSSRulesContainingSelector(this._ruleName),c.createCSSRule(`.monaco-editor ${this._ruleName}`,`border-style: solid; border-color: transparent; border-bottom-color: ${this._color}; border-width: ${this._height}px; bottom: -${this._height}px !important; margin-left: -${this._height}px; `)}show(e){e.column===1&&(e={lineNumber:e.lineNumber,column:2}),this._decorations.set([{range:s.fromPositions(e),options:{description:"zone-widget-arrow",className:this._ruleName,stickiness:x.NeverGrowsWhenTypingAtEdges}}])}hide(){this._decorations.clear()}}class re{_arrow=null;_overlayWidget=null;_resizeSash=null;_isSashResizeHeight=!1;_positionMarkerId;_viewZone=null;_disposables=new W;container=null;domNode;editor;options;constructor(e,t={}){this.editor=e,this._positionMarkerId=this.editor.createDecorationsCollection(),this.options=b.deepClone(t),b.mixin(this.options,M,!1),this.domNode=document.createElement("div"),this.options.isAccessible||(this.domNode.setAttribute("aria-hidden","true"),this.domNode.setAttribute("role","presentation")),this._disposables.add(this.editor.onDidLayoutChange(i=>{const o=this._getWidth(i);this.domNode.style.width=o+"px",this.domNode.style.left=this._getLeft(i)+"px",this._onWidth(o)}))}dispose(){this._overlayWidget&&(this.editor.removeOverlayWidget(this._overlayWidget),this._overlayWidget=null),this._viewZone&&this.editor.changeViewZones(e=>{this._viewZone&&e.removeZone(this._viewZone.id),this._viewZone=null}),this._positionMarkerId.clear(),this._disposables.dispose()}create(){this.domNode.classList.add("zone-widget"),this.options.className&&this.domNode.classList.add(this.options.className),this.container=document.createElement("div"),this.container.classList.add("zone-widget-container"),this.domNode.appendChild(this.container),this.options.showArrow&&(this._arrow=new _(this.editor),this._disposables.add(this._arrow)),this._fillContainer(this.container),this._initSash(),this._applyStyles()}style(e){e.frameColor&&(this.options.frameColor=e.frameColor),e.arrowColor&&(this.options.arrowColor=e.arrowColor),this._applyStyles()}_applyStyles(){if(this.container&&this.options.frameColor){const e=this.options.frameColor.toString();this.container.style.borderTopColor=e,this.container.style.borderBottomColor=e}if(this._arrow&&this.options.arrowColor){const e=this.options.arrowColor.toString();this._arrow.color=e}}_getWidth(e){return e.width-e.minimap.minimapWidth-e.verticalScrollbarWidth}_getLeft(e){return e.minimap.minimapWidth>0&&e.minimap.minimapLeft===0?e.minimap.minimapWidth:0}_onViewZoneTop(e){this.domNode.style.top=e+"px"}_onViewZoneHeight(e){if(this.domNode.style.height=`${e}px`,this.container){const t=e-this._decoratingElementsHeight();this.container.style.height=`${t}px`;const i=this.editor.getLayoutInfo();this._doLayout(t,this._getWidth(i))}this._resizeSash?.layout()}get position(){const e=this._positionMarkerId.getRange(0);if(e)return e.getStartPosition()}hasFocus(){return this.domNode.contains(L.getActiveElement())}_isShowing=!1;show(e,t){const i=s.isIRange(e)?s.lift(e):s.fromPositions(e);this._isShowing=!0,this._showImpl(i,t),this._isShowing=!1,this._positionMarkerId.set([{range:i,options:I.EMPTY}])}updatePositionAndHeight(e,t){this._viewZone&&(e=s.isIRange(e)?s.getStartPosition(e):e,this._viewZone.afterLineNumber=e.lineNumber,this._viewZone.afterColumn=e.column,this._viewZone.heightInLines=t??this._viewZone.heightInLines,this.editor.changeViewZones(i=>{i.layoutZone(this._viewZone.id)}),this._positionMarkerId.set([{range:s.isIRange(e)?e:s.fromPositions(e),options:I.EMPTY}]),this._updateSashEnablement())}hide(){this._viewZone&&(this.editor.changeViewZones(e=>{this._viewZone&&e.removeZone(this._viewZone.id)}),this._viewZone=null),this._overlayWidget&&(this.editor.removeOverlayWidget(this._overlayWidget),this._overlayWidget=null),this._arrow?.hide(),this._positionMarkerId.clear(),this._isSashResizeHeight=!1}_decoratingElementsHeight(){const e=this.editor.getOption(l.lineHeight);let t=0;if(this.options.showArrow){const i=Math.round(e/3);t+=2*i}if(this.options.showFrame){const i=Math.round(e/9);t+=2*i}return t}_getMaximumHeightInLines(){return Math.max(12,this.editor.getLayoutInfo().height/this.editor.getOption(l.lineHeight)*.8)}_showImpl(e,t){const i=e.getStartPosition(),o=this.editor.getLayoutInfo(),n=this._getWidth(o);this.domNode.style.width=`${n}px`,this.domNode.style.left=this._getLeft(o)+"px";const h=document.createElement("div");h.style.overflow="hidden";const a=this.editor.getOption(l.lineHeight),d=this._getMaximumHeightInLines();d!==void 0&&(t=Math.min(t,d));let m=0,f=0;if(this._arrow&&this.options.showArrow&&(m=Math.round(a/3),this._arrow.height=m,this._arrow.show(i)),this.options.showFrame&&(f=Math.round(a/9)),this.editor.changeViewZones(r=>{this._viewZone&&r.removeZone(this._viewZone.id),this._overlayWidget&&(this.editor.removeOverlayWidget(this._overlayWidget),this._overlayWidget=null),this.domNode.style.top="-1000px",this._viewZone=new R(h,i.lineNumber,i.column,t,u=>this._onViewZoneTop(u),u=>this._onViewZoneHeight(u),this.options.showInHiddenAreas,this.options.ordinal),this._viewZone.id=r.addZone(this._viewZone),this._overlayWidget=new D(z+this._viewZone.id,this.domNode),this.editor.addOverlayWidget(this._overlayWidget)}),this._updateSashEnablement(),this.container&&this.options.showFrame){const r=this.options.frameWidth?this.options.frameWidth:f;this.container.style.borderTopWidth=r+"px",this.container.style.borderBottomWidth=r+"px"}const w=t*a-this._decoratingElementsHeight();this.container&&(this.container.style.top=m+"px",this.container.style.height=w+"px",this.container.style.overflow="hidden"),this._doLayout(w,n),this.options.keepEditorSelection||this.editor.setSelection(e);const p=this.editor.getModel();if(p){const r=p.validateRange(new s(e.startLineNumber,1,e.endLineNumber+1,1));this.revealRange(r,r.startLineNumber===p.getLineCount())}}revealRange(e,t){t?this.editor.revealLineNearTop(e.endLineNumber,y.Smooth):this.editor.revealRange(e,y.Smooth)}setCssClass(e,t){this.container&&(t&&this.container.classList.remove(t),this.container.classList.add(e))}_onWidth(e){}_doLayout(e,t){}_relayout(e,t){const i=this._getMaximumHeightInLines(),o=t&&i!==void 0?Math.min(i,e):e;this._viewZone&&this._viewZone.heightInLines!==o&&(this.editor.changeViewZones(n=>{this._viewZone&&(this._viewZone.heightInLines=o,n.layoutZone(this._viewZone.id))}),this._updateSashEnablement())}_initSash(){if(this._resizeSash)return;this._resizeSash=this._disposables.add(new N(this.domNode,this,{orientation:C.HORIZONTAL})),this.options.isResizeable||(this._resizeSash.state=g.Disabled);let e;this._disposables.add(this._resizeSash.onDidStart(t=>{this._viewZone&&(e={startY:t.startY,heightInLines:this._viewZone.heightInLines,...this._getResizeBounds()})})),this._disposables.add(this._resizeSash.onDidEnd(()=>{e=void 0})),this._disposables.add(this._resizeSash.onDidChange(t=>{if(e){const i=(t.currentY-e.startY)/this.editor.getOption(l.lineHeight),o=i<0?Math.ceil(i):Math.floor(i),n=e.heightInLines+o;n>e.minLines&&n<e.maxLines&&(this._isSashResizeHeight=!0,this._relayout(n))}}))}_updateSashEnablement(){if(this._resizeSash){const{minLines:e,maxLines:t}=this._getResizeBounds();this._resizeSash.state=e===t?g.Disabled:g.Enabled}}get _usesResizeHeight(){return this._isSashResizeHeight}_getResizeBounds(){return{minLines:5,maxLines:35}}getHorizontalSashLeft(){return 0}getHorizontalSashTop(){return(this.domNode.style.height===null?0:parseInt(this.domNode.style.height))-this._decoratingElementsHeight()/2}getHorizontalSashWidth(){const e=this.editor.getLayoutInfo();return e.width-e.minimap.minimapWidth}}export{D as OverlayWidgetDelegate,re as ZoneWidget};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as dom from "../../../../base/browser/dom.js";
+import * as domStylesheetsJs from "../../../../base/browser/domStylesheets.js";
+import { IHorizontalSashLayoutProvider, ISashEvent, Orientation, Sash, SashState } from "../../../../base/browser/ui/sash/sash.js";
+import { Color, RGBA } from "../../../../base/common/color.js";
+import { IdGenerator } from "../../../../base/common/idGenerator.js";
+import { DisposableStore } from "../../../../base/common/lifecycle.js";
+import * as objects from "../../../../base/common/objects.js";
+import "./zoneWidget.css";
+import { ICodeEditor, IOverlayWidget, IOverlayWidgetPosition, IViewZone, IViewZoneChangeAccessor } from "../../../browser/editorBrowser.js";
+import { EditorLayoutInfo, EditorOption } from "../../../common/config/editorOptions.js";
+import { IPosition, Position } from "../../../common/core/position.js";
+import { IRange, Range } from "../../../common/core/range.js";
+import { IEditorDecorationsCollection, ScrollType } from "../../../common/editorCommon.js";
+import { TrackedRangeStickiness } from "../../../common/model.js";
+import { ModelDecorationOptions } from "../../../common/model/textModel.js";
+const defaultColor = new Color(new RGBA(0, 122, 204));
+const defaultOptions = {
+  showArrow: true,
+  showFrame: true,
+  className: "",
+  frameColor: defaultColor,
+  arrowColor: defaultColor,
+  keepEditorSelection: false
+};
+const WIDGET_ID = "vs.editor.contrib.zoneWidget";
+class ViewZoneDelegate {
+  static {
+    __name(this, "ViewZoneDelegate");
+  }
+  domNode;
+  id = "";
+  // A valid zone id should be greater than 0
+  afterLineNumber;
+  afterColumn;
+  heightInLines;
+  showInHiddenAreas;
+  ordinal;
+  _onDomNodeTop;
+  _onComputedHeight;
+  constructor(domNode, afterLineNumber, afterColumn, heightInLines, onDomNodeTop, onComputedHeight, showInHiddenAreas, ordinal) {
+    this.domNode = domNode;
+    this.afterLineNumber = afterLineNumber;
+    this.afterColumn = afterColumn;
+    this.heightInLines = heightInLines;
+    this.showInHiddenAreas = showInHiddenAreas;
+    this.ordinal = ordinal;
+    this._onDomNodeTop = onDomNodeTop;
+    this._onComputedHeight = onComputedHeight;
+  }
+  onDomNodeTop(top) {
+    this._onDomNodeTop(top);
+  }
+  onComputedHeight(height) {
+    this._onComputedHeight(height);
+  }
+}
+class OverlayWidgetDelegate {
+  static {
+    __name(this, "OverlayWidgetDelegate");
+  }
+  _id;
+  _domNode;
+  constructor(id, domNode) {
+    this._id = id;
+    this._domNode = domNode;
+  }
+  getId() {
+    return this._id;
+  }
+  getDomNode() {
+    return this._domNode;
+  }
+  getPosition() {
+    return null;
+  }
+}
+class Arrow {
+  constructor(_editor) {
+    this._editor = _editor;
+    this._decorations = this._editor.createDecorationsCollection();
+  }
+  static {
+    __name(this, "Arrow");
+  }
+  static _IdGenerator = new IdGenerator(".arrow-decoration-");
+  _ruleName = Arrow._IdGenerator.nextId();
+  _decorations;
+  _color = null;
+  _height = -1;
+  dispose() {
+    this.hide();
+    domStylesheetsJs.removeCSSRulesContainingSelector(this._ruleName);
+  }
+  set color(value) {
+    if (this._color !== value) {
+      this._color = value;
+      this._updateStyle();
+    }
+  }
+  set height(value) {
+    if (this._height !== value) {
+      this._height = value;
+      this._updateStyle();
+    }
+  }
+  _updateStyle() {
+    domStylesheetsJs.removeCSSRulesContainingSelector(this._ruleName);
+    domStylesheetsJs.createCSSRule(
+      `.monaco-editor ${this._ruleName}`,
+      `border-style: solid; border-color: transparent; border-bottom-color: ${this._color}; border-width: ${this._height}px; bottom: -${this._height}px !important; margin-left: -${this._height}px; `
+    );
+  }
+  show(where) {
+    if (where.column === 1) {
+      where = { lineNumber: where.lineNumber, column: 2 };
+    }
+    this._decorations.set([{
+      range: Range.fromPositions(where),
+      options: {
+        description: "zone-widget-arrow",
+        className: this._ruleName,
+        stickiness: TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges
+      }
+    }]);
+  }
+  hide() {
+    this._decorations.clear();
+  }
+}
+class ZoneWidget {
+  static {
+    __name(this, "ZoneWidget");
+  }
+  _arrow = null;
+  _overlayWidget = null;
+  _resizeSash = null;
+  _isSashResizeHeight = false;
+  _positionMarkerId;
+  _viewZone = null;
+  _disposables = new DisposableStore();
+  container = null;
+  domNode;
+  editor;
+  options;
+  constructor(editor, options = {}) {
+    this.editor = editor;
+    this._positionMarkerId = this.editor.createDecorationsCollection();
+    this.options = objects.deepClone(options);
+    objects.mixin(this.options, defaultOptions, false);
+    this.domNode = document.createElement("div");
+    if (!this.options.isAccessible) {
+      this.domNode.setAttribute("aria-hidden", "true");
+      this.domNode.setAttribute("role", "presentation");
+    }
+    this._disposables.add(this.editor.onDidLayoutChange((info) => {
+      const width = this._getWidth(info);
+      this.domNode.style.width = width + "px";
+      this.domNode.style.left = this._getLeft(info) + "px";
+      this._onWidth(width);
+    }));
+  }
+  dispose() {
+    if (this._overlayWidget) {
+      this.editor.removeOverlayWidget(this._overlayWidget);
+      this._overlayWidget = null;
+    }
+    if (this._viewZone) {
+      this.editor.changeViewZones((accessor) => {
+        if (this._viewZone) {
+          accessor.removeZone(this._viewZone.id);
+        }
+        this._viewZone = null;
+      });
+    }
+    this._positionMarkerId.clear();
+    this._disposables.dispose();
+  }
+  create() {
+    this.domNode.classList.add("zone-widget");
+    if (this.options.className) {
+      this.domNode.classList.add(this.options.className);
+    }
+    this.container = document.createElement("div");
+    this.container.classList.add("zone-widget-container");
+    this.domNode.appendChild(this.container);
+    if (this.options.showArrow) {
+      this._arrow = new Arrow(this.editor);
+      this._disposables.add(this._arrow);
+    }
+    this._fillContainer(this.container);
+    this._initSash();
+    this._applyStyles();
+  }
+  style(styles) {
+    if (styles.frameColor) {
+      this.options.frameColor = styles.frameColor;
+    }
+    if (styles.arrowColor) {
+      this.options.arrowColor = styles.arrowColor;
+    }
+    this._applyStyles();
+  }
+  _applyStyles() {
+    if (this.container && this.options.frameColor) {
+      const frameColor = this.options.frameColor.toString();
+      this.container.style.borderTopColor = frameColor;
+      this.container.style.borderBottomColor = frameColor;
+    }
+    if (this._arrow && this.options.arrowColor) {
+      const arrowColor = this.options.arrowColor.toString();
+      this._arrow.color = arrowColor;
+    }
+  }
+  _getWidth(info) {
+    return info.width - info.minimap.minimapWidth - info.verticalScrollbarWidth;
+  }
+  _getLeft(info) {
+    if (info.minimap.minimapWidth > 0 && info.minimap.minimapLeft === 0) {
+      return info.minimap.minimapWidth;
+    }
+    return 0;
+  }
+  _onViewZoneTop(top) {
+    this.domNode.style.top = top + "px";
+  }
+  _onViewZoneHeight(height) {
+    this.domNode.style.height = `${height}px`;
+    if (this.container) {
+      const containerHeight = height - this._decoratingElementsHeight();
+      this.container.style.height = `${containerHeight}px`;
+      const layoutInfo = this.editor.getLayoutInfo();
+      this._doLayout(containerHeight, this._getWidth(layoutInfo));
+    }
+    this._resizeSash?.layout();
+  }
+  get position() {
+    const range = this._positionMarkerId.getRange(0);
+    if (!range) {
+      return void 0;
+    }
+    return range.getStartPosition();
+  }
+  hasFocus() {
+    return this.domNode.contains(dom.getActiveElement());
+  }
+  _isShowing = false;
+  show(rangeOrPos, heightInLines) {
+    const range = Range.isIRange(rangeOrPos) ? Range.lift(rangeOrPos) : Range.fromPositions(rangeOrPos);
+    this._isShowing = true;
+    this._showImpl(range, heightInLines);
+    this._isShowing = false;
+    this._positionMarkerId.set([{ range, options: ModelDecorationOptions.EMPTY }]);
+  }
+  updatePositionAndHeight(rangeOrPos, heightInLines) {
+    if (this._viewZone) {
+      rangeOrPos = Range.isIRange(rangeOrPos) ? Range.getStartPosition(rangeOrPos) : rangeOrPos;
+      this._viewZone.afterLineNumber = rangeOrPos.lineNumber;
+      this._viewZone.afterColumn = rangeOrPos.column;
+      this._viewZone.heightInLines = heightInLines ?? this._viewZone.heightInLines;
+      this.editor.changeViewZones((accessor) => {
+        accessor.layoutZone(this._viewZone.id);
+      });
+      this._positionMarkerId.set([{
+        range: Range.isIRange(rangeOrPos) ? rangeOrPos : Range.fromPositions(rangeOrPos),
+        options: ModelDecorationOptions.EMPTY
+      }]);
+      this._updateSashEnablement();
+    }
+  }
+  hide() {
+    if (this._viewZone) {
+      this.editor.changeViewZones((accessor) => {
+        if (this._viewZone) {
+          accessor.removeZone(this._viewZone.id);
+        }
+      });
+      this._viewZone = null;
+    }
+    if (this._overlayWidget) {
+      this.editor.removeOverlayWidget(this._overlayWidget);
+      this._overlayWidget = null;
+    }
+    this._arrow?.hide();
+    this._positionMarkerId.clear();
+    this._isSashResizeHeight = false;
+  }
+  _decoratingElementsHeight() {
+    const lineHeight = this.editor.getOption(EditorOption.lineHeight);
+    let result = 0;
+    if (this.options.showArrow) {
+      const arrowHeight = Math.round(lineHeight / 3);
+      result += 2 * arrowHeight;
+    }
+    if (this.options.showFrame) {
+      const frameThickness = Math.round(lineHeight / 9);
+      result += 2 * frameThickness;
+    }
+    return result;
+  }
+  /** Gets the maximum widget height in lines. */
+  _getMaximumHeightInLines() {
+    return Math.max(12, this.editor.getLayoutInfo().height / this.editor.getOption(EditorOption.lineHeight) * 0.8);
+  }
+  _showImpl(where, heightInLines) {
+    const position = where.getStartPosition();
+    const layoutInfo = this.editor.getLayoutInfo();
+    const width = this._getWidth(layoutInfo);
+    this.domNode.style.width = `${width}px`;
+    this.domNode.style.left = this._getLeft(layoutInfo) + "px";
+    const viewZoneDomNode = document.createElement("div");
+    viewZoneDomNode.style.overflow = "hidden";
+    const lineHeight = this.editor.getOption(EditorOption.lineHeight);
+    const maxHeightInLines = this._getMaximumHeightInLines();
+    if (maxHeightInLines !== void 0) {
+      heightInLines = Math.min(heightInLines, maxHeightInLines);
+    }
+    let arrowHeight = 0;
+    let frameThickness = 0;
+    if (this._arrow && this.options.showArrow) {
+      arrowHeight = Math.round(lineHeight / 3);
+      this._arrow.height = arrowHeight;
+      this._arrow.show(position);
+    }
+    if (this.options.showFrame) {
+      frameThickness = Math.round(lineHeight / 9);
+    }
+    this.editor.changeViewZones((accessor) => {
+      if (this._viewZone) {
+        accessor.removeZone(this._viewZone.id);
+      }
+      if (this._overlayWidget) {
+        this.editor.removeOverlayWidget(this._overlayWidget);
+        this._overlayWidget = null;
+      }
+      this.domNode.style.top = "-1000px";
+      this._viewZone = new ViewZoneDelegate(
+        viewZoneDomNode,
+        position.lineNumber,
+        position.column,
+        heightInLines,
+        (top) => this._onViewZoneTop(top),
+        (height) => this._onViewZoneHeight(height),
+        this.options.showInHiddenAreas,
+        this.options.ordinal
+      );
+      this._viewZone.id = accessor.addZone(this._viewZone);
+      this._overlayWidget = new OverlayWidgetDelegate(WIDGET_ID + this._viewZone.id, this.domNode);
+      this.editor.addOverlayWidget(this._overlayWidget);
+    });
+    this._updateSashEnablement();
+    if (this.container && this.options.showFrame) {
+      const width2 = this.options.frameWidth ? this.options.frameWidth : frameThickness;
+      this.container.style.borderTopWidth = width2 + "px";
+      this.container.style.borderBottomWidth = width2 + "px";
+    }
+    const containerHeight = heightInLines * lineHeight - this._decoratingElementsHeight();
+    if (this.container) {
+      this.container.style.top = arrowHeight + "px";
+      this.container.style.height = containerHeight + "px";
+      this.container.style.overflow = "hidden";
+    }
+    this._doLayout(containerHeight, width);
+    if (!this.options.keepEditorSelection) {
+      this.editor.setSelection(where);
+    }
+    const model = this.editor.getModel();
+    if (model) {
+      const range = model.validateRange(new Range(where.startLineNumber, 1, where.endLineNumber + 1, 1));
+      this.revealRange(range, range.startLineNumber === model.getLineCount());
+    }
+  }
+  revealRange(range, isLastLine) {
+    if (isLastLine) {
+      this.editor.revealLineNearTop(range.endLineNumber, ScrollType.Smooth);
+    } else {
+      this.editor.revealRange(range, ScrollType.Smooth);
+    }
+  }
+  setCssClass(className, classToReplace) {
+    if (!this.container) {
+      return;
+    }
+    if (classToReplace) {
+      this.container.classList.remove(classToReplace);
+    }
+    this.container.classList.add(className);
+  }
+  _onWidth(widthInPixel) {
+  }
+  _doLayout(heightInPixel, widthInPixel) {
+  }
+  _relayout(_newHeightInLines, useMax) {
+    const maxHeightInLines = this._getMaximumHeightInLines();
+    const newHeightInLines = useMax && maxHeightInLines !== void 0 ? Math.min(maxHeightInLines, _newHeightInLines) : _newHeightInLines;
+    if (this._viewZone && this._viewZone.heightInLines !== newHeightInLines) {
+      this.editor.changeViewZones((accessor) => {
+        if (this._viewZone) {
+          this._viewZone.heightInLines = newHeightInLines;
+          accessor.layoutZone(this._viewZone.id);
+        }
+      });
+      this._updateSashEnablement();
+    }
+  }
+  // --- sash
+  _initSash() {
+    if (this._resizeSash) {
+      return;
+    }
+    this._resizeSash = this._disposables.add(new Sash(this.domNode, this, { orientation: Orientation.HORIZONTAL }));
+    if (!this.options.isResizeable) {
+      this._resizeSash.state = SashState.Disabled;
+    }
+    let data;
+    this._disposables.add(this._resizeSash.onDidStart((e) => {
+      if (this._viewZone) {
+        data = {
+          startY: e.startY,
+          heightInLines: this._viewZone.heightInLines,
+          ...this._getResizeBounds()
+        };
+      }
+    }));
+    this._disposables.add(this._resizeSash.onDidEnd(() => {
+      data = void 0;
+    }));
+    this._disposables.add(this._resizeSash.onDidChange((evt) => {
+      if (data) {
+        const lineDelta = (evt.currentY - data.startY) / this.editor.getOption(EditorOption.lineHeight);
+        const roundedLineDelta = lineDelta < 0 ? Math.ceil(lineDelta) : Math.floor(lineDelta);
+        const newHeightInLines = data.heightInLines + roundedLineDelta;
+        if (newHeightInLines > data.minLines && newHeightInLines < data.maxLines) {
+          this._isSashResizeHeight = true;
+          this._relayout(newHeightInLines);
+        }
+      }
+    }));
+  }
+  _updateSashEnablement() {
+    if (this._resizeSash) {
+      const { minLines, maxLines } = this._getResizeBounds();
+      this._resizeSash.state = minLines === maxLines ? SashState.Disabled : SashState.Enabled;
+    }
+  }
+  get _usesResizeHeight() {
+    return this._isSashResizeHeight;
+  }
+  _getResizeBounds() {
+    return { minLines: 5, maxLines: 35 };
+  }
+  getHorizontalSashLeft() {
+    return 0;
+  }
+  getHorizontalSashTop() {
+    return (this.domNode.style.height === null ? 0 : parseInt(this.domNode.style.height)) - this._decoratingElementsHeight() / 2;
+  }
+  getHorizontalSashWidth() {
+    const layoutInfo = this.editor.getLayoutInfo();
+    return layoutInfo.width - layoutInfo.minimap.minimapWidth;
+  }
+}
+export {
+  OverlayWidgetDelegate,
+  ZoneWidget
+};
+//# sourceMappingURL=zoneWidget.js.map

@@ -1,1 +1,4 @@
-import{bootstrapWebWorker as r}from"../../../../../base/common/worker/webWorkerBootstrap.js";import{create as o}from"./notebookWebWorker.js";r(o);
+import { bootstrapWebWorker } from "../../../../../base/common/worker/webWorkerBootstrap.js";
+import { create } from "./notebookWebWorker.js";
+bootstrapWebWorker(create);
+//# sourceMappingURL=notebookWebWorkerMain.js.map

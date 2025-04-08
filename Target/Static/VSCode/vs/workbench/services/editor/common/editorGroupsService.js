@@ -1,1 +1,91 @@
-import"../../../../base/common/event.js";import{createDecorator as d}from"../../../../platform/instantiation/common/instantiation.js";import{isEditorInput as n}from"../../../common/editor.js";import"../../../common/editor/editorInput.js";import"../../../../platform/editor/common/editor.js";import"../../../../platform/configuration/common/configuration.js";import"../../../../editor/common/core/dimension.js";import"../../../../base/common/lifecycle.js";import"../../../../platform/contextkey/common/contextkey.js";import"../../../../base/common/uri.js";import"../../../common/editor/editorGroupModel.js";import"../../../../platform/window/common/window.js";import"../../../../platform/actions/common/actions.js";import"../../../../base/common/types.js";const no=d("editorGroupsService");var a=(o=>(o[o.UP=0]="UP",o[o.DOWN=1]="DOWN",o[o.LEFT=2]="LEFT",o[o.RIGHT=3]="RIGHT",o))(a||{}),p=(o=>(o[o.HORIZONTAL=0]="HORIZONTAL",o[o.VERTICAL=1]="VERTICAL",o))(p||{}),E=(o=>(o[o.FIRST=0]="FIRST",o[o.LAST=1]="LAST",o[o.NEXT=2]="NEXT",o[o.PREVIOUS=3]="PREVIOUS",o))(E||{}),u=(o=>(o[o.MAXIMIZE=0]="MAXIMIZE",o[o.EXPAND=1]="EXPAND",o[o.EVEN=2]="EVEN",o))(u||{}),l=(o=>(o[o.COPY_EDITORS=0]="COPY_EDITORS",o[o.MOVE_EDITORS=1]="MOVE_EDITORS",o))(l||{});function ao(o){const r=o;return n(r?.editor)&&n(r?.replacement)}var I=(o=>(o[o.CREATION_TIME=0]="CREATION_TIME",o[o.MOST_RECENTLY_ACTIVE=1]="MOST_RECENTLY_ACTIVE",o[o.GRID_APPEARANCE=2]="GRID_APPEARANCE",o))(I||{}),s=(o=>(o[o.NEW_EDITOR=1]="NEW_EDITOR",o[o.MOVE_EDITOR=2]="MOVE_EDITOR",o[o.COPY_EDITOR=3]="COPY_EDITOR",o))(s||{});function po(o){const r=o;return!!r&&"number"==typeof r.id&&Array.isArray(r.editors)}function Eo(o){return"down"===o.getValue("workbench.editor.openSideBySideDirection")?1:3}export{a as GroupDirection,E as GroupLocation,p as GroupOrientation,u as GroupsArrangement,I as GroupsOrder,no as IEditorGroupsService,l as MergeGroupMode,s as OpenEditorContext,po as isEditorGroup,ao as isEditorReplacement,Eo as preferredSideBySideGroupDirection};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Event } from "../../../../base/common/event.js";
+import { IInstantiationService, createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { IEditorPane, GroupIdentifier, EditorInputWithOptions, CloseDirection, IEditorPartOptions, IEditorPartOptionsChangeEvent, EditorsOrder, IVisibleEditorPane, IEditorCloseEvent, IUntypedEditorInput, isEditorInput, IEditorWillMoveEvent, IMatchEditorOptions, IActiveEditorChangeEvent, IFindEditorOptions, IToolbarActions } from "../../../common/editor.js";
+import { EditorInput } from "../../../common/editor/editorInput.js";
+import { IEditorOptions } from "../../../../platform/editor/common/editor.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IDimension } from "../../../../editor/common/core/dimension.js";
+import { DisposableStore, IDisposable } from "../../../../base/common/lifecycle.js";
+import { ContextKeyValue, IContextKeyService, RawContextKey } from "../../../../platform/contextkey/common/contextkey.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IGroupModelChangeEvent } from "../../../common/editor/editorGroupModel.js";
+import { IRectangle } from "../../../../platform/window/common/window.js";
+import { IMenuChangeEvent } from "../../../../platform/actions/common/actions.js";
+import { DeepPartial } from "../../../../base/common/types.js";
+const IEditorGroupsService = createDecorator("editorGroupsService");
+var GroupDirection = /* @__PURE__ */ ((GroupDirection2) => {
+  GroupDirection2[GroupDirection2["UP"] = 0] = "UP";
+  GroupDirection2[GroupDirection2["DOWN"] = 1] = "DOWN";
+  GroupDirection2[GroupDirection2["LEFT"] = 2] = "LEFT";
+  GroupDirection2[GroupDirection2["RIGHT"] = 3] = "RIGHT";
+  return GroupDirection2;
+})(GroupDirection || {});
+var GroupOrientation = /* @__PURE__ */ ((GroupOrientation2) => {
+  GroupOrientation2[GroupOrientation2["HORIZONTAL"] = 0] = "HORIZONTAL";
+  GroupOrientation2[GroupOrientation2["VERTICAL"] = 1] = "VERTICAL";
+  return GroupOrientation2;
+})(GroupOrientation || {});
+var GroupLocation = /* @__PURE__ */ ((GroupLocation2) => {
+  GroupLocation2[GroupLocation2["FIRST"] = 0] = "FIRST";
+  GroupLocation2[GroupLocation2["LAST"] = 1] = "LAST";
+  GroupLocation2[GroupLocation2["NEXT"] = 2] = "NEXT";
+  GroupLocation2[GroupLocation2["PREVIOUS"] = 3] = "PREVIOUS";
+  return GroupLocation2;
+})(GroupLocation || {});
+var GroupsArrangement = /* @__PURE__ */ ((GroupsArrangement2) => {
+  GroupsArrangement2[GroupsArrangement2["MAXIMIZE"] = 0] = "MAXIMIZE";
+  GroupsArrangement2[GroupsArrangement2["EXPAND"] = 1] = "EXPAND";
+  GroupsArrangement2[GroupsArrangement2["EVEN"] = 2] = "EVEN";
+  return GroupsArrangement2;
+})(GroupsArrangement || {});
+var MergeGroupMode = /* @__PURE__ */ ((MergeGroupMode2) => {
+  MergeGroupMode2[MergeGroupMode2["COPY_EDITORS"] = 0] = "COPY_EDITORS";
+  MergeGroupMode2[MergeGroupMode2["MOVE_EDITORS"] = 1] = "MOVE_EDITORS";
+  return MergeGroupMode2;
+})(MergeGroupMode || {});
+function isEditorReplacement(replacement) {
+  const candidate = replacement;
+  return isEditorInput(candidate?.editor) && isEditorInput(candidate?.replacement);
+}
+__name(isEditorReplacement, "isEditorReplacement");
+var GroupsOrder = /* @__PURE__ */ ((GroupsOrder2) => {
+  GroupsOrder2[GroupsOrder2["CREATION_TIME"] = 0] = "CREATION_TIME";
+  GroupsOrder2[GroupsOrder2["MOST_RECENTLY_ACTIVE"] = 1] = "MOST_RECENTLY_ACTIVE";
+  GroupsOrder2[GroupsOrder2["GRID_APPEARANCE"] = 2] = "GRID_APPEARANCE";
+  return GroupsOrder2;
+})(GroupsOrder || {});
+var OpenEditorContext = /* @__PURE__ */ ((OpenEditorContext2) => {
+  OpenEditorContext2[OpenEditorContext2["NEW_EDITOR"] = 1] = "NEW_EDITOR";
+  OpenEditorContext2[OpenEditorContext2["MOVE_EDITOR"] = 2] = "MOVE_EDITOR";
+  OpenEditorContext2[OpenEditorContext2["COPY_EDITOR"] = 3] = "COPY_EDITOR";
+  return OpenEditorContext2;
+})(OpenEditorContext || {});
+function isEditorGroup(obj) {
+  const group = obj;
+  return !!group && typeof group.id === "number" && Array.isArray(group.editors);
+}
+__name(isEditorGroup, "isEditorGroup");
+function preferredSideBySideGroupDirection(configurationService) {
+  const openSideBySideDirection = configurationService.getValue("workbench.editor.openSideBySideDirection");
+  if (openSideBySideDirection === "down") {
+    return 1 /* DOWN */;
+  }
+  return 3 /* RIGHT */;
+}
+__name(preferredSideBySideGroupDirection, "preferredSideBySideGroupDirection");
+export {
+  GroupDirection,
+  GroupLocation,
+  GroupOrientation,
+  GroupsArrangement,
+  GroupsOrder,
+  IEditorGroupsService,
+  MergeGroupMode,
+  OpenEditorContext,
+  isEditorGroup,
+  isEditorReplacement,
+  preferredSideBySideGroupDirection
+};
+//# sourceMappingURL=editorGroupsService.js.map

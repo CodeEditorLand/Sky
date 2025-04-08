@@ -1,1 +1,679 @@
-var F=Object.defineProperty;var j=Object.getOwnPropertyDescriptor;var T=(d,s,t,e)=>{for(var n=e>1?void 0:e?j(s,t):s,o=d.length-1,i;o>=0;o--)(i=d[o])&&(n=(e?i(s,t,n):i(n))||n);return e&&n&&F(s,t,n),n},p=(d,s)=>(t,e)=>s(t,e,d);import"../../../../../base/common/actions.js";import{groupBy as U}from"../../../../../base/common/arrays.js";import{createCancelablePromise as z}from"../../../../../base/common/async.js";import{CancellationToken as X}from"../../../../../base/common/cancellation.js";import{Codicon as D}from"../../../../../base/common/codicons.js";import{Event as x}from"../../../../../base/common/event.js";import{DisposableStore as M}from"../../../../../base/common/lifecycle.js";import{MarshalledId as J}from"../../../../../base/common/marshallingIds.js";import{uppercaseFirstLetter as V}from"../../../../../base/common/strings.js";import"../../../../../editor/common/languages.js";import{localize as I}from"../../../../../nls.js";import{ICommandService as Y}from"../../../../../platform/commands/common/commands.js";import"../../../../../platform/contextkey/common/contextkey.js";import{ILabelService as Z}from"../../../../../platform/label/common/label.js";import{ILogService as ee}from"../../../../../platform/log/common/log.js";import{IProductService as te}from"../../../../../platform/product/common/productService.js";import{ProgressLocation as ne}from"../../../../../platform/progress/common/progress.js";import{IQuickInputService as ie}from"../../../../../platform/quickinput/common/quickInput.js";import{ThemeIcon as g}from"../../../../../base/common/themables.js";import{IExtensionsWorkbenchService as oe}from"../../../extensions/common/extensions.js";import{JUPYTER_EXTENSION_ID as re,KERNEL_RECOMMENDATIONS as se}from"../notebookBrowser.js";import"../notebookEditorWidget.js";import{executingStateIcon as R,selectKernelIcon as w}from"../notebookIcons.js";import"../../common/model/notebookTextModel.js";import{INotebookKernelHistoryService as ce,INotebookKernelService as le}from"../../common/notebookKernelService.js";import{IExtensionService as ae}from"../../../../services/extensions/common/extensions.js";import{URI as L}from"../../../../../base/common/uri.js";import{IOpenerService as ue}from"../../../../../platform/opener/common/opener.js";import"../../common/notebookCommon.js";import{SELECT_KERNEL_ID as de}from"../controller/coreActions.js";import{EnablementState as h,IExtensionManagementServerService as ke}from"../../../../services/extensionManagement/common/extensionManagement.js";import{areSameExtensions as q}from"../../../../../platform/extensionManagement/common/extensionManagementUtil.js";function K(d){return"kernel"in d}function me(d){return"kernels"in d}function _(d){return"action"in d}function B(d){return d.id==="installSuggested"&&"extensionIds"in d}function O(d){return d.id==="install"}function H(d){return"command"in d}function Ie(d){return"autoRun"in d&&!!d.autoRun}const W=200;function A(d,s){const t={kernel:d,picked:d.id===s?.id,label:d.label,description:d.description,detail:d.detail};return d.id===s?.id&&(t.description?t.description=I("current2","{0} - Currently Selected",t.description):t.description=I("current1","Currently Selected")),t}class pe{constructor(s,t,e,n,o,i,a,l,u){this._notebookKernelService=s;this._productService=t;this._quickInputService=e;this._labelService=n;this._logService=o;this._extensionWorkbenchService=i;this._extensionService=a;this._commandService=l;this._extensionManagementServerService=u}async showQuickPick(s,t,e){const n=s.textModel,o=s.scopedContextKeyService,i=this._getMatchingResult(n),{selected:a,all:l}=i;let u;if(t){for(const m of l)if(m.id===t){u=m;break}if(!u)return this._logService.warn(`wanted kernel DOES NOT EXIST, wanted: ${t}, all: ${l.map(m=>m.id)}`),!1}if(u)return this._selecteKernel(n,u),!0;const c=new M,r=c.add(this._quickInputService.createQuickPick({useSeparators:!0})),k=this._getKernelPickerQuickPickItems(n,i,this._notebookKernelService,o);if(k.length===1&&Ie(k[0])&&!e){const m=await this._handleQuickPick(s,k[0],k);return c.dispose(),m}r.items=k,r.canSelectMany=!1,r.placeholder=a?I("prompt.placeholder.change","Change kernel for '{0}'",this._labelService.getUriLabel(n.uri,{relative:!0})):I("prompt.placeholder.select","Select kernel for '{0}'",this._labelService.getUriLabel(n.uri,{relative:!0})),r.busy=this._notebookKernelService.getKernelDetectionTasks(n).length>0;const S=this._notebookKernelService.onDidChangeKernelDetectionTasks(()=>{r.busy=this._notebookKernelService.getKernelDetectionTasks(n).length>0}),G=k.length===0?z(m=>this._showInstallKernelExtensionRecommendation(n,r,this._extensionWorkbenchService,m)):void 0,$=x.debounce(x.any(this._notebookKernelService.onDidChangeSourceActions,this._notebookKernelService.onDidAddKernel,this._notebookKernelService.onDidRemoveKernel,this._notebookKernelService.onDidChangeNotebookAffinity),(m,Q)=>m,W)(async()=>{r.busy=!1,G?.cancel();const m=r.activeItems,Q=this._getMatchingResult(n),f=this._getKernelPickerQuickPickItems(n,Q,this._notebookKernelService,o);r.keepScrollPosition=!0;const N=[];for(const v of m)if(K(v)){const P=v.kernel.id,b=f.find(C=>K(C)&&C.kernel.id===P);b&&N.push(b)}else if(_(v)){const P=f.find(b=>_(b)&&b.action.action.id===v.action.action.id);P&&N.push(P)}r.items=f,r.activeItems=N},this),E=await new Promise((m,Q)=>{c.add(r.onDidAccept(()=>{const f=r.selectedItems[0];m(f?{selected:f,items:r.items}:{selected:void 0,items:r.items}),r.hide()})),c.add(r.onDidHide(()=>{S.dispose(),$.dispose(),r.dispose(),m({selected:void 0,items:r.items})})),r.show()});return c.dispose(),E.selected?await this._handleQuickPick(s,E.selected,E.items):!1}_getMatchingResult(s){return this._notebookKernelService.getMatchingKernel(s)}async _handleQuickPick(s,t,e){if(K(t)){const n=t.kernel;return this._selecteKernel(s.textModel,n),!0}return O(t)?await this._showKernelExtension(this._extensionWorkbenchService,this._extensionService,this._extensionManagementServerService,s.textModel.viewType,[]):B(t)?await this._showKernelExtension(this._extensionWorkbenchService,this._extensionService,this._extensionManagementServerService,s.textModel.viewType,t.extensionIds,this._productService.quality!=="stable"):_(t)&&t.action.runAction(),!0}_selecteKernel(s,t){this._notebookKernelService.selectKernelForNotebook(t,s)}async _showKernelExtension(s,t,e,n,o,i){const a=[],l=[],u=[];for(const r of o){const k=(await s.getExtensions([{id:r}],X.None))[0];if(k.enablementState===h.DisabledGlobally||k.enablementState===h.DisabledWorkspace||k.enablementState===h.DisabledByEnvironment)u.push(k);else if(!s.installed.some(S=>q(S.identifier,k.identifier)))await s.canInstall(k)===!0&&a.push(k);else if(e.remoteExtensionManagementServer){if(s.installed.some(S=>q(S.identifier,k.identifier)&&S.server===e.remoteExtensionManagementServer))continue;await s.canInstall(k)&&l.push(k)}}if(a.length||u.length||l.length){await Promise.all([...a.map(async r=>{await s.install(r,{installPreReleaseVersion:i??!1,context:{skipWalkthrough:!0}},ne.Notification)}),...u.map(async r=>{switch(r.enablementState){case h.DisabledWorkspace:await s.setEnablement([r],h.EnabledWorkspace);return;case h.DisabledGlobally:await s.setEnablement([r],h.EnabledGlobally);return;case h.DisabledByEnvironment:await s.setEnablement([r],h.EnabledByEnvironment);return;default:break}}),...l.map(async r=>{await s.installInServer(r,this._extensionManagementServerService.remoteExtensionManagementServer)})]),await t.activateByEvent(`onNotebook:${n}`);return}const c=n.split(/[^a-z0-9]/ig).map(V).join("");await s.openSearch(`@tag:notebookKernel${c}`)}async _showInstallKernelExtensionRecommendation(s,t,e,n){t.busy=!0;const o=await this._getKernelRecommendationsQuickPickItems(s,e);t.busy=!1,!n.isCancellationRequested&&o&&t.items.length===0&&(t.items=o)}async _getKernelRecommendationsQuickPickItems(s,t){const e=[],n=this.getSuggestedLanguage(s),o=n?this.getSuggestedKernelFromLanguage(s.viewType,n):void 0;if(o){if(await t.queryLocal(),t.installed.filter(a=>(a.enablementState===h.EnabledByEnvironment||a.enablementState===h.EnabledGlobally||a.enablementState===h.EnabledWorkspace)&&o.extensionIds.includes(a.identifier.id)).length===o.extensionIds.length)return;e.push({id:"installSuggested",description:o.displayName??o.extensionIds.join(", "),label:`$(${D.lightbulb.id}) `+I("installSuggestedKernel","Install/Enable suggested extensions"),extensionIds:o.extensionIds})}return e.push({id:"install",label:I("searchForKernels","Browse marketplace for kernel extensions")}),e}getSuggestedLanguage(s){let e=s.metadata?.metadata?.language_info?.name;if(!e){const n=s.cells.map(o=>o.language).filter(o=>o!=="markdown");if(n.length>1){const o=n[0];n.every(i=>i===o)&&(e=o)}}return e}getSuggestedKernelFromLanguage(s,t){return se.get(s)?.get(t)}}let y=class extends pe{constructor(t,e,n,o,i,a,l,u,c,r,k){super(t,e,n,o,i,a,l,c,u);this._notebookKernelHistoryService=r;this._openerService=k}_getKernelPickerQuickPickItems(t,e,n,o){const i=[];if(e.selected){const l=A(e.selected,e.selected);i.push(l)}e.suggestions.filter(l=>l.id!==e.selected?.id).map(l=>A(l,e.selected)).forEach(l=>{i.push(l)});const a=i.length===0;return i.length>0&&i.push({type:"separator"}),i.push({id:"selectAnother",label:I("selectAnotherKernel.more","Select Another Kernel..."),autoRun:a}),i}_selecteKernel(t,e){const n=this._notebookKernelService.getMatchingKernel(t);n.selected&&this._notebookKernelHistoryService.addMostRecentKernel(n.selected),super._selecteKernel(t,e),this._notebookKernelHistoryService.addMostRecentKernel(e)}_getMatchingResult(t){const{selected:e,all:n}=this._notebookKernelHistoryService.getKernels(t),o=this._notebookKernelService.getMatchingKernel(t);return{selected:e,all:o.all,suggestions:n,hidden:[]}}async _handleQuickPick(t,e,n){return e.id==="selectAnother"?this.displaySelectAnotherQuickPick(t,n.length===1&&n[0]===e):super._handleQuickPick(t,e,n)}async displaySelectAnotherQuickPick(t,e){const n=t.textModel,o=new M,i=o.add(this._quickInputService.createQuickPick({useSeparators:!0})),a=await new Promise(l=>{i.title=e?I("select","Select Kernel"):I("selectAnotherKernel","Select Another Kernel"),i.placeholder=I("selectKernel.placeholder","Type to choose a kernel source"),i.busy=!0,i.buttons=[this._quickInputService.backButton],i.show(),o.add(i.onDidTriggerButton(u=>{u===this._quickInputService.backButton&&l(u)})),o.add(i.onDidTriggerItemButton(async u=>{if(H(u.item)&&u.item.documentation!==void 0){const c=L.isUri(u.item.documentation)?L.parse(u.item.documentation):await this._commandService.executeCommand(u.item.documentation);this._openerService.open(c,{openExternal:!0})}})),o.add(i.onDidAccept(async()=>{l(i.selectedItems[0])})),o.add(i.onDidHide(()=>{l(void 0)})),this._calculdateKernelSources(t).then(u=>{i.items=u,i.items.length>0&&(i.busy=!1)}),o.add(x.debounce(x.any(this._notebookKernelService.onDidChangeSourceActions,this._notebookKernelService.onDidAddKernel,this._notebookKernelService.onDidRemoveKernel),(u,c)=>u,W)(async()=>{i.busy=!0;const u=await this._calculdateKernelSources(t);i.items=u,i.busy=!1}))});if(i.hide(),o.dispose(),a===this._quickInputService.backButton)return this.showQuickPick(t,void 0,!0);if(a){const l=a;if(H(l))try{const u=await this._executeCommand(n,l.command);if(u){const{all:c}=await this._getMatchingResult(n),r=c.find(k=>k.id===`ms-toolsai.jupyter/${u}`);return r&&await this._selecteKernel(n,r),!0}else return this.displaySelectAnotherQuickPick(t,!1)}catch{return!1}else{if(K(l))return await this._selecteKernel(n,l.kernel),!0;if(me(l))return await this._selectOneKernel(n,l.label,l.kernels),!0;if(_(l))try{return await l.action.runAction(),!0}catch{return!1}else{if(O(l))return await this._showKernelExtension(this._extensionWorkbenchService,this._extensionService,this._extensionManagementServerService,t.textModel.viewType,[]),!0;if(B(l))return await this._showKernelExtension(this._extensionWorkbenchService,this._extensionService,this._extensionManagementServerService,t.textModel.viewType,l.extensionIds,this._productService.quality!=="stable"),this.displaySelectAnotherQuickPick(t,!1)}}}return!1}async _calculdateKernelSources(t){const e=t.textModel,n=this._notebookKernelService.getSourceActions(e,t.scopedContextKeyService),o=await this._notebookKernelService.getKernelSourceActions2(e),i=this._getMatchingResult(e);if(n.length===0&&i.all.length===0&&o.length===0)return await this._getKernelRecommendationsQuickPickItems(e,this._extensionWorkbenchService)??[];const a=i.all.filter(c=>c.extension.value!==re),l=[];for(const c of U(a,(r,k)=>r.extension.value===k.extension.value?0:1)){const r=this._extensionService.extensions.find(S=>S.identifier.value===c[0].extension.value),k=r?.displayName??r?.description??c[0].extension.value;c.length>1?l.push({label:k,kernels:c}):l.push({label:c[0].label,kernel:c[0]})}const u=o.filter(c=>c.command);l.push(...u.map(c=>{const r=c.documentation?[{iconClass:g.asClassName(D.info),tooltip:I("learnMoreTooltip","Learn More")}]:[];return{id:typeof c.command=="string"?c.command:c.command.id,label:c.label,description:c.description,command:c.command,documentation:c.documentation,buttons:r}}));for(const c of n){const r={action:c,picked:!1,label:c.action.label,tooltip:c.action.tooltip};l.push(r)}return l}async _selectOneKernel(t,e,n){const o=n.map(l=>A(l,void 0)),i=new M,a=i.add(this._quickInputService.createQuickPick({useSeparators:!0}));a.items=o,a.canSelectMany=!1,a.title=I("selectKernelFromExtension","Select Kernel from {0}",e),i.add(a.onDidAccept(async()=>{a.selectedItems&&a.selectedItems.length>0&&K(a.selectedItems[0])&&await this._selecteKernel(t,a.selectedItems[0].kernel),a.hide(),a.dispose()})),i.add(a.onDidHide(()=>{i.dispose()})),a.show()}async _executeCommand(t,e){const n=typeof e=="string"?e:e.id,o=typeof e=="string"?[]:e.arguments??[];return(typeof e=="string"||!e.arguments||!Array.isArray(e.arguments)||e.arguments.length===0)&&o.unshift({uri:t.uri,$mid:J.NotebookActionContext}),typeof e=="string"?this._commandService.executeCommand(n):this._commandService.executeCommand(n,...o)}static updateKernelStatusAction(t,e,n,o){if(n.getKernelDetectionTasks(t).length){const c=n.getMatchingKernel(t);if(e.enabled=!0,e.class=g.asClassName(g.modify(R,"spin")),c.selected){e.label=c.selected.label;const r=c.selected.description??c.selected.detail;e.tooltip=r?I("kernels.selectedKernelAndKernelDetectionRunning","Selected Kernel: {0} (Kernel Detection Tasks Running)",r):I("kernels.detecting","Detecting Kernels")}else e.label=I("kernels.detecting","Detecting Kernels");return}const a=n.getRunningSourceActions(t),l=(c,r)=>{const k=c.action;e.class=r?g.asClassName(g.modify(R,"spin")):g.asClassName(w),e.label=k.label,e.enabled=!0};if(a.length)return l(a[0],!0);const{selected:u}=o.getKernels(t);u?(e.label=u.label,e.class=g.asClassName(w),e.tooltip=u.description??u.detail??""):(e.label=I("select","Select Kernel"),e.class=g.asClassName(w),e.tooltip="")}static async resolveKernel(t,e,n,o){const i=n.getKernels(t);if(i.selected)return i.selected;await o.executeCommand(de);const{selected:a}=n.getKernels(t);return a}};y=T([p(0,le),p(1,te),p(2,ie),p(3,Z),p(4,ee),p(5,oe),p(6,ae),p(7,ke),p(8,Y),p(9,ce),p(10,ue)],y);export{y as KernelPickerMRUStrategy};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { IAction } from "../../../../../base/common/actions.js";
+import { groupBy } from "../../../../../base/common/arrays.js";
+import { createCancelablePromise } from "../../../../../base/common/async.js";
+import { CancellationToken } from "../../../../../base/common/cancellation.js";
+import { Codicon } from "../../../../../base/common/codicons.js";
+import { Event } from "../../../../../base/common/event.js";
+import { DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { MarshalledId } from "../../../../../base/common/marshallingIds.js";
+import { uppercaseFirstLetter } from "../../../../../base/common/strings.js";
+import { Command } from "../../../../../editor/common/languages.js";
+import { localize } from "../../../../../nls.js";
+import { ICommandService } from "../../../../../platform/commands/common/commands.js";
+import { IContextKeyService } from "../../../../../platform/contextkey/common/contextkey.js";
+import { ILabelService } from "../../../../../platform/label/common/label.js";
+import { ILogService } from "../../../../../platform/log/common/log.js";
+import { IProductService } from "../../../../../platform/product/common/productService.js";
+import { ProgressLocation } from "../../../../../platform/progress/common/progress.js";
+import { IQuickInputButton, IQuickInputService, IQuickPick, IQuickPickItem, QuickPickInput } from "../../../../../platform/quickinput/common/quickInput.js";
+import { ThemeIcon } from "../../../../../base/common/themables.js";
+import { IExtension, IExtensionsWorkbenchService } from "../../../extensions/common/extensions.js";
+import { IActiveNotebookEditor, INotebookExtensionRecommendation, JUPYTER_EXTENSION_ID, KERNEL_RECOMMENDATIONS } from "../notebookBrowser.js";
+import { NotebookEditorWidget } from "../notebookEditorWidget.js";
+import { executingStateIcon, selectKernelIcon } from "../notebookIcons.js";
+import { NotebookTextModel } from "../../common/model/notebookTextModel.js";
+import { INotebookKernel, INotebookKernelHistoryService, INotebookKernelMatchResult, INotebookKernelService, ISourceAction } from "../../common/notebookKernelService.js";
+import { IExtensionService } from "../../../../services/extensions/common/extensions.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { IOpenerService } from "../../../../../platform/opener/common/opener.js";
+import { INotebookTextModel } from "../../common/notebookCommon.js";
+import { SELECT_KERNEL_ID } from "../controller/coreActions.js";
+import { EnablementState, IExtensionManagementServerService } from "../../../../services/extensionManagement/common/extensionManagement.js";
+import { areSameExtensions } from "../../../../../platform/extensionManagement/common/extensionManagementUtil.js";
+function isKernelPick(item) {
+  return "kernel" in item;
+}
+__name(isKernelPick, "isKernelPick");
+function isGroupedKernelsPick(item) {
+  return "kernels" in item;
+}
+__name(isGroupedKernelsPick, "isGroupedKernelsPick");
+function isSourcePick(item) {
+  return "action" in item;
+}
+__name(isSourcePick, "isSourcePick");
+function isInstallExtensionPick(item) {
+  return item.id === "installSuggested" && "extensionIds" in item;
+}
+__name(isInstallExtensionPick, "isInstallExtensionPick");
+function isSearchMarketplacePick(item) {
+  return item.id === "install";
+}
+__name(isSearchMarketplacePick, "isSearchMarketplacePick");
+function isKernelSourceQuickPickItem(item) {
+  return "command" in item;
+}
+__name(isKernelSourceQuickPickItem, "isKernelSourceQuickPickItem");
+function supportAutoRun(item) {
+  return "autoRun" in item && !!item.autoRun;
+}
+__name(supportAutoRun, "supportAutoRun");
+const KERNEL_PICKER_UPDATE_DEBOUNCE = 200;
+function toKernelQuickPick(kernel, selected) {
+  const res = {
+    kernel,
+    picked: kernel.id === selected?.id,
+    label: kernel.label,
+    description: kernel.description,
+    detail: kernel.detail
+  };
+  if (kernel.id === selected?.id) {
+    if (!res.description) {
+      res.description = localize("current1", "Currently Selected");
+    } else {
+      res.description = localize("current2", "{0} - Currently Selected", res.description);
+    }
+  }
+  return res;
+}
+__name(toKernelQuickPick, "toKernelQuickPick");
+class KernelPickerStrategyBase {
+  constructor(_notebookKernelService, _productService, _quickInputService, _labelService, _logService, _extensionWorkbenchService, _extensionService, _commandService, _extensionManagementServerService) {
+    this._notebookKernelService = _notebookKernelService;
+    this._productService = _productService;
+    this._quickInputService = _quickInputService;
+    this._labelService = _labelService;
+    this._logService = _logService;
+    this._extensionWorkbenchService = _extensionWorkbenchService;
+    this._extensionService = _extensionService;
+    this._commandService = _commandService;
+    this._extensionManagementServerService = _extensionManagementServerService;
+  }
+  static {
+    __name(this, "KernelPickerStrategyBase");
+  }
+  async showQuickPick(editor, wantedId, skipAutoRun) {
+    const notebook = editor.textModel;
+    const scopedContextKeyService = editor.scopedContextKeyService;
+    const matchResult = this._getMatchingResult(notebook);
+    const { selected, all } = matchResult;
+    let newKernel;
+    if (wantedId) {
+      for (const candidate of all) {
+        if (candidate.id === wantedId) {
+          newKernel = candidate;
+          break;
+        }
+      }
+      if (!newKernel) {
+        this._logService.warn(`wanted kernel DOES NOT EXIST, wanted: ${wantedId}, all: ${all.map((k) => k.id)}`);
+        return false;
+      }
+    }
+    if (newKernel) {
+      this._selecteKernel(notebook, newKernel);
+      return true;
+    }
+    const localDisposableStore = new DisposableStore();
+    const quickPick = localDisposableStore.add(this._quickInputService.createQuickPick({ useSeparators: true }));
+    const quickPickItems = this._getKernelPickerQuickPickItems(notebook, matchResult, this._notebookKernelService, scopedContextKeyService);
+    if (quickPickItems.length === 1 && supportAutoRun(quickPickItems[0]) && !skipAutoRun) {
+      const picked = await this._handleQuickPick(editor, quickPickItems[0], quickPickItems);
+      localDisposableStore.dispose();
+      return picked;
+    }
+    quickPick.items = quickPickItems;
+    quickPick.canSelectMany = false;
+    quickPick.placeholder = selected ? localize("prompt.placeholder.change", "Change kernel for '{0}'", this._labelService.getUriLabel(notebook.uri, { relative: true })) : localize("prompt.placeholder.select", "Select kernel for '{0}'", this._labelService.getUriLabel(notebook.uri, { relative: true }));
+    quickPick.busy = this._notebookKernelService.getKernelDetectionTasks(notebook).length > 0;
+    const kernelDetectionTaskListener = this._notebookKernelService.onDidChangeKernelDetectionTasks(() => {
+      quickPick.busy = this._notebookKernelService.getKernelDetectionTasks(notebook).length > 0;
+    });
+    const extensionRecommendataionPromise = quickPickItems.length === 0 ? createCancelablePromise((token) => this._showInstallKernelExtensionRecommendation(notebook, quickPick, this._extensionWorkbenchService, token)) : void 0;
+    const kernelChangeEventListener = Event.debounce(
+      Event.any(
+        this._notebookKernelService.onDidChangeSourceActions,
+        this._notebookKernelService.onDidAddKernel,
+        this._notebookKernelService.onDidRemoveKernel,
+        this._notebookKernelService.onDidChangeNotebookAffinity
+      ),
+      (last, _current) => last,
+      KERNEL_PICKER_UPDATE_DEBOUNCE
+    )(async () => {
+      quickPick.busy = false;
+      extensionRecommendataionPromise?.cancel();
+      const currentActiveItems = quickPick.activeItems;
+      const matchResult2 = this._getMatchingResult(notebook);
+      const quickPickItems2 = this._getKernelPickerQuickPickItems(notebook, matchResult2, this._notebookKernelService, scopedContextKeyService);
+      quickPick.keepScrollPosition = true;
+      const activeItems = [];
+      for (const item of currentActiveItems) {
+        if (isKernelPick(item)) {
+          const kernelId = item.kernel.id;
+          const sameItem = quickPickItems2.find((pi) => isKernelPick(pi) && pi.kernel.id === kernelId);
+          if (sameItem) {
+            activeItems.push(sameItem);
+          }
+        } else if (isSourcePick(item)) {
+          const sameItem = quickPickItems2.find((pi) => isSourcePick(pi) && pi.action.action.id === item.action.action.id);
+          if (sameItem) {
+            activeItems.push(sameItem);
+          }
+        }
+      }
+      quickPick.items = quickPickItems2;
+      quickPick.activeItems = activeItems;
+    }, this);
+    const pick = await new Promise((resolve, reject) => {
+      localDisposableStore.add(quickPick.onDidAccept(() => {
+        const item = quickPick.selectedItems[0];
+        if (item) {
+          resolve({ selected: item, items: quickPick.items });
+        } else {
+          resolve({ selected: void 0, items: quickPick.items });
+        }
+        quickPick.hide();
+      }));
+      localDisposableStore.add(quickPick.onDidHide(() => {
+        kernelDetectionTaskListener.dispose();
+        kernelChangeEventListener.dispose();
+        quickPick.dispose();
+        resolve({ selected: void 0, items: quickPick.items });
+      }));
+      quickPick.show();
+    });
+    localDisposableStore.dispose();
+    if (pick.selected) {
+      return await this._handleQuickPick(editor, pick.selected, pick.items);
+    }
+    return false;
+  }
+  _getMatchingResult(notebook) {
+    return this._notebookKernelService.getMatchingKernel(notebook);
+  }
+  async _handleQuickPick(editor, pick, quickPickItems) {
+    if (isKernelPick(pick)) {
+      const newKernel = pick.kernel;
+      this._selecteKernel(editor.textModel, newKernel);
+      return true;
+    }
+    if (isSearchMarketplacePick(pick)) {
+      await this._showKernelExtension(
+        this._extensionWorkbenchService,
+        this._extensionService,
+        this._extensionManagementServerService,
+        editor.textModel.viewType,
+        []
+      );
+    } else if (isInstallExtensionPick(pick)) {
+      await this._showKernelExtension(
+        this._extensionWorkbenchService,
+        this._extensionService,
+        this._extensionManagementServerService,
+        editor.textModel.viewType,
+        pick.extensionIds,
+        this._productService.quality !== "stable"
+      );
+    } else if (isSourcePick(pick)) {
+      pick.action.runAction();
+    }
+    return true;
+  }
+  _selecteKernel(notebook, kernel) {
+    this._notebookKernelService.selectKernelForNotebook(kernel, notebook);
+  }
+  async _showKernelExtension(extensionWorkbenchService, extensionService, extensionManagementServerService, viewType, extIds, isInsiders) {
+    const extensionsToInstall = [];
+    const extensionsToInstallOnRemote = [];
+    const extensionsToEnable = [];
+    for (const extId of extIds) {
+      const extension = (await extensionWorkbenchService.getExtensions([{ id: extId }], CancellationToken.None))[0];
+      if (extension.enablementState === EnablementState.DisabledGlobally || extension.enablementState === EnablementState.DisabledWorkspace || extension.enablementState === EnablementState.DisabledByEnvironment) {
+        extensionsToEnable.push(extension);
+      } else if (!extensionWorkbenchService.installed.some((e) => areSameExtensions(e.identifier, extension.identifier))) {
+        const canInstall = await extensionWorkbenchService.canInstall(extension);
+        if (canInstall === true) {
+          extensionsToInstall.push(extension);
+        }
+      } else if (extensionManagementServerService.remoteExtensionManagementServer) {
+        if (extensionWorkbenchService.installed.some((e) => areSameExtensions(e.identifier, extension.identifier) && e.server === extensionManagementServerService.remoteExtensionManagementServer)) {
+          continue;
+        } else {
+          const canInstall = await extensionWorkbenchService.canInstall(extension);
+          if (canInstall) {
+            extensionsToInstallOnRemote.push(extension);
+          }
+        }
+      }
+    }
+    if (extensionsToInstall.length || extensionsToEnable.length || extensionsToInstallOnRemote.length) {
+      await Promise.all([...extensionsToInstall.map(async (extension) => {
+        await extensionWorkbenchService.install(
+          extension,
+          {
+            installPreReleaseVersion: isInsiders ?? false,
+            context: { skipWalkthrough: true }
+          },
+          ProgressLocation.Notification
+        );
+      }), ...extensionsToEnable.map(async (extension) => {
+        switch (extension.enablementState) {
+          case EnablementState.DisabledWorkspace:
+            await extensionWorkbenchService.setEnablement([extension], EnablementState.EnabledWorkspace);
+            return;
+          case EnablementState.DisabledGlobally:
+            await extensionWorkbenchService.setEnablement([extension], EnablementState.EnabledGlobally);
+            return;
+          case EnablementState.DisabledByEnvironment:
+            await extensionWorkbenchService.setEnablement([extension], EnablementState.EnabledByEnvironment);
+            return;
+          default:
+            break;
+        }
+      }), ...extensionsToInstallOnRemote.map(async (extension) => {
+        await extensionWorkbenchService.installInServer(extension, this._extensionManagementServerService.remoteExtensionManagementServer);
+      })]);
+      await extensionService.activateByEvent(`onNotebook:${viewType}`);
+      return;
+    }
+    const pascalCased = viewType.split(/[^a-z0-9]/ig).map(uppercaseFirstLetter).join("");
+    await extensionWorkbenchService.openSearch(`@tag:notebookKernel${pascalCased}`);
+  }
+  async _showInstallKernelExtensionRecommendation(notebookTextModel, quickPick, extensionWorkbenchService, token) {
+    quickPick.busy = true;
+    const newQuickPickItems = await this._getKernelRecommendationsQuickPickItems(notebookTextModel, extensionWorkbenchService);
+    quickPick.busy = false;
+    if (token.isCancellationRequested) {
+      return;
+    }
+    if (newQuickPickItems && quickPick.items.length === 0) {
+      quickPick.items = newQuickPickItems;
+    }
+  }
+  async _getKernelRecommendationsQuickPickItems(notebookTextModel, extensionWorkbenchService) {
+    const quickPickItems = [];
+    const language = this.getSuggestedLanguage(notebookTextModel);
+    const suggestedExtension = language ? this.getSuggestedKernelFromLanguage(notebookTextModel.viewType, language) : void 0;
+    if (suggestedExtension) {
+      await extensionWorkbenchService.queryLocal();
+      const extensions = extensionWorkbenchService.installed.filter(
+        (e) => (e.enablementState === EnablementState.EnabledByEnvironment || e.enablementState === EnablementState.EnabledGlobally || e.enablementState === EnablementState.EnabledWorkspace) && suggestedExtension.extensionIds.includes(e.identifier.id)
+      );
+      if (extensions.length === suggestedExtension.extensionIds.length) {
+        return void 0;
+      }
+      quickPickItems.push({
+        id: "installSuggested",
+        description: suggestedExtension.displayName ?? suggestedExtension.extensionIds.join(", "),
+        label: `$(${Codicon.lightbulb.id}) ` + localize("installSuggestedKernel", "Install/Enable suggested extensions"),
+        extensionIds: suggestedExtension.extensionIds
+      });
+    }
+    quickPickItems.push({
+      id: "install",
+      label: localize("searchForKernels", "Browse marketplace for kernel extensions")
+    });
+    return quickPickItems;
+  }
+  /**
+   * Examine the most common language in the notebook
+   * @param notebookTextModel The notebook text model
+   * @returns What the suggested language is for the notebook. Used for kernal installing
+   */
+  getSuggestedLanguage(notebookTextModel) {
+    const metaData = notebookTextModel.metadata;
+    let suggestedKernelLanguage = metaData?.metadata?.language_info?.name;
+    if (!suggestedKernelLanguage) {
+      const cellLanguages = notebookTextModel.cells.map((cell) => cell.language).filter((language) => language !== "markdown");
+      if (cellLanguages.length > 1) {
+        const firstLanguage = cellLanguages[0];
+        if (cellLanguages.every((language) => language === firstLanguage)) {
+          suggestedKernelLanguage = firstLanguage;
+        }
+      }
+    }
+    return suggestedKernelLanguage;
+  }
+  /**
+   * Given a language and notebook view type suggest a kernel for installation
+   * @param language The language to find a suggested kernel extension for
+   * @returns A recommednation object for the recommended extension, else undefined
+   */
+  getSuggestedKernelFromLanguage(viewType, language) {
+    const recommendation = KERNEL_RECOMMENDATIONS.get(viewType)?.get(language);
+    return recommendation;
+  }
+}
+let KernelPickerMRUStrategy = class extends KernelPickerStrategyBase {
+  constructor(_notebookKernelService, _productService, _quickInputService, _labelService, _logService, _extensionWorkbenchService, _extensionService, _extensionManagementServerService, _commandService, _notebookKernelHistoryService, _openerService) {
+    super(
+      _notebookKernelService,
+      _productService,
+      _quickInputService,
+      _labelService,
+      _logService,
+      _extensionWorkbenchService,
+      _extensionService,
+      _commandService,
+      _extensionManagementServerService
+    );
+    this._notebookKernelHistoryService = _notebookKernelHistoryService;
+    this._openerService = _openerService;
+  }
+  static {
+    __name(this, "KernelPickerMRUStrategy");
+  }
+  _getKernelPickerQuickPickItems(notebookTextModel, matchResult, notebookKernelService, scopedContextKeyService) {
+    const quickPickItems = [];
+    if (matchResult.selected) {
+      const kernelItem = toKernelQuickPick(matchResult.selected, matchResult.selected);
+      quickPickItems.push(kernelItem);
+    }
+    matchResult.suggestions.filter((kernel) => kernel.id !== matchResult.selected?.id).map((kernel) => toKernelQuickPick(kernel, matchResult.selected)).forEach((kernel) => {
+      quickPickItems.push(kernel);
+    });
+    const shouldAutoRun = quickPickItems.length === 0;
+    if (quickPickItems.length > 0) {
+      quickPickItems.push({
+        type: "separator"
+      });
+    }
+    quickPickItems.push({
+      id: "selectAnother",
+      label: localize("selectAnotherKernel.more", "Select Another Kernel..."),
+      autoRun: shouldAutoRun
+    });
+    return quickPickItems;
+  }
+  _selecteKernel(notebook, kernel) {
+    const currentInfo = this._notebookKernelService.getMatchingKernel(notebook);
+    if (currentInfo.selected) {
+      this._notebookKernelHistoryService.addMostRecentKernel(currentInfo.selected);
+    }
+    super._selecteKernel(notebook, kernel);
+    this._notebookKernelHistoryService.addMostRecentKernel(kernel);
+  }
+  _getMatchingResult(notebook) {
+    const { selected, all } = this._notebookKernelHistoryService.getKernels(notebook);
+    const matchingResult = this._notebookKernelService.getMatchingKernel(notebook);
+    return {
+      selected,
+      all: matchingResult.all,
+      suggestions: all,
+      hidden: []
+    };
+  }
+  async _handleQuickPick(editor, pick, items) {
+    if (pick.id === "selectAnother") {
+      return this.displaySelectAnotherQuickPick(editor, items.length === 1 && items[0] === pick);
+    }
+    return super._handleQuickPick(editor, pick, items);
+  }
+  async displaySelectAnotherQuickPick(editor, kernelListEmpty) {
+    const notebook = editor.textModel;
+    const disposables = new DisposableStore();
+    const quickPick = disposables.add(this._quickInputService.createQuickPick({ useSeparators: true }));
+    const quickPickItem = await new Promise((resolve) => {
+      quickPick.title = kernelListEmpty ? localize("select", "Select Kernel") : localize("selectAnotherKernel", "Select Another Kernel");
+      quickPick.placeholder = localize("selectKernel.placeholder", "Type to choose a kernel source");
+      quickPick.busy = true;
+      quickPick.buttons = [this._quickInputService.backButton];
+      quickPick.show();
+      disposables.add(quickPick.onDidTriggerButton((button) => {
+        if (button === this._quickInputService.backButton) {
+          resolve(button);
+        }
+      }));
+      disposables.add(quickPick.onDidTriggerItemButton(async (e) => {
+        if (isKernelSourceQuickPickItem(e.item) && e.item.documentation !== void 0) {
+          const uri = URI.isUri(e.item.documentation) ? URI.parse(e.item.documentation) : await this._commandService.executeCommand(e.item.documentation);
+          void this._openerService.open(uri, { openExternal: true });
+        }
+      }));
+      disposables.add(quickPick.onDidAccept(async () => {
+        resolve(quickPick.selectedItems[0]);
+      }));
+      disposables.add(quickPick.onDidHide(() => {
+        resolve(void 0);
+      }));
+      this._calculdateKernelSources(editor).then((quickPickItems) => {
+        quickPick.items = quickPickItems;
+        if (quickPick.items.length > 0) {
+          quickPick.busy = false;
+        }
+      });
+      disposables.add(Event.debounce(
+        Event.any(
+          this._notebookKernelService.onDidChangeSourceActions,
+          this._notebookKernelService.onDidAddKernel,
+          this._notebookKernelService.onDidRemoveKernel
+        ),
+        (last, _current) => last,
+        KERNEL_PICKER_UPDATE_DEBOUNCE
+      )(async () => {
+        quickPick.busy = true;
+        const quickPickItems = await this._calculdateKernelSources(editor);
+        quickPick.items = quickPickItems;
+        quickPick.busy = false;
+      }));
+    });
+    quickPick.hide();
+    disposables.dispose();
+    if (quickPickItem === this._quickInputService.backButton) {
+      return this.showQuickPick(editor, void 0, true);
+    }
+    if (quickPickItem) {
+      const selectedKernelPickItem = quickPickItem;
+      if (isKernelSourceQuickPickItem(selectedKernelPickItem)) {
+        try {
+          const selectedKernelId = await this._executeCommand(notebook, selectedKernelPickItem.command);
+          if (selectedKernelId) {
+            const { all } = await this._getMatchingResult(notebook);
+            const kernel = all.find((kernel2) => kernel2.id === `ms-toolsai.jupyter/${selectedKernelId}`);
+            if (kernel) {
+              await this._selecteKernel(notebook, kernel);
+              return true;
+            }
+            return true;
+          } else {
+            return this.displaySelectAnotherQuickPick(editor, false);
+          }
+        } catch (ex) {
+          return false;
+        }
+      } else if (isKernelPick(selectedKernelPickItem)) {
+        await this._selecteKernel(notebook, selectedKernelPickItem.kernel);
+        return true;
+      } else if (isGroupedKernelsPick(selectedKernelPickItem)) {
+        await this._selectOneKernel(notebook, selectedKernelPickItem.label, selectedKernelPickItem.kernels);
+        return true;
+      } else if (isSourcePick(selectedKernelPickItem)) {
+        try {
+          await selectedKernelPickItem.action.runAction();
+          return true;
+        } catch (ex) {
+          return false;
+        }
+      } else if (isSearchMarketplacePick(selectedKernelPickItem)) {
+        await this._showKernelExtension(
+          this._extensionWorkbenchService,
+          this._extensionService,
+          this._extensionManagementServerService,
+          editor.textModel.viewType,
+          []
+        );
+        return true;
+      } else if (isInstallExtensionPick(selectedKernelPickItem)) {
+        await this._showKernelExtension(
+          this._extensionWorkbenchService,
+          this._extensionService,
+          this._extensionManagementServerService,
+          editor.textModel.viewType,
+          selectedKernelPickItem.extensionIds,
+          this._productService.quality !== "stable"
+        );
+        return this.displaySelectAnotherQuickPick(editor, false);
+      }
+    }
+    return false;
+  }
+  async _calculdateKernelSources(editor) {
+    const notebook = editor.textModel;
+    const sourceActionCommands = this._notebookKernelService.getSourceActions(notebook, editor.scopedContextKeyService);
+    const actions = await this._notebookKernelService.getKernelSourceActions2(notebook);
+    const matchResult = this._getMatchingResult(notebook);
+    if (sourceActionCommands.length === 0 && matchResult.all.length === 0 && actions.length === 0) {
+      return await this._getKernelRecommendationsQuickPickItems(notebook, this._extensionWorkbenchService) ?? [];
+    }
+    const others = matchResult.all.filter((item) => item.extension.value !== JUPYTER_EXTENSION_ID);
+    const quickPickItems = [];
+    for (const group of groupBy(others, (a, b) => a.extension.value === b.extension.value ? 0 : 1)) {
+      const extension = this._extensionService.extensions.find((extension2) => extension2.identifier.value === group[0].extension.value);
+      const source = extension?.displayName ?? extension?.description ?? group[0].extension.value;
+      if (group.length > 1) {
+        quickPickItems.push({
+          label: source,
+          kernels: group
+        });
+      } else {
+        quickPickItems.push({
+          label: group[0].label,
+          kernel: group[0]
+        });
+      }
+    }
+    const validActions = actions.filter((action) => action.command);
+    quickPickItems.push(...validActions.map((action) => {
+      const buttons = action.documentation ? [{
+        iconClass: ThemeIcon.asClassName(Codicon.info),
+        tooltip: localize("learnMoreTooltip", "Learn More")
+      }] : [];
+      return {
+        id: typeof action.command === "string" ? action.command : action.command.id,
+        label: action.label,
+        description: action.description,
+        command: action.command,
+        documentation: action.documentation,
+        buttons
+      };
+    }));
+    for (const sourceAction of sourceActionCommands) {
+      const res = {
+        action: sourceAction,
+        picked: false,
+        label: sourceAction.action.label,
+        tooltip: sourceAction.action.tooltip
+      };
+      quickPickItems.push(res);
+    }
+    return quickPickItems;
+  }
+  async _selectOneKernel(notebook, source, kernels) {
+    const quickPickItems = kernels.map((kernel) => toKernelQuickPick(kernel, void 0));
+    const localDisposableStore = new DisposableStore();
+    const quickPick = localDisposableStore.add(this._quickInputService.createQuickPick({ useSeparators: true }));
+    quickPick.items = quickPickItems;
+    quickPick.canSelectMany = false;
+    quickPick.title = localize("selectKernelFromExtension", "Select Kernel from {0}", source);
+    localDisposableStore.add(quickPick.onDidAccept(async () => {
+      if (quickPick.selectedItems && quickPick.selectedItems.length > 0 && isKernelPick(quickPick.selectedItems[0])) {
+        await this._selecteKernel(notebook, quickPick.selectedItems[0].kernel);
+      }
+      quickPick.hide();
+      quickPick.dispose();
+    }));
+    localDisposableStore.add(quickPick.onDidHide(() => {
+      localDisposableStore.dispose();
+    }));
+    quickPick.show();
+  }
+  async _executeCommand(notebook, command) {
+    const id = typeof command === "string" ? command : command.id;
+    const args = typeof command === "string" ? [] : command.arguments ?? [];
+    if (typeof command === "string" || !command.arguments || !Array.isArray(command.arguments) || command.arguments.length === 0) {
+      args.unshift({
+        uri: notebook.uri,
+        $mid: MarshalledId.NotebookActionContext
+      });
+    }
+    if (typeof command === "string") {
+      return this._commandService.executeCommand(id);
+    } else {
+      return this._commandService.executeCommand(id, ...args);
+    }
+  }
+  static updateKernelStatusAction(notebook, action, notebookKernelService, notebookKernelHistoryService) {
+    const detectionTasks = notebookKernelService.getKernelDetectionTasks(notebook);
+    if (detectionTasks.length) {
+      const info = notebookKernelService.getMatchingKernel(notebook);
+      action.enabled = true;
+      action.class = ThemeIcon.asClassName(ThemeIcon.modify(executingStateIcon, "spin"));
+      if (info.selected) {
+        action.label = info.selected.label;
+        const kernelInfo = info.selected.description ?? info.selected.detail;
+        action.tooltip = kernelInfo ? localize("kernels.selectedKernelAndKernelDetectionRunning", "Selected Kernel: {0} (Kernel Detection Tasks Running)", kernelInfo) : localize("kernels.detecting", "Detecting Kernels");
+      } else {
+        action.label = localize("kernels.detecting", "Detecting Kernels");
+      }
+      return;
+    }
+    const runningActions = notebookKernelService.getRunningSourceActions(notebook);
+    const updateActionFromSourceAction = /* @__PURE__ */ __name((sourceAction, running) => {
+      const sAction = sourceAction.action;
+      action.class = running ? ThemeIcon.asClassName(ThemeIcon.modify(executingStateIcon, "spin")) : ThemeIcon.asClassName(selectKernelIcon);
+      action.label = sAction.label;
+      action.enabled = true;
+    }, "updateActionFromSourceAction");
+    if (runningActions.length) {
+      return updateActionFromSourceAction(runningActions[0], true);
+    }
+    const { selected } = notebookKernelHistoryService.getKernels(notebook);
+    if (selected) {
+      action.label = selected.label;
+      action.class = ThemeIcon.asClassName(selectKernelIcon);
+      action.tooltip = selected.description ?? selected.detail ?? "";
+    } else {
+      action.label = localize("select", "Select Kernel");
+      action.class = ThemeIcon.asClassName(selectKernelIcon);
+      action.tooltip = "";
+    }
+  }
+  static async resolveKernel(notebook, notebookKernelService, notebookKernelHistoryService, commandService) {
+    const alreadySelected = notebookKernelHistoryService.getKernels(notebook);
+    if (alreadySelected.selected) {
+      return alreadySelected.selected;
+    }
+    await commandService.executeCommand(SELECT_KERNEL_ID);
+    const { selected } = notebookKernelHistoryService.getKernels(notebook);
+    return selected;
+  }
+};
+KernelPickerMRUStrategy = __decorateClass([
+  __decorateParam(0, INotebookKernelService),
+  __decorateParam(1, IProductService),
+  __decorateParam(2, IQuickInputService),
+  __decorateParam(3, ILabelService),
+  __decorateParam(4, ILogService),
+  __decorateParam(5, IExtensionsWorkbenchService),
+  __decorateParam(6, IExtensionService),
+  __decorateParam(7, IExtensionManagementServerService),
+  __decorateParam(8, ICommandService),
+  __decorateParam(9, INotebookKernelHistoryService),
+  __decorateParam(10, IOpenerService)
+], KernelPickerMRUStrategy);
+export {
+  KernelPickerMRUStrategy
+};
+//# sourceMappingURL=notebookKernelQuickPickStrategy.js.map

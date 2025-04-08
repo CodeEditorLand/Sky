@@ -1,1 +1,81 @@
-var b=Object.defineProperty,d=Object.getOwnPropertyDescriptor,o=(e,i,t,s)=>{for(var r,v=s>1?void 0:s?d(i,t):i,a=e.length-1;a>=0;a--)(r=e[a])&&(v=(s?r(i,t,v):r(v))||v);return s&&v&&b(i,t,v),v},w=(e,i)=>(t,s)=>i(t,s,e);import{Emitter as c}from"../../../../base/common/event.js";import{Disposable as W,DisposableStore as h}from"../../../../base/common/lifecycle.js";import{IInstantiationService as p}from"../../../../platform/instantiation/common/instantiation.js";import{WebviewThemeDataProvider as I}from"./themeing.js";import"./webview.js";import{WebviewElement as m}from"./webviewElement.js";import{OverlayWebview as l}from"./overlayWebview.js";let v=class extends W{constructor(e){super(),this._instantiationService=e,this._webviewThemeDataProvider=this._instantiationService.createInstance(I)}_webviewThemeDataProvider;_activeWebview;get activeWebview(){return this._activeWebview}_updateActiveWebview(e){e!==this._activeWebview&&(this._activeWebview=e,this._onDidChangeActiveWebview.fire(e))}_webviews=new Set;get webviews(){return this._webviews.values()}_onDidChangeActiveWebview=this._register(new c);onDidChangeActiveWebview=this._onDidChangeActiveWebview.event;createWebviewElement(e){const i=this._instantiationService.createInstance(m,e,this._webviewThemeDataProvider);return this.registerNewWebview(i),i}createWebviewOverlay(e){const i=this._instantiationService.createInstance(l,e);return this.registerNewWebview(i),i}registerNewWebview(e){this._webviews.add(e);const i=new h;i.add(e.onDidFocus((()=>{this._updateActiveWebview(e)})));const t=()=>{this._activeWebview===e&&this._updateActiveWebview(void 0)};i.add(e.onDidBlur(t)),i.add(e.onDidDispose((()=>{t(),i.dispose(),this._webviews.delete(e)})))}};v=o([w(0,p)],v);export{v as WebviewService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Emitter } from "../../../../base/common/event.js";
+import { Disposable, DisposableStore } from "../../../../base/common/lifecycle.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { WebviewThemeDataProvider } from "./themeing.js";
+import { IOverlayWebview, IWebview, IWebviewElement, IWebviewService, WebviewInitInfo } from "./webview.js";
+import { WebviewElement } from "./webviewElement.js";
+import { OverlayWebview } from "./overlayWebview.js";
+let WebviewService = class extends Disposable {
+  constructor(_instantiationService) {
+    super();
+    this._instantiationService = _instantiationService;
+    this._webviewThemeDataProvider = this._instantiationService.createInstance(WebviewThemeDataProvider);
+  }
+  static {
+    __name(this, "WebviewService");
+  }
+  _webviewThemeDataProvider;
+  _activeWebview;
+  get activeWebview() {
+    return this._activeWebview;
+  }
+  _updateActiveWebview(value) {
+    if (value !== this._activeWebview) {
+      this._activeWebview = value;
+      this._onDidChangeActiveWebview.fire(value);
+    }
+  }
+  _webviews = /* @__PURE__ */ new Set();
+  get webviews() {
+    return this._webviews.values();
+  }
+  _onDidChangeActiveWebview = this._register(new Emitter());
+  onDidChangeActiveWebview = this._onDidChangeActiveWebview.event;
+  createWebviewElement(initInfo) {
+    const webview = this._instantiationService.createInstance(WebviewElement, initInfo, this._webviewThemeDataProvider);
+    this.registerNewWebview(webview);
+    return webview;
+  }
+  createWebviewOverlay(initInfo) {
+    const webview = this._instantiationService.createInstance(OverlayWebview, initInfo);
+    this.registerNewWebview(webview);
+    return webview;
+  }
+  registerNewWebview(webview) {
+    this._webviews.add(webview);
+    const store = new DisposableStore();
+    store.add(webview.onDidFocus(() => {
+      this._updateActiveWebview(webview);
+    }));
+    const onBlur = /* @__PURE__ */ __name(() => {
+      if (this._activeWebview === webview) {
+        this._updateActiveWebview(void 0);
+      }
+    }, "onBlur");
+    store.add(webview.onDidBlur(onBlur));
+    store.add(webview.onDidDispose(() => {
+      onBlur();
+      store.dispose();
+      this._webviews.delete(webview);
+    }));
+  }
+};
+WebviewService = __decorateClass([
+  __decorateParam(0, IInstantiationService)
+], WebviewService);
+export {
+  WebviewService
+};
+//# sourceMappingURL=webviewService.js.map

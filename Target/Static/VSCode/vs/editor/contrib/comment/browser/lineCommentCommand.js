@@ -1,1 +1,364 @@
-import{CharCode as d}from"../../../../base/common/charCode.js";import*as I from"../../../../base/common/strings.js";import{Constants as v}from"../../../../base/common/uint.js";import{EditOperation as _}from"../../../common/core/editOperation.js";import{Position as O}from"../../../common/core/position.js";import{Range as p}from"../../../common/core/range.js";import{Selection as x}from"../../../common/core/selection.js";import"../../../common/editorCommon.js";import"../../../common/model.js";import"../../../common/languages/languageConfigurationRegistry.js";import{BlockCommentCommand as b}from"./blockCommentCommand.js";var N=(e=>(e[e.Toggle=0]="Toggle",e[e.ForceAdd=1]="ForceAdd",e[e.ForceRemove=2]="ForceRemove",e))(N||{});class g{constructor(e,t,n,o,i,r,s){this.languageConfigurationService=e,this._selection=t,this._indentSize=n,this._type=o,this._insertSpace=i,this._selectionId=null,this._deltaColumn=0,this._moveEndPositionDown=!1,this._ignoreEmptyLines=r,this._ignoreFirstLine=s||!1}_selection;_indentSize;_type;_insertSpace;_ignoreEmptyLines;_selectionId;_deltaColumn;_moveEndPositionDown;_ignoreFirstLine;static _gatherPreflightCommentStrings(e,t,n,o){e.tokenization.tokenizeIfCheap(t);const i=e.getLanguageIdAtPosition(t,1),r=o.getLanguageConfiguration(i).comments,s=r?r.lineCommentToken:null;if(!s)return null;const m=[];for(let e=0,o=n-t+1;e<o;e++)m[e]={ignore:!1,commentStr:s,commentStrOffset:0,commentStrLength:s.length};return m}static _analyzeLines(e,t,n,o,i,r,s,m){let a,l=!0;a=0===e||1!==e;for(let m=0,c=o.length;m<c;m++){const c=o[m],g=i+m;if(g===i&&s){c.ignore=!0;continue}const u=n.getLineContent(g),h=I.firstNonWhitespaceIndex(u);if(-1!==h){if(l=!1,c.ignore=!1,c.commentStrOffset=h,a&&!b._haystackHasNeedleAtOffset(u,c.commentStr,h)&&(0===e?a=!1:1===e||(c.ignore=!0)),a&&t){const e=h+c.commentStrLength;e<u.length&&u.charCodeAt(e)===d.Space&&(c.commentStrLength+=1)}}else c.ignore=r,c.commentStrOffset=u.length}if(0===e&&l){a=!1;for(let e=0,t=o.length;e<t;e++)o[e].ignore=!1}return{supported:!0,shouldRemoveComments:a,lines:o}}static _gatherPreflightData(e,t,n,o,i,r,s,m){const a=g._gatherPreflightCommentStrings(n,o,i,m);return null===a?{supported:!1}:g._analyzeLines(e,t,n,a,o,r,s,m)}_executeLineComments(e,t,n,o){let i;n.shouldRemoveComments?i=g._createRemoveLineCommentsOperations(n.lines,o.startLineNumber):(g._normalizeInsertionPoint(e,n.lines,o.startLineNumber,this._indentSize),i=this._createAddLineCommentsOperations(n.lines,o.startLineNumber));const r=new O(o.positionLineNumber,o.positionColumn);for(let n=0,o=i.length;n<o;n++)t.addEditOperation(i[n].range,i[n].text),p.isEmpty(i[n].range)&&p.getStartPosition(i[n].range).equals(r)&&e.getLineContent(r.lineNumber).length+1===r.column&&(this._deltaColumn=(i[n].text||"").length);this._selectionId=t.trackSelection(o)}_attemptRemoveBlockComment(e,t,n,o){let i=t.startLineNumber,r=t.endLineNumber;const s=o.length+Math.max(e.getLineFirstNonWhitespaceColumn(t.startLineNumber),t.startColumn);let m=e.getLineContent(i).lastIndexOf(n,s-1),a=e.getLineContent(r).indexOf(o,t.endColumn-1-n.length);return-1!==m&&-1===a&&(a=e.getLineContent(i).indexOf(o,m+n.length),r=i),-1===m&&-1!==a&&(m=e.getLineContent(r).lastIndexOf(n,a),i=r),t.isEmpty()&&(-1===m||-1===a)&&(m=e.getLineContent(i).indexOf(n),-1!==m&&(a=e.getLineContent(i).indexOf(o,m+n.length))),-1!==m&&e.getLineContent(i).charCodeAt(m+n.length)===d.Space&&(n+=" "),-1!==a&&e.getLineContent(r).charCodeAt(a-1)===d.Space&&(o=" "+o,a-=1),-1!==m&&-1!==a?b._createRemoveBlockCommentOperations(new p(i,m+n.length+1,r,a+1),n,o):null}_executeBlockComment(e,t,n){e.tokenization.tokenizeIfCheap(n.startLineNumber);const o=e.getLanguageIdAtPosition(n.startLineNumber,1),i=this.languageConfigurationService.getLanguageConfiguration(o).comments;if(!i||!i.blockCommentStartToken||!i.blockCommentEndToken)return;const r=i.blockCommentStartToken,s=i.blockCommentEndToken;let m=this._attemptRemoveBlockComment(e,n,r,s);if(!m){if(n.isEmpty()){const t=e.getLineContent(n.startLineNumber);let o=I.firstNonWhitespaceIndex(t);-1===o&&(o=t.length),m=b._createAddBlockCommentOperations(new p(n.startLineNumber,o+1,n.startLineNumber,t.length+1),r,s,this._insertSpace)}else m=b._createAddBlockCommentOperations(new p(n.startLineNumber,e.getLineFirstNonWhitespaceColumn(n.startLineNumber),n.endLineNumber,e.getLineMaxColumn(n.endLineNumber)),r,s,this._insertSpace);1===m.length&&(this._deltaColumn=r.length+1)}this._selectionId=t.trackSelection(n);for(const e of m)t.addEditOperation(e.range,e.text)}getEditOperations(e,t){let n=this._selection;if(this._moveEndPositionDown=!1,n.startLineNumber===n.endLineNumber&&this._ignoreFirstLine)return t.addEditOperation(new p(n.startLineNumber,e.getLineMaxColumn(n.startLineNumber),n.startLineNumber+1,1),n.startLineNumber===e.getLineCount()?"":"\n"),void(this._selectionId=t.trackSelection(n));n.startLineNumber<n.endLineNumber&&1===n.endColumn&&(this._moveEndPositionDown=!0,n=n.setEndPosition(n.endLineNumber-1,e.getLineMaxColumn(n.endLineNumber-1)));const o=g._gatherPreflightData(this._type,this._insertSpace,e,n.startLineNumber,n.endLineNumber,this._ignoreEmptyLines,this._ignoreFirstLine,this.languageConfigurationService);return o.supported?this._executeLineComments(e,t,o,n):this._executeBlockComment(e,t,n)}computeCursorState(e,t){let n=t.getTrackedSelection(this._selectionId);return this._moveEndPositionDown&&(n=n.setEndPosition(n.endLineNumber+1,1)),new x(n.selectionStartLineNumber,n.selectionStartColumn+this._deltaColumn,n.positionLineNumber,n.positionColumn+this._deltaColumn)}static _createRemoveLineCommentsOperations(e,t){const n=[];for(let o=0,i=e.length;o<i;o++){const i=e[o];i.ignore||n.push(_.delete(new p(t+o,i.commentStrOffset+1,t+o,i.commentStrOffset+i.commentStrLength+1)))}return n}_createAddLineCommentsOperations(e,t){const n=[],o=this._insertSpace?" ":"";for(let i=0,r=e.length;i<r;i++){const r=e[i];r.ignore||n.push(_.insert(new O(t+i,r.commentStrOffset+1),r.commentStr+o))}return n}static nextVisibleColumn(e,t,n,o){return n?e+(t-e%t):e+o}static _normalizeInsertionPoint(e,t,n,o){let i,r,s=v.MAX_SAFE_SMALL_INTEGER;for(let i=0,r=t.length;i<r;i++){if(t[i].ignore)continue;const r=e.getLineContent(n+i);let m=0;for(let e=0,n=t[i].commentStrOffset;m<s&&e<n;e++)m=g.nextVisibleColumn(m,o,r.charCodeAt(e)===d.Tab,1);m<s&&(s=m)}s=Math.floor(s/o)*o;for(let m=0,a=t.length;m<a;m++){if(t[m].ignore)continue;const a=e.getLineContent(n+m);let l=0;for(i=0,r=t[m].commentStrOffset;l<s&&i<r;i++)l=g.nextVisibleColumn(l,o,a.charCodeAt(i)===d.Tab,1);t[m].commentStrOffset=l>s?i-1:i}}}export{g as LineCommentCommand,N as Type};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { CharCode } from "../../../../base/common/charCode.js";
+import * as strings from "../../../../base/common/strings.js";
+import { Constants } from "../../../../base/common/uint.js";
+import { EditOperation, ISingleEditOperation } from "../../../common/core/editOperation.js";
+import { Position } from "../../../common/core/position.js";
+import { Range } from "../../../common/core/range.js";
+import { Selection } from "../../../common/core/selection.js";
+import { ICommand, ICursorStateComputerData, IEditOperationBuilder } from "../../../common/editorCommon.js";
+import { ITextModel } from "../../../common/model.js";
+import { ILanguageConfigurationService } from "../../../common/languages/languageConfigurationRegistry.js";
+import { BlockCommentCommand } from "./blockCommentCommand.js";
+var Type = /* @__PURE__ */ ((Type2) => {
+  Type2[Type2["Toggle"] = 0] = "Toggle";
+  Type2[Type2["ForceAdd"] = 1] = "ForceAdd";
+  Type2[Type2["ForceRemove"] = 2] = "ForceRemove";
+  return Type2;
+})(Type || {});
+class LineCommentCommand {
+  constructor(languageConfigurationService, selection, indentSize, type, insertSpace, ignoreEmptyLines, ignoreFirstLine) {
+    this.languageConfigurationService = languageConfigurationService;
+    this._selection = selection;
+    this._indentSize = indentSize;
+    this._type = type;
+    this._insertSpace = insertSpace;
+    this._selectionId = null;
+    this._deltaColumn = 0;
+    this._moveEndPositionDown = false;
+    this._ignoreEmptyLines = ignoreEmptyLines;
+    this._ignoreFirstLine = ignoreFirstLine || false;
+  }
+  static {
+    __name(this, "LineCommentCommand");
+  }
+  _selection;
+  _indentSize;
+  _type;
+  _insertSpace;
+  _ignoreEmptyLines;
+  _selectionId;
+  _deltaColumn;
+  _moveEndPositionDown;
+  _ignoreFirstLine;
+  /**
+   * Do an initial pass over the lines and gather info about the line comment string.
+   * Returns null if any of the lines doesn't support a line comment string.
+   */
+  static _gatherPreflightCommentStrings(model, startLineNumber, endLineNumber, languageConfigurationService) {
+    model.tokenization.tokenizeIfCheap(startLineNumber);
+    const languageId = model.getLanguageIdAtPosition(startLineNumber, 1);
+    const config = languageConfigurationService.getLanguageConfiguration(languageId).comments;
+    const commentStr = config ? config.lineCommentToken : null;
+    if (!commentStr) {
+      return null;
+    }
+    const lines = [];
+    for (let i = 0, lineCount = endLineNumber - startLineNumber + 1; i < lineCount; i++) {
+      lines[i] = {
+        ignore: false,
+        commentStr,
+        commentStrOffset: 0,
+        commentStrLength: commentStr.length
+      };
+    }
+    return lines;
+  }
+  /**
+   * Analyze lines and decide which lines are relevant and what the toggle should do.
+   * Also, build up several offsets and lengths useful in the generation of editor operations.
+   */
+  static _analyzeLines(type, insertSpace, model, lines, startLineNumber, ignoreEmptyLines, ignoreFirstLine, languageConfigurationService) {
+    let onlyWhitespaceLines = true;
+    let shouldRemoveComments;
+    if (type === 0 /* Toggle */) {
+      shouldRemoveComments = true;
+    } else if (type === 1 /* ForceAdd */) {
+      shouldRemoveComments = false;
+    } else {
+      shouldRemoveComments = true;
+    }
+    for (let i = 0, lineCount = lines.length; i < lineCount; i++) {
+      const lineData = lines[i];
+      const lineNumber = startLineNumber + i;
+      if (lineNumber === startLineNumber && ignoreFirstLine) {
+        lineData.ignore = true;
+        continue;
+      }
+      const lineContent = model.getLineContent(lineNumber);
+      const lineContentStartOffset = strings.firstNonWhitespaceIndex(lineContent);
+      if (lineContentStartOffset === -1) {
+        lineData.ignore = ignoreEmptyLines;
+        lineData.commentStrOffset = lineContent.length;
+        continue;
+      }
+      onlyWhitespaceLines = false;
+      lineData.ignore = false;
+      lineData.commentStrOffset = lineContentStartOffset;
+      if (shouldRemoveComments && !BlockCommentCommand._haystackHasNeedleAtOffset(lineContent, lineData.commentStr, lineContentStartOffset)) {
+        if (type === 0 /* Toggle */) {
+          shouldRemoveComments = false;
+        } else if (type === 1 /* ForceAdd */) {
+        } else {
+          lineData.ignore = true;
+        }
+      }
+      if (shouldRemoveComments && insertSpace) {
+        const commentStrEndOffset = lineContentStartOffset + lineData.commentStrLength;
+        if (commentStrEndOffset < lineContent.length && lineContent.charCodeAt(commentStrEndOffset) === CharCode.Space) {
+          lineData.commentStrLength += 1;
+        }
+      }
+    }
+    if (type === 0 /* Toggle */ && onlyWhitespaceLines) {
+      shouldRemoveComments = false;
+      for (let i = 0, lineCount = lines.length; i < lineCount; i++) {
+        lines[i].ignore = false;
+      }
+    }
+    return {
+      supported: true,
+      shouldRemoveComments,
+      lines
+    };
+  }
+  /**
+   * Analyze all lines and decide exactly what to do => not supported | insert line comments | remove line comments
+   */
+  static _gatherPreflightData(type, insertSpace, model, startLineNumber, endLineNumber, ignoreEmptyLines, ignoreFirstLine, languageConfigurationService) {
+    const lines = LineCommentCommand._gatherPreflightCommentStrings(model, startLineNumber, endLineNumber, languageConfigurationService);
+    if (lines === null) {
+      return {
+        supported: false
+      };
+    }
+    return LineCommentCommand._analyzeLines(type, insertSpace, model, lines, startLineNumber, ignoreEmptyLines, ignoreFirstLine, languageConfigurationService);
+  }
+  /**
+   * Given a successful analysis, execute either insert line comments, either remove line comments
+   */
+  _executeLineComments(model, builder, data, s) {
+    let ops;
+    if (data.shouldRemoveComments) {
+      ops = LineCommentCommand._createRemoveLineCommentsOperations(data.lines, s.startLineNumber);
+    } else {
+      LineCommentCommand._normalizeInsertionPoint(model, data.lines, s.startLineNumber, this._indentSize);
+      ops = this._createAddLineCommentsOperations(data.lines, s.startLineNumber);
+    }
+    const cursorPosition = new Position(s.positionLineNumber, s.positionColumn);
+    for (let i = 0, len = ops.length; i < len; i++) {
+      builder.addEditOperation(ops[i].range, ops[i].text);
+      if (Range.isEmpty(ops[i].range) && Range.getStartPosition(ops[i].range).equals(cursorPosition)) {
+        const lineContent = model.getLineContent(cursorPosition.lineNumber);
+        if (lineContent.length + 1 === cursorPosition.column) {
+          this._deltaColumn = (ops[i].text || "").length;
+        }
+      }
+    }
+    this._selectionId = builder.trackSelection(s);
+  }
+  _attemptRemoveBlockComment(model, s, startToken, endToken) {
+    let startLineNumber = s.startLineNumber;
+    let endLineNumber = s.endLineNumber;
+    const startTokenAllowedBeforeColumn = endToken.length + Math.max(
+      model.getLineFirstNonWhitespaceColumn(s.startLineNumber),
+      s.startColumn
+    );
+    let startTokenIndex = model.getLineContent(startLineNumber).lastIndexOf(startToken, startTokenAllowedBeforeColumn - 1);
+    let endTokenIndex = model.getLineContent(endLineNumber).indexOf(endToken, s.endColumn - 1 - startToken.length);
+    if (startTokenIndex !== -1 && endTokenIndex === -1) {
+      endTokenIndex = model.getLineContent(startLineNumber).indexOf(endToken, startTokenIndex + startToken.length);
+      endLineNumber = startLineNumber;
+    }
+    if (startTokenIndex === -1 && endTokenIndex !== -1) {
+      startTokenIndex = model.getLineContent(endLineNumber).lastIndexOf(startToken, endTokenIndex);
+      startLineNumber = endLineNumber;
+    }
+    if (s.isEmpty() && (startTokenIndex === -1 || endTokenIndex === -1)) {
+      startTokenIndex = model.getLineContent(startLineNumber).indexOf(startToken);
+      if (startTokenIndex !== -1) {
+        endTokenIndex = model.getLineContent(startLineNumber).indexOf(endToken, startTokenIndex + startToken.length);
+      }
+    }
+    if (startTokenIndex !== -1 && model.getLineContent(startLineNumber).charCodeAt(startTokenIndex + startToken.length) === CharCode.Space) {
+      startToken += " ";
+    }
+    if (endTokenIndex !== -1 && model.getLineContent(endLineNumber).charCodeAt(endTokenIndex - 1) === CharCode.Space) {
+      endToken = " " + endToken;
+      endTokenIndex -= 1;
+    }
+    if (startTokenIndex !== -1 && endTokenIndex !== -1) {
+      return BlockCommentCommand._createRemoveBlockCommentOperations(
+        new Range(startLineNumber, startTokenIndex + startToken.length + 1, endLineNumber, endTokenIndex + 1),
+        startToken,
+        endToken
+      );
+    }
+    return null;
+  }
+  /**
+   * Given an unsuccessful analysis, delegate to the block comment command
+   */
+  _executeBlockComment(model, builder, s) {
+    model.tokenization.tokenizeIfCheap(s.startLineNumber);
+    const languageId = model.getLanguageIdAtPosition(s.startLineNumber, 1);
+    const config = this.languageConfigurationService.getLanguageConfiguration(languageId).comments;
+    if (!config || !config.blockCommentStartToken || !config.blockCommentEndToken) {
+      return;
+    }
+    const startToken = config.blockCommentStartToken;
+    const endToken = config.blockCommentEndToken;
+    let ops = this._attemptRemoveBlockComment(model, s, startToken, endToken);
+    if (!ops) {
+      if (s.isEmpty()) {
+        const lineContent = model.getLineContent(s.startLineNumber);
+        let firstNonWhitespaceIndex = strings.firstNonWhitespaceIndex(lineContent);
+        if (firstNonWhitespaceIndex === -1) {
+          firstNonWhitespaceIndex = lineContent.length;
+        }
+        ops = BlockCommentCommand._createAddBlockCommentOperations(
+          new Range(s.startLineNumber, firstNonWhitespaceIndex + 1, s.startLineNumber, lineContent.length + 1),
+          startToken,
+          endToken,
+          this._insertSpace
+        );
+      } else {
+        ops = BlockCommentCommand._createAddBlockCommentOperations(
+          new Range(s.startLineNumber, model.getLineFirstNonWhitespaceColumn(s.startLineNumber), s.endLineNumber, model.getLineMaxColumn(s.endLineNumber)),
+          startToken,
+          endToken,
+          this._insertSpace
+        );
+      }
+      if (ops.length === 1) {
+        this._deltaColumn = startToken.length + 1;
+      }
+    }
+    this._selectionId = builder.trackSelection(s);
+    for (const op of ops) {
+      builder.addEditOperation(op.range, op.text);
+    }
+  }
+  getEditOperations(model, builder) {
+    let s = this._selection;
+    this._moveEndPositionDown = false;
+    if (s.startLineNumber === s.endLineNumber && this._ignoreFirstLine) {
+      builder.addEditOperation(new Range(s.startLineNumber, model.getLineMaxColumn(s.startLineNumber), s.startLineNumber + 1, 1), s.startLineNumber === model.getLineCount() ? "" : "\n");
+      this._selectionId = builder.trackSelection(s);
+      return;
+    }
+    if (s.startLineNumber < s.endLineNumber && s.endColumn === 1) {
+      this._moveEndPositionDown = true;
+      s = s.setEndPosition(s.endLineNumber - 1, model.getLineMaxColumn(s.endLineNumber - 1));
+    }
+    const data = LineCommentCommand._gatherPreflightData(
+      this._type,
+      this._insertSpace,
+      model,
+      s.startLineNumber,
+      s.endLineNumber,
+      this._ignoreEmptyLines,
+      this._ignoreFirstLine,
+      this.languageConfigurationService
+    );
+    if (data.supported) {
+      return this._executeLineComments(model, builder, data, s);
+    }
+    return this._executeBlockComment(model, builder, s);
+  }
+  computeCursorState(model, helper) {
+    let result = helper.getTrackedSelection(this._selectionId);
+    if (this._moveEndPositionDown) {
+      result = result.setEndPosition(result.endLineNumber + 1, 1);
+    }
+    return new Selection(
+      result.selectionStartLineNumber,
+      result.selectionStartColumn + this._deltaColumn,
+      result.positionLineNumber,
+      result.positionColumn + this._deltaColumn
+    );
+  }
+  /**
+   * Generate edit operations in the remove line comment case
+   */
+  static _createRemoveLineCommentsOperations(lines, startLineNumber) {
+    const res = [];
+    for (let i = 0, len = lines.length; i < len; i++) {
+      const lineData = lines[i];
+      if (lineData.ignore) {
+        continue;
+      }
+      res.push(EditOperation.delete(new Range(
+        startLineNumber + i,
+        lineData.commentStrOffset + 1,
+        startLineNumber + i,
+        lineData.commentStrOffset + lineData.commentStrLength + 1
+      )));
+    }
+    return res;
+  }
+  /**
+   * Generate edit operations in the add line comment case
+   */
+  _createAddLineCommentsOperations(lines, startLineNumber) {
+    const res = [];
+    const afterCommentStr = this._insertSpace ? " " : "";
+    for (let i = 0, len = lines.length; i < len; i++) {
+      const lineData = lines[i];
+      if (lineData.ignore) {
+        continue;
+      }
+      res.push(EditOperation.insert(new Position(startLineNumber + i, lineData.commentStrOffset + 1), lineData.commentStr + afterCommentStr));
+    }
+    return res;
+  }
+  static nextVisibleColumn(currentVisibleColumn, indentSize, isTab, columnSize) {
+    if (isTab) {
+      return currentVisibleColumn + (indentSize - currentVisibleColumn % indentSize);
+    }
+    return currentVisibleColumn + columnSize;
+  }
+  /**
+   * Adjust insertion points to have them vertically aligned in the add line comment case
+   */
+  static _normalizeInsertionPoint(model, lines, startLineNumber, indentSize) {
+    let minVisibleColumn = Constants.MAX_SAFE_SMALL_INTEGER;
+    let j;
+    let lenJ;
+    for (let i = 0, len = lines.length; i < len; i++) {
+      if (lines[i].ignore) {
+        continue;
+      }
+      const lineContent = model.getLineContent(startLineNumber + i);
+      let currentVisibleColumn = 0;
+      for (let j2 = 0, lenJ2 = lines[i].commentStrOffset; currentVisibleColumn < minVisibleColumn && j2 < lenJ2; j2++) {
+        currentVisibleColumn = LineCommentCommand.nextVisibleColumn(currentVisibleColumn, indentSize, lineContent.charCodeAt(j2) === CharCode.Tab, 1);
+      }
+      if (currentVisibleColumn < minVisibleColumn) {
+        minVisibleColumn = currentVisibleColumn;
+      }
+    }
+    minVisibleColumn = Math.floor(minVisibleColumn / indentSize) * indentSize;
+    for (let i = 0, len = lines.length; i < len; i++) {
+      if (lines[i].ignore) {
+        continue;
+      }
+      const lineContent = model.getLineContent(startLineNumber + i);
+      let currentVisibleColumn = 0;
+      for (j = 0, lenJ = lines[i].commentStrOffset; currentVisibleColumn < minVisibleColumn && j < lenJ; j++) {
+        currentVisibleColumn = LineCommentCommand.nextVisibleColumn(currentVisibleColumn, indentSize, lineContent.charCodeAt(j) === CharCode.Tab, 1);
+      }
+      if (currentVisibleColumn > minVisibleColumn) {
+        lines[i].commentStrOffset = j - 1;
+      } else {
+        lines[i].commentStrOffset = j;
+      }
+    }
+  }
+}
+export {
+  LineCommentCommand,
+  Type
+};
+//# sourceMappingURL=lineCommentCommand.js.map

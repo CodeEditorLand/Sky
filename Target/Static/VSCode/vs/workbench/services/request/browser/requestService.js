@@ -1,1 +1,90 @@
-var m=Object.defineProperty,g=Object.getOwnPropertyDescriptor,u=(e,o,t,r)=>{for(var s,n=r>1?void 0:r?g(o,t):o,i=e.length-1;i>=0;i--)(s=e[i])&&(n=(r?s(o,t,n):s(n))||n);return r&&n&&m(o,t,n),n},c=(e,o)=>(t,r)=>o(t,r,e);import"../../../../base/parts/request/common/request.js";import"../../../../base/common/cancellation.js";import{IConfigurationService as f}from"../../../../platform/configuration/common/configuration.js";import{RequestChannelClient as l}from"../../../../platform/request/common/requestIpc.js";import{IRemoteAgentService as d}from"../../remote/common/remoteAgentService.js";import"../../../../editor/browser/editorExtensions.js";import{CommandsRegistry as p}from"../../../../platform/commands/common/commands.js";import{AbstractRequestService as h}from"../../../../platform/request/common/request.js";import{request as v}from"../../../../base/parts/request/common/requestImpl.js";import{ILoggerService as C}from"../../../../platform/log/common/log.js";import{localize as A}from"../../../../nls.js";import{LogService as I}from"../../../../platform/log/common/logService.js";import{windowLogGroup as R}from"../../log/common/logConstants.js";let a=class extends h{constructor(e,o,t){const r=t.createLogger("network",{name:A("network","Network"),group:R}),s=new I(r);super(s),this.remoteAgentService=e,this.configurationService=o,this._register(r),this._register(s)}async request(e,o){try{e.proxyAuthorization||(e.proxyAuthorization=this.configurationService.inspect("http.proxyAuthorization").userLocalValue);const t=await this.logAndRequest(e,(()=>v(e,o,(()=>navigator.onLine)))),r=this.remoteAgentService.getConnection();return r&&405===t.res.statusCode?this._makeRemoteRequest(r,e,o):t}catch(t){const r=this.remoteAgentService.getConnection();if(r)return this._makeRemoteRequest(r,e,o);throw t}}async resolveProxy(e){}async lookupAuthorization(e){}async lookupKerberosAuthorization(e){}async loadCertificates(){return[]}_makeRemoteRequest(e,o,t){return e.withChannel("request",(e=>new l(e).request(o,t)))}};a=u([c(0,d),c(1,f),c(2,C)],a),p.registerCommand("_workbench.fetchJSON",(async function(e,o,t){const r=await fetch(o,{method:t,headers:{Accept:"application/json"}});if(r.ok)return r.json();throw new Error(r.statusText)}));export{a as BrowserRequestService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { IRequestOptions, IRequestContext } from "../../../../base/parts/request/common/request.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { RequestChannelClient } from "../../../../platform/request/common/requestIpc.js";
+import { IRemoteAgentService, IRemoteAgentConnection } from "../../remote/common/remoteAgentService.js";
+import { ServicesAccessor } from "../../../../editor/browser/editorExtensions.js";
+import { CommandsRegistry } from "../../../../platform/commands/common/commands.js";
+import { AbstractRequestService, AuthInfo, Credentials, IRequestService } from "../../../../platform/request/common/request.js";
+import { request } from "../../../../base/parts/request/common/requestImpl.js";
+import { ILoggerService } from "../../../../platform/log/common/log.js";
+import { localize } from "../../../../nls.js";
+import { LogService } from "../../../../platform/log/common/logService.js";
+import { windowLogGroup } from "../../log/common/logConstants.js";
+let BrowserRequestService = class extends AbstractRequestService {
+  constructor(remoteAgentService, configurationService, loggerService) {
+    const logger = loggerService.createLogger(`network`, { name: localize("network", "Network"), group: windowLogGroup });
+    const logService = new LogService(logger);
+    super(logService);
+    this.remoteAgentService = remoteAgentService;
+    this.configurationService = configurationService;
+    this._register(logger);
+    this._register(logService);
+  }
+  static {
+    __name(this, "BrowserRequestService");
+  }
+  async request(options, token) {
+    try {
+      if (!options.proxyAuthorization) {
+        options.proxyAuthorization = this.configurationService.inspect("http.proxyAuthorization").userLocalValue;
+      }
+      const context = await this.logAndRequest(options, () => request(options, token, () => navigator.onLine));
+      const connection = this.remoteAgentService.getConnection();
+      if (connection && context.res.statusCode === 405) {
+        return this._makeRemoteRequest(connection, options, token);
+      }
+      return context;
+    } catch (error) {
+      const connection = this.remoteAgentService.getConnection();
+      if (connection) {
+        return this._makeRemoteRequest(connection, options, token);
+      }
+      throw error;
+    }
+  }
+  async resolveProxy(url) {
+    return void 0;
+  }
+  async lookupAuthorization(authInfo) {
+    return void 0;
+  }
+  async lookupKerberosAuthorization(url) {
+    return void 0;
+  }
+  async loadCertificates() {
+    return [];
+  }
+  _makeRemoteRequest(connection, options, token) {
+    return connection.withChannel("request", (channel) => new RequestChannelClient(channel).request(options, token));
+  }
+};
+BrowserRequestService = __decorateClass([
+  __decorateParam(0, IRemoteAgentService),
+  __decorateParam(1, IConfigurationService),
+  __decorateParam(2, ILoggerService)
+], BrowserRequestService);
+CommandsRegistry.registerCommand("_workbench.fetchJSON", async function(accessor, url, method) {
+  const result = await fetch(url, { method, headers: { Accept: "application/json" } });
+  if (result.ok) {
+    return result.json();
+  } else {
+    throw new Error(result.statusText);
+  }
+});
+export {
+  BrowserRequestService
+};
+//# sourceMappingURL=requestService.js.map

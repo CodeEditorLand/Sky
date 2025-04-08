@@ -1,1 +1,249 @@
-import{localize as a}from"../../../../nls.js";import{EditorContextKeys as p}from"../../../common/editorContextKeys.js";import{ContentHoverController as v}from"./contentHoverController.js";import{AccessibleViewType as c,AccessibleViewProviderId as u,AccessibleContentProvider as g}from"../../../../platform/accessibility/browser/accessibleView.js";import"../../../../platform/accessibility/browser/accessibleViewRegistry.js";import{IContextViewService as V}from"../../../../platform/contextview/browser/contextView.js";import{IHoverService as E}from"../../../../platform/hover/browser/hover.js";import{IInstantiationService as b}from"../../../../platform/instantiation/common/instantiation.js";import{HoverVerbosityAction as n}from"../../../common/languages.js";import{DECREASE_HOVER_VERBOSITY_ACCESSIBLE_ACTION_ID as w,DECREASE_HOVER_VERBOSITY_ACTION_ID as h,INCREASE_HOVER_VERBOSITY_ACCESSIBLE_ACTION_ID as x,INCREASE_HOVER_VERBOSITY_ACTION_ID as C}from"./hoverActionIds.js";import"../../../browser/editorBrowser.js";import{ICodeEditorService as I}from"../../../browser/services/codeEditorService.js";import{Action as H}from"../../../../base/common/actions.js";import{ThemeIcon as S}from"../../../../base/common/themables.js";import{Codicon as m}from"../../../../base/common/codicons.js";import{Emitter as O}from"../../../../base/common/event.js";import{Disposable as P}from"../../../../base/common/lifecycle.js";import{IKeybindingService as D}from"../../../../platform/keybinding/common/keybinding.js";import{labelForHoverVerbosityAction as F}from"./markdownHoverParticipant.js";var l;(e=>{e.increaseVerbosity=a("increaseVerbosity","- The focused hover part verbosity level can be increased with the Increase Hover Verbosity command.",`<keybinding:${C}>`),e.decreaseVerbosity=a("decreaseVerbosity","- The focused hover part verbosity level can be decreased with the Decrease Hover Verbosity command.",`<keybinding:${h}>`)})(l||={});class ce{type=c.View;priority=95;name="hover";when=p.hoverFocused;getProvider(e){const o=e.get(I),t=o.getActiveCodeEditor()||o.getFocusedCodeEditor();if(!t)throw new Error("No active or focused code editor");const r=v.get(t);if(!r)return;const s=e.get(D);return e.get(b).createInstance(T,s,t,r)}}class de{priority=100;name="hover";type=c.Help;when=p.hoverVisible;getProvider(e){const o=e.get(I),t=o.getActiveCodeEditor()||o.getFocusedCodeEditor();if(!t)throw new Error("No active or focused code editor");const r=v.get(t);if(r)return e.get(b).createInstance(f,r)}}class A extends P{constructor(e){super(),this._hoverController=e}id=u.Hover;verbositySettingKey="accessibility.verbosity.hover";_onDidChangeContent=this._register(new O);onDidChangeContent=this._onDidChangeContent.event;_focusedHoverPartIndex=-1;onOpen(){this._hoverController&&(this._hoverController.shouldKeepOpenOnEditorMouseMoveOrLeave=!0,this._focusedHoverPartIndex=this._hoverController.focusedHoverPartIndex(),this._register(this._hoverController.onHoverContentsChanged((()=>{this._onDidChangeContent.fire()}))))}onClose(){this._hoverController&&(-1===this._focusedHoverPartIndex?this._hoverController.focus():this._hoverController.focusHoverPartWithIndex(this._focusedHoverPartIndex),this._focusedHoverPartIndex=-1,this._hoverController.shouldKeepOpenOnEditorMouseMoveOrLeave=!1)}provideContentAtIndex(e,o){if(-1!==e){const t=this._hoverController.getAccessibleWidgetContentAtIndex(e);if(void 0===t)return"";const r=[];return o&&r.push(...this._descriptionsOfVerbosityActionsForIndex(e)),r.push(t),r.join("\n")}{const e=this._hoverController.getAccessibleWidgetContent();if(void 0===e)return"";const o=[];return o.push(e),o.join("\n")}}_descriptionsOfVerbosityActionsForIndex(e){const o=[],t=this._descriptionOfVerbosityActionForIndex(n.Increase,e);void 0!==t&&o.push(t);const r=this._descriptionOfVerbosityActionForIndex(n.Decrease,e);return void 0!==r&&o.push(r),o}_descriptionOfVerbosityActionForIndex(e,o){if(this._hoverController.doesHoverAtIndexSupportVerbosityAction(o,e))switch(e){case n.Increase:return l.increaseVerbosity;case n.Decrease:return l.decreaseVerbosity}}}class f extends A{options={type:c.Help};constructor(e){super(e)}provideContent(){return this.provideContentAtIndex(this._focusedHoverPartIndex,!0)}}class T extends A{constructor(e,o,t){super(t),this._keybindingService=e,this._editor=o,this._initializeOptions(this._editor,t)}options={type:c.View};provideContent(){return this.provideContentAtIndex(this._focusedHoverPartIndex,!1)}get actions(){const e=[];return e.push(this._getActionFor(this._editor,n.Increase)),e.push(this._getActionFor(this._editor,n.Decrease)),e}_getActionFor(e,o){let t,r,s;switch(o){case n.Increase:t=C,r=x,s=m.add;break;case n.Decrease:t=h,r=w,s=m.remove}const i=F(this._keybindingService,o),c=this._hoverController.doesHoverAtIndexSupportVerbosityAction(this._focusedHoverPartIndex,o);return new H(r,i,S.asClassName(s),c,(()=>{e.getAction(t)?.run({index:this._focusedHoverPartIndex,focus:!1})}))}_initializeOptions(e,o){const t=this._register(new f(o));this.options.language=e.getModel()?.getLanguageId(),this.options.customHelp=()=>t.provideContentAtIndex(this._focusedHoverPartIndex,!0)}}class le{type=c.View;priority=90;name="extension-hover";getProvider(e){const o=e.get(V).getContextViewElement(),t=o?.textContent??void 0,r=e.get(E);if(!o.classList.contains("accessible-view-container")&&t)return new g(u.Hover,{language:"typescript",type:c.View},(()=>t),(()=>{r.showAndFocusLastHover()}),"accessibility.verbosity.hover")}}export{le as ExtHoverAccessibleView,de as HoverAccessibilityHelp,f as HoverAccessibilityHelpProvider,ce as HoverAccessibleView,T as HoverAccessibleViewProvider};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { localize } from "../../../../nls.js";
+import { EditorContextKeys } from "../../../common/editorContextKeys.js";
+import { ContentHoverController } from "./contentHoverController.js";
+import { AccessibleViewType, AccessibleViewProviderId, AccessibleContentProvider, IAccessibleViewContentProvider, IAccessibleViewOptions } from "../../../../platform/accessibility/browser/accessibleView.js";
+import { IAccessibleViewImplementation } from "../../../../platform/accessibility/browser/accessibleViewRegistry.js";
+import { IContextViewService } from "../../../../platform/contextview/browser/contextView.js";
+import { IHoverService } from "../../../../platform/hover/browser/hover.js";
+import { IInstantiationService, ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+import { HoverVerbosityAction } from "../../../common/languages.js";
+import { DECREASE_HOVER_VERBOSITY_ACCESSIBLE_ACTION_ID, DECREASE_HOVER_VERBOSITY_ACTION_ID, INCREASE_HOVER_VERBOSITY_ACCESSIBLE_ACTION_ID, INCREASE_HOVER_VERBOSITY_ACTION_ID } from "./hoverActionIds.js";
+import { ICodeEditor } from "../../../browser/editorBrowser.js";
+import { ICodeEditorService } from "../../../browser/services/codeEditorService.js";
+import { Action, IAction } from "../../../../base/common/actions.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { labelForHoverVerbosityAction } from "./markdownHoverParticipant.js";
+var HoverAccessibilityHelpNLS;
+((HoverAccessibilityHelpNLS2) => {
+  HoverAccessibilityHelpNLS2.increaseVerbosity = localize("increaseVerbosity", "- The focused hover part verbosity level can be increased with the Increase Hover Verbosity command.", `<keybinding:${INCREASE_HOVER_VERBOSITY_ACTION_ID}>`);
+  HoverAccessibilityHelpNLS2.decreaseVerbosity = localize("decreaseVerbosity", "- The focused hover part verbosity level can be decreased with the Decrease Hover Verbosity command.", `<keybinding:${DECREASE_HOVER_VERBOSITY_ACTION_ID}>`);
+})(HoverAccessibilityHelpNLS || (HoverAccessibilityHelpNLS = {}));
+class HoverAccessibleView {
+  static {
+    __name(this, "HoverAccessibleView");
+  }
+  type = AccessibleViewType.View;
+  priority = 95;
+  name = "hover";
+  when = EditorContextKeys.hoverFocused;
+  getProvider(accessor) {
+    const codeEditorService = accessor.get(ICodeEditorService);
+    const codeEditor = codeEditorService.getActiveCodeEditor() || codeEditorService.getFocusedCodeEditor();
+    if (!codeEditor) {
+      throw new Error("No active or focused code editor");
+    }
+    const hoverController = ContentHoverController.get(codeEditor);
+    if (!hoverController) {
+      return;
+    }
+    const keybindingService = accessor.get(IKeybindingService);
+    return accessor.get(IInstantiationService).createInstance(HoverAccessibleViewProvider, keybindingService, codeEditor, hoverController);
+  }
+}
+class HoverAccessibilityHelp {
+  static {
+    __name(this, "HoverAccessibilityHelp");
+  }
+  priority = 100;
+  name = "hover";
+  type = AccessibleViewType.Help;
+  when = EditorContextKeys.hoverVisible;
+  getProvider(accessor) {
+    const codeEditorService = accessor.get(ICodeEditorService);
+    const codeEditor = codeEditorService.getActiveCodeEditor() || codeEditorService.getFocusedCodeEditor();
+    if (!codeEditor) {
+      throw new Error("No active or focused code editor");
+    }
+    const hoverController = ContentHoverController.get(codeEditor);
+    if (!hoverController) {
+      return;
+    }
+    return accessor.get(IInstantiationService).createInstance(HoverAccessibilityHelpProvider, hoverController);
+  }
+}
+class BaseHoverAccessibleViewProvider extends Disposable {
+  constructor(_hoverController) {
+    super();
+    this._hoverController = _hoverController;
+  }
+  static {
+    __name(this, "BaseHoverAccessibleViewProvider");
+  }
+  id = AccessibleViewProviderId.Hover;
+  verbositySettingKey = "accessibility.verbosity.hover";
+  _onDidChangeContent = this._register(new Emitter());
+  onDidChangeContent = this._onDidChangeContent.event;
+  _focusedHoverPartIndex = -1;
+  onOpen() {
+    if (!this._hoverController) {
+      return;
+    }
+    this._hoverController.shouldKeepOpenOnEditorMouseMoveOrLeave = true;
+    this._focusedHoverPartIndex = this._hoverController.focusedHoverPartIndex();
+    this._register(this._hoverController.onHoverContentsChanged(() => {
+      this._onDidChangeContent.fire();
+    }));
+  }
+  onClose() {
+    if (!this._hoverController) {
+      return;
+    }
+    if (this._focusedHoverPartIndex === -1) {
+      this._hoverController.focus();
+    } else {
+      this._hoverController.focusHoverPartWithIndex(this._focusedHoverPartIndex);
+    }
+    this._focusedHoverPartIndex = -1;
+    this._hoverController.shouldKeepOpenOnEditorMouseMoveOrLeave = false;
+  }
+  provideContentAtIndex(focusedHoverIndex, includeVerbosityActions) {
+    if (focusedHoverIndex !== -1) {
+      const accessibleContent = this._hoverController.getAccessibleWidgetContentAtIndex(focusedHoverIndex);
+      if (accessibleContent === void 0) {
+        return "";
+      }
+      const contents = [];
+      if (includeVerbosityActions) {
+        contents.push(...this._descriptionsOfVerbosityActionsForIndex(focusedHoverIndex));
+      }
+      contents.push(accessibleContent);
+      return contents.join("\n");
+    } else {
+      const accessibleContent = this._hoverController.getAccessibleWidgetContent();
+      if (accessibleContent === void 0) {
+        return "";
+      }
+      const contents = [];
+      contents.push(accessibleContent);
+      return contents.join("\n");
+    }
+  }
+  _descriptionsOfVerbosityActionsForIndex(index) {
+    const content = [];
+    const descriptionForIncreaseAction = this._descriptionOfVerbosityActionForIndex(HoverVerbosityAction.Increase, index);
+    if (descriptionForIncreaseAction !== void 0) {
+      content.push(descriptionForIncreaseAction);
+    }
+    const descriptionForDecreaseAction = this._descriptionOfVerbosityActionForIndex(HoverVerbosityAction.Decrease, index);
+    if (descriptionForDecreaseAction !== void 0) {
+      content.push(descriptionForDecreaseAction);
+    }
+    return content;
+  }
+  _descriptionOfVerbosityActionForIndex(action, index) {
+    const isActionSupported = this._hoverController.doesHoverAtIndexSupportVerbosityAction(index, action);
+    if (!isActionSupported) {
+      return;
+    }
+    switch (action) {
+      case HoverVerbosityAction.Increase:
+        return HoverAccessibilityHelpNLS.increaseVerbosity;
+      case HoverVerbosityAction.Decrease:
+        return HoverAccessibilityHelpNLS.decreaseVerbosity;
+    }
+  }
+}
+class HoverAccessibilityHelpProvider extends BaseHoverAccessibleViewProvider {
+  static {
+    __name(this, "HoverAccessibilityHelpProvider");
+  }
+  options = { type: AccessibleViewType.Help };
+  constructor(hoverController) {
+    super(hoverController);
+  }
+  provideContent() {
+    return this.provideContentAtIndex(this._focusedHoverPartIndex, true);
+  }
+}
+class HoverAccessibleViewProvider extends BaseHoverAccessibleViewProvider {
+  constructor(_keybindingService, _editor, hoverController) {
+    super(hoverController);
+    this._keybindingService = _keybindingService;
+    this._editor = _editor;
+    this._initializeOptions(this._editor, hoverController);
+  }
+  static {
+    __name(this, "HoverAccessibleViewProvider");
+  }
+  options = { type: AccessibleViewType.View };
+  provideContent() {
+    return this.provideContentAtIndex(this._focusedHoverPartIndex, false);
+  }
+  get actions() {
+    const actions = [];
+    actions.push(this._getActionFor(this._editor, HoverVerbosityAction.Increase));
+    actions.push(this._getActionFor(this._editor, HoverVerbosityAction.Decrease));
+    return actions;
+  }
+  _getActionFor(editor, action) {
+    let actionId;
+    let accessibleActionId;
+    let actionCodicon;
+    switch (action) {
+      case HoverVerbosityAction.Increase:
+        actionId = INCREASE_HOVER_VERBOSITY_ACTION_ID;
+        accessibleActionId = INCREASE_HOVER_VERBOSITY_ACCESSIBLE_ACTION_ID;
+        actionCodicon = Codicon.add;
+        break;
+      case HoverVerbosityAction.Decrease:
+        actionId = DECREASE_HOVER_VERBOSITY_ACTION_ID;
+        accessibleActionId = DECREASE_HOVER_VERBOSITY_ACCESSIBLE_ACTION_ID;
+        actionCodicon = Codicon.remove;
+        break;
+    }
+    const actionLabel = labelForHoverVerbosityAction(this._keybindingService, action);
+    const actionEnabled = this._hoverController.doesHoverAtIndexSupportVerbosityAction(this._focusedHoverPartIndex, action);
+    return new Action(accessibleActionId, actionLabel, ThemeIcon.asClassName(actionCodicon), actionEnabled, () => {
+      editor.getAction(actionId)?.run({ index: this._focusedHoverPartIndex, focus: false });
+    });
+  }
+  _initializeOptions(editor, hoverController) {
+    const helpProvider = this._register(new HoverAccessibilityHelpProvider(hoverController));
+    this.options.language = editor.getModel()?.getLanguageId();
+    this.options.customHelp = () => {
+      return helpProvider.provideContentAtIndex(this._focusedHoverPartIndex, true);
+    };
+  }
+}
+class ExtHoverAccessibleView {
+  static {
+    __name(this, "ExtHoverAccessibleView");
+  }
+  type = AccessibleViewType.View;
+  priority = 90;
+  name = "extension-hover";
+  getProvider(accessor) {
+    const contextViewService = accessor.get(IContextViewService);
+    const contextViewElement = contextViewService.getContextViewElement();
+    const extensionHoverContent = contextViewElement?.textContent ?? void 0;
+    const hoverService = accessor.get(IHoverService);
+    if (contextViewElement.classList.contains("accessible-view-container") || !extensionHoverContent) {
+      return;
+    }
+    return new AccessibleContentProvider(
+      AccessibleViewProviderId.Hover,
+      { language: "typescript", type: AccessibleViewType.View },
+      () => {
+        return extensionHoverContent;
+      },
+      () => {
+        hoverService.showAndFocusLastHover();
+      },
+      "accessibility.verbosity.hover"
+    );
+  }
+}
+export {
+  ExtHoverAccessibleView,
+  HoverAccessibilityHelp,
+  HoverAccessibilityHelpProvider,
+  HoverAccessibleView,
+  HoverAccessibleViewProvider
+};
+//# sourceMappingURL=hoverAccessibleViews.js.map

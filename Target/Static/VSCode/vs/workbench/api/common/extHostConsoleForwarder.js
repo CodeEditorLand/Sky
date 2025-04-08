@@ -1,1 +1,109 @@
-var g=Object.defineProperty,d=Object.getOwnPropertyDescriptor,c=(t,o,e,s)=>{for(var n,r=s>1?void 0:s?d(o,e):o,a=t.length-1;a>=0;a--)(n=t[a])&&(r=(s?n(o,e,r):n(r))||r);return s&&r&&g(o,e,r),r},l=(t,o)=>(e,s)=>o(e,s,t);import"../../../base/common/console.js";import{safeStringify as h}from"../../../base/common/objects.js";import{MainContext as u}from"./extHost.protocol.js";import{IExtHostInitDataService as f}from"./extHostInitDataService.js";import{IExtHostRpcService as p}from"./extHostRpcService.js";let a=class{_mainThreadConsole;_includeStack;_logNative;constructor(t,o){this._mainThreadConsole=t.getProxy(u.MainThreadConsole),this._includeStack=o.consoleForward.includeStack,this._logNative=o.consoleForward.logNative,this._wrapConsoleMethod("info","log"),this._wrapConsoleMethod("log","log"),this._wrapConsoleMethod("warn","warn"),this._wrapConsoleMethod("debug","debug"),this._wrapConsoleMethod("error","error")}_wrapConsoleMethod(t,o){const e=this,s=console[t];Object.defineProperty(console,t,{set:()=>{},get:()=>function(){e._handleConsoleCall(t,o,s,arguments)}})}_handleConsoleCall(t,o,e,s){this._mainThreadConsole.$logExtensionHostMessage({type:"__$console",severity:o,arguments:m(s,this._includeStack)}),this._logNative&&this._nativeConsoleLogMessage(t,e,s)}};a=c([l(0,p),l(1,f)],a);const _=1e5;function m(t,o){const e=[];if(t.length)for(let o=0;o<t.length;o++){let s=t[o];if(typeof s>"u")s="undefined";else if(s instanceof Error){const t=s;s=t.stack?t.stack:t.toString()}e.push(s)}if(o){const t=(new Error).stack;t&&e.push({__$stack:t.split("\n").slice(3).join("\n")})}try{const t=h(e);return t.length>_?"Output omitted for a large object that exceeds the limits":t}catch(t){return`Output omitted for an object that cannot be inspected ('${t.toString()}')`}}export{a as AbstractExtHostConsoleForwarder};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { IStackArgument } from "../../../base/common/console.js";
+import { safeStringify } from "../../../base/common/objects.js";
+import { MainContext, MainThreadConsoleShape } from "./extHost.protocol.js";
+import { IExtHostInitDataService } from "./extHostInitDataService.js";
+import { IExtHostRpcService } from "./extHostRpcService.js";
+let AbstractExtHostConsoleForwarder = class {
+  static {
+    __name(this, "AbstractExtHostConsoleForwarder");
+  }
+  _mainThreadConsole;
+  _includeStack;
+  _logNative;
+  constructor(extHostRpc, initData) {
+    this._mainThreadConsole = extHostRpc.getProxy(MainContext.MainThreadConsole);
+    this._includeStack = initData.consoleForward.includeStack;
+    this._logNative = initData.consoleForward.logNative;
+    this._wrapConsoleMethod("info", "log");
+    this._wrapConsoleMethod("log", "log");
+    this._wrapConsoleMethod("warn", "warn");
+    this._wrapConsoleMethod("debug", "debug");
+    this._wrapConsoleMethod("error", "error");
+  }
+  /**
+   * Wraps a console message so that it is transmitted to the renderer. If
+   * native logging is turned on, the original console message will be written
+   * as well. This is needed since the console methods are "magic" in V8 and
+   * are the only methods that allow later introspection of logged variables.
+   *
+   * The wrapped property is not defined with `writable: false` to avoid
+   * throwing errors, but rather a no-op setting. See https://github.com/microsoft/vscode-extension-telemetry/issues/88
+   */
+  _wrapConsoleMethod(method, severity) {
+    const that = this;
+    const original = console[method];
+    Object.defineProperty(console, method, {
+      set: /* @__PURE__ */ __name(() => {
+      }, "set"),
+      get: /* @__PURE__ */ __name(() => function() {
+        that._handleConsoleCall(method, severity, original, arguments);
+      }, "get")
+    });
+  }
+  _handleConsoleCall(method, severity, original, args) {
+    this._mainThreadConsole.$logExtensionHostMessage({
+      type: "__$console",
+      severity,
+      arguments: safeStringifyArgumentsToArray(args, this._includeStack)
+    });
+    if (this._logNative) {
+      this._nativeConsoleLogMessage(method, original, args);
+    }
+  }
+};
+AbstractExtHostConsoleForwarder = __decorateClass([
+  __decorateParam(0, IExtHostRpcService),
+  __decorateParam(1, IExtHostInitDataService)
+], AbstractExtHostConsoleForwarder);
+const MAX_LENGTH = 1e5;
+function safeStringifyArgumentsToArray(args, includeStack) {
+  const argsArray = [];
+  if (args.length) {
+    for (let i = 0; i < args.length; i++) {
+      let arg = args[i];
+      if (typeof arg === "undefined") {
+        arg = "undefined";
+      } else if (arg instanceof Error) {
+        const errorObj = arg;
+        if (errorObj.stack) {
+          arg = errorObj.stack;
+        } else {
+          arg = errorObj.toString();
+        }
+      }
+      argsArray.push(arg);
+    }
+  }
+  if (includeStack) {
+    const stack = new Error().stack;
+    if (stack) {
+      argsArray.push({ __$stack: stack.split("\n").slice(3).join("\n") });
+    }
+  }
+  try {
+    const res = safeStringify(argsArray);
+    if (res.length > MAX_LENGTH) {
+      return "Output omitted for a large object that exceeds the limits";
+    }
+    return res;
+  } catch (error) {
+    return `Output omitted for an object that cannot be inspected ('${error.toString()}')`;
+  }
+}
+__name(safeStringifyArgumentsToArray, "safeStringifyArgumentsToArray");
+export {
+  AbstractExtHostConsoleForwarder
+};
+//# sourceMappingURL=extHostConsoleForwarder.js.map

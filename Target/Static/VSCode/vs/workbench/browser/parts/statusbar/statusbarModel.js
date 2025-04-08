@@ -1,1 +1,266 @@
-import{Disposable as p}from"../../../../base/common/lifecycle.js";import{isStatusbarEntryLocation as c,StatusbarAlignment as y}from"../../../services/statusbar/browser/statusbar.js";import{hide as f,show as E,isAncestorOfActiveElement as m}from"../../../../base/browser/dom.js";import{StorageScope as u,StorageTarget as b}from"../../../../platform/storage/common/storage.js";import{Emitter as g}from"../../../../base/common/event.js";class h extends p{constructor(i){super();this.storageService=i;this.restoreState(),this.registerListeners()}static HIDDEN_ENTRIES_KEY="workbench.statusbar.hidden";_onDidChangeEntryVisibility=this._register(new g);onDidChangeEntryVisibility=this._onDidChangeEntryVisibility.event;_entries=[];get entries(){return this._entries.slice(0)}_lastFocusedEntry;get lastFocusedEntry(){return this._lastFocusedEntry&&!this.isHidden(this._lastFocusedEntry.id)?this._lastFocusedEntry:void 0}hidden=new Set;restoreState(){const i=this.storageService.get(h.HIDDEN_ENTRIES_KEY,u.PROFILE);if(i)try{this.hidden=new Set(JSON.parse(i))}catch{}}registerListeners(){this._register(this.storageService.onDidChangeValue(u.PROFILE,h.HIDDEN_ENTRIES_KEY,this._store)(()=>this.onDidStorageValueChange()))}onDidStorageValueChange(){const i=new Set(this.hidden);this.hidden.clear(),this.restoreState();const r=new Set;for(const t of i)this.hidden.has(t)||r.add(t);for(const t of this.hidden)i.has(t)||r.add(t);if(r.size>0)for(const t of this._entries)r.has(t.id)&&(this.updateVisibility(t.id,!0),r.delete(t.id))}add(i){this._entries.push(i),this.updateVisibility(i,!1),this.sort(),this.markFirstLastVisibleEntry()}remove(i){const r=this._entries.indexOf(i);r>=0&&(this._entries.splice(r,1),this._entries.some(t=>c(t.priority.primary)&&t.priority.primary.location.id===i.id)&&this.sort(),this.markFirstLastVisibleEntry())}isHidden(i){return this.hidden.has(i)}hide(i){this.hidden.has(i)||(this.hidden.add(i),this.updateVisibility(i,!0),this.saveState())}show(i){this.hidden.has(i)&&(this.hidden.delete(i),this.updateVisibility(i,!0),this.saveState())}findEntry(i){return this._entries.find(r=>r.container===i)}getEntries(i){return this._entries.filter(r=>r.alignment===i)}focusNextEntry(){this.focusEntry(1,0)}focusPreviousEntry(){this.focusEntry(-1,this.entries.length-1)}isEntryFocused(){return!!this.getFocusedEntry()}getFocusedEntry(){return this._entries.find(i=>m(i.container))}focusEntry(i,r){const t=s=>{let e=s,o=e>=0&&e<this._entries.length?this._entries[e]:void 0;for(;o&&this.isHidden(o.id);)e+=i,o=e>=0&&e<this._entries.length?this._entries[e]:void 0;return o},a=this.getFocusedEntry();if(a){const s=t(this._entries.indexOf(a)+i);if(s){this._lastFocusedEntry=s,s.labelContainer.focus();return}}const d=t(r);d&&(this._lastFocusedEntry=d,d.labelContainer.focus())}updateVisibility(i,r){if(typeof i=="string"){const t=i;for(const a of this._entries)a.id===t&&this.updateVisibility(a,r)}else{const t=i,a=this.isHidden(t.id);a?f(t.container):E(t.container),r&&this._onDidChangeEntryVisibility.fire({id:t.id,visible:!a}),this.markFirstLastVisibleEntry()}}saveState(){this.hidden.size>0?this.storageService.store(h.HIDDEN_ENTRIES_KEY,JSON.stringify(Array.from(this.hidden.values())),u.PROFILE,b.USER):this.storageService.remove(h.HIDDEN_ENTRIES_KEY,u.PROFILE)}sort(){const i=new Set(this._entries.map(s=>s.id)),r=new Map,t=new Map;for(let s=0;s<this._entries.length;s++){const e=this._entries[s];if(typeof e.priority.primary=="number"||!i.has(e.priority.primary.location.id))r.set(e,s);else{const o=e.priority.primary.location.id;let n=t.get(o);if(!n){for(const l of t.values())if(l.has(o)){n=l;break}n||(n=new Map,t.set(o,n))}n.set(e.id,e)}}const a=Array.from(r.keys());a.sort((s,e)=>{if(s.alignment===e.alignment){const o=typeof s.priority.primary=="number"?s.priority.primary:s.priority.primary.location.priority,n=typeof e.priority.primary=="number"?e.priority.primary:e.priority.primary.location.priority;return o!==n?n-o:s.priority.secondary!==e.priority.secondary?e.priority.secondary-s.priority.secondary:r.get(s)-r.get(e)}return s.alignment===y.LEFT?-1:e.alignment===y.LEFT?1:0});let d;if(t.size>0){d=[];for(const s of a){const e=t.get(s.id),o=e?Array.from(e.values()):void 0;o&&d.push(...o.filter(n=>c(n.priority.primary)&&n.priority.primary.alignment===y.LEFT).sort((n,l)=>l.priority.secondary-n.priority.secondary)),d.push(s),o&&d.push(...o.filter(n=>c(n.priority.primary)&&n.priority.primary.alignment===y.RIGHT).sort((n,l)=>l.priority.secondary-n.priority.secondary)),t.delete(s.id)}for(const[,s]of t)d.push(...Array.from(s.values()).sort((e,o)=>o.priority.secondary-e.priority.secondary))}else d=a;this._entries=d}markFirstLastVisibleEntry(){this.doMarkFirstLastVisibleStatusbarItem(this.getEntries(y.LEFT)),this.doMarkFirstLastVisibleStatusbarItem(this.getEntries(y.RIGHT))}doMarkFirstLastVisibleStatusbarItem(i){let r,t;for(const a of i)a.container.classList.remove("first-visible-item","last-visible-item"),!this.isHidden(a.id)&&(r||(r=a),t=a);r?.container.classList.add("first-visible-item"),t?.container.classList.add("last-visible-item")}}export{h as StatusbarViewModel};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { isStatusbarEntryLocation, IStatusbarEntryPriority, StatusbarAlignment } from "../../../services/statusbar/browser/statusbar.js";
+import { hide, show, isAncestorOfActiveElement } from "../../../../base/browser/dom.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { Emitter } from "../../../../base/common/event.js";
+class StatusbarViewModel extends Disposable {
+  constructor(storageService) {
+    super();
+    this.storageService = storageService;
+    this.restoreState();
+    this.registerListeners();
+  }
+  static {
+    __name(this, "StatusbarViewModel");
+  }
+  static HIDDEN_ENTRIES_KEY = "workbench.statusbar.hidden";
+  _onDidChangeEntryVisibility = this._register(new Emitter());
+  onDidChangeEntryVisibility = this._onDidChangeEntryVisibility.event;
+  _entries = [];
+  // Intentionally not using a map here since multiple entries can have the same ID
+  get entries() {
+    return this._entries.slice(0);
+  }
+  _lastFocusedEntry;
+  get lastFocusedEntry() {
+    return this._lastFocusedEntry && !this.isHidden(this._lastFocusedEntry.id) ? this._lastFocusedEntry : void 0;
+  }
+  hidden = /* @__PURE__ */ new Set();
+  restoreState() {
+    const hiddenRaw = this.storageService.get(StatusbarViewModel.HIDDEN_ENTRIES_KEY, StorageScope.PROFILE);
+    if (hiddenRaw) {
+      try {
+        this.hidden = new Set(JSON.parse(hiddenRaw));
+      } catch (error) {
+      }
+    }
+  }
+  registerListeners() {
+    this._register(this.storageService.onDidChangeValue(StorageScope.PROFILE, StatusbarViewModel.HIDDEN_ENTRIES_KEY, this._store)(() => this.onDidStorageValueChange()));
+  }
+  onDidStorageValueChange() {
+    const currentlyHidden = new Set(this.hidden);
+    this.hidden.clear();
+    this.restoreState();
+    const changed = /* @__PURE__ */ new Set();
+    for (const id of currentlyHidden) {
+      if (!this.hidden.has(id)) {
+        changed.add(id);
+      }
+    }
+    for (const id of this.hidden) {
+      if (!currentlyHidden.has(id)) {
+        changed.add(id);
+      }
+    }
+    if (changed.size > 0) {
+      for (const entry of this._entries) {
+        if (changed.has(entry.id)) {
+          this.updateVisibility(entry.id, true);
+          changed.delete(entry.id);
+        }
+      }
+    }
+  }
+  add(entry) {
+    this._entries.push(entry);
+    this.updateVisibility(entry, false);
+    this.sort();
+    this.markFirstLastVisibleEntry();
+  }
+  remove(entry) {
+    const index = this._entries.indexOf(entry);
+    if (index >= 0) {
+      this._entries.splice(index, 1);
+      if (this._entries.some((otherEntry) => isStatusbarEntryLocation(otherEntry.priority.primary) && otherEntry.priority.primary.location.id === entry.id)) {
+        this.sort();
+      }
+      this.markFirstLastVisibleEntry();
+    }
+  }
+  isHidden(id) {
+    return this.hidden.has(id);
+  }
+  hide(id) {
+    if (!this.hidden.has(id)) {
+      this.hidden.add(id);
+      this.updateVisibility(id, true);
+      this.saveState();
+    }
+  }
+  show(id) {
+    if (this.hidden.has(id)) {
+      this.hidden.delete(id);
+      this.updateVisibility(id, true);
+      this.saveState();
+    }
+  }
+  findEntry(container) {
+    return this._entries.find((entry) => entry.container === container);
+  }
+  getEntries(alignment) {
+    return this._entries.filter((entry) => entry.alignment === alignment);
+  }
+  focusNextEntry() {
+    this.focusEntry(1, 0);
+  }
+  focusPreviousEntry() {
+    this.focusEntry(-1, this.entries.length - 1);
+  }
+  isEntryFocused() {
+    return !!this.getFocusedEntry();
+  }
+  getFocusedEntry() {
+    return this._entries.find((entry) => isAncestorOfActiveElement(entry.container));
+  }
+  focusEntry(delta, restartPosition) {
+    const getVisibleEntry = /* @__PURE__ */ __name((start) => {
+      let indexToFocus = start;
+      let entry2 = indexToFocus >= 0 && indexToFocus < this._entries.length ? this._entries[indexToFocus] : void 0;
+      while (entry2 && this.isHidden(entry2.id)) {
+        indexToFocus += delta;
+        entry2 = indexToFocus >= 0 && indexToFocus < this._entries.length ? this._entries[indexToFocus] : void 0;
+      }
+      return entry2;
+    }, "getVisibleEntry");
+    const focused = this.getFocusedEntry();
+    if (focused) {
+      const entry2 = getVisibleEntry(this._entries.indexOf(focused) + delta);
+      if (entry2) {
+        this._lastFocusedEntry = entry2;
+        entry2.labelContainer.focus();
+        return;
+      }
+    }
+    const entry = getVisibleEntry(restartPosition);
+    if (entry) {
+      this._lastFocusedEntry = entry;
+      entry.labelContainer.focus();
+    }
+  }
+  updateVisibility(arg1, trigger) {
+    if (typeof arg1 === "string") {
+      const id = arg1;
+      for (const entry of this._entries) {
+        if (entry.id === id) {
+          this.updateVisibility(entry, trigger);
+        }
+      }
+    } else {
+      const entry = arg1;
+      const isHidden = this.isHidden(entry.id);
+      if (isHidden) {
+        hide(entry.container);
+      } else {
+        show(entry.container);
+      }
+      if (trigger) {
+        this._onDidChangeEntryVisibility.fire({ id: entry.id, visible: !isHidden });
+      }
+      this.markFirstLastVisibleEntry();
+    }
+  }
+  saveState() {
+    if (this.hidden.size > 0) {
+      this.storageService.store(StatusbarViewModel.HIDDEN_ENTRIES_KEY, JSON.stringify(Array.from(this.hidden.values())), StorageScope.PROFILE, StorageTarget.USER);
+    } else {
+      this.storageService.remove(StatusbarViewModel.HIDDEN_ENTRIES_KEY, StorageScope.PROFILE);
+    }
+  }
+  sort() {
+    const allEntryIds = new Set(this._entries.map((entry) => entry.id));
+    const mapEntryWithNumberedPriorityToIndex = /* @__PURE__ */ new Map();
+    const mapEntryWithRelativePriority = /* @__PURE__ */ new Map();
+    for (let i = 0; i < this._entries.length; i++) {
+      const entry = this._entries[i];
+      if (typeof entry.priority.primary === "number" || !allEntryIds.has(entry.priority.primary.location.id)) {
+        mapEntryWithNumberedPriorityToIndex.set(entry, i);
+      } else {
+        const referenceEntryId = entry.priority.primary.location.id;
+        let entries = mapEntryWithRelativePriority.get(referenceEntryId);
+        if (!entries) {
+          for (const relativeEntries of mapEntryWithRelativePriority.values()) {
+            if (relativeEntries.has(referenceEntryId)) {
+              entries = relativeEntries;
+              break;
+            }
+          }
+          if (!entries) {
+            entries = /* @__PURE__ */ new Map();
+            mapEntryWithRelativePriority.set(referenceEntryId, entries);
+          }
+        }
+        entries.set(entry.id, entry);
+      }
+    }
+    const sortedEntriesWithNumberedPriority = Array.from(mapEntryWithNumberedPriorityToIndex.keys());
+    sortedEntriesWithNumberedPriority.sort((entryA, entryB) => {
+      if (entryA.alignment === entryB.alignment) {
+        const entryAPrimaryPriority = typeof entryA.priority.primary === "number" ? entryA.priority.primary : entryA.priority.primary.location.priority;
+        const entryBPrimaryPriority = typeof entryB.priority.primary === "number" ? entryB.priority.primary : entryB.priority.primary.location.priority;
+        if (entryAPrimaryPriority !== entryBPrimaryPriority) {
+          return entryBPrimaryPriority - entryAPrimaryPriority;
+        }
+        if (entryA.priority.secondary !== entryB.priority.secondary) {
+          return entryB.priority.secondary - entryA.priority.secondary;
+        }
+        return mapEntryWithNumberedPriorityToIndex.get(entryA) - mapEntryWithNumberedPriorityToIndex.get(entryB);
+      }
+      if (entryA.alignment === StatusbarAlignment.LEFT) {
+        return -1;
+      }
+      if (entryB.alignment === StatusbarAlignment.LEFT) {
+        return 1;
+      }
+      return 0;
+    });
+    let sortedEntries;
+    if (mapEntryWithRelativePriority.size > 0) {
+      sortedEntries = [];
+      for (const entry of sortedEntriesWithNumberedPriority) {
+        const relativeEntriesMap = mapEntryWithRelativePriority.get(entry.id);
+        const relativeEntries = relativeEntriesMap ? Array.from(relativeEntriesMap.values()) : void 0;
+        if (relativeEntries) {
+          sortedEntries.push(...relativeEntries.filter((entry2) => isStatusbarEntryLocation(entry2.priority.primary) && entry2.priority.primary.alignment === StatusbarAlignment.LEFT).sort((entryA, entryB) => entryB.priority.secondary - entryA.priority.secondary));
+        }
+        sortedEntries.push(entry);
+        if (relativeEntries) {
+          sortedEntries.push(...relativeEntries.filter((entry2) => isStatusbarEntryLocation(entry2.priority.primary) && entry2.priority.primary.alignment === StatusbarAlignment.RIGHT).sort((entryA, entryB) => entryB.priority.secondary - entryA.priority.secondary));
+        }
+        mapEntryWithRelativePriority.delete(entry.id);
+      }
+      for (const [, entries] of mapEntryWithRelativePriority) {
+        sortedEntries.push(...Array.from(entries.values()).sort((entryA, entryB) => entryB.priority.secondary - entryA.priority.secondary));
+      }
+    } else {
+      sortedEntries = sortedEntriesWithNumberedPriority;
+    }
+    this._entries = sortedEntries;
+  }
+  markFirstLastVisibleEntry() {
+    this.doMarkFirstLastVisibleStatusbarItem(this.getEntries(StatusbarAlignment.LEFT));
+    this.doMarkFirstLastVisibleStatusbarItem(this.getEntries(StatusbarAlignment.RIGHT));
+  }
+  doMarkFirstLastVisibleStatusbarItem(entries) {
+    let firstVisibleItem;
+    let lastVisibleItem;
+    for (const entry of entries) {
+      entry.container.classList.remove("first-visible-item", "last-visible-item");
+      const isVisible = !this.isHidden(entry.id);
+      if (isVisible) {
+        if (!firstVisibleItem) {
+          firstVisibleItem = entry;
+        }
+        lastVisibleItem = entry;
+      }
+    }
+    firstVisibleItem?.container.classList.add("first-visible-item");
+    lastVisibleItem?.container.classList.add("last-visible-item");
+  }
+}
+export {
+  StatusbarViewModel
+};
+//# sourceMappingURL=statusbarModel.js.map

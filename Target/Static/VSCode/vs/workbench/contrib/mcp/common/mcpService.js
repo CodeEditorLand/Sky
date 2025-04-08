@@ -1,4 +1,249 @@
-var y=Object.defineProperty;var _=Object.getOwnPropertyDescriptor;var h=(l,r,o,i)=>{for(var t=i>1?void 0:i?_(r,o):r,n=l.length-1,c;n>=0;n--)(c=l[n])&&(t=(i?c(r,o,t):c(t))||t);return i&&t&&y(r,o,t),t},p=(l,r)=>(o,i)=>r(o,i,l);import{RunOnceScheduler as C}from"../../../../base/common/async.js";import"../../../../base/common/cancellation.js";import{Codicon as M}from"../../../../base/common/codicons.js";import{MarkdownString as I}from"../../../../base/common/htmlContent.js";import{Disposable as b,DisposableStore as T,toDisposable as R}from"../../../../base/common/lifecycle.js";import{equals as w}from"../../../../base/common/objects.js";import{autorun as S,observableValue as k,transaction as P}from"../../../../base/common/observable.js";import{localize as f}from"../../../../nls.js";import{IInstantiationService as x}from"../../../../platform/instantiation/common/instantiation.js";import{ILogService as j}from"../../../../platform/log/common/log.js";import{IProductService as O}from"../../../../platform/product/common/productService.js";import{StorageScope as m}from"../../../../platform/storage/common/storage.js";import{ILanguageModelToolsService as E}from"../../chat/common/languageModelToolsService.js";import{IMcpRegistry as A}from"./mcpRegistryTypes.js";import{McpServer as L,McpServerMetadataCache as g}from"./mcpServer.js";import{McpServerDefinition as W,McpServerToolsState as q}from"./mcpTypes.js";let v=class extends b{constructor(o,i,t,n){super();this._instantiationService=o;this._mcpRegistry=i;this._toolsService=t;this._logService=n;this.userCache=this._register(o.createInstance(g,m.PROFILE)),this.workspaceCache=this._register(o.createInstance(g,m.WORKSPACE));const c=this._store.add(new C(()=>this._updateCollectedServers(),500));this._register(S(e=>{for(const s of this._mcpRegistry.collections.read(e))s.serverDefinitions.read(e);c.schedule(500)}))}_servers=k(this,[]);servers=this._servers.map(o=>o.map(i=>i.object));get lazyCollectionState(){return this._mcpRegistry.lazyCollectionState}userCache;workspaceCache;resetCaches(){this.userCache.reset(),this.workspaceCache.reset()}async activateCollections(){const o=await this._mcpRegistry.discoverCollections(),i=new Set(o.map(n=>n.id));this._updateCollectedServers();const t=[];for(const{object:n}of this._servers.get())i.has(n.collection.id)&&n.toolsState.get()===q.Unknown&&t.push(n.start());await Promise.all(t)}_syncTools(o,i){const t=new Map;i.add(S(n=>{const c=new Set(t.keys());for(const e of o.tools.read(n)){const s=t.get(e.id),a=this._mcpRegistry.collections.get().find(D=>D.id===o.collection.id),d={id:e.id,source:{type:"mcp",collectionId:o.collection.id,definitionId:o.definition.id},icon:M.tools,displayName:e.definition.name,toolReferenceName:e.definition.name,modelDescription:e.definition.description??"",userDescription:e.definition.description??"",inputSchema:e.definition.inputSchema,canBeReferencedInPrompt:!0,supportsToolPicker:!0,runsInWorkspace:a?.scope===m.WORKSPACE||!!a?.remoteAuthority,tags:["mcp"]};s?(w(s.toolData,d)||(s.toolData=d,s.toolDispose.dispose(),s.toolDispose=this._toolsService.registerToolData(d)),c.delete(e.id)):t.set(e.id,{toolData:d,toolDispose:this._toolsService.registerToolData(d),implDispose:this._toolsService.registerToolImplementation(e.id,this._instantiationService.createInstance(u,e,o))})}for(const e of c){const s=t.get(e);s&&(s.toolDispose.dispose(),s.implDispose.dispose(),t.delete(e))}})),i.add(R(()=>{for(const n of t.values())n.toolDispose.dispose(),n.implDispose.dispose()}))}_updateCollectedServers(){const o=this._mcpRegistry.collections.get().flatMap(e=>e.serverDefinitions.get().map(s=>({serverDefinition:s,collectionDefinition:e}))),i=new Set(o),t=this._servers.get(),n=[],c=(e,s)=>{i.delete(e),n.push(s);const a=s.object.connection.get();a&&!W.equals(a.definition,e.serverDefinition)&&(s.object.stop(),this._logService.debug(`MCP server ${s.object.definition.id} stopped because the definition changed`))};for(const e of t){const s=o.find(a=>z(e.object,a));s?c(s,e):e.dispose()}for(const e of i){const s=new T,a=this._instantiationService.createInstance(L,e.collectionDefinition,e.serverDefinition,e.serverDefinition.roots,!!e.collectionDefinition.lazy,e.collectionDefinition.scope===m.WORKSPACE?this.workspaceCache:this.userCache);s.add(a),this._syncTools(a,s),n.push({object:a,dispose:()=>s.dispose()})}P(e=>{this._servers.set(n,e)})}dispose(){this._servers.get().forEach(o=>o.dispose()),super.dispose()}};v=h([p(0,x),p(1,A),p(2,E),p(3,j)],v);function z(l,r){return l.collection.id===r.collectionDefinition.id&&l.definition.id===r.serverDefinition.id}let u=class{constructor(r,o,i){this._tool=r;this._server=o;this._productService=i}async prepareToolInvocation(r){const o=this._tool,i=this._server,t=f("mcp.tool.warning","{0} This tool is from '{1}' (MCP Server). Note that MCP servers or malicious conversation content may attempt to misuse '{2}' through tools. Please carefully review any requested actions.","$(info)",i.definition.label,this._productService.nameShort);return{confirmationMessages:{title:f("msg.title","Run `{0}`",o.definition.name,i.definition.label),message:new I(f("msg.msg",`{0}
-
- {1}`,o.definition.description,t),{supportThemeIcons:!0}),allowAutoConfirm:!0},invocationMessage:new I(f("msg.run","Running `{0}`",o.definition.name,i.definition.label)),pastTenseMessage:new I(f("msg.ran","Ran `{0}` ",o.definition.name,i.definition.label)),toolSpecificData:{kind:"input",rawInput:r}}}async invoke(r,o,i){const t={content:[]},n=[],c=await this._tool.call(r.parameters,i);for(const e of c.content)e.type==="text"&&(t.content.push({kind:"text",value:e.text}),n.push(e.text));return t.toolResultDetails={input:JSON.stringify(r.parameters,void 0,2),output:n.join(`
-`)},t}};u=h([p(2,O)],u);export{v as McpService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { RunOnceScheduler } from "../../../../base/common/async.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { MarkdownString } from "../../../../base/common/htmlContent.js";
+import { Disposable, DisposableStore, IDisposable, IReference, toDisposable } from "../../../../base/common/lifecycle.js";
+import { equals } from "../../../../base/common/objects.js";
+import { autorun, IObservable, observableValue, transaction } from "../../../../base/common/observable.js";
+import { localize } from "../../../../nls.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+import { StorageScope } from "../../../../platform/storage/common/storage.js";
+import { CountTokensCallback, ILanguageModelToolsService, IPreparedToolInvocation, IToolData, IToolImpl, IToolInvocation, IToolResult } from "../../chat/common/languageModelToolsService.js";
+import { IMcpRegistry } from "./mcpRegistryTypes.js";
+import { McpServer, McpServerMetadataCache } from "./mcpServer.js";
+import { IMcpServer, IMcpService, IMcpTool, McpCollectionDefinition, McpServerDefinition, McpServerToolsState } from "./mcpTypes.js";
+let McpService = class extends Disposable {
+  constructor(_instantiationService, _mcpRegistry, _toolsService, _logService) {
+    super();
+    this._instantiationService = _instantiationService;
+    this._mcpRegistry = _mcpRegistry;
+    this._toolsService = _toolsService;
+    this._logService = _logService;
+    this.userCache = this._register(_instantiationService.createInstance(McpServerMetadataCache, StorageScope.PROFILE));
+    this.workspaceCache = this._register(_instantiationService.createInstance(McpServerMetadataCache, StorageScope.WORKSPACE));
+    const updateThrottle = this._store.add(new RunOnceScheduler(() => this._updateCollectedServers(), 500));
+    this._register(autorun((reader) => {
+      for (const collection of this._mcpRegistry.collections.read(reader)) {
+        collection.serverDefinitions.read(reader);
+      }
+      updateThrottle.schedule(500);
+    }));
+  }
+  static {
+    __name(this, "McpService");
+  }
+  _servers = observableValue(this, []);
+  servers = this._servers.map((servers) => servers.map((s) => s.object));
+  get lazyCollectionState() {
+    return this._mcpRegistry.lazyCollectionState;
+  }
+  userCache;
+  workspaceCache;
+  resetCaches() {
+    this.userCache.reset();
+    this.workspaceCache.reset();
+  }
+  async activateCollections() {
+    const collections = await this._mcpRegistry.discoverCollections();
+    const collectionIds = new Set(collections.map((c) => c.id));
+    this._updateCollectedServers();
+    const todo = [];
+    for (const { object: server } of this._servers.get()) {
+      if (collectionIds.has(server.collection.id)) {
+        const state = server.toolsState.get();
+        if (state === McpServerToolsState.Unknown) {
+          todo.push(server.start());
+        }
+      }
+    }
+    await Promise.all(todo);
+  }
+  _syncTools(server, store) {
+    const tools = /* @__PURE__ */ new Map();
+    store.add(autorun((reader) => {
+      const toDelete = new Set(tools.keys());
+      for (const tool of server.tools.read(reader)) {
+        const existing = tools.get(tool.id);
+        const collection = this._mcpRegistry.collections.get().find((c) => c.id === server.collection.id);
+        const toolData = {
+          id: tool.id,
+          source: { type: "mcp", collectionId: server.collection.id, definitionId: server.definition.id },
+          icon: Codicon.tools,
+          displayName: tool.definition.name,
+          toolReferenceName: tool.definition.name,
+          modelDescription: tool.definition.description ?? "",
+          userDescription: tool.definition.description ?? "",
+          inputSchema: tool.definition.inputSchema,
+          canBeReferencedInPrompt: true,
+          supportsToolPicker: true,
+          runsInWorkspace: collection?.scope === StorageScope.WORKSPACE || !!collection?.remoteAuthority,
+          tags: ["mcp"]
+        };
+        if (existing) {
+          if (!equals(existing.toolData, toolData)) {
+            existing.toolData = toolData;
+            existing.toolDispose.dispose();
+            existing.toolDispose = this._toolsService.registerToolData(toolData);
+          }
+          toDelete.delete(tool.id);
+        } else {
+          tools.set(tool.id, {
+            toolData,
+            toolDispose: this._toolsService.registerToolData(toolData),
+            implDispose: this._toolsService.registerToolImplementation(tool.id, this._instantiationService.createInstance(McpToolImplementation, tool, server))
+          });
+        }
+      }
+      for (const id of toDelete) {
+        const tool = tools.get(id);
+        if (tool) {
+          tool.toolDispose.dispose();
+          tool.implDispose.dispose();
+          tools.delete(id);
+        }
+      }
+    }));
+    store.add(toDisposable(() => {
+      for (const tool of tools.values()) {
+        tool.toolDispose.dispose();
+        tool.implDispose.dispose();
+      }
+    }));
+  }
+  _updateCollectedServers() {
+    const definitions = this._mcpRegistry.collections.get().flatMap(
+      (collectionDefinition) => collectionDefinition.serverDefinitions.get().map((serverDefinition) => ({
+        serverDefinition,
+        collectionDefinition
+      }))
+    );
+    const nextDefinitions = new Set(definitions);
+    const currentServers = this._servers.get();
+    const nextServers = [];
+    const pushMatch = /* @__PURE__ */ __name((match, rec) => {
+      nextDefinitions.delete(match);
+      nextServers.push(rec);
+      const connection = rec.object.connection.get();
+      if (connection && !McpServerDefinition.equals(connection.definition, match.serverDefinition)) {
+        rec.object.stop();
+        this._logService.debug(`MCP server ${rec.object.definition.id} stopped because the definition changed`);
+      }
+    }, "pushMatch");
+    for (const server of currentServers) {
+      const match = definitions.find((d) => defsEqual(server.object, d));
+      if (match) {
+        pushMatch(match, server);
+      } else {
+        server.dispose();
+      }
+    }
+    for (const def of nextDefinitions) {
+      const store = new DisposableStore();
+      const object = this._instantiationService.createInstance(
+        McpServer,
+        def.collectionDefinition,
+        def.serverDefinition,
+        def.serverDefinition.roots,
+        !!def.collectionDefinition.lazy,
+        def.collectionDefinition.scope === StorageScope.WORKSPACE ? this.workspaceCache : this.userCache
+      );
+      store.add(object);
+      this._syncTools(object, store);
+      nextServers.push({ object, dispose: /* @__PURE__ */ __name(() => store.dispose(), "dispose") });
+    }
+    transaction((tx) => {
+      this._servers.set(nextServers, tx);
+    });
+  }
+  dispose() {
+    this._servers.get().forEach((s) => s.dispose());
+    super.dispose();
+  }
+};
+McpService = __decorateClass([
+  __decorateParam(0, IInstantiationService),
+  __decorateParam(1, IMcpRegistry),
+  __decorateParam(2, ILanguageModelToolsService),
+  __decorateParam(3, ILogService)
+], McpService);
+function defsEqual(server, def) {
+  return server.collection.id === def.collectionDefinition.id && server.definition.id === def.serverDefinition.id;
+}
+__name(defsEqual, "defsEqual");
+let McpToolImplementation = class {
+  constructor(_tool, _server, _productService) {
+    this._tool = _tool;
+    this._server = _server;
+    this._productService = _productService;
+  }
+  static {
+    __name(this, "McpToolImplementation");
+  }
+  async prepareToolInvocation(parameters) {
+    const tool = this._tool;
+    const server = this._server;
+    const mcpToolWarning = localize(
+      "mcp.tool.warning",
+      "{0} This tool is from '{1}' (MCP Server). Note that MCP servers or malicious conversation content may attempt to misuse '{2}' through tools. Please carefully review any requested actions.",
+      "$(info)",
+      server.definition.label,
+      this._productService.nameShort
+    );
+    return {
+      confirmationMessages: {
+        title: localize("msg.title", "Run `{0}`", tool.definition.name, server.definition.label),
+        message: new MarkdownString(localize("msg.msg", "{0}\n\n {1}", tool.definition.description, mcpToolWarning), { supportThemeIcons: true }),
+        allowAutoConfirm: true
+      },
+      invocationMessage: new MarkdownString(localize("msg.run", "Running `{0}`", tool.definition.name, server.definition.label)),
+      pastTenseMessage: new MarkdownString(localize("msg.ran", "Ran `{0}` ", tool.definition.name, server.definition.label)),
+      toolSpecificData: {
+        kind: "input",
+        rawInput: parameters
+      }
+    };
+  }
+  async invoke(invocation, _countTokens, token) {
+    const result = {
+      content: []
+    };
+    const outputParts = [];
+    const callResult = await this._tool.call(invocation.parameters, token);
+    for (const item of callResult.content) {
+      if (item.type === "text") {
+        result.content.push({
+          kind: "text",
+          value: item.text
+        });
+        outputParts.push(item.text);
+      } else {
+      }
+    }
+    result.toolResultDetails = {
+      input: JSON.stringify(invocation.parameters, void 0, 2),
+      output: outputParts.join("\n")
+    };
+    return result;
+  }
+};
+McpToolImplementation = __decorateClass([
+  __decorateParam(2, IProductService)
+], McpToolImplementation);
+export {
+  McpService
+};
+//# sourceMappingURL=mcpService.js.map

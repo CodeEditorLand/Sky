@@ -1,1 +1,233 @@
-var T=Object.defineProperty,I=Object.getOwnPropertyDescriptor,m=(e,t,o,i)=>{for(var r,a=i>1?void 0:i?I(t,o):t,s=e.length-1;s>=0;s--)(r=e[s])&&(a=(i?r(t,o,a):r(a))||a);return i&&a&&T(t,o,a),a},l=(e,t)=>(o,i)=>t(o,i,e);import o from"electron";import{Emitter as _,Event as E}from"../../../base/common/event.js";import{Disposable as k}from"../../../base/common/lifecycle.js";import{isLinux as S,isMacintosh as y,isWindows as B}from"../../../base/common/platform.js";import{IConfigurationService as W}from"../../configuration/common/configuration.js";import{createDecorator as O}from"../../instantiation/common/instantiation.js";import{IStateService as H}from"../../state/node/state.js";import"../common/themeService.js";import"../../window/common/window.js";import{ThemeTypeSelector as i}from"../common/theme.js";import"../../workspace/common/workspace.js";import{coalesce as D}from"../../../base/common/arrays.js";import{getAllWindowsExcludingOffscreen as w}from"../../windows/electron-main/windows.js";const L="#FFFFFF",x="#1F1F1F",A="#000000",b="#FFFFFF",C="theme",p="themeBackground",g="windowSplash",v="windowSplashWorkspaceOverride";var d;(e=>{e.DETECT_COLOR_SCHEME="window.autoDetectColorScheme",e.DETECT_HC="window.autoDetectHighContrast",e.SYSTEM_COLOR_THEME="window.systemColorTheme"})(d||={});const ee=O("themeMainService");let u=class extends k{constructor(e,t){super(),this.stateService=e,this.configurationService=t,S||this._register(this.configurationService.onDidChangeConfiguration((e=>{(e.affectsConfiguration(d.SYSTEM_COLOR_THEME)||e.affectsConfiguration(d.DETECT_COLOR_SCHEME))&&this.updateSystemColorTheme()}))),this.updateSystemColorTheme(),this._register(E.fromNodeEventEmitter(o.nativeTheme,"updated")((()=>this._onDidChangeColorScheme.fire(this.getColorScheme()))))}_onDidChangeColorScheme=this._register(new _);onDidChangeColorScheme=this._onDidChangeColorScheme.event;updateSystemColorTheme(){if(S||this.configurationService.getValue(d.DETECT_COLOR_SCHEME))o.nativeTheme.themeSource="system";else switch(this.configurationService.getValue(d.SYSTEM_COLOR_THEME)){case"dark":o.nativeTheme.themeSource="dark";break;case"light":o.nativeTheme.themeSource="light";break;case"auto":switch(this.getPreferredBaseTheme()??this.getStoredBaseTheme()){case i.VS:o.nativeTheme.themeSource="light";break;case i.VS_DARK:o.nativeTheme.themeSource="dark";break;default:o.nativeTheme.themeSource="system"}break;default:o.nativeTheme.themeSource="system"}}getColorScheme(){if(B){if(o.nativeTheme.shouldUseHighContrastColors)return{dark:o.nativeTheme.shouldUseInvertedColorScheme,highContrast:!0}}else if(y){if(o.nativeTheme.shouldUseInvertedColorScheme||o.nativeTheme.shouldUseHighContrastColors)return{dark:o.nativeTheme.shouldUseDarkColors,highContrast:!0}}else if(S&&o.nativeTheme.shouldUseHighContrastColors)return{dark:!0,highContrast:!0};return{dark:o.nativeTheme.shouldUseDarkColors,highContrast:!1}}getPreferredBaseTheme(){const e=this.getColorScheme();return this.configurationService.getValue(d.DETECT_HC)&&e.highContrast?e.dark?i.HC_BLACK:i.HC_LIGHT:this.configurationService.getValue(d.DETECT_COLOR_SCHEME)?e.dark?i.VS_DARK:i.VS:void 0}getBackgroundColor(){const e=this.getPreferredBaseTheme(),t=this.getStoredBaseTheme();if(void 0===e||e===t){const e=this.stateService.getItem(p,null);if(e)return e}switch(e??t){case i.VS:return L;case i.HC_BLACK:return A;case i.HC_LIGHT:return b;default:return x}}getStoredBaseTheme(){switch(this.stateService.getItem(C,i.VS_DARK).split(" ")[0]){case i.VS:return i.VS;case i.HC_BLACK:return i.HC_BLACK;case i.HC_LIGHT:return i.HC_LIGHT;default:return i.VS_DARK}}saveWindowSplash(e,t,o){const i=this.updateWindowSplashOverride(t,o);this.stateService.setItems(D([{key:C,data:o.baseTheme},{key:p,data:o.colorInfo.background},{key:g,data:o},i?{key:v,data:i}:void 0])),"number"==typeof e&&this.updateBackgroundColor(e,o),this.updateSystemColorTheme()}updateWindowSplashOverride(e,t){let o,i=!1;if(e){o={...this.getWindowSplashOverride()};const[r,a]=o.layoutInfo.auxiliarySideBarWidth;if(t.layoutInfo?.auxiliarySideBarWidth)r!==t.layoutInfo.auxiliarySideBarWidth&&(o.layoutInfo.auxiliarySideBarWidth[0]=t.layoutInfo.auxiliarySideBarWidth,i=!0),a.includes(e.id)||(a.push(e.id),i=!0);else{const t=a.indexOf(e.id);t>-1&&(a.splice(t,1),i=!0)}}return i?o:void 0}updateBackgroundColor(e,t){for(const o of w())if(o.id===e){o.setBackgroundColor(t.colorInfo.background);break}}getWindowSplash(e){const t=this.stateService.getItem(g);if(!t?.layoutInfo)return t;let o;if(e){const[t,i]=this.getWindowSplashOverride().layoutInfo.auxiliarySideBarWidth;i.includes(e.id)&&(o=t)}return{...t,layoutInfo:{...t.layoutInfo,auxiliarySideBarWidth:"number"==typeof o?o:0}}}getWindowSplashOverride(){return this.stateService.getItem(v,{layoutInfo:{auxiliarySideBarWidth:[0,[]]}})}};u=m([l(0,H),l(1,W)],u);export{ee as IThemeMainService,u as ThemeMainService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import electron from "electron";
+import { Emitter, Event } from "../../../base/common/event.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { isLinux, isMacintosh, isWindows } from "../../../base/common/platform.js";
+import { IConfigurationService } from "../../configuration/common/configuration.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+import { IStateService } from "../../state/node/state.js";
+import { IPartsSplash, IPartsSplashWorkspaceOverride } from "../common/themeService.js";
+import { IColorScheme } from "../../window/common/window.js";
+import { ThemeTypeSelector } from "../common/theme.js";
+import { IBaseWorkspaceIdentifier } from "../../workspace/common/workspace.js";
+import { coalesce } from "../../../base/common/arrays.js";
+import { getAllWindowsExcludingOffscreen } from "../../windows/electron-main/windows.js";
+const DEFAULT_BG_LIGHT = "#FFFFFF";
+const DEFAULT_BG_DARK = "#1F1F1F";
+const DEFAULT_BG_HC_BLACK = "#000000";
+const DEFAULT_BG_HC_LIGHT = "#FFFFFF";
+const THEME_STORAGE_KEY = "theme";
+const THEME_BG_STORAGE_KEY = "themeBackground";
+const THEME_WINDOW_SPLASH_KEY = "windowSplash";
+const THEME_WINDOW_SPLASH_WORKSPACE_OVERRIDE_KEY = "windowSplashWorkspaceOverride";
+var ThemeSettings;
+((ThemeSettings2) => {
+  ThemeSettings2.DETECT_COLOR_SCHEME = "window.autoDetectColorScheme";
+  ThemeSettings2.DETECT_HC = "window.autoDetectHighContrast";
+  ThemeSettings2.SYSTEM_COLOR_THEME = "window.systemColorTheme";
+})(ThemeSettings || (ThemeSettings = {}));
+const IThemeMainService = createDecorator("themeMainService");
+let ThemeMainService = class extends Disposable {
+  constructor(stateService, configurationService) {
+    super();
+    this.stateService = stateService;
+    this.configurationService = configurationService;
+    if (!isLinux) {
+      this._register(this.configurationService.onDidChangeConfiguration((e) => {
+        if (e.affectsConfiguration(ThemeSettings.SYSTEM_COLOR_THEME) || e.affectsConfiguration(ThemeSettings.DETECT_COLOR_SCHEME)) {
+          this.updateSystemColorTheme();
+        }
+      }));
+    }
+    this.updateSystemColorTheme();
+    this._register(Event.fromNodeEventEmitter(electron.nativeTheme, "updated")(() => this._onDidChangeColorScheme.fire(this.getColorScheme())));
+  }
+  static {
+    __name(this, "ThemeMainService");
+  }
+  _onDidChangeColorScheme = this._register(new Emitter());
+  onDidChangeColorScheme = this._onDidChangeColorScheme.event;
+  updateSystemColorTheme() {
+    if (isLinux || this.configurationService.getValue(ThemeSettings.DETECT_COLOR_SCHEME)) {
+      electron.nativeTheme.themeSource = "system";
+    } else {
+      switch (this.configurationService.getValue(ThemeSettings.SYSTEM_COLOR_THEME)) {
+        case "dark":
+          electron.nativeTheme.themeSource = "dark";
+          break;
+        case "light":
+          electron.nativeTheme.themeSource = "light";
+          break;
+        case "auto":
+          switch (this.getPreferredBaseTheme() ?? this.getStoredBaseTheme()) {
+            case ThemeTypeSelector.VS:
+              electron.nativeTheme.themeSource = "light";
+              break;
+            case ThemeTypeSelector.VS_DARK:
+              electron.nativeTheme.themeSource = "dark";
+              break;
+            default:
+              electron.nativeTheme.themeSource = "system";
+          }
+          break;
+        default:
+          electron.nativeTheme.themeSource = "system";
+          break;
+      }
+    }
+  }
+  getColorScheme() {
+    if (isWindows) {
+      if (electron.nativeTheme.shouldUseHighContrastColors) {
+        return { dark: electron.nativeTheme.shouldUseInvertedColorScheme, highContrast: true };
+      }
+    } else if (isMacintosh) {
+      if (electron.nativeTheme.shouldUseInvertedColorScheme || electron.nativeTheme.shouldUseHighContrastColors) {
+        return { dark: electron.nativeTheme.shouldUseDarkColors, highContrast: true };
+      }
+    } else if (isLinux) {
+      if (electron.nativeTheme.shouldUseHighContrastColors) {
+        return { dark: true, highContrast: true };
+      }
+    }
+    return {
+      dark: electron.nativeTheme.shouldUseDarkColors,
+      highContrast: false
+    };
+  }
+  getPreferredBaseTheme() {
+    const colorScheme = this.getColorScheme();
+    if (this.configurationService.getValue(ThemeSettings.DETECT_HC) && colorScheme.highContrast) {
+      return colorScheme.dark ? ThemeTypeSelector.HC_BLACK : ThemeTypeSelector.HC_LIGHT;
+    }
+    if (this.configurationService.getValue(ThemeSettings.DETECT_COLOR_SCHEME)) {
+      return colorScheme.dark ? ThemeTypeSelector.VS_DARK : ThemeTypeSelector.VS;
+    }
+    return void 0;
+  }
+  getBackgroundColor() {
+    const preferred = this.getPreferredBaseTheme();
+    const stored = this.getStoredBaseTheme();
+    if (preferred === void 0 || preferred === stored) {
+      const storedBackground = this.stateService.getItem(THEME_BG_STORAGE_KEY, null);
+      if (storedBackground) {
+        return storedBackground;
+      }
+    }
+    switch (preferred ?? stored) {
+      case ThemeTypeSelector.VS:
+        return DEFAULT_BG_LIGHT;
+      case ThemeTypeSelector.HC_BLACK:
+        return DEFAULT_BG_HC_BLACK;
+      case ThemeTypeSelector.HC_LIGHT:
+        return DEFAULT_BG_HC_LIGHT;
+      default:
+        return DEFAULT_BG_DARK;
+    }
+  }
+  getStoredBaseTheme() {
+    const baseTheme = this.stateService.getItem(THEME_STORAGE_KEY, ThemeTypeSelector.VS_DARK).split(" ")[0];
+    switch (baseTheme) {
+      case ThemeTypeSelector.VS:
+        return ThemeTypeSelector.VS;
+      case ThemeTypeSelector.HC_BLACK:
+        return ThemeTypeSelector.HC_BLACK;
+      case ThemeTypeSelector.HC_LIGHT:
+        return ThemeTypeSelector.HC_LIGHT;
+      default:
+        return ThemeTypeSelector.VS_DARK;
+    }
+  }
+  saveWindowSplash(windowId, workspace, splash) {
+    const splashOverride = this.updateWindowSplashOverride(workspace, splash);
+    this.stateService.setItems(coalesce([
+      { key: THEME_STORAGE_KEY, data: splash.baseTheme },
+      { key: THEME_BG_STORAGE_KEY, data: splash.colorInfo.background },
+      { key: THEME_WINDOW_SPLASH_KEY, data: splash },
+      splashOverride ? { key: THEME_WINDOW_SPLASH_WORKSPACE_OVERRIDE_KEY, data: splashOverride } : void 0
+    ]));
+    if (typeof windowId === "number") {
+      this.updateBackgroundColor(windowId, splash);
+    }
+    this.updateSystemColorTheme();
+  }
+  updateWindowSplashOverride(workspace, splash) {
+    let splashOverride = void 0;
+    let changed = false;
+    if (workspace) {
+      splashOverride = { ...this.getWindowSplashOverride() };
+      const [auxiliarySideBarWidth, workspaceIds] = splashOverride.layoutInfo.auxiliarySideBarWidth;
+      if (splash.layoutInfo?.auxiliarySideBarWidth) {
+        if (auxiliarySideBarWidth !== splash.layoutInfo.auxiliarySideBarWidth) {
+          splashOverride.layoutInfo.auxiliarySideBarWidth[0] = splash.layoutInfo.auxiliarySideBarWidth;
+          changed = true;
+        }
+        if (!workspaceIds.includes(workspace.id)) {
+          workspaceIds.push(workspace.id);
+          changed = true;
+        }
+      } else {
+        const index = workspaceIds.indexOf(workspace.id);
+        if (index > -1) {
+          workspaceIds.splice(index, 1);
+          changed = true;
+        }
+      }
+    }
+    return changed ? splashOverride : void 0;
+  }
+  updateBackgroundColor(windowId, splash) {
+    for (const window of getAllWindowsExcludingOffscreen()) {
+      if (window.id === windowId) {
+        window.setBackgroundColor(splash.colorInfo.background);
+        break;
+      }
+    }
+  }
+  getWindowSplash(workspace) {
+    const partSplash = this.stateService.getItem(THEME_WINDOW_SPLASH_KEY);
+    if (!partSplash?.layoutInfo) {
+      return partSplash;
+    }
+    let auxiliarySideBarWidthOverride;
+    if (workspace) {
+      const [auxiliarySideBarWidth, workspaceIds] = this.getWindowSplashOverride().layoutInfo.auxiliarySideBarWidth;
+      if (workspaceIds.includes(workspace.id)) {
+        auxiliarySideBarWidthOverride = auxiliarySideBarWidth;
+      }
+    }
+    return {
+      ...partSplash,
+      layoutInfo: {
+        ...partSplash.layoutInfo,
+        // Only apply an auxiliary bar width when we have a workspace specific
+        // override. Auxiliary bar is not visible by default unless explicitly
+        // opened in a workspace.
+        auxiliarySideBarWidth: typeof auxiliarySideBarWidthOverride === "number" ? auxiliarySideBarWidthOverride : 0
+      }
+    };
+  }
+  getWindowSplashOverride() {
+    return this.stateService.getItem(THEME_WINDOW_SPLASH_WORKSPACE_OVERRIDE_KEY, { layoutInfo: { auxiliarySideBarWidth: [0, []] } });
+  }
+};
+ThemeMainService = __decorateClass([
+  __decorateParam(0, IStateService),
+  __decorateParam(1, IConfigurationService)
+], ThemeMainService);
+export {
+  IThemeMainService,
+  ThemeMainService
+};
+//# sourceMappingURL=themeMainService.js.map

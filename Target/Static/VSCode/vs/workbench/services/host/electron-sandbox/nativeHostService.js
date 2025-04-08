@@ -1,1 +1,177 @@
-var W=Object.defineProperty;var S=Object.getOwnPropertyDescriptor;var v=(s,r,e,i)=>{for(var n=i>1?void 0:i?S(r,e):r,t=s.length-1,u;t>=0;t--)(u=s[t])&&(n=(i?u(r,e,n):u(n))||n);return i&&n&&W(r,e,n),n},d=(s,r)=>(e,i)=>r(e,i,s);import{Emitter as I,Event as o}from"../../../../base/common/event.js";import{IHostService as y}from"../browser/host.js";import{INativeHostService as m}from"../../../../platform/native/common/native.js";import{InstantiationType as h,registerSingleton as p}from"../../../../platform/instantiation/common/extensions.js";import{ILabelService as g,Verbosity as f}from"../../../../platform/label/common/label.js";import{IWorkbenchEnvironmentService as O}from"../../environment/common/environmentService.js";import{isFolderToOpen as b,isWorkspaceToOpen as P}from"../../../../platform/window/common/window.js";import{Disposable as H}from"../../../../base/common/lifecycle.js";import{NativeHostService as E}from"../../../../platform/native/common/nativeHostService.js";import{INativeWorkbenchEnvironmentService as F}from"../../environment/electron-sandbox/environmentService.js";import{IMainProcessService as _}from"../../../../platform/ipc/common/mainProcessService.js";import{disposableWindowInterval as A,getActiveDocument as D,getWindowId as C,getWindowsCount as L,hasWindow as l,onDidRegisterWindow as x}from"../../../../base/browser/dom.js";import{memoize as T}from"../../../../base/common/decorators.js";import{isAuxiliaryWindow as w}from"../../../../base/browser/window.js";import"../../../../base/common/buffer.js";let c=class extends E{constructor(r,e){super(r.window.id,e)}};c=v([d(0,F),d(1,_)],c);let a=class extends H{constructor(e,i,n){super();this.nativeHostService=e;this.labelService=i;this.environmentService=n;this.onDidChangeFocus=o.latch(o.any(o.map(o.filter(this.nativeHostService.onDidFocusMainOrAuxiliaryWindow,t=>l(t),this._store),()=>this.hasFocus,this._store),o.map(o.filter(this.nativeHostService.onDidBlurMainOrAuxiliaryWindow,t=>l(t),this._store),()=>this.hasFocus,this._store),o.map(this.onDidChangeActiveWindow,()=>this.hasFocus,this._store)),void 0,this._store),this.onDidChangeFullScreen=o.filter(this.nativeHostService.onDidChangeWindowFullScreen,t=>l(t.windowId),this._store)}onDidChangeFocus;get hasFocus(){return D().hasFocus()}async hadLastFocus(){const e=await this.nativeHostService.getActiveWindowId();return typeof e>"u"?!1:e===this.nativeHostService.windowId}get onDidChangeActiveWindow(){const e=this._register(new I);return this._register(o.filter(this.nativeHostService.onDidFocusMainOrAuxiliaryWindow,i=>l(i),this._store)(i=>e.fire(i))),this._register(x(({window:i,disposables:n})=>{n.add(A(i,()=>{const t=i.document.hasFocus();return t&&e.fire(i.vscodeWindowId),t},100,20))})),o.latch(e.event,void 0,this._store)}onDidChangeFullScreen;openWindow(e,i){return Array.isArray(e)?this.doOpenWindow(e,i):this.doOpenEmptyWindow(e)}doOpenWindow(e,i){const n=this.environmentService.remoteAuthority;return n&&(e.forEach(t=>t.label=t.label||this.getRecentLabel(t)),i?.remoteAuthority===void 0&&(i=i?{...i,remoteAuthority:n}:{remoteAuthority:n})),this.nativeHostService.openWindow(e,i)}getRecentLabel(e){return b(e)?this.labelService.getWorkspaceLabel(e.folderUri,{verbose:f.LONG}):P(e)?this.labelService.getWorkspaceLabel({id:"",configPath:e.workspaceUri},{verbose:f.LONG}):this.labelService.getUriLabel(e.fileUri,{appendWorkspaceSuffix:!0})}doOpenEmptyWindow(e){const i=this.environmentService.remoteAuthority;return i&&e?.remoteAuthority===void 0&&(e=e?{...e,remoteAuthority:i}:{remoteAuthority:i}),this.nativeHostService.openWindow(e)}toggleFullScreen(e){return this.nativeHostService.toggleFullScreen({targetWindowId:w(e)?e.vscodeWindowId:void 0})}async moveTop(e){if(!(L()<=1))return this.nativeHostService.moveWindowTop(w(e)?{targetWindowId:e.vscodeWindowId}:void 0)}getCursorScreenPoint(){return this.nativeHostService.getCursorScreenPoint()}focus(e,i){return this.nativeHostService.focusWindow({force:i?.force,targetWindowId:C(e)})}restart(){return this.nativeHostService.relaunch()}reload(e){return this.nativeHostService.reload(e)}close(){return this.nativeHostService.closeWindow()}async withExpectedShutdown(e){return await e()}getScreenshot(){return this.nativeHostService.getScreenshot()}_nativeWindowHandleCache=new Map;async getNativeWindowHandle(e){return this._nativeWindowHandleCache.has(e)||this._nativeWindowHandleCache.set(e,this.nativeHostService.getNativeWindowHandle(e)),this._nativeWindowHandleCache.get(e)}};v([T],a.prototype,"onDidChangeActiveWindow",1),a=v([d(0,m),d(1,g),d(2,O)],a),p(y,a,h.Delayed),p(m,c,h.Delayed);
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { IHostService } from "../browser/host.js";
+import { INativeHostService } from "../../../../platform/native/common/native.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { ILabelService, Verbosity } from "../../../../platform/label/common/label.js";
+import { IWorkbenchEnvironmentService } from "../../environment/common/environmentService.js";
+import { IWindowOpenable, IOpenWindowOptions, isFolderToOpen, isWorkspaceToOpen, IOpenEmptyWindowOptions, IPoint, IRectangle } from "../../../../platform/window/common/window.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { NativeHostService } from "../../../../platform/native/common/nativeHostService.js";
+import { INativeWorkbenchEnvironmentService } from "../../environment/electron-sandbox/environmentService.js";
+import { IMainProcessService } from "../../../../platform/ipc/common/mainProcessService.js";
+import { disposableWindowInterval, getActiveDocument, getWindowId, getWindowsCount, hasWindow, onDidRegisterWindow } from "../../../../base/browser/dom.js";
+import { memoize } from "../../../../base/common/decorators.js";
+import { isAuxiliaryWindow } from "../../../../base/browser/window.js";
+import { VSBuffer } from "../../../../base/common/buffer.js";
+let WorkbenchNativeHostService = class extends NativeHostService {
+  static {
+    __name(this, "WorkbenchNativeHostService");
+  }
+  constructor(environmentService, mainProcessService) {
+    super(environmentService.window.id, mainProcessService);
+  }
+};
+WorkbenchNativeHostService = __decorateClass([
+  __decorateParam(0, INativeWorkbenchEnvironmentService),
+  __decorateParam(1, IMainProcessService)
+], WorkbenchNativeHostService);
+let WorkbenchHostService = class extends Disposable {
+  constructor(nativeHostService, labelService, environmentService) {
+    super();
+    this.nativeHostService = nativeHostService;
+    this.labelService = labelService;
+    this.environmentService = environmentService;
+    this.onDidChangeFocus = Event.latch(
+      Event.any(
+        Event.map(Event.filter(this.nativeHostService.onDidFocusMainOrAuxiliaryWindow, (id) => hasWindow(id), this._store), () => this.hasFocus, this._store),
+        Event.map(Event.filter(this.nativeHostService.onDidBlurMainOrAuxiliaryWindow, (id) => hasWindow(id), this._store), () => this.hasFocus, this._store),
+        Event.map(this.onDidChangeActiveWindow, () => this.hasFocus, this._store)
+      ),
+      void 0,
+      this._store
+    );
+    this.onDidChangeFullScreen = Event.filter(this.nativeHostService.onDidChangeWindowFullScreen, (e) => hasWindow(e.windowId), this._store);
+  }
+  static {
+    __name(this, "WorkbenchHostService");
+  }
+  //#region Focus
+  onDidChangeFocus;
+  get hasFocus() {
+    return getActiveDocument().hasFocus();
+  }
+  async hadLastFocus() {
+    const activeWindowId = await this.nativeHostService.getActiveWindowId();
+    if (typeof activeWindowId === "undefined") {
+      return false;
+    }
+    return activeWindowId === this.nativeHostService.windowId;
+  }
+  get onDidChangeActiveWindow() {
+    const emitter = this._register(new Emitter());
+    this._register(Event.filter(this.nativeHostService.onDidFocusMainOrAuxiliaryWindow, (id) => hasWindow(id), this._store)((id) => emitter.fire(id)));
+    this._register(onDidRegisterWindow(({ window, disposables }) => {
+      disposables.add(disposableWindowInterval(window, () => {
+        const hasFocus = window.document.hasFocus();
+        if (hasFocus) {
+          emitter.fire(window.vscodeWindowId);
+        }
+        return hasFocus;
+      }, 100, 20));
+    }));
+    return Event.latch(emitter.event, void 0, this._store);
+  }
+  onDidChangeFullScreen;
+  openWindow(arg1, arg2) {
+    if (Array.isArray(arg1)) {
+      return this.doOpenWindow(arg1, arg2);
+    }
+    return this.doOpenEmptyWindow(arg1);
+  }
+  doOpenWindow(toOpen, options) {
+    const remoteAuthority = this.environmentService.remoteAuthority;
+    if (!!remoteAuthority) {
+      toOpen.forEach((openable) => openable.label = openable.label || this.getRecentLabel(openable));
+      if (options?.remoteAuthority === void 0) {
+        options = options ? { ...options, remoteAuthority } : { remoteAuthority };
+      }
+    }
+    return this.nativeHostService.openWindow(toOpen, options);
+  }
+  getRecentLabel(openable) {
+    if (isFolderToOpen(openable)) {
+      return this.labelService.getWorkspaceLabel(openable.folderUri, { verbose: Verbosity.LONG });
+    }
+    if (isWorkspaceToOpen(openable)) {
+      return this.labelService.getWorkspaceLabel({ id: "", configPath: openable.workspaceUri }, { verbose: Verbosity.LONG });
+    }
+    return this.labelService.getUriLabel(openable.fileUri, { appendWorkspaceSuffix: true });
+  }
+  doOpenEmptyWindow(options) {
+    const remoteAuthority = this.environmentService.remoteAuthority;
+    if (!!remoteAuthority && options?.remoteAuthority === void 0) {
+      options = options ? { ...options, remoteAuthority } : { remoteAuthority };
+    }
+    return this.nativeHostService.openWindow(options);
+  }
+  toggleFullScreen(targetWindow) {
+    return this.nativeHostService.toggleFullScreen({ targetWindowId: isAuxiliaryWindow(targetWindow) ? targetWindow.vscodeWindowId : void 0 });
+  }
+  async moveTop(targetWindow) {
+    if (getWindowsCount() <= 1) {
+      return;
+    }
+    return this.nativeHostService.moveWindowTop(isAuxiliaryWindow(targetWindow) ? { targetWindowId: targetWindow.vscodeWindowId } : void 0);
+  }
+  getCursorScreenPoint() {
+    return this.nativeHostService.getCursorScreenPoint();
+  }
+  //#endregion
+  //#region Lifecycle
+  focus(targetWindow, options) {
+    return this.nativeHostService.focusWindow({
+      force: options?.force,
+      targetWindowId: getWindowId(targetWindow)
+    });
+  }
+  restart() {
+    return this.nativeHostService.relaunch();
+  }
+  reload(options) {
+    return this.nativeHostService.reload(options);
+  }
+  close() {
+    return this.nativeHostService.closeWindow();
+  }
+  async withExpectedShutdown(expectedShutdownTask) {
+    return await expectedShutdownTask();
+  }
+  //#endregion
+  //#region Screenshots
+  getScreenshot() {
+    return this.nativeHostService.getScreenshot();
+  }
+  //#endregion
+  //#region Native Handle
+  _nativeWindowHandleCache = /* @__PURE__ */ new Map();
+  async getNativeWindowHandle(windowId) {
+    if (!this._nativeWindowHandleCache.has(windowId)) {
+      this._nativeWindowHandleCache.set(windowId, this.nativeHostService.getNativeWindowHandle(windowId));
+    }
+    return this._nativeWindowHandleCache.get(windowId);
+  }
+  //#endregion
+};
+__decorateClass([
+  memoize
+], WorkbenchHostService.prototype, "onDidChangeActiveWindow", 1);
+WorkbenchHostService = __decorateClass([
+  __decorateParam(0, INativeHostService),
+  __decorateParam(1, ILabelService),
+  __decorateParam(2, IWorkbenchEnvironmentService)
+], WorkbenchHostService);
+registerSingleton(IHostService, WorkbenchHostService, InstantiationType.Delayed);
+registerSingleton(INativeHostService, WorkbenchNativeHostService, InstantiationType.Delayed);
+//# sourceMappingURL=nativeHostService.js.map

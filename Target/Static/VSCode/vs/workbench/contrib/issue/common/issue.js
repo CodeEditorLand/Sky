@@ -1,1 +1,26 @@
-import"../../../../base/common/uri.js";import"../../../../base/parts/sandbox/common/sandboxTypes.js";import{createDecorator as r}from"../../../../platform/instantiation/common/instantiation.js";var o=(e=>(e[e.Bug=0]="Bug",e[e.PerformanceIssue=1]="PerformanceIssue",e[e.FeatureRequest=2]="FeatureRequest",e))(o||{}),n=(e=>(e.VSCode="vscode",e.Extension="extension",e.Marketplace="marketplace",e))(n||{});const c=r("issueFormService"),l=r("workbenchIssueService"),g=r("workbenchProcessService");export{c as IIssueFormService,l as IWorkbenchIssueService,g as IWorkbenchProcessService,n as IssueSource,o as IssueType};
+import { UriComponents } from "../../../../base/common/uri.js";
+import { ISandboxConfiguration } from "../../../../base/parts/sandbox/common/sandboxTypes.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+var IssueType = /* @__PURE__ */ ((IssueType2) => {
+  IssueType2[IssueType2["Bug"] = 0] = "Bug";
+  IssueType2[IssueType2["PerformanceIssue"] = 1] = "PerformanceIssue";
+  IssueType2[IssueType2["FeatureRequest"] = 2] = "FeatureRequest";
+  return IssueType2;
+})(IssueType || {});
+var IssueSource = /* @__PURE__ */ ((IssueSource2) => {
+  IssueSource2["VSCode"] = "vscode";
+  IssueSource2["Extension"] = "extension";
+  IssueSource2["Marketplace"] = "marketplace";
+  return IssueSource2;
+})(IssueSource || {});
+const IIssueFormService = createDecorator("issueFormService");
+const IWorkbenchIssueService = createDecorator("workbenchIssueService");
+const IWorkbenchProcessService = createDecorator("workbenchProcessService");
+export {
+  IIssueFormService,
+  IWorkbenchIssueService,
+  IWorkbenchProcessService,
+  IssueSource,
+  IssueType
+};
+//# sourceMappingURL=issue.js.map

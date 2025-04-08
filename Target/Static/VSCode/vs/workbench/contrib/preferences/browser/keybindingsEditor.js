@@ -1,1 +1,1154 @@
-var G=Object.defineProperty,U=Object.getOwnPropertyDescriptor,E=(e,i,t,n)=>{for(var s,o=n>1?void 0:n?U(i,t):i,r=e.length-1;r>=0;r--)(s=e[r])&&(o=(n?s(i,t,o):s(o))||o);return n&&o&&G(i,t,o),o},c=(e,i)=>(t,n)=>i(t,n,e);import"./media/keybindingsEditor.css";import{localize as s}from"../../../../nls.js";import{Delayer as N}from"../../../../base/common/async.js";import*as r from"../../../../base/browser/dom.js";import{isIOS as q,OS as z}from"../../../../base/common/platform.js";import{Disposable as X,DisposableStore as k,toDisposable as J}from"../../../../base/common/lifecycle.js";import{ToggleActionViewItem as Z}from"../../../../base/browser/ui/toggle/toggle.js";import{HighlightedLabel as f}from"../../../../base/browser/ui/highlightedlabel/highlightedLabel.js";import{KeybindingLabel as Q}from"../../../../base/browser/ui/keybindingLabel/keybindingLabel.js";import{Action as w,Separator as A}from"../../../../base/common/actions.js";import{ActionBar as ee}from"../../../../base/browser/ui/actionbar/actionbar.js";import{EditorPane as ie}from"../../../browser/parts/editor/editorPane.js";import"../../../common/editor.js";import{ITelemetryService as ne}from"../../../../platform/telemetry/common/telemetry.js";import{IClipboardService as te}from"../../../../platform/clipboard/common/clipboardService.js";import{KEYBINDING_ENTRY_TEMPLATE_ID as L}from"../../../services/preferences/browser/keybindingsEditorModel.js";import{IInstantiationService as M}from"../../../../platform/instantiation/common/instantiation.js";import{IKeybindingService as P}from"../../../../platform/keybinding/common/keybinding.js";import{DefineKeybindingWidget as oe,KeybindingsSearchWidget as re}from"./keybindingWidgets.js";import{CONTEXT_KEYBINDING_FOCUS as se,CONTEXT_KEYBINDINGS_EDITOR as de,CONTEXT_KEYBINDINGS_SEARCH_FOCUS as ae,KEYBINDINGS_EDITOR_COMMAND_RECORD_SEARCH_KEYS as ce,KEYBINDINGS_EDITOR_COMMAND_SORTBY_PRECEDENCE as le,KEYBINDINGS_EDITOR_COMMAND_DEFINE as D,KEYBINDINGS_EDITOR_COMMAND_REMOVE as ge,KEYBINDINGS_EDITOR_COMMAND_RESET as be,KEYBINDINGS_EDITOR_COMMAND_COPY as he,KEYBINDINGS_EDITOR_COMMAND_COPY_COMMAND as ye,KEYBINDINGS_EDITOR_COMMAND_CLEAR_SEARCH_RESULTS as me,KEYBINDINGS_EDITOR_COMMAND_DEFINE_WHEN as ue,KEYBINDINGS_EDITOR_COMMAND_SHOW_SIMILAR as pe,KEYBINDINGS_EDITOR_COMMAND_ADD as Ie,KEYBINDINGS_EDITOR_COMMAND_COPY_COMMAND_TITLE as ve,CONTEXT_WHEN_FOCUS as Ee}from"../common/preferences.js";import{IContextMenuService as fe}from"../../../../platform/contextview/browser/contextView.js";import{IKeybindingEditingService as Ke}from"../../../services/keybinding/common/keybindingEditing.js";import"../../../../base/browser/ui/list/list.js";import{IThemeService as Ce,registerThemingParticipant as Le}from"../../../../platform/theme/common/themeService.js";import{ThemeIcon as T}from"../../../../base/common/themables.js";import{IContextKeyService as R,RawContextKey as Te}from"../../../../platform/contextkey/common/contextkey.js";import{KeyCode as F}from"../../../../base/common/keyCodes.js";import{badgeBackground as Se,contrastBorder as ke,badgeForeground as Ae,listActiveSelectionForeground as xe,listInactiveSelectionForeground as we,listHoverForeground as Me,listFocusForeground as De,editorBackground as _e,foreground as He,listActiveSelectionBackground as Oe,listInactiveSelectionBackground as We,listFocusBackground as Be,listHoverBackground as Ne,registerColor as Y,tableOddRowsBackgroundColor as V,asCssVariable as _}from"../../../../platform/theme/common/colorRegistry.js";import{IEditorService as Pe}from"../../../services/editor/common/editorService.js";import{EditorExtensionsRegistry as Re}from"../../../../editor/browser/editorExtensions.js";import{WorkbenchTable as Fe}from"../../../../platform/list/browser/listService.js";import{INotificationService as Ye}from"../../../../platform/notification/common/notification.js";import"../../../../base/common/cancellation.js";import{IStorageService as Ve,StorageScope as H,StorageTarget as O}from"../../../../platform/storage/common/storage.js";import{Emitter as K,Event as $e}from"../../../../base/common/event.js";import{MenuRegistry as je,MenuId as Ge,isIMenuItem as Ue}from"../../../../platform/actions/common/actions.js";import"../../../../base/browser/ui/list/listWidget.js";import{WORKBENCH_BACKGROUND as qe}from"../../../common/theme.js";import"../../../services/preferences/common/preferences.js";import{keybindingsRecordKeysIcon as ze,keybindingsSortIcon as Xe,keybindingsAddIcon as Je,preferencesClearInputIcon as Ze,keybindingsEditIcon as Qe}from"./preferencesIcons.js";import"../../../../base/browser/ui/table/table.js";import"../../../services/preferences/browser/keybindingsEditorInput.js";import"../../../../platform/editor/common/editor.js";import{ToolBar as ei}from"../../../../base/browser/ui/toolbar/toolbar.js";import{defaultKeybindingLabelStyles as ii,defaultToggleStyles as ni,getInputBoxStyle as ti}from"../../../../platform/theme/browser/defaultStyles.js";import{IExtensionsWorkbenchService as oi}from"../../extensions/common/extensions.js";import{StandardKeyboardEvent as ri}from"../../../../base/browser/keyboardEvent.js";import{isString as $}from"../../../../base/common/types.js";import{SuggestEnabledInput as si}from"../../codeEditor/browser/suggestEnabledInput/suggestEnabledInput.js";import{CompletionItemKind as di}from"../../../../editor/common/languages.js";import{settingsTextInputBorder as ai}from"../common/settingsEditorColorRegistry.js";import{IConfigurationService as ci}from"../../../../platform/configuration/common/configuration.js";import{AccessibilityVerbositySettingId as li}from"../../accessibility/browser/accessibilityConfiguration.js";import{registerNavigableContainer as gi}from"../../../browser/actions/widgetNavigationCommands.js";import"../../../../base/browser/ui/actionbar/actionViewItems.js";import{getDefaultHoverDelegate as W}from"../../../../base/browser/ui/hover/hoverDelegateFactory.js";import"../../../services/editor/common/editorGroupsService.js";import{IHoverService as B}from"../../../../platform/hover/browser/hover.js";import{IAccessibilityService as bi}from"../../../../platform/accessibility/common/accessibility.js";const l=r.$;let C=class extends ie{constructor(e,i,t,n,o,r,a,d,c,h,b,g,m,y){super(C.ID,e,i,t,g),this.keybindingsService=n,this.contextMenuService=o,this.keybindingEditingService=r,this.contextKeyService=a,this.notificationService=d,this.clipboardService=c,this.instantiationService=h,this.editorService=b,this.configurationService=m,this.accessibilityService=y,this.delayedFiltering=new N(300),this._register(n.onDidUpdateKeybindings((()=>this.render(!!this.keybindingFocusContextKey.get())))),this.keybindingsEditorContextKey=de.bindTo(this.contextKeyService),this.searchFocusContextKey=ae.bindTo(this.contextKeyService),this.keybindingFocusContextKey=se.bindTo(this.contextKeyService),this.searchHistoryDelayer=new N(500),this.recordKeysAction=new w(ce,s("recordKeysLabel","Record Keys"),T.asClassName(ze)),this.recordKeysAction.checked=!1,this.sortByPrecedenceAction=new w(le,s("sortByPrecedeneLabel","Sort by Precedence (Highest first)"),T.asClassName(Xe)),this.sortByPrecedenceAction.checked=!1,this.overflowWidgetsDomNode=l(".keybindings-overflow-widgets-container.monaco-editor")}static ID="workbench.editor.keybindings";_onDefineWhenExpression=this._register(new K);onDefineWhenExpression=this._onDefineWhenExpression.event;_onRejectWhenExpression=this._register(new K);onRejectWhenExpression=this._onRejectWhenExpression.event;_onAcceptWhenExpression=this._register(new K);onAcceptWhenExpression=this._onAcceptWhenExpression.event;_onLayout=this._register(new K);onLayout=this._onLayout.event;keybindingsEditorModel=null;headerContainer;actionsContainer;searchWidget;searchHistoryDelayer;overlayContainer;defineKeybindingWidget;unAssignedKeybindingItemToRevealAndFocus=null;tableEntries=[];keybindingsTableContainer;keybindingsTable;dimension=null;delayedFiltering;latestEmptyFilters=[];keybindingsEditorContextKey;keybindingFocusContextKey;searchFocusContextKey;sortByPrecedenceAction;recordKeysAction;ariaLabelElement;overflowWidgetsDomNode;create(e){super.create(e),this._register(gi({name:"keybindingsEditor",focusNotifiers:[this],focusNextWidget:()=>{this.searchWidget.hasFocus()&&this.focusKeybindings()},focusPreviousWidget:()=>{this.searchWidget.hasFocus()||this.focusSearch()}}))}createEditor(e){const i=r.append(e,l("div",{class:"keybindings-editor"}));this.createAriaLabelElement(i),this.createOverlayContainer(i),this.createHeader(i),this.createBody(i)}setInput(e,i,t,n){return this.keybindingsEditorContextKey.set(!0),super.setInput(e,i,t,n).then((()=>this.render(!(!i||!i.preserveFocus))))}clearInput(){super.clearInput(),this.keybindingsEditorContextKey.reset(),this.keybindingFocusContextKey.reset()}layout(e){this.dimension=e,this.layoutSearchWidget(e),this.overlayContainer.style.width=e.width+"px",this.overlayContainer.style.height=e.height+"px",this.defineKeybindingWidget.layout(this.dimension),this.layoutKeybindingsTable(),this._onLayout.fire()}focus(){super.focus();const e=this.activeKeybindingEntry;e?this.selectEntry(e):q||this.searchWidget.focus()}get activeKeybindingEntry(){const e=this.keybindingsTable.getFocusedElements()[0];return e&&e.templateId===L?e:null}async defineKeybinding(e,i){this.selectEntry(e),this.showOverlayContainer();try{const t=await this.defineKeybindingWidget.define();t&&await this.updateKeybinding(e,t,e.keybindingItem.when,i)}catch(e){this.onKeybindingEditingError(e)}finally{this.hideOverlayContainer(),this.selectEntry(e)}}defineWhenExpression(e){e.keybindingItem.keybinding&&(this.selectEntry(e),this._onDefineWhenExpression.fire(e))}rejectWhenExpression(e){this._onRejectWhenExpression.fire(e)}acceptWhenExpression(e){this._onAcceptWhenExpression.fire(e)}async updateKeybinding(e,i,t,n){((e.keybindingItem.keybinding?e.keybindingItem.keybinding.getUserSettingsLabel():"")!==i||e.keybindingItem.when!==t)&&(n?await this.keybindingEditingService.addKeybinding(e.keybindingItem.keybindingItem,i,t||void 0):await this.keybindingEditingService.editKeybinding(e.keybindingItem.keybindingItem,i,t||void 0),e.keybindingItem.keybinding||(this.unAssignedKeybindingItemToRevealAndFocus=e))}async removeKeybinding(e){if(this.selectEntry(e),e.keybindingItem.keybinding)try{await this.keybindingEditingService.removeKeybinding(e.keybindingItem.keybindingItem),this.focus()}catch(i){this.onKeybindingEditingError(i),this.selectEntry(e)}}async resetKeybinding(e){this.selectEntry(e);try{await this.keybindingEditingService.resetKeybinding(e.keybindingItem.keybindingItem),e.keybindingItem.keybinding||(this.unAssignedKeybindingItemToRevealAndFocus=e),this.selectEntry(e)}catch(i){this.onKeybindingEditingError(i),this.selectEntry(e)}}async copyKeybinding(e){this.selectEntry(e);const i={key:e.keybindingItem.keybinding&&e.keybindingItem.keybinding.getUserSettingsLabel()||"",command:e.keybindingItem.command};e.keybindingItem.when&&(i.when=e.keybindingItem.when),await this.clipboardService.writeText(JSON.stringify(i,null,"  "))}async copyKeybindingCommand(e){this.selectEntry(e),await this.clipboardService.writeText(e.keybindingItem.command)}async copyKeybindingCommandTitle(e){this.selectEntry(e),await this.clipboardService.writeText(e.keybindingItem.commandLabel)}focusSearch(){this.searchWidget.focus()}search(e){this.focusSearch(),this.searchWidget.setValue(e),this.selectEntry(0)}clearSearchResults(){this.searchWidget.clear()}showSimilarKeybindings(e){const i=`"${e.keybindingItem.keybinding.getAriaLabel()}"`;i!==this.searchWidget.getValue()&&this.searchWidget.setValue(i)}createAriaLabelElement(e){this.ariaLabelElement=r.append(e,r.$("")),this.ariaLabelElement.setAttribute("id","keybindings-editor-aria-label-element"),this.ariaLabelElement.setAttribute("aria-live","assertive")}createOverlayContainer(e){this.overlayContainer=r.append(e,l(".overlay-container")),this.overlayContainer.style.position="absolute",this.overlayContainer.style.zIndex="40",this.defineKeybindingWidget=this._register(this.instantiationService.createInstance(oe,this.overlayContainer)),this._register(this.defineKeybindingWidget.onDidChange((e=>this.defineKeybindingWidget.printExisting(this.keybindingsEditorModel.fetch(`"${e}"`).length)))),this._register(this.defineKeybindingWidget.onShowExistingKeybidings((e=>this.searchWidget.setValue(`"${e}"`)))),this.hideOverlayContainer()}showOverlayContainer(){this.overlayContainer.style.display="block"}hideOverlayContainer(){this.overlayContainer.style.display="none"}createHeader(e){this.headerContainer=r.append(e,l(".keybindings-header"));const i=s("SearchKeybindings.FullTextSearchPlaceholder","Type to search in keybindings"),t=s("SearchKeybindings.KeybindingsSearchPlaceholder","Recording Keys. Press Escape to exit"),n=new w(me,s("clearInput","Clear Keybindings Search Input"),T.asClassName(Ze),!1,(async()=>this.clearSearchResults())),o=r.append(this.headerContainer,l(".search-container"));this.searchWidget=this._register(this.instantiationService.createInstance(re,o,{ariaLabel:i,placeholder:i,focusKey:this.searchFocusContextKey,ariaLabelledBy:"keybindings-editor-aria-label-element",recordEnter:!0,quoteRecordedKeys:!0,history:new Set(this.getMemento(H.PROFILE,O.USER).searchHistory??[]),inputBoxStyles:ti({inputBorder:ai})})),this._register(this.searchWidget.onDidChange((e=>{n.enabled=!!e,this.delayedFiltering.trigger((()=>this.filterKeybindings())),this.updateSearchOptions()}))),this._register(this.searchWidget.onEscape((()=>this.recordKeysAction.checked=!1))),this.actionsContainer=r.append(o,r.$(".keybindings-search-actions-container"));const a=this.createRecordingBadge(this.actionsContainer);this._register(this.sortByPrecedenceAction.onDidChange((e=>{void 0!==e.checked&&this.renderKeybindingsEntries(!1),this.updateSearchOptions()}))),this._register(this.recordKeysAction.onDidChange((e=>{void 0!==e.checked&&(a.classList.toggle("disabled",!e.checked),e.checked?(this.searchWidget.inputBox.setPlaceHolder(t),this.searchWidget.inputBox.setAriaLabel(t),this.searchWidget.startRecordingKeys(),this.searchWidget.focus()):(this.searchWidget.inputBox.setPlaceHolder(i),this.searchWidget.inputBox.setAriaLabel(i),this.searchWidget.stopRecordingKeys(),this.searchWidget.focus()),this.updateSearchOptions())})));const d=[this.recordKeysAction,this.sortByPrecedenceAction,n],c=this._register(new ei(this.actionsContainer,this.contextMenuService,{actionViewItemProvider:(e,i)=>{if(e.id===this.sortByPrecedenceAction.id||e.id===this.recordKeysAction.id)return new Z(null,e,{...i,keybinding:this.keybindingsService.lookupKeybinding(e.id)?.getLabel(),toggleStyles:ni})},getKeyBinding:e=>this.keybindingsService.lookupKeybinding(e.id)}));c.setActions(d),this._register(this.keybindingsService.onDidUpdateKeybindings((()=>c.setActions(d))))}updateSearchOptions(){const e=this.input;e&&(e.searchOptions={searchValue:this.searchWidget.getValue(),recordKeybindings:!!this.recordKeysAction.checked,sortByPrecedence:!!this.sortByPrecedenceAction.checked})}createRecordingBadge(e){const i=r.append(e,r.$(".recording-badge.monaco-count-badge.long.disabled"));return i.textContent=s("recording","Recording Keys"),i.style.backgroundColor=_(Se),i.style.color=_(Ae),i.style.border=`1px solid ${_(ke)}`,i}layoutSearchWidget(e){this.searchWidget.layout(e),this.headerContainer.classList.toggle("small",e.width<400),this.searchWidget.inputBox.inputElement.style.paddingRight=`${r.getTotalWidth(this.actionsContainer)+12}px`}createBody(e){const i=r.append(e,l(".keybindings-body"));this.createTable(i)}createTable(e){this.keybindingsTableContainer=r.append(e,l(".keybindings-table-container")),this.keybindingsTable=this._register(this.instantiationService.createInstance(Fe,"KeybindingsEditor",this.keybindingsTableContainer,new hi,[{label:"",tooltip:"",weight:0,minimumWidth:40,maximumWidth:40,templateId:u.TEMPLATE_ID,project:e=>e},{label:s("command","Command"),tooltip:"",weight:.3,templateId:p.TEMPLATE_ID,project:e=>e},{label:s("keybinding","Keybinding"),tooltip:"",weight:.2,templateId:x.TEMPLATE_ID,project:e=>e},{label:s("when","When"),tooltip:"",weight:.35,templateId:v.TEMPLATE_ID,project:e=>e},{label:s("source","Source"),tooltip:"",weight:.15,templateId:I.TEMPLATE_ID,project:e=>e}],[this.instantiationService.createInstance(u,this),this.instantiationService.createInstance(p),this.instantiationService.createInstance(x),this.instantiationService.createInstance(v,this),this.instantiationService.createInstance(I)],{identityProvider:{getId:e=>e.id},horizontalScrolling:!1,accessibilityProvider:new mi(this.configurationService),keyboardNavigationLabelProvider:{getKeyboardNavigationLabel:e=>e.keybindingItem.commandLabel||e.keybindingItem.command},overrideStyles:{listBackground:_e},multipleSelectionSupport:!1,setRowLineHeight:!1,openOnSingleClick:!1,transformOptimization:!1})),this._register(this.keybindingsTable.onContextMenu((e=>this.onContextMenu(e)))),this._register(this.keybindingsTable.onDidChangeFocus((e=>this.onFocusChange()))),this._register(this.keybindingsTable.onDidFocus((()=>{this.keybindingsTable.getHTMLElement().classList.add("focused"),this.onFocusChange()}))),this._register(this.keybindingsTable.onDidBlur((()=>{this.keybindingsTable.getHTMLElement().classList.remove("focused"),this.keybindingFocusContextKey.reset()}))),this._register(this.keybindingsTable.onDidOpen((e=>{if(e.browserEvent?.defaultPrevented)return;const i=this.activeKeybindingEntry;i&&this.defineKeybinding(i,!1)}))),r.append(this.keybindingsTableContainer,this.overflowWidgetsDomNode)}async render(e){if(this.input){const i=this.input;this.keybindingsEditorModel=await i.resolve(),await this.keybindingsEditorModel.resolve(this.getActionsLabels()),this.renderKeybindingsEntries(!1,e),i.searchOptions?(this.recordKeysAction.checked=i.searchOptions.recordKeybindings,this.sortByPrecedenceAction.checked=i.searchOptions.sortByPrecedence,this.searchWidget.setValue(i.searchOptions.searchValue)):this.updateSearchOptions()}}getActionsLabels(){const e=new Map;for(const i of Re.getEditorActions())e.set(i.id,i.label);for(const i of je.getMenuItems(Ge.CommandPalette))if(Ue(i)){const t="string"==typeof i.command.title?i.command.title:i.command.title.value,n=i.command.category?"string"==typeof i.command.category?i.command.category:i.command.category.value:void 0;e.set(i.command.id,n?`${n}: ${t}`:t)}return e}filterKeybindings(){this.renderKeybindingsEntries(this.searchWidget.hasFocus()),this.searchHistoryDelayer.trigger((()=>{this.searchWidget.inputBox.addToHistory(),this.getMemento(H.PROFILE,O.USER).searchHistory=this.searchWidget.inputBox.getHistory(),this.saveState()}))}clearKeyboardShortcutSearchHistory(){this.searchWidget.inputBox.clearHistory(),this.getMemento(H.PROFILE,O.USER).searchHistory=this.searchWidget.inputBox.getHistory(),this.saveState()}renderKeybindingsEntries(e,i){if(this.keybindingsEditorModel){const t=this.searchWidget.getValue(),n=this.keybindingsEditorModel.fetch(t,this.sortByPrecedenceAction.checked);this.accessibilityService.alert(s("foundResults","{0} results",n.length)),this.ariaLabelElement.setAttribute("aria-label",this.getAriaLabel(n)),0===n.length&&this.latestEmptyFilters.push(t);const o=this.keybindingsTable.getSelection()[0];if(this.tableEntries=n,this.keybindingsTable.splice(0,this.keybindingsTable.length,this.tableEntries),this.layoutKeybindingsTable(),e)this.keybindingsTable.setSelection([]),this.keybindingsTable.setFocus([]);else if(this.unAssignedKeybindingItemToRevealAndFocus){const e=this.getNewIndexOfUnassignedKeybinding(this.unAssignedKeybindingItemToRevealAndFocus);-1!==e&&(this.keybindingsTable.reveal(e,.2),this.selectEntry(e)),this.unAssignedKeybindingItemToRevealAndFocus=null}else-1!==o&&o<this.tableEntries.length?this.selectEntry(o,i):this.editorService.activeEditorPane===this&&!i&&this.focus()}}getAriaLabel(e){return this.sortByPrecedenceAction.checked?s("show sorted keybindings","Showing {0} Keybindings in precedence order",e.length):s("show keybindings","Showing {0} Keybindings in alphabetical order",e.length)}layoutKeybindingsTable(){if(!this.dimension)return;const e=this.dimension.height-(r.getDomNodePagePosition(this.headerContainer).height+12);this.keybindingsTableContainer.style.height=`${e}px`,this.keybindingsTable.layout(e)}getIndexOf(e){const i=this.tableEntries.indexOf(e);if(-1===i)for(let i=0;i<this.tableEntries.length;i++)if(this.tableEntries[i].id===e.id)return i;return i}getNewIndexOfUnassignedKeybinding(e){for(let i=0;i<this.tableEntries.length;i++){const t=this.tableEntries[i];if(t.templateId===L&&t.keybindingItem.command===e.keybindingItem.command)return i}return-1}selectEntry(e,i=!0){const t="number"==typeof e?e:this.getIndexOf(e);-1!==t&&t<this.keybindingsTable.length&&(i&&(this.keybindingsTable.domFocus(),this.keybindingsTable.setFocus([t])),this.keybindingsTable.setSelection([t]))}focusKeybindings(){this.keybindingsTable.domFocus();const e=this.keybindingsTable.getFocus();this.keybindingsTable.setFocus([e.length?e[0]:0])}selectKeybinding(e){this.selectEntry(e)}recordSearchKeys(){this.recordKeysAction.checked=!0}toggleSortByPrecedence(){this.sortByPrecedenceAction.checked=!this.sortByPrecedenceAction.checked}onContextMenu(e){if(e.element&&e.element.templateId===L){const i=e.element;this.selectEntry(i),this.contextMenuService.showContextMenu({getAnchor:()=>e.anchor,getActions:()=>[this.createCopyAction(i),this.createCopyCommandAction(i),this.createCopyCommandTitleAction(i),new A,...i.keybindingItem.keybinding?[this.createDefineKeybindingAction(i),this.createAddKeybindingAction(i)]:[this.createDefineKeybindingAction(i)],new A,this.createRemoveAction(i),this.createResetAction(i),new A,this.createDefineWhenExpressionAction(i),new A,this.createShowConflictsAction(i)]})}}onFocusChange(){this.keybindingFocusContextKey.reset();const e=this.keybindingsTable.getFocusedElements()[0];e&&e.templateId===L&&this.keybindingFocusContextKey.set(!0)}createDefineKeybindingAction(e){return{label:e.keybindingItem.keybinding?s("changeLabel","Change Keybinding..."):s("addLabel","Add Keybinding..."),enabled:!0,id:D,run:()=>this.defineKeybinding(e,!1)}}createAddKeybindingAction(e){return{label:s("addLabel","Add Keybinding..."),enabled:!0,id:Ie,run:()=>this.defineKeybinding(e,!0)}}createDefineWhenExpressionAction(e){return{label:s("editWhen","Change When Expression"),enabled:!!e.keybindingItem.keybinding,id:ue,run:()=>this.defineWhenExpression(e)}}createRemoveAction(e){return{label:s("removeLabel","Remove Keybinding"),enabled:!!e.keybindingItem.keybinding,id:ge,run:()=>this.removeKeybinding(e)}}createResetAction(e){return{label:s("resetLabel","Reset Keybinding"),enabled:!e.keybindingItem.keybindingItem.isDefault,id:be,run:()=>this.resetKeybinding(e)}}createShowConflictsAction(e){return{label:s("showSameKeybindings","Show Same Keybindings"),enabled:!!e.keybindingItem.keybinding,id:pe,run:()=>this.showSimilarKeybindings(e)}}createCopyAction(e){return{label:s("copyLabel","Copy"),enabled:!0,id:he,run:()=>this.copyKeybinding(e)}}createCopyCommandAction(e){return{label:s("copyCommandLabel","Copy Command ID"),enabled:!0,id:ye,run:()=>this.copyKeybindingCommand(e)}}createCopyCommandTitleAction(e){return{label:s("copyCommandTitleLabel","Copy Command Title"),enabled:!!e.keybindingItem.commandLabel,id:ve,run:()=>this.copyKeybindingCommandTitle(e)}}onKeybindingEditingError(e){this.notificationService.error("string"==typeof e?e:s("error","Error '{0}' while editing the keybinding. Please open 'keybindings.json' file and check for errors.",`${e}`))}};C=E([c(1,ne),c(2,Ce),c(3,P),c(4,fe),c(5,Ke),c(6,R),c(7,Ye),c(8,te),c(9,M),c(10,Pe),c(11,Ve),c(12,ci),c(13,bi)],C);class hi{headerRowHeight=30;getHeight(e){if(e.templateId===L){const i=e.keybindingItem.commandLabel&&e.commandIdMatches,t=!!e.commandDefaultLabelMatches,n=!!e.extensionIdMatches;if(i&&t)return 60;if(n||i||t)return 40}return 24}}let u=class{constructor(e,i){this.keybindingsEditor=e,this.keybindingsService=i}static TEMPLATE_ID="actions";templateId=u.TEMPLATE_ID;renderTemplate(e){const i=r.append(e,l(".actions"));return{actionBar:new ee(i)}}renderElement(e,i,t,n){t.actionBar.clear();const s=[];e.keybindingItem.keybinding?s.push(this.createEditAction(e)):s.push(this.createAddAction(e)),t.actionBar.push(s,{icon:!0})}createEditAction(e){const i=this.keybindingsService.lookupKeybinding(D);return{class:T.asClassName(Qe),enabled:!0,id:"editKeybinding",tooltip:i?s("editKeybindingLabelWithKey","Change Keybinding {0}",`(${i.getLabel()})`):s("editKeybindingLabel","Change Keybinding"),run:()=>this.keybindingsEditor.defineKeybinding(e,!1)}}createAddAction(e){const i=this.keybindingsService.lookupKeybinding(D);return{class:T.asClassName(Je),enabled:!0,id:"addKeybinding",tooltip:i?s("addKeybindingLabelWithKey","Add Keybinding {0}",`(${i.getLabel()})`):s("addKeybindingLabel","Add Keybinding"),run:()=>this.keybindingsEditor.defineKeybinding(e,!1)}}disposeTemplate(e){e.actionBar.dispose()}};u=E([c(1,P)],u);let p=class{constructor(e){this._hoverService=e}static TEMPLATE_ID="commands";templateId=p.TEMPLATE_ID;renderTemplate(e){const i=r.append(e,l(".command")),t=this._hoverService.setupManagedHover(W("mouse"),i,""),n=r.append(i,l(".command-label")),s=new f(n),o=r.append(i,l(".command-default-label")),a=new f(o),d=r.append(i,l(".command-id.code"));return{commandColumn:i,commandColumnHover:t,commandLabelContainer:n,commandLabel:s,commandDefaultLabelContainer:o,commandDefaultLabel:a,commandIdLabelContainer:d,commandIdLabel:new f(d)}}renderElement(e,i,t,n){const o=e.keybindingItem,r=!(!o.commandLabel||!e.commandIdMatches),a=!!e.commandDefaultLabelMatches;t.commandColumn.classList.toggle("vertical-align-column",r||a);const d=o.commandLabel?s("title","{0} ({1})",o.commandLabel,o.command):o.command;t.commandColumn.setAttribute("aria-label",d),t.commandColumnHover.update(d),o.commandLabel?(t.commandLabelContainer.classList.remove("hide"),t.commandLabel.set(o.commandLabel,e.commandLabelMatches)):(t.commandLabelContainer.classList.add("hide"),t.commandLabel.set(void 0)),e.commandDefaultLabelMatches?(t.commandDefaultLabelContainer.classList.remove("hide"),t.commandDefaultLabel.set(o.commandDefaultLabel,e.commandDefaultLabelMatches)):(t.commandDefaultLabelContainer.classList.add("hide"),t.commandDefaultLabel.set(void 0)),e.commandIdMatches||!o.commandLabel?(t.commandIdLabelContainer.classList.remove("hide"),t.commandIdLabel.set(o.command,e.commandIdMatches)):(t.commandIdLabelContainer.classList.add("hide"),t.commandIdLabel.set(void 0))}disposeTemplate(e){e.commandColumnHover.dispose(),e.commandDefaultLabel.dispose(),e.commandIdLabel.dispose(),e.commandLabel.dispose()}};p=E([c(0,B)],p);class x{static TEMPLATE_ID="keybindings";templateId=x.TEMPLATE_ID;constructor(){}renderTemplate(e){const i=r.append(e,l(".keybinding"));return{keybindingLabel:new Q(r.append(i,l("div.keybinding-label")),z,ii)}}renderElement(e,i,t,n){e.keybindingItem.keybinding?t.keybindingLabel.set(e.keybindingItem.keybinding,e.keybindingMatches):t.keybindingLabel.set(void 0,void 0)}disposeTemplate(e){e.keybindingLabel.dispose()}}function yi(e,i){const t=new k;return t.add(r.addDisposableListener(e,r.EventType.CLICK,r.finalHandler(i))),t.add(r.addDisposableListener(e,r.EventType.KEY_UP,(e=>{const t=new ri(e);(t.equals(F.Space)||t.equals(F.Enter))&&(e.preventDefault(),e.stopPropagation(),i())}))),t}let I=class{constructor(e,i){this.extensionsWorkbenchService=e,this.hoverService=i}static TEMPLATE_ID="source";templateId=I.TEMPLATE_ID;renderTemplate(e){const i=r.append(e,l(".source")),t=this.hoverService.setupManagedHover(W("mouse"),i,""),n=new f(r.append(i,l(".source-label"))),s=r.append(i,l(".extension-container"));return{sourceColumn:i,sourceColumnHover:t,sourceLabel:n,extensionLabel:r.append(s,l("a.extension-label",{tabindex:0})),extensionContainer:s,extensionId:new f(r.append(s,l(".extension-id-container.code"))),disposables:new k}}renderElement(e,i,t,n){if(t.disposables.clear(),$(e.keybindingItem.source))t.extensionContainer.classList.add("hide"),t.sourceLabel.element.classList.remove("hide"),t.sourceColumnHover.update(""),t.sourceLabel.set(e.keybindingItem.source||"-",e.sourceMatches);else{t.extensionContainer.classList.remove("hide"),t.sourceLabel.element.classList.add("hide");const i=e.keybindingItem.source,n=i.displayName??i.identifier.value;t.sourceColumnHover.update(s("extension label","Extension ({0})",n)),t.extensionLabel.textContent=n,t.disposables.add(yi(t.extensionLabel,(()=>{this.extensionsWorkbenchService.open(i.identifier.value)}))),e.extensionIdMatches?(t.extensionId.element.classList.remove("hide"),t.extensionId.set(i.identifier.value,e.extensionIdMatches)):(t.extensionId.element.classList.add("hide"),t.extensionId.set(void 0))}}disposeTemplate(e){e.sourceColumnHover.dispose(),e.disposables.dispose(),e.sourceLabel.dispose(),e.extensionId.dispose()}};I=E([c(0,oi),c(1,B)],I);let S=class extends X{input;_onDidAccept=this._register(new K);onDidAccept=this._onDidAccept.event;_onDidReject=this._register(new K);onDidReject=this._onDidReject.event;constructor(e,i,t,n){super();const s=Ee.bindTo(n);this.input=this._register(t.createInstance(si,"keyboardshortcutseditor#wheninput",e,{provideResults:()=>{const e=[];for(const i of Te.all())e.push({label:i.key,documentation:i.description,detail:i.type,kind:di.Constant});return e},triggerCharacters:["!"," "],wordDefinition:/[a-zA-Z.]+/,alwaysShowSuggestions:!0},"","keyboardshortcutseditor#wheninput",{focusContextKey:s,overflowWidgetsDomNode:i.overflowWidgetsDomNode})),this._register(r.addDisposableListener(this.input.element,r.EventType.DBLCLICK,(e=>r.EventHelper.stop(e)))),this._register(J((()=>s.reset()))),this._register(i.onAcceptWhenExpression((()=>this._onDidAccept.fire(this.input.getValue())))),this._register($e.any(i.onRejectWhenExpression,this.input.onDidBlur)((()=>this._onDidReject.fire())))}layout(e){this.input.layout(e)}show(e){this.input.setValue(e),this.input.focus(!0)}};S=E([c(2,M),c(3,R)],S);let v=class{constructor(e,i,t){this.keybindingsEditor=e,this.hoverService=i,this.instantiationService=t}static TEMPLATE_ID="when";templateId=v.TEMPLATE_ID;renderTemplate(e){const i=r.append(e,l(".when")),t=r.append(i,l("div.when-label"));return{element:i,whenLabelContainer:t,whenLabel:new f(t),whenInputContainer:r.append(i,l("div.when-input-container")),disposables:new k}}renderElement(e,i,t,n){t.disposables.clear();const s=t.disposables.add(new k);t.disposables.add(this.keybindingsEditor.onDefineWhenExpression((i=>{if(e===i){t.element.classList.add("input-mode");const i=s.add(this.instantiationService.createInstance(S,t.whenInputContainer,this.keybindingsEditor));i.layout(new r.Dimension(t.element.parentElement.clientWidth,18)),i.show(e.keybindingItem.when||"");const n=()=>{s.clear(),t.element.classList.remove("input-mode"),t.element.parentElement.style.paddingLeft="10px",r.clearNode(t.whenInputContainer)};s.add(i.onDidAccept((i=>{n(),this.keybindingsEditor.updateKeybinding(e,e.keybindingItem.keybinding&&e.keybindingItem.keybinding.getUserSettingsLabel()||"",i),this.keybindingsEditor.selectKeybinding(e)}))),s.add(i.onDidReject((()=>{n(),this.keybindingsEditor.selectKeybinding(e)}))),t.element.parentElement.style.paddingLeft="0px"}}))),t.whenLabelContainer.classList.toggle("code",!!e.keybindingItem.when),t.whenLabelContainer.classList.toggle("empty",!e.keybindingItem.when),e.keybindingItem.when?(t.whenLabel.set(e.keybindingItem.when,e.whenMatches,e.keybindingItem.when),t.disposables.add(this.hoverService.setupManagedHover(W("mouse"),t.element,e.keybindingItem.when))):t.whenLabel.set("-")}disposeTemplate(e){e.disposables.dispose(),e.whenLabel.dispose()}};v=E([c(1,B),c(2,M)],v);class mi{constructor(e){this.configurationService=e}getWidgetAriaLabel(){return s("keybindingsLabel","Keybindings")}getAriaLabel({keybindingItem:e}){const i=[e.commandLabel?e.commandLabel:e.command,e.keybinding?.getAriaLabel()||s("noKeybinding","No keybinding assigned"),e.when?e.when:s("noWhen","No when context"),$(e.source)?e.source:e.source.description??e.source.identifier.value];if(this.configurationService.getValue(li.KeybindingsEditor)){const e=s("keyboard shortcuts aria label","use space or enter to change the keybinding.");i.push(e)}return i.join(", ")}}Y("keybindingTable.headerBackground",V,"Background color for the keyboard shortcuts table header."),Y("keybindingTable.rowsBackground",V,"Background color for the keyboard shortcuts table alternating rows."),Le(((e,i)=>{const t=e.getColor(He);if(t){const n=t.transparent(.8).makeOpaque(qe(e));i.addRule(`.keybindings-editor > .keybindings-body > .keybindings-table-container .monaco-table .monaco-table-tr .monaco-table-td .code { color: ${n}; }`)}const n=e.getColor(xe),s=e.getColor(Oe);if(n&&s){const e=n.transparent(.8).makeOpaque(s);i.addRule(`.keybindings-editor > .keybindings-body > .keybindings-table-container .monaco-table.focused .monaco-list-row.selected .monaco-table-tr .monaco-table-td .code { color: ${e}; }`)}const o=e.getColor(we),r=e.getColor(We);if(o&&r){const e=o.transparent(.8).makeOpaque(r);i.addRule(`.keybindings-editor > .keybindings-body > .keybindings-table-container .monaco-table .monaco-list-row.selected .monaco-table-tr .monaco-table-td .code { color: ${e}; }`)}const a=e.getColor(De),d=e.getColor(Be);if(a&&d){const e=a.transparent(.8).makeOpaque(d);i.addRule(`.keybindings-editor > .keybindings-body > .keybindings-table-container .monaco-table.focused .monaco-list-row.focused .monaco-table-tr .monaco-table-td .code { color: ${e}; }`)}const c=e.getColor(Me),l=e.getColor(Ne);if(c&&l){const e=c.transparent(.8).makeOpaque(l);i.addRule(`.keybindings-editor > .keybindings-body > .keybindings-table-container .monaco-table.focused .monaco-list-row:hover:not(.focused):not(.selected) .monaco-table-tr .monaco-table-td .code { color: ${e}; }`)}}));export{C as KeybindingsEditor};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import "./media/keybindingsEditor.css";
+import { localize } from "../../../../nls.js";
+import { Delayer } from "../../../../base/common/async.js";
+import * as DOM from "../../../../base/browser/dom.js";
+import { isIOS, OS } from "../../../../base/common/platform.js";
+import { Disposable, DisposableStore, IDisposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { ToggleActionViewItem } from "../../../../base/browser/ui/toggle/toggle.js";
+import { HighlightedLabel } from "../../../../base/browser/ui/highlightedlabel/highlightedLabel.js";
+import { KeybindingLabel } from "../../../../base/browser/ui/keybindingLabel/keybindingLabel.js";
+import { IAction, Action, Separator } from "../../../../base/common/actions.js";
+import { ActionBar } from "../../../../base/browser/ui/actionbar/actionbar.js";
+import { EditorPane } from "../../../browser/parts/editor/editorPane.js";
+import { IEditorOpenContext } from "../../../common/editor.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { IClipboardService } from "../../../../platform/clipboard/common/clipboardService.js";
+import { KeybindingsEditorModel, KEYBINDING_ENTRY_TEMPLATE_ID } from "../../../services/preferences/browser/keybindingsEditorModel.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IKeybindingService, IUserFriendlyKeybinding } from "../../../../platform/keybinding/common/keybinding.js";
+import { DefineKeybindingWidget, KeybindingsSearchWidget } from "./keybindingWidgets.js";
+import { CONTEXT_KEYBINDING_FOCUS, CONTEXT_KEYBINDINGS_EDITOR, CONTEXT_KEYBINDINGS_SEARCH_FOCUS, KEYBINDINGS_EDITOR_COMMAND_RECORD_SEARCH_KEYS, KEYBINDINGS_EDITOR_COMMAND_SORTBY_PRECEDENCE, KEYBINDINGS_EDITOR_COMMAND_DEFINE, KEYBINDINGS_EDITOR_COMMAND_REMOVE, KEYBINDINGS_EDITOR_COMMAND_RESET, KEYBINDINGS_EDITOR_COMMAND_COPY, KEYBINDINGS_EDITOR_COMMAND_COPY_COMMAND, KEYBINDINGS_EDITOR_COMMAND_CLEAR_SEARCH_RESULTS, KEYBINDINGS_EDITOR_COMMAND_DEFINE_WHEN, KEYBINDINGS_EDITOR_COMMAND_SHOW_SIMILAR, KEYBINDINGS_EDITOR_COMMAND_ADD, KEYBINDINGS_EDITOR_COMMAND_COPY_COMMAND_TITLE, CONTEXT_WHEN_FOCUS } from "../common/preferences.js";
+import { IContextMenuService } from "../../../../platform/contextview/browser/contextView.js";
+import { IKeybindingEditingService } from "../../../services/keybinding/common/keybindingEditing.js";
+import { IListContextMenuEvent } from "../../../../base/browser/ui/list/list.js";
+import { IThemeService, registerThemingParticipant, IColorTheme, ICssStyleCollector } from "../../../../platform/theme/common/themeService.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { IContextKeyService, IContextKey, RawContextKey } from "../../../../platform/contextkey/common/contextkey.js";
+import { KeyCode } from "../../../../base/common/keyCodes.js";
+import { badgeBackground, contrastBorder, badgeForeground, listActiveSelectionForeground, listInactiveSelectionForeground, listHoverForeground, listFocusForeground, editorBackground, foreground, listActiveSelectionBackground, listInactiveSelectionBackground, listFocusBackground, listHoverBackground, registerColor, tableOddRowsBackgroundColor, asCssVariable } from "../../../../platform/theme/common/colorRegistry.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { EditorExtensionsRegistry } from "../../../../editor/browser/editorExtensions.js";
+import { WorkbenchTable } from "../../../../platform/list/browser/listService.js";
+import { INotificationService } from "../../../../platform/notification/common/notification.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { MenuRegistry, MenuId, isIMenuItem } from "../../../../platform/actions/common/actions.js";
+import { IListAccessibilityProvider } from "../../../../base/browser/ui/list/listWidget.js";
+import { WORKBENCH_BACKGROUND } from "../../../common/theme.js";
+import { IKeybindingItemEntry, IKeybindingsEditorPane } from "../../../services/preferences/common/preferences.js";
+import { keybindingsRecordKeysIcon, keybindingsSortIcon, keybindingsAddIcon, preferencesClearInputIcon, keybindingsEditIcon } from "./preferencesIcons.js";
+import { ITableRenderer, ITableVirtualDelegate } from "../../../../base/browser/ui/table/table.js";
+import { KeybindingsEditorInput } from "../../../services/preferences/browser/keybindingsEditorInput.js";
+import { IEditorOptions } from "../../../../platform/editor/common/editor.js";
+import { ToolBar } from "../../../../base/browser/ui/toolbar/toolbar.js";
+import { defaultKeybindingLabelStyles, defaultToggleStyles, getInputBoxStyle } from "../../../../platform/theme/browser/defaultStyles.js";
+import { IExtensionsWorkbenchService } from "../../extensions/common/extensions.js";
+import { StandardKeyboardEvent } from "../../../../base/browser/keyboardEvent.js";
+import { isString } from "../../../../base/common/types.js";
+import { SuggestEnabledInput } from "../../codeEditor/browser/suggestEnabledInput/suggestEnabledInput.js";
+import { CompletionItemKind } from "../../../../editor/common/languages.js";
+import { settingsTextInputBorder } from "../common/settingsEditorColorRegistry.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { AccessibilityVerbositySettingId } from "../../accessibility/browser/accessibilityConfiguration.js";
+import { registerNavigableContainer } from "../../../browser/actions/widgetNavigationCommands.js";
+import { IActionViewItemOptions } from "../../../../base/browser/ui/actionbar/actionViewItems.js";
+import { getDefaultHoverDelegate } from "../../../../base/browser/ui/hover/hoverDelegateFactory.js";
+import { IEditorGroup } from "../../../services/editor/common/editorGroupsService.js";
+import { IHoverService } from "../../../../platform/hover/browser/hover.js";
+import { IAccessibilityService } from "../../../../platform/accessibility/common/accessibility.js";
+const $ = DOM.$;
+let KeybindingsEditor = class extends EditorPane {
+  constructor(group, telemetryService, themeService, keybindingsService, contextMenuService, keybindingEditingService, contextKeyService, notificationService, clipboardService, instantiationService, editorService, storageService, configurationService, accessibilityService) {
+    super(KeybindingsEditor.ID, group, telemetryService, themeService, storageService);
+    this.keybindingsService = keybindingsService;
+    this.contextMenuService = contextMenuService;
+    this.keybindingEditingService = keybindingEditingService;
+    this.contextKeyService = contextKeyService;
+    this.notificationService = notificationService;
+    this.clipboardService = clipboardService;
+    this.instantiationService = instantiationService;
+    this.editorService = editorService;
+    this.configurationService = configurationService;
+    this.accessibilityService = accessibilityService;
+    this.delayedFiltering = new Delayer(300);
+    this._register(keybindingsService.onDidUpdateKeybindings(() => this.render(!!this.keybindingFocusContextKey.get())));
+    this.keybindingsEditorContextKey = CONTEXT_KEYBINDINGS_EDITOR.bindTo(this.contextKeyService);
+    this.searchFocusContextKey = CONTEXT_KEYBINDINGS_SEARCH_FOCUS.bindTo(this.contextKeyService);
+    this.keybindingFocusContextKey = CONTEXT_KEYBINDING_FOCUS.bindTo(this.contextKeyService);
+    this.searchHistoryDelayer = new Delayer(500);
+    this.recordKeysAction = new Action(KEYBINDINGS_EDITOR_COMMAND_RECORD_SEARCH_KEYS, localize("recordKeysLabel", "Record Keys"), ThemeIcon.asClassName(keybindingsRecordKeysIcon));
+    this.recordKeysAction.checked = false;
+    this.sortByPrecedenceAction = new Action(KEYBINDINGS_EDITOR_COMMAND_SORTBY_PRECEDENCE, localize("sortByPrecedeneLabel", "Sort by Precedence (Highest first)"), ThemeIcon.asClassName(keybindingsSortIcon));
+    this.sortByPrecedenceAction.checked = false;
+    this.overflowWidgetsDomNode = $(".keybindings-overflow-widgets-container.monaco-editor");
+  }
+  static {
+    __name(this, "KeybindingsEditor");
+  }
+  static ID = "workbench.editor.keybindings";
+  _onDefineWhenExpression = this._register(new Emitter());
+  onDefineWhenExpression = this._onDefineWhenExpression.event;
+  _onRejectWhenExpression = this._register(new Emitter());
+  onRejectWhenExpression = this._onRejectWhenExpression.event;
+  _onAcceptWhenExpression = this._register(new Emitter());
+  onAcceptWhenExpression = this._onAcceptWhenExpression.event;
+  _onLayout = this._register(new Emitter());
+  onLayout = this._onLayout.event;
+  keybindingsEditorModel = null;
+  headerContainer;
+  actionsContainer;
+  searchWidget;
+  searchHistoryDelayer;
+  overlayContainer;
+  defineKeybindingWidget;
+  unAssignedKeybindingItemToRevealAndFocus = null;
+  tableEntries = [];
+  keybindingsTableContainer;
+  keybindingsTable;
+  dimension = null;
+  delayedFiltering;
+  latestEmptyFilters = [];
+  keybindingsEditorContextKey;
+  keybindingFocusContextKey;
+  searchFocusContextKey;
+  sortByPrecedenceAction;
+  recordKeysAction;
+  ariaLabelElement;
+  overflowWidgetsDomNode;
+  create(parent) {
+    super.create(parent);
+    this._register(registerNavigableContainer({
+      name: "keybindingsEditor",
+      focusNotifiers: [this],
+      focusNextWidget: /* @__PURE__ */ __name(() => {
+        if (this.searchWidget.hasFocus()) {
+          this.focusKeybindings();
+        }
+      }, "focusNextWidget"),
+      focusPreviousWidget: /* @__PURE__ */ __name(() => {
+        if (!this.searchWidget.hasFocus()) {
+          this.focusSearch();
+        }
+      }, "focusPreviousWidget")
+    }));
+  }
+  createEditor(parent) {
+    const keybindingsEditorElement = DOM.append(parent, $("div", { class: "keybindings-editor" }));
+    this.createAriaLabelElement(keybindingsEditorElement);
+    this.createOverlayContainer(keybindingsEditorElement);
+    this.createHeader(keybindingsEditorElement);
+    this.createBody(keybindingsEditorElement);
+  }
+  setInput(input, options, context, token) {
+    this.keybindingsEditorContextKey.set(true);
+    return super.setInput(input, options, context, token).then(() => this.render(!!(options && options.preserveFocus)));
+  }
+  clearInput() {
+    super.clearInput();
+    this.keybindingsEditorContextKey.reset();
+    this.keybindingFocusContextKey.reset();
+  }
+  layout(dimension) {
+    this.dimension = dimension;
+    this.layoutSearchWidget(dimension);
+    this.overlayContainer.style.width = dimension.width + "px";
+    this.overlayContainer.style.height = dimension.height + "px";
+    this.defineKeybindingWidget.layout(this.dimension);
+    this.layoutKeybindingsTable();
+    this._onLayout.fire();
+  }
+  focus() {
+    super.focus();
+    const activeKeybindingEntry = this.activeKeybindingEntry;
+    if (activeKeybindingEntry) {
+      this.selectEntry(activeKeybindingEntry);
+    } else if (!isIOS) {
+      this.searchWidget.focus();
+    }
+  }
+  get activeKeybindingEntry() {
+    const focusedElement = this.keybindingsTable.getFocusedElements()[0];
+    return focusedElement && focusedElement.templateId === KEYBINDING_ENTRY_TEMPLATE_ID ? focusedElement : null;
+  }
+  async defineKeybinding(keybindingEntry, add) {
+    this.selectEntry(keybindingEntry);
+    this.showOverlayContainer();
+    try {
+      const key = await this.defineKeybindingWidget.define();
+      if (key) {
+        await this.updateKeybinding(keybindingEntry, key, keybindingEntry.keybindingItem.when, add);
+      }
+    } catch (error) {
+      this.onKeybindingEditingError(error);
+    } finally {
+      this.hideOverlayContainer();
+      this.selectEntry(keybindingEntry);
+    }
+  }
+  defineWhenExpression(keybindingEntry) {
+    if (keybindingEntry.keybindingItem.keybinding) {
+      this.selectEntry(keybindingEntry);
+      this._onDefineWhenExpression.fire(keybindingEntry);
+    }
+  }
+  rejectWhenExpression(keybindingEntry) {
+    this._onRejectWhenExpression.fire(keybindingEntry);
+  }
+  acceptWhenExpression(keybindingEntry) {
+    this._onAcceptWhenExpression.fire(keybindingEntry);
+  }
+  async updateKeybinding(keybindingEntry, key, when, add) {
+    const currentKey = keybindingEntry.keybindingItem.keybinding ? keybindingEntry.keybindingItem.keybinding.getUserSettingsLabel() : "";
+    if (currentKey !== key || keybindingEntry.keybindingItem.when !== when) {
+      if (add) {
+        await this.keybindingEditingService.addKeybinding(keybindingEntry.keybindingItem.keybindingItem, key, when || void 0);
+      } else {
+        await this.keybindingEditingService.editKeybinding(keybindingEntry.keybindingItem.keybindingItem, key, when || void 0);
+      }
+      if (!keybindingEntry.keybindingItem.keybinding) {
+        this.unAssignedKeybindingItemToRevealAndFocus = keybindingEntry;
+      }
+    }
+  }
+  async removeKeybinding(keybindingEntry) {
+    this.selectEntry(keybindingEntry);
+    if (keybindingEntry.keybindingItem.keybinding) {
+      try {
+        await this.keybindingEditingService.removeKeybinding(keybindingEntry.keybindingItem.keybindingItem);
+        this.focus();
+      } catch (error) {
+        this.onKeybindingEditingError(error);
+        this.selectEntry(keybindingEntry);
+      }
+    }
+  }
+  async resetKeybinding(keybindingEntry) {
+    this.selectEntry(keybindingEntry);
+    try {
+      await this.keybindingEditingService.resetKeybinding(keybindingEntry.keybindingItem.keybindingItem);
+      if (!keybindingEntry.keybindingItem.keybinding) {
+        this.unAssignedKeybindingItemToRevealAndFocus = keybindingEntry;
+      }
+      this.selectEntry(keybindingEntry);
+    } catch (error) {
+      this.onKeybindingEditingError(error);
+      this.selectEntry(keybindingEntry);
+    }
+  }
+  async copyKeybinding(keybinding) {
+    this.selectEntry(keybinding);
+    const userFriendlyKeybinding = {
+      key: keybinding.keybindingItem.keybinding ? keybinding.keybindingItem.keybinding.getUserSettingsLabel() || "" : "",
+      command: keybinding.keybindingItem.command
+    };
+    if (keybinding.keybindingItem.when) {
+      userFriendlyKeybinding.when = keybinding.keybindingItem.when;
+    }
+    await this.clipboardService.writeText(JSON.stringify(userFriendlyKeybinding, null, "  "));
+  }
+  async copyKeybindingCommand(keybinding) {
+    this.selectEntry(keybinding);
+    await this.clipboardService.writeText(keybinding.keybindingItem.command);
+  }
+  async copyKeybindingCommandTitle(keybinding) {
+    this.selectEntry(keybinding);
+    await this.clipboardService.writeText(keybinding.keybindingItem.commandLabel);
+  }
+  focusSearch() {
+    this.searchWidget.focus();
+  }
+  search(filter) {
+    this.focusSearch();
+    this.searchWidget.setValue(filter);
+    this.selectEntry(0);
+  }
+  clearSearchResults() {
+    this.searchWidget.clear();
+  }
+  showSimilarKeybindings(keybindingEntry) {
+    const value = `"${keybindingEntry.keybindingItem.keybinding.getAriaLabel()}"`;
+    if (value !== this.searchWidget.getValue()) {
+      this.searchWidget.setValue(value);
+    }
+  }
+  createAriaLabelElement(parent) {
+    this.ariaLabelElement = DOM.append(parent, DOM.$(""));
+    this.ariaLabelElement.setAttribute("id", "keybindings-editor-aria-label-element");
+    this.ariaLabelElement.setAttribute("aria-live", "assertive");
+  }
+  createOverlayContainer(parent) {
+    this.overlayContainer = DOM.append(parent, $(".overlay-container"));
+    this.overlayContainer.style.position = "absolute";
+    this.overlayContainer.style.zIndex = "40";
+    this.defineKeybindingWidget = this._register(this.instantiationService.createInstance(DefineKeybindingWidget, this.overlayContainer));
+    this._register(this.defineKeybindingWidget.onDidChange((keybindingStr) => this.defineKeybindingWidget.printExisting(this.keybindingsEditorModel.fetch(`"${keybindingStr}"`).length)));
+    this._register(this.defineKeybindingWidget.onShowExistingKeybidings((keybindingStr) => this.searchWidget.setValue(`"${keybindingStr}"`)));
+    this.hideOverlayContainer();
+  }
+  showOverlayContainer() {
+    this.overlayContainer.style.display = "block";
+  }
+  hideOverlayContainer() {
+    this.overlayContainer.style.display = "none";
+  }
+  createHeader(parent) {
+    this.headerContainer = DOM.append(parent, $(".keybindings-header"));
+    const fullTextSearchPlaceholder = localize("SearchKeybindings.FullTextSearchPlaceholder", "Type to search in keybindings");
+    const keybindingsSearchPlaceholder = localize("SearchKeybindings.KeybindingsSearchPlaceholder", "Recording Keys. Press Escape to exit");
+    const clearInputAction = new Action(KEYBINDINGS_EDITOR_COMMAND_CLEAR_SEARCH_RESULTS, localize("clearInput", "Clear Keybindings Search Input"), ThemeIcon.asClassName(preferencesClearInputIcon), false, async () => this.clearSearchResults());
+    const searchContainer = DOM.append(this.headerContainer, $(".search-container"));
+    this.searchWidget = this._register(this.instantiationService.createInstance(KeybindingsSearchWidget, searchContainer, {
+      ariaLabel: fullTextSearchPlaceholder,
+      placeholder: fullTextSearchPlaceholder,
+      focusKey: this.searchFocusContextKey,
+      ariaLabelledBy: "keybindings-editor-aria-label-element",
+      recordEnter: true,
+      quoteRecordedKeys: true,
+      history: new Set(this.getMemento(StorageScope.PROFILE, StorageTarget.USER)["searchHistory"] ?? []),
+      inputBoxStyles: getInputBoxStyle({
+        inputBorder: settingsTextInputBorder
+      })
+    }));
+    this._register(this.searchWidget.onDidChange((searchValue) => {
+      clearInputAction.enabled = !!searchValue;
+      this.delayedFiltering.trigger(() => this.filterKeybindings());
+      this.updateSearchOptions();
+    }));
+    this._register(this.searchWidget.onEscape(() => this.recordKeysAction.checked = false));
+    this.actionsContainer = DOM.append(searchContainer, DOM.$(".keybindings-search-actions-container"));
+    const recordingBadge = this.createRecordingBadge(this.actionsContainer);
+    this._register(this.sortByPrecedenceAction.onDidChange((e) => {
+      if (e.checked !== void 0) {
+        this.renderKeybindingsEntries(false);
+      }
+      this.updateSearchOptions();
+    }));
+    this._register(this.recordKeysAction.onDidChange((e) => {
+      if (e.checked !== void 0) {
+        recordingBadge.classList.toggle("disabled", !e.checked);
+        if (e.checked) {
+          this.searchWidget.inputBox.setPlaceHolder(keybindingsSearchPlaceholder);
+          this.searchWidget.inputBox.setAriaLabel(keybindingsSearchPlaceholder);
+          this.searchWidget.startRecordingKeys();
+          this.searchWidget.focus();
+        } else {
+          this.searchWidget.inputBox.setPlaceHolder(fullTextSearchPlaceholder);
+          this.searchWidget.inputBox.setAriaLabel(fullTextSearchPlaceholder);
+          this.searchWidget.stopRecordingKeys();
+          this.searchWidget.focus();
+        }
+        this.updateSearchOptions();
+      }
+    }));
+    const actions = [this.recordKeysAction, this.sortByPrecedenceAction, clearInputAction];
+    const toolBar = this._register(new ToolBar(this.actionsContainer, this.contextMenuService, {
+      actionViewItemProvider: /* @__PURE__ */ __name((action, options) => {
+        if (action.id === this.sortByPrecedenceAction.id || action.id === this.recordKeysAction.id) {
+          return new ToggleActionViewItem(null, action, { ...options, keybinding: this.keybindingsService.lookupKeybinding(action.id)?.getLabel(), toggleStyles: defaultToggleStyles });
+        }
+        return void 0;
+      }, "actionViewItemProvider"),
+      getKeyBinding: /* @__PURE__ */ __name((action) => this.keybindingsService.lookupKeybinding(action.id), "getKeyBinding")
+    }));
+    toolBar.setActions(actions);
+    this._register(this.keybindingsService.onDidUpdateKeybindings(() => toolBar.setActions(actions)));
+  }
+  updateSearchOptions() {
+    const keybindingsEditorInput = this.input;
+    if (keybindingsEditorInput) {
+      keybindingsEditorInput.searchOptions = {
+        searchValue: this.searchWidget.getValue(),
+        recordKeybindings: !!this.recordKeysAction.checked,
+        sortByPrecedence: !!this.sortByPrecedenceAction.checked
+      };
+    }
+  }
+  createRecordingBadge(container) {
+    const recordingBadge = DOM.append(container, DOM.$(".recording-badge.monaco-count-badge.long.disabled"));
+    recordingBadge.textContent = localize("recording", "Recording Keys");
+    recordingBadge.style.backgroundColor = asCssVariable(badgeBackground);
+    recordingBadge.style.color = asCssVariable(badgeForeground);
+    recordingBadge.style.border = `1px solid ${asCssVariable(contrastBorder)}`;
+    return recordingBadge;
+  }
+  layoutSearchWidget(dimension) {
+    this.searchWidget.layout(dimension);
+    this.headerContainer.classList.toggle("small", dimension.width < 400);
+    this.searchWidget.inputBox.inputElement.style.paddingRight = `${DOM.getTotalWidth(this.actionsContainer) + 12}px`;
+  }
+  createBody(parent) {
+    const bodyContainer = DOM.append(parent, $(".keybindings-body"));
+    this.createTable(bodyContainer);
+  }
+  createTable(parent) {
+    this.keybindingsTableContainer = DOM.append(parent, $(".keybindings-table-container"));
+    this.keybindingsTable = this._register(this.instantiationService.createInstance(
+      WorkbenchTable,
+      "KeybindingsEditor",
+      this.keybindingsTableContainer,
+      new Delegate(),
+      [
+        {
+          label: "",
+          tooltip: "",
+          weight: 0,
+          minimumWidth: 40,
+          maximumWidth: 40,
+          templateId: ActionsColumnRenderer.TEMPLATE_ID,
+          project(row) {
+            return row;
+          }
+        },
+        {
+          label: localize("command", "Command"),
+          tooltip: "",
+          weight: 0.3,
+          templateId: CommandColumnRenderer.TEMPLATE_ID,
+          project(row) {
+            return row;
+          }
+        },
+        {
+          label: localize("keybinding", "Keybinding"),
+          tooltip: "",
+          weight: 0.2,
+          templateId: KeybindingColumnRenderer.TEMPLATE_ID,
+          project(row) {
+            return row;
+          }
+        },
+        {
+          label: localize("when", "When"),
+          tooltip: "",
+          weight: 0.35,
+          templateId: WhenColumnRenderer.TEMPLATE_ID,
+          project(row) {
+            return row;
+          }
+        },
+        {
+          label: localize("source", "Source"),
+          tooltip: "",
+          weight: 0.15,
+          templateId: SourceColumnRenderer.TEMPLATE_ID,
+          project(row) {
+            return row;
+          }
+        }
+      ],
+      [
+        this.instantiationService.createInstance(ActionsColumnRenderer, this),
+        this.instantiationService.createInstance(CommandColumnRenderer),
+        this.instantiationService.createInstance(KeybindingColumnRenderer),
+        this.instantiationService.createInstance(WhenColumnRenderer, this),
+        this.instantiationService.createInstance(SourceColumnRenderer)
+      ],
+      {
+        identityProvider: { getId: /* @__PURE__ */ __name((e) => e.id, "getId") },
+        horizontalScrolling: false,
+        accessibilityProvider: new AccessibilityProvider(this.configurationService),
+        keyboardNavigationLabelProvider: { getKeyboardNavigationLabel: /* @__PURE__ */ __name((e) => e.keybindingItem.commandLabel || e.keybindingItem.command, "getKeyboardNavigationLabel") },
+        overrideStyles: {
+          listBackground: editorBackground
+        },
+        multipleSelectionSupport: false,
+        setRowLineHeight: false,
+        openOnSingleClick: false,
+        transformOptimization: false
+        // disable transform optimization as it causes the editor overflow widgets to be mispositioned
+      }
+    ));
+    this._register(this.keybindingsTable.onContextMenu((e) => this.onContextMenu(e)));
+    this._register(this.keybindingsTable.onDidChangeFocus((e) => this.onFocusChange()));
+    this._register(this.keybindingsTable.onDidFocus(() => {
+      this.keybindingsTable.getHTMLElement().classList.add("focused");
+      this.onFocusChange();
+    }));
+    this._register(this.keybindingsTable.onDidBlur(() => {
+      this.keybindingsTable.getHTMLElement().classList.remove("focused");
+      this.keybindingFocusContextKey.reset();
+    }));
+    this._register(this.keybindingsTable.onDidOpen((e) => {
+      if (e.browserEvent?.defaultPrevented) {
+        return;
+      }
+      const activeKeybindingEntry = this.activeKeybindingEntry;
+      if (activeKeybindingEntry) {
+        this.defineKeybinding(activeKeybindingEntry, false);
+      }
+    }));
+    DOM.append(this.keybindingsTableContainer, this.overflowWidgetsDomNode);
+  }
+  async render(preserveFocus) {
+    if (this.input) {
+      const input = this.input;
+      this.keybindingsEditorModel = await input.resolve();
+      await this.keybindingsEditorModel.resolve(this.getActionsLabels());
+      this.renderKeybindingsEntries(false, preserveFocus);
+      if (input.searchOptions) {
+        this.recordKeysAction.checked = input.searchOptions.recordKeybindings;
+        this.sortByPrecedenceAction.checked = input.searchOptions.sortByPrecedence;
+        this.searchWidget.setValue(input.searchOptions.searchValue);
+      } else {
+        this.updateSearchOptions();
+      }
+    }
+  }
+  getActionsLabels() {
+    const actionsLabels = /* @__PURE__ */ new Map();
+    for (const editorAction of EditorExtensionsRegistry.getEditorActions()) {
+      actionsLabels.set(editorAction.id, editorAction.label);
+    }
+    for (const menuItem of MenuRegistry.getMenuItems(MenuId.CommandPalette)) {
+      if (isIMenuItem(menuItem)) {
+        const title = typeof menuItem.command.title === "string" ? menuItem.command.title : menuItem.command.title.value;
+        const category = menuItem.command.category ? typeof menuItem.command.category === "string" ? menuItem.command.category : menuItem.command.category.value : void 0;
+        actionsLabels.set(menuItem.command.id, category ? `${category}: ${title}` : title);
+      }
+    }
+    return actionsLabels;
+  }
+  filterKeybindings() {
+    this.renderKeybindingsEntries(this.searchWidget.hasFocus());
+    this.searchHistoryDelayer.trigger(() => {
+      this.searchWidget.inputBox.addToHistory();
+      this.getMemento(StorageScope.PROFILE, StorageTarget.USER)["searchHistory"] = this.searchWidget.inputBox.getHistory();
+      this.saveState();
+    });
+  }
+  clearKeyboardShortcutSearchHistory() {
+    this.searchWidget.inputBox.clearHistory();
+    this.getMemento(StorageScope.PROFILE, StorageTarget.USER)["searchHistory"] = this.searchWidget.inputBox.getHistory();
+    this.saveState();
+  }
+  renderKeybindingsEntries(reset, preserveFocus) {
+    if (this.keybindingsEditorModel) {
+      const filter = this.searchWidget.getValue();
+      const keybindingsEntries = this.keybindingsEditorModel.fetch(filter, this.sortByPrecedenceAction.checked);
+      this.accessibilityService.alert(localize("foundResults", "{0} results", keybindingsEntries.length));
+      this.ariaLabelElement.setAttribute("aria-label", this.getAriaLabel(keybindingsEntries));
+      if (keybindingsEntries.length === 0) {
+        this.latestEmptyFilters.push(filter);
+      }
+      const currentSelectedIndex = this.keybindingsTable.getSelection()[0];
+      this.tableEntries = keybindingsEntries;
+      this.keybindingsTable.splice(0, this.keybindingsTable.length, this.tableEntries);
+      this.layoutKeybindingsTable();
+      if (reset) {
+        this.keybindingsTable.setSelection([]);
+        this.keybindingsTable.setFocus([]);
+      } else {
+        if (this.unAssignedKeybindingItemToRevealAndFocus) {
+          const index = this.getNewIndexOfUnassignedKeybinding(this.unAssignedKeybindingItemToRevealAndFocus);
+          if (index !== -1) {
+            this.keybindingsTable.reveal(index, 0.2);
+            this.selectEntry(index);
+          }
+          this.unAssignedKeybindingItemToRevealAndFocus = null;
+        } else if (currentSelectedIndex !== -1 && currentSelectedIndex < this.tableEntries.length) {
+          this.selectEntry(currentSelectedIndex, preserveFocus);
+        } else if (this.editorService.activeEditorPane === this && !preserveFocus) {
+          this.focus();
+        }
+      }
+    }
+  }
+  getAriaLabel(keybindingsEntries) {
+    if (this.sortByPrecedenceAction.checked) {
+      return localize("show sorted keybindings", "Showing {0} Keybindings in precedence order", keybindingsEntries.length);
+    } else {
+      return localize("show keybindings", "Showing {0} Keybindings in alphabetical order", keybindingsEntries.length);
+    }
+  }
+  layoutKeybindingsTable() {
+    if (!this.dimension) {
+      return;
+    }
+    const tableHeight = this.dimension.height - (DOM.getDomNodePagePosition(this.headerContainer).height + 12);
+    this.keybindingsTableContainer.style.height = `${tableHeight}px`;
+    this.keybindingsTable.layout(tableHeight);
+  }
+  getIndexOf(listEntry) {
+    const index = this.tableEntries.indexOf(listEntry);
+    if (index === -1) {
+      for (let i = 0; i < this.tableEntries.length; i++) {
+        if (this.tableEntries[i].id === listEntry.id) {
+          return i;
+        }
+      }
+    }
+    return index;
+  }
+  getNewIndexOfUnassignedKeybinding(unassignedKeybinding) {
+    for (let index = 0; index < this.tableEntries.length; index++) {
+      const entry = this.tableEntries[index];
+      if (entry.templateId === KEYBINDING_ENTRY_TEMPLATE_ID) {
+        const keybindingItemEntry = entry;
+        if (keybindingItemEntry.keybindingItem.command === unassignedKeybinding.keybindingItem.command) {
+          return index;
+        }
+      }
+    }
+    return -1;
+  }
+  selectEntry(keybindingItemEntry, focus = true) {
+    const index = typeof keybindingItemEntry === "number" ? keybindingItemEntry : this.getIndexOf(keybindingItemEntry);
+    if (index !== -1 && index < this.keybindingsTable.length) {
+      if (focus) {
+        this.keybindingsTable.domFocus();
+        this.keybindingsTable.setFocus([index]);
+      }
+      this.keybindingsTable.setSelection([index]);
+    }
+  }
+  focusKeybindings() {
+    this.keybindingsTable.domFocus();
+    const currentFocusIndices = this.keybindingsTable.getFocus();
+    this.keybindingsTable.setFocus([currentFocusIndices.length ? currentFocusIndices[0] : 0]);
+  }
+  selectKeybinding(keybindingItemEntry) {
+    this.selectEntry(keybindingItemEntry);
+  }
+  recordSearchKeys() {
+    this.recordKeysAction.checked = true;
+  }
+  toggleSortByPrecedence() {
+    this.sortByPrecedenceAction.checked = !this.sortByPrecedenceAction.checked;
+  }
+  onContextMenu(e) {
+    if (!e.element) {
+      return;
+    }
+    if (e.element.templateId === KEYBINDING_ENTRY_TEMPLATE_ID) {
+      const keybindingItemEntry = e.element;
+      this.selectEntry(keybindingItemEntry);
+      this.contextMenuService.showContextMenu({
+        getAnchor: /* @__PURE__ */ __name(() => e.anchor, "getAnchor"),
+        getActions: /* @__PURE__ */ __name(() => [
+          this.createCopyAction(keybindingItemEntry),
+          this.createCopyCommandAction(keybindingItemEntry),
+          this.createCopyCommandTitleAction(keybindingItemEntry),
+          new Separator(),
+          ...keybindingItemEntry.keybindingItem.keybinding ? [this.createDefineKeybindingAction(keybindingItemEntry), this.createAddKeybindingAction(keybindingItemEntry)] : [this.createDefineKeybindingAction(keybindingItemEntry)],
+          new Separator(),
+          this.createRemoveAction(keybindingItemEntry),
+          this.createResetAction(keybindingItemEntry),
+          new Separator(),
+          this.createDefineWhenExpressionAction(keybindingItemEntry),
+          new Separator(),
+          this.createShowConflictsAction(keybindingItemEntry)
+        ], "getActions")
+      });
+    }
+  }
+  onFocusChange() {
+    this.keybindingFocusContextKey.reset();
+    const element = this.keybindingsTable.getFocusedElements()[0];
+    if (!element) {
+      return;
+    }
+    if (element.templateId === KEYBINDING_ENTRY_TEMPLATE_ID) {
+      this.keybindingFocusContextKey.set(true);
+    }
+  }
+  createDefineKeybindingAction(keybindingItemEntry) {
+    return {
+      label: keybindingItemEntry.keybindingItem.keybinding ? localize("changeLabel", "Change Keybinding...") : localize("addLabel", "Add Keybinding..."),
+      enabled: true,
+      id: KEYBINDINGS_EDITOR_COMMAND_DEFINE,
+      run: /* @__PURE__ */ __name(() => this.defineKeybinding(keybindingItemEntry, false), "run")
+    };
+  }
+  createAddKeybindingAction(keybindingItemEntry) {
+    return {
+      label: localize("addLabel", "Add Keybinding..."),
+      enabled: true,
+      id: KEYBINDINGS_EDITOR_COMMAND_ADD,
+      run: /* @__PURE__ */ __name(() => this.defineKeybinding(keybindingItemEntry, true), "run")
+    };
+  }
+  createDefineWhenExpressionAction(keybindingItemEntry) {
+    return {
+      label: localize("editWhen", "Change When Expression"),
+      enabled: !!keybindingItemEntry.keybindingItem.keybinding,
+      id: KEYBINDINGS_EDITOR_COMMAND_DEFINE_WHEN,
+      run: /* @__PURE__ */ __name(() => this.defineWhenExpression(keybindingItemEntry), "run")
+    };
+  }
+  createRemoveAction(keybindingItem) {
+    return {
+      label: localize("removeLabel", "Remove Keybinding"),
+      enabled: !!keybindingItem.keybindingItem.keybinding,
+      id: KEYBINDINGS_EDITOR_COMMAND_REMOVE,
+      run: /* @__PURE__ */ __name(() => this.removeKeybinding(keybindingItem), "run")
+    };
+  }
+  createResetAction(keybindingItem) {
+    return {
+      label: localize("resetLabel", "Reset Keybinding"),
+      enabled: !keybindingItem.keybindingItem.keybindingItem.isDefault,
+      id: KEYBINDINGS_EDITOR_COMMAND_RESET,
+      run: /* @__PURE__ */ __name(() => this.resetKeybinding(keybindingItem), "run")
+    };
+  }
+  createShowConflictsAction(keybindingItem) {
+    return {
+      label: localize("showSameKeybindings", "Show Same Keybindings"),
+      enabled: !!keybindingItem.keybindingItem.keybinding,
+      id: KEYBINDINGS_EDITOR_COMMAND_SHOW_SIMILAR,
+      run: /* @__PURE__ */ __name(() => this.showSimilarKeybindings(keybindingItem), "run")
+    };
+  }
+  createCopyAction(keybindingItem) {
+    return {
+      label: localize("copyLabel", "Copy"),
+      enabled: true,
+      id: KEYBINDINGS_EDITOR_COMMAND_COPY,
+      run: /* @__PURE__ */ __name(() => this.copyKeybinding(keybindingItem), "run")
+    };
+  }
+  createCopyCommandAction(keybinding) {
+    return {
+      label: localize("copyCommandLabel", "Copy Command ID"),
+      enabled: true,
+      id: KEYBINDINGS_EDITOR_COMMAND_COPY_COMMAND,
+      run: /* @__PURE__ */ __name(() => this.copyKeybindingCommand(keybinding), "run")
+    };
+  }
+  createCopyCommandTitleAction(keybinding) {
+    return {
+      label: localize("copyCommandTitleLabel", "Copy Command Title"),
+      enabled: !!keybinding.keybindingItem.commandLabel,
+      id: KEYBINDINGS_EDITOR_COMMAND_COPY_COMMAND_TITLE,
+      run: /* @__PURE__ */ __name(() => this.copyKeybindingCommandTitle(keybinding), "run")
+    };
+  }
+  onKeybindingEditingError(error) {
+    this.notificationService.error(typeof error === "string" ? error : localize("error", "Error '{0}' while editing the keybinding. Please open 'keybindings.json' file and check for errors.", `${error}`));
+  }
+};
+KeybindingsEditor = __decorateClass([
+  __decorateParam(1, ITelemetryService),
+  __decorateParam(2, IThemeService),
+  __decorateParam(3, IKeybindingService),
+  __decorateParam(4, IContextMenuService),
+  __decorateParam(5, IKeybindingEditingService),
+  __decorateParam(6, IContextKeyService),
+  __decorateParam(7, INotificationService),
+  __decorateParam(8, IClipboardService),
+  __decorateParam(9, IInstantiationService),
+  __decorateParam(10, IEditorService),
+  __decorateParam(11, IStorageService),
+  __decorateParam(12, IConfigurationService),
+  __decorateParam(13, IAccessibilityService)
+], KeybindingsEditor);
+class Delegate {
+  static {
+    __name(this, "Delegate");
+  }
+  headerRowHeight = 30;
+  getHeight(element) {
+    if (element.templateId === KEYBINDING_ENTRY_TEMPLATE_ID) {
+      const commandIdMatched = element.keybindingItem.commandLabel && element.commandIdMatches;
+      const commandDefaultLabelMatched = !!element.commandDefaultLabelMatches;
+      const extensionIdMatched = !!element.extensionIdMatches;
+      if (commandIdMatched && commandDefaultLabelMatched) {
+        return 60;
+      }
+      if (extensionIdMatched || commandIdMatched || commandDefaultLabelMatched) {
+        return 40;
+      }
+    }
+    return 24;
+  }
+}
+let ActionsColumnRenderer = class {
+  constructor(keybindingsEditor, keybindingsService) {
+    this.keybindingsEditor = keybindingsEditor;
+    this.keybindingsService = keybindingsService;
+  }
+  static {
+    __name(this, "ActionsColumnRenderer");
+  }
+  static TEMPLATE_ID = "actions";
+  templateId = ActionsColumnRenderer.TEMPLATE_ID;
+  renderTemplate(container) {
+    const element = DOM.append(container, $(".actions"));
+    const actionBar = new ActionBar(element);
+    return { actionBar };
+  }
+  renderElement(keybindingItemEntry, index, templateData, height) {
+    templateData.actionBar.clear();
+    const actions = [];
+    if (keybindingItemEntry.keybindingItem.keybinding) {
+      actions.push(this.createEditAction(keybindingItemEntry));
+    } else {
+      actions.push(this.createAddAction(keybindingItemEntry));
+    }
+    templateData.actionBar.push(actions, { icon: true });
+  }
+  createEditAction(keybindingItemEntry) {
+    const keybinding = this.keybindingsService.lookupKeybinding(KEYBINDINGS_EDITOR_COMMAND_DEFINE);
+    return {
+      class: ThemeIcon.asClassName(keybindingsEditIcon),
+      enabled: true,
+      id: "editKeybinding",
+      tooltip: keybinding ? localize("editKeybindingLabelWithKey", "Change Keybinding {0}", `(${keybinding.getLabel()})`) : localize("editKeybindingLabel", "Change Keybinding"),
+      run: /* @__PURE__ */ __name(() => this.keybindingsEditor.defineKeybinding(keybindingItemEntry, false), "run")
+    };
+  }
+  createAddAction(keybindingItemEntry) {
+    const keybinding = this.keybindingsService.lookupKeybinding(KEYBINDINGS_EDITOR_COMMAND_DEFINE);
+    return {
+      class: ThemeIcon.asClassName(keybindingsAddIcon),
+      enabled: true,
+      id: "addKeybinding",
+      tooltip: keybinding ? localize("addKeybindingLabelWithKey", "Add Keybinding {0}", `(${keybinding.getLabel()})`) : localize("addKeybindingLabel", "Add Keybinding"),
+      run: /* @__PURE__ */ __name(() => this.keybindingsEditor.defineKeybinding(keybindingItemEntry, false), "run")
+    };
+  }
+  disposeTemplate(templateData) {
+    templateData.actionBar.dispose();
+  }
+};
+ActionsColumnRenderer = __decorateClass([
+  __decorateParam(1, IKeybindingService)
+], ActionsColumnRenderer);
+let CommandColumnRenderer = class {
+  constructor(_hoverService) {
+    this._hoverService = _hoverService;
+  }
+  static {
+    __name(this, "CommandColumnRenderer");
+  }
+  static TEMPLATE_ID = "commands";
+  templateId = CommandColumnRenderer.TEMPLATE_ID;
+  renderTemplate(container) {
+    const commandColumn = DOM.append(container, $(".command"));
+    const commandColumnHover = this._hoverService.setupManagedHover(getDefaultHoverDelegate("mouse"), commandColumn, "");
+    const commandLabelContainer = DOM.append(commandColumn, $(".command-label"));
+    const commandLabel = new HighlightedLabel(commandLabelContainer);
+    const commandDefaultLabelContainer = DOM.append(commandColumn, $(".command-default-label"));
+    const commandDefaultLabel = new HighlightedLabel(commandDefaultLabelContainer);
+    const commandIdLabelContainer = DOM.append(commandColumn, $(".command-id.code"));
+    const commandIdLabel = new HighlightedLabel(commandIdLabelContainer);
+    return { commandColumn, commandColumnHover, commandLabelContainer, commandLabel, commandDefaultLabelContainer, commandDefaultLabel, commandIdLabelContainer, commandIdLabel };
+  }
+  renderElement(keybindingItemEntry, index, templateData, height) {
+    const keybindingItem = keybindingItemEntry.keybindingItem;
+    const commandIdMatched = !!(keybindingItem.commandLabel && keybindingItemEntry.commandIdMatches);
+    const commandDefaultLabelMatched = !!keybindingItemEntry.commandDefaultLabelMatches;
+    templateData.commandColumn.classList.toggle("vertical-align-column", commandIdMatched || commandDefaultLabelMatched);
+    const title = keybindingItem.commandLabel ? localize("title", "{0} ({1})", keybindingItem.commandLabel, keybindingItem.command) : keybindingItem.command;
+    templateData.commandColumn.setAttribute("aria-label", title);
+    templateData.commandColumnHover.update(title);
+    if (keybindingItem.commandLabel) {
+      templateData.commandLabelContainer.classList.remove("hide");
+      templateData.commandLabel.set(keybindingItem.commandLabel, keybindingItemEntry.commandLabelMatches);
+    } else {
+      templateData.commandLabelContainer.classList.add("hide");
+      templateData.commandLabel.set(void 0);
+    }
+    if (keybindingItemEntry.commandDefaultLabelMatches) {
+      templateData.commandDefaultLabelContainer.classList.remove("hide");
+      templateData.commandDefaultLabel.set(keybindingItem.commandDefaultLabel, keybindingItemEntry.commandDefaultLabelMatches);
+    } else {
+      templateData.commandDefaultLabelContainer.classList.add("hide");
+      templateData.commandDefaultLabel.set(void 0);
+    }
+    if (keybindingItemEntry.commandIdMatches || !keybindingItem.commandLabel) {
+      templateData.commandIdLabelContainer.classList.remove("hide");
+      templateData.commandIdLabel.set(keybindingItem.command, keybindingItemEntry.commandIdMatches);
+    } else {
+      templateData.commandIdLabelContainer.classList.add("hide");
+      templateData.commandIdLabel.set(void 0);
+    }
+  }
+  disposeTemplate(templateData) {
+    templateData.commandColumnHover.dispose();
+    templateData.commandDefaultLabel.dispose();
+    templateData.commandIdLabel.dispose();
+    templateData.commandLabel.dispose();
+  }
+};
+CommandColumnRenderer = __decorateClass([
+  __decorateParam(0, IHoverService)
+], CommandColumnRenderer);
+class KeybindingColumnRenderer {
+  static {
+    __name(this, "KeybindingColumnRenderer");
+  }
+  static TEMPLATE_ID = "keybindings";
+  templateId = KeybindingColumnRenderer.TEMPLATE_ID;
+  constructor() {
+  }
+  renderTemplate(container) {
+    const element = DOM.append(container, $(".keybinding"));
+    const keybindingLabel = new KeybindingLabel(DOM.append(element, $("div.keybinding-label")), OS, defaultKeybindingLabelStyles);
+    return { keybindingLabel };
+  }
+  renderElement(keybindingItemEntry, index, templateData, height) {
+    if (keybindingItemEntry.keybindingItem.keybinding) {
+      templateData.keybindingLabel.set(keybindingItemEntry.keybindingItem.keybinding, keybindingItemEntry.keybindingMatches);
+    } else {
+      templateData.keybindingLabel.set(void 0, void 0);
+    }
+  }
+  disposeTemplate(templateData) {
+    templateData.keybindingLabel.dispose();
+  }
+}
+function onClick(element, callback) {
+  const disposables = new DisposableStore();
+  disposables.add(DOM.addDisposableListener(element, DOM.EventType.CLICK, DOM.finalHandler(callback)));
+  disposables.add(DOM.addDisposableListener(element, DOM.EventType.KEY_UP, (e) => {
+    const keyboardEvent = new StandardKeyboardEvent(e);
+    if (keyboardEvent.equals(KeyCode.Space) || keyboardEvent.equals(KeyCode.Enter)) {
+      e.preventDefault();
+      e.stopPropagation();
+      callback();
+    }
+  }));
+  return disposables;
+}
+__name(onClick, "onClick");
+let SourceColumnRenderer = class {
+  constructor(extensionsWorkbenchService, hoverService) {
+    this.extensionsWorkbenchService = extensionsWorkbenchService;
+    this.hoverService = hoverService;
+  }
+  static {
+    __name(this, "SourceColumnRenderer");
+  }
+  static TEMPLATE_ID = "source";
+  templateId = SourceColumnRenderer.TEMPLATE_ID;
+  renderTemplate(container) {
+    const sourceColumn = DOM.append(container, $(".source"));
+    const sourceColumnHover = this.hoverService.setupManagedHover(getDefaultHoverDelegate("mouse"), sourceColumn, "");
+    const sourceLabel = new HighlightedLabel(DOM.append(sourceColumn, $(".source-label")));
+    const extensionContainer = DOM.append(sourceColumn, $(".extension-container"));
+    const extensionLabel = DOM.append(extensionContainer, $("a.extension-label", { tabindex: 0 }));
+    const extensionId = new HighlightedLabel(DOM.append(extensionContainer, $(".extension-id-container.code")));
+    return { sourceColumn, sourceColumnHover, sourceLabel, extensionLabel, extensionContainer, extensionId, disposables: new DisposableStore() };
+  }
+  renderElement(keybindingItemEntry, index, templateData, height) {
+    templateData.disposables.clear();
+    if (isString(keybindingItemEntry.keybindingItem.source)) {
+      templateData.extensionContainer.classList.add("hide");
+      templateData.sourceLabel.element.classList.remove("hide");
+      templateData.sourceColumnHover.update("");
+      templateData.sourceLabel.set(keybindingItemEntry.keybindingItem.source || "-", keybindingItemEntry.sourceMatches);
+    } else {
+      templateData.extensionContainer.classList.remove("hide");
+      templateData.sourceLabel.element.classList.add("hide");
+      const extension = keybindingItemEntry.keybindingItem.source;
+      const extensionLabel = extension.displayName ?? extension.identifier.value;
+      templateData.sourceColumnHover.update(localize("extension label", "Extension ({0})", extensionLabel));
+      templateData.extensionLabel.textContent = extensionLabel;
+      templateData.disposables.add(onClick(templateData.extensionLabel, () => {
+        this.extensionsWorkbenchService.open(extension.identifier.value);
+      }));
+      if (keybindingItemEntry.extensionIdMatches) {
+        templateData.extensionId.element.classList.remove("hide");
+        templateData.extensionId.set(extension.identifier.value, keybindingItemEntry.extensionIdMatches);
+      } else {
+        templateData.extensionId.element.classList.add("hide");
+        templateData.extensionId.set(void 0);
+      }
+    }
+  }
+  disposeTemplate(templateData) {
+    templateData.sourceColumnHover.dispose();
+    templateData.disposables.dispose();
+    templateData.sourceLabel.dispose();
+    templateData.extensionId.dispose();
+  }
+};
+SourceColumnRenderer = __decorateClass([
+  __decorateParam(0, IExtensionsWorkbenchService),
+  __decorateParam(1, IHoverService)
+], SourceColumnRenderer);
+let WhenInputWidget = class extends Disposable {
+  static {
+    __name(this, "WhenInputWidget");
+  }
+  input;
+  _onDidAccept = this._register(new Emitter());
+  onDidAccept = this._onDidAccept.event;
+  _onDidReject = this._register(new Emitter());
+  onDidReject = this._onDidReject.event;
+  constructor(parent, keybindingsEditor, instantiationService, contextKeyService) {
+    super();
+    const focusContextKey = CONTEXT_WHEN_FOCUS.bindTo(contextKeyService);
+    this.input = this._register(instantiationService.createInstance(SuggestEnabledInput, "keyboardshortcutseditor#wheninput", parent, {
+      provideResults: /* @__PURE__ */ __name(() => {
+        const result = [];
+        for (const contextKey of RawContextKey.all()) {
+          result.push({ label: contextKey.key, documentation: contextKey.description, detail: contextKey.type, kind: CompletionItemKind.Constant });
+        }
+        return result;
+      }, "provideResults"),
+      triggerCharacters: ["!", " "],
+      wordDefinition: /[a-zA-Z.]+/,
+      alwaysShowSuggestions: true
+    }, "", `keyboardshortcutseditor#wheninput`, { focusContextKey, overflowWidgetsDomNode: keybindingsEditor.overflowWidgetsDomNode }));
+    this._register(DOM.addDisposableListener(this.input.element, DOM.EventType.DBLCLICK, (e) => DOM.EventHelper.stop(e)));
+    this._register(toDisposable(() => focusContextKey.reset()));
+    this._register(keybindingsEditor.onAcceptWhenExpression(() => this._onDidAccept.fire(this.input.getValue())));
+    this._register(Event.any(keybindingsEditor.onRejectWhenExpression, this.input.onDidBlur)(() => this._onDidReject.fire()));
+  }
+  layout(dimension) {
+    this.input.layout(dimension);
+  }
+  show(value) {
+    this.input.setValue(value);
+    this.input.focus(true);
+  }
+};
+WhenInputWidget = __decorateClass([
+  __decorateParam(2, IInstantiationService),
+  __decorateParam(3, IContextKeyService)
+], WhenInputWidget);
+let WhenColumnRenderer = class {
+  constructor(keybindingsEditor, hoverService, instantiationService) {
+    this.keybindingsEditor = keybindingsEditor;
+    this.hoverService = hoverService;
+    this.instantiationService = instantiationService;
+  }
+  static {
+    __name(this, "WhenColumnRenderer");
+  }
+  static TEMPLATE_ID = "when";
+  templateId = WhenColumnRenderer.TEMPLATE_ID;
+  renderTemplate(container) {
+    const element = DOM.append(container, $(".when"));
+    const whenLabelContainer = DOM.append(element, $("div.when-label"));
+    const whenLabel = new HighlightedLabel(whenLabelContainer);
+    const whenInputContainer = DOM.append(element, $("div.when-input-container"));
+    return {
+      element,
+      whenLabelContainer,
+      whenLabel,
+      whenInputContainer,
+      disposables: new DisposableStore()
+    };
+  }
+  renderElement(keybindingItemEntry, index, templateData, height) {
+    templateData.disposables.clear();
+    const whenInputDisposables = templateData.disposables.add(new DisposableStore());
+    templateData.disposables.add(this.keybindingsEditor.onDefineWhenExpression((e) => {
+      if (keybindingItemEntry === e) {
+        templateData.element.classList.add("input-mode");
+        const inputWidget = whenInputDisposables.add(this.instantiationService.createInstance(WhenInputWidget, templateData.whenInputContainer, this.keybindingsEditor));
+        inputWidget.layout(new DOM.Dimension(templateData.element.parentElement.clientWidth, 18));
+        inputWidget.show(keybindingItemEntry.keybindingItem.when || "");
+        const hideInputWidget = /* @__PURE__ */ __name(() => {
+          whenInputDisposables.clear();
+          templateData.element.classList.remove("input-mode");
+          templateData.element.parentElement.style.paddingLeft = "10px";
+          DOM.clearNode(templateData.whenInputContainer);
+        }, "hideInputWidget");
+        whenInputDisposables.add(inputWidget.onDidAccept((value) => {
+          hideInputWidget();
+          this.keybindingsEditor.updateKeybinding(keybindingItemEntry, keybindingItemEntry.keybindingItem.keybinding ? keybindingItemEntry.keybindingItem.keybinding.getUserSettingsLabel() || "" : "", value);
+          this.keybindingsEditor.selectKeybinding(keybindingItemEntry);
+        }));
+        whenInputDisposables.add(inputWidget.onDidReject(() => {
+          hideInputWidget();
+          this.keybindingsEditor.selectKeybinding(keybindingItemEntry);
+        }));
+        templateData.element.parentElement.style.paddingLeft = "0px";
+      }
+    }));
+    templateData.whenLabelContainer.classList.toggle("code", !!keybindingItemEntry.keybindingItem.when);
+    templateData.whenLabelContainer.classList.toggle("empty", !keybindingItemEntry.keybindingItem.when);
+    if (keybindingItemEntry.keybindingItem.when) {
+      templateData.whenLabel.set(keybindingItemEntry.keybindingItem.when, keybindingItemEntry.whenMatches, keybindingItemEntry.keybindingItem.when);
+      templateData.disposables.add(this.hoverService.setupManagedHover(getDefaultHoverDelegate("mouse"), templateData.element, keybindingItemEntry.keybindingItem.when));
+    } else {
+      templateData.whenLabel.set("-");
+    }
+  }
+  disposeTemplate(templateData) {
+    templateData.disposables.dispose();
+    templateData.whenLabel.dispose();
+  }
+};
+WhenColumnRenderer = __decorateClass([
+  __decorateParam(1, IHoverService),
+  __decorateParam(2, IInstantiationService)
+], WhenColumnRenderer);
+class AccessibilityProvider {
+  constructor(configurationService) {
+    this.configurationService = configurationService;
+  }
+  static {
+    __name(this, "AccessibilityProvider");
+  }
+  getWidgetAriaLabel() {
+    return localize("keybindingsLabel", "Keybindings");
+  }
+  getAriaLabel({ keybindingItem }) {
+    const ariaLabel = [
+      keybindingItem.commandLabel ? keybindingItem.commandLabel : keybindingItem.command,
+      keybindingItem.keybinding?.getAriaLabel() || localize("noKeybinding", "No keybinding assigned"),
+      keybindingItem.when ? keybindingItem.when : localize("noWhen", "No when context"),
+      isString(keybindingItem.source) ? keybindingItem.source : keybindingItem.source.description ?? keybindingItem.source.identifier.value
+    ];
+    if (this.configurationService.getValue(AccessibilityVerbositySettingId.KeybindingsEditor)) {
+      const kbEditorAriaLabel = localize("keyboard shortcuts aria label", "use space or enter to change the keybinding.");
+      ariaLabel.push(kbEditorAriaLabel);
+    }
+    return ariaLabel.join(", ");
+  }
+}
+registerColor("keybindingTable.headerBackground", tableOddRowsBackgroundColor, "Background color for the keyboard shortcuts table header.");
+registerColor("keybindingTable.rowsBackground", tableOddRowsBackgroundColor, "Background color for the keyboard shortcuts table alternating rows.");
+registerThemingParticipant((theme, collector) => {
+  const foregroundColor = theme.getColor(foreground);
+  if (foregroundColor) {
+    const whenForegroundColor = foregroundColor.transparent(0.8).makeOpaque(WORKBENCH_BACKGROUND(theme));
+    collector.addRule(`.keybindings-editor > .keybindings-body > .keybindings-table-container .monaco-table .monaco-table-tr .monaco-table-td .code { color: ${whenForegroundColor}; }`);
+  }
+  const listActiveSelectionForegroundColor = theme.getColor(listActiveSelectionForeground);
+  const listActiveSelectionBackgroundColor = theme.getColor(listActiveSelectionBackground);
+  if (listActiveSelectionForegroundColor && listActiveSelectionBackgroundColor) {
+    const whenForegroundColor = listActiveSelectionForegroundColor.transparent(0.8).makeOpaque(listActiveSelectionBackgroundColor);
+    collector.addRule(`.keybindings-editor > .keybindings-body > .keybindings-table-container .monaco-table.focused .monaco-list-row.selected .monaco-table-tr .monaco-table-td .code { color: ${whenForegroundColor}; }`);
+  }
+  const listInactiveSelectionForegroundColor = theme.getColor(listInactiveSelectionForeground);
+  const listInactiveSelectionBackgroundColor = theme.getColor(listInactiveSelectionBackground);
+  if (listInactiveSelectionForegroundColor && listInactiveSelectionBackgroundColor) {
+    const whenForegroundColor = listInactiveSelectionForegroundColor.transparent(0.8).makeOpaque(listInactiveSelectionBackgroundColor);
+    collector.addRule(`.keybindings-editor > .keybindings-body > .keybindings-table-container .monaco-table .monaco-list-row.selected .monaco-table-tr .monaco-table-td .code { color: ${whenForegroundColor}; }`);
+  }
+  const listFocusForegroundColor = theme.getColor(listFocusForeground);
+  const listFocusBackgroundColor = theme.getColor(listFocusBackground);
+  if (listFocusForegroundColor && listFocusBackgroundColor) {
+    const whenForegroundColor = listFocusForegroundColor.transparent(0.8).makeOpaque(listFocusBackgroundColor);
+    collector.addRule(`.keybindings-editor > .keybindings-body > .keybindings-table-container .monaco-table.focused .monaco-list-row.focused .monaco-table-tr .monaco-table-td .code { color: ${whenForegroundColor}; }`);
+  }
+  const listHoverForegroundColor = theme.getColor(listHoverForeground);
+  const listHoverBackgroundColor = theme.getColor(listHoverBackground);
+  if (listHoverForegroundColor && listHoverBackgroundColor) {
+    const whenForegroundColor = listHoverForegroundColor.transparent(0.8).makeOpaque(listHoverBackgroundColor);
+    collector.addRule(`.keybindings-editor > .keybindings-body > .keybindings-table-container .monaco-table.focused .monaco-list-row:hover:not(.focused):not(.selected) .monaco-table-tr .monaco-table-td .code { color: ${whenForegroundColor}; }`);
+  }
+});
+export {
+  KeybindingsEditor
+};
+//# sourceMappingURL=keybindingsEditor.js.map

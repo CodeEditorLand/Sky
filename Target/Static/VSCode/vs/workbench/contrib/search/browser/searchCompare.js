@@ -1,1 +1,121 @@
-import{isIMatchInNotebook as p}from"./notebookSearch/notebookSearchModelBase.js";import{compareFileExtensions as x,compareFileNames as s,comparePaths as w}from"../../../../base/common/comparers.js";import{SearchSortOrder as n}from"../../../services/search/common/search.js";import{Range as S}from"../../../../editor/common/core/range.js";import{createParentList as g,isSearchTreeFileMatch as t,isSearchTreeFolderMatch as d,isSearchTreeMatch as M}from"./searchTreeModel/searchTreeCommon.js";import{isSearchTreeAIFileMatch as P}from"./AISearch/aiSearchModelBase.js";let f=-1,b=-1;function N(e,r,a=n.Default){if(t(e)&&d(r))return 1;if(t(r)&&d(e))return-1;if(d(e)&&d(r)){if(f=e.index(),b=r.index(),-1!==f&&-1!==b)return f-b;if(P(e)&&P(r))return e.rank-r.rank;switch(a){case n.CountDescending:return r.count()-e.count();case n.CountAscending:return e.count()-r.count();case n.Type:return x(e.name(),r.name());case n.FileNames:return s(e.name(),r.name());default:return e.resource&&r.resource?w(e.resource.fsPath,r.resource.fsPath)||s(e.name(),r.name()):0}}if(t(e)&&t(r))switch(a){case n.CountDescending:return r.count()-e.count();case n.CountAscending:return e.count()-r.count();case n.Type:return x(e.name(),r.name());case n.FileNames:return s(e.name(),r.name());case n.Modified:{const n=e.fileStat,a=r.fileStat;if(n&&a)return a.mtime-n.mtime}default:return w(e.resource.fsPath,r.resource.fsPath)||s(e.name(),r.name())}return p(e)&&p(r)?R(e,r):M(e)&&M(r)?S.compareRangesUsingStarts(e.range(),r.range()):0}function R(e,r){return e.cellIndex===r.cellIndex?void 0!==e.webviewIndex&&void 0!==r.webviewIndex?e.webviewIndex-r.webviewIndex:void 0===e.webviewIndex&&void 0===r.webviewIndex?S.compareRangesUsingStarts(e.range(),r.range()):void 0!==e.webviewIndex?1:-1:e.cellIndex<r.cellIndex?-1:1}function O(e,r,a=n.Default){const t=g(e),s=g(r);let o=t.length-1,c=s.length-1;for(;o>=0&&c>=0;){if(t[o].id()!==s[c].id())return N(t[o],s[c],a);o--,c--}const i=0===o,m=0===c;return i&&!m?1:!i&&m?-1:0}export{O as searchComparer,N as searchMatchComparer};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { IMatchInNotebook, isIMatchInNotebook } from "./notebookSearch/notebookSearchModelBase.js";
+import { compareFileExtensions, compareFileNames, comparePaths } from "../../../../base/common/comparers.js";
+import { SearchSortOrder } from "../../../services/search/common/search.js";
+import { Range } from "../../../../editor/common/core/range.js";
+import { createParentList, isSearchTreeFileMatch, isSearchTreeFolderMatch, isSearchTreeMatch, RenderableMatch } from "./searchTreeModel/searchTreeCommon.js";
+import { isSearchTreeAIFileMatch } from "./AISearch/aiSearchModelBase.js";
+let elemAIndex = -1;
+let elemBIndex = -1;
+function searchMatchComparer(elementA, elementB, sortOrder = SearchSortOrder.Default) {
+  if (isSearchTreeFileMatch(elementA) && isSearchTreeFolderMatch(elementB)) {
+    return 1;
+  }
+  if (isSearchTreeFileMatch(elementB) && isSearchTreeFolderMatch(elementA)) {
+    return -1;
+  }
+  if (isSearchTreeFolderMatch(elementA) && isSearchTreeFolderMatch(elementB)) {
+    elemAIndex = elementA.index();
+    elemBIndex = elementB.index();
+    if (elemAIndex !== -1 && elemBIndex !== -1) {
+      return elemAIndex - elemBIndex;
+    }
+    if (isSearchTreeAIFileMatch(elementA) && isSearchTreeAIFileMatch(elementB)) {
+      return elementA.rank - elementB.rank;
+    }
+    switch (sortOrder) {
+      case SearchSortOrder.CountDescending:
+        return elementB.count() - elementA.count();
+      case SearchSortOrder.CountAscending:
+        return elementA.count() - elementB.count();
+      case SearchSortOrder.Type:
+        return compareFileExtensions(elementA.name(), elementB.name());
+      case SearchSortOrder.FileNames:
+        return compareFileNames(elementA.name(), elementB.name());
+      // Fall through otherwise
+      default:
+        if (!elementA.resource || !elementB.resource) {
+          return 0;
+        }
+        return comparePaths(elementA.resource.fsPath, elementB.resource.fsPath) || compareFileNames(elementA.name(), elementB.name());
+    }
+  }
+  if (isSearchTreeFileMatch(elementA) && isSearchTreeFileMatch(elementB)) {
+    switch (sortOrder) {
+      case SearchSortOrder.CountDescending:
+        return elementB.count() - elementA.count();
+      case SearchSortOrder.CountAscending:
+        return elementA.count() - elementB.count();
+      case SearchSortOrder.Type:
+        return compareFileExtensions(elementA.name(), elementB.name());
+      case SearchSortOrder.FileNames:
+        return compareFileNames(elementA.name(), elementB.name());
+      case SearchSortOrder.Modified: {
+        const fileStatA = elementA.fileStat;
+        const fileStatB = elementB.fileStat;
+        if (fileStatA && fileStatB) {
+          return fileStatB.mtime - fileStatA.mtime;
+        }
+      }
+      // Fall through otherwise
+      default:
+        return comparePaths(elementA.resource.fsPath, elementB.resource.fsPath) || compareFileNames(elementA.name(), elementB.name());
+    }
+  }
+  if (isIMatchInNotebook(elementA) && isIMatchInNotebook(elementB)) {
+    return compareNotebookPos(elementA, elementB);
+  }
+  if (isSearchTreeMatch(elementA) && isSearchTreeMatch(elementB)) {
+    return Range.compareRangesUsingStarts(elementA.range(), elementB.range());
+  }
+  return 0;
+}
+__name(searchMatchComparer, "searchMatchComparer");
+function compareNotebookPos(match1, match2) {
+  if (match1.cellIndex === match2.cellIndex) {
+    if (match1.webviewIndex !== void 0 && match2.webviewIndex !== void 0) {
+      return match1.webviewIndex - match2.webviewIndex;
+    } else if (match1.webviewIndex === void 0 && match2.webviewIndex === void 0) {
+      return Range.compareRangesUsingStarts(match1.range(), match2.range());
+    } else {
+      if (match1.webviewIndex !== void 0) {
+        return 1;
+      } else {
+        return -1;
+      }
+    }
+  } else if (match1.cellIndex < match2.cellIndex) {
+    return -1;
+  } else {
+    return 1;
+  }
+}
+__name(compareNotebookPos, "compareNotebookPos");
+function searchComparer(elementA, elementB, sortOrder = SearchSortOrder.Default) {
+  const elemAParents = createParentList(elementA);
+  const elemBParents = createParentList(elementB);
+  let i = elemAParents.length - 1;
+  let j = elemBParents.length - 1;
+  while (i >= 0 && j >= 0) {
+    if (elemAParents[i].id() !== elemBParents[j].id()) {
+      return searchMatchComparer(elemAParents[i], elemBParents[j], sortOrder);
+    }
+    i--;
+    j--;
+  }
+  const elemAAtEnd = i === 0;
+  const elemBAtEnd = j === 0;
+  if (elemAAtEnd && !elemBAtEnd) {
+    return 1;
+  } else if (!elemAAtEnd && elemBAtEnd) {
+    return -1;
+  }
+  return 0;
+}
+__name(searchComparer, "searchComparer");
+export {
+  searchComparer,
+  searchMatchComparer
+};
+//# sourceMappingURL=searchCompare.js.map

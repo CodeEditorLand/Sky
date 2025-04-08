@@ -1,1 +1,11 @@
-import"../../../../base/common/cancellation.js";import"../../../../base/common/event.js";import"../../../../base/common/lifecycle.js";import"../../../../base/common/uri.js";import{createDecorator as e}from"../../../../platform/instantiation/common/instantiation.js";import"./notebookCommon.js";const C=e("notebookCellStatusBarService");export{C as INotebookCellStatusBarService};
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { Event } from "../../../../base/common/event.js";
+import { IDisposable } from "../../../../base/common/lifecycle.js";
+import { URI } from "../../../../base/common/uri.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { INotebookCellStatusBarItemList, INotebookCellStatusBarItemProvider } from "./notebookCommon.js";
+const INotebookCellStatusBarService = createDecorator("notebookCellStatusBarService");
+export {
+  INotebookCellStatusBarService
+};
+//# sourceMappingURL=notebookCellStatusBarService.js.map

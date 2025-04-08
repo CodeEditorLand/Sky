@@ -1,1 +1,101 @@
-import*as s from"../../../base/browser/dom.js";import{FindInput as p}from"../../../base/browser/ui/findinput/findInput.js";import{MessageType as e}from"../../../base/browser/ui/inputbox/inputBox.js";import"../../../base/browser/ui/toggle/toggle.js";import{Disposable as r}from"../../../base/common/lifecycle.js";import n from"../../../base/common/severity.js";import"./media/quickInput.css";const l=s.$;class E extends r{constructor(t,e,n){super(),this.parent=t,this.container=s.append(this.parent,l(".quick-input-box")),this.findInput=this._register(new p(this.container,void 0,{label:"",inputBoxStyles:e,toggleStyles:n}));const i=this.findInput.inputBox.inputElement;i.role="textbox",i.ariaHasPopup="menu",i.ariaAutoComplete="list"}container;findInput;get onKeyDown(){return this.findInput.onKeyDown}get onMouseDown(){return this.findInput.onMouseDown}onDidChange=t=>this.findInput.onDidChange(t);get value(){return this.findInput.getValue()}set value(t){this.findInput.setValue(t)}select(t=null){this.findInput.inputBox.select(t)}getSelection(){return this.findInput.inputBox.getSelection()}isSelectionAtEnd(){return this.findInput.inputBox.isSelectionAtEnd()}setPlaceholder(t){this.findInput.inputBox.setPlaceHolder(t)}get placeholder(){return this.findInput.inputBox.inputElement.getAttribute("placeholder")||""}set placeholder(t){this.findInput.inputBox.setPlaceHolder(t)}get password(){return"password"===this.findInput.inputBox.inputElement.type}set password(t){this.findInput.inputBox.inputElement.type=t?"password":"text"}set enabled(t){this.findInput.inputBox.inputElement.toggleAttribute("readonly",!t)}set toggles(t){this.findInput.setAdditionalToggles(t)}hasFocus(){return this.findInput.inputBox.hasFocus()}setAttribute(t,e){this.findInput.inputBox.inputElement.setAttribute(t,e)}removeAttribute(t){this.findInput.inputBox.inputElement.removeAttribute(t)}showDecoration(t){t===n.Ignore?this.findInput.clearMessage():this.findInput.showMessage({type:t===n.Info?e.INFO:t===n.Warning?e.WARNING:e.ERROR,content:""})}stylesForType(t){return this.findInput.inputBox.stylesForType(t===n.Info?e.INFO:t===n.Warning?e.WARNING:e.ERROR)}setFocus(){this.findInput.focus()}layout(){this.findInput.inputBox.layout()}}export{E as QuickInputBox};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as dom from "../../../base/browser/dom.js";
+import { FindInput } from "../../../base/browser/ui/findinput/findInput.js";
+import { IInputBoxStyles, IRange, MessageType } from "../../../base/browser/ui/inputbox/inputBox.js";
+import { IToggleStyles, Toggle } from "../../../base/browser/ui/toggle/toggle.js";
+import { Disposable, IDisposable } from "../../../base/common/lifecycle.js";
+import Severity from "../../../base/common/severity.js";
+import "./media/quickInput.css";
+const $ = dom.$;
+class QuickInputBox extends Disposable {
+  constructor(parent, inputBoxStyles, toggleStyles) {
+    super();
+    this.parent = parent;
+    this.container = dom.append(this.parent, $(".quick-input-box"));
+    this.findInput = this._register(new FindInput(this.container, void 0, { label: "", inputBoxStyles, toggleStyles }));
+    const input = this.findInput.inputBox.inputElement;
+    input.role = "textbox";
+    input.ariaHasPopup = "menu";
+    input.ariaAutoComplete = "list";
+  }
+  static {
+    __name(this, "QuickInputBox");
+  }
+  container;
+  findInput;
+  get onKeyDown() {
+    return this.findInput.onKeyDown;
+  }
+  get onMouseDown() {
+    return this.findInput.onMouseDown;
+  }
+  onDidChange = /* @__PURE__ */ __name((handler) => {
+    return this.findInput.onDidChange(handler);
+  }, "onDidChange");
+  get value() {
+    return this.findInput.getValue();
+  }
+  set value(value) {
+    this.findInput.setValue(value);
+  }
+  select(range = null) {
+    this.findInput.inputBox.select(range);
+  }
+  getSelection() {
+    return this.findInput.inputBox.getSelection();
+  }
+  isSelectionAtEnd() {
+    return this.findInput.inputBox.isSelectionAtEnd();
+  }
+  setPlaceholder(placeholder) {
+    this.findInput.inputBox.setPlaceHolder(placeholder);
+  }
+  get placeholder() {
+    return this.findInput.inputBox.inputElement.getAttribute("placeholder") || "";
+  }
+  set placeholder(placeholder) {
+    this.findInput.inputBox.setPlaceHolder(placeholder);
+  }
+  get password() {
+    return this.findInput.inputBox.inputElement.type === "password";
+  }
+  set password(password) {
+    this.findInput.inputBox.inputElement.type = password ? "password" : "text";
+  }
+  set enabled(enabled) {
+    this.findInput.inputBox.inputElement.toggleAttribute("readonly", !enabled);
+  }
+  set toggles(toggles) {
+    this.findInput.setAdditionalToggles(toggles);
+  }
+  hasFocus() {
+    return this.findInput.inputBox.hasFocus();
+  }
+  setAttribute(name, value) {
+    this.findInput.inputBox.inputElement.setAttribute(name, value);
+  }
+  removeAttribute(name) {
+    this.findInput.inputBox.inputElement.removeAttribute(name);
+  }
+  showDecoration(decoration) {
+    if (decoration === Severity.Ignore) {
+      this.findInput.clearMessage();
+    } else {
+      this.findInput.showMessage({ type: decoration === Severity.Info ? MessageType.INFO : decoration === Severity.Warning ? MessageType.WARNING : MessageType.ERROR, content: "" });
+    }
+  }
+  stylesForType(decoration) {
+    return this.findInput.inputBox.stylesForType(decoration === Severity.Info ? MessageType.INFO : decoration === Severity.Warning ? MessageType.WARNING : MessageType.ERROR);
+  }
+  setFocus() {
+    this.findInput.focus();
+  }
+  layout() {
+    this.findInput.inputBox.layout();
+  }
+}
+export {
+  QuickInputBox
+};
+//# sourceMappingURL=quickInputBox.js.map

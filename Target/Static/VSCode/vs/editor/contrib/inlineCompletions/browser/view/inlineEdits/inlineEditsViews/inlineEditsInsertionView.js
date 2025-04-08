@@ -1,1 +1,278 @@
-var k=Object.defineProperty;var W=Object.getOwnPropertyDescriptor;var w=(c,m,e,t)=>{for(var i=t>1?void 0:t?W(m,e):m,n=c.length-1,r;n>=0;n--)(r=c[n])&&(i=(t?r(m,e,i):r(i))||i);return t&&i&&k(m,e,i),i},x=(c,m)=>(e,t)=>m(e,t,c);import{$ as V,n as u}from"../../../../../../../base/browser/dom.js";import"../../../../../../../base/browser/mouseEvent.js";import{Emitter as A}from"../../../../../../../base/common/event.js";import{Disposable as D}from"../../../../../../../base/common/lifecycle.js";import{constObservable as y,derived as d,derivedWithStore as B,observableValue as E}from"../../../../../../../base/common/observable.js";import{IInstantiationService as H}from"../../../../../../../platform/instantiation/common/instantiation.js";import{editorBackground as R}from"../../../../../../../platform/theme/common/colorRegistry.js";import{asCssVariable as _}from"../../../../../../../platform/theme/common/colorUtils.js";import"../../../../../../browser/editorBrowser.js";import{observableCodeEditor as P}from"../../../../../../browser/observableCodeEditor.js";import{Rect as N}from"../../../../../../browser/rect.js";import{LineSource as z,renderLines as G,RenderOptions as $}from"../../../../../../browser/widget/diffEditor/components/diffEditorViewZones/renderLines.js";import{EditorOption as U}from"../../../../../../common/config/editorOptions.js";import{LineRange as M}from"../../../../../../common/core/lineRange.js";import{OffsetRange as F}from"../../../../../../common/core/offsetRange.js";import{Position as q}from"../../../../../../common/core/position.js";import{Range as O}from"../../../../../../common/core/range.js";import{ILanguageService as j}from"../../../../../../common/languages/language.js";import{LineTokens as X}from"../../../../../../common/tokens/lineTokens.js";import{TokenArray as J}from"../../../../../../common/tokens/tokenArray.js";import{InlineDecoration as K,InlineDecorationType as Q}from"../../../../../../common/viewModel.js";import{GhostText as Y,GhostTextPart as Z}from"../../../model/ghostText.js";import{GhostTextView as tt}from"../../ghostText/ghostTextView.js";import"../inlineEditsViewInterface.js";import{getModifiedBorderColor as et,modifiedBackgroundColor as it}from"../theme.js";import{getPrefixTrim as ot,mapOutFalsy as nt}from"../utils/utils.js";const p=1,L=1,T=4;let v=class extends D{constructor(e,t,i,n,r){super();this._editor=e;this._input=t;this._tabAction=i;this._languageService=r;this._editorObs=P(this._editor),this._ghostTextView=this._register(n.createInstance(tt,this._editor,{ghostText:this._ghostText,minReservedLineCount:y(0),targetTextModel:this._editorObs.model.map(o=>o??void 0),warning:y(void 0)},E(this,{syntaxHighlightingEnabled:!0,extraClasses:["inline-edit"]}),!0,!0)),this.isHovered=this._ghostTextView.isHovered,this._register(this._ghostTextView.onDidClick(o=>{this._onDidClick.fire(o)})),this._register(this._editorObs.createOverlayWidget({domNode:this._view.element,position:y(null),allowEditorOverflow:!1,minContentWidthInPx:d(o=>{const s=this._overlayLayout.read(o);return s===null?0:s.minContentWidthRequired})}))}_editorObs;_onDidClick=this._register(new A);onDidClick=this._onDidClick.event;_state=d(this,e=>{const t=this._input.read(e);if(!t)return;const i=this._editor.getModel(),n=i.getEOL();if(t.startColumn===1&&t.lineNumber>1&&i.getLineLength(t.lineNumber)!==0&&t.text.endsWith(n)&&!t.text.startsWith(n)){const r=i.getLineLength(t.lineNumber-1)+1;return{lineNumber:t.lineNumber-1,column:r,text:n+t.text.slice(0,-n.length)}}return{lineNumber:t.lineNumber,column:t.startColumn,text:t.text}});_trimVertically=d(this,e=>{const t=this._state.read(e)?.text;if(!t||t.trim()==="")return{topOffset:0,bottomOffset:0,linesTop:0,linesBottom:0};const i=this._editor.getOption(U.lineHeight),n=this._editor.getModel().getEOL();let r=0,o=0,s=0;for(;s<t.length&&t.startsWith(n,s);s+=n.length)r+=1;for(let l=t.length;l>s&&t.endsWith(n,l);l-=n.length)o+=1;return{topOffset:r*i,bottomOffset:o*i,linesTop:r,linesBottom:o}});_maxPrefixTrim=d(e=>{const t=this._state.read(e);if(!t)return{prefixLeftOffset:0,prefixTrim:0};const i=this._editor.getModel(),n=i.getEOL(),r=this._trimVertically.read(e),o=t.text.split(n),s=o.slice(r.linesTop,o.length-r.linesBottom);r.linesTop===0&&(s[0]=i.getLineContent(t.lineNumber)+s[0]);const l=new M(t.lineNumber,t.lineNumber+(r.linesTop>0?0:1));return ot([],l,s,this._editor)});_ghostText=d(e=>{const t=this._state.read(e),i=this._maxPrefixTrim.read(e);if(!t)return;const r=this._editor.getModel().getEOL(),s=t.text.split(r).map((l,a)=>new K(new O(a+1,a===0?1:i.prefixTrim+1,a+1,l.length+1),"modified-background",Q.Regular));return new Y(t.lineNumber,[new Z(t.column,t.text,!1,s)])});_ghostTextView;isHovered;_display=d(this,e=>this._state.read(e)?"block":"none");_editorMaxContentWidthInRange=d(this,e=>{const t=this._state.read(e);if(!t)return 0;this._editorObs.versionId.read(e);const i=this._editor.getModel(),n=i.getEOL(),r=t.text.startsWith(n)?"":i.getValueInRange(new O(t.lineNumber,1,t.lineNumber,t.column)),o=i.getValueInRange(new O(t.lineNumber,t.column,t.lineNumber,i.getLineLength(t.lineNumber)+1)),l=(r+t.text+o).split(n),a=$.fromEditor(this._editor).withSetWidth(!1).withScrollBeyondLastColumn(0),g=l.map(h=>{const b=i.tokenization.tokenizeLinesAt(t.lineNumber,[h])?.[0];let f;return b?f=J.fromLineTokens(b).toLineTokens(h,this._languageService.languageIdCodec):f=X.createEmpty(h,this._languageService.languageIdCodec),G(new z([f]),a,[],V("div"),!0).minWidthInPx});return Math.max(...g)});startLineOffset=this._trimVertically.map(e=>e.topOffset);originalLines=this._state.map(e=>e?new M(e.lineNumber,Math.min(e.lineNumber+2,this._editor.getModel().getLineCount()+1)):void 0);_overlayLayout=B(this,(e,t)=>{this._ghostText.read(e);const i=this._state.read(e);if(!i)return null;this._editorObs.observePosition(E(this,new q(i.lineNumber,i.column)),t).read(e);const n=this._editorObs.layoutInfo.read(e),r=this._editorObs.scrollLeft.read(e),o=this._editorObs.layoutInfoVerticalScrollbarWidth.read(e),s=n.contentLeft+this._editorMaxContentWidthInRange.read(e)-r,l=this._maxPrefixTrim.read(e).prefixLeftOffset??0,a=n.contentLeft+l-r;if(s<=a)return null;const{topOffset:g,bottomOffset:h}=this._trimVertically.read(e),b=this._editorObs.scrollTop.read(e),f=this._ghostTextView.height.read(e)-g-h,I=this._editor.getTopForLineNumber(i.lineNumber)-b+g,S=I+f,C=new N(a,I,s,S);return{overlay:C,startsAtContentLeft:l===0,contentLeft:n.contentLeft,minContentWidthRequired:l+C.width+o}}).recomputeInitiallyAndOnChange(this._store);_modifiedOverlay=u.div({style:{pointerEvents:"none"}},d(e=>{const t=nt(this._overlayLayout).read(e);if(!t)return;const i=t.map(o=>N.fromLeftTopRightBottom(o.contentLeft-T-p,o.overlay.top,o.contentLeft,o.overlay.bottom)).read(e),n=t.map(o=>o.overlay.withMargin(0,p,0,o.startsAtContentLeft?0:p).intersectHorizontal(new F(i.left,Number.MAX_SAFE_INTEGER))),r=n.map(o=>o.withMargin(L,L));return[u.div({class:"originalUnderlayInsertion",style:{...r.read(e).toStyles(),borderRadius:T,border:`${p+L}px solid ${_(R)}`,boxSizing:"border-box"}}),u.div({class:"originalOverlayInsertion",style:{...n.read(e).toStyles(),borderRadius:T,border:et(this._tabAction).map(o=>`${p}px solid ${_(o)}`),boxSizing:"border-box",backgroundColor:_(it)}}),u.div({class:"originalOverlayHiderInsertion",style:{...i.toStyles(),backgroundColor:_(R)}})]})).keepUpdated(this._store);_view=u.div({class:"inline-edits-view",style:{position:"absolute",overflow:"visible",top:"0px",left:"0px",zIndex:"0",display:this._display}},[[this._modifiedOverlay]]).keepUpdated(this._store)};v=w([x(3,H),x(4,j)],v);export{v as InlineEditsInsertionView};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { $, n } from "../../../../../../../base/browser/dom.js";
+import { IMouseEvent } from "../../../../../../../base/browser/mouseEvent.js";
+import { Emitter } from "../../../../../../../base/common/event.js";
+import { Disposable } from "../../../../../../../base/common/lifecycle.js";
+import { constObservable, derived, derivedWithStore, IObservable, observableValue } from "../../../../../../../base/common/observable.js";
+import { IInstantiationService } from "../../../../../../../platform/instantiation/common/instantiation.js";
+import { editorBackground } from "../../../../../../../platform/theme/common/colorRegistry.js";
+import { asCssVariable } from "../../../../../../../platform/theme/common/colorUtils.js";
+import { ICodeEditor } from "../../../../../../browser/editorBrowser.js";
+import { ObservableCodeEditor, observableCodeEditor } from "../../../../../../browser/observableCodeEditor.js";
+import { Rect } from "../../../../../../browser/rect.js";
+import { LineSource, renderLines, RenderOptions } from "../../../../../../browser/widget/diffEditor/components/diffEditorViewZones/renderLines.js";
+import { EditorOption } from "../../../../../../common/config/editorOptions.js";
+import { LineRange } from "../../../../../../common/core/lineRange.js";
+import { OffsetRange } from "../../../../../../common/core/offsetRange.js";
+import { Position } from "../../../../../../common/core/position.js";
+import { Range } from "../../../../../../common/core/range.js";
+import { ILanguageService } from "../../../../../../common/languages/language.js";
+import { LineTokens } from "../../../../../../common/tokens/lineTokens.js";
+import { TokenArray } from "../../../../../../common/tokens/tokenArray.js";
+import { InlineDecoration, InlineDecorationType } from "../../../../../../common/viewModel.js";
+import { GhostText, GhostTextPart } from "../../../model/ghostText.js";
+import { GhostTextView } from "../../ghostText/ghostTextView.js";
+import { IInlineEditsView, InlineEditTabAction } from "../inlineEditsViewInterface.js";
+import { getModifiedBorderColor, modifiedBackgroundColor } from "../theme.js";
+import { getPrefixTrim, mapOutFalsy } from "../utils/utils.js";
+const BORDER_WIDTH = 1;
+const WIDGET_SEPARATOR_WIDTH = 1;
+const BORDER_RADIUS = 4;
+let InlineEditsInsertionView = class extends Disposable {
+  constructor(_editor, _input, _tabAction, instantiationService, _languageService) {
+    super();
+    this._editor = _editor;
+    this._input = _input;
+    this._tabAction = _tabAction;
+    this._languageService = _languageService;
+    this._editorObs = observableCodeEditor(this._editor);
+    this._ghostTextView = this._register(instantiationService.createInstance(
+      GhostTextView,
+      this._editor,
+      {
+        ghostText: this._ghostText,
+        minReservedLineCount: constObservable(0),
+        targetTextModel: this._editorObs.model.map((model) => model ?? void 0),
+        warning: constObservable(void 0)
+      },
+      observableValue(this, { syntaxHighlightingEnabled: true, extraClasses: ["inline-edit"] }),
+      true,
+      true
+    ));
+    this.isHovered = this._ghostTextView.isHovered;
+    this._register(this._ghostTextView.onDidClick((e) => {
+      this._onDidClick.fire(e);
+    }));
+    this._register(this._editorObs.createOverlayWidget({
+      domNode: this._view.element,
+      position: constObservable(null),
+      allowEditorOverflow: false,
+      minContentWidthInPx: derived((reader) => {
+        const info = this._overlayLayout.read(reader);
+        if (info === null) {
+          return 0;
+        }
+        return info.minContentWidthRequired;
+      })
+    }));
+  }
+  static {
+    __name(this, "InlineEditsInsertionView");
+  }
+  _editorObs;
+  _onDidClick = this._register(new Emitter());
+  onDidClick = this._onDidClick.event;
+  _state = derived(this, (reader) => {
+    const state = this._input.read(reader);
+    if (!state) {
+      return void 0;
+    }
+    const textModel = this._editor.getModel();
+    const eol = textModel.getEOL();
+    if (state.startColumn === 1 && state.lineNumber > 1 && textModel.getLineLength(state.lineNumber) !== 0 && state.text.endsWith(eol) && !state.text.startsWith(eol)) {
+      const endOfLineColumn = textModel.getLineLength(state.lineNumber - 1) + 1;
+      return { lineNumber: state.lineNumber - 1, column: endOfLineColumn, text: eol + state.text.slice(0, -eol.length) };
+    }
+    return { lineNumber: state.lineNumber, column: state.startColumn, text: state.text };
+  });
+  _trimVertically = derived(this, (reader) => {
+    const text = this._state.read(reader)?.text;
+    if (!text || text.trim() === "") {
+      return { topOffset: 0, bottomOffset: 0, linesTop: 0, linesBottom: 0 };
+    }
+    const lineHeight = this._editor.getOption(EditorOption.lineHeight);
+    const eol = this._editor.getModel().getEOL();
+    let linesTop = 0;
+    let linesBottom = 0;
+    let i = 0;
+    for (; i < text.length && text.startsWith(eol, i); i += eol.length) {
+      linesTop += 1;
+    }
+    for (let j = text.length; j > i && text.endsWith(eol, j); j -= eol.length) {
+      linesBottom += 1;
+    }
+    return { topOffset: linesTop * lineHeight, bottomOffset: linesBottom * lineHeight, linesTop, linesBottom };
+  });
+  _maxPrefixTrim = derived((reader) => {
+    const state = this._state.read(reader);
+    if (!state) {
+      return { prefixLeftOffset: 0, prefixTrim: 0 };
+    }
+    const textModel = this._editor.getModel();
+    const eol = textModel.getEOL();
+    const trimVertically = this._trimVertically.read(reader);
+    const lines = state.text.split(eol);
+    const modifiedLines = lines.slice(trimVertically.linesTop, lines.length - trimVertically.linesBottom);
+    if (trimVertically.linesTop === 0) {
+      modifiedLines[0] = textModel.getLineContent(state.lineNumber) + modifiedLines[0];
+    }
+    const originalRange = new LineRange(state.lineNumber, state.lineNumber + (trimVertically.linesTop > 0 ? 0 : 1));
+    return getPrefixTrim([], originalRange, modifiedLines, this._editor);
+  });
+  _ghostText = derived((reader) => {
+    const state = this._state.read(reader);
+    const prefixTrim = this._maxPrefixTrim.read(reader);
+    if (!state) {
+      return void 0;
+    }
+    const textModel = this._editor.getModel();
+    const eol = textModel.getEOL();
+    const modifiedLines = state.text.split(eol);
+    const inlineDecorations = modifiedLines.map((line, i) => new InlineDecoration(
+      new Range(i + 1, i === 0 ? 1 : prefixTrim.prefixTrim + 1, i + 1, line.length + 1),
+      "modified-background",
+      InlineDecorationType.Regular
+    ));
+    return new GhostText(state.lineNumber, [new GhostTextPart(state.column, state.text, false, inlineDecorations)]);
+  });
+  _ghostTextView;
+  isHovered;
+  _display = derived(this, (reader) => !!this._state.read(reader) ? "block" : "none");
+  _editorMaxContentWidthInRange = derived(this, (reader) => {
+    const state = this._state.read(reader);
+    if (!state) {
+      return 0;
+    }
+    this._editorObs.versionId.read(reader);
+    const textModel = this._editor.getModel();
+    const eol = textModel.getEOL();
+    const textBeforeInsertion = state.text.startsWith(eol) ? "" : textModel.getValueInRange(new Range(state.lineNumber, 1, state.lineNumber, state.column));
+    const textAfterInsertion = textModel.getValueInRange(new Range(state.lineNumber, state.column, state.lineNumber, textModel.getLineLength(state.lineNumber) + 1));
+    const text = textBeforeInsertion + state.text + textAfterInsertion;
+    const lines = text.split(eol);
+    const renderOptions = RenderOptions.fromEditor(this._editor).withSetWidth(false).withScrollBeyondLastColumn(0);
+    const lineWidths = lines.map((line) => {
+      const t = textModel.tokenization.tokenizeLinesAt(state.lineNumber, [line])?.[0];
+      let tokens;
+      if (t) {
+        tokens = TokenArray.fromLineTokens(t).toLineTokens(line, this._languageService.languageIdCodec);
+      } else {
+        tokens = LineTokens.createEmpty(line, this._languageService.languageIdCodec);
+      }
+      return renderLines(new LineSource([tokens]), renderOptions, [], $("div"), true).minWidthInPx;
+    });
+    return Math.max(...lineWidths);
+  });
+  startLineOffset = this._trimVertically.map((v) => v.topOffset);
+  originalLines = this._state.map(
+    (s) => s ? new LineRange(
+      s.lineNumber,
+      Math.min(s.lineNumber + 2, this._editor.getModel().getLineCount() + 1)
+    ) : void 0
+  );
+  _overlayLayout = derivedWithStore(this, (reader, store) => {
+    this._ghostText.read(reader);
+    const state = this._state.read(reader);
+    if (!state) {
+      return null;
+    }
+    this._editorObs.observePosition(observableValue(this, new Position(state.lineNumber, state.column)), store).read(reader);
+    const editorLayout = this._editorObs.layoutInfo.read(reader);
+    const horizontalScrollOffset = this._editorObs.scrollLeft.read(reader);
+    const verticalScrollbarWidth = this._editorObs.layoutInfoVerticalScrollbarWidth.read(reader);
+    const right = editorLayout.contentLeft + this._editorMaxContentWidthInRange.read(reader) - horizontalScrollOffset;
+    const prefixLeftOffset = this._maxPrefixTrim.read(reader).prefixLeftOffset ?? 0;
+    const left = editorLayout.contentLeft + prefixLeftOffset - horizontalScrollOffset;
+    if (right <= left) {
+      return null;
+    }
+    const { topOffset: topTrim, bottomOffset: bottomTrim } = this._trimVertically.read(reader);
+    const scrollTop = this._editorObs.scrollTop.read(reader);
+    const height = this._ghostTextView.height.read(reader) - topTrim - bottomTrim;
+    const top = this._editor.getTopForLineNumber(state.lineNumber) - scrollTop + topTrim;
+    const bottom = top + height;
+    const overlay = new Rect(left, top, right, bottom);
+    return {
+      overlay,
+      startsAtContentLeft: prefixLeftOffset === 0,
+      contentLeft: editorLayout.contentLeft,
+      minContentWidthRequired: prefixLeftOffset + overlay.width + verticalScrollbarWidth
+    };
+  }).recomputeInitiallyAndOnChange(this._store);
+  _modifiedOverlay = n.div({
+    style: { pointerEvents: "none" }
+  }, derived((reader) => {
+    const overlayLayoutObs = mapOutFalsy(this._overlayLayout).read(reader);
+    if (!overlayLayoutObs) {
+      return void 0;
+    }
+    const overlayHider = overlayLayoutObs.map((layoutInfo) => Rect.fromLeftTopRightBottom(
+      layoutInfo.contentLeft - BORDER_RADIUS - BORDER_WIDTH,
+      layoutInfo.overlay.top,
+      layoutInfo.contentLeft,
+      layoutInfo.overlay.bottom
+    )).read(reader);
+    const overlayRect = overlayLayoutObs.map((l) => l.overlay.withMargin(0, BORDER_WIDTH, 0, l.startsAtContentLeft ? 0 : BORDER_WIDTH).intersectHorizontal(new OffsetRange(overlayHider.left, Number.MAX_SAFE_INTEGER)));
+    const underlayRect = overlayRect.map((rect) => rect.withMargin(WIDGET_SEPARATOR_WIDTH, WIDGET_SEPARATOR_WIDTH));
+    return [
+      n.div({
+        class: "originalUnderlayInsertion",
+        style: {
+          ...underlayRect.read(reader).toStyles(),
+          borderRadius: BORDER_RADIUS,
+          border: `${BORDER_WIDTH + WIDGET_SEPARATOR_WIDTH}px solid ${asCssVariable(editorBackground)}`,
+          boxSizing: "border-box"
+        }
+      }),
+      n.div({
+        class: "originalOverlayInsertion",
+        style: {
+          ...overlayRect.read(reader).toStyles(),
+          borderRadius: BORDER_RADIUS,
+          border: getModifiedBorderColor(this._tabAction).map((bc) => `${BORDER_WIDTH}px solid ${asCssVariable(bc)}`),
+          boxSizing: "border-box",
+          backgroundColor: asCssVariable(modifiedBackgroundColor)
+        }
+      }),
+      n.div({
+        class: "originalOverlayHiderInsertion",
+        style: {
+          ...overlayHider.toStyles(),
+          backgroundColor: asCssVariable(editorBackground)
+        }
+      })
+    ];
+  })).keepUpdated(this._store);
+  _view = n.div({
+    class: "inline-edits-view",
+    style: {
+      position: "absolute",
+      overflow: "visible",
+      top: "0px",
+      left: "0px",
+      zIndex: "0",
+      display: this._display
+    }
+  }, [
+    [this._modifiedOverlay]
+  ]).keepUpdated(this._store);
+};
+InlineEditsInsertionView = __decorateClass([
+  __decorateParam(3, IInstantiationService),
+  __decorateParam(4, ILanguageService)
+], InlineEditsInsertionView);
+export {
+  InlineEditsInsertionView
+};
+//# sourceMappingURL=inlineEditsInsertionView.js.map

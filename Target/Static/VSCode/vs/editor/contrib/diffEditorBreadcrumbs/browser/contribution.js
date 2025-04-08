@@ -1,1 +1,70 @@
-var p=Object.defineProperty;var v=Object.getOwnPropertyDescriptor;var u=(a,n,t,o)=>{for(var r=o>1?void 0:o?v(n,t):n,i=a.length-1,e;i>=0;i--)(e=a[i])&&(r=(o?e(n,t,r):e(r))||r);return o&&r&&p(n,t,r),r},s=(a,n)=>(t,o)=>n(t,o,a);import{reverseOrder as f,compareBy as S,numberComparator as h}from"../../../../base/common/arrays.js";import{observableValue as M,observableSignalFromEvent as c,autorunWithStore as y}from"../../../../base/common/observable.js";import{HideUnchangedRegionsFeature as I}from"../../../browser/widget/diffEditor/features/hideUnchangedRegionsFeature.js";import{DisposableCancellationTokenSource as L}from"../../../browser/widget/diffEditor/utils.js";import"../../../common/core/lineRange.js";import"../../../common/model.js";import{ILanguageFeaturesService as _}from"../../../common/services/languageFeatures.js";import{IOutlineModelService as C}from"../../documentSymbols/browser/outlineModel.js";import{Disposable as x}from"../../../../base/common/lifecycle.js";import{Event as D}from"../../../../base/common/event.js";import"../../../common/languages.js";let d=class extends x{constructor(t,o,r){super();this._textModel=t;this._languageFeaturesService=o;this._outlineModelService=r;const i=c("documentSymbolProvider.onDidChange",this._languageFeaturesService.documentSymbolProvider.onDidChange),e=c("_textModel.onDidChangeContent",D.debounce(m=>this._textModel.onDidChangeContent(m),()=>{},100));this._register(y(async(m,l)=>{i.read(m),e.read(m);const g=l.add(new L),b=await this._outlineModelService.getOrCreate(this._textModel,g.token);l.isDisposed||this._currentModel.set(b,void 0)}))}_currentModel=M(this,void 0);getBreadcrumbItems(t,o){const r=this._currentModel.read(o);if(!r)return[];const i=r.asListOfDocumentSymbols().filter(e=>t.contains(e.range.startLineNumber)&&!t.contains(e.range.endLineNumber));return i.sort(f(S(e=>e.range.endLineNumber-e.range.startLineNumber,h))),i.map(e=>({name:e.name,kind:e.kind,startLineNumber:e.range.startLineNumber}))}};d=u([s(1,_),s(2,C)],d),I.setBreadcrumbsSourceFactory((a,n)=>n.createInstance(d,a));
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { reverseOrder, compareBy, numberComparator } from "../../../../base/common/arrays.js";
+import { observableValue, observableSignalFromEvent, autorunWithStore, IReader } from "../../../../base/common/observable.js";
+import { HideUnchangedRegionsFeature, IDiffEditorBreadcrumbsSource } from "../../../browser/widget/diffEditor/features/hideUnchangedRegionsFeature.js";
+import { DisposableCancellationTokenSource } from "../../../browser/widget/diffEditor/utils.js";
+import { LineRange } from "../../../common/core/lineRange.js";
+import { ITextModel } from "../../../common/model.js";
+import { ILanguageFeaturesService } from "../../../common/services/languageFeatures.js";
+import { IOutlineModelService, OutlineModel } from "../../documentSymbols/browser/outlineModel.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { Event } from "../../../../base/common/event.js";
+import { SymbolKind } from "../../../common/languages.js";
+let DiffEditorBreadcrumbsSource = class extends Disposable {
+  constructor(_textModel, _languageFeaturesService, _outlineModelService) {
+    super();
+    this._textModel = _textModel;
+    this._languageFeaturesService = _languageFeaturesService;
+    this._outlineModelService = _outlineModelService;
+    const documentSymbolProviderChanged = observableSignalFromEvent(
+      "documentSymbolProvider.onDidChange",
+      this._languageFeaturesService.documentSymbolProvider.onDidChange
+    );
+    const textModelChanged = observableSignalFromEvent(
+      "_textModel.onDidChangeContent",
+      Event.debounce((e) => this._textModel.onDidChangeContent(e), () => void 0, 100)
+    );
+    this._register(autorunWithStore(async (reader, store) => {
+      documentSymbolProviderChanged.read(reader);
+      textModelChanged.read(reader);
+      const src = store.add(new DisposableCancellationTokenSource());
+      const model = await this._outlineModelService.getOrCreate(this._textModel, src.token);
+      if (store.isDisposed) {
+        return;
+      }
+      this._currentModel.set(model, void 0);
+    }));
+  }
+  static {
+    __name(this, "DiffEditorBreadcrumbsSource");
+  }
+  _currentModel = observableValue(this, void 0);
+  getBreadcrumbItems(startRange, reader) {
+    const m = this._currentModel.read(reader);
+    if (!m) {
+      return [];
+    }
+    const symbols = m.asListOfDocumentSymbols().filter((s) => startRange.contains(s.range.startLineNumber) && !startRange.contains(s.range.endLineNumber));
+    symbols.sort(reverseOrder(compareBy((s) => s.range.endLineNumber - s.range.startLineNumber, numberComparator)));
+    return symbols.map((s) => ({ name: s.name, kind: s.kind, startLineNumber: s.range.startLineNumber }));
+  }
+};
+DiffEditorBreadcrumbsSource = __decorateClass([
+  __decorateParam(1, ILanguageFeaturesService),
+  __decorateParam(2, IOutlineModelService)
+], DiffEditorBreadcrumbsSource);
+HideUnchangedRegionsFeature.setBreadcrumbsSourceFactory((textModel, instantiationService) => {
+  return instantiationService.createInstance(DiffEditorBreadcrumbsSource, textModel);
+});
+//# sourceMappingURL=contribution.js.map

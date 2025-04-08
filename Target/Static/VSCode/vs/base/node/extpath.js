@@ -1,1 +1,72 @@
-import*as o from"fs";import"../common/cancellation.js";import{basename as g,dirname as p,join as c,normalize as d,sep as x}from"../common/path.js";import{isLinux as y}from"../common/platform.js";import{rtrim as w}from"../common/strings.js";import{Promises as l}from"./pfs.js";async function f(r,e){if(y)return r;const n=p(r);if(r===n)return r;const s=(g(r)||r).toLowerCase();try{if(e?.isCancellationRequested)return null;const i=(await l.readdir(n)).filter(t=>t.toLowerCase()===s);if(i.length===1){const t=await f(n,e);if(t)return c(t,i[0])}else if(i.length>1){const t=i.indexOf(s);if(t>=0){const a=await f(n,e);if(a)return c(a,i[t])}}}catch{}return null}async function R(r){try{return await l.realpath(r)}catch{const n=m(r);return await o.promises.access(n,o.constants.R_OK),n}}function S(r){try{return o.realpathSync(r)}catch{const n=m(r);return o.accessSync(n,o.constants.R_OK),n}}function m(r){return w(d(r),x)}export{f as realcase,R as realpath,S as realpathSync};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as fs from "fs";
+import { CancellationToken } from "../common/cancellation.js";
+import { basename, dirname, join, normalize, sep } from "../common/path.js";
+import { isLinux } from "../common/platform.js";
+import { rtrim } from "../common/strings.js";
+import { Promises } from "./pfs.js";
+async function realcase(path, token) {
+  if (isLinux) {
+    return path;
+  }
+  const dir = dirname(path);
+  if (path === dir) {
+    return path;
+  }
+  const name = (basename(path) || path).toLowerCase();
+  try {
+    if (token?.isCancellationRequested) {
+      return null;
+    }
+    const entries = await Promises.readdir(dir);
+    const found = entries.filter((e) => e.toLowerCase() === name);
+    if (found.length === 1) {
+      const prefix = await realcase(dir, token);
+      if (prefix) {
+        return join(prefix, found[0]);
+      }
+    } else if (found.length > 1) {
+      const ix = found.indexOf(name);
+      if (ix >= 0) {
+        const prefix = await realcase(dir, token);
+        if (prefix) {
+          return join(prefix, found[ix]);
+        }
+      }
+    }
+  } catch (error) {
+  }
+  return null;
+}
+__name(realcase, "realcase");
+async function realpath(path) {
+  try {
+    return await Promises.realpath(path);
+  } catch (error) {
+    const normalizedPath = normalizePath(path);
+    await fs.promises.access(normalizedPath, fs.constants.R_OK);
+    return normalizedPath;
+  }
+}
+__name(realpath, "realpath");
+function realpathSync(path) {
+  try {
+    return fs.realpathSync(path);
+  } catch (error) {
+    const normalizedPath = normalizePath(path);
+    fs.accessSync(normalizedPath, fs.constants.R_OK);
+    return normalizedPath;
+  }
+}
+__name(realpathSync, "realpathSync");
+function normalizePath(path) {
+  return rtrim(normalize(path), sep);
+}
+__name(normalizePath, "normalizePath");
+export {
+  realcase,
+  realpath,
+  realpathSync
+};
+//# sourceMappingURL=extpath.js.map

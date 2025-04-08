@@ -1,1 +1,71 @@
-var C=Object.defineProperty,u=Object.getOwnPropertyDescriptor,d=(o,e,t,i)=>{for(var r,s=i>1?void 0:i?u(e,t):e,n=o.length-1;n>=0;n--)(r=o[n])&&(s=(i?r(e,t,s):r(s))||s);return i&&s&&C(e,t,s),s},l=(o,e)=>(t,i)=>e(t,i,o);import{IContextKeyService as h}from"../../../../../platform/contextkey/common/contextkey.js";import{IInstantiationService as p}from"../../../../../platform/instantiation/common/instantiation.js";import"../../../../browser/editorBrowser.js";import"../../../../common/editorCommon.js";import{EditorContextKeys as c}from"../../../../common/editorContextKeys.js";import{StandaloneColorPickerWidget as b}from"./standaloneColorPickerWidget.js";import{Disposable as _}from"../../../../../base/common/lifecycle.js";let r=class extends _{constructor(o,e,t){super(),this._editor=o,this._instantiationService=t,this._standaloneColorPickerVisible=c.standaloneColorPickerVisible.bindTo(e),this._standaloneColorPickerFocused=c.standaloneColorPickerFocused.bindTo(e)}static ID="editor.contrib.standaloneColorPickerController";_standaloneColorPickerWidget=null;_standaloneColorPickerVisible;_standaloneColorPickerFocused;showOrFocus(){this._editor.hasModel()&&(this._standaloneColorPickerVisible.get()?this._standaloneColorPickerFocused.get()||this._standaloneColorPickerWidget?.focus():this._standaloneColorPickerWidget=this._instantiationService.createInstance(b,this._editor,this._standaloneColorPickerVisible,this._standaloneColorPickerFocused))}hide(){this._standaloneColorPickerFocused.set(!1),this._standaloneColorPickerVisible.set(!1),this._standaloneColorPickerWidget?.hide(),this._editor.focus()}insertColor(){this._standaloneColorPickerWidget?.updateEditor(),this.hide()}static get(o){return o.getContribution(r.ID)}};r=d([l(1,h),l(2,p)],r);export{r as StandaloneColorPickerController};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { IContextKey, IContextKeyService } from "../../../../../platform/contextkey/common/contextkey.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { ICodeEditor } from "../../../../browser/editorBrowser.js";
+import { IEditorContribution } from "../../../../common/editorCommon.js";
+import { EditorContextKeys } from "../../../../common/editorContextKeys.js";
+import { StandaloneColorPickerWidget } from "./standaloneColorPickerWidget.js";
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+let StandaloneColorPickerController = class extends Disposable {
+  constructor(_editor, _contextKeyService, _instantiationService) {
+    super();
+    this._editor = _editor;
+    this._instantiationService = _instantiationService;
+    this._standaloneColorPickerVisible = EditorContextKeys.standaloneColorPickerVisible.bindTo(_contextKeyService);
+    this._standaloneColorPickerFocused = EditorContextKeys.standaloneColorPickerFocused.bindTo(_contextKeyService);
+  }
+  static {
+    __name(this, "StandaloneColorPickerController");
+  }
+  static ID = "editor.contrib.standaloneColorPickerController";
+  _standaloneColorPickerWidget = null;
+  _standaloneColorPickerVisible;
+  _standaloneColorPickerFocused;
+  showOrFocus() {
+    if (!this._editor.hasModel()) {
+      return;
+    }
+    if (!this._standaloneColorPickerVisible.get()) {
+      this._standaloneColorPickerWidget = this._instantiationService.createInstance(
+        StandaloneColorPickerWidget,
+        this._editor,
+        this._standaloneColorPickerVisible,
+        this._standaloneColorPickerFocused
+      );
+    } else if (!this._standaloneColorPickerFocused.get()) {
+      this._standaloneColorPickerWidget?.focus();
+    }
+  }
+  hide() {
+    this._standaloneColorPickerFocused.set(false);
+    this._standaloneColorPickerVisible.set(false);
+    this._standaloneColorPickerWidget?.hide();
+    this._editor.focus();
+  }
+  insertColor() {
+    this._standaloneColorPickerWidget?.updateEditor();
+    this.hide();
+  }
+  static get(editor) {
+    return editor.getContribution(StandaloneColorPickerController.ID);
+  }
+};
+StandaloneColorPickerController = __decorateClass([
+  __decorateParam(1, IContextKeyService),
+  __decorateParam(2, IInstantiationService)
+], StandaloneColorPickerController);
+export {
+  StandaloneColorPickerController
+};
+//# sourceMappingURL=standaloneColorPickerController.js.map

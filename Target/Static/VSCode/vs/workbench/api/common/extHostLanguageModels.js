@@ -1,1 +1,481 @@
-var E=Object.defineProperty;var D=Object.getOwnPropertyDescriptor;var L=(p,e,t,a)=>{for(var o=a>1?void 0:a?D(e,t):e,n=p.length-1,s;n>=0;n--)(s=p[n])&&(o=(a?s(e,t,o):s(o))||o);return a&&o&&E(e,t,o),o},f=(p,e)=>(t,a)=>e(t,a,p);import{AsyncIterableObject as R,AsyncIterableSource as v}from"../../../base/common/async.js";import{CancellationToken as y}from"../../../base/common/cancellation.js";import{CancellationError as w,transformErrorForSerialization as A,transformErrorFromSerialization as S}from"../../../base/common/errors.js";import{Emitter as I,Event as m}from"../../../base/common/event.js";import{Iterable as C}from"../../../base/common/iterator.js";import{toDisposable as x}from"../../../base/common/lifecycle.js";import{URI as T}from"../../../base/common/uri.js";import{localize as $}from"../../../nls.js";import{ExtensionIdentifier as h,ExtensionIdentifierMap as P,ExtensionIdentifierSet as k}from"../../../platform/extensions/common/extensions.js";import{createDecorator as F}from"../../../platform/instantiation/common/instantiation.js";import{ILogService as N}from"../../../platform/log/common/log.js";import{Progress as O}from"../../../platform/progress/common/progress.js";import"../../contrib/chat/common/languageModels.js";import{INTERNAL_AUTH_PROVIDER_PREFIX as q}from"../../services/authentication/common/authentication.js";import{checkProposedApiEnabled as M}from"../../services/extensions/common/extensions.js";import{MainContext as j}from"./extHost.protocol.js";import{IExtHostAuthentication as U}from"./extHostAuthentication.js";import{IExtHostRpcService as H}from"./extHostRpcService.js";import*as _ from"./extHostTypeConverters.js";import*as l from"./extHostTypes.js";import{SerializableObjectWithBuffers as z}from"../../services/extensions/common/proxyIdentifier.js";const ye=F("IExtHostLanguageModels");class b{constructor(e,t){this.option=e;this.stream=t??new v}stream=new v}class B{apiObject;_responseStreams=new Map;_defaultStream=new v;_isDone=!1;constructor(){const e=this;this.apiObject={get stream(){return e._defaultStream.asyncIterable},get text(){return R.map(e._defaultStream.asyncIterable,t=>{if(t instanceof l.LanguageModelTextPart)return t.value}).coalesce()}}}*_streams(){if(this._responseStreams.size>0)for(const[,e]of this._responseStreams)yield e.stream;else yield this._defaultStream}handleFragment(e){if(this._isDone)return;let t=this._responseStreams.get(e.index);t||(this._responseStreams.size===0?t=new b(e.index,this._defaultStream):t=new b(e.index),this._responseStreams.set(e.index,t));let a;e.part.type==="text"?a=new l.LanguageModelTextPart(e.part.value):a=new l.LanguageModelToolCallPart(e.part.toolCallId,e.part.name,e.part.parameters),t.stream.emitOne(a)}reject(e){this._isDone=!0;for(const t of this._streams())t.reject(e)}resolve(){this._isDone=!0;for(const e of this._streams())e.resolve()}}let c=class{constructor(e,t,a){this._logService=t;this._extHostAuthentication=a;this._proxy=e.getProxy(j.MainThreadLanguageModels)}static _idPool=1;_proxy;_onDidChangeModelAccess=new I;_onDidChangeProviders=new I;onDidChangeProviders=this._onDidChangeProviders.event;_languageModels=new Map;_allLanguageModelData=new Map;_modelAccessList=new P;_pendingRequest=new Map;_ignoredFileProviders=new Map;dispose(){this._onDidChangeModelAccess.dispose(),this._onDidChangeProviders.dispose()}registerLanguageModel(e,t,a,o){const n=c._idPool++;this._languageModels.set(n,{extension:e.identifier,provider:a,languageModelId:t});let s;o.auth&&(s={providerLabel:e.displayName||e.name,accountLabel:typeof o.auth=="object"?o.auth.label:void 0}),this._proxy.$registerLanguageModelProvider(n,`${h.toKey(e.identifier)}/${t}`,{extension:e.identifier,id:t,vendor:o.vendor??h.toKey(e.identifier),name:o.name??"",family:o.family??"",version:o.version,maxInputTokens:o.maxInputTokens,maxOutputTokens:o.maxOutputTokens,auth:s,targetExtensions:o.extensions,isDefault:o.isDefault,isUserSelectable:o.isUserSelectable,capabilities:o.capabilities});const i=a.onDidReceiveLanguageModelResponse2?.(({extensionId:d,participant:g,tokenCount:r})=>{this._proxy.$whenLanguageModelChatRequestMade(t,new h(d),g,r)});return x(()=>{this._languageModels.delete(n),this._proxy.$unregisterProvider(n),i?.dispose()})}async $startChatRequest(e,t,a,o,n,s){const i=this._languageModels.get(e);if(!i)throw new Error("Provider not found");const d=new O(async r=>{if(s.isCancellationRequested){this._logService.warn(`[CHAT](${i.extension.value}) CANNOT send progress because the REQUEST IS CANCELLED`);return}let u;if(r.part instanceof l.LanguageModelToolCallPart?u={type:"tool_use",name:r.part.name,parameters:r.part.input,toolCallId:r.part.callId}:r.part instanceof l.LanguageModelTextPart&&(u={type:"text",value:r.part.value}),!u){this._logService.warn(`[CHAT](${i.extension.value}) UNKNOWN part ${JSON.stringify(r)}`);return}this._proxy.$reportResponsePart(t,{index:r.index,part:u})});let g;try{g=i.provider.provideLanguageModelResponse(o.value.map(_.LanguageModelChatMessage2.to),n,h.toKey(a),d,s)}catch(r){throw r}Promise.resolve(g).then(()=>{this._proxy.$reportResponseDone(t,void 0)},r=>{this._proxy.$reportResponseDone(t,A(r))})}$provideTokenLength(e,t,a){const o=this._languageModels.get(e);return o?Promise.resolve(o.provider.provideTokenCount(t,a)):Promise.resolve(0)}$acceptChatModelMetadata(e){if(e.added)for(const{identifier:t,metadata:a}of e.added)this._allLanguageModelData.set(t,{metadata:a,apiObjects:new P});if(e.removed)for(const t of e.removed){this._allLanguageModelData.delete(t);for(const[a,o]of this._pendingRequest)o.languageModelId===t&&(o.res.reject(new w),this._pendingRequest.delete(a))}e.added?.forEach(t=>this._fakeAuthPopulate(t.metadata)),this._onDidChangeProviders.fire(void 0)}async getDefaultLanguageModel(e){const t=C.find(this._allLanguageModelData.entries(),([,a])=>!!a.metadata.isDefault)?.[0];if(t)return this.getLanguageModelByIdentifier(e,t)}async getLanguageModelByIdentifier(e,t){const a=this._allLanguageModelData.get(t);if(!a)return;this._isUsingAuth(e.identifier,a.metadata)&&await this._fakeAuthPopulate(a.metadata);let o=a.apiObjects.get(e.identifier);if(!o){const n=this;o={id:a.metadata.id,vendor:a.metadata.vendor,family:a.metadata.family,version:a.metadata.version,name:a.metadata.name,capabilities:{supportsImageToText:a.metadata.capabilities?.vision??!1,supportsToolCalling:a.metadata.capabilities?.toolCalling??!1},maxInputTokens:a.metadata.maxInputTokens,countTokens(s,i){if(!n._allLanguageModelData.has(t))throw l.LanguageModelError.NotFound(t);return n._computeTokenLength(t,s,i??y.None)},sendRequest(s,i,d){if(!n._allLanguageModelData.has(t))throw l.LanguageModelError.NotFound(t);return n._sendChatRequest(e,t,s,i??{},d??y.None)}},Object.freeze(o),a.apiObjects.set(e.identifier,o)}return o}async selectLanguageModels(e,t){const a=await this._proxy.$selectChatModels({...t,extension:e.identifier}),o=[];for(const n of a){const s=await this.getLanguageModelByIdentifier(e,n);s&&o.push(s)}return o}async _sendChatRequest(e,t,a,o,n){const s=this._convertMessages(e,a),i=e.identifier,d=this._allLanguageModelData.get(t)?.metadata;if(!d||!this._allLanguageModelData.has(t))throw l.LanguageModelError.NotFound(`Language model '${t}' is unknown.`);if(this._isUsingAuth(i,d)&&(!await this._getAuthAccess(e,{identifier:d.extension,displayName:d.auth.providerLabel},o.justification,!1)||!this._modelAccessList.get(i)?.has(d.extension)))throw l.LanguageModelError.NoPermissions(`Language model '${t}' cannot be used by '${i.value}'.`);const g=Math.random()*1e6|0,r=new B;this._pendingRequest.set(g,{languageModelId:t,res:r});try{await this._proxy.$tryStartChatRequest(i,t,g,new z(s),o,n)}catch(u){throw this._pendingRequest.delete(g),l.LanguageModelError.tryDeserialize(u)??u}return r.apiObject}_convertMessages(e,t){const a=[];for(const o of t)o.role===l.LanguageModelChatMessageRole.System&&M(e,"languageModelSystem"),a.push(_.LanguageModelChatMessage2.from(o));return a}async $acceptResponsePart(e,t){const a=this._pendingRequest.get(e);a&&a.res.handleFragment(t)}async $acceptResponseDone(e,t){const a=this._pendingRequest.get(e);a&&(this._pendingRequest.delete(e),t?a.res.reject(l.LanguageModelError.tryDeserialize(t)??S(t)):a.res.resolve())}async _getAuthAccess(e,t,a,o){const n=q+t.identifier.value;if(await this._extHostAuthentication.getSession(e,n,[],{silent:!0}))return this.$updateModelAccesslist([{from:e.identifier,to:t.identifier,enabled:!0}]),!0;if(o)return!1;try{const i=a?$("chatAccessWithJustification","Justification: {1}",t.displayName,a):void 0;return await this._extHostAuthentication.getSession(e,n,[],{forceNewSession:{detail:i}}),this.$updateModelAccesslist([{from:e.identifier,to:t.identifier,enabled:!0}]),!0}catch{return!1}}_isUsingAuth(e,t){return!!t.auth&&!h.equals(t.extension,e)}async _fakeAuthPopulate(e){if(e.auth)for(const t of this._languageAccessInformationExtensions)try{await this._getAuthAccess(t,{identifier:e.extension,displayName:""},void 0,!0)}catch(a){this._logService.error("Fake Auth request failed"),this._logService.error(a)}}async _computeTokenLength(e,t,a){if(!this._allLanguageModelData.get(e))throw l.LanguageModelError.NotFound(`Language model '${e}' is unknown.`);const n=C.find(this._languageModels.values(),s=>s.languageModelId===e);return n?n.provider.provideTokenCount(t,a):this._proxy.$countTokens(e,typeof t=="string"?t:_.LanguageModelChatMessage2.from(t),a)}$updateModelAccesslist(e){const t=new Array;for(const{from:a,to:o,enabled:n}of e){const s=this._modelAccessList.get(a)??new k;if(s.has(o)!==n){n?s.add(o):s.delete(o),this._modelAccessList.set(a,s);const d={from:a,to:o};t.push(d),this._onDidChangeModelAccess.fire(d)}}}_languageAccessInformationExtensions=new Set;createLanguageModelAccessInformation(e){this._languageAccessInformationExtensions.add(e);const t=this,a=m.signal(m.filter(this._onDidChangeModelAccess.event,n=>h.equals(n.from,e.identifier))),o=m.signal(this._onDidChangeProviders.event);return{get onDidChange(){return m.any(a,o)},canSendRequest(n){let s;e:for(const[d,g]of t._allLanguageModelData)for(const r of g.apiObjects.values())if(r===n){s=g.metadata;break e}if(!s)return;if(!t._isUsingAuth(e.identifier,s))return!0;const i=t._modelAccessList.get(e.identifier);if(i)return i.has(s.extension)}}}fileIsIgnored(e,t,a){return M(e,"chatParticipantAdditions"),this._proxy.$fileIsIgnored(t,a)}async $isFileIgnored(e,t,a){const o=this._ignoredFileProviders.get(e);if(!o)throw new Error("Unknown LanguageModelIgnoredFileProvider");return await o.provideFileIgnored(T.revive(t),a)??!1}registerIgnoredFileProvider(e,t){M(e,"chatParticipantPrivate");const a=c._idPool++;return this._proxy.$registerFileIgnoreProvider(a),this._ignoredFileProviders.set(a,t),x(()=>{this._proxy.$unregisterFileIgnoreProvider(a),this._ignoredFileProviders.delete(a)})}};c=L([f(0,H),f(1,N),f(2,U)],c);export{c as ExtHostLanguageModels,ye as IExtHostLanguageModels};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { AsyncIterableObject, AsyncIterableSource } from "../../../base/common/async.js";
+import { CancellationToken } from "../../../base/common/cancellation.js";
+import { CancellationError, SerializedError, transformErrorForSerialization, transformErrorFromSerialization } from "../../../base/common/errors.js";
+import { Emitter, Event } from "../../../base/common/event.js";
+import { Iterable } from "../../../base/common/iterator.js";
+import { IDisposable, toDisposable } from "../../../base/common/lifecycle.js";
+import { URI, UriComponents } from "../../../base/common/uri.js";
+import { localize } from "../../../nls.js";
+import { ExtensionIdentifier, ExtensionIdentifierMap, ExtensionIdentifierSet, IExtensionDescription } from "../../../platform/extensions/common/extensions.js";
+import { createDecorator } from "../../../platform/instantiation/common/instantiation.js";
+import { ILogService } from "../../../platform/log/common/log.js";
+import { Progress } from "../../../platform/progress/common/progress.js";
+import { IChatMessage, IChatResponseFragment, IChatResponsePart, ILanguageModelChatMetadata } from "../../contrib/chat/common/languageModels.js";
+import { INTERNAL_AUTH_PROVIDER_PREFIX } from "../../services/authentication/common/authentication.js";
+import { checkProposedApiEnabled } from "../../services/extensions/common/extensions.js";
+import { ExtHostLanguageModelsShape, MainContext, MainThreadLanguageModelsShape } from "./extHost.protocol.js";
+import { IExtHostAuthentication } from "./extHostAuthentication.js";
+import { IExtHostRpcService } from "./extHostRpcService.js";
+import * as typeConvert from "./extHostTypeConverters.js";
+import * as extHostTypes from "./extHostTypes.js";
+import { SerializableObjectWithBuffers } from "../../services/extensions/common/proxyIdentifier.js";
+const IExtHostLanguageModels = createDecorator("IExtHostLanguageModels");
+class LanguageModelResponseStream {
+  constructor(option, stream) {
+    this.option = option;
+    this.stream = stream ?? new AsyncIterableSource();
+  }
+  static {
+    __name(this, "LanguageModelResponseStream");
+  }
+  stream = new AsyncIterableSource();
+}
+class LanguageModelResponse {
+  static {
+    __name(this, "LanguageModelResponse");
+  }
+  apiObject;
+  _responseStreams = /* @__PURE__ */ new Map();
+  _defaultStream = new AsyncIterableSource();
+  _isDone = false;
+  constructor() {
+    const that = this;
+    this.apiObject = {
+      // result: promise,
+      get stream() {
+        return that._defaultStream.asyncIterable;
+      },
+      get text() {
+        return AsyncIterableObject.map(that._defaultStream.asyncIterable, (part) => {
+          if (part instanceof extHostTypes.LanguageModelTextPart) {
+            return part.value;
+          } else {
+            return void 0;
+          }
+        }).coalesce();
+      }
+    };
+  }
+  *_streams() {
+    if (this._responseStreams.size > 0) {
+      for (const [, value] of this._responseStreams) {
+        yield value.stream;
+      }
+    } else {
+      yield this._defaultStream;
+    }
+  }
+  handleFragment(fragment) {
+    if (this._isDone) {
+      return;
+    }
+    let res = this._responseStreams.get(fragment.index);
+    if (!res) {
+      if (this._responseStreams.size === 0) {
+        res = new LanguageModelResponseStream(fragment.index, this._defaultStream);
+      } else {
+        res = new LanguageModelResponseStream(fragment.index);
+      }
+      this._responseStreams.set(fragment.index, res);
+    }
+    let out;
+    if (fragment.part.type === "text") {
+      out = new extHostTypes.LanguageModelTextPart(fragment.part.value);
+    } else {
+      out = new extHostTypes.LanguageModelToolCallPart(fragment.part.toolCallId, fragment.part.name, fragment.part.parameters);
+    }
+    res.stream.emitOne(out);
+  }
+  reject(err) {
+    this._isDone = true;
+    for (const stream of this._streams()) {
+      stream.reject(err);
+    }
+  }
+  resolve() {
+    this._isDone = true;
+    for (const stream of this._streams()) {
+      stream.resolve();
+    }
+  }
+}
+let ExtHostLanguageModels = class {
+  constructor(extHostRpc, _logService, _extHostAuthentication) {
+    this._logService = _logService;
+    this._extHostAuthentication = _extHostAuthentication;
+    this._proxy = extHostRpc.getProxy(MainContext.MainThreadLanguageModels);
+  }
+  static {
+    __name(this, "ExtHostLanguageModels");
+  }
+  static _idPool = 1;
+  _proxy;
+  _onDidChangeModelAccess = new Emitter();
+  _onDidChangeProviders = new Emitter();
+  onDidChangeProviders = this._onDidChangeProviders.event;
+  _languageModels = /* @__PURE__ */ new Map();
+  _allLanguageModelData = /* @__PURE__ */ new Map();
+  // these are ALL models, not just the one in this EH
+  _modelAccessList = new ExtensionIdentifierMap();
+  _pendingRequest = /* @__PURE__ */ new Map();
+  _ignoredFileProviders = /* @__PURE__ */ new Map();
+  dispose() {
+    this._onDidChangeModelAccess.dispose();
+    this._onDidChangeProviders.dispose();
+  }
+  registerLanguageModel(extension, identifier, provider, metadata) {
+    const handle = ExtHostLanguageModels._idPool++;
+    this._languageModels.set(handle, { extension: extension.identifier, provider, languageModelId: identifier });
+    let auth;
+    if (metadata.auth) {
+      auth = {
+        providerLabel: extension.displayName || extension.name,
+        accountLabel: typeof metadata.auth === "object" ? metadata.auth.label : void 0
+      };
+    }
+    this._proxy.$registerLanguageModelProvider(handle, `${ExtensionIdentifier.toKey(extension.identifier)}/${identifier}`, {
+      extension: extension.identifier,
+      id: identifier,
+      vendor: metadata.vendor ?? ExtensionIdentifier.toKey(extension.identifier),
+      name: metadata.name ?? "",
+      family: metadata.family ?? "",
+      version: metadata.version,
+      maxInputTokens: metadata.maxInputTokens,
+      maxOutputTokens: metadata.maxOutputTokens,
+      auth,
+      targetExtensions: metadata.extensions,
+      isDefault: metadata.isDefault,
+      isUserSelectable: metadata.isUserSelectable,
+      capabilities: metadata.capabilities
+    });
+    const responseReceivedListener = provider.onDidReceiveLanguageModelResponse2?.(({ extensionId, participant, tokenCount }) => {
+      this._proxy.$whenLanguageModelChatRequestMade(identifier, new ExtensionIdentifier(extensionId), participant, tokenCount);
+    });
+    return toDisposable(() => {
+      this._languageModels.delete(handle);
+      this._proxy.$unregisterProvider(handle);
+      responseReceivedListener?.dispose();
+    });
+  }
+  async $startChatRequest(handle, requestId, from, messages, options, token) {
+    const data = this._languageModels.get(handle);
+    if (!data) {
+      throw new Error("Provider not found");
+    }
+    const progress = new Progress(async (fragment) => {
+      if (token.isCancellationRequested) {
+        this._logService.warn(`[CHAT](${data.extension.value}) CANNOT send progress because the REQUEST IS CANCELLED`);
+        return;
+      }
+      let part;
+      if (fragment.part instanceof extHostTypes.LanguageModelToolCallPart) {
+        part = { type: "tool_use", name: fragment.part.name, parameters: fragment.part.input, toolCallId: fragment.part.callId };
+      } else if (fragment.part instanceof extHostTypes.LanguageModelTextPart) {
+        part = { type: "text", value: fragment.part.value };
+      }
+      if (!part) {
+        this._logService.warn(`[CHAT](${data.extension.value}) UNKNOWN part ${JSON.stringify(fragment)}`);
+        return;
+      }
+      this._proxy.$reportResponsePart(requestId, { index: fragment.index, part });
+    });
+    let value;
+    try {
+      value = data.provider.provideLanguageModelResponse(
+        messages.value.map(typeConvert.LanguageModelChatMessage2.to),
+        options,
+        ExtensionIdentifier.toKey(from),
+        progress,
+        token
+      );
+    } catch (err) {
+      throw err;
+    }
+    Promise.resolve(value).then(() => {
+      this._proxy.$reportResponseDone(requestId, void 0);
+    }, (err) => {
+      this._proxy.$reportResponseDone(requestId, transformErrorForSerialization(err));
+    });
+  }
+  //#region --- token counting
+  $provideTokenLength(handle, value, token) {
+    const data = this._languageModels.get(handle);
+    if (!data) {
+      return Promise.resolve(0);
+    }
+    return Promise.resolve(data.provider.provideTokenCount(value, token));
+  }
+  //#region --- making request
+  $acceptChatModelMetadata(data) {
+    if (data.added) {
+      for (const { identifier, metadata } of data.added) {
+        this._allLanguageModelData.set(identifier, { metadata, apiObjects: new ExtensionIdentifierMap() });
+      }
+    }
+    if (data.removed) {
+      for (const id of data.removed) {
+        this._allLanguageModelData.delete(id);
+        for (const [key, value] of this._pendingRequest) {
+          if (value.languageModelId === id) {
+            value.res.reject(new CancellationError());
+            this._pendingRequest.delete(key);
+          }
+        }
+      }
+    }
+    data.added?.forEach((added) => this._fakeAuthPopulate(added.metadata));
+    this._onDidChangeProviders.fire(void 0);
+  }
+  async getDefaultLanguageModel(extension) {
+    const defaultModelId = Iterable.find(this._allLanguageModelData.entries(), ([, value]) => !!value.metadata.isDefault)?.[0];
+    if (!defaultModelId) {
+      return;
+    }
+    return this.getLanguageModelByIdentifier(extension, defaultModelId);
+  }
+  async getLanguageModelByIdentifier(extension, identifier) {
+    const data = this._allLanguageModelData.get(identifier);
+    if (!data) {
+      return;
+    }
+    if (this._isUsingAuth(extension.identifier, data.metadata)) {
+      await this._fakeAuthPopulate(data.metadata);
+    }
+    let apiObject = data.apiObjects.get(extension.identifier);
+    if (!apiObject) {
+      const that = this;
+      apiObject = {
+        id: data.metadata.id,
+        vendor: data.metadata.vendor,
+        family: data.metadata.family,
+        version: data.metadata.version,
+        name: data.metadata.name,
+        capabilities: {
+          supportsImageToText: data.metadata.capabilities?.vision ?? false,
+          supportsToolCalling: data.metadata.capabilities?.toolCalling ?? false
+        },
+        maxInputTokens: data.metadata.maxInputTokens,
+        countTokens(text, token) {
+          if (!that._allLanguageModelData.has(identifier)) {
+            throw extHostTypes.LanguageModelError.NotFound(identifier);
+          }
+          return that._computeTokenLength(identifier, text, token ?? CancellationToken.None);
+        },
+        sendRequest(messages, options, token) {
+          if (!that._allLanguageModelData.has(identifier)) {
+            throw extHostTypes.LanguageModelError.NotFound(identifier);
+          }
+          return that._sendChatRequest(extension, identifier, messages, options ?? {}, token ?? CancellationToken.None);
+        }
+      };
+      Object.freeze(apiObject);
+      data.apiObjects.set(extension.identifier, apiObject);
+    }
+    return apiObject;
+  }
+  async selectLanguageModels(extension, selector) {
+    const models = await this._proxy.$selectChatModels({ ...selector, extension: extension.identifier });
+    const result = [];
+    for (const identifier of models) {
+      const model = await this.getLanguageModelByIdentifier(extension, identifier);
+      if (model) {
+        result.push(model);
+      }
+    }
+    return result;
+  }
+  async _sendChatRequest(extension, languageModelId, messages, options, token) {
+    const internalMessages = this._convertMessages(extension, messages);
+    const from = extension.identifier;
+    const metadata = this._allLanguageModelData.get(languageModelId)?.metadata;
+    if (!metadata || !this._allLanguageModelData.has(languageModelId)) {
+      throw extHostTypes.LanguageModelError.NotFound(`Language model '${languageModelId}' is unknown.`);
+    }
+    if (this._isUsingAuth(from, metadata)) {
+      const success = await this._getAuthAccess(extension, { identifier: metadata.extension, displayName: metadata.auth.providerLabel }, options.justification, false);
+      if (!success || !this._modelAccessList.get(from)?.has(metadata.extension)) {
+        throw extHostTypes.LanguageModelError.NoPermissions(`Language model '${languageModelId}' cannot be used by '${from.value}'.`);
+      }
+    }
+    const requestId = Math.random() * 1e6 | 0;
+    const res = new LanguageModelResponse();
+    this._pendingRequest.set(requestId, { languageModelId, res });
+    try {
+      await this._proxy.$tryStartChatRequest(from, languageModelId, requestId, new SerializableObjectWithBuffers(internalMessages), options, token);
+    } catch (error) {
+      this._pendingRequest.delete(requestId);
+      throw extHostTypes.LanguageModelError.tryDeserialize(error) ?? error;
+    }
+    return res.apiObject;
+  }
+  _convertMessages(extension, messages) {
+    const internalMessages = [];
+    for (const message of messages) {
+      if (message.role === extHostTypes.LanguageModelChatMessageRole.System) {
+        checkProposedApiEnabled(extension, "languageModelSystem");
+      }
+      internalMessages.push(typeConvert.LanguageModelChatMessage2.from(message));
+    }
+    return internalMessages;
+  }
+  async $acceptResponsePart(requestId, chunk) {
+    const data = this._pendingRequest.get(requestId);
+    if (data) {
+      data.res.handleFragment(chunk);
+    }
+  }
+  async $acceptResponseDone(requestId, error) {
+    const data = this._pendingRequest.get(requestId);
+    if (!data) {
+      return;
+    }
+    this._pendingRequest.delete(requestId);
+    if (error) {
+      data.res.reject(extHostTypes.LanguageModelError.tryDeserialize(error) ?? transformErrorFromSerialization(error));
+    } else {
+      data.res.resolve();
+    }
+  }
+  // BIG HACK: Using AuthenticationProviders to check access to Language Models
+  async _getAuthAccess(from, to, justification, silent) {
+    const providerId = INTERNAL_AUTH_PROVIDER_PREFIX + to.identifier.value;
+    const session = await this._extHostAuthentication.getSession(from, providerId, [], { silent: true });
+    if (session) {
+      this.$updateModelAccesslist([{ from: from.identifier, to: to.identifier, enabled: true }]);
+      return true;
+    }
+    if (silent) {
+      return false;
+    }
+    try {
+      const detail = justification ? localize("chatAccessWithJustification", "Justification: {1}", to.displayName, justification) : void 0;
+      await this._extHostAuthentication.getSession(from, providerId, [], { forceNewSession: { detail } });
+      this.$updateModelAccesslist([{ from: from.identifier, to: to.identifier, enabled: true }]);
+      return true;
+    } catch (err) {
+      return false;
+    }
+  }
+  _isUsingAuth(from, toMetadata) {
+    return !!toMetadata.auth && !ExtensionIdentifier.equals(toMetadata.extension, from);
+  }
+  async _fakeAuthPopulate(metadata) {
+    if (!metadata.auth) {
+      return;
+    }
+    for (const from of this._languageAccessInformationExtensions) {
+      try {
+        await this._getAuthAccess(from, { identifier: metadata.extension, displayName: "" }, void 0, true);
+      } catch (err) {
+        this._logService.error("Fake Auth request failed");
+        this._logService.error(err);
+      }
+    }
+  }
+  async _computeTokenLength(languageModelId, value, token) {
+    const data = this._allLanguageModelData.get(languageModelId);
+    if (!data) {
+      throw extHostTypes.LanguageModelError.NotFound(`Language model '${languageModelId}' is unknown.`);
+    }
+    const local = Iterable.find(this._languageModels.values(), (candidate) => candidate.languageModelId === languageModelId);
+    if (local) {
+      return local.provider.provideTokenCount(value, token);
+    }
+    return this._proxy.$countTokens(languageModelId, typeof value === "string" ? value : typeConvert.LanguageModelChatMessage2.from(value), token);
+  }
+  $updateModelAccesslist(data) {
+    const updated = new Array();
+    for (const { from, to, enabled } of data) {
+      const set = this._modelAccessList.get(from) ?? new ExtensionIdentifierSet();
+      const oldValue = set.has(to);
+      if (oldValue !== enabled) {
+        if (enabled) {
+          set.add(to);
+        } else {
+          set.delete(to);
+        }
+        this._modelAccessList.set(from, set);
+        const newItem = { from, to };
+        updated.push(newItem);
+        this._onDidChangeModelAccess.fire(newItem);
+      }
+    }
+  }
+  _languageAccessInformationExtensions = /* @__PURE__ */ new Set();
+  createLanguageModelAccessInformation(from) {
+    this._languageAccessInformationExtensions.add(from);
+    const that = this;
+    const _onDidChangeAccess = Event.signal(Event.filter(this._onDidChangeModelAccess.event, (e) => ExtensionIdentifier.equals(e.from, from.identifier)));
+    const _onDidAddRemove = Event.signal(this._onDidChangeProviders.event);
+    return {
+      get onDidChange() {
+        return Event.any(_onDidChangeAccess, _onDidAddRemove);
+      },
+      canSendRequest(chat) {
+        let metadata;
+        out: for (const [_, value] of that._allLanguageModelData) {
+          for (const candidate of value.apiObjects.values()) {
+            if (candidate === chat) {
+              metadata = value.metadata;
+              break out;
+            }
+          }
+        }
+        if (!metadata) {
+          return void 0;
+        }
+        if (!that._isUsingAuth(from.identifier, metadata)) {
+          return true;
+        }
+        const list = that._modelAccessList.get(from.identifier);
+        if (!list) {
+          return void 0;
+        }
+        return list.has(metadata.extension);
+      }
+    };
+  }
+  fileIsIgnored(extension, uri, token) {
+    checkProposedApiEnabled(extension, "chatParticipantAdditions");
+    return this._proxy.$fileIsIgnored(uri, token);
+  }
+  async $isFileIgnored(handle, uri, token) {
+    const provider = this._ignoredFileProviders.get(handle);
+    if (!provider) {
+      throw new Error("Unknown LanguageModelIgnoredFileProvider");
+    }
+    return await provider.provideFileIgnored(URI.revive(uri), token) ?? false;
+  }
+  registerIgnoredFileProvider(extension, provider) {
+    checkProposedApiEnabled(extension, "chatParticipantPrivate");
+    const handle = ExtHostLanguageModels._idPool++;
+    this._proxy.$registerFileIgnoreProvider(handle);
+    this._ignoredFileProviders.set(handle, provider);
+    return toDisposable(() => {
+      this._proxy.$unregisterFileIgnoreProvider(handle);
+      this._ignoredFileProviders.delete(handle);
+    });
+  }
+};
+ExtHostLanguageModels = __decorateClass([
+  __decorateParam(0, IExtHostRpcService),
+  __decorateParam(1, ILogService),
+  __decorateParam(2, IExtHostAuthentication)
+], ExtHostLanguageModels);
+export {
+  ExtHostLanguageModels,
+  IExtHostLanguageModels
+};
+//# sourceMappingURL=extHostLanguageModels.js.map

@@ -1,1 +1,145 @@
-var g=Object.defineProperty,b=Object.getOwnPropertyDescriptor,P=(e,o,t,s)=>{for(var i,r=s>1?void 0:s?b(o,t):o,c=e.length-1;c>=0;c--)(i=e[c])&&(r=(s?i(o,t,r):i(r))||r);return s&&r&&g(o,t,r),r},u=(e,o)=>(t,s)=>o(t,s,e);import{PickerQuickAccessProvider as x,TriggerAction as h}from"../../../../platform/quickinput/browser/pickerQuickAccess.js";import{IContextKeyService as A}from"../../../../platform/contextkey/common/contextkey.js";import{IMenuService as C,MenuId as E}from"../../../../platform/actions/common/actions.js";import{matchesFuzzy as k}from"../../../../base/common/filters.js";import"../../../../platform/quickinput/common/quickInput.js";import{localize as S}from"../../../../nls.js";import{ICommandService as y}from"../../../../platform/commands/common/commands.js";import{IExtensionService as M}from"../../../services/extensions/common/extensions.js";import"../../../../platform/extensions/common/extensions.js";import{ThemeIcon as w}from"../../../../base/common/themables.js";import{Codicon as L}from"../../../../base/common/codicons.js";import{IssueSource as v}from"../common/issue.js";import{IProductService as Q}from"../../../../platform/product/common/productService.js";let l=class extends x{constructor(e,o,t,s,i){super(l.PREFIX,{canAcceptInBackground:!0}),this.menuService=e,this.contextKeyService=o,this.commandService=t,this.extensionService=s,this.productService=i}static PREFIX="issue ";_getPicks(e){const o=new Array,t=new Array,s=new Set,i=this.productService.nameLong,r=S("reportExtensionMarketplace","Extension Marketplace"),c=k(e,i,!0),n=k(e,r,!0);return c&&o.push({label:i,ariaLabel:i,highlights:{label:c},accept:()=>this.commandService.executeCommand("workbench.action.openIssueReporter",{issueSource:v.VSCode})}),n&&o.push({label:r,ariaLabel:r,highlights:{label:n},accept:()=>this.commandService.executeCommand("workbench.action.openIssueReporter",{issueSource:v.Marketplace})}),o.push({type:"separator",label:S("extensions","Extensions")}),this.menuService.getMenuActions(E.IssueReporter,this.contextKeyService,{renderShortTitle:!0}).flatMap((e=>e[1])).forEach((o=>{"source"in o.item&&o.item.source&&s.add(o.item.source.id);const i=this._createPick(e,o);i&&t.push(i)})),this.extensionService.extensions.forEach((o=>{if(!o.isBuiltin){const i=this._createPick(e,void 0,o),r=o.identifier.value;i&&!s.has(r)&&t.push(i),s.add(r)}})),t.sort(((e,o)=>{const t=e.label??"",s=o.label??"";return t.localeCompare(s)})),[...o,...t]}_createPick(e,o,t){const s=[{iconClass:w.asClassName(L.info),tooltip:S("contributedIssuePage","Open Extension Page")}];let i,r,c;if(o&&"source"in o.item&&o.item.source)i=o.item.source?.title,r=()=>("source"in o.item&&o.item.source&&this.commandService.executeCommand("extension.open",o.item.source.id),h.CLOSE_PICKER),c=()=>{o.run()};else{if(!t)return;i=t.displayName??t.name,r=()=>(this.commandService.executeCommand("extension.open",t.identifier.value),h.CLOSE_PICKER),c=()=>{this.commandService.executeCommand("workbench.action.openIssueReporter",t.identifier.value)}}const n=k(e,i,!0);if(n)return{label:i,highlights:{label:n},buttons:s,trigger:r,accept:c}}};l=P([u(0,C),u(1,A),u(2,y),u(3,M),u(4,Q)],l);export{l as IssueQuickAccess};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { PickerQuickAccessProvider, IPickerQuickAccessItem, FastAndSlowPicks, Picks, TriggerAction } from "../../../../platform/quickinput/browser/pickerQuickAccess.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IMenuService, MenuId, MenuItemAction, SubmenuItemAction } from "../../../../platform/actions/common/actions.js";
+import { matchesFuzzy } from "../../../../base/common/filters.js";
+import { IQuickPickSeparator } from "../../../../platform/quickinput/common/quickInput.js";
+import { localize } from "../../../../nls.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { IExtensionService } from "../../../services/extensions/common/extensions.js";
+import { IExtensionDescription } from "../../../../platform/extensions/common/extensions.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { IssueSource } from "../common/issue.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+let IssueQuickAccess = class extends PickerQuickAccessProvider {
+  constructor(menuService, contextKeyService, commandService, extensionService, productService) {
+    super(IssueQuickAccess.PREFIX, { canAcceptInBackground: true });
+    this.menuService = menuService;
+    this.contextKeyService = contextKeyService;
+    this.commandService = commandService;
+    this.extensionService = extensionService;
+    this.productService = productService;
+  }
+  static {
+    __name(this, "IssueQuickAccess");
+  }
+  static PREFIX = "issue ";
+  _getPicks(filter) {
+    const issuePicksConst = new Array();
+    const issuePicksParts = new Array();
+    const extensionIdSet = /* @__PURE__ */ new Set();
+    const productLabel = this.productService.nameLong;
+    const marketPlaceLabel = localize("reportExtensionMarketplace", "Extension Marketplace");
+    const productFilter = matchesFuzzy(filter, productLabel, true);
+    const marketPlaceFilter = matchesFuzzy(filter, marketPlaceLabel, true);
+    if (productFilter) {
+      issuePicksConst.push({
+        label: productLabel,
+        ariaLabel: productLabel,
+        highlights: { label: productFilter },
+        accept: /* @__PURE__ */ __name(() => this.commandService.executeCommand("workbench.action.openIssueReporter", { issueSource: IssueSource.VSCode }), "accept")
+      });
+    }
+    if (marketPlaceFilter) {
+      issuePicksConst.push({
+        label: marketPlaceLabel,
+        ariaLabel: marketPlaceLabel,
+        highlights: { label: marketPlaceFilter },
+        accept: /* @__PURE__ */ __name(() => this.commandService.executeCommand("workbench.action.openIssueReporter", { issueSource: IssueSource.Marketplace }), "accept")
+      });
+    }
+    issuePicksConst.push({ type: "separator", label: localize("extensions", "Extensions") });
+    const actions = this.menuService.getMenuActions(MenuId.IssueReporter, this.contextKeyService, { renderShortTitle: true }).flatMap((entry) => entry[1]);
+    actions.forEach((action) => {
+      if ("source" in action.item && action.item.source) {
+        extensionIdSet.add(action.item.source.id);
+      }
+      const pick = this._createPick(filter, action);
+      if (pick) {
+        issuePicksParts.push(pick);
+      }
+    });
+    this.extensionService.extensions.forEach((extension) => {
+      if (!extension.isBuiltin) {
+        const pick = this._createPick(filter, void 0, extension);
+        const id = extension.identifier.value;
+        if (pick && !extensionIdSet.has(id)) {
+          issuePicksParts.push(pick);
+        }
+        extensionIdSet.add(id);
+      }
+    });
+    issuePicksParts.sort((a, b) => {
+      const aLabel = a.label ?? "";
+      const bLabel = b.label ?? "";
+      return aLabel.localeCompare(bLabel);
+    });
+    return [...issuePicksConst, ...issuePicksParts];
+  }
+  _createPick(filter, action, extension) {
+    const buttons = [{
+      iconClass: ThemeIcon.asClassName(Codicon.info),
+      tooltip: localize("contributedIssuePage", "Open Extension Page")
+    }];
+    let label;
+    let trigger;
+    let accept;
+    if (action && "source" in action.item && action.item.source) {
+      label = action.item.source?.title;
+      trigger = /* @__PURE__ */ __name(() => {
+        if ("source" in action.item && action.item.source) {
+          this.commandService.executeCommand("extension.open", action.item.source.id);
+        }
+        return TriggerAction.CLOSE_PICKER;
+      }, "trigger");
+      accept = /* @__PURE__ */ __name(() => {
+        action.run();
+      }, "accept");
+    } else if (extension) {
+      label = extension.displayName ?? extension.name;
+      trigger = /* @__PURE__ */ __name(() => {
+        this.commandService.executeCommand("extension.open", extension.identifier.value);
+        return TriggerAction.CLOSE_PICKER;
+      }, "trigger");
+      accept = /* @__PURE__ */ __name(() => {
+        this.commandService.executeCommand("workbench.action.openIssueReporter", extension.identifier.value);
+      }, "accept");
+    } else {
+      return void 0;
+    }
+    const highlights = matchesFuzzy(filter, label, true);
+    if (highlights) {
+      return {
+        label,
+        highlights: { label: highlights },
+        buttons,
+        trigger,
+        accept
+      };
+    }
+    return void 0;
+  }
+};
+IssueQuickAccess = __decorateClass([
+  __decorateParam(0, IMenuService),
+  __decorateParam(1, IContextKeyService),
+  __decorateParam(2, ICommandService),
+  __decorateParam(3, IExtensionService),
+  __decorateParam(4, IProductService)
+], IssueQuickAccess);
+export {
+  IssueQuickAccess
+};
+//# sourceMappingURL=issueQuickAccess.js.map

@@ -1,1 +1,410 @@
-var H=Object.defineProperty;var F=Object.getOwnPropertyDescriptor;var w=(p,d,e,t)=>{for(var s=t>1?void 0:t?F(d,e):d,l=p.length-1,o;l>=0;l--)(o=p[l])&&(s=(t?o(d,e,s):o(s))||s);return t&&s&&H(d,e,s),s},c=(p,d)=>(e,t)=>d(e,t,p);import{groupBy as m}from"../../../../base/common/arrays.js";import{CancellationToken as h,CancellationTokenSource as C}from"../../../../base/common/cancellation.js";import{Emitter as R}from"../../../../base/common/event.js";import{Iterable as S}from"../../../../base/common/iterator.js";import{Disposable as K,toDisposable as E}from"../../../../base/common/lifecycle.js";import{observableValue as A}from"../../../../base/common/observable.js";import{isDefined as y}from"../../../../base/common/types.js";import"../../../../base/common/uri.js";import"../../../../editor/common/core/position.js";import"../../../../editor/common/languages.js";import{localize as I}from"../../../../nls.js";import{IConfigurationService as B}from"../../../../platform/configuration/common/configuration.js";import{IContextKeyService as N}from"../../../../platform/contextkey/common/contextkey.js";import{IInstantiationService as O}from"../../../../platform/instantiation/common/instantiation.js";import{INotificationService as U}from"../../../../platform/notification/common/notification.js";import{bindContextKey as P}from"../../../../platform/observable/common/platformObservableUtils.js";import{IStorageService as W,StorageScope as _,StorageTarget as V}from"../../../../platform/storage/common/storage.js";import{IUriIdentityService as z}from"../../../../platform/uriIdentity/common/uriIdentity.js";import{IWorkspaceTrustRequestService as L}from"../../../../platform/workspace/common/workspaceTrust.js";import{getTestingConfiguration as j,TestingConfigKeys as G}from"./configuration.js";import{MainThreadTestCollection as q}from"./mainThreadTestCollection.js";import{MutableObservableValue as J}from"./observableValue.js";import{StoredValue as Q}from"./storedValue.js";import{TestExclusions as X}from"./testExclusions.js";import{TestId as Y}from"./testId.js";import{TestingContextKeys as f}from"./testingContextKeys.js";import{canUseProfileWithTest as D,ITestProfileService as Z}from"./testProfileService.js";import"./testResult.js";import{ITestResultService as $}from"./testResultService.js";import"./testService.js";import{TestControllerCapability as b,TestDiffOpType as ee}from"./testTypes.js";import{IEditorService as te}from"../../../services/editor/common/editorService.js";let g=class extends K{constructor(e,t,s,l,o,i,r,a,n,u){super();this.editorService=o;this.testProfiles=i;this.notificationService=r;this.configurationService=a;this.testResults=n;this.workspaceTrustRequestService=u;this.collection=new q(s,this.expandTest.bind(this)),this.showInlineOutput=this._register(J.stored(new Q({key:"inlineTestOutputVisible",scope:_.WORKSPACE,target:V.USER},l),!0)),this.excluded=t.createInstance(X),this.isRefreshingTests=f.isRefreshingTests.bindTo(e),this.activeEditorHasTests=f.activeEditorHasTests.bindTo(e),this._register(P(f.providerCount,e,v=>this.testControllers.read(v).size));const T=(v,k)=>this._register(P(v,e,x=>S.some(this.testControllers.read(x).values(),M=>!!(M.capabilities.read(x)&k))));T(f.canRefreshTests,b.Refresh),T(f.canGoToRelatedCode,b.CodeRelatedToTest),T(f.canGoToRelatedTest,b.TestRelatedToCode),this._register(o.onDidActiveEditorChange(()=>this.updateEditorContextKeys()))}testControllers=A("testControllers",new Map);testExtHosts=new Set;cancelExtensionTestRunEmitter=new R;willProcessDiffEmitter=new R;didProcessDiffEmitter=new R;testRefreshCancellations=new Set;isRefreshingTests;activeEditorHasTests;uiRunningTests=new Map;onWillProcessDiff=this.willProcessDiffEmitter.event;onDidProcessDiff=this.didProcessDiffEmitter.event;onDidCancelTestRun=this.cancelExtensionTestRunEmitter.event;collection;excluded;showInlineOutput;async expandTest(e,t){await this.testControllers.get().get(Y.fromString(e).controllerId)?.expandTest(e,t)}cancelTestRun(e,t){if(this.cancelExtensionTestRunEmitter.fire({runId:e,taskId:t}),e===void 0)for(const s of this.uiRunningTests.values())s.cancel();else t||this.uiRunningTests.get(e)?.cancel()}async runTests(e,t=h.None){const s=[];for(const o of e.tests){const i=s.find(a=>D(a.profile,o));if(i){i.tests.push(o);continue}const r=this.testProfiles.getDefaultProfileForTest(e.group,o);r&&s.push({profile:r,tests:[o]})}const l={targets:s.map(({profile:o,tests:i})=>({profileId:o.profileId,controllerId:i[0].controllerId,testIds:i.map(r=>r.item.extId)})),group:e.group,exclude:e.exclude?.map(o=>o.item.extId),continuous:e.continuous};if(l.targets.length===0)for(const o of m(e.tests,(i,r)=>i.controllerId===r.controllerId?0:1)){const i=this.testProfiles.getControllerProfiles(o[0].controllerId),r=o.map(a=>({profile:i.find(n=>n.group===e.group&&D(n,a)),test:a}));for(const a of m(r,(n,u)=>n.profile===u.profile?0:1)){const n=a[0].profile;n&&l.targets.push({testIds:a.map(u=>u.test.item.extId),profileId:n.profileId,controllerId:n.controllerId})}}return this.runResolvedTests(l,t)}async startContinuousRun(e,t){if(e.exclude||(e.exclude=[...this.excluded.all]),!await this.workspaceTrustRequestService.requestWorkspaceTrust({message:I("testTrust","Running tests may execute code in your workspace.")}))return;const o=m(e.targets,(i,r)=>i.controllerId.localeCompare(r.controllerId)).map(i=>this.getTestController(i[0].controllerId)?.startContinuousRun(i.map(r=>({excludeExtIds:e.exclude.filter(a=>!r.testIds.includes(a)),profileId:r.profileId,controllerId:r.controllerId,testIds:r.testIds})),t).then(r=>{const a=r.map(n=>n.error).filter(y);a.length&&this.notificationService.error(I("testError","An error occurred attempting to run tests: {0}",a.join(" ")))}));await Promise.all(o)}async runResolvedTests(e,t=h.None){e.exclude||(e.exclude=[...this.excluded.all]);const s=this.testResults.createLiveResult(e);if(!await this.workspaceTrustRequestService.requestWorkspaceTrust({message:I("testTrust","Running tests may execute code in your workspace.")}))return s.markComplete(),s;try{const o=new C(t);this.uiRunningTests.set(s.id,o);const r=m(e.targets,(a,n)=>a.controllerId.localeCompare(n.controllerId)).map(a=>this.getTestController(a[0].controllerId)?.runTests(a.map(n=>({runId:s.id,excludeExtIds:e.exclude.filter(u=>!n.testIds.includes(u)),profileId:n.profileId,controllerId:n.controllerId,testIds:n.testIds})),o.token).then(n=>{const u=n.map(T=>T.error).filter(y);u.length&&this.notificationService.error(I("testError","An error occurred attempting to run tests: {0}",u.join(" ")))}));return await this.saveAllBeforeTest(e),await Promise.all(r),s}finally{this.uiRunningTests.delete(s.id),s.markComplete()}}async provideTestFollowups(e,t){const s=await Promise.all([...this.testExtHosts].map(async o=>({ctrl:o,followups:await o.provideTestFollowups(e,t)}))),l={followups:s.flatMap(({ctrl:o,followups:i})=>i.map(r=>({message:r.title,execute:()=>o.executeTestFollowup(r.id)}))),dispose:()=>{for(const{ctrl:o,followups:i}of s)o.disposeTestFollowups(i.map(r=>r.id))}};return t.isCancellationRequested&&l.dispose(),l}publishDiff(e,t){this.willProcessDiffEmitter.fire(t),this.collection.apply(t),this.updateEditorContextKeys(),this.didProcessDiffEmitter.fire(t)}getTestController(e){return this.testControllers.get().get(e)}async syncTests(){const e=new C;try{await Promise.all([...this.testControllers.get().values()].map(t=>t.syncTests(e.token)))}finally{e.dispose(!0)}}async refreshTests(e){const t=new C;this.testRefreshCancellations.add(t),this.isRefreshingTests.set(!0);try{e?await this.getTestController(e)?.refreshTests(t.token):await Promise.all([...this.testControllers.get().values()].map(s=>s.refreshTests(t.token)))}finally{this.testRefreshCancellations.delete(t),this.isRefreshingTests.set(this.testRefreshCancellations.size>0),t.dispose(!0)}}cancelRefreshTests(){for(const e of this.testRefreshCancellations)e.cancel();this.testRefreshCancellations.clear(),this.isRefreshingTests.set(!1)}registerExtHost(e){return this.testExtHosts.add(e),E(()=>this.testExtHosts.delete(e))}async getTestsRelatedToCode(e,t,s=h.None){return(await Promise.all([...this.testExtHosts.values()].map(o=>o.getTestsRelatedToCode(e,t,s)))).flatMap(o=>o.map(i=>this.collection.getNodeById(i))).filter(y)}registerTestController(e,t){return this.testControllers.set(new Map(this.testControllers.get()).set(e,t),void 0),E(()=>{const s=[];for(const o of this.collection.rootItems)o.controllerId===e&&s.push({op:ee.Remove,itemId:o.item.extId});this.publishDiff(e,s);const l=new Map(this.testControllers.get());l.delete(e),this.testControllers.set(l,void 0)})}async getCodeRelatedToTest(e,t=h.None){return await this.testControllers.get().get(e.controllerId)?.getRelatedCode(e.item.extId,t)||[]}updateEditorContextKeys(){const e=this.editorService.activeEditor?.resource;e?this.activeEditorHasTests.set(!S.isEmpty(this.collection.getNodeByUrl(e))):this.activeEditorHasTests.set(!1)}async saveAllBeforeTest(e,t=this.configurationService,s=this.editorService){if(e.preserveFocus===!0)return;j(this.configurationService,G.SaveBeforeTest)&&await s.saveAll()}};g=w([c(0,N),c(1,O),c(2,z),c(3,W),c(4,te),c(5,Z),c(6,U),c(7,B),c(8,$),c(9,L)],g);export{g as TestService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { groupBy } from "../../../../base/common/arrays.js";
+import { CancellationToken, CancellationTokenSource } from "../../../../base/common/cancellation.js";
+import { Emitter } from "../../../../base/common/event.js";
+import { Iterable } from "../../../../base/common/iterator.js";
+import { Disposable, IDisposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { observableValue } from "../../../../base/common/observable.js";
+import { isDefined } from "../../../../base/common/types.js";
+import { URI } from "../../../../base/common/uri.js";
+import { Position } from "../../../../editor/common/core/position.js";
+import { Location } from "../../../../editor/common/languages.js";
+import { localize } from "../../../../nls.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IContextKey, IContextKeyService, RawContextKey } from "../../../../platform/contextkey/common/contextkey.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { INotificationService } from "../../../../platform/notification/common/notification.js";
+import { bindContextKey } from "../../../../platform/observable/common/platformObservableUtils.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import { IWorkspaceTrustRequestService } from "../../../../platform/workspace/common/workspaceTrust.js";
+import { getTestingConfiguration, TestingConfigKeys } from "./configuration.js";
+import { MainThreadTestCollection } from "./mainThreadTestCollection.js";
+import { MutableObservableValue } from "./observableValue.js";
+import { StoredValue } from "./storedValue.js";
+import { TestExclusions } from "./testExclusions.js";
+import { TestId } from "./testId.js";
+import { TestingContextKeys } from "./testingContextKeys.js";
+import { canUseProfileWithTest, ITestProfileService } from "./testProfileService.js";
+import { ITestResult } from "./testResult.js";
+import { ITestResultService } from "./testResultService.js";
+import { AmbiguousRunTestsRequest, IMainThreadTestController, IMainThreadTestHostProxy, ITestFollowups, ITestService } from "./testService.js";
+import { InternalTestItem, ITestRunProfile, ResolvedTestRunRequest, TestControllerCapability, TestDiffOpType, TestMessageFollowupRequest, TestsDiff } from "./testTypes.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+let TestService = class extends Disposable {
+  constructor(contextKeyService, instantiationService, uriIdentityService, storage, editorService, testProfiles, notificationService, configurationService, testResults, workspaceTrustRequestService) {
+    super();
+    this.editorService = editorService;
+    this.testProfiles = testProfiles;
+    this.notificationService = notificationService;
+    this.configurationService = configurationService;
+    this.testResults = testResults;
+    this.workspaceTrustRequestService = workspaceTrustRequestService;
+    this.collection = new MainThreadTestCollection(uriIdentityService, this.expandTest.bind(this));
+    this.showInlineOutput = this._register(MutableObservableValue.stored(new StoredValue({
+      key: "inlineTestOutputVisible",
+      scope: StorageScope.WORKSPACE,
+      target: StorageTarget.USER
+    }, storage), true));
+    this.excluded = instantiationService.createInstance(TestExclusions);
+    this.isRefreshingTests = TestingContextKeys.isRefreshingTests.bindTo(contextKeyService);
+    this.activeEditorHasTests = TestingContextKeys.activeEditorHasTests.bindTo(contextKeyService);
+    this._register(bindContextKey(
+      TestingContextKeys.providerCount,
+      contextKeyService,
+      (reader) => this.testControllers.read(reader).size
+    ));
+    const bindCapability = /* @__PURE__ */ __name((key, capability) => this._register(bindContextKey(
+      key,
+      contextKeyService,
+      (reader) => Iterable.some(
+        this.testControllers.read(reader).values(),
+        (ctrl) => !!(ctrl.capabilities.read(reader) & capability)
+      )
+    )), "bindCapability");
+    bindCapability(TestingContextKeys.canRefreshTests, TestControllerCapability.Refresh);
+    bindCapability(TestingContextKeys.canGoToRelatedCode, TestControllerCapability.CodeRelatedToTest);
+    bindCapability(TestingContextKeys.canGoToRelatedTest, TestControllerCapability.TestRelatedToCode);
+    this._register(editorService.onDidActiveEditorChange(() => this.updateEditorContextKeys()));
+  }
+  static {
+    __name(this, "TestService");
+  }
+  testControllers = observableValue("testControllers", /* @__PURE__ */ new Map());
+  testExtHosts = /* @__PURE__ */ new Set();
+  cancelExtensionTestRunEmitter = new Emitter();
+  willProcessDiffEmitter = new Emitter();
+  didProcessDiffEmitter = new Emitter();
+  testRefreshCancellations = /* @__PURE__ */ new Set();
+  isRefreshingTests;
+  activeEditorHasTests;
+  /**
+   * Cancellation for runs requested by the user being managed by the UI.
+   * Test runs initiated by extensions are not included here.
+   */
+  uiRunningTests = /* @__PURE__ */ new Map();
+  /**
+   * @inheritdoc
+   */
+  onWillProcessDiff = this.willProcessDiffEmitter.event;
+  /**
+   * @inheritdoc
+   */
+  onDidProcessDiff = this.didProcessDiffEmitter.event;
+  /**
+   * @inheritdoc
+   */
+  onDidCancelTestRun = this.cancelExtensionTestRunEmitter.event;
+  /**
+   * @inheritdoc
+   */
+  collection;
+  /**
+   * @inheritdoc
+   */
+  excluded;
+  /**
+   * @inheritdoc
+   */
+  showInlineOutput;
+  /**
+   * @inheritdoc
+   */
+  async expandTest(id, levels) {
+    await this.testControllers.get().get(TestId.fromString(id).controllerId)?.expandTest(id, levels);
+  }
+  /**
+   * @inheritdoc
+   */
+  cancelTestRun(runId, taskId) {
+    this.cancelExtensionTestRunEmitter.fire({ runId, taskId });
+    if (runId === void 0) {
+      for (const runCts of this.uiRunningTests.values()) {
+        runCts.cancel();
+      }
+    } else if (!taskId) {
+      this.uiRunningTests.get(runId)?.cancel();
+    }
+  }
+  /**
+   * @inheritdoc
+   */
+  async runTests(req, token = CancellationToken.None) {
+    const byProfile = [];
+    for (const test of req.tests) {
+      const existing = byProfile.find((p) => canUseProfileWithTest(p.profile, test));
+      if (existing) {
+        existing.tests.push(test);
+        continue;
+      }
+      const bestProfile = this.testProfiles.getDefaultProfileForTest(req.group, test);
+      if (!bestProfile) {
+        continue;
+      }
+      byProfile.push({ profile: bestProfile, tests: [test] });
+    }
+    const resolved = {
+      targets: byProfile.map(({ profile, tests }) => ({
+        profileId: profile.profileId,
+        controllerId: tests[0].controllerId,
+        testIds: tests.map((t) => t.item.extId)
+      })),
+      group: req.group,
+      exclude: req.exclude?.map((t) => t.item.extId),
+      continuous: req.continuous
+    };
+    if (resolved.targets.length === 0) {
+      for (const byController of groupBy(req.tests, (a, b) => a.controllerId === b.controllerId ? 0 : 1)) {
+        const profiles = this.testProfiles.getControllerProfiles(byController[0].controllerId);
+        const withControllers = byController.map((test) => ({
+          profile: profiles.find((p) => p.group === req.group && canUseProfileWithTest(p, test)),
+          test
+        }));
+        for (const byProfile2 of groupBy(withControllers, (a, b) => a.profile === b.profile ? 0 : 1)) {
+          const profile = byProfile2[0].profile;
+          if (profile) {
+            resolved.targets.push({
+              testIds: byProfile2.map((t) => t.test.item.extId),
+              profileId: profile.profileId,
+              controllerId: profile.controllerId
+            });
+          }
+        }
+      }
+    }
+    return this.runResolvedTests(resolved, token);
+  }
+  /** @inheritdoc */
+  async startContinuousRun(req, token) {
+    if (!req.exclude) {
+      req.exclude = [...this.excluded.all];
+    }
+    const trust = await this.workspaceTrustRequestService.requestWorkspaceTrust({
+      message: localize("testTrust", "Running tests may execute code in your workspace.")
+    });
+    if (!trust) {
+      return;
+    }
+    const byController = groupBy(req.targets, (a, b) => a.controllerId.localeCompare(b.controllerId));
+    const requests = byController.map(
+      (group) => this.getTestController(group[0].controllerId)?.startContinuousRun(
+        group.map((controlReq) => ({
+          excludeExtIds: req.exclude.filter((t) => !controlReq.testIds.includes(t)),
+          profileId: controlReq.profileId,
+          controllerId: controlReq.controllerId,
+          testIds: controlReq.testIds
+        })),
+        token
+      ).then((result) => {
+        const errs = result.map((r) => r.error).filter(isDefined);
+        if (errs.length) {
+          this.notificationService.error(localize("testError", "An error occurred attempting to run tests: {0}", errs.join(" ")));
+        }
+      })
+    );
+    await Promise.all(requests);
+  }
+  /**
+   * @inheritdoc
+   */
+  async runResolvedTests(req, token = CancellationToken.None) {
+    if (!req.exclude) {
+      req.exclude = [...this.excluded.all];
+    }
+    const result = this.testResults.createLiveResult(req);
+    const trust = await this.workspaceTrustRequestService.requestWorkspaceTrust({
+      message: localize("testTrust", "Running tests may execute code in your workspace.")
+    });
+    if (!trust) {
+      result.markComplete();
+      return result;
+    }
+    try {
+      const cancelSource = new CancellationTokenSource(token);
+      this.uiRunningTests.set(result.id, cancelSource);
+      const byController = groupBy(req.targets, (a, b) => a.controllerId.localeCompare(b.controllerId));
+      const requests = byController.map(
+        (group) => this.getTestController(group[0].controllerId)?.runTests(
+          group.map((controlReq) => ({
+            runId: result.id,
+            excludeExtIds: req.exclude.filter((t) => !controlReq.testIds.includes(t)),
+            profileId: controlReq.profileId,
+            controllerId: controlReq.controllerId,
+            testIds: controlReq.testIds
+          })),
+          cancelSource.token
+        ).then((result2) => {
+          const errs = result2.map((r) => r.error).filter(isDefined);
+          if (errs.length) {
+            this.notificationService.error(localize("testError", "An error occurred attempting to run tests: {0}", errs.join(" ")));
+          }
+        })
+      );
+      await this.saveAllBeforeTest(req);
+      await Promise.all(requests);
+      return result;
+    } finally {
+      this.uiRunningTests.delete(result.id);
+      result.markComplete();
+    }
+  }
+  /**
+   * @inheritdoc
+   */
+  async provideTestFollowups(req, token) {
+    const reqs = await Promise.all([...this.testExtHosts].map(async (ctrl) => ({ ctrl, followups: await ctrl.provideTestFollowups(req, token) })));
+    const followups = {
+      followups: reqs.flatMap(({ ctrl, followups: followups2 }) => followups2.map((f) => ({
+        message: f.title,
+        execute: /* @__PURE__ */ __name(() => ctrl.executeTestFollowup(f.id), "execute")
+      }))),
+      dispose: /* @__PURE__ */ __name(() => {
+        for (const { ctrl, followups: followups2 } of reqs) {
+          ctrl.disposeTestFollowups(followups2.map((f) => f.id));
+        }
+      }, "dispose")
+    };
+    if (token.isCancellationRequested) {
+      followups.dispose();
+    }
+    return followups;
+  }
+  /**
+   * @inheritdoc
+   */
+  publishDiff(_controllerId, diff) {
+    this.willProcessDiffEmitter.fire(diff);
+    this.collection.apply(diff);
+    this.updateEditorContextKeys();
+    this.didProcessDiffEmitter.fire(diff);
+  }
+  /**
+   * @inheritdoc
+   */
+  getTestController(id) {
+    return this.testControllers.get().get(id);
+  }
+  /**
+   * @inheritdoc
+   */
+  async syncTests() {
+    const cts = new CancellationTokenSource();
+    try {
+      await Promise.all([...this.testControllers.get().values()].map((c) => c.syncTests(cts.token)));
+    } finally {
+      cts.dispose(true);
+    }
+  }
+  /**
+   * @inheritdoc
+   */
+  async refreshTests(controllerId) {
+    const cts = new CancellationTokenSource();
+    this.testRefreshCancellations.add(cts);
+    this.isRefreshingTests.set(true);
+    try {
+      if (controllerId) {
+        await this.getTestController(controllerId)?.refreshTests(cts.token);
+      } else {
+        await Promise.all([...this.testControllers.get().values()].map((c) => c.refreshTests(cts.token)));
+      }
+    } finally {
+      this.testRefreshCancellations.delete(cts);
+      this.isRefreshingTests.set(this.testRefreshCancellations.size > 0);
+      cts.dispose(true);
+    }
+  }
+  /**
+   * @inheritdoc
+   */
+  cancelRefreshTests() {
+    for (const cts of this.testRefreshCancellations) {
+      cts.cancel();
+    }
+    this.testRefreshCancellations.clear();
+    this.isRefreshingTests.set(false);
+  }
+  /**
+   * @inheritdoc
+   */
+  registerExtHost(controller) {
+    this.testExtHosts.add(controller);
+    return toDisposable(() => this.testExtHosts.delete(controller));
+  }
+  /**
+   * @inheritdoc
+   */
+  async getTestsRelatedToCode(uri, position, token = CancellationToken.None) {
+    const testIds = await Promise.all([...this.testExtHosts.values()].map((v) => v.getTestsRelatedToCode(uri, position, token)));
+    return testIds.flatMap((ids) => ids.map((id) => this.collection.getNodeById(id))).filter(isDefined);
+  }
+  /**
+   * @inheritdoc
+   */
+  registerTestController(id, controller) {
+    this.testControllers.set(new Map(this.testControllers.get()).set(id, controller), void 0);
+    return toDisposable(() => {
+      const diff = [];
+      for (const root of this.collection.rootItems) {
+        if (root.controllerId === id) {
+          diff.push({ op: TestDiffOpType.Remove, itemId: root.item.extId });
+        }
+      }
+      this.publishDiff(id, diff);
+      const next = new Map(this.testControllers.get());
+      next.delete(id);
+      this.testControllers.set(next, void 0);
+    });
+  }
+  /**
+   * @inheritdoc
+   */
+  async getCodeRelatedToTest(test, token = CancellationToken.None) {
+    return await this.testControllers.get().get(test.controllerId)?.getRelatedCode(test.item.extId, token) || [];
+  }
+  updateEditorContextKeys() {
+    const uri = this.editorService.activeEditor?.resource;
+    if (uri) {
+      this.activeEditorHasTests.set(!Iterable.isEmpty(this.collection.getNodeByUrl(uri)));
+    } else {
+      this.activeEditorHasTests.set(false);
+    }
+  }
+  async saveAllBeforeTest(req, configurationService = this.configurationService, editorService = this.editorService) {
+    if (req.preserveFocus === true) {
+      return;
+    }
+    const saveBeforeTest = getTestingConfiguration(this.configurationService, TestingConfigKeys.SaveBeforeTest);
+    if (saveBeforeTest) {
+      await editorService.saveAll();
+    }
+    return;
+  }
+};
+TestService = __decorateClass([
+  __decorateParam(0, IContextKeyService),
+  __decorateParam(1, IInstantiationService),
+  __decorateParam(2, IUriIdentityService),
+  __decorateParam(3, IStorageService),
+  __decorateParam(4, IEditorService),
+  __decorateParam(5, ITestProfileService),
+  __decorateParam(6, INotificationService),
+  __decorateParam(7, IConfigurationService),
+  __decorateParam(8, ITestResultService),
+  __decorateParam(9, IWorkspaceTrustRequestService)
+], TestService);
+export {
+  TestService
+};
+//# sourceMappingURL=testServiceImpl.js.map

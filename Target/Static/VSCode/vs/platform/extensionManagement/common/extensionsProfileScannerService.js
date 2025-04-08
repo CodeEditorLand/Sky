@@ -1,1 +1,337 @@
-var D=Object.defineProperty;var w=Object.getOwnPropertyDescriptor;var R=(a,l,i,n)=>{for(var s=n>1?void 0:n?w(l,i):l,r=a.length-1,e;r>=0;r--)(e=a[r])&&(s=(n?e(l,i,s):e(s))||s);return n&&s&&D(l,i,s),s},E=(a,l)=>(i,n)=>l(i,n,a);import{Queue as O}from"../../../base/common/async.js";import{VSBuffer as S}from"../../../base/common/buffer.js";import{Disposable as U}from"../../../base/common/lifecycle.js";import{Emitter as h}from"../../../base/common/event.js";import{ResourceMap as F}from"../../../base/common/map.js";import{URI as N}from"../../../base/common/uri.js";import{isIExtensionIdentifier as L}from"./extensionManagement.js";import{areSameExtensions as m}from"./extensionManagementUtil.js";import"../../extensions/common/extensions.js";import{FileOperationResult as v,IFileService as A,toFileOperationResult as u}from"../../files/common/files.js";import{createDecorator as M}from"../../instantiation/common/instantiation.js";import{ILogService as T}from"../../log/common/log.js";import{IUserDataProfilesService as C}from"../../userDataProfile/common/userDataProfile.js";import{IUriIdentityService as b}from"../../uriIdentity/common/uriIdentity.js";import{isObject as Q,isString as c,isUndefined as g}from"../../../base/common/types.js";import{getErrorMessage as V}from"../../../base/common/errors.js";var J=(i=>(i.ERROR_PROFILE_NOT_FOUND="ERROR_PROFILE_NOT_FOUND",i.ERROR_INVALID_CONTENT="ERROR_INVALID_CONTENT",i))(J||{});class y extends Error{constructor(i,n){super(i);this.code=n}}const ce=M("IExtensionsProfileScannerService");let I=class extends U{constructor(i,n,s,r,e){super();this.extensionsLocation=i;this.fileService=n;this.userDataProfilesService=s;this.uriIdentityService=r;this.logService=e}_serviceBrand;_onAddExtensions=this._register(new h);onAddExtensions=this._onAddExtensions.event;_onDidAddExtensions=this._register(new h);onDidAddExtensions=this._onDidAddExtensions.event;_onRemoveExtensions=this._register(new h);onRemoveExtensions=this._onRemoveExtensions.event;_onDidRemoveExtensions=this._register(new h);onDidRemoveExtensions=this._onDidRemoveExtensions.event;resourcesAccessQueueMap=new F;scanProfileExtensions(i,n){return this.withProfileExtensions(i,void 0,n)}async addExtensionsToProfile(i,n,s){const r=[],e=[];try{return await this.withProfileExtensions(n,o=>{const t=[];if(s)t.push(...o);else for(const d of o)i.some(([f])=>m(f.identifier,d.identifier)&&f.manifest.version!==d.version)?r.push(d):t.push(d);for(const[d,f]of i){const x=t.findIndex(p=>m(p.identifier,d.identifier)&&p.version===d.manifest.version),P={identifier:d.identifier,version:d.manifest.version,location:d.location,metadata:f};x===-1?(e.push(P),t.push(P)):t.splice(x,1,P)}return e.length&&this._onAddExtensions.fire({extensions:e,profileLocation:n}),r.length&&this._onRemoveExtensions.fire({extensions:r,profileLocation:n}),t}),e.length&&this._onDidAddExtensions.fire({extensions:e,profileLocation:n}),r.length&&this._onDidRemoveExtensions.fire({extensions:r,profileLocation:n}),e}catch(o){throw e.length&&this._onDidAddExtensions.fire({extensions:e,error:o,profileLocation:n}),r.length&&this._onDidRemoveExtensions.fire({extensions:r,error:o,profileLocation:n}),o}}async updateMetadata(i,n){const s=[];return await this.withProfileExtensions(n,r=>{const e=[];for(const o of r){const t=i.find(([d])=>m(d.identifier,o.identifier)&&d.manifest.version===o.version);t&&(o.metadata={...o.metadata,...t[1]},s.push(o)),e.push(o)}return e}),s}async removeExtensionsFromProfile(i,n){const s=[];try{await this.withProfileExtensions(n,r=>{const e=[];for(const o of r)i.some(t=>m(o.identifier,t))?s.push(o):e.push(o);return s.length&&this._onRemoveExtensions.fire({extensions:s,profileLocation:n}),e}),s.length&&this._onDidRemoveExtensions.fire({extensions:s,profileLocation:n})}catch(r){throw s.length&&this._onDidRemoveExtensions.fire({extensions:s,error:r,profileLocation:n}),r}}async withProfileExtensions(i,n,s){return this.getResourceAccessQueue(i).queue(async()=>{let r=[],e;try{const o=await this.fileService.readFile(i);e=JSON.parse(o.value.toString().trim()||"[]")}catch(o){if(u(o)!==v.FILE_NOT_FOUND)throw o;if(this.uriIdentityService.extUri.isEqual(i,this.userDataProfilesService.defaultProfile.extensionsResource)&&(e=await this.migrateFromOldDefaultProfileExtensionsLocation()),!e&&s?.bailOutWhenFileNotFound)throw new y(V(o),"ERROR_PROFILE_NOT_FOUND")}if(e){Array.isArray(e)||this.throwInvalidConentError(i);let o=!1;for(const t of e){_(t)||this.throwInvalidConentError(i);let d;if(c(t.relativeLocation)&&t.relativeLocation)d=this.resolveExtensionLocation(t.relativeLocation);else if(c(t.location)){this.logService.warn(`Extensions profile: Ignoring extension with invalid location: ${t.location}`);continue}else{d=N.revive(t.location);const x=this.toRelativePath(d);x&&(o=!0,t.relativeLocation=x)}g(t.metadata?.hasPreReleaseVersion)&&t.metadata?.preRelease&&(o=!0,t.metadata.hasPreReleaseVersion=!0);const f=t.metadata?.id??t.identifier.uuid;r.push({identifier:f?{id:t.identifier.id,uuid:f}:{id:t.identifier.id},location:d,version:t.version,metadata:t.metadata})}o&&await this.fileService.writeFile(i,S.fromString(JSON.stringify(e)))}if(n){r=n(r);const o=r.map(t=>({identifier:t.identifier,version:t.version,location:t.location.toJSON(),relativeLocation:this.toRelativePath(t.location),metadata:t.metadata}));await this.fileService.writeFile(i,S.fromString(JSON.stringify(o)))}return r})}throwInvalidConentError(i){throw new y(`Invalid extensions content in ${i.toString()}`,"ERROR_INVALID_CONTENT")}toRelativePath(i){return this.uriIdentityService.extUri.isEqual(this.uriIdentityService.extUri.dirname(i),this.extensionsLocation)?this.uriIdentityService.extUri.basename(i):void 0}resolveExtensionLocation(i){return this.uriIdentityService.extUri.joinPath(this.extensionsLocation,i)}_migrationPromise;async migrateFromOldDefaultProfileExtensionsLocation(){return this._migrationPromise||(this._migrationPromise=(async()=>{const i=this.uriIdentityService.extUri.joinPath(this.userDataProfilesService.defaultProfile.location,"extensions.json"),n=this.uriIdentityService.extUri.joinPath(this.extensionsLocation,".init-default-profile-extensions");let s;try{s=(await this.fileService.readFile(i)).value.toString()}catch(e){if(u(e)===v.FILE_NOT_FOUND)return;throw e}this.logService.info("Migrating extensions from old default profile location",i.toString());let r;try{const e=JSON.parse(s);Array.isArray(e)&&e.every(o=>_(o))?r=e:this.logService.warn("Skipping migrating from old default profile locaiton: Found invalid data",e)}catch(e){this.logService.error(e)}if(r)try{await this.fileService.createFile(this.userDataProfilesService.defaultProfile.extensionsResource,S.fromString(JSON.stringify(r)),{overwrite:!1}),this.logService.info("Migrated extensions from old default profile location to new location",i.toString(),this.userDataProfilesService.defaultProfile.extensionsResource.toString())}catch(e){if(u(e)===v.FILE_MODIFIED_SINCE)this.logService.info("Migration from old default profile location to new location is done by another window",i.toString(),this.userDataProfilesService.defaultProfile.extensionsResource.toString());else throw e}try{await this.fileService.del(i)}catch(e){u(e)!==v.FILE_NOT_FOUND&&this.logService.error(e)}try{await this.fileService.del(n)}catch(e){u(e)!==v.FILE_NOT_FOUND&&this.logService.error(e)}return r})()),this._migrationPromise}getResourceAccessQueue(i){let n=this.resourcesAccessQueueMap.get(i);return n||(n=new O,this.resourcesAccessQueueMap.set(i,n)),n}};I=R([E(1,A),E(2,C),E(3,b),E(4,T)],I);function _(a){return Q(a)&&L(a.identifier)&&(j(a.location)||c(a.location)&&a.location)&&(g(a.relativeLocation)||c(a.relativeLocation))&&a.version&&c(a.version)}function j(a){return a?c(a.path)&&c(a.scheme):!1}export{I as AbstractExtensionsProfileScannerService,y as ExtensionsProfileScanningError,J as ExtensionsProfileScanningErrorCode,ce as IExtensionsProfileScannerService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Queue } from "../../../base/common/async.js";
+import { VSBuffer } from "../../../base/common/buffer.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { Emitter, Event } from "../../../base/common/event.js";
+import { ResourceMap } from "../../../base/common/map.js";
+import { URI, UriComponents } from "../../../base/common/uri.js";
+import { Metadata, isIExtensionIdentifier } from "./extensionManagement.js";
+import { areSameExtensions } from "./extensionManagementUtil.js";
+import { IExtension, IExtensionIdentifier } from "../../extensions/common/extensions.js";
+import { FileOperationResult, IFileService, toFileOperationResult } from "../../files/common/files.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+import { ILogService } from "../../log/common/log.js";
+import { IUserDataProfilesService } from "../../userDataProfile/common/userDataProfile.js";
+import { IUriIdentityService } from "../../uriIdentity/common/uriIdentity.js";
+import { Mutable, isObject, isString, isUndefined } from "../../../base/common/types.js";
+import { getErrorMessage } from "../../../base/common/errors.js";
+var ExtensionsProfileScanningErrorCode = /* @__PURE__ */ ((ExtensionsProfileScanningErrorCode2) => {
+  ExtensionsProfileScanningErrorCode2["ERROR_PROFILE_NOT_FOUND"] = "ERROR_PROFILE_NOT_FOUND";
+  ExtensionsProfileScanningErrorCode2["ERROR_INVALID_CONTENT"] = "ERROR_INVALID_CONTENT";
+  return ExtensionsProfileScanningErrorCode2;
+})(ExtensionsProfileScanningErrorCode || {});
+class ExtensionsProfileScanningError extends Error {
+  constructor(message, code) {
+    super(message);
+    this.code = code;
+  }
+  static {
+    __name(this, "ExtensionsProfileScanningError");
+  }
+}
+const IExtensionsProfileScannerService = createDecorator("IExtensionsProfileScannerService");
+let AbstractExtensionsProfileScannerService = class extends Disposable {
+  constructor(extensionsLocation, fileService, userDataProfilesService, uriIdentityService, logService) {
+    super();
+    this.extensionsLocation = extensionsLocation;
+    this.fileService = fileService;
+    this.userDataProfilesService = userDataProfilesService;
+    this.uriIdentityService = uriIdentityService;
+    this.logService = logService;
+  }
+  static {
+    __name(this, "AbstractExtensionsProfileScannerService");
+  }
+  _serviceBrand;
+  _onAddExtensions = this._register(new Emitter());
+  onAddExtensions = this._onAddExtensions.event;
+  _onDidAddExtensions = this._register(new Emitter());
+  onDidAddExtensions = this._onDidAddExtensions.event;
+  _onRemoveExtensions = this._register(new Emitter());
+  onRemoveExtensions = this._onRemoveExtensions.event;
+  _onDidRemoveExtensions = this._register(new Emitter());
+  onDidRemoveExtensions = this._onDidRemoveExtensions.event;
+  resourcesAccessQueueMap = new ResourceMap();
+  scanProfileExtensions(profileLocation, options) {
+    return this.withProfileExtensions(profileLocation, void 0, options);
+  }
+  async addExtensionsToProfile(extensions, profileLocation, keepExistingVersions) {
+    const extensionsToRemove = [];
+    const extensionsToAdd = [];
+    try {
+      await this.withProfileExtensions(profileLocation, (existingExtensions) => {
+        const result = [];
+        if (keepExistingVersions) {
+          result.push(...existingExtensions);
+        } else {
+          for (const existing of existingExtensions) {
+            if (extensions.some(([e]) => areSameExtensions(e.identifier, existing.identifier) && e.manifest.version !== existing.version)) {
+              extensionsToRemove.push(existing);
+            } else {
+              result.push(existing);
+            }
+          }
+        }
+        for (const [extension, metadata] of extensions) {
+          const index = result.findIndex((e) => areSameExtensions(e.identifier, extension.identifier) && e.version === extension.manifest.version);
+          const extensionToAdd = { identifier: extension.identifier, version: extension.manifest.version, location: extension.location, metadata };
+          if (index === -1) {
+            extensionsToAdd.push(extensionToAdd);
+            result.push(extensionToAdd);
+          } else {
+            result.splice(index, 1, extensionToAdd);
+          }
+        }
+        if (extensionsToAdd.length) {
+          this._onAddExtensions.fire({ extensions: extensionsToAdd, profileLocation });
+        }
+        if (extensionsToRemove.length) {
+          this._onRemoveExtensions.fire({ extensions: extensionsToRemove, profileLocation });
+        }
+        return result;
+      });
+      if (extensionsToAdd.length) {
+        this._onDidAddExtensions.fire({ extensions: extensionsToAdd, profileLocation });
+      }
+      if (extensionsToRemove.length) {
+        this._onDidRemoveExtensions.fire({ extensions: extensionsToRemove, profileLocation });
+      }
+      return extensionsToAdd;
+    } catch (error) {
+      if (extensionsToAdd.length) {
+        this._onDidAddExtensions.fire({ extensions: extensionsToAdd, error, profileLocation });
+      }
+      if (extensionsToRemove.length) {
+        this._onDidRemoveExtensions.fire({ extensions: extensionsToRemove, error, profileLocation });
+      }
+      throw error;
+    }
+  }
+  async updateMetadata(extensions, profileLocation) {
+    const updatedExtensions = [];
+    await this.withProfileExtensions(profileLocation, (profileExtensions) => {
+      const result = [];
+      for (const profileExtension of profileExtensions) {
+        const extension = extensions.find(([e]) => areSameExtensions(e.identifier, profileExtension.identifier) && e.manifest.version === profileExtension.version);
+        if (extension) {
+          profileExtension.metadata = { ...profileExtension.metadata, ...extension[1] };
+          updatedExtensions.push(profileExtension);
+          result.push(profileExtension);
+        } else {
+          result.push(profileExtension);
+        }
+      }
+      return result;
+    });
+    return updatedExtensions;
+  }
+  async removeExtensionsFromProfile(extensions, profileLocation) {
+    const extensionsToRemove = [];
+    try {
+      await this.withProfileExtensions(profileLocation, (profileExtensions) => {
+        const result = [];
+        for (const e of profileExtensions) {
+          if (extensions.some((extension) => areSameExtensions(e.identifier, extension))) {
+            extensionsToRemove.push(e);
+          } else {
+            result.push(e);
+          }
+        }
+        if (extensionsToRemove.length) {
+          this._onRemoveExtensions.fire({ extensions: extensionsToRemove, profileLocation });
+        }
+        return result;
+      });
+      if (extensionsToRemove.length) {
+        this._onDidRemoveExtensions.fire({ extensions: extensionsToRemove, profileLocation });
+      }
+    } catch (error) {
+      if (extensionsToRemove.length) {
+        this._onDidRemoveExtensions.fire({ extensions: extensionsToRemove, error, profileLocation });
+      }
+      throw error;
+    }
+  }
+  async withProfileExtensions(file, updateFn, options) {
+    return this.getResourceAccessQueue(file).queue(async () => {
+      let extensions = [];
+      let storedProfileExtensions;
+      try {
+        const content = await this.fileService.readFile(file);
+        storedProfileExtensions = JSON.parse(content.value.toString().trim() || "[]");
+      } catch (error) {
+        if (toFileOperationResult(error) !== FileOperationResult.FILE_NOT_FOUND) {
+          throw error;
+        }
+        if (this.uriIdentityService.extUri.isEqual(file, this.userDataProfilesService.defaultProfile.extensionsResource)) {
+          storedProfileExtensions = await this.migrateFromOldDefaultProfileExtensionsLocation();
+        }
+        if (!storedProfileExtensions && options?.bailOutWhenFileNotFound) {
+          throw new ExtensionsProfileScanningError(getErrorMessage(error), "ERROR_PROFILE_NOT_FOUND" /* ERROR_PROFILE_NOT_FOUND */);
+        }
+      }
+      if (storedProfileExtensions) {
+        if (!Array.isArray(storedProfileExtensions)) {
+          this.throwInvalidConentError(file);
+        }
+        let migrate = false;
+        for (const e of storedProfileExtensions) {
+          if (!isStoredProfileExtension(e)) {
+            this.throwInvalidConentError(file);
+          }
+          let location;
+          if (isString(e.relativeLocation) && e.relativeLocation) {
+            location = this.resolveExtensionLocation(e.relativeLocation);
+          } else if (isString(e.location)) {
+            this.logService.warn(`Extensions profile: Ignoring extension with invalid location: ${e.location}`);
+            continue;
+          } else {
+            location = URI.revive(e.location);
+            const relativePath = this.toRelativePath(location);
+            if (relativePath) {
+              migrate = true;
+              e.relativeLocation = relativePath;
+            }
+          }
+          if (isUndefined(e.metadata?.hasPreReleaseVersion) && e.metadata?.preRelease) {
+            migrate = true;
+            e.metadata.hasPreReleaseVersion = true;
+          }
+          const uuid = e.metadata?.id ?? e.identifier.uuid;
+          extensions.push({
+            identifier: uuid ? { id: e.identifier.id, uuid } : { id: e.identifier.id },
+            location,
+            version: e.version,
+            metadata: e.metadata
+          });
+        }
+        if (migrate) {
+          await this.fileService.writeFile(file, VSBuffer.fromString(JSON.stringify(storedProfileExtensions)));
+        }
+      }
+      if (updateFn) {
+        extensions = updateFn(extensions);
+        const storedProfileExtensions2 = extensions.map((e) => ({
+          identifier: e.identifier,
+          version: e.version,
+          // retain old format so that old clients can read it
+          location: e.location.toJSON(),
+          relativeLocation: this.toRelativePath(e.location),
+          metadata: e.metadata
+        }));
+        await this.fileService.writeFile(file, VSBuffer.fromString(JSON.stringify(storedProfileExtensions2)));
+      }
+      return extensions;
+    });
+  }
+  throwInvalidConentError(file) {
+    throw new ExtensionsProfileScanningError(`Invalid extensions content in ${file.toString()}`, "ERROR_INVALID_CONTENT" /* ERROR_INVALID_CONTENT */);
+  }
+  toRelativePath(extensionLocation) {
+    return this.uriIdentityService.extUri.isEqual(this.uriIdentityService.extUri.dirname(extensionLocation), this.extensionsLocation) ? this.uriIdentityService.extUri.basename(extensionLocation) : void 0;
+  }
+  resolveExtensionLocation(path) {
+    return this.uriIdentityService.extUri.joinPath(this.extensionsLocation, path);
+  }
+  _migrationPromise;
+  async migrateFromOldDefaultProfileExtensionsLocation() {
+    if (!this._migrationPromise) {
+      this._migrationPromise = (async () => {
+        const oldDefaultProfileExtensionsLocation = this.uriIdentityService.extUri.joinPath(this.userDataProfilesService.defaultProfile.location, "extensions.json");
+        const oldDefaultProfileExtensionsInitLocation = this.uriIdentityService.extUri.joinPath(this.extensionsLocation, ".init-default-profile-extensions");
+        let content;
+        try {
+          content = (await this.fileService.readFile(oldDefaultProfileExtensionsLocation)).value.toString();
+        } catch (error) {
+          if (toFileOperationResult(error) === FileOperationResult.FILE_NOT_FOUND) {
+            return void 0;
+          }
+          throw error;
+        }
+        this.logService.info("Migrating extensions from old default profile location", oldDefaultProfileExtensionsLocation.toString());
+        let storedProfileExtensions;
+        try {
+          const parsedData = JSON.parse(content);
+          if (Array.isArray(parsedData) && parsedData.every((candidate) => isStoredProfileExtension(candidate))) {
+            storedProfileExtensions = parsedData;
+          } else {
+            this.logService.warn("Skipping migrating from old default profile locaiton: Found invalid data", parsedData);
+          }
+        } catch (error) {
+          this.logService.error(error);
+        }
+        if (storedProfileExtensions) {
+          try {
+            await this.fileService.createFile(this.userDataProfilesService.defaultProfile.extensionsResource, VSBuffer.fromString(JSON.stringify(storedProfileExtensions)), { overwrite: false });
+            this.logService.info("Migrated extensions from old default profile location to new location", oldDefaultProfileExtensionsLocation.toString(), this.userDataProfilesService.defaultProfile.extensionsResource.toString());
+          } catch (error) {
+            if (toFileOperationResult(error) === FileOperationResult.FILE_MODIFIED_SINCE) {
+              this.logService.info("Migration from old default profile location to new location is done by another window", oldDefaultProfileExtensionsLocation.toString(), this.userDataProfilesService.defaultProfile.extensionsResource.toString());
+            } else {
+              throw error;
+            }
+          }
+        }
+        try {
+          await this.fileService.del(oldDefaultProfileExtensionsLocation);
+        } catch (error) {
+          if (toFileOperationResult(error) !== FileOperationResult.FILE_NOT_FOUND) {
+            this.logService.error(error);
+          }
+        }
+        try {
+          await this.fileService.del(oldDefaultProfileExtensionsInitLocation);
+        } catch (error) {
+          if (toFileOperationResult(error) !== FileOperationResult.FILE_NOT_FOUND) {
+            this.logService.error(error);
+          }
+        }
+        return storedProfileExtensions;
+      })();
+    }
+    return this._migrationPromise;
+  }
+  getResourceAccessQueue(file) {
+    let resourceQueue = this.resourcesAccessQueueMap.get(file);
+    if (!resourceQueue) {
+      resourceQueue = new Queue();
+      this.resourcesAccessQueueMap.set(file, resourceQueue);
+    }
+    return resourceQueue;
+  }
+};
+AbstractExtensionsProfileScannerService = __decorateClass([
+  __decorateParam(1, IFileService),
+  __decorateParam(2, IUserDataProfilesService),
+  __decorateParam(3, IUriIdentityService),
+  __decorateParam(4, ILogService)
+], AbstractExtensionsProfileScannerService);
+function isStoredProfileExtension(candidate) {
+  return isObject(candidate) && isIExtensionIdentifier(candidate.identifier) && (isUriComponents(candidate.location) || isString(candidate.location) && candidate.location) && (isUndefined(candidate.relativeLocation) || isString(candidate.relativeLocation)) && candidate.version && isString(candidate.version);
+}
+__name(isStoredProfileExtension, "isStoredProfileExtension");
+function isUriComponents(thing) {
+  if (!thing) {
+    return false;
+  }
+  return isString(thing.path) && isString(thing.scheme);
+}
+__name(isUriComponents, "isUriComponents");
+export {
+  AbstractExtensionsProfileScannerService,
+  ExtensionsProfileScanningError,
+  ExtensionsProfileScanningErrorCode,
+  IExtensionsProfileScannerService
+};
+//# sourceMappingURL=extensionsProfileScannerService.js.map

@@ -1,1 +1,43 @@
-import{localize as n,localize2 as e}from"../../../../nls.js";import{Action2 as s,registerAction2 as d}from"../../../../platform/actions/common/actions.js";import{Categories as m}from"../../../../platform/action/common/actionCommonCategories.js";import"../../../../platform/instantiation/common/instantiation.js";import{KeybindingWeight as p}from"../../../../platform/keybinding/common/keybindingsRegistry.js";import{KeyCode as o,KeyMod as t}from"../../../../base/common/keyCodes.js";import{InputMode as r}from"../../../../editor/common/inputMode.js";class c extends s{constructor(){super({id:"editor.action.toggleOvertypeInsertMode",title:{...e("toggleOvertypeInsertMode","Toggle Overtype/Insert Mode"),mnemonicTitle:n({key:"mitoggleOvertypeInsertMode",comment:["&& denotes a mnemonic"]},"&&Toggle Overtype/Insert Mode")},metadata:{description:e("toggleOvertypeMode.description","Toggle between overtype and insert mode")},keybinding:{weight:p.WorkbenchContrib,primary:o.Insert,mac:{primary:t.Alt|t.CtrlCmd|o.KeyO}},f1:!0,category:m.View})}async run(e){const o="insert"===r.getInputMode()?"overtype":"insert";r.setInputMode(o)}}d(c);export{c as ToggleOvertypeInsertMode};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { localize, localize2 } from "../../../../nls.js";
+import { Action2, registerAction2 } from "../../../../platform/actions/common/actions.js";
+import { Categories } from "../../../../platform/action/common/actionCommonCategories.js";
+import { ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+import { KeybindingWeight } from "../../../../platform/keybinding/common/keybindingsRegistry.js";
+import { KeyCode, KeyMod } from "../../../../base/common/keyCodes.js";
+import { InputMode } from "../../../../editor/common/inputMode.js";
+class ToggleOvertypeInsertMode extends Action2 {
+  static {
+    __name(this, "ToggleOvertypeInsertMode");
+  }
+  constructor() {
+    super({
+      id: "editor.action.toggleOvertypeInsertMode",
+      title: {
+        ...localize2("toggleOvertypeInsertMode", "Toggle Overtype/Insert Mode"),
+        mnemonicTitle: localize({ key: "mitoggleOvertypeInsertMode", comment: ["&& denotes a mnemonic"] }, "&&Toggle Overtype/Insert Mode")
+      },
+      metadata: {
+        description: localize2("toggleOvertypeMode.description", "Toggle between overtype and insert mode")
+      },
+      keybinding: {
+        weight: KeybindingWeight.WorkbenchContrib,
+        primary: KeyCode.Insert,
+        mac: { primary: KeyMod.Alt | KeyMod.CtrlCmd | KeyCode.KeyO }
+      },
+      f1: true,
+      category: Categories.View
+    });
+  }
+  async run(accessor) {
+    const oldInputMode = InputMode.getInputMode();
+    const newInputMode = oldInputMode === "insert" ? "overtype" : "insert";
+    InputMode.setInputMode(newInputMode);
+  }
+}
+registerAction2(ToggleOvertypeInsertMode);
+export {
+  ToggleOvertypeInsertMode
+};
+//# sourceMappingURL=toggleOvertype.js.map

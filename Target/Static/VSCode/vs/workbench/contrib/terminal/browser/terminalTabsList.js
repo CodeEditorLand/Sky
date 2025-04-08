@@ -1,1 +1,753 @@
-var re=Object.defineProperty;var ne=Object.getOwnPropertyDescriptor;var S=(I,d,e,i)=>{for(var t=i>1?void 0:i?ne(d,e):d,o=I.length-1,r;o>=0;o--)(r=I[o])&&(t=(i?r(d,e,t):r(t))||t);return i&&t&&re(d,e,t),t},l=(I,d)=>(e,i)=>d(e,i,I);import{IListService as R,WorkbenchList as oe}from"../../../../platform/list/browser/listService.js";import"../../../../base/browser/ui/list/listWidget.js";import{IConfigurationService as se}from"../../../../platform/configuration/common/configuration.js";import{IContextKeyService as ae}from"../../../../platform/contextkey/common/contextkey.js";import{IKeybindingService as le}from"../../../../platform/keybinding/common/keybinding.js";import{IThemeService as K}from"../../../../platform/theme/common/themeService.js";import{ThemeIcon as k}from"../../../../base/common/themables.js";import{ITerminalConfigurationService as ce,ITerminalGroupService as A,ITerminalService as L,TerminalDataTransfers as B}from"./terminal.js";import{localize as _}from"../../../../nls.js";import*as f from"../../../../base/browser/dom.js";import{IInstantiationService as N}from"../../../../platform/instantiation/common/instantiation.js";import{ActionBar as me}from"../../../../base/browser/ui/actionbar/actionbar.js";import{MenuItemAction as de}from"../../../../platform/actions/common/actions.js";import{MenuEntryActionViewItem as ue}from"../../../../platform/actions/browser/menuEntryActionViewItem.js";import{TerminalCommandId as V}from"../common/terminal.js";import{TerminalLocation as pe,TerminalSettingId as he}from"../../../../platform/terminal/common/terminal.js";import{Codicon as W}from"../../../../base/common/codicons.js";import{Action as H}from"../../../../base/common/actions.js";import{DEFAULT_LABELS_CONTAINER as fe,ResourceLabels as ve}from"../../../browser/labels.js";import{IDecorationsService as Ie}from"../../../services/decorations/common/decorations.js";import{IHoverService as U}from"../../../../platform/hover/browser/hover.js";import w from"../../../../base/common/severity.js";import{Disposable as y,DisposableStore as ge,dispose as O,toDisposable as $}from"../../../../base/common/lifecycle.js";import{ListDragOverEffectPosition as Se,ListDragOverEffectType as _e}from"../../../../base/browser/ui/list/list.js";import{DataTransfers as P}from"../../../../base/browser/dnd.js";import{disposableTimeout as ye}from"../../../../base/common/async.js";import{ElementsDragAndDropData as q,NativeDragAndDropData as be}from"../../../../base/browser/ui/list/listView.js";import{URI as M}from"../../../../base/common/uri.js";import{getColorClass as Te,getIconId as De,getUriClasses as Ce}from"./terminalIcon.js";import"../../../common/views.js";import{IContextViewService as Ee}from"../../../../platform/contextview/browser/contextView.js";import{InputBox as xe,MessageType as F}from"../../../../base/browser/ui/inputbox/inputBox.js";import{createSingleCallFunction as Ae}from"../../../../base/common/functional.js";import"../../../../base/browser/keyboardEvent.js";import{KeyCode as J}from"../../../../base/common/keyCodes.js";import{CodeDataTransfers as Y,containsDragType as j,getPathForFile as X}from"../../../../platform/dnd/browser/dnd.js";import{terminalStrings as Q}from"../common/terminalStrings.js";import{ILifecycleService as Le}from"../../../services/lifecycle/common/lifecycle.js";import"../../../../platform/terminal/common/terminalProcess.js";import{TerminalContextKeys as Z}from"../common/terminalContextKey.js";import{getTerminalResourcesFromDragEvent as we,parseTerminalUri as Fe}from"./terminalUri.js";import{getInstanceHoverInfo as z}from"./terminalTooltip.js";import{defaultInputBoxStyles as Ge}from"../../../../platform/theme/browser/defaultStyles.js";import{Emitter as Re}from"../../../../base/common/event.js";import{Schemas as ke}from"../../../../base/common/network.js";import{getColorForSeverity as Be}from"./terminalStatusList.js";import{TerminalContextActionRunner as He}from"./terminalContextMenu.js";import{HoverPosition as ee}from"../../../../base/browser/ui/hover/hoverWidget.js";import{ICommandService as Oe}from"../../../../platform/commands/common/commands.js";import{IStorageService as te,StorageScope as Pe}from"../../../../platform/storage/common/storage.js";import{TerminalStorageKeys as Me}from"../common/terminalStorageKeys.js";const ie=f.$;var Ke=(n=>(n[n.TabHeight=22]="TabHeight",n[n.NarrowViewWidth=46]="NarrowViewWidth",n[n.WideViewMinimumWidth=80]="WideViewMinimumWidth",n[n.DefaultWidth=120]="DefaultWidth",n[n.MidpointViewWidth=63]="MidpointViewWidth",n[n.ActionbarMinimumWidth=105]="ActionbarMinimumWidth",n[n.MaximumWidth=500]="MaximumWidth",n))(Ke||{});let G=class extends oe{constructor(e,i,t,o,r,n,p,u,c,a,m,h,E){super("TerminalTabsList",e,{getHeight:()=>22,getTemplateId:()=>"terminal.tabs"},[i.add(u.createInstance(b,e,u.createInstance(ve,fe),()=>this.getSelectedElements()))],{horizontalScrolling:!1,supportDynamicHeights:!1,selectionNavigation:!0,identityProvider:{getId:s=>s?.instanceId},accessibilityProvider:u.createInstance(T),smoothScrolling:r.getValue("workbench.list.smoothScrolling"),multipleSelectionSupport:!0,paddingBottom:22,dnd:u.createInstance(D),openOnSingleClick:!0},t,o,r,u);this._configurationService=r;this._terminalService=n;this._terminalGroupService=p;this._themeService=a;this._storageService=m;this._hoverService=E;const g=[this._terminalGroupService.onDidChangeInstances(()=>this.refresh()),this._terminalGroupService.onDidChangeGroups(()=>this.refresh()),this._terminalGroupService.onDidShow(()=>this.refresh()),this._terminalGroupService.onDidChangeInstanceCapability(()=>this.refresh()),this._terminalService.onAnyInstanceTitleChange(()=>this.refresh()),this._terminalService.onAnyInstanceIconChange(()=>this.refresh()),this._terminalService.onAnyInstancePrimaryStatusChange(()=>this.refresh()),this._terminalService.onDidChangeConnectionState(()=>this.refresh()),this._themeService.onDidColorThemeChange(()=>this.refresh()),this._terminalGroupService.onDidChangeActiveInstance(s=>{if(s){const v=this._terminalGroupService.instances.indexOf(s);this.setSelection([v]),this.reveal(v)}this.refresh()}),this._storageService.onDidChangeValue(Pe.APPLICATION,Me.TabsShowDetailed,this.disposables)(()=>this.refresh())];this.disposables.add(h.onWillShutdown(s=>{O(g),g.length=0})),this.disposables.add($(()=>{O(g),g.length=0})),this.disposables.add(this.onMouseDblClick(async s=>{if(this.getFocus().length===0){const x=await this._terminalService.createTerminal({location:pe.Panel});this._terminalGroupService.setActiveInstance(x),await x.focusWhenReady()}this._terminalService.getEditingTerminal()?.instanceId!==s.element?.instanceId&&this._getFocusMode()==="doubleClick"&&this.getFocus().length===1&&s.element?.focus(!0)})),this.disposables.add(this.onMouseClick(async s=>{this._terminalService.getEditingTerminal()?.instanceId!==s.element?.instanceId&&(s.browserEvent.altKey&&s.element?await this._terminalService.createTerminal({location:{parentTerminal:s.element}}):this._getFocusMode()==="singleClick"&&this.getSelection().length<=1&&s.element?.focus(!0))})),this.disposables.add(this.onContextMenu(s=>{if(!s.element){this.setSelection([]);return}const v=this.getSelectedElements();(!v||!v.find(x=>s.element===x))&&this.setFocus(s.index!==void 0?[s.index]:[])})),this._terminalTabsSingleSelectedContextKey=Z.tabsSingularSelection.bindTo(t),this._isSplitContextKey=Z.splitTerminal.bindTo(t),this.disposables.add(this.onDidChangeSelection(s=>this._updateContextKey())),this.disposables.add(this.onDidChangeFocus(()=>this._updateContextKey())),this.disposables.add(this.onDidOpen(async s=>{const v=s.element;v&&(this._terminalGroupService.setActiveInstance(v),s.editorOptions.preserveFocus||await v.focusWhenReady())})),this._decorationsProvider||(this._decorationsProvider=this.disposables.add(u.createInstance(C)),this.disposables.add(c.registerDecorationsProvider(this._decorationsProvider))),this.refresh()}_decorationsProvider;_terminalTabsSingleSelectedContextKey;_isSplitContextKey;_getFocusMode(){return this._configurationService.getValue(he.TabsFocusMode)}refresh(e=!0){e&&this._terminalService.isEditable(void 0)&&this.domFocus(),this.splice(0,this.length,this._terminalGroupService.instances.slice())}focusHover(){const e=this.getSelectedElements()[0];e&&this._hoverService.showInstantHover({...z(e,this._storageService),target:this.getHTMLElement(),trapFocus:!0},!0)}_updateContextKey(){this._terminalTabsSingleSelectedContextKey.set(this.getSelectedElements().length===1);const e=this.getFocusedElements();this._isSplitContextKey.set(e.length>0&&this._terminalGroupService.instanceIsSplit(e[0]))}};G=S([l(2,ae),l(3,R),l(4,se),l(5,L),l(6,A),l(7,N),l(8,Ie),l(9,K),l(10,te),l(11,Le),l(12,U)],G);let b=class extends y{constructor(e,i,t,o,r,n,p,u,c,a,m,h,E,g){super();this._container=e;this._labels=i;this._getSelection=t;this._instantiationService=o;this._terminalConfigurationService=r;this._terminalService=n;this._terminalGroupService=p;this._hoverService=u;this._keybindingService=c;this._listService=a;this._storageService=m;this._themeService=h;this._contextViewService=E;this._commandService=g}templateId="terminal.tabs";renderTemplate(e){const i=f.append(e,ie(".terminal-tabs-entry")),t={},o=this._labels.create(i,{supportHighlights:!0,supportDescriptionHighlights:!0,supportIcons:!0,hoverDelegate:{delay:0,showHover:p=>this._hoverService.showDelayedHover({...p,actions:t.hoverActions,target:i,appearance:{showPointer:!0},position:{hoverPosition:this._terminalConfigurationService.config.tabs.location==="left"?ee.RIGHT:ee.LEFT}},{groupId:"terminal-tabs-list"})}}),r=f.append(o.element,ie(".actions")),n=this._register(new me(r,{actionRunner:this._register(new He),actionViewItemProvider:(p,u)=>p instanceof de?this._register(this._instantiationService.createInstance(ue,p,{hoverDelegate:u.hoverDelegate})):void 0}));return{element:i,label:o,actionBar:n,context:t,elementDisposables:new ge}}shouldHideText(){return this._container?this._container.clientWidth<63:!1}shouldHideActionBar(){return this._container?this._container.clientWidth<=105:!1}renderElement(e,i,t){const o=!this.shouldHideText(),r=this._terminalGroupService.getGroupForInstance(e);if(!r)throw new Error(`Could not find group for instance "${e.instanceId}"`);t.element.classList.toggle("has-text",o),t.element.classList.toggle("is-active",this._terminalGroupService.activeInstance===e);let n="";if(r.terminalInstances.length>1){const s=r.terminalInstances.indexOf(e);s===0?n="\u250C ":s===r.terminalInstances.length-1?n="\u2514 ":n="\u251C "}const p=z(e,this._storageService);t.context.hoverActions=p.actions;const u=this._instantiationService.invokeFunction(De,e),c=!this.shouldHideActionBar();let a="";if(o)this.fillActionBar(e,t),a=n,e.icon&&(a+=`$(${u}) ${e.title}`);else{const s=e.statusList.primary;s&&s.severity>w.Ignore?a=`${n}$(${s.icon?.id||u})`:a=`${n}$(${u})`}c||t.actionBar.clear(),t.elementDisposables.add(f.addDisposableListener(t.element,f.EventType.AUXCLICK,s=>{s.stopImmediatePropagation(),s.button===1&&this._terminalService.safeDisposeTerminal(e)}));const m=[],h=Te(e);h&&m.push(h);const E=Ce(e,this._themeService.getColorTheme().type);E&&m.push(...E),t.label.setResource({resource:e.resource,name:a,description:o?e.description:void 0},{fileDecorations:{colors:!0,badges:o},title:{markdown:p.content,markdownNotSupportedFallback:void 0},extraClasses:m});const g=this._terminalService.getEditableData(e);t.label.element.classList.toggle("editable-tab",!!g),g&&(t.elementDisposables.add(this._renderInputBox(t.label.element.querySelector(".monaco-icon-label-container"),e,g)),t.actionBar.clear())}_renderInputBox(e,i,t){const o=i.title||"",r=new xe(e,this._contextViewService,{validationOptions:{validation:c=>{const a=t.validationMessage(c);return!a||a.severity!==w.Error?null:{content:a.content,formatContent:!0,type:F.ERROR}}},ariaLabel:_("terminalInputAriaLabel","Type terminal name. Press Enter to confirm or Escape to cancel."),inputBoxStyles:Ge});r.element.style.height="22px",r.value=o,r.focus(),r.select({start:0,end:o.length});const n=Ae((c,a)=>{r.element.style.display="none";const m=r.value;O(u),r.element.remove(),a&&t.onFinish(m,c)}),p=()=>{if(r.isInputValid()){const c=t.validationMessage(r.value);c?r.showMessage({content:c.content,formatContent:!0,type:c.severity===w.Info?F.INFO:c.severity===w.Warning?F.WARNING:F.ERROR}):r.hideMessage()}};p();const u=[r,f.addStandardDisposableListener(r.inputElement,f.EventType.KEY_DOWN,c=>{c.stopPropagation(),c.equals(J.Enter)?n(r.isInputValid(),!0):c.equals(J.Escape)&&n(!1,!0)}),f.addStandardDisposableListener(r.inputElement,f.EventType.KEY_UP,c=>{p()}),f.addDisposableListener(r.inputElement,f.EventType.BLUR,()=>{n(r.isInputValid(),!0)})];return $(()=>{n(!1,!1)})}disposeElement(e,i,t){t.elementDisposables.clear(),t.actionBar.clear()}disposeTemplate(e){e.elementDisposables.dispose(),e.label.dispose(),e.actionBar.dispose()}fillActionBar(e,i){const t=[this._register(new H(V.SplitActiveTab,Q.split.short,k.asClassName(W.splitHorizontal),!0,async()=>{this._runForSelectionOrInstance(e,async o=>{this._terminalService.createTerminal({location:{parentTerminal:o}})})}))];if(e.shellLaunchConfig.tabActions)for(const o of e.shellLaunchConfig.tabActions)t.push(this._register(new H(o.id,o.label,o.icon?k.asClassName(o.icon):void 0,!0,async()=>{this._runForSelectionOrInstance(e,r=>this._commandService.executeCommand(o.id,e))})));t.push(this._register(new H(V.KillActiveTab,Q.kill.short,k.asClassName(W.trashcan),!0,async()=>{this._runForSelectionOrInstance(e,o=>this._terminalService.safeDisposeTerminal(o))}))),i.actionBar.clear();for(const o of t)i.actionBar.push(o,{icon:!0,label:!1,keybinding:this._keybindingService.lookupKeybinding(o.id)?.getLabel()})}_runForSelectionOrInstance(e,i){const t=this._getSelection();if(t.includes(e))for(const o of t)o&&i(o);else i(e);this._terminalGroupService.focusTabs(),this._listService.lastFocusedList?.focusNext()}};b=S([l(3,N),l(4,ce),l(5,L),l(6,A),l(7,U),l(8,le),l(9,R),l(10,te),l(11,K),l(12,Ee),l(13,Oe)],b);let T=class{constructor(d){this._terminalGroupService=d}getWidgetAriaLabel(){return _("terminal.tabs","Terminal tabs")}getAriaLabel(d){let e="";const i=this._terminalGroupService.getGroupForInstance(d);if(i&&i.terminalInstances?.length>1){const t=i.terminalInstances.indexOf(d);e=_({key:"splitTerminalAriaLabel",comment:["The terminal's ID","The terminal's title","The terminal's split number","The terminal group's total split number"]},"Terminal {0} {1}, split {2} of {3}",d.instanceId,d.title,t+1,i.terminalInstances.length)}else e=_({key:"terminalAriaLabel",comment:["The terminal's ID","The terminal's title"]},"Terminal {0} {1}",d.instanceId,d.title);return e}};T=S([l(0,A)],T);let D=class extends y{constructor(e,i,t){super();this._terminalService=e;this._terminalGroupService=i;this._listService=t;this._primaryBackend=this._terminalService.getPrimaryBackend()}_autoFocusInstance;_autoFocusDisposable=y.None;_primaryBackend;getDragURI(e){return this._terminalService.getEditingTerminal()?.instanceId===e.instanceId?null:e.resource.toString()}getDragLabel(e,i){return e.length===1?e[0].title:void 0}onDragLeave(){this._autoFocusInstance=void 0,this._autoFocusDisposable.dispose(),this._autoFocusDisposable=y.None}onDragStart(e,i){if(!i.dataTransfer)return;const t=e.getData();if(!Array.isArray(t))return;const o=t.filter(r=>"instanceId"in r);o.length>0&&i.dataTransfer.setData(B.Terminals,JSON.stringify(o.map(r=>r.resource.toString())))}onDragOver(e,i,t,o,r){if(e instanceof be&&!j(r,P.FILES,P.RESOURCES,B.Terminals,Y.FILES))return!1;const n=this._autoFocusInstance!==i;return n&&(this._autoFocusDisposable.dispose(),this._autoFocusInstance=i),!i&&!j(r,B.Terminals)?e instanceof q:(n&&i&&(this._autoFocusDisposable=ye(()=>{this._terminalService.setActiveInstance(i),this._autoFocusInstance=void 0},500,this._store)),{feedback:t?[t]:void 0,accept:!0,effect:{type:_e.Move,position:Se.Over}})}async drop(e,i,t,o,r){this._autoFocusDisposable.dispose(),this._autoFocusInstance=void 0;let n;const p=[],u=we(r);if(u)for(const a of u){const m=this._terminalService.getInstanceFromResource(a);if(m)Array.isArray(n)?n.push(m):n=[m],this._terminalService.moveToTerminalView(m);else if(this._primaryBackend){const h=Fe(a);h.instanceId&&p.push(this._primaryBackend.requestDetachInstance(h.workspaceId,h.instanceId))}}if(p.length){let a=await Promise.all(p);a=a.filter(h=>h!==void 0);let m;for(const h of a)m=await this._terminalService.createTerminal({config:{attachPersistentProcess:h}});m&&this._terminalService.setActiveInstance(m);return}if(n===void 0){if(!(e instanceof q)){this._handleExternalDrop(i,r);return}const a=e.getData();if(!a||!Array.isArray(a))return;n=[];for(const m of a)"instanceId"in m&&n.push(m)}if(!i){this._terminalGroupService.moveGroupToEnd(n),this._terminalService.setActiveInstance(n[0]);const a=this._terminalGroupService.getGroupForInstance(n[0]);if(a){const m=this._terminalGroupService.groups.indexOf(a);this._listService.lastFocusedList?.setSelection([m])}return}this._terminalGroupService.moveGroup(n,i),this._terminalService.setActiveInstance(n[0]);const c=this._terminalGroupService.getGroupForInstance(n[0]);if(c){const a=this._terminalGroupService.groups.indexOf(c);this._listService.lastFocusedList?.setSelection([a])}}async _handleExternalDrop(e,i){if(!e||!i.dataTransfer)return;let t;const o=i.dataTransfer.getData(P.RESOURCES);o&&(t=M.parse(JSON.parse(o)[0]));const r=i.dataTransfer.getData(Y.FILES);!t&&r&&(t=M.file(JSON.parse(r)[0])),!t&&i.dataTransfer.files.length>0&&X(i.dataTransfer.files[0])&&(t=M.file(X(i.dataTransfer.files[0]))),t&&(this._terminalService.setActiveInstance(e),e.focus(),await e.sendPath(t,!1))}};D=S([l(0,L),l(1,A),l(2,R)],D);let C=class extends y{constructor(e){super();this._terminalService=e;this._register(this._terminalService.onAnyInstancePrimaryStatusChange(i=>this._onDidChange.fire([i.resource])))}label=_("label","Terminal");_onDidChange=this._register(new Re);onDidChange=this._onDidChange.event;provideDecorations(e){if(e.scheme!==ke.vscodeTerminal)return;const i=this._terminalService.getInstanceFromResource(e);if(!i)return;const t=i?.statusList?.primary;if(t?.icon)return{color:Be(t.severity),letter:t.icon,tooltip:t.tooltip}}};C=S([l(0,L)],C);export{G as TerminalTabList,Ke as TerminalTabsListSizes};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { IListService, WorkbenchList } from "../../../../platform/list/browser/listService.js";
+import { IListAccessibilityProvider } from "../../../../base/browser/ui/list/listWidget.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IContextKey, IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { IThemeService } from "../../../../platform/theme/common/themeService.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { ITerminalConfigurationService, ITerminalGroupService, ITerminalInstance, ITerminalService, TerminalDataTransfers } from "./terminal.js";
+import { localize } from "../../../../nls.js";
+import * as DOM from "../../../../base/browser/dom.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { ActionBar } from "../../../../base/browser/ui/actionbar/actionbar.js";
+import { MenuItemAction } from "../../../../platform/actions/common/actions.js";
+import { MenuEntryActionViewItem } from "../../../../platform/actions/browser/menuEntryActionViewItem.js";
+import { TerminalCommandId } from "../common/terminal.js";
+import { ITerminalBackend, TerminalLocation, TerminalSettingId } from "../../../../platform/terminal/common/terminal.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { Action } from "../../../../base/common/actions.js";
+import { DEFAULT_LABELS_CONTAINER, IResourceLabel, ResourceLabels } from "../../../browser/labels.js";
+import { IDecorationData, IDecorationsProvider, IDecorationsService } from "../../../services/decorations/common/decorations.js";
+import { IHoverService } from "../../../../platform/hover/browser/hover.js";
+import Severity from "../../../../base/common/severity.js";
+import { Disposable, DisposableStore, dispose, IDisposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { IListDragAndDrop, IListDragOverReaction, IListRenderer, ListDragOverEffectPosition, ListDragOverEffectType } from "../../../../base/browser/ui/list/list.js";
+import { DataTransfers, IDragAndDropData } from "../../../../base/browser/dnd.js";
+import { disposableTimeout } from "../../../../base/common/async.js";
+import { ElementsDragAndDropData, ListViewTargetSector, NativeDragAndDropData } from "../../../../base/browser/ui/list/listView.js";
+import { URI } from "../../../../base/common/uri.js";
+import { getColorClass, getIconId, getUriClasses } from "./terminalIcon.js";
+import { IEditableData } from "../../../common/views.js";
+import { IContextViewService } from "../../../../platform/contextview/browser/contextView.js";
+import { InputBox, MessageType } from "../../../../base/browser/ui/inputbox/inputBox.js";
+import { createSingleCallFunction } from "../../../../base/common/functional.js";
+import { IKeyboardEvent } from "../../../../base/browser/keyboardEvent.js";
+import { KeyCode } from "../../../../base/common/keyCodes.js";
+import { CodeDataTransfers, containsDragType, getPathForFile } from "../../../../platform/dnd/browser/dnd.js";
+import { terminalStrings } from "../common/terminalStrings.js";
+import { ILifecycleService } from "../../../services/lifecycle/common/lifecycle.js";
+import { IProcessDetails } from "../../../../platform/terminal/common/terminalProcess.js";
+import { TerminalContextKeys } from "../common/terminalContextKey.js";
+import { getTerminalResourcesFromDragEvent, parseTerminalUri } from "./terminalUri.js";
+import { getInstanceHoverInfo } from "./terminalTooltip.js";
+import { defaultInputBoxStyles } from "../../../../platform/theme/browser/defaultStyles.js";
+import { Emitter } from "../../../../base/common/event.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { getColorForSeverity } from "./terminalStatusList.js";
+import { TerminalContextActionRunner } from "./terminalContextMenu.js";
+import { HoverPosition } from "../../../../base/browser/ui/hover/hoverWidget.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { IStorageService, StorageScope } from "../../../../platform/storage/common/storage.js";
+import { TerminalStorageKeys } from "../common/terminalStorageKeys.js";
+const $ = DOM.$;
+var TerminalTabsListSizes = /* @__PURE__ */ ((TerminalTabsListSizes2) => {
+  TerminalTabsListSizes2[TerminalTabsListSizes2["TabHeight"] = 22] = "TabHeight";
+  TerminalTabsListSizes2[TerminalTabsListSizes2["NarrowViewWidth"] = 46] = "NarrowViewWidth";
+  TerminalTabsListSizes2[TerminalTabsListSizes2["WideViewMinimumWidth"] = 80] = "WideViewMinimumWidth";
+  TerminalTabsListSizes2[TerminalTabsListSizes2["DefaultWidth"] = 120] = "DefaultWidth";
+  TerminalTabsListSizes2[TerminalTabsListSizes2["MidpointViewWidth"] = 63] = "MidpointViewWidth";
+  TerminalTabsListSizes2[TerminalTabsListSizes2["ActionbarMinimumWidth"] = 105] = "ActionbarMinimumWidth";
+  TerminalTabsListSizes2[TerminalTabsListSizes2["MaximumWidth"] = 500] = "MaximumWidth";
+  return TerminalTabsListSizes2;
+})(TerminalTabsListSizes || {});
+let TerminalTabList = class extends WorkbenchList {
+  constructor(container, disposableStore, contextKeyService, listService, _configurationService, _terminalService, _terminalGroupService, instantiationService, decorationsService, _themeService, _storageService, lifecycleService, _hoverService) {
+    super(
+      "TerminalTabsList",
+      container,
+      {
+        getHeight: /* @__PURE__ */ __name(() => 22 /* TabHeight */, "getHeight"),
+        getTemplateId: /* @__PURE__ */ __name(() => "terminal.tabs", "getTemplateId")
+      },
+      [disposableStore.add(instantiationService.createInstance(TerminalTabsRenderer, container, instantiationService.createInstance(ResourceLabels, DEFAULT_LABELS_CONTAINER), () => this.getSelectedElements()))],
+      {
+        horizontalScrolling: false,
+        supportDynamicHeights: false,
+        selectionNavigation: true,
+        identityProvider: {
+          getId: /* @__PURE__ */ __name((e) => e?.instanceId, "getId")
+        },
+        accessibilityProvider: instantiationService.createInstance(TerminalTabsAccessibilityProvider),
+        smoothScrolling: _configurationService.getValue("workbench.list.smoothScrolling"),
+        multipleSelectionSupport: true,
+        paddingBottom: 22 /* TabHeight */,
+        dnd: instantiationService.createInstance(TerminalTabsDragAndDrop),
+        openOnSingleClick: true
+      },
+      contextKeyService,
+      listService,
+      _configurationService,
+      instantiationService
+    );
+    this._configurationService = _configurationService;
+    this._terminalService = _terminalService;
+    this._terminalGroupService = _terminalGroupService;
+    this._themeService = _themeService;
+    this._storageService = _storageService;
+    this._hoverService = _hoverService;
+    const instanceDisposables = [
+      this._terminalGroupService.onDidChangeInstances(() => this.refresh()),
+      this._terminalGroupService.onDidChangeGroups(() => this.refresh()),
+      this._terminalGroupService.onDidShow(() => this.refresh()),
+      this._terminalGroupService.onDidChangeInstanceCapability(() => this.refresh()),
+      this._terminalService.onAnyInstanceTitleChange(() => this.refresh()),
+      this._terminalService.onAnyInstanceIconChange(() => this.refresh()),
+      this._terminalService.onAnyInstancePrimaryStatusChange(() => this.refresh()),
+      this._terminalService.onDidChangeConnectionState(() => this.refresh()),
+      this._themeService.onDidColorThemeChange(() => this.refresh()),
+      this._terminalGroupService.onDidChangeActiveInstance((e) => {
+        if (e) {
+          const i = this._terminalGroupService.instances.indexOf(e);
+          this.setSelection([i]);
+          this.reveal(i);
+        }
+        this.refresh();
+      }),
+      this._storageService.onDidChangeValue(StorageScope.APPLICATION, TerminalStorageKeys.TabsShowDetailed, this.disposables)(() => this.refresh())
+    ];
+    this.disposables.add(lifecycleService.onWillShutdown((e) => {
+      dispose(instanceDisposables);
+      instanceDisposables.length = 0;
+    }));
+    this.disposables.add(toDisposable(() => {
+      dispose(instanceDisposables);
+      instanceDisposables.length = 0;
+    }));
+    this.disposables.add(this.onMouseDblClick(async (e) => {
+      const focus = this.getFocus();
+      if (focus.length === 0) {
+        const instance = await this._terminalService.createTerminal({ location: TerminalLocation.Panel });
+        this._terminalGroupService.setActiveInstance(instance);
+        await instance.focusWhenReady();
+      }
+      if (this._terminalService.getEditingTerminal()?.instanceId === e.element?.instanceId) {
+        return;
+      }
+      if (this._getFocusMode() === "doubleClick" && this.getFocus().length === 1) {
+        e.element?.focus(true);
+      }
+    }));
+    this.disposables.add(this.onMouseClick(async (e) => {
+      if (this._terminalService.getEditingTerminal()?.instanceId === e.element?.instanceId) {
+        return;
+      }
+      if (e.browserEvent.altKey && e.element) {
+        await this._terminalService.createTerminal({ location: { parentTerminal: e.element } });
+      } else if (this._getFocusMode() === "singleClick") {
+        if (this.getSelection().length <= 1) {
+          e.element?.focus(true);
+        }
+      }
+    }));
+    this.disposables.add(this.onContextMenu((e) => {
+      if (!e.element) {
+        this.setSelection([]);
+        return;
+      }
+      const selection = this.getSelectedElements();
+      if (!selection || !selection.find((s) => e.element === s)) {
+        this.setFocus(e.index !== void 0 ? [e.index] : []);
+      }
+    }));
+    this._terminalTabsSingleSelectedContextKey = TerminalContextKeys.tabsSingularSelection.bindTo(contextKeyService);
+    this._isSplitContextKey = TerminalContextKeys.splitTerminal.bindTo(contextKeyService);
+    this.disposables.add(this.onDidChangeSelection((e) => this._updateContextKey()));
+    this.disposables.add(this.onDidChangeFocus(() => this._updateContextKey()));
+    this.disposables.add(this.onDidOpen(async (e) => {
+      const instance = e.element;
+      if (!instance) {
+        return;
+      }
+      this._terminalGroupService.setActiveInstance(instance);
+      if (!e.editorOptions.preserveFocus) {
+        await instance.focusWhenReady();
+      }
+    }));
+    if (!this._decorationsProvider) {
+      this._decorationsProvider = this.disposables.add(instantiationService.createInstance(TabDecorationsProvider));
+      this.disposables.add(decorationsService.registerDecorationsProvider(this._decorationsProvider));
+    }
+    this.refresh();
+  }
+  static {
+    __name(this, "TerminalTabList");
+  }
+  _decorationsProvider;
+  _terminalTabsSingleSelectedContextKey;
+  _isSplitContextKey;
+  _getFocusMode() {
+    return this._configurationService.getValue(TerminalSettingId.TabsFocusMode);
+  }
+  refresh(cancelEditing = true) {
+    if (cancelEditing && this._terminalService.isEditable(void 0)) {
+      this.domFocus();
+    }
+    this.splice(0, this.length, this._terminalGroupService.instances.slice());
+  }
+  focusHover() {
+    const instance = this.getSelectedElements()[0];
+    if (!instance) {
+      return;
+    }
+    this._hoverService.showInstantHover({
+      ...getInstanceHoverInfo(instance, this._storageService),
+      target: this.getHTMLElement(),
+      trapFocus: true
+    }, true);
+  }
+  _updateContextKey() {
+    this._terminalTabsSingleSelectedContextKey.set(this.getSelectedElements().length === 1);
+    const instance = this.getFocusedElements();
+    this._isSplitContextKey.set(instance.length > 0 && this._terminalGroupService.instanceIsSplit(instance[0]));
+  }
+};
+TerminalTabList = __decorateClass([
+  __decorateParam(2, IContextKeyService),
+  __decorateParam(3, IListService),
+  __decorateParam(4, IConfigurationService),
+  __decorateParam(5, ITerminalService),
+  __decorateParam(6, ITerminalGroupService),
+  __decorateParam(7, IInstantiationService),
+  __decorateParam(8, IDecorationsService),
+  __decorateParam(9, IThemeService),
+  __decorateParam(10, IStorageService),
+  __decorateParam(11, ILifecycleService),
+  __decorateParam(12, IHoverService)
+], TerminalTabList);
+let TerminalTabsRenderer = class extends Disposable {
+  constructor(_container, _labels, _getSelection, _instantiationService, _terminalConfigurationService, _terminalService, _terminalGroupService, _hoverService, _keybindingService, _listService, _storageService, _themeService, _contextViewService, _commandService) {
+    super();
+    this._container = _container;
+    this._labels = _labels;
+    this._getSelection = _getSelection;
+    this._instantiationService = _instantiationService;
+    this._terminalConfigurationService = _terminalConfigurationService;
+    this._terminalService = _terminalService;
+    this._terminalGroupService = _terminalGroupService;
+    this._hoverService = _hoverService;
+    this._keybindingService = _keybindingService;
+    this._listService = _listService;
+    this._storageService = _storageService;
+    this._themeService = _themeService;
+    this._contextViewService = _contextViewService;
+    this._commandService = _commandService;
+  }
+  static {
+    __name(this, "TerminalTabsRenderer");
+  }
+  templateId = "terminal.tabs";
+  renderTemplate(container) {
+    const element = DOM.append(container, $(".terminal-tabs-entry"));
+    const context = {};
+    const label = this._labels.create(element, {
+      supportHighlights: true,
+      supportDescriptionHighlights: true,
+      supportIcons: true,
+      hoverDelegate: {
+        delay: 0,
+        showHover: /* @__PURE__ */ __name((options) => {
+          return this._hoverService.showDelayedHover({
+            ...options,
+            actions: context.hoverActions,
+            target: element,
+            appearance: {
+              showPointer: true
+            },
+            position: {
+              hoverPosition: this._terminalConfigurationService.config.tabs.location === "left" ? HoverPosition.RIGHT : HoverPosition.LEFT
+            }
+          }, { groupId: "terminal-tabs-list" });
+        }, "showHover")
+      }
+    });
+    const actionsContainer = DOM.append(label.element, $(".actions"));
+    const actionBar = this._register(new ActionBar(actionsContainer, {
+      actionRunner: this._register(new TerminalContextActionRunner()),
+      actionViewItemProvider: /* @__PURE__ */ __name((action, options) => action instanceof MenuItemAction ? this._register(this._instantiationService.createInstance(MenuEntryActionViewItem, action, { hoverDelegate: options.hoverDelegate })) : void 0, "actionViewItemProvider")
+    }));
+    return {
+      element,
+      label,
+      actionBar,
+      context,
+      elementDisposables: new DisposableStore()
+    };
+  }
+  shouldHideText() {
+    return this._container ? this._container.clientWidth < 63 /* MidpointViewWidth */ : false;
+  }
+  shouldHideActionBar() {
+    return this._container ? this._container.clientWidth <= 105 /* ActionbarMinimumWidth */ : false;
+  }
+  renderElement(instance, index, template) {
+    const hasText = !this.shouldHideText();
+    const group = this._terminalGroupService.getGroupForInstance(instance);
+    if (!group) {
+      throw new Error(`Could not find group for instance "${instance.instanceId}"`);
+    }
+    template.element.classList.toggle("has-text", hasText);
+    template.element.classList.toggle("is-active", this._terminalGroupService.activeInstance === instance);
+    let prefix = "";
+    if (group.terminalInstances.length > 1) {
+      const terminalIndex = group.terminalInstances.indexOf(instance);
+      if (terminalIndex === 0) {
+        prefix = `\u250C `;
+      } else if (terminalIndex === group.terminalInstances.length - 1) {
+        prefix = `\u2514 `;
+      } else {
+        prefix = `\u251C `;
+      }
+    }
+    const hoverInfo = getInstanceHoverInfo(instance, this._storageService);
+    template.context.hoverActions = hoverInfo.actions;
+    const iconId = this._instantiationService.invokeFunction(getIconId, instance);
+    const hasActionbar = !this.shouldHideActionBar();
+    let label = "";
+    if (!hasText) {
+      const primaryStatus = instance.statusList.primary;
+      if (primaryStatus && primaryStatus.severity > Severity.Ignore) {
+        label = `${prefix}$(${primaryStatus.icon?.id || iconId})`;
+      } else {
+        label = `${prefix}$(${iconId})`;
+      }
+    } else {
+      this.fillActionBar(instance, template);
+      label = prefix;
+      if (instance.icon) {
+        label += `$(${iconId}) ${instance.title}`;
+      }
+    }
+    if (!hasActionbar) {
+      template.actionBar.clear();
+    }
+    template.elementDisposables.add(DOM.addDisposableListener(template.element, DOM.EventType.AUXCLICK, (e) => {
+      e.stopImmediatePropagation();
+      if (e.button === 1) {
+        this._terminalService.safeDisposeTerminal(instance);
+      }
+    }));
+    const extraClasses = [];
+    const colorClass = getColorClass(instance);
+    if (colorClass) {
+      extraClasses.push(colorClass);
+    }
+    const uriClasses = getUriClasses(instance, this._themeService.getColorTheme().type);
+    if (uriClasses) {
+      extraClasses.push(...uriClasses);
+    }
+    template.label.setResource({
+      resource: instance.resource,
+      name: label,
+      description: hasText ? instance.description : void 0
+    }, {
+      fileDecorations: {
+        colors: true,
+        badges: hasText
+      },
+      title: {
+        markdown: hoverInfo.content,
+        markdownNotSupportedFallback: void 0
+      },
+      extraClasses
+    });
+    const editableData = this._terminalService.getEditableData(instance);
+    template.label.element.classList.toggle("editable-tab", !!editableData);
+    if (editableData) {
+      template.elementDisposables.add(this._renderInputBox(template.label.element.querySelector(".monaco-icon-label-container"), instance, editableData));
+      template.actionBar.clear();
+    }
+  }
+  _renderInputBox(container, instance, editableData) {
+    const value = instance.title || "";
+    const inputBox = new InputBox(container, this._contextViewService, {
+      validationOptions: {
+        validation: /* @__PURE__ */ __name((value2) => {
+          const message = editableData.validationMessage(value2);
+          if (!message || message.severity !== Severity.Error) {
+            return null;
+          }
+          return {
+            content: message.content,
+            formatContent: true,
+            type: MessageType.ERROR
+          };
+        }, "validation")
+      },
+      ariaLabel: localize("terminalInputAriaLabel", "Type terminal name. Press Enter to confirm or Escape to cancel."),
+      inputBoxStyles: defaultInputBoxStyles
+    });
+    inputBox.element.style.height = "22px";
+    inputBox.value = value;
+    inputBox.focus();
+    inputBox.select({ start: 0, end: value.length });
+    const done = createSingleCallFunction((success, finishEditing) => {
+      inputBox.element.style.display = "none";
+      const value2 = inputBox.value;
+      dispose(toDispose);
+      inputBox.element.remove();
+      if (finishEditing) {
+        editableData.onFinish(value2, success);
+      }
+    });
+    const showInputBoxNotification = /* @__PURE__ */ __name(() => {
+      if (inputBox.isInputValid()) {
+        const message = editableData.validationMessage(inputBox.value);
+        if (message) {
+          inputBox.showMessage({
+            content: message.content,
+            formatContent: true,
+            type: message.severity === Severity.Info ? MessageType.INFO : message.severity === Severity.Warning ? MessageType.WARNING : MessageType.ERROR
+          });
+        } else {
+          inputBox.hideMessage();
+        }
+      }
+    }, "showInputBoxNotification");
+    showInputBoxNotification();
+    const toDispose = [
+      inputBox,
+      DOM.addStandardDisposableListener(inputBox.inputElement, DOM.EventType.KEY_DOWN, (e) => {
+        e.stopPropagation();
+        if (e.equals(KeyCode.Enter)) {
+          done(inputBox.isInputValid(), true);
+        } else if (e.equals(KeyCode.Escape)) {
+          done(false, true);
+        }
+      }),
+      DOM.addStandardDisposableListener(inputBox.inputElement, DOM.EventType.KEY_UP, (e) => {
+        showInputBoxNotification();
+      }),
+      DOM.addDisposableListener(inputBox.inputElement, DOM.EventType.BLUR, () => {
+        done(inputBox.isInputValid(), true);
+      })
+    ];
+    return toDisposable(() => {
+      done(false, false);
+    });
+  }
+  disposeElement(instance, index, templateData) {
+    templateData.elementDisposables.clear();
+    templateData.actionBar.clear();
+  }
+  disposeTemplate(templateData) {
+    templateData.elementDisposables.dispose();
+    templateData.label.dispose();
+    templateData.actionBar.dispose();
+  }
+  fillActionBar(instance, template) {
+    const actions = [
+      this._register(new Action(TerminalCommandId.SplitActiveTab, terminalStrings.split.short, ThemeIcon.asClassName(Codicon.splitHorizontal), true, async () => {
+        this._runForSelectionOrInstance(instance, async (e) => {
+          this._terminalService.createTerminal({ location: { parentTerminal: e } });
+        });
+      }))
+    ];
+    if (instance.shellLaunchConfig.tabActions) {
+      for (const action of instance.shellLaunchConfig.tabActions) {
+        actions.push(this._register(new Action(action.id, action.label, action.icon ? ThemeIcon.asClassName(action.icon) : void 0, true, async () => {
+          this._runForSelectionOrInstance(instance, (e) => this._commandService.executeCommand(action.id, instance));
+        })));
+      }
+    }
+    actions.push(this._register(new Action(TerminalCommandId.KillActiveTab, terminalStrings.kill.short, ThemeIcon.asClassName(Codicon.trashcan), true, async () => {
+      this._runForSelectionOrInstance(instance, (e) => this._terminalService.safeDisposeTerminal(e));
+    })));
+    template.actionBar.clear();
+    for (const action of actions) {
+      template.actionBar.push(action, { icon: true, label: false, keybinding: this._keybindingService.lookupKeybinding(action.id)?.getLabel() });
+    }
+  }
+  _runForSelectionOrInstance(instance, callback) {
+    const selection = this._getSelection();
+    if (selection.includes(instance)) {
+      for (const s of selection) {
+        if (s) {
+          callback(s);
+        }
+      }
+    } else {
+      callback(instance);
+    }
+    this._terminalGroupService.focusTabs();
+    this._listService.lastFocusedList?.focusNext();
+  }
+};
+TerminalTabsRenderer = __decorateClass([
+  __decorateParam(3, IInstantiationService),
+  __decorateParam(4, ITerminalConfigurationService),
+  __decorateParam(5, ITerminalService),
+  __decorateParam(6, ITerminalGroupService),
+  __decorateParam(7, IHoverService),
+  __decorateParam(8, IKeybindingService),
+  __decorateParam(9, IListService),
+  __decorateParam(10, IStorageService),
+  __decorateParam(11, IThemeService),
+  __decorateParam(12, IContextViewService),
+  __decorateParam(13, ICommandService)
+], TerminalTabsRenderer);
+let TerminalTabsAccessibilityProvider = class {
+  constructor(_terminalGroupService) {
+    this._terminalGroupService = _terminalGroupService;
+  }
+  static {
+    __name(this, "TerminalTabsAccessibilityProvider");
+  }
+  getWidgetAriaLabel() {
+    return localize("terminal.tabs", "Terminal tabs");
+  }
+  getAriaLabel(instance) {
+    let ariaLabel = "";
+    const tab = this._terminalGroupService.getGroupForInstance(instance);
+    if (tab && tab.terminalInstances?.length > 1) {
+      const terminalIndex = tab.terminalInstances.indexOf(instance);
+      ariaLabel = localize({
+        key: "splitTerminalAriaLabel",
+        comment: [
+          `The terminal's ID`,
+          `The terminal's title`,
+          `The terminal's split number`,
+          `The terminal group's total split number`
+        ]
+      }, "Terminal {0} {1}, split {2} of {3}", instance.instanceId, instance.title, terminalIndex + 1, tab.terminalInstances.length);
+    } else {
+      ariaLabel = localize({
+        key: "terminalAriaLabel",
+        comment: [
+          `The terminal's ID`,
+          `The terminal's title`
+        ]
+      }, "Terminal {0} {1}", instance.instanceId, instance.title);
+    }
+    return ariaLabel;
+  }
+};
+TerminalTabsAccessibilityProvider = __decorateClass([
+  __decorateParam(0, ITerminalGroupService)
+], TerminalTabsAccessibilityProvider);
+let TerminalTabsDragAndDrop = class extends Disposable {
+  constructor(_terminalService, _terminalGroupService, _listService) {
+    super();
+    this._terminalService = _terminalService;
+    this._terminalGroupService = _terminalGroupService;
+    this._listService = _listService;
+    this._primaryBackend = this._terminalService.getPrimaryBackend();
+  }
+  static {
+    __name(this, "TerminalTabsDragAndDrop");
+  }
+  _autoFocusInstance;
+  _autoFocusDisposable = Disposable.None;
+  _primaryBackend;
+  getDragURI(instance) {
+    if (this._terminalService.getEditingTerminal()?.instanceId === instance.instanceId) {
+      return null;
+    }
+    return instance.resource.toString();
+  }
+  getDragLabel(elements, originalEvent) {
+    return elements.length === 1 ? elements[0].title : void 0;
+  }
+  onDragLeave() {
+    this._autoFocusInstance = void 0;
+    this._autoFocusDisposable.dispose();
+    this._autoFocusDisposable = Disposable.None;
+  }
+  onDragStart(data, originalEvent) {
+    if (!originalEvent.dataTransfer) {
+      return;
+    }
+    const dndData = data.getData();
+    if (!Array.isArray(dndData)) {
+      return;
+    }
+    const terminals = dndData.filter((e) => "instanceId" in e);
+    if (terminals.length > 0) {
+      originalEvent.dataTransfer.setData(TerminalDataTransfers.Terminals, JSON.stringify(terminals.map((e) => e.resource.toString())));
+    }
+  }
+  onDragOver(data, targetInstance, targetIndex, targetSector, originalEvent) {
+    if (data instanceof NativeDragAndDropData) {
+      if (!containsDragType(originalEvent, DataTransfers.FILES, DataTransfers.RESOURCES, TerminalDataTransfers.Terminals, CodeDataTransfers.FILES)) {
+        return false;
+      }
+    }
+    const didChangeAutoFocusInstance = this._autoFocusInstance !== targetInstance;
+    if (didChangeAutoFocusInstance) {
+      this._autoFocusDisposable.dispose();
+      this._autoFocusInstance = targetInstance;
+    }
+    if (!targetInstance && !containsDragType(originalEvent, TerminalDataTransfers.Terminals)) {
+      return data instanceof ElementsDragAndDropData;
+    }
+    if (didChangeAutoFocusInstance && targetInstance) {
+      this._autoFocusDisposable = disposableTimeout(() => {
+        this._terminalService.setActiveInstance(targetInstance);
+        this._autoFocusInstance = void 0;
+      }, 500, this._store);
+    }
+    return {
+      feedback: targetIndex ? [targetIndex] : void 0,
+      accept: true,
+      effect: { type: ListDragOverEffectType.Move, position: ListDragOverEffectPosition.Over }
+    };
+  }
+  async drop(data, targetInstance, targetIndex, targetSector, originalEvent) {
+    this._autoFocusDisposable.dispose();
+    this._autoFocusInstance = void 0;
+    let sourceInstances;
+    const promises = [];
+    const resources = getTerminalResourcesFromDragEvent(originalEvent);
+    if (resources) {
+      for (const uri of resources) {
+        const instance = this._terminalService.getInstanceFromResource(uri);
+        if (instance) {
+          if (Array.isArray(sourceInstances)) {
+            sourceInstances.push(instance);
+          } else {
+            sourceInstances = [instance];
+          }
+          this._terminalService.moveToTerminalView(instance);
+        } else if (this._primaryBackend) {
+          const terminalIdentifier = parseTerminalUri(uri);
+          if (terminalIdentifier.instanceId) {
+            promises.push(this._primaryBackend.requestDetachInstance(terminalIdentifier.workspaceId, terminalIdentifier.instanceId));
+          }
+        }
+      }
+    }
+    if (promises.length) {
+      let processes = await Promise.all(promises);
+      processes = processes.filter((p) => p !== void 0);
+      let lastInstance;
+      for (const attachPersistentProcess of processes) {
+        lastInstance = await this._terminalService.createTerminal({ config: { attachPersistentProcess } });
+      }
+      if (lastInstance) {
+        this._terminalService.setActiveInstance(lastInstance);
+      }
+      return;
+    }
+    if (sourceInstances === void 0) {
+      if (!(data instanceof ElementsDragAndDropData)) {
+        this._handleExternalDrop(targetInstance, originalEvent);
+        return;
+      }
+      const draggedElement = data.getData();
+      if (!draggedElement || !Array.isArray(draggedElement)) {
+        return;
+      }
+      sourceInstances = [];
+      for (const e of draggedElement) {
+        if ("instanceId" in e) {
+          sourceInstances.push(e);
+        }
+      }
+    }
+    if (!targetInstance) {
+      this._terminalGroupService.moveGroupToEnd(sourceInstances);
+      this._terminalService.setActiveInstance(sourceInstances[0]);
+      const targetGroup2 = this._terminalGroupService.getGroupForInstance(sourceInstances[0]);
+      if (targetGroup2) {
+        const index = this._terminalGroupService.groups.indexOf(targetGroup2);
+        this._listService.lastFocusedList?.setSelection([index]);
+      }
+      return;
+    }
+    this._terminalGroupService.moveGroup(sourceInstances, targetInstance);
+    this._terminalService.setActiveInstance(sourceInstances[0]);
+    const targetGroup = this._terminalGroupService.getGroupForInstance(sourceInstances[0]);
+    if (targetGroup) {
+      const index = this._terminalGroupService.groups.indexOf(targetGroup);
+      this._listService.lastFocusedList?.setSelection([index]);
+    }
+  }
+  async _handleExternalDrop(instance, e) {
+    if (!instance || !e.dataTransfer) {
+      return;
+    }
+    let resource;
+    const rawResources = e.dataTransfer.getData(DataTransfers.RESOURCES);
+    if (rawResources) {
+      resource = URI.parse(JSON.parse(rawResources)[0]);
+    }
+    const rawCodeFiles = e.dataTransfer.getData(CodeDataTransfers.FILES);
+    if (!resource && rawCodeFiles) {
+      resource = URI.file(JSON.parse(rawCodeFiles)[0]);
+    }
+    if (!resource && e.dataTransfer.files.length > 0 && getPathForFile(e.dataTransfer.files[0])) {
+      resource = URI.file(getPathForFile(e.dataTransfer.files[0]));
+    }
+    if (!resource) {
+      return;
+    }
+    this._terminalService.setActiveInstance(instance);
+    instance.focus();
+    await instance.sendPath(resource, false);
+  }
+};
+TerminalTabsDragAndDrop = __decorateClass([
+  __decorateParam(0, ITerminalService),
+  __decorateParam(1, ITerminalGroupService),
+  __decorateParam(2, IListService)
+], TerminalTabsDragAndDrop);
+let TabDecorationsProvider = class extends Disposable {
+  constructor(_terminalService) {
+    super();
+    this._terminalService = _terminalService;
+    this._register(this._terminalService.onAnyInstancePrimaryStatusChange((e) => this._onDidChange.fire([e.resource])));
+  }
+  static {
+    __name(this, "TabDecorationsProvider");
+  }
+  label = localize("label", "Terminal");
+  _onDidChange = this._register(new Emitter());
+  onDidChange = this._onDidChange.event;
+  provideDecorations(resource) {
+    if (resource.scheme !== Schemas.vscodeTerminal) {
+      return void 0;
+    }
+    const instance = this._terminalService.getInstanceFromResource(resource);
+    if (!instance) {
+      return void 0;
+    }
+    const primaryStatus = instance?.statusList?.primary;
+    if (!primaryStatus?.icon) {
+      return void 0;
+    }
+    return {
+      color: getColorForSeverity(primaryStatus.severity),
+      letter: primaryStatus.icon,
+      tooltip: primaryStatus.tooltip
+    };
+  }
+};
+TabDecorationsProvider = __decorateClass([
+  __decorateParam(0, ITerminalService)
+], TabDecorationsProvider);
+export {
+  TerminalTabList,
+  TerminalTabsListSizes
+};
+//# sourceMappingURL=terminalTabsList.js.map

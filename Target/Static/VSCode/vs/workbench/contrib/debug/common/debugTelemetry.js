@@ -1,1 +1,53 @@
-var c=Object.defineProperty,a=Object.getOwnPropertyDescriptor,g=(e,t,s,o)=>{for(var i,n=o>1?void 0:o?a(t,s):t,r=e.length-1;r>=0;r--)(i=e[r])&&(n=(o?i(t,s,n):i(n))||n);return o&&n&&c(t,s,n),n},l=(e,t)=>(s,o)=>t(s,o,e);import"./debug.js";import{ITelemetryService as d}from"../../../../platform/telemetry/common/telemetry.js";import"./debugger.js";let s=class{constructor(e,t){this.model=e,this.telemetryService=t}logDebugSessionStart(e,t){const s=e.getMainExtensionDescriptor();this.telemetryService.publicLog("debugSessionStart",{type:e.type,breakpointCount:this.model.getBreakpoints().length,exceptionBreakpoints:this.model.getExceptionBreakpoints(),watchExpressionsCount:this.model.getWatchExpressions().length,extensionName:s.identifier.value,isBuiltin:s.isBuiltin,launchJsonExists:t})}logDebugSessionStop(e,t){const s=this.model.getBreakpoints();this.telemetryService.publicLog("debugSessionStop",{type:e&&e.configuration.type,success:t.emittedStopped||0===s.length,sessionLengthInSeconds:t.sessionLengthInSeconds,breakpointCount:s.length,watchExpressionsCount:this.model.getWatchExpressions().length})}};s=g([l(1,d)],s);export{s as DebugTelemetry};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { IDebugModel, IDebugSession, AdapterEndEvent } from "./debug.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { Debugger } from "./debugger.js";
+let DebugTelemetry = class {
+  constructor(model, telemetryService) {
+    this.model = model;
+    this.telemetryService = telemetryService;
+  }
+  static {
+    __name(this, "DebugTelemetry");
+  }
+  logDebugSessionStart(dbgr, launchJsonExists) {
+    const extension = dbgr.getMainExtensionDescriptor();
+    this.telemetryService.publicLog("debugSessionStart", {
+      type: dbgr.type,
+      breakpointCount: this.model.getBreakpoints().length,
+      exceptionBreakpoints: this.model.getExceptionBreakpoints(),
+      watchExpressionsCount: this.model.getWatchExpressions().length,
+      extensionName: extension.identifier.value,
+      isBuiltin: extension.isBuiltin,
+      launchJsonExists
+    });
+  }
+  logDebugSessionStop(session, adapterExitEvent) {
+    const breakpoints = this.model.getBreakpoints();
+    this.telemetryService.publicLog("debugSessionStop", {
+      type: session && session.configuration.type,
+      success: adapterExitEvent.emittedStopped || breakpoints.length === 0,
+      sessionLengthInSeconds: adapterExitEvent.sessionLengthInSeconds,
+      breakpointCount: breakpoints.length,
+      watchExpressionsCount: this.model.getWatchExpressions().length
+    });
+  }
+};
+DebugTelemetry = __decorateClass([
+  __decorateParam(1, ITelemetryService)
+], DebugTelemetry);
+export {
+  DebugTelemetry
+};
+//# sourceMappingURL=debugTelemetry.js.map

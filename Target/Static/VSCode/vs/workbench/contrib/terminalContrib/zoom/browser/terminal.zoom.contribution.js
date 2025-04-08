@@ -1,1 +1,136 @@
-var M=Object.defineProperty,_=Object.getOwnPropertyDescriptor,d=(e,t,o,i)=>{for(var r,n=i>1?void 0:i?_(t,o):t,s=e.length-1;s>=0;s--)(r=e[s])&&(n=(i?r(t,o,n):r(n))||n);return i&&n&&M(t,o,n),n},S=(e,t)=>(o,i)=>t(o,i,e);import{Event as y}from"../../../../../base/common/event.js";import"../../../../../base/browser/mouseEvent.js";import{MouseWheelClassifier as z}from"../../../../../base/browser/ui/scrollbar/scrollableElement.js";import{Disposable as D,MutableDisposable as W,toDisposable as Z}from"../../../../../base/common/lifecycle.js";import{isMacintosh as b}from"../../../../../base/common/platform.js";import{TerminalSettingId as r}from"../../../../../platform/terminal/common/terminal.js";import"../../../terminal/browser/terminal.js";import{registerTerminalContribution as x}from"../../../terminal/browser/terminalExtensions.js";import{IConfigurationService as c}from"../../../../../platform/configuration/common/configuration.js";import{registerTerminalAction as h}from"../../../terminal/browser/terminalActions.js";import{localize2 as p}from"../../../../../nls.js";import{isNumber as I}from"../../../../../base/common/types.js";import{defaultTerminalFontSize as V}from"../../../terminal/common/terminalConfiguration.js";import{TerminalZoomCommandId as g,TerminalZoomSettingId as C}from"../common/terminal.zoom.js";let a=class extends D{constructor(e,t){super(),this._configurationService=t}static ID="terminal.mouseWheelZoom";static activeFindWidget;static get(e){return e.getContribution(a.ID)}_listener=this._register(new W);xtermOpen(e){this._register(y.runAndSubscribe(this._configurationService.onDidChangeConfiguration,(t=>{(!t||t.affectsConfiguration(C.MouseWheelZoom))&&(this._configurationService.getValue(C.MouseWheelZoom)?this._setupMouseWheelZoomListener(e.raw):this._listener.clear())})))}_getConfigFontSize(){return this._configurationService.getValue(r.FontSize)}_setupMouseWheelZoomListener(e){const t=z.INSTANCE;let o=0,i=this._getConfigFontSize(),n=!1,s=0;e.attachCustomWheelEventHandler((e=>{const a=e;if(t.isPhysicalMouseWheel()){if(this._hasMouseWheelZoomModifiers(a)){const e=a.deltaY>0?-1:1;return this._configurationService.updateValue(r.FontSize,this._getConfigFontSize()+e),a.preventDefault(),a.stopPropagation(),!1}}else if(Date.now()-o>50&&(i=this._getConfigFontSize(),n=this._hasMouseWheelZoomModifiers(a),s=0),o=Date.now(),s+=a.deltaY,n){const e=Math.ceil(Math.abs(s/5))*(s>0?-1:1);return this._configurationService.updateValue(r.FontSize,i+e),s+=a.deltaY,a.preventDefault(),a.stopPropagation(),!1}return!0})),this._listener.value=Z((()=>e.attachCustomWheelEventHandler((()=>!0))))}_hasMouseWheelZoomModifiers(e){return b?(e.metaKey||e.ctrlKey)&&!e.shiftKey&&!e.altKey:e.ctrlKey&&!e.metaKey&&!e.shiftKey&&!e.altKey}};a=d([S(1,c)],a),x(a.ID,a,!0),h({id:g.FontZoomIn,title:p("fontZoomIn","Increase Font Size"),run:async(e,t)=>{const o=t.get(c),i=o.getValue(r.FontSize);I(i)&&await o.updateValue(r.FontSize,i+1)}}),h({id:g.FontZoomOut,title:p("fontZoomOut","Decrease Font Size"),run:async(e,t)=>{const o=t.get(c),i=o.getValue(r.FontSize);I(i)&&await o.updateValue(r.FontSize,i-1)}}),h({id:g.FontZoomReset,title:p("fontZoomReset","Reset Font Size"),run:async(e,t)=>{await t.get(c).updateValue(r.FontSize,V)}});
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Event } from "../../../../../base/common/event.js";
+import { IMouseWheelEvent } from "../../../../../base/browser/mouseEvent.js";
+import { MouseWheelClassifier } from "../../../../../base/browser/ui/scrollbar/scrollableElement.js";
+import { Disposable, MutableDisposable, toDisposable } from "../../../../../base/common/lifecycle.js";
+import { isMacintosh } from "../../../../../base/common/platform.js";
+import { TerminalSettingId } from "../../../../../platform/terminal/common/terminal.js";
+import { IDetachedTerminalInstance, ITerminalContribution, ITerminalInstance, IXtermTerminal } from "../../../terminal/browser/terminal.js";
+import { registerTerminalContribution } from "../../../terminal/browser/terminalExtensions.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { registerTerminalAction } from "../../../terminal/browser/terminalActions.js";
+import { localize2 } from "../../../../../nls.js";
+import { isNumber } from "../../../../../base/common/types.js";
+import { defaultTerminalFontSize } from "../../../terminal/common/terminalConfiguration.js";
+import { TerminalZoomCommandId, TerminalZoomSettingId } from "../common/terminal.zoom.js";
+let TerminalMouseWheelZoomContribution = class extends Disposable {
+  constructor(_ctx, _configurationService) {
+    super();
+    this._configurationService = _configurationService;
+  }
+  static {
+    __name(this, "TerminalMouseWheelZoomContribution");
+  }
+  static ID = "terminal.mouseWheelZoom";
+  /**
+   * Currently focused find widget. This is used to track action context since
+   * 'active terminals' are only tracked for non-detached terminal instanecs.
+   */
+  static activeFindWidget;
+  static get(instance) {
+    return instance.getContribution(TerminalMouseWheelZoomContribution.ID);
+  }
+  _listener = this._register(new MutableDisposable());
+  xtermOpen(xterm) {
+    this._register(Event.runAndSubscribe(this._configurationService.onDidChangeConfiguration, (e) => {
+      if (!e || e.affectsConfiguration(TerminalZoomSettingId.MouseWheelZoom)) {
+        if (!!this._configurationService.getValue(TerminalZoomSettingId.MouseWheelZoom)) {
+          this._setupMouseWheelZoomListener(xterm.raw);
+        } else {
+          this._listener.clear();
+        }
+      }
+    }));
+  }
+  _getConfigFontSize() {
+    return this._configurationService.getValue(TerminalSettingId.FontSize);
+  }
+  _setupMouseWheelZoomListener(raw) {
+    const classifier = MouseWheelClassifier.INSTANCE;
+    let prevMouseWheelTime = 0;
+    let gestureStartFontSize = this._getConfigFontSize();
+    let gestureHasZoomModifiers = false;
+    let gestureAccumulatedDelta = 0;
+    raw.attachCustomWheelEventHandler((e) => {
+      const browserEvent = e;
+      if (classifier.isPhysicalMouseWheel()) {
+        if (this._hasMouseWheelZoomModifiers(browserEvent)) {
+          const delta = browserEvent.deltaY > 0 ? -1 : 1;
+          this._configurationService.updateValue(TerminalSettingId.FontSize, this._getConfigFontSize() + delta);
+          browserEvent.preventDefault();
+          browserEvent.stopPropagation();
+          return false;
+        }
+      } else {
+        if (Date.now() - prevMouseWheelTime > 50) {
+          gestureStartFontSize = this._getConfigFontSize();
+          gestureHasZoomModifiers = this._hasMouseWheelZoomModifiers(browserEvent);
+          gestureAccumulatedDelta = 0;
+        }
+        prevMouseWheelTime = Date.now();
+        gestureAccumulatedDelta += browserEvent.deltaY;
+        if (gestureHasZoomModifiers) {
+          const deltaAbs = Math.ceil(Math.abs(gestureAccumulatedDelta / 5));
+          const deltaDirection = gestureAccumulatedDelta > 0 ? -1 : 1;
+          const delta = deltaAbs * deltaDirection;
+          this._configurationService.updateValue(TerminalSettingId.FontSize, gestureStartFontSize + delta);
+          gestureAccumulatedDelta += browserEvent.deltaY;
+          browserEvent.preventDefault();
+          browserEvent.stopPropagation();
+          return false;
+        }
+      }
+      return true;
+    });
+    this._listener.value = toDisposable(() => raw.attachCustomWheelEventHandler(() => true));
+  }
+  _hasMouseWheelZoomModifiers(browserEvent) {
+    return isMacintosh ? (browserEvent.metaKey || browserEvent.ctrlKey) && !browserEvent.shiftKey && !browserEvent.altKey : browserEvent.ctrlKey && !browserEvent.metaKey && !browserEvent.shiftKey && !browserEvent.altKey;
+  }
+};
+TerminalMouseWheelZoomContribution = __decorateClass([
+  __decorateParam(1, IConfigurationService)
+], TerminalMouseWheelZoomContribution);
+registerTerminalContribution(TerminalMouseWheelZoomContribution.ID, TerminalMouseWheelZoomContribution, true);
+registerTerminalAction({
+  id: TerminalZoomCommandId.FontZoomIn,
+  title: localize2("fontZoomIn", "Increase Font Size"),
+  run: /* @__PURE__ */ __name(async (c, accessor) => {
+    const configurationService = accessor.get(IConfigurationService);
+    const value = configurationService.getValue(TerminalSettingId.FontSize);
+    if (isNumber(value)) {
+      await configurationService.updateValue(TerminalSettingId.FontSize, value + 1);
+    }
+  }, "run")
+});
+registerTerminalAction({
+  id: TerminalZoomCommandId.FontZoomOut,
+  title: localize2("fontZoomOut", "Decrease Font Size"),
+  run: /* @__PURE__ */ __name(async (c, accessor) => {
+    const configurationService = accessor.get(IConfigurationService);
+    const value = configurationService.getValue(TerminalSettingId.FontSize);
+    if (isNumber(value)) {
+      await configurationService.updateValue(TerminalSettingId.FontSize, value - 1);
+    }
+  }, "run")
+});
+registerTerminalAction({
+  id: TerminalZoomCommandId.FontZoomReset,
+  title: localize2("fontZoomReset", "Reset Font Size"),
+  run: /* @__PURE__ */ __name(async (c, accessor) => {
+    const configurationService = accessor.get(IConfigurationService);
+    await configurationService.updateValue(TerminalSettingId.FontSize, defaultTerminalFontSize);
+  }, "run")
+});
+//# sourceMappingURL=terminal.zoom.contribution.js.map

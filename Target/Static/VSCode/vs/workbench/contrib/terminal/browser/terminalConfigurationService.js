@@ -1,1 +1,219 @@
-var p=Object.defineProperty,v=Object.getOwnPropertyDescriptor,d=(e,t,i,n)=>{for(var o,r=n>1?void 0:n?v(t,i):t,a=e.length-1;a>=0;a--)(o=e[a])&&(r=(n?o(t,i,r):o(r))||r);return n&&r&&p(t,i,r),r},_=(e,t)=>(i,n)=>t(i,n,e);import{Emitter as C,Event as I}from"../../../../base/common/event.js";import{Disposable as M,toDisposable as E}from"../../../../base/common/lifecycle.js";import{EDITOR_FONT_DEFAULTS as f}from"../../../../editor/common/config/editorOptions.js";import{IConfigurationService as S}from"../../../../platform/configuration/common/configuration.js";import{LinuxDistro as m}from"./terminal.js";import{DEFAULT_BOLD_FONT_WEIGHT as T,DEFAULT_FONT_WEIGHT as y,DEFAULT_LETTER_SPACING as W,DEFAULT_LINE_HEIGHT as b,MAXIMUM_FONT_WEIGHT as x,MINIMUM_FONT_WEIGHT as H,MINIMUM_LETTER_SPACING as w,TERMINAL_CONFIG_SECTION as F}from"../common/terminal.js";import{isMacintosh as D}from"../../../../base/common/platform.js";let u=class extends M{constructor(e){super(),this._configurationService=e,this._fontMetrics=this._register(new R(this,this._configurationService)),this._register(I.runAndSubscribe(this._configurationService.onDidChangeConfiguration,(e=>{(!e||e.affectsConfiguration(F))&&this._updateConfig()})))}_fontMetrics;_config;get config(){return this._config}_onConfigChanged=new C;get onConfigChanged(){return this._onConfigChanged.event}setPanelContainer(e){return this._fontMetrics.setPanelContainer(e)}configFontIsMonospace(){return this._fontMetrics.configFontIsMonospace()}getFont(e,t,i){return this._fontMetrics.getFont(e,t,i)}_updateConfig(){const e={...this._configurationService.getValue(F)};e.fontWeight=this._normalizeFontWeight(e.fontWeight,y),e.fontWeightBold=this._normalizeFontWeight(e.fontWeightBold,T),this._config=e,this._onConfigChanged.fire()}_normalizeFontWeight(e,t){return"normal"===e||"bold"===e?e:g(e,H,x,t)}};u=d([_(0,S)],u);var L=(e=>(e[e.MinimumFontSize=6]="MinimumFontSize",e[e.MaximumFontSize=100]="MaximumFontSize",e))(L||{});class R extends M{constructor(e,t){super(),this._terminalConfigurationService=e,this._configurationService=t,this._register(E((()=>this._charMeasureElement?.remove())))}_panelContainer;_charMeasureElement;_lastFontMeasurement;linuxDistro=m.Unknown;setPanelContainer(e){this._panelContainer=e}configFontIsMonospace(){const e=this._terminalConfigurationService.config.fontFamily||this._configurationService.getValue("editor").fontFamily||f.fontFamily,t=this._getBoundingRectFor("i",e,15),i=this._getBoundingRectFor("w",e,15);return!(t&&i&&t.width&&i.width)||t.width===i.width}getFont(e,t,i){const n=this._configurationService.getValue("editor");let o=this._terminalConfigurationService.config.fontFamily||n.fontFamily||f.fontFamily||"monospace",r=g(this._terminalConfigurationService.config.fontSize,6,100,f.fontSize);this._terminalConfigurationService.config.fontFamily||(this.linuxDistro===m.Fedora&&(o="'DejaVu Sans Mono'"),this.linuxDistro===m.Ubuntu&&(o="'Ubuntu Mono'",r=g(r+2,6,100,f.fontSize))),o+=", monospace",D&&(o+=", AppleBraille");const a=this._terminalConfigurationService.config.letterSpacing?Math.max(Math.floor(this._terminalConfigurationService.config.letterSpacing),w):W,s=this._terminalConfigurationService.config.lineHeight?Math.max(this._terminalConfigurationService.config.lineHeight,1):b;if(i)return{fontFamily:o,fontSize:r,letterSpacing:a,lineHeight:s};if(t?._renderService?._renderer.value){const i=t._renderService.dimensions.css.cell;if(i?.width&&i?.height)return{fontFamily:o,fontSize:r,letterSpacing:a,lineHeight:s,charHeight:i.height/s,charWidth:i.width-Math.round(a)/e.devicePixelRatio}}return this._measureFont(e,o,r,a,s)}_createCharMeasureElementIfNecessary(){if(!this._panelContainer)throw new Error("Cannot measure element when terminal is not attached");return(!this._charMeasureElement||!this._charMeasureElement.parentElement)&&(this._charMeasureElement=document.createElement("div"),this._panelContainer.appendChild(this._charMeasureElement)),this._charMeasureElement}_getBoundingRectFor(e,t,i){let n;try{n=this._createCharMeasureElementIfNecessary()}catch{return}const o=n.style;o.display="inline-block",o.fontFamily=t,o.fontSize=i+"px",o.lineHeight="normal",n.innerText=e;const r=n.getBoundingClientRect();return o.display="none",r}_measureFont(e,t,i,n,o){const r=this._getBoundingRectFor("X",t,i);if(this._lastFontMeasurement&&(!r||!r.width||!r.height))return this._lastFontMeasurement;if(this._lastFontMeasurement={fontFamily:t,fontSize:i,letterSpacing:n,lineHeight:o,charWidth:0,charHeight:0},r&&r.width&&r.height)if(this._lastFontMeasurement.charHeight=Math.ceil(r.height),"off"===this._terminalConfigurationService.config.gpuAcceleration)this._lastFontMeasurement.charWidth=r.width;else{const t=(Math.floor(r.width*e.devicePixelRatio)+Math.round(n))/e.devicePixelRatio;this._lastFontMeasurement.charWidth=t-Math.round(n)/e.devicePixelRatio}return this._lastFontMeasurement}}function g(e,t,i,n){let o=parseInt(e,10);return isNaN(o)?n:("number"==typeof t&&(o=Math.max(t,o)),"number"==typeof i&&(o=Math.min(i,o)),o)}export{u as TerminalConfigurationService,R as TerminalFontMetrics};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { Disposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { EDITOR_FONT_DEFAULTS } from "../../../../editor/common/config/editorOptions.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { ITerminalConfigurationService, LinuxDistro } from "./terminal.js";
+import { DEFAULT_BOLD_FONT_WEIGHT, DEFAULT_FONT_WEIGHT, DEFAULT_LETTER_SPACING, DEFAULT_LINE_HEIGHT, FontWeight, ITerminalConfiguration, MAXIMUM_FONT_WEIGHT, MINIMUM_FONT_WEIGHT, MINIMUM_LETTER_SPACING, TERMINAL_CONFIG_SECTION } from "../common/terminal.js";
+import { isMacintosh } from "../../../../base/common/platform.js";
+let TerminalConfigurationService = class extends Disposable {
+  constructor(_configurationService) {
+    super();
+    this._configurationService = _configurationService;
+    this._fontMetrics = this._register(new TerminalFontMetrics(this, this._configurationService));
+    this._register(Event.runAndSubscribe(this._configurationService.onDidChangeConfiguration, (e) => {
+      if (!e || e.affectsConfiguration(TERMINAL_CONFIG_SECTION)) {
+        this._updateConfig();
+      }
+    }));
+  }
+  static {
+    __name(this, "TerminalConfigurationService");
+  }
+  _fontMetrics;
+  _config;
+  get config() {
+    return this._config;
+  }
+  _onConfigChanged = new Emitter();
+  get onConfigChanged() {
+    return this._onConfigChanged.event;
+  }
+  setPanelContainer(panelContainer) {
+    return this._fontMetrics.setPanelContainer(panelContainer);
+  }
+  configFontIsMonospace() {
+    return this._fontMetrics.configFontIsMonospace();
+  }
+  getFont(w, xtermCore, excludeDimensions) {
+    return this._fontMetrics.getFont(w, xtermCore, excludeDimensions);
+  }
+  _updateConfig() {
+    const configValues = { ...this._configurationService.getValue(TERMINAL_CONFIG_SECTION) };
+    configValues.fontWeight = this._normalizeFontWeight(configValues.fontWeight, DEFAULT_FONT_WEIGHT);
+    configValues.fontWeightBold = this._normalizeFontWeight(configValues.fontWeightBold, DEFAULT_BOLD_FONT_WEIGHT);
+    this._config = configValues;
+    this._onConfigChanged.fire();
+  }
+  _normalizeFontWeight(input, defaultWeight) {
+    if (input === "normal" || input === "bold") {
+      return input;
+    }
+    return clampInt(input, MINIMUM_FONT_WEIGHT, MAXIMUM_FONT_WEIGHT, defaultWeight);
+  }
+};
+TerminalConfigurationService = __decorateClass([
+  __decorateParam(0, IConfigurationService)
+], TerminalConfigurationService);
+var FontConstants = /* @__PURE__ */ ((FontConstants2) => {
+  FontConstants2[FontConstants2["MinimumFontSize"] = 6] = "MinimumFontSize";
+  FontConstants2[FontConstants2["MaximumFontSize"] = 100] = "MaximumFontSize";
+  return FontConstants2;
+})(FontConstants || {});
+class TerminalFontMetrics extends Disposable {
+  constructor(_terminalConfigurationService, _configurationService) {
+    super();
+    this._terminalConfigurationService = _terminalConfigurationService;
+    this._configurationService = _configurationService;
+    this._register(toDisposable(() => this._charMeasureElement?.remove()));
+  }
+  static {
+    __name(this, "TerminalFontMetrics");
+  }
+  _panelContainer;
+  _charMeasureElement;
+  _lastFontMeasurement;
+  linuxDistro = LinuxDistro.Unknown;
+  setPanelContainer(panelContainer) {
+    this._panelContainer = panelContainer;
+  }
+  configFontIsMonospace() {
+    const fontSize = 15;
+    const fontFamily = this._terminalConfigurationService.config.fontFamily || this._configurationService.getValue("editor").fontFamily || EDITOR_FONT_DEFAULTS.fontFamily;
+    const iRect = this._getBoundingRectFor("i", fontFamily, fontSize);
+    const wRect = this._getBoundingRectFor("w", fontFamily, fontSize);
+    if (!iRect || !wRect || !iRect.width || !wRect.width) {
+      return true;
+    }
+    return iRect.width === wRect.width;
+  }
+  /**
+   * Gets the font information based on the terminal.integrated.fontFamily
+   * terminal.integrated.fontSize, terminal.integrated.lineHeight configuration properties
+   */
+  getFont(w, xtermCore, excludeDimensions) {
+    const editorConfig = this._configurationService.getValue("editor");
+    let fontFamily = this._terminalConfigurationService.config.fontFamily || editorConfig.fontFamily || EDITOR_FONT_DEFAULTS.fontFamily || "monospace";
+    let fontSize = clampInt(this._terminalConfigurationService.config.fontSize, 6 /* MinimumFontSize */, 100 /* MaximumFontSize */, EDITOR_FONT_DEFAULTS.fontSize);
+    if (!this._terminalConfigurationService.config.fontFamily) {
+      if (this.linuxDistro === LinuxDistro.Fedora) {
+        fontFamily = "'DejaVu Sans Mono'";
+      }
+      if (this.linuxDistro === LinuxDistro.Ubuntu) {
+        fontFamily = "'Ubuntu Mono'";
+        fontSize = clampInt(fontSize + 2, 6 /* MinimumFontSize */, 100 /* MaximumFontSize */, EDITOR_FONT_DEFAULTS.fontSize);
+      }
+    }
+    fontFamily += ", monospace";
+    if (isMacintosh) {
+      fontFamily += ", AppleBraille";
+    }
+    const letterSpacing = this._terminalConfigurationService.config.letterSpacing ? Math.max(Math.floor(this._terminalConfigurationService.config.letterSpacing), MINIMUM_LETTER_SPACING) : DEFAULT_LETTER_SPACING;
+    const lineHeight = this._terminalConfigurationService.config.lineHeight ? Math.max(this._terminalConfigurationService.config.lineHeight, 1) : DEFAULT_LINE_HEIGHT;
+    if (excludeDimensions) {
+      return {
+        fontFamily,
+        fontSize,
+        letterSpacing,
+        lineHeight
+      };
+    }
+    if (xtermCore?._renderService?._renderer.value) {
+      const cellDims = xtermCore._renderService.dimensions.css.cell;
+      if (cellDims?.width && cellDims?.height) {
+        return {
+          fontFamily,
+          fontSize,
+          letterSpacing,
+          lineHeight,
+          charHeight: cellDims.height / lineHeight,
+          charWidth: cellDims.width - Math.round(letterSpacing) / w.devicePixelRatio
+        };
+      }
+    }
+    return this._measureFont(w, fontFamily, fontSize, letterSpacing, lineHeight);
+  }
+  _createCharMeasureElementIfNecessary() {
+    if (!this._panelContainer) {
+      throw new Error("Cannot measure element when terminal is not attached");
+    }
+    if (!this._charMeasureElement || !this._charMeasureElement.parentElement) {
+      this._charMeasureElement = document.createElement("div");
+      this._panelContainer.appendChild(this._charMeasureElement);
+    }
+    return this._charMeasureElement;
+  }
+  _getBoundingRectFor(char, fontFamily, fontSize) {
+    let charMeasureElement;
+    try {
+      charMeasureElement = this._createCharMeasureElementIfNecessary();
+    } catch {
+      return void 0;
+    }
+    const style = charMeasureElement.style;
+    style.display = "inline-block";
+    style.fontFamily = fontFamily;
+    style.fontSize = fontSize + "px";
+    style.lineHeight = "normal";
+    charMeasureElement.innerText = char;
+    const rect = charMeasureElement.getBoundingClientRect();
+    style.display = "none";
+    return rect;
+  }
+  _measureFont(w, fontFamily, fontSize, letterSpacing, lineHeight) {
+    const rect = this._getBoundingRectFor("X", fontFamily, fontSize);
+    if (this._lastFontMeasurement && (!rect || !rect.width || !rect.height)) {
+      return this._lastFontMeasurement;
+    }
+    this._lastFontMeasurement = {
+      fontFamily,
+      fontSize,
+      letterSpacing,
+      lineHeight,
+      charWidth: 0,
+      charHeight: 0
+    };
+    if (rect && rect.width && rect.height) {
+      this._lastFontMeasurement.charHeight = Math.ceil(rect.height);
+      if (this._terminalConfigurationService.config.gpuAcceleration === "off") {
+        this._lastFontMeasurement.charWidth = rect.width;
+      } else {
+        const deviceCharWidth = Math.floor(rect.width * w.devicePixelRatio);
+        const deviceCellWidth = deviceCharWidth + Math.round(letterSpacing);
+        const cssCellWidth = deviceCellWidth / w.devicePixelRatio;
+        this._lastFontMeasurement.charWidth = cssCellWidth - Math.round(letterSpacing) / w.devicePixelRatio;
+      }
+    }
+    return this._lastFontMeasurement;
+  }
+}
+function clampInt(source, minimum, maximum, fallback) {
+  let r = parseInt(source, 10);
+  if (isNaN(r)) {
+    return fallback;
+  }
+  if (typeof minimum === "number") {
+    r = Math.max(minimum, r);
+  }
+  if (typeof maximum === "number") {
+    r = Math.min(maximum, r);
+  }
+  return r;
+}
+__name(clampInt, "clampInt");
+export {
+  TerminalConfigurationService,
+  TerminalFontMetrics
+};
+//# sourceMappingURL=terminalConfigurationService.js.map

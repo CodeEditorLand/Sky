@@ -1,1 +1,584 @@
-import{localize as e,localize2 as y}from"../../../../nls.js";import{Registry as f}from"../../../../platform/registry/common/platform.js";import{registerWorkbenchContribution2 as H,Extensions as A,WorkbenchPhase as z}from"../../../common/contributions.js";import{QuickDiffWorkbenchController as Q}from"./quickDiffDecorator.js";import{VIEWLET_ID as j,ISCMService as w,VIEW_PANE_ID as u,ISCMViewService as G,REPOSITORIES_VIEW_PANE_ID as $,HISTORY_VIEW_PANE_ID as N}from"../common/scm.js";import{KeyMod as d,KeyCode as m}from"../../../../base/common/keyCodes.js";import{MenuRegistry as B,MenuId as O}from"../../../../platform/actions/common/actions.js";import{SCMActiveResourceContextKeyController as Y,SCMActiveRepositoryController as J}from"./activity.js";import{LifecyclePhase as M}from"../../../services/lifecycle/common/lifecycle.js";import{Extensions as X,ConfigurationScope as Z}from"../../../../platform/configuration/common/configurationRegistry.js";import{IContextKeyService as C,ContextKeyExpr as o}from"../../../../platform/contextkey/common/contextkey.js";import{CommandsRegistry as T,ICommandService as W}from"../../../../platform/commands/common/commands.js";import{KeybindingsRegistry as c,KeybindingWeight as p}from"../../../../platform/keybinding/common/keybindingsRegistry.js";import{InstantiationType as S,registerSingleton as v}from"../../../../platform/instantiation/common/extensions.js";import{SCMService as ee}from"../common/scmService.js";import{ViewContainerLocation as oe,Extensions as U}from"../../../common/views.js";import{SCMViewPaneContainer as te}from"./scmViewPaneContainer.js";import{SyncDescriptor as b}from"../../../../platform/instantiation/common/descriptors.js";import{ModesRegistry as ie}from"../../../../editor/common/languages/modesRegistry.js";import{Codicon as re}from"../../../../base/common/codicons.js";import{registerIcon as ne}from"../../../../platform/theme/common/iconRegistry.js";import{ContextKeys as E,SCMViewPane as se}from"./scmViewPane.js";import{RepositoryPicker as ce,SCMViewService as ae}from"./scmViewService.js";import{SCMRepositoriesViewPane as de}from"./scmRepositoriesViewPane.js";import{IInstantiationService as me}from"../../../../platform/instantiation/common/instantiation.js";import{Context as K}from"../../../../editor/contrib/suggest/browser/suggest.js";import{MANAGE_TRUST_COMMAND_ID as le,WorkspaceTrustContext as I}from"../../workspace/common/workspace.js";import{IQuickDiffService as ue}from"../common/quickDiff.js";import{QuickDiffService as pe}from"../common/quickDiffService.js";import{getActiveElement as R,isActiveElement as he}from"../../../../base/browser/dom.js";import{SCMWorkingSetController as q}from"./workingSet.js";import{IViewsService as V}from"../../../services/views/common/viewsService.js";import{IListService as fe,WorkbenchList as ge}from"../../../../platform/list/browser/listService.js";import{isSCMRepository as we}from"./util.js";import{SCMHistoryViewPane as ye}from"./scmHistoryViewPane.js";import{QuickDiffModelService as Ce,IQuickDiffModelService as Se}from"./quickDiffModel.js";import{QuickDiffEditorController as _}from"./quickDiffWidget.js";import{EditorContributionInstantiation as ve,registerEditorContribution as be}from"../../../../editor/browser/editorExtensions.js";import{RemoteNameContext as Ie}from"../../../common/contextkeys.js";import{AccessibleViewRegistry as Re}from"../../../../platform/accessibility/browser/accessibleViewRegistry.js";import{SCMAccessibilityHelp as Ve}from"./scmAccessibilityHelp.js";import{EditorContextKeys as De}from"../../../../editor/common/editorContextKeys.js";ie.registerLanguage({id:"scminput",extensions:[],aliases:[],mimetypes:["text/x-scm-input"]}),f.as(A.Workbench).registerWorkbenchContribution(Q,M.Restored),be(_.ID,_,ve.AfterFirstRender);const D=ne("source-control-view-icon",re.sourceControl,e("sourceControlViewIcon","View icon of the Source Control view.")),k=f.as(U.ViewContainersRegistry).registerViewContainer({id:j,title:y("source control","Source Control"),ctorDescriptor:new b(te),storageId:"workbench.scm.views.state",icon:D,alwaysUseContainerInfo:!0,order:2,hideIfEmpty:!0},oe.Sidebar,{doNotRegisterOpenCommand:!0}),h=f.as(U.ViewsRegistry),x=e("source control view","Source Control");h.registerViewWelcomeContent(u,{content:e("no open repo","No source control providers registered."),when:"default"}),h.registerViewWelcomeContent(u,{content:e("no open repo in an untrusted workspace","None of the registered source control providers work in Restricted Mode."),when:o.and(o.equals("scm.providerCount",0),I.IsEnabled,I.IsTrusted.toNegated())}),h.registerViewWelcomeContent(u,{content:`[${e("manageWorkspaceTrustAction","Manage Workspace Trust")}](command:${le})`,when:o.and(o.equals("scm.providerCount",0),I.IsEnabled,I.IsTrusted.toNegated())}),h.registerViewWelcomeContent(N,{content:e("no history items","The selected source control provider does not have any source control history items."),when:E.SCMHistoryItemCount.isEqualTo(0)}),h.registerViews([{id:$,containerTitle:x,name:y("scmRepositories","Repositories"),singleViewPaneContainerTitle:e("source control repositories","Source Control Repositories"),ctorDescriptor:new b(de),canToggleVisibility:!0,hideByDefault:!0,canMoveView:!0,weight:20,order:0,when:o.and(o.has("scm.providerCount"),o.notEquals("scm.providerCount",0)),containerIcon:D}],k),h.registerViews([{id:u,containerTitle:x,name:y("scmChanges","Changes"),singleViewPaneContainerTitle:x,ctorDescriptor:new b(se),canToggleVisibility:!0,canMoveView:!0,weight:40,order:1,containerIcon:D,openCommandActionDescriptor:{id:k.id,mnemonicTitle:e({key:"miViewSCM",comment:["&& denotes a mnemonic"]},"Source &&Control"),keybindings:{primary:0,win:{primary:d.CtrlCmd|d.Shift|m.KeyG},linux:{primary:d.CtrlCmd|d.Shift|m.KeyG},mac:{primary:d.WinCtrl|d.Shift|m.KeyG}},order:2}}],k),h.registerViews([{id:N,containerTitle:x,name:y("scmGraph","Graph"),singleViewPaneContainerTitle:e("source control graph","Source Control Graph"),ctorDescriptor:new b(ye),canToggleVisibility:!0,canMoveView:!0,weight:40,order:2,when:o.and(o.has("scm.historyProviderCount"),o.notEquals("scm.historyProviderCount",0)),containerIcon:D}],k),f.as(A.Workbench).registerWorkbenchContribution(J,M.Restored),f.as(A.Workbench).registerWorkbenchContribution(Y,M.Restored),H(q.ID,q,z.AfterRestored),f.as(X.Configuration).registerConfiguration({id:"scm",order:5,title:e("scmConfigurationTitle","Source Control"),type:"object",scope:Z.RESOURCE,properties:{"scm.diffDecorations":{type:"string",enum:["all","gutter","overview","minimap","none"],enumDescriptions:[e("scm.diffDecorations.all","Show the diff decorations in all available locations."),e("scm.diffDecorations.gutter","Show the diff decorations only in the editor gutter."),e("scm.diffDecorations.overviewRuler","Show the diff decorations only in the overview ruler."),e("scm.diffDecorations.minimap","Show the diff decorations only in the minimap."),e("scm.diffDecorations.none","Do not show the diff decorations.")],default:"all",description:e("diffDecorations","Controls diff decorations in the editor.")},"scm.diffDecorationsGutterWidth":{type:"number",enum:[1,2,3,4,5],default:3,description:e("diffGutterWidth","Controls the width(px) of diff decorations in gutter (added & modified).")},"scm.diffDecorationsGutterVisibility":{type:"string",enum:["always","hover"],enumDescriptions:[e("scm.diffDecorationsGutterVisibility.always","Show the diff decorator in the gutter at all times."),e("scm.diffDecorationsGutterVisibility.hover","Show the diff decorator in the gutter only on hover.")],description:e("scm.diffDecorationsGutterVisibility","Controls the visibility of the Source Control diff decorator in the gutter."),default:"always"},"scm.diffDecorationsGutterAction":{type:"string",enum:["diff","none"],enumDescriptions:[e("scm.diffDecorationsGutterAction.diff","Show the inline diff Peek view on click."),e("scm.diffDecorationsGutterAction.none","Do nothing.")],description:e("scm.diffDecorationsGutterAction","Controls the behavior of Source Control diff gutter decorations."),default:"diff"},"scm.diffDecorationsGutterPattern":{type:"object",description:e("diffGutterPattern","Controls whether a pattern is used for the diff decorations in gutter."),additionalProperties:!1,properties:{added:{type:"boolean",description:e("diffGutterPatternAdded","Use pattern for the diff decorations in gutter for added lines.")},modified:{type:"boolean",description:e("diffGutterPatternModifed","Use pattern for the diff decorations in gutter for modified lines.")}},default:{added:!1,modified:!0}},"scm.diffDecorationsIgnoreTrimWhitespace":{type:"string",enum:["true","false","inherit"],enumDescriptions:[e("scm.diffDecorationsIgnoreTrimWhitespace.true","Ignore leading and trailing whitespace."),e("scm.diffDecorationsIgnoreTrimWhitespace.false","Do not ignore leading and trailing whitespace."),e("scm.diffDecorationsIgnoreTrimWhitespace.inherit","Inherit from `diffEditor.ignoreTrimWhitespace`.")],description:e("diffDecorationsIgnoreTrimWhitespace","Controls whether leading and trailing whitespace is ignored in Source Control diff gutter decorations."),default:"false"},"scm.alwaysShowActions":{type:"boolean",description:e("alwaysShowActions","Controls whether inline actions are always visible in the Source Control view."),default:!1},"scm.countBadge":{type:"string",enum:["all","focused","off"],enumDescriptions:[e("scm.countBadge.all","Show the sum of all Source Control Provider count badges."),e("scm.countBadge.focused","Show the count badge of the focused Source Control Provider."),e("scm.countBadge.off","Disable the Source Control count badge.")],description:e("scm.countBadge","Controls the count badge on the Source Control icon on the Activity Bar."),default:"all"},"scm.providerCountBadge":{type:"string",enum:["hidden","auto","visible"],enumDescriptions:[e("scm.providerCountBadge.hidden","Hide Source Control Provider count badges."),e("scm.providerCountBadge.auto","Only show count badge for Source Control Provider when non-zero."),e("scm.providerCountBadge.visible","Show Source Control Provider count badges.")],markdownDescription:e("scm.providerCountBadge","Controls the count badges on Source Control Provider headers. These headers appear in the Source Control view when there is more than one provider or when the {0} setting is enabled, and in the Source Control Repositories view.","`#scm.alwaysShowRepositories#`"),default:"hidden"},"scm.defaultViewMode":{type:"string",enum:["tree","list"],enumDescriptions:[e("scm.defaultViewMode.tree","Show the repository changes as a tree."),e("scm.defaultViewMode.list","Show the repository changes as a list.")],description:e("scm.defaultViewMode","Controls the default Source Control repository view mode."),default:"list"},"scm.defaultViewSortKey":{type:"string",enum:["name","path","status"],enumDescriptions:[e("scm.defaultViewSortKey.name","Sort the repository changes by file name."),e("scm.defaultViewSortKey.path","Sort the repository changes by path."),e("scm.defaultViewSortKey.status","Sort the repository changes by Source Control status.")],description:e("scm.defaultViewSortKey","Controls the default Source Control repository changes sort order when viewed as a list."),default:"path"},"scm.autoReveal":{type:"boolean",description:e("autoReveal","Controls whether the Source Control view should automatically reveal and select files when opening them."),default:!0},"scm.inputFontFamily":{type:"string",markdownDescription:e("inputFontFamily","Controls the font for the input message. Use `default` for the workbench user interface font family, `editor` for the `#editor.fontFamily#`'s value, or a custom font family."),default:"default"},"scm.inputFontSize":{type:"number",markdownDescription:e("inputFontSize","Controls the font size for the input message in pixels."),default:13},"scm.inputMaxLineCount":{type:"number",markdownDescription:e("inputMaxLines","Controls the maximum number of lines that the input will auto-grow to."),minimum:1,maximum:50,default:10},"scm.inputMinLineCount":{type:"number",markdownDescription:e("inputMinLines","Controls the minimum number of lines that the input will auto-grow from."),minimum:1,maximum:50,default:1},"scm.alwaysShowRepositories":{type:"boolean",markdownDescription:e("alwaysShowRepository","Controls whether repositories should always be visible in the Source Control view."),default:!1},"scm.repositories.sortOrder":{type:"string",enum:["discovery time","name","path"],enumDescriptions:[e("scm.repositoriesSortOrder.discoveryTime","Repositories in the Source Control Repositories view are sorted by discovery time. Repositories in the Source Control view are sorted in the order that they were selected."),e("scm.repositoriesSortOrder.name","Repositories in the Source Control Repositories and Source Control views are sorted by repository name."),e("scm.repositoriesSortOrder.path","Repositories in the Source Control Repositories and Source Control views are sorted by repository path.")],description:e("repositoriesSortOrder","Controls the sort order of the repositories in the source control repositories view."),default:"discovery time"},"scm.repositories.visible":{type:"number",description:e("providersVisible","Controls how many repositories are visible in the Source Control Repositories section. Set to 0, to be able to manually resize the view."),default:10},"scm.showActionButton":{type:"boolean",markdownDescription:e("showActionButton","Controls whether an action button can be shown in the Source Control view."),default:!0},"scm.showInputActionButton":{type:"boolean",markdownDescription:e("showInputActionButton","Controls whether an action button can be shown in the Source Control input."),default:!0},"scm.workingSets.enabled":{type:"boolean",description:e("scm.workingSets.enabled","Controls whether to store editor working sets when switching between source control history item groups."),default:!1},"scm.workingSets.default":{type:"string",enum:["empty","current"],enumDescriptions:[e("scm.workingSets.default.empty","Use an empty working set when switching to a source control history item group that does not have a working set."),e("scm.workingSets.default.current","Use the current working set when switching to a source control history item group that does not have a working set.")],description:e("scm.workingSets.default","Controls the default working set to use when switching to a source control history item group that does not have a working set."),default:"current"},"scm.compactFolders":{type:"boolean",description:e("scm.compactFolders","Controls whether the Source Control view should render folders in a compact form. In such a form, single child folders will be compressed in a combined tree element."),default:!0},"scm.graph.pageOnScroll":{type:"boolean",description:e("scm.graph.pageOnScroll","Controls whether the Source Control Graph view will load the next page of items when you scroll to the end of the list."),default:!0},"scm.graph.pageSize":{type:"number",description:e("scm.graph.pageSize","The number of items to show in the Source Control Graph view by default and when loading more items."),minimum:1,maximum:1e3,default:50},"scm.graph.badges":{type:"string",enum:["all","filter"],enumDescriptions:[e("scm.graph.badges.all","Show badges of all history item groups in the Source Control Graph view."),e("scm.graph.badges.filter","Show only the badges of history item groups used as a filter in the Source Control Graph view.")],description:e("scm.graph.badges","Controls which badges are shown in the Source Control Graph view. The badges are shown on the right side of the graph indicating the names of history item groups."),default:"filter"}}}),c.registerCommandAndKeybindingRule({id:"scm.acceptInput",metadata:{description:e("scm accept","Source Control: Accept Input"),args:[]},weight:p.WorkbenchContrib,when:o.has("scmRepository"),primary:d.CtrlCmd|m.Enter,handler:e=>{const o=e.get(C).getContext(R()).getValue("scmRepository");if(!o)return Promise.resolve(null);const t=e.get(w).getRepository(o);if(!t?.provider.acceptInputCommand)return Promise.resolve(null);const i=t.provider.acceptInputCommand.id,r=t.provider.acceptInputCommand.arguments;return e.get(W).executeCommand(i,...r||[])}}),c.registerCommandAndKeybindingRule({id:"scm.clearInput",weight:p.WorkbenchContrib,when:o.and(o.has("scmRepository"),K.Visible.toNegated(),De.hasNonEmptySelection.toNegated()),primary:m.Escape,handler:async e=>{const o=e.get(w),t=e.get(C).getContext(R()).getValue("scmRepository");(t?o.getRepository(t):void 0)?.input.setValue("",!0)}});const F={description:{description:e("scm view next commit","Source Control: View Next Commit"),args:[]},weight:p.WorkbenchContrib,handler:e=>{const o=e.get(C),t=e.get(w),i=o.getContext(R()).getValue("scmRepository");(i?t.getRepository(i):void 0)?.input.showNextHistoryValue()}},L={description:{description:e("scm view previous commit","Source Control: View Previous Commit"),args:[]},weight:p.WorkbenchContrib,handler:e=>{const o=e.get(C),t=e.get(w),i=o.getContext(R()).getValue("scmRepository");(i?t.getRepository(i):void 0)?.input.showPreviousHistoryValue()}};c.registerCommandAndKeybindingRule({...F,id:"scm.viewNextCommit",when:o.and(o.has("scmRepository"),o.has("scmInputIsInLastPosition"),K.Visible.toNegated()),primary:m.DownArrow}),c.registerCommandAndKeybindingRule({...L,id:"scm.viewPreviousCommit",when:o.and(o.has("scmRepository"),o.has("scmInputIsInFirstPosition"),K.Visible.toNegated()),primary:m.UpArrow}),c.registerCommandAndKeybindingRule({...F,id:"scm.forceViewNextCommit",when:o.has("scmRepository"),primary:d.Alt|m.DownArrow}),c.registerCommandAndKeybindingRule({...L,id:"scm.forceViewPreviousCommit",when:o.has("scmRepository"),primary:d.Alt|m.UpArrow}),T.registerCommand("scm.openInIntegratedTerminal",(async(e,...o)=>{if(!o||0===o.length)return;const t=e.get(W),i=e.get(fe);let r=1===o.length?o[0]:void 0;if(!r){const e=i.lastFocusedList,o=e?.getHTMLElement();if(e instanceof ge&&o&&he(o)){const[o]=e.getFocus(),t=e.element(o);we(t)&&(r=t.provider)}}r?.rootUri&&await t.executeCommand("openInIntegratedTerminal",r.rootUri)})),T.registerCommand("scm.openInTerminal",(async(e,o)=>{o&&o.rootUri&&await e.get(W).executeCommand("openInTerminal",o.rootUri)})),T.registerCommand("scm.setActiveProvider",(async o=>{const t=o.get(me),i=o.get(G),r=e("scmActiveRepositoryPlaceHolder","Select the active repository, type to filter all repositories"),n=e("scmActiveRepositoryAutoDescription","The active repository is updated based on focused repository/active editor"),s=await t.createInstance(ce,r,n).pickRepository();if(s?.repository){const e="auto"!==s.repository?s.repository:void 0;i.pinActiveRepository(e)}})),B.appendMenuItem(O.SCMSourceControl,{group:"100_end",command:{id:"scm.openInTerminal",title:e("open in external terminal","Open in External Terminal")},when:o.and(Ie.isEqualTo(""),o.equals("scmProviderHasRootUri",!0),o.or(o.equals("config.terminal.sourceControlRepositoriesKind","external"),o.equals("config.terminal.sourceControlRepositoriesKind","both")))}),B.appendMenuItem(O.SCMSourceControl,{group:"100_end",command:{id:"scm.openInIntegratedTerminal",title:e("open in integrated terminal","Open in Integrated Terminal")},when:o.and(o.equals("scmProviderHasRootUri",!0),o.or(o.equals("config.terminal.sourceControlRepositoriesKind","integrated"),o.equals("config.terminal.sourceControlRepositoriesKind","both")))}),c.registerCommandAndKeybindingRule({id:"workbench.scm.action.focusPreviousInput",weight:p.WorkbenchContrib,when:E.RepositoryVisibilityCount.notEqualsTo(0),handler:async e=>{const o=await e.get(V).openView(u);o&&o.focusPreviousInput()}}),c.registerCommandAndKeybindingRule({id:"workbench.scm.action.focusNextInput",weight:p.WorkbenchContrib,when:E.RepositoryVisibilityCount.notEqualsTo(0),handler:async e=>{const o=await e.get(V).openView(u);o&&o.focusNextInput()}}),c.registerCommandAndKeybindingRule({id:"workbench.scm.action.focusPreviousResourceGroup",weight:p.WorkbenchContrib,handler:async e=>{const o=await e.get(V).openView(u);o&&o.focusPreviousResourceGroup()}}),c.registerCommandAndKeybindingRule({id:"workbench.scm.action.focusNextResourceGroup",weight:p.WorkbenchContrib,handler:async e=>{const o=await e.get(V).openView(u);o&&o.focusNextResourceGroup()}}),v(w,ee,S.Delayed),v(G,ae,S.Delayed),v(ue,pe,S.Delayed),v(Se,Ce,S.Delayed),Re.register(new Ve);
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { localize, localize2 } from "../../../../nls.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { IWorkbenchContributionsRegistry, registerWorkbenchContribution2, Extensions as WorkbenchExtensions, WorkbenchPhase } from "../../../common/contributions.js";
+import { QuickDiffWorkbenchController } from "./quickDiffDecorator.js";
+import { VIEWLET_ID, ISCMService, VIEW_PANE_ID, ISCMProvider, ISCMViewService, REPOSITORIES_VIEW_PANE_ID, HISTORY_VIEW_PANE_ID } from "../common/scm.js";
+import { KeyMod, KeyCode } from "../../../../base/common/keyCodes.js";
+import { MenuRegistry, MenuId } from "../../../../platform/actions/common/actions.js";
+import { SCMActiveResourceContextKeyController, SCMActiveRepositoryController } from "./activity.js";
+import { LifecyclePhase } from "../../../services/lifecycle/common/lifecycle.js";
+import { IConfigurationRegistry, Extensions as ConfigurationExtensions, ConfigurationScope } from "../../../../platform/configuration/common/configurationRegistry.js";
+import { IContextKeyService, ContextKeyExpr } from "../../../../platform/contextkey/common/contextkey.js";
+import { CommandsRegistry, ICommandService } from "../../../../platform/commands/common/commands.js";
+import { KeybindingsRegistry, KeybindingWeight } from "../../../../platform/keybinding/common/keybindingsRegistry.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { SCMService } from "../common/scmService.js";
+import { IViewContainersRegistry, ViewContainerLocation, Extensions as ViewContainerExtensions, IViewsRegistry } from "../../../common/views.js";
+import { SCMViewPaneContainer } from "./scmViewPaneContainer.js";
+import { SyncDescriptor } from "../../../../platform/instantiation/common/descriptors.js";
+import { ModesRegistry } from "../../../../editor/common/languages/modesRegistry.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { registerIcon } from "../../../../platform/theme/common/iconRegistry.js";
+import { ContextKeys, SCMViewPane } from "./scmViewPane.js";
+import { RepositoryPicker, SCMViewService } from "./scmViewService.js";
+import { SCMRepositoriesViewPane } from "./scmRepositoriesViewPane.js";
+import { IInstantiationService, ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+import { Context as SuggestContext } from "../../../../editor/contrib/suggest/browser/suggest.js";
+import { MANAGE_TRUST_COMMAND_ID, WorkspaceTrustContext } from "../../workspace/common/workspace.js";
+import { IQuickDiffService } from "../common/quickDiff.js";
+import { QuickDiffService } from "../common/quickDiffService.js";
+import { getActiveElement, isActiveElement } from "../../../../base/browser/dom.js";
+import { SCMWorkingSetController } from "./workingSet.js";
+import { IViewsService } from "../../../services/views/common/viewsService.js";
+import { IListService, WorkbenchList } from "../../../../platform/list/browser/listService.js";
+import { isSCMRepository } from "./util.js";
+import { SCMHistoryViewPane } from "./scmHistoryViewPane.js";
+import { QuickDiffModelService, IQuickDiffModelService } from "./quickDiffModel.js";
+import { QuickDiffEditorController } from "./quickDiffWidget.js";
+import { EditorContributionInstantiation, registerEditorContribution } from "../../../../editor/browser/editorExtensions.js";
+import { RemoteNameContext } from "../../../common/contextkeys.js";
+import { AccessibleViewRegistry } from "../../../../platform/accessibility/browser/accessibleViewRegistry.js";
+import { SCMAccessibilityHelp } from "./scmAccessibilityHelp.js";
+import { EditorContextKeys } from "../../../../editor/common/editorContextKeys.js";
+ModesRegistry.registerLanguage({
+  id: "scminput",
+  extensions: [],
+  aliases: [],
+  // hide from language selector
+  mimetypes: ["text/x-scm-input"]
+});
+Registry.as(WorkbenchExtensions.Workbench).registerWorkbenchContribution(QuickDiffWorkbenchController, LifecyclePhase.Restored);
+registerEditorContribution(
+  QuickDiffEditorController.ID,
+  QuickDiffEditorController,
+  EditorContributionInstantiation.AfterFirstRender
+);
+const sourceControlViewIcon = registerIcon("source-control-view-icon", Codicon.sourceControl, localize("sourceControlViewIcon", "View icon of the Source Control view."));
+const viewContainer = Registry.as(ViewContainerExtensions.ViewContainersRegistry).registerViewContainer({
+  id: VIEWLET_ID,
+  title: localize2("source control", "Source Control"),
+  ctorDescriptor: new SyncDescriptor(SCMViewPaneContainer),
+  storageId: "workbench.scm.views.state",
+  icon: sourceControlViewIcon,
+  alwaysUseContainerInfo: true,
+  order: 2,
+  hideIfEmpty: true
+}, ViewContainerLocation.Sidebar, { doNotRegisterOpenCommand: true });
+const viewsRegistry = Registry.as(ViewContainerExtensions.ViewsRegistry);
+const containerTitle = localize("source control view", "Source Control");
+viewsRegistry.registerViewWelcomeContent(VIEW_PANE_ID, {
+  content: localize("no open repo", "No source control providers registered."),
+  when: "default"
+});
+viewsRegistry.registerViewWelcomeContent(VIEW_PANE_ID, {
+  content: localize("no open repo in an untrusted workspace", "None of the registered source control providers work in Restricted Mode."),
+  when: ContextKeyExpr.and(ContextKeyExpr.equals("scm.providerCount", 0), WorkspaceTrustContext.IsEnabled, WorkspaceTrustContext.IsTrusted.toNegated())
+});
+viewsRegistry.registerViewWelcomeContent(VIEW_PANE_ID, {
+  content: `[${localize("manageWorkspaceTrustAction", "Manage Workspace Trust")}](command:${MANAGE_TRUST_COMMAND_ID})`,
+  when: ContextKeyExpr.and(ContextKeyExpr.equals("scm.providerCount", 0), WorkspaceTrustContext.IsEnabled, WorkspaceTrustContext.IsTrusted.toNegated())
+});
+viewsRegistry.registerViewWelcomeContent(HISTORY_VIEW_PANE_ID, {
+  content: localize("no history items", "The selected source control provider does not have any source control history items."),
+  when: ContextKeys.SCMHistoryItemCount.isEqualTo(0)
+});
+viewsRegistry.registerViews([{
+  id: REPOSITORIES_VIEW_PANE_ID,
+  containerTitle,
+  name: localize2("scmRepositories", "Repositories"),
+  singleViewPaneContainerTitle: localize("source control repositories", "Source Control Repositories"),
+  ctorDescriptor: new SyncDescriptor(SCMRepositoriesViewPane),
+  canToggleVisibility: true,
+  hideByDefault: true,
+  canMoveView: true,
+  weight: 20,
+  order: 0,
+  when: ContextKeyExpr.and(ContextKeyExpr.has("scm.providerCount"), ContextKeyExpr.notEquals("scm.providerCount", 0)),
+  // readonly when = ContextKeyExpr.or(ContextKeyExpr.equals('config.scm.alwaysShowProviders', true), ContextKeyExpr.and(ContextKeyExpr.notEquals('scm.providerCount', 0), ContextKeyExpr.notEquals('scm.providerCount', 1)));
+  containerIcon: sourceControlViewIcon
+}], viewContainer);
+viewsRegistry.registerViews([{
+  id: VIEW_PANE_ID,
+  containerTitle,
+  name: localize2("scmChanges", "Changes"),
+  singleViewPaneContainerTitle: containerTitle,
+  ctorDescriptor: new SyncDescriptor(SCMViewPane),
+  canToggleVisibility: true,
+  canMoveView: true,
+  weight: 40,
+  order: 1,
+  containerIcon: sourceControlViewIcon,
+  openCommandActionDescriptor: {
+    id: viewContainer.id,
+    mnemonicTitle: localize({ key: "miViewSCM", comment: ["&& denotes a mnemonic"] }, "Source &&Control"),
+    keybindings: {
+      primary: 0,
+      win: { primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyG },
+      linux: { primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyG },
+      mac: { primary: KeyMod.WinCtrl | KeyMod.Shift | KeyCode.KeyG }
+    },
+    order: 2
+  }
+}], viewContainer);
+viewsRegistry.registerViews([{
+  id: HISTORY_VIEW_PANE_ID,
+  containerTitle,
+  name: localize2("scmGraph", "Graph"),
+  singleViewPaneContainerTitle: localize("source control graph", "Source Control Graph"),
+  ctorDescriptor: new SyncDescriptor(SCMHistoryViewPane),
+  canToggleVisibility: true,
+  canMoveView: true,
+  weight: 40,
+  order: 2,
+  when: ContextKeyExpr.and(
+    ContextKeyExpr.has("scm.historyProviderCount"),
+    ContextKeyExpr.notEquals("scm.historyProviderCount", 0)
+  ),
+  containerIcon: sourceControlViewIcon
+}], viewContainer);
+Registry.as(WorkbenchExtensions.Workbench).registerWorkbenchContribution(SCMActiveRepositoryController, LifecyclePhase.Restored);
+Registry.as(WorkbenchExtensions.Workbench).registerWorkbenchContribution(SCMActiveResourceContextKeyController, LifecyclePhase.Restored);
+registerWorkbenchContribution2(
+  SCMWorkingSetController.ID,
+  SCMWorkingSetController,
+  WorkbenchPhase.AfterRestored
+);
+Registry.as(ConfigurationExtensions.Configuration).registerConfiguration({
+  id: "scm",
+  order: 5,
+  title: localize("scmConfigurationTitle", "Source Control"),
+  type: "object",
+  scope: ConfigurationScope.RESOURCE,
+  properties: {
+    "scm.diffDecorations": {
+      type: "string",
+      enum: ["all", "gutter", "overview", "minimap", "none"],
+      enumDescriptions: [
+        localize("scm.diffDecorations.all", "Show the diff decorations in all available locations."),
+        localize("scm.diffDecorations.gutter", "Show the diff decorations only in the editor gutter."),
+        localize("scm.diffDecorations.overviewRuler", "Show the diff decorations only in the overview ruler."),
+        localize("scm.diffDecorations.minimap", "Show the diff decorations only in the minimap."),
+        localize("scm.diffDecorations.none", "Do not show the diff decorations.")
+      ],
+      default: "all",
+      description: localize("diffDecorations", "Controls diff decorations in the editor.")
+    },
+    "scm.diffDecorationsGutterWidth": {
+      type: "number",
+      enum: [1, 2, 3, 4, 5],
+      default: 3,
+      description: localize("diffGutterWidth", "Controls the width(px) of diff decorations in gutter (added & modified).")
+    },
+    "scm.diffDecorationsGutterVisibility": {
+      type: "string",
+      enum: ["always", "hover"],
+      enumDescriptions: [
+        localize("scm.diffDecorationsGutterVisibility.always", "Show the diff decorator in the gutter at all times."),
+        localize("scm.diffDecorationsGutterVisibility.hover", "Show the diff decorator in the gutter only on hover.")
+      ],
+      description: localize("scm.diffDecorationsGutterVisibility", "Controls the visibility of the Source Control diff decorator in the gutter."),
+      default: "always"
+    },
+    "scm.diffDecorationsGutterAction": {
+      type: "string",
+      enum: ["diff", "none"],
+      enumDescriptions: [
+        localize("scm.diffDecorationsGutterAction.diff", "Show the inline diff Peek view on click."),
+        localize("scm.diffDecorationsGutterAction.none", "Do nothing.")
+      ],
+      description: localize("scm.diffDecorationsGutterAction", "Controls the behavior of Source Control diff gutter decorations."),
+      default: "diff"
+    },
+    "scm.diffDecorationsGutterPattern": {
+      type: "object",
+      description: localize("diffGutterPattern", "Controls whether a pattern is used for the diff decorations in gutter."),
+      additionalProperties: false,
+      properties: {
+        "added": {
+          type: "boolean",
+          description: localize("diffGutterPatternAdded", "Use pattern for the diff decorations in gutter for added lines.")
+        },
+        "modified": {
+          type: "boolean",
+          description: localize("diffGutterPatternModifed", "Use pattern for the diff decorations in gutter for modified lines.")
+        }
+      },
+      default: {
+        "added": false,
+        "modified": true
+      }
+    },
+    "scm.diffDecorationsIgnoreTrimWhitespace": {
+      type: "string",
+      enum: ["true", "false", "inherit"],
+      enumDescriptions: [
+        localize("scm.diffDecorationsIgnoreTrimWhitespace.true", "Ignore leading and trailing whitespace."),
+        localize("scm.diffDecorationsIgnoreTrimWhitespace.false", "Do not ignore leading and trailing whitespace."),
+        localize("scm.diffDecorationsIgnoreTrimWhitespace.inherit", "Inherit from `diffEditor.ignoreTrimWhitespace`.")
+      ],
+      description: localize("diffDecorationsIgnoreTrimWhitespace", "Controls whether leading and trailing whitespace is ignored in Source Control diff gutter decorations."),
+      default: "false"
+    },
+    "scm.alwaysShowActions": {
+      type: "boolean",
+      description: localize("alwaysShowActions", "Controls whether inline actions are always visible in the Source Control view."),
+      default: false
+    },
+    "scm.countBadge": {
+      type: "string",
+      enum: ["all", "focused", "off"],
+      enumDescriptions: [
+        localize("scm.countBadge.all", "Show the sum of all Source Control Provider count badges."),
+        localize("scm.countBadge.focused", "Show the count badge of the focused Source Control Provider."),
+        localize("scm.countBadge.off", "Disable the Source Control count badge.")
+      ],
+      description: localize("scm.countBadge", "Controls the count badge on the Source Control icon on the Activity Bar."),
+      default: "all"
+    },
+    "scm.providerCountBadge": {
+      type: "string",
+      enum: ["hidden", "auto", "visible"],
+      enumDescriptions: [
+        localize("scm.providerCountBadge.hidden", "Hide Source Control Provider count badges."),
+        localize("scm.providerCountBadge.auto", "Only show count badge for Source Control Provider when non-zero."),
+        localize("scm.providerCountBadge.visible", "Show Source Control Provider count badges.")
+      ],
+      markdownDescription: localize("scm.providerCountBadge", "Controls the count badges on Source Control Provider headers. These headers appear in the Source Control view when there is more than one provider or when the {0} setting is enabled, and in the Source Control Repositories view.", "`#scm.alwaysShowRepositories#`"),
+      default: "hidden"
+    },
+    "scm.defaultViewMode": {
+      type: "string",
+      enum: ["tree", "list"],
+      enumDescriptions: [
+        localize("scm.defaultViewMode.tree", "Show the repository changes as a tree."),
+        localize("scm.defaultViewMode.list", "Show the repository changes as a list.")
+      ],
+      description: localize("scm.defaultViewMode", "Controls the default Source Control repository view mode."),
+      default: "list"
+    },
+    "scm.defaultViewSortKey": {
+      type: "string",
+      enum: ["name", "path", "status"],
+      enumDescriptions: [
+        localize("scm.defaultViewSortKey.name", "Sort the repository changes by file name."),
+        localize("scm.defaultViewSortKey.path", "Sort the repository changes by path."),
+        localize("scm.defaultViewSortKey.status", "Sort the repository changes by Source Control status.")
+      ],
+      description: localize("scm.defaultViewSortKey", "Controls the default Source Control repository changes sort order when viewed as a list."),
+      default: "path"
+    },
+    "scm.autoReveal": {
+      type: "boolean",
+      description: localize("autoReveal", "Controls whether the Source Control view should automatically reveal and select files when opening them."),
+      default: true
+    },
+    "scm.inputFontFamily": {
+      type: "string",
+      markdownDescription: localize("inputFontFamily", "Controls the font for the input message. Use `default` for the workbench user interface font family, `editor` for the `#editor.fontFamily#`'s value, or a custom font family."),
+      default: "default"
+    },
+    "scm.inputFontSize": {
+      type: "number",
+      markdownDescription: localize("inputFontSize", "Controls the font size for the input message in pixels."),
+      default: 13
+    },
+    "scm.inputMaxLineCount": {
+      type: "number",
+      markdownDescription: localize("inputMaxLines", "Controls the maximum number of lines that the input will auto-grow to."),
+      minimum: 1,
+      maximum: 50,
+      default: 10
+    },
+    "scm.inputMinLineCount": {
+      type: "number",
+      markdownDescription: localize("inputMinLines", "Controls the minimum number of lines that the input will auto-grow from."),
+      minimum: 1,
+      maximum: 50,
+      default: 1
+    },
+    "scm.alwaysShowRepositories": {
+      type: "boolean",
+      markdownDescription: localize("alwaysShowRepository", "Controls whether repositories should always be visible in the Source Control view."),
+      default: false
+    },
+    "scm.repositories.sortOrder": {
+      type: "string",
+      enum: ["discovery time", "name", "path"],
+      enumDescriptions: [
+        localize("scm.repositoriesSortOrder.discoveryTime", "Repositories in the Source Control Repositories view are sorted by discovery time. Repositories in the Source Control view are sorted in the order that they were selected."),
+        localize("scm.repositoriesSortOrder.name", "Repositories in the Source Control Repositories and Source Control views are sorted by repository name."),
+        localize("scm.repositoriesSortOrder.path", "Repositories in the Source Control Repositories and Source Control views are sorted by repository path.")
+      ],
+      description: localize("repositoriesSortOrder", "Controls the sort order of the repositories in the source control repositories view."),
+      default: "discovery time"
+    },
+    "scm.repositories.visible": {
+      type: "number",
+      description: localize("providersVisible", "Controls how many repositories are visible in the Source Control Repositories section. Set to 0, to be able to manually resize the view."),
+      default: 10
+    },
+    "scm.showActionButton": {
+      type: "boolean",
+      markdownDescription: localize("showActionButton", "Controls whether an action button can be shown in the Source Control view."),
+      default: true
+    },
+    "scm.showInputActionButton": {
+      type: "boolean",
+      markdownDescription: localize("showInputActionButton", "Controls whether an action button can be shown in the Source Control input."),
+      default: true
+    },
+    "scm.workingSets.enabled": {
+      type: "boolean",
+      description: localize("scm.workingSets.enabled", "Controls whether to store editor working sets when switching between source control history item groups."),
+      default: false
+    },
+    "scm.workingSets.default": {
+      type: "string",
+      enum: ["empty", "current"],
+      enumDescriptions: [
+        localize("scm.workingSets.default.empty", "Use an empty working set when switching to a source control history item group that does not have a working set."),
+        localize("scm.workingSets.default.current", "Use the current working set when switching to a source control history item group that does not have a working set.")
+      ],
+      description: localize("scm.workingSets.default", "Controls the default working set to use when switching to a source control history item group that does not have a working set."),
+      default: "current"
+    },
+    "scm.compactFolders": {
+      type: "boolean",
+      description: localize("scm.compactFolders", "Controls whether the Source Control view should render folders in a compact form. In such a form, single child folders will be compressed in a combined tree element."),
+      default: true
+    },
+    "scm.graph.pageOnScroll": {
+      type: "boolean",
+      description: localize("scm.graph.pageOnScroll", "Controls whether the Source Control Graph view will load the next page of items when you scroll to the end of the list."),
+      default: true
+    },
+    "scm.graph.pageSize": {
+      type: "number",
+      description: localize("scm.graph.pageSize", "The number of items to show in the Source Control Graph view by default and when loading more items."),
+      minimum: 1,
+      maximum: 1e3,
+      default: 50
+    },
+    "scm.graph.badges": {
+      type: "string",
+      enum: ["all", "filter"],
+      enumDescriptions: [
+        localize("scm.graph.badges.all", "Show badges of all history item groups in the Source Control Graph view."),
+        localize("scm.graph.badges.filter", "Show only the badges of history item groups used as a filter in the Source Control Graph view.")
+      ],
+      description: localize("scm.graph.badges", "Controls which badges are shown in the Source Control Graph view. The badges are shown on the right side of the graph indicating the names of history item groups."),
+      default: "filter"
+    }
+  }
+});
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  id: "scm.acceptInput",
+  metadata: { description: localize("scm accept", "Source Control: Accept Input"), args: [] },
+  weight: KeybindingWeight.WorkbenchContrib,
+  when: ContextKeyExpr.has("scmRepository"),
+  primary: KeyMod.CtrlCmd | KeyCode.Enter,
+  handler: /* @__PURE__ */ __name((accessor) => {
+    const contextKeyService = accessor.get(IContextKeyService);
+    const context = contextKeyService.getContext(getActiveElement());
+    const repositoryId = context.getValue("scmRepository");
+    if (!repositoryId) {
+      return Promise.resolve(null);
+    }
+    const scmService = accessor.get(ISCMService);
+    const repository = scmService.getRepository(repositoryId);
+    if (!repository?.provider.acceptInputCommand) {
+      return Promise.resolve(null);
+    }
+    const id = repository.provider.acceptInputCommand.id;
+    const args = repository.provider.acceptInputCommand.arguments;
+    const commandService = accessor.get(ICommandService);
+    return commandService.executeCommand(id, ...args || []);
+  }, "handler")
+});
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  id: "scm.clearInput",
+  weight: KeybindingWeight.WorkbenchContrib,
+  when: ContextKeyExpr.and(ContextKeyExpr.has("scmRepository"), SuggestContext.Visible.toNegated(), EditorContextKeys.hasNonEmptySelection.toNegated()),
+  primary: KeyCode.Escape,
+  handler: /* @__PURE__ */ __name(async (accessor) => {
+    const scmService = accessor.get(ISCMService);
+    const contextKeyService = accessor.get(IContextKeyService);
+    const context = contextKeyService.getContext(getActiveElement());
+    const repositoryId = context.getValue("scmRepository");
+    const repository = repositoryId ? scmService.getRepository(repositoryId) : void 0;
+    repository?.input.setValue("", true);
+  }, "handler")
+});
+const viewNextCommitCommand = {
+  description: { description: localize("scm view next commit", "Source Control: View Next Commit"), args: [] },
+  weight: KeybindingWeight.WorkbenchContrib,
+  handler: /* @__PURE__ */ __name((accessor) => {
+    const contextKeyService = accessor.get(IContextKeyService);
+    const scmService = accessor.get(ISCMService);
+    const context = contextKeyService.getContext(getActiveElement());
+    const repositoryId = context.getValue("scmRepository");
+    const repository = repositoryId ? scmService.getRepository(repositoryId) : void 0;
+    repository?.input.showNextHistoryValue();
+  }, "handler")
+};
+const viewPreviousCommitCommand = {
+  description: { description: localize("scm view previous commit", "Source Control: View Previous Commit"), args: [] },
+  weight: KeybindingWeight.WorkbenchContrib,
+  handler: /* @__PURE__ */ __name((accessor) => {
+    const contextKeyService = accessor.get(IContextKeyService);
+    const scmService = accessor.get(ISCMService);
+    const context = contextKeyService.getContext(getActiveElement());
+    const repositoryId = context.getValue("scmRepository");
+    const repository = repositoryId ? scmService.getRepository(repositoryId) : void 0;
+    repository?.input.showPreviousHistoryValue();
+  }, "handler")
+};
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  ...viewNextCommitCommand,
+  id: "scm.viewNextCommit",
+  when: ContextKeyExpr.and(ContextKeyExpr.has("scmRepository"), ContextKeyExpr.has("scmInputIsInLastPosition"), SuggestContext.Visible.toNegated()),
+  primary: KeyCode.DownArrow
+});
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  ...viewPreviousCommitCommand,
+  id: "scm.viewPreviousCommit",
+  when: ContextKeyExpr.and(ContextKeyExpr.has("scmRepository"), ContextKeyExpr.has("scmInputIsInFirstPosition"), SuggestContext.Visible.toNegated()),
+  primary: KeyCode.UpArrow
+});
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  ...viewNextCommitCommand,
+  id: "scm.forceViewNextCommit",
+  when: ContextKeyExpr.has("scmRepository"),
+  primary: KeyMod.Alt | KeyCode.DownArrow
+});
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  ...viewPreviousCommitCommand,
+  id: "scm.forceViewPreviousCommit",
+  when: ContextKeyExpr.has("scmRepository"),
+  primary: KeyMod.Alt | KeyCode.UpArrow
+});
+CommandsRegistry.registerCommand("scm.openInIntegratedTerminal", async (accessor, ...providers) => {
+  if (!providers || providers.length === 0) {
+    return;
+  }
+  const commandService = accessor.get(ICommandService);
+  const listService = accessor.get(IListService);
+  let provider = providers.length === 1 ? providers[0] : void 0;
+  if (!provider) {
+    const list = listService.lastFocusedList;
+    const element = list?.getHTMLElement();
+    if (list instanceof WorkbenchList && element && isActiveElement(element)) {
+      const [index] = list.getFocus();
+      const focusedElement = list.element(index);
+      if (isSCMRepository(focusedElement)) {
+        provider = focusedElement.provider;
+      }
+    }
+  }
+  if (!provider?.rootUri) {
+    return;
+  }
+  await commandService.executeCommand("openInIntegratedTerminal", provider.rootUri);
+});
+CommandsRegistry.registerCommand("scm.openInTerminal", async (accessor, provider) => {
+  if (!provider || !provider.rootUri) {
+    return;
+  }
+  const commandService = accessor.get(ICommandService);
+  await commandService.executeCommand("openInTerminal", provider.rootUri);
+});
+CommandsRegistry.registerCommand("scm.setActiveProvider", async (accessor) => {
+  const instantiationService = accessor.get(IInstantiationService);
+  const scmViewService = accessor.get(ISCMViewService);
+  const placeHolder = localize("scmActiveRepositoryPlaceHolder", "Select the active repository, type to filter all repositories");
+  const autoQuickItemDescription = localize("scmActiveRepositoryAutoDescription", "The active repository is updated based on focused repository/active editor");
+  const repositoryPicker = instantiationService.createInstance(RepositoryPicker, placeHolder, autoQuickItemDescription);
+  const result = await repositoryPicker.pickRepository();
+  if (result?.repository) {
+    const repository = result.repository !== "auto" ? result.repository : void 0;
+    scmViewService.pinActiveRepository(repository);
+  }
+});
+MenuRegistry.appendMenuItem(MenuId.SCMSourceControl, {
+  group: "100_end",
+  command: {
+    id: "scm.openInTerminal",
+    title: localize("open in external terminal", "Open in External Terminal")
+  },
+  when: ContextKeyExpr.and(
+    RemoteNameContext.isEqualTo(""),
+    ContextKeyExpr.equals("scmProviderHasRootUri", true),
+    ContextKeyExpr.or(
+      ContextKeyExpr.equals("config.terminal.sourceControlRepositoriesKind", "external"),
+      ContextKeyExpr.equals("config.terminal.sourceControlRepositoriesKind", "both")
+    )
+  )
+});
+MenuRegistry.appendMenuItem(MenuId.SCMSourceControl, {
+  group: "100_end",
+  command: {
+    id: "scm.openInIntegratedTerminal",
+    title: localize("open in integrated terminal", "Open in Integrated Terminal")
+  },
+  when: ContextKeyExpr.and(
+    ContextKeyExpr.equals("scmProviderHasRootUri", true),
+    ContextKeyExpr.or(
+      ContextKeyExpr.equals("config.terminal.sourceControlRepositoriesKind", "integrated"),
+      ContextKeyExpr.equals("config.terminal.sourceControlRepositoriesKind", "both")
+    )
+  )
+});
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  id: "workbench.scm.action.focusPreviousInput",
+  weight: KeybindingWeight.WorkbenchContrib,
+  when: ContextKeys.RepositoryVisibilityCount.notEqualsTo(0),
+  handler: /* @__PURE__ */ __name(async (accessor) => {
+    const viewsService = accessor.get(IViewsService);
+    const scmView = await viewsService.openView(VIEW_PANE_ID);
+    if (scmView) {
+      scmView.focusPreviousInput();
+    }
+  }, "handler")
+});
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  id: "workbench.scm.action.focusNextInput",
+  weight: KeybindingWeight.WorkbenchContrib,
+  when: ContextKeys.RepositoryVisibilityCount.notEqualsTo(0),
+  handler: /* @__PURE__ */ __name(async (accessor) => {
+    const viewsService = accessor.get(IViewsService);
+    const scmView = await viewsService.openView(VIEW_PANE_ID);
+    if (scmView) {
+      scmView.focusNextInput();
+    }
+  }, "handler")
+});
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  id: "workbench.scm.action.focusPreviousResourceGroup",
+  weight: KeybindingWeight.WorkbenchContrib,
+  handler: /* @__PURE__ */ __name(async (accessor) => {
+    const viewsService = accessor.get(IViewsService);
+    const scmView = await viewsService.openView(VIEW_PANE_ID);
+    if (scmView) {
+      scmView.focusPreviousResourceGroup();
+    }
+  }, "handler")
+});
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  id: "workbench.scm.action.focusNextResourceGroup",
+  weight: KeybindingWeight.WorkbenchContrib,
+  handler: /* @__PURE__ */ __name(async (accessor) => {
+    const viewsService = accessor.get(IViewsService);
+    const scmView = await viewsService.openView(VIEW_PANE_ID);
+    if (scmView) {
+      scmView.focusNextResourceGroup();
+    }
+  }, "handler")
+});
+registerSingleton(ISCMService, SCMService, InstantiationType.Delayed);
+registerSingleton(ISCMViewService, SCMViewService, InstantiationType.Delayed);
+registerSingleton(IQuickDiffService, QuickDiffService, InstantiationType.Delayed);
+registerSingleton(IQuickDiffModelService, QuickDiffModelService, InstantiationType.Delayed);
+AccessibleViewRegistry.register(new SCMAccessibilityHelp());
+//# sourceMappingURL=scm.contribution.js.map

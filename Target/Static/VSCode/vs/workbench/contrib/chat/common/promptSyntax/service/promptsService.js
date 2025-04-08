@@ -1,1 +1,102 @@
-var u=Object.defineProperty,P=Object.getOwnPropertyDescriptor,l=(e,t,r,s)=>{for(var o,i=s>1?void 0:s?P(t,r):t,a=e.length-1;a>=0;a--)(o=e[a])&&(i=(s?o(t,r,i):o(i))||i);return s&&i&&u(t,r,i),i},n=(e,t)=>(r,s)=>t(r,s,e);import"./types.js";import"../../../../../../base/common/uri.js";import{assert as c}from"../../../../../../base/common/assert.js";import{PromptFilesLocator as f}from"../utils/promptFilesLocator.js";import"../../../../../../editor/common/model.js";import{Disposable as h}from"../../../../../../base/common/lifecycle.js";import{ObjectCache as I}from"../../../../../../base/common/objectCache.js";import{TextModelPromptParser as y}from"../parsers/textModelPromptParser.js";import{IInstantiationService as v}from"../../../../../../platform/instantiation/common/instantiation.js";import{IUserDataProfileService as x}from"../../../../../services/userDataProfile/common/userDataProfile.js";let i=class extends h{constructor(e,t){super(),this.initService=e,this.userDataService=t,this.fileLocator=this.initService.createInstance(f),this.cache=this._register(new I((t=>{const r=e.createInstance(y,t,[]);return r.start(),r.assertNotDisposed("Created prompt parser must not be disposed."),r})))}cache;fileLocator;getSyntaxParserFor(e){return c(!e.isDisposed(),"Cannot create a prompt syntax parser for a disposed model."),this.cache.get(e)}async listPromptFiles(){const e=[this.userDataService.currentProfile.promptsHome];return(await Promise.all([this.fileLocator.listFilesIn(e).then(d("user")),this.fileLocator.listFiles().then(d("local"))])).flat()}getSourceFolders(e){return c("local"===e||"user"===e,`Unknown prompt type '${e}'.`),("user"===e?[this.userDataService.currentProfile.promptsHome]:this.fileLocator.getConfigBasedSourceFolders()).map(m(e))}};i=l([n(0,v),n(1,x)],i);const m=e=>t=>({uri:t,type:e}),d=e=>t=>t.map(m(e));export{i as PromptsService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { IPromptPath, IPromptsService } from "./types.js";
+import { URI } from "../../../../../../base/common/uri.js";
+import { assert } from "../../../../../../base/common/assert.js";
+import { PromptFilesLocator } from "../utils/promptFilesLocator.js";
+import { ITextModel } from "../../../../../../editor/common/model.js";
+import { Disposable } from "../../../../../../base/common/lifecycle.js";
+import { ObjectCache } from "../../../../../../base/common/objectCache.js";
+import { TextModelPromptParser } from "../parsers/textModelPromptParser.js";
+import { IInstantiationService } from "../../../../../../platform/instantiation/common/instantiation.js";
+import { IUserDataProfileService } from "../../../../../services/userDataProfile/common/userDataProfile.js";
+let PromptsService = class extends Disposable {
+  constructor(initService, userDataService) {
+    super();
+    this.initService = initService;
+    this.userDataService = userDataService;
+    this.fileLocator = this.initService.createInstance(PromptFilesLocator);
+    this.cache = this._register(
+      new ObjectCache((model) => {
+        const parser = initService.createInstance(
+          TextModelPromptParser,
+          model,
+          []
+        );
+        parser.start();
+        parser.assertNotDisposed(
+          "Created prompt parser must not be disposed."
+        );
+        return parser;
+      })
+    );
+  }
+  static {
+    __name(this, "PromptsService");
+  }
+  /**
+   * Cache of text model content prompt parsers.
+   */
+  cache;
+  /**
+   * Prompt files locator utility.
+   */
+  fileLocator;
+  /**
+   * @throws {Error} if:
+   * 	- the provided model is disposed
+   * 	- newly created parser is disposed immediately on initialization.
+   * 	  See factory function in the {@link constructor} for more info.
+   */
+  getSyntaxParserFor(model) {
+    assert(
+      !model.isDisposed(),
+      "Cannot create a prompt syntax parser for a disposed model."
+    );
+    return this.cache.get(model);
+  }
+  async listPromptFiles() {
+    const userLocations = [this.userDataService.currentProfile.promptsHome];
+    const prompts = await Promise.all([
+      this.fileLocator.listFilesIn(userLocations).then(withType("user")),
+      this.fileLocator.listFiles().then(withType("local"))
+    ]);
+    return prompts.flat();
+  }
+  getSourceFolders(type) {
+    assert(
+      type === "local" || type === "user",
+      `Unknown prompt type '${type}'.`
+    );
+    const prompts = type === "user" ? [this.userDataService.currentProfile.promptsHome] : this.fileLocator.getConfigBasedSourceFolders();
+    return prompts.map(addType(type));
+  }
+};
+PromptsService = __decorateClass([
+  __decorateParam(0, IInstantiationService),
+  __decorateParam(1, IUserDataProfileService)
+], PromptsService);
+const addType = /* @__PURE__ */ __name((type) => {
+  return (uri) => {
+    return { uri, type };
+  };
+}, "addType");
+const withType = /* @__PURE__ */ __name((type) => {
+  return (uris) => {
+    return uris.map(addType(type));
+  };
+}, "withType");
+export {
+  PromptsService
+};
+//# sourceMappingURL=promptsService.js.map

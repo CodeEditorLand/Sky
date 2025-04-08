@@ -1,1 +1,127 @@
-import{Emitter as g,Event as p}from"../../../base/common/event.js";import{Disposable as h}from"../../../base/common/lifecycle.js";import{revive as l}from"../../../base/common/marshalling.js";import"../../../base/parts/ipc/common/ipc.js";import"../../log/common/log.js";import"../common/storageIpc.js";import"./storageMain.js";import"./storageMainService.js";import"../../userDataProfile/common/userDataProfile.js";import{reviveIdentifier as d}from"../../workspace/common/workspace.js";class S extends h{constructor(e,t){super(),this.logService=e,this.storageMainService=t,this.registerStorageChangeListeners(t.applicationStorage,this.onDidChangeApplicationStorageEmitter)}static STORAGE_CHANGE_DEBOUNCE_TIME=100;onDidChangeApplicationStorageEmitter=this._register(new g);mapProfileToOnDidChangeProfileStorageEmitter=new Map;registerStorageChangeListeners(e,t){this._register(p.debounce(e.onDidChangeStorage,((e,t)=>(e?e.push(t):e=[t],e)),S.STORAGE_CHANGE_DEBOUNCE_TIME)((r=>{r.length&&t.fire(this.serializeStorageChangeEvents(r,e))})))}serializeStorageChangeEvents(e,t){const r=new Map,i=new Set;return e.forEach((e=>{const o=t.get(e.key);"string"==typeof o?r.set(e.key,o):i.add(e.key)})),{changed:Array.from(r.entries()),deleted:Array.from(i.values())}}listen(e,t,r){if("onDidChangeStorage"===t){const e=r.profile?l(r.profile):void 0;if(!e)return this.onDidChangeApplicationStorageEmitter.event;let t=this.mapProfileToOnDidChangeProfileStorageEmitter.get(e.id);return t||(t=this._register(new g),this.registerStorageChangeListeners(this.storageMainService.profileStorage(e),t),this.mapProfileToOnDidChangeProfileStorageEmitter.set(e.id,t)),t.event}throw new Error(`Event not found: ${t}`)}async call(e,t,r){const i=r.profile?l(r.profile):void 0,o=d(r.workspace),a=await this.withStorageInitialized(i,o);switch(t){case"getItems":return Array.from(a.items.entries());case"updateItems":{const e=r;if(e.insert)for(const[t,r]of e.insert)a.set(t,r);e.delete?.forEach((e=>a.delete(e)));break}case"optimize":return a.optimize();case"isUsed":{const e=r.payload;if("string"==typeof e)return this.storageMainService.isUsed(e)}default:throw new Error(`Call not found: ${t}`)}}async withStorageInitialized(e,t){let r;r=t?this.storageMainService.workspaceStorage(t):e?this.storageMainService.profileStorage(e):this.storageMainService.applicationStorage;try{await r.init()}catch(r){this.logService.error(`StorageIPC#init: Unable to init ${t?"workspace":e?"profile":"application"} storage due to ${r}`)}return r}}export{S as StorageDatabaseChannel};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Emitter, Event } from "../../../base/common/event.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { revive } from "../../../base/common/marshalling.js";
+import { IServerChannel } from "../../../base/parts/ipc/common/ipc.js";
+import { ILogService } from "../../log/common/log.js";
+import { IBaseSerializableStorageRequest, ISerializableItemsChangeEvent, ISerializableUpdateRequest, Key, Value } from "../common/storageIpc.js";
+import { IStorageChangeEvent, IStorageMain } from "./storageMain.js";
+import { IStorageMainService } from "./storageMainService.js";
+import { IUserDataProfile } from "../../userDataProfile/common/userDataProfile.js";
+import { reviveIdentifier, IAnyWorkspaceIdentifier } from "../../workspace/common/workspace.js";
+class StorageDatabaseChannel extends Disposable {
+  constructor(logService, storageMainService) {
+    super();
+    this.logService = logService;
+    this.storageMainService = storageMainService;
+    this.registerStorageChangeListeners(storageMainService.applicationStorage, this.onDidChangeApplicationStorageEmitter);
+  }
+  static {
+    __name(this, "StorageDatabaseChannel");
+  }
+  static STORAGE_CHANGE_DEBOUNCE_TIME = 100;
+  onDidChangeApplicationStorageEmitter = this._register(new Emitter());
+  mapProfileToOnDidChangeProfileStorageEmitter = /* @__PURE__ */ new Map();
+  //#region Storage Change Events
+  registerStorageChangeListeners(storage, emitter) {
+    this._register(Event.debounce(storage.onDidChangeStorage, (prev, cur) => {
+      if (!prev) {
+        prev = [cur];
+      } else {
+        prev.push(cur);
+      }
+      return prev;
+    }, StorageDatabaseChannel.STORAGE_CHANGE_DEBOUNCE_TIME)((events) => {
+      if (events.length) {
+        emitter.fire(this.serializeStorageChangeEvents(events, storage));
+      }
+    }));
+  }
+  serializeStorageChangeEvents(events, storage) {
+    const changed = /* @__PURE__ */ new Map();
+    const deleted = /* @__PURE__ */ new Set();
+    events.forEach((event) => {
+      const existing = storage.get(event.key);
+      if (typeof existing === "string") {
+        changed.set(event.key, existing);
+      } else {
+        deleted.add(event.key);
+      }
+    });
+    return {
+      changed: Array.from(changed.entries()),
+      deleted: Array.from(deleted.values())
+    };
+  }
+  listen(_, event, arg) {
+    switch (event) {
+      case "onDidChangeStorage": {
+        const profile = arg.profile ? revive(arg.profile) : void 0;
+        if (!profile) {
+          return this.onDidChangeApplicationStorageEmitter.event;
+        }
+        let profileStorageChangeEmitter = this.mapProfileToOnDidChangeProfileStorageEmitter.get(profile.id);
+        if (!profileStorageChangeEmitter) {
+          profileStorageChangeEmitter = this._register(new Emitter());
+          this.registerStorageChangeListeners(this.storageMainService.profileStorage(profile), profileStorageChangeEmitter);
+          this.mapProfileToOnDidChangeProfileStorageEmitter.set(profile.id, profileStorageChangeEmitter);
+        }
+        return profileStorageChangeEmitter.event;
+      }
+    }
+    throw new Error(`Event not found: ${event}`);
+  }
+  //#endregion
+  async call(_, command, arg) {
+    const profile = arg.profile ? revive(arg.profile) : void 0;
+    const workspace = reviveIdentifier(arg.workspace);
+    const storage = await this.withStorageInitialized(profile, workspace);
+    switch (command) {
+      case "getItems": {
+        return Array.from(storage.items.entries());
+      }
+      case "updateItems": {
+        const items = arg;
+        if (items.insert) {
+          for (const [key, value] of items.insert) {
+            storage.set(key, value);
+          }
+        }
+        items.delete?.forEach((key) => storage.delete(key));
+        break;
+      }
+      case "optimize": {
+        return storage.optimize();
+      }
+      case "isUsed": {
+        const path = arg.payload;
+        if (typeof path === "string") {
+          return this.storageMainService.isUsed(path);
+        }
+      }
+      default:
+        throw new Error(`Call not found: ${command}`);
+    }
+  }
+  async withStorageInitialized(profile, workspace) {
+    let storage;
+    if (workspace) {
+      storage = this.storageMainService.workspaceStorage(workspace);
+    } else if (profile) {
+      storage = this.storageMainService.profileStorage(profile);
+    } else {
+      storage = this.storageMainService.applicationStorage;
+    }
+    try {
+      await storage.init();
+    } catch (error) {
+      this.logService.error(`StorageIPC#init: Unable to init ${workspace ? "workspace" : profile ? "profile" : "application"} storage due to ${error}`);
+    }
+    return storage;
+  }
+}
+export {
+  StorageDatabaseChannel
+};
+//# sourceMappingURL=storageIpc.js.map

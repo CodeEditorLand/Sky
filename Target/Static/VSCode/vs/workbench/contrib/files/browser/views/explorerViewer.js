@@ -1,1 +1,1756 @@
-var Fe=Object.defineProperty;var Te=Object.getOwnPropertyDescriptor;var y=(u,e,r,t)=>{for(var s=t>1?void 0:t?Te(e,r):e,i=u.length-1,n;i>=0;i--)(n=u[i])&&(s=(t?n(e,r,s):n(s))||s);return t&&s&&Fe(e,r,s),s},h=(u,e)=>(r,t)=>e(r,t,u);import"../../../../../base/browser/ui/list/listWidget.js";import*as x from"../../../../../base/browser/dom.js";import*as re from"../../../../../base/common/glob.js";import{ListDragOverEffectPosition as M,ListDragOverEffectType as O}from"../../../../../base/browser/ui/list/list.js";import{IProgressService as te,ProgressLocation as ie}from"../../../../../platform/progress/common/progress.js";import{INotificationService as Re,Severity as $}from"../../../../../platform/notification/common/notification.js";import{IFileService as k,FileKind as C,FileOperationResult as we,FileChangeType as oe}from"../../../../../platform/files/common/files.js";import{IWorkbenchLayoutService as Pe}from"../../../../services/layout/browser/layoutService.js";import{isTemporaryWorkspace as Le,IWorkspaceContextService as T,WorkbenchState as q}from"../../../../../platform/workspace/common/workspace.js";import{Disposable as Me,dispose as se,toDisposable as G,DisposableStore as B}from"../../../../../base/common/lifecycle.js";import{KeyCode as Y}from"../../../../../base/common/keyCodes.js";import"../../../../browser/labels.js";import{TreeVisibility as ne,TreeDragOverBubble as N}from"../../../../../base/browser/ui/tree/tree.js";import{IContextMenuService as Oe,IContextViewService as ke}from"../../../../../platform/contextview/browser/contextView.js";import{IThemeService as Ne}from"../../../../../platform/theme/common/themeService.js";import{IConfigurationService as R}from"../../../../../platform/configuration/common/configuration.js";import{ExplorerFindProviderActive as Ae,UndoConfirmLevel as j}from"../../common/files.js";import{dirname as A,joinPath as Q,distinctParents as He,relativePath as w}from"../../../../../base/common/resources.js";import{InputBox as We,MessageType as H}from"../../../../../base/browser/ui/inputbox/inputBox.js";import{localize as I}from"../../../../../nls.js";import{createSingleCallFunction as Ue}from"../../../../../base/common/functional.js";import"../../../../../base/browser/keyboardEvent.js";import{equals as _e,deepClone as Ve}from"../../../../../base/common/objects.js";import*as ze from"../../../../../base/common/path.js";import{ExplorerItem as P,NewExplorerItem as Ke}from"../../common/explorerModel.js";import{compareFileExtensionsDefault as $e,compareFileNamesDefault as qe,compareFileNamesUpper as Ge,compareFileExtensionsUpper as Be,compareFileNamesLower as Ye,compareFileExtensionsLower as je,compareFileNamesUnicode as Qe,compareFileExtensionsUnicode as Je}from"../../../../../base/common/comparers.js";import{CodeDataTransfers as ae,containsDragType as Xe}from"../../../../../platform/dnd/browser/dnd.js";import{fillEditorsDragData as Ze}from"../../../../browser/dnd.js";import{IInstantiationService as le}from"../../../../../platform/instantiation/common/instantiation.js";import{DataTransfers as ce}from"../../../../../base/browser/dnd.js";import{Schemas as J}from"../../../../../base/common/network.js";import{NativeDragAndDropData as de,ExternalElementsDragAndDropData as er,ListViewTargetSector as b}from"../../../../../base/browser/ui/list/listView.js";import{isMacintosh as W,isWeb as rr}from"../../../../../base/common/platform.js";import{IDialogService as tr,getFileNamesMessage as ir}from"../../../../../platform/dialogs/common/dialogs.js";import{IWorkspaceEditingService as or}from"../../../../services/workspaces/common/workspaceEditing.js";import"../../../../../base/common/uri.js";import{IEditorService as pe}from"../../../../services/editor/common/editorService.js";import"../../../../../platform/workspaces/common/workspaces.js";import{findValidPasteFileTarget as sr}from"../fileActions.js";import{createMatches as nr}from"../../../../../base/common/filters.js";import{Emitter as X,Event as ar,EventMultiplexer as lr}from"../../../../../base/common/event.js";import"../../../../../base/browser/ui/tree/asyncDataTree.js";import"../../../../../base/browser/ui/tree/objectTree.js";import"../../../../../base/browser/ui/tree/compressedObjectTreeModel.js";import{ILabelService as cr}from"../../../../../platform/label/common/label.js";import{isNumber as he}from"../../../../../base/common/types.js";import"../../../../common/views.js";import"../../../../common/editor/editorInput.js";import{IUriIdentityService as ue}from"../../../../../platform/uriIdentity/common/uriIdentity.js";import{ResourceFileEdit as Z}from"../../../../../editor/browser/services/bulkEditService.js";import{IExplorerService as F}from"../files.js";import{BrowserFileUpload as dr,ExternalFileImport as pr,getMultipleFilesOverwriteConfirm as hr}from"../fileImportExport.js";import{toErrorMessage as ur}from"../../../../../base/common/errorMessage.js";import{WebFileSystemAccess as fr}from"../../../../../platform/files/browser/webFileSystemAccess.js";import{IgnoreFile as mr}from"../../../../services/search/common/ignoreFile.js";import{ResourceSet as fe}from"../../../../../base/common/map.js";import{TernarySearchTree as gr}from"../../../../../base/common/ternarySearchTree.js";import{defaultCountBadgeStyles as vr,defaultInputBoxStyles as Ir}from"../../../../../platform/theme/browser/defaultStyles.js";import{timeout as Sr}from"../../../../../base/common/async.js";import{IFilesConfigurationService as me}from"../../../../services/filesConfiguration/common/filesConfigurationService.js";import{mainWindow as ge}from"../../../../../base/browser/window.js";import{explorerFileContribRegistry as ve}from"../explorerFileContrib.js";import"../../../../../platform/list/browser/listService.js";import{ISearchService as xr,QueryType as Er,getExcludes as yr}from"../../../../services/search/common/search.js";import"../../../../../base/common/cancellation.js";import{TreeFindMatchType as br,TreeFindMode as Dr}from"../../../../../base/browser/ui/tree/abstractTree.js";import{isCancellationError as Cr}from"../../../../../base/common/errors.js";import{IContextKeyService as Fr}from"../../../../../platform/contextkey/common/contextkey.js";import{CountBadge as Tr}from"../../../../../base/browser/ui/countBadge/countBadge.js";import{listFilterMatchHighlight as Rr,listFilterMatchHighlightBorder as wr}from"../../../../../platform/theme/common/colorRegistry.js";import{asCssVariable as Ie}from"../../../../../platform/theme/common/colorUtils.js";class be{static ITEM_HEIGHT=22;getHeight(e){return be.ITEM_HEIGHT}getTemplateId(e){return D.ID}}const Se=new X;let U=class{constructor(e,r,t,s,i,n,o,a,l,c){this.fileFilter=e;this.findProvider=r;this.progressService=t;this.configService=s;this.notificationService=i;this.layoutService=n;this.fileService=o;this.explorerService=a;this.contextService=l;this.filesConfigService=c}getParent(e){if(e.parent)return e.parent;throw new Error("getParent only supported for cached parents")}hasChildren(e){return Array.isArray(e)||e.hasChildren(r=>this.fileFilter.filter(r,ne.Visible))}getChildren(e){if(Array.isArray(e))return e;if(this.findProvider.isShowingFilterResults())return Array.from(e.children.values());const r=e.error,t=this.explorerService.sortOrderConfiguration.sortOrder,s=e.fetchChildren(t);if(Array.isArray(s))return s;const i=s.then(n=>(e instanceof P&&e.isRoot&&!e.error&&r&&this.contextService.getWorkbenchState()!==q.FOLDER&&Se.fire(e.resource),n),n=>{if(e instanceof P&&e.isRoot)if(this.contextService.getWorkbenchState()===q.FOLDER){const o=new P(e.resource,this.fileService,this.configService,this.filesConfigService,void 0,void 0,!1);return o.error=n,[o]}else Se.fire(e.resource);else this.notificationService.error(n);return[]});return this.progressService.withProgress({location:ie.Explorer,delay:this.layoutService.isRestored()?800:1500},n=>i),i}};U=y([h(2,te),h(3,R),h(4,Re),h(5,Pe),h(6,k),h(7,F),h(8,T),h(9,me)],U);class xe extends P{constructor(e,r,t,s,i,n){super(e,r,t,s,i,n)}}class Pr{_tree=new Map;_highlightedItems=new Map;get highlightedItems(){return Array.from(this._highlightedItems.values())}get(e){const r=this.find(e);if(r===void 0)return 0;const{treeLayer:t,relPath:s}=r;return this._highlightedItems.set(s,e),t.childMatches}find(e){const r=this._tree.get(e.root.name);if(r===void 0)return;const t=w(e.root.resource,e.resource);if(t===void 0||t.startsWith(".."))throw new Error("Resource is not a child of the root");if(t==="")return{treeLayer:r,relPath:t};let s=r;for(const i of t.split("/")){if(!s.stats[i])return;s=s.stats[i]}return{treeLayer:s,relPath:t}}add(e,r){const t=w(r.resource,e);if(t===void 0||t.startsWith(".."))throw new Error("Resource is not a child of the root");let s=this._tree.get(r.name);s||(s={childMatches:0,stats:{},isMatch:!1},this._tree.set(r.name,s)),s.childMatches++;let i=s;for(const n of t.split("/"))i.stats[n]||(i.stats[n]={childMatches:0,stats:{},isMatch:!1}),i=i.stats[n],i.childMatches++;i.childMatches--,i.isMatch=!0}isMatch(e){const r=this.find(e);if(r===void 0)return!1;const{treeLayer:t}=r;return t.isMatch}clear(){this._tree.clear()}}let _=class{constructor(e,r,t,s,i,n,o,a,l){this.filesFilter=e;this.treeProvider=r;this.searchService=t;this.fileService=s;this.configurationService=i;this.filesConfigService=n;this.progressService=o;this.explorerService=a;this.explorerFindActiveContextKey=Ae.bindTo(l)}sessionId=0;filterSessionStartState;highlightSessionStartState;explorerFindActiveContextKey;phantomParents=new Set;findHighlightTree=new Pr;get highlightTree(){return this.findHighlightTree}isShowingFilterResults(){return!!this.filterSessionStartState}isVisible(e){return!this.filterSessionStartState||this.explorerService.isEditable(e)?!0:this.filterSessionStartState.rootsWithProviders.has(e.root)?e.isMarkedAsFiltered():!0}startSession(){this.sessionId++}async endSession(){this.filterSessionStartState&&await this.endFilterSession(),this.highlightSessionStartState&&this.endHighlightSession()}async find(e,r,t){const s=this.doFind(e,r,t);return await this.progressService.withProgress({location:ie.Explorer,delay:750},i=>s)}async doFind(e,r,t){return r.findMode===Dr.Highlight?(this.filterSessionStartState&&await this.endFilterSession(),this.highlightSessionStartState||this.startHighlightSession(),await this.doHighlightFind(e,r.matchType,t)):(this.highlightSessionStartState&&this.endHighlightSession(),this.filterSessionStartState||this.startFilterSession(),await this.doFilterFind(e,r.matchType,t))}startFilterSession(){const e=this.treeProvider(),r=e.getInput();if(!r)return;const t=this.explorerService.roots.filter(s=>this.searchSupportsScheme(s.resource.scheme));this.filterSessionStartState={viewState:e.getViewState(),input:r,rootsWithProviders:new Set(t)},this.explorerFindActiveContextKey.set(!0)}async doFilterFind(e,r,t){if(!this.filterSessionStartState)throw new Error("ExplorerFindProvider: no session state");const s=Array.from(this.filterSessionStartState.rootsWithProviders),i=await this.getSearchResults(e,s,r,t);if(t.isCancellationRequested)return;this.clearPhantomElements();for(const{explorerRoot:a,files:l,directories:c}of i)this.addWorkspaceFilterResults(a,l,c);await this.treeProvider().setInput(this.filterSessionStartState.input);const o=i.some(({hitMaxResults:a})=>a);return{isMatch:a=>a.isMarkedAsFiltered(),matchCount:i.reduce((a,{files:l,directories:c})=>a+l.length+c.length,0),warningMessage:o?I("searchMaxResultsWarning","The result set only contains a subset of all matches. Be more specific in your search to narrow down the results."):void 0}}addWorkspaceFilterResults(e,r,t){const s=[...r.map(i=>({resource:i,isDirectory:!1})),...t.map(i=>({resource:i,isDirectory:!0}))];for(const{resource:i,isDirectory:n}of s){const o=e.find(i);if(o&&o.root===e){o.markItemAndParentsAsFiltered();continue}const a=this.createPhantomItems(i,e,n);if(a.length===0)throw new Error("Phantom item was not created even though it is not in the model");const l=a[0].parent;l instanceof xe||this.phantomParents.add(l),a[a.length-1].markItemAndParentsAsFiltered()}}createPhantomItems(e,r,t){const s=w(r.resource,e);if(!s)throw new Error("Resource is not a child of the root");const i=[];let n=r,o=r.resource;const a=s.split("/");for(const l of a){o=o.with({path:`${o.path}/${l}`});let c=n.getChild(l);if(!c){const f=a[a.length-1]===l?t:!0;c=new xe(o,this.fileService,this.configurationService,this.filesConfigService,n,f),n.addChild(c),i.push(c)}n=c}return i}async endFilterSession(){if(this.clearPhantomElements(),this.explorerFindActiveContextKey.set(!1),!this.filterSessionStartState)throw new Error("ExplorerFindProvider: no session state to restore");await this.treeProvider().setInput(this.filterSessionStartState.input,this.filterSessionStartState.viewState),this.filterSessionStartState=void 0,this.explorerService.refresh()}clearPhantomElements(){for(const e of this.phantomParents)e.forgetChildren();this.phantomParents.clear(),this.explorerService.roots.forEach(e=>e.unmarkItemAndChildren())}startHighlightSession(){const e=this.explorerService.roots.filter(r=>this.searchSupportsScheme(r.resource.scheme));this.highlightSessionStartState={rootsWithProviders:new Set(e)}}async doHighlightFind(e,r,t){if(!this.highlightSessionStartState)throw new Error("ExplorerFindProvider: no highlight session state");const s=Array.from(this.highlightSessionStartState.rootsWithProviders),i=await this.getSearchResults(e,s,r,t);if(t.isCancellationRequested)return;this.clearHighlights();for(const{explorerRoot:o,files:a,directories:l}of i)this.addWorkspaceHighlightResults(o,a.concat(l));const n=i.some(({hitMaxResults:o})=>o);return{isMatch:o=>this.findHighlightTree.isMatch(o)||this.findHighlightTree.get(o)>0&&this.treeProvider().isCollapsed(o),matchCount:i.reduce((o,{files:a,directories:l})=>o+a.length+l.length,0),warningMessage:n?I("searchMaxResultsWarning","The result set only contains a subset of all matches. Be more specific in your search to narrow down the results."):void 0}}addWorkspaceHighlightResults(e,r){const t=new Set,s=n=>{for(;n;)t.add(n),n=n.parent};for(const n of r){const o=e.find(n);if(o&&o.root===e){this.findHighlightTree.add(n,e),s(o.parent);continue}const a=Mr(n,e);a&&(this.findHighlightTree.add(n,e),s(a.parent))}const i=this.treeProvider();for(const n of t)i.hasNode(n)&&i.rerender(n)}endHighlightSession(){this.highlightSessionStartState=void 0,this.clearHighlights()}clearHighlights(){const e=this.treeProvider();for(const r of this.findHighlightTree.highlightedItems)e.hasNode(r)&&e.rerender(r);this.findHighlightTree.clear()}searchSupportsScheme(e){return e!==J.file&&e!==J.vscodeRemote?!1:this.searchService.schemeHasFileSearchProvider(e)}async getSearchResults(e,r,t,s){const i=e.toLowerCase(),n=t===br.Fuzzy;return await Promise.all(r.map((o,a)=>this.searchInWorkspace(i,o,a,n,s)))}async searchInWorkspace(e,r,t,s,i){const n=Nr(s?Or(e):kr(e)),o=yr(this.configurationService.getValue({resource:r.resource}))||{},a={folderQueries:[{folder:r.resource,disregardIgnoreFiles:!this.configurationService.getValue("explorer.excludeGitIgnore")}],type:Er.File,shouldGlobMatchFilePattern:!0,cacheKey:`explorerfindprovider:${r.name}:${t}:${this.sessionId}`,excludePattern:o};let l,c;try{[l,c]=await Promise.all([this.searchService.fileSearch({...a,filePattern:`**/${n}`,maxResults:512},i),this.searchService.fileSearch({...a,filePattern:`**/${n}/**`},i)])}catch(m){if(!Cr(m))throw m}if(!l||!c||i.isCancellationRequested)return{explorerRoot:r,files:[],directories:[],hitMaxResults:!1};const f=l.results.map(m=>m.resource),d=Lr(c.results.map(m=>m.resource),r,n),p=f.filter(m=>!this.filesFilter.isIgnored(m,r.resource,!1)),g=d.filter(m=>!this.filesFilter.isIgnored(m,r.resource,!0));return{explorerRoot:r,files:p,directories:g,hitMaxResults:!!l.limitHit||!!c.limitHit}}};_=y([h(2,xr),h(3,k),h(4,R),h(5,me),h(6,te),h(7,F),h(8,Fr)],_);function Lr(u,e,r){const t=new fe;for(const i of u){const n=w(e.resource,i);if(!n)throw new Error("Resource is not a child of the root");let o=e.resource;const a=n.split("/").slice(0,-1);for(const l of a)o=o.with({path:`${o.path}/${l}`}),t.add(o)}const s=[];for(const i of t){const n=i.path.split("/"),o=n[n.length-1];!o||!re.match(r,o)||s.push(i)}return s}function Mr(u,e){const r=w(e.resource,u);if(!r)throw new Error("Resource is not a child of the root");let t=e,s=e.resource;const i=r.split("/");for(const n of i){s=s.with({path:`${s.path}/${n}`});const o=t.getChild(n);if(!o)return t;t=o}}function Or(u){return u?"*"+u.split("").join("*")+"*":"*"}function kr(u){return u?"*"+u+"*":"*"}function Nr(u){let e="";for(let r=0;r<u.length;r++){const t=u[r];/[a-zA-Z]/.test(t)?e+=`[${t.toLowerCase()}${t.toUpperCase()}]`:e+=t}return e}class Ee{constructor(e,r,t,s,i){this.id=e;this.items=r;this.depth=s;this.collapsed=i;this._index=r.length-1,this.updateLabels(t),this._updateLabelDisposable=t.label.onDidRender(()=>this.updateLabels(t))}static ID=0;_index;_labels;_updateLabelDisposable;get index(){return this._index}get count(){return this.items.length}get current(){return this.items[this._index]}get currentId(){return`${this.id}_${this.index}`}get labels(){return this._labels}_onDidChange=new X;onDidChange=this._onDidChange.event;updateLabels(e){this._labels=Array.from(e.container.querySelectorAll(".label-name"));let r="";for(let t=0;t<this.labels.length;t++){const s=r.length?`${this.items[t].name}, compact, ${r}`:this.items[t].name;this.labels[t].setAttribute("aria-label",s),this.labels[t].setAttribute("aria-level",`${this.depth+t}`),r=r.length?`${this.items[t].name} ${r}`:this.items[t].name}this.updateCollapsed(this.collapsed),this._index<this.labels.length&&this.labels[this._index].classList.add("active")}previous(){this._index<=0||this.setIndex(this._index-1)}next(){this._index>=this.items.length-1||this.setIndex(this._index+1)}first(){this._index!==0&&this.setIndex(0)}last(){this._index!==this.items.length-1&&this.setIndex(this.items.length-1)}setIndex(e){e<0||e>=this.items.length||(this.labels[this._index].classList.remove("active"),this._index=e,this.labels[this._index].classList.add("active"),this._onDidChange.fire())}updateCollapsed(e){this.collapsed=e;for(let r=0;r<this.labels.length;r++)this.labels[r].setAttribute("aria-expanded",e?"false":"true")}dispose(){this._onDidChange.dispose(),this._updateLabelDisposable.dispose()}}let D=class{constructor(e,r,t,s,i,n,o,a,l,c,f,d){this.labels=r;this.highlightTree=t;this.updateWidth=s;this.contextViewService=i;this.themeService=n;this.configurationService=o;this.explorerService=a;this.labelService=l;this.contextService=c;this.contextMenuService=f;this.instantiationService=d;this.config=this.configurationService.getValue();const p=()=>{const g=this.configurationService.getValue("workbench.tree.indent"),m=Math.max(22-g,0);e.style.setProperty("--vscode-explorer-align-offset-margin-left",`${m}px`)};this.configListener=this.configurationService.onDidChangeConfiguration(g=>{g.affectsConfiguration("explorer")&&(this.config=this.configurationService.getValue()),g.affectsConfiguration("workbench.tree.indent")&&p()}),p()}static ID="file";config;configListener;compressedNavigationControllers=new Map;_onDidChangeActiveDescendant=new lr;onDidChangeActiveDescendant=this._onDidChangeActiveDescendant.event;getWidgetAriaLabel(){return I("treeAriaLabel","Files Explorer")}get templateId(){return D.ID}renderTemplate(e){const r=new B,t=r.add(this.labels.create(e,{supportHighlights:!0}));r.add(t.onDidRender(()=>{try{i.currentContext&&this.updateWidth(i.currentContext)}catch{}}));const s=ve.create(this.instantiationService,e,r);r.add(ve.onDidRegisterDescriptor(n=>{const o=n.create(this.instantiationService,e);s.push(r.add(o)),o.setResource(i.currentContext?.resource)}));const i={templateDisposables:r,elementDisposables:r.add(new B),label:t,container:e,contribs:s};return i}renderElement(e,r,t){const s=e.element;t.currentContext=s;const i=this.explorerService.getEditableData(s);t.label.element.classList.remove("compressed"),i?(t.label.element.style.display="none",t.contribs.forEach(n=>n.setResource(void 0)),t.elementDisposables.add(this.renderInputBox(t.container,s,i))):(t.label.element.style.display="flex",this.renderStat(s,s.name,void 0,e.filterData,t))}renderCompressedElements(e,r,t,s){const i=e.element.elements[e.element.elements.length-1];t.currentContext=i;const n=e.element.elements.filter(a=>this.explorerService.isEditable(a)),o=n.length===0?void 0:this.explorerService.getEditableData(n[0]);if(o)t.label.element.classList.remove("compressed"),t.label.element.style.display="none",t.contribs.forEach(a=>a.setResource(void 0)),t.elementDisposables.add(this.renderInputBox(t.container,n[0],o));else{t.label.element.classList.add("compressed"),t.label.element.style.display="flex";const a=`compressed-explorer_${Ee.ID++}`,l=e.element.elements.map(p=>p.name);let c=e.filterData;if(c&&c.length>2){const p=l.join("/").length-l[l.length-1].length;c=[c[0],c[1]+p,...c.slice(2)]}this.renderStat(i,l,a,c,t);const f=new Ee(a,e.element.elements,t,e.depth,e.collapsed);t.elementDisposables.add(f);const d=this.compressedNavigationControllers.get(i)??[];this.compressedNavigationControllers.set(i,[...d,f]),t.elementDisposables.add(this._onDidChangeActiveDescendant.add(f.onDidChange)),t.elementDisposables.add(x.addDisposableListener(t.container,"mousedown",p=>{const g=K(p.target);g&&f.setIndex(g.index)})),t.elementDisposables.add(G(()=>{const p=this.compressedNavigationControllers.get(i)??[],g=p.findIndex(m=>m===f);if(g<0)throw new Error("Disposing unknown navigation controller");p.length===1?this.compressedNavigationControllers.delete(i):p.splice(g,1)}))}}renderStat(e,r,t,s,i){i.label.element.style.display="flex";const n=["explorer-item"];this.explorerService.isCut(e)&&n.push("cut");const o=this.themeService.getFileIconTheme();i.container.parentElement?.parentElement?.querySelector(".monaco-tl-twistie")?.classList.toggle("force-twistie",e.hasNests&&o.hidesExplorerArrows);const l=o.hasFileIcons&&(o.hidesExplorerArrows||!o.hasFolderIcons),c=e.nestedParent&&l;i.contribs.forEach(d=>d.setResource(e.resource)),i.label.setResource({resource:e.resource,name:r},{fileKind:e.isRoot?C.ROOT_FOLDER:e.isDirectory?C.FOLDER:C.FILE,extraClasses:c?[...n,"align-nest-icon-with-parent-icon"]:n,fileDecorations:this.config.explorer.decorations,matches:nr(s),separator:this.labelService.getSeparator(e.resource.scheme,e.resource.authority),domId:t});const f=e.isDirectory?this.highlightTree.get(e):0;if(f>0){const d=new Tr(i.label.element.lastElementChild,{},{...vr,badgeBackground:Ie(Rr),badgeBorder:Ie(wr)});d.setCount(f),d.setTitleFormat(I("explorerHighlightFolderBadgeTitle","Directory contains {0} matches",f)),i.elementDisposables.add(d)}i.label.element.classList.toggle("highlight-badge",f>0)}renderInputBox(e,r,t){const s=this.labels.create(e),i=["explorer-item","explorer-item-edited"],n=r.isRoot?C.ROOT_FOLDER:r.isDirectory?C.FOLDER:C.FILE,o=this.themeService.getFileIconTheme(),a=o.hasFileIcons&&(o.hidesExplorerArrows||!o.hasFolderIcons),l=r.nestedParent&&a,c={hidePath:!0,hideLabel:!0,fileKind:n,extraClasses:l?[...i,"align-nest-icon-with-parent-icon"]:i},f=r.name?A(r.resource):r.resource,d=r.name||"";s.setFile(Q(f,d||" "),c),s.element.firstElementChild.style.display="none";const p=new We(s.element,this.contextViewService,{validationOptions:{validation:v=>{const E=t.validationMessage(v);return!E||E.severity!==$.Error?null:{content:E.content,formatContent:!0,type:H.ERROR}}},ariaLabel:I("fileInputAriaLabel","Type file name. Press Enter to confirm or Escape to cancel."),inputBoxStyles:Ir}),g=d.lastIndexOf(".");let m="prefix";p.value=d,p.focus(),p.select({start:0,end:g>0&&!r.isDirectory?g:d.length});const L=Ue((v,E)=>{s.element.style.display="none";const Ce=p.value;se(De),s.element.remove(),E&&t.onFinish(Ce,v)}),ee=()=>{if(p.isInputValid()){const v=t.validationMessage(p.value);v?p.showMessage({content:v.content,formatContent:!0,type:v.severity===$.Info?H.INFO:v.severity===$.Warning?H.WARNING:H.ERROR}):p.hideMessage()}};ee();const De=[p,p.onDidChange(v=>{s.setFile(Q(f,v||" "),c)}),x.addStandardDisposableListener(p.inputElement,x.EventType.KEY_DOWN,v=>{if(v.equals(Y.F2)){const E=p.value.lastIndexOf(".");if(r.isDirectory||E===-1)return;m==="prefix"?(m="all",p.select({start:0,end:p.value.length})):m==="all"?(m="suffix",p.select({start:E+1,end:p.value.length})):(m="prefix",p.select({start:0,end:E}))}else v.equals(Y.Enter)?p.validate()||L(!0,!0):v.equals(Y.Escape)&&L(!1,!0)}),x.addStandardDisposableListener(p.inputElement,x.EventType.KEY_UP,v=>{ee()}),x.addDisposableListener(p.inputElement,x.EventType.BLUR,async()=>{for(;;){await Sr(0);const v=p.inputElement.ownerDocument;if(!v.hasFocus())break;if(x.isActiveElement(p.inputElement))return;if(x.isHTMLElement(v.activeElement)&&x.hasParentWithClass(v.activeElement,"context-view"))await ar.toPromise(this.contextMenuService.onDidHideContextMenu);else break}L(p.isInputValid(),!0)}),s];return G(()=>{L(!1,!1)})}disposeElement(e,r,t){t.currentContext=void 0,t.elementDisposables.clear()}disposeCompressedElements(e,r,t){t.currentContext=void 0,t.elementDisposables.clear()}disposeTemplate(e){e.templateDisposables.dispose()}getCompressedNavigationController(e){return this.compressedNavigationControllers.get(e)}getAriaLabel(e){return e.name}getAriaLevel(e){let r=0,t=e.parent;for(;t;)t=t.parent,r++;return this.contextService.getWorkbenchState()===q.WORKSPACE&&(r=r+1),r}getActiveDescendantId(e){return this.compressedNavigationControllers.get(e)?.[0]?.currentId??void 0}dispose(){this.configListener.dispose()}};D=y([h(4,ke),h(5,Ne),h(6,R),h(7,F),h(8,cr),h(9,T),h(10,Oe),h(11,le)],D);let V=class{constructor(e,r,t,s,i,n){this.contextService=e;this.configurationService=r;this.explorerService=t;this.editorService=s;this.uriIdentityService=i;this.fileService=n;this.toDispose.push(this.contextService.onDidChangeWorkspaceFolders(()=>this.updateConfiguration())),this.toDispose.push(this.configurationService.onDidChangeConfiguration(o=>{(o.affectsConfiguration("files.exclude")||o.affectsConfiguration("explorer.excludeGitIgnore"))&&this.updateConfiguration()})),this.toDispose.push(this.fileService.onDidFilesChange(o=>{for(const[a,l]of this.ignoreFileResourcesPerRoot.entries())l.forEach(async c=>{o.contains(c,oe.UPDATED)&&await this.processIgnoreFile(a,c,!0),o.contains(c,oe.DELETED)&&(this.ignoreTreesPerRoot.get(a)?.delete(A(c)),l.delete(c),this._onDidChange.fire())})})),this.toDispose.push(this.editorService.onDidVisibleEditorsChange(()=>{const o=this.editorService.visibleEditors;let a=!1;for(const l of o){if(!l.resource)continue;const c=this.explorerService.findClosest(l.resource);if(c&&c.isExcluded){a=!0;break}}for(const l of this.editorsAffectingFilter)if(!o.includes(l)){a=!0;break}a&&(this.editorsAffectingFilter.clear(),this._onDidChange.fire())})),this.updateConfiguration()}hiddenExpressionPerRoot=new Map;editorsAffectingFilter=new Set;_onDidChange=new X;toDispose=[];ignoreFileResourcesPerRoot=new Map;ignoreTreesPerRoot=new Map;get onDidChange(){return this._onDidChange.event}updateConfiguration(){let e=!1,r=!1;this.contextService.getWorkspace().folders.forEach(t=>{const s=this.configurationService.getValue({resource:t.uri}),i=s?.files?.exclude||Object.create(null),n=s.explorer.excludeGitIgnore;if(n&&!this.ignoreTreesPerRoot.has(t.uri.toString())&&(r=!0,this.ignoreFileResourcesPerRoot.set(t.uri.toString(),new fe),this.ignoreTreesPerRoot.set(t.uri.toString(),gr.forUris(a=>this.uriIdentityService.extUri.ignorePathCasing(a)))),!n&&this.ignoreTreesPerRoot.has(t.uri.toString())&&(r=!0,this.ignoreFileResourcesPerRoot.delete(t.uri.toString()),this.ignoreTreesPerRoot.delete(t.uri.toString())),!e){const a=this.hiddenExpressionPerRoot.get(t.uri.toString());e=!a||!_e(a.original,i)}const o=Ve(i);this.hiddenExpressionPerRoot.set(t.uri.toString(),{original:o,parsed:re.parse(o)})}),(e||r)&&(this.editorsAffectingFilter.clear(),this._onDidChange.fire())}async processIgnoreFile(e,r,t){const s=A(r),i=this.ignoreTreesPerRoot.get(e);if(!i||!t&&i.has(s))return;const n=await this.fileService.readFile(r);if(t)i.get(s)?.updateContents(n.value.toString());else{const o=i.findSubstr(s),a=new mr(n.value.toString(),s.path,o);i.set(s,a),this.ignoreFileResourcesPerRoot.get(e)?.has(r)||this.ignoreFileResourcesPerRoot.get(e)?.add(r)}this._onDidChange.fire()}filter(e,r){return e.name===".gitignore"&&this.ignoreTreesPerRoot.has(e.root.resource.toString())?(this.processIgnoreFile(e.root.resource.toString(),e.resource,!1),!0):this.isVisible(e,r)}isVisible(e,r){if(e.isExcluded=!1,r===ne.Hidden)return e.isExcluded=!0,!1;if(this.explorerService.getEditableData(e))return!0;if((this.hiddenExpressionPerRoot.get(e.root.resource.toString())?.parsed(ze.relative(e.root.resource.path,e.resource.path),e.name,n=>!!(e.parent&&e.parent.getChild(n)))?!0:this.isIgnored(e.resource,e.root.resource,e.isDirectory))||e.parent?.isExcluded){e.isExcluded=!0;const o=this.editorService.visibleEditors.find(a=>a.resource&&this.uriIdentityService.extUri.isEqualOrParent(a.resource,e.resource));return o&&e.root===this.explorerService.findClosestRoot(e.resource)?(this.editorsAffectingFilter.add(o),!0):!1}return!0}isIgnored(e,r,t){const i=this.ignoreTreesPerRoot.get(r.toString())?.findSubstr(e)?.isPathIncludedInTraversal(e.path,t);return i===void 0?!1:!i}dispose(){se(this.toDispose)}};V=y([h(0,T),h(1,R),h(2,F),h(3,pe),h(4,ue),h(5,k)],V);let z=class{constructor(e,r){this.explorerService=e;this.contextService=r}compare(e,r){if(e.isRoot){if(r.isRoot){const a=this.contextService.getWorkspaceFolder(e.resource),l=this.contextService.getWorkspaceFolder(r.resource);return a&&l?a.index-l.index:-1}return-1}if(r.isRoot)return 1;const t=this.explorerService.sortOrderConfiguration.sortOrder,s=this.explorerService.sortOrderConfiguration.lexicographicOptions;this.explorerService.sortOrderConfiguration.reverse&&([e,r]=[r,e]);let n,o;switch(s){case"upper":n=Ge,o=Be;break;case"lower":n=Ye,o=je;break;case"unicode":n=Qe,o=Je;break;default:n=qe,o=$e}switch(t){case"type":if(e.isDirectory&&!r.isDirectory)return-1;if(r.isDirectory&&!e.isDirectory)return 1;if(e.isDirectory&&r.isDirectory)return n(e.name,r.name);break;case"filesFirst":if(e.isDirectory&&!r.isDirectory)return 1;if(r.isDirectory&&!e.isDirectory)return-1;break;case"foldersNestsFiles":if(e.isDirectory&&!r.isDirectory)return-1;if(r.isDirectory&&!e.isDirectory)return 1;if(e.hasNests&&!r.hasNests)return-1;if(r.hasNests&&!e.hasNests)return 1;break;case"mixed":break;default:if(e.isDirectory&&!r.isDirectory)return-1;if(r.isDirectory&&!e.isDirectory)return 1;break}switch(t){case"type":return o(e.name,r.name);case"modified":return e.mtime!==r.mtime?e.mtime&&r.mtime&&e.mtime<r.mtime?1:-1:n(e.name,r.name);default:return n(e.name,r.name)}}};z=y([h(0,F),h(1,T)],z);let S=class{constructor(e,r,t,s,i,n,o,a,l,c){this.isCollapsed=e;this.explorerService=r;this.editorService=t;this.dialogService=s;this.contextService=i;this.fileService=n;this.configurationService=o;this.instantiationService=a;this.workspaceEditingService=l;this.uriIdentityService=c;const f=d=>{(!d||d.affectsConfiguration("explorer.enableDragAndDrop"))&&(this.dropEnabled=this.configurationService.getValue("explorer.enableDragAndDrop"))};f(void 0),this.disposables.add(this.configurationService.onDidChangeConfiguration(d=>f(d)))}static CONFIRM_DND_SETTING_KEY="explorer.confirmDragAndDrop";compressedDragOverElement;compressedDropTargetDisposable=Me.None;disposables=new B;dropEnabled=!1;onDragOver(e,r,t,s,i){if(!this.dropEnabled)return!1;if(r){const n=S.getCompressedStatFromDragEvent(r,i);if(n){const o=K(i.target);if(o&&o.index<o.count-1){const a=this.handleDragOver(e,n,t,s,i);return a?(o.element!==this.compressedDragOverElement&&(this.compressedDragOverElement=o.element,this.compressedDropTargetDisposable.dispose(),this.compressedDropTargetDisposable=G(()=>{o.element.classList.remove("drop-target"),this.compressedDragOverElement=void 0}),o.element.classList.add("drop-target")),typeof a=="boolean"?a:{...a,feedback:[]}):(this.compressedDropTargetDisposable.dispose(),!1)}}}return this.compressedDropTargetDisposable.dispose(),this.handleDragOver(e,r,t,s,i)}handleDragOver(e,r,t,s,i){const n=i&&(i.ctrlKey&&!W||i.altKey&&W),o=e instanceof de,l={type:o||n?O.Copy:O.Move,position:M.Over};if(o){if(!Xe(i,ce.FILES,ae.FILES,ce.RESOURCES))return!1}else{if(e instanceof er)return!1;{const c=S.getStatsFromDragAndDropData(e),f=c.every(d=>d.isRoot);if(!r)return!n&&c.every(d=>!!d.parent&&d.parent.isRoot)?!1:f?{accept:!0,effect:{type:O.Move,position:M.After}}:{accept:!0,bubble:N.Down,effect:l,autoExpand:!1};if(!Array.isArray(c)||!n&&c.every(d=>d.isReadonly)||c.some(d=>d.isRoot?!1:!!(this.uriIdentityService.extUri.isEqual(d.resource,r.resource)||!n&&this.uriIdentityService.extUri.isEqual(A(d.resource),r.resource)||this.uriIdentityService.extUri.isEqualOrParent(r.resource,d.resource))))return!1;if(f){if(!r.isRoot)return!1;let d;switch(s){case b.TOP:case b.CENTER_TOP:d=M.Before;break;case b.CENTER_BOTTOM:case b.BOTTOM:d=M.After;break}return{accept:!0,effect:{type:O.Move,position:d}}}}}if(r){if(r.isDirectory)return r.isReadonly?!1:{accept:!0,bubble:N.Down,effect:l,autoExpand:!0};if(this.contextService.getWorkspace().folders.every(c=>c.uri.toString()!==r.resource.toString()))return{accept:!0,bubble:N.Up,effect:l}}else return{accept:!0,bubble:N.Down,effect:l};return!1}getDragURI(e){return this.explorerService.isEditable(e)?null:e.resource.toString()}getDragLabel(e,r){return e.length===1?S.getCompressedStatFromDragEvent(e[0],r).name:String(e.length)}onDragStart(e,r){const t=S.getStatsFromDragAndDropData(e,r);if(t&&t.length&&r.dataTransfer){this.instantiationService.invokeFunction(i=>Ze(i,t,r));const s=t.filter(i=>i.resource.scheme===J.file).map(i=>i.resource.fsPath);s.length&&r.dataTransfer.setData(ae.FILES,JSON.stringify(s))}}async drop(e,r,t,s,i){if(this.compressedDropTargetDisposable.dispose(),r){const o=S.getCompressedStatFromDragEvent(r,i);o&&(r=o)}if(r||(r=this.explorerService.roots[this.explorerService.roots.length-1],s=b.BOTTOM),!r.isDirectory&&r.parent&&(r=r.parent),r.isReadonly)return;const n=r;if(n)try{e instanceof de?!rr||Le(this.contextService.getWorkspace())&&fr.supported(ge)?await this.instantiationService.createInstance(pr).import(n,i,ge):await this.instantiationService.createInstance(dr).upload(r,i):await this.handleExplorerDrop(e,n,t,s,i)}catch(o){this.dialogService.error(ur(o))}}async handleExplorerDrop(e,r,t,s,i){const n=S.getStatsFromDragAndDropData(e),o=new Map(n.map(d=>[d,this.isCollapsed(d)]));for(const[d,p]of o)if(p){const g=d.nestedChildren;if(g)for(const m of g)o.set(m,!0)}const a=He([...o.keys()],d=>d.resource),l=i.ctrlKey&&!W||i.altKey&&W;if(!l&&this.configurationService.getValue(S.CONFIRM_DND_SETTING_KEY)){const d=a.length>1&&a.every(m=>m.isRoot)?I("confirmRootsMove","Are you sure you want to change the order of multiple root folders in your workspace?"):a.length>1?I("confirmMultiMove","Are you sure you want to move the following {0} files into '{1}'?",a.length,r.name):a[0].isRoot?I("confirmRootMove","Are you sure you want to change the order of root folder '{0}' in your workspace?",a[0].name):I("confirmMove","Are you sure you want to move '{0}' into '{1}'?",a[0].name,r.name),p=a.length>1&&!a.every(m=>m.isRoot)?ir(a.map(m=>m.resource)):void 0,g=await this.dialogService.confirm({message:d,detail:p,checkbox:{label:I("doNotAskAgain","Do not ask me again")},primaryButton:I({key:"moveButtonLabel",comment:["&& denotes a mnemonic"]},"&&Move")});if(!g.confirmed)return;g.checkboxChecked===!0&&await this.configurationService.updateValue(S.CONFIRM_DND_SETTING_KEY,!1)}await this.doHandleRootDrop(a.filter(d=>d.isRoot),r,s);const f=a.filter(d=>!d.isRoot);return l?this.doHandleExplorerDropOnCopy(f,r):this.doHandleExplorerDropOnMove(f,r)}async doHandleRootDrop(e,r,t){if(e.length===0)return;const s=this.contextService.getWorkspace().folders;let i;const n=[],o=[],a=[];for(let l=0;l<s.length;l++){const c={uri:s[l].uri,name:s[l].name};r instanceof P&&this.uriIdentityService.extUri.isEqual(s[l].uri,r.resource)&&(i=l);for(const f of e)if(this.uriIdentityService.extUri.isEqual(s[l].uri,f.resource)){n.push(l);break}e.every(f=>f.resource.toString()!==s[l].uri.toString())?o.push(c):a.push(c)}if(i===void 0)i=o.length;else{switch(t){case b.BOTTOM:case b.CENTER_BOTTOM:i++;break}for(const l of n)l<i&&i--}return o.splice(i,0,...a),this.workspaceEditingService.updateFolders(0,o.length,o)}async doHandleExplorerDropOnCopy(e,r){const t=this.configurationService.getValue().explorer,s=[];for(const{resource:o,isDirectory:a}of e){const l=t.incrementalNaming==="disabled",c=await sr(this.explorerService,this.fileService,this.dialogService,r,{resource:o,isDirectory:a,allowOverwrite:l},t.incrementalNaming);if(!c)continue;const f=new Z(o,c,{copy:!0,overwrite:l});s.push(f)}const i=ye(e);await this.explorerService.applyBulkEdit(s,{confirmBeforeUndo:t.confirmUndo===j.Default||t.confirmUndo===j.Verbose,undoLabel:I("copy","Copy {0}",i),progressLabel:I("copying","Copying {0}",i)});const n=s.filter(o=>{const a=o.newResource?this.explorerService.findClosest(o.newResource):void 0;return a&&!a.isDirectory}).map(o=>({resource:o.newResource,options:{pinned:!0}}));await this.editorService.openEditors(n)}async doHandleExplorerDropOnMove(e,r){const t=e.filter(n=>!n.isReadonly).map(n=>new Z(n.resource,Q(r.resource,n.name))),s=ye(e),i={confirmBeforeUndo:this.configurationService.getValue().explorer.confirmUndo===j.Verbose,undoLabel:I("move","Move {0}",s),progressLabel:I("moving","Moving {0}",s)};try{await this.explorerService.applyBulkEdit(t,i)}catch(n){if(n.fileOperationResult===we.FILE_MOVE_CONFLICT){const o=[];for(const c of t)c.newResource&&await this.fileService.exists(c.newResource)&&o.push(c.newResource);const a=hr(o),{confirmed:l}=await this.dialogService.confirm(a);l&&await this.explorerService.applyBulkEdit(t.map(c=>new Z(c.oldResource,c.newResource,{overwrite:!0})),i)}else throw n}}static getStatsFromDragAndDropData(e,r){return e.context?e.context:r&&e.elements.length===1?(e.context=[S.getCompressedStatFromDragEvent(e.elements[0],r)],e.context):e.elements}static getCompressedStatFromDragEvent(e,r){const t=x.getWindow(r).document.elementFromPoint(r.clientX,r.clientY),s=K(t);if(s){const{count:i,index:n}=s;let o=i-1;for(;o>n&&e.parent;)e=e.parent,o--;return e}return e}onDragEnd(){this.compressedDropTargetDisposable.dispose()}dispose(){this.compressedDropTargetDisposable.dispose()}};S=y([h(1,F),h(2,pe),h(3,tr),h(4,T),h(5,k),h(6,R),h(7,le),h(8,or),h(9,ue)],S);function K(u){if(!x.isHTMLElement(u))return null;let e=u;for(;e&&!e.classList.contains("monaco-list-row");){if(e.classList.contains("label-name")&&e.hasAttribute("data-icon-label-count")){const r=Number(e.getAttribute("data-icon-label-count")),t=Number(e.getAttribute("data-icon-label-index"));if(he(r)&&he(t))return{element:e,count:r,index:t}}e=e.parentElement}return null}function ki(u){return!!K(u)}class Ni{isIncompressible(e){return e.isRoot||!e.isDirectory||e instanceof Ke||!e.parent||e.parent.isRoot}}function ye(u){return u.length===1?u[0].name:u.every(e=>e.isDirectory)?I("numberOfFolders","{0} folders",u.length):u.every(e=>!e.isDirectory)?I("numberOfFiles","{0} files",u.length):`${u.length} files and folders`}export{Ee as CompressedNavigationController,Ni as ExplorerCompressionDelegate,U as ExplorerDataSource,be as ExplorerDelegate,_ as ExplorerFindProvider,S as FileDragAndDrop,z as FileSorter,V as FilesFilter,D as FilesRenderer,xe as PhantomExplorerItem,Se as explorerRootErrorEmitter,ki as isCompressedFolderName};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { IListAccessibilityProvider } from "../../../../../base/browser/ui/list/listWidget.js";
+import * as DOM from "../../../../../base/browser/dom.js";
+import * as glob from "../../../../../base/common/glob.js";
+import { IListVirtualDelegate, ListDragOverEffectPosition, ListDragOverEffectType } from "../../../../../base/browser/ui/list/list.js";
+import { IProgressService, ProgressLocation } from "../../../../../platform/progress/common/progress.js";
+import { INotificationService, Severity } from "../../../../../platform/notification/common/notification.js";
+import { IFileService, FileKind, FileOperationError, FileOperationResult, FileChangeType } from "../../../../../platform/files/common/files.js";
+import { IWorkbenchLayoutService } from "../../../../services/layout/browser/layoutService.js";
+import { isTemporaryWorkspace, IWorkspaceContextService, WorkbenchState } from "../../../../../platform/workspace/common/workspace.js";
+import { IDisposable, Disposable, dispose, toDisposable, DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { KeyCode } from "../../../../../base/common/keyCodes.js";
+import { IFileLabelOptions, IResourceLabel, ResourceLabels } from "../../../../browser/labels.js";
+import { ITreeNode, ITreeFilter, TreeVisibility, IAsyncDataSource, ITreeSorter, ITreeDragAndDrop, ITreeDragOverReaction, TreeDragOverBubble } from "../../../../../base/browser/ui/tree/tree.js";
+import { IContextMenuService, IContextViewService } from "../../../../../platform/contextview/browser/contextView.js";
+import { IThemeService } from "../../../../../platform/theme/common/themeService.js";
+import { IConfigurationChangeEvent, IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { ExplorerFindProviderActive, IFilesConfiguration, UndoConfirmLevel } from "../../common/files.js";
+import { dirname, joinPath, distinctParents, relativePath } from "../../../../../base/common/resources.js";
+import { InputBox, MessageType } from "../../../../../base/browser/ui/inputbox/inputBox.js";
+import { localize } from "../../../../../nls.js";
+import { createSingleCallFunction } from "../../../../../base/common/functional.js";
+import { IKeyboardEvent } from "../../../../../base/browser/keyboardEvent.js";
+import { equals, deepClone } from "../../../../../base/common/objects.js";
+import * as path from "../../../../../base/common/path.js";
+import { ExplorerItem, NewExplorerItem } from "../../common/explorerModel.js";
+import { compareFileExtensionsDefault, compareFileNamesDefault, compareFileNamesUpper, compareFileExtensionsUpper, compareFileNamesLower, compareFileExtensionsLower, compareFileNamesUnicode, compareFileExtensionsUnicode } from "../../../../../base/common/comparers.js";
+import { CodeDataTransfers, containsDragType } from "../../../../../platform/dnd/browser/dnd.js";
+import { fillEditorsDragData } from "../../../../browser/dnd.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { IDragAndDropData, DataTransfers } from "../../../../../base/browser/dnd.js";
+import { Schemas } from "../../../../../base/common/network.js";
+import { NativeDragAndDropData, ExternalElementsDragAndDropData, ElementsDragAndDropData, ListViewTargetSector } from "../../../../../base/browser/ui/list/listView.js";
+import { isMacintosh, isWeb } from "../../../../../base/common/platform.js";
+import { IDialogService, getFileNamesMessage } from "../../../../../platform/dialogs/common/dialogs.js";
+import { IWorkspaceEditingService } from "../../../../services/workspaces/common/workspaceEditing.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { IEditorService } from "../../../../services/editor/common/editorService.js";
+import { IWorkspaceFolderCreationData } from "../../../../../platform/workspaces/common/workspaces.js";
+import { findValidPasteFileTarget } from "../fileActions.js";
+import { FuzzyScore, createMatches } from "../../../../../base/common/filters.js";
+import { Emitter, Event, EventMultiplexer } from "../../../../../base/common/event.js";
+import { IAsyncDataTreeViewState, IAsyncFindProvider, IAsyncFindResult, IAsyncFindToggles, ITreeCompressionDelegate } from "../../../../../base/browser/ui/tree/asyncDataTree.js";
+import { ICompressibleTreeRenderer } from "../../../../../base/browser/ui/tree/objectTree.js";
+import { ICompressedTreeNode } from "../../../../../base/browser/ui/tree/compressedObjectTreeModel.js";
+import { ILabelService } from "../../../../../platform/label/common/label.js";
+import { isNumber } from "../../../../../base/common/types.js";
+import { IEditableData } from "../../../../common/views.js";
+import { EditorInput } from "../../../../common/editor/editorInput.js";
+import { IUriIdentityService } from "../../../../../platform/uriIdentity/common/uriIdentity.js";
+import { ResourceFileEdit } from "../../../../../editor/browser/services/bulkEditService.js";
+import { IExplorerService } from "../files.js";
+import { BrowserFileUpload, ExternalFileImport, getMultipleFilesOverwriteConfirm } from "../fileImportExport.js";
+import { toErrorMessage } from "../../../../../base/common/errorMessage.js";
+import { WebFileSystemAccess } from "../../../../../platform/files/browser/webFileSystemAccess.js";
+import { IgnoreFile } from "../../../../services/search/common/ignoreFile.js";
+import { ResourceSet } from "../../../../../base/common/map.js";
+import { TernarySearchTree } from "../../../../../base/common/ternarySearchTree.js";
+import { defaultCountBadgeStyles, defaultInputBoxStyles } from "../../../../../platform/theme/browser/defaultStyles.js";
+import { timeout } from "../../../../../base/common/async.js";
+import { IFilesConfigurationService } from "../../../../services/filesConfiguration/common/filesConfigurationService.js";
+import { mainWindow } from "../../../../../base/browser/window.js";
+import { IExplorerFileContribution, explorerFileContribRegistry } from "../explorerFileContrib.js";
+import { WorkbenchCompressibleAsyncDataTree } from "../../../../../platform/list/browser/listService.js";
+import { ISearchService, QueryType, getExcludes, ISearchConfiguration, ISearchComplete, IFileQuery } from "../../../../services/search/common/search.js";
+import { CancellationToken } from "../../../../../base/common/cancellation.js";
+import { TreeFindMatchType, TreeFindMode } from "../../../../../base/browser/ui/tree/abstractTree.js";
+import { isCancellationError } from "../../../../../base/common/errors.js";
+import { IContextKey, IContextKeyService } from "../../../../../platform/contextkey/common/contextkey.js";
+import { CountBadge } from "../../../../../base/browser/ui/countBadge/countBadge.js";
+import { listFilterMatchHighlight, listFilterMatchHighlightBorder } from "../../../../../platform/theme/common/colorRegistry.js";
+import { asCssVariable } from "../../../../../platform/theme/common/colorUtils.js";
+class ExplorerDelegate {
+  static {
+    __name(this, "ExplorerDelegate");
+  }
+  static ITEM_HEIGHT = 22;
+  getHeight(element) {
+    return ExplorerDelegate.ITEM_HEIGHT;
+  }
+  getTemplateId(element) {
+    return FilesRenderer.ID;
+  }
+}
+const explorerRootErrorEmitter = new Emitter();
+let ExplorerDataSource = class {
+  constructor(fileFilter, findProvider, progressService, configService, notificationService, layoutService, fileService, explorerService, contextService, filesConfigService) {
+    this.fileFilter = fileFilter;
+    this.findProvider = findProvider;
+    this.progressService = progressService;
+    this.configService = configService;
+    this.notificationService = notificationService;
+    this.layoutService = layoutService;
+    this.fileService = fileService;
+    this.explorerService = explorerService;
+    this.contextService = contextService;
+    this.filesConfigService = filesConfigService;
+  }
+  static {
+    __name(this, "ExplorerDataSource");
+  }
+  getParent(element) {
+    if (element.parent) {
+      return element.parent;
+    }
+    throw new Error("getParent only supported for cached parents");
+  }
+  hasChildren(element) {
+    return Array.isArray(element) || element.hasChildren((stat) => this.fileFilter.filter(stat, TreeVisibility.Visible));
+  }
+  getChildren(element) {
+    if (Array.isArray(element)) {
+      return element;
+    }
+    if (this.findProvider.isShowingFilterResults()) {
+      return Array.from(element.children.values());
+    }
+    const hasError = element.error;
+    const sortOrder = this.explorerService.sortOrderConfiguration.sortOrder;
+    const children = element.fetchChildren(sortOrder);
+    if (Array.isArray(children)) {
+      return children;
+    }
+    const promise = children.then(
+      (children2) => {
+        if (element instanceof ExplorerItem && element.isRoot && !element.error && hasError && this.contextService.getWorkbenchState() !== WorkbenchState.FOLDER) {
+          explorerRootErrorEmitter.fire(element.resource);
+        }
+        return children2;
+      },
+      (e) => {
+        if (element instanceof ExplorerItem && element.isRoot) {
+          if (this.contextService.getWorkbenchState() === WorkbenchState.FOLDER) {
+            const placeholder = new ExplorerItem(element.resource, this.fileService, this.configService, this.filesConfigService, void 0, void 0, false);
+            placeholder.error = e;
+            return [placeholder];
+          } else {
+            explorerRootErrorEmitter.fire(element.resource);
+          }
+        } else {
+          this.notificationService.error(e);
+        }
+        return [];
+      }
+    );
+    this.progressService.withProgress({
+      location: ProgressLocation.Explorer,
+      delay: this.layoutService.isRestored() ? 800 : 1500
+      // reduce progress visibility when still restoring
+    }, (_progress) => promise);
+    return promise;
+  }
+};
+ExplorerDataSource = __decorateClass([
+  __decorateParam(2, IProgressService),
+  __decorateParam(3, IConfigurationService),
+  __decorateParam(4, INotificationService),
+  __decorateParam(5, IWorkbenchLayoutService),
+  __decorateParam(6, IFileService),
+  __decorateParam(7, IExplorerService),
+  __decorateParam(8, IWorkspaceContextService),
+  __decorateParam(9, IFilesConfigurationService)
+], ExplorerDataSource);
+class PhantomExplorerItem extends ExplorerItem {
+  static {
+    __name(this, "PhantomExplorerItem");
+  }
+  constructor(resource, fileService, configService, filesConfigService, _parent, _isDirectory) {
+    super(resource, fileService, configService, filesConfigService, _parent, _isDirectory);
+  }
+}
+class ExplorerFindHighlightTree {
+  static {
+    __name(this, "ExplorerFindHighlightTree");
+  }
+  _tree = /* @__PURE__ */ new Map();
+  _highlightedItems = /* @__PURE__ */ new Map();
+  get highlightedItems() {
+    return Array.from(this._highlightedItems.values());
+  }
+  get(item) {
+    const result = this.find(item);
+    if (result === void 0) {
+      return 0;
+    }
+    const { treeLayer, relPath } = result;
+    this._highlightedItems.set(relPath, item);
+    return treeLayer.childMatches;
+  }
+  find(item) {
+    const rootLayer = this._tree.get(item.root.name);
+    if (rootLayer === void 0) {
+      return void 0;
+    }
+    const relPath = relativePath(item.root.resource, item.resource);
+    if (relPath === void 0 || relPath.startsWith("..")) {
+      throw new Error("Resource is not a child of the root");
+    }
+    if (relPath === "") {
+      return { treeLayer: rootLayer, relPath };
+    }
+    let treeLayer = rootLayer;
+    for (const segment of relPath.split("/")) {
+      if (!treeLayer.stats[segment]) {
+        return void 0;
+      }
+      treeLayer = treeLayer.stats[segment];
+    }
+    return { treeLayer, relPath };
+  }
+  add(resource, root) {
+    const relPath = relativePath(root.resource, resource);
+    if (relPath === void 0 || relPath.startsWith("..")) {
+      throw new Error("Resource is not a child of the root");
+    }
+    let rootLayer = this._tree.get(root.name);
+    if (!rootLayer) {
+      rootLayer = { childMatches: 0, stats: {}, isMatch: false };
+      this._tree.set(root.name, rootLayer);
+    }
+    rootLayer.childMatches++;
+    let treeLayer = rootLayer;
+    for (const stat of relPath.split("/")) {
+      if (!treeLayer.stats[stat]) {
+        treeLayer.stats[stat] = { childMatches: 0, stats: {}, isMatch: false };
+      }
+      treeLayer = treeLayer.stats[stat];
+      treeLayer.childMatches++;
+    }
+    treeLayer.childMatches--;
+    treeLayer.isMatch = true;
+  }
+  isMatch(item) {
+    const result = this.find(item);
+    if (result === void 0) {
+      return false;
+    }
+    const { treeLayer } = result;
+    return treeLayer.isMatch;
+  }
+  clear() {
+    this._tree.clear();
+  }
+}
+let ExplorerFindProvider = class {
+  constructor(filesFilter, treeProvider, searchService, fileService, configurationService, filesConfigService, progressService, explorerService, contextKeyService) {
+    this.filesFilter = filesFilter;
+    this.treeProvider = treeProvider;
+    this.searchService = searchService;
+    this.fileService = fileService;
+    this.configurationService = configurationService;
+    this.filesConfigService = filesConfigService;
+    this.progressService = progressService;
+    this.explorerService = explorerService;
+    this.explorerFindActiveContextKey = ExplorerFindProviderActive.bindTo(contextKeyService);
+  }
+  static {
+    __name(this, "ExplorerFindProvider");
+  }
+  sessionId = 0;
+  filterSessionStartState;
+  highlightSessionStartState;
+  explorerFindActiveContextKey;
+  phantomParents = /* @__PURE__ */ new Set();
+  findHighlightTree = new ExplorerFindHighlightTree();
+  get highlightTree() {
+    return this.findHighlightTree;
+  }
+  isShowingFilterResults() {
+    return !!this.filterSessionStartState;
+  }
+  isVisible(element) {
+    if (!this.filterSessionStartState) {
+      return true;
+    }
+    if (this.explorerService.isEditable(element)) {
+      return true;
+    }
+    return this.filterSessionStartState.rootsWithProviders.has(element.root) ? element.isMarkedAsFiltered() : true;
+  }
+  startSession() {
+    this.sessionId++;
+  }
+  async endSession() {
+    if (this.filterSessionStartState) {
+      await this.endFilterSession();
+    }
+    if (this.highlightSessionStartState) {
+      this.endHighlightSession();
+    }
+  }
+  async find(pattern, toggles, token) {
+    const promise = this.doFind(pattern, toggles, token);
+    return await this.progressService.withProgress({
+      location: ProgressLocation.Explorer,
+      delay: 750
+    }, (_progress) => promise);
+  }
+  async doFind(pattern, toggles, token) {
+    if (toggles.findMode === TreeFindMode.Highlight) {
+      if (this.filterSessionStartState) {
+        await this.endFilterSession();
+      }
+      if (!this.highlightSessionStartState) {
+        this.startHighlightSession();
+      }
+      return await this.doHighlightFind(pattern, toggles.matchType, token);
+    }
+    if (this.highlightSessionStartState) {
+      this.endHighlightSession();
+    }
+    if (!this.filterSessionStartState) {
+      this.startFilterSession();
+    }
+    return await this.doFilterFind(pattern, toggles.matchType, token);
+  }
+  // Filter
+  startFilterSession() {
+    const tree = this.treeProvider();
+    const input = tree.getInput();
+    if (!input) {
+      return;
+    }
+    const roots = this.explorerService.roots.filter((root) => this.searchSupportsScheme(root.resource.scheme));
+    this.filterSessionStartState = { viewState: tree.getViewState(), input, rootsWithProviders: new Set(roots) };
+    this.explorerFindActiveContextKey.set(true);
+  }
+  async doFilterFind(pattern, matchType, token) {
+    if (!this.filterSessionStartState) {
+      throw new Error("ExplorerFindProvider: no session state");
+    }
+    const roots = Array.from(this.filterSessionStartState.rootsWithProviders);
+    const searchResults = await this.getSearchResults(pattern, roots, matchType, token);
+    if (token.isCancellationRequested) {
+      return void 0;
+    }
+    this.clearPhantomElements();
+    for (const { explorerRoot, files, directories } of searchResults) {
+      this.addWorkspaceFilterResults(explorerRoot, files, directories);
+    }
+    const tree = this.treeProvider();
+    await tree.setInput(this.filterSessionStartState.input);
+    const hitMaxResults = searchResults.some(({ hitMaxResults: hitMaxResults2 }) => hitMaxResults2);
+    return {
+      isMatch: /* @__PURE__ */ __name((item) => item.isMarkedAsFiltered(), "isMatch"),
+      matchCount: searchResults.reduce((acc, { files, directories }) => acc + files.length + directories.length, 0),
+      warningMessage: hitMaxResults ? localize("searchMaxResultsWarning", "The result set only contains a subset of all matches. Be more specific in your search to narrow down the results.") : void 0
+    };
+  }
+  addWorkspaceFilterResults(root, files, directories) {
+    const results = [
+      ...files.map((file) => ({ resource: file, isDirectory: false })),
+      ...directories.map((directory) => ({ resource: directory, isDirectory: true }))
+    ];
+    for (const { resource, isDirectory } of results) {
+      const element = root.find(resource);
+      if (element && element.root === root) {
+        element.markItemAndParentsAsFiltered();
+        continue;
+      }
+      const phantomElements = this.createPhantomItems(resource, root, isDirectory);
+      if (phantomElements.length === 0) {
+        throw new Error("Phantom item was not created even though it is not in the model");
+      }
+      const firstPhantomParent = phantomElements[0].parent;
+      if (!(firstPhantomParent instanceof PhantomExplorerItem)) {
+        this.phantomParents.add(firstPhantomParent);
+      }
+      const phantomFileElement = phantomElements[phantomElements.length - 1];
+      phantomFileElement.markItemAndParentsAsFiltered();
+    }
+  }
+  createPhantomItems(resource, root, resourceIsDirectory) {
+    const relativePathToRoot = relativePath(root.resource, resource);
+    if (!relativePathToRoot) {
+      throw new Error("Resource is not a child of the root");
+    }
+    const phantomElements = [];
+    let currentItem = root;
+    let currentResource = root.resource;
+    const pathSegments = relativePathToRoot.split("/");
+    for (const stat of pathSegments) {
+      currentResource = currentResource.with({ path: `${currentResource.path}/${stat}` });
+      let child = currentItem.getChild(stat);
+      if (!child) {
+        const isDirectory = pathSegments[pathSegments.length - 1] === stat ? resourceIsDirectory : true;
+        child = new PhantomExplorerItem(currentResource, this.fileService, this.configurationService, this.filesConfigService, currentItem, isDirectory);
+        currentItem.addChild(child);
+        phantomElements.push(child);
+      }
+      currentItem = child;
+    }
+    return phantomElements;
+  }
+  async endFilterSession() {
+    this.clearPhantomElements();
+    this.explorerFindActiveContextKey.set(false);
+    if (!this.filterSessionStartState) {
+      throw new Error("ExplorerFindProvider: no session state to restore");
+    }
+    const tree = this.treeProvider();
+    await tree.setInput(this.filterSessionStartState.input, this.filterSessionStartState.viewState);
+    this.filterSessionStartState = void 0;
+    this.explorerService.refresh();
+  }
+  clearPhantomElements() {
+    for (const phantomParent of this.phantomParents) {
+      phantomParent.forgetChildren();
+    }
+    this.phantomParents.clear();
+    this.explorerService.roots.forEach((root) => root.unmarkItemAndChildren());
+  }
+  // Highlight
+  startHighlightSession() {
+    const roots = this.explorerService.roots.filter((root) => this.searchSupportsScheme(root.resource.scheme));
+    this.highlightSessionStartState = { rootsWithProviders: new Set(roots) };
+  }
+  async doHighlightFind(pattern, matchType, token) {
+    if (!this.highlightSessionStartState) {
+      throw new Error("ExplorerFindProvider: no highlight session state");
+    }
+    const roots = Array.from(this.highlightSessionStartState.rootsWithProviders);
+    const searchResults = await this.getSearchResults(pattern, roots, matchType, token);
+    if (token.isCancellationRequested) {
+      return void 0;
+    }
+    this.clearHighlights();
+    for (const { explorerRoot, files, directories } of searchResults) {
+      this.addWorkspaceHighlightResults(explorerRoot, files.concat(directories));
+    }
+    const hitMaxResults = searchResults.some(({ hitMaxResults: hitMaxResults2 }) => hitMaxResults2);
+    return {
+      isMatch: /* @__PURE__ */ __name((item) => this.findHighlightTree.isMatch(item) || this.findHighlightTree.get(item) > 0 && this.treeProvider().isCollapsed(item), "isMatch"),
+      matchCount: searchResults.reduce((acc, { files, directories }) => acc + files.length + directories.length, 0),
+      warningMessage: hitMaxResults ? localize("searchMaxResultsWarning", "The result set only contains a subset of all matches. Be more specific in your search to narrow down the results.") : void 0
+    };
+  }
+  addWorkspaceHighlightResults(root, resources) {
+    const highlightedDirectories = /* @__PURE__ */ new Set();
+    const storeDirectories = /* @__PURE__ */ __name((item) => {
+      while (item) {
+        highlightedDirectories.add(item);
+        item = item.parent;
+      }
+    }, "storeDirectories");
+    for (const resource of resources) {
+      const element = root.find(resource);
+      if (element && element.root === root) {
+        this.findHighlightTree.add(resource, root);
+        storeDirectories(element.parent);
+        continue;
+      }
+      const firstParent = findFirstParent(resource, root);
+      if (firstParent) {
+        this.findHighlightTree.add(resource, root);
+        storeDirectories(firstParent.parent);
+      }
+    }
+    const tree = this.treeProvider();
+    for (const directory of highlightedDirectories) {
+      if (tree.hasNode(directory)) {
+        tree.rerender(directory);
+      }
+    }
+  }
+  endHighlightSession() {
+    this.highlightSessionStartState = void 0;
+    this.clearHighlights();
+  }
+  clearHighlights() {
+    const tree = this.treeProvider();
+    for (const item of this.findHighlightTree.highlightedItems) {
+      if (tree.hasNode(item)) {
+        tree.rerender(item);
+      }
+    }
+    this.findHighlightTree.clear();
+  }
+  // Search
+  searchSupportsScheme(scheme) {
+    if (scheme !== Schemas.file && scheme !== Schemas.vscodeRemote) {
+      return false;
+    }
+    return this.searchService.schemeHasFileSearchProvider(scheme);
+  }
+  async getSearchResults(pattern, roots, matchType, token) {
+    const patternLowercase = pattern.toLowerCase();
+    const isFuzzyMatch = matchType === TreeFindMatchType.Fuzzy;
+    return await Promise.all(roots.map((root, index) => this.searchInWorkspace(patternLowercase, root, index, isFuzzyMatch, token)));
+  }
+  async searchInWorkspace(patternLowercase, root, rootIndex, isFuzzyMatch, token) {
+    const segmentMatchPattern = caseInsensitiveGlobPattern(isFuzzyMatch ? fuzzyMatchingGlobPattern(patternLowercase) : continousMatchingGlobPattern(patternLowercase));
+    const searchExcludePattern = getExcludes(this.configurationService.getValue({ resource: root.resource })) || {};
+    const searchOptions = {
+      folderQueries: [{
+        folder: root.resource,
+        disregardIgnoreFiles: !this.configurationService.getValue("explorer.excludeGitIgnore")
+      }],
+      type: QueryType.File,
+      shouldGlobMatchFilePattern: true,
+      cacheKey: `explorerfindprovider:${root.name}:${rootIndex}:${this.sessionId}`,
+      excludePattern: searchExcludePattern
+    };
+    let fileResults;
+    let folderResults;
+    try {
+      [fileResults, folderResults] = await Promise.all([
+        this.searchService.fileSearch({ ...searchOptions, filePattern: `**/${segmentMatchPattern}`, maxResults: 512 }, token),
+        this.searchService.fileSearch({ ...searchOptions, filePattern: `**/${segmentMatchPattern}/**` }, token)
+      ]);
+    } catch (e) {
+      if (!isCancellationError(e)) {
+        throw e;
+      }
+    }
+    if (!fileResults || !folderResults || token.isCancellationRequested) {
+      return { explorerRoot: root, files: [], directories: [], hitMaxResults: false };
+    }
+    const fileResultResources = fileResults.results.map((result) => result.resource);
+    const directoryResources = getMatchingDirectoriesFromFiles(folderResults.results.map((result) => result.resource), root, segmentMatchPattern);
+    const filteredFileResources = fileResultResources.filter((resource) => !this.filesFilter.isIgnored(resource, root.resource, false));
+    const filteredDirectoryResources = directoryResources.filter((resource) => !this.filesFilter.isIgnored(resource, root.resource, true));
+    return { explorerRoot: root, files: filteredFileResources, directories: filteredDirectoryResources, hitMaxResults: !!fileResults.limitHit || !!folderResults.limitHit };
+  }
+};
+ExplorerFindProvider = __decorateClass([
+  __decorateParam(2, ISearchService),
+  __decorateParam(3, IFileService),
+  __decorateParam(4, IConfigurationService),
+  __decorateParam(5, IFilesConfigurationService),
+  __decorateParam(6, IProgressService),
+  __decorateParam(7, IExplorerService),
+  __decorateParam(8, IContextKeyService)
+], ExplorerFindProvider);
+function getMatchingDirectoriesFromFiles(resources, root, segmentMatchPattern) {
+  const uniqueDirectories = new ResourceSet();
+  for (const resource of resources) {
+    const relativePathToRoot = relativePath(root.resource, resource);
+    if (!relativePathToRoot) {
+      throw new Error("Resource is not a child of the root");
+    }
+    let dirResource = root.resource;
+    const stats = relativePathToRoot.split("/").slice(0, -1);
+    for (const stat of stats) {
+      dirResource = dirResource.with({ path: `${dirResource.path}/${stat}` });
+      uniqueDirectories.add(dirResource);
+    }
+  }
+  const matchingDirectories = [];
+  for (const dirResource of uniqueDirectories) {
+    const stats = dirResource.path.split("/");
+    const dirStat = stats[stats.length - 1];
+    if (!dirStat || !glob.match(segmentMatchPattern, dirStat)) {
+      continue;
+    }
+    matchingDirectories.push(dirResource);
+  }
+  return matchingDirectories;
+}
+__name(getMatchingDirectoriesFromFiles, "getMatchingDirectoriesFromFiles");
+function findFirstParent(resource, root) {
+  const relativePathToRoot = relativePath(root.resource, resource);
+  if (!relativePathToRoot) {
+    throw new Error("Resource is not a child of the root");
+  }
+  let currentItem = root;
+  let currentResource = root.resource;
+  const pathSegments = relativePathToRoot.split("/");
+  for (const stat of pathSegments) {
+    currentResource = currentResource.with({ path: `${currentResource.path}/${stat}` });
+    const child = currentItem.getChild(stat);
+    if (!child) {
+      return currentItem;
+    }
+    currentItem = child;
+  }
+  return void 0;
+}
+__name(findFirstParent, "findFirstParent");
+function fuzzyMatchingGlobPattern(pattern) {
+  if (!pattern) {
+    return "*";
+  }
+  return "*" + pattern.split("").join("*") + "*";
+}
+__name(fuzzyMatchingGlobPattern, "fuzzyMatchingGlobPattern");
+function continousMatchingGlobPattern(pattern) {
+  if (!pattern) {
+    return "*";
+  }
+  return "*" + pattern + "*";
+}
+__name(continousMatchingGlobPattern, "continousMatchingGlobPattern");
+function caseInsensitiveGlobPattern(pattern) {
+  let caseInsensitiveFilePattern = "";
+  for (let i = 0; i < pattern.length; i++) {
+    const char = pattern[i];
+    if (/[a-zA-Z]/.test(char)) {
+      caseInsensitiveFilePattern += `[${char.toLowerCase()}${char.toUpperCase()}]`;
+    } else {
+      caseInsensitiveFilePattern += char;
+    }
+  }
+  return caseInsensitiveFilePattern;
+}
+__name(caseInsensitiveGlobPattern, "caseInsensitiveGlobPattern");
+class CompressedNavigationController {
+  constructor(id, items, templateData, depth, collapsed) {
+    this.id = id;
+    this.items = items;
+    this.depth = depth;
+    this.collapsed = collapsed;
+    this._index = items.length - 1;
+    this.updateLabels(templateData);
+    this._updateLabelDisposable = templateData.label.onDidRender(() => this.updateLabels(templateData));
+  }
+  static {
+    __name(this, "CompressedNavigationController");
+  }
+  static ID = 0;
+  _index;
+  _labels;
+  _updateLabelDisposable;
+  get index() {
+    return this._index;
+  }
+  get count() {
+    return this.items.length;
+  }
+  get current() {
+    return this.items[this._index];
+  }
+  get currentId() {
+    return `${this.id}_${this.index}`;
+  }
+  get labels() {
+    return this._labels;
+  }
+  _onDidChange = new Emitter();
+  onDidChange = this._onDidChange.event;
+  updateLabels(templateData) {
+    this._labels = Array.from(templateData.container.querySelectorAll(".label-name"));
+    let parents = "";
+    for (let i = 0; i < this.labels.length; i++) {
+      const ariaLabel = parents.length ? `${this.items[i].name}, compact, ${parents}` : this.items[i].name;
+      this.labels[i].setAttribute("aria-label", ariaLabel);
+      this.labels[i].setAttribute("aria-level", `${this.depth + i}`);
+      parents = parents.length ? `${this.items[i].name} ${parents}` : this.items[i].name;
+    }
+    this.updateCollapsed(this.collapsed);
+    if (this._index < this.labels.length) {
+      this.labels[this._index].classList.add("active");
+    }
+  }
+  previous() {
+    if (this._index <= 0) {
+      return;
+    }
+    this.setIndex(this._index - 1);
+  }
+  next() {
+    if (this._index >= this.items.length - 1) {
+      return;
+    }
+    this.setIndex(this._index + 1);
+  }
+  first() {
+    if (this._index === 0) {
+      return;
+    }
+    this.setIndex(0);
+  }
+  last() {
+    if (this._index === this.items.length - 1) {
+      return;
+    }
+    this.setIndex(this.items.length - 1);
+  }
+  setIndex(index) {
+    if (index < 0 || index >= this.items.length) {
+      return;
+    }
+    this.labels[this._index].classList.remove("active");
+    this._index = index;
+    this.labels[this._index].classList.add("active");
+    this._onDidChange.fire();
+  }
+  updateCollapsed(collapsed) {
+    this.collapsed = collapsed;
+    for (let i = 0; i < this.labels.length; i++) {
+      this.labels[i].setAttribute("aria-expanded", collapsed ? "false" : "true");
+    }
+  }
+  dispose() {
+    this._onDidChange.dispose();
+    this._updateLabelDisposable.dispose();
+  }
+}
+let FilesRenderer = class {
+  constructor(container, labels, highlightTree, updateWidth, contextViewService, themeService, configurationService, explorerService, labelService, contextService, contextMenuService, instantiationService) {
+    this.labels = labels;
+    this.highlightTree = highlightTree;
+    this.updateWidth = updateWidth;
+    this.contextViewService = contextViewService;
+    this.themeService = themeService;
+    this.configurationService = configurationService;
+    this.explorerService = explorerService;
+    this.labelService = labelService;
+    this.contextService = contextService;
+    this.contextMenuService = contextMenuService;
+    this.instantiationService = instantiationService;
+    this.config = this.configurationService.getValue();
+    const updateOffsetStyles = /* @__PURE__ */ __name(() => {
+      const indent = this.configurationService.getValue("workbench.tree.indent");
+      const offset = Math.max(22 - indent, 0);
+      container.style.setProperty(`--vscode-explorer-align-offset-margin-left`, `${offset}px`);
+    }, "updateOffsetStyles");
+    this.configListener = this.configurationService.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration("explorer")) {
+        this.config = this.configurationService.getValue();
+      }
+      if (e.affectsConfiguration("workbench.tree.indent")) {
+        updateOffsetStyles();
+      }
+    });
+    updateOffsetStyles();
+  }
+  static {
+    __name(this, "FilesRenderer");
+  }
+  static ID = "file";
+  config;
+  configListener;
+  compressedNavigationControllers = /* @__PURE__ */ new Map();
+  _onDidChangeActiveDescendant = new EventMultiplexer();
+  onDidChangeActiveDescendant = this._onDidChangeActiveDescendant.event;
+  getWidgetAriaLabel() {
+    return localize("treeAriaLabel", "Files Explorer");
+  }
+  get templateId() {
+    return FilesRenderer.ID;
+  }
+  renderTemplate(container) {
+    const templateDisposables = new DisposableStore();
+    const label = templateDisposables.add(this.labels.create(container, { supportHighlights: true }));
+    templateDisposables.add(label.onDidRender(() => {
+      try {
+        if (templateData.currentContext) {
+          this.updateWidth(templateData.currentContext);
+        }
+      } catch (e) {
+      }
+    }));
+    const contribs = explorerFileContribRegistry.create(this.instantiationService, container, templateDisposables);
+    templateDisposables.add(explorerFileContribRegistry.onDidRegisterDescriptor((d) => {
+      const contr = d.create(this.instantiationService, container);
+      contribs.push(templateDisposables.add(contr));
+      contr.setResource(templateData.currentContext?.resource);
+    }));
+    const templateData = { templateDisposables, elementDisposables: templateDisposables.add(new DisposableStore()), label, container, contribs };
+    return templateData;
+  }
+  renderElement(node, index, templateData) {
+    const stat = node.element;
+    templateData.currentContext = stat;
+    const editableData = this.explorerService.getEditableData(stat);
+    templateData.label.element.classList.remove("compressed");
+    if (!editableData) {
+      templateData.label.element.style.display = "flex";
+      this.renderStat(stat, stat.name, void 0, node.filterData, templateData);
+    } else {
+      templateData.label.element.style.display = "none";
+      templateData.contribs.forEach((c) => c.setResource(void 0));
+      templateData.elementDisposables.add(this.renderInputBox(templateData.container, stat, editableData));
+    }
+  }
+  renderCompressedElements(node, index, templateData, height) {
+    const stat = node.element.elements[node.element.elements.length - 1];
+    templateData.currentContext = stat;
+    const editable = node.element.elements.filter((e) => this.explorerService.isEditable(e));
+    const editableData = editable.length === 0 ? void 0 : this.explorerService.getEditableData(editable[0]);
+    if (!editableData) {
+      templateData.label.element.classList.add("compressed");
+      templateData.label.element.style.display = "flex";
+      const id = `compressed-explorer_${CompressedNavigationController.ID++}`;
+      const labels = node.element.elements.map((e) => e.name);
+      let fuzzyScore = node.filterData;
+      if (fuzzyScore && fuzzyScore.length > 2) {
+        const filterDataOffset = labels.join("/").length - labels[labels.length - 1].length;
+        fuzzyScore = [fuzzyScore[0], fuzzyScore[1] + filterDataOffset, ...fuzzyScore.slice(2)];
+      }
+      this.renderStat(stat, labels, id, fuzzyScore, templateData);
+      const compressedNavigationController = new CompressedNavigationController(id, node.element.elements, templateData, node.depth, node.collapsed);
+      templateData.elementDisposables.add(compressedNavigationController);
+      const nodeControllers = this.compressedNavigationControllers.get(stat) ?? [];
+      this.compressedNavigationControllers.set(stat, [...nodeControllers, compressedNavigationController]);
+      templateData.elementDisposables.add(this._onDidChangeActiveDescendant.add(compressedNavigationController.onDidChange));
+      templateData.elementDisposables.add(DOM.addDisposableListener(templateData.container, "mousedown", (e) => {
+        const result = getIconLabelNameFromHTMLElement(e.target);
+        if (result) {
+          compressedNavigationController.setIndex(result.index);
+        }
+      }));
+      templateData.elementDisposables.add(toDisposable(() => {
+        const nodeControllers2 = this.compressedNavigationControllers.get(stat) ?? [];
+        const renderedIndex = nodeControllers2.findIndex((controller) => controller === compressedNavigationController);
+        if (renderedIndex < 0) {
+          throw new Error("Disposing unknown navigation controller");
+        }
+        if (nodeControllers2.length === 1) {
+          this.compressedNavigationControllers.delete(stat);
+        } else {
+          nodeControllers2.splice(renderedIndex, 1);
+        }
+      }));
+    } else {
+      templateData.label.element.classList.remove("compressed");
+      templateData.label.element.style.display = "none";
+      templateData.contribs.forEach((c) => c.setResource(void 0));
+      templateData.elementDisposables.add(this.renderInputBox(templateData.container, editable[0], editableData));
+    }
+  }
+  renderStat(stat, label, domId, filterData, templateData) {
+    templateData.label.element.style.display = "flex";
+    const extraClasses = ["explorer-item"];
+    if (this.explorerService.isCut(stat)) {
+      extraClasses.push("cut");
+    }
+    const theme = this.themeService.getFileIconTheme();
+    const twistieContainer = templateData.container.parentElement?.parentElement?.querySelector(".monaco-tl-twistie");
+    twistieContainer?.classList.toggle("force-twistie", stat.hasNests && theme.hidesExplorerArrows);
+    const themeIsUnhappyWithNesting = theme.hasFileIcons && (theme.hidesExplorerArrows || !theme.hasFolderIcons);
+    const realignNestedChildren = stat.nestedParent && themeIsUnhappyWithNesting;
+    templateData.contribs.forEach((c) => c.setResource(stat.resource));
+    templateData.label.setResource({ resource: stat.resource, name: label }, {
+      fileKind: stat.isRoot ? FileKind.ROOT_FOLDER : stat.isDirectory ? FileKind.FOLDER : FileKind.FILE,
+      extraClasses: realignNestedChildren ? [...extraClasses, "align-nest-icon-with-parent-icon"] : extraClasses,
+      fileDecorations: this.config.explorer.decorations,
+      matches: createMatches(filterData),
+      separator: this.labelService.getSeparator(stat.resource.scheme, stat.resource.authority),
+      domId
+    });
+    const highlightResults = stat.isDirectory ? this.highlightTree.get(stat) : 0;
+    if (highlightResults > 0) {
+      const badge = new CountBadge(templateData.label.element.lastElementChild, {}, { ...defaultCountBadgeStyles, badgeBackground: asCssVariable(listFilterMatchHighlight), badgeBorder: asCssVariable(listFilterMatchHighlightBorder) });
+      badge.setCount(highlightResults);
+      badge.setTitleFormat(localize("explorerHighlightFolderBadgeTitle", "Directory contains {0} matches", highlightResults));
+      templateData.elementDisposables.add(badge);
+    }
+    templateData.label.element.classList.toggle("highlight-badge", highlightResults > 0);
+  }
+  renderInputBox(container, stat, editableData) {
+    const label = this.labels.create(container);
+    const extraClasses = ["explorer-item", "explorer-item-edited"];
+    const fileKind = stat.isRoot ? FileKind.ROOT_FOLDER : stat.isDirectory ? FileKind.FOLDER : FileKind.FILE;
+    const theme = this.themeService.getFileIconTheme();
+    const themeIsUnhappyWithNesting = theme.hasFileIcons && (theme.hidesExplorerArrows || !theme.hasFolderIcons);
+    const realignNestedChildren = stat.nestedParent && themeIsUnhappyWithNesting;
+    const labelOptions = {
+      hidePath: true,
+      hideLabel: true,
+      fileKind,
+      extraClasses: realignNestedChildren ? [...extraClasses, "align-nest-icon-with-parent-icon"] : extraClasses
+    };
+    const parent = stat.name ? dirname(stat.resource) : stat.resource;
+    const value = stat.name || "";
+    label.setFile(joinPath(parent, value || " "), labelOptions);
+    label.element.firstElementChild.style.display = "none";
+    const inputBox = new InputBox(label.element, this.contextViewService, {
+      validationOptions: {
+        validation: /* @__PURE__ */ __name((value2) => {
+          const message = editableData.validationMessage(value2);
+          if (!message || message.severity !== Severity.Error) {
+            return null;
+          }
+          return {
+            content: message.content,
+            formatContent: true,
+            type: MessageType.ERROR
+          };
+        }, "validation")
+      },
+      ariaLabel: localize("fileInputAriaLabel", "Type file name. Press Enter to confirm or Escape to cancel."),
+      inputBoxStyles: defaultInputBoxStyles
+    });
+    const lastDot = value.lastIndexOf(".");
+    let currentSelectionState = "prefix";
+    inputBox.value = value;
+    inputBox.focus();
+    inputBox.select({ start: 0, end: lastDot > 0 && !stat.isDirectory ? lastDot : value.length });
+    const done = createSingleCallFunction((success, finishEditing) => {
+      label.element.style.display = "none";
+      const value2 = inputBox.value;
+      dispose(toDispose);
+      label.element.remove();
+      if (finishEditing) {
+        editableData.onFinish(value2, success);
+      }
+    });
+    const showInputBoxNotification = /* @__PURE__ */ __name(() => {
+      if (inputBox.isInputValid()) {
+        const message = editableData.validationMessage(inputBox.value);
+        if (message) {
+          inputBox.showMessage({
+            content: message.content,
+            formatContent: true,
+            type: message.severity === Severity.Info ? MessageType.INFO : message.severity === Severity.Warning ? MessageType.WARNING : MessageType.ERROR
+          });
+        } else {
+          inputBox.hideMessage();
+        }
+      }
+    }, "showInputBoxNotification");
+    showInputBoxNotification();
+    const toDispose = [
+      inputBox,
+      inputBox.onDidChange((value2) => {
+        label.setFile(joinPath(parent, value2 || " "), labelOptions);
+      }),
+      DOM.addStandardDisposableListener(inputBox.inputElement, DOM.EventType.KEY_DOWN, (e) => {
+        if (e.equals(KeyCode.F2)) {
+          const dotIndex = inputBox.value.lastIndexOf(".");
+          if (stat.isDirectory || dotIndex === -1) {
+            return;
+          }
+          if (currentSelectionState === "prefix") {
+            currentSelectionState = "all";
+            inputBox.select({ start: 0, end: inputBox.value.length });
+          } else if (currentSelectionState === "all") {
+            currentSelectionState = "suffix";
+            inputBox.select({ start: dotIndex + 1, end: inputBox.value.length });
+          } else {
+            currentSelectionState = "prefix";
+            inputBox.select({ start: 0, end: dotIndex });
+          }
+        } else if (e.equals(KeyCode.Enter)) {
+          if (!inputBox.validate()) {
+            done(true, true);
+          }
+        } else if (e.equals(KeyCode.Escape)) {
+          done(false, true);
+        }
+      }),
+      DOM.addStandardDisposableListener(inputBox.inputElement, DOM.EventType.KEY_UP, (e) => {
+        showInputBoxNotification();
+      }),
+      DOM.addDisposableListener(inputBox.inputElement, DOM.EventType.BLUR, async () => {
+        while (true) {
+          await timeout(0);
+          const ownerDocument = inputBox.inputElement.ownerDocument;
+          if (!ownerDocument.hasFocus()) {
+            break;
+          }
+          if (DOM.isActiveElement(inputBox.inputElement)) {
+            return;
+          } else if (DOM.isHTMLElement(ownerDocument.activeElement) && DOM.hasParentWithClass(ownerDocument.activeElement, "context-view")) {
+            await Event.toPromise(this.contextMenuService.onDidHideContextMenu);
+          } else {
+            break;
+          }
+        }
+        done(inputBox.isInputValid(), true);
+      }),
+      label
+    ];
+    return toDisposable(() => {
+      done(false, false);
+    });
+  }
+  disposeElement(element, index, templateData) {
+    templateData.currentContext = void 0;
+    templateData.elementDisposables.clear();
+  }
+  disposeCompressedElements(node, index, templateData) {
+    templateData.currentContext = void 0;
+    templateData.elementDisposables.clear();
+  }
+  disposeTemplate(templateData) {
+    templateData.templateDisposables.dispose();
+  }
+  getCompressedNavigationController(stat) {
+    return this.compressedNavigationControllers.get(stat);
+  }
+  // IAccessibilityProvider
+  getAriaLabel(element) {
+    return element.name;
+  }
+  getAriaLevel(element) {
+    let depth = 0;
+    let parent = element.parent;
+    while (parent) {
+      parent = parent.parent;
+      depth++;
+    }
+    if (this.contextService.getWorkbenchState() === WorkbenchState.WORKSPACE) {
+      depth = depth + 1;
+    }
+    return depth;
+  }
+  getActiveDescendantId(stat) {
+    return this.compressedNavigationControllers.get(stat)?.[0]?.currentId ?? void 0;
+  }
+  dispose() {
+    this.configListener.dispose();
+  }
+};
+FilesRenderer = __decorateClass([
+  __decorateParam(4, IContextViewService),
+  __decorateParam(5, IThemeService),
+  __decorateParam(6, IConfigurationService),
+  __decorateParam(7, IExplorerService),
+  __decorateParam(8, ILabelService),
+  __decorateParam(9, IWorkspaceContextService),
+  __decorateParam(10, IContextMenuService),
+  __decorateParam(11, IInstantiationService)
+], FilesRenderer);
+let FilesFilter = class {
+  constructor(contextService, configurationService, explorerService, editorService, uriIdentityService, fileService) {
+    this.contextService = contextService;
+    this.configurationService = configurationService;
+    this.explorerService = explorerService;
+    this.editorService = editorService;
+    this.uriIdentityService = uriIdentityService;
+    this.fileService = fileService;
+    this.toDispose.push(this.contextService.onDidChangeWorkspaceFolders(() => this.updateConfiguration()));
+    this.toDispose.push(this.configurationService.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration("files.exclude") || e.affectsConfiguration("explorer.excludeGitIgnore")) {
+        this.updateConfiguration();
+      }
+    }));
+    this.toDispose.push(this.fileService.onDidFilesChange((e) => {
+      for (const [root, ignoreFileResourceSet] of this.ignoreFileResourcesPerRoot.entries()) {
+        ignoreFileResourceSet.forEach(async (ignoreResource) => {
+          if (e.contains(ignoreResource, FileChangeType.UPDATED)) {
+            await this.processIgnoreFile(root, ignoreResource, true);
+          }
+          if (e.contains(ignoreResource, FileChangeType.DELETED)) {
+            this.ignoreTreesPerRoot.get(root)?.delete(dirname(ignoreResource));
+            ignoreFileResourceSet.delete(ignoreResource);
+            this._onDidChange.fire();
+          }
+        });
+      }
+    }));
+    this.toDispose.push(this.editorService.onDidVisibleEditorsChange(() => {
+      const editors = this.editorService.visibleEditors;
+      let shouldFire = false;
+      for (const e of editors) {
+        if (!e.resource) {
+          continue;
+        }
+        const stat = this.explorerService.findClosest(e.resource);
+        if (stat && stat.isExcluded) {
+          shouldFire = true;
+          break;
+        }
+      }
+      for (const e of this.editorsAffectingFilter) {
+        if (!editors.includes(e)) {
+          shouldFire = true;
+          break;
+        }
+      }
+      if (shouldFire) {
+        this.editorsAffectingFilter.clear();
+        this._onDidChange.fire();
+      }
+    }));
+    this.updateConfiguration();
+  }
+  static {
+    __name(this, "FilesFilter");
+  }
+  hiddenExpressionPerRoot = /* @__PURE__ */ new Map();
+  editorsAffectingFilter = /* @__PURE__ */ new Set();
+  _onDidChange = new Emitter();
+  toDispose = [];
+  // List of ignoreFile resources. Used to detect changes to the ignoreFiles.
+  ignoreFileResourcesPerRoot = /* @__PURE__ */ new Map();
+  // Ignore tree per root. Similar to `hiddenExpressionPerRoot`
+  // Note: URI in the ternary search tree is the URI of the folder containing the ignore file
+  // It is not the ignore file itself. This is because of the way the IgnoreFile works and nested paths
+  ignoreTreesPerRoot = /* @__PURE__ */ new Map();
+  get onDidChange() {
+    return this._onDidChange.event;
+  }
+  updateConfiguration() {
+    let shouldFire = false;
+    let updatedGitIgnoreSetting = false;
+    this.contextService.getWorkspace().folders.forEach((folder) => {
+      const configuration = this.configurationService.getValue({ resource: folder.uri });
+      const excludesConfig = configuration?.files?.exclude || /* @__PURE__ */ Object.create(null);
+      const parseIgnoreFile = configuration.explorer.excludeGitIgnore;
+      if (parseIgnoreFile && !this.ignoreTreesPerRoot.has(folder.uri.toString())) {
+        updatedGitIgnoreSetting = true;
+        this.ignoreFileResourcesPerRoot.set(folder.uri.toString(), new ResourceSet());
+        this.ignoreTreesPerRoot.set(folder.uri.toString(), TernarySearchTree.forUris((uri) => this.uriIdentityService.extUri.ignorePathCasing(uri)));
+      }
+      if (!parseIgnoreFile && this.ignoreTreesPerRoot.has(folder.uri.toString())) {
+        updatedGitIgnoreSetting = true;
+        this.ignoreFileResourcesPerRoot.delete(folder.uri.toString());
+        this.ignoreTreesPerRoot.delete(folder.uri.toString());
+      }
+      if (!shouldFire) {
+        const cached = this.hiddenExpressionPerRoot.get(folder.uri.toString());
+        shouldFire = !cached || !equals(cached.original, excludesConfig);
+      }
+      const excludesConfigCopy = deepClone(excludesConfig);
+      this.hiddenExpressionPerRoot.set(folder.uri.toString(), { original: excludesConfigCopy, parsed: glob.parse(excludesConfigCopy) });
+    });
+    if (shouldFire || updatedGitIgnoreSetting) {
+      this.editorsAffectingFilter.clear();
+      this._onDidChange.fire();
+    }
+  }
+  /**
+   * Given a .gitignore file resource, processes the resource and adds it to the ignore tree which hides explorer items
+   * @param root The root folder of the workspace as a string. Used for lookup key for ignore tree and resource list
+   * @param ignoreFileResource The resource of the .gitignore file
+   * @param update Whether or not we're updating an existing ignore file. If true it deletes the old entry
+   */
+  async processIgnoreFile(root, ignoreFileResource, update) {
+    const dirUri = dirname(ignoreFileResource);
+    const ignoreTree = this.ignoreTreesPerRoot.get(root);
+    if (!ignoreTree) {
+      return;
+    }
+    if (!update && ignoreTree.has(dirUri)) {
+      return;
+    }
+    const content = await this.fileService.readFile(ignoreFileResource);
+    if (update) {
+      const ignoreFile = ignoreTree.get(dirUri);
+      ignoreFile?.updateContents(content.value.toString());
+    } else {
+      const ignoreParent = ignoreTree.findSubstr(dirUri);
+      const ignoreFile = new IgnoreFile(content.value.toString(), dirUri.path, ignoreParent);
+      ignoreTree.set(dirUri, ignoreFile);
+      if (!this.ignoreFileResourcesPerRoot.get(root)?.has(ignoreFileResource)) {
+        this.ignoreFileResourcesPerRoot.get(root)?.add(ignoreFileResource);
+      }
+    }
+    this._onDidChange.fire();
+  }
+  filter(stat, parentVisibility) {
+    if (stat.name === ".gitignore" && this.ignoreTreesPerRoot.has(stat.root.resource.toString())) {
+      this.processIgnoreFile(stat.root.resource.toString(), stat.resource, false);
+      return true;
+    }
+    return this.isVisible(stat, parentVisibility);
+  }
+  isVisible(stat, parentVisibility) {
+    stat.isExcluded = false;
+    if (parentVisibility === TreeVisibility.Hidden) {
+      stat.isExcluded = true;
+      return false;
+    }
+    if (this.explorerService.getEditableData(stat)) {
+      return true;
+    }
+    const cached = this.hiddenExpressionPerRoot.get(stat.root.resource.toString());
+    const globMatch = cached?.parsed(path.relative(stat.root.resource.path, stat.resource.path), stat.name, (name) => !!(stat.parent && stat.parent.getChild(name)));
+    const isHiddenResource = !!globMatch ? true : this.isIgnored(stat.resource, stat.root.resource, stat.isDirectory);
+    if (isHiddenResource || stat.parent?.isExcluded) {
+      stat.isExcluded = true;
+      const editors = this.editorService.visibleEditors;
+      const editor = editors.find((e) => e.resource && this.uriIdentityService.extUri.isEqualOrParent(e.resource, stat.resource));
+      if (editor && stat.root === this.explorerService.findClosestRoot(stat.resource)) {
+        this.editorsAffectingFilter.add(editor);
+        return true;
+      }
+      return false;
+    }
+    return true;
+  }
+  isIgnored(resource, rootResource, isDirectory) {
+    const ignoreFile = this.ignoreTreesPerRoot.get(rootResource.toString())?.findSubstr(resource);
+    const isIncludedInTraversal = ignoreFile?.isPathIncludedInTraversal(resource.path, isDirectory);
+    return isIncludedInTraversal === void 0 ? false : !isIncludedInTraversal;
+  }
+  dispose() {
+    dispose(this.toDispose);
+  }
+};
+FilesFilter = __decorateClass([
+  __decorateParam(0, IWorkspaceContextService),
+  __decorateParam(1, IConfigurationService),
+  __decorateParam(2, IExplorerService),
+  __decorateParam(3, IEditorService),
+  __decorateParam(4, IUriIdentityService),
+  __decorateParam(5, IFileService)
+], FilesFilter);
+let FileSorter = class {
+  constructor(explorerService, contextService) {
+    this.explorerService = explorerService;
+    this.contextService = contextService;
+  }
+  static {
+    __name(this, "FileSorter");
+  }
+  compare(statA, statB) {
+    if (statA.isRoot) {
+      if (statB.isRoot) {
+        const workspaceA = this.contextService.getWorkspaceFolder(statA.resource);
+        const workspaceB = this.contextService.getWorkspaceFolder(statB.resource);
+        return workspaceA && workspaceB ? workspaceA.index - workspaceB.index : -1;
+      }
+      return -1;
+    }
+    if (statB.isRoot) {
+      return 1;
+    }
+    const sortOrder = this.explorerService.sortOrderConfiguration.sortOrder;
+    const lexicographicOptions = this.explorerService.sortOrderConfiguration.lexicographicOptions;
+    const reverse = this.explorerService.sortOrderConfiguration.reverse;
+    if (reverse) {
+      [statA, statB] = [statB, statA];
+    }
+    let compareFileNames;
+    let compareFileExtensions;
+    switch (lexicographicOptions) {
+      case "upper":
+        compareFileNames = compareFileNamesUpper;
+        compareFileExtensions = compareFileExtensionsUpper;
+        break;
+      case "lower":
+        compareFileNames = compareFileNamesLower;
+        compareFileExtensions = compareFileExtensionsLower;
+        break;
+      case "unicode":
+        compareFileNames = compareFileNamesUnicode;
+        compareFileExtensions = compareFileExtensionsUnicode;
+        break;
+      default:
+        compareFileNames = compareFileNamesDefault;
+        compareFileExtensions = compareFileExtensionsDefault;
+    }
+    switch (sortOrder) {
+      case "type":
+        if (statA.isDirectory && !statB.isDirectory) {
+          return -1;
+        }
+        if (statB.isDirectory && !statA.isDirectory) {
+          return 1;
+        }
+        if (statA.isDirectory && statB.isDirectory) {
+          return compareFileNames(statA.name, statB.name);
+        }
+        break;
+      case "filesFirst":
+        if (statA.isDirectory && !statB.isDirectory) {
+          return 1;
+        }
+        if (statB.isDirectory && !statA.isDirectory) {
+          return -1;
+        }
+        break;
+      case "foldersNestsFiles":
+        if (statA.isDirectory && !statB.isDirectory) {
+          return -1;
+        }
+        if (statB.isDirectory && !statA.isDirectory) {
+          return 1;
+        }
+        if (statA.hasNests && !statB.hasNests) {
+          return -1;
+        }
+        if (statB.hasNests && !statA.hasNests) {
+          return 1;
+        }
+        break;
+      case "mixed":
+        break;
+      // not sorting when "mixed" is on
+      default:
+        if (statA.isDirectory && !statB.isDirectory) {
+          return -1;
+        }
+        if (statB.isDirectory && !statA.isDirectory) {
+          return 1;
+        }
+        break;
+    }
+    switch (sortOrder) {
+      case "type":
+        return compareFileExtensions(statA.name, statB.name);
+      case "modified":
+        if (statA.mtime !== statB.mtime) {
+          return statA.mtime && statB.mtime && statA.mtime < statB.mtime ? 1 : -1;
+        }
+        return compareFileNames(statA.name, statB.name);
+      default:
+        return compareFileNames(statA.name, statB.name);
+    }
+  }
+};
+FileSorter = __decorateClass([
+  __decorateParam(0, IExplorerService),
+  __decorateParam(1, IWorkspaceContextService)
+], FileSorter);
+let FileDragAndDrop = class {
+  constructor(isCollapsed, explorerService, editorService, dialogService, contextService, fileService, configurationService, instantiationService, workspaceEditingService, uriIdentityService) {
+    this.isCollapsed = isCollapsed;
+    this.explorerService = explorerService;
+    this.editorService = editorService;
+    this.dialogService = dialogService;
+    this.contextService = contextService;
+    this.fileService = fileService;
+    this.configurationService = configurationService;
+    this.instantiationService = instantiationService;
+    this.workspaceEditingService = workspaceEditingService;
+    this.uriIdentityService = uriIdentityService;
+    const updateDropEnablement = /* @__PURE__ */ __name((e) => {
+      if (!e || e.affectsConfiguration("explorer.enableDragAndDrop")) {
+        this.dropEnabled = this.configurationService.getValue("explorer.enableDragAndDrop");
+      }
+    }, "updateDropEnablement");
+    updateDropEnablement(void 0);
+    this.disposables.add(this.configurationService.onDidChangeConfiguration((e) => updateDropEnablement(e)));
+  }
+  static {
+    __name(this, "FileDragAndDrop");
+  }
+  static CONFIRM_DND_SETTING_KEY = "explorer.confirmDragAndDrop";
+  compressedDragOverElement;
+  compressedDropTargetDisposable = Disposable.None;
+  disposables = new DisposableStore();
+  dropEnabled = false;
+  onDragOver(data, target, targetIndex, targetSector, originalEvent) {
+    if (!this.dropEnabled) {
+      return false;
+    }
+    if (target) {
+      const compressedTarget = FileDragAndDrop.getCompressedStatFromDragEvent(target, originalEvent);
+      if (compressedTarget) {
+        const iconLabelName = getIconLabelNameFromHTMLElement(originalEvent.target);
+        if (iconLabelName && iconLabelName.index < iconLabelName.count - 1) {
+          const result = this.handleDragOver(data, compressedTarget, targetIndex, targetSector, originalEvent);
+          if (result) {
+            if (iconLabelName.element !== this.compressedDragOverElement) {
+              this.compressedDragOverElement = iconLabelName.element;
+              this.compressedDropTargetDisposable.dispose();
+              this.compressedDropTargetDisposable = toDisposable(() => {
+                iconLabelName.element.classList.remove("drop-target");
+                this.compressedDragOverElement = void 0;
+              });
+              iconLabelName.element.classList.add("drop-target");
+            }
+            return typeof result === "boolean" ? result : { ...result, feedback: [] };
+          }
+          this.compressedDropTargetDisposable.dispose();
+          return false;
+        }
+      }
+    }
+    this.compressedDropTargetDisposable.dispose();
+    return this.handleDragOver(data, target, targetIndex, targetSector, originalEvent);
+  }
+  handleDragOver(data, target, targetIndex, targetSector, originalEvent) {
+    const isCopy = originalEvent && (originalEvent.ctrlKey && !isMacintosh || originalEvent.altKey && isMacintosh);
+    const isNative = data instanceof NativeDragAndDropData;
+    const effectType = isNative || isCopy ? ListDragOverEffectType.Copy : ListDragOverEffectType.Move;
+    const effect = { type: effectType, position: ListDragOverEffectPosition.Over };
+    if (isNative) {
+      if (!containsDragType(originalEvent, DataTransfers.FILES, CodeDataTransfers.FILES, DataTransfers.RESOURCES)) {
+        return false;
+      }
+    } else if (data instanceof ExternalElementsDragAndDropData) {
+      return false;
+    } else {
+      const items = FileDragAndDrop.getStatsFromDragAndDropData(data);
+      const isRootsReorder = items.every((item) => item.isRoot);
+      if (!target) {
+        if (!isCopy && items.every((i) => !!i.parent && i.parent.isRoot)) {
+          return false;
+        }
+        if (isRootsReorder) {
+          return { accept: true, effect: { type: ListDragOverEffectType.Move, position: ListDragOverEffectPosition.After } };
+        }
+        return { accept: true, bubble: TreeDragOverBubble.Down, effect, autoExpand: false };
+      }
+      if (!Array.isArray(items)) {
+        return false;
+      }
+      if (!isCopy && items.every((source) => source.isReadonly)) {
+        return false;
+      }
+      if (items.some((source) => {
+        if (source.isRoot) {
+          return false;
+        }
+        if (this.uriIdentityService.extUri.isEqual(source.resource, target.resource)) {
+          return true;
+        }
+        if (!isCopy && this.uriIdentityService.extUri.isEqual(dirname(source.resource), target.resource)) {
+          return true;
+        }
+        if (this.uriIdentityService.extUri.isEqualOrParent(target.resource, source.resource)) {
+          return true;
+        }
+        return false;
+      })) {
+        return false;
+      }
+      if (isRootsReorder) {
+        if (!target.isRoot) {
+          return false;
+        }
+        let dropEffectPosition = void 0;
+        switch (targetSector) {
+          case ListViewTargetSector.TOP:
+          case ListViewTargetSector.CENTER_TOP:
+            dropEffectPosition = ListDragOverEffectPosition.Before;
+            break;
+          case ListViewTargetSector.CENTER_BOTTOM:
+          case ListViewTargetSector.BOTTOM:
+            dropEffectPosition = ListDragOverEffectPosition.After;
+            break;
+        }
+        return { accept: true, effect: { type: ListDragOverEffectType.Move, position: dropEffectPosition } };
+      }
+    }
+    if (!target) {
+      return { accept: true, bubble: TreeDragOverBubble.Down, effect };
+    } else {
+      if (target.isDirectory) {
+        if (target.isReadonly) {
+          return false;
+        }
+        return { accept: true, bubble: TreeDragOverBubble.Down, effect, autoExpand: true };
+      }
+      if (this.contextService.getWorkspace().folders.every((folder) => folder.uri.toString() !== target.resource.toString())) {
+        return { accept: true, bubble: TreeDragOverBubble.Up, effect };
+      }
+    }
+    return false;
+  }
+  getDragURI(element) {
+    if (this.explorerService.isEditable(element)) {
+      return null;
+    }
+    return element.resource.toString();
+  }
+  getDragLabel(elements, originalEvent) {
+    if (elements.length === 1) {
+      const stat = FileDragAndDrop.getCompressedStatFromDragEvent(elements[0], originalEvent);
+      return stat.name;
+    }
+    return String(elements.length);
+  }
+  onDragStart(data, originalEvent) {
+    const items = FileDragAndDrop.getStatsFromDragAndDropData(data, originalEvent);
+    if (items && items.length && originalEvent.dataTransfer) {
+      this.instantiationService.invokeFunction((accessor) => fillEditorsDragData(accessor, items, originalEvent));
+      const fileResources = items.filter((s) => s.resource.scheme === Schemas.file).map((r) => r.resource.fsPath);
+      if (fileResources.length) {
+        originalEvent.dataTransfer.setData(CodeDataTransfers.FILES, JSON.stringify(fileResources));
+      }
+    }
+  }
+  async drop(data, target, targetIndex, targetSector, originalEvent) {
+    this.compressedDropTargetDisposable.dispose();
+    if (target) {
+      const compressedTarget = FileDragAndDrop.getCompressedStatFromDragEvent(target, originalEvent);
+      if (compressedTarget) {
+        target = compressedTarget;
+      }
+    }
+    if (!target) {
+      target = this.explorerService.roots[this.explorerService.roots.length - 1];
+      targetSector = ListViewTargetSector.BOTTOM;
+    }
+    if (!target.isDirectory && target.parent) {
+      target = target.parent;
+    }
+    if (target.isReadonly) {
+      return;
+    }
+    const resolvedTarget = target;
+    if (!resolvedTarget) {
+      return;
+    }
+    try {
+      if (data instanceof NativeDragAndDropData) {
+        if (!isWeb || isTemporaryWorkspace(this.contextService.getWorkspace()) && WebFileSystemAccess.supported(mainWindow)) {
+          const fileImport = this.instantiationService.createInstance(ExternalFileImport);
+          await fileImport.import(resolvedTarget, originalEvent, mainWindow);
+        } else {
+          const browserUpload = this.instantiationService.createInstance(BrowserFileUpload);
+          await browserUpload.upload(target, originalEvent);
+        }
+      } else {
+        await this.handleExplorerDrop(data, resolvedTarget, targetIndex, targetSector, originalEvent);
+      }
+    } catch (error) {
+      this.dialogService.error(toErrorMessage(error));
+    }
+  }
+  async handleExplorerDrop(data, target, targetIndex, targetSector, originalEvent) {
+    const elementsData = FileDragAndDrop.getStatsFromDragAndDropData(data);
+    const distinctItems = new Map(elementsData.map((element) => [element, this.isCollapsed(element)]));
+    for (const [item, collapsed] of distinctItems) {
+      if (collapsed) {
+        const nestedChildren = item.nestedChildren;
+        if (nestedChildren) {
+          for (const child of nestedChildren) {
+            distinctItems.set(child, true);
+          }
+        }
+      }
+    }
+    const items = distinctParents([...distinctItems.keys()], (s) => s.resource);
+    const isCopy = originalEvent.ctrlKey && !isMacintosh || originalEvent.altKey && isMacintosh;
+    const confirmDragAndDrop = !isCopy && this.configurationService.getValue(FileDragAndDrop.CONFIRM_DND_SETTING_KEY);
+    if (confirmDragAndDrop) {
+      const message = items.length > 1 && items.every((s) => s.isRoot) ? localize("confirmRootsMove", "Are you sure you want to change the order of multiple root folders in your workspace?") : items.length > 1 ? localize("confirmMultiMove", "Are you sure you want to move the following {0} files into '{1}'?", items.length, target.name) : items[0].isRoot ? localize("confirmRootMove", "Are you sure you want to change the order of root folder '{0}' in your workspace?", items[0].name) : localize("confirmMove", "Are you sure you want to move '{0}' into '{1}'?", items[0].name, target.name);
+      const detail = items.length > 1 && !items.every((s) => s.isRoot) ? getFileNamesMessage(items.map((i) => i.resource)) : void 0;
+      const confirmation = await this.dialogService.confirm({
+        message,
+        detail,
+        checkbox: {
+          label: localize("doNotAskAgain", "Do not ask me again")
+        },
+        primaryButton: localize({ key: "moveButtonLabel", comment: ["&& denotes a mnemonic"] }, "&&Move")
+      });
+      if (!confirmation.confirmed) {
+        return;
+      }
+      if (confirmation.checkboxChecked === true) {
+        await this.configurationService.updateValue(FileDragAndDrop.CONFIRM_DND_SETTING_KEY, false);
+      }
+    }
+    await this.doHandleRootDrop(items.filter((s) => s.isRoot), target, targetSector);
+    const sources = items.filter((s) => !s.isRoot);
+    if (isCopy) {
+      return this.doHandleExplorerDropOnCopy(sources, target);
+    }
+    return this.doHandleExplorerDropOnMove(sources, target);
+  }
+  async doHandleRootDrop(roots, target, targetSector) {
+    if (roots.length === 0) {
+      return;
+    }
+    const folders = this.contextService.getWorkspace().folders;
+    let targetIndex;
+    const sourceIndices = [];
+    const workspaceCreationData = [];
+    const rootsToMove = [];
+    for (let index = 0; index < folders.length; index++) {
+      const data = {
+        uri: folders[index].uri,
+        name: folders[index].name
+      };
+      if (target instanceof ExplorerItem && this.uriIdentityService.extUri.isEqual(folders[index].uri, target.resource)) {
+        targetIndex = index;
+      }
+      for (const root of roots) {
+        if (this.uriIdentityService.extUri.isEqual(folders[index].uri, root.resource)) {
+          sourceIndices.push(index);
+          break;
+        }
+      }
+      if (roots.every((r) => r.resource.toString() !== folders[index].uri.toString())) {
+        workspaceCreationData.push(data);
+      } else {
+        rootsToMove.push(data);
+      }
+    }
+    if (targetIndex === void 0) {
+      targetIndex = workspaceCreationData.length;
+    } else {
+      switch (targetSector) {
+        case ListViewTargetSector.BOTTOM:
+        case ListViewTargetSector.CENTER_BOTTOM:
+          targetIndex++;
+          break;
+      }
+      for (const sourceIndex of sourceIndices) {
+        if (sourceIndex < targetIndex) {
+          targetIndex--;
+        }
+      }
+    }
+    workspaceCreationData.splice(targetIndex, 0, ...rootsToMove);
+    return this.workspaceEditingService.updateFolders(0, workspaceCreationData.length, workspaceCreationData);
+  }
+  async doHandleExplorerDropOnCopy(sources, target) {
+    const explorerConfig = this.configurationService.getValue().explorer;
+    const resourceFileEdits = [];
+    for (const { resource, isDirectory } of sources) {
+      const allowOverwrite = explorerConfig.incrementalNaming === "disabled";
+      const newResource = await findValidPasteFileTarget(
+        this.explorerService,
+        this.fileService,
+        this.dialogService,
+        target,
+        { resource, isDirectory, allowOverwrite },
+        explorerConfig.incrementalNaming
+      );
+      if (!newResource) {
+        continue;
+      }
+      const resourceEdit = new ResourceFileEdit(resource, newResource, { copy: true, overwrite: allowOverwrite });
+      resourceFileEdits.push(resourceEdit);
+    }
+    const labelSuffix = getFileOrFolderLabelSuffix(sources);
+    await this.explorerService.applyBulkEdit(resourceFileEdits, {
+      confirmBeforeUndo: explorerConfig.confirmUndo === UndoConfirmLevel.Default || explorerConfig.confirmUndo === UndoConfirmLevel.Verbose,
+      undoLabel: localize("copy", "Copy {0}", labelSuffix),
+      progressLabel: localize("copying", "Copying {0}", labelSuffix)
+    });
+    const editors = resourceFileEdits.filter((edit) => {
+      const item = edit.newResource ? this.explorerService.findClosest(edit.newResource) : void 0;
+      return item && !item.isDirectory;
+    }).map((edit) => ({ resource: edit.newResource, options: { pinned: true } }));
+    await this.editorService.openEditors(editors);
+  }
+  async doHandleExplorerDropOnMove(sources, target) {
+    const resourceFileEdits = sources.filter((source) => !source.isReadonly).map((source) => new ResourceFileEdit(source.resource, joinPath(target.resource, source.name)));
+    const labelSuffix = getFileOrFolderLabelSuffix(sources);
+    const options = {
+      confirmBeforeUndo: this.configurationService.getValue().explorer.confirmUndo === UndoConfirmLevel.Verbose,
+      undoLabel: localize("move", "Move {0}", labelSuffix),
+      progressLabel: localize("moving", "Moving {0}", labelSuffix)
+    };
+    try {
+      await this.explorerService.applyBulkEdit(resourceFileEdits, options);
+    } catch (error) {
+      if (error.fileOperationResult === FileOperationResult.FILE_MOVE_CONFLICT) {
+        const overwrites = [];
+        for (const edit of resourceFileEdits) {
+          if (edit.newResource && await this.fileService.exists(edit.newResource)) {
+            overwrites.push(edit.newResource);
+          }
+        }
+        const confirm = getMultipleFilesOverwriteConfirm(overwrites);
+        const { confirmed } = await this.dialogService.confirm(confirm);
+        if (confirmed) {
+          await this.explorerService.applyBulkEdit(resourceFileEdits.map((re) => new ResourceFileEdit(re.oldResource, re.newResource, { overwrite: true })), options);
+        }
+      } else {
+        throw error;
+      }
+    }
+  }
+  static getStatsFromDragAndDropData(data, dragStartEvent) {
+    if (data.context) {
+      return data.context;
+    }
+    if (dragStartEvent && data.elements.length === 1) {
+      data.context = [FileDragAndDrop.getCompressedStatFromDragEvent(data.elements[0], dragStartEvent)];
+      return data.context;
+    }
+    return data.elements;
+  }
+  static getCompressedStatFromDragEvent(stat, dragEvent) {
+    const target = DOM.getWindow(dragEvent).document.elementFromPoint(dragEvent.clientX, dragEvent.clientY);
+    const iconLabelName = getIconLabelNameFromHTMLElement(target);
+    if (iconLabelName) {
+      const { count, index } = iconLabelName;
+      let i = count - 1;
+      while (i > index && stat.parent) {
+        stat = stat.parent;
+        i--;
+      }
+      return stat;
+    }
+    return stat;
+  }
+  onDragEnd() {
+    this.compressedDropTargetDisposable.dispose();
+  }
+  dispose() {
+    this.compressedDropTargetDisposable.dispose();
+  }
+};
+FileDragAndDrop = __decorateClass([
+  __decorateParam(1, IExplorerService),
+  __decorateParam(2, IEditorService),
+  __decorateParam(3, IDialogService),
+  __decorateParam(4, IWorkspaceContextService),
+  __decorateParam(5, IFileService),
+  __decorateParam(6, IConfigurationService),
+  __decorateParam(7, IInstantiationService),
+  __decorateParam(8, IWorkspaceEditingService),
+  __decorateParam(9, IUriIdentityService)
+], FileDragAndDrop);
+function getIconLabelNameFromHTMLElement(target) {
+  if (!DOM.isHTMLElement(target)) {
+    return null;
+  }
+  let element = target;
+  while (element && !element.classList.contains("monaco-list-row")) {
+    if (element.classList.contains("label-name") && element.hasAttribute("data-icon-label-count")) {
+      const count = Number(element.getAttribute("data-icon-label-count"));
+      const index = Number(element.getAttribute("data-icon-label-index"));
+      if (isNumber(count) && isNumber(index)) {
+        return { element, count, index };
+      }
+    }
+    element = element.parentElement;
+  }
+  return null;
+}
+__name(getIconLabelNameFromHTMLElement, "getIconLabelNameFromHTMLElement");
+function isCompressedFolderName(target) {
+  return !!getIconLabelNameFromHTMLElement(target);
+}
+__name(isCompressedFolderName, "isCompressedFolderName");
+class ExplorerCompressionDelegate {
+  static {
+    __name(this, "ExplorerCompressionDelegate");
+  }
+  isIncompressible(stat) {
+    return stat.isRoot || !stat.isDirectory || stat instanceof NewExplorerItem || (!stat.parent || stat.parent.isRoot);
+  }
+}
+function getFileOrFolderLabelSuffix(items) {
+  if (items.length === 1) {
+    return items[0].name;
+  }
+  if (items.every((i) => i.isDirectory)) {
+    return localize("numberOfFolders", "{0} folders", items.length);
+  }
+  if (items.every((i) => !i.isDirectory)) {
+    return localize("numberOfFiles", "{0} files", items.length);
+  }
+  return `${items.length} files and folders`;
+}
+__name(getFileOrFolderLabelSuffix, "getFileOrFolderLabelSuffix");
+export {
+  CompressedNavigationController,
+  ExplorerCompressionDelegate,
+  ExplorerDataSource,
+  ExplorerDelegate,
+  ExplorerFindProvider,
+  FileDragAndDrop,
+  FileSorter,
+  FilesFilter,
+  FilesRenderer,
+  PhantomExplorerItem,
+  explorerRootErrorEmitter,
+  isCompressedFolderName
+};
+//# sourceMappingURL=explorerViewer.js.map

@@ -1,1 +1,126 @@
-import{StorageScope as r}from"../../platform/storage/common/storage.js";import{isEmptyObject as a}from"../../base/common/types.js";import{onUnexpectedError as n}from"../../base/common/errors.js";import"../../base/common/lifecycle.js";import"../../base/common/event.js";class t{constructor(e,s){this.storageService=s,this.id=t.COMMON_PREFIX+e}static applicationMementos=new Map;static profileMementos=new Map;static workspaceMementos=new Map;static COMMON_PREFIX="memento/";id;getMemento(e,i){switch(e){case r.WORKSPACE:{let o=t.workspaceMementos.get(this.id);return o||(o=new s(this.id,e,i,this.storageService),t.workspaceMementos.set(this.id,o)),o.getMemento()}case r.PROFILE:{let o=t.profileMementos.get(this.id);return o||(o=new s(this.id,e,i,this.storageService),t.profileMementos.set(this.id,o)),o.getMemento()}case r.APPLICATION:{let o=t.applicationMementos.get(this.id);return o||(o=new s(this.id,e,i,this.storageService),t.applicationMementos.set(this.id,o)),o.getMemento()}}}onDidChangeValue(e,t){return this.storageService.onDidChangeValue(e,this.id,t)}saveMemento(){t.workspaceMementos.get(this.id)?.save(),t.profileMementos.get(this.id)?.save(),t.applicationMementos.get(this.id)?.save()}reloadMemento(e){let s;switch(e){case r.APPLICATION:s=t.applicationMementos.get(this.id);break;case r.PROFILE:s=t.profileMementos.get(this.id);break;case r.WORKSPACE:s=t.workspaceMementos.get(this.id)}s?.reload()}static clear(e){switch(e){case r.WORKSPACE:t.workspaceMementos.clear();break;case r.PROFILE:t.profileMementos.clear();break;case r.APPLICATION:t.applicationMementos.clear()}}}class s{constructor(e,t,s,i){this.id=e,this.scope=t,this.target=s,this.storageService=i,this.mementoObj=this.doLoad()}mementoObj;doLoad(){try{return this.storageService.getObject(this.id,this.scope,{})}catch(e){n(`[memento]: failed to parse contents: ${e} (id: ${this.id}, scope: ${this.scope}, contents: ${this.storageService.get(this.id,this.scope)})`)}return{}}getMemento(){return this.mementoObj}reload(){for(const e of Object.getOwnPropertyNames(this.mementoObj))delete this.mementoObj[e];Object.assign(this.mementoObj,this.doLoad())}save(){a(this.mementoObj)?this.storageService.remove(this.id,this.scope):this.storageService.store(this.id,this.mementoObj,this.scope,this.target)}}export{t as Memento};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { IStorageService, IStorageValueChangeEvent, StorageScope, StorageTarget } from "../../platform/storage/common/storage.js";
+import { isEmptyObject } from "../../base/common/types.js";
+import { onUnexpectedError } from "../../base/common/errors.js";
+import { DisposableStore } from "../../base/common/lifecycle.js";
+import { Event } from "../../base/common/event.js";
+class Memento {
+  constructor(id, storageService) {
+    this.storageService = storageService;
+    this.id = Memento.COMMON_PREFIX + id;
+  }
+  static {
+    __name(this, "Memento");
+  }
+  static applicationMementos = /* @__PURE__ */ new Map();
+  static profileMementos = /* @__PURE__ */ new Map();
+  static workspaceMementos = /* @__PURE__ */ new Map();
+  static COMMON_PREFIX = "memento/";
+  id;
+  getMemento(scope, target) {
+    switch (scope) {
+      case StorageScope.WORKSPACE: {
+        let workspaceMemento = Memento.workspaceMementos.get(this.id);
+        if (!workspaceMemento) {
+          workspaceMemento = new ScopedMemento(this.id, scope, target, this.storageService);
+          Memento.workspaceMementos.set(this.id, workspaceMemento);
+        }
+        return workspaceMemento.getMemento();
+      }
+      case StorageScope.PROFILE: {
+        let profileMemento = Memento.profileMementos.get(this.id);
+        if (!profileMemento) {
+          profileMemento = new ScopedMemento(this.id, scope, target, this.storageService);
+          Memento.profileMementos.set(this.id, profileMemento);
+        }
+        return profileMemento.getMemento();
+      }
+      case StorageScope.APPLICATION: {
+        let applicationMemento = Memento.applicationMementos.get(this.id);
+        if (!applicationMemento) {
+          applicationMemento = new ScopedMemento(this.id, scope, target, this.storageService);
+          Memento.applicationMementos.set(this.id, applicationMemento);
+        }
+        return applicationMemento.getMemento();
+      }
+    }
+  }
+  onDidChangeValue(scope, disposables) {
+    return this.storageService.onDidChangeValue(scope, this.id, disposables);
+  }
+  saveMemento() {
+    Memento.workspaceMementos.get(this.id)?.save();
+    Memento.profileMementos.get(this.id)?.save();
+    Memento.applicationMementos.get(this.id)?.save();
+  }
+  reloadMemento(scope) {
+    let memento;
+    switch (scope) {
+      case StorageScope.APPLICATION:
+        memento = Memento.applicationMementos.get(this.id);
+        break;
+      case StorageScope.PROFILE:
+        memento = Memento.profileMementos.get(this.id);
+        break;
+      case StorageScope.WORKSPACE:
+        memento = Memento.workspaceMementos.get(this.id);
+        break;
+    }
+    memento?.reload();
+  }
+  static clear(scope) {
+    switch (scope) {
+      case StorageScope.WORKSPACE:
+        Memento.workspaceMementos.clear();
+        break;
+      case StorageScope.PROFILE:
+        Memento.profileMementos.clear();
+        break;
+      case StorageScope.APPLICATION:
+        Memento.applicationMementos.clear();
+        break;
+    }
+  }
+}
+class ScopedMemento {
+  constructor(id, scope, target, storageService) {
+    this.id = id;
+    this.scope = scope;
+    this.target = target;
+    this.storageService = storageService;
+    this.mementoObj = this.doLoad();
+  }
+  static {
+    __name(this, "ScopedMemento");
+  }
+  mementoObj;
+  doLoad() {
+    try {
+      return this.storageService.getObject(this.id, this.scope, {});
+    } catch (error) {
+      onUnexpectedError(`[memento]: failed to parse contents: ${error} (id: ${this.id}, scope: ${this.scope}, contents: ${this.storageService.get(this.id, this.scope)})`);
+    }
+    return {};
+  }
+  getMemento() {
+    return this.mementoObj;
+  }
+  reload() {
+    for (const name of Object.getOwnPropertyNames(this.mementoObj)) {
+      delete this.mementoObj[name];
+    }
+    Object.assign(this.mementoObj, this.doLoad());
+  }
+  save() {
+    if (!isEmptyObject(this.mementoObj)) {
+      this.storageService.store(this.id, this.mementoObj, this.scope, this.target);
+    } else {
+      this.storageService.remove(this.id, this.scope);
+    }
+  }
+}
+export {
+  Memento
+};
+//# sourceMappingURL=memento.js.map

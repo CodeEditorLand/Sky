@@ -1,1 +1,5 @@
-import{SyncDescriptor as r}from"../../../../platform/instantiation/common/descriptors.js";import{mcpDiscoveryRegistry as i}from"../common/discovery/mcpDiscovery.js";import{NativeMcpDiscovery as o}from"./nativeMpcDiscovery.js";i.register(new r(o));
+import { SyncDescriptor } from "../../../../platform/instantiation/common/descriptors.js";
+import { mcpDiscoveryRegistry } from "../common/discovery/mcpDiscovery.js";
+import { NativeMcpDiscovery } from "./nativeMpcDiscovery.js";
+mcpDiscoveryRegistry.register(new SyncDescriptor(NativeMcpDiscovery));
+//# sourceMappingURL=mcp.contribution.js.map

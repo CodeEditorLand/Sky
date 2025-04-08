@@ -1,1 +1,430 @@
-var Y=Object.defineProperty;var q=Object.getOwnPropertyDescriptor;var A=(h,b,t,e)=>{for(var i=e>1?void 0:e?q(b,t):b,o=h.length-1,n;o>=0;o--)(n=h[o])&&(i=(e?n(b,t,i):n(i))||i);return e&&i&&Y(b,t,i),i},O=(h,b)=>(t,e)=>b(t,e,h);import{n as p,trackFocus as K}from"../../../../../../../base/browser/dom.js";import{renderIcon as Q}from"../../../../../../../base/browser/ui/iconLabel/iconLabels.js";import{Codicon as w}from"../../../../../../../base/common/codicons.js";import{BugIndicatingError as F}from"../../../../../../../base/common/errors.js";import{Disposable as Z,DisposableStore as G,toDisposable as ee}from"../../../../../../../base/common/lifecycle.js";import{autorun as te,constObservable as D,debouncedObservable as B,derived as v,observableFromEvent as ie,observableValue as V,runOnChange as oe}from"../../../../../../../base/common/observable.js";import{IAccessibilityService as ne}from"../../../../../../../platform/accessibility/common/accessibility.js";import{IHoverService as re}from"../../../../../../../platform/hover/browser/hover.js";import{IInstantiationService as se}from"../../../../../../../platform/instantiation/common/instantiation.js";import{asCssVariable as de}from"../../../../../../../platform/theme/common/colorUtils.js";import{IThemeService as ae}from"../../../../../../../platform/theme/common/themeService.js";import"../../../../../../browser/editorBrowser.js";import"../../../../../../browser/observableCodeEditor.js";import{Point as le}from"../../../../../../browser/point.js";import{Rect as E}from"../../../../../../browser/rect.js";import"../../../../../../browser/services/hoverService/hoverService.js";import"../../../../../../browser/services/hoverService/hoverWidget.js";import{EditorOption as N,RenderLineNumbersType as _}from"../../../../../../common/config/editorOptions.js";import"../../../../../../common/core/lineRange.js";import{OffsetRange as ce}from"../../../../../../common/core/offsetRange.js";import{StickyScrollController as ue}from"../../../../../stickyScroll/browser/stickyScrollController.js";import{InlineEditTabAction as R}from"../inlineEditsViewInterface.js";import{getEditorBlendedColor as u,inlineEditIndicatorBackground as he,inlineEditIndicatorPrimaryBackground as be,inlineEditIndicatorPrimaryBorder as fe,inlineEditIndicatorPrimaryForeground as ge,inlineEditIndicatorSecondaryBackground as me,inlineEditIndicatorSecondaryBorder as pe,inlineEditIndicatorSecondaryForeground as ve,inlineEditIndicatorsuccessfulBackground as _e,inlineEditIndicatorsuccessfulBorder as Ie,inlineEditIndicatorsuccessfulForeground as ye}from"../theme.js";import{mapOutFalsy as j,rectToProps as $}from"../utils/utils.js";import{GutterIndicatorMenuContent as Oe}from"./gutterIndicatorMenu.js";let H=class extends Z{constructor(t,e,i,o,n,I,S,f,m,l){super();this._editorObs=t;this._originalRange=e;this._verticalOffset=i;this._model=o;this._isHoveringOverInlineEdit=n;this._focusIsInMenu=I;this._hoverService=S;this._instantiationService=f;this._accessibilityService=m;this._gutterIndicatorStyles=this._tabAction.map((s,r)=>{switch(s){case R.Inactive:return{background:u(me,l).read(r).toString(),foreground:u(ve,l).read(r).toString(),border:u(pe,l).read(r).toString()};case R.Jump:return{background:u(be,l).read(r).toString(),foreground:u(ge,l).read(r).toString(),border:u(fe,l).read(r).toString()};case R.Accept:return{background:u(_e,l).read(r).toString(),foreground:u(ye,l).read(r).toString(),border:u(Ie,l).read(r).toString()}}}),this._register(this._editorObs.createOverlayWidget({domNode:this._indicator.element,position:D(null),allowEditorOverflow:!1,minContentWidthInPx:D(0)})),this._register(this._editorObs.editor.onMouseMove(s=>{const d=this._iconRef.element.getBoundingClientRect(),c=E.fromLeftTopWidthHeight(d.left,d.top,d.width,d.height),y=new le(s.event.posx,s.event.posy);this._isHoveredOverIcon.set(c.containsPoint(y),void 0)})),this._register(this._editorObs.editor.onDidScrollChange(()=>{this._isHoveredOverIcon.set(!1,void 0)})),this._isHoveredOverInlineEditDebounced=B(this._isHoveringOverInlineEdit,100),this._register(oe(this._isHoveredOverInlineEditDebounced,s=>{s&&this.triggerAnimation()})),this._register(te(s=>{this._indicator.readEffect(s),this._indicator.element&&this._editorObs.editor.applyFontInfo(this._indicator.element)}))}get model(){const t=this._model.get();if(!t)throw new F("Inline Edit Model not available");return t}_gutterIndicatorStyles;_isHoveredOverInlineEditDebounced;triggerAnimation(){return this._accessibilityService.isMotionReduced()?new Animation(null,null).finished:this._iconRef.element.animate([{outline:`2px solid ${this._gutterIndicatorStyles.map(e=>e.border).get()}`,outlineOffset:"-1px",offset:0},{outline:"2px solid transparent",outlineOffset:"10px",offset:1}],{duration:500}).finished}_originalRangeObs=j(this._originalRange);_state=v(t=>{const e=this._originalRangeObs.read(t);if(e)return{range:e,lineOffsetRange:this._editorObs.observeLineOffsetRange(e,this._store)}});_stickyScrollController=ue.get(this._editorObs.editor);_stickyScrollHeight=this._stickyScrollController?ie(this._stickyScrollController.onDidChangeStickyScrollHeight,()=>this._stickyScrollController.stickyScrollWidgetHeight):D(0);_lineNumberToRender=v(this,t=>{if(this._verticalOffset.read(t)!==0)return"";const e=this._originalRange.read(t)?.startLineNumber,i=this._editorObs.getOption(N.lineNumbers).read(t);if(e===void 0||i.renderType===_.Off)return"";if(i.renderType===_.Interval){const o=this._editorObs.cursorPosition.read(t);return e%10===0||o&&o.lineNumber===e?e.toString():""}if(i.renderType===_.Relative){const o=this._editorObs.cursorPosition.read(t);if(!o)return"";const n=Math.abs(e-o.lineNumber);return n===0?e.toString():n.toString()}return i.renderType===_.Custom?i.renderFn?i.renderFn(e):"":e.toString()});_availableWidthForIcon=v(this,t=>{const e=this._editorObs.editor.getModel(),i=this._editorObs.editor,o=this._editorObs.layoutInfo.read(t),n=o.decorationsLeft+o.decorationsWidth-o.glyphMarginLeft;if(!e||n<=0)return()=>0;if(o.lineNumbersLeft===0)return()=>n;const I=this._editorObs.getOption(N.lineNumbers).read(t);if(I.renderType===_.Relative||I.renderType===_.Off)return()=>n;const S=i.getOption(N.fontInfo).typicalHalfwidthCharacterWidth,f=o.lineNumbersLeft+o.lineNumbersWidth,l=(e.getLineCount()+1).toString().length,s=[];for(let r=1;r<=l;r++){const d=10**(r-1),c=i.getTopForLineNumber(d),y=r*S,k=Math.min(n,Math.max(0,f-y-o.glyphMarginLeft));s.push({firstLineNumberWithDigitCount:d,topOfLineNumber:c,usableWidthLeftOfLineNumber:k})}return r=>{for(let d=s.length-1;d>=0;d--)if(r>=s[d].topOfLineNumber)return s[d].usableWidthLeftOfLineNumber;throw new F("Could not find avilable width for icon")}});_layout=v(this,t=>{const e=this._state.read(t);if(!e)return;const i=this._editorObs.layoutInfo.read(t),o=this._editorObs.getOption(N.lineHeight).read(t),n=1,I=i.decorationsLeft+i.decorationsWidth-i.glyphMarginLeft-2*n,S=i.height-2*n,f=E.fromLeftTopWidthHeight(n,n,I,S),m=f.withTop(this._stickyScrollHeight.read(t)+n),l=e.lineOffsetRange.read(t),s=E.fromRanges(ce.fromTo(m.left,m.right),l),r=o,d=this._verticalOffset.read(t),c=s.withHeight(r).translateY(d),y=m.containsRect(c),k=this._tabAction.map(a=>a===R.Accept?w.keyboardTab:w.arrowRight),C=v(a=>this._isHoveredOverIconDebounced.read(a)||this._isHoveredOverInlineEditDebounced.read(a)?w.check:k.read(a)),M=22,z=16,T=a=>{const g=this._availableWidthForIcon.get()(a.bottom+this._editorObs.editor.getScrollTop())-n;return Math.max(Math.min(g,M),z)};if(y){const a=c,g=Math.max(i.lineNumbersLeft+i.lineNumbersWidth-f.left,0),P=a.withWidth(g),X=a.withWidth(M).translateX(g);return{gutterEditArea:s,icon:C,iconDirection:"right",iconRect:X,pillRect:a,lineNumberRect:P}}const L=f.intersect(s);if(L&&L.height>=r){const a=c.moveToBeContainedIn(m).moveToBeContainedIn(L),g=a.withWidth(T(a));return{gutterEditArea:s,icon:C,iconDirection:"right",iconRect:g,pillRect:g}}const x=c.moveToBeContainedIn(f),W=x.withWidth(T(x)),J=W,U=W.top<c.top?"top":"bottom";return{gutterEditArea:s,icon:k,iconDirection:U,iconRect:J,pillRect:W}});_iconRef=p.ref();isVisible=this._layout.map(t=>!!t);_hoverVisible=V(this,!1);isHoverVisible=this._hoverVisible;_isHoveredOverIcon=V(this,!1);_isHoveredOverIconDebounced=B(this._isHoveredOverIcon,100);isHoveredOverIcon=this._isHoveredOverIconDebounced;_showHover(){if(this._hoverVisible.get())return;const t=new G,e=t.add(this._instantiationService.createInstance(Oe,this.model,n=>{n&&this._editorObs.editor.focus(),o?.dispose()},this._editorObs).toDisposableLiveElement()),i=t.add(K(e.element));t.add(i.onDidBlur(()=>this._focusIsInMenu.set(!1,void 0))),t.add(i.onDidFocus(()=>this._focusIsInMenu.set(!0,void 0))),t.add(ee(()=>this._focusIsInMenu.set(!1,void 0)));const o=this._hoverService.showInstantHover({target:this._iconRef.element,content:e.element});o?(this._hoverVisible.set(!0,void 0),t.add(this._editorObs.editor.onDidScrollChange(()=>o.dispose())),t.add(o.onDispose(()=>{this._hoverVisible.set(!1,void 0),t.dispose()}))):t.dispose()}_tabAction=v(this,t=>{const e=this._model.read(t);return e?e.tabAction.read(t):R.Inactive});_indicator=p.div({class:"inline-edits-view-gutter-indicator",onclick:()=>{const e=this._layout.get()?.icon.get()===w.check;this._editorObs.editor.focus(),e?this.model.accept():this.model.jump()},tabIndex:0,style:{position:"absolute",overflow:"visible"}},j(this._layout).map(t=>t?[p.div({style:{position:"absolute",background:de(he),borderRadius:"4px",...$(e=>t.read(e).gutterEditArea)}}),p.div({class:"icon",ref:this._iconRef,onmouseenter:()=>{this._showHover()},style:{cursor:"pointer",zIndex:"1000",position:"absolute",backgroundColor:this._gutterIndicatorStyles.map(e=>e.background),"--vscodeIconForeground":this._gutterIndicatorStyles.map(e=>e.foreground),border:this._gutterIndicatorStyles.map(e=>`1px solid ${e.border}`),boxSizing:"border-box",borderRadius:"4px",display:"flex",justifyContent:"flex-end",transition:"background-color 0.2s ease-in-out, width 0.2s ease-in-out",...$(e=>t.read(e).pillRect)}},[p.div({className:"line-number",style:{lineHeight:t.map(e=>e.lineNumberRect?e.lineNumberRect.height:0),display:t.map(e=>e.lineNumberRect?"flex":"none"),alignItems:"center",justifyContent:"flex-end",width:t.map(e=>e.lineNumberRect?e.lineNumberRect.width:0),height:"100%",color:this._gutterIndicatorStyles.map(e=>e.foreground)}},this._lineNumberToRender),p.div({style:{rotate:t.map(e=>`${Re(e.iconDirection)}deg`),transition:"rotate 0.2s ease-in-out",display:"flex",alignItems:"center",justifyContent:"center",height:"100%",marginRight:t.map(e=>e.pillRect.width-e.iconRect.width-(e.lineNumberRect?.width??0)),width:t.map(e=>e.iconRect.width)}},[t.map((e,i)=>Q(e.icon.read(i)))])])]:[])).keepUpdated(this._store)};H=A([O(6,re),O(7,se),O(8,ne),O(9,ae)],H);function Re(h){switch(h){case"top":return 90;case"bottom":return-90;case"right":return 0}}export{H as InlineEditsGutterIndicator};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { n, trackFocus } from "../../../../../../../base/browser/dom.js";
+import { renderIcon } from "../../../../../../../base/browser/ui/iconLabel/iconLabels.js";
+import { Codicon } from "../../../../../../../base/common/codicons.js";
+import { BugIndicatingError } from "../../../../../../../base/common/errors.js";
+import { Disposable, DisposableStore, toDisposable } from "../../../../../../../base/common/lifecycle.js";
+import { IObservable, ISettableObservable, autorun, constObservable, debouncedObservable, derived, observableFromEvent, observableValue, runOnChange } from "../../../../../../../base/common/observable.js";
+import { IAccessibilityService } from "../../../../../../../platform/accessibility/common/accessibility.js";
+import { IHoverService } from "../../../../../../../platform/hover/browser/hover.js";
+import { IInstantiationService } from "../../../../../../../platform/instantiation/common/instantiation.js";
+import { asCssVariable } from "../../../../../../../platform/theme/common/colorUtils.js";
+import { IThemeService } from "../../../../../../../platform/theme/common/themeService.js";
+import { IEditorMouseEvent } from "../../../../../../browser/editorBrowser.js";
+import { ObservableCodeEditor } from "../../../../../../browser/observableCodeEditor.js";
+import { Point } from "../../../../../../browser/point.js";
+import { Rect } from "../../../../../../browser/rect.js";
+import { HoverService } from "../../../../../../browser/services/hoverService/hoverService.js";
+import { HoverWidget } from "../../../../../../browser/services/hoverService/hoverWidget.js";
+import { EditorOption, RenderLineNumbersType } from "../../../../../../common/config/editorOptions.js";
+import { LineRange } from "../../../../../../common/core/lineRange.js";
+import { OffsetRange } from "../../../../../../common/core/offsetRange.js";
+import { StickyScrollController } from "../../../../../stickyScroll/browser/stickyScrollController.js";
+import { IInlineEditModel, InlineEditTabAction } from "../inlineEditsViewInterface.js";
+import { getEditorBlendedColor, inlineEditIndicatorBackground, inlineEditIndicatorPrimaryBackground, inlineEditIndicatorPrimaryBorder, inlineEditIndicatorPrimaryForeground, inlineEditIndicatorSecondaryBackground, inlineEditIndicatorSecondaryBorder, inlineEditIndicatorSecondaryForeground, inlineEditIndicatorsuccessfulBackground, inlineEditIndicatorsuccessfulBorder, inlineEditIndicatorsuccessfulForeground } from "../theme.js";
+import { mapOutFalsy, rectToProps } from "../utils/utils.js";
+import { GutterIndicatorMenuContent } from "./gutterIndicatorMenu.js";
+let InlineEditsGutterIndicator = class extends Disposable {
+  constructor(_editorObs, _originalRange, _verticalOffset, _model, _isHoveringOverInlineEdit, _focusIsInMenu, _hoverService, _instantiationService, _accessibilityService, themeService) {
+    super();
+    this._editorObs = _editorObs;
+    this._originalRange = _originalRange;
+    this._verticalOffset = _verticalOffset;
+    this._model = _model;
+    this._isHoveringOverInlineEdit = _isHoveringOverInlineEdit;
+    this._focusIsInMenu = _focusIsInMenu;
+    this._hoverService = _hoverService;
+    this._instantiationService = _instantiationService;
+    this._accessibilityService = _accessibilityService;
+    this._gutterIndicatorStyles = this._tabAction.map((v, reader) => {
+      switch (v) {
+        case InlineEditTabAction.Inactive:
+          return {
+            background: getEditorBlendedColor(inlineEditIndicatorSecondaryBackground, themeService).read(reader).toString(),
+            foreground: getEditorBlendedColor(inlineEditIndicatorSecondaryForeground, themeService).read(reader).toString(),
+            border: getEditorBlendedColor(inlineEditIndicatorSecondaryBorder, themeService).read(reader).toString()
+          };
+        case InlineEditTabAction.Jump:
+          return {
+            background: getEditorBlendedColor(inlineEditIndicatorPrimaryBackground, themeService).read(reader).toString(),
+            foreground: getEditorBlendedColor(inlineEditIndicatorPrimaryForeground, themeService).read(reader).toString(),
+            border: getEditorBlendedColor(inlineEditIndicatorPrimaryBorder, themeService).read(reader).toString()
+          };
+        case InlineEditTabAction.Accept:
+          return {
+            background: getEditorBlendedColor(inlineEditIndicatorsuccessfulBackground, themeService).read(reader).toString(),
+            foreground: getEditorBlendedColor(inlineEditIndicatorsuccessfulForeground, themeService).read(reader).toString(),
+            border: getEditorBlendedColor(inlineEditIndicatorsuccessfulBorder, themeService).read(reader).toString()
+          };
+      }
+    });
+    this._register(this._editorObs.createOverlayWidget({
+      domNode: this._indicator.element,
+      position: constObservable(null),
+      allowEditorOverflow: false,
+      minContentWidthInPx: constObservable(0)
+    }));
+    this._register(this._editorObs.editor.onMouseMove((e) => {
+      const el = this._iconRef.element;
+      const rect = el.getBoundingClientRect();
+      const rectangularArea = Rect.fromLeftTopWidthHeight(rect.left, rect.top, rect.width, rect.height);
+      const point = new Point(e.event.posx, e.event.posy);
+      this._isHoveredOverIcon.set(rectangularArea.containsPoint(point), void 0);
+    }));
+    this._register(this._editorObs.editor.onDidScrollChange(() => {
+      this._isHoveredOverIcon.set(false, void 0);
+    }));
+    this._isHoveredOverInlineEditDebounced = debouncedObservable(this._isHoveringOverInlineEdit, 100);
+    this._register(runOnChange(this._isHoveredOverInlineEditDebounced, (isHovering) => {
+      if (isHovering) {
+        this.triggerAnimation();
+      }
+    }));
+    this._register(autorun((reader) => {
+      this._indicator.readEffect(reader);
+      if (this._indicator.element) {
+        this._editorObs.editor.applyFontInfo(this._indicator.element);
+      }
+    }));
+  }
+  static {
+    __name(this, "InlineEditsGutterIndicator");
+  }
+  get model() {
+    const model = this._model.get();
+    if (!model) {
+      throw new BugIndicatingError("Inline Edit Model not available");
+    }
+    return model;
+  }
+  _gutterIndicatorStyles;
+  _isHoveredOverInlineEditDebounced;
+  triggerAnimation() {
+    if (this._accessibilityService.isMotionReduced()) {
+      return new Animation(null, null).finished;
+    }
+    const animation = this._iconRef.element.animate([
+      {
+        outline: `2px solid ${this._gutterIndicatorStyles.map((v) => v.border).get()}`,
+        outlineOffset: "-1px",
+        offset: 0
+      },
+      {
+        outline: `2px solid transparent`,
+        outlineOffset: "10px",
+        offset: 1
+      }
+    ], { duration: 500 });
+    return animation.finished;
+  }
+  _originalRangeObs = mapOutFalsy(this._originalRange);
+  _state = derived((reader) => {
+    const range = this._originalRangeObs.read(reader);
+    if (!range) {
+      return void 0;
+    }
+    return {
+      range,
+      lineOffsetRange: this._editorObs.observeLineOffsetRange(range, this._store)
+    };
+  });
+  _stickyScrollController = StickyScrollController.get(this._editorObs.editor);
+  _stickyScrollHeight = this._stickyScrollController ? observableFromEvent(this._stickyScrollController.onDidChangeStickyScrollHeight, () => this._stickyScrollController.stickyScrollWidgetHeight) : constObservable(0);
+  _lineNumberToRender = derived(this, (reader) => {
+    if (this._verticalOffset.read(reader) !== 0) {
+      return "";
+    }
+    const lineNumber = this._originalRange.read(reader)?.startLineNumber;
+    const lineNumberOptions = this._editorObs.getOption(EditorOption.lineNumbers).read(reader);
+    if (lineNumber === void 0 || lineNumberOptions.renderType === RenderLineNumbersType.Off) {
+      return "";
+    }
+    if (lineNumberOptions.renderType === RenderLineNumbersType.Interval) {
+      const cursorPosition = this._editorObs.cursorPosition.read(reader);
+      if (lineNumber % 10 === 0 || cursorPosition && cursorPosition.lineNumber === lineNumber) {
+        return lineNumber.toString();
+      }
+      return "";
+    }
+    if (lineNumberOptions.renderType === RenderLineNumbersType.Relative) {
+      const cursorPosition = this._editorObs.cursorPosition.read(reader);
+      if (!cursorPosition) {
+        return "";
+      }
+      const relativeLineNumber = Math.abs(lineNumber - cursorPosition.lineNumber);
+      if (relativeLineNumber === 0) {
+        return lineNumber.toString();
+      }
+      return relativeLineNumber.toString();
+    }
+    if (lineNumberOptions.renderType === RenderLineNumbersType.Custom) {
+      if (lineNumberOptions.renderFn) {
+        return lineNumberOptions.renderFn(lineNumber);
+      }
+      return "";
+    }
+    return lineNumber.toString();
+  });
+  _availableWidthForIcon = derived(this, (reader) => {
+    const textModel = this._editorObs.editor.getModel();
+    const editor = this._editorObs.editor;
+    const layout = this._editorObs.layoutInfo.read(reader);
+    const gutterWidth = layout.decorationsLeft + layout.decorationsWidth - layout.glyphMarginLeft;
+    if (!textModel || gutterWidth <= 0) {
+      return () => 0;
+    }
+    if (layout.lineNumbersLeft === 0) {
+      return () => gutterWidth;
+    }
+    const lineNumberOptions = this._editorObs.getOption(EditorOption.lineNumbers).read(reader);
+    if (lineNumberOptions.renderType === RenderLineNumbersType.Relative || /* likely to flicker */
+    lineNumberOptions.renderType === RenderLineNumbersType.Off) {
+      return () => gutterWidth;
+    }
+    const w = editor.getOption(EditorOption.fontInfo).typicalHalfwidthCharacterWidth;
+    const rightOfLineNumber = layout.lineNumbersLeft + layout.lineNumbersWidth;
+    const totalLines = textModel.getLineCount();
+    const totalLinesDigits = (totalLines + 1).toString().length;
+    const offsetDigits = [];
+    for (let digits = 1; digits <= totalLinesDigits; digits++) {
+      const firstLineNumberWithDigitCount = 10 ** (digits - 1);
+      const topOfLineNumber = editor.getTopForLineNumber(firstLineNumberWithDigitCount);
+      const digitsWidth = digits * w;
+      const usableWidthLeftOfLineNumber = Math.min(gutterWidth, Math.max(0, rightOfLineNumber - digitsWidth - layout.glyphMarginLeft));
+      offsetDigits.push({ firstLineNumberWithDigitCount, topOfLineNumber, usableWidthLeftOfLineNumber });
+    }
+    return (topOffset) => {
+      for (let i = offsetDigits.length - 1; i >= 0; i--) {
+        if (topOffset >= offsetDigits[i].topOfLineNumber) {
+          return offsetDigits[i].usableWidthLeftOfLineNumber;
+        }
+      }
+      throw new BugIndicatingError("Could not find avilable width for icon");
+    };
+  });
+  _layout = derived(this, (reader) => {
+    const s = this._state.read(reader);
+    if (!s) {
+      return void 0;
+    }
+    const layout = this._editorObs.layoutInfo.read(reader);
+    const lineHeight = this._editorObs.getOption(EditorOption.lineHeight).read(reader);
+    const gutterViewPortPadding = 1;
+    const gutterWidthWithoutPadding = layout.decorationsLeft + layout.decorationsWidth - layout.glyphMarginLeft - 2 * gutterViewPortPadding;
+    const gutterHeightWithoutPadding = layout.height - 2 * gutterViewPortPadding;
+    const gutterViewPortWithStickyScroll = Rect.fromLeftTopWidthHeight(gutterViewPortPadding, gutterViewPortPadding, gutterWidthWithoutPadding, gutterHeightWithoutPadding);
+    const gutterViewPortWithoutStickyScroll = gutterViewPortWithStickyScroll.withTop(this._stickyScrollHeight.read(reader) + gutterViewPortPadding);
+    const verticalEditRange = s.lineOffsetRange.read(reader);
+    const gutterEditArea = Rect.fromRanges(OffsetRange.fromTo(gutterViewPortWithoutStickyScroll.left, gutterViewPortWithoutStickyScroll.right), verticalEditRange);
+    const pillHeight = lineHeight;
+    const pillOffset = this._verticalOffset.read(reader);
+    const pillFullyDockedRect = gutterEditArea.withHeight(pillHeight).translateY(pillOffset);
+    const pillIsFullyDocked = gutterViewPortWithoutStickyScroll.containsRect(pillFullyDockedRect);
+    const iconNoneDocked = this._tabAction.map((action) => action === InlineEditTabAction.Accept ? Codicon.keyboardTab : Codicon.arrowRight);
+    const iconDocked = derived((reader2) => this._isHoveredOverIconDebounced.read(reader2) || this._isHoveredOverInlineEditDebounced.read(reader2) ? Codicon.check : iconNoneDocked.read(reader2));
+    const idealIconWidth = 22;
+    const minimalIconWidth = 16;
+    const iconWidth = /* @__PURE__ */ __name((pillRect2) => {
+      const availableWidth = this._availableWidthForIcon.get()(pillRect2.bottom + this._editorObs.editor.getScrollTop()) - gutterViewPortPadding;
+      return Math.max(Math.min(availableWidth, idealIconWidth), minimalIconWidth);
+    }, "iconWidth");
+    if (pillIsFullyDocked) {
+      const pillRect2 = pillFullyDockedRect;
+      const lineNumberWidth = Math.max(layout.lineNumbersLeft + layout.lineNumbersWidth - gutterViewPortWithStickyScroll.left, 0);
+      const lineNumberRect = pillRect2.withWidth(lineNumberWidth);
+      const iconRect2 = pillRect2.withWidth(idealIconWidth).translateX(lineNumberWidth);
+      return {
+        gutterEditArea,
+        icon: iconDocked,
+        iconDirection: "right",
+        iconRect: iconRect2,
+        pillRect: pillRect2,
+        lineNumberRect
+      };
+    }
+    const pillPartiallyDockedPossibleArea = gutterViewPortWithStickyScroll.intersect(gutterEditArea);
+    const pillIsPartiallyDocked = pillPartiallyDockedPossibleArea && pillPartiallyDockedPossibleArea.height >= pillHeight;
+    if (pillIsPartiallyDocked) {
+      const pillRectMoved2 = pillFullyDockedRect.moveToBeContainedIn(gutterViewPortWithoutStickyScroll).moveToBeContainedIn(pillPartiallyDockedPossibleArea);
+      const pillRect2 = pillRectMoved2.withWidth(iconWidth(pillRectMoved2));
+      const iconRect2 = pillRect2;
+      return {
+        gutterEditArea,
+        icon: iconDocked,
+        iconDirection: "right",
+        iconRect: iconRect2,
+        pillRect: pillRect2
+      };
+    }
+    const pillRectMoved = pillFullyDockedRect.moveToBeContainedIn(gutterViewPortWithStickyScroll);
+    const pillRect = pillRectMoved.withWidth(iconWidth(pillRectMoved));
+    const iconRect = pillRect;
+    const iconDirection = pillRect.top < pillFullyDockedRect.top ? "top" : "bottom";
+    return {
+      gutterEditArea,
+      icon: iconNoneDocked,
+      iconDirection,
+      iconRect,
+      pillRect
+    };
+  });
+  _iconRef = n.ref();
+  isVisible = this._layout.map((l) => !!l);
+  _hoverVisible = observableValue(this, false);
+  isHoverVisible = this._hoverVisible;
+  _isHoveredOverIcon = observableValue(this, false);
+  _isHoveredOverIconDebounced = debouncedObservable(this._isHoveredOverIcon, 100);
+  isHoveredOverIcon = this._isHoveredOverIconDebounced;
+  _showHover() {
+    if (this._hoverVisible.get()) {
+      return;
+    }
+    const disposableStore = new DisposableStore();
+    const content = disposableStore.add(this._instantiationService.createInstance(
+      GutterIndicatorMenuContent,
+      this.model,
+      (focusEditor) => {
+        if (focusEditor) {
+          this._editorObs.editor.focus();
+        }
+        h?.dispose();
+      },
+      this._editorObs
+    ).toDisposableLiveElement());
+    const focusTracker = disposableStore.add(trackFocus(content.element));
+    disposableStore.add(focusTracker.onDidBlur(() => this._focusIsInMenu.set(false, void 0)));
+    disposableStore.add(focusTracker.onDidFocus(() => this._focusIsInMenu.set(true, void 0)));
+    disposableStore.add(toDisposable(() => this._focusIsInMenu.set(false, void 0)));
+    const h = this._hoverService.showInstantHover({
+      target: this._iconRef.element,
+      content: content.element
+    });
+    if (h) {
+      this._hoverVisible.set(true, void 0);
+      disposableStore.add(this._editorObs.editor.onDidScrollChange(() => h.dispose()));
+      disposableStore.add(h.onDispose(() => {
+        this._hoverVisible.set(false, void 0);
+        disposableStore.dispose();
+      }));
+    } else {
+      disposableStore.dispose();
+    }
+  }
+  _tabAction = derived(this, (reader) => {
+    const model = this._model.read(reader);
+    if (!model) {
+      return InlineEditTabAction.Inactive;
+    }
+    return model.tabAction.read(reader);
+  });
+  _indicator = n.div({
+    class: "inline-edits-view-gutter-indicator",
+    onclick: /* @__PURE__ */ __name(() => {
+      const layout = this._layout.get();
+      const acceptOnClick = layout?.icon.get() === Codicon.check;
+      this._editorObs.editor.focus();
+      if (acceptOnClick) {
+        this.model.accept();
+      } else {
+        this.model.jump();
+      }
+    }, "onclick"),
+    tabIndex: 0,
+    style: {
+      position: "absolute",
+      overflow: "visible"
+    }
+  }, mapOutFalsy(this._layout).map((layout) => !layout ? [] : [
+    n.div({
+      style: {
+        position: "absolute",
+        background: asCssVariable(inlineEditIndicatorBackground),
+        borderRadius: "4px",
+        ...rectToProps((reader) => layout.read(reader).gutterEditArea)
+      }
+    }),
+    n.div({
+      class: "icon",
+      ref: this._iconRef,
+      onmouseenter: /* @__PURE__ */ __name(() => {
+        this._showHover();
+      }, "onmouseenter"),
+      style: {
+        cursor: "pointer",
+        zIndex: "1000",
+        position: "absolute",
+        backgroundColor: this._gutterIndicatorStyles.map((v) => v.background),
+        ["--vscodeIconForeground"]: this._gutterIndicatorStyles.map((v) => v.foreground),
+        border: this._gutterIndicatorStyles.map((v) => `1px solid ${v.border}`),
+        boxSizing: "border-box",
+        borderRadius: "4px",
+        display: "flex",
+        justifyContent: "flex-end",
+        transition: "background-color 0.2s ease-in-out, width 0.2s ease-in-out",
+        ...rectToProps((reader) => layout.read(reader).pillRect)
+      }
+    }, [
+      n.div(
+        {
+          className: "line-number",
+          style: {
+            lineHeight: layout.map((l) => l.lineNumberRect ? l.lineNumberRect.height : 0),
+            display: layout.map((l) => l.lineNumberRect ? "flex" : "none"),
+            alignItems: "center",
+            justifyContent: "flex-end",
+            width: layout.map((l) => l.lineNumberRect ? l.lineNumberRect.width : 0),
+            height: "100%",
+            color: this._gutterIndicatorStyles.map((v) => v.foreground)
+          }
+        },
+        this._lineNumberToRender
+      ),
+      n.div({
+        style: {
+          rotate: layout.map((l) => `${getRotationFromDirection(l.iconDirection)}deg`),
+          transition: "rotate 0.2s ease-in-out",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          height: "100%",
+          marginRight: layout.map((l) => l.pillRect.width - l.iconRect.width - (l.lineNumberRect?.width ?? 0)),
+          width: layout.map((l) => l.iconRect.width)
+        }
+      }, [
+        layout.map((l, reader) => renderIcon(l.icon.read(reader)))
+      ])
+    ])
+  ])).keepUpdated(this._store);
+};
+InlineEditsGutterIndicator = __decorateClass([
+  __decorateParam(6, IHoverService),
+  __decorateParam(7, IInstantiationService),
+  __decorateParam(8, IAccessibilityService),
+  __decorateParam(9, IThemeService)
+], InlineEditsGutterIndicator);
+function getRotationFromDirection(direction) {
+  switch (direction) {
+    case "top":
+      return 90;
+    case "bottom":
+      return -90;
+    case "right":
+      return 0;
+  }
+}
+__name(getRotationFromDirection, "getRotationFromDirection");
+export {
+  InlineEditsGutterIndicator
+};
+//# sourceMappingURL=gutterIndicatorView.js.map

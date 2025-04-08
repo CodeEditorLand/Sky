@@ -1,1 +1,356 @@
-import*as o from"../../../../nls.js";import*as S from"../../../../base/common/types.js";import{Registry as P}from"../../../../platform/registry/common/platform.js";import{Extensions as w,ConfigurationScope as z}from"../../../../platform/configuration/common/configurationRegistry.js";import"../../../../base/common/jsonSchema.js";import{textmateColorsSchemaId as N,textmateColorGroupSchemaId as A}from"./colorThemeSchema.js";import{workbenchColorsSchemaId as k}from"../../../../platform/theme/common/colorRegistry.js";import{tokenStylingSchemaId as v}from"../../../../platform/theme/common/tokenClassificationRegistry.js";import{ThemeSettings as t,ThemeSettingDefaults as c}from"./workbenchThemeService.js";import{ConfigurationTarget as l}from"../../../../platform/configuration/common/configuration.js";import{isWeb as U}from"../../../../base/common/platform.js";import{ColorScheme as m}from"../../../../platform/theme/common/theme.js";import"./hostColorSchemeService.js";const f=P.as(w.Configuration),u=[],d=[],g=[];function s(e){return`\`#${e}#\``}const C="colorThemeConfiguration",F={type:"string",markdownDescription:o.localize({key:"colorTheme",comment:["{0} will become a link to another setting."]},"Specifies the color theme used in the workbench when {0} is not enabled.",s(t.DETECT_COLOR_SCHEME)),default:U?c.COLOR_THEME_LIGHT:c.COLOR_THEME_DARK,tags:[C],enum:u,enumDescriptions:g,enumItemLabels:d,errorMessage:o.localize("colorThemeError","Theme is unknown or not installed.")},G={type:"string",markdownDescription:o.localize({key:"preferredDarkColorTheme",comment:["{0} will become a link to another setting."]},"Specifies the color theme when system color mode is dark and {0} is enabled.",s(t.DETECT_COLOR_SCHEME)),default:c.COLOR_THEME_DARK,tags:[C],enum:u,enumDescriptions:g,enumItemLabels:d,errorMessage:o.localize("colorThemeError","Theme is unknown or not installed.")},K={type:"string",markdownDescription:o.localize({key:"preferredLightColorTheme",comment:["{0} will become a link to another setting."]},"Specifies the color theme when system color mode is light and {0} is enabled.",s(t.DETECT_COLOR_SCHEME)),default:c.COLOR_THEME_LIGHT,tags:[C],enum:u,enumDescriptions:g,enumItemLabels:d,errorMessage:o.localize("colorThemeError","Theme is unknown or not installed.")},V={type:"string",markdownDescription:o.localize({key:"preferredHCDarkColorTheme",comment:["{0} will become a link to another setting."]},"Specifies the color theme when in high contrast dark mode and {0} is enabled.",s(t.DETECT_HC)),default:c.COLOR_THEME_HC_DARK,tags:[C],enum:u,enumDescriptions:g,enumItemLabels:d,errorMessage:o.localize("colorThemeError","Theme is unknown or not installed.")},W={type:"string",markdownDescription:o.localize({key:"preferredHCLightColorTheme",comment:["{0} will become a link to another setting."]},"Specifies the color theme when in high contrast light mode and {0} is enabled.",s(t.DETECT_HC)),default:c.COLOR_THEME_HC_LIGHT,tags:[C],enum:u,enumDescriptions:g,enumItemLabels:d,errorMessage:o.localize("colorThemeError","Theme is unknown or not installed.")},x={type:"boolean",markdownDescription:o.localize({key:"detectColorScheme",comment:["{0} and {1} will become links to other settings."]},"If enabled, will automatically select a color theme based on the system color mode. If the system color mode is dark, {0} is used, else {1}.",s(t.PREFERRED_DARK_THEME),s(t.PREFERRED_LIGHT_THEME)),default:!1,tags:[C]},H={type:"object",description:o.localize("workbenchColors","Overrides colors from the currently selected color theme."),allOf:[{$ref:k}],default:{},defaultSnippets:[{body:{}}]},E={type:["string","null"],default:c.FILE_ICON_THEME,description:o.localize("iconTheme","Specifies the file icon theme used in the workbench or 'null' to not show any file icons."),enum:[null],enumItemLabels:[o.localize("noIconThemeLabel","None")],enumDescriptions:[o.localize("noIconThemeDesc","No file icons")],errorMessage:o.localize("iconThemeError","File icon theme is unknown or not installed.")},I={type:["string","null"],default:c.PRODUCT_ICON_THEME,description:o.localize("productIconTheme","Specifies the product icon theme used."),enum:[c.PRODUCT_ICON_THEME],enumItemLabels:[o.localize("defaultProductIconThemeLabel","Default")],enumDescriptions:[o.localize("defaultProductIconThemeDesc","Default")],errorMessage:o.localize("productIconThemeError","Product icon theme is unknown or not installed.")},$={type:"boolean",default:!0,markdownDescription:o.localize({key:"autoDetectHighContrast",comment:["{0} and {1} will become links to other settings."]},"If enabled, will automatically change to high contrast theme if the OS is using a high contrast theme. The high contrast theme to use is specified by {0} and {1}.",s(t.PREFERRED_HC_DARK_THEME),s(t.PREFERRED_HC_LIGHT_THEME)),scope:z.APPLICATION,tags:[C]},_={id:"workbench",order:7.1,type:"object",properties:{[t.COLOR_THEME]:F,[t.PREFERRED_DARK_THEME]:G,[t.PREFERRED_LIGHT_THEME]:K,[t.PREFERRED_HC_DARK_THEME]:V,[t.PREFERRED_HC_LIGHT_THEME]:W,[t.FILE_ICON_THEME]:E,[t.COLOR_CUSTOMIZATIONS]:H,[t.PRODUCT_ICON_THEME]:I}};f.registerConfiguration(_);const J={id:"window",order:8.1,type:"object",properties:{[t.DETECT_HC]:$,[t.DETECT_COLOR_SCHEME]:x}};function p(e){return{description:e,$ref:A}}f.registerConfiguration(J);const O="^\\[[^\\]]*(\\]\\s*\\[[^\\]]*)*\\]$",y={type:"object",properties:{comments:p(o.localize("editorColors.comments","Sets the colors and styles for comments")),strings:p(o.localize("editorColors.strings","Sets the colors and styles for strings literals.")),keywords:p(o.localize("editorColors.keywords","Sets the colors and styles for keywords.")),numbers:p(o.localize("editorColors.numbers","Sets the colors and styles for number literals.")),types:p(o.localize("editorColors.types","Sets the colors and styles for type declarations and references.")),functions:p(o.localize("editorColors.functions","Sets the colors and styles for functions declarations and references.")),variables:p(o.localize("editorColors.variables","Sets the colors and styles for variables declarations and references.")),textMateRules:{description:o.localize("editorColors.textMateRules","Sets colors and styles using textmate theming rules (advanced)."),$ref:N},semanticHighlighting:{description:o.localize("editorColors.semanticHighlighting","Whether semantic highlighting should be enabled for this theme."),deprecationMessage:o.localize("editorColors.semanticHighlighting.deprecationMessage","Use `enabled` in `editor.semanticTokenColorCustomizations` setting instead."),markdownDeprecationMessage:o.localize({key:"editorColors.semanticHighlighting.deprecationMessageMarkdown",comment:["{0} will become a link to another setting."]},"Use `enabled` in {0} setting instead.",s("editor.semanticTokenColorCustomizations")),type:"boolean"}},additionalProperties:!1},D={description:o.localize("editorColors","Overrides editor syntax colors and font style from the currently selected color theme."),default:{},allOf:[{...y,patternProperties:{"^\\[":{}}}]},b={type:"object",properties:{enabled:{type:"boolean",description:o.localize("editorColors.semanticHighlighting.enabled","Whether semantic highlighting is enabled or disabled for this theme"),suggestSortText:"0_enabled"},rules:{$ref:v,description:o.localize("editorColors.semanticHighlighting.rules","Semantic token styling rules for this theme."),suggestSortText:"0_rules"}},additionalProperties:!1},M={description:o.localize("semanticTokenColors","Overrides editor semantic token color and styles from the currently selected color theme."),default:{},allOf:[{...b,patternProperties:{"^\\[":{}}}]},L={id:"editor",order:7.2,type:"object",properties:{[t.TOKEN_COLOR_CUSTOMIZATIONS]:D,[t.SEMANTIC_TOKEN_COLOR_CUSTOMIZATIONS]:M}};function Te(e){e.sort(((e,o)=>e.label.localeCompare(o.label))),u.splice(0,u.length,...e.map((e=>e.settingsId))),g.splice(0,g.length,...e.map((e=>e.description||""))),d.splice(0,d.length,...e.map((e=>e.label||"")));const o={properties:{}},t={properties:{}},i={properties:{}},r={$ref:k,additionalProperties:!1},n={properties:y.properties,additionalProperties:!1};for(const s of e){const e=`[${s.settingsId}]`;o.properties[e]=r,t.properties[e]=n,i.properties[e]=b}o.patternProperties={[O]:r},t.patternProperties={[O]:n},i.patternProperties={[O]:b},H.allOf[1]=o,D.allOf[1]=t,M.allOf[1]=i,f.notifyConfigurationSchemaUpdated(_,L)}function Se(e){E.enum.splice(1,Number.MAX_VALUE,...e.map((e=>e.settingsId))),E.enumItemLabels.splice(1,Number.MAX_VALUE,...e.map((e=>e.label))),E.enumDescriptions.splice(1,Number.MAX_VALUE,...e.map((e=>e.description||""))),f.notifyConfigurationSchemaUpdated(_)}function Ee(e){I.enum.splice(1,Number.MAX_VALUE,...e.map((e=>e.settingsId))),I.enumItemLabels.splice(1,Number.MAX_VALUE,...e.map((e=>e.label))),I.enumDescriptions.splice(1,Number.MAX_VALUE,...e.map((e=>e.description||""))),f.notifyConfigurationSchemaUpdated(_)}f.registerConfiguration(L);const j={[m.DARK]:t.PREFERRED_DARK_THEME,[m.LIGHT]:t.PREFERRED_LIGHT_THEME,[m.HIGH_CONTRAST_DARK]:t.PREFERRED_HC_DARK_THEME,[m.HIGH_CONTRAST_LIGHT]:t.PREFERRED_HC_LIGHT_THEME};class Ie{constructor(e,o){this.configurationService=e,this.hostColorService=o}get colorTheme(){return this.configurationService.getValue(this.getColorThemeSettingId())}get fileIconTheme(){return this.configurationService.getValue(t.FILE_ICON_THEME)}get productIconTheme(){return this.configurationService.getValue(t.PRODUCT_ICON_THEME)}get colorCustomizations(){return this.configurationService.getValue(t.COLOR_CUSTOMIZATIONS)||{}}get tokenColorCustomizations(){return this.configurationService.getValue(t.TOKEN_COLOR_CUSTOMIZATIONS)||{}}get semanticTokenColorCustomizations(){return this.configurationService.getValue(t.SEMANTIC_TOKEN_COLOR_CUSTOMIZATIONS)}getPreferredColorScheme(){return this.configurationService.getValue(t.DETECT_HC)&&this.hostColorService.highContrast?this.hostColorService.dark?m.HIGH_CONTRAST_DARK:m.HIGH_CONTRAST_LIGHT:this.configurationService.getValue(t.DETECT_COLOR_SCHEME)?this.hostColorService.dark?m.DARK:m.LIGHT:void 0}isDetectingColorScheme(){return this.configurationService.getValue(t.DETECT_COLOR_SCHEME)}getColorThemeSettingId(){const e=this.getPreferredColorScheme();return e?j[e]:t.COLOR_THEME}async setColorTheme(e,o){return await this.writeConfiguration(this.getColorThemeSettingId(),e.settingsId,o),e}async setFileIconTheme(e,o){return await this.writeConfiguration(t.FILE_ICON_THEME,e.settingsId,o),e}async setProductIconTheme(e,o){return await this.writeConfiguration(t.PRODUCT_ICON_THEME,e.settingsId,o),e}isDefaultColorTheme(){const e=this.configurationService.inspect(this.getColorThemeSettingId());return e&&e.default?.value===e.value}findAutoConfigurationTarget(e){const o=this.configurationService.inspect(e);return S.isUndefined(o.workspaceFolderValue)?S.isUndefined(o.workspaceValue)?S.isUndefined(o.userRemote)?l.USER:l.USER_REMOTE:l.WORKSPACE:l.WORKSPACE_FOLDER}async writeConfiguration(e,o,t){if(void 0===t||"preview"===t)return;const i=this.configurationService.inspect(e);if("auto"===t)return this.configurationService.updateValue(e,o);if(t===l.USER){if(o===i.userValue)return Promise.resolve(void 0);if(o===i.defaultValue){if(S.isUndefined(i.userValue))return Promise.resolve(void 0);o=void 0}}else if((t===l.WORKSPACE||t===l.WORKSPACE_FOLDER||t===l.USER_REMOTE)&&o===i.value)return Promise.resolve(void 0);return this.configurationService.updateValue(e,o,t)}}export{C as COLOR_THEME_CONFIGURATION_SETTINGS_TAG,Ie as ThemeConfiguration,s as formatSettingAsLink,Te as updateColorThemeConfigurationSchemas,Se as updateFileIconThemeConfigurationSchemas,Ee as updateProductIconThemeConfigurationSchemas};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as nls from "../../../../nls.js";
+import * as types from "../../../../base/common/types.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { IConfigurationRegistry, Extensions as ConfigurationExtensions, IConfigurationPropertySchema, IConfigurationNode, ConfigurationScope } from "../../../../platform/configuration/common/configurationRegistry.js";
+import { IJSONSchema } from "../../../../base/common/jsonSchema.js";
+import { textmateColorsSchemaId, textmateColorGroupSchemaId } from "./colorThemeSchema.js";
+import { workbenchColorsSchemaId } from "../../../../platform/theme/common/colorRegistry.js";
+import { tokenStylingSchemaId } from "../../../../platform/theme/common/tokenClassificationRegistry.js";
+import { ThemeSettings, IWorkbenchColorTheme, IWorkbenchFileIconTheme, IColorCustomizations, ITokenColorCustomizations, IWorkbenchProductIconTheme, ISemanticTokenColorCustomizations, ThemeSettingTarget, ThemeSettingDefaults } from "./workbenchThemeService.js";
+import { IConfigurationService, ConfigurationTarget } from "../../../../platform/configuration/common/configuration.js";
+import { isWeb } from "../../../../base/common/platform.js";
+import { ColorScheme } from "../../../../platform/theme/common/theme.js";
+import { IHostColorSchemeService } from "./hostColorSchemeService.js";
+const configurationRegistry = Registry.as(ConfigurationExtensions.Configuration);
+const colorThemeSettingEnum = [];
+const colorThemeSettingEnumItemLabels = [];
+const colorThemeSettingEnumDescriptions = [];
+function formatSettingAsLink(str) {
+  return `\`#${str}#\``;
+}
+__name(formatSettingAsLink, "formatSettingAsLink");
+const COLOR_THEME_CONFIGURATION_SETTINGS_TAG = "colorThemeConfiguration";
+const colorThemeSettingSchema = {
+  type: "string",
+  markdownDescription: nls.localize({ key: "colorTheme", comment: ["{0} will become a link to another setting."] }, "Specifies the color theme used in the workbench when {0} is not enabled.", formatSettingAsLink(ThemeSettings.DETECT_COLOR_SCHEME)),
+  default: isWeb ? ThemeSettingDefaults.COLOR_THEME_LIGHT : ThemeSettingDefaults.COLOR_THEME_DARK,
+  tags: [COLOR_THEME_CONFIGURATION_SETTINGS_TAG],
+  enum: colorThemeSettingEnum,
+  enumDescriptions: colorThemeSettingEnumDescriptions,
+  enumItemLabels: colorThemeSettingEnumItemLabels,
+  errorMessage: nls.localize("colorThemeError", "Theme is unknown or not installed.")
+};
+const preferredDarkThemeSettingSchema = {
+  type: "string",
+  //
+  markdownDescription: nls.localize({ key: "preferredDarkColorTheme", comment: ["{0} will become a link to another setting."] }, "Specifies the color theme when system color mode is dark and {0} is enabled.", formatSettingAsLink(ThemeSettings.DETECT_COLOR_SCHEME)),
+  default: ThemeSettingDefaults.COLOR_THEME_DARK,
+  tags: [COLOR_THEME_CONFIGURATION_SETTINGS_TAG],
+  enum: colorThemeSettingEnum,
+  enumDescriptions: colorThemeSettingEnumDescriptions,
+  enumItemLabels: colorThemeSettingEnumItemLabels,
+  errorMessage: nls.localize("colorThemeError", "Theme is unknown or not installed.")
+};
+const preferredLightThemeSettingSchema = {
+  type: "string",
+  markdownDescription: nls.localize({ key: "preferredLightColorTheme", comment: ["{0} will become a link to another setting."] }, "Specifies the color theme when system color mode is light and {0} is enabled.", formatSettingAsLink(ThemeSettings.DETECT_COLOR_SCHEME)),
+  default: ThemeSettingDefaults.COLOR_THEME_LIGHT,
+  tags: [COLOR_THEME_CONFIGURATION_SETTINGS_TAG],
+  enum: colorThemeSettingEnum,
+  enumDescriptions: colorThemeSettingEnumDescriptions,
+  enumItemLabels: colorThemeSettingEnumItemLabels,
+  errorMessage: nls.localize("colorThemeError", "Theme is unknown or not installed.")
+};
+const preferredHCDarkThemeSettingSchema = {
+  type: "string",
+  markdownDescription: nls.localize({ key: "preferredHCDarkColorTheme", comment: ["{0} will become a link to another setting."] }, "Specifies the color theme when in high contrast dark mode and {0} is enabled.", formatSettingAsLink(ThemeSettings.DETECT_HC)),
+  default: ThemeSettingDefaults.COLOR_THEME_HC_DARK,
+  tags: [COLOR_THEME_CONFIGURATION_SETTINGS_TAG],
+  enum: colorThemeSettingEnum,
+  enumDescriptions: colorThemeSettingEnumDescriptions,
+  enumItemLabels: colorThemeSettingEnumItemLabels,
+  errorMessage: nls.localize("colorThemeError", "Theme is unknown or not installed.")
+};
+const preferredHCLightThemeSettingSchema = {
+  type: "string",
+  markdownDescription: nls.localize({ key: "preferredHCLightColorTheme", comment: ["{0} will become a link to another setting."] }, "Specifies the color theme when in high contrast light mode and {0} is enabled.", formatSettingAsLink(ThemeSettings.DETECT_HC)),
+  default: ThemeSettingDefaults.COLOR_THEME_HC_LIGHT,
+  tags: [COLOR_THEME_CONFIGURATION_SETTINGS_TAG],
+  enum: colorThemeSettingEnum,
+  enumDescriptions: colorThemeSettingEnumDescriptions,
+  enumItemLabels: colorThemeSettingEnumItemLabels,
+  errorMessage: nls.localize("colorThemeError", "Theme is unknown or not installed.")
+};
+const detectColorSchemeSettingSchema = {
+  type: "boolean",
+  markdownDescription: nls.localize({ key: "detectColorScheme", comment: ["{0} and {1} will become links to other settings."] }, "If enabled, will automatically select a color theme based on the system color mode. If the system color mode is dark, {0} is used, else {1}.", formatSettingAsLink(ThemeSettings.PREFERRED_DARK_THEME), formatSettingAsLink(ThemeSettings.PREFERRED_LIGHT_THEME)),
+  default: false,
+  tags: [COLOR_THEME_CONFIGURATION_SETTINGS_TAG]
+};
+const colorCustomizationsSchema = {
+  type: "object",
+  description: nls.localize("workbenchColors", "Overrides colors from the currently selected color theme."),
+  allOf: [{ $ref: workbenchColorsSchemaId }],
+  default: {},
+  defaultSnippets: [{
+    body: {}
+  }]
+};
+const fileIconThemeSettingSchema = {
+  type: ["string", "null"],
+  default: ThemeSettingDefaults.FILE_ICON_THEME,
+  description: nls.localize("iconTheme", "Specifies the file icon theme used in the workbench or 'null' to not show any file icons."),
+  enum: [null],
+  enumItemLabels: [nls.localize("noIconThemeLabel", "None")],
+  enumDescriptions: [nls.localize("noIconThemeDesc", "No file icons")],
+  errorMessage: nls.localize("iconThemeError", "File icon theme is unknown or not installed.")
+};
+const productIconThemeSettingSchema = {
+  type: ["string", "null"],
+  default: ThemeSettingDefaults.PRODUCT_ICON_THEME,
+  description: nls.localize("productIconTheme", "Specifies the product icon theme used."),
+  enum: [ThemeSettingDefaults.PRODUCT_ICON_THEME],
+  enumItemLabels: [nls.localize("defaultProductIconThemeLabel", "Default")],
+  enumDescriptions: [nls.localize("defaultProductIconThemeDesc", "Default")],
+  errorMessage: nls.localize("productIconThemeError", "Product icon theme is unknown or not installed.")
+};
+const detectHCSchemeSettingSchema = {
+  type: "boolean",
+  default: true,
+  markdownDescription: nls.localize({ key: "autoDetectHighContrast", comment: ["{0} and {1} will become links to other settings."] }, "If enabled, will automatically change to high contrast theme if the OS is using a high contrast theme. The high contrast theme to use is specified by {0} and {1}.", formatSettingAsLink(ThemeSettings.PREFERRED_HC_DARK_THEME), formatSettingAsLink(ThemeSettings.PREFERRED_HC_LIGHT_THEME)),
+  scope: ConfigurationScope.APPLICATION,
+  tags: [COLOR_THEME_CONFIGURATION_SETTINGS_TAG]
+};
+const themeSettingsConfiguration = {
+  id: "workbench",
+  order: 7.1,
+  type: "object",
+  properties: {
+    [ThemeSettings.COLOR_THEME]: colorThemeSettingSchema,
+    [ThemeSettings.PREFERRED_DARK_THEME]: preferredDarkThemeSettingSchema,
+    [ThemeSettings.PREFERRED_LIGHT_THEME]: preferredLightThemeSettingSchema,
+    [ThemeSettings.PREFERRED_HC_DARK_THEME]: preferredHCDarkThemeSettingSchema,
+    [ThemeSettings.PREFERRED_HC_LIGHT_THEME]: preferredHCLightThemeSettingSchema,
+    [ThemeSettings.FILE_ICON_THEME]: fileIconThemeSettingSchema,
+    [ThemeSettings.COLOR_CUSTOMIZATIONS]: colorCustomizationsSchema,
+    [ThemeSettings.PRODUCT_ICON_THEME]: productIconThemeSettingSchema
+  }
+};
+configurationRegistry.registerConfiguration(themeSettingsConfiguration);
+const themeSettingsWindowConfiguration = {
+  id: "window",
+  order: 8.1,
+  type: "object",
+  properties: {
+    [ThemeSettings.DETECT_HC]: detectHCSchemeSettingSchema,
+    [ThemeSettings.DETECT_COLOR_SCHEME]: detectColorSchemeSettingSchema
+  }
+};
+configurationRegistry.registerConfiguration(themeSettingsWindowConfiguration);
+function tokenGroupSettings(description) {
+  return {
+    description,
+    $ref: textmateColorGroupSchemaId
+  };
+}
+__name(tokenGroupSettings, "tokenGroupSettings");
+const themeSpecificSettingKey = "^\\[[^\\]]*(\\]\\s*\\[[^\\]]*)*\\]$";
+const tokenColorSchema = {
+  type: "object",
+  properties: {
+    comments: tokenGroupSettings(nls.localize("editorColors.comments", "Sets the colors and styles for comments")),
+    strings: tokenGroupSettings(nls.localize("editorColors.strings", "Sets the colors and styles for strings literals.")),
+    keywords: tokenGroupSettings(nls.localize("editorColors.keywords", "Sets the colors and styles for keywords.")),
+    numbers: tokenGroupSettings(nls.localize("editorColors.numbers", "Sets the colors and styles for number literals.")),
+    types: tokenGroupSettings(nls.localize("editorColors.types", "Sets the colors and styles for type declarations and references.")),
+    functions: tokenGroupSettings(nls.localize("editorColors.functions", "Sets the colors and styles for functions declarations and references.")),
+    variables: tokenGroupSettings(nls.localize("editorColors.variables", "Sets the colors and styles for variables declarations and references.")),
+    textMateRules: {
+      description: nls.localize("editorColors.textMateRules", "Sets colors and styles using textmate theming rules (advanced)."),
+      $ref: textmateColorsSchemaId
+    },
+    semanticHighlighting: {
+      description: nls.localize("editorColors.semanticHighlighting", "Whether semantic highlighting should be enabled for this theme."),
+      deprecationMessage: nls.localize("editorColors.semanticHighlighting.deprecationMessage", "Use `enabled` in `editor.semanticTokenColorCustomizations` setting instead."),
+      markdownDeprecationMessage: nls.localize({ key: "editorColors.semanticHighlighting.deprecationMessageMarkdown", comment: ["{0} will become a link to another setting."] }, "Use `enabled` in {0} setting instead.", formatSettingAsLink("editor.semanticTokenColorCustomizations")),
+      type: "boolean"
+    }
+  },
+  additionalProperties: false
+};
+const tokenColorCustomizationSchema = {
+  description: nls.localize("editorColors", "Overrides editor syntax colors and font style from the currently selected color theme."),
+  default: {},
+  allOf: [{ ...tokenColorSchema, patternProperties: { "^\\[": {} } }]
+};
+const semanticTokenColorSchema = {
+  type: "object",
+  properties: {
+    enabled: {
+      type: "boolean",
+      description: nls.localize("editorColors.semanticHighlighting.enabled", "Whether semantic highlighting is enabled or disabled for this theme"),
+      suggestSortText: "0_enabled"
+    },
+    rules: {
+      $ref: tokenStylingSchemaId,
+      description: nls.localize("editorColors.semanticHighlighting.rules", "Semantic token styling rules for this theme."),
+      suggestSortText: "0_rules"
+    }
+  },
+  additionalProperties: false
+};
+const semanticTokenColorCustomizationSchema = {
+  description: nls.localize("semanticTokenColors", "Overrides editor semantic token color and styles from the currently selected color theme."),
+  default: {},
+  allOf: [{ ...semanticTokenColorSchema, patternProperties: { "^\\[": {} } }]
+};
+const tokenColorCustomizationConfiguration = {
+  id: "editor",
+  order: 7.2,
+  type: "object",
+  properties: {
+    [ThemeSettings.TOKEN_COLOR_CUSTOMIZATIONS]: tokenColorCustomizationSchema,
+    [ThemeSettings.SEMANTIC_TOKEN_COLOR_CUSTOMIZATIONS]: semanticTokenColorCustomizationSchema
+  }
+};
+configurationRegistry.registerConfiguration(tokenColorCustomizationConfiguration);
+function updateColorThemeConfigurationSchemas(themes) {
+  themes.sort((a, b) => a.label.localeCompare(b.label));
+  colorThemeSettingEnum.splice(0, colorThemeSettingEnum.length, ...themes.map((t) => t.settingsId));
+  colorThemeSettingEnumDescriptions.splice(0, colorThemeSettingEnumDescriptions.length, ...themes.map((t) => t.description || ""));
+  colorThemeSettingEnumItemLabels.splice(0, colorThemeSettingEnumItemLabels.length, ...themes.map((t) => t.label || ""));
+  const themeSpecificWorkbenchColors = { properties: {} };
+  const themeSpecificTokenColors = { properties: {} };
+  const themeSpecificSemanticTokenColors = { properties: {} };
+  const workbenchColors = { $ref: workbenchColorsSchemaId, additionalProperties: false };
+  const tokenColors = { properties: tokenColorSchema.properties, additionalProperties: false };
+  for (const t of themes) {
+    const themeId = `[${t.settingsId}]`;
+    themeSpecificWorkbenchColors.properties[themeId] = workbenchColors;
+    themeSpecificTokenColors.properties[themeId] = tokenColors;
+    themeSpecificSemanticTokenColors.properties[themeId] = semanticTokenColorSchema;
+  }
+  themeSpecificWorkbenchColors.patternProperties = { [themeSpecificSettingKey]: workbenchColors };
+  themeSpecificTokenColors.patternProperties = { [themeSpecificSettingKey]: tokenColors };
+  themeSpecificSemanticTokenColors.patternProperties = { [themeSpecificSettingKey]: semanticTokenColorSchema };
+  colorCustomizationsSchema.allOf[1] = themeSpecificWorkbenchColors;
+  tokenColorCustomizationSchema.allOf[1] = themeSpecificTokenColors;
+  semanticTokenColorCustomizationSchema.allOf[1] = themeSpecificSemanticTokenColors;
+  configurationRegistry.notifyConfigurationSchemaUpdated(themeSettingsConfiguration, tokenColorCustomizationConfiguration);
+}
+__name(updateColorThemeConfigurationSchemas, "updateColorThemeConfigurationSchemas");
+function updateFileIconThemeConfigurationSchemas(themes) {
+  fileIconThemeSettingSchema.enum.splice(1, Number.MAX_VALUE, ...themes.map((t) => t.settingsId));
+  fileIconThemeSettingSchema.enumItemLabels.splice(1, Number.MAX_VALUE, ...themes.map((t) => t.label));
+  fileIconThemeSettingSchema.enumDescriptions.splice(1, Number.MAX_VALUE, ...themes.map((t) => t.description || ""));
+  configurationRegistry.notifyConfigurationSchemaUpdated(themeSettingsConfiguration);
+}
+__name(updateFileIconThemeConfigurationSchemas, "updateFileIconThemeConfigurationSchemas");
+function updateProductIconThemeConfigurationSchemas(themes) {
+  productIconThemeSettingSchema.enum.splice(1, Number.MAX_VALUE, ...themes.map((t) => t.settingsId));
+  productIconThemeSettingSchema.enumItemLabels.splice(1, Number.MAX_VALUE, ...themes.map((t) => t.label));
+  productIconThemeSettingSchema.enumDescriptions.splice(1, Number.MAX_VALUE, ...themes.map((t) => t.description || ""));
+  configurationRegistry.notifyConfigurationSchemaUpdated(themeSettingsConfiguration);
+}
+__name(updateProductIconThemeConfigurationSchemas, "updateProductIconThemeConfigurationSchemas");
+const colorSchemeToPreferred = {
+  [ColorScheme.DARK]: ThemeSettings.PREFERRED_DARK_THEME,
+  [ColorScheme.LIGHT]: ThemeSettings.PREFERRED_LIGHT_THEME,
+  [ColorScheme.HIGH_CONTRAST_DARK]: ThemeSettings.PREFERRED_HC_DARK_THEME,
+  [ColorScheme.HIGH_CONTRAST_LIGHT]: ThemeSettings.PREFERRED_HC_LIGHT_THEME
+};
+class ThemeConfiguration {
+  constructor(configurationService, hostColorService) {
+    this.configurationService = configurationService;
+    this.hostColorService = hostColorService;
+  }
+  static {
+    __name(this, "ThemeConfiguration");
+  }
+  get colorTheme() {
+    return this.configurationService.getValue(this.getColorThemeSettingId());
+  }
+  get fileIconTheme() {
+    return this.configurationService.getValue(ThemeSettings.FILE_ICON_THEME);
+  }
+  get productIconTheme() {
+    return this.configurationService.getValue(ThemeSettings.PRODUCT_ICON_THEME);
+  }
+  get colorCustomizations() {
+    return this.configurationService.getValue(ThemeSettings.COLOR_CUSTOMIZATIONS) || {};
+  }
+  get tokenColorCustomizations() {
+    return this.configurationService.getValue(ThemeSettings.TOKEN_COLOR_CUSTOMIZATIONS) || {};
+  }
+  get semanticTokenColorCustomizations() {
+    return this.configurationService.getValue(ThemeSettings.SEMANTIC_TOKEN_COLOR_CUSTOMIZATIONS);
+  }
+  getPreferredColorScheme() {
+    if (this.configurationService.getValue(ThemeSettings.DETECT_HC) && this.hostColorService.highContrast) {
+      return this.hostColorService.dark ? ColorScheme.HIGH_CONTRAST_DARK : ColorScheme.HIGH_CONTRAST_LIGHT;
+    }
+    if (this.configurationService.getValue(ThemeSettings.DETECT_COLOR_SCHEME)) {
+      return this.hostColorService.dark ? ColorScheme.DARK : ColorScheme.LIGHT;
+    }
+    return void 0;
+  }
+  isDetectingColorScheme() {
+    return this.configurationService.getValue(ThemeSettings.DETECT_COLOR_SCHEME);
+  }
+  getColorThemeSettingId() {
+    const preferredScheme = this.getPreferredColorScheme();
+    return preferredScheme ? colorSchemeToPreferred[preferredScheme] : ThemeSettings.COLOR_THEME;
+  }
+  async setColorTheme(theme, settingsTarget) {
+    await this.writeConfiguration(this.getColorThemeSettingId(), theme.settingsId, settingsTarget);
+    return theme;
+  }
+  async setFileIconTheme(theme, settingsTarget) {
+    await this.writeConfiguration(ThemeSettings.FILE_ICON_THEME, theme.settingsId, settingsTarget);
+    return theme;
+  }
+  async setProductIconTheme(theme, settingsTarget) {
+    await this.writeConfiguration(ThemeSettings.PRODUCT_ICON_THEME, theme.settingsId, settingsTarget);
+    return theme;
+  }
+  isDefaultColorTheme() {
+    const settings = this.configurationService.inspect(this.getColorThemeSettingId());
+    return settings && settings.default?.value === settings.value;
+  }
+  findAutoConfigurationTarget(key) {
+    const settings = this.configurationService.inspect(key);
+    if (!types.isUndefined(settings.workspaceFolderValue)) {
+      return ConfigurationTarget.WORKSPACE_FOLDER;
+    } else if (!types.isUndefined(settings.workspaceValue)) {
+      return ConfigurationTarget.WORKSPACE;
+    } else if (!types.isUndefined(settings.userRemote)) {
+      return ConfigurationTarget.USER_REMOTE;
+    }
+    return ConfigurationTarget.USER;
+  }
+  async writeConfiguration(key, value, settingsTarget) {
+    if (settingsTarget === void 0 || settingsTarget === "preview") {
+      return;
+    }
+    const settings = this.configurationService.inspect(key);
+    if (settingsTarget === "auto") {
+      return this.configurationService.updateValue(key, value);
+    }
+    if (settingsTarget === ConfigurationTarget.USER) {
+      if (value === settings.userValue) {
+        return Promise.resolve(void 0);
+      } else if (value === settings.defaultValue) {
+        if (types.isUndefined(settings.userValue)) {
+          return Promise.resolve(void 0);
+        }
+        value = void 0;
+      }
+    } else if (settingsTarget === ConfigurationTarget.WORKSPACE || settingsTarget === ConfigurationTarget.WORKSPACE_FOLDER || settingsTarget === ConfigurationTarget.USER_REMOTE) {
+      if (value === settings.value) {
+        return Promise.resolve(void 0);
+      }
+    }
+    return this.configurationService.updateValue(key, value, settingsTarget);
+  }
+}
+export {
+  COLOR_THEME_CONFIGURATION_SETTINGS_TAG,
+  ThemeConfiguration,
+  formatSettingAsLink,
+  updateColorThemeConfigurationSchemas,
+  updateFileIconThemeConfigurationSchemas,
+  updateProductIconThemeConfigurationSchemas
+};
+//# sourceMappingURL=themeConfiguration.js.map

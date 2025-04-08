@@ -1,1 +1,48 @@
-import{VSBuffer as o}from"../../../common/buffer.js";import{Event as i}from"../../../common/event.js";import"../../../common/lifecycle.js";import{IPCClient as n}from"./ipc.js";class a{constructor(e){this.port=e;this.onMessage=i.fromDOMEventEmitter(this.port,"message",s=>s.data?o.wrap(s.data):o.alloc(0)),e.start()}onMessage;send(e){this.port.postMessage(e.buffer)}disconnect(){this.port.close()}}class m extends n{protocol;constructor(e,s){const t=new a(e);super(t,s),this.protocol=t}dispose(){this.protocol.disconnect(),super.dispose()}}export{m as Client,a as Protocol};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { VSBuffer } from "../../../common/buffer.js";
+import { Event } from "../../../common/event.js";
+import { IDisposable } from "../../../common/lifecycle.js";
+import { IMessagePassingProtocol, IPCClient } from "./ipc.js";
+class Protocol {
+  constructor(port) {
+    this.port = port;
+    this.onMessage = Event.fromDOMEventEmitter(this.port, "message", (e) => {
+      if (e.data) {
+        return VSBuffer.wrap(e.data);
+      }
+      return VSBuffer.alloc(0);
+    });
+    port.start();
+  }
+  static {
+    __name(this, "Protocol");
+  }
+  onMessage;
+  send(message) {
+    this.port.postMessage(message.buffer);
+  }
+  disconnect() {
+    this.port.close();
+  }
+}
+class Client extends IPCClient {
+  static {
+    __name(this, "Client");
+  }
+  protocol;
+  constructor(port, clientId) {
+    const protocol = new Protocol(port);
+    super(protocol, clientId);
+    this.protocol = protocol;
+  }
+  dispose() {
+    this.protocol.disconnect();
+    super.dispose();
+  }
+}
+export {
+  Client,
+  Protocol
+};
+//# sourceMappingURL=ipc.mp.js.map

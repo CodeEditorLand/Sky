@@ -1,1 +1,46 @@
-var u;(t=>{function n(t,n){if(t.start>=n.end||n.start>=t.end)return{start:0,end:0};const e=Math.max(t.start,n.start),r=Math.min(t.end,n.end);return r-e<=0?{start:0,end:0}:{start:e,end:r}}function e(t){return t.end-t.start<=0}t.intersect=n,t.isEmpty=e,t.intersects=function(t,r){return!e(n(t,r))},t.relativeComplement=function(t,n){const r=[],a={start:t.start,end:Math.min(n.start,t.end)},s={start:Math.max(n.end,t.start),end:t.end};return e(a)||r.push(a),e(s)||r.push(s),r}})(u||={});export{u as Range};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var Range;
+((Range2) => {
+  function intersect(one, other) {
+    if (one.start >= other.end || other.start >= one.end) {
+      return { start: 0, end: 0 };
+    }
+    const start = Math.max(one.start, other.start);
+    const end = Math.min(one.end, other.end);
+    if (end - start <= 0) {
+      return { start: 0, end: 0 };
+    }
+    return { start, end };
+  }
+  Range2.intersect = intersect;
+  __name(intersect, "intersect");
+  function isEmpty(range) {
+    return range.end - range.start <= 0;
+  }
+  Range2.isEmpty = isEmpty;
+  __name(isEmpty, "isEmpty");
+  function intersects(one, other) {
+    return !isEmpty(intersect(one, other));
+  }
+  Range2.intersects = intersects;
+  __name(intersects, "intersects");
+  function relativeComplement(one, other) {
+    const result = [];
+    const first = { start: one.start, end: Math.min(other.start, one.end) };
+    const second = { start: Math.max(other.end, one.start), end: one.end };
+    if (!isEmpty(first)) {
+      result.push(first);
+    }
+    if (!isEmpty(second)) {
+      result.push(second);
+    }
+    return result;
+  }
+  Range2.relativeComplement = relativeComplement;
+  __name(relativeComplement, "relativeComplement");
+})(Range || (Range = {}));
+export {
+  Range
+};
+//# sourceMappingURL=range.js.map

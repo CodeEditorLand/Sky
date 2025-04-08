@@ -1,1 +1,70 @@
-import{mainWindow as m}from"../../../base/browser/window.js";import{relativePath as u}from"../../../base/common/resources.js";import"../../../base/common/uri.js";import"../../environment/common/environment.js";import"../../files/common/files.js";import{AdapterLogger as L,DEFAULT_LOG_LEVEL as d,LogLevel as n}from"../common/log.js";async function P(o,e){const n=[];return await g(o,n,e.logsHome,e.logsHome),n}async function g(o,e,n,r){const t=await o.resolve(n);for(const{resource:n,isDirectory:s}of t.children||[])if(s)await g(o,e,n,r);else{const t=(await o.readFile(n)).value.toString();if(t){const o=u(r,n);o&&e.push({relativePath:o,contents:t})}}}function f(o){switch(o){case n.Trace:return"trace";case n.Debug:return"debug";case n.Info:return"info";case n.Warning:return"warn";case n.Error:return"error"}return"info"}class W extends L{constructor(o=d){super({log:(o,e)=>this.consoleLog(f(o),e)},o)}consoleLog(o,e){const n=m;if("function"==typeof n.codeAutomationLog)try{n.codeAutomationLog(o,e)}catch(o){console.error("Problems writing to codeAutomationLog",o)}}}export{W as ConsoleLogInAutomationLogger,P as getLogs};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { mainWindow } from "../../../base/browser/window.js";
+import { relativePath } from "../../../base/common/resources.js";
+import { URI } from "../../../base/common/uri.js";
+import { IEnvironmentService } from "../../environment/common/environment.js";
+import { IFileService } from "../../files/common/files.js";
+import { AdapterLogger, DEFAULT_LOG_LEVEL, ILogger, LogLevel } from "../common/log.js";
+async function getLogs(fileService, environmentService) {
+  const result = [];
+  await doGetLogs(fileService, result, environmentService.logsHome, environmentService.logsHome);
+  return result;
+}
+__name(getLogs, "getLogs");
+async function doGetLogs(fileService, logs, curFolder, logsHome) {
+  const stat = await fileService.resolve(curFolder);
+  for (const { resource, isDirectory } of stat.children || []) {
+    if (isDirectory) {
+      await doGetLogs(fileService, logs, resource, logsHome);
+    } else {
+      const contents = (await fileService.readFile(resource)).value.toString();
+      if (contents) {
+        const path = relativePath(logsHome, resource);
+        if (path) {
+          logs.push({ relativePath: path, contents });
+        }
+      }
+    }
+  }
+}
+__name(doGetLogs, "doGetLogs");
+function logLevelToString(level) {
+  switch (level) {
+    case LogLevel.Trace:
+      return "trace";
+    case LogLevel.Debug:
+      return "debug";
+    case LogLevel.Info:
+      return "info";
+    case LogLevel.Warning:
+      return "warn";
+    case LogLevel.Error:
+      return "error";
+  }
+  return "info";
+}
+__name(logLevelToString, "logLevelToString");
+class ConsoleLogInAutomationLogger extends AdapterLogger {
+  static {
+    __name(this, "ConsoleLogInAutomationLogger");
+  }
+  constructor(logLevel = DEFAULT_LOG_LEVEL) {
+    super({ log: /* @__PURE__ */ __name((level, args) => this.consoleLog(logLevelToString(level), args), "log") }, logLevel);
+  }
+  consoleLog(type, args) {
+    const automatedWindow = mainWindow;
+    if (typeof automatedWindow.codeAutomationLog === "function") {
+      try {
+        automatedWindow.codeAutomationLog(type, args);
+      } catch (err) {
+        console.error("Problems writing to codeAutomationLog", err);
+      }
+    }
+  }
+}
+export {
+  ConsoleLogInAutomationLogger,
+  getLogs
+};
+//# sourceMappingURL=log.js.map

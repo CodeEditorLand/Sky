@@ -1,1 +1,66 @@
-import{CancellationTokenSource as u}from"../../../../base/common/cancellation.js";import"./ripgrepSearchUtils.js";import{RipgrepTextSearchEngine as T}from"./ripgrepTextSearchEngine.js";import"../common/searchExtTypes.js";import{Progress as d}from"../../../../platform/progress/common/progress.js";import{Schemas as p}from"../../../../base/common/network.js";class F{constructor(e,t){this.outputChannel=e;this.getNumThreads=t;process.once("exit",()=>this.dispose())}inProgress=new Set;async provideTextSearchResults(e,t,r,i){const l=await this.getNumThreads(),h=new T(this.outputChannel,l);return Promise.all(t.folderOptions.map(o=>{const a={folderOptions:o,numThreads:l,maxResults:t.maxResults,previewOptions:t.previewOptions,maxFileSize:t.maxFileSize,surroundingContext:t.surroundingContext};if(o.folder.scheme===p.vscodeUserData){const n={...a,folder:o.folder.with({scheme:p.file})},m=new d(s=>r.report({...s,uri:s.uri.with({scheme:o.folder.scheme})}));return this.withToken(i,s=>h.provideTextSearchResultsWithRgOptions(e,n,m,s))}else return this.withToken(i,n=>h.provideTextSearchResultsWithRgOptions(e,a,r,n))})).then(o=>({limitHit:o.some(n=>!!n&&n.limitHit)}))}async withToken(e,t){const r=S(e);this.inProgress.add(r);const i=await t(r.token);return this.inProgress.delete(r),i}dispose(){this.inProgress.forEach(e=>e.cancel())}}function S(c){const e=new u;return c.onCancellationRequested(()=>e.cancel()),e}export{F as RipgrepSearchProvider};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { CancellationTokenSource, CancellationToken } from "../../../../base/common/cancellation.js";
+import { OutputChannel } from "./ripgrepSearchUtils.js";
+import { RipgrepTextSearchEngine } from "./ripgrepTextSearchEngine.js";
+import { TextSearchProvider2, TextSearchComplete2, TextSearchResult2, TextSearchQuery2, TextSearchProviderOptions } from "../common/searchExtTypes.js";
+import { Progress } from "../../../../platform/progress/common/progress.js";
+import { Schemas } from "../../../../base/common/network.js";
+class RipgrepSearchProvider {
+  constructor(outputChannel, getNumThreads) {
+    this.outputChannel = outputChannel;
+    this.getNumThreads = getNumThreads;
+    process.once("exit", () => this.dispose());
+  }
+  static {
+    __name(this, "RipgrepSearchProvider");
+  }
+  inProgress = /* @__PURE__ */ new Set();
+  async provideTextSearchResults(query, options, progress, token) {
+    const numThreads = await this.getNumThreads();
+    const engine = new RipgrepTextSearchEngine(this.outputChannel, numThreads);
+    return Promise.all(options.folderOptions.map((folderOption) => {
+      const extendedOptions = {
+        folderOptions: folderOption,
+        numThreads,
+        maxResults: options.maxResults,
+        previewOptions: options.previewOptions,
+        maxFileSize: options.maxFileSize,
+        surroundingContext: options.surroundingContext
+      };
+      if (folderOption.folder.scheme === Schemas.vscodeUserData) {
+        const translatedOptions = { ...extendedOptions, folder: folderOption.folder.with({ scheme: Schemas.file }) };
+        const progressTranslator = new Progress((data) => progress.report({ ...data, uri: data.uri.with({ scheme: folderOption.folder.scheme }) }));
+        return this.withToken(token, (token2) => engine.provideTextSearchResultsWithRgOptions(query, translatedOptions, progressTranslator, token2));
+      } else {
+        return this.withToken(token, (token2) => engine.provideTextSearchResultsWithRgOptions(query, extendedOptions, progress, token2));
+      }
+    })).then((e) => {
+      const complete = {
+        // todo: get this to actually check
+        limitHit: e.some((complete2) => !!complete2 && complete2.limitHit)
+      };
+      return complete;
+    });
+  }
+  async withToken(token, fn) {
+    const merged = mergedTokenSource(token);
+    this.inProgress.add(merged);
+    const result = await fn(merged.token);
+    this.inProgress.delete(merged);
+    return result;
+  }
+  dispose() {
+    this.inProgress.forEach((engine) => engine.cancel());
+  }
+}
+function mergedTokenSource(token) {
+  const tokenSource = new CancellationTokenSource();
+  token.onCancellationRequested(() => tokenSource.cancel());
+  return tokenSource;
+}
+__name(mergedTokenSource, "mergedTokenSource");
+export {
+  RipgrepSearchProvider
+};
+//# sourceMappingURL=ripgrepSearchProvider.js.map

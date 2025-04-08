@@ -1,1 +1,70 @@
-var m=Object.defineProperty,c=Object.getOwnPropertyDescriptor,y=(t,e,o,i)=>{for(var r,s=i>1?void 0:i?c(e,o):e,a=t.length-1;a>=0;a--)(r=t[a])&&(s=(i?r(e,o,s):r(s))||s);return i&&s&&m(e,o,s),s},h=(t,e)=>(o,i)=>e(o,i,t);import{Emitter as d}from"../../../../base/common/event.js";import"../../../../base/common/uri.js";import{createDecorator as v}from"../../../../platform/instantiation/common/instantiation.js";import{IStorageService as C,StorageScope as I,StorageTarget as p}from"../../../../platform/storage/common/storage.js";import{Memento as g}from"../../../common/memento.js";import"./chatEditingService.js";import"./chatModel.js";import{CHAT_PROVIDER_ID as H}from"./chatParticipantContribTypes.js";import{ChatAgentLocation as S}from"./constants.js";const V=v("IChatWidgetHistoryService"),l=40;let a=class{_serviceBrand;memento;viewState;_onDidClearHistory=new d;onDidClearHistory=this._onDidClearHistory.event;constructor(t){this.memento=new g("interactive-session",t);const e=this.memento.getMemento(I.WORKSPACE,p.MACHINE);for(const t in e.history)e.history[t]=e.history[t].map((t=>"string"==typeof t?{text:t}:t));this.viewState=e}getHistory(t){const e=this.getKey(t);return this.viewState.history?.[e]??[]}getKey(t){return t===S.Panel?H:t}saveHistory(t,e){this.viewState.history||(this.viewState.history={});const o=this.getKey(t);this.viewState.history[o]=e.slice(-l),this.memento.saveMemento()}clearHistory(){this.viewState.history={},this.memento.saveMemento(),this._onDidClearHistory.fire()}};a=y([h(0,C)],a);export{l as ChatInputHistoryMaxEntries,a as ChatWidgetHistoryService,V as IChatWidgetHistoryService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { URI } from "../../../../base/common/uri.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { Memento } from "../../../common/memento.js";
+import { ModifiedFileEntryState } from "./chatEditingService.js";
+import { IChatRequestVariableEntry } from "./chatModel.js";
+import { CHAT_PROVIDER_ID } from "./chatParticipantContribTypes.js";
+import { ChatAgentLocation, ChatMode } from "./constants.js";
+const IChatWidgetHistoryService = createDecorator("IChatWidgetHistoryService");
+const ChatInputHistoryMaxEntries = 40;
+let ChatWidgetHistoryService = class {
+  static {
+    __name(this, "ChatWidgetHistoryService");
+  }
+  _serviceBrand;
+  memento;
+  viewState;
+  _onDidClearHistory = new Emitter();
+  onDidClearHistory = this._onDidClearHistory.event;
+  constructor(storageService) {
+    this.memento = new Memento("interactive-session", storageService);
+    const loadedState = this.memento.getMemento(StorageScope.WORKSPACE, StorageTarget.MACHINE);
+    for (const provider in loadedState.history) {
+      loadedState.history[provider] = loadedState.history[provider].map((entry) => typeof entry === "string" ? { text: entry } : entry);
+    }
+    this.viewState = loadedState;
+  }
+  getHistory(location) {
+    const key = this.getKey(location);
+    return this.viewState.history?.[key] ?? [];
+  }
+  getKey(location) {
+    return location === ChatAgentLocation.Panel ? CHAT_PROVIDER_ID : location;
+  }
+  saveHistory(location, history) {
+    if (!this.viewState.history) {
+      this.viewState.history = {};
+    }
+    const key = this.getKey(location);
+    this.viewState.history[key] = history.slice(-ChatInputHistoryMaxEntries);
+    this.memento.saveMemento();
+  }
+  clearHistory() {
+    this.viewState.history = {};
+    this.memento.saveMemento();
+    this._onDidClearHistory.fire();
+  }
+};
+ChatWidgetHistoryService = __decorateClass([
+  __decorateParam(0, IStorageService)
+], ChatWidgetHistoryService);
+export {
+  ChatInputHistoryMaxEntries,
+  ChatWidgetHistoryService,
+  IChatWidgetHistoryService
+};
+//# sourceMappingURL=chatWidgetHistoryService.js.map

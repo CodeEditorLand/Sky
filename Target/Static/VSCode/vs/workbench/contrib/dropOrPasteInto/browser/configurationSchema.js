@@ -1,5 +1,174 @@
-var h=Object.defineProperty;var g=Object.getOwnPropertyDescriptor;var l=(n,t,e,i)=>{for(var r=i>1?void 0:i?g(t,e):t,o=n.length-1,s;o>=0;o--)(s=n[o])&&(r=(i?s(t,e,r):s(r))||r);return i&&r&&h(t,e,r),r},p=(n,t)=>(e,i)=>t(e,i,n);import{Emitter as v,Event as c}from"../../../../base/common/event.js";import"../../../../base/common/hierarchicalKind.js";import"../../../../base/common/jsonSchema.js";import{Disposable as y}from"../../../../base/common/lifecycle.js";import{editorConfigurationBaseNode as P}from"../../../../editor/common/config/editorConfigurationSchema.js";import{ILanguageFeaturesService as C}from"../../../../editor/common/services/languageFeatures.js";import{pasteAsCommandId as K}from"../../../../editor/contrib/dropOrPasteInto/browser/copyPasteContribution.js";import{pasteAsPreferenceConfig as S}from"../../../../editor/contrib/dropOrPasteInto/browser/copyPasteController.js";import{dropAsPreferenceConfig as b}from"../../../../editor/contrib/dropOrPasteInto/browser/dropIntoEditorController.js";import*as d from"../../../../nls.js";import{ConfigurationScope as u,Extensions as A}from"../../../../platform/configuration/common/configurationRegistry.js";import{IKeybindingService as I}from"../../../../platform/keybinding/common/keybinding.js";import{Registry as E}from"../../../../platform/registry/common/platform.js";import"../../../common/contributions.js";const f=[],_={type:"array",scope:u.LANGUAGE_OVERRIDABLE,description:d.localize("dropPreferredDescription",`Configures the preferred type of edit to use when dropping content.
-
-This is an ordered list of edit kinds. The first available edit of a preferred kind will be used.`),default:[],items:{description:d.localize("dropKind","The kind identifier of the drop edit."),anyOf:[{type:"string"},{enum:f}]}},m=[],D={type:"array",scope:u.LANGUAGE_OVERRIDABLE,description:d.localize("pastePreferredDescription",`Configures the preferred type of edit to use when pasting content.
-
-This is an ordered list of edit kinds. The first available edit of a preferred kind will be used.`),default:[],items:{description:d.localize("pasteKind","The kind identifier of the paste edit."),anyOf:[{type:"string"},{enum:m}]}},k=Object.freeze({...P,properties:{[S]:D,[b]:_}});let a=class extends y{constructor(e,i){super();this.languageFeatures=i;this._register(c.runAndSubscribe(c.debounce(c.any(i.documentPasteEditProvider.onDidChange,i.documentPasteEditProvider.onDidChange),()=>{},1e3),()=>{this.updateProvidedKinds(),this.updateConfigurationSchema(),this._onDidChangeSchemaContributions.fire()})),e.registerSchemaContribution({getSchemaAdditions:()=>this.getKeybindingSchemaAdditions(),onDidChange:this._onDidChangeSchemaContributions.event})}static ID="workbench.contrib.dropOrPasteIntoSchema";_onDidChangeSchemaContributions=this._register(new v);_allProvidedDropKinds=[];_allProvidedPasteKinds=[];updateProvidedKinds(){const e=new Map;for(const r of this.languageFeatures.documentDropEditProvider.allNoModel())for(const o of r.providedDropEditKinds??[])e.set(o.value,o);this._allProvidedDropKinds=Array.from(e.values());const i=new Map;for(const r of this.languageFeatures.documentPasteEditProvider.allNoModel())for(const o of r.providedPasteEditKinds??[])i.set(o.value,o);this._allProvidedPasteKinds=Array.from(i.values())}updateConfigurationSchema(){m.length=0;for(const e of this._allProvidedPasteKinds)m.push(e.value);f.length=0;for(const e of this._allProvidedDropKinds)f.push(e.value);E.as(A.Configuration).notifyConfigurationSchemaUpdated(k)}getKeybindingSchemaAdditions(){return[{if:{required:["command"],properties:{command:{const:K}}},then:{properties:{args:{oneOf:[{required:["kind"],properties:{kind:{anyOf:[{enum:Array.from(this._allProvidedPasteKinds.map(e=>e.value))},{type:"string"}]}}},{required:["preferences"],properties:{preferences:{type:"array",items:{anyOf:[{enum:Array.from(this._allProvidedPasteKinds.map(e=>e.value))},{type:"string"}]}}}}]}}}}]}};a=l([p(0,I),p(1,C)],a);export{a as DropOrPasteSchemaContribution,k as editorConfiguration};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { HierarchicalKind } from "../../../../base/common/hierarchicalKind.js";
+import { IJSONSchema } from "../../../../base/common/jsonSchema.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { editorConfigurationBaseNode } from "../../../../editor/common/config/editorConfigurationSchema.js";
+import { ILanguageFeaturesService } from "../../../../editor/common/services/languageFeatures.js";
+import { pasteAsCommandId } from "../../../../editor/contrib/dropOrPasteInto/browser/copyPasteContribution.js";
+import { pasteAsPreferenceConfig } from "../../../../editor/contrib/dropOrPasteInto/browser/copyPasteController.js";
+import { dropAsPreferenceConfig } from "../../../../editor/contrib/dropOrPasteInto/browser/dropIntoEditorController.js";
+import * as nls from "../../../../nls.js";
+import { ConfigurationScope, Extensions, IConfigurationNode, IConfigurationPropertySchema, IConfigurationRegistry } from "../../../../platform/configuration/common/configurationRegistry.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { IWorkbenchContribution } from "../../../common/contributions.js";
+const dropEnumValues = [];
+const dropAsPreferenceSchema = {
+  type: "array",
+  scope: ConfigurationScope.LANGUAGE_OVERRIDABLE,
+  description: nls.localize("dropPreferredDescription", "Configures the preferred type of edit to use when dropping content.\n\nThis is an ordered list of edit kinds. The first available edit of a preferred kind will be used."),
+  default: [],
+  items: {
+    description: nls.localize("dropKind", "The kind identifier of the drop edit."),
+    anyOf: [
+      { type: "string" },
+      { enum: dropEnumValues }
+    ]
+  }
+};
+const pasteEnumValues = [];
+const pasteAsPreferenceSchema = {
+  type: "array",
+  scope: ConfigurationScope.LANGUAGE_OVERRIDABLE,
+  description: nls.localize("pastePreferredDescription", "Configures the preferred type of edit to use when pasting content.\n\nThis is an ordered list of edit kinds. The first available edit of a preferred kind will be used."),
+  default: [],
+  items: {
+    description: nls.localize("pasteKind", "The kind identifier of the paste edit."),
+    anyOf: [
+      { type: "string" },
+      { enum: pasteEnumValues }
+    ]
+  }
+};
+const editorConfiguration = Object.freeze({
+  ...editorConfigurationBaseNode,
+  properties: {
+    [pasteAsPreferenceConfig]: pasteAsPreferenceSchema,
+    [dropAsPreferenceConfig]: dropAsPreferenceSchema
+  }
+});
+let DropOrPasteSchemaContribution = class extends Disposable {
+  constructor(keybindingService, languageFeatures) {
+    super();
+    this.languageFeatures = languageFeatures;
+    this._register(
+      Event.runAndSubscribe(
+        Event.debounce(
+          Event.any(languageFeatures.documentPasteEditProvider.onDidChange, languageFeatures.documentPasteEditProvider.onDidChange),
+          () => {
+          },
+          1e3
+        ),
+        () => {
+          this.updateProvidedKinds();
+          this.updateConfigurationSchema();
+          this._onDidChangeSchemaContributions.fire();
+        }
+      )
+    );
+    keybindingService.registerSchemaContribution({
+      getSchemaAdditions: /* @__PURE__ */ __name(() => this.getKeybindingSchemaAdditions(), "getSchemaAdditions"),
+      onDidChange: this._onDidChangeSchemaContributions.event
+    });
+  }
+  static {
+    __name(this, "DropOrPasteSchemaContribution");
+  }
+  static ID = "workbench.contrib.dropOrPasteIntoSchema";
+  _onDidChangeSchemaContributions = this._register(new Emitter());
+  _allProvidedDropKinds = [];
+  _allProvidedPasteKinds = [];
+  updateProvidedKinds() {
+    const dropKinds = /* @__PURE__ */ new Map();
+    for (const provider of this.languageFeatures.documentDropEditProvider.allNoModel()) {
+      for (const kind of provider.providedDropEditKinds ?? []) {
+        dropKinds.set(kind.value, kind);
+      }
+    }
+    this._allProvidedDropKinds = Array.from(dropKinds.values());
+    const pasteKinds = /* @__PURE__ */ new Map();
+    for (const provider of this.languageFeatures.documentPasteEditProvider.allNoModel()) {
+      for (const kind of provider.providedPasteEditKinds ?? []) {
+        pasteKinds.set(kind.value, kind);
+      }
+    }
+    this._allProvidedPasteKinds = Array.from(pasteKinds.values());
+  }
+  updateConfigurationSchema() {
+    pasteEnumValues.length = 0;
+    for (const codeActionKind of this._allProvidedPasteKinds) {
+      pasteEnumValues.push(codeActionKind.value);
+    }
+    dropEnumValues.length = 0;
+    for (const codeActionKind of this._allProvidedDropKinds) {
+      dropEnumValues.push(codeActionKind.value);
+    }
+    Registry.as(Extensions.Configuration).notifyConfigurationSchemaUpdated(editorConfiguration);
+  }
+  getKeybindingSchemaAdditions() {
+    return [
+      {
+        if: {
+          required: ["command"],
+          properties: {
+            "command": { const: pasteAsCommandId }
+          }
+        },
+        then: {
+          properties: {
+            "args": {
+              oneOf: [
+                {
+                  required: ["kind"],
+                  properties: {
+                    "kind": {
+                      anyOf: [
+                        { enum: Array.from(this._allProvidedPasteKinds.map((x) => x.value)) },
+                        { type: "string" }
+                      ]
+                    }
+                  }
+                },
+                {
+                  required: ["preferences"],
+                  properties: {
+                    "preferences": {
+                      type: "array",
+                      items: {
+                        anyOf: [
+                          { enum: Array.from(this._allProvidedPasteKinds.map((x) => x.value)) },
+                          { type: "string" }
+                        ]
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    ];
+  }
+};
+DropOrPasteSchemaContribution = __decorateClass([
+  __decorateParam(0, IKeybindingService),
+  __decorateParam(1, ILanguageFeaturesService)
+], DropOrPasteSchemaContribution);
+export {
+  DropOrPasteSchemaContribution,
+  editorConfiguration
+};
+//# sourceMappingURL=configurationSchema.js.map

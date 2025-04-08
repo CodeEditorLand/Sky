@@ -1,1 +1,278 @@
-import{CharCode as n}from"../../../../base/common/charCode.js";import{buildReplaceStringWithCasePreserved as _}from"../../../../base/common/search.js";var f=(t=>(t[t.StaticValue=0]="StaticValue",t[t.DynamicPieces=1]="DynamicPieces",t))(f||{});class d{constructor(t){this.staticValue=t}kind=0}class P{constructor(t){this.pieces=t}kind=1}class o{static fromStaticValue(t){return new o([h.staticValue(t)])}_state;get hasReplacementPatterns(){return 1===this._state.kind}constructor(t){t&&0!==t.length?1===t.length&&null!==t[0].staticValue?this._state=new d(t[0].staticValue):this._state=new P(t):this._state=new d("")}buildReplaceString(t,e){if(0===this._state.kind)return e?_(t,this._state.staticValue):this._state.staticValue;let s="";for(let e=0,i=this._state.pieces.length;e<i;e++){const i=this._state.pieces[e];if(null!==i.staticValue){s+=i.staticValue;continue}let a=o._substitute(i.matchIndex,t);if(null!==i.caseOps&&i.caseOps.length>0){const t=[],e=i.caseOps.length;let s=0;for(let n=0,c=a.length;n<c;n++){if(s>=e){t.push(a.slice(n));break}switch(i.caseOps[s]){case"U":t.push(a[n].toUpperCase());break;case"u":t.push(a[n].toUpperCase()),s++;break;case"L":t.push(a[n].toLowerCase());break;case"l":t.push(a[n].toLowerCase()),s++;break;default:t.push(a[n])}}a=t.join("")}s+=a}return s}static _substitute(t,e){if(null===e)return"";if(0===t)return e[0];let s="";for(;t>0;){if(t<e.length)return(e[t]||"")+s;s=String(t%10)+s,t=Math.floor(t/10)}return"$"+s}}class h{static staticValue(t){return new h(t,-1,null)}static matchIndex(t){return new h(null,t,null)}static caseOps(t,e){return new h(null,t,e)}staticValue;matchIndex;caseOps;constructor(t,e,s){this.staticValue=t,this.matchIndex=e,s&&0!==s.length?this.caseOps=s.slice(0):this.caseOps=null}}class C{_source;_lastCharIndex;_result;_resultLen;_currentStaticPiece;constructor(t){this._source=t,this._lastCharIndex=0,this._result=[],this._resultLen=0,this._currentStaticPiece=""}emitUnchanged(t){this._emitStatic(this._source.substring(this._lastCharIndex,t)),this._lastCharIndex=t}emitStatic(t,e){this._emitStatic(t),this._lastCharIndex=e}_emitStatic(t){0!==t.length&&(this._currentStaticPiece+=t)}emitMatchIndex(t,e,s){0!==this._currentStaticPiece.length&&(this._result[this._resultLen++]=h.staticValue(this._currentStaticPiece),this._currentStaticPiece=""),this._result[this._resultLen++]=h.caseOps(t,s),this._lastCharIndex=e}finalize(){return this.emitUnchanged(this._source.length),0!==this._currentStaticPiece.length&&(this._result[this._resultLen++]=h.staticValue(this._currentStaticPiece),this._currentStaticPiece=""),new o(this._result)}}function k(t){if(!t||0===t.length)return new o(null);const e=[],s=new C(t);for(let i=0,a=t.length;i<a;i++){const c=t.charCodeAt(i);if(c!==n.Backslash){if(c===n.DollarSign){if(i++,i>=a)break;const c=t.charCodeAt(i);if(c===n.DollarSign){s.emitUnchanged(i-1),s.emitStatic("$",i+1);continue}if(c===n.Digit0||c===n.Ampersand){s.emitUnchanged(i-1),s.emitMatchIndex(0,i+1,e),e.length=0;continue}if(n.Digit1<=c&&c<=n.Digit9){let r=c-n.Digit0;if(i+1<a){const a=t.charCodeAt(i+1);if(n.Digit0<=a&&a<=n.Digit9){i++,r=10*r+(a-n.Digit0),s.emitUnchanged(i-2),s.emitMatchIndex(r,i+1,e),e.length=0;continue}}s.emitUnchanged(i-1),s.emitMatchIndex(r,i+1,e),e.length=0;continue}}}else{if(i++,i>=a)break;const c=t.charCodeAt(i);switch(c){case n.Backslash:s.emitUnchanged(i-1),s.emitStatic("\\",i+1);break;case n.n:s.emitUnchanged(i-1),s.emitStatic("\n",i+1);break;case n.t:s.emitUnchanged(i-1),s.emitStatic("\t",i+1);break;case n.u:case n.U:case n.l:case n.L:s.emitUnchanged(i-1),s.emitStatic("",i+1),e.push(String.fromCharCode(c))}}}return s.finalize()}export{o as ReplacePattern,h as ReplacePiece,k as parseReplaceString};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { CharCode } from "../../../../base/common/charCode.js";
+import { buildReplaceStringWithCasePreserved } from "../../../../base/common/search.js";
+var ReplacePatternKind = /* @__PURE__ */ ((ReplacePatternKind2) => {
+  ReplacePatternKind2[ReplacePatternKind2["StaticValue"] = 0] = "StaticValue";
+  ReplacePatternKind2[ReplacePatternKind2["DynamicPieces"] = 1] = "DynamicPieces";
+  return ReplacePatternKind2;
+})(ReplacePatternKind || {});
+class StaticValueReplacePattern {
+  constructor(staticValue) {
+    this.staticValue = staticValue;
+  }
+  static {
+    __name(this, "StaticValueReplacePattern");
+  }
+  kind = 0 /* StaticValue */;
+}
+class DynamicPiecesReplacePattern {
+  constructor(pieces) {
+    this.pieces = pieces;
+  }
+  static {
+    __name(this, "DynamicPiecesReplacePattern");
+  }
+  kind = 1 /* DynamicPieces */;
+}
+class ReplacePattern {
+  static {
+    __name(this, "ReplacePattern");
+  }
+  static fromStaticValue(value) {
+    return new ReplacePattern([ReplacePiece.staticValue(value)]);
+  }
+  _state;
+  get hasReplacementPatterns() {
+    return this._state.kind === 1 /* DynamicPieces */;
+  }
+  constructor(pieces) {
+    if (!pieces || pieces.length === 0) {
+      this._state = new StaticValueReplacePattern("");
+    } else if (pieces.length === 1 && pieces[0].staticValue !== null) {
+      this._state = new StaticValueReplacePattern(pieces[0].staticValue);
+    } else {
+      this._state = new DynamicPiecesReplacePattern(pieces);
+    }
+  }
+  buildReplaceString(matches, preserveCase) {
+    if (this._state.kind === 0 /* StaticValue */) {
+      if (preserveCase) {
+        return buildReplaceStringWithCasePreserved(matches, this._state.staticValue);
+      } else {
+        return this._state.staticValue;
+      }
+    }
+    let result = "";
+    for (let i = 0, len = this._state.pieces.length; i < len; i++) {
+      const piece = this._state.pieces[i];
+      if (piece.staticValue !== null) {
+        result += piece.staticValue;
+        continue;
+      }
+      let match = ReplacePattern._substitute(piece.matchIndex, matches);
+      if (piece.caseOps !== null && piece.caseOps.length > 0) {
+        const repl = [];
+        const lenOps = piece.caseOps.length;
+        let opIdx = 0;
+        for (let idx = 0, len2 = match.length; idx < len2; idx++) {
+          if (opIdx >= lenOps) {
+            repl.push(match.slice(idx));
+            break;
+          }
+          switch (piece.caseOps[opIdx]) {
+            case "U":
+              repl.push(match[idx].toUpperCase());
+              break;
+            case "u":
+              repl.push(match[idx].toUpperCase());
+              opIdx++;
+              break;
+            case "L":
+              repl.push(match[idx].toLowerCase());
+              break;
+            case "l":
+              repl.push(match[idx].toLowerCase());
+              opIdx++;
+              break;
+            default:
+              repl.push(match[idx]);
+          }
+        }
+        match = repl.join("");
+      }
+      result += match;
+    }
+    return result;
+  }
+  static _substitute(matchIndex, matches) {
+    if (matches === null) {
+      return "";
+    }
+    if (matchIndex === 0) {
+      return matches[0];
+    }
+    let remainder = "";
+    while (matchIndex > 0) {
+      if (matchIndex < matches.length) {
+        const match = matches[matchIndex] || "";
+        return match + remainder;
+      }
+      remainder = String(matchIndex % 10) + remainder;
+      matchIndex = Math.floor(matchIndex / 10);
+    }
+    return "$" + remainder;
+  }
+}
+class ReplacePiece {
+  static {
+    __name(this, "ReplacePiece");
+  }
+  static staticValue(value) {
+    return new ReplacePiece(value, -1, null);
+  }
+  static matchIndex(index) {
+    return new ReplacePiece(null, index, null);
+  }
+  static caseOps(index, caseOps) {
+    return new ReplacePiece(null, index, caseOps);
+  }
+  staticValue;
+  matchIndex;
+  caseOps;
+  constructor(staticValue, matchIndex, caseOps) {
+    this.staticValue = staticValue;
+    this.matchIndex = matchIndex;
+    if (!caseOps || caseOps.length === 0) {
+      this.caseOps = null;
+    } else {
+      this.caseOps = caseOps.slice(0);
+    }
+  }
+}
+class ReplacePieceBuilder {
+  static {
+    __name(this, "ReplacePieceBuilder");
+  }
+  _source;
+  _lastCharIndex;
+  _result;
+  _resultLen;
+  _currentStaticPiece;
+  constructor(source) {
+    this._source = source;
+    this._lastCharIndex = 0;
+    this._result = [];
+    this._resultLen = 0;
+    this._currentStaticPiece = "";
+  }
+  emitUnchanged(toCharIndex) {
+    this._emitStatic(this._source.substring(this._lastCharIndex, toCharIndex));
+    this._lastCharIndex = toCharIndex;
+  }
+  emitStatic(value, toCharIndex) {
+    this._emitStatic(value);
+    this._lastCharIndex = toCharIndex;
+  }
+  _emitStatic(value) {
+    if (value.length === 0) {
+      return;
+    }
+    this._currentStaticPiece += value;
+  }
+  emitMatchIndex(index, toCharIndex, caseOps) {
+    if (this._currentStaticPiece.length !== 0) {
+      this._result[this._resultLen++] = ReplacePiece.staticValue(this._currentStaticPiece);
+      this._currentStaticPiece = "";
+    }
+    this._result[this._resultLen++] = ReplacePiece.caseOps(index, caseOps);
+    this._lastCharIndex = toCharIndex;
+  }
+  finalize() {
+    this.emitUnchanged(this._source.length);
+    if (this._currentStaticPiece.length !== 0) {
+      this._result[this._resultLen++] = ReplacePiece.staticValue(this._currentStaticPiece);
+      this._currentStaticPiece = "";
+    }
+    return new ReplacePattern(this._result);
+  }
+}
+function parseReplaceString(replaceString) {
+  if (!replaceString || replaceString.length === 0) {
+    return new ReplacePattern(null);
+  }
+  const caseOps = [];
+  const result = new ReplacePieceBuilder(replaceString);
+  for (let i = 0, len = replaceString.length; i < len; i++) {
+    const chCode = replaceString.charCodeAt(i);
+    if (chCode === CharCode.Backslash) {
+      i++;
+      if (i >= len) {
+        break;
+      }
+      const nextChCode = replaceString.charCodeAt(i);
+      switch (nextChCode) {
+        case CharCode.Backslash:
+          result.emitUnchanged(i - 1);
+          result.emitStatic("\\", i + 1);
+          break;
+        case CharCode.n:
+          result.emitUnchanged(i - 1);
+          result.emitStatic("\n", i + 1);
+          break;
+        case CharCode.t:
+          result.emitUnchanged(i - 1);
+          result.emitStatic("	", i + 1);
+          break;
+        // Case modification of string replacements, patterned after Boost, but only applied
+        // to the replacement text, not subsequent content.
+        case CharCode.u:
+        // \u => upper-cases one character.
+        case CharCode.U:
+        // \U => upper-cases ALL following characters.
+        case CharCode.l:
+        // \l => lower-cases one character.
+        case CharCode.L:
+          result.emitUnchanged(i - 1);
+          result.emitStatic("", i + 1);
+          caseOps.push(String.fromCharCode(nextChCode));
+          break;
+      }
+      continue;
+    }
+    if (chCode === CharCode.DollarSign) {
+      i++;
+      if (i >= len) {
+        break;
+      }
+      const nextChCode = replaceString.charCodeAt(i);
+      if (nextChCode === CharCode.DollarSign) {
+        result.emitUnchanged(i - 1);
+        result.emitStatic("$", i + 1);
+        continue;
+      }
+      if (nextChCode === CharCode.Digit0 || nextChCode === CharCode.Ampersand) {
+        result.emitUnchanged(i - 1);
+        result.emitMatchIndex(0, i + 1, caseOps);
+        caseOps.length = 0;
+        continue;
+      }
+      if (CharCode.Digit1 <= nextChCode && nextChCode <= CharCode.Digit9) {
+        let matchIndex = nextChCode - CharCode.Digit0;
+        if (i + 1 < len) {
+          const nextNextChCode = replaceString.charCodeAt(i + 1);
+          if (CharCode.Digit0 <= nextNextChCode && nextNextChCode <= CharCode.Digit9) {
+            i++;
+            matchIndex = matchIndex * 10 + (nextNextChCode - CharCode.Digit0);
+            result.emitUnchanged(i - 2);
+            result.emitMatchIndex(matchIndex, i + 1, caseOps);
+            caseOps.length = 0;
+            continue;
+          }
+        }
+        result.emitUnchanged(i - 1);
+        result.emitMatchIndex(matchIndex, i + 1, caseOps);
+        caseOps.length = 0;
+        continue;
+      }
+    }
+  }
+  return result.finalize();
+}
+__name(parseReplaceString, "parseReplaceString");
+export {
+  ReplacePattern,
+  ReplacePiece,
+  parseReplaceString
+};
+//# sourceMappingURL=replacePattern.js.map

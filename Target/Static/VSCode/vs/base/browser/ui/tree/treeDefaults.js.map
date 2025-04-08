@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/base/browser/ui/tree/treeDefaults.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { AsyncDataTree } from './asyncDataTree.js';\r\nimport { Action } from '../../../common/actions.js';\r\nimport * as nls from '../../../../nls.js';\r\n\r\nexport class CollapseAllAction<TInput, T, TFilterData = void> extends Action {\r\n\r\n\tconstructor(private viewer: AsyncDataTree<TInput, T, TFilterData>, enabled: boolean) {\r\n\t\tsuper('vs.tree.collapse', nls.localize('collapse all', \"Collapse All\"), 'collapse-all', enabled);\r\n\t}\r\n\r\n\toverride async run(): Promise<void> {\r\n\t\tthis.viewer.collapseAll();\r\n\t\tthis.viewer.setSelection([]);\r\n\t\tthis.viewer.setFocus([]);\r\n\t}\r\n}\r\n"],
+  "mappings": ";;AAKA,SAAS,qBAAqB;AAC9B,SAAS,cAAc;AACvB,YAAY,SAAS;AAEd,MAAM,0BAAyD,OAAO;AAAA,EAE5E,YAAoB,QAA+C,SAAkB;AACpF,UAAM,oBAAoB,IAAI,SAAS,gBAAgB,cAAc,GAAG,gBAAgB,OAAO;AAD5E;AAAA,EAEpB;AAAA,EAbD,OAS6E;AAAA;AAAA;AAAA,EAM5E,MAAe,MAAqB;AACnC,SAAK,OAAO,YAAY;AACxB,SAAK,OAAO,aAAa,CAAC,CAAC;AAC3B,SAAK,OAAO,SAAS,CAAC,CAAC;AAAA,EACxB;AACD;",
+  "names": []
+}

@@ -1,1 +1,5 @@
-const e="comments";export{e as COMMENTS_SECTION};
+const COMMENTS_SECTION = "comments";
+export {
+  COMMENTS_SECTION
+};
+//# sourceMappingURL=commentsConfiguration.js.map

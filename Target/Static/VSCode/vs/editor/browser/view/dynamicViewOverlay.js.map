@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/editor/browser/view/dynamicViewOverlay.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { RenderingContext } from './renderingContext.js';\r\nimport { ViewEventHandler } from '../../common/viewEventHandler.js';\r\n\r\nexport abstract class DynamicViewOverlay extends ViewEventHandler {\r\n\r\n\tpublic abstract prepareRender(ctx: RenderingContext): void;\r\n\r\n\tpublic abstract render(startLineNumber: number, lineNumber: number): string;\r\n\r\n}\r\n"],
+  "mappings": ";;AAKA,SAAS,wBAAwB;AACjC,SAAS,wBAAwB;AAE1B,MAAe,2BAA2B,iBAAiB;AAAA,EARlE,OAQkE;AAAA;AAAA;AAMlE;",
+  "names": []
+}

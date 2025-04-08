@@ -1,1 +1,295 @@
-var k=Object.defineProperty;var B=Object.getOwnPropertyDescriptor;var R=(c,a,i,o)=>{for(var t=o>1?void 0:o?B(a,i):a,d=c.length-1,n;d>=0;d--)(n=c[d])&&(t=(o?n(a,i,t):n(t))||t);return o&&t&&k(a,i,t),t},p=(c,a)=>(i,o)=>a(i,o,c);import{MarkdownString as U}from"../../../../../base/common/htmlContent.js";import{Disposable as P,MutableDisposable as z}from"../../../../../base/common/lifecycle.js";import{ICodeEditorService as K}from"../../../../../editor/browser/services/codeEditorService.js";import{Range as T}from"../../../../../editor/common/core/range.js";import"../../../../../editor/common/editorCommon.js";import{IInstantiationService as j}from"../../../../../platform/instantiation/common/instantiation.js";import{inputPlaceholderForeground as G}from"../../../../../platform/theme/common/colorRegistry.js";import{IThemeService as H}from"../../../../../platform/theme/common/themeService.js";import{IChatAgentService as J}from"../../common/chatAgents.js";import{chatSlashCommandBackground as b,chatSlashCommandForeground as E}from"../../common/chatColors.js";import{ChatRequestAgentPart as y,ChatRequestAgentSubcommandPart as A,ChatRequestSlashCommandPart as O,ChatRequestTextPart as D,ChatRequestToolPart as L,chatAgentLeader as _,chatSubcommandLeader as Q}from"../../common/chatParserTypes.js";import{ChatRequestParser as X}from"../../common/chatRequestParser.js";import"../chat.js";import{ChatWidget as F}from"../chatWidget.js";import{dynamicVariableDecorationType as N}from"./chatDynamicVariables.js";const g="chat",x="chat-session-detail",M="chat-session-text",q="chat-variable-text";function V(c,a){return a?`${c.id}__${a}`:c.id}let m=class extends P{constructor(i,o,t,d){super();this.widget=i;this.codeEditorService=o;this.themeService=t;this.chatAgentService=d;this.codeEditorService.registerDecorationType(g,x,{}),this._register(this.themeService.onDidColorThemeChange(()=>this.updateRegisteredDecorationTypes())),this.updateRegisteredDecorationTypes(),this.updateInputEditorDecorations(),this._register(this.widget.inputEditor.onDidChangeModelContent(()=>this.updateInputEditorDecorations())),this._register(this.widget.onDidChangeParsedInput(()=>this.updateInputEditorDecorations())),this._register(this.widget.onDidChangeViewModel(()=>{this.registerViewModelListeners(),this.previouslyUsedAgents.clear(),this.updateInputEditorDecorations()})),this._register(this.widget.onDidSubmitAgent(n=>{this.previouslyUsedAgents.add(V(n.agent,n.slashCommand?.name))})),this._register(this.chatAgentService.onDidChangeAgents(()=>this.updateInputEditorDecorations())),this.registerViewModelListeners()}id="inputEditorDecorations";previouslyUsedAgents=new Set;viewModelDisposables=this._register(new z);registerViewModelListeners(){this.viewModelDisposables.value=this.widget.viewModel?.onDidChange(i=>{(i?.kind==="changePlaceholder"||i?.kind==="initialize")&&this.updateInputEditorDecorations()})}updateRegisteredDecorationTypes(){this.codeEditorService.removeDecorationType(q),this.codeEditorService.removeDecorationType(N),this.codeEditorService.removeDecorationType(M);const i=this.themeService.getColorTheme();this.codeEditorService.registerDecorationType(g,M,{color:i.getColor(E)?.toString(),backgroundColor:i.getColor(b)?.toString(),borderRadius:"3px"}),this.codeEditorService.registerDecorationType(g,q,{color:i.getColor(E)?.toString(),backgroundColor:i.getColor(b)?.toString(),borderRadius:"3px"}),this.codeEditorService.registerDecorationType(g,N,{color:i.getColor(E)?.toString(),backgroundColor:i.getColor(b)?.toString(),borderRadius:"3px"}),this.updateInputEditorDecorations()}getPlaceholderColor(){return this.themeService.getColorTheme().getColor(G)?.toString()}async updateInputEditorDecorations(){const i=this.widget.inputEditor.getValue(),o=this.widget.viewModel;if(!o)return;if(!i){const e=this.chatAgentService.getDefaultAgent(this.widget.location,this.widget.input.currentMode),l=[{range:{startLineNumber:1,endLineNumber:1,startColumn:1,endColumn:1e3},renderOptions:{after:{contentText:o.inputPlaceholder||(e?.description??""),color:this.getPlaceholderColor()}}}];this.widget.inputEditor.setDecorationsByType(g,x,l);return}const t=this.widget.parsedInput.parts;let d;const n=t.find(e=>e instanceof y),r=t.find(e=>e instanceof A),f=t.find(e=>e instanceof O),h=e=>{const l=t.indexOf(e);if(t.length>l+2)return!1;const I=t[l+1];return I&&I instanceof D&&I.text===" "},v=e=>({startLineNumber:e.editorRange.startLineNumber,endLineNumber:e.editorRange.endLineNumber,startColumn:e.editorRange.endColumn+1,endColumn:1e3});if(n&&t.every(e=>e instanceof D&&!e.text.trim().length||e instanceof y)){const l=this.previouslyUsedAgents.has(V(n.agent,void 0))&&n.agent.metadata.followupPlaceholder;n.agent.description&&h(n)&&(d=[{range:v(n),renderOptions:{after:{contentText:l?n.agent.metadata.followupPlaceholder:n.agent.description,color:this.getPlaceholderColor()}}}])}if(n&&r&&t.every(e=>e instanceof D&&!e.text.trim().length||e instanceof y||e instanceof A)){const l=this.previouslyUsedAgents.has(V(n.agent,r.command.name))&&r.command.followupPlaceholder;r?.command.description&&h(r)&&(d=[{range:v(r),renderOptions:{after:{contentText:l?r.command.followupPlaceholder:r.command.description,color:this.getPlaceholderColor()}}}])}r&&t.every(e=>e instanceof D&&!e.text.trim().length||e instanceof A)&&r?.command.description&&h(r)&&(d=[{range:v(r),renderOptions:{after:{contentText:r.command.description,color:this.getPlaceholderColor()}}}]),this.widget.inputEditor.setDecorationsByType(g,x,d??[]);const u=[];n&&u.push({range:n.editorRange}),r&&u.push({range:r.editorRange,hoverMessage:new U(r.command.description)}),f&&u.push({range:f.editorRange}),this.widget.inputEditor.setDecorationsByType(g,M,u);const w=[],$=t.filter(e=>e instanceof L);for(const e of $)w.push({range:e.editorRange});this.widget.inputEditor.setDecorationsByType(g,q,w)}};m=R([p(1,K),p(2,H),p(3,J)],m);class Y extends P{constructor(i){super();this.widget=i;this._register(this.widget.onDidChangeAgent(o=>{(o.slashCommand&&o.slashCommand.isSticky||!o.slashCommand&&o.agent.metadata.isSticky)&&this.repopulateAgentCommand(o.agent,o.slashCommand)})),this._register(this.widget.onDidSubmitAgent(o=>{this.repopulateAgentCommand(o.agent,o.slashCommand)}))}id="InputEditorSlashCommandMode";async repopulateAgentCommand(i,o){if(this.widget.inputEditor.getValue().trim())return;let t;o&&o.isSticky?t=`${_}${i.name} ${Q}${o.name} `:i.metadata.isSticky&&(t=`${_}${i.name} `),t&&(this.widget.inputEditor.setValue(t),this.widget.inputEditor.setPosition({lineNumber:1,column:t.length+1}))}}F.CONTRIBS.push(m,Y);let C=class extends P{constructor(i,o){super();this.widget=i;this.instantiationService=o;const t=this.instantiationService.createInstance(X),d=this.widget.inputEditor.getValue();let n,r;this._register(this.widget.inputEditor.onDidChangeModelContent(f=>{n||(n=d,r=this.widget.lastSelectedAgent);const h=f.changes[0];!h.text&&this.widget.viewModel&&t.parseChatRequest(this.widget.viewModel.sessionId,n,i.location,{selectedAgent:r,mode:this.widget.input.currentMode}).parts.filter(s=>s instanceof y||s instanceof A||s instanceof O||s instanceof L).forEach(s=>{const S=T.intersectRanges(s.editorRange,h.range);if(S&&T.compareRangesUsingStarts(s.editorRange,h.range)<0){const u=S.endColumn-S.startColumn,w=new T(s.editorRange.startLineNumber,s.editorRange.startColumn,s.editorRange.endLineNumber,s.editorRange.endColumn-u);this.widget.inputEditor.executeEdits(this.id,[{range:w,text:""}]),this.widget.refreshParsedInput()}}),n=this.widget.inputEditor.getValue(),r=this.widget.lastSelectedAgent}))}id="chatTokenDeleter"};C=R([p(1,j)],C),F.CONTRIBS.push(C);
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { MarkdownString } from "../../../../../base/common/htmlContent.js";
+import { Disposable, MutableDisposable } from "../../../../../base/common/lifecycle.js";
+import { ICodeEditorService } from "../../../../../editor/browser/services/codeEditorService.js";
+import { Range } from "../../../../../editor/common/core/range.js";
+import { IDecorationOptions } from "../../../../../editor/common/editorCommon.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { inputPlaceholderForeground } from "../../../../../platform/theme/common/colorRegistry.js";
+import { IThemeService } from "../../../../../platform/theme/common/themeService.js";
+import { IChatAgentCommand, IChatAgentData, IChatAgentService } from "../../common/chatAgents.js";
+import { chatSlashCommandBackground, chatSlashCommandForeground } from "../../common/chatColors.js";
+import { ChatRequestAgentPart, ChatRequestAgentSubcommandPart, ChatRequestSlashCommandPart, ChatRequestTextPart, ChatRequestToolPart, IParsedChatRequestPart, chatAgentLeader, chatSubcommandLeader } from "../../common/chatParserTypes.js";
+import { ChatRequestParser } from "../../common/chatRequestParser.js";
+import { IChatWidget } from "../chat.js";
+import { ChatWidget } from "../chatWidget.js";
+import { dynamicVariableDecorationType } from "./chatDynamicVariables.js";
+const decorationDescription = "chat";
+const placeholderDecorationType = "chat-session-detail";
+const slashCommandTextDecorationType = "chat-session-text";
+const variableTextDecorationType = "chat-variable-text";
+function agentAndCommandToKey(agent, subcommand) {
+  return subcommand ? `${agent.id}__${subcommand}` : agent.id;
+}
+__name(agentAndCommandToKey, "agentAndCommandToKey");
+let InputEditorDecorations = class extends Disposable {
+  constructor(widget, codeEditorService, themeService, chatAgentService) {
+    super();
+    this.widget = widget;
+    this.codeEditorService = codeEditorService;
+    this.themeService = themeService;
+    this.chatAgentService = chatAgentService;
+    this.codeEditorService.registerDecorationType(decorationDescription, placeholderDecorationType, {});
+    this._register(this.themeService.onDidColorThemeChange(() => this.updateRegisteredDecorationTypes()));
+    this.updateRegisteredDecorationTypes();
+    this.updateInputEditorDecorations();
+    this._register(this.widget.inputEditor.onDidChangeModelContent(() => this.updateInputEditorDecorations()));
+    this._register(this.widget.onDidChangeParsedInput(() => this.updateInputEditorDecorations()));
+    this._register(this.widget.onDidChangeViewModel(() => {
+      this.registerViewModelListeners();
+      this.previouslyUsedAgents.clear();
+      this.updateInputEditorDecorations();
+    }));
+    this._register(this.widget.onDidSubmitAgent((e) => {
+      this.previouslyUsedAgents.add(agentAndCommandToKey(e.agent, e.slashCommand?.name));
+    }));
+    this._register(this.chatAgentService.onDidChangeAgents(() => this.updateInputEditorDecorations()));
+    this.registerViewModelListeners();
+  }
+  static {
+    __name(this, "InputEditorDecorations");
+  }
+  id = "inputEditorDecorations";
+  previouslyUsedAgents = /* @__PURE__ */ new Set();
+  viewModelDisposables = this._register(new MutableDisposable());
+  registerViewModelListeners() {
+    this.viewModelDisposables.value = this.widget.viewModel?.onDidChange((e) => {
+      if (e?.kind === "changePlaceholder" || e?.kind === "initialize") {
+        this.updateInputEditorDecorations();
+      }
+    });
+  }
+  updateRegisteredDecorationTypes() {
+    this.codeEditorService.removeDecorationType(variableTextDecorationType);
+    this.codeEditorService.removeDecorationType(dynamicVariableDecorationType);
+    this.codeEditorService.removeDecorationType(slashCommandTextDecorationType);
+    const theme = this.themeService.getColorTheme();
+    this.codeEditorService.registerDecorationType(decorationDescription, slashCommandTextDecorationType, {
+      color: theme.getColor(chatSlashCommandForeground)?.toString(),
+      backgroundColor: theme.getColor(chatSlashCommandBackground)?.toString(),
+      borderRadius: "3px"
+    });
+    this.codeEditorService.registerDecorationType(decorationDescription, variableTextDecorationType, {
+      color: theme.getColor(chatSlashCommandForeground)?.toString(),
+      backgroundColor: theme.getColor(chatSlashCommandBackground)?.toString(),
+      borderRadius: "3px"
+    });
+    this.codeEditorService.registerDecorationType(decorationDescription, dynamicVariableDecorationType, {
+      color: theme.getColor(chatSlashCommandForeground)?.toString(),
+      backgroundColor: theme.getColor(chatSlashCommandBackground)?.toString(),
+      borderRadius: "3px"
+    });
+    this.updateInputEditorDecorations();
+  }
+  getPlaceholderColor() {
+    const theme = this.themeService.getColorTheme();
+    const transparentForeground = theme.getColor(inputPlaceholderForeground);
+    return transparentForeground?.toString();
+  }
+  async updateInputEditorDecorations() {
+    const inputValue = this.widget.inputEditor.getValue();
+    const viewModel = this.widget.viewModel;
+    if (!viewModel) {
+      return;
+    }
+    if (!inputValue) {
+      const defaultAgent = this.chatAgentService.getDefaultAgent(this.widget.location, this.widget.input.currentMode);
+      const decoration = [
+        {
+          range: {
+            startLineNumber: 1,
+            endLineNumber: 1,
+            startColumn: 1,
+            endColumn: 1e3
+          },
+          renderOptions: {
+            after: {
+              contentText: viewModel.inputPlaceholder || (defaultAgent?.description ?? ""),
+              color: this.getPlaceholderColor()
+            }
+          }
+        }
+      ];
+      this.widget.inputEditor.setDecorationsByType(decorationDescription, placeholderDecorationType, decoration);
+      return;
+    }
+    const parsedRequest = this.widget.parsedInput.parts;
+    let placeholderDecoration;
+    const agentPart = parsedRequest.find((p) => p instanceof ChatRequestAgentPart);
+    const agentSubcommandPart = parsedRequest.find((p) => p instanceof ChatRequestAgentSubcommandPart);
+    const slashCommandPart = parsedRequest.find((p) => p instanceof ChatRequestSlashCommandPart);
+    const exactlyOneSpaceAfterPart = /* @__PURE__ */ __name((part) => {
+      const partIdx = parsedRequest.indexOf(part);
+      if (parsedRequest.length > partIdx + 2) {
+        return false;
+      }
+      const nextPart = parsedRequest[partIdx + 1];
+      return nextPart && nextPart instanceof ChatRequestTextPart && nextPart.text === " ";
+    }, "exactlyOneSpaceAfterPart");
+    const getRangeForPlaceholder = /* @__PURE__ */ __name((part) => ({
+      startLineNumber: part.editorRange.startLineNumber,
+      endLineNumber: part.editorRange.endLineNumber,
+      startColumn: part.editorRange.endColumn + 1,
+      endColumn: 1e3
+    }), "getRangeForPlaceholder");
+    const onlyAgentAndWhitespace = agentPart && parsedRequest.every((p) => p instanceof ChatRequestTextPart && !p.text.trim().length || p instanceof ChatRequestAgentPart);
+    if (onlyAgentAndWhitespace) {
+      const isFollowupSlashCommand = this.previouslyUsedAgents.has(agentAndCommandToKey(agentPart.agent, void 0));
+      const shouldRenderFollowupPlaceholder = isFollowupSlashCommand && agentPart.agent.metadata.followupPlaceholder;
+      if (agentPart.agent.description && exactlyOneSpaceAfterPart(agentPart)) {
+        placeholderDecoration = [{
+          range: getRangeForPlaceholder(agentPart),
+          renderOptions: {
+            after: {
+              contentText: shouldRenderFollowupPlaceholder ? agentPart.agent.metadata.followupPlaceholder : agentPart.agent.description,
+              color: this.getPlaceholderColor()
+            }
+          }
+        }];
+      }
+    }
+    const onlyAgentAndAgentCommandAndWhitespace = agentPart && agentSubcommandPart && parsedRequest.every((p) => p instanceof ChatRequestTextPart && !p.text.trim().length || p instanceof ChatRequestAgentPart || p instanceof ChatRequestAgentSubcommandPart);
+    if (onlyAgentAndAgentCommandAndWhitespace) {
+      const isFollowupSlashCommand = this.previouslyUsedAgents.has(agentAndCommandToKey(agentPart.agent, agentSubcommandPart.command.name));
+      const shouldRenderFollowupPlaceholder = isFollowupSlashCommand && agentSubcommandPart.command.followupPlaceholder;
+      if (agentSubcommandPart?.command.description && exactlyOneSpaceAfterPart(agentSubcommandPart)) {
+        placeholderDecoration = [{
+          range: getRangeForPlaceholder(agentSubcommandPart),
+          renderOptions: {
+            after: {
+              contentText: shouldRenderFollowupPlaceholder ? agentSubcommandPart.command.followupPlaceholder : agentSubcommandPart.command.description,
+              color: this.getPlaceholderColor()
+            }
+          }
+        }];
+      }
+    }
+    const onlyAgentCommandAndWhitespace = agentSubcommandPart && parsedRequest.every((p) => p instanceof ChatRequestTextPart && !p.text.trim().length || p instanceof ChatRequestAgentSubcommandPart);
+    if (onlyAgentCommandAndWhitespace) {
+      if (agentSubcommandPart?.command.description && exactlyOneSpaceAfterPart(agentSubcommandPart)) {
+        placeholderDecoration = [{
+          range: getRangeForPlaceholder(agentSubcommandPart),
+          renderOptions: {
+            after: {
+              contentText: agentSubcommandPart.command.description,
+              color: this.getPlaceholderColor()
+            }
+          }
+        }];
+      }
+    }
+    this.widget.inputEditor.setDecorationsByType(decorationDescription, placeholderDecorationType, placeholderDecoration ?? []);
+    const textDecorations = [];
+    if (agentPart) {
+      textDecorations.push({ range: agentPart.editorRange });
+    }
+    if (agentSubcommandPart) {
+      textDecorations.push({ range: agentSubcommandPart.editorRange, hoverMessage: new MarkdownString(agentSubcommandPart.command.description) });
+    }
+    if (slashCommandPart) {
+      textDecorations.push({ range: slashCommandPart.editorRange });
+    }
+    this.widget.inputEditor.setDecorationsByType(decorationDescription, slashCommandTextDecorationType, textDecorations);
+    const varDecorations = [];
+    const toolParts = parsedRequest.filter((p) => p instanceof ChatRequestToolPart);
+    for (const tool of toolParts) {
+      varDecorations.push({ range: tool.editorRange });
+    }
+    this.widget.inputEditor.setDecorationsByType(decorationDescription, variableTextDecorationType, varDecorations);
+  }
+};
+InputEditorDecorations = __decorateClass([
+  __decorateParam(1, ICodeEditorService),
+  __decorateParam(2, IThemeService),
+  __decorateParam(3, IChatAgentService)
+], InputEditorDecorations);
+class InputEditorSlashCommandMode extends Disposable {
+  constructor(widget) {
+    super();
+    this.widget = widget;
+    this._register(this.widget.onDidChangeAgent((e) => {
+      if (e.slashCommand && e.slashCommand.isSticky || !e.slashCommand && e.agent.metadata.isSticky) {
+        this.repopulateAgentCommand(e.agent, e.slashCommand);
+      }
+    }));
+    this._register(this.widget.onDidSubmitAgent((e) => {
+      this.repopulateAgentCommand(e.agent, e.slashCommand);
+    }));
+  }
+  static {
+    __name(this, "InputEditorSlashCommandMode");
+  }
+  id = "InputEditorSlashCommandMode";
+  async repopulateAgentCommand(agent, slashCommand) {
+    if (this.widget.inputEditor.getValue().trim()) {
+      return;
+    }
+    let value;
+    if (slashCommand && slashCommand.isSticky) {
+      value = `${chatAgentLeader}${agent.name} ${chatSubcommandLeader}${slashCommand.name} `;
+    } else if (agent.metadata.isSticky) {
+      value = `${chatAgentLeader}${agent.name} `;
+    }
+    if (value) {
+      this.widget.inputEditor.setValue(value);
+      this.widget.inputEditor.setPosition({ lineNumber: 1, column: value.length + 1 });
+    }
+  }
+}
+ChatWidget.CONTRIBS.push(InputEditorDecorations, InputEditorSlashCommandMode);
+let ChatTokenDeleter = class extends Disposable {
+  constructor(widget, instantiationService) {
+    super();
+    this.widget = widget;
+    this.instantiationService = instantiationService;
+    const parser = this.instantiationService.createInstance(ChatRequestParser);
+    const inputValue = this.widget.inputEditor.getValue();
+    let previousInputValue;
+    let previousSelectedAgent;
+    this._register(this.widget.inputEditor.onDidChangeModelContent((e) => {
+      if (!previousInputValue) {
+        previousInputValue = inputValue;
+        previousSelectedAgent = this.widget.lastSelectedAgent;
+      }
+      const change = e.changes[0];
+      if (!change.text && this.widget.viewModel) {
+        const previousParsedValue = parser.parseChatRequest(this.widget.viewModel.sessionId, previousInputValue, widget.location, { selectedAgent: previousSelectedAgent, mode: this.widget.input.currentMode });
+        const deletableTokens = previousParsedValue.parts.filter((p) => p instanceof ChatRequestAgentPart || p instanceof ChatRequestAgentSubcommandPart || p instanceof ChatRequestSlashCommandPart || p instanceof ChatRequestToolPart);
+        deletableTokens.forEach((token) => {
+          const deletedRangeOfToken = Range.intersectRanges(token.editorRange, change.range);
+          if (deletedRangeOfToken && Range.compareRangesUsingStarts(token.editorRange, change.range) < 0) {
+            const length = deletedRangeOfToken.endColumn - deletedRangeOfToken.startColumn;
+            const rangeToDelete = new Range(token.editorRange.startLineNumber, token.editorRange.startColumn, token.editorRange.endLineNumber, token.editorRange.endColumn - length);
+            this.widget.inputEditor.executeEdits(this.id, [{
+              range: rangeToDelete,
+              text: ""
+            }]);
+            this.widget.refreshParsedInput();
+          }
+        });
+      }
+      previousInputValue = this.widget.inputEditor.getValue();
+      previousSelectedAgent = this.widget.lastSelectedAgent;
+    }));
+  }
+  static {
+    __name(this, "ChatTokenDeleter");
+  }
+  id = "chatTokenDeleter";
+};
+ChatTokenDeleter = __decorateClass([
+  __decorateParam(1, IInstantiationService)
+], ChatTokenDeleter);
+ChatWidget.CONTRIBS.push(ChatTokenDeleter);
+//# sourceMappingURL=chatInputEditorContrib.js.map

@@ -1,1 +1,148 @@
-import{asArray as l,coalesce as c}from"../../../../base/common/arrays.js";import"../../../../base/common/cancellation.js";import"../../../../base/common/uri.js";import"../../../../platform/progress/common/progress.js";import{DEFAULT_TEXT_SEARCH_PREVIEW_OPTIONS as h}from"./search.js";import{TextSearchContext2 as x,TextSearchMatch2 as p}from"./searchExtTypes.js";function m(e){return"uri"in e&&"ranges"in e&&"preview"in e}function S(e){return e.folderOptions.map((r=>({folder:r.folder,excludes:r.excludes.map((e=>"string"==typeof e?e:e.pattern)),includes:r.includes,useGlobalIgnoreFiles:r.useIgnoreFiles.global,useIgnoreFiles:r.useIgnoreFiles.local,useParentIgnoreFiles:r.useIgnoreFiles.parent,followSymlinks:r.followSymlinks,maxResults:e.maxResults,session:e.session})))}class D{constructor(e){this.provider=e}provideFileSearchResults(e,r,s){return(async()=>{const t=S(r);return Promise.all(t.map((r=>this.provider.provideFileSearchResults({pattern:e},r,s))))})().then((e=>c(e).flat()))}}function g(e){return e.folderOptions.map((r=>({folder:r.folder,excludes:r.excludes.map((e=>"string"==typeof e?e:e.pattern)),includes:r.includes,useGlobalIgnoreFiles:r.useIgnoreFiles.global,useIgnoreFiles:r.useIgnoreFiles.local,useParentIgnoreFiles:r.useIgnoreFiles.parent,followSymlinks:r.followSymlinks,maxResults:e.maxResults,previewOptions:v(e.previewOptions),maxFileSize:e.maxFileSize,encoding:r.encoding,afterContext:e.surroundingContext,beforeContext:e.surroundingContext})))}function v(e){return{matchLines:e?.matchLines??h.matchLines,charsPerLine:e?.charsPerLine??h.charsPerLine}}function d(e){if(m(e)){const r=l(e.ranges).map(((r,s)=>({sourceRange:r,previewRange:l(e.preview.matches)[s]})));return new p(e.uri,r,e.preview.text)}return new x(e.uri,e.text,e.lineNumber)}class V{constructor(e){this.provider=e}provideTextSearchResults(e,r,s,t){return(async()=>c(await Promise.all(g(r).map((r=>this.provider.provideTextSearchResults(e,r,{report:e=>(e=>{T(e)&&s.report(d(e))})(e)},t))))).reduce(((e,r)=>({limitHit:e.limitHit||r.limitHit})),{limitHit:!1}))().then((e=>({limitHit:e.limitHit,message:c(l(e.message))})))}}function T(e){if(R(e))if(Array.isArray(e.ranges)){if(!Array.isArray(e.preview.matches))return console.warn("INVALID - A text search provider match's`ranges` and`matches` properties must have the same type."),!1;if(e.preview.matches.length!==e.ranges.length)return console.warn("INVALID - A text search provider match's`ranges` and`matches` properties must have the same length."),!1}else if(Array.isArray(e.preview.matches))return console.warn("INVALID - A text search provider match's`ranges` and`matches` properties must have the same length."),!1;return!0}function R(e){return!!e.preview}export{D as OldFileSearchProviderConverter,V as OldTextSearchProviderConverter,R as extensionResultIsMatch,v as newToOldPreviewOptions,d as oldToNewTextSearchResult};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { asArray, coalesce } from "../../../../base/common/arrays.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IProgress } from "../../../../platform/progress/common/progress.js";
+import { DEFAULT_TEXT_SEARCH_PREVIEW_OPTIONS } from "./search.js";
+import { Range, FileSearchProvider2, FileSearchProviderOptions, ProviderResult, TextSearchComplete2, TextSearchContext2, TextSearchMatch2, TextSearchProvider2, TextSearchProviderOptions, TextSearchQuery2, TextSearchResult2, TextSearchCompleteMessage } from "./searchExtTypes.js";
+function isTextSearchMatch(object) {
+  return "uri" in object && "ranges" in object && "preview" in object;
+}
+__name(isTextSearchMatch, "isTextSearchMatch");
+function newToOldFileProviderOptions(options) {
+  return options.folderOptions.map((folderOption) => ({
+    folder: folderOption.folder,
+    excludes: folderOption.excludes.map((e) => typeof e === "string" ? e : e.pattern),
+    includes: folderOption.includes,
+    useGlobalIgnoreFiles: folderOption.useIgnoreFiles.global,
+    useIgnoreFiles: folderOption.useIgnoreFiles.local,
+    useParentIgnoreFiles: folderOption.useIgnoreFiles.parent,
+    followSymlinks: folderOption.followSymlinks,
+    maxResults: options.maxResults,
+    session: options.session
+    // TODO: make sure that we actually use a cancellation token here.
+  }));
+}
+__name(newToOldFileProviderOptions, "newToOldFileProviderOptions");
+class OldFileSearchProviderConverter {
+  constructor(provider) {
+    this.provider = provider;
+  }
+  static {
+    __name(this, "OldFileSearchProviderConverter");
+  }
+  provideFileSearchResults(pattern, options, token) {
+    const getResult = /* @__PURE__ */ __name(async () => {
+      const newOpts = newToOldFileProviderOptions(options);
+      return Promise.all(newOpts.map(
+        (o) => this.provider.provideFileSearchResults({ pattern }, o, token)
+      ));
+    }, "getResult");
+    return getResult().then((e) => coalesce(e).flat());
+  }
+}
+function newToOldTextProviderOptions(options) {
+  return options.folderOptions.map((folderOption) => ({
+    folder: folderOption.folder,
+    excludes: folderOption.excludes.map((e) => typeof e === "string" ? e : e.pattern),
+    includes: folderOption.includes,
+    useGlobalIgnoreFiles: folderOption.useIgnoreFiles.global,
+    useIgnoreFiles: folderOption.useIgnoreFiles.local,
+    useParentIgnoreFiles: folderOption.useIgnoreFiles.parent,
+    followSymlinks: folderOption.followSymlinks,
+    maxResults: options.maxResults,
+    previewOptions: newToOldPreviewOptions(options.previewOptions),
+    maxFileSize: options.maxFileSize,
+    encoding: folderOption.encoding,
+    afterContext: options.surroundingContext,
+    beforeContext: options.surroundingContext
+  }));
+}
+__name(newToOldTextProviderOptions, "newToOldTextProviderOptions");
+function newToOldPreviewOptions(options) {
+  return {
+    matchLines: options?.matchLines ?? DEFAULT_TEXT_SEARCH_PREVIEW_OPTIONS.matchLines,
+    charsPerLine: options?.charsPerLine ?? DEFAULT_TEXT_SEARCH_PREVIEW_OPTIONS.charsPerLine
+  };
+}
+__name(newToOldPreviewOptions, "newToOldPreviewOptions");
+function oldToNewTextSearchResult(result) {
+  if (isTextSearchMatch(result)) {
+    const ranges = asArray(result.ranges).map((r, i) => {
+      const previewArr = asArray(result.preview.matches);
+      const matchingPreviewRange = previewArr[i];
+      return { sourceRange: r, previewRange: matchingPreviewRange };
+    });
+    return new TextSearchMatch2(result.uri, ranges, result.preview.text);
+  } else {
+    return new TextSearchContext2(result.uri, result.text, result.lineNumber);
+  }
+}
+__name(oldToNewTextSearchResult, "oldToNewTextSearchResult");
+class OldTextSearchProviderConverter {
+  constructor(provider) {
+    this.provider = provider;
+  }
+  static {
+    __name(this, "OldTextSearchProviderConverter");
+  }
+  provideTextSearchResults(query, options, progress, token) {
+    const progressShim = /* @__PURE__ */ __name((oldResult2) => {
+      if (!validateProviderResult(oldResult2)) {
+        return;
+      }
+      progress.report(oldToNewTextSearchResult(oldResult2));
+    }, "progressShim");
+    const getResult = /* @__PURE__ */ __name(async () => {
+      return coalesce(await Promise.all(
+        newToOldTextProviderOptions(options).map(
+          (o) => this.provider.provideTextSearchResults(query, o, { report: /* @__PURE__ */ __name((e) => progressShim(e), "report") }, token)
+        )
+      )).reduce(
+        (prev, cur) => ({ limitHit: prev.limitHit || cur.limitHit }),
+        { limitHit: false }
+      );
+    }, "getResult");
+    const oldResult = getResult();
+    return oldResult.then((e) => {
+      return {
+        limitHit: e.limitHit,
+        message: coalesce(asArray(e.message))
+      };
+    });
+  }
+}
+function validateProviderResult(result) {
+  if (extensionResultIsMatch(result)) {
+    if (Array.isArray(result.ranges)) {
+      if (!Array.isArray(result.preview.matches)) {
+        console.warn("INVALID - A text search provider match's`ranges` and`matches` properties must have the same type.");
+        return false;
+      }
+      if (result.preview.matches.length !== result.ranges.length) {
+        console.warn("INVALID - A text search provider match's`ranges` and`matches` properties must have the same length.");
+        return false;
+      }
+    } else {
+      if (Array.isArray(result.preview.matches)) {
+        console.warn("INVALID - A text search provider match's`ranges` and`matches` properties must have the same length.");
+        return false;
+      }
+    }
+  }
+  return true;
+}
+__name(validateProviderResult, "validateProviderResult");
+function extensionResultIsMatch(data) {
+  return !!data.preview;
+}
+__name(extensionResultIsMatch, "extensionResultIsMatch");
+export {
+  OldFileSearchProviderConverter,
+  OldTextSearchProviderConverter,
+  extensionResultIsMatch,
+  newToOldPreviewOptions,
+  oldToNewTextSearchResult
+};
+//# sourceMappingURL=searchExtConversionTypes.js.map

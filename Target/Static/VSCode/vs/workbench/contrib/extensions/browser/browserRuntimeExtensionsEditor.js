@@ -1,1 +1,31 @@
-import"../../../../base/common/actions.js";import"../../../services/extensions/common/extensions.js";import"../../../../platform/extensions/common/extensions.js";import{AbstractRuntimeExtensionsEditor as t}from"./abstractRuntimeExtensionsEditor.js";import{ReportExtensionIssueAction as n}from"../common/reportExtensionIssueAction.js";class d extends t{_getProfileInfo(){return null}_getUnresponsiveProfile(t){}_createSlowExtensionAction(t){return null}_createReportExtensionIssueAction(t){return t.marketplaceInfo?this._instantiationService.createInstance(n,t.description):null}}export{d as RuntimeExtensionsEditor};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Action } from "../../../../base/common/actions.js";
+import { IExtensionHostProfile } from "../../../services/extensions/common/extensions.js";
+import { ExtensionIdentifier } from "../../../../platform/extensions/common/extensions.js";
+import { AbstractRuntimeExtensionsEditor, IRuntimeExtension } from "./abstractRuntimeExtensionsEditor.js";
+import { ReportExtensionIssueAction } from "../common/reportExtensionIssueAction.js";
+class RuntimeExtensionsEditor extends AbstractRuntimeExtensionsEditor {
+  static {
+    __name(this, "RuntimeExtensionsEditor");
+  }
+  _getProfileInfo() {
+    return null;
+  }
+  _getUnresponsiveProfile(extensionId) {
+    return void 0;
+  }
+  _createSlowExtensionAction(element) {
+    return null;
+  }
+  _createReportExtensionIssueAction(element) {
+    if (element.marketplaceInfo) {
+      return this._instantiationService.createInstance(ReportExtensionIssueAction, element.description);
+    }
+    return null;
+  }
+}
+export {
+  RuntimeExtensionsEditor
+};
+//# sourceMappingURL=browserRuntimeExtensionsEditor.js.map

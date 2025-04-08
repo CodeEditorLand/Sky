@@ -1,1 +1,96 @@
-var I=Object.defineProperty,u=Object.getOwnPropertyDescriptor,d=(o,e,r,s)=>{for(var t,i=s>1?void 0:s?u(e,r):e,a=o.length-1;a>=0;a--)(t=o[a])&&(i=(s?t(e,r,i):t(i))||i);return s&&i&&I(e,r,i),i},p=(o,e)=>(r,s)=>e(r,s,o);import{raceCancellation as k}from"../../../../base/common/async.js";import{CancellationTokenSource as C}from"../../../../base/common/cancellation.js";import{ILogService as h}from"../../../../platform/log/common/log.js";import{IProgressService as y,ProgressLocation as b}from"../../../../platform/progress/common/progress.js";import{Disposable as F,toDisposable as D}from"../../../../base/common/lifecycle.js";import"./workingCopyFileService.js";import"./storedFileWorkingCopy.js";import{LinkedList as W}from"../../../../base/common/linkedList.js";import{CancellationError as E,isCancellationError as L}from"../../../../base/common/errors.js";import{NotificationPriority as x}from"../../../../platform/notification/common/notification.js";import{localize as v}from"../../../../nls.js";let c=class extends F{constructor(o,e){super(),this.logService=o,this.progressService=e}saveParticipants=new W;get length(){return this.saveParticipants.size}addSaveParticipant(o){const e=this.saveParticipants.push(o);return D((()=>e()))}async participate(o,e,r,s){const t=new C(s);o.model?.pushStackElement(),r.report({message:v("saveParticipants1","Running Code Actions and Formatters...")});let i=!1;if(await this.progressService.withProgress({priority:x.URGENT,location:b.Notification,cancellable:v("skip","Skip"),delay:o.isDirty()?5e3:3e3},(async r=>{const s=Array.from(this.saveParticipants).sort(((o,e)=>(o.ordinal??0)-(e.ordinal??0)));for(const a of s){if(t.token.isCancellationRequested||o.isDisposed())break;try{const s=a.participate(o,e,r,t.token);await k(s,t.token)}catch(o){L(o)?t.token.isCancellationRequested||(t.cancel(),i=!0):this.logService.error(o)}}}),(()=>{t.cancel()})),o.model?.pushStackElement(),t.dispose(),i)throw new E}dispose(){this.saveParticipants.clear(),super.dispose()}};c=d([p(0,h),p(1,y)],c);export{c as StoredFileWorkingCopySaveParticipant};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { raceCancellation } from "../../../../base/common/async.js";
+import { CancellationToken, CancellationTokenSource } from "../../../../base/common/cancellation.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { IProgress, IProgressService, IProgressStep, ProgressLocation } from "../../../../platform/progress/common/progress.js";
+import { IDisposable, Disposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { IStoredFileWorkingCopySaveParticipant, IStoredFileWorkingCopySaveParticipantContext } from "./workingCopyFileService.js";
+import { IStoredFileWorkingCopy, IStoredFileWorkingCopyModel } from "./storedFileWorkingCopy.js";
+import { LinkedList } from "../../../../base/common/linkedList.js";
+import { CancellationError, isCancellationError } from "../../../../base/common/errors.js";
+import { NotificationPriority } from "../../../../platform/notification/common/notification.js";
+import { localize } from "../../../../nls.js";
+let StoredFileWorkingCopySaveParticipant = class extends Disposable {
+  constructor(logService, progressService) {
+    super();
+    this.logService = logService;
+    this.progressService = progressService;
+  }
+  static {
+    __name(this, "StoredFileWorkingCopySaveParticipant");
+  }
+  saveParticipants = new LinkedList();
+  get length() {
+    return this.saveParticipants.size;
+  }
+  addSaveParticipant(participant) {
+    const remove = this.saveParticipants.push(participant);
+    return toDisposable(() => remove());
+  }
+  async participate(workingCopy, context, progress, token) {
+    const cts = new CancellationTokenSource(token);
+    workingCopy.model?.pushStackElement();
+    progress.report({
+      message: localize("saveParticipants1", "Running Code Actions and Formatters...")
+    });
+    let bubbleCancel = false;
+    await this.progressService.withProgress({
+      priority: NotificationPriority.URGENT,
+      location: ProgressLocation.Notification,
+      cancellable: localize("skip", "Skip"),
+      delay: workingCopy.isDirty() ? 5e3 : 3e3
+    }, async (progress2) => {
+      const participants = Array.from(this.saveParticipants).sort((a, b) => {
+        const aValue = a.ordinal ?? 0;
+        const bValue = b.ordinal ?? 0;
+        return aValue - bValue;
+      });
+      for (const saveParticipant of participants) {
+        if (cts.token.isCancellationRequested || workingCopy.isDisposed()) {
+          break;
+        }
+        try {
+          const promise = saveParticipant.participate(workingCopy, context, progress2, cts.token);
+          await raceCancellation(promise, cts.token);
+        } catch (err) {
+          if (!isCancellationError(err)) {
+            this.logService.error(err);
+          } else if (!cts.token.isCancellationRequested) {
+            cts.cancel();
+            bubbleCancel = true;
+          }
+        }
+      }
+    }, () => {
+      cts.cancel();
+    });
+    workingCopy.model?.pushStackElement();
+    cts.dispose();
+    if (bubbleCancel) {
+      throw new CancellationError();
+    }
+  }
+  dispose() {
+    this.saveParticipants.clear();
+    super.dispose();
+  }
+};
+StoredFileWorkingCopySaveParticipant = __decorateClass([
+  __decorateParam(0, ILogService),
+  __decorateParam(1, IProgressService)
+], StoredFileWorkingCopySaveParticipant);
+export {
+  StoredFileWorkingCopySaveParticipant
+};
+//# sourceMappingURL=storedFileWorkingCopySaveParticipant.js.map

@@ -1,10 +1,664 @@
-var We=Object.defineProperty;var Ne=Object.getOwnPropertyDescriptor;var Z=(m,c,t,e)=>{for(var n=e>1?void 0:e?Ne(c,t):c,i=m.length-1,s;i>=0;i--)(s=m[i])&&(n=(e?s(c,t,n):s(n))||n);return e&&n&&We(c,t,n),n},p=(m,c)=>(t,e)=>c(t,e,m);import{$ as o,addDisposableListener as Ge,append as r,hide as Fe,setParentFlowTo as Ve,show as Ke}from"../../../../base/browser/dom.js";import{ActionBar as ue}from"../../../../base/browser/ui/actionbar/actionbar.js";import{getDefaultHoverDelegate as T}from"../../../../base/browser/ui/hover/hoverDelegateFactory.js";import{DomScrollableElement as z}from"../../../../base/browser/ui/scrollbar/scrollableElement.js";import{CheckboxActionViewItem as Ze}from"../../../../base/browser/ui/toggle/toggle.js";import{Action as ze}from"../../../../base/common/actions.js";import*as w from"../../../../base/common/arrays.js";import{Cache as O}from"../../../../base/common/cache.js";import{CancellationToken as Oe,CancellationTokenSource as he}from"../../../../base/common/cancellation.js";import{isCancellationError as Ue}from"../../../../base/common/errors.js";import{Emitter as Be,Event as H}from"../../../../base/common/event.js";import{KeyCode as U,KeyMod as pe}from"../../../../base/common/keyCodes.js";import{Disposable as me,DisposableStore as B,MutableDisposable as _e,dispose as je,toDisposable as x}from"../../../../base/common/lifecycle.js";import{Schemas as E,matchesScheme as W}from"../../../../base/common/network.js";import{isNative as _,language as Ye}from"../../../../base/common/platform.js";import{isUndefined as ve}from"../../../../base/common/types.js";import{URI as M}from"../../../../base/common/uri.js";import{generateUuid as fe}from"../../../../base/common/uuid.js";import"./media/extensionEditor.css";import{EditorContextKeys as Je}from"../../../../editor/common/editorContextKeys.js";import{TokenizationRegistry as $e}from"../../../../editor/common/languages.js";import{ILanguageService as Qe}from"../../../../editor/common/languages/language.js";import{generateTokensCSSForColorMap as Xe}from"../../../../editor/common/languages/supports/tokenization.js";import{localize as a}from"../../../../nls.js";import{Action2 as j,registerAction2 as Y}from"../../../../platform/actions/common/actions.js";import{ContextKeyExpr as N,IContextKeyService as qe,RawContextKey as et}from"../../../../platform/contextkey/common/contextkey.js";import{IContextMenuService as tt}from"../../../../platform/contextview/browser/contextView.js";import{computeSize as nt,FilterType as it,IExtensionGalleryService as ot}from"../../../../platform/extensionManagement/common/extensionManagement.js";import{areSameExtensions as ge}from"../../../../platform/extensionManagement/common/extensionManagementUtil.js";import{ExtensionType as J}from"../../../../platform/extensions/common/extensions.js";import{IInstantiationService as st}from"../../../../platform/instantiation/common/instantiation.js";import{KeybindingWeight as $}from"../../../../platform/keybinding/common/keybindingsRegistry.js";import{INotificationService as rt}from"../../../../platform/notification/common/notification.js";import{IOpenerService as Ie}from"../../../../platform/opener/common/opener.js";import{IStorageService as at}from"../../../../platform/storage/common/storage.js";import{ITelemetryService as ct}from"../../../../platform/telemetry/common/telemetry.js";import{defaultCheckboxStyles as lt}from"../../../../platform/theme/browser/defaultStyles.js";import{buttonForeground as dt,buttonHoverBackground as ut,editorBackground as ht,textLinkActiveForeground as pt,textLinkForeground as mt}from"../../../../platform/theme/common/colorRegistry.js";import{IThemeService as vt,registerThemingParticipant as ft}from"../../../../platform/theme/common/themeService.js";import{EditorPane as gt}from"../../../browser/parts/editor/editorPane.js";import"../../../common/editor.js";import{ExtensionFeaturesTab as It}from"./extensionFeaturesTab.js";import{ButtonWithDropDownExtensionAction as be,ClearLanguageAction as bt,DisableDropDownAction as Et,EnableDropDownAction as xt,ButtonWithDropdownExtensionActionViewItem as yt,DropDownExtensionAction as St,ExtensionEditorManageExtensionAction as Ct,ExtensionStatusAction as wt,ExtensionStatusLabelAction as Dt,InstallAnotherVersionAction as Pt,InstallDropdownAction as kt,InstallingLabelAction as Mt,LocalInstallAction as Rt,MigrateDeprecatedExtensionAction as Lt,ExtensionRuntimeStateAction as At,RemoteInstallAction as Tt,SetColorThemeAction as Ht,SetFileIconThemeAction as Wt,SetLanguageAction as Nt,SetProductIconThemeAction as Gt,ToggleAutoUpdateForExtensionAction as Ee,UninstallAction as xe,UpdateAction as Ft,WebInstallAction as Vt,TogglePreReleaseExtensionAction as Kt}from"./extensionsActions.js";import{Delegate as Zt}from"./extensionsList.js";import{ExtensionData as zt,ExtensionsGridView as Ot,ExtensionsTree as Ut,getExtensions as Bt}from"./extensionsViewer.js";import{ExtensionRecommendationWidget as _t,ExtensionStatusWidget as jt,ExtensionWidget as ye,InstallCountWidget as Yt,RatingsWidget as Jt,RemoteBadgeWidget as $t,SponsorWidget as Qt,PublisherWidget as Xt,onClick as k,ExtensionKindIndicatorWidget as qt}from"./extensionsWidgets.js";import{ExtensionContainers as en,ExtensionEditorTab as b,ExtensionState as tn,IExtensionsWorkbenchService as Se}from"../common/extensions.js";import"../common/extensionsInput.js";import{DEFAULT_MARKDOWN_STYLES as nn,renderMarkdownDocument as on}from"../../markdown/browser/markdownDocumentRenderer.js";import{IWebviewService as sn,KEYBINDING_CONTEXT_WEBVIEW_FIND_WIDGET_FOCUSED as Ce}from"../../webview/browser/webview.js";import"../../../services/editor/common/editorGroupsService.js";import{IEditorService as rn}from"../../../services/editor/common/editorService.js";import{IExtensionRecommendationsService as an}from"../../../services/extensionRecommendations/common/extensionRecommendations.js";import{IExtensionService as cn}from"../../../services/extensions/common/extensions.js";import{IUriIdentityService as ln}from"../../../../platform/uriIdentity/common/uriIdentity.js";import{IHoverService as we}from"../../../../platform/hover/browser/hover.js";import{ByteSize as De,IFileService as dn}from"../../../../platform/files/common/files.js";import{IUserDataProfilesService as un}from"../../../../platform/userDataProfile/common/userDataProfile.js";import{IRemoteAgentService as hn}from"../../../services/remote/common/remoteAgentService.js";import{IExtensionGalleryManifestService as pn}from"../../../../platform/extensionManagement/common/extensionGalleryManifest.js";function Q(m){return`${m.getFullYear()}-${String(m.getMonth()+1).padStart(2,"0")}-${String(m.getDate()).padStart(2,"0")}, ${m.toLocaleTimeString(Ye,{hourCycle:"h23"})}`}class mn extends me{_onChange=this._register(new Be);get onChange(){return this._onChange.event}_currentId=null;get currentId(){return this._currentId}actions;actionbar;constructor(c){super();const t=r(c,o(".navbar"));this.actions=[],this.actionbar=this._register(new ue(t))}push(c,t,e){const n=new ze(c,t,void 0,!0,()=>this.update(c,!0));n.tooltip=e,this.actions.push(n),this.actionbar.push(n),this.actions.length===1&&this.update(c)}clear(){this.actions=je(this.actions),this.actionbar.clear()}switch(c){const t=this.actions.find(e=>e.id===c);return t?(t.run(),!0):!1}update(c,t){this._currentId=c,this._onChange.fire({id:c,focus:!!t}),this.actions.forEach(e=>e.checked=e.id===c)}}var vn=(t=>(t[t.Readme=0]="Readme",t[t.Changelog=1]="Changelog",t))(vn||{});const fn=new et("showPreReleaseVersion",!1);class gn extends ye{_gallery=null;get gallery(){return this._gallery}set gallery(c){this.extension&&c&&!ge(this.extension.identifier,c.identifier)||(this._gallery=c,this.update())}}class In extends gn{element;constructor(c,t){super(),this.element=r(c,o("code.version",void 0,"pre-release")),this._register(t.setupManagedHover(T("mouse"),this.element,a("extension version","Extension Version"))),this.render()}render(){this.extension?.preRelease?Ke(this.element):Fe(this.element)}}let y=class extends gt{constructor(t,e,n,i,s,l,d,h,u,S,I,f,D,C,G,ee){super(y.ID,t,e,l,S);this.instantiationService=n;this.extensionsWorkbenchService=i;this.extensionGalleryService=s;this.notificationService=d;this.openerService=h;this.extensionRecommendationsService=u;this.extensionService=I;this.webviewService=f;this.languageService=D;this.contextMenuService=C;this.contextKeyService=G;this.hoverService=ee;this.extensionReadme=null,this.extensionChangelog=null,this.extensionManifest=null}static ID="workbench.editor.extension";_scopedContextKeyService=this._register(new _e);template;extensionReadme;extensionChangelog;extensionManifest;initialScrollProgress=new Map;currentIdentifier="";layoutParticipants=[];contentDisposables=this._register(new B);transientDisposables=this._register(new B);activeElement=null;dimension;showPreReleaseVersionContextKey;get scopedContextKeyService(){return this._scopedContextKeyService.value}createEditor(t){const e=r(t,o(".extension-editor"));this._scopedContextKeyService.value=this.contextKeyService.createScoped(e),this._scopedContextKeyService.value.createKey("inExtensionEditor",!0),this.showPreReleaseVersionContextKey=fn.bindTo(this._scopedContextKeyService.value),e.tabIndex=0,e.style.outline="none",e.setAttribute("role","document");const n=r(e,o(".header")),i=r(n,o(".icon-container")),s=r(i,o("img.icon",{draggable:!1,alt:""})),l=this.instantiationService.createInstance($t,i,!0),d=r(n,o(".details")),h=r(d,o(".title")),u=r(h,o("span.name.clickable",{role:"heading",tabIndex:0}));this._register(this.hoverService.setupManagedHover(T("mouse"),u,a("name","Extension name")));const S=new In(h,this.hoverService),I=r(h,o("span.preview"));this._register(this.hoverService.setupManagedHover(T("mouse"),I,a("preview","Preview"))),I.textContent=a("preview","Preview");const f=r(h,o("span.builtin"));f.textContent=a("builtin","Built-in");const D=r(d,o(".subtitle")),C=[],G=r(D,o(".subtitle-entry"));C.push(G);const ee=this.instantiationService.createInstance(Xt,G,!1),te=r(D,o(".subtitle-entry"));C.push(te);const Pe=this.instantiationService.createInstance(qt,te,!1),ne=r(D,o(".subtitle-entry"));C.push(ne);const ke=this.instantiationService.createInstance(Yt,ne,!1),ie=r(D,o(".subtitle-entry"));C.push(ie);const Me=this.instantiationService.createInstance(Jt,ie,!1),oe=r(D,o(".subtitle-entry"));C.push(oe);const Re=this.instantiationService.createInstance(Qt,oe),F=[l,S,ee,Pe,ke,Me,Re],Le=r(d,o(".description")),se=this.instantiationService.createInstance(kt),L=[this.instantiationService.createInstance(At),this.instantiationService.createInstance(Dt),this.instantiationService.createInstance(Ft,!0),this.instantiationService.createInstance(Ht),this.instantiationService.createInstance(Wt),this.instantiationService.createInstance(Gt),this.instantiationService.createInstance(Nt),this.instantiationService.createInstance(bt),this.instantiationService.createInstance(xt),this.instantiationService.createInstance(Et),this.instantiationService.createInstance(Tt,!1),this.instantiationService.createInstance(Rt),this.instantiationService.createInstance(Vt),se,this.instantiationService.createInstance(Mt),this.instantiationService.createInstance(be,"extensions.uninstall",xe.UninstallClass,[[this.instantiationService.createInstance(Lt,!1),this.instantiationService.createInstance(xe),this.instantiationService.createInstance(Pt,null,!0)]]),this.instantiationService.createInstance(Kt),this.instantiationService.createInstance(Ee),new Ct(this.scopedContextKeyService||this.contextKeyService,this.instantiationService)],A=r(d,o(".actions-status-container")),P=this._register(new ue(A,{actionViewItemProvider:(v,g)=>{if(v instanceof St)return v.createActionViewItem(g);if(v instanceof be)return new yt(v,{...g,icon:!0,label:!0,menuActionsOrProvider:{getActions:()=>v.menuActions},menuActionClassNames:v.menuActionClassNames},this.contextMenuService);if(v instanceof Ee)return new Ze(void 0,v,{...g,icon:!0,label:!0,checkboxStyles:lt})},focusOnlyEnabledItems:!0}));P.push(L,{icon:!0,label:!0}),P.setFocusable(!0),this._register(H.any(...L.map(v=>H.filter(v.onDidChange,g=>g.enabled!==void 0)))(()=>{P.setFocusable(!1),P.setFocusable(!0)}));const V=[],re=this.instantiationService.createInstance(wt),Ae=this._register(this.instantiationService.createInstance(jt,r(A,o(".status")),re));V.push(re,new class extends ye{render(){A.classList.toggle("list-layout",this.extension?.state===tn.Installed)}});const ae=this.instantiationService.createInstance(_t,r(d,o(".recommendation")));F.push(ae),this._register(H.any(Ae.onDidRender,ae.onDidRender)(()=>{this.dimension&&this.layout(this.dimension)}));const ce=this.instantiationService.createInstance(en,[...L,...F,...V]);for(const v of[...L,...F,...V,ce])this._register(v);const Te=H.chain(P.onDidRun,v=>v.map(({error:g})=>g).filter(g=>!!g));this._register(Te(this.onError,this));const le=r(e,o(".body")),He=new mn(le),de=r(le,o(".content"));de.id=fe(),this.template={builtin:f,content:de,description:Le,header:n,icon:s,iconContainer:i,name:u,navbar:He,preview:I,actionsAndStatusContainer:A,extensionActionBar:P,set extension(v){ce.extension=v;let g;for(const K of C)K.classList.remove("last-non-empty"),K.children.length>0&&(g=K);g&&g.classList.add("last-non-empty")},set gallery(v){S.gallery=v},set manifest(v){se.manifest=v}}}async setInput(t,e,n,i){await super.setInput(t,e,n,i),this.updatePreReleaseVersionContext(),this.template&&await this.render(t.extension,this.template,!!e?.preserveFocus)}setOptions(t){const e=this.options;if(super.setOptions(t),this.updatePreReleaseVersionContext(),this.input&&this.template&&e?.showPreReleaseVersion!==t?.showPreReleaseVersion){this.render(this.input.extension,this.template,!!t?.preserveFocus);return}t?.tab&&this.template?.navbar.switch(t.tab)}updatePreReleaseVersionContext(){let t=this.options?.showPreReleaseVersion;ve(t)&&(t=!!this.input.extension.gallery?.properties.isPreReleaseVersion),this.showPreReleaseVersionContextKey?.set(t)}async openTab(t){!this.input||!this.template||this.template.navbar.switch(t)||t===b.ExtensionPack&&this.template.navbar.switch(b.Readme)}async getGalleryVersionToShow(t,e){return t.resourceExtension||t.local?.source==="resource"||ve(e)||e===t.gallery?.properties.isPreReleaseVersion||e&&!t.hasPreReleaseVersion||!e&&!t.hasReleaseVersion?null:(await this.extensionGalleryService.getExtensions([{...t.identifier,preRelease:e,hasPreRelease:t.hasPreReleaseVersion}],Oe.None))[0]||null}async render(t,e,n){this.activeElement=null,this.transientDisposables.clear();const i=this.transientDisposables.add(new he).token,s=await this.getGalleryVersionToShow(t,this.options?.showPreReleaseVersion);if(i.isCancellationRequested)return;this.extensionReadme=new O(()=>s?this.extensionGalleryService.getReadme(s,i):t.getReadme(i)),this.extensionChangelog=new O(()=>s?this.extensionGalleryService.getChangelog(s,i):t.getChangelog(i)),this.extensionManifest=new O(()=>s?this.extensionGalleryService.getManifest(s,i):t.getManifest(i)),e.extension=t,e.gallery=s,e.manifest=null,this.transientDisposables.add(Ge(e.icon,"error",()=>e.icon.src=t.iconUrlFallback,{once:!0})),e.icon.src=t.iconUrl,e.name.textContent=t.displayName,e.name.classList.toggle("clickable",!!t.url),e.name.classList.toggle("deprecated",!!t.deprecationInfo),e.preview.style.display=t.preview?"inherit":"none",e.builtin.style.display=t.isBuiltin?"inherit":"none",e.description.textContent=t.description,t.url&&this.transientDisposables.add(k(e.name,()=>this.openerService.open(M.parse(t.url))));const l=await this.extensionManifest.get().promise;if(i.isCancellationRequested)return;l&&(e.manifest=l),this.renderNavbar(t,l,e,n);const d=this.extensionRecommendationsService.getAllRecommendationsWithReason();let h={};d[t.identifier.id.toLowerCase()]&&(h={recommendationReason:d[t.identifier.id.toLowerCase()].reasonId}),this.telemetryService.publicLog("extensionGallery:openExtension",{...t.telemetryData,...h})}renderNavbar(t,e,n,i){n.content.innerText="",n.navbar.clear(),this.currentIdentifier!==t.identifier.id&&(this.initialScrollProgress.clear(),this.currentIdentifier=t.identifier.id),n.navbar.push(b.Readme,a("details","Details"),a("detailstooltip","Extension details, rendered from the extension's 'README.md' file")),e&&n.navbar.push(b.Features,a("features","Features"),a("featurestooltip","Lists features contributed by this extension")),t.hasChangelog()&&n.navbar.push(b.Changelog,a("changelog","Changelog"),a("changelogtooltip","Extension update history, rendered from the extension's 'CHANGELOG.md' file")),t.dependencies.length&&n.navbar.push(b.Dependencies,a("dependencies","Dependencies"),a("dependenciestooltip","Lists extensions this extension depends on")),e&&e.extensionPack?.length&&!this.shallRenderAsExtensionPack(e)&&n.navbar.push(b.ExtensionPack,a("extensionpack","Extension Pack"),a("extensionpacktooltip","Lists extensions those will be installed together with this extension")),this.options?.tab&&n.navbar.switch(this.options.tab),n.navbar.currentId&&this.onNavbarChange(t,{id:n.navbar.currentId,focus:!i},n),n.navbar.onChange(s=>this.onNavbarChange(t,s,n),this,this.transientDisposables)}clearInput(){this.contentDisposables.clear(),this.transientDisposables.clear(),super.clearInput()}focus(){super.focus(),this.activeElement?.focus()}showFind(){this.activeWebview?.showFind()}runFindAction(t){this.activeWebview?.runFindAction(t)}get activeWebview(){if(!(!this.activeElement||!this.activeElement.runFindAction))return this.activeElement}onNavbarChange(t,{id:e,focus:n},i){if(this.contentDisposables.clear(),i.content.innerText="",this.activeElement=null,e){const s=new he;this.contentDisposables.add(x(()=>s.dispose(!0))),this.open(e,t,i,s.token).then(l=>{s.token.isCancellationRequested||(this.activeElement=l,n&&this.focus())})}}open(t,e,n,i){switch(t){case b.Readme:return this.openDetails(e,n,i);case b.Features:return this.openFeatures(n,i);case b.Changelog:return this.openChangelog(e,n,i);case b.Dependencies:return this.openExtensionDependencies(e,n,i);case b.ExtensionPack:return this.openExtensionPack(e,n,i)}return Promise.resolve(null)}async openMarkdown(t,e,n,i,s,l,d){try{const h=await this.renderMarkdown(t,e,i,d);if(d.isCancellationRequested)return Promise.resolve(null);const u=this.contentDisposables.add(this.webviewService.createWebviewOverlay({title:l,options:{enableFindWidget:!0,tryRestoreScrollPosition:!0,disableServiceWorker:!0},contentOptions:{},extension:void 0}));u.initialScrollProgress=this.initialScrollProgress.get(s)||0,u.claim(this,this.window,this.scopedContextKeyService),Ve(u.container,i),u.layoutWebviewOverElement(i),u.setHtml(h),u.claim(this,this.window,void 0),this.contentDisposables.add(u.onDidFocus(()=>this._onDidFocus?.fire())),this.contentDisposables.add(u.onDidScroll(()=>this.initialScrollProgress.set(s,u.initialScrollProgress)));const S=w.insert(this.layoutParticipants,{layout:()=>{u.layoutWebviewOverElement(i)}});this.contentDisposables.add(x(S));let I=!1;return this.contentDisposables.add(x(()=>{I=!0})),this.contentDisposables.add(this.themeService.onDidColorThemeChange(async()=>{const f=await this.renderMarkdown(t,e,i);I||u.setHtml(f)})),this.contentDisposables.add(u.onDidClickLink(f=>{f&&((W(f,E.http)||W(f,E.https)||W(f,E.mailto))&&this.openerService.open(f),W(f,E.command)&&t.type===J.System&&this.openerService.open(f,{allowCommands:!0}))})),u}catch{const u=r(i,o("p.nocontent"));return u.textContent=n,u}}async renderMarkdown(t,e,n,i){const s=await this.loadContents(()=>e,n);if(i?.isCancellationRequested)return"";const l=await on(s,this.extensionService,this.languageService,{shouldSanitize:t.type!==J.System,token:i});return i?.isCancellationRequested?"":this.renderBody(l)}renderBody(t){const e=fe(),n=$e.getColorMap(),i=n?Xe(n):"";return`<!DOCTYPE html>
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { $, Dimension, addDisposableListener, append, hide, setParentFlowTo, show } from "../../../../base/browser/dom.js";
+import { ActionBar } from "../../../../base/browser/ui/actionbar/actionbar.js";
+import { getDefaultHoverDelegate } from "../../../../base/browser/ui/hover/hoverDelegateFactory.js";
+import { DomScrollableElement } from "../../../../base/browser/ui/scrollbar/scrollableElement.js";
+import { CheckboxActionViewItem } from "../../../../base/browser/ui/toggle/toggle.js";
+import { Action, IAction } from "../../../../base/common/actions.js";
+import * as arrays from "../../../../base/common/arrays.js";
+import { Cache, CacheResult } from "../../../../base/common/cache.js";
+import { CancellationToken, CancellationTokenSource } from "../../../../base/common/cancellation.js";
+import { isCancellationError } from "../../../../base/common/errors.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { KeyCode, KeyMod } from "../../../../base/common/keyCodes.js";
+import { Disposable, DisposableStore, MutableDisposable, dispose, toDisposable } from "../../../../base/common/lifecycle.js";
+import { Schemas, matchesScheme } from "../../../../base/common/network.js";
+import { isNative, language } from "../../../../base/common/platform.js";
+import { isUndefined } from "../../../../base/common/types.js";
+import { URI } from "../../../../base/common/uri.js";
+import { generateUuid } from "../../../../base/common/uuid.js";
+import "./media/extensionEditor.css";
+import { EditorContextKeys } from "../../../../editor/common/editorContextKeys.js";
+import { TokenizationRegistry } from "../../../../editor/common/languages.js";
+import { ILanguageService } from "../../../../editor/common/languages/language.js";
+import { generateTokensCSSForColorMap } from "../../../../editor/common/languages/supports/tokenization.js";
+import { localize } from "../../../../nls.js";
+import { Action2, registerAction2 } from "../../../../platform/actions/common/actions.js";
+import { ContextKeyExpr, IContextKey, IContextKeyService, IScopedContextKeyService, RawContextKey } from "../../../../platform/contextkey/common/contextkey.js";
+import { IContextMenuService } from "../../../../platform/contextview/browser/contextView.js";
+import { computeSize, FilterType, IExtensionGalleryService, IGalleryExtension, ILocalExtension } from "../../../../platform/extensionManagement/common/extensionManagement.js";
+import { areSameExtensions } from "../../../../platform/extensionManagement/common/extensionManagementUtil.js";
+import { ExtensionType, IExtensionManifest } from "../../../../platform/extensions/common/extensions.js";
+import { IInstantiationService, ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+import { KeybindingWeight } from "../../../../platform/keybinding/common/keybindingsRegistry.js";
+import { INotificationService } from "../../../../platform/notification/common/notification.js";
+import { IOpenerService } from "../../../../platform/opener/common/opener.js";
+import { IStorageService } from "../../../../platform/storage/common/storage.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { defaultCheckboxStyles } from "../../../../platform/theme/browser/defaultStyles.js";
+import { buttonForeground, buttonHoverBackground, editorBackground, textLinkActiveForeground, textLinkForeground } from "../../../../platform/theme/common/colorRegistry.js";
+import { IColorTheme, ICssStyleCollector, IThemeService, registerThemingParticipant } from "../../../../platform/theme/common/themeService.js";
+import { EditorPane } from "../../../browser/parts/editor/editorPane.js";
+import { IEditorOpenContext } from "../../../common/editor.js";
+import { ExtensionFeaturesTab } from "./extensionFeaturesTab.js";
+import {
+  ButtonWithDropDownExtensionAction,
+  ClearLanguageAction,
+  DisableDropDownAction,
+  EnableDropDownAction,
+  ButtonWithDropdownExtensionActionViewItem,
+  DropDownExtensionAction,
+  ExtensionEditorManageExtensionAction,
+  ExtensionStatusAction,
+  ExtensionStatusLabelAction,
+  InstallAnotherVersionAction,
+  InstallDropdownAction,
+  InstallingLabelAction,
+  LocalInstallAction,
+  MigrateDeprecatedExtensionAction,
+  ExtensionRuntimeStateAction,
+  RemoteInstallAction,
+  SetColorThemeAction,
+  SetFileIconThemeAction,
+  SetLanguageAction,
+  SetProductIconThemeAction,
+  ToggleAutoUpdateForExtensionAction,
+  UninstallAction,
+  UpdateAction,
+  WebInstallAction,
+  TogglePreReleaseExtensionAction
+} from "./extensionsActions.js";
+import { Delegate } from "./extensionsList.js";
+import { ExtensionData, ExtensionsGridView, ExtensionsTree, getExtensions } from "./extensionsViewer.js";
+import { ExtensionRecommendationWidget, ExtensionStatusWidget, ExtensionWidget, InstallCountWidget, RatingsWidget, RemoteBadgeWidget, SponsorWidget, PublisherWidget, onClick, ExtensionKindIndicatorWidget } from "./extensionsWidgets.js";
+import { ExtensionContainers, ExtensionEditorTab, ExtensionState, IExtension, IExtensionContainer, IExtensionsWorkbenchService } from "../common/extensions.js";
+import { ExtensionsInput, IExtensionEditorOptions } from "../common/extensionsInput.js";
+import { DEFAULT_MARKDOWN_STYLES, renderMarkdownDocument } from "../../markdown/browser/markdownDocumentRenderer.js";
+import { IWebview, IWebviewService, KEYBINDING_CONTEXT_WEBVIEW_FIND_WIDGET_FOCUSED } from "../../webview/browser/webview.js";
+import { IEditorGroup } from "../../../services/editor/common/editorGroupsService.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { IExtensionRecommendationsService } from "../../../services/extensionRecommendations/common/extensionRecommendations.js";
+import { IExtensionService } from "../../../services/extensions/common/extensions.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import { IHoverService } from "../../../../platform/hover/browser/hover.js";
+import { ByteSize, IFileService } from "../../../../platform/files/common/files.js";
+import { IUserDataProfilesService } from "../../../../platform/userDataProfile/common/userDataProfile.js";
+import { IRemoteAgentService } from "../../../services/remote/common/remoteAgentService.js";
+import { IExtensionGalleryManifestService } from "../../../../platform/extensionManagement/common/extensionGalleryManifest.js";
+function toDateString(date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}, ${date.toLocaleTimeString(language, { hourCycle: "h23" })}`;
+}
+__name(toDateString, "toDateString");
+class NavBar extends Disposable {
+  static {
+    __name(this, "NavBar");
+  }
+  _onChange = this._register(new Emitter());
+  get onChange() {
+    return this._onChange.event;
+  }
+  _currentId = null;
+  get currentId() {
+    return this._currentId;
+  }
+  actions;
+  actionbar;
+  constructor(container) {
+    super();
+    const element = append(container, $(".navbar"));
+    this.actions = [];
+    this.actionbar = this._register(new ActionBar(element));
+  }
+  push(id, label, tooltip) {
+    const action = new Action(id, label, void 0, true, () => this.update(id, true));
+    action.tooltip = tooltip;
+    this.actions.push(action);
+    this.actionbar.push(action);
+    if (this.actions.length === 1) {
+      this.update(id);
+    }
+  }
+  clear() {
+    this.actions = dispose(this.actions);
+    this.actionbar.clear();
+  }
+  switch(id) {
+    const action = this.actions.find((action2) => action2.id === id);
+    if (action) {
+      action.run();
+      return true;
+    }
+    return false;
+  }
+  update(id, focus) {
+    this._currentId = id;
+    this._onChange.fire({ id, focus: !!focus });
+    this.actions.forEach((a) => a.checked = a.id === id);
+  }
+}
+var WebviewIndex = /* @__PURE__ */ ((WebviewIndex2) => {
+  WebviewIndex2[WebviewIndex2["Readme"] = 0] = "Readme";
+  WebviewIndex2[WebviewIndex2["Changelog"] = 1] = "Changelog";
+  return WebviewIndex2;
+})(WebviewIndex || {});
+const CONTEXT_SHOW_PRE_RELEASE_VERSION = new RawContextKey("showPreReleaseVersion", false);
+class ExtensionWithDifferentGalleryVersionWidget extends ExtensionWidget {
+  static {
+    __name(this, "ExtensionWithDifferentGalleryVersionWidget");
+  }
+  _gallery = null;
+  get gallery() {
+    return this._gallery;
+  }
+  set gallery(gallery) {
+    if (this.extension && gallery && !areSameExtensions(this.extension.identifier, gallery.identifier)) {
+      return;
+    }
+    this._gallery = gallery;
+    this.update();
+  }
+}
+class VersionWidget extends ExtensionWithDifferentGalleryVersionWidget {
+  static {
+    __name(this, "VersionWidget");
+  }
+  element;
+  constructor(container, hoverService) {
+    super();
+    this.element = append(container, $("code.version", void 0, "pre-release"));
+    this._register(hoverService.setupManagedHover(getDefaultHoverDelegate("mouse"), this.element, localize("extension version", "Extension Version")));
+    this.render();
+  }
+  render() {
+    if (this.extension?.preRelease) {
+      show(this.element);
+    } else {
+      hide(this.element);
+    }
+  }
+}
+let ExtensionEditor = class extends EditorPane {
+  constructor(group, telemetryService, instantiationService, extensionsWorkbenchService, extensionGalleryService, themeService, notificationService, openerService, extensionRecommendationsService, storageService, extensionService, webviewService, languageService, contextMenuService, contextKeyService, hoverService) {
+    super(ExtensionEditor.ID, group, telemetryService, themeService, storageService);
+    this.instantiationService = instantiationService;
+    this.extensionsWorkbenchService = extensionsWorkbenchService;
+    this.extensionGalleryService = extensionGalleryService;
+    this.notificationService = notificationService;
+    this.openerService = openerService;
+    this.extensionRecommendationsService = extensionRecommendationsService;
+    this.extensionService = extensionService;
+    this.webviewService = webviewService;
+    this.languageService = languageService;
+    this.contextMenuService = contextMenuService;
+    this.contextKeyService = contextKeyService;
+    this.hoverService = hoverService;
+    this.extensionReadme = null;
+    this.extensionChangelog = null;
+    this.extensionManifest = null;
+  }
+  static {
+    __name(this, "ExtensionEditor");
+  }
+  static ID = "workbench.editor.extension";
+  _scopedContextKeyService = this._register(new MutableDisposable());
+  template;
+  extensionReadme;
+  extensionChangelog;
+  extensionManifest;
+  // Some action bar items use a webview whose vertical scroll position we track in this map
+  initialScrollProgress = /* @__PURE__ */ new Map();
+  // Spot when an ExtensionEditor instance gets reused for a different extension, in which case the vertical scroll positions must be zeroed
+  currentIdentifier = "";
+  layoutParticipants = [];
+  contentDisposables = this._register(new DisposableStore());
+  transientDisposables = this._register(new DisposableStore());
+  activeElement = null;
+  dimension;
+  showPreReleaseVersionContextKey;
+  get scopedContextKeyService() {
+    return this._scopedContextKeyService.value;
+  }
+  createEditor(parent) {
+    const root = append(parent, $(".extension-editor"));
+    this._scopedContextKeyService.value = this.contextKeyService.createScoped(root);
+    this._scopedContextKeyService.value.createKey("inExtensionEditor", true);
+    this.showPreReleaseVersionContextKey = CONTEXT_SHOW_PRE_RELEASE_VERSION.bindTo(this._scopedContextKeyService.value);
+    root.tabIndex = 0;
+    root.style.outline = "none";
+    root.setAttribute("role", "document");
+    const header = append(root, $(".header"));
+    const iconContainer = append(header, $(".icon-container"));
+    const icon = append(iconContainer, $("img.icon", { draggable: false, alt: "" }));
+    const remoteBadge = this.instantiationService.createInstance(RemoteBadgeWidget, iconContainer, true);
+    const details = append(header, $(".details"));
+    const title = append(details, $(".title"));
+    const name = append(title, $("span.name.clickable", { role: "heading", tabIndex: 0 }));
+    this._register(this.hoverService.setupManagedHover(getDefaultHoverDelegate("mouse"), name, localize("name", "Extension name")));
+    const versionWidget = new VersionWidget(title, this.hoverService);
+    const preview = append(title, $("span.preview"));
+    this._register(this.hoverService.setupManagedHover(getDefaultHoverDelegate("mouse"), preview, localize("preview", "Preview")));
+    preview.textContent = localize("preview", "Preview");
+    const builtin = append(title, $("span.builtin"));
+    builtin.textContent = localize("builtin", "Built-in");
+    const subtitle = append(details, $(".subtitle"));
+    const subTitleEntryContainers = [];
+    const publisherContainer = append(subtitle, $(".subtitle-entry"));
+    subTitleEntryContainers.push(publisherContainer);
+    const publisherWidget = this.instantiationService.createInstance(PublisherWidget, publisherContainer, false);
+    const extensionKindContainer = append(subtitle, $(".subtitle-entry"));
+    subTitleEntryContainers.push(extensionKindContainer);
+    const extensionKindWidget = this.instantiationService.createInstance(ExtensionKindIndicatorWidget, extensionKindContainer, false);
+    const installCountContainer = append(subtitle, $(".subtitle-entry"));
+    subTitleEntryContainers.push(installCountContainer);
+    const installCountWidget = this.instantiationService.createInstance(InstallCountWidget, installCountContainer, false);
+    const ratingsContainer = append(subtitle, $(".subtitle-entry"));
+    subTitleEntryContainers.push(ratingsContainer);
+    const ratingsWidget = this.instantiationService.createInstance(RatingsWidget, ratingsContainer, false);
+    const sponsorContainer = append(subtitle, $(".subtitle-entry"));
+    subTitleEntryContainers.push(sponsorContainer);
+    const sponsorWidget = this.instantiationService.createInstance(SponsorWidget, sponsorContainer);
+    const widgets = [
+      remoteBadge,
+      versionWidget,
+      publisherWidget,
+      extensionKindWidget,
+      installCountWidget,
+      ratingsWidget,
+      sponsorWidget
+    ];
+    const description = append(details, $(".description"));
+    const installAction = this.instantiationService.createInstance(InstallDropdownAction);
+    const actions = [
+      this.instantiationService.createInstance(ExtensionRuntimeStateAction),
+      this.instantiationService.createInstance(ExtensionStatusLabelAction),
+      this.instantiationService.createInstance(UpdateAction, true),
+      this.instantiationService.createInstance(SetColorThemeAction),
+      this.instantiationService.createInstance(SetFileIconThemeAction),
+      this.instantiationService.createInstance(SetProductIconThemeAction),
+      this.instantiationService.createInstance(SetLanguageAction),
+      this.instantiationService.createInstance(ClearLanguageAction),
+      this.instantiationService.createInstance(EnableDropDownAction),
+      this.instantiationService.createInstance(DisableDropDownAction),
+      this.instantiationService.createInstance(RemoteInstallAction, false),
+      this.instantiationService.createInstance(LocalInstallAction),
+      this.instantiationService.createInstance(WebInstallAction),
+      installAction,
+      this.instantiationService.createInstance(InstallingLabelAction),
+      this.instantiationService.createInstance(ButtonWithDropDownExtensionAction, "extensions.uninstall", UninstallAction.UninstallClass, [
+        [
+          this.instantiationService.createInstance(MigrateDeprecatedExtensionAction, false),
+          this.instantiationService.createInstance(UninstallAction),
+          this.instantiationService.createInstance(InstallAnotherVersionAction, null, true)
+        ]
+      ]),
+      this.instantiationService.createInstance(TogglePreReleaseExtensionAction),
+      this.instantiationService.createInstance(ToggleAutoUpdateForExtensionAction),
+      new ExtensionEditorManageExtensionAction(this.scopedContextKeyService || this.contextKeyService, this.instantiationService)
+    ];
+    const actionsAndStatusContainer = append(details, $(".actions-status-container"));
+    const extensionActionBar = this._register(new ActionBar(actionsAndStatusContainer, {
+      actionViewItemProvider: /* @__PURE__ */ __name((action, options) => {
+        if (action instanceof DropDownExtensionAction) {
+          return action.createActionViewItem(options);
+        }
+        if (action instanceof ButtonWithDropDownExtensionAction) {
+          return new ButtonWithDropdownExtensionActionViewItem(
+            action,
+            {
+              ...options,
+              icon: true,
+              label: true,
+              menuActionsOrProvider: { getActions: /* @__PURE__ */ __name(() => action.menuActions, "getActions") },
+              menuActionClassNames: action.menuActionClassNames
+            },
+            this.contextMenuService
+          );
+        }
+        if (action instanceof ToggleAutoUpdateForExtensionAction) {
+          return new CheckboxActionViewItem(void 0, action, { ...options, icon: true, label: true, checkboxStyles: defaultCheckboxStyles });
+        }
+        return void 0;
+      }, "actionViewItemProvider"),
+      focusOnlyEnabledItems: true
+    }));
+    extensionActionBar.push(actions, { icon: true, label: true });
+    extensionActionBar.setFocusable(true);
+    this._register(Event.any(...actions.map((a) => Event.filter(a.onDidChange, (e) => e.enabled !== void 0)))(() => {
+      extensionActionBar.setFocusable(false);
+      extensionActionBar.setFocusable(true);
+    }));
+    const otherExtensionContainers = [];
+    const extensionStatusAction = this.instantiationService.createInstance(ExtensionStatusAction);
+    const extensionStatusWidget = this._register(this.instantiationService.createInstance(ExtensionStatusWidget, append(actionsAndStatusContainer, $(".status")), extensionStatusAction));
+    otherExtensionContainers.push(extensionStatusAction, new class extends ExtensionWidget {
+      render() {
+        actionsAndStatusContainer.classList.toggle("list-layout", this.extension?.state === ExtensionState.Installed);
+      }
+    }());
+    const recommendationWidget = this.instantiationService.createInstance(ExtensionRecommendationWidget, append(details, $(".recommendation")));
+    widgets.push(recommendationWidget);
+    this._register(Event.any(extensionStatusWidget.onDidRender, recommendationWidget.onDidRender)(() => {
+      if (this.dimension) {
+        this.layout(this.dimension);
+      }
+    }));
+    const extensionContainers = this.instantiationService.createInstance(ExtensionContainers, [...actions, ...widgets, ...otherExtensionContainers]);
+    for (const disposable of [...actions, ...widgets, ...otherExtensionContainers, extensionContainers]) {
+      this._register(disposable);
+    }
+    const onError = Event.chain(
+      extensionActionBar.onDidRun,
+      ($2) => $2.map(({ error }) => error).filter((error) => !!error)
+    );
+    this._register(onError(this.onError, this));
+    const body = append(root, $(".body"));
+    const navbar = new NavBar(body);
+    const content = append(body, $(".content"));
+    content.id = generateUuid();
+    this.template = {
+      builtin,
+      content,
+      description,
+      header,
+      icon,
+      iconContainer,
+      name,
+      navbar,
+      preview,
+      actionsAndStatusContainer,
+      extensionActionBar,
+      set extension(extension) {
+        extensionContainers.extension = extension;
+        let lastNonEmptySubtitleEntryContainer;
+        for (const subTitleEntryElement of subTitleEntryContainers) {
+          subTitleEntryElement.classList.remove("last-non-empty");
+          if (subTitleEntryElement.children.length > 0) {
+            lastNonEmptySubtitleEntryContainer = subTitleEntryElement;
+          }
+        }
+        if (lastNonEmptySubtitleEntryContainer) {
+          lastNonEmptySubtitleEntryContainer.classList.add("last-non-empty");
+        }
+      },
+      set gallery(gallery) {
+        versionWidget.gallery = gallery;
+      },
+      set manifest(manifest) {
+        installAction.manifest = manifest;
+      }
+    };
+  }
+  async setInput(input, options, context, token) {
+    await super.setInput(input, options, context, token);
+    this.updatePreReleaseVersionContext();
+    if (this.template) {
+      await this.render(input.extension, this.template, !!options?.preserveFocus);
+    }
+  }
+  setOptions(options) {
+    const currentOptions = this.options;
+    super.setOptions(options);
+    this.updatePreReleaseVersionContext();
+    if (this.input && this.template && currentOptions?.showPreReleaseVersion !== options?.showPreReleaseVersion) {
+      this.render(this.input.extension, this.template, !!options?.preserveFocus);
+      return;
+    }
+    if (options?.tab) {
+      this.template?.navbar.switch(options.tab);
+    }
+  }
+  updatePreReleaseVersionContext() {
+    let showPreReleaseVersion = this.options?.showPreReleaseVersion;
+    if (isUndefined(showPreReleaseVersion)) {
+      showPreReleaseVersion = !!this.input.extension.gallery?.properties.isPreReleaseVersion;
+    }
+    this.showPreReleaseVersionContextKey?.set(showPreReleaseVersion);
+  }
+  async openTab(tab) {
+    if (!this.input || !this.template) {
+      return;
+    }
+    if (this.template.navbar.switch(tab)) {
+      return;
+    }
+    if (tab === ExtensionEditorTab.ExtensionPack) {
+      this.template.navbar.switch(ExtensionEditorTab.Readme);
+    }
+  }
+  async getGalleryVersionToShow(extension, preRelease) {
+    if (extension.resourceExtension) {
+      return null;
+    }
+    if (extension.local?.source === "resource") {
+      return null;
+    }
+    if (isUndefined(preRelease)) {
+      return null;
+    }
+    if (preRelease === extension.gallery?.properties.isPreReleaseVersion) {
+      return null;
+    }
+    if (preRelease && !extension.hasPreReleaseVersion) {
+      return null;
+    }
+    if (!preRelease && !extension.hasReleaseVersion) {
+      return null;
+    }
+    return (await this.extensionGalleryService.getExtensions([{ ...extension.identifier, preRelease, hasPreRelease: extension.hasPreReleaseVersion }], CancellationToken.None))[0] || null;
+  }
+  async render(extension, template, preserveFocus) {
+    this.activeElement = null;
+    this.transientDisposables.clear();
+    const token = this.transientDisposables.add(new CancellationTokenSource()).token;
+    const gallery = await this.getGalleryVersionToShow(extension, this.options?.showPreReleaseVersion);
+    if (token.isCancellationRequested) {
+      return;
+    }
+    this.extensionReadme = new Cache(() => gallery ? this.extensionGalleryService.getReadme(gallery, token) : extension.getReadme(token));
+    this.extensionChangelog = new Cache(() => gallery ? this.extensionGalleryService.getChangelog(gallery, token) : extension.getChangelog(token));
+    this.extensionManifest = new Cache(() => gallery ? this.extensionGalleryService.getManifest(gallery, token) : extension.getManifest(token));
+    template.extension = extension;
+    template.gallery = gallery;
+    template.manifest = null;
+    this.transientDisposables.add(addDisposableListener(template.icon, "error", () => template.icon.src = extension.iconUrlFallback, { once: true }));
+    template.icon.src = extension.iconUrl;
+    template.name.textContent = extension.displayName;
+    template.name.classList.toggle("clickable", !!extension.url);
+    template.name.classList.toggle("deprecated", !!extension.deprecationInfo);
+    template.preview.style.display = extension.preview ? "inherit" : "none";
+    template.builtin.style.display = extension.isBuiltin ? "inherit" : "none";
+    template.description.textContent = extension.description;
+    if (extension.url) {
+      this.transientDisposables.add(onClick(template.name, () => this.openerService.open(URI.parse(extension.url))));
+    }
+    const manifest = await this.extensionManifest.get().promise;
+    if (token.isCancellationRequested) {
+      return;
+    }
+    if (manifest) {
+      template.manifest = manifest;
+    }
+    this.renderNavbar(extension, manifest, template, preserveFocus);
+    const extRecommendations = this.extensionRecommendationsService.getAllRecommendationsWithReason();
+    let recommendationsData = {};
+    if (extRecommendations[extension.identifier.id.toLowerCase()]) {
+      recommendationsData = { recommendationReason: extRecommendations[extension.identifier.id.toLowerCase()].reasonId };
+    }
+    this.telemetryService.publicLog("extensionGallery:openExtension", { ...extension.telemetryData, ...recommendationsData });
+  }
+  renderNavbar(extension, manifest, template, preserveFocus) {
+    template.content.innerText = "";
+    template.navbar.clear();
+    if (this.currentIdentifier !== extension.identifier.id) {
+      this.initialScrollProgress.clear();
+      this.currentIdentifier = extension.identifier.id;
+    }
+    template.navbar.push(ExtensionEditorTab.Readme, localize("details", "Details"), localize("detailstooltip", "Extension details, rendered from the extension's 'README.md' file"));
+    if (manifest) {
+      template.navbar.push(ExtensionEditorTab.Features, localize("features", "Features"), localize("featurestooltip", "Lists features contributed by this extension"));
+    }
+    if (extension.hasChangelog()) {
+      template.navbar.push(ExtensionEditorTab.Changelog, localize("changelog", "Changelog"), localize("changelogtooltip", "Extension update history, rendered from the extension's 'CHANGELOG.md' file"));
+    }
+    if (extension.dependencies.length) {
+      template.navbar.push(ExtensionEditorTab.Dependencies, localize("dependencies", "Dependencies"), localize("dependenciestooltip", "Lists extensions this extension depends on"));
+    }
+    if (manifest && manifest.extensionPack?.length && !this.shallRenderAsExtensionPack(manifest)) {
+      template.navbar.push(ExtensionEditorTab.ExtensionPack, localize("extensionpack", "Extension Pack"), localize("extensionpacktooltip", "Lists extensions those will be installed together with this extension"));
+    }
+    if (this.options?.tab) {
+      template.navbar.switch(this.options.tab);
+    }
+    if (template.navbar.currentId) {
+      this.onNavbarChange(extension, { id: template.navbar.currentId, focus: !preserveFocus }, template);
+    }
+    template.navbar.onChange((e) => this.onNavbarChange(extension, e, template), this, this.transientDisposables);
+  }
+  clearInput() {
+    this.contentDisposables.clear();
+    this.transientDisposables.clear();
+    super.clearInput();
+  }
+  focus() {
+    super.focus();
+    this.activeElement?.focus();
+  }
+  showFind() {
+    this.activeWebview?.showFind();
+  }
+  runFindAction(previous) {
+    this.activeWebview?.runFindAction(previous);
+  }
+  get activeWebview() {
+    if (!this.activeElement || !this.activeElement.runFindAction) {
+      return void 0;
+    }
+    return this.activeElement;
+  }
+  onNavbarChange(extension, { id, focus }, template) {
+    this.contentDisposables.clear();
+    template.content.innerText = "";
+    this.activeElement = null;
+    if (id) {
+      const cts = new CancellationTokenSource();
+      this.contentDisposables.add(toDisposable(() => cts.dispose(true)));
+      this.open(id, extension, template, cts.token).then((activeElement) => {
+        if (cts.token.isCancellationRequested) {
+          return;
+        }
+        this.activeElement = activeElement;
+        if (focus) {
+          this.focus();
+        }
+      });
+    }
+  }
+  open(id, extension, template, token) {
+    switch (id) {
+      case ExtensionEditorTab.Readme:
+        return this.openDetails(extension, template, token);
+      case ExtensionEditorTab.Features:
+        return this.openFeatures(template, token);
+      case ExtensionEditorTab.Changelog:
+        return this.openChangelog(extension, template, token);
+      case ExtensionEditorTab.Dependencies:
+        return this.openExtensionDependencies(extension, template, token);
+      case ExtensionEditorTab.ExtensionPack:
+        return this.openExtensionPack(extension, template, token);
+    }
+    return Promise.resolve(null);
+  }
+  async openMarkdown(extension, cacheResult, noContentCopy, container, webviewIndex, title, token) {
+    try {
+      const body = await this.renderMarkdown(extension, cacheResult, container, token);
+      if (token.isCancellationRequested) {
+        return Promise.resolve(null);
+      }
+      const webview = this.contentDisposables.add(this.webviewService.createWebviewOverlay({
+        title,
+        options: {
+          enableFindWidget: true,
+          tryRestoreScrollPosition: true,
+          disableServiceWorker: true
+        },
+        contentOptions: {},
+        extension: void 0
+      }));
+      webview.initialScrollProgress = this.initialScrollProgress.get(webviewIndex) || 0;
+      webview.claim(this, this.window, this.scopedContextKeyService);
+      setParentFlowTo(webview.container, container);
+      webview.layoutWebviewOverElement(container);
+      webview.setHtml(body);
+      webview.claim(this, this.window, void 0);
+      this.contentDisposables.add(webview.onDidFocus(() => this._onDidFocus?.fire()));
+      this.contentDisposables.add(webview.onDidScroll(() => this.initialScrollProgress.set(webviewIndex, webview.initialScrollProgress)));
+      const removeLayoutParticipant = arrays.insert(this.layoutParticipants, {
+        layout: /* @__PURE__ */ __name(() => {
+          webview.layoutWebviewOverElement(container);
+        }, "layout")
+      });
+      this.contentDisposables.add(toDisposable(removeLayoutParticipant));
+      let isDisposed = false;
+      this.contentDisposables.add(toDisposable(() => {
+        isDisposed = true;
+      }));
+      this.contentDisposables.add(this.themeService.onDidColorThemeChange(async () => {
+        const body2 = await this.renderMarkdown(extension, cacheResult, container);
+        if (!isDisposed) {
+          webview.setHtml(body2);
+        }
+      }));
+      this.contentDisposables.add(webview.onDidClickLink((link) => {
+        if (!link) {
+          return;
+        }
+        if (matchesScheme(link, Schemas.http) || matchesScheme(link, Schemas.https) || matchesScheme(link, Schemas.mailto)) {
+          this.openerService.open(link);
+        }
+        if (matchesScheme(link, Schemas.command) && extension.type === ExtensionType.System) {
+          this.openerService.open(link, { allowCommands: true });
+        }
+      }));
+      return webview;
+    } catch (e) {
+      const p = append(container, $("p.nocontent"));
+      p.textContent = noContentCopy;
+      return p;
+    }
+  }
+  async renderMarkdown(extension, cacheResult, container, token) {
+    const contents = await this.loadContents(() => cacheResult, container);
+    if (token?.isCancellationRequested) {
+      return "";
+    }
+    const content = await renderMarkdownDocument(contents, this.extensionService, this.languageService, { shouldSanitize: extension.type !== ExtensionType.System, token });
+    if (token?.isCancellationRequested) {
+      return "";
+    }
+    return this.renderBody(content);
+  }
+  renderBody(body) {
+    const nonce = generateUuid();
+    const colorMap = TokenizationRegistry.getColorMap();
+    const css = colorMap ? generateTokensCSSForColorMap(colorMap) : "";
+    return `<!DOCTYPE html>
 		<html>
 			<head>
 				<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
-				<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src https: data:; media-src https:; script-src 'none'; style-src 'nonce-${e}';">
-				<style nonce="${e}">
-					${nn}
+				<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src https: data:; media-src https:; script-src 'none'; style-src 'nonce-${nonce}';">
+				<style nonce="${nonce}">
+					${DEFAULT_MARKDOWN_STYLES}
 
 					/* prevent scroll-to-top button from blocking the body text */
 					body {
@@ -49,13 +703,538 @@ var We=Object.defineProperty;var Ne=Object.getOwnPropertyDescriptor;var Z=(m,c,t
 						width: 16px;
 						height: 16px;
 					}
-					${i}
+					${css}
 				</style>
 			</head>
 			<body>
 				<a id="scroll-to-top" role="button" aria-label="scroll to top" href="#"><span class="icon"></span></a>
-				${t}
+				${body}
 			</body>
-		</html>`}async openDetails(t,e,n){const i=r(e.content,o(".details")),s=r(i,o(".readme-container")),l=r(i,o(".additional-details-container")),d=()=>i.classList.toggle("narrow",this.dimension&&this.dimension.width<500);d(),this.contentDisposables.add(x(w.insert(this.layoutParticipants,{layout:d})));let h=null;const u=await this.extensionManifest.get().promise;return u&&u.extensionPack?.length&&this.shallRenderAsExtensionPack(u)?h=await this.openExtensionPackReadme(t,u,s,n):h=await this.openMarkdown(t,this.extensionReadme.get(),a("noReadme","No README available."),s,0,a("Readme title","Readme"),n),this.renderAdditionalDetails(l,t),h}shallRenderAsExtensionPack(t){return!!t.categories?.some(e=>e.toLowerCase()==="extension packs")}async openExtensionPackReadme(t,e,n,i){if(i.isCancellationRequested)return Promise.resolve(null);const s=r(n,o("div",{class:"extension-pack-readme"}));s.style.margin="0 auto",s.style.maxWidth="882px";const l=r(s,o("div",{class:"extension-pack"}));e.extensionPack.length<=3?s.classList.add("one-row"):e.extensionPack.length<=6?s.classList.add("two-rows"):e.extensionPack.length<=9?s.classList.add("three-rows"):s.classList.add("more-rows");const d=r(l,o("div.header"));d.textContent=a("extension pack","Extension Pack ({0})",e.extensionPack.length);const h=r(l,o("div",{class:"extension-pack-content"}));h.setAttribute("tabindex","0"),r(l,o("div.footer"));const u=r(s,o("div.readme-content"));return await Promise.all([this.renderExtensionPack(e,h,i),this.openMarkdown(t,this.extensionReadme.get(),a("noReadme","No README available."),u,0,a("Readme title","Readme"),i)]),{focus:()=>h.focus()}}renderAdditionalDetails(t,e){const n=o("div",{class:"additional-details-content",tabindex:"0"}),i=new z(n,{}),s=()=>i.scanDomNode(),l=w.insert(this.layoutParticipants,{layout:s});this.contentDisposables.add(x(l)),this.contentDisposables.add(i),this.contentDisposables.add(this.instantiationService.createInstance(R,n,e)),r(t,i.getDomNode()),i.scanDomNode()}openChangelog(t,e,n){return this.openMarkdown(t,this.extensionChangelog.get(),a("noChangelog","No Changelog available."),e.content,1,a("Changelog title","Changelog"),n)}async openFeatures(t,e){const n=await this.loadContents(()=>this.extensionManifest.get(),t.content);if(e.isCancellationRequested||!n)return null;const i=this.contentDisposables.add(this.instantiationService.createInstance(It,n,this.options?.feature)),s=()=>i.layout(t.content.clientHeight,t.content.clientWidth),l=w.insert(this.layoutParticipants,{layout:s});return this.contentDisposables.add(x(l)),r(t.content,i.domNode),s(),i.domNode}openExtensionDependencies(t,e,n){if(n.isCancellationRequested)return Promise.resolve(null);if(w.isFalsyOrEmpty(t.dependencies))return r(e.content,o("p.nocontent")).textContent=a("noDependencies","No Dependencies"),Promise.resolve(e.content);const i=o("div",{class:"subcontent"}),s=new z(i,{});r(e.content,s.getDomNode()),this.contentDisposables.add(s);const l=this.instantiationService.createInstance(Ut,new zt(t,null,u=>u.dependencies||[],this.extensionsWorkbenchService),i,{listBackground:ht}),d=()=>{s.scanDomNode();const u=s.getScrollDimensions();l.layout(u.height)},h=w.insert(this.layoutParticipants,{layout:d});return this.contentDisposables.add(x(h)),this.contentDisposables.add(l),s.scanDomNode(),Promise.resolve({focus(){l.domFocus()}})}async openExtensionPack(t,e,n){if(n.isCancellationRequested)return Promise.resolve(null);const i=await this.loadContents(()=>this.extensionManifest.get(),e.content);return n.isCancellationRequested||!i?null:this.renderExtensionPack(i,e.content,n)}async renderExtensionPack(t,e,n){if(n.isCancellationRequested)return null;const i=o("div",{class:"subcontent"}),s=new z(i,{useShadows:!1});r(e,s.getDomNode());const l=this.instantiationService.createInstance(Ot,i,new Zt),d=await Bt(t.extensionPack,this.extensionsWorkbenchService);return l.setExtensions(d),s.scanDomNode(),this.contentDisposables.add(s),this.contentDisposables.add(l),this.contentDisposables.add(x(w.insert(this.layoutParticipants,{layout:()=>s.scanDomNode()}))),i}loadContents(t,e){e.classList.add("loading");const n=this.contentDisposables.add(t()),i=()=>e.classList.remove("loading");return n.promise.then(i,i),n.promise}layout(t){this.dimension=t,this.layoutParticipants.forEach(e=>e.layout())}onError(t){Ue(t)||this.notificationService.error(t)}};y=Z([p(1,ct),p(2,st),p(3,Se),p(4,ot),p(5,vt),p(6,rt),p(7,Ie),p(8,an),p(9,at),p(10,cn),p(11,sn),p(12,Qe),p(13,tt),p(14,qe),p(15,we)],y);let R=class extends me{constructor(t,e,n,i,s,l,d,h,u,S){super();this.container=t;this.hoverService=n;this.openerService=i;this.userDataProfilesService=s;this.remoteAgentService=l;this.fileService=d;this.uriIdentityService=h;this.extensionsWorkbenchService=u;this.extensionGalleryManifestService=S;this.render(e),this._register(this.extensionsWorkbenchService.onChange(I=>{I&&ge(I.identifier,e.identifier)&&I.server===e.server&&this.render(I)}))}disposables=this._register(new B);render(t){this.container.innerText="",this.disposables.clear(),t.local&&this.renderInstallInfo(this.container,t.local),t.gallery&&this.renderMarketplaceInfo(this.container,t),this.renderCategories(this.container,t),this.renderExtensionResources(this.container,t)}renderCategories(t,e){if(e.categories.length){const n=r(t,o(".categories-container.additional-details-element"));r(n,o(".additional-details-title",void 0,a("categories","Categories")));const i=r(n,o(".categories"));this.extensionGalleryManifestService.getExtensionGalleryManifest().then(s=>{const l=s?.capabilities.extensionQuery.filtering?.some(({name:d})=>d===it.Category);for(const d of e.categories){const h=r(i,o("span.category",{tabindex:"0"},d));l&&(h.classList.add("clickable"),this.disposables.add(k(h,()=>this.extensionsWorkbenchService.openSearch(`@category:"${d}"`))))}})}}renderExtensionResources(t,e){const n=[];if(e.url&&n.push([a("Marketplace","Marketplace"),M.parse(e.url)]),e.supportUrl)try{n.push([a("issues","Issues"),M.parse(e.supportUrl)])}catch{}if(e.repository)try{n.push([a("repository","Repository"),M.parse(e.repository)])}catch{}if(e.licenseUrl)try{n.push([a("license","License"),M.parse(e.licenseUrl)])}catch{}if(e.publisherUrl&&n.push([e.publisherDisplayName,e.publisherUrl]),n.length||e.publisherSponsorLink){const i=r(t,o(".resources-container.additional-details-element"));r(i,o(".additional-details-title",void 0,a("resources","Resources")));const s=r(i,o(".resources"));for(const[l,d]of n){const h=r(s,o("a.resource",{tabindex:"0"},l));this.disposables.add(k(h,()=>this.openerService.open(d))),this.disposables.add(this.hoverService.setupManagedHover(T("mouse"),h,d.toString()))}}}renderInstallInfo(t,e){const n=r(t,o(".more-info-container.additional-details-element"));r(n,o(".additional-details-title",void 0,a("Install Info","Installation")));const i=r(n,o(".more-info"));if(r(i,o(".more-info-entry",void 0,o("div.more-info-entry-name",void 0,a("id","Identifier")),o("code",void 0,e.identifier.id))),e.type!==J.System&&r(i,o(".more-info-entry",void 0,o("div.more-info-entry-name",void 0,a("Version","Version")),o("code",void 0,e.manifest.version))),e.installedTimestamp&&r(i,o(".more-info-entry",void 0,o("div.more-info-entry-name",void 0,a("last updated","Last Updated")),o("div",void 0,Q(new Date(e.installedTimestamp))))),!e.isBuiltin&&e.source!=="gallery"){const s=o("div",void 0,e.source==="vsix"?a("vsix","VSIX"):a("other","Local"));r(i,o(".more-info-entry",void 0,o("div.more-info-entry-name",void 0,a("source","Source")),s)),_&&e.source==="resource"&&e.location.scheme===E.file&&(s.classList.add("link"),s.title=e.location.fsPath,this.disposables.add(k(s,()=>this.openerService.open(e.location,{openExternal:!0}))))}if(e.size){const s=o("div",void 0,De.formatSize(e.size));r(i,o(".more-info-entry",void 0,o("div.more-info-entry-name",{title:a("size when installed","Size when installed")},a("size","Size")),s)),_&&e.location.scheme===E.file&&(s.classList.add("link"),s.title=e.location.fsPath,this.disposables.add(k(s,()=>this.openerService.open(e.location,{openExternal:!0}))))}this.getCacheLocation(e).then(s=>{s&&nt(s,this.fileService).then(l=>{if(!l)return;const d=o("div",void 0,De.formatSize(l));r(i,o(".more-info-entry",void 0,o("div.more-info-entry-name",{title:a("disk space used","Cache size")},a("cache size","Cache")),d)),_&&e.location.scheme===E.file&&(d.classList.add("link"),d.title=s.fsPath,this.disposables.add(k(d,()=>this.openerService.open(s.with({scheme:E.file}),{openExternal:!0}))))})})}async getCacheLocation(t){let e=this.uriIdentityService.extUri.joinPath(this.userDataProfilesService.defaultProfile.globalStorageHome,t.identifier.id.toLowerCase());if(t.location.scheme===E.vscodeRemote){const n=await this.remoteAgentService.getEnvironment();if(!n)return;e=this.uriIdentityService.extUri.joinPath(n.globalStorageHome,t.identifier.id.toLowerCase())}return e}renderMarketplaceInfo(t,e){const n=e.gallery,i=r(t,o(".more-info-container.additional-details-element"));r(i,o(".additional-details-title",void 0,a("Marketplace Info","Marketplace")));const s=r(i,o(".more-info"));n&&(e.local||(r(s,o(".more-info-entry",void 0,o("div.more-info-entry-name",void 0,a("id","Identifier")),o("code",void 0,e.identifier.id))),r(s,o(".more-info-entry",void 0,o("div.more-info-entry-name",void 0,a("Version","Version")),o("code",void 0,n.version)))),r(s,o(".more-info-entry",void 0,o("div.more-info-entry-name",void 0,a("published","Published")),o("div",void 0,Q(new Date(n.releaseDate)))),o(".more-info-entry",void 0,o("div.more-info-entry-name",void 0,a("last released","Last Released")),o("div",void 0,Q(new Date(n.lastUpdated))))))}};R=Z([p(2,we),p(3,Ie),p(4,un),p(5,hn),p(6,dn),p(7,ln),p(8,Se),p(9,pn)],R);const X=N.and(N.equals("activeEditor",y.ID),Je.focus.toNegated());Y(class extends j{constructor(){super({id:"editor.action.extensioneditor.showfind",title:a("find","Find"),keybinding:{when:X,weight:$.EditorContrib,primary:pe.CtrlCmd|U.KeyF}})}run(c){q(c)?.showFind()}}),Y(class extends j{constructor(){super({id:"editor.action.extensioneditor.findNext",title:a("find next","Find Next"),keybinding:{when:N.and(X,Ce),primary:U.Enter,weight:$.EditorContrib}})}run(c){q(c)?.runFindAction(!1)}}),Y(class extends j{constructor(){super({id:"editor.action.extensioneditor.findPrevious",title:a("find previous","Find Previous"),keybinding:{when:N.and(X,Ce),primary:pe.Shift|U.Enter,weight:$.EditorContrib}})}run(c){q(c)?.runFindAction(!0)}}),ft((m,c)=>{const t=m.getColor(mt);t&&(c.addRule(`.monaco-workbench .extension-editor .content .details .additional-details-container .resources-container a.resource { color: ${t}; }`),c.addRule(`.monaco-workbench .extension-editor .content .feature-contributions a { color: ${t}; }`));const e=m.getColor(pt);e&&(c.addRule(`.monaco-workbench .extension-editor .content .details .additional-details-container .resources-container a.resource:hover,
-			.monaco-workbench .extension-editor .content .details .additional-details-container .resources-container a.resource:active { color: ${e}; }`),c.addRule(`.monaco-workbench .extension-editor .content .feature-contributions a:hover,
-			.monaco-workbench .extension-editor .content .feature-contributions a:active { color: ${e}; }`));const n=m.getColor(ut);n&&c.addRule(`.monaco-workbench .extension-editor .content > .details > .additional-details-container .categories-container > .categories > .category.clickable:hover { background-color: ${n}; border-color: ${n}; }`);const i=m.getColor(dt);i&&c.addRule(`.monaco-workbench .extension-editor .content > .details > .additional-details-container .categories-container > .categories > .category.clickable:hover { color: ${i}; }`)});function q(m){const c=m.get(rn).activeEditorPane;return c instanceof y?c:null}export{y as ExtensionEditor};
+		</html>`;
+  }
+  async openDetails(extension, template, token) {
+    const details = append(template.content, $(".details"));
+    const readmeContainer = append(details, $(".readme-container"));
+    const additionalDetailsContainer = append(details, $(".additional-details-container"));
+    const layout = /* @__PURE__ */ __name(() => details.classList.toggle("narrow", this.dimension && this.dimension.width < 500), "layout");
+    layout();
+    this.contentDisposables.add(toDisposable(arrays.insert(this.layoutParticipants, { layout })));
+    let activeElement = null;
+    const manifest = await this.extensionManifest.get().promise;
+    if (manifest && manifest.extensionPack?.length && this.shallRenderAsExtensionPack(manifest)) {
+      activeElement = await this.openExtensionPackReadme(extension, manifest, readmeContainer, token);
+    } else {
+      activeElement = await this.openMarkdown(extension, this.extensionReadme.get(), localize("noReadme", "No README available."), readmeContainer, 0 /* Readme */, localize("Readme title", "Readme"), token);
+    }
+    this.renderAdditionalDetails(additionalDetailsContainer, extension);
+    return activeElement;
+  }
+  shallRenderAsExtensionPack(manifest) {
+    return !!manifest.categories?.some((category) => category.toLowerCase() === "extension packs");
+  }
+  async openExtensionPackReadme(extension, manifest, container, token) {
+    if (token.isCancellationRequested) {
+      return Promise.resolve(null);
+    }
+    const extensionPackReadme = append(container, $("div", { class: "extension-pack-readme" }));
+    extensionPackReadme.style.margin = "0 auto";
+    extensionPackReadme.style.maxWidth = "882px";
+    const extensionPack = append(extensionPackReadme, $("div", { class: "extension-pack" }));
+    if (manifest.extensionPack.length <= 3) {
+      extensionPackReadme.classList.add("one-row");
+    } else if (manifest.extensionPack.length <= 6) {
+      extensionPackReadme.classList.add("two-rows");
+    } else if (manifest.extensionPack.length <= 9) {
+      extensionPackReadme.classList.add("three-rows");
+    } else {
+      extensionPackReadme.classList.add("more-rows");
+    }
+    const extensionPackHeader = append(extensionPack, $("div.header"));
+    extensionPackHeader.textContent = localize("extension pack", "Extension Pack ({0})", manifest.extensionPack.length);
+    const extensionPackContent = append(extensionPack, $("div", { class: "extension-pack-content" }));
+    extensionPackContent.setAttribute("tabindex", "0");
+    append(extensionPack, $("div.footer"));
+    const readmeContent = append(extensionPackReadme, $("div.readme-content"));
+    await Promise.all([
+      this.renderExtensionPack(manifest, extensionPackContent, token),
+      this.openMarkdown(extension, this.extensionReadme.get(), localize("noReadme", "No README available."), readmeContent, 0 /* Readme */, localize("Readme title", "Readme"), token)
+    ]);
+    return { focus: /* @__PURE__ */ __name(() => extensionPackContent.focus(), "focus") };
+  }
+  renderAdditionalDetails(container, extension) {
+    const content = $("div", { class: "additional-details-content", tabindex: "0" });
+    const scrollableContent = new DomScrollableElement(content, {});
+    const layout = /* @__PURE__ */ __name(() => scrollableContent.scanDomNode(), "layout");
+    const removeLayoutParticipant = arrays.insert(this.layoutParticipants, { layout });
+    this.contentDisposables.add(toDisposable(removeLayoutParticipant));
+    this.contentDisposables.add(scrollableContent);
+    this.contentDisposables.add(this.instantiationService.createInstance(AdditionalDetailsWidget, content, extension));
+    append(container, scrollableContent.getDomNode());
+    scrollableContent.scanDomNode();
+  }
+  openChangelog(extension, template, token) {
+    return this.openMarkdown(extension, this.extensionChangelog.get(), localize("noChangelog", "No Changelog available."), template.content, 1 /* Changelog */, localize("Changelog title", "Changelog"), token);
+  }
+  async openFeatures(template, token) {
+    const manifest = await this.loadContents(() => this.extensionManifest.get(), template.content);
+    if (token.isCancellationRequested) {
+      return null;
+    }
+    if (!manifest) {
+      return null;
+    }
+    const extensionFeaturesTab = this.contentDisposables.add(this.instantiationService.createInstance(ExtensionFeaturesTab, manifest, this.options?.feature));
+    const layout = /* @__PURE__ */ __name(() => extensionFeaturesTab.layout(template.content.clientHeight, template.content.clientWidth), "layout");
+    const removeLayoutParticipant = arrays.insert(this.layoutParticipants, { layout });
+    this.contentDisposables.add(toDisposable(removeLayoutParticipant));
+    append(template.content, extensionFeaturesTab.domNode);
+    layout();
+    return extensionFeaturesTab.domNode;
+  }
+  openExtensionDependencies(extension, template, token) {
+    if (token.isCancellationRequested) {
+      return Promise.resolve(null);
+    }
+    if (arrays.isFalsyOrEmpty(extension.dependencies)) {
+      append(template.content, $("p.nocontent")).textContent = localize("noDependencies", "No Dependencies");
+      return Promise.resolve(template.content);
+    }
+    const content = $("div", { class: "subcontent" });
+    const scrollableContent = new DomScrollableElement(content, {});
+    append(template.content, scrollableContent.getDomNode());
+    this.contentDisposables.add(scrollableContent);
+    const dependenciesTree = this.instantiationService.createInstance(
+      ExtensionsTree,
+      new ExtensionData(extension, null, (extension2) => extension2.dependencies || [], this.extensionsWorkbenchService),
+      content,
+      {
+        listBackground: editorBackground
+      }
+    );
+    const layout = /* @__PURE__ */ __name(() => {
+      scrollableContent.scanDomNode();
+      const scrollDimensions = scrollableContent.getScrollDimensions();
+      dependenciesTree.layout(scrollDimensions.height);
+    }, "layout");
+    const removeLayoutParticipant = arrays.insert(this.layoutParticipants, { layout });
+    this.contentDisposables.add(toDisposable(removeLayoutParticipant));
+    this.contentDisposables.add(dependenciesTree);
+    scrollableContent.scanDomNode();
+    return Promise.resolve({ focus() {
+      dependenciesTree.domFocus();
+    } });
+  }
+  async openExtensionPack(extension, template, token) {
+    if (token.isCancellationRequested) {
+      return Promise.resolve(null);
+    }
+    const manifest = await this.loadContents(() => this.extensionManifest.get(), template.content);
+    if (token.isCancellationRequested) {
+      return null;
+    }
+    if (!manifest) {
+      return null;
+    }
+    return this.renderExtensionPack(manifest, template.content, token);
+  }
+  async renderExtensionPack(manifest, parent, token) {
+    if (token.isCancellationRequested) {
+      return null;
+    }
+    const content = $("div", { class: "subcontent" });
+    const scrollableContent = new DomScrollableElement(content, { useShadows: false });
+    append(parent, scrollableContent.getDomNode());
+    const extensionsGridView = this.instantiationService.createInstance(ExtensionsGridView, content, new Delegate());
+    const extensions = await getExtensions(manifest.extensionPack, this.extensionsWorkbenchService);
+    extensionsGridView.setExtensions(extensions);
+    scrollableContent.scanDomNode();
+    this.contentDisposables.add(scrollableContent);
+    this.contentDisposables.add(extensionsGridView);
+    this.contentDisposables.add(toDisposable(arrays.insert(this.layoutParticipants, { layout: /* @__PURE__ */ __name(() => scrollableContent.scanDomNode(), "layout") })));
+    return content;
+  }
+  loadContents(loadingTask, container) {
+    container.classList.add("loading");
+    const result = this.contentDisposables.add(loadingTask());
+    const onDone = /* @__PURE__ */ __name(() => container.classList.remove("loading"), "onDone");
+    result.promise.then(onDone, onDone);
+    return result.promise;
+  }
+  layout(dimension) {
+    this.dimension = dimension;
+    this.layoutParticipants.forEach((p) => p.layout());
+  }
+  onError(err) {
+    if (isCancellationError(err)) {
+      return;
+    }
+    this.notificationService.error(err);
+  }
+};
+ExtensionEditor = __decorateClass([
+  __decorateParam(1, ITelemetryService),
+  __decorateParam(2, IInstantiationService),
+  __decorateParam(3, IExtensionsWorkbenchService),
+  __decorateParam(4, IExtensionGalleryService),
+  __decorateParam(5, IThemeService),
+  __decorateParam(6, INotificationService),
+  __decorateParam(7, IOpenerService),
+  __decorateParam(8, IExtensionRecommendationsService),
+  __decorateParam(9, IStorageService),
+  __decorateParam(10, IExtensionService),
+  __decorateParam(11, IWebviewService),
+  __decorateParam(12, ILanguageService),
+  __decorateParam(13, IContextMenuService),
+  __decorateParam(14, IContextKeyService),
+  __decorateParam(15, IHoverService)
+], ExtensionEditor);
+let AdditionalDetailsWidget = class extends Disposable {
+  constructor(container, extension, hoverService, openerService, userDataProfilesService, remoteAgentService, fileService, uriIdentityService, extensionsWorkbenchService, extensionGalleryManifestService) {
+    super();
+    this.container = container;
+    this.hoverService = hoverService;
+    this.openerService = openerService;
+    this.userDataProfilesService = userDataProfilesService;
+    this.remoteAgentService = remoteAgentService;
+    this.fileService = fileService;
+    this.uriIdentityService = uriIdentityService;
+    this.extensionsWorkbenchService = extensionsWorkbenchService;
+    this.extensionGalleryManifestService = extensionGalleryManifestService;
+    this.render(extension);
+    this._register(this.extensionsWorkbenchService.onChange((e) => {
+      if (e && areSameExtensions(e.identifier, extension.identifier) && e.server === extension.server) {
+        this.render(e);
+      }
+    }));
+  }
+  static {
+    __name(this, "AdditionalDetailsWidget");
+  }
+  disposables = this._register(new DisposableStore());
+  render(extension) {
+    this.container.innerText = "";
+    this.disposables.clear();
+    if (extension.local) {
+      this.renderInstallInfo(this.container, extension.local);
+    }
+    if (extension.gallery) {
+      this.renderMarketplaceInfo(this.container, extension);
+    }
+    this.renderCategories(this.container, extension);
+    this.renderExtensionResources(this.container, extension);
+  }
+  renderCategories(container, extension) {
+    if (extension.categories.length) {
+      const categoriesContainer = append(container, $(".categories-container.additional-details-element"));
+      append(categoriesContainer, $(".additional-details-title", void 0, localize("categories", "Categories")));
+      const categoriesElement = append(categoriesContainer, $(".categories"));
+      this.extensionGalleryManifestService.getExtensionGalleryManifest().then((manifest) => {
+        const hasCategoryFilter = manifest?.capabilities.extensionQuery.filtering?.some(({ name }) => name === FilterType.Category);
+        for (const category of extension.categories) {
+          const categoryElement = append(categoriesElement, $("span.category", { tabindex: "0" }, category));
+          if (hasCategoryFilter) {
+            categoryElement.classList.add("clickable");
+            this.disposables.add(onClick(categoryElement, () => this.extensionsWorkbenchService.openSearch(`@category:"${category}"`)));
+          }
+        }
+      });
+    }
+  }
+  renderExtensionResources(container, extension) {
+    const resources = [];
+    if (extension.url) {
+      resources.push([localize("Marketplace", "Marketplace"), URI.parse(extension.url)]);
+    }
+    if (extension.supportUrl) {
+      try {
+        resources.push([localize("issues", "Issues"), URI.parse(extension.supportUrl)]);
+      } catch (error) {
+      }
+    }
+    if (extension.repository) {
+      try {
+        resources.push([localize("repository", "Repository"), URI.parse(extension.repository)]);
+      } catch (error) {
+      }
+    }
+    if (extension.licenseUrl) {
+      try {
+        resources.push([localize("license", "License"), URI.parse(extension.licenseUrl)]);
+      } catch (error) {
+      }
+    }
+    if (extension.publisherUrl) {
+      resources.push([extension.publisherDisplayName, extension.publisherUrl]);
+    }
+    if (resources.length || extension.publisherSponsorLink) {
+      const extensionResourcesContainer = append(container, $(".resources-container.additional-details-element"));
+      append(extensionResourcesContainer, $(".additional-details-title", void 0, localize("resources", "Resources")));
+      const resourcesElement = append(extensionResourcesContainer, $(".resources"));
+      for (const [label, uri] of resources) {
+        const resource = append(resourcesElement, $("a.resource", { tabindex: "0" }, label));
+        this.disposables.add(onClick(resource, () => this.openerService.open(uri)));
+        this.disposables.add(this.hoverService.setupManagedHover(getDefaultHoverDelegate("mouse"), resource, uri.toString()));
+      }
+    }
+  }
+  renderInstallInfo(container, extension) {
+    const installInfoContainer = append(container, $(".more-info-container.additional-details-element"));
+    append(installInfoContainer, $(".additional-details-title", void 0, localize("Install Info", "Installation")));
+    const installInfo = append(installInfoContainer, $(".more-info"));
+    append(
+      installInfo,
+      $(
+        ".more-info-entry",
+        void 0,
+        $("div.more-info-entry-name", void 0, localize("id", "Identifier")),
+        $("code", void 0, extension.identifier.id)
+      )
+    );
+    if (extension.type !== ExtensionType.System) {
+      append(
+        installInfo,
+        $(
+          ".more-info-entry",
+          void 0,
+          $("div.more-info-entry-name", void 0, localize("Version", "Version")),
+          $("code", void 0, extension.manifest.version)
+        )
+      );
+    }
+    if (extension.installedTimestamp) {
+      append(
+        installInfo,
+        $(
+          ".more-info-entry",
+          void 0,
+          $("div.more-info-entry-name", void 0, localize("last updated", "Last Updated")),
+          $("div", void 0, toDateString(new Date(extension.installedTimestamp)))
+        )
+      );
+    }
+    if (!extension.isBuiltin && extension.source !== "gallery") {
+      const element = $("div", void 0, extension.source === "vsix" ? localize("vsix", "VSIX") : localize("other", "Local"));
+      append(
+        installInfo,
+        $(
+          ".more-info-entry",
+          void 0,
+          $("div.more-info-entry-name", void 0, localize("source", "Source")),
+          element
+        )
+      );
+      if (isNative && extension.source === "resource" && extension.location.scheme === Schemas.file) {
+        element.classList.add("link");
+        element.title = extension.location.fsPath;
+        this.disposables.add(onClick(element, () => this.openerService.open(extension.location, { openExternal: true })));
+      }
+    }
+    if (extension.size) {
+      const element = $("div", void 0, ByteSize.formatSize(extension.size));
+      append(
+        installInfo,
+        $(
+          ".more-info-entry",
+          void 0,
+          $("div.more-info-entry-name", { title: localize("size when installed", "Size when installed") }, localize("size", "Size")),
+          element
+        )
+      );
+      if (isNative && extension.location.scheme === Schemas.file) {
+        element.classList.add("link");
+        element.title = extension.location.fsPath;
+        this.disposables.add(onClick(element, () => this.openerService.open(extension.location, { openExternal: true })));
+      }
+    }
+    this.getCacheLocation(extension).then((cacheLocation) => {
+      if (!cacheLocation) {
+        return;
+      }
+      computeSize(cacheLocation, this.fileService).then((cacheSize) => {
+        if (!cacheSize) {
+          return;
+        }
+        const element = $("div", void 0, ByteSize.formatSize(cacheSize));
+        append(
+          installInfo,
+          $(
+            ".more-info-entry",
+            void 0,
+            $("div.more-info-entry-name", { title: localize("disk space used", "Cache size") }, localize("cache size", "Cache")),
+            element
+          )
+        );
+        if (isNative && extension.location.scheme === Schemas.file) {
+          element.classList.add("link");
+          element.title = cacheLocation.fsPath;
+          this.disposables.add(onClick(element, () => this.openerService.open(cacheLocation.with({ scheme: Schemas.file }), { openExternal: true })));
+        }
+      });
+    });
+  }
+  async getCacheLocation(extension) {
+    let extensionCacheLocation = this.uriIdentityService.extUri.joinPath(this.userDataProfilesService.defaultProfile.globalStorageHome, extension.identifier.id.toLowerCase());
+    if (extension.location.scheme === Schemas.vscodeRemote) {
+      const environment = await this.remoteAgentService.getEnvironment();
+      if (!environment) {
+        return void 0;
+      }
+      extensionCacheLocation = this.uriIdentityService.extUri.joinPath(environment.globalStorageHome, extension.identifier.id.toLowerCase());
+    }
+    return extensionCacheLocation;
+  }
+  renderMarketplaceInfo(container, extension) {
+    const gallery = extension.gallery;
+    const moreInfoContainer = append(container, $(".more-info-container.additional-details-element"));
+    append(moreInfoContainer, $(".additional-details-title", void 0, localize("Marketplace Info", "Marketplace")));
+    const moreInfo = append(moreInfoContainer, $(".more-info"));
+    if (gallery) {
+      if (!extension.local) {
+        append(
+          moreInfo,
+          $(
+            ".more-info-entry",
+            void 0,
+            $("div.more-info-entry-name", void 0, localize("id", "Identifier")),
+            $("code", void 0, extension.identifier.id)
+          )
+        );
+        append(
+          moreInfo,
+          $(
+            ".more-info-entry",
+            void 0,
+            $("div.more-info-entry-name", void 0, localize("Version", "Version")),
+            $("code", void 0, gallery.version)
+          )
+        );
+      }
+      append(
+        moreInfo,
+        $(
+          ".more-info-entry",
+          void 0,
+          $("div.more-info-entry-name", void 0, localize("published", "Published")),
+          $("div", void 0, toDateString(new Date(gallery.releaseDate)))
+        ),
+        $(
+          ".more-info-entry",
+          void 0,
+          $("div.more-info-entry-name", void 0, localize("last released", "Last Released")),
+          $("div", void 0, toDateString(new Date(gallery.lastUpdated)))
+        )
+      );
+    }
+  }
+};
+AdditionalDetailsWidget = __decorateClass([
+  __decorateParam(2, IHoverService),
+  __decorateParam(3, IOpenerService),
+  __decorateParam(4, IUserDataProfilesService),
+  __decorateParam(5, IRemoteAgentService),
+  __decorateParam(6, IFileService),
+  __decorateParam(7, IUriIdentityService),
+  __decorateParam(8, IExtensionsWorkbenchService),
+  __decorateParam(9, IExtensionGalleryManifestService)
+], AdditionalDetailsWidget);
+const contextKeyExpr = ContextKeyExpr.and(ContextKeyExpr.equals("activeEditor", ExtensionEditor.ID), EditorContextKeys.focus.toNegated());
+registerAction2(class ShowExtensionEditorFindAction extends Action2 {
+  static {
+    __name(this, "ShowExtensionEditorFindAction");
+  }
+  constructor() {
+    super({
+      id: "editor.action.extensioneditor.showfind",
+      title: localize("find", "Find"),
+      keybinding: {
+        when: contextKeyExpr,
+        weight: KeybindingWeight.EditorContrib,
+        primary: KeyMod.CtrlCmd | KeyCode.KeyF
+      }
+    });
+  }
+  run(accessor) {
+    const extensionEditor = getExtensionEditor(accessor);
+    extensionEditor?.showFind();
+  }
+});
+registerAction2(class StartExtensionEditorFindNextAction extends Action2 {
+  static {
+    __name(this, "StartExtensionEditorFindNextAction");
+  }
+  constructor() {
+    super({
+      id: "editor.action.extensioneditor.findNext",
+      title: localize("find next", "Find Next"),
+      keybinding: {
+        when: ContextKeyExpr.and(
+          contextKeyExpr,
+          KEYBINDING_CONTEXT_WEBVIEW_FIND_WIDGET_FOCUSED
+        ),
+        primary: KeyCode.Enter,
+        weight: KeybindingWeight.EditorContrib
+      }
+    });
+  }
+  run(accessor) {
+    const extensionEditor = getExtensionEditor(accessor);
+    extensionEditor?.runFindAction(false);
+  }
+});
+registerAction2(class StartExtensionEditorFindPreviousAction extends Action2 {
+  static {
+    __name(this, "StartExtensionEditorFindPreviousAction");
+  }
+  constructor() {
+    super({
+      id: "editor.action.extensioneditor.findPrevious",
+      title: localize("find previous", "Find Previous"),
+      keybinding: {
+        when: ContextKeyExpr.and(
+          contextKeyExpr,
+          KEYBINDING_CONTEXT_WEBVIEW_FIND_WIDGET_FOCUSED
+        ),
+        primary: KeyMod.Shift | KeyCode.Enter,
+        weight: KeybindingWeight.EditorContrib
+      }
+    });
+  }
+  run(accessor) {
+    const extensionEditor = getExtensionEditor(accessor);
+    extensionEditor?.runFindAction(true);
+  }
+});
+registerThemingParticipant((theme, collector) => {
+  const link = theme.getColor(textLinkForeground);
+  if (link) {
+    collector.addRule(`.monaco-workbench .extension-editor .content .details .additional-details-container .resources-container a.resource { color: ${link}; }`);
+    collector.addRule(`.monaco-workbench .extension-editor .content .feature-contributions a { color: ${link}; }`);
+  }
+  const activeLink = theme.getColor(textLinkActiveForeground);
+  if (activeLink) {
+    collector.addRule(`.monaco-workbench .extension-editor .content .details .additional-details-container .resources-container a.resource:hover,
+			.monaco-workbench .extension-editor .content .details .additional-details-container .resources-container a.resource:active { color: ${activeLink}; }`);
+    collector.addRule(`.monaco-workbench .extension-editor .content .feature-contributions a:hover,
+			.monaco-workbench .extension-editor .content .feature-contributions a:active { color: ${activeLink}; }`);
+  }
+  const buttonHoverBackgroundColor = theme.getColor(buttonHoverBackground);
+  if (buttonHoverBackgroundColor) {
+    collector.addRule(`.monaco-workbench .extension-editor .content > .details > .additional-details-container .categories-container > .categories > .category.clickable:hover { background-color: ${buttonHoverBackgroundColor}; border-color: ${buttonHoverBackgroundColor}; }`);
+  }
+  const buttonForegroundColor = theme.getColor(buttonForeground);
+  if (buttonForegroundColor) {
+    collector.addRule(`.monaco-workbench .extension-editor .content > .details > .additional-details-container .categories-container > .categories > .category.clickable:hover { color: ${buttonForegroundColor}; }`);
+  }
+});
+function getExtensionEditor(accessor) {
+  const activeEditorPane = accessor.get(IEditorService).activeEditorPane;
+  if (activeEditorPane instanceof ExtensionEditor) {
+    return activeEditorPane;
+  }
+  return null;
+}
+__name(getExtensionEditor, "getExtensionEditor");
+export {
+  ExtensionEditor
+};
+//# sourceMappingURL=extensionEditor.js.map

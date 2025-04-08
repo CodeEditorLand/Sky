@@ -1,1 +1,90 @@
-var b=Object.defineProperty,v=Object.getOwnPropertyDescriptor,d=(e,i,t,s)=>{for(var r,o=s>1?void 0:s?v(i,t):i,n=e.length-1;n>=0;n--)(r=e[n])&&(o=(s?r(i,t,o):r(o))||o);return s&&o&&b(i,t,o),o},t=(e,i)=>(t,s)=>i(t,s,e);import{IAccessibilityService as m,AccessibilitySupport as y}from"../../../../platform/accessibility/common/accessibility.js";import{isWindows as S,isLinux as f}from"../../../../base/common/platform.js";import{INativeWorkbenchEnvironmentService as p}from"../../environment/electron-sandbox/environmentService.js";import{IContextKeyService as u}from"../../../../platform/contextkey/common/contextkey.js";import{IConfigurationService as h}from"../../../../platform/configuration/common/configuration.js";import{AccessibilityService as I}from"../../../../platform/accessibility/browser/accessibilityService.js";import{InstantiationType as A,registerSingleton as w}from"../../../../platform/instantiation/common/extensions.js";import{ITelemetryService as g}from"../../../../platform/telemetry/common/telemetry.js";import{IJSONEditingService as K}from"../../configuration/common/jsonEditing.js";import{WorkbenchPhase as E,registerWorkbenchContribution2 as k}from"../../../common/contributions.js";import{INativeHostService as C}from"../../../../platform/native/common/native.js";import{ILayoutService as R}from"../../../../platform/layout/browser/layoutService.js";let a=class extends I{constructor(e,i,t,s,r,o){super(i,s,t),this._telemetryService=r,this.nativeHostService=o,this.setAccessibilitySupport(e.window.accessibilitySupport?y.Enabled:y.Disabled)}didSendTelemetry=!1;shouldAlwaysUnderlineAccessKeys=void 0;async alwaysUnderlineAccessKeys(){if(!S)return!1;if("boolean"!=typeof this.shouldAlwaysUnderlineAccessKeys){const e=await this.nativeHostService.windowsGetStringRegKey("HKEY_CURRENT_USER","Control Panel\\Accessibility\\Keyboard Preference","On");this.shouldAlwaysUnderlineAccessKeys="1"===e}return this.shouldAlwaysUnderlineAccessKeys}setAccessibilitySupport(e){super.setAccessibilitySupport(e),!this.didSendTelemetry&&e===y.Enabled&&(this._telemetryService.publicLog2("accessibility",{enabled:!0}),this.didSendTelemetry=!0)}};a=d([t(0,p),t(1,u),t(2,h),t(3,R),t(4,g),t(5,C)],a),w(m,a,A.Delayed);let n=class{static ID="workbench.contrib.linuxAccessibility";constructor(e,i,t){const s=()=>{i.isScreenReaderOptimized()&&e.write(t.argvResource,[{path:["force-renderer-accessibility"],value:!0}],!0)};s(),i.onDidChangeScreenReaderOptimized(s)}};n=d([t(0,K),t(1,m),t(2,p)],n),f&&k(n.ID,n,E.BlockRestore);export{a as NativeAccessibilityService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { IAccessibilityService, AccessibilitySupport } from "../../../../platform/accessibility/common/accessibility.js";
+import { isWindows, isLinux } from "../../../../base/common/platform.js";
+import { INativeWorkbenchEnvironmentService } from "../../environment/electron-sandbox/environmentService.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { AccessibilityService } from "../../../../platform/accessibility/browser/accessibilityService.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { IJSONEditingService } from "../../configuration/common/jsonEditing.js";
+import { IWorkbenchContribution, WorkbenchPhase, registerWorkbenchContribution2 } from "../../../common/contributions.js";
+import { INativeHostService } from "../../../../platform/native/common/native.js";
+import { ILayoutService } from "../../../../platform/layout/browser/layoutService.js";
+let NativeAccessibilityService = class extends AccessibilityService {
+  constructor(environmentService, contextKeyService, configurationService, _layoutService, _telemetryService, nativeHostService) {
+    super(contextKeyService, _layoutService, configurationService);
+    this._telemetryService = _telemetryService;
+    this.nativeHostService = nativeHostService;
+    this.setAccessibilitySupport(environmentService.window.accessibilitySupport ? AccessibilitySupport.Enabled : AccessibilitySupport.Disabled);
+  }
+  static {
+    __name(this, "NativeAccessibilityService");
+  }
+  didSendTelemetry = false;
+  shouldAlwaysUnderlineAccessKeys = void 0;
+  async alwaysUnderlineAccessKeys() {
+    if (!isWindows) {
+      return false;
+    }
+    if (typeof this.shouldAlwaysUnderlineAccessKeys !== "boolean") {
+      const windowsKeyboardAccessibility = await this.nativeHostService.windowsGetStringRegKey("HKEY_CURRENT_USER", "Control Panel\\Accessibility\\Keyboard Preference", "On");
+      this.shouldAlwaysUnderlineAccessKeys = windowsKeyboardAccessibility === "1";
+    }
+    return this.shouldAlwaysUnderlineAccessKeys;
+  }
+  setAccessibilitySupport(accessibilitySupport) {
+    super.setAccessibilitySupport(accessibilitySupport);
+    if (!this.didSendTelemetry && accessibilitySupport === AccessibilitySupport.Enabled) {
+      this._telemetryService.publicLog2("accessibility", { enabled: true });
+      this.didSendTelemetry = true;
+    }
+  }
+};
+NativeAccessibilityService = __decorateClass([
+  __decorateParam(0, INativeWorkbenchEnvironmentService),
+  __decorateParam(1, IContextKeyService),
+  __decorateParam(2, IConfigurationService),
+  __decorateParam(3, ILayoutService),
+  __decorateParam(4, ITelemetryService),
+  __decorateParam(5, INativeHostService)
+], NativeAccessibilityService);
+registerSingleton(IAccessibilityService, NativeAccessibilityService, InstantiationType.Delayed);
+let LinuxAccessibilityContribution = class {
+  static {
+    __name(this, "LinuxAccessibilityContribution");
+  }
+  static ID = "workbench.contrib.linuxAccessibility";
+  constructor(jsonEditingService, accessibilityService, environmentService) {
+    const forceRendererAccessibility = /* @__PURE__ */ __name(() => {
+      if (accessibilityService.isScreenReaderOptimized()) {
+        jsonEditingService.write(environmentService.argvResource, [{ path: ["force-renderer-accessibility"], value: true }], true);
+      }
+    }, "forceRendererAccessibility");
+    forceRendererAccessibility();
+    accessibilityService.onDidChangeScreenReaderOptimized(forceRendererAccessibility);
+  }
+};
+LinuxAccessibilityContribution = __decorateClass([
+  __decorateParam(0, IJSONEditingService),
+  __decorateParam(1, IAccessibilityService),
+  __decorateParam(2, INativeWorkbenchEnvironmentService)
+], LinuxAccessibilityContribution);
+if (isLinux) {
+  registerWorkbenchContribution2(LinuxAccessibilityContribution.ID, LinuxAccessibilityContribution, WorkbenchPhase.BlockRestore);
+}
+export {
+  NativeAccessibilityService
+};
+//# sourceMappingURL=accessibilityService.js.map

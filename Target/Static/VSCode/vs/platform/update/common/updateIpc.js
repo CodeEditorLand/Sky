@@ -1,1 +1,87 @@
-import{Emitter as s}from"../../../base/common/event.js";import{DisposableStore as i}from"../../../base/common/lifecycle.js";import"../../../base/parts/ipc/common/ipc.js";import{State as r}from"./update.js";class S{constructor(e){this.service=e}listen(e,t){if("onStateChange"===t)return this.service.onStateChange;throw new Error(`Event not found: ${t}`)}call(e,t,s){switch(t){case"checkForUpdates":return this.service.checkForUpdates(s);case"downloadUpdate":return this.service.downloadUpdate();case"applyUpdate":return this.service.applyUpdate();case"quitAndInstall":return this.service.quitAndInstall();case"_getInitialState":return Promise.resolve(this.service.state);case"isLatestVersion":return this.service.isLatestVersion();case"_applySpecificUpdate":return this.service._applySpecificUpdate(s)}throw new Error(`Call not found: ${t}`)}}class U{constructor(e){this.channel=e,this.disposables.add(this.channel.listen("onStateChange")((e=>this.state=e))),this.channel.call("_getInitialState").then((e=>this.state=e))}disposables=new i;_onStateChange=new s;onStateChange=this._onStateChange.event;_state=r.Uninitialized;get state(){return this._state}set state(e){this._state=e,this._onStateChange.fire(e)}checkForUpdates(e){return this.channel.call("checkForUpdates",e)}downloadUpdate(){return this.channel.call("downloadUpdate")}applyUpdate(){return this.channel.call("applyUpdate")}quitAndInstall(){return this.channel.call("quitAndInstall")}isLatestVersion(){return this.channel.call("isLatestVersion")}_applySpecificUpdate(e){return this.channel.call("_applySpecificUpdate",e)}dispose(){this.disposables.dispose()}}export{S as UpdateChannel,U as UpdateChannelClient};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Emitter, Event } from "../../../base/common/event.js";
+import { DisposableStore } from "../../../base/common/lifecycle.js";
+import { IChannel, IServerChannel } from "../../../base/parts/ipc/common/ipc.js";
+import { IUpdateService, State } from "./update.js";
+class UpdateChannel {
+  constructor(service) {
+    this.service = service;
+  }
+  static {
+    __name(this, "UpdateChannel");
+  }
+  listen(_, event) {
+    switch (event) {
+      case "onStateChange":
+        return this.service.onStateChange;
+    }
+    throw new Error(`Event not found: ${event}`);
+  }
+  call(_, command, arg) {
+    switch (command) {
+      case "checkForUpdates":
+        return this.service.checkForUpdates(arg);
+      case "downloadUpdate":
+        return this.service.downloadUpdate();
+      case "applyUpdate":
+        return this.service.applyUpdate();
+      case "quitAndInstall":
+        return this.service.quitAndInstall();
+      case "_getInitialState":
+        return Promise.resolve(this.service.state);
+      case "isLatestVersion":
+        return this.service.isLatestVersion();
+      case "_applySpecificUpdate":
+        return this.service._applySpecificUpdate(arg);
+    }
+    throw new Error(`Call not found: ${command}`);
+  }
+}
+class UpdateChannelClient {
+  constructor(channel) {
+    this.channel = channel;
+    this.disposables.add(this.channel.listen("onStateChange")((state) => this.state = state));
+    this.channel.call("_getInitialState").then((state) => this.state = state);
+  }
+  static {
+    __name(this, "UpdateChannelClient");
+  }
+  disposables = new DisposableStore();
+  _onStateChange = new Emitter();
+  onStateChange = this._onStateChange.event;
+  _state = State.Uninitialized;
+  get state() {
+    return this._state;
+  }
+  set state(state) {
+    this._state = state;
+    this._onStateChange.fire(state);
+  }
+  checkForUpdates(explicit) {
+    return this.channel.call("checkForUpdates", explicit);
+  }
+  downloadUpdate() {
+    return this.channel.call("downloadUpdate");
+  }
+  applyUpdate() {
+    return this.channel.call("applyUpdate");
+  }
+  quitAndInstall() {
+    return this.channel.call("quitAndInstall");
+  }
+  isLatestVersion() {
+    return this.channel.call("isLatestVersion");
+  }
+  _applySpecificUpdate(packagePath) {
+    return this.channel.call("_applySpecificUpdate", packagePath);
+  }
+  dispose() {
+    this.disposables.dispose();
+  }
+}
+export {
+  UpdateChannel,
+  UpdateChannelClient
+};
+//# sourceMappingURL=updateIpc.js.map

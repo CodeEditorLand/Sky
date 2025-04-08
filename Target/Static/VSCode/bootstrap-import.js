@@ -1,1 +1,46 @@
-import{fileURLToPath as l,pathToFileURL as a}from"node:url";import{promises as s}from"node:fs";import{join as c}from"node:path";const m={};async function u(o){const e=l(new URL("../package.json",a(o))),r=JSON.parse(String(await s.readFile(e)));for(const[o]of Object.entries(r.dependencies))try{const r=c(e,`../node_modules/${o}/package.json`);let{main:n}=JSON.parse(String(await s.readFile(r)));n||(n="index.js"),n.endsWith(".js")||(n+=".js");const t=c(e,`../node_modules/${o}/${n}`);m[o]=a(t).href}catch(e){console.error(o),console.error(e)}console.log(`[bootstrap-import] Initialized node_modules redirector for: ${o}`)}async function h(o,e,s){const r=m[o];return void 0!==r?{format:"commonjs",shortCircuit:!0,url:r}:s(o,e)}export{u as initialize,h as resolve};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { fileURLToPath, pathToFileURL } from "node:url";
+import { promises } from "node:fs";
+import { join } from "node:path";
+const _specifierToUrl = {};
+async function initialize(injectPath) {
+  const injectPackageJSONPath = fileURLToPath(new URL("../package.json", pathToFileURL(injectPath)));
+  const packageJSON = JSON.parse(String(await promises.readFile(injectPackageJSONPath)));
+  for (const [name] of Object.entries(packageJSON.dependencies)) {
+    try {
+      const path = join(injectPackageJSONPath, `../node_modules/${name}/package.json`);
+      let { main } = JSON.parse(String(await promises.readFile(path)));
+      if (!main) {
+        main = "index.js";
+      }
+      if (!main.endsWith(".js")) {
+        main += ".js";
+      }
+      const mainPath = join(injectPackageJSONPath, `../node_modules/${name}/${main}`);
+      _specifierToUrl[name] = pathToFileURL(mainPath).href;
+    } catch (err) {
+      console.error(name);
+      console.error(err);
+    }
+  }
+  console.log(`[bootstrap-import] Initialized node_modules redirector for: ${injectPath}`);
+}
+__name(initialize, "initialize");
+async function resolve(specifier, context, nextResolve) {
+  const newSpecifier = _specifierToUrl[specifier];
+  if (newSpecifier !== void 0) {
+    return {
+      format: "commonjs",
+      shortCircuit: true,
+      url: newSpecifier
+    };
+  }
+  return nextResolve(specifier, context);
+}
+__name(resolve, "resolve");
+export {
+  initialize,
+  resolve
+};
+//# sourceMappingURL=bootstrap-import.js.map

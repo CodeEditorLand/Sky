@@ -1,1 +1,1179 @@
-var Se=Object.defineProperty;var pe=Object.getOwnPropertyDescriptor;var q=(v,e,t,s)=>{for(var i=s>1?void 0:s?pe(e,t):e,a=v.length-1,n;a>=0;a--)(n=v[a])&&(i=(s?n(e,t,i):n(i))||i);return s&&i&&Se(e,t,i),i},S=(v,e)=>(t,s)=>e(t,s,v);import*as fe from"../../../../base/browser/ui/aria/aria.js";import{Barrier as ve,DeferredPromise as Ce,Queue as Ee,raceCancellation as Ie}from"../../../../base/common/async.js";import{CancellationToken as Q,CancellationTokenSource as B}from"../../../../base/common/cancellation.js";import{toErrorMessage as j}from"../../../../base/common/errorMessage.js";import{onUnexpectedError as me}from"../../../../base/common/errors.js";import{Emitter as X,Event as U}from"../../../../base/common/event.js";import{Lazy as K}from"../../../../base/common/lazy.js";import{DisposableStore as A,MutableDisposable as Z,toDisposable as $}from"../../../../base/common/lifecycle.js";import{MovingAverage as we}from"../../../../base/common/numbers.js";import{autorun as Y,autorunWithStore as Re,derived as L,observableSignalFromEvent as ye,observableValue as F,transaction as Ne,waitForState as Ae}from"../../../../base/common/observable.js";import{isEqual as b}from"../../../../base/common/resources.js";import{StopWatch as Te}from"../../../../base/common/stopwatch.js";import{assertType as h}from"../../../../base/common/types.js";import{generateUuid as Pe}from"../../../../base/common/uuid.js";import{isCodeEditor as be}from"../../../../editor/browser/editorBrowser.js";import{observableCodeEditor as Me}from"../../../../editor/browser/observableCodeEditor.js";import{ICodeEditorService as Oe}from"../../../../editor/browser/services/codeEditorService.js";import{EditorOption as J}from"../../../../editor/common/config/editorOptions.js";import{Position as ee}from"../../../../editor/common/core/position.js";import{Range as H}from"../../../../editor/common/core/range.js";import{Selection as V,SelectionDirection as xe}from"../../../../editor/common/core/selection.js";import"../../../../editor/common/editorCommon.js";import{TextEdit as ke}from"../../../../editor/common/languages.js";import"../../../../editor/common/model.js";import{IEditorWorkerService as De}from"../../../../editor/common/services/editorWorker.js";import{DefaultModelSHA1Computer as We}from"../../../../editor/common/services/modelService.js";import{InlineCompletionsController as qe}from"../../../../editor/contrib/inlineCompletions/browser/controller/inlineCompletionsController.js";import{MessageController as Ue}from"../../../../editor/contrib/message/browser/messageController.js";import{localize as M}from"../../../../nls.js";import{IConfigurationService as te}from"../../../../platform/configuration/common/configuration.js";import{IContextKeyService as ie}from"../../../../platform/contextkey/common/contextkey.js";import{IDialogService as Le}from"../../../../platform/dialogs/common/dialogs.js";import{IInstantiationService as se}from"../../../../platform/instantiation/common/instantiation.js";import{ILogService as Fe}from"../../../../platform/log/common/log.js";import{IEditorService as He,SIDE_GROUP as Ve}from"../../../services/editor/common/editorService.js";import{IViewsService as Ge}from"../../../services/views/common/viewsService.js";import{showChatView as ze}from"../../chat/browser/chat.js";import"../../chat/browser/chatWidget.js";import{ChatRequestRemovalReason as Qe}from"../../chat/common/chatModel.js";import{IChatService as G}from"../../chat/common/chatService.js";import{INotebookEditorService as oe}from"../../notebook/browser/services/notebookEditorService.js";import{CTX_INLINE_CHAT_EDITING as Be,CTX_INLINE_CHAT_REQUEST_IN_PROGRESS as je,CTX_INLINE_CHAT_RESPONSE_TYPE as Xe,CTX_INLINE_CHAT_VISIBLE as ne,INLINE_CHAT_ID as re,InlineChatConfigKeys as ae,InlineChatResponseType as O}from"../common/inlineChat.js";import{Session as Ke}from"./inlineChatSession.js";import{IInlineChatSessionService as de}from"./inlineChatSessionService.js";import{InlineChatError as le}from"./inlineChatSessionServiceImpl.js";import{HunkAction as x,LiveStrategy as Ze}from"./inlineChatStrategies.js";import"./inlineChatWidget.js";import{InlineChatZoneWidget as he}from"./inlineChatZoneWidget.js";import{ChatAgentLocation as y}from"../../chat/common/constants.js";import{ChatContextKeys as ce}from"../../chat/common/chatContextKeys.js";import{IChatEditingService as $e,ModifiedFileEntryState as z}from"../../chat/common/chatEditingService.js";import{observableConfigValue as Ye}from"../../../../platform/observable/common/platformObservableUtils.js";var Je=(o=>(o.CREATE_SESSION="CREATE_SESSION",o.INIT_UI="INIT_UI",o.WAIT_FOR_INPUT="WAIT_FOR_INPUT",o.SHOW_REQUEST="SHOW_REQUEST",o.PAUSE="PAUSE",o.CANCEL="CANCEL",o.ACCEPT="DONE",o))(Je||{}),et=(o=>(o[o.NONE=0]="NONE",o[o.ACCEPT_SESSION=1]="ACCEPT_SESSION",o[o.CANCEL_SESSION=2]="CANCEL_SESSION",o[o.PAUSE_SESSION=4]="PAUSE_SESSION",o[o.CANCEL_REQUEST=8]="CANCEL_REQUEST",o[o.CANCEL_INPUT=16]="CANCEL_INPUT",o[o.ACCEPT_INPUT=32]="ACCEPT_INPUT",o))(et||{});class tt{initialSelection;initialRange;message;autoSend;existingSession;position;static isInlineChatRunOptions(e){const{initialSelection:t,initialRange:s,message:i,autoSend:a,position:n,existingSession:o}=e;return!(typeof i<"u"&&typeof i!="string"||typeof a<"u"&&typeof a!="boolean"||typeof s<"u"&&!H.isIRange(s)||typeof t<"u"&&!V.isISelection(t)||typeof n<"u"&&!ee.isIPosition(n)||typeof o<"u"&&!(o instanceof Ke))}}let T=class{static ID="editor.contrib.inlineChatController";static get(e){return e.getContribution(T.ID)}_delegate;constructor(e,t){const s=Ye(ae.EnableV2,!1,t);this._delegate=L(i=>s.read(i)?w.get(e):N.get(e))}dispose(){}get isActive(){return this._delegate.get().isActive}async run(e){return this._delegate.get().run(e)}focus(){return this._delegate.get().focus()}get widget(){return this._delegate.get().widget}getWidgetPosition(){return this._delegate.get().getWidgetPosition()}acceptSession(){return this._delegate.get().acceptSession()}};T=q([S(1,te)],T);let N=class{constructor(e,t,s,i,a,n,o,d,p,_,u){this._editor=e;this._instaService=t;this._inlineChatSessionService=s;this._editorWorkerService=i;this._logService=a;this._configurationService=n;this._dialogService=o;this._chatService=p;this._editorService=_;this._ctxVisible=ne.bindTo(d),this._ctxEditing=Be.bindTo(d),this._ctxResponseType=Xe.bindTo(d),this._ctxRequestInProgress=je.bindTo(d),this._ctxResponse=ce.isResponse.bindTo(d),ce.responseHasError.bindTo(d),this._ui=new K(()=>{const r={location:y.Editor,resolveData:()=>(h(this._editor.hasModel()),h(this._session),{type:y.Editor,selection:this._editor.getSelection(),document:this._session.textModelN.uri,wholeRange:this._session?.wholeRange.trackedInitialRange})};for(const g of u.listNotebookEditors())for(const[,E]of g.codeEditors)if(E===this._editor){r.location=y.Notebook;break}const c=t.createInstance(he,r,void 0,this._editor);return this._store.add(c),this._store.add(c.widget.chatWidget.onDidClear(async()=>{const g=this.joinCurrentRun();this.cancelSession(),await g,this.run()})),c}),this._store.add(this._editor.onDidChangeModel(async r=>{if(this._session||!r.newModelUrl)return;const c=this._inlineChatSessionService.getSession(this._editor,r.newModelUrl);c&&(this._log("session RESUMING after model change",r),await this.run({existingSession:c}))})),this._store.add(this._inlineChatSessionService.onDidEndSession(r=>{r.session===this._session&&r.endedByExternalCause&&(this._log("session ENDED by external cause"),this.acceptSession())})),this._store.add(this._inlineChatSessionService.onDidMoveSession(async r=>{r.editor===this._editor&&(this._log("session RESUMING after move",r),await this.run({existingSession:r.session}))})),this._log("NEW controller")}static get(e){return e.getContribution(re)}_isDisposed=!1;_store=new A;_ui;_ctxVisible;_ctxEditing;_ctxResponseType;_ctxRequestInProgress;_ctxResponse;_messages=this._store.add(new X);_onDidEnterState=this._store.add(new X);get chatWidget(){return this._ui.value.widget.chatWidget}_sessionStore=this._store.add(new A);_stashedSession=this._store.add(new Z);_session;_strategy;dispose(){this._currentRun&&this._messages.fire(this._session?.chatModel.hasRequests?4:2),this._store.dispose(),this._isDisposed=!0,this._log("DISPOSED controller")}_log(e,...t){e instanceof Error?this._logService.error(e,...t):this._logService.trace(`[IE] (editor:${this._editor.getId()}) ${e}`,...t)}get widget(){return this._ui.value.widget}getId(){return re}getWidgetPosition(){return this._ui.value.position}_currentRun;async run(e={}){let t;const s=this._onDidEnterState.event(i=>t=i);try{this.acceptSession(),this._currentRun&&await this._currentRun,e.initialSelection&&this._editor.setSelection(e.initialSelection),this._stashedSession.clear(),this._currentRun=this._nextState("CREATE_SESSION",e),await this._currentRun}catch(i){this._log("error during run",i),me(i),this._session&&this._inlineChatSessionService.releaseSession(this._session),this.PAUSE()}finally{this._currentRun=void 0,s.dispose()}return t!=="CANCEL"}async _nextState(e,t){let s=e;for(;s&&!this._isDisposed;){this._log("setState to ",s);const i=this[s](t);this._onDidEnterState.fire(s),s=await i}}async CREATE_SESSION(e){h(this._session===void 0),h(this._editor.hasModel());let t=e.existingSession,s;e.position&&(s=ee.lift(e.position).delta(-1),delete e.position);const i=this._showWidget(t?.headless,!0,s);let a=M("create.fail","Failed to start editor chat");if(!t){const n=new B,o=U.once(this._messages.event)(d=>{this._log("state=_createSession) message received",d),d===32?(e.autoSend=!0,this._ui.value.widget.updateInfo(M("welcome.2","Getting ready..."))):n.cancel()});try{t=await this._inlineChatSessionService.createSession(this._editor,{wholeRange:e.initialRange},n.token)}catch(d){(d instanceof le||d?.name===le.code)&&(a=d.message)}if(n.dispose(),o.dispose(),n.token.isCancellationRequested)return t&&this._inlineChatSessionService.releaseSession(t),"CANCEL"}return delete e.initialRange,delete e.existingSession,t?(await t.chatModel.waitForInitialization(),this._strategy=this._instaService.createInstance(Ze,t,this._editor,this._ui.value,t.headless),this._session=t,"INIT_UI"):(Ue.get(this._editor)?.showMessage(a,i),this._log("Failed to start editor chat"),"CANCEL")}async INIT_UI(e){h(this._session),h(this._strategy),qe.get(this._editor)?.reject(),this._sessionStore.clear();const t=this._editor.createDecorationsCollection(),s=()=>{const o=this._strategy?.getWholeRangeDecoration()??[];t.set(o),this._ctxEditing.set(!this._session?.wholeRange.trackedInitialRange.isEmpty())};this._sessionStore.add($(()=>{t.clear(),this._ctxEditing.reset()})),this._sessionStore.add(this._session.wholeRange.onDidChange(s)),s(),this._ui.value.widget.setChatModel(this._session.chatModel),this._updatePlaceholder();const i=!this._session.chatModel.hasRequests;this._ui.value.widget.updateToolbar(!0),this._ui.value.widget.toggleStatus(!i),this._showWidget(this._session.headless,i),this._sessionStore.add(this._editor.onDidChangeModel(o=>{const d=this._session?.chatModel.hasRequests?4:2;this._log("model changed, pause or cancel session",d,o),this._messages.fire(d)})),this._sessionStore.add(this._editor.onDidChangeModelContent(o=>{if(this._session?.hunkData.ignoreTextModelNChanges||this._ui.value.widget.hasFocus())return;const d=this._session.wholeRange;let p=!1;if(this._configurationService.getValue(ae.FinishOnType))for(const{range:_}of o.changes)p=!H.areIntersectingOrTouching(_,d.value);this._session.recordExternalEditOccurred(p),p&&(this._log("text changed outside of whole range, FINISH session"),this.acceptSession())})),this._sessionStore.add(this._session.chatModel.onDidChange(async o=>{o.kind==="removeRequest"&&await this._session.undoChangesUntil(o.requestId)}));const a=this._createChatTextEditGroupState();let n=!1;for(const o of this._session.chatModel.getRequests()){if(!o.response||o.response.result?.errorDetails)break;for(const d of o.response.response.value)if(!(d.kind!=="textEditGroup"||!b(d.uri,this._session.textModelN.uri))&&!d.state?.applied){for(const p of d.edits)this._makeChanges(p,void 0,!n),n=!0;d.state??=a}}if(n){const o=await this._editorWorkerService.computeDiff(this._session.textModel0.uri,this._session.textModelN.uri,{computeMoves:!1,maxComputationTimeMs:Number.MAX_SAFE_INTEGER,ignoreTrimWhitespace:!1},"advanced");this._session.wholeRange.fixup(o?.changes??[]),await this._session.hunkData.recompute(a,o),this._updateCtxResponseType()}return e.position=await this._strategy.renderChanges(),this._session.chatModel.requestInProgress?"SHOW_REQUEST":"WAIT_FOR_INPUT"}async WAIT_FOR_INPUT(e){h(this._session),h(this._strategy),this._updatePlaceholder(),e.message&&(this._updateInput(e.message),fe.alert(e.message),delete e.message,this._showWidget(this._session.headless,!1));let t=0,s;const i=new ve,a=new A;return a.add(this._session.chatModel.onDidChange(n=>{n.kind==="addRequest"&&(s=n.request,t=32,i.open())})),a.add(this._strategy.onDidAccept(()=>this.acceptSession())),a.add(this._strategy.onDidDiscard(()=>this.cancelSession())),a.add(U.once(this._messages.event)(n=>{this._log("state=_waitForInput) message received",n),t=n,i.open()})),e.autoSend&&(delete e.autoSend,this._showWidget(this._session.headless,!1),this._ui.value.widget.chatWidget.acceptInput()),await i.wait(),a.dispose(),t&18?"CANCEL":t&4?"PAUSE":t&1?(this._ui.value.widget.selectAll(),"DONE"):s?.message.text?"SHOW_REQUEST":"WAIT_FOR_INPUT"}async SHOW_REQUEST(e){h(this._session),h(this._strategy),h(this._session.chatModel.requestInProgress),this._ctxRequestInProgress.set(!0);const{chatModel:t}=this._session,s=t.lastRequest;h(s),h(s.response),this._showWidget(this._session.headless,!1),this._ui.value.widget.selectAll(),this._ui.value.widget.updateInfo(""),this._ui.value.widget.toggleStatus(!0);const{response:i}=s,a=new Ce,n=new A,o=n.add(new B),d=new we,p=Te.create(),_=new Ee,u=this._editor.getOption(J.renderValidationDecorations);this._editor.updateOptions({renderValidationDecorations:"off"}),n.add($(()=>{this._editor.updateOptions({renderValidationDecorations:u})}));let r="WAIT_FOR_INPUT";n.add(U.once(this._messages.event)(l=>{this._log("state=_makeRequest) message received",l),this._chatService.cancelCurrentRequestForSession(t.sessionId),l&2?r="CANCEL":l&4?r="PAUSE":l&1&&(r="DONE")})),n.add(t.onDidChange(async l=>{if(l.kind==="removeRequest"&&l.requestId===s.id){o.cancel(),a.complete(),l.reason===Qe.Resend?r="SHOW_REQUEST":r="CANCEL";return}if(l.kind==="move"){h(this._session);const f=(_e,...ge)=>this._log("state=_showRequest) moving inline chat",_e,...ge);f("move was requested",l.target,l.range);const W=V.fromRange(H.lift(l.range),xe.LTR),C=await this._editorService.openEditor({resource:l.target,options:{selection:W}},Ve);if(!C){f("opening editor failed");return}const R=C.getControl();if(!be(R)||!R.hasModel()){f("new editor is either missing or not a code editor or does not have a model");return}if(this._inlineChatSessionService.getSession(R,l.target)){f("new editor ALREADY has a session");return}const ue=await this._inlineChatSessionService.createSession(R,{session:this._session},Q.None);N.get(R)?.run({existingSession:ue}),r="CANCEL",a.complete();return}})),n.add(this._ui.value.widget.chatWidget.inputEditor.onDidChangeModelContent(()=>{this._chatService.cancelCurrentRequestForSession(t.sessionId)}));let c=0,g=!0;const E=this._createChatTextEditGroupState();let I;const k=()=>{if(this._updateCtxResponseType(),I||(I=i.response.value.find(l=>l.kind==="textEditGroup"&&b(l.uri,this._session?.textModelN.uri))),I){I.state??=E;const l=I.edits,f=l.slice(c);f.length>0&&(this._log(`${this._session?.textModelN.uri.toString()} received ${f.length} edits`),c=l.length,d.update(p.elapsed()),p.reset(),_.queue(async()=>{const W=this._session.wholeRange.value.getStartPosition();for(const R of f)await this._makeChanges(R,{duration:d.value,token:o.token},g),g=!1;const C=this._session.wholeRange.value.getStartPosition();(!C.equals(W)||!this._ui.value.position?.equals(C))&&this._showWidget(this._session.headless,!1,C.delta(-1))}))}i.isCanceled?(o.cancel(),a.complete()):i.isComplete&&a.complete()};n.add(i.onDidChange(k)),k(),await a.p,await _.whenIdle(),i.result?.errorDetails&&!i.result.errorDetails.responseIsFiltered&&await this._session.undoChangesUntil(i.requestId),n.dispose();const D=await this._editorWorkerService.computeDiff(this._session.textModel0.uri,this._session.textModelN.uri,{computeMoves:!1,maxComputationTimeMs:Number.MAX_SAFE_INTEGER,ignoreTrimWhitespace:!1},"advanced");this._session.wholeRange.fixup(D?.changes??[]),await this._session.hunkData.recompute(E,D),this._ctxRequestInProgress.set(!1);let P;if(!i.result?.errorDetails)if(i.response.value.length===0){const l=M("empty","No results, please refine your input and try again");this._ui.value.widget.updateStatus(l,{classes:["warn"]})}else this._ui.value.widget.updateStatus("");const m=await this._strategy.renderChanges();if(m){const l=this._editor.getSelection();l?.containsPosition(m)?m.lineNumber-l.startLineNumber>8&&(P=m):P=m}return this._showWidget(this._session.headless,!1,P),r}async PAUSE(){this._resetWidget(),this._strategy?.dispose?.(),this._session=void 0}async DONE(){h(this._session),h(this._strategy),this._sessionStore.clear();try{await this._strategy.apply()}catch(e){this._dialogService.error(M("err.apply","Failed to apply changes.",j(e))),this._log("FAILED to apply changes"),this._log(e)}this._resetWidget(),this._inlineChatSessionService.releaseSession(this._session),this._strategy?.dispose(),this._strategy=void 0,this._session=void 0}async CANCEL(){if(this._resetWidget(),this._session){h(this._strategy),this._sessionStore.clear();const e=!this._session.isUnstashed&&this._session.chatModel.hasRequests&&this._session.hunkData.size===this._session.hunkData.pending;let t=[];try{t=this._strategy.cancel()}catch(s){this._dialogService.error(M("err.discard","Failed to discard changes.",j(s))),this._log("FAILED to discard changes"),this._log(s)}this._stashedSession.clear(),e?this._stashedSession.value=this._inlineChatSessionService.stashSession(this._session,this._editor,t):this._inlineChatSessionService.releaseSession(this._session)}this._strategy?.dispose(),this._strategy=void 0,this._session=void 0}_showWidget(e=!1,t=!1,s){h(this._editor.hasModel()),this._ctxVisible.set(!0);let i;return s?i=s:this._ui.rawValue?.position?this._ui.rawValue?.position.lineNumber===1?i=this._ui.rawValue?.position.delta(-1):i=this._ui.rawValue?.position:i=this._editor.getSelection().getStartPosition().delta(-1),this._session&&!s&&(this._session.hasChangedText||this._session.chatModel.hasRequests)&&(i=this._session.wholeRange.trackedInitialRange.getStartPosition().delta(-1)),t&&this._editor.getOption(J.stickyScroll).enabled&&this._editor.revealLine(i.lineNumber),e||(this._ui.rawValue?.position?this._ui.value.updatePositionAndHeight(i):this._ui.value.show(i)),i}_resetWidget(){this._sessionStore.clear(),this._ctxVisible.reset(),this._ui.rawValue?.hide(),this._editor.hasWidgetFocus()&&this._editor.focus()}_updateCtxResponseType(){if(!this._session){this._ctxResponseType.set(O.None);return}const e=s=>s.value.some(i=>i.kind==="textEditGroup"&&b(i.uri,this._session?.textModelN.uri));let t=O.None;for(const s of this._session.chatModel.getRequests())if(s.response&&(t=O.Messages,e(s.response.response))){t=O.MessagesAndEdits;break}this._ctxResponseType.set(t),this._ctxResponse.set(t!==O.None)}_createChatTextEditGroupState(){h(this._session);const e=new We;return{sha1:e.canComputeSHA1(this._session.textModel0)?e.computeSHA1(this._session.textModel0):Pe(),applied:0}}async _makeChanges(e,t,s){h(this._session),h(this._strategy);const i=await this._editorWorkerService.computeMoreMinimalEdits(this._session.textModelN.uri,e);if(this._log("edits from PROVIDER and after making them MORE MINIMAL",this._session.agent.extensionId,e,i),i?.length===0)return;const n=(!t&&i?i:e).map(ke.asEditOperation),o={start:()=>this._session.hunkData.ignoreTextModelNChanges=!0,stop:()=>this._session.hunkData.ignoreTextModelNChanges=!1};t?await this._strategy.makeProgressiveChanges(n,o,t,s):await this._strategy.makeChanges(n,o,s)}_updatePlaceholder(){this._ui.value.widget.placeholder=this._session?.agent.description??""}_updateInput(e,t=!0){if(this._ui.value.widget.chatWidget.setInput(e),t){const s=new V(1,1,Number.MAX_SAFE_INTEGER,1);this._ui.value.widget.chatWidget.inputEditor.setSelection(s)}}arrowOut(e){if(this._ui.value.position&&this._editor.hasModel()){const{column:t}=this._editor.getPosition(),{lineNumber:s}=this._ui.value.position,i=e?s:s+1;this._editor.setPosition({lineNumber:i,column:t}),this._editor.focus()}}focus(){this._ui.value.widget.focus()}async viewInChat(){if(!this._strategy||!this._session)return;let e=!1,t;const s=this._editor.getModel()?.uri,i=this._session.chatModel.getRequests();for(const n of i)if(n.response)for(const o of n.response.response.value)o.kind==="textEditGroup"&&b(o.uri,s)&&(e=e||!!o.state?.applied,t=o);const a=this._strategy.cancel();e&&(h(t),t.edits=[a],t.state.applied=0),await this._instaService.invokeFunction(it,this._session?.chatModel),this.cancelSession()}acceptSession(){const e=this._session?.chatModel.getRequests().at(-1)?.response;e&&this._chatService.notifyUserAction({sessionId:e.session.sessionId,requestId:e.requestId,agentId:e.agent?.id,command:e.slashCommand?.name,result:e.result,action:{kind:"inlineChat",action:"accepted"}}),this._messages.fire(1)}acceptHunk(e){return this._strategy?.performHunkAction(e,x.Accept)}discardHunk(e){return this._strategy?.performHunkAction(e,x.Discard)}toggleDiff(e){return this._strategy?.performHunkAction(e,x.ToggleDiff)}moveHunk(e){this.focus(),this._strategy?.performHunkAction(void 0,e?x.MoveNext:x.MovePrev)}async cancelSession(){const e=this._session?.chatModel.lastRequest?.response;e&&this._chatService.notifyUserAction({sessionId:e.session.sessionId,requestId:e.requestId,agentId:e.agent?.id,command:e.slashCommand?.name,result:e.result,action:{kind:"inlineChat",action:"discarded"}}),this._messages.fire(2)}reportIssue(){const e=this._session?.chatModel.lastRequest?.response;e&&this._chatService.notifyUserAction({sessionId:e.session.sessionId,requestId:e.requestId,agentId:e.agent?.id,command:e.slashCommand?.name,result:e.result,action:{kind:"bug"}})}unstashLastSession(){return this._stashedSession.value?.unstash()}joinCurrentRun(){return this._currentRun}get isActive(){return!!this._currentRun}};N=q([S(1,se),S(2,de),S(3,De),S(4,Fe),S(5,te),S(6,Le),S(7,ie),S(8,G),S(9,He),S(10,oe)],N);let w=class{constructor(e,t,s,i,a,n){this._editor=e;this._instaService=t;this._notebookEditorService=s;this._inlineChatSessions=i;const o=ne.bindTo(n);this._zone=new K(()=>{const u={location:y.Editor,resolveData:()=>(h(this._editor.hasModel()),{type:y.Editor,selection:this._editor.getSelection(),document:this._editor.getModel().uri,wholeRange:this._editor.getSelection()})};for(const c of this._notebookEditorService.listNotebookEditors())for(const[,g]of c.codeEditors)if(g===this._editor){u.location=y.Notebook;break}const r=this._instaService.createInstance(he,u,{enableWorkingSet:"implicit",rendererOptions:{renderTextEditsAsSummary:c=>!0}},this._editor);return r.domNode.classList.add("inline-chat-2"),r});const d=Me(e),p=ye(this,i.onDidChangeSessions);this._currentSession=L(u=>{p.read(u);const r=d.model.read(u);return(r&&i.getSession2(r.uri))??void 0}),this._store.add(Y(u=>{if(!this._currentSession.read(u)){this._isActiveController.set(!1,void 0);return}let c=!1;for(const g of a.listCodeEditors())if(w.get(g)?._isActiveController.get()){c=!0;break}!c&&e.hasWidgetFocus()&&this._isActiveController.set(!0,void 0)}));const _=F(this,void 0);this._store.add(Re((u,r)=>{const c=d.model.read(u),g=this._currentSession.read(u),E=this._isActiveController.read(u);if(!g||!E||!c){_.set(void 0,void 0);return}const{chatModel:I}=g,k=this._showWidgetOverrideObs.read(u),D=I.getRequests().length===0,P=r.add(new Z);r.add(I.onDidChange(m=>{if(m.kind==="addRequest"){Ne(f=>{this._showWidgetOverrideObs.set(!1,f),_.set(void 0,f)});const{response:l}=m.request;if(!l)return;P.value=l.onDidChange(async f=>{if(!l.isComplete)return;(l.isCanceled||l.result?.errorDetails||!l.response.value.find(C=>C.kind==="textEditGroup"&&C.edits.length>0&&b(C.uri,c.uri)))&&_.set(g,void 0)})}})),k||D?_.set(g,void 0):_.set(void 0,void 0)})),this._store.add(Y(u=>{const r=_.read(u);r?(o.set(!0),this._zone.value.widget.setChatModel(r.chatModel),this._zone.value.position||this._zone.value.show(r.initialPosition),this._zone.value.reveal(this._zone.value.position),this._zone.value.widget.focus(),r.editingSession.getEntry(r.uri)?.autoAcceptController.get()?.cancel()):(this._zone.rawValue?.hide(),e.focus(),o.reset())}))}static ID="editor.contrib.inlineChatController2";static get(e){return e.getContribution(w.ID)??void 0}_store=new A;_showWidgetOverrideObs=F(this,!1);_isActiveController=F(this,!1);_zone;_currentSession;get widget(){return this._zone.value.widget}get isActive(){return!!this._currentSession.get()}dispose(){this._store.dispose()}toggleWidgetUntilNextRequest(){const e=this._showWidgetOverrideObs.get();this._showWidgetOverrideObs.set(!e,void 0)}getWidgetPosition(){return this._zone.rawValue?.position}focus(){this._zone.rawValue?.widget.focus()}markActiveController(){this._isActiveController.set(!0,void 0)}async run(e){h(this._editor.hasModel()),this.markActiveController();const t=this._editor.getModel().uri,s=this._inlineChatSessions.getSession2(t)??await this._inlineChatSessions.createSession2(this._editor,t,Q.None);return e&&tt.isInlineChatRunOptions(e)&&(e.initialRange&&this._editor.revealRange(e.initialRange),e.initialSelection&&this._editor.setSelection(e.initialSelection),e.message&&(this._zone.value.widget.chatWidget.setInput(e.message),e.autoSend&&await this._zone.value.widget.chatWidget.acceptInput())),await U.toPromise(s.editingSession.onDidDispose),!(s.editingSession.getEntry(t)?.state.get()===z.Rejected)}acceptSession(){this._currentSession.get()?.editingSession.accept()}};w=q([S(1,se),S(2,oe),S(3,de),S(4,Oe),S(5,ie)],w);async function mi(v,e,t,s){if(!e.hasModel())return!1;const i=v.get(G),a=v.get($e),n=e.getModel().uri,o=i.startSession(y.Editor,s,!1),d=await a.createEditingSession(o),p=new A;p.add(o),p.add(d);const _=o?.addRequest({text:"",parts:[]},{variables:[]},0);h(_.response),_.response.updateContent({kind:"textEdit",uri:n,edits:[],done:!1});for await(const c of t){if(s.isCancellationRequested){_.response.cancel();break}_.response.updateContent({kind:"textEdit",uri:n,edits:c,done:!1})}_.response.updateContent({kind:"textEdit",uri:n,edits:[],done:!0}),s.isCancellationRequested||_.response.complete();const u=L(c=>{const g=d.readEntry(n,c);if(!g)return!1;const E=g.state.read(c);return E===z.Accepted||E===z.Rejected}),r=Ae(u,Boolean);return await Ie(r,s),p.dispose(),!0}async function it(v,e){const t=v.get(Ge),s=v.get(G),i=await ze(t);if(i&&i.viewModel&&e){for(const a of e.getRequests().slice())await s.adoptRequest(i.viewModel.model.sessionId,a);i.focusLastMessage()}}export{T as InlineChatController,N as InlineChatController1,w as InlineChatController2,tt as InlineChatRunOptions,Je as State,mi as reviewEdits};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import * as aria from "../../../../base/browser/ui/aria/aria.js";
+import { Barrier, DeferredPromise, Queue, raceCancellation } from "../../../../base/common/async.js";
+import { CancellationToken, CancellationTokenSource } from "../../../../base/common/cancellation.js";
+import { toErrorMessage } from "../../../../base/common/errorMessage.js";
+import { onUnexpectedError } from "../../../../base/common/errors.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { Lazy } from "../../../../base/common/lazy.js";
+import { DisposableStore, MutableDisposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { MovingAverage } from "../../../../base/common/numbers.js";
+import { autorun, autorunWithStore, derived, IObservable, observableSignalFromEvent, observableValue, transaction, waitForState } from "../../../../base/common/observable.js";
+import { isEqual } from "../../../../base/common/resources.js";
+import { StopWatch } from "../../../../base/common/stopwatch.js";
+import { assertType } from "../../../../base/common/types.js";
+import { generateUuid } from "../../../../base/common/uuid.js";
+import { ICodeEditor, isCodeEditor } from "../../../../editor/browser/editorBrowser.js";
+import { observableCodeEditor } from "../../../../editor/browser/observableCodeEditor.js";
+import { ICodeEditorService } from "../../../../editor/browser/services/codeEditorService.js";
+import { EditorOption } from "../../../../editor/common/config/editorOptions.js";
+import { IPosition, Position } from "../../../../editor/common/core/position.js";
+import { IRange, Range } from "../../../../editor/common/core/range.js";
+import { ISelection, Selection, SelectionDirection } from "../../../../editor/common/core/selection.js";
+import { IEditorContribution } from "../../../../editor/common/editorCommon.js";
+import { TextEdit } from "../../../../editor/common/languages.js";
+import { IValidEditOperation } from "../../../../editor/common/model.js";
+import { IEditorWorkerService } from "../../../../editor/common/services/editorWorker.js";
+import { DefaultModelSHA1Computer } from "../../../../editor/common/services/modelService.js";
+import { InlineCompletionsController } from "../../../../editor/contrib/inlineCompletions/browser/controller/inlineCompletionsController.js";
+import { MessageController } from "../../../../editor/contrib/message/browser/messageController.js";
+import { localize } from "../../../../nls.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IContextKey, IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IDialogService } from "../../../../platform/dialogs/common/dialogs.js";
+import { IInstantiationService, ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { IEditorService, SIDE_GROUP } from "../../../services/editor/common/editorService.js";
+import { IViewsService } from "../../../services/views/common/viewsService.js";
+import { showChatView } from "../../chat/browser/chat.js";
+import { IChatWidgetLocationOptions } from "../../chat/browser/chatWidget.js";
+import { ChatModel, ChatRequestRemovalReason, IChatRequestModel, IChatTextEditGroup, IChatTextEditGroupState, IResponse } from "../../chat/common/chatModel.js";
+import { IChatService } from "../../chat/common/chatService.js";
+import { INotebookEditorService } from "../../notebook/browser/services/notebookEditorService.js";
+import { CTX_INLINE_CHAT_EDITING, CTX_INLINE_CHAT_REQUEST_IN_PROGRESS, CTX_INLINE_CHAT_RESPONSE_TYPE, CTX_INLINE_CHAT_VISIBLE, INLINE_CHAT_ID, InlineChatConfigKeys, InlineChatResponseType } from "../common/inlineChat.js";
+import { HunkInformation, Session, StashedSession } from "./inlineChatSession.js";
+import { IInlineChatSession2, IInlineChatSessionService } from "./inlineChatSessionService.js";
+import { InlineChatError } from "./inlineChatSessionServiceImpl.js";
+import { HunkAction, IEditObserver, LiveStrategy, ProgressingEditsOptions } from "./inlineChatStrategies.js";
+import { EditorBasedInlineChatWidget } from "./inlineChatWidget.js";
+import { InlineChatZoneWidget } from "./inlineChatZoneWidget.js";
+import { ChatAgentLocation } from "../../chat/common/constants.js";
+import { ChatContextKeys } from "../../chat/common/chatContextKeys.js";
+import { IChatEditingService, ModifiedFileEntryState } from "../../chat/common/chatEditingService.js";
+import { observableConfigValue } from "../../../../platform/observable/common/platformObservableUtils.js";
+var State = /* @__PURE__ */ ((State2) => {
+  State2["CREATE_SESSION"] = "CREATE_SESSION";
+  State2["INIT_UI"] = "INIT_UI";
+  State2["WAIT_FOR_INPUT"] = "WAIT_FOR_INPUT";
+  State2["SHOW_REQUEST"] = "SHOW_REQUEST";
+  State2["PAUSE"] = "PAUSE";
+  State2["CANCEL"] = "CANCEL";
+  State2["ACCEPT"] = "DONE";
+  return State2;
+})(State || {});
+var Message = /* @__PURE__ */ ((Message2) => {
+  Message2[Message2["NONE"] = 0] = "NONE";
+  Message2[Message2["ACCEPT_SESSION"] = 1] = "ACCEPT_SESSION";
+  Message2[Message2["CANCEL_SESSION"] = 2] = "CANCEL_SESSION";
+  Message2[Message2["PAUSE_SESSION"] = 4] = "PAUSE_SESSION";
+  Message2[Message2["CANCEL_REQUEST"] = 8] = "CANCEL_REQUEST";
+  Message2[Message2["CANCEL_INPUT"] = 16] = "CANCEL_INPUT";
+  Message2[Message2["ACCEPT_INPUT"] = 32] = "ACCEPT_INPUT";
+  return Message2;
+})(Message || {});
+class InlineChatRunOptions {
+  static {
+    __name(this, "InlineChatRunOptions");
+  }
+  initialSelection;
+  initialRange;
+  message;
+  autoSend;
+  existingSession;
+  position;
+  static isInlineChatRunOptions(options) {
+    const { initialSelection, initialRange, message, autoSend, position, existingSession } = options;
+    if (typeof message !== "undefined" && typeof message !== "string" || typeof autoSend !== "undefined" && typeof autoSend !== "boolean" || typeof initialRange !== "undefined" && !Range.isIRange(initialRange) || typeof initialSelection !== "undefined" && !Selection.isISelection(initialSelection) || typeof position !== "undefined" && !Position.isIPosition(position) || typeof existingSession !== "undefined" && !(existingSession instanceof Session)) {
+      return false;
+    }
+    return true;
+  }
+}
+let InlineChatController = class {
+  static {
+    __name(this, "InlineChatController");
+  }
+  static ID = "editor.contrib.inlineChatController";
+  static get(editor) {
+    return editor.getContribution(InlineChatController.ID);
+  }
+  _delegate;
+  constructor(editor, configurationService) {
+    const inlineChat2 = observableConfigValue(InlineChatConfigKeys.EnableV2, false, configurationService);
+    this._delegate = derived((r) => {
+      if (inlineChat2.read(r)) {
+        return InlineChatController2.get(editor);
+      } else {
+        return InlineChatController1.get(editor);
+      }
+    });
+  }
+  dispose() {
+  }
+  get isActive() {
+    return this._delegate.get().isActive;
+  }
+  async run(arg) {
+    return this._delegate.get().run(arg);
+  }
+  focus() {
+    return this._delegate.get().focus();
+  }
+  get widget() {
+    return this._delegate.get().widget;
+  }
+  getWidgetPosition() {
+    return this._delegate.get().getWidgetPosition();
+  }
+  acceptSession() {
+    return this._delegate.get().acceptSession();
+  }
+};
+InlineChatController = __decorateClass([
+  __decorateParam(1, IConfigurationService)
+], InlineChatController);
+let InlineChatController1 = class {
+  constructor(_editor, _instaService, _inlineChatSessionService, _editorWorkerService, _logService, _configurationService, _dialogService, contextKeyService, _chatService, _editorService, notebookEditorService) {
+    this._editor = _editor;
+    this._instaService = _instaService;
+    this._inlineChatSessionService = _inlineChatSessionService;
+    this._editorWorkerService = _editorWorkerService;
+    this._logService = _logService;
+    this._configurationService = _configurationService;
+    this._dialogService = _dialogService;
+    this._chatService = _chatService;
+    this._editorService = _editorService;
+    this._ctxVisible = CTX_INLINE_CHAT_VISIBLE.bindTo(contextKeyService);
+    this._ctxEditing = CTX_INLINE_CHAT_EDITING.bindTo(contextKeyService);
+    this._ctxResponseType = CTX_INLINE_CHAT_RESPONSE_TYPE.bindTo(contextKeyService);
+    this._ctxRequestInProgress = CTX_INLINE_CHAT_REQUEST_IN_PROGRESS.bindTo(contextKeyService);
+    this._ctxResponse = ChatContextKeys.isResponse.bindTo(contextKeyService);
+    ChatContextKeys.responseHasError.bindTo(contextKeyService);
+    this._ui = new Lazy(() => {
+      const location = {
+        location: ChatAgentLocation.Editor,
+        resolveData: /* @__PURE__ */ __name(() => {
+          assertType(this._editor.hasModel());
+          assertType(this._session);
+          return {
+            type: ChatAgentLocation.Editor,
+            selection: this._editor.getSelection(),
+            document: this._session.textModelN.uri,
+            wholeRange: this._session?.wholeRange.trackedInitialRange
+          };
+        }, "resolveData")
+      };
+      for (const notebookEditor of notebookEditorService.listNotebookEditors()) {
+        for (const [, codeEditor] of notebookEditor.codeEditors) {
+          if (codeEditor === this._editor) {
+            location.location = ChatAgentLocation.Notebook;
+            break;
+          }
+        }
+      }
+      const zone = _instaService.createInstance(InlineChatZoneWidget, location, void 0, this._editor);
+      this._store.add(zone);
+      this._store.add(zone.widget.chatWidget.onDidClear(async () => {
+        const r = this.joinCurrentRun();
+        this.cancelSession();
+        await r;
+        this.run();
+      }));
+      return zone;
+    });
+    this._store.add(this._editor.onDidChangeModel(async (e) => {
+      if (this._session || !e.newModelUrl) {
+        return;
+      }
+      const existingSession = this._inlineChatSessionService.getSession(this._editor, e.newModelUrl);
+      if (!existingSession) {
+        return;
+      }
+      this._log("session RESUMING after model change", e);
+      await this.run({ existingSession });
+    }));
+    this._store.add(this._inlineChatSessionService.onDidEndSession((e) => {
+      if (e.session === this._session && e.endedByExternalCause) {
+        this._log("session ENDED by external cause");
+        this.acceptSession();
+      }
+    }));
+    this._store.add(this._inlineChatSessionService.onDidMoveSession(async (e) => {
+      if (e.editor === this._editor) {
+        this._log("session RESUMING after move", e);
+        await this.run({ existingSession: e.session });
+      }
+    }));
+    this._log(`NEW controller`);
+  }
+  static {
+    __name(this, "InlineChatController1");
+  }
+  static get(editor) {
+    return editor.getContribution(INLINE_CHAT_ID);
+  }
+  _isDisposed = false;
+  _store = new DisposableStore();
+  _ui;
+  _ctxVisible;
+  _ctxEditing;
+  _ctxResponseType;
+  _ctxRequestInProgress;
+  _ctxResponse;
+  _messages = this._store.add(new Emitter());
+  _onDidEnterState = this._store.add(new Emitter());
+  get chatWidget() {
+    return this._ui.value.widget.chatWidget;
+  }
+  _sessionStore = this._store.add(new DisposableStore());
+  _stashedSession = this._store.add(new MutableDisposable());
+  _session;
+  _strategy;
+  dispose() {
+    if (this._currentRun) {
+      this._messages.fire(this._session?.chatModel.hasRequests ? 4 /* PAUSE_SESSION */ : 2 /* CANCEL_SESSION */);
+    }
+    this._store.dispose();
+    this._isDisposed = true;
+    this._log("DISPOSED controller");
+  }
+  _log(message, ...more) {
+    if (message instanceof Error) {
+      this._logService.error(message, ...more);
+    } else {
+      this._logService.trace(`[IE] (editor:${this._editor.getId()}) ${message}`, ...more);
+    }
+  }
+  get widget() {
+    return this._ui.value.widget;
+  }
+  getId() {
+    return INLINE_CHAT_ID;
+  }
+  getWidgetPosition() {
+    return this._ui.value.position;
+  }
+  _currentRun;
+  async run(options = {}) {
+    let lastState;
+    const d = this._onDidEnterState.event((e) => lastState = e);
+    try {
+      this.acceptSession();
+      if (this._currentRun) {
+        await this._currentRun;
+      }
+      if (options.initialSelection) {
+        this._editor.setSelection(options.initialSelection);
+      }
+      this._stashedSession.clear();
+      this._currentRun = this._nextState("CREATE_SESSION" /* CREATE_SESSION */, options);
+      await this._currentRun;
+    } catch (error) {
+      this._log("error during run", error);
+      onUnexpectedError(error);
+      if (this._session) {
+        this._inlineChatSessionService.releaseSession(this._session);
+      }
+      this["PAUSE" /* PAUSE */]();
+    } finally {
+      this._currentRun = void 0;
+      d.dispose();
+    }
+    return lastState !== "CANCEL" /* CANCEL */;
+  }
+  // ---- state machine
+  async _nextState(state, options) {
+    let nextState = state;
+    while (nextState && !this._isDisposed) {
+      this._log("setState to ", nextState);
+      const p = this[nextState](options);
+      this._onDidEnterState.fire(nextState);
+      nextState = await p;
+    }
+  }
+  async ["CREATE_SESSION" /* CREATE_SESSION */](options) {
+    assertType(this._session === void 0);
+    assertType(this._editor.hasModel());
+    let session = options.existingSession;
+    let initPosition;
+    if (options.position) {
+      initPosition = Position.lift(options.position).delta(-1);
+      delete options.position;
+    }
+    const widgetPosition = this._showWidget(session?.headless, true, initPosition);
+    let errorMessage = localize("create.fail", "Failed to start editor chat");
+    if (!session) {
+      const createSessionCts = new CancellationTokenSource();
+      const msgListener = Event.once(this._messages.event)((m) => {
+        this._log("state=_createSession) message received", m);
+        if (m === 32 /* ACCEPT_INPUT */) {
+          options.autoSend = true;
+          this._ui.value.widget.updateInfo(localize("welcome.2", "Getting ready..."));
+        } else {
+          createSessionCts.cancel();
+        }
+      });
+      try {
+        session = await this._inlineChatSessionService.createSession(
+          this._editor,
+          { wholeRange: options.initialRange },
+          createSessionCts.token
+        );
+      } catch (error) {
+        if (error instanceof InlineChatError || error?.name === InlineChatError.code) {
+          errorMessage = error.message;
+        }
+      }
+      createSessionCts.dispose();
+      msgListener.dispose();
+      if (createSessionCts.token.isCancellationRequested) {
+        if (session) {
+          this._inlineChatSessionService.releaseSession(session);
+        }
+        return "CANCEL" /* CANCEL */;
+      }
+    }
+    delete options.initialRange;
+    delete options.existingSession;
+    if (!session) {
+      MessageController.get(this._editor)?.showMessage(errorMessage, widgetPosition);
+      this._log("Failed to start editor chat");
+      return "CANCEL" /* CANCEL */;
+    }
+    await session.chatModel.waitForInitialization();
+    this._strategy = this._instaService.createInstance(LiveStrategy, session, this._editor, this._ui.value, session.headless);
+    this._session = session;
+    return "INIT_UI" /* INIT_UI */;
+  }
+  async ["INIT_UI" /* INIT_UI */](options) {
+    assertType(this._session);
+    assertType(this._strategy);
+    InlineCompletionsController.get(this._editor)?.reject();
+    this._sessionStore.clear();
+    const wholeRangeDecoration = this._editor.createDecorationsCollection();
+    const handleWholeRangeChange = /* @__PURE__ */ __name(() => {
+      const newDecorations = this._strategy?.getWholeRangeDecoration() ?? [];
+      wholeRangeDecoration.set(newDecorations);
+      this._ctxEditing.set(!this._session?.wholeRange.trackedInitialRange.isEmpty());
+    }, "handleWholeRangeChange");
+    this._sessionStore.add(toDisposable(() => {
+      wholeRangeDecoration.clear();
+      this._ctxEditing.reset();
+    }));
+    this._sessionStore.add(this._session.wholeRange.onDidChange(handleWholeRangeChange));
+    handleWholeRangeChange();
+    this._ui.value.widget.setChatModel(this._session.chatModel);
+    this._updatePlaceholder();
+    const isModelEmpty = !this._session.chatModel.hasRequests;
+    this._ui.value.widget.updateToolbar(true);
+    this._ui.value.widget.toggleStatus(!isModelEmpty);
+    this._showWidget(this._session.headless, isModelEmpty);
+    this._sessionStore.add(this._editor.onDidChangeModel((e) => {
+      const msg = this._session?.chatModel.hasRequests ? 4 /* PAUSE_SESSION */ : 2 /* CANCEL_SESSION */;
+      this._log("model changed, pause or cancel session", msg, e);
+      this._messages.fire(msg);
+    }));
+    this._sessionStore.add(this._editor.onDidChangeModelContent((e) => {
+      if (this._session?.hunkData.ignoreTextModelNChanges || this._ui.value.widget.hasFocus()) {
+        return;
+      }
+      const wholeRange = this._session.wholeRange;
+      let shouldFinishSession = false;
+      if (this._configurationService.getValue(InlineChatConfigKeys.FinishOnType)) {
+        for (const { range } of e.changes) {
+          shouldFinishSession = !Range.areIntersectingOrTouching(range, wholeRange.value);
+        }
+      }
+      this._session.recordExternalEditOccurred(shouldFinishSession);
+      if (shouldFinishSession) {
+        this._log("text changed outside of whole range, FINISH session");
+        this.acceptSession();
+      }
+    }));
+    this._sessionStore.add(this._session.chatModel.onDidChange(async (e) => {
+      if (e.kind === "removeRequest") {
+        await this._session.undoChangesUntil(e.requestId);
+      }
+    }));
+    const editState = this._createChatTextEditGroupState();
+    let didEdit = false;
+    for (const request of this._session.chatModel.getRequests()) {
+      if (!request.response || request.response.result?.errorDetails) {
+        break;
+      }
+      for (const part of request.response.response.value) {
+        if (part.kind !== "textEditGroup" || !isEqual(part.uri, this._session.textModelN.uri)) {
+          continue;
+        }
+        if (part.state?.applied) {
+          continue;
+        }
+        for (const edit of part.edits) {
+          this._makeChanges(edit, void 0, !didEdit);
+          didEdit = true;
+        }
+        part.state ??= editState;
+      }
+    }
+    if (didEdit) {
+      const diff = await this._editorWorkerService.computeDiff(this._session.textModel0.uri, this._session.textModelN.uri, { computeMoves: false, maxComputationTimeMs: Number.MAX_SAFE_INTEGER, ignoreTrimWhitespace: false }, "advanced");
+      this._session.wholeRange.fixup(diff?.changes ?? []);
+      await this._session.hunkData.recompute(editState, diff);
+      this._updateCtxResponseType();
+    }
+    options.position = await this._strategy.renderChanges();
+    if (this._session.chatModel.requestInProgress) {
+      return "SHOW_REQUEST" /* SHOW_REQUEST */;
+    } else {
+      return "WAIT_FOR_INPUT" /* WAIT_FOR_INPUT */;
+    }
+  }
+  async ["WAIT_FOR_INPUT" /* WAIT_FOR_INPUT */](options) {
+    assertType(this._session);
+    assertType(this._strategy);
+    this._updatePlaceholder();
+    if (options.message) {
+      this._updateInput(options.message);
+      aria.alert(options.message);
+      delete options.message;
+      this._showWidget(this._session.headless, false);
+    }
+    let message = 0 /* NONE */;
+    let request;
+    const barrier = new Barrier();
+    const store = new DisposableStore();
+    store.add(this._session.chatModel.onDidChange((e) => {
+      if (e.kind === "addRequest") {
+        request = e.request;
+        message = 32 /* ACCEPT_INPUT */;
+        barrier.open();
+      }
+    }));
+    store.add(this._strategy.onDidAccept(() => this.acceptSession()));
+    store.add(this._strategy.onDidDiscard(() => this.cancelSession()));
+    store.add(Event.once(this._messages.event)((m) => {
+      this._log("state=_waitForInput) message received", m);
+      message = m;
+      barrier.open();
+    }));
+    if (options.autoSend) {
+      delete options.autoSend;
+      this._showWidget(this._session.headless, false);
+      this._ui.value.widget.chatWidget.acceptInput();
+    }
+    await barrier.wait();
+    store.dispose();
+    if (message & (16 /* CANCEL_INPUT */ | 2 /* CANCEL_SESSION */)) {
+      return "CANCEL" /* CANCEL */;
+    }
+    if (message & 4 /* PAUSE_SESSION */) {
+      return "PAUSE" /* PAUSE */;
+    }
+    if (message & 1 /* ACCEPT_SESSION */) {
+      this._ui.value.widget.selectAll();
+      return "DONE" /* ACCEPT */;
+    }
+    if (!request?.message.text) {
+      return "WAIT_FOR_INPUT" /* WAIT_FOR_INPUT */;
+    }
+    return "SHOW_REQUEST" /* SHOW_REQUEST */;
+  }
+  async ["SHOW_REQUEST" /* SHOW_REQUEST */](options) {
+    assertType(this._session);
+    assertType(this._strategy);
+    assertType(this._session.chatModel.requestInProgress);
+    this._ctxRequestInProgress.set(true);
+    const { chatModel } = this._session;
+    const request = chatModel.lastRequest;
+    assertType(request);
+    assertType(request.response);
+    this._showWidget(this._session.headless, false);
+    this._ui.value.widget.selectAll();
+    this._ui.value.widget.updateInfo("");
+    this._ui.value.widget.toggleStatus(true);
+    const { response } = request;
+    const responsePromise = new DeferredPromise();
+    const store = new DisposableStore();
+    const progressiveEditsCts = store.add(new CancellationTokenSource());
+    const progressiveEditsAvgDuration = new MovingAverage();
+    const progressiveEditsClock = StopWatch.create();
+    const progressiveEditsQueue = new Queue();
+    const origDeco = this._editor.getOption(EditorOption.renderValidationDecorations);
+    this._editor.updateOptions({
+      renderValidationDecorations: "off"
+    });
+    store.add(toDisposable(() => {
+      this._editor.updateOptions({
+        renderValidationDecorations: origDeco
+      });
+    }));
+    let next = "WAIT_FOR_INPUT" /* WAIT_FOR_INPUT */;
+    store.add(Event.once(this._messages.event)((message) => {
+      this._log("state=_makeRequest) message received", message);
+      this._chatService.cancelCurrentRequestForSession(chatModel.sessionId);
+      if (message & 2 /* CANCEL_SESSION */) {
+        next = "CANCEL" /* CANCEL */;
+      } else if (message & 4 /* PAUSE_SESSION */) {
+        next = "PAUSE" /* PAUSE */;
+      } else if (message & 1 /* ACCEPT_SESSION */) {
+        next = "DONE" /* ACCEPT */;
+      }
+    }));
+    store.add(chatModel.onDidChange(async (e) => {
+      if (e.kind === "removeRequest" && e.requestId === request.id) {
+        progressiveEditsCts.cancel();
+        responsePromise.complete();
+        if (e.reason === ChatRequestRemovalReason.Resend) {
+          next = "SHOW_REQUEST" /* SHOW_REQUEST */;
+        } else {
+          next = "CANCEL" /* CANCEL */;
+        }
+        return;
+      }
+      if (e.kind === "move") {
+        assertType(this._session);
+        const log = /* @__PURE__ */ __name((msg, ...args) => this._log("state=_showRequest) moving inline chat", msg, ...args), "log");
+        log("move was requested", e.target, e.range);
+        const initialSelection = Selection.fromRange(Range.lift(e.range), SelectionDirection.LTR);
+        const editorPane = await this._editorService.openEditor({ resource: e.target, options: { selection: initialSelection } }, SIDE_GROUP);
+        if (!editorPane) {
+          log("opening editor failed");
+          return;
+        }
+        const newEditor = editorPane.getControl();
+        if (!isCodeEditor(newEditor) || !newEditor.hasModel()) {
+          log("new editor is either missing or not a code editor or does not have a model");
+          return;
+        }
+        if (this._inlineChatSessionService.getSession(newEditor, e.target)) {
+          log("new editor ALREADY has a session");
+          return;
+        }
+        const newSession = await this._inlineChatSessionService.createSession(
+          newEditor,
+          {
+            session: this._session
+          },
+          CancellationToken.None
+        );
+        InlineChatController1.get(newEditor)?.run({ existingSession: newSession });
+        next = "CANCEL" /* CANCEL */;
+        responsePromise.complete();
+        return;
+      }
+    }));
+    store.add(this._ui.value.widget.chatWidget.inputEditor.onDidChangeModelContent(() => {
+      this._chatService.cancelCurrentRequestForSession(chatModel.sessionId);
+    }));
+    let lastLength = 0;
+    let isFirstChange = true;
+    const editState = this._createChatTextEditGroupState();
+    let localEditGroup;
+    const handleResponse = /* @__PURE__ */ __name(() => {
+      this._updateCtxResponseType();
+      if (!localEditGroup) {
+        localEditGroup = response.response.value.find((part) => part.kind === "textEditGroup" && isEqual(part.uri, this._session?.textModelN.uri));
+      }
+      if (localEditGroup) {
+        localEditGroup.state ??= editState;
+        const edits = localEditGroup.edits;
+        const newEdits = edits.slice(lastLength);
+        if (newEdits.length > 0) {
+          this._log(`${this._session?.textModelN.uri.toString()} received ${newEdits.length} edits`);
+          lastLength = edits.length;
+          progressiveEditsAvgDuration.update(progressiveEditsClock.elapsed());
+          progressiveEditsClock.reset();
+          progressiveEditsQueue.queue(async () => {
+            const startThen = this._session.wholeRange.value.getStartPosition();
+            for (const edits2 of newEdits) {
+              await this._makeChanges(edits2, {
+                duration: progressiveEditsAvgDuration.value,
+                token: progressiveEditsCts.token
+              }, isFirstChange);
+              isFirstChange = false;
+            }
+            const startNow = this._session.wholeRange.value.getStartPosition();
+            if (!startNow.equals(startThen) || !this._ui.value.position?.equals(startNow)) {
+              this._showWidget(this._session.headless, false, startNow.delta(-1));
+            }
+          });
+        }
+      }
+      if (response.isCanceled) {
+        progressiveEditsCts.cancel();
+        responsePromise.complete();
+      } else if (response.isComplete) {
+        responsePromise.complete();
+      }
+    }, "handleResponse");
+    store.add(response.onDidChange(handleResponse));
+    handleResponse();
+    await responsePromise.p;
+    await progressiveEditsQueue.whenIdle();
+    if (response.result?.errorDetails && !response.result.errorDetails.responseIsFiltered) {
+      await this._session.undoChangesUntil(response.requestId);
+    }
+    store.dispose();
+    const diff = await this._editorWorkerService.computeDiff(this._session.textModel0.uri, this._session.textModelN.uri, { computeMoves: false, maxComputationTimeMs: Number.MAX_SAFE_INTEGER, ignoreTrimWhitespace: false }, "advanced");
+    this._session.wholeRange.fixup(diff?.changes ?? []);
+    await this._session.hunkData.recompute(editState, diff);
+    this._ctxRequestInProgress.set(false);
+    let newPosition;
+    if (response.result?.errorDetails) {
+    } else if (response.response.value.length === 0) {
+      const status = localize("empty", "No results, please refine your input and try again");
+      this._ui.value.widget.updateStatus(status, { classes: ["warn"] });
+    } else {
+      this._ui.value.widget.updateStatus("");
+    }
+    const position = await this._strategy.renderChanges();
+    if (position) {
+      const selection = this._editor.getSelection();
+      if (selection?.containsPosition(position)) {
+        if (position.lineNumber - selection.startLineNumber > 8) {
+          newPosition = position;
+        }
+      } else {
+        newPosition = position;
+      }
+    }
+    this._showWidget(this._session.headless, false, newPosition);
+    return next;
+  }
+  async ["PAUSE" /* PAUSE */]() {
+    this._resetWidget();
+    this._strategy?.dispose?.();
+    this._session = void 0;
+  }
+  async ["DONE" /* ACCEPT */]() {
+    assertType(this._session);
+    assertType(this._strategy);
+    this._sessionStore.clear();
+    try {
+      await this._strategy.apply();
+    } catch (err) {
+      this._dialogService.error(localize("err.apply", "Failed to apply changes.", toErrorMessage(err)));
+      this._log("FAILED to apply changes");
+      this._log(err);
+    }
+    this._resetWidget();
+    this._inlineChatSessionService.releaseSession(this._session);
+    this._strategy?.dispose();
+    this._strategy = void 0;
+    this._session = void 0;
+  }
+  async ["CANCEL" /* CANCEL */]() {
+    this._resetWidget();
+    if (this._session) {
+      assertType(this._strategy);
+      this._sessionStore.clear();
+      const shouldStash = !this._session.isUnstashed && this._session.chatModel.hasRequests && this._session.hunkData.size === this._session.hunkData.pending;
+      let undoCancelEdits = [];
+      try {
+        undoCancelEdits = this._strategy.cancel();
+      } catch (err) {
+        this._dialogService.error(localize("err.discard", "Failed to discard changes.", toErrorMessage(err)));
+        this._log("FAILED to discard changes");
+        this._log(err);
+      }
+      this._stashedSession.clear();
+      if (shouldStash) {
+        this._stashedSession.value = this._inlineChatSessionService.stashSession(this._session, this._editor, undoCancelEdits);
+      } else {
+        this._inlineChatSessionService.releaseSession(this._session);
+      }
+    }
+    this._strategy?.dispose();
+    this._strategy = void 0;
+    this._session = void 0;
+  }
+  // ----
+  _showWidget(headless = false, initialRender = false, position) {
+    assertType(this._editor.hasModel());
+    this._ctxVisible.set(true);
+    let widgetPosition;
+    if (position) {
+      widgetPosition = position;
+    } else if (this._ui.rawValue?.position) {
+      if (this._ui.rawValue?.position.lineNumber === 1) {
+        widgetPosition = this._ui.rawValue?.position.delta(-1);
+      } else {
+        widgetPosition = this._ui.rawValue?.position;
+      }
+    } else {
+      widgetPosition = this._editor.getSelection().getStartPosition().delta(-1);
+    }
+    if (this._session && !position && (this._session.hasChangedText || this._session.chatModel.hasRequests)) {
+      widgetPosition = this._session.wholeRange.trackedInitialRange.getStartPosition().delta(-1);
+    }
+    if (initialRender && this._editor.getOption(EditorOption.stickyScroll).enabled) {
+      this._editor.revealLine(widgetPosition.lineNumber);
+    }
+    if (!headless) {
+      if (this._ui.rawValue?.position) {
+        this._ui.value.updatePositionAndHeight(widgetPosition);
+      } else {
+        this._ui.value.show(widgetPosition);
+      }
+    }
+    return widgetPosition;
+  }
+  _resetWidget() {
+    this._sessionStore.clear();
+    this._ctxVisible.reset();
+    this._ui.rawValue?.hide();
+    if (this._editor.hasWidgetFocus()) {
+      this._editor.focus();
+    }
+  }
+  _updateCtxResponseType() {
+    if (!this._session) {
+      this._ctxResponseType.set(InlineChatResponseType.None);
+      return;
+    }
+    const hasLocalEdit = /* @__PURE__ */ __name((response) => {
+      return response.value.some((part) => part.kind === "textEditGroup" && isEqual(part.uri, this._session?.textModelN.uri));
+    }, "hasLocalEdit");
+    let responseType = InlineChatResponseType.None;
+    for (const request of this._session.chatModel.getRequests()) {
+      if (!request.response) {
+        continue;
+      }
+      responseType = InlineChatResponseType.Messages;
+      if (hasLocalEdit(request.response.response)) {
+        responseType = InlineChatResponseType.MessagesAndEdits;
+        break;
+      }
+    }
+    this._ctxResponseType.set(responseType);
+    this._ctxResponse.set(responseType !== InlineChatResponseType.None);
+  }
+  _createChatTextEditGroupState() {
+    assertType(this._session);
+    const sha1 = new DefaultModelSHA1Computer();
+    const textModel0Sha1 = sha1.canComputeSHA1(this._session.textModel0) ? sha1.computeSHA1(this._session.textModel0) : generateUuid();
+    return {
+      sha1: textModel0Sha1,
+      applied: 0
+    };
+  }
+  async _makeChanges(edits, opts, undoStopBefore) {
+    assertType(this._session);
+    assertType(this._strategy);
+    const moreMinimalEdits = await this._editorWorkerService.computeMoreMinimalEdits(this._session.textModelN.uri, edits);
+    this._log("edits from PROVIDER and after making them MORE MINIMAL", this._session.agent.extensionId, edits, moreMinimalEdits);
+    if (moreMinimalEdits?.length === 0) {
+      return;
+    }
+    const actualEdits = !opts && moreMinimalEdits ? moreMinimalEdits : edits;
+    const editOperations = actualEdits.map(TextEdit.asEditOperation);
+    const editsObserver = {
+      start: /* @__PURE__ */ __name(() => this._session.hunkData.ignoreTextModelNChanges = true, "start"),
+      stop: /* @__PURE__ */ __name(() => this._session.hunkData.ignoreTextModelNChanges = false, "stop")
+    };
+    if (opts) {
+      await this._strategy.makeProgressiveChanges(editOperations, editsObserver, opts, undoStopBefore);
+    } else {
+      await this._strategy.makeChanges(editOperations, editsObserver, undoStopBefore);
+    }
+  }
+  _updatePlaceholder() {
+    this._ui.value.widget.placeholder = this._session?.agent.description ?? "";
+  }
+  _updateInput(text, selectAll = true) {
+    this._ui.value.widget.chatWidget.setInput(text);
+    if (selectAll) {
+      const newSelection = new Selection(1, 1, Number.MAX_SAFE_INTEGER, 1);
+      this._ui.value.widget.chatWidget.inputEditor.setSelection(newSelection);
+    }
+  }
+  // ---- controller API
+  arrowOut(up) {
+    if (this._ui.value.position && this._editor.hasModel()) {
+      const { column } = this._editor.getPosition();
+      const { lineNumber } = this._ui.value.position;
+      const newLine = up ? lineNumber : lineNumber + 1;
+      this._editor.setPosition({ lineNumber: newLine, column });
+      this._editor.focus();
+    }
+  }
+  focus() {
+    this._ui.value.widget.focus();
+  }
+  async viewInChat() {
+    if (!this._strategy || !this._session) {
+      return;
+    }
+    let someApplied = false;
+    let lastEdit;
+    const uri = this._editor.getModel()?.uri;
+    const requests = this._session.chatModel.getRequests();
+    for (const request of requests) {
+      if (!request.response) {
+        continue;
+      }
+      for (const part of request.response.response.value) {
+        if (part.kind === "textEditGroup" && isEqual(part.uri, uri)) {
+          someApplied = someApplied || Boolean(part.state?.applied);
+          lastEdit = part;
+        }
+      }
+    }
+    const doEdits = this._strategy.cancel();
+    if (someApplied) {
+      assertType(lastEdit);
+      lastEdit.edits = [doEdits];
+      lastEdit.state.applied = 0;
+    }
+    await this._instaService.invokeFunction(moveToPanelChat, this._session?.chatModel);
+    this.cancelSession();
+  }
+  acceptSession() {
+    const response = this._session?.chatModel.getRequests().at(-1)?.response;
+    if (response) {
+      this._chatService.notifyUserAction({
+        sessionId: response.session.sessionId,
+        requestId: response.requestId,
+        agentId: response.agent?.id,
+        command: response.slashCommand?.name,
+        result: response.result,
+        action: {
+          kind: "inlineChat",
+          action: "accepted"
+        }
+      });
+    }
+    this._messages.fire(1 /* ACCEPT_SESSION */);
+  }
+  acceptHunk(hunkInfo) {
+    return this._strategy?.performHunkAction(hunkInfo, HunkAction.Accept);
+  }
+  discardHunk(hunkInfo) {
+    return this._strategy?.performHunkAction(hunkInfo, HunkAction.Discard);
+  }
+  toggleDiff(hunkInfo) {
+    return this._strategy?.performHunkAction(hunkInfo, HunkAction.ToggleDiff);
+  }
+  moveHunk(next) {
+    this.focus();
+    this._strategy?.performHunkAction(void 0, next ? HunkAction.MoveNext : HunkAction.MovePrev);
+  }
+  async cancelSession() {
+    const response = this._session?.chatModel.lastRequest?.response;
+    if (response) {
+      this._chatService.notifyUserAction({
+        sessionId: response.session.sessionId,
+        requestId: response.requestId,
+        agentId: response.agent?.id,
+        command: response.slashCommand?.name,
+        result: response.result,
+        action: {
+          kind: "inlineChat",
+          action: "discarded"
+        }
+      });
+    }
+    this._messages.fire(2 /* CANCEL_SESSION */);
+  }
+  reportIssue() {
+    const response = this._session?.chatModel.lastRequest?.response;
+    if (response) {
+      this._chatService.notifyUserAction({
+        sessionId: response.session.sessionId,
+        requestId: response.requestId,
+        agentId: response.agent?.id,
+        command: response.slashCommand?.name,
+        result: response.result,
+        action: { kind: "bug" }
+      });
+    }
+  }
+  unstashLastSession() {
+    const result = this._stashedSession.value?.unstash();
+    return result;
+  }
+  joinCurrentRun() {
+    return this._currentRun;
+  }
+  get isActive() {
+    return Boolean(this._currentRun);
+  }
+};
+InlineChatController1 = __decorateClass([
+  __decorateParam(1, IInstantiationService),
+  __decorateParam(2, IInlineChatSessionService),
+  __decorateParam(3, IEditorWorkerService),
+  __decorateParam(4, ILogService),
+  __decorateParam(5, IConfigurationService),
+  __decorateParam(6, IDialogService),
+  __decorateParam(7, IContextKeyService),
+  __decorateParam(8, IChatService),
+  __decorateParam(9, IEditorService),
+  __decorateParam(10, INotebookEditorService)
+], InlineChatController1);
+let InlineChatController2 = class {
+  constructor(_editor, _instaService, _notebookEditorService, _inlineChatSessions, codeEditorService, contextKeyService) {
+    this._editor = _editor;
+    this._instaService = _instaService;
+    this._notebookEditorService = _notebookEditorService;
+    this._inlineChatSessions = _inlineChatSessions;
+    const ctxInlineChatVisible = CTX_INLINE_CHAT_VISIBLE.bindTo(contextKeyService);
+    this._zone = new Lazy(() => {
+      const location = {
+        location: ChatAgentLocation.Editor,
+        resolveData: /* @__PURE__ */ __name(() => {
+          assertType(this._editor.hasModel());
+          return {
+            type: ChatAgentLocation.Editor,
+            selection: this._editor.getSelection(),
+            document: this._editor.getModel().uri,
+            wholeRange: this._editor.getSelection()
+          };
+        }, "resolveData")
+      };
+      for (const notebookEditor of this._notebookEditorService.listNotebookEditors()) {
+        for (const [, codeEditor] of notebookEditor.codeEditors) {
+          if (codeEditor === this._editor) {
+            location.location = ChatAgentLocation.Notebook;
+            break;
+          }
+        }
+      }
+      const result = this._instaService.createInstance(
+        InlineChatZoneWidget,
+        location,
+        {
+          enableWorkingSet: "implicit",
+          rendererOptions: {
+            renderTextEditsAsSummary: /* @__PURE__ */ __name((_uri) => true, "renderTextEditsAsSummary")
+          }
+        },
+        this._editor
+      );
+      result.domNode.classList.add("inline-chat-2");
+      return result;
+    });
+    const editorObs = observableCodeEditor(_editor);
+    const sessionsSignal = observableSignalFromEvent(this, _inlineChatSessions.onDidChangeSessions);
+    this._currentSession = derived((r) => {
+      sessionsSignal.read(r);
+      const model = editorObs.model.read(r);
+      const value = model && _inlineChatSessions.getSession2(model.uri);
+      return value ?? void 0;
+    });
+    this._store.add(autorun((r) => {
+      const session = this._currentSession.read(r);
+      if (!session) {
+        this._isActiveController.set(false, void 0);
+        return;
+      }
+      let foundOne = false;
+      for (const editor of codeEditorService.listCodeEditors()) {
+        if (Boolean(InlineChatController2.get(editor)?._isActiveController.get())) {
+          foundOne = true;
+          break;
+        }
+      }
+      if (!foundOne && _editor.hasWidgetFocus()) {
+        this._isActiveController.set(true, void 0);
+      }
+    }));
+    const visibleSessionObs = observableValue(this, void 0);
+    this._store.add(autorunWithStore((r, store) => {
+      const model = editorObs.model.read(r);
+      const session = this._currentSession.read(r);
+      const isActive = this._isActiveController.read(r);
+      if (!session || !isActive || !model) {
+        visibleSessionObs.set(void 0, void 0);
+        return;
+      }
+      const { chatModel } = session;
+      const showShowUntil = this._showWidgetOverrideObs.read(r);
+      const hasNoRequests = chatModel.getRequests().length === 0;
+      const responseListener = store.add(new MutableDisposable());
+      store.add(chatModel.onDidChange((e) => {
+        if (e.kind === "addRequest") {
+          transaction((tx) => {
+            this._showWidgetOverrideObs.set(false, tx);
+            visibleSessionObs.set(void 0, tx);
+          });
+          const { response } = e.request;
+          if (!response) {
+            return;
+          }
+          responseListener.value = response.onDidChange(async (e2) => {
+            if (!response.isComplete) {
+              return;
+            }
+            const shouldShow = response.isCanceled || response.result?.errorDetails || !response.response.value.find((part) => part.kind === "textEditGroup" && part.edits.length > 0 && isEqual(part.uri, model.uri));
+            if (shouldShow) {
+              visibleSessionObs.set(session, void 0);
+            }
+          });
+        }
+      }));
+      if (showShowUntil || hasNoRequests) {
+        visibleSessionObs.set(session, void 0);
+      } else {
+        visibleSessionObs.set(void 0, void 0);
+      }
+    }));
+    this._store.add(autorun((r) => {
+      const session = visibleSessionObs.read(r);
+      if (!session) {
+        this._zone.rawValue?.hide();
+        _editor.focus();
+        ctxInlineChatVisible.reset();
+      } else {
+        ctxInlineChatVisible.set(true);
+        this._zone.value.widget.setChatModel(session.chatModel);
+        if (!this._zone.value.position) {
+          this._zone.value.show(session.initialPosition);
+        }
+        this._zone.value.reveal(this._zone.value.position);
+        this._zone.value.widget.focus();
+        session.editingSession.getEntry(session.uri)?.autoAcceptController.get()?.cancel();
+      }
+    }));
+  }
+  static {
+    __name(this, "InlineChatController2");
+  }
+  static ID = "editor.contrib.inlineChatController2";
+  static get(editor) {
+    return editor.getContribution(InlineChatController2.ID) ?? void 0;
+  }
+  _store = new DisposableStore();
+  _showWidgetOverrideObs = observableValue(this, false);
+  _isActiveController = observableValue(this, false);
+  _zone;
+  _currentSession;
+  get widget() {
+    return this._zone.value.widget;
+  }
+  get isActive() {
+    return Boolean(this._currentSession.get());
+  }
+  dispose() {
+    this._store.dispose();
+  }
+  toggleWidgetUntilNextRequest() {
+    const value = this._showWidgetOverrideObs.get();
+    this._showWidgetOverrideObs.set(!value, void 0);
+  }
+  getWidgetPosition() {
+    return this._zone.rawValue?.position;
+  }
+  focus() {
+    this._zone.rawValue?.widget.focus();
+  }
+  markActiveController() {
+    this._isActiveController.set(true, void 0);
+  }
+  async run(arg) {
+    assertType(this._editor.hasModel());
+    this.markActiveController();
+    const uri = this._editor.getModel().uri;
+    const session = this._inlineChatSessions.getSession2(uri) ?? await this._inlineChatSessions.createSession2(this._editor, uri, CancellationToken.None);
+    if (arg && InlineChatRunOptions.isInlineChatRunOptions(arg)) {
+      if (arg.initialRange) {
+        this._editor.revealRange(arg.initialRange);
+      }
+      if (arg.initialSelection) {
+        this._editor.setSelection(arg.initialSelection);
+      }
+      if (arg.message) {
+        this._zone.value.widget.chatWidget.setInput(arg.message);
+        if (arg.autoSend) {
+          await this._zone.value.widget.chatWidget.acceptInput();
+        }
+      }
+    }
+    await Event.toPromise(session.editingSession.onDidDispose);
+    const rejected = session.editingSession.getEntry(uri)?.state.get() === ModifiedFileEntryState.Rejected;
+    return !rejected;
+  }
+  acceptSession() {
+    const value = this._currentSession.get();
+    value?.editingSession.accept();
+  }
+};
+InlineChatController2 = __decorateClass([
+  __decorateParam(1, IInstantiationService),
+  __decorateParam(2, INotebookEditorService),
+  __decorateParam(3, IInlineChatSessionService),
+  __decorateParam(4, ICodeEditorService),
+  __decorateParam(5, IContextKeyService)
+], InlineChatController2);
+async function reviewEdits(accessor, editor, stream, token) {
+  if (!editor.hasModel()) {
+    return false;
+  }
+  const chatService = accessor.get(IChatService);
+  const chatEditingService = accessor.get(IChatEditingService);
+  const uri = editor.getModel().uri;
+  const chatModel = chatService.startSession(ChatAgentLocation.Editor, token, false);
+  const editSession = await chatEditingService.createEditingSession(chatModel);
+  const store = new DisposableStore();
+  store.add(chatModel);
+  store.add(editSession);
+  const chatRequest = chatModel?.addRequest({ text: "", parts: [] }, { variables: [] }, 0);
+  assertType(chatRequest.response);
+  chatRequest.response.updateContent({ kind: "textEdit", uri, edits: [], done: false });
+  for await (const chunk of stream) {
+    if (token.isCancellationRequested) {
+      chatRequest.response.cancel();
+      break;
+    }
+    chatRequest.response.updateContent({ kind: "textEdit", uri, edits: chunk, done: false });
+  }
+  chatRequest.response.updateContent({ kind: "textEdit", uri, edits: [], done: true });
+  if (!token.isCancellationRequested) {
+    chatRequest.response.complete();
+  }
+  const isSettled = derived((r) => {
+    const entry = editSession.readEntry(uri, r);
+    if (!entry) {
+      return false;
+    }
+    const state = entry.state.read(r);
+    return state === ModifiedFileEntryState.Accepted || state === ModifiedFileEntryState.Rejected;
+  });
+  const whenDecided = waitForState(isSettled, Boolean);
+  await raceCancellation(whenDecided, token);
+  store.dispose();
+  return true;
+}
+__name(reviewEdits, "reviewEdits");
+async function moveToPanelChat(accessor, model) {
+  const viewsService = accessor.get(IViewsService);
+  const chatService = accessor.get(IChatService);
+  const widget = await showChatView(viewsService);
+  if (widget && widget.viewModel && model) {
+    for (const request of model.getRequests().slice()) {
+      await chatService.adoptRequest(widget.viewModel.model.sessionId, request);
+    }
+    widget.focusLastMessage();
+  }
+}
+__name(moveToPanelChat, "moveToPanelChat");
+export {
+  InlineChatController,
+  InlineChatController1,
+  InlineChatController2,
+  InlineChatRunOptions,
+  State,
+  reviewEdits
+};
+//# sourceMappingURL=inlineChatController.js.map

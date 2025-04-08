@@ -1,1 +1,90 @@
-import{Hash as i}from"./tokens/hash.js";import{Dash as a}from"./tokens/dash.js";import{Colon as n}from"./tokens/colon.js";import{FormFeed as s}from"./tokens/formFeed.js";import{Tab as l}from"../simpleCodec/tokens/tab.js";import{Word as S}from"../simpleCodec/tokens/word.js";import{VerticalTab as f}from"./tokens/verticalTab.js";import{Space as c}from"../simpleCodec/tokens/space.js";import{NewLine as g}from"../linesCodec/tokens/newLine.js";import"../../../../base/common/buffer.js";import{ExclamationMark as p}from"./tokens/exclamationMark.js";import"../../../../base/common/stream.js";import{CarriageReturn as B}from"../linesCodec/tokens/carriageReturn.js";import{LinesDecoder as x}from"../linesCodec/linesDecoder.js";import{LeftBracket as b,RightBracket as T}from"./tokens/brackets.js";import{BaseDecoder as D}from"../../../../base/common/codecs/baseDecoder.js";import{LeftParenthesis as h,RightParenthesis as d}from"./tokens/parentheses.js";import{LeftAngleBracket as y,RightAngleBracket as u}from"./tokens/angleBrackets.js";const R=Object.freeze([c,l,f,s,b,T,y,u,h,d,n,i,a,p]),w=Object.freeze([c.symbol,l.symbol,f.symbol,s.symbol,b.symbol,T.symbol,y.symbol,u.symbol,h.symbol,d.symbol,n.symbol,i.symbol,a.symbol,p.symbol]);class Z extends D{constructor(e){super(new x(e))}onStreamData(e){if(e instanceof B||e instanceof g){this._onData.fire(e);return}let r=0;for(;r<e.text.length;){const o=r+1,t=R.find(L=>L.symbol===e.text[r]);if(t){this._onData.fire(t.newOnLine(e,o)),r++;continue}let m="";for(;r<e.text.length&&!w.includes(e.text[r]);)m+=e.text[r],r++;this._onData.fire(S.newOnLine(m,e,o))}}}export{Z as SimpleDecoder};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Hash } from "./tokens/hash.js";
+import { Dash } from "./tokens/dash.js";
+import { Colon } from "./tokens/colon.js";
+import { FormFeed } from "./tokens/formFeed.js";
+import { Tab } from "../simpleCodec/tokens/tab.js";
+import { Word } from "../simpleCodec/tokens/word.js";
+import { VerticalTab } from "./tokens/verticalTab.js";
+import { Space } from "../simpleCodec/tokens/space.js";
+import { NewLine } from "../linesCodec/tokens/newLine.js";
+import { VSBuffer } from "../../../../base/common/buffer.js";
+import { ExclamationMark } from "./tokens/exclamationMark.js";
+import { ReadableStream } from "../../../../base/common/stream.js";
+import { CarriageReturn } from "../linesCodec/tokens/carriageReturn.js";
+import { LinesDecoder, TLineToken } from "../linesCodec/linesDecoder.js";
+import { LeftBracket, RightBracket, TBracket } from "./tokens/brackets.js";
+import { BaseDecoder } from "../../../../base/common/codecs/baseDecoder.js";
+import { LeftParenthesis, RightParenthesis, TParenthesis } from "./tokens/parentheses.js";
+import { LeftAngleBracket, RightAngleBracket, TAngleBracket } from "./tokens/angleBrackets.js";
+const WELL_KNOWN_TOKENS = Object.freeze([
+  Space,
+  Tab,
+  VerticalTab,
+  FormFeed,
+  LeftBracket,
+  RightBracket,
+  LeftAngleBracket,
+  RightAngleBracket,
+  LeftParenthesis,
+  RightParenthesis,
+  Colon,
+  Hash,
+  Dash,
+  ExclamationMark
+]);
+const WORD_STOP_CHARACTERS = Object.freeze([
+  Space.symbol,
+  Tab.symbol,
+  VerticalTab.symbol,
+  FormFeed.symbol,
+  LeftBracket.symbol,
+  RightBracket.symbol,
+  LeftAngleBracket.symbol,
+  RightAngleBracket.symbol,
+  LeftParenthesis.symbol,
+  RightParenthesis.symbol,
+  Colon.symbol,
+  Hash.symbol,
+  Dash.symbol,
+  ExclamationMark.symbol
+]);
+class SimpleDecoder extends BaseDecoder {
+  static {
+    __name(this, "SimpleDecoder");
+  }
+  constructor(stream) {
+    super(new LinesDecoder(stream));
+  }
+  onStreamData(token) {
+    if (token instanceof CarriageReturn || token instanceof NewLine) {
+      this._onData.fire(token);
+      return;
+    }
+    let i = 0;
+    while (i < token.text.length) {
+      const columnNumber = i + 1;
+      const tokenConstructor = WELL_KNOWN_TOKENS.find((wellKnownToken) => {
+        return wellKnownToken.symbol === token.text[i];
+      });
+      if (tokenConstructor) {
+        this._onData.fire(tokenConstructor.newOnLine(token, columnNumber));
+        i++;
+        continue;
+      }
+      let word = "";
+      while (i < token.text.length && !WORD_STOP_CHARACTERS.includes(token.text[i])) {
+        word += token.text[i];
+        i++;
+      }
+      this._onData.fire(
+        Word.newOnLine(word, token, columnNumber)
+      );
+    }
+  }
+}
+export {
+  SimpleDecoder
+};
+//# sourceMappingURL=simpleDecoder.js.map

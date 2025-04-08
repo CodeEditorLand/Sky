@@ -1,1 +1,41 @@
-class t{static count=0;_proxyIdentifierBrand=void 0;sid;nid;constructor(r){this.sid=r,this.nid=++t.count}}const r=[];function n(i){const n=new t(i);return r[n.nid]=n,n}function o(t){return r[t].sid}class s{constructor(t){this.value=t}}export{t as ProxyIdentifier,s as SerializableObjectWithBuffers,n as createProxyIdentifier,o as getStringIdentifierForProxy};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+class ProxyIdentifier {
+  static {
+    __name(this, "ProxyIdentifier");
+  }
+  static count = 0;
+  _proxyIdentifierBrand = void 0;
+  sid;
+  nid;
+  constructor(sid) {
+    this.sid = sid;
+    this.nid = ++ProxyIdentifier.count;
+  }
+}
+const identifiers = [];
+function createProxyIdentifier(identifier) {
+  const result = new ProxyIdentifier(identifier);
+  identifiers[result.nid] = result;
+  return result;
+}
+__name(createProxyIdentifier, "createProxyIdentifier");
+function getStringIdentifierForProxy(nid) {
+  return identifiers[nid].sid;
+}
+__name(getStringIdentifierForProxy, "getStringIdentifierForProxy");
+class SerializableObjectWithBuffers {
+  constructor(value) {
+    this.value = value;
+  }
+  static {
+    __name(this, "SerializableObjectWithBuffers");
+  }
+}
+export {
+  ProxyIdentifier,
+  SerializableObjectWithBuffers,
+  createProxyIdentifier,
+  getStringIdentifierForProxy
+};
+//# sourceMappingURL=proxyIdentifier.js.map

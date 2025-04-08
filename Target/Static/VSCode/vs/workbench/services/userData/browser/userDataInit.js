@@ -1,1 +1,81 @@
-var m=Object.defineProperty;var z=Object.getOwnPropertyDescriptor;var c=(a,i,e,t)=>{for(var n=t>1?void 0:t?z(i,e):i,o=a.length-1,l;o>=0;o--)(l=a[o])&&(n=(t?l(i,e,n):l(n))||n);return t&&n&&m(i,e,n),n},s=(a,i)=>(e,t)=>i(e,t,a);import{createDecorator as h,IInstantiationService as v}from"../../../../platform/instantiation/common/instantiation.js";import{Extensions as d}from"../../../common/contributions.js";import{Registry as u}from"../../../../platform/registry/common/platform.js";import{LifecyclePhase as p}from"../../lifecycle/common/lifecycle.js";import{isWeb as w}from"../../../../base/common/platform.js";import{IExtensionService as S}from"../../extensions/common/extensions.js";import{mark as I}from"../../../../base/common/performance.js";const P=h("IUserDataInitializationService");class E{constructor(i=[]){this.initializers=i}_serviceBrand;async whenInitializationFinished(){await this.requiresInitialization()&&await Promise.all(this.initializers.map(i=>i.whenInitializationFinished()))}async requiresInitialization(){return(await Promise.all(this.initializers.map(i=>i.requiresInitialization()))).some(i=>i)}async initializeRequiredResources(){await this.requiresInitialization()&&await Promise.all(this.initializers.map(i=>i.initializeRequiredResources()))}async initializeOtherResources(i){await this.requiresInitialization()&&await Promise.all(this.initializers.map(e=>e.initializeOtherResources(i)))}async initializeInstalledExtensions(i){await this.requiresInitialization()&&await Promise.all(this.initializers.map(e=>e.initializeInstalledExtensions(i)))}}let r=class{constructor(i,e,t){t.whenInstalledExtensionsRegistered().then(()=>this.initializeOtherResource(i,e))}async initializeOtherResource(i,e){await i.requiresInitialization()&&(I("code/willInitOtherUserData"),await i.initializeOtherResources(e),I("code/didInitOtherUserData"))}};r=c([s(0,P),s(1,v),s(2,S)],r),w&&u.as(d.Workbench).registerWorkbenchContribution(r,p.Restored);export{P as IUserDataInitializationService,E as UserDataInitializationService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { createDecorator, IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IWorkbenchContribution, IWorkbenchContributionsRegistry, Extensions } from "../../../common/contributions.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { LifecyclePhase } from "../../lifecycle/common/lifecycle.js";
+import { isWeb } from "../../../../base/common/platform.js";
+import { IExtensionService } from "../../extensions/common/extensions.js";
+import { mark } from "../../../../base/common/performance.js";
+const IUserDataInitializationService = createDecorator("IUserDataInitializationService");
+class UserDataInitializationService {
+  constructor(initializers = []) {
+    this.initializers = initializers;
+  }
+  static {
+    __name(this, "UserDataInitializationService");
+  }
+  _serviceBrand;
+  async whenInitializationFinished() {
+    if (await this.requiresInitialization()) {
+      await Promise.all(this.initializers.map((initializer) => initializer.whenInitializationFinished()));
+    }
+  }
+  async requiresInitialization() {
+    return (await Promise.all(this.initializers.map((initializer) => initializer.requiresInitialization()))).some((result) => result);
+  }
+  async initializeRequiredResources() {
+    if (await this.requiresInitialization()) {
+      await Promise.all(this.initializers.map((initializer) => initializer.initializeRequiredResources()));
+    }
+  }
+  async initializeOtherResources(instantiationService) {
+    if (await this.requiresInitialization()) {
+      await Promise.all(this.initializers.map((initializer) => initializer.initializeOtherResources(instantiationService)));
+    }
+  }
+  async initializeInstalledExtensions(instantiationService) {
+    if (await this.requiresInitialization()) {
+      await Promise.all(this.initializers.map((initializer) => initializer.initializeInstalledExtensions(instantiationService)));
+    }
+  }
+}
+let InitializeOtherResourcesContribution = class {
+  static {
+    __name(this, "InitializeOtherResourcesContribution");
+  }
+  constructor(userDataInitializeService, instantiationService, extensionService) {
+    extensionService.whenInstalledExtensionsRegistered().then(() => this.initializeOtherResource(userDataInitializeService, instantiationService));
+  }
+  async initializeOtherResource(userDataInitializeService, instantiationService) {
+    if (await userDataInitializeService.requiresInitialization()) {
+      mark("code/willInitOtherUserData");
+      await userDataInitializeService.initializeOtherResources(instantiationService);
+      mark("code/didInitOtherUserData");
+    }
+  }
+};
+InitializeOtherResourcesContribution = __decorateClass([
+  __decorateParam(0, IUserDataInitializationService),
+  __decorateParam(1, IInstantiationService),
+  __decorateParam(2, IExtensionService)
+], InitializeOtherResourcesContribution);
+if (isWeb) {
+  const workbenchRegistry = Registry.as(Extensions.Workbench);
+  workbenchRegistry.registerWorkbenchContribution(InitializeOtherResourcesContribution, LifecyclePhase.Restored);
+}
+export {
+  IUserDataInitializationService,
+  UserDataInitializationService
+};
+//# sourceMappingURL=userDataInit.js.map

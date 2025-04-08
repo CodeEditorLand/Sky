@@ -1,1 +1,21 @@
-import"../../../../base/common/uri.js";import"../../../../base/common/worker/webWorker.js";import"./search.js";class r{static CHANNEL_NAME="localFileSearchWorkerHost";static getChannel(e){return e.getChannel(r.CHANNEL_NAME)}static setChannel(e,t){e.setChannel(r.CHANNEL_NAME,t)}}export{r as LocalFileSearchWorkerHost};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { UriComponents } from "../../../../base/common/uri.js";
+import { IWebWorkerClient, IWebWorkerServer } from "../../../../base/common/worker/webWorker.js";
+import { IFileMatch, IFileQueryProps, IFolderQuery, ITextQueryProps } from "./search.js";
+class LocalFileSearchWorkerHost {
+  static {
+    __name(this, "LocalFileSearchWorkerHost");
+  }
+  static CHANNEL_NAME = "localFileSearchWorkerHost";
+  static getChannel(workerServer) {
+    return workerServer.getChannel(LocalFileSearchWorkerHost.CHANNEL_NAME);
+  }
+  static setChannel(workerClient, obj) {
+    workerClient.setChannel(LocalFileSearchWorkerHost.CHANNEL_NAME, obj);
+  }
+}
+export {
+  LocalFileSearchWorkerHost
+};
+//# sourceMappingURL=localFileSearchWorkerTypes.js.map

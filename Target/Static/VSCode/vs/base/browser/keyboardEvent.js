@@ -1,1 +1,171 @@
-import*as n from"./browser.js";import{EVENT_KEY_CODE_MAP as d,KeyCode as t,KeyCodeUtils as s,KeyMod as i}from"../common/keyCodes.js";import{KeyCodeChord as y}from"../common/keybindings.js";import*as a from"../common/platform.js";function l(e){if(e.charCode){const t=String.fromCharCode(e.charCode).toUpperCase();return s.fromString(t)}const i=e.keyCode;if(3===i)return t.PauseBreak;if(n.isFirefox)switch(i){case 59:return t.Semicolon;case 60:if(a.isLinux)return t.IntlBackslash;break;case 61:return t.Equal;case 107:return t.NumpadAdd;case 109:return t.NumpadSubtract;case 173:return t.Minus;case 224:if(a.isMacintosh)return t.Meta}else if(n.isWebKit){if(a.isMacintosh&&93===i)return t.Meta;if(!a.isMacintosh&&92===i)return t.Meta}return d[i]||t.Unknown}const h=a.isMacintosh?i.WinCtrl:i.CtrlCmd,K=i.Alt,c=i.Shift,C=a.isMacintosh?i.CtrlCmd:i.WinCtrl;function f(t){const e=[];return t.ctrlKey&&e.push("ctrl"),t.shiftKey&&e.push("shift"),t.altKey&&e.push("alt"),t.metaKey&&e.push("meta"),`modifiers: [${e.join(",")}], code: ${t.code}, keyCode: ${t.keyCode}, key: ${t.key}`}function p(t){const e=[];return t.ctrlKey&&e.push("ctrl"),t.shiftKey&&e.push("shift"),t.altKey&&e.push("alt"),t.metaKey&&e.push("meta"),`modifiers: [${e.join(",")}], code: ${t.code}, keyCode: ${t.keyCode} ('${s.toString(t.keyCode)}')`}class m{_standardKeyboardEventBrand=!0;browserEvent;target;ctrlKey;shiftKey;altKey;metaKey;altGraphKey;keyCode;code;_asKeybinding;_asKeyCodeChord;constructor(e){const s=e;this.browserEvent=s,this.target=s.target,this.ctrlKey=s.ctrlKey,this.shiftKey=s.shiftKey,this.altKey=s.altKey,this.metaKey=s.metaKey,this.altGraphKey=s.getModifierState?.("AltGraph"),this.keyCode=l(s),this.code=s.code,this.ctrlKey=this.ctrlKey||this.keyCode===t.Ctrl,this.altKey=this.altKey||this.keyCode===t.Alt,this.shiftKey=this.shiftKey||this.keyCode===t.Shift,this.metaKey=this.metaKey||this.keyCode===t.Meta,this._asKeybinding=this._computeKeybinding(),this._asKeyCodeChord=this._computeKeyCodeChord()}preventDefault(){this.browserEvent&&this.browserEvent.preventDefault&&this.browserEvent.preventDefault()}stopPropagation(){this.browserEvent&&this.browserEvent.stopPropagation&&this.browserEvent.stopPropagation()}toKeyCodeChord(){return this._asKeyCodeChord}equals(t){return this._asKeybinding===t}_computeKeybinding(){let e=t.Unknown;this.keyCode!==t.Ctrl&&this.keyCode!==t.Shift&&this.keyCode!==t.Alt&&this.keyCode!==t.Meta&&(e=this.keyCode);let s=0;return this.ctrlKey&&(s|=h),this.altKey&&(s|=K),this.shiftKey&&(s|=c),this.metaKey&&(s|=C),s|=e,s}_computeKeyCodeChord(){let e=t.Unknown;return this.keyCode!==t.Ctrl&&this.keyCode!==t.Shift&&this.keyCode!==t.Alt&&this.keyCode!==t.Meta&&(e=this.keyCode),new y(this.ctrlKey,this.shiftKey,this.altKey,this.metaKey,e)}}export{m as StandardKeyboardEvent,f as printKeyboardEvent,p as printStandardKeyboardEvent};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as browser from "./browser.js";
+import { EVENT_KEY_CODE_MAP, KeyCode, KeyCodeUtils, KeyMod } from "../common/keyCodes.js";
+import { KeyCodeChord } from "../common/keybindings.js";
+import * as platform from "../common/platform.js";
+function extractKeyCode(e) {
+  if (e.charCode) {
+    const char = String.fromCharCode(e.charCode).toUpperCase();
+    return KeyCodeUtils.fromString(char);
+  }
+  const keyCode = e.keyCode;
+  if (keyCode === 3) {
+    return KeyCode.PauseBreak;
+  } else if (browser.isFirefox) {
+    switch (keyCode) {
+      case 59:
+        return KeyCode.Semicolon;
+      case 60:
+        if (platform.isLinux) {
+          return KeyCode.IntlBackslash;
+        }
+        break;
+      case 61:
+        return KeyCode.Equal;
+      // based on: https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/keyCode#numpad_keys
+      case 107:
+        return KeyCode.NumpadAdd;
+      case 109:
+        return KeyCode.NumpadSubtract;
+      case 173:
+        return KeyCode.Minus;
+      case 224:
+        if (platform.isMacintosh) {
+          return KeyCode.Meta;
+        }
+        break;
+    }
+  } else if (browser.isWebKit) {
+    if (platform.isMacintosh && keyCode === 93) {
+      return KeyCode.Meta;
+    } else if (!platform.isMacintosh && keyCode === 92) {
+      return KeyCode.Meta;
+    }
+  }
+  return EVENT_KEY_CODE_MAP[keyCode] || KeyCode.Unknown;
+}
+__name(extractKeyCode, "extractKeyCode");
+const ctrlKeyMod = platform.isMacintosh ? KeyMod.WinCtrl : KeyMod.CtrlCmd;
+const altKeyMod = KeyMod.Alt;
+const shiftKeyMod = KeyMod.Shift;
+const metaKeyMod = platform.isMacintosh ? KeyMod.CtrlCmd : KeyMod.WinCtrl;
+function printKeyboardEvent(e) {
+  const modifiers = [];
+  if (e.ctrlKey) {
+    modifiers.push(`ctrl`);
+  }
+  if (e.shiftKey) {
+    modifiers.push(`shift`);
+  }
+  if (e.altKey) {
+    modifiers.push(`alt`);
+  }
+  if (e.metaKey) {
+    modifiers.push(`meta`);
+  }
+  return `modifiers: [${modifiers.join(",")}], code: ${e.code}, keyCode: ${e.keyCode}, key: ${e.key}`;
+}
+__name(printKeyboardEvent, "printKeyboardEvent");
+function printStandardKeyboardEvent(e) {
+  const modifiers = [];
+  if (e.ctrlKey) {
+    modifiers.push(`ctrl`);
+  }
+  if (e.shiftKey) {
+    modifiers.push(`shift`);
+  }
+  if (e.altKey) {
+    modifiers.push(`alt`);
+  }
+  if (e.metaKey) {
+    modifiers.push(`meta`);
+  }
+  return `modifiers: [${modifiers.join(",")}], code: ${e.code}, keyCode: ${e.keyCode} ('${KeyCodeUtils.toString(e.keyCode)}')`;
+}
+__name(printStandardKeyboardEvent, "printStandardKeyboardEvent");
+class StandardKeyboardEvent {
+  static {
+    __name(this, "StandardKeyboardEvent");
+  }
+  _standardKeyboardEventBrand = true;
+  browserEvent;
+  target;
+  ctrlKey;
+  shiftKey;
+  altKey;
+  metaKey;
+  altGraphKey;
+  keyCode;
+  code;
+  _asKeybinding;
+  _asKeyCodeChord;
+  constructor(source) {
+    const e = source;
+    this.browserEvent = e;
+    this.target = e.target;
+    this.ctrlKey = e.ctrlKey;
+    this.shiftKey = e.shiftKey;
+    this.altKey = e.altKey;
+    this.metaKey = e.metaKey;
+    this.altGraphKey = e.getModifierState?.("AltGraph");
+    this.keyCode = extractKeyCode(e);
+    this.code = e.code;
+    this.ctrlKey = this.ctrlKey || this.keyCode === KeyCode.Ctrl;
+    this.altKey = this.altKey || this.keyCode === KeyCode.Alt;
+    this.shiftKey = this.shiftKey || this.keyCode === KeyCode.Shift;
+    this.metaKey = this.metaKey || this.keyCode === KeyCode.Meta;
+    this._asKeybinding = this._computeKeybinding();
+    this._asKeyCodeChord = this._computeKeyCodeChord();
+  }
+  preventDefault() {
+    if (this.browserEvent && this.browserEvent.preventDefault) {
+      this.browserEvent.preventDefault();
+    }
+  }
+  stopPropagation() {
+    if (this.browserEvent && this.browserEvent.stopPropagation) {
+      this.browserEvent.stopPropagation();
+    }
+  }
+  toKeyCodeChord() {
+    return this._asKeyCodeChord;
+  }
+  equals(other) {
+    return this._asKeybinding === other;
+  }
+  _computeKeybinding() {
+    let key = KeyCode.Unknown;
+    if (this.keyCode !== KeyCode.Ctrl && this.keyCode !== KeyCode.Shift && this.keyCode !== KeyCode.Alt && this.keyCode !== KeyCode.Meta) {
+      key = this.keyCode;
+    }
+    let result = 0;
+    if (this.ctrlKey) {
+      result |= ctrlKeyMod;
+    }
+    if (this.altKey) {
+      result |= altKeyMod;
+    }
+    if (this.shiftKey) {
+      result |= shiftKeyMod;
+    }
+    if (this.metaKey) {
+      result |= metaKeyMod;
+    }
+    result |= key;
+    return result;
+  }
+  _computeKeyCodeChord() {
+    let key = KeyCode.Unknown;
+    if (this.keyCode !== KeyCode.Ctrl && this.keyCode !== KeyCode.Shift && this.keyCode !== KeyCode.Alt && this.keyCode !== KeyCode.Meta) {
+      key = this.keyCode;
+    }
+    return new KeyCodeChord(this.ctrlKey, this.shiftKey, this.altKey, this.metaKey, key);
+  }
+}
+export {
+  StandardKeyboardEvent,
+  printKeyboardEvent,
+  printStandardKeyboardEvent
+};
+//# sourceMappingURL=keyboardEvent.js.map

@@ -1,1 +1,350 @@
-import{isFalsyOrEmpty as v,isNonEmptyArray as b}from"../../../base/common/arrays.js";import{DebounceEmitter as I}from"../../../base/common/event.js";import{Iterable as h}from"../../../base/common/iterator.js";import{toDisposable as y}from"../../../base/common/lifecycle.js";import{ResourceMap as d,ResourceSet as w}from"../../../base/common/map.js";import{Schemas as p}from"../../../base/common/network.js";import{URI as R}from"../../../base/common/uri.js";import{localize as m}from"../../../nls.js";import{MarkerSeverity as g}from"./markers.js";const S=new Set([p.inMemory,p.vscodeSourceControl,p.walkThrough,p.walkThroughSnippet,p.vscodeChatCodeBlock]);class U{_byResource=new d;_byOwner=new Map;set(e,s,t){let r=this._byResource.get(e);r||(r=new Map,this._byResource.set(e,r)),r.set(s,t);let o=this._byOwner.get(s);o||(o=new d,this._byOwner.set(s,o)),o.set(e,t)}get(e,s){return this._byResource.get(e)?.get(s)}delete(e,s){let t=!1,r=!1;const o=this._byResource.get(e);o&&(t=o.delete(s));const n=this._byOwner.get(s);if(n&&(r=n.delete(e)),t!==r)throw new Error("illegal state");return t&&r}values(e){return"string"==typeof e?this._byOwner.get(e)?.values()??h.empty():R.isUri(e)?this._byResource.get(e)?.values()??h.empty():h.map(h.concat(...this._byOwner.values()),(e=>e[1]))}}class C{errors=0;infos=0;warnings=0;unknowns=0;_data=new d;_service;_subscription;constructor(e){this._service=e,this._subscription=e.onMarkerChanged(this._update,this)}dispose(){this._subscription.dispose()}_update(e){for(const s of e){const e=this._data.get(s);e&&this._substract(e);const t=this._resourceStats(s);this._add(t),this._data.set(s,t)}}_resourceStats(e){const s={errors:0,warnings:0,infos:0,unknowns:0};if(S.has(e.scheme))return s;for(const{severity:t}of this._service.read({resource:e}))t===g.Error?s.errors+=1:t===g.Warning?s.warnings+=1:t===g.Info?s.infos+=1:s.unknowns+=1;return s}_substract(e){this.errors-=e.errors,this.warnings-=e.warnings,this.infos-=e.infos,this.unknowns-=e.unknowns}_add(e){this.errors+=e.errors,this.warnings+=e.warnings,this.infos+=e.infos,this.unknowns+=e.unknowns}}class f{_onMarkerChanged=new I({delay:0,merge:f._merge});onMarkerChanged=this._onMarkerChanged.event;_data=new U;_stats=new C(this);_filteredResources=new d;dispose(){this._stats.dispose(),this._onMarkerChanged.dispose()}getStatistics(){return this._stats}remove(e,s){for(const t of s||[])this.changeOne(e,t,[])}changeOne(e,s,t){if(v(t))this._data.delete(s,e)&&this._onMarkerChanged.fire([s]);else{const r=[];for(const o of t){const t=f._toMarker(e,s,o);t&&r.push(t)}this._data.set(s,e,r),this._onMarkerChanged.fire([s])}}installResourceFilter(e,s){let t=this._filteredResources.get(e);return t||(t=[],this._filteredResources.set(e,t)),t.push(s),this._onMarkerChanged.fire([e]),y((()=>{const t=this._filteredResources.get(e);if(!t)return;const r=t.indexOf(s);-1!==r&&(t.splice(r,1),0===t.length&&this._filteredResources.delete(e),this._onMarkerChanged.fire([e]))}))}static _toMarker(e,s,t){let{code:r,severity:o,message:n,source:i,startLineNumber:a,startColumn:c,endLineNumber:h,endColumn:u,relatedInformation:f,tags:d}=t;if(n)return a=a>0?a:1,c=c>0?c:1,h=h>=a?h:a,u=u>0?u:c,{resource:s,owner:e,code:r,severity:o,message:n,source:i,startLineNumber:a,startColumn:c,endLineNumber:h,endColumn:u,relatedInformation:f,tags:d}}changeAll(e,s){const t=[],r=this._data.values(e);if(r)for(const s of r){const r=h.first(s);r&&(t.push(r.resource),this._data.delete(r.resource,e))}if(b(s)){const r=new d;for(const{resource:o,marker:n}of s){const s=f._toMarker(e,o,n);if(!s)continue;const i=r.get(o);i?i.push(s):(r.set(o,[s]),t.push(o))}for(const[s,t]of r)this._data.set(s,e,t)}t.length>0&&this._onMarkerChanged.fire(t)}_createFilteredMarker(e,s){const t=1===s.length?m("filtered",'Problems are paused because: "{0}"',s[0]):m("filtered.network",'Problems are paused because: "{0}" and {1} more',s[0],s.length-1);return{owner:"markersFilter",resource:e,severity:g.Info,message:t,startLineNumber:1,startColumn:1,endLineNumber:1,endColumn:1}}read(e=Object.create(null)){let{owner:s,resource:t,severities:r,take:o}=e;if((!o||o<0)&&(o=-1),s&&t){const e=this._filteredResources.get(t);if(e?.length)return[this._createFilteredMarker(t,e)];const n=this._data.get(t,s);if(!n)return[];const i=[];for(const e of n){if(o>0&&i.length===o)break;const s=this._filteredResources.get(t);s?.length?i.push(this._createFilteredMarker(t,s)):f._accept(e,r)&&i.push(e)}return i}{const e=s||t?this._data.values(t??s):this._data.values(),n=[],i=new w;for(const s of e)for(const e of s){if(i.has(e.resource))continue;if(o>0&&n.length===o)break;const s=this._filteredResources.get(e.resource);s?.length?(n.push(this._createFilteredMarker(e.resource,s)),i.add(e.resource)):f._accept(e,r)&&n.push(e)}return n}}static _accept(e,s){return void 0===s||(s&e.severity)===e.severity}static _merge(e){const s=new d;for(const t of e)for(const e of t)s.set(e,!0);return Array.from(s.keys())}}export{f as MarkerService,S as unsupportedSchemas};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { isFalsyOrEmpty, isNonEmptyArray } from "../../../base/common/arrays.js";
+import { DebounceEmitter } from "../../../base/common/event.js";
+import { Iterable } from "../../../base/common/iterator.js";
+import { IDisposable, toDisposable } from "../../../base/common/lifecycle.js";
+import { ResourceMap, ResourceSet } from "../../../base/common/map.js";
+import { Schemas } from "../../../base/common/network.js";
+import { URI } from "../../../base/common/uri.js";
+import { localize } from "../../../nls.js";
+import { IMarker, IMarkerData, IMarkerService, IResourceMarker, MarkerSeverity, MarkerStatistics } from "./markers.js";
+const unsupportedSchemas = /* @__PURE__ */ new Set([
+  Schemas.inMemory,
+  Schemas.vscodeSourceControl,
+  Schemas.walkThrough,
+  Schemas.walkThroughSnippet,
+  Schemas.vscodeChatCodeBlock
+]);
+class DoubleResourceMap {
+  static {
+    __name(this, "DoubleResourceMap");
+  }
+  _byResource = new ResourceMap();
+  _byOwner = /* @__PURE__ */ new Map();
+  set(resource, owner, value) {
+    let ownerMap = this._byResource.get(resource);
+    if (!ownerMap) {
+      ownerMap = /* @__PURE__ */ new Map();
+      this._byResource.set(resource, ownerMap);
+    }
+    ownerMap.set(owner, value);
+    let resourceMap = this._byOwner.get(owner);
+    if (!resourceMap) {
+      resourceMap = new ResourceMap();
+      this._byOwner.set(owner, resourceMap);
+    }
+    resourceMap.set(resource, value);
+  }
+  get(resource, owner) {
+    const ownerMap = this._byResource.get(resource);
+    return ownerMap?.get(owner);
+  }
+  delete(resource, owner) {
+    let removedA = false;
+    let removedB = false;
+    const ownerMap = this._byResource.get(resource);
+    if (ownerMap) {
+      removedA = ownerMap.delete(owner);
+    }
+    const resourceMap = this._byOwner.get(owner);
+    if (resourceMap) {
+      removedB = resourceMap.delete(resource);
+    }
+    if (removedA !== removedB) {
+      throw new Error("illegal state");
+    }
+    return removedA && removedB;
+  }
+  values(key) {
+    if (typeof key === "string") {
+      return this._byOwner.get(key)?.values() ?? Iterable.empty();
+    }
+    if (URI.isUri(key)) {
+      return this._byResource.get(key)?.values() ?? Iterable.empty();
+    }
+    return Iterable.map(Iterable.concat(...this._byOwner.values()), (map) => map[1]);
+  }
+}
+class MarkerStats {
+  static {
+    __name(this, "MarkerStats");
+  }
+  errors = 0;
+  infos = 0;
+  warnings = 0;
+  unknowns = 0;
+  _data = new ResourceMap();
+  _service;
+  _subscription;
+  constructor(service) {
+    this._service = service;
+    this._subscription = service.onMarkerChanged(this._update, this);
+  }
+  dispose() {
+    this._subscription.dispose();
+  }
+  _update(resources) {
+    for (const resource of resources) {
+      const oldStats = this._data.get(resource);
+      if (oldStats) {
+        this._substract(oldStats);
+      }
+      const newStats = this._resourceStats(resource);
+      this._add(newStats);
+      this._data.set(resource, newStats);
+    }
+  }
+  _resourceStats(resource) {
+    const result = { errors: 0, warnings: 0, infos: 0, unknowns: 0 };
+    if (unsupportedSchemas.has(resource.scheme)) {
+      return result;
+    }
+    for (const { severity } of this._service.read({ resource })) {
+      if (severity === MarkerSeverity.Error) {
+        result.errors += 1;
+      } else if (severity === MarkerSeverity.Warning) {
+        result.warnings += 1;
+      } else if (severity === MarkerSeverity.Info) {
+        result.infos += 1;
+      } else {
+        result.unknowns += 1;
+      }
+    }
+    return result;
+  }
+  _substract(op) {
+    this.errors -= op.errors;
+    this.warnings -= op.warnings;
+    this.infos -= op.infos;
+    this.unknowns -= op.unknowns;
+  }
+  _add(op) {
+    this.errors += op.errors;
+    this.warnings += op.warnings;
+    this.infos += op.infos;
+    this.unknowns += op.unknowns;
+  }
+}
+class MarkerService {
+  static {
+    __name(this, "MarkerService");
+  }
+  _onMarkerChanged = new DebounceEmitter({
+    delay: 0,
+    merge: MarkerService._merge
+  });
+  onMarkerChanged = this._onMarkerChanged.event;
+  _data = new DoubleResourceMap();
+  _stats = new MarkerStats(this);
+  _filteredResources = new ResourceMap();
+  dispose() {
+    this._stats.dispose();
+    this._onMarkerChanged.dispose();
+  }
+  getStatistics() {
+    return this._stats;
+  }
+  remove(owner, resources) {
+    for (const resource of resources || []) {
+      this.changeOne(owner, resource, []);
+    }
+  }
+  changeOne(owner, resource, markerData) {
+    if (isFalsyOrEmpty(markerData)) {
+      const removed = this._data.delete(resource, owner);
+      if (removed) {
+        this._onMarkerChanged.fire([resource]);
+      }
+    } else {
+      const markers = [];
+      for (const data of markerData) {
+        const marker = MarkerService._toMarker(owner, resource, data);
+        if (marker) {
+          markers.push(marker);
+        }
+      }
+      this._data.set(resource, owner, markers);
+      this._onMarkerChanged.fire([resource]);
+    }
+  }
+  installResourceFilter(resource, reason) {
+    let reasons = this._filteredResources.get(resource);
+    if (!reasons) {
+      reasons = [];
+      this._filteredResources.set(resource, reasons);
+    }
+    reasons.push(reason);
+    this._onMarkerChanged.fire([resource]);
+    return toDisposable(() => {
+      const reasons2 = this._filteredResources.get(resource);
+      if (!reasons2) {
+        return;
+      }
+      const reasonIndex = reasons2.indexOf(reason);
+      if (reasonIndex !== -1) {
+        reasons2.splice(reasonIndex, 1);
+        if (reasons2.length === 0) {
+          this._filteredResources.delete(resource);
+        }
+        this._onMarkerChanged.fire([resource]);
+      }
+    });
+  }
+  static _toMarker(owner, resource, data) {
+    let {
+      code,
+      severity,
+      message,
+      source,
+      startLineNumber,
+      startColumn,
+      endLineNumber,
+      endColumn,
+      relatedInformation,
+      tags
+    } = data;
+    if (!message) {
+      return void 0;
+    }
+    startLineNumber = startLineNumber > 0 ? startLineNumber : 1;
+    startColumn = startColumn > 0 ? startColumn : 1;
+    endLineNumber = endLineNumber >= startLineNumber ? endLineNumber : startLineNumber;
+    endColumn = endColumn > 0 ? endColumn : startColumn;
+    return {
+      resource,
+      owner,
+      code,
+      severity,
+      message,
+      source,
+      startLineNumber,
+      startColumn,
+      endLineNumber,
+      endColumn,
+      relatedInformation,
+      tags
+    };
+  }
+  changeAll(owner, data) {
+    const changes = [];
+    const existing = this._data.values(owner);
+    if (existing) {
+      for (const data2 of existing) {
+        const first = Iterable.first(data2);
+        if (first) {
+          changes.push(first.resource);
+          this._data.delete(first.resource, owner);
+        }
+      }
+    }
+    if (isNonEmptyArray(data)) {
+      const groups = new ResourceMap();
+      for (const { resource, marker: markerData } of data) {
+        const marker = MarkerService._toMarker(owner, resource, markerData);
+        if (!marker) {
+          continue;
+        }
+        const array = groups.get(resource);
+        if (!array) {
+          groups.set(resource, [marker]);
+          changes.push(resource);
+        } else {
+          array.push(marker);
+        }
+      }
+      for (const [resource, value] of groups) {
+        this._data.set(resource, owner, value);
+      }
+    }
+    if (changes.length > 0) {
+      this._onMarkerChanged.fire(changes);
+    }
+  }
+  /**
+   * Creates an information marker for filtered resources
+   */
+  _createFilteredMarker(resource, reasons) {
+    const message = reasons.length === 1 ? localize("filtered", 'Problems are paused because: "{0}"', reasons[0]) : localize("filtered.network", 'Problems are paused because: "{0}" and {1} more', reasons[0], reasons.length - 1);
+    return {
+      owner: "markersFilter",
+      resource,
+      severity: MarkerSeverity.Info,
+      message,
+      startLineNumber: 1,
+      startColumn: 1,
+      endLineNumber: 1,
+      endColumn: 1
+    };
+  }
+  read(filter = /* @__PURE__ */ Object.create(null)) {
+    let { owner, resource, severities, take } = filter;
+    if (!take || take < 0) {
+      take = -1;
+    }
+    if (owner && resource) {
+      const reasons = this._filteredResources.get(resource);
+      if (reasons?.length) {
+        const infoMarker = this._createFilteredMarker(resource, reasons);
+        return [infoMarker];
+      }
+      const data = this._data.get(resource, owner);
+      if (!data) {
+        return [];
+      }
+      const result = [];
+      for (const marker of data) {
+        if (take > 0 && result.length === take) {
+          break;
+        }
+        const reasons2 = this._filteredResources.get(resource);
+        if (reasons2?.length) {
+          result.push(this._createFilteredMarker(resource, reasons2));
+        } else if (MarkerService._accept(marker, severities)) {
+          result.push(marker);
+        }
+      }
+      return result;
+    } else {
+      const iterable = !owner && !resource ? this._data.values() : this._data.values(resource ?? owner);
+      const result = [];
+      const filtered = new ResourceSet();
+      for (const markers of iterable) {
+        for (const data of markers) {
+          if (filtered.has(data.resource)) {
+            continue;
+          }
+          if (take > 0 && result.length === take) {
+            break;
+          }
+          const reasons = this._filteredResources.get(data.resource);
+          if (reasons?.length) {
+            result.push(this._createFilteredMarker(data.resource, reasons));
+            filtered.add(data.resource);
+          } else if (MarkerService._accept(data, severities)) {
+            result.push(data);
+          }
+        }
+      }
+      return result;
+    }
+  }
+  static _accept(marker, severities) {
+    return severities === void 0 || (severities & marker.severity) === marker.severity;
+  }
+  // --- event debounce logic
+  static _merge(all) {
+    const set = new ResourceMap();
+    for (const array of all) {
+      for (const item of array) {
+        set.set(item, true);
+      }
+    }
+    return Array.from(set.keys());
+  }
+}
+export {
+  MarkerService,
+  unsupportedSchemas
+};
+//# sourceMappingURL=markerService.js.map

@@ -1,1 +1,129 @@
-var f=Object.defineProperty,h=Object.getOwnPropertyDescriptor,c=(e,r,t,i)=>{for(var s,a=i>1?void 0:i?h(r,t):r,o=e.length-1;o>=0;o--)(s=e[o])&&(a=(i?s(r,t,a):s(a))||a);return i&&a&&f(r,t,a),a},g=(e,r)=>(t,i)=>r(t,i,e);import{ThrottledDelayer as p}from"../../../base/common/async.js";import{VSBuffer as u}from"../../../base/common/buffer.js";import{basename as v,dirname as m,joinPath as d}from"../../../base/common/resources.js";import"../../../base/common/uri.js";import{ByteSize as L,FileOperationResult as I,IFileService as S,whenProviderRegistered as b}from"../../files/common/files.js";import{BufferLogger as y}from"./bufferLog.js";import{AbstractLoggerService as w,AbstractMessageLogger as F,LogLevel as n}from"./log.js";const $=5*L.MB;let a=class extends F{constructor(e,r,t,i){super(),this.resource=e,this.donotUseFormatters=t,this.fileService=i,this.setLevel(r),this.flushDelayer=new p(100),this.initializePromise=this.initialize()}initializePromise;flushDelayer;backupIndex=1;buffer="";async flush(){if(!this.buffer)return;await this.initializePromise;let e=await this.loadContent();e.length>$&&(await this.fileService.writeFile(this.getBackupResource(),u.fromString(e)),e=""),this.buffer&&(e+=this.buffer,this.buffer="",await this.fileService.writeFile(this.resource,u.fromString(e)))}async initialize(){try{await this.fileService.createFile(this.resource)}catch(e){if(e.fileOperationResult!==I.FILE_MODIFIED_SINCE)throw e}}log(e,r){this.donotUseFormatters?this.buffer+=r:this.buffer+=`${this.getCurrentTimestamp()} [${this.stringifyLogLevel(e)}] ${r}\n`,this.flushDelayer.trigger((()=>this.flush()))}getCurrentTimestamp(){const e=e=>e<10?`0${e}`:e,r=new Date;return`${r.getFullYear()}-${e(r.getMonth()+1)}-${e(r.getDate())} ${e(r.getHours())}:${e(r.getMinutes())}:${e(r.getSeconds())}.${t=r.getMilliseconds(),t<10?`00${t}`:t<100?`0${t}`:t}`;var t}getBackupResource(){return this.backupIndex=this.backupIndex>5?1:this.backupIndex,d(m(this.resource),`${v(this.resource)}_${this.backupIndex++}`)}async loadContent(){try{return(await this.fileService.readFile(this.resource)).value.toString()}catch{return""}}stringifyLogLevel(e){switch(e){case n.Debug:return"debug";case n.Error:return"error";case n.Info:return"info";case n.Trace:return"trace";case n.Warning:return"warning"}return""}};a=c([g(3,S)],a);class _ extends w{constructor(e,r,t){super(e,r),this.fileService=t}doCreateLogger(e,r,t){const i=new y(r);return b(e,this.fileService).then((()=>i.logger=new a(e,i.getLevel(),!!t?.donotUseFormatters,this.fileService))),i}}export{_ as FileLoggerService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { ThrottledDelayer } from "../../../base/common/async.js";
+import { VSBuffer } from "../../../base/common/buffer.js";
+import { basename, dirname, joinPath } from "../../../base/common/resources.js";
+import { URI } from "../../../base/common/uri.js";
+import { ByteSize, FileOperationError, FileOperationResult, IFileService, whenProviderRegistered } from "../../files/common/files.js";
+import { BufferLogger } from "./bufferLog.js";
+import { AbstractLoggerService, AbstractMessageLogger, ILogger, ILoggerOptions, ILoggerService, LogLevel } from "./log.js";
+const MAX_FILE_SIZE = 5 * ByteSize.MB;
+let FileLogger = class extends AbstractMessageLogger {
+  constructor(resource, level, donotUseFormatters, fileService) {
+    super();
+    this.resource = resource;
+    this.donotUseFormatters = donotUseFormatters;
+    this.fileService = fileService;
+    this.setLevel(level);
+    this.flushDelayer = new ThrottledDelayer(
+      100
+      /* buffer saves over a short time */
+    );
+    this.initializePromise = this.initialize();
+  }
+  static {
+    __name(this, "FileLogger");
+  }
+  initializePromise;
+  flushDelayer;
+  backupIndex = 1;
+  buffer = "";
+  async flush() {
+    if (!this.buffer) {
+      return;
+    }
+    await this.initializePromise;
+    let content = await this.loadContent();
+    if (content.length > MAX_FILE_SIZE) {
+      await this.fileService.writeFile(this.getBackupResource(), VSBuffer.fromString(content));
+      content = "";
+    }
+    if (this.buffer) {
+      content += this.buffer;
+      this.buffer = "";
+      await this.fileService.writeFile(this.resource, VSBuffer.fromString(content));
+    }
+  }
+  async initialize() {
+    try {
+      await this.fileService.createFile(this.resource);
+    } catch (error) {
+      if (error.fileOperationResult !== FileOperationResult.FILE_MODIFIED_SINCE) {
+        throw error;
+      }
+    }
+  }
+  log(level, message) {
+    if (this.donotUseFormatters) {
+      this.buffer += message;
+    } else {
+      this.buffer += `${this.getCurrentTimestamp()} [${this.stringifyLogLevel(level)}] ${message}
+`;
+    }
+    this.flushDelayer.trigger(() => this.flush());
+  }
+  getCurrentTimestamp() {
+    const toTwoDigits = /* @__PURE__ */ __name((v) => v < 10 ? `0${v}` : v, "toTwoDigits");
+    const toThreeDigits = /* @__PURE__ */ __name((v) => v < 10 ? `00${v}` : v < 100 ? `0${v}` : v, "toThreeDigits");
+    const currentTime = /* @__PURE__ */ new Date();
+    return `${currentTime.getFullYear()}-${toTwoDigits(currentTime.getMonth() + 1)}-${toTwoDigits(currentTime.getDate())} ${toTwoDigits(currentTime.getHours())}:${toTwoDigits(currentTime.getMinutes())}:${toTwoDigits(currentTime.getSeconds())}.${toThreeDigits(currentTime.getMilliseconds())}`;
+  }
+  getBackupResource() {
+    this.backupIndex = this.backupIndex > 5 ? 1 : this.backupIndex;
+    return joinPath(dirname(this.resource), `${basename(this.resource)}_${this.backupIndex++}`);
+  }
+  async loadContent() {
+    try {
+      const content = await this.fileService.readFile(this.resource);
+      return content.value.toString();
+    } catch (e) {
+      return "";
+    }
+  }
+  stringifyLogLevel(level) {
+    switch (level) {
+      case LogLevel.Debug:
+        return "debug";
+      case LogLevel.Error:
+        return "error";
+      case LogLevel.Info:
+        return "info";
+      case LogLevel.Trace:
+        return "trace";
+      case LogLevel.Warning:
+        return "warning";
+    }
+    return "";
+  }
+};
+FileLogger = __decorateClass([
+  __decorateParam(3, IFileService)
+], FileLogger);
+class FileLoggerService extends AbstractLoggerService {
+  constructor(logLevel, logsHome, fileService) {
+    super(logLevel, logsHome);
+    this.fileService = fileService;
+  }
+  static {
+    __name(this, "FileLoggerService");
+  }
+  doCreateLogger(resource, logLevel, options) {
+    const logger = new BufferLogger(logLevel);
+    whenProviderRegistered(resource, this.fileService).then(() => logger.logger = new FileLogger(resource, logger.getLevel(), !!options?.donotUseFormatters, this.fileService));
+    return logger;
+  }
+}
+export {
+  FileLoggerService
+};
+//# sourceMappingURL=fileLog.js.map

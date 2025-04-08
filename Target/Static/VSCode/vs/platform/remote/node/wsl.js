@@ -1,1 +1,73 @@
-import*as o from"fs";import*as a from"os";import*as u from"child_process";import*as f from"path";let s;async function P(e=!1){return(s===void 0||e)&&(s=d()),s}async function d(){const e=l();if(e===void 0)return!1;if(e>=22e3){const n=c();if(n)return new Promise(t=>{try{u.execFile(n,["--status"],r=>t(!r))}catch{t(!1)}})}else{const n=m();if(n)try{if((await o.promises.stat(n)).isFile())return!0}catch{}}return!1}function l(){const e=/(\d+)\.(\d+)\.(\d+)/g.exec(a.release());if(e)return parseInt(e[3])}function i(e){const n=process.env.SystemRoot;if(n){const t=process.env.hasOwnProperty("PROCESSOR_ARCHITEW6432");return f.join(n,t?"Sysnative":"System32",e)}}function c(){return i("wsl.exe")}function m(){return i("lxss\\LxssManager.dll")}export{P as hasWSLFeatureInstalled};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as fs from "fs";
+import * as os from "os";
+import * as cp from "child_process";
+import * as path from "path";
+let hasWSLFeaturePromise;
+async function hasWSLFeatureInstalled(refresh = false) {
+  if (hasWSLFeaturePromise === void 0 || refresh) {
+    hasWSLFeaturePromise = testWSLFeatureInstalled();
+  }
+  return hasWSLFeaturePromise;
+}
+__name(hasWSLFeatureInstalled, "hasWSLFeatureInstalled");
+async function testWSLFeatureInstalled() {
+  const windowsBuildNumber = getWindowsBuildNumber();
+  if (windowsBuildNumber === void 0) {
+    return false;
+  }
+  if (windowsBuildNumber >= 22e3) {
+    const wslExePath = getWSLExecutablePath();
+    if (wslExePath) {
+      return new Promise((s) => {
+        try {
+          cp.execFile(wslExePath, ["--status"], (err) => s(!err));
+        } catch (e) {
+          s(false);
+        }
+      });
+    }
+  } else {
+    const dllPath = getLxssManagerDllPath();
+    if (dllPath) {
+      try {
+        if ((await fs.promises.stat(dllPath)).isFile()) {
+          return true;
+        }
+      } catch (e) {
+      }
+    }
+  }
+  return false;
+}
+__name(testWSLFeatureInstalled, "testWSLFeatureInstalled");
+function getWindowsBuildNumber() {
+  const osVersion = /(\d+)\.(\d+)\.(\d+)/g.exec(os.release());
+  if (osVersion) {
+    return parseInt(osVersion[3]);
+  }
+  return void 0;
+}
+__name(getWindowsBuildNumber, "getWindowsBuildNumber");
+function getSystem32Path(subPath) {
+  const systemRoot = process.env["SystemRoot"];
+  if (systemRoot) {
+    const is32ProcessOn64Windows = process.env.hasOwnProperty("PROCESSOR_ARCHITEW6432");
+    return path.join(systemRoot, is32ProcessOn64Windows ? "Sysnative" : "System32", subPath);
+  }
+  return void 0;
+}
+__name(getSystem32Path, "getSystem32Path");
+function getWSLExecutablePath() {
+  return getSystem32Path("wsl.exe");
+}
+__name(getWSLExecutablePath, "getWSLExecutablePath");
+function getLxssManagerDllPath() {
+  return getSystem32Path("lxss\\LxssManager.dll");
+}
+__name(getLxssManagerDllPath, "getLxssManagerDllPath");
+export {
+  hasWSLFeatureInstalled
+};
+//# sourceMappingURL=wsl.js.map

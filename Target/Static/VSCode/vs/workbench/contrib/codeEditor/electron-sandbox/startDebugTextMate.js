@@ -1,1 +1,100 @@
-import*as M from"../../../../nls.js";import{Range as E}from"../../../../editor/common/core/range.js";import{Action2 as I,registerAction2 as h}from"../../../../platform/actions/common/actions.js";import{Categories as x}from"../../../../platform/action/common/actionCommonCategories.js";import{ITextMateTokenizationService as A}from"../../../services/textMate/browser/textMateTokenizationFeature.js";import{IModelService as L}from"../../../../editor/common/services/model.js";import{IEditorService as w}from"../../../services/editor/common/editorService.js";import{URI as C}from"../../../../base/common/uri.js";import{generateUuid as T}from"../../../../base/common/uuid.js";import{ICodeEditorService as _}from"../../../../editor/browser/services/codeEditorService.js";import"../../../../editor/common/model.js";import{Constants as p}from"../../../../base/common/uint.js";import{IHostService as y}from"../../../services/host/browser/host.js";import{INativeWorkbenchEnvironmentService as F}from"../../../services/environment/electron-sandbox/environmentService.js";import{ILoggerService as N}from"../../../../platform/log/common/log.js";import{joinPath as O}from"../../../../base/common/resources.js";import{IFileService as R}from"../../../../platform/files/common/files.js";import"../../../../platform/instantiation/common/instantiation.js";class r extends I{static resource=C.parse("inmemory:///tm-log.txt");constructor(){super({id:"editor.action.startDebugTextMate",title:M.localize2("startDebugTextMate","Start TextMate Syntax Grammar Logging"),category:x.Developer,f1:!0})}_getOrCreateModel(e){return e.getModel(r.resource)||e.createModel("",null,r.resource)}_append(e,o){const t=e.getLineCount();e.applyEdits([{range:new E(t,p.MAX_SAFE_SMALL_INTEGER,t,p.MAX_SAFE_SMALL_INTEGER),text:o}])}async run(e){const o=e.get(A),t=e.get(L),i=e.get(w),s=e.get(_),n=e.get(y),a=e.get(F),m=e.get(N),c=e.get(R),p=O(a.tmpDir,`vcode-tm-log-${T()}.txt`);await c.createFile(p);const d=m.createLogger(p,{name:"debug textmate"}),g=this._getOrCreateModel(t),l=e=>{this._append(g,e+"\n"),f(),d.info(e),d.flush()};if(await n.openWindow([{fileUri:p}],{forceNewWindow:!0}),!await i.openEditor({resource:g.uri,options:{pinned:!0}}))return;const f=()=>{const e=s.listCodeEditors();for(const o of e)o.hasModel()&&o.getModel().uri.toString()===r.resource.toString()&&o.revealLine(o.getModel().getLineCount())};l("// Open the file you want to test to the side and watch here"),l(`// Output mirrored at ${p}`),o.startDebugMode((e=>{this._append(g,e+"\n"),f(),d.info(e),d.flush()}),(()=>{}))}}h(r);
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as nls from "../../../../nls.js";
+import { Range } from "../../../../editor/common/core/range.js";
+import { Action2, registerAction2 } from "../../../../platform/actions/common/actions.js";
+import { Categories } from "../../../../platform/action/common/actionCommonCategories.js";
+import { ITextMateTokenizationService } from "../../../services/textMate/browser/textMateTokenizationFeature.js";
+import { IModelService } from "../../../../editor/common/services/model.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { URI } from "../../../../base/common/uri.js";
+import { generateUuid } from "../../../../base/common/uuid.js";
+import { ICodeEditorService } from "../../../../editor/browser/services/codeEditorService.js";
+import { ITextModel } from "../../../../editor/common/model.js";
+import { Constants } from "../../../../base/common/uint.js";
+import { IHostService } from "../../../services/host/browser/host.js";
+import { INativeWorkbenchEnvironmentService } from "../../../services/environment/electron-sandbox/environmentService.js";
+import { ILoggerService } from "../../../../platform/log/common/log.js";
+import { joinPath } from "../../../../base/common/resources.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+class StartDebugTextMate extends Action2 {
+  static {
+    __name(this, "StartDebugTextMate");
+  }
+  static resource = URI.parse(`inmemory:///tm-log.txt`);
+  constructor() {
+    super({
+      id: "editor.action.startDebugTextMate",
+      title: nls.localize2("startDebugTextMate", "Start TextMate Syntax Grammar Logging"),
+      category: Categories.Developer,
+      f1: true
+    });
+  }
+  _getOrCreateModel(modelService) {
+    const model = modelService.getModel(StartDebugTextMate.resource);
+    if (model) {
+      return model;
+    }
+    return modelService.createModel("", null, StartDebugTextMate.resource);
+  }
+  _append(model, str) {
+    const lineCount = model.getLineCount();
+    model.applyEdits([{
+      range: new Range(lineCount, Constants.MAX_SAFE_SMALL_INTEGER, lineCount, Constants.MAX_SAFE_SMALL_INTEGER),
+      text: str
+    }]);
+  }
+  async run(accessor) {
+    const textMateService = accessor.get(ITextMateTokenizationService);
+    const modelService = accessor.get(IModelService);
+    const editorService = accessor.get(IEditorService);
+    const codeEditorService = accessor.get(ICodeEditorService);
+    const hostService = accessor.get(IHostService);
+    const environmentService = accessor.get(INativeWorkbenchEnvironmentService);
+    const loggerService = accessor.get(ILoggerService);
+    const fileService = accessor.get(IFileService);
+    const pathInTemp = joinPath(environmentService.tmpDir, `vcode-tm-log-${generateUuid()}.txt`);
+    await fileService.createFile(pathInTemp);
+    const logger = loggerService.createLogger(pathInTemp, { name: "debug textmate" });
+    const model = this._getOrCreateModel(modelService);
+    const append = /* @__PURE__ */ __name((str) => {
+      this._append(model, str + "\n");
+      scrollEditor();
+      logger.info(str);
+      logger.flush();
+    }, "append");
+    await hostService.openWindow([{ fileUri: pathInTemp }], { forceNewWindow: true });
+    const textEditorPane = await editorService.openEditor({
+      resource: model.uri,
+      options: { pinned: true }
+    });
+    if (!textEditorPane) {
+      return;
+    }
+    const scrollEditor = /* @__PURE__ */ __name(() => {
+      const editors = codeEditorService.listCodeEditors();
+      for (const editor of editors) {
+        if (editor.hasModel()) {
+          if (editor.getModel().uri.toString() === StartDebugTextMate.resource.toString()) {
+            editor.revealLine(editor.getModel().getLineCount());
+          }
+        }
+      }
+    }, "scrollEditor");
+    append(`// Open the file you want to test to the side and watch here`);
+    append(`// Output mirrored at ${pathInTemp}`);
+    textMateService.startDebugMode(
+      (str) => {
+        this._append(model, str + "\n");
+        scrollEditor();
+        logger.info(str);
+        logger.flush();
+      },
+      () => {
+      }
+    );
+  }
+}
+registerAction2(StartDebugTextMate);
+//# sourceMappingURL=startDebugTextMate.js.map

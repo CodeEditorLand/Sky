@@ -1,1 +1,364 @@
-var G=Object.defineProperty;var Y=Object.getOwnPropertyDescriptor;var w=(a,e,t,i)=>{for(var s=i>1?void 0:i?Y(e,t):e,u=a.length-1,o;u>=0;u--)(o=a[u])&&(s=(i?o(e,t,s):o(s))||s);return i&&s&&G(e,t,s),s},n=(a,e)=>(t,i)=>e(t,i,a);import{$ as R,append as k}from"../../../../../base/browser/dom.js";import{DEFAULT_FONT_FAMILY as j}from"../../../../../base/browser/fonts.js";import"../../../../../base/browser/history.js";import{Widget as J}from"../../../../../base/browser/ui/widget.js";import{Emitter as E,Event as A}from"../../../../../base/common/event.js";import{HistoryNavigator as Q}from"../../../../../base/common/history.js";import{KeyCode as z}from"../../../../../base/common/keyCodes.js";import{mixin as X}from"../../../../../base/common/objects.js";import{isMacintosh as Z}from"../../../../../base/common/platform.js";import{URI as ee}from"../../../../../base/common/uri.js";import"./suggestEnabledInput.css";import"../../../../../editor/browser/config/editorConfiguration.js";import{EditorExtensionsRegistry as te}from"../../../../../editor/browser/editorExtensions.js";import{CodeEditorWidget as ie}from"../../../../../editor/browser/widget/codeEditor/codeEditorWidget.js";import"../../../../../editor/common/config/editorOptions.js";import{EditOperation as oe}from"../../../../../editor/common/core/editOperation.js";import{Position as re}from"../../../../../editor/common/core/position.js";import{Range as $}from"../../../../../editor/common/core/range.js";import{ensureValidWordDefinition as ne,getWordAtText as se}from"../../../../../editor/common/core/wordHelper.js";import*as le from"../../../../../editor/common/languages.js";import"../../../../../editor/common/model.js";import{ILanguageFeaturesService as M}from"../../../../../editor/common/services/languageFeatures.js";import{IModelService as K}from"../../../../../editor/common/services/model.js";import{ContextMenuController as ae}from"../../../../../editor/contrib/contextmenu/browser/contextmenu.js";import{SnippetController2 as ue}from"../../../../../editor/contrib/snippet/browser/snippetController2.js";import{SuggestController as de}from"../../../../../editor/contrib/suggest/browser/suggestController.js";import{IConfigurationService as F}from"../../../../../platform/configuration/common/configuration.js";import{IContextKeyService as V}from"../../../../../platform/contextkey/common/contextkey.js";import{registerAndCreateHistoryNavigationContext as ge}from"../../../../../platform/history/browser/contextScopedHistoryWidget.js";import{IInstantiationService as L}from"../../../../../platform/instantiation/common/instantiation.js";import{ServiceCollection as pe}from"../../../../../platform/instantiation/common/serviceCollection.js";import{asCssVariable as _,asCssVariableWithDefault as ce,inputBackground as he,inputBorder as me,inputForeground as q,inputPlaceholderForeground as fe}from"../../../../../platform/theme/common/colorRegistry.js";import{MenuPreventer as ye}from"../menuPreventer.js";import{SelectionClipboardContributionID as Ce}from"../selectionClipboard.js";import{getSimpleEditorOptions as ve,setupSimpleEditorSelectionStyling as xe}from"../simpleEditorOptions.js";let x=class extends J{_onShouldFocusResults=new E;onShouldFocusResults=this._onShouldFocusResults.event;_onInputDidChange=new E;onInputDidChange=this._onInputDidChange.event;_onDidFocus=this._register(new E);onDidFocus=this._onDidFocus.event;_onDidBlur=this._register(new E);onDidBlur=this._onDidBlur.event;inputWidget;inputModel;stylingContainer;element;placeholderText;constructor(e,t,i,s,u,o,h,y,C,p,d){super(),this.stylingContainer=k(t,R(".suggest-input-container")),this.element=t,this.placeholderText=k(this.stylingContainer,R(".suggest-input-placeholder",void 0,o.placeholderText||""));const m=X(ve(d),Ie(s));m.overflowWidgetsDomNode=o.overflowWidgetsDomNode;const c=this.getScopedContextKeyService(C),U=c?this._register(h.createChild(new pe([V,c]))):h;this.inputWidget=this._register(U.createInstance(ie,this.stylingContainer,m,{contributions:te.getSomeEditorContributions([de.ID,ue.ID,ae.ID,ye.ID,Ce]),isSimpleWidget:!0})),this._register(d.onDidChangeConfiguration(r=>{if(r.affectsConfiguration("editor.accessibilitySupport")||r.affectsConfiguration("editor.cursorBlinking")){const l=d.getValue("editor.accessibilitySupport"),O=d.getValue("editor.cursorBlinking");this.inputWidget.updateOptions({accessibilitySupport:l,cursorBlinking:O})}})),this._register(this.inputWidget.onDidFocusEditorText(()=>this._onDidFocus.fire())),this._register(this.inputWidget.onDidBlurEditorText(()=>this._onDidBlur.fire()));const T=ee.parse(u);this.inputModel=y.createModel("",null,T,!0),this._register(this.inputModel),this.inputWidget.setModel(this.inputModel),this._register(this.inputWidget.onDidPaste(()=>this.setValue(this.getValue()))),this._register(this.inputWidget.onDidFocusEditorText(()=>{o.focusContextKey&&o.focusContextKey.set(!0),this.stylingContainer.classList.add("synthetic-focus")})),this._register(this.inputWidget.onDidBlurEditorText(()=>{o.focusContextKey&&o.focusContextKey.set(!1),this.stylingContainer.classList.remove("synthetic-focus")})),this._register(A.chain(this.inputWidget.onKeyDown,r=>r.filter(l=>l.keyCode===z.Enter))(r=>{r.preventDefault()},this)),this._register(A.chain(this.inputWidget.onKeyDown,r=>r.filter(l=>l.keyCode===z.DownArrow&&(Z?l.metaKey:l.ctrlKey)))(()=>this._onShouldFocusResults.fire(),this));let N=this.getValue();const H=this.inputWidget.getModel();H&&this._register(H.onDidChangeContent(()=>{const r=this.getValue();this.placeholderText.style.visibility=r?"hidden":"visible",N.trim()!==r.trim()&&(this._onInputDidChange.fire(void 0),N=r)}));const f={provideResults:i.provideResults,sortKey:i.sortKey||(r=>r),triggerCharacters:i.triggerCharacters||[],wordDefinition:i.wordDefinition?ne(i.wordDefinition):void 0,alwaysShowSuggestions:!!i.alwaysShowSuggestions};this.setValue(o.value||""),this._register(p.completionProvider.register({scheme:T.scheme,pattern:"**/"+T.path,hasAccessToAllModels:!0},{_debugDisplayName:`suggestEnabledInput/${e}`,triggerCharacters:f.triggerCharacters,provideCompletionItems:(r,l,O)=>{const S=r.getValue(),P=l.column-1;let b=0,D=0;if(f.wordDefinition){const g=se(l.column,f.wordDefinition,S,0);b=g?.word.length??0,D=g?g.startColumn-1:0}else D=S.lastIndexOf(" ",P-1)+1,b=P-D;return!f.alwaysShowSuggestions&&b>0&&f.triggerCharacters?.indexOf(S[D])===-1?{suggestions:[]}:{suggestions:i.provideResults(S).map(g=>{let v,B;return typeof g=="string"?v=g:(v=g.label,B=g),{label:v,insertText:v,range:$.fromPositions(l.delta(0,-b),l),sortText:f.sortKey(v),kind:le.CompletionItemKind.Keyword,...B}})}}})),this.style(o.styleOverrides||{})}getScopedContextKeyService(e){}updateAriaLabel(e){this.inputWidget.updateOptions({ariaLabel:e})}setValue(e){e=e.replace(/\s/g," ");const t=this.inputModel.getFullModelRange();this.inputWidget.executeEdits("suggestEnabledInput.setValue",[oe.replace(t,e)]),this.inputWidget.setScrollTop(0),this.inputWidget.setPosition(new re(1,e.length+1))}getValue(){return this.inputWidget.getValue()}style(e){this.stylingContainer.style.backgroundColor=_(e.inputBackground??he),this.stylingContainer.style.color=_(e.inputForeground??q),this.placeholderText.style.color=_(e.inputPlaceholderForeground??fe),this.stylingContainer.style.borderWidth="1px",this.stylingContainer.style.borderStyle="solid",this.stylingContainer.style.borderColor=ce(e.inputBorder??me,"transparent");const t=this.stylingContainer.getElementsByClassName("cursor")[0];t&&(t.style.backgroundColor=_(e.inputForeground??q))}focus(e){this.inputWidget.focus(),e&&this.inputWidget.getValue()&&this.selectAll()}onHide(){this.inputWidget.onHide()}layout(e){this.inputWidget.layout(e),this.placeholderText.style.width=`${e.width-2}px`}selectAll(){this.inputWidget.setSelection(new $(1,1,1,this.getValue().length+1))}};x=w([n(6,L),n(7,K),n(8,V),n(9,M),n(10,F)],x);let I=class extends x{history;constructor({id:e,parent:t,ariaLabel:i,suggestionProvider:s,resourceHandle:u,suggestOptions:o,history:h},y,C,p,d,m){super(e,t,s,i,u,o,y,C,p,d,m),this.history=this._register(new Q(new Set(h),100))}addToHistory(){const e=this.getValue();e&&e!==this.getCurrentValue()&&this.history.add(e)}getHistory(){return this.history.getHistory()}showNextValue(){this.history.has(this.getValue())||this.addToHistory();let e=this.getNextValue();e&&(e=e===this.getValue()?this.getNextValue():e),this.setValue(e??"")}showPreviousValue(){this.history.has(this.getValue())||this.addToHistory();let e=this.getPreviousValue();e&&(e=e===this.getValue()?this.getPreviousValue():e),e&&(this.setValue(e),this.inputWidget.setPosition({lineNumber:0,column:0}))}clearHistory(){this.history.clear()}getCurrentValue(){let e=this.history.current();return e||(e=this.history.last(),this.history.next()),e}getPreviousValue(){return this.history.previous()||this.history.first()}getNextValue(){return this.history.next()}};I=w([n(1,L),n(2,K),n(3,V),n(4,M),n(5,F)],I);let W=class extends I{historyContext;constructor(e,t,i,s,u,o){super(e,t,i,s,u,o);const{historyNavigationBackwardsEnablement:h,historyNavigationForwardsEnablement:y}=this.historyContext;this._register(this.inputWidget.onDidChangeCursorPosition(({position:C})=>{const p=this.inputWidget._getViewModel(),d=p.getLineCount(),m=p.getLineLength(d)+1,c=p.coordinatesConverter.convertModelPositionToViewPosition(C);h.set(c.lineNumber===1&&c.column===1),y.set(c.lineNumber===d&&c.column===m)}))}getScopedContextKeyService(e){const t=this._register(e.createScoped(this.element));return this.historyContext=this._register(ge(t,this)),t}};W=w([n(1,L),n(2,K),n(3,V),n(4,M),n(5,F)],W),xe(".suggest-input-container");function Ie(a){return{fontSize:13,lineHeight:20,wordWrap:"off",scrollbar:{vertical:"hidden"},roundedSelection:!1,guides:{indentation:!1},cursorWidth:1,fontFamily:j,ariaLabel:a||"",snippetSuggestions:"none",suggest:{filterGraceful:!1,showIcons:!1},autoClosingBrackets:"never"}}export{W as ContextScopedSuggestEnabledInputWithHistory,x as SuggestEnabledInput,I as SuggestEnabledInputWithHistory};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { $, Dimension, append } from "../../../../../base/browser/dom.js";
+import { DEFAULT_FONT_FAMILY } from "../../../../../base/browser/fonts.js";
+import { IHistoryNavigationWidget } from "../../../../../base/browser/history.js";
+import { Widget } from "../../../../../base/browser/ui/widget.js";
+import { Emitter, Event } from "../../../../../base/common/event.js";
+import { HistoryNavigator } from "../../../../../base/common/history.js";
+import { KeyCode } from "../../../../../base/common/keyCodes.js";
+import { mixin } from "../../../../../base/common/objects.js";
+import { isMacintosh } from "../../../../../base/common/platform.js";
+import { URI as uri } from "../../../../../base/common/uri.js";
+import "./suggestEnabledInput.css";
+import { IEditorConstructionOptions } from "../../../../../editor/browser/config/editorConfiguration.js";
+import { EditorExtensionsRegistry } from "../../../../../editor/browser/editorExtensions.js";
+import { CodeEditorWidget } from "../../../../../editor/browser/widget/codeEditor/codeEditorWidget.js";
+import { IEditorOptions } from "../../../../../editor/common/config/editorOptions.js";
+import { EditOperation } from "../../../../../editor/common/core/editOperation.js";
+import { Position } from "../../../../../editor/common/core/position.js";
+import { Range } from "../../../../../editor/common/core/range.js";
+import { ensureValidWordDefinition, getWordAtText } from "../../../../../editor/common/core/wordHelper.js";
+import * as languages from "../../../../../editor/common/languages.js";
+import { ITextModel } from "../../../../../editor/common/model.js";
+import { ILanguageFeaturesService } from "../../../../../editor/common/services/languageFeatures.js";
+import { IModelService } from "../../../../../editor/common/services/model.js";
+import { ContextMenuController } from "../../../../../editor/contrib/contextmenu/browser/contextmenu.js";
+import { SnippetController2 } from "../../../../../editor/contrib/snippet/browser/snippetController2.js";
+import { SuggestController } from "../../../../../editor/contrib/suggest/browser/suggestController.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { IContextKey, IContextKeyService } from "../../../../../platform/contextkey/common/contextkey.js";
+import { IHistoryNavigationContext, registerAndCreateHistoryNavigationContext } from "../../../../../platform/history/browser/contextScopedHistoryWidget.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { ServiceCollection } from "../../../../../platform/instantiation/common/serviceCollection.js";
+import { ColorIdentifier, asCssVariable, asCssVariableWithDefault, inputBackground, inputBorder, inputForeground, inputPlaceholderForeground } from "../../../../../platform/theme/common/colorRegistry.js";
+import { MenuPreventer } from "../menuPreventer.js";
+import { SelectionClipboardContributionID } from "../selectionClipboard.js";
+import { getSimpleEditorOptions, setupSimpleEditorSelectionStyling } from "../simpleEditorOptions.js";
+let SuggestEnabledInput = class extends Widget {
+  static {
+    __name(this, "SuggestEnabledInput");
+  }
+  _onShouldFocusResults = new Emitter();
+  onShouldFocusResults = this._onShouldFocusResults.event;
+  _onInputDidChange = new Emitter();
+  onInputDidChange = this._onInputDidChange.event;
+  _onDidFocus = this._register(new Emitter());
+  onDidFocus = this._onDidFocus.event;
+  _onDidBlur = this._register(new Emitter());
+  onDidBlur = this._onDidBlur.event;
+  inputWidget;
+  inputModel;
+  stylingContainer;
+  element;
+  placeholderText;
+  constructor(id, parent, suggestionProvider, ariaLabel, resourceHandle, options, defaultInstantiationService, modelService, contextKeyService, languageFeaturesService, configurationService) {
+    super();
+    this.stylingContainer = append(parent, $(".suggest-input-container"));
+    this.element = parent;
+    this.placeholderText = append(this.stylingContainer, $(".suggest-input-placeholder", void 0, options.placeholderText || ""));
+    const editorOptions = mixin(
+      getSimpleEditorOptions(configurationService),
+      getSuggestEnabledInputOptions(ariaLabel)
+    );
+    editorOptions.overflowWidgetsDomNode = options.overflowWidgetsDomNode;
+    const scopedContextKeyService = this.getScopedContextKeyService(contextKeyService);
+    const instantiationService = scopedContextKeyService ? this._register(defaultInstantiationService.createChild(new ServiceCollection([IContextKeyService, scopedContextKeyService]))) : defaultInstantiationService;
+    this.inputWidget = this._register(instantiationService.createInstance(
+      CodeEditorWidget,
+      this.stylingContainer,
+      editorOptions,
+      {
+        contributions: EditorExtensionsRegistry.getSomeEditorContributions([
+          SuggestController.ID,
+          SnippetController2.ID,
+          ContextMenuController.ID,
+          MenuPreventer.ID,
+          SelectionClipboardContributionID
+        ]),
+        isSimpleWidget: true
+      }
+    ));
+    this._register(configurationService.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration("editor.accessibilitySupport") || e.affectsConfiguration("editor.cursorBlinking")) {
+        const accessibilitySupport = configurationService.getValue("editor.accessibilitySupport");
+        const cursorBlinking = configurationService.getValue("editor.cursorBlinking");
+        this.inputWidget.updateOptions({
+          accessibilitySupport,
+          cursorBlinking
+        });
+      }
+    }));
+    this._register(this.inputWidget.onDidFocusEditorText(() => this._onDidFocus.fire()));
+    this._register(this.inputWidget.onDidBlurEditorText(() => this._onDidBlur.fire()));
+    const scopeHandle = uri.parse(resourceHandle);
+    this.inputModel = modelService.createModel("", null, scopeHandle, true);
+    this._register(this.inputModel);
+    this.inputWidget.setModel(this.inputModel);
+    this._register(this.inputWidget.onDidPaste(() => this.setValue(this.getValue())));
+    this._register(this.inputWidget.onDidFocusEditorText(() => {
+      if (options.focusContextKey) {
+        options.focusContextKey.set(true);
+      }
+      this.stylingContainer.classList.add("synthetic-focus");
+    }));
+    this._register(this.inputWidget.onDidBlurEditorText(() => {
+      if (options.focusContextKey) {
+        options.focusContextKey.set(false);
+      }
+      this.stylingContainer.classList.remove("synthetic-focus");
+    }));
+    this._register(Event.chain(this.inputWidget.onKeyDown, ($2) => $2.filter((e) => e.keyCode === KeyCode.Enter))((e) => {
+      e.preventDefault();
+    }, this));
+    this._register(Event.chain(this.inputWidget.onKeyDown, ($2) => $2.filter((e) => e.keyCode === KeyCode.DownArrow && (isMacintosh ? e.metaKey : e.ctrlKey)))(() => this._onShouldFocusResults.fire(), this));
+    let preexistingContent = this.getValue();
+    const inputWidgetModel = this.inputWidget.getModel();
+    if (inputWidgetModel) {
+      this._register(inputWidgetModel.onDidChangeContent(() => {
+        const content = this.getValue();
+        this.placeholderText.style.visibility = content ? "hidden" : "visible";
+        if (preexistingContent.trim() === content.trim()) {
+          return;
+        }
+        this._onInputDidChange.fire(void 0);
+        preexistingContent = content;
+      }));
+    }
+    const validatedSuggestProvider = {
+      provideResults: suggestionProvider.provideResults,
+      sortKey: suggestionProvider.sortKey || ((a) => a),
+      triggerCharacters: suggestionProvider.triggerCharacters || [],
+      wordDefinition: suggestionProvider.wordDefinition ? ensureValidWordDefinition(suggestionProvider.wordDefinition) : void 0,
+      alwaysShowSuggestions: !!suggestionProvider.alwaysShowSuggestions
+    };
+    this.setValue(options.value || "");
+    this._register(languageFeaturesService.completionProvider.register({ scheme: scopeHandle.scheme, pattern: "**/" + scopeHandle.path, hasAccessToAllModels: true }, {
+      _debugDisplayName: `suggestEnabledInput/${id}`,
+      triggerCharacters: validatedSuggestProvider.triggerCharacters,
+      provideCompletionItems: /* @__PURE__ */ __name((model, position, _context) => {
+        const query = model.getValue();
+        const zeroIndexedColumn = position.column - 1;
+        let alreadyTypedCount = 0, zeroIndexedWordStart = 0;
+        if (validatedSuggestProvider.wordDefinition) {
+          const wordAtText = getWordAtText(position.column, validatedSuggestProvider.wordDefinition, query, 0);
+          alreadyTypedCount = wordAtText?.word.length ?? 0;
+          zeroIndexedWordStart = wordAtText ? wordAtText.startColumn - 1 : 0;
+        } else {
+          zeroIndexedWordStart = query.lastIndexOf(" ", zeroIndexedColumn - 1) + 1;
+          alreadyTypedCount = zeroIndexedColumn - zeroIndexedWordStart;
+        }
+        if (!validatedSuggestProvider.alwaysShowSuggestions && alreadyTypedCount > 0 && validatedSuggestProvider.triggerCharacters?.indexOf(query[zeroIndexedWordStart]) === -1) {
+          return { suggestions: [] };
+        }
+        return {
+          suggestions: suggestionProvider.provideResults(query).map((result) => {
+            let label;
+            let rest;
+            if (typeof result === "string") {
+              label = result;
+            } else {
+              label = result.label;
+              rest = result;
+            }
+            return {
+              label,
+              insertText: label,
+              range: Range.fromPositions(position.delta(0, -alreadyTypedCount), position),
+              sortText: validatedSuggestProvider.sortKey(label),
+              kind: languages.CompletionItemKind.Keyword,
+              ...rest
+            };
+          })
+        };
+      }, "provideCompletionItems")
+    }));
+    this.style(options.styleOverrides || {});
+  }
+  getScopedContextKeyService(_contextKeyService) {
+    return void 0;
+  }
+  updateAriaLabel(label) {
+    this.inputWidget.updateOptions({ ariaLabel: label });
+  }
+  setValue(val) {
+    val = val.replace(/\s/g, " ");
+    const fullRange = this.inputModel.getFullModelRange();
+    this.inputWidget.executeEdits("suggestEnabledInput.setValue", [EditOperation.replace(fullRange, val)]);
+    this.inputWidget.setScrollTop(0);
+    this.inputWidget.setPosition(new Position(1, val.length + 1));
+  }
+  getValue() {
+    return this.inputWidget.getValue();
+  }
+  style(styleOverrides) {
+    this.stylingContainer.style.backgroundColor = asCssVariable(styleOverrides.inputBackground ?? inputBackground);
+    this.stylingContainer.style.color = asCssVariable(styleOverrides.inputForeground ?? inputForeground);
+    this.placeholderText.style.color = asCssVariable(styleOverrides.inputPlaceholderForeground ?? inputPlaceholderForeground);
+    this.stylingContainer.style.borderWidth = "1px";
+    this.stylingContainer.style.borderStyle = "solid";
+    this.stylingContainer.style.borderColor = asCssVariableWithDefault(styleOverrides.inputBorder ?? inputBorder, "transparent");
+    const cursor = this.stylingContainer.getElementsByClassName("cursor")[0];
+    if (cursor) {
+      cursor.style.backgroundColor = asCssVariable(styleOverrides.inputForeground ?? inputForeground);
+    }
+  }
+  focus(selectAll) {
+    this.inputWidget.focus();
+    if (selectAll && this.inputWidget.getValue()) {
+      this.selectAll();
+    }
+  }
+  onHide() {
+    this.inputWidget.onHide();
+  }
+  layout(dimension) {
+    this.inputWidget.layout(dimension);
+    this.placeholderText.style.width = `${dimension.width - 2}px`;
+  }
+  selectAll() {
+    this.inputWidget.setSelection(new Range(1, 1, 1, this.getValue().length + 1));
+  }
+};
+SuggestEnabledInput = __decorateClass([
+  __decorateParam(6, IInstantiationService),
+  __decorateParam(7, IModelService),
+  __decorateParam(8, IContextKeyService),
+  __decorateParam(9, ILanguageFeaturesService),
+  __decorateParam(10, IConfigurationService)
+], SuggestEnabledInput);
+let SuggestEnabledInputWithHistory = class extends SuggestEnabledInput {
+  static {
+    __name(this, "SuggestEnabledInputWithHistory");
+  }
+  history;
+  constructor({ id, parent, ariaLabel, suggestionProvider, resourceHandle, suggestOptions, history }, instantiationService, modelService, contextKeyService, languageFeaturesService, configurationService) {
+    super(id, parent, suggestionProvider, ariaLabel, resourceHandle, suggestOptions, instantiationService, modelService, contextKeyService, languageFeaturesService, configurationService);
+    this.history = this._register(new HistoryNavigator(new Set(history), 100));
+  }
+  addToHistory() {
+    const value = this.getValue();
+    if (value && value !== this.getCurrentValue()) {
+      this.history.add(value);
+    }
+  }
+  getHistory() {
+    return this.history.getHistory();
+  }
+  showNextValue() {
+    if (!this.history.has(this.getValue())) {
+      this.addToHistory();
+    }
+    let next = this.getNextValue();
+    if (next) {
+      next = next === this.getValue() ? this.getNextValue() : next;
+    }
+    this.setValue(next ?? "");
+  }
+  showPreviousValue() {
+    if (!this.history.has(this.getValue())) {
+      this.addToHistory();
+    }
+    let previous = this.getPreviousValue();
+    if (previous) {
+      previous = previous === this.getValue() ? this.getPreviousValue() : previous;
+    }
+    if (previous) {
+      this.setValue(previous);
+      this.inputWidget.setPosition({ lineNumber: 0, column: 0 });
+    }
+  }
+  clearHistory() {
+    this.history.clear();
+  }
+  getCurrentValue() {
+    let currentValue = this.history.current();
+    if (!currentValue) {
+      currentValue = this.history.last();
+      this.history.next();
+    }
+    return currentValue;
+  }
+  getPreviousValue() {
+    return this.history.previous() || this.history.first();
+  }
+  getNextValue() {
+    return this.history.next();
+  }
+};
+SuggestEnabledInputWithHistory = __decorateClass([
+  __decorateParam(1, IInstantiationService),
+  __decorateParam(2, IModelService),
+  __decorateParam(3, IContextKeyService),
+  __decorateParam(4, ILanguageFeaturesService),
+  __decorateParam(5, IConfigurationService)
+], SuggestEnabledInputWithHistory);
+let ContextScopedSuggestEnabledInputWithHistory = class extends SuggestEnabledInputWithHistory {
+  static {
+    __name(this, "ContextScopedSuggestEnabledInputWithHistory");
+  }
+  historyContext;
+  constructor(options, instantiationService, modelService, contextKeyService, languageFeaturesService, configurationService) {
+    super(options, instantiationService, modelService, contextKeyService, languageFeaturesService, configurationService);
+    const { historyNavigationBackwardsEnablement, historyNavigationForwardsEnablement } = this.historyContext;
+    this._register(this.inputWidget.onDidChangeCursorPosition(({ position }) => {
+      const viewModel = this.inputWidget._getViewModel();
+      const lastLineNumber = viewModel.getLineCount();
+      const lastLineCol = viewModel.getLineLength(lastLineNumber) + 1;
+      const viewPosition = viewModel.coordinatesConverter.convertModelPositionToViewPosition(position);
+      historyNavigationBackwardsEnablement.set(viewPosition.lineNumber === 1 && viewPosition.column === 1);
+      historyNavigationForwardsEnablement.set(viewPosition.lineNumber === lastLineNumber && viewPosition.column === lastLineCol);
+    }));
+  }
+  getScopedContextKeyService(contextKeyService) {
+    const scopedContextKeyService = this._register(contextKeyService.createScoped(this.element));
+    this.historyContext = this._register(registerAndCreateHistoryNavigationContext(
+      scopedContextKeyService,
+      this
+    ));
+    return scopedContextKeyService;
+  }
+};
+ContextScopedSuggestEnabledInputWithHistory = __decorateClass([
+  __decorateParam(1, IInstantiationService),
+  __decorateParam(2, IModelService),
+  __decorateParam(3, IContextKeyService),
+  __decorateParam(4, ILanguageFeaturesService),
+  __decorateParam(5, IConfigurationService)
+], ContextScopedSuggestEnabledInputWithHistory);
+setupSimpleEditorSelectionStyling(".suggest-input-container");
+function getSuggestEnabledInputOptions(ariaLabel) {
+  return {
+    fontSize: 13,
+    lineHeight: 20,
+    wordWrap: "off",
+    scrollbar: { vertical: "hidden" },
+    roundedSelection: false,
+    guides: {
+      indentation: false
+    },
+    cursorWidth: 1,
+    fontFamily: DEFAULT_FONT_FAMILY,
+    ariaLabel: ariaLabel || "",
+    snippetSuggestions: "none",
+    suggest: { filterGraceful: false, showIcons: false },
+    autoClosingBrackets: "never"
+  };
+}
+__name(getSuggestEnabledInputOptions, "getSuggestEnabledInputOptions");
+export {
+  ContextScopedSuggestEnabledInputWithHistory,
+  SuggestEnabledInput,
+  SuggestEnabledInputWithHistory
+};
+//# sourceMappingURL=suggestEnabledInput.js.map

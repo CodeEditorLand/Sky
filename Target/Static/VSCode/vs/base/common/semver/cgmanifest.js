@@ -1,1 +1,5 @@
-var s="../../../../Asset/cgmanifest-TLDOG6HX.json";export{s as default};
+var cgmanifest_default = "../../../../Asset/cgmanifest-TLDOG6HX.json";
+export {
+  cgmanifest_default as default
+};
+//# sourceMappingURL=cgmanifest.js.map

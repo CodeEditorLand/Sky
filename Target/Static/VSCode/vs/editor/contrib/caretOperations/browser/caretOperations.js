@@ -1,1 +1,58 @@
-import"../../../browser/editorBrowser.js";import{EditorAction as m,registerEditorAction as i}from"../../../browser/editorExtensions.js";import"../../../common/editorCommon.js";import{EditorContextKeys as s}from"../../../common/editorContextKeys.js";import{MoveCaretCommand as d}from"./moveCaretCommand.js";import*as c from"../../../../nls.js";class n extends m{left;constructor(e,o){super(o),this.left=e}run(e,o){if(!o.hasModel())return;const t=[],r=o.getSelections();for(const e of r)t.push(new d(e,this.left));o.pushUndoStop(),o.executeCommands(this.id,t),o.pushUndoStop()}}class p extends n{constructor(){super(!0,{id:"editor.action.moveCarretLeftAction",label:c.localize2("caret.moveLeft","Move Selected Text Left"),precondition:s.writable})}}class f extends n{constructor(){super(!1,{id:"editor.action.moveCarretRightAction",label:c.localize2("caret.moveRight","Move Selected Text Right"),precondition:s.writable})}}i(p),i(f);
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { ICodeEditor } from "../../../browser/editorBrowser.js";
+import { EditorAction, IActionOptions, registerEditorAction, ServicesAccessor } from "../../../browser/editorExtensions.js";
+import { ICommand } from "../../../common/editorCommon.js";
+import { EditorContextKeys } from "../../../common/editorContextKeys.js";
+import { MoveCaretCommand } from "./moveCaretCommand.js";
+import * as nls from "../../../../nls.js";
+class MoveCaretAction extends EditorAction {
+  static {
+    __name(this, "MoveCaretAction");
+  }
+  left;
+  constructor(left, opts) {
+    super(opts);
+    this.left = left;
+  }
+  run(accessor, editor) {
+    if (!editor.hasModel()) {
+      return;
+    }
+    const commands = [];
+    const selections = editor.getSelections();
+    for (const selection of selections) {
+      commands.push(new MoveCaretCommand(selection, this.left));
+    }
+    editor.pushUndoStop();
+    editor.executeCommands(this.id, commands);
+    editor.pushUndoStop();
+  }
+}
+class MoveCaretLeftAction extends MoveCaretAction {
+  static {
+    __name(this, "MoveCaretLeftAction");
+  }
+  constructor() {
+    super(true, {
+      id: "editor.action.moveCarretLeftAction",
+      label: nls.localize2("caret.moveLeft", "Move Selected Text Left"),
+      precondition: EditorContextKeys.writable
+    });
+  }
+}
+class MoveCaretRightAction extends MoveCaretAction {
+  static {
+    __name(this, "MoveCaretRightAction");
+  }
+  constructor() {
+    super(false, {
+      id: "editor.action.moveCarretRightAction",
+      label: nls.localize2("caret.moveRight", "Move Selected Text Right"),
+      precondition: EditorContextKeys.writable
+    });
+  }
+}
+registerEditorAction(MoveCaretLeftAction);
+registerEditorAction(MoveCaretRightAction);
+//# sourceMappingURL=caretOperations.js.map

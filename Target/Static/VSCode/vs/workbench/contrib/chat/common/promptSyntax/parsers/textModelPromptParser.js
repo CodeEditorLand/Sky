@@ -1,1 +1,41 @@
-var I=Object.defineProperty,a=Object.getOwnPropertyDescriptor,p=(t,r,o,e)=>{for(var s,n=e>1?void 0:e?a(r,o):r,i=t.length-1;i>=0;i--)(s=t[i])&&(n=(e?s(r,o,n):s(n))||n);return e&&n&&I(r,o,n),n},m=(t,r)=>(o,e)=>r(o,e,t);import{BasePromptParser as d}from"./basePromptParser.js";import"../../../../../../editor/common/model.js";import{ILogService as v}from"../../../../../../platform/log/common/log.js";import{TextModelContentsProvider as f}from"../contentProviders/textModelContentsProvider.js";import{IInstantiationService as g}from"../../../../../../platform/instantiation/common/instantiation.js";let s=class extends d{constructor(t,r=[],o,e){const s=o.createInstance(f,t);super(s,r,o,e),this._register(s)}toString(){return`text-model-prompt:${this.uri.path}`}};s=p([m(2,g),m(3,v)],s);export{s as TextModelPromptParser};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { BasePromptParser } from "./basePromptParser.js";
+import { ITextModel } from "../../../../../../editor/common/model.js";
+import { ILogService } from "../../../../../../platform/log/common/log.js";
+import { TextModelContentsProvider } from "../contentProviders/textModelContentsProvider.js";
+import { IInstantiationService } from "../../../../../../platform/instantiation/common/instantiation.js";
+let TextModelPromptParser = class extends BasePromptParser {
+  static {
+    __name(this, "TextModelPromptParser");
+  }
+  constructor(model, seenReferences = [], initService, logService) {
+    const contentsProvider = initService.createInstance(TextModelContentsProvider, model);
+    super(contentsProvider, seenReferences, initService, logService);
+    this._register(contentsProvider);
+  }
+  /**
+   * Returns a string representation of this object.
+   */
+  toString() {
+    return `text-model-prompt:${this.uri.path}`;
+  }
+};
+TextModelPromptParser = __decorateClass([
+  __decorateParam(2, IInstantiationService),
+  __decorateParam(3, ILogService)
+], TextModelPromptParser);
+export {
+  TextModelPromptParser
+};
+//# sourceMappingURL=textModelPromptParser.js.map

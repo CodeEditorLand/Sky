@@ -1,1 +1,1256 @@
-var J=Object.defineProperty,Q=Object.getOwnPropertyDescriptor,$=(e,t,i,o)=>{for(var s,n=o>1?void 0:o?Q(t,i):t,l=e.length-1;l>=0;l--)(s=e[l])&&(n=(o?s(t,i,n):s(n))||n);return o&&n&&J(t,i,n),n},S=(e,t)=>(i,o)=>t(i,o,e);import*as g from"../../../../../base/browser/dom.js";import*as X from"../../../../../base/browser/domStylesheets.js";import"../../../../../base/browser/mouseEvent.js";import{ListError as y}from"../../../../../base/browser/ui/list/list.js";import"../../../../../base/browser/ui/list/listWidget.js";import{Emitter as M,Event as H}from"../../../../../base/common/event.js";import{Disposable as z,DisposableStore as N,MutableDisposable as U}from"../../../../../base/common/lifecycle.js";import{isMacintosh as ee}from"../../../../../base/common/platform.js";import"../../../../../base/common/scrollable.js";import"../../../../../editor/common/core/range.js";import"../../../../../editor/common/core/selection.js";import{TrackedRangeStickiness as W}from"../../../../../editor/common/model.js";import{PrefixSumComputer as te}from"../../../../../editor/common/model/prefixSumComputer.js";import{IConfigurationService as ie}from"../../../../../platform/configuration/common/configuration.js";import"../../../../../platform/contextkey/common/contextkey.js";import{IListService as oe,WorkbenchList as ne}from"../../../../../platform/list/browser/listService.js";import{CursorAtBoundary as B,CellEditState as le,CellRevealType as f,CellRevealRangeType as A,CursorAtLineBoundary as D}from"../notebookBrowser.js";import"../viewModel/notebookViewModelImpl.js";import{diff as Z,NOTEBOOK_EDITOR_CURSOR_BOUNDARY as se,CellKind as K,SelectionStateType as b,NOTEBOOK_EDITOR_CURSOR_LINE_BOUNDARY as re}from"../../common/notebookCommon.js";import{cellRangesToIndexes as j,reduceCellRanges as F,cellRangesEqual as ae}from"../../common/notebookRange.js";import{NOTEBOOK_CELL_LIST_FOCUSED as de}from"../../common/notebookContextKeys.js";import{clamp as I}from"../../../../../base/common/numbers.js";import"../../../../../base/common/sequence.js";import"./notebookRenderingCommon.js";import{FastDomNode as ce}from"../../../../../base/browser/fastDomNode.js";import{MarkupCellViewModel as he}from"../viewModel/markupCellViewModel.js";import{IInstantiationService as ue}from"../../../../../platform/instantiation/common/instantiation.js";import"../../../../../base/browser/ui/list/listView.js";import{NotebookCellListView as me}from"./notebookCellListView.js";import"../notebookOptions.js";import{INotebookExecutionStateService as we}from"../../common/notebookExecutionStateService.js";import{NotebookCellAnchor as pe}from"./notebookCellAnchor.js";import{NotebookViewZones as ge}from"../viewParts/notebookViewZones.js";import{NotebookCellOverlays as ve}from"../viewParts/notebookCellOverlays.js";var fe=(e=>(e[e.Top=0]="Top",e[e.Center=1]="Center",e[e.Bottom=2]="Bottom",e[e.NearTop=3]="NearTop",e))(fe||{});function P(e,t){if(!t.length)return e;let i=0,o=0;const s=[];for(;i<e.length&&o<t.length;)i<t[o].start&&s.push(...e.slice(i,t[o].start)),i=t[o].end+1,o++;return i<e.length&&s.push(...e.slice(i)),s}const L=5e3;function be(e){const t=0-(parseInt(e.style.top,10)||0);return t>=0&&t<=2*L}let R=class extends ne{constructor(e,t,i,o,s,n,l,r,a,h,d){super(e,t,o,s,l,n,r,a,h),this.listUser=e,this.notebookOptions=i,de.bindTo(this.contextKeyService).set(!0),this._previousFocusedElements=this.getFocusedElements(),this._localDisposableStore.add(this.onDidChangeFocus((e=>{this._previousFocusedElements.forEach((t=>{e.elements.indexOf(t)<0&&t.onDeselect()})),this._previousFocusedElements=e.elements})));const c=se.bindTo(n);c.set("none");const u=re.bindTo(n);u.set("none");const m=this._localDisposableStore.add(new U),w=this._localDisposableStore.add(new U);this._notebookCellAnchor=new pe(d,a,this.onDidScroll);const v=e=>{switch(e.cursorAtBoundary()){case B.Both:c.set("both");break;case B.Top:c.set("top");break;case B.Bottom:c.set("bottom");break;default:c.set("none")}switch(e.cursorAtLineBoundary()){case D.Both:u.set("both");break;case D.Start:u.set("start");break;case D.End:u.set("end");break;default:u.set("none")}};this._localDisposableStore.add(this.onDidChangeFocus((e=>{if(e.elements.length){const t=e.elements[0];return m.value=t.onDidChangeState((e=>{e.selectionChanged&&v(t)})),w.value=t.onDidChangeEditorAttachState((()=>{t.editorAttached&&v(t)})),void v(t)}c.set("none")})));const p=()=>{if(!this.view.length)return;const e=this.getViewScrollTop(),t=this.getViewScrollBottom();if(e>=t)return;const i=I(this.view.indexAt(e),0,this.view.length-1),o=this.view.element(i),s=this._viewModel.getCellIndex(o),n=I(this.view.indexAt(t),0,this.view.length-1),l=this.view.element(n),r=this._viewModel.getCellIndex(l);this.visibleRanges=r-s==n-i?[{start:s,end:r+1}]:this._getVisibleRangesFromIndex(i,s,n,r)};this._localDisposableStore.add(this.view.onDidChangeContentHeight((()=>{this._isInLayout&&g.scheduleAtNextAnimationFrame(g.getWindow(t),(()=>{p()})),p()}))),this._localDisposableStore.add(this.view.onDidScroll((()=>{this._isInLayout&&g.scheduleAtNextAnimationFrame(g.getWindow(t),(()=>{p()})),p()})))}view;viewZones;cellOverlays;get onWillScroll(){return this.view.onWillScroll}get rowsContainer(){return this.view.containerDomNode}get scrollableElement(){return this.view.scrollableElementDomNode}_previousFocusedElements=[];_localDisposableStore=new N;_viewModelStore=new N;styleElement;_notebookCellAnchor;_onDidRemoveOutputs=this._localDisposableStore.add(new M);onDidRemoveOutputs=this._onDidRemoveOutputs.event;_onDidHideOutputs=this._localDisposableStore.add(new M);onDidHideOutputs=this._onDidHideOutputs.event;_onDidRemoveCellsFromView=this._localDisposableStore.add(new M);onDidRemoveCellsFromView=this._onDidRemoveCellsFromView.event;_viewModel=null;get viewModel(){return this._viewModel}_hiddenRangeIds=[];hiddenRangesPrefixSum=null;_onDidChangeVisibleRanges=this._localDisposableStore.add(new M);onDidChangeVisibleRanges=this._onDidChangeVisibleRanges.event;_visibleRanges=[];get visibleRanges(){return this._visibleRanges}set visibleRanges(e){ae(this._visibleRanges,e)||(this._visibleRanges=e,this._onDidChangeVisibleRanges.fire())}_isDisposed=!1;get isDisposed(){return this._isDisposed}_isInLayout=!1;_webviewElement=null;get webviewElement(){return this._webviewElement}get inRenderingTransaction(){return this.view.inRenderingTransaction}createListView(e,t,i,o){const s=new me(e,t,i,o);return this.viewZones=new ge(s,this),this.cellOverlays=new ve(s),s}_getView(){return this.view}attachWebview(e){e.style.top="-5000px",this.rowsContainer.insertAdjacentElement("afterbegin",e),this._webviewElement=new ce(e)}elementAt(e){if(!this.view.length)return;const t=this.view.indexAt(e),i=I(t,0,this.view.length-1);return this.element(i)}elementHeight(e){const t=this._getViewIndexUpperBound(e);if(void 0===t||t<0||t>=this.length)throw this._getViewIndexUpperBound(e),new y(this.listUser,`Invalid index ${t}`);return this.view.elementHeight(t)}detachViewModel(){this._viewModelStore.clear(),this._viewModel=null,this.hiddenRangesPrefixSum=null}attachViewModel(e){this._viewModel=e,this._viewModelStore.add(e.onDidChangeViewCells((e=>{if(this._isDisposed)return;this.viewZones.onCellsChanged(e),this.cellOverlays.onCellsChanged(e);const t=this._hiddenRangeIds.map((e=>this._viewModel.getTrackedRange(e))).filter((e=>null!==e)),i=P(this._viewModel.viewCells,t),o=[],s=new Set;for(let e=0;e<this.length;e++)o.push(this.element(e)),s.add(this.element(e).uri.toString());const n=Z(o,i,(e=>s.has(e.uri.toString())));e.synchronous?this._updateElementsInWebview(n):this._viewModelStore.add(g.scheduleAtNextAnimationFrame(g.getWindow(this.rowsContainer),(()=>{this._isDisposed||this._updateElementsInWebview(n)})))}))),this._viewModelStore.add(e.onDidChangeSelection((t=>{if("view"===t)return;const i=j(e.getSelections()).map((t=>e.cellAt(t))).filter((e=>!!e)).map((e=>this._getViewIndexUpperBound(e)));this.setSelection(i,void 0,!0);const o=j([e.getFocus()]).map((t=>e.cellAt(t))).filter((e=>!!e)).map((e=>this._getViewIndexUpperBound(e)));o.length&&this.setFocus(o,void 0,!0)})));const t=e.getHiddenRanges();this.setHiddenAreas(t,!1);const i=F(t),o=e.viewCells.slice(0);i.reverse().forEach((e=>{const t=o.splice(e.start,e.end-e.start+1);this._onDidRemoveCellsFromView.fire(t)})),this.splice2(0,0,o)}_updateElementsInWebview(e){e.reverse().forEach((e=>{const t=[],i=[],o=[];for(let s=e.start;s<e.start+e.deleteCount;s++){const e=this.element(s);e.cellKind===K.Code?this._viewModel.hasCell(e)?t.push(...e?.outputsViewModels):i.push(...e?.outputsViewModels):o.push(e)}this.splice2(e.start,e.deleteCount,e.toInsert),this._onDidHideOutputs.fire(t),this._onDidRemoveOutputs.fire(i),this._onDidRemoveCellsFromView.fire(o)}))}clear(){super.splice(0,this.length)}setHiddenAreas(e,t){if(!this._viewModel)return!1;const i=F(e),o=this._hiddenRangeIds.map((e=>this._viewModel.getTrackedRange(e))).filter((e=>null!==e));if(i.length===o.length){let e=!1;for(let t=0;t<i.length;t++)if(i[t].start!==o[t].start||i[t].end!==o[t].end){e=!0;break}if(!e)return this._updateHiddenRangePrefixSum(i),this.viewZones.onHiddenRangesChange(),this.viewZones.layout(),this.cellOverlays.onHiddenRangesChange(),this.cellOverlays.layout(),!1}this._hiddenRangeIds.forEach((e=>this._viewModel.setTrackedRange(e,null,W.GrowsOnlyWhenTypingAfter)));const s=i.map((e=>this._viewModel.setTrackedRange(null,e,W.GrowsOnlyWhenTypingAfter))).filter((e=>null!==e));return this._hiddenRangeIds=s,this._updateHiddenRangePrefixSum(i),this.viewZones.onHiddenRangesChange(),this.cellOverlays.onHiddenRangesChange(),t&&this.updateHiddenAreasInView(o,i),this.viewZones.layout(),this.cellOverlays.layout(),!0}_updateHiddenRangePrefixSum(e){let t=0,i=0;const o=[];for(;i<e.length;){for(let s=t;s<e[i].start-1;s++)o.push(1);o.push(e[i].end-e[i].start+1+1),t=e[i].end+1,i++}for(let e=t;e<this._viewModel.length;e++)o.push(1);const s=new Uint32Array(o.length);for(let e=0;e<o.length;e++)s[e]=o[e];this.hiddenRangesPrefixSum=new te(s)}updateHiddenAreasInView(e,t){const i=P(this._viewModel.viewCells,e),o=new Set;i.forEach((e=>{o.add(e.uri.toString())}));const s=P(this._viewModel.viewCells,t),n=Z(i,s,(e=>o.has(e.uri.toString())));this._updateElementsInWebview(n)}splice2(e,t,i=[]){if(e<0||e>this.view.length)return;const o=g.isAncestorOfActiveElement(this.rowsContainer);super.splice(e,t,i),o&&this.domFocus();const s=[];this.getSelectedElements().forEach((e=>{this._viewModel.hasCell(e)&&s.push(e.handle)})),!s.length&&this._viewModel.viewCells.length&&this._viewModel.updateSelectionsState({kind:b.Index,focus:{start:0,end:1},selections:[{start:0,end:1}]}),this.viewZones.layout(),this.cellOverlays.layout()}getModelIndex(e){const t=this.indexOf(e);return this.getModelIndex2(t)}getModelIndex2(e){return this.hiddenRangesPrefixSum?this.hiddenRangesPrefixSum.getPrefixSum(e-1):e}getViewIndex(e){const t=this._viewModel.getCellIndex(e);return this.getViewIndex2(t)}getViewIndex2(e){if(!this.hiddenRangesPrefixSum)return e;const t=this.hiddenRangesPrefixSum.getIndexOf(e);return 0!==t.remainder?e>=this.hiddenRangesPrefixSum.getTotalSum()?e-(this.hiddenRangesPrefixSum.getTotalSum()-this.hiddenRangesPrefixSum.getCount()):void 0:t.index}convertModelIndexToViewIndex(e){return this.hiddenRangesPrefixSum?e>=this.hiddenRangesPrefixSum.getTotalSum()?Math.min(this.length,this.hiddenRangesPrefixSum.getTotalSum()):this.hiddenRangesPrefixSum.getIndexOf(e).index:e}modelIndexIsVisible(e){return!this.hiddenRangesPrefixSum||0===this.hiddenRangesPrefixSum.getIndexOf(e).remainder||e>=this.hiddenRangesPrefixSum.getTotalSum()}_getVisibleRangesFromIndex(e,t,i,o){const s=[],n=[];let l=e,r=t;for(;l<=i;){const e=this.hiddenRangesPrefixSum.getPrefixSum(l);e===r+1?(s.length&&(s[s.length-1]===r-1?n.push({start:s[s.length-1],end:r+1}):n.push({start:s[s.length-1],end:s[s.length-1]+1})),s.push(r),l++,r++):(s.length&&(s[s.length-1]===r-1?n.push({start:s[s.length-1],end:r+1}):n.push({start:s[s.length-1],end:s[s.length-1]+1})),s.push(r),l++,r=e)}return s.length&&n.push({start:s[s.length-1],end:s[s.length-1]+1}),F(n)}getVisibleRangesPlusViewportAboveAndBelow(){if(this.view.length<=0)return[];const e=Math.max(this.getViewScrollTop()-this.renderHeight,0),t=this.view.indexAt(e),i=this.view.element(t),o=this._viewModel.getCellIndex(i),s=I(this.getViewScrollBottom()+this.renderHeight,0,this.scrollHeight),n=I(this.view.indexAt(s),0,this.view.length-1),l=this.view.element(n),r=this._viewModel.getCellIndex(l);return r-o==n-t?[{start:o,end:r}]:this._getVisibleRangesFromIndex(t,o,n,r)}_getViewIndexUpperBound(e){if(!this._viewModel)return-1;const t=this._viewModel.getCellIndex(e);if(-1===t)return-1;if(!this.hiddenRangesPrefixSum)return t;const i=this.hiddenRangesPrefixSum.getIndexOf(t);return 0!==i.remainder&&t>=this.hiddenRangesPrefixSum.getTotalSum()?t-(this.hiddenRangesPrefixSum.getTotalSum()-this.hiddenRangesPrefixSum.getCount()):i.index}_getViewIndexUpperBound2(e){if(!this.hiddenRangesPrefixSum)return e;const t=this.hiddenRangesPrefixSum.getIndexOf(e);return 0!==t.remainder&&e>=this.hiddenRangesPrefixSum.getTotalSum()?e-(this.hiddenRangesPrefixSum.getTotalSum()-this.hiddenRangesPrefixSum.getCount()):t.index}focusElement(e){const t=this._getViewIndexUpperBound(e);if(t>=0&&this._viewModel){const e=this.element(t).handle;this._viewModel.updateSelectionsState({kind:b.Handle,primary:e,selections:[e]},"view"),this.setFocus([t],void 0,!1)}}selectElements(e){const t=e.map((e=>this._getViewIndexUpperBound(e))).filter((e=>e>=0));this.setSelection(t)}getCellViewScrollTop(e){const t=this._getViewIndexUpperBound(e);if(void 0===t||t<0||t>=this.length)throw new y(this.listUser,`Invalid index ${t}`);return this.view.elementTop(t)}getCellViewScrollBottom(e){const t=this._getViewIndexUpperBound(e);if(void 0===t||t<0||t>=this.length)throw new y(this.listUser,`Invalid index ${t}`);return this.view.elementTop(t)+this.view.elementHeight(t)}setFocus(e,t,i){if(i)super.setFocus(e,t);else{if(e.length){if(this._viewModel){const t=this.element(e[0]).handle;this._viewModel.updateSelectionsState({kind:b.Handle,primary:t,selections:this.getSelection().map((e=>this.element(e).handle))},"view")}}else if(this._viewModel){if(this.length)return;this._viewModel.updateSelectionsState({kind:b.Handle,primary:null,selections:[]},"view")}super.setFocus(e,t)}}setSelection(e,t,i){i||(e.length?this._viewModel&&this._viewModel.updateSelectionsState({kind:b.Handle,primary:this.getFocusedElements()[0]?.handle??null,selections:e.map((e=>this.element(e))).map((e=>e.handle))},"view"):this._viewModel&&this._viewModel.updateSelectionsState({kind:b.Handle,primary:this.getFocusedElements()[0]?.handle??null,selections:[]},"view")),super.setSelection(e,t)}revealCells(e){const t=this._getViewIndexUpperBound2(e.start);if(t<0)return;const i=this._getViewIndexUpperBound2(e.end-1),o=this.getViewScrollTop(),s=this.getViewScrollBottom(),n=this.view.elementTop(t);if(n>=o&&n<s){const e=this.view.elementTop(i),l=this.view.elementHeight(i);if(e+l<=s)return;if(e>=s)return this._revealInternal(i,!1,2);if(e<s)return e+l-s<n-o?this.view.setScrollTop(o+e+l-s):this._revealInternal(t,!1,0)}this._revealInViewWithMinimalScrolling(t)}_revealInViewWithMinimalScrolling(e,t){const i=this.view.firstMostlyVisibleIndex,o=this.view.elementHeight(e);e<=i||!t&&o>=this.view.renderHeight?this._revealInternal(e,!0,0):this._revealInternal(e,!0,2,t)}scrollToBottom(){const e=this.view.scrollHeight,t=this.getViewScrollTop(),i=this.getViewScrollBottom();this.view.setScrollTop(e-(i-t))}async revealCell(e,t){const i=this._getViewIndexUpperBound(e);if(!(i<0)){switch(t){case f.Top:this._revealInternal(i,!1,0);break;case f.Center:this._revealInternal(i,!1,1);break;case f.CenterIfOutsideViewport:this._revealInternal(i,!0,1);break;case f.NearTopIfOutsideViewport:this._revealInternal(i,!0,3);break;case f.FirstLineIfOutsideViewport:this._revealInViewWithMinimalScrolling(i,!0);break;case f.Default:this._revealInViewWithMinimalScrolling(i)}if((e.getEditState()===le.Editing||t===f.FirstLineIfOutsideViewport&&e.cellKind===K.Code)&&!e.editorAttached)return V(e)}}_revealInternal(e,t,i,o){if(e>=this.view.length)return;const s=this.getViewScrollTop(),n=this.getViewScrollBottom(),l=this.view.elementTop(e),r=this.view.elementHeight(e)+l;if(!(t&&l>=s&&r<n))switch(i){case 0:this.view.setScrollTop(l),this.view.setScrollTop(this.view.elementTop(e));break;case 1:case 3:{this.view.setScrollTop(l-this.view.renderHeight/2);const t=this.view.elementTop(e),o=this.view.elementHeight(e),s=this.getViewScrollBottom()-this.getViewScrollTop();o>=s?this.view.setScrollTop(t):1===i?this.view.setScrollTop(t+o/2-s/2):3===i&&this.view.setScrollTop(t-s/5)}break;case 2:if(o){const e=l+(this.viewModel?.layoutInfo?.fontInfo.lineHeight??15)+(this.notebookOptions.getLayoutConfiguration().cellTopMargin+this.notebookOptions.getLayoutConfiguration().editorTopPadding);if(e<n)return;this.view.setScrollTop(this.scrollTop+(e-n));break}this.view.setScrollTop(this.scrollTop+(r-n)),this.view.setScrollTop(this.scrollTop+(this.view.elementTop(e)+this.view.elementHeight(e)-this.getViewScrollBottom()))}}async revealRangeInCell(e,t,i){const o=this._getViewIndexUpperBound(e);if(!(o<0))switch(i){case A.Default:return this._revealRangeInternalAsync(o,t);case A.Center:return this._revealRangeInCenterInternalAsync(o,t);case A.CenterIfOutsideViewport:return this._revealRangeInCenterIfOutsideViewportInternalAsync(o,t)}}async _revealRangeInternalAsync(e,t){const i=this.getViewScrollTop(),o=this.getViewScrollBottom(),s=this.view.elementTop(e),n=this.view.element(e);if(!n.editorAttached){let l;return s+this.view.elementHeight(e)<=i?(this.view.setScrollTop(s),l="top"):s>=o&&(this.view.setScrollTop(s-this.view.renderHeight/2),l="bottom"),new Promise(((e,t)=>{H.once(n.onDidChangeEditorAttachState)((()=>{n.editorAttached?e():t()}))})).then((()=>{this._revealRangeCommon(e,t,l)}))}this._revealRangeCommon(e,t)}async _revealRangeInCenterInternalAsync(e,t){const i=(e,t)=>{const i=this.view.element(e),o=i.getPositionScrollTopOffset(t),s=this.view.elementTop(e)+o;this.view.setScrollTop(s-this.view.renderHeight/2),i.revealRangeInCenter(t)},o=this.view.elementTop(e);this.view.setScrollTop(o-this.view.renderHeight/2);const s=this.view.element(e);if(!s.editorAttached)return V(s).then((()=>i(e,t)));i(e,t)}async _revealRangeInCenterIfOutsideViewportInternalAsync(e,t){const i=(e,t)=>{const i=this.view.element(e),o=i.getPositionScrollTopOffset(t),s=this.view.elementTop(e)+o;this.view.setScrollTop(s-this.view.renderHeight/2),i.revealRangeInCenter(t)},o=this.getViewScrollTop(),s=this.getViewScrollBottom(),n=this.view.elementTop(e),l=this.view.element(e),r=n+l.getPositionScrollTopOffset(t);if(r<o||r>s){this.view.setScrollTop(r-this.view.renderHeight/2);const o=this.view.elementTop(e)+l.getPositionScrollTopOffset(t);if(this.view.setScrollTop(o-this.view.renderHeight/2),!l.editorAttached)return V(l).then((()=>i(e,t)))}else{if(!l.editorAttached)return V(l).then((()=>i(e,t)));l.revealRangeInCenter(t)}}_revealRangeCommon(e,t,i){const o=this.view.element(e),s=this.getViewScrollTop(),n=this.getViewScrollBottom(),l=o.getPositionScrollTopOffset(t);if(l>=this.view.elementHeight(e)){const t=o.layoutInfo.totalHeight;this.updateElementHeight(e,t)}const r=this.view.elementTop(e)+l;r<s?this.view.setScrollTop(r-30):r>n||"bottom"===i?this.view.setScrollTop(s+r-n+30):"top"===i&&this.view.setScrollTop(r-30)}revealCellOffsetInCenter(e,t){const i=this._getViewIndexUpperBound(e);if(i>=0){const e=this.view.element(i),o=this.view.elementTop(i);if(e instanceof he)return this._revealInCenterIfOutsideViewport(i);{const i=e.layoutInfo.outputContainerOffset+Math.min(t,e.layoutInfo.outputTotalHeight);this.view.setScrollTop(o-this.view.renderHeight/2),this.view.setScrollTop(o+i-this.view.renderHeight/2)}}}revealOffsetInCenterIfOutsideViewport(e){const t=this.getViewScrollTop(),i=this.getViewScrollBottom();if(e<t||e>i){const t=Math.max(0,e-this.view.renderHeight/2);this.view.setScrollTop(t)}}_revealInCenterIfOutsideViewport(e){this._revealInternal(e,!0,1)}domElementOfElement(e){const t=this._getViewIndexUpperBound(e);return t>=0&&t<this.length?this.view.domElement(t):null}focusView(){this.view.domNode.focus()}triggerScrollFromMouseWheelEvent(e){this.view.delegateScrollFromMouseWheelEvent(e)}delegateVerticalScrollbarPointerDown(e){this.view.delegateVerticalScrollbarPointerDown(e)}isElementAboveViewport(e){return this.view.elementTop(e)+this.view.elementHeight(e)<this.scrollTop}updateElementHeight2(e,t,i=null){const o=this._getViewIndexUpperBound(e);if(void 0===o||o<0||o>=this.length)return;if(this.isElementAboveViewport(o)){const s=this.elementHeight(e)-t;return this._webviewElement&&H.once(this.view.onWillScroll)((()=>{const e=parseInt(this._webviewElement.domNode.style.top,10);be(this._webviewElement.domNode)?this._webviewElement.setTop(e-s):this._webviewElement.setTop(-L)})),this.view.updateElementHeight(o,t,i),this.viewZones.layout(),void this.cellOverlays.layout()}if(null!==i)return this.view.updateElementHeight(o,t,i),this.viewZones.layout(),void this.cellOverlays.layout();const s=this.getFocus(),n=s.length?s[0]:null;if(n){const e=t-this.view.elementHeight(o);if(this._notebookCellAnchor.shouldAnchor(this.view,n,e,this.element(o)))return this.view.updateElementHeight(o,t,n),this.viewZones.layout(),void this.cellOverlays.layout()}this.view.updateElementHeight(o,t,null),this.viewZones.layout(),this.cellOverlays.layout()}changeViewZones(e){this.viewZones.changeViewZones(e)&&this.viewZones.layout()}changeCellOverlays(e){this.cellOverlays.changeCellOverlays(e)&&this.cellOverlays.layout()}getViewZoneLayoutInfo(e){return this.viewZones.getViewZoneLayoutInfo(e)}domFocus(){const e=this.getFocusedElements()[0],t=e&&this.domElementOfElement(e);this.view.domNode.ownerDocument.activeElement&&t&&t.contains(this.view.domNode.ownerDocument.activeElement)||!ee&&this.view.domNode.ownerDocument.activeElement&&g.findParentWithClass(this.view.domNode.ownerDocument.activeElement,"context-view")||super.domFocus()}focusContainer(e){e&&(this._viewModel?.updateSelectionsState({kind:b.Handle,primary:null,selections:[]},"view"),this.setFocus([],void 0,!0),this.setSelection([],void 0,!0)),super.domFocus()}getViewScrollTop(){return this.view.getScrollTop()}getViewScrollBottom(){return this.getViewScrollTop()+this.view.renderHeight}setCellEditorSelection(e,t){const i=e;i.editorAttached?i.setSelection(t):V(i).then((()=>{i.setSelection(t)}))}style(e){const t=this.view.domId;this.styleElement||(this.styleElement=X.createStyleSheet(this.view.domNode));const i=t&&`.${t}`,o=[];e.listBackground&&o.push(`.monaco-list${i} > div.monaco-scrollable-element > .monaco-list-rows { background: ${e.listBackground}; }`),e.listFocusBackground&&(o.push(`.monaco-list${i}:focus > div.monaco-scrollable-element > .monaco-list-rows > .monaco-list-row.focused { background-color: ${e.listFocusBackground}; }`),o.push(`.monaco-list${i}:focus > div.monaco-scrollable-element > .monaco-list-rows > .monaco-list-row.focused:hover { background-color: ${e.listFocusBackground}; }`)),e.listFocusForeground&&o.push(`.monaco-list${i}:focus > div.monaco-scrollable-element > .monaco-list-rows > .monaco-list-row.focused { color: ${e.listFocusForeground}; }`),e.listActiveSelectionBackground&&(o.push(`.monaco-list${i}:focus > div.monaco-scrollable-element > .monaco-list-rows > .monaco-list-row.selected { background-color: ${e.listActiveSelectionBackground}; }`),o.push(`.monaco-list${i}:focus > div.monaco-scrollable-element > .monaco-list-rows > .monaco-list-row.selected:hover { background-color: ${e.listActiveSelectionBackground}; }`)),e.listActiveSelectionForeground&&o.push(`.monaco-list${i}:focus > div.monaco-scrollable-element > .monaco-list-rows > .monaco-list-row.selected { color: ${e.listActiveSelectionForeground}; }`),e.listFocusAndSelectionBackground&&o.push(`\n\t\t\t\t.monaco-drag-image${i},\n\t\t\t\t.monaco-list${i}:focus > div.monaco-scrollable-element > .monaco-list-rows > .monaco-list-row.selected.focused { background-color: ${e.listFocusAndSelectionBackground}; }\n\t\t\t`),e.listFocusAndSelectionForeground&&o.push(`\n\t\t\t\t.monaco-drag-image${i},\n\t\t\t\t.monaco-list${i}:focus > div.monaco-scrollable-element > .monaco-list-rows > .monaco-list-row.selected.focused { color: ${e.listFocusAndSelectionForeground}; }\n\t\t\t`),e.listInactiveFocusBackground&&(o.push(`.monaco-list${i} > div.monaco-scrollable-element > .monaco-list-rows > .monaco-list-row.focused { background-color:  ${e.listInactiveFocusBackground}; }`),o.push(`.monaco-list${i} > div.monaco-scrollable-element > .monaco-list-rows > .monaco-list-row.focused:hover { background-color:  ${e.listInactiveFocusBackground}; }`)),e.listInactiveSelectionBackground&&(o.push(`.monaco-list${i} > div.monaco-scrollable-element > .monaco-list-rows > .monaco-list-row.selected { background-color:  ${e.listInactiveSelectionBackground}; }`),o.push(`.monaco-list${i} > div.monaco-scrollable-element > .monaco-list-rows > .monaco-list-row.selected:hover { background-color:  ${e.listInactiveSelectionBackground}; }`)),e.listInactiveSelectionForeground&&o.push(`.monaco-list${i} > div.monaco-scrollable-element > .monaco-list-rows > .monaco-list-row.selected { color: ${e.listInactiveSelectionForeground}; }`),e.listHoverBackground&&o.push(`.monaco-list${i}:not(.drop-target) > div.monaco-scrollable-element > .monaco-list-rows > .monaco-list-row:hover:not(.selected):not(.focused) { background-color:  ${e.listHoverBackground}; }`),e.listHoverForeground&&o.push(`.monaco-list${i} > div.monaco-scrollable-element > .monaco-list-rows > .monaco-list-row:hover:not(.selected):not(.focused) { color:  ${e.listHoverForeground}; }`),e.listSelectionOutline&&o.push(`.monaco-list${i} > div.monaco-scrollable-element > .monaco-list-rows > .monaco-list-row.selected { outline: 1px dotted ${e.listSelectionOutline}; outline-offset: -1px; }`),e.listFocusOutline&&o.push(`\n\t\t\t\t.monaco-drag-image${i},\n\t\t\t\t.monaco-list${i}:focus > div.monaco-scrollable-element > .monaco-list-rows > .monaco-list-row.focused { outline: 1px solid ${e.listFocusOutline}; outline-offset: -1px; }\n\t\t\t`),e.listInactiveFocusOutline&&o.push(`.monaco-list${i} > div.monaco-scrollable-element > .monaco-list-rows > .monaco-list-row.focused { outline: 1px dotted ${e.listInactiveFocusOutline}; outline-offset: -1px; }`),e.listHoverOutline&&o.push(`.monaco-list${i} > div.monaco-scrollable-element > .monaco-list-rows > .monaco-list-row:hover { outline: 1px dashed ${e.listHoverOutline}; outline-offset: -1px; }`),e.listDropOverBackground&&o.push(`\n\t\t\t\t.monaco-list${i}.drop-target,\n\t\t\t\t.monaco-list${i} > div.monaco-scrollable-element > .monaco-list-rows.drop-target,\n\t\t\t\t.monaco-list${i} > div.monaco-scrollable-element > .monaco-list-row.drop-target { background-color: ${e.listDropOverBackground} !important; color: inherit !important; }\n\t\t\t`);const s=o.join("\n");s!==this.styleElement.textContent&&(this.styleElement.textContent=s)}getRenderHeight(){return this.view.renderHeight}getScrollHeight(){return this.view.scrollHeight}layout(e,t){this._isInLayout=!0,super.layout(e,t),0===this.renderHeight?this.view.domNode.style.visibility="hidden":this.view.domNode.style.visibility="initial",this._isInLayout=!1}dispose(){this._isDisposed=!0,this._viewModelStore.dispose(),this._localDisposableStore.dispose(),this._notebookCellAnchor.dispose(),this.viewZones.dispose(),this.cellOverlays.dispose(),super.dispose(),this._previousFocusedElements=[],this._viewModel=null,this._hiddenRangeIds=[],this.hiddenRangesPrefixSum=null,this._visibleRanges=[]}};R=$([S(7,oe),S(8,ie),S(9,ue),S(10,we)],R);class Vt extends z{constructor(e){super(),this.list=e}getViewIndex(e){return this.list.getViewIndex(e)??-1}getViewHeight(e){return this.list.viewModel?this.list.elementHeight(e):-1}getCellRangeFromViewRange(e,t){if(!this.list.viewModel)return;const i=this.list.getModelIndex2(e);if(void 0===i)throw new Error(`startIndex ${e} out of boundary`);if(t>=this.list.length){return{start:i,end:this.list.viewModel.length}}{const e=this.list.getModelIndex2(t);if(void 0===e)throw new Error(`endIndex ${t} out of boundary`);return{start:i,end:e}}}getCellsFromViewRange(e,t){if(!this.list.viewModel)return[];const i=this.getCellRangeFromViewRange(e,t);return i?this.list.viewModel.getCellsInRange(i):[]}getCellsInRange(e){return this.list.viewModel?.getCellsInRange(e)??[]}getVisibleRangesPlusViewportAboveAndBelow(){return this.list?.getVisibleRangesPlusViewportAboveAndBelow()??[]}}function V(e){return new Promise(((t,i)=>{H.once(e.onDidChangeEditorAttachState)((()=>e.editorAttached?t():i()))}))}export{Vt as ListViewInfoAccessor,L as NOTEBOOK_WEBVIEW_BOUNDARY,R as NotebookCellList};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import * as DOM from "../../../../../base/browser/dom.js";
+import * as domStylesheetsJs from "../../../../../base/browser/domStylesheets.js";
+import { IMouseWheelEvent } from "../../../../../base/browser/mouseEvent.js";
+import { IListRenderer, IListVirtualDelegate, ListError } from "../../../../../base/browser/ui/list/list.js";
+import { IListStyles, IStyleController } from "../../../../../base/browser/ui/list/listWidget.js";
+import { Emitter, Event } from "../../../../../base/common/event.js";
+import { Disposable, DisposableStore, IDisposable, MutableDisposable } from "../../../../../base/common/lifecycle.js";
+import { isMacintosh } from "../../../../../base/common/platform.js";
+import { ScrollEvent } from "../../../../../base/common/scrollable.js";
+import { Range } from "../../../../../editor/common/core/range.js";
+import { Selection } from "../../../../../editor/common/core/selection.js";
+import { TrackedRangeStickiness } from "../../../../../editor/common/model.js";
+import { PrefixSumComputer } from "../../../../../editor/common/model/prefixSumComputer.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { IContextKeyService } from "../../../../../platform/contextkey/common/contextkey.js";
+import { IListService, IWorkbenchListOptions, WorkbenchList } from "../../../../../platform/list/browser/listService.js";
+import { CursorAtBoundary, ICellViewModel, CellEditState, ICellOutputViewModel, CellRevealType, CellRevealRangeType, CursorAtLineBoundary, INotebookViewZoneChangeAccessor, INotebookCellOverlayChangeAccessor } from "../notebookBrowser.js";
+import { CellViewModel, NotebookViewModel } from "../viewModel/notebookViewModelImpl.js";
+import { diff, NOTEBOOK_EDITOR_CURSOR_BOUNDARY, CellKind, SelectionStateType, NOTEBOOK_EDITOR_CURSOR_LINE_BOUNDARY } from "../../common/notebookCommon.js";
+import { ICellRange, cellRangesToIndexes, reduceCellRanges, cellRangesEqual } from "../../common/notebookRange.js";
+import { NOTEBOOK_CELL_LIST_FOCUSED } from "../../common/notebookContextKeys.js";
+import { clamp } from "../../../../../base/common/numbers.js";
+import { ISplice } from "../../../../../base/common/sequence.js";
+import { BaseCellRenderTemplate, INotebookCellList } from "./notebookRenderingCommon.js";
+import { FastDomNode } from "../../../../../base/browser/fastDomNode.js";
+import { MarkupCellViewModel } from "../viewModel/markupCellViewModel.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { IListViewOptions, IListView } from "../../../../../base/browser/ui/list/listView.js";
+import { NotebookCellListView } from "./notebookCellListView.js";
+import { NotebookOptions } from "../notebookOptions.js";
+import { INotebookExecutionStateService } from "../../common/notebookExecutionStateService.js";
+import { NotebookCellAnchor } from "./notebookCellAnchor.js";
+import { NotebookViewZones } from "../viewParts/notebookViewZones.js";
+import { NotebookCellOverlays } from "../viewParts/notebookCellOverlays.js";
+var CellRevealPosition = /* @__PURE__ */ ((CellRevealPosition2) => {
+  CellRevealPosition2[CellRevealPosition2["Top"] = 0] = "Top";
+  CellRevealPosition2[CellRevealPosition2["Center"] = 1] = "Center";
+  CellRevealPosition2[CellRevealPosition2["Bottom"] = 2] = "Bottom";
+  CellRevealPosition2[CellRevealPosition2["NearTop"] = 3] = "NearTop";
+  return CellRevealPosition2;
+})(CellRevealPosition || {});
+function getVisibleCells(cells, hiddenRanges) {
+  if (!hiddenRanges.length) {
+    return cells;
+  }
+  let start = 0;
+  let hiddenRangeIndex = 0;
+  const result = [];
+  while (start < cells.length && hiddenRangeIndex < hiddenRanges.length) {
+    if (start < hiddenRanges[hiddenRangeIndex].start) {
+      result.push(...cells.slice(start, hiddenRanges[hiddenRangeIndex].start));
+    }
+    start = hiddenRanges[hiddenRangeIndex].end + 1;
+    hiddenRangeIndex++;
+  }
+  if (start < cells.length) {
+    result.push(...cells.slice(start));
+  }
+  return result;
+}
+__name(getVisibleCells, "getVisibleCells");
+const NOTEBOOK_WEBVIEW_BOUNDARY = 5e3;
+function validateWebviewBoundary(element) {
+  const webviewTop = 0 - (parseInt(element.style.top, 10) || 0);
+  return webviewTop >= 0 && webviewTop <= NOTEBOOK_WEBVIEW_BOUNDARY * 2;
+}
+__name(validateWebviewBoundary, "validateWebviewBoundary");
+let NotebookCellList = class extends WorkbenchList {
+  constructor(listUser, container, notebookOptions, delegate, renderers, contextKeyService, options, listService, configurationService, instantiationService, notebookExecutionStateService) {
+    super(listUser, container, delegate, renderers, options, contextKeyService, listService, configurationService, instantiationService);
+    this.listUser = listUser;
+    this.notebookOptions = notebookOptions;
+    NOTEBOOK_CELL_LIST_FOCUSED.bindTo(this.contextKeyService).set(true);
+    this._previousFocusedElements = this.getFocusedElements();
+    this._localDisposableStore.add(this.onDidChangeFocus((e) => {
+      this._previousFocusedElements.forEach((element) => {
+        if (e.elements.indexOf(element) < 0) {
+          element.onDeselect();
+        }
+      });
+      this._previousFocusedElements = e.elements;
+    }));
+    const notebookEditorCursorAtBoundaryContext = NOTEBOOK_EDITOR_CURSOR_BOUNDARY.bindTo(contextKeyService);
+    notebookEditorCursorAtBoundaryContext.set("none");
+    const notebookEditorCursorAtLineBoundaryContext = NOTEBOOK_EDITOR_CURSOR_LINE_BOUNDARY.bindTo(contextKeyService);
+    notebookEditorCursorAtLineBoundaryContext.set("none");
+    const cursorSelectionListener = this._localDisposableStore.add(new MutableDisposable());
+    const textEditorAttachListener = this._localDisposableStore.add(new MutableDisposable());
+    this._notebookCellAnchor = new NotebookCellAnchor(notebookExecutionStateService, configurationService, this.onDidScroll);
+    const recomputeContext = /* @__PURE__ */ __name((element) => {
+      switch (element.cursorAtBoundary()) {
+        case CursorAtBoundary.Both:
+          notebookEditorCursorAtBoundaryContext.set("both");
+          break;
+        case CursorAtBoundary.Top:
+          notebookEditorCursorAtBoundaryContext.set("top");
+          break;
+        case CursorAtBoundary.Bottom:
+          notebookEditorCursorAtBoundaryContext.set("bottom");
+          break;
+        default:
+          notebookEditorCursorAtBoundaryContext.set("none");
+          break;
+      }
+      switch (element.cursorAtLineBoundary()) {
+        case CursorAtLineBoundary.Both:
+          notebookEditorCursorAtLineBoundaryContext.set("both");
+          break;
+        case CursorAtLineBoundary.Start:
+          notebookEditorCursorAtLineBoundaryContext.set("start");
+          break;
+        case CursorAtLineBoundary.End:
+          notebookEditorCursorAtLineBoundaryContext.set("end");
+          break;
+        default:
+          notebookEditorCursorAtLineBoundaryContext.set("none");
+          break;
+      }
+      return;
+    }, "recomputeContext");
+    this._localDisposableStore.add(this.onDidChangeFocus((e) => {
+      if (e.elements.length) {
+        const focusedElement = e.elements[0];
+        cursorSelectionListener.value = focusedElement.onDidChangeState((e2) => {
+          if (e2.selectionChanged) {
+            recomputeContext(focusedElement);
+          }
+        });
+        textEditorAttachListener.value = focusedElement.onDidChangeEditorAttachState(() => {
+          if (focusedElement.editorAttached) {
+            recomputeContext(focusedElement);
+          }
+        });
+        recomputeContext(focusedElement);
+        return;
+      }
+      notebookEditorCursorAtBoundaryContext.set("none");
+    }));
+    const updateVisibleRanges = /* @__PURE__ */ __name(() => {
+      if (!this.view.length) {
+        return;
+      }
+      const top = this.getViewScrollTop();
+      const bottom = this.getViewScrollBottom();
+      if (top >= bottom) {
+        return;
+      }
+      const topViewIndex = clamp(this.view.indexAt(top), 0, this.view.length - 1);
+      const topElement = this.view.element(topViewIndex);
+      const topModelIndex = this._viewModel.getCellIndex(topElement);
+      const bottomViewIndex = clamp(this.view.indexAt(bottom), 0, this.view.length - 1);
+      const bottomElement = this.view.element(bottomViewIndex);
+      const bottomModelIndex = this._viewModel.getCellIndex(bottomElement);
+      if (bottomModelIndex - topModelIndex === bottomViewIndex - topViewIndex) {
+        this.visibleRanges = [{ start: topModelIndex, end: bottomModelIndex + 1 }];
+      } else {
+        this.visibleRanges = this._getVisibleRangesFromIndex(topViewIndex, topModelIndex, bottomViewIndex, bottomModelIndex);
+      }
+    }, "updateVisibleRanges");
+    this._localDisposableStore.add(this.view.onDidChangeContentHeight(() => {
+      if (this._isInLayout) {
+        DOM.scheduleAtNextAnimationFrame(DOM.getWindow(container), () => {
+          updateVisibleRanges();
+        });
+      }
+      updateVisibleRanges();
+    }));
+    this._localDisposableStore.add(this.view.onDidScroll(() => {
+      if (this._isInLayout) {
+        DOM.scheduleAtNextAnimationFrame(DOM.getWindow(container), () => {
+          updateVisibleRanges();
+        });
+      }
+      updateVisibleRanges();
+    }));
+  }
+  static {
+    __name(this, "NotebookCellList");
+  }
+  view;
+  viewZones;
+  cellOverlays;
+  get onWillScroll() {
+    return this.view.onWillScroll;
+  }
+  get rowsContainer() {
+    return this.view.containerDomNode;
+  }
+  get scrollableElement() {
+    return this.view.scrollableElementDomNode;
+  }
+  _previousFocusedElements = [];
+  _localDisposableStore = new DisposableStore();
+  _viewModelStore = new DisposableStore();
+  styleElement;
+  _notebookCellAnchor;
+  _onDidRemoveOutputs = this._localDisposableStore.add(new Emitter());
+  onDidRemoveOutputs = this._onDidRemoveOutputs.event;
+  _onDidHideOutputs = this._localDisposableStore.add(new Emitter());
+  onDidHideOutputs = this._onDidHideOutputs.event;
+  _onDidRemoveCellsFromView = this._localDisposableStore.add(new Emitter());
+  onDidRemoveCellsFromView = this._onDidRemoveCellsFromView.event;
+  _viewModel = null;
+  get viewModel() {
+    return this._viewModel;
+  }
+  _hiddenRangeIds = [];
+  hiddenRangesPrefixSum = null;
+  _onDidChangeVisibleRanges = this._localDisposableStore.add(new Emitter());
+  onDidChangeVisibleRanges = this._onDidChangeVisibleRanges.event;
+  _visibleRanges = [];
+  get visibleRanges() {
+    return this._visibleRanges;
+  }
+  set visibleRanges(ranges) {
+    if (cellRangesEqual(this._visibleRanges, ranges)) {
+      return;
+    }
+    this._visibleRanges = ranges;
+    this._onDidChangeVisibleRanges.fire();
+  }
+  _isDisposed = false;
+  get isDisposed() {
+    return this._isDisposed;
+  }
+  _isInLayout = false;
+  _webviewElement = null;
+  get webviewElement() {
+    return this._webviewElement;
+  }
+  get inRenderingTransaction() {
+    return this.view.inRenderingTransaction;
+  }
+  createListView(container, virtualDelegate, renderers, viewOptions) {
+    const listView = new NotebookCellListView(container, virtualDelegate, renderers, viewOptions);
+    this.viewZones = new NotebookViewZones(listView, this);
+    this.cellOverlays = new NotebookCellOverlays(listView);
+    return listView;
+  }
+  /**
+   * Test Only
+   */
+  _getView() {
+    return this.view;
+  }
+  attachWebview(element) {
+    element.style.top = `-${NOTEBOOK_WEBVIEW_BOUNDARY}px`;
+    this.rowsContainer.insertAdjacentElement("afterbegin", element);
+    this._webviewElement = new FastDomNode(element);
+  }
+  elementAt(position) {
+    if (!this.view.length) {
+      return void 0;
+    }
+    const idx = this.view.indexAt(position);
+    const clamped = clamp(idx, 0, this.view.length - 1);
+    return this.element(clamped);
+  }
+  elementHeight(element) {
+    const index = this._getViewIndexUpperBound(element);
+    if (index === void 0 || index < 0 || index >= this.length) {
+      this._getViewIndexUpperBound(element);
+      throw new ListError(this.listUser, `Invalid index ${index}`);
+    }
+    return this.view.elementHeight(index);
+  }
+  detachViewModel() {
+    this._viewModelStore.clear();
+    this._viewModel = null;
+    this.hiddenRangesPrefixSum = null;
+  }
+  attachViewModel(model) {
+    this._viewModel = model;
+    this._viewModelStore.add(model.onDidChangeViewCells((e) => {
+      if (this._isDisposed) {
+        return;
+      }
+      this.viewZones.onCellsChanged(e);
+      this.cellOverlays.onCellsChanged(e);
+      const currentRanges = this._hiddenRangeIds.map((id) => this._viewModel.getTrackedRange(id)).filter((range) => range !== null);
+      const newVisibleViewCells = getVisibleCells(this._viewModel.viewCells, currentRanges);
+      const oldVisibleViewCells = [];
+      const oldViewCellMapping = /* @__PURE__ */ new Set();
+      for (let i = 0; i < this.length; i++) {
+        oldVisibleViewCells.push(this.element(i));
+        oldViewCellMapping.add(this.element(i).uri.toString());
+      }
+      const viewDiffs = diff(oldVisibleViewCells, newVisibleViewCells, (a) => {
+        return oldViewCellMapping.has(a.uri.toString());
+      });
+      if (e.synchronous) {
+        this._updateElementsInWebview(viewDiffs);
+      } else {
+        this._viewModelStore.add(DOM.scheduleAtNextAnimationFrame(DOM.getWindow(this.rowsContainer), () => {
+          if (this._isDisposed) {
+            return;
+          }
+          this._updateElementsInWebview(viewDiffs);
+        }));
+      }
+    }));
+    this._viewModelStore.add(model.onDidChangeSelection((e) => {
+      if (e === "view") {
+        return;
+      }
+      const viewSelections = cellRangesToIndexes(model.getSelections()).map((index) => model.cellAt(index)).filter((cell) => !!cell).map((cell) => this._getViewIndexUpperBound(cell));
+      this.setSelection(viewSelections, void 0, true);
+      const primary = cellRangesToIndexes([model.getFocus()]).map((index) => model.cellAt(index)).filter((cell) => !!cell).map((cell) => this._getViewIndexUpperBound(cell));
+      if (primary.length) {
+        this.setFocus(primary, void 0, true);
+      }
+    }));
+    const hiddenRanges = model.getHiddenRanges();
+    this.setHiddenAreas(hiddenRanges, false);
+    const newRanges = reduceCellRanges(hiddenRanges);
+    const viewCells = model.viewCells.slice(0);
+    newRanges.reverse().forEach((range) => {
+      const removedCells = viewCells.splice(range.start, range.end - range.start + 1);
+      this._onDidRemoveCellsFromView.fire(removedCells);
+    });
+    this.splice2(0, 0, viewCells);
+  }
+  _updateElementsInWebview(viewDiffs) {
+    viewDiffs.reverse().forEach((diff2) => {
+      const hiddenOutputs = [];
+      const deletedOutputs = [];
+      const removedMarkdownCells = [];
+      for (let i = diff2.start; i < diff2.start + diff2.deleteCount; i++) {
+        const cell = this.element(i);
+        if (cell.cellKind === CellKind.Code) {
+          if (this._viewModel.hasCell(cell)) {
+            hiddenOutputs.push(...cell?.outputsViewModels);
+          } else {
+            deletedOutputs.push(...cell?.outputsViewModels);
+          }
+        } else {
+          removedMarkdownCells.push(cell);
+        }
+      }
+      this.splice2(diff2.start, diff2.deleteCount, diff2.toInsert);
+      this._onDidHideOutputs.fire(hiddenOutputs);
+      this._onDidRemoveOutputs.fire(deletedOutputs);
+      this._onDidRemoveCellsFromView.fire(removedMarkdownCells);
+    });
+  }
+  clear() {
+    super.splice(0, this.length);
+  }
+  setHiddenAreas(_ranges, triggerViewUpdate) {
+    if (!this._viewModel) {
+      return false;
+    }
+    const newRanges = reduceCellRanges(_ranges);
+    const oldRanges = this._hiddenRangeIds.map((id) => this._viewModel.getTrackedRange(id)).filter((range) => range !== null);
+    if (newRanges.length === oldRanges.length) {
+      let hasDifference = false;
+      for (let i = 0; i < newRanges.length; i++) {
+        if (!(newRanges[i].start === oldRanges[i].start && newRanges[i].end === oldRanges[i].end)) {
+          hasDifference = true;
+          break;
+        }
+      }
+      if (!hasDifference) {
+        this._updateHiddenRangePrefixSum(newRanges);
+        this.viewZones.onHiddenRangesChange();
+        this.viewZones.layout();
+        this.cellOverlays.onHiddenRangesChange();
+        this.cellOverlays.layout();
+        return false;
+      }
+    }
+    this._hiddenRangeIds.forEach((id) => this._viewModel.setTrackedRange(id, null, TrackedRangeStickiness.GrowsOnlyWhenTypingAfter));
+    const hiddenAreaIds = newRanges.map((range) => this._viewModel.setTrackedRange(null, range, TrackedRangeStickiness.GrowsOnlyWhenTypingAfter)).filter((id) => id !== null);
+    this._hiddenRangeIds = hiddenAreaIds;
+    this._updateHiddenRangePrefixSum(newRanges);
+    this.viewZones.onHiddenRangesChange();
+    this.cellOverlays.onHiddenRangesChange();
+    if (triggerViewUpdate) {
+      this.updateHiddenAreasInView(oldRanges, newRanges);
+    }
+    this.viewZones.layout();
+    this.cellOverlays.layout();
+    return true;
+  }
+  _updateHiddenRangePrefixSum(newRanges) {
+    let start = 0;
+    let index = 0;
+    const ret = [];
+    while (index < newRanges.length) {
+      for (let j = start; j < newRanges[index].start - 1; j++) {
+        ret.push(1);
+      }
+      ret.push(newRanges[index].end - newRanges[index].start + 1 + 1);
+      start = newRanges[index].end + 1;
+      index++;
+    }
+    for (let i = start; i < this._viewModel.length; i++) {
+      ret.push(1);
+    }
+    const values = new Uint32Array(ret.length);
+    for (let i = 0; i < ret.length; i++) {
+      values[i] = ret[i];
+    }
+    this.hiddenRangesPrefixSum = new PrefixSumComputer(values);
+  }
+  /**
+   * oldRanges and newRanges are all reduced and sorted.
+   */
+  updateHiddenAreasInView(oldRanges, newRanges) {
+    const oldViewCellEntries = getVisibleCells(this._viewModel.viewCells, oldRanges);
+    const oldViewCellMapping = /* @__PURE__ */ new Set();
+    oldViewCellEntries.forEach((cell) => {
+      oldViewCellMapping.add(cell.uri.toString());
+    });
+    const newViewCellEntries = getVisibleCells(this._viewModel.viewCells, newRanges);
+    const viewDiffs = diff(oldViewCellEntries, newViewCellEntries, (a) => {
+      return oldViewCellMapping.has(a.uri.toString());
+    });
+    this._updateElementsInWebview(viewDiffs);
+  }
+  splice2(start, deleteCount, elements = []) {
+    if (start < 0 || start > this.view.length) {
+      return;
+    }
+    const focusInside = DOM.isAncestorOfActiveElement(this.rowsContainer);
+    super.splice(start, deleteCount, elements);
+    if (focusInside) {
+      this.domFocus();
+    }
+    const selectionsLeft = [];
+    this.getSelectedElements().forEach((el) => {
+      if (this._viewModel.hasCell(el)) {
+        selectionsLeft.push(el.handle);
+      }
+    });
+    if (!selectionsLeft.length && this._viewModel.viewCells.length) {
+      this._viewModel.updateSelectionsState({ kind: SelectionStateType.Index, focus: { start: 0, end: 1 }, selections: [{ start: 0, end: 1 }] });
+    }
+    this.viewZones.layout();
+    this.cellOverlays.layout();
+  }
+  getModelIndex(cell) {
+    const viewIndex = this.indexOf(cell);
+    return this.getModelIndex2(viewIndex);
+  }
+  getModelIndex2(viewIndex) {
+    if (!this.hiddenRangesPrefixSum) {
+      return viewIndex;
+    }
+    const modelIndex = this.hiddenRangesPrefixSum.getPrefixSum(viewIndex - 1);
+    return modelIndex;
+  }
+  getViewIndex(cell) {
+    const modelIndex = this._viewModel.getCellIndex(cell);
+    return this.getViewIndex2(modelIndex);
+  }
+  getViewIndex2(modelIndex) {
+    if (!this.hiddenRangesPrefixSum) {
+      return modelIndex;
+    }
+    const viewIndexInfo = this.hiddenRangesPrefixSum.getIndexOf(modelIndex);
+    if (viewIndexInfo.remainder !== 0) {
+      if (modelIndex >= this.hiddenRangesPrefixSum.getTotalSum()) {
+        return modelIndex - (this.hiddenRangesPrefixSum.getTotalSum() - this.hiddenRangesPrefixSum.getCount());
+      }
+      return void 0;
+    } else {
+      return viewIndexInfo.index;
+    }
+  }
+  convertModelIndexToViewIndex(modelIndex) {
+    if (!this.hiddenRangesPrefixSum) {
+      return modelIndex;
+    }
+    if (modelIndex >= this.hiddenRangesPrefixSum.getTotalSum()) {
+      return Math.min(this.length, this.hiddenRangesPrefixSum.getTotalSum());
+    }
+    return this.hiddenRangesPrefixSum.getIndexOf(modelIndex).index;
+  }
+  modelIndexIsVisible(modelIndex) {
+    if (!this.hiddenRangesPrefixSum) {
+      return true;
+    }
+    const viewIndexInfo = this.hiddenRangesPrefixSum.getIndexOf(modelIndex);
+    if (viewIndexInfo.remainder !== 0) {
+      if (modelIndex >= this.hiddenRangesPrefixSum.getTotalSum()) {
+        return true;
+      }
+      return false;
+    } else {
+      return true;
+    }
+  }
+  _getVisibleRangesFromIndex(topViewIndex, topModelIndex, bottomViewIndex, bottomModelIndex) {
+    const stack = [];
+    const ranges = [];
+    let index = topViewIndex;
+    let modelIndex = topModelIndex;
+    while (index <= bottomViewIndex) {
+      const accu = this.hiddenRangesPrefixSum.getPrefixSum(index);
+      if (accu === modelIndex + 1) {
+        if (stack.length) {
+          if (stack[stack.length - 1] === modelIndex - 1) {
+            ranges.push({ start: stack[stack.length - 1], end: modelIndex + 1 });
+          } else {
+            ranges.push({ start: stack[stack.length - 1], end: stack[stack.length - 1] + 1 });
+          }
+        }
+        stack.push(modelIndex);
+        index++;
+        modelIndex++;
+      } else {
+        if (stack.length) {
+          if (stack[stack.length - 1] === modelIndex - 1) {
+            ranges.push({ start: stack[stack.length - 1], end: modelIndex + 1 });
+          } else {
+            ranges.push({ start: stack[stack.length - 1], end: stack[stack.length - 1] + 1 });
+          }
+        }
+        stack.push(modelIndex);
+        index++;
+        modelIndex = accu;
+      }
+    }
+    if (stack.length) {
+      ranges.push({ start: stack[stack.length - 1], end: stack[stack.length - 1] + 1 });
+    }
+    return reduceCellRanges(ranges);
+  }
+  getVisibleRangesPlusViewportAboveAndBelow() {
+    if (this.view.length <= 0) {
+      return [];
+    }
+    const top = Math.max(this.getViewScrollTop() - this.renderHeight, 0);
+    const topViewIndex = this.view.indexAt(top);
+    const topElement = this.view.element(topViewIndex);
+    const topModelIndex = this._viewModel.getCellIndex(topElement);
+    const bottom = clamp(this.getViewScrollBottom() + this.renderHeight, 0, this.scrollHeight);
+    const bottomViewIndex = clamp(this.view.indexAt(bottom), 0, this.view.length - 1);
+    const bottomElement = this.view.element(bottomViewIndex);
+    const bottomModelIndex = this._viewModel.getCellIndex(bottomElement);
+    if (bottomModelIndex - topModelIndex === bottomViewIndex - topViewIndex) {
+      return [{ start: topModelIndex, end: bottomModelIndex }];
+    } else {
+      return this._getVisibleRangesFromIndex(topViewIndex, topModelIndex, bottomViewIndex, bottomModelIndex);
+    }
+  }
+  _getViewIndexUpperBound(cell) {
+    if (!this._viewModel) {
+      return -1;
+    }
+    const modelIndex = this._viewModel.getCellIndex(cell);
+    if (modelIndex === -1) {
+      return -1;
+    }
+    if (!this.hiddenRangesPrefixSum) {
+      return modelIndex;
+    }
+    const viewIndexInfo = this.hiddenRangesPrefixSum.getIndexOf(modelIndex);
+    if (viewIndexInfo.remainder !== 0) {
+      if (modelIndex >= this.hiddenRangesPrefixSum.getTotalSum()) {
+        return modelIndex - (this.hiddenRangesPrefixSum.getTotalSum() - this.hiddenRangesPrefixSum.getCount());
+      }
+    }
+    return viewIndexInfo.index;
+  }
+  _getViewIndexUpperBound2(modelIndex) {
+    if (!this.hiddenRangesPrefixSum) {
+      return modelIndex;
+    }
+    const viewIndexInfo = this.hiddenRangesPrefixSum.getIndexOf(modelIndex);
+    if (viewIndexInfo.remainder !== 0) {
+      if (modelIndex >= this.hiddenRangesPrefixSum.getTotalSum()) {
+        return modelIndex - (this.hiddenRangesPrefixSum.getTotalSum() - this.hiddenRangesPrefixSum.getCount());
+      }
+    }
+    return viewIndexInfo.index;
+  }
+  focusElement(cell) {
+    const index = this._getViewIndexUpperBound(cell);
+    if (index >= 0 && this._viewModel) {
+      const focusedElementHandle = this.element(index).handle;
+      this._viewModel.updateSelectionsState({
+        kind: SelectionStateType.Handle,
+        primary: focusedElementHandle,
+        selections: [focusedElementHandle]
+      }, "view");
+      this.setFocus([index], void 0, false);
+    }
+  }
+  selectElements(elements) {
+    const indices = elements.map((cell) => this._getViewIndexUpperBound(cell)).filter((index) => index >= 0);
+    this.setSelection(indices);
+  }
+  getCellViewScrollTop(cell) {
+    const index = this._getViewIndexUpperBound(cell);
+    if (index === void 0 || index < 0 || index >= this.length) {
+      throw new ListError(this.listUser, `Invalid index ${index}`);
+    }
+    return this.view.elementTop(index);
+  }
+  getCellViewScrollBottom(cell) {
+    const index = this._getViewIndexUpperBound(cell);
+    if (index === void 0 || index < 0 || index >= this.length) {
+      throw new ListError(this.listUser, `Invalid index ${index}`);
+    }
+    const top = this.view.elementTop(index);
+    const height = this.view.elementHeight(index);
+    return top + height;
+  }
+  setFocus(indexes, browserEvent, ignoreTextModelUpdate) {
+    if (ignoreTextModelUpdate) {
+      super.setFocus(indexes, browserEvent);
+      return;
+    }
+    if (!indexes.length) {
+      if (this._viewModel) {
+        if (this.length) {
+          return;
+        }
+        this._viewModel.updateSelectionsState({
+          kind: SelectionStateType.Handle,
+          primary: null,
+          selections: []
+        }, "view");
+      }
+    } else {
+      if (this._viewModel) {
+        const focusedElementHandle = this.element(indexes[0]).handle;
+        this._viewModel.updateSelectionsState({
+          kind: SelectionStateType.Handle,
+          primary: focusedElementHandle,
+          selections: this.getSelection().map((selection) => this.element(selection).handle)
+        }, "view");
+      }
+    }
+    super.setFocus(indexes, browserEvent);
+  }
+  setSelection(indexes, browserEvent, ignoreTextModelUpdate) {
+    if (ignoreTextModelUpdate) {
+      super.setSelection(indexes, browserEvent);
+      return;
+    }
+    if (!indexes.length) {
+      if (this._viewModel) {
+        this._viewModel.updateSelectionsState({
+          kind: SelectionStateType.Handle,
+          primary: this.getFocusedElements()[0]?.handle ?? null,
+          selections: []
+        }, "view");
+      }
+    } else {
+      if (this._viewModel) {
+        this._viewModel.updateSelectionsState({
+          kind: SelectionStateType.Handle,
+          primary: this.getFocusedElements()[0]?.handle ?? null,
+          selections: indexes.map((index) => this.element(index)).map((cell) => cell.handle)
+        }, "view");
+      }
+    }
+    super.setSelection(indexes, browserEvent);
+  }
+  /**
+   * The range will be revealed with as little scrolling as possible.
+   */
+  revealCells(range) {
+    const startIndex = this._getViewIndexUpperBound2(range.start);
+    if (startIndex < 0) {
+      return;
+    }
+    const endIndex = this._getViewIndexUpperBound2(range.end - 1);
+    const scrollTop = this.getViewScrollTop();
+    const wrapperBottom = this.getViewScrollBottom();
+    const elementTop = this.view.elementTop(startIndex);
+    if (elementTop >= scrollTop && elementTop < wrapperBottom) {
+      const endElementTop = this.view.elementTop(endIndex);
+      const endElementHeight = this.view.elementHeight(endIndex);
+      if (endElementTop + endElementHeight <= wrapperBottom) {
+        return;
+      }
+      if (endElementTop >= wrapperBottom) {
+        return this._revealInternal(endIndex, false, 2 /* Bottom */);
+      }
+      if (endElementTop < wrapperBottom) {
+        if (endElementTop + endElementHeight - wrapperBottom < elementTop - scrollTop) {
+          return this.view.setScrollTop(scrollTop + endElementTop + endElementHeight - wrapperBottom);
+        } else {
+          return this._revealInternal(startIndex, false, 0 /* Top */);
+        }
+      }
+    }
+    this._revealInViewWithMinimalScrolling(startIndex);
+  }
+  _revealInViewWithMinimalScrolling(viewIndex, firstLine) {
+    const firstIndex = this.view.firstMostlyVisibleIndex;
+    const elementHeight = this.view.elementHeight(viewIndex);
+    if (viewIndex <= firstIndex || !firstLine && elementHeight >= this.view.renderHeight) {
+      this._revealInternal(viewIndex, true, 0 /* Top */);
+    } else {
+      this._revealInternal(viewIndex, true, 2 /* Bottom */, firstLine);
+    }
+  }
+  scrollToBottom() {
+    const scrollHeight = this.view.scrollHeight;
+    const scrollTop = this.getViewScrollTop();
+    const wrapperBottom = this.getViewScrollBottom();
+    this.view.setScrollTop(scrollHeight - (wrapperBottom - scrollTop));
+  }
+  /**
+   * Reveals the given cell in the notebook cell list. The cell will come into view syncronously
+   * but the cell's editor will be attached asyncronously if it was previously out of view.
+   * @returns The promise to await for the cell editor to be attached
+   */
+  async revealCell(cell, revealType) {
+    const index = this._getViewIndexUpperBound(cell);
+    if (index < 0) {
+      return;
+    }
+    switch (revealType) {
+      case CellRevealType.Top:
+        this._revealInternal(index, false, 0 /* Top */);
+        break;
+      case CellRevealType.Center:
+        this._revealInternal(index, false, 1 /* Center */);
+        break;
+      case CellRevealType.CenterIfOutsideViewport:
+        this._revealInternal(index, true, 1 /* Center */);
+        break;
+      case CellRevealType.NearTopIfOutsideViewport:
+        this._revealInternal(index, true, 3 /* NearTop */);
+        break;
+      case CellRevealType.FirstLineIfOutsideViewport:
+        this._revealInViewWithMinimalScrolling(index, true);
+        break;
+      case CellRevealType.Default:
+        this._revealInViewWithMinimalScrolling(index);
+        break;
+    }
+    if (
+      // wait for the editor to be created if the cell is in editing mode
+      (cell.getEditState() === CellEditState.Editing || revealType === CellRevealType.FirstLineIfOutsideViewport && cell.cellKind === CellKind.Code) && !cell.editorAttached
+    ) {
+      return getEditorAttachedPromise(cell);
+    }
+    return;
+  }
+  _revealInternal(viewIndex, ignoreIfInsideViewport, revealPosition, firstLine) {
+    if (viewIndex >= this.view.length) {
+      return;
+    }
+    const scrollTop = this.getViewScrollTop();
+    const wrapperBottom = this.getViewScrollBottom();
+    const elementTop = this.view.elementTop(viewIndex);
+    const elementBottom = this.view.elementHeight(viewIndex) + elementTop;
+    if (ignoreIfInsideViewport) {
+      if (elementTop >= scrollTop && elementBottom < wrapperBottom) {
+        return;
+      }
+    }
+    switch (revealPosition) {
+      case 0 /* Top */:
+        this.view.setScrollTop(elementTop);
+        this.view.setScrollTop(this.view.elementTop(viewIndex));
+        break;
+      case 1 /* Center */:
+      case 3 /* NearTop */:
+        {
+          this.view.setScrollTop(elementTop - this.view.renderHeight / 2);
+          const newElementTop = this.view.elementTop(viewIndex);
+          const newElementHeight = this.view.elementHeight(viewIndex);
+          const renderHeight = this.getViewScrollBottom() - this.getViewScrollTop();
+          if (newElementHeight >= renderHeight) {
+            this.view.setScrollTop(newElementTop);
+          } else if (revealPosition === 1 /* Center */) {
+            this.view.setScrollTop(newElementTop + newElementHeight / 2 - renderHeight / 2);
+          } else if (revealPosition === 3 /* NearTop */) {
+            this.view.setScrollTop(newElementTop - renderHeight / 5);
+          }
+        }
+        break;
+      case 2 /* Bottom */:
+        if (firstLine) {
+          const lineHeight = this.viewModel?.layoutInfo?.fontInfo.lineHeight ?? 15;
+          const padding = this.notebookOptions.getLayoutConfiguration().cellTopMargin + this.notebookOptions.getLayoutConfiguration().editorTopPadding;
+          const firstLineLocation = elementTop + lineHeight + padding;
+          if (firstLineLocation < wrapperBottom) {
+            return;
+          }
+          this.view.setScrollTop(this.scrollTop + (firstLineLocation - wrapperBottom));
+          break;
+        }
+        this.view.setScrollTop(this.scrollTop + (elementBottom - wrapperBottom));
+        this.view.setScrollTop(this.scrollTop + (this.view.elementTop(viewIndex) + this.view.elementHeight(viewIndex) - this.getViewScrollBottom()));
+        break;
+      default:
+        break;
+    }
+  }
+  //#region Reveal Cell Editor Range asynchronously
+  async revealRangeInCell(cell, range, revealType) {
+    const index = this._getViewIndexUpperBound(cell);
+    if (index < 0) {
+      return;
+    }
+    switch (revealType) {
+      case CellRevealRangeType.Default:
+        return this._revealRangeInternalAsync(index, range);
+      case CellRevealRangeType.Center:
+        return this._revealRangeInCenterInternalAsync(index, range);
+      case CellRevealRangeType.CenterIfOutsideViewport:
+        return this._revealRangeInCenterIfOutsideViewportInternalAsync(index, range);
+    }
+  }
+  // List items have real dynamic heights, which means after we set `scrollTop` based on the `elementTop(index)`, the element at `index` might still be removed from the view once all relayouting tasks are done.
+  // For example, we scroll item 10 into the view upwards, in the first round, items 7, 8, 9, 10 are all in the viewport. Then item 7 and 8 resize themselves to be larger and finally item 10 is removed from the view.
+  // To ensure that item 10 is always there, we need to scroll item 10 to the top edge of the viewport.
+  async _revealRangeInternalAsync(viewIndex, range) {
+    const scrollTop = this.getViewScrollTop();
+    const wrapperBottom = this.getViewScrollBottom();
+    const elementTop = this.view.elementTop(viewIndex);
+    const element = this.view.element(viewIndex);
+    if (element.editorAttached) {
+      this._revealRangeCommon(viewIndex, range);
+    } else {
+      const elementHeight = this.view.elementHeight(viewIndex);
+      let alignHint = void 0;
+      if (elementTop + elementHeight <= scrollTop) {
+        this.view.setScrollTop(elementTop);
+        alignHint = "top";
+      } else if (elementTop >= wrapperBottom) {
+        this.view.setScrollTop(elementTop - this.view.renderHeight / 2);
+        alignHint = "bottom";
+      }
+      const editorAttachedPromise = new Promise((resolve, reject) => {
+        Event.once(element.onDidChangeEditorAttachState)(() => {
+          element.editorAttached ? resolve() : reject();
+        });
+      });
+      return editorAttachedPromise.then(() => {
+        this._revealRangeCommon(viewIndex, range, alignHint);
+      });
+    }
+  }
+  async _revealRangeInCenterInternalAsync(viewIndex, range) {
+    const reveal = /* @__PURE__ */ __name((viewIndex2, range2) => {
+      const element2 = this.view.element(viewIndex2);
+      const positionOffset = element2.getPositionScrollTopOffset(range2);
+      const positionOffsetInView = this.view.elementTop(viewIndex2) + positionOffset;
+      this.view.setScrollTop(positionOffsetInView - this.view.renderHeight / 2);
+      element2.revealRangeInCenter(range2);
+    }, "reveal");
+    const elementTop = this.view.elementTop(viewIndex);
+    const viewItemOffset = elementTop;
+    this.view.setScrollTop(viewItemOffset - this.view.renderHeight / 2);
+    const element = this.view.element(viewIndex);
+    if (!element.editorAttached) {
+      return getEditorAttachedPromise(element).then(() => reveal(viewIndex, range));
+    } else {
+      reveal(viewIndex, range);
+    }
+  }
+  async _revealRangeInCenterIfOutsideViewportInternalAsync(viewIndex, range) {
+    const reveal = /* @__PURE__ */ __name((viewIndex2, range2) => {
+      const element2 = this.view.element(viewIndex2);
+      const positionOffset2 = element2.getPositionScrollTopOffset(range2);
+      const positionOffsetInView = this.view.elementTop(viewIndex2) + positionOffset2;
+      this.view.setScrollTop(positionOffsetInView - this.view.renderHeight / 2);
+      element2.revealRangeInCenter(range2);
+    }, "reveal");
+    const scrollTop = this.getViewScrollTop();
+    const wrapperBottom = this.getViewScrollBottom();
+    const elementTop = this.view.elementTop(viewIndex);
+    const viewItemOffset = elementTop;
+    const element = this.view.element(viewIndex);
+    const positionOffset = viewItemOffset + element.getPositionScrollTopOffset(range);
+    if (positionOffset < scrollTop || positionOffset > wrapperBottom) {
+      this.view.setScrollTop(positionOffset - this.view.renderHeight / 2);
+      const newPositionOffset = this.view.elementTop(viewIndex) + element.getPositionScrollTopOffset(range);
+      this.view.setScrollTop(newPositionOffset - this.view.renderHeight / 2);
+      if (!element.editorAttached) {
+        return getEditorAttachedPromise(element).then(() => reveal(viewIndex, range));
+      } else {
+      }
+    } else {
+      if (element.editorAttached) {
+        element.revealRangeInCenter(range);
+      } else {
+        return getEditorAttachedPromise(element).then(() => reveal(viewIndex, range));
+      }
+    }
+  }
+  _revealRangeCommon(viewIndex, range, alignHint) {
+    const element = this.view.element(viewIndex);
+    const scrollTop = this.getViewScrollTop();
+    const wrapperBottom = this.getViewScrollBottom();
+    const positionOffset = element.getPositionScrollTopOffset(range);
+    const elementOriginalHeight = this.view.elementHeight(viewIndex);
+    if (positionOffset >= elementOriginalHeight) {
+      const newTotalHeight = element.layoutInfo.totalHeight;
+      this.updateElementHeight(viewIndex, newTotalHeight);
+    }
+    const elementTop = this.view.elementTop(viewIndex);
+    const positionTop = elementTop + positionOffset;
+    if (positionTop < scrollTop) {
+      this.view.setScrollTop(positionTop - 30);
+    } else if (positionTop > wrapperBottom) {
+      this.view.setScrollTop(scrollTop + positionTop - wrapperBottom + 30);
+    } else if (alignHint === "bottom") {
+      this.view.setScrollTop(scrollTop + positionTop - wrapperBottom + 30);
+    } else if (alignHint === "top") {
+      this.view.setScrollTop(positionTop - 30);
+    }
+  }
+  //#endregion
+  /**
+   * Reveals the specified offset of the given cell in the center of the viewport.
+   * This enables revealing locations in the output as well as the input.
+   */
+  revealCellOffsetInCenter(cell, offset) {
+    const viewIndex = this._getViewIndexUpperBound(cell);
+    if (viewIndex >= 0) {
+      const element = this.view.element(viewIndex);
+      const elementTop = this.view.elementTop(viewIndex);
+      if (element instanceof MarkupCellViewModel) {
+        return this._revealInCenterIfOutsideViewport(viewIndex);
+      } else {
+        const rangeOffset = element.layoutInfo.outputContainerOffset + Math.min(offset, element.layoutInfo.outputTotalHeight);
+        this.view.setScrollTop(elementTop - this.view.renderHeight / 2);
+        this.view.setScrollTop(elementTop + rangeOffset - this.view.renderHeight / 2);
+      }
+    }
+  }
+  revealOffsetInCenterIfOutsideViewport(offset) {
+    const scrollTop = this.getViewScrollTop();
+    const wrapperBottom = this.getViewScrollBottom();
+    if (offset < scrollTop || offset > wrapperBottom) {
+      const newTop = Math.max(0, offset - this.view.renderHeight / 2);
+      this.view.setScrollTop(newTop);
+    }
+  }
+  _revealInCenterIfOutsideViewport(viewIndex) {
+    this._revealInternal(viewIndex, true, 1 /* Center */);
+  }
+  domElementOfElement(element) {
+    const index = this._getViewIndexUpperBound(element);
+    if (index >= 0 && index < this.length) {
+      return this.view.domElement(index);
+    }
+    return null;
+  }
+  focusView() {
+    this.view.domNode.focus();
+  }
+  triggerScrollFromMouseWheelEvent(browserEvent) {
+    this.view.delegateScrollFromMouseWheelEvent(browserEvent);
+  }
+  delegateVerticalScrollbarPointerDown(browserEvent) {
+    this.view.delegateVerticalScrollbarPointerDown(browserEvent);
+  }
+  isElementAboveViewport(index) {
+    const elementTop = this.view.elementTop(index);
+    const elementBottom = elementTop + this.view.elementHeight(index);
+    return elementBottom < this.scrollTop;
+  }
+  updateElementHeight2(element, size, anchorElementIndex = null) {
+    const index = this._getViewIndexUpperBound(element);
+    if (index === void 0 || index < 0 || index >= this.length) {
+      return;
+    }
+    if (this.isElementAboveViewport(index)) {
+      const oldHeight = this.elementHeight(element);
+      const delta = oldHeight - size;
+      if (this._webviewElement) {
+        Event.once(this.view.onWillScroll)(() => {
+          const webviewTop = parseInt(this._webviewElement.domNode.style.top, 10);
+          if (validateWebviewBoundary(this._webviewElement.domNode)) {
+            this._webviewElement.setTop(webviewTop - delta);
+          } else {
+            this._webviewElement.setTop(-NOTEBOOK_WEBVIEW_BOUNDARY);
+          }
+        });
+      }
+      this.view.updateElementHeight(index, size, anchorElementIndex);
+      this.viewZones.layout();
+      this.cellOverlays.layout();
+      return;
+    }
+    if (anchorElementIndex !== null) {
+      this.view.updateElementHeight(index, size, anchorElementIndex);
+      this.viewZones.layout();
+      this.cellOverlays.layout();
+      return;
+    }
+    const focused = this.getFocus();
+    const focus = focused.length ? focused[0] : null;
+    if (focus) {
+      const heightDelta = size - this.view.elementHeight(index);
+      if (this._notebookCellAnchor.shouldAnchor(this.view, focus, heightDelta, this.element(index))) {
+        this.view.updateElementHeight(index, size, focus);
+        this.viewZones.layout();
+        this.cellOverlays.layout();
+        return;
+      }
+    }
+    this.view.updateElementHeight(index, size, null);
+    this.viewZones.layout();
+    this.cellOverlays.layout();
+    return;
+  }
+  changeViewZones(callback) {
+    if (this.viewZones.changeViewZones(callback)) {
+      this.viewZones.layout();
+    }
+  }
+  changeCellOverlays(callback) {
+    if (this.cellOverlays.changeCellOverlays(callback)) {
+      this.cellOverlays.layout();
+    }
+  }
+  getViewZoneLayoutInfo(viewZoneId) {
+    return this.viewZones.getViewZoneLayoutInfo(viewZoneId);
+  }
+  // override
+  domFocus() {
+    const focused = this.getFocusedElements()[0];
+    const focusedDomElement = focused && this.domElementOfElement(focused);
+    if (this.view.domNode.ownerDocument.activeElement && focusedDomElement && focusedDomElement.contains(this.view.domNode.ownerDocument.activeElement)) {
+      return;
+    }
+    if (!isMacintosh && this.view.domNode.ownerDocument.activeElement && !!DOM.findParentWithClass(this.view.domNode.ownerDocument.activeElement, "context-view")) {
+      return;
+    }
+    super.domFocus();
+  }
+  focusContainer(clearSelection) {
+    if (clearSelection) {
+      this._viewModel?.updateSelectionsState({
+        kind: SelectionStateType.Handle,
+        primary: null,
+        selections: []
+      }, "view");
+      this.setFocus([], void 0, true);
+      this.setSelection([], void 0, true);
+    }
+    super.domFocus();
+  }
+  getViewScrollTop() {
+    return this.view.getScrollTop();
+  }
+  getViewScrollBottom() {
+    return this.getViewScrollTop() + this.view.renderHeight;
+  }
+  setCellEditorSelection(cell, range) {
+    const element = cell;
+    if (element.editorAttached) {
+      element.setSelection(range);
+    } else {
+      getEditorAttachedPromise(element).then(() => {
+        element.setSelection(range);
+      });
+    }
+  }
+  style(styles) {
+    const selectorSuffix = this.view.domId;
+    if (!this.styleElement) {
+      this.styleElement = domStylesheetsJs.createStyleSheet(this.view.domNode);
+    }
+    const suffix = selectorSuffix && `.${selectorSuffix}`;
+    const content = [];
+    if (styles.listBackground) {
+      content.push(`.monaco-list${suffix} > div.monaco-scrollable-element > .monaco-list-rows { background: ${styles.listBackground}; }`);
+    }
+    if (styles.listFocusBackground) {
+      content.push(`.monaco-list${suffix}:focus > div.monaco-scrollable-element > .monaco-list-rows > .monaco-list-row.focused { background-color: ${styles.listFocusBackground}; }`);
+      content.push(`.monaco-list${suffix}:focus > div.monaco-scrollable-element > .monaco-list-rows > .monaco-list-row.focused:hover { background-color: ${styles.listFocusBackground}; }`);
+    }
+    if (styles.listFocusForeground) {
+      content.push(`.monaco-list${suffix}:focus > div.monaco-scrollable-element > .monaco-list-rows > .monaco-list-row.focused { color: ${styles.listFocusForeground}; }`);
+    }
+    if (styles.listActiveSelectionBackground) {
+      content.push(`.monaco-list${suffix}:focus > div.monaco-scrollable-element > .monaco-list-rows > .monaco-list-row.selected { background-color: ${styles.listActiveSelectionBackground}; }`);
+      content.push(`.monaco-list${suffix}:focus > div.monaco-scrollable-element > .monaco-list-rows > .monaco-list-row.selected:hover { background-color: ${styles.listActiveSelectionBackground}; }`);
+    }
+    if (styles.listActiveSelectionForeground) {
+      content.push(`.monaco-list${suffix}:focus > div.monaco-scrollable-element > .monaco-list-rows > .monaco-list-row.selected { color: ${styles.listActiveSelectionForeground}; }`);
+    }
+    if (styles.listFocusAndSelectionBackground) {
+      content.push(`
+				.monaco-drag-image${suffix},
+				.monaco-list${suffix}:focus > div.monaco-scrollable-element > .monaco-list-rows > .monaco-list-row.selected.focused { background-color: ${styles.listFocusAndSelectionBackground}; }
+			`);
+    }
+    if (styles.listFocusAndSelectionForeground) {
+      content.push(`
+				.monaco-drag-image${suffix},
+				.monaco-list${suffix}:focus > div.monaco-scrollable-element > .monaco-list-rows > .monaco-list-row.selected.focused { color: ${styles.listFocusAndSelectionForeground}; }
+			`);
+    }
+    if (styles.listInactiveFocusBackground) {
+      content.push(`.monaco-list${suffix} > div.monaco-scrollable-element > .monaco-list-rows > .monaco-list-row.focused { background-color:  ${styles.listInactiveFocusBackground}; }`);
+      content.push(`.monaco-list${suffix} > div.monaco-scrollable-element > .monaco-list-rows > .monaco-list-row.focused:hover { background-color:  ${styles.listInactiveFocusBackground}; }`);
+    }
+    if (styles.listInactiveSelectionBackground) {
+      content.push(`.monaco-list${suffix} > div.monaco-scrollable-element > .monaco-list-rows > .monaco-list-row.selected { background-color:  ${styles.listInactiveSelectionBackground}; }`);
+      content.push(`.monaco-list${suffix} > div.monaco-scrollable-element > .monaco-list-rows > .monaco-list-row.selected:hover { background-color:  ${styles.listInactiveSelectionBackground}; }`);
+    }
+    if (styles.listInactiveSelectionForeground) {
+      content.push(`.monaco-list${suffix} > div.monaco-scrollable-element > .monaco-list-rows > .monaco-list-row.selected { color: ${styles.listInactiveSelectionForeground}; }`);
+    }
+    if (styles.listHoverBackground) {
+      content.push(`.monaco-list${suffix}:not(.drop-target) > div.monaco-scrollable-element > .monaco-list-rows > .monaco-list-row:hover:not(.selected):not(.focused) { background-color:  ${styles.listHoverBackground}; }`);
+    }
+    if (styles.listHoverForeground) {
+      content.push(`.monaco-list${suffix} > div.monaco-scrollable-element > .monaco-list-rows > .monaco-list-row:hover:not(.selected):not(.focused) { color:  ${styles.listHoverForeground}; }`);
+    }
+    if (styles.listSelectionOutline) {
+      content.push(`.monaco-list${suffix} > div.monaco-scrollable-element > .monaco-list-rows > .monaco-list-row.selected { outline: 1px dotted ${styles.listSelectionOutline}; outline-offset: -1px; }`);
+    }
+    if (styles.listFocusOutline) {
+      content.push(`
+				.monaco-drag-image${suffix},
+				.monaco-list${suffix}:focus > div.monaco-scrollable-element > .monaco-list-rows > .monaco-list-row.focused { outline: 1px solid ${styles.listFocusOutline}; outline-offset: -1px; }
+			`);
+    }
+    if (styles.listInactiveFocusOutline) {
+      content.push(`.monaco-list${suffix} > div.monaco-scrollable-element > .monaco-list-rows > .monaco-list-row.focused { outline: 1px dotted ${styles.listInactiveFocusOutline}; outline-offset: -1px; }`);
+    }
+    if (styles.listHoverOutline) {
+      content.push(`.monaco-list${suffix} > div.monaco-scrollable-element > .monaco-list-rows > .monaco-list-row:hover { outline: 1px dashed ${styles.listHoverOutline}; outline-offset: -1px; }`);
+    }
+    if (styles.listDropOverBackground) {
+      content.push(`
+				.monaco-list${suffix}.drop-target,
+				.monaco-list${suffix} > div.monaco-scrollable-element > .monaco-list-rows.drop-target,
+				.monaco-list${suffix} > div.monaco-scrollable-element > .monaco-list-row.drop-target { background-color: ${styles.listDropOverBackground} !important; color: inherit !important; }
+			`);
+    }
+    const newStyles = content.join("\n");
+    if (newStyles !== this.styleElement.textContent) {
+      this.styleElement.textContent = newStyles;
+    }
+  }
+  getRenderHeight() {
+    return this.view.renderHeight;
+  }
+  getScrollHeight() {
+    return this.view.scrollHeight;
+  }
+  layout(height, width) {
+    this._isInLayout = true;
+    super.layout(height, width);
+    if (this.renderHeight === 0) {
+      this.view.domNode.style.visibility = "hidden";
+    } else {
+      this.view.domNode.style.visibility = "initial";
+    }
+    this._isInLayout = false;
+  }
+  dispose() {
+    this._isDisposed = true;
+    this._viewModelStore.dispose();
+    this._localDisposableStore.dispose();
+    this._notebookCellAnchor.dispose();
+    this.viewZones.dispose();
+    this.cellOverlays.dispose();
+    super.dispose();
+    this._previousFocusedElements = [];
+    this._viewModel = null;
+    this._hiddenRangeIds = [];
+    this.hiddenRangesPrefixSum = null;
+    this._visibleRanges = [];
+  }
+};
+NotebookCellList = __decorateClass([
+  __decorateParam(7, IListService),
+  __decorateParam(8, IConfigurationService),
+  __decorateParam(9, IInstantiationService),
+  __decorateParam(10, INotebookExecutionStateService)
+], NotebookCellList);
+class ListViewInfoAccessor extends Disposable {
+  constructor(list) {
+    super();
+    this.list = list;
+  }
+  static {
+    __name(this, "ListViewInfoAccessor");
+  }
+  getViewIndex(cell) {
+    return this.list.getViewIndex(cell) ?? -1;
+  }
+  getViewHeight(cell) {
+    if (!this.list.viewModel) {
+      return -1;
+    }
+    return this.list.elementHeight(cell);
+  }
+  getCellRangeFromViewRange(startIndex, endIndex) {
+    if (!this.list.viewModel) {
+      return void 0;
+    }
+    const modelIndex = this.list.getModelIndex2(startIndex);
+    if (modelIndex === void 0) {
+      throw new Error(`startIndex ${startIndex} out of boundary`);
+    }
+    if (endIndex >= this.list.length) {
+      const endModelIndex = this.list.viewModel.length;
+      return { start: modelIndex, end: endModelIndex };
+    } else {
+      const endModelIndex = this.list.getModelIndex2(endIndex);
+      if (endModelIndex === void 0) {
+        throw new Error(`endIndex ${endIndex} out of boundary`);
+      }
+      return { start: modelIndex, end: endModelIndex };
+    }
+  }
+  getCellsFromViewRange(startIndex, endIndex) {
+    if (!this.list.viewModel) {
+      return [];
+    }
+    const range = this.getCellRangeFromViewRange(startIndex, endIndex);
+    if (!range) {
+      return [];
+    }
+    return this.list.viewModel.getCellsInRange(range);
+  }
+  getCellsInRange(range) {
+    return this.list.viewModel?.getCellsInRange(range) ?? [];
+  }
+  getVisibleRangesPlusViewportAboveAndBelow() {
+    return this.list?.getVisibleRangesPlusViewportAboveAndBelow() ?? [];
+  }
+}
+function getEditorAttachedPromise(element) {
+  return new Promise((resolve, reject) => {
+    Event.once(element.onDidChangeEditorAttachState)(() => element.editorAttached ? resolve() : reject());
+  });
+}
+__name(getEditorAttachedPromise, "getEditorAttachedPromise");
+export {
+  ListViewInfoAccessor,
+  NOTEBOOK_WEBVIEW_BOUNDARY,
+  NotebookCellList
+};
+//# sourceMappingURL=notebookCellList.js.map

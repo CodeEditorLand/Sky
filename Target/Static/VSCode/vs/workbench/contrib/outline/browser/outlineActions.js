@@ -1,1 +1,169 @@
-import{localize as t}from"../../../../nls.js";import{Codicon as d}from"../../../../base/common/codicons.js";import{MenuId as l,registerAction2 as r}from"../../../../platform/actions/common/actions.js";import{ViewAction as n}from"../../../browser/parts/views/viewPane.js";import{ContextKeyExpr as i}from"../../../../platform/contextkey/common/contextkey.js";import"../../../../platform/instantiation/common/instantiation.js";import{ctxAllCollapsed as w,ctxFilterOnType as I,ctxFollowsCursor as p,ctxSortMode as c,IOutlinePane as o,OutlineSortOrder as a}from"./outline.js";r(class extends n{constructor(){super({viewId:o.Id,id:"outline.collapse",title:t("collapse","Collapse All"),f1:!1,icon:d.collapseAll,menu:{id:l.ViewTitle,group:"navigation",when:i.and(i.equals("view",o.Id),w.isEqualTo(!1))}})}runInView(e,o){o.collapseAll()}}),r(class extends n{constructor(){super({viewId:o.Id,id:"outline.expand",title:t("expand","Expand All"),f1:!1,icon:d.expandAll,menu:{id:l.ViewTitle,group:"navigation",when:i.and(i.equals("view",o.Id),w.isEqualTo(!0))}})}runInView(e,o){o.expandAll()}}),r(class extends n{constructor(){super({viewId:o.Id,id:"outline.followCursor",title:t("followCur","Follow Cursor"),f1:!1,toggled:p,menu:{id:l.ViewTitle,group:"config",order:1,when:i.equals("view",o.Id)}})}runInView(e,o){o.outlineViewState.followCursor=!o.outlineViewState.followCursor}}),r(class extends n{constructor(){super({viewId:o.Id,id:"outline.filterOnType",title:t("filterOnType","Filter on Type"),f1:!1,toggled:I,menu:{id:l.ViewTitle,group:"config",order:2,when:i.equals("view",o.Id)}})}runInView(e,o){o.outlineViewState.filterOnType=!o.outlineViewState.filterOnType}}),r(class extends n{constructor(){super({viewId:o.Id,id:"outline.sortByPosition",title:t("sortByPosition","Sort By: Position"),f1:!1,toggled:c.isEqualTo(a.ByPosition),menu:{id:l.ViewTitle,group:"sort",order:1,when:i.equals("view",o.Id)}})}runInView(e,o){o.outlineViewState.sortBy=a.ByPosition}}),r(class extends n{constructor(){super({viewId:o.Id,id:"outline.sortByName",title:t("sortByName","Sort By: Name"),f1:!1,toggled:c.isEqualTo(a.ByName),menu:{id:l.ViewTitle,group:"sort",order:2,when:i.equals("view",o.Id)}})}runInView(e,o){o.outlineViewState.sortBy=a.ByName}}),r(class extends n{constructor(){super({viewId:o.Id,id:"outline.sortByKind",title:t("sortByKind","Sort By: Category"),f1:!1,toggled:c.isEqualTo(a.ByKind),menu:{id:l.ViewTitle,group:"sort",order:3,when:i.equals("view",o.Id)}})}runInView(e,o){o.outlineViewState.sortBy=a.ByKind}});
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { localize } from "../../../../nls.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { MenuId, registerAction2 } from "../../../../platform/actions/common/actions.js";
+import { ViewAction } from "../../../browser/parts/views/viewPane.js";
+import { ContextKeyExpr } from "../../../../platform/contextkey/common/contextkey.js";
+import { ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+import { ctxAllCollapsed, ctxFilterOnType, ctxFollowsCursor, ctxSortMode, IOutlinePane, OutlineSortOrder } from "./outline.js";
+registerAction2(class CollapseAll extends ViewAction {
+  static {
+    __name(this, "CollapseAll");
+  }
+  constructor() {
+    super({
+      viewId: IOutlinePane.Id,
+      id: "outline.collapse",
+      title: localize("collapse", "Collapse All"),
+      f1: false,
+      icon: Codicon.collapseAll,
+      menu: {
+        id: MenuId.ViewTitle,
+        group: "navigation",
+        when: ContextKeyExpr.and(ContextKeyExpr.equals("view", IOutlinePane.Id), ctxAllCollapsed.isEqualTo(false))
+      }
+    });
+  }
+  runInView(_accessor, view) {
+    view.collapseAll();
+  }
+});
+registerAction2(class ExpandAll extends ViewAction {
+  static {
+    __name(this, "ExpandAll");
+  }
+  constructor() {
+    super({
+      viewId: IOutlinePane.Id,
+      id: "outline.expand",
+      title: localize("expand", "Expand All"),
+      f1: false,
+      icon: Codicon.expandAll,
+      menu: {
+        id: MenuId.ViewTitle,
+        group: "navigation",
+        when: ContextKeyExpr.and(ContextKeyExpr.equals("view", IOutlinePane.Id), ctxAllCollapsed.isEqualTo(true))
+      }
+    });
+  }
+  runInView(_accessor, view) {
+    view.expandAll();
+  }
+});
+registerAction2(class FollowCursor extends ViewAction {
+  static {
+    __name(this, "FollowCursor");
+  }
+  constructor() {
+    super({
+      viewId: IOutlinePane.Id,
+      id: "outline.followCursor",
+      title: localize("followCur", "Follow Cursor"),
+      f1: false,
+      toggled: ctxFollowsCursor,
+      menu: {
+        id: MenuId.ViewTitle,
+        group: "config",
+        order: 1,
+        when: ContextKeyExpr.equals("view", IOutlinePane.Id)
+      }
+    });
+  }
+  runInView(_accessor, view) {
+    view.outlineViewState.followCursor = !view.outlineViewState.followCursor;
+  }
+});
+registerAction2(class FilterOnType extends ViewAction {
+  static {
+    __name(this, "FilterOnType");
+  }
+  constructor() {
+    super({
+      viewId: IOutlinePane.Id,
+      id: "outline.filterOnType",
+      title: localize("filterOnType", "Filter on Type"),
+      f1: false,
+      toggled: ctxFilterOnType,
+      menu: {
+        id: MenuId.ViewTitle,
+        group: "config",
+        order: 2,
+        when: ContextKeyExpr.equals("view", IOutlinePane.Id)
+      }
+    });
+  }
+  runInView(_accessor, view) {
+    view.outlineViewState.filterOnType = !view.outlineViewState.filterOnType;
+  }
+});
+registerAction2(class SortByPosition extends ViewAction {
+  static {
+    __name(this, "SortByPosition");
+  }
+  constructor() {
+    super({
+      viewId: IOutlinePane.Id,
+      id: "outline.sortByPosition",
+      title: localize("sortByPosition", "Sort By: Position"),
+      f1: false,
+      toggled: ctxSortMode.isEqualTo(OutlineSortOrder.ByPosition),
+      menu: {
+        id: MenuId.ViewTitle,
+        group: "sort",
+        order: 1,
+        when: ContextKeyExpr.equals("view", IOutlinePane.Id)
+      }
+    });
+  }
+  runInView(_accessor, view) {
+    view.outlineViewState.sortBy = OutlineSortOrder.ByPosition;
+  }
+});
+registerAction2(class SortByName extends ViewAction {
+  static {
+    __name(this, "SortByName");
+  }
+  constructor() {
+    super({
+      viewId: IOutlinePane.Id,
+      id: "outline.sortByName",
+      title: localize("sortByName", "Sort By: Name"),
+      f1: false,
+      toggled: ctxSortMode.isEqualTo(OutlineSortOrder.ByName),
+      menu: {
+        id: MenuId.ViewTitle,
+        group: "sort",
+        order: 2,
+        when: ContextKeyExpr.equals("view", IOutlinePane.Id)
+      }
+    });
+  }
+  runInView(_accessor, view) {
+    view.outlineViewState.sortBy = OutlineSortOrder.ByName;
+  }
+});
+registerAction2(class SortByKind extends ViewAction {
+  static {
+    __name(this, "SortByKind");
+  }
+  constructor() {
+    super({
+      viewId: IOutlinePane.Id,
+      id: "outline.sortByKind",
+      title: localize("sortByKind", "Sort By: Category"),
+      f1: false,
+      toggled: ctxSortMode.isEqualTo(OutlineSortOrder.ByKind),
+      menu: {
+        id: MenuId.ViewTitle,
+        group: "sort",
+        order: 3,
+        when: ContextKeyExpr.equals("view", IOutlinePane.Id)
+      }
+    });
+  }
+  runInView(_accessor, view) {
+    view.outlineViewState.sortBy = OutlineSortOrder.ByKind;
+  }
+});
+//# sourceMappingURL=outlineActions.js.map

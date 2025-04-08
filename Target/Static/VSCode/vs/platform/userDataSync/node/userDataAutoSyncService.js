@@ -1,1 +1,50 @@
-var d=Object.defineProperty,f=Object.getOwnPropertyDescriptor,v=(e,r,o,t)=>{for(var a,s=t>1?void 0:t?f(r,o):r,c=e.length-1;c>=0;c--)(a=e[c])&&(s=(t?a(r,o,s):a(s))||s);return t&&s&&d(r,o,s),s},e=(e,r)=>(o,t)=>r(o,t,e);import{Event as s}from"../../../base/common/event.js";import{INativeHostService as u}from"../../native/common/native.js";import{IProductService as w}from"../../product/common/productService.js";import{IStorageService as M}from"../../storage/common/storage.js";import{ITelemetryService as l}from"../../telemetry/common/telemetry.js";import{UserDataAutoSyncService as h}from"../common/userDataAutoSyncService.js";import{IUserDataSyncEnablementService as b,IUserDataSyncLogService as E,IUserDataSyncService as x,IUserDataSyncStoreManagementService as F,IUserDataSyncStoreService as L}from"../common/userDataSync.js";import{IUserDataSyncAccountService as N}from"../common/userDataSyncAccount.js";import{IUserDataSyncMachinesService as O}from"../common/userDataSyncMachines.js";let m=class extends h{constructor(e,r,o,t,a,c,n,m,i,S,v){super(e,r,o,t,a,n,m,i,S,v),this._register(s.debounce(s.any(s.map(c.onDidFocusMainWindow,(()=>"windowFocus")),s.map(c.onDidOpenMainWindow,(()=>"windowOpen"))),((e,r)=>e?[...e,r]:[r]),1e3)((e=>this.triggerSync(e,{skipIfSyncedRecently:!0}))))}};m=v([e(0,w),e(1,F),e(2,L),e(3,b),e(4,x),e(5,u),e(6,E),e(7,N),e(8,l),e(9,O),e(10,M)],m);export{m as UserDataAutoSyncService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Event } from "../../../base/common/event.js";
+import { INativeHostService } from "../../native/common/native.js";
+import { IProductService } from "../../product/common/productService.js";
+import { IStorageService } from "../../storage/common/storage.js";
+import { ITelemetryService } from "../../telemetry/common/telemetry.js";
+import { UserDataAutoSyncService as BaseUserDataAutoSyncService } from "../common/userDataAutoSyncService.js";
+import { IUserDataSyncEnablementService, IUserDataSyncLogService, IUserDataSyncService, IUserDataSyncStoreManagementService, IUserDataSyncStoreService } from "../common/userDataSync.js";
+import { IUserDataSyncAccountService } from "../common/userDataSyncAccount.js";
+import { IUserDataSyncMachinesService } from "../common/userDataSyncMachines.js";
+let UserDataAutoSyncService = class extends BaseUserDataAutoSyncService {
+  static {
+    __name(this, "UserDataAutoSyncService");
+  }
+  constructor(productService, userDataSyncStoreManagementService, userDataSyncStoreService, userDataSyncEnablementService, userDataSyncService, nativeHostService, logService, authTokenService, telemetryService, userDataSyncMachinesService, storageService) {
+    super(productService, userDataSyncStoreManagementService, userDataSyncStoreService, userDataSyncEnablementService, userDataSyncService, logService, authTokenService, telemetryService, userDataSyncMachinesService, storageService);
+    this._register(Event.debounce(Event.any(
+      Event.map(nativeHostService.onDidFocusMainWindow, () => "windowFocus"),
+      Event.map(nativeHostService.onDidOpenMainWindow, () => "windowOpen")
+    ), (last, source) => last ? [...last, source] : [source], 1e3)((sources) => this.triggerSync(sources, { skipIfSyncedRecently: true })));
+  }
+};
+UserDataAutoSyncService = __decorateClass([
+  __decorateParam(0, IProductService),
+  __decorateParam(1, IUserDataSyncStoreManagementService),
+  __decorateParam(2, IUserDataSyncStoreService),
+  __decorateParam(3, IUserDataSyncEnablementService),
+  __decorateParam(4, IUserDataSyncService),
+  __decorateParam(5, INativeHostService),
+  __decorateParam(6, IUserDataSyncLogService),
+  __decorateParam(7, IUserDataSyncAccountService),
+  __decorateParam(8, ITelemetryService),
+  __decorateParam(9, IUserDataSyncMachinesService),
+  __decorateParam(10, IStorageService)
+], UserDataAutoSyncService);
+export {
+  UserDataAutoSyncService
+};
+//# sourceMappingURL=userDataAutoSyncService.js.map

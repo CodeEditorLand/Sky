@@ -1,1 +1,39 @@
-import"./position.js";import{Range as t}from"./range.js";class g{static insert(e,r){return{range:new t(e.lineNumber,e.column,e.lineNumber,e.column),text:r,forceMoveMarkers:!0}}static delete(e){return{range:e,text:null}}static replace(e,t){return{range:e,text:t}}static replaceMove(e,t){return{range:e,text:t,forceMoveMarkers:!0}}}export{g as EditOperation};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Position } from "./position.js";
+import { IRange, Range } from "./range.js";
+class EditOperation {
+  static {
+    __name(this, "EditOperation");
+  }
+  static insert(position, text) {
+    return {
+      range: new Range(position.lineNumber, position.column, position.lineNumber, position.column),
+      text,
+      forceMoveMarkers: true
+    };
+  }
+  static delete(range) {
+    return {
+      range,
+      text: null
+    };
+  }
+  static replace(range, text) {
+    return {
+      range,
+      text
+    };
+  }
+  static replaceMove(range, text) {
+    return {
+      range,
+      text,
+      forceMoveMarkers: true
+    };
+  }
+}
+export {
+  EditOperation
+};
+//# sourceMappingURL=editOperation.js.map

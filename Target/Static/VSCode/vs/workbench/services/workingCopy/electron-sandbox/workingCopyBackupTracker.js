@@ -1,2 +1,333 @@
-var E=Object.defineProperty;var W=Object.getOwnPropertyDescriptor;var m=(l,u,e,r)=>{for(var i=r>1?void 0:r?W(u,e):u,o=l.length-1,t;o>=0;o--)(t=l[o])&&(i=(r?t(u,e,i):t(i))||i);return r&&i&&E(u,e,i),i},a=(l,u)=>(e,r)=>u(e,r,l);import{localize as s}from"../../../../nls.js";import{IWorkingCopyBackupService as P}from"../common/workingCopyBackup.js";import"../../../common/contributions.js";import{IFilesConfigurationService as A,AutoSaveMode as D}from"../../filesConfiguration/common/filesConfigurationService.js";import{IWorkingCopyService as T}from"../common/workingCopyService.js";import{WorkingCopyCapabilities as h}from"../common/workingCopy.js";import{ILifecycleService as x,ShutdownReason as d}from"../../lifecycle/common/lifecycle.js";import{ConfirmResult as w,IFileDialogService as M,IDialogService as O,getFileNamesMessage as R}from"../../../../platform/dialogs/common/dialogs.js";import{WorkbenchState as v,IWorkspaceContextService as L}from"../../../../platform/workspace/common/workspace.js";import{isMacintosh as F}from"../../../../base/common/platform.js";import{HotExitConfiguration as y}from"../../../../platform/files/common/files.js";import{INativeHostService as V}from"../../../../platform/native/common/native.js";import{WorkingCopyBackupTracker as $}from"../common/workingCopyBackupTracker.js";import{ILogService as _}from"../../../../platform/log/common/log.js";import{IEditorService as N}from"../../editor/common/editorService.js";import{SaveReason as I}from"../../../common/editor.js";import{IEnvironmentService as H}from"../../../../platform/environment/common/environment.js";import{CancellationTokenSource as U}from"../../../../base/common/cancellation.js";import{IProgressService as K,ProgressLocation as g}from"../../../../platform/progress/common/progress.js";import{Promises as f,raceCancellation as Q}from"../../../../base/common/async.js";import{IWorkingCopyEditorService as Y}from"../common/workingCopyEditorService.js";import{IEditorGroupsService as X}from"../../editor/common/editorGroupsService.js";let S=class extends ${constructor(e,r,i,o,t,c,n,k,p,q,G,b,C,B){super(e,i,p,o,r,b,C,B);this.fileDialogService=t;this.dialogService=c;this.contextService=n;this.nativeHostService=k;this.environmentService=q;this.progressService=G}static ID="workbench.contrib.nativeWorkingCopyBackupTracker";async onFinalBeforeShutdown(e){this.cancelBackupOperations();const{resume:r}=this.suspendBackupOperations();try{const i=this.workingCopyService.modifiedWorkingCopies;return i.length?await this.onBeforeShutdownWithModified(e,i):await this.onBeforeShutdownWithoutModified()}finally{r()}}async onBeforeShutdownWithModified(e,r){const i=r.filter(o=>!(o.capabilities&h.Untitled)&&this.filesConfigurationService.getAutoSaveMode(o.resource).mode!==D.OFF);if(i.length>0){try{await this.doSaveAllBeforeShutdown(i,I.AUTO)}catch(t){this.logService.error(`[backup tracker] error saving modified working copies: ${t}`)}const o=this.workingCopyService.modifiedWorkingCopies;return o.length?this.handleModifiedBeforeShutdown(o,e):this.noVeto([...r])}return this.handleModifiedBeforeShutdown(r,e)}async handleModifiedBeforeShutdown(e,r){let i=[],o;const t=await this.shouldBackupBeforeShutdown(r,e);if(t.length>0)try{const n=await this.backupBeforeShutdown(t);if(i=n.backups,o=n.error,i.length===e.length)return!1}catch(n){o=n}const c=e.filter(n=>!i.includes(n));if(o)return this.environmentService.isExtensionDevelopment?(this.logService.error(`[backup tracker] error creating backups: ${o}`),!1):this.showErrorDialog(s("backupTrackerBackupFailed","The following editors with unsaved changes could not be saved to the backup location."),c,o,r);try{return await this.confirmBeforeShutdown(c)}catch(n){return this.environmentService.isExtensionDevelopment?(this.logService.error(`[backup tracker] error saving or reverting modified working copies: ${n}`),!1):this.showErrorDialog(s("backupTrackerConfirmFailed","The following editors with unsaved changes could not be saved or reverted."),c,n,r)}}async shouldBackupBeforeShutdown(e,r){if(!this.filesConfigurationService.isHotExitEnabled)return[];if(this.environmentService.isExtensionDevelopment)return r;switch(e){case d.CLOSE:return this.contextService.getWorkbenchState()!==v.EMPTY&&this.filesConfigurationService.hotExitConfiguration===y.ON_EXIT_AND_WINDOW_CLOSE?r:F||await this.nativeHostService.getWindowCount()>1?this.contextService.getWorkbenchState()!==v.EMPTY?r.filter(i=>i.capabilities&h.Scratchpad):[]:r;case d.QUIT:return r;case d.RELOAD:return r;case d.LOAD:return this.contextService.getWorkbenchState()!==v.EMPTY?this.filesConfigurationService.hotExitConfiguration===y.ON_EXIT_AND_WINDOW_CLOSE?r:r.filter(i=>i.capabilities&h.Scratchpad):[]}}async showErrorDialog(e,r,i,o){this.logService.error(`[backup tracker] ${e}: ${i}`);const t=r.filter(p=>p.isModified()),c=s("backupErrorDetails","Try saving or reverting the editors with unsaved changes first and then try again."),n=t.length?`${R(t.map(p=>p.name))}
-${c}`:c,{result:k}=await this.dialogService.prompt({type:"error",message:e,detail:n,buttons:[{label:s({key:"ok",comment:["&& denotes a mnemonic"]},"&&OK"),run:()=>!0},{label:this.toForceShutdownLabel(o),run:()=>!1}]});return k??!0}toForceShutdownLabel(e){switch(e){case d.CLOSE:case d.LOAD:return s("shutdownForceClose","Close Anyway");case d.QUIT:return s("shutdownForceQuit","Quit Anyway");case d.RELOAD:return s("shutdownForceReload","Reload Anyway")}}async backupBeforeShutdown(e){const r=[];let i;return await this.withProgressAndCancellation(async o=>{try{await f.settled(e.map(async t=>{const c=this.getContentVersion(t);if(this.workingCopyBackupService.hasBackupSync(t,c))r.push(t);else{const n=await t.backup(o);if(o.isCancellationRequested||(await this.workingCopyBackupService.backup(t,n.content,c,n.meta,o),o.isCancellationRequested))return;r.push(t)}}))}catch(t){i=t}},s("backupBeforeShutdownMessage","Backing up editors with unsaved changes is taking a bit longer..."),s("backupBeforeShutdownDetail","Click 'Cancel' to stop waiting and to save or revert editors with unsaved changes.")),{backups:r,error:i}}async confirmBeforeShutdown(e){const r=await this.fileDialogService.showSaveConfirm(e.map(i=>i.name));if(r===w.SAVE){const i=this.workingCopyService.modifiedCount;try{await this.doSaveAllBeforeShutdown(e,I.EXPLICIT)}catch(t){this.logService.error(`[backup tracker] error saving modified working copies: ${t}`)}return i-this.workingCopyService.modifiedCount<e.length?!0:this.noVeto(e)}else if(r===w.DONT_SAVE){try{await this.doRevertAllBeforeShutdown(e)}catch(i){this.logService.error(`[backup tracker] error reverting modified working copies: ${i}`)}return this.noVeto(e)}return!0}doSaveAllBeforeShutdown(e,r){return this.withProgressAndCancellation(async()=>{const i={skipSaveParticipants:!0,reason:r};let o;e.length===this.workingCopyService.modifiedCount&&(o=(await this.editorService.saveAll({includeUntitled:{includeScratchpad:!0},...i})).success),o!==!1&&await f.settled(e.map(t=>t.isModified()?t.save(i):Promise.resolve(!0)))},s("saveBeforeShutdown","Saving editors with unsaved changes is taking a bit longer..."),void 0,e.some(i=>i.capabilities&h.Untitled||i.capabilities&h.Scratchpad)?g.Window:g.Dialog)}doRevertAllBeforeShutdown(e){return this.withProgressAndCancellation(async()=>{const r={soft:!0};e.length===this.workingCopyService.modifiedCount&&await this.editorService.revertAll(r),await f.settled(e.map(i=>i.isModified()?i.revert(r):Promise.resolve()))},s("revertBeforeShutdown","Reverting editors with unsaved changes is taking a bit longer..."))}onBeforeShutdownWithoutModified(){return this.noVeto({except:this.contextService.getWorkbenchState()===v.EMPTY?[]:Array.from(this.unrestoredBackups)})}async noVeto(e){return await this.discardBackupsBeforeShutdown(e),!1}async discardBackupsBeforeShutdown(e){this.isReady&&await this.withProgressAndCancellation(async()=>{try{Array.isArray(e)?await f.settled(e.map(r=>this.workingCopyBackupService.discardBackup(r))):await this.workingCopyBackupService.discardBackups(e)}catch(r){this.logService.error(`[backup tracker] error discarding backups: ${r}`)}},s("discardBackupsBeforeShutdown","Discarding backups is taking a bit longer..."))}withProgressAndCancellation(e,r,i,o=g.Dialog){const t=new U;return this.progressService.withProgress({location:o,cancellable:!0,delay:800,title:r,detail:i},()=>Q(e(t.token),t.token),()=>t.dispose(!0))}};S=m([a(0,P),a(1,A),a(2,T),a(3,x),a(4,M),a(5,O),a(6,L),a(7,V),a(8,_),a(9,H),a(10,K),a(11,Y),a(12,N),a(13,X)],S);export{S as NativeWorkingCopyBackupTracker};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { localize } from "../../../../nls.js";
+import { IWorkingCopyBackupService } from "../common/workingCopyBackup.js";
+import { IWorkbenchContribution } from "../../../common/contributions.js";
+import { IFilesConfigurationService, AutoSaveMode } from "../../filesConfiguration/common/filesConfigurationService.js";
+import { IWorkingCopyService } from "../common/workingCopyService.js";
+import { IWorkingCopy, IWorkingCopyIdentifier, WorkingCopyCapabilities } from "../common/workingCopy.js";
+import { ILifecycleService, ShutdownReason } from "../../lifecycle/common/lifecycle.js";
+import { ConfirmResult, IFileDialogService, IDialogService, getFileNamesMessage } from "../../../../platform/dialogs/common/dialogs.js";
+import { WorkbenchState, IWorkspaceContextService } from "../../../../platform/workspace/common/workspace.js";
+import { isMacintosh } from "../../../../base/common/platform.js";
+import { HotExitConfiguration } from "../../../../platform/files/common/files.js";
+import { INativeHostService } from "../../../../platform/native/common/native.js";
+import { WorkingCopyBackupTracker } from "../common/workingCopyBackupTracker.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { IEditorService } from "../../editor/common/editorService.js";
+import { SaveReason } from "../../../common/editor.js";
+import { IEnvironmentService } from "../../../../platform/environment/common/environment.js";
+import { CancellationToken, CancellationTokenSource } from "../../../../base/common/cancellation.js";
+import { IProgressService, ProgressLocation } from "../../../../platform/progress/common/progress.js";
+import { Promises, raceCancellation } from "../../../../base/common/async.js";
+import { IWorkingCopyEditorService } from "../common/workingCopyEditorService.js";
+import { IEditorGroupsService } from "../../editor/common/editorGroupsService.js";
+let NativeWorkingCopyBackupTracker = class extends WorkingCopyBackupTracker {
+  constructor(workingCopyBackupService, filesConfigurationService, workingCopyService, lifecycleService, fileDialogService, dialogService, contextService, nativeHostService, logService, environmentService, progressService, workingCopyEditorService, editorService, editorGroupService) {
+    super(workingCopyBackupService, workingCopyService, logService, lifecycleService, filesConfigurationService, workingCopyEditorService, editorService, editorGroupService);
+    this.fileDialogService = fileDialogService;
+    this.dialogService = dialogService;
+    this.contextService = contextService;
+    this.nativeHostService = nativeHostService;
+    this.environmentService = environmentService;
+    this.progressService = progressService;
+  }
+  static {
+    __name(this, "NativeWorkingCopyBackupTracker");
+  }
+  static ID = "workbench.contrib.nativeWorkingCopyBackupTracker";
+  async onFinalBeforeShutdown(reason) {
+    this.cancelBackupOperations();
+    const { resume } = this.suspendBackupOperations();
+    try {
+      const modifiedWorkingCopies = this.workingCopyService.modifiedWorkingCopies;
+      if (modifiedWorkingCopies.length) {
+        return await this.onBeforeShutdownWithModified(reason, modifiedWorkingCopies);
+      } else {
+        return await this.onBeforeShutdownWithoutModified();
+      }
+    } finally {
+      resume();
+    }
+  }
+  async onBeforeShutdownWithModified(reason, modifiedWorkingCopies) {
+    const workingCopiesToAutoSave = modifiedWorkingCopies.filter((wc) => !(wc.capabilities & WorkingCopyCapabilities.Untitled) && this.filesConfigurationService.getAutoSaveMode(wc.resource).mode !== AutoSaveMode.OFF);
+    if (workingCopiesToAutoSave.length > 0) {
+      try {
+        await this.doSaveAllBeforeShutdown(workingCopiesToAutoSave, SaveReason.AUTO);
+      } catch (error) {
+        this.logService.error(`[backup tracker] error saving modified working copies: ${error}`);
+      }
+      const remainingModifiedWorkingCopies = this.workingCopyService.modifiedWorkingCopies;
+      if (remainingModifiedWorkingCopies.length) {
+        return this.handleModifiedBeforeShutdown(remainingModifiedWorkingCopies, reason);
+      }
+      return this.noVeto([...modifiedWorkingCopies]);
+    }
+    return this.handleModifiedBeforeShutdown(modifiedWorkingCopies, reason);
+  }
+  async handleModifiedBeforeShutdown(modifiedWorkingCopies, reason) {
+    let backups = [];
+    let backupError = void 0;
+    const modifiedWorkingCopiesToBackup = await this.shouldBackupBeforeShutdown(reason, modifiedWorkingCopies);
+    if (modifiedWorkingCopiesToBackup.length > 0) {
+      try {
+        const backupResult = await this.backupBeforeShutdown(modifiedWorkingCopiesToBackup);
+        backups = backupResult.backups;
+        backupError = backupResult.error;
+        if (backups.length === modifiedWorkingCopies.length) {
+          return false;
+        }
+      } catch (error) {
+        backupError = error;
+      }
+    }
+    const remainingModifiedWorkingCopies = modifiedWorkingCopies.filter((workingCopy) => !backups.includes(workingCopy));
+    if (backupError) {
+      if (this.environmentService.isExtensionDevelopment) {
+        this.logService.error(`[backup tracker] error creating backups: ${backupError}`);
+        return false;
+      }
+      return this.showErrorDialog(localize("backupTrackerBackupFailed", "The following editors with unsaved changes could not be saved to the backup location."), remainingModifiedWorkingCopies, backupError, reason);
+    }
+    try {
+      return await this.confirmBeforeShutdown(remainingModifiedWorkingCopies);
+    } catch (error) {
+      if (this.environmentService.isExtensionDevelopment) {
+        this.logService.error(`[backup tracker] error saving or reverting modified working copies: ${error}`);
+        return false;
+      }
+      return this.showErrorDialog(localize("backupTrackerConfirmFailed", "The following editors with unsaved changes could not be saved or reverted."), remainingModifiedWorkingCopies, error, reason);
+    }
+  }
+  async shouldBackupBeforeShutdown(reason, modifiedWorkingCopies) {
+    if (!this.filesConfigurationService.isHotExitEnabled) {
+      return [];
+    }
+    if (this.environmentService.isExtensionDevelopment) {
+      return modifiedWorkingCopies;
+    }
+    switch (reason) {
+      // Window Close
+      case ShutdownReason.CLOSE:
+        if (this.contextService.getWorkbenchState() !== WorkbenchState.EMPTY && this.filesConfigurationService.hotExitConfiguration === HotExitConfiguration.ON_EXIT_AND_WINDOW_CLOSE) {
+          return modifiedWorkingCopies;
+        }
+        if (isMacintosh || await this.nativeHostService.getWindowCount() > 1) {
+          if (this.contextService.getWorkbenchState() !== WorkbenchState.EMPTY) {
+            return modifiedWorkingCopies.filter((modifiedWorkingCopy) => modifiedWorkingCopy.capabilities & WorkingCopyCapabilities.Scratchpad);
+          }
+          return [];
+        }
+        return modifiedWorkingCopies;
+      // backup if last window is closed on win/linux where the application quits right after
+      // Application Quit
+      case ShutdownReason.QUIT:
+        return modifiedWorkingCopies;
+      // backup because next start we restore all backups
+      // Window Reload
+      case ShutdownReason.RELOAD:
+        return modifiedWorkingCopies;
+      // backup because after window reload, backups restore
+      // Workspace Change
+      case ShutdownReason.LOAD:
+        if (this.contextService.getWorkbenchState() !== WorkbenchState.EMPTY) {
+          if (this.filesConfigurationService.hotExitConfiguration === HotExitConfiguration.ON_EXIT_AND_WINDOW_CLOSE) {
+            return modifiedWorkingCopies;
+          }
+          return modifiedWorkingCopies.filter((modifiedWorkingCopy) => modifiedWorkingCopy.capabilities & WorkingCopyCapabilities.Scratchpad);
+        }
+        return [];
+    }
+  }
+  async showErrorDialog(message, workingCopies, error, reason) {
+    this.logService.error(`[backup tracker] ${message}: ${error}`);
+    const modifiedWorkingCopies = workingCopies.filter((workingCopy) => workingCopy.isModified());
+    const advice = localize("backupErrorDetails", "Try saving or reverting the editors with unsaved changes first and then try again.");
+    const detail = modifiedWorkingCopies.length ? `${getFileNamesMessage(modifiedWorkingCopies.map((x) => x.name))}
+${advice}` : advice;
+    const { result } = await this.dialogService.prompt({
+      type: "error",
+      message,
+      detail,
+      buttons: [
+        {
+          label: localize({ key: "ok", comment: ["&& denotes a mnemonic"] }, "&&OK"),
+          run: /* @__PURE__ */ __name(() => true, "run")
+          // veto
+        },
+        {
+          label: this.toForceShutdownLabel(reason),
+          run: /* @__PURE__ */ __name(() => false, "run")
+          // no veto
+        }
+      ]
+    });
+    return result ?? true;
+  }
+  toForceShutdownLabel(reason) {
+    switch (reason) {
+      case ShutdownReason.CLOSE:
+      case ShutdownReason.LOAD:
+        return localize("shutdownForceClose", "Close Anyway");
+      case ShutdownReason.QUIT:
+        return localize("shutdownForceQuit", "Quit Anyway");
+      case ShutdownReason.RELOAD:
+        return localize("shutdownForceReload", "Reload Anyway");
+    }
+  }
+  async backupBeforeShutdown(modifiedWorkingCopies) {
+    const backups = [];
+    let error = void 0;
+    await this.withProgressAndCancellation(
+      async (token) => {
+        try {
+          await Promises.settled(modifiedWorkingCopies.map(async (workingCopy) => {
+            const contentVersion = this.getContentVersion(workingCopy);
+            if (this.workingCopyBackupService.hasBackupSync(workingCopy, contentVersion)) {
+              backups.push(workingCopy);
+            } else {
+              const backup = await workingCopy.backup(token);
+              if (token.isCancellationRequested) {
+                return;
+              }
+              await this.workingCopyBackupService.backup(workingCopy, backup.content, contentVersion, backup.meta, token);
+              if (token.isCancellationRequested) {
+                return;
+              }
+              backups.push(workingCopy);
+            }
+          }));
+        } catch (backupError) {
+          error = backupError;
+        }
+      },
+      localize("backupBeforeShutdownMessage", "Backing up editors with unsaved changes is taking a bit longer..."),
+      localize("backupBeforeShutdownDetail", "Click 'Cancel' to stop waiting and to save or revert editors with unsaved changes.")
+    );
+    return { backups, error };
+  }
+  async confirmBeforeShutdown(modifiedWorkingCopies) {
+    const confirm = await this.fileDialogService.showSaveConfirm(modifiedWorkingCopies.map((workingCopy) => workingCopy.name));
+    if (confirm === ConfirmResult.SAVE) {
+      const modifiedCountBeforeSave = this.workingCopyService.modifiedCount;
+      try {
+        await this.doSaveAllBeforeShutdown(modifiedWorkingCopies, SaveReason.EXPLICIT);
+      } catch (error) {
+        this.logService.error(`[backup tracker] error saving modified working copies: ${error}`);
+      }
+      const savedWorkingCopies = modifiedCountBeforeSave - this.workingCopyService.modifiedCount;
+      if (savedWorkingCopies < modifiedWorkingCopies.length) {
+        return true;
+      }
+      return this.noVeto(modifiedWorkingCopies);
+    } else if (confirm === ConfirmResult.DONT_SAVE) {
+      try {
+        await this.doRevertAllBeforeShutdown(modifiedWorkingCopies);
+      } catch (error) {
+        this.logService.error(`[backup tracker] error reverting modified working copies: ${error}`);
+      }
+      return this.noVeto(modifiedWorkingCopies);
+    }
+    return true;
+  }
+  doSaveAllBeforeShutdown(workingCopies, reason) {
+    return this.withProgressAndCancellation(
+      async () => {
+        const saveOptions = { skipSaveParticipants: true, reason };
+        let result = void 0;
+        if (workingCopies.length === this.workingCopyService.modifiedCount) {
+          result = (await this.editorService.saveAll({
+            includeUntitled: { includeScratchpad: true },
+            ...saveOptions
+          })).success;
+        }
+        if (result !== false) {
+          await Promises.settled(workingCopies.map((workingCopy) => workingCopy.isModified() ? workingCopy.save(saveOptions) : Promise.resolve(true)));
+        }
+      },
+      localize("saveBeforeShutdown", "Saving editors with unsaved changes is taking a bit longer..."),
+      void 0,
+      // Do not pick `Dialog` as location for reporting progress if it is likely
+      // that the save operation will itself open a dialog for asking for the
+      // location to save to for untitled or scratchpad working copies.
+      // https://github.com/microsoft/vscode-internalbacklog/issues/4943
+      workingCopies.some((workingCopy) => workingCopy.capabilities & WorkingCopyCapabilities.Untitled || workingCopy.capabilities & WorkingCopyCapabilities.Scratchpad) ? ProgressLocation.Window : ProgressLocation.Dialog
+    );
+  }
+  doRevertAllBeforeShutdown(modifiedWorkingCopies) {
+    return this.withProgressAndCancellation(async () => {
+      const revertOptions = { soft: true };
+      if (modifiedWorkingCopies.length === this.workingCopyService.modifiedCount) {
+        await this.editorService.revertAll(revertOptions);
+      }
+      await Promises.settled(modifiedWorkingCopies.map((workingCopy) => workingCopy.isModified() ? workingCopy.revert(revertOptions) : Promise.resolve()));
+    }, localize("revertBeforeShutdown", "Reverting editors with unsaved changes is taking a bit longer..."));
+  }
+  onBeforeShutdownWithoutModified() {
+    return this.noVeto({ except: this.contextService.getWorkbenchState() === WorkbenchState.EMPTY ? [] : Array.from(this.unrestoredBackups) });
+  }
+  async noVeto(arg1) {
+    await this.discardBackupsBeforeShutdown(arg1);
+    return false;
+  }
+  async discardBackupsBeforeShutdown(arg1) {
+    if (!this.isReady) {
+      return;
+    }
+    await this.withProgressAndCancellation(async () => {
+      try {
+        if (Array.isArray(arg1)) {
+          await Promises.settled(arg1.map((workingCopy) => this.workingCopyBackupService.discardBackup(workingCopy)));
+        } else {
+          await this.workingCopyBackupService.discardBackups(arg1);
+        }
+      } catch (error) {
+        this.logService.error(`[backup tracker] error discarding backups: ${error}`);
+      }
+    }, localize("discardBackupsBeforeShutdown", "Discarding backups is taking a bit longer..."));
+  }
+  withProgressAndCancellation(promiseFactory, title, detail, location = ProgressLocation.Dialog) {
+    const cts = new CancellationTokenSource();
+    return this.progressService.withProgress({
+      location,
+      // by default use a dialog to prevent the user from making any more changes now (https://github.com/microsoft/vscode/issues/122774)
+      cancellable: true,
+      // allow to cancel (https://github.com/microsoft/vscode/issues/112278)
+      delay: 800,
+      // delay so that it only appears when operation takes a long time
+      title,
+      detail
+    }, () => raceCancellation(promiseFactory(cts.token), cts.token), () => cts.dispose(true));
+  }
+};
+NativeWorkingCopyBackupTracker = __decorateClass([
+  __decorateParam(0, IWorkingCopyBackupService),
+  __decorateParam(1, IFilesConfigurationService),
+  __decorateParam(2, IWorkingCopyService),
+  __decorateParam(3, ILifecycleService),
+  __decorateParam(4, IFileDialogService),
+  __decorateParam(5, IDialogService),
+  __decorateParam(6, IWorkspaceContextService),
+  __decorateParam(7, INativeHostService),
+  __decorateParam(8, ILogService),
+  __decorateParam(9, IEnvironmentService),
+  __decorateParam(10, IProgressService),
+  __decorateParam(11, IWorkingCopyEditorService),
+  __decorateParam(12, IEditorService),
+  __decorateParam(13, IEditorGroupsService)
+], NativeWorkingCopyBackupTracker);
+export {
+  NativeWorkingCopyBackupTracker
+};
+//# sourceMappingURL=workingCopyBackupTracker.js.map

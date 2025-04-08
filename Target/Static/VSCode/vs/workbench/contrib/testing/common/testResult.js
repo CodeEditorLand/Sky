@@ -1,1 +1,529 @@
-var M=Object.defineProperty,B=Object.getOwnPropertyDescriptor,y=(t,e,s,i)=>{for(var r,a=i>1?void 0:i?B(e,s):e,o=t.length-1;o>=0;o--)(r=t[o])&&(a=(i?r(e,s,a):r(a))||a);return i&&a&&M(e,s,a),a},S=(t,e)=>(s,i)=>e(s,i,t);import{DeferredPromise as E}from"../../../../base/common/async.js";import{VSBuffer as c}from"../../../../base/common/buffer.js";import{Emitter as h,Event as O}from"../../../../base/common/event.js";import{Lazy as R}from"../../../../base/common/lazy.js";import{Disposable as A}from"../../../../base/common/lifecycle.js";import{observableValue as k}from"../../../../base/common/observable.js";import{language as D}from"../../../../base/common/platform.js";import"../../../../base/common/prefixTree.js";import{localize as v}from"../../../../nls.js";import{ITelemetryService as L}from"../../../../platform/telemetry/common/telemetry.js";import"../../../../platform/uriIdentity/common/uriIdentity.js";import{refreshComputedState as N}from"./getComputedState.js";import"./testCoverage.js";import{TestId as T}from"./testId.js";import{makeEmptyCounts as C,maxPriority as P,statesInOrder as W,terminalStatePriorities as w}from"./testingStates.js";import{getMarkId as z,TestItemExpandState as U,TestMessageType as q,TestResultItem as b,TestResultState as l}from"./testTypes.js";const V={buffers:[],length:0,onDidWriteData:O.None,endPromise:Promise.resolve(),getRange:()=>c.alloc(0),getRangeIter:()=>[]};class F{writeDataEmitter=new h;endDeferred=new E;offset=0;onDidWriteData=this.writeDataEmitter.event;endPromise=this.endDeferred.p;buffers=[];get length(){return this.offset}getRange(t,e){const s=c.alloc(e);let i=0;for(const r of this.getRangeIter(t,e))s.buffer.set(r.buffer,i),i+=r.byteLength;return i<e?s.slice(0,i):s}*getRangeIter(t,e){let s=0,i=0;for(const r of this.buffers){if(i+r.byteLength<=t){i+=r.byteLength;continue}const a=Math.max(0,t-i),o=Math.min(r.byteLength,a+e-s);if(yield r.slice(a,o),s+=o-a,i+=r.byteLength,s===e)break}}append(t,e){const s=this.offset;let i,r=t.byteLength;if(void 0===e)return this.push(t),{offset:s,length:r};var a;(a=i||={})[a.CR=13]="CR",a[a.LF=10]="LF";const o=c.fromString(x(e,!0)),n=c.fromString(x(e,!1));r+=o.byteLength+n.byteLength,this.push(o);let h=t.byteLength;for(;h>0;h--){const e=t.buffer[h-1];if(13!==e&&10!==e)break}return this.push(t.slice(0,h)),this.push(n),this.push(t.slice(h)),{offset:s,length:r}}push(t){0!==t.byteLength&&(this.buffers.push(t),this.writeDataEmitter.fire(t),this.offset+=t.byteLength)}end(){this.endDeferred.complete()}}const Re=function*(t,e){for(const s of T.fromString(e.item.extId).idsToRoot())yield t.getStateById(s.toString())},ke=t=>{for(const e of W)if(t[e]>0)return e;return l.Unset},x=(t,e)=>`]633;SetMark;Id=${z(t,e)};Hidden`,_=(t,e,s)=>({controllerId:t,expand:U.NotExpandable,item:{...e},children:[],tasks:[],ownComputedState:l.Unset,computedState:l.Unset});var J=(t=>(t[t.ComputedStateChange=0]="ComputedStateChange",t[t.OwnStateChange=1]="OwnStateChange",t[t.NewMessage=2]="NewMessage",t))(J||{});let f=class extends A{constructor(t,e,s,i,r){super(),this.id=t,this.persist=e,this.request=s,this.insertOrder=i,this.telemetry=r}completeEmitter=this._register(new h);newTaskEmitter=this._register(new h);endTaskEmitter=this._register(new h);changeEmitter=this._register(new h);testById=new Map;testMarkerCounter=0;_completedAt;startedAt=Date.now();onChange=this.changeEmitter.event;onComplete=this.completeEmitter.event;onNewTask=this.newTaskEmitter.event;onEndTask=this.endTaskEmitter.event;tasks=[];name=v("runFinished","Test run at {0}",(new Date).toLocaleString(D));get completedAt(){return this._completedAt}counts=C();get tests(){return this.testById.values()}getTestById(t){return this.testById.get(t)?.item}computedStateAccessor={getOwnState:t=>t.ownComputedState,getCurrentComputedState:t=>t.computedState,setComputedState:(t,e)=>t.computedState=e,getChildren:t=>t.children,getParents:t=>{const{testById:e}=this;return function*(){const s=T.fromString(t.item.extId).parentId;if(s)for(const t of s.idsToRoot())yield e.get(t.toString())}()}};getStateById(t){return this.testById.get(t)}appendOutput(t,e,s,i){const r=t.byteLength>100?t.slice(0,100).toString()+"…":t.toString();let a;(i||s)&&(a=this.testMarkerCounter++);const o=this.mustGetTaskIndex(e),n=this.tasks[o],{offset:h,length:m}=n.output.append(t,a),d={location:s,message:r,offset:h,length:m,marker:a,type:q.Output},u=i&&this.testById.get(i);u?(u.tasks[o].messages.push(d),this.changeEmitter.fire({item:u,result:this,reason:2,message:d})):n.otherMessages.push(d)}addTask(t){this.tasks.push({...t,coverage:k(this,void 0),otherMessages:[],output:new F});for(const t of this.tests)t.tasks.push({duration:void 0,messages:[],state:l.Unset});this.newTaskEmitter.fire(this.tasks.length-1)}addTestChainToRun(t,e){let s=this.testById.get(e[0].extId);s||(s=this.addTestToRun(t,e[0],null));for(let i=1;i<e.length;i++)s=this.addTestToRun(t,e[i],s.item.extId)}updateState(t,e,s,i){const r=this.testById.get(t);if(!r)return;const a=this.mustGetTaskIndex(e),o=w[r.tasks[a].state],n=w[s];void 0!==o&&(void 0===n||n<o)||this.fireUpdateAndRefresh(r,a,s,i)}appendMessage(t,e,s){const i=this.testById.get(t);i&&(i.tasks[this.mustGetTaskIndex(e)].messages.push(s),this.changeEmitter.fire({item:i,result:this,reason:2,message:s}))}markTaskComplete(t){const e=this.mustGetTaskIndex(t),s=this.tasks[e];s.running=!1,s.output.end(),this.setAllToState(l.Unset,t,(t=>t.state===l.Queued||t.state===l.Running)),this.endTaskEmitter.fire(e)}markComplete(){if(void 0!==this._completedAt)throw new Error("cannot complete a test result multiple times");for(const t of this.tasks)t.running&&this.markTaskComplete(t.id);this._completedAt=Date.now(),this.completeEmitter.fire(),this.telemetry.publicLog2("test.outcomes",{failures:this.counts[l.Errored]+this.counts[l.Failed],passes:this.counts[l.Passed],controller:this.request.targets.map((t=>t.controllerId)).join(",")})}markRetired(t){for(const[e,s]of this.testById)!s.retired&&(!t||t.hasKeyOrParent(T.fromString(e).path))&&(s.retired=!0,this.changeEmitter.fire({reason:0,item:s,result:this}))}toJSON(){return this.completedAt&&this.persist?this.doSerialize.value:void 0}toJSONWithMessages(){return this.completedAt&&this.persist?this.doSerializeWithMessages.value:void 0}setAllToState(t,e,s){const i=this.mustGetTaskIndex(e);for(const e of this.testById.values())s(e.tasks[i],e)&&this.fireUpdateAndRefresh(e,i,t)}fireUpdateAndRefresh(t,e,s,i){const r=t.ownComputedState,a=t.ownDuration,o={item:t,result:this,reason:1,previousState:r,previousOwnDuration:a};t.tasks[e].state=s,void 0!==i&&(t.tasks[e].duration=i,t.ownDuration=Math.max(t.ownDuration||0,i));const n=P(...t.tasks.map((t=>t.state)));n!==r?(t.ownComputedState=n,this.counts[r]--,this.counts[n]++,N(this.computedStateAccessor,t).forEach((e=>this.changeEmitter.fire(e===t?o:{item:e,result:this,reason:0})))):i!==a&&this.changeEmitter.fire(o)}addTestToRun(t,e,s){const i=_(t,e);if(this.testById.set(e.extId,i),this.counts[l.Unset]++,s&&this.testById.get(s)?.children.push(i),this.tasks.length)for(let t=0;t<this.tasks.length;t++)i.tasks.push({duration:void 0,messages:[],state:l.Unset});return i}mustGetTaskIndex(t){const e=this.tasks.findIndex((e=>e.id===t));if(-1===e)throw new Error(`Unknown task ${t} in updateState`);return e}doSerialize=new R((()=>({id:this.id,completedAt:this.completedAt,tasks:this.tasks.map((t=>({id:t.id,name:t.name,ctrlId:t.ctrlId,hasCoverage:!!t.coverage.get()}))),name:this.name,request:this.request,items:[...this.testById.values()].map(b.serializeWithoutMessages)})));doSerializeWithMessages=new R((()=>({id:this.id,completedAt:this.completedAt,tasks:this.tasks.map((t=>({id:t.id,name:t.name,ctrlId:t.ctrlId,hasCoverage:!!t.coverage.get()}))),name:this.name,request:this.request,items:[...this.testById.values()].map(b.serialize)})))};f=y([S(4,L)],f);class ve{constructor(t,e,s=!0){this.serialized=e,this.persist=s,this.id=e.id,this.completedAt=e.completedAt,this.tasks=e.tasks.map(((t,e)=>({id:t.id,name:t.name||v("testUnnamedTask","Unnamed Task"),ctrlId:t.ctrlId,running:!1,coverage:k(this,void 0),output:V,otherMessages:[]}))),this.name=e.name,this.request=e.request;for(const s of e.items){const e=b.deserialize(t,s);this.counts[e.ownComputedState]++,this.testById.set(s.item.extId,e)}}counts=C();id;completedAt;tasks;get tests(){return this.testById.values()}name;request;testById=new Map;getStateById(t){return this.testById.get(t)}toJSON(){return this.persist?this.serialized:void 0}toJSONWithMessages(){return this.toJSON()}}export{ve as HydratedTestResult,f as LiveTestResult,F as TaskRawOutput,J as TestResultItemChangeReason,ke as maxCountPriority,Re as resultItemParents};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { DeferredPromise } from "../../../../base/common/async.js";
+import { VSBuffer } from "../../../../base/common/buffer.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { Lazy } from "../../../../base/common/lazy.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { IObservable, observableValue } from "../../../../base/common/observable.js";
+import { language } from "../../../../base/common/platform.js";
+import { WellDefinedPrefixTree } from "../../../../base/common/prefixTree.js";
+import { localize } from "../../../../nls.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import { IComputedStateAccessor, refreshComputedState } from "./getComputedState.js";
+import { TestCoverage } from "./testCoverage.js";
+import { TestId } from "./testId.js";
+import { makeEmptyCounts, maxPriority, statesInOrder, terminalStatePriorities, TestStateCount } from "./testingStates.js";
+import { getMarkId, IRichLocation, ISerializedTestResults, ITestItem, ITestMessage, ITestOutputMessage, ITestRunTask, ITestTaskState, ResolvedTestRunRequest, TestItemExpandState, TestMessageType, TestResultItem, TestResultState } from "./testTypes.js";
+const emptyRawOutput = {
+  buffers: [],
+  length: 0,
+  onDidWriteData: Event.None,
+  endPromise: Promise.resolve(),
+  getRange: /* @__PURE__ */ __name(() => VSBuffer.alloc(0), "getRange"),
+  getRangeIter: /* @__PURE__ */ __name(() => [], "getRangeIter")
+};
+class TaskRawOutput {
+  static {
+    __name(this, "TaskRawOutput");
+  }
+  writeDataEmitter = new Emitter();
+  endDeferred = new DeferredPromise();
+  offset = 0;
+  /** @inheritdoc */
+  onDidWriteData = this.writeDataEmitter.event;
+  /** @inheritdoc */
+  endPromise = this.endDeferred.p;
+  /** @inheritdoc */
+  buffers = [];
+  /** @inheritdoc */
+  get length() {
+    return this.offset;
+  }
+  /** @inheritdoc */
+  getRange(start, length) {
+    const buf = VSBuffer.alloc(length);
+    let bufLastWrite = 0;
+    for (const chunk of this.getRangeIter(start, length)) {
+      buf.buffer.set(chunk.buffer, bufLastWrite);
+      bufLastWrite += chunk.byteLength;
+    }
+    return bufLastWrite < length ? buf.slice(0, bufLastWrite) : buf;
+  }
+  /** @inheritdoc */
+  *getRangeIter(start, length) {
+    let soFar = 0;
+    let internalLastRead = 0;
+    for (const b of this.buffers) {
+      if (internalLastRead + b.byteLength <= start) {
+        internalLastRead += b.byteLength;
+        continue;
+      }
+      const bstart = Math.max(0, start - internalLastRead);
+      const bend = Math.min(b.byteLength, bstart + length - soFar);
+      yield b.slice(bstart, bend);
+      soFar += bend - bstart;
+      internalLastRead += b.byteLength;
+      if (soFar === length) {
+        break;
+      }
+    }
+  }
+  /**
+   * Appends data to the output, returning the byte range where the data can be found.
+   */
+  append(data, marker) {
+    const offset = this.offset;
+    let length = data.byteLength;
+    if (marker === void 0) {
+      this.push(data);
+      return { offset, length };
+    }
+    let TrimBytes;
+    ((TrimBytes2) => {
+      TrimBytes2[TrimBytes2["CR"] = 13] = "CR";
+      TrimBytes2[TrimBytes2["LF"] = 10] = "LF";
+    })(TrimBytes || (TrimBytes = {}));
+    const start = VSBuffer.fromString(getMarkCode(marker, true));
+    const end = VSBuffer.fromString(getMarkCode(marker, false));
+    length += start.byteLength + end.byteLength;
+    this.push(start);
+    let trimLen = data.byteLength;
+    for (; trimLen > 0; trimLen--) {
+      const last = data.buffer[trimLen - 1];
+      if (last !== 13 /* CR */ && last !== 10 /* LF */) {
+        break;
+      }
+    }
+    this.push(data.slice(0, trimLen));
+    this.push(end);
+    this.push(data.slice(trimLen));
+    return { offset, length };
+  }
+  push(data) {
+    if (data.byteLength === 0) {
+      return;
+    }
+    this.buffers.push(data);
+    this.writeDataEmitter.fire(data);
+    this.offset += data.byteLength;
+  }
+  /** Signals the output has ended. */
+  end() {
+    this.endDeferred.complete();
+  }
+}
+const resultItemParents = /* @__PURE__ */ __name(function* (results, item) {
+  for (const id of TestId.fromString(item.item.extId).idsToRoot()) {
+    yield results.getStateById(id.toString());
+  }
+}, "resultItemParents");
+const maxCountPriority = /* @__PURE__ */ __name((counts) => {
+  for (const state of statesInOrder) {
+    if (counts[state] > 0) {
+      return state;
+    }
+  }
+  return TestResultState.Unset;
+}, "maxCountPriority");
+const getMarkCode = /* @__PURE__ */ __name((marker, start) => `\x1B]633;SetMark;Id=${getMarkId(marker, start)};Hidden\x07`, "getMarkCode");
+const itemToNode = /* @__PURE__ */ __name((controllerId, item, parent) => ({
+  controllerId,
+  expand: TestItemExpandState.NotExpandable,
+  item: { ...item },
+  children: [],
+  tasks: [],
+  ownComputedState: TestResultState.Unset,
+  computedState: TestResultState.Unset
+}), "itemToNode");
+var TestResultItemChangeReason = /* @__PURE__ */ ((TestResultItemChangeReason2) => {
+  TestResultItemChangeReason2[TestResultItemChangeReason2["ComputedStateChange"] = 0] = "ComputedStateChange";
+  TestResultItemChangeReason2[TestResultItemChangeReason2["OwnStateChange"] = 1] = "OwnStateChange";
+  TestResultItemChangeReason2[TestResultItemChangeReason2["NewMessage"] = 2] = "NewMessage";
+  return TestResultItemChangeReason2;
+})(TestResultItemChangeReason || {});
+let LiveTestResult = class extends Disposable {
+  constructor(id, persist, request, insertOrder, telemetry) {
+    super();
+    this.id = id;
+    this.persist = persist;
+    this.request = request;
+    this.insertOrder = insertOrder;
+    this.telemetry = telemetry;
+  }
+  static {
+    __name(this, "LiveTestResult");
+  }
+  completeEmitter = this._register(new Emitter());
+  newTaskEmitter = this._register(new Emitter());
+  endTaskEmitter = this._register(new Emitter());
+  changeEmitter = this._register(new Emitter());
+  /** todo@connor4312: convert to a WellDefinedPrefixTree */
+  testById = /* @__PURE__ */ new Map();
+  testMarkerCounter = 0;
+  _completedAt;
+  startedAt = Date.now();
+  onChange = this.changeEmitter.event;
+  onComplete = this.completeEmitter.event;
+  onNewTask = this.newTaskEmitter.event;
+  onEndTask = this.endTaskEmitter.event;
+  tasks = [];
+  name = localize("runFinished", "Test run at {0}", (/* @__PURE__ */ new Date()).toLocaleString(language));
+  /**
+   * @inheritdoc
+   */
+  get completedAt() {
+    return this._completedAt;
+  }
+  /**
+   * @inheritdoc
+   */
+  counts = makeEmptyCounts();
+  /**
+   * @inheritdoc
+   */
+  get tests() {
+    return this.testById.values();
+  }
+  /** Gets an included test item by ID. */
+  getTestById(id) {
+    return this.testById.get(id)?.item;
+  }
+  computedStateAccessor = {
+    getOwnState: /* @__PURE__ */ __name((i) => i.ownComputedState, "getOwnState"),
+    getCurrentComputedState: /* @__PURE__ */ __name((i) => i.computedState, "getCurrentComputedState"),
+    setComputedState: /* @__PURE__ */ __name((i, s) => i.computedState = s, "setComputedState"),
+    getChildren: /* @__PURE__ */ __name((i) => i.children, "getChildren"),
+    getParents: /* @__PURE__ */ __name((i) => {
+      const { testById: testByExtId } = this;
+      return function* () {
+        const parentId = TestId.fromString(i.item.extId).parentId;
+        if (parentId) {
+          for (const id of parentId.idsToRoot()) {
+            yield testByExtId.get(id.toString());
+          }
+        }
+      }();
+    }, "getParents")
+  };
+  /**
+   * @inheritdoc
+   */
+  getStateById(extTestId) {
+    return this.testById.get(extTestId);
+  }
+  /**
+   * Appends output that occurred during the test run.
+   */
+  appendOutput(output, taskId, location, testId) {
+    const preview = output.byteLength > 100 ? output.slice(0, 100).toString() + "\u2026" : output.toString();
+    let marker;
+    if (testId || location) {
+      marker = this.testMarkerCounter++;
+    }
+    const index = this.mustGetTaskIndex(taskId);
+    const task = this.tasks[index];
+    const { offset, length } = task.output.append(output, marker);
+    const message = {
+      location,
+      message: preview,
+      offset,
+      length,
+      marker,
+      type: TestMessageType.Output
+    };
+    const test = testId && this.testById.get(testId);
+    if (test) {
+      test.tasks[index].messages.push(message);
+      this.changeEmitter.fire({ item: test, result: this, reason: 2 /* NewMessage */, message });
+    } else {
+      task.otherMessages.push(message);
+    }
+  }
+  /**
+   * Adds a new run task to the results.
+   */
+  addTask(task) {
+    this.tasks.push({ ...task, coverage: observableValue(this, void 0), otherMessages: [], output: new TaskRawOutput() });
+    for (const test of this.tests) {
+      test.tasks.push({ duration: void 0, messages: [], state: TestResultState.Unset });
+    }
+    this.newTaskEmitter.fire(this.tasks.length - 1);
+  }
+  /**
+   * Add the chain of tests to the run. The first test in the chain should
+   * be either a test root, or a previously-known test.
+   */
+  addTestChainToRun(controllerId, chain) {
+    let parent = this.testById.get(chain[0].extId);
+    if (!parent) {
+      parent = this.addTestToRun(controllerId, chain[0], null);
+    }
+    for (let i = 1; i < chain.length; i++) {
+      parent = this.addTestToRun(controllerId, chain[i], parent.item.extId);
+    }
+    return void 0;
+  }
+  /**
+   * Updates the state of the test by its internal ID.
+   */
+  updateState(testId, taskId, state, duration) {
+    const entry = this.testById.get(testId);
+    if (!entry) {
+      return;
+    }
+    const index = this.mustGetTaskIndex(taskId);
+    const oldTerminalStatePrio = terminalStatePriorities[entry.tasks[index].state];
+    const newTerminalStatePrio = terminalStatePriorities[state];
+    if (oldTerminalStatePrio !== void 0 && (newTerminalStatePrio === void 0 || newTerminalStatePrio < oldTerminalStatePrio)) {
+      return;
+    }
+    this.fireUpdateAndRefresh(entry, index, state, duration);
+  }
+  /**
+   * Appends a message for the test in the run.
+   */
+  appendMessage(testId, taskId, message) {
+    const entry = this.testById.get(testId);
+    if (!entry) {
+      return;
+    }
+    entry.tasks[this.mustGetTaskIndex(taskId)].messages.push(message);
+    this.changeEmitter.fire({ item: entry, result: this, reason: 2 /* NewMessage */, message });
+  }
+  /**
+   * Marks the task in the test run complete.
+   */
+  markTaskComplete(taskId) {
+    const index = this.mustGetTaskIndex(taskId);
+    const task = this.tasks[index];
+    task.running = false;
+    task.output.end();
+    this.setAllToState(
+      TestResultState.Unset,
+      taskId,
+      (t) => t.state === TestResultState.Queued || t.state === TestResultState.Running
+    );
+    this.endTaskEmitter.fire(index);
+  }
+  /**
+   * Notifies the service that all tests are complete.
+   */
+  markComplete() {
+    if (this._completedAt !== void 0) {
+      throw new Error("cannot complete a test result multiple times");
+    }
+    for (const task of this.tasks) {
+      if (task.running) {
+        this.markTaskComplete(task.id);
+      }
+    }
+    this._completedAt = Date.now();
+    this.completeEmitter.fire();
+    this.telemetry.publicLog2("test.outcomes", {
+      failures: this.counts[TestResultState.Errored] + this.counts[TestResultState.Failed],
+      passes: this.counts[TestResultState.Passed],
+      controller: this.request.targets.map((t) => t.controllerId).join(",")
+    });
+  }
+  /**
+   * Marks the test and all of its children in the run as retired.
+   */
+  markRetired(testIds) {
+    for (const [id, test] of this.testById) {
+      if (!test.retired && (!testIds || testIds.hasKeyOrParent(TestId.fromString(id).path))) {
+        test.retired = true;
+        this.changeEmitter.fire({ reason: 0 /* ComputedStateChange */, item: test, result: this });
+      }
+    }
+  }
+  /**
+   * @inheritdoc
+   */
+  toJSON() {
+    return this.completedAt && this.persist ? this.doSerialize.value : void 0;
+  }
+  toJSONWithMessages() {
+    return this.completedAt && this.persist ? this.doSerializeWithMessages.value : void 0;
+  }
+  /**
+   * Updates all tests in the collection to the given state.
+   */
+  setAllToState(state, taskId, when) {
+    const index = this.mustGetTaskIndex(taskId);
+    for (const test of this.testById.values()) {
+      if (when(test.tasks[index], test)) {
+        this.fireUpdateAndRefresh(test, index, state);
+      }
+    }
+  }
+  fireUpdateAndRefresh(entry, taskIndex, newState, newOwnDuration) {
+    const previousOwnComputed = entry.ownComputedState;
+    const previousOwnDuration = entry.ownDuration;
+    const changeEvent = {
+      item: entry,
+      result: this,
+      reason: 1 /* OwnStateChange */,
+      previousState: previousOwnComputed,
+      previousOwnDuration
+    };
+    entry.tasks[taskIndex].state = newState;
+    if (newOwnDuration !== void 0) {
+      entry.tasks[taskIndex].duration = newOwnDuration;
+      entry.ownDuration = Math.max(entry.ownDuration || 0, newOwnDuration);
+    }
+    const newOwnComputed = maxPriority(...entry.tasks.map((t) => t.state));
+    if (newOwnComputed === previousOwnComputed) {
+      if (newOwnDuration !== previousOwnDuration) {
+        this.changeEmitter.fire(changeEvent);
+      }
+      return;
+    }
+    entry.ownComputedState = newOwnComputed;
+    this.counts[previousOwnComputed]--;
+    this.counts[newOwnComputed]++;
+    refreshComputedState(this.computedStateAccessor, entry).forEach(
+      (t) => this.changeEmitter.fire(t === entry ? changeEvent : {
+        item: t,
+        result: this,
+        reason: 0 /* ComputedStateChange */
+      })
+    );
+  }
+  addTestToRun(controllerId, item, parent) {
+    const node = itemToNode(controllerId, item, parent);
+    this.testById.set(item.extId, node);
+    this.counts[TestResultState.Unset]++;
+    if (parent) {
+      this.testById.get(parent)?.children.push(node);
+    }
+    if (this.tasks.length) {
+      for (let i = 0; i < this.tasks.length; i++) {
+        node.tasks.push({ duration: void 0, messages: [], state: TestResultState.Unset });
+      }
+    }
+    return node;
+  }
+  mustGetTaskIndex(taskId) {
+    const index = this.tasks.findIndex((t) => t.id === taskId);
+    if (index === -1) {
+      throw new Error(`Unknown task ${taskId} in updateState`);
+    }
+    return index;
+  }
+  doSerialize = new Lazy(() => ({
+    id: this.id,
+    completedAt: this.completedAt,
+    tasks: this.tasks.map((t) => ({ id: t.id, name: t.name, ctrlId: t.ctrlId, hasCoverage: !!t.coverage.get() })),
+    name: this.name,
+    request: this.request,
+    items: [...this.testById.values()].map(TestResultItem.serializeWithoutMessages)
+  }));
+  doSerializeWithMessages = new Lazy(() => ({
+    id: this.id,
+    completedAt: this.completedAt,
+    tasks: this.tasks.map((t) => ({ id: t.id, name: t.name, ctrlId: t.ctrlId, hasCoverage: !!t.coverage.get() })),
+    name: this.name,
+    request: this.request,
+    items: [...this.testById.values()].map(TestResultItem.serialize)
+  }));
+};
+LiveTestResult = __decorateClass([
+  __decorateParam(4, ITelemetryService)
+], LiveTestResult);
+class HydratedTestResult {
+  constructor(identity, serialized, persist = true) {
+    this.serialized = serialized;
+    this.persist = persist;
+    this.id = serialized.id;
+    this.completedAt = serialized.completedAt;
+    this.tasks = serialized.tasks.map((task, i) => ({
+      id: task.id,
+      name: task.name || localize("testUnnamedTask", "Unnamed Task"),
+      ctrlId: task.ctrlId,
+      running: false,
+      coverage: observableValue(this, void 0),
+      output: emptyRawOutput,
+      otherMessages: []
+    }));
+    this.name = serialized.name;
+    this.request = serialized.request;
+    for (const item of serialized.items) {
+      const de = TestResultItem.deserialize(identity, item);
+      this.counts[de.ownComputedState]++;
+      this.testById.set(item.item.extId, de);
+    }
+  }
+  static {
+    __name(this, "HydratedTestResult");
+  }
+  /**
+   * @inheritdoc
+   */
+  counts = makeEmptyCounts();
+  /**
+   * @inheritdoc
+   */
+  id;
+  /**
+   * @inheritdoc
+   */
+  completedAt;
+  /**
+   * @inheritdoc
+   */
+  tasks;
+  /**
+   * @inheritdoc
+   */
+  get tests() {
+    return this.testById.values();
+  }
+  /**
+   * @inheritdoc
+   */
+  name;
+  /**
+   * @inheritdoc
+   */
+  request;
+  testById = /* @__PURE__ */ new Map();
+  /**
+   * @inheritdoc
+   */
+  getStateById(extTestId) {
+    return this.testById.get(extTestId);
+  }
+  /**
+   * @inheritdoc
+   */
+  toJSON() {
+    return this.persist ? this.serialized : void 0;
+  }
+  /**
+   * @inheritdoc
+   */
+  toJSONWithMessages() {
+    return this.toJSON();
+  }
+}
+export {
+  HydratedTestResult,
+  LiveTestResult,
+  TaskRawOutput,
+  TestResultItemChangeReason,
+  maxCountPriority,
+  resultItemParents
+};
+//# sourceMappingURL=testResult.js.map

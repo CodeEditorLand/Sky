@@ -1,1 +1,707 @@
-var M=Object.defineProperty,_=Object.getOwnPropertyDescriptor,E=(e,i,t,s)=>{for(var r,o=s>1?void 0:s?_(i,t):i,n=e.length-1;n>=0;n--)(r=e[n])&&(o=(s?r(i,t,o):r(o))||o);return s&&o&&M(i,t,o),o},l=(e,i)=>(t,s)=>i(t,s,e);import{localize as n}from"../../../../nls.js";import"../../../../base/common/uri.js";import{Event as R,Emitter as S}from"../../../../base/common/event.js";import{CancellationToken as D,CancellationTokenSource as b}from"../../../../base/common/cancellation.js";import{ETAG_DISABLED as g,FileOperationResult as c,IFileService as P,NotModifiedSinceFileOperationError as A}from"../../../../platform/files/common/files.js";import{SaveReason as d}from"../../../common/editor.js";import{IWorkingCopyService as T}from"./workingCopyService.js";import{WorkingCopyCapabilities as N}from"./workingCopy.js";import{raceCancellation as w,TaskSequentializer as L,timeout as x}from"../../../../base/common/async.js";import{ILogService as B}from"../../../../platform/log/common/log.js";import{assertIsDefined as k}from"../../../../base/common/types.js";import{IWorkingCopyFileService as U}from"./workingCopyFileService.js";import"../../../../base/common/buffer.js";import{IFilesConfigurationService as V}from"../../filesConfiguration/common/filesConfigurationService.js";import{IWorkingCopyBackupService as q}from"./workingCopyBackup.js";import{INotificationService as z,Severity as H}from"../../../../platform/notification/common/notification.js";import{hash as $}from"../../../../base/common/hash.js";import{isErrorWithActions as G,toErrorMessage as X}from"../../../../base/common/errorMessage.js";import{toAction as u}from"../../../../base/common/actions.js";import{isWindows as C}from"../../../../base/common/platform.js";import{IWorkingCopyEditorService as j}from"./workingCopyEditorService.js";import{IEditorService as Y}from"../../editor/common/editorService.js";import{IElevatedFileService as K}from"../../files/common/elevatedFileService.js";import{ResourceWorkingCopy as J}from"./resourceWorkingCopy.js";import{SnapshotContext as O}from"./fileWorkingCopy.js";import"../../../../base/common/htmlContent.js";import{IProgressService as Q,ProgressLocation as Z}from"../../../../platform/progress/common/progress.js";import{isCancellationError as ee}from"../../../../base/common/errors.js";var ie=(e=>(e[e.SAVED=0]="SAVED",e[e.DIRTY=1]="DIRTY",e[e.PENDING_SAVE=2]="PENDING_SAVE",e[e.CONFLICT=3]="CONFLICT",e[e.ORPHAN=4]="ORPHAN",e[e.ERROR=5]="ERROR",e))(ie||{});function ii(e){return!!e.stat}let y=class extends J{constructor(e,i,t,s,r,o,n,a,l,d,h,c,v,m,u,S){super(i,o),this.typeId=e,this.name=t,this.modelFactory=s,this.externalResolver=r,this.logService=n,this.workingCopyFileService=a,this.filesConfigurationService=l,this.workingCopyBackupService=d,this.notificationService=c,this.workingCopyEditorService=v,this.editorService=m,this.elevatedFileService=u,this.progressService=S,this._register(h.registerWorkingCopy(this)),this.registerListeners()}capabilities=N.None;_model=void 0;get model(){return this._model}_onDidChangeContent=this._register(new S);onDidChangeContent=this._onDidChangeContent.event;_onDidResolve=this._register(new S);onDidResolve=this._onDidResolve.event;_onDidChangeDirty=this._register(new S);onDidChangeDirty=this._onDidChangeDirty.event;_onDidSaveError=this._register(new S);onDidSaveError=this._onDidSaveError.event;_onDidSave=this._register(new S);onDidSave=this._onDidSave.event;_onDidRevert=this._register(new S);onDidRevert=this._onDidRevert.event;_onDidChangeReadonly=this._register(new S);onDidChangeReadonly=this._onDidChangeReadonly.event;registerListeners(){this._register(this.filesConfigurationService.onDidChangeReadonly((()=>this._onDidChangeReadonly.fire())))}dirty=!1;savedVersionId;isDirty(){return this.dirty}markModified(){this.setDirty(!0)}setDirty(e){if(!this.isResolved())return;const i=this.dirty;this.doSetDirty(e),e!==i&&this._onDidChangeDirty.fire()}doSetDirty(e){const i=this.dirty,t=this.inConflictMode,s=this.inErrorMode,r=this.savedVersionId;return e?this.dirty=!0:(this.dirty=!1,this.inConflictMode=!1,this.inErrorMode=!1,this.isResolved()&&(this.savedVersionId=this.model.versionId)),()=>{this.dirty=i,this.inConflictMode=t,this.inErrorMode=s,this.savedVersionId=r}}lastResolvedFileStat;isResolved(){return!!this.model}async resolve(e){if(this.trace("resolve() - enter"),this.isDisposed())this.trace("resolve() - exit - without resolving because file working copy is disposed");else{if(e?.contents||!this.dirty&&!this.saveSequentializer.isRunning())return this.doResolve(e);this.trace("resolve() - exit - without resolving because file working copy is dirty or being saved")}}async doResolve(e){return e?.contents?this.resolveFromBuffer(e.contents):this.isResolved()||!await this.resolveFromBackup()?this.resolveFromFile(e):void 0}async resolveFromBuffer(e){let i,t,s,r;this.trace("resolveFromBuffer()");try{const e=await this.fileService.stat(this.resource);i=e.mtime,t=e.ctime,s=e.size,r=e.etag,this.setOrphaned(!1)}catch(e){i=Date.now(),t=Date.now(),s=0,r=g,this.setOrphaned(e.fileOperationResult===c.FILE_NOT_FOUND)}return this.resolveFromContent({resource:this.resource,name:this.name,mtime:i,ctime:t,size:s,etag:r,value:e,readonly:!1,locked:!1},!0)}async resolveFromBackup(){const e=await this.workingCopyBackupService.resolve(this);return this.isResolved()?(this.trace("resolveFromBackup() - exit - withoutresolving because previously new file working copy got created meanwhile"),!0):!!e&&(await this.doResolveFromBackup(e),!0)}async doResolveFromBackup(e){this.trace("doResolveFromBackup()"),await this.resolveFromContent({resource:this.resource,name:this.name,mtime:e.meta?e.meta.mtime:Date.now(),ctime:e.meta?e.meta.ctime:Date.now(),size:e.meta?e.meta.size:0,etag:e.meta?e.meta.etag:g,value:e.value,readonly:!1,locked:!1},!0),e.meta&&e.meta.orphaned&&this.setOrphaned(!0)}async resolveFromFile(e){this.trace("resolveFromFile()");const i=e?.forceReadFromFile;let t;i?t=g:this.lastResolvedFileStat&&(t=this.lastResolvedFileStat.etag);const s=this.versionId;try{const i=await this.fileService.readFileStream(this.resource,{etag:t,limits:e?.limits});if(this.setOrphaned(!1),s!==this.versionId)return void this.trace("resolveFromFile() - exit - without resolving because file working copy content changed");await this.resolveFromContent(i,!1)}catch(e){const t=e.fileOperationResult;if(this.setOrphaned(t===c.FILE_NOT_FOUND),this.isResolved()&&t===c.FILE_NOT_MODIFIED_SINCE)return void(e instanceof A&&this.updateLastResolvedFileStat(e.stat));if(this.isResolved()&&t===c.FILE_NOT_FOUND&&!i)return;throw e}}async resolveFromContent(e,i){this.trace("resolveFromContent() - enter"),this.isDisposed()?this.trace("resolveFromContent() - exit - because working copy is disposed"):(this.updateLastResolvedFileStat({resource:this.resource,name:e.name,mtime:e.mtime,ctime:e.ctime,size:e.size,etag:e.etag,readonly:e.readonly,locked:e.locked,isFile:!0,isDirectory:!1,isSymbolicLink:!1,children:void 0}),this.isResolved()?await this.doUpdateModel(e.value):await this.doCreateModel(e.value),this.setDirty(!!i),this._onDidResolve.fire())}async doCreateModel(e){this.trace("doCreateModel()"),this._model=this._register(await this.modelFactory.createModel(this.resource,e,D.None)),this.installModelListeners(this._model)}ignoreDirtyOnModelContentChange=!1;async doUpdateModel(e){this.trace("doUpdateModel()"),this.ignoreDirtyOnModelContentChange=!0;try{await(this.model?.update(e,D.None))}finally{this.ignoreDirtyOnModelContentChange=!1}}installModelListeners(e){this._register(e.onDidChangeContent((i=>this.onModelContentChanged(e,i.isUndoing||i.isRedoing)))),this._register(e.onWillDispose((()=>this.dispose())))}onModelContentChanged(e,i){if(this.trace("onModelContentChanged() - enter"),this.versionId++,this.trace(`onModelContentChanged() - new versionId ${this.versionId}`),i&&(this.lastContentChangeFromUndoRedo=Date.now()),!this.ignoreDirtyOnModelContentChange&&!this.isReadonly())if(e.versionId===this.savedVersionId){this.trace("onModelContentChanged() - model content changed back to last saved version");const e=this.dirty;this.setDirty(!1),e&&this._onDidRevert.fire()}else this.trace("onModelContentChanged() - model content changed and marked as dirty"),this.setDirty(!0);this._onDidChangeContent.fire()}async forceResolveFromFile(){this.isDisposed()||await this.externalResolver({forceReadFromFile:!0})}get backupDelay(){return this.model?.configuration?.backupDelay}async backup(e){let i,t;return this.lastResolvedFileStat&&(i={mtime:this.lastResolvedFileStat.mtime,ctime:this.lastResolvedFileStat.ctime,size:this.lastResolvedFileStat.size,etag:this.lastResolvedFileStat.etag,orphaned:this.isOrphaned()}),this.isResolved()&&(t=await w(this.model.snapshot(O.Backup,e),e)),{meta:i,content:t}}versionId=0;static UNDO_REDO_SAVE_PARTICIPANTS_AUTO_SAVE_THROTTLE_THRESHOLD=500;lastContentChangeFromUndoRedo=void 0;saveSequentializer=new L;ignoreSaveFromSaveParticipants=!1;async save(e=Object.create(null)){return!!this.isResolved()&&(this.isReadonly()?(this.trace("save() - ignoring request for readonly resource"),!1):!this.hasState(3)&&!this.hasState(5)||e.reason!==d.AUTO&&e.reason!==d.FOCUS_CHANGE&&e.reason!==d.WINDOW_CHANGE?(this.trace("save() - enter"),await this.doSave(e),this.trace("save() - exit"),this.hasState(0)):(this.trace("save() - ignoring auto save request for file working copy that is in conflict or error"),!1))}async doSave(e){"number"!=typeof e.reason&&(e.reason=d.EXPLICIT);const i=this.versionId;if(this.trace(`doSave(${i}) - enter with versionId ${i}`),this.ignoreSaveFromSaveParticipants)return void this.trace(`doSave(${i}) - exit - refusing to save() recursively from save participant`);if(this.saveSequentializer.isRunning(i))return this.trace(`doSave(${i}) - exit - found a running save for versionId ${i}`),this.saveSequentializer.running;if(!e.force&&!this.dirty)return void this.trace(`doSave(${i}) - exit - because not dirty and/or versionId is different (this.isDirty: ${this.dirty}, this.versionId: ${this.versionId})`);if(this.saveSequentializer.isRunning())return this.trace(`doSave(${i}) - exit - because busy saving`),this.saveSequentializer.cancelRunning(),this.saveSequentializer.queue((()=>this.doSave(e)));this.isResolved()&&this.model.pushStackElement();const t=new b;return this.progressService.withProgress({title:n("saveParticipants","Saving '{0}'",this.name),location:Z.Window,cancellable:!0,delay:this.isDirty()?3e3:5e3},(s=>this.doSaveSequential(i,e,s,t)),(()=>{t.cancel()})).finally((()=>{t.dispose()}))}doSaveSequential(e,i,t,s){return this.saveSequentializer.run(e,(async()=>{if(this.isResolved()&&!i.skipSaveParticipants&&this.workingCopyFileService.hasSaveParticipants)try{if(i.reason===d.AUTO&&"number"==typeof this.lastContentChangeFromUndoRedo){const e=Date.now()-this.lastContentChangeFromUndoRedo;e<y.UNDO_REDO_SAVE_PARTICIPANTS_AUTO_SAVE_THROTTLE_THRESHOLD&&await x(y.UNDO_REDO_SAVE_PARTICIPANTS_AUTO_SAVE_THROTTLE_THRESHOLD-e)}if(!s.token.isCancellationRequested){this.ignoreSaveFromSaveParticipants=!0;try{await this.workingCopyFileService.runSaveParticipants(this,{reason:i.reason??d.EXPLICIT,savedFrom:i.from},t,s.token)}catch(e){ee(e)&&!s.token.isCancellationRequested&&s.cancel()}finally{this.ignoreSaveFromSaveParticipants=!1}}}catch(i){this.logService.error(`[stored file working copy] runSaveParticipants(${e}) - resulted in an error: ${i.toString()}`,this.resource.toString(),this.typeId)}if(s.token.isCancellationRequested||this.isDisposed()||!this.isResolved())return;e=this.versionId,this.inErrorMode=!1,t.report({message:n("saveTextFile","Writing into file...")}),this.trace(`doSave(${e}) - before write()`);const r=k(this.lastResolvedFileStat),o=this;return this.saveSequentializer.run(e,(async()=>{try{const t={mtime:r.mtime,etag:i.ignoreModifiedSince||!this.filesConfigurationService.preventSaveConflicts(r.resource)?g:r.etag,unlock:i.writeUnlock};let n;if("function"==typeof o.model.save)try{n=await o.model.save(t,s.token)}catch(e){if(s.token.isCancellationRequested)return;throw e}else{const e=await w(o.model.snapshot(O.Save,s.token),s.token);if(s.token.isCancellationRequested)return;s.dispose(),n=i?.writeElevated&&this.elevatedFileService.isSupported(r.resource)?await this.elevatedFileService.writeFileElevated(r.resource,k(e),t):await this.fileService.writeFile(r.resource,k(e),t)}this.handleSaveSuccess(n,e,i)}catch(t){this.handleSaveError(t,e,i)}})(),(()=>s.cancel()))})(),(()=>s.cancel()))}handleSaveSuccess(e,i,t){this.updateLastResolvedFileStat(e),i===this.versionId?(this.trace(`handleSaveSuccess(${i}) - setting dirty to false because versionId did not change`),this.setDirty(!1)):this.trace(`handleSaveSuccess(${i}) - not setting dirty to false because versionId did change meanwhile`),this.setOrphaned(!1),this._onDidSave.fire({reason:t.reason,stat:e,source:t.source})}handleSaveError(e,i,t){if((t.ignoreErrorHandler?this.logService.trace:this.logService.error).apply(this.logService,[`[stored file working copy] handleSaveError(${i}) - exit - resulted in a save error: ${e.toString()}`,this.resource.toString(),this.typeId]),t.ignoreErrorHandler)throw e;this.setDirty(!0),this.inErrorMode=!0,e.fileOperationResult===c.FILE_MODIFIED_SINCE&&(this.inConflictMode=!0),this.doHandleSaveError(e,t),this._onDidSaveError.fire()}doHandleSaveError(e,i){const t=e,s=[];let r;if(t.fileOperationResult===c.FILE_MODIFIED_SINCE)r=n("staleSaveError","Failed to save '{0}': The content of the file is newer. Do you want to overwrite the file with your changes?",this.name),s.push(u({id:"fileWorkingCopy.overwrite",label:n("overwrite","Overwrite"),run:()=>this.save({...i,ignoreModifiedSince:!0,reason:d.EXPLICIT})})),s.push(u({id:"fileWorkingCopy.revert",label:n("revert","Revert"),run:()=>this.revert()}));else{const o=t.fileOperationResult===c.FILE_WRITE_LOCKED,a=o&&t.options?.unlock,l=t.fileOperationResult===c.FILE_PERMISSION_DENIED,h=this.elevatedFileService.isSupported(this.resource);G(e)&&s.push(...e.actions),h&&(l||a)?s.push(u({id:"fileWorkingCopy.saveElevated",label:a?C?n("overwriteElevated","Overwrite as Admin..."):n("overwriteElevatedSudo","Overwrite as Sudo..."):C?n("saveElevated","Retry as Admin..."):n("saveElevatedSudo","Retry as Sudo..."),run:()=>{this.save({...i,writeElevated:!0,writeUnlock:a,reason:d.EXPLICIT})}})):o?s.push(u({id:"fileWorkingCopy.unlock",label:n("overwrite","Overwrite"),run:()=>this.save({...i,writeUnlock:!0,reason:d.EXPLICIT})})):s.push(u({id:"fileWorkingCopy.retry",label:n("retry","Retry"),run:()=>this.save({...i,reason:d.EXPLICIT})})),s.push(u({id:"fileWorkingCopy.saveAs",label:n("saveAs","Save As..."),run:async()=>{const t=this.workingCopyEditorService.findEditor(this);t&&((await this.editorService.save(t,{saveAs:!0,reason:d.EXPLICIT})).success||this.doHandleSaveError(e,i))}})),s.push(u({id:"fileWorkingCopy.revert",label:n("revert","Revert"),run:()=>this.revert()})),r=o?a&&h?C?n("readonlySaveErrorAdmin","Failed to save '{0}': File is read-only. Select 'Overwrite as Admin' to retry as administrator.",this.name):n("readonlySaveErrorSudo","Failed to save '{0}': File is read-only. Select 'Overwrite as Sudo' to retry as superuser.",this.name):n("readonlySaveError","Failed to save '{0}': File is read-only. Select 'Overwrite' to attempt to make it writeable.",this.name):h&&l?C?n("permissionDeniedSaveError","Failed to save '{0}': Insufficient permissions. Select 'Retry as Admin' to retry as administrator.",this.name):n("permissionDeniedSaveErrorSudo","Failed to save '{0}': Insufficient permissions. Select 'Retry as Sudo' to retry as superuser.",this.name):n({key:"genericSaveError",comment:["{0} is the resource that failed to save and {1} the error message"]},"Failed to save '{0}': {1}",this.name,X(e,!1))}const o=this.notificationService.notify({id:`${$(this.resource.toString())}`,severity:H.Error,message:r,actions:{primary:s}}),a=this._register(R.once(R.any(this.onDidSave,this.onDidRevert))((()=>o.close())));this._register(R.once(o.onDidClose)((()=>a.dispose())))}updateLastResolvedFileStat(e){const i=this.isReadonly();this.lastResolvedFileStat?this.lastResolvedFileStat.mtime<=e.mtime?this.lastResolvedFileStat=e:this.lastResolvedFileStat={...this.lastResolvedFileStat,readonly:e.readonly,locked:e.locked}:this.lastResolvedFileStat=e,this.isReadonly()!==i&&this._onDidChangeReadonly.fire()}async revert(e){if(!this.isResolved()||!this.dirty&&!e?.force)return;this.trace("revert()");const i=this.dirty,t=this.doSetDirty(!1);if(!e?.soft)try{await this.forceResolveFromFile()}catch(e){if(e.fileOperationResult!==c.FILE_NOT_FOUND)throw t(),e}this._onDidRevert.fire(),i&&this._onDidChangeDirty.fire()}inConflictMode=!1;inErrorMode=!1;hasState(e){switch(e){case 3:return this.inConflictMode;case 1:return this.dirty;case 5:return this.inErrorMode;case 4:return this.isOrphaned();case 2:return this.saveSequentializer.isRunning();case 0:return!this.dirty}}async joinState(e){return this.saveSequentializer.running}isReadonly(){return this.filesConfigurationService.isReadonly(this.resource,this.lastResolvedFileStat)}trace(e){this.logService.trace(`[stored file working copy] ${e}`,this.resource.toString(),this.typeId)}dispose(){this.trace("dispose()"),this.inConflictMode=!1,this.inErrorMode=!1,this._model=void 0,super.dispose()}};y=E([l(5,P),l(6,B),l(7,U),l(8,V),l(9,q),l(10,T),l(11,z),l(12,j),l(13,Y),l(14,K),l(15,Q)],y);export{y as StoredFileWorkingCopy,ie as StoredFileWorkingCopyState,ii as isStoredFileWorkingCopySaveEvent};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { localize } from "../../../../nls.js";
+import { URI } from "../../../../base/common/uri.js";
+import { Event, Emitter } from "../../../../base/common/event.js";
+import { CancellationToken, CancellationTokenSource } from "../../../../base/common/cancellation.js";
+import { ETAG_DISABLED, FileOperationError, FileOperationResult, IFileReadLimits, IFileService, IFileStatWithMetadata, IFileStreamContent, IWriteFileOptions, NotModifiedSinceFileOperationError } from "../../../../platform/files/common/files.js";
+import { ISaveOptions, IRevertOptions, SaveReason } from "../../../common/editor.js";
+import { IWorkingCopyService } from "./workingCopyService.js";
+import { IWorkingCopyBackup, IWorkingCopyBackupMeta, IWorkingCopySaveEvent, WorkingCopyCapabilities } from "./workingCopy.js";
+import { raceCancellation, TaskSequentializer, timeout } from "../../../../base/common/async.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { assertIsDefined } from "../../../../base/common/types.js";
+import { IWorkingCopyFileService } from "./workingCopyFileService.js";
+import { VSBufferReadableStream } from "../../../../base/common/buffer.js";
+import { IFilesConfigurationService } from "../../filesConfiguration/common/filesConfigurationService.js";
+import { IWorkingCopyBackupService, IResolvedWorkingCopyBackup } from "./workingCopyBackup.js";
+import { INotificationService, Severity } from "../../../../platform/notification/common/notification.js";
+import { hash } from "../../../../base/common/hash.js";
+import { isErrorWithActions, toErrorMessage } from "../../../../base/common/errorMessage.js";
+import { IAction, toAction } from "../../../../base/common/actions.js";
+import { isWindows } from "../../../../base/common/platform.js";
+import { IWorkingCopyEditorService } from "./workingCopyEditorService.js";
+import { IEditorService } from "../../editor/common/editorService.js";
+import { IElevatedFileService } from "../../files/common/elevatedFileService.js";
+import { IResourceWorkingCopy, ResourceWorkingCopy } from "./resourceWorkingCopy.js";
+import { IFileWorkingCopy, IFileWorkingCopyModel, IFileWorkingCopyModelFactory, SnapshotContext } from "./fileWorkingCopy.js";
+import { IMarkdownString } from "../../../../base/common/htmlContent.js";
+import { IProgress, IProgressService, IProgressStep, ProgressLocation } from "../../../../platform/progress/common/progress.js";
+import { isCancellationError } from "../../../../base/common/errors.js";
+var StoredFileWorkingCopyState = /* @__PURE__ */ ((StoredFileWorkingCopyState2) => {
+  StoredFileWorkingCopyState2[StoredFileWorkingCopyState2["SAVED"] = 0] = "SAVED";
+  StoredFileWorkingCopyState2[StoredFileWorkingCopyState2["DIRTY"] = 1] = "DIRTY";
+  StoredFileWorkingCopyState2[StoredFileWorkingCopyState2["PENDING_SAVE"] = 2] = "PENDING_SAVE";
+  StoredFileWorkingCopyState2[StoredFileWorkingCopyState2["CONFLICT"] = 3] = "CONFLICT";
+  StoredFileWorkingCopyState2[StoredFileWorkingCopyState2["ORPHAN"] = 4] = "ORPHAN";
+  StoredFileWorkingCopyState2[StoredFileWorkingCopyState2["ERROR"] = 5] = "ERROR";
+  return StoredFileWorkingCopyState2;
+})(StoredFileWorkingCopyState || {});
+function isStoredFileWorkingCopySaveEvent(e) {
+  const candidate = e;
+  return !!candidate.stat;
+}
+__name(isStoredFileWorkingCopySaveEvent, "isStoredFileWorkingCopySaveEvent");
+let StoredFileWorkingCopy = class extends ResourceWorkingCopy {
+  //#endregion
+  constructor(typeId, resource, name, modelFactory, externalResolver, fileService, logService, workingCopyFileService, filesConfigurationService, workingCopyBackupService, workingCopyService, notificationService, workingCopyEditorService, editorService, elevatedFileService, progressService) {
+    super(resource, fileService);
+    this.typeId = typeId;
+    this.name = name;
+    this.modelFactory = modelFactory;
+    this.externalResolver = externalResolver;
+    this.logService = logService;
+    this.workingCopyFileService = workingCopyFileService;
+    this.filesConfigurationService = filesConfigurationService;
+    this.workingCopyBackupService = workingCopyBackupService;
+    this.notificationService = notificationService;
+    this.workingCopyEditorService = workingCopyEditorService;
+    this.editorService = editorService;
+    this.elevatedFileService = elevatedFileService;
+    this.progressService = progressService;
+    this._register(workingCopyService.registerWorkingCopy(this));
+    this.registerListeners();
+  }
+  static {
+    __name(this, "StoredFileWorkingCopy");
+  }
+  capabilities = WorkingCopyCapabilities.None;
+  _model = void 0;
+  get model() {
+    return this._model;
+  }
+  //#region events
+  _onDidChangeContent = this._register(new Emitter());
+  onDidChangeContent = this._onDidChangeContent.event;
+  _onDidResolve = this._register(new Emitter());
+  onDidResolve = this._onDidResolve.event;
+  _onDidChangeDirty = this._register(new Emitter());
+  onDidChangeDirty = this._onDidChangeDirty.event;
+  _onDidSaveError = this._register(new Emitter());
+  onDidSaveError = this._onDidSaveError.event;
+  _onDidSave = this._register(new Emitter());
+  onDidSave = this._onDidSave.event;
+  _onDidRevert = this._register(new Emitter());
+  onDidRevert = this._onDidRevert.event;
+  _onDidChangeReadonly = this._register(new Emitter());
+  onDidChangeReadonly = this._onDidChangeReadonly.event;
+  registerListeners() {
+    this._register(this.filesConfigurationService.onDidChangeReadonly(() => this._onDidChangeReadonly.fire()));
+  }
+  //#region Dirty
+  dirty = false;
+  savedVersionId;
+  isDirty() {
+    return this.dirty;
+  }
+  markModified() {
+    this.setDirty(true);
+  }
+  setDirty(dirty) {
+    if (!this.isResolved()) {
+      return;
+    }
+    const wasDirty = this.dirty;
+    this.doSetDirty(dirty);
+    if (dirty !== wasDirty) {
+      this._onDidChangeDirty.fire();
+    }
+  }
+  doSetDirty(dirty) {
+    const wasDirty = this.dirty;
+    const wasInConflictMode = this.inConflictMode;
+    const wasInErrorMode = this.inErrorMode;
+    const oldSavedVersionId = this.savedVersionId;
+    if (!dirty) {
+      this.dirty = false;
+      this.inConflictMode = false;
+      this.inErrorMode = false;
+      if (this.isResolved()) {
+        this.savedVersionId = this.model.versionId;
+      }
+    } else {
+      this.dirty = true;
+    }
+    return () => {
+      this.dirty = wasDirty;
+      this.inConflictMode = wasInConflictMode;
+      this.inErrorMode = wasInErrorMode;
+      this.savedVersionId = oldSavedVersionId;
+    };
+  }
+  //#endregion
+  //#region Resolve
+  lastResolvedFileStat;
+  // !!! DO NOT MARK PRIVATE! USED IN TESTS !!!
+  isResolved() {
+    return !!this.model;
+  }
+  async resolve(options) {
+    this.trace("resolve() - enter");
+    if (this.isDisposed()) {
+      this.trace("resolve() - exit - without resolving because file working copy is disposed");
+      return;
+    }
+    if (!options?.contents && (this.dirty || this.saveSequentializer.isRunning())) {
+      this.trace("resolve() - exit - without resolving because file working copy is dirty or being saved");
+      return;
+    }
+    return this.doResolve(options);
+  }
+  async doResolve(options) {
+    if (options?.contents) {
+      return this.resolveFromBuffer(options.contents);
+    }
+    const isNew = !this.isResolved();
+    if (isNew) {
+      const resolvedFromBackup = await this.resolveFromBackup();
+      if (resolvedFromBackup) {
+        return;
+      }
+    }
+    return this.resolveFromFile(options);
+  }
+  async resolveFromBuffer(buffer) {
+    this.trace("resolveFromBuffer()");
+    let mtime;
+    let ctime;
+    let size;
+    let etag;
+    try {
+      const metadata = await this.fileService.stat(this.resource);
+      mtime = metadata.mtime;
+      ctime = metadata.ctime;
+      size = metadata.size;
+      etag = metadata.etag;
+      this.setOrphaned(false);
+    } catch (error) {
+      mtime = Date.now();
+      ctime = Date.now();
+      size = 0;
+      etag = ETAG_DISABLED;
+      this.setOrphaned(error.fileOperationResult === FileOperationResult.FILE_NOT_FOUND);
+    }
+    return this.resolveFromContent(
+      {
+        resource: this.resource,
+        name: this.name,
+        mtime,
+        ctime,
+        size,
+        etag,
+        value: buffer,
+        readonly: false,
+        locked: false
+      },
+      true
+      /* dirty (resolved from buffer) */
+    );
+  }
+  async resolveFromBackup() {
+    const backup = await this.workingCopyBackupService.resolve(this);
+    const isNew = !this.isResolved();
+    if (!isNew) {
+      this.trace("resolveFromBackup() - exit - withoutresolving because previously new file working copy got created meanwhile");
+      return true;
+    }
+    if (backup) {
+      await this.doResolveFromBackup(backup);
+      return true;
+    }
+    return false;
+  }
+  async doResolveFromBackup(backup) {
+    this.trace("doResolveFromBackup()");
+    await this.resolveFromContent(
+      {
+        resource: this.resource,
+        name: this.name,
+        mtime: backup.meta ? backup.meta.mtime : Date.now(),
+        ctime: backup.meta ? backup.meta.ctime : Date.now(),
+        size: backup.meta ? backup.meta.size : 0,
+        etag: backup.meta ? backup.meta.etag : ETAG_DISABLED,
+        // etag disabled if unknown!
+        value: backup.value,
+        readonly: false,
+        locked: false
+      },
+      true
+      /* dirty (resolved from backup) */
+    );
+    if (backup.meta && backup.meta.orphaned) {
+      this.setOrphaned(true);
+    }
+  }
+  async resolveFromFile(options) {
+    this.trace("resolveFromFile()");
+    const forceReadFromFile = options?.forceReadFromFile;
+    let etag;
+    if (forceReadFromFile) {
+      etag = ETAG_DISABLED;
+    } else if (this.lastResolvedFileStat) {
+      etag = this.lastResolvedFileStat.etag;
+    }
+    const currentVersionId = this.versionId;
+    try {
+      const content = await this.fileService.readFileStream(this.resource, {
+        etag,
+        limits: options?.limits
+      });
+      this.setOrphaned(false);
+      if (currentVersionId !== this.versionId) {
+        this.trace("resolveFromFile() - exit - without resolving because file working copy content changed");
+        return;
+      }
+      await this.resolveFromContent(
+        content,
+        false
+        /* not dirty (resolved from file) */
+      );
+    } catch (error) {
+      const result = error.fileOperationResult;
+      this.setOrphaned(result === FileOperationResult.FILE_NOT_FOUND);
+      if (this.isResolved() && result === FileOperationResult.FILE_NOT_MODIFIED_SINCE) {
+        if (error instanceof NotModifiedSinceFileOperationError) {
+          this.updateLastResolvedFileStat(error.stat);
+        }
+        return;
+      }
+      if (this.isResolved() && result === FileOperationResult.FILE_NOT_FOUND && !forceReadFromFile) {
+        return;
+      }
+      throw error;
+    }
+  }
+  async resolveFromContent(content, dirty) {
+    this.trace("resolveFromContent() - enter");
+    if (this.isDisposed()) {
+      this.trace("resolveFromContent() - exit - because working copy is disposed");
+      return;
+    }
+    this.updateLastResolvedFileStat({
+      resource: this.resource,
+      name: content.name,
+      mtime: content.mtime,
+      ctime: content.ctime,
+      size: content.size,
+      etag: content.etag,
+      readonly: content.readonly,
+      locked: content.locked,
+      isFile: true,
+      isDirectory: false,
+      isSymbolicLink: false,
+      children: void 0
+    });
+    if (this.isResolved()) {
+      await this.doUpdateModel(content.value);
+    } else {
+      await this.doCreateModel(content.value);
+    }
+    this.setDirty(!!dirty);
+    this._onDidResolve.fire();
+  }
+  async doCreateModel(contents) {
+    this.trace("doCreateModel()");
+    this._model = this._register(await this.modelFactory.createModel(this.resource, contents, CancellationToken.None));
+    this.installModelListeners(this._model);
+  }
+  ignoreDirtyOnModelContentChange = false;
+  async doUpdateModel(contents) {
+    this.trace("doUpdateModel()");
+    this.ignoreDirtyOnModelContentChange = true;
+    try {
+      await this.model?.update(contents, CancellationToken.None);
+    } finally {
+      this.ignoreDirtyOnModelContentChange = false;
+    }
+  }
+  installModelListeners(model) {
+    this._register(model.onDidChangeContent((e) => this.onModelContentChanged(model, e.isUndoing || e.isRedoing)));
+    this._register(model.onWillDispose(() => this.dispose()));
+  }
+  onModelContentChanged(model, isUndoingOrRedoing) {
+    this.trace(`onModelContentChanged() - enter`);
+    this.versionId++;
+    this.trace(`onModelContentChanged() - new versionId ${this.versionId}`);
+    if (isUndoingOrRedoing) {
+      this.lastContentChangeFromUndoRedo = Date.now();
+    }
+    if (!this.ignoreDirtyOnModelContentChange && !this.isReadonly()) {
+      if (model.versionId === this.savedVersionId) {
+        this.trace("onModelContentChanged() - model content changed back to last saved version");
+        const wasDirty = this.dirty;
+        this.setDirty(false);
+        if (wasDirty) {
+          this._onDidRevert.fire();
+        }
+      } else {
+        this.trace("onModelContentChanged() - model content changed and marked as dirty");
+        this.setDirty(true);
+      }
+    }
+    this._onDidChangeContent.fire();
+  }
+  async forceResolveFromFile() {
+    if (this.isDisposed()) {
+      return;
+    }
+    await this.externalResolver({
+      forceReadFromFile: true
+    });
+  }
+  //#endregion
+  //#region Backup
+  get backupDelay() {
+    return this.model?.configuration?.backupDelay;
+  }
+  async backup(token) {
+    let meta = void 0;
+    if (this.lastResolvedFileStat) {
+      meta = {
+        mtime: this.lastResolvedFileStat.mtime,
+        ctime: this.lastResolvedFileStat.ctime,
+        size: this.lastResolvedFileStat.size,
+        etag: this.lastResolvedFileStat.etag,
+        orphaned: this.isOrphaned()
+      };
+    }
+    let content = void 0;
+    if (this.isResolved()) {
+      content = await raceCancellation(this.model.snapshot(SnapshotContext.Backup, token), token);
+    }
+    return { meta, content };
+  }
+  //#endregion
+  //#region Save
+  versionId = 0;
+  static UNDO_REDO_SAVE_PARTICIPANTS_AUTO_SAVE_THROTTLE_THRESHOLD = 500;
+  lastContentChangeFromUndoRedo = void 0;
+  saveSequentializer = new TaskSequentializer();
+  ignoreSaveFromSaveParticipants = false;
+  async save(options = /* @__PURE__ */ Object.create(null)) {
+    if (!this.isResolved()) {
+      return false;
+    }
+    if (this.isReadonly()) {
+      this.trace("save() - ignoring request for readonly resource");
+      return false;
+    }
+    if ((this.hasState(3 /* CONFLICT */) || this.hasState(5 /* ERROR */)) && (options.reason === SaveReason.AUTO || options.reason === SaveReason.FOCUS_CHANGE || options.reason === SaveReason.WINDOW_CHANGE)) {
+      this.trace("save() - ignoring auto save request for file working copy that is in conflict or error");
+      return false;
+    }
+    this.trace("save() - enter");
+    await this.doSave(options);
+    this.trace("save() - exit");
+    return this.hasState(0 /* SAVED */);
+  }
+  async doSave(options) {
+    if (typeof options.reason !== "number") {
+      options.reason = SaveReason.EXPLICIT;
+    }
+    const versionId = this.versionId;
+    this.trace(`doSave(${versionId}) - enter with versionId ${versionId}`);
+    if (this.ignoreSaveFromSaveParticipants) {
+      this.trace(`doSave(${versionId}) - exit - refusing to save() recursively from save participant`);
+      return;
+    }
+    if (this.saveSequentializer.isRunning(versionId)) {
+      this.trace(`doSave(${versionId}) - exit - found a running save for versionId ${versionId}`);
+      return this.saveSequentializer.running;
+    }
+    if (!options.force && !this.dirty) {
+      this.trace(`doSave(${versionId}) - exit - because not dirty and/or versionId is different (this.isDirty: ${this.dirty}, this.versionId: ${this.versionId})`);
+      return;
+    }
+    if (this.saveSequentializer.isRunning()) {
+      this.trace(`doSave(${versionId}) - exit - because busy saving`);
+      this.saveSequentializer.cancelRunning();
+      return this.saveSequentializer.queue(() => this.doSave(options));
+    }
+    if (this.isResolved()) {
+      this.model.pushStackElement();
+    }
+    const saveCancellation = new CancellationTokenSource();
+    return this.progressService.withProgress({
+      title: localize("saveParticipants", "Saving '{0}'", this.name),
+      location: ProgressLocation.Window,
+      cancellable: true,
+      delay: this.isDirty() ? 3e3 : 5e3
+    }, (progress) => {
+      return this.doSaveSequential(versionId, options, progress, saveCancellation);
+    }, () => {
+      saveCancellation.cancel();
+    }).finally(() => {
+      saveCancellation.dispose();
+    });
+  }
+  doSaveSequential(versionId, options, progress, saveCancellation) {
+    return this.saveSequentializer.run(versionId, (async () => {
+      if (this.isResolved() && !options.skipSaveParticipants && this.workingCopyFileService.hasSaveParticipants) {
+        try {
+          if (options.reason === SaveReason.AUTO && typeof this.lastContentChangeFromUndoRedo === "number") {
+            const timeFromUndoRedoToSave = Date.now() - this.lastContentChangeFromUndoRedo;
+            if (timeFromUndoRedoToSave < StoredFileWorkingCopy.UNDO_REDO_SAVE_PARTICIPANTS_AUTO_SAVE_THROTTLE_THRESHOLD) {
+              await timeout(StoredFileWorkingCopy.UNDO_REDO_SAVE_PARTICIPANTS_AUTO_SAVE_THROTTLE_THRESHOLD - timeFromUndoRedoToSave);
+            }
+          }
+          if (!saveCancellation.token.isCancellationRequested) {
+            this.ignoreSaveFromSaveParticipants = true;
+            try {
+              await this.workingCopyFileService.runSaveParticipants(this, { reason: options.reason ?? SaveReason.EXPLICIT, savedFrom: options.from }, progress, saveCancellation.token);
+            } catch (err) {
+              if (isCancellationError(err) && !saveCancellation.token.isCancellationRequested) {
+                saveCancellation.cancel();
+              }
+            } finally {
+              this.ignoreSaveFromSaveParticipants = false;
+            }
+          }
+        } catch (error) {
+          this.logService.error(`[stored file working copy] runSaveParticipants(${versionId}) - resulted in an error: ${error.toString()}`, this.resource.toString(), this.typeId);
+        }
+      }
+      if (saveCancellation.token.isCancellationRequested) {
+        return;
+      }
+      if (this.isDisposed()) {
+        return;
+      }
+      if (!this.isResolved()) {
+        return;
+      }
+      versionId = this.versionId;
+      this.inErrorMode = false;
+      progress.report({ message: localize("saveTextFile", "Writing into file...") });
+      this.trace(`doSave(${versionId}) - before write()`);
+      const lastResolvedFileStat = assertIsDefined(this.lastResolvedFileStat);
+      const resolvedFileWorkingCopy = this;
+      return this.saveSequentializer.run(versionId, (async () => {
+        try {
+          const writeFileOptions = {
+            mtime: lastResolvedFileStat.mtime,
+            etag: options.ignoreModifiedSince || !this.filesConfigurationService.preventSaveConflicts(lastResolvedFileStat.resource) ? ETAG_DISABLED : lastResolvedFileStat.etag,
+            unlock: options.writeUnlock
+          };
+          let stat;
+          if (typeof resolvedFileWorkingCopy.model.save === "function") {
+            try {
+              stat = await resolvedFileWorkingCopy.model.save(writeFileOptions, saveCancellation.token);
+            } catch (error) {
+              if (saveCancellation.token.isCancellationRequested) {
+                return void 0;
+              }
+              throw error;
+            }
+          } else {
+            const snapshot = await raceCancellation(resolvedFileWorkingCopy.model.snapshot(SnapshotContext.Save, saveCancellation.token), saveCancellation.token);
+            if (saveCancellation.token.isCancellationRequested) {
+              return;
+            } else {
+              saveCancellation.dispose();
+            }
+            if (options?.writeElevated && this.elevatedFileService.isSupported(lastResolvedFileStat.resource)) {
+              stat = await this.elevatedFileService.writeFileElevated(lastResolvedFileStat.resource, assertIsDefined(snapshot), writeFileOptions);
+            } else {
+              stat = await this.fileService.writeFile(lastResolvedFileStat.resource, assertIsDefined(snapshot), writeFileOptions);
+            }
+          }
+          this.handleSaveSuccess(stat, versionId, options);
+        } catch (error) {
+          this.handleSaveError(error, versionId, options);
+        }
+      })(), () => saveCancellation.cancel());
+    })(), () => saveCancellation.cancel());
+  }
+  handleSaveSuccess(stat, versionId, options) {
+    this.updateLastResolvedFileStat(stat);
+    if (versionId === this.versionId) {
+      this.trace(`handleSaveSuccess(${versionId}) - setting dirty to false because versionId did not change`);
+      this.setDirty(false);
+    } else {
+      this.trace(`handleSaveSuccess(${versionId}) - not setting dirty to false because versionId did change meanwhile`);
+    }
+    this.setOrphaned(false);
+    this._onDidSave.fire({ reason: options.reason, stat, source: options.source });
+  }
+  handleSaveError(error, versionId, options) {
+    (options.ignoreErrorHandler ? this.logService.trace : this.logService.error).apply(this.logService, [`[stored file working copy] handleSaveError(${versionId}) - exit - resulted in a save error: ${error.toString()}`, this.resource.toString(), this.typeId]);
+    if (options.ignoreErrorHandler) {
+      throw error;
+    }
+    this.setDirty(true);
+    this.inErrorMode = true;
+    if (error.fileOperationResult === FileOperationResult.FILE_MODIFIED_SINCE) {
+      this.inConflictMode = true;
+    }
+    this.doHandleSaveError(error, options);
+    this._onDidSaveError.fire();
+  }
+  doHandleSaveError(error, options) {
+    const fileOperationError = error;
+    const primaryActions = [];
+    let message;
+    if (fileOperationError.fileOperationResult === FileOperationResult.FILE_MODIFIED_SINCE) {
+      message = localize("staleSaveError", "Failed to save '{0}': The content of the file is newer. Do you want to overwrite the file with your changes?", this.name);
+      primaryActions.push(toAction({ id: "fileWorkingCopy.overwrite", label: localize("overwrite", "Overwrite"), run: /* @__PURE__ */ __name(() => this.save({ ...options, ignoreModifiedSince: true, reason: SaveReason.EXPLICIT }), "run") }));
+      primaryActions.push(toAction({ id: "fileWorkingCopy.revert", label: localize("revert", "Revert"), run: /* @__PURE__ */ __name(() => this.revert(), "run") }));
+    } else {
+      const isWriteLocked = fileOperationError.fileOperationResult === FileOperationResult.FILE_WRITE_LOCKED;
+      const triedToUnlock = isWriteLocked && fileOperationError.options?.unlock;
+      const isPermissionDenied = fileOperationError.fileOperationResult === FileOperationResult.FILE_PERMISSION_DENIED;
+      const canSaveElevated = this.elevatedFileService.isSupported(this.resource);
+      if (isErrorWithActions(error)) {
+        primaryActions.push(...error.actions);
+      }
+      if (canSaveElevated && (isPermissionDenied || triedToUnlock)) {
+        primaryActions.push(toAction({
+          id: "fileWorkingCopy.saveElevated",
+          label: triedToUnlock ? isWindows ? localize("overwriteElevated", "Overwrite as Admin...") : localize("overwriteElevatedSudo", "Overwrite as Sudo...") : isWindows ? localize("saveElevated", "Retry as Admin...") : localize("saveElevatedSudo", "Retry as Sudo..."),
+          run: /* @__PURE__ */ __name(() => {
+            this.save({ ...options, writeElevated: true, writeUnlock: triedToUnlock, reason: SaveReason.EXPLICIT });
+          }, "run")
+        }));
+      } else if (isWriteLocked) {
+        primaryActions.push(toAction({ id: "fileWorkingCopy.unlock", label: localize("overwrite", "Overwrite"), run: /* @__PURE__ */ __name(() => this.save({ ...options, writeUnlock: true, reason: SaveReason.EXPLICIT }), "run") }));
+      } else {
+        primaryActions.push(toAction({ id: "fileWorkingCopy.retry", label: localize("retry", "Retry"), run: /* @__PURE__ */ __name(() => this.save({ ...options, reason: SaveReason.EXPLICIT }), "run") }));
+      }
+      primaryActions.push(toAction({
+        id: "fileWorkingCopy.saveAs",
+        label: localize("saveAs", "Save As..."),
+        run: /* @__PURE__ */ __name(async () => {
+          const editor = this.workingCopyEditorService.findEditor(this);
+          if (editor) {
+            const result = await this.editorService.save(editor, { saveAs: true, reason: SaveReason.EXPLICIT });
+            if (!result.success) {
+              this.doHandleSaveError(error, options);
+            }
+          }
+        }, "run")
+      }));
+      primaryActions.push(toAction({ id: "fileWorkingCopy.revert", label: localize("revert", "Revert"), run: /* @__PURE__ */ __name(() => this.revert(), "run") }));
+      if (isWriteLocked) {
+        if (triedToUnlock && canSaveElevated) {
+          message = isWindows ? localize("readonlySaveErrorAdmin", "Failed to save '{0}': File is read-only. Select 'Overwrite as Admin' to retry as administrator.", this.name) : localize("readonlySaveErrorSudo", "Failed to save '{0}': File is read-only. Select 'Overwrite as Sudo' to retry as superuser.", this.name);
+        } else {
+          message = localize("readonlySaveError", "Failed to save '{0}': File is read-only. Select 'Overwrite' to attempt to make it writeable.", this.name);
+        }
+      } else if (canSaveElevated && isPermissionDenied) {
+        message = isWindows ? localize("permissionDeniedSaveError", "Failed to save '{0}': Insufficient permissions. Select 'Retry as Admin' to retry as administrator.", this.name) : localize("permissionDeniedSaveErrorSudo", "Failed to save '{0}': Insufficient permissions. Select 'Retry as Sudo' to retry as superuser.", this.name);
+      } else {
+        message = localize({ key: "genericSaveError", comment: ["{0} is the resource that failed to save and {1} the error message"] }, "Failed to save '{0}': {1}", this.name, toErrorMessage(error, false));
+      }
+    }
+    const handle = this.notificationService.notify({ id: `${hash(this.resource.toString())}`, severity: Severity.Error, message, actions: { primary: primaryActions } });
+    const listener = this._register(Event.once(Event.any(this.onDidSave, this.onDidRevert))(() => handle.close()));
+    this._register(Event.once(handle.onDidClose)(() => listener.dispose()));
+  }
+  updateLastResolvedFileStat(newFileStat) {
+    const oldReadonly = this.isReadonly();
+    if (!this.lastResolvedFileStat) {
+      this.lastResolvedFileStat = newFileStat;
+    } else if (this.lastResolvedFileStat.mtime <= newFileStat.mtime) {
+      this.lastResolvedFileStat = newFileStat;
+    } else {
+      this.lastResolvedFileStat = { ...this.lastResolvedFileStat, readonly: newFileStat.readonly, locked: newFileStat.locked };
+    }
+    if (this.isReadonly() !== oldReadonly) {
+      this._onDidChangeReadonly.fire();
+    }
+  }
+  //#endregion
+  //#region Revert
+  async revert(options) {
+    if (!this.isResolved() || !this.dirty && !options?.force) {
+      return;
+    }
+    this.trace("revert()");
+    const wasDirty = this.dirty;
+    const undoSetDirty = this.doSetDirty(false);
+    const softUndo = options?.soft;
+    if (!softUndo) {
+      try {
+        await this.forceResolveFromFile();
+      } catch (error) {
+        if (error.fileOperationResult !== FileOperationResult.FILE_NOT_FOUND) {
+          undoSetDirty();
+          throw error;
+        }
+      }
+    }
+    this._onDidRevert.fire();
+    if (wasDirty) {
+      this._onDidChangeDirty.fire();
+    }
+  }
+  //#endregion
+  //#region State
+  inConflictMode = false;
+  inErrorMode = false;
+  hasState(state) {
+    switch (state) {
+      case 3 /* CONFLICT */:
+        return this.inConflictMode;
+      case 1 /* DIRTY */:
+        return this.dirty;
+      case 5 /* ERROR */:
+        return this.inErrorMode;
+      case 4 /* ORPHAN */:
+        return this.isOrphaned();
+      case 2 /* PENDING_SAVE */:
+        return this.saveSequentializer.isRunning();
+      case 0 /* SAVED */:
+        return !this.dirty;
+    }
+  }
+  async joinState(state) {
+    return this.saveSequentializer.running;
+  }
+  //#endregion
+  //#region Utilities
+  isReadonly() {
+    return this.filesConfigurationService.isReadonly(this.resource, this.lastResolvedFileStat);
+  }
+  trace(msg) {
+    this.logService.trace(`[stored file working copy] ${msg}`, this.resource.toString(), this.typeId);
+  }
+  //#endregion
+  //#region Dispose
+  dispose() {
+    this.trace("dispose()");
+    this.inConflictMode = false;
+    this.inErrorMode = false;
+    this._model = void 0;
+    super.dispose();
+  }
+  //#endregion
+};
+StoredFileWorkingCopy = __decorateClass([
+  __decorateParam(5, IFileService),
+  __decorateParam(6, ILogService),
+  __decorateParam(7, IWorkingCopyFileService),
+  __decorateParam(8, IFilesConfigurationService),
+  __decorateParam(9, IWorkingCopyBackupService),
+  __decorateParam(10, IWorkingCopyService),
+  __decorateParam(11, INotificationService),
+  __decorateParam(12, IWorkingCopyEditorService),
+  __decorateParam(13, IEditorService),
+  __decorateParam(14, IElevatedFileService),
+  __decorateParam(15, IProgressService)
+], StoredFileWorkingCopy);
+export {
+  StoredFileWorkingCopy,
+  StoredFileWorkingCopyState,
+  isStoredFileWorkingCopySaveEvent
+};
+//# sourceMappingURL=storedFileWorkingCopy.js.map

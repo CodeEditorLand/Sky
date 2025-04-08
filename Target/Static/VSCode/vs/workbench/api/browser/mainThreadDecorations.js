@@ -1,1 +1,120 @@
-var D=Object.defineProperty;var f=Object.getOwnPropertyDescriptor;var c=(n,e,o,t)=>{for(var r=t>1?void 0:t?f(e,o):e,i=n.length-1,s;i>=0;i--)(s=n[i])&&(r=(t?s(e,o,r):s(r))||r);return t&&r&&D(e,o,r),r},d=(n,e)=>(o,t)=>e(o,t,n);import{URI as x}from"../../../base/common/uri.js";import{Emitter as b}from"../../../base/common/event.js";import{dispose as u}from"../../../base/common/lifecycle.js";import{ExtHostContext as y,MainContext as q}from"../common/extHost.protocol.js";import{extHostNamedCustomer as C}from"../../services/extensions/common/extHostCustomers.js";import{IDecorationsService as I}from"../../services/decorations/common/decorations.js";import{CancellationToken as g}from"../../../base/common/cancellation.js";class w{constructor(e,o){this._proxy=e;this._handle=o}_idPool=0;_requests=new Map;_resolver=new Map;_timer;enqueue(e,o){const t=++this._idPool,r=new Promise(s=>{this._requests.set(t,{id:t,uri:e}),this._resolver.set(t,s),this._processQueue()}),i=o.onCancellationRequested(()=>{this._requests.delete(t),this._resolver.delete(t)});return r.finally(()=>i.dispose())}_processQueue(){typeof this._timer!="number"&&(this._timer=setTimeout(()=>{const e=this._requests,o=this._resolver;this._proxy.$provideDecorations(this._handle,[...e.values()],g.None).then(t=>{for(const[r,i]of o)i(t[r])}),this._requests=new Map,this._resolver=new Map,this._timer=void 0},0))}}let a=class{constructor(e,o){this._decorationsService=o;this._proxy=e.getProxy(y.ExtHostDecorations)}_provider=new Map;_proxy;dispose(){this._provider.forEach(e=>u(e)),this._provider.clear()}$registerDecorationProvider(e,o){const t=new b,r=new w(this._proxy,e),i=this._decorationsService.registerDecorationsProvider({label:o,onDidChange:t.event,provideDecorations:async(s,v)=>{const p=await r.enqueue(s,v);if(!p)return;const[m,l,h,_]=p;return{weight:10,bubble:m??!1,color:_?.id,tooltip:l,letter:h}}});this._provider.set(e,[t,i])}$onDidChange(e,o){const t=this._provider.get(e);if(t){const[r]=t;r.fire(o&&o.map(i=>x.revive(i)))}}$unregisterDecorationProvider(e){const o=this._provider.get(e);o&&(u(o),this._provider.delete(e))}};a=c([C(q.MainThreadDecorations),d(1,I)],a);export{a as MainThreadDecorations};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { URI, UriComponents } from "../../../base/common/uri.js";
+import { Emitter } from "../../../base/common/event.js";
+import { IDisposable, dispose } from "../../../base/common/lifecycle.js";
+import { ExtHostContext, MainContext, MainThreadDecorationsShape, ExtHostDecorationsShape, DecorationData, DecorationRequest } from "../common/extHost.protocol.js";
+import { extHostNamedCustomer, IExtHostContext } from "../../services/extensions/common/extHostCustomers.js";
+import { IDecorationsService, IDecorationData } from "../../services/decorations/common/decorations.js";
+import { CancellationToken } from "../../../base/common/cancellation.js";
+class DecorationRequestsQueue {
+  constructor(_proxy, _handle) {
+    this._proxy = _proxy;
+    this._handle = _handle;
+  }
+  static {
+    __name(this, "DecorationRequestsQueue");
+  }
+  _idPool = 0;
+  _requests = /* @__PURE__ */ new Map();
+  _resolver = /* @__PURE__ */ new Map();
+  _timer;
+  enqueue(uri, token) {
+    const id = ++this._idPool;
+    const result = new Promise((resolve) => {
+      this._requests.set(id, { id, uri });
+      this._resolver.set(id, resolve);
+      this._processQueue();
+    });
+    const sub = token.onCancellationRequested(() => {
+      this._requests.delete(id);
+      this._resolver.delete(id);
+    });
+    return result.finally(() => sub.dispose());
+  }
+  _processQueue() {
+    if (typeof this._timer === "number") {
+      return;
+    }
+    this._timer = setTimeout(() => {
+      const requests = this._requests;
+      const resolver = this._resolver;
+      this._proxy.$provideDecorations(this._handle, [...requests.values()], CancellationToken.None).then((data) => {
+        for (const [id, resolve] of resolver) {
+          resolve(data[id]);
+        }
+      });
+      this._requests = /* @__PURE__ */ new Map();
+      this._resolver = /* @__PURE__ */ new Map();
+      this._timer = void 0;
+    }, 0);
+  }
+}
+let MainThreadDecorations = class {
+  constructor(context, _decorationsService) {
+    this._decorationsService = _decorationsService;
+    this._proxy = context.getProxy(ExtHostContext.ExtHostDecorations);
+  }
+  _provider = /* @__PURE__ */ new Map();
+  _proxy;
+  dispose() {
+    this._provider.forEach((value) => dispose(value));
+    this._provider.clear();
+  }
+  $registerDecorationProvider(handle, label) {
+    const emitter = new Emitter();
+    const queue = new DecorationRequestsQueue(this._proxy, handle);
+    const registration = this._decorationsService.registerDecorationsProvider({
+      label,
+      onDidChange: emitter.event,
+      provideDecorations: /* @__PURE__ */ __name(async (uri, token) => {
+        const data = await queue.enqueue(uri, token);
+        if (!data) {
+          return void 0;
+        }
+        const [bubble, tooltip, letter, themeColor] = data;
+        return {
+          weight: 10,
+          bubble: bubble ?? false,
+          color: themeColor?.id,
+          tooltip,
+          letter
+        };
+      }, "provideDecorations")
+    });
+    this._provider.set(handle, [emitter, registration]);
+  }
+  $onDidChange(handle, resources) {
+    const provider = this._provider.get(handle);
+    if (provider) {
+      const [emitter] = provider;
+      emitter.fire(resources && resources.map((r) => URI.revive(r)));
+    }
+  }
+  $unregisterDecorationProvider(handle) {
+    const provider = this._provider.get(handle);
+    if (provider) {
+      dispose(provider);
+      this._provider.delete(handle);
+    }
+  }
+};
+__name(MainThreadDecorations, "MainThreadDecorations");
+MainThreadDecorations = __decorateClass([
+  extHostNamedCustomer(MainContext.MainThreadDecorations),
+  __decorateParam(1, IDecorationsService)
+], MainThreadDecorations);
+export {
+  MainThreadDecorations
+};
+//# sourceMappingURL=mainThreadDecorations.js.map

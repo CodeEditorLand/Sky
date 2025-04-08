@@ -1,1 +1,20 @@
-import{InstantiationType as r,registerSingleton as o}from"../../../../platform/instantiation/common/extensions.js";import{IReplaceService as t}from"./replace.js";import{ReplaceService as i,ReplacePreviewContentProvider as e}from"./replaceService.js";import{WorkbenchPhase as n,registerWorkbenchContribution2 as p}from"../../../common/contributions.js";function s(){o(t,i,r.Delayed),p(e.ID,e,n.BlockStartup)}export{s as registerContributions};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { IReplaceService } from "./replace.js";
+import { ReplaceService, ReplacePreviewContentProvider } from "./replaceService.js";
+import { WorkbenchPhase, registerWorkbenchContribution2 } from "../../../common/contributions.js";
+function registerContributions() {
+  registerSingleton(IReplaceService, ReplaceService, InstantiationType.Delayed);
+  registerWorkbenchContribution2(
+    ReplacePreviewContentProvider.ID,
+    ReplacePreviewContentProvider,
+    WorkbenchPhase.BlockStartup
+    /* registration only */
+  );
+}
+__name(registerContributions, "registerContributions");
+export {
+  registerContributions
+};
+//# sourceMappingURL=replaceContributions.js.map

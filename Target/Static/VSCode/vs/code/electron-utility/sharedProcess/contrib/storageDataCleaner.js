@@ -1,1 +1,84 @@
-var l=Object.defineProperty,S=Object.getOwnPropertyDescriptor,m=(e,o,r,s)=>{for(var a,t=s>1?void 0:s?S(o,r):o,i=e.length-1;i>=0;i--)(a=e[i])&&(t=(s?a(o,r,t):a(t))||t);return s&&t&&l(o,r,t),t},a=(e,o)=>(r,s)=>o(r,s,e);import{RunOnceScheduler as f}from"../../../../base/common/async.js";import{onUnexpectedError as d}from"../../../../base/common/errors.js";import{Disposable as g}from"../../../../base/common/lifecycle.js";import{join as h}from"../../../../base/common/path.js";import{Promises as v}from"../../../../base/node/pfs.js";import{INativeEnvironmentService as w}from"../../../../platform/environment/common/environment.js";import{ILogService as u}from"../../../../platform/log/common/log.js";import{StorageClient as P}from"../../../../platform/storage/common/storageIpc.js";import{EXTENSION_DEVELOPMENT_EMPTY_WINDOW_WORKSPACE as E}from"../../../../platform/workspace/common/workspace.js";import{NON_EMPTY_WORKSPACE_ID_LENGTH as I}from"../../../../platform/workspaces/node/workspaces.js";import{INativeHostService as N}from"../../../../platform/native/common/native.js";import{IMainProcessService as y}from"../../../../platform/ipc/common/mainProcessService.js";import{Schemas as _}from"../../../../base/common/network.js";let c=class extends g{constructor(e,o,r,s){super(),this.environmentService=e,this.logService=o,this.nativeHostService=r,this.mainProcessService=s,this._register(new f((()=>{this.cleanUpStorage()}),3e4)).schedule()}async cleanUpStorage(){this.logService.trace("[storage cleanup]: Starting to clean up workspace storage folders for unused empty workspaces.");try{const e=this.environmentService.workspaceStorageHome.with({scheme:_.file}).fsPath,o=await v.readdir(e),r=new P(this.mainProcessService.getChannel("storage"));await Promise.all(o.map((async o=>{const s=h(e,o);o.length===I||o===E.id||(await this.nativeHostService.getWindows({includeAuxiliaryWindows:!1})).some((e=>e.workspace?.id===o))||await r.isUsed(s)||(this.logService.trace(`[storage cleanup]: Deleting workspace storage folder ${o} as it seems to be an unused empty workspace.`),await v.rm(s))})))}catch(e){d(e)}}};c=m([a(0,w),a(1,u),a(2,N),a(3,y)],c);export{c as UnusedWorkspaceStorageDataCleaner};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { RunOnceScheduler } from "../../../../base/common/async.js";
+import { onUnexpectedError } from "../../../../base/common/errors.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { join } from "../../../../base/common/path.js";
+import { Promises } from "../../../../base/node/pfs.js";
+import { INativeEnvironmentService } from "../../../../platform/environment/common/environment.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { StorageClient } from "../../../../platform/storage/common/storageIpc.js";
+import { EXTENSION_DEVELOPMENT_EMPTY_WINDOW_WORKSPACE } from "../../../../platform/workspace/common/workspace.js";
+import { NON_EMPTY_WORKSPACE_ID_LENGTH } from "../../../../platform/workspaces/node/workspaces.js";
+import { INativeHostService } from "../../../../platform/native/common/native.js";
+import { IMainProcessService } from "../../../../platform/ipc/common/mainProcessService.js";
+import { Schemas } from "../../../../base/common/network.js";
+let UnusedWorkspaceStorageDataCleaner = class extends Disposable {
+  constructor(environmentService, logService, nativeHostService, mainProcessService) {
+    super();
+    this.environmentService = environmentService;
+    this.logService = logService;
+    this.nativeHostService = nativeHostService;
+    this.mainProcessService = mainProcessService;
+    const scheduler = this._register(new RunOnceScheduler(
+      () => {
+        this.cleanUpStorage();
+      },
+      30 * 1e3
+      /* after 30s */
+    ));
+    scheduler.schedule();
+  }
+  static {
+    __name(this, "UnusedWorkspaceStorageDataCleaner");
+  }
+  async cleanUpStorage() {
+    this.logService.trace("[storage cleanup]: Starting to clean up workspace storage folders for unused empty workspaces.");
+    try {
+      const workspaceStorageHome = this.environmentService.workspaceStorageHome.with({ scheme: Schemas.file }).fsPath;
+      const workspaceStorageFolders = await Promises.readdir(workspaceStorageHome);
+      const storageClient = new StorageClient(this.mainProcessService.getChannel("storage"));
+      await Promise.all(workspaceStorageFolders.map(async (workspaceStorageFolder) => {
+        const workspaceStoragePath = join(workspaceStorageHome, workspaceStorageFolder);
+        if (workspaceStorageFolder.length === NON_EMPTY_WORKSPACE_ID_LENGTH) {
+          return;
+        }
+        if (workspaceStorageFolder === EXTENSION_DEVELOPMENT_EMPTY_WINDOW_WORKSPACE.id) {
+          return;
+        }
+        const windows = await this.nativeHostService.getWindows({ includeAuxiliaryWindows: false });
+        if (windows.some((window) => window.workspace?.id === workspaceStorageFolder)) {
+          return;
+        }
+        const isStorageUsed = await storageClient.isUsed(workspaceStoragePath);
+        if (isStorageUsed) {
+          return;
+        }
+        this.logService.trace(`[storage cleanup]: Deleting workspace storage folder ${workspaceStorageFolder} as it seems to be an unused empty workspace.`);
+        await Promises.rm(workspaceStoragePath);
+      }));
+    } catch (error) {
+      onUnexpectedError(error);
+    }
+  }
+};
+UnusedWorkspaceStorageDataCleaner = __decorateClass([
+  __decorateParam(0, INativeEnvironmentService),
+  __decorateParam(1, ILogService),
+  __decorateParam(2, INativeHostService),
+  __decorateParam(3, IMainProcessService)
+], UnusedWorkspaceStorageDataCleaner);
+export {
+  UnusedWorkspaceStorageDataCleaner
+};
+//# sourceMappingURL=storageDataCleaner.js.map

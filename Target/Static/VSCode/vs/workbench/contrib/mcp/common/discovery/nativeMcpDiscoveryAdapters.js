@@ -1,1 +1,95 @@
-import"../../../../../base/common/buffer.js";import{Platform as s}from"../../../../../base/common/platform.js";import"../../../../../base/common/types.js";import{URI as i}from"../../../../../base/common/uri.js";import"../../../../../platform/mcp/common/nativeMcpDiscoveryHelper.js";import{DiscoverySource as a}from"../mcpConfiguration.js";import{McpCollectionSortOrder as p,McpServerTransportType as d}from"../mcpTypes.js";function l(o,r,e){let t;try{t=JSON.parse(r.toString())}catch{return}return Object.entries(t.mcpServers).map((([r,t])=>({id:`${o}.${r}`,label:r,launch:t.url?{type:d.SSE,uri:i.parse(t.url),headers:[]}:{type:d.Stdio,args:t.args||[],command:t.command,env:t.env||{},envFile:void 0,cwd:e}})))}class u{constructor(o){this.remoteAuthority=o,this.id=`claude-desktop.${this.remoteAuthority}`}id;order=p.Filesystem;discoverySource=a.ClaudeDesktop;getFilePath({platform:o,winAppData:r,xdgHome:e,homedir:t}){if(o===s.Windows){const o=r||i.joinPath(t,"AppData","Roaming");return i.joinPath(o,"Claude","claude_desktop_config.json")}if(o===s.Mac)return i.joinPath(t,"Library","Application Support","Claude","claude_desktop_config.json");{const o=e||i.joinPath(t,".config");return i.joinPath(o,"Claude","claude_desktop_config.json")}}adaptFile(o,{homedir:r}){return l(this.id,o,r)}}class I extends u{discoverySource=a.Windsurf;constructor(o){super(o),this.id=`windsurf.${this.remoteAuthority}`}getFilePath({homedir:o}){return i.joinPath(o,".codeium","windsurf","mcp_config.json")}}class A extends u{discoverySource=a.CursorGlobal;constructor(o){super(o),this.id=`cursor.${this.remoteAuthority}`}getFilePath({homedir:o}){return i.joinPath(o,".cursor","mcp.json")}}export{u as ClaudeDesktopMpcDiscoveryAdapter,A as CursorDesktopMpcDiscoveryAdapter,I as WindsurfDesktopMpcDiscoveryAdapter,l as claudeConfigToServerDefinition};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { VSBuffer } from "../../../../../base/common/buffer.js";
+import { Platform } from "../../../../../base/common/platform.js";
+import { Mutable } from "../../../../../base/common/types.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { INativeMcpDiscoveryData } from "../../../../../platform/mcp/common/nativeMcpDiscoveryHelper.js";
+import { DiscoverySource } from "../mcpConfiguration.js";
+import { McpCollectionSortOrder, McpServerDefinition, McpServerTransportType } from "../mcpTypes.js";
+function claudeConfigToServerDefinition(idPrefix, contents, cwd) {
+  let parsed;
+  try {
+    parsed = JSON.parse(contents.toString());
+  } catch {
+    return;
+  }
+  return Object.entries(parsed.mcpServers).map(([name, server]) => {
+    return {
+      id: `${idPrefix}.${name}`,
+      label: name,
+      launch: server.url ? {
+        type: McpServerTransportType.SSE,
+        uri: URI.parse(server.url),
+        headers: []
+      } : {
+        type: McpServerTransportType.Stdio,
+        args: server.args || [],
+        command: server.command,
+        env: server.env || {},
+        envFile: void 0,
+        cwd
+      }
+    };
+  });
+}
+__name(claudeConfigToServerDefinition, "claudeConfigToServerDefinition");
+class ClaudeDesktopMpcDiscoveryAdapter {
+  constructor(remoteAuthority) {
+    this.remoteAuthority = remoteAuthority;
+    this.id = `claude-desktop.${this.remoteAuthority}`;
+  }
+  static {
+    __name(this, "ClaudeDesktopMpcDiscoveryAdapter");
+  }
+  id;
+  order = McpCollectionSortOrder.Filesystem;
+  discoverySource = DiscoverySource.ClaudeDesktop;
+  getFilePath({ platform, winAppData, xdgHome, homedir }) {
+    if (platform === Platform.Windows) {
+      const appData = winAppData || URI.joinPath(homedir, "AppData", "Roaming");
+      return URI.joinPath(appData, "Claude", "claude_desktop_config.json");
+    } else if (platform === Platform.Mac) {
+      return URI.joinPath(homedir, "Library", "Application Support", "Claude", "claude_desktop_config.json");
+    } else {
+      const configDir = xdgHome || URI.joinPath(homedir, ".config");
+      return URI.joinPath(configDir, "Claude", "claude_desktop_config.json");
+    }
+  }
+  adaptFile(contents, { homedir }) {
+    return claudeConfigToServerDefinition(this.id, contents, homedir);
+  }
+}
+class WindsurfDesktopMpcDiscoveryAdapter extends ClaudeDesktopMpcDiscoveryAdapter {
+  static {
+    __name(this, "WindsurfDesktopMpcDiscoveryAdapter");
+  }
+  discoverySource = DiscoverySource.Windsurf;
+  constructor(remoteAuthority) {
+    super(remoteAuthority);
+    this.id = `windsurf.${this.remoteAuthority}`;
+  }
+  getFilePath({ homedir }) {
+    return URI.joinPath(homedir, ".codeium", "windsurf", "mcp_config.json");
+  }
+}
+class CursorDesktopMpcDiscoveryAdapter extends ClaudeDesktopMpcDiscoveryAdapter {
+  static {
+    __name(this, "CursorDesktopMpcDiscoveryAdapter");
+  }
+  discoverySource = DiscoverySource.CursorGlobal;
+  constructor(remoteAuthority) {
+    super(remoteAuthority);
+    this.id = `cursor.${this.remoteAuthority}`;
+  }
+  getFilePath({ homedir }) {
+    return URI.joinPath(homedir, ".cursor", "mcp.json");
+  }
+}
+export {
+  ClaudeDesktopMpcDiscoveryAdapter,
+  CursorDesktopMpcDiscoveryAdapter,
+  WindsurfDesktopMpcDiscoveryAdapter,
+  claudeConfigToServerDefinition
+};
+//# sourceMappingURL=nativeMcpDiscoveryAdapters.js.map

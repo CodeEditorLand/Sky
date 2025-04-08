@@ -1,1 +1,51 @@
-import{Transform as s}from"stream";import{binaryIndexOf as n}from"../common/buffer.js";class b extends s{buffer;splitter;spitterLen;constructor(t){if(super(),"number"==typeof t)this.splitter=t,this.spitterLen=1;else{const e=Buffer.isBuffer(t)?t:Buffer.from(t);this.splitter=1===e.length?e[0]:e,this.spitterLen=e.length}}_transform(t,e,s){this.buffer?this.buffer=Buffer.concat([this.buffer,t]):this.buffer=t;let f=0;for(;f<this.buffer.length;){const t="number"==typeof this.splitter?this.buffer.indexOf(this.splitter,f):n(this.buffer,this.splitter,f);if(-1===t)break;this.push(this.buffer.slice(f,t+this.spitterLen)),f=t+this.spitterLen}this.buffer=f===this.buffer.length?void 0:this.buffer.slice(f),s()}_flush(t){this.buffer&&this.push(this.buffer),t()}}export{b as StreamSplitter};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Transform } from "stream";
+import { binaryIndexOf } from "../common/buffer.js";
+class StreamSplitter extends Transform {
+  static {
+    __name(this, "StreamSplitter");
+  }
+  buffer;
+  splitter;
+  spitterLen;
+  constructor(splitter) {
+    super();
+    if (typeof splitter === "number") {
+      this.splitter = splitter;
+      this.spitterLen = 1;
+    } else {
+      const buf = Buffer.isBuffer(splitter) ? splitter : Buffer.from(splitter);
+      this.splitter = buf.length === 1 ? buf[0] : buf;
+      this.spitterLen = buf.length;
+    }
+  }
+  _transform(chunk, _encoding, callback) {
+    if (!this.buffer) {
+      this.buffer = chunk;
+    } else {
+      this.buffer = Buffer.concat([this.buffer, chunk]);
+    }
+    let offset = 0;
+    while (offset < this.buffer.length) {
+      const index = typeof this.splitter === "number" ? this.buffer.indexOf(this.splitter, offset) : binaryIndexOf(this.buffer, this.splitter, offset);
+      if (index === -1) {
+        break;
+      }
+      this.push(this.buffer.slice(offset, index + this.spitterLen));
+      offset = index + this.spitterLen;
+    }
+    this.buffer = offset === this.buffer.length ? void 0 : this.buffer.slice(offset);
+    callback();
+  }
+  _flush(callback) {
+    if (this.buffer) {
+      this.push(this.buffer);
+    }
+    callback();
+  }
+}
+export {
+  StreamSplitter
+};
+//# sourceMappingURL=nodeStreams.js.map

@@ -1,1 +1,46 @@
-import{KeyCode as t,KeyMod as i}from"../../../../base/common/keyCodes.js";import"../../../browser/editorBrowser.js";import{EditorAction as n,registerEditorAction as s}from"../../../browser/editorExtensions.js";import{CursorChangeReason as c}from"../../../common/cursorEvents.js";import{CursorMoveCommands as d}from"../../../common/cursor/cursorMoveCommands.js";import{EditorContextKeys as p}from"../../../common/editorContextKeys.js";import*as l from"../../../../nls.js";import{KeybindingWeight as m}from"../../../../platform/keybinding/common/keybindingsRegistry.js";class a extends n{constructor(){super({id:"expandLineSelection",label:l.localize2("expandLineSelection","Expand Line Selection"),precondition:void 0,kbOpts:{weight:m.EditorCore,kbExpr:p.textInputFocus,primary:i.CtrlCmd|t.KeyL}})}run(o,e,r){if(r=r||{},!e.hasModel())return;const s=e._getViewModel();s.model.pushStackElement(),s.setCursorStates(r.source,c.Explicit,d.expandLineSelection(s,s.getCursorStates())),s.revealAllCursors(r.source,!0)}}s(a);export{a as ExpandLineSelectionAction};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { KeyCode, KeyMod } from "../../../../base/common/keyCodes.js";
+import { ICodeEditor } from "../../../browser/editorBrowser.js";
+import { EditorAction, registerEditorAction, ServicesAccessor } from "../../../browser/editorExtensions.js";
+import { CursorChangeReason } from "../../../common/cursorEvents.js";
+import { CursorMoveCommands } from "../../../common/cursor/cursorMoveCommands.js";
+import { EditorContextKeys } from "../../../common/editorContextKeys.js";
+import * as nls from "../../../../nls.js";
+import { KeybindingWeight } from "../../../../platform/keybinding/common/keybindingsRegistry.js";
+class ExpandLineSelectionAction extends EditorAction {
+  static {
+    __name(this, "ExpandLineSelectionAction");
+  }
+  constructor() {
+    super({
+      id: "expandLineSelection",
+      label: nls.localize2("expandLineSelection", "Expand Line Selection"),
+      precondition: void 0,
+      kbOpts: {
+        weight: KeybindingWeight.EditorCore,
+        kbExpr: EditorContextKeys.textInputFocus,
+        primary: KeyMod.CtrlCmd | KeyCode.KeyL
+      }
+    });
+  }
+  run(_accessor, editor, args) {
+    args = args || {};
+    if (!editor.hasModel()) {
+      return;
+    }
+    const viewModel = editor._getViewModel();
+    viewModel.model.pushStackElement();
+    viewModel.setCursorStates(
+      args.source,
+      CursorChangeReason.Explicit,
+      CursorMoveCommands.expandLineSelection(viewModel, viewModel.getCursorStates())
+    );
+    viewModel.revealAllCursors(args.source, true);
+  }
+}
+registerEditorAction(ExpandLineSelectionAction);
+export {
+  ExpandLineSelectionAction
+};
+//# sourceMappingURL=lineSelection.js.map

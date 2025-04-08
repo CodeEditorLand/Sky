@@ -1,1 +1,182 @@
-var C=Object.defineProperty,b=Object.getOwnPropertyDescriptor,E=(t,i,o,s)=>{for(var r,e=s>1?void 0:s?b(i,o):i,n=t.length-1;n>=0;n--)(r=t[n])&&(e=(s?r(i,o,e):r(e))||e);return s&&e&&C(i,o,e),e},c=(t,i)=>(o,s)=>i(o,s,t);import{Dimension as p}from"../../../../base/browser/dom.js";import{IInstantiationService as y}from"../../../../platform/instantiation/common/instantiation.js";import"./editor.js";import"./editorTabsControl.js";import{MultiEditorTabsControl as u}from"./multiEditorTabsControl.js";import"../../../common/editor.js";import"../../../common/editor/editorInput.js";import{Disposable as T}from"../../../../base/common/lifecycle.js";import{StickyEditorGroupModel as v,UnstickyEditorGroupModel as k}from"../../../common/editor/filteredEditorGroupModel.js";import"./editorTitleControl.js";import"../../../common/editor/editorGroupModel.js";let l=class extends T{constructor(t,i,o,s,r,e){super(),this.parent=t,this.groupsView=o,this.groupView=s,this.model=r,this.instantiationService=e;const n=this._register(new v(this.model)),a=this._register(new k(this.model));this.stickyEditorTabsControl=this._register(this.instantiationService.createInstance(u,this.parent,i,this.groupsView,this.groupView,n)),this.unstickyEditorTabsControl=this._register(this.instantiationService.createInstance(u,this.parent,i,this.groupsView,this.groupView,a)),this.handleTabBarsStateChange()}stickyEditorTabsControl;unstickyEditorTabsControl;activeControl;handleTabBarsStateChange(){this.activeControl=this.model.activeEditor?this.getEditorTabsController(this.model.activeEditor):void 0,this.handleTabBarsLayoutChange()}handleTabBarsLayoutChange(){if(0===this.groupView.count)return;const t=this.parent.classList.contains("two-tab-bars"),i=this.groupView.count!==this.groupView.stickyCount&&this.groupView.stickyCount>0;this.parent.classList.toggle("two-tab-bars",i),t!==i&&this.groupView.relayout()}didActiveControlChange(){return this.activeControl!==(this.model.activeEditor?this.getEditorTabsController(this.model.activeEditor):void 0)}getEditorTabsController(t){return this.model.isSticky(t)?this.stickyEditorTabsControl:this.unstickyEditorTabsControl}openEditor(t,i){const o=this.didActiveControlChange(),s=this.getEditorTabsController(t).openEditor(t,i)||o;return s&&this.handleOpenedEditors(),s}openEditors(t){const i=t.filter((t=>this.model.isSticky(t))),o=t.filter((t=>!this.model.isSticky(t))),s=this.didActiveControlChange(),r=this.stickyEditorTabsControl.openEditors(i),e=this.unstickyEditorTabsControl.openEditors(o),n=r||e||s;return n&&this.handleOpenedEditors(),n}handleOpenedEditors(){this.handleTabBarsStateChange()}beforeCloseEditor(t){this.getEditorTabsController(t).beforeCloseEditor(t)}closeEditor(t){this.stickyEditorTabsControl.closeEditor(t),this.unstickyEditorTabsControl.closeEditor(t),this.handleClosedEditors()}closeEditors(t){const i=t.filter((t=>this.model.isSticky(t))),o=t.filter((t=>!this.model.isSticky(t)));this.stickyEditorTabsControl.closeEditors(i),this.unstickyEditorTabsControl.closeEditors(o),this.handleClosedEditors()}handleClosedEditors(){this.handleTabBarsStateChange()}moveEditor(t,i,o,s){s?(this.model.isSticky(t)?(this.stickyEditorTabsControl.openEditor(t),this.unstickyEditorTabsControl.closeEditor(t)):(this.stickyEditorTabsControl.closeEditor(t),this.unstickyEditorTabsControl.openEditor(t)),this.handleTabBarsStateChange()):this.model.isSticky(t)?this.stickyEditorTabsControl.moveEditor(t,i,o,s):this.unstickyEditorTabsControl.moveEditor(t,i-this.model.stickyCount,o-this.model.stickyCount,s)}pinEditor(t){this.getEditorTabsController(t).pinEditor(t)}stickEditor(t){this.unstickyEditorTabsControl.closeEditor(t),this.stickyEditorTabsControl.openEditor(t),this.handleTabBarsStateChange()}unstickEditor(t){this.stickyEditorTabsControl.closeEditor(t),this.unstickyEditorTabsControl.openEditor(t),this.handleTabBarsStateChange()}setActive(t){this.stickyEditorTabsControl.setActive(t),this.unstickyEditorTabsControl.setActive(t)}updateEditorSelections(){this.stickyEditorTabsControl.updateEditorSelections(),this.unstickyEditorTabsControl.updateEditorSelections()}updateEditorLabel(t){this.getEditorTabsController(t).updateEditorLabel(t)}updateEditorDirty(t){this.getEditorTabsController(t).updateEditorDirty(t)}updateOptions(t,i){this.stickyEditorTabsControl.updateOptions(t,i),this.unstickyEditorTabsControl.updateOptions(t,i)}layout(t){const i=this.stickyEditorTabsControl.layout(t),o={container:t.container,available:new p(t.available.width,t.available.height-i.height)},s=this.unstickyEditorTabsControl.layout(o);return new p(t.container.width,i.height+s.height)}getHeight(){return this.stickyEditorTabsControl.getHeight()+this.unstickyEditorTabsControl.getHeight()}dispose(){this.parent.classList.toggle("two-tab-bars",!1),super.dispose()}};l=E([c(5,y)],l);export{l as MultiRowEditorControl};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Dimension } from "../../../../base/browser/dom.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IEditorGroupsView, IEditorGroupView, IEditorPartsView, IInternalEditorOpenOptions } from "./editor.js";
+import { IEditorTabsControl } from "./editorTabsControl.js";
+import { MultiEditorTabsControl } from "./multiEditorTabsControl.js";
+import { IEditorPartOptions } from "../../../common/editor.js";
+import { EditorInput } from "../../../common/editor/editorInput.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { StickyEditorGroupModel, UnstickyEditorGroupModel } from "../../../common/editor/filteredEditorGroupModel.js";
+import { IEditorTitleControlDimensions } from "./editorTitleControl.js";
+import { IReadonlyEditorGroupModel } from "../../../common/editor/editorGroupModel.js";
+let MultiRowEditorControl = class extends Disposable {
+  constructor(parent, editorPartsView, groupsView, groupView, model, instantiationService) {
+    super();
+    this.parent = parent;
+    this.groupsView = groupsView;
+    this.groupView = groupView;
+    this.model = model;
+    this.instantiationService = instantiationService;
+    const stickyModel = this._register(new StickyEditorGroupModel(this.model));
+    const unstickyModel = this._register(new UnstickyEditorGroupModel(this.model));
+    this.stickyEditorTabsControl = this._register(this.instantiationService.createInstance(MultiEditorTabsControl, this.parent, editorPartsView, this.groupsView, this.groupView, stickyModel));
+    this.unstickyEditorTabsControl = this._register(this.instantiationService.createInstance(MultiEditorTabsControl, this.parent, editorPartsView, this.groupsView, this.groupView, unstickyModel));
+    this.handleTabBarsStateChange();
+  }
+  static {
+    __name(this, "MultiRowEditorControl");
+  }
+  stickyEditorTabsControl;
+  unstickyEditorTabsControl;
+  activeControl;
+  handleTabBarsStateChange() {
+    this.activeControl = this.model.activeEditor ? this.getEditorTabsController(this.model.activeEditor) : void 0;
+    this.handleTabBarsLayoutChange();
+  }
+  handleTabBarsLayoutChange() {
+    if (this.groupView.count === 0) {
+      return;
+    }
+    const hadTwoTabBars = this.parent.classList.contains("two-tab-bars");
+    const hasTwoTabBars = this.groupView.count !== this.groupView.stickyCount && this.groupView.stickyCount > 0;
+    this.parent.classList.toggle("two-tab-bars", hasTwoTabBars);
+    if (hadTwoTabBars !== hasTwoTabBars) {
+      this.groupView.relayout();
+    }
+  }
+  didActiveControlChange() {
+    return this.activeControl !== (this.model.activeEditor ? this.getEditorTabsController(this.model.activeEditor) : void 0);
+  }
+  getEditorTabsController(editor) {
+    return this.model.isSticky(editor) ? this.stickyEditorTabsControl : this.unstickyEditorTabsControl;
+  }
+  openEditor(editor, options) {
+    const didActiveControlChange = this.didActiveControlChange();
+    const didOpenEditorChange = this.getEditorTabsController(editor).openEditor(editor, options);
+    const didChange = didOpenEditorChange || didActiveControlChange;
+    if (didChange) {
+      this.handleOpenedEditors();
+    }
+    return didChange;
+  }
+  openEditors(editors) {
+    const stickyEditors = editors.filter((e) => this.model.isSticky(e));
+    const unstickyEditors = editors.filter((e) => !this.model.isSticky(e));
+    const didActiveControlChange = this.didActiveControlChange();
+    const didChangeOpenEditorsSticky = this.stickyEditorTabsControl.openEditors(stickyEditors);
+    const didChangeOpenEditorsUnSticky = this.unstickyEditorTabsControl.openEditors(unstickyEditors);
+    const didChange = didChangeOpenEditorsSticky || didChangeOpenEditorsUnSticky || didActiveControlChange;
+    if (didChange) {
+      this.handleOpenedEditors();
+    }
+    return didChange;
+  }
+  handleOpenedEditors() {
+    this.handleTabBarsStateChange();
+  }
+  beforeCloseEditor(editor) {
+    this.getEditorTabsController(editor).beforeCloseEditor(editor);
+  }
+  closeEditor(editor) {
+    this.stickyEditorTabsControl.closeEditor(editor);
+    this.unstickyEditorTabsControl.closeEditor(editor);
+    this.handleClosedEditors();
+  }
+  closeEditors(editors) {
+    const stickyEditors = editors.filter((e) => this.model.isSticky(e));
+    const unstickyEditors = editors.filter((e) => !this.model.isSticky(e));
+    this.stickyEditorTabsControl.closeEditors(stickyEditors);
+    this.unstickyEditorTabsControl.closeEditors(unstickyEditors);
+    this.handleClosedEditors();
+  }
+  handleClosedEditors() {
+    this.handleTabBarsStateChange();
+  }
+  moveEditor(editor, fromIndex, targetIndex, stickyStateChange) {
+    if (stickyStateChange) {
+      if (this.model.isSticky(editor)) {
+        this.stickyEditorTabsControl.openEditor(editor);
+        this.unstickyEditorTabsControl.closeEditor(editor);
+      } else {
+        this.stickyEditorTabsControl.closeEditor(editor);
+        this.unstickyEditorTabsControl.openEditor(editor);
+      }
+      this.handleTabBarsStateChange();
+    } else {
+      if (this.model.isSticky(editor)) {
+        this.stickyEditorTabsControl.moveEditor(editor, fromIndex, targetIndex, stickyStateChange);
+      } else {
+        this.unstickyEditorTabsControl.moveEditor(editor, fromIndex - this.model.stickyCount, targetIndex - this.model.stickyCount, stickyStateChange);
+      }
+    }
+  }
+  pinEditor(editor) {
+    this.getEditorTabsController(editor).pinEditor(editor);
+  }
+  stickEditor(editor) {
+    this.unstickyEditorTabsControl.closeEditor(editor);
+    this.stickyEditorTabsControl.openEditor(editor);
+    this.handleTabBarsStateChange();
+  }
+  unstickEditor(editor) {
+    this.stickyEditorTabsControl.closeEditor(editor);
+    this.unstickyEditorTabsControl.openEditor(editor);
+    this.handleTabBarsStateChange();
+  }
+  setActive(isActive) {
+    this.stickyEditorTabsControl.setActive(isActive);
+    this.unstickyEditorTabsControl.setActive(isActive);
+  }
+  updateEditorSelections() {
+    this.stickyEditorTabsControl.updateEditorSelections();
+    this.unstickyEditorTabsControl.updateEditorSelections();
+  }
+  updateEditorLabel(editor) {
+    this.getEditorTabsController(editor).updateEditorLabel(editor);
+  }
+  updateEditorDirty(editor) {
+    this.getEditorTabsController(editor).updateEditorDirty(editor);
+  }
+  updateOptions(oldOptions, newOptions) {
+    this.stickyEditorTabsControl.updateOptions(oldOptions, newOptions);
+    this.unstickyEditorTabsControl.updateOptions(oldOptions, newOptions);
+  }
+  layout(dimensions) {
+    const stickyDimensions = this.stickyEditorTabsControl.layout(dimensions);
+    const unstickyAvailableDimensions = {
+      container: dimensions.container,
+      available: new Dimension(dimensions.available.width, dimensions.available.height - stickyDimensions.height)
+    };
+    const unstickyDimensions = this.unstickyEditorTabsControl.layout(unstickyAvailableDimensions);
+    return new Dimension(
+      dimensions.container.width,
+      stickyDimensions.height + unstickyDimensions.height
+    );
+  }
+  getHeight() {
+    return this.stickyEditorTabsControl.getHeight() + this.unstickyEditorTabsControl.getHeight();
+  }
+  dispose() {
+    this.parent.classList.toggle("two-tab-bars", false);
+    super.dispose();
+  }
+};
+MultiRowEditorControl = __decorateClass([
+  __decorateParam(5, IInstantiationService)
+], MultiRowEditorControl);
+export {
+  MultiRowEditorControl
+};
+//# sourceMappingURL=multiRowEditorTabsControl.js.map

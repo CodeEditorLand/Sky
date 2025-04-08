@@ -1,1 +1,136 @@
-import{createScanner as k,SyntaxKind as o}from"../../../../base/common/json.js";import{Position as g}from"../../../../editor/common/core/position.js";import{Range as B}from"../../../../editor/common/core/range.js";import"../../../../editor/common/model.js";class m{static hasOpenBrace(e){for(;e.scan()!==o.EOF;)if(e.getToken()===o.OpenBraceToken)return!0;return!1}static offsetToPosition(e,o){let n=0;const t=e.getEOL().length,s=e.getLineCount();for(let r=1;r<=s;r++){const s=n+(e.getLineLength(r)+t);if(s>o)return new g(r,o-n+1);n=s}return new g(s,e.getLineMaxColumn(s))}static insertSnippet(e,n){const t=e.getValueLengthInRange(new B(1,1,n.lineNumber,n.column));let s;var r;(r=s||={})[r.INVALID=0]="INVALID",r[r.AFTER_OBJECT=1]="AFTER_OBJECT",r[r.BEFORE_OBJECT=2]="BEFORE_OBJECT";let a=0,i=-1,c=0;const p=k(e.getValue());let m=0,T=0;const f=(e,o)=>{0!==o&&1===m&&0===T?(a=o,i=e,c=o):0!==a&&(a=0,i=p.getTokenOffset())};for(;p.scan()!==o.EOF;){const n=p.getPosition();let s=!1;switch(p.getToken()){case o.OpenBracketToken:s=!0,m++,f(n,2);break;case o.CloseBracketToken:s=!0,m--,f(n,0);break;case o.CommaToken:s=!0,f(n,2);break;case o.OpenBraceToken:s=!0,T++,f(n,0);break;case o.CloseBraceToken:s=!0,T--,f(n,1);break;case o.Trivia:case o.LineBreakTrivia:s=!0}if(n>=t&&(0!==a||-1!==i)){let o,t;return 0!==a?(o=s?n:p.getTokenOffset(),t=a):(o=i,t=c),1===t?{position:this.offsetToPosition(e,o),prepend:",",append:""}:(p.setPosition(o),{position:this.offsetToPosition(e,o),prepend:"",append:this.hasOpenBrace(p)?",":""})}}const l=e.getLineCount();return{position:new g(l,e.getLineMaxColumn(l)),prepend:"\n[",append:"]"}}}export{m as SmartSnippetInserter};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { JSONScanner, createScanner as createJSONScanner, SyntaxKind as JSONSyntaxKind } from "../../../../base/common/json.js";
+import { Position } from "../../../../editor/common/core/position.js";
+import { Range } from "../../../../editor/common/core/range.js";
+import { ITextModel } from "../../../../editor/common/model.js";
+class SmartSnippetInserter {
+  static {
+    __name(this, "SmartSnippetInserter");
+  }
+  static hasOpenBrace(scanner) {
+    while (scanner.scan() !== JSONSyntaxKind.EOF) {
+      const kind = scanner.getToken();
+      if (kind === JSONSyntaxKind.OpenBraceToken) {
+        return true;
+      }
+    }
+    return false;
+  }
+  static offsetToPosition(model, offset) {
+    let offsetBeforeLine = 0;
+    const eolLength = model.getEOL().length;
+    const lineCount = model.getLineCount();
+    for (let lineNumber = 1; lineNumber <= lineCount; lineNumber++) {
+      const lineTotalLength = model.getLineLength(lineNumber) + eolLength;
+      const offsetAfterLine = offsetBeforeLine + lineTotalLength;
+      if (offsetAfterLine > offset) {
+        return new Position(
+          lineNumber,
+          offset - offsetBeforeLine + 1
+        );
+      }
+      offsetBeforeLine = offsetAfterLine;
+    }
+    return new Position(
+      lineCount,
+      model.getLineMaxColumn(lineCount)
+    );
+  }
+  static insertSnippet(model, _position) {
+    const desiredPosition = model.getValueLengthInRange(new Range(1, 1, _position.lineNumber, _position.column));
+    let State;
+    ((State2) => {
+      State2[State2["INVALID"] = 0] = "INVALID";
+      State2[State2["AFTER_OBJECT"] = 1] = "AFTER_OBJECT";
+      State2[State2["BEFORE_OBJECT"] = 2] = "BEFORE_OBJECT";
+    })(State || (State = {}));
+    let currentState = 0 /* INVALID */;
+    let lastValidPos = -1;
+    let lastValidState = 0 /* INVALID */;
+    const scanner = createJSONScanner(model.getValue());
+    let arrayLevel = 0;
+    let objLevel = 0;
+    const checkRangeStatus = /* @__PURE__ */ __name((pos, state) => {
+      if (state !== 0 /* INVALID */ && arrayLevel === 1 && objLevel === 0) {
+        currentState = state;
+        lastValidPos = pos;
+        lastValidState = state;
+      } else {
+        if (currentState !== 0 /* INVALID */) {
+          currentState = 0 /* INVALID */;
+          lastValidPos = scanner.getTokenOffset();
+        }
+      }
+    }, "checkRangeStatus");
+    while (scanner.scan() !== JSONSyntaxKind.EOF) {
+      const currentPos = scanner.getPosition();
+      const kind = scanner.getToken();
+      let goodKind = false;
+      switch (kind) {
+        case JSONSyntaxKind.OpenBracketToken:
+          goodKind = true;
+          arrayLevel++;
+          checkRangeStatus(currentPos, 2 /* BEFORE_OBJECT */);
+          break;
+        case JSONSyntaxKind.CloseBracketToken:
+          goodKind = true;
+          arrayLevel--;
+          checkRangeStatus(currentPos, 0 /* INVALID */);
+          break;
+        case JSONSyntaxKind.CommaToken:
+          goodKind = true;
+          checkRangeStatus(currentPos, 2 /* BEFORE_OBJECT */);
+          break;
+        case JSONSyntaxKind.OpenBraceToken:
+          goodKind = true;
+          objLevel++;
+          checkRangeStatus(currentPos, 0 /* INVALID */);
+          break;
+        case JSONSyntaxKind.CloseBraceToken:
+          goodKind = true;
+          objLevel--;
+          checkRangeStatus(currentPos, 1 /* AFTER_OBJECT */);
+          break;
+        case JSONSyntaxKind.Trivia:
+        case JSONSyntaxKind.LineBreakTrivia:
+          goodKind = true;
+      }
+      if (currentPos >= desiredPosition && (currentState !== 0 /* INVALID */ || lastValidPos !== -1)) {
+        let acceptPosition;
+        let acceptState;
+        if (currentState !== 0 /* INVALID */) {
+          acceptPosition = goodKind ? currentPos : scanner.getTokenOffset();
+          acceptState = currentState;
+        } else {
+          acceptPosition = lastValidPos;
+          acceptState = lastValidState;
+        }
+        if (acceptState === 1 /* AFTER_OBJECT */) {
+          return {
+            position: this.offsetToPosition(model, acceptPosition),
+            prepend: ",",
+            append: ""
+          };
+        } else {
+          scanner.setPosition(acceptPosition);
+          return {
+            position: this.offsetToPosition(model, acceptPosition),
+            prepend: "",
+            append: this.hasOpenBrace(scanner) ? "," : ""
+          };
+        }
+      }
+    }
+    const modelLineCount = model.getLineCount();
+    return {
+      position: new Position(modelLineCount, model.getLineMaxColumn(modelLineCount)),
+      prepend: "\n[",
+      append: "]"
+    };
+  }
+}
+export {
+  SmartSnippetInserter
+};
+//# sourceMappingURL=smartSnippetInserter.js.map

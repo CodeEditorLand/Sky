@@ -1,1 +1,67 @@
-import{addDisposableListener as r}from"./dom.js";import{Disposable as o}from"../common/lifecycle.js";import{Mimes as a}from"../common/mime.js";class m extends o{timeout;constructor(t,i){super(),this._register(r(t,"dragover",e=>{e.preventDefault(),this.timeout||(this.timeout=setTimeout(()=>{i(),this.timeout=null},800))})),["dragleave","drop","dragend"].forEach(e=>{this._register(r(t,e,()=>{this.clearDragTimeout()}))})}clearDragTimeout(){this.timeout&&(clearTimeout(this.timeout),this.timeout=null)}dispose(){super.dispose(),this.clearDragTimeout()}}const n={RESOURCES:"ResourceURLs",DOWNLOAD_URL:"DownloadURL",FILES:"Files",TEXT:a.text,INTERNAL_URI_LIST:"application/vnd.code.uri-list"};export{n as DataTransfers,m as DelayedDragHandler};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { addDisposableListener } from "./dom.js";
+import { Disposable } from "../common/lifecycle.js";
+import { Mimes } from "../common/mime.js";
+class DelayedDragHandler extends Disposable {
+  static {
+    __name(this, "DelayedDragHandler");
+  }
+  timeout;
+  constructor(container, callback) {
+    super();
+    this._register(addDisposableListener(container, "dragover", (e) => {
+      e.preventDefault();
+      if (!this.timeout) {
+        this.timeout = setTimeout(() => {
+          callback();
+          this.timeout = null;
+        }, 800);
+      }
+    }));
+    ["dragleave", "drop", "dragend"].forEach((type) => {
+      this._register(addDisposableListener(container, type, () => {
+        this.clearDragTimeout();
+      }));
+    });
+  }
+  clearDragTimeout() {
+    if (this.timeout) {
+      clearTimeout(this.timeout);
+      this.timeout = null;
+    }
+  }
+  dispose() {
+    super.dispose();
+    this.clearDragTimeout();
+  }
+}
+const DataTransfers = {
+  /**
+   * Application specific resource transfer type
+   */
+  RESOURCES: "ResourceURLs",
+  /**
+   * Browser specific transfer type to download
+   */
+  DOWNLOAD_URL: "DownloadURL",
+  /**
+   * Browser specific transfer type for files
+   */
+  FILES: "Files",
+  /**
+   * Typically transfer type for copy/paste transfers.
+   */
+  TEXT: Mimes.text,
+  /**
+   * Internal type used to pass around text/uri-list data.
+   *
+   * This is needed to work around https://bugs.chromium.org/p/chromium/issues/detail?id=239745.
+   */
+  INTERNAL_URI_LIST: "application/vnd.code.uri-list"
+};
+export {
+  DataTransfers,
+  DelayedDragHandler
+};
+//# sourceMappingURL=dnd.js.map

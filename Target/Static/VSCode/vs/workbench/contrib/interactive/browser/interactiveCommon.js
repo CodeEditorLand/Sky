@@ -1,1 +1,12 @@
-import{RawContextKey as t}from"../../../../platform/contextkey/common/contextkey.js";const n=new t("interactiveInputCursorAtBoundary","none"),o={interactiveWindowAlwaysScrollOnNewCell:"interactiveWindow.alwaysScrollOnNewCell",executeWithShiftEnter:"interactiveWindow.executeWithShiftEnter",showExecutionHint:"interactiveWindow.showExecutionHint"};export{n as INTERACTIVE_INPUT_CURSOR_BOUNDARY,o as ReplEditorSettings};
+import { RawContextKey } from "../../../../platform/contextkey/common/contextkey.js";
+const INTERACTIVE_INPUT_CURSOR_BOUNDARY = new RawContextKey("interactiveInputCursorAtBoundary", "none");
+const ReplEditorSettings = {
+  interactiveWindowAlwaysScrollOnNewCell: "interactiveWindow.alwaysScrollOnNewCell",
+  executeWithShiftEnter: "interactiveWindow.executeWithShiftEnter",
+  showExecutionHint: "interactiveWindow.showExecutionHint"
+};
+export {
+  INTERACTIVE_INPUT_CURSOR_BOUNDARY,
+  ReplEditorSettings
+};
+//# sourceMappingURL=interactiveCommon.js.map

@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/editor/contrib/snippet/browser/snippetSession.css"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\n.monaco-editor .snippet-placeholder {\r\n\tmin-width: 2px;\r\n\toutline-style: solid;\r\n\toutline-width: 1px;\r\n\tbackground-color: var(--vscode-editor-snippetTabstopHighlightBackground, transparent);\r\n\toutline-color: var(--vscode-editor-snippetTabstopHighlightBorder, transparent);\r\n}\r\n\r\n.monaco-editor .finish-snippet-placeholder {\r\n\toutline-style: solid;\r\n\toutline-width: 1px;\r\n\tbackground-color: var(--vscode-editor-snippetFinalTabstopHighlightBackground, transparent);\r\n\toutline-color: var(--vscode-editor-snippetFinalTabstopHighlightBorder, transparent);\r\n}\r\n"],
+  "mappings": "AAKA,CAAC,cAAc,CAAC;AACf,aAAW;AACX,iBAAe;AACf,iBAAe;AACf,oBAAkB,IAAI,iDAAiD,EAAE;AACzE,iBAAe,IAAI,6CAA6C,EAAE;AACnE;AAEA,CARC,cAQc,CAAC;AACf,iBAAe;AACf,iBAAe;AACf,oBAAkB,IAAI,sDAAsD,EAAE;AAC9E,iBAAe,IAAI,kDAAkD,EAAE;AACxE;",
+  "names": []
+}

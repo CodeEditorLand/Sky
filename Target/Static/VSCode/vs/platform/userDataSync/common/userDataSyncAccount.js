@@ -1,1 +1,72 @@
-var h=Object.defineProperty,l=Object.getOwnPropertyDescriptor,d=(e,t,n,o)=>{for(var i,a=o>1?void 0:o?l(t,n):t,c=e.length-1;c>=0;c--)(i=e[c])&&(a=(o?i(t,n,a):i(a))||a);return o&&a&&h(t,n,a),a},s=(e,t)=>(n,o)=>t(n,o,e);import{Emitter as u}from"../../../base/common/event.js";import{Disposable as v}from"../../../base/common/lifecycle.js";import{createDecorator as y}from"../../instantiation/common/instantiation.js";import{IUserDataSyncLogService as S,IUserDataSyncStoreService as f,UserDataSyncErrorCode as _}from"./userDataSync.js";const U=y("IUserDataSyncAccountService");let a=class extends v{constructor(e,t){super(),this.userDataSyncStoreService=e,this.logService=t,this._register(e.onTokenFailed((e=>{this.logService.info("Settings Sync auth token failed",this.account?.authenticationProviderId,this.wasTokenFailed,e),this.updateAccount(void 0),e===_.Forbidden?this._onTokenFailed.fire(!0):this._onTokenFailed.fire(this.wasTokenFailed),this.wasTokenFailed=!0}))),this._register(e.onTokenSucceed((()=>this.wasTokenFailed=!1)))}_serviceBrand;_account;get account(){return this._account}_onDidChangeAccount=this._register(new u);onDidChangeAccount=this._onDidChangeAccount.event;_onTokenFailed=this._register(new u);onTokenFailed=this._onTokenFailed.event;wasTokenFailed=!1;async updateAccount(e){(e&&this._account?e.token!==this._account.token||e.authenticationProviderId!==this._account.authenticationProviderId:e!==this._account)&&(this._account=e,this._account&&this.userDataSyncStoreService.setAuthToken(this._account.token,this._account.authenticationProviderId),this._onDidChangeAccount.fire(e))}};a=d([s(0,f),s(1,S)],a);export{U as IUserDataSyncAccountService,a as UserDataSyncAccountService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Emitter, Event } from "../../../base/common/event.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+import { IUserDataSyncLogService, IUserDataSyncStoreService, UserDataSyncErrorCode } from "./userDataSync.js";
+const IUserDataSyncAccountService = createDecorator("IUserDataSyncAccountService");
+let UserDataSyncAccountService = class extends Disposable {
+  constructor(userDataSyncStoreService, logService) {
+    super();
+    this.userDataSyncStoreService = userDataSyncStoreService;
+    this.logService = logService;
+    this._register(userDataSyncStoreService.onTokenFailed((code) => {
+      this.logService.info("Settings Sync auth token failed", this.account?.authenticationProviderId, this.wasTokenFailed, code);
+      this.updateAccount(void 0);
+      if (code === UserDataSyncErrorCode.Forbidden) {
+        this._onTokenFailed.fire(
+          true
+          /*bail out immediately*/
+        );
+      } else {
+        this._onTokenFailed.fire(
+          this.wasTokenFailed
+          /* bail out if token failed before */
+        );
+      }
+      this.wasTokenFailed = true;
+    }));
+    this._register(userDataSyncStoreService.onTokenSucceed(() => this.wasTokenFailed = false));
+  }
+  static {
+    __name(this, "UserDataSyncAccountService");
+  }
+  _serviceBrand;
+  _account;
+  get account() {
+    return this._account;
+  }
+  _onDidChangeAccount = this._register(new Emitter());
+  onDidChangeAccount = this._onDidChangeAccount.event;
+  _onTokenFailed = this._register(new Emitter());
+  onTokenFailed = this._onTokenFailed.event;
+  wasTokenFailed = false;
+  async updateAccount(account) {
+    if (account && this._account ? account.token !== this._account.token || account.authenticationProviderId !== this._account.authenticationProviderId : account !== this._account) {
+      this._account = account;
+      if (this._account) {
+        this.userDataSyncStoreService.setAuthToken(this._account.token, this._account.authenticationProviderId);
+      }
+      this._onDidChangeAccount.fire(account);
+    }
+  }
+};
+UserDataSyncAccountService = __decorateClass([
+  __decorateParam(0, IUserDataSyncStoreService),
+  __decorateParam(1, IUserDataSyncLogService)
+], UserDataSyncAccountService);
+export {
+  IUserDataSyncAccountService,
+  UserDataSyncAccountService
+};
+//# sourceMappingURL=userDataSyncAccount.js.map

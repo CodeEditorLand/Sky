@@ -1,1 +1,136 @@
-var l=Object.defineProperty,v=Object.getOwnPropertyDescriptor,c=(e,r,o,t)=>{for(var s,a=t>1?void 0:t?v(r,o):r,i=e.length-1;i>=0;i--)(s=e[i])&&(a=(t?s(r,o,a):s(a))||a);return t&&a&&l(r,o,a),a},a=(e,r)=>(o,t)=>r(o,t,e);import{$ as u}from"../../../../base/browser/dom.js";import"../../../../base/browser/markdownRenderer.js";import{getDefaultHoverDelegate as I}from"../../../../base/browser/ui/hover/hoverDelegateFactory.js";import"../../../../base/common/htmlContent.js";import{DisposableStore as S}from"../../../../base/common/lifecycle.js";import{URI as f}from"../../../../base/common/uri.js";import{MarkdownRenderer as h}from"../../../../editor/browser/widget/markdownRenderer/browser/markdownRenderer.js";import{ILanguageService as g}from"../../../../editor/common/languages/language.js";import{ICommandService as M}from"../../../../platform/commands/common/commands.js";import{IFileService as R}from"../../../../platform/files/common/files.js";import{IHoverService as w}from"../../../../platform/hover/browser/hover.js";import{IOpenerService as y}from"../../../../platform/opener/common/opener.js";import{REVEAL_IN_EXPLORER_COMMAND_ID as k}from"../../files/browser/fileConstants.js";import{ITrustedDomainService as O}from"../../url/browser/trustedDomainService.js";const D=["b","blockquote","br","code","em","h1","h2","h3","h4","h5","h6","hr","i","li","ol","p","pre","strong","sub","sup","table","tbody","td","th","thead","tr","ul","a","img","span","div"];let m=class extends h{constructor(e,r,o,t,s,a,i){super(e??{},r,o),this.trustedDomainService=t,this.hoverService=s,this.fileService=a,this.commandService=i}render(e,r,o){r={...r,remoteImageIsAllowed:e=>this.trustedDomainService.isValid(e),sanitizerOptions:{replaceWithPlaintext:!0,allowedTags:D}};const t=e&&e.supportHtml?{...e,value:`<body>\n\n${e.value}</body>`}:e,s=super.render(t,r,o),a=s.element.lastChild;return a?.nodeType===Node.TEXT_NODE&&a.textContent?.trim()&&a.replaceWith(u("p",void 0,a.textContent)),this.attachCustomHover(s)}attachCustomHover(e){const r=new S;return e.element.querySelectorAll("a").forEach((e=>{if(e.title){const o=e.title;e.title="",r.add(this.hoverService.setupManagedHover(I("element"),e,o))}})),{element:e.element,dispose:()=>{e.dispose(),r.dispose()}}}async openMarkdownLink(e,r){try{const r=f.parse(e);if((await this.fileService.stat(r)).isDirectory)return this.commandService.executeCommand(k,r)}catch{}return super.openMarkdownLink(e,r)}};m=c([a(1,g),a(2,y),a(3,O),a(4,w),a(5,R),a(6,M)],m);export{m as ChatMarkdownRenderer};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { $ } from "../../../../base/browser/dom.js";
+import { MarkdownRenderOptions, MarkedOptions } from "../../../../base/browser/markdownRenderer.js";
+import { getDefaultHoverDelegate } from "../../../../base/browser/ui/hover/hoverDelegateFactory.js";
+import { IMarkdownString } from "../../../../base/common/htmlContent.js";
+import { DisposableStore } from "../../../../base/common/lifecycle.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IMarkdownRendererOptions, IMarkdownRenderResult, MarkdownRenderer } from "../../../../editor/browser/widget/markdownRenderer/browser/markdownRenderer.js";
+import { ILanguageService } from "../../../../editor/common/languages/language.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { IHoverService } from "../../../../platform/hover/browser/hover.js";
+import { IOpenerService } from "../../../../platform/opener/common/opener.js";
+import { REVEAL_IN_EXPLORER_COMMAND_ID } from "../../files/browser/fileConstants.js";
+import { ITrustedDomainService } from "../../url/browser/trustedDomainService.js";
+const allowedHtmlTags = [
+  "b",
+  "blockquote",
+  "br",
+  "code",
+  "em",
+  "h1",
+  "h2",
+  "h3",
+  "h4",
+  "h5",
+  "h6",
+  "hr",
+  "i",
+  "li",
+  "ol",
+  "p",
+  "pre",
+  "strong",
+  "sub",
+  "sup",
+  "table",
+  "tbody",
+  "td",
+  "th",
+  "thead",
+  "tr",
+  "ul",
+  "a",
+  "img",
+  // TODO@roblourens when we sanitize attributes in markdown source, we can ban these elements at that step. microsoft/vscode-copilot#5091
+  // Not in the official list, but used for codicons and other vscode markdown extensions
+  "span",
+  "div"
+];
+let ChatMarkdownRenderer = class extends MarkdownRenderer {
+  constructor(options, languageService, openerService, trustedDomainService, hoverService, fileService, commandService) {
+    super(options ?? {}, languageService, openerService);
+    this.trustedDomainService = trustedDomainService;
+    this.hoverService = hoverService;
+    this.fileService = fileService;
+    this.commandService = commandService;
+  }
+  static {
+    __name(this, "ChatMarkdownRenderer");
+  }
+  render(markdown, options, markedOptions) {
+    options = {
+      ...options,
+      remoteImageIsAllowed: /* @__PURE__ */ __name((uri) => this.trustedDomainService.isValid(uri), "remoteImageIsAllowed"),
+      sanitizerOptions: {
+        replaceWithPlaintext: true,
+        allowedTags: allowedHtmlTags
+      }
+    };
+    const mdWithBody = markdown && markdown.supportHtml ? {
+      ...markdown,
+      // dompurify uses DOMParser, which strips leading comments. Wrapping it all in 'body' prevents this.
+      // The \n\n prevents marked.js from parsing the body contents as just text in an 'html' token, instead of actual markdown.
+      value: `<body>
+
+${markdown.value}</body>`
+    } : markdown;
+    const result = super.render(mdWithBody, options, markedOptions);
+    const lastChild = result.element.lastChild;
+    if (lastChild?.nodeType === Node.TEXT_NODE && lastChild.textContent?.trim()) {
+      lastChild.replaceWith($("p", void 0, lastChild.textContent));
+    }
+    return this.attachCustomHover(result);
+  }
+  attachCustomHover(result) {
+    const store = new DisposableStore();
+    result.element.querySelectorAll("a").forEach((element) => {
+      if (element.title) {
+        const title = element.title;
+        element.title = "";
+        store.add(this.hoverService.setupManagedHover(getDefaultHoverDelegate("element"), element, title));
+      }
+    });
+    return {
+      element: result.element,
+      dispose: /* @__PURE__ */ __name(() => {
+        result.dispose();
+        store.dispose();
+      }, "dispose")
+    };
+  }
+  async openMarkdownLink(link, markdown) {
+    try {
+      const uri = URI.parse(link);
+      if ((await this.fileService.stat(uri)).isDirectory) {
+        return this.commandService.executeCommand(REVEAL_IN_EXPLORER_COMMAND_ID, uri);
+      }
+    } catch {
+    }
+    return super.openMarkdownLink(link, markdown);
+  }
+};
+ChatMarkdownRenderer = __decorateClass([
+  __decorateParam(1, ILanguageService),
+  __decorateParam(2, IOpenerService),
+  __decorateParam(3, ITrustedDomainService),
+  __decorateParam(4, IHoverService),
+  __decorateParam(5, IFileService),
+  __decorateParam(6, ICommandService)
+], ChatMarkdownRenderer);
+export {
+  ChatMarkdownRenderer
+};
+//# sourceMappingURL=chatMarkdownRenderer.js.map

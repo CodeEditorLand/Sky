@@ -1,1 +1,88 @@
-import"./workbenchThemeService.js";import{Color as u}from"../../../../base/common/color.js";import*as t from"../../../../platform/theme/common/colorRegistry.js";import*as r from"../../../../editor/common/core/editorColorRegistry.js";const s={};function i(i,t){let e=s[i];e||(s[i]=e=[]),e.push(t)}function k(i,t){for(const e of i)if(t.textMateRules.push(e),!e.scope){const i=e.settings;if(i)for(const e in i){const o=e,r=s[o];if(r){const e=i[o];if("string"==typeof e){const i=u.fromHex(e);for(const e of r)t.colors[e]=i}}"foreground"!==o&&"background"!==o&&"fontStyle"!==o&&delete i[o]}else e.settings={}}}i("background",t.editorBackground),i("foreground",t.editorForeground),i("selection",t.editorSelectionBackground),i("inactiveSelection",t.editorInactiveSelection),i("selectionHighlightColor",t.editorSelectionHighlight),i("findMatchHighlight",t.editorFindMatchHighlight),i("currentFindMatchHighlight",t.editorFindMatch),i("hoverHighlight",t.editorHoverHighlight),i("wordHighlight","editor.wordHighlightBackground"),i("wordHighlightStrong","editor.wordHighlightStrongBackground"),i("findRangeHighlight",t.editorFindRangeHighlight),i("findMatchHighlight","peekViewResult.matchHighlightBackground"),i("referenceHighlight","peekViewEditor.matchHighlightBackground"),i("lineHighlight",r.editorLineHighlight),i("rangeHighlight",r.editorRangeHighlight),i("caret",r.editorCursorForeground),i("invisibles",r.editorWhitespaces),i("guide",r.editorIndentGuide1),i("activeGuide",r.editorActiveIndentGuide1);const H=["ansiBlack","ansiRed","ansiGreen","ansiYellow","ansiBlue","ansiMagenta","ansiCyan","ansiWhite","ansiBrightBlack","ansiBrightRed","ansiBrightGreen","ansiBrightYellow","ansiBrightBlue","ansiBrightMagenta","ansiBrightCyan","ansiBrightWhite"];for(const t of H)i(t,"terminal."+t);export{k as convertSettings};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { ITextMateThemingRule, IColorMap } from "./workbenchThemeService.js";
+import { Color } from "../../../../base/common/color.js";
+import * as colorRegistry from "../../../../platform/theme/common/colorRegistry.js";
+import * as editorColorRegistry from "../../../../editor/common/core/editorColorRegistry.js";
+const settingToColorIdMapping = {};
+function addSettingMapping(settingId, colorId) {
+  let colorIds = settingToColorIdMapping[settingId];
+  if (!colorIds) {
+    settingToColorIdMapping[settingId] = colorIds = [];
+  }
+  colorIds.push(colorId);
+}
+__name(addSettingMapping, "addSettingMapping");
+function convertSettings(oldSettings, result) {
+  for (const rule of oldSettings) {
+    result.textMateRules.push(rule);
+    if (!rule.scope) {
+      const settings = rule.settings;
+      if (!settings) {
+        rule.settings = {};
+      } else {
+        for (const settingKey in settings) {
+          const key = settingKey;
+          const mappings = settingToColorIdMapping[key];
+          if (mappings) {
+            const colorHex = settings[key];
+            if (typeof colorHex === "string") {
+              const color = Color.fromHex(colorHex);
+              for (const colorId of mappings) {
+                result.colors[colorId] = color;
+              }
+            }
+          }
+          if (key !== "foreground" && key !== "background" && key !== "fontStyle") {
+            delete settings[key];
+          }
+        }
+      }
+    }
+  }
+}
+__name(convertSettings, "convertSettings");
+addSettingMapping("background", colorRegistry.editorBackground);
+addSettingMapping("foreground", colorRegistry.editorForeground);
+addSettingMapping("selection", colorRegistry.editorSelectionBackground);
+addSettingMapping("inactiveSelection", colorRegistry.editorInactiveSelection);
+addSettingMapping("selectionHighlightColor", colorRegistry.editorSelectionHighlight);
+addSettingMapping("findMatchHighlight", colorRegistry.editorFindMatchHighlight);
+addSettingMapping("currentFindMatchHighlight", colorRegistry.editorFindMatch);
+addSettingMapping("hoverHighlight", colorRegistry.editorHoverHighlight);
+addSettingMapping("wordHighlight", "editor.wordHighlightBackground");
+addSettingMapping("wordHighlightStrong", "editor.wordHighlightStrongBackground");
+addSettingMapping("findRangeHighlight", colorRegistry.editorFindRangeHighlight);
+addSettingMapping("findMatchHighlight", "peekViewResult.matchHighlightBackground");
+addSettingMapping("referenceHighlight", "peekViewEditor.matchHighlightBackground");
+addSettingMapping("lineHighlight", editorColorRegistry.editorLineHighlight);
+addSettingMapping("rangeHighlight", editorColorRegistry.editorRangeHighlight);
+addSettingMapping("caret", editorColorRegistry.editorCursorForeground);
+addSettingMapping("invisibles", editorColorRegistry.editorWhitespaces);
+addSettingMapping("guide", editorColorRegistry.editorIndentGuide1);
+addSettingMapping("activeGuide", editorColorRegistry.editorActiveIndentGuide1);
+const ansiColorMap = [
+  "ansiBlack",
+  "ansiRed",
+  "ansiGreen",
+  "ansiYellow",
+  "ansiBlue",
+  "ansiMagenta",
+  "ansiCyan",
+  "ansiWhite",
+  "ansiBrightBlack",
+  "ansiBrightRed",
+  "ansiBrightGreen",
+  "ansiBrightYellow",
+  "ansiBrightBlue",
+  "ansiBrightMagenta",
+  "ansiBrightCyan",
+  "ansiBrightWhite"
+];
+for (const color of ansiColorMap) {
+  addSettingMapping(color, "terminal." + color);
+}
+export {
+  convertSettings
+};
+//# sourceMappingURL=themeCompatibility.js.map

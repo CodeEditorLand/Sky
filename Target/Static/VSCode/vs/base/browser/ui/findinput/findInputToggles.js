@@ -1,1 +1,64 @@
-import{getDefaultHoverDelegate as t}from"../hover/hoverDelegateFactory.js";import"../hover/hoverDelegate.js";import{Toggle as i}from"../toggle/toggle.js";import{Codicon as n}from"../../../common/codicons.js";import*as o from"../../../../nls.js";const c=o.localize("caseDescription","Match Case"),p=o.localize("wordsDescription","Match Whole Word"),d=o.localize("regexDescription","Use Regular Expression");class v extends i{constructor(e){super({icon:n.caseSensitive,title:c+e.appendTitle,isChecked:e.isChecked,hoverDelegate:e.hoverDelegate??t("element"),inputActiveOptionBorder:e.inputActiveOptionBorder,inputActiveOptionForeground:e.inputActiveOptionForeground,inputActiveOptionBackground:e.inputActiveOptionBackground})}}class O extends i{constructor(e){super({icon:n.wholeWord,title:p+e.appendTitle,isChecked:e.isChecked,hoverDelegate:e.hoverDelegate??t("element"),inputActiveOptionBorder:e.inputActiveOptionBorder,inputActiveOptionForeground:e.inputActiveOptionForeground,inputActiveOptionBackground:e.inputActiveOptionBackground})}}class A extends i{constructor(e){super({icon:n.regex,title:d+e.appendTitle,isChecked:e.isChecked,hoverDelegate:e.hoverDelegate??t("element"),inputActiveOptionBorder:e.inputActiveOptionBorder,inputActiveOptionForeground:e.inputActiveOptionForeground,inputActiveOptionBackground:e.inputActiveOptionBackground})}}export{v as CaseSensitiveToggle,A as RegexToggle,O as WholeWordsToggle};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { getDefaultHoverDelegate } from "../hover/hoverDelegateFactory.js";
+import { IHoverDelegate } from "../hover/hoverDelegate.js";
+import { Toggle } from "../toggle/toggle.js";
+import { Codicon } from "../../../common/codicons.js";
+import * as nls from "../../../../nls.js";
+const NLS_CASE_SENSITIVE_TOGGLE_LABEL = nls.localize("caseDescription", "Match Case");
+const NLS_WHOLE_WORD_TOGGLE_LABEL = nls.localize("wordsDescription", "Match Whole Word");
+const NLS_REGEX_TOGGLE_LABEL = nls.localize("regexDescription", "Use Regular Expression");
+class CaseSensitiveToggle extends Toggle {
+  static {
+    __name(this, "CaseSensitiveToggle");
+  }
+  constructor(opts) {
+    super({
+      icon: Codicon.caseSensitive,
+      title: NLS_CASE_SENSITIVE_TOGGLE_LABEL + opts.appendTitle,
+      isChecked: opts.isChecked,
+      hoverDelegate: opts.hoverDelegate ?? getDefaultHoverDelegate("element"),
+      inputActiveOptionBorder: opts.inputActiveOptionBorder,
+      inputActiveOptionForeground: opts.inputActiveOptionForeground,
+      inputActiveOptionBackground: opts.inputActiveOptionBackground
+    });
+  }
+}
+class WholeWordsToggle extends Toggle {
+  static {
+    __name(this, "WholeWordsToggle");
+  }
+  constructor(opts) {
+    super({
+      icon: Codicon.wholeWord,
+      title: NLS_WHOLE_WORD_TOGGLE_LABEL + opts.appendTitle,
+      isChecked: opts.isChecked,
+      hoverDelegate: opts.hoverDelegate ?? getDefaultHoverDelegate("element"),
+      inputActiveOptionBorder: opts.inputActiveOptionBorder,
+      inputActiveOptionForeground: opts.inputActiveOptionForeground,
+      inputActiveOptionBackground: opts.inputActiveOptionBackground
+    });
+  }
+}
+class RegexToggle extends Toggle {
+  static {
+    __name(this, "RegexToggle");
+  }
+  constructor(opts) {
+    super({
+      icon: Codicon.regex,
+      title: NLS_REGEX_TOGGLE_LABEL + opts.appendTitle,
+      isChecked: opts.isChecked,
+      hoverDelegate: opts.hoverDelegate ?? getDefaultHoverDelegate("element"),
+      inputActiveOptionBorder: opts.inputActiveOptionBorder,
+      inputActiveOptionForeground: opts.inputActiveOptionForeground,
+      inputActiveOptionBackground: opts.inputActiveOptionBackground
+    });
+  }
+}
+export {
+  CaseSensitiveToggle,
+  RegexToggle,
+  WholeWordsToggle
+};
+//# sourceMappingURL=findInputToggles.js.map

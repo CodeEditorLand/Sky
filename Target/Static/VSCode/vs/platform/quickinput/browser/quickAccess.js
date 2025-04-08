@@ -1,1 +1,171 @@
-var A=Object.defineProperty;var S=Object.getOwnPropertyDescriptor;var Q=(v,u,i,t)=>{for(var e=t>1?void 0:t?S(u,i):u,s=v.length-1,r;s>=0;s--)(r=v[s])&&(e=(t?r(u,i,e):r(e))||e);return t&&e&&A(u,i,e),e},P=(v,u)=>(i,t)=>u(i,t,v);import{DeferredPromise as b}from"../../../base/common/async.js";import{CancellationTokenSource as D}from"../../../base/common/cancellation.js";import{Event as h}from"../../../base/common/event.js";import{Disposable as O,DisposableStore as g,toDisposable as V}from"../../../base/common/lifecycle.js";import{IInstantiationService as y}from"../../instantiation/common/instantiation.js";import{DefaultQuickAccessFilterValue as w,Extensions as x}from"../common/quickAccess.js";import{IQuickInputService as q,ItemActivation as C}from"../common/quickInput.js";import{Registry as N}from"../../registry/common/platform.js";let k=class extends O{constructor(i,t){super();this.quickInputService=i;this.instantiationService=t}registry=N.as(x.Quickaccess);mapProviderToDescriptor=new Map;lastAcceptedPickerValues=new Map;visibleQuickAccess=void 0;pick(i="",t){return this.doShowOrPick(i,!0,t)}show(i="",t){this.doShowOrPick(i,!1,t)}doShowOrPick(i,t,e){const[s,r]=this.getOrInstantiateProvider(i,e?.enabledProviderPrefixes),n=this.visibleQuickAccess,a=n?.descriptor;if(n&&r&&a===r){i!==r.prefix&&!e?.preserveValue&&(n.picker.value=i),this.adjustValueSelection(n.picker,r,e);return}if(r&&!e?.preserveValue){let o;if(n&&a&&a!==r){const p=n.value.substr(a.prefix.length);p&&(o=`${r.prefix}${p}`)}if(!o){const p=s?.defaultFilterValue;p===w.LAST?o=this.lastAcceptedPickerValues.get(r):typeof p=="string"&&(o=`${r.prefix}${p}`)}typeof o=="string"&&(i=o)}const d=n?.picker?.valueSelection,f=n?.picker?.value,l=new g,c=l.add(this.quickInputService.createQuickPick({useSeparators:!0}));c.value=i,this.adjustValueSelection(c,r,e),c.placeholder=e?.placeholder??r?.placeholder,c.quickNavigate=e?.quickNavigateConfiguration,c.hideInput=!!c.quickNavigate&&!n,(typeof e?.itemActivation=="number"||e?.quickNavigateConfiguration)&&(c.itemActivation=e?.itemActivation??C.SECOND),c.contextKey=r?.contextKey,c.filterValue=o=>o.substring(r?r.prefix.length:0);let I;t&&(I=new b,l.add(h.once(c.onWillAccept)(o=>{o.veto(),c.hide()}))),l.add(this.registerPickerListeners(c,s,r,i,e));const m=l.add(new D);if(s&&l.add(s.provide(c,m.token,e?.providerOptions)),h.once(c.onDidHide)(()=>{c.selectedItems.length===0&&m.cancel(),l.dispose(),I?.complete(c.selectedItems.slice(0))}),c.show(),d&&f===i&&(c.valueSelection=d),t)return I?.p}adjustValueSelection(i,t,e){let s;e?.preserveValue?s=[i.value.length,i.value.length]:s=[t?.prefix.length??0,i.value.length],i.valueSelection=s}registerPickerListeners(i,t,e,s,r){const n=new g,a=this.visibleQuickAccess={picker:i,descriptor:e,value:s};return n.add(V(()=>{a===this.visibleQuickAccess&&(this.visibleQuickAccess=void 0)})),n.add(i.onDidChangeValue(d=>{const[f]=this.getOrInstantiateProvider(d,r?.enabledProviderPrefixes);f!==t?this.show(d,{enabledProviderPrefixes:r?.enabledProviderPrefixes,preserveValue:!0,providerOptions:r?.providerOptions}):a.value=d})),e&&n.add(i.onDidAccept(()=>{this.lastAcceptedPickerValues.set(e,i.value)})),n}getOrInstantiateProvider(i,t){const e=this.registry.getQuickAccessProvider(i);if(!e||t&&!t?.includes(e.prefix))return[void 0,void 0];let s=this.mapProviderToDescriptor.get(e);return s||(s=this.instantiationService.createInstance(e.ctor),this.mapProviderToDescriptor.set(e,s)),[s,e]}};k=Q([P(0,q),P(1,y)],k);export{k as QuickAccessController};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { DeferredPromise } from "../../../base/common/async.js";
+import { CancellationTokenSource } from "../../../base/common/cancellation.js";
+import { Event } from "../../../base/common/event.js";
+import { Disposable, DisposableStore, IDisposable, toDisposable } from "../../../base/common/lifecycle.js";
+import { IInstantiationService } from "../../instantiation/common/instantiation.js";
+import { DefaultQuickAccessFilterValue, Extensions, IQuickAccessController, IQuickAccessOptions, IQuickAccessProvider, IQuickAccessProviderDescriptor, IQuickAccessRegistry } from "../common/quickAccess.js";
+import { IQuickInputService, IQuickPick, IQuickPickItem, ItemActivation } from "../common/quickInput.js";
+import { Registry } from "../../registry/common/platform.js";
+let QuickAccessController = class extends Disposable {
+  constructor(quickInputService, instantiationService) {
+    super();
+    this.quickInputService = quickInputService;
+    this.instantiationService = instantiationService;
+  }
+  static {
+    __name(this, "QuickAccessController");
+  }
+  registry = Registry.as(Extensions.Quickaccess);
+  mapProviderToDescriptor = /* @__PURE__ */ new Map();
+  lastAcceptedPickerValues = /* @__PURE__ */ new Map();
+  visibleQuickAccess = void 0;
+  pick(value = "", options) {
+    return this.doShowOrPick(value, true, options);
+  }
+  show(value = "", options) {
+    this.doShowOrPick(value, false, options);
+  }
+  doShowOrPick(value, pick, options) {
+    const [provider, descriptor] = this.getOrInstantiateProvider(value, options?.enabledProviderPrefixes);
+    const visibleQuickAccess = this.visibleQuickAccess;
+    const visibleDescriptor = visibleQuickAccess?.descriptor;
+    if (visibleQuickAccess && descriptor && visibleDescriptor === descriptor) {
+      if (value !== descriptor.prefix && !options?.preserveValue) {
+        visibleQuickAccess.picker.value = value;
+      }
+      this.adjustValueSelection(visibleQuickAccess.picker, descriptor, options);
+      return;
+    }
+    if (descriptor && !options?.preserveValue) {
+      let newValue = void 0;
+      if (visibleQuickAccess && visibleDescriptor && visibleDescriptor !== descriptor) {
+        const newValueCandidateWithoutPrefix = visibleQuickAccess.value.substr(visibleDescriptor.prefix.length);
+        if (newValueCandidateWithoutPrefix) {
+          newValue = `${descriptor.prefix}${newValueCandidateWithoutPrefix}`;
+        }
+      }
+      if (!newValue) {
+        const defaultFilterValue = provider?.defaultFilterValue;
+        if (defaultFilterValue === DefaultQuickAccessFilterValue.LAST) {
+          newValue = this.lastAcceptedPickerValues.get(descriptor);
+        } else if (typeof defaultFilterValue === "string") {
+          newValue = `${descriptor.prefix}${defaultFilterValue}`;
+        }
+      }
+      if (typeof newValue === "string") {
+        value = newValue;
+      }
+    }
+    const visibleSelection = visibleQuickAccess?.picker?.valueSelection;
+    const visibleValue = visibleQuickAccess?.picker?.value;
+    const disposables = new DisposableStore();
+    const picker = disposables.add(this.quickInputService.createQuickPick({ useSeparators: true }));
+    picker.value = value;
+    this.adjustValueSelection(picker, descriptor, options);
+    picker.placeholder = options?.placeholder ?? descriptor?.placeholder;
+    picker.quickNavigate = options?.quickNavigateConfiguration;
+    picker.hideInput = !!picker.quickNavigate && !visibleQuickAccess;
+    if (typeof options?.itemActivation === "number" || options?.quickNavigateConfiguration) {
+      picker.itemActivation = options?.itemActivation ?? ItemActivation.SECOND;
+    }
+    picker.contextKey = descriptor?.contextKey;
+    picker.filterValue = (value2) => value2.substring(descriptor ? descriptor.prefix.length : 0);
+    let pickPromise = void 0;
+    if (pick) {
+      pickPromise = new DeferredPromise();
+      disposables.add(Event.once(picker.onWillAccept)((e) => {
+        e.veto();
+        picker.hide();
+      }));
+    }
+    disposables.add(this.registerPickerListeners(picker, provider, descriptor, value, options));
+    const cts = disposables.add(new CancellationTokenSource());
+    if (provider) {
+      disposables.add(provider.provide(picker, cts.token, options?.providerOptions));
+    }
+    Event.once(picker.onDidHide)(() => {
+      if (picker.selectedItems.length === 0) {
+        cts.cancel();
+      }
+      disposables.dispose();
+      pickPromise?.complete(picker.selectedItems.slice(0));
+    });
+    picker.show();
+    if (visibleSelection && visibleValue === value) {
+      picker.valueSelection = visibleSelection;
+    }
+    if (pick) {
+      return pickPromise?.p;
+    }
+  }
+  adjustValueSelection(picker, descriptor, options) {
+    let valueSelection;
+    if (options?.preserveValue) {
+      valueSelection = [picker.value.length, picker.value.length];
+    } else {
+      valueSelection = [descriptor?.prefix.length ?? 0, picker.value.length];
+    }
+    picker.valueSelection = valueSelection;
+  }
+  registerPickerListeners(picker, provider, descriptor, value, options) {
+    const disposables = new DisposableStore();
+    const visibleQuickAccess = this.visibleQuickAccess = { picker, descriptor, value };
+    disposables.add(toDisposable(() => {
+      if (visibleQuickAccess === this.visibleQuickAccess) {
+        this.visibleQuickAccess = void 0;
+      }
+    }));
+    disposables.add(picker.onDidChangeValue((value2) => {
+      const [providerForValue] = this.getOrInstantiateProvider(value2, options?.enabledProviderPrefixes);
+      if (providerForValue !== provider) {
+        this.show(value2, {
+          enabledProviderPrefixes: options?.enabledProviderPrefixes,
+          // do not rewrite value from user typing!
+          preserveValue: true,
+          // persist the value of the providerOptions from the original showing
+          providerOptions: options?.providerOptions
+        });
+      } else {
+        visibleQuickAccess.value = value2;
+      }
+    }));
+    if (descriptor) {
+      disposables.add(picker.onDidAccept(() => {
+        this.lastAcceptedPickerValues.set(descriptor, picker.value);
+      }));
+    }
+    return disposables;
+  }
+  getOrInstantiateProvider(value, enabledProviderPrefixes) {
+    const providerDescriptor = this.registry.getQuickAccessProvider(value);
+    if (!providerDescriptor || enabledProviderPrefixes && !enabledProviderPrefixes?.includes(providerDescriptor.prefix)) {
+      return [void 0, void 0];
+    }
+    let provider = this.mapProviderToDescriptor.get(providerDescriptor);
+    if (!provider) {
+      provider = this.instantiationService.createInstance(providerDescriptor.ctor);
+      this.mapProviderToDescriptor.set(providerDescriptor, provider);
+    }
+    return [provider, providerDescriptor];
+  }
+};
+QuickAccessController = __decorateClass([
+  __decorateParam(0, IQuickInputService),
+  __decorateParam(1, IInstantiationService)
+], QuickAccessController);
+export {
+  QuickAccessController
+};
+//# sourceMappingURL=quickAccess.js.map

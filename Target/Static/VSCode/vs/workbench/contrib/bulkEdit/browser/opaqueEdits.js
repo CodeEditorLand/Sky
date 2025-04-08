@@ -1,1 +1,85 @@
-var l=Object.defineProperty,m=Object.getOwnPropertyDescriptor,u=(e,o,t,r)=>{for(var s,i=r>1?void 0:r?m(o,t):o,n=e.length-1;n>=0;n--)(s=e[n])&&(i=(r?s(o,t,i):s(i))||i);return r&&i&&l(o,t,i),i},c=(e,o)=>(t,r)=>o(t,r,e);import"../../../../base/common/cancellation.js";import{isObject as p}from"../../../../base/common/types.js";import"../../../../base/common/uri.js";import{ResourceEdit as R}from"../../../../editor/browser/services/bulkEditService.js";import"../../../../editor/common/languages.js";import"../../../../platform/progress/common/progress.js";import{IUndoRedoService as f,UndoRedoElementType as v}from"../../../../platform/undoRedo/common/undoRedo.js";class a extends R{constructor(e,o,t,r){super(r),this.resource=e,this.undo=o,this.redo=t}static is(e){return e instanceof a||p(e)&&!(!e.undo||!e.redo)}static lift(e){return e instanceof a?e:new a(e.resource,e.undo,e.redo,e.metadata)}}let i=class{constructor(e,o,t,r,s,i){this._undoRedoGroup=e,this._undoRedoSource=o,this._progress=t,this._token=r,this._edits=s,this._undoRedoService=i}async apply(){const e=[];for(const o of this._edits){if(this._token.isCancellationRequested)break;await o.redo(),this._undoRedoService.pushElement({type:v.Resource,resource:o.resource,label:o.metadata?.label||"Custom Edit",code:"paste",undo:o.undo,redo:o.redo},this._undoRedoGroup,this._undoRedoSource),this._progress.report(void 0),e.push(o.resource)}return e}};i=u([c(5,f)],i);export{i as OpaqueEdits,a as ResourceAttachmentEdit};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { isObject } from "../../../../base/common/types.js";
+import { URI } from "../../../../base/common/uri.js";
+import { ResourceEdit } from "../../../../editor/browser/services/bulkEditService.js";
+import { ICustomEdit, WorkspaceEditMetadata } from "../../../../editor/common/languages.js";
+import { IProgress } from "../../../../platform/progress/common/progress.js";
+import { IUndoRedoService, UndoRedoElementType, UndoRedoGroup, UndoRedoSource } from "../../../../platform/undoRedo/common/undoRedo.js";
+class ResourceAttachmentEdit extends ResourceEdit {
+  constructor(resource, undo, redo, metadata) {
+    super(metadata);
+    this.resource = resource;
+    this.undo = undo;
+    this.redo = redo;
+  }
+  static {
+    __name(this, "ResourceAttachmentEdit");
+  }
+  static is(candidate) {
+    if (candidate instanceof ResourceAttachmentEdit) {
+      return true;
+    } else {
+      return isObject(candidate) && Boolean(candidate.undo && candidate.redo);
+    }
+  }
+  static lift(edit) {
+    if (edit instanceof ResourceAttachmentEdit) {
+      return edit;
+    } else {
+      return new ResourceAttachmentEdit(edit.resource, edit.undo, edit.redo, edit.metadata);
+    }
+  }
+}
+let OpaqueEdits = class {
+  constructor(_undoRedoGroup, _undoRedoSource, _progress, _token, _edits, _undoRedoService) {
+    this._undoRedoGroup = _undoRedoGroup;
+    this._undoRedoSource = _undoRedoSource;
+    this._progress = _progress;
+    this._token = _token;
+    this._edits = _edits;
+    this._undoRedoService = _undoRedoService;
+  }
+  static {
+    __name(this, "OpaqueEdits");
+  }
+  async apply() {
+    const resources = [];
+    for (const edit of this._edits) {
+      if (this._token.isCancellationRequested) {
+        break;
+      }
+      await edit.redo();
+      this._undoRedoService.pushElement({
+        type: UndoRedoElementType.Resource,
+        resource: edit.resource,
+        label: edit.metadata?.label || "Custom Edit",
+        code: "paste",
+        undo: edit.undo,
+        redo: edit.redo
+      }, this._undoRedoGroup, this._undoRedoSource);
+      this._progress.report(void 0);
+      resources.push(edit.resource);
+    }
+    return resources;
+  }
+};
+OpaqueEdits = __decorateClass([
+  __decorateParam(5, IUndoRedoService)
+], OpaqueEdits);
+export {
+  OpaqueEdits,
+  ResourceAttachmentEdit
+};
+//# sourceMappingURL=opaqueEdits.js.map

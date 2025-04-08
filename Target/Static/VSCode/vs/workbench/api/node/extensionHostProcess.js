@@ -1,1 +1,323 @@
-import C from"minimist";import"native-watchdog";import*as _ from"net";import{ProcessTimeRunOnceScheduler as k}from"../../../base/common/async.js";import{VSBuffer as P}from"../../../base/common/buffer.js";import{isCancellationError as b,isSigPipeError as D,onUnexpectedError as E}from"../../../base/common/errors.js";import"../../../base/common/event.js";import*as x from"../../../base/common/performance.js";import"../../../base/common/uriIpc.js";import{realpath as O}from"../../../base/node/extpath.js";import{Promises as N}from"../../../base/node/pfs.js";import"../../../base/parts/ipc/common/ipc.js";import{BufferedEmitter as M,PersistentProtocol as w,ProtocolConstants as H}from"../../../base/parts/ipc/common/ipc.net.js";import{NodeSocket as h,WebSocketNodeSocket as U}from"../../../base/parts/ipc/node/ipc.net.js";import{boolean as A}from"../../../editor/common/config/editorOptions.js";import L from"../../../platform/product/common/product.js";import{ExtensionHostMain as B}from"../common/extensionHostMain.js";import"../common/extHostExtensionService.js";import{createURITransformer as W}from"./uriTransformer.js";import{ExtHostConnectionType as S,readExtHostConnection as $}from"../../services/extensions/common/extensionHostEnv.js";import{ExtensionHostExitCode as V,MessageType as y,createMessageOfType as R,isMessageOfType as G}from"../../services/extensions/common/extensionHostProtocol.js";import"../../../base/common/lifecycle.js";import"../common/extHost.common.services.js";import"./extHost.node.services.js";import{createRequire as j}from"node:module";const T=j(import.meta.url);(function(){for(let e=0;e<process.execArgv.length;e++)process.execArgv[e]==="--inspect-port=0"&&(process.execArgv.splice(e,1),e--)})();const f=C(process.argv.slice(2),{boolean:["transformURIs","skipWorkspaceStorageLock"],string:["useHostProxy"]});(function(){const o=T("module"),e=o._load;o._load=function(i){if(i==="natives")throw new Error('Either the extension or an NPM dependency is using the [unsupported "natives" node module](https://go.microsoft.com/fwlink/?linkid=871887).');return e.apply(this,arguments)}})();const u=process.exit.bind(process),F=process.on.bind(process);function X(o){process.exit=function(e){if(o)u(e);else{const i=new Error("An extension called process.exit() and this was prevented.");console.warn(i.stack)}},process.crash=function(){const e=new Error("An extension called process.crash() and this was prevented.");console.warn(e.stack)},process.env.ELECTRON_RUN_AS_NODE="1",process.on=function(e,i){if(e==="uncaughtException"){const t=i;i=function(...n){try{return t.apply(void 0,n)}catch{}}}F(e,i)}}let p=function(o){u()};function q(){const o=$(process.env);if(o.type===S.MessagePort)return new Promise((e,i)=>{const t=n=>{const c=n[0],m=new M;c.on("message",s=>m.fire(P.wrap(s.data))),c.on("close",()=>{p("renderer closed the MessagePort")}),c.start(),e({onMessage:m.event,send:s=>c.postMessage(s.buffer)})};process.parentPort.on("message",n=>t(n.ports))});if(o.type===S.Socket)return new Promise((e,i)=>{let t=null;const n=setTimeout(()=>{p("VSCODE_EXTHOST_IPC_SOCKET timeout")},6e4),c=H.ReconnectionGraceTime,m=H.ReconnectionShortGraceTime,s=new k(()=>p("renderer disconnected for too long (1)"),c),r=new k(()=>p("renderer disconnected for too long (2)"),m);process.on("message",(d,g)=>{if(d&&d.type==="VSCODE_EXTHOST_IPC_SOCKET"){g.setNoDelay(!0);const I=P.wrap(Buffer.from(d.initialDataChunk,"base64"));let l;if(d.skipWebSocketFrames)l=new h(g,"extHost-socket");else{const v=P.wrap(Buffer.from(d.inflateBytes,"base64"));l=new U(new h(g,"extHost-socket"),d.permessageDeflate,v,!1)}t?(s.cancel(),r.cancel(),t.beginAcceptReconnection(l,I),t.endAcceptReconnection(),t.sendResume()):(clearTimeout(n),t=new w({socket:l,initialChunk:I}),t.sendResume(),t.onDidDispose(()=>p("renderer disconnected")),e(t),t.onSocketClose(()=>{s.schedule()}))}if(d&&d.type==="VSCODE_EXTHOST_IPC_REDUCE_GRACE_TIME"){if(r.isScheduled())return;s.isScheduled()&&r.schedule()}});const a={type:"VSCODE_EXTHOST_IPC_READY"};process.send?.(a)});{const e=o.pipeName;return new Promise((i,t)=>{const n=_.createConnection(e,()=>{n.removeListener("error",t);const c=new w({socket:new h(n,"extHost-renderer")});c.sendResume(),i(c)});n.once("error",t),n.on("close",()=>{p("renderer closed the socket")})})}}async function K(){const o=await q();return new class{_onMessage=new M;onMessage=this._onMessage.event;_terminating;_protocolListener;constructor(){this._terminating=!1,this._protocolListener=o.onMessage(e=>{G(e,y.Terminate)?(this._terminating=!0,this._protocolListener.dispose(),p("received terminate message from renderer")):this._onMessage.fire(e)})}send(e){this._terminating||o.send(e)}async drain(){if(o.drain)return o.drain()}}}function z(o){return new Promise(e=>{const i=o.onMessage(t=>{i.dispose();const n=JSON.parse(t.toString()),c=n.commit,m=L.commit;if(c&&m&&c!==m&&u(V.VersionMismatch),n.parentPid){let s=0;setInterval(function(){try{process.kill(n.parentPid,0),s=0}catch(a){a&&a.code==="EPERM"?(s++,s>=3&&p(`parent process ${n.parentPid} does not exist anymore (3 x EPERM): ${a.message} (code: ${a.code}) (errno: ${a.errno})`)):p(`parent process ${n.parentPid} does not exist anymore: ${a.message} (code: ${a.code}) (errno: ${a.errno})`)}},1e3);let r;try{r=T("native-watchdog"),r.start(n.parentPid)}catch(a){E(a)}}o.send(R(y.Initialized)),e({protocol:o,initData:n})});o.send(R(y.Ready))})}async function J(){const o=[];process.on("unhandledRejection",(s,r)=>{o.push(r),setTimeout(()=>{const a=o.indexOf(r);a>=0&&r.catch(d=>{o.splice(a,1),b(d)||(console.warn(`rejected promise not handled within 1 second: ${d}`),d&&d.stack&&console.warn(`stack trace: ${d.stack}`),s&&E(s))})},1e3)}),process.on("rejectionHandled",s=>{const r=o.indexOf(s);r>=0&&o.splice(r,1)}),process.on("uncaughtException",function(s){D(s)||E(s)}),x.mark("code/extHost/willConnectToRenderer");const e=await K();x.mark("code/extHost/didConnectToRenderer");const i=await z(e);x.mark("code/extHost/didWaitForInitData");const{initData:t}=i;X(!!t.environment.extensionTestsLocationURI),t.environment.useHostProxy=f.useHostProxy!==void 0?f.useHostProxy!=="false":void 0,t.environment.skipWorkspaceStorageLock=A(f.skipWorkspaceStorageLock,!1);const n=new class{pid=process.pid;exit(r){u(r)}fsExists(r){return N.exists(r)}fsRealpath(r){return O(r)}};let c=null;t.remote.authority&&f.transformURIs&&(c=W(t.remote.authority));const m=new B(i.protocol,t,n,c);p=s=>m.terminate(s)}J().catch(o=>console.log(o));
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import minimist from "minimist";
+import * as nativeWatchdog from "native-watchdog";
+import * as net from "net";
+import { ProcessTimeRunOnceScheduler } from "../../../base/common/async.js";
+import { VSBuffer } from "../../../base/common/buffer.js";
+import { isCancellationError, isSigPipeError, onUnexpectedError } from "../../../base/common/errors.js";
+import { Event } from "../../../base/common/event.js";
+import * as performance from "../../../base/common/performance.js";
+import { IURITransformer } from "../../../base/common/uriIpc.js";
+import { realpath } from "../../../base/node/extpath.js";
+import { Promises } from "../../../base/node/pfs.js";
+import { IMessagePassingProtocol } from "../../../base/parts/ipc/common/ipc.js";
+import { BufferedEmitter, PersistentProtocol, ProtocolConstants } from "../../../base/parts/ipc/common/ipc.net.js";
+import { NodeSocket, WebSocketNodeSocket } from "../../../base/parts/ipc/node/ipc.net.js";
+import { boolean } from "../../../editor/common/config/editorOptions.js";
+import product from "../../../platform/product/common/product.js";
+import { ExtensionHostMain, IExitFn } from "../common/extensionHostMain.js";
+import { IHostUtils } from "../common/extHostExtensionService.js";
+import { createURITransformer } from "./uriTransformer.js";
+import { ExtHostConnectionType, readExtHostConnection } from "../../services/extensions/common/extensionHostEnv.js";
+import { ExtensionHostExitCode, IExtHostReadyMessage, IExtHostReduceGraceTimeMessage, IExtHostSocketMessage, IExtensionHostInitData, MessageType, createMessageOfType, isMessageOfType } from "../../services/extensions/common/extensionHostProtocol.js";
+import { IDisposable } from "../../../base/common/lifecycle.js";
+import "../common/extHost.common.services.js";
+import "./extHost.node.services.js";
+import { createRequire } from "node:module";
+const require2 = createRequire(import.meta.url);
+(/* @__PURE__ */ __name(function removeInspectPort() {
+  for (let i = 0; i < process.execArgv.length; i++) {
+    if (process.execArgv[i] === "--inspect-port=0") {
+      process.execArgv.splice(i, 1);
+      i--;
+    }
+  }
+}, "removeInspectPort"))();
+const args = minimist(process.argv.slice(2), {
+  boolean: [
+    "transformURIs",
+    "skipWorkspaceStorageLock"
+  ],
+  string: [
+    "useHostProxy"
+    // 'true' | 'false' | undefined
+  ]
+});
+(function() {
+  const Module = require2("module");
+  const originalLoad = Module._load;
+  Module._load = function(request) {
+    if (request === "natives") {
+      throw new Error('Either the extension or an NPM dependency is using the [unsupported "natives" node module](https://go.microsoft.com/fwlink/?linkid=871887).');
+    }
+    return originalLoad.apply(this, arguments);
+  };
+})();
+const nativeExit = process.exit.bind(process);
+const nativeOn = process.on.bind(process);
+function patchProcess(allowExit) {
+  process.exit = function(code) {
+    if (allowExit) {
+      nativeExit(code);
+    } else {
+      const err = new Error("An extension called process.exit() and this was prevented.");
+      console.warn(err.stack);
+    }
+  };
+  process.crash = function() {
+    const err = new Error("An extension called process.crash() and this was prevented.");
+    console.warn(err.stack);
+  };
+  process.env["ELECTRON_RUN_AS_NODE"] = "1";
+  process.on = function(event, listener) {
+    if (event === "uncaughtException") {
+      const actualListener = listener;
+      listener = /* @__PURE__ */ __name(function(...args2) {
+        try {
+          return actualListener.apply(void 0, args2);
+        } catch {
+        }
+      }, "listener");
+    }
+    nativeOn(event, listener);
+  };
+}
+__name(patchProcess, "patchProcess");
+let onTerminate = /* @__PURE__ */ __name(function(reason) {
+  nativeExit();
+}, "onTerminate");
+function _createExtHostProtocol() {
+  const extHostConnection = readExtHostConnection(process.env);
+  if (extHostConnection.type === ExtHostConnectionType.MessagePort) {
+    return new Promise((resolve, reject) => {
+      const withPorts = /* @__PURE__ */ __name((ports) => {
+        const port = ports[0];
+        const onMessage = new BufferedEmitter();
+        port.on("message", (e) => onMessage.fire(VSBuffer.wrap(e.data)));
+        port.on("close", () => {
+          onTerminate("renderer closed the MessagePort");
+        });
+        port.start();
+        resolve({
+          onMessage: onMessage.event,
+          send: /* @__PURE__ */ __name((message) => port.postMessage(message.buffer), "send")
+        });
+      }, "withPorts");
+      process.parentPort.on("message", (e) => withPorts(e.ports));
+    });
+  } else if (extHostConnection.type === ExtHostConnectionType.Socket) {
+    return new Promise((resolve, reject) => {
+      let protocol = null;
+      const timer = setTimeout(() => {
+        onTerminate("VSCODE_EXTHOST_IPC_SOCKET timeout");
+      }, 6e4);
+      const reconnectionGraceTime = ProtocolConstants.ReconnectionGraceTime;
+      const reconnectionShortGraceTime = ProtocolConstants.ReconnectionShortGraceTime;
+      const disconnectRunner1 = new ProcessTimeRunOnceScheduler(() => onTerminate("renderer disconnected for too long (1)"), reconnectionGraceTime);
+      const disconnectRunner2 = new ProcessTimeRunOnceScheduler(() => onTerminate("renderer disconnected for too long (2)"), reconnectionShortGraceTime);
+      process.on("message", (msg, handle) => {
+        if (msg && msg.type === "VSCODE_EXTHOST_IPC_SOCKET") {
+          handle.setNoDelay(true);
+          const initialDataChunk = VSBuffer.wrap(Buffer.from(msg.initialDataChunk, "base64"));
+          let socket;
+          if (msg.skipWebSocketFrames) {
+            socket = new NodeSocket(handle, "extHost-socket");
+          } else {
+            const inflateBytes = VSBuffer.wrap(Buffer.from(msg.inflateBytes, "base64"));
+            socket = new WebSocketNodeSocket(new NodeSocket(handle, "extHost-socket"), msg.permessageDeflate, inflateBytes, false);
+          }
+          if (protocol) {
+            disconnectRunner1.cancel();
+            disconnectRunner2.cancel();
+            protocol.beginAcceptReconnection(socket, initialDataChunk);
+            protocol.endAcceptReconnection();
+            protocol.sendResume();
+          } else {
+            clearTimeout(timer);
+            protocol = new PersistentProtocol({ socket, initialChunk: initialDataChunk });
+            protocol.sendResume();
+            protocol.onDidDispose(() => onTerminate("renderer disconnected"));
+            resolve(protocol);
+            protocol.onSocketClose(() => {
+              disconnectRunner1.schedule();
+            });
+          }
+        }
+        if (msg && msg.type === "VSCODE_EXTHOST_IPC_REDUCE_GRACE_TIME") {
+          if (disconnectRunner2.isScheduled()) {
+            return;
+          }
+          if (disconnectRunner1.isScheduled()) {
+            disconnectRunner2.schedule();
+          }
+        }
+      });
+      const req = { type: "VSCODE_EXTHOST_IPC_READY" };
+      process.send?.(req);
+    });
+  } else {
+    const pipeName = extHostConnection.pipeName;
+    return new Promise((resolve, reject) => {
+      const socket = net.createConnection(pipeName, () => {
+        socket.removeListener("error", reject);
+        const protocol = new PersistentProtocol({ socket: new NodeSocket(socket, "extHost-renderer") });
+        protocol.sendResume();
+        resolve(protocol);
+      });
+      socket.once("error", reject);
+      socket.on("close", () => {
+        onTerminate("renderer closed the socket");
+      });
+    });
+  }
+}
+__name(_createExtHostProtocol, "_createExtHostProtocol");
+async function createExtHostProtocol() {
+  const protocol = await _createExtHostProtocol();
+  return new class {
+    _onMessage = new BufferedEmitter();
+    onMessage = this._onMessage.event;
+    _terminating;
+    _protocolListener;
+    constructor() {
+      this._terminating = false;
+      this._protocolListener = protocol.onMessage((msg) => {
+        if (isMessageOfType(msg, MessageType.Terminate)) {
+          this._terminating = true;
+          this._protocolListener.dispose();
+          onTerminate("received terminate message from renderer");
+        } else {
+          this._onMessage.fire(msg);
+        }
+      });
+    }
+    send(msg) {
+      if (!this._terminating) {
+        protocol.send(msg);
+      }
+    }
+    async drain() {
+      if (protocol.drain) {
+        return protocol.drain();
+      }
+    }
+  }();
+}
+__name(createExtHostProtocol, "createExtHostProtocol");
+function connectToRenderer(protocol) {
+  return new Promise((c) => {
+    const first = protocol.onMessage((raw) => {
+      first.dispose();
+      const initData = JSON.parse(raw.toString());
+      const rendererCommit = initData.commit;
+      const myCommit = product.commit;
+      if (rendererCommit && myCommit) {
+        if (rendererCommit !== myCommit) {
+          nativeExit(ExtensionHostExitCode.VersionMismatch);
+        }
+      }
+      if (initData.parentPid) {
+        let epermErrors = 0;
+        setInterval(function() {
+          try {
+            process.kill(initData.parentPid, 0);
+            epermErrors = 0;
+          } catch (e) {
+            if (e && e.code === "EPERM") {
+              epermErrors++;
+              if (epermErrors >= 3) {
+                onTerminate(`parent process ${initData.parentPid} does not exist anymore (3 x EPERM): ${e.message} (code: ${e.code}) (errno: ${e.errno})`);
+              }
+            } else {
+              onTerminate(`parent process ${initData.parentPid} does not exist anymore: ${e.message} (code: ${e.code}) (errno: ${e.errno})`);
+            }
+          }
+        }, 1e3);
+        let watchdog;
+        try {
+          watchdog = require2("native-watchdog");
+          watchdog.start(initData.parentPid);
+        } catch (err) {
+          onUnexpectedError(err);
+        }
+      }
+      protocol.send(createMessageOfType(MessageType.Initialized));
+      c({ protocol, initData });
+    });
+    protocol.send(createMessageOfType(MessageType.Ready));
+  });
+}
+__name(connectToRenderer, "connectToRenderer");
+async function startExtensionHostProcess() {
+  const unhandledPromises = [];
+  process.on("unhandledRejection", (reason, promise) => {
+    unhandledPromises.push(promise);
+    setTimeout(() => {
+      const idx = unhandledPromises.indexOf(promise);
+      if (idx >= 0) {
+        promise.catch((e) => {
+          unhandledPromises.splice(idx, 1);
+          if (!isCancellationError(e)) {
+            console.warn(`rejected promise not handled within 1 second: ${e}`);
+            if (e && e.stack) {
+              console.warn(`stack trace: ${e.stack}`);
+            }
+            if (reason) {
+              onUnexpectedError(reason);
+            }
+          }
+        });
+      }
+    }, 1e3);
+  });
+  process.on("rejectionHandled", (promise) => {
+    const idx = unhandledPromises.indexOf(promise);
+    if (idx >= 0) {
+      unhandledPromises.splice(idx, 1);
+    }
+  });
+  process.on("uncaughtException", function(err) {
+    if (!isSigPipeError(err)) {
+      onUnexpectedError(err);
+    }
+  });
+  performance.mark(`code/extHost/willConnectToRenderer`);
+  const protocol = await createExtHostProtocol();
+  performance.mark(`code/extHost/didConnectToRenderer`);
+  const renderer = await connectToRenderer(protocol);
+  performance.mark(`code/extHost/didWaitForInitData`);
+  const { initData } = renderer;
+  patchProcess(!!initData.environment.extensionTestsLocationURI);
+  initData.environment.useHostProxy = args.useHostProxy !== void 0 ? args.useHostProxy !== "false" : void 0;
+  initData.environment.skipWorkspaceStorageLock = boolean(args.skipWorkspaceStorageLock, false);
+  const hostUtils = new class NodeHost {
+    static {
+      __name(this, "NodeHost");
+    }
+    pid = process.pid;
+    exit(code) {
+      nativeExit(code);
+    }
+    fsExists(path) {
+      return Promises.exists(path);
+    }
+    fsRealpath(path) {
+      return realpath(path);
+    }
+  }();
+  let uriTransformer = null;
+  if (initData.remote.authority && args.transformURIs) {
+    uriTransformer = createURITransformer(initData.remote.authority);
+  }
+  const extensionHostMain = new ExtensionHostMain(
+    renderer.protocol,
+    initData,
+    hostUtils,
+    uriTransformer
+  );
+  onTerminate = /* @__PURE__ */ __name((reason) => extensionHostMain.terminate(reason), "onTerminate");
+}
+__name(startExtensionHostProcess, "startExtensionHostProcess");
+startExtensionHostProcess().catch((err) => console.log(err));
+//# sourceMappingURL=extensionHostProcess.js.map

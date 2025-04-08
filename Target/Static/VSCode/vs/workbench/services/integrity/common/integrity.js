@@ -1,1 +1,7 @@
-import"../../../../base/common/uri.js";import{createDecorator as e}from"../../../../platform/instantiation/common/instantiation.js";const o=e("integrityService");export{o as IIntegrityService};
+import { URI } from "../../../../base/common/uri.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+const IIntegrityService = createDecorator("integrityService");
+export {
+  IIntegrityService
+};
+//# sourceMappingURL=integrity.js.map

@@ -1,1 +1,21 @@
-import{isEqual as r}from"../../../../../base/common/resources.js";import"../../../../../editor/browser/editorBrowser.js";import{findDiffEditorContainingCodeEditor as n}from"../../../../../editor/browser/widget/diffEditor/commands.js";import"../../../../../platform/instantiation/common/instantiation.js";import"../../common/chatEditingService.js";function p(i,o,t){const e=n(i,t);if(!e)return!1;const d=e.getOriginalEditor().getModel(),s=e.getModifiedEditor().getModel();return r(d?.uri,o.originalURI)&&r(s?.uri,o.modifiedURI)}export{p as isTextDiffEditorForEntry};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { isEqual } from "../../../../../base/common/resources.js";
+import { ICodeEditor } from "../../../../../editor/browser/editorBrowser.js";
+import { findDiffEditorContainingCodeEditor } from "../../../../../editor/browser/widget/diffEditor/commands.js";
+import { ServicesAccessor } from "../../../../../platform/instantiation/common/instantiation.js";
+import { IModifiedFileEntry } from "../../common/chatEditingService.js";
+function isTextDiffEditorForEntry(accessor, entry, editor) {
+  const diffEditor = findDiffEditorContainingCodeEditor(accessor, editor);
+  if (!diffEditor) {
+    return false;
+  }
+  const originalModel = diffEditor.getOriginalEditor().getModel();
+  const modifiedModel = diffEditor.getModifiedEditor().getModel();
+  return isEqual(originalModel?.uri, entry.originalURI) && isEqual(modifiedModel?.uri, entry.modifiedURI);
+}
+__name(isTextDiffEditorForEntry, "isTextDiffEditorForEntry");
+export {
+  isTextDiffEditorForEntry
+};
+//# sourceMappingURL=chatEditing.js.map

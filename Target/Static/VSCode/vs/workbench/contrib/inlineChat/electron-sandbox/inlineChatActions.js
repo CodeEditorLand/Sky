@@ -1,1 +1,77 @@
-import{KeyCode as s,KeyMod as a}from"../../../../base/common/keyCodes.js";import"../../../../editor/browser/editorBrowser.js";import{ContextKeyExpr as f}from"../../../../platform/contextkey/common/contextkey.js";import"../../../../platform/instantiation/common/instantiation.js";import{KeybindingWeight as h}from"../../../../platform/keybinding/common/keybindingsRegistry.js";import{InlineChatController as C}from"../browser/inlineChatController.js";import{AbstractInline1ChatAction as S,setHoldForSpeech as g}from"../browser/inlineChatActions.js";import{disposableTimeout as I}from"../../../../base/common/async.js";import{EditorContextKeys as u}from"../../../../editor/common/editorContextKeys.js";import{ICommandService as y}from"../../../../platform/commands/common/commands.js";import{IKeybindingService as v}from"../../../../platform/keybinding/common/keybinding.js";import{StartVoiceChatAction as A,StopListeningAction as E,VOICE_KEY_HOLD_THRESHOLD as b}from"../../chat/electron-sandbox/actions/voiceChatActions.js";import"../../chat/browser/actions/chatExecuteActions.js";import{CTX_INLINE_CHAT_VISIBLE as x,InlineChatConfigKeys as H}from"../common/inlineChat.js";import{HasSpeechProvider as K,ISpeechService as T}from"../../speech/common/speechService.js";import{localize2 as _}from"../../../../nls.js";import"../../../../platform/actions/common/actions.js";import{IConfigurationService as F}from"../../../../platform/configuration/common/configuration.js";import{EditorAction2 as L}from"../../../../editor/browser/editorExtensions.js";class oe extends L{constructor(){super({id:"inlineChat.holdForSpeech",category:S.category,precondition:f.and(K,x),title:_("holdForSpeech","Hold for Speech"),keybinding:{when:u.textInputFocus,weight:h.WorkbenchContrib,primary:a.CtrlCmd|s.KeyI}})}runEditorCommand(t,i,...r){const o=C.get(i);o&&d(t,o,this)}}function d(e,t,i){const r=e.get(F),o=e.get(T),p=e.get(v),n=e.get(y);if(!r.getValue(H.HoldToSpeech||!o.hasSpeechProvider))return;const c=p.enableKeybindingHoldMode(i.desc.id);if(!c)return;let m=!1;const l=I(()=>{n.executeCommand(A.ID,{voice:{disableTimeout:!0}}),m=!0},b);c.finally(()=>{m&&n.executeCommand(E.ID).finally(()=>{t.widget.chatWidget.acceptInput()}),l.dispose()})}g(d);export{oe as HoldToSpeak};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { KeyCode, KeyMod } from "../../../../base/common/keyCodes.js";
+import { ICodeEditor } from "../../../../editor/browser/editorBrowser.js";
+import { ContextKeyExpr } from "../../../../platform/contextkey/common/contextkey.js";
+import { ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+import { KeybindingWeight } from "../../../../platform/keybinding/common/keybindingsRegistry.js";
+import { InlineChatController } from "../browser/inlineChatController.js";
+import { AbstractInline1ChatAction, setHoldForSpeech } from "../browser/inlineChatActions.js";
+import { disposableTimeout } from "../../../../base/common/async.js";
+import { EditorContextKeys } from "../../../../editor/common/editorContextKeys.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { StartVoiceChatAction, StopListeningAction, VOICE_KEY_HOLD_THRESHOLD } from "../../chat/electron-sandbox/actions/voiceChatActions.js";
+import { IChatExecuteActionContext } from "../../chat/browser/actions/chatExecuteActions.js";
+import { CTX_INLINE_CHAT_VISIBLE, InlineChatConfigKeys } from "../common/inlineChat.js";
+import { HasSpeechProvider, ISpeechService } from "../../speech/common/speechService.js";
+import { localize2 } from "../../../../nls.js";
+import { Action2 } from "../../../../platform/actions/common/actions.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { EditorAction2 } from "../../../../editor/browser/editorExtensions.js";
+class HoldToSpeak extends EditorAction2 {
+  static {
+    __name(this, "HoldToSpeak");
+  }
+  constructor() {
+    super({
+      id: "inlineChat.holdForSpeech",
+      category: AbstractInline1ChatAction.category,
+      precondition: ContextKeyExpr.and(HasSpeechProvider, CTX_INLINE_CHAT_VISIBLE),
+      title: localize2("holdForSpeech", "Hold for Speech"),
+      keybinding: {
+        when: EditorContextKeys.textInputFocus,
+        weight: KeybindingWeight.WorkbenchContrib,
+        primary: KeyMod.CtrlCmd | KeyCode.KeyI
+      }
+    });
+  }
+  runEditorCommand(accessor, editor, ..._args) {
+    const ctrl = InlineChatController.get(editor);
+    if (ctrl) {
+      holdForSpeech(accessor, ctrl, this);
+    }
+  }
+}
+function holdForSpeech(accessor, ctrl, action) {
+  const configService = accessor.get(IConfigurationService);
+  const speechService = accessor.get(ISpeechService);
+  const keybindingService = accessor.get(IKeybindingService);
+  const commandService = accessor.get(ICommandService);
+  if (!configService.getValue(InlineChatConfigKeys.HoldToSpeech || !speechService.hasSpeechProvider)) {
+    return;
+  }
+  const holdMode = keybindingService.enableKeybindingHoldMode(action.desc.id);
+  if (!holdMode) {
+    return;
+  }
+  let listening = false;
+  const handle = disposableTimeout(() => {
+    commandService.executeCommand(StartVoiceChatAction.ID, { voice: { disableTimeout: true } });
+    listening = true;
+  }, VOICE_KEY_HOLD_THRESHOLD);
+  holdMode.finally(() => {
+    if (listening) {
+      commandService.executeCommand(StopListeningAction.ID).finally(() => {
+        ctrl.widget.chatWidget.acceptInput();
+      });
+    }
+    handle.dispose();
+  });
+}
+__name(holdForSpeech, "holdForSpeech");
+setHoldForSpeech(holdForSpeech);
+export {
+  HoldToSpeak
+};
+//# sourceMappingURL=inlineChatActions.js.map

@@ -1,1 +1,507 @@
-var E=Object.defineProperty;var w=Object.getOwnPropertyDescriptor;var L=(l,a,e,t)=>{for(var i=t>1?void 0:t?w(a,e):a,n=l.length-1,o;n>=0;n--)(o=l[n])&&(i=(t?o(a,e,i):o(i))||i);return t&&i&&E(a,e,i),i},s=(l,a)=>(e,t)=>a(e,t,l);import{Event as y,Emitter as T}from"../../../../base/common/event.js";import{Schemas as O}from"../../../../base/common/network.js";import{URI as R}from"../../../../base/common/uri.js";import{Disposable as _,DisposableMap as A}from"../../../../base/common/lifecycle.js";import{IInstantiationService as b}from"../../../../platform/instantiation/common/instantiation.js";import{IStorageService as P,StorageScope as m,StorageTarget as F}from"../../../../platform/storage/common/storage.js";import{Registry as u}from"../../../../platform/registry/common/platform.js";import{OUTPUT_VIEW_ID as v,LOG_MIME as M,OUTPUT_MIME as V,Extensions as c,ACTIVE_OUTPUT_CHANNEL_CONTEXT as U,CONTEXT_ACTIVE_FILE_OUTPUT as K,CONTEXT_ACTIVE_OUTPUT_LEVEL_SETTABLE as N,CONTEXT_ACTIVE_OUTPUT_LEVEL as W,CONTEXT_ACTIVE_OUTPUT_LEVEL_IS_DEFAULT as H,SHOW_DEBUG_FILTER_CONTEXT as X,SHOW_ERROR_FILTER_CONTEXT as $,SHOW_INFO_FILTER_CONTEXT as B,SHOW_TRACE_FILTER_CONTEXT as G,SHOW_WARNING_FILTER_CONTEXT as j,CONTEXT_ACTIVE_LOG_FILE_OUTPUT as k,isSingleSourceOutputChannelDescriptor as d,HIDE_CATEGORY_FILTER_CONTEXT as Y,isMultiSourceOutputChannelDescriptor as f}from"../../../services/output/common/output.js";import{OutputLinkProvider as z}from"./outputLinkProvider.js";import{ITextModelService as Z}from"../../../../editor/common/services/resolverService.js";import"../../../../editor/common/model.js";import{ILogService as q,ILoggerService as J,LogLevel as g,LogLevelToString as Q}from"../../../../platform/log/common/log.js";import{ILifecycleService as ee}from"../../../services/lifecycle/common/lifecycle.js";import{DelegatedOutputChannelModel as te,FileOutputChannelModel as ie,MultiFileOutputChannelModel as ne}from"../common/outputChannelModel.js";import{IViewsService as re}from"../../../services/views/common/viewsService.js";import"./outputView.js";import{ILanguageService as oe}from"../../../../editor/common/languages/language.js";import{IContextKeyService as se}from"../../../../platform/contextkey/common/contextkey.js";import{IDefaultLogLevelsService as ae}from"../../logs/common/defaultLogLevels.js";import{IFileDialogService as le}from"../../../../platform/dialogs/common/dialogs.js";import{IFileService as he}from"../../../../platform/files/common/files.js";import{localize as ue}from"../../../../nls.js";import{joinPath as D}from"../../../../base/common/resources.js";import{VSBuffer as ce}from"../../../../base/common/buffer.js";import{telemetryLogId as ge}from"../../../../platform/telemetry/common/telemetryUtils.js";import{toLocalISOString as ve}from"../../../../base/common/date.js";import{IWorkbenchEnvironmentService as de}from"../../../services/environment/common/environmentService.js";const S="output.activechannel";let C=class extends _{constructor(e,t,i,n,o){super();this.outputChannelDescriptor=e;this.outputLocation=t;this.outputDirPromise=i;this.languageService=n;this.instantiationService=o;this.id=e.id,this.label=e.label,this.uri=R.from({scheme:O.outputChannel,path:this.id}),this.model=this._register(this.createOutputChannelModel(this.uri,e))}scrollLock=!1;model;id;label;uri;createOutputChannelModel(e,t){const i=t.languageId?this.languageService.createById(t.languageId):this.languageService.createByMimeType(t.log?M:V);return f(t)?this.instantiationService.createInstance(ne,e,i,[...t.source]):d(t)?this.instantiationService.createInstance(ie,e,i,t.source):this.instantiationService.createInstance(te,this.id,e,i,this.outputLocation,this.outputDirPromise)}getLogEntries(){return this.model.getLogEntries()}append(e){this.model.append(e)}update(e,t){this.model.update(e,t,!0)}clear(){this.model.clear()}replace(e){this.model.replace(e)}};C=L([s(3,oe),s(4,b)],C);class Ce extends _{constructor(e,t){super();this.contextKeyService=t;this._trace=G.bindTo(this.contextKeyService),this._trace.set(e.trace),this._debug=X.bindTo(this.contextKeyService),this._debug.set(e.debug),this._info=B.bindTo(this.contextKeyService),this._info.set(e.info),this._warning=j.bindTo(this.contextKeyService),this._warning.set(e.warning),this._error=$.bindTo(this.contextKeyService),this._error.set(e.error),this._categories=Y.bindTo(this.contextKeyService),this._categories.set(e.sources),this.filterHistory=e.filterHistory}_onDidChange=this._register(new T);onDidChange=this._onDidChange.event;filterHistory;_filterText="";get text(){return this._filterText}set text(e){this._filterText!==e&&(this._filterText=e,this._onDidChange.fire())}_trace;get trace(){return!!this._trace.get()}set trace(e){this._trace.get()!==e&&(this._trace.set(e),this._onDidChange.fire())}_debug;get debug(){return!!this._debug.get()}set debug(e){this._debug.get()!==e&&(this._debug.set(e),this._onDidChange.fire())}_info;get info(){return!!this._info.get()}set info(e){this._info.get()!==e&&(this._info.set(e),this._onDidChange.fire())}_warning;get warning(){return!!this._warning.get()}set warning(e){this._warning.get()!==e&&(this._warning.set(e),this._onDidChange.fire())}_error;get error(){return!!this._error.get()}set error(e){this._error.get()!==e&&(this._error.set(e),this._onDidChange.fire())}_categories;get categories(){return this._categories.get()||","}set categories(e){this._categories.set(e),this._onDidChange.fire()}toggleCategory(e){const t=this.categories;this.hasCategory(e)?this.categories=t.replace(`,${e},`,","):this.categories=`${t}${e},`}hasCategory(e){return e===","?!1:this.categories.includes(`,${e},`)}}let I=class extends _{constructor(e,t,i,n,o,pe,fe,h,Ie,Le,Oe,x){super();this.storageService=e;this.instantiationService=t;this.textModelService=i;this.logService=n;this.loggerService=o;this.lifecycleService=pe;this.viewsService=fe;this.defaultLogLevelsService=Ie;this.fileDialogService=Le;this.fileService=Oe;this.activeChannelIdInStorage=this.storageService.get(S,m.WORKSPACE,""),this.activeOutputChannelContext=U.bindTo(h),this.activeOutputChannelContext.set(this.activeChannelIdInStorage),this._register(this.onActiveOutputChannel(r=>this.activeOutputChannelContext.set(r))),this.activeFileOutputChannelContext=K.bindTo(h),this.activeLogOutputChannelContext=k.bindTo(h),this.activeOutputChannelLevelSettableContext=N.bindTo(h),this.activeOutputChannelLevelContext=W.bindTo(h),this.activeOutputChannelLevelIsDefaultContext=H.bindTo(h),this.outputLocation=D(x.windowLogsPath,`output_${ve(new Date).replace(/-|:|\.\d+Z$/g,"")}`),this._register(i.registerTextModelContentProvider(O.outputChannel,this)),this._register(t.createInstance(z));const p=u.as(c.OutputChannels);for(const r of p.getChannels())this.onDidRegisterChannel(r.id);if(this._register(p.onDidRegisterChannel(r=>this.onDidRegisterChannel(r))),this._register(p.onDidUpdateChannelSources(r=>this.onDidUpdateChannelSources(r))),this._register(p.onDidRemoveChannel(r=>this.onDidRemoveChannel(r))),!this.activeChannel){const r=this.getChannelDescriptors();this.setActiveChannel(r&&r.length>0?this.getChannel(r[0].id):void 0)}this._register(y.filter(this.viewsService.onDidChangeViewVisibility,r=>r.id===v&&r.visible)(()=>{this.activeChannel&&this.viewsService.getActiveViewWithId(v)?.showChannel(this.activeChannel,!0)})),this._register(this.loggerService.onDidChangeLogLevel(()=>{this.resetLogLevelFilters(),this.setLevelContext(),this.setLevelIsDefaultContext()})),this._register(this.defaultLogLevelsService.onDidChangeDefaultLogLevels(()=>{this.setLevelIsDefaultContext()})),this._register(this.lifecycleService.onDidShutdown(()=>this.dispose())),this.filters=this._register(new Ce({filterHistory:[],trace:!0,debug:!0,info:!0,warning:!0,error:!0,sources:""},h))}channels=this._register(new A);activeChannelIdInStorage;activeChannel;_onActiveOutputChannel=this._register(new T);onActiveOutputChannel=this._onActiveOutputChannel.event;activeOutputChannelContext;activeFileOutputChannelContext;activeLogOutputChannelContext;activeOutputChannelLevelSettableContext;activeOutputChannelLevelContext;activeOutputChannelLevelIsDefaultContext;outputLocation;filters;provideTextContent(e){const t=this.getChannel(e.path);return t?t.model.loadModel():null}async showChannel(e,t){const i=this.getChannel(e);this.activeChannel?.id!==i?.id&&(this.setActiveChannel(i),this._onActiveOutputChannel.fire(e));const n=await this.viewsService.openView(v,!t);n&&i&&n.showChannel(i,!!t)}getChannel(e){return this.channels.get(e)}getChannelDescriptor(e){return u.as(c.OutputChannels).getChannel(e)}getChannelDescriptors(){return u.as(c.OutputChannels).getChannels()}getActiveChannel(){return this.activeChannel}canSetLogLevel(e){return e.log&&e.id!==ge}getLogLevel(e){if(!e.log)return;const t=d(e)?[e.source]:f(e)?e.source:[];if(t.length===0)return;const i=this.loggerService.getLogLevel();return t.reduce((n,o)=>Math.min(n,this.loggerService.getLogLevel(o.resource)??i),g.Error)}setLogLevel(e,t){if(!e.log)return;const i=d(e)?[e.source]:f(e)?e.source:[];if(i.length!==0)for(const n of i)this.loggerService.setLogLevel(n.resource,t)}registerCompoundLogChannel(e){const t=u.as(c.OutputChannels);e.sort((n,o)=>n.label.localeCompare(o.label));const i=e.map(n=>n.id.toLowerCase()).join("-");return t.getChannel(i)||t.registerChannel({id:i,label:e.map(n=>n.label).join(", "),log:e.some(n=>n.log),user:!0,source:e.map(n=>{if(d(n))return[{resource:n.source.resource,name:n.source.name??n.label}];if(f(n))return n.source;const o=this.getChannel(n.id);return o?o.model.source:[]}).flat()}),i}async saveOutputAs(...e){let t;if(e.length>1){const i=this.registerCompoundLogChannel(e);t=this.getChannel(i)}else t=this.getChannel(e[0].id);if(t)try{const i=e.length>1?"output":e[0].label,n=await this.fileDialogService.showSaveDialog({title:ue("saveLog.dialogTitle","Save Output As"),availableFileSystems:[O.file],defaultUri:D(await this.fileDialogService.defaultFilePath(),`${i}.log`),filters:[{name:i,extensions:["log"]}]});if(!n)return;const o=await this.textModelService.createModelReference(t.uri);try{await this.fileService.writeFile(n,ce.fromString(o.object.textEditorModel.getValue()))}finally{o.dispose()}return}finally{e.length>1&&u.as(c.OutputChannels).removeChannel(t.id)}}async onDidRegisterChannel(e){const t=this.createChannel(e);this.channels.set(e,t),(!this.activeChannel||this.activeChannelIdInStorage===e)&&(this.setActiveChannel(t),this._onActiveOutputChannel.fire(e),this.viewsService.getActiveViewWithId(v)?.showChannel(t,!0))}onDidUpdateChannelSources(e){const t=this.channels.get(e.id);t&&t.model.updateChannelSources(e.source)}onDidRemoveChannel(e){if(this.activeChannel?.id===e.id){const t=this.getChannelDescriptors();t[0]&&this.showChannel(t[0].id)}this.channels.deleteAndDispose(e.id)}createChannel(e){const t=this.instantiateChannel(e);return this._register(y.once(t.model.onDispose)(()=>{if(this.activeChannel===t){const i=this.getChannelDescriptors(),n=i.length?this.getChannel(i[0].id):void 0;n&&this.viewsService.isViewVisible(v)?this.showChannel(n.id):this.setActiveChannel(void 0)}u.as(c.OutputChannels).removeChannel(e)})),t}outputFolderCreationPromise=null;instantiateChannel(e){const t=u.as(c.OutputChannels).getChannel(e);if(!t)throw this.logService.error(`Channel '${e}' is not registered yet`),new Error(`Channel '${e}' is not registered yet`);return this.outputFolderCreationPromise||(this.outputFolderCreationPromise=this.fileService.createFolder(this.outputLocation).then(()=>{})),this.instantiationService.createInstance(C,t,this.outputLocation,this.outputFolderCreationPromise)}resetLogLevelFilters(){const e=this.activeChannel?.outputChannelDescriptor,t=e?this.getLogLevel(e):void 0;t!==void 0&&(this.filters.error=t<=g.Error,this.filters.warning=t<=g.Warning,this.filters.info=t<=g.Info,this.filters.debug=t<=g.Debug,this.filters.trace=t<=g.Trace)}setLevelContext(){const e=this.activeChannel?.outputChannelDescriptor,t=e?this.getLogLevel(e):void 0;this.activeOutputChannelLevelContext.set(t!==void 0?Q(t):"")}async setLevelIsDefaultContext(){const e=this.activeChannel?.outputChannelDescriptor,t=e?this.getLogLevel(e):void 0;if(t!==void 0){const i=await this.defaultLogLevelsService.getDefaultLogLevel(e?.extensionId);this.activeOutputChannelLevelIsDefaultContext.set(i===t)}else this.activeOutputChannelLevelIsDefaultContext.set(!1)}setActiveChannel(e){this.activeChannel=e;const t=e?.outputChannelDescriptor;this.activeFileOutputChannelContext.set(!!t&&d(t)),this.activeLogOutputChannelContext.set(!!t?.log),this.activeOutputChannelLevelSettableContext.set(t!==void 0&&this.canSetLogLevel(t)),this.setLevelIsDefaultContext(),this.setLevelContext(),this.activeChannel?this.storageService.store(S,this.activeChannel.id,m.WORKSPACE,F.MACHINE):this.storageService.remove(S,m.WORKSPACE)}};I=L([s(0,P),s(1,b),s(2,Z),s(3,q),s(4,J),s(5,ee),s(6,re),s(7,se),s(8,ae),s(9,le),s(10,he),s(11,de)],I);export{I as OutputService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Event, Emitter } from "../../../../base/common/event.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { URI } from "../../../../base/common/uri.js";
+import { Disposable, DisposableMap } from "../../../../base/common/lifecycle.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { IOutputChannel, IOutputService, OUTPUT_VIEW_ID, LOG_MIME, OUTPUT_MIME, OutputChannelUpdateMode, IOutputChannelDescriptor, Extensions, IOutputChannelRegistry, ACTIVE_OUTPUT_CHANNEL_CONTEXT, CONTEXT_ACTIVE_FILE_OUTPUT, CONTEXT_ACTIVE_OUTPUT_LEVEL_SETTABLE, CONTEXT_ACTIVE_OUTPUT_LEVEL, CONTEXT_ACTIVE_OUTPUT_LEVEL_IS_DEFAULT, IOutputViewFilters, SHOW_DEBUG_FILTER_CONTEXT, SHOW_ERROR_FILTER_CONTEXT, SHOW_INFO_FILTER_CONTEXT, SHOW_TRACE_FILTER_CONTEXT, SHOW_WARNING_FILTER_CONTEXT, CONTEXT_ACTIVE_LOG_FILE_OUTPUT, IMultiSourceOutputChannelDescriptor, isSingleSourceOutputChannelDescriptor, HIDE_CATEGORY_FILTER_CONTEXT, isMultiSourceOutputChannelDescriptor, ILogEntry } from "../../../services/output/common/output.js";
+import { OutputLinkProvider } from "./outputLinkProvider.js";
+import { ITextModelService, ITextModelContentProvider } from "../../../../editor/common/services/resolverService.js";
+import { ITextModel } from "../../../../editor/common/model.js";
+import { ILogService, ILoggerService, LogLevel, LogLevelToString } from "../../../../platform/log/common/log.js";
+import { ILifecycleService } from "../../../services/lifecycle/common/lifecycle.js";
+import { DelegatedOutputChannelModel, FileOutputChannelModel, IOutputChannelModel, MultiFileOutputChannelModel } from "../common/outputChannelModel.js";
+import { IViewsService } from "../../../services/views/common/viewsService.js";
+import { OutputViewPane } from "./outputView.js";
+import { ILanguageService } from "../../../../editor/common/languages/language.js";
+import { IContextKey, IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IDefaultLogLevelsService } from "../../logs/common/defaultLogLevels.js";
+import { IFileDialogService } from "../../../../platform/dialogs/common/dialogs.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { localize } from "../../../../nls.js";
+import { joinPath } from "../../../../base/common/resources.js";
+import { VSBuffer } from "../../../../base/common/buffer.js";
+import { telemetryLogId } from "../../../../platform/telemetry/common/telemetryUtils.js";
+import { toLocalISOString } from "../../../../base/common/date.js";
+import { IWorkbenchEnvironmentService } from "../../../services/environment/common/environmentService.js";
+const OUTPUT_ACTIVE_CHANNEL_KEY = "output.activechannel";
+let OutputChannel = class extends Disposable {
+  constructor(outputChannelDescriptor, outputLocation, outputDirPromise, languageService, instantiationService) {
+    super();
+    this.outputChannelDescriptor = outputChannelDescriptor;
+    this.outputLocation = outputLocation;
+    this.outputDirPromise = outputDirPromise;
+    this.languageService = languageService;
+    this.instantiationService = instantiationService;
+    this.id = outputChannelDescriptor.id;
+    this.label = outputChannelDescriptor.label;
+    this.uri = URI.from({ scheme: Schemas.outputChannel, path: this.id });
+    this.model = this._register(this.createOutputChannelModel(this.uri, outputChannelDescriptor));
+  }
+  static {
+    __name(this, "OutputChannel");
+  }
+  scrollLock = false;
+  model;
+  id;
+  label;
+  uri;
+  createOutputChannelModel(uri, outputChannelDescriptor) {
+    const language = outputChannelDescriptor.languageId ? this.languageService.createById(outputChannelDescriptor.languageId) : this.languageService.createByMimeType(outputChannelDescriptor.log ? LOG_MIME : OUTPUT_MIME);
+    if (isMultiSourceOutputChannelDescriptor(outputChannelDescriptor)) {
+      return this.instantiationService.createInstance(MultiFileOutputChannelModel, uri, language, [...outputChannelDescriptor.source]);
+    }
+    if (isSingleSourceOutputChannelDescriptor(outputChannelDescriptor)) {
+      return this.instantiationService.createInstance(FileOutputChannelModel, uri, language, outputChannelDescriptor.source);
+    }
+    return this.instantiationService.createInstance(DelegatedOutputChannelModel, this.id, uri, language, this.outputLocation, this.outputDirPromise);
+  }
+  getLogEntries() {
+    return this.model.getLogEntries();
+  }
+  append(output) {
+    this.model.append(output);
+  }
+  update(mode, till) {
+    this.model.update(mode, till, true);
+  }
+  clear() {
+    this.model.clear();
+  }
+  replace(value) {
+    this.model.replace(value);
+  }
+};
+OutputChannel = __decorateClass([
+  __decorateParam(3, ILanguageService),
+  __decorateParam(4, IInstantiationService)
+], OutputChannel);
+class OutputViewFilters extends Disposable {
+  constructor(options, contextKeyService) {
+    super();
+    this.contextKeyService = contextKeyService;
+    this._trace = SHOW_TRACE_FILTER_CONTEXT.bindTo(this.contextKeyService);
+    this._trace.set(options.trace);
+    this._debug = SHOW_DEBUG_FILTER_CONTEXT.bindTo(this.contextKeyService);
+    this._debug.set(options.debug);
+    this._info = SHOW_INFO_FILTER_CONTEXT.bindTo(this.contextKeyService);
+    this._info.set(options.info);
+    this._warning = SHOW_WARNING_FILTER_CONTEXT.bindTo(this.contextKeyService);
+    this._warning.set(options.warning);
+    this._error = SHOW_ERROR_FILTER_CONTEXT.bindTo(this.contextKeyService);
+    this._error.set(options.error);
+    this._categories = HIDE_CATEGORY_FILTER_CONTEXT.bindTo(this.contextKeyService);
+    this._categories.set(options.sources);
+    this.filterHistory = options.filterHistory;
+  }
+  static {
+    __name(this, "OutputViewFilters");
+  }
+  _onDidChange = this._register(new Emitter());
+  onDidChange = this._onDidChange.event;
+  filterHistory;
+  _filterText = "";
+  get text() {
+    return this._filterText;
+  }
+  set text(filterText) {
+    if (this._filterText !== filterText) {
+      this._filterText = filterText;
+      this._onDidChange.fire();
+    }
+  }
+  _trace;
+  get trace() {
+    return !!this._trace.get();
+  }
+  set trace(trace) {
+    if (this._trace.get() !== trace) {
+      this._trace.set(trace);
+      this._onDidChange.fire();
+    }
+  }
+  _debug;
+  get debug() {
+    return !!this._debug.get();
+  }
+  set debug(debug) {
+    if (this._debug.get() !== debug) {
+      this._debug.set(debug);
+      this._onDidChange.fire();
+    }
+  }
+  _info;
+  get info() {
+    return !!this._info.get();
+  }
+  set info(info) {
+    if (this._info.get() !== info) {
+      this._info.set(info);
+      this._onDidChange.fire();
+    }
+  }
+  _warning;
+  get warning() {
+    return !!this._warning.get();
+  }
+  set warning(warning) {
+    if (this._warning.get() !== warning) {
+      this._warning.set(warning);
+      this._onDidChange.fire();
+    }
+  }
+  _error;
+  get error() {
+    return !!this._error.get();
+  }
+  set error(error) {
+    if (this._error.get() !== error) {
+      this._error.set(error);
+      this._onDidChange.fire();
+    }
+  }
+  _categories;
+  get categories() {
+    return this._categories.get() || ",";
+  }
+  set categories(categories) {
+    this._categories.set(categories);
+    this._onDidChange.fire();
+  }
+  toggleCategory(category) {
+    const categories = this.categories;
+    if (this.hasCategory(category)) {
+      this.categories = categories.replace(`,${category},`, ",");
+    } else {
+      this.categories = `${categories}${category},`;
+    }
+  }
+  hasCategory(category) {
+    if (category === ",") {
+      return false;
+    }
+    return this.categories.includes(`,${category},`);
+  }
+}
+let OutputService = class extends Disposable {
+  constructor(storageService, instantiationService, textModelService, logService, loggerService, lifecycleService, viewsService, contextKeyService, defaultLogLevelsService, fileDialogService, fileService, environmentService) {
+    super();
+    this.storageService = storageService;
+    this.instantiationService = instantiationService;
+    this.textModelService = textModelService;
+    this.logService = logService;
+    this.loggerService = loggerService;
+    this.lifecycleService = lifecycleService;
+    this.viewsService = viewsService;
+    this.defaultLogLevelsService = defaultLogLevelsService;
+    this.fileDialogService = fileDialogService;
+    this.fileService = fileService;
+    this.activeChannelIdInStorage = this.storageService.get(OUTPUT_ACTIVE_CHANNEL_KEY, StorageScope.WORKSPACE, "");
+    this.activeOutputChannelContext = ACTIVE_OUTPUT_CHANNEL_CONTEXT.bindTo(contextKeyService);
+    this.activeOutputChannelContext.set(this.activeChannelIdInStorage);
+    this._register(this.onActiveOutputChannel((channel) => this.activeOutputChannelContext.set(channel)));
+    this.activeFileOutputChannelContext = CONTEXT_ACTIVE_FILE_OUTPUT.bindTo(contextKeyService);
+    this.activeLogOutputChannelContext = CONTEXT_ACTIVE_LOG_FILE_OUTPUT.bindTo(contextKeyService);
+    this.activeOutputChannelLevelSettableContext = CONTEXT_ACTIVE_OUTPUT_LEVEL_SETTABLE.bindTo(contextKeyService);
+    this.activeOutputChannelLevelContext = CONTEXT_ACTIVE_OUTPUT_LEVEL.bindTo(contextKeyService);
+    this.activeOutputChannelLevelIsDefaultContext = CONTEXT_ACTIVE_OUTPUT_LEVEL_IS_DEFAULT.bindTo(contextKeyService);
+    this.outputLocation = joinPath(environmentService.windowLogsPath, `output_${toLocalISOString(/* @__PURE__ */ new Date()).replace(/-|:|\.\d+Z$/g, "")}`);
+    this._register(textModelService.registerTextModelContentProvider(Schemas.outputChannel, this));
+    this._register(instantiationService.createInstance(OutputLinkProvider));
+    const registry = Registry.as(Extensions.OutputChannels);
+    for (const channelIdentifier of registry.getChannels()) {
+      this.onDidRegisterChannel(channelIdentifier.id);
+    }
+    this._register(registry.onDidRegisterChannel((id) => this.onDidRegisterChannel(id)));
+    this._register(registry.onDidUpdateChannelSources((channel) => this.onDidUpdateChannelSources(channel)));
+    this._register(registry.onDidRemoveChannel((channel) => this.onDidRemoveChannel(channel)));
+    if (!this.activeChannel) {
+      const channels = this.getChannelDescriptors();
+      this.setActiveChannel(channels && channels.length > 0 ? this.getChannel(channels[0].id) : void 0);
+    }
+    this._register(Event.filter(this.viewsService.onDidChangeViewVisibility, (e) => e.id === OUTPUT_VIEW_ID && e.visible)(() => {
+      if (this.activeChannel) {
+        this.viewsService.getActiveViewWithId(OUTPUT_VIEW_ID)?.showChannel(this.activeChannel, true);
+      }
+    }));
+    this._register(this.loggerService.onDidChangeLogLevel(() => {
+      this.resetLogLevelFilters();
+      this.setLevelContext();
+      this.setLevelIsDefaultContext();
+    }));
+    this._register(this.defaultLogLevelsService.onDidChangeDefaultLogLevels(() => {
+      this.setLevelIsDefaultContext();
+    }));
+    this._register(this.lifecycleService.onDidShutdown(() => this.dispose()));
+    this.filters = this._register(new OutputViewFilters({
+      filterHistory: [],
+      trace: true,
+      debug: true,
+      info: true,
+      warning: true,
+      error: true,
+      sources: ""
+    }, contextKeyService));
+  }
+  static {
+    __name(this, "OutputService");
+  }
+  channels = this._register(new DisposableMap());
+  activeChannelIdInStorage;
+  activeChannel;
+  _onActiveOutputChannel = this._register(new Emitter());
+  onActiveOutputChannel = this._onActiveOutputChannel.event;
+  activeOutputChannelContext;
+  activeFileOutputChannelContext;
+  activeLogOutputChannelContext;
+  activeOutputChannelLevelSettableContext;
+  activeOutputChannelLevelContext;
+  activeOutputChannelLevelIsDefaultContext;
+  outputLocation;
+  filters;
+  provideTextContent(resource) {
+    const channel = this.getChannel(resource.path);
+    if (channel) {
+      return channel.model.loadModel();
+    }
+    return null;
+  }
+  async showChannel(id, preserveFocus) {
+    const channel = this.getChannel(id);
+    if (this.activeChannel?.id !== channel?.id) {
+      this.setActiveChannel(channel);
+      this._onActiveOutputChannel.fire(id);
+    }
+    const outputView = await this.viewsService.openView(OUTPUT_VIEW_ID, !preserveFocus);
+    if (outputView && channel) {
+      outputView.showChannel(channel, !!preserveFocus);
+    }
+  }
+  getChannel(id) {
+    return this.channels.get(id);
+  }
+  getChannelDescriptor(id) {
+    return Registry.as(Extensions.OutputChannels).getChannel(id);
+  }
+  getChannelDescriptors() {
+    return Registry.as(Extensions.OutputChannels).getChannels();
+  }
+  getActiveChannel() {
+    return this.activeChannel;
+  }
+  canSetLogLevel(channel) {
+    return channel.log && channel.id !== telemetryLogId;
+  }
+  getLogLevel(channel) {
+    if (!channel.log) {
+      return void 0;
+    }
+    const sources = isSingleSourceOutputChannelDescriptor(channel) ? [channel.source] : isMultiSourceOutputChannelDescriptor(channel) ? channel.source : [];
+    if (sources.length === 0) {
+      return void 0;
+    }
+    const logLevel = this.loggerService.getLogLevel();
+    return sources.reduce((prev, curr) => Math.min(prev, this.loggerService.getLogLevel(curr.resource) ?? logLevel), LogLevel.Error);
+  }
+  setLogLevel(channel, logLevel) {
+    if (!channel.log) {
+      return;
+    }
+    const sources = isSingleSourceOutputChannelDescriptor(channel) ? [channel.source] : isMultiSourceOutputChannelDescriptor(channel) ? channel.source : [];
+    if (sources.length === 0) {
+      return;
+    }
+    for (const source of sources) {
+      this.loggerService.setLogLevel(source.resource, logLevel);
+    }
+  }
+  registerCompoundLogChannel(descriptors) {
+    const outputChannelRegistry = Registry.as(Extensions.OutputChannels);
+    descriptors.sort((a, b) => a.label.localeCompare(b.label));
+    const id = descriptors.map((r) => r.id.toLowerCase()).join("-");
+    if (!outputChannelRegistry.getChannel(id)) {
+      outputChannelRegistry.registerChannel({
+        id,
+        label: descriptors.map((r) => r.label).join(", "),
+        log: descriptors.some((r) => r.log),
+        user: true,
+        source: descriptors.map((descriptor) => {
+          if (isSingleSourceOutputChannelDescriptor(descriptor)) {
+            return [{ resource: descriptor.source.resource, name: descriptor.source.name ?? descriptor.label }];
+          }
+          if (isMultiSourceOutputChannelDescriptor(descriptor)) {
+            return descriptor.source;
+          }
+          const channel = this.getChannel(descriptor.id);
+          if (channel) {
+            return channel.model.source;
+          }
+          return [];
+        }).flat()
+      });
+    }
+    return id;
+  }
+  async saveOutputAs(...channels) {
+    let channel;
+    if (channels.length > 1) {
+      const compoundChannelId = this.registerCompoundLogChannel(channels);
+      channel = this.getChannel(compoundChannelId);
+    } else {
+      channel = this.getChannel(channels[0].id);
+    }
+    if (!channel) {
+      return;
+    }
+    try {
+      const name = channels.length > 1 ? "output" : channels[0].label;
+      const uri = await this.fileDialogService.showSaveDialog({
+        title: localize("saveLog.dialogTitle", "Save Output As"),
+        availableFileSystems: [Schemas.file],
+        defaultUri: joinPath(await this.fileDialogService.defaultFilePath(), `${name}.log`),
+        filters: [{
+          name,
+          extensions: ["log"]
+        }]
+      });
+      if (!uri) {
+        return;
+      }
+      const modelRef = await this.textModelService.createModelReference(channel.uri);
+      try {
+        await this.fileService.writeFile(uri, VSBuffer.fromString(modelRef.object.textEditorModel.getValue()));
+      } finally {
+        modelRef.dispose();
+      }
+      return;
+    } finally {
+      if (channels.length > 1) {
+        Registry.as(Extensions.OutputChannels).removeChannel(channel.id);
+      }
+    }
+  }
+  async onDidRegisterChannel(channelId) {
+    const channel = this.createChannel(channelId);
+    this.channels.set(channelId, channel);
+    if (!this.activeChannel || this.activeChannelIdInStorage === channelId) {
+      this.setActiveChannel(channel);
+      this._onActiveOutputChannel.fire(channelId);
+      const outputView = this.viewsService.getActiveViewWithId(OUTPUT_VIEW_ID);
+      outputView?.showChannel(channel, true);
+    }
+  }
+  onDidUpdateChannelSources(channel) {
+    const outputChannel = this.channels.get(channel.id);
+    if (outputChannel) {
+      outputChannel.model.updateChannelSources(channel.source);
+    }
+  }
+  onDidRemoveChannel(channel) {
+    if (this.activeChannel?.id === channel.id) {
+      const channels = this.getChannelDescriptors();
+      if (channels[0]) {
+        this.showChannel(channels[0].id);
+      }
+    }
+    this.channels.deleteAndDispose(channel.id);
+  }
+  createChannel(id) {
+    const channel = this.instantiateChannel(id);
+    this._register(Event.once(channel.model.onDispose)(() => {
+      if (this.activeChannel === channel) {
+        const channels = this.getChannelDescriptors();
+        const channel2 = channels.length ? this.getChannel(channels[0].id) : void 0;
+        if (channel2 && this.viewsService.isViewVisible(OUTPUT_VIEW_ID)) {
+          this.showChannel(channel2.id);
+        } else {
+          this.setActiveChannel(void 0);
+        }
+      }
+      Registry.as(Extensions.OutputChannels).removeChannel(id);
+    }));
+    return channel;
+  }
+  outputFolderCreationPromise = null;
+  instantiateChannel(id) {
+    const channelData = Registry.as(Extensions.OutputChannels).getChannel(id);
+    if (!channelData) {
+      this.logService.error(`Channel '${id}' is not registered yet`);
+      throw new Error(`Channel '${id}' is not registered yet`);
+    }
+    if (!this.outputFolderCreationPromise) {
+      this.outputFolderCreationPromise = this.fileService.createFolder(this.outputLocation).then(() => void 0);
+    }
+    return this.instantiationService.createInstance(OutputChannel, channelData, this.outputLocation, this.outputFolderCreationPromise);
+  }
+  resetLogLevelFilters() {
+    const descriptor = this.activeChannel?.outputChannelDescriptor;
+    const channelLogLevel = descriptor ? this.getLogLevel(descriptor) : void 0;
+    if (channelLogLevel !== void 0) {
+      this.filters.error = channelLogLevel <= LogLevel.Error;
+      this.filters.warning = channelLogLevel <= LogLevel.Warning;
+      this.filters.info = channelLogLevel <= LogLevel.Info;
+      this.filters.debug = channelLogLevel <= LogLevel.Debug;
+      this.filters.trace = channelLogLevel <= LogLevel.Trace;
+    }
+  }
+  setLevelContext() {
+    const descriptor = this.activeChannel?.outputChannelDescriptor;
+    const channelLogLevel = descriptor ? this.getLogLevel(descriptor) : void 0;
+    this.activeOutputChannelLevelContext.set(channelLogLevel !== void 0 ? LogLevelToString(channelLogLevel) : "");
+  }
+  async setLevelIsDefaultContext() {
+    const descriptor = this.activeChannel?.outputChannelDescriptor;
+    const channelLogLevel = descriptor ? this.getLogLevel(descriptor) : void 0;
+    if (channelLogLevel !== void 0) {
+      const channelDefaultLogLevel = await this.defaultLogLevelsService.getDefaultLogLevel(descriptor?.extensionId);
+      this.activeOutputChannelLevelIsDefaultContext.set(channelDefaultLogLevel === channelLogLevel);
+    } else {
+      this.activeOutputChannelLevelIsDefaultContext.set(false);
+    }
+  }
+  setActiveChannel(channel) {
+    this.activeChannel = channel;
+    const descriptor = channel?.outputChannelDescriptor;
+    this.activeFileOutputChannelContext.set(!!descriptor && isSingleSourceOutputChannelDescriptor(descriptor));
+    this.activeLogOutputChannelContext.set(!!descriptor?.log);
+    this.activeOutputChannelLevelSettableContext.set(descriptor !== void 0 && this.canSetLogLevel(descriptor));
+    this.setLevelIsDefaultContext();
+    this.setLevelContext();
+    if (this.activeChannel) {
+      this.storageService.store(OUTPUT_ACTIVE_CHANNEL_KEY, this.activeChannel.id, StorageScope.WORKSPACE, StorageTarget.MACHINE);
+    } else {
+      this.storageService.remove(OUTPUT_ACTIVE_CHANNEL_KEY, StorageScope.WORKSPACE);
+    }
+  }
+};
+OutputService = __decorateClass([
+  __decorateParam(0, IStorageService),
+  __decorateParam(1, IInstantiationService),
+  __decorateParam(2, ITextModelService),
+  __decorateParam(3, ILogService),
+  __decorateParam(4, ILoggerService),
+  __decorateParam(5, ILifecycleService),
+  __decorateParam(6, IViewsService),
+  __decorateParam(7, IContextKeyService),
+  __decorateParam(8, IDefaultLogLevelsService),
+  __decorateParam(9, IFileDialogService),
+  __decorateParam(10, IFileService),
+  __decorateParam(11, IWorkbenchEnvironmentService)
+], OutputService);
+export {
+  OutputService
+};
+//# sourceMappingURL=outputServices.js.map

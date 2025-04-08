@@ -1,1 +1,157 @@
-import{KeyCode as s}from"../../../../base/common/keyCodes.js";import{EditorAction2 as i}from"../../../browser/editorExtensions.js";import{localize as n,localize2 as e}from"../../../../nls.js";import{Categories as k}from"../../../../platform/action/common/actionCommonCategories.js";import{MenuId as d}from"../../../../platform/actions/common/actions.js";import{IConfigurationService as p}from"../../../../platform/configuration/common/configuration.js";import{KeybindingWeight as g}from"../../../../platform/keybinding/common/keybindingsRegistry.js";import{ContextKeyExpr as m}from"../../../../platform/contextkey/common/contextkey.js";import{EditorContextKeys as l}from"../../../common/editorContextKeys.js";import"../../../browser/editorBrowser.js";import{StickyScrollController as c}from"./stickyScrollController.js";class P extends i{constructor(){super({id:"editor.action.toggleStickyScroll",title:{...e("toggleEditorStickyScroll","Toggle Editor Sticky Scroll"),mnemonicTitle:n({key:"mitoggleStickyScroll",comment:["&& denotes a mnemonic"]},"&&Toggle Editor Sticky Scroll")},metadata:{description:e("toggleEditorStickyScroll.description","Toggle/enable the editor sticky scroll which shows the nested scopes at the top of the viewport")},category:k.View,toggled:{condition:m.equals("config.editor.stickyScroll.enabled",!0),title:n("stickyScroll","Sticky Scroll"),mnemonicTitle:n({key:"miStickyScroll",comment:["&& denotes a mnemonic"]},"&&Sticky Scroll")},menu:[{id:d.CommandPalette},{id:d.MenubarAppearanceMenu,group:"4_editor",order:3},{id:d.StickyScrollContext}]})}async runEditorCommand(o,t){const e=o.get(p),i=!e.getValue("editor.stickyScroll.enabled"),r=c.get(t)?.isFocused();e.updateValue("editor.stickyScroll.enabled",i),r&&t.focus()}}const S=g.EditorContrib;class _ extends i{constructor(){super({id:"editor.action.focusStickyScroll",title:{...e("focusStickyScroll","Focus Editor Sticky Scroll"),mnemonicTitle:n({key:"mifocusEditorStickyScroll",comment:["&& denotes a mnemonic"]},"&&Focus Editor Sticky Scroll")},precondition:m.and(m.has("config.editor.stickyScroll.enabled"),l.stickyScrollVisible),menu:[{id:d.CommandPalette}]})}runEditorCommand(o,t){c.get(t)?.focus()}}class q extends i{constructor(){super({id:"editor.action.selectNextStickyScrollLine",title:e("selectNextStickyScrollLine.title","Select the next editor sticky scroll line"),precondition:l.stickyScrollFocused.isEqualTo(!0),keybinding:{weight:S,primary:s.DownArrow}})}runEditorCommand(o,t){c.get(t)?.focusNext()}}class V extends i{constructor(){super({id:"editor.action.selectPreviousStickyScrollLine",title:e("selectPreviousStickyScrollLine.title","Select the previous sticky scroll line"),precondition:l.stickyScrollFocused.isEqualTo(!0),keybinding:{weight:S,primary:s.UpArrow}})}runEditorCommand(o,t){c.get(t)?.focusPrevious()}}class K extends i{constructor(){super({id:"editor.action.goToFocusedStickyScrollLine",title:e("goToFocusedStickyScrollLine.title","Go to the focused sticky scroll line"),precondition:l.stickyScrollFocused.isEqualTo(!0),keybinding:{weight:S,primary:s.Enter}})}runEditorCommand(o,t){c.get(t)?.goToFocused()}}class N extends i{constructor(){super({id:"editor.action.selectEditor",title:e("selectEditor.title","Select Editor"),precondition:l.stickyScrollFocused.isEqualTo(!0),keybinding:{weight:S,primary:s.Escape}})}runEditorCommand(o,t){c.get(t)?.selectEditor()}}export{_ as FocusStickyScroll,K as GoToStickyScrollLine,N as SelectEditor,q as SelectNextStickyScrollLine,V as SelectPreviousStickyScrollLine,P as ToggleStickyScroll};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { KeyCode } from "../../../../base/common/keyCodes.js";
+import { EditorAction2, ServicesAccessor } from "../../../browser/editorExtensions.js";
+import { localize, localize2 } from "../../../../nls.js";
+import { Categories } from "../../../../platform/action/common/actionCommonCategories.js";
+import { MenuId } from "../../../../platform/actions/common/actions.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { KeybindingWeight } from "../../../../platform/keybinding/common/keybindingsRegistry.js";
+import { ContextKeyExpr } from "../../../../platform/contextkey/common/contextkey.js";
+import { EditorContextKeys } from "../../../common/editorContextKeys.js";
+import { ICodeEditor } from "../../../browser/editorBrowser.js";
+import { StickyScrollController } from "./stickyScrollController.js";
+class ToggleStickyScroll extends EditorAction2 {
+  static {
+    __name(this, "ToggleStickyScroll");
+  }
+  constructor() {
+    super({
+      id: "editor.action.toggleStickyScroll",
+      title: {
+        ...localize2("toggleEditorStickyScroll", "Toggle Editor Sticky Scroll"),
+        mnemonicTitle: localize({ key: "mitoggleStickyScroll", comment: ["&& denotes a mnemonic"] }, "&&Toggle Editor Sticky Scroll")
+      },
+      metadata: {
+        description: localize2("toggleEditorStickyScroll.description", "Toggle/enable the editor sticky scroll which shows the nested scopes at the top of the viewport")
+      },
+      category: Categories.View,
+      toggled: {
+        condition: ContextKeyExpr.equals("config.editor.stickyScroll.enabled", true),
+        title: localize("stickyScroll", "Sticky Scroll"),
+        mnemonicTitle: localize({ key: "miStickyScroll", comment: ["&& denotes a mnemonic"] }, "&&Sticky Scroll")
+      },
+      menu: [
+        { id: MenuId.CommandPalette },
+        { id: MenuId.MenubarAppearanceMenu, group: "4_editor", order: 3 },
+        { id: MenuId.StickyScrollContext }
+      ]
+    });
+  }
+  async runEditorCommand(accessor, editor) {
+    const configurationService = accessor.get(IConfigurationService);
+    const newValue = !configurationService.getValue("editor.stickyScroll.enabled");
+    const isFocused = StickyScrollController.get(editor)?.isFocused();
+    configurationService.updateValue("editor.stickyScroll.enabled", newValue);
+    if (isFocused) {
+      editor.focus();
+    }
+  }
+}
+const weight = KeybindingWeight.EditorContrib;
+class FocusStickyScroll extends EditorAction2 {
+  static {
+    __name(this, "FocusStickyScroll");
+  }
+  constructor() {
+    super({
+      id: "editor.action.focusStickyScroll",
+      title: {
+        ...localize2("focusStickyScroll", "Focus Editor Sticky Scroll"),
+        mnemonicTitle: localize({ key: "mifocusEditorStickyScroll", comment: ["&& denotes a mnemonic"] }, "&&Focus Editor Sticky Scroll")
+      },
+      precondition: ContextKeyExpr.and(ContextKeyExpr.has("config.editor.stickyScroll.enabled"), EditorContextKeys.stickyScrollVisible),
+      menu: [
+        { id: MenuId.CommandPalette }
+      ]
+    });
+  }
+  runEditorCommand(_accessor, editor) {
+    StickyScrollController.get(editor)?.focus();
+  }
+}
+class SelectNextStickyScrollLine extends EditorAction2 {
+  static {
+    __name(this, "SelectNextStickyScrollLine");
+  }
+  constructor() {
+    super({
+      id: "editor.action.selectNextStickyScrollLine",
+      title: localize2("selectNextStickyScrollLine.title", "Select the next editor sticky scroll line"),
+      precondition: EditorContextKeys.stickyScrollFocused.isEqualTo(true),
+      keybinding: {
+        weight,
+        primary: KeyCode.DownArrow
+      }
+    });
+  }
+  runEditorCommand(_accessor, editor) {
+    StickyScrollController.get(editor)?.focusNext();
+  }
+}
+class SelectPreviousStickyScrollLine extends EditorAction2 {
+  static {
+    __name(this, "SelectPreviousStickyScrollLine");
+  }
+  constructor() {
+    super({
+      id: "editor.action.selectPreviousStickyScrollLine",
+      title: localize2("selectPreviousStickyScrollLine.title", "Select the previous sticky scroll line"),
+      precondition: EditorContextKeys.stickyScrollFocused.isEqualTo(true),
+      keybinding: {
+        weight,
+        primary: KeyCode.UpArrow
+      }
+    });
+  }
+  runEditorCommand(_accessor, editor) {
+    StickyScrollController.get(editor)?.focusPrevious();
+  }
+}
+class GoToStickyScrollLine extends EditorAction2 {
+  static {
+    __name(this, "GoToStickyScrollLine");
+  }
+  constructor() {
+    super({
+      id: "editor.action.goToFocusedStickyScrollLine",
+      title: localize2("goToFocusedStickyScrollLine.title", "Go to the focused sticky scroll line"),
+      precondition: EditorContextKeys.stickyScrollFocused.isEqualTo(true),
+      keybinding: {
+        weight,
+        primary: KeyCode.Enter
+      }
+    });
+  }
+  runEditorCommand(_accessor, editor) {
+    StickyScrollController.get(editor)?.goToFocused();
+  }
+}
+class SelectEditor extends EditorAction2 {
+  static {
+    __name(this, "SelectEditor");
+  }
+  constructor() {
+    super({
+      id: "editor.action.selectEditor",
+      title: localize2("selectEditor.title", "Select Editor"),
+      precondition: EditorContextKeys.stickyScrollFocused.isEqualTo(true),
+      keybinding: {
+        weight,
+        primary: KeyCode.Escape
+      }
+    });
+  }
+  runEditorCommand(_accessor, editor) {
+    StickyScrollController.get(editor)?.selectEditor();
+  }
+}
+export {
+  FocusStickyScroll,
+  GoToStickyScrollLine,
+  SelectEditor,
+  SelectNextStickyScrollLine,
+  SelectPreviousStickyScrollLine,
+  ToggleStickyScroll
+};
+//# sourceMappingURL=stickyScrollActions.js.map

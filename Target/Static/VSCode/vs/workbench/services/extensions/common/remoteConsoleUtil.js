@@ -1,1 +1,56 @@
-import{parse as e}from"../../../../base/common/console.js";import"../../../../platform/log/common/log.js";function m(r,o,t=null){const s=e(o).args;let n=s.shift();if("string"==typeof n)switch(o.severity||(o.severity="info"),t&&(/^\[/.test(t)||(t=`[${t}]`),/ $/.test(t)||(t=`${t} `),n=t+n),o.severity){case"log":case"info":r.info(n,...s);break;case"warn":r.warn(n,...s);break;case"error":r.error(n,...s)}}function p(r,o,t){const s=e(o).args,n=s.shift();"string"!=typeof n||"error"!==o.severity||(/^\[/.test(t)||(t=`[${t}]`),/ $/.test(t)||(t=`${t} `),r.error(t+n,...s))}export{m as logRemoteEntry,p as logRemoteEntryIfError};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { IRemoteConsoleLog, parse } from "../../../../base/common/console.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+function logRemoteEntry(logService, entry, label = null) {
+  const args = parse(entry).args;
+  let firstArg = args.shift();
+  if (typeof firstArg !== "string") {
+    return;
+  }
+  if (!entry.severity) {
+    entry.severity = "info";
+  }
+  if (label) {
+    if (!/^\[/.test(label)) {
+      label = `[${label}]`;
+    }
+    if (!/ $/.test(label)) {
+      label = `${label} `;
+    }
+    firstArg = label + firstArg;
+  }
+  switch (entry.severity) {
+    case "log":
+    case "info":
+      logService.info(firstArg, ...args);
+      break;
+    case "warn":
+      logService.warn(firstArg, ...args);
+      break;
+    case "error":
+      logService.error(firstArg, ...args);
+      break;
+  }
+}
+__name(logRemoteEntry, "logRemoteEntry");
+function logRemoteEntryIfError(logService, entry, label) {
+  const args = parse(entry).args;
+  const firstArg = args.shift();
+  if (typeof firstArg !== "string" || entry.severity !== "error") {
+    return;
+  }
+  if (!/^\[/.test(label)) {
+    label = `[${label}]`;
+  }
+  if (!/ $/.test(label)) {
+    label = `${label} `;
+  }
+  logService.error(label + firstArg, ...args);
+}
+__name(logRemoteEntryIfError, "logRemoteEntryIfError");
+export {
+  logRemoteEntry,
+  logRemoteEntryIfError
+};
+//# sourceMappingURL=remoteConsoleUtil.js.map

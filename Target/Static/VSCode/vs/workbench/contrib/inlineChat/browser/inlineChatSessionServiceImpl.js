@@ -1,1 +1,394 @@
-var H=Object.defineProperty;var O=Object.getOwnPropertyDescriptor;var M=(I,e,t,i)=>{for(var s=i>1?void 0:i?O(e,t):e,n=I.length-1,r;n>=0;n--)(r=I[n])&&(s=(i?r(e,t,s):r(s))||s);return i&&s&&H(e,t,s),s},d=(I,e)=>(t,i)=>e(t,i,I);import"../../../../base/common/cancellation.js";import{Emitter as m,Event as W}from"../../../../base/common/event.js";import{DisposableStore as u,MutableDisposable as U,toDisposable as w}from"../../../../base/common/lifecycle.js";import{ResourceMap as $}from"../../../../base/common/map.js";import{Schemas as T}from"../../../../base/common/network.js";import{autorun as b,observableFromEvent as F}from"../../../../base/common/observable.js";import{isEqual as K}from"../../../../base/common/resources.js";import{assertType as q}from"../../../../base/common/types.js";import"../../../../base/common/uri.js";import{generateUuid as B}from"../../../../base/common/uuid.js";import{isCodeEditor as V,isCompositeEditor as G,isDiffEditor as X}from"../../../../editor/browser/editorBrowser.js";import{Range as j}from"../../../../editor/common/core/range.js";import{ILanguageService as z}from"../../../../editor/common/languages/language.js";import"../../../../editor/common/model.js";import{createTextBufferFactoryFromSnapshot as J}from"../../../../editor/common/model/textModel.js";import{IEditorWorkerService as Q}from"../../../../editor/common/services/editorWorker.js";import{IModelService as Y}from"../../../../editor/common/services/model.js";import{ITextModelService as Z}from"../../../../editor/common/services/resolverService.js";import{IConfigurationService as ee}from"../../../../platform/configuration/common/configuration.js";import{IContextKeyService as te}from"../../../../platform/contextkey/common/contextkey.js";import{IInstantiationService as se}from"../../../../platform/instantiation/common/instantiation.js";import{ILogService as ie}from"../../../../platform/log/common/log.js";import{observableConfigValue as oe}from"../../../../platform/observable/common/platformObservableUtils.js";import{ITelemetryService as ne}from"../../../../platform/telemetry/common/telemetry.js";import{DEFAULT_EDITOR_ASSOCIATION as re}from"../../../common/editor.js";import{IEditorService as A}from"../../../services/editor/common/editorService.js";import{ITextFileService as ae}from"../../../services/textfile/common/textfiles.js";import{UntitledTextEditorInput as de}from"../../../services/untitled/common/untitledTextEditorInput.js";import{IChatWidgetService as le}from"../../chat/browser/chat.js";import{IChatAgentService as k}from"../../chat/common/chatAgents.js";import{ModifiedFileEntryState as R}from"../../chat/common/chatEditingService.js";import{IChatService as ce}from"../../chat/common/chatService.js";import{ChatAgentLocation as C}from"../../chat/common/constants.js";import{CTX_INLINE_CHAT_HAS_AGENT as he,CTX_INLINE_CHAT_HAS_AGENT2 as Se,CTX_INLINE_CHAT_POSSIBLE as ve,InlineChatConfigKeys as Ie}from"../common/inlineChat.js";import{HunkData as _e,Session as ge,SessionWholeRange as fe,StashedSession as pe}from"./inlineChatSession.js";import"./inlineChatSessionService.js";class P extends Error{static code="InlineChatError";constructor(e){super(e),this.name=P.code}}let E=class{constructor(e,t,i,s,n,r,o,a,l,_,g,S){this._telemetryService=e;this._modelService=t;this._textModelService=i;this._editorWorkerService=s;this._logService=n;this._instaService=r;this._editorService=o;this._textFileService=a;this._languageService=l;this._chatService=_;this._chatAgentService=g;this._chatWidgetService=S}_store=new u;_onWillStartSession=this._store.add(new m);onWillStartSession=this._onWillStartSession.event;_onDidMoveSession=this._store.add(new m);onDidMoveSession=this._onDidMoveSession.event;_onDidEndSession=this._store.add(new m);onDidEndSession=this._onDidEndSession.event;_onDidStashSession=this._store.add(new m);onDidStashSession=this._onDidStashSession.event;_sessions=new Map;_keyComputers=new Map;dispose(){this._store.dispose(),this._sessions.forEach(e=>e.store.dispose()),this._sessions.clear()}async createSession(e,t,i){const s=this._chatAgentService.getDefaultAgent(C.Editor);if(!s){this._logService.trace("[IE] NO agent found");return}this._onWillStartSession.fire(e);const n=e.getModel(),r=e.getSelection(),o=new u;this._logService.trace(`[IE] creating NEW session for ${e.getId()}, ${s.extensionId}`);const a=t.session?.chatModel??this._chatService.startSession(C.Editor,i);if(!a){this._logService.trace("[IE] NO chatModel found");return}o.add(w(()=>{[...this._sessions.values()].some(h=>h.session!==c&&h.session.chatModel===a)||(this._chatService.clearSession(a.sessionId),a.dispose())}));const l=o.add(new U);o.add(a.onDidChange(v=>{if(v.kind!=="addRequest"||!v.request.response)return;const{response:h}=v.request;c.markModelVersion(v.request),l.value=h.onDidChange(()=>{if(h.isComplete){l.clear();for(const f of h.response.value){if(f.kind!=="textEditGroup"||f.uri.scheme!==T.untitled||K(f.uri,c.textModelN.uri))continue;const L=this._languageService.createByFilepathOrFirstLine(f.uri,void 0);this._textFileService.untitled.create({associatedResource:f.uri,languageId:L.languageId}).resolve(),this._textModelService.createModelReference(f.uri).then(N=>{o.add(N)})}}})})),o.add(this._chatAgentService.onDidChangeAgents(v=>{v===void 0&&(!this._chatAgentService.getAgent(s.id)||!this._chatAgentService.getActivatedAgents().map(h=>h.id).includes(s.id))&&(this._logService.trace(`[IE] provider GONE for ${e.getId()}, ${s.extensionId}`),this._releaseSession(c,!0))}));const _=B(),g=n.uri;o.add(await this._textModelService.createModelReference(n.uri));const S=n,p=o.add(this._modelService.createModel(J(n.createSnapshot()),{languageId:n.getLanguageId(),onDidChange:W.None},g.with({scheme:T.vscode,authority:"inline-chat",path:"",query:new URLSearchParams({id:_,textModel0:""}).toString()}),!0));g.scheme===T.untitled&&o.add(this._editorService.onDidCloseEditor(()=>{this._editorService.isOpened({resource:g,typeId:de.ID,editorId:re.id})||this._releaseSession(c,!0)}));let x=t.wholeRange;if(x||(x=new j(r.selectionStartLineNumber,r.selectionStartColumn,r.positionLineNumber,r.positionColumn)),i.isCancellationRequested){o.dispose();return}const c=new ge(t.headless??!1,g,p,S,s,o.add(new fe(S,x)),o.add(new _e(this._editorWorkerService,p,S)),a,t.session?.versionsByRequest),D=this._key(e,c.targetUri);if(this._sessions.has(D))throw o.dispose(),new Error(`Session already stored for ${D}`);return this._sessions.set(D,{session:c,editor:e,store:o}),c}moveSession(e,t){const i=this._key(t,e.targetUri),s=this._sessions.get(i);if(s){if(s.session!==e)throw new Error("Cannot move session because the target editor already/still has one");return}let n=!1;for(const[r,o]of this._sessions)if(o.session===e){n=!0,this._sessions.delete(r),this._sessions.set(i,{...o,editor:t}),this._logService.trace(`[IE] did MOVE session for ${o.editor.getId()} to NEW EDITOR ${t.getId()}, ${e.agent.extensionId}`),this._onDidMoveSession.fire({session:e,editor:t});break}if(!n)throw new Error("Cannot move session because it is not stored")}releaseSession(e){this._releaseSession(e,!1)}_releaseSession(e,t){let i;for(const r of this._sessions)if(r[1].session===e){i=r;break}if(!i)return;this._telemetryService.publicLog2("interactiveEditor/session",e.asTelemetryData());const[s,n]=i;this._sessions.delete(s),this._logService.trace(`[IE] did RELEASED session for ${n.editor.getId()}, ${e.agent.extensionId}`),this._onDidEndSession.fire({editor:n.editor,session:e,endedByExternalCause:t}),n.store.dispose()}stashSession(e,t,i){const s=this._instaService.createInstance(pe,t,e,i);return this._onDidStashSession.fire({editor:t,session:e}),this._logService.trace(`[IE] did STASH session for ${t.getId()}, ${e.agent.extensionId}`),s}getCodeEditor(e){for(const[,t]of this._sessions)if(t.session===e)return t.editor;throw new Error("session not found")}getSession(e,t){const i=this._key(e,t);return this._sessions.get(i)?.session}_key(e,t){const i=this._keyComputers.get(t.scheme);return i?i.getComparisonKey(e,t):`${e.getId()}@${t.toString()}`}registerSessionKeyComputer(e,t){return this._keyComputers.set(e,t),w(()=>this._keyComputers.delete(e))}_sessions2=new $;_onDidChangeSessions=this._store.add(new m);onDidChangeSessions=this._onDidChangeSessions.event;async createSession2(e,t,i){if(q(e.hasModel()),this._sessions2.has(t))throw new Error("Session already exists");this._onWillStartSession.fire(e);const s=this._chatService.startSession(C.EditingSession,i,!1),n=await s.editingSessionObs?.promise;await this._chatWidgetService.getWidgetBySessionId(s.sessionId)?.attachmentModel.addFile(t);const o=new u;o.add(w(()=>{this._chatService.cancelCurrentRequestForSession(s.sessionId),n.reject(),this._sessions2.delete(t),this._onDidChangeSessions.fire(this)})),o.add(s),o.add(b(l=>{const _=n.entries.read(l);if(_.length===0)return;_.every(S=>{const p=S.state.read(l);return(p===R.Accepted||p===R.Rejected)&&!S.isCurrentlyBeingModifiedBy.read(l)})&&!s.requestInProgress&&o.dispose()}));const a={uri:t,initialPosition:e.getPosition().delta(-1),chatModel:s,editingSession:n,dispose:o.dispose.bind(o)};return this._sessions2.set(t,a),this._onDidChangeSessions.fire(this),a}getSession2(e){let t=this._sessions2.get(e);if(!t){for(const[i,s]of this._sessions2)if(s.editingSession.getEntry(e)){t=s;break}}return t}};E=M([d(0,ne),d(1,Y),d(2,Z),d(3,Q),d(4,ie),d(5,se),d(6,A),d(7,ae),d(8,z),d(9,ce),d(10,k),d(11,le)],E);let y=class{static Id="inlineChat.enabler";_ctxHasProvider;_ctxHasProvider2;_ctxPossible;_store=new u;constructor(e,t,i,s){this._ctxHasProvider=he.bindTo(e),this._ctxHasProvider2=Se.bindTo(e),this._ctxPossible=ve.bindTo(e);const n=F(this,t.onDidChangeAgents,()=>t.getDefaultAgent(C.Editor)),r=oe(Ie.EnableV2,!1,s);this._store.add(b(a=>{const l=r.read(a);n.read(a)?l?(this._ctxHasProvider.reset(),this._ctxHasProvider2.set(!0)):(this._ctxHasProvider.set(!0),this._ctxHasProvider2.reset()):(this._ctxHasProvider.reset(),this._ctxHasProvider2.reset())}));const o=()=>{const a=i.activeEditorPane?.getControl(),l=V(a)||X(a)||G(a);this._ctxPossible.set(l)};this._store.add(i.onDidActiveEditorChange(o)),o()}dispose(){this._ctxPossible.reset(),this._ctxHasProvider.reset(),this._store.dispose()}};y=M([d(0,te),d(1,k),d(2,A),d(3,ee)],y);export{y as InlineChatEnabler,P as InlineChatError,E as InlineChatSessionServiceImpl};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { DisposableStore, IDisposable, MutableDisposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { ResourceMap } from "../../../../base/common/map.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { autorun, observableFromEvent } from "../../../../base/common/observable.js";
+import { isEqual } from "../../../../base/common/resources.js";
+import { assertType } from "../../../../base/common/types.js";
+import { URI } from "../../../../base/common/uri.js";
+import { generateUuid } from "../../../../base/common/uuid.js";
+import { IActiveCodeEditor, ICodeEditor, isCodeEditor, isCompositeEditor, isDiffEditor } from "../../../../editor/browser/editorBrowser.js";
+import { Range } from "../../../../editor/common/core/range.js";
+import { ILanguageService } from "../../../../editor/common/languages/language.js";
+import { IValidEditOperation } from "../../../../editor/common/model.js";
+import { createTextBufferFactoryFromSnapshot } from "../../../../editor/common/model/textModel.js";
+import { IEditorWorkerService } from "../../../../editor/common/services/editorWorker.js";
+import { IModelService } from "../../../../editor/common/services/model.js";
+import { ITextModelService } from "../../../../editor/common/services/resolverService.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IContextKey, IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { observableConfigValue } from "../../../../platform/observable/common/platformObservableUtils.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { DEFAULT_EDITOR_ASSOCIATION } from "../../../common/editor.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { ITextFileService } from "../../../services/textfile/common/textfiles.js";
+import { UntitledTextEditorInput } from "../../../services/untitled/common/untitledTextEditorInput.js";
+import { IChatWidgetService } from "../../chat/browser/chat.js";
+import { IChatAgentService } from "../../chat/common/chatAgents.js";
+import { ModifiedFileEntryState } from "../../chat/common/chatEditingService.js";
+import { IChatService } from "../../chat/common/chatService.js";
+import { ChatAgentLocation } from "../../chat/common/constants.js";
+import { CTX_INLINE_CHAT_HAS_AGENT, CTX_INLINE_CHAT_HAS_AGENT2, CTX_INLINE_CHAT_POSSIBLE, InlineChatConfigKeys } from "../common/inlineChat.js";
+import { HunkData, Session, SessionWholeRange, StashedSession, TelemetryData, TelemetryDataClassification } from "./inlineChatSession.js";
+import { IInlineChatSession2, IInlineChatSessionEndEvent, IInlineChatSessionEvent, IInlineChatSessionService, ISessionKeyComputer } from "./inlineChatSessionService.js";
+class InlineChatError extends Error {
+  static {
+    __name(this, "InlineChatError");
+  }
+  static code = "InlineChatError";
+  constructor(message) {
+    super(message);
+    this.name = InlineChatError.code;
+  }
+}
+let InlineChatSessionServiceImpl = class {
+  constructor(_telemetryService, _modelService, _textModelService, _editorWorkerService, _logService, _instaService, _editorService, _textFileService, _languageService, _chatService, _chatAgentService, _chatWidgetService) {
+    this._telemetryService = _telemetryService;
+    this._modelService = _modelService;
+    this._textModelService = _textModelService;
+    this._editorWorkerService = _editorWorkerService;
+    this._logService = _logService;
+    this._instaService = _instaService;
+    this._editorService = _editorService;
+    this._textFileService = _textFileService;
+    this._languageService = _languageService;
+    this._chatService = _chatService;
+    this._chatAgentService = _chatAgentService;
+    this._chatWidgetService = _chatWidgetService;
+  }
+  static {
+    __name(this, "InlineChatSessionServiceImpl");
+  }
+  _store = new DisposableStore();
+  _onWillStartSession = this._store.add(new Emitter());
+  onWillStartSession = this._onWillStartSession.event;
+  _onDidMoveSession = this._store.add(new Emitter());
+  onDidMoveSession = this._onDidMoveSession.event;
+  _onDidEndSession = this._store.add(new Emitter());
+  onDidEndSession = this._onDidEndSession.event;
+  _onDidStashSession = this._store.add(new Emitter());
+  onDidStashSession = this._onDidStashSession.event;
+  _sessions = /* @__PURE__ */ new Map();
+  _keyComputers = /* @__PURE__ */ new Map();
+  dispose() {
+    this._store.dispose();
+    this._sessions.forEach((x) => x.store.dispose());
+    this._sessions.clear();
+  }
+  async createSession(editor, options, token) {
+    const agent = this._chatAgentService.getDefaultAgent(ChatAgentLocation.Editor);
+    if (!agent) {
+      this._logService.trace("[IE] NO agent found");
+      return void 0;
+    }
+    this._onWillStartSession.fire(editor);
+    const textModel = editor.getModel();
+    const selection = editor.getSelection();
+    const store = new DisposableStore();
+    this._logService.trace(`[IE] creating NEW session for ${editor.getId()}, ${agent.extensionId}`);
+    const chatModel = options.session?.chatModel ?? this._chatService.startSession(ChatAgentLocation.Editor, token);
+    if (!chatModel) {
+      this._logService.trace("[IE] NO chatModel found");
+      return void 0;
+    }
+    store.add(toDisposable(() => {
+      const doesOtherSessionUseChatModel = [...this._sessions.values()].some((data) => data.session !== session && data.session.chatModel === chatModel);
+      if (!doesOtherSessionUseChatModel) {
+        this._chatService.clearSession(chatModel.sessionId);
+        chatModel.dispose();
+      }
+    }));
+    const lastResponseListener = store.add(new MutableDisposable());
+    store.add(chatModel.onDidChange((e) => {
+      if (e.kind !== "addRequest" || !e.request.response) {
+        return;
+      }
+      const { response } = e.request;
+      session.markModelVersion(e.request);
+      lastResponseListener.value = response.onDidChange(() => {
+        if (!response.isComplete) {
+          return;
+        }
+        lastResponseListener.clear();
+        for (const part of response.response.value) {
+          if (part.kind !== "textEditGroup" || part.uri.scheme !== Schemas.untitled || isEqual(part.uri, session.textModelN.uri)) {
+            continue;
+          }
+          const langSelection = this._languageService.createByFilepathOrFirstLine(part.uri, void 0);
+          const untitledTextModel = this._textFileService.untitled.create({
+            associatedResource: part.uri,
+            languageId: langSelection.languageId
+          });
+          untitledTextModel.resolve();
+          this._textModelService.createModelReference(part.uri).then((ref) => {
+            store.add(ref);
+          });
+        }
+      });
+    }));
+    store.add(this._chatAgentService.onDidChangeAgents((e) => {
+      if (e === void 0 && (!this._chatAgentService.getAgent(agent.id) || !this._chatAgentService.getActivatedAgents().map((agent2) => agent2.id).includes(agent.id))) {
+        this._logService.trace(`[IE] provider GONE for ${editor.getId()}, ${agent.extensionId}`);
+        this._releaseSession(session, true);
+      }
+    }));
+    const id = generateUuid();
+    const targetUri = textModel.uri;
+    store.add(await this._textModelService.createModelReference(textModel.uri));
+    const textModelN = textModel;
+    const textModel0 = store.add(this._modelService.createModel(
+      createTextBufferFactoryFromSnapshot(textModel.createSnapshot()),
+      { languageId: textModel.getLanguageId(), onDidChange: Event.None },
+      targetUri.with({ scheme: Schemas.vscode, authority: "inline-chat", path: "", query: new URLSearchParams({ id, "textModel0": "" }).toString() }),
+      true
+    ));
+    if (targetUri.scheme === Schemas.untitled) {
+      store.add(this._editorService.onDidCloseEditor(() => {
+        if (!this._editorService.isOpened({ resource: targetUri, typeId: UntitledTextEditorInput.ID, editorId: DEFAULT_EDITOR_ASSOCIATION.id })) {
+          this._releaseSession(session, true);
+        }
+      }));
+    }
+    let wholeRange = options.wholeRange;
+    if (!wholeRange) {
+      wholeRange = new Range(selection.selectionStartLineNumber, selection.selectionStartColumn, selection.positionLineNumber, selection.positionColumn);
+    }
+    if (token.isCancellationRequested) {
+      store.dispose();
+      return void 0;
+    }
+    const session = new Session(
+      options.headless ?? false,
+      targetUri,
+      textModel0,
+      textModelN,
+      agent,
+      store.add(new SessionWholeRange(textModelN, wholeRange)),
+      store.add(new HunkData(this._editorWorkerService, textModel0, textModelN)),
+      chatModel,
+      options.session?.versionsByRequest
+    );
+    const key = this._key(editor, session.targetUri);
+    if (this._sessions.has(key)) {
+      store.dispose();
+      throw new Error(`Session already stored for ${key}`);
+    }
+    this._sessions.set(key, { session, editor, store });
+    return session;
+  }
+  moveSession(session, target) {
+    const newKey = this._key(target, session.targetUri);
+    const existing = this._sessions.get(newKey);
+    if (existing) {
+      if (existing.session !== session) {
+        throw new Error(`Cannot move session because the target editor already/still has one`);
+      } else {
+        return;
+      }
+    }
+    let found = false;
+    for (const [oldKey, data] of this._sessions) {
+      if (data.session === session) {
+        found = true;
+        this._sessions.delete(oldKey);
+        this._sessions.set(newKey, { ...data, editor: target });
+        this._logService.trace(`[IE] did MOVE session for ${data.editor.getId()} to NEW EDITOR ${target.getId()}, ${session.agent.extensionId}`);
+        this._onDidMoveSession.fire({ session, editor: target });
+        break;
+      }
+    }
+    if (!found) {
+      throw new Error(`Cannot move session because it is not stored`);
+    }
+  }
+  releaseSession(session) {
+    this._releaseSession(session, false);
+  }
+  _releaseSession(session, byServer) {
+    let tuple;
+    for (const candidate of this._sessions) {
+      if (candidate[1].session === session) {
+        tuple = candidate;
+        break;
+      }
+    }
+    if (!tuple) {
+      return;
+    }
+    this._telemetryService.publicLog2("interactiveEditor/session", session.asTelemetryData());
+    const [key, value] = tuple;
+    this._sessions.delete(key);
+    this._logService.trace(`[IE] did RELEASED session for ${value.editor.getId()}, ${session.agent.extensionId}`);
+    this._onDidEndSession.fire({ editor: value.editor, session, endedByExternalCause: byServer });
+    value.store.dispose();
+  }
+  stashSession(session, editor, undoCancelEdits) {
+    const result = this._instaService.createInstance(StashedSession, editor, session, undoCancelEdits);
+    this._onDidStashSession.fire({ editor, session });
+    this._logService.trace(`[IE] did STASH session for ${editor.getId()}, ${session.agent.extensionId}`);
+    return result;
+  }
+  getCodeEditor(session) {
+    for (const [, data] of this._sessions) {
+      if (data.session === session) {
+        return data.editor;
+      }
+    }
+    throw new Error("session not found");
+  }
+  getSession(editor, uri) {
+    const key = this._key(editor, uri);
+    return this._sessions.get(key)?.session;
+  }
+  _key(editor, uri) {
+    const item = this._keyComputers.get(uri.scheme);
+    return item ? item.getComparisonKey(editor, uri) : `${editor.getId()}@${uri.toString()}`;
+  }
+  registerSessionKeyComputer(scheme, value) {
+    this._keyComputers.set(scheme, value);
+    return toDisposable(() => this._keyComputers.delete(scheme));
+  }
+  // ---- NEW
+  _sessions2 = new ResourceMap();
+  _onDidChangeSessions = this._store.add(new Emitter());
+  onDidChangeSessions = this._onDidChangeSessions.event;
+  async createSession2(editor, uri, token) {
+    assertType(editor.hasModel());
+    if (this._sessions2.has(uri)) {
+      throw new Error("Session already exists");
+    }
+    this._onWillStartSession.fire(editor);
+    const chatModel = this._chatService.startSession(ChatAgentLocation.EditingSession, token, false);
+    const editingSession = await chatModel.editingSessionObs?.promise;
+    const widget = this._chatWidgetService.getWidgetBySessionId(chatModel.sessionId);
+    await widget?.attachmentModel.addFile(uri);
+    const store = new DisposableStore();
+    store.add(toDisposable(() => {
+      this._chatService.cancelCurrentRequestForSession(chatModel.sessionId);
+      editingSession.reject();
+      this._sessions2.delete(uri);
+      this._onDidChangeSessions.fire(this);
+    }));
+    store.add(chatModel);
+    store.add(autorun((r) => {
+      const entries = editingSession.entries.read(r);
+      if (entries.length === 0) {
+        return;
+      }
+      const allSettled = entries.every((entry) => {
+        const state = entry.state.read(r);
+        return (state === ModifiedFileEntryState.Accepted || state === ModifiedFileEntryState.Rejected) && !entry.isCurrentlyBeingModifiedBy.read(r);
+      });
+      if (allSettled && !chatModel.requestInProgress) {
+        store.dispose();
+      }
+    }));
+    const result = {
+      uri,
+      initialPosition: editor.getPosition().delta(-1),
+      chatModel,
+      editingSession,
+      dispose: store.dispose.bind(store)
+    };
+    this._sessions2.set(uri, result);
+    this._onDidChangeSessions.fire(this);
+    return result;
+  }
+  getSession2(uri) {
+    let result = this._sessions2.get(uri);
+    if (!result) {
+      for (const [_, candidate] of this._sessions2) {
+        const entry = candidate.editingSession.getEntry(uri);
+        if (entry) {
+          result = candidate;
+          break;
+        }
+      }
+    }
+    return result;
+  }
+};
+InlineChatSessionServiceImpl = __decorateClass([
+  __decorateParam(0, ITelemetryService),
+  __decorateParam(1, IModelService),
+  __decorateParam(2, ITextModelService),
+  __decorateParam(3, IEditorWorkerService),
+  __decorateParam(4, ILogService),
+  __decorateParam(5, IInstantiationService),
+  __decorateParam(6, IEditorService),
+  __decorateParam(7, ITextFileService),
+  __decorateParam(8, ILanguageService),
+  __decorateParam(9, IChatService),
+  __decorateParam(10, IChatAgentService),
+  __decorateParam(11, IChatWidgetService)
+], InlineChatSessionServiceImpl);
+let InlineChatEnabler = class {
+  static {
+    __name(this, "InlineChatEnabler");
+  }
+  static Id = "inlineChat.enabler";
+  _ctxHasProvider;
+  _ctxHasProvider2;
+  _ctxPossible;
+  _store = new DisposableStore();
+  constructor(contextKeyService, chatAgentService, editorService, configService) {
+    this._ctxHasProvider = CTX_INLINE_CHAT_HAS_AGENT.bindTo(contextKeyService);
+    this._ctxHasProvider2 = CTX_INLINE_CHAT_HAS_AGENT2.bindTo(contextKeyService);
+    this._ctxPossible = CTX_INLINE_CHAT_POSSIBLE.bindTo(contextKeyService);
+    const agentObs = observableFromEvent(this, chatAgentService.onDidChangeAgents, () => chatAgentService.getDefaultAgent(ChatAgentLocation.Editor));
+    const inlineChat2Obs = observableConfigValue(InlineChatConfigKeys.EnableV2, false, configService);
+    this._store.add(autorun((r) => {
+      const v2 = inlineChat2Obs.read(r);
+      const agent = agentObs.read(r);
+      if (!agent) {
+        this._ctxHasProvider.reset();
+        this._ctxHasProvider2.reset();
+      } else if (v2) {
+        this._ctxHasProvider.reset();
+        this._ctxHasProvider2.set(true);
+      } else {
+        this._ctxHasProvider.set(true);
+        this._ctxHasProvider2.reset();
+      }
+    }));
+    const updateEditor = /* @__PURE__ */ __name(() => {
+      const ctrl = editorService.activeEditorPane?.getControl();
+      const isCodeEditorLike = isCodeEditor(ctrl) || isDiffEditor(ctrl) || isCompositeEditor(ctrl);
+      this._ctxPossible.set(isCodeEditorLike);
+    }, "updateEditor");
+    this._store.add(editorService.onDidActiveEditorChange(updateEditor));
+    updateEditor();
+  }
+  dispose() {
+    this._ctxPossible.reset();
+    this._ctxHasProvider.reset();
+    this._store.dispose();
+  }
+};
+InlineChatEnabler = __decorateClass([
+  __decorateParam(0, IContextKeyService),
+  __decorateParam(1, IChatAgentService),
+  __decorateParam(2, IEditorService),
+  __decorateParam(3, IConfigurationService)
+], InlineChatEnabler);
+export {
+  InlineChatEnabler,
+  InlineChatError,
+  InlineChatSessionServiceImpl
+};
+//# sourceMappingURL=inlineChatSessionServiceImpl.js.map

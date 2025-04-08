@@ -1,1 +1,38 @@
-import"../../../../base/browser/ui/list/list.js";import"../../../../base/browser/ui/tree/tree.js";import"../../../../base/common/cancellation.js";import"../../../../base/common/event.js";import"../../../../base/common/filters.js";import"../../../../base/common/lifecycle.js";import"../../../../base/common/uri.js";import"../../../../platform/editor/common/editor.js";import{createDecorator as t}from"../../../../platform/instantiation/common/instantiation.js";import"../../../../platform/list/browser/listService.js";import"../../../common/editor.js";const h=t("IOutlineService");var n=(e=>(e[e.OutlinePane=1]="OutlinePane",e[e.Breadcrumbs=2]="Breadcrumbs",e[e.QuickPick=4]="QuickPick",e))(n||{}),a=(e=>(e.icons="outline.icons",e.collapseItems="outline.collapseItems",e.problemsEnabled="outline.problems.enabled",e.problemsColors="outline.problems.colors",e.problemsBadges="outline.problems.badges",e))(a||{}),i=(e=>(e.Collapsed="alwaysCollapse",e.Expanded="alwaysExpand",e))(i||{});export{h as IOutlineService,i as OutlineConfigCollapseItemsValues,a as OutlineConfigKeys,n as OutlineTarget};
+import { IListVirtualDelegate } from "../../../../base/browser/ui/list/list.js";
+import { IDataSource, ITreeRenderer } from "../../../../base/browser/ui/tree/tree.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { Event } from "../../../../base/common/event.js";
+import { FuzzyScore } from "../../../../base/common/filters.js";
+import { IDisposable } from "../../../../base/common/lifecycle.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IEditorOptions } from "../../../../platform/editor/common/editor.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { IWorkbenchDataTreeOptions } from "../../../../platform/list/browser/listService.js";
+import { IEditorPane } from "../../../common/editor.js";
+const IOutlineService = createDecorator("IOutlineService");
+var OutlineTarget = /* @__PURE__ */ ((OutlineTarget2) => {
+  OutlineTarget2[OutlineTarget2["OutlinePane"] = 1] = "OutlinePane";
+  OutlineTarget2[OutlineTarget2["Breadcrumbs"] = 2] = "Breadcrumbs";
+  OutlineTarget2[OutlineTarget2["QuickPick"] = 4] = "QuickPick";
+  return OutlineTarget2;
+})(OutlineTarget || {});
+var OutlineConfigKeys = /* @__PURE__ */ ((OutlineConfigKeys2) => {
+  OutlineConfigKeys2["icons"] = "outline.icons";
+  OutlineConfigKeys2["collapseItems"] = "outline.collapseItems";
+  OutlineConfigKeys2["problemsEnabled"] = "outline.problems.enabled";
+  OutlineConfigKeys2["problemsColors"] = "outline.problems.colors";
+  OutlineConfigKeys2["problemsBadges"] = "outline.problems.badges";
+  return OutlineConfigKeys2;
+})(OutlineConfigKeys || {});
+var OutlineConfigCollapseItemsValues = /* @__PURE__ */ ((OutlineConfigCollapseItemsValues2) => {
+  OutlineConfigCollapseItemsValues2["Collapsed"] = "alwaysCollapse";
+  OutlineConfigCollapseItemsValues2["Expanded"] = "alwaysExpand";
+  return OutlineConfigCollapseItemsValues2;
+})(OutlineConfigCollapseItemsValues || {});
+export {
+  IOutlineService,
+  OutlineConfigCollapseItemsValues,
+  OutlineConfigKeys,
+  OutlineTarget
+};
+//# sourceMappingURL=outline.js.map

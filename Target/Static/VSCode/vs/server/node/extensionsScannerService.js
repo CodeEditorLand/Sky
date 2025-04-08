@@ -1,1 +1,71 @@
-var p=Object.defineProperty,v=Object.getOwnPropertyDescriptor,l=(e,o,r,t)=>{for(var i,n=t>1?void 0:t?v(o,r):o,a=e.length-1;a>=0;a--)(i=e[a])&&(n=(t?i(o,r,n):i(n))||n);return t&&n&&p(o,r,n),n},i=(e,o)=>(r,t)=>o(r,t,e);import{joinPath as u}from"../../base/common/resources.js";import{URI as m}from"../../base/common/uri.js";import{INativeEnvironmentService as g}from"../../platform/environment/common/environment.js";import{IExtensionsProfileScannerService as P}from"../../platform/extensionManagement/common/extensionsProfileScannerService.js";import{AbstractExtensionsScannerService as d}from"../../platform/extensionManagement/common/extensionsScannerService.js";import{IFileService as h}from"../../platform/files/common/files.js";import{IInstantiationService as x}from"../../platform/instantiation/common/instantiation.js";import{ILogService as y}from"../../platform/log/common/log.js";import{IProductService as U}from"../../platform/product/common/productService.js";import{IUriIdentityService as F}from"../../platform/uriIdentity/common/uriIdentity.js";import{IUserDataProfilesService as N}from"../../platform/userDataProfile/common/userDataProfile.js";import{getNLSConfiguration as b}from"./remoteLanguagePacks.js";let c=class extends d{constructor(e,o,r,t,i,n,a,s){super(m.file(i.builtinExtensionsPath),m.file(i.extensionsPath),u(i.userHome,".vscode-oss-dev","extensions","control.json"),e.defaultProfile,e,o,r,t,i,n,a,s),this.nativeEnvironmentService=i}async getTranslations(e){const o=await b(e,this.nativeEnvironmentService.userDataPath);if(o.languagePack)try{const e=await this.fileService.readFile(m.file(o.languagePack.translationsConfigFile));return JSON.parse(e.value.toString())}catch{}return Object.create(null)}};c=l([i(0,N),i(1,P),i(2,h),i(3,y),i(4,g),i(5,U),i(6,F),i(7,x)],c);export{c as ExtensionsScannerService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { joinPath } from "../../base/common/resources.js";
+import { URI } from "../../base/common/uri.js";
+import { INativeEnvironmentService } from "../../platform/environment/common/environment.js";
+import { IExtensionsProfileScannerService } from "../../platform/extensionManagement/common/extensionsProfileScannerService.js";
+import { AbstractExtensionsScannerService, IExtensionsScannerService, Translations } from "../../platform/extensionManagement/common/extensionsScannerService.js";
+import { IFileService } from "../../platform/files/common/files.js";
+import { IInstantiationService } from "../../platform/instantiation/common/instantiation.js";
+import { ILogService } from "../../platform/log/common/log.js";
+import { IProductService } from "../../platform/product/common/productService.js";
+import { IUriIdentityService } from "../../platform/uriIdentity/common/uriIdentity.js";
+import { IUserDataProfilesService } from "../../platform/userDataProfile/common/userDataProfile.js";
+import { getNLSConfiguration } from "./remoteLanguagePacks.js";
+let ExtensionsScannerService = class extends AbstractExtensionsScannerService {
+  constructor(userDataProfilesService, extensionsProfileScannerService, fileService, logService, nativeEnvironmentService, productService, uriIdentityService, instantiationService) {
+    super(
+      URI.file(nativeEnvironmentService.builtinExtensionsPath),
+      URI.file(nativeEnvironmentService.extensionsPath),
+      joinPath(nativeEnvironmentService.userHome, ".vscode-oss-dev", "extensions", "control.json"),
+      userDataProfilesService.defaultProfile,
+      userDataProfilesService,
+      extensionsProfileScannerService,
+      fileService,
+      logService,
+      nativeEnvironmentService,
+      productService,
+      uriIdentityService,
+      instantiationService
+    );
+    this.nativeEnvironmentService = nativeEnvironmentService;
+  }
+  static {
+    __name(this, "ExtensionsScannerService");
+  }
+  async getTranslations(language) {
+    const config = await getNLSConfiguration(language, this.nativeEnvironmentService.userDataPath);
+    if (config.languagePack) {
+      try {
+        const content = await this.fileService.readFile(URI.file(config.languagePack.translationsConfigFile));
+        return JSON.parse(content.value.toString());
+      } catch (err) {
+      }
+    }
+    return /* @__PURE__ */ Object.create(null);
+  }
+};
+ExtensionsScannerService = __decorateClass([
+  __decorateParam(0, IUserDataProfilesService),
+  __decorateParam(1, IExtensionsProfileScannerService),
+  __decorateParam(2, IFileService),
+  __decorateParam(3, ILogService),
+  __decorateParam(4, INativeEnvironmentService),
+  __decorateParam(5, IProductService),
+  __decorateParam(6, IUriIdentityService),
+  __decorateParam(7, IInstantiationService)
+], ExtensionsScannerService);
+export {
+  ExtensionsScannerService
+};
+//# sourceMappingURL=extensionsScannerService.js.map

@@ -1,4 +1,1269 @@
-var Te=Object.defineProperty;var Me=Object.getOwnPropertyDescriptor;var D=(h,r,e,n)=>{for(var t=n>1?void 0:n?Me(r,e):r,a=h.length-1,c;a>=0;a--)(c=h[a])&&(t=(n?c(r,e,t):c(t))||t);return n&&t&&Te(r,e,t),t},p=(h,r)=>(e,n)=>r(e,n,h);import*as S from"../../../../base/browser/dom.js";import{StandardKeyboardEvent as te}from"../../../../base/browser/keyboardEvent.js";import{renderStringAsPlaintext as De}from"../../../../base/browser/markdownRenderer.js";import{Action as L,Separator as ie,SubmenuAction as xe}from"../../../../base/common/actions.js";import{equals as we}from"../../../../base/common/arrays.js";import{mapFindFirst as Re}from"../../../../base/common/arraysFind.js";import{RunOnceScheduler as Ee}from"../../../../base/common/async.js";import{Emitter as ke,Event as U}from"../../../../base/common/event.js";import{MarkdownString as G}from"../../../../base/common/htmlContent.js";import{stripIcons as Ae}from"../../../../base/common/iconLabels.js";import{Iterable as Le}from"../../../../base/common/iterator.js";import{KeyCode as H}from"../../../../base/common/keyCodes.js";import{Disposable as j,DisposableMap as Ne,DisposableStore as ne,MutableDisposable as re,toDisposable as se}from"../../../../base/common/lifecycle.js";import{ResourceMap as Ue}from"../../../../base/common/map.js";import{clamp as Oe}from"../../../../base/common/numbers.js";import{autorun as Fe}from"../../../../base/common/observable.js";import{isMacintosh as We}from"../../../../base/common/platform.js";import{count as _e,truncateMiddle as oe}from"../../../../base/common/strings.js";import{ThemeIcon as V}from"../../../../base/common/themables.js";import{Constants as Pe}from"../../../../base/common/uint.js";import"../../../../base/common/uri.js";import{generateUuid as z}from"../../../../base/common/uuid.js";import{ContentWidgetPositionPreference as ae,MouseTargetType as Ge}from"../../../../editor/browser/editorBrowser.js";import{ICodeEditorService as N}from"../../../../editor/browser/services/codeEditorService.js";import{EditorOption as y}from"../../../../editor/common/config/editorOptions.js";import{overviewRulerError as $e,overviewRulerInfo as Be}from"../../../../editor/common/core/editorColorRegistry.js";import{Position as Ke}from"../../../../editor/common/core/position.js";import"../../../../editor/common/core/range.js";import"../../../../editor/common/editorCommon.js";import{GlyphMarginLane as He,OverviewRulerLane as je,TrackedRangeStickiness as ce}from"../../../../editor/common/model.js";import{IModelService as Ve}from"../../../../editor/common/services/model.js";import{localize as v}from"../../../../nls.js";import{getFlatContextMenuActions as ze}from"../../../../platform/actions/browser/menuEntryActionViewItem.js";import{IMenuService as Z,MenuId as Ze}from"../../../../platform/actions/common/actions.js";import{ICommandService as Q}from"../../../../platform/commands/common/commands.js";import{IConfigurationService as O}from"../../../../platform/configuration/common/configuration.js";import{IContextKeyService as q}from"../../../../platform/contextkey/common/contextkey.js";import{IContextMenuService as X}from"../../../../platform/contextview/browser/contextView.js";import{IInstantiationService as le}from"../../../../platform/instantiation/common/instantiation.js";import{IQuickInputService as Qe}from"../../../../platform/quickinput/common/quickInput.js";import{themeColorFromId as qe}from"../../../../platform/theme/common/themeService.js";import{IUriIdentityService as Xe}from"../../../../platform/uriIdentity/common/uriIdentity.js";import{EditorLineNumberContextMenu as Ye,GutterActionsRegistry as Je}from"../../codeEditor/browser/editorLineNumberMenu.js";import{DefaultGutterClickAction as T,TestingConfigKeys as x,getTestingConfiguration as A}from"../common/configuration.js";import{Testing as et,labelForTestInState as tt}from"../common/constants.js";import{TestId as it}from"../common/testId.js";import{ITestProfileService as Y}from"../common/testProfileService.js";import{LiveTestResult as nt,TestResultItemChangeReason as rt}from"../common/testResult.js";import{ITestResultService as de}from"../common/testResultService.js";import{ITestService as F,getContextForTestItem as st,simplifyTestsToExecute as ot,testsInFile as at}from"../common/testService.js";import{TestDiffOpType as ct,TestMessageType as J,TestResultState as $,TestRunProfileBitset as b}from"../common/testTypes.js";import{ITestingDecorationsService as lt,TestDecorations as dt}from"../common/testingDecorations.js";import{ITestingPeekOpener as ue}from"../common/testingPeekOpener.js";import{isFailedState as ut,maxPriority as gt}from"../common/testingStates.js";import{TestUriType as B,buildTestUri as ge,parseTestUri as pt}from"../common/testingUri.js";import{getTestItemContextOverlay as mt}from"./explorerProjections/testItemContextOverlay.js";import{testingDebugAllIcon as ht,testingDebugIcon as ft,testingRunAllIcon as pe,testingRunIcon as me,testingStatesToIcons as he}from"./icons.js";import{renderTestMessageAsText as It}from"./testMessageColorizer.js";import{MessageSubject as vt}from"./testResultsView/testResultsSubject.js";import{TestingOutputPeekController as bt}from"./testingOutputPeek.js";const fe=128,Ie=30,ve=He.Center;function yt(h,r){const e=h.listDiffEditors();for(const n of e)if(n.getOriginalEditor()===r)return!0;return!1}class ee{runByIdKey=new Map;get size(){return this.runByIdKey.size}getForExactTests(r){const e=r.sort().join("\0\0");return this.runByIdKey.get(e)}addTest(r){const e=r.testIds.sort().join("\0\0");this.runByIdKey.set(e,r)}getById(r){for(const e of this.runByIdKey.values())if(e.id===r)return e}*[Symbol.iterator](){for(const r of this.runByIdKey.values())yield r}}let K=class extends j{constructor(e,n,t,a,c,g){super();this.configurationService=n;this.testService=t;this.results=a;this.instantiationService=c;this.modelService=g;e.registerDecorationType("test-message-decoration",M.decorationId,{},void 0),this._register(g.onModelRemoved(o=>this.decorationCache.delete(o.uri)));const u=this._register(new Ee(()=>this.invalidate(),100));this._register(this.testService.onWillProcessDiff(o=>{for(const s of o){if(s.op!==ct.DocumentSynced)continue;const l=this.decorationCache.get(s.uri);l&&(l.rangeUpdateVersionId=s.docv)}u.isScheduled()||u.schedule()})),this._register(U.any(this.results.onResultsChanged,this.results.onTestChanged,this.testService.excluded.onTestExclusionsChanged,U.filter(n.onDidChangeConfiguration,o=>o.affectsConfiguration(x.GutterEnabled)))(()=>{u.isScheduled()||u.schedule()})),this._register(Je.registerGutterActionsGenerator((o,s)=>{const l=o.editor.getModel(),i=C.get(o.editor);if(!l||!i?.currentUri)return;const d=this.syncDecorations(i.currentUri);if(!d.size)return;const m=l.getLinesDecorations(o.lineNumber,o.lineNumber);for(const{id:f}of m){const I=d.getById(f);if(I){const{object:R}=I.getContextMenuActions();for(const E of R)s.push(E,"1_testing")}}}))}generation=0;changeEmitter=new ke;decorationCache=new Ue;invalidatedMessages=new WeakSet;onDidChange=this.changeEmitter.event;invalidateResultMessage(e){this.invalidatedMessages.add(e),this.invalidate()}syncDecorations(e){const n=this.modelService.getModel(e);if(!n)return new ee;const t=this.decorationCache.get(e);return t&&t.generation===this.generation&&(t.rangeUpdateVersionId===void 0||t.rangeUpdateVersionId!==n.getVersionId())?t.value:this.applyDecorations(n)}getDecoratedTestPosition(e,n){const t=this.modelService.getModel(e);if(!t)return;const a=Le.find(this.syncDecorations(e),c=>c instanceof w&&c.isForTest(n));if(a)return t.getDecorationRange(a.id)?.getStartPosition()}invalidate(){this.generation++,this.changeEmitter.fire()}updateDecorationsAlternateAction(e,n){const t=this.modelService.getModel(e),a=this.decorationCache.get(e);!t||!a||a.isAlt===n||(a.isAlt=n,t.changeDecorations(c=>{for(const g of a.value)g instanceof w&&g.editorDecoration.alternate&&c.changeDecorationOptions(g.id,n?g.editorDecoration.alternate:g.editorDecoration.options)}))}applyDecorations(e){const n=A(this.configurationService,x.GutterEnabled),t=this.decorationCache.get(e.uri),a=t?.rangeUpdateVersionId===e.getVersionId(),c=t?.value??new ee;return e.changeDecorations(u=>{const o=new ee,s=new dt;for(const i of this.testService.collection.getNodeByUrl(e.uri)){if(!i.item.range)continue;const d=this.results.getStateById(i.item.extId),m=i.item.range.startLineNumber;s.push({line:m,id:"",test:i,resultItem:d?.[1]})}for(const[i,d]of s.lines()){const m=d.length>1;let f=c.getForExactTests(d.map(I=>I.test.item.extId));f&&a&&e.getDecorationRange(f.id)?.startLineNumber!==i&&(f=void 0),f?(f.replaceOptions(d,n)&&u.changeDecorationOptions(f.id,f.editorDecoration.options),o.addTest(f)):o.addTest(m?this.instantiationService.createInstance(W,d,n,e):this.instantiationService.createInstance(_,d[0].test,d[0].resultItem,e,n))}const l=new Set;for(const i of o)i.id===""?i.id=u.addDecoration(i.editorDecoration.range,i.editorDecoration.options):l.add(i.id);for(const i of c)l.has(i.id)||u.removeDecoration(i.id);return this.decorationCache.set(e.uri,{generation:this.generation,rangeUpdateVersionId:t?.rangeUpdateVersionId,value:o}),o})||c}};K=D([p(0,N),p(1,O),p(2,F),p(3,de),p(4,le),p(5,Ve)],K);let C=class extends j{constructor(e,n,t,a,c,g,u,o){super();this.editor=e;this.codeEditorService=n;this.testService=t;this.decorations=a;this.uriIdentityService=c;this.results=g;this.configurationService=u;this.instantiationService=o;n.registerDecorationType("test-message-decoration",M.decorationId,{},void 0,e),this.attachModel(e.getModel()?.uri),this._register(a.onDidChange(()=>{this._currentUri&&a.syncDecorations(this._currentUri)})),this._register(U.any(this.results.onResultsChanged,e.onDidChangeModel,U.filter(this.results.onTestChanged,i=>i.reason===rt.NewMessage),this.testService.showInlineOutput.onDidChange)(()=>this.applyResults()));const s=S.getWindow(e.getDomNode());this._register(S.addDisposableListener(s,"keydown",i=>{new te(i).keyCode===H.Alt&&this._currentUri&&a.updateDecorationsAlternateAction(this._currentUri,!0)})),this._register(S.addDisposableListener(s,"keyup",i=>{new te(i).keyCode===H.Alt&&this._currentUri&&a.updateDecorationsAlternateAction(this._currentUri,!1)})),this._register(S.addDisposableListener(s,"blur",()=>{this._currentUri&&a.updateDecorationsAlternateAction(this._currentUri,!1)})),this._register(this.editor.onKeyUp(i=>{i.keyCode===H.Alt&&this._currentUri&&a.updateDecorationsAlternateAction(this._currentUri,!1)})),this._register(this.editor.onDidChangeModel(i=>this.attachModel(i.newModelUrl||void 0))),this._register(this.editor.onMouseDown(i=>{if(i.target.position&&this.currentUri){const d=e.getModel()?.getLineDecorations(i.target.position.lineNumber)??[];if(!d.length)return;const m=a.syncDecorations(this.currentUri);for(const{id:f}of d)if(m.getById(f)?.click(i)){i.event.stopPropagation();return}}})),this._register(U.accumulate(this.editor.onDidChangeModelContent,0,this._store)(i=>{const d=e.getModel();if(!this._currentUri||!d)return;let m=!1;for(const[f,I]of this.loggedMessageDecorations)i.some(E=>E.changes.some(k=>k.range.startLineNumber<=I.line&&k.range.endLineNumber>=I.line||I.resultItem?.item.range&&I.resultItem.item.range.startLineNumber<=k.range.startLineNumber&&I.resultItem.item.range.endLineNumber>=k.range.endLineNumber))&&(m=!0,C.invalidatedTests.add(I.resultItem||f));m&&this.applyResults()}));const l=()=>{this.editor.getContainerDomNode().style.setProperty("--testMessageDecorationFontFamily",e.getOption(y.fontFamily)),this.editor.getContainerDomNode().style.setProperty("--testMessageDecorationFontSize",`${e.getOption(y.fontSize)}px`)};this._register(this.editor.onDidChangeConfiguration(i=>{i.hasChanged(y.fontFamily)&&l()})),l()}static invalidatedTests=new WeakSet;static get(e){return e.getContribution(et.DecorationsContributionId)}get currentUri(){return this._currentUri}_currentUri;expectedWidget=this._register(new re);actualWidget=this._register(new re);errorContentWidgets=this._register(new Ne);loggedMessageDecorations=new Map;attachModel(e){switch(e&&pt(e)?.type){case B.ResultExpectedOutput:this.expectedWidget.value=new St(this.editor),this.actualWidget.clear();break;case B.ResultActualOutput:this.expectedWidget.clear(),this.actualWidget.value=new Tt(this.editor);break;default:this.expectedWidget.clear(),this.actualWidget.clear()}yt(this.codeEditorService,this.editor)&&(e=void 0),this._currentUri=e,e&&(this.decorations.syncDecorations(e),(async()=>{for await(const n of at(this.testService,this.uriIdentityService,e,!1))if(this._currentUri!==e)break})())}applyResults(){const e=this.editor.getModel();if(!e)return this.clearResults();const n=e.uri.toString(),t=new Set;this.applyResultsContentWidgets(n,t),this.applyResultsLoggedMessages(n,t)}clearResults(){this.errorContentWidgets.clearAndDisposeAll()}isMessageInvalidated(e){return C.invalidatedTests.has(e)}applyResultsContentWidgets(e,n){const t=new Set;A(this.configurationService,x.ShowAllMessages)?this.results.results.forEach(a=>this.applyContentWidgetsFromResult(a,e,t,n)):this.results.results.length&&this.applyContentWidgetsFromResult(this.results.results[0],e,t,n);for(const a of this.errorContentWidgets.keys())t.has(a)||this.errorContentWidgets.deleteAndDispose(a)}applyContentWidgetsFromResult(e,n,t,a){for(const c of e.tests)if(!C.invalidatedTests.has(c))for(let g=0;g<c.tasks.length;g++){const u=c.tasks[g];for(let o=0;o<u.messages.length;o++){const s=u.messages[o];if(s.type!==J.Error||this.isMessageInvalidated(s))continue;const l=s.location?.uri.toString()===n?s.location.range.startLineNumber:s.stackTrace&&Re(s.stackTrace,d=>d.position&&d.uri?.toString()===n?d.position.lineNumber:void 0);if(l===void 0||a.has(l))continue;a.add(l);let i=this.errorContentWidgets.get(s);if(!i){const d=this.editor.getModel()?.getLineLength(l)??100;i=this.instantiationService.createInstance(P,this.editor,new Ke(l,d+1),s,c,ge({type:B.ResultActualOutput,messageIndex:o,taskIndex:g,resultId:e.id,testExtId:c.item.extId})),this.errorContentWidgets.set(s,i)}t.add(s)}}}applyResultsLoggedMessages(e,n){this.editor.changeDecorations(t=>{const a=new Set;A(this.configurationService,x.ShowAllMessages)?this.results.results.forEach(c=>this.applyLoggedMessageFromResult(c,e,a,n,t)):this.results.results.length&&this.applyLoggedMessageFromResult(this.results.results[0],e,a,n,t);for(const[c,{id:g}]of this.loggedMessageDecorations)a.has(c)||t.removeDecoration(g)})}applyLoggedMessageFromResult(e,n,t,a,c){if(!this.testService.showInlineOutput.value||!(e instanceof nt))return;const g=(u,o,s)=>{if(this.isMessageInvalidated(o)||o.location?.uri.toString()!==n)return;t.add(o);const l=o.location.range.startLineNumber;if(a.has(l)||this.loggedMessageDecorations.has(o))return;const i=this.instantiationService.createInstance(M,o,s,this.editor.getModel());a.add(l);const d=c.addDecoration(i.editorDecoration.range,i.editorDecoration.options);this.loggedMessageDecorations.set(o,{id:d,line:l,resultItem:u})};for(const u of e.tests)if(!C.invalidatedTests.has(u))for(let o=0;o<u.tasks.length;o++){const s=u.tasks[o];for(let l=s.messages.length-1;l>=0;l--){const i=s.messages[l];i.type===J.Output&&g(u,i,ge({type:B.ResultActualOutput,messageIndex:l,taskIndex:o,resultId:e.id,testExtId:u.item.extId}))}}for(const u of e.tasks)for(const o of u.otherMessages)g(void 0,o)}};C=D([p(1,N),p(2,F),p(3,lt),p(4,Xe),p(5,de),p(6,O),p(7,le)],C);const be=h=>({startLineNumber:h.startLineNumber,endLineNumber:h.startLineNumber,startColumn:h.startColumn,endColumn:h.startColumn}),ye=(h,r,e,n)=>{const t=h[0]?.item.range;if(!t)throw new Error("Test decorations can only be created for tests with a range");if(!e)return{range:be(t),options:{isWholeLine:!0,description:"run-test-decoration"}};let a=$.Unset;const c=[];let g,u=!1;for(let I=0;I<h.length;I++){const R=h[I],E=r[I],k=E?.computedState??$.Unset;c.length<10&&c.push(tt(R.item.label,k)),a=gt(a,k),u=u||!!E?.retired,!g&&E?.tasks.some(Se=>Se.messages.length)&&(g=R.item.extId)}const o=h.length>1||h[0].children.size>0,s=a===$.Unset?o?pe:me:he.get(a),l=n===T.Debug?o?pe:me:o?ht:ft;let i,d="testing-run-glyph";u&&(d+=" retired");const m={description:"run-test-decoration",showIfCollapsed:!0,get hoverMessage(){if(!i){const I=i=new G("",!0).appendText(c.join(", ")+".");if(g){const R=encodeURIComponent(JSON.stringify([g]));I.appendMarkdown(` [${v("peekTestOutout","Peek Test Output")}](command:vscode.peekTestError?${R})`)}}return i},glyphMargin:{position:ve},glyphMarginClassName:`${V.asClassName(s)} ${d}`,stickiness:ce.NeverGrowsWhenTypingAtEdges,zIndex:1e4},f={...m,glyphMarginClassName:`${V.asClassName(l)} ${d}`};return{range:be(t),options:m,alternate:f}};var Ct=(e=>(e.FontFamily="testingDiffLensFontFamily",e.FontFeatures="testingDiffLensFontFeatures",e))(Ct||{});class Ce{constructor(r){this.editor=r;queueMicrotask(()=>{this.applyStyling(),this.editor.addContentWidget(this)})}allowEditorOverflow=!1;suppressMouseDown=!0;_domNode=S.$("span");viewZoneId;applyStyling(){let r=this.editor.getOption(y.codeLensFontSize),e;!r||r<5?(r=this.editor.getOption(y.fontSize)*.9|0,e=this.editor.getOption(y.lineHeight)):e=r*Math.max(1.3,this.editor.getOption(y.lineHeight)/this.editor.getOption(y.fontSize))|0;const n=this.editor.getOption(y.fontInfo),t=this._domNode;t.classList.add("testing-diff-lens-widget"),t.textContent=this.getText(),t.style.lineHeight=`${e}px`,t.style.fontSize=`${r}px`,t.style.fontFamily="var(--testingDiffLensFontFamily)",t.style.fontFeatureSettings="var(--testingDiffLensFontFeatures)";const a=this.editor.getContainerDomNode().style;a.setProperty("testingDiffLensFontFamily",this.editor.getOption(y.codeLensFontFamily)??"inherit"),a.setProperty("testingDiffLensFontFeatures",n.fontFeatureSettings),this.editor.changeViewZones(c=>{this.viewZoneId&&c.removeZone(this.viewZoneId),this.viewZoneId=c.addZone({afterLineNumber:0,afterColumn:Pe.MAX_SAFE_SMALL_INTEGER,domNode:document.createElement("div"),heightInPx:20})})}getDomNode(){return this._domNode}dispose(){this.editor.changeViewZones(r=>{this.viewZoneId&&r.removeZone(this.viewZoneId)}),this.editor.removeContentWidget(this)}getPosition(){return{position:{column:0,lineNumber:0},preference:[ae.ABOVE]}}}class St extends Ce{getId(){return"expectedTestingLens"}getText(){return v("expected.title","Expected")}}class Tt extends Ce{getId(){return"actualTestingLens"}getText(){return v("actual.title","Actual")}}let w=class{constructor(r,e,n,t,a,c,g,u,o,s,l){this.tests=r;this.visible=e;this.model=n;this.codeEditorService=t;this.testService=a;this.contextMenuService=c;this.commandService=g;this.configurationService=u;this.testProfileService=o;this.contextKeyService=s;this.menuService=l;this.displayedStates=r.map(i=>i.resultItem?.computedState),this.editorDecoration=ye(r.map(i=>i.test),r.map(i=>i.resultItem),e,A(this.configurationService,x.DefaultGutterClickAction)),this.editorDecoration.options.glyphMarginHoverMessage=new G().appendText(this.getGutterLabel())}id="";get line(){return this.editorDecoration.range.startLineNumber}get testIds(){return this.tests.map(r=>r.test.item.extId)}editorDecoration;displayedStates;click(r){if(r.target.type!==Ge.GUTTER_GLYPH_MARGIN||r.target.detail.glyphMarginLane!==ve||r.event.rightButton||We&&r.event.leftButton&&r.event.ctrlKey)return!1;const e=r.event.altKey;switch(A(this.configurationService,x.DefaultGutterClickAction)){case T.ContextMenu:this.showContextMenu(r);break;case T.Debug:this.runWith(e?b.Run:b.Debug);break;case T.Coverage:this.runWith(e?b.Debug:b.Coverage);break;case T.Run:default:this.runWith(e?b.Debug:b.Run);break}return!0}replaceOptions(r,e){const n=r.map(c=>c.resultItem?.computedState);if(e===this.visible&&we(this.displayedStates,n))return!1;this.tests=r,this.displayedStates=n,this.visible=e;const{options:t,alternate:a}=ye(r.map(c=>c.test),r.map(c=>c.resultItem),e,A(this.configurationService,x.DefaultGutterClickAction));return this.editorDecoration.options=t,this.editorDecoration.alternate=a,this.editorDecoration.options.glyphMarginHoverMessage=new G().appendText(this.getGutterLabel()),!0}isForTest(r){return this.tests.some(e=>e.test.item.extId===r)}runWith(r){return this.testService.runTests({tests:ot(this.testService.collection,this.tests.map(({test:e})=>e)),group:r})}showContextMenu(r){this.codeEditorService.listCodeEditors().find(n=>n.getModel()===this.model)?.getContribution(Ye.ID)?.show(r)}getGutterLabel(){switch(A(this.configurationService,x.DefaultGutterClickAction)){case T.ContextMenu:return v("testing.gutterMsg.contextMenu","Click for test options");case T.Debug:return v("testing.gutterMsg.debug","Click to debug tests, right click for more options");case T.Coverage:return v("testing.gutterMsg.coverage","Click to run tests with coverage, right click for more options");case T.Run:default:return v("testing.gutterMsg.run","Click to run tests, right click for more options")}}getTestContextMenuActions(r,e){const n=[],t=this.testProfileService.capabilitiesForTest(r.item);[{bitset:b.Run,label:v("run test","Run Test")},{bitset:b.Debug,label:v("debug test","Debug Test")},{bitset:b.Coverage,label:v("coverage test","Run with Coverage")}].forEach(({bitset:c,label:g})=>{t&c&&n.push(new L(`testing.gutter.${c}`,g,void 0,void 0,()=>this.testService.runTests({group:c,tests:[r]})))}),t&b.HasNonDefaultProfile&&n.push(new L("testing.runUsing",v("testing.runUsing","Execute Using Profile..."),void 0,void 0,async()=>{const c=await this.commandService.executeCommand("vscode.pickTestProfile",{onlyForTest:r});c&&this.testService.runResolvedTests({group:c.group,targets:[{profileId:c.profileId,controllerId:c.controllerId,testIds:[r.item.extId]}]})})),e&&ut(e.computedState)&&n.push(new L("testing.gutter.peekFailure",v("peek failure","Peek Error"),void 0,void 0,()=>this.commandService.executeCommand("vscode.peekTestError",r.item.extId))),n.push(new L("testing.gutter.reveal",v("reveal test","Reveal in Test Explorer"),void 0,void 0,()=>this.commandService.executeCommand("_revealTestInExplorer",r.item.extId)));const a=this.getContributedTestActions(r,t);return{object:ie.join(n,a),dispose(){n.forEach(c=>c.dispose())}}}getContributedTestActions(r,e){const n=this.contextKeyService.createOverlay(mt(r,e)),t=st(this.testService.collection,r.item.extId),a=this.menuService.getMenuActions(Ze.TestItemGutter,n,{shouldForwardArgs:!0,arg:t});return ze(a)}};w=D([p(3,N),p(4,F),p(5,X),p(6,Q),p(7,O),p(8,Y),p(9,q),p(10,Z)],w);let W=class extends w{constructor(e,n,t,a,c,g,u,o,s,l,i,d){super(e,n,t,a,c,g,u,o,s,l,i);this.quickInputService=d}getContextMenuActions(){const e=new ne,n=[];[{bitset:b.Run,label:v("run all test","Run All Tests")},{bitset:b.Coverage,label:v("run all test with coverage","Run All Tests with Coverage")},{bitset:b.Debug,label:v("debug all test","Debug All Tests")}].forEach(({bitset:s,label:l},i)=>{this.tests.some(({test:m})=>this.testProfileService.capabilitiesForTest(m.item)&s)&&n.push(new L(`testing.gutter.run${i}`,l,void 0,void 0,()=>this.runWith(s)))}),e.add(se(()=>n.forEach(s=>s.dispose())));const t=this.tests.map(s=>({currentLabel:s.test.item.label,testItem:s,parent:it.fromString(s.test.item.extId).parentId})),a=s=>{const l=new Map;for(const i of s)l.set(i.currentLabel,(l.get(i.currentLabel)||0)+1);return s.filter(i=>l.get(i.currentLabel)>1)};let c,g=!0;for(;(c=a(t)).length&&g;)for(const s of c)if(s.parent){const l=this.testService.collection.getNodeById(s.parent.toString());s.currentLabel=l?.item.label+" > "+s.currentLabel,s.parent=s.parent.parentId}else g=!1;t.sort((s,l)=>{const i=s.testItem.test.item,d=l.testItem.test.item;return(i.sortText||i.label).localeCompare(d.sortText||d.label)});let u=t.map(({currentLabel:s,testItem:l})=>{const i=this.getTestContextMenuActions(l.test,l.resultItem);e.add(i);let d=Ae(s);const m=d.indexOf(`
-`);return m!==-1&&(d=d.slice(0,m)),new xe(l.test.item.extId,d,i.object)});const o=u.length-Ie;return o>0&&(u=u.slice(0,Ie),u.push(new L("testing.gutter.overflow",v("testOverflowItems","{0} more tests...",o),void 0,void 0,()=>this.pickAndRun(t)))),{object:ie.join(n,u),dispose:()=>e.dispose()}}async pickAndRun(e){const n=(c,g)=>new Promise(u=>{const o=new ne,s=o.add(this.quickInputService.createQuickPick());s.placeholder=g,s.items=c,o.add(s.onDidHide(()=>{u(void 0),o.dispose()})),o.add(s.onDidAccept(()=>{u(s.selectedItems[0]),o.dispose()})),s.show()}),t=await n(e.map(({currentLabel:c,testItem:g})=>({label:c,test:g.test,result:g.resultItem})),v("selectTestToRun","Select a test to run"));if(!t)return;const a=this.getTestContextMenuActions(t.test,t.result);try{(await n(a.object,t.label))?.run()}finally{a.dispose()}}};W=D([p(3,N),p(4,F),p(5,X),p(6,Q),p(7,O),p(8,Y),p(9,q),p(10,Z),p(11,Qe)],W);let _=class extends w{constructor(r,e,n,t,a,c,g,u,o,s,l,i){super([{test:r,resultItem:e}],t,n,a,c,u,g,o,s,l,i)}getContextMenuActions(){return this.getTestContextMenuActions(this.tests[0].test,this.tests[0].resultItem)}};_=D([p(4,N),p(5,F),p(6,Q),p(7,X),p(8,O),p(9,Y),p(10,q),p(11,Z)],_);const Mt=/\r?\n\s*/g;let M=class{constructor(r,e,n,t,a){this.testMessage=r;this.messageUri=e;this.peekOpener=t;const c=r.location;this.line=Oe(c.range.startLineNumber,0,n.getLineCount());const g=r.type,u=r.message,o=a.resolveDecorationOptions(M.decorationId,!0);o.hoverMessage=typeof u=="string"?new G().appendText(u):u,o.zIndex=10,o.className=`testing-inline-message-severity-${g}`,o.isWholeLine=!0,o.stickiness=ce.NeverGrowsWhenTypingAtEdges,o.collapseOnReplaceEdit=!0;let s=It(u).replace(Mt," ");s.length>fe&&(s=s.slice(0,fe-1)+"\u2026"),o.after={content:s,inlineClassName:`test-message-inline-content test-message-inline-content-s${g} ${this.contentIdClass} ${e?"test-message-inline-content-clickable":""}`},o.showIfCollapsed=!0;const l=g===J.Error?$e:Be;l&&(o.overviewRuler={color:qe(l),position:je.Right});const i=n.getLineLength(this.line),d=i?i+1:c.range.endColumn;this.editorDecoration={options:o,range:{startLineNumber:this.line,startColumn:d,endColumn:d,endLineNumber:this.line}}}static inlineClassName="test-message-inline-content";static decorationId=`testmessage-${z()}`;id="";editorDecoration;line;contentIdClass=`test-message-inline-content-id${z()}`;click(r){return r.event.rightButton||!this.messageUri||r.target.element?.className.includes(this.contentIdClass)&&this.peekOpener.peekUri(this.messageUri),!1}getContextMenuActions(){return{object:[],dispose:()=>{}}}};M=D([p(3,ue),p(4,N)],M);const Dt=20;let P=class extends j{constructor(e,n,t,a,c,g){super();this.editor=e;this.position=n;this.message=t;this.resultItem=a;this.peekOpener=g;const u=()=>{const d=e.getOption(y.lineHeight);this.node.root.style.marginTop=(d-Dt)/2+"px"};u(),this._register(e.onDidChangeConfiguration(d=>{d.hasChanged(y.lineHeight)&&u()}));let o;if(t.expected!==void 0&&t.actual!==void 0)o=`${oe(t.actual.replace(/\s+/g," "),30)} != ${oe(t.expected.replace(/\s+/g," "),30)}`;else{const d=De(t.message),m=d.indexOf(`
-`);o=m===-1?d:d.slice(0,m)}this.node.root.addEventListener("click",d=>{this.peekOpener.peekUri(c),d.preventDefault()});const s=bt.get(e);s&&this._register(Fe(d=>{const m=s.subject.read(d),f=m instanceof vt&&m.message===t;this.node.root.classList.toggle("is-current",f)})),this.node.name.innerText=o||"Test Failed";const l=document.createElementNS("http://www.w3.org/2000/svg","svg");l.setAttribute("width","15"),l.setAttribute("height","10"),l.setAttribute("preserveAspectRatio","none"),l.setAttribute("viewBox","0 0 15 10");const i=document.createElementNS("http://www.w3.org/2000/svg","path");i.setAttribute("d","M15 0 L10 0 L0 5 L10 10 L15 10 Z"),l.append(i),this.node.arrow.appendChild(l),this._register(e.onDidChangeModelContent(d=>{for(const m of d.changes){if(m.range.startLineNumber>this.line)continue;(m.range.startLineNumber<=this.line&&m.range.endLineNumber>=this.line||a.item.range&&a.item.range.startLineNumber<=m.range.startLineNumber&&a.item.range.endLineNumber>=m.range.endLineNumber)&&(C.invalidatedTests.add(this.resultItem),this.dispose());const f=_e(m.text,`
-`)-(m.range.endLineNumber-m.range.startLineNumber);f!==0&&(this.position=this.position.delta(f),this.editor.layoutContentWidget(this))}})),e.addContentWidget(this),this._register(se(()=>e.removeContentWidget(this)))}id=z();allowEditorOverflow=!1;node=S.h("div.test-error-content-widget",[S.h("div.inner@inner",[S.h("div.arrow@arrow"),S.h(`span${V.asCSSSelector(he.get($.Failed))}`),S.h("span.content@name")])]);get line(){return this.position.lineNumber}getId(){return this.id}getDomNode(){return this.node.root}getPosition(){return{position:this.position,preference:[ae.EXACT]}}afterRender(e,n){if(n){const{verticalScrollbarWidth:t}=this.editor.getLayoutInfo(),a=this.editor.getScrollWidth();this.node.inner.style.maxWidth=`${a-t-n.left-20}px`}}};P=D([p(5,ue)],P);export{K as TestingDecorationService,C as TestingDecorations};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import * as dom from "../../../../base/browser/dom.js";
+import { StandardKeyboardEvent } from "../../../../base/browser/keyboardEvent.js";
+import { renderStringAsPlaintext } from "../../../../base/browser/markdownRenderer.js";
+import { Action, IAction, Separator, SubmenuAction } from "../../../../base/common/actions.js";
+import { equals } from "../../../../base/common/arrays.js";
+import { mapFindFirst } from "../../../../base/common/arraysFind.js";
+import { RunOnceScheduler } from "../../../../base/common/async.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { IMarkdownString, MarkdownString } from "../../../../base/common/htmlContent.js";
+import { stripIcons } from "../../../../base/common/iconLabels.js";
+import { Iterable } from "../../../../base/common/iterator.js";
+import { KeyCode } from "../../../../base/common/keyCodes.js";
+import { Disposable, DisposableMap, DisposableStore, IReference, MutableDisposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { ResourceMap } from "../../../../base/common/map.js";
+import { clamp } from "../../../../base/common/numbers.js";
+import { autorun } from "../../../../base/common/observable.js";
+import { isMacintosh } from "../../../../base/common/platform.js";
+import { count, truncateMiddle } from "../../../../base/common/strings.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { Constants } from "../../../../base/common/uint.js";
+import { URI } from "../../../../base/common/uri.js";
+import { generateUuid } from "../../../../base/common/uuid.js";
+import { ContentWidgetPositionPreference, ICodeEditor, IContentWidget, IContentWidgetPosition, IContentWidgetRenderedCoordinate, IEditorMouseEvent, MouseTargetType } from "../../../../editor/browser/editorBrowser.js";
+import { ICodeEditorService } from "../../../../editor/browser/services/codeEditorService.js";
+import { EditorOption } from "../../../../editor/common/config/editorOptions.js";
+import { overviewRulerError, overviewRulerInfo } from "../../../../editor/common/core/editorColorRegistry.js";
+import { Position } from "../../../../editor/common/core/position.js";
+import { IRange } from "../../../../editor/common/core/range.js";
+import { IEditorContribution } from "../../../../editor/common/editorCommon.js";
+import { GlyphMarginLane, IModelDecorationOptions, IModelDecorationsChangeAccessor, IModelDeltaDecoration, ITextModel, OverviewRulerLane, TrackedRangeStickiness } from "../../../../editor/common/model.js";
+import { IModelService } from "../../../../editor/common/services/model.js";
+import { localize } from "../../../../nls.js";
+import { getFlatContextMenuActions } from "../../../../platform/actions/browser/menuEntryActionViewItem.js";
+import { IMenuService, MenuId } from "../../../../platform/actions/common/actions.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IContextMenuService } from "../../../../platform/contextview/browser/contextView.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IQuickInputService, IQuickPickItem } from "../../../../platform/quickinput/common/quickInput.js";
+import { themeColorFromId } from "../../../../platform/theme/common/themeService.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import { EditorLineNumberContextMenu, GutterActionsRegistry } from "../../codeEditor/browser/editorLineNumberMenu.js";
+import { DefaultGutterClickAction, TestingConfigKeys, getTestingConfiguration } from "../common/configuration.js";
+import { Testing, labelForTestInState } from "../common/constants.js";
+import { TestId } from "../common/testId.js";
+import { ITestProfileService } from "../common/testProfileService.js";
+import { ITestResult, LiveTestResult, TestResultItemChangeReason } from "../common/testResult.js";
+import { ITestResultService } from "../common/testResultService.js";
+import { ITestService, getContextForTestItem, simplifyTestsToExecute, testsInFile } from "../common/testService.js";
+import { ITestErrorMessage, ITestMessage, ITestRunProfile, IncrementalTestCollectionItem, InternalTestItem, TestDiffOpType, TestMessageType, TestResultItem, TestResultState, TestRunProfileBitset } from "../common/testTypes.js";
+import { ITestDecoration as IPublicTestDecoration, ITestingDecorationsService, TestDecorations } from "../common/testingDecorations.js";
+import { ITestingPeekOpener } from "../common/testingPeekOpener.js";
+import { isFailedState, maxPriority } from "../common/testingStates.js";
+import { TestUriType, buildTestUri, parseTestUri } from "../common/testingUri.js";
+import { getTestItemContextOverlay } from "./explorerProjections/testItemContextOverlay.js";
+import { testingDebugAllIcon, testingDebugIcon, testingRunAllIcon, testingRunIcon, testingStatesToIcons } from "./icons.js";
+import { renderTestMessageAsText } from "./testMessageColorizer.js";
+import { MessageSubject } from "./testResultsView/testResultsSubject.js";
+import { TestingOutputPeekController } from "./testingOutputPeek.js";
+const MAX_INLINE_MESSAGE_LENGTH = 128;
+const MAX_TESTS_IN_SUBMENU = 30;
+const GLYPH_MARGIN_LANE = GlyphMarginLane.Center;
+function isOriginalInDiffEditor(codeEditorService, codeEditor) {
+  const diffEditors = codeEditorService.listDiffEditors();
+  for (const diffEditor of diffEditors) {
+    if (diffEditor.getOriginalEditor() === codeEditor) {
+      return true;
+    }
+  }
+  return false;
+}
+__name(isOriginalInDiffEditor, "isOriginalInDiffEditor");
+class CachedDecorations {
+  static {
+    __name(this, "CachedDecorations");
+  }
+  runByIdKey = /* @__PURE__ */ new Map();
+  get size() {
+    return this.runByIdKey.size;
+  }
+  /** Gets a test run decoration that contains exactly the given test IDs */
+  getForExactTests(testIds) {
+    const key = testIds.sort().join("\0\0");
+    return this.runByIdKey.get(key);
+  }
+  /** Adds a new test run decroation */
+  addTest(d) {
+    const key = d.testIds.sort().join("\0\0");
+    this.runByIdKey.set(key, d);
+  }
+  /** Finds an extension by VS Code event ID */
+  getById(decorationId) {
+    for (const d of this.runByIdKey.values()) {
+      if (d.id === decorationId) {
+        return d;
+      }
+    }
+    return void 0;
+  }
+  /** Iterate over all decorations */
+  *[Symbol.iterator]() {
+    for (const d of this.runByIdKey.values()) {
+      yield d;
+    }
+  }
+}
+let TestingDecorationService = class extends Disposable {
+  constructor(codeEditorService, configurationService, testService, results, instantiationService, modelService) {
+    super();
+    this.configurationService = configurationService;
+    this.testService = testService;
+    this.results = results;
+    this.instantiationService = instantiationService;
+    this.modelService = modelService;
+    codeEditorService.registerDecorationType("test-message-decoration", TestMessageDecoration.decorationId, {}, void 0);
+    this._register(modelService.onModelRemoved((e) => this.decorationCache.delete(e.uri)));
+    const debounceInvalidate = this._register(new RunOnceScheduler(() => this.invalidate(), 100));
+    this._register(this.testService.onWillProcessDiff((diff) => {
+      for (const entry of diff) {
+        if (entry.op !== TestDiffOpType.DocumentSynced) {
+          continue;
+        }
+        const rec = this.decorationCache.get(entry.uri);
+        if (rec) {
+          rec.rangeUpdateVersionId = entry.docv;
+        }
+      }
+      if (!debounceInvalidate.isScheduled()) {
+        debounceInvalidate.schedule();
+      }
+    }));
+    this._register(Event.any(
+      this.results.onResultsChanged,
+      this.results.onTestChanged,
+      this.testService.excluded.onTestExclusionsChanged,
+      Event.filter(configurationService.onDidChangeConfiguration, (e) => e.affectsConfiguration(TestingConfigKeys.GutterEnabled))
+    )(() => {
+      if (!debounceInvalidate.isScheduled()) {
+        debounceInvalidate.schedule();
+      }
+    }));
+    this._register(GutterActionsRegistry.registerGutterActionsGenerator((context, result) => {
+      const model = context.editor.getModel();
+      const testingDecorations = TestingDecorations.get(context.editor);
+      if (!model || !testingDecorations?.currentUri) {
+        return;
+      }
+      const currentDecorations = this.syncDecorations(testingDecorations.currentUri);
+      if (!currentDecorations.size) {
+        return;
+      }
+      const modelDecorations = model.getLinesDecorations(context.lineNumber, context.lineNumber);
+      for (const { id } of modelDecorations) {
+        const decoration = currentDecorations.getById(id);
+        if (decoration) {
+          const { object: actions } = decoration.getContextMenuActions();
+          for (const action of actions) {
+            result.push(action, "1_testing");
+          }
+        }
+      }
+    }));
+  }
+  static {
+    __name(this, "TestingDecorationService");
+  }
+  generation = 0;
+  changeEmitter = new Emitter();
+  decorationCache = new ResourceMap();
+  /**
+   * List of messages that should be hidden because an editor changed their
+   * underlying ranges. I think this is good enough, because:
+   *  - Message decorations are never shown across reloads; this does not
+   *    need to persist
+   *  - Message instances are stable for any completed test results for
+   *    the duration of the session.
+   */
+  invalidatedMessages = /* @__PURE__ */ new WeakSet();
+  /** @inheritdoc */
+  onDidChange = this.changeEmitter.event;
+  /** @inheritdoc */
+  invalidateResultMessage(message) {
+    this.invalidatedMessages.add(message);
+    this.invalidate();
+  }
+  /** @inheritdoc */
+  syncDecorations(resource) {
+    const model = this.modelService.getModel(resource);
+    if (!model) {
+      return new CachedDecorations();
+    }
+    const cached = this.decorationCache.get(resource);
+    if (cached && cached.generation === this.generation && (cached.rangeUpdateVersionId === void 0 || cached.rangeUpdateVersionId !== model.getVersionId())) {
+      return cached.value;
+    }
+    return this.applyDecorations(model);
+  }
+  /** @inheritdoc */
+  getDecoratedTestPosition(resource, testId) {
+    const model = this.modelService.getModel(resource);
+    if (!model) {
+      return void 0;
+    }
+    const decoration = Iterable.find(this.syncDecorations(resource), (v) => v instanceof RunTestDecoration && v.isForTest(testId));
+    if (!decoration) {
+      return void 0;
+    }
+    return model.getDecorationRange(decoration.id)?.getStartPosition();
+  }
+  invalidate() {
+    this.generation++;
+    this.changeEmitter.fire();
+  }
+  /**
+   * Sets whether alternate actions are shown for the model.
+   */
+  updateDecorationsAlternateAction(resource, isAlt) {
+    const model = this.modelService.getModel(resource);
+    const cached = this.decorationCache.get(resource);
+    if (!model || !cached || cached.isAlt === isAlt) {
+      return;
+    }
+    cached.isAlt = isAlt;
+    model.changeDecorations((accessor) => {
+      for (const decoration of cached.value) {
+        if (decoration instanceof RunTestDecoration && decoration.editorDecoration.alternate) {
+          accessor.changeDecorationOptions(
+            decoration.id,
+            isAlt ? decoration.editorDecoration.alternate : decoration.editorDecoration.options
+          );
+        }
+      }
+    });
+  }
+  /**
+   * Applies the current set of test decorations to the given text model.
+   */
+  applyDecorations(model) {
+    const gutterEnabled = getTestingConfiguration(this.configurationService, TestingConfigKeys.GutterEnabled);
+    const cached = this.decorationCache.get(model.uri);
+    const testRangesUpdated = cached?.rangeUpdateVersionId === model.getVersionId();
+    const lastDecorations = cached?.value ?? new CachedDecorations();
+    const newDecorations = model.changeDecorations((accessor) => {
+      const newDecorations2 = new CachedDecorations();
+      const runDecorations = new TestDecorations();
+      for (const test of this.testService.collection.getNodeByUrl(model.uri)) {
+        if (!test.item.range) {
+          continue;
+        }
+        const stateLookup = this.results.getStateById(test.item.extId);
+        const line = test.item.range.startLineNumber;
+        runDecorations.push({ line, id: "", test, resultItem: stateLookup?.[1] });
+      }
+      for (const [line, tests] of runDecorations.lines()) {
+        const multi = tests.length > 1;
+        let existing = lastDecorations.getForExactTests(tests.map((t) => t.test.item.extId));
+        if (existing && testRangesUpdated && model.getDecorationRange(existing.id)?.startLineNumber !== line) {
+          existing = void 0;
+        }
+        if (existing) {
+          if (existing.replaceOptions(tests, gutterEnabled)) {
+            accessor.changeDecorationOptions(existing.id, existing.editorDecoration.options);
+          }
+          newDecorations2.addTest(existing);
+        } else {
+          newDecorations2.addTest(multi ? this.instantiationService.createInstance(MultiRunTestDecoration, tests, gutterEnabled, model) : this.instantiationService.createInstance(RunSingleTestDecoration, tests[0].test, tests[0].resultItem, model, gutterEnabled));
+        }
+      }
+      const saveFromRemoval = /* @__PURE__ */ new Set();
+      for (const decoration of newDecorations2) {
+        if (decoration.id === "") {
+          decoration.id = accessor.addDecoration(decoration.editorDecoration.range, decoration.editorDecoration.options);
+        } else {
+          saveFromRemoval.add(decoration.id);
+        }
+      }
+      for (const decoration of lastDecorations) {
+        if (!saveFromRemoval.has(decoration.id)) {
+          accessor.removeDecoration(decoration.id);
+        }
+      }
+      this.decorationCache.set(model.uri, {
+        generation: this.generation,
+        rangeUpdateVersionId: cached?.rangeUpdateVersionId,
+        value: newDecorations2
+      });
+      return newDecorations2;
+    });
+    return newDecorations || lastDecorations;
+  }
+};
+TestingDecorationService = __decorateClass([
+  __decorateParam(0, ICodeEditorService),
+  __decorateParam(1, IConfigurationService),
+  __decorateParam(2, ITestService),
+  __decorateParam(3, ITestResultService),
+  __decorateParam(4, IInstantiationService),
+  __decorateParam(5, IModelService)
+], TestingDecorationService);
+let TestingDecorations = class extends Disposable {
+  constructor(editor, codeEditorService, testService, decorations, uriIdentityService, results, configurationService, instantiationService) {
+    super();
+    this.editor = editor;
+    this.codeEditorService = codeEditorService;
+    this.testService = testService;
+    this.decorations = decorations;
+    this.uriIdentityService = uriIdentityService;
+    this.results = results;
+    this.configurationService = configurationService;
+    this.instantiationService = instantiationService;
+    codeEditorService.registerDecorationType("test-message-decoration", TestMessageDecoration.decorationId, {}, void 0, editor);
+    this.attachModel(editor.getModel()?.uri);
+    this._register(decorations.onDidChange(() => {
+      if (this._currentUri) {
+        decorations.syncDecorations(this._currentUri);
+      }
+    }));
+    this._register(Event.any(
+      this.results.onResultsChanged,
+      editor.onDidChangeModel,
+      Event.filter(this.results.onTestChanged, (c) => c.reason === TestResultItemChangeReason.NewMessage),
+      this.testService.showInlineOutput.onDidChange
+    )(() => this.applyResults()));
+    const win = dom.getWindow(editor.getDomNode());
+    this._register(dom.addDisposableListener(win, "keydown", (e) => {
+      if (new StandardKeyboardEvent(e).keyCode === KeyCode.Alt && this._currentUri) {
+        decorations.updateDecorationsAlternateAction(this._currentUri, true);
+      }
+    }));
+    this._register(dom.addDisposableListener(win, "keyup", (e) => {
+      if (new StandardKeyboardEvent(e).keyCode === KeyCode.Alt && this._currentUri) {
+        decorations.updateDecorationsAlternateAction(this._currentUri, false);
+      }
+    }));
+    this._register(dom.addDisposableListener(win, "blur", () => {
+      if (this._currentUri) {
+        decorations.updateDecorationsAlternateAction(this._currentUri, false);
+      }
+    }));
+    this._register(this.editor.onKeyUp((e) => {
+      if (e.keyCode === KeyCode.Alt && this._currentUri) {
+        decorations.updateDecorationsAlternateAction(this._currentUri, false);
+      }
+    }));
+    this._register(this.editor.onDidChangeModel((e) => this.attachModel(e.newModelUrl || void 0)));
+    this._register(this.editor.onMouseDown((e) => {
+      if (e.target.position && this.currentUri) {
+        const modelDecorations = editor.getModel()?.getLineDecorations(e.target.position.lineNumber) ?? [];
+        if (!modelDecorations.length) {
+          return;
+        }
+        const cache = decorations.syncDecorations(this.currentUri);
+        for (const { id } of modelDecorations) {
+          if (cache.getById(id)?.click(e)) {
+            e.event.stopPropagation();
+            return;
+          }
+        }
+      }
+    }));
+    this._register(Event.accumulate(this.editor.onDidChangeModelContent, 0, this._store)((evts) => {
+      const model = editor.getModel();
+      if (!this._currentUri || !model) {
+        return;
+      }
+      let changed = false;
+      for (const [message, deco] of this.loggedMessageDecorations) {
+        const invalidate = evts.some((e) => e.changes.some(
+          (c) => c.range.startLineNumber <= deco.line && c.range.endLineNumber >= deco.line || deco.resultItem?.item.range && deco.resultItem.item.range.startLineNumber <= c.range.startLineNumber && deco.resultItem.item.range.endLineNumber >= c.range.endLineNumber
+        ));
+        if (invalidate) {
+          changed = true;
+          TestingDecorations.invalidatedTests.add(deco.resultItem || message);
+        }
+      }
+      if (changed) {
+        this.applyResults();
+      }
+    }));
+    const updateFontFamilyVar = /* @__PURE__ */ __name(() => {
+      this.editor.getContainerDomNode().style.setProperty("--testMessageDecorationFontFamily", editor.getOption(EditorOption.fontFamily));
+      this.editor.getContainerDomNode().style.setProperty("--testMessageDecorationFontSize", `${editor.getOption(EditorOption.fontSize)}px`);
+    }, "updateFontFamilyVar");
+    this._register(this.editor.onDidChangeConfiguration((e) => {
+      if (e.hasChanged(EditorOption.fontFamily)) {
+        updateFontFamilyVar();
+      }
+    }));
+    updateFontFamilyVar();
+  }
+  static {
+    __name(this, "TestingDecorations");
+  }
+  /**
+   * Results invalidated by editor changes.
+   */
+  static invalidatedTests = /* @__PURE__ */ new WeakSet();
+  /**
+   * Gets the decorations associated with the given code editor.
+   */
+  static get(editor) {
+    return editor.getContribution(Testing.DecorationsContributionId);
+  }
+  get currentUri() {
+    return this._currentUri;
+  }
+  _currentUri;
+  expectedWidget = this._register(new MutableDisposable());
+  actualWidget = this._register(new MutableDisposable());
+  errorContentWidgets = this._register(new DisposableMap());
+  loggedMessageDecorations = /* @__PURE__ */ new Map();
+  attachModel(uri) {
+    switch (uri && parseTestUri(uri)?.type) {
+      case TestUriType.ResultExpectedOutput:
+        this.expectedWidget.value = new ExpectedLensContentWidget(this.editor);
+        this.actualWidget.clear();
+        break;
+      case TestUriType.ResultActualOutput:
+        this.expectedWidget.clear();
+        this.actualWidget.value = new ActualLensContentWidget(this.editor);
+        break;
+      default:
+        this.expectedWidget.clear();
+        this.actualWidget.clear();
+    }
+    if (isOriginalInDiffEditor(this.codeEditorService, this.editor)) {
+      uri = void 0;
+    }
+    this._currentUri = uri;
+    if (!uri) {
+      return;
+    }
+    this.decorations.syncDecorations(uri);
+    (async () => {
+      for await (const _test of testsInFile(this.testService, this.uriIdentityService, uri, false)) {
+        if (this._currentUri !== uri) {
+          break;
+        }
+      }
+    })();
+  }
+  applyResults() {
+    const model = this.editor.getModel();
+    if (!model) {
+      return this.clearResults();
+    }
+    const uriStr = model.uri.toString();
+    const seenLines = /* @__PURE__ */ new Set();
+    this.applyResultsContentWidgets(uriStr, seenLines);
+    this.applyResultsLoggedMessages(uriStr, seenLines);
+  }
+  clearResults() {
+    this.errorContentWidgets.clearAndDisposeAll();
+  }
+  isMessageInvalidated(message) {
+    return TestingDecorations.invalidatedTests.has(message);
+  }
+  applyResultsContentWidgets(uriStr, seenLines) {
+    const seen = /* @__PURE__ */ new Set();
+    if (getTestingConfiguration(this.configurationService, TestingConfigKeys.ShowAllMessages)) {
+      this.results.results.forEach((lastResult) => this.applyContentWidgetsFromResult(lastResult, uriStr, seen, seenLines));
+    } else if (this.results.results.length) {
+      this.applyContentWidgetsFromResult(this.results.results[0], uriStr, seen, seenLines);
+    }
+    for (const message of this.errorContentWidgets.keys()) {
+      if (!seen.has(message)) {
+        this.errorContentWidgets.deleteAndDispose(message);
+      }
+    }
+  }
+  applyContentWidgetsFromResult(lastResult, uriStr, seen, seenLines) {
+    for (const test of lastResult.tests) {
+      if (TestingDecorations.invalidatedTests.has(test)) {
+        continue;
+      }
+      for (let taskId = 0; taskId < test.tasks.length; taskId++) {
+        const state = test.tasks[taskId];
+        for (let i = 0; i < state.messages.length; i++) {
+          const m = state.messages[i];
+          if (m.type !== TestMessageType.Error || this.isMessageInvalidated(m)) {
+            continue;
+          }
+          const line = m.location?.uri.toString() === uriStr ? m.location.range.startLineNumber : m.stackTrace && mapFindFirst(m.stackTrace, (f) => f.position && f.uri?.toString() === uriStr ? f.position.lineNumber : void 0);
+          if (line === void 0 || seenLines.has(line)) {
+            continue;
+          }
+          seenLines.add(line);
+          let deco = this.errorContentWidgets.get(m);
+          if (!deco) {
+            const lineLength = this.editor.getModel()?.getLineLength(line) ?? 100;
+            deco = this.instantiationService.createInstance(
+              TestErrorContentWidget,
+              this.editor,
+              new Position(line, lineLength + 1),
+              m,
+              test,
+              buildTestUri({
+                type: TestUriType.ResultActualOutput,
+                messageIndex: i,
+                taskIndex: taskId,
+                resultId: lastResult.id,
+                testExtId: test.item.extId
+              })
+            );
+            this.errorContentWidgets.set(m, deco);
+          }
+          seen.add(m);
+        }
+      }
+    }
+  }
+  applyResultsLoggedMessages(uriStr, messageLines) {
+    this.editor.changeDecorations((accessor) => {
+      const seen = /* @__PURE__ */ new Set();
+      if (getTestingConfiguration(this.configurationService, TestingConfigKeys.ShowAllMessages)) {
+        this.results.results.forEach((r) => this.applyLoggedMessageFromResult(r, uriStr, seen, messageLines, accessor));
+      } else if (this.results.results.length) {
+        this.applyLoggedMessageFromResult(this.results.results[0], uriStr, seen, messageLines, accessor);
+      }
+      for (const [message, { id }] of this.loggedMessageDecorations) {
+        if (!seen.has(message)) {
+          accessor.removeDecoration(id);
+        }
+      }
+    });
+  }
+  applyLoggedMessageFromResult(lastResult, uriStr, seen, messageLines, accessor) {
+    if (!this.testService.showInlineOutput.value || !(lastResult instanceof LiveTestResult)) {
+      return;
+    }
+    const tryAdd = /* @__PURE__ */ __name((resultItem, m, uri) => {
+      if (this.isMessageInvalidated(m) || m.location?.uri.toString() !== uriStr) {
+        return;
+      }
+      seen.add(m);
+      const line = m.location.range.startLineNumber;
+      if (messageLines.has(line) || this.loggedMessageDecorations.has(m)) {
+        return;
+      }
+      const deco = this.instantiationService.createInstance(TestMessageDecoration, m, uri, this.editor.getModel());
+      messageLines.add(line);
+      const id = accessor.addDecoration(
+        deco.editorDecoration.range,
+        deco.editorDecoration.options
+      );
+      this.loggedMessageDecorations.set(m, { id, line, resultItem });
+    }, "tryAdd");
+    for (const test of lastResult.tests) {
+      if (TestingDecorations.invalidatedTests.has(test)) {
+        continue;
+      }
+      for (let taskId = 0; taskId < test.tasks.length; taskId++) {
+        const state = test.tasks[taskId];
+        for (let i = state.messages.length - 1; i >= 0; i--) {
+          const m = state.messages[i];
+          if (m.type === TestMessageType.Output) {
+            tryAdd(test, m, buildTestUri({
+              type: TestUriType.ResultActualOutput,
+              messageIndex: i,
+              taskIndex: taskId,
+              resultId: lastResult.id,
+              testExtId: test.item.extId
+            }));
+          }
+        }
+      }
+    }
+    for (const task of lastResult.tasks) {
+      for (const m of task.otherMessages) {
+        tryAdd(void 0, m);
+      }
+    }
+  }
+};
+TestingDecorations = __decorateClass([
+  __decorateParam(1, ICodeEditorService),
+  __decorateParam(2, ITestService),
+  __decorateParam(3, ITestingDecorationsService),
+  __decorateParam(4, IUriIdentityService),
+  __decorateParam(5, ITestResultService),
+  __decorateParam(6, IConfigurationService),
+  __decorateParam(7, IInstantiationService)
+], TestingDecorations);
+const collapseRange = /* @__PURE__ */ __name((originalRange) => ({
+  startLineNumber: originalRange.startLineNumber,
+  endLineNumber: originalRange.startLineNumber,
+  startColumn: originalRange.startColumn,
+  endColumn: originalRange.startColumn
+}), "collapseRange");
+const createRunTestDecoration = /* @__PURE__ */ __name((tests, states, visible, defaultGutterAction) => {
+  const range = tests[0]?.item.range;
+  if (!range) {
+    throw new Error("Test decorations can only be created for tests with a range");
+  }
+  if (!visible) {
+    return {
+      range: collapseRange(range),
+      options: { isWholeLine: true, description: "run-test-decoration" }
+    };
+  }
+  let computedState = TestResultState.Unset;
+  const hoverMessageParts = [];
+  let testIdWithMessages;
+  let retired = false;
+  for (let i = 0; i < tests.length; i++) {
+    const test = tests[i];
+    const resultItem = states[i];
+    const state = resultItem?.computedState ?? TestResultState.Unset;
+    if (hoverMessageParts.length < 10) {
+      hoverMessageParts.push(labelForTestInState(test.item.label, state));
+    }
+    computedState = maxPriority(computedState, state);
+    retired = retired || !!resultItem?.retired;
+    if (!testIdWithMessages && resultItem?.tasks.some((t) => t.messages.length)) {
+      testIdWithMessages = test.item.extId;
+    }
+  }
+  const hasMultipleTests = tests.length > 1 || tests[0].children.size > 0;
+  const primaryIcon = computedState === TestResultState.Unset ? hasMultipleTests ? testingRunAllIcon : testingRunIcon : testingStatesToIcons.get(computedState);
+  const alternateIcon = defaultGutterAction === DefaultGutterClickAction.Debug ? hasMultipleTests ? testingRunAllIcon : testingRunIcon : hasMultipleTests ? testingDebugAllIcon : testingDebugIcon;
+  let hoverMessage;
+  let glyphMarginClassName = "testing-run-glyph";
+  if (retired) {
+    glyphMarginClassName += " retired";
+  }
+  const defaultOptions = {
+    description: "run-test-decoration",
+    showIfCollapsed: true,
+    get hoverMessage() {
+      if (!hoverMessage) {
+        const building = hoverMessage = new MarkdownString("", true).appendText(hoverMessageParts.join(", ") + ".");
+        if (testIdWithMessages) {
+          const args = encodeURIComponent(JSON.stringify([testIdWithMessages]));
+          building.appendMarkdown(` [${localize("peekTestOutout", "Peek Test Output")}](command:vscode.peekTestError?${args})`);
+        }
+      }
+      return hoverMessage;
+    },
+    glyphMargin: { position: GLYPH_MARGIN_LANE },
+    glyphMarginClassName: `${ThemeIcon.asClassName(primaryIcon)} ${glyphMarginClassName}`,
+    stickiness: TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
+    zIndex: 1e4
+  };
+  const alternateOptions = {
+    ...defaultOptions,
+    glyphMarginClassName: `${ThemeIcon.asClassName(alternateIcon)} ${glyphMarginClassName}`
+  };
+  return {
+    range: collapseRange(range),
+    options: defaultOptions,
+    alternate: alternateOptions
+  };
+}, "createRunTestDecoration");
+var LensContentWidgetVars = /* @__PURE__ */ ((LensContentWidgetVars2) => {
+  LensContentWidgetVars2["FontFamily"] = "testingDiffLensFontFamily";
+  LensContentWidgetVars2["FontFeatures"] = "testingDiffLensFontFeatures";
+  return LensContentWidgetVars2;
+})(LensContentWidgetVars || {});
+class TitleLensContentWidget {
+  constructor(editor) {
+    this.editor = editor;
+    queueMicrotask(() => {
+      this.applyStyling();
+      this.editor.addContentWidget(this);
+    });
+  }
+  static {
+    __name(this, "TitleLensContentWidget");
+  }
+  /** @inheritdoc */
+  allowEditorOverflow = false;
+  /** @inheritdoc */
+  suppressMouseDown = true;
+  _domNode = dom.$("span");
+  viewZoneId;
+  applyStyling() {
+    let fontSize = this.editor.getOption(EditorOption.codeLensFontSize);
+    let height;
+    if (!fontSize || fontSize < 5) {
+      fontSize = this.editor.getOption(EditorOption.fontSize) * 0.9 | 0;
+      height = this.editor.getOption(EditorOption.lineHeight);
+    } else {
+      height = fontSize * Math.max(1.3, this.editor.getOption(EditorOption.lineHeight) / this.editor.getOption(EditorOption.fontSize)) | 0;
+    }
+    const editorFontInfo = this.editor.getOption(EditorOption.fontInfo);
+    const node = this._domNode;
+    node.classList.add("testing-diff-lens-widget");
+    node.textContent = this.getText();
+    node.style.lineHeight = `${height}px`;
+    node.style.fontSize = `${fontSize}px`;
+    node.style.fontFamily = `var(--${"testingDiffLensFontFamily" /* FontFamily */})`;
+    node.style.fontFeatureSettings = `var(--${"testingDiffLensFontFeatures" /* FontFeatures */})`;
+    const containerStyle = this.editor.getContainerDomNode().style;
+    containerStyle.setProperty("testingDiffLensFontFamily" /* FontFamily */, this.editor.getOption(EditorOption.codeLensFontFamily) ?? "inherit");
+    containerStyle.setProperty("testingDiffLensFontFeatures" /* FontFeatures */, editorFontInfo.fontFeatureSettings);
+    this.editor.changeViewZones((accessor) => {
+      if (this.viewZoneId) {
+        accessor.removeZone(this.viewZoneId);
+      }
+      this.viewZoneId = accessor.addZone({
+        afterLineNumber: 0,
+        afterColumn: Constants.MAX_SAFE_SMALL_INTEGER,
+        domNode: document.createElement("div"),
+        heightInPx: 20
+      });
+    });
+  }
+  /** @inheritdoc */
+  getDomNode() {
+    return this._domNode;
+  }
+  /** @inheritdoc */
+  dispose() {
+    this.editor.changeViewZones((accessor) => {
+      if (this.viewZoneId) {
+        accessor.removeZone(this.viewZoneId);
+      }
+    });
+    this.editor.removeContentWidget(this);
+  }
+  /** @inheritdoc */
+  getPosition() {
+    return {
+      position: { column: 0, lineNumber: 0 },
+      preference: [ContentWidgetPositionPreference.ABOVE]
+    };
+  }
+}
+class ExpectedLensContentWidget extends TitleLensContentWidget {
+  static {
+    __name(this, "ExpectedLensContentWidget");
+  }
+  getId() {
+    return "expectedTestingLens";
+  }
+  getText() {
+    return localize("expected.title", "Expected");
+  }
+}
+class ActualLensContentWidget extends TitleLensContentWidget {
+  static {
+    __name(this, "ActualLensContentWidget");
+  }
+  getId() {
+    return "actualTestingLens";
+  }
+  getText() {
+    return localize("actual.title", "Actual");
+  }
+}
+let RunTestDecoration = class {
+  constructor(tests, visible, model, codeEditorService, testService, contextMenuService, commandService, configurationService, testProfileService, contextKeyService, menuService) {
+    this.tests = tests;
+    this.visible = visible;
+    this.model = model;
+    this.codeEditorService = codeEditorService;
+    this.testService = testService;
+    this.contextMenuService = contextMenuService;
+    this.commandService = commandService;
+    this.configurationService = configurationService;
+    this.testProfileService = testProfileService;
+    this.contextKeyService = contextKeyService;
+    this.menuService = menuService;
+    this.displayedStates = tests.map((t) => t.resultItem?.computedState);
+    this.editorDecoration = createRunTestDecoration(
+      tests.map((t) => t.test),
+      tests.map((t) => t.resultItem),
+      visible,
+      getTestingConfiguration(this.configurationService, TestingConfigKeys.DefaultGutterClickAction)
+    );
+    this.editorDecoration.options.glyphMarginHoverMessage = new MarkdownString().appendText(this.getGutterLabel());
+  }
+  static {
+    __name(this, "RunTestDecoration");
+  }
+  /** @inheritdoc */
+  id = "";
+  get line() {
+    return this.editorDecoration.range.startLineNumber;
+  }
+  get testIds() {
+    return this.tests.map((t) => t.test.item.extId);
+  }
+  editorDecoration;
+  displayedStates;
+  /** @inheritdoc */
+  click(e) {
+    if (e.target.type !== MouseTargetType.GUTTER_GLYPH_MARGIN || e.target.detail.glyphMarginLane !== GLYPH_MARGIN_LANE || e.event.rightButton || isMacintosh && e.event.leftButton && e.event.ctrlKey) {
+      return false;
+    }
+    const alternateAction = e.event.altKey;
+    switch (getTestingConfiguration(this.configurationService, TestingConfigKeys.DefaultGutterClickAction)) {
+      case DefaultGutterClickAction.ContextMenu:
+        this.showContextMenu(e);
+        break;
+      case DefaultGutterClickAction.Debug:
+        this.runWith(alternateAction ? TestRunProfileBitset.Run : TestRunProfileBitset.Debug);
+        break;
+      case DefaultGutterClickAction.Coverage:
+        this.runWith(alternateAction ? TestRunProfileBitset.Debug : TestRunProfileBitset.Coverage);
+        break;
+      case DefaultGutterClickAction.Run:
+      default:
+        this.runWith(alternateAction ? TestRunProfileBitset.Debug : TestRunProfileBitset.Run);
+        break;
+    }
+    return true;
+  }
+  /**
+   * Updates the decoration to match the new set of tests.
+   * @returns true if options were changed, false otherwise
+   */
+  replaceOptions(newTests, visible) {
+    const displayedStates = newTests.map((t) => t.resultItem?.computedState);
+    if (visible === this.visible && equals(this.displayedStates, displayedStates)) {
+      return false;
+    }
+    this.tests = newTests;
+    this.displayedStates = displayedStates;
+    this.visible = visible;
+    const { options, alternate } = createRunTestDecoration(
+      newTests.map((t) => t.test),
+      newTests.map((t) => t.resultItem),
+      visible,
+      getTestingConfiguration(this.configurationService, TestingConfigKeys.DefaultGutterClickAction)
+    );
+    this.editorDecoration.options = options;
+    this.editorDecoration.alternate = alternate;
+    this.editorDecoration.options.glyphMarginHoverMessage = new MarkdownString().appendText(this.getGutterLabel());
+    return true;
+  }
+  /**
+   * Gets whether this decoration serves as the run button for the given test ID.
+   */
+  isForTest(testId) {
+    return this.tests.some((t) => t.test.item.extId === testId);
+  }
+  runWith(profile) {
+    return this.testService.runTests({
+      tests: simplifyTestsToExecute(this.testService.collection, this.tests.map(({ test }) => test)),
+      group: profile
+    });
+  }
+  showContextMenu(e) {
+    const editor = this.codeEditorService.listCodeEditors().find((e2) => e2.getModel() === this.model);
+    editor?.getContribution(EditorLineNumberContextMenu.ID)?.show(e);
+  }
+  getGutterLabel() {
+    switch (getTestingConfiguration(this.configurationService, TestingConfigKeys.DefaultGutterClickAction)) {
+      case DefaultGutterClickAction.ContextMenu:
+        return localize("testing.gutterMsg.contextMenu", "Click for test options");
+      case DefaultGutterClickAction.Debug:
+        return localize("testing.gutterMsg.debug", "Click to debug tests, right click for more options");
+      case DefaultGutterClickAction.Coverage:
+        return localize("testing.gutterMsg.coverage", "Click to run tests with coverage, right click for more options");
+      case DefaultGutterClickAction.Run:
+      default:
+        return localize("testing.gutterMsg.run", "Click to run tests, right click for more options");
+    }
+  }
+  /**
+   * Gets context menu actions relevant for a singel test.
+   */
+  getTestContextMenuActions(test, resultItem) {
+    const testActions = [];
+    const capabilities = this.testProfileService.capabilitiesForTest(test.item);
+    [
+      { bitset: TestRunProfileBitset.Run, label: localize("run test", "Run Test") },
+      { bitset: TestRunProfileBitset.Debug, label: localize("debug test", "Debug Test") },
+      { bitset: TestRunProfileBitset.Coverage, label: localize("coverage test", "Run with Coverage") }
+    ].forEach(({ bitset, label }) => {
+      if (capabilities & bitset) {
+        testActions.push(new Action(
+          `testing.gutter.${bitset}`,
+          label,
+          void 0,
+          void 0,
+          () => this.testService.runTests({ group: bitset, tests: [test] })
+        ));
+      }
+    });
+    if (capabilities & TestRunProfileBitset.HasNonDefaultProfile) {
+      testActions.push(new Action("testing.runUsing", localize("testing.runUsing", "Execute Using Profile..."), void 0, void 0, async () => {
+        const profile = await this.commandService.executeCommand("vscode.pickTestProfile", { onlyForTest: test });
+        if (!profile) {
+          return;
+        }
+        this.testService.runResolvedTests({
+          group: profile.group,
+          targets: [{
+            profileId: profile.profileId,
+            controllerId: profile.controllerId,
+            testIds: [test.item.extId]
+          }]
+        });
+      }));
+    }
+    if (resultItem && isFailedState(resultItem.computedState)) {
+      testActions.push(new Action(
+        "testing.gutter.peekFailure",
+        localize("peek failure", "Peek Error"),
+        void 0,
+        void 0,
+        () => this.commandService.executeCommand("vscode.peekTestError", test.item.extId)
+      ));
+    }
+    testActions.push(new Action(
+      "testing.gutter.reveal",
+      localize("reveal test", "Reveal in Test Explorer"),
+      void 0,
+      void 0,
+      () => this.commandService.executeCommand("_revealTestInExplorer", test.item.extId)
+    ));
+    const contributed = this.getContributedTestActions(test, capabilities);
+    return { object: Separator.join(testActions, contributed), dispose() {
+      testActions.forEach((a) => a.dispose());
+    } };
+  }
+  getContributedTestActions(test, capabilities) {
+    const contextOverlay = this.contextKeyService.createOverlay(getTestItemContextOverlay(test, capabilities));
+    const arg = getContextForTestItem(this.testService.collection, test.item.extId);
+    const menu = this.menuService.getMenuActions(MenuId.TestItemGutter, contextOverlay, { shouldForwardArgs: true, arg });
+    return getFlatContextMenuActions(menu);
+  }
+};
+RunTestDecoration = __decorateClass([
+  __decorateParam(3, ICodeEditorService),
+  __decorateParam(4, ITestService),
+  __decorateParam(5, IContextMenuService),
+  __decorateParam(6, ICommandService),
+  __decorateParam(7, IConfigurationService),
+  __decorateParam(8, ITestProfileService),
+  __decorateParam(9, IContextKeyService),
+  __decorateParam(10, IMenuService)
+], RunTestDecoration);
+let MultiRunTestDecoration = class extends RunTestDecoration {
+  constructor(tests, visible, model, codeEditorService, testService, contextMenuService, commandService, configurationService, testProfileService, contextKeyService, menuService, quickInputService) {
+    super(tests, visible, model, codeEditorService, testService, contextMenuService, commandService, configurationService, testProfileService, contextKeyService, menuService);
+    this.quickInputService = quickInputService;
+  }
+  static {
+    __name(this, "MultiRunTestDecoration");
+  }
+  getContextMenuActions() {
+    const disposable = new DisposableStore();
+    const allActions = [];
+    [
+      { bitset: TestRunProfileBitset.Run, label: localize("run all test", "Run All Tests") },
+      { bitset: TestRunProfileBitset.Coverage, label: localize("run all test with coverage", "Run All Tests with Coverage") },
+      { bitset: TestRunProfileBitset.Debug, label: localize("debug all test", "Debug All Tests") }
+    ].forEach(({ bitset, label }, i) => {
+      const canRun = this.tests.some(({ test }) => this.testProfileService.capabilitiesForTest(test.item) & bitset);
+      if (canRun) {
+        allActions.push(new Action(`testing.gutter.run${i}`, label, void 0, void 0, () => this.runWith(bitset)));
+      }
+    });
+    disposable.add(toDisposable(() => allActions.forEach((a) => a.dispose())));
+    const testItems = this.tests.map((testItem) => ({
+      currentLabel: testItem.test.item.label,
+      testItem,
+      parent: TestId.fromString(testItem.test.item.extId).parentId
+    }));
+    const getLabelConflicts = /* @__PURE__ */ __name((tests) => {
+      const labelCount = /* @__PURE__ */ new Map();
+      for (const test of tests) {
+        labelCount.set(test.currentLabel, (labelCount.get(test.currentLabel) || 0) + 1);
+      }
+      return tests.filter((e) => labelCount.get(e.currentLabel) > 1);
+    }, "getLabelConflicts");
+    let conflicts, hasParent = true;
+    while ((conflicts = getLabelConflicts(testItems)).length && hasParent) {
+      for (const conflict of conflicts) {
+        if (conflict.parent) {
+          const parent = this.testService.collection.getNodeById(conflict.parent.toString());
+          conflict.currentLabel = parent?.item.label + " > " + conflict.currentLabel;
+          conflict.parent = conflict.parent.parentId;
+        } else {
+          hasParent = false;
+        }
+      }
+    }
+    testItems.sort((a, b) => {
+      const ai = a.testItem.test.item;
+      const bi = b.testItem.test.item;
+      return (ai.sortText || ai.label).localeCompare(bi.sortText || bi.label);
+    });
+    let testSubmenus = testItems.map(({ currentLabel, testItem }) => {
+      const actions = this.getTestContextMenuActions(testItem.test, testItem.resultItem);
+      disposable.add(actions);
+      let label = stripIcons(currentLabel);
+      const lf = label.indexOf("\n");
+      if (lf !== -1) {
+        label = label.slice(0, lf);
+      }
+      return new SubmenuAction(testItem.test.item.extId, label, actions.object);
+    });
+    const overflow = testSubmenus.length - MAX_TESTS_IN_SUBMENU;
+    if (overflow > 0) {
+      testSubmenus = testSubmenus.slice(0, MAX_TESTS_IN_SUBMENU);
+      testSubmenus.push(new Action(
+        "testing.gutter.overflow",
+        localize("testOverflowItems", "{0} more tests...", overflow),
+        void 0,
+        void 0,
+        () => this.pickAndRun(testItems)
+      ));
+    }
+    return { object: Separator.join(allActions, testSubmenus), dispose: /* @__PURE__ */ __name(() => disposable.dispose(), "dispose") };
+  }
+  async pickAndRun(testItems) {
+    const doPick = /* @__PURE__ */ __name((items, title) => new Promise((resolve) => {
+      const disposables = new DisposableStore();
+      const pick = disposables.add(this.quickInputService.createQuickPick());
+      pick.placeholder = title;
+      pick.items = items;
+      disposables.add(pick.onDidHide(() => {
+        resolve(void 0);
+        disposables.dispose();
+      }));
+      disposables.add(pick.onDidAccept(() => {
+        resolve(pick.selectedItems[0]);
+        disposables.dispose();
+      }));
+      pick.show();
+    }), "doPick");
+    const item = await doPick(
+      testItems.map(({ currentLabel, testItem }) => ({ label: currentLabel, test: testItem.test, result: testItem.resultItem })),
+      localize("selectTestToRun", "Select a test to run")
+    );
+    if (!item) {
+      return;
+    }
+    const actions = this.getTestContextMenuActions(item.test, item.result);
+    try {
+      (await doPick(actions.object, item.label))?.run();
+    } finally {
+      actions.dispose();
+    }
+  }
+};
+MultiRunTestDecoration = __decorateClass([
+  __decorateParam(3, ICodeEditorService),
+  __decorateParam(4, ITestService),
+  __decorateParam(5, IContextMenuService),
+  __decorateParam(6, ICommandService),
+  __decorateParam(7, IConfigurationService),
+  __decorateParam(8, ITestProfileService),
+  __decorateParam(9, IContextKeyService),
+  __decorateParam(10, IMenuService),
+  __decorateParam(11, IQuickInputService)
+], MultiRunTestDecoration);
+let RunSingleTestDecoration = class extends RunTestDecoration {
+  static {
+    __name(this, "RunSingleTestDecoration");
+  }
+  constructor(test, resultItem, model, visible, codeEditorService, testService, commandService, contextMenuService, configurationService, testProfiles, contextKeyService, menuService) {
+    super([{ test, resultItem }], visible, model, codeEditorService, testService, contextMenuService, commandService, configurationService, testProfiles, contextKeyService, menuService);
+  }
+  getContextMenuActions() {
+    return this.getTestContextMenuActions(this.tests[0].test, this.tests[0].resultItem);
+  }
+};
+RunSingleTestDecoration = __decorateClass([
+  __decorateParam(4, ICodeEditorService),
+  __decorateParam(5, ITestService),
+  __decorateParam(6, ICommandService),
+  __decorateParam(7, IContextMenuService),
+  __decorateParam(8, IConfigurationService),
+  __decorateParam(9, ITestProfileService),
+  __decorateParam(10, IContextKeyService),
+  __decorateParam(11, IMenuService)
+], RunSingleTestDecoration);
+const lineBreakRe = /\r?\n\s*/g;
+let TestMessageDecoration = class {
+  constructor(testMessage, messageUri, textModel, peekOpener, editorService) {
+    this.testMessage = testMessage;
+    this.messageUri = messageUri;
+    this.peekOpener = peekOpener;
+    const location = testMessage.location;
+    this.line = clamp(location.range.startLineNumber, 0, textModel.getLineCount());
+    const severity = testMessage.type;
+    const message = testMessage.message;
+    const options = editorService.resolveDecorationOptions(TestMessageDecoration.decorationId, true);
+    options.hoverMessage = typeof message === "string" ? new MarkdownString().appendText(message) : message;
+    options.zIndex = 10;
+    options.className = `testing-inline-message-severity-${severity}`;
+    options.isWholeLine = true;
+    options.stickiness = TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges;
+    options.collapseOnReplaceEdit = true;
+    let inlineText = renderTestMessageAsText(message).replace(lineBreakRe, " ");
+    if (inlineText.length > MAX_INLINE_MESSAGE_LENGTH) {
+      inlineText = inlineText.slice(0, MAX_INLINE_MESSAGE_LENGTH - 1) + "\u2026";
+    }
+    options.after = {
+      content: inlineText,
+      inlineClassName: `test-message-inline-content test-message-inline-content-s${severity} ${this.contentIdClass} ${messageUri ? "test-message-inline-content-clickable" : ""}`
+    };
+    options.showIfCollapsed = true;
+    const rulerColor = severity === TestMessageType.Error ? overviewRulerError : overviewRulerInfo;
+    if (rulerColor) {
+      options.overviewRuler = { color: themeColorFromId(rulerColor), position: OverviewRulerLane.Right };
+    }
+    const lineLength = textModel.getLineLength(this.line);
+    const column = lineLength ? lineLength + 1 : location.range.endColumn;
+    this.editorDecoration = {
+      options,
+      range: {
+        startLineNumber: this.line,
+        startColumn: column,
+        endColumn: column,
+        endLineNumber: this.line
+      }
+    };
+  }
+  static {
+    __name(this, "TestMessageDecoration");
+  }
+  static inlineClassName = "test-message-inline-content";
+  static decorationId = `testmessage-${generateUuid()}`;
+  id = "";
+  editorDecoration;
+  line;
+  contentIdClass = `test-message-inline-content-id${generateUuid()}`;
+  click(e) {
+    if (e.event.rightButton) {
+      return false;
+    }
+    if (!this.messageUri) {
+      return false;
+    }
+    if (e.target.element?.className.includes(this.contentIdClass)) {
+      this.peekOpener.peekUri(this.messageUri);
+    }
+    return false;
+  }
+  getContextMenuActions() {
+    return { object: [], dispose: /* @__PURE__ */ __name(() => {
+    }, "dispose") };
+  }
+};
+TestMessageDecoration = __decorateClass([
+  __decorateParam(3, ITestingPeekOpener),
+  __decorateParam(4, ICodeEditorService)
+], TestMessageDecoration);
+const ERROR_CONTENT_WIDGET_HEIGHT = 20;
+let TestErrorContentWidget = class extends Disposable {
+  constructor(editor, position, message, resultItem, uri, peekOpener) {
+    super();
+    this.editor = editor;
+    this.position = position;
+    this.message = message;
+    this.resultItem = resultItem;
+    this.peekOpener = peekOpener;
+    const setMarginTop = /* @__PURE__ */ __name(() => {
+      const lineHeight = editor.getOption(EditorOption.lineHeight);
+      this.node.root.style.marginTop = (lineHeight - ERROR_CONTENT_WIDGET_HEIGHT) / 2 + "px";
+    }, "setMarginTop");
+    setMarginTop();
+    this._register(editor.onDidChangeConfiguration((e) => {
+      if (e.hasChanged(EditorOption.lineHeight)) {
+        setMarginTop();
+      }
+    }));
+    let text;
+    if (message.expected !== void 0 && message.actual !== void 0) {
+      text = `${truncateMiddle(message.actual.replace(/\s+/g, " "), 30)} != ${truncateMiddle(message.expected.replace(/\s+/g, " "), 30)}`;
+    } else {
+      const msg = renderStringAsPlaintext(message.message);
+      const lf = msg.indexOf("\n");
+      text = lf === -1 ? msg : msg.slice(0, lf);
+    }
+    this.node.root.addEventListener("click", (e) => {
+      this.peekOpener.peekUri(uri);
+      e.preventDefault();
+    });
+    const ctrl = TestingOutputPeekController.get(editor);
+    if (ctrl) {
+      this._register(autorun((reader) => {
+        const subject = ctrl.subject.read(reader);
+        const isCurrent = subject instanceof MessageSubject && subject.message === message;
+        this.node.root.classList.toggle("is-current", isCurrent);
+      }));
+    }
+    this.node.name.innerText = text || "Test Failed";
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("width", "15");
+    svg.setAttribute("height", "10");
+    svg.setAttribute("preserveAspectRatio", "none");
+    svg.setAttribute("viewBox", "0 0 15 10");
+    const leftArrow = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    leftArrow.setAttribute("d", "M15 0 L10 0 L0 5 L10 10 L15 10 Z");
+    svg.append(leftArrow);
+    this.node.arrow.appendChild(svg);
+    this._register(editor.onDidChangeModelContent((e) => {
+      for (const c of e.changes) {
+        if (c.range.startLineNumber > this.line) {
+          continue;
+        }
+        if (c.range.startLineNumber <= this.line && c.range.endLineNumber >= this.line || resultItem.item.range && resultItem.item.range.startLineNumber <= c.range.startLineNumber && resultItem.item.range.endLineNumber >= c.range.endLineNumber) {
+          TestingDecorations.invalidatedTests.add(this.resultItem);
+          this.dispose();
+        }
+        const adjust = count(c.text, "\n") - (c.range.endLineNumber - c.range.startLineNumber);
+        if (adjust !== 0) {
+          this.position = this.position.delta(adjust);
+          this.editor.layoutContentWidget(this);
+        }
+      }
+    }));
+    editor.addContentWidget(this);
+    this._register(toDisposable(() => editor.removeContentWidget(this)));
+  }
+  static {
+    __name(this, "TestErrorContentWidget");
+  }
+  id = generateUuid();
+  /** @inheritdoc */
+  allowEditorOverflow = false;
+  node = dom.h("div.test-error-content-widget", [
+    dom.h("div.inner@inner", [
+      dom.h("div.arrow@arrow"),
+      dom.h(`span${ThemeIcon.asCSSSelector(testingStatesToIcons.get(TestResultState.Failed))}`),
+      dom.h("span.content@name")
+    ])
+  ]);
+  get line() {
+    return this.position.lineNumber;
+  }
+  getId() {
+    return this.id;
+  }
+  getDomNode() {
+    return this.node.root;
+  }
+  getPosition() {
+    return {
+      position: this.position,
+      preference: [ContentWidgetPositionPreference.EXACT]
+    };
+  }
+  afterRender(_position, coordinate) {
+    if (coordinate) {
+      const { verticalScrollbarWidth } = this.editor.getLayoutInfo();
+      const scrollWidth = this.editor.getScrollWidth();
+      this.node.inner.style.maxWidth = `${scrollWidth - verticalScrollbarWidth - coordinate.left - 20}px`;
+    }
+  }
+};
+TestErrorContentWidget = __decorateClass([
+  __decorateParam(5, ITestingPeekOpener)
+], TestErrorContentWidget);
+export {
+  TestingDecorationService,
+  TestingDecorations
+};
+//# sourceMappingURL=testingDecorations.js.map

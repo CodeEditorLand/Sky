@@ -1,1 +1,279 @@
-var y=Object.defineProperty,w=Object.getOwnPropertyDescriptor,p=(e,r,i,t)=>{for(var o,s=t>1?void 0:t?w(r,i):r,n=e.length-1;n>=0;n--)(o=e[n])&&(s=(t?o(r,i,s):o(s))||s);return t&&s&&y(r,i,s),s},s=(e,r)=>(i,t)=>r(i,t,e);import{Schemas as g}from"../../../../../base/common/network.js";import{OperatingSystem as x}from"../../../../../base/common/platform.js";import{URI as I}from"../../../../../base/common/uri.js";import{ICommandService as b}from"../../../../../platform/commands/common/commands.js";import"../../../../../platform/editor/common/editor.js";import{IFileService as E}from"../../../../../platform/files/common/files.js";import{IInstantiationService as C}from"../../../../../platform/instantiation/common/instantiation.js";import{IOpenerService as R}from"../../../../../platform/opener/common/opener.js";import{IQuickInputService as k}from"../../../../../platform/quickinput/common/quickInput.js";import{IWorkspaceContextService as P}from"../../../../../platform/workspace/common/workspace.js";import"./links.js";import{osPathModule as _,updateLinkWithRelativeCwd as T}from"./terminalLinkHelpers.js";import{TerminalCapability as O}from"../../../../../platform/terminal/common/capabilities/capabilities.js";import{IEditorService as W}from"../../../../services/editor/common/editorService.js";import{IWorkbenchEnvironmentService as M}from"../../../../services/environment/common/environmentService.js";import{IHostService as Q}from"../../../../services/host/browser/host.js";import{QueryBuilder as $}from"../../../../services/search/common/queryBuilder.js";import{ISearchService as A}from"../../../../services/search/common/search.js";import{IConfigurationService as B}from"../../../../../platform/configuration/common/configuration.js";import{detectLinks as D,getLinkSuffix as L}from"./terminalLinkParsing.js";import{ITerminalLogService as U}from"../../../../../platform/terminal/common/terminal.js";let f=class{constructor(e){this._editorService=e}async open(e){if(!e.uri)throw new Error("Tried to open file link without a resolved URI");const r=e.parsedLink?e.parsedLink.suffix:L(e.text);let i=e.selection;i||(i=void 0===r?.row?void 0:{startLineNumber:r.row??1,startColumn:r.col??1,endLineNumber:r.rowEnd,endColumn:r.colEnd}),await this._editorService.openEditor({resource:e.uri,options:{pinned:!0,selection:i,revealIfOpened:!0}})}};f=p([s(0,W)],f);let m=class{constructor(e){this._commandService=e}async open(e){if(!e.uri)throw new Error("Tried to open folder in workspace link without a resolved URI");await this._commandService.executeCommand("revealInExplorer",e.uri)}};m=p([s(0,b)],m);let d=class{constructor(e){this._hostService=e}async open(e){if(!e.uri)throw new Error("Tried to open folder in workspace link without a resolved URI");this._hostService.openWindow([{folderUri:e.uri}],{forceNewWindow:!0})}};d=p([s(0,Q)],d);let h=class{constructor(e,r,i,t,o,s,n,a,c,l,m,p){this._capabilities=e,this._initialCwd=r,this._localFileOpener=i,this._localFolderInWorkspaceOpener=t,this._getOS=o,this._fileService=s,this._quickInputService=a,this._searchService=c,this._logService=l,this._workbenchEnvironmentService=m,this._workspaceContextService=p,this._fileQueryBuilder=n.createInstance($)}_fileQueryBuilder;async open(e){const r=_(this._getOS()),i=r.sep;let t=e.text.replace(/^file:\/\/\/?/,"");if(t=r.normalize(t).replace(/^(\.+[\\/])+/,""),e.contextLine){const r=D(e.contextLine,this._getOS()).find((r=>r.suffix&&e.text.startsWith(r.path.text)));r&&void 0!==r.suffix?.row&&(t=r.path.text,t+=`:${r.suffix.row}`,void 0!==r.suffix?.col&&(t+=`:${r.suffix.col}`))}t=t.replace(/:[^\\/\d][^\d]*$/,""),t=t.replace(/\.$/,""),this._workspaceContextService.getWorkspace().folders.forEach((e=>{t.substring(0,e.name.length+1)!==e.name+i||(t=t.substring(e.name.length+1))}));let o=t;if(this._capabilities.has(O.CommandDetection)&&(o=T(this._capabilities,e.bufferRange.start.y,t,r,this._logService)?.[0]||t),!(await this._tryOpenExactLink(o,e)||t!==o&&await this._tryOpenExactLink(t,e)))return this._quickInputService.quickAccess.show(t)}async _getExactMatch(e){const r=this._getOS(),i=_(r),t=i.isAbsolute(e);let o,s=t?e:void 0;if(!t&&this._initialCwd.length>0&&(s=i.join(this._initialCwd,e)),s){let e,i=s;r===x.Windows&&(i=s.replace(/\\/g,"/"),i.match(/[a-z]:/i)&&(i=`/${i}`)),e=this._workbenchEnvironmentService.remoteAuthority?I.from({scheme:g.vscodeRemote,authority:this._workbenchEnvironmentService.remoteAuthority,path:i}):I.file(i);try{o={uri:e,isDirectory:(await this._fileService.stat(e)).isDirectory}}catch{}}if(!o){const r=await this._searchService.fileSearch(this._fileQueryBuilder.file(this._workspaceContextService.getWorkspace().folders,{filePattern:e,maxResults:2}));if(r.results.length>0)if(1===r.results.length)o={uri:r.results[0].resource};else if(!t){const r=(await this._searchService.fileSearch(this._fileQueryBuilder.file(this._workspaceContextService.getWorkspace().folders,{filePattern:`**/${e}`}))).results.filter((r=>r.resource.toString().endsWith(e)));1===r.length&&(o={uri:r[0].resource})}}return o}async _tryOpenExactLink(e,r){const i=e.replace(/:\d+(:\d+)?$/,"");try{const t=await this._getExactMatch(i);if(t){const{uri:i,isDirectory:o}=t,s={text:t.uri.path+(e.match(/:\d+(:\d+)?$/)?.[0]||""),uri:i,bufferRange:r.bufferRange,type:r.type};if(i)return await(o?this._localFolderInWorkspaceOpener.open(s):this._localFileOpener.open(s)),!0}}catch{return!1}return!1}};h=p([s(5,E),s(6,C),s(7,k),s(8,A),s(9,U),s(10,M),s(11,P)],h);let v=class{constructor(e,r,i){this._isRemote=e,this._openerService=r,this._configurationService=i}async open(e){if(!e.uri)throw new Error("Tried to open a url without a resolved URI");this._openerService.open(e.text,{allowTunneling:this._isRemote&&this._configurationService.getValue("remote.forwardOnOpen"),allowContributedOpeners:!0,openExternal:!0})}};v=p([s(1,R),s(2,B)],v);export{f as TerminalLocalFileLinkOpener,m as TerminalLocalFolderInWorkspaceLinkOpener,d as TerminalLocalFolderOutsideWorkspaceLinkOpener,h as TerminalSearchLinkOpener,v as TerminalUrlLinkOpener};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Schemas } from "../../../../../base/common/network.js";
+import { OperatingSystem } from "../../../../../base/common/platform.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { ICommandService } from "../../../../../platform/commands/common/commands.js";
+import { ITextEditorSelection } from "../../../../../platform/editor/common/editor.js";
+import { IFileService } from "../../../../../platform/files/common/files.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { IOpenerService } from "../../../../../platform/opener/common/opener.js";
+import { IQuickInputService } from "../../../../../platform/quickinput/common/quickInput.js";
+import { IWorkspaceContextService } from "../../../../../platform/workspace/common/workspace.js";
+import { ITerminalLinkOpener, ITerminalSimpleLink } from "./links.js";
+import { osPathModule, updateLinkWithRelativeCwd } from "./terminalLinkHelpers.js";
+import { ITerminalCapabilityStore, TerminalCapability } from "../../../../../platform/terminal/common/capabilities/capabilities.js";
+import { IEditorService } from "../../../../services/editor/common/editorService.js";
+import { IWorkbenchEnvironmentService } from "../../../../services/environment/common/environmentService.js";
+import { IHostService } from "../../../../services/host/browser/host.js";
+import { QueryBuilder } from "../../../../services/search/common/queryBuilder.js";
+import { ISearchService } from "../../../../services/search/common/search.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { detectLinks, getLinkSuffix } from "./terminalLinkParsing.js";
+import { ITerminalLogService } from "../../../../../platform/terminal/common/terminal.js";
+let TerminalLocalFileLinkOpener = class {
+  constructor(_editorService) {
+    this._editorService = _editorService;
+  }
+  static {
+    __name(this, "TerminalLocalFileLinkOpener");
+  }
+  async open(link) {
+    if (!link.uri) {
+      throw new Error("Tried to open file link without a resolved URI");
+    }
+    const linkSuffix = link.parsedLink ? link.parsedLink.suffix : getLinkSuffix(link.text);
+    let selection = link.selection;
+    if (!selection) {
+      selection = linkSuffix?.row === void 0 ? void 0 : {
+        startLineNumber: linkSuffix.row ?? 1,
+        startColumn: linkSuffix.col ?? 1,
+        endLineNumber: linkSuffix.rowEnd,
+        endColumn: linkSuffix.colEnd
+      };
+    }
+    await this._editorService.openEditor({
+      resource: link.uri,
+      options: { pinned: true, selection, revealIfOpened: true }
+    });
+  }
+};
+TerminalLocalFileLinkOpener = __decorateClass([
+  __decorateParam(0, IEditorService)
+], TerminalLocalFileLinkOpener);
+let TerminalLocalFolderInWorkspaceLinkOpener = class {
+  constructor(_commandService) {
+    this._commandService = _commandService;
+  }
+  static {
+    __name(this, "TerminalLocalFolderInWorkspaceLinkOpener");
+  }
+  async open(link) {
+    if (!link.uri) {
+      throw new Error("Tried to open folder in workspace link without a resolved URI");
+    }
+    await this._commandService.executeCommand("revealInExplorer", link.uri);
+  }
+};
+TerminalLocalFolderInWorkspaceLinkOpener = __decorateClass([
+  __decorateParam(0, ICommandService)
+], TerminalLocalFolderInWorkspaceLinkOpener);
+let TerminalLocalFolderOutsideWorkspaceLinkOpener = class {
+  constructor(_hostService) {
+    this._hostService = _hostService;
+  }
+  static {
+    __name(this, "TerminalLocalFolderOutsideWorkspaceLinkOpener");
+  }
+  async open(link) {
+    if (!link.uri) {
+      throw new Error("Tried to open folder in workspace link without a resolved URI");
+    }
+    this._hostService.openWindow([{ folderUri: link.uri }], { forceNewWindow: true });
+  }
+};
+TerminalLocalFolderOutsideWorkspaceLinkOpener = __decorateClass([
+  __decorateParam(0, IHostService)
+], TerminalLocalFolderOutsideWorkspaceLinkOpener);
+let TerminalSearchLinkOpener = class {
+  constructor(_capabilities, _initialCwd, _localFileOpener, _localFolderInWorkspaceOpener, _getOS, _fileService, instantiationService, _quickInputService, _searchService, _logService, _workbenchEnvironmentService, _workspaceContextService) {
+    this._capabilities = _capabilities;
+    this._initialCwd = _initialCwd;
+    this._localFileOpener = _localFileOpener;
+    this._localFolderInWorkspaceOpener = _localFolderInWorkspaceOpener;
+    this._getOS = _getOS;
+    this._fileService = _fileService;
+    this._quickInputService = _quickInputService;
+    this._searchService = _searchService;
+    this._logService = _logService;
+    this._workbenchEnvironmentService = _workbenchEnvironmentService;
+    this._workspaceContextService = _workspaceContextService;
+    this._fileQueryBuilder = instantiationService.createInstance(QueryBuilder);
+  }
+  static {
+    __name(this, "TerminalSearchLinkOpener");
+  }
+  _fileQueryBuilder;
+  async open(link) {
+    const osPath = osPathModule(this._getOS());
+    const pathSeparator = osPath.sep;
+    let text = link.text.replace(/^file:\/\/\/?/, "");
+    text = osPath.normalize(text).replace(/^(\.+[\\/])+/, "");
+    if (link.contextLine) {
+      const parsedLinks = detectLinks(link.contextLine, this._getOS());
+      const matchingParsedLink = parsedLinks.find((parsedLink) => parsedLink.suffix && link.text.startsWith(parsedLink.path.text));
+      if (matchingParsedLink) {
+        if (matchingParsedLink.suffix?.row !== void 0) {
+          text = matchingParsedLink.path.text;
+          text += `:${matchingParsedLink.suffix.row}`;
+          if (matchingParsedLink.suffix?.col !== void 0) {
+            text += `:${matchingParsedLink.suffix.col}`;
+          }
+        }
+      }
+    }
+    text = text.replace(/:[^\\/\d][^\d]*$/, "");
+    text = text.replace(/\.$/, "");
+    this._workspaceContextService.getWorkspace().folders.forEach((folder) => {
+      if (text.substring(0, folder.name.length + 1) === folder.name + pathSeparator) {
+        text = text.substring(folder.name.length + 1);
+        return;
+      }
+    });
+    let cwdResolvedText = text;
+    if (this._capabilities.has(TerminalCapability.CommandDetection)) {
+      cwdResolvedText = updateLinkWithRelativeCwd(this._capabilities, link.bufferRange.start.y, text, osPath, this._logService)?.[0] || text;
+    }
+    if (await this._tryOpenExactLink(cwdResolvedText, link)) {
+      return;
+    }
+    if (text !== cwdResolvedText) {
+      if (await this._tryOpenExactLink(text, link)) {
+        return;
+      }
+    }
+    return this._quickInputService.quickAccess.show(text);
+  }
+  async _getExactMatch(sanitizedLink) {
+    const os = this._getOS();
+    const pathModule = osPathModule(os);
+    const isAbsolute = pathModule.isAbsolute(sanitizedLink);
+    let absolutePath = isAbsolute ? sanitizedLink : void 0;
+    if (!isAbsolute && this._initialCwd.length > 0) {
+      absolutePath = pathModule.join(this._initialCwd, sanitizedLink);
+    }
+    let resourceMatch;
+    if (absolutePath) {
+      let normalizedAbsolutePath = absolutePath;
+      if (os === OperatingSystem.Windows) {
+        normalizedAbsolutePath = absolutePath.replace(/\\/g, "/");
+        if (normalizedAbsolutePath.match(/[a-z]:/i)) {
+          normalizedAbsolutePath = `/${normalizedAbsolutePath}`;
+        }
+      }
+      let uri;
+      if (this._workbenchEnvironmentService.remoteAuthority) {
+        uri = URI.from({
+          scheme: Schemas.vscodeRemote,
+          authority: this._workbenchEnvironmentService.remoteAuthority,
+          path: normalizedAbsolutePath
+        });
+      } else {
+        uri = URI.file(normalizedAbsolutePath);
+      }
+      try {
+        const fileStat = await this._fileService.stat(uri);
+        resourceMatch = { uri, isDirectory: fileStat.isDirectory };
+      } catch {
+      }
+    }
+    if (!resourceMatch) {
+      const results = await this._searchService.fileSearch(
+        this._fileQueryBuilder.file(this._workspaceContextService.getWorkspace().folders, {
+          filePattern: sanitizedLink,
+          maxResults: 2
+        })
+      );
+      if (results.results.length > 0) {
+        if (results.results.length === 1) {
+          resourceMatch = { uri: results.results[0].resource };
+        } else if (!isAbsolute) {
+          const results2 = await this._searchService.fileSearch(
+            this._fileQueryBuilder.file(this._workspaceContextService.getWorkspace().folders, {
+              filePattern: `**/${sanitizedLink}`
+            })
+          );
+          const exactMatches = results2.results.filter((e) => e.resource.toString().endsWith(sanitizedLink));
+          if (exactMatches.length === 1) {
+            resourceMatch = { uri: exactMatches[0].resource };
+          }
+        }
+      }
+    }
+    return resourceMatch;
+  }
+  async _tryOpenExactLink(text, link) {
+    const sanitizedLink = text.replace(/:\d+(:\d+)?$/, "");
+    try {
+      const result = await this._getExactMatch(sanitizedLink);
+      if (result) {
+        const { uri, isDirectory } = result;
+        const linkToOpen = {
+          // Use the absolute URI's path here so the optional line/col get detected
+          text: result.uri.path + (text.match(/:\d+(:\d+)?$/)?.[0] || ""),
+          uri,
+          bufferRange: link.bufferRange,
+          type: link.type
+        };
+        if (uri) {
+          await (isDirectory ? this._localFolderInWorkspaceOpener.open(linkToOpen) : this._localFileOpener.open(linkToOpen));
+          return true;
+        }
+      }
+    } catch {
+      return false;
+    }
+    return false;
+  }
+};
+TerminalSearchLinkOpener = __decorateClass([
+  __decorateParam(5, IFileService),
+  __decorateParam(6, IInstantiationService),
+  __decorateParam(7, IQuickInputService),
+  __decorateParam(8, ISearchService),
+  __decorateParam(9, ITerminalLogService),
+  __decorateParam(10, IWorkbenchEnvironmentService),
+  __decorateParam(11, IWorkspaceContextService)
+], TerminalSearchLinkOpener);
+let TerminalUrlLinkOpener = class {
+  constructor(_isRemote, _openerService, _configurationService) {
+    this._isRemote = _isRemote;
+    this._openerService = _openerService;
+    this._configurationService = _configurationService;
+  }
+  static {
+    __name(this, "TerminalUrlLinkOpener");
+  }
+  async open(link) {
+    if (!link.uri) {
+      throw new Error("Tried to open a url without a resolved URI");
+    }
+    this._openerService.open(link.text, {
+      allowTunneling: this._isRemote && this._configurationService.getValue("remote.forwardOnOpen"),
+      allowContributedOpeners: true,
+      openExternal: true
+    });
+  }
+};
+TerminalUrlLinkOpener = __decorateClass([
+  __decorateParam(1, IOpenerService),
+  __decorateParam(2, IConfigurationService)
+], TerminalUrlLinkOpener);
+export {
+  TerminalLocalFileLinkOpener,
+  TerminalLocalFolderInWorkspaceLinkOpener,
+  TerminalLocalFolderOutsideWorkspaceLinkOpener,
+  TerminalSearchLinkOpener,
+  TerminalUrlLinkOpener
+};
+//# sourceMappingURL=terminalLinkOpeners.js.map

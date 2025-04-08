@@ -1,1 +1,143 @@
-var y=Object.defineProperty,M=Object.getOwnPropertyDescriptor,p=(e,t,o,n)=>{for(var r,i=n>1?void 0:n?M(t,o):t,s=e.length-1;s>=0;s--)(r=e[s])&&(i=(n?r(t,o,i):r(i))||i);return n&&i&&y(t,o,i),i},u=(e,t)=>(o,n)=>t(o,n,e);import{renderMarkdownAsPlaintext as I}from"../../../../../base/browser/markdownRenderer.js";import"../../../../../base/common/cancellation.js";import{IOutlineModelService as S}from"../../../../../editor/contrib/documentSymbols/browser/outlineModel.js";import{localize as O}from"../../../../../nls.js";import"../notebookBrowser.js";import{getMarkdownHeadersInCell as k}from"./foldingModel.js";import{OutlineEntry as m}from"./OutlineEntry.js";import{CellKind as h}from"../../common/notebookCommon.js";import{INotebookExecutionStateService as w}from"../../common/notebookExecutionStateService.js";import"../../../../../editor/common/core/range.js";import"../../../../../editor/common/languages.js";import{createDecorator as C}from"../../../../../platform/instantiation/common/instantiation.js";import{ITextModelService as x}from"../../../../../editor/common/services/resolverService.js";var E=(e=>(e[e.NonHeaderOutlineLevel=7]="NonHeaderOutlineLevel",e))(E||{});function b(e){const t=Array.from(k(e));if(t.length)return t;const o=e.match(/<h([1-6]).*>(.*)<\/h\1>/i);if(o){const e=parseInt(o[1]),n=o[2].trim();t.push({depth:e,text:n})}return t}const U=C("INotebookOutlineEntryFactory");let f=class{constructor(e,t,o){this.executionStateService=e,this.outlineModelService=t,this.textModelService=o}cellOutlineEntryCache={};cachedMarkdownOutlineEntries=new WeakMap;getOutlineEntries(e,t){const o=[],n=e.cellKind===h.Markup;let r=T(e),i=!1;if(n){const n=e.getText().substring(0,1e4),s=this.cachedMarkdownOutlineEntries.get(e),a=s?.alternativeId===e.getAlternativeId()?s.headers:Array.from(b(n));this.cachedMarkdownOutlineEntries.set(e,{alternativeId:e.getAlternativeId(),headers:a});for(const{depth:n,text:r}of a)i=!0,o.push(new m(t++,n,e,r,!1,!1));i||(r=I({value:r}))}if(!i){const i=!n&&this.executionStateService.getCellExecution(e.uri);let s=r.trim();if(!n){const n=this.cellOutlineEntryCache[e.id];n&&(o.push(new m(t++,7,e,s,!!i,!!i&&i.isPaused)),n.forEach((n=>{o.push(new m(t++,n.level,e,n.name,!1,!1,n.range,n.kind))})))}0===o.length&&(0===s.length&&(s=O("empty","empty cell")),o.push(new m(t++,7,e,s,!!i,!!i&&i.isPaused)))}return o}async cacheSymbols(e,t){if(e.cellKind===h.Markup)return;const o=await this.textModelService.createModelReference(e.uri);try{const n=o.object.textEditorModel,r=g((await this.outlineModelService.getOrCreate(n,t)).getTopLevelSymbols(),8);this.cellOutlineEntryCache[e.id]=r}finally{o.dispose()}}};function g(e,t){const o=[];return e.forEach((e=>{o.push({name:e.name,range:e.range,level:t,kind:e.kind}),e.children&&o.push(...g(e.children,t+1))})),o}function T(e){const t=e.textBuffer;for(let e=0;e<t.getLineCount();e++){if(t.getLineFirstNonWhitespaceColumn(e+1)<t.getLineLength(e+1))return t.getLineContent(e+1)}return e.getText().substring(0,100)}f=p([u(0,w),u(1,S),u(2,x)],f);export{U as INotebookOutlineEntryFactory,E as NotebookOutlineConstants,f as NotebookOutlineEntryFactory};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { renderMarkdownAsPlaintext } from "../../../../../base/browser/markdownRenderer.js";
+import { CancellationToken } from "../../../../../base/common/cancellation.js";
+import { IOutlineModelService, OutlineModelService } from "../../../../../editor/contrib/documentSymbols/browser/outlineModel.js";
+import { localize } from "../../../../../nls.js";
+import { ICellViewModel } from "../notebookBrowser.js";
+import { getMarkdownHeadersInCell } from "./foldingModel.js";
+import { OutlineEntry } from "./OutlineEntry.js";
+import { CellKind } from "../../common/notebookCommon.js";
+import { INotebookExecutionStateService } from "../../common/notebookExecutionStateService.js";
+import { IRange } from "../../../../../editor/common/core/range.js";
+import { SymbolKind } from "../../../../../editor/common/languages.js";
+import { createDecorator } from "../../../../../platform/instantiation/common/instantiation.js";
+import { ITextModelService } from "../../../../../editor/common/services/resolverService.js";
+var NotebookOutlineConstants = /* @__PURE__ */ ((NotebookOutlineConstants2) => {
+  NotebookOutlineConstants2[NotebookOutlineConstants2["NonHeaderOutlineLevel"] = 7] = "NonHeaderOutlineLevel";
+  return NotebookOutlineConstants2;
+})(NotebookOutlineConstants || {});
+function getMarkdownHeadersInCellFallbackToHtmlTags(fullContent) {
+  const headers = Array.from(getMarkdownHeadersInCell(fullContent));
+  if (headers.length) {
+    return headers;
+  }
+  const match = fullContent.match(/<h([1-6]).*>(.*)<\/h\1>/i);
+  if (match) {
+    const level = parseInt(match[1]);
+    const text = match[2].trim();
+    headers.push({ depth: level, text });
+  }
+  return headers;
+}
+__name(getMarkdownHeadersInCellFallbackToHtmlTags, "getMarkdownHeadersInCellFallbackToHtmlTags");
+const INotebookOutlineEntryFactory = createDecorator("INotebookOutlineEntryFactory");
+let NotebookOutlineEntryFactory = class {
+  constructor(executionStateService, outlineModelService, textModelService) {
+    this.executionStateService = executionStateService;
+    this.outlineModelService = outlineModelService;
+    this.textModelService = textModelService;
+  }
+  static {
+    __name(this, "NotebookOutlineEntryFactory");
+  }
+  cellOutlineEntryCache = {};
+  cachedMarkdownOutlineEntries = /* @__PURE__ */ new WeakMap();
+  getOutlineEntries(cell, index) {
+    const entries = [];
+    const isMarkdown = cell.cellKind === CellKind.Markup;
+    let content = getCellFirstNonEmptyLine(cell);
+    let hasHeader = false;
+    if (isMarkdown) {
+      const fullContent = cell.getText().substring(0, 1e4);
+      const cache = this.cachedMarkdownOutlineEntries.get(cell);
+      const headers = cache?.alternativeId === cell.getAlternativeId() ? cache.headers : Array.from(getMarkdownHeadersInCellFallbackToHtmlTags(fullContent));
+      this.cachedMarkdownOutlineEntries.set(cell, { alternativeId: cell.getAlternativeId(), headers });
+      for (const { depth, text } of headers) {
+        hasHeader = true;
+        entries.push(new OutlineEntry(index++, depth, cell, text, false, false));
+      }
+      if (!hasHeader) {
+        content = renderMarkdownAsPlaintext({ value: content });
+      }
+    }
+    if (!hasHeader) {
+      const exeState = !isMarkdown && this.executionStateService.getCellExecution(cell.uri);
+      let preview = content.trim();
+      if (!isMarkdown) {
+        const cached = this.cellOutlineEntryCache[cell.id];
+        if (cached) {
+          entries.push(new OutlineEntry(index++, 7 /* NonHeaderOutlineLevel */, cell, preview, !!exeState, exeState ? exeState.isPaused : false));
+          cached.forEach((entry) => {
+            entries.push(new OutlineEntry(index++, entry.level, cell, entry.name, false, false, entry.range, entry.kind));
+          });
+        }
+      }
+      if (entries.length === 0) {
+        if (preview.length === 0) {
+          preview = localize("empty", "empty cell");
+        }
+        entries.push(new OutlineEntry(index++, 7 /* NonHeaderOutlineLevel */, cell, preview, !!exeState, exeState ? exeState.isPaused : false));
+      }
+    }
+    return entries;
+  }
+  async cacheSymbols(cell, cancelToken) {
+    if (cell.cellKind === CellKind.Markup) {
+      return;
+    }
+    const ref = await this.textModelService.createModelReference(cell.uri);
+    try {
+      const textModel = ref.object.textEditorModel;
+      const outlineModel = await this.outlineModelService.getOrCreate(textModel, cancelToken);
+      const entries = createOutlineEntries(outlineModel.getTopLevelSymbols(), 8);
+      this.cellOutlineEntryCache[cell.id] = entries;
+    } finally {
+      ref.dispose();
+    }
+  }
+};
+NotebookOutlineEntryFactory = __decorateClass([
+  __decorateParam(0, INotebookExecutionStateService),
+  __decorateParam(1, IOutlineModelService),
+  __decorateParam(2, ITextModelService)
+], NotebookOutlineEntryFactory);
+function createOutlineEntries(symbols, level) {
+  const entries = [];
+  symbols.forEach((symbol) => {
+    entries.push({ name: symbol.name, range: symbol.range, level, kind: symbol.kind });
+    if (symbol.children) {
+      entries.push(...createOutlineEntries(symbol.children, level + 1));
+    }
+  });
+  return entries;
+}
+__name(createOutlineEntries, "createOutlineEntries");
+function getCellFirstNonEmptyLine(cell) {
+  const textBuffer = cell.textBuffer;
+  for (let i = 0; i < textBuffer.getLineCount(); i++) {
+    const firstNonWhitespace = textBuffer.getLineFirstNonWhitespaceColumn(i + 1);
+    const lineLength = textBuffer.getLineLength(i + 1);
+    if (firstNonWhitespace < lineLength) {
+      return textBuffer.getLineContent(i + 1);
+    }
+  }
+  return cell.getText().substring(0, 100);
+}
+__name(getCellFirstNonEmptyLine, "getCellFirstNonEmptyLine");
+export {
+  INotebookOutlineEntryFactory,
+  NotebookOutlineConstants,
+  NotebookOutlineEntryFactory
+};
+//# sourceMappingURL=notebookOutlineEntryFactory.js.map

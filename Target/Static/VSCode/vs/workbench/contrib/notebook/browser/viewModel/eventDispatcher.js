@@ -1,1 +1,36 @@
-import{Emitter as a}from"../../../../../base/common/event.js";import{Disposable as d}from"../../../../../base/common/lifecycle.js";import{NotebookViewEventType as o}from"../notebookViewEvents.js";class b extends d{_onDidChangeLayout=this._register(new a);onDidChangeLayout=this._onDidChangeLayout.event;_onDidChangeMetadata=this._register(new a);onDidChangeMetadata=this._onDidChangeMetadata.event;_onDidChangeCellState=this._register(new a);onDidChangeCellState=this._onDidChangeCellState.event;emit(e){for(let t=0,a=e.length;t<a;t++){const a=e[t];switch(a.type){case o.LayoutChanged:this._onDidChangeLayout.fire(a);break;case o.MetadataChanged:this._onDidChangeMetadata.fire(a);break;case o.CellStateChanged:this._onDidChangeCellState.fire(a)}}}}export{b as NotebookEventDispatcher};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Emitter } from "../../../../../base/common/event.js";
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { NotebookCellStateChangedEvent, NotebookLayoutChangedEvent, NotebookMetadataChangedEvent, NotebookViewEvent, NotebookViewEventType } from "../notebookViewEvents.js";
+class NotebookEventDispatcher extends Disposable {
+  static {
+    __name(this, "NotebookEventDispatcher");
+  }
+  _onDidChangeLayout = this._register(new Emitter());
+  onDidChangeLayout = this._onDidChangeLayout.event;
+  _onDidChangeMetadata = this._register(new Emitter());
+  onDidChangeMetadata = this._onDidChangeMetadata.event;
+  _onDidChangeCellState = this._register(new Emitter());
+  onDidChangeCellState = this._onDidChangeCellState.event;
+  emit(events) {
+    for (let i = 0, len = events.length; i < len; i++) {
+      const e = events[i];
+      switch (e.type) {
+        case NotebookViewEventType.LayoutChanged:
+          this._onDidChangeLayout.fire(e);
+          break;
+        case NotebookViewEventType.MetadataChanged:
+          this._onDidChangeMetadata.fire(e);
+          break;
+        case NotebookViewEventType.CellStateChanged:
+          this._onDidChangeCellState.fire(e);
+          break;
+      }
+    }
+  }
+}
+export {
+  NotebookEventDispatcher
+};
+//# sourceMappingURL=eventDispatcher.js.map

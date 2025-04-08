@@ -1,1 +1,34 @@
-var E=(E=>(E[E.IS_WHITESPACE=1]="IS_WHITESPACE",E[E.PSEUDO_BEFORE=2]="PSEUDO_BEFORE",E[E.PSEUDO_AFTER=4]="PSEUDO_AFTER",E[E.IS_WHITESPACE_MASK=1]="IS_WHITESPACE_MASK",E[E.PSEUDO_BEFORE_MASK=2]="PSEUDO_BEFORE_MASK",E[E.PSEUDO_AFTER_MASK=4]="PSEUDO_AFTER_MASK",E))(E||{});class s{constructor(E,t,a,S){this.endIndex=E,this.type=t,this.metadata=a,this.containsRTL=S}_linePartBrand=void 0;isWhitespace(){return!!(1&this.metadata)}isPseudoAfter(){return!!(4&this.metadata)}}export{s as LinePart,E as LinePartMetadata};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var LinePartMetadata = /* @__PURE__ */ ((LinePartMetadata2) => {
+  LinePartMetadata2[LinePartMetadata2["IS_WHITESPACE"] = 1] = "IS_WHITESPACE";
+  LinePartMetadata2[LinePartMetadata2["PSEUDO_BEFORE"] = 2] = "PSEUDO_BEFORE";
+  LinePartMetadata2[LinePartMetadata2["PSEUDO_AFTER"] = 4] = "PSEUDO_AFTER";
+  LinePartMetadata2[LinePartMetadata2["IS_WHITESPACE_MASK"] = 1] = "IS_WHITESPACE_MASK";
+  LinePartMetadata2[LinePartMetadata2["PSEUDO_BEFORE_MASK"] = 2] = "PSEUDO_BEFORE_MASK";
+  LinePartMetadata2[LinePartMetadata2["PSEUDO_AFTER_MASK"] = 4] = "PSEUDO_AFTER_MASK";
+  return LinePartMetadata2;
+})(LinePartMetadata || {});
+class LinePart {
+  constructor(endIndex, type, metadata, containsRTL) {
+    this.endIndex = endIndex;
+    this.type = type;
+    this.metadata = metadata;
+    this.containsRTL = containsRTL;
+  }
+  static {
+    __name(this, "LinePart");
+  }
+  _linePartBrand = void 0;
+  isWhitespace() {
+    return this.metadata & 1 /* IS_WHITESPACE_MASK */ ? true : false;
+  }
+  isPseudoAfter() {
+    return this.metadata & 4 /* PSEUDO_AFTER_MASK */ ? true : false;
+  }
+}
+export {
+  LinePart,
+  LinePartMetadata
+};
+//# sourceMappingURL=linePart.js.map

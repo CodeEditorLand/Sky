@@ -1,1 +1,85 @@
-import{streamToBuffer as u}from"../../../base/common/buffer.js";import{CancellationToken as p}from"../../../base/common/cancellation.js";import"../../../base/parts/request/common/request.js";import"../../request/common/request.js";import*as c from"https";import{AbstractOneDataSystemAppender as m}from"../common/1dsAppender.js";async function f(e,t){const s=await t.request(e,p.None),a=(await u(s.stream)).toString(),r=s.res.statusCode??200;return{headers:s.res.headers,statusCode:r,responseData:a}}async function h(e){const t={method:e.type,headers:e.headers};return new Promise(((s,a)=>{const r=c.request(e.url??"",t,(e=>{e.on("data",(function(t){s({headers:e.headers,statusCode:e.statusCode??200,responseData:t.toString()})})),e.on("error",(function(e){a(e)}))}));r.write(e.data,(e=>{e&&a(e)})),r.end()}))}async function g(e,t,s){const a="string"==typeof t.data?t.data:(new TextDecoder).decode(t.data),r={type:"POST",headers:{...t.headers,"Content-Type":"application/json","Content-Length":Buffer.byteLength(t.data).toString()},url:t.urlString,data:a};try{const t=e?await f(r,e):await h(r);s(t.statusCode,t.headers,t.responseData)}catch{s(0,{})}}class P extends m{constructor(e,t,s,a,r){super(t,s,a,r,{sendPOST:(t,s)=>{g(e,t,s)}})}}export{P as OneDataSystemAppender};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { streamToBuffer } from "../../../base/common/buffer.js";
+import { CancellationToken } from "../../../base/common/cancellation.js";
+import { IRequestOptions } from "../../../base/parts/request/common/request.js";
+import { IRequestService } from "../../request/common/request.js";
+import * as https from "https";
+import { AbstractOneDataSystemAppender, IAppInsightsCore } from "../common/1dsAppender.js";
+async function makeTelemetryRequest(options, requestService) {
+  const response = await requestService.request(options, CancellationToken.None);
+  const responseData = (await streamToBuffer(response.stream)).toString();
+  const statusCode = response.res.statusCode ?? 200;
+  const headers = response.res.headers;
+  return {
+    headers,
+    statusCode,
+    responseData
+  };
+}
+__name(makeTelemetryRequest, "makeTelemetryRequest");
+async function makeLegacyTelemetryRequest(options) {
+  const httpsOptions = {
+    method: options.type,
+    headers: options.headers
+  };
+  const responsePromise = new Promise((resolve, reject) => {
+    const req = https.request(options.url ?? "", httpsOptions, (res) => {
+      res.on("data", function(responseData) {
+        resolve({
+          headers: res.headers,
+          statusCode: res.statusCode ?? 200,
+          responseData: responseData.toString()
+        });
+      });
+      res.on("error", function(err) {
+        reject(err);
+      });
+    });
+    req.write(options.data, (err) => {
+      if (err) {
+        reject(err);
+      }
+    });
+    req.end();
+  });
+  return responsePromise;
+}
+__name(makeLegacyTelemetryRequest, "makeLegacyTelemetryRequest");
+async function sendPostAsync(requestService, payload, oncomplete) {
+  const telemetryRequestData = typeof payload.data === "string" ? payload.data : new TextDecoder().decode(payload.data);
+  const requestOptions = {
+    type: "POST",
+    headers: {
+      ...payload.headers,
+      "Content-Type": "application/json",
+      "Content-Length": Buffer.byteLength(payload.data).toString()
+    },
+    url: payload.urlString,
+    data: telemetryRequestData
+  };
+  try {
+    const responseData = requestService ? await makeTelemetryRequest(requestOptions, requestService) : await makeLegacyTelemetryRequest(requestOptions);
+    oncomplete(responseData.statusCode, responseData.headers, responseData.responseData);
+  } catch {
+    oncomplete(0, {});
+  }
+}
+__name(sendPostAsync, "sendPostAsync");
+class OneDataSystemAppender extends AbstractOneDataSystemAppender {
+  static {
+    __name(this, "OneDataSystemAppender");
+  }
+  constructor(requestService, isInternalTelemetry, eventPrefix, defaultData, iKeyOrClientFactory) {
+    const customHttpXHROverride = {
+      sendPOST: /* @__PURE__ */ __name((payload, oncomplete) => {
+        sendPostAsync(requestService, payload, oncomplete);
+      }, "sendPOST")
+    };
+    super(isInternalTelemetry, eventPrefix, defaultData, iKeyOrClientFactory, customHttpXHROverride);
+  }
+}
+export {
+  OneDataSystemAppender
+};
+//# sourceMappingURL=1dsAppender.js.map

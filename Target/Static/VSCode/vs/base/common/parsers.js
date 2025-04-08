@@ -1,1 +1,66 @@
-var s=(t=>(t[t.OK=0]="OK",t[t.Info=1]="Info",t[t.Warning=2]="Warning",t[t.Error=3]="Error",t[t.Fatal=4]="Fatal",t))(s||{});class o{_state;constructor(){this._state=0}get state(){return this._state}set state(t){t>this._state&&(this._state=t)}isOK(){return 0===this._state}isFatal(){return 4===this._state}}class i{_problemReporter;constructor(t){this._problemReporter=t}reset(){this._problemReporter.status.state=0}get problemReporter(){return this._problemReporter}info(t){this._problemReporter.info(t)}warn(t){this._problemReporter.warn(t)}error(t){this._problemReporter.error(t)}fatal(t){this._problemReporter.fatal(t)}}export{i as Parser,s as ValidationState,o as ValidationStatus};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var ValidationState = /* @__PURE__ */ ((ValidationState2) => {
+  ValidationState2[ValidationState2["OK"] = 0] = "OK";
+  ValidationState2[ValidationState2["Info"] = 1] = "Info";
+  ValidationState2[ValidationState2["Warning"] = 2] = "Warning";
+  ValidationState2[ValidationState2["Error"] = 3] = "Error";
+  ValidationState2[ValidationState2["Fatal"] = 4] = "Fatal";
+  return ValidationState2;
+})(ValidationState || {});
+class ValidationStatus {
+  static {
+    __name(this, "ValidationStatus");
+  }
+  _state;
+  constructor() {
+    this._state = 0 /* OK */;
+  }
+  get state() {
+    return this._state;
+  }
+  set state(value) {
+    if (value > this._state) {
+      this._state = value;
+    }
+  }
+  isOK() {
+    return this._state === 0 /* OK */;
+  }
+  isFatal() {
+    return this._state === 4 /* Fatal */;
+  }
+}
+class Parser {
+  static {
+    __name(this, "Parser");
+  }
+  _problemReporter;
+  constructor(problemReporter) {
+    this._problemReporter = problemReporter;
+  }
+  reset() {
+    this._problemReporter.status.state = 0 /* OK */;
+  }
+  get problemReporter() {
+    return this._problemReporter;
+  }
+  info(message) {
+    this._problemReporter.info(message);
+  }
+  warn(message) {
+    this._problemReporter.warn(message);
+  }
+  error(message) {
+    this._problemReporter.error(message);
+  }
+  fatal(message) {
+    this._problemReporter.fatal(message);
+  }
+}
+export {
+  Parser,
+  ValidationState,
+  ValidationStatus
+};
+//# sourceMappingURL=parsers.js.map

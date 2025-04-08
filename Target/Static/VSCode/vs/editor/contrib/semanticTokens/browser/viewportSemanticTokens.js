@@ -1,1 +1,150 @@
-var h=Object.defineProperty;var _=Object.getOwnPropertyDescriptor;var m=(d,s,e,t)=>{for(var i=t>1?void 0:t?_(s,e):s,o=d.length-1,a;o>=0;o--)(a=d[o])&&(i=(t?a(s,e,i):a(i))||i);return t&&i&&h(s,e,i),i},u=(d,s)=>(e,t)=>s(e,t,d);import{createCancelablePromise as p,RunOnceScheduler as f}from"../../../../base/common/async.js";import{Disposable as v}from"../../../../base/common/lifecycle.js";import"../../../browser/editorBrowser.js";import{EditorContributionInstantiation as S,registerEditorContribution as I}from"../../../browser/editorExtensions.js";import"../../../common/core/range.js";import"../../../common/editorCommon.js";import"../../../common/model.js";import{getDocumentRangeSemanticTokens as k,hasDocumentRangeSemanticTokensProvider as R}from"../common/getSemanticTokens.js";import{isSemanticColoringEnabled as C,SEMANTIC_HIGHLIGHTING_SETTING_ID as T}from"../common/semanticTokensConfig.js";import{toMultilineTokens2 as b}from"../../../common/services/semanticTokensProviderStyling.js";import{IConfigurationService as D}from"../../../../platform/configuration/common/configuration.js";import{IThemeService as y}from"../../../../platform/theme/common/themeService.js";import{ILanguageFeatureDebounceService as q}from"../../../common/services/languageFeatureDebounce.js";import{StopWatch as w}from"../../../../base/common/stopwatch.js";import"../../../common/languageFeatureRegistry.js";import"../../../common/languages.js";import{ILanguageFeaturesService as z}from"../../../common/services/languageFeatures.js";import{ISemanticTokensStylingService as P}from"../../../common/services/semanticTokensStyling.js";let r=class extends v{constructor(e,t,i,o,a,c){super();this._semanticTokensStylingService=t;this._themeService=i;this._configurationService=o;this._editor=e,this._provider=c.documentRangeSemanticTokensProvider,this._debounceInformation=a.for(this._provider,"DocumentRangeSemanticTokens",{min:100,max:500}),this._tokenizeViewport=this._register(new f(()=>this._tokenizeViewportNow(),100)),this._outstandingRequests=[];const n=()=>{this._editor.hasModel()&&this._tokenizeViewport.schedule(this._debounceInformation.get(this._editor.getModel()))};this._register(this._editor.onDidScrollChange(()=>{n()})),this._register(this._editor.onDidChangeModel(()=>{this._cancelAll(),n()})),this._register(this._editor.onDidChangeModelContent(l=>{this._cancelAll(),n()})),this._register(this._provider.onDidChange(()=>{this._cancelAll(),n()})),this._register(this._configurationService.onDidChangeConfiguration(l=>{l.affectsConfiguration(T)&&(this._cancelAll(),n())})),this._register(this._themeService.onDidColorThemeChange(()=>{this._cancelAll(),n()})),n()}static ID="editor.contrib.viewportSemanticTokens";static get(e){return e.getContribution(r.ID)}_editor;_provider;_debounceInformation;_tokenizeViewport;_outstandingRequests;_cancelAll(){for(const e of this._outstandingRequests)e.cancel();this._outstandingRequests=[]}_removeOutstandingRequest(e){for(let t=0,i=this._outstandingRequests.length;t<i;t++)if(this._outstandingRequests[t]===e){this._outstandingRequests.splice(t,1);return}}_tokenizeViewportNow(){if(!this._editor.hasModel())return;const e=this._editor.getModel();if(e.tokenization.hasCompleteSemanticTokens())return;if(!C(e,this._themeService,this._configurationService)){e.tokenization.hasSomeSemanticTokens()&&e.tokenization.setSemanticTokens(null,!1);return}if(!R(this._provider,e)){e.tokenization.hasSomeSemanticTokens()&&e.tokenization.setSemanticTokens(null,!1);return}const t=this._editor.getVisibleRangesPlusViewportAboveBelow();this._outstandingRequests=this._outstandingRequests.concat(t.map(i=>this._requestRange(e,i)))}_requestRange(e,t){const i=e.getVersionId(),o=p(c=>Promise.resolve(k(this._provider,e,t,c))),a=new w(!1);return o.then(c=>{if(this._debounceInformation.update(e,a.elapsed()),!c||!c.tokens||e.isDisposed()||e.getVersionId()!==i)return;const{provider:n,tokens:l}=c,g=this._semanticTokensStylingService.getStyling(n);e.tokenization.setPartialSemanticTokens(t,b(l,g,e.getLanguageId()))}).then(()=>this._removeOutstandingRequest(o),()=>this._removeOutstandingRequest(o)),o}};r=m([u(1,P),u(2,y),u(3,D),u(4,q),u(5,z)],r),I(r.ID,r,S.AfterFirstRender);export{r as ViewportSemanticTokensContribution};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { CancelablePromise, createCancelablePromise, RunOnceScheduler } from "../../../../base/common/async.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { ICodeEditor } from "../../../browser/editorBrowser.js";
+import { EditorContributionInstantiation, registerEditorContribution } from "../../../browser/editorExtensions.js";
+import { Range } from "../../../common/core/range.js";
+import { IEditorContribution } from "../../../common/editorCommon.js";
+import { ITextModel } from "../../../common/model.js";
+import { getDocumentRangeSemanticTokens, hasDocumentRangeSemanticTokensProvider } from "../common/getSemanticTokens.js";
+import { isSemanticColoringEnabled, SEMANTIC_HIGHLIGHTING_SETTING_ID } from "../common/semanticTokensConfig.js";
+import { toMultilineTokens2 } from "../../../common/services/semanticTokensProviderStyling.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IThemeService } from "../../../../platform/theme/common/themeService.js";
+import { IFeatureDebounceInformation, ILanguageFeatureDebounceService } from "../../../common/services/languageFeatureDebounce.js";
+import { StopWatch } from "../../../../base/common/stopwatch.js";
+import { LanguageFeatureRegistry } from "../../../common/languageFeatureRegistry.js";
+import { DocumentRangeSemanticTokensProvider } from "../../../common/languages.js";
+import { ILanguageFeaturesService } from "../../../common/services/languageFeatures.js";
+import { ISemanticTokensStylingService } from "../../../common/services/semanticTokensStyling.js";
+let ViewportSemanticTokensContribution = class extends Disposable {
+  constructor(editor, _semanticTokensStylingService, _themeService, _configurationService, languageFeatureDebounceService, languageFeaturesService) {
+    super();
+    this._semanticTokensStylingService = _semanticTokensStylingService;
+    this._themeService = _themeService;
+    this._configurationService = _configurationService;
+    this._editor = editor;
+    this._provider = languageFeaturesService.documentRangeSemanticTokensProvider;
+    this._debounceInformation = languageFeatureDebounceService.for(this._provider, "DocumentRangeSemanticTokens", { min: 100, max: 500 });
+    this._tokenizeViewport = this._register(new RunOnceScheduler(() => this._tokenizeViewportNow(), 100));
+    this._outstandingRequests = [];
+    const scheduleTokenizeViewport = /* @__PURE__ */ __name(() => {
+      if (this._editor.hasModel()) {
+        this._tokenizeViewport.schedule(this._debounceInformation.get(this._editor.getModel()));
+      }
+    }, "scheduleTokenizeViewport");
+    this._register(this._editor.onDidScrollChange(() => {
+      scheduleTokenizeViewport();
+    }));
+    this._register(this._editor.onDidChangeModel(() => {
+      this._cancelAll();
+      scheduleTokenizeViewport();
+    }));
+    this._register(this._editor.onDidChangeModelContent((e) => {
+      this._cancelAll();
+      scheduleTokenizeViewport();
+    }));
+    this._register(this._provider.onDidChange(() => {
+      this._cancelAll();
+      scheduleTokenizeViewport();
+    }));
+    this._register(this._configurationService.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration(SEMANTIC_HIGHLIGHTING_SETTING_ID)) {
+        this._cancelAll();
+        scheduleTokenizeViewport();
+      }
+    }));
+    this._register(this._themeService.onDidColorThemeChange(() => {
+      this._cancelAll();
+      scheduleTokenizeViewport();
+    }));
+    scheduleTokenizeViewport();
+  }
+  static {
+    __name(this, "ViewportSemanticTokensContribution");
+  }
+  static ID = "editor.contrib.viewportSemanticTokens";
+  static get(editor) {
+    return editor.getContribution(ViewportSemanticTokensContribution.ID);
+  }
+  _editor;
+  _provider;
+  _debounceInformation;
+  _tokenizeViewport;
+  _outstandingRequests;
+  _cancelAll() {
+    for (const request of this._outstandingRequests) {
+      request.cancel();
+    }
+    this._outstandingRequests = [];
+  }
+  _removeOutstandingRequest(req) {
+    for (let i = 0, len = this._outstandingRequests.length; i < len; i++) {
+      if (this._outstandingRequests[i] === req) {
+        this._outstandingRequests.splice(i, 1);
+        return;
+      }
+    }
+  }
+  _tokenizeViewportNow() {
+    if (!this._editor.hasModel()) {
+      return;
+    }
+    const model = this._editor.getModel();
+    if (model.tokenization.hasCompleteSemanticTokens()) {
+      return;
+    }
+    if (!isSemanticColoringEnabled(model, this._themeService, this._configurationService)) {
+      if (model.tokenization.hasSomeSemanticTokens()) {
+        model.tokenization.setSemanticTokens(null, false);
+      }
+      return;
+    }
+    if (!hasDocumentRangeSemanticTokensProvider(this._provider, model)) {
+      if (model.tokenization.hasSomeSemanticTokens()) {
+        model.tokenization.setSemanticTokens(null, false);
+      }
+      return;
+    }
+    const visibleRanges = this._editor.getVisibleRangesPlusViewportAboveBelow();
+    this._outstandingRequests = this._outstandingRequests.concat(visibleRanges.map((range) => this._requestRange(model, range)));
+  }
+  _requestRange(model, range) {
+    const requestVersionId = model.getVersionId();
+    const request = createCancelablePromise((token) => Promise.resolve(getDocumentRangeSemanticTokens(this._provider, model, range, token)));
+    const sw = new StopWatch(false);
+    request.then((r) => {
+      this._debounceInformation.update(model, sw.elapsed());
+      if (!r || !r.tokens || model.isDisposed() || model.getVersionId() !== requestVersionId) {
+        return;
+      }
+      const { provider, tokens: result } = r;
+      const styling = this._semanticTokensStylingService.getStyling(provider);
+      model.tokenization.setPartialSemanticTokens(range, toMultilineTokens2(result, styling, model.getLanguageId()));
+    }).then(() => this._removeOutstandingRequest(request), () => this._removeOutstandingRequest(request));
+    return request;
+  }
+};
+ViewportSemanticTokensContribution = __decorateClass([
+  __decorateParam(1, ISemanticTokensStylingService),
+  __decorateParam(2, IThemeService),
+  __decorateParam(3, IConfigurationService),
+  __decorateParam(4, ILanguageFeatureDebounceService),
+  __decorateParam(5, ILanguageFeaturesService)
+], ViewportSemanticTokensContribution);
+registerEditorContribution(ViewportSemanticTokensContribution.ID, ViewportSemanticTokensContribution, EditorContributionInstantiation.AfterFirstRender);
+export {
+  ViewportSemanticTokensContribution
+};
+//# sourceMappingURL=viewportSemanticTokens.js.map

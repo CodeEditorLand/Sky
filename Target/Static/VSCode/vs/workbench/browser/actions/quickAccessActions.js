@@ -1,1 +1,248 @@
-import{localize as C,localize2 as p}from"../../../nls.js";import{MenuId as S,Action2 as l,registerAction2 as k}from"../../../platform/actions/common/actions.js";import{KeyMod as i,KeyCode as t}from"../../../base/common/keyCodes.js";import{KeybindingsRegistry as a,KeybindingWeight as c}from"../../../platform/keybinding/common/keybindingsRegistry.js";import{IQuickInputService as o,ItemActivation as w}from"../../../platform/quickinput/common/quickInput.js";import{IKeybindingService as f}from"../../../platform/keybinding/common/keybinding.js";import{CommandsRegistry as I}from"../../../platform/commands/common/commands.js";import"../../../platform/instantiation/common/instantiation.js";import{inQuickPickContext as u,defaultQuickAccessContext as v,getQuickNavigateHandler as b}from"../quickaccess.js";import"../../../platform/action/common/action.js";import"../../../platform/quickinput/common/quickAccess.js";import{Codicon as N}from"../../../base/common/codicons.js";const s={primary:i.CtrlCmd|t.KeyP,secondary:[i.CtrlCmd|t.KeyE],mac:{primary:i.CtrlCmd|t.KeyP,secondary:void 0}};a.registerCommandAndKeybindingRule({id:"workbench.action.closeQuickOpen",weight:c.WorkbenchContrib,when:u,primary:t.Escape,secondary:[i.Shift|t.Escape],handler:e=>e.get(o).cancel()}),a.registerCommandAndKeybindingRule({id:"workbench.action.acceptSelectedQuickOpenItem",weight:c.WorkbenchContrib,when:u,primary:0,handler:e=>e.get(o).accept()}),a.registerCommandAndKeybindingRule({id:"workbench.action.alternativeAcceptSelectedQuickOpenItem",weight:c.WorkbenchContrib,when:u,primary:0,handler:e=>e.get(o).accept({ctrlCmd:!0,alt:!1})}),a.registerCommandAndKeybindingRule({id:"workbench.action.focusQuickOpen",weight:c.WorkbenchContrib,when:u,primary:0,handler:e=>{e.get(o).focus()}});const A="workbench.action.quickOpenNavigateNextInFilePicker";a.registerCommandAndKeybindingRule({id:A,weight:c.WorkbenchContrib+50,handler:b(A,!0),when:v,primary:s.primary,secondary:s.secondary,mac:s.mac});const q="workbench.action.quickOpenNavigatePreviousInFilePicker";a.registerCommandAndKeybindingRule({id:q,weight:c.WorkbenchContrib+50,handler:b(q,!1),when:v,primary:s.primary|i.Shift,secondary:[s.secondary[0]|i.Shift],mac:{primary:s.mac.primary|i.Shift,secondary:void 0}}),a.registerCommandAndKeybindingRule({id:"workbench.action.quickPickManyToggle",weight:c.WorkbenchContrib,when:u,primary:0,handler:e=>{e.get(o).toggle()}}),a.registerCommandAndKeybindingRule({id:"workbench.action.quickInputBack",weight:c.WorkbenchContrib+50,when:u,primary:0,win:{primary:i.Alt|t.LeftArrow},mac:{primary:i.WinCtrl|t.Minus},linux:{primary:i.CtrlCmd|i.Alt|t.Minus},handler:e=>{e.get(o).back()}}),k(class extends l{constructor(){super({id:"workbench.action.quickOpen",title:p("quickOpen","Go to File..."),metadata:{description:"Quick access",args:[{name:"prefix",schema:{type:"string"}}]},keybinding:{weight:c.WorkbenchContrib,primary:s.primary,secondary:s.secondary,mac:s.mac},f1:!0})}run(e,i){e.get(o).quickAccess.show("string"==typeof i?i:void 0,{preserveValue:"string"==typeof i})}}),k(class extends l{constructor(){super({id:"workbench.action.quickOpenWithModes",title:C("quickOpenWithModes","Quick Open"),icon:N.search,menu:{id:S.CommandCenterCenter,order:100}})}run(e){e.get(o).quickAccess.show(void 0,{preserveValue:!0,providerOptions:{includeHelp:!0,from:"commandCenter"}})}}),I.registerCommand("workbench.action.quickOpenPreviousEditor",(async e=>{e.get(o).quickAccess.show("",{itemActivation:w.SECOND})}));class m extends l{constructor(e,i,n,t,r){super({id:e,title:i,f1:!0,keybinding:r}),this.id=e,this.next=n,this.quickNavigate=t}async run(e){const i=e.get(f),n=e.get(o),t=i.lookupKeybindings(this.id),r=this.quickNavigate?{keybindings:t}:void 0;n.navigate(this.next,r)}}class O extends m{constructor(){super("workbench.action.quickOpenNavigateNext",p("quickNavigateNext","Navigate Next in Quick Open"),!0,!0)}}class Q extends m{constructor(){super("workbench.action.quickOpenNavigatePrevious",p("quickNavigatePrevious","Navigate Previous in Quick Open"),!1,!0)}}class P extends m{constructor(){super("workbench.action.quickOpenSelectNext",p("quickSelectNext","Select Next in Quick Open"),!0,!1,{weight:c.WorkbenchContrib+50,when:u,primary:0,mac:{primary:i.WinCtrl|t.KeyN}})}}class K extends m{constructor(){super("workbench.action.quickOpenSelectPrevious",p("quickSelectPrevious","Select Previous in Quick Open"),!1,!1,{weight:c.WorkbenchContrib+50,when:u,primary:0,mac:{primary:i.WinCtrl|t.KeyP}})}}k(P),k(K),k(O),k(Q);
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { localize, localize2 } from "../../../nls.js";
+import { MenuId, Action2, registerAction2 } from "../../../platform/actions/common/actions.js";
+import { KeyMod, KeyCode } from "../../../base/common/keyCodes.js";
+import { KeybindingsRegistry, KeybindingWeight, IKeybindingRule } from "../../../platform/keybinding/common/keybindingsRegistry.js";
+import { IQuickInputService, ItemActivation } from "../../../platform/quickinput/common/quickInput.js";
+import { IKeybindingService } from "../../../platform/keybinding/common/keybinding.js";
+import { CommandsRegistry } from "../../../platform/commands/common/commands.js";
+import { ServicesAccessor } from "../../../platform/instantiation/common/instantiation.js";
+import { inQuickPickContext, defaultQuickAccessContext, getQuickNavigateHandler } from "../quickaccess.js";
+import { ILocalizedString } from "../../../platform/action/common/action.js";
+import { AnythingQuickAccessProviderRunOptions } from "../../../platform/quickinput/common/quickAccess.js";
+import { Codicon } from "../../../base/common/codicons.js";
+const globalQuickAccessKeybinding = {
+  primary: KeyMod.CtrlCmd | KeyCode.KeyP,
+  secondary: [KeyMod.CtrlCmd | KeyCode.KeyE],
+  mac: { primary: KeyMod.CtrlCmd | KeyCode.KeyP, secondary: void 0 }
+};
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  id: "workbench.action.closeQuickOpen",
+  weight: KeybindingWeight.WorkbenchContrib,
+  when: inQuickPickContext,
+  primary: KeyCode.Escape,
+  secondary: [KeyMod.Shift | KeyCode.Escape],
+  handler: /* @__PURE__ */ __name((accessor) => {
+    const quickInputService = accessor.get(IQuickInputService);
+    return quickInputService.cancel();
+  }, "handler")
+});
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  id: "workbench.action.acceptSelectedQuickOpenItem",
+  weight: KeybindingWeight.WorkbenchContrib,
+  when: inQuickPickContext,
+  primary: 0,
+  handler: /* @__PURE__ */ __name((accessor) => {
+    const quickInputService = accessor.get(IQuickInputService);
+    return quickInputService.accept();
+  }, "handler")
+});
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  id: "workbench.action.alternativeAcceptSelectedQuickOpenItem",
+  weight: KeybindingWeight.WorkbenchContrib,
+  when: inQuickPickContext,
+  primary: 0,
+  handler: /* @__PURE__ */ __name((accessor) => {
+    const quickInputService = accessor.get(IQuickInputService);
+    return quickInputService.accept({ ctrlCmd: true, alt: false });
+  }, "handler")
+});
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  id: "workbench.action.focusQuickOpen",
+  weight: KeybindingWeight.WorkbenchContrib,
+  when: inQuickPickContext,
+  primary: 0,
+  handler: /* @__PURE__ */ __name((accessor) => {
+    const quickInputService = accessor.get(IQuickInputService);
+    quickInputService.focus();
+  }, "handler")
+});
+const quickAccessNavigateNextInFilePickerId = "workbench.action.quickOpenNavigateNextInFilePicker";
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  id: quickAccessNavigateNextInFilePickerId,
+  weight: KeybindingWeight.WorkbenchContrib + 50,
+  handler: getQuickNavigateHandler(quickAccessNavigateNextInFilePickerId, true),
+  when: defaultQuickAccessContext,
+  primary: globalQuickAccessKeybinding.primary,
+  secondary: globalQuickAccessKeybinding.secondary,
+  mac: globalQuickAccessKeybinding.mac
+});
+const quickAccessNavigatePreviousInFilePickerId = "workbench.action.quickOpenNavigatePreviousInFilePicker";
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  id: quickAccessNavigatePreviousInFilePickerId,
+  weight: KeybindingWeight.WorkbenchContrib + 50,
+  handler: getQuickNavigateHandler(quickAccessNavigatePreviousInFilePickerId, false),
+  when: defaultQuickAccessContext,
+  primary: globalQuickAccessKeybinding.primary | KeyMod.Shift,
+  secondary: [globalQuickAccessKeybinding.secondary[0] | KeyMod.Shift],
+  mac: {
+    primary: globalQuickAccessKeybinding.mac.primary | KeyMod.Shift,
+    secondary: void 0
+  }
+});
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  id: "workbench.action.quickPickManyToggle",
+  weight: KeybindingWeight.WorkbenchContrib,
+  when: inQuickPickContext,
+  primary: 0,
+  handler: /* @__PURE__ */ __name((accessor) => {
+    const quickInputService = accessor.get(IQuickInputService);
+    quickInputService.toggle();
+  }, "handler")
+});
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  id: "workbench.action.quickInputBack",
+  weight: KeybindingWeight.WorkbenchContrib + 50,
+  when: inQuickPickContext,
+  primary: 0,
+  win: { primary: KeyMod.Alt | KeyCode.LeftArrow },
+  mac: { primary: KeyMod.WinCtrl | KeyCode.Minus },
+  linux: { primary: KeyMod.CtrlCmd | KeyMod.Alt | KeyCode.Minus },
+  handler: /* @__PURE__ */ __name((accessor) => {
+    const quickInputService = accessor.get(IQuickInputService);
+    quickInputService.back();
+  }, "handler")
+});
+registerAction2(class QuickAccessAction extends Action2 {
+  static {
+    __name(this, "QuickAccessAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.quickOpen",
+      title: localize2("quickOpen", "Go to File..."),
+      metadata: {
+        description: `Quick access`,
+        args: [{
+          name: "prefix",
+          schema: {
+            "type": "string"
+          }
+        }]
+      },
+      keybinding: {
+        weight: KeybindingWeight.WorkbenchContrib,
+        primary: globalQuickAccessKeybinding.primary,
+        secondary: globalQuickAccessKeybinding.secondary,
+        mac: globalQuickAccessKeybinding.mac
+      },
+      f1: true
+    });
+  }
+  run(accessor, prefix) {
+    const quickInputService = accessor.get(IQuickInputService);
+    quickInputService.quickAccess.show(typeof prefix === "string" ? prefix : void 0, {
+      preserveValue: typeof prefix === "string"
+      /* preserve as is if provided */
+    });
+  }
+});
+registerAction2(class QuickAccessAction2 extends Action2 {
+  static {
+    __name(this, "QuickAccessAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.quickOpenWithModes",
+      title: localize("quickOpenWithModes", "Quick Open"),
+      icon: Codicon.search,
+      menu: {
+        id: MenuId.CommandCenterCenter,
+        order: 100
+      }
+    });
+  }
+  run(accessor) {
+    const quickInputService = accessor.get(IQuickInputService);
+    const providerOptions = {
+      includeHelp: true,
+      from: "commandCenter"
+    };
+    quickInputService.quickAccess.show(void 0, {
+      preserveValue: true,
+      providerOptions
+    });
+  }
+});
+CommandsRegistry.registerCommand("workbench.action.quickOpenPreviousEditor", async (accessor) => {
+  const quickInputService = accessor.get(IQuickInputService);
+  quickInputService.quickAccess.show("", { itemActivation: ItemActivation.SECOND });
+});
+class BaseQuickAccessNavigateAction extends Action2 {
+  constructor(id, title, next, quickNavigate, keybinding) {
+    super({ id, title, f1: true, keybinding });
+    this.id = id;
+    this.next = next;
+    this.quickNavigate = quickNavigate;
+  }
+  static {
+    __name(this, "BaseQuickAccessNavigateAction");
+  }
+  async run(accessor) {
+    const keybindingService = accessor.get(IKeybindingService);
+    const quickInputService = accessor.get(IQuickInputService);
+    const keys = keybindingService.lookupKeybindings(this.id);
+    const quickNavigate = this.quickNavigate ? { keybindings: keys } : void 0;
+    quickInputService.navigate(this.next, quickNavigate);
+  }
+}
+class QuickAccessNavigateNextAction extends BaseQuickAccessNavigateAction {
+  static {
+    __name(this, "QuickAccessNavigateNextAction");
+  }
+  constructor() {
+    super("workbench.action.quickOpenNavigateNext", localize2("quickNavigateNext", "Navigate Next in Quick Open"), true, true);
+  }
+}
+class QuickAccessNavigatePreviousAction extends BaseQuickAccessNavigateAction {
+  static {
+    __name(this, "QuickAccessNavigatePreviousAction");
+  }
+  constructor() {
+    super("workbench.action.quickOpenNavigatePrevious", localize2("quickNavigatePrevious", "Navigate Previous in Quick Open"), false, true);
+  }
+}
+class QuickAccessSelectNextAction extends BaseQuickAccessNavigateAction {
+  static {
+    __name(this, "QuickAccessSelectNextAction");
+  }
+  constructor() {
+    super(
+      "workbench.action.quickOpenSelectNext",
+      localize2("quickSelectNext", "Select Next in Quick Open"),
+      true,
+      false,
+      {
+        weight: KeybindingWeight.WorkbenchContrib + 50,
+        when: inQuickPickContext,
+        primary: 0,
+        mac: { primary: KeyMod.WinCtrl | KeyCode.KeyN }
+      }
+    );
+  }
+}
+class QuickAccessSelectPreviousAction extends BaseQuickAccessNavigateAction {
+  static {
+    __name(this, "QuickAccessSelectPreviousAction");
+  }
+  constructor() {
+    super(
+      "workbench.action.quickOpenSelectPrevious",
+      localize2("quickSelectPrevious", "Select Previous in Quick Open"),
+      false,
+      false,
+      {
+        weight: KeybindingWeight.WorkbenchContrib + 50,
+        when: inQuickPickContext,
+        primary: 0,
+        mac: { primary: KeyMod.WinCtrl | KeyCode.KeyP }
+      }
+    );
+  }
+}
+registerAction2(QuickAccessSelectNextAction);
+registerAction2(QuickAccessSelectPreviousAction);
+registerAction2(QuickAccessNavigateNextAction);
+registerAction2(QuickAccessNavigatePreviousAction);
+//# sourceMappingURL=quickAccessActions.js.map

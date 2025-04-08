@@ -1,1 +1,109 @@
-import"./search.js";import{Range as T}from"../../../../editor/common/core/range.js";const F=(e,t,n)=>{let r;if(255===e[0]&&254===e[1])r=new TextDecoder("utf-16le").decode(e);else if(254===e[0]&&255===e[1])r=new TextDecoder("utf-16be").decode(e);else if(r=new TextDecoder("utf8").decode(e),r.slice(0,1e3).includes("�")&&e.includes(0))return[];const s=[],o=[];let i=null,a=n.remainingResultQuota;for(;a>=0&&(i=t.exec(r));)o.push({matchStartIndex:i.index,matchedText:i[0]}),a--;if(o.length){const e=new Set,t=new Set,i=[],d=e=>r.slice(i[e].start,i[e].end);let l=0,c=null;const u=/\r?\n/g;for(;c=u.exec(r);)i.push({start:l,end:c.index}),l=c.index+c[0].length;l<r.length&&i.push({start:l,end:r.length});let h=0;for(const{matchStartIndex:r,matchedText:l}of o){if(a<0)break;for(;i[h+1]&&r>i[h].end;)h++;let o=h;for(;i[o+1]&&r+l.length>i[o].end;)o++;if(n.surroundingContext)for(let t=Math.max(0,h-n.surroundingContext);t<h;t++)e.add(t);let c="",u=0;for(let e=h;e<=o;e++){let s=d(e);n.previewOptions?.charsPerLine&&s.length>n.previewOptions.charsPerLine&&(u=Math.max(r-i[h].start-20,0),s=s.substr(u,n.previewOptions.charsPerLine)),c+=`${s}\n`,t.add(e)}const f={rangeLocations:[{source:new T(h,r-i[h].start,o,r+l.length-i[o].start),preview:new T(0,r-i[h].start-u,o-h,r+l.length-i[o].start-(o===h?u:0))}],previewText:c};if(s.push(f),n.surroundingContext)for(let t=o+1;t<=Math.min(o+n.surroundingContext,i.length-1);t++)e.add(t)}for(const n of e)t.has(n)||s.push({text:d(n),lineNumber:n+1})}return s};export{F as getFileResults};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { ITextSearchMatch, ITextSearchPreviewOptions, ITextSearchResult } from "./search.js";
+import { Range } from "../../../../editor/common/core/range.js";
+const getFileResults = /* @__PURE__ */ __name((bytes, pattern, options) => {
+  let text;
+  if (bytes[0] === 255 && bytes[1] === 254) {
+    text = new TextDecoder("utf-16le").decode(bytes);
+  } else if (bytes[0] === 254 && bytes[1] === 255) {
+    text = new TextDecoder("utf-16be").decode(bytes);
+  } else {
+    text = new TextDecoder("utf8").decode(bytes);
+    if (text.slice(0, 1e3).includes("\uFFFD") && bytes.includes(0)) {
+      return [];
+    }
+  }
+  const results = [];
+  const patternIndecies = [];
+  let patternMatch = null;
+  let remainingResultQuota = options.remainingResultQuota;
+  while (remainingResultQuota >= 0 && (patternMatch = pattern.exec(text))) {
+    patternIndecies.push({ matchStartIndex: patternMatch.index, matchedText: patternMatch[0] });
+    remainingResultQuota--;
+  }
+  if (patternIndecies.length) {
+    const contextLinesNeeded = /* @__PURE__ */ new Set();
+    const resultLines = /* @__PURE__ */ new Set();
+    const lineRanges = [];
+    const readLine = /* @__PURE__ */ __name((lineNumber) => text.slice(lineRanges[lineNumber].start, lineRanges[lineNumber].end), "readLine");
+    let prevLineEnd = 0;
+    let lineEndingMatch = null;
+    const lineEndRegex = /\r?\n/g;
+    while (lineEndingMatch = lineEndRegex.exec(text)) {
+      lineRanges.push({ start: prevLineEnd, end: lineEndingMatch.index });
+      prevLineEnd = lineEndingMatch.index + lineEndingMatch[0].length;
+    }
+    if (prevLineEnd < text.length) {
+      lineRanges.push({ start: prevLineEnd, end: text.length });
+    }
+    let startLine = 0;
+    for (const { matchStartIndex, matchedText } of patternIndecies) {
+      if (remainingResultQuota < 0) {
+        break;
+      }
+      while (Boolean(lineRanges[startLine + 1]) && matchStartIndex > lineRanges[startLine].end) {
+        startLine++;
+      }
+      let endLine = startLine;
+      while (Boolean(lineRanges[endLine + 1]) && matchStartIndex + matchedText.length > lineRanges[endLine].end) {
+        endLine++;
+      }
+      if (options.surroundingContext) {
+        for (let contextLine = Math.max(0, startLine - options.surroundingContext); contextLine < startLine; contextLine++) {
+          contextLinesNeeded.add(contextLine);
+        }
+      }
+      let previewText = "";
+      let offset = 0;
+      for (let matchLine = startLine; matchLine <= endLine; matchLine++) {
+        let previewLine = readLine(matchLine);
+        if (options.previewOptions?.charsPerLine && previewLine.length > options.previewOptions.charsPerLine) {
+          offset = Math.max(matchStartIndex - lineRanges[startLine].start - 20, 0);
+          previewLine = previewLine.substr(offset, options.previewOptions.charsPerLine);
+        }
+        previewText += `${previewLine}
+`;
+        resultLines.add(matchLine);
+      }
+      const fileRange = new Range(
+        startLine,
+        matchStartIndex - lineRanges[startLine].start,
+        endLine,
+        matchStartIndex + matchedText.length - lineRanges[endLine].start
+      );
+      const previewRange = new Range(
+        0,
+        matchStartIndex - lineRanges[startLine].start - offset,
+        endLine - startLine,
+        matchStartIndex + matchedText.length - lineRanges[endLine].start - (endLine === startLine ? offset : 0)
+      );
+      const match = {
+        rangeLocations: [{
+          source: fileRange,
+          preview: previewRange
+        }],
+        previewText
+      };
+      results.push(match);
+      if (options.surroundingContext) {
+        for (let contextLine = endLine + 1; contextLine <= Math.min(endLine + options.surroundingContext, lineRanges.length - 1); contextLine++) {
+          contextLinesNeeded.add(contextLine);
+        }
+      }
+    }
+    for (const contextLine of contextLinesNeeded) {
+      if (!resultLines.has(contextLine)) {
+        results.push({
+          text: readLine(contextLine),
+          lineNumber: contextLine + 1
+        });
+      }
+    }
+  }
+  return results;
+}, "getFileResults");
+export {
+  getFileResults
+};
+//# sourceMappingURL=getFileResults.js.map

@@ -1,7 +1,172 @@
-var S=Object.defineProperty;var f=Object.getOwnPropertyDescriptor;var m=(c,e,r,i)=>{for(var t=i>1?void 0:i?f(e,r):e,a=c.length-1,n;a>=0;a--)(n=c[a])&&(t=(i?n(e,r,t):n(t))||t);return i&&t&&S(e,r,t),t},o=(c,e)=>(r,i)=>e(r,i,c);import{localize as u}from"../../../../nls.js";import p from"../../../../base/common/severity.js";import{URI as g}from"../../../../base/common/uri.js";import{IIntegrityService as d}from"../common/integrity.js";import{ILifecycleService as y,LifecyclePhase as P}from"../../lifecycle/common/lifecycle.js";import{IProductService as I}from"../../../../platform/product/common/productService.js";import{INotificationService as k,NotificationPriority as v}from"../../../../platform/notification/common/notification.js";import{IStorageService as w,StorageScope as h,StorageTarget as C}from"../../../../platform/storage/common/storage.js";import{InstantiationType as N,registerSingleton as R}from"../../../../platform/instantiation/common/extensions.js";import{IOpenerService as A}from"../../../../platform/opener/common/opener.js";import{FileAccess as T}from"../../../../base/common/network.js";import{IChecksumService as _}from"../../../../platform/checksum/common/checksumService.js";import{ILogService as D}from"../../../../platform/log/common/log.js";class l{constructor(e){this.storageService=e;this.value=this._read()}static KEY="integrityService";value;_read(){const e=this.storageService.get(l.KEY,h.APPLICATION);if(!e)return null;try{return JSON.parse(e)}catch{return null}}get(){return this.value}set(e){this.value=e,this.storageService.store(l.KEY,JSON.stringify(this.value),h.APPLICATION,C.MACHINE)}}let s=class{constructor(e,r,i,t,a,n,U){this.notificationService=e;this.lifecycleService=i;this.openerService=t;this.productService=a;this.checksumService=n;this.logService=U;this.storage=new l(r),this.isPurePromise=this._isPure(),this._compute()}storage;isPurePromise;isPure(){return this.isPurePromise}async _compute(){const{isPure:e}=await this.isPure();if(e)return;this.logService.warn(`
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { localize } from "../../../../nls.js";
+import Severity from "../../../../base/common/severity.js";
+import { URI } from "../../../../base/common/uri.js";
+import { ChecksumPair, IIntegrityService, IntegrityTestResult } from "../common/integrity.js";
+import { ILifecycleService, LifecyclePhase } from "../../lifecycle/common/lifecycle.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+import { INotificationService, NotificationPriority } from "../../../../platform/notification/common/notification.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { IOpenerService } from "../../../../platform/opener/common/opener.js";
+import { FileAccess, AppResourcePath } from "../../../../base/common/network.js";
+import { IChecksumService } from "../../../../platform/checksum/common/checksumService.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+class IntegrityStorage {
+  constructor(storageService) {
+    this.storageService = storageService;
+    this.value = this._read();
+  }
+  static {
+    __name(this, "IntegrityStorage");
+  }
+  static KEY = "integrityService";
+  value;
+  _read() {
+    const jsonValue = this.storageService.get(IntegrityStorage.KEY, StorageScope.APPLICATION);
+    if (!jsonValue) {
+      return null;
+    }
+    try {
+      return JSON.parse(jsonValue);
+    } catch (err) {
+      return null;
+    }
+  }
+  get() {
+    return this.value;
+  }
+  set(data) {
+    this.value = data;
+    this.storageService.store(IntegrityStorage.KEY, JSON.stringify(this.value), StorageScope.APPLICATION, StorageTarget.MACHINE);
+  }
+}
+let IntegrityService = class {
+  constructor(notificationService, storageService, lifecycleService, openerService, productService, checksumService, logService) {
+    this.notificationService = notificationService;
+    this.lifecycleService = lifecycleService;
+    this.openerService = openerService;
+    this.productService = productService;
+    this.checksumService = checksumService;
+    this.logService = logService;
+    this.storage = new IntegrityStorage(storageService);
+    this.isPurePromise = this._isPure();
+    this._compute();
+  }
+  static {
+    __name(this, "IntegrityService");
+  }
+  storage;
+  isPurePromise;
+  isPure() {
+    return this.isPurePromise;
+  }
+  async _compute() {
+    const { isPure } = await this.isPure();
+    if (isPure) {
+      return;
+    }
+    this.logService.warn(`
 
 ----------------------------------------------
 ***	Installation has been modified on disk ***
 ----------------------------------------------
 
-`);const r=this.storage.get();r?.dontShowPrompt&&r.commit===this.productService.commit||this._showNotification()}async _isPure(){const e=this.productService.checksums||{};await this.lifecycleService.when(P.Eventually);const r=await Promise.all(Object.keys(e).map(t=>this._resolve(t,e[t])));let i=!0;for(let t=0,a=r.length;t<a;t++)if(!r[t].isPure){i=!1;break}return{isPure:i,proof:r}}async _resolve(e,r){const i=T.asFileUri(e);try{const t=await this.checksumService.checksum(i);return s._createChecksumPair(i,t,r)}catch{return s._createChecksumPair(i,"",r)}}static _createChecksumPair(e,r,i){return{uri:e,actual:r,expected:i,isPure:r===i}}_showNotification(){const e=this.productService.checksumFailMoreInfoUrl,r=u("integrity.prompt","Your {0} installation appears to be corrupt. Please reinstall.",this.productService.nameShort);e?this.notificationService.prompt(p.Warning,r,[{label:u("integrity.moreInformation","More Information"),run:()=>this.openerService.open(g.parse(e))},{label:u("integrity.dontShowAgain","Don't Show Again"),isSecondary:!0,run:()=>this.storage.set({dontShowPrompt:!0,commit:this.productService.commit})}],{sticky:!0,priority:v.URGENT}):this.notificationService.notify({severity:p.Warning,message:r,sticky:!0,priority:v.URGENT})}};s=m([o(0,k),o(1,w),o(2,y),o(3,A),o(4,I),o(5,_),o(6,D)],s),R(d,s,N.Delayed);export{s as IntegrityService};
+`);
+    const storedData = this.storage.get();
+    if (storedData?.dontShowPrompt && storedData.commit === this.productService.commit) {
+      return;
+    }
+    this._showNotification();
+  }
+  async _isPure() {
+    const expectedChecksums = this.productService.checksums || {};
+    await this.lifecycleService.when(LifecyclePhase.Eventually);
+    const allResults = await Promise.all(Object.keys(expectedChecksums).map((filename) => this._resolve(filename, expectedChecksums[filename])));
+    let isPure = true;
+    for (let i = 0, len = allResults.length; i < len; i++) {
+      if (!allResults[i].isPure) {
+        isPure = false;
+        break;
+      }
+    }
+    return {
+      isPure,
+      proof: allResults
+    };
+  }
+  async _resolve(filename, expected) {
+    const fileUri = FileAccess.asFileUri(filename);
+    try {
+      const checksum = await this.checksumService.checksum(fileUri);
+      return IntegrityService._createChecksumPair(fileUri, checksum, expected);
+    } catch (error) {
+      return IntegrityService._createChecksumPair(fileUri, "", expected);
+    }
+  }
+  static _createChecksumPair(uri, actual, expected) {
+    return {
+      uri,
+      actual,
+      expected,
+      isPure: actual === expected
+    };
+  }
+  _showNotification() {
+    const checksumFailMoreInfoUrl = this.productService.checksumFailMoreInfoUrl;
+    const message = localize("integrity.prompt", "Your {0} installation appears to be corrupt. Please reinstall.", this.productService.nameShort);
+    if (checksumFailMoreInfoUrl) {
+      this.notificationService.prompt(
+        Severity.Warning,
+        message,
+        [
+          {
+            label: localize("integrity.moreInformation", "More Information"),
+            run: /* @__PURE__ */ __name(() => this.openerService.open(URI.parse(checksumFailMoreInfoUrl)), "run")
+          },
+          {
+            label: localize("integrity.dontShowAgain", "Don't Show Again"),
+            isSecondary: true,
+            run: /* @__PURE__ */ __name(() => this.storage.set({ dontShowPrompt: true, commit: this.productService.commit }), "run")
+          }
+        ],
+        {
+          sticky: true,
+          priority: NotificationPriority.URGENT
+        }
+      );
+    } else {
+      this.notificationService.notify({
+        severity: Severity.Warning,
+        message,
+        sticky: true,
+        priority: NotificationPriority.URGENT
+      });
+    }
+  }
+};
+IntegrityService = __decorateClass([
+  __decorateParam(0, INotificationService),
+  __decorateParam(1, IStorageService),
+  __decorateParam(2, ILifecycleService),
+  __decorateParam(3, IOpenerService),
+  __decorateParam(4, IProductService),
+  __decorateParam(5, IChecksumService),
+  __decorateParam(6, ILogService)
+], IntegrityService);
+registerSingleton(IIntegrityService, IntegrityService, InstantiationType.Delayed);
+export {
+  IntegrityService
+};
+//# sourceMappingURL=integrityService.js.map

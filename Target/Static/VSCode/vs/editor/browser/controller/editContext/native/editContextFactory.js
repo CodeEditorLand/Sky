@@ -1,1 +1,14 @@
-var n;(n||={}).create=function(t,n){return new t.EditContext(n)};export{n as EditContext};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var EditContext;
+((EditContext2) => {
+  function create(window, options) {
+    return new window.EditContext(options);
+  }
+  EditContext2.create = create;
+  __name(create, "create");
+})(EditContext || (EditContext = {}));
+export {
+  EditContext
+};
+//# sourceMappingURL=editContextFactory.js.map

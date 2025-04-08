@@ -1,1 +1,92 @@
-import"../../../../../../base/common/event.js";import{derived as m}from"../../../../../../base/common/observable.js";import{localize as a}from"../../../../../../nls.js";import"../../../../../browser/editorBrowser.js";import{observableCodeEditor as p}from"../../../../../browser/observableCodeEditor.js";import"../../../../../common/core/lineRange.js";import{StringText as c,TextEdit as I}from"../../../../../common/core/textEdit.js";import"../../../../../common/languages.js";import"../../model/inlineCompletionsModel.js";import"../../model/inlineCompletionsSource.js";import{InlineEditTabAction as l}from"./inlineEditsViewInterface.js";import{InlineEditWithChanges as h}from"./inlineEditWithChanges.js";class C{constructor(i,e,d){this._model=i;this.inlineEdit=e;this.tabAction=d;this.action=this.inlineEdit.inlineCompletion.action,this.displayName=this.inlineEdit.inlineCompletion.source.provider.displayName??a("inlineEdit","Inline Edit"),this.extensionCommands=this.inlineEdit.inlineCompletion.source.inlineCompletions.commands??[],this.showCollapsed=this._model.showCollapsed}action;displayName;extensionCommands;showCollapsed;accept(){this._model.accept()}jump(){this._model.jump()}abort(i){console.error(i),this._model.stop()}handleInlineEditShown(){this._model.handleInlineEditShown(this.inlineEdit.inlineCompletion)}}class j{constructor(i){this._model=i;this.onDidAccept=this._model.onDidAccept,this.inAcceptFlow=this._model.inAcceptFlow}onDidAccept;inAcceptFlow}class L{constructor(i,e,d,o){this.lineRange=d;const r=p(i),s=m(this,t=>r.isFocused.read(t)&&e.inlineCompletionState.read(t)?.inlineCompletion?.sourceInlineCompletion.showInlineEditMenu?l.Accept:l.Inactive);this.model=new C(e,new h(new c(""),new I([]),e.primaryPosition.get(),o.source.inlineCompletions.commands??[],o.inlineCompletion),s)}model}export{L as GhostTextIndicator,j as InlineEditHost,C as InlineEditModel};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Event } from "../../../../../../base/common/event.js";
+import { derived, IObservable } from "../../../../../../base/common/observable.js";
+import { localize } from "../../../../../../nls.js";
+import { ICodeEditor } from "../../../../../browser/editorBrowser.js";
+import { observableCodeEditor } from "../../../../../browser/observableCodeEditor.js";
+import { LineRange } from "../../../../../common/core/lineRange.js";
+import { StringText, TextEdit } from "../../../../../common/core/textEdit.js";
+import { Command } from "../../../../../common/languages.js";
+import { InlineCompletionsModel } from "../../model/inlineCompletionsModel.js";
+import { InlineCompletionWithUpdatedRange } from "../../model/inlineCompletionsSource.js";
+import { IInlineEditHost, IInlineEditModel, InlineEditTabAction } from "./inlineEditsViewInterface.js";
+import { InlineEditWithChanges } from "./inlineEditWithChanges.js";
+class InlineEditModel {
+  constructor(_model, inlineEdit, tabAction) {
+    this._model = _model;
+    this.inlineEdit = inlineEdit;
+    this.tabAction = tabAction;
+    this.action = this.inlineEdit.inlineCompletion.action;
+    this.displayName = this.inlineEdit.inlineCompletion.source.provider.displayName ?? localize("inlineEdit", "Inline Edit");
+    this.extensionCommands = this.inlineEdit.inlineCompletion.source.inlineCompletions.commands ?? [];
+    this.showCollapsed = this._model.showCollapsed;
+  }
+  static {
+    __name(this, "InlineEditModel");
+  }
+  action;
+  displayName;
+  extensionCommands;
+  showCollapsed;
+  accept() {
+    this._model.accept();
+  }
+  jump() {
+    this._model.jump();
+  }
+  abort(reason) {
+    console.error(reason);
+    this._model.stop();
+  }
+  handleInlineEditShown() {
+    this._model.handleInlineEditShown(this.inlineEdit.inlineCompletion);
+  }
+}
+class InlineEditHost {
+  constructor(_model) {
+    this._model = _model;
+    this.onDidAccept = this._model.onDidAccept;
+    this.inAcceptFlow = this._model.inAcceptFlow;
+  }
+  static {
+    __name(this, "InlineEditHost");
+  }
+  onDidAccept;
+  inAcceptFlow;
+}
+class GhostTextIndicator {
+  constructor(editor, model, lineRange, inlineCompletion) {
+    this.lineRange = lineRange;
+    const editorObs = observableCodeEditor(editor);
+    const tabAction = derived(this, (reader) => {
+      if (editorObs.isFocused.read(reader)) {
+        if (model.inlineCompletionState.read(reader)?.inlineCompletion?.sourceInlineCompletion.showInlineEditMenu) {
+          return InlineEditTabAction.Accept;
+        }
+      }
+      return InlineEditTabAction.Inactive;
+    });
+    this.model = new InlineEditModel(
+      model,
+      new InlineEditWithChanges(
+        new StringText(""),
+        new TextEdit([]),
+        model.primaryPosition.get(),
+        inlineCompletion.source.inlineCompletions.commands ?? [],
+        inlineCompletion.inlineCompletion
+      ),
+      tabAction
+    );
+  }
+  static {
+    __name(this, "GhostTextIndicator");
+  }
+  model;
+}
+export {
+  GhostTextIndicator,
+  InlineEditHost,
+  InlineEditModel
+};
+//# sourceMappingURL=inlineEditsModel.js.map

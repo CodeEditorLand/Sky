@@ -1,1 +1,196 @@
-import*as h from"../../../base/common/arrays.js";import{Emitter as d}from"../../../base/common/event.js";import{Disposable as p}from"../../../base/common/lifecycle.js";import{URI as f}from"../../../base/common/uri.js";import"../../../platform/extensions/common/extensions.js";import{MainContext as D}from"./extHost.protocol.js";import"./extHostDocumentsAndEditors.js";import{TextEditorDecorationType as C}from"./extHostTextEditor.js";import*as n from"./extHostTypeConverters.js";import{TextEditorSelectionChangeKind as w,TextEditorChangeKind as c}from"./extHostTypes.js";import"vscode";class B extends p{constructor(o,e){super();this._extHostDocumentsAndEditors=e;this._proxy=o.getProxy(D.MainThreadTextEditors),this._register(this._extHostDocumentsAndEditors.onDidChangeVisibleTextEditors(t=>this._onDidChangeVisibleTextEditors.fire(t))),this._register(this._extHostDocumentsAndEditors.onDidChangeActiveTextEditor(t=>this._onDidChangeActiveTextEditor.fire(t)))}_onDidChangeTextEditorSelection=new d;_onDidChangeTextEditorOptions=new d;_onDidChangeTextEditorVisibleRanges=new d;_onDidChangeTextEditorViewColumn=new d;_onDidChangeTextEditorDiffInformation=new d;_onDidChangeActiveTextEditor=new d;_onDidChangeVisibleTextEditors=new d;onDidChangeTextEditorSelection=this._onDidChangeTextEditorSelection.event;onDidChangeTextEditorOptions=this._onDidChangeTextEditorOptions.event;onDidChangeTextEditorVisibleRanges=this._onDidChangeTextEditorVisibleRanges.event;onDidChangeTextEditorViewColumn=this._onDidChangeTextEditorViewColumn.event;onDidChangeTextEditorDiffInformation=this._onDidChangeTextEditorDiffInformation.event;onDidChangeActiveTextEditor=this._onDidChangeActiveTextEditor.event;onDidChangeVisibleTextEditors=this._onDidChangeVisibleTextEditors.event;_proxy;getActiveTextEditor(){return this._extHostDocumentsAndEditors.activeEditor()}getVisibleTextEditors(o){const e=this._extHostDocumentsAndEditors.allEditors();return o?e:e.map(t=>t.value)}async showTextDocument(o,e,t){let i;typeof e=="number"?i={position:n.ViewColumn.from(e),preserveFocus:t}:typeof e=="object"?i={position:n.ViewColumn.from(e.viewColumn),preserveFocus:e.preserveFocus,selection:typeof e.selection=="object"?n.Range.from(e.selection):void 0,pinned:typeof e.preview=="boolean"?!e.preview:void 0}:i={preserveFocus:!1};const r=await this._proxy.$tryShowTextDocument(o.uri,i),s=r&&this._extHostDocumentsAndEditors.getEditor(r);if(s)return s.value;throw r?new Error(`Could NOT open editor for "${o.uri.toString()}" because another editor opened in the meantime.`):new Error(`Could NOT open editor for "${o.uri.toString()}".`)}createTextEditorDecorationType(o,e){return new C(this._proxy,o,e).value}$acceptEditorPropertiesChanged(o,e){const t=this._extHostDocumentsAndEditors.getEditor(o);if(!t)throw new Error("unknown text editor");if(e.options&&t._acceptOptions(e.options),e.selections){const i=e.selections.selections.map(n.Selection.to);t._acceptSelections(i)}if(e.visibleRanges){const i=h.coalesce(e.visibleRanges.map(n.Range.to));t._acceptVisibleRanges(i)}if(e.options&&this._onDidChangeTextEditorOptions.fire({textEditor:t.value,options:{...e.options,lineNumbers:n.TextEditorLineNumbersStyle.to(e.options.lineNumbers)}}),e.selections){const i=w.fromValue(e.selections.source),r=e.selections.selections.map(n.Selection.to);this._onDidChangeTextEditorSelection.fire({textEditor:t.value,selections:r,kind:i})}if(e.visibleRanges){const i=h.coalesce(e.visibleRanges.map(n.Range.to));this._onDidChangeTextEditorVisibleRanges.fire({textEditor:t.value,visibleRanges:i})}}$acceptEditorPositionData(o){for(const e in o){const t=this._extHostDocumentsAndEditors.getEditor(e);if(!t)throw new Error("Unknown text editor");const i=n.ViewColumn.to(o[e]);t.value.viewColumn!==i&&(t._acceptViewColumn(i),this._onDidChangeTextEditorViewColumn.fire({textEditor:t.value,viewColumn:i}))}}$acceptEditorDiffInformation(o,e){const t=this._extHostDocumentsAndEditors.getEditor(o);if(!t)throw new Error("unknown text editor");if(!e){t._acceptDiffInformation(void 0),this._onDidChangeTextEditorDiffInformation.fire({textEditor:t.value,diffInformation:void 0});return}const i=this,r=e.map(s=>{const T=f.revive(s.original),E=f.revive(s.modified),g=s.changes.map(x=>{const[l,m,v,u]=x;let a;return l===m?a=c.Addition:v===u?a=c.Deletion:a=c.Modification,{original:{startLineNumber:l,endLineNumberExclusive:m},modified:{startLineNumber:v,endLineNumberExclusive:u},kind:a}});return Object.freeze({documentVersion:s.documentVersion,original:T,modified:E,changes:g,get isStale(){return i._extHostDocumentsAndEditors.getDocument(E)?.version!==s.documentVersion}})});t._acceptDiffInformation(r),this._onDidChangeTextEditorDiffInformation.fire({textEditor:t.value,diffInformation:r})}getDiffInformation(o){return Promise.resolve(this._proxy.$getDiffInformation(o))}}export{B as ExtHostEditors};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as arrays from "../../../base/common/arrays.js";
+import { Emitter, Event } from "../../../base/common/event.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { URI } from "../../../base/common/uri.js";
+import { IExtensionDescription } from "../../../platform/extensions/common/extensions.js";
+import { ExtHostEditorsShape, IEditorPropertiesChangeData, IMainContext, ITextDocumentShowOptions, ITextEditorDiffInformation, ITextEditorPositionData, MainContext, MainThreadTextEditorsShape } from "./extHost.protocol.js";
+import { ExtHostDocumentsAndEditors } from "./extHostDocumentsAndEditors.js";
+import { ExtHostTextEditor, TextEditorDecorationType } from "./extHostTextEditor.js";
+import * as TypeConverters from "./extHostTypeConverters.js";
+import { TextEditorSelectionChangeKind, TextEditorChangeKind } from "./extHostTypes.js";
+import * as vscode from "vscode";
+class ExtHostEditors extends Disposable {
+  constructor(mainContext, _extHostDocumentsAndEditors) {
+    super();
+    this._extHostDocumentsAndEditors = _extHostDocumentsAndEditors;
+    this._proxy = mainContext.getProxy(MainContext.MainThreadTextEditors);
+    this._register(this._extHostDocumentsAndEditors.onDidChangeVisibleTextEditors((e) => this._onDidChangeVisibleTextEditors.fire(e)));
+    this._register(this._extHostDocumentsAndEditors.onDidChangeActiveTextEditor((e) => this._onDidChangeActiveTextEditor.fire(e)));
+  }
+  static {
+    __name(this, "ExtHostEditors");
+  }
+  _onDidChangeTextEditorSelection = new Emitter();
+  _onDidChangeTextEditorOptions = new Emitter();
+  _onDidChangeTextEditorVisibleRanges = new Emitter();
+  _onDidChangeTextEditorViewColumn = new Emitter();
+  _onDidChangeTextEditorDiffInformation = new Emitter();
+  _onDidChangeActiveTextEditor = new Emitter();
+  _onDidChangeVisibleTextEditors = new Emitter();
+  onDidChangeTextEditorSelection = this._onDidChangeTextEditorSelection.event;
+  onDidChangeTextEditorOptions = this._onDidChangeTextEditorOptions.event;
+  onDidChangeTextEditorVisibleRanges = this._onDidChangeTextEditorVisibleRanges.event;
+  onDidChangeTextEditorViewColumn = this._onDidChangeTextEditorViewColumn.event;
+  onDidChangeTextEditorDiffInformation = this._onDidChangeTextEditorDiffInformation.event;
+  onDidChangeActiveTextEditor = this._onDidChangeActiveTextEditor.event;
+  onDidChangeVisibleTextEditors = this._onDidChangeVisibleTextEditors.event;
+  _proxy;
+  getActiveTextEditor() {
+    return this._extHostDocumentsAndEditors.activeEditor();
+  }
+  getVisibleTextEditors(internal) {
+    const editors = this._extHostDocumentsAndEditors.allEditors();
+    return internal ? editors : editors.map((editor) => editor.value);
+  }
+  async showTextDocument(document, columnOrOptions, preserveFocus) {
+    let options;
+    if (typeof columnOrOptions === "number") {
+      options = {
+        position: TypeConverters.ViewColumn.from(columnOrOptions),
+        preserveFocus
+      };
+    } else if (typeof columnOrOptions === "object") {
+      options = {
+        position: TypeConverters.ViewColumn.from(columnOrOptions.viewColumn),
+        preserveFocus: columnOrOptions.preserveFocus,
+        selection: typeof columnOrOptions.selection === "object" ? TypeConverters.Range.from(columnOrOptions.selection) : void 0,
+        pinned: typeof columnOrOptions.preview === "boolean" ? !columnOrOptions.preview : void 0
+      };
+    } else {
+      options = {
+        preserveFocus: false
+      };
+    }
+    const editorId = await this._proxy.$tryShowTextDocument(document.uri, options);
+    const editor = editorId && this._extHostDocumentsAndEditors.getEditor(editorId);
+    if (editor) {
+      return editor.value;
+    }
+    if (editorId) {
+      throw new Error(`Could NOT open editor for "${document.uri.toString()}" because another editor opened in the meantime.`);
+    } else {
+      throw new Error(`Could NOT open editor for "${document.uri.toString()}".`);
+    }
+  }
+  createTextEditorDecorationType(extension, options) {
+    return new TextEditorDecorationType(this._proxy, extension, options).value;
+  }
+  // --- called from main thread
+  $acceptEditorPropertiesChanged(id, data) {
+    const textEditor = this._extHostDocumentsAndEditors.getEditor(id);
+    if (!textEditor) {
+      throw new Error("unknown text editor");
+    }
+    if (data.options) {
+      textEditor._acceptOptions(data.options);
+    }
+    if (data.selections) {
+      const selections = data.selections.selections.map(TypeConverters.Selection.to);
+      textEditor._acceptSelections(selections);
+    }
+    if (data.visibleRanges) {
+      const visibleRanges = arrays.coalesce(data.visibleRanges.map(TypeConverters.Range.to));
+      textEditor._acceptVisibleRanges(visibleRanges);
+    }
+    if (data.options) {
+      this._onDidChangeTextEditorOptions.fire({
+        textEditor: textEditor.value,
+        options: { ...data.options, lineNumbers: TypeConverters.TextEditorLineNumbersStyle.to(data.options.lineNumbers) }
+      });
+    }
+    if (data.selections) {
+      const kind = TextEditorSelectionChangeKind.fromValue(data.selections.source);
+      const selections = data.selections.selections.map(TypeConverters.Selection.to);
+      this._onDidChangeTextEditorSelection.fire({
+        textEditor: textEditor.value,
+        selections,
+        kind
+      });
+    }
+    if (data.visibleRanges) {
+      const visibleRanges = arrays.coalesce(data.visibleRanges.map(TypeConverters.Range.to));
+      this._onDidChangeTextEditorVisibleRanges.fire({
+        textEditor: textEditor.value,
+        visibleRanges
+      });
+    }
+  }
+  $acceptEditorPositionData(data) {
+    for (const id in data) {
+      const textEditor = this._extHostDocumentsAndEditors.getEditor(id);
+      if (!textEditor) {
+        throw new Error("Unknown text editor");
+      }
+      const viewColumn = TypeConverters.ViewColumn.to(data[id]);
+      if (textEditor.value.viewColumn !== viewColumn) {
+        textEditor._acceptViewColumn(viewColumn);
+        this._onDidChangeTextEditorViewColumn.fire({ textEditor: textEditor.value, viewColumn });
+      }
+    }
+  }
+  $acceptEditorDiffInformation(id, diffInformation) {
+    const textEditor = this._extHostDocumentsAndEditors.getEditor(id);
+    if (!textEditor) {
+      throw new Error("unknown text editor");
+    }
+    if (!diffInformation) {
+      textEditor._acceptDiffInformation(void 0);
+      this._onDidChangeTextEditorDiffInformation.fire({
+        textEditor: textEditor.value,
+        diffInformation: void 0
+      });
+      return;
+    }
+    const that = this;
+    const result = diffInformation.map((diff) => {
+      const original = URI.revive(diff.original);
+      const modified = URI.revive(diff.modified);
+      const changes = diff.changes.map((change) => {
+        const [originalStartLineNumber, originalEndLineNumberExclusive, modifiedStartLineNumber, modifiedEndLineNumberExclusive] = change;
+        let kind;
+        if (originalStartLineNumber === originalEndLineNumberExclusive) {
+          kind = TextEditorChangeKind.Addition;
+        } else if (modifiedStartLineNumber === modifiedEndLineNumberExclusive) {
+          kind = TextEditorChangeKind.Deletion;
+        } else {
+          kind = TextEditorChangeKind.Modification;
+        }
+        return {
+          original: {
+            startLineNumber: originalStartLineNumber,
+            endLineNumberExclusive: originalEndLineNumberExclusive
+          },
+          modified: {
+            startLineNumber: modifiedStartLineNumber,
+            endLineNumberExclusive: modifiedEndLineNumberExclusive
+          },
+          kind
+        };
+      });
+      return Object.freeze({
+        documentVersion: diff.documentVersion,
+        original,
+        modified,
+        changes,
+        get isStale() {
+          const document = that._extHostDocumentsAndEditors.getDocument(modified);
+          return document?.version !== diff.documentVersion;
+        }
+      });
+    });
+    textEditor._acceptDiffInformation(result);
+    this._onDidChangeTextEditorDiffInformation.fire({
+      textEditor: textEditor.value,
+      diffInformation: result
+    });
+  }
+  getDiffInformation(id) {
+    return Promise.resolve(this._proxy.$getDiffInformation(id));
+  }
+}
+export {
+  ExtHostEditors
+};
+//# sourceMappingURL=extHostTextEditors.js.map

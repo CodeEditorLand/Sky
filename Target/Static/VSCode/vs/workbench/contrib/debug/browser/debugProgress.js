@@ -1,1 +1,99 @@
-var w=Object.defineProperty;var P=Object.getOwnPropertyDescriptor;var g=(p,i,s,t)=>{for(var e=t>1?void 0:t?P(i,s):i,n=p.length-1,o;n>=0;n--)(o=p[n])&&(e=(t?o(i,s,e):o(e))||e);return t&&e&&w(i,s,e),e},f=(p,i)=>(s,t)=>i(s,t,p);import{Event as y}from"../../../../base/common/event.js";import{dispose as V}from"../../../../base/common/lifecycle.js";import{IProgressService as L,ProgressLocation as W}from"../../../../platform/progress/common/progress.js";import"../../../common/contributions.js";import{IDebugService as M,VIEWLET_ID as D}from"../common/debug.js";import{IViewsService as k}from"../../../services/views/common/viewsService.js";let m=class{toDispose=[];constructor(i,s,t){let e;const n=o=>{e&&(e.dispose(),e=void 0),o&&(e=o.onDidProgressStart(async r=>{const I=new Promise(b=>{const c=y.any(y.filter(o.onDidProgressEnd,l=>l.body.progressId===r.body.progressId),o.onDidEndAdapter)(()=>{c.dispose(),b()})});t.isViewContainerVisible(D)&&s.withProgress({location:D},()=>I);const u=i.getAdapterManager().getDebuggerLabel(o.configuration.type);s.withProgress({location:W.Notification,title:r.body.title,cancellable:r.body.cancellable,source:u,delay:500},b=>{let c=0;const l=d=>{let a;typeof d.percentage=="number"&&(a=d.percentage-c,c+=a),b.report({message:d.message,increment:a,total:typeof a=="number"?100:void 0})};r.body.message&&l(r.body);const h=o.onDidProgressUpdate(d=>{d.body.progressId===r.body.progressId&&l(d.body)});return I.then(()=>h.dispose())},()=>o.cancel(r.body.progressId))}))};this.toDispose.push(i.getViewModel().onDidFocusSession(n)),n(i.getViewModel().focusedSession),this.toDispose.push(i.onWillNewSession(o=>{e||n(o)}))}dispose(){V(this.toDispose)}};m=g([f(0,M),f(1,L),f(2,k)],m);export{m as DebugProgressContribution};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Event } from "../../../../base/common/event.js";
+import { IDisposable, dispose } from "../../../../base/common/lifecycle.js";
+import { IProgressService, ProgressLocation } from "../../../../platform/progress/common/progress.js";
+import { IWorkbenchContribution } from "../../../common/contributions.js";
+import { IDebugService, IDebugSession, VIEWLET_ID } from "../common/debug.js";
+import { IViewsService } from "../../../services/views/common/viewsService.js";
+let DebugProgressContribution = class {
+  static {
+    __name(this, "DebugProgressContribution");
+  }
+  toDispose = [];
+  constructor(debugService, progressService, viewsService) {
+    let progressListener;
+    const listenOnProgress = /* @__PURE__ */ __name((session) => {
+      if (progressListener) {
+        progressListener.dispose();
+        progressListener = void 0;
+      }
+      if (session) {
+        progressListener = session.onDidProgressStart(async (progressStartEvent) => {
+          const promise = new Promise((r) => {
+            const listener = Event.any(
+              Event.filter(session.onDidProgressEnd, (e) => e.body.progressId === progressStartEvent.body.progressId),
+              session.onDidEndAdapter
+            )(() => {
+              listener.dispose();
+              r();
+            });
+          });
+          if (viewsService.isViewContainerVisible(VIEWLET_ID)) {
+            progressService.withProgress({ location: VIEWLET_ID }, () => promise);
+          }
+          const source = debugService.getAdapterManager().getDebuggerLabel(session.configuration.type);
+          progressService.withProgress({
+            location: ProgressLocation.Notification,
+            title: progressStartEvent.body.title,
+            cancellable: progressStartEvent.body.cancellable,
+            source,
+            delay: 500
+          }, (progressStep) => {
+            let total = 0;
+            const reportProgress = /* @__PURE__ */ __name((progress) => {
+              let increment = void 0;
+              if (typeof progress.percentage === "number") {
+                increment = progress.percentage - total;
+                total += increment;
+              }
+              progressStep.report({
+                message: progress.message,
+                increment,
+                total: typeof increment === "number" ? 100 : void 0
+              });
+            }, "reportProgress");
+            if (progressStartEvent.body.message) {
+              reportProgress(progressStartEvent.body);
+            }
+            const progressUpdateListener = session.onDidProgressUpdate((e) => {
+              if (e.body.progressId === progressStartEvent.body.progressId) {
+                reportProgress(e.body);
+              }
+            });
+            return promise.then(() => progressUpdateListener.dispose());
+          }, () => session.cancel(progressStartEvent.body.progressId));
+        });
+      }
+    }, "listenOnProgress");
+    this.toDispose.push(debugService.getViewModel().onDidFocusSession(listenOnProgress));
+    listenOnProgress(debugService.getViewModel().focusedSession);
+    this.toDispose.push(debugService.onWillNewSession((session) => {
+      if (!progressListener) {
+        listenOnProgress(session);
+      }
+    }));
+  }
+  dispose() {
+    dispose(this.toDispose);
+  }
+};
+DebugProgressContribution = __decorateClass([
+  __decorateParam(0, IDebugService),
+  __decorateParam(1, IProgressService),
+  __decorateParam(2, IViewsService)
+], DebugProgressContribution);
+export {
+  DebugProgressContribution
+};
+//# sourceMappingURL=debugProgress.js.map

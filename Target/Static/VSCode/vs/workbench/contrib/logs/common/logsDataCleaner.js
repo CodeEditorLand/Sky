@@ -1,1 +1,58 @@
-var S=Object.defineProperty;var f=Object.getOwnPropertyDescriptor;var v=(c,o,e,i)=>{for(var r=i>1?void 0:i?f(o,e):o,s=c.length-1,n;s>=0;s--)(n=c[s])&&(r=(i?n(o,e,r):n(r))||r);return i&&r&&S(o,e,r),r},l=(c,o)=>(e,i)=>o(e,i,c);import{Disposable as a}from"../../../../base/common/lifecycle.js";import{IFileService as p}from"../../../../platform/files/common/files.js";import{basename as h,dirname as u}from"../../../../base/common/resources.js";import{IWorkbenchEnvironmentService as y}from"../../../services/environment/common/environmentService.js";import{ILifecycleService as I}from"../../../services/lifecycle/common/lifecycle.js";import{Promises as b}from"../../../../base/common/async.js";let m=class extends a{constructor(e,i,r){super();this.environmentService=e;this.fileService=i;this.lifecycleService=r;this.cleanUpOldLogsSoon()}cleanUpOldLogsSoon(){let e=setTimeout(async()=>{e=void 0;const i=await this.fileService.resolve(u(this.environmentService.logsHome));if(i.children){const r=h(this.environmentService.logsHome),n=i.children.filter(t=>t.isDirectory&&/^\d{8}T\d{6}$/.test(t.name)).sort().filter((t,g)=>t.name!==r),d=n.slice(0,Math.max(0,n.length-49));b.settled(d.map(t=>this.fileService.del(t.resource,{recursive:!0})))}},1e4);this.lifecycleService.onWillShutdown(()=>{e&&(clearTimeout(e),e=void 0)})}};m=v([l(0,y),l(1,p),l(2,I)],m);export{m as LogsDataCleaner};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { basename, dirname } from "../../../../base/common/resources.js";
+import { IWorkbenchEnvironmentService } from "../../../services/environment/common/environmentService.js";
+import { ILifecycleService } from "../../../services/lifecycle/common/lifecycle.js";
+import { Promises } from "../../../../base/common/async.js";
+let LogsDataCleaner = class extends Disposable {
+  constructor(environmentService, fileService, lifecycleService) {
+    super();
+    this.environmentService = environmentService;
+    this.fileService = fileService;
+    this.lifecycleService = lifecycleService;
+    this.cleanUpOldLogsSoon();
+  }
+  static {
+    __name(this, "LogsDataCleaner");
+  }
+  cleanUpOldLogsSoon() {
+    let handle = setTimeout(async () => {
+      handle = void 0;
+      const stat = await this.fileService.resolve(dirname(this.environmentService.logsHome));
+      if (stat.children) {
+        const currentLog = basename(this.environmentService.logsHome);
+        const allSessions = stat.children.filter((stat2) => stat2.isDirectory && /^\d{8}T\d{6}$/.test(stat2.name));
+        const oldSessions = allSessions.sort().filter((d, i) => d.name !== currentLog);
+        const toDelete = oldSessions.slice(0, Math.max(0, oldSessions.length - 49));
+        Promises.settled(toDelete.map((stat2) => this.fileService.del(stat2.resource, { recursive: true })));
+      }
+    }, 10 * 1e3);
+    this.lifecycleService.onWillShutdown(() => {
+      if (handle) {
+        clearTimeout(handle);
+        handle = void 0;
+      }
+    });
+  }
+};
+LogsDataCleaner = __decorateClass([
+  __decorateParam(0, IWorkbenchEnvironmentService),
+  __decorateParam(1, IFileService),
+  __decorateParam(2, ILifecycleService)
+], LogsDataCleaner);
+export {
+  LogsDataCleaner
+};
+//# sourceMappingURL=logsDataCleaner.js.map

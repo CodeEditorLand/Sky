@@ -1,1 +1,143 @@
-var g=Object.defineProperty,f=Object.getOwnPropertyDescriptor,c=(e,t,n,o)=>{for(var s,i=o>1?void 0:o?f(t,n):t,a=e.length-1;a>=0;a--)(s=e[a])&&(i=(o?s(t,n,i):s(i))||i);return o&&i&&g(t,n,i),i},h=(e,t)=>(n,o)=>t(n,o,e);import*as t from"../../../../base/browser/dom.js";import"../../../../base/browser/ui/hover/hover.js";import{renderIcon as d}from"../../../../base/browser/ui/iconLabel/iconLabels.js";import{CancellationTokenSource as u}from"../../../../base/common/cancellation.js";import{Codicon as x}from"../../../../base/common/codicons.js";import{Emitter as C}from"../../../../base/common/event.js";import{Disposable as I}from"../../../../base/common/lifecycle.js";import{FileAccess as N}from"../../../../base/common/network.js";import{ThemeIcon as b}from"../../../../base/common/themables.js";import{URI as S}from"../../../../base/common/uri.js";import{localize as l}from"../../../../nls.js";import"../../../../platform/commands/common/commands.js";import{getFullyQualifiedId as E,IChatAgentNameService as y,IChatAgentService as w}from"../common/chatAgents.js";import{showExtensionsWithIdsCommandId as p}from"../../extensions/browser/extensionsActions.js";import{IExtensionsWorkbenchService as A}from"../../extensions/common/extensions.js";import{verifiedPublisherIcon as D}from"../../../services/extensionManagement/common/extensionsIcons.js";let m=class extends I{constructor(e,n,o){super(),this.chatAgentService=e,this.extensionService=n,this.chatAgentNameService=o;const s=t.h(".chat-agent-hover@root",[t.h(".chat-agent-hover-header",[t.h(".chat-agent-hover-icon@icon"),t.h(".chat-agent-hover-details",[t.h(".chat-agent-hover-name@name"),t.h(".chat-agent-hover-extension",[t.h(".chat-agent-hover-extension-name@extensionName"),t.h(".chat-agent-hover-separator@separator"),t.h(".chat-agent-hover-publisher@publisher")])])]),t.h(".chat-agent-hover-warning@warning"),t.h("span.chat-agent-hover-description@description")]);this.domNode=s.root,this.icon=s.icon,this.name=s.name,this.extensionName=s.extensionName,this.description=s.description,s.separator.textContent="|";const i=t.$("span.extension-verified-publisher",void 0,d(D));this.publisherName=t.$("span.chat-agent-hover-publisher-name"),t.append(s.publisher,i,this.publisherName),s.warning.appendChild(d(x.warning)),s.warning.appendChild(t.$("span",void 0,l("reservedName","This chat extension is using a reserved name.")))}domNode;icon;name;extensionName;publisherName;description;_onDidChangeContents=this._register(new C);onDidChangeContents=this._onDidChangeContents.event;setAgent(e){const n=this.chatAgentService.getAgent(e);if(n.metadata.icon instanceof S){const e=t.$("img.icon");e.src=N.uriToBrowserUri(n.metadata.icon).toString(!0),this.icon.replaceChildren(t.$(".avatar",void 0,e))}else if(n.metadata.themeIcon){const e=t.$(b.asCSSSelector(n.metadata.themeIcon));this.icon.replaceChildren(t.$(".avatar.codicon-avatar",void 0,e))}this.domNode.classList.toggle("noExtensionName",!!n.isDynamic);const o=this.chatAgentNameService.getAgentNameRestriction(n);this.name.textContent=o?`@${n.name}`:E(n),this.extensionName.textContent=n.extensionDisplayName,this.publisherName.textContent=n.publisherDisplayName??n.extensionPublisherId;let s=n.description??"";if(s&&(s.match(/[\.\?\!] *$/)||(s+=".")),this.description.textContent=s,this.domNode.classList.toggle("allowedName",o),this.domNode.classList.toggle("verifiedPublisher",!1),!n.isDynamic){const e=this._register(new u);this.extensionService.getExtensions([{id:n.extensionId.value}],e.token).then((t=>{e.dispose(),t[0]?.publisherDomain?.verified&&(this.domNode.classList.toggle("verifiedPublisher",!0),this._onDidChangeContents.fire())}))}}};function K(e,t){return{actions:[{commandId:p,label:l("viewExtensionLabel","View Extension"),run:()=>{const n=e();n&&t.executeCommand(p,[n.extensionId.value])}}]}}m=c([h(0,w),h(1,A),h(2,y)],m);export{m as ChatAgentHover,K as getChatAgentHoverOptions};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import * as dom from "../../../../base/browser/dom.js";
+import { IManagedHoverOptions } from "../../../../base/browser/ui/hover/hover.js";
+import { renderIcon } from "../../../../base/browser/ui/iconLabel/iconLabels.js";
+import { CancellationTokenSource } from "../../../../base/common/cancellation.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { FileAccess } from "../../../../base/common/network.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { URI } from "../../../../base/common/uri.js";
+import { localize } from "../../../../nls.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { getFullyQualifiedId, IChatAgentData, IChatAgentNameService, IChatAgentService } from "../common/chatAgents.js";
+import { showExtensionsWithIdsCommandId } from "../../extensions/browser/extensionsActions.js";
+import { IExtensionsWorkbenchService } from "../../extensions/common/extensions.js";
+import { verifiedPublisherIcon } from "../../../services/extensionManagement/common/extensionsIcons.js";
+let ChatAgentHover = class extends Disposable {
+  constructor(chatAgentService, extensionService, chatAgentNameService) {
+    super();
+    this.chatAgentService = chatAgentService;
+    this.extensionService = extensionService;
+    this.chatAgentNameService = chatAgentNameService;
+    const hoverElement = dom.h(
+      ".chat-agent-hover@root",
+      [
+        dom.h(".chat-agent-hover-header", [
+          dom.h(".chat-agent-hover-icon@icon"),
+          dom.h(".chat-agent-hover-details", [
+            dom.h(".chat-agent-hover-name@name"),
+            dom.h(".chat-agent-hover-extension", [
+              dom.h(".chat-agent-hover-extension-name@extensionName"),
+              dom.h(".chat-agent-hover-separator@separator"),
+              dom.h(".chat-agent-hover-publisher@publisher")
+            ])
+          ])
+        ]),
+        dom.h(".chat-agent-hover-warning@warning"),
+        dom.h("span.chat-agent-hover-description@description")
+      ]
+    );
+    this.domNode = hoverElement.root;
+    this.icon = hoverElement.icon;
+    this.name = hoverElement.name;
+    this.extensionName = hoverElement.extensionName;
+    this.description = hoverElement.description;
+    hoverElement.separator.textContent = "|";
+    const verifiedBadge = dom.$("span.extension-verified-publisher", void 0, renderIcon(verifiedPublisherIcon));
+    this.publisherName = dom.$("span.chat-agent-hover-publisher-name");
+    dom.append(
+      hoverElement.publisher,
+      verifiedBadge,
+      this.publisherName
+    );
+    hoverElement.warning.appendChild(renderIcon(Codicon.warning));
+    hoverElement.warning.appendChild(dom.$("span", void 0, localize("reservedName", "This chat extension is using a reserved name.")));
+  }
+  static {
+    __name(this, "ChatAgentHover");
+  }
+  domNode;
+  icon;
+  name;
+  extensionName;
+  publisherName;
+  description;
+  _onDidChangeContents = this._register(new Emitter());
+  onDidChangeContents = this._onDidChangeContents.event;
+  setAgent(id) {
+    const agent = this.chatAgentService.getAgent(id);
+    if (agent.metadata.icon instanceof URI) {
+      const avatarIcon = dom.$("img.icon");
+      avatarIcon.src = FileAccess.uriToBrowserUri(agent.metadata.icon).toString(true);
+      this.icon.replaceChildren(dom.$(".avatar", void 0, avatarIcon));
+    } else if (agent.metadata.themeIcon) {
+      const avatarIcon = dom.$(ThemeIcon.asCSSSelector(agent.metadata.themeIcon));
+      this.icon.replaceChildren(dom.$(".avatar.codicon-avatar", void 0, avatarIcon));
+    }
+    this.domNode.classList.toggle("noExtensionName", !!agent.isDynamic);
+    const isAllowed = this.chatAgentNameService.getAgentNameRestriction(agent);
+    this.name.textContent = isAllowed ? `@${agent.name}` : getFullyQualifiedId(agent);
+    this.extensionName.textContent = agent.extensionDisplayName;
+    this.publisherName.textContent = agent.publisherDisplayName ?? agent.extensionPublisherId;
+    let description = agent.description ?? "";
+    if (description) {
+      if (!description.match(/[\.\?\!] *$/)) {
+        description += ".";
+      }
+    }
+    this.description.textContent = description;
+    this.domNode.classList.toggle("allowedName", isAllowed);
+    this.domNode.classList.toggle("verifiedPublisher", false);
+    if (!agent.isDynamic) {
+      const cancel = this._register(new CancellationTokenSource());
+      this.extensionService.getExtensions([{ id: agent.extensionId.value }], cancel.token).then((extensions) => {
+        cancel.dispose();
+        const extension = extensions[0];
+        if (extension?.publisherDomain?.verified) {
+          this.domNode.classList.toggle("verifiedPublisher", true);
+          this._onDidChangeContents.fire();
+        }
+      });
+    }
+  }
+};
+ChatAgentHover = __decorateClass([
+  __decorateParam(0, IChatAgentService),
+  __decorateParam(1, IExtensionsWorkbenchService),
+  __decorateParam(2, IChatAgentNameService)
+], ChatAgentHover);
+function getChatAgentHoverOptions(getAgent, commandService) {
+  return {
+    actions: [
+      {
+        commandId: showExtensionsWithIdsCommandId,
+        label: localize("viewExtensionLabel", "View Extension"),
+        run: /* @__PURE__ */ __name(() => {
+          const agent = getAgent();
+          if (agent) {
+            commandService.executeCommand(showExtensionsWithIdsCommandId, [agent.extensionId.value]);
+          }
+        }, "run")
+      }
+    ]
+  };
+}
+__name(getChatAgentHoverOptions, "getChatAgentHoverOptions");
+export {
+  ChatAgentHover,
+  getChatAgentHoverOptions
+};
+//# sourceMappingURL=chatAgentHover.js.map

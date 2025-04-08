@@ -1,1 +1,1270 @@
-var Se=Object.defineProperty,pe=Object.getOwnPropertyDescriptor,L=(e,t,n,i)=>{for(var r,o=i>1?void 0:i?pe(t,n):t,s=e.length-1;s>=0;s--)(r=e[s])&&(o=(i?r(t,n,o):r(o))||o);return i&&o&&Se(t,n,o),o},v=(e,t)=>(n,i)=>t(n,i,e);import{KeyChord as M,KeyCode as l,KeyMod as h}from"../../../../base/common/keyCodes.js";import{Disposable as ee,DisposableStore as Ee,MutableDisposable as me}from"../../../../base/common/lifecycle.js";import{Schemas as fe}from"../../../../base/common/network.js";import{isBoolean as he,isObject as ye,isString as te}from"../../../../base/common/types.js";import{URI as Ie}from"../../../../base/common/uri.js";import"./media/preferences.css";import{EditorContributionInstantiation as _e,registerEditorContribution as Ce}from"../../../../editor/browser/editorExtensions.js";import{Context as F}from"../../../../editor/contrib/suggest/browser/suggest.js";import*as o from"../../../../nls.js";import{Action2 as s,MenuId as g,MenuRegistry as x,registerAction2 as c}from"../../../../platform/actions/common/actions.js";import{CommandsRegistry as W,ICommandService as Y}from"../../../../platform/commands/common/commands.js";import{ContextKeyExpr as a}from"../../../../platform/contextkey/common/contextkey.js";import{InputFocusedContext as be,IsMacNativeContext as Oe}from"../../../../platform/contextkey/common/contextkeys.js";import{SyncDescriptor as ne}from"../../../../platform/instantiation/common/descriptors.js";import{IInstantiationService as ve}from"../../../../platform/instantiation/common/instantiation.js";import{KeybindingsRegistry as C,KeybindingWeight as u}from"../../../../platform/keybinding/common/keybindingsRegistry.js";import{ILabelService as Te}from"../../../../platform/label/common/label.js";import{Registry as G}from"../../../../platform/registry/common/platform.js";import{IWorkspaceContextService as Ne,WorkbenchState as ie}from"../../../../platform/workspace/common/workspace.js";import{PICK_WORKSPACE_FOLDER_COMMAND_ID as J}from"../../../browser/actions/workspaceCommands.js";import{EditorPaneDescriptor as re}from"../../../browser/editor.js";import{WorkbenchPhase as q,registerWorkbenchContribution2 as H}from"../../../common/contributions.js";import{EditorExtensions as z}from"../../../common/editor.js";import"../../../common/editor/editorInput.js";import{ResourceContextKey as A,RemoteNameContext as oe,WorkbenchStateContext as w}from"../../../common/contextkeys.js";import{ExplorerFolderContext as De,ExplorerRootContext as Ae}from"../../files/common/files.js";import{KeybindingsEditor as m}from"./keybindingsEditor.js";import{ConfigureLanguageBasedSettingsAction as P}from"./preferencesActions.js";import{SettingsEditorContribution as se}from"./preferencesEditor.js";import{preferencesOpenSettingsIcon as R}from"./preferencesIcons.js";import{SettingsEditor2 as O,SettingsFocusContext as j}from"./settingsEditor2.js";import{CONTEXT_KEYBINDINGS_EDITOR as y,CONTEXT_KEYBINDINGS_SEARCH_FOCUS as X,CONTEXT_KEYBINDING_FOCUS as T,CONTEXT_SETTINGS_EDITOR as N,CONTEXT_SETTINGS_JSON_EDITOR as ce,CONTEXT_SETTINGS_ROW_FOCUS as ae,CONTEXT_SETTINGS_SEARCH_FOCUS as U,CONTEXT_TOC_ROW_FOCUS as we,CONTEXT_WHEN_FOCUS as B,KEYBINDINGS_EDITOR_COMMAND_ACCEPT_WHEN as Re,KEYBINDINGS_EDITOR_COMMAND_ADD as ke,KEYBINDINGS_EDITOR_COMMAND_CLEAR_SEARCH_HISTORY as Ke,KEYBINDINGS_EDITOR_COMMAND_CLEAR_SEARCH_RESULTS as Pe,KEYBINDINGS_EDITOR_COMMAND_COPY as Me,KEYBINDINGS_EDITOR_COMMAND_COPY_COMMAND as Fe,KEYBINDINGS_EDITOR_COMMAND_COPY_COMMAND_TITLE as xe,KEYBINDINGS_EDITOR_COMMAND_DEFINE as We,KEYBINDINGS_EDITOR_COMMAND_DEFINE_WHEN as Ge,KEYBINDINGS_EDITOR_COMMAND_FOCUS_KEYBINDINGS as ze,KEYBINDINGS_EDITOR_COMMAND_RECORD_SEARCH_KEYS as Ue,KEYBINDINGS_EDITOR_COMMAND_REJECT_WHEN as Be,KEYBINDINGS_EDITOR_COMMAND_REMOVE as Le,KEYBINDINGS_EDITOR_COMMAND_RESET as Ye,KEYBINDINGS_EDITOR_COMMAND_SEARCH as Je,KEYBINDINGS_EDITOR_COMMAND_SHOW_SIMILAR as qe,KEYBINDINGS_EDITOR_COMMAND_SORTBY_PRECEDENCE as He,KEYBINDINGS_EDITOR_SHOW_DEFAULT_KEYBINDINGS as je,KEYBINDINGS_EDITOR_SHOW_EXTENSION_KEYBINDINGS as Xe,KEYBINDINGS_EDITOR_SHOW_USER_KEYBINDINGS as Ve,REQUIRE_TRUSTED_WORKSPACE_SETTING_TAG as $e,SETTINGS_EDITOR_COMMAND_CLEAR_SEARCH_RESULTS as Qe,SETTINGS_EDITOR_COMMAND_SHOW_CONTEXT_MENU as Ze}from"../common/preferences.js";import{PreferencesContribution as de}from"../common/preferencesContribution.js";import{IEditorService as f}from"../../../services/editor/common/editorService.js";import{IWorkbenchEnvironmentService as et}from"../../../services/environment/common/environmentService.js";import{IExtensionService as tt}from"../../../services/extensions/common/extensions.js";import{KeybindingsEditorInput as V}from"../../../services/preferences/browser/keybindingsEditorInput.js";import{DEFINE_KEYBINDING_EDITOR_CONTRIB_ID as nt,IPreferencesService as p}from"../../../services/preferences/common/preferences.js";import{SettingsEditor2Input as $}from"../../../services/preferences/common/preferencesEditorInput.js";import{IUserDataProfileService as le,CURRENT_PROFILE_CONTEXT as it}from"../../../services/userDataProfile/common/userDataProfile.js";import{IUserDataProfilesService as ge}from"../../../../platform/userDataProfile/common/userDataProfile.js";import{isCodeEditor as rt}from"../../../../editor/browser/editorBrowser.js";import{Categories as ot}from"../../../../platform/action/common/actionCommonCategories.js";import{resolveCommandsContext as st}from"../../../browser/parts/editor/editorCommandsContext.js";import{IEditorGroupsService as ct}from"../../../services/editor/common/editorGroupsService.js";import{IListService as at}from"../../../../platform/list/browser/listService.js";const dt="settings.action.search",lt="settings.action.focusSettingsFile",gt="settings.action.focusSettingsFromSearch",ut="settings.action.focusSettingsList",St="settings.action.focusTOC",pt="settings.action.focusSettingControl",Et="settings.action.focusLevelUp",mt="settings.switchToJSON",ft="settings.filterByOnline",ht="settings.filterUntrusted",yt="workbench.action.openSettings",It="settings.filterByTelemetry";G.as(z.EditorPane).registerEditorPane(re.create(O,O.ID,o.localize("settingsEditor2","Settings Editor 2")),[new ne($)]),G.as(z.EditorPane).registerEditorPane(re.create(m,m.ID,o.localize("keybindingsEditor","Keybindings Editor")),[new ne(V)]);class _t{canSerialize(e){return!0}serialize(e){return""}deserialize(e){return e.createInstance(V)}}class Ct{canSerialize(e){return!0}serialize(e){return""}deserialize(e){return e.createInstance($)}}G.as(z.EditorFactory).registerEditorSerializer(V.ID,_t),G.as(z.EditorFactory).registerEditorSerializer($.ID,Ct);const Q=o.localize2("openSettings2","Open Settings (UI)"),bt=o.localize2("openUserSettingsJson","Open User Settings (JSON)"),Ot=o.localize2("openApplicationSettingsJson","Open Application Settings (JSON)"),I=ot.Preferences;function Z(e){return he(e)?e:void 0}function vt(e){return te(e)?e:void 0}function b(e){ye(e)||(e={});let t={focusSearch:Z(e?.focusSearch),openToSide:Z(e?.openToSide),query:vt(e?.query)};return te(e?.revealSetting?.key)&&(t={...t,revealSetting:{key:e.revealSetting.key,edit:Z(e.revealSetting?.edit)}}),t}let k=class extends ee{constructor(e,t,n,i,r,o,s){super(),this.environmentService=e,this.userDataProfileService=t,this.preferencesService=n,this.workspaceContextService=i,this.labelService=r,this.extensionService=o,this.userDataProfilesService=s,this.registerSettingsActions(),this.registerKeybindingsActions(),this.updatePreferencesEditorMenuItem(),this._register(i.onDidChangeWorkbenchState((()=>this.updatePreferencesEditorMenuItem()))),this._register(i.onDidChangeWorkspaceFolders((()=>this.updatePreferencesEditorMenuItemForWorkspaceFolders())))}static ID="workbench.contrib.preferencesActions";registerSettingsActions(){this._register(c(class extends s{constructor(){super({id:yt,title:{...o.localize2("settings","Settings"),mnemonicTitle:o.localize({key:"miOpenSettings",comment:["&& denotes a mnemonic"]},"&&Settings")},keybinding:{weight:u.WorkbenchContrib,when:null,primary:h.CtrlCmd|l.Comma},menu:[{id:g.GlobalActivity,group:"2_configuration",order:2},{id:g.MenubarPreferencesMenu,group:"2_configuration",order:2}]})}run(e,t){const n="string"==typeof t?{query:t}:b(t);return e.get(p).openSettings(n)}})),this._register(c(class extends s{constructor(){super({id:"workbench.action.openSettings2",title:o.localize2("openSettings2","Open Settings (UI)"),category:I,f1:!0})}run(e,t){return t=b(t),e.get(p).openSettings({jsonEditor:!1,...t})}})),this._register(c(class extends s{constructor(){super({id:"workbench.action.openSettingsJson",title:bt,metadata:{description:o.localize2("workbench.action.openSettingsJson.description","Opens the JSON file containing the current user profile settings")},category:I,f1:!0})}run(e,t){return t=b(t),e.get(p).openSettings({jsonEditor:!0,...t})}}));const e=this;this._register(c(class extends s{constructor(){super({id:"workbench.action.openApplicationSettingsJson",title:Ot,category:I,menu:{id:g.CommandPalette,when:a.notEquals(it.key,e.userDataProfilesService.defaultProfile.id)}})}run(e,t){return t=b(t),e.get(p).openApplicationSettings({jsonEditor:!0,...t})}})),this._register(c(class extends s{constructor(){super({id:"workbench.action.openGlobalSettings",title:o.localize2("openGlobalSettings","Open User Settings"),category:I,f1:!0})}run(e,t){return t=b(t),e.get(p).openUserSettings(t)}})),this._register(c(class extends s{constructor(){super({id:"workbench.action.openRawDefaultSettings",title:o.localize2("openRawDefaultSettings","Open Default Settings (JSON)"),category:I,f1:!0})}run(e){return e.get(p).openRawDefaultSettings()}})),this._register(c(class extends s{constructor(){super({id:P.ID,title:P.LABEL,category:I,f1:!0})}run(e){return e.get(ve).createInstance(P,P.ID,P.LABEL.value).run()}})),this._register(c(class extends s{constructor(){super({id:"workbench.action.openWorkspaceSettings",title:o.localize2("openWorkspaceSettings","Open Workspace Settings"),category:I,menu:{id:g.CommandPalette,when:w.notEqualsTo("empty")}})}run(e,t){return t="string"==typeof t?{query:t}:b(t),e.get(p).openWorkspaceSettings(t)}})),this._register(c(class extends s{constructor(){super({id:"workbench.action.openAccessibilitySettings",title:o.localize2("openAccessibilitySettings","Open Accessibility Settings"),category:I,menu:{id:g.CommandPalette,when:w.notEqualsTo("empty")}})}async run(e){await e.get(p).openSettings({jsonEditor:!1,query:"@tag:accessibility"})}})),this._register(c(class extends s{constructor(){super({id:"workbench.action.openWorkspaceSettingsFile",title:o.localize2("openWorkspaceSettingsFile","Open Workspace Settings (JSON)"),category:I,menu:{id:g.CommandPalette,when:w.notEqualsTo("empty")}})}run(e,t){return t=b(t),e.get(p).openWorkspaceSettings({jsonEditor:!0,...t})}})),this._register(c(class extends s{constructor(){super({id:"workbench.action.openFolderSettings",title:o.localize2("openFolderSettings","Open Folder Settings"),category:I,menu:{id:g.CommandPalette,when:w.isEqualTo("workspace")}})}async run(e,t){const n=e.get(Y),i=e.get(p),r=await n.executeCommand(J);r&&(t=b(t),await i.openFolderSettings({folderUri:r.uri,...t}))}})),this._register(c(class extends s{constructor(){super({id:"workbench.action.openFolderSettingsFile",title:o.localize2("openFolderSettingsFile","Open Folder Settings (JSON)"),category:I,menu:{id:g.CommandPalette,when:w.isEqualTo("workspace")}})}async run(e,t){const n=e.get(Y),i=e.get(p),r=await n.executeCommand(J);r&&(t=b(t),await i.openFolderSettings({folderUri:r.uri,jsonEditor:!0,...t}))}})),this._register(c(class extends s{constructor(){super({id:"_workbench.action.openFolderSettings",title:o.localize("openFolderSettings","Open Folder Settings"),category:I,menu:{id:g.ExplorerContext,group:"2_workspace",order:20,when:a.and(Ae,De)}})}async run(e,t){if(Ie.isUri(t))await e.get(p).openFolderSettings({folderUri:t});else{const t=e.get(Y),n=e.get(p),i=await t.executeCommand(J);i&&await n.openFolderSettings({folderUri:i.uri})}}})),this._register(c(class extends s{constructor(){super({id:ft,title:o.localize({key:"miOpenOnlineSettings",comment:["&& denotes a mnemonic"]},"&&Online Services Settings"),menu:{id:g.MenubarPreferencesMenu,group:"3_settings",order:1}})}run(e){const t=e.get(f).activeEditorPane;t instanceof O?t.focusSearch("@tag:usesOnlineServices"):e.get(p).openSettings({jsonEditor:!1,query:"@tag:usesOnlineServices"})}})),this._register(c(class extends s{constructor(){super({id:ht,title:o.localize2("filterUntrusted","Show untrusted workspace settings")})}run(e){e.get(p).openWorkspaceSettings({jsonEditor:!1,query:`@tag:${$e}`})}})),this._register(c(class extends s{constructor(){super({id:It,title:o.localize({key:"miOpenTelemetrySettings",comment:["&& denotes a mnemonic"]},"&&Telemetry Settings")})}run(e){const t=e.get(f).activeEditorPane;t instanceof O?t.focusSearch("@tag:telemetry"):e.get(p).openSettings({jsonEditor:!1,query:"@tag:telemetry"})}})),this.registerSettingsEditorActions(),this.extensionService.whenInstalledExtensionsRegistered().then((()=>{const e=this.environmentService.remoteAuthority,t=this.labelService.getHostLabel(fe.vscodeRemote,e)||e;this._register(c(class extends s{constructor(){super({id:"workbench.action.openRemoteSettings",title:o.localize2("openRemoteSettings","Open Remote Settings ({0})",t),category:I,menu:{id:g.CommandPalette,when:oe.notEqualsTo("")}})}run(e,t){return t=b(t),e.get(p).openRemoteSettings(t)}})),this._register(c(class extends s{constructor(){super({id:"workbench.action.openRemoteSettingsFile",title:o.localize2("openRemoteSettingsJSON","Open Remote Settings (JSON) ({0})",t),category:I,menu:{id:g.CommandPalette,when:oe.notEqualsTo("")}})}run(e,t){return t=b(t),e.get(p).openRemoteSettings({jsonEditor:!0,...t})}}))}))}registerSettingsEditorActions(){function e(e){const t=e.get(f).activeEditorPane;return t instanceof O?t:null}this._register(c(class extends s{constructor(){super({id:dt,precondition:N,keybinding:{primary:h.CtrlCmd|l.KeyF,weight:u.EditorContrib,when:null},category:I,f1:!0,title:o.localize2("settings.focusSearch","Focus Settings Search")})}run(t){!function(t){e(t)?.focusSearch()}(t)}})),this._register(c(class extends s{constructor(){super({id:Qe,precondition:N,keybinding:{primary:l.Escape,weight:u.EditorContrib,when:U},category:I,f1:!0,title:o.localize2("settings.clearResults","Clear Settings Search Results")})}run(t){e(t)?.clearSearchResults()}})),this._register(c(class extends s{constructor(){super({id:lt,precondition:a.and(U,F.Visible.toNegated()),keybinding:{primary:l.DownArrow,weight:u.EditorContrib,when:null},title:o.localize("settings.focusFile","Focus settings file")})}run(t,n){e(t)?.focusSettings()}})),this._register(c(class extends s{constructor(){super({id:gt,precondition:a.and(U,F.Visible.toNegated()),keybinding:{primary:l.DownArrow,weight:u.WorkbenchContrib,when:null},title:o.localize("settings.focusFile","Focus settings file")})}run(t,n){e(t)?.focusSettings()}})),this._register(c(class extends s{constructor(){super({id:ut,precondition:a.and(N,we),keybinding:{primary:l.Enter,weight:u.WorkbenchContrib,when:null},title:o.localize("settings.focusSettingsList","Focus settings list")})}run(t){const n=e(t);n instanceof O&&n.focusSettings()}})),this._register(c(class extends s{constructor(){super({id:St,precondition:N,f1:!0,keybinding:[{primary:l.LeftArrow,weight:u.WorkbenchContrib,when:ae}],category:I,title:o.localize2("settings.focusSettingsTOC","Focus Settings Table of Contents")})}run(t){const n=e(t);n instanceof O&&n.focusTOC()}})),this._register(c(class extends s{constructor(){super({id:pt,precondition:a.and(N,ae),keybinding:{primary:l.Enter,weight:u.WorkbenchContrib},title:o.localize("settings.focusSettingControl","Focus Setting Control")})}run(t){const n=e(t);n instanceof O&&n.getContainer()?.ownerDocument.activeElement?.classList.contains("monaco-list")&&n.focusSettings(!0)}})),this._register(c(class extends s{constructor(){super({id:Ze,precondition:N,keybinding:{primary:h.Shift|l.F9,weight:u.WorkbenchContrib,when:null},f1:!0,category:I,title:o.localize2("settings.showContextMenu","Show Setting Context Menu")})}run(t){const n=e(t);n instanceof O&&n.showContextMenu()}})),this._register(c(class extends s{constructor(){super({id:Et,precondition:a.and(N,U.toNegated(),ce.toNegated()),keybinding:{primary:l.Escape,weight:u.WorkbenchContrib,when:null},f1:!0,category:I,title:o.localize2("settings.focusLevelUp","Move Focus Up One Level")})}run(t){const n=e(t);n instanceof O&&(n.currentFocusContext===j.SettingControl?n.focusSettings():n.currentFocusContext===j.SettingTree?n.focusTOC():n.currentFocusContext===j.TableOfContents&&n.focusSearch())}}))}registerKeybindingsActions(){const e=this,t=o.localize2("preferences","Preferences"),n="workbench.action.openGlobalKeybindings";this._register(c(class extends s{constructor(){super({id:n,title:o.localize2("openGlobalKeybindings","Open Keyboard Shortcuts"),shortTitle:o.localize("keyboardShortcuts","Keyboard Shortcuts"),category:t,icon:R,keybinding:{when:null,weight:u.WorkbenchContrib,primary:M(h.CtrlCmd|l.KeyK,h.CtrlCmd|l.KeyS)},menu:[{id:g.CommandPalette},{id:g.EditorTitle,when:A.Resource.isEqualTo(e.userDataProfileService.currentProfile.keybindingsResource.toString()),group:"navigation",order:1},{id:g.GlobalActivity,group:"2_configuration",order:4}]})}run(e,...t){const n="string"==typeof t[0]?t[0]:void 0,i=D(e,t)?.id;return e.get(p).openGlobalKeybindingSettings(!1,{query:n,groupId:i})}})),this._register(x.appendMenuItem(g.MenubarPreferencesMenu,{command:{id:n,title:o.localize("keyboardShortcuts","Keyboard Shortcuts")},group:"2_configuration",order:4})),this._register(c(class extends s{constructor(){super({id:"workbench.action.openDefaultKeybindingsFile",title:o.localize2("openDefaultKeybindingsFile","Open Default Keyboard Shortcuts (JSON)"),category:t,menu:{id:g.CommandPalette}})}run(e){return e.get(p).openDefaultKeybindingsFile()}})),this._register(c(class extends s{constructor(){super({id:"workbench.action.openGlobalKeybindingsFile",title:o.localize2("openGlobalKeybindingsFile","Open Keyboard Shortcuts (JSON)"),category:t,icon:R,menu:[{id:g.CommandPalette},{id:g.EditorTitle,when:a.and(y),group:"navigation"}]})}run(e,...t){const n=D(e,t)?.id;return e.get(p).openGlobalKeybindingSettings(!0,{groupId:n})}})),this._register(c(class extends s{constructor(){super({id:je,title:o.localize2("showDefaultKeybindings","Show System Keybindings"),menu:[{id:g.EditorTitle,when:a.and(y),group:"1_keyboard_preferences_actions"}]})}run(e,...t){const n=D(e,t)?.activeEditorPane;n instanceof m&&n.search("@source:system")}})),this._register(c(class extends s{constructor(){super({id:Xe,title:o.localize2("showExtensionKeybindings","Show Extension Keybindings"),menu:[{id:g.EditorTitle,when:a.and(y),group:"1_keyboard_preferences_actions"}]})}run(e,...t){const n=D(e,t)?.activeEditorPane;n instanceof m&&n.search("@source:extension")}})),this._register(c(class extends s{constructor(){super({id:Ve,title:o.localize2("showUserKeybindings","Show User Keybindings"),menu:[{id:g.EditorTitle,when:a.and(y),group:"1_keyboard_preferences_actions"}]})}run(e,...t){const n=D(e,t)?.activeEditorPane;n instanceof m&&n.search("@source:user")}})),this._register(c(class extends s{constructor(){super({id:Pe,title:o.localize("clear","Clear Search Results"),keybinding:{weight:u.WorkbenchContrib,when:a.and(y,X),primary:l.Escape}})}run(e){const t=e.get(f).activeEditorPane;t instanceof m&&t.clearSearchResults()}})),this._register(c(class extends s{constructor(){super({id:Ke,title:o.localize("clearHistory","Clear Keyboard Shortcuts Search History"),category:t,menu:[{id:g.CommandPalette,when:a.and(y)}]})}run(e){const t=e.get(f).activeEditorPane;t instanceof m&&t.clearKeyboardShortcutSearchHistory()}})),this.registerKeybindingEditorActions()}registerKeybindingEditorActions(){const e=this;C.registerCommandAndKeybindingRule({id:We,weight:u.WorkbenchContrib,when:a.and(y,T,B.toNegated()),primary:l.Enter,handler:(e,t)=>{const n=e.get(f).activeEditorPane;n instanceof m&&n.defineKeybinding(n.activeKeybindingEntry,!1)}}),C.registerCommandAndKeybindingRule({id:ke,weight:u.WorkbenchContrib,when:a.and(y,T),primary:M(h.CtrlCmd|l.KeyK,h.CtrlCmd|l.KeyA),handler:(e,t)=>{const n=e.get(f).activeEditorPane;n instanceof m&&n.defineKeybinding(n.activeKeybindingEntry,!0)}}),C.registerCommandAndKeybindingRule({id:Ge,weight:u.WorkbenchContrib,when:a.and(y,T),primary:M(h.CtrlCmd|l.KeyK,h.CtrlCmd|l.KeyE),handler:(e,t)=>{const n=e.get(f).activeEditorPane;n instanceof m&&n.activeKeybindingEntry.keybindingItem.keybinding&&n.defineWhenExpression(n.activeKeybindingEntry)}}),C.registerCommandAndKeybindingRule({id:Le,weight:u.WorkbenchContrib,when:a.and(y,T,be.toNegated()),primary:l.Delete,mac:{primary:h.CtrlCmd|l.Backspace},handler:(e,t)=>{const n=e.get(f).activeEditorPane;n instanceof m&&n.removeKeybinding(n.activeKeybindingEntry)}}),C.registerCommandAndKeybindingRule({id:Ye,weight:u.WorkbenchContrib,when:a.and(y,T),primary:0,handler:(e,t)=>{const n=e.get(f).activeEditorPane;n instanceof m&&n.resetKeybinding(n.activeKeybindingEntry)}}),C.registerCommandAndKeybindingRule({id:Je,weight:u.WorkbenchContrib,when:a.and(y),primary:h.CtrlCmd|l.KeyF,handler:(e,t)=>{const n=e.get(f).activeEditorPane;n instanceof m&&n.focusSearch()}}),C.registerCommandAndKeybindingRule({id:Ue,weight:u.WorkbenchContrib,when:a.and(y,X),primary:h.Alt|l.KeyK,mac:{primary:h.CtrlCmd|h.Alt|l.KeyK},handler:(e,t)=>{const n=e.get(f).activeEditorPane;n instanceof m&&n.recordSearchKeys()}}),C.registerCommandAndKeybindingRule({id:He,weight:u.WorkbenchContrib,when:a.and(y),primary:h.Alt|l.KeyP,mac:{primary:h.CtrlCmd|h.Alt|l.KeyP},handler:(e,t)=>{const n=e.get(f).activeEditorPane;n instanceof m&&n.toggleSortByPrecedence()}}),C.registerCommandAndKeybindingRule({id:qe,weight:u.WorkbenchContrib,when:a.and(y,T),primary:0,handler:(e,t)=>{const n=e.get(f).activeEditorPane;n instanceof m&&n.showSimilarKeybindings(n.activeKeybindingEntry)}}),C.registerCommandAndKeybindingRule({id:Me,weight:u.WorkbenchContrib,when:a.and(y,T,B.negate()),primary:h.CtrlCmd|l.KeyC,handler:async(e,t)=>{const n=e.get(f).activeEditorPane;n instanceof m&&await n.copyKeybinding(n.activeKeybindingEntry)}}),C.registerCommandAndKeybindingRule({id:Fe,weight:u.WorkbenchContrib,when:a.and(y,T),primary:0,handler:async(e,t)=>{const n=e.get(f).activeEditorPane;n instanceof m&&await n.copyKeybindingCommand(n.activeKeybindingEntry)}}),C.registerCommandAndKeybindingRule({id:xe,weight:u.WorkbenchContrib,when:a.and(y,T),primary:0,handler:async(e,t)=>{const n=e.get(f).activeEditorPane;n instanceof m&&await n.copyKeybindingCommandTitle(n.activeKeybindingEntry)}}),C.registerCommandAndKeybindingRule({id:ze,weight:u.WorkbenchContrib,when:a.and(y,X),primary:h.CtrlCmd|l.DownArrow,handler:(e,t)=>{const n=e.get(f).activeEditorPane;n instanceof m&&n.focusKeybindings()}}),C.registerCommandAndKeybindingRule({id:Be,weight:u.WorkbenchContrib,when:a.and(y,B,F.Visible.toNegated()),primary:l.Escape,handler:async(e,t)=>{const n=e.get(f).activeEditorPane;n instanceof m&&n.rejectWhenExpression(n.activeKeybindingEntry)}}),C.registerCommandAndKeybindingRule({id:Re,weight:u.WorkbenchContrib,when:a.and(y,B,F.Visible.toNegated()),primary:l.Enter,handler:async(e,t)=>{const n=e.get(f).activeEditorPane;n instanceof m&&n.acceptWhenExpression(n.activeKeybindingEntry)}});const t=this._register(new Ee),n=()=>{t.clear(),t.add(c(class extends s{constructor(){const t=A.Resource.isEqualTo(e.userDataProfileService.currentProfile.keybindingsResource.toString());super({id:"editor.action.defineKeybinding",title:o.localize2("defineKeybinding.start","Define Keybinding"),f1:!0,precondition:t,keybinding:{weight:u.WorkbenchContrib,when:t,primary:M(h.CtrlCmd|l.KeyK,h.CtrlCmd|l.KeyK)},menu:{id:g.EditorContent,when:t}})}async run(e){const t=e.get(f).activeTextEditorControl;rt(t)&&t.getContribution(nt)?.showDefineKeybindingWidget()}}))};n(),this._register(this.userDataProfileService.onDidChangeCurrentProfile((()=>n())))}updatePreferencesEditorMenuItem(){const e="_workbench.openWorkspaceSettingsEditor";this.workspaceContextService.getWorkbenchState()===ie.WORKSPACE&&!W.getCommand(e)&&(W.registerCommand(e,(()=>this.preferencesService.openWorkspaceSettings({jsonEditor:!1}))),x.appendMenuItem(g.EditorTitle,{command:{id:e,title:Q,icon:R},when:a.and(A.Resource.isEqualTo(this.preferencesService.workspaceSettingsResource.toString()),w.isEqualTo("workspace"),a.not("isInDiffEditor")),group:"navigation",order:1})),this.updatePreferencesEditorMenuItemForWorkspaceFolders()}updatePreferencesEditorMenuItemForWorkspaceFolders(){for(const e of this.workspaceContextService.getWorkspace().folders){const t=`_workbench.openFolderSettings.${e.uri.toString()}`;W.getCommand(t)||(W.registerCommand(t,((t,...n)=>{const i=D(t,n)?.id;return this.workspaceContextService.getWorkbenchState()===ie.FOLDER?this.preferencesService.openWorkspaceSettings({jsonEditor:!1,groupId:i}):this.preferencesService.openFolderSettings({folderUri:e.uri,jsonEditor:!1,groupId:i})})),x.appendMenuItem(g.EditorTitle,{command:{id:t,title:Q,icon:R},when:a.and(A.Resource.isEqualTo(this.preferencesService.getFolderSettingsResource(e.uri).toString()),a.not("isInDiffEditor")),group:"navigation",order:1}))}}};k=L([v(0,et),v(1,le),v(2,p),v(3,Ne),v(4,Te),v(5,tt),v(6,ge)],k);let K=class extends ee{constructor(e,t){super(),this.userDataProfileService=e,this.userDataProfilesService=t,this.registerSettingsEditorTitleActions()}static ID="workbench.contrib.settingsEditorTitleBarActions";registerSettingsEditorTitleActions(){const e=this._register(new me),t=()=>{const t=a.and(N.toNegated(),a.or(A.Resource.isEqualTo(this.userDataProfileService.currentProfile.settingsResource.toString()),A.Resource.isEqualTo(this.userDataProfilesService.defaultProfile.settingsResource.toString())),a.not("isInDiffEditor"));e.value=c(class extends s{constructor(){super({id:"_workbench.openUserSettingsEditor",title:Q,icon:R,menu:[{id:g.EditorTitle,when:t,group:"navigation",order:1}]})}run(e,...t){const n=b(t[0]),i=D(e,t)?.id;return e.get(p).openUserSettings({jsonEditor:!1,...n,groupId:i})}})};t(),this._register(this.userDataProfileService.onDidChangeCurrentProfile((()=>{t()})));const n=a.and(ce.toNegated(),N);this._register(c(class extends s{constructor(){super({id:mt,title:o.localize2("openSettingsJson","Open Settings (JSON)"),icon:R,menu:[{id:g.EditorTitle,when:n,group:"navigation",order:1}]})}run(e,...t){const n=D(e,t)?.activeEditorPane;return n instanceof O?n.switchToSettingsFile():null}}))}};function D(e,t){return st(t,e.get(f),e.get(ct),e.get(at)).groupedEditors[0]?.group}K=L([v(0,le),v(1,ge)],K),H(k.ID,k,q.BlockStartup),H(de.ID,de,q.BlockStartup),H(K.ID,K,q.AfterRestored),Ce(se.ID,se,_e.AfterFirstRender),x.appendMenuItem(g.MenubarFileMenu,{title:o.localize({key:"miPreferences",comment:["&& denotes a mnemonic"]},"&&Preferences"),submenu:g.MenubarPreferencesMenu,group:"5_autosave",order:2,when:Oe.toNegated()});
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { KeyChord, KeyCode, KeyMod } from "../../../../base/common/keyCodes.js";
+import { Disposable, DisposableStore, MutableDisposable } from "../../../../base/common/lifecycle.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { isBoolean, isObject, isString } from "../../../../base/common/types.js";
+import { URI } from "../../../../base/common/uri.js";
+import "./media/preferences.css";
+import { EditorContributionInstantiation, registerEditorContribution } from "../../../../editor/browser/editorExtensions.js";
+import { Context as SuggestContext } from "../../../../editor/contrib/suggest/browser/suggest.js";
+import * as nls from "../../../../nls.js";
+import { Action2, MenuId, MenuRegistry, registerAction2 } from "../../../../platform/actions/common/actions.js";
+import { CommandsRegistry, ICommandService } from "../../../../platform/commands/common/commands.js";
+import { ContextKeyExpr } from "../../../../platform/contextkey/common/contextkey.js";
+import { InputFocusedContext, IsMacNativeContext } from "../../../../platform/contextkey/common/contextkeys.js";
+import { SyncDescriptor } from "../../../../platform/instantiation/common/descriptors.js";
+import { IInstantiationService, ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+import { KeybindingsRegistry, KeybindingWeight } from "../../../../platform/keybinding/common/keybindingsRegistry.js";
+import { ILabelService } from "../../../../platform/label/common/label.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { IWorkspaceContextService, IWorkspaceFolder, WorkbenchState } from "../../../../platform/workspace/common/workspace.js";
+import { PICK_WORKSPACE_FOLDER_COMMAND_ID } from "../../../browser/actions/workspaceCommands.js";
+import { EditorPaneDescriptor, IEditorPaneRegistry } from "../../../browser/editor.js";
+import { IWorkbenchContribution, WorkbenchPhase, registerWorkbenchContribution2 } from "../../../common/contributions.js";
+import { EditorExtensions, IEditorFactoryRegistry, IEditorSerializer } from "../../../common/editor.js";
+import { EditorInput } from "../../../common/editor/editorInput.js";
+import { ResourceContextKey, RemoteNameContext, WorkbenchStateContext } from "../../../common/contextkeys.js";
+import { ExplorerFolderContext, ExplorerRootContext } from "../../files/common/files.js";
+import { KeybindingsEditor } from "./keybindingsEditor.js";
+import { ConfigureLanguageBasedSettingsAction } from "./preferencesActions.js";
+import { SettingsEditorContribution } from "./preferencesEditor.js";
+import { preferencesOpenSettingsIcon } from "./preferencesIcons.js";
+import { SettingsEditor2, SettingsFocusContext } from "./settingsEditor2.js";
+import { CONTEXT_KEYBINDINGS_EDITOR, CONTEXT_KEYBINDINGS_SEARCH_FOCUS, CONTEXT_KEYBINDING_FOCUS, CONTEXT_SETTINGS_EDITOR, CONTEXT_SETTINGS_JSON_EDITOR, CONTEXT_SETTINGS_ROW_FOCUS, CONTEXT_SETTINGS_SEARCH_FOCUS, CONTEXT_TOC_ROW_FOCUS, CONTEXT_WHEN_FOCUS, KEYBINDINGS_EDITOR_COMMAND_ACCEPT_WHEN, KEYBINDINGS_EDITOR_COMMAND_ADD, KEYBINDINGS_EDITOR_COMMAND_CLEAR_SEARCH_HISTORY, KEYBINDINGS_EDITOR_COMMAND_CLEAR_SEARCH_RESULTS, KEYBINDINGS_EDITOR_COMMAND_COPY, KEYBINDINGS_EDITOR_COMMAND_COPY_COMMAND, KEYBINDINGS_EDITOR_COMMAND_COPY_COMMAND_TITLE, KEYBINDINGS_EDITOR_COMMAND_DEFINE, KEYBINDINGS_EDITOR_COMMAND_DEFINE_WHEN, KEYBINDINGS_EDITOR_COMMAND_FOCUS_KEYBINDINGS, KEYBINDINGS_EDITOR_COMMAND_RECORD_SEARCH_KEYS, KEYBINDINGS_EDITOR_COMMAND_REJECT_WHEN, KEYBINDINGS_EDITOR_COMMAND_REMOVE, KEYBINDINGS_EDITOR_COMMAND_RESET, KEYBINDINGS_EDITOR_COMMAND_SEARCH, KEYBINDINGS_EDITOR_COMMAND_SHOW_SIMILAR, KEYBINDINGS_EDITOR_COMMAND_SORTBY_PRECEDENCE, KEYBINDINGS_EDITOR_SHOW_DEFAULT_KEYBINDINGS, KEYBINDINGS_EDITOR_SHOW_EXTENSION_KEYBINDINGS, KEYBINDINGS_EDITOR_SHOW_USER_KEYBINDINGS, REQUIRE_TRUSTED_WORKSPACE_SETTING_TAG, SETTINGS_EDITOR_COMMAND_CLEAR_SEARCH_RESULTS, SETTINGS_EDITOR_COMMAND_SHOW_CONTEXT_MENU } from "../common/preferences.js";
+import { PreferencesContribution } from "../common/preferencesContribution.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { IWorkbenchEnvironmentService } from "../../../services/environment/common/environmentService.js";
+import { IExtensionService } from "../../../services/extensions/common/extensions.js";
+import { KeybindingsEditorInput } from "../../../services/preferences/browser/keybindingsEditorInput.js";
+import { DEFINE_KEYBINDING_EDITOR_CONTRIB_ID, IDefineKeybindingEditorContribution, IPreferencesService } from "../../../services/preferences/common/preferences.js";
+import { SettingsEditor2Input } from "../../../services/preferences/common/preferencesEditorInput.js";
+import { IUserDataProfileService, CURRENT_PROFILE_CONTEXT } from "../../../services/userDataProfile/common/userDataProfile.js";
+import { IUserDataProfilesService } from "../../../../platform/userDataProfile/common/userDataProfile.js";
+import { isCodeEditor } from "../../../../editor/browser/editorBrowser.js";
+import { Categories } from "../../../../platform/action/common/actionCommonCategories.js";
+import { resolveCommandsContext } from "../../../browser/parts/editor/editorCommandsContext.js";
+import { IEditorGroup, IEditorGroupsService } from "../../../services/editor/common/editorGroupsService.js";
+import { IListService } from "../../../../platform/list/browser/listService.js";
+const SETTINGS_EDITOR_COMMAND_SEARCH = "settings.action.search";
+const SETTINGS_EDITOR_COMMAND_FOCUS_FILE = "settings.action.focusSettingsFile";
+const SETTINGS_EDITOR_COMMAND_FOCUS_SETTINGS_FROM_SEARCH = "settings.action.focusSettingsFromSearch";
+const SETTINGS_EDITOR_COMMAND_FOCUS_SETTINGS_LIST = "settings.action.focusSettingsList";
+const SETTINGS_EDITOR_COMMAND_FOCUS_TOC = "settings.action.focusTOC";
+const SETTINGS_EDITOR_COMMAND_FOCUS_CONTROL = "settings.action.focusSettingControl";
+const SETTINGS_EDITOR_COMMAND_FOCUS_UP = "settings.action.focusLevelUp";
+const SETTINGS_EDITOR_COMMAND_SWITCH_TO_JSON = "settings.switchToJSON";
+const SETTINGS_EDITOR_COMMAND_FILTER_ONLINE = "settings.filterByOnline";
+const SETTINGS_EDITOR_COMMAND_FILTER_UNTRUSTED = "settings.filterUntrusted";
+const SETTINGS_COMMAND_OPEN_SETTINGS = "workbench.action.openSettings";
+const SETTINGS_COMMAND_FILTER_TELEMETRY = "settings.filterByTelemetry";
+Registry.as(EditorExtensions.EditorPane).registerEditorPane(
+  EditorPaneDescriptor.create(
+    SettingsEditor2,
+    SettingsEditor2.ID,
+    nls.localize("settingsEditor2", "Settings Editor 2")
+  ),
+  [
+    new SyncDescriptor(SettingsEditor2Input)
+  ]
+);
+Registry.as(EditorExtensions.EditorPane).registerEditorPane(
+  EditorPaneDescriptor.create(
+    KeybindingsEditor,
+    KeybindingsEditor.ID,
+    nls.localize("keybindingsEditor", "Keybindings Editor")
+  ),
+  [
+    new SyncDescriptor(KeybindingsEditorInput)
+  ]
+);
+class KeybindingsEditorInputSerializer {
+  static {
+    __name(this, "KeybindingsEditorInputSerializer");
+  }
+  canSerialize(editorInput) {
+    return true;
+  }
+  serialize(editorInput) {
+    return "";
+  }
+  deserialize(instantiationService) {
+    return instantiationService.createInstance(KeybindingsEditorInput);
+  }
+}
+class SettingsEditor2InputSerializer {
+  static {
+    __name(this, "SettingsEditor2InputSerializer");
+  }
+  canSerialize(editorInput) {
+    return true;
+  }
+  serialize(input) {
+    return "";
+  }
+  deserialize(instantiationService) {
+    return instantiationService.createInstance(SettingsEditor2Input);
+  }
+}
+Registry.as(EditorExtensions.EditorFactory).registerEditorSerializer(KeybindingsEditorInput.ID, KeybindingsEditorInputSerializer);
+Registry.as(EditorExtensions.EditorFactory).registerEditorSerializer(SettingsEditor2Input.ID, SettingsEditor2InputSerializer);
+const OPEN_USER_SETTINGS_UI_TITLE = nls.localize2("openSettings2", "Open Settings (UI)");
+const OPEN_USER_SETTINGS_JSON_TITLE = nls.localize2("openUserSettingsJson", "Open User Settings (JSON)");
+const OPEN_APPLICATION_SETTINGS_JSON_TITLE = nls.localize2("openApplicationSettingsJson", "Open Application Settings (JSON)");
+const category = Categories.Preferences;
+function sanitizeBoolean(arg) {
+  return isBoolean(arg) ? arg : void 0;
+}
+__name(sanitizeBoolean, "sanitizeBoolean");
+function sanitizeString(arg) {
+  return isString(arg) ? arg : void 0;
+}
+__name(sanitizeString, "sanitizeString");
+function sanitizeOpenSettingsArgs(args) {
+  if (!isObject(args)) {
+    args = {};
+  }
+  let sanitizedObject = {
+    focusSearch: sanitizeBoolean(args?.focusSearch),
+    openToSide: sanitizeBoolean(args?.openToSide),
+    query: sanitizeString(args?.query)
+  };
+  if (isString(args?.revealSetting?.key)) {
+    sanitizedObject = {
+      ...sanitizedObject,
+      revealSetting: {
+        key: args.revealSetting.key,
+        edit: sanitizeBoolean(args.revealSetting?.edit)
+      }
+    };
+  }
+  return sanitizedObject;
+}
+__name(sanitizeOpenSettingsArgs, "sanitizeOpenSettingsArgs");
+let PreferencesActionsContribution = class extends Disposable {
+  constructor(environmentService, userDataProfileService, preferencesService, workspaceContextService, labelService, extensionService, userDataProfilesService) {
+    super();
+    this.environmentService = environmentService;
+    this.userDataProfileService = userDataProfileService;
+    this.preferencesService = preferencesService;
+    this.workspaceContextService = workspaceContextService;
+    this.labelService = labelService;
+    this.extensionService = extensionService;
+    this.userDataProfilesService = userDataProfilesService;
+    this.registerSettingsActions();
+    this.registerKeybindingsActions();
+    this.updatePreferencesEditorMenuItem();
+    this._register(workspaceContextService.onDidChangeWorkbenchState(() => this.updatePreferencesEditorMenuItem()));
+    this._register(workspaceContextService.onDidChangeWorkspaceFolders(() => this.updatePreferencesEditorMenuItemForWorkspaceFolders()));
+  }
+  static {
+    __name(this, "PreferencesActionsContribution");
+  }
+  static ID = "workbench.contrib.preferencesActions";
+  registerSettingsActions() {
+    this._register(registerAction2(class extends Action2 {
+      constructor() {
+        super({
+          id: SETTINGS_COMMAND_OPEN_SETTINGS,
+          title: {
+            ...nls.localize2("settings", "Settings"),
+            mnemonicTitle: nls.localize({ key: "miOpenSettings", comment: ["&& denotes a mnemonic"] }, "&&Settings")
+          },
+          keybinding: {
+            weight: KeybindingWeight.WorkbenchContrib,
+            when: null,
+            primary: KeyMod.CtrlCmd | KeyCode.Comma
+          },
+          menu: [{
+            id: MenuId.GlobalActivity,
+            group: "2_configuration",
+            order: 2
+          }, {
+            id: MenuId.MenubarPreferencesMenu,
+            group: "2_configuration",
+            order: 2
+          }]
+        });
+      }
+      run(accessor, args) {
+        const opts = typeof args === "string" ? { query: args } : sanitizeOpenSettingsArgs(args);
+        return accessor.get(IPreferencesService).openSettings(opts);
+      }
+    }));
+    this._register(registerAction2(class extends Action2 {
+      constructor() {
+        super({
+          id: "workbench.action.openSettings2",
+          title: nls.localize2("openSettings2", "Open Settings (UI)"),
+          category,
+          f1: true
+        });
+      }
+      run(accessor, args) {
+        args = sanitizeOpenSettingsArgs(args);
+        return accessor.get(IPreferencesService).openSettings({ jsonEditor: false, ...args });
+      }
+    }));
+    this._register(registerAction2(class extends Action2 {
+      constructor() {
+        super({
+          id: "workbench.action.openSettingsJson",
+          title: OPEN_USER_SETTINGS_JSON_TITLE,
+          metadata: {
+            description: nls.localize2("workbench.action.openSettingsJson.description", "Opens the JSON file containing the current user profile settings")
+          },
+          category,
+          f1: true
+        });
+      }
+      run(accessor, args) {
+        args = sanitizeOpenSettingsArgs(args);
+        return accessor.get(IPreferencesService).openSettings({ jsonEditor: true, ...args });
+      }
+    }));
+    const that = this;
+    this._register(registerAction2(class extends Action2 {
+      constructor() {
+        super({
+          id: "workbench.action.openApplicationSettingsJson",
+          title: OPEN_APPLICATION_SETTINGS_JSON_TITLE,
+          category,
+          menu: {
+            id: MenuId.CommandPalette,
+            when: ContextKeyExpr.notEquals(CURRENT_PROFILE_CONTEXT.key, that.userDataProfilesService.defaultProfile.id)
+          }
+        });
+      }
+      run(accessor, args) {
+        args = sanitizeOpenSettingsArgs(args);
+        return accessor.get(IPreferencesService).openApplicationSettings({ jsonEditor: true, ...args });
+      }
+    }));
+    this._register(registerAction2(class extends Action2 {
+      constructor() {
+        super({
+          id: "workbench.action.openGlobalSettings",
+          title: nls.localize2("openGlobalSettings", "Open User Settings"),
+          category,
+          f1: true
+        });
+      }
+      run(accessor, args) {
+        args = sanitizeOpenSettingsArgs(args);
+        return accessor.get(IPreferencesService).openUserSettings(args);
+      }
+    }));
+    this._register(registerAction2(class extends Action2 {
+      constructor() {
+        super({
+          id: "workbench.action.openRawDefaultSettings",
+          title: nls.localize2("openRawDefaultSettings", "Open Default Settings (JSON)"),
+          category,
+          f1: true
+        });
+      }
+      run(accessor) {
+        return accessor.get(IPreferencesService).openRawDefaultSettings();
+      }
+    }));
+    this._register(registerAction2(class extends Action2 {
+      constructor() {
+        super({
+          id: ConfigureLanguageBasedSettingsAction.ID,
+          title: ConfigureLanguageBasedSettingsAction.LABEL,
+          category,
+          f1: true
+        });
+      }
+      run(accessor) {
+        return accessor.get(IInstantiationService).createInstance(ConfigureLanguageBasedSettingsAction, ConfigureLanguageBasedSettingsAction.ID, ConfigureLanguageBasedSettingsAction.LABEL.value).run();
+      }
+    }));
+    this._register(registerAction2(class extends Action2 {
+      constructor() {
+        super({
+          id: "workbench.action.openWorkspaceSettings",
+          title: nls.localize2("openWorkspaceSettings", "Open Workspace Settings"),
+          category,
+          menu: {
+            id: MenuId.CommandPalette,
+            when: WorkbenchStateContext.notEqualsTo("empty")
+          }
+        });
+      }
+      run(accessor, args) {
+        args = typeof args === "string" ? { query: args } : sanitizeOpenSettingsArgs(args);
+        return accessor.get(IPreferencesService).openWorkspaceSettings(args);
+      }
+    }));
+    this._register(registerAction2(class extends Action2 {
+      constructor() {
+        super({
+          id: "workbench.action.openAccessibilitySettings",
+          title: nls.localize2("openAccessibilitySettings", "Open Accessibility Settings"),
+          category,
+          menu: {
+            id: MenuId.CommandPalette,
+            when: WorkbenchStateContext.notEqualsTo("empty")
+          }
+        });
+      }
+      async run(accessor) {
+        await accessor.get(IPreferencesService).openSettings({ jsonEditor: false, query: "@tag:accessibility" });
+      }
+    }));
+    this._register(registerAction2(class extends Action2 {
+      constructor() {
+        super({
+          id: "workbench.action.openWorkspaceSettingsFile",
+          title: nls.localize2("openWorkspaceSettingsFile", "Open Workspace Settings (JSON)"),
+          category,
+          menu: {
+            id: MenuId.CommandPalette,
+            when: WorkbenchStateContext.notEqualsTo("empty")
+          }
+        });
+      }
+      run(accessor, args) {
+        args = sanitizeOpenSettingsArgs(args);
+        return accessor.get(IPreferencesService).openWorkspaceSettings({ jsonEditor: true, ...args });
+      }
+    }));
+    this._register(registerAction2(class extends Action2 {
+      constructor() {
+        super({
+          id: "workbench.action.openFolderSettings",
+          title: nls.localize2("openFolderSettings", "Open Folder Settings"),
+          category,
+          menu: {
+            id: MenuId.CommandPalette,
+            when: WorkbenchStateContext.isEqualTo("workspace")
+          }
+        });
+      }
+      async run(accessor, args) {
+        const commandService = accessor.get(ICommandService);
+        const preferencesService = accessor.get(IPreferencesService);
+        const workspaceFolder = await commandService.executeCommand(PICK_WORKSPACE_FOLDER_COMMAND_ID);
+        if (workspaceFolder) {
+          args = sanitizeOpenSettingsArgs(args);
+          await preferencesService.openFolderSettings({ folderUri: workspaceFolder.uri, ...args });
+        }
+      }
+    }));
+    this._register(registerAction2(class extends Action2 {
+      constructor() {
+        super({
+          id: "workbench.action.openFolderSettingsFile",
+          title: nls.localize2("openFolderSettingsFile", "Open Folder Settings (JSON)"),
+          category,
+          menu: {
+            id: MenuId.CommandPalette,
+            when: WorkbenchStateContext.isEqualTo("workspace")
+          }
+        });
+      }
+      async run(accessor, args) {
+        const commandService = accessor.get(ICommandService);
+        const preferencesService = accessor.get(IPreferencesService);
+        const workspaceFolder = await commandService.executeCommand(PICK_WORKSPACE_FOLDER_COMMAND_ID);
+        if (workspaceFolder) {
+          args = sanitizeOpenSettingsArgs(args);
+          await preferencesService.openFolderSettings({ folderUri: workspaceFolder.uri, jsonEditor: true, ...args });
+        }
+      }
+    }));
+    this._register(registerAction2(class extends Action2 {
+      constructor() {
+        super({
+          id: "_workbench.action.openFolderSettings",
+          title: nls.localize("openFolderSettings", "Open Folder Settings"),
+          category,
+          menu: {
+            id: MenuId.ExplorerContext,
+            group: "2_workspace",
+            order: 20,
+            when: ContextKeyExpr.and(ExplorerRootContext, ExplorerFolderContext)
+          }
+        });
+      }
+      async run(accessor, resource) {
+        if (URI.isUri(resource)) {
+          await accessor.get(IPreferencesService).openFolderSettings({ folderUri: resource });
+        } else {
+          const commandService = accessor.get(ICommandService);
+          const preferencesService = accessor.get(IPreferencesService);
+          const workspaceFolder = await commandService.executeCommand(PICK_WORKSPACE_FOLDER_COMMAND_ID);
+          if (workspaceFolder) {
+            await preferencesService.openFolderSettings({ folderUri: workspaceFolder.uri });
+          }
+        }
+      }
+    }));
+    this._register(registerAction2(class extends Action2 {
+      constructor() {
+        super({
+          id: SETTINGS_EDITOR_COMMAND_FILTER_ONLINE,
+          title: nls.localize({ key: "miOpenOnlineSettings", comment: ["&& denotes a mnemonic"] }, "&&Online Services Settings"),
+          menu: {
+            id: MenuId.MenubarPreferencesMenu,
+            group: "3_settings",
+            order: 1
+          }
+        });
+      }
+      run(accessor) {
+        const editorPane = accessor.get(IEditorService).activeEditorPane;
+        if (editorPane instanceof SettingsEditor2) {
+          editorPane.focusSearch(`@tag:usesOnlineServices`);
+        } else {
+          accessor.get(IPreferencesService).openSettings({ jsonEditor: false, query: "@tag:usesOnlineServices" });
+        }
+      }
+    }));
+    this._register(registerAction2(class extends Action2 {
+      constructor() {
+        super({
+          id: SETTINGS_EDITOR_COMMAND_FILTER_UNTRUSTED,
+          title: nls.localize2("filterUntrusted", "Show untrusted workspace settings")
+        });
+      }
+      run(accessor) {
+        accessor.get(IPreferencesService).openWorkspaceSettings({ jsonEditor: false, query: `@tag:${REQUIRE_TRUSTED_WORKSPACE_SETTING_TAG}` });
+      }
+    }));
+    this._register(registerAction2(class extends Action2 {
+      constructor() {
+        super({
+          id: SETTINGS_COMMAND_FILTER_TELEMETRY,
+          title: nls.localize({ key: "miOpenTelemetrySettings", comment: ["&& denotes a mnemonic"] }, "&&Telemetry Settings")
+        });
+      }
+      run(accessor) {
+        const editorPane = accessor.get(IEditorService).activeEditorPane;
+        if (editorPane instanceof SettingsEditor2) {
+          editorPane.focusSearch(`@tag:telemetry`);
+        } else {
+          accessor.get(IPreferencesService).openSettings({ jsonEditor: false, query: "@tag:telemetry" });
+        }
+      }
+    }));
+    this.registerSettingsEditorActions();
+    this.extensionService.whenInstalledExtensionsRegistered().then(() => {
+      const remoteAuthority = this.environmentService.remoteAuthority;
+      const hostLabel = this.labelService.getHostLabel(Schemas.vscodeRemote, remoteAuthority) || remoteAuthority;
+      this._register(registerAction2(class extends Action2 {
+        constructor() {
+          super({
+            id: "workbench.action.openRemoteSettings",
+            title: nls.localize2("openRemoteSettings", "Open Remote Settings ({0})", hostLabel),
+            category,
+            menu: {
+              id: MenuId.CommandPalette,
+              when: RemoteNameContext.notEqualsTo("")
+            }
+          });
+        }
+        run(accessor, args) {
+          args = sanitizeOpenSettingsArgs(args);
+          return accessor.get(IPreferencesService).openRemoteSettings(args);
+        }
+      }));
+      this._register(registerAction2(class extends Action2 {
+        constructor() {
+          super({
+            id: "workbench.action.openRemoteSettingsFile",
+            title: nls.localize2("openRemoteSettingsJSON", "Open Remote Settings (JSON) ({0})", hostLabel),
+            category,
+            menu: {
+              id: MenuId.CommandPalette,
+              when: RemoteNameContext.notEqualsTo("")
+            }
+          });
+        }
+        run(accessor, args) {
+          args = sanitizeOpenSettingsArgs(args);
+          return accessor.get(IPreferencesService).openRemoteSettings({ jsonEditor: true, ...args });
+        }
+      }));
+    });
+  }
+  registerSettingsEditorActions() {
+    function getPreferencesEditor(accessor) {
+      const activeEditorPane = accessor.get(IEditorService).activeEditorPane;
+      if (activeEditorPane instanceof SettingsEditor2) {
+        return activeEditorPane;
+      }
+      return null;
+    }
+    __name(getPreferencesEditor, "getPreferencesEditor");
+    function settingsEditorFocusSearch(accessor) {
+      const preferencesEditor = getPreferencesEditor(accessor);
+      preferencesEditor?.focusSearch();
+    }
+    __name(settingsEditorFocusSearch, "settingsEditorFocusSearch");
+    this._register(registerAction2(class extends Action2 {
+      constructor() {
+        super({
+          id: SETTINGS_EDITOR_COMMAND_SEARCH,
+          precondition: CONTEXT_SETTINGS_EDITOR,
+          keybinding: {
+            primary: KeyMod.CtrlCmd | KeyCode.KeyF,
+            weight: KeybindingWeight.EditorContrib,
+            when: null
+          },
+          category,
+          f1: true,
+          title: nls.localize2("settings.focusSearch", "Focus Settings Search")
+        });
+      }
+      run(accessor) {
+        settingsEditorFocusSearch(accessor);
+      }
+    }));
+    this._register(registerAction2(class extends Action2 {
+      constructor() {
+        super({
+          id: SETTINGS_EDITOR_COMMAND_CLEAR_SEARCH_RESULTS,
+          precondition: CONTEXT_SETTINGS_EDITOR,
+          keybinding: {
+            primary: KeyCode.Escape,
+            weight: KeybindingWeight.EditorContrib,
+            when: CONTEXT_SETTINGS_SEARCH_FOCUS
+          },
+          category,
+          f1: true,
+          title: nls.localize2("settings.clearResults", "Clear Settings Search Results")
+        });
+      }
+      run(accessor) {
+        const preferencesEditor = getPreferencesEditor(accessor);
+        preferencesEditor?.clearSearchResults();
+      }
+    }));
+    this._register(registerAction2(class extends Action2 {
+      constructor() {
+        super({
+          id: SETTINGS_EDITOR_COMMAND_FOCUS_FILE,
+          precondition: ContextKeyExpr.and(CONTEXT_SETTINGS_SEARCH_FOCUS, SuggestContext.Visible.toNegated()),
+          keybinding: {
+            primary: KeyCode.DownArrow,
+            weight: KeybindingWeight.EditorContrib,
+            when: null
+          },
+          title: nls.localize("settings.focusFile", "Focus settings file")
+        });
+      }
+      run(accessor, args) {
+        const preferencesEditor = getPreferencesEditor(accessor);
+        preferencesEditor?.focusSettings();
+      }
+    }));
+    this._register(registerAction2(class extends Action2 {
+      constructor() {
+        super({
+          id: SETTINGS_EDITOR_COMMAND_FOCUS_SETTINGS_FROM_SEARCH,
+          precondition: ContextKeyExpr.and(CONTEXT_SETTINGS_SEARCH_FOCUS, SuggestContext.Visible.toNegated()),
+          keybinding: {
+            primary: KeyCode.DownArrow,
+            weight: KeybindingWeight.WorkbenchContrib,
+            when: null
+          },
+          title: nls.localize("settings.focusFile", "Focus settings file")
+        });
+      }
+      run(accessor, args) {
+        const preferencesEditor = getPreferencesEditor(accessor);
+        preferencesEditor?.focusSettings();
+      }
+    }));
+    this._register(registerAction2(class extends Action2 {
+      constructor() {
+        super({
+          id: SETTINGS_EDITOR_COMMAND_FOCUS_SETTINGS_LIST,
+          precondition: ContextKeyExpr.and(CONTEXT_SETTINGS_EDITOR, CONTEXT_TOC_ROW_FOCUS),
+          keybinding: {
+            primary: KeyCode.Enter,
+            weight: KeybindingWeight.WorkbenchContrib,
+            when: null
+          },
+          title: nls.localize("settings.focusSettingsList", "Focus settings list")
+        });
+      }
+      run(accessor) {
+        const preferencesEditor = getPreferencesEditor(accessor);
+        if (preferencesEditor instanceof SettingsEditor2) {
+          preferencesEditor.focusSettings();
+        }
+      }
+    }));
+    this._register(registerAction2(class extends Action2 {
+      constructor() {
+        super({
+          id: SETTINGS_EDITOR_COMMAND_FOCUS_TOC,
+          precondition: CONTEXT_SETTINGS_EDITOR,
+          f1: true,
+          keybinding: [
+            {
+              primary: KeyCode.LeftArrow,
+              weight: KeybindingWeight.WorkbenchContrib,
+              when: CONTEXT_SETTINGS_ROW_FOCUS
+            }
+          ],
+          category,
+          title: nls.localize2("settings.focusSettingsTOC", "Focus Settings Table of Contents")
+        });
+      }
+      run(accessor) {
+        const preferencesEditor = getPreferencesEditor(accessor);
+        if (!(preferencesEditor instanceof SettingsEditor2)) {
+          return;
+        }
+        preferencesEditor.focusTOC();
+      }
+    }));
+    this._register(registerAction2(class extends Action2 {
+      constructor() {
+        super({
+          id: SETTINGS_EDITOR_COMMAND_FOCUS_CONTROL,
+          precondition: ContextKeyExpr.and(CONTEXT_SETTINGS_EDITOR, CONTEXT_SETTINGS_ROW_FOCUS),
+          keybinding: {
+            primary: KeyCode.Enter,
+            weight: KeybindingWeight.WorkbenchContrib
+          },
+          title: nls.localize("settings.focusSettingControl", "Focus Setting Control")
+        });
+      }
+      run(accessor) {
+        const preferencesEditor = getPreferencesEditor(accessor);
+        if (!(preferencesEditor instanceof SettingsEditor2)) {
+          return;
+        }
+        const activeElement = preferencesEditor.getContainer()?.ownerDocument.activeElement;
+        if (activeElement?.classList.contains("monaco-list")) {
+          preferencesEditor.focusSettings(true);
+        }
+      }
+    }));
+    this._register(registerAction2(class extends Action2 {
+      constructor() {
+        super({
+          id: SETTINGS_EDITOR_COMMAND_SHOW_CONTEXT_MENU,
+          precondition: CONTEXT_SETTINGS_EDITOR,
+          keybinding: {
+            primary: KeyMod.Shift | KeyCode.F9,
+            weight: KeybindingWeight.WorkbenchContrib,
+            when: null
+          },
+          f1: true,
+          category,
+          title: nls.localize2("settings.showContextMenu", "Show Setting Context Menu")
+        });
+      }
+      run(accessor) {
+        const preferencesEditor = getPreferencesEditor(accessor);
+        if (preferencesEditor instanceof SettingsEditor2) {
+          preferencesEditor.showContextMenu();
+        }
+      }
+    }));
+    this._register(registerAction2(class extends Action2 {
+      constructor() {
+        super({
+          id: SETTINGS_EDITOR_COMMAND_FOCUS_UP,
+          precondition: ContextKeyExpr.and(CONTEXT_SETTINGS_EDITOR, CONTEXT_SETTINGS_SEARCH_FOCUS.toNegated(), CONTEXT_SETTINGS_JSON_EDITOR.toNegated()),
+          keybinding: {
+            primary: KeyCode.Escape,
+            weight: KeybindingWeight.WorkbenchContrib,
+            when: null
+          },
+          f1: true,
+          category,
+          title: nls.localize2("settings.focusLevelUp", "Move Focus Up One Level")
+        });
+      }
+      run(accessor) {
+        const preferencesEditor = getPreferencesEditor(accessor);
+        if (!(preferencesEditor instanceof SettingsEditor2)) {
+          return;
+        }
+        if (preferencesEditor.currentFocusContext === SettingsFocusContext.SettingControl) {
+          preferencesEditor.focusSettings();
+        } else if (preferencesEditor.currentFocusContext === SettingsFocusContext.SettingTree) {
+          preferencesEditor.focusTOC();
+        } else if (preferencesEditor.currentFocusContext === SettingsFocusContext.TableOfContents) {
+          preferencesEditor.focusSearch();
+        }
+      }
+    }));
+  }
+  registerKeybindingsActions() {
+    const that = this;
+    const category2 = nls.localize2("preferences", "Preferences");
+    const id = "workbench.action.openGlobalKeybindings";
+    this._register(registerAction2(class extends Action2 {
+      constructor() {
+        super({
+          id,
+          title: nls.localize2("openGlobalKeybindings", "Open Keyboard Shortcuts"),
+          shortTitle: nls.localize("keyboardShortcuts", "Keyboard Shortcuts"),
+          category: category2,
+          icon: preferencesOpenSettingsIcon,
+          keybinding: {
+            when: null,
+            weight: KeybindingWeight.WorkbenchContrib,
+            primary: KeyChord(KeyMod.CtrlCmd | KeyCode.KeyK, KeyMod.CtrlCmd | KeyCode.KeyS)
+          },
+          menu: [
+            { id: MenuId.CommandPalette },
+            {
+              id: MenuId.EditorTitle,
+              when: ResourceContextKey.Resource.isEqualTo(that.userDataProfileService.currentProfile.keybindingsResource.toString()),
+              group: "navigation",
+              order: 1
+            },
+            {
+              id: MenuId.GlobalActivity,
+              group: "2_configuration",
+              order: 4
+            }
+          ]
+        });
+      }
+      run(accessor, ...args) {
+        const query = typeof args[0] === "string" ? args[0] : void 0;
+        const groupId = getEditorGroupFromArguments(accessor, args)?.id;
+        return accessor.get(IPreferencesService).openGlobalKeybindingSettings(false, { query, groupId });
+      }
+    }));
+    this._register(MenuRegistry.appendMenuItem(MenuId.MenubarPreferencesMenu, {
+      command: {
+        id,
+        title: nls.localize("keyboardShortcuts", "Keyboard Shortcuts")
+      },
+      group: "2_configuration",
+      order: 4
+    }));
+    this._register(registerAction2(class extends Action2 {
+      constructor() {
+        super({
+          id: "workbench.action.openDefaultKeybindingsFile",
+          title: nls.localize2("openDefaultKeybindingsFile", "Open Default Keyboard Shortcuts (JSON)"),
+          category: category2,
+          menu: { id: MenuId.CommandPalette }
+        });
+      }
+      run(accessor) {
+        return accessor.get(IPreferencesService).openDefaultKeybindingsFile();
+      }
+    }));
+    this._register(registerAction2(class extends Action2 {
+      constructor() {
+        super({
+          id: "workbench.action.openGlobalKeybindingsFile",
+          title: nls.localize2("openGlobalKeybindingsFile", "Open Keyboard Shortcuts (JSON)"),
+          category: category2,
+          icon: preferencesOpenSettingsIcon,
+          menu: [
+            { id: MenuId.CommandPalette },
+            {
+              id: MenuId.EditorTitle,
+              when: ContextKeyExpr.and(CONTEXT_KEYBINDINGS_EDITOR),
+              group: "navigation"
+            }
+          ]
+        });
+      }
+      run(accessor, ...args) {
+        const groupId = getEditorGroupFromArguments(accessor, args)?.id;
+        return accessor.get(IPreferencesService).openGlobalKeybindingSettings(true, { groupId });
+      }
+    }));
+    this._register(registerAction2(class extends Action2 {
+      constructor() {
+        super({
+          id: KEYBINDINGS_EDITOR_SHOW_DEFAULT_KEYBINDINGS,
+          title: nls.localize2("showDefaultKeybindings", "Show System Keybindings"),
+          menu: [
+            {
+              id: MenuId.EditorTitle,
+              when: ContextKeyExpr.and(CONTEXT_KEYBINDINGS_EDITOR),
+              group: "1_keyboard_preferences_actions"
+            }
+          ]
+        });
+      }
+      run(accessor, ...args) {
+        const group = getEditorGroupFromArguments(accessor, args);
+        const editorPane = group?.activeEditorPane;
+        if (editorPane instanceof KeybindingsEditor) {
+          editorPane.search("@source:system");
+        }
+      }
+    }));
+    this._register(registerAction2(class extends Action2 {
+      constructor() {
+        super({
+          id: KEYBINDINGS_EDITOR_SHOW_EXTENSION_KEYBINDINGS,
+          title: nls.localize2("showExtensionKeybindings", "Show Extension Keybindings"),
+          menu: [
+            {
+              id: MenuId.EditorTitle,
+              when: ContextKeyExpr.and(CONTEXT_KEYBINDINGS_EDITOR),
+              group: "1_keyboard_preferences_actions"
+            }
+          ]
+        });
+      }
+      run(accessor, ...args) {
+        const group = getEditorGroupFromArguments(accessor, args);
+        const editorPane = group?.activeEditorPane;
+        if (editorPane instanceof KeybindingsEditor) {
+          editorPane.search("@source:extension");
+        }
+      }
+    }));
+    this._register(registerAction2(class extends Action2 {
+      constructor() {
+        super({
+          id: KEYBINDINGS_EDITOR_SHOW_USER_KEYBINDINGS,
+          title: nls.localize2("showUserKeybindings", "Show User Keybindings"),
+          menu: [
+            {
+              id: MenuId.EditorTitle,
+              when: ContextKeyExpr.and(CONTEXT_KEYBINDINGS_EDITOR),
+              group: "1_keyboard_preferences_actions"
+            }
+          ]
+        });
+      }
+      run(accessor, ...args) {
+        const group = getEditorGroupFromArguments(accessor, args);
+        const editorPane = group?.activeEditorPane;
+        if (editorPane instanceof KeybindingsEditor) {
+          editorPane.search("@source:user");
+        }
+      }
+    }));
+    this._register(registerAction2(class extends Action2 {
+      constructor() {
+        super({
+          id: KEYBINDINGS_EDITOR_COMMAND_CLEAR_SEARCH_RESULTS,
+          title: nls.localize("clear", "Clear Search Results"),
+          keybinding: {
+            weight: KeybindingWeight.WorkbenchContrib,
+            when: ContextKeyExpr.and(CONTEXT_KEYBINDINGS_EDITOR, CONTEXT_KEYBINDINGS_SEARCH_FOCUS),
+            primary: KeyCode.Escape
+          }
+        });
+      }
+      run(accessor) {
+        const editorPane = accessor.get(IEditorService).activeEditorPane;
+        if (editorPane instanceof KeybindingsEditor) {
+          editorPane.clearSearchResults();
+        }
+      }
+    }));
+    this._register(registerAction2(class extends Action2 {
+      constructor() {
+        super({
+          id: KEYBINDINGS_EDITOR_COMMAND_CLEAR_SEARCH_HISTORY,
+          title: nls.localize("clearHistory", "Clear Keyboard Shortcuts Search History"),
+          category: category2,
+          menu: [
+            {
+              id: MenuId.CommandPalette,
+              when: ContextKeyExpr.and(CONTEXT_KEYBINDINGS_EDITOR)
+            }
+          ]
+        });
+      }
+      run(accessor) {
+        const editorPane = accessor.get(IEditorService).activeEditorPane;
+        if (editorPane instanceof KeybindingsEditor) {
+          editorPane.clearKeyboardShortcutSearchHistory();
+        }
+      }
+    }));
+    this.registerKeybindingEditorActions();
+  }
+  registerKeybindingEditorActions() {
+    const that = this;
+    KeybindingsRegistry.registerCommandAndKeybindingRule({
+      id: KEYBINDINGS_EDITOR_COMMAND_DEFINE,
+      weight: KeybindingWeight.WorkbenchContrib,
+      when: ContextKeyExpr.and(CONTEXT_KEYBINDINGS_EDITOR, CONTEXT_KEYBINDING_FOCUS, CONTEXT_WHEN_FOCUS.toNegated()),
+      primary: KeyCode.Enter,
+      handler: /* @__PURE__ */ __name((accessor, args) => {
+        const editorPane = accessor.get(IEditorService).activeEditorPane;
+        if (editorPane instanceof KeybindingsEditor) {
+          editorPane.defineKeybinding(editorPane.activeKeybindingEntry, false);
+        }
+      }, "handler")
+    });
+    KeybindingsRegistry.registerCommandAndKeybindingRule({
+      id: KEYBINDINGS_EDITOR_COMMAND_ADD,
+      weight: KeybindingWeight.WorkbenchContrib,
+      when: ContextKeyExpr.and(CONTEXT_KEYBINDINGS_EDITOR, CONTEXT_KEYBINDING_FOCUS),
+      primary: KeyChord(KeyMod.CtrlCmd | KeyCode.KeyK, KeyMod.CtrlCmd | KeyCode.KeyA),
+      handler: /* @__PURE__ */ __name((accessor, args) => {
+        const editorPane = accessor.get(IEditorService).activeEditorPane;
+        if (editorPane instanceof KeybindingsEditor) {
+          editorPane.defineKeybinding(editorPane.activeKeybindingEntry, true);
+        }
+      }, "handler")
+    });
+    KeybindingsRegistry.registerCommandAndKeybindingRule({
+      id: KEYBINDINGS_EDITOR_COMMAND_DEFINE_WHEN,
+      weight: KeybindingWeight.WorkbenchContrib,
+      when: ContextKeyExpr.and(CONTEXT_KEYBINDINGS_EDITOR, CONTEXT_KEYBINDING_FOCUS),
+      primary: KeyChord(KeyMod.CtrlCmd | KeyCode.KeyK, KeyMod.CtrlCmd | KeyCode.KeyE),
+      handler: /* @__PURE__ */ __name((accessor, args) => {
+        const editorPane = accessor.get(IEditorService).activeEditorPane;
+        if (editorPane instanceof KeybindingsEditor && editorPane.activeKeybindingEntry.keybindingItem.keybinding) {
+          editorPane.defineWhenExpression(editorPane.activeKeybindingEntry);
+        }
+      }, "handler")
+    });
+    KeybindingsRegistry.registerCommandAndKeybindingRule({
+      id: KEYBINDINGS_EDITOR_COMMAND_REMOVE,
+      weight: KeybindingWeight.WorkbenchContrib,
+      when: ContextKeyExpr.and(CONTEXT_KEYBINDINGS_EDITOR, CONTEXT_KEYBINDING_FOCUS, InputFocusedContext.toNegated()),
+      primary: KeyCode.Delete,
+      mac: {
+        primary: KeyMod.CtrlCmd | KeyCode.Backspace
+      },
+      handler: /* @__PURE__ */ __name((accessor, args) => {
+        const editorPane = accessor.get(IEditorService).activeEditorPane;
+        if (editorPane instanceof KeybindingsEditor) {
+          editorPane.removeKeybinding(editorPane.activeKeybindingEntry);
+        }
+      }, "handler")
+    });
+    KeybindingsRegistry.registerCommandAndKeybindingRule({
+      id: KEYBINDINGS_EDITOR_COMMAND_RESET,
+      weight: KeybindingWeight.WorkbenchContrib,
+      when: ContextKeyExpr.and(CONTEXT_KEYBINDINGS_EDITOR, CONTEXT_KEYBINDING_FOCUS),
+      primary: 0,
+      handler: /* @__PURE__ */ __name((accessor, args) => {
+        const editorPane = accessor.get(IEditorService).activeEditorPane;
+        if (editorPane instanceof KeybindingsEditor) {
+          editorPane.resetKeybinding(editorPane.activeKeybindingEntry);
+        }
+      }, "handler")
+    });
+    KeybindingsRegistry.registerCommandAndKeybindingRule({
+      id: KEYBINDINGS_EDITOR_COMMAND_SEARCH,
+      weight: KeybindingWeight.WorkbenchContrib,
+      when: ContextKeyExpr.and(CONTEXT_KEYBINDINGS_EDITOR),
+      primary: KeyMod.CtrlCmd | KeyCode.KeyF,
+      handler: /* @__PURE__ */ __name((accessor, args) => {
+        const editorPane = accessor.get(IEditorService).activeEditorPane;
+        if (editorPane instanceof KeybindingsEditor) {
+          editorPane.focusSearch();
+        }
+      }, "handler")
+    });
+    KeybindingsRegistry.registerCommandAndKeybindingRule({
+      id: KEYBINDINGS_EDITOR_COMMAND_RECORD_SEARCH_KEYS,
+      weight: KeybindingWeight.WorkbenchContrib,
+      when: ContextKeyExpr.and(CONTEXT_KEYBINDINGS_EDITOR, CONTEXT_KEYBINDINGS_SEARCH_FOCUS),
+      primary: KeyMod.Alt | KeyCode.KeyK,
+      mac: { primary: KeyMod.CtrlCmd | KeyMod.Alt | KeyCode.KeyK },
+      handler: /* @__PURE__ */ __name((accessor, args) => {
+        const editorPane = accessor.get(IEditorService).activeEditorPane;
+        if (editorPane instanceof KeybindingsEditor) {
+          editorPane.recordSearchKeys();
+        }
+      }, "handler")
+    });
+    KeybindingsRegistry.registerCommandAndKeybindingRule({
+      id: KEYBINDINGS_EDITOR_COMMAND_SORTBY_PRECEDENCE,
+      weight: KeybindingWeight.WorkbenchContrib,
+      when: ContextKeyExpr.and(CONTEXT_KEYBINDINGS_EDITOR),
+      primary: KeyMod.Alt | KeyCode.KeyP,
+      mac: { primary: KeyMod.CtrlCmd | KeyMod.Alt | KeyCode.KeyP },
+      handler: /* @__PURE__ */ __name((accessor, args) => {
+        const editorPane = accessor.get(IEditorService).activeEditorPane;
+        if (editorPane instanceof KeybindingsEditor) {
+          editorPane.toggleSortByPrecedence();
+        }
+      }, "handler")
+    });
+    KeybindingsRegistry.registerCommandAndKeybindingRule({
+      id: KEYBINDINGS_EDITOR_COMMAND_SHOW_SIMILAR,
+      weight: KeybindingWeight.WorkbenchContrib,
+      when: ContextKeyExpr.and(CONTEXT_KEYBINDINGS_EDITOR, CONTEXT_KEYBINDING_FOCUS),
+      primary: 0,
+      handler: /* @__PURE__ */ __name((accessor, args) => {
+        const editorPane = accessor.get(IEditorService).activeEditorPane;
+        if (editorPane instanceof KeybindingsEditor) {
+          editorPane.showSimilarKeybindings(editorPane.activeKeybindingEntry);
+        }
+      }, "handler")
+    });
+    KeybindingsRegistry.registerCommandAndKeybindingRule({
+      id: KEYBINDINGS_EDITOR_COMMAND_COPY,
+      weight: KeybindingWeight.WorkbenchContrib,
+      when: ContextKeyExpr.and(CONTEXT_KEYBINDINGS_EDITOR, CONTEXT_KEYBINDING_FOCUS, CONTEXT_WHEN_FOCUS.negate()),
+      primary: KeyMod.CtrlCmd | KeyCode.KeyC,
+      handler: /* @__PURE__ */ __name(async (accessor, args) => {
+        const editorPane = accessor.get(IEditorService).activeEditorPane;
+        if (editorPane instanceof KeybindingsEditor) {
+          await editorPane.copyKeybinding(editorPane.activeKeybindingEntry);
+        }
+      }, "handler")
+    });
+    KeybindingsRegistry.registerCommandAndKeybindingRule({
+      id: KEYBINDINGS_EDITOR_COMMAND_COPY_COMMAND,
+      weight: KeybindingWeight.WorkbenchContrib,
+      when: ContextKeyExpr.and(CONTEXT_KEYBINDINGS_EDITOR, CONTEXT_KEYBINDING_FOCUS),
+      primary: 0,
+      handler: /* @__PURE__ */ __name(async (accessor, args) => {
+        const editorPane = accessor.get(IEditorService).activeEditorPane;
+        if (editorPane instanceof KeybindingsEditor) {
+          await editorPane.copyKeybindingCommand(editorPane.activeKeybindingEntry);
+        }
+      }, "handler")
+    });
+    KeybindingsRegistry.registerCommandAndKeybindingRule({
+      id: KEYBINDINGS_EDITOR_COMMAND_COPY_COMMAND_TITLE,
+      weight: KeybindingWeight.WorkbenchContrib,
+      when: ContextKeyExpr.and(CONTEXT_KEYBINDINGS_EDITOR, CONTEXT_KEYBINDING_FOCUS),
+      primary: 0,
+      handler: /* @__PURE__ */ __name(async (accessor, args) => {
+        const editorPane = accessor.get(IEditorService).activeEditorPane;
+        if (editorPane instanceof KeybindingsEditor) {
+          await editorPane.copyKeybindingCommandTitle(editorPane.activeKeybindingEntry);
+        }
+      }, "handler")
+    });
+    KeybindingsRegistry.registerCommandAndKeybindingRule({
+      id: KEYBINDINGS_EDITOR_COMMAND_FOCUS_KEYBINDINGS,
+      weight: KeybindingWeight.WorkbenchContrib,
+      when: ContextKeyExpr.and(CONTEXT_KEYBINDINGS_EDITOR, CONTEXT_KEYBINDINGS_SEARCH_FOCUS),
+      primary: KeyMod.CtrlCmd | KeyCode.DownArrow,
+      handler: /* @__PURE__ */ __name((accessor, args) => {
+        const editorPane = accessor.get(IEditorService).activeEditorPane;
+        if (editorPane instanceof KeybindingsEditor) {
+          editorPane.focusKeybindings();
+        }
+      }, "handler")
+    });
+    KeybindingsRegistry.registerCommandAndKeybindingRule({
+      id: KEYBINDINGS_EDITOR_COMMAND_REJECT_WHEN,
+      weight: KeybindingWeight.WorkbenchContrib,
+      when: ContextKeyExpr.and(CONTEXT_KEYBINDINGS_EDITOR, CONTEXT_WHEN_FOCUS, SuggestContext.Visible.toNegated()),
+      primary: KeyCode.Escape,
+      handler: /* @__PURE__ */ __name(async (accessor, args) => {
+        const editorPane = accessor.get(IEditorService).activeEditorPane;
+        if (editorPane instanceof KeybindingsEditor) {
+          editorPane.rejectWhenExpression(editorPane.activeKeybindingEntry);
+        }
+      }, "handler")
+    });
+    KeybindingsRegistry.registerCommandAndKeybindingRule({
+      id: KEYBINDINGS_EDITOR_COMMAND_ACCEPT_WHEN,
+      weight: KeybindingWeight.WorkbenchContrib,
+      when: ContextKeyExpr.and(CONTEXT_KEYBINDINGS_EDITOR, CONTEXT_WHEN_FOCUS, SuggestContext.Visible.toNegated()),
+      primary: KeyCode.Enter,
+      handler: /* @__PURE__ */ __name(async (accessor, args) => {
+        const editorPane = accessor.get(IEditorService).activeEditorPane;
+        if (editorPane instanceof KeybindingsEditor) {
+          editorPane.acceptWhenExpression(editorPane.activeKeybindingEntry);
+        }
+      }, "handler")
+    });
+    const profileScopedActionDisposables = this._register(new DisposableStore());
+    const registerProfileScopedActions = /* @__PURE__ */ __name(() => {
+      profileScopedActionDisposables.clear();
+      profileScopedActionDisposables.add(registerAction2(class DefineKeybindingAction extends Action2 {
+        static {
+          __name(this, "DefineKeybindingAction");
+        }
+        constructor() {
+          const when = ResourceContextKey.Resource.isEqualTo(that.userDataProfileService.currentProfile.keybindingsResource.toString());
+          super({
+            id: "editor.action.defineKeybinding",
+            title: nls.localize2("defineKeybinding.start", "Define Keybinding"),
+            f1: true,
+            precondition: when,
+            keybinding: {
+              weight: KeybindingWeight.WorkbenchContrib,
+              when,
+              primary: KeyChord(KeyMod.CtrlCmd | KeyCode.KeyK, KeyMod.CtrlCmd | KeyCode.KeyK)
+            },
+            menu: {
+              id: MenuId.EditorContent,
+              when
+            }
+          });
+        }
+        async run(accessor) {
+          const codeEditor = accessor.get(IEditorService).activeTextEditorControl;
+          if (isCodeEditor(codeEditor)) {
+            codeEditor.getContribution(DEFINE_KEYBINDING_EDITOR_CONTRIB_ID)?.showDefineKeybindingWidget();
+          }
+        }
+      }));
+    }, "registerProfileScopedActions");
+    registerProfileScopedActions();
+    this._register(this.userDataProfileService.onDidChangeCurrentProfile(() => registerProfileScopedActions()));
+  }
+  updatePreferencesEditorMenuItem() {
+    const commandId = "_workbench.openWorkspaceSettingsEditor";
+    if (this.workspaceContextService.getWorkbenchState() === WorkbenchState.WORKSPACE && !CommandsRegistry.getCommand(commandId)) {
+      CommandsRegistry.registerCommand(commandId, () => this.preferencesService.openWorkspaceSettings({ jsonEditor: false }));
+      MenuRegistry.appendMenuItem(MenuId.EditorTitle, {
+        command: {
+          id: commandId,
+          title: OPEN_USER_SETTINGS_UI_TITLE,
+          icon: preferencesOpenSettingsIcon
+        },
+        when: ContextKeyExpr.and(ResourceContextKey.Resource.isEqualTo(this.preferencesService.workspaceSettingsResource.toString()), WorkbenchStateContext.isEqualTo("workspace"), ContextKeyExpr.not("isInDiffEditor")),
+        group: "navigation",
+        order: 1
+      });
+    }
+    this.updatePreferencesEditorMenuItemForWorkspaceFolders();
+  }
+  updatePreferencesEditorMenuItemForWorkspaceFolders() {
+    for (const folder of this.workspaceContextService.getWorkspace().folders) {
+      const commandId = `_workbench.openFolderSettings.${folder.uri.toString()}`;
+      if (!CommandsRegistry.getCommand(commandId)) {
+        CommandsRegistry.registerCommand(commandId, (accessor, ...args) => {
+          const groupId = getEditorGroupFromArguments(accessor, args)?.id;
+          if (this.workspaceContextService.getWorkbenchState() === WorkbenchState.FOLDER) {
+            return this.preferencesService.openWorkspaceSettings({ jsonEditor: false, groupId });
+          } else {
+            return this.preferencesService.openFolderSettings({ folderUri: folder.uri, jsonEditor: false, groupId });
+          }
+        });
+        MenuRegistry.appendMenuItem(MenuId.EditorTitle, {
+          command: {
+            id: commandId,
+            title: OPEN_USER_SETTINGS_UI_TITLE,
+            icon: preferencesOpenSettingsIcon
+          },
+          when: ContextKeyExpr.and(ResourceContextKey.Resource.isEqualTo(this.preferencesService.getFolderSettingsResource(folder.uri).toString()), ContextKeyExpr.not("isInDiffEditor")),
+          group: "navigation",
+          order: 1
+        });
+      }
+    }
+  }
+};
+PreferencesActionsContribution = __decorateClass([
+  __decorateParam(0, IWorkbenchEnvironmentService),
+  __decorateParam(1, IUserDataProfileService),
+  __decorateParam(2, IPreferencesService),
+  __decorateParam(3, IWorkspaceContextService),
+  __decorateParam(4, ILabelService),
+  __decorateParam(5, IExtensionService),
+  __decorateParam(6, IUserDataProfilesService)
+], PreferencesActionsContribution);
+let SettingsEditorTitleContribution = class extends Disposable {
+  constructor(userDataProfileService, userDataProfilesService) {
+    super();
+    this.userDataProfileService = userDataProfileService;
+    this.userDataProfilesService = userDataProfilesService;
+    this.registerSettingsEditorTitleActions();
+  }
+  static {
+    __name(this, "SettingsEditorTitleContribution");
+  }
+  static ID = "workbench.contrib.settingsEditorTitleBarActions";
+  registerSettingsEditorTitleActions() {
+    const registerOpenUserSettingsEditorFromJsonActionDisposables = this._register(new MutableDisposable());
+    const registerOpenUserSettingsEditorFromJsonAction = /* @__PURE__ */ __name(() => {
+      const openUserSettingsEditorWhen = ContextKeyExpr.and(
+        CONTEXT_SETTINGS_EDITOR.toNegated(),
+        ContextKeyExpr.or(
+          ResourceContextKey.Resource.isEqualTo(this.userDataProfileService.currentProfile.settingsResource.toString()),
+          ResourceContextKey.Resource.isEqualTo(this.userDataProfilesService.defaultProfile.settingsResource.toString())
+        ),
+        ContextKeyExpr.not("isInDiffEditor")
+      );
+      registerOpenUserSettingsEditorFromJsonActionDisposables.value = registerAction2(class extends Action2 {
+        constructor() {
+          super({
+            id: "_workbench.openUserSettingsEditor",
+            title: OPEN_USER_SETTINGS_UI_TITLE,
+            icon: preferencesOpenSettingsIcon,
+            menu: [{
+              id: MenuId.EditorTitle,
+              when: openUserSettingsEditorWhen,
+              group: "navigation",
+              order: 1
+            }]
+          });
+        }
+        run(accessor, ...args) {
+          const sanitizedArgs = sanitizeOpenSettingsArgs(args[0]);
+          const groupId = getEditorGroupFromArguments(accessor, args)?.id;
+          return accessor.get(IPreferencesService).openUserSettings({ jsonEditor: false, ...sanitizedArgs, groupId });
+        }
+      });
+    }, "registerOpenUserSettingsEditorFromJsonAction");
+    registerOpenUserSettingsEditorFromJsonAction();
+    this._register(this.userDataProfileService.onDidChangeCurrentProfile(() => {
+      registerOpenUserSettingsEditorFromJsonAction();
+    }));
+    const openSettingsJsonWhen = ContextKeyExpr.and(CONTEXT_SETTINGS_JSON_EDITOR.toNegated(), CONTEXT_SETTINGS_EDITOR);
+    this._register(registerAction2(class extends Action2 {
+      constructor() {
+        super({
+          id: SETTINGS_EDITOR_COMMAND_SWITCH_TO_JSON,
+          title: nls.localize2("openSettingsJson", "Open Settings (JSON)"),
+          icon: preferencesOpenSettingsIcon,
+          menu: [{
+            id: MenuId.EditorTitle,
+            when: openSettingsJsonWhen,
+            group: "navigation",
+            order: 1
+          }]
+        });
+      }
+      run(accessor, ...args) {
+        const group = getEditorGroupFromArguments(accessor, args);
+        const editorPane = group?.activeEditorPane;
+        if (editorPane instanceof SettingsEditor2) {
+          return editorPane.switchToSettingsFile();
+        }
+        return null;
+      }
+    }));
+  }
+};
+SettingsEditorTitleContribution = __decorateClass([
+  __decorateParam(0, IUserDataProfileService),
+  __decorateParam(1, IUserDataProfilesService)
+], SettingsEditorTitleContribution);
+function getEditorGroupFromArguments(accessor, args) {
+  const context = resolveCommandsContext(args, accessor.get(IEditorService), accessor.get(IEditorGroupsService), accessor.get(IListService));
+  return context.groupedEditors[0]?.group;
+}
+__name(getEditorGroupFromArguments, "getEditorGroupFromArguments");
+registerWorkbenchContribution2(PreferencesActionsContribution.ID, PreferencesActionsContribution, WorkbenchPhase.BlockStartup);
+registerWorkbenchContribution2(PreferencesContribution.ID, PreferencesContribution, WorkbenchPhase.BlockStartup);
+registerWorkbenchContribution2(SettingsEditorTitleContribution.ID, SettingsEditorTitleContribution, WorkbenchPhase.AfterRestored);
+registerEditorContribution(SettingsEditorContribution.ID, SettingsEditorContribution, EditorContributionInstantiation.AfterFirstRender);
+MenuRegistry.appendMenuItem(MenuId.MenubarFileMenu, {
+  title: nls.localize({ key: "miPreferences", comment: ["&& denotes a mnemonic"] }, "&&Preferences"),
+  submenu: MenuId.MenubarPreferencesMenu,
+  group: "5_autosave",
+  order: 2,
+  when: IsMacNativeContext.toNegated()
+  // on macOS native the preferences menu is separate under the application menu
+});
+//# sourceMappingURL=preferences.contribution.js.map

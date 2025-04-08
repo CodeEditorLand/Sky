@@ -1,1 +1,81 @@
-var p=Object.defineProperty,d=Object.getOwnPropertyDescriptor,h=(e,o,r,t)=>{for(var s,i=t>1?void 0:t?d(o,r):o,a=e.length-1;a>=0;a--)(s=e[a])&&(i=(t?s(o,r,i):s(i))||i);return t&&i&&p(o,r,i),i},c=(e,o)=>(r,t)=>o(r,t,e);import{VSBuffer as f,encodeBase64 as l}from"../../../base/common/buffer.js";import"../../../base/common/event.js";import{Disposable as v}from"../../../base/common/lifecycle.js";import{getMediaOrTextMime as w}from"../../../base/common/mime.js";import{Schemas as y}from"../../../base/common/network.js";import{URI as E}from"../../../base/common/uri.js";import"../../../base/parts/ipc/common/ipc.js";import{FileOperationError as R,FileOperationResult as S,IFileService as I}from"../../files/common/files.js";import{IMainProcessService as C}from"../../ipc/common/mainProcessService.js";import{NODE_REMOTE_RESOURCE_CHANNEL_NAME as O,NODE_REMOTE_RESOURCE_IPC_METHOD_NAME as _}from"../common/electronRemoteResources.js";let m=class extends v{constructor(e,o,r){super(),this.windowId=e,this.fileService=r;const t={listen(e,o){throw new Error(`Event not found: ${o}`)},call:(e,o,r)=>{if(o===_)return this.doRequest(E.revive(r[0]));throw new Error(`Call not found: ${o}`)}};o.registerChannel(O,t)}async doRequest(e){let o;try{const r=new URLSearchParams(e.query),t=e.with({scheme:r.get("scheme"),authority:r.get("authority"),query:""});o=await this.fileService.readFile(t)}catch(e){const o=l(f.fromString(e.message));return e instanceof R&&e.fileOperationResult===S.FILE_NOT_FOUND?{statusCode:404,body:o}:{statusCode:500,body:o}}const r=e.path&&w(e.path);return{statusCode:200,body:l(o.value),mimeType:r}}getResourceUriProvider(){return e=>e.with({scheme:y.vscodeManagedRemoteResource,authority:`window:${this.windowId}`,query:new URLSearchParams({authority:e.authority,scheme:e.scheme}).toString()})}};m=h([c(1,C),c(2,I)],m);export{m as ElectronRemoteResourceLoader};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { VSBuffer, encodeBase64 } from "../../../base/common/buffer.js";
+import { Event } from "../../../base/common/event.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { getMediaOrTextMime } from "../../../base/common/mime.js";
+import { Schemas } from "../../../base/common/network.js";
+import { URI } from "../../../base/common/uri.js";
+import { IServerChannel } from "../../../base/parts/ipc/common/ipc.js";
+import { FileOperationError, FileOperationResult, IFileContent, IFileService } from "../../files/common/files.js";
+import { IMainProcessService } from "../../ipc/common/mainProcessService.js";
+import { NODE_REMOTE_RESOURCE_CHANNEL_NAME, NODE_REMOTE_RESOURCE_IPC_METHOD_NAME, NodeRemoteResourceResponse } from "../common/electronRemoteResources.js";
+let ElectronRemoteResourceLoader = class extends Disposable {
+  constructor(windowId, mainProcessService, fileService) {
+    super();
+    this.windowId = windowId;
+    this.fileService = fileService;
+    const channel = {
+      listen(_, event) {
+        throw new Error(`Event not found: ${event}`);
+      },
+      call: /* @__PURE__ */ __name((_, command, arg) => {
+        switch (command) {
+          case NODE_REMOTE_RESOURCE_IPC_METHOD_NAME:
+            return this.doRequest(URI.revive(arg[0]));
+        }
+        throw new Error(`Call not found: ${command}`);
+      }, "call")
+    };
+    mainProcessService.registerChannel(NODE_REMOTE_RESOURCE_CHANNEL_NAME, channel);
+  }
+  static {
+    __name(this, "ElectronRemoteResourceLoader");
+  }
+  async doRequest(uri) {
+    let content;
+    try {
+      const params = new URLSearchParams(uri.query);
+      const actual = uri.with({
+        scheme: params.get("scheme"),
+        authority: params.get("authority"),
+        query: ""
+      });
+      content = await this.fileService.readFile(actual);
+    } catch (e) {
+      const str = encodeBase64(VSBuffer.fromString(e.message));
+      if (e instanceof FileOperationError && e.fileOperationResult === FileOperationResult.FILE_NOT_FOUND) {
+        return { statusCode: 404, body: str };
+      } else {
+        return { statusCode: 500, body: str };
+      }
+    }
+    const mimeType = uri.path && getMediaOrTextMime(uri.path);
+    return { statusCode: 200, body: encodeBase64(content.value), mimeType };
+  }
+  getResourceUriProvider() {
+    return (uri) => uri.with({
+      scheme: Schemas.vscodeManagedRemoteResource,
+      authority: `window:${this.windowId}`,
+      query: new URLSearchParams({ authority: uri.authority, scheme: uri.scheme }).toString()
+    });
+  }
+};
+ElectronRemoteResourceLoader = __decorateClass([
+  __decorateParam(1, IMainProcessService),
+  __decorateParam(2, IFileService)
+], ElectronRemoteResourceLoader);
+export {
+  ElectronRemoteResourceLoader
+};
+//# sourceMappingURL=electronRemoteResourceLoader.js.map

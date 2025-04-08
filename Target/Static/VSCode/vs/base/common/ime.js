@@ -1,1 +1,34 @@
-import{Emitter as e}from"./event.js";class i{_onDidChange=new e;onDidChange=this._onDidChange.event;_enabled=!0;get enabled(){return this._enabled}enable(){this._enabled=!0,this._onDidChange.fire()}disable(){this._enabled=!1,this._onDidChange.fire()}}const a=new i;export{a as IME,i as IMEImpl};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Emitter } from "./event.js";
+class IMEImpl {
+  static {
+    __name(this, "IMEImpl");
+  }
+  _onDidChange = new Emitter();
+  onDidChange = this._onDidChange.event;
+  _enabled = true;
+  get enabled() {
+    return this._enabled;
+  }
+  /**
+   * Enable IME
+   */
+  enable() {
+    this._enabled = true;
+    this._onDidChange.fire();
+  }
+  /**
+   * Disable IME
+   */
+  disable() {
+    this._enabled = false;
+    this._onDidChange.fire();
+  }
+}
+const IME = new IMEImpl();
+export {
+  IME,
+  IMEImpl
+};
+//# sourceMappingURL=ime.js.map

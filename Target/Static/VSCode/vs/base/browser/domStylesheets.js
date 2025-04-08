@@ -1,1 +1,146 @@
-import{DisposableStore as S,toDisposable as d}from"../common/lifecycle.js";import{getWindows as y,sharedMutationObserver as b}from"./dom.js";import{mainWindow as i}from"./window.js";const r=new Map;function x(e){return r.has(e)}function R(){return new E}class E{_currentCssStyle="";_styleSheet=void 0;setStyle(n){n!==this._currentCssStyle&&(this._currentCssStyle=n,this._styleSheet?this._styleSheet.innerText=n:this._styleSheet=c(i.document.head,o=>o.innerText=n))}dispose(){this._styleSheet&&(this._styleSheet.remove(),this._styleSheet=void 0)}}function c(e=i.document.head,n,o){const t=document.createElement("style");if(t.type="text/css",t.media="screen",n?.(t),e.appendChild(t),o&&o.add(d(()=>t.remove())),e===i.document.head){const l=new Set;r.set(t,l);for(const{window:s,disposables:m}of y()){if(s===i)continue;const p=m.add(a(t,l,s));o?.add(p)}}return t}function w(e){const n=new S;for(const[o,t]of r)n.add(a(o,t,e));return n}function a(e,n,o){const t=new S,l=e.cloneNode(!0);o.document.head.appendChild(l),t.add(d(()=>l.remove()));for(const s of f(e))l.sheet?.insertRule(s.cssText,l.sheet?.cssRules.length);return t.add(b.observe(e,t,{childList:!0})(()=>{l.textContent=e.textContent})),n.add(l),t.add(d(()=>n.delete(l))),t}let u=null;function h(){return u||(u=c()),u}function f(e){return e?.sheet?.rules?e.sheet.rules:e?.sheet?.cssRules?e.sheet.cssRules:[]}function T(e,n,o=h()){if(!(!o||!n)){o.sheet?.insertRule(`${e} {${n}}`,0);for(const t of r.get(o)??[])T(e,n,t)}}function M(e,n=h()){if(!n)return;const o=f(n),t=[];for(let l=0;l<o.length;l++){const s=o[l];L(s)&&s.selectorText.indexOf(e)!==-1&&t.push(l)}for(let l=t.length-1;l>=0;l--)n.sheet?.deleteRule(t[l]);for(const l of r.get(n)??[])M(e,l)}function L(e){return typeof e.selectorText=="string"}export{w as cloneGlobalStylesheets,T as createCSSRule,c as createStyleSheet,R as createStyleSheet2,x as isGlobalStylesheet,M as removeCSSRulesContainingSelector};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { DisposableStore, toDisposable, IDisposable } from "../common/lifecycle.js";
+import { getWindows, sharedMutationObserver } from "./dom.js";
+import { mainWindow } from "./window.js";
+const globalStylesheets = /* @__PURE__ */ new Map();
+function isGlobalStylesheet(node) {
+  return globalStylesheets.has(node);
+}
+__name(isGlobalStylesheet, "isGlobalStylesheet");
+function createStyleSheet2() {
+  return new WrappedStyleElement();
+}
+__name(createStyleSheet2, "createStyleSheet2");
+class WrappedStyleElement {
+  static {
+    __name(this, "WrappedStyleElement");
+  }
+  _currentCssStyle = "";
+  _styleSheet = void 0;
+  setStyle(cssStyle) {
+    if (cssStyle === this._currentCssStyle) {
+      return;
+    }
+    this._currentCssStyle = cssStyle;
+    if (!this._styleSheet) {
+      this._styleSheet = createStyleSheet(mainWindow.document.head, (s) => s.innerText = cssStyle);
+    } else {
+      this._styleSheet.innerText = cssStyle;
+    }
+  }
+  dispose() {
+    if (this._styleSheet) {
+      this._styleSheet.remove();
+      this._styleSheet = void 0;
+    }
+  }
+}
+function createStyleSheet(container = mainWindow.document.head, beforeAppend, disposableStore) {
+  const style = document.createElement("style");
+  style.type = "text/css";
+  style.media = "screen";
+  beforeAppend?.(style);
+  container.appendChild(style);
+  if (disposableStore) {
+    disposableStore.add(toDisposable(() => style.remove()));
+  }
+  if (container === mainWindow.document.head) {
+    const globalStylesheetClones = /* @__PURE__ */ new Set();
+    globalStylesheets.set(style, globalStylesheetClones);
+    for (const { window: targetWindow, disposables } of getWindows()) {
+      if (targetWindow === mainWindow) {
+        continue;
+      }
+      const cloneDisposable = disposables.add(cloneGlobalStyleSheet(style, globalStylesheetClones, targetWindow));
+      disposableStore?.add(cloneDisposable);
+    }
+  }
+  return style;
+}
+__name(createStyleSheet, "createStyleSheet");
+function cloneGlobalStylesheets(targetWindow) {
+  const disposables = new DisposableStore();
+  for (const [globalStylesheet, clonedGlobalStylesheets] of globalStylesheets) {
+    disposables.add(cloneGlobalStyleSheet(globalStylesheet, clonedGlobalStylesheets, targetWindow));
+  }
+  return disposables;
+}
+__name(cloneGlobalStylesheets, "cloneGlobalStylesheets");
+function cloneGlobalStyleSheet(globalStylesheet, globalStylesheetClones, targetWindow) {
+  const disposables = new DisposableStore();
+  const clone = globalStylesheet.cloneNode(true);
+  targetWindow.document.head.appendChild(clone);
+  disposables.add(toDisposable(() => clone.remove()));
+  for (const rule of getDynamicStyleSheetRules(globalStylesheet)) {
+    clone.sheet?.insertRule(rule.cssText, clone.sheet?.cssRules.length);
+  }
+  disposables.add(sharedMutationObserver.observe(globalStylesheet, disposables, { childList: true })(() => {
+    clone.textContent = globalStylesheet.textContent;
+  }));
+  globalStylesheetClones.add(clone);
+  disposables.add(toDisposable(() => globalStylesheetClones.delete(clone)));
+  return disposables;
+}
+__name(cloneGlobalStyleSheet, "cloneGlobalStyleSheet");
+let _sharedStyleSheet = null;
+function getSharedStyleSheet() {
+  if (!_sharedStyleSheet) {
+    _sharedStyleSheet = createStyleSheet();
+  }
+  return _sharedStyleSheet;
+}
+__name(getSharedStyleSheet, "getSharedStyleSheet");
+function getDynamicStyleSheetRules(style) {
+  if (style?.sheet?.rules) {
+    return style.sheet.rules;
+  }
+  if (style?.sheet?.cssRules) {
+    return style.sheet.cssRules;
+  }
+  return [];
+}
+__name(getDynamicStyleSheetRules, "getDynamicStyleSheetRules");
+function createCSSRule(selector, cssText, style = getSharedStyleSheet()) {
+  if (!style || !cssText) {
+    return;
+  }
+  style.sheet?.insertRule(`${selector} {${cssText}}`, 0);
+  for (const clonedGlobalStylesheet of globalStylesheets.get(style) ?? []) {
+    createCSSRule(selector, cssText, clonedGlobalStylesheet);
+  }
+}
+__name(createCSSRule, "createCSSRule");
+function removeCSSRulesContainingSelector(ruleName, style = getSharedStyleSheet()) {
+  if (!style) {
+    return;
+  }
+  const rules = getDynamicStyleSheetRules(style);
+  const toDelete = [];
+  for (let i = 0; i < rules.length; i++) {
+    const rule = rules[i];
+    if (isCSSStyleRule(rule) && rule.selectorText.indexOf(ruleName) !== -1) {
+      toDelete.push(i);
+    }
+  }
+  for (let i = toDelete.length - 1; i >= 0; i--) {
+    style.sheet?.deleteRule(toDelete[i]);
+  }
+  for (const clonedGlobalStylesheet of globalStylesheets.get(style) ?? []) {
+    removeCSSRulesContainingSelector(ruleName, clonedGlobalStylesheet);
+  }
+}
+__name(removeCSSRulesContainingSelector, "removeCSSRulesContainingSelector");
+function isCSSStyleRule(rule) {
+  return typeof rule.selectorText === "string";
+}
+__name(isCSSStyleRule, "isCSSStyleRule");
+export {
+  cloneGlobalStylesheets,
+  createCSSRule,
+  createStyleSheet,
+  createStyleSheet2,
+  isGlobalStylesheet,
+  removeCSSRulesContainingSelector
+};
+//# sourceMappingURL=domStylesheets.js.map

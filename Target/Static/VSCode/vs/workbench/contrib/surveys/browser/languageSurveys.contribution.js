@@ -1,1 +1,146 @@
-var b=Object.defineProperty,R=Object.getOwnPropertyDescriptor,N=(e,o,r,t)=>{for(var s,i=t>1?void 0:t?R(o,r):o,n=e.length-1;n>=0;n--)(s=e[n])&&(i=(t?s(o,r,i):s(i))||i);return t&&i&&b(o,r,i),i},s=(e,o)=>(r,t)=>o(r,t,e);import{localize as A}from"../../../../nls.js";import{language as U}from"../../../../base/common/platform.js";import{ILanguageService as k}from"../../../../editor/common/languages/language.js";import{Extensions as _}from"../../../common/contributions.js";import{Registry as D}from"../../../../platform/registry/common/platform.js";import{ITelemetryService as x}from"../../../../platform/telemetry/common/telemetry.js";import{IStorageService as $,StorageScope as o,StorageTarget as t}from"../../../../platform/storage/common/storage.js";import{IProductService as w}from"../../../../platform/product/common/productService.js";import"../../../../base/common/product.js";import{LifecyclePhase as W}from"../../../services/lifecycle/common/lifecycle.js";import{Severity as F,INotificationService as K,NotificationPriority as M}from"../../../../platform/notification/common/notification.js";import{ITextFileService as Y}from"../../../services/textfile/common/textfiles.js";import{IOpenerService as G}from"../../../../platform/opener/common/opener.js";import{URI as V}from"../../../../base/common/uri.js";import{platform as z}from"../../../../base/common/process.js";import{RunOnceWorker as B}from"../../../../base/common/async.js";import{Disposable as H}from"../../../../base/common/lifecycle.js";import{IExtensionService as j}from"../../../services/extensions/common/extensions.js";class q extends H{constructor(e,r,s,i,n,a,c,m){super();const u=`${e.surveyId}.sessionCount`,I=`${e.surveyId}.lastSessionDate`,l=`${e.surveyId}.skipVersion`,p=`${e.surveyId}.isCandidate`,v=`${e.surveyId}.editedCount`,S=`${e.surveyId}.editedDate`;if(r.get(l,o.APPLICATION,""))return;const g=(new Date).toDateString();if(r.getNumber(v,o.APPLICATION,0)<e.editCount){const s=this._register(new B((s=>{s.forEach((s=>{if(s.getLanguageId()===e.languageId&&g!==r.get(S,o.APPLICATION)){const e=r.getNumber(v,o.APPLICATION,0)+1;r.store(v,e,o.APPLICATION,t.USER),r.store(S,g,o.APPLICATION,t.USER)}}))}),250));this._register(a.files.onDidSave((e=>s.work(e.model))))}const d=r.get(I,o.APPLICATION,new Date(0).toDateString());if(g===d)return;const f=r.getNumber(u,o.APPLICATION,0)+1;if(r.store(I,g,o.APPLICATION,t.USER),r.store(u,f,o.APPLICATION,t.USER),f<9||r.getNumber(v,o.APPLICATION,0)<e.editCount)return;const P=r.getBoolean(p,o.APPLICATION,!1)||Math.random()<e.userProbability;r.store(p,P,o.APPLICATION,t.USER),P?s.prompt(F.Info,A("helpUs","Help us improve our support for {0}",n.getLanguageName(e.languageId)??e.languageId),[{label:A("takeShortSurvey","Take Short Survey"),run:()=>{i.publicLog(`${e.surveyId}.survey/takeShortSurvey`),c.open(V.parse(`${e.surveyUrl}?o=${encodeURIComponent(z)}&v=${encodeURIComponent(m.version)}&m=${encodeURIComponent(i.machineId)}`)),r.store(p,!1,o.APPLICATION,t.USER),r.store(l,m.version,o.APPLICATION,t.USER)}},{label:A("remindLater","Remind Me Later"),run:()=>{i.publicLog(`${e.surveyId}.survey/remindMeLater`),r.store(u,f-3,o.APPLICATION,t.USER)}},{label:A("neverAgain","Don't Show Again"),isSecondary:!0,run:()=>{i.publicLog(`${e.surveyId}.survey/dontShowAgain`),r.store(p,!1,o.APPLICATION,t.USER),r.store(l,m.version,o.APPLICATION,t.USER)}}],{sticky:!0,priority:M.OPTIONAL}):r.store(l,m.version,o.APPLICATION,t.USER)}}let S=class{constructor(e,o,r,t,s,i,n,a){this.storageService=e,this.notificationService=o,this.telemetryService=r,this.textFileService=t,this.openerService=s,this.productService=i,this.languageService=n,this.extensionService=a,this.handleSurveys()}async handleSurveys(){this.productService.surveys&&(await this.extensionService.whenInstalledExtensionsRegistered(),this.productService.surveys.filter((e=>e.surveyId&&e.editCount&&e.languageId&&e.surveyUrl&&e.userProbability)).map((e=>new q(e,this.storageService,this.notificationService,this.telemetryService,this.languageService,this.textFileService,this.openerService,this.productService))))}};S=N([s(0,$),s(1,K),s(2,x),s(3,Y),s(4,G),s(5,w),s(6,k),s(7,j)],S),"en"===U&&D.as(_.Workbench).registerWorkbenchContribution(S,W.Restored);
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { localize } from "../../../../nls.js";
+import { language } from "../../../../base/common/platform.js";
+import { ILanguageService } from "../../../../editor/common/languages/language.js";
+import { IWorkbenchContributionsRegistry, IWorkbenchContribution, Extensions as WorkbenchExtensions } from "../../../common/contributions.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+import { ISurveyData } from "../../../../base/common/product.js";
+import { LifecyclePhase } from "../../../services/lifecycle/common/lifecycle.js";
+import { Severity, INotificationService, NotificationPriority } from "../../../../platform/notification/common/notification.js";
+import { ITextFileService, ITextFileEditorModel } from "../../../services/textfile/common/textfiles.js";
+import { IOpenerService } from "../../../../platform/opener/common/opener.js";
+import { URI } from "../../../../base/common/uri.js";
+import { platform } from "../../../../base/common/process.js";
+import { RunOnceWorker } from "../../../../base/common/async.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { IExtensionService } from "../../../services/extensions/common/extensions.js";
+class LanguageSurvey extends Disposable {
+  static {
+    __name(this, "LanguageSurvey");
+  }
+  constructor(data, storageService, notificationService, telemetryService, languageService, textFileService, openerService, productService) {
+    super();
+    const SESSION_COUNT_KEY = `${data.surveyId}.sessionCount`;
+    const LAST_SESSION_DATE_KEY = `${data.surveyId}.lastSessionDate`;
+    const SKIP_VERSION_KEY = `${data.surveyId}.skipVersion`;
+    const IS_CANDIDATE_KEY = `${data.surveyId}.isCandidate`;
+    const EDITED_LANGUAGE_COUNT_KEY = `${data.surveyId}.editedCount`;
+    const EDITED_LANGUAGE_DATE_KEY = `${data.surveyId}.editedDate`;
+    const skipVersion = storageService.get(SKIP_VERSION_KEY, StorageScope.APPLICATION, "");
+    if (skipVersion) {
+      return;
+    }
+    const date = (/* @__PURE__ */ new Date()).toDateString();
+    if (storageService.getNumber(EDITED_LANGUAGE_COUNT_KEY, StorageScope.APPLICATION, 0) < data.editCount) {
+      const onModelsSavedWorker = this._register(new RunOnceWorker((models) => {
+        models.forEach((m) => {
+          if (m.getLanguageId() === data.languageId && date !== storageService.get(EDITED_LANGUAGE_DATE_KEY, StorageScope.APPLICATION)) {
+            const editedCount = storageService.getNumber(EDITED_LANGUAGE_COUNT_KEY, StorageScope.APPLICATION, 0) + 1;
+            storageService.store(EDITED_LANGUAGE_COUNT_KEY, editedCount, StorageScope.APPLICATION, StorageTarget.USER);
+            storageService.store(EDITED_LANGUAGE_DATE_KEY, date, StorageScope.APPLICATION, StorageTarget.USER);
+          }
+        });
+      }, 250));
+      this._register(textFileService.files.onDidSave((e) => onModelsSavedWorker.work(e.model)));
+    }
+    const lastSessionDate = storageService.get(LAST_SESSION_DATE_KEY, StorageScope.APPLICATION, (/* @__PURE__ */ new Date(0)).toDateString());
+    if (date === lastSessionDate) {
+      return;
+    }
+    const sessionCount = storageService.getNumber(SESSION_COUNT_KEY, StorageScope.APPLICATION, 0) + 1;
+    storageService.store(LAST_SESSION_DATE_KEY, date, StorageScope.APPLICATION, StorageTarget.USER);
+    storageService.store(SESSION_COUNT_KEY, sessionCount, StorageScope.APPLICATION, StorageTarget.USER);
+    if (sessionCount < 9) {
+      return;
+    }
+    if (storageService.getNumber(EDITED_LANGUAGE_COUNT_KEY, StorageScope.APPLICATION, 0) < data.editCount) {
+      return;
+    }
+    const isCandidate = storageService.getBoolean(IS_CANDIDATE_KEY, StorageScope.APPLICATION, false) || Math.random() < data.userProbability;
+    storageService.store(IS_CANDIDATE_KEY, isCandidate, StorageScope.APPLICATION, StorageTarget.USER);
+    if (!isCandidate) {
+      storageService.store(SKIP_VERSION_KEY, productService.version, StorageScope.APPLICATION, StorageTarget.USER);
+      return;
+    }
+    notificationService.prompt(
+      Severity.Info,
+      localize("helpUs", "Help us improve our support for {0}", languageService.getLanguageName(data.languageId) ?? data.languageId),
+      [{
+        label: localize("takeShortSurvey", "Take Short Survey"),
+        run: /* @__PURE__ */ __name(() => {
+          telemetryService.publicLog(`${data.surveyId}.survey/takeShortSurvey`);
+          openerService.open(URI.parse(`${data.surveyUrl}?o=${encodeURIComponent(platform)}&v=${encodeURIComponent(productService.version)}&m=${encodeURIComponent(telemetryService.machineId)}`));
+          storageService.store(IS_CANDIDATE_KEY, false, StorageScope.APPLICATION, StorageTarget.USER);
+          storageService.store(SKIP_VERSION_KEY, productService.version, StorageScope.APPLICATION, StorageTarget.USER);
+        }, "run")
+      }, {
+        label: localize("remindLater", "Remind Me Later"),
+        run: /* @__PURE__ */ __name(() => {
+          telemetryService.publicLog(`${data.surveyId}.survey/remindMeLater`);
+          storageService.store(SESSION_COUNT_KEY, sessionCount - 3, StorageScope.APPLICATION, StorageTarget.USER);
+        }, "run")
+      }, {
+        label: localize("neverAgain", "Don't Show Again"),
+        isSecondary: true,
+        run: /* @__PURE__ */ __name(() => {
+          telemetryService.publicLog(`${data.surveyId}.survey/dontShowAgain`);
+          storageService.store(IS_CANDIDATE_KEY, false, StorageScope.APPLICATION, StorageTarget.USER);
+          storageService.store(SKIP_VERSION_KEY, productService.version, StorageScope.APPLICATION, StorageTarget.USER);
+        }, "run")
+      }],
+      { sticky: true, priority: NotificationPriority.OPTIONAL }
+    );
+  }
+}
+let LanguageSurveysContribution = class {
+  constructor(storageService, notificationService, telemetryService, textFileService, openerService, productService, languageService, extensionService) {
+    this.storageService = storageService;
+    this.notificationService = notificationService;
+    this.telemetryService = telemetryService;
+    this.textFileService = textFileService;
+    this.openerService = openerService;
+    this.productService = productService;
+    this.languageService = languageService;
+    this.extensionService = extensionService;
+    this.handleSurveys();
+  }
+  static {
+    __name(this, "LanguageSurveysContribution");
+  }
+  async handleSurveys() {
+    if (!this.productService.surveys) {
+      return;
+    }
+    await this.extensionService.whenInstalledExtensionsRegistered();
+    this.productService.surveys.filter((surveyData) => surveyData.surveyId && surveyData.editCount && surveyData.languageId && surveyData.surveyUrl && surveyData.userProbability).map((surveyData) => new LanguageSurvey(surveyData, this.storageService, this.notificationService, this.telemetryService, this.languageService, this.textFileService, this.openerService, this.productService));
+  }
+};
+LanguageSurveysContribution = __decorateClass([
+  __decorateParam(0, IStorageService),
+  __decorateParam(1, INotificationService),
+  __decorateParam(2, ITelemetryService),
+  __decorateParam(3, ITextFileService),
+  __decorateParam(4, IOpenerService),
+  __decorateParam(5, IProductService),
+  __decorateParam(6, ILanguageService),
+  __decorateParam(7, IExtensionService)
+], LanguageSurveysContribution);
+if (language === "en") {
+  const workbenchRegistry = Registry.as(WorkbenchExtensions.Workbench);
+  workbenchRegistry.registerWorkbenchContribution(LanguageSurveysContribution, LifecyclePhase.Restored);
+}
+//# sourceMappingURL=languageSurveys.contribution.js.map

@@ -1,1 +1,81 @@
-import{MarkdownToken as n}from"./tokens/markdownToken.js";import"../../../../base/common/buffer.js";import{LeftBracket as o}from"../simpleCodec/tokens/brackets.js";import{PartialMarkdownImage as a}from"./parsers/markdownImage.js";import"../../../../base/common/stream.js";import{LeftAngleBracket as i}from"../simpleCodec/tokens/angleBrackets.js";import{ExclamationMark as s}from"../simpleCodec/tokens/exclamationMark.js";import{BaseDecoder as m}from"../../../../base/common/codecs/baseDecoder.js";import{SimpleDecoder as c}from"../simpleCodec/simpleDecoder.js";import{MarkdownCommentStart as f,PartialMarkdownCommentStart as d}from"./parsers/markdownComment.js";import{PartialMarkdownLinkCaption as u}from"./parsers/markdownLink.js";class g extends m{current;constructor(r){super(new c(r))}onStreamData(r){if(r instanceof o&&!this.current){this.current=new u(r);return}if(r instanceof i&&!this.current){this.current=new d(r);return}if(r instanceof s&&!this.current){this.current=new a(r);return}if(!this.current){this._onData.fire(r);return}const t=this.current.accept(r);if(t.result==="success"){const{nextParser:e}=t;e instanceof n?(this._onData.fire(e),delete this.current):this.current=e}else for(const e of this.current.tokens)this._onData.fire(e),delete this.current;t.wasTokenConsumed||this.onStreamData(r)}onStreamEnd(){if(this.current){if(this.current instanceof f)return this._onData.fire(this.current.asMarkdownComment()),delete this.current,this.onStreamEnd();const{tokens:r}=this.current;delete this.current;for(const t of[...r])this._onData.fire(t)}super.onStreamEnd()}}export{g as MarkdownDecoder};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { MarkdownToken } from "./tokens/markdownToken.js";
+import { VSBuffer } from "../../../../base/common/buffer.js";
+import { LeftBracket } from "../simpleCodec/tokens/brackets.js";
+import { PartialMarkdownImage } from "./parsers/markdownImage.js";
+import { ReadableStream } from "../../../../base/common/stream.js";
+import { LeftAngleBracket } from "../simpleCodec/tokens/angleBrackets.js";
+import { ExclamationMark } from "../simpleCodec/tokens/exclamationMark.js";
+import { BaseDecoder } from "../../../../base/common/codecs/baseDecoder.js";
+import { SimpleDecoder, TSimpleToken } from "../simpleCodec/simpleDecoder.js";
+import { MarkdownCommentStart, PartialMarkdownCommentStart } from "./parsers/markdownComment.js";
+import { MarkdownLinkCaption, PartialMarkdownLink, PartialMarkdownLinkCaption } from "./parsers/markdownLink.js";
+class MarkdownDecoder extends BaseDecoder {
+  static {
+    __name(this, "MarkdownDecoder");
+  }
+  /**
+   * Current parser object that is responsible for parsing a sequence of tokens into
+   * some markdown entity. Set to `undefined` when no parsing is in progress at the moment.
+   */
+  current;
+  constructor(stream) {
+    super(new SimpleDecoder(stream));
+  }
+  onStreamData(token) {
+    if (token instanceof LeftBracket && !this.current) {
+      this.current = new PartialMarkdownLinkCaption(token);
+      return;
+    }
+    if (token instanceof LeftAngleBracket && !this.current) {
+      this.current = new PartialMarkdownCommentStart(token);
+      return;
+    }
+    if (token instanceof ExclamationMark && !this.current) {
+      this.current = new PartialMarkdownImage(token);
+      return;
+    }
+    if (!this.current) {
+      this._onData.fire(token);
+      return;
+    }
+    const parseResult = this.current.accept(token);
+    if (parseResult.result === "success") {
+      const { nextParser } = parseResult;
+      if (nextParser instanceof MarkdownToken) {
+        this._onData.fire(nextParser);
+        delete this.current;
+      } else {
+        this.current = nextParser;
+      }
+    } else {
+      for (const token2 of this.current.tokens) {
+        this._onData.fire(token2);
+        delete this.current;
+      }
+    }
+    if (!parseResult.wasTokenConsumed) {
+      this.onStreamData(token);
+    }
+  }
+  onStreamEnd() {
+    if (this.current) {
+      if (this.current instanceof MarkdownCommentStart) {
+        this._onData.fire(this.current.asMarkdownComment());
+        delete this.current;
+        return this.onStreamEnd();
+      }
+      const { tokens } = this.current;
+      delete this.current;
+      for (const token of [...tokens]) {
+        this._onData.fire(token);
+      }
+    }
+    super.onStreamEnd();
+  }
+}
+export {
+  MarkdownDecoder
+};
+//# sourceMappingURL=markdownDecoder.js.map

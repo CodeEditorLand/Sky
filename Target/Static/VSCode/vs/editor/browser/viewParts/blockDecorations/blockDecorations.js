@@ -1,1 +1,99 @@
-import{createFastDomNode as l}from"../../../../base/browser/fastDomNode.js";import"./blockDecorations.css";import"../../view/renderingContext.js";import{ViewPart as p}from"../../view/viewPart.js";import{EditorOption as u}from"../../../common/config/editorOptions.js";import"../../../common/viewEvents.js";import"../../../common/viewModel/viewContext.js";class D extends p{domNode;blocks=[];contentWidth=-1;contentLeft=0;constructor(e){super(e),this.domNode=l(document.createElement("div")),this.domNode.setAttribute("role","presentation"),this.domNode.setAttribute("aria-hidden","true"),this.domNode.setClassName("blockDecorations-container"),this.update()}update(){let e=!1;const t=this._context.configuration.options.get(u.layoutInfo),o=t.contentWidth-t.verticalScrollbarWidth;this.contentWidth!==o&&(this.contentWidth=o,e=!0);const n=t.contentLeft;return this.contentLeft!==n&&(this.contentLeft=n,e=!0),e}dispose(){super.dispose()}onConfigurationChanged(e){return this.update()}onScrollChanged(e){return e.scrollTopChanged||e.scrollLeftChanged}onDecorationsChanged(e){return!0}onZonesChanged(e){return!0}prepareRender(e){}render(e){let t=0;const o=e.getDecorationsInViewport();for(const n of o){if(!n.options.blockClassName)continue;let o,s,r=this.blocks[t];r||(r=this.blocks[t]=l(document.createElement("div")),this.domNode.appendChild(r)),n.options.blockIsAfterEnd?(o=e.getVerticalOffsetAfterLineNumber(n.range.endLineNumber,!1),s=e.getVerticalOffsetAfterLineNumber(n.range.endLineNumber,!0)):(o=e.getVerticalOffsetForLineNumber(n.range.startLineNumber,!0),s=n.range.isEmpty()&&!n.options.blockDoesNotCollapse?e.getVerticalOffsetForLineNumber(n.range.startLineNumber,!1):e.getVerticalOffsetAfterLineNumber(n.range.endLineNumber,!0));const[i,c,a,d]=n.options.blockPadding??[0,0,0,0];r.setClassName("blockDecorations-block "+n.options.blockClassName),r.setLeft(this.contentLeft-d),r.setWidth(this.contentWidth+d+c),r.setTop(o-e.scrollTop-i),r.setHeight(s-o+i+a),t++}for(let e=t;e<this.blocks.length;e++)this.blocks[e].domNode.remove();this.blocks.length=t}}export{D as BlockDecorations};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { createFastDomNode, FastDomNode } from "../../../../base/browser/fastDomNode.js";
+import "./blockDecorations.css";
+import { RenderingContext, RestrictedRenderingContext } from "../../view/renderingContext.js";
+import { ViewPart } from "../../view/viewPart.js";
+import { EditorOption } from "../../../common/config/editorOptions.js";
+import * as viewEvents from "../../../common/viewEvents.js";
+import { ViewContext } from "../../../common/viewModel/viewContext.js";
+class BlockDecorations extends ViewPart {
+  static {
+    __name(this, "BlockDecorations");
+  }
+  domNode;
+  blocks = [];
+  contentWidth = -1;
+  contentLeft = 0;
+  constructor(context) {
+    super(context);
+    this.domNode = createFastDomNode(document.createElement("div"));
+    this.domNode.setAttribute("role", "presentation");
+    this.domNode.setAttribute("aria-hidden", "true");
+    this.domNode.setClassName("blockDecorations-container");
+    this.update();
+  }
+  update() {
+    let didChange = false;
+    const options = this._context.configuration.options;
+    const layoutInfo = options.get(EditorOption.layoutInfo);
+    const newContentWidth = layoutInfo.contentWidth - layoutInfo.verticalScrollbarWidth;
+    if (this.contentWidth !== newContentWidth) {
+      this.contentWidth = newContentWidth;
+      didChange = true;
+    }
+    const newContentLeft = layoutInfo.contentLeft;
+    if (this.contentLeft !== newContentLeft) {
+      this.contentLeft = newContentLeft;
+      didChange = true;
+    }
+    return didChange;
+  }
+  dispose() {
+    super.dispose();
+  }
+  // --- begin event handlers
+  onConfigurationChanged(e) {
+    return this.update();
+  }
+  onScrollChanged(e) {
+    return e.scrollTopChanged || e.scrollLeftChanged;
+  }
+  onDecorationsChanged(e) {
+    return true;
+  }
+  onZonesChanged(e) {
+    return true;
+  }
+  // --- end event handlers
+  prepareRender(ctx) {
+  }
+  render(ctx) {
+    let count = 0;
+    const decorations = ctx.getDecorationsInViewport();
+    for (const decoration of decorations) {
+      if (!decoration.options.blockClassName) {
+        continue;
+      }
+      let block = this.blocks[count];
+      if (!block) {
+        block = this.blocks[count] = createFastDomNode(document.createElement("div"));
+        this.domNode.appendChild(block);
+      }
+      let top;
+      let bottom;
+      if (decoration.options.blockIsAfterEnd) {
+        top = ctx.getVerticalOffsetAfterLineNumber(decoration.range.endLineNumber, false);
+        bottom = ctx.getVerticalOffsetAfterLineNumber(decoration.range.endLineNumber, true);
+      } else {
+        top = ctx.getVerticalOffsetForLineNumber(decoration.range.startLineNumber, true);
+        bottom = decoration.range.isEmpty() && !decoration.options.blockDoesNotCollapse ? ctx.getVerticalOffsetForLineNumber(decoration.range.startLineNumber, false) : ctx.getVerticalOffsetAfterLineNumber(decoration.range.endLineNumber, true);
+      }
+      const [paddingTop, paddingRight, paddingBottom, paddingLeft] = decoration.options.blockPadding ?? [0, 0, 0, 0];
+      block.setClassName("blockDecorations-block " + decoration.options.blockClassName);
+      block.setLeft(this.contentLeft - paddingLeft);
+      block.setWidth(this.contentWidth + paddingLeft + paddingRight);
+      block.setTop(top - ctx.scrollTop - paddingTop);
+      block.setHeight(bottom - top + paddingTop + paddingBottom);
+      count++;
+    }
+    for (let i = count; i < this.blocks.length; i++) {
+      this.blocks[i].domNode.remove();
+    }
+    this.blocks.length = count;
+  }
+}
+export {
+  BlockDecorations
+};
+//# sourceMappingURL=blockDecorations.js.map

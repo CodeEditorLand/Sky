@@ -1,1 +1,260 @@
-import{Lazy as N}from"./lazy.js";import{sep as L}from"./path.js";const m=new N((()=>{const e=new Intl.Collator(void 0,{numeric:!0,sensitivity:"base"});return{collator:e,collatorIsNumeric:e.resolvedOptions().numeric}})),f=new N((()=>({collator:new Intl.Collator(void 0,{numeric:!0})}))),C=new N((()=>({collator:new Intl.Collator(void 0,{numeric:!0,sensitivity:"accent"})})));function w(e,o,t=!1){const r=e||"",n=o||"",a=m.value.collator.compare(r,n);return m.value.collatorIsNumeric&&0===a&&r!==n?r<n?-1:1:a}function B(e,t){return o(f.value.collator,e=e||"",t=t||"")}function P(e,t){const r=f.value.collator;return d(e=e||"",t=t||"")||o(r,e,t)}function U(e,t){const r=f.value.collator;return I(e=e||"",t=t||"")||o(r,e,t)}function W(e,o){return(e=e||"")===(o=o||"")?0:e<o?-1:1}function M(e,o){const[t,r]=E(e),[n,a]=E(o);let c=m.value.collator.compare(r,a);if(0===c){if(m.value.collatorIsNumeric&&r!==a)return r<a?-1:1;if(c=m.value.collator.compare(t,n),m.value.collatorIsNumeric&&0===c&&t!==n)return t<n?-1:1}return c}function O(e,t){t=t||"";const r=a(e=e||""),n=a(t),c=f.value.collator;return o(C.value.collator,r,n)||o(c,e,t)}function z(e,t){t=t||"";const r=a(e=e||""),n=a(t),c=f.value.collator;return o(C.value.collator,r,n)||d(e,t)||o(c,e,t)}function D(e,t){t=t||"";const r=a(e=e||""),n=a(t),c=f.value.collator;return o(C.value.collator,r,n)||I(e,t)||o(c,e,t)}function S(e,o){o=o||"";const t=a(e=e||"").toLowerCase(),r=a(o).toLowerCase();return t!==r?t<r?-1:1:e!==o?e<o?-1:1:0}const b=/^(.*?)(\.([^.]*))?$/;function E(e,o=!1){const t=e?b.exec(e):[];let r=[t&&t[1]||"",t&&t[3]||""];return o&&(!r[0]&&r[1]||r[0]&&"."===r[0].charAt(0))&&(r=[r[0]+"."+r[1],""]),r}function a(e){const o=e?b.exec(e):[];return o&&o[1]&&"."!==o[1].charAt(0)&&o[3]||""}function o(e,o,t){const r=e.compare(o,t);return 0!==r?r:o.length!==t.length?o.length<t.length?-1:1:0}function p(e){const o=e.charAt(0);return o.toLocaleUpperCase()!==o}function x(e){const o=e.charAt(0);return o.toLocaleLowerCase()!==o}function I(e,o){return p(e)&&x(o)?-1:x(e)&&p(o)?1:0}function d(e,o){return x(e)&&p(o)?-1:p(e)&&x(o)?1:0}function A(e,o,t=!1){return t||(e=e&&e.toLowerCase(),o=o&&o.toLowerCase()),e===o?0:e<o?-1:1}function $(e,o,t=!1){const r=e.split(L),n=o.split(L),a=r.length-1,c=n.length-1;let l,s;for(let e=0;;e++){if(l=a===e,s=c===e,l&&s)return w(r[e],n[e],t);if(l)return-1;if(s)return 1;const o=A(r[e],n[e],t);if(0!==o)return o}}function j(e,o,t){const r=e.toLowerCase(),n=o.toLowerCase(),a=y(e,o,t);if(a)return a;const c=r.endsWith(t);if(c!==n.endsWith(t))return c?-1:1;const l=w(r,n);return 0!==l?l:r.localeCompare(n)}function y(e,o,t){const r=e.toLowerCase(),n=o.toLowerCase(),a=r.startsWith(t),c=n.startsWith(t);if(a!==c)return a?-1:1;if(a&&c){if(r.length<n.length)return-1;if(r.length>n.length)return 1}return 0}export{j as compareAnything,y as compareByPrefix,M as compareFileExtensions,O as compareFileExtensionsDefault,D as compareFileExtensionsLower,S as compareFileExtensionsUnicode,z as compareFileExtensionsUpper,w as compareFileNames,B as compareFileNamesDefault,U as compareFileNamesLower,W as compareFileNamesUnicode,P as compareFileNamesUpper,$ as comparePaths};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Lazy } from "./lazy.js";
+import { sep } from "./path.js";
+const intlFileNameCollatorBaseNumeric = new Lazy(() => {
+  const collator = new Intl.Collator(void 0, { numeric: true, sensitivity: "base" });
+  return {
+    collator,
+    collatorIsNumeric: collator.resolvedOptions().numeric
+  };
+});
+const intlFileNameCollatorNumeric = new Lazy(() => {
+  const collator = new Intl.Collator(void 0, { numeric: true });
+  return {
+    collator
+  };
+});
+const intlFileNameCollatorNumericCaseInsensitive = new Lazy(() => {
+  const collator = new Intl.Collator(void 0, { numeric: true, sensitivity: "accent" });
+  return {
+    collator
+  };
+});
+function compareFileNames(one, other, caseSensitive = false) {
+  const a = one || "";
+  const b = other || "";
+  const result = intlFileNameCollatorBaseNumeric.value.collator.compare(a, b);
+  if (intlFileNameCollatorBaseNumeric.value.collatorIsNumeric && result === 0 && a !== b) {
+    return a < b ? -1 : 1;
+  }
+  return result;
+}
+__name(compareFileNames, "compareFileNames");
+function compareFileNamesDefault(one, other) {
+  const collatorNumeric = intlFileNameCollatorNumeric.value.collator;
+  one = one || "";
+  other = other || "";
+  return compareAndDisambiguateByLength(collatorNumeric, one, other);
+}
+__name(compareFileNamesDefault, "compareFileNamesDefault");
+function compareFileNamesUpper(one, other) {
+  const collatorNumeric = intlFileNameCollatorNumeric.value.collator;
+  one = one || "";
+  other = other || "";
+  return compareCaseUpperFirst(one, other) || compareAndDisambiguateByLength(collatorNumeric, one, other);
+}
+__name(compareFileNamesUpper, "compareFileNamesUpper");
+function compareFileNamesLower(one, other) {
+  const collatorNumeric = intlFileNameCollatorNumeric.value.collator;
+  one = one || "";
+  other = other || "";
+  return compareCaseLowerFirst(one, other) || compareAndDisambiguateByLength(collatorNumeric, one, other);
+}
+__name(compareFileNamesLower, "compareFileNamesLower");
+function compareFileNamesUnicode(one, other) {
+  one = one || "";
+  other = other || "";
+  if (one === other) {
+    return 0;
+  }
+  return one < other ? -1 : 1;
+}
+__name(compareFileNamesUnicode, "compareFileNamesUnicode");
+function compareFileExtensions(one, other) {
+  const [oneName, oneExtension] = extractNameAndExtension(one);
+  const [otherName, otherExtension] = extractNameAndExtension(other);
+  let result = intlFileNameCollatorBaseNumeric.value.collator.compare(oneExtension, otherExtension);
+  if (result === 0) {
+    if (intlFileNameCollatorBaseNumeric.value.collatorIsNumeric && oneExtension !== otherExtension) {
+      return oneExtension < otherExtension ? -1 : 1;
+    }
+    result = intlFileNameCollatorBaseNumeric.value.collator.compare(oneName, otherName);
+    if (intlFileNameCollatorBaseNumeric.value.collatorIsNumeric && result === 0 && oneName !== otherName) {
+      return oneName < otherName ? -1 : 1;
+    }
+  }
+  return result;
+}
+__name(compareFileExtensions, "compareFileExtensions");
+function compareFileExtensionsDefault(one, other) {
+  one = one || "";
+  other = other || "";
+  const oneExtension = extractExtension(one);
+  const otherExtension = extractExtension(other);
+  const collatorNumeric = intlFileNameCollatorNumeric.value.collator;
+  const collatorNumericCaseInsensitive = intlFileNameCollatorNumericCaseInsensitive.value.collator;
+  return compareAndDisambiguateByLength(collatorNumericCaseInsensitive, oneExtension, otherExtension) || compareAndDisambiguateByLength(collatorNumeric, one, other);
+}
+__name(compareFileExtensionsDefault, "compareFileExtensionsDefault");
+function compareFileExtensionsUpper(one, other) {
+  one = one || "";
+  other = other || "";
+  const oneExtension = extractExtension(one);
+  const otherExtension = extractExtension(other);
+  const collatorNumeric = intlFileNameCollatorNumeric.value.collator;
+  const collatorNumericCaseInsensitive = intlFileNameCollatorNumericCaseInsensitive.value.collator;
+  return compareAndDisambiguateByLength(collatorNumericCaseInsensitive, oneExtension, otherExtension) || compareCaseUpperFirst(one, other) || compareAndDisambiguateByLength(collatorNumeric, one, other);
+}
+__name(compareFileExtensionsUpper, "compareFileExtensionsUpper");
+function compareFileExtensionsLower(one, other) {
+  one = one || "";
+  other = other || "";
+  const oneExtension = extractExtension(one);
+  const otherExtension = extractExtension(other);
+  const collatorNumeric = intlFileNameCollatorNumeric.value.collator;
+  const collatorNumericCaseInsensitive = intlFileNameCollatorNumericCaseInsensitive.value.collator;
+  return compareAndDisambiguateByLength(collatorNumericCaseInsensitive, oneExtension, otherExtension) || compareCaseLowerFirst(one, other) || compareAndDisambiguateByLength(collatorNumeric, one, other);
+}
+__name(compareFileExtensionsLower, "compareFileExtensionsLower");
+function compareFileExtensionsUnicode(one, other) {
+  one = one || "";
+  other = other || "";
+  const oneExtension = extractExtension(one).toLowerCase();
+  const otherExtension = extractExtension(other).toLowerCase();
+  if (oneExtension !== otherExtension) {
+    return oneExtension < otherExtension ? -1 : 1;
+  }
+  if (one !== other) {
+    return one < other ? -1 : 1;
+  }
+  return 0;
+}
+__name(compareFileExtensionsUnicode, "compareFileExtensionsUnicode");
+const FileNameMatch = /^(.*?)(\.([^.]*))?$/;
+function extractNameAndExtension(str, dotfilesAsNames = false) {
+  const match = str ? FileNameMatch.exec(str) : [];
+  let result = [match && match[1] || "", match && match[3] || ""];
+  if (dotfilesAsNames && (!result[0] && result[1] || result[0] && result[0].charAt(0) === ".")) {
+    result = [result[0] + "." + result[1], ""];
+  }
+  return result;
+}
+__name(extractNameAndExtension, "extractNameAndExtension");
+function extractExtension(str) {
+  const match = str ? FileNameMatch.exec(str) : [];
+  return match && match[1] && match[1].charAt(0) !== "." && match[3] || "";
+}
+__name(extractExtension, "extractExtension");
+function compareAndDisambiguateByLength(collator, one, other) {
+  const result = collator.compare(one, other);
+  if (result !== 0) {
+    return result;
+  }
+  if (one.length !== other.length) {
+    return one.length < other.length ? -1 : 1;
+  }
+  return 0;
+}
+__name(compareAndDisambiguateByLength, "compareAndDisambiguateByLength");
+function startsWithLower(string) {
+  const character = string.charAt(0);
+  return character.toLocaleUpperCase() !== character ? true : false;
+}
+__name(startsWithLower, "startsWithLower");
+function startsWithUpper(string) {
+  const character = string.charAt(0);
+  return character.toLocaleLowerCase() !== character ? true : false;
+}
+__name(startsWithUpper, "startsWithUpper");
+function compareCaseLowerFirst(one, other) {
+  if (startsWithLower(one) && startsWithUpper(other)) {
+    return -1;
+  }
+  return startsWithUpper(one) && startsWithLower(other) ? 1 : 0;
+}
+__name(compareCaseLowerFirst, "compareCaseLowerFirst");
+function compareCaseUpperFirst(one, other) {
+  if (startsWithUpper(one) && startsWithLower(other)) {
+    return -1;
+  }
+  return startsWithLower(one) && startsWithUpper(other) ? 1 : 0;
+}
+__name(compareCaseUpperFirst, "compareCaseUpperFirst");
+function comparePathComponents(one, other, caseSensitive = false) {
+  if (!caseSensitive) {
+    one = one && one.toLowerCase();
+    other = other && other.toLowerCase();
+  }
+  if (one === other) {
+    return 0;
+  }
+  return one < other ? -1 : 1;
+}
+__name(comparePathComponents, "comparePathComponents");
+function comparePaths(one, other, caseSensitive = false) {
+  const oneParts = one.split(sep);
+  const otherParts = other.split(sep);
+  const lastOne = oneParts.length - 1;
+  const lastOther = otherParts.length - 1;
+  let endOne, endOther;
+  for (let i = 0; ; i++) {
+    endOne = lastOne === i;
+    endOther = lastOther === i;
+    if (endOne && endOther) {
+      return compareFileNames(oneParts[i], otherParts[i], caseSensitive);
+    } else if (endOne) {
+      return -1;
+    } else if (endOther) {
+      return 1;
+    }
+    const result = comparePathComponents(oneParts[i], otherParts[i], caseSensitive);
+    if (result !== 0) {
+      return result;
+    }
+  }
+}
+__name(comparePaths, "comparePaths");
+function compareAnything(one, other, lookFor) {
+  const elementAName = one.toLowerCase();
+  const elementBName = other.toLowerCase();
+  const prefixCompare = compareByPrefix(one, other, lookFor);
+  if (prefixCompare) {
+    return prefixCompare;
+  }
+  const elementASuffixMatch = elementAName.endsWith(lookFor);
+  const elementBSuffixMatch = elementBName.endsWith(lookFor);
+  if (elementASuffixMatch !== elementBSuffixMatch) {
+    return elementASuffixMatch ? -1 : 1;
+  }
+  const r = compareFileNames(elementAName, elementBName);
+  if (r !== 0) {
+    return r;
+  }
+  return elementAName.localeCompare(elementBName);
+}
+__name(compareAnything, "compareAnything");
+function compareByPrefix(one, other, lookFor) {
+  const elementAName = one.toLowerCase();
+  const elementBName = other.toLowerCase();
+  const elementAPrefixMatch = elementAName.startsWith(lookFor);
+  const elementBPrefixMatch = elementBName.startsWith(lookFor);
+  if (elementAPrefixMatch !== elementBPrefixMatch) {
+    return elementAPrefixMatch ? -1 : 1;
+  } else if (elementAPrefixMatch && elementBPrefixMatch) {
+    if (elementAName.length < elementBName.length) {
+      return -1;
+    }
+    if (elementAName.length > elementBName.length) {
+      return 1;
+    }
+  }
+  return 0;
+}
+__name(compareByPrefix, "compareByPrefix");
+export {
+  compareAnything,
+  compareByPrefix,
+  compareFileExtensions,
+  compareFileExtensionsDefault,
+  compareFileExtensionsLower,
+  compareFileExtensionsUnicode,
+  compareFileExtensionsUpper,
+  compareFileNames,
+  compareFileNamesDefault,
+  compareFileNamesLower,
+  compareFileNamesUnicode,
+  compareFileNamesUpper,
+  comparePaths
+};
+//# sourceMappingURL=comparers.js.map

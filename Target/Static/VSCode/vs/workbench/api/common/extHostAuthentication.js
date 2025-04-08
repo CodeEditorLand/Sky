@@ -1,1 +1,130 @@
-var u=Object.defineProperty;var v=Object.getOwnPropertyDescriptor;var d=(r,e,n,t)=>{for(var i=t>1?void 0:t?v(e,n):e,s=r.length-1,o;s>=0;s--)(o=r[s])&&(i=(t?o(e,n,i):o(i))||i);return t&&i&&u(e,n,i),i},h=(r,e)=>(n,t)=>e(n,t,r);import{Emitter as g,Event as S}from"../../../base/common/event.js";import{MainContext as l}from"./extHost.protocol.js";import{Disposable as m}from"./extHostTypes.js";import{ExtensionIdentifier as A}from"../../../platform/extensions/common/extensions.js";import{INTERNAL_AUTH_PROVIDER_PREFIX as P}from"../../services/authentication/common/authentication.js";import{createDecorator as f}from"../../../platform/instantiation/common/instantiation.js";import{IExtHostRpcService as x}from"./extHostRpcService.js";const R=f("IExtHostAuthentication");let c=class{_proxy;_authenticationProviders=new Map;_onDidChangeSessions=new g;_getSessionTaskSingler=new y;constructor(e){this._proxy=e.getProxy(l.MainThreadAuthentication)}getExtensionScopedSessionsEvent(e){const n=e.toLowerCase();return S.chain(this._onDidChangeSessions.event,t=>t.filter(i=>!i.extensionIdFilter||i.extensionIdFilter.includes(n)).map(i=>({provider:i.provider})))}async getSession(e,n,t,i={}){const s=A.toKey(e.identifier),o=[...t].sort().join(" "),p=Object.keys(i).sort().map(a=>`${a}:${!!i[a]}`).join(", ");return await this._getSessionTaskSingler.getOrCreate(`${s} ${n} ${o} ${p}`,async()=>{await this._proxy.$ensureProvider(n);const a=e.displayName||e.name;return this._proxy.$getSession(n,t,s,a,i)})}async getAccounts(e){return await this._proxy.$ensureProvider(e),await this._proxy.$getAccounts(e)}async removeSession(e,n){const t=this._authenticationProviders.get(e);return t?t.provider.removeSession(n):this._proxy.$removeSession(e,n)}registerAuthenticationProvider(e,n,t,i){if(this._authenticationProviders.get(e))throw new Error(`An authentication provider with id '${e}' is already registered.`);this._authenticationProviders.set(e,{label:n,provider:t,options:i??{supportsMultipleAccounts:!1}});const s=t.onDidChangeSessions(o=>this._proxy.$sendDidChangeSessions(e,o));return this._proxy.$registerAuthenticationProvider(e,n,i?.supportsMultipleAccounts??!1),new m(()=>{s.dispose(),this._authenticationProviders.delete(e),this._proxy.$unregisterAuthenticationProvider(e)})}async $createSession(e,n,t){const i=this._authenticationProviders.get(e);if(i)return await i.provider.createSession(n,t);throw new Error(`Unable to find authentication provider with handle: ${e}`)}async $removeSession(e,n){const t=this._authenticationProviders.get(e);if(t)return await t.provider.removeSession(n);throw new Error(`Unable to find authentication provider with handle: ${e}`)}async $getSessions(e,n,t){const i=this._authenticationProviders.get(e);if(i)return await i.provider.getSessions(n,t);throw new Error(`Unable to find authentication provider with handle: ${e}`)}$onDidChangeAuthenticationSessions(e,n,t){return e.startsWith(P)||this._onDidChangeSessions.fire({provider:{id:e,label:n},extensionIdFilter:t}),Promise.resolve()}};c=d([h(0,x)],c);class y{_inFlightPromises=new Map;getOrCreate(e,n){const t=this._inFlightPromises.get(e);if(t)return t;const i=n().finally(()=>this._inFlightPromises.delete(e));return this._inFlightPromises.set(e,i),i}}export{c as ExtHostAuthentication,R as IExtHostAuthentication};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Emitter, Event } from "../../../base/common/event.js";
+import { MainContext, MainThreadAuthenticationShape, ExtHostAuthenticationShape } from "./extHost.protocol.js";
+import { Disposable } from "./extHostTypes.js";
+import { IExtensionDescription, ExtensionIdentifier } from "../../../platform/extensions/common/extensions.js";
+import { INTERNAL_AUTH_PROVIDER_PREFIX } from "../../services/authentication/common/authentication.js";
+import { createDecorator } from "../../../platform/instantiation/common/instantiation.js";
+import { IExtHostRpcService } from "./extHostRpcService.js";
+const IExtHostAuthentication = createDecorator("IExtHostAuthentication");
+let ExtHostAuthentication = class {
+  static {
+    __name(this, "ExtHostAuthentication");
+  }
+  _proxy;
+  _authenticationProviders = /* @__PURE__ */ new Map();
+  _onDidChangeSessions = new Emitter();
+  _getSessionTaskSingler = new TaskSingler();
+  constructor(extHostRpc) {
+    this._proxy = extHostRpc.getProxy(MainContext.MainThreadAuthentication);
+  }
+  /**
+   * This sets up an event that will fire when the auth sessions change with a built-in filter for the extensionId
+   * if a session change only affects a specific extension.
+   * @param extensionId The extension that is interested in the event.
+   * @returns An event with a built-in filter for the extensionId
+   */
+  getExtensionScopedSessionsEvent(extensionId) {
+    const normalizedExtensionId = extensionId.toLowerCase();
+    return Event.chain(
+      this._onDidChangeSessions.event,
+      ($) => $.filter((e) => !e.extensionIdFilter || e.extensionIdFilter.includes(normalizedExtensionId)).map((e) => ({ provider: e.provider }))
+    );
+  }
+  async getSession(requestingExtension, providerId, scopes, options = {}) {
+    const extensionId = ExtensionIdentifier.toKey(requestingExtension.identifier);
+    const sortedScopes = [...scopes].sort().join(" ");
+    const keys = Object.keys(options);
+    const optionsStr = keys.sort().map((key) => `${key}:${!!options[key]}`).join(", ");
+    return await this._getSessionTaskSingler.getOrCreate(`${extensionId} ${providerId} ${sortedScopes} ${optionsStr}`, async () => {
+      await this._proxy.$ensureProvider(providerId);
+      const extensionName = requestingExtension.displayName || requestingExtension.name;
+      return this._proxy.$getSession(providerId, scopes, extensionId, extensionName, options);
+    });
+  }
+  async getAccounts(providerId) {
+    await this._proxy.$ensureProvider(providerId);
+    return await this._proxy.$getAccounts(providerId);
+  }
+  async removeSession(providerId, sessionId) {
+    const providerData = this._authenticationProviders.get(providerId);
+    if (!providerData) {
+      return this._proxy.$removeSession(providerId, sessionId);
+    }
+    return providerData.provider.removeSession(sessionId);
+  }
+  registerAuthenticationProvider(id, label, provider, options) {
+    if (this._authenticationProviders.get(id)) {
+      throw new Error(`An authentication provider with id '${id}' is already registered.`);
+    }
+    this._authenticationProviders.set(id, { label, provider, options: options ?? { supportsMultipleAccounts: false } });
+    const listener = provider.onDidChangeSessions((e) => this._proxy.$sendDidChangeSessions(id, e));
+    this._proxy.$registerAuthenticationProvider(id, label, options?.supportsMultipleAccounts ?? false);
+    return new Disposable(() => {
+      listener.dispose();
+      this._authenticationProviders.delete(id);
+      this._proxy.$unregisterAuthenticationProvider(id);
+    });
+  }
+  async $createSession(providerId, scopes, options) {
+    const providerData = this._authenticationProviders.get(providerId);
+    if (providerData) {
+      return await providerData.provider.createSession(scopes, options);
+    }
+    throw new Error(`Unable to find authentication provider with handle: ${providerId}`);
+  }
+  async $removeSession(providerId, sessionId) {
+    const providerData = this._authenticationProviders.get(providerId);
+    if (providerData) {
+      return await providerData.provider.removeSession(sessionId);
+    }
+    throw new Error(`Unable to find authentication provider with handle: ${providerId}`);
+  }
+  async $getSessions(providerId, scopes, options) {
+    const providerData = this._authenticationProviders.get(providerId);
+    if (providerData) {
+      return await providerData.provider.getSessions(scopes, options);
+    }
+    throw new Error(`Unable to find authentication provider with handle: ${providerId}`);
+  }
+  $onDidChangeAuthenticationSessions(id, label, extensionIdFilter) {
+    if (!id.startsWith(INTERNAL_AUTH_PROVIDER_PREFIX)) {
+      this._onDidChangeSessions.fire({ provider: { id, label }, extensionIdFilter });
+    }
+    return Promise.resolve();
+  }
+};
+ExtHostAuthentication = __decorateClass([
+  __decorateParam(0, IExtHostRpcService)
+], ExtHostAuthentication);
+class TaskSingler {
+  static {
+    __name(this, "TaskSingler");
+  }
+  _inFlightPromises = /* @__PURE__ */ new Map();
+  getOrCreate(key, promiseFactory) {
+    const inFlight = this._inFlightPromises.get(key);
+    if (inFlight) {
+      return inFlight;
+    }
+    const promise = promiseFactory().finally(() => this._inFlightPromises.delete(key));
+    this._inFlightPromises.set(key, promise);
+    return promise;
+  }
+}
+export {
+  ExtHostAuthentication,
+  IExtHostAuthentication
+};
+//# sourceMappingURL=extHostAuthentication.js.map

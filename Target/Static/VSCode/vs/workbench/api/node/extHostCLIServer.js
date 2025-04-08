@@ -1,1 +1,156 @@
-var I=Object.defineProperty,S=Object.getOwnPropertyDescriptor,x=(e,t,r,o)=>{for(var s,a=o>1?void 0:o?S(t,r):t,n=e.length-1;n>=0;n--)(s=e[n])&&(a=(o?s(t,r,a):s(a))||a);return o&&a&&I(t,r,a),a},l=(e,t)=>(r,o)=>t(r,o,e);import{createRandomIPCHandle as C}from"../../../base/parts/ipc/node/ipc.net.js";import*as O from"http";import*as y from"fs";import{IExtHostCommands as A}from"../common/extHostCommands.js";import"../../../platform/window/common/window.js";import{URI as a}from"../../../base/common/uri.js";import{ILogService as _}from"../../../platform/log/common/log.js";import{hasWorkspaceFileExtension as b}from"../../../platform/workspace/common/workspace.js";class M{constructor(e,t,r){this._commands=e,this.logService=t,this._ipcHandlePath=r,this._server=O.createServer(((e,t)=>this.onRequest(e,t))),this.setup().catch((e=>(t.error(e),"")))}_server;get ipcHandlePath(){return this._ipcHandlePath}async setup(){try{this._server.listen(this.ipcHandlePath),this._server.on("error",(e=>this.logService.error(e)))}catch{this.logService.error("Could not start open from terminal server.")}return this._ipcHandlePath}onRequest(e,t){const r=(e,r)=>{t.writeHead(e,{"content-type":"application/json"}),t.end(JSON.stringify(r||null),(e=>e&&this.logService.error(e)))},o=[];e.setEncoding("utf8"),e.on("data",(e=>o.push(e))),e.on("end",(async()=>{try{const e=JSON.parse(o.join(""));let t;switch(e.type){case"open":t=await this.open(e);break;case"openExternal":t=await this.openExternal(e);break;case"status":t=await this.getStatus(e);break;case"extensionManagement":t=await this.manageExtensions(e);break;default:r(404,`Unknown message type: ${e.type}`)}r(200,t)}catch(e){const t=e instanceof Error?e.message:JSON.stringify(e);r(500,t),this.logService.error("Error while processing pipe request",e)}}))}async open(e){const{fileURIs:t,folderURIs:r,forceNewWindow:o,diffMode:s,mergeMode:n,addMode:i,removeMode:c,forceReuseWindow:m,gotoLineMode:p,waitMarkerFilePath:l,remoteAuthority:d}=e,h=[];if(Array.isArray(r))for(const e of r)try{h.push({folderUri:a.parse(e)})}catch{}if(Array.isArray(t))for(const e of t)try{b(e)?h.push({workspaceUri:a.parse(e)}):h.push({fileUri:a.parse(e)})}catch{}const f=l?a.file(l):void 0,u={forceNewWindow:o,diffMode:s,mergeMode:n,addMode:i,removeMode:c,gotoLineMode:p,forceReuseWindow:m,preferNewWindow:!(m||f||i||c),waitMarkerFileURI:f,remoteAuthority:d};this._commands.executeCommand("_remoteCLI.windowOpen",h,u)}async openExternal(e){for(const t of e.uris){const e=a.parse(t),r="file"===e.scheme?e:t;await this._commands.executeCommand("_remoteCLI.openExternal",r)}}async manageExtensions(e){const t=e=>e?.map((e=>/\.vsix$/i.test(e)?a.parse(e):e)),r={list:e.list,install:t(e.install),uninstall:t(e.uninstall),force:e.force};return await this._commands.executeCommand("_remoteCLI.manageExtensions",r)}async getStatus(e){return await this._commands.executeCommand("_remoteCLI.getSystemStatus")}dispose(){this._server.close(),this._ipcHandlePath&&"win32"!==process.platform&&y.existsSync(this._ipcHandlePath)&&y.unlinkSync(this._ipcHandlePath)}}let m=class extends M{constructor(e,t){super(e,t,C())}};m=x([l(0,A),l(1,_)],m);export{m as CLIServer,M as CLIServerBase};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { createRandomIPCHandle } from "../../../base/parts/ipc/node/ipc.net.js";
+import * as http from "http";
+import * as fs from "fs";
+import { IExtHostCommands } from "../common/extHostCommands.js";
+import { IWindowOpenable, IOpenWindowOptions } from "../../../platform/window/common/window.js";
+import { URI } from "../../../base/common/uri.js";
+import { ILogService } from "../../../platform/log/common/log.js";
+import { hasWorkspaceFileExtension } from "../../../platform/workspace/common/workspace.js";
+class CLIServerBase {
+  constructor(_commands, logService, _ipcHandlePath) {
+    this._commands = _commands;
+    this.logService = logService;
+    this._ipcHandlePath = _ipcHandlePath;
+    this._server = http.createServer((req, res) => this.onRequest(req, res));
+    this.setup().catch((err) => {
+      logService.error(err);
+      return "";
+    });
+  }
+  static {
+    __name(this, "CLIServerBase");
+  }
+  _server;
+  get ipcHandlePath() {
+    return this._ipcHandlePath;
+  }
+  async setup() {
+    try {
+      this._server.listen(this.ipcHandlePath);
+      this._server.on("error", (err) => this.logService.error(err));
+    } catch (err) {
+      this.logService.error("Could not start open from terminal server.");
+    }
+    return this._ipcHandlePath;
+  }
+  onRequest(req, res) {
+    const sendResponse = /* @__PURE__ */ __name((statusCode, returnObj) => {
+      res.writeHead(statusCode, { "content-type": "application/json" });
+      res.end(JSON.stringify(returnObj || null), (err) => err && this.logService.error(err));
+    }, "sendResponse");
+    const chunks = [];
+    req.setEncoding("utf8");
+    req.on("data", (d) => chunks.push(d));
+    req.on("end", async () => {
+      try {
+        const data = JSON.parse(chunks.join(""));
+        let returnObj;
+        switch (data.type) {
+          case "open":
+            returnObj = await this.open(data);
+            break;
+          case "openExternal":
+            returnObj = await this.openExternal(data);
+            break;
+          case "status":
+            returnObj = await this.getStatus(data);
+            break;
+          case "extensionManagement":
+            returnObj = await this.manageExtensions(data);
+            break;
+          default:
+            sendResponse(404, `Unknown message type: ${data.type}`);
+            break;
+        }
+        sendResponse(200, returnObj);
+      } catch (e) {
+        const message = e instanceof Error ? e.message : JSON.stringify(e);
+        sendResponse(500, message);
+        this.logService.error("Error while processing pipe request", e);
+      }
+    });
+  }
+  async open(data) {
+    const { fileURIs, folderURIs, forceNewWindow, diffMode, mergeMode, addMode, removeMode, forceReuseWindow, gotoLineMode, waitMarkerFilePath, remoteAuthority } = data;
+    const urisToOpen = [];
+    if (Array.isArray(folderURIs)) {
+      for (const s of folderURIs) {
+        try {
+          urisToOpen.push({ folderUri: URI.parse(s) });
+        } catch (e) {
+        }
+      }
+    }
+    if (Array.isArray(fileURIs)) {
+      for (const s of fileURIs) {
+        try {
+          if (hasWorkspaceFileExtension(s)) {
+            urisToOpen.push({ workspaceUri: URI.parse(s) });
+          } else {
+            urisToOpen.push({ fileUri: URI.parse(s) });
+          }
+        } catch (e) {
+        }
+      }
+    }
+    const waitMarkerFileURI = waitMarkerFilePath ? URI.file(waitMarkerFilePath) : void 0;
+    const preferNewWindow = !forceReuseWindow && !waitMarkerFileURI && !addMode && !removeMode;
+    const windowOpenArgs = { forceNewWindow, diffMode, mergeMode, addMode, removeMode, gotoLineMode, forceReuseWindow, preferNewWindow, waitMarkerFileURI, remoteAuthority };
+    this._commands.executeCommand("_remoteCLI.windowOpen", urisToOpen, windowOpenArgs);
+  }
+  async openExternal(data) {
+    for (const uriString of data.uris) {
+      const uri = URI.parse(uriString);
+      const urioOpen = uri.scheme === "file" ? uri : uriString;
+      await this._commands.executeCommand("_remoteCLI.openExternal", urioOpen);
+    }
+  }
+  async manageExtensions(data) {
+    const toExtOrVSIX = /* @__PURE__ */ __name((inputs) => inputs?.map((input) => /\.vsix$/i.test(input) ? URI.parse(input) : input), "toExtOrVSIX");
+    const commandArgs = {
+      list: data.list,
+      install: toExtOrVSIX(data.install),
+      uninstall: toExtOrVSIX(data.uninstall),
+      force: data.force
+    };
+    return await this._commands.executeCommand("_remoteCLI.manageExtensions", commandArgs);
+  }
+  async getStatus(data) {
+    return await this._commands.executeCommand("_remoteCLI.getSystemStatus");
+  }
+  dispose() {
+    this._server.close();
+    if (this._ipcHandlePath && process.platform !== "win32" && fs.existsSync(this._ipcHandlePath)) {
+      fs.unlinkSync(this._ipcHandlePath);
+    }
+  }
+}
+let CLIServer = class extends CLIServerBase {
+  static {
+    __name(this, "CLIServer");
+  }
+  constructor(commands, logService) {
+    super(commands, logService, createRandomIPCHandle());
+  }
+};
+CLIServer = __decorateClass([
+  __decorateParam(0, IExtHostCommands),
+  __decorateParam(1, ILogService)
+], CLIServer);
+export {
+  CLIServer,
+  CLIServerBase
+};
+//# sourceMappingURL=extHostCLIServer.js.map

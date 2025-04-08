@@ -1,1 +1,101 @@
-var a=Object.defineProperty,_=Object.getOwnPropertyDescriptor,h=(e,t,i,s)=>{for(var o,n=s>1?void 0:s?_(t,i):t,r=e.length-1;r>=0;r--)(o=e[r])&&(n=(s?o(t,i,n):o(n))||n);return s&&n&&a(t,i,n),n},l=(e,t)=>(i,s)=>t(i,s,e);import"../../../../base/common/lifecycle.js";import"../../../browser/editorBrowser.js";import{IContextKeyService as m,RawContextKey as p}from"../../../../platform/contextkey/common/contextkey.js";import"./completionModel.js";import"./suggestWidget.js";let n=class{constructor(e,t){this._editor=e,this._ckOtherSuggestions=n.OtherSuggestions.bindTo(t)}static OtherSuggestions=new p("hasOtherSuggestions",!1);_ckOtherSuggestions;_index=0;_model;_acceptNext;_listener;_ignore;dispose(){this.reset()}reset(){this._ckOtherSuggestions.reset(),this._listener?.dispose(),this._model=void 0,this._acceptNext=void 0,this._ignore=!1}set({model:e,index:t},i){0!==e.items.length&&n._moveIndex(!0,e,t)!==t?(this._acceptNext=i,this._model=e,this._index=t,this._listener=this._editor.onDidChangeCursorPosition((()=>{this._ignore||this.reset()})),this._ckOtherSuggestions.set(!0)):this.reset()}static _moveIndex(e,t,i){let s=i;for(let o=t.items.length;o>0&&(s=(s+t.items.length+(e?1:-1))%t.items.length,s!==i&&t.items[s].completion.additionalTextEdits);o--);return s}next(){this._move(!0)}prev(){this._move(!1)}_move(e){if(this._model)try{this._ignore=!0,this._index=n._moveIndex(e,this._model,this._index),this._acceptNext({index:this._index,item:this._model.items[this._index],model:this._model})}finally{this._ignore=!1}}};n=h([l(1,m)],n);export{n as SuggestAlternatives};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { IDisposable } from "../../../../base/common/lifecycle.js";
+import { ICodeEditor } from "../../../browser/editorBrowser.js";
+import { IContextKey, IContextKeyService, RawContextKey } from "../../../../platform/contextkey/common/contextkey.js";
+import { CompletionModel } from "./completionModel.js";
+import { ISelectedSuggestion } from "./suggestWidget.js";
+let SuggestAlternatives = class {
+  constructor(_editor, contextKeyService) {
+    this._editor = _editor;
+    this._ckOtherSuggestions = SuggestAlternatives.OtherSuggestions.bindTo(contextKeyService);
+  }
+  static {
+    __name(this, "SuggestAlternatives");
+  }
+  static OtherSuggestions = new RawContextKey("hasOtherSuggestions", false);
+  _ckOtherSuggestions;
+  _index = 0;
+  _model;
+  _acceptNext;
+  _listener;
+  _ignore;
+  dispose() {
+    this.reset();
+  }
+  reset() {
+    this._ckOtherSuggestions.reset();
+    this._listener?.dispose();
+    this._model = void 0;
+    this._acceptNext = void 0;
+    this._ignore = false;
+  }
+  set({ model, index }, acceptNext) {
+    if (model.items.length === 0) {
+      this.reset();
+      return;
+    }
+    const nextIndex = SuggestAlternatives._moveIndex(true, model, index);
+    if (nextIndex === index) {
+      this.reset();
+      return;
+    }
+    this._acceptNext = acceptNext;
+    this._model = model;
+    this._index = index;
+    this._listener = this._editor.onDidChangeCursorPosition(() => {
+      if (!this._ignore) {
+        this.reset();
+      }
+    });
+    this._ckOtherSuggestions.set(true);
+  }
+  static _moveIndex(fwd, model, index) {
+    let newIndex = index;
+    for (let rounds = model.items.length; rounds > 0; rounds--) {
+      newIndex = (newIndex + model.items.length + (fwd ? 1 : -1)) % model.items.length;
+      if (newIndex === index) {
+        break;
+      }
+      if (!model.items[newIndex].completion.additionalTextEdits) {
+        break;
+      }
+    }
+    return newIndex;
+  }
+  next() {
+    this._move(true);
+  }
+  prev() {
+    this._move(false);
+  }
+  _move(fwd) {
+    if (!this._model) {
+      return;
+    }
+    try {
+      this._ignore = true;
+      this._index = SuggestAlternatives._moveIndex(fwd, this._model, this._index);
+      this._acceptNext({ index: this._index, item: this._model.items[this._index], model: this._model });
+    } finally {
+      this._ignore = false;
+    }
+  }
+};
+SuggestAlternatives = __decorateClass([
+  __decorateParam(1, IContextKeyService)
+], SuggestAlternatives);
+export {
+  SuggestAlternatives
+};
+//# sourceMappingURL=suggestAlternatives.js.map

@@ -1,1 +1,200 @@
-var C=Object.defineProperty;var c=Object.getOwnPropertyDescriptor;var _=(n,e,i,t)=>{for(var o=t>1?void 0:t?c(e,i):e,s=n.length-1,l;s>=0;s--)(l=n[s])&&(o=(t?l(e,i,o):l(o))||o);return t&&o&&C(e,i,o),o},r=(n,e)=>(i,t)=>e(i,t,n);import*as p from"../../../../../base/browser/dom.js";import{DisposableStore as a,dispose as h}from"../../../../../base/common/lifecycle.js";import{IContextKeyService as K}from"../../../../../platform/contextkey/common/contextkey.js";import{KERNEL_EXTENSIONS as v}from"../notebookBrowser.js";import{KERNEL_HAS_VARIABLE_PROVIDER as T,NOTEBOOK_CELL_TOOLBAR_LOCATION as g,NOTEBOOK_HAS_OUTPUTS as I,NOTEBOOK_HAS_RUNNING_CELL as N,NOTEBOOK_HAS_SOMETHING_RUNNING as x,NOTEBOOK_INTERRUPTIBLE_KERNEL as k,NOTEBOOK_KERNEL as y,NOTEBOOK_KERNEL_COUNT as L,NOTEBOOK_KERNEL_SELECTED as S,NOTEBOOK_KERNEL_SOURCE_COUNT as m,NOTEBOOK_LAST_CELL_FAILED as D,NOTEBOOK_MISSING_KERNEL_EXTENSION as R,NOTEBOOK_USE_CONSOLIDATED_OUTPUT_BUTTON as M,NOTEBOOK_VIEW_TYPE as f}from"../../common/notebookContextKeys.js";import{INotebookExecutionStateService as w,NotebookExecutionType as u}from"../../common/notebookExecutionStateService.js";import{INotebookKernelService as B}from"../../common/notebookKernelService.js";import{IExtensionService as F}from"../../../../services/extensions/common/extensions.js";let d=class{constructor(e,i,t,o,s){this._editor=e;this._notebookKernelService=i;this._extensionService=o;this._notebookExecutionStateService=s;this._notebookKernel=y.bindTo(t),this._notebookKernelCount=L.bindTo(t),this._notebookKernelSelected=S.bindTo(t),this._interruptibleKernel=k.bindTo(t),this._hasVariableProvider=T.bindTo(t),this._someCellRunning=N.bindTo(t),this._kernelRunning=x.bindTo(t),this._useConsolidatedOutputButton=M.bindTo(t),this._hasOutputs=I.bindTo(t),this._viewType=f.bindTo(t),this._missingKernelExtension=R.bindTo(t),this._notebookKernelSourceCount=m.bindTo(t),this._cellToolbarLocation=g.bindTo(t),this._lastCellFailed=D.bindTo(t),this._handleDidChangeModel(),this._updateForNotebookOptions(),this._disposables.add(e.onDidChangeModel(this._handleDidChangeModel,this)),this._disposables.add(i.onDidAddKernel(this._updateKernelContext,this)),this._disposables.add(i.onDidChangeSelectedNotebooks(this._updateKernelContext,this)),this._disposables.add(i.onDidChangeSourceActions(this._updateKernelContext,this)),this._disposables.add(e.notebookOptions.onDidChangeOptions(this._updateForNotebookOptions,this)),this._disposables.add(o.onDidChangeExtensions(this._updateForInstalledExtension,this)),this._disposables.add(s.onDidChangeExecution(this._updateForExecution,this)),this._disposables.add(s.onDidChangeLastRunFailState(this._updateForLastRunFailState,this))}_notebookKernel;_notebookKernelCount;_notebookKernelSourceCount;_notebookKernelSelected;_interruptibleKernel;_hasVariableProvider;_someCellRunning;_kernelRunning;_hasOutputs;_useConsolidatedOutputButton;_viewType;_missingKernelExtension;_cellToolbarLocation;_lastCellFailed;_disposables=new a;_viewModelDisposables=new a;_cellOutputsListeners=[];_selectedKernelDisposables=new a;dispose(){this._disposables.dispose(),this._viewModelDisposables.dispose(),this._selectedKernelDisposables.dispose(),this._notebookKernelCount.reset(),this._notebookKernelSourceCount.reset(),this._interruptibleKernel.reset(),this._hasVariableProvider.reset(),this._someCellRunning.reset(),this._kernelRunning.reset(),this._viewType.reset(),h(this._cellOutputsListeners),this._cellOutputsListeners.length=0}_handleDidChangeModel(){if(this._updateKernelContext(),this._updateForNotebookOptions(),this._viewModelDisposables.clear(),h(this._cellOutputsListeners),this._cellOutputsListeners.length=0,!this._editor.hasModel())return;const e=()=>{let o=!1;if(this._editor.hasModel()){for(let s=0;s<this._editor.getLength();s++)if(this._editor.cellAt(s).outputsViewModels.length>0){o=!0;break}}this._hasOutputs.set(o)},i=this._viewModelDisposables.add(new a),t=o=>o.model.onDidChangeOutputs(()=>{i.clear(),i.add(p.scheduleAtNextAnimationFrame(p.getWindow(this._editor.getDomNode()),()=>{e()}))});for(let o=0;o<this._editor.getLength();o++){const s=this._editor.cellAt(o);this._cellOutputsListeners.push(t(s))}e(),this._updateForInstalledExtension(),this._viewModelDisposables.add(this._editor.onDidChangeViewCells(o=>{[...o.splices].reverse().forEach(s=>{const[l,b,O]=s,E=this._cellOutputsListeners.splice(l,b,...O.map(t));h(E)})})),this._viewType.set(this._editor.textModel.viewType)}_updateForExecution(e){if(this._editor.textModel){const i=this._notebookExecutionStateService.getExecution(this._editor.textModel.uri),t=this._notebookExecutionStateService.getCellExecutionsForNotebook(this._editor.textModel.uri);this._kernelRunning.set(t.length>0||!!i),e.type===u.cell&&this._someCellRunning.set(t.length>0)}else this._kernelRunning.set(!1),e.type===u.cell&&this._someCellRunning.set(!1)}_updateForLastRunFailState(e){e.notebook===this._editor.textModel?.uri&&this._lastCellFailed.set(e.visible)}async _updateForInstalledExtension(){if(!this._editor.hasModel())return;const e=this._editor.textModel.viewType,i=v.get(e);this._missingKernelExtension.set(!!i&&!await this._extensionService.getExtension(i))}_updateKernelContext(){if(!this._editor.hasModel()){this._notebookKernelCount.reset(),this._notebookKernelSourceCount.reset(),this._interruptibleKernel.reset(),this._hasVariableProvider.reset();return}const{selected:e,all:i}=this._notebookKernelService.getMatchingKernel(this._editor.textModel),t=this._notebookKernelService.getSourceActions(this._editor.textModel,this._editor.scopedContextKeyService);this._notebookKernelCount.set(i.length),this._notebookKernelSourceCount.set(t.length),this._interruptibleKernel.set(e?.implementsInterrupt??!1),this._hasVariableProvider.set(e?.hasVariableProvider??!1),this._notebookKernelSelected.set(!!e),this._notebookKernel.set(e?.id??""),this._selectedKernelDisposables.clear(),e&&this._selectedKernelDisposables.add(e.onDidChange(()=>{this._interruptibleKernel.set(e?.implementsInterrupt??!1)}))}_updateForNotebookOptions(){const e=this._editor.notebookOptions.getDisplayOptions();this._useConsolidatedOutputButton.set(e.consolidatedOutputButton),this._cellToolbarLocation.set(this._editor.notebookOptions.computeCellToolbarLocation(this._editor.textModel?.viewType))}};d=_([r(1,B),r(2,K),r(3,F),r(4,w)],d);export{d as NotebookEditorContextKeys};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import * as DOM from "../../../../../base/browser/dom.js";
+import { DisposableStore, dispose, IDisposable } from "../../../../../base/common/lifecycle.js";
+import { IContextKey, IContextKeyService } from "../../../../../platform/contextkey/common/contextkey.js";
+import { ICellViewModel, INotebookEditorDelegate, KERNEL_EXTENSIONS } from "../notebookBrowser.js";
+import { KERNEL_HAS_VARIABLE_PROVIDER, NOTEBOOK_CELL_TOOLBAR_LOCATION, NOTEBOOK_HAS_OUTPUTS, NOTEBOOK_HAS_RUNNING_CELL, NOTEBOOK_HAS_SOMETHING_RUNNING, NOTEBOOK_INTERRUPTIBLE_KERNEL, NOTEBOOK_KERNEL, NOTEBOOK_KERNEL_COUNT, NOTEBOOK_KERNEL_SELECTED, NOTEBOOK_KERNEL_SOURCE_COUNT, NOTEBOOK_LAST_CELL_FAILED, NOTEBOOK_MISSING_KERNEL_EXTENSION, NOTEBOOK_USE_CONSOLIDATED_OUTPUT_BUTTON, NOTEBOOK_VIEW_TYPE } from "../../common/notebookContextKeys.js";
+import { ICellExecutionStateChangedEvent, IExecutionStateChangedEvent, INotebookExecutionStateService, INotebookFailStateChangedEvent, NotebookExecutionType } from "../../common/notebookExecutionStateService.js";
+import { INotebookKernelService } from "../../common/notebookKernelService.js";
+import { IExtensionService } from "../../../../services/extensions/common/extensions.js";
+let NotebookEditorContextKeys = class {
+  constructor(_editor, _notebookKernelService, contextKeyService, _extensionService, _notebookExecutionStateService) {
+    this._editor = _editor;
+    this._notebookKernelService = _notebookKernelService;
+    this._extensionService = _extensionService;
+    this._notebookExecutionStateService = _notebookExecutionStateService;
+    this._notebookKernel = NOTEBOOK_KERNEL.bindTo(contextKeyService);
+    this._notebookKernelCount = NOTEBOOK_KERNEL_COUNT.bindTo(contextKeyService);
+    this._notebookKernelSelected = NOTEBOOK_KERNEL_SELECTED.bindTo(contextKeyService);
+    this._interruptibleKernel = NOTEBOOK_INTERRUPTIBLE_KERNEL.bindTo(contextKeyService);
+    this._hasVariableProvider = KERNEL_HAS_VARIABLE_PROVIDER.bindTo(contextKeyService);
+    this._someCellRunning = NOTEBOOK_HAS_RUNNING_CELL.bindTo(contextKeyService);
+    this._kernelRunning = NOTEBOOK_HAS_SOMETHING_RUNNING.bindTo(contextKeyService);
+    this._useConsolidatedOutputButton = NOTEBOOK_USE_CONSOLIDATED_OUTPUT_BUTTON.bindTo(contextKeyService);
+    this._hasOutputs = NOTEBOOK_HAS_OUTPUTS.bindTo(contextKeyService);
+    this._viewType = NOTEBOOK_VIEW_TYPE.bindTo(contextKeyService);
+    this._missingKernelExtension = NOTEBOOK_MISSING_KERNEL_EXTENSION.bindTo(contextKeyService);
+    this._notebookKernelSourceCount = NOTEBOOK_KERNEL_SOURCE_COUNT.bindTo(contextKeyService);
+    this._cellToolbarLocation = NOTEBOOK_CELL_TOOLBAR_LOCATION.bindTo(contextKeyService);
+    this._lastCellFailed = NOTEBOOK_LAST_CELL_FAILED.bindTo(contextKeyService);
+    this._handleDidChangeModel();
+    this._updateForNotebookOptions();
+    this._disposables.add(_editor.onDidChangeModel(this._handleDidChangeModel, this));
+    this._disposables.add(_notebookKernelService.onDidAddKernel(this._updateKernelContext, this));
+    this._disposables.add(_notebookKernelService.onDidChangeSelectedNotebooks(this._updateKernelContext, this));
+    this._disposables.add(_notebookKernelService.onDidChangeSourceActions(this._updateKernelContext, this));
+    this._disposables.add(_editor.notebookOptions.onDidChangeOptions(this._updateForNotebookOptions, this));
+    this._disposables.add(_extensionService.onDidChangeExtensions(this._updateForInstalledExtension, this));
+    this._disposables.add(_notebookExecutionStateService.onDidChangeExecution(this._updateForExecution, this));
+    this._disposables.add(_notebookExecutionStateService.onDidChangeLastRunFailState(this._updateForLastRunFailState, this));
+  }
+  static {
+    __name(this, "NotebookEditorContextKeys");
+  }
+  _notebookKernel;
+  _notebookKernelCount;
+  _notebookKernelSourceCount;
+  _notebookKernelSelected;
+  _interruptibleKernel;
+  _hasVariableProvider;
+  _someCellRunning;
+  _kernelRunning;
+  _hasOutputs;
+  _useConsolidatedOutputButton;
+  _viewType;
+  _missingKernelExtension;
+  _cellToolbarLocation;
+  _lastCellFailed;
+  _disposables = new DisposableStore();
+  _viewModelDisposables = new DisposableStore();
+  _cellOutputsListeners = [];
+  _selectedKernelDisposables = new DisposableStore();
+  dispose() {
+    this._disposables.dispose();
+    this._viewModelDisposables.dispose();
+    this._selectedKernelDisposables.dispose();
+    this._notebookKernelCount.reset();
+    this._notebookKernelSourceCount.reset();
+    this._interruptibleKernel.reset();
+    this._hasVariableProvider.reset();
+    this._someCellRunning.reset();
+    this._kernelRunning.reset();
+    this._viewType.reset();
+    dispose(this._cellOutputsListeners);
+    this._cellOutputsListeners.length = 0;
+  }
+  _handleDidChangeModel() {
+    this._updateKernelContext();
+    this._updateForNotebookOptions();
+    this._viewModelDisposables.clear();
+    dispose(this._cellOutputsListeners);
+    this._cellOutputsListeners.length = 0;
+    if (!this._editor.hasModel()) {
+      return;
+    }
+    const recomputeOutputsExistence = /* @__PURE__ */ __name(() => {
+      let hasOutputs = false;
+      if (this._editor.hasModel()) {
+        for (let i = 0; i < this._editor.getLength(); i++) {
+          if (this._editor.cellAt(i).outputsViewModels.length > 0) {
+            hasOutputs = true;
+            break;
+          }
+        }
+      }
+      this._hasOutputs.set(hasOutputs);
+    }, "recomputeOutputsExistence");
+    const layoutDisposable = this._viewModelDisposables.add(new DisposableStore());
+    const addCellOutputsListener = /* @__PURE__ */ __name((c) => {
+      return c.model.onDidChangeOutputs(() => {
+        layoutDisposable.clear();
+        layoutDisposable.add(DOM.scheduleAtNextAnimationFrame(DOM.getWindow(this._editor.getDomNode()), () => {
+          recomputeOutputsExistence();
+        }));
+      });
+    }, "addCellOutputsListener");
+    for (let i = 0; i < this._editor.getLength(); i++) {
+      const cell = this._editor.cellAt(i);
+      this._cellOutputsListeners.push(addCellOutputsListener(cell));
+    }
+    recomputeOutputsExistence();
+    this._updateForInstalledExtension();
+    this._viewModelDisposables.add(this._editor.onDidChangeViewCells((e) => {
+      [...e.splices].reverse().forEach((splice) => {
+        const [start, deleted, newCells] = splice;
+        const deletedCellOutputStates = this._cellOutputsListeners.splice(start, deleted, ...newCells.map(addCellOutputsListener));
+        dispose(deletedCellOutputStates);
+      });
+    }));
+    this._viewType.set(this._editor.textModel.viewType);
+  }
+  _updateForExecution(e) {
+    if (this._editor.textModel) {
+      const notebookExe = this._notebookExecutionStateService.getExecution(this._editor.textModel.uri);
+      const notebookCellExe = this._notebookExecutionStateService.getCellExecutionsForNotebook(this._editor.textModel.uri);
+      this._kernelRunning.set(notebookCellExe.length > 0 || !!notebookExe);
+      if (e.type === NotebookExecutionType.cell) {
+        this._someCellRunning.set(notebookCellExe.length > 0);
+      }
+    } else {
+      this._kernelRunning.set(false);
+      if (e.type === NotebookExecutionType.cell) {
+        this._someCellRunning.set(false);
+      }
+    }
+  }
+  _updateForLastRunFailState(e) {
+    if (e.notebook === this._editor.textModel?.uri) {
+      this._lastCellFailed.set(e.visible);
+    }
+  }
+  async _updateForInstalledExtension() {
+    if (!this._editor.hasModel()) {
+      return;
+    }
+    const viewType = this._editor.textModel.viewType;
+    const kernelExtensionId = KERNEL_EXTENSIONS.get(viewType);
+    this._missingKernelExtension.set(
+      !!kernelExtensionId && !await this._extensionService.getExtension(kernelExtensionId)
+    );
+  }
+  _updateKernelContext() {
+    if (!this._editor.hasModel()) {
+      this._notebookKernelCount.reset();
+      this._notebookKernelSourceCount.reset();
+      this._interruptibleKernel.reset();
+      this._hasVariableProvider.reset();
+      return;
+    }
+    const { selected, all } = this._notebookKernelService.getMatchingKernel(this._editor.textModel);
+    const sourceActions = this._notebookKernelService.getSourceActions(this._editor.textModel, this._editor.scopedContextKeyService);
+    this._notebookKernelCount.set(all.length);
+    this._notebookKernelSourceCount.set(sourceActions.length);
+    this._interruptibleKernel.set(selected?.implementsInterrupt ?? false);
+    this._hasVariableProvider.set(selected?.hasVariableProvider ?? false);
+    this._notebookKernelSelected.set(Boolean(selected));
+    this._notebookKernel.set(selected?.id ?? "");
+    this._selectedKernelDisposables.clear();
+    if (selected) {
+      this._selectedKernelDisposables.add(selected.onDidChange(() => {
+        this._interruptibleKernel.set(selected?.implementsInterrupt ?? false);
+      }));
+    }
+  }
+  _updateForNotebookOptions() {
+    const layout = this._editor.notebookOptions.getDisplayOptions();
+    this._useConsolidatedOutputButton.set(layout.consolidatedOutputButton);
+    this._cellToolbarLocation.set(this._editor.notebookOptions.computeCellToolbarLocation(this._editor.textModel?.viewType));
+  }
+};
+NotebookEditorContextKeys = __decorateClass([
+  __decorateParam(1, INotebookKernelService),
+  __decorateParam(2, IContextKeyService),
+  __decorateParam(3, IExtensionService),
+  __decorateParam(4, INotebookExecutionStateService)
+], NotebookEditorContextKeys);
+export {
+  NotebookEditorContextKeys
+};
+//# sourceMappingURL=notebookEditorWidgetContextKeys.js.map

@@ -1,1 +1,55 @@
-import"../../../editor/common/core/range.js";import"../../../editor/common/editorCommon.js";import{TextEditorSelectionRevealType as n,TextEditorSelectionSource as l}from"../../../platform/editor/common/editor.js";import{isTextEditorViewState as d}from"../editor.js";function v(e,t,o){let r=!1;const i=c(e);if(d(i)&&(t.restoreViewState(i),r=!0),e.selection){const i={startLineNumber:e.selection.startLineNumber,startColumn:e.selection.startColumn,endLineNumber:e.selection.endLineNumber??e.selection.startLineNumber,endColumn:e.selection.endColumn??e.selection.startColumn};t.setSelection(i,e.selectionSource??l.NAVIGATION),e.selectionRevealType===n.NearTop?t.revealRangeNearTop(i,o):e.selectionRevealType===n.NearTopIfOutsideViewport?t.revealRangeNearTopIfOutsideViewport(i,o):e.selectionRevealType===n.CenterIfOutsideViewport?t.revealRangeInCenterIfOutsideViewport(i,o):t.revealRangeInCenter(i,o),r=!0}return r}function c(e){if(!e.selection||!e.viewState)return e.viewState;const t=e.viewState;if(t.modified)return t.modified.cursorState=[],t;const o=e.viewState;return o.cursorState&&(o.cursorState=[]),o}export{v as applyTextEditorOptions};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { IRange } from "../../../editor/common/core/range.js";
+import { ICodeEditorViewState, IDiffEditorViewState, IEditor, ScrollType } from "../../../editor/common/editorCommon.js";
+import { ITextEditorOptions, TextEditorSelectionRevealType, TextEditorSelectionSource } from "../../../platform/editor/common/editor.js";
+import { isTextEditorViewState } from "../editor.js";
+function applyTextEditorOptions(options, editor, scrollType) {
+  let applied = false;
+  const viewState = massageEditorViewState(options);
+  if (isTextEditorViewState(viewState)) {
+    editor.restoreViewState(viewState);
+    applied = true;
+  }
+  if (options.selection) {
+    const range = {
+      startLineNumber: options.selection.startLineNumber,
+      startColumn: options.selection.startColumn,
+      endLineNumber: options.selection.endLineNumber ?? options.selection.startLineNumber,
+      endColumn: options.selection.endColumn ?? options.selection.startColumn
+    };
+    editor.setSelection(range, options.selectionSource ?? TextEditorSelectionSource.NAVIGATION);
+    if (options.selectionRevealType === TextEditorSelectionRevealType.NearTop) {
+      editor.revealRangeNearTop(range, scrollType);
+    } else if (options.selectionRevealType === TextEditorSelectionRevealType.NearTopIfOutsideViewport) {
+      editor.revealRangeNearTopIfOutsideViewport(range, scrollType);
+    } else if (options.selectionRevealType === TextEditorSelectionRevealType.CenterIfOutsideViewport) {
+      editor.revealRangeInCenterIfOutsideViewport(range, scrollType);
+    } else {
+      editor.revealRangeInCenter(range, scrollType);
+    }
+    applied = true;
+  }
+  return applied;
+}
+__name(applyTextEditorOptions, "applyTextEditorOptions");
+function massageEditorViewState(options) {
+  if (!options.selection || !options.viewState) {
+    return options.viewState;
+  }
+  const candidateDiffViewState = options.viewState;
+  if (candidateDiffViewState.modified) {
+    candidateDiffViewState.modified.cursorState = [];
+    return candidateDiffViewState;
+  }
+  const candidateEditorViewState = options.viewState;
+  if (candidateEditorViewState.cursorState) {
+    candidateEditorViewState.cursorState = [];
+  }
+  return candidateEditorViewState;
+}
+__name(massageEditorViewState, "massageEditorViewState");
+export {
+  applyTextEditorOptions
+};
+//# sourceMappingURL=editorOptions.js.map

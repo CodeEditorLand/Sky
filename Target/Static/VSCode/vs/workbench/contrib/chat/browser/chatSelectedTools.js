@@ -1,1 +1,112 @@
-var T=Object.defineProperty,y=Object.getOwnPropertyDescriptor,I=(e,o,t,s)=>{for(var r,a=s>1?void 0:s?y(o,t):o,i=e.length-1;i>=0;i--)(r=e[i])&&(a=(s?r(o,t,a):r(a))||a);return s&&a&&T(o,t,a),a},p=(e,o)=>(t,s)=>o(t,s,e);import{reset as S}from"../../../../base/browser/dom.js";import"../../../../base/browser/ui/actionbar/actionbar.js";import"../../../../base/browser/ui/actionbar/actionViewItems.js";import{renderLabelWithIcons as D}from"../../../../base/browser/ui/iconLabel/iconLabels.js";import"../../../../base/common/actions.js";import{Emitter as A}from"../../../../base/common/event.js";import{Disposable as w}from"../../../../base/common/lifecycle.js";import{autorun as k,derived as f,observableFromEvent as M}from"../../../../base/common/observable.js";import{assertType as E}from"../../../../base/common/types.js";import{localize as v}from"../../../../nls.js";import{MenuEntryActionViewItem as O}from"../../../../platform/actions/browser/menuEntryActionViewItem.js";import{MenuItemAction as V}from"../../../../platform/actions/common/actions.js";import{IInstantiationService as L}from"../../../../platform/instantiation/common/instantiation.js";import{observableMemento as _}from"../../../../platform/observable/common/observableMemento.js";import{IStorageService as P,StorageScope as R,StorageTarget as B}from"../../../../platform/storage/common/storage.js";import{ILanguageModelToolsService as x,ToolDataSource as h}from"../common/languageModelToolsService.js";const K=_({defaultValue:{},key:"chat/selectedTools"});let u=class extends w{_selectedTools;tools;toolsActionItemViewItemProvider;constructor(e,o,t){super(),this._selectedTools=this._register(K(R.WORKSPACE,B.MACHINE,t));const s=M(e.onDidChangeTools,(()=>Array.from(e.getTools()).filter((e=>e.supportsToolPicker)))),r=this._selectedTools.map((e=>(e.disabledBuckets?.length||e.disabledTools?.length)&&{buckets:new Set(e.disabledBuckets),toolIds:new Set(e.disabledTools)}));this.tools=f((e=>{const o=r.read(e),t=s.read(e);return o?t.filter((e=>!(o.toolIds.has(e.id)||o.buckets.has(h.toKey(e.source))))):t}));const a=f((e=>({count:s.read(e).length,enabled:this.tools.read(e).length}))),i=this._store.add(new A);this.toolsActionItemViewItemProvider=Object.assign(((e,t)=>{if(e instanceof V)return o.createInstance(class extends O{render(e){this.options.icon=!1,this.options.label=!0,e.classList.add("chat-mcp"),super.render(e)}updateLabel(){this._store.add(k((e=>{E(this.label);const{enabled:o,count:t}=a.read(e),s=0===t?"$(tools)":o!==t?v("tool.1","{0} {1} of {2}","$(tools)",o,t):v("tool.0","{0} {1}","$(tools)",t);S(this.label,...D(s)),this.element?.isConnected&&i.fire()})))}},e,{...t,keybindingNotRenderedWithLabel:!0})}),{onDidRender:i.event})}update(e,o){this._selectedTools.set({disabledBuckets:e.map(h.toKey),disabledTools:o.map((e=>e.id))},void 0)}};u=I([p(0,x),p(1,L),p(2,P)],u);export{u as ChatSelectedTools};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { reset } from "../../../../base/browser/dom.js";
+import { IActionViewItemProvider } from "../../../../base/browser/ui/actionbar/actionbar.js";
+import { IActionViewItemOptions } from "../../../../base/browser/ui/actionbar/actionViewItems.js";
+import { renderLabelWithIcons } from "../../../../base/browser/ui/iconLabel/iconLabels.js";
+import { IAction } from "../../../../base/common/actions.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { autorun, derived, IObservable, observableFromEvent } from "../../../../base/common/observable.js";
+import { assertType } from "../../../../base/common/types.js";
+import { localize } from "../../../../nls.js";
+import { MenuEntryActionViewItem } from "../../../../platform/actions/browser/menuEntryActionViewItem.js";
+import { MenuItemAction } from "../../../../platform/actions/common/actions.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { ObservableMemento, observableMemento } from "../../../../platform/observable/common/observableMemento.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { ILanguageModelToolsService, IToolData, ToolDataSource } from "../common/languageModelToolsService.js";
+const storedTools = observableMemento({
+  defaultValue: {},
+  key: "chat/selectedTools"
+});
+let ChatSelectedTools = class extends Disposable {
+  static {
+    __name(this, "ChatSelectedTools");
+  }
+  _selectedTools;
+  tools;
+  toolsActionItemViewItemProvider;
+  constructor(toolsService, instaService, storageService) {
+    super();
+    this._selectedTools = this._register(storedTools(StorageScope.WORKSPACE, StorageTarget.MACHINE, storageService));
+    const allTools = observableFromEvent(
+      toolsService.onDidChangeTools,
+      () => Array.from(toolsService.getTools()).filter((t) => t.supportsToolPicker)
+    );
+    const disabledData = this._selectedTools.map((data) => {
+      return (data.disabledBuckets?.length || data.disabledTools?.length) && {
+        buckets: new Set(data.disabledBuckets),
+        toolIds: new Set(data.disabledTools)
+      };
+    });
+    this.tools = derived((r) => {
+      const disabled = disabledData.read(r);
+      const tools = allTools.read(r);
+      if (!disabled) {
+        return tools;
+      }
+      return tools.filter(
+        (t) => !(disabled.toolIds.has(t.id) || disabled.buckets.has(ToolDataSource.toKey(t.source)))
+      );
+    });
+    const toolsCount = derived((r) => {
+      const count = allTools.read(r).length;
+      const enabled = this.tools.read(r).length;
+      return { count, enabled };
+    });
+    const onDidRender = this._store.add(new Emitter());
+    this.toolsActionItemViewItemProvider = Object.assign(
+      (action, options) => {
+        if (!(action instanceof MenuItemAction)) {
+          return void 0;
+        }
+        return instaService.createInstance(class extends MenuEntryActionViewItem {
+          render(container) {
+            this.options.icon = false;
+            this.options.label = true;
+            container.classList.add("chat-mcp");
+            super.render(container);
+          }
+          updateLabel() {
+            this._store.add(autorun((r) => {
+              assertType(this.label);
+              const { enabled, count } = toolsCount.read(r);
+              const message = count === 0 ? "$(tools)" : enabled !== count ? localize("tool.1", "{0} {1} of {2}", "$(tools)", enabled, count) : localize("tool.0", "{0} {1}", "$(tools)", count);
+              reset(this.label, ...renderLabelWithIcons(message));
+              if (this.element?.isConnected) {
+                onDidRender.fire();
+              }
+            }));
+          }
+        }, action, { ...options, keybindingNotRenderedWithLabel: true });
+      },
+      { onDidRender: onDidRender.event }
+    );
+  }
+  update(disableBuckets, disableTools) {
+    this._selectedTools.set({
+      disabledBuckets: disableBuckets.map(ToolDataSource.toKey),
+      disabledTools: disableTools.map((t) => t.id)
+    }, void 0);
+  }
+};
+ChatSelectedTools = __decorateClass([
+  __decorateParam(0, ILanguageModelToolsService),
+  __decorateParam(1, IInstantiationService),
+  __decorateParam(2, IStorageService)
+], ChatSelectedTools);
+export {
+  ChatSelectedTools
+};
+//# sourceMappingURL=chatSelectedTools.js.map

@@ -1,1 +1,48 @@
-import{stripIcons as a}from"../../../../base/common/iconLabels.js";import"../../../common/editorCommon.js";import"../../../../nls.js";import{isLocalizedString as m}from"../../../../platform/action/common/action.js";import"../../../../platform/commands/common/commands.js";import"../../../../platform/dialogs/common/dialogs.js";import"../../../../platform/instantiation/common/instantiation.js";import"../../../../platform/keybinding/common/keybinding.js";import{AbstractCommandsQuickAccessProvider as n}from"../../../../platform/quickinput/browser/commandsQuickAccess.js";import"../../../../platform/telemetry/common/telemetry.js";class z extends n{constructor(o,t,m,i,a,s){super(o,t,m,i,a,s)}getCodeEditorCommandPicks(){const o=this.activeTextEditorControl;if(!o)return[];const t=[];for(const i of o.getSupportedActions()){let o;i.metadata?.description&&(o=m(i.metadata.description)?i.metadata.description:{original:i.metadata.description,value:i.metadata.description}),t.push({commandId:i.id,commandAlias:i.alias,commandDescription:o,label:a(i.label)||i.id})}return t}}export{z as AbstractEditorCommandsQuickAccessProvider};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { stripIcons } from "../../../../base/common/iconLabels.js";
+import { IEditor } from "../../../common/editorCommon.js";
+import { ILocalizedString } from "../../../../nls.js";
+import { isLocalizedString } from "../../../../platform/action/common/action.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { IDialogService } from "../../../../platform/dialogs/common/dialogs.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { AbstractCommandsQuickAccessProvider, ICommandQuickPick, ICommandsQuickAccessOptions } from "../../../../platform/quickinput/browser/commandsQuickAccess.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+class AbstractEditorCommandsQuickAccessProvider extends AbstractCommandsQuickAccessProvider {
+  static {
+    __name(this, "AbstractEditorCommandsQuickAccessProvider");
+  }
+  constructor(options, instantiationService, keybindingService, commandService, telemetryService, dialogService) {
+    super(options, instantiationService, keybindingService, commandService, telemetryService, dialogService);
+  }
+  getCodeEditorCommandPicks() {
+    const activeTextEditorControl = this.activeTextEditorControl;
+    if (!activeTextEditorControl) {
+      return [];
+    }
+    const editorCommandPicks = [];
+    for (const editorAction of activeTextEditorControl.getSupportedActions()) {
+      let commandDescription;
+      if (editorAction.metadata?.description) {
+        if (isLocalizedString(editorAction.metadata.description)) {
+          commandDescription = editorAction.metadata.description;
+        } else {
+          commandDescription = { original: editorAction.metadata.description, value: editorAction.metadata.description };
+        }
+      }
+      editorCommandPicks.push({
+        commandId: editorAction.id,
+        commandAlias: editorAction.alias,
+        commandDescription,
+        label: stripIcons(editorAction.label) || editorAction.id
+      });
+    }
+    return editorCommandPicks;
+  }
+}
+export {
+  AbstractEditorCommandsQuickAccessProvider
+};
+//# sourceMappingURL=commandsQuickAccess.js.map

@@ -1,1 +1,135 @@
-var P=Object.defineProperty;var E=Object.getOwnPropertyDescriptor;var h=(f,s,t,i)=>{for(var e=i>1?void 0:i?E(s,t):s,o=f.length-1,n;o>=0;o--)(n=f[o])&&(e=(i?n(s,t,e):n(e))||e);return i&&e&&P(s,t,e),e},v=(f,s)=>(t,i)=>s(t,i,f);import{fork as L}from"child_process";import{Limiter as w}from"../../../base/common/async.js";import{toErrorMessage as I}from"../../../base/common/errorMessage.js";import{Event as l}from"../../../base/common/event.js";import{Disposable as $}from"../../../base/common/lifecycle.js";import{Schemas as b}from"../../../base/common/network.js";import{join as S}from"../../../base/common/path.js";import{Promises as D}from"../../../base/node/pfs.js";import"../common/extensionManagement.js";import{ILogService as k}from"../../log/common/log.js";import{IUserDataProfilesService as y}from"../../userDataProfile/common/userDataProfile.js";let p=class extends ${constructor(t,i){super();this.userDataProfilesService=t;this.logService=i}processesLimiter=new w(5);async postUninstall(t){const i=this.parseScript(t,"uninstall");i&&(this.logService.info(t.identifier.id,t.manifest.version,"Running post uninstall script"),await this.processesLimiter.queue(async()=>{try{await this.runLifecycleHook(i.script,"uninstall",i.args,!0,t),this.logService.info("Finished running post uninstall script",t.identifier.id,t.manifest.version)}catch(e){this.logService.error("Failed to run post uninstall script",t.identifier.id,t.manifest.version),this.logService.error(e)}}));try{await D.rm(this.getExtensionStoragePath(t))}catch(e){this.logService.error("Error while removing extension storage path",t.identifier.id),this.logService.error(e)}}parseScript(t,i){const e=`vscode:${i}`;if(t.location.scheme===b.file&&t.manifest&&t.manifest.scripts&&typeof t.manifest.scripts[e]=="string"){const o=t.manifest.scripts[e].split(" ");return o.length<2||o[0]!=="node"||!o[1]?(this.logService.warn(t.identifier.id,t.manifest.version,`${e} should be a node script`),null):{script:S(t.location.fsPath,o[1]),args:o.slice(2)||[]}}return null}runLifecycleHook(t,i,e,o,n){return new Promise((a,m)=>{const d=this.start(t,i,e,n);let c;const g=r=>{c&&(clearTimeout(c),c=null),r?m(r):a(void 0)};d.on("error",r=>{g(I(r)||"Unknown")}),d.on("exit",(r,u)=>{g(r?`post-${i} process exited with code ${r}`:void 0)}),o&&(c=setTimeout(()=>{c=null,d.kill(),m("timed out")},5e3))})}start(t,i,e,o){const n={silent:!0,execArgv:void 0},a=L(t,[`--type=extension-post-${i}`,...e],n);a.stdout.setEncoding("utf8"),a.stderr.setEncoding("utf8");const m=l.fromNodeEventEmitter(a.stdout,"data"),d=l.fromNodeEventEmitter(a.stderr,"data");this._register(m(r=>this.logService.info(o.identifier.id,o.manifest.version,`post-${i}`,r))),this._register(d(r=>this.logService.error(o.identifier.id,o.manifest.version,`post-${i}`,r)));const c=l.any(l.map(m,r=>({data:`%c${r}`,format:[""]}),this._store),l.map(d,r=>({data:`%c${r}`,format:["color: red"]}),this._store));return l.debounce(c,(r,u)=>r?{data:r.data+u.data,format:[...r.format,...u.format]}:{data:u.data,format:u.format},100,void 0,void 0,void 0,this._store)(r=>{console.group(o.identifier.id),console.log(r.data,...r.format),console.groupEnd()}),a}getExtensionStoragePath(t){return S(this.userDataProfilesService.defaultProfile.globalStorageHome.fsPath,t.identifier.id.toLowerCase())}};p=h([v(0,y),v(1,k)],p);export{p as ExtensionsLifecycle};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { ChildProcess, fork } from "child_process";
+import { Limiter } from "../../../base/common/async.js";
+import { toErrorMessage } from "../../../base/common/errorMessage.js";
+import { Event } from "../../../base/common/event.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { Schemas } from "../../../base/common/network.js";
+import { join } from "../../../base/common/path.js";
+import { Promises } from "../../../base/node/pfs.js";
+import { ILocalExtension } from "../common/extensionManagement.js";
+import { ILogService } from "../../log/common/log.js";
+import { IUserDataProfilesService } from "../../userDataProfile/common/userDataProfile.js";
+let ExtensionsLifecycle = class extends Disposable {
+  // Run max 5 processes in parallel
+  constructor(userDataProfilesService, logService) {
+    super();
+    this.userDataProfilesService = userDataProfilesService;
+    this.logService = logService;
+  }
+  static {
+    __name(this, "ExtensionsLifecycle");
+  }
+  processesLimiter = new Limiter(5);
+  async postUninstall(extension) {
+    const script = this.parseScript(extension, "uninstall");
+    if (script) {
+      this.logService.info(extension.identifier.id, extension.manifest.version, `Running post uninstall script`);
+      await this.processesLimiter.queue(async () => {
+        try {
+          await this.runLifecycleHook(script.script, "uninstall", script.args, true, extension);
+          this.logService.info(`Finished running post uninstall script`, extension.identifier.id, extension.manifest.version);
+        } catch (error) {
+          this.logService.error("Failed to run post uninstall script", extension.identifier.id, extension.manifest.version);
+          this.logService.error(error);
+        }
+      });
+    }
+    try {
+      await Promises.rm(this.getExtensionStoragePath(extension));
+    } catch (error) {
+      this.logService.error("Error while removing extension storage path", extension.identifier.id);
+      this.logService.error(error);
+    }
+  }
+  parseScript(extension, type) {
+    const scriptKey = `vscode:${type}`;
+    if (extension.location.scheme === Schemas.file && extension.manifest && extension.manifest["scripts"] && typeof extension.manifest["scripts"][scriptKey] === "string") {
+      const script = extension.manifest["scripts"][scriptKey].split(" ");
+      if (script.length < 2 || script[0] !== "node" || !script[1]) {
+        this.logService.warn(extension.identifier.id, extension.manifest.version, `${scriptKey} should be a node script`);
+        return null;
+      }
+      return { script: join(extension.location.fsPath, script[1]), args: script.slice(2) || [] };
+    }
+    return null;
+  }
+  runLifecycleHook(lifecycleHook, lifecycleType, args, timeout, extension) {
+    return new Promise((c, e) => {
+      const extensionLifecycleProcess = this.start(lifecycleHook, lifecycleType, args, extension);
+      let timeoutHandler;
+      const onexit = /* @__PURE__ */ __name((error) => {
+        if (timeoutHandler) {
+          clearTimeout(timeoutHandler);
+          timeoutHandler = null;
+        }
+        if (error) {
+          e(error);
+        } else {
+          c(void 0);
+        }
+      }, "onexit");
+      extensionLifecycleProcess.on("error", (err) => {
+        onexit(toErrorMessage(err) || "Unknown");
+      });
+      extensionLifecycleProcess.on("exit", (code, signal) => {
+        onexit(code ? `post-${lifecycleType} process exited with code ${code}` : void 0);
+      });
+      if (timeout) {
+        timeoutHandler = setTimeout(() => {
+          timeoutHandler = null;
+          extensionLifecycleProcess.kill();
+          e("timed out");
+        }, 5e3);
+      }
+    });
+  }
+  start(uninstallHook, lifecycleType, args, extension) {
+    const opts = {
+      silent: true,
+      execArgv: void 0
+    };
+    const extensionUninstallProcess = fork(uninstallHook, [`--type=extension-post-${lifecycleType}`, ...args], opts);
+    extensionUninstallProcess.stdout.setEncoding("utf8");
+    extensionUninstallProcess.stderr.setEncoding("utf8");
+    const onStdout = Event.fromNodeEventEmitter(extensionUninstallProcess.stdout, "data");
+    const onStderr = Event.fromNodeEventEmitter(extensionUninstallProcess.stderr, "data");
+    this._register(onStdout((data) => this.logService.info(extension.identifier.id, extension.manifest.version, `post-${lifecycleType}`, data)));
+    this._register(onStderr((data) => this.logService.error(extension.identifier.id, extension.manifest.version, `post-${lifecycleType}`, data)));
+    const onOutput = Event.any(
+      Event.map(onStdout, (o) => ({ data: `%c${o}`, format: [""] }), this._store),
+      Event.map(onStderr, (o) => ({ data: `%c${o}`, format: ["color: red"] }), this._store)
+    );
+    const onDebouncedOutput = Event.debounce(onOutput, (r, o) => {
+      return r ? { data: r.data + o.data, format: [...r.format, ...o.format] } : { data: o.data, format: o.format };
+    }, 100, void 0, void 0, void 0, this._store);
+    onDebouncedOutput((data) => {
+      console.group(extension.identifier.id);
+      console.log(data.data, ...data.format);
+      console.groupEnd();
+    });
+    return extensionUninstallProcess;
+  }
+  getExtensionStoragePath(extension) {
+    return join(this.userDataProfilesService.defaultProfile.globalStorageHome.fsPath, extension.identifier.id.toLowerCase());
+  }
+};
+ExtensionsLifecycle = __decorateClass([
+  __decorateParam(0, IUserDataProfilesService),
+  __decorateParam(1, ILogService)
+], ExtensionsLifecycle);
+export {
+  ExtensionsLifecycle
+};
+//# sourceMappingURL=extensionLifecycle.js.map

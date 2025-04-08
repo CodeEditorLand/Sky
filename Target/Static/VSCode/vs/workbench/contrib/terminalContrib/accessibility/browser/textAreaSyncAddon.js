@@ -1,1 +1,82 @@
-var d=Object.defineProperty,v=Object.getOwnPropertyDescriptor,c=(e,i,t,s)=>{for(var r,o=s>1?void 0:s?v(i,t):i,n=e.length-1;n>=0;n--)(r=e[n])&&(o=(s?r(i,t,o):r(o))||o);return s&&o&&d(i,t,o),o},o=(e,i)=>(t,s)=>i(t,s,e);import{debounce as u}from"../../../../../base/common/decorators.js";import{Event as m}from"../../../../../base/common/event.js";import{Disposable as _,MutableDisposable as h}from"../../../../../base/common/lifecycle.js";import{IAccessibilityService as b}from"../../../../../platform/accessibility/common/accessibility.js";import{IConfigurationService as f}from"../../../../../platform/configuration/common/configuration.js";import{TerminalCapability as p}from"../../../../../platform/terminal/common/capabilities/capabilities.js";import{ITerminalLogService as g,TerminalSettingId as y}from"../../../../../platform/terminal/common/terminal.js";let n=class extends _{constructor(e,i,t,s){super(),this._capabilities=e,this._accessibilityService=i,this._configurationService=t,this._logService=s,this._register(m.runAndSubscribe(m.any(this._capabilities.onDidAddCapability,this._capabilities.onDidRemoveCapability,this._accessibilityService.onDidChangeScreenReaderOptimized),(()=>{this._refreshListeners()})))}_terminal;_listeners=this._register(new h);activate(e){this._terminal=e,this._refreshListeners()}_refreshListeners(){const e=this._capabilities.get(p.CommandDetection);if(this._shouldBeActive()&&e){if(!this._listeners.value){const i=this._terminal?.textarea;i&&(this._listeners.value=m.runAndSubscribe(e.promptInputModel.onDidChangeInput,(()=>this._sync(i))))}}else this._listeners.clear()}_shouldBeActive(){return this._accessibilityService.isScreenReaderOptimized()||this._configurationService.getValue(y.DevMode)}_sync(e){const i=this._capabilities.get(p.CommandDetection);i&&(e.value=i.promptInputModel.value,e.selectionStart=i.promptInputModel.cursorIndex,e.selectionEnd=i.promptInputModel.cursorIndex,this._logService.debug(`TextAreaSyncAddon#sync: text changed to "${e.value}"`))}};c([u(50)],n.prototype,"_sync",1),n=c([o(1,b),o(2,f),o(3,g)],n);export{n as TextAreaSyncAddon};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { debounce } from "../../../../../base/common/decorators.js";
+import { Event } from "../../../../../base/common/event.js";
+import { Disposable, MutableDisposable } from "../../../../../base/common/lifecycle.js";
+import { IAccessibilityService } from "../../../../../platform/accessibility/common/accessibility.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { ITerminalCapabilityStore, TerminalCapability } from "../../../../../platform/terminal/common/capabilities/capabilities.js";
+import { ITerminalLogService, TerminalSettingId } from "../../../../../platform/terminal/common/terminal.js";
+let TextAreaSyncAddon = class extends Disposable {
+  constructor(_capabilities, _accessibilityService, _configurationService, _logService) {
+    super();
+    this._capabilities = _capabilities;
+    this._accessibilityService = _accessibilityService;
+    this._configurationService = _configurationService;
+    this._logService = _logService;
+    this._register(Event.runAndSubscribe(Event.any(
+      this._capabilities.onDidAddCapability,
+      this._capabilities.onDidRemoveCapability,
+      this._accessibilityService.onDidChangeScreenReaderOptimized
+    ), () => {
+      this._refreshListeners();
+    }));
+  }
+  static {
+    __name(this, "TextAreaSyncAddon");
+  }
+  _terminal;
+  _listeners = this._register(new MutableDisposable());
+  activate(terminal) {
+    this._terminal = terminal;
+    this._refreshListeners();
+  }
+  _refreshListeners() {
+    const commandDetection = this._capabilities.get(TerminalCapability.CommandDetection);
+    if (this._shouldBeActive() && commandDetection) {
+      if (!this._listeners.value) {
+        const textarea = this._terminal?.textarea;
+        if (textarea) {
+          this._listeners.value = Event.runAndSubscribe(commandDetection.promptInputModel.onDidChangeInput, () => this._sync(textarea));
+        }
+      }
+    } else {
+      this._listeners.clear();
+    }
+  }
+  _shouldBeActive() {
+    return this._accessibilityService.isScreenReaderOptimized() || this._configurationService.getValue(TerminalSettingId.DevMode);
+  }
+  _sync(textArea) {
+    const commandCapability = this._capabilities.get(TerminalCapability.CommandDetection);
+    if (!commandCapability) {
+      return;
+    }
+    textArea.value = commandCapability.promptInputModel.value;
+    textArea.selectionStart = commandCapability.promptInputModel.cursorIndex;
+    textArea.selectionEnd = commandCapability.promptInputModel.cursorIndex;
+    this._logService.debug(`TextAreaSyncAddon#sync: text changed to "${textArea.value}"`);
+  }
+};
+__decorateClass([
+  debounce(50)
+], TextAreaSyncAddon.prototype, "_sync", 1);
+TextAreaSyncAddon = __decorateClass([
+  __decorateParam(1, IAccessibilityService),
+  __decorateParam(2, IConfigurationService),
+  __decorateParam(3, ITerminalLogService)
+], TextAreaSyncAddon);
+export {
+  TextAreaSyncAddon
+};
+//# sourceMappingURL=textAreaSyncAddon.js.map

@@ -1,1 +1,143 @@
-var W=Object.defineProperty,H=Object.getOwnPropertyDescriptor,d=(e,t,s,o)=>{for(var i,r=o>1?void 0:o?H(t,s):t,n=e.length-1;n>=0;n--)(i=e[n])&&(r=(o?i(t,s,r):i(r))||r);return o&&r&&W(t,s,r),r},c=(e,t)=>(s,o)=>t(s,o,e);import"../../../base/browser/history.js";import"../../../base/browser/ui/contextview/contextview.js";import{FindInput as A}from"../../../base/browser/ui/findinput/findInput.js";import{ReplaceInput as D}from"../../../base/browser/ui/findinput/replaceInput.js";import{HistoryInputBox as F}from"../../../base/browser/ui/inputbox/inputBox.js";import{KeyCode as g,KeyMod as x}from"../../../base/common/keyCodes.js";import{ContextKeyExpr as a,IContextKeyService as b,RawContextKey as u}from"../../contextkey/common/contextkey.js";import{KeybindingsRegistry as I,KeybindingWeight as C}from"../../keybinding/common/keybindingsRegistry.js";import{localize as V}from"../../../nls.js";import{DisposableStore as B,toDisposable as T}from"../../../base/common/lifecycle.js";import{isActiveElement as O}from"../../../base/browser/dom.js";const N=new u("suggestWidgetVisible",!1,V("suggestWidgetVisible","Whether suggestion are visible")),v="historyNavigationWidgetFocus",K="historyNavigationForwardsEnabled",E="historyNavigationBackwardsEnabled";let l;const m=[];function w(e,t){if(m.includes(t))throw new Error("Cannot register the same widget multiple times");m.push(t);const s=new B,o=new u(v,!1).bindTo(e),i=new u(K,!0).bindTo(e),r=new u(E,!0).bindTo(e),n=()=>{o.set(!0),l=t},a=()=>{o.set(!1),l===t&&(l=void 0)};return O(t.element)&&n(),s.add(t.onDidFocus((()=>n()))),s.add(t.onDidBlur((()=>a()))),s.add(T((()=>{m.splice(m.indexOf(t),1),a()}))),{historyNavigationForwardsEnablement:i,historyNavigationBackwardsEnablement:r,dispose(){s.dispose()}}}let h=class extends F{constructor(e,t,s,o){super(e,t,s);const i=this._register(o.createScoped(this.element));this._register(w(i,this))}};h=d([c(3,b)],h);let y=class extends A{constructor(e,t,s,o){super(e,t,s);const i=this._register(o.createScoped(this.inputBox.element));this._register(w(i,this.inputBox))}};y=d([c(3,b)],y);let p=class extends D{constructor(e,t,s,o,i=!1){super(e,t,i,s);const r=this._register(o.createScoped(this.inputBox.element));this._register(w(r,this.inputBox))}};p=d([c(3,b)],p),I.registerCommandAndKeybindingRule({id:"history.showPrevious",weight:C.WorkbenchContrib,when:a.and(a.has(v),a.equals(E,!0),a.not("isComposing"),N.isEqualTo(!1)),primary:g.UpArrow,secondary:[x.Alt|g.UpArrow],handler:e=>{l?.showPreviousValue()}}),I.registerCommandAndKeybindingRule({id:"history.showNext",weight:C.WorkbenchContrib,when:a.and(a.has(v),a.equals(K,!0),a.not("isComposing"),N.isEqualTo(!1)),primary:g.DownArrow,secondary:[x.Alt|g.DownArrow],handler:e=>{l?.showNextValue()}});export{y as ContextScopedFindInput,h as ContextScopedHistoryInputBox,p as ContextScopedReplaceInput,N as historyNavigationVisible,w as registerAndCreateHistoryNavigationContext};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { IHistoryNavigationWidget } from "../../../base/browser/history.js";
+import { IContextViewProvider } from "../../../base/browser/ui/contextview/contextview.js";
+import { FindInput, IFindInputOptions } from "../../../base/browser/ui/findinput/findInput.js";
+import { IReplaceInputOptions, ReplaceInput } from "../../../base/browser/ui/findinput/replaceInput.js";
+import { HistoryInputBox, IHistoryInputOptions } from "../../../base/browser/ui/inputbox/inputBox.js";
+import { KeyCode, KeyMod } from "../../../base/common/keyCodes.js";
+import { ContextKeyExpr, IContextKey, IContextKeyService, RawContextKey } from "../../contextkey/common/contextkey.js";
+import { KeybindingsRegistry, KeybindingWeight } from "../../keybinding/common/keybindingsRegistry.js";
+import { localize } from "../../../nls.js";
+import { DisposableStore, IDisposable, toDisposable } from "../../../base/common/lifecycle.js";
+import { isActiveElement } from "../../../base/browser/dom.js";
+const historyNavigationVisible = new RawContextKey("suggestWidgetVisible", false, localize("suggestWidgetVisible", "Whether suggestion are visible"));
+const HistoryNavigationWidgetFocusContext = "historyNavigationWidgetFocus";
+const HistoryNavigationForwardsEnablementContext = "historyNavigationForwardsEnabled";
+const HistoryNavigationBackwardsEnablementContext = "historyNavigationBackwardsEnabled";
+let lastFocusedWidget = void 0;
+const widgets = [];
+function registerAndCreateHistoryNavigationContext(scopedContextKeyService, widget) {
+  if (widgets.includes(widget)) {
+    throw new Error("Cannot register the same widget multiple times");
+  }
+  widgets.push(widget);
+  const disposableStore = new DisposableStore();
+  const historyNavigationWidgetFocus = new RawContextKey(HistoryNavigationWidgetFocusContext, false).bindTo(scopedContextKeyService);
+  const historyNavigationForwardsEnablement = new RawContextKey(HistoryNavigationForwardsEnablementContext, true).bindTo(scopedContextKeyService);
+  const historyNavigationBackwardsEnablement = new RawContextKey(HistoryNavigationBackwardsEnablementContext, true).bindTo(scopedContextKeyService);
+  const onDidFocus = /* @__PURE__ */ __name(() => {
+    historyNavigationWidgetFocus.set(true);
+    lastFocusedWidget = widget;
+  }, "onDidFocus");
+  const onDidBlur = /* @__PURE__ */ __name(() => {
+    historyNavigationWidgetFocus.set(false);
+    if (lastFocusedWidget === widget) {
+      lastFocusedWidget = void 0;
+    }
+  }, "onDidBlur");
+  if (isActiveElement(widget.element)) {
+    onDidFocus();
+  }
+  disposableStore.add(widget.onDidFocus(() => onDidFocus()));
+  disposableStore.add(widget.onDidBlur(() => onDidBlur()));
+  disposableStore.add(toDisposable(() => {
+    widgets.splice(widgets.indexOf(widget), 1);
+    onDidBlur();
+  }));
+  return {
+    historyNavigationForwardsEnablement,
+    historyNavigationBackwardsEnablement,
+    dispose() {
+      disposableStore.dispose();
+    }
+  };
+}
+__name(registerAndCreateHistoryNavigationContext, "registerAndCreateHistoryNavigationContext");
+let ContextScopedHistoryInputBox = class extends HistoryInputBox {
+  static {
+    __name(this, "ContextScopedHistoryInputBox");
+  }
+  constructor(container, contextViewProvider, options, contextKeyService) {
+    super(container, contextViewProvider, options);
+    const scopedContextKeyService = this._register(contextKeyService.createScoped(this.element));
+    this._register(registerAndCreateHistoryNavigationContext(scopedContextKeyService, this));
+  }
+};
+ContextScopedHistoryInputBox = __decorateClass([
+  __decorateParam(3, IContextKeyService)
+], ContextScopedHistoryInputBox);
+let ContextScopedFindInput = class extends FindInput {
+  static {
+    __name(this, "ContextScopedFindInput");
+  }
+  constructor(container, contextViewProvider, options, contextKeyService) {
+    super(container, contextViewProvider, options);
+    const scopedContextKeyService = this._register(contextKeyService.createScoped(this.inputBox.element));
+    this._register(registerAndCreateHistoryNavigationContext(scopedContextKeyService, this.inputBox));
+  }
+};
+ContextScopedFindInput = __decorateClass([
+  __decorateParam(3, IContextKeyService)
+], ContextScopedFindInput);
+let ContextScopedReplaceInput = class extends ReplaceInput {
+  static {
+    __name(this, "ContextScopedReplaceInput");
+  }
+  constructor(container, contextViewProvider, options, contextKeyService, showReplaceOptions = false) {
+    super(container, contextViewProvider, showReplaceOptions, options);
+    const scopedContextKeyService = this._register(contextKeyService.createScoped(this.inputBox.element));
+    this._register(registerAndCreateHistoryNavigationContext(scopedContextKeyService, this.inputBox));
+  }
+};
+ContextScopedReplaceInput = __decorateClass([
+  __decorateParam(3, IContextKeyService)
+], ContextScopedReplaceInput);
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  id: "history.showPrevious",
+  weight: KeybindingWeight.WorkbenchContrib,
+  when: ContextKeyExpr.and(
+    ContextKeyExpr.has(HistoryNavigationWidgetFocusContext),
+    ContextKeyExpr.equals(HistoryNavigationBackwardsEnablementContext, true),
+    ContextKeyExpr.not("isComposing"),
+    historyNavigationVisible.isEqualTo(false)
+  ),
+  primary: KeyCode.UpArrow,
+  secondary: [KeyMod.Alt | KeyCode.UpArrow],
+  handler: /* @__PURE__ */ __name((accessor) => {
+    lastFocusedWidget?.showPreviousValue();
+  }, "handler")
+});
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  id: "history.showNext",
+  weight: KeybindingWeight.WorkbenchContrib,
+  when: ContextKeyExpr.and(
+    ContextKeyExpr.has(HistoryNavigationWidgetFocusContext),
+    ContextKeyExpr.equals(HistoryNavigationForwardsEnablementContext, true),
+    ContextKeyExpr.not("isComposing"),
+    historyNavigationVisible.isEqualTo(false)
+  ),
+  primary: KeyCode.DownArrow,
+  secondary: [KeyMod.Alt | KeyCode.DownArrow],
+  handler: /* @__PURE__ */ __name((accessor) => {
+    lastFocusedWidget?.showNextValue();
+  }, "handler")
+});
+export {
+  ContextScopedFindInput,
+  ContextScopedHistoryInputBox,
+  ContextScopedReplaceInput,
+  historyNavigationVisible,
+  registerAndCreateHistoryNavigationContext
+};
+//# sourceMappingURL=contextScopedHistoryWidget.js.map

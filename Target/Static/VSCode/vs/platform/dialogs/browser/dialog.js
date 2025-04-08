@@ -1,1 +1,41 @@
-import{EventHelper as a}from"../../../base/browser/dom.js";import"../../../base/browser/keyboardEvent.js";import"../../../base/browser/ui/dialog/dialog.js";import"../../keybinding/common/keybinding.js";import{ResultKind as c}from"../../keybinding/common/keybindingResolver.js";import"../../layout/browser/layoutService.js";import{defaultButtonStyles as l,defaultCheckboxStyles as d,defaultInputBoxStyles as s,defaultDialogStyles as p}from"../../theme/browser/defaultStyles.js";const m=["workbench.action.quit","workbench.action.reloadWindow","copy","cut","editor.action.selectAll","editor.action.clipboardCopyAction","editor.action.clipboardCutAction","editor.action.clipboardPasteAction"];function K(o,t,e,i=m){return{keyEventProcessor:o=>{const s=t.softDispatch(o,e.activeContainer);s.kind===c.KbFound&&s.commandId&&(i.includes(s.commandId)||a.stop(o,!0))},buttonStyles:l,checkboxStyles:d,inputBoxStyles:s,dialogStyles:p,...o}}export{K as createWorkbenchDialogOptions};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { EventHelper } from "../../../base/browser/dom.js";
+import { StandardKeyboardEvent } from "../../../base/browser/keyboardEvent.js";
+import { IDialogOptions } from "../../../base/browser/ui/dialog/dialog.js";
+import { IKeybindingService } from "../../keybinding/common/keybinding.js";
+import { ResultKind } from "../../keybinding/common/keybindingResolver.js";
+import { ILayoutService } from "../../layout/browser/layoutService.js";
+import { defaultButtonStyles, defaultCheckboxStyles, defaultInputBoxStyles, defaultDialogStyles } from "../../theme/browser/defaultStyles.js";
+const defaultDialogAllowableCommands = [
+  "workbench.action.quit",
+  "workbench.action.reloadWindow",
+  "copy",
+  "cut",
+  "editor.action.selectAll",
+  "editor.action.clipboardCopyAction",
+  "editor.action.clipboardCutAction",
+  "editor.action.clipboardPasteAction"
+];
+function createWorkbenchDialogOptions(options, keybindingService, layoutService, allowableCommands = defaultDialogAllowableCommands) {
+  return {
+    keyEventProcessor: /* @__PURE__ */ __name((event) => {
+      const resolved = keybindingService.softDispatch(event, layoutService.activeContainer);
+      if (resolved.kind === ResultKind.KbFound && resolved.commandId) {
+        if (!allowableCommands.includes(resolved.commandId)) {
+          EventHelper.stop(event, true);
+        }
+      }
+    }, "keyEventProcessor"),
+    buttonStyles: defaultButtonStyles,
+    checkboxStyles: defaultCheckboxStyles,
+    inputBoxStyles: defaultInputBoxStyles,
+    dialogStyles: defaultDialogStyles,
+    ...options
+  };
+}
+__name(createWorkbenchDialogOptions, "createWorkbenchDialogOptions");
+export {
+  createWorkbenchDialogOptions
+};
+//# sourceMappingURL=dialog.js.map

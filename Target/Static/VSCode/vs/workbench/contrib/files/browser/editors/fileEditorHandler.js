@@ -1,1 +1,101 @@
-var v=Object.defineProperty,b=Object.getOwnPropertyDescriptor,u=(e,r,o,i)=>{for(var t,s=i>1?void 0:i?b(r,o):r,n=e.length-1;n>=0;n--)(t=e[n])&&(s=(i?t(r,o,s):t(s))||s);return i&&s&&v(r,o,s),s},d=(e,r)=>(o,i)=>r(o,i,e);import{Disposable as h}from"../../../../../base/common/lifecycle.js";import{URI as a}from"../../../../../base/common/uri.js";import"../../../../common/editor.js";import"../../../../common/editor/editorInput.js";import{ITextEditorService as I}from"../../../../services/textfile/common/textEditorService.js";import{isEqual as l}from"../../../../../base/common/resources.js";import"../../../../../platform/instantiation/common/instantiation.js";import"../../../../common/contributions.js";import{NO_TYPE_ID as f}from"../../../../services/workingCopy/common/workingCopy.js";import{IWorkingCopyEditorService as y}from"../../../../services/workingCopy/common/workingCopyEditorService.js";import"./fileEditorInput.js";import{IFileService as F}from"../../../../../platform/files/common/files.js";class G{canSerialize(e){return!0}serialize(e){const r=e,o=r.resource,i=r.preferredResource,t={resourceJSON:o.toJSON(),preferredResourceJSON:l(o,i)?void 0:i,name:r.getPreferredName(),description:r.getPreferredDescription(),encoding:r.getEncoding(),modeId:r.getPreferredLanguageId()};return JSON.stringify(t)}deserialize(e,r){return e.invokeFunction((e=>{const o=JSON.parse(r),i=a.revive(o.resourceJSON),t=a.revive(o.preferredResourceJSON),s=o.name,n=o.description,c=o.encoding,d=o.modeId,m=e.get(I).createTextEditor({resource:i,label:s,description:n,encoding:c,languageId:d,forceFile:!0});return t&&m.setPreferredResource(t),m}))}}let c=class extends h{constructor(e,r,o){super(),this.textEditorService=r,this.fileService=o,this._register(e.registerHandler(this))}static ID="workbench.contrib.fileEditorWorkingCopyEditorHandler";handles(e){return e.typeId===f&&this.fileService.canHandleResource(e.resource)}handlesSync(e){return e.typeId===f&&this.fileService.hasProvider(e.resource)}isOpen(e,r){return!!this.handlesSync(e)&&l(e.resource,r.resource)}createEditor(e){return this.textEditorService.createTextEditor({resource:e.resource,forceFile:!0})}};c=u([d(0,y),d(1,I),d(2,F)],c);export{G as FileEditorInputSerializer,c as FileEditorWorkingCopyEditorHandler};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { URI, UriComponents } from "../../../../../base/common/uri.js";
+import { IEditorSerializer } from "../../../../common/editor.js";
+import { EditorInput } from "../../../../common/editor/editorInput.js";
+import { ITextEditorService } from "../../../../services/textfile/common/textEditorService.js";
+import { isEqual } from "../../../../../base/common/resources.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { IWorkbenchContribution } from "../../../../common/contributions.js";
+import { IWorkingCopyIdentifier, NO_TYPE_ID } from "../../../../services/workingCopy/common/workingCopy.js";
+import { IWorkingCopyEditorHandler, IWorkingCopyEditorService } from "../../../../services/workingCopy/common/workingCopyEditorService.js";
+import { FileEditorInput } from "./fileEditorInput.js";
+import { IFileService } from "../../../../../platform/files/common/files.js";
+class FileEditorInputSerializer {
+  static {
+    __name(this, "FileEditorInputSerializer");
+  }
+  canSerialize(editorInput) {
+    return true;
+  }
+  serialize(editorInput) {
+    const fileEditorInput = editorInput;
+    const resource = fileEditorInput.resource;
+    const preferredResource = fileEditorInput.preferredResource;
+    const serializedFileEditorInput = {
+      resourceJSON: resource.toJSON(),
+      preferredResourceJSON: isEqual(resource, preferredResource) ? void 0 : preferredResource,
+      // only storing preferredResource if it differs from the resource
+      name: fileEditorInput.getPreferredName(),
+      description: fileEditorInput.getPreferredDescription(),
+      encoding: fileEditorInput.getEncoding(),
+      modeId: fileEditorInput.getPreferredLanguageId()
+      // only using the preferred user associated language here if available to not store redundant data
+    };
+    return JSON.stringify(serializedFileEditorInput);
+  }
+  deserialize(instantiationService, serializedEditorInput) {
+    return instantiationService.invokeFunction((accessor) => {
+      const serializedFileEditorInput = JSON.parse(serializedEditorInput);
+      const resource = URI.revive(serializedFileEditorInput.resourceJSON);
+      const preferredResource = URI.revive(serializedFileEditorInput.preferredResourceJSON);
+      const name = serializedFileEditorInput.name;
+      const description = serializedFileEditorInput.description;
+      const encoding = serializedFileEditorInput.encoding;
+      const languageId = serializedFileEditorInput.modeId;
+      const fileEditorInput = accessor.get(ITextEditorService).createTextEditor({ resource, label: name, description, encoding, languageId, forceFile: true });
+      if (preferredResource) {
+        fileEditorInput.setPreferredResource(preferredResource);
+      }
+      return fileEditorInput;
+    });
+  }
+}
+let FileEditorWorkingCopyEditorHandler = class extends Disposable {
+  constructor(workingCopyEditorService, textEditorService, fileService) {
+    super();
+    this.textEditorService = textEditorService;
+    this.fileService = fileService;
+    this._register(workingCopyEditorService.registerHandler(this));
+  }
+  static {
+    __name(this, "FileEditorWorkingCopyEditorHandler");
+  }
+  static ID = "workbench.contrib.fileEditorWorkingCopyEditorHandler";
+  handles(workingCopy) {
+    return workingCopy.typeId === NO_TYPE_ID && this.fileService.canHandleResource(workingCopy.resource);
+  }
+  handlesSync(workingCopy) {
+    return workingCopy.typeId === NO_TYPE_ID && this.fileService.hasProvider(workingCopy.resource);
+  }
+  isOpen(workingCopy, editor) {
+    if (!this.handlesSync(workingCopy)) {
+      return false;
+    }
+    return isEqual(workingCopy.resource, editor.resource);
+  }
+  createEditor(workingCopy) {
+    return this.textEditorService.createTextEditor({ resource: workingCopy.resource, forceFile: true });
+  }
+};
+FileEditorWorkingCopyEditorHandler = __decorateClass([
+  __decorateParam(0, IWorkingCopyEditorService),
+  __decorateParam(1, ITextEditorService),
+  __decorateParam(2, IFileService)
+], FileEditorWorkingCopyEditorHandler);
+export {
+  FileEditorInputSerializer,
+  FileEditorWorkingCopyEditorHandler
+};
+//# sourceMappingURL=fileEditorHandler.js.map

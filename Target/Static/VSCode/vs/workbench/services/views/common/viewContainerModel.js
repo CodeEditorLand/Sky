@@ -1,1 +1,619 @@
-var k=Object.defineProperty;var x=Object.getOwnPropertyDescriptor;var b=(c,p,e,t)=>{for(var s=t>1?void 0:t?x(p,e):p,r=c.length-1,i;r>=0;r--)(i=c[r])&&(s=(t?i(p,e,s):i(s))||s);return t&&s&&k(p,e,s),s},h=(c,p)=>(e,t)=>p(e,t,c);import{Extensions as G,defaultViewIcon as W,VIEWS_LOG_ID as u,VIEWS_LOG_NAME as S}from"../../../common/views.js";import{IContextKeyService as E}from"../../../../platform/contextkey/common/contextkey.js";import{IStorageService as z,StorageScope as v,StorageTarget as m}from"../../../../platform/storage/common/storage.js";import{Registry as O}from"../../../../platform/registry/common/platform.js";import{Disposable as y}from"../../../../base/common/lifecycle.js";import{Event as $,Emitter as w}from"../../../../base/common/event.js";import{IInstantiationService as L}from"../../../../platform/instantiation/common/instantiation.js";import{URI as C}from"../../../../base/common/uri.js";import{coalesce as M,move as H}from"../../../../base/common/arrays.js";import{isUndefined as f,isUndefinedOrNull as l}from"../../../../base/common/types.js";import{isEqual as N}from"../../../../base/common/resources.js";import{ThemeIcon as I}from"../../../../base/common/themables.js";import"../../../../base/common/collections.js";import{ILoggerService as A}from"../../../../platform/log/common/log.js";import{CounterSet as K}from"../../../../base/common/map.js";import{Lazy as _}from"../../../../base/common/lazy.js";import{windowLogGroup as R}from"../../log/common/logConstants.js";function U(c){return`${c}.hidden`}let D=class extends y{constructor(e,t,s,r){super();this.viewContainerName=t;this.storageService=s;this.logger=new _(()=>r.createLogger(u,{name:S,group:R})),this.globalViewsStateStorageId=U(e),this.workspaceViewsStateStorageId=e,this._register(this.storageService.onDidChangeValue(v.PROFILE,this.globalViewsStateStorageId,this._store)(()=>this.onDidStorageChange())),this.state=this.initialize()}workspaceViewsStateStorageId;globalViewsStateStorageId;state;_onDidChangeStoredState=this._register(new w);onDidChangeStoredState=this._onDidChangeStoredState.event;logger;set(e,t){this.state.set(e,t)}get(e){return this.state.get(e)}updateState(e){this.updateWorkspaceState(e),this.updateGlobalState(e)}updateWorkspaceState(e){const t=this.getStoredWorkspaceState();for(const s of e){const r=this.get(s.id);r&&(t[s.id]={collapsed:!!r.collapsed,isHidden:!r.visibleWorkspace,size:r.size,order:s.workspace&&r?r.order:void 0})}Object.keys(t).length>0?this.storageService.store(this.workspaceViewsStateStorageId,JSON.stringify(t),v.WORKSPACE,m.MACHINE):this.storageService.remove(this.workspaceViewsStateStorageId,v.WORKSPACE)}updateGlobalState(e){const t=this.getStoredGlobalState();for(const s of e){const r=this.get(s.id);t.set(s.id,{id:s.id,isHidden:r&&s.canToggleVisibility?!r.visibleGlobal:!1,order:!s.workspace&&r?r.order:void 0})}this.setStoredGlobalState(t)}onDidStorageChange(){if(this.globalViewsStatesValue!==this.getStoredGlobalViewsStatesValue()){this._globalViewsStatesValue=void 0;const e=this.getStoredGlobalState(),t=this.getStoredWorkspaceState(),s=[];for(const[r,i]of e){const a=this.get(r);if(a)a.visibleGlobal!==!i.isHidden&&(i.isHidden||this.logger.value.info(`View visibility state changed: ${r} is now visible`,this.viewContainerName),s.push({id:r,visible:!i.isHidden}));else{const o=t[r];this.set(r,{active:!1,visibleGlobal:!i.isHidden,visibleWorkspace:f(o?.isHidden)?void 0:!o?.isHidden,collapsed:o?.collapsed,order:o?.order,size:o?.size})}}if(s.length){this._onDidChangeStoredState.fire(s);for(const r of s){const i=this.get(r.id);i&&(i.visibleGlobal=r.visible)}}}}initialize(){const e=new Map,t=this.getStoredWorkspaceState();for(const o of Object.keys(t)){const n=t[o];e.set(o,{active:!1,visibleGlobal:void 0,visibleWorkspace:f(n.isHidden)?void 0:!n.isHidden,collapsed:n.collapsed,order:n.order,size:n.size})}const s=this.storageService.get(this.globalViewsStateStorageId,v.WORKSPACE,"[]"),{state:r}=this.parseStoredGlobalState(s);if(r.size>0){for(const{id:o,isHidden:n}of r.values()){const d=e.get(o);d?f(d.visibleWorkspace)&&(d.visibleWorkspace=!n):e.set(o,{active:!1,collapsed:void 0,visibleGlobal:void 0,visibleWorkspace:!n})}this.storageService.remove(this.globalViewsStateStorageId,v.WORKSPACE)}const{state:i,hasDuplicates:a}=this.parseStoredGlobalState(this.globalViewsStatesValue);a&&this.setStoredGlobalState(i);for(const{id:o,isHidden:n,order:d}of i.values()){const V=e.get(o);V?(V.visibleGlobal=!n,f(d)||(V.order=d)):e.set(o,{active:!1,visibleGlobal:!n,order:d,collapsed:void 0,visibleWorkspace:void 0})}return e}getStoredWorkspaceState(){return JSON.parse(this.storageService.get(this.workspaceViewsStateStorageId,v.WORKSPACE,"{}"))}getStoredGlobalState(){return this.parseStoredGlobalState(this.globalViewsStatesValue).state}setStoredGlobalState(e){this.globalViewsStatesValue=JSON.stringify([...e.values()])}parseStoredGlobalState(e){const t=JSON.parse(e);let s=!1;return{state:t.reduce((i,a)=>(typeof a=="string"?(s=s||i.has(a),i.set(a,{id:a,isHidden:!0})):(s=s||i.has(a.id),i.set(a.id,a)),i),new Map),hasDuplicates:s}}_globalViewsStatesValue;get globalViewsStatesValue(){return this._globalViewsStatesValue||(this._globalViewsStatesValue=this.getStoredGlobalViewsStatesValue()),this._globalViewsStatesValue}set globalViewsStatesValue(e){this.globalViewsStatesValue!==e&&(this._globalViewsStatesValue=e,this.setStoredGlobalViewsStatesValue(e))}getStoredGlobalViewsStatesValue(){return this.storageService.get(this.globalViewsStateStorageId,v.PROFILE,"[]")}setStoredGlobalViewsStatesValue(e){this.storageService.store(this.globalViewsStateStorageId,e,v.PROFILE,m.USER)}};D=b([h(2,z),h(3,A)],D);let g=class extends y{constructor(e,t,s,r){super();this.viewContainer=e;this.contextKeyService=s;this.logger=new _(()=>r.createLogger(u,{name:S,group:R})),this._register($.filter(s.onDidChangeContext,i=>i.affectsSome(this.contextKeys))(()=>this.onDidChangeContext())),this.viewDescriptorsState=this._register(t.createInstance(D,e.storageId||`${e.id}.state`,typeof e.title=="string"?e.title:e.title.original)),this._register(this.viewDescriptorsState.onDidChangeStoredState(i=>this.updateVisibility(i))),this.updateContainerInfo()}contextKeys=new K;viewDescriptorItems=[];viewDescriptorsState;_title;get title(){return this._title}_icon;get icon(){return this._icon}_keybindingId;get keybindingId(){return this._keybindingId}_onDidChangeContainerInfo=this._register(new w);onDidChangeContainerInfo=this._onDidChangeContainerInfo.event;get allViewDescriptors(){return this.viewDescriptorItems.map(e=>e.viewDescriptor)}_onDidChangeAllViewDescriptors=this._register(new w);onDidChangeAllViewDescriptors=this._onDidChangeAllViewDescriptors.event;get activeViewDescriptors(){return this.viewDescriptorItems.filter(e=>e.state.active).map(e=>e.viewDescriptor)}_onDidChangeActiveViewDescriptors=this._register(new w);onDidChangeActiveViewDescriptors=this._onDidChangeActiveViewDescriptors.event;get visibleViewDescriptors(){return this.viewDescriptorItems.filter(e=>this.isViewDescriptorVisible(e)).map(e=>e.viewDescriptor)}_onDidAddVisibleViewDescriptors=this._register(new w);onDidAddVisibleViewDescriptors=this._onDidAddVisibleViewDescriptors.event;_onDidRemoveVisibleViewDescriptors=this._register(new w);onDidRemoveVisibleViewDescriptors=this._onDidRemoveVisibleViewDescriptors.event;_onDidMoveVisibleViewDescriptors=this._register(new w);onDidMoveVisibleViewDescriptors=this._onDidMoveVisibleViewDescriptors.event;logger;updateContainerInfo(){const e=this.viewContainer.alwaysUseContainerInfo||this.visibleViewDescriptors.length===0||this.visibleViewDescriptors.some(n=>O.as(G.ViewsRegistry).getViewContainer(n.id)===this.viewContainer),t=e?typeof this.viewContainer.title=="string"?this.viewContainer.title:this.viewContainer.title.value:this.visibleViewDescriptors[0]?.containerTitle||this.visibleViewDescriptors[0]?.name?.value||"";let s=!1;this._title!==t&&(this._title=t,s=!0);const r=e?this.viewContainer.icon:this.visibleViewDescriptors[0]?.containerIcon||W;let i=!1;this.isEqualIcon(r)||(this._icon=r,i=!0);const a=this.viewContainer.openCommandActionDescriptor?.id??this.activeViewDescriptors.find(n=>n.openCommandActionDescriptor)?.openCommandActionDescriptor?.id;let o=!1;this._keybindingId!==a&&(this._keybindingId=a,o=!0),(s||i||o)&&this._onDidChangeContainerInfo.fire({title:s,icon:i,keybindingId:o})}isEqualIcon(e){return C.isUri(e)?C.isUri(this._icon)&&N(e,this._icon):I.isThemeIcon(e)?I.isThemeIcon(this._icon)&&I.isEqual(e,this._icon):e===this._icon}isVisible(e){const t=this.viewDescriptorItems.find(s=>s.viewDescriptor.id===e);if(!t)throw new Error(`Unknown view ${e}`);return this.isViewDescriptorVisible(t)}setVisible(e,t){this.updateVisibility([{id:e,visible:t}])}updateVisibility(e){const t=M(e.filter(({visible:i})=>!i).map(({id:i})=>this.findAndIgnoreIfNotFound(i))),s=[];for(const{viewDescriptorItem:i,visibleIndex:a}of t)this.updateViewDescriptorItemVisibility(i,!1)&&s.push({viewDescriptor:i.viewDescriptor,index:a});s.length&&this.broadCastRemovedVisibleViewDescriptors(s);const r=[];for(const{id:i,visible:a}of e){if(!a)continue;const o=this.findAndIgnoreIfNotFound(i);if(!o)continue;const{viewDescriptorItem:n,visibleIndex:d}=o;this.updateViewDescriptorItemVisibility(n,!0)&&r.push({index:d,viewDescriptor:n.viewDescriptor,size:n.state.size,collapsed:!!n.state.collapsed})}r.length&&this.broadCastAddedVisibleViewDescriptors(r)}updateViewDescriptorItemVisibility(e,t){return!e.viewDescriptor.canToggleVisibility||this.isViewDescriptorVisibleWhenActive(e)===t?!1:(e.viewDescriptor.workspace?e.state.visibleWorkspace=t:(e.state.visibleGlobal=t,t&&this.logger.value.info(`Showing view ${e.viewDescriptor.id} in the container ${this.viewContainer.id}`)),this.isViewDescriptorVisible(e)===t)}isCollapsed(e){return!!this.find(e).viewDescriptorItem.state.collapsed}setCollapsed(e,t){const{viewDescriptorItem:s}=this.find(e);s.state.collapsed!==t&&(s.state.collapsed=t),this.viewDescriptorsState.updateState(this.allViewDescriptors)}getSize(e){return this.find(e).viewDescriptorItem.state.size}setSizes(e){for(const{id:t,size:s}of e){const{viewDescriptorItem:r}=this.find(t);r.state.size!==s&&(r.state.size=s)}this.viewDescriptorsState.updateState(this.allViewDescriptors)}move(e,t){const s=this.viewDescriptorItems.findIndex(o=>o.viewDescriptor.id===e),r=this.viewDescriptorItems.findIndex(o=>o.viewDescriptor.id===t),i=this.viewDescriptorItems[s],a=this.viewDescriptorItems[r];H(this.viewDescriptorItems,s,r);for(let o=0;o<this.viewDescriptorItems.length;o++)this.viewDescriptorItems[o].state.order=o;this.broadCastMovedViewDescriptors({index:s,viewDescriptor:i.viewDescriptor},{index:r,viewDescriptor:a.viewDescriptor})}add(e){const t=[];for(const i of e){const a=i.viewDescriptor;if(a.when)for(const n of a.when.keys())this.contextKeys.add(n);let o=this.viewDescriptorsState.get(a.id);if(o){if(a.workspace)o.visibleWorkspace=l(i.visible)?l(o.visibleWorkspace)?!a.hideByDefault:o.visibleWorkspace:i.visible;else{const n=o.visibleGlobal;o.visibleGlobal=l(i.visible)?l(o.visibleGlobal)?!a.hideByDefault:o.visibleGlobal:i.visible,o.visibleGlobal&&!n&&this.logger.value.info(`Added view ${a.id} in the container ${this.viewContainer.id} and showing it.`,`${n}`,`${a.hideByDefault}`,`${i.visible}`)}o.collapsed=l(i.collapsed)?l(o.collapsed)?!!a.collapsed:o.collapsed:i.collapsed}else o={active:!1,visibleGlobal:l(i.visible)?!a.hideByDefault:i.visible,visibleWorkspace:l(i.visible)?!a.hideByDefault:i.visible,collapsed:l(i.collapsed)?!!a.collapsed:i.collapsed};this.viewDescriptorsState.set(a.id,o),o.active=this.contextKeyService.contextMatchesRules(a.when),t.push({viewDescriptor:a,state:o})}this.viewDescriptorItems.push(...t),this.viewDescriptorItems.sort(this.compareViewDescriptors.bind(this)),this._onDidChangeAllViewDescriptors.fire({added:t.map(({viewDescriptor:i})=>i),removed:[]});const s=[];for(const i of t)i.state.active&&s.push({viewDescriptorItem:i,visible:this.isViewDescriptorVisible(i)});s.length&&this._onDidChangeActiveViewDescriptors.fire({added:s.map(({viewDescriptorItem:i})=>i.viewDescriptor),removed:[]});const r=[];for(const{viewDescriptorItem:i,visible:a}of s)if(a&&this.isViewDescriptorVisible(i)){const{visibleIndex:o}=this.find(i.viewDescriptor.id);r.push({index:o,viewDescriptor:i.viewDescriptor,size:i.state.size,collapsed:!!i.state.collapsed})}this.broadCastAddedVisibleViewDescriptors(r)}remove(e){const t=[],s=[],r=[],i=[];for(const a of e){if(a.when)for(const n of a.when.keys())this.contextKeys.delete(n);const o=this.viewDescriptorItems.findIndex(n=>n.viewDescriptor.id===a.id);if(o!==-1){t.push(a);const n=this.viewDescriptorItems[o];if(n.state.active&&r.push(n.viewDescriptor),this.isViewDescriptorVisible(n)){const{visibleIndex:d}=this.find(n.viewDescriptor.id);i.push({index:d,viewDescriptor:n.viewDescriptor})}s.push(n)}}s.forEach(a=>this.viewDescriptorItems.splice(this.viewDescriptorItems.indexOf(a),1)),this.broadCastRemovedVisibleViewDescriptors(i),r.length&&this._onDidChangeActiveViewDescriptors.fire({added:[],removed:r}),t.length&&this._onDidChangeAllViewDescriptors.fire({added:[],removed:t})}onDidChangeContext(){const e=[],t=[];for(const i of this.viewDescriptorItems){const a=i.state.active,o=this.contextKeyService.contextMatchesRules(i.viewDescriptor.when);a!==o&&(o?e.push({item:i,visibleWhenActive:this.isViewDescriptorVisibleWhenActive(i)}):t.push(i))}const s=[];for(const i of t)if(this.isViewDescriptorVisible(i)){const{visibleIndex:a}=this.find(i.viewDescriptor.id);s.push({index:a,viewDescriptor:i.viewDescriptor})}t.forEach(i=>i.state.active=!1),e.forEach(({item:i})=>i.state.active=!0),this.broadCastRemovedVisibleViewDescriptors(s),(e.length||t.length)&&this._onDidChangeActiveViewDescriptors.fire({added:e.map(({item:i})=>i.viewDescriptor),removed:t.map(i=>i.viewDescriptor)});const r=[];for(const{item:i,visibleWhenActive:a}of e)if(a&&this.isViewDescriptorVisible(i)){const{visibleIndex:o}=this.find(i.viewDescriptor.id);r.push({index:o,viewDescriptor:i.viewDescriptor,size:i.state.size,collapsed:!!i.state.collapsed})}this.broadCastAddedVisibleViewDescriptors(r)}broadCastAddedVisibleViewDescriptors(e){e.length&&(this._onDidAddVisibleViewDescriptors.fire(e.sort((t,s)=>t.index-s.index)),this.updateState(`Added views:${e.map(t=>t.viewDescriptor.id).join(",")} in ${this.viewContainer.id}`))}broadCastRemovedVisibleViewDescriptors(e){e.length&&(this._onDidRemoveVisibleViewDescriptors.fire(e.sort((t,s)=>s.index-t.index)),this.updateState(`Removed views:${e.map(t=>t.viewDescriptor.id).join(",")} from ${this.viewContainer.id}`))}broadCastMovedViewDescriptors(e,t){this._onDidMoveVisibleViewDescriptors.fire({from:e,to:t}),this.updateState(`Moved view ${e.viewDescriptor.id} to ${t.viewDescriptor.id} in ${this.viewContainer.id}`)}updateState(e){this.logger.value.info(e),this.viewDescriptorsState.updateState(this.allViewDescriptors),this.updateContainerInfo()}isViewDescriptorVisible(e){return e.state.active?this.isViewDescriptorVisibleWhenActive(e):!1}isViewDescriptorVisibleWhenActive(e){return e.viewDescriptor.workspace?!!e.state.visibleWorkspace:!!e.state.visibleGlobal}find(e){const t=this.findAndIgnoreIfNotFound(e);if(t)return t;throw new Error(`view descriptor ${e} not found`)}findAndIgnoreIfNotFound(e){for(let t=0,s=0;t<this.viewDescriptorItems.length;t++){const r=this.viewDescriptorItems[t];if(r.viewDescriptor.id===e)return{index:t,visibleIndex:s,viewDescriptorItem:r};this.isViewDescriptorVisible(r)&&s++}}compareViewDescriptors(e,t){return e.viewDescriptor.id===t.viewDescriptor.id?0:this.getViewOrder(e)-this.getViewOrder(t)||this.getGroupOrderResult(e.viewDescriptor,t.viewDescriptor)}getViewOrder(e){const t=typeof e.state.order=="number"?e.state.order:e.viewDescriptor.order;return typeof t=="number"?t:Number.MAX_VALUE}getGroupOrderResult(e,t){return!e.group||!t.group||e.group===t.group?0:e.group<t.group?-1:1}};g=b([h(1,L),h(2,E),h(3,A)],g);export{g as ViewContainerModel,U as getViewsStateStorageId};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { ViewContainer, IViewsRegistry, IViewDescriptor, Extensions as ViewExtensions, IViewContainerModel, IAddedViewDescriptorRef, IViewDescriptorRef, IAddedViewDescriptorState, defaultViewIcon, VIEWS_LOG_ID, VIEWS_LOG_NAME } from "../../../common/views.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { Event, Emitter } from "../../../../base/common/event.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { URI } from "../../../../base/common/uri.js";
+import { coalesce, move } from "../../../../base/common/arrays.js";
+import { isUndefined, isUndefinedOrNull } from "../../../../base/common/types.js";
+import { isEqual } from "../../../../base/common/resources.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { IStringDictionary } from "../../../../base/common/collections.js";
+import { ILogger, ILoggerService } from "../../../../platform/log/common/log.js";
+import { CounterSet } from "../../../../base/common/map.js";
+import { Lazy } from "../../../../base/common/lazy.js";
+import { windowLogGroup } from "../../log/common/logConstants.js";
+function getViewsStateStorageId(viewContainerStorageId) {
+  return `${viewContainerStorageId}.hidden`;
+}
+__name(getViewsStateStorageId, "getViewsStateStorageId");
+let ViewDescriptorsState = class extends Disposable {
+  constructor(viewContainerStorageId, viewContainerName, storageService, loggerService) {
+    super();
+    this.viewContainerName = viewContainerName;
+    this.storageService = storageService;
+    this.logger = new Lazy(() => loggerService.createLogger(VIEWS_LOG_ID, { name: VIEWS_LOG_NAME, group: windowLogGroup }));
+    this.globalViewsStateStorageId = getViewsStateStorageId(viewContainerStorageId);
+    this.workspaceViewsStateStorageId = viewContainerStorageId;
+    this._register(this.storageService.onDidChangeValue(StorageScope.PROFILE, this.globalViewsStateStorageId, this._store)(() => this.onDidStorageChange()));
+    this.state = this.initialize();
+  }
+  static {
+    __name(this, "ViewDescriptorsState");
+  }
+  workspaceViewsStateStorageId;
+  globalViewsStateStorageId;
+  state;
+  _onDidChangeStoredState = this._register(new Emitter());
+  onDidChangeStoredState = this._onDidChangeStoredState.event;
+  logger;
+  set(id, state) {
+    this.state.set(id, state);
+  }
+  get(id) {
+    return this.state.get(id);
+  }
+  updateState(viewDescriptors) {
+    this.updateWorkspaceState(viewDescriptors);
+    this.updateGlobalState(viewDescriptors);
+  }
+  updateWorkspaceState(viewDescriptors) {
+    const storedViewsStates = this.getStoredWorkspaceState();
+    for (const viewDescriptor of viewDescriptors) {
+      const viewState = this.get(viewDescriptor.id);
+      if (viewState) {
+        storedViewsStates[viewDescriptor.id] = {
+          collapsed: !!viewState.collapsed,
+          isHidden: !viewState.visibleWorkspace,
+          size: viewState.size,
+          order: viewDescriptor.workspace && viewState ? viewState.order : void 0
+        };
+      }
+    }
+    if (Object.keys(storedViewsStates).length > 0) {
+      this.storageService.store(this.workspaceViewsStateStorageId, JSON.stringify(storedViewsStates), StorageScope.WORKSPACE, StorageTarget.MACHINE);
+    } else {
+      this.storageService.remove(this.workspaceViewsStateStorageId, StorageScope.WORKSPACE);
+    }
+  }
+  updateGlobalState(viewDescriptors) {
+    const storedGlobalState = this.getStoredGlobalState();
+    for (const viewDescriptor of viewDescriptors) {
+      const state = this.get(viewDescriptor.id);
+      storedGlobalState.set(viewDescriptor.id, {
+        id: viewDescriptor.id,
+        isHidden: state && viewDescriptor.canToggleVisibility ? !state.visibleGlobal : false,
+        order: !viewDescriptor.workspace && state ? state.order : void 0
+      });
+    }
+    this.setStoredGlobalState(storedGlobalState);
+  }
+  onDidStorageChange() {
+    if (this.globalViewsStatesValue !== this.getStoredGlobalViewsStatesValue()) {
+      this._globalViewsStatesValue = void 0;
+      const storedViewsVisibilityStates = this.getStoredGlobalState();
+      const storedWorkspaceViewsStates = this.getStoredWorkspaceState();
+      const changedStates = [];
+      for (const [id, storedState] of storedViewsVisibilityStates) {
+        const state = this.get(id);
+        if (state) {
+          if (state.visibleGlobal !== !storedState.isHidden) {
+            if (!storedState.isHidden) {
+              this.logger.value.info(`View visibility state changed: ${id} is now visible`, this.viewContainerName);
+            }
+            changedStates.push({ id, visible: !storedState.isHidden });
+          }
+        } else {
+          const workspaceViewState = storedWorkspaceViewsStates[id];
+          this.set(id, {
+            active: false,
+            visibleGlobal: !storedState.isHidden,
+            visibleWorkspace: isUndefined(workspaceViewState?.isHidden) ? void 0 : !workspaceViewState?.isHidden,
+            collapsed: workspaceViewState?.collapsed,
+            order: workspaceViewState?.order,
+            size: workspaceViewState?.size
+          });
+        }
+      }
+      if (changedStates.length) {
+        this._onDidChangeStoredState.fire(changedStates);
+        for (const changedState of changedStates) {
+          const state = this.get(changedState.id);
+          if (state) {
+            state.visibleGlobal = changedState.visible;
+          }
+        }
+      }
+    }
+  }
+  initialize() {
+    const viewStates = /* @__PURE__ */ new Map();
+    const workspaceViewsStates = this.getStoredWorkspaceState();
+    for (const id of Object.keys(workspaceViewsStates)) {
+      const workspaceViewState = workspaceViewsStates[id];
+      viewStates.set(id, {
+        active: false,
+        visibleGlobal: void 0,
+        visibleWorkspace: isUndefined(workspaceViewState.isHidden) ? void 0 : !workspaceViewState.isHidden,
+        collapsed: workspaceViewState.collapsed,
+        order: workspaceViewState.order,
+        size: workspaceViewState.size
+      });
+    }
+    const value = this.storageService.get(this.globalViewsStateStorageId, StorageScope.WORKSPACE, "[]");
+    const { state: workspaceVisibilityStates } = this.parseStoredGlobalState(value);
+    if (workspaceVisibilityStates.size > 0) {
+      for (const { id, isHidden } of workspaceVisibilityStates.values()) {
+        const viewState = viewStates.get(id);
+        if (viewState) {
+          if (isUndefined(viewState.visibleWorkspace)) {
+            viewState.visibleWorkspace = !isHidden;
+          }
+        } else {
+          viewStates.set(id, {
+            active: false,
+            collapsed: void 0,
+            visibleGlobal: void 0,
+            visibleWorkspace: !isHidden
+          });
+        }
+      }
+      this.storageService.remove(this.globalViewsStateStorageId, StorageScope.WORKSPACE);
+    }
+    const { state, hasDuplicates } = this.parseStoredGlobalState(this.globalViewsStatesValue);
+    if (hasDuplicates) {
+      this.setStoredGlobalState(state);
+    }
+    for (const { id, isHidden, order } of state.values()) {
+      const viewState = viewStates.get(id);
+      if (viewState) {
+        viewState.visibleGlobal = !isHidden;
+        if (!isUndefined(order)) {
+          viewState.order = order;
+        }
+      } else {
+        viewStates.set(id, {
+          active: false,
+          visibleGlobal: !isHidden,
+          order,
+          collapsed: void 0,
+          visibleWorkspace: void 0
+        });
+      }
+    }
+    return viewStates;
+  }
+  getStoredWorkspaceState() {
+    return JSON.parse(this.storageService.get(this.workspaceViewsStateStorageId, StorageScope.WORKSPACE, "{}"));
+  }
+  getStoredGlobalState() {
+    return this.parseStoredGlobalState(this.globalViewsStatesValue).state;
+  }
+  setStoredGlobalState(storedGlobalState) {
+    this.globalViewsStatesValue = JSON.stringify([...storedGlobalState.values()]);
+  }
+  parseStoredGlobalState(value) {
+    const storedValue = JSON.parse(value);
+    let hasDuplicates = false;
+    const state = storedValue.reduce((result, storedState) => {
+      if (typeof storedState === "string") {
+        hasDuplicates = hasDuplicates || result.has(storedState);
+        result.set(storedState, { id: storedState, isHidden: true });
+      } else {
+        hasDuplicates = hasDuplicates || result.has(storedState.id);
+        result.set(storedState.id, storedState);
+      }
+      return result;
+    }, /* @__PURE__ */ new Map());
+    return { state, hasDuplicates };
+  }
+  _globalViewsStatesValue;
+  get globalViewsStatesValue() {
+    if (!this._globalViewsStatesValue) {
+      this._globalViewsStatesValue = this.getStoredGlobalViewsStatesValue();
+    }
+    return this._globalViewsStatesValue;
+  }
+  set globalViewsStatesValue(globalViewsStatesValue) {
+    if (this.globalViewsStatesValue !== globalViewsStatesValue) {
+      this._globalViewsStatesValue = globalViewsStatesValue;
+      this.setStoredGlobalViewsStatesValue(globalViewsStatesValue);
+    }
+  }
+  getStoredGlobalViewsStatesValue() {
+    return this.storageService.get(this.globalViewsStateStorageId, StorageScope.PROFILE, "[]");
+  }
+  setStoredGlobalViewsStatesValue(value) {
+    this.storageService.store(this.globalViewsStateStorageId, value, StorageScope.PROFILE, StorageTarget.USER);
+  }
+};
+ViewDescriptorsState = __decorateClass([
+  __decorateParam(2, IStorageService),
+  __decorateParam(3, ILoggerService)
+], ViewDescriptorsState);
+let ViewContainerModel = class extends Disposable {
+  constructor(viewContainer, instantiationService, contextKeyService, loggerService) {
+    super();
+    this.viewContainer = viewContainer;
+    this.contextKeyService = contextKeyService;
+    this.logger = new Lazy(() => loggerService.createLogger(VIEWS_LOG_ID, { name: VIEWS_LOG_NAME, group: windowLogGroup }));
+    this._register(Event.filter(contextKeyService.onDidChangeContext, (e) => e.affectsSome(this.contextKeys))(() => this.onDidChangeContext()));
+    this.viewDescriptorsState = this._register(instantiationService.createInstance(ViewDescriptorsState, viewContainer.storageId || `${viewContainer.id}.state`, typeof viewContainer.title === "string" ? viewContainer.title : viewContainer.title.original));
+    this._register(this.viewDescriptorsState.onDidChangeStoredState((items) => this.updateVisibility(items)));
+    this.updateContainerInfo();
+  }
+  static {
+    __name(this, "ViewContainerModel");
+  }
+  contextKeys = new CounterSet();
+  viewDescriptorItems = [];
+  viewDescriptorsState;
+  // Container Info
+  _title;
+  get title() {
+    return this._title;
+  }
+  _icon;
+  get icon() {
+    return this._icon;
+  }
+  _keybindingId;
+  get keybindingId() {
+    return this._keybindingId;
+  }
+  _onDidChangeContainerInfo = this._register(new Emitter());
+  onDidChangeContainerInfo = this._onDidChangeContainerInfo.event;
+  // All View Descriptors
+  get allViewDescriptors() {
+    return this.viewDescriptorItems.map((item) => item.viewDescriptor);
+  }
+  _onDidChangeAllViewDescriptors = this._register(new Emitter());
+  onDidChangeAllViewDescriptors = this._onDidChangeAllViewDescriptors.event;
+  // Active View Descriptors
+  get activeViewDescriptors() {
+    return this.viewDescriptorItems.filter((item) => item.state.active).map((item) => item.viewDescriptor);
+  }
+  _onDidChangeActiveViewDescriptors = this._register(new Emitter());
+  onDidChangeActiveViewDescriptors = this._onDidChangeActiveViewDescriptors.event;
+  // Visible View Descriptors
+  get visibleViewDescriptors() {
+    return this.viewDescriptorItems.filter((item) => this.isViewDescriptorVisible(item)).map((item) => item.viewDescriptor);
+  }
+  _onDidAddVisibleViewDescriptors = this._register(new Emitter());
+  onDidAddVisibleViewDescriptors = this._onDidAddVisibleViewDescriptors.event;
+  _onDidRemoveVisibleViewDescriptors = this._register(new Emitter());
+  onDidRemoveVisibleViewDescriptors = this._onDidRemoveVisibleViewDescriptors.event;
+  _onDidMoveVisibleViewDescriptors = this._register(new Emitter());
+  onDidMoveVisibleViewDescriptors = this._onDidMoveVisibleViewDescriptors.event;
+  logger;
+  updateContainerInfo() {
+    const useDefaultContainerInfo = this.viewContainer.alwaysUseContainerInfo || this.visibleViewDescriptors.length === 0 || this.visibleViewDescriptors.some((v) => Registry.as(ViewExtensions.ViewsRegistry).getViewContainer(v.id) === this.viewContainer);
+    const title = useDefaultContainerInfo ? typeof this.viewContainer.title === "string" ? this.viewContainer.title : this.viewContainer.title.value : this.visibleViewDescriptors[0]?.containerTitle || this.visibleViewDescriptors[0]?.name?.value || "";
+    let titleChanged = false;
+    if (this._title !== title) {
+      this._title = title;
+      titleChanged = true;
+    }
+    const icon = useDefaultContainerInfo ? this.viewContainer.icon : this.visibleViewDescriptors[0]?.containerIcon || defaultViewIcon;
+    let iconChanged = false;
+    if (!this.isEqualIcon(icon)) {
+      this._icon = icon;
+      iconChanged = true;
+    }
+    const keybindingId = this.viewContainer.openCommandActionDescriptor?.id ?? this.activeViewDescriptors.find((v) => v.openCommandActionDescriptor)?.openCommandActionDescriptor?.id;
+    let keybindingIdChanged = false;
+    if (this._keybindingId !== keybindingId) {
+      this._keybindingId = keybindingId;
+      keybindingIdChanged = true;
+    }
+    if (titleChanged || iconChanged || keybindingIdChanged) {
+      this._onDidChangeContainerInfo.fire({ title: titleChanged, icon: iconChanged, keybindingId: keybindingIdChanged });
+    }
+  }
+  isEqualIcon(icon) {
+    if (URI.isUri(icon)) {
+      return URI.isUri(this._icon) && isEqual(icon, this._icon);
+    } else if (ThemeIcon.isThemeIcon(icon)) {
+      return ThemeIcon.isThemeIcon(this._icon) && ThemeIcon.isEqual(icon, this._icon);
+    }
+    return icon === this._icon;
+  }
+  isVisible(id) {
+    const viewDescriptorItem = this.viewDescriptorItems.find((v) => v.viewDescriptor.id === id);
+    if (!viewDescriptorItem) {
+      throw new Error(`Unknown view ${id}`);
+    }
+    return this.isViewDescriptorVisible(viewDescriptorItem);
+  }
+  setVisible(id, visible) {
+    this.updateVisibility([{ id, visible }]);
+  }
+  updateVisibility(viewDescriptors) {
+    const viewDescriptorItemsToHide = coalesce(viewDescriptors.filter(({ visible }) => !visible).map(({ id }) => this.findAndIgnoreIfNotFound(id)));
+    const removed = [];
+    for (const { viewDescriptorItem, visibleIndex } of viewDescriptorItemsToHide) {
+      if (this.updateViewDescriptorItemVisibility(viewDescriptorItem, false)) {
+        removed.push({ viewDescriptor: viewDescriptorItem.viewDescriptor, index: visibleIndex });
+      }
+    }
+    if (removed.length) {
+      this.broadCastRemovedVisibleViewDescriptors(removed);
+    }
+    const added = [];
+    for (const { id, visible } of viewDescriptors) {
+      if (!visible) {
+        continue;
+      }
+      const foundViewDescriptor = this.findAndIgnoreIfNotFound(id);
+      if (!foundViewDescriptor) {
+        continue;
+      }
+      const { viewDescriptorItem, visibleIndex } = foundViewDescriptor;
+      if (this.updateViewDescriptorItemVisibility(viewDescriptorItem, true)) {
+        added.push({ index: visibleIndex, viewDescriptor: viewDescriptorItem.viewDescriptor, size: viewDescriptorItem.state.size, collapsed: !!viewDescriptorItem.state.collapsed });
+      }
+    }
+    if (added.length) {
+      this.broadCastAddedVisibleViewDescriptors(added);
+    }
+  }
+  updateViewDescriptorItemVisibility(viewDescriptorItem, visible) {
+    if (!viewDescriptorItem.viewDescriptor.canToggleVisibility) {
+      return false;
+    }
+    if (this.isViewDescriptorVisibleWhenActive(viewDescriptorItem) === visible) {
+      return false;
+    }
+    if (viewDescriptorItem.viewDescriptor.workspace) {
+      viewDescriptorItem.state.visibleWorkspace = visible;
+    } else {
+      viewDescriptorItem.state.visibleGlobal = visible;
+      if (visible) {
+        this.logger.value.info(`Showing view ${viewDescriptorItem.viewDescriptor.id} in the container ${this.viewContainer.id}`);
+      }
+    }
+    return this.isViewDescriptorVisible(viewDescriptorItem) === visible;
+  }
+  isCollapsed(id) {
+    return !!this.find(id).viewDescriptorItem.state.collapsed;
+  }
+  setCollapsed(id, collapsed) {
+    const { viewDescriptorItem } = this.find(id);
+    if (viewDescriptorItem.state.collapsed !== collapsed) {
+      viewDescriptorItem.state.collapsed = collapsed;
+    }
+    this.viewDescriptorsState.updateState(this.allViewDescriptors);
+  }
+  getSize(id) {
+    return this.find(id).viewDescriptorItem.state.size;
+  }
+  setSizes(newSizes) {
+    for (const { id, size } of newSizes) {
+      const { viewDescriptorItem } = this.find(id);
+      if (viewDescriptorItem.state.size !== size) {
+        viewDescriptorItem.state.size = size;
+      }
+    }
+    this.viewDescriptorsState.updateState(this.allViewDescriptors);
+  }
+  move(from, to) {
+    const fromIndex = this.viewDescriptorItems.findIndex((v) => v.viewDescriptor.id === from);
+    const toIndex = this.viewDescriptorItems.findIndex((v) => v.viewDescriptor.id === to);
+    const fromViewDescriptor = this.viewDescriptorItems[fromIndex];
+    const toViewDescriptor = this.viewDescriptorItems[toIndex];
+    move(this.viewDescriptorItems, fromIndex, toIndex);
+    for (let index = 0; index < this.viewDescriptorItems.length; index++) {
+      this.viewDescriptorItems[index].state.order = index;
+    }
+    this.broadCastMovedViewDescriptors({ index: fromIndex, viewDescriptor: fromViewDescriptor.viewDescriptor }, { index: toIndex, viewDescriptor: toViewDescriptor.viewDescriptor });
+  }
+  add(addedViewDescriptorStates) {
+    const addedItems = [];
+    for (const addedViewDescriptorState of addedViewDescriptorStates) {
+      const viewDescriptor = addedViewDescriptorState.viewDescriptor;
+      if (viewDescriptor.when) {
+        for (const key of viewDescriptor.when.keys()) {
+          this.contextKeys.add(key);
+        }
+      }
+      let state = this.viewDescriptorsState.get(viewDescriptor.id);
+      if (state) {
+        if (viewDescriptor.workspace) {
+          state.visibleWorkspace = isUndefinedOrNull(addedViewDescriptorState.visible) ? isUndefinedOrNull(state.visibleWorkspace) ? !viewDescriptor.hideByDefault : state.visibleWorkspace : addedViewDescriptorState.visible;
+        } else {
+          const isVisible = state.visibleGlobal;
+          state.visibleGlobal = isUndefinedOrNull(addedViewDescriptorState.visible) ? isUndefinedOrNull(state.visibleGlobal) ? !viewDescriptor.hideByDefault : state.visibleGlobal : addedViewDescriptorState.visible;
+          if (state.visibleGlobal && !isVisible) {
+            this.logger.value.info(`Added view ${viewDescriptor.id} in the container ${this.viewContainer.id} and showing it.`, `${isVisible}`, `${viewDescriptor.hideByDefault}`, `${addedViewDescriptorState.visible}`);
+          }
+        }
+        state.collapsed = isUndefinedOrNull(addedViewDescriptorState.collapsed) ? isUndefinedOrNull(state.collapsed) ? !!viewDescriptor.collapsed : state.collapsed : addedViewDescriptorState.collapsed;
+      } else {
+        state = {
+          active: false,
+          visibleGlobal: isUndefinedOrNull(addedViewDescriptorState.visible) ? !viewDescriptor.hideByDefault : addedViewDescriptorState.visible,
+          visibleWorkspace: isUndefinedOrNull(addedViewDescriptorState.visible) ? !viewDescriptor.hideByDefault : addedViewDescriptorState.visible,
+          collapsed: isUndefinedOrNull(addedViewDescriptorState.collapsed) ? !!viewDescriptor.collapsed : addedViewDescriptorState.collapsed
+        };
+      }
+      this.viewDescriptorsState.set(viewDescriptor.id, state);
+      state.active = this.contextKeyService.contextMatchesRules(viewDescriptor.when);
+      addedItems.push({ viewDescriptor, state });
+    }
+    this.viewDescriptorItems.push(...addedItems);
+    this.viewDescriptorItems.sort(this.compareViewDescriptors.bind(this));
+    this._onDidChangeAllViewDescriptors.fire({ added: addedItems.map(({ viewDescriptor }) => viewDescriptor), removed: [] });
+    const addedActiveItems = [];
+    for (const viewDescriptorItem of addedItems) {
+      if (viewDescriptorItem.state.active) {
+        addedActiveItems.push({ viewDescriptorItem, visible: this.isViewDescriptorVisible(viewDescriptorItem) });
+      }
+    }
+    if (addedActiveItems.length) {
+      this._onDidChangeActiveViewDescriptors.fire({ added: addedActiveItems.map(({ viewDescriptorItem }) => viewDescriptorItem.viewDescriptor), removed: [] });
+    }
+    const addedVisibleDescriptors = [];
+    for (const { viewDescriptorItem, visible } of addedActiveItems) {
+      if (visible && this.isViewDescriptorVisible(viewDescriptorItem)) {
+        const { visibleIndex } = this.find(viewDescriptorItem.viewDescriptor.id);
+        addedVisibleDescriptors.push({ index: visibleIndex, viewDescriptor: viewDescriptorItem.viewDescriptor, size: viewDescriptorItem.state.size, collapsed: !!viewDescriptorItem.state.collapsed });
+      }
+    }
+    this.broadCastAddedVisibleViewDescriptors(addedVisibleDescriptors);
+  }
+  remove(viewDescriptors) {
+    const removed = [];
+    const removedItems = [];
+    const removedActiveDescriptors = [];
+    const removedVisibleDescriptors = [];
+    for (const viewDescriptor of viewDescriptors) {
+      if (viewDescriptor.when) {
+        for (const key of viewDescriptor.when.keys()) {
+          this.contextKeys.delete(key);
+        }
+      }
+      const index = this.viewDescriptorItems.findIndex((i) => i.viewDescriptor.id === viewDescriptor.id);
+      if (index !== -1) {
+        removed.push(viewDescriptor);
+        const viewDescriptorItem = this.viewDescriptorItems[index];
+        if (viewDescriptorItem.state.active) {
+          removedActiveDescriptors.push(viewDescriptorItem.viewDescriptor);
+        }
+        if (this.isViewDescriptorVisible(viewDescriptorItem)) {
+          const { visibleIndex } = this.find(viewDescriptorItem.viewDescriptor.id);
+          removedVisibleDescriptors.push({ index: visibleIndex, viewDescriptor: viewDescriptorItem.viewDescriptor });
+        }
+        removedItems.push(viewDescriptorItem);
+      }
+    }
+    removedItems.forEach((item) => this.viewDescriptorItems.splice(this.viewDescriptorItems.indexOf(item), 1));
+    this.broadCastRemovedVisibleViewDescriptors(removedVisibleDescriptors);
+    if (removedActiveDescriptors.length) {
+      this._onDidChangeActiveViewDescriptors.fire({ added: [], removed: removedActiveDescriptors });
+    }
+    if (removed.length) {
+      this._onDidChangeAllViewDescriptors.fire({ added: [], removed });
+    }
+  }
+  onDidChangeContext() {
+    const addedActiveItems = [];
+    const removedActiveItems = [];
+    for (const item of this.viewDescriptorItems) {
+      const wasActive = item.state.active;
+      const isActive = this.contextKeyService.contextMatchesRules(item.viewDescriptor.when);
+      if (wasActive !== isActive) {
+        if (isActive) {
+          addedActiveItems.push({ item, visibleWhenActive: this.isViewDescriptorVisibleWhenActive(item) });
+        } else {
+          removedActiveItems.push(item);
+        }
+      }
+    }
+    const removedVisibleDescriptors = [];
+    for (const item of removedActiveItems) {
+      if (this.isViewDescriptorVisible(item)) {
+        const { visibleIndex } = this.find(item.viewDescriptor.id);
+        removedVisibleDescriptors.push({ index: visibleIndex, viewDescriptor: item.viewDescriptor });
+      }
+    }
+    removedActiveItems.forEach((item) => item.state.active = false);
+    addedActiveItems.forEach(({ item }) => item.state.active = true);
+    this.broadCastRemovedVisibleViewDescriptors(removedVisibleDescriptors);
+    if (addedActiveItems.length || removedActiveItems.length) {
+      this._onDidChangeActiveViewDescriptors.fire({ added: addedActiveItems.map(({ item }) => item.viewDescriptor), removed: removedActiveItems.map((item) => item.viewDescriptor) });
+    }
+    const addedVisibleDescriptors = [];
+    for (const { item, visibleWhenActive } of addedActiveItems) {
+      if (visibleWhenActive && this.isViewDescriptorVisible(item)) {
+        const { visibleIndex } = this.find(item.viewDescriptor.id);
+        addedVisibleDescriptors.push({ index: visibleIndex, viewDescriptor: item.viewDescriptor, size: item.state.size, collapsed: !!item.state.collapsed });
+      }
+    }
+    this.broadCastAddedVisibleViewDescriptors(addedVisibleDescriptors);
+  }
+  broadCastAddedVisibleViewDescriptors(added) {
+    if (added.length) {
+      this._onDidAddVisibleViewDescriptors.fire(added.sort((a, b) => a.index - b.index));
+      this.updateState(`Added views:${added.map((v) => v.viewDescriptor.id).join(",")} in ${this.viewContainer.id}`);
+    }
+  }
+  broadCastRemovedVisibleViewDescriptors(removed) {
+    if (removed.length) {
+      this._onDidRemoveVisibleViewDescriptors.fire(removed.sort((a, b) => b.index - a.index));
+      this.updateState(`Removed views:${removed.map((v) => v.viewDescriptor.id).join(",")} from ${this.viewContainer.id}`);
+    }
+  }
+  broadCastMovedViewDescriptors(from, to) {
+    this._onDidMoveVisibleViewDescriptors.fire({ from, to });
+    this.updateState(`Moved view ${from.viewDescriptor.id} to ${to.viewDescriptor.id} in ${this.viewContainer.id}`);
+  }
+  updateState(reason) {
+    this.logger.value.info(reason);
+    this.viewDescriptorsState.updateState(this.allViewDescriptors);
+    this.updateContainerInfo();
+  }
+  isViewDescriptorVisible(viewDescriptorItem) {
+    if (!viewDescriptorItem.state.active) {
+      return false;
+    }
+    return this.isViewDescriptorVisibleWhenActive(viewDescriptorItem);
+  }
+  isViewDescriptorVisibleWhenActive(viewDescriptorItem) {
+    if (viewDescriptorItem.viewDescriptor.workspace) {
+      return !!viewDescriptorItem.state.visibleWorkspace;
+    }
+    return !!viewDescriptorItem.state.visibleGlobal;
+  }
+  find(id) {
+    const result = this.findAndIgnoreIfNotFound(id);
+    if (result) {
+      return result;
+    }
+    throw new Error(`view descriptor ${id} not found`);
+  }
+  findAndIgnoreIfNotFound(id) {
+    for (let i = 0, visibleIndex = 0; i < this.viewDescriptorItems.length; i++) {
+      const viewDescriptorItem = this.viewDescriptorItems[i];
+      if (viewDescriptorItem.viewDescriptor.id === id) {
+        return { index: i, visibleIndex, viewDescriptorItem };
+      }
+      if (this.isViewDescriptorVisible(viewDescriptorItem)) {
+        visibleIndex++;
+      }
+    }
+    return void 0;
+  }
+  compareViewDescriptors(a, b) {
+    if (a.viewDescriptor.id === b.viewDescriptor.id) {
+      return 0;
+    }
+    return this.getViewOrder(a) - this.getViewOrder(b) || this.getGroupOrderResult(a.viewDescriptor, b.viewDescriptor);
+  }
+  getViewOrder(viewDescriptorItem) {
+    const viewOrder = typeof viewDescriptorItem.state.order === "number" ? viewDescriptorItem.state.order : viewDescriptorItem.viewDescriptor.order;
+    return typeof viewOrder === "number" ? viewOrder : Number.MAX_VALUE;
+  }
+  getGroupOrderResult(a, b) {
+    if (!a.group || !b.group) {
+      return 0;
+    }
+    if (a.group === b.group) {
+      return 0;
+    }
+    return a.group < b.group ? -1 : 1;
+  }
+};
+ViewContainerModel = __decorateClass([
+  __decorateParam(1, IInstantiationService),
+  __decorateParam(2, IContextKeyService),
+  __decorateParam(3, ILoggerService)
+], ViewContainerModel);
+export {
+  ViewContainerModel,
+  getViewsStateStorageId
+};
+//# sourceMappingURL=viewContainerModel.js.map

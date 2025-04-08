@@ -1,1 +1,120 @@
-import{VSBuffer as d,decodeBase64 as s,encodeBase64 as i}from"../../../../base/common/buffer.js";import{ResourceMap as l}from"../../../../base/common/map.js";import{Schemas as r}from"../../../../base/common/network.js";import"../../../../base/common/uri.js";import{InstantiationType as p,registerSingleton as I}from"../../../../platform/instantiation/common/extensions.js";import{createDecorator as b}from"../../../../platform/instantiation/common/instantiation.js";const g=b("notebookDocumentService"),u=["W","X","Y","Z","a","b","c","d","e","f"],h=new RegExp(`^[${u.join("")}]+`),m=7;function a(o){if(o.scheme!==r.vscodeNotebookCell)return;const e=o.fragment.indexOf("s");if(e<0)return;const t=parseInt(o.fragment.substring(0,e).replace(h,""),m),n=s(o.fragment.substring(e+1)).toString();if(!isNaN(t))return{handle:t,notebook:o.with({scheme:n,fragment:null})}}function w(o,e){const t=e.toString(m),c=`${t.length<u.length?u[t.length-1]:"z"}${t}s${i(d.fromString(o.scheme),!0,!0)}`;return o.with({scheme:r.vscodeNotebookCell,fragment:c})}function C(o){if(o.scheme!==r.vscodeNotebookMetadata)return;const e=s(o.fragment).toString();return o.with({scheme:e,fragment:null})}function y(o){const e=`${i(d.fromString(o.scheme),!0,!0)}`;return o.with({scheme:r.vscodeNotebookMetadata,fragment:e})}function k(o){if(o.scheme!==r.vscodeNotebookCellOutput)return;const e=new URLSearchParams(o.query),t=e.get("openIn");if(!t)return;const n=e.get("outputId")??void 0,c=a(o.with({scheme:r.vscodeNotebookCell,query:null})),f=e.get("outputIndex")?parseInt(e.get("outputIndex")||"",10):void 0;if(c?.notebook===void 0||c?.handle===void 0)throw new Error("Invalid cell URI");return{notebook:c.notebook,openIn:t,outputId:n,outputIndex:f,cellHandle:c.handle,cellFragment:o.fragment}}class N{_documents=new l;getNotebook(e){if(e.scheme===r.vscodeNotebookCell){const t=a(e);if(t){const n=this._documents.get(t.notebook);if(n)return n}}if(e.scheme===r.vscodeNotebookCellOutput){const t=k(e);if(t){const n=this._documents.get(t.notebook);if(n)return n}}return this._documents.get(e)}addNotebookDocument(e){this._documents.set(e.uri,e)}removeNotebookDocument(e){this._documents.delete(e.uri)}}I(g,N,p.Delayed);export{g as INotebookDocumentService,N as NotebookDocumentWorkbenchService,k as extractCellOutputDetails,w as generate,y as generateMetadataUri,a as parse,C as parseMetadataUri};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { VSBuffer, decodeBase64, encodeBase64 } from "../../../../base/common/buffer.js";
+import { ResourceMap } from "../../../../base/common/map.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { URI } from "../../../../base/common/uri.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+const INotebookDocumentService = createDecorator("notebookDocumentService");
+const _lengths = ["W", "X", "Y", "Z", "a", "b", "c", "d", "e", "f"];
+const _padRegexp = new RegExp(`^[${_lengths.join("")}]+`);
+const _radix = 7;
+function parse(cell) {
+  if (cell.scheme !== Schemas.vscodeNotebookCell) {
+    return void 0;
+  }
+  const idx = cell.fragment.indexOf("s");
+  if (idx < 0) {
+    return void 0;
+  }
+  const handle = parseInt(cell.fragment.substring(0, idx).replace(_padRegexp, ""), _radix);
+  const _scheme = decodeBase64(cell.fragment.substring(idx + 1)).toString();
+  if (isNaN(handle)) {
+    return void 0;
+  }
+  return {
+    handle,
+    notebook: cell.with({ scheme: _scheme, fragment: null })
+  };
+}
+__name(parse, "parse");
+function generate(notebook, handle) {
+  const s = handle.toString(_radix);
+  const p = s.length < _lengths.length ? _lengths[s.length - 1] : "z";
+  const fragment = `${p}${s}s${encodeBase64(VSBuffer.fromString(notebook.scheme), true, true)}`;
+  return notebook.with({ scheme: Schemas.vscodeNotebookCell, fragment });
+}
+__name(generate, "generate");
+function parseMetadataUri(metadata) {
+  if (metadata.scheme !== Schemas.vscodeNotebookMetadata) {
+    return void 0;
+  }
+  const _scheme = decodeBase64(metadata.fragment).toString();
+  return metadata.with({ scheme: _scheme, fragment: null });
+}
+__name(parseMetadataUri, "parseMetadataUri");
+function generateMetadataUri(notebook) {
+  const fragment = `${encodeBase64(VSBuffer.fromString(notebook.scheme), true, true)}`;
+  return notebook.with({ scheme: Schemas.vscodeNotebookMetadata, fragment });
+}
+__name(generateMetadataUri, "generateMetadataUri");
+function extractCellOutputDetails(uri) {
+  if (uri.scheme !== Schemas.vscodeNotebookCellOutput) {
+    return;
+  }
+  const params = new URLSearchParams(uri.query);
+  const openIn = params.get("openIn");
+  if (!openIn) {
+    return;
+  }
+  const outputId = params.get("outputId") ?? void 0;
+  const parsedCell = parse(uri.with({ scheme: Schemas.vscodeNotebookCell, query: null }));
+  const outputIndex = params.get("outputIndex") ? parseInt(params.get("outputIndex") || "", 10) : void 0;
+  if (parsedCell?.notebook === void 0 || parsedCell?.handle === void 0) {
+    throw new Error("Invalid cell URI");
+  }
+  return {
+    notebook: parsedCell.notebook,
+    openIn,
+    outputId,
+    outputIndex,
+    cellHandle: parsedCell.handle,
+    cellFragment: uri.fragment
+  };
+}
+__name(extractCellOutputDetails, "extractCellOutputDetails");
+class NotebookDocumentWorkbenchService {
+  static {
+    __name(this, "NotebookDocumentWorkbenchService");
+  }
+  _documents = new ResourceMap();
+  getNotebook(uri) {
+    if (uri.scheme === Schemas.vscodeNotebookCell) {
+      const cellUri = parse(uri);
+      if (cellUri) {
+        const document = this._documents.get(cellUri.notebook);
+        if (document) {
+          return document;
+        }
+      }
+    }
+    if (uri.scheme === Schemas.vscodeNotebookCellOutput) {
+      const parsedData = extractCellOutputDetails(uri);
+      if (parsedData) {
+        const document = this._documents.get(parsedData.notebook);
+        if (document) {
+          return document;
+        }
+      }
+    }
+    return this._documents.get(uri);
+  }
+  addNotebookDocument(document) {
+    this._documents.set(document.uri, document);
+  }
+  removeNotebookDocument(document) {
+    this._documents.delete(document.uri);
+  }
+}
+registerSingleton(INotebookDocumentService, NotebookDocumentWorkbenchService, InstantiationType.Delayed);
+export {
+  INotebookDocumentService,
+  NotebookDocumentWorkbenchService,
+  extractCellOutputDetails,
+  generate,
+  generateMetadataUri,
+  parse,
+  parseMetadataUri
+};
+//# sourceMappingURL=notebookDocumentService.js.map

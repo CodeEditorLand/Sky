@@ -1,2 +1,29 @@
-function o(e){const t=[];return r(e.node,t),t.join("")}function r(e,t){if(e.type===PromptNodeType.Text)e.lineBreakBefore&&t.push(`
-`),typeof e.text=="string"&&t.push(e.text);else if(e.ctor===PieceCtorKind.ImageChatMessage)t.push("<image>");else if(e.ctor===PieceCtorKind.BaseChatMessage||e.ctor===PieceCtorKind.Other)for(const i of e.children)r(i,t)}export{o as stringifyPromptElementJSON};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+function stringifyPromptElementJSON(element) {
+  const strs = [];
+  stringifyPromptNodeJSON(element.node, strs);
+  return strs.join("");
+}
+__name(stringifyPromptElementJSON, "stringifyPromptElementJSON");
+function stringifyPromptNodeJSON(node, strs) {
+  if (node.type === PromptNodeType.Text) {
+    if (node.lineBreakBefore) {
+      strs.push("\n");
+    }
+    if (typeof node.text === "string") {
+      strs.push(node.text);
+    }
+  } else if (node.ctor === PieceCtorKind.ImageChatMessage) {
+    strs.push("<image>");
+  } else if (node.ctor === PieceCtorKind.BaseChatMessage || node.ctor === PieceCtorKind.Other) {
+    for (const child of node.children) {
+      stringifyPromptNodeJSON(child, strs);
+    }
+  }
+}
+__name(stringifyPromptNodeJSON, "stringifyPromptNodeJSON");
+export {
+  stringifyPromptElementJSON
+};
+//# sourceMappingURL=promptTsxTypes.js.map

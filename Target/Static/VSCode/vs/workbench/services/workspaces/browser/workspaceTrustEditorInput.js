@@ -1,1 +1,40 @@
-import{Codicon as i}from"../../../../base/common/codicons.js";import{Schemas as s}from"../../../../base/common/network.js";import"../../../../base/common/themables.js";import{URI as n}from"../../../../base/common/uri.js";import{localize as o}from"../../../../nls.js";import{registerIcon as a}from"../../../../platform/theme/common/iconRegistry.js";import{EditorInputCapabilities as t}from"../../../common/editor.js";import{EditorInput as p}from"../../../common/editor/editorInput.js";const c=a("workspace-trust-editor-label-icon",i.shield,o("workspaceTrustEditorLabelIcon","Icon of the workspace trust editor label."));class r extends p{static ID="workbench.input.workspaceTrust";get capabilities(){return t.Readonly|t.Singleton}get typeId(){return r.ID}resource=n.from({scheme:s.vscodeWorkspaceTrust,path:"workspaceTrustEditor"});matches(o){return super.matches(o)||o instanceof r}getName(){return o("workspaceTrustEditorInputName","Workspace Trust")}getIcon(){return c}}export{r as WorkspaceTrustEditorInput};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Codicon } from "../../../../base/common/codicons.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { URI } from "../../../../base/common/uri.js";
+import { localize } from "../../../../nls.js";
+import { registerIcon } from "../../../../platform/theme/common/iconRegistry.js";
+import { EditorInputCapabilities, IUntypedEditorInput } from "../../../common/editor.js";
+import { EditorInput } from "../../../common/editor/editorInput.js";
+const WorkspaceTrustEditorIcon = registerIcon("workspace-trust-editor-label-icon", Codicon.shield, localize("workspaceTrustEditorLabelIcon", "Icon of the workspace trust editor label."));
+class WorkspaceTrustEditorInput extends EditorInput {
+  static {
+    __name(this, "WorkspaceTrustEditorInput");
+  }
+  static ID = "workbench.input.workspaceTrust";
+  get capabilities() {
+    return EditorInputCapabilities.Readonly | EditorInputCapabilities.Singleton;
+  }
+  get typeId() {
+    return WorkspaceTrustEditorInput.ID;
+  }
+  resource = URI.from({
+    scheme: Schemas.vscodeWorkspaceTrust,
+    path: `workspaceTrustEditor`
+  });
+  matches(otherInput) {
+    return super.matches(otherInput) || otherInput instanceof WorkspaceTrustEditorInput;
+  }
+  getName() {
+    return localize("workspaceTrustEditorInputName", "Workspace Trust");
+  }
+  getIcon() {
+    return WorkspaceTrustEditorIcon;
+  }
+}
+export {
+  WorkspaceTrustEditorInput
+};
+//# sourceMappingURL=workspaceTrustEditorInput.js.map

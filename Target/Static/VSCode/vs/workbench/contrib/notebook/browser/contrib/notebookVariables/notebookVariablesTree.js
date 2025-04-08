@@ -1,1 +1,98 @@
-var c=Object.defineProperty,d=Object.getOwnPropertyDescriptor,p=(e,r,s,t)=>{for(var o,a=t>1?void 0:t?d(r,s):r,n=e.length-1;n>=0;n--)(o=e[n])&&(a=(t?o(r,s,a):o(a))||a);return t&&a&&c(r,s,a),a},b=(e,r)=>(s,t)=>r(s,t,e);import*as l from"../../../../../../base/browser/dom.js";import"../../../../../../base/browser/ui/list/list.js";import"../../../../../../base/browser/ui/list/listWidget.js";import"../../../../../../base/browser/ui/tree/tree.js";import"../../../../../../base/common/filters.js";import{DisposableStore as u}from"../../../../../../base/common/lifecycle.js";import{localize as I}from"../../../../../../nls.js";import{IInstantiationService as E}from"../../../../../../platform/instantiation/common/instantiation.js";import{WorkbenchObjectTree as V}from"../../../../../../platform/list/browser/listService.js";import{DebugExpressionRenderer as D}from"../../../../debug/browser/debugExpressionRenderer.js";import"./notebookVariablesDataSource.js";const m=l.$,T=1024;class P extends V{}class W{getHeight(e){return 22}getTemplateId(e){return n.ID}}let n=class{expressionRenderer;static ID="variableElement";get templateId(){return n.ID}constructor(e){this.expressionRenderer=e.createInstance(D)}renderTemplate(e){const r=l.append(e,m(".expression"));return{expression:r,name:l.append(r,m("span.name")),value:l.append(r,m("span.value")),elementDisposables:new u}}renderElement(e,r,s){const t=""!==e.element.value.trim()?`${e.element.name}:`:e.element.name;s.name.textContent=t,s.name.title=e.element.type??"",s.elementDisposables.add(this.expressionRenderer.renderValue(s.value,e.element,{colorize:!0,maxValueLength:T,session:void 0}))}disposeElement(e,r,s,t){s.elementDisposables.clear()}disposeTemplate(e){e.elementDisposables.dispose()}};n=p([b(0,E)],n);class ${getWidgetAriaLabel(){return I("debugConsole","Notebook Variables")}getAriaLabel(e){return I("notebookVariableAriaLabel","Variable {0}, value {1}",e.name,e.value)}}export{$ as NotebookVariableAccessibilityProvider,n as NotebookVariableRenderer,W as NotebookVariablesDelegate,P as NotebookVariablesTree};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import * as dom from "../../../../../../base/browser/dom.js";
+import { IListVirtualDelegate } from "../../../../../../base/browser/ui/list/list.js";
+import { IListAccessibilityProvider } from "../../../../../../base/browser/ui/list/listWidget.js";
+import { ITreeNode, ITreeRenderer } from "../../../../../../base/browser/ui/tree/tree.js";
+import { FuzzyScore } from "../../../../../../base/common/filters.js";
+import { DisposableStore } from "../../../../../../base/common/lifecycle.js";
+import { localize } from "../../../../../../nls.js";
+import { IInstantiationService } from "../../../../../../platform/instantiation/common/instantiation.js";
+import { WorkbenchObjectTree } from "../../../../../../platform/list/browser/listService.js";
+import { DebugExpressionRenderer } from "../../../../debug/browser/debugExpressionRenderer.js";
+import { INotebookVariableElement } from "./notebookVariablesDataSource.js";
+const $ = dom.$;
+const MAX_VALUE_RENDER_LENGTH_IN_VIEWLET = 1024;
+class NotebookVariablesTree extends WorkbenchObjectTree {
+  static {
+    __name(this, "NotebookVariablesTree");
+  }
+}
+class NotebookVariablesDelegate {
+  static {
+    __name(this, "NotebookVariablesDelegate");
+  }
+  getHeight(element) {
+    return 22;
+  }
+  getTemplateId(element) {
+    return NotebookVariableRenderer.ID;
+  }
+}
+let NotebookVariableRenderer = class {
+  static {
+    __name(this, "NotebookVariableRenderer");
+  }
+  expressionRenderer;
+  static ID = "variableElement";
+  get templateId() {
+    return NotebookVariableRenderer.ID;
+  }
+  constructor(instantiationService) {
+    this.expressionRenderer = instantiationService.createInstance(DebugExpressionRenderer);
+  }
+  renderTemplate(container) {
+    const expression = dom.append(container, $(".expression"));
+    const name = dom.append(expression, $("span.name"));
+    const value = dom.append(expression, $("span.value"));
+    const template = { expression, name, value, elementDisposables: new DisposableStore() };
+    return template;
+  }
+  renderElement(element, _index, data) {
+    const text = element.element.value.trim() !== "" ? `${element.element.name}:` : element.element.name;
+    data.name.textContent = text;
+    data.name.title = element.element.type ?? "";
+    data.elementDisposables.add(this.expressionRenderer.renderValue(data.value, element.element, {
+      colorize: true,
+      maxValueLength: MAX_VALUE_RENDER_LENGTH_IN_VIEWLET,
+      session: void 0
+    }));
+  }
+  disposeElement(element, index, templateData, height) {
+    templateData.elementDisposables.clear();
+  }
+  disposeTemplate(templateData) {
+    templateData.elementDisposables.dispose();
+  }
+};
+NotebookVariableRenderer = __decorateClass([
+  __decorateParam(0, IInstantiationService)
+], NotebookVariableRenderer);
+class NotebookVariableAccessibilityProvider {
+  static {
+    __name(this, "NotebookVariableAccessibilityProvider");
+  }
+  getWidgetAriaLabel() {
+    return localize("debugConsole", "Notebook Variables");
+  }
+  getAriaLabel(element) {
+    return localize("notebookVariableAriaLabel", "Variable {0}, value {1}", element.name, element.value);
+  }
+}
+export {
+  NotebookVariableAccessibilityProvider,
+  NotebookVariableRenderer,
+  NotebookVariablesDelegate,
+  NotebookVariablesTree
+};
+//# sourceMappingURL=notebookVariablesTree.js.map

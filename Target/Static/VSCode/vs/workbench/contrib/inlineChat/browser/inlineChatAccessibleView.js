@@ -1,1 +1,47 @@
-import{InlineChatController as s}from"./inlineChatController.js";import{CTX_INLINE_CHAT_FOCUSED as c,CTX_INLINE_CHAT_RESPONSE_FOCUSED as m}from"../common/inlineChat.js";import{ICodeEditorService as l}from"../../../../editor/browser/services/codeEditorService.js";import{ContextKeyExpr as d}from"../../../../platform/contextkey/common/contextkey.js";import{AccessibleViewProviderId as p,AccessibleViewType as i,AccessibleContentProvider as C}from"../../../../platform/accessibility/browser/accessibleView.js";import"../../../../platform/instantiation/common/instantiation.js";import"../../../../platform/accessibility/browser/accessibleViewRegistry.js";import{MarkdownString as a}from"../../../../base/common/htmlContent.js";import{renderMarkdownAsPlaintext as I}from"../../../../base/browser/markdownRenderer.js";import{AccessibilityVerbositySettingId as f}from"../../accessibility/browser/accessibilityConfiguration.js";class P{priority=100;name="inlineChat";when=d.or(c,m);type=i.View;getProvider(n){const r=n.get(l),o=r.getActiveCodeEditor()||r.getFocusedCodeEditor();if(!o)return;const e=s.get(o);if(!e)return;const t=e.widget.responseContent;if(t)return new C(p.InlineChat,{type:i.View},()=>I(new a(t),!0),()=>e.focus(),f.InlineChat)}}export{P as InlineChatAccessibleView};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { InlineChatController } from "./inlineChatController.js";
+import { CTX_INLINE_CHAT_FOCUSED, CTX_INLINE_CHAT_RESPONSE_FOCUSED } from "../common/inlineChat.js";
+import { ICodeEditorService } from "../../../../editor/browser/services/codeEditorService.js";
+import { ContextKeyExpr } from "../../../../platform/contextkey/common/contextkey.js";
+import { AccessibleViewProviderId, AccessibleViewType, AccessibleContentProvider } from "../../../../platform/accessibility/browser/accessibleView.js";
+import { ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+import { IAccessibleViewImplementation } from "../../../../platform/accessibility/browser/accessibleViewRegistry.js";
+import { MarkdownString } from "../../../../base/common/htmlContent.js";
+import { renderMarkdownAsPlaintext } from "../../../../base/browser/markdownRenderer.js";
+import { AccessibilityVerbositySettingId } from "../../accessibility/browser/accessibilityConfiguration.js";
+class InlineChatAccessibleView {
+  static {
+    __name(this, "InlineChatAccessibleView");
+  }
+  priority = 100;
+  name = "inlineChat";
+  when = ContextKeyExpr.or(CTX_INLINE_CHAT_FOCUSED, CTX_INLINE_CHAT_RESPONSE_FOCUSED);
+  type = AccessibleViewType.View;
+  getProvider(accessor) {
+    const codeEditorService = accessor.get(ICodeEditorService);
+    const editor = codeEditorService.getActiveCodeEditor() || codeEditorService.getFocusedCodeEditor();
+    if (!editor) {
+      return;
+    }
+    const controller = InlineChatController.get(editor);
+    if (!controller) {
+      return;
+    }
+    const responseContent = controller.widget.responseContent;
+    if (!responseContent) {
+      return;
+    }
+    return new AccessibleContentProvider(
+      AccessibleViewProviderId.InlineChat,
+      { type: AccessibleViewType.View },
+      () => renderMarkdownAsPlaintext(new MarkdownString(responseContent), true),
+      () => controller.focus(),
+      AccessibilityVerbositySettingId.InlineChat
+    );
+  }
+}
+export {
+  InlineChatAccessibleView
+};
+//# sourceMappingURL=inlineChatAccessibleView.js.map

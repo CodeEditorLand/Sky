@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/platform/backup/common/backup.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { URI } from '../../../base/common/uri.js';\r\nimport { IWorkspaceIdentifier } from '../../workspace/common/workspace.js';\r\n\r\nexport interface IBaseBackupInfo {\r\n\tremoteAuthority?: string;\r\n}\r\n\r\nexport interface IWorkspaceBackupInfo extends IBaseBackupInfo {\r\n\treadonly workspace: IWorkspaceIdentifier;\r\n}\r\n\r\nexport interface IFolderBackupInfo extends IBaseBackupInfo {\r\n\treadonly folderUri: URI;\r\n}\r\n\r\nexport function isFolderBackupInfo(curr: IWorkspaceBackupInfo | IFolderBackupInfo): curr is IFolderBackupInfo {\r\n\treturn curr && curr.hasOwnProperty('folderUri');\r\n}\r\n\r\nexport function isWorkspaceBackupInfo(curr: IWorkspaceBackupInfo | IFolderBackupInfo): curr is IWorkspaceBackupInfo {\r\n\treturn curr && curr.hasOwnProperty('workspace');\r\n}\r\n"],
+  "mappings": ";;AAKA,SAAS,WAAW;AACpB,SAAS,4BAA4B;AAc9B,SAAS,mBAAmB,MAA2E;AAC7G,SAAO,QAAQ,KAAK,eAAe,WAAW;AAC/C;AAFgB;AAIT,SAAS,sBAAsB,MAA8E;AACnH,SAAO,QAAQ,KAAK,eAAe,WAAW;AAC/C;AAFgB;",
+  "names": []
+}

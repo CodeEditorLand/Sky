@@ -1,1 +1,25 @@
-import{writeFileSync as o}from"fs";import{tmpdir as i}from"os";import{randomPath as a}from"../../../base/common/extpath.js";function m(e){const r=a(i());try{return o(r,""),e&&console.log(`Marker file for --wait created: ${r}`),r}catch(t){e&&console.error(`Failed to create marker file for --wait: ${t}`);return}}export{m as createWaitMarkerFileSync};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { writeFileSync } from "fs";
+import { tmpdir } from "os";
+import { randomPath } from "../../../base/common/extpath.js";
+function createWaitMarkerFileSync(verbose) {
+  const randomWaitMarkerPath = randomPath(tmpdir());
+  try {
+    writeFileSync(randomWaitMarkerPath, "");
+    if (verbose) {
+      console.log(`Marker file for --wait created: ${randomWaitMarkerPath}`);
+    }
+    return randomWaitMarkerPath;
+  } catch (err) {
+    if (verbose) {
+      console.error(`Failed to create marker file for --wait: ${err}`);
+    }
+    return void 0;
+  }
+}
+__name(createWaitMarkerFileSync, "createWaitMarkerFileSync");
+export {
+  createWaitMarkerFileSync
+};
+//# sourceMappingURL=wait.js.map

@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/contrib/notebook/common/notebookPerformance.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nexport type PerfName = 'startTime' | 'extensionActivated' | 'inputLoaded' | 'webviewCommLoaded' | 'customMarkdownLoaded' | 'editorLoaded';\r\n\r\ntype PerformanceMark = { [key in PerfName]?: number };\r\n\r\nexport class NotebookPerfMarks {\r\n\tprivate _marks: PerformanceMark = {};\r\n\r\n\tget value(): PerformanceMark {\r\n\t\treturn { ...this._marks };\r\n\t}\r\n\r\n\tmark(name: PerfName): void {\r\n\t\tif (this._marks[name]) {\r\n\t\t\tconsole.error(`Skipping overwrite of notebook perf value: ${name}`);\r\n\t\t\treturn;\r\n\t\t}\r\n\r\n\t\tthis._marks[name] = Date.now();\r\n\t}\r\n}\r\n"],
+  "mappings": ";;AASO,MAAM,kBAAkB;AAAA,EAT/B,OAS+B;AAAA;AAAA;AAAA,EACtB,SAA0B,CAAC;AAAA,EAEnC,IAAI,QAAyB;AAC5B,WAAO,EAAE,GAAG,KAAK,OAAO;AAAA,EACzB;AAAA,EAEA,KAAK,MAAsB;AAC1B,QAAI,KAAK,OAAO,IAAI,GAAG;AACtB,cAAQ,MAAM,8CAA8C,IAAI,EAAE;AAClE;AAAA,IACD;AAEA,SAAK,OAAO,IAAI,IAAI,KAAK,IAAI;AAAA,EAC9B;AACD;",
+  "names": []
+}

@@ -1,1 +1,155 @@
-var g=Object.defineProperty;var w=Object.getOwnPropertyDescriptor;var h=(o,n,i,e)=>{for(var t=e>1?void 0:e?w(n,i):n,s=o.length-1,r;s>=0;s--)(r=o[s])&&(t=(e?r(n,i,t):r(t))||t);return e&&t&&g(n,i,t),t},v=(o,n)=>(i,e)=>n(i,e,o);import{IActivityService as l}from"../common/activity.js";import{Disposable as p,toDisposable as y}from"../../../../base/common/lifecycle.js";import{InstantiationType as I,registerSingleton as D}from"../../../../platform/instantiation/common/extensions.js";import{IViewDescriptorService as d}from"../../../common/views.js";import{GLOBAL_ACTIVITY_ID as f,ACCOUNTS_ACTIVITY_ID as u}from"../../../common/activity.js";import{Emitter as C,Event as A}from"../../../../base/common/event.js";import{IInstantiationService as m}from"../../../../platform/instantiation/common/instantiation.js";let c=class extends p{constructor(i,e,t){super();this.viewId=i;this.viewDescriptorService=e;this.activityService=t;this._register(A.filter(this.viewDescriptorService.onDidChangeContainer,s=>s.views.some(r=>r.id===i))(()=>this.update())),this._register(A.filter(this.viewDescriptorService.onDidChangeLocation,s=>s.views.some(r=>r.id===i))(()=>this.update()))}activity=void 0;activityDisposable=p.None;setActivity(i){this.activity=i,this.update()}clearActivity(){this.activity=void 0,this.update()}update(){this.activityDisposable.dispose();const i=this.viewDescriptorService.getViewContainerByViewId(this.viewId);i&&this.activity&&(this.activityDisposable=this.activityService.showViewContainerActivity(i.id,this.activity))}dispose(){this.activityDisposable.dispose(),super.dispose()}};c=h([v(1,d),v(2,l)],c);let a=class extends p{constructor(i,e){super();this.viewDescriptorService=i;this.instantiationService=e}_serviceBrand;viewActivities=new Map;_onDidChangeActivity=this._register(new C);onDidChangeActivity=this._onDidChangeActivity.event;viewContainerActivities=new Map;globalActivities=new Map;showViewContainerActivity(i,e){const t=this.viewDescriptorService.getViewContainerById(i);if(!t)return p.None;let s=this.viewContainerActivities.get(i);return s||(s=[],this.viewContainerActivities.set(i,s)),s.push(e),this._onDidChangeActivity.fire(t),y(()=>{s.splice(s.indexOf(e),1),s.length===0&&this.viewContainerActivities.delete(i),this._onDidChangeActivity.fire(t)})}getViewContainerActivities(i){return this.viewDescriptorService.getViewContainerById(i)?this.viewContainerActivities.get(i)??[]:[]}showViewActivity(i,e){let t=this.viewActivities.get(i);t?t.id++:(t={id:1,activity:this.instantiationService.createInstance(c,i)},this.viewActivities.set(i,t));const s=t.id;t.activity.setActivity(e);const r=t;return y(()=>{r.id===s&&(r.activity.dispose(),this.viewActivities.delete(i))})}showAccountsActivity(i){return this.showActivity(u,i)}showGlobalActivity(i){return this.showActivity(f,i)}getActivity(i){return this.globalActivities.get(i)??[]}showActivity(i,e){let t=this.globalActivities.get(i);return t||(t=[],this.globalActivities.set(i,t)),t.push(e),this._onDidChangeActivity.fire(i),y(()=>{t.splice(t.indexOf(e),1),t.length===0&&this.globalActivities.delete(i),this._onDidChangeActivity.fire(i)})}};a=h([v(0,d),v(1,m)],a),D(l,a,I.Delayed);export{a as ActivityService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { IActivityService, IActivity } from "../common/activity.js";
+import { IDisposable, Disposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { IViewDescriptorService, ViewContainer } from "../../../common/views.js";
+import { GLOBAL_ACTIVITY_ID, ACCOUNTS_ACTIVITY_ID } from "../../../common/activity.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+let ViewContainerActivityByView = class extends Disposable {
+  constructor(viewId, viewDescriptorService, activityService) {
+    super();
+    this.viewId = viewId;
+    this.viewDescriptorService = viewDescriptorService;
+    this.activityService = activityService;
+    this._register(Event.filter(this.viewDescriptorService.onDidChangeContainer, (e) => e.views.some((view) => view.id === viewId))(() => this.update()));
+    this._register(Event.filter(this.viewDescriptorService.onDidChangeLocation, (e) => e.views.some((view) => view.id === viewId))(() => this.update()));
+  }
+  static {
+    __name(this, "ViewContainerActivityByView");
+  }
+  activity = void 0;
+  activityDisposable = Disposable.None;
+  setActivity(activity) {
+    this.activity = activity;
+    this.update();
+  }
+  clearActivity() {
+    this.activity = void 0;
+    this.update();
+  }
+  update() {
+    this.activityDisposable.dispose();
+    const container = this.viewDescriptorService.getViewContainerByViewId(this.viewId);
+    if (container && this.activity) {
+      this.activityDisposable = this.activityService.showViewContainerActivity(container.id, this.activity);
+    }
+  }
+  dispose() {
+    this.activityDisposable.dispose();
+    super.dispose();
+  }
+};
+ViewContainerActivityByView = __decorateClass([
+  __decorateParam(1, IViewDescriptorService),
+  __decorateParam(2, IActivityService)
+], ViewContainerActivityByView);
+let ActivityService = class extends Disposable {
+  constructor(viewDescriptorService, instantiationService) {
+    super();
+    this.viewDescriptorService = viewDescriptorService;
+    this.instantiationService = instantiationService;
+  }
+  static {
+    __name(this, "ActivityService");
+  }
+  _serviceBrand;
+  viewActivities = /* @__PURE__ */ new Map();
+  _onDidChangeActivity = this._register(new Emitter());
+  onDidChangeActivity = this._onDidChangeActivity.event;
+  viewContainerActivities = /* @__PURE__ */ new Map();
+  globalActivities = /* @__PURE__ */ new Map();
+  showViewContainerActivity(viewContainerId, activity) {
+    const viewContainer = this.viewDescriptorService.getViewContainerById(viewContainerId);
+    if (!viewContainer) {
+      return Disposable.None;
+    }
+    let activities = this.viewContainerActivities.get(viewContainerId);
+    if (!activities) {
+      activities = [];
+      this.viewContainerActivities.set(viewContainerId, activities);
+    }
+    activities.push(activity);
+    this._onDidChangeActivity.fire(viewContainer);
+    return toDisposable(() => {
+      activities.splice(activities.indexOf(activity), 1);
+      if (activities.length === 0) {
+        this.viewContainerActivities.delete(viewContainerId);
+      }
+      this._onDidChangeActivity.fire(viewContainer);
+    });
+  }
+  getViewContainerActivities(viewContainerId) {
+    const viewContainer = this.viewDescriptorService.getViewContainerById(viewContainerId);
+    if (viewContainer) {
+      return this.viewContainerActivities.get(viewContainerId) ?? [];
+    }
+    return [];
+  }
+  showViewActivity(viewId, activity) {
+    let maybeItem = this.viewActivities.get(viewId);
+    if (maybeItem) {
+      maybeItem.id++;
+    } else {
+      maybeItem = {
+        id: 1,
+        activity: this.instantiationService.createInstance(ViewContainerActivityByView, viewId)
+      };
+      this.viewActivities.set(viewId, maybeItem);
+    }
+    const id = maybeItem.id;
+    maybeItem.activity.setActivity(activity);
+    const item = maybeItem;
+    return toDisposable(() => {
+      if (item.id === id) {
+        item.activity.dispose();
+        this.viewActivities.delete(viewId);
+      }
+    });
+  }
+  showAccountsActivity(activity) {
+    return this.showActivity(ACCOUNTS_ACTIVITY_ID, activity);
+  }
+  showGlobalActivity(activity) {
+    return this.showActivity(GLOBAL_ACTIVITY_ID, activity);
+  }
+  getActivity(id) {
+    return this.globalActivities.get(id) ?? [];
+  }
+  showActivity(id, activity) {
+    let activities = this.globalActivities.get(id);
+    if (!activities) {
+      activities = [];
+      this.globalActivities.set(id, activities);
+    }
+    activities.push(activity);
+    this._onDidChangeActivity.fire(id);
+    return toDisposable(() => {
+      activities.splice(activities.indexOf(activity), 1);
+      if (activities.length === 0) {
+        this.globalActivities.delete(id);
+      }
+      this._onDidChangeActivity.fire(id);
+    });
+  }
+};
+ActivityService = __decorateClass([
+  __decorateParam(0, IViewDescriptorService),
+  __decorateParam(1, IInstantiationService)
+], ActivityService);
+registerSingleton(IActivityService, ActivityService, InstantiationType.Delayed);
+export {
+  ActivityService
+};
+//# sourceMappingURL=activityService.js.map

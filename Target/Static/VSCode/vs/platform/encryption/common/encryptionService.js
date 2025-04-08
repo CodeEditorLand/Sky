@@ -1,1 +1,42 @@
-import{createDecorator as t}from"../../instantiation/common/instantiation.js";const l=t("encryptionService"),a=t("encryptionMainService");var r=(e=>(e.kwallet="kwallet",e.kwallet5="kwallet5",e.gnomeLibsecret="gnome-libsecret",e.basic="basic",e))(r||{}),c=(e=>(e.unknown="unknown",e.basicText="basic_text",e.gnomeAny="gnome_any",e.gnomeLibsecret="gnome_libsecret",e.gnomeKeyring="gnome_keyring",e.kwallet="kwallet",e.kwallet5="kwallet5",e.kwallet6="kwallet6",e.dplib="dpapi",e.keychainAccess="keychain_access",e))(c||{});function s(e){return"kwallet"===e||"kwallet5"===e||"kwallet6"===e}function m(e){return"gnome_any"===e||"gnome_libsecret"===e||"gnome_keyring"===e}export{a as IEncryptionMainService,l as IEncryptionService,c as KnownStorageProvider,r as PasswordStoreCLIOption,m as isGnome,s as isKwallet};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+const IEncryptionService = createDecorator("encryptionService");
+const IEncryptionMainService = createDecorator("encryptionMainService");
+var PasswordStoreCLIOption = /* @__PURE__ */ ((PasswordStoreCLIOption2) => {
+  PasswordStoreCLIOption2["kwallet"] = "kwallet";
+  PasswordStoreCLIOption2["kwallet5"] = "kwallet5";
+  PasswordStoreCLIOption2["gnomeLibsecret"] = "gnome-libsecret";
+  PasswordStoreCLIOption2["basic"] = "basic";
+  return PasswordStoreCLIOption2;
+})(PasswordStoreCLIOption || {});
+var KnownStorageProvider = /* @__PURE__ */ ((KnownStorageProvider2) => {
+  KnownStorageProvider2["unknown"] = "unknown";
+  KnownStorageProvider2["basicText"] = "basic_text";
+  KnownStorageProvider2["gnomeAny"] = "gnome_any";
+  KnownStorageProvider2["gnomeLibsecret"] = "gnome_libsecret";
+  KnownStorageProvider2["gnomeKeyring"] = "gnome_keyring";
+  KnownStorageProvider2["kwallet"] = "kwallet";
+  KnownStorageProvider2["kwallet5"] = "kwallet5";
+  KnownStorageProvider2["kwallet6"] = "kwallet6";
+  KnownStorageProvider2["dplib"] = "dpapi";
+  KnownStorageProvider2["keychainAccess"] = "keychain_access";
+  return KnownStorageProvider2;
+})(KnownStorageProvider || {});
+function isKwallet(backend) {
+  return backend === "kwallet" /* kwallet */ || backend === "kwallet5" /* kwallet5 */ || backend === "kwallet6" /* kwallet6 */;
+}
+__name(isKwallet, "isKwallet");
+function isGnome(backend) {
+  return backend === "gnome_any" /* gnomeAny */ || backend === "gnome_libsecret" /* gnomeLibsecret */ || backend === "gnome_keyring" /* gnomeKeyring */;
+}
+__name(isGnome, "isGnome");
+export {
+  IEncryptionMainService,
+  IEncryptionService,
+  KnownStorageProvider,
+  PasswordStoreCLIOption,
+  isGnome,
+  isKwallet
+};
+//# sourceMappingURL=encryptionService.js.map

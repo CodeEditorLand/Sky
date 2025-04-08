@@ -1,1 +1,8 @@
-import"../../../base/common/cancellation.js";import"../../../base/common/uri.js";import{createDecorator as o}from"../../instantiation/common/instantiation.js";const c=o("downloadService");export{c as IDownloadService};
+import { CancellationToken } from "../../../base/common/cancellation.js";
+import { URI } from "../../../base/common/uri.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+const IDownloadService = createDecorator("downloadService");
+export {
+  IDownloadService
+};
+//# sourceMappingURL=download.js.map

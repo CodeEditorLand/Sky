@@ -1,1 +1,37 @@
-import{isMacintosh as i}from"../../../base/common/platform.js";import{getMachineId as n,getSqmMachineId as o,getdevDeviceId as a}from"../../../base/node/id.js";import"../../log/common/log.js";import"../../state/node/state.js";import{machineIdKey as d,sqmIdKey as c,devDeviceIdKey as I}from"../common/telemetry.js";async function b(e,t){let a=e.getItem(d);return("string"!=typeof a||i&&"6c9d2bc8f91b89624add29c0abeae7fb42bf539fa1cdb2e3e57cd668fa9bcead"===a)&&(a=await n(t.error.bind(t))),a}async function y(e,t){let a=e.getItem(c);return"string"!=typeof a&&(a=await o(t.error.bind(t))),a}async function h(e,t){let o=e.getItem(I);return"string"!=typeof o&&(o=await a(t.error.bind(t))),o}export{b as resolveMachineId,y as resolveSqmId,h as resolvedevDeviceId};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { isMacintosh } from "../../../base/common/platform.js";
+import { getMachineId, getSqmMachineId, getdevDeviceId } from "../../../base/node/id.js";
+import { ILogService } from "../../log/common/log.js";
+import { IStateReadService } from "../../state/node/state.js";
+import { machineIdKey, sqmIdKey, devDeviceIdKey } from "../common/telemetry.js";
+async function resolveMachineId(stateService, logService) {
+  let machineId = stateService.getItem(machineIdKey);
+  if (typeof machineId !== "string" || isMacintosh && machineId === "6c9d2bc8f91b89624add29c0abeae7fb42bf539fa1cdb2e3e57cd668fa9bcead") {
+    machineId = await getMachineId(logService.error.bind(logService));
+  }
+  return machineId;
+}
+__name(resolveMachineId, "resolveMachineId");
+async function resolveSqmId(stateService, logService) {
+  let sqmId = stateService.getItem(sqmIdKey);
+  if (typeof sqmId !== "string") {
+    sqmId = await getSqmMachineId(logService.error.bind(logService));
+  }
+  return sqmId;
+}
+__name(resolveSqmId, "resolveSqmId");
+async function resolvedevDeviceId(stateService, logService) {
+  let devDeviceId = stateService.getItem(devDeviceIdKey);
+  if (typeof devDeviceId !== "string") {
+    devDeviceId = await getdevDeviceId(logService.error.bind(logService));
+  }
+  return devDeviceId;
+}
+__name(resolvedevDeviceId, "resolvedevDeviceId");
+export {
+  resolveMachineId,
+  resolveSqmId,
+  resolvedevDeviceId
+};
+//# sourceMappingURL=telemetryUtils.js.map

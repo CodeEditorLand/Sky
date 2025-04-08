@@ -1,5 +1,103 @@
-class r{constructor(n,o){this.key=n;this.data=o}incoming=new Map;outgoing=new Map}class d{constructor(n){this._hashFn=n}_nodes=new Map;roots(){const n=[];for(const o of this._nodes.values())o.outgoing.size===0&&n.push(o);return n}insertEdge(n,o){const e=this.lookupOrInsertNode(n),t=this.lookupOrInsertNode(o);e.outgoing.set(t.key,t),t.incoming.set(e.key,e)}removeNode(n){const o=this._hashFn(n);this._nodes.delete(o);for(const e of this._nodes.values())e.outgoing.delete(o),e.incoming.delete(o)}lookupOrInsertNode(n){const o=this._hashFn(n);let e=this._nodes.get(o);return e||(e=new r(o,n),this._nodes.set(o,e)),e}lookup(n){return this._nodes.get(this._hashFn(n))}isEmpty(){return this._nodes.size===0}toString(){const n=[];for(const[o,e]of this._nodes)n.push(`${o}
-	(-> incoming)[${[...e.incoming.keys()].join(", ")}]
-	(outgoing ->)[${[...e.outgoing.keys()].join(",")}]
-`);return n.join(`
-`)}findCycleSlow(){for(const[n,o]of this._nodes){const e=new Set([n]),t=this._findCycle(o,e);if(t)return t}}_findCycle(n,o){for(const[e,t]of n.outgoing){if(o.has(e))return[...o,e].join(" -> ");o.add(e);const s=this._findCycle(t,o);if(s)return s;o.delete(e)}}}export{d as Graph,r as Node};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+class Node {
+  constructor(key, data) {
+    this.key = key;
+    this.data = data;
+  }
+  static {
+    __name(this, "Node");
+  }
+  incoming = /* @__PURE__ */ new Map();
+  outgoing = /* @__PURE__ */ new Map();
+}
+class Graph {
+  constructor(_hashFn) {
+    this._hashFn = _hashFn;
+  }
+  static {
+    __name(this, "Graph");
+  }
+  _nodes = /* @__PURE__ */ new Map();
+  roots() {
+    const ret = [];
+    for (const node of this._nodes.values()) {
+      if (node.outgoing.size === 0) {
+        ret.push(node);
+      }
+    }
+    return ret;
+  }
+  insertEdge(from, to) {
+    const fromNode = this.lookupOrInsertNode(from);
+    const toNode = this.lookupOrInsertNode(to);
+    fromNode.outgoing.set(toNode.key, toNode);
+    toNode.incoming.set(fromNode.key, fromNode);
+  }
+  removeNode(data) {
+    const key = this._hashFn(data);
+    this._nodes.delete(key);
+    for (const node of this._nodes.values()) {
+      node.outgoing.delete(key);
+      node.incoming.delete(key);
+    }
+  }
+  lookupOrInsertNode(data) {
+    const key = this._hashFn(data);
+    let node = this._nodes.get(key);
+    if (!node) {
+      node = new Node(key, data);
+      this._nodes.set(key, node);
+    }
+    return node;
+  }
+  lookup(data) {
+    return this._nodes.get(this._hashFn(data));
+  }
+  isEmpty() {
+    return this._nodes.size === 0;
+  }
+  toString() {
+    const data = [];
+    for (const [key, value] of this._nodes) {
+      data.push(`${key}
+	(-> incoming)[${[...value.incoming.keys()].join(", ")}]
+	(outgoing ->)[${[...value.outgoing.keys()].join(",")}]
+`);
+    }
+    return data.join("\n");
+  }
+  /**
+   * This is brute force and slow and **only** be used
+   * to trouble shoot.
+   */
+  findCycleSlow() {
+    for (const [id, node] of this._nodes) {
+      const seen = /* @__PURE__ */ new Set([id]);
+      const res = this._findCycle(node, seen);
+      if (res) {
+        return res;
+      }
+    }
+    return void 0;
+  }
+  _findCycle(node, seen) {
+    for (const [id, outgoing] of node.outgoing) {
+      if (seen.has(id)) {
+        return [...seen, id].join(" -> ");
+      }
+      seen.add(id);
+      const value = this._findCycle(outgoing, seen);
+      if (value) {
+        return value;
+      }
+      seen.delete(id);
+    }
+    return void 0;
+  }
+}
+export {
+  Graph,
+  Node
+};
+//# sourceMappingURL=graph.js.map

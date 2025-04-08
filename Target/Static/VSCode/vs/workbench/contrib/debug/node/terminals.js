@@ -1,1 +1,177 @@
-import*as g from"child_process";import{getDriveLetter as a}from"../../../../base/common/extpath.js";import*as m from"../../../../base/common/platform.js";function $(e,s){return new Promise(((t,n)=>{let o="";const r=g.spawn(e,s);r.pid&&r.stdout.on("data",(e=>{o+=e.toString()})),r.on("error",(e=>{n(e)})),r.on("close",(e=>{t(o)}))}))}async function h(e){if(e){if(m.isWindows){const s=await import("@vscode/windows-process-tree");return new Promise((t=>{s.getProcessTree(e,(e=>{t(!!e&&e.children.length>0)}))}))}return $("/usr/bin/pgrep",["-lP",String(e)]).then((e=>{const s=e.trim();return!(0===s.length||s.indexOf(" tmux")>=0)}),(e=>!0))}return Promise.resolve(!0)}var p=(e=>(e[e.cmd=0]="cmd",e[e.powershell=1]="powershell",e[e.bash=2]="bash",e))(p||{});function b(e,s,t,n,o){let r;r=(e=e.trim().toLowerCase()).indexOf("powershell")>=0||e.indexOf("pwsh")>=0?1:e.indexOf("cmd.exe")>=0?0:e.indexOf("bash")>=0?2:m.isWindows?0:2;let c,i=" ";switch(r){case 1:if(c=e=>(e=e.replace(/\'/g,"''")).length>0&&"\\"===e.charAt(e.length-1)?`'${e}\\'`:`'${e}'`,n){const e=a(n);e&&(i+=`${e}:; `),i+=`cd ${c(n)}; `}if(o)for(const e in o){const s=o[e];i+=null===s?`Remove-Item env:${e}; `:`\${env:${e}}='${s}'; `}if(s.length>0){const e=s.shift(),n=t?e:c(e);i+="'"===n[0]?`& ${n} `:`${n} `;for(const e of s)i+="<"===e||">"===e||t?e:c(e),i+=" "}break;case 0:if(c=e=>(e=(e=e.replace(/\"/g,'""')).replace(/([><!^&|])/g,"^$1"),' "'.split("").some((s=>e.includes(s)))||0===e.length?`"${e}"`:e),n){const e=a(n);e&&(i+=`${e}: && `),i+=`cd ${c(n)} && `}if(o){i+='cmd /C "';for(const e in o){let s=o[e];null===s?i+=`set "${e}=" && `:(s=s.replace(/[&^|<>]/g,(e=>`^${e}`)),i+=`set "${e}=${s}" && `)}}for(const e of s)i+="<"===e||">"===e||t?e:c(e),i+=" ";o&&(i+='"');break;case 2:{c=e=>0===(e=e.replace(/(["'\\\$!><#()\[\]*&^| ;{}?`])/g,"\\$1")).length?'""':e;const e=e=>/[^\w@%\/+=,.:^-]/.test(e)?`'${e.replace(/'/g,"'\\''")}'`:e;if(n&&(i+=`cd ${c(n)} ; `),o){i+="/usr/bin/env";for(const s in o){const t=o[s];i+=null===t?` -u ${e(s)}`:` ${e(`${s}=${t}`)}`}i+=" "}for(const e of s)i+="<"===e||">"===e||t?e:c(e),i+=" ";break}}return i}export{h as hasChildProcesses,b as prepareCommand};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as cp from "child_process";
+import { getDriveLetter } from "../../../../base/common/extpath.js";
+import * as platform from "../../../../base/common/platform.js";
+function spawnAsPromised(command, args) {
+  return new Promise((resolve, reject) => {
+    let stdout = "";
+    const child = cp.spawn(command, args);
+    if (child.pid) {
+      child.stdout.on("data", (data) => {
+        stdout += data.toString();
+      });
+    }
+    child.on("error", (err) => {
+      reject(err);
+    });
+    child.on("close", (code) => {
+      resolve(stdout);
+    });
+  });
+}
+__name(spawnAsPromised, "spawnAsPromised");
+async function hasChildProcesses(processId) {
+  if (processId) {
+    if (platform.isWindows) {
+      const windowsProcessTree = await import("@vscode/windows-process-tree");
+      return new Promise((resolve) => {
+        windowsProcessTree.getProcessTree(processId, (processTree) => {
+          resolve(!!processTree && processTree.children.length > 0);
+        });
+      });
+    } else {
+      return spawnAsPromised("/usr/bin/pgrep", ["-lP", String(processId)]).then((stdout) => {
+        const r = stdout.trim();
+        if (r.length === 0 || r.indexOf(" tmux") >= 0) {
+          return false;
+        } else {
+          return true;
+        }
+      }, (error) => {
+        return true;
+      });
+    }
+  }
+  return Promise.resolve(true);
+}
+__name(hasChildProcesses, "hasChildProcesses");
+var ShellType = /* @__PURE__ */ ((ShellType2) => {
+  ShellType2[ShellType2["cmd"] = 0] = "cmd";
+  ShellType2[ShellType2["powershell"] = 1] = "powershell";
+  ShellType2[ShellType2["bash"] = 2] = "bash";
+  return ShellType2;
+})(ShellType || {});
+function prepareCommand(shell, args, argsCanBeInterpretedByShell, cwd, env) {
+  shell = shell.trim().toLowerCase();
+  let shellType;
+  if (shell.indexOf("powershell") >= 0 || shell.indexOf("pwsh") >= 0) {
+    shellType = 1 /* powershell */;
+  } else if (shell.indexOf("cmd.exe") >= 0) {
+    shellType = 0 /* cmd */;
+  } else if (shell.indexOf("bash") >= 0) {
+    shellType = 2 /* bash */;
+  } else if (platform.isWindows) {
+    shellType = 0 /* cmd */;
+  } else {
+    shellType = 2 /* bash */;
+  }
+  let quote;
+  let command = " ";
+  switch (shellType) {
+    case 1 /* powershell */:
+      quote = /* @__PURE__ */ __name((s) => {
+        s = s.replace(/\'/g, "''");
+        if (s.length > 0 && s.charAt(s.length - 1) === "\\") {
+          return `'${s}\\'`;
+        }
+        return `'${s}'`;
+      }, "quote");
+      if (cwd) {
+        const driveLetter = getDriveLetter(cwd);
+        if (driveLetter) {
+          command += `${driveLetter}:; `;
+        }
+        command += `cd ${quote(cwd)}; `;
+      }
+      if (env) {
+        for (const key in env) {
+          const value = env[key];
+          if (value === null) {
+            command += `Remove-Item env:${key}; `;
+          } else {
+            command += `\${env:${key}}='${value}'; `;
+          }
+        }
+      }
+      if (args.length > 0) {
+        const arg = args.shift();
+        const cmd = argsCanBeInterpretedByShell ? arg : quote(arg);
+        command += cmd[0] === "'" ? `& ${cmd} ` : `${cmd} `;
+        for (const a of args) {
+          command += a === "<" || a === ">" || argsCanBeInterpretedByShell ? a : quote(a);
+          command += " ";
+        }
+      }
+      break;
+    case 0 /* cmd */:
+      quote = /* @__PURE__ */ __name((s) => {
+        s = s.replace(/\"/g, '""');
+        s = s.replace(/([><!^&|])/g, "^$1");
+        return ' "'.split("").some((char) => s.includes(char)) || s.length === 0 ? `"${s}"` : s;
+      }, "quote");
+      if (cwd) {
+        const driveLetter = getDriveLetter(cwd);
+        if (driveLetter) {
+          command += `${driveLetter}: && `;
+        }
+        command += `cd ${quote(cwd)} && `;
+      }
+      if (env) {
+        command += 'cmd /C "';
+        for (const key in env) {
+          let value = env[key];
+          if (value === null) {
+            command += `set "${key}=" && `;
+          } else {
+            value = value.replace(/[&^|<>]/g, (s) => `^${s}`);
+            command += `set "${key}=${value}" && `;
+          }
+        }
+      }
+      for (const a of args) {
+        command += a === "<" || a === ">" || argsCanBeInterpretedByShell ? a : quote(a);
+        command += " ";
+      }
+      if (env) {
+        command += '"';
+      }
+      break;
+    case 2 /* bash */: {
+      quote = /* @__PURE__ */ __name((s) => {
+        s = s.replace(/(["'\\\$!><#()\[\]*&^| ;{}?`])/g, "\\$1");
+        return s.length === 0 ? `""` : s;
+      }, "quote");
+      const hardQuote = /* @__PURE__ */ __name((s) => {
+        return /[^\w@%\/+=,.:^-]/.test(s) ? `'${s.replace(/'/g, "'\\''")}'` : s;
+      }, "hardQuote");
+      if (cwd) {
+        command += `cd ${quote(cwd)} ; `;
+      }
+      if (env) {
+        command += "/usr/bin/env";
+        for (const key in env) {
+          const value = env[key];
+          if (value === null) {
+            command += ` -u ${hardQuote(key)}`;
+          } else {
+            command += ` ${hardQuote(`${key}=${value}`)}`;
+          }
+        }
+        command += " ";
+      }
+      for (const a of args) {
+        command += a === "<" || a === ">" || argsCanBeInterpretedByShell ? a : quote(a);
+        command += " ";
+      }
+      break;
+    }
+  }
+  return command;
+}
+__name(prepareCommand, "prepareCommand");
+export {
+  hasChildProcesses,
+  prepareCommand
+};
+//# sourceMappingURL=terminals.js.map

@@ -1,1 +1,89 @@
-var c=Object.defineProperty,h=Object.getOwnPropertyDescriptor,p=(e,o,i,t)=>{for(var s,r=t>1?void 0:t?h(o,i):o,n=e.length-1;n>=0;n--)(s=e[n])&&(r=(t?s(o,i,r):s(r))||r);return t&&r&&c(o,i,r),r},l=(e,o)=>(i,t)=>o(i,t,e);import m from"../../../../base/common/severity.js";import{Disposable as u}from"../../../../base/common/lifecycle.js";import{IDialogService as d}from"../../../../platform/dialogs/common/dialogs.js";import{DialogsModel as I}from"../../../common/dialogs.js";import{InstantiationType as g,registerSingleton as f}from"../../../../platform/instantiation/common/extensions.js";import{IWorkbenchEnvironmentService as v}from"../../environment/common/environmentService.js";import{ILogService as P}from"../../../../platform/log/common/log.js";let s=class extends u{constructor(e,o){super(),this.environmentService=e,this.logService=o}model=this._register(new I);onWillShowDialog=this.model.onWillShowDialog;onDidShowDialog=this.model.onDidShowDialog;skipDialogs(){return!(!this.environmentService.isExtensionDevelopment||!this.environmentService.extensionTestsLocationURI)||!!this.environmentService.enableSmokeTestDriver}async confirm(e){return this.skipDialogs()?(this.logService.trace("DialogService: refused to show confirmation dialog in tests."),{confirmed:!0}):await this.model.show({confirmArgs:{confirmation:e}}).result}async prompt(e){if(this.skipDialogs())throw new Error(`DialogService: refused to show dialog in tests. Contents: ${e.message}`);const o=await this.model.show({promptArgs:{prompt:e}}).result;return{result:await o.result,checkboxChecked:o.checkboxChecked}}async input(e){if(this.skipDialogs())throw new Error("DialogService: refused to show input dialog in tests.");return await this.model.show({inputArgs:{input:e}}).result}async info(e,o){await this.prompt({type:m.Info,message:e,detail:o})}async warn(e,o){await this.prompt({type:m.Warning,message:e,detail:o})}async error(e,o){await this.prompt({type:m.Error,message:e,detail:o})}async about(){if(this.skipDialogs())throw new Error("DialogService: refused to show about dialog in tests.");await this.model.show({}).result}};s=p([l(0,v),l(1,P)],s),f(d,s,g.Delayed);export{s as DialogService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import Severity from "../../../../base/common/severity.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { IAsyncPromptResult, IAsyncPromptResultWithCancel, IConfirmation, IConfirmationResult, IDialogService, IInput, IInputResult, IPrompt, IPromptResult, IPromptResultWithCancel, IPromptWithCustomCancel, IPromptWithDefaultCancel } from "../../../../platform/dialogs/common/dialogs.js";
+import { DialogsModel } from "../../../common/dialogs.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { IWorkbenchEnvironmentService } from "../../environment/common/environmentService.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+let DialogService = class extends Disposable {
+  constructor(environmentService, logService) {
+    super();
+    this.environmentService = environmentService;
+    this.logService = logService;
+  }
+  static {
+    __name(this, "DialogService");
+  }
+  model = this._register(new DialogsModel());
+  onWillShowDialog = this.model.onWillShowDialog;
+  onDidShowDialog = this.model.onDidShowDialog;
+  skipDialogs() {
+    if (this.environmentService.isExtensionDevelopment && this.environmentService.extensionTestsLocationURI) {
+      return true;
+    }
+    return !!this.environmentService.enableSmokeTestDriver;
+  }
+  async confirm(confirmation) {
+    if (this.skipDialogs()) {
+      this.logService.trace("DialogService: refused to show confirmation dialog in tests.");
+      return { confirmed: true };
+    }
+    const handle = this.model.show({ confirmArgs: { confirmation } });
+    return await handle.result;
+  }
+  async prompt(prompt) {
+    if (this.skipDialogs()) {
+      throw new Error(`DialogService: refused to show dialog in tests. Contents: ${prompt.message}`);
+    }
+    const handle = this.model.show({ promptArgs: { prompt } });
+    const dialogResult = await handle.result;
+    return {
+      result: await dialogResult.result,
+      checkboxChecked: dialogResult.checkboxChecked
+    };
+  }
+  async input(input) {
+    if (this.skipDialogs()) {
+      throw new Error("DialogService: refused to show input dialog in tests.");
+    }
+    const handle = this.model.show({ inputArgs: { input } });
+    return await handle.result;
+  }
+  async info(message, detail) {
+    await this.prompt({ type: Severity.Info, message, detail });
+  }
+  async warn(message, detail) {
+    await this.prompt({ type: Severity.Warning, message, detail });
+  }
+  async error(message, detail) {
+    await this.prompt({ type: Severity.Error, message, detail });
+  }
+  async about() {
+    if (this.skipDialogs()) {
+      throw new Error("DialogService: refused to show about dialog in tests.");
+    }
+    const handle = this.model.show({});
+    await handle.result;
+  }
+};
+DialogService = __decorateClass([
+  __decorateParam(0, IWorkbenchEnvironmentService),
+  __decorateParam(1, ILogService)
+], DialogService);
+registerSingleton(IDialogService, DialogService, InstantiationType.Delayed);
+export {
+  DialogService
+};
+//# sourceMappingURL=dialogService.js.map

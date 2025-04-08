@@ -1,1 +1,166 @@
-var g=Object.defineProperty,_=Object.getOwnPropertyDescriptor,f=(e,t,r,i)=>{for(var s,o=i>1?void 0:i?_(t,r):t,n=e.length-1;n>=0;n--)(s=e[n])&&(o=(i?s(t,r,o):s(o))||o);return i&&o&&g(t,r,o),o},d=(e,t)=>(r,i)=>t(r,i,e);import"./links.js";import{removeLinkSuffix as T,removeLinkQueryString as I,winDrivePrefix as P}from"./terminalLinkParsing.js";import{URI as m}from"../../../../../base/common/uri.js";import"../../../terminal/common/terminal.js";import{Schemas as l}from"../../../../../base/common/network.js";import{isWindows as y,OperatingSystem as p,OS as w}from"../../../../../base/common/platform.js";import{IFileService as L}from"../../../../../platform/files/common/files.js";import{posix as S,win32 as R}from"../../../../../base/common/path.js";import"../../../../../platform/terminal/common/terminal.js";import{mainWindow as v}from"../../../../../base/browser/window.js";let a=class{constructor(e){this._fileService=e}_resolvedLinkCaches=new Map;async resolveLink(e,t,r){r&&r.scheme===l.file&&e.remoteAuthority&&(r=r.with({scheme:l.vscodeRemote,authority:e.remoteAuthority}));let i=this._resolvedLinkCaches.get(e.remoteAuthority??"");i||(i=new U,this._resolvedLinkCaches.set(e.remoteAuthority??"",i));const s=i.get(r||t);if(void 0!==s)return s;if(r)try{const e={uri:r,link:t,isDirectory:(await this._fileService.stat(r)).isDirectory};return i.set(r,e),e}catch{return i.set(r,null),null}let o=T(t);if(o=I(o),0===o.length)return i.set(t,null),null;if(y&&t.match(/^\/mnt\/[a-z]/i)&&e.backend)o=await e.backend.getWslPath(o,"unix-to-win");else if(!y||!t.match(/^(?:\/\/|\\\\)wsl(?:\$|\.localhost)(\/|\\)/)){const r=this._preprocessPath(o,e.initialCwd,e.os,e.userHome);if(!r)return i.set(t,null),null;o=r}try{let r;r=e.remoteAuthority?m.from({scheme:l.vscodeRemote,authority:e.remoteAuthority,path:o}):m.file(o);try{const e={uri:r,link:t,isDirectory:(await this._fileService.stat(r)).isDirectory};return i.set(t,e),e}catch{return i.set(t,null),null}}catch{return i.set(t,null),null}}_preprocessPath(e,t,r,i){const s=this._getOsPath(r);if("~"===e.charAt(0)){if(!i)return null;e=s.join(i,e.substring(1))}else if("/"!==e.charAt(0)&&"~"!==e.charAt(0))if(r===p.Windows)if(e.match("^"+P)||e.startsWith("\\\\?\\"))e=e.replace(/^\\\\\?\\/,"");else{if(!t)return null;e=s.join(t,e)}else{if(!t)return null;e=s.join(t,e)}return e=s.normalize(e)}_getOsPath(e){return(e??w)===p.Windows?R:S}};a=f([d(0,L)],a);var A=(e=>(e[e.TTL=1e4]="TTL",e))(A||{});class U{_cache=new Map;_cacheTilTimeout=0;set(e,t){this._cacheTilTimeout&&v.clearTimeout(this._cacheTilTimeout),this._cacheTilTimeout=v.setTimeout((()=>this._cache.clear()),1e4),this._cache.set(this._getKey(e),t)}get(e){return this._cache.get(this._getKey(e))}_getKey(e){return m.isUri(e)?e.toString():e}}export{a as TerminalLinkResolver};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { ITerminalLinkResolver, ResolvedLink } from "./links.js";
+import { removeLinkSuffix, removeLinkQueryString, winDrivePrefix } from "./terminalLinkParsing.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { ITerminalProcessManager } from "../../../terminal/common/terminal.js";
+import { Schemas } from "../../../../../base/common/network.js";
+import { isWindows, OperatingSystem, OS } from "../../../../../base/common/platform.js";
+import { IFileService } from "../../../../../platform/files/common/files.js";
+import { IPath, posix, win32 } from "../../../../../base/common/path.js";
+import { ITerminalBackend } from "../../../../../platform/terminal/common/terminal.js";
+import { mainWindow } from "../../../../../base/browser/window.js";
+let TerminalLinkResolver = class {
+  constructor(_fileService) {
+    this._fileService = _fileService;
+  }
+  static {
+    __name(this, "TerminalLinkResolver");
+  }
+  // Link cache could be shared across all terminals, but that could lead to weird results when
+  // both local and remote terminals are present
+  _resolvedLinkCaches = /* @__PURE__ */ new Map();
+  async resolveLink(processManager, link, uri) {
+    if (uri && uri.scheme === Schemas.file && processManager.remoteAuthority) {
+      uri = uri.with({
+        scheme: Schemas.vscodeRemote,
+        authority: processManager.remoteAuthority
+      });
+    }
+    let cache = this._resolvedLinkCaches.get(processManager.remoteAuthority ?? "");
+    if (!cache) {
+      cache = new LinkCache();
+      this._resolvedLinkCaches.set(processManager.remoteAuthority ?? "", cache);
+    }
+    const cached = cache.get(uri || link);
+    if (cached !== void 0) {
+      return cached;
+    }
+    if (uri) {
+      try {
+        const stat = await this._fileService.stat(uri);
+        const result = { uri, link, isDirectory: stat.isDirectory };
+        cache.set(uri, result);
+        return result;
+      } catch (e) {
+        cache.set(uri, null);
+        return null;
+      }
+    }
+    let linkUrl = removeLinkSuffix(link);
+    linkUrl = removeLinkQueryString(linkUrl);
+    if (linkUrl.length === 0) {
+      cache.set(link, null);
+      return null;
+    }
+    if (isWindows && link.match(/^\/mnt\/[a-z]/i) && processManager.backend) {
+      linkUrl = await processManager.backend.getWslPath(linkUrl, "unix-to-win");
+    } else if (isWindows && link.match(/^(?:\/\/|\\\\)wsl(?:\$|\.localhost)(\/|\\)/)) {
+    } else {
+      const preprocessedLink = this._preprocessPath(linkUrl, processManager.initialCwd, processManager.os, processManager.userHome);
+      if (!preprocessedLink) {
+        cache.set(link, null);
+        return null;
+      }
+      linkUrl = preprocessedLink;
+    }
+    try {
+      let uri2;
+      if (processManager.remoteAuthority) {
+        uri2 = URI.from({
+          scheme: Schemas.vscodeRemote,
+          authority: processManager.remoteAuthority,
+          path: linkUrl
+        });
+      } else {
+        uri2 = URI.file(linkUrl);
+      }
+      try {
+        const stat = await this._fileService.stat(uri2);
+        const result = { uri: uri2, link, isDirectory: stat.isDirectory };
+        cache.set(link, result);
+        return result;
+      } catch (e) {
+        cache.set(link, null);
+        return null;
+      }
+    } catch {
+      cache.set(link, null);
+      return null;
+    }
+  }
+  _preprocessPath(link, initialCwd, os, userHome) {
+    const osPath = this._getOsPath(os);
+    if (link.charAt(0) === "~") {
+      if (!userHome) {
+        return null;
+      }
+      link = osPath.join(userHome, link.substring(1));
+    } else if (link.charAt(0) !== "/" && link.charAt(0) !== "~") {
+      if (os === OperatingSystem.Windows) {
+        if (!link.match("^" + winDrivePrefix) && !link.startsWith("\\\\?\\")) {
+          if (!initialCwd) {
+            return null;
+          }
+          link = osPath.join(initialCwd, link);
+        } else {
+          link = link.replace(/^\\\\\?\\/, "");
+        }
+      } else {
+        if (!initialCwd) {
+          return null;
+        }
+        link = osPath.join(initialCwd, link);
+      }
+    }
+    link = osPath.normalize(link);
+    return link;
+  }
+  _getOsPath(os) {
+    return (os ?? OS) === OperatingSystem.Windows ? win32 : posix;
+  }
+};
+TerminalLinkResolver = __decorateClass([
+  __decorateParam(0, IFileService)
+], TerminalLinkResolver);
+var LinkCacheConstants = /* @__PURE__ */ ((LinkCacheConstants2) => {
+  LinkCacheConstants2[LinkCacheConstants2["TTL"] = 1e4] = "TTL";
+  return LinkCacheConstants2;
+})(LinkCacheConstants || {});
+class LinkCache {
+  static {
+    __name(this, "LinkCache");
+  }
+  _cache = /* @__PURE__ */ new Map();
+  _cacheTilTimeout = 0;
+  set(link, value) {
+    if (this._cacheTilTimeout) {
+      mainWindow.clearTimeout(this._cacheTilTimeout);
+    }
+    this._cacheTilTimeout = mainWindow.setTimeout(() => this._cache.clear(), 1e4 /* TTL */);
+    this._cache.set(this._getKey(link), value);
+  }
+  get(link) {
+    return this._cache.get(this._getKey(link));
+  }
+  _getKey(link) {
+    if (URI.isUri(link)) {
+      return link.toString();
+    }
+    return link;
+  }
+}
+export {
+  TerminalLinkResolver
+};
+//# sourceMappingURL=terminalLinkResolver.js.map

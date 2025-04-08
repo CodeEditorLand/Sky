@@ -1,1 +1,155 @@
-var g=Object.defineProperty;var v=Object.getOwnPropertyDescriptor;var c=(a,e,o,i)=>{for(var n=i>1?void 0:i?v(e,o):e,t=a.length-1,r;t>=0;t--)(r=a[t])&&(n=(i?r(e,o,n):r(n))||n);return i&&n&&g(e,o,n),n},l=(a,e)=>(o,i)=>e(o,i,a);import{ShutdownReason as p,ILifecycleService as S,StartupKind as m}from"../common/lifecycle.js";import{ILogService as U}from"../../../../platform/log/common/log.js";import{AbstractLifecycleService as w}from"../common/lifecycleService.js";import{localize as y}from"../../../../nls.js";import{InstantiationType as b,registerSingleton as E}from"../../../../platform/instantiation/common/extensions.js";import"../../../../base/common/lifecycle.js";import{addDisposableListener as f,EventType as u}from"../../../../base/browser/dom.js";import{IStorageService as L,WillSaveStateReason as h}from"../../../../platform/storage/common/storage.js";import{CancellationToken as B}from"../../../../base/common/cancellation.js";import{mainWindow as s}from"../../../../base/browser/window.js";let d=class extends w{beforeUnloadListener=void 0;unloadListener=void 0;ignoreBeforeUnload=!1;didUnload=!1;constructor(e,o){super(e,o),this.registerListeners()}registerListeners(){this.beforeUnloadListener=f(s,u.BEFORE_UNLOAD,e=>this.onBeforeUnload(e)),this.unloadListener=f(s,u.PAGE_HIDE,()=>this.onUnload())}onBeforeUnload(e){this.ignoreBeforeUnload?(this.logService.info("[lifecycle] onBeforeUnload triggered but ignored once"),this.ignoreBeforeUnload=!1):(this.logService.info("[lifecycle] onBeforeUnload triggered and handled with veto support"),this.doShutdown(()=>this.vetoBeforeUnload(e)))}vetoBeforeUnload(e){e.preventDefault(),e.returnValue=y("lifecycleVeto","Changes that you made may not be saved. Please check press 'Cancel' and try again.")}withExpectedShutdown(e,o){if(typeof e=="number")return this.shutdownReason=e,this.storageService.flush(h.SHUTDOWN);this.ignoreBeforeUnload=!0;try{o?.()}finally{this.ignoreBeforeUnload=!1}}async shutdown(){this.logService.info("[lifecycle] shutdown triggered"),this.beforeUnloadListener?.dispose(),this.unloadListener?.dispose(),await this.storageService.flush(h.SHUTDOWN),this.doShutdown()}doShutdown(e){const o=this.logService;this.storageService.flush(h.SHUTDOWN);let i=!1;function n(t,r){typeof e=="function"&&(t instanceof Promise&&(o.error(`[lifecycle] Long running operations before shutdown are unsupported in the web (id: ${r})`),i=!0),t===!0&&(o.info(`[lifecycle]: Unload was prevented (id: ${r})`),i=!0))}return this._onBeforeShutdown.fire({reason:p.QUIT,veto(t,r){n(t,r)},finalVeto(t,r){n(t(),r)}}),i&&typeof e=="function"?e():this.onUnload()}onUnload(){if(this.didUnload)return;this.didUnload=!0,this._willShutdown=!0,this._register(f(s,u.PAGE_SHOW,o=>this.onLoadAfterUnload(o)));const e=this.logService;this._onWillShutdown.fire({reason:p.QUIT,joiners:()=>[],token:B.None,join(o,i){typeof o=="function"&&o(),e.error(`[lifecycle] Long running operations during shutdown are unsupported in the web (id: ${i.id})`)},force:()=>{}}),this._onDidShutdown.fire()}onLoadAfterUnload(e){e.persisted&&this.withExpectedShutdown({disableShutdownHandling:!0},()=>s.location.reload())}doResolveStartupKind(){let e=super.doResolveStartupKind();return typeof e!="number"&&performance.getEntriesByType("navigation").at(0)?.type==="reload"&&(e=m.ReloadedWindow),e}};d=c([l(0,U),l(1,L)],d),E(S,d,b.Eager);export{d as BrowserLifecycleService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { ShutdownReason, ILifecycleService, StartupKind } from "../common/lifecycle.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { AbstractLifecycleService } from "../common/lifecycleService.js";
+import { localize } from "../../../../nls.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { IDisposable } from "../../../../base/common/lifecycle.js";
+import { addDisposableListener, EventType } from "../../../../base/browser/dom.js";
+import { IStorageService, WillSaveStateReason } from "../../../../platform/storage/common/storage.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { mainWindow } from "../../../../base/browser/window.js";
+let BrowserLifecycleService = class extends AbstractLifecycleService {
+  static {
+    __name(this, "BrowserLifecycleService");
+  }
+  beforeUnloadListener = void 0;
+  unloadListener = void 0;
+  ignoreBeforeUnload = false;
+  didUnload = false;
+  constructor(logService, storageService) {
+    super(logService, storageService);
+    this.registerListeners();
+  }
+  registerListeners() {
+    this.beforeUnloadListener = addDisposableListener(mainWindow, EventType.BEFORE_UNLOAD, (e) => this.onBeforeUnload(e));
+    this.unloadListener = addDisposableListener(mainWindow, EventType.PAGE_HIDE, () => this.onUnload());
+  }
+  onBeforeUnload(event) {
+    if (this.ignoreBeforeUnload) {
+      this.logService.info("[lifecycle] onBeforeUnload triggered but ignored once");
+      this.ignoreBeforeUnload = false;
+    } else {
+      this.logService.info("[lifecycle] onBeforeUnload triggered and handled with veto support");
+      this.doShutdown(() => this.vetoBeforeUnload(event));
+    }
+  }
+  vetoBeforeUnload(event) {
+    event.preventDefault();
+    event.returnValue = localize("lifecycleVeto", "Changes that you made may not be saved. Please check press 'Cancel' and try again.");
+  }
+  withExpectedShutdown(reason, callback) {
+    if (typeof reason === "number") {
+      this.shutdownReason = reason;
+      return this.storageService.flush(WillSaveStateReason.SHUTDOWN);
+    } else {
+      this.ignoreBeforeUnload = true;
+      try {
+        callback?.();
+      } finally {
+        this.ignoreBeforeUnload = false;
+      }
+    }
+  }
+  async shutdown() {
+    this.logService.info("[lifecycle] shutdown triggered");
+    this.beforeUnloadListener?.dispose();
+    this.unloadListener?.dispose();
+    await this.storageService.flush(WillSaveStateReason.SHUTDOWN);
+    this.doShutdown();
+  }
+  doShutdown(vetoShutdown) {
+    const logService = this.logService;
+    this.storageService.flush(WillSaveStateReason.SHUTDOWN);
+    let veto = false;
+    function handleVeto(vetoResult, id) {
+      if (typeof vetoShutdown !== "function") {
+        return;
+      }
+      if (vetoResult instanceof Promise) {
+        logService.error(`[lifecycle] Long running operations before shutdown are unsupported in the web (id: ${id})`);
+        veto = true;
+      }
+      if (vetoResult === true) {
+        logService.info(`[lifecycle]: Unload was prevented (id: ${id})`);
+        veto = true;
+      }
+    }
+    __name(handleVeto, "handleVeto");
+    this._onBeforeShutdown.fire({
+      reason: ShutdownReason.QUIT,
+      veto(value, id) {
+        handleVeto(value, id);
+      },
+      finalVeto(valueFn, id) {
+        handleVeto(valueFn(), id);
+      }
+    });
+    if (veto && typeof vetoShutdown === "function") {
+      return vetoShutdown();
+    }
+    return this.onUnload();
+  }
+  onUnload() {
+    if (this.didUnload) {
+      return;
+    }
+    this.didUnload = true;
+    this._willShutdown = true;
+    this._register(addDisposableListener(mainWindow, EventType.PAGE_SHOW, (e) => this.onLoadAfterUnload(e)));
+    const logService = this.logService;
+    this._onWillShutdown.fire({
+      reason: ShutdownReason.QUIT,
+      joiners: /* @__PURE__ */ __name(() => [], "joiners"),
+      // Unsupported in web
+      token: CancellationToken.None,
+      // Unsupported in web
+      join(promise, joiner) {
+        if (typeof promise === "function") {
+          promise();
+        }
+        logService.error(`[lifecycle] Long running operations during shutdown are unsupported in the web (id: ${joiner.id})`);
+      },
+      force: /* @__PURE__ */ __name(() => {
+      }, "force")
+    });
+    this._onDidShutdown.fire();
+  }
+  onLoadAfterUnload(event) {
+    const wasRestoredFromCache = event.persisted;
+    if (!wasRestoredFromCache) {
+      return;
+    }
+    this.withExpectedShutdown({ disableShutdownHandling: true }, () => mainWindow.location.reload());
+  }
+  doResolveStartupKind() {
+    let startupKind = super.doResolveStartupKind();
+    if (typeof startupKind !== "number") {
+      const timing = performance.getEntriesByType("navigation").at(0);
+      if (timing?.type === "reload") {
+        startupKind = StartupKind.ReloadedWindow;
+      }
+    }
+    return startupKind;
+  }
+};
+BrowserLifecycleService = __decorateClass([
+  __decorateParam(0, ILogService),
+  __decorateParam(1, IStorageService)
+], BrowserLifecycleService);
+registerSingleton(ILifecycleService, BrowserLifecycleService, InstantiationType.Eager);
+export {
+  BrowserLifecycleService
+};
+//# sourceMappingURL=lifecycleService.js.map

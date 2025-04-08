@@ -1,1 +1,75 @@
-import*as r from"fs";import{tmpdir as p}from"os";import{Queue as m}from"../../../base/common/async.js";import{randomPath as u}from"../../../base/common/extpath.js";import{resolveTerminalEncoding as l}from"../../../base/node/terminalEncoding.js";function T(){try{return!process.stdin.isTTY}catch{}return!1}function x(e){return new Promise(n=>{const o=()=>n(!0);setTimeout(()=>{process.stdin.removeListener("data",o),n(!1)},e),process.stdin.once("data",o)})}function S(){return u(p(),"code-stdin",3)}async function f(e){await r.promises.appendFile(e,""),await r.promises.chmod(e,384)}async function b(e,n,o){let[t,s]=await Promise.all([l(n),import("@vscode/iconv-lite-umd"),f(e)]);s.default.encodingExists(t)||(console.log(`Unsupported terminal encoding: ${t}, falling back to UTF-8.`),t="utf8");const a=new m,d=s.default.getDecoder(t);process.stdin.on("data",i=>{const c=d.write(i);a.queue(()=>r.promises.appendFile(e,c))}),process.stdin.on("end",()=>{const i=d.end();a.queue(async()=>{try{typeof i=="string"&&await r.promises.appendFile(e,i)}finally{o?.()}})})}export{S as getStdinFilePath,T as hasStdinWithoutTty,b as readFromStdin,x as stdinDataListener};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as fs from "fs";
+import { tmpdir } from "os";
+import { Queue } from "../../../base/common/async.js";
+import { randomPath } from "../../../base/common/extpath.js";
+import { resolveTerminalEncoding } from "../../../base/node/terminalEncoding.js";
+function hasStdinWithoutTty() {
+  try {
+    return !process.stdin.isTTY;
+  } catch (error) {
+  }
+  return false;
+}
+__name(hasStdinWithoutTty, "hasStdinWithoutTty");
+function stdinDataListener(durationinMs) {
+  return new Promise((resolve) => {
+    const dataListener = /* @__PURE__ */ __name(() => resolve(true), "dataListener");
+    setTimeout(() => {
+      process.stdin.removeListener("data", dataListener);
+      resolve(false);
+    }, durationinMs);
+    process.stdin.once("data", dataListener);
+  });
+}
+__name(stdinDataListener, "stdinDataListener");
+function getStdinFilePath() {
+  return randomPath(tmpdir(), "code-stdin", 3);
+}
+__name(getStdinFilePath, "getStdinFilePath");
+async function createStdInFile(targetPath) {
+  await fs.promises.appendFile(targetPath, "");
+  await fs.promises.chmod(targetPath, 384);
+}
+__name(createStdInFile, "createStdInFile");
+async function readFromStdin(targetPath, verbose, onEnd) {
+  let [encoding, iconv] = await Promise.all([
+    resolveTerminalEncoding(verbose),
+    // respect terminal encoding when piping into file
+    import("@vscode/iconv-lite-umd"),
+    // lazy load encoding module for usage
+    createStdInFile(targetPath)
+    // make sure file exists right away (https://github.com/microsoft/vscode/issues/155341)
+  ]);
+  if (!iconv.default.encodingExists(encoding)) {
+    console.log(`Unsupported terminal encoding: ${encoding}, falling back to UTF-8.`);
+    encoding = "utf8";
+  }
+  const appendFileQueue = new Queue();
+  const decoder = iconv.default.getDecoder(encoding);
+  process.stdin.on("data", (chunk) => {
+    const chunkStr = decoder.write(chunk);
+    appendFileQueue.queue(() => fs.promises.appendFile(targetPath, chunkStr));
+  });
+  process.stdin.on("end", () => {
+    const end = decoder.end();
+    appendFileQueue.queue(async () => {
+      try {
+        if (typeof end === "string") {
+          await fs.promises.appendFile(targetPath, end);
+        }
+      } finally {
+        onEnd?.();
+      }
+    });
+  });
+}
+__name(readFromStdin, "readFromStdin");
+export {
+  getStdinFilePath,
+  hasStdinWithoutTty,
+  readFromStdin,
+  stdinDataListener
+};
+//# sourceMappingURL=stdin.js.map

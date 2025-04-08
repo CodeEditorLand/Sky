@@ -1,1 +1,40 @@
-import*as o from"../../../../nls.js";import"../../../../platform/instantiation/common/instantiation.js";import*as i from"../common/constants.js";import{Action2 as t,MenuId as n,registerAction2 as s}from"../../../../platform/actions/common/actions.js";import{KeybindingWeight as c}from"../../../../platform/keybinding/common/keybindingsRegistry.js";import{KeyCode as m,KeyMod as l}from"../../../../base/common/keyCodes.js";import{IQuickInputService as a}from"../../../../platform/quickinput/common/quickInput.js";s(class s extends t{static ID="workbench.action.showAllSymbols";static LABEL=o.localize("showTriggerActions","Go to Symbol in Workspace...");static ALL_SYMBOLS_PREFIX="#";constructor(){super({id:i.SearchCommandIds.ShowAllSymbolsActionId,title:{...o.localize2("showTriggerActions","Go to Symbol in Workspace..."),mnemonicTitle:o.localize({key:"miGotoSymbolInWorkspace",comment:["&& denotes a mnemonic"]},"Go to Symbol in &&Workspace...")},f1:!0,keybinding:{weight:c.WorkbenchContrib,primary:l.CtrlCmd|m.KeyT},menu:{id:n.MenubarGoMenu,group:"3_global_nav",order:2}})}async run(o){o.get(a).quickAccess.show(s.ALL_SYMBOLS_PREFIX)}});
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as nls from "../../../../nls.js";
+import { ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+import * as Constants from "../common/constants.js";
+import { Action2, MenuId, registerAction2 } from "../../../../platform/actions/common/actions.js";
+import { KeybindingWeight } from "../../../../platform/keybinding/common/keybindingsRegistry.js";
+import { KeyCode, KeyMod } from "../../../../base/common/keyCodes.js";
+import { IQuickInputService } from "../../../../platform/quickinput/common/quickInput.js";
+registerAction2(class ShowAllSymbolsAction extends Action2 {
+  static {
+    __name(this, "ShowAllSymbolsAction");
+  }
+  static ID = "workbench.action.showAllSymbols";
+  static LABEL = nls.localize("showTriggerActions", "Go to Symbol in Workspace...");
+  static ALL_SYMBOLS_PREFIX = "#";
+  constructor() {
+    super({
+      id: Constants.SearchCommandIds.ShowAllSymbolsActionId,
+      title: {
+        ...nls.localize2("showTriggerActions", "Go to Symbol in Workspace..."),
+        mnemonicTitle: nls.localize({ key: "miGotoSymbolInWorkspace", comment: ["&& denotes a mnemonic"] }, "Go to Symbol in &&Workspace...")
+      },
+      f1: true,
+      keybinding: {
+        weight: KeybindingWeight.WorkbenchContrib,
+        primary: KeyMod.CtrlCmd | KeyCode.KeyT
+      },
+      menu: {
+        id: MenuId.MenubarGoMenu,
+        group: "3_global_nav",
+        order: 2
+      }
+    });
+  }
+  async run(accessor) {
+    accessor.get(IQuickInputService).quickAccess.show(ShowAllSymbolsAction.ALL_SYMBOLS_PREFIX);
+  }
+});
+//# sourceMappingURL=searchActionsSymbol.js.map

@@ -1,1 +1,49 @@
-const t=String.raw,u=t`(?<!\\)`+t`(!?\[`+t`(?:`+t`[^\[\]\\]|`+t`\\.|`+t`\[[^\[\]]*\]`+t`)*`+t`\])`+t`(\(\s*)`+t`(`+t`[^\s\(\)<](?:[^\s\(\)]|\([^\s\(\)]*?\))*|`+t`<(?:\\[<>]|[^<>])+>`+t`)`+t`\s*(?:"[^"]*"|'[^']*'|\([^\(\)]*\))?\s*`+t`\)`;function g(n,e){const r=Array.from(n.matchAll(new RegExp(u+t`|\p{sc=Han}|=+|\++|-+|[^\s\|\p{sc=Han}|=|\+|\-]+`,"gu"))),s=r.slice(0,e),g=e>=r.length?n.length:s.length?s.at(-1).index+s.at(-1)[0].length:0,l=n.substring(0,g);return{value:l,returnedWordCount:0===s.length?l.length?1:0:s.length,isFullString:g>=n.length,totalWordCount:r.length}}function a(t){return g(t,Number.MAX_SAFE_INTEGER).returnedWordCount}export{a as countWords,g as getNWords};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+const r = String.raw;
+const linkPattern = r`(?<!\\)` + // Must not start with escape
+// text
+r`(!?\[` + // open prefix match -->
+/**/
+r`(?:` + /*****/
+r`[^\[\]\\]|` + // Non-bracket chars, or...
+/*****/
+r`\\.|` + // Escaped char, or...
+/*****/
+r`\[[^\[\]]*\]` + // Matched bracket pair
+/**/
+r`)*` + r`\])` + // <-- close prefix match
+// Destination
+r`(\(\s*)` + // Pre href
+/**/
+r`(` + /*****/
+r`[^\s\(\)<](?:[^\s\(\)]|\([^\s\(\)]*?\))*|` + // Link without whitespace, or...
+/*****/
+r`<(?:\\[<>]|[^<>])+>` + // In angle brackets
+/**/
+r`)` + // Title
+/**/
+r`\s*(?:"[^"]*"|'[^']*'|\([^\(\)]*\))?\s*` + r`\)`;
+function getNWords(str, numWordsToCount) {
+  const allWordMatches = Array.from(str.matchAll(new RegExp(linkPattern + r`|\p{sc=Han}|=+|\++|-+|[^\s\|\p{sc=Han}|=|\+|\-]+`, "gu")));
+  const targetWords = allWordMatches.slice(0, numWordsToCount);
+  const endIndex = numWordsToCount >= allWordMatches.length ? str.length : targetWords.length ? targetWords.at(-1).index + targetWords.at(-1)[0].length : 0;
+  const value = str.substring(0, endIndex);
+  return {
+    value,
+    returnedWordCount: targetWords.length === 0 ? value.length ? 1 : 0 : targetWords.length,
+    isFullString: endIndex >= str.length,
+    totalWordCount: allWordMatches.length
+  };
+}
+__name(getNWords, "getNWords");
+function countWords(str) {
+  const result = getNWords(str, Number.MAX_SAFE_INTEGER);
+  return result.returnedWordCount;
+}
+__name(countWords, "countWords");
+export {
+  countWords,
+  getNWords
+};
+//# sourceMappingURL=chatWordCounter.js.map

@@ -1,1 +1,452 @@
-var y=Object.defineProperty;var P=Object.getOwnPropertyDescriptor;var x=(h,e,i,r)=>{for(var t=r>1?void 0:r?P(e,i):e,s=h.length-1,o;s>=0;s--)(o=h[s])&&(t=(r?o(e,i,t):o(t))||t);return r&&t&&y(e,i,t),t},d=(h,e)=>(i,r)=>e(i,r,h);import{Event as F}from"../../../../base/common/event.js";import{IWorkspaceContextService as D}from"../../../../platform/workspace/common/workspace.js";import{DisposableStore as L}from"../../../../base/common/lifecycle.js";import{SortOrder as C,LexicographicOptions as U}from"../common/files.js";import{ExplorerItem as g,ExplorerModel as A}from"../common/explorerModel.js";import"../../../../base/common/uri.js";import{FileOperation as m,IFileService as M,FileChangeType as O}from"../../../../platform/files/common/files.js";import{dirname as E,basename as T}from"../../../../base/common/resources.js";import{IConfigurationService as k}from"../../../../platform/configuration/common/configuration.js";import{IClipboardService as V}from"../../../../platform/clipboard/common/clipboardService.js";import{IEditorService as _}from"../../../services/editor/common/editorService.js";import"../../../common/views.js";import{IUriIdentityService as N}from"../../../../platform/uriIdentity/common/uriIdentity.js";import{IBulkEditService as B}from"../../../../editor/browser/services/bulkEditService.js";import{UndoRedoSource as W}from"../../../../platform/undoRedo/common/undoRedo.js";import"./files.js";import{IProgressService as G,ProgressLocation as S}from"../../../../platform/progress/common/progress.js";import{CancellationTokenSource as H}from"../../../../base/common/cancellation.js";import{RunOnceScheduler as q}from"../../../../base/common/async.js";import{IHostService as Y}from"../../../services/host/browser/host.js";import"../../../../base/common/glob.js";import{ResourceGlobMatcher as X}from"../../../common/resources.js";import{IFilesConfigurationService as j}from"../../../services/filesConfiguration/common/filesConfigurationService.js";const z=new W;let v=class{constructor(e,i,r,t,s,o,l,u,a,p){this.fileService=e;this.configurationService=i;this.contextService=r;this.clipboardService=t;this.editorService=s;this.uriIdentityService=o;this.bulkEditService=l;this.progressService=u;this.filesConfigurationService=p;this.config=this.configurationService.getValue("explorer"),this.model=new A(this.contextService,this.uriIdentityService,this.fileService,this.configurationService,this.filesConfigurationService),this.disposables.add(this.model),this.disposables.add(this.fileService.onDidRunOperation(n=>this.onDidRunOperation(n))),this.onFileChangesScheduler=new q(async()=>{const n=this.fileChangeEvents;this.fileChangeEvents=[];const f=[O.DELETED];this.config.sortOrder===C.Modified&&f.push(O.UPDATED);let c=!1;this.roots.forEach(I=>{this.view&&!c&&(c=R(I,this.view,n,f))}),n.forEach(I=>{if(!c)for(const w of I.rawAdded){const b=this.model.findClosest(E(w));if(b&&!b.getChild(T(w))){c=!0;break}}}),c&&await this.refresh(!1)},v.EXPLORER_FILE_CHANGES_REACT_DELAY),this.disposables.add(this.fileService.onDidFilesChange(n=>{this.fileChangeEvents.push(n),!this.editable&&(this.onFileChangesScheduler.isScheduled()||this.onFileChangesScheduler.schedule())})),this.disposables.add(this.configurationService.onDidChangeConfiguration(n=>this.onConfigurationUpdated(n))),this.disposables.add(F.any(this.fileService.onDidChangeFileSystemProviderRegistrations,this.fileService.onDidChangeFileSystemProviderCapabilities)(async n=>{let f=!1;this.model.roots.forEach(c=>{c.resource.scheme===n.scheme&&(f=!0,c.forgetChildren())}),f&&this.view&&await this.view.setTreeInput()})),this.disposables.add(this.model.onDidChangeRoots(()=>{this.view?.setTreeInput()})),this.disposables.add(a.onDidChangeFocus(n=>{n&&this.refresh(!1)})),this.revealExcludeMatcher=new X(n=>J(i.getValue({resource:n})),n=>n.affectsConfiguration("explorer.autoRevealExclude"),r,i),this.disposables.add(this.revealExcludeMatcher)}static EXPLORER_FILE_CHANGES_REACT_DELAY=500;disposables=new L;editable;config;cutItems;view;model;onFileChangesScheduler;fileChangeEvents=[];revealExcludeMatcher;get roots(){return this.model.roots}get sortOrderConfiguration(){return{sortOrder:this.config.sortOrder,lexicographicOptions:this.config.sortOrderLexicographicOptions,reverse:this.config.sortOrderReverse}}registerView(e){this.view=e}getContext(e,i=!1){if(!this.view)return[];const r=new Set(this.view.getContext(e));return r.forEach(t=>{try{if(e&&!i&&this.view?.isItemCollapsed(t)&&t.nestedChildren)for(const s of t.nestedChildren)r.add(s)}catch{return}}),[...r]}async applyBulkEdit(e,i){const r=new H,t=i.progressLocation??S.Window;let s;t===S.Window?s={location:t,title:i.progressLabel,cancellable:e.length>1}:s={location:t,title:i.progressLabel,cancellable:e.length>1,delay:500};const o=this.progressService.withProgress(s,async l=>{await this.bulkEditService.apply(e,{undoRedoSource:z,label:i.undoLabel,code:"undoredo.explorerOperation",progress:l,token:r.token,confirmBeforeUndo:i.confirmBeforeUndo})},()=>r.cancel());await this.progressService.withProgress({location:S.Explorer,delay:500},()=>o),r.dispose()}hasViewFocus(){return!!this.view&&this.view.hasFocus()}findClosest(e){return this.model.findClosest(e)}findClosestRoot(e){const i=this.model.roots.filter(r=>this.uriIdentityService.extUri.isEqualOrParent(e,r.resource)).sort((r,t)=>t.resource.path.length-r.resource.path.length);return i.length?i[0]:null}async setEditable(e,i){if(!this.view)return;i?this.editable={stat:e,data:i}:this.editable=void 0;const r=this.isEditable(e);try{await this.view.setEditable(e,r)}catch{return}!this.editable&&this.fileChangeEvents.length&&!this.onFileChangesScheduler.isScheduled()&&this.onFileChangesScheduler.schedule()}async setToCopy(e,i){const r=this.cutItems;this.cutItems=i?e:void 0,await this.clipboardService.writeResources(e.map(t=>t.resource)),this.view?.itemsCopied(e,i,r)}isCut(e){return!!this.cutItems&&this.cutItems.some(i=>this.uriIdentityService.extUri.isEqual(i.resource,e.resource))}getEditable(){return this.editable}getEditableData(e){return this.editable&&this.editable.stat===e?this.editable.data:void 0}isEditable(e){return!!this.editable&&(this.editable.stat===e||!e)}async select(e,i){if(!this.view)return;const r=i==="force",t=this.findClosest(e);if(t)return this.shouldAutoRevealItem(t,r)?(await this.view.selectResource(t.resource,i),Promise.resolve(void 0)):void 0;const s={resolveTo:[e],resolveMetadata:this.config.sortOrder===C.Modified},o=this.findClosestRoot(e);if(o)try{const l=await this.fileService.resolve(o.resource,s),u=g.create(this.fileService,this.configurationService,this.filesConfigurationService,l,void 0,s.resolveTo);g.mergeLocalWithDisk(u,o);const a=o.find(e);if(await this.view.refresh(!0,o),a&&!this.shouldAutoRevealItem(a,r))return;await this.view.selectResource(a?a.resource:void 0,i)}catch(l){o.error=l,await this.view.refresh(!1,o)}}async refresh(e=!0){if(!this.view?.hasPhantomElements()&&(this.model.roots.forEach(i=>i.forgetChildren()),this.view)){await this.view.refresh(!0);const i=this.editorService.activeEditor?.resource,r=this.configurationService.getValue().explorer.autoReveal;e&&i&&r&&this.select(i,r)}}async onDidRunOperation(e){const i=this.config.fileNesting.enabled;if(e.isOperation(m.CREATE)||e.isOperation(m.COPY)){const r=e.target,t=E(r.resource),s=this.model.findAll(t);s.length&&await Promise.all(s.map(async o=>{const l=this.config.sortOrder==="modified";if(!o.isDirectoryResolved){const a=await this.fileService.resolve(o.resource,{resolveMetadata:l});if(a){const p=g.create(this.fileService,this.configurationService,this.filesConfigurationService,a,o.parent);g.mergeLocalWithDisk(p,o)}}const u=g.create(this.fileService,this.configurationService,this.filesConfigurationService,r,o.parent);o.removeChild(u),o.addChild(u),await this.view?.refresh(i,o)}))}else if(e.isOperation(m.MOVE)){const r=e.resource,t=e.target,s=E(r),o=E(t.resource),l=this.model.findAll(r);if(l.every(a=>!a.nestedParent)&&this.uriIdentityService.extUri.isEqual(s,o))await Promise.all(l.map(async a=>{a.rename(t),await this.view?.refresh(i,a.parent)}));else{const a=this.model.findAll(o);a.length&&l.length&&await Promise.all(l.map(async(p,n)=>{const f=p.parent,c=p.nestedParent;p.move(a[n]),c&&await this.view?.refresh(!1,c),await this.view?.refresh(!1,f),await this.view?.refresh(i,a[n])}))}}else if(e.isOperation(m.DELETE)){const r=this.model.findAll(e.resource);await Promise.all(r.map(async t=>{if(t.parent){const s=t.parent;s.removeChild(t),this.view?.focusNext();const o=t.nestedParent;o&&(o.removeChild(t),await this.view?.refresh(!1,o)),await this.view?.refresh(i,s),this.view?.getFocus().length===0&&this.view?.focusLast()}}))}}shouldAutoRevealItem(e,i){if(e===void 0||i)return!0;if(this.revealExcludeMatcher.matches(e.resource,s=>!!(e.parent&&e.parent.getChild(s))))return!1;const r=e.root;let t=e.parent;for(;t!==r;){if(t===void 0)return!0;if(this.revealExcludeMatcher.matches(t.resource))return!1;t=t.parent}return!0}async onConfigurationUpdated(e){if(!e.affectsConfiguration("explorer"))return;let i=!1;e.affectsConfiguration("explorer.fileNesting")&&(i=!0);const r=this.configurationService.getValue(),t=r?.explorer?.sortOrder||C.Default;this.config.sortOrder!==t&&(i=this.config.sortOrder!==void 0);const s=r?.explorer?.sortOrderLexicographicOptions||U.Default;this.config.sortOrderLexicographicOptions!==s&&(i=i||this.config.sortOrderLexicographicOptions!==void 0);const o=r?.explorer?.sortOrderReverse||!1;this.config.sortOrderReverse!==o&&(i=i||this.config.sortOrderReverse!==void 0),this.config=r.explorer,i&&await this.refresh()}dispose(){this.disposables.dispose()}};v=x([d(0,M),d(1,k),d(2,D),d(3,V),d(4,_),d(5,N),d(6,B),d(7,G),d(8,Y),d(9,j)],v);function R(h,e,i,r){for(const[t,s]of h.children)if(e.isItemVisible(s)&&(i.some(o=>o.contains(s.resource,...r))||s.isDirectory&&s.isDirectoryResolved&&R(s,e,i,r)))return!0;return!1}function J(h){const e=h&&h.explorer&&h.explorer.autoRevealExclude;return e||{}}export{v as ExplorerService,z as UNDO_REDO_SOURCE};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Event } from "../../../../base/common/event.js";
+import { IWorkspaceContextService } from "../../../../platform/workspace/common/workspace.js";
+import { DisposableStore } from "../../../../base/common/lifecycle.js";
+import { IFilesConfiguration, ISortOrderConfiguration, SortOrder, LexicographicOptions } from "../common/files.js";
+import { ExplorerItem, ExplorerModel } from "../common/explorerModel.js";
+import { URI } from "../../../../base/common/uri.js";
+import { FileOperationEvent, FileOperation, IFileService, FileChangesEvent, FileChangeType, IResolveFileOptions } from "../../../../platform/files/common/files.js";
+import { dirname, basename } from "../../../../base/common/resources.js";
+import { IConfigurationService, IConfigurationChangeEvent } from "../../../../platform/configuration/common/configuration.js";
+import { IClipboardService } from "../../../../platform/clipboard/common/clipboardService.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { IEditableData } from "../../../common/views.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import { IBulkEditService, ResourceFileEdit } from "../../../../editor/browser/services/bulkEditService.js";
+import { UndoRedoSource } from "../../../../platform/undoRedo/common/undoRedo.js";
+import { IExplorerView, IExplorerService } from "./files.js";
+import { IProgressService, ProgressLocation, IProgressCompositeOptions, IProgressOptions } from "../../../../platform/progress/common/progress.js";
+import { CancellationTokenSource } from "../../../../base/common/cancellation.js";
+import { RunOnceScheduler } from "../../../../base/common/async.js";
+import { IHostService } from "../../../services/host/browser/host.js";
+import { IExpression } from "../../../../base/common/glob.js";
+import { ResourceGlobMatcher } from "../../../common/resources.js";
+import { IFilesConfigurationService } from "../../../services/filesConfiguration/common/filesConfigurationService.js";
+const UNDO_REDO_SOURCE = new UndoRedoSource();
+let ExplorerService = class {
+  constructor(fileService, configurationService, contextService, clipboardService, editorService, uriIdentityService, bulkEditService, progressService, hostService, filesConfigurationService) {
+    this.fileService = fileService;
+    this.configurationService = configurationService;
+    this.contextService = contextService;
+    this.clipboardService = clipboardService;
+    this.editorService = editorService;
+    this.uriIdentityService = uriIdentityService;
+    this.bulkEditService = bulkEditService;
+    this.progressService = progressService;
+    this.filesConfigurationService = filesConfigurationService;
+    this.config = this.configurationService.getValue("explorer");
+    this.model = new ExplorerModel(this.contextService, this.uriIdentityService, this.fileService, this.configurationService, this.filesConfigurationService);
+    this.disposables.add(this.model);
+    this.disposables.add(this.fileService.onDidRunOperation((e) => this.onDidRunOperation(e)));
+    this.onFileChangesScheduler = new RunOnceScheduler(async () => {
+      const events = this.fileChangeEvents;
+      this.fileChangeEvents = [];
+      const types = [FileChangeType.DELETED];
+      if (this.config.sortOrder === SortOrder.Modified) {
+        types.push(FileChangeType.UPDATED);
+      }
+      let shouldRefresh = false;
+      this.roots.forEach((r) => {
+        if (this.view && !shouldRefresh) {
+          shouldRefresh = doesFileEventAffect(r, this.view, events, types);
+        }
+      });
+      events.forEach((e) => {
+        if (!shouldRefresh) {
+          for (const resource of e.rawAdded) {
+            const parent = this.model.findClosest(dirname(resource));
+            if (parent && !parent.getChild(basename(resource))) {
+              shouldRefresh = true;
+              break;
+            }
+          }
+        }
+      });
+      if (shouldRefresh) {
+        await this.refresh(false);
+      }
+    }, ExplorerService.EXPLORER_FILE_CHANGES_REACT_DELAY);
+    this.disposables.add(this.fileService.onDidFilesChange((e) => {
+      this.fileChangeEvents.push(e);
+      if (this.editable) {
+        return;
+      }
+      if (!this.onFileChangesScheduler.isScheduled()) {
+        this.onFileChangesScheduler.schedule();
+      }
+    }));
+    this.disposables.add(this.configurationService.onDidChangeConfiguration((e) => this.onConfigurationUpdated(e)));
+    this.disposables.add(Event.any(this.fileService.onDidChangeFileSystemProviderRegistrations, this.fileService.onDidChangeFileSystemProviderCapabilities)(async (e) => {
+      let affected = false;
+      this.model.roots.forEach((r) => {
+        if (r.resource.scheme === e.scheme) {
+          affected = true;
+          r.forgetChildren();
+        }
+      });
+      if (affected) {
+        if (this.view) {
+          await this.view.setTreeInput();
+        }
+      }
+    }));
+    this.disposables.add(this.model.onDidChangeRoots(() => {
+      this.view?.setTreeInput();
+    }));
+    this.disposables.add(hostService.onDidChangeFocus((hasFocus) => {
+      if (hasFocus) {
+        this.refresh(false);
+      }
+    }));
+    this.revealExcludeMatcher = new ResourceGlobMatcher(
+      (uri) => getRevealExcludes(configurationService.getValue({ resource: uri })),
+      (event) => event.affectsConfiguration("explorer.autoRevealExclude"),
+      contextService,
+      configurationService
+    );
+    this.disposables.add(this.revealExcludeMatcher);
+  }
+  static {
+    __name(this, "ExplorerService");
+  }
+  static EXPLORER_FILE_CHANGES_REACT_DELAY = 500;
+  // delay in ms to react to file changes to give our internal events a chance to react first
+  disposables = new DisposableStore();
+  editable;
+  config;
+  cutItems;
+  view;
+  model;
+  onFileChangesScheduler;
+  fileChangeEvents = [];
+  revealExcludeMatcher;
+  get roots() {
+    return this.model.roots;
+  }
+  get sortOrderConfiguration() {
+    return {
+      sortOrder: this.config.sortOrder,
+      lexicographicOptions: this.config.sortOrderLexicographicOptions,
+      reverse: this.config.sortOrderReverse
+    };
+  }
+  registerView(contextProvider) {
+    this.view = contextProvider;
+  }
+  getContext(respectMultiSelection, ignoreNestedChildren = false) {
+    if (!this.view) {
+      return [];
+    }
+    const items = new Set(this.view.getContext(respectMultiSelection));
+    items.forEach((item) => {
+      try {
+        if (respectMultiSelection && !ignoreNestedChildren && this.view?.isItemCollapsed(item) && item.nestedChildren) {
+          for (const child of item.nestedChildren) {
+            items.add(child);
+          }
+        }
+      } catch {
+        return;
+      }
+    });
+    return [...items];
+  }
+  async applyBulkEdit(edit, options) {
+    const cancellationTokenSource = new CancellationTokenSource();
+    const location = options.progressLocation ?? ProgressLocation.Window;
+    let progressOptions;
+    if (location === ProgressLocation.Window) {
+      progressOptions = {
+        location,
+        title: options.progressLabel,
+        cancellable: edit.length > 1
+      };
+    } else {
+      progressOptions = {
+        location,
+        title: options.progressLabel,
+        cancellable: edit.length > 1,
+        delay: 500
+      };
+    }
+    const promise = this.progressService.withProgress(progressOptions, async (progress) => {
+      await this.bulkEditService.apply(edit, {
+        undoRedoSource: UNDO_REDO_SOURCE,
+        label: options.undoLabel,
+        code: "undoredo.explorerOperation",
+        progress,
+        token: cancellationTokenSource.token,
+        confirmBeforeUndo: options.confirmBeforeUndo
+      });
+    }, () => cancellationTokenSource.cancel());
+    await this.progressService.withProgress({ location: ProgressLocation.Explorer, delay: 500 }, () => promise);
+    cancellationTokenSource.dispose();
+  }
+  hasViewFocus() {
+    return !!this.view && this.view.hasFocus();
+  }
+  // IExplorerService methods
+  findClosest(resource) {
+    return this.model.findClosest(resource);
+  }
+  findClosestRoot(resource) {
+    const parentRoots = this.model.roots.filter((r) => this.uriIdentityService.extUri.isEqualOrParent(resource, r.resource)).sort((first, second) => second.resource.path.length - first.resource.path.length);
+    return parentRoots.length ? parentRoots[0] : null;
+  }
+  async setEditable(stat, data) {
+    if (!this.view) {
+      return;
+    }
+    if (!data) {
+      this.editable = void 0;
+    } else {
+      this.editable = { stat, data };
+    }
+    const isEditing = this.isEditable(stat);
+    try {
+      await this.view.setEditable(stat, isEditing);
+    } catch {
+      return;
+    }
+    if (!this.editable && this.fileChangeEvents.length && !this.onFileChangesScheduler.isScheduled()) {
+      this.onFileChangesScheduler.schedule();
+    }
+  }
+  async setToCopy(items, cut) {
+    const previouslyCutItems = this.cutItems;
+    this.cutItems = cut ? items : void 0;
+    await this.clipboardService.writeResources(items.map((s) => s.resource));
+    this.view?.itemsCopied(items, cut, previouslyCutItems);
+  }
+  isCut(item) {
+    return !!this.cutItems && this.cutItems.some((i) => this.uriIdentityService.extUri.isEqual(i.resource, item.resource));
+  }
+  getEditable() {
+    return this.editable;
+  }
+  getEditableData(stat) {
+    return this.editable && this.editable.stat === stat ? this.editable.data : void 0;
+  }
+  isEditable(stat) {
+    return !!this.editable && (this.editable.stat === stat || !stat);
+  }
+  async select(resource, reveal) {
+    if (!this.view) {
+      return;
+    }
+    const ignoreRevealExcludes = reveal === "force";
+    const fileStat = this.findClosest(resource);
+    if (fileStat) {
+      if (!this.shouldAutoRevealItem(fileStat, ignoreRevealExcludes)) {
+        return;
+      }
+      await this.view.selectResource(fileStat.resource, reveal);
+      return Promise.resolve(void 0);
+    }
+    const options = { resolveTo: [resource], resolveMetadata: this.config.sortOrder === SortOrder.Modified };
+    const root = this.findClosestRoot(resource);
+    if (!root) {
+      return void 0;
+    }
+    try {
+      const stat = await this.fileService.resolve(root.resource, options);
+      const modelStat = ExplorerItem.create(this.fileService, this.configurationService, this.filesConfigurationService, stat, void 0, options.resolveTo);
+      ExplorerItem.mergeLocalWithDisk(modelStat, root);
+      const item = root.find(resource);
+      await this.view.refresh(true, root);
+      if (item && !this.shouldAutoRevealItem(item, ignoreRevealExcludes)) {
+        return;
+      }
+      await this.view.selectResource(item ? item.resource : void 0, reveal);
+    } catch (error) {
+      root.error = error;
+      await this.view.refresh(false, root);
+    }
+  }
+  async refresh(reveal = true) {
+    if (this.view?.hasPhantomElements()) {
+      return;
+    }
+    this.model.roots.forEach((r) => r.forgetChildren());
+    if (this.view) {
+      await this.view.refresh(true);
+      const resource = this.editorService.activeEditor?.resource;
+      const autoReveal = this.configurationService.getValue().explorer.autoReveal;
+      if (reveal && resource && autoReveal) {
+        this.select(resource, autoReveal);
+      }
+    }
+  }
+  // File events
+  async onDidRunOperation(e) {
+    const shouldDeepRefresh = this.config.fileNesting.enabled;
+    if (e.isOperation(FileOperation.CREATE) || e.isOperation(FileOperation.COPY)) {
+      const addedElement = e.target;
+      const parentResource = dirname(addedElement.resource);
+      const parents = this.model.findAll(parentResource);
+      if (parents.length) {
+        await Promise.all(parents.map(async (p) => {
+          const resolveMetadata = this.config.sortOrder === `modified`;
+          if (!p.isDirectoryResolved) {
+            const stat = await this.fileService.resolve(p.resource, { resolveMetadata });
+            if (stat) {
+              const modelStat = ExplorerItem.create(this.fileService, this.configurationService, this.filesConfigurationService, stat, p.parent);
+              ExplorerItem.mergeLocalWithDisk(modelStat, p);
+            }
+          }
+          const childElement = ExplorerItem.create(this.fileService, this.configurationService, this.filesConfigurationService, addedElement, p.parent);
+          p.removeChild(childElement);
+          p.addChild(childElement);
+          await this.view?.refresh(shouldDeepRefresh, p);
+        }));
+      }
+    } else if (e.isOperation(FileOperation.MOVE)) {
+      const oldResource = e.resource;
+      const newElement = e.target;
+      const oldParentResource = dirname(oldResource);
+      const newParentResource = dirname(newElement.resource);
+      const modelElements = this.model.findAll(oldResource);
+      const sameParentMove = modelElements.every((e2) => !e2.nestedParent) && this.uriIdentityService.extUri.isEqual(oldParentResource, newParentResource);
+      if (sameParentMove) {
+        await Promise.all(modelElements.map(async (modelElement) => {
+          modelElement.rename(newElement);
+          await this.view?.refresh(shouldDeepRefresh, modelElement.parent);
+        }));
+      } else {
+        const newParents = this.model.findAll(newParentResource);
+        if (newParents.length && modelElements.length) {
+          await Promise.all(modelElements.map(async (modelElement, index) => {
+            const oldParent = modelElement.parent;
+            const oldNestedParent = modelElement.nestedParent;
+            modelElement.move(newParents[index]);
+            if (oldNestedParent) {
+              await this.view?.refresh(false, oldNestedParent);
+            }
+            await this.view?.refresh(false, oldParent);
+            await this.view?.refresh(shouldDeepRefresh, newParents[index]);
+          }));
+        }
+      }
+    } else if (e.isOperation(FileOperation.DELETE)) {
+      const modelElements = this.model.findAll(e.resource);
+      await Promise.all(modelElements.map(async (modelElement) => {
+        if (modelElement.parent) {
+          const parent = modelElement.parent;
+          parent.removeChild(modelElement);
+          this.view?.focusNext();
+          const oldNestedParent = modelElement.nestedParent;
+          if (oldNestedParent) {
+            oldNestedParent.removeChild(modelElement);
+            await this.view?.refresh(false, oldNestedParent);
+          }
+          await this.view?.refresh(shouldDeepRefresh, parent);
+          if (this.view?.getFocus().length === 0) {
+            this.view?.focusLast();
+          }
+        }
+      }));
+    }
+  }
+  // Check if an item matches a explorer.autoRevealExclude pattern
+  shouldAutoRevealItem(item, ignore) {
+    if (item === void 0 || ignore) {
+      return true;
+    }
+    if (this.revealExcludeMatcher.matches(item.resource, (name) => !!(item.parent && item.parent.getChild(name)))) {
+      return false;
+    }
+    const root = item.root;
+    let currentItem = item.parent;
+    while (currentItem !== root) {
+      if (currentItem === void 0) {
+        return true;
+      }
+      if (this.revealExcludeMatcher.matches(currentItem.resource)) {
+        return false;
+      }
+      currentItem = currentItem.parent;
+    }
+    return true;
+  }
+  async onConfigurationUpdated(event) {
+    if (!event.affectsConfiguration("explorer")) {
+      return;
+    }
+    let shouldRefresh = false;
+    if (event.affectsConfiguration("explorer.fileNesting")) {
+      shouldRefresh = true;
+    }
+    const configuration = this.configurationService.getValue();
+    const configSortOrder = configuration?.explorer?.sortOrder || SortOrder.Default;
+    if (this.config.sortOrder !== configSortOrder) {
+      shouldRefresh = this.config.sortOrder !== void 0;
+    }
+    const configLexicographicOptions = configuration?.explorer?.sortOrderLexicographicOptions || LexicographicOptions.Default;
+    if (this.config.sortOrderLexicographicOptions !== configLexicographicOptions) {
+      shouldRefresh = shouldRefresh || this.config.sortOrderLexicographicOptions !== void 0;
+    }
+    const sortOrderReverse = configuration?.explorer?.sortOrderReverse || false;
+    if (this.config.sortOrderReverse !== sortOrderReverse) {
+      shouldRefresh = shouldRefresh || this.config.sortOrderReverse !== void 0;
+    }
+    this.config = configuration.explorer;
+    if (shouldRefresh) {
+      await this.refresh();
+    }
+  }
+  dispose() {
+    this.disposables.dispose();
+  }
+};
+ExplorerService = __decorateClass([
+  __decorateParam(0, IFileService),
+  __decorateParam(1, IConfigurationService),
+  __decorateParam(2, IWorkspaceContextService),
+  __decorateParam(3, IClipboardService),
+  __decorateParam(4, IEditorService),
+  __decorateParam(5, IUriIdentityService),
+  __decorateParam(6, IBulkEditService),
+  __decorateParam(7, IProgressService),
+  __decorateParam(8, IHostService),
+  __decorateParam(9, IFilesConfigurationService)
+], ExplorerService);
+function doesFileEventAffect(item, view, events, types) {
+  for (const [_name, child] of item.children) {
+    if (view.isItemVisible(child)) {
+      if (events.some((e) => e.contains(child.resource, ...types))) {
+        return true;
+      }
+      if (child.isDirectory && child.isDirectoryResolved) {
+        if (doesFileEventAffect(child, view, events, types)) {
+          return true;
+        }
+      }
+    }
+  }
+  return false;
+}
+__name(doesFileEventAffect, "doesFileEventAffect");
+function getRevealExcludes(configuration) {
+  const revealExcludes = configuration && configuration.explorer && configuration.explorer.autoRevealExclude;
+  if (!revealExcludes) {
+    return {};
+  }
+  return revealExcludes;
+}
+__name(getRevealExcludes, "getRevealExcludes");
+export {
+  ExplorerService,
+  UNDO_REDO_SOURCE
+};
+//# sourceMappingURL=explorerService.js.map

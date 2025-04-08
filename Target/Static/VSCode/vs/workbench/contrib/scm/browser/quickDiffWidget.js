@@ -1,4 +1,439 @@
-var ue=Object.defineProperty;var ge=Object.getOwnPropertyDescriptor;var v=(d,o,e,i)=>{for(var t=i>1?void 0:i?ge(o,e):o,n=d.length-1,s;n>=0;n--)(s=d[n])&&(t=(i?s(o,e,t):s(t))||t);return i&&t&&ue(o,e,t),t},l=(d,o)=>(e,i)=>o(e,i,d);import*as c from"../../../../nls.js";import*as W from"../../../../base/browser/dom.js";import*as me from"../../../../base/browser/domStylesheets.js";import{Action as L,ActionRunner as pe}from"../../../../base/common/actions.js";import{Event as x}from"../../../../base/common/event.js";import{IContextViewService as ve}from"../../../../platform/contextview/browser/contextView.js";import"../../../../base/browser/ui/selectBox/selectBox.js";import{SelectActionViewItem as be}from"../../../../base/browser/ui/actionbar/actionViewItems.js";import{defaultSelectBoxStyles as Ce}from"../../../../platform/theme/browser/defaultStyles.js";import{IThemeService as U}from"../../../../platform/theme/common/themeService.js";import{peekViewBorder as Ie,peekViewTitleBackground as j,peekViewTitleForeground as ye,peekViewTitleInfoForeground as Se,PeekViewWidget as xe}from"../../../../editor/contrib/peekView/browser/peekView.js";import{editorBackground as we}from"../../../../platform/theme/common/colorRegistry.js";import{IMenuService as Ee,MenuId as R,MenuItemAction as De,MenuRegistry as X}from"../../../../platform/actions/common/actions.js";import{MouseTargetType as $}from"../../../../editor/browser/editorBrowser.js";import{EditorAction as w,registerEditorAction as E}from"../../../../editor/browser/editorExtensions.js";import{IInstantiationService as O}from"../../../../platform/instantiation/common/instantiation.js";import{IKeybindingService as Me}from"../../../../platform/keybinding/common/keybinding.js";import{EmbeddedDiffEditorWidget as J}from"../../../../editor/browser/widget/diffEditor/embeddedDiffEditorWidget.js";import{ScrollType as Y}from"../../../../editor/common/editorCommon.js";import{IQuickDiffModelService as P}from"./quickDiffModel.js";import{Disposable as q,DisposableStore as Z,toDisposable as ke}from"../../../../base/common/lifecycle.js";import{ContextKeyExpr as Q,IContextKeyService as ee,RawContextKey as Ae}from"../../../../platform/contextkey/common/contextkey.js";import{IConfigurationService as Te}from"../../../../platform/configuration/common/configuration.js";import{rot as ie}from"../../../../base/common/numbers.js";import"../../../../base/common/sequence.js";import{ChangeType as F,getChangeHeight as Ne,getChangeType as te,getChangeTypeColor as _e,getModifiedEndLineNumber as Le,lineIntersectsChange as Re}from"../common/quickDiff.js";import{ICodeEditorService as B}from"../../../../editor/browser/services/codeEditorService.js";import{TextCompareEditorActiveContext as D}from"../../../common/contextkeys.js";import{EditorContextKeys as M}from"../../../../editor/common/editorContextKeys.js";import{KeybindingsRegistry as Oe,KeybindingWeight as b}from"../../../../platform/keybinding/common/keybindingsRegistry.js";import"../../../../editor/common/diff/legacyLinesDiffComputer.js";import{AccessibilitySignal as z,IAccessibilitySignalService as oe}from"../../../../platform/accessibilitySignal/browser/accessibilitySignalService.js";import{IAccessibilityService as re}from"../../../../platform/accessibility/common/accessibility.js";import{Iterable as k}from"../../../../base/common/iterator.js";import{basename as Pe}from"../../../../base/common/resources.js";import{EditorOption as qe}from"../../../../editor/common/config/editorOptions.js";import{Position as ne}from"../../../../editor/common/core/position.js";import"../../../../editor/common/core/range.js";import{getFlatActionBarActions as Qe}from"../../../../platform/actions/browser/menuEntryActionViewItem.js";import"../../../../base/browser/ui/actionbar/actionbar.js";import{ThemeIcon as G}from"../../../../base/common/themables.js";import{gotoNextLocation as Fe,gotoPreviousLocation as Be}from"../../../../platform/theme/common/iconRegistry.js";import{Codicon as ze}from"../../../../base/common/codicons.js";import{Color as se}from"../../../../base/common/color.js";import{KeyCode as p,KeyMod as g}from"../../../../base/common/keyCodes.js";import{getOuterEditor as Ge}from"../../../../editor/browser/widget/codeEditor/embeddedCodeEditorWidget.js";import{quickDiffDecorationCount as de}from"./quickDiffDecorator.js";const ae=new Ae("dirtyDiffVisible",!1);let C=class extends be{optionsItems;constructor(o,e,i,t,n){const s=e.map(S=>({provider:S,text:S}));let r=e.indexOf(i);r===-1&&(r=0);const a={...Ce},u=n.getColorTheme(),h=u.getColor(we),T=u.getColor(j)?.makeOpaque(h)??h;a.selectBackground=T.lighten(.6).toString(),super(null,o,s,r,t,a,{ariaLabel:c.localize("remotes","Switch quick diff base")}),this.optionsItems=s}setSelection(o){const e=this.optionsItems.findIndex(i=>i.provider===o);this.select(e)}getActionContext(o,e){return this.optionsItems[e]}render(o){super.render(o),this.setFocusable(!0)}};C=v([l(3,ve),l(4,U)],C);class A extends L{constructor(e){super(A.ID,A.LABEL,void 0,void 0);this.callback=e}static ID="quickDiff.base.switch";static LABEL=c.localize("quickDiff.base.switch","Switch Quick Diff Base");async run(e){return this.callback(e)}}class Ke extends pe{runAction(o,e){return o instanceof De?o.run(...e):super.runAction(o,e)}}let m=class extends L{editor;action;instantiationService;constructor(o,e,i,t,n){const s=t.lookupKeybinding(e.id),r=e.label+(s?` (${s.getLabel()})`:"");super(e.id,r,i),this.instantiationService=n,this.action=e,this.editor=o}run(){return Promise.resolve(this.instantiationService.invokeFunction(o=>this.action.run(o,this.editor,null)))}};m=v([l(3,Me),l(4,O)],m);let I=class extends xe{constructor(e,i,t,n,s,r){super(e,{isResizeable:!0,frameWidth:1,keepEditorSelection:!0,className:"dirty-diff"},n);this.model=i;this.themeService=t;this.menuService=s;this.contextKeyService=r;this._disposables.add(t.onDidColorThemeChange(this._applyTheme,this)),this._applyTheme(t.getColorTheme()),k.isEmpty(this.model.originalTextModels)||(r=r.createOverlay([["originalResourceScheme",k.first(this.model.originalTextModels)?.uri.scheme],["originalResourceSchemes",k.map(this.model.originalTextModels,a=>a.uri.scheme)]])),this.create(),e.hasModel()?this.title=Pe(e.getModel().uri):this.title="",this.setTitle(this.title)}diffEditor;title;menu;_index=0;_provider="";change;height=void 0;dropdown;dropdownContainer;get provider(){return this._provider}get index(){return this._index}get visibleRange(){const e=this.diffEditor.getModifiedEditor().getVisibleRanges();return e.length>=0?e[0]:void 0}showChange(e,i=!0){const t=this.model.changes[e],n=t.change;if(this._index=e,this.contextKeyService.createKey("originalResourceScheme",this.model.changes[e].original.scheme),this.updateActions(),this._provider=t.label,this.change=n,k.isEmpty(this.model.originalTextModels))return;x.once(this.diffEditor.onDidUpdateDiff)(()=>setTimeout(()=>this.revealChange(n),0));const r=this.model.getDiffEditorModel(t.original);if(!r)return;this.diffEditor.setModel(r),this.dropdown?.setSelection(t.label);const a=new ne(Le(n),1),u=this.editor.getOption(qe.lineHeight),h=this.editor.getLayoutInfo().height,K=Math.floor(h/u),T=Math.min(Ne(n)+8,Math.floor(K/3));this.renderTitle(t.label);const S=te(n),V=_e(this.themeService.getColorTheme(),S);this.style({frameColor:V,arrowColor:V});const N=[];let H=e;for(const _ of this.model.changes)_.label===this.model.changes[this._index].label&&(N.push(_.change),t===_&&(H=N.length-1));this._actionbarWidget.context=[r.modified.uri,N,H],i&&(this.show(a,T),this.editor.setPosition(a),this.editor.focus())}renderTitle(e){const i=this.model.quickDiffChanges.get(e),t=i.indexOf(this._index);let n;this.shouldUseDropdown()?(n=this.model.changes.length>1?c.localize("multiChanges","{0} of {1} changes",t+1,i.length):c.localize("multiChange","{0} of {1} change",t+1,i.length),this.dropdownContainer.style.display="inherit"):(n=this.model.changes.length>1?c.localize("changes","{0} - {1} of {2} changes",e,t+1,i.length):c.localize("change","{0} - {1} of {2} change",e,t+1,i.length),this.dropdownContainer.style.display="none"),this.setTitle(this.title,n)}switchQuickDiff(e){const i=e?.provider;if(i===this.model.changes[this._index].label)return;let t=this._index<this.model.changes.length-1?this._index+1:0;for(let r=t;r!==this._index;r<this.model.changes.length-1?r++:r=0)if(this.model.changes[r].label===i){t=r;break}let n=this._index>0?this._index-1:this.model.changes.length-1;for(let r=n;r!==this._index;r>=0?r--:r=this.model.changes.length-1)if(this.model.changes[r].label===i){n=r;break}const s=Math.abs(this.model.changes[t].change.modifiedEndLineNumber-this.model.changes[this._index].change.modifiedEndLineNumber)<Math.abs(this.model.changes[n].change.modifiedEndLineNumber-this.model.changes[this._index].change.modifiedEndLineNumber)?t:n;this.showChange(s,!1)}shouldUseDropdown(){const e=this.model.quickDiffs.filter(t=>t.visible);return this.model.getQuickDiffResults().filter(t=>e.some(n=>n.label===t.label)).filter(t=>t.changes.length>0).length>1}updateActions(){if(!this._actionbarWidget)return;const e=this.instantiationService.createInstance(m,this.editor,new le(this.editor),G.asClassName(Be)),i=this.instantiationService.createInstance(m,this.editor,new ce(this.editor),G.asClassName(Fe));this._disposables.add(e),this._disposables.add(i),this.menu&&this.menu.dispose(),this.menu=this.menuService.createMenu(R.SCMChangeContext,this.contextKeyService);const t=Qe(this.menu.getActions({shouldForwardArgs:!0}));this._actionbarWidget.clear(),this._actionbarWidget.push(t.reverse(),{label:!1,icon:!0}),this._actionbarWidget.push([i,e],{label:!1,icon:!0}),this._actionbarWidget.push(this._disposables.add(new L("peekview.close",c.localize("label.close","Close"),G.asClassName(ze.close),!0,()=>this.dispose())),{label:!1,icon:!0})}_fillHead(e){super._fillHead(e,!0);const i=this.model.quickDiffs.filter(t=>t.visible);this.dropdownContainer=W.prepend(this._titleElement,W.$(".dropdown")),this.dropdown=this.instantiationService.createInstance(C,new A(t=>this.switchQuickDiff(t)),i.map(t=>t.label),this.model.changes[this._index].label),this.dropdown.render(this.dropdownContainer),this.updateActions()}_getActionBarOptions(){const e=new Ke;return this._disposables.add(e),this._disposables.add(e.onDidRun(i=>{!(i.action instanceof m)&&!i.error&&this.dispose()})),{...super._getActionBarOptions(),actionRunner:e}}_fillBody(e){const i={scrollBeyondLastLine:!0,scrollbar:{verticalScrollbarSize:14,horizontal:"auto",useShadows:!0,verticalHasArrows:!1,horizontalHasArrows:!1},overviewRulerLanes:2,fixedOverflowWidgets:!0,minimap:{enabled:!1},renderSideBySide:!1,readOnly:!1,renderIndicators:!1,diffAlgorithm:"advanced",ignoreTrimWhitespace:!1,stickyScroll:{enabled:!1}};this.diffEditor=this.instantiationService.createInstance(J,e,i,{},this.editor),this._disposables.add(this.diffEditor)}_onWidth(e){typeof this.height>"u"||this.diffEditor.layout({height:this.height,width:e})}_doLayoutBody(e,i){super._doLayoutBody(e,i),this.diffEditor.layout({height:e,width:i}),typeof this.height>"u"&&this.change&&this.revealChange(this.change),this.height=e}revealChange(e){let i,t;e.modifiedEndLineNumber===0?(i=e.modifiedStartLineNumber,t=e.modifiedStartLineNumber+1):e.originalEndLineNumber>0?(i=e.modifiedStartLineNumber-1,t=e.modifiedEndLineNumber+1):(i=e.modifiedStartLineNumber,t=e.modifiedEndLineNumber),this.diffEditor.revealLinesInCenter(i,t,Y.Immediate)}_applyTheme(e){const i=e.getColor(Ie)||se.transparent;this.style({arrowColor:i,frameColor:i,headerBackgroundColor:e.getColor(j)||se.transparent,primaryHeadingColor:e.getColor(ye),secondaryHeadingColor:e.getColor(Se)})}revealRange(e){this.editor.revealLineInCenterIfOutsideViewport(e.endLineNumber,Y.Smooth)}hasFocus(){return this.diffEditor.hasTextFocus()}dispose(){super.dispose(),this.menu?.dispose()}};I=v([l(2,U),l(3,O),l(4,Ee),l(5,ee)],I);let f=class extends q{constructor(e,i,t,n,s){super();this.editor=e;this.configurationService=t;this.quickDiffModelService=n;this.instantiationService=s;if(this.enabled=!i.getContextKeyValue("isInDiffEditor"),this.stylesheet=me.createStyleSheet(void 0,void 0,this._store),this.enabled){this.isQuickDiffVisible=ae.bindTo(i),this._register(e.onDidChangeModel(()=>this.close()));const r=x.filter(t.onDidChangeConfiguration,a=>a.affectsConfiguration("scm.diffDecorationsGutterAction"));this._register(r(this.onDidChangeGutterAction,this)),this.onDidChangeGutterAction()}}static ID="editor.contrib.quickdiff";static get(e){return e.getContribution(f.ID)}model=null;widget=null;isQuickDiffVisible;session=q.None;mouseDownInfo=null;enabled=!1;gutterActionDisposables=new Z;stylesheet;onDidChangeGutterAction(){const e=this.configurationService.getValue("scm.diffDecorationsGutterAction");this.gutterActionDisposables.clear(),e==="diff"?(this.gutterActionDisposables.add(this.editor.onMouseDown(i=>this.onEditorMouseDown(i))),this.gutterActionDisposables.add(this.editor.onMouseUp(i=>this.onEditorMouseUp(i))),this.stylesheet.textContent=`
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import * as nls from "../../../../nls.js";
+import * as dom from "../../../../base/browser/dom.js";
+import * as domStylesheetsJs from "../../../../base/browser/domStylesheets.js";
+import { Action, ActionRunner, IAction } from "../../../../base/common/actions.js";
+import { Event } from "../../../../base/common/event.js";
+import { IContextViewService } from "../../../../platform/contextview/browser/contextView.js";
+import { ISelectOptionItem } from "../../../../base/browser/ui/selectBox/selectBox.js";
+import { SelectActionViewItem } from "../../../../base/browser/ui/actionbar/actionViewItems.js";
+import { defaultSelectBoxStyles } from "../../../../platform/theme/browser/defaultStyles.js";
+import { IColorTheme, IThemeService } from "../../../../platform/theme/common/themeService.js";
+import { peekViewBorder, peekViewTitleBackground, peekViewTitleForeground, peekViewTitleInfoForeground, PeekViewWidget } from "../../../../editor/contrib/peekView/browser/peekView.js";
+import { editorBackground } from "../../../../platform/theme/common/colorRegistry.js";
+import { IMenu, IMenuService, MenuId, MenuItemAction, MenuRegistry } from "../../../../platform/actions/common/actions.js";
+import { ICodeEditor, IEditorMouseEvent, MouseTargetType } from "../../../../editor/browser/editorBrowser.js";
+import { EditorAction, registerEditorAction } from "../../../../editor/browser/editorExtensions.js";
+import { IInstantiationService, ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { EmbeddedDiffEditorWidget } from "../../../../editor/browser/widget/diffEditor/embeddedDiffEditorWidget.js";
+import { IEditorContribution, ScrollType } from "../../../../editor/common/editorCommon.js";
+import { IQuickDiffModelService, QuickDiffModel } from "./quickDiffModel.js";
+import { Disposable, DisposableStore, IDisposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { ContextKeyExpr, IContextKey, IContextKeyService, RawContextKey } from "../../../../platform/contextkey/common/contextkey.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { rot } from "../../../../base/common/numbers.js";
+import { ISplice } from "../../../../base/common/sequence.js";
+import { ChangeType, getChangeHeight, getChangeType, getChangeTypeColor, getModifiedEndLineNumber, lineIntersectsChange, QuickDiffChange } from "../common/quickDiff.js";
+import { ICodeEditorService } from "../../../../editor/browser/services/codeEditorService.js";
+import { TextCompareEditorActiveContext } from "../../../common/contextkeys.js";
+import { EditorContextKeys } from "../../../../editor/common/editorContextKeys.js";
+import { KeybindingsRegistry, KeybindingWeight } from "../../../../platform/keybinding/common/keybindingsRegistry.js";
+import { IChange } from "../../../../editor/common/diff/legacyLinesDiffComputer.js";
+import { AccessibilitySignal, IAccessibilitySignalService } from "../../../../platform/accessibilitySignal/browser/accessibilitySignalService.js";
+import { IAccessibilityService } from "../../../../platform/accessibility/common/accessibility.js";
+import { Iterable } from "../../../../base/common/iterator.js";
+import { basename } from "../../../../base/common/resources.js";
+import { EditorOption, IDiffEditorOptions } from "../../../../editor/common/config/editorOptions.js";
+import { Position } from "../../../../editor/common/core/position.js";
+import { Range } from "../../../../editor/common/core/range.js";
+import { getFlatActionBarActions } from "../../../../platform/actions/browser/menuEntryActionViewItem.js";
+import { IActionBarOptions } from "../../../../base/browser/ui/actionbar/actionbar.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { gotoNextLocation, gotoPreviousLocation } from "../../../../platform/theme/common/iconRegistry.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { Color } from "../../../../base/common/color.js";
+import { KeyCode, KeyMod } from "../../../../base/common/keyCodes.js";
+import { getOuterEditor } from "../../../../editor/browser/widget/codeEditor/embeddedCodeEditorWidget.js";
+import { quickDiffDecorationCount } from "./quickDiffDecorator.js";
+const isQuickDiffVisible = new RawContextKey("dirtyDiffVisible", false);
+let QuickDiffPickerViewItem = class extends SelectActionViewItem {
+  static {
+    __name(this, "QuickDiffPickerViewItem");
+  }
+  optionsItems;
+  constructor(action, providers, selected, contextViewService, themeService) {
+    const items = providers.map((provider) => ({ provider, text: provider }));
+    let startingSelection = providers.indexOf(selected);
+    if (startingSelection === -1) {
+      startingSelection = 0;
+    }
+    const styles = { ...defaultSelectBoxStyles };
+    const theme = themeService.getColorTheme();
+    const editorBackgroundColor = theme.getColor(editorBackground);
+    const peekTitleColor = theme.getColor(peekViewTitleBackground);
+    const opaqueTitleColor = peekTitleColor?.makeOpaque(editorBackgroundColor) ?? editorBackgroundColor;
+    styles.selectBackground = opaqueTitleColor.lighten(0.6).toString();
+    super(null, action, items, startingSelection, contextViewService, styles, { ariaLabel: nls.localize("remotes", "Switch quick diff base") });
+    this.optionsItems = items;
+  }
+  setSelection(provider) {
+    const index = this.optionsItems.findIndex((item) => item.provider === provider);
+    this.select(index);
+  }
+  getActionContext(_, index) {
+    return this.optionsItems[index];
+  }
+  render(container) {
+    super.render(container);
+    this.setFocusable(true);
+  }
+};
+QuickDiffPickerViewItem = __decorateClass([
+  __decorateParam(3, IContextViewService),
+  __decorateParam(4, IThemeService)
+], QuickDiffPickerViewItem);
+class QuickDiffPickerBaseAction extends Action {
+  constructor(callback) {
+    super(QuickDiffPickerBaseAction.ID, QuickDiffPickerBaseAction.LABEL, void 0, void 0);
+    this.callback = callback;
+  }
+  static {
+    __name(this, "QuickDiffPickerBaseAction");
+  }
+  static ID = "quickDiff.base.switch";
+  static LABEL = nls.localize("quickDiff.base.switch", "Switch Quick Diff Base");
+  async run(event) {
+    return this.callback(event);
+  }
+}
+class QuickDiffWidgetActionRunner extends ActionRunner {
+  static {
+    __name(this, "QuickDiffWidgetActionRunner");
+  }
+  runAction(action, context) {
+    if (action instanceof MenuItemAction) {
+      return action.run(...context);
+    }
+    return super.runAction(action, context);
+  }
+}
+let QuickDiffWidgetEditorAction = class extends Action {
+  static {
+    __name(this, "QuickDiffWidgetEditorAction");
+  }
+  editor;
+  action;
+  instantiationService;
+  constructor(editor, action, cssClass, keybindingService, instantiationService) {
+    const keybinding = keybindingService.lookupKeybinding(action.id);
+    const label = action.label + (keybinding ? ` (${keybinding.getLabel()})` : "");
+    super(action.id, label, cssClass);
+    this.instantiationService = instantiationService;
+    this.action = action;
+    this.editor = editor;
+  }
+  run() {
+    return Promise.resolve(this.instantiationService.invokeFunction((accessor) => this.action.run(accessor, this.editor, null)));
+  }
+};
+QuickDiffWidgetEditorAction = __decorateClass([
+  __decorateParam(3, IKeybindingService),
+  __decorateParam(4, IInstantiationService)
+], QuickDiffWidgetEditorAction);
+let QuickDiffWidget = class extends PeekViewWidget {
+  constructor(editor, model, themeService, instantiationService, menuService, contextKeyService) {
+    super(editor, { isResizeable: true, frameWidth: 1, keepEditorSelection: true, className: "dirty-diff" }, instantiationService);
+    this.model = model;
+    this.themeService = themeService;
+    this.menuService = menuService;
+    this.contextKeyService = contextKeyService;
+    this._disposables.add(themeService.onDidColorThemeChange(this._applyTheme, this));
+    this._applyTheme(themeService.getColorTheme());
+    if (!Iterable.isEmpty(this.model.originalTextModels)) {
+      contextKeyService = contextKeyService.createOverlay([
+        ["originalResourceScheme", Iterable.first(this.model.originalTextModels)?.uri.scheme],
+        ["originalResourceSchemes", Iterable.map(this.model.originalTextModels, (textModel) => textModel.uri.scheme)]
+      ]);
+    }
+    this.create();
+    if (editor.hasModel()) {
+      this.title = basename(editor.getModel().uri);
+    } else {
+      this.title = "";
+    }
+    this.setTitle(this.title);
+  }
+  static {
+    __name(this, "QuickDiffWidget");
+  }
+  diffEditor;
+  title;
+  menu;
+  _index = 0;
+  _provider = "";
+  change;
+  height = void 0;
+  dropdown;
+  dropdownContainer;
+  get provider() {
+    return this._provider;
+  }
+  get index() {
+    return this._index;
+  }
+  get visibleRange() {
+    const visibleRanges = this.diffEditor.getModifiedEditor().getVisibleRanges();
+    return visibleRanges.length >= 0 ? visibleRanges[0] : void 0;
+  }
+  showChange(index, usePosition = true) {
+    const labeledChange = this.model.changes[index];
+    const change = labeledChange.change;
+    this._index = index;
+    this.contextKeyService.createKey("originalResourceScheme", this.model.changes[index].original.scheme);
+    this.updateActions();
+    this._provider = labeledChange.label;
+    this.change = change;
+    if (Iterable.isEmpty(this.model.originalTextModels)) {
+      return;
+    }
+    const onFirstDiffUpdate = Event.once(this.diffEditor.onDidUpdateDiff);
+    onFirstDiffUpdate(() => setTimeout(() => this.revealChange(change), 0));
+    const diffEditorModel = this.model.getDiffEditorModel(labeledChange.original);
+    if (!diffEditorModel) {
+      return;
+    }
+    this.diffEditor.setModel(diffEditorModel);
+    this.dropdown?.setSelection(labeledChange.label);
+    const position = new Position(getModifiedEndLineNumber(change), 1);
+    const lineHeight = this.editor.getOption(EditorOption.lineHeight);
+    const editorHeight = this.editor.getLayoutInfo().height;
+    const editorHeightInLines = Math.floor(editorHeight / lineHeight);
+    const height = Math.min(getChangeHeight(change) + /* padding */
+    8, Math.floor(editorHeightInLines / 3));
+    this.renderTitle(labeledChange.label);
+    const changeType = getChangeType(change);
+    const changeTypeColor = getChangeTypeColor(this.themeService.getColorTheme(), changeType);
+    this.style({ frameColor: changeTypeColor, arrowColor: changeTypeColor });
+    const providerSpecificChanges = [];
+    let contextIndex = index;
+    for (const change2 of this.model.changes) {
+      if (change2.label === this.model.changes[this._index].label) {
+        providerSpecificChanges.push(change2.change);
+        if (labeledChange === change2) {
+          contextIndex = providerSpecificChanges.length - 1;
+        }
+      }
+    }
+    this._actionbarWidget.context = [diffEditorModel.modified.uri, providerSpecificChanges, contextIndex];
+    if (usePosition) {
+      this.show(position, height);
+      this.editor.setPosition(position);
+      this.editor.focus();
+    }
+  }
+  renderTitle(label) {
+    const providerChanges = this.model.quickDiffChanges.get(label);
+    const providerIndex = providerChanges.indexOf(this._index);
+    let detail;
+    if (!this.shouldUseDropdown()) {
+      detail = this.model.changes.length > 1 ? nls.localize("changes", "{0} - {1} of {2} changes", label, providerIndex + 1, providerChanges.length) : nls.localize("change", "{0} - {1} of {2} change", label, providerIndex + 1, providerChanges.length);
+      this.dropdownContainer.style.display = "none";
+    } else {
+      detail = this.model.changes.length > 1 ? nls.localize("multiChanges", "{0} of {1} changes", providerIndex + 1, providerChanges.length) : nls.localize("multiChange", "{0} of {1} change", providerIndex + 1, providerChanges.length);
+      this.dropdownContainer.style.display = "inherit";
+    }
+    this.setTitle(this.title, detail);
+  }
+  switchQuickDiff(event) {
+    const newProvider = event?.provider;
+    if (newProvider === this.model.changes[this._index].label) {
+      return;
+    }
+    let closestGreaterIndex = this._index < this.model.changes.length - 1 ? this._index + 1 : 0;
+    for (let i = closestGreaterIndex; i !== this._index; i < this.model.changes.length - 1 ? i++ : i = 0) {
+      if (this.model.changes[i].label === newProvider) {
+        closestGreaterIndex = i;
+        break;
+      }
+    }
+    let closestLesserIndex = this._index > 0 ? this._index - 1 : this.model.changes.length - 1;
+    for (let i = closestLesserIndex; i !== this._index; i >= 0 ? i-- : i = this.model.changes.length - 1) {
+      if (this.model.changes[i].label === newProvider) {
+        closestLesserIndex = i;
+        break;
+      }
+    }
+    const closestIndex = Math.abs(this.model.changes[closestGreaterIndex].change.modifiedEndLineNumber - this.model.changes[this._index].change.modifiedEndLineNumber) < Math.abs(this.model.changes[closestLesserIndex].change.modifiedEndLineNumber - this.model.changes[this._index].change.modifiedEndLineNumber) ? closestGreaterIndex : closestLesserIndex;
+    this.showChange(closestIndex, false);
+  }
+  shouldUseDropdown() {
+    const visibleQuickDiffs = this.model.quickDiffs.filter((quickDiff) => quickDiff.visible);
+    const visibleQuickDiffResults = this.model.getQuickDiffResults().filter((result) => visibleQuickDiffs.some((quickDiff) => quickDiff.label === result.label));
+    return visibleQuickDiffResults.filter((quickDiff) => quickDiff.changes.length > 0).length > 1;
+  }
+  updateActions() {
+    if (!this._actionbarWidget) {
+      return;
+    }
+    const previous = this.instantiationService.createInstance(QuickDiffWidgetEditorAction, this.editor, new ShowPreviousChangeAction(this.editor), ThemeIcon.asClassName(gotoPreviousLocation));
+    const next = this.instantiationService.createInstance(QuickDiffWidgetEditorAction, this.editor, new ShowNextChangeAction(this.editor), ThemeIcon.asClassName(gotoNextLocation));
+    this._disposables.add(previous);
+    this._disposables.add(next);
+    if (this.menu) {
+      this.menu.dispose();
+    }
+    this.menu = this.menuService.createMenu(MenuId.SCMChangeContext, this.contextKeyService);
+    const actions = getFlatActionBarActions(this.menu.getActions({ shouldForwardArgs: true }));
+    this._actionbarWidget.clear();
+    this._actionbarWidget.push(actions.reverse(), { label: false, icon: true });
+    this._actionbarWidget.push([next, previous], { label: false, icon: true });
+    this._actionbarWidget.push(this._disposables.add(new Action("peekview.close", nls.localize("label.close", "Close"), ThemeIcon.asClassName(Codicon.close), true, () => this.dispose())), { label: false, icon: true });
+  }
+  _fillHead(container) {
+    super._fillHead(container, true);
+    const visibleQuickDiffs = this.model.quickDiffs.filter((quickDiff) => quickDiff.visible);
+    this.dropdownContainer = dom.prepend(this._titleElement, dom.$(".dropdown"));
+    this.dropdown = this.instantiationService.createInstance(
+      QuickDiffPickerViewItem,
+      new QuickDiffPickerBaseAction((event) => this.switchQuickDiff(event)),
+      visibleQuickDiffs.map((quickDiff) => quickDiff.label),
+      this.model.changes[this._index].label
+    );
+    this.dropdown.render(this.dropdownContainer);
+    this.updateActions();
+  }
+  _getActionBarOptions() {
+    const actionRunner = new QuickDiffWidgetActionRunner();
+    this._disposables.add(actionRunner);
+    this._disposables.add(actionRunner.onDidRun((e) => {
+      if (!(e.action instanceof QuickDiffWidgetEditorAction) && !e.error) {
+        this.dispose();
+      }
+    }));
+    return {
+      ...super._getActionBarOptions(),
+      actionRunner
+    };
+  }
+  _fillBody(container) {
+    const options = {
+      scrollBeyondLastLine: true,
+      scrollbar: {
+        verticalScrollbarSize: 14,
+        horizontal: "auto",
+        useShadows: true,
+        verticalHasArrows: false,
+        horizontalHasArrows: false
+      },
+      overviewRulerLanes: 2,
+      fixedOverflowWidgets: true,
+      minimap: { enabled: false },
+      renderSideBySide: false,
+      readOnly: false,
+      renderIndicators: false,
+      diffAlgorithm: "advanced",
+      ignoreTrimWhitespace: false,
+      stickyScroll: { enabled: false }
+    };
+    this.diffEditor = this.instantiationService.createInstance(EmbeddedDiffEditorWidget, container, options, {}, this.editor);
+    this._disposables.add(this.diffEditor);
+  }
+  _onWidth(width) {
+    if (typeof this.height === "undefined") {
+      return;
+    }
+    this.diffEditor.layout({ height: this.height, width });
+  }
+  _doLayoutBody(height, width) {
+    super._doLayoutBody(height, width);
+    this.diffEditor.layout({ height, width });
+    if (typeof this.height === "undefined" && this.change) {
+      this.revealChange(this.change);
+    }
+    this.height = height;
+  }
+  revealChange(change) {
+    let start, end;
+    if (change.modifiedEndLineNumber === 0) {
+      start = change.modifiedStartLineNumber;
+      end = change.modifiedStartLineNumber + 1;
+    } else if (change.originalEndLineNumber > 0) {
+      start = change.modifiedStartLineNumber - 1;
+      end = change.modifiedEndLineNumber + 1;
+    } else {
+      start = change.modifiedStartLineNumber;
+      end = change.modifiedEndLineNumber;
+    }
+    this.diffEditor.revealLinesInCenter(start, end, ScrollType.Immediate);
+  }
+  _applyTheme(theme) {
+    const borderColor = theme.getColor(peekViewBorder) || Color.transparent;
+    this.style({
+      arrowColor: borderColor,
+      frameColor: borderColor,
+      headerBackgroundColor: theme.getColor(peekViewTitleBackground) || Color.transparent,
+      primaryHeadingColor: theme.getColor(peekViewTitleForeground),
+      secondaryHeadingColor: theme.getColor(peekViewTitleInfoForeground)
+    });
+  }
+  revealRange(range) {
+    this.editor.revealLineInCenterIfOutsideViewport(range.endLineNumber, ScrollType.Smooth);
+  }
+  hasFocus() {
+    return this.diffEditor.hasTextFocus();
+  }
+  dispose() {
+    super.dispose();
+    this.menu?.dispose();
+  }
+};
+QuickDiffWidget = __decorateClass([
+  __decorateParam(2, IThemeService),
+  __decorateParam(3, IInstantiationService),
+  __decorateParam(4, IMenuService),
+  __decorateParam(5, IContextKeyService)
+], QuickDiffWidget);
+let QuickDiffEditorController = class extends Disposable {
+  constructor(editor, contextKeyService, configurationService, quickDiffModelService, instantiationService) {
+    super();
+    this.editor = editor;
+    this.configurationService = configurationService;
+    this.quickDiffModelService = quickDiffModelService;
+    this.instantiationService = instantiationService;
+    this.enabled = !contextKeyService.getContextKeyValue("isInDiffEditor");
+    this.stylesheet = domStylesheetsJs.createStyleSheet(void 0, void 0, this._store);
+    if (this.enabled) {
+      this.isQuickDiffVisible = isQuickDiffVisible.bindTo(contextKeyService);
+      this._register(editor.onDidChangeModel(() => this.close()));
+      const onDidChangeGutterAction = Event.filter(configurationService.onDidChangeConfiguration, (e) => e.affectsConfiguration("scm.diffDecorationsGutterAction"));
+      this._register(onDidChangeGutterAction(this.onDidChangeGutterAction, this));
+      this.onDidChangeGutterAction();
+    }
+  }
+  static {
+    __name(this, "QuickDiffEditorController");
+  }
+  static ID = "editor.contrib.quickdiff";
+  static get(editor) {
+    return editor.getContribution(QuickDiffEditorController.ID);
+  }
+  model = null;
+  widget = null;
+  isQuickDiffVisible;
+  session = Disposable.None;
+  mouseDownInfo = null;
+  enabled = false;
+  gutterActionDisposables = new DisposableStore();
+  stylesheet;
+  onDidChangeGutterAction() {
+    const gutterAction = this.configurationService.getValue("scm.diffDecorationsGutterAction");
+    this.gutterActionDisposables.clear();
+    if (gutterAction === "diff") {
+      this.gutterActionDisposables.add(this.editor.onMouseDown((e) => this.onEditorMouseDown(e)));
+      this.gutterActionDisposables.add(this.editor.onMouseUp((e) => this.onEditorMouseUp(e)));
+      this.stylesheet.textContent = `
 				.monaco-editor .dirty-diff-glyph {
 					cursor: pointer;
 				}
@@ -14,4 +449,392 @@ var ue=Object.defineProperty;var ge=Object.getOwnPropertyDescriptor;var v=(d,o,e
 					border-top-width: 0;
 					border-bottom-width: 0;
 				}
-			`):this.stylesheet.textContent=""}canNavigate(){return!this.widget||this.widget?.index===-1||!!this.model&&this.model.changes.length>1}refresh(){this.widget?.showChange(this.widget.index,!1)}next(e){if(!this.assertWidget()||!this.widget||!this.model)return;let i;if(this.editor.hasModel()&&(typeof e=="number"||!this.widget.provider))i=this.model.findNextClosestChange(typeof e=="number"?e:this.editor.getPosition().lineNumber,!0,this.widget.provider);else{const t=this.model.quickDiffChanges.get(this.widget.provider)??this.model.quickDiffChanges.values().next().value,n=t.findIndex(s=>s===this.widget.index);i=t[ie(n+1,t.length)]}this.widget.showChange(i)}previous(e){if(!this.assertWidget()||!this.widget||!this.model)return;let i;if(this.editor.hasModel()&&typeof e=="number")i=this.model.findPreviousClosestChange(typeof e=="number"?e:this.editor.getPosition().lineNumber,!0,this.widget.provider);else{const t=this.model.quickDiffChanges.get(this.widget.provider)??this.model.quickDiffChanges.values().next().value,n=t.findIndex(s=>s===this.widget.index);i=t[ie(n-1,t.length)]}this.widget.showChange(i)}close(){this.session.dispose(),this.session=q.None}assertWidget(){if(!this.enabled)return!1;if(this.widget)return!this.model||this.model.changes.length===0?(this.close(),!1):!0;const e=this.editor.getModel();if(!e)return!1;const i=this.quickDiffModelService.createQuickDiffModelReference(e.uri);if(!i)return!1;if(i.object.changes.length===0)return i.dispose(),!1;this.model=i.object,this.widget=this.instantiationService.createInstance(I,this.editor,this.model),this.isQuickDiffVisible.set(!0);const t=new Z;return t.add(x.once(this.widget.onDidClose)(this.close,this)),x.chain(this.model.onDidChange,s=>s.filter(r=>r.diff.length>0).map(r=>r.diff))(this.onDidModelChange,this,t),t.add(i),t.add(this.widget),t.add(ke(()=>{this.model=null,this.widget=null,this.isQuickDiffVisible.set(!1),this.editor.focus()})),this.session=t,!0}onDidModelChange(e){if(!(!this.model||!this.widget||this.widget.hasFocus())){for(const i of e)if(i.start<=this.widget.index){this.next();return}this.refresh()}}onEditorMouseDown(e){this.mouseDownInfo=null;const i=e.target.range;if(!i||!e.event.leftButton||e.target.type!==$.GUTTER_LINE_DECORATIONS||!e.target.element||e.target.element.className.indexOf("dirty-diff-glyph")<0)return;const t=e.target.detail,n=e.target.element.offsetLeft,s=t.offsetX-n;s<-3||s>3||(this.mouseDownInfo={lineNumber:i.startLineNumber})}onEditorMouseUp(e){if(!this.mouseDownInfo)return;const{lineNumber:i}=this.mouseDownInfo;this.mouseDownInfo=null;const t=e.target.range;if(!t||t.startLineNumber!==i||e.target.type!==$.GUTTER_LINE_DECORATIONS)return;const n=this.editor.getModel();if(!n)return;const s=this.quickDiffModelService.createQuickDiffModelReference(n.uri);if(s)try{const r=s.object.changes.findIndex(a=>Re(i,a.change));if(r<0)return;r===this.widget?.index?this.close():this.next(i)}finally{s.dispose()}}dispose(){this.gutterActionDisposables.dispose(),super.dispose()}};f=v([l(1,ee),l(2,Te),l(3,P),l(4,O)],f);class le extends w{constructor(e){super({id:"editor.action.dirtydiff.previous",label:c.localize2("show previous change","Show Previous Change"),precondition:D.toNegated(),kbOpts:{kbExpr:M.editorTextFocus,primary:g.Shift|g.Alt|p.F3,weight:b.EditorContrib}});this.outerEditor=e}run(e){const i=this.outerEditor??y(e);if(!i)return;const t=f.get(i);t&&t.canNavigate()&&t.previous()}}E(le);class ce extends w{constructor(e){super({id:"editor.action.dirtydiff.next",label:c.localize2("show next change","Show Next Change"),precondition:D.toNegated(),kbOpts:{kbExpr:M.editorTextFocus,primary:g.Alt|p.F3,weight:b.EditorContrib}});this.outerEditor=e}run(e){const i=this.outerEditor??y(e);if(!i)return;const t=f.get(i);t&&t.canNavigate()&&t.next()}}E(ce);class Ve extends w{constructor(){super({id:"workbench.action.editor.previousChange",label:c.localize2("move to previous change","Go to Previous Change"),precondition:Q.and(D.toNegated(),de.notEqualsTo(0)),kbOpts:{kbExpr:M.editorTextFocus,primary:g.Shift|g.Alt|p.F5,weight:b.EditorContrib}})}async run(o){const e=y(o),i=o.get(oe),t=o.get(re),n=o.get(B),s=o.get(P);if(!e||!e.hasModel())return;const r=s.createQuickDiffModelReference(e.getModel().uri);try{if(!r||r.object.changes.length===0)return;const a=e.getPosition().lineNumber,u=r.object.findPreviousClosestChange(a,!1),h=r.object.changes[u];await fe(h.change,i),he(h.change,e,t,n)}finally{r?.dispose()}}}E(Ve);class He extends w{constructor(){super({id:"workbench.action.editor.nextChange",label:c.localize2("move to next change","Go to Next Change"),precondition:Q.and(D.toNegated(),de.notEqualsTo(0)),kbOpts:{kbExpr:M.editorTextFocus,primary:g.Alt|p.F5,weight:b.EditorContrib}})}async run(o){const e=o.get(oe),i=y(o),t=o.get(re),n=o.get(B),s=o.get(P);if(!i||!i.hasModel())return;const r=s.createQuickDiffModelReference(i.getModel().uri);try{if(!r||r.object.changes.length===0)return;const a=i.getPosition().lineNumber,u=r.object.findNextClosestChange(a,!1),h=r.object.changes[u].change;await fe(h,e),he(h,i,t,n)}finally{r?.dispose()}}}E(He),X.appendMenuItem(R.MenubarGoMenu,{group:"7_change_nav",command:{id:"editor.action.dirtydiff.next",title:c.localize({key:"miGotoNextChange",comment:["&& denotes a mnemonic"]},"Next &&Change")},order:1}),X.appendMenuItem(R.MenubarGoMenu,{group:"7_change_nav",command:{id:"editor.action.dirtydiff.previous",title:c.localize({key:"miGotoPreviousChange",comment:["&& denotes a mnemonic"]},"Previous &&Change")},order:2}),Oe.registerCommandAndKeybindingRule({id:"closeQuickDiff",weight:b.EditorContrib+50,primary:p.Escape,secondary:[g.Shift|p.Escape],when:Q.and(ae),handler:d=>{const o=y(d);if(!o)return;const e=f.get(o);e&&e.close()}});function he(d,o,e,i){const t=new ne(d.modifiedStartLineNumber,1);o.setPosition(t),o.revealPositionInCenter(t),e.isScreenReaderOptimized()&&(o.setSelection({startLineNumber:d.modifiedStartLineNumber,startColumn:0,endLineNumber:d.modifiedStartLineNumber,endColumn:Number.MAX_VALUE}),i.getActiveCodeEditor()?.writeScreenReaderContent("diff-navigation"))}async function fe(d,o){switch(te(d)){case F.Add:o.playSignal(z.diffLineInserted,{allowManyInParallel:!0,source:"quickDiffDecoration"});break;case F.Delete:o.playSignal(z.diffLineDeleted,{allowManyInParallel:!0,source:"quickDiffDecoration"});break;case F.Modify:o.playSignal(z.diffLineModified,{allowManyInParallel:!0,source:"quickDiffDecoration"});break}}function y(d){const o=d.get(B).listDiffEditors();for(const e of o)if(e.hasTextFocus()&&e instanceof J)return e.getParentEditor();return Ge(d)}export{He as GotoNextChangeAction,Ve as GotoPreviousChangeAction,f as QuickDiffEditorController,A as QuickDiffPickerBaseAction,C as QuickDiffPickerViewItem,ce as ShowNextChangeAction,le as ShowPreviousChangeAction,ae as isQuickDiffVisible};
+			`;
+    } else {
+      this.stylesheet.textContent = ``;
+    }
+  }
+  canNavigate() {
+    return !this.widget || this.widget?.index === -1 || !!this.model && this.model.changes.length > 1;
+  }
+  refresh() {
+    this.widget?.showChange(this.widget.index, false);
+  }
+  next(lineNumber) {
+    if (!this.assertWidget()) {
+      return;
+    }
+    if (!this.widget || !this.model) {
+      return;
+    }
+    let index;
+    if (this.editor.hasModel() && (typeof lineNumber === "number" || !this.widget.provider)) {
+      index = this.model.findNextClosestChange(typeof lineNumber === "number" ? lineNumber : this.editor.getPosition().lineNumber, true, this.widget.provider);
+    } else {
+      const providerChanges = this.model.quickDiffChanges.get(this.widget.provider) ?? this.model.quickDiffChanges.values().next().value;
+      const mapIndex = providerChanges.findIndex((value) => value === this.widget.index);
+      index = providerChanges[rot(mapIndex + 1, providerChanges.length)];
+    }
+    this.widget.showChange(index);
+  }
+  previous(lineNumber) {
+    if (!this.assertWidget()) {
+      return;
+    }
+    if (!this.widget || !this.model) {
+      return;
+    }
+    let index;
+    if (this.editor.hasModel() && typeof lineNumber === "number") {
+      index = this.model.findPreviousClosestChange(typeof lineNumber === "number" ? lineNumber : this.editor.getPosition().lineNumber, true, this.widget.provider);
+    } else {
+      const providerChanges = this.model.quickDiffChanges.get(this.widget.provider) ?? this.model.quickDiffChanges.values().next().value;
+      const mapIndex = providerChanges.findIndex((value) => value === this.widget.index);
+      index = providerChanges[rot(mapIndex - 1, providerChanges.length)];
+    }
+    this.widget.showChange(index);
+  }
+  close() {
+    this.session.dispose();
+    this.session = Disposable.None;
+  }
+  assertWidget() {
+    if (!this.enabled) {
+      return false;
+    }
+    if (this.widget) {
+      if (!this.model || this.model.changes.length === 0) {
+        this.close();
+        return false;
+      }
+      return true;
+    }
+    const editorModel = this.editor.getModel();
+    if (!editorModel) {
+      return false;
+    }
+    const modelRef = this.quickDiffModelService.createQuickDiffModelReference(editorModel.uri);
+    if (!modelRef) {
+      return false;
+    }
+    if (modelRef.object.changes.length === 0) {
+      modelRef.dispose();
+      return false;
+    }
+    this.model = modelRef.object;
+    this.widget = this.instantiationService.createInstance(QuickDiffWidget, this.editor, this.model);
+    this.isQuickDiffVisible.set(true);
+    const disposables = new DisposableStore();
+    disposables.add(Event.once(this.widget.onDidClose)(this.close, this));
+    const onDidModelChange = Event.chain(
+      this.model.onDidChange,
+      ($) => $.filter((e) => e.diff.length > 0).map((e) => e.diff)
+    );
+    onDidModelChange(this.onDidModelChange, this, disposables);
+    disposables.add(modelRef);
+    disposables.add(this.widget);
+    disposables.add(toDisposable(() => {
+      this.model = null;
+      this.widget = null;
+      this.isQuickDiffVisible.set(false);
+      this.editor.focus();
+    }));
+    this.session = disposables;
+    return true;
+  }
+  onDidModelChange(splices) {
+    if (!this.model || !this.widget || this.widget.hasFocus()) {
+      return;
+    }
+    for (const splice of splices) {
+      if (splice.start <= this.widget.index) {
+        this.next();
+        return;
+      }
+    }
+    this.refresh();
+  }
+  onEditorMouseDown(e) {
+    this.mouseDownInfo = null;
+    const range = e.target.range;
+    if (!range) {
+      return;
+    }
+    if (!e.event.leftButton) {
+      return;
+    }
+    if (e.target.type !== MouseTargetType.GUTTER_LINE_DECORATIONS) {
+      return;
+    }
+    if (!e.target.element) {
+      return;
+    }
+    if (e.target.element.className.indexOf("dirty-diff-glyph") < 0) {
+      return;
+    }
+    const data = e.target.detail;
+    const offsetLeftInGutter = e.target.element.offsetLeft;
+    const gutterOffsetX = data.offsetX - offsetLeftInGutter;
+    if (gutterOffsetX < -3 || gutterOffsetX > 3) {
+      return;
+    }
+    this.mouseDownInfo = { lineNumber: range.startLineNumber };
+  }
+  onEditorMouseUp(e) {
+    if (!this.mouseDownInfo) {
+      return;
+    }
+    const { lineNumber } = this.mouseDownInfo;
+    this.mouseDownInfo = null;
+    const range = e.target.range;
+    if (!range || range.startLineNumber !== lineNumber) {
+      return;
+    }
+    if (e.target.type !== MouseTargetType.GUTTER_LINE_DECORATIONS) {
+      return;
+    }
+    const editorModel = this.editor.getModel();
+    if (!editorModel) {
+      return;
+    }
+    const modelRef = this.quickDiffModelService.createQuickDiffModelReference(editorModel.uri);
+    if (!modelRef) {
+      return;
+    }
+    try {
+      const index = modelRef.object.changes.findIndex((change) => lineIntersectsChange(lineNumber, change.change));
+      if (index < 0) {
+        return;
+      }
+      if (index === this.widget?.index) {
+        this.close();
+      } else {
+        this.next(lineNumber);
+      }
+    } finally {
+      modelRef.dispose();
+    }
+  }
+  dispose() {
+    this.gutterActionDisposables.dispose();
+    super.dispose();
+  }
+};
+QuickDiffEditorController = __decorateClass([
+  __decorateParam(1, IContextKeyService),
+  __decorateParam(2, IConfigurationService),
+  __decorateParam(3, IQuickDiffModelService),
+  __decorateParam(4, IInstantiationService)
+], QuickDiffEditorController);
+class ShowPreviousChangeAction extends EditorAction {
+  constructor(outerEditor) {
+    super({
+      id: "editor.action.dirtydiff.previous",
+      label: nls.localize2("show previous change", "Show Previous Change"),
+      precondition: TextCompareEditorActiveContext.toNegated(),
+      kbOpts: { kbExpr: EditorContextKeys.editorTextFocus, primary: KeyMod.Shift | KeyMod.Alt | KeyCode.F3, weight: KeybindingWeight.EditorContrib }
+    });
+    this.outerEditor = outerEditor;
+  }
+  static {
+    __name(this, "ShowPreviousChangeAction");
+  }
+  run(accessor) {
+    const outerEditor = this.outerEditor ?? getOuterEditorFromDiffEditor(accessor);
+    if (!outerEditor) {
+      return;
+    }
+    const controller = QuickDiffEditorController.get(outerEditor);
+    if (!controller) {
+      return;
+    }
+    if (!controller.canNavigate()) {
+      return;
+    }
+    controller.previous();
+  }
+}
+registerEditorAction(ShowPreviousChangeAction);
+class ShowNextChangeAction extends EditorAction {
+  constructor(outerEditor) {
+    super({
+      id: "editor.action.dirtydiff.next",
+      label: nls.localize2("show next change", "Show Next Change"),
+      precondition: TextCompareEditorActiveContext.toNegated(),
+      kbOpts: { kbExpr: EditorContextKeys.editorTextFocus, primary: KeyMod.Alt | KeyCode.F3, weight: KeybindingWeight.EditorContrib }
+    });
+    this.outerEditor = outerEditor;
+  }
+  static {
+    __name(this, "ShowNextChangeAction");
+  }
+  run(accessor) {
+    const outerEditor = this.outerEditor ?? getOuterEditorFromDiffEditor(accessor);
+    if (!outerEditor) {
+      return;
+    }
+    const controller = QuickDiffEditorController.get(outerEditor);
+    if (!controller) {
+      return;
+    }
+    if (!controller.canNavigate()) {
+      return;
+    }
+    controller.next();
+  }
+}
+registerEditorAction(ShowNextChangeAction);
+class GotoPreviousChangeAction extends EditorAction {
+  static {
+    __name(this, "GotoPreviousChangeAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.editor.previousChange",
+      label: nls.localize2("move to previous change", "Go to Previous Change"),
+      precondition: ContextKeyExpr.and(TextCompareEditorActiveContext.toNegated(), quickDiffDecorationCount.notEqualsTo(0)),
+      kbOpts: { kbExpr: EditorContextKeys.editorTextFocus, primary: KeyMod.Shift | KeyMod.Alt | KeyCode.F5, weight: KeybindingWeight.EditorContrib }
+    });
+  }
+  async run(accessor) {
+    const outerEditor = getOuterEditorFromDiffEditor(accessor);
+    const accessibilitySignalService = accessor.get(IAccessibilitySignalService);
+    const accessibilityService = accessor.get(IAccessibilityService);
+    const codeEditorService = accessor.get(ICodeEditorService);
+    const quickDiffModelService = accessor.get(IQuickDiffModelService);
+    if (!outerEditor || !outerEditor.hasModel()) {
+      return;
+    }
+    const modelRef = quickDiffModelService.createQuickDiffModelReference(outerEditor.getModel().uri);
+    try {
+      if (!modelRef || modelRef.object.changes.length === 0) {
+        return;
+      }
+      const lineNumber = outerEditor.getPosition().lineNumber;
+      const index = modelRef.object.findPreviousClosestChange(lineNumber, false);
+      const change = modelRef.object.changes[index];
+      await playAccessibilitySymbolForChange(change.change, accessibilitySignalService);
+      setPositionAndSelection(change.change, outerEditor, accessibilityService, codeEditorService);
+    } finally {
+      modelRef?.dispose();
+    }
+  }
+}
+registerEditorAction(GotoPreviousChangeAction);
+class GotoNextChangeAction extends EditorAction {
+  static {
+    __name(this, "GotoNextChangeAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.editor.nextChange",
+      label: nls.localize2("move to next change", "Go to Next Change"),
+      precondition: ContextKeyExpr.and(TextCompareEditorActiveContext.toNegated(), quickDiffDecorationCount.notEqualsTo(0)),
+      kbOpts: { kbExpr: EditorContextKeys.editorTextFocus, primary: KeyMod.Alt | KeyCode.F5, weight: KeybindingWeight.EditorContrib }
+    });
+  }
+  async run(accessor) {
+    const accessibilitySignalService = accessor.get(IAccessibilitySignalService);
+    const outerEditor = getOuterEditorFromDiffEditor(accessor);
+    const accessibilityService = accessor.get(IAccessibilityService);
+    const codeEditorService = accessor.get(ICodeEditorService);
+    const quickDiffModelService = accessor.get(IQuickDiffModelService);
+    if (!outerEditor || !outerEditor.hasModel()) {
+      return;
+    }
+    const modelRef = quickDiffModelService.createQuickDiffModelReference(outerEditor.getModel().uri);
+    try {
+      if (!modelRef || modelRef.object.changes.length === 0) {
+        return;
+      }
+      const lineNumber = outerEditor.getPosition().lineNumber;
+      const index = modelRef.object.findNextClosestChange(lineNumber, false);
+      const change = modelRef.object.changes[index].change;
+      await playAccessibilitySymbolForChange(change, accessibilitySignalService);
+      setPositionAndSelection(change, outerEditor, accessibilityService, codeEditorService);
+    } finally {
+      modelRef?.dispose();
+    }
+  }
+}
+registerEditorAction(GotoNextChangeAction);
+MenuRegistry.appendMenuItem(MenuId.MenubarGoMenu, {
+  group: "7_change_nav",
+  command: {
+    id: "editor.action.dirtydiff.next",
+    title: nls.localize({ key: "miGotoNextChange", comment: ["&& denotes a mnemonic"] }, "Next &&Change")
+  },
+  order: 1
+});
+MenuRegistry.appendMenuItem(MenuId.MenubarGoMenu, {
+  group: "7_change_nav",
+  command: {
+    id: "editor.action.dirtydiff.previous",
+    title: nls.localize({ key: "miGotoPreviousChange", comment: ["&& denotes a mnemonic"] }, "Previous &&Change")
+  },
+  order: 2
+});
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  id: "closeQuickDiff",
+  weight: KeybindingWeight.EditorContrib + 50,
+  primary: KeyCode.Escape,
+  secondary: [KeyMod.Shift | KeyCode.Escape],
+  when: ContextKeyExpr.and(isQuickDiffVisible),
+  handler: /* @__PURE__ */ __name((accessor) => {
+    const outerEditor = getOuterEditorFromDiffEditor(accessor);
+    if (!outerEditor) {
+      return;
+    }
+    const controller = QuickDiffEditorController.get(outerEditor);
+    if (!controller) {
+      return;
+    }
+    controller.close();
+  }, "handler")
+});
+function setPositionAndSelection(change, editor, accessibilityService, codeEditorService) {
+  const position = new Position(change.modifiedStartLineNumber, 1);
+  editor.setPosition(position);
+  editor.revealPositionInCenter(position);
+  if (accessibilityService.isScreenReaderOptimized()) {
+    editor.setSelection({ startLineNumber: change.modifiedStartLineNumber, startColumn: 0, endLineNumber: change.modifiedStartLineNumber, endColumn: Number.MAX_VALUE });
+    codeEditorService.getActiveCodeEditor()?.writeScreenReaderContent("diff-navigation");
+  }
+}
+__name(setPositionAndSelection, "setPositionAndSelection");
+async function playAccessibilitySymbolForChange(change, accessibilitySignalService) {
+  const changeType = getChangeType(change);
+  switch (changeType) {
+    case ChangeType.Add:
+      accessibilitySignalService.playSignal(AccessibilitySignal.diffLineInserted, { allowManyInParallel: true, source: "quickDiffDecoration" });
+      break;
+    case ChangeType.Delete:
+      accessibilitySignalService.playSignal(AccessibilitySignal.diffLineDeleted, { allowManyInParallel: true, source: "quickDiffDecoration" });
+      break;
+    case ChangeType.Modify:
+      accessibilitySignalService.playSignal(AccessibilitySignal.diffLineModified, { allowManyInParallel: true, source: "quickDiffDecoration" });
+      break;
+  }
+}
+__name(playAccessibilitySymbolForChange, "playAccessibilitySymbolForChange");
+function getOuterEditorFromDiffEditor(accessor) {
+  const diffEditors = accessor.get(ICodeEditorService).listDiffEditors();
+  for (const diffEditor of diffEditors) {
+    if (diffEditor.hasTextFocus() && diffEditor instanceof EmbeddedDiffEditorWidget) {
+      return diffEditor.getParentEditor();
+    }
+  }
+  return getOuterEditor(accessor);
+}
+__name(getOuterEditorFromDiffEditor, "getOuterEditorFromDiffEditor");
+export {
+  GotoNextChangeAction,
+  GotoPreviousChangeAction,
+  QuickDiffEditorController,
+  QuickDiffPickerBaseAction,
+  QuickDiffPickerViewItem,
+  ShowNextChangeAction,
+  ShowPreviousChangeAction,
+  isQuickDiffVisible
+};
+//# sourceMappingURL=quickDiffWidget.js.map

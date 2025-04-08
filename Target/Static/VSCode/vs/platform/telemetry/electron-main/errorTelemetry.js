@@ -1,1 +1,47 @@
-var v=Object.defineProperty,l=Object.getOwnPropertyDescriptor,p=(r,e,o,t)=>{for(var n,s=t>1?void 0:t?l(e,o):e,c=r.length-1;c>=0;c--)(n=r[c])&&(s=(t?n(e,o,s):n(s))||s);return t&&s&&v(e,o,s),s},a=(r,e)=>(o,t)=>e(o,t,r);import{isSigPipeError as m,onUnexpectedError as d,setUnexpectedErrorHandler as u}from"../../../base/common/errors.js";import g from"../common/errorTelemetry.js";import{ITelemetryService as x}from"../common/telemetry.js";import"../../../platform/log/common/log.js";let n=class extends g{constructor(r,e){super(e),this.logService=r}installErrorListeners(){u((r=>this.onUnexpectedError(r))),process.on("uncaughtException",(r=>{m(r)||d(r)})),process.on("unhandledRejection",(r=>d(r)))}onUnexpectedError(r){this.logService.error(`[uncaught exception in main]: ${r}`),r.stack&&this.logService.error(r.stack)}};n=p([a(1,x)],n);export{n as default};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { isSigPipeError, onUnexpectedError, setUnexpectedErrorHandler } from "../../../base/common/errors.js";
+import BaseErrorTelemetry from "../common/errorTelemetry.js";
+import { ITelemetryService } from "../common/telemetry.js";
+import { ILogService } from "../../../platform/log/common/log.js";
+let ErrorTelemetry = class extends BaseErrorTelemetry {
+  constructor(logService, telemetryService) {
+    super(telemetryService);
+    this.logService = logService;
+  }
+  static {
+    __name(this, "ErrorTelemetry");
+  }
+  installErrorListeners() {
+    setUnexpectedErrorHandler((error) => this.onUnexpectedError(error));
+    process.on("uncaughtException", (error) => {
+      if (!isSigPipeError(error)) {
+        onUnexpectedError(error);
+      }
+    });
+    process.on("unhandledRejection", (reason) => onUnexpectedError(reason));
+  }
+  onUnexpectedError(error) {
+    this.logService.error(`[uncaught exception in main]: ${error}`);
+    if (error.stack) {
+      this.logService.error(error.stack);
+    }
+  }
+};
+ErrorTelemetry = __decorateClass([
+  __decorateParam(1, ITelemetryService)
+], ErrorTelemetry);
+export {
+  ErrorTelemetry as default
+};
+//# sourceMappingURL=errorTelemetry.js.map

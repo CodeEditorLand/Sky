@@ -1,1 +1,73 @@
-var x=Object.defineProperty,I=Object.getOwnPropertyDescriptor,c=(e,n,t,o)=>{for(var r,a=o>1?void 0:o?I(n,t):n,s=e.length-1;s>=0;s--)(r=e[s])&&(a=(o?r(n,t,a):r(a))||a);return o&&a&&x(n,t,a),a},s=(e,n)=>(t,o)=>n(t,o,e);import{localize as g}from"../../../../nls.js";import{Schemas as l}from"../../../../base/common/network.js";import{ExtensionInstallLocation as v,IExtensionManagementServerService as E}from"../common/extensionManagement.js";import{IRemoteAgentService as M}from"../../remote/common/remoteAgentService.js";import"../../../../base/parts/ipc/common/ipc.js";import{ISharedProcessService as h}from"../../../../platform/ipc/electron-sandbox/services.js";import{InstantiationType as f,registerSingleton as p}from"../../../../platform/instantiation/common/extensions.js";import{NativeRemoteExtensionManagementService as d}from"./remoteExtensionManagementService.js";import{ILabelService as u}from"../../../../platform/label/common/label.js";import"../../../../platform/extensions/common/extensions.js";import{IInstantiationService as L}from"../../../../platform/instantiation/common/instantiation.js";import{NativeExtensionManagementService as b}from"./nativeExtensionManagementService.js";import{Disposable as y}from"../../../../base/common/lifecycle.js";let m=class extends y{localExtensionManagementServer;remoteExtensionManagementServer=null;webExtensionManagementServer=null;constructor(e,n,t,o){super();const r=this._register(o.createInstance(b,e.getChannel("extensions")));this.localExtensionManagementServer={extensionManagementService:r,id:"local",label:g("local","Local")};const a=n.getConnection();if(a){const e=o.createInstance(d,a.getChannel("extensions"),this.localExtensionManagementServer);this.remoteExtensionManagementServer={id:"remote",extensionManagementService:e,get label(){return t.getHostLabel(l.vscodeRemote,a.remoteAuthority)||g("remote","Remote")}}}}getExtensionManagementServer(e){if(e.location.scheme===l.file)return this.localExtensionManagementServer;if(this.remoteExtensionManagementServer&&e.location.scheme===l.vscodeRemote)return this.remoteExtensionManagementServer;throw new Error(`Invalid Extension ${e.location}`)}getExtensionInstallLocation(e){return this.getExtensionManagementServer(e)===this.remoteExtensionManagementServer?v.Remote:v.Local}};m=c([s(0,h),s(1,M),s(2,u),s(3,L)],m),p(E,m,f.Delayed);export{m as ExtensionManagementServerService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { localize } from "../../../../nls.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { ExtensionInstallLocation, IExtensionManagementServer, IExtensionManagementServerService } from "../common/extensionManagement.js";
+import { IRemoteAgentService } from "../../remote/common/remoteAgentService.js";
+import { IChannel } from "../../../../base/parts/ipc/common/ipc.js";
+import { ISharedProcessService } from "../../../../platform/ipc/electron-sandbox/services.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { NativeRemoteExtensionManagementService } from "./remoteExtensionManagementService.js";
+import { ILabelService } from "../../../../platform/label/common/label.js";
+import { IExtension } from "../../../../platform/extensions/common/extensions.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { NativeExtensionManagementService } from "./nativeExtensionManagementService.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+let ExtensionManagementServerService = class extends Disposable {
+  static {
+    __name(this, "ExtensionManagementServerService");
+  }
+  localExtensionManagementServer;
+  remoteExtensionManagementServer = null;
+  webExtensionManagementServer = null;
+  constructor(sharedProcessService, remoteAgentService, labelService, instantiationService) {
+    super();
+    const localExtensionManagementService = this._register(instantiationService.createInstance(NativeExtensionManagementService, sharedProcessService.getChannel("extensions")));
+    this.localExtensionManagementServer = { extensionManagementService: localExtensionManagementService, id: "local", label: localize("local", "Local") };
+    const remoteAgentConnection = remoteAgentService.getConnection();
+    if (remoteAgentConnection) {
+      const extensionManagementService = instantiationService.createInstance(NativeRemoteExtensionManagementService, remoteAgentConnection.getChannel("extensions"), this.localExtensionManagementServer);
+      this.remoteExtensionManagementServer = {
+        id: "remote",
+        extensionManagementService,
+        get label() {
+          return labelService.getHostLabel(Schemas.vscodeRemote, remoteAgentConnection.remoteAuthority) || localize("remote", "Remote");
+        }
+      };
+    }
+  }
+  getExtensionManagementServer(extension) {
+    if (extension.location.scheme === Schemas.file) {
+      return this.localExtensionManagementServer;
+    }
+    if (this.remoteExtensionManagementServer && extension.location.scheme === Schemas.vscodeRemote) {
+      return this.remoteExtensionManagementServer;
+    }
+    throw new Error(`Invalid Extension ${extension.location}`);
+  }
+  getExtensionInstallLocation(extension) {
+    const server = this.getExtensionManagementServer(extension);
+    return server === this.remoteExtensionManagementServer ? ExtensionInstallLocation.Remote : ExtensionInstallLocation.Local;
+  }
+};
+ExtensionManagementServerService = __decorateClass([
+  __decorateParam(0, ISharedProcessService),
+  __decorateParam(1, IRemoteAgentService),
+  __decorateParam(2, ILabelService),
+  __decorateParam(3, IInstantiationService)
+], ExtensionManagementServerService);
+registerSingleton(IExtensionManagementServerService, ExtensionManagementServerService, InstantiationType.Delayed);
+export {
+  ExtensionManagementServerService
+};
+//# sourceMappingURL=extensionManagementServerService.js.map

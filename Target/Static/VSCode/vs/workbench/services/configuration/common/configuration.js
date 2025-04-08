@@ -1,4 +1,69 @@
-import{ConfigurationScope as e}from"../../../../platform/configuration/common/configurationRegistry.js";import"../../../../base/common/uri.js";import{IConfigurationService as c}from"../../../../platform/configuration/common/configuration.js";import{refineServiceDecorator as a}from"../../../../platform/instantiation/common/instantiation.js";import"../../../../base/common/event.js";import"../../../../base/common/map.js";import"../../../../platform/workspace/common/workspace.js";const t=".vscode",E="settings",L=`${t}/${E}.json`,l="vscode://schemas/settings/default",f="vscode://schemas/settings/user",P="vscode://schemas/settings/profile",x="vscode://schemas/settings/machine",h="vscode://schemas/settings/workspace",u="vscode://schemas/settings/folder",y="vscode://schemas/launch",v="vscode://schemas/tasks",T="vscode://schemas/mcp",D=[e.APPLICATION,e.APPLICATION_MACHINE],U=[e.MACHINE,e.WINDOW,e.RESOURCE,e.LANGUAGE_OVERRIDABLE,e.MACHINE_OVERRIDABLE],A=[e.WINDOW,e.RESOURCE,e.LANGUAGE_OVERRIDABLE],k=[e.APPLICATION,...A],G=[e.MACHINE,e.APPLICATION_MACHINE,e.WINDOW,e.RESOURCE,e.LANGUAGE_OVERRIDABLE,e.MACHINE_OVERRIDABLE],F=[e.WINDOW,e.RESOURCE,e.LANGUAGE_OVERRIDABLE,e.MACHINE_OVERRIDABLE],M=[e.RESOURCE,e.LANGUAGE_OVERRIDABLE,e.MACHINE_OVERRIDABLE],o="tasks",n="launch",r="mcp",s=Object.create(null);s[o]=`${t}/${o}.json`,s[n]=`${t}/${n}.json`,s[r]=`${t}/${r}.json`;const i=Object.create(null);i[o]=`${o}.json`,i[r]=`${r}.json`;const W=a(c),H=`{
-	"version": "2.0.0",
-	"tasks": []
-}`,K="workbench.settings.applyToAllProfiles";export{D as APPLICATION_SCOPES,K as APPLY_ALL_PROFILES_SETTING,t as FOLDER_CONFIG_FOLDER_NAME,M as FOLDER_SCOPES,E as FOLDER_SETTINGS_NAME,L as FOLDER_SETTINGS_PATH,W as IWorkbenchConfigurationService,n as LAUNCH_CONFIGURATION_KEY,A as LOCAL_MACHINE_PROFILE_SCOPES,k as LOCAL_MACHINE_SCOPES,r as MCP_CONFIGURATION_KEY,U as PROFILE_SCOPES,G as REMOTE_MACHINE_SCOPES,o as TASKS_CONFIGURATION_KEY,H as TASKS_DEFAULT,i as USER_STANDALONE_CONFIGURATIONS,F as WORKSPACE_SCOPES,s as WORKSPACE_STANDALONE_CONFIGURATIONS,l as defaultSettingsSchemaId,u as folderSettingsSchemaId,y as launchSchemaId,x as machineSettingsSchemaId,T as mcpSchemaId,P as profileSettingsSchemaId,v as tasksSchemaId,f as userSettingsSchemaId,h as workspaceSettingsSchemaId};
+import { ConfigurationScope } from "../../../../platform/configuration/common/configurationRegistry.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { refineServiceDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { Event } from "../../../../base/common/event.js";
+import { ResourceMap } from "../../../../base/common/map.js";
+import { IAnyWorkspaceIdentifier } from "../../../../platform/workspace/common/workspace.js";
+const FOLDER_CONFIG_FOLDER_NAME = ".vscode";
+const FOLDER_SETTINGS_NAME = "settings";
+const FOLDER_SETTINGS_PATH = `${FOLDER_CONFIG_FOLDER_NAME}/${FOLDER_SETTINGS_NAME}.json`;
+const defaultSettingsSchemaId = "vscode://schemas/settings/default";
+const userSettingsSchemaId = "vscode://schemas/settings/user";
+const profileSettingsSchemaId = "vscode://schemas/settings/profile";
+const machineSettingsSchemaId = "vscode://schemas/settings/machine";
+const workspaceSettingsSchemaId = "vscode://schemas/settings/workspace";
+const folderSettingsSchemaId = "vscode://schemas/settings/folder";
+const launchSchemaId = "vscode://schemas/launch";
+const tasksSchemaId = "vscode://schemas/tasks";
+const mcpSchemaId = "vscode://schemas/mcp";
+const APPLICATION_SCOPES = [ConfigurationScope.APPLICATION, ConfigurationScope.APPLICATION_MACHINE];
+const PROFILE_SCOPES = [ConfigurationScope.MACHINE, ConfigurationScope.WINDOW, ConfigurationScope.RESOURCE, ConfigurationScope.LANGUAGE_OVERRIDABLE, ConfigurationScope.MACHINE_OVERRIDABLE];
+const LOCAL_MACHINE_PROFILE_SCOPES = [ConfigurationScope.WINDOW, ConfigurationScope.RESOURCE, ConfigurationScope.LANGUAGE_OVERRIDABLE];
+const LOCAL_MACHINE_SCOPES = [ConfigurationScope.APPLICATION, ...LOCAL_MACHINE_PROFILE_SCOPES];
+const REMOTE_MACHINE_SCOPES = [ConfigurationScope.MACHINE, ConfigurationScope.APPLICATION_MACHINE, ConfigurationScope.WINDOW, ConfigurationScope.RESOURCE, ConfigurationScope.LANGUAGE_OVERRIDABLE, ConfigurationScope.MACHINE_OVERRIDABLE];
+const WORKSPACE_SCOPES = [ConfigurationScope.WINDOW, ConfigurationScope.RESOURCE, ConfigurationScope.LANGUAGE_OVERRIDABLE, ConfigurationScope.MACHINE_OVERRIDABLE];
+const FOLDER_SCOPES = [ConfigurationScope.RESOURCE, ConfigurationScope.LANGUAGE_OVERRIDABLE, ConfigurationScope.MACHINE_OVERRIDABLE];
+const TASKS_CONFIGURATION_KEY = "tasks";
+const LAUNCH_CONFIGURATION_KEY = "launch";
+const MCP_CONFIGURATION_KEY = "mcp";
+const WORKSPACE_STANDALONE_CONFIGURATIONS = /* @__PURE__ */ Object.create(null);
+WORKSPACE_STANDALONE_CONFIGURATIONS[TASKS_CONFIGURATION_KEY] = `${FOLDER_CONFIG_FOLDER_NAME}/${TASKS_CONFIGURATION_KEY}.json`;
+WORKSPACE_STANDALONE_CONFIGURATIONS[LAUNCH_CONFIGURATION_KEY] = `${FOLDER_CONFIG_FOLDER_NAME}/${LAUNCH_CONFIGURATION_KEY}.json`;
+WORKSPACE_STANDALONE_CONFIGURATIONS[MCP_CONFIGURATION_KEY] = `${FOLDER_CONFIG_FOLDER_NAME}/${MCP_CONFIGURATION_KEY}.json`;
+const USER_STANDALONE_CONFIGURATIONS = /* @__PURE__ */ Object.create(null);
+USER_STANDALONE_CONFIGURATIONS[TASKS_CONFIGURATION_KEY] = `${TASKS_CONFIGURATION_KEY}.json`;
+USER_STANDALONE_CONFIGURATIONS[MCP_CONFIGURATION_KEY] = `${MCP_CONFIGURATION_KEY}.json`;
+const IWorkbenchConfigurationService = refineServiceDecorator(IConfigurationService);
+const TASKS_DEFAULT = '{\n	"version": "2.0.0",\n	"tasks": []\n}';
+const APPLY_ALL_PROFILES_SETTING = "workbench.settings.applyToAllProfiles";
+export {
+  APPLICATION_SCOPES,
+  APPLY_ALL_PROFILES_SETTING,
+  FOLDER_CONFIG_FOLDER_NAME,
+  FOLDER_SCOPES,
+  FOLDER_SETTINGS_NAME,
+  FOLDER_SETTINGS_PATH,
+  IWorkbenchConfigurationService,
+  LAUNCH_CONFIGURATION_KEY,
+  LOCAL_MACHINE_PROFILE_SCOPES,
+  LOCAL_MACHINE_SCOPES,
+  MCP_CONFIGURATION_KEY,
+  PROFILE_SCOPES,
+  REMOTE_MACHINE_SCOPES,
+  TASKS_CONFIGURATION_KEY,
+  TASKS_DEFAULT,
+  USER_STANDALONE_CONFIGURATIONS,
+  WORKSPACE_SCOPES,
+  WORKSPACE_STANDALONE_CONFIGURATIONS,
+  defaultSettingsSchemaId,
+  folderSettingsSchemaId,
+  launchSchemaId,
+  machineSettingsSchemaId,
+  mcpSchemaId,
+  profileSettingsSchemaId,
+  tasksSchemaId,
+  userSettingsSchemaId,
+  workspaceSettingsSchemaId
+};
+//# sourceMappingURL=configuration.js.map

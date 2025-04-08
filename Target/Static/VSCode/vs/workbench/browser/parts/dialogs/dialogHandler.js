@@ -1,1 +1,155 @@
-var k=Object.defineProperty,C=Object.getOwnPropertyDescriptor,I=(e,o,t,i)=>{for(var r,a=i>1?void 0:i?C(o,t):o,s=e.length-1;s>=0;s--)(r=e[s])&&(a=(i?r(o,t,a):r(a))||a);return i&&a&&k(o,t,a),a},n=(e,o)=>(t,i)=>o(t,i,e);import{localize as v}from"../../../../nls.js";import{AbstractDialogHandler as w}from"../../../../platform/dialogs/common/dialogs.js";import{ILayoutService as A}from"../../../../platform/layout/browser/layoutService.js";import{ILogService as D}from"../../../../platform/log/common/log.js";import L from"../../../../base/common/severity.js";import{Dialog as P}from"../../../../base/browser/ui/dialog/dialog.js";import{DisposableStore as R}from"../../../../base/common/lifecycle.js";import{IKeybindingService as x}from"../../../../platform/keybinding/common/keybinding.js";import{IProductService as T}from"../../../../platform/product/common/productService.js";import{IClipboardService as M}from"../../../../platform/clipboard/common/clipboardService.js";import{fromNow as E}from"../../../../base/common/date.js";import{IInstantiationService as O}from"../../../../platform/instantiation/common/instantiation.js";import{MarkdownRenderer as B,openLinkFromMarkdown as j}from"../../../../editor/browser/widget/markdownRenderer/browser/markdownRenderer.js";import{IOpenerService as K}from"../../../../platform/opener/common/opener.js";import{createWorkbenchDialogOptions as N}from"../../../../platform/dialogs/browser/dialog.js";let a=class extends w{constructor(e,o,t,i,r,a,s){super(),this.logService=e,this.layoutService=o,this.keybindingService=t,this.productService=r,this.clipboardService=a,this.openerService=s,this.markdownRenderer=i.createInstance(B,{})}static ALLOWABLE_COMMANDS=["copy","cut","editor.action.selectAll","editor.action.clipboardCopyAction","editor.action.clipboardCutAction","editor.action.clipboardPasteAction"];markdownRenderer;async prompt(e){this.logService.trace("DialogService#prompt",e.message);const o=this.getPromptButtons(e),{button:t,checkboxChecked:i}=await this.doShow(e.type,e.message,o,e.detail,e.cancelButton?o.length-1:-1,e.checkbox,void 0,"object"==typeof e?.custom?e.custom:void 0);return this.getPromptResult(e,t,i)}async confirm(e){this.logService.trace("DialogService#confirm",e.message);const o=this.getConfirmationButtons(e),{button:t,checkboxChecked:i}=await this.doShow(e.type??"question",e.message,o,e.detail,o.length-1,e.checkbox,void 0,"object"==typeof e?.custom?e.custom:void 0);return{confirmed:0===t,checkboxChecked:i}}async input(e){this.logService.trace("DialogService#input",e.message);const o=this.getInputButtons(e),{button:t,checkboxChecked:i,values:r}=await this.doShow(e.type??"question",e.message,o,e.detail,o.length-1,e?.checkbox,e.inputs,"object"==typeof e.custom?e.custom:void 0);return{confirmed:0===t,checkboxChecked:i,values:r}}async about(){const e=e=>v("aboutDetail","Version: {0}\nCommit: {1}\nDate: {2}\nBrowser: {3}",this.productService.version||"Unknown",this.productService.commit||"Unknown",this.productService.date?`${this.productService.date}${e?" ("+E(new Date(this.productService.date),!0)+")":""}`:"Unknown",navigator.userAgent),o=e(!0),t=e(!1),{button:i}=await this.doShow(L.Info,this.productService.nameLong,[v({key:"copy",comment:["&& denotes a mnemonic"]},"&&Copy"),v("ok","OK")],o,1);0===i&&this.clipboardService.writeText(t)}async doShow(e,o,t,i,r,s,n,c){const d=new R,m=c?e=>{e.classList.add(...c.classes||[]),c.markdownDetails?.forEach((o=>{const t=this.markdownRenderer.render(o.markdown,{actionHandler:{callback:o.actionHandler||(e=>j(this.openerService,e,o.markdown.isTrusted,!0)),disposables:d}});e.appendChild(t.element),t.element.classList.add(...o.classes||[]),d.add(t)}))}:void 0,l=new P(this.layoutService.activeContainer,o,t,N({detail:i,cancelId:r,type:this.getDialogType(e),renderBody:m,icon:c?.icon,disableCloseAction:c?.disableCloseAction,buttonDetails:c?.buttonDetails,checkboxLabel:s?.label,checkboxChecked:s?.checked,inputs:n},this.keybindingService,this.layoutService,a.ALLOWABLE_COMMANDS));d.add(l);const p=await l.show();return d.dispose(),p}};a=I([n(0,D),n(1,A),n(2,x),n(3,O),n(4,T),n(5,M),n(6,K)],a);export{a as BrowserDialogHandler};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { localize } from "../../../../nls.js";
+import { IConfirmation, IConfirmationResult, IInputResult, ICheckbox, IInputElement, ICustomDialogOptions, IInput, AbstractDialogHandler, DialogType, IPrompt, IAsyncPromptResult } from "../../../../platform/dialogs/common/dialogs.js";
+import { ILayoutService } from "../../../../platform/layout/browser/layoutService.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import Severity from "../../../../base/common/severity.js";
+import { Dialog, IDialogResult } from "../../../../base/browser/ui/dialog/dialog.js";
+import { DisposableStore } from "../../../../base/common/lifecycle.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+import { IClipboardService } from "../../../../platform/clipboard/common/clipboardService.js";
+import { fromNow } from "../../../../base/common/date.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { MarkdownRenderer, openLinkFromMarkdown } from "../../../../editor/browser/widget/markdownRenderer/browser/markdownRenderer.js";
+import { IOpenerService } from "../../../../platform/opener/common/opener.js";
+import { createWorkbenchDialogOptions } from "../../../../platform/dialogs/browser/dialog.js";
+let BrowserDialogHandler = class extends AbstractDialogHandler {
+  constructor(logService, layoutService, keybindingService, instantiationService, productService, clipboardService, openerService) {
+    super();
+    this.logService = logService;
+    this.layoutService = layoutService;
+    this.keybindingService = keybindingService;
+    this.productService = productService;
+    this.clipboardService = clipboardService;
+    this.openerService = openerService;
+    this.markdownRenderer = instantiationService.createInstance(MarkdownRenderer, {});
+  }
+  static {
+    __name(this, "BrowserDialogHandler");
+  }
+  static ALLOWABLE_COMMANDS = [
+    "copy",
+    "cut",
+    "editor.action.selectAll",
+    "editor.action.clipboardCopyAction",
+    "editor.action.clipboardCutAction",
+    "editor.action.clipboardPasteAction"
+  ];
+  markdownRenderer;
+  async prompt(prompt) {
+    this.logService.trace("DialogService#prompt", prompt.message);
+    const buttons = this.getPromptButtons(prompt);
+    const { button, checkboxChecked } = await this.doShow(prompt.type, prompt.message, buttons, prompt.detail, prompt.cancelButton ? buttons.length - 1 : -1, prompt.checkbox, void 0, typeof prompt?.custom === "object" ? prompt.custom : void 0);
+    return this.getPromptResult(prompt, button, checkboxChecked);
+  }
+  async confirm(confirmation) {
+    this.logService.trace("DialogService#confirm", confirmation.message);
+    const buttons = this.getConfirmationButtons(confirmation);
+    const { button, checkboxChecked } = await this.doShow(confirmation.type ?? "question", confirmation.message, buttons, confirmation.detail, buttons.length - 1, confirmation.checkbox, void 0, typeof confirmation?.custom === "object" ? confirmation.custom : void 0);
+    return { confirmed: button === 0, checkboxChecked };
+  }
+  async input(input) {
+    this.logService.trace("DialogService#input", input.message);
+    const buttons = this.getInputButtons(input);
+    const { button, checkboxChecked, values } = await this.doShow(input.type ?? "question", input.message, buttons, input.detail, buttons.length - 1, input?.checkbox, input.inputs, typeof input.custom === "object" ? input.custom : void 0);
+    return { confirmed: button === 0, checkboxChecked, values };
+  }
+  async about() {
+    const detailString = /* @__PURE__ */ __name((useAgo) => {
+      return localize(
+        "aboutDetail",
+        "Version: {0}\nCommit: {1}\nDate: {2}\nBrowser: {3}",
+        this.productService.version || "Unknown",
+        this.productService.commit || "Unknown",
+        this.productService.date ? `${this.productService.date}${useAgo ? " (" + fromNow(new Date(this.productService.date), true) + ")" : ""}` : "Unknown",
+        navigator.userAgent
+      );
+    }, "detailString");
+    const detail = detailString(true);
+    const detailToCopy = detailString(false);
+    const { button } = await this.doShow(
+      Severity.Info,
+      this.productService.nameLong,
+      [
+        localize({ key: "copy", comment: ["&& denotes a mnemonic"] }, "&&Copy"),
+        localize("ok", "OK")
+      ],
+      detail,
+      1
+    );
+    if (button === 0) {
+      this.clipboardService.writeText(detailToCopy);
+    }
+  }
+  async doShow(type, message, buttons, detail, cancelId, checkbox, inputs, customOptions) {
+    const dialogDisposables = new DisposableStore();
+    const renderBody = customOptions ? (parent) => {
+      parent.classList.add(...customOptions.classes || []);
+      customOptions.markdownDetails?.forEach((markdownDetail) => {
+        const result2 = this.markdownRenderer.render(markdownDetail.markdown, {
+          actionHandler: {
+            callback: markdownDetail.actionHandler || ((link) => {
+              return openLinkFromMarkdown(
+                this.openerService,
+                link,
+                markdownDetail.markdown.isTrusted,
+                true
+                /* skip URL validation to prevent another dialog from showing which is unsupported */
+              );
+            }),
+            disposables: dialogDisposables
+          }
+        });
+        parent.appendChild(result2.element);
+        result2.element.classList.add(...markdownDetail.classes || []);
+        dialogDisposables.add(result2);
+      });
+    } : void 0;
+    const dialog = new Dialog(
+      this.layoutService.activeContainer,
+      message,
+      buttons,
+      createWorkbenchDialogOptions({
+        detail,
+        cancelId,
+        type: this.getDialogType(type),
+        renderBody,
+        icon: customOptions?.icon,
+        disableCloseAction: customOptions?.disableCloseAction,
+        buttonDetails: customOptions?.buttonDetails,
+        checkboxLabel: checkbox?.label,
+        checkboxChecked: checkbox?.checked,
+        inputs
+      }, this.keybindingService, this.layoutService, BrowserDialogHandler.ALLOWABLE_COMMANDS)
+    );
+    dialogDisposables.add(dialog);
+    const result = await dialog.show();
+    dialogDisposables.dispose();
+    return result;
+  }
+};
+BrowserDialogHandler = __decorateClass([
+  __decorateParam(0, ILogService),
+  __decorateParam(1, ILayoutService),
+  __decorateParam(2, IKeybindingService),
+  __decorateParam(3, IInstantiationService),
+  __decorateParam(4, IProductService),
+  __decorateParam(5, IClipboardService),
+  __decorateParam(6, IOpenerService)
+], BrowserDialogHandler);
+export {
+  BrowserDialogHandler
+};
+//# sourceMappingURL=dialogHandler.js.map

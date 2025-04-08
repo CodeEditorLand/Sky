@@ -1,1 +1,11 @@
-var r=(e=>(e.WriteDataToTerminal="workbench.action.terminal.writeDataToTerminal",e.RecordSession="workbench.action.terminal.recordSession",e.ShowTextureAtlas="workbench.action.terminal.showTextureAtlas",e.RestartPtyHost="workbench.action.terminal.restartPtyHost",e))(r||{});export{r as TerminalDeveloperCommandId};
+var TerminalDeveloperCommandId = /* @__PURE__ */ ((TerminalDeveloperCommandId2) => {
+  TerminalDeveloperCommandId2["WriteDataToTerminal"] = "workbench.action.terminal.writeDataToTerminal";
+  TerminalDeveloperCommandId2["RecordSession"] = "workbench.action.terminal.recordSession";
+  TerminalDeveloperCommandId2["ShowTextureAtlas"] = "workbench.action.terminal.showTextureAtlas";
+  TerminalDeveloperCommandId2["RestartPtyHost"] = "workbench.action.terminal.restartPtyHost";
+  return TerminalDeveloperCommandId2;
+})(TerminalDeveloperCommandId || {});
+export {
+  TerminalDeveloperCommandId
+};
+//# sourceMappingURL=terminal.developer.js.map

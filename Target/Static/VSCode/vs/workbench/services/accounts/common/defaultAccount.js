@@ -1,1 +1,241 @@
-var I=Object.defineProperty,D=Object.getOwnPropertyDescriptor,v=(t,e,i,n)=>{for(var o,r=n>1?void 0:n?D(e,i):e,s=t.length-1;s>=0;s--)(o=t[s])&&(r=(n?o(e,i,r):o(r))||r);return n&&r&&I(e,i,r),r},c=(t,e)=>(i,n)=>e(i,n,t);import{createDecorator as b}from"../../../../platform/instantiation/common/instantiation.js";import{Emitter as C,Event as x}from"../../../../base/common/event.js";import{Disposable as h}from"../../../../base/common/lifecycle.js";import{IProductService as E}from"../../../../platform/product/common/productService.js";import{IAuthenticationService as P}from"../../authentication/common/authentication.js";import{asJson as g,IRequestService as k}from"../../../../platform/request/common/request.js";import{CancellationToken as m}from"../../../../base/common/cancellation.js";import{IExtensionService as w}from"../../extensions/common/extensions.js";import{ILogService as T}from"../../../../platform/log/common/log.js";import{IContextKeyService as q,RawContextKey as F}from"../../../../platform/contextkey/common/contextkey.js";import{Action2 as R,MenuId as B,registerAction2 as z}from"../../../../platform/actions/common/actions.js";import{localize as N}from"../../../../nls.js";import"../../../common/contributions.js";import{Barrier as U}from"../../../../base/common/async.js";import{IConfigurationService as K}from"../../../../platform/configuration/common/configuration.js";import{getErrorMessage as p}from"../../../../base/common/errors.js";var L=(t=>(t.Uninitialized="uninitialized",t.Unavailable="unavailable",t.Available="available",t))(L||{});const A=new F("defaultAccountStatus","uninitialized"),M=b("defaultAccountService");class ce extends h{_defaultAccount=void 0;get defaultAccount(){return this._defaultAccount??null}initBarrier=new U;_onDidChangeDefaultAccount=this._register(new C);onDidChangeDefaultAccount=this._onDidChangeDefaultAccount.event;async getDefaultAccount(){return await this.initBarrier.wait(),this.defaultAccount}setDefaultAccount(t){const e=this._defaultAccount;this._defaultAccount=t,e!==this._defaultAccount&&this._onDidChangeDefaultAccount.fire(this._defaultAccount),this.initBarrier.open()}}class se extends h{onDidChangeDefaultAccount=x.None;async getDefaultAccount(){return null}setDefaultAccount(t){}}let f=class extends h{constructor(t,e,i,n,o,r,s,c){super(),this.defaultAccountService=t,this.configurationService=e,this.authenticationService=i,this.extensionService=n,this.productService=o,this.requestService=r,this.logService=s,this.accountStatusContext=A.bindTo(c),this.initialize()}static ID="workbench.contributions.defaultAccountManagement";defaultAccount=null;accountStatusContext;async initialize(){if(!this.productService.defaultAccount)return;const{authenticationProvider:t,tokenEntitlementUrl:e,chatEntitlementUrl:i}=this.productService.defaultAccount;await this.extensionService.whenInstalledExtensionsRegistered();const n=this.authenticationService.declaredProviders.find((e=>e.id===t.id));n?(this.registerSignInAction(t.id,n.label,t.enterpriseProviderId,t.enterpriseProviderConfig,t.scopes),this.setDefaultAccount(await this.getDefaultAccountFromAuthenticatedSessions(t.id,t.enterpriseProviderId,t.enterpriseProviderConfig,t.scopes,e,i)),this._register(this.authenticationService.onDidChangeSessions((async n=>{if(n.providerId===t.id||n.providerId===t.enterpriseProviderId){if(this.defaultAccount&&n.event.removed?.some((t=>t.id===this.defaultAccount?.sessionId)))return void this.setDefaultAccount(null);this.setDefaultAccount(await this.getDefaultAccountFromAuthenticatedSessions(t.id,t.enterpriseProviderId,t.enterpriseProviderConfig,t.scopes,e,i))}})))):this.logService.info(`Default account authentication provider ${t} is not declared.`)}setDefaultAccount(t){this.defaultAccount=t,this.defaultAccountService.setDefaultAccount(this.defaultAccount),this.defaultAccount?this.accountStatusContext.set("available"):this.accountStatusContext.set("unavailable")}extractFromToken(t,e){const i=new Map,n=t?.split(":")[0]?.split(";");for(const t of n){const[e,n]=t.split("=");i.set(e,n)}return i.get(e)}async getDefaultAccountFromAuthenticatedSessions(t,e,i,n,o,r){const s=this.configurationService.getValue(i)?e:t,c=(await this.authenticationService.getSessions(s,void 0,void 0,!0)).find((t=>this.scopesMatch(t.scopes,n)));if(!c)return null;const[a,u]=await Promise.all([this.getChatEntitlements(c.accessToken,r),this.getTokenEntitlements(c.accessToken,o)]);return{sessionId:c.id,enterprise:s===e||c.account.label.includes("_"),...a,...u}}scopesMatch(t,e){return t.length===e.length&&e.every((e=>t.includes(e)))}async getTokenEntitlements(t,e){if(!e)return{};try{const i=await this.requestService.request({type:"GET",url:e,disableCache:!0,headers:{Authorization:`Bearer ${t}`}},m.None),n=await g(i);if(n)return{chat_preview_features_enabled:"0"!==this.extractFromToken(n.token,"editor_preview_features")};this.logService.error("Failed to fetch token entitlements","No data returned")}catch(t){this.logService.error("Failed to fetch token entitlements",p(t))}return{}}async getChatEntitlements(t,e){if(!e)return{};try{const i=await this.requestService.request({type:"GET",url:e,disableCache:!0,headers:{Authorization:`Bearer ${t}`}},m.None),n=await g(i);if(n)return n;this.logService.error("Failed to fetch entitlements","No data returned")}catch(t){this.logService.error("Failed to fetch entitlements",p(t))}return{}}registerSignInAction(t,e,i,n,o){const r=this;this._register(z(class extends R{constructor(){super({id:"workbench.accounts.actions.signin",title:N("sign in","Sign in to {0}",e),menu:{id:B.AccountsContext,when:A.isEqualTo("unavailable"),group:"0_signin"}})}run(){const e=r.configurationService.getValue(n)?i:t;return r.authenticationService.createSession(e,o)}}))}};f=v([c(0,M),c(1,K),c(2,P),c(3,w),c(4,E),c(5,k),c(6,T),c(7,q)],f);export{f as DefaultAccountManagementContribution,ce as DefaultAccountService,M as IDefaultAccountService,se as NullDefaultAccountService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+import { IAuthenticationService } from "../../authentication/common/authentication.js";
+import { asJson, IRequestService } from "../../../../platform/request/common/request.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { IExtensionService } from "../../extensions/common/extensions.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { IContextKey, IContextKeyService, RawContextKey } from "../../../../platform/contextkey/common/contextkey.js";
+import { Action2, MenuId, registerAction2 } from "../../../../platform/actions/common/actions.js";
+import { localize } from "../../../../nls.js";
+import { IWorkbenchContribution } from "../../../common/contributions.js";
+import { Barrier } from "../../../../base/common/async.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { getErrorMessage } from "../../../../base/common/errors.js";
+var DefaultAccountStatus = /* @__PURE__ */ ((DefaultAccountStatus2) => {
+  DefaultAccountStatus2["Uninitialized"] = "uninitialized";
+  DefaultAccountStatus2["Unavailable"] = "unavailable";
+  DefaultAccountStatus2["Available"] = "available";
+  return DefaultAccountStatus2;
+})(DefaultAccountStatus || {});
+const CONTEXT_DEFAULT_ACCOUNT_STATE = new RawContextKey("defaultAccountStatus", "uninitialized" /* Uninitialized */);
+const IDefaultAccountService = createDecorator("defaultAccountService");
+class DefaultAccountService extends Disposable {
+  static {
+    __name(this, "DefaultAccountService");
+  }
+  _defaultAccount = void 0;
+  get defaultAccount() {
+    return this._defaultAccount ?? null;
+  }
+  initBarrier = new Barrier();
+  _onDidChangeDefaultAccount = this._register(new Emitter());
+  onDidChangeDefaultAccount = this._onDidChangeDefaultAccount.event;
+  async getDefaultAccount() {
+    await this.initBarrier.wait();
+    return this.defaultAccount;
+  }
+  setDefaultAccount(account) {
+    const oldAccount = this._defaultAccount;
+    this._defaultAccount = account;
+    if (oldAccount !== this._defaultAccount) {
+      this._onDidChangeDefaultAccount.fire(this._defaultAccount);
+    }
+    this.initBarrier.open();
+  }
+}
+class NullDefaultAccountService extends Disposable {
+  static {
+    __name(this, "NullDefaultAccountService");
+  }
+  onDidChangeDefaultAccount = Event.None;
+  async getDefaultAccount() {
+    return null;
+  }
+  setDefaultAccount(account) {
+  }
+}
+let DefaultAccountManagementContribution = class extends Disposable {
+  constructor(defaultAccountService, configurationService, authenticationService, extensionService, productService, requestService, logService, contextKeyService) {
+    super();
+    this.defaultAccountService = defaultAccountService;
+    this.configurationService = configurationService;
+    this.authenticationService = authenticationService;
+    this.extensionService = extensionService;
+    this.productService = productService;
+    this.requestService = requestService;
+    this.logService = logService;
+    this.accountStatusContext = CONTEXT_DEFAULT_ACCOUNT_STATE.bindTo(contextKeyService);
+    this.initialize();
+  }
+  static {
+    __name(this, "DefaultAccountManagementContribution");
+  }
+  static ID = "workbench.contributions.defaultAccountManagement";
+  defaultAccount = null;
+  accountStatusContext;
+  async initialize() {
+    if (!this.productService.defaultAccount) {
+      return;
+    }
+    const { authenticationProvider, tokenEntitlementUrl, chatEntitlementUrl } = this.productService.defaultAccount;
+    await this.extensionService.whenInstalledExtensionsRegistered();
+    const declaredProvider = this.authenticationService.declaredProviders.find((provider) => provider.id === authenticationProvider.id);
+    if (!declaredProvider) {
+      this.logService.info(`Default account authentication provider ${authenticationProvider} is not declared.`);
+      return;
+    }
+    this.registerSignInAction(authenticationProvider.id, declaredProvider.label, authenticationProvider.enterpriseProviderId, authenticationProvider.enterpriseProviderConfig, authenticationProvider.scopes);
+    this.setDefaultAccount(await this.getDefaultAccountFromAuthenticatedSessions(authenticationProvider.id, authenticationProvider.enterpriseProviderId, authenticationProvider.enterpriseProviderConfig, authenticationProvider.scopes, tokenEntitlementUrl, chatEntitlementUrl));
+    this._register(this.authenticationService.onDidChangeSessions(async (e) => {
+      if (e.providerId !== authenticationProvider.id && e.providerId !== authenticationProvider.enterpriseProviderId) {
+        return;
+      }
+      if (this.defaultAccount && e.event.removed?.some((session) => session.id === this.defaultAccount?.sessionId)) {
+        this.setDefaultAccount(null);
+        return;
+      }
+      this.setDefaultAccount(await this.getDefaultAccountFromAuthenticatedSessions(authenticationProvider.id, authenticationProvider.enterpriseProviderId, authenticationProvider.enterpriseProviderConfig, authenticationProvider.scopes, tokenEntitlementUrl, chatEntitlementUrl));
+    }));
+  }
+  setDefaultAccount(account) {
+    this.defaultAccount = account;
+    this.defaultAccountService.setDefaultAccount(this.defaultAccount);
+    if (this.defaultAccount) {
+      this.accountStatusContext.set("available" /* Available */);
+    } else {
+      this.accountStatusContext.set("unavailable" /* Unavailable */);
+    }
+  }
+  extractFromToken(token, key) {
+    const result = /* @__PURE__ */ new Map();
+    const firstPart = token?.split(":")[0];
+    const fields = firstPart?.split(";");
+    for (const field of fields) {
+      const [key2, value] = field.split("=");
+      result.set(key2, value);
+    }
+    return result.get(key);
+  }
+  async getDefaultAccountFromAuthenticatedSessions(authProviderId, enterpriseAuthProviderId, enterpriseAuthProviderConfig, scopes, tokenEntitlementUrl, chatEntitlementUrl) {
+    const id = this.configurationService.getValue(enterpriseAuthProviderConfig) ? enterpriseAuthProviderId : authProviderId;
+    const sessions = await this.authenticationService.getSessions(id, void 0, void 0, true);
+    const session = sessions.find((s) => this.scopesMatch(s.scopes, scopes));
+    if (!session) {
+      return null;
+    }
+    const [chatEntitlements, tokenEntitlements] = await Promise.all([
+      this.getChatEntitlements(session.accessToken, chatEntitlementUrl),
+      this.getTokenEntitlements(session.accessToken, tokenEntitlementUrl)
+    ]);
+    return {
+      sessionId: session.id,
+      enterprise: id === enterpriseAuthProviderId || session.account.label.includes("_"),
+      ...chatEntitlements,
+      ...tokenEntitlements
+    };
+  }
+  scopesMatch(scopes, expectedScopes) {
+    return scopes.length === expectedScopes.length && expectedScopes.every((scope) => scopes.includes(scope));
+  }
+  async getTokenEntitlements(accessToken, tokenEntitlementsUrl) {
+    if (!tokenEntitlementsUrl) {
+      return {};
+    }
+    try {
+      const chatContext = await this.requestService.request({
+        type: "GET",
+        url: tokenEntitlementsUrl,
+        disableCache: true,
+        headers: {
+          "Authorization": `Bearer ${accessToken}`
+        }
+      }, CancellationToken.None);
+      const chatData = await asJson(chatContext);
+      if (chatData) {
+        return {
+          // Editor preview features are disabled if the flag is present and set to 0
+          chat_preview_features_enabled: this.extractFromToken(chatData.token, "editor_preview_features") !== "0"
+        };
+      }
+      this.logService.error("Failed to fetch token entitlements", "No data returned");
+    } catch (error) {
+      this.logService.error("Failed to fetch token entitlements", getErrorMessage(error));
+    }
+    return {};
+  }
+  async getChatEntitlements(accessToken, chatEntitlementsUrl) {
+    if (!chatEntitlementsUrl) {
+      return {};
+    }
+    try {
+      const context = await this.requestService.request({
+        type: "GET",
+        url: chatEntitlementsUrl,
+        disableCache: true,
+        headers: {
+          "Authorization": `Bearer ${accessToken}`
+        }
+      }, CancellationToken.None);
+      const data = await asJson(context);
+      if (data) {
+        return data;
+      }
+      this.logService.error("Failed to fetch entitlements", "No data returned");
+    } catch (error) {
+      this.logService.error("Failed to fetch entitlements", getErrorMessage(error));
+    }
+    return {};
+  }
+  registerSignInAction(authProviderId, authProviderLabel, enterpriseAuthProviderId, enterpriseAuthProviderConfig, scopes) {
+    const that = this;
+    this._register(registerAction2(class extends Action2 {
+      constructor() {
+        super({
+          id: "workbench.accounts.actions.signin",
+          title: localize("sign in", "Sign in to {0}", authProviderLabel),
+          menu: {
+            id: MenuId.AccountsContext,
+            when: CONTEXT_DEFAULT_ACCOUNT_STATE.isEqualTo("unavailable" /* Unavailable */),
+            group: "0_signin"
+          }
+        });
+      }
+      run() {
+        const id = that.configurationService.getValue(enterpriseAuthProviderConfig) ? enterpriseAuthProviderId : authProviderId;
+        return that.authenticationService.createSession(id, scopes);
+      }
+    }));
+  }
+};
+DefaultAccountManagementContribution = __decorateClass([
+  __decorateParam(0, IDefaultAccountService),
+  __decorateParam(1, IConfigurationService),
+  __decorateParam(2, IAuthenticationService),
+  __decorateParam(3, IExtensionService),
+  __decorateParam(4, IProductService),
+  __decorateParam(5, IRequestService),
+  __decorateParam(6, ILogService),
+  __decorateParam(7, IContextKeyService)
+], DefaultAccountManagementContribution);
+export {
+  DefaultAccountManagementContribution,
+  DefaultAccountService,
+  IDefaultAccountService,
+  NullDefaultAccountService
+};
+//# sourceMappingURL=defaultAccount.js.map

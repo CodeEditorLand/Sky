@@ -1,1 +1,39 @@
-import{toDisposable as c}from"../../../base/common/lifecycle.js";import"../../../base/parts/ipc/common/ipc.net.js";import{createDecorator as i}from"../../instantiation/common/instantiation.js";import"./remoteAuthorityResolver.js";const R=i("remoteSocketFactoryService");class u{factories={};register(e,t){return this.factories[e]??=[],this.factories[e].push(t),c(()=>{const o=this.factories[e]?.indexOf(t);typeof o=="number"&&o>=0&&this.factories[e]?.splice(o,1)})}getSocketFactory(e){return(this.factories[e.type]||[]).find(o=>o.supports(e))}connect(e,t,o,n){const r=this.getSocketFactory(e);if(!r)throw new Error(`No socket factory found for ${e}`);return r.connect(e,t,o,n)}}export{R as IRemoteSocketFactoryService,u as RemoteSocketFactoryService};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { IDisposable, toDisposable } from "../../../base/common/lifecycle.js";
+import { ISocket } from "../../../base/parts/ipc/common/ipc.net.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+import { RemoteConnectionOfType, RemoteConnectionType, RemoteConnection } from "./remoteAuthorityResolver.js";
+const IRemoteSocketFactoryService = createDecorator("remoteSocketFactoryService");
+class RemoteSocketFactoryService {
+  static {
+    __name(this, "RemoteSocketFactoryService");
+  }
+  factories = {};
+  register(type, factory) {
+    this.factories[type] ??= [];
+    this.factories[type].push(factory);
+    return toDisposable(() => {
+      const idx = this.factories[type]?.indexOf(factory);
+      if (typeof idx === "number" && idx >= 0) {
+        this.factories[type]?.splice(idx, 1);
+      }
+    });
+  }
+  getSocketFactory(messagePassing) {
+    const factories = this.factories[messagePassing.type] || [];
+    return factories.find((factory) => factory.supports(messagePassing));
+  }
+  connect(connectTo, path, query, debugLabel) {
+    const socketFactory = this.getSocketFactory(connectTo);
+    if (!socketFactory) {
+      throw new Error(`No socket factory found for ${connectTo}`);
+    }
+    return socketFactory.connect(connectTo, path, query, debugLabel);
+  }
+}
+export {
+  IRemoteSocketFactoryService,
+  RemoteSocketFactoryService
+};
+//# sourceMappingURL=remoteSocketFactoryService.js.map

@@ -1,1 +1,123 @@
-var f=Object.defineProperty,S=Object.getOwnPropertyDescriptor,u=(e,t,r,i)=>{for(var o,n=i>1?void 0:i?S(t,r):t,s=e.length-1;s>=0;s--)(o=e[s])&&(n=(i?o(t,r,n):o(n))||n);return i&&n&&f(t,r,n),n},n=(e,t)=>(r,i)=>t(r,i,e);import{Schemas as h}from"../../../../base/common/network.js";import{Disposable as E}from"../../../../base/common/lifecycle.js";import{URI as g}from"../../../../base/common/uri.js";import"../../../common/editor.js";import"../../../common/editor/editorInput.js";import{ITextEditorService as l}from"../../textfile/common/textEditorService.js";import{isEqual as x,toLocalResource as I}from"../../../../base/common/resources.js";import{PLAINTEXT_LANGUAGE_ID as y}from"../../../../editor/common/languages/modesRegistry.js";import"../../../../platform/instantiation/common/instantiation.js";import{IWorkbenchEnvironmentService as m}from"../../environment/common/environmentService.js";import{IFilesConfigurationService as b}from"../../filesConfiguration/common/filesConfigurationService.js";import{IPathService as p}from"../../path/common/pathService.js";import{UntitledTextEditorInput as T}from"./untitledTextEditorInput.js";import"../../../common/contributions.js";import{NO_TYPE_ID as U}from"../../workingCopy/common/workingCopy.js";import{IWorkingCopyEditorService as W}from"../../workingCopy/common/workingCopyEditorService.js";import{IUntitledTextEditorService as C}from"./untitledTextEditorService.js";let c=class{constructor(e,t,r){this.filesConfigurationService=e,this.environmentService=t,this.pathService=r}canSerialize(e){return this.filesConfigurationService.isHotExitEnabled&&!e.isDisposed()}serialize(e){if(!this.canSerialize(e))return;const t=e;let r,i=t.resource;t.hasAssociatedFilePath&&(i=I(i,this.environmentService.remoteAuthority,this.pathService.defaultUriScheme));const o=t.getLanguageId();(o!==y||t.hasLanguageSetExplicitly)&&(r=o);const n={resourceJSON:i.toJSON(),modeId:r,encoding:t.getEncoding()};return JSON.stringify(n)}deserialize(e,t){return e.invokeFunction((e=>{const r=JSON.parse(t),i=g.revive(r.resourceJSON),o=r.modeId,n=r.encoding;return e.get(l).createTextEditor({resource:i,languageId:o,encoding:n,forceUntitled:!0})}))}};c=u([n(0,b),n(1,m),n(2,p)],c);let a=class extends E{constructor(e,t,r,i,o){super(),this.environmentService=t,this.pathService=r,this.textEditorService=i,this.untitledTextEditorService=o,this._register(e.registerHandler(this))}static ID="workbench.contrib.untitledTextEditorWorkingCopyEditorHandler";handles(e){return e.resource.scheme===h.untitled&&e.typeId===U}isOpen(e,t){return!!this.handles(e)&&(t instanceof T&&x(e.resource,t.resource))}createEditor(e){let t;return t=this.untitledTextEditorService.isUntitledWithAssociatedResource(e.resource)?I(e.resource,this.environmentService.remoteAuthority,this.pathService.defaultUriScheme):e.resource,this.textEditorService.createTextEditor({resource:t,forceUntitled:!0})}};a=u([n(0,W),n(1,m),n(2,p),n(3,l),n(4,C)],a);export{c as UntitledTextEditorInputSerializer,a as UntitledTextEditorWorkingCopyEditorHandler};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Schemas } from "../../../../base/common/network.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { URI, UriComponents } from "../../../../base/common/uri.js";
+import { IEditorSerializer } from "../../../common/editor.js";
+import { EditorInput } from "../../../common/editor/editorInput.js";
+import { ITextEditorService } from "../../textfile/common/textEditorService.js";
+import { isEqual, toLocalResource } from "../../../../base/common/resources.js";
+import { PLAINTEXT_LANGUAGE_ID } from "../../../../editor/common/languages/modesRegistry.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IWorkbenchEnvironmentService } from "../../environment/common/environmentService.js";
+import { IFilesConfigurationService } from "../../filesConfiguration/common/filesConfigurationService.js";
+import { IPathService } from "../../path/common/pathService.js";
+import { UntitledTextEditorInput } from "./untitledTextEditorInput.js";
+import { IWorkbenchContribution } from "../../../common/contributions.js";
+import { IWorkingCopyIdentifier, NO_TYPE_ID } from "../../workingCopy/common/workingCopy.js";
+import { IWorkingCopyEditorHandler, IWorkingCopyEditorService } from "../../workingCopy/common/workingCopyEditorService.js";
+import { IUntitledTextEditorService } from "./untitledTextEditorService.js";
+let UntitledTextEditorInputSerializer = class {
+  constructor(filesConfigurationService, environmentService, pathService) {
+    this.filesConfigurationService = filesConfigurationService;
+    this.environmentService = environmentService;
+    this.pathService = pathService;
+  }
+  static {
+    __name(this, "UntitledTextEditorInputSerializer");
+  }
+  canSerialize(editorInput) {
+    return this.filesConfigurationService.isHotExitEnabled && !editorInput.isDisposed();
+  }
+  serialize(editorInput) {
+    if (!this.canSerialize(editorInput)) {
+      return void 0;
+    }
+    const untitledTextEditorInput = editorInput;
+    let resource = untitledTextEditorInput.resource;
+    if (untitledTextEditorInput.hasAssociatedFilePath) {
+      resource = toLocalResource(resource, this.environmentService.remoteAuthority, this.pathService.defaultUriScheme);
+    }
+    let languageId;
+    const languageIdCandidate = untitledTextEditorInput.getLanguageId();
+    if (languageIdCandidate !== PLAINTEXT_LANGUAGE_ID) {
+      languageId = languageIdCandidate;
+    } else if (untitledTextEditorInput.hasLanguageSetExplicitly) {
+      languageId = languageIdCandidate;
+    }
+    const serialized = {
+      resourceJSON: resource.toJSON(),
+      modeId: languageId,
+      encoding: untitledTextEditorInput.getEncoding()
+    };
+    return JSON.stringify(serialized);
+  }
+  deserialize(instantiationService, serializedEditorInput) {
+    return instantiationService.invokeFunction((accessor) => {
+      const deserialized = JSON.parse(serializedEditorInput);
+      const resource = URI.revive(deserialized.resourceJSON);
+      const languageId = deserialized.modeId;
+      const encoding = deserialized.encoding;
+      return accessor.get(ITextEditorService).createTextEditor({ resource, languageId, encoding, forceUntitled: true });
+    });
+  }
+};
+UntitledTextEditorInputSerializer = __decorateClass([
+  __decorateParam(0, IFilesConfigurationService),
+  __decorateParam(1, IWorkbenchEnvironmentService),
+  __decorateParam(2, IPathService)
+], UntitledTextEditorInputSerializer);
+let UntitledTextEditorWorkingCopyEditorHandler = class extends Disposable {
+  constructor(workingCopyEditorService, environmentService, pathService, textEditorService, untitledTextEditorService) {
+    super();
+    this.environmentService = environmentService;
+    this.pathService = pathService;
+    this.textEditorService = textEditorService;
+    this.untitledTextEditorService = untitledTextEditorService;
+    this._register(workingCopyEditorService.registerHandler(this));
+  }
+  static {
+    __name(this, "UntitledTextEditorWorkingCopyEditorHandler");
+  }
+  static ID = "workbench.contrib.untitledTextEditorWorkingCopyEditorHandler";
+  handles(workingCopy) {
+    return workingCopy.resource.scheme === Schemas.untitled && workingCopy.typeId === NO_TYPE_ID;
+  }
+  isOpen(workingCopy, editor) {
+    if (!this.handles(workingCopy)) {
+      return false;
+    }
+    return editor instanceof UntitledTextEditorInput && isEqual(workingCopy.resource, editor.resource);
+  }
+  createEditor(workingCopy) {
+    let editorInputResource;
+    if (this.untitledTextEditorService.isUntitledWithAssociatedResource(workingCopy.resource)) {
+      editorInputResource = toLocalResource(workingCopy.resource, this.environmentService.remoteAuthority, this.pathService.defaultUriScheme);
+    } else {
+      editorInputResource = workingCopy.resource;
+    }
+    return this.textEditorService.createTextEditor({ resource: editorInputResource, forceUntitled: true });
+  }
+};
+UntitledTextEditorWorkingCopyEditorHandler = __decorateClass([
+  __decorateParam(0, IWorkingCopyEditorService),
+  __decorateParam(1, IWorkbenchEnvironmentService),
+  __decorateParam(2, IPathService),
+  __decorateParam(3, ITextEditorService),
+  __decorateParam(4, IUntitledTextEditorService)
+], UntitledTextEditorWorkingCopyEditorHandler);
+export {
+  UntitledTextEditorInputSerializer,
+  UntitledTextEditorWorkingCopyEditorHandler
+};
+//# sourceMappingURL=untitledTextEditorHandler.js.map

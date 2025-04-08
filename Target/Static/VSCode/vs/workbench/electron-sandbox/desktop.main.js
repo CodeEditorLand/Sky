@@ -1,1 +1,255 @@
-import{localize as F}from"../../nls.js";import R from"../../platform/product/common/product.js";import"../../platform/window/common/window.js";import{Workbench as E}from"../browser/workbench.js";import{NativeWindow as M}from"./window.js";import{setFullscreen as _}from"../../base/browser/browser.js";import{domContentLoaded as x}from"../../base/browser/dom.js";import{onUnexpectedError as C}from"../../base/common/errors.js";import{URI as I}from"../../base/common/uri.js";import{WorkspaceService as z}from"../services/configuration/browser/configurationService.js";import{INativeWorkbenchEnvironmentService as K,NativeWorkbenchEnvironmentService as Z}from"../services/environment/electron-sandbox/environmentService.js";import{ServiceCollection as j}from"../../platform/instantiation/common/serviceCollection.js";import{ILoggerService as B,ILogService as O,LogLevel as H}from"../../platform/log/common/log.js";import{NativeWorkbenchStorageService as V}from"../services/storage/electron-sandbox/storageService.js";import{IWorkspaceContextService as q,isSingleFolderWorkspaceIdentifier as G,isWorkspaceIdentifier as J,reviveIdentifier as Q,toWorkspaceIdentifier as X}from"../../platform/workspace/common/workspace.js";import{IWorkbenchConfigurationService as Y}from"../services/configuration/common/configuration.js";import{IStorageService as $}from"../../platform/storage/common/storage.js";import{Disposable as ee}from"../../base/common/lifecycle.js";import{ISharedProcessService as re}from"../../platform/ipc/electron-sandbox/services.js";import{IMainProcessService as ie}from"../../platform/ipc/common/mainProcessService.js";import{SharedProcessService as oe}from"../services/sharedProcess/electron-sandbox/sharedProcessService.js";import{RemoteAuthorityResolverService as te}from"../../platform/remote/electron-sandbox/remoteAuthorityResolverService.js";import{IRemoteAuthorityResolverService as ne,RemoteConnectionType as se}from"../../platform/remote/common/remoteAuthorityResolver.js";import{RemoteAgentService as ce}from"../services/remote/electron-sandbox/remoteAgentService.js";import{IRemoteAgentService as ae}from"../services/remote/common/remoteAgentService.js";import{FileService as ve}from"../../platform/files/common/fileService.js";import{IFileService as me}from"../../platform/files/common/files.js";import{RemoteFileSystemProviderClient as fe}from"../services/remote/common/remoteFileSystemProviderClient.js";import{ConfigurationCache as le}from"../services/configuration/common/configurationCache.js";import{ISignService as pe}from"../../platform/sign/common/sign.js";import{IProductService as Se}from"../../platform/product/common/productService.js";import{IUriIdentityService as ue}from"../../platform/uriIdentity/common/uriIdentity.js";import{UriIdentityService as ge}from"../../platform/uriIdentity/common/uriIdentityService.js";import{INativeKeyboardLayoutService as he,NativeKeyboardLayoutService as de}from"../services/keybinding/electron-sandbox/nativeKeyboardLayoutService.js";import{ElectronIPCMainProcessService as we}from"../../platform/ipc/electron-sandbox/mainProcessService.js";import{LoggerChannelClient as Ie}from"../../platform/log/common/logIpc.js";import{ProxyChannel as ke}from"../../base/parts/ipc/common/ipc.js";import{NativeLogService as ye}from"../services/log/electron-sandbox/logService.js";import{WorkspaceTrustEnablementService as We,WorkspaceTrustManagementService as Pe}from"../services/workspaces/common/workspaceTrust.js";import{IWorkspaceTrustEnablementService as Ce,IWorkspaceTrustManagementService as be}from"../../platform/workspace/common/workspaceTrust.js";import{safeStringify as Le}from"../../base/common/objects.js";import{IUtilityProcessWorkerWorkbenchService as De,UtilityProcessWorkerWorkbenchService as Ue}from"../services/utilityProcess/electron-sandbox/utilityProcessWorkerWorkbenchService.js";import{isBigSurOrNewer as Ae,isCI as Ne,isMacintosh as Te}from"../../base/common/platform.js";import{Schemas as f}from"../../base/common/network.js";import{DiskFileSystemProvider as Fe}from"../services/files/electron-sandbox/diskFileSystemProvider.js";import{FileUserDataProvider as Re}from"../../platform/userData/common/fileUserDataProvider.js";import{IUserDataProfilesService as Ee,reviveProfile as Me}from"../../platform/userDataProfile/common/userDataProfile.js";import{UserDataProfilesService as _e}from"../../platform/userDataProfile/common/userDataProfileIpc.js";import{PolicyChannelClient as xe}from"../../platform/policy/common/policyIpc.js";import{IPolicyService as ze}from"../../platform/policy/common/policy.js";import{UserDataProfileService as Ke}from"../services/userDataProfile/common/userDataProfileService.js";import{IUserDataProfileService as Ze}from"../services/userDataProfile/common/userDataProfile.js";import{BrowserSocketFactory as je}from"../../platform/remote/browser/browserSocketFactory.js";import{RemoteSocketFactoryService as Be,IRemoteSocketFactoryService as Oe}from"../../platform/remote/common/remoteSocketFactoryService.js";import{ElectronRemoteResourceLoader as He}from"../../platform/remote/electron-sandbox/electronRemoteResourceLoader.js";import"../../platform/configuration/common/configuration.js";import{applyZoom as Ve}from"../../platform/window/electron-sandbox/window.js";import{mainWindow as k}from"../../base/browser/window.js";import{DefaultAccountService as qe,IDefaultAccountService as Ge}from"../services/accounts/common/defaultAccount.js";import{AccountPolicyService as Je}from"../services/policies/common/accountPolicyService.js";import{MultiplexPolicyService as Qe}from"../services/policies/common/multiplexPolicyService.js";class Xe extends ee{constructor(e){super();this.configuration=e;this.init()}init(){this.reviveUris(),_(!!this.configuration.fullscreen,k)}reviveUris(){const e=Q(this.configuration.workspace);(J(e)||G(e))&&(this.configuration.workspace=e);const r=this.configuration.filesToWait,i=r?.paths;for(const t of[i,this.configuration.filesToOpenOrCreate,this.configuration.filesToDiff,this.configuration.filesToMerge])if(Array.isArray(t))for(const s of t)s.fileUri&&(s.fileUri=I.revive(s.fileUri));r&&(r.waitMarkerFileUri=I.revive(r.waitMarkerFileUri))}async open(){const[e]=await Promise.all([this.initServices(),x(k)]);this.applyWindowZoomLevel(e.configurationService);const r=new E(k.document.body,{extraClasses:this.getExtraClasses()},e.serviceCollection,e.logService);this.registerListeners(r,e.storageService);const i=r.startup();this._register(i.createInstance(M))}applyWindowZoomLevel(e){let r;if(this.configuration.isCustomZoomLevel&&typeof this.configuration.zoomLevel=="number")r=this.configuration.zoomLevel;else{const i=e.getValue();r=typeof i.window?.zoomLevel=="number"?i.window.zoomLevel:0}Ve(r,k)}getExtraClasses(){return Te&&Ae(this.configuration.os.release)?["macos-bigsur-or-newer"]:[]}registerListeners(e,r){this._register(e.onWillShutdown(i=>i.join(r.close(),{id:"join.closeStorage",label:F("join.closeStorage","Saving UI state")}))),this._register(e.onDidShutdown(()=>this.dispose()))}async initServices(){const e=new j,r=this._register(new we(this.configuration.windowId));e.set(ie,r);const i={_serviceBrand:void 0,...R};e.set(Se,i);const t=new Z(this.configuration,i);e.set(K,t);const s=this.configuration.loggers.map(n=>({...n,resource:I.revive(n.resource)})),c=new Ie(this.configuration.windowId,this.configuration.logLevel,t.windowLogsPath,s,r.getChannel("logger"));e.set(B,c);const o=this._register(new ye(c,t));e.set(O,o),Ne&&o.info("workbench#open()"),o.getLevel()===H.Trace&&o.trace("workbench#open(): with configuration",Le({...this.configuration,nls:void 0}));const S=this._register(new qe);e.set(Ge,S);let v;const u=new Je(o,S);if(this.configuration.policiesData){const n=new xe(this.configuration.policiesData,r.getChannel("policy"));v=new Qe([n,u],o)}else v=u;e.set(ze,v);const l=new oe(this.configuration.windowId,o);e.set(re,l);const g=new Ue(this.configuration.windowId,o,r);e.set(De,g);const L=ke.toService(r.getChannel("sign"));e.set(pe,L);const a=this._register(new ve(o));e.set(me,a);const y=new te(i,new He(t.window.id,r,a));e.set(ne,y);const D=this._register(new Fe(r,g,o,c));a.registerProvider(f.file,D);const h=new ge(a);e.set(ue,h);const p=new _e(this.configuration.profiles.all,I.revive(this.configuration.profiles.home).with({scheme:t.userRoamingDataHome.scheme}),r.getChannel("userDataProfiles"));e.set(Ee,p);const d=new Ke(Me(this.configuration.profiles.profile,p.profilesHome.scheme));e.set(Ze,d),a.registerProvider(f.vscodeUserData,this._register(new Re(f.file,D,f.vscodeUserData,p,h,o)));const W=new Be;W.register(se.WebSocket,new je(null)),e.set(Oe,W);const P=this._register(new ce(W,d,t,i,y,L,o));e.set(ae,P),this._register(fe.register(P,a,o));const U=this.resolveWorkspaceIdentifier(t),[m,A]=await Promise.all([this.createWorkspaceService(U,t,d,p,a,P,h,o,v).then(n=>(e.set(q,n),e.set(Y,n),n)),this.createStorageService(U,t,d,p,r).then(n=>(e.set($,n),n)),this.createKeyboardLayoutService(r).then(n=>(e.set(he,n),n))]),N=new We(m,t);e.set(Ce,N);const w=new Pe(m,y,A,h,t,m,N,a);return e.set(be,w),m.updateWorkspaceTrust(w.isWorkspaceTrusted()),this._register(w.onDidChangeTrust(()=>m.updateWorkspaceTrust(w.isWorkspaceTrusted()))),{serviceCollection:e,logService:o,storageService:A,configurationService:m}}resolveWorkspaceIdentifier(e){return this.configuration.workspace?this.configuration.workspace:X(this.configuration.backupPath,e.isExtensionDevelopment)}async createWorkspaceService(e,r,i,t,s,c,o,S,v){const u=new le([f.file,f.vscodeUserData],r,s),l=new z({remoteAuthority:r.remoteAuthority,configurationCache:u},r,i,t,s,c,o,S,v);try{return await l.initialize(e),l}catch(g){return C(g),l}}async createStorageService(e,r,i,t,s){const c=new V(e,i,t,s,r);try{return await c.initialize(),c}catch(o){return C(o),c}}async createKeyboardLayoutService(e){const r=new de(e);try{return await r.initialize(),r}catch(i){return C(i),r}}}function vi(b){return new Xe(b).open()}export{Xe as DesktopMain,vi as main};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { localize } from "../../nls.js";
+import product from "../../platform/product/common/product.js";
+import { INativeWindowConfiguration, IWindowsConfiguration } from "../../platform/window/common/window.js";
+import { Workbench } from "../browser/workbench.js";
+import { NativeWindow } from "./window.js";
+import { setFullscreen } from "../../base/browser/browser.js";
+import { domContentLoaded } from "../../base/browser/dom.js";
+import { onUnexpectedError } from "../../base/common/errors.js";
+import { URI } from "../../base/common/uri.js";
+import { WorkspaceService } from "../services/configuration/browser/configurationService.js";
+import { INativeWorkbenchEnvironmentService, NativeWorkbenchEnvironmentService } from "../services/environment/electron-sandbox/environmentService.js";
+import { ServiceCollection } from "../../platform/instantiation/common/serviceCollection.js";
+import { ILoggerService, ILogService, LogLevel } from "../../platform/log/common/log.js";
+import { NativeWorkbenchStorageService } from "../services/storage/electron-sandbox/storageService.js";
+import { IWorkspaceContextService, isSingleFolderWorkspaceIdentifier, isWorkspaceIdentifier, IAnyWorkspaceIdentifier, reviveIdentifier, toWorkspaceIdentifier } from "../../platform/workspace/common/workspace.js";
+import { IWorkbenchConfigurationService } from "../services/configuration/common/configuration.js";
+import { IStorageService } from "../../platform/storage/common/storage.js";
+import { Disposable } from "../../base/common/lifecycle.js";
+import { ISharedProcessService } from "../../platform/ipc/electron-sandbox/services.js";
+import { IMainProcessService } from "../../platform/ipc/common/mainProcessService.js";
+import { SharedProcessService } from "../services/sharedProcess/electron-sandbox/sharedProcessService.js";
+import { RemoteAuthorityResolverService } from "../../platform/remote/electron-sandbox/remoteAuthorityResolverService.js";
+import { IRemoteAuthorityResolverService, RemoteConnectionType } from "../../platform/remote/common/remoteAuthorityResolver.js";
+import { RemoteAgentService } from "../services/remote/electron-sandbox/remoteAgentService.js";
+import { IRemoteAgentService } from "../services/remote/common/remoteAgentService.js";
+import { FileService } from "../../platform/files/common/fileService.js";
+import { IFileService } from "../../platform/files/common/files.js";
+import { RemoteFileSystemProviderClient } from "../services/remote/common/remoteFileSystemProviderClient.js";
+import { ConfigurationCache } from "../services/configuration/common/configurationCache.js";
+import { ISignService } from "../../platform/sign/common/sign.js";
+import { IProductService } from "../../platform/product/common/productService.js";
+import { IUriIdentityService } from "../../platform/uriIdentity/common/uriIdentity.js";
+import { UriIdentityService } from "../../platform/uriIdentity/common/uriIdentityService.js";
+import { INativeKeyboardLayoutService, NativeKeyboardLayoutService } from "../services/keybinding/electron-sandbox/nativeKeyboardLayoutService.js";
+import { ElectronIPCMainProcessService } from "../../platform/ipc/electron-sandbox/mainProcessService.js";
+import { LoggerChannelClient } from "../../platform/log/common/logIpc.js";
+import { ProxyChannel } from "../../base/parts/ipc/common/ipc.js";
+import { NativeLogService } from "../services/log/electron-sandbox/logService.js";
+import { WorkspaceTrustEnablementService, WorkspaceTrustManagementService } from "../services/workspaces/common/workspaceTrust.js";
+import { IWorkspaceTrustEnablementService, IWorkspaceTrustManagementService } from "../../platform/workspace/common/workspaceTrust.js";
+import { safeStringify } from "../../base/common/objects.js";
+import { IUtilityProcessWorkerWorkbenchService, UtilityProcessWorkerWorkbenchService } from "../services/utilityProcess/electron-sandbox/utilityProcessWorkerWorkbenchService.js";
+import { isBigSurOrNewer, isCI, isMacintosh } from "../../base/common/platform.js";
+import { Schemas } from "../../base/common/network.js";
+import { DiskFileSystemProvider } from "../services/files/electron-sandbox/diskFileSystemProvider.js";
+import { FileUserDataProvider } from "../../platform/userData/common/fileUserDataProvider.js";
+import { IUserDataProfilesService, reviveProfile } from "../../platform/userDataProfile/common/userDataProfile.js";
+import { UserDataProfilesService } from "../../platform/userDataProfile/common/userDataProfileIpc.js";
+import { PolicyChannelClient } from "../../platform/policy/common/policyIpc.js";
+import { IPolicyService } from "../../platform/policy/common/policy.js";
+import { UserDataProfileService } from "../services/userDataProfile/common/userDataProfileService.js";
+import { IUserDataProfileService } from "../services/userDataProfile/common/userDataProfile.js";
+import { BrowserSocketFactory } from "../../platform/remote/browser/browserSocketFactory.js";
+import { RemoteSocketFactoryService, IRemoteSocketFactoryService } from "../../platform/remote/common/remoteSocketFactoryService.js";
+import { ElectronRemoteResourceLoader } from "../../platform/remote/electron-sandbox/electronRemoteResourceLoader.js";
+import { IConfigurationService } from "../../platform/configuration/common/configuration.js";
+import { applyZoom } from "../../platform/window/electron-sandbox/window.js";
+import { mainWindow } from "../../base/browser/window.js";
+import { DefaultAccountService, IDefaultAccountService } from "../services/accounts/common/defaultAccount.js";
+import { AccountPolicyService } from "../services/policies/common/accountPolicyService.js";
+import { MultiplexPolicyService } from "../services/policies/common/multiplexPolicyService.js";
+class DesktopMain extends Disposable {
+  constructor(configuration) {
+    super();
+    this.configuration = configuration;
+    this.init();
+  }
+  static {
+    __name(this, "DesktopMain");
+  }
+  init() {
+    this.reviveUris();
+    setFullscreen(!!this.configuration.fullscreen, mainWindow);
+  }
+  reviveUris() {
+    const workspace = reviveIdentifier(this.configuration.workspace);
+    if (isWorkspaceIdentifier(workspace) || isSingleFolderWorkspaceIdentifier(workspace)) {
+      this.configuration.workspace = workspace;
+    }
+    const filesToWait = this.configuration.filesToWait;
+    const filesToWaitPaths = filesToWait?.paths;
+    for (const paths of [filesToWaitPaths, this.configuration.filesToOpenOrCreate, this.configuration.filesToDiff, this.configuration.filesToMerge]) {
+      if (Array.isArray(paths)) {
+        for (const path of paths) {
+          if (path.fileUri) {
+            path.fileUri = URI.revive(path.fileUri);
+          }
+        }
+      }
+    }
+    if (filesToWait) {
+      filesToWait.waitMarkerFileUri = URI.revive(filesToWait.waitMarkerFileUri);
+    }
+  }
+  async open() {
+    const [services] = await Promise.all([this.initServices(), domContentLoaded(mainWindow)]);
+    this.applyWindowZoomLevel(services.configurationService);
+    const workbench = new Workbench(mainWindow.document.body, { extraClasses: this.getExtraClasses() }, services.serviceCollection, services.logService);
+    this.registerListeners(workbench, services.storageService);
+    const instantiationService = workbench.startup();
+    this._register(instantiationService.createInstance(NativeWindow));
+  }
+  applyWindowZoomLevel(configurationService) {
+    let zoomLevel = void 0;
+    if (this.configuration.isCustomZoomLevel && typeof this.configuration.zoomLevel === "number") {
+      zoomLevel = this.configuration.zoomLevel;
+    } else {
+      const windowConfig = configurationService.getValue();
+      zoomLevel = typeof windowConfig.window?.zoomLevel === "number" ? windowConfig.window.zoomLevel : 0;
+    }
+    applyZoom(zoomLevel, mainWindow);
+  }
+  getExtraClasses() {
+    if (isMacintosh && isBigSurOrNewer(this.configuration.os.release)) {
+      return ["macos-bigsur-or-newer"];
+    }
+    return [];
+  }
+  registerListeners(workbench, storageService) {
+    this._register(workbench.onWillShutdown((event) => event.join(storageService.close(), { id: "join.closeStorage", label: localize("join.closeStorage", "Saving UI state") })));
+    this._register(workbench.onDidShutdown(() => this.dispose()));
+  }
+  async initServices() {
+    const serviceCollection = new ServiceCollection();
+    const mainProcessService = this._register(new ElectronIPCMainProcessService(this.configuration.windowId));
+    serviceCollection.set(IMainProcessService, mainProcessService);
+    const productService = { _serviceBrand: void 0, ...product };
+    serviceCollection.set(IProductService, productService);
+    const environmentService = new NativeWorkbenchEnvironmentService(this.configuration, productService);
+    serviceCollection.set(INativeWorkbenchEnvironmentService, environmentService);
+    const loggers = this.configuration.loggers.map((loggerResource) => ({ ...loggerResource, resource: URI.revive(loggerResource.resource) }));
+    const loggerService = new LoggerChannelClient(this.configuration.windowId, this.configuration.logLevel, environmentService.windowLogsPath, loggers, mainProcessService.getChannel("logger"));
+    serviceCollection.set(ILoggerService, loggerService);
+    const logService = this._register(new NativeLogService(loggerService, environmentService));
+    serviceCollection.set(ILogService, logService);
+    if (isCI) {
+      logService.info("workbench#open()");
+    }
+    if (logService.getLevel() === LogLevel.Trace) {
+      logService.trace("workbench#open(): with configuration", safeStringify({
+        ...this.configuration,
+        nls: void 0
+        /* exclude large property */
+      }));
+    }
+    const defaultAccountService = this._register(new DefaultAccountService());
+    serviceCollection.set(IDefaultAccountService, defaultAccountService);
+    let policyService;
+    const accountPolicy = new AccountPolicyService(logService, defaultAccountService);
+    if (this.configuration.policiesData) {
+      const policyChannel = new PolicyChannelClient(this.configuration.policiesData, mainProcessService.getChannel("policy"));
+      policyService = new MultiplexPolicyService([policyChannel, accountPolicy], logService);
+    } else {
+      policyService = accountPolicy;
+    }
+    serviceCollection.set(IPolicyService, policyService);
+    const sharedProcessService = new SharedProcessService(this.configuration.windowId, logService);
+    serviceCollection.set(ISharedProcessService, sharedProcessService);
+    const utilityProcessWorkerWorkbenchService = new UtilityProcessWorkerWorkbenchService(this.configuration.windowId, logService, mainProcessService);
+    serviceCollection.set(IUtilityProcessWorkerWorkbenchService, utilityProcessWorkerWorkbenchService);
+    const signService = ProxyChannel.toService(mainProcessService.getChannel("sign"));
+    serviceCollection.set(ISignService, signService);
+    const fileService = this._register(new FileService(logService));
+    serviceCollection.set(IFileService, fileService);
+    const remoteAuthorityResolverService = new RemoteAuthorityResolverService(productService, new ElectronRemoteResourceLoader(environmentService.window.id, mainProcessService, fileService));
+    serviceCollection.set(IRemoteAuthorityResolverService, remoteAuthorityResolverService);
+    const diskFileSystemProvider = this._register(new DiskFileSystemProvider(mainProcessService, utilityProcessWorkerWorkbenchService, logService, loggerService));
+    fileService.registerProvider(Schemas.file, diskFileSystemProvider);
+    const uriIdentityService = new UriIdentityService(fileService);
+    serviceCollection.set(IUriIdentityService, uriIdentityService);
+    const userDataProfilesService = new UserDataProfilesService(this.configuration.profiles.all, URI.revive(this.configuration.profiles.home).with({ scheme: environmentService.userRoamingDataHome.scheme }), mainProcessService.getChannel("userDataProfiles"));
+    serviceCollection.set(IUserDataProfilesService, userDataProfilesService);
+    const userDataProfileService = new UserDataProfileService(reviveProfile(this.configuration.profiles.profile, userDataProfilesService.profilesHome.scheme));
+    serviceCollection.set(IUserDataProfileService, userDataProfileService);
+    fileService.registerProvider(Schemas.vscodeUserData, this._register(new FileUserDataProvider(Schemas.file, diskFileSystemProvider, Schemas.vscodeUserData, userDataProfilesService, uriIdentityService, logService)));
+    const remoteSocketFactoryService = new RemoteSocketFactoryService();
+    remoteSocketFactoryService.register(RemoteConnectionType.WebSocket, new BrowserSocketFactory(null));
+    serviceCollection.set(IRemoteSocketFactoryService, remoteSocketFactoryService);
+    const remoteAgentService = this._register(new RemoteAgentService(remoteSocketFactoryService, userDataProfileService, environmentService, productService, remoteAuthorityResolverService, signService, logService));
+    serviceCollection.set(IRemoteAgentService, remoteAgentService);
+    this._register(RemoteFileSystemProviderClient.register(remoteAgentService, fileService, logService));
+    const workspace = this.resolveWorkspaceIdentifier(environmentService);
+    const [configurationService, storageService] = await Promise.all([
+      this.createWorkspaceService(workspace, environmentService, userDataProfileService, userDataProfilesService, fileService, remoteAgentService, uriIdentityService, logService, policyService).then((service) => {
+        serviceCollection.set(IWorkspaceContextService, service);
+        serviceCollection.set(IWorkbenchConfigurationService, service);
+        return service;
+      }),
+      this.createStorageService(workspace, environmentService, userDataProfileService, userDataProfilesService, mainProcessService).then((service) => {
+        serviceCollection.set(IStorageService, service);
+        return service;
+      }),
+      this.createKeyboardLayoutService(mainProcessService).then((service) => {
+        serviceCollection.set(INativeKeyboardLayoutService, service);
+        return service;
+      })
+    ]);
+    const workspaceTrustEnablementService = new WorkspaceTrustEnablementService(configurationService, environmentService);
+    serviceCollection.set(IWorkspaceTrustEnablementService, workspaceTrustEnablementService);
+    const workspaceTrustManagementService = new WorkspaceTrustManagementService(configurationService, remoteAuthorityResolverService, storageService, uriIdentityService, environmentService, configurationService, workspaceTrustEnablementService, fileService);
+    serviceCollection.set(IWorkspaceTrustManagementService, workspaceTrustManagementService);
+    configurationService.updateWorkspaceTrust(workspaceTrustManagementService.isWorkspaceTrusted());
+    this._register(workspaceTrustManagementService.onDidChangeTrust(() => configurationService.updateWorkspaceTrust(workspaceTrustManagementService.isWorkspaceTrusted())));
+    return { serviceCollection, logService, storageService, configurationService };
+  }
+  resolveWorkspaceIdentifier(environmentService) {
+    if (this.configuration.workspace) {
+      return this.configuration.workspace;
+    }
+    return toWorkspaceIdentifier(this.configuration.backupPath, environmentService.isExtensionDevelopment);
+  }
+  async createWorkspaceService(workspace, environmentService, userDataProfileService, userDataProfilesService, fileService, remoteAgentService, uriIdentityService, logService, policyService) {
+    const configurationCache = new ConfigurationCache([Schemas.file, Schemas.vscodeUserData], environmentService, fileService);
+    const workspaceService = new WorkspaceService({ remoteAuthority: environmentService.remoteAuthority, configurationCache }, environmentService, userDataProfileService, userDataProfilesService, fileService, remoteAgentService, uriIdentityService, logService, policyService);
+    try {
+      await workspaceService.initialize(workspace);
+      return workspaceService;
+    } catch (error) {
+      onUnexpectedError(error);
+      return workspaceService;
+    }
+  }
+  async createStorageService(workspace, environmentService, userDataProfileService, userDataProfilesService, mainProcessService) {
+    const storageService = new NativeWorkbenchStorageService(workspace, userDataProfileService, userDataProfilesService, mainProcessService, environmentService);
+    try {
+      await storageService.initialize();
+      return storageService;
+    } catch (error) {
+      onUnexpectedError(error);
+      return storageService;
+    }
+  }
+  async createKeyboardLayoutService(mainProcessService) {
+    const keyboardLayoutService = new NativeKeyboardLayoutService(mainProcessService);
+    try {
+      await keyboardLayoutService.initialize();
+      return keyboardLayoutService;
+    } catch (error) {
+      onUnexpectedError(error);
+      return keyboardLayoutService;
+    }
+  }
+}
+function main(configuration) {
+  const workbench = new DesktopMain(configuration);
+  return workbench.open();
+}
+__name(main, "main");
+export {
+  DesktopMain,
+  main
+};
+//# sourceMappingURL=desktop.main.js.map

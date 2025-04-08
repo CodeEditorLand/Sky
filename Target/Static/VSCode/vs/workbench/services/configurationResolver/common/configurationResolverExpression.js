@@ -1,1 +1,157 @@
-import{Iterable as l}from"../../../../base/common/iterator.js";import{isLinux as c,isMacintosh as p,isWindows as u}from"../../../../base/common/platform.js";import"./configurationResolver.js";class a{static VARIABLE_LHS="${";locations=new Map;root;stringRoot;constructor(e){typeof e=="string"?(this.stringRoot=!0,this.root={value:e}):(this.stringRoot=!1,this.root=structuredClone(e))}static parse(e){if(e instanceof a)return e;const t=new a(e);return t.applyPlatformSpecificKeys(),t.parseObject(t.root),t}applyPlatformSpecificKeys(){const e=this.root,t=u?"windows":p?"osx":c?"linux":void 0;t===void 0||!e||typeof e!="object"||!e.hasOwnProperty(t)||(Object.keys(e[t]).forEach(n=>e[n]=e[t][n]),delete e.windows,delete e.osx,delete e.linux)}parseVariable(e,t){if(e[t]!=="$"||e[t+1]!=="{")return;let n=t+2,r=1;for(;n<e.length;){if(e[n]==="{")r++;else if(e[n]==="}"&&(r--,r===0))break;n++}if(r!==0)return;const o=e.slice(t,n+1),i=e.substring(t+2,n),s=i.indexOf(":");return s===-1?{replacement:{id:o,name:i,inner:i},end:n}:{replacement:{id:o,inner:i,name:i.slice(0,s),arg:i.slice(s+1)},end:n}}parseObject(e){if(!(typeof e!="object"||e===null)){if(Array.isArray(e)){for(let t=0;t<e.length;t++){const n=e[t];typeof n=="string"?this.parseString(e,t,n):this.parseObject(n)}return}for(const[t,n]of Object.entries(e))typeof n=="string"?this.parseString(e,t,n):this.parseObject(n)}}parseString(e,t,n){let r=0;for(;r<n.length;){const o=n.indexOf("${",r);if(o===-1)break;const i=this.parseVariable(n,o);if(i){const s=this.locations.get(i.replacement.id)||{locations:[],replacement:i.replacement};s.locations.push({object:e,propertyName:t}),this.locations.set(i.replacement.id,s),r=i.end+1}else r=o+2}}unresolved(){return l.map(l.filter(this.locations.values(),e=>e.resolved===void 0),e=>e.replacement)}resolved(){return l.map(l.filter(this.locations.values(),e=>!!e.resolved),e=>[e.replacement,e.resolved])}resolve(e,t){typeof t!="object"&&(t={value:String(t)});const n=this.locations.get(e.id);if(n){if(t.value!==void 0)for(const{object:r,propertyName:o}of n.locations||[]){const i=r[o].replaceAll(e.id,t.value);r[o]=i}n.resolved=t}}toObject(){return this.stringRoot?this.root.value:this.root}}export{a as ConfigurationResolverExpression};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Iterable } from "../../../../base/common/iterator.js";
+import { isLinux, isMacintosh, isWindows } from "../../../../base/common/platform.js";
+import { ConfiguredInput } from "./configurationResolver.js";
+class ConfigurationResolverExpression {
+  static {
+    __name(this, "ConfigurationResolverExpression");
+  }
+  static VARIABLE_LHS = "${";
+  locations = /* @__PURE__ */ new Map();
+  root;
+  stringRoot;
+  constructor(object) {
+    if (typeof object === "string") {
+      this.stringRoot = true;
+      this.root = { value: object };
+    } else {
+      this.stringRoot = false;
+      this.root = structuredClone(object);
+    }
+  }
+  /**
+   * Creates a new {@link ConfigurationResolverExpression} from an object.
+   * Note that platform-specific keys (i.e. `windows`, `osx`, `linux`) are
+   * applied during parsing.
+   */
+  static parse(object) {
+    if (object instanceof ConfigurationResolverExpression) {
+      return object;
+    }
+    const expr = new ConfigurationResolverExpression(object);
+    expr.applyPlatformSpecificKeys();
+    expr.parseObject(expr.root);
+    return expr;
+  }
+  applyPlatformSpecificKeys() {
+    const config = this.root;
+    const key = isWindows ? "windows" : isMacintosh ? "osx" : isLinux ? "linux" : void 0;
+    if (key === void 0 || !config || typeof config !== "object" || !config.hasOwnProperty(key)) {
+      return;
+    }
+    Object.keys(config[key]).forEach((k) => config[k] = config[key][k]);
+    delete config.windows;
+    delete config.osx;
+    delete config.linux;
+  }
+  parseVariable(str, start) {
+    if (str[start] !== "$" || str[start + 1] !== "{") {
+      return void 0;
+    }
+    let end = start + 2;
+    let braceCount = 1;
+    while (end < str.length) {
+      if (str[end] === "{") {
+        braceCount++;
+      } else if (str[end] === "}") {
+        braceCount--;
+        if (braceCount === 0) {
+          break;
+        }
+      }
+      end++;
+    }
+    if (braceCount !== 0) {
+      return void 0;
+    }
+    const id = str.slice(start, end + 1);
+    const inner = str.substring(start + 2, end);
+    const colonIdx = inner.indexOf(":");
+    if (colonIdx === -1) {
+      return { replacement: { id, name: inner, inner }, end };
+    }
+    return {
+      replacement: {
+        id,
+        inner,
+        name: inner.slice(0, colonIdx),
+        arg: inner.slice(colonIdx + 1)
+      },
+      end
+    };
+  }
+  parseObject(obj) {
+    if (typeof obj !== "object" || obj === null) {
+      return;
+    }
+    if (Array.isArray(obj)) {
+      for (let i = 0; i < obj.length; i++) {
+        const value = obj[i];
+        if (typeof value === "string") {
+          this.parseString(obj, i, value);
+        } else {
+          this.parseObject(value);
+        }
+      }
+      return;
+    }
+    for (const [key, value] of Object.entries(obj)) {
+      if (typeof value === "string") {
+        this.parseString(obj, key, value);
+      } else {
+        this.parseObject(value);
+      }
+    }
+  }
+  parseString(object, propertyName, value) {
+    let pos = 0;
+    while (pos < value.length) {
+      const match = value.indexOf("${", pos);
+      if (match === -1) {
+        break;
+      }
+      const parsed = this.parseVariable(value, match);
+      if (parsed) {
+        const locations = this.locations.get(parsed.replacement.id) || { locations: [], replacement: parsed.replacement };
+        locations.locations.push({ object, propertyName });
+        this.locations.set(parsed.replacement.id, locations);
+        pos = parsed.end + 1;
+      } else {
+        pos = match + 2;
+      }
+    }
+  }
+  unresolved() {
+    return Iterable.map(Iterable.filter(this.locations.values(), (l) => l.resolved === void 0), (l) => l.replacement);
+  }
+  resolved() {
+    return Iterable.map(Iterable.filter(this.locations.values(), (l) => !!l.resolved), (l) => [l.replacement, l.resolved]);
+  }
+  resolve(replacement, data) {
+    if (typeof data !== "object") {
+      data = { value: String(data) };
+    }
+    const location = this.locations.get(replacement.id);
+    if (!location) {
+      return;
+    }
+    if (data.value !== void 0) {
+      for (const { object, propertyName } of location.locations || []) {
+        const newValue = object[propertyName].replaceAll(replacement.id, data.value);
+        object[propertyName] = newValue;
+      }
+    }
+    location.resolved = data;
+  }
+  toObject() {
+    if (this.stringRoot) {
+      return this.root.value;
+    }
+    return this.root;
+  }
+}
+export {
+  ConfigurationResolverExpression
+};
+//# sourceMappingURL=configurationResolverExpression.js.map

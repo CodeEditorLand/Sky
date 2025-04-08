@@ -1,1 +1,35 @@
-var I=Object.defineProperty,a=Object.getOwnPropertyDescriptor,p=(e,r,t,o)=>{for(var n,i=o>1?void 0:o?a(r,t):r,m=e.length-1;m>=0;m--)(n=e[m])&&(i=(o?n(r,t,i):n(i))||i);return o&&i&&I(r,t,i),i},i=(e,r)=>(t,o)=>r(t,o,e);import{InstantiationType as f,registerSingleton as S}from"../../../../platform/instantiation/common/extensions.js";import{IRemoteAgentService as g}from"../../remote/common/remoteAgentService.js";import{INativeWorkbenchEnvironmentService as k}from"../../environment/electron-sandbox/environmentService.js";import{IPathService as v,AbstractPathService as x}from"../common/pathService.js";import{IWorkspaceContextService as W}from"../../../../platform/workspace/common/workspace.js";let m=class extends x{constructor(e,r,t){super(r.userHome,e,r,t)}};m=p([i(0,g),i(1,k),i(2,W)],m),S(v,m,f.Delayed);export{m as NativePathService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { IRemoteAgentService } from "../../remote/common/remoteAgentService.js";
+import { INativeWorkbenchEnvironmentService } from "../../environment/electron-sandbox/environmentService.js";
+import { IPathService, AbstractPathService } from "../common/pathService.js";
+import { IWorkspaceContextService } from "../../../../platform/workspace/common/workspace.js";
+let NativePathService = class extends AbstractPathService {
+  static {
+    __name(this, "NativePathService");
+  }
+  constructor(remoteAgentService, environmentService, contextService) {
+    super(environmentService.userHome, remoteAgentService, environmentService, contextService);
+  }
+};
+NativePathService = __decorateClass([
+  __decorateParam(0, IRemoteAgentService),
+  __decorateParam(1, INativeWorkbenchEnvironmentService),
+  __decorateParam(2, IWorkspaceContextService)
+], NativePathService);
+registerSingleton(IPathService, NativePathService, InstantiationType.Delayed);
+export {
+  NativePathService
+};
+//# sourceMappingURL=pathService.js.map

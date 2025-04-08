@@ -1,1 +1,135 @@
-import{CharCode as c}from"../../../base/common/charCode.js";import{CursorColumns as f}from"../core/cursorColumns.js";var C=(e=>(e[e.Left=0]="Left",e[e.Right=1]="Right",e[e.Nearest=2]="Nearest",e))(C||{});class p{static whitespaceVisibleColumn(e,t,r){const a=e.length;let s=0,o=-1,n=-1;for(let i=0;i<a;i++){if(i===t)return[o,n,s];switch(s%r==0&&(o=i,n=s),e.charCodeAt(i)){case c.Space:s+=1;break;case c.Tab:s=f.nextRenderTabStop(s,r);break;default:return[-1,-1,-1]}}return t===a?[o,n,s]:[-1,-1,-1]}static atomicPosition(e,t,r,a){const s=e.length,[o,n,i]=p.whitespaceVisibleColumn(e,t,r);if(-1===i)return-1;let u;switch(a){case 0:u=!0;break;case 1:u=!1;break;case 2:if(i%r==0)return t;u=i%r<=r/2}if(u){if(-1===o)return-1;let t=n;for(let a=o;a<s;++a){if(t===n+r)return o;switch(e.charCodeAt(a)){case c.Space:t+=1;break;case c.Tab:t=f.nextRenderTabStop(t,r);break;default:return-1}}return t===n+r?o:-1}const b=f.nextRenderTabStop(i,r);let l=i;for(let a=t;a<s;a++){if(l===b)return a;switch(e.charCodeAt(a)){case c.Space:l+=1;break;case c.Tab:l=f.nextRenderTabStop(l,r);break;default:return-1}}return l===b?s:-1}}export{p as AtomicTabMoveOperations,C as Direction};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { CharCode } from "../../../base/common/charCode.js";
+import { CursorColumns } from "../core/cursorColumns.js";
+var Direction = /* @__PURE__ */ ((Direction2) => {
+  Direction2[Direction2["Left"] = 0] = "Left";
+  Direction2[Direction2["Right"] = 1] = "Right";
+  Direction2[Direction2["Nearest"] = 2] = "Nearest";
+  return Direction2;
+})(Direction || {});
+class AtomicTabMoveOperations {
+  static {
+    __name(this, "AtomicTabMoveOperations");
+  }
+  /**
+   * Get the visible column at the position. If we get to a non-whitespace character first
+   * or past the end of string then return -1.
+   *
+   * **Note** `position` and the return value are 0-based.
+   */
+  static whitespaceVisibleColumn(lineContent, position, tabSize) {
+    const lineLength = lineContent.length;
+    let visibleColumn = 0;
+    let prevTabStopPosition = -1;
+    let prevTabStopVisibleColumn = -1;
+    for (let i = 0; i < lineLength; i++) {
+      if (i === position) {
+        return [prevTabStopPosition, prevTabStopVisibleColumn, visibleColumn];
+      }
+      if (visibleColumn % tabSize === 0) {
+        prevTabStopPosition = i;
+        prevTabStopVisibleColumn = visibleColumn;
+      }
+      const chCode = lineContent.charCodeAt(i);
+      switch (chCode) {
+        case CharCode.Space:
+          visibleColumn += 1;
+          break;
+        case CharCode.Tab:
+          visibleColumn = CursorColumns.nextRenderTabStop(visibleColumn, tabSize);
+          break;
+        default:
+          return [-1, -1, -1];
+      }
+    }
+    if (position === lineLength) {
+      return [prevTabStopPosition, prevTabStopVisibleColumn, visibleColumn];
+    }
+    return [-1, -1, -1];
+  }
+  /**
+   * Return the position that should result from a move left, right or to the
+   * nearest tab, if atomic tabs are enabled. Left and right are used for the
+   * arrow key movements, nearest is used for mouse selection. It returns
+   * -1 if atomic tabs are not relevant and you should fall back to normal
+   * behaviour.
+   *
+   * **Note**: `position` and the return value are 0-based.
+   */
+  static atomicPosition(lineContent, position, tabSize, direction) {
+    const lineLength = lineContent.length;
+    const [prevTabStopPosition, prevTabStopVisibleColumn, visibleColumn] = AtomicTabMoveOperations.whitespaceVisibleColumn(lineContent, position, tabSize);
+    if (visibleColumn === -1) {
+      return -1;
+    }
+    let left;
+    switch (direction) {
+      case 0 /* Left */:
+        left = true;
+        break;
+      case 1 /* Right */:
+        left = false;
+        break;
+      case 2 /* Nearest */:
+        if (visibleColumn % tabSize === 0) {
+          return position;
+        }
+        left = visibleColumn % tabSize <= tabSize / 2;
+        break;
+    }
+    if (left) {
+      if (prevTabStopPosition === -1) {
+        return -1;
+      }
+      let currentVisibleColumn2 = prevTabStopVisibleColumn;
+      for (let i = prevTabStopPosition; i < lineLength; ++i) {
+        if (currentVisibleColumn2 === prevTabStopVisibleColumn + tabSize) {
+          return prevTabStopPosition;
+        }
+        const chCode = lineContent.charCodeAt(i);
+        switch (chCode) {
+          case CharCode.Space:
+            currentVisibleColumn2 += 1;
+            break;
+          case CharCode.Tab:
+            currentVisibleColumn2 = CursorColumns.nextRenderTabStop(currentVisibleColumn2, tabSize);
+            break;
+          default:
+            return -1;
+        }
+      }
+      if (currentVisibleColumn2 === prevTabStopVisibleColumn + tabSize) {
+        return prevTabStopPosition;
+      }
+      return -1;
+    }
+    const targetVisibleColumn = CursorColumns.nextRenderTabStop(visibleColumn, tabSize);
+    let currentVisibleColumn = visibleColumn;
+    for (let i = position; i < lineLength; i++) {
+      if (currentVisibleColumn === targetVisibleColumn) {
+        return i;
+      }
+      const chCode = lineContent.charCodeAt(i);
+      switch (chCode) {
+        case CharCode.Space:
+          currentVisibleColumn += 1;
+          break;
+        case CharCode.Tab:
+          currentVisibleColumn = CursorColumns.nextRenderTabStop(currentVisibleColumn, tabSize);
+          break;
+        default:
+          return -1;
+      }
+    }
+    if (currentVisibleColumn === targetVisibleColumn) {
+      return lineLength;
+    }
+    return -1;
+  }
+}
+export {
+  AtomicTabMoveOperations,
+  Direction
+};
+//# sourceMappingURL=cursorAtomicMoveOperations.js.map

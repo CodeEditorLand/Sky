@@ -1,1 +1,153 @@
-import"./workbench.common.main.js";import"./browser/parts/dialogs/dialog.web.contribution.js";import"./browser/web.main.js";import"./services/integrity/browser/integrityService.js";import"./services/search/browser/searchService.js";import"./services/textfile/browser/browserTextFileService.js";import"./services/keybinding/browser/keyboardLayoutService.js";import"./services/extensions/browser/extensionService.js";import"./services/extensionManagement/browser/extensionsProfileScannerService.js";import"./services/extensions/browser/extensionsScannerService.js";import"./services/extensionManagement/browser/webExtensionsScannerService.js";import"./services/extensionManagement/common/extensionManagementServerService.js";import"./services/extensionManagement/browser/extensionGalleryManifestService.js";import"./services/telemetry/browser/telemetryService.js";import"./services/url/browser/urlService.js";import"./services/update/browser/updateService.js";import"./services/workspaces/browser/workspacesService.js";import"./services/workspaces/browser/workspaceEditingService.js";import"./services/dialogs/browser/fileDialogService.js";import"./services/host/browser/browserHostService.js";import"./services/lifecycle/browser/lifecycleService.js";import"./services/clipboard/browser/clipboardService.js";import"./services/localization/browser/localeService.js";import"./services/path/browser/pathService.js";import"./services/themes/browser/browserHostColorSchemeService.js";import"./services/encryption/browser/encryptionService.js";import"./services/secrets/browser/secretStorageService.js";import"./services/workingCopy/browser/workingCopyBackupService.js";import"./services/tunnel/browser/tunnelService.js";import"./services/files/browser/elevatedFileService.js";import"./services/workingCopy/browser/workingCopyHistoryService.js";import"./services/userDataSync/browser/webUserDataSyncEnablementService.js";import"./services/userDataProfile/browser/userDataProfileStorageService.js";import"./services/configurationResolver/browser/configurationResolverService.js";import"../platform/extensionResourceLoader/browser/extensionResourceLoaderService.js";import"./services/auxiliaryWindow/browser/auxiliaryWindowService.js";import{InstantiationType as r,registerSingleton as e}from"../platform/instantiation/common/extensions.js";import{IAccessibilityService as E}from"../platform/accessibility/common/accessibility.js";import{IContextMenuService as d}from"../platform/contextview/browser/contextView.js";import{ContextMenuService as u}from"../platform/contextview/browser/contextMenuService.js";import{IExtensionTipsService as I}from"../platform/extensionManagement/common/extensionManagement.js";import{ExtensionTipsService as g}from"../platform/extensionManagement/common/extensionTipsService.js";import{IWorkbenchExtensionManagementService as U}from"./services/extensionManagement/common/extensionManagement.js";import{ExtensionManagementService as R}from"./services/extensionManagement/common/extensionManagementService.js";import{LogLevel as o}from"../platform/log/common/log.js";import{UserDataSyncMachinesService as _,IUserDataSyncMachinesService as M}from"../platform/userDataSync/common/userDataSyncMachines.js";import{IUserDataSyncStoreService as b,IUserDataSyncService as h,IUserDataAutoSyncService as x,IUserDataSyncLocalStoreService as A,IUserDataSyncResourceProviderService as C}from"../platform/userDataSync/common/userDataSync.js";import{UserDataSyncStoreService as T}from"../platform/userDataSync/common/userDataSyncStoreService.js";import{UserDataSyncLocalStoreService as W}from"../platform/userDataSync/common/userDataSyncLocalStoreService.js";import{UserDataSyncService as L}from"../platform/userDataSync/common/userDataSyncService.js";import{IUserDataSyncAccountService as w,UserDataSyncAccountService as O}from"../platform/userDataSync/common/userDataSyncAccount.js";import{UserDataAutoSyncService as P}from"../platform/userDataSync/common/userDataAutoSyncService.js";import{AccessibilityService as k}from"../platform/accessibility/browser/accessibilityService.js";import{ICustomEndpointTelemetryService as N}from"../platform/telemetry/common/telemetry.js";import{NullEndpointTelemetryService as B}from"../platform/telemetry/common/telemetryUtils.js";import{ITitleService as V}from"./services/title/browser/titleService.js";import{BrowserTitleService as G}from"./browser/parts/titlebar/titlebarPart.js";import{ITimerService as j,TimerService as q}from"./services/timer/browser/timerService.js";import{IDiagnosticsService as z,NullDiagnosticsService as F}from"../platform/diagnostics/common/diagnostics.js";import{ILanguagePackService as H}from"../platform/languagePacks/common/languagePacks.js";import{WebLanguagePacksService as J}from"../platform/languagePacks/browser/languagePacks.js";import{IWebContentExtractorService as K,NullWebContentExtractorService as Q,ISharedWebContentExtractorService as X,NullSharedWebContentExtractorService as Y}from"../platform/webContentExtractor/common/webContentExtractor.js";import{IDefaultAccountService as Z,NullDefaultAccountService as $}from"./services/accounts/common/defaultAccount.js";e(U,R,r.Delayed),e(E,k,r.Delayed),e(d,u,r.Delayed),e(b,T,r.Delayed),e(M,_,r.Delayed),e(A,W,r.Delayed),e(w,O,r.Delayed),e(h,L,r.Delayed),e(C,er,r.Delayed),e(x,P,r.Eager),e(V,G,r.Eager),e(I,g,r.Delayed),e(j,q,r.Delayed),e(N,B,r.Delayed),e(z,F,r.Delayed),e(H,J,r.Delayed),e(K,Q,r.Delayed),e(X,Y,r.Delayed),e(Z,$,r.Delayed);import"./contrib/logs/browser/logs.contribution.js";import"./contrib/localization/browser/localization.contribution.js";import"./contrib/performance/browser/performance.web.contribution.js";import"./contrib/preferences/browser/keyboardLayoutPicker.js";import"./contrib/debug/browser/extensionHostDebugService.js";import"./contrib/welcomeBanner/browser/welcomeBanner.contribution.js";import"./contrib/webview/browser/webview.web.contribution.js";import"./contrib/extensions/browser/extensions.web.contribution.js";import"./contrib/terminal/browser/terminal.web.contribution.js";import"./contrib/externalTerminal/browser/externalTerminal.contribution.js";import"./contrib/terminal/browser/terminalInstanceService.js";import"./contrib/tasks/browser/taskService.js";import"./contrib/tags/browser/workspaceTagsService.js";import"./contrib/issue/browser/issue.contribution.js";import"./contrib/splash/browser/splash.contribution.js";import"./contrib/remote/browser/remoteStartEntry.contribution.js";import{create as t,commands as i,env as m,window as p,workspace as a,logger as c}from"./browser/web.factory.js";import{Menu as n}from"./browser/web.api.js";import{URI as S}from"../base/common/uri.js";import{Event as s,Emitter as l}from"../base/common/event.js";import{Disposable as v}from"../base/common/lifecycle.js";import{GroupOrientation as rr}from"./services/editor/common/editorGroupsService.js";import{UserDataSyncResourceProviderService as er}from"../platform/userDataSync/common/userDataSyncResourceProvider.js";import{RemoteAuthorityResolverError as y,RemoteAuthorityResolverErrorCode as D}from"../platform/remote/common/remoteAuthorityResolver.js";if(globalThis.__VSCODE_WEB_ESM_PROMISE){const e={create:t,URI:S,Event:s,Emitter:l,Disposable:v,LogLevel:o,RemoteAuthorityResolverError:y,RemoteAuthorityResolverErrorCode:D,env:m,window:p,workspace:a,commands:i,logger:c,Menu:n};globalThis.__VSCODE_WEB_ESM_PROMISE(e),delete globalThis.__VSCODE_WEB_ESM_PROMISE}export{v as Disposable,l as Emitter,s as Event,rr as GroupOrientation,o as LogLevel,n as Menu,y as RemoteAuthorityResolverError,D as RemoteAuthorityResolverErrorCode,S as URI,i as commands,t as create,m as env,c as logger,p as window,a as workspace};
+import "./workbench.common.main.js";
+import "./browser/parts/dialogs/dialog.web.contribution.js";
+import "./browser/web.main.js";
+import "./services/integrity/browser/integrityService.js";
+import "./services/search/browser/searchService.js";
+import "./services/textfile/browser/browserTextFileService.js";
+import "./services/keybinding/browser/keyboardLayoutService.js";
+import "./services/extensions/browser/extensionService.js";
+import "./services/extensionManagement/browser/extensionsProfileScannerService.js";
+import "./services/extensions/browser/extensionsScannerService.js";
+import "./services/extensionManagement/browser/webExtensionsScannerService.js";
+import "./services/extensionManagement/common/extensionManagementServerService.js";
+import "./services/extensionManagement/browser/extensionGalleryManifestService.js";
+import "./services/telemetry/browser/telemetryService.js";
+import "./services/url/browser/urlService.js";
+import "./services/update/browser/updateService.js";
+import "./services/workspaces/browser/workspacesService.js";
+import "./services/workspaces/browser/workspaceEditingService.js";
+import "./services/dialogs/browser/fileDialogService.js";
+import "./services/host/browser/browserHostService.js";
+import "./services/lifecycle/browser/lifecycleService.js";
+import "./services/clipboard/browser/clipboardService.js";
+import "./services/localization/browser/localeService.js";
+import "./services/path/browser/pathService.js";
+import "./services/themes/browser/browserHostColorSchemeService.js";
+import "./services/encryption/browser/encryptionService.js";
+import "./services/secrets/browser/secretStorageService.js";
+import "./services/workingCopy/browser/workingCopyBackupService.js";
+import "./services/tunnel/browser/tunnelService.js";
+import "./services/files/browser/elevatedFileService.js";
+import "./services/workingCopy/browser/workingCopyHistoryService.js";
+import "./services/userDataSync/browser/webUserDataSyncEnablementService.js";
+import "./services/userDataProfile/browser/userDataProfileStorageService.js";
+import "./services/configurationResolver/browser/configurationResolverService.js";
+import "../platform/extensionResourceLoader/browser/extensionResourceLoaderService.js";
+import "./services/auxiliaryWindow/browser/auxiliaryWindowService.js";
+import { InstantiationType, registerSingleton } from "../platform/instantiation/common/extensions.js";
+import { IAccessibilityService } from "../platform/accessibility/common/accessibility.js";
+import { IContextMenuService } from "../platform/contextview/browser/contextView.js";
+import { ContextMenuService } from "../platform/contextview/browser/contextMenuService.js";
+import { IExtensionTipsService } from "../platform/extensionManagement/common/extensionManagement.js";
+import { ExtensionTipsService } from "../platform/extensionManagement/common/extensionTipsService.js";
+import { IWorkbenchExtensionManagementService } from "./services/extensionManagement/common/extensionManagement.js";
+import { ExtensionManagementService } from "./services/extensionManagement/common/extensionManagementService.js";
+import { LogLevel } from "../platform/log/common/log.js";
+import { UserDataSyncMachinesService, IUserDataSyncMachinesService } from "../platform/userDataSync/common/userDataSyncMachines.js";
+import { IUserDataSyncStoreService, IUserDataSyncService, IUserDataAutoSyncService, IUserDataSyncLocalStoreService, IUserDataSyncResourceProviderService } from "../platform/userDataSync/common/userDataSync.js";
+import { UserDataSyncStoreService } from "../platform/userDataSync/common/userDataSyncStoreService.js";
+import { UserDataSyncLocalStoreService } from "../platform/userDataSync/common/userDataSyncLocalStoreService.js";
+import { UserDataSyncService } from "../platform/userDataSync/common/userDataSyncService.js";
+import { IUserDataSyncAccountService, UserDataSyncAccountService } from "../platform/userDataSync/common/userDataSyncAccount.js";
+import { UserDataAutoSyncService } from "../platform/userDataSync/common/userDataAutoSyncService.js";
+import { AccessibilityService } from "../platform/accessibility/browser/accessibilityService.js";
+import { ICustomEndpointTelemetryService } from "../platform/telemetry/common/telemetry.js";
+import { NullEndpointTelemetryService } from "../platform/telemetry/common/telemetryUtils.js";
+import { ITitleService } from "./services/title/browser/titleService.js";
+import { BrowserTitleService } from "./browser/parts/titlebar/titlebarPart.js";
+import { ITimerService, TimerService } from "./services/timer/browser/timerService.js";
+import { IDiagnosticsService, NullDiagnosticsService } from "../platform/diagnostics/common/diagnostics.js";
+import { ILanguagePackService } from "../platform/languagePacks/common/languagePacks.js";
+import { WebLanguagePacksService } from "../platform/languagePacks/browser/languagePacks.js";
+import { IWebContentExtractorService, NullWebContentExtractorService, ISharedWebContentExtractorService, NullSharedWebContentExtractorService } from "../platform/webContentExtractor/common/webContentExtractor.js";
+import { IDefaultAccountService, NullDefaultAccountService } from "./services/accounts/common/defaultAccount.js";
+registerSingleton(IWorkbenchExtensionManagementService, ExtensionManagementService, InstantiationType.Delayed);
+registerSingleton(IAccessibilityService, AccessibilityService, InstantiationType.Delayed);
+registerSingleton(IContextMenuService, ContextMenuService, InstantiationType.Delayed);
+registerSingleton(IUserDataSyncStoreService, UserDataSyncStoreService, InstantiationType.Delayed);
+registerSingleton(IUserDataSyncMachinesService, UserDataSyncMachinesService, InstantiationType.Delayed);
+registerSingleton(IUserDataSyncLocalStoreService, UserDataSyncLocalStoreService, InstantiationType.Delayed);
+registerSingleton(IUserDataSyncAccountService, UserDataSyncAccountService, InstantiationType.Delayed);
+registerSingleton(IUserDataSyncService, UserDataSyncService, InstantiationType.Delayed);
+registerSingleton(IUserDataSyncResourceProviderService, UserDataSyncResourceProviderService, InstantiationType.Delayed);
+registerSingleton(
+  IUserDataAutoSyncService,
+  UserDataAutoSyncService,
+  InstantiationType.Eager
+  /* Eager to start auto sync */
+);
+registerSingleton(ITitleService, BrowserTitleService, InstantiationType.Eager);
+registerSingleton(IExtensionTipsService, ExtensionTipsService, InstantiationType.Delayed);
+registerSingleton(ITimerService, TimerService, InstantiationType.Delayed);
+registerSingleton(ICustomEndpointTelemetryService, NullEndpointTelemetryService, InstantiationType.Delayed);
+registerSingleton(IDiagnosticsService, NullDiagnosticsService, InstantiationType.Delayed);
+registerSingleton(ILanguagePackService, WebLanguagePacksService, InstantiationType.Delayed);
+registerSingleton(IWebContentExtractorService, NullWebContentExtractorService, InstantiationType.Delayed);
+registerSingleton(ISharedWebContentExtractorService, NullSharedWebContentExtractorService, InstantiationType.Delayed);
+registerSingleton(IDefaultAccountService, NullDefaultAccountService, InstantiationType.Delayed);
+import "./contrib/logs/browser/logs.contribution.js";
+import "./contrib/localization/browser/localization.contribution.js";
+import "./contrib/performance/browser/performance.web.contribution.js";
+import "./contrib/preferences/browser/keyboardLayoutPicker.js";
+import "./contrib/debug/browser/extensionHostDebugService.js";
+import "./contrib/welcomeBanner/browser/welcomeBanner.contribution.js";
+import "./contrib/webview/browser/webview.web.contribution.js";
+import "./contrib/extensions/browser/extensions.web.contribution.js";
+import "./contrib/terminal/browser/terminal.web.contribution.js";
+import "./contrib/externalTerminal/browser/externalTerminal.contribution.js";
+import "./contrib/terminal/browser/terminalInstanceService.js";
+import "./contrib/tasks/browser/taskService.js";
+import "./contrib/tags/browser/workspaceTagsService.js";
+import "./contrib/issue/browser/issue.contribution.js";
+import "./contrib/splash/browser/splash.contribution.js";
+import "./contrib/remote/browser/remoteStartEntry.contribution.js";
+import { create, commands, env, window, workspace, logger } from "./browser/web.factory.js";
+import { Menu } from "./browser/web.api.js";
+import { URI } from "../base/common/uri.js";
+import { Event, Emitter } from "../base/common/event.js";
+import { Disposable } from "../base/common/lifecycle.js";
+import { GroupOrientation } from "./services/editor/common/editorGroupsService.js";
+import { UserDataSyncResourceProviderService } from "../platform/userDataSync/common/userDataSyncResourceProvider.js";
+import { RemoteAuthorityResolverError, RemoteAuthorityResolverErrorCode } from "../platform/remote/common/remoteAuthorityResolver.js";
+if (globalThis.__VSCODE_WEB_ESM_PROMISE) {
+  const exports = {
+    // Factory
+    create,
+    // Basic Types
+    URI,
+    Event,
+    Emitter,
+    Disposable,
+    // GroupOrientation,
+    LogLevel,
+    RemoteAuthorityResolverError,
+    RemoteAuthorityResolverErrorCode,
+    // Facade API
+    env,
+    window,
+    workspace,
+    commands,
+    logger,
+    Menu
+  };
+  globalThis.__VSCODE_WEB_ESM_PROMISE(exports);
+  delete globalThis.__VSCODE_WEB_ESM_PROMISE;
+}
+export {
+  Disposable,
+  Emitter,
+  Event,
+  GroupOrientation,
+  LogLevel,
+  Menu,
+  RemoteAuthorityResolverError,
+  RemoteAuthorityResolverErrorCode,
+  URI,
+  commands,
+  create,
+  env,
+  logger,
+  window,
+  workspace
+};
+//# sourceMappingURL=workbench.web.main.internal.js.map

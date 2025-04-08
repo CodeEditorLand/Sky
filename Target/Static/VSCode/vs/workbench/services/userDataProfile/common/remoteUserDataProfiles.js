@@ -1,1 +1,166 @@
-var P=Object.defineProperty,d=Object.getOwnPropertyDescriptor,m=(e,t,r,i)=>{for(var o,s=i>1?void 0:i?d(t,r):t,a=e.length-1;a>=0;a--)(o=e[a])&&(s=(i?o(t,r,s):o(s))||s);return i&&s&&P(t,r,s),s},a=(e,t)=>(r,i)=>t(r,i,e);import{Disposable as h}from"../../../../base/common/lifecycle.js";import{InstantiationType as S,registerSingleton as g}from"../../../../platform/instantiation/common/extensions.js";import{createDecorator as p}from"../../../../platform/instantiation/common/instantiation.js";import{IUserDataProfilesService as D}from"../../../../platform/userDataProfile/common/userDataProfile.js";import{IRemoteAgentService as u}from"../../remote/common/remoteAgentService.js";import{IStorageService as I,StorageScope as c,StorageTarget as y}from"../../../../platform/storage/common/storage.js";import"../../../../base/common/collections.js";import{ILogService as A}from"../../../../platform/log/common/log.js";import{IUserDataProfileService as U}from"./userDataProfile.js";import{distinct as R}from"../../../../base/common/arrays.js";import{IWorkbenchEnvironmentService as w}from"../../environment/common/environmentService.js";import{UserDataProfilesService as C}from"../../../../platform/userDataProfile/common/userDataProfileIpc.js";import{ErrorNoTelemetry as v}from"../../../../base/common/errors.js";const l="associatedRemoteProfiles",E=p("IRemoteUserDataProfilesService");let f=class extends h{constructor(e,t,r,i,o,s){super(),this.environmentService=e,this.remoteAgentService=t,this.userDataProfilesService=r,this.userDataProfileService=i,this.storageService=o,this.logService=s,this.initPromise=this.init()}_serviceBrand;initPromise;remoteUserDataProfilesService;async init(){const e=this.remoteAgentService.getConnection();if(!e)return;const t=await this.remoteAgentService.getEnvironment();if(!t)return;this.remoteUserDataProfilesService=new C(t.profiles.all,t.profiles.home,e.getChannel("userDataProfiles")),this._register(this.userDataProfilesService.onDidChangeProfiles((e=>this.onDidChangeLocalProfiles(e))));const r=await this.getAssociatedRemoteProfile(this.userDataProfileService.currentProfile,this.remoteUserDataProfilesService);r.isDefault||this.setAssociatedRemoteProfiles([...this.getAssociatedRemoteProfiles(),r.id]),this.cleanUp()}async onDidChangeLocalProfiles(e){for(const t of e.removed){const e=this.remoteUserDataProfilesService?.profiles.find((e=>e.id===t.id));e&&await(this.remoteUserDataProfilesService?.removeProfile(e))}}async getRemoteProfiles(){if(await this.initPromise,!this.remoteUserDataProfilesService)throw new v("Remote profiles service not available in the current window");return this.remoteUserDataProfilesService.profiles}async getRemoteProfile(e){if(await this.initPromise,!this.remoteUserDataProfilesService)throw new v("Remote profiles service not available in the current window");return this.getAssociatedRemoteProfile(e,this.remoteUserDataProfilesService)}async getAssociatedRemoteProfile(e,t){if(e.isDefault)return t.defaultProfile;let r=t.profiles.find((t=>t.id===e.id));return r||(r=await t.createProfile(e.id,e.name,{transient:e.isTransient,useDefaultFlags:e.useDefaultFlags}),this.setAssociatedRemoteProfiles([...this.getAssociatedRemoteProfiles(),this.userDataProfileService.currentProfile.id])),r}getAssociatedRemoteProfiles(){return this.environmentService.remoteAuthority?this.parseAssociatedRemoteProfiles()[this.environmentService.remoteAuthority]??[]:[]}setAssociatedRemoteProfiles(e){if(this.environmentService.remoteAuthority){const t=this.parseAssociatedRemoteProfiles();(e=R(e)).length?t[this.environmentService.remoteAuthority]=e:delete t[this.environmentService.remoteAuthority],Object.keys(t).length?this.storageService.store(l,JSON.stringify(t),c.APPLICATION,y.MACHINE):this.storageService.remove(l,c.APPLICATION)}}parseAssociatedRemoteProfiles(){if(this.environmentService.remoteAuthority){const e=this.storageService.get(l,c.APPLICATION);try{return e?JSON.parse(e):{}}catch(e){this.logService.error(e)}}return{}}async cleanUp(){const e=[];for(const t of this.getAssociatedRemoteProfiles()){const r=this.remoteUserDataProfilesService?.profiles.find((e=>e.id===t));if(!r)continue;const i=this.userDataProfilesService.profiles.find((e=>e.id===t));i?(i.name!==r.name&&await(this.remoteUserDataProfilesService?.updateProfile(r,{name:i.name})),e.push(t)):r&&await(this.remoteUserDataProfilesService?.removeProfile(r))}this.setAssociatedRemoteProfiles(e)}};f=m([a(0,w),a(1,u),a(2,D),a(3,U),a(4,I),a(5,A)],f),g(E,f,S.Delayed);export{E as IRemoteUserDataProfilesService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { DidChangeProfilesEvent, IUserDataProfile, IUserDataProfilesService } from "../../../../platform/userDataProfile/common/userDataProfile.js";
+import { IRemoteAgentService } from "../../remote/common/remoteAgentService.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { IStringDictionary } from "../../../../base/common/collections.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { IUserDataProfileService } from "./userDataProfile.js";
+import { distinct } from "../../../../base/common/arrays.js";
+import { IWorkbenchEnvironmentService } from "../../environment/common/environmentService.js";
+import { UserDataProfilesService } from "../../../../platform/userDataProfile/common/userDataProfileIpc.js";
+import { ErrorNoTelemetry } from "../../../../base/common/errors.js";
+const associatedRemoteProfilesKey = "associatedRemoteProfiles";
+const IRemoteUserDataProfilesService = createDecorator("IRemoteUserDataProfilesService");
+let RemoteUserDataProfilesService = class extends Disposable {
+  constructor(environmentService, remoteAgentService, userDataProfilesService, userDataProfileService, storageService, logService) {
+    super();
+    this.environmentService = environmentService;
+    this.remoteAgentService = remoteAgentService;
+    this.userDataProfilesService = userDataProfilesService;
+    this.userDataProfileService = userDataProfileService;
+    this.storageService = storageService;
+    this.logService = logService;
+    this.initPromise = this.init();
+  }
+  static {
+    __name(this, "RemoteUserDataProfilesService");
+  }
+  _serviceBrand;
+  initPromise;
+  remoteUserDataProfilesService;
+  async init() {
+    const connection = this.remoteAgentService.getConnection();
+    if (!connection) {
+      return;
+    }
+    const environment = await this.remoteAgentService.getEnvironment();
+    if (!environment) {
+      return;
+    }
+    this.remoteUserDataProfilesService = new UserDataProfilesService(environment.profiles.all, environment.profiles.home, connection.getChannel("userDataProfiles"));
+    this._register(this.userDataProfilesService.onDidChangeProfiles((e) => this.onDidChangeLocalProfiles(e)));
+    const remoteProfile = await this.getAssociatedRemoteProfile(this.userDataProfileService.currentProfile, this.remoteUserDataProfilesService);
+    if (!remoteProfile.isDefault) {
+      this.setAssociatedRemoteProfiles([...this.getAssociatedRemoteProfiles(), remoteProfile.id]);
+    }
+    this.cleanUp();
+  }
+  async onDidChangeLocalProfiles(e) {
+    for (const profile of e.removed) {
+      const remoteProfile = this.remoteUserDataProfilesService?.profiles.find((p) => p.id === profile.id);
+      if (remoteProfile) {
+        await this.remoteUserDataProfilesService?.removeProfile(remoteProfile);
+      }
+    }
+  }
+  async getRemoteProfiles() {
+    await this.initPromise;
+    if (!this.remoteUserDataProfilesService) {
+      throw new ErrorNoTelemetry("Remote profiles service not available in the current window");
+    }
+    return this.remoteUserDataProfilesService.profiles;
+  }
+  async getRemoteProfile(localProfile) {
+    await this.initPromise;
+    if (!this.remoteUserDataProfilesService) {
+      throw new ErrorNoTelemetry("Remote profiles service not available in the current window");
+    }
+    return this.getAssociatedRemoteProfile(localProfile, this.remoteUserDataProfilesService);
+  }
+  async getAssociatedRemoteProfile(localProfile, remoteUserDataProfilesService) {
+    if (localProfile.isDefault) {
+      return remoteUserDataProfilesService.defaultProfile;
+    }
+    let profile = remoteUserDataProfilesService.profiles.find((p) => p.id === localProfile.id);
+    if (!profile) {
+      profile = await remoteUserDataProfilesService.createProfile(localProfile.id, localProfile.name, {
+        transient: localProfile.isTransient,
+        useDefaultFlags: localProfile.useDefaultFlags
+      });
+      this.setAssociatedRemoteProfiles([...this.getAssociatedRemoteProfiles(), this.userDataProfileService.currentProfile.id]);
+    }
+    return profile;
+  }
+  getAssociatedRemoteProfiles() {
+    if (this.environmentService.remoteAuthority) {
+      const remotes = this.parseAssociatedRemoteProfiles();
+      return remotes[this.environmentService.remoteAuthority] ?? [];
+    }
+    return [];
+  }
+  setAssociatedRemoteProfiles(profiles) {
+    if (this.environmentService.remoteAuthority) {
+      const remotes = this.parseAssociatedRemoteProfiles();
+      profiles = distinct(profiles);
+      if (profiles.length) {
+        remotes[this.environmentService.remoteAuthority] = profiles;
+      } else {
+        delete remotes[this.environmentService.remoteAuthority];
+      }
+      if (Object.keys(remotes).length) {
+        this.storageService.store(associatedRemoteProfilesKey, JSON.stringify(remotes), StorageScope.APPLICATION, StorageTarget.MACHINE);
+      } else {
+        this.storageService.remove(associatedRemoteProfilesKey, StorageScope.APPLICATION);
+      }
+    }
+  }
+  parseAssociatedRemoteProfiles() {
+    if (this.environmentService.remoteAuthority) {
+      const value = this.storageService.get(associatedRemoteProfilesKey, StorageScope.APPLICATION);
+      try {
+        return value ? JSON.parse(value) : {};
+      } catch (error) {
+        this.logService.error(error);
+      }
+    }
+    return {};
+  }
+  async cleanUp() {
+    const associatedRemoteProfiles = [];
+    for (const profileId of this.getAssociatedRemoteProfiles()) {
+      const remoteProfile = this.remoteUserDataProfilesService?.profiles.find((p) => p.id === profileId);
+      if (!remoteProfile) {
+        continue;
+      }
+      const localProfile = this.userDataProfilesService.profiles.find((p) => p.id === profileId);
+      if (localProfile) {
+        if (localProfile.name !== remoteProfile.name) {
+          await this.remoteUserDataProfilesService?.updateProfile(remoteProfile, { name: localProfile.name });
+        }
+        associatedRemoteProfiles.push(profileId);
+        continue;
+      }
+      if (remoteProfile) {
+        await this.remoteUserDataProfilesService?.removeProfile(remoteProfile);
+      }
+    }
+    this.setAssociatedRemoteProfiles(associatedRemoteProfiles);
+  }
+};
+RemoteUserDataProfilesService = __decorateClass([
+  __decorateParam(0, IWorkbenchEnvironmentService),
+  __decorateParam(1, IRemoteAgentService),
+  __decorateParam(2, IUserDataProfilesService),
+  __decorateParam(3, IUserDataProfileService),
+  __decorateParam(4, IStorageService),
+  __decorateParam(5, ILogService)
+], RemoteUserDataProfilesService);
+registerSingleton(IRemoteUserDataProfilesService, RemoteUserDataProfilesService, InstantiationType.Delayed);
+export {
+  IRemoteUserDataProfilesService
+};
+//# sourceMappingURL=remoteUserDataProfiles.js.map

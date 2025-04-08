@@ -1,1 +1,38 @@
-import{Schemas as t}from"../../../base/common/network.js";import"../../../base/common/uri.js";import"./workspace.js";function n(r){return r.scheme!==t.file&&r.scheme!==t.vscodeRemote}function r(r){return r.folders.length?r.folders.every((r=>n(r.uri)))?r.folders[0].uri:void 0:r.configuration&&n(r.configuration)?r.configuration:void 0}function a(o){return r(o)?.scheme}function d(o){return r(o)?.authority}function m(o){return void 0!==r(o)}export{d as getVirtualWorkspaceAuthority,r as getVirtualWorkspaceLocation,a as getVirtualWorkspaceScheme,n as isVirtualResource,m as isVirtualWorkspace};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Schemas } from "../../../base/common/network.js";
+import { URI } from "../../../base/common/uri.js";
+import { IWorkspace } from "./workspace.js";
+function isVirtualResource(resource) {
+  return resource.scheme !== Schemas.file && resource.scheme !== Schemas.vscodeRemote;
+}
+__name(isVirtualResource, "isVirtualResource");
+function getVirtualWorkspaceLocation(workspace) {
+  if (workspace.folders.length) {
+    return workspace.folders.every((f) => isVirtualResource(f.uri)) ? workspace.folders[0].uri : void 0;
+  } else if (workspace.configuration && isVirtualResource(workspace.configuration)) {
+    return workspace.configuration;
+  }
+  return void 0;
+}
+__name(getVirtualWorkspaceLocation, "getVirtualWorkspaceLocation");
+function getVirtualWorkspaceScheme(workspace) {
+  return getVirtualWorkspaceLocation(workspace)?.scheme;
+}
+__name(getVirtualWorkspaceScheme, "getVirtualWorkspaceScheme");
+function getVirtualWorkspaceAuthority(workspace) {
+  return getVirtualWorkspaceLocation(workspace)?.authority;
+}
+__name(getVirtualWorkspaceAuthority, "getVirtualWorkspaceAuthority");
+function isVirtualWorkspace(workspace) {
+  return getVirtualWorkspaceLocation(workspace) !== void 0;
+}
+__name(isVirtualWorkspace, "isVirtualWorkspace");
+export {
+  getVirtualWorkspaceAuthority,
+  getVirtualWorkspaceLocation,
+  getVirtualWorkspaceScheme,
+  isVirtualResource,
+  isVirtualWorkspace
+};
+//# sourceMappingURL=virtualWorkspace.js.map

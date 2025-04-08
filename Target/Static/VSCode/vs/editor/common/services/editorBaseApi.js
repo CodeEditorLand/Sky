@@ -1,1 +1,49 @@
-import{CancellationTokenSource as n}from"../../../base/common/cancellation.js";import{Emitter as i}from"../../../base/common/event.js";import{KeyChord as a,KeyMod as e}from"../../../base/common/keyCodes.js";import{URI as m}from"../../../base/common/uri.js";import{Position as c}from"../core/position.js";import{Range as l}from"../core/range.js";import{Selection as u}from"../core/selection.js";import{Token as d}from"../languages.js";import*as r from"../standalone/standaloneEnums.js";class p{static CtrlCmd=e.CtrlCmd;static Shift=e.Shift;static Alt=e.Alt;static WinCtrl=e.WinCtrl;static chord(e,o){return a(e,o)}}function g(){return{editor:void 0,languages:void 0,CancellationTokenSource:n,Emitter:i,KeyCode:r.KeyCode,KeyMod:p,Position:c,Range:l,Selection:u,SelectionDirection:r.SelectionDirection,MarkerSeverity:r.MarkerSeverity,MarkerTag:r.MarkerTag,Uri:m,Token:d}}export{p as KeyMod,g as createMonacoBaseAPI};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { CancellationTokenSource } from "../../../base/common/cancellation.js";
+import { Emitter } from "../../../base/common/event.js";
+import { KeyChord, KeyMod as ConstKeyMod } from "../../../base/common/keyCodes.js";
+import { URI } from "../../../base/common/uri.js";
+import { Position } from "../core/position.js";
+import { Range } from "../core/range.js";
+import { Selection } from "../core/selection.js";
+import { Token } from "../languages.js";
+import * as standaloneEnums from "../standalone/standaloneEnums.js";
+class KeyMod {
+  static {
+    __name(this, "KeyMod");
+  }
+  static CtrlCmd = ConstKeyMod.CtrlCmd;
+  static Shift = ConstKeyMod.Shift;
+  static Alt = ConstKeyMod.Alt;
+  static WinCtrl = ConstKeyMod.WinCtrl;
+  static chord(firstPart, secondPart) {
+    return KeyChord(firstPart, secondPart);
+  }
+}
+function createMonacoBaseAPI() {
+  return {
+    editor: void 0,
+    // undefined override expected here
+    languages: void 0,
+    // undefined override expected here
+    CancellationTokenSource,
+    Emitter,
+    KeyCode: standaloneEnums.KeyCode,
+    KeyMod,
+    Position,
+    Range,
+    Selection,
+    SelectionDirection: standaloneEnums.SelectionDirection,
+    MarkerSeverity: standaloneEnums.MarkerSeverity,
+    MarkerTag: standaloneEnums.MarkerTag,
+    Uri: URI,
+    Token
+  };
+}
+__name(createMonacoBaseAPI, "createMonacoBaseAPI");
+export {
+  KeyMod,
+  createMonacoBaseAPI
+};
+//# sourceMappingURL=editorBaseApi.js.map

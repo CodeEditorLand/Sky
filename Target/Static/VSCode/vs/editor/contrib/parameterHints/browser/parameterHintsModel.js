@@ -1,1 +1,277 @@
-import{createCancelablePromise as C,Delayer as v}from"../../../../base/common/async.js";import{onUnexpectedError as c}from"../../../../base/common/errors.js";import{Emitter as f}from"../../../../base/common/event.js";import{Disposable as y,MutableDisposable as m}from"../../../../base/common/lifecycle.js";import"../../../browser/editorBrowser.js";import{EditorOption as d}from"../../../common/config/editorOptions.js";import{CharacterSet as u}from"../../../common/core/characterClassifier.js";import"../../../common/cursorEvents.js";import"../../../common/languageFeatureRegistry.js";import*as a from"../../../common/languages.js";import{provideSignatureHelp as H}from"./provideSignatureHelp.js";var s;(t=>{let e;var i;(i=e=t.Type||={})[i.Default=0]="Default",i[i.Active=1]="Active",i[i.Pending=2]="Pending",t.Default={type:0};t.Pending=class{constructor(t,e){this.request=t,this.previouslyActiveHints=e}type=2};t.Active=class{constructor(t){this.hints=t}type=1}})(s||={});class p extends y{static DEFAULT_DELAY=120;_onChangedHints=this._register(new f);onChangedHints=this._onChangedHints.event;editor;providers;triggerOnType=!1;_state=s.Default;_pendingTriggers=[];_lastSignatureHelpResult=this._register(new m);triggerChars=new u;retriggerChars=new u;throttledDelayer;triggerId=0;constructor(t,e,i=p.DEFAULT_DELAY){super(),this.editor=t,this.providers=e,this.throttledDelayer=new v(i),this._register(this.editor.onDidBlurEditorWidget((()=>this.cancel()))),this._register(this.editor.onDidChangeConfiguration((()=>this.onEditorConfigurationChange()))),this._register(this.editor.onDidChangeModel((t=>this.onModelChanged()))),this._register(this.editor.onDidChangeModelLanguage((t=>this.onModelChanged()))),this._register(this.editor.onDidChangeCursorSelection((t=>this.onCursorChange(t)))),this._register(this.editor.onDidChangeModelContent((t=>this.onModelContentChange()))),this._register(this.providers.onDidChange(this.onModelChanged,this)),this._register(this.editor.onDidType((t=>this.onDidType(t)))),this.onEditorConfigurationChange(),this.onModelChanged()}get state(){return this._state}set state(t){2===this._state.type&&this._state.request.cancel(),this._state=t}cancel(t=!1){this.state=s.Default,this.throttledDelayer.cancel(),t||this._onChangedHints.fire(void 0)}trigger(t,e){const i=this.editor.getModel();if(!i||!this.providers.has(i))return;const r=++this.triggerId;this._pendingTriggers.push(t),this.throttledDelayer.trigger((()=>this.doTrigger(r)),e).catch(c)}next(){if(1!==this.state.type)return;const t=this.state.hints.signatures.length,e=this.state.hints.activeSignature,i=e%t==t-1,r=this.editor.getOption(d.parameterHints).cycle;!(t<2||i)||r?this.updateActiveSignature(i&&r?0:e+1):this.cancel()}previous(){if(1!==this.state.type)return;const t=this.state.hints.signatures.length,e=this.state.hints.activeSignature,i=0===e,r=this.editor.getOption(d.parameterHints).cycle;!(t<2||i)||r?this.updateActiveSignature(i&&r?t-1:e-1):this.cancel()}updateActiveSignature(t){1===this.state.type&&(this.state=new s.Active({...this.state.hints,activeSignature:t}),this._onChangedHints.fire(this.state.hints))}async doTrigger(t){const e=1===this.state.type||2===this.state.type,i=this.getLastActiveHints();if(this.cancel(!0),0===this._pendingTriggers.length)return!1;const r=this._pendingTriggers.reduce(S);this._pendingTriggers=[];const n={triggerKind:r.triggerKind,triggerCharacter:r.triggerCharacter,isRetrigger:e,activeSignatureHelp:i};if(!this.editor.hasModel())return!1;const a=this.editor.getModel(),g=this.editor.getPosition();this.state=new s.Pending(C((t=>H(this.providers,a,g,n,t))),i);try{const e=await this.state.request;return t!==this.triggerId?(e?.dispose(),!1):e&&e.value.signatures&&0!==e.value.signatures.length?(this.state=new s.Active(e.value),this._lastSignatureHelpResult.value=e,this._onChangedHints.fire(this.state.hints),!0):(e?.dispose(),this._lastSignatureHelpResult.clear(),this.cancel(),!1)}catch(e){return t===this.triggerId&&(this.state=s.Default),c(e),!1}}getLastActiveHints(){switch(this.state.type){case 1:return this.state.hints;case 2:return this.state.previouslyActiveHints;default:return}}get isTriggered(){return 1===this.state.type||2===this.state.type||this.throttledDelayer.isTriggered()}onModelChanged(){this.cancel(),this.triggerChars.clear(),this.retriggerChars.clear();const t=this.editor.getModel();if(t)for(const e of this.providers.ordered(t)){for(const t of e.signatureHelpTriggerCharacters||[])if(t.length){const e=t.charCodeAt(0);this.triggerChars.add(e),this.retriggerChars.add(e)}for(const t of e.signatureHelpRetriggerCharacters||[])t.length&&this.retriggerChars.add(t.charCodeAt(0))}}onDidType(t){if(!this.triggerOnType)return;const e=t.length-1,i=t.charCodeAt(e);(this.triggerChars.has(i)||this.isTriggered&&this.retriggerChars.has(i))&&this.trigger({triggerKind:a.SignatureHelpTriggerKind.TriggerCharacter,triggerCharacter:t.charAt(e)})}onCursorChange(t){"mouse"===t.source?this.cancel():this.isTriggered&&this.trigger({triggerKind:a.SignatureHelpTriggerKind.ContentChange})}onModelContentChange(){this.isTriggered&&this.trigger({triggerKind:a.SignatureHelpTriggerKind.ContentChange})}onEditorConfigurationChange(){this.triggerOnType=this.editor.getOption(d.parameterHints).enabled,this.triggerOnType||this.cancel()}dispose(){this.cancel(!0),super.dispose()}}function S(t,e){switch(e.triggerKind){case a.SignatureHelpTriggerKind.Invoke:return e;case a.SignatureHelpTriggerKind.ContentChange:return t;case a.SignatureHelpTriggerKind.TriggerCharacter:default:return e}}export{p as ParameterHintsModel};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { CancelablePromise, createCancelablePromise, Delayer } from "../../../../base/common/async.js";
+import { onUnexpectedError } from "../../../../base/common/errors.js";
+import { Emitter } from "../../../../base/common/event.js";
+import { Disposable, MutableDisposable } from "../../../../base/common/lifecycle.js";
+import { ICodeEditor } from "../../../browser/editorBrowser.js";
+import { EditorOption } from "../../../common/config/editorOptions.js";
+import { CharacterSet } from "../../../common/core/characterClassifier.js";
+import { ICursorSelectionChangedEvent } from "../../../common/cursorEvents.js";
+import { LanguageFeatureRegistry } from "../../../common/languageFeatureRegistry.js";
+import * as languages from "../../../common/languages.js";
+import { provideSignatureHelp } from "./provideSignatureHelp.js";
+var ParameterHintState;
+((ParameterHintState2) => {
+  let Type;
+  ((Type2) => {
+    Type2[Type2["Default"] = 0] = "Default";
+    Type2[Type2["Active"] = 1] = "Active";
+    Type2[Type2["Pending"] = 2] = "Pending";
+  })(Type = ParameterHintState2.Type || (ParameterHintState2.Type = {}));
+  ParameterHintState2.Default = { type: 0 /* Default */ };
+  class Pending {
+    constructor(request, previouslyActiveHints) {
+      this.request = request;
+      this.previouslyActiveHints = previouslyActiveHints;
+    }
+    static {
+      __name(this, "Pending");
+    }
+    type = 2 /* Pending */;
+  }
+  ParameterHintState2.Pending = Pending;
+  class Active {
+    constructor(hints) {
+      this.hints = hints;
+    }
+    static {
+      __name(this, "Active");
+    }
+    type = 1 /* Active */;
+  }
+  ParameterHintState2.Active = Active;
+})(ParameterHintState || (ParameterHintState = {}));
+class ParameterHintsModel extends Disposable {
+  static {
+    __name(this, "ParameterHintsModel");
+  }
+  static DEFAULT_DELAY = 120;
+  // ms
+  _onChangedHints = this._register(new Emitter());
+  onChangedHints = this._onChangedHints.event;
+  editor;
+  providers;
+  triggerOnType = false;
+  _state = ParameterHintState.Default;
+  _pendingTriggers = [];
+  _lastSignatureHelpResult = this._register(new MutableDisposable());
+  triggerChars = new CharacterSet();
+  retriggerChars = new CharacterSet();
+  throttledDelayer;
+  triggerId = 0;
+  constructor(editor, providers, delay = ParameterHintsModel.DEFAULT_DELAY) {
+    super();
+    this.editor = editor;
+    this.providers = providers;
+    this.throttledDelayer = new Delayer(delay);
+    this._register(this.editor.onDidBlurEditorWidget(() => this.cancel()));
+    this._register(this.editor.onDidChangeConfiguration(() => this.onEditorConfigurationChange()));
+    this._register(this.editor.onDidChangeModel((e) => this.onModelChanged()));
+    this._register(this.editor.onDidChangeModelLanguage((_) => this.onModelChanged()));
+    this._register(this.editor.onDidChangeCursorSelection((e) => this.onCursorChange(e)));
+    this._register(this.editor.onDidChangeModelContent((e) => this.onModelContentChange()));
+    this._register(this.providers.onDidChange(this.onModelChanged, this));
+    this._register(this.editor.onDidType((text) => this.onDidType(text)));
+    this.onEditorConfigurationChange();
+    this.onModelChanged();
+  }
+  get state() {
+    return this._state;
+  }
+  set state(value) {
+    if (this._state.type === 2 /* Pending */) {
+      this._state.request.cancel();
+    }
+    this._state = value;
+  }
+  cancel(silent = false) {
+    this.state = ParameterHintState.Default;
+    this.throttledDelayer.cancel();
+    if (!silent) {
+      this._onChangedHints.fire(void 0);
+    }
+  }
+  trigger(context, delay) {
+    const model = this.editor.getModel();
+    if (!model || !this.providers.has(model)) {
+      return;
+    }
+    const triggerId = ++this.triggerId;
+    this._pendingTriggers.push(context);
+    this.throttledDelayer.trigger(() => {
+      return this.doTrigger(triggerId);
+    }, delay).catch(onUnexpectedError);
+  }
+  next() {
+    if (this.state.type !== 1 /* Active */) {
+      return;
+    }
+    const length = this.state.hints.signatures.length;
+    const activeSignature = this.state.hints.activeSignature;
+    const last = activeSignature % length === length - 1;
+    const cycle = this.editor.getOption(EditorOption.parameterHints).cycle;
+    if ((length < 2 || last) && !cycle) {
+      this.cancel();
+      return;
+    }
+    this.updateActiveSignature(last && cycle ? 0 : activeSignature + 1);
+  }
+  previous() {
+    if (this.state.type !== 1 /* Active */) {
+      return;
+    }
+    const length = this.state.hints.signatures.length;
+    const activeSignature = this.state.hints.activeSignature;
+    const first = activeSignature === 0;
+    const cycle = this.editor.getOption(EditorOption.parameterHints).cycle;
+    if ((length < 2 || first) && !cycle) {
+      this.cancel();
+      return;
+    }
+    this.updateActiveSignature(first && cycle ? length - 1 : activeSignature - 1);
+  }
+  updateActiveSignature(activeSignature) {
+    if (this.state.type !== 1 /* Active */) {
+      return;
+    }
+    this.state = new ParameterHintState.Active({ ...this.state.hints, activeSignature });
+    this._onChangedHints.fire(this.state.hints);
+  }
+  async doTrigger(triggerId) {
+    const isRetrigger = this.state.type === 1 /* Active */ || this.state.type === 2 /* Pending */;
+    const activeSignatureHelp = this.getLastActiveHints();
+    this.cancel(true);
+    if (this._pendingTriggers.length === 0) {
+      return false;
+    }
+    const context = this._pendingTriggers.reduce(mergeTriggerContexts);
+    this._pendingTriggers = [];
+    const triggerContext = {
+      triggerKind: context.triggerKind,
+      triggerCharacter: context.triggerCharacter,
+      isRetrigger,
+      activeSignatureHelp
+    };
+    if (!this.editor.hasModel()) {
+      return false;
+    }
+    const model = this.editor.getModel();
+    const position = this.editor.getPosition();
+    this.state = new ParameterHintState.Pending(
+      createCancelablePromise((token) => provideSignatureHelp(this.providers, model, position, triggerContext, token)),
+      activeSignatureHelp
+    );
+    try {
+      const result = await this.state.request;
+      if (triggerId !== this.triggerId) {
+        result?.dispose();
+        return false;
+      }
+      if (!result || !result.value.signatures || result.value.signatures.length === 0) {
+        result?.dispose();
+        this._lastSignatureHelpResult.clear();
+        this.cancel();
+        return false;
+      } else {
+        this.state = new ParameterHintState.Active(result.value);
+        this._lastSignatureHelpResult.value = result;
+        this._onChangedHints.fire(this.state.hints);
+        return true;
+      }
+    } catch (error) {
+      if (triggerId === this.triggerId) {
+        this.state = ParameterHintState.Default;
+      }
+      onUnexpectedError(error);
+      return false;
+    }
+  }
+  getLastActiveHints() {
+    switch (this.state.type) {
+      case 1 /* Active */:
+        return this.state.hints;
+      case 2 /* Pending */:
+        return this.state.previouslyActiveHints;
+      default:
+        return void 0;
+    }
+  }
+  get isTriggered() {
+    return this.state.type === 1 /* Active */ || this.state.type === 2 /* Pending */ || this.throttledDelayer.isTriggered();
+  }
+  onModelChanged() {
+    this.cancel();
+    this.triggerChars.clear();
+    this.retriggerChars.clear();
+    const model = this.editor.getModel();
+    if (!model) {
+      return;
+    }
+    for (const support of this.providers.ordered(model)) {
+      for (const ch of support.signatureHelpTriggerCharacters || []) {
+        if (ch.length) {
+          const charCode = ch.charCodeAt(0);
+          this.triggerChars.add(charCode);
+          this.retriggerChars.add(charCode);
+        }
+      }
+      for (const ch of support.signatureHelpRetriggerCharacters || []) {
+        if (ch.length) {
+          this.retriggerChars.add(ch.charCodeAt(0));
+        }
+      }
+    }
+  }
+  onDidType(text) {
+    if (!this.triggerOnType) {
+      return;
+    }
+    const lastCharIndex = text.length - 1;
+    const triggerCharCode = text.charCodeAt(lastCharIndex);
+    if (this.triggerChars.has(triggerCharCode) || this.isTriggered && this.retriggerChars.has(triggerCharCode)) {
+      this.trigger({
+        triggerKind: languages.SignatureHelpTriggerKind.TriggerCharacter,
+        triggerCharacter: text.charAt(lastCharIndex)
+      });
+    }
+  }
+  onCursorChange(e) {
+    if (e.source === "mouse") {
+      this.cancel();
+    } else if (this.isTriggered) {
+      this.trigger({ triggerKind: languages.SignatureHelpTriggerKind.ContentChange });
+    }
+  }
+  onModelContentChange() {
+    if (this.isTriggered) {
+      this.trigger({ triggerKind: languages.SignatureHelpTriggerKind.ContentChange });
+    }
+  }
+  onEditorConfigurationChange() {
+    this.triggerOnType = this.editor.getOption(EditorOption.parameterHints).enabled;
+    if (!this.triggerOnType) {
+      this.cancel();
+    }
+  }
+  dispose() {
+    this.cancel(true);
+    super.dispose();
+  }
+}
+function mergeTriggerContexts(previous, current) {
+  switch (current.triggerKind) {
+    case languages.SignatureHelpTriggerKind.Invoke:
+      return current;
+    case languages.SignatureHelpTriggerKind.ContentChange:
+      return previous;
+    case languages.SignatureHelpTriggerKind.TriggerCharacter:
+    default:
+      return current;
+  }
+}
+__name(mergeTriggerContexts, "mergeTriggerContexts");
+export {
+  ParameterHintsModel
+};
+//# sourceMappingURL=parameterHintsModel.js.map

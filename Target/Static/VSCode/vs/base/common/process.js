@@ -1,1 +1,63 @@
-import{isMacintosh as o,isWindows as t}from"./platform.js";let e;const s=globalThis.vscode;if(typeof s<"u"&&typeof s.process<"u"){const r=s.process;e={get platform(){return r.platform},get arch(){return r.arch},get env(){return r.env},cwd:()=>r.cwd()}}else e=typeof process<"u"&&"string"==typeof process?.versions?.node?{get platform(){return process.platform},get arch(){return process.arch},get env(){return process.env},cwd:()=>process.env.VSCODE_CWD||process.cwd()}:{get platform(){return t?"win32":o?"darwin":"linux"},get arch(){},get env(){return{}},cwd:()=>"/"};const d=e.cwd,p=e.env,a=e.platform,f=e.arch;export{f as arch,d as cwd,p as env,a as platform};
+import { INodeProcess, isMacintosh, isWindows } from "./platform.js";
+let safeProcess;
+const vscodeGlobal = globalThis.vscode;
+if (typeof vscodeGlobal !== "undefined" && typeof vscodeGlobal.process !== "undefined") {
+  const sandboxProcess = vscodeGlobal.process;
+  safeProcess = {
+    get platform() {
+      return sandboxProcess.platform;
+    },
+    get arch() {
+      return sandboxProcess.arch;
+    },
+    get env() {
+      return sandboxProcess.env;
+    },
+    cwd() {
+      return sandboxProcess.cwd();
+    }
+  };
+} else if (typeof process !== "undefined" && typeof process?.versions?.node === "string") {
+  safeProcess = {
+    get platform() {
+      return process.platform;
+    },
+    get arch() {
+      return process.arch;
+    },
+    get env() {
+      return process.env;
+    },
+    cwd() {
+      return process.env["VSCODE_CWD"] || process.cwd();
+    }
+  };
+} else {
+  safeProcess = {
+    // Supported
+    get platform() {
+      return isWindows ? "win32" : isMacintosh ? "darwin" : "linux";
+    },
+    get arch() {
+      return void 0;
+    },
+    // Unsupported
+    get env() {
+      return {};
+    },
+    cwd() {
+      return "/";
+    }
+  };
+}
+const cwd = safeProcess.cwd;
+const env = safeProcess.env;
+const platform = safeProcess.platform;
+const arch = safeProcess.arch;
+export {
+  arch,
+  cwd,
+  env,
+  platform
+};
+//# sourceMappingURL=process.js.map

@@ -1,1 +1,87 @@
-import{onUnexpectedError as p}from"../../../base/common/errors.js";import{URI as u}from"../../../base/common/uri.js";import"../../../base/common/lifecycle.js";import{Disposable as f}from"./extHostTypes.js";import{MainContext as v}from"./extHost.protocol.js";import"./extHostDocumentsAndEditors.js";import{Schemas as h}from"../../../base/common/network.js";import"../../../platform/log/common/log.js";import{CancellationToken as l}from"../../../base/common/cancellation.js";import{splitLines as C}from"../../../base/common/strings.js";class c{constructor(e,o,t){this._documentsAndEditors=o;this._logService=t;this._proxy=e.getProxy(v.MainThreadDocumentContentProviders)}static _handlePool=0;_documentContentProviders=new Map;_proxy;registerTextDocumentContentProvider(e,o){if(Object.keys(h).indexOf(e)>=0)throw new Error(`scheme '${e}' already registered`);const t=c._handlePool++;this._documentContentProviders.set(t,o),this._proxy.$registerTextContentProvider(t,e);let i;if(typeof o.onDidChange=="function"){let r;i=o.onDidChange(async n=>{if(n.scheme!==e){this._logService.warn(`Provider for scheme '${e}' is firing event for schema '${n.scheme}' which will be IGNORED`);return}if(!this._documentsAndEditors.getDocument(n))return;r&&await r;const d=this.$provideTextDocumentContent(t,n).then(async s=>{if(!s&&typeof s!="string")return;const m=this._documentsAndEditors.getDocument(n);if(!m)return;const a=C(s);if(!m.equalLines(a))return this._proxy.$onVirtualDocumentChange(n,s)}).catch(p).finally(()=>{r===d&&(r=void 0)});r=d})}return new f(()=>{this._documentContentProviders.delete(t)&&this._proxy.$unregisterTextContentProvider(t),i&&(i.dispose(),i=void 0)})}$provideTextDocumentContent(e,o){const t=this._documentContentProviders.get(e);return t?Promise.resolve(t.provideTextDocumentContent(u.revive(o),l.None)):Promise.reject(new Error(`unsupported uri-scheme: ${o.scheme}`))}}export{c as ExtHostDocumentContentProvider};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { onUnexpectedError } from "../../../base/common/errors.js";
+import { URI, UriComponents } from "../../../base/common/uri.js";
+import { IDisposable } from "../../../base/common/lifecycle.js";
+import { Disposable } from "./extHostTypes.js";
+import { MainContext, ExtHostDocumentContentProvidersShape, MainThreadDocumentContentProvidersShape, IMainContext } from "./extHost.protocol.js";
+import { ExtHostDocumentsAndEditors } from "./extHostDocumentsAndEditors.js";
+import { Schemas } from "../../../base/common/network.js";
+import { ILogService } from "../../../platform/log/common/log.js";
+import { CancellationToken } from "../../../base/common/cancellation.js";
+import { splitLines } from "../../../base/common/strings.js";
+class ExtHostDocumentContentProvider {
+  constructor(mainContext, _documentsAndEditors, _logService) {
+    this._documentsAndEditors = _documentsAndEditors;
+    this._logService = _logService;
+    this._proxy = mainContext.getProxy(MainContext.MainThreadDocumentContentProviders);
+  }
+  static {
+    __name(this, "ExtHostDocumentContentProvider");
+  }
+  static _handlePool = 0;
+  _documentContentProviders = /* @__PURE__ */ new Map();
+  _proxy;
+  registerTextDocumentContentProvider(scheme, provider) {
+    if (Object.keys(Schemas).indexOf(scheme) >= 0) {
+      throw new Error(`scheme '${scheme}' already registered`);
+    }
+    const handle = ExtHostDocumentContentProvider._handlePool++;
+    this._documentContentProviders.set(handle, provider);
+    this._proxy.$registerTextContentProvider(handle, scheme);
+    let subscription;
+    if (typeof provider.onDidChange === "function") {
+      let lastEvent;
+      subscription = provider.onDidChange(async (uri) => {
+        if (uri.scheme !== scheme) {
+          this._logService.warn(`Provider for scheme '${scheme}' is firing event for schema '${uri.scheme}' which will be IGNORED`);
+          return;
+        }
+        if (!this._documentsAndEditors.getDocument(uri)) {
+          return;
+        }
+        if (lastEvent) {
+          await lastEvent;
+        }
+        const thisEvent = this.$provideTextDocumentContent(handle, uri).then(async (value) => {
+          if (!value && typeof value !== "string") {
+            return;
+          }
+          const document = this._documentsAndEditors.getDocument(uri);
+          if (!document) {
+            return;
+          }
+          const lines = splitLines(value);
+          if (!document.equalLines(lines)) {
+            return this._proxy.$onVirtualDocumentChange(uri, value);
+          }
+        }).catch(onUnexpectedError).finally(() => {
+          if (lastEvent === thisEvent) {
+            lastEvent = void 0;
+          }
+        });
+        lastEvent = thisEvent;
+      });
+    }
+    return new Disposable(() => {
+      if (this._documentContentProviders.delete(handle)) {
+        this._proxy.$unregisterTextContentProvider(handle);
+      }
+      if (subscription) {
+        subscription.dispose();
+        subscription = void 0;
+      }
+    });
+  }
+  $provideTextDocumentContent(handle, uri) {
+    const provider = this._documentContentProviders.get(handle);
+    if (!provider) {
+      return Promise.reject(new Error(`unsupported uri-scheme: ${uri.scheme}`));
+    }
+    return Promise.resolve(provider.provideTextDocumentContent(URI.revive(uri), CancellationToken.None));
+  }
+}
+export {
+  ExtHostDocumentContentProvider
+};
+//# sourceMappingURL=extHostDocumentContentProviders.js.map

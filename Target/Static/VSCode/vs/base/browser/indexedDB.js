@@ -1,1 +1,156 @@
-import{toErrorMessage as D}from"../common/errorMessage.js";import{ErrorNoTelemetry as d,getErrorMessage as h}from"../common/errors.js";import{mark as l}from"../common/performance.js";class u extends Error{constructor(s){super("Missing stores");this.db=s}}class b extends Error{code="DBClosed";constructor(e){super(`IndexedDB database '${e}' is closed.`)}}class c{constructor(e,s){this.name=s;this.database=e}static async create(e,s,n){const r=await c.openDatabase(e,s,n);return new c(r,e)}static async openDatabase(e,s,n){l(`code/willOpenDatabase/${e}`);try{return await c.doOpenDatabase(e,s,n)}catch(r){if(r instanceof u){console.info("Attempting to recreate the IndexedDB once.",e);try{await c.deleteDatabase(r.db)}catch(o){throw console.error("Error while deleting the IndexedDB",h(o)),o}return await c.doOpenDatabase(e,s,n)}throw r}finally{l(`code/didOpenDatabase/${e}`)}}static doOpenDatabase(e,s,n){return new Promise((r,o)=>{const a=indexedDB.open(e,s);a.onerror=()=>o(a.error),a.onsuccess=()=>{const t=a.result;for(const i of n)if(!t.objectStoreNames.contains(i)){console.error(`Error while opening IndexedDB. Could not find '${i}'' object store`),o(new u(t));return}r(t)},a.onupgradeneeded=()=>{const t=a.result;for(const i of n)t.objectStoreNames.contains(i)||t.createObjectStore(i)}})}static deleteDatabase(e){return new Promise((s,n)=>{e.close();const r=indexedDB.deleteDatabase(e.name);r.onerror=o=>n(r.error),r.onsuccess=()=>s()})}database=null;pendingTransactions=[];hasPendingTransactions(){return this.pendingTransactions.length>0}close(){this.pendingTransactions.length&&this.pendingTransactions.splice(0,this.pendingTransactions.length).forEach(e=>e.abort()),this.database?.close(),this.database=null}async runInTransaction(e,s,n){if(!this.database)throw new b(this.name);const r=this.database.transaction(e,s);return this.pendingTransactions.push(r),new Promise((o,a)=>{r.oncomplete=()=>{Array.isArray(t)?o(t.map(i=>i.result)):o(t.result)},r.onerror=()=>a(r.error?d.fromError(r.error):new d("unknown error")),r.onabort=()=>a(r.error?d.fromError(r.error):new d("unknown error"));const t=n(r.objectStore(e))}).finally(()=>this.pendingTransactions.splice(this.pendingTransactions.indexOf(r),1))}async getKeyValues(e,s){if(!this.database)throw new b(this.name);const n=this.database.transaction(e,"readonly");return this.pendingTransactions.push(n),new Promise(r=>{const o=new Map,t=n.objectStore(e).openCursor();if(!t)return r(o);t.onsuccess=()=>{t.result?(s(t.result.value)&&o.set(t.result.key.toString(),t.result.value),t.result.continue()):r(o)};const i=g=>{console.error(`IndexedDB getKeyValues(): ${D(g,!0)}`),r(o)};t.onerror=()=>i(t.error),n.onerror=()=>i(n.error)}).finally(()=>this.pendingTransactions.splice(this.pendingTransactions.indexOf(n),1))}}export{b as DBClosedError,c as IndexedDB};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { toErrorMessage } from "../common/errorMessage.js";
+import { ErrorNoTelemetry, getErrorMessage } from "../common/errors.js";
+import { mark } from "../common/performance.js";
+class MissingStoresError extends Error {
+  constructor(db) {
+    super("Missing stores");
+    this.db = db;
+  }
+  static {
+    __name(this, "MissingStoresError");
+  }
+}
+class DBClosedError extends Error {
+  static {
+    __name(this, "DBClosedError");
+  }
+  code = "DBClosed";
+  constructor(dbName) {
+    super(`IndexedDB database '${dbName}' is closed.`);
+  }
+}
+class IndexedDB {
+  constructor(database, name) {
+    this.name = name;
+    this.database = database;
+  }
+  static {
+    __name(this, "IndexedDB");
+  }
+  static async create(name, version, stores) {
+    const database = await IndexedDB.openDatabase(name, version, stores);
+    return new IndexedDB(database, name);
+  }
+  static async openDatabase(name, version, stores) {
+    mark(`code/willOpenDatabase/${name}`);
+    try {
+      return await IndexedDB.doOpenDatabase(name, version, stores);
+    } catch (err) {
+      if (err instanceof MissingStoresError) {
+        console.info(`Attempting to recreate the IndexedDB once.`, name);
+        try {
+          await IndexedDB.deleteDatabase(err.db);
+        } catch (error) {
+          console.error(`Error while deleting the IndexedDB`, getErrorMessage(error));
+          throw error;
+        }
+        return await IndexedDB.doOpenDatabase(name, version, stores);
+      }
+      throw err;
+    } finally {
+      mark(`code/didOpenDatabase/${name}`);
+    }
+  }
+  static doOpenDatabase(name, version, stores) {
+    return new Promise((c, e) => {
+      const request = indexedDB.open(name, version);
+      request.onerror = () => e(request.error);
+      request.onsuccess = () => {
+        const db = request.result;
+        for (const store of stores) {
+          if (!db.objectStoreNames.contains(store)) {
+            console.error(`Error while opening IndexedDB. Could not find '${store}'' object store`);
+            e(new MissingStoresError(db));
+            return;
+          }
+        }
+        c(db);
+      };
+      request.onupgradeneeded = () => {
+        const db = request.result;
+        for (const store of stores) {
+          if (!db.objectStoreNames.contains(store)) {
+            db.createObjectStore(store);
+          }
+        }
+      };
+    });
+  }
+  static deleteDatabase(database) {
+    return new Promise((c, e) => {
+      database.close();
+      const deleteRequest = indexedDB.deleteDatabase(database.name);
+      deleteRequest.onerror = (err) => e(deleteRequest.error);
+      deleteRequest.onsuccess = () => c();
+    });
+  }
+  database = null;
+  pendingTransactions = [];
+  hasPendingTransactions() {
+    return this.pendingTransactions.length > 0;
+  }
+  close() {
+    if (this.pendingTransactions.length) {
+      this.pendingTransactions.splice(0, this.pendingTransactions.length).forEach((transaction) => transaction.abort());
+    }
+    this.database?.close();
+    this.database = null;
+  }
+  async runInTransaction(store, transactionMode, dbRequestFn) {
+    if (!this.database) {
+      throw new DBClosedError(this.name);
+    }
+    const transaction = this.database.transaction(store, transactionMode);
+    this.pendingTransactions.push(transaction);
+    return new Promise((c, e) => {
+      transaction.oncomplete = () => {
+        if (Array.isArray(request)) {
+          c(request.map((r) => r.result));
+        } else {
+          c(request.result);
+        }
+      };
+      transaction.onerror = () => e(transaction.error ? ErrorNoTelemetry.fromError(transaction.error) : new ErrorNoTelemetry("unknown error"));
+      transaction.onabort = () => e(transaction.error ? ErrorNoTelemetry.fromError(transaction.error) : new ErrorNoTelemetry("unknown error"));
+      const request = dbRequestFn(transaction.objectStore(store));
+    }).finally(() => this.pendingTransactions.splice(this.pendingTransactions.indexOf(transaction), 1));
+  }
+  async getKeyValues(store, isValid) {
+    if (!this.database) {
+      throw new DBClosedError(this.name);
+    }
+    const transaction = this.database.transaction(store, "readonly");
+    this.pendingTransactions.push(transaction);
+    return new Promise((resolve) => {
+      const items = /* @__PURE__ */ new Map();
+      const objectStore = transaction.objectStore(store);
+      const cursor = objectStore.openCursor();
+      if (!cursor) {
+        return resolve(items);
+      }
+      cursor.onsuccess = () => {
+        if (cursor.result) {
+          if (isValid(cursor.result.value)) {
+            items.set(cursor.result.key.toString(), cursor.result.value);
+          }
+          cursor.result.continue();
+        } else {
+          resolve(items);
+        }
+      };
+      const onError = /* @__PURE__ */ __name((error) => {
+        console.error(`IndexedDB getKeyValues(): ${toErrorMessage(error, true)}`);
+        resolve(items);
+      }, "onError");
+      cursor.onerror = () => onError(cursor.error);
+      transaction.onerror = () => onError(transaction.error);
+    }).finally(() => this.pendingTransactions.splice(this.pendingTransactions.indexOf(transaction), 1));
+  }
+}
+export {
+  DBClosedError,
+  IndexedDB
+};
+//# sourceMappingURL=indexedDB.js.map

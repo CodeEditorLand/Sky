@@ -1,1 +1,62 @@
-import"../../../../base/common/lifecycle.js";import"../../../../platform/instantiation/common/instantiation.js";import"./extensionHostKind.js";import"./extensionHostProxy.js";import"./extensions.js";import"./proxyIdentifier.js";function T(t){return function(s){e.INSTANCE.registerNamedCustomer(t,s)}}function N(t){e.INSTANCE.registerCustomer(t)}var n;(t=>{t.getNamedCustomers=function(){return e.INSTANCE.getNamedCustomers()},t.getCustomers=function(){return e.INSTANCE.getCustomers()}})(n||={});class e{static INSTANCE=new e;_namedCustomers;_customers;constructor(){this._namedCustomers=[],this._customers=[]}registerNamedCustomer(t,s){const e=[t,s];this._namedCustomers.push(e)}getNamedCustomers(){return this._namedCustomers}registerCustomer(t){this._customers.push(t)}getCustomers(){return this._customers}}export{n as ExtHostCustomersRegistry,N as extHostCustomer,T as extHostNamedCustomer};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { IDisposable } from "../../../../base/common/lifecycle.js";
+import { BrandedService, IConstructorSignature } from "../../../../platform/instantiation/common/instantiation.js";
+import { ExtensionHostKind } from "./extensionHostKind.js";
+import { IExtensionHostProxy } from "./extensionHostProxy.js";
+import { IInternalExtensionService } from "./extensions.js";
+import { IRPCProtocol, ProxyIdentifier } from "./proxyIdentifier.js";
+function extHostNamedCustomer(id) {
+  return function(ctor) {
+    ExtHostCustomersRegistryImpl.INSTANCE.registerNamedCustomer(id, ctor);
+  };
+}
+__name(extHostNamedCustomer, "extHostNamedCustomer");
+function extHostCustomer(ctor) {
+  ExtHostCustomersRegistryImpl.INSTANCE.registerCustomer(ctor);
+}
+__name(extHostCustomer, "extHostCustomer");
+var ExtHostCustomersRegistry;
+((ExtHostCustomersRegistry2) => {
+  function getNamedCustomers() {
+    return ExtHostCustomersRegistryImpl.INSTANCE.getNamedCustomers();
+  }
+  ExtHostCustomersRegistry2.getNamedCustomers = getNamedCustomers;
+  __name(getNamedCustomers, "getNamedCustomers");
+  function getCustomers() {
+    return ExtHostCustomersRegistryImpl.INSTANCE.getCustomers();
+  }
+  ExtHostCustomersRegistry2.getCustomers = getCustomers;
+  __name(getCustomers, "getCustomers");
+})(ExtHostCustomersRegistry || (ExtHostCustomersRegistry = {}));
+class ExtHostCustomersRegistryImpl {
+  static {
+    __name(this, "ExtHostCustomersRegistryImpl");
+  }
+  static INSTANCE = new ExtHostCustomersRegistryImpl();
+  _namedCustomers;
+  _customers;
+  constructor() {
+    this._namedCustomers = [];
+    this._customers = [];
+  }
+  registerNamedCustomer(id, ctor) {
+    const entry = [id, ctor];
+    this._namedCustomers.push(entry);
+  }
+  getNamedCustomers() {
+    return this._namedCustomers;
+  }
+  registerCustomer(ctor) {
+    this._customers.push(ctor);
+  }
+  getCustomers() {
+    return this._customers;
+  }
+}
+export {
+  ExtHostCustomersRegistry,
+  extHostCustomer,
+  extHostNamedCustomer
+};
+//# sourceMappingURL=extHostCustomers.js.map

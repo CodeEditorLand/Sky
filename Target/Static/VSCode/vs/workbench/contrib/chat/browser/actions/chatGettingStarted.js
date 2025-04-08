@@ -1,1 +1,99 @@
-var u=Object.defineProperty;var h=Object.getOwnPropertyDescriptor;var v=(a,o,r,i)=>{for(var e=i>1?void 0:i?h(o,r):o,n=a.length-1,c;n>=0;n--)(c=a[n])&&(e=(i?c(o,r,e):c(e))||e);return i&&e&&u(o,r,e),e},t=(a,o)=>(r,i)=>o(r,i,a);import"../../../../common/contributions.js";import{Disposable as I}from"../../../../../base/common/lifecycle.js";import{IProductService as d}from"../../../../../platform/product/common/productService.js";import{IExtensionService as f}from"../../../../services/extensions/common/extensions.js";import{ExtensionIdentifier as S}from"../../../../../platform/extensions/common/extensions.js";import{IExtensionManagementService as g,InstallOperation as y}from"../../../../../platform/extensionManagement/common/extensionManagement.js";import{IStorageService as x,StorageScope as p,StorageTarget as w}from"../../../../../platform/storage/common/storage.js";import"../../../../../base/common/product.js";import{IViewDescriptorService as D}from"../../../../common/views.js";import{IWorkbenchLayoutService as V}from"../../../../services/layout/browser/layoutService.js";import{ensureSideBarChatViewSize as b,showCopilotView as E}from"../chat.js";import{IConfigurationService as W}from"../../../../../platform/configuration/common/configuration.js";import{IViewsService as A}from"../../../../services/views/common/viewsService.js";import{IStatusbarService as k}from"../../../../services/statusbar/browser/statusbar.js";let s=class extends I{constructor(r,i,e,n,c,C,L,P,M){super();this.productService=r;this.extensionService=i;this.viewsService=e;this.extensionManagementService=n;this.storageService=c;this.viewDescriptorService=C;this.layoutService=L;this.configurationService=P;this.statusbarService=M;const l=this.productService.defaultChatAgent,m=this.storageService.getBoolean(s.hideWelcomeView,p.APPLICATION,!1);!l||m||this.registerListeners(l)}static ID="workbench.contrib.chatGettingStarted";recentlyInstalled=!1;static hideWelcomeView="workbench.chat.hideWelcomeView";registerListeners(r){this._register(this.extensionManagementService.onDidInstallExtensions(async i=>{for(const e of i)if(S.equals(r.extensionId,e.identifier.id)&&e.operation===y.Install){this.recentlyInstalled=!0;return}})),this._register(this.extensionService.onDidChangeExtensionsStatus(async i=>{for(const e of i)if(S.equals(r.extensionId,e.value)&&this.extensionService.getExtensionsStatus()[e.value].activationTimes&&this.recentlyInstalled){this.onDidInstallChat();return}}))}async onDidInstallChat(){E(this.viewsService,this.layoutService),this.configurationService.getValue("chat.setupFromDialog")||b(this.viewDescriptorService,this.layoutService,this.viewsService),this.storageService.store(s.hideWelcomeView,!0,p.APPLICATION,w.MACHINE),this.recentlyInstalled=!1,this.statusbarService.updateEntryVisibility("chat.statusBarEntry",!0),this.configurationService.updateValue("chat.commandCenter.enabled",!0)}};s=v([t(0,d),t(1,f),t(2,A),t(3,g),t(4,x),t(5,D),t(6,V),t(7,W),t(8,k)],s);export{s as ChatGettingStartedContribution};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { IWorkbenchContribution } from "../../../../common/contributions.js";
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { IProductService } from "../../../../../platform/product/common/productService.js";
+import { IExtensionService } from "../../../../services/extensions/common/extensions.js";
+import { ExtensionIdentifier } from "../../../../../platform/extensions/common/extensions.js";
+import { IExtensionManagementService, InstallOperation } from "../../../../../platform/extensionManagement/common/extensionManagement.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../../platform/storage/common/storage.js";
+import { IDefaultChatAgent } from "../../../../../base/common/product.js";
+import { IViewDescriptorService } from "../../../../common/views.js";
+import { IWorkbenchLayoutService } from "../../../../services/layout/browser/layoutService.js";
+import { ensureSideBarChatViewSize, showCopilotView } from "../chat.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { IViewsService } from "../../../../services/views/common/viewsService.js";
+import { IStatusbarService } from "../../../../services/statusbar/browser/statusbar.js";
+let ChatGettingStartedContribution = class extends Disposable {
+  constructor(productService, extensionService, viewsService, extensionManagementService, storageService, viewDescriptorService, layoutService, configurationService, statusbarService) {
+    super();
+    this.productService = productService;
+    this.extensionService = extensionService;
+    this.viewsService = viewsService;
+    this.extensionManagementService = extensionManagementService;
+    this.storageService = storageService;
+    this.viewDescriptorService = viewDescriptorService;
+    this.layoutService = layoutService;
+    this.configurationService = configurationService;
+    this.statusbarService = statusbarService;
+    const defaultChatAgent = this.productService.defaultChatAgent;
+    const hideWelcomeView = this.storageService.getBoolean(ChatGettingStartedContribution.hideWelcomeView, StorageScope.APPLICATION, false);
+    if (!defaultChatAgent || hideWelcomeView) {
+      return;
+    }
+    this.registerListeners(defaultChatAgent);
+  }
+  static {
+    __name(this, "ChatGettingStartedContribution");
+  }
+  static ID = "workbench.contrib.chatGettingStarted";
+  recentlyInstalled = false;
+  static hideWelcomeView = "workbench.chat.hideWelcomeView";
+  registerListeners(defaultChatAgent) {
+    this._register(this.extensionManagementService.onDidInstallExtensions(async (result) => {
+      for (const e of result) {
+        if (ExtensionIdentifier.equals(defaultChatAgent.extensionId, e.identifier.id) && e.operation === InstallOperation.Install) {
+          this.recentlyInstalled = true;
+          return;
+        }
+      }
+    }));
+    this._register(this.extensionService.onDidChangeExtensionsStatus(async (event) => {
+      for (const ext of event) {
+        if (ExtensionIdentifier.equals(defaultChatAgent.extensionId, ext.value)) {
+          const extensionStatus = this.extensionService.getExtensionsStatus();
+          if (extensionStatus[ext.value].activationTimes && this.recentlyInstalled) {
+            this.onDidInstallChat();
+            return;
+          }
+        }
+      }
+    }));
+  }
+  async onDidInstallChat() {
+    showCopilotView(this.viewsService, this.layoutService);
+    const setupFromDialog = this.configurationService.getValue("chat.setupFromDialog");
+    if (!setupFromDialog) {
+      ensureSideBarChatViewSize(this.viewDescriptorService, this.layoutService, this.viewsService);
+    }
+    this.storageService.store(ChatGettingStartedContribution.hideWelcomeView, true, StorageScope.APPLICATION, StorageTarget.MACHINE);
+    this.recentlyInstalled = false;
+    this.statusbarService.updateEntryVisibility("chat.statusBarEntry", true);
+    this.configurationService.updateValue("chat.commandCenter.enabled", true);
+  }
+};
+ChatGettingStartedContribution = __decorateClass([
+  __decorateParam(0, IProductService),
+  __decorateParam(1, IExtensionService),
+  __decorateParam(2, IViewsService),
+  __decorateParam(3, IExtensionManagementService),
+  __decorateParam(4, IStorageService),
+  __decorateParam(5, IViewDescriptorService),
+  __decorateParam(6, IWorkbenchLayoutService),
+  __decorateParam(7, IConfigurationService),
+  __decorateParam(8, IStatusbarService)
+], ChatGettingStartedContribution);
+export {
+  ChatGettingStartedContribution
+};
+//# sourceMappingURL=chatGettingStarted.js.map

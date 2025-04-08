@@ -1,1 +1,61 @@
-var p=Object.defineProperty,I=Object.getOwnPropertyDescriptor,m=(e,o,t,r)=>{for(var i,s=r>1?void 0:r?I(o,t):o,a=e.length-1;a>=0;a--)(i=e[a])&&(s=(r?i(o,t,s):i(s))||s);return r&&s&&p(o,t,s),s},o=(e,o)=>(t,r)=>o(t,r,e);import{ProxyChannel as S}from"../../../../../base/parts/ipc/common/ipc.js";import{IConfigurationService as f}from"../../../../../platform/configuration/common/configuration.js";import{IFileService as g}from"../../../../../platform/files/common/files.js";import{IInstantiationService as h}from"../../../../../platform/instantiation/common/instantiation.js";import{ILabelService as u}from"../../../../../platform/label/common/label.js";import{ILogService as y}from"../../../../../platform/log/common/log.js";import{NativeMcpDiscoveryHelperChannelName as d}from"../../../../../platform/mcp/common/nativeMcpDiscoveryHelper.js";import{IRemoteAgentService as C}from"../../../../services/remote/common/remoteAgentService.js";import{IMcpRegistry as A}from"../mcpRegistryTypes.js";import{NativeFilesystemMcpDiscovery as D}from"./nativeMcpDiscoveryAbstract.js";let a=class extends D{constructor(e,o,t,r,i,s,a){super(e.getConnection()?.remoteAuthority||null,t,r,i,s,a),this.remoteAgent=e,this.logService=o}async start(){const e=this.remoteAgent.getConnection();if(!e)return this.setDetails(void 0);await e.withChannel(d,(async e=>{S.toService(e).load().then((e=>this.setDetails(e)),(e=>{this.logService.warn("Error getting remote process MCP environment",e),this.setDetails(void 0)}))}))}};a=m([o(0,C),o(1,y),o(2,u),o(3,g),o(4,h),o(5,A),o(6,f)],a);export{a as RemoteNativeMpcDiscovery};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { ProxyChannel } from "../../../../../base/parts/ipc/common/ipc.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { IFileService } from "../../../../../platform/files/common/files.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { ILabelService } from "../../../../../platform/label/common/label.js";
+import { ILogService } from "../../../../../platform/log/common/log.js";
+import { INativeMcpDiscoveryHelperService, NativeMcpDiscoveryHelperChannelName } from "../../../../../platform/mcp/common/nativeMcpDiscoveryHelper.js";
+import { IRemoteAgentService } from "../../../../services/remote/common/remoteAgentService.js";
+import { IMcpRegistry } from "../mcpRegistryTypes.js";
+import { NativeFilesystemMcpDiscovery } from "./nativeMcpDiscoveryAbstract.js";
+let RemoteNativeMpcDiscovery = class extends NativeFilesystemMcpDiscovery {
+  constructor(remoteAgent, logService, labelService, fileService, instantiationService, mcpRegistry, configurationService) {
+    super(remoteAgent.getConnection()?.remoteAuthority || null, labelService, fileService, instantiationService, mcpRegistry, configurationService);
+    this.remoteAgent = remoteAgent;
+    this.logService = logService;
+  }
+  static {
+    __name(this, "RemoteNativeMpcDiscovery");
+  }
+  async start() {
+    const connection = this.remoteAgent.getConnection();
+    if (!connection) {
+      return this.setDetails(void 0);
+    }
+    await connection.withChannel(NativeMcpDiscoveryHelperChannelName, async (channel) => {
+      const service = ProxyChannel.toService(channel);
+      service.load().then(
+        (data) => this.setDetails(data),
+        (err) => {
+          this.logService.warn("Error getting remote process MCP environment", err);
+          this.setDetails(void 0);
+        }
+      );
+    });
+  }
+};
+RemoteNativeMpcDiscovery = __decorateClass([
+  __decorateParam(0, IRemoteAgentService),
+  __decorateParam(1, ILogService),
+  __decorateParam(2, ILabelService),
+  __decorateParam(3, IFileService),
+  __decorateParam(4, IInstantiationService),
+  __decorateParam(5, IMcpRegistry),
+  __decorateParam(6, IConfigurationService)
+], RemoteNativeMpcDiscovery);
+export {
+  RemoteNativeMpcDiscovery
+};
+//# sourceMappingURL=nativeMcpRemoteDiscovery.js.map

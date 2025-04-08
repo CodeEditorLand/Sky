@@ -1,1 +1,469 @@
-var q=Object.defineProperty,H=Object.getOwnPropertyDescriptor,m=(e,t,o,r)=>{for(var a,s=r>1?void 0:r?H(t,o):t,i=e.length-1;i>=0;i--)(a=e[i])&&(s=(r?a(t,o,s):a(s))||s);return r&&s&&q(t,o,s),s},n=(e,t)=>(o,r)=>t(o,r,e);import{VSBuffer as A}from"../../../base/common/buffer.js";import"../../../base/common/cancellation.js";import"../../../base/common/collections.js";import{getErrorMessage as W}from"../../../base/common/errors.js";import{Event as O}from"../../../base/common/event.js";import{parse as z}from"../../../base/common/json.js";import{toFormattedString as Y}from"../../../base/common/jsonFormatter.js";import{isWeb as B}from"../../../base/common/platform.js";import"../../../base/common/uri.js";import{generateUuid as Q}from"../../../base/common/uuid.js";import"../../../base/parts/request/common/request.js";import{IConfigurationService as X}from"../../configuration/common/configuration.js";import{IEnvironmentService as D}from"../../environment/common/environment.js";import{IFileService as U}from"../../files/common/files.js";import{ILogService as Z}from"../../log/common/log.js";import{getServiceMachineId as ee}from"../../externalServices/common/serviceMachineId.js";import{IStorageService as N,StorageScope as M,StorageTarget as y}from"../../storage/common/storage.js";import{ITelemetryService as te}from"../../telemetry/common/telemetry.js";import{IUriIdentityService as j}from"../../uriIdentity/common/uriIdentity.js";import{AbstractInitializer as re,AbstractSynchroniser as ae,getSyncResourceLogLabel as oe,isSyncData as ie}from"./abstractSynchronizer.js";import{edit as F}from"./content.js";import{merge as C}from"./globalStateMerge.js";import{ALL_SYNC_RESOURCES as ne,Change as c,createSyncHeaders as se,getEnablementKey as le,IUserDataSyncLocalStoreService as ce,IUserDataSyncLogService as k,IUserDataSyncEnablementService as ge,IUserDataSyncStoreService as Se,SyncResource as f,SYNC_SERVICE_URL_TYPE as $,UserDataSyncError as ue,UserDataSyncErrorCode as de,USER_DATA_SYNC_SCHEME as L}from"./userDataSync.js";import"./userDataSyncStoreService.js";import{IUserDataProfilesService as ve}from"../../userDataProfile/common/userDataProfile.js";import{IUserDataProfileStorageService as T}from"../../userDataProfile/common/userDataProfileStorageService.js";import{IInstantiationService as he}from"../../instantiation/common/instantiation.js";const h="globalState.argv.",ye=["locale"];function p(e,t){const o=e.storage?Object.keys(e.storage).sort():[],r={};return o.forEach((t=>r[t]=e.storage[t])),e.storage=r,t?Y(e,{}):JSON.stringify(e)}const x=1;let w=class extends ae{constructor(e,t,o,r,a,s,i,n,c,l,g,h,u,S){super({syncResource:f.GlobalState,profile:e},t,r,n,h,a,s,c,l,i,g,u),this.userDataProfileStorageService=o,this.localGlobalStateProvider=S.createInstance(I),this._register(r.watch(this.extUri.dirname(this.environmentService.argvResource))),this._register(O.any(O.filter(r.onDidFilesChange,(e=>e.contains(this.environmentService.argvResource))),O.filter(o.onDidChange,(e=>!(!e.targetChanges.some((e=>this.syncResource.profile.id===e.id))&&!e.valueChanges.some((({profile:e,changes:t})=>this.syncResource.profile.id===e.id&&t.some((e=>e.target===y.USER))))))))((()=>this.triggerLocalChange())))}version=1;previewResource=this.extUri.joinPath(this.syncPreviewFolder,"globalState.json");baseResource=this.previewResource.with({scheme:L,authority:"base"});localResource=this.previewResource.with({scheme:L,authority:"local"});remoteResource=this.previewResource.with({scheme:L,authority:"remote"});acceptedResource=this.previewResource.with({scheme:L,authority:"accepted"});localGlobalStateProvider;async generateSyncPreview(e,t,o){const r=e.syncData?JSON.parse(e.syncData.content):null,a=(t=null===t&&o?e:t)&&t.syncData?JSON.parse(t.syncData.content):null,s=await this.localGlobalStateProvider.getLocalGlobalState(this.syncResource.profile);r?this.logService.trace(`${this.syncResourceLogLabel}: Merging remote ui state with local ui state...`):this.logService.trace(`${this.syncResourceLogLabel}: Remote ui state does not exist. Synchronizing ui state for the first time.`);const i=await this.getStorageKeys(a),{local:n,remote:l}=C(s.storage,r?r.storage:null,a?a.storage:null,i,this.logService),g={content:null,local:n,remote:l,localChange:Object.keys(n.added).length>0||Object.keys(n.updated).length>0||n.removed.length>0?c.Modified:c.None,remoteChange:null!==l.all?c.Modified:c.None},h=p(s,!1);return[{baseResource:this.baseResource,baseContent:a?p(a,!1):h,localResource:this.localResource,localContent:h,localUserData:s,remoteResource:this.remoteResource,remoteContent:r?p(r,!1):null,previewResource:this.previewResource,previewResult:g,localChange:g.localChange,remoteChange:g.remoteChange,acceptedResource:this.acceptedResource,storageKeys:i}]}async hasRemoteChanged(e){const t=e.syncData?JSON.parse(e.syncData.content):null;if(null===t)return!0;const o=await this.localGlobalStateProvider.getLocalGlobalState(this.syncResource.profile),r=await this.getStorageKeys(t),{remote:a}=C(o.storage,t.storage,t.storage,r,this.logService);return null!==a.all}async getMergeResult(e,t){return{...e.previewResult,hasConflicts:!1}}async getAcceptResult(e,t,o,r){if(this.extUri.isEqual(t,this.localResource))return this.acceptLocal(e);if(this.extUri.isEqual(t,this.remoteResource))return this.acceptRemote(e);if(this.extUri.isEqual(t,this.previewResource))return e.previewResult;throw new Error(`Invalid Resource: ${t.toString()}`)}async acceptLocal(e){if(null!==e.remoteContent){const t=JSON.parse(e.remoteContent),{local:o,remote:r}=C(e.localUserData.storage,t.storage,t.storage,e.storageKeys,this.logService);return{content:e.remoteContent,local:o,remote:r,localChange:c.None,remoteChange:null!==r.all?c.Modified:c.None}}return{content:e.localContent,local:{added:{},removed:[],updated:{}},remote:{added:Object.keys(e.localUserData.storage),removed:[],updated:[],all:e.localUserData.storage},localChange:c.None,remoteChange:c.Modified}}async acceptRemote(e){if(null!==e.remoteContent){const t=JSON.parse(e.remoteContent),{local:o,remote:r}=C(e.localUserData.storage,t.storage,e.localUserData.storage,e.storageKeys,this.logService);return{content:e.remoteContent,local:o,remote:r,localChange:Object.keys(o.added).length>0||Object.keys(o.updated).length>0||o.removed.length>0?c.Modified:c.None,remoteChange:c.None}}return{content:e.remoteContent,local:{added:{},removed:[],updated:{}},remote:{added:[],removed:[],updated:[],all:null},localChange:c.None,remoteChange:c.None}}async applyResult(e,t,o,r){const{localUserData:a}=o[0][0],{local:s,remote:i,localChange:n,remoteChange:l}=o[0][1];if(n===c.None&&l===c.None&&this.logService.info(`${this.syncResourceLogLabel}: No changes found during synchronizing ui state.`),n!==c.None&&(this.logService.trace(`${this.syncResourceLogLabel}: Updating local ui state...`),await this.backupLocal(JSON.stringify(a)),await this.localGlobalStateProvider.writeLocalGlobalState(s,this.syncResource.profile),this.logService.info(`${this.syncResourceLogLabel}: Updated local ui state`)),l!==c.None){this.logService.trace(`${this.syncResourceLogLabel}: Updating remote ui state...`);const t=JSON.stringify({storage:i.all});e=await this.updateRemoteUserData(t,r?null:e.ref),this.logService.info(`${this.syncResourceLogLabel}: Updated remote ui state.${i.added.length?` Added: ${i.added}.`:""}${i.updated.length?` Updated: ${i.updated}.`:""}${i.removed.length?` Removed: ${i.removed}.`:""}`)}t?.ref!==e.ref&&(this.logService.trace(`${this.syncResourceLogLabel}: Updating last synchronized ui state...`),await this.updateLastSyncUserData(e),this.logService.info(`${this.syncResourceLogLabel}: Updated last synchronized ui state`))}async resolveContent(e){if(this.extUri.isEqual(this.remoteResource,e)||this.extUri.isEqual(this.baseResource,e)||this.extUri.isEqual(this.localResource,e)||this.extUri.isEqual(this.acceptedResource,e)){const t=await this.resolvePreviewContent(e);return t&&p(JSON.parse(t),!0)}return null}async hasLocalData(){try{const{storage:e}=await this.localGlobalStateProvider.getLocalGlobalState(this.syncResource.profile);if(Object.keys(e).length>1||"en"!==e[`${h}.locale`]?.value)return!0}catch{}return!1}async getStorageKeys(e){const t=await this.userDataProfileStorageService.readStorageData(this.syncResource.profile),o=[],r=[];for(const[e,a]of t)a.target===y.USER?o.push(e):a.target===y.MACHINE&&r.push(e);const a=[...o,...r],s=e?.storage?Object.keys(e.storage).filter((e=>!e.startsWith(h)&&!a.includes(e)&&void 0!==t.get(e))):[];if(!B){const e=[...ne.map((e=>le(e))),$];s.push(...e),r.push(...e)}return{user:o,machine:r,unregistered:s}}};w=m([n(2,T),n(3,U),n(4,Se),n(5,ce),n(6,k),n(7,D),n(8,ge),n(9,te),n(10,X),n(11,N),n(12,j),n(13,he)],w);let I=class{constructor(e,t,o,r){this.fileService=e,this.environmentService=t,this.userDataProfileStorageService=o,this.logService=r}async getLocalGlobalState(e){const t={};if(e.isDefault){const e=await this.getLocalArgvContent(),o=z(e);for(const e of ye)void 0!==o[e]&&(t[`${h}${e}`]={version:1,value:o[e]})}const o=await this.userDataProfileStorageService.readStorageData(e);for(const[e,r]of o)r.value&&r.target===y.USER&&(t[e]={version:1,value:r.value});return{storage:t}}async getLocalArgvContent(){try{this.logService.debug("GlobalStateSync#getLocalArgvContent",this.environmentService.argvResource);const e=await this.fileService.readFile(this.environmentService.argvResource);return this.logService.debug("GlobalStateSync#getLocalArgvContent - Resolved",this.environmentService.argvResource),e.value.toString()}catch(e){this.logService.debug(W(e))}return"{}"}async writeLocalGlobalState({added:e,removed:t,updated:o},r){const a=oe(f.GlobalState,r),s={},i=new Map,n=await this.userDataProfileStorageService.readStorageData(r),c=(e,t)=>{for(const o of e)if(o.startsWith(h))s[o.substring(17)]=t?t[o].value:void 0;else if(t){const e=t[o];e.value!==n.get(o)?.value&&i.set(o,e.value)}else void 0!==n.get(o)&&i.set(o,void 0)};if(c(Object.keys(e),e),c(Object.keys(o),o),c(t),Object.keys(s).length){this.logService.trace(`${a}: Updating locale...`);const e=await this.getLocalArgvContent();let t=e;for(const e of Object.keys(s))t=F(t,[e],s[e],{});e!==t&&(this.logService.trace(`${a}: Updating locale...`),await this.fileService.writeFile(this.environmentService.argvResource,A.fromString(t)),this.logService.info(`${a}: Updated locale.`)),this.logService.info(`${a}: Updated locale`)}i.size&&(this.logService.trace(`${a}: Updating global state...`),await this.userDataProfileStorageService.updateStorageData(r,i,y.USER),this.logService.info(`${a}: Updated global state`,[...i.keys()]))}};I=m([n(0,U),n(1,D),n(2,T),n(3,k)],I);let G=class extends re{constructor(e,t,o,r,a,s){super(f.GlobalState,o,r,a,t,e,s)}async doInitialize(e){const t=e.syncData?JSON.parse(e.syncData.content):null;if(!t)return void this.logService.info("Skipping initializing global state because remote global state does not exist.");const o={},r={};for(const e of Object.keys(t.storage))e.startsWith(h)?o[e.substring(17)]=t.storage[e].value:void 0===this.storageService.get(e,M.PROFILE)&&(r[e]=t.storage[e].value);if(Object.keys(o).length){let e="{}";try{e=(await this.fileService.readFile(this.environmentService.argvResource)).value.toString()}catch{}for(const t of Object.keys(o))e=F(e,[t],o[t],{});await this.fileService.writeFile(this.environmentService.argvResource,A.fromString(e))}if(Object.keys(r).length){const e=[];for(const t of Object.keys(r))e.push({key:t,value:r[t],scope:M.PROFILE,target:y.USER});this.storageService.storeAll(e,!0)}}};G=m([n(0,N),n(1,U),n(2,ve),n(3,D),n(4,k),n(5,j)],G);let E=class{constructor(e,t,o,r,a){this.userDataSyncStoreClient=e,this.storageService=t,this.environmentService=o,this.fileService=r,this.logService=a}getSyncStoreType(e){return this.parseGlobalState(e)?.storage[$]?.value}async sync(e){const t=se(Q());try{return await this.doSync(e,t)}catch(o){if(o instanceof ue&&o.code===de.PreconditionFailed)return this.logService.info("Failed to synchronize UserDataSyncStoreType as there is a new remote version available. Synchronizing again..."),this.doSync(e,t);throw o}}async doSync(e,t){const o=await this.userDataSyncStoreClient.readResource(f.GlobalState,null,void 0,t),r=this.parseGlobalState(o)||{storage:{}};r.storage[$]={value:e,version:1};const a={version:1,machineId:await ee(this.environmentService,this.fileService,this.storageService),content:p(r,!1)};await this.userDataSyncStoreClient.writeResource(f.GlobalState,JSON.stringify(a),o.ref,void 0,t)}parseGlobalState({content:e}){if(!e)return null;const t=JSON.parse(e);if(ie(t))return t?JSON.parse(t.content):null;throw new Error("Invalid remote data")}};E=m([n(1,N),n(2,D),n(3,U),n(4,Z)],E);export{G as GlobalStateInitializer,w as GlobalStateSynchroniser,I as LocalGlobalStateProvider,E as UserDataSyncStoreTypeSynchronizer,p as stringify};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { VSBuffer } from "../../../base/common/buffer.js";
+import { CancellationToken } from "../../../base/common/cancellation.js";
+import { IStringDictionary } from "../../../base/common/collections.js";
+import { getErrorMessage } from "../../../base/common/errors.js";
+import { Event } from "../../../base/common/event.js";
+import { parse } from "../../../base/common/json.js";
+import { toFormattedString } from "../../../base/common/jsonFormatter.js";
+import { isWeb } from "../../../base/common/platform.js";
+import { URI } from "../../../base/common/uri.js";
+import { generateUuid } from "../../../base/common/uuid.js";
+import { IHeaders } from "../../../base/parts/request/common/request.js";
+import { IConfigurationService } from "../../configuration/common/configuration.js";
+import { IEnvironmentService } from "../../environment/common/environment.js";
+import { IFileService } from "../../files/common/files.js";
+import { ILogService } from "../../log/common/log.js";
+import { getServiceMachineId } from "../../externalServices/common/serviceMachineId.js";
+import { IStorageEntry, IStorageService, StorageScope, StorageTarget } from "../../storage/common/storage.js";
+import { ITelemetryService } from "../../telemetry/common/telemetry.js";
+import { IUriIdentityService } from "../../uriIdentity/common/uriIdentity.js";
+import { AbstractInitializer, AbstractSynchroniser, getSyncResourceLogLabel, IAcceptResult, IMergeResult, IResourcePreview, isSyncData } from "./abstractSynchronizer.js";
+import { edit } from "./content.js";
+import { merge } from "./globalStateMerge.js";
+import { ALL_SYNC_RESOURCES, Change, createSyncHeaders, getEnablementKey, IGlobalState, IRemoteUserData, IStorageValue, ISyncData, IUserData, IUserDataSyncLocalStoreService, IUserDataSynchroniser, IUserDataSyncLogService, IUserDataSyncEnablementService, IUserDataSyncStoreService, SyncResource, SYNC_SERVICE_URL_TYPE, UserDataSyncError, UserDataSyncErrorCode, UserDataSyncStoreType, USER_DATA_SYNC_SCHEME } from "./userDataSync.js";
+import { UserDataSyncStoreClient } from "./userDataSyncStoreService.js";
+import { IUserDataProfile, IUserDataProfilesService } from "../../userDataProfile/common/userDataProfile.js";
+import { IUserDataProfileStorageService } from "../../userDataProfile/common/userDataProfileStorageService.js";
+import { IInstantiationService } from "../../instantiation/common/instantiation.js";
+const argvStoragePrefx = "globalState.argv.";
+const argvProperties = ["locale"];
+function stringify(globalState, format) {
+  const storageKeys = globalState.storage ? Object.keys(globalState.storage).sort() : [];
+  const storage = {};
+  storageKeys.forEach((key) => storage[key] = globalState.storage[key]);
+  globalState.storage = storage;
+  return format ? toFormattedString(globalState, {}) : JSON.stringify(globalState);
+}
+__name(stringify, "stringify");
+const GLOBAL_STATE_DATA_VERSION = 1;
+let GlobalStateSynchroniser = class extends AbstractSynchroniser {
+  constructor(profile, collection, userDataProfileStorageService, fileService, userDataSyncStoreService, userDataSyncLocalStoreService, logService, environmentService, userDataSyncEnablementService, telemetryService, configurationService, storageService, uriIdentityService, instantiationService) {
+    super({ syncResource: SyncResource.GlobalState, profile }, collection, fileService, environmentService, storageService, userDataSyncStoreService, userDataSyncLocalStoreService, userDataSyncEnablementService, telemetryService, logService, configurationService, uriIdentityService);
+    this.userDataProfileStorageService = userDataProfileStorageService;
+    this.localGlobalStateProvider = instantiationService.createInstance(LocalGlobalStateProvider);
+    this._register(fileService.watch(this.extUri.dirname(this.environmentService.argvResource)));
+    this._register(
+      Event.any(
+        /* Locale change */
+        Event.filter(fileService.onDidFilesChange, (e) => e.contains(this.environmentService.argvResource)),
+        Event.filter(userDataProfileStorageService.onDidChange, (e) => {
+          if (e.targetChanges.some((profile2) => this.syncResource.profile.id === profile2.id)) {
+            return true;
+          }
+          if (e.valueChanges.some(({ profile: profile2, changes }) => this.syncResource.profile.id === profile2.id && changes.some((change) => change.target === StorageTarget.USER))) {
+            return true;
+          }
+          return false;
+        })
+      )(() => this.triggerLocalChange())
+    );
+  }
+  static {
+    __name(this, "GlobalStateSynchroniser");
+  }
+  version = GLOBAL_STATE_DATA_VERSION;
+  previewResource = this.extUri.joinPath(this.syncPreviewFolder, "globalState.json");
+  baseResource = this.previewResource.with({ scheme: USER_DATA_SYNC_SCHEME, authority: "base" });
+  localResource = this.previewResource.with({ scheme: USER_DATA_SYNC_SCHEME, authority: "local" });
+  remoteResource = this.previewResource.with({ scheme: USER_DATA_SYNC_SCHEME, authority: "remote" });
+  acceptedResource = this.previewResource.with({ scheme: USER_DATA_SYNC_SCHEME, authority: "accepted" });
+  localGlobalStateProvider;
+  async generateSyncPreview(remoteUserData, lastSyncUserData, isRemoteDataFromCurrentMachine) {
+    const remoteGlobalState = remoteUserData.syncData ? JSON.parse(remoteUserData.syncData.content) : null;
+    lastSyncUserData = lastSyncUserData === null && isRemoteDataFromCurrentMachine ? remoteUserData : lastSyncUserData;
+    const lastSyncGlobalState = lastSyncUserData && lastSyncUserData.syncData ? JSON.parse(lastSyncUserData.syncData.content) : null;
+    const localGlobalState = await this.localGlobalStateProvider.getLocalGlobalState(this.syncResource.profile);
+    if (remoteGlobalState) {
+      this.logService.trace(`${this.syncResourceLogLabel}: Merging remote ui state with local ui state...`);
+    } else {
+      this.logService.trace(`${this.syncResourceLogLabel}: Remote ui state does not exist. Synchronizing ui state for the first time.`);
+    }
+    const storageKeys = await this.getStorageKeys(lastSyncGlobalState);
+    const { local, remote } = merge(localGlobalState.storage, remoteGlobalState ? remoteGlobalState.storage : null, lastSyncGlobalState ? lastSyncGlobalState.storage : null, storageKeys, this.logService);
+    const previewResult = {
+      content: null,
+      local,
+      remote,
+      localChange: Object.keys(local.added).length > 0 || Object.keys(local.updated).length > 0 || local.removed.length > 0 ? Change.Modified : Change.None,
+      remoteChange: remote.all !== null ? Change.Modified : Change.None
+    };
+    const localContent = stringify(localGlobalState, false);
+    return [{
+      baseResource: this.baseResource,
+      baseContent: lastSyncGlobalState ? stringify(lastSyncGlobalState, false) : localContent,
+      localResource: this.localResource,
+      localContent,
+      localUserData: localGlobalState,
+      remoteResource: this.remoteResource,
+      remoteContent: remoteGlobalState ? stringify(remoteGlobalState, false) : null,
+      previewResource: this.previewResource,
+      previewResult,
+      localChange: previewResult.localChange,
+      remoteChange: previewResult.remoteChange,
+      acceptedResource: this.acceptedResource,
+      storageKeys
+    }];
+  }
+  async hasRemoteChanged(lastSyncUserData) {
+    const lastSyncGlobalState = lastSyncUserData.syncData ? JSON.parse(lastSyncUserData.syncData.content) : null;
+    if (lastSyncGlobalState === null) {
+      return true;
+    }
+    const localGlobalState = await this.localGlobalStateProvider.getLocalGlobalState(this.syncResource.profile);
+    const storageKeys = await this.getStorageKeys(lastSyncGlobalState);
+    const { remote } = merge(localGlobalState.storage, lastSyncGlobalState.storage, lastSyncGlobalState.storage, storageKeys, this.logService);
+    return remote.all !== null;
+  }
+  async getMergeResult(resourcePreview, token) {
+    return { ...resourcePreview.previewResult, hasConflicts: false };
+  }
+  async getAcceptResult(resourcePreview, resource, content, token) {
+    if (this.extUri.isEqual(resource, this.localResource)) {
+      return this.acceptLocal(resourcePreview);
+    }
+    if (this.extUri.isEqual(resource, this.remoteResource)) {
+      return this.acceptRemote(resourcePreview);
+    }
+    if (this.extUri.isEqual(resource, this.previewResource)) {
+      return resourcePreview.previewResult;
+    }
+    throw new Error(`Invalid Resource: ${resource.toString()}`);
+  }
+  async acceptLocal(resourcePreview) {
+    if (resourcePreview.remoteContent !== null) {
+      const remoteGlobalState = JSON.parse(resourcePreview.remoteContent);
+      const { local, remote } = merge(resourcePreview.localUserData.storage, remoteGlobalState.storage, remoteGlobalState.storage, resourcePreview.storageKeys, this.logService);
+      return {
+        content: resourcePreview.remoteContent,
+        local,
+        remote,
+        localChange: Change.None,
+        remoteChange: remote.all !== null ? Change.Modified : Change.None
+      };
+    } else {
+      return {
+        content: resourcePreview.localContent,
+        local: { added: {}, removed: [], updated: {} },
+        remote: { added: Object.keys(resourcePreview.localUserData.storage), removed: [], updated: [], all: resourcePreview.localUserData.storage },
+        localChange: Change.None,
+        remoteChange: Change.Modified
+      };
+    }
+  }
+  async acceptRemote(resourcePreview) {
+    if (resourcePreview.remoteContent !== null) {
+      const remoteGlobalState = JSON.parse(resourcePreview.remoteContent);
+      const { local, remote } = merge(resourcePreview.localUserData.storage, remoteGlobalState.storage, resourcePreview.localUserData.storage, resourcePreview.storageKeys, this.logService);
+      return {
+        content: resourcePreview.remoteContent,
+        local,
+        remote,
+        localChange: Object.keys(local.added).length > 0 || Object.keys(local.updated).length > 0 || local.removed.length > 0 ? Change.Modified : Change.None,
+        remoteChange: Change.None
+      };
+    } else {
+      return {
+        content: resourcePreview.remoteContent,
+        local: { added: {}, removed: [], updated: {} },
+        remote: { added: [], removed: [], updated: [], all: null },
+        localChange: Change.None,
+        remoteChange: Change.None
+      };
+    }
+  }
+  async applyResult(remoteUserData, lastSyncUserData, resourcePreviews, force) {
+    const { localUserData } = resourcePreviews[0][0];
+    const { local, remote, localChange, remoteChange } = resourcePreviews[0][1];
+    if (localChange === Change.None && remoteChange === Change.None) {
+      this.logService.info(`${this.syncResourceLogLabel}: No changes found during synchronizing ui state.`);
+    }
+    if (localChange !== Change.None) {
+      this.logService.trace(`${this.syncResourceLogLabel}: Updating local ui state...`);
+      await this.backupLocal(JSON.stringify(localUserData));
+      await this.localGlobalStateProvider.writeLocalGlobalState(local, this.syncResource.profile);
+      this.logService.info(`${this.syncResourceLogLabel}: Updated local ui state`);
+    }
+    if (remoteChange !== Change.None) {
+      this.logService.trace(`${this.syncResourceLogLabel}: Updating remote ui state...`);
+      const content = JSON.stringify({ storage: remote.all });
+      remoteUserData = await this.updateRemoteUserData(content, force ? null : remoteUserData.ref);
+      this.logService.info(`${this.syncResourceLogLabel}: Updated remote ui state.${remote.added.length ? ` Added: ${remote.added}.` : ""}${remote.updated.length ? ` Updated: ${remote.updated}.` : ""}${remote.removed.length ? ` Removed: ${remote.removed}.` : ""}`);
+    }
+    if (lastSyncUserData?.ref !== remoteUserData.ref) {
+      this.logService.trace(`${this.syncResourceLogLabel}: Updating last synchronized ui state...`);
+      await this.updateLastSyncUserData(remoteUserData);
+      this.logService.info(`${this.syncResourceLogLabel}: Updated last synchronized ui state`);
+    }
+  }
+  async resolveContent(uri) {
+    if (this.extUri.isEqual(this.remoteResource, uri) || this.extUri.isEqual(this.baseResource, uri) || this.extUri.isEqual(this.localResource, uri) || this.extUri.isEqual(this.acceptedResource, uri)) {
+      const content = await this.resolvePreviewContent(uri);
+      return content ? stringify(JSON.parse(content), true) : content;
+    }
+    return null;
+  }
+  async hasLocalData() {
+    try {
+      const { storage } = await this.localGlobalStateProvider.getLocalGlobalState(this.syncResource.profile);
+      if (Object.keys(storage).length > 1 || storage[`${argvStoragePrefx}.locale`]?.value !== "en") {
+        return true;
+      }
+    } catch (error) {
+    }
+    return false;
+  }
+  async getStorageKeys(lastSyncGlobalState) {
+    const storageData = await this.userDataProfileStorageService.readStorageData(this.syncResource.profile);
+    const user = [], machine = [];
+    for (const [key, value] of storageData) {
+      if (value.target === StorageTarget.USER) {
+        user.push(key);
+      } else if (value.target === StorageTarget.MACHINE) {
+        machine.push(key);
+      }
+    }
+    const registered = [...user, ...machine];
+    const unregistered = lastSyncGlobalState?.storage ? Object.keys(lastSyncGlobalState.storage).filter((key) => !key.startsWith(argvStoragePrefx) && !registered.includes(key) && storageData.get(key) !== void 0) : [];
+    if (!isWeb) {
+      const keysSyncedOnlyInWeb = [...ALL_SYNC_RESOURCES.map((resource) => getEnablementKey(resource)), SYNC_SERVICE_URL_TYPE];
+      unregistered.push(...keysSyncedOnlyInWeb);
+      machine.push(...keysSyncedOnlyInWeb);
+    }
+    return { user, machine, unregistered };
+  }
+};
+GlobalStateSynchroniser = __decorateClass([
+  __decorateParam(2, IUserDataProfileStorageService),
+  __decorateParam(3, IFileService),
+  __decorateParam(4, IUserDataSyncStoreService),
+  __decorateParam(5, IUserDataSyncLocalStoreService),
+  __decorateParam(6, IUserDataSyncLogService),
+  __decorateParam(7, IEnvironmentService),
+  __decorateParam(8, IUserDataSyncEnablementService),
+  __decorateParam(9, ITelemetryService),
+  __decorateParam(10, IConfigurationService),
+  __decorateParam(11, IStorageService),
+  __decorateParam(12, IUriIdentityService),
+  __decorateParam(13, IInstantiationService)
+], GlobalStateSynchroniser);
+let LocalGlobalStateProvider = class {
+  constructor(fileService, environmentService, userDataProfileStorageService, logService) {
+    this.fileService = fileService;
+    this.environmentService = environmentService;
+    this.userDataProfileStorageService = userDataProfileStorageService;
+    this.logService = logService;
+  }
+  static {
+    __name(this, "LocalGlobalStateProvider");
+  }
+  async getLocalGlobalState(profile) {
+    const storage = {};
+    if (profile.isDefault) {
+      const argvContent = await this.getLocalArgvContent();
+      const argvValue = parse(argvContent);
+      for (const argvProperty of argvProperties) {
+        if (argvValue[argvProperty] !== void 0) {
+          storage[`${argvStoragePrefx}${argvProperty}`] = { version: 1, value: argvValue[argvProperty] };
+        }
+      }
+    }
+    const storageData = await this.userDataProfileStorageService.readStorageData(profile);
+    for (const [key, value] of storageData) {
+      if (value.value && value.target === StorageTarget.USER) {
+        storage[key] = { version: 1, value: value.value };
+      }
+    }
+    return { storage };
+  }
+  async getLocalArgvContent() {
+    try {
+      this.logService.debug("GlobalStateSync#getLocalArgvContent", this.environmentService.argvResource);
+      const content = await this.fileService.readFile(this.environmentService.argvResource);
+      this.logService.debug("GlobalStateSync#getLocalArgvContent - Resolved", this.environmentService.argvResource);
+      return content.value.toString();
+    } catch (error) {
+      this.logService.debug(getErrorMessage(error));
+    }
+    return "{}";
+  }
+  async writeLocalGlobalState({ added, removed, updated }, profile) {
+    const syncResourceLogLabel = getSyncResourceLogLabel(SyncResource.GlobalState, profile);
+    const argv = {};
+    const updatedStorage = /* @__PURE__ */ new Map();
+    const storageData = await this.userDataProfileStorageService.readStorageData(profile);
+    const handleUpdatedStorage = /* @__PURE__ */ __name((keys, storage) => {
+      for (const key of keys) {
+        if (key.startsWith(argvStoragePrefx)) {
+          argv[key.substring(argvStoragePrefx.length)] = storage ? storage[key].value : void 0;
+          continue;
+        }
+        if (storage) {
+          const storageValue = storage[key];
+          if (storageValue.value !== storageData.get(key)?.value) {
+            updatedStorage.set(key, storageValue.value);
+          }
+        } else {
+          if (storageData.get(key) !== void 0) {
+            updatedStorage.set(key, void 0);
+          }
+        }
+      }
+    }, "handleUpdatedStorage");
+    handleUpdatedStorage(Object.keys(added), added);
+    handleUpdatedStorage(Object.keys(updated), updated);
+    handleUpdatedStorage(removed);
+    if (Object.keys(argv).length) {
+      this.logService.trace(`${syncResourceLogLabel}: Updating locale...`);
+      const argvContent = await this.getLocalArgvContent();
+      let content = argvContent;
+      for (const argvProperty of Object.keys(argv)) {
+        content = edit(content, [argvProperty], argv[argvProperty], {});
+      }
+      if (argvContent !== content) {
+        this.logService.trace(`${syncResourceLogLabel}: Updating locale...`);
+        await this.fileService.writeFile(this.environmentService.argvResource, VSBuffer.fromString(content));
+        this.logService.info(`${syncResourceLogLabel}: Updated locale.`);
+      }
+      this.logService.info(`${syncResourceLogLabel}: Updated locale`);
+    }
+    if (updatedStorage.size) {
+      this.logService.trace(`${syncResourceLogLabel}: Updating global state...`);
+      await this.userDataProfileStorageService.updateStorageData(profile, updatedStorage, StorageTarget.USER);
+      this.logService.info(`${syncResourceLogLabel}: Updated global state`, [...updatedStorage.keys()]);
+    }
+  }
+};
+LocalGlobalStateProvider = __decorateClass([
+  __decorateParam(0, IFileService),
+  __decorateParam(1, IEnvironmentService),
+  __decorateParam(2, IUserDataProfileStorageService),
+  __decorateParam(3, IUserDataSyncLogService)
+], LocalGlobalStateProvider);
+let GlobalStateInitializer = class extends AbstractInitializer {
+  static {
+    __name(this, "GlobalStateInitializer");
+  }
+  constructor(storageService, fileService, userDataProfilesService, environmentService, logService, uriIdentityService) {
+    super(SyncResource.GlobalState, userDataProfilesService, environmentService, logService, fileService, storageService, uriIdentityService);
+  }
+  async doInitialize(remoteUserData) {
+    const remoteGlobalState = remoteUserData.syncData ? JSON.parse(remoteUserData.syncData.content) : null;
+    if (!remoteGlobalState) {
+      this.logService.info("Skipping initializing global state because remote global state does not exist.");
+      return;
+    }
+    const argv = {};
+    const storage = {};
+    for (const key of Object.keys(remoteGlobalState.storage)) {
+      if (key.startsWith(argvStoragePrefx)) {
+        argv[key.substring(argvStoragePrefx.length)] = remoteGlobalState.storage[key].value;
+      } else {
+        if (this.storageService.get(key, StorageScope.PROFILE) === void 0) {
+          storage[key] = remoteGlobalState.storage[key].value;
+        }
+      }
+    }
+    if (Object.keys(argv).length) {
+      let content = "{}";
+      try {
+        const fileContent = await this.fileService.readFile(this.environmentService.argvResource);
+        content = fileContent.value.toString();
+      } catch (error) {
+      }
+      for (const argvProperty of Object.keys(argv)) {
+        content = edit(content, [argvProperty], argv[argvProperty], {});
+      }
+      await this.fileService.writeFile(this.environmentService.argvResource, VSBuffer.fromString(content));
+    }
+    if (Object.keys(storage).length) {
+      const storageEntries = [];
+      for (const key of Object.keys(storage)) {
+        storageEntries.push({ key, value: storage[key], scope: StorageScope.PROFILE, target: StorageTarget.USER });
+      }
+      this.storageService.storeAll(storageEntries, true);
+    }
+  }
+};
+GlobalStateInitializer = __decorateClass([
+  __decorateParam(0, IStorageService),
+  __decorateParam(1, IFileService),
+  __decorateParam(2, IUserDataProfilesService),
+  __decorateParam(3, IEnvironmentService),
+  __decorateParam(4, IUserDataSyncLogService),
+  __decorateParam(5, IUriIdentityService)
+], GlobalStateInitializer);
+let UserDataSyncStoreTypeSynchronizer = class {
+  constructor(userDataSyncStoreClient, storageService, environmentService, fileService, logService) {
+    this.userDataSyncStoreClient = userDataSyncStoreClient;
+    this.storageService = storageService;
+    this.environmentService = environmentService;
+    this.fileService = fileService;
+    this.logService = logService;
+  }
+  static {
+    __name(this, "UserDataSyncStoreTypeSynchronizer");
+  }
+  getSyncStoreType(userData) {
+    const remoteGlobalState = this.parseGlobalState(userData);
+    return remoteGlobalState?.storage[SYNC_SERVICE_URL_TYPE]?.value;
+  }
+  async sync(userDataSyncStoreType) {
+    const syncHeaders = createSyncHeaders(generateUuid());
+    try {
+      return await this.doSync(userDataSyncStoreType, syncHeaders);
+    } catch (e) {
+      if (e instanceof UserDataSyncError) {
+        switch (e.code) {
+          case UserDataSyncErrorCode.PreconditionFailed:
+            this.logService.info(`Failed to synchronize UserDataSyncStoreType as there is a new remote version available. Synchronizing again...`);
+            return this.doSync(userDataSyncStoreType, syncHeaders);
+        }
+      }
+      throw e;
+    }
+  }
+  async doSync(userDataSyncStoreType, syncHeaders) {
+    const globalStateUserData = await this.userDataSyncStoreClient.readResource(SyncResource.GlobalState, null, void 0, syncHeaders);
+    const remoteGlobalState = this.parseGlobalState(globalStateUserData) || { storage: {} };
+    remoteGlobalState.storage[SYNC_SERVICE_URL_TYPE] = { value: userDataSyncStoreType, version: GLOBAL_STATE_DATA_VERSION };
+    const machineId = await getServiceMachineId(this.environmentService, this.fileService, this.storageService);
+    const syncDataToUpdate = { version: GLOBAL_STATE_DATA_VERSION, machineId, content: stringify(remoteGlobalState, false) };
+    await this.userDataSyncStoreClient.writeResource(SyncResource.GlobalState, JSON.stringify(syncDataToUpdate), globalStateUserData.ref, void 0, syncHeaders);
+  }
+  parseGlobalState({ content }) {
+    if (!content) {
+      return null;
+    }
+    const syncData = JSON.parse(content);
+    if (isSyncData(syncData)) {
+      return syncData ? JSON.parse(syncData.content) : null;
+    }
+    throw new Error("Invalid remote data");
+  }
+};
+UserDataSyncStoreTypeSynchronizer = __decorateClass([
+  __decorateParam(1, IStorageService),
+  __decorateParam(2, IEnvironmentService),
+  __decorateParam(3, IFileService),
+  __decorateParam(4, ILogService)
+], UserDataSyncStoreTypeSynchronizer);
+export {
+  GlobalStateInitializer,
+  GlobalStateSynchroniser,
+  LocalGlobalStateProvider,
+  UserDataSyncStoreTypeSynchronizer,
+  stringify
+};
+//# sourceMappingURL=globalStateSync.js.map

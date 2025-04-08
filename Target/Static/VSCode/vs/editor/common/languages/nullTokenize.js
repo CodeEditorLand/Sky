@@ -1,1 +1,29 @@
-import{Token as l,TokenizationResult as r,EncodedTokenizationResult as u}from"../languages.js";import{FontStyle as i,ColorId as a,StandardTokenType as T,MetadataConsts as t}from"../encodedTokenAttributes.js";const S=new class{clone(){return this}equals(n){return this===n}};function c(n,e){return new r([new l(0,"",n)],e)}function I(n,e){const o=new Uint32Array(2);return o[0]=0,o[1]=(n<<t.LANGUAGEID_OFFSET|T.Other<<t.TOKEN_TYPE_OFFSET|i.None<<t.FONT_STYLE_OFFSET|a.DefaultForeground<<t.FOREGROUND_OFFSET|a.DefaultBackground<<t.BACKGROUND_OFFSET)>>>0,new u(o,null===e?S:e)}export{S as NullState,c as nullTokenize,I as nullTokenizeEncoded};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Token, TokenizationResult, EncodedTokenizationResult, IState } from "../languages.js";
+import { LanguageId, FontStyle, ColorId, StandardTokenType, MetadataConsts } from "../encodedTokenAttributes.js";
+const NullState = new class {
+  clone() {
+    return this;
+  }
+  equals(other) {
+    return this === other;
+  }
+}();
+function nullTokenize(languageId, state) {
+  return new TokenizationResult([new Token(0, "", languageId)], state);
+}
+__name(nullTokenize, "nullTokenize");
+function nullTokenizeEncoded(languageId, state) {
+  const tokens = new Uint32Array(2);
+  tokens[0] = 0;
+  tokens[1] = (languageId << MetadataConsts.LANGUAGEID_OFFSET | StandardTokenType.Other << MetadataConsts.TOKEN_TYPE_OFFSET | FontStyle.None << MetadataConsts.FONT_STYLE_OFFSET | ColorId.DefaultForeground << MetadataConsts.FOREGROUND_OFFSET | ColorId.DefaultBackground << MetadataConsts.BACKGROUND_OFFSET) >>> 0;
+  return new EncodedTokenizationResult(tokens, state === null ? NullState : state);
+}
+__name(nullTokenizeEncoded, "nullTokenizeEncoded");
+export {
+  NullState,
+  nullTokenize,
+  nullTokenizeEncoded
+};
+//# sourceMappingURL=nullTokenize.js.map

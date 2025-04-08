@@ -1,1 +1,196 @@
-var w=Object.defineProperty,h=Object.getOwnPropertyDescriptor,d=(e,i,o,t)=>{for(var a,s=t>1?void 0:t?h(i,o):i,r=e.length-1;r>=0;r--)(a=e[r])&&(s=(t?a(i,o,s):a(s))||s);return t&&s&&w(i,o,s),s},u=(e,i)=>(o,t)=>i(o,t,e);import n from"electron";import{Queue as p}from"../../../base/common/async.js";import{hash as D}from"../../../base/common/hash.js";import{mnemonicButtonLabel as m}from"../../../base/common/labels.js";import{Disposable as v,dispose as g,toDisposable as O}from"../../../base/common/lifecycle.js";import{normalizeNFC as k}from"../../../base/common/normalization.js";import{isMacintosh as f}from"../../../base/common/platform.js";import{Promises as P}from"../../../base/node/pfs.js";import{localize as l}from"../../../nls.js";import{massageMessageBoxOptions as F}from"../common/dialogs.js";import{createDecorator as S}from"../../instantiation/common/instantiation.js";import{ILogService as B}from"../../log/common/log.js";import{IProductService as y}from"../../product/common/productService.js";import{WORKSPACE_FILTER as W}from"../../workspace/common/workspace.js";const K=S("dialogMainService");let s=class{constructor(e,i){this.logService=e,this.productService=i}windowFileDialogLocks=new Map;windowDialogQueues=new Map;noWindowDialogueQueue=new p;pickFileFolder(e,i){return this.doPick({...e,pickFolders:!0,pickFiles:!0,title:l("open","Open")},i)}pickFolder(e,i){return this.doPick({...e,pickFolders:!0,title:l("openFolder","Open Folder")},i)}pickFile(e,i){return this.doPick({...e,pickFiles:!0,title:l("openFile","Open File")},i)}pickWorkspace(e,i){const o=l("openWorkspaceTitle","Open Workspace from File"),t=m(l({key:"openWorkspace",comment:["&& denotes a mnemonic"]},"&&Open")).withMnemonic,a=W;return this.doPick({...e,pickFiles:!0,title:o,filters:a,buttonLabel:t},i)}async doPick(e,i){const o={title:e.title,buttonLabel:e.buttonLabel,filters:e.filters,defaultPath:e.defaultPath};("boolean"==typeof e.pickFiles||"boolean"==typeof e.pickFolders)&&(o.properties=void 0,e.pickFiles&&e.pickFolders&&(o.properties=["multiSelections","openDirectory","openFile","createDirectory"])),o.properties||(o.properties=["multiSelections",e.pickFolders?"openDirectory":"openFile","createDirectory"]),f&&o.properties.push("treatPackageAsDirectory");const t=await this.showOpenDialog(o,(i||n.BrowserWindow.getFocusedWindow())??void 0);if(t&&t.filePaths&&t.filePaths.length>0)return t.filePaths}getWindowDialogQueue(e){if(e){let i=this.windowDialogQueues.get(e.id);return i||(i=new p,this.windowDialogQueues.set(e.id,i)),i}return this.noWindowDialogueQueue}showMessageBox(e,i){return this.getWindowDialogQueue(i).queue((async()=>{const{options:o,buttonIndeces:t}=F(e,this.productService);let a;return a=i?await n.dialog.showMessageBox(i,o):await n.dialog.showMessageBox(o),{response:t[a.response],checkboxChecked:a.checkboxChecked}}))}async showSaveDialog(e,i){const o=this.acquireFileDialogLock(e,i);if(!o)return this.logService.error("[DialogMainService]: file save dialog is already or will be showing for the window with the same configuration"),{canceled:!0,filePath:""};try{return await this.getWindowDialogQueue(i).queue((async()=>{let o;return o=i?await n.dialog.showSaveDialog(i,e):await n.dialog.showSaveDialog(e),o.filePath=this.normalizePath(o.filePath),o}))}finally{g(o)}}normalizePath(e){return e&&f&&(e=k(e)),e}normalizePaths(e){return e.map((e=>this.normalizePath(e)))}async showOpenDialog(e,i){e.defaultPath&&(await P.exists(e.defaultPath)||(e.defaultPath=void 0));const o=this.acquireFileDialogLock(e,i);if(!o)return this.logService.error("[DialogMainService]: file open dialog is already or will be showing for the window with the same configuration"),{canceled:!0,filePaths:[]};try{return await this.getWindowDialogQueue(i).queue((async()=>{let o;return o=i?await n.dialog.showOpenDialog(i,e):await n.dialog.showOpenDialog(e),o.filePaths=this.normalizePaths(o.filePaths),o}))}finally{g(o)}}acquireFileDialogLock(e,i){if(!i)return v.None;this.logService.trace("[DialogMainService]: request to acquire file dialog lock",e);let o=this.windowFileDialogLocks.get(i.id);o||(o=new Set,this.windowFileDialogLocks.set(i.id,o));const t=D(e);return o.has(t)?void 0:(this.logService.trace("[DialogMainService]: new file dialog lock created",e),o.add(t),O((()=>{this.logService.trace("[DialogMainService]: file dialog lock disposed",e),o?.delete(t),0===o?.size&&this.windowFileDialogLocks.delete(i.id)})))}};s=d([u(0,B),u(1,y)],s);export{s as DialogMainService,K as IDialogMainService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import electron from "electron";
+import { Queue } from "../../../base/common/async.js";
+import { hash } from "../../../base/common/hash.js";
+import { mnemonicButtonLabel } from "../../../base/common/labels.js";
+import { Disposable, dispose, IDisposable, toDisposable } from "../../../base/common/lifecycle.js";
+import { normalizeNFC } from "../../../base/common/normalization.js";
+import { isMacintosh } from "../../../base/common/platform.js";
+import { Promises } from "../../../base/node/pfs.js";
+import { localize } from "../../../nls.js";
+import { INativeOpenDialogOptions, massageMessageBoxOptions } from "../common/dialogs.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+import { ILogService } from "../../log/common/log.js";
+import { IProductService } from "../../product/common/productService.js";
+import { WORKSPACE_FILTER } from "../../workspace/common/workspace.js";
+const IDialogMainService = createDecorator("dialogMainService");
+let DialogMainService = class {
+  constructor(logService, productService) {
+    this.logService = logService;
+    this.productService = productService;
+  }
+  static {
+    __name(this, "DialogMainService");
+  }
+  windowFileDialogLocks = /* @__PURE__ */ new Map();
+  windowDialogQueues = /* @__PURE__ */ new Map();
+  noWindowDialogueQueue = new Queue();
+  pickFileFolder(options, window) {
+    return this.doPick({ ...options, pickFolders: true, pickFiles: true, title: localize("open", "Open") }, window);
+  }
+  pickFolder(options, window) {
+    return this.doPick({ ...options, pickFolders: true, title: localize("openFolder", "Open Folder") }, window);
+  }
+  pickFile(options, window) {
+    return this.doPick({ ...options, pickFiles: true, title: localize("openFile", "Open File") }, window);
+  }
+  pickWorkspace(options, window) {
+    const title = localize("openWorkspaceTitle", "Open Workspace from File");
+    const buttonLabel = mnemonicButtonLabel(localize({ key: "openWorkspace", comment: ["&& denotes a mnemonic"] }, "&&Open")).withMnemonic;
+    const filters = WORKSPACE_FILTER;
+    return this.doPick({ ...options, pickFiles: true, title, filters, buttonLabel }, window);
+  }
+  async doPick(options, window) {
+    const dialogOptions = {
+      title: options.title,
+      buttonLabel: options.buttonLabel,
+      filters: options.filters,
+      defaultPath: options.defaultPath
+    };
+    if (typeof options.pickFiles === "boolean" || typeof options.pickFolders === "boolean") {
+      dialogOptions.properties = void 0;
+      if (options.pickFiles && options.pickFolders) {
+        dialogOptions.properties = ["multiSelections", "openDirectory", "openFile", "createDirectory"];
+      }
+    }
+    if (!dialogOptions.properties) {
+      dialogOptions.properties = ["multiSelections", options.pickFolders ? "openDirectory" : "openFile", "createDirectory"];
+    }
+    if (isMacintosh) {
+      dialogOptions.properties.push("treatPackageAsDirectory");
+    }
+    const result = await this.showOpenDialog(dialogOptions, (window || electron.BrowserWindow.getFocusedWindow()) ?? void 0);
+    if (result && result.filePaths && result.filePaths.length > 0) {
+      return result.filePaths;
+    }
+    return void 0;
+  }
+  getWindowDialogQueue(window) {
+    if (window) {
+      let windowDialogQueue = this.windowDialogQueues.get(window.id);
+      if (!windowDialogQueue) {
+        windowDialogQueue = new Queue();
+        this.windowDialogQueues.set(window.id, windowDialogQueue);
+      }
+      return windowDialogQueue;
+    } else {
+      return this.noWindowDialogueQueue;
+    }
+  }
+  showMessageBox(rawOptions, window) {
+    return this.getWindowDialogQueue(window).queue(async () => {
+      const { options, buttonIndeces } = massageMessageBoxOptions(rawOptions, this.productService);
+      let result = void 0;
+      if (window) {
+        result = await electron.dialog.showMessageBox(window, options);
+      } else {
+        result = await electron.dialog.showMessageBox(options);
+      }
+      return {
+        response: buttonIndeces[result.response],
+        checkboxChecked: result.checkboxChecked
+      };
+    });
+  }
+  async showSaveDialog(options, window) {
+    const fileDialogLock = this.acquireFileDialogLock(options, window);
+    if (!fileDialogLock) {
+      this.logService.error("[DialogMainService]: file save dialog is already or will be showing for the window with the same configuration");
+      return { canceled: true, filePath: "" };
+    }
+    try {
+      return await this.getWindowDialogQueue(window).queue(async () => {
+        let result;
+        if (window) {
+          result = await electron.dialog.showSaveDialog(window, options);
+        } else {
+          result = await electron.dialog.showSaveDialog(options);
+        }
+        result.filePath = this.normalizePath(result.filePath);
+        return result;
+      });
+    } finally {
+      dispose(fileDialogLock);
+    }
+  }
+  normalizePath(path) {
+    if (path && isMacintosh) {
+      path = normalizeNFC(path);
+    }
+    return path;
+  }
+  normalizePaths(paths) {
+    return paths.map((path) => this.normalizePath(path));
+  }
+  async showOpenDialog(options, window) {
+    if (options.defaultPath) {
+      const pathExists = await Promises.exists(options.defaultPath);
+      if (!pathExists) {
+        options.defaultPath = void 0;
+      }
+    }
+    const fileDialogLock = this.acquireFileDialogLock(options, window);
+    if (!fileDialogLock) {
+      this.logService.error("[DialogMainService]: file open dialog is already or will be showing for the window with the same configuration");
+      return { canceled: true, filePaths: [] };
+    }
+    try {
+      return await this.getWindowDialogQueue(window).queue(async () => {
+        let result;
+        if (window) {
+          result = await electron.dialog.showOpenDialog(window, options);
+        } else {
+          result = await electron.dialog.showOpenDialog(options);
+        }
+        result.filePaths = this.normalizePaths(result.filePaths);
+        return result;
+      });
+    } finally {
+      dispose(fileDialogLock);
+    }
+  }
+  acquireFileDialogLock(options, window) {
+    if (!window) {
+      return Disposable.None;
+    }
+    this.logService.trace("[DialogMainService]: request to acquire file dialog lock", options);
+    let windowFileDialogLocks = this.windowFileDialogLocks.get(window.id);
+    if (!windowFileDialogLocks) {
+      windowFileDialogLocks = /* @__PURE__ */ new Set();
+      this.windowFileDialogLocks.set(window.id, windowFileDialogLocks);
+    }
+    const optionsHash = hash(options);
+    if (windowFileDialogLocks.has(optionsHash)) {
+      return void 0;
+    }
+    this.logService.trace("[DialogMainService]: new file dialog lock created", options);
+    windowFileDialogLocks.add(optionsHash);
+    return toDisposable(() => {
+      this.logService.trace("[DialogMainService]: file dialog lock disposed", options);
+      windowFileDialogLocks?.delete(optionsHash);
+      if (windowFileDialogLocks?.size === 0) {
+        this.windowFileDialogLocks.delete(window.id);
+      }
+    });
+  }
+};
+DialogMainService = __decorateClass([
+  __decorateParam(0, ILogService),
+  __decorateParam(1, IProductService)
+], DialogMainService);
+export {
+  DialogMainService,
+  IDialogMainService
+};
+//# sourceMappingURL=dialogMainService.js.map

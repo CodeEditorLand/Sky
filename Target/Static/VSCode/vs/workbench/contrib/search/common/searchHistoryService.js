@@ -1,1 +1,58 @@
-var S=Object.defineProperty,v=Object.getOwnPropertyDescriptor,d=(r,e,t,o)=>{for(var s,i=o>1?void 0:o?v(e,t):e,a=r.length-1;a>=0;a--)(s=r[a])&&(i=(o?s(e,t,i):s(i))||i);return o&&i&&S(e,t,i),i},l=(r,e)=>(t,o)=>e(t,o,r);import{Emitter as y}from"../../../../base/common/event.js";import{IStorageService as H,StorageScope as s,StorageTarget as E}from"../../../../platform/storage/common/storage.js";import{isEmptyObject as I}from"../../../../base/common/types.js";import{createDecorator as g}from"../../../../platform/instantiation/common/instantiation.js";const f=g("searchHistoryService");let r=class{constructor(r){this.storageService=r}static SEARCH_HISTORY_KEY="workbench.search.history";_onDidClearHistory=new y;onDidClearHistory=this._onDidClearHistory.event;clearHistory(){this.storageService.remove(r.SEARCH_HISTORY_KEY,s.WORKSPACE),this._onDidClearHistory.fire()}load(){let e;const t=this.storageService.get(r.SEARCH_HISTORY_KEY,s.WORKSPACE);if(t)try{e=JSON.parse(t)}catch{}return e||{}}save(e){I(e)?this.storageService.remove(r.SEARCH_HISTORY_KEY,s.WORKSPACE):this.storageService.store(r.SEARCH_HISTORY_KEY,JSON.stringify(e),s.WORKSPACE,E.USER)}};r=d([l(0,H)],r);export{f as ISearchHistoryService,r as SearchHistoryService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { isEmptyObject } from "../../../../base/common/types.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+const ISearchHistoryService = createDecorator("searchHistoryService");
+let SearchHistoryService = class {
+  constructor(storageService) {
+    this.storageService = storageService;
+  }
+  static {
+    __name(this, "SearchHistoryService");
+  }
+  static SEARCH_HISTORY_KEY = "workbench.search.history";
+  _onDidClearHistory = new Emitter();
+  onDidClearHistory = this._onDidClearHistory.event;
+  clearHistory() {
+    this.storageService.remove(SearchHistoryService.SEARCH_HISTORY_KEY, StorageScope.WORKSPACE);
+    this._onDidClearHistory.fire();
+  }
+  load() {
+    let result;
+    const raw = this.storageService.get(SearchHistoryService.SEARCH_HISTORY_KEY, StorageScope.WORKSPACE);
+    if (raw) {
+      try {
+        result = JSON.parse(raw);
+      } catch (e) {
+      }
+    }
+    return result || {};
+  }
+  save(history) {
+    if (isEmptyObject(history)) {
+      this.storageService.remove(SearchHistoryService.SEARCH_HISTORY_KEY, StorageScope.WORKSPACE);
+    } else {
+      this.storageService.store(SearchHistoryService.SEARCH_HISTORY_KEY, JSON.stringify(history), StorageScope.WORKSPACE, StorageTarget.USER);
+    }
+  }
+};
+SearchHistoryService = __decorateClass([
+  __decorateParam(0, IStorageService)
+], SearchHistoryService);
+export {
+  ISearchHistoryService,
+  SearchHistoryService
+};
+//# sourceMappingURL=searchHistoryService.js.map

@@ -1,5 +1,344 @@
-var V=Object.defineProperty;var j=Object.getOwnPropertyDescriptor;var g=(d,m,e,t)=>{for(var o=t>1?void 0:t?j(m,e):m,i=d.length-1,r;i>=0;i--)(r=d[i])&&(o=(t?r(m,e,o):r(o))||o);return t&&o&&V(m,e,o),o},a=(d,m)=>(e,t)=>m(e,t,d);import{isSafari as Y,setFullscreen as z}from"../../base/browser/browser.js";import{addDisposableListener as f,EventHelper as k,EventType as p,getActiveWindow as G,getWindow as K,getWindowById as X,getWindows as L,getWindowsCount as x,windowOpenNoOpener as P,windowOpenPopup as A,windowOpenWithSuccess as Z}from"../../base/browser/dom.js";import{DomEmitter as C}from"../../base/browser/event.js";import{requestHidDevice as $,requestSerialPort as J,requestUsbDevice as ee}from"../../base/browser/deviceAccess.js";import{timeout as te}from"../../base/common/async.js";import{Event as y}from"../../base/common/event.js";import{Disposable as oe,dispose as M,toDisposable as ie}from"../../base/common/lifecycle.js";import{matchesScheme as E,Schemas as I}from"../../base/common/network.js";import{isIOS as U,isMacintosh as F}from"../../base/common/platform.js";import D from"../../base/common/severity.js";import{URI as W}from"../../base/common/uri.js";import{localize as n}from"../../nls.js";import{CommandsRegistry as T}from"../../platform/commands/common/commands.js";import{IDialogService as H}from"../../platform/dialogs/common/dialogs.js";import{IInstantiationService as re}from"../../platform/instantiation/common/instantiation.js";import{ILabelService as ne}from"../../platform/label/common/label.js";import{IOpenerService as se}from"../../platform/opener/common/opener.js";import{IProductService as ae}from"../../platform/product/common/productService.js";import{IBrowserWorkbenchEnvironmentService as ce}from"../services/environment/browser/environmentService.js";import{IWorkbenchLayoutService as le}from"../services/layout/browser/layoutService.js";import"../services/lifecycle/browser/lifecycleService.js";import{ILifecycleService as ue,ShutdownReason as _}from"../services/lifecycle/common/lifecycle.js";import{IHostService as N}from"../services/host/browser/host.js";import{registerWindowDriver as me}from"../services/driver/browser/driver.js";import{isAuxiliaryWindow as pe,mainWindow as u}from"../../base/browser/window.js";import{createSingleCallFunction as de}from"../../base/common/functional.js";import{IConfigurationService as ve}from"../../platform/configuration/common/configuration.js";import{IWorkbenchEnvironmentService as Se}from"../services/environment/common/environmentService.js";let c=class extends oe{constructor(e,t={getWindowsCount:x,getWindows:L},o,i){super();this.hostService=o;this.environmentService=i;this.enableWindowFocusOnElementFocus(e),this.enableMultiWindowAwareTimeout(e,t),this.registerFullScreenListeners(e.vscodeWindowId)}static TIMEOUT_HANDLES=Number.MIN_SAFE_INTEGER;static TIMEOUT_DISPOSABLES=new Map;enableWindowFocusOnElementFocus(e){const t=e.HTMLElement.prototype.focus,o=this;e.HTMLElement.prototype.focus=function(i){o.onElementFocus(K(this)),t.apply(this,[i])}}onElementFocus(e){const t=G();t!==e&&t.document.hasFocus()&&(e.focus(),!this.environmentService.extensionTestsLocationURI&&!e.document.hasFocus()&&this.hostService.focus(e))}enableMultiWindowAwareTimeout(e,t={getWindowsCount:x,getWindows:L}){const o=e.setTimeout;Object.defineProperty(e,"vscodeOriginalSetTimeout",{get:()=>o});const i=e.clearTimeout;Object.defineProperty(e,"vscodeOriginalClearTimeout",{get:()=>i}),e.setTimeout=function(r,s=0,...l){if(t.getWindowsCount()===1||typeof r=="string"||s===0)return o.apply(this,[r,s,...l]);const v=new Set,S=c.TIMEOUT_HANDLES++;c.TIMEOUT_DISPOSABLES.set(S,v);const q=de(r,()=>{M(v),c.TIMEOUT_DISPOSABLES.delete(S)});for(const{window:h,disposables:B}of t.getWindows()){if(pe(h)&&h.document.visibilityState==="hidden")continue;let O=!1;const R=h.vscodeOriginalSetTimeout.apply(this,[(...Q)=>{O||q(...Q)},s,...l]),b=ie(()=>{O=!0,h.vscodeOriginalClearTimeout(R),v.delete(b)});B.add(b),v.add(b)}return S},e.clearTimeout=function(r){const s=typeof r=="number"?c.TIMEOUT_DISPOSABLES.get(r):void 0;s?(M(s),c.TIMEOUT_DISPOSABLES.delete(r)):i.apply(this,[r])}}registerFullScreenListeners(e){this._register(this.hostService.onDidChangeFullScreen(({windowId:t,fullscreen:o})=>{if(t===e){const i=X(e);i&&z(o,i.window)}}))}static async confirmOnShutdown(e,t){const o=e.get(H),i=e.get(ve),r=t===_.QUIT?F?n("quitMessageMac","Are you sure you want to quit?"):n("quitMessage","Are you sure you want to exit?"):n("closeWindowMessage","Are you sure you want to close the window?"),s=t===_.QUIT?F?n({key:"quitButtonLabel",comment:["&& denotes a mnemonic"]},"&&Quit"):n({key:"exitButtonLabel",comment:["&& denotes a mnemonic"]},"&&Exit"):n({key:"closeWindowButtonLabel",comment:["&& denotes a mnemonic"]},"&&Close Window"),l=await o.confirm({message:r,primaryButton:s,checkbox:{label:n("doNotAskAgain","Do not ask me again")}});return l.confirmed&&l.checkboxChecked&&await i.updateValue("window.confirmBeforeClose","never"),l.confirmed}};c=g([a(2,N),a(3,Se)],c);let w=class extends c{constructor(e,t,o,i,r,s,l,v,S){super(u,void 0,S,s);this.openerService=e;this.lifecycleService=t;this.dialogService=o;this.labelService=i;this.productService=r;this.browserEnvironmentService=s;this.layoutService=l;this.instantiationService=v;this.registerListeners(),this.create()}registerListeners(){this._register(this.lifecycleService.onWillShutdown(()=>this.onWillShutdown()));const e=U&&u.visualViewport?u.visualViewport:u;this._register(f(e,p.RESIZE,()=>{this.layoutService.layout(),U&&u.scrollTo(0,0)})),this._register(f(this.layoutService.mainContainer,p.WHEEL,t=>t.preventDefault(),{passive:!1})),this._register(f(this.layoutService.mainContainer,p.CONTEXT_MENU,t=>k.stop(t,!0))),this._register(f(this.layoutService.mainContainer,p.DROP,t=>k.stop(t,!0)))}onWillShutdown(){y.toPromise(y.any(y.once(new C(u.document.body,p.KEY_DOWN,!0).event),y.once(new C(u.document.body,p.MOUSE_DOWN,!0).event))).then(async()=>{await te(3e3),await this.dialogService.prompt({type:D.Error,message:n("shutdownError","An unexpected error occurred that requires a reload of this page."),detail:n("shutdownErrorDetail","The workbench was unexpectedly disposed while running."),buttons:[{label:n({key:"reload",comment:["&& denotes a mnemonic"]},"&&Reload"),run:()=>u.location.reload()}]})})}create(){this.setupOpenHandlers(),this.registerLabelFormatters(),this.registerCommands(),this.setupDriver()}setupDriver(){this.environmentService.enableSmokeTestDriver&&me(this.instantiationService)}setupOpenHandlers(){this.openerService.setDefaultExternalOpener({openExternal:async e=>{let t=!1;if(this.browserEnvironmentService.options?.openerAllowedExternalUrlPrefixes){for(const o of this.browserEnvironmentService.options.openerAllowedExternalUrlPrefixes)if(e.startsWith(o)){t=!0;break}}if(E(e,I.http)||E(e,I.https))Y?Z(e,!t)||await this.dialogService.prompt({type:D.Warning,message:n("unableToOpenExternal","The browser interrupted the opening of a new tab or window. Press 'Open' to open it anyway."),detail:e,buttons:[{label:n({key:"open",comment:["&& denotes a mnemonic"]},"&&Open"),run:()=>t?A(e):P(e)},{label:n({key:"learnMore",comment:["&& denotes a mnemonic"]},"&&Learn More"),run:()=>this.openerService.open(W.parse("https://aka.ms/allow-vscode-popup"))}],cancelButton:!0}):t?A(e):P(e);else{const o=()=>{this.lifecycleService.withExpectedShutdown({disableShutdownHandling:!0},()=>u.location.href=e)};o();const i=async()=>{const{downloadUrl:r}=this.productService;let s;const l=[{label:n({key:"openExternalDialogButtonRetry.v2",comment:["&& denotes a mnemonic"]},"&&Try Again"),run:()=>o()}];r!==void 0?(s=n("openExternalDialogDetail.v2",`We launched {0} on your computer.
-
-If {1} did not launch, try again or install it below.`,this.productService.nameLong,this.productService.nameLong),l.push({label:n({key:"openExternalDialogButtonInstall.v3",comment:["&& denotes a mnemonic"]},"&&Install"),run:async()=>{await this.openerService.open(W.parse(r)),i()}})):s=n("openExternalDialogDetailNoInstall",`We launched {0} on your computer.
-
-If {1} did not launch, try again below.`,this.productService.nameLong,this.productService.nameLong),await this.hostService.withExpectedShutdown(()=>this.dialogService.prompt({type:D.Info,message:n("openExternalDialogTitle","All done. You can close this tab now."),detail:s,buttons:l,cancelButton:!0}))};E(e,this.productService.urlProtocol)&&await i()}return!0}})}registerLabelFormatters(){this._register(this.labelService.registerFormatter({scheme:I.vscodeUserData,priority:!0,formatting:{label:"(Settings) ${path}",separator:"/"}}))}registerCommands(){T.registerCommand("workbench.experimental.requestUsbDevice",async(e,t)=>ee(t)),T.registerCommand("workbench.experimental.requestSerialPort",async(e,t)=>J(t)),T.registerCommand("workbench.experimental.requestHidDevice",async(e,t)=>$(t))}};w=g([a(0,se),a(1,ue),a(2,H),a(3,ne),a(4,ae),a(5,ce),a(6,le),a(7,re),a(8,N)],w);export{c as BaseWindow,w as BrowserWindow};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { isSafari, setFullscreen } from "../../base/browser/browser.js";
+import { addDisposableListener, EventHelper, EventType, getActiveWindow, getWindow, getWindowById, getWindows, getWindowsCount, windowOpenNoOpener, windowOpenPopup, windowOpenWithSuccess } from "../../base/browser/dom.js";
+import { DomEmitter } from "../../base/browser/event.js";
+import { HidDeviceData, requestHidDevice, requestSerialPort, requestUsbDevice, SerialPortData, UsbDeviceData } from "../../base/browser/deviceAccess.js";
+import { timeout } from "../../base/common/async.js";
+import { Event } from "../../base/common/event.js";
+import { Disposable, IDisposable, dispose, toDisposable } from "../../base/common/lifecycle.js";
+import { matchesScheme, Schemas } from "../../base/common/network.js";
+import { isIOS, isMacintosh } from "../../base/common/platform.js";
+import Severity from "../../base/common/severity.js";
+import { URI } from "../../base/common/uri.js";
+import { localize } from "../../nls.js";
+import { CommandsRegistry } from "../../platform/commands/common/commands.js";
+import { IDialogService, IPromptButton } from "../../platform/dialogs/common/dialogs.js";
+import { IInstantiationService, ServicesAccessor } from "../../platform/instantiation/common/instantiation.js";
+import { ILabelService } from "../../platform/label/common/label.js";
+import { IOpenerService } from "../../platform/opener/common/opener.js";
+import { IProductService } from "../../platform/product/common/productService.js";
+import { IBrowserWorkbenchEnvironmentService } from "../services/environment/browser/environmentService.js";
+import { IWorkbenchLayoutService } from "../services/layout/browser/layoutService.js";
+import { BrowserLifecycleService } from "../services/lifecycle/browser/lifecycleService.js";
+import { ILifecycleService, ShutdownReason } from "../services/lifecycle/common/lifecycle.js";
+import { IHostService } from "../services/host/browser/host.js";
+import { registerWindowDriver } from "../services/driver/browser/driver.js";
+import { CodeWindow, isAuxiliaryWindow, mainWindow } from "../../base/browser/window.js";
+import { createSingleCallFunction } from "../../base/common/functional.js";
+import { IConfigurationService } from "../../platform/configuration/common/configuration.js";
+import { IWorkbenchEnvironmentService } from "../services/environment/common/environmentService.js";
+let BaseWindow = class extends Disposable {
+  constructor(targetWindow, dom = { getWindowsCount, getWindows }, hostService, environmentService) {
+    super();
+    this.hostService = hostService;
+    this.environmentService = environmentService;
+    this.enableWindowFocusOnElementFocus(targetWindow);
+    this.enableMultiWindowAwareTimeout(targetWindow, dom);
+    this.registerFullScreenListeners(targetWindow.vscodeWindowId);
+  }
+  static {
+    __name(this, "BaseWindow");
+  }
+  static TIMEOUT_HANDLES = Number.MIN_SAFE_INTEGER;
+  // try to not compete with the IDs of native `setTimeout`
+  static TIMEOUT_DISPOSABLES = /* @__PURE__ */ new Map();
+  //#region focus handling in multi-window applications
+  enableWindowFocusOnElementFocus(targetWindow) {
+    const originalFocus = targetWindow.HTMLElement.prototype.focus;
+    const that = this;
+    targetWindow.HTMLElement.prototype.focus = function(options) {
+      that.onElementFocus(getWindow(this));
+      originalFocus.apply(this, [options]);
+    };
+  }
+  onElementFocus(targetWindow) {
+    const activeWindow = getActiveWindow();
+    if (activeWindow !== targetWindow && activeWindow.document.hasFocus()) {
+      targetWindow.focus();
+      if (!this.environmentService.extensionTestsLocationURI && !targetWindow.document.hasFocus()) {
+        this.hostService.focus(targetWindow);
+      }
+    }
+  }
+  //#endregion
+  //#region timeout handling in multi-window applications
+  enableMultiWindowAwareTimeout(targetWindow, dom = { getWindowsCount, getWindows }) {
+    const originalSetTimeout = targetWindow.setTimeout;
+    Object.defineProperty(targetWindow, "vscodeOriginalSetTimeout", { get: /* @__PURE__ */ __name(() => originalSetTimeout, "get") });
+    const originalClearTimeout = targetWindow.clearTimeout;
+    Object.defineProperty(targetWindow, "vscodeOriginalClearTimeout", { get: /* @__PURE__ */ __name(() => originalClearTimeout, "get") });
+    targetWindow.setTimeout = function(handler, timeout2 = 0, ...args) {
+      if (dom.getWindowsCount() === 1 || typeof handler === "string" || timeout2 === 0) {
+        return originalSetTimeout.apply(this, [handler, timeout2, ...args]);
+      }
+      const timeoutDisposables = /* @__PURE__ */ new Set();
+      const timeoutHandle = BaseWindow.TIMEOUT_HANDLES++;
+      BaseWindow.TIMEOUT_DISPOSABLES.set(timeoutHandle, timeoutDisposables);
+      const handlerFn = createSingleCallFunction(handler, () => {
+        dispose(timeoutDisposables);
+        BaseWindow.TIMEOUT_DISPOSABLES.delete(timeoutHandle);
+      });
+      for (const { window, disposables } of dom.getWindows()) {
+        if (isAuxiliaryWindow(window) && window.document.visibilityState === "hidden") {
+          continue;
+        }
+        let didClear = false;
+        const handle = window.vscodeOriginalSetTimeout.apply(this, [(...args2) => {
+          if (didClear) {
+            return;
+          }
+          handlerFn(...args2);
+        }, timeout2, ...args]);
+        const timeoutDisposable = toDisposable(() => {
+          didClear = true;
+          window.vscodeOriginalClearTimeout(handle);
+          timeoutDisposables.delete(timeoutDisposable);
+        });
+        disposables.add(timeoutDisposable);
+        timeoutDisposables.add(timeoutDisposable);
+      }
+      return timeoutHandle;
+    };
+    targetWindow.clearTimeout = function(timeoutHandle) {
+      const timeoutDisposables = typeof timeoutHandle === "number" ? BaseWindow.TIMEOUT_DISPOSABLES.get(timeoutHandle) : void 0;
+      if (timeoutDisposables) {
+        dispose(timeoutDisposables);
+        BaseWindow.TIMEOUT_DISPOSABLES.delete(timeoutHandle);
+      } else {
+        originalClearTimeout.apply(this, [timeoutHandle]);
+      }
+    };
+  }
+  //#endregion
+  registerFullScreenListeners(targetWindowId) {
+    this._register(this.hostService.onDidChangeFullScreen(({ windowId, fullscreen }) => {
+      if (windowId === targetWindowId) {
+        const targetWindow = getWindowById(targetWindowId);
+        if (targetWindow) {
+          setFullscreen(fullscreen, targetWindow.window);
+        }
+      }
+    }));
+  }
+  //#region Confirm on Shutdown
+  static async confirmOnShutdown(accessor, reason) {
+    const dialogService = accessor.get(IDialogService);
+    const configurationService = accessor.get(IConfigurationService);
+    const message = reason === ShutdownReason.QUIT ? isMacintosh ? localize("quitMessageMac", "Are you sure you want to quit?") : localize("quitMessage", "Are you sure you want to exit?") : localize("closeWindowMessage", "Are you sure you want to close the window?");
+    const primaryButton = reason === ShutdownReason.QUIT ? isMacintosh ? localize({ key: "quitButtonLabel", comment: ["&& denotes a mnemonic"] }, "&&Quit") : localize({ key: "exitButtonLabel", comment: ["&& denotes a mnemonic"] }, "&&Exit") : localize({ key: "closeWindowButtonLabel", comment: ["&& denotes a mnemonic"] }, "&&Close Window");
+    const res = await dialogService.confirm({
+      message,
+      primaryButton,
+      checkbox: {
+        label: localize("doNotAskAgain", "Do not ask me again")
+      }
+    });
+    if (res.confirmed && res.checkboxChecked) {
+      await configurationService.updateValue("window.confirmBeforeClose", "never");
+    }
+    return res.confirmed;
+  }
+  //#endregion
+};
+BaseWindow = __decorateClass([
+  __decorateParam(2, IHostService),
+  __decorateParam(3, IWorkbenchEnvironmentService)
+], BaseWindow);
+let BrowserWindow = class extends BaseWindow {
+  constructor(openerService, lifecycleService, dialogService, labelService, productService, browserEnvironmentService, layoutService, instantiationService, hostService) {
+    super(mainWindow, void 0, hostService, browserEnvironmentService);
+    this.openerService = openerService;
+    this.lifecycleService = lifecycleService;
+    this.dialogService = dialogService;
+    this.labelService = labelService;
+    this.productService = productService;
+    this.browserEnvironmentService = browserEnvironmentService;
+    this.layoutService = layoutService;
+    this.instantiationService = instantiationService;
+    this.registerListeners();
+    this.create();
+  }
+  static {
+    __name(this, "BrowserWindow");
+  }
+  registerListeners() {
+    this._register(this.lifecycleService.onWillShutdown(() => this.onWillShutdown()));
+    const viewport = isIOS && mainWindow.visualViewport ? mainWindow.visualViewport : mainWindow;
+    this._register(addDisposableListener(viewport, EventType.RESIZE, () => {
+      this.layoutService.layout();
+      if (isIOS) {
+        mainWindow.scrollTo(0, 0);
+      }
+    }));
+    this._register(addDisposableListener(this.layoutService.mainContainer, EventType.WHEEL, (e) => e.preventDefault(), { passive: false }));
+    this._register(addDisposableListener(this.layoutService.mainContainer, EventType.CONTEXT_MENU, (e) => EventHelper.stop(e, true)));
+    this._register(addDisposableListener(this.layoutService.mainContainer, EventType.DROP, (e) => EventHelper.stop(e, true)));
+  }
+  onWillShutdown() {
+    Event.toPromise(Event.any(
+      Event.once(new DomEmitter(mainWindow.document.body, EventType.KEY_DOWN, true).event),
+      Event.once(new DomEmitter(mainWindow.document.body, EventType.MOUSE_DOWN, true).event)
+    )).then(async () => {
+      await timeout(3e3);
+      await this.dialogService.prompt({
+        type: Severity.Error,
+        message: localize("shutdownError", "An unexpected error occurred that requires a reload of this page."),
+        detail: localize("shutdownErrorDetail", "The workbench was unexpectedly disposed while running."),
+        buttons: [
+          {
+            label: localize({ key: "reload", comment: ["&& denotes a mnemonic"] }, "&&Reload"),
+            run: /* @__PURE__ */ __name(() => mainWindow.location.reload(), "run")
+            // do not use any services at this point since they are likely not functional at this point
+          }
+        ]
+      });
+    });
+  }
+  create() {
+    this.setupOpenHandlers();
+    this.registerLabelFormatters();
+    this.registerCommands();
+    this.setupDriver();
+  }
+  setupDriver() {
+    if (this.environmentService.enableSmokeTestDriver) {
+      registerWindowDriver(this.instantiationService);
+    }
+  }
+  setupOpenHandlers() {
+    this.openerService.setDefaultExternalOpener({
+      openExternal: /* @__PURE__ */ __name(async (href) => {
+        let isAllowedOpener = false;
+        if (this.browserEnvironmentService.options?.openerAllowedExternalUrlPrefixes) {
+          for (const trustedPopupPrefix of this.browserEnvironmentService.options.openerAllowedExternalUrlPrefixes) {
+            if (href.startsWith(trustedPopupPrefix)) {
+              isAllowedOpener = true;
+              break;
+            }
+          }
+        }
+        if (matchesScheme(href, Schemas.http) || matchesScheme(href, Schemas.https)) {
+          if (isSafari) {
+            const opened = windowOpenWithSuccess(href, !isAllowedOpener);
+            if (!opened) {
+              await this.dialogService.prompt({
+                type: Severity.Warning,
+                message: localize("unableToOpenExternal", "The browser interrupted the opening of a new tab or window. Press 'Open' to open it anyway."),
+                detail: href,
+                buttons: [
+                  {
+                    label: localize({ key: "open", comment: ["&& denotes a mnemonic"] }, "&&Open"),
+                    run: /* @__PURE__ */ __name(() => isAllowedOpener ? windowOpenPopup(href) : windowOpenNoOpener(href), "run")
+                  },
+                  {
+                    label: localize({ key: "learnMore", comment: ["&& denotes a mnemonic"] }, "&&Learn More"),
+                    run: /* @__PURE__ */ __name(() => this.openerService.open(URI.parse("https://aka.ms/allow-vscode-popup")), "run")
+                  }
+                ],
+                cancelButton: true
+              });
+            }
+          } else {
+            isAllowedOpener ? windowOpenPopup(href) : windowOpenNoOpener(href);
+          }
+        } else {
+          const invokeProtocolHandler = /* @__PURE__ */ __name(() => {
+            this.lifecycleService.withExpectedShutdown({ disableShutdownHandling: true }, () => mainWindow.location.href = href);
+          }, "invokeProtocolHandler");
+          invokeProtocolHandler();
+          const showProtocolUrlOpenedDialog = /* @__PURE__ */ __name(async () => {
+            const { downloadUrl } = this.productService;
+            let detail;
+            const buttons = [
+              {
+                label: localize({ key: "openExternalDialogButtonRetry.v2", comment: ["&& denotes a mnemonic"] }, "&&Try Again"),
+                run: /* @__PURE__ */ __name(() => invokeProtocolHandler(), "run")
+              }
+            ];
+            if (downloadUrl !== void 0) {
+              detail = localize(
+                "openExternalDialogDetail.v2",
+                "We launched {0} on your computer.\n\nIf {1} did not launch, try again or install it below.",
+                this.productService.nameLong,
+                this.productService.nameLong
+              );
+              buttons.push({
+                label: localize({ key: "openExternalDialogButtonInstall.v3", comment: ["&& denotes a mnemonic"] }, "&&Install"),
+                run: /* @__PURE__ */ __name(async () => {
+                  await this.openerService.open(URI.parse(downloadUrl));
+                  showProtocolUrlOpenedDialog();
+                }, "run")
+              });
+            } else {
+              detail = localize(
+                "openExternalDialogDetailNoInstall",
+                "We launched {0} on your computer.\n\nIf {1} did not launch, try again below.",
+                this.productService.nameLong,
+                this.productService.nameLong
+              );
+            }
+            await this.hostService.withExpectedShutdown(() => this.dialogService.prompt({
+              type: Severity.Info,
+              message: localize("openExternalDialogTitle", "All done. You can close this tab now."),
+              detail,
+              buttons,
+              cancelButton: true
+            }));
+          }, "showProtocolUrlOpenedDialog");
+          if (matchesScheme(href, this.productService.urlProtocol)) {
+            await showProtocolUrlOpenedDialog();
+          }
+        }
+        return true;
+      }, "openExternal")
+    });
+  }
+  registerLabelFormatters() {
+    this._register(this.labelService.registerFormatter({
+      scheme: Schemas.vscodeUserData,
+      priority: true,
+      formatting: {
+        label: "(Settings) ${path}",
+        separator: "/"
+      }
+    }));
+  }
+  registerCommands() {
+    CommandsRegistry.registerCommand("workbench.experimental.requestUsbDevice", async (_accessor, options) => {
+      return requestUsbDevice(options);
+    });
+    CommandsRegistry.registerCommand("workbench.experimental.requestSerialPort", async (_accessor, options) => {
+      return requestSerialPort(options);
+    });
+    CommandsRegistry.registerCommand("workbench.experimental.requestHidDevice", async (_accessor, options) => {
+      return requestHidDevice(options);
+    });
+  }
+};
+BrowserWindow = __decorateClass([
+  __decorateParam(0, IOpenerService),
+  __decorateParam(1, ILifecycleService),
+  __decorateParam(2, IDialogService),
+  __decorateParam(3, ILabelService),
+  __decorateParam(4, IProductService),
+  __decorateParam(5, IBrowserWorkbenchEnvironmentService),
+  __decorateParam(6, IWorkbenchLayoutService),
+  __decorateParam(7, IInstantiationService),
+  __decorateParam(8, IHostService)
+], BrowserWindow);
+export {
+  BaseWindow,
+  BrowserWindow
+};
+//# sourceMappingURL=window.js.map

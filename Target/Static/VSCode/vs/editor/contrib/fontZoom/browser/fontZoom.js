@@ -1,1 +1,55 @@
-import"../../../browser/editorBrowser.js";import{EditorAction as e,registerEditorAction as t}from"../../../browser/editorExtensions.js";import{EditorZoom as o}from"../../../common/config/editorZoom.js";import*as i from"../../../../nls.js";class c extends e{constructor(){super({id:"editor.action.fontZoomIn",label:i.localize2("EditorFontZoomIn.label","Increase Editor Font Size"),precondition:void 0})}run(e,t){o.setZoomLevel(o.getZoomLevel()+1)}}class n extends e{constructor(){super({id:"editor.action.fontZoomOut",label:i.localize2("EditorFontZoomOut.label","Decrease Editor Font Size"),precondition:void 0})}run(e,t){o.setZoomLevel(o.getZoomLevel()-1)}}class l extends e{constructor(){super({id:"editor.action.fontZoomReset",label:i.localize2("EditorFontZoomReset.label","Reset Editor Font Size"),precondition:void 0})}run(e,t){o.setZoomLevel(0)}}t(c),t(n),t(l);
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { ICodeEditor } from "../../../browser/editorBrowser.js";
+import { EditorAction, registerEditorAction, ServicesAccessor } from "../../../browser/editorExtensions.js";
+import { EditorZoom } from "../../../common/config/editorZoom.js";
+import * as nls from "../../../../nls.js";
+class EditorFontZoomIn extends EditorAction {
+  static {
+    __name(this, "EditorFontZoomIn");
+  }
+  constructor() {
+    super({
+      id: "editor.action.fontZoomIn",
+      label: nls.localize2("EditorFontZoomIn.label", "Increase Editor Font Size"),
+      precondition: void 0
+    });
+  }
+  run(accessor, editor) {
+    EditorZoom.setZoomLevel(EditorZoom.getZoomLevel() + 1);
+  }
+}
+class EditorFontZoomOut extends EditorAction {
+  static {
+    __name(this, "EditorFontZoomOut");
+  }
+  constructor() {
+    super({
+      id: "editor.action.fontZoomOut",
+      label: nls.localize2("EditorFontZoomOut.label", "Decrease Editor Font Size"),
+      precondition: void 0
+    });
+  }
+  run(accessor, editor) {
+    EditorZoom.setZoomLevel(EditorZoom.getZoomLevel() - 1);
+  }
+}
+class EditorFontZoomReset extends EditorAction {
+  static {
+    __name(this, "EditorFontZoomReset");
+  }
+  constructor() {
+    super({
+      id: "editor.action.fontZoomReset",
+      label: nls.localize2("EditorFontZoomReset.label", "Reset Editor Font Size"),
+      precondition: void 0
+    });
+  }
+  run(accessor, editor) {
+    EditorZoom.setZoomLevel(0);
+  }
+}
+registerEditorAction(EditorFontZoomIn);
+registerEditorAction(EditorFontZoomOut);
+registerEditorAction(EditorFontZoomReset);
+//# sourceMappingURL=fontZoom.js.map

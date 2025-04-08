@@ -1,1 +1,42 @@
-var S=Object.defineProperty,c=Object.getOwnPropertyDescriptor,n=(t,e,r,s)=>{for(var o,a=s>1?void 0:s?c(e,r):e,i=t.length-1;i>=0;i--)(o=t[i])&&(a=(s?o(e,r,a):o(a))||a);return s&&a&&S(e,r,a),a},p=(t,e)=>(r,s)=>e(r,s,t);import{Disposable as d}from"../../../base/common/lifecycle.js";import{IChatStatusItemService as h}from"../../contrib/chat/browser/chatStatusItemService.js";import{extHostNamedCustomer as I}from"../../services/extensions/common/extHostCustomers.js";import{MainContext as l}from"../common/extHost.protocol.js";let r=class extends d{constructor(t,e){super(),this._chatStatusItemService=e}$setEntry(t,e){this._chatStatusItemService.setOrUpdateEntry({id:t,label:e.title,description:e.description,detail:e.detail})}$disposeEntry(t){this._chatStatusItemService.deleteEntry(t)}};r=n([I(l.MainThreadChatStatus),p(1,h)],r);export{r as MainThreadChatStatus};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { IChatStatusItemService } from "../../contrib/chat/browser/chatStatusItemService.js";
+import { IExtHostContext, extHostNamedCustomer } from "../../services/extensions/common/extHostCustomers.js";
+import { ChatStatusItemDto, MainContext, MainThreadChatStatusShape } from "../common/extHost.protocol.js";
+let MainThreadChatStatus = class extends Disposable {
+  constructor(_extHostContext, _chatStatusItemService) {
+    super();
+    this._chatStatusItemService = _chatStatusItemService;
+  }
+  $setEntry(id, entry) {
+    this._chatStatusItemService.setOrUpdateEntry({
+      id,
+      label: entry.title,
+      description: entry.description,
+      detail: entry.detail
+    });
+  }
+  $disposeEntry(id) {
+    this._chatStatusItemService.deleteEntry(id);
+  }
+};
+__name(MainThreadChatStatus, "MainThreadChatStatus");
+MainThreadChatStatus = __decorateClass([
+  extHostNamedCustomer(MainContext.MainThreadChatStatus),
+  __decorateParam(1, IChatStatusItemService)
+], MainThreadChatStatus);
+export {
+  MainThreadChatStatus
+};
+//# sourceMappingURL=mainThreadChatStatus.js.map

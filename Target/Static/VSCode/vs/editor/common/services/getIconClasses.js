@@ -1,1 +1,97 @@
-import{Schemas as d}from"../../../base/common/network.js";import{DataUri as f}from"../../../base/common/resources.js";import{URI as u}from"../../../base/common/uri.js";import{PLAINTEXT_LANGUAGE_ID as p}from"../languages/modesRegistry.js";import"../languages/language.js";import"./model.js";import{FileKind as c}from"../../../platform/files/common/files.js";import{ThemeIcon as I}from"../../../base/common/themables.js";const h=/(?:\/|^)(?:([^\/]+)\/)?([^\/]+)$/;function x(e,o,n,i,t){if(I.isThemeIcon(t))return[`codicon-${t.id}`,"predefined-file-icon"];if(u.isUri(t))return[];const a=i===c.ROOT_FOLDER?["rootfolder-icon"]:i===c.FOLDER?["folder-icon"]:["file-icon"];if(n){let t;if(n.scheme===d.data)t=f.parseMetaData(n).get(f.META_DATA_LABEL);else{const e=n.path.match(h);e?(t=s(e[2].toLowerCase()),e[1]&&a.push(`${s(e[1].toLowerCase())}-name-dir-icon`)):t=s(n.authority.toLowerCase())}if(i===c.ROOT_FOLDER)a.push(`${t}-root-name-folder-icon`);else if(i===c.FOLDER)a.push(`${t}-name-folder-icon`);else{if(t){if(a.push(`${t}-name-file-icon`),a.push("name-file-icon"),t.length<=255){const e=t.split(".");for(let o=1;o<e.length;o++)a.push(`${e.slice(o).join(".")}-ext-file-icon`)}a.push("ext-file-icon")}const i=L(e,o,n);i&&a.push(`${s(i)}-lang-file-icon`)}}return a}function U(e){return["file-icon",`${s(e)}-lang-file-icon`]}function L(e,o,s){if(!s)return null;let n=null;if(s.scheme===d.data){const e=f.parseMetaData(s).get(f.META_DATA_MIME);e&&(n=o.getLanguageIdByMimeType(e))}else{const o=e.getModel(s);o&&(n=o.getLanguageId())}return n&&n!==p?n:o.guessLanguageIdByFilepathOrFirstLine(s)}function s(e){return e.replace(/[\s]/g,"/")}export{s as fileIconSelectorEscape,x as getIconClasses,U as getIconClassesForLanguageId};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Schemas } from "../../../base/common/network.js";
+import { DataUri } from "../../../base/common/resources.js";
+import { URI, URI as uri } from "../../../base/common/uri.js";
+import { PLAINTEXT_LANGUAGE_ID } from "../languages/modesRegistry.js";
+import { ILanguageService } from "../languages/language.js";
+import { IModelService } from "./model.js";
+import { FileKind } from "../../../platform/files/common/files.js";
+import { ThemeIcon } from "../../../base/common/themables.js";
+const fileIconDirectoryRegex = /(?:\/|^)(?:([^\/]+)\/)?([^\/]+)$/;
+function getIconClasses(modelService, languageService, resource, fileKind, icon) {
+  if (ThemeIcon.isThemeIcon(icon)) {
+    return [`codicon-${icon.id}`, "predefined-file-icon"];
+  }
+  if (URI.isUri(icon)) {
+    return [];
+  }
+  const classes = fileKind === FileKind.ROOT_FOLDER ? ["rootfolder-icon"] : fileKind === FileKind.FOLDER ? ["folder-icon"] : ["file-icon"];
+  if (resource) {
+    let name;
+    if (resource.scheme === Schemas.data) {
+      const metadata = DataUri.parseMetaData(resource);
+      name = metadata.get(DataUri.META_DATA_LABEL);
+    } else {
+      const match = resource.path.match(fileIconDirectoryRegex);
+      if (match) {
+        name = fileIconSelectorEscape(match[2].toLowerCase());
+        if (match[1]) {
+          classes.push(`${fileIconSelectorEscape(match[1].toLowerCase())}-name-dir-icon`);
+        }
+      } else {
+        name = fileIconSelectorEscape(resource.authority.toLowerCase());
+      }
+    }
+    if (fileKind === FileKind.ROOT_FOLDER) {
+      classes.push(`${name}-root-name-folder-icon`);
+    } else if (fileKind === FileKind.FOLDER) {
+      classes.push(`${name}-name-folder-icon`);
+    } else {
+      if (name) {
+        classes.push(`${name}-name-file-icon`);
+        classes.push(`name-file-icon`);
+        if (name.length <= 255) {
+          const dotSegments = name.split(".");
+          for (let i = 1; i < dotSegments.length; i++) {
+            classes.push(`${dotSegments.slice(i).join(".")}-ext-file-icon`);
+          }
+        }
+        classes.push(`ext-file-icon`);
+      }
+      const detectedLanguageId = detectLanguageId(modelService, languageService, resource);
+      if (detectedLanguageId) {
+        classes.push(`${fileIconSelectorEscape(detectedLanguageId)}-lang-file-icon`);
+      }
+    }
+  }
+  return classes;
+}
+__name(getIconClasses, "getIconClasses");
+function getIconClassesForLanguageId(languageId) {
+  return ["file-icon", `${fileIconSelectorEscape(languageId)}-lang-file-icon`];
+}
+__name(getIconClassesForLanguageId, "getIconClassesForLanguageId");
+function detectLanguageId(modelService, languageService, resource) {
+  if (!resource) {
+    return null;
+  }
+  let languageId = null;
+  if (resource.scheme === Schemas.data) {
+    const metadata = DataUri.parseMetaData(resource);
+    const mime = metadata.get(DataUri.META_DATA_MIME);
+    if (mime) {
+      languageId = languageService.getLanguageIdByMimeType(mime);
+    }
+  } else {
+    const model = modelService.getModel(resource);
+    if (model) {
+      languageId = model.getLanguageId();
+    }
+  }
+  if (languageId && languageId !== PLAINTEXT_LANGUAGE_ID) {
+    return languageId;
+  }
+  return languageService.guessLanguageIdByFilepathOrFirstLine(resource);
+}
+__name(detectLanguageId, "detectLanguageId");
+function fileIconSelectorEscape(str) {
+  return str.replace(/[\s]/g, "/");
+}
+__name(fileIconSelectorEscape, "fileIconSelectorEscape");
+export {
+  fileIconSelectorEscape,
+  getIconClasses,
+  getIconClassesForLanguageId
+};
+//# sourceMappingURL=getIconClasses.js.map

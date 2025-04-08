@@ -1,1 +1,164 @@
-var l=Object.defineProperty;var v=Object.getOwnPropertyDescriptor;var p=(s,o,e,t)=>{for(var i=t>1?void 0:t?v(o,e):o,d=s.length-1,a;d>=0;d--)(a=s[d])&&(i=(t?a(o,e,i):a(i))||i);return t&&i&&l(o,e,i),i},r=(s,o)=>(e,t)=>o(e,t,s);import"../../../../base/common/uri.js";import{Event as f}from"../../../../base/common/event.js";import{EditorResourceAccessor as h,SideBySideEditor as I}from"../../../common/editor.js";import{EditorPane as w}from"./editorPane.js";import{IStorageService as m}from"../../../../platform/storage/common/storage.js";import{IInstantiationService as V}from"../../../../platform/instantiation/common/instantiation.js";import{ITelemetryService as b}from"../../../../platform/telemetry/common/telemetry.js";import{IThemeService as g}from"../../../../platform/theme/common/themeService.js";import{ITextResourceConfigurationService as R}from"../../../../editor/common/services/textResourceConfiguration.js";import{IEditorGroupsService as D}from"../../../services/editor/common/editorGroupsService.js";import{IEditorService as T}from"../../../services/editor/common/editorService.js";import"../../../../base/common/resources.js";import{MutableDisposable as x}from"../../../../base/common/lifecycle.js";import"../../../common/editor/editorInput.js";let n=class extends w{constructor(e,t,i,d,a,u,c,S,C,E){super(e,t,d,S,u);this.instantiationService=a;this.textResourceConfigurationService=c;this.editorService=C;this.editorGroupService=E;this.viewState=this.getEditorMemento(E,c,i,100)}viewState;groupListener=this._register(new x);editorViewStateDisposables;setEditorVisible(e){this.groupListener.value=this.group.onWillCloseEditor(t=>this.onWillCloseEditor(t)),super.setEditorVisible(e)}onWillCloseEditor(e){const t=e.editor;t===this.input&&this.updateEditorViewState(t)}clearInput(){this.updateEditorViewState(this.input),super.clearInput()}saveState(){this.updateEditorViewState(this.input),super.saveState()}updateEditorViewState(e){if(!e||!this.tracksEditorViewState(e))return;const t=this.toEditorViewStateResource(e);t&&(this.tracksDisposedEditorViewState()||(this.editorViewStateDisposables||(this.editorViewStateDisposables=new Map),this.editorViewStateDisposables.has(e)||this.editorViewStateDisposables.set(e,f.once(e.onWillDispose)(()=>{this.clearEditorViewState(t,this.group),this.editorViewStateDisposables?.delete(e)}))),e.isDisposed()&&!this.tracksDisposedEditorViewState()||!this.shouldRestoreEditorViewState(e)&&!this.group.contains(e)?this.clearEditorViewState(t,this.group):e.isDisposed()||this.saveEditorViewState(t))}shouldRestoreEditorViewState(e,t){return t?.newInGroup?this.textResourceConfigurationService.getValue(h.getOriginalUri(e,{supportSideBySide:I.PRIMARY}),"workbench.editor.restoreViewState")!==!1:!0}getViewState(){const e=this.input;if(!e||!this.tracksEditorViewState(e))return;const t=this.toEditorViewStateResource(e);if(t)return this.computeEditorViewState(t)}saveEditorViewState(e){const t=this.computeEditorViewState(e);t&&this.viewState.saveEditorState(this.group,e,t)}loadEditorViewState(e,t){if(!e||!this.tracksEditorViewState(e)||!this.shouldRestoreEditorViewState(e,t))return;const i=this.toEditorViewStateResource(e);if(i)return this.viewState.loadEditorState(this.group,i)}moveEditorViewState(e,t,i){return this.viewState.moveEditorState(e,t,i)}clearEditorViewState(e,t){this.viewState.clearEditorState(e,t)}dispose(){if(super.dispose(),this.editorViewStateDisposables){for(const[,e]of this.editorViewStateDisposables)e.dispose();this.editorViewStateDisposables=void 0}}tracksDisposedEditorViewState(){return!1}};n=p([r(3,b),r(4,V),r(5,m),r(6,R),r(7,g),r(8,T),r(9,D)],n);export{n as AbstractEditorWithViewState};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { URI } from "../../../../base/common/uri.js";
+import { Event } from "../../../../base/common/event.js";
+import { IEditorMemento, IEditorCloseEvent, IEditorOpenContext, EditorResourceAccessor, SideBySideEditor } from "../../../common/editor.js";
+import { EditorPane } from "./editorPane.js";
+import { IStorageService } from "../../../../platform/storage/common/storage.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { IThemeService } from "../../../../platform/theme/common/themeService.js";
+import { ITextResourceConfigurationService } from "../../../../editor/common/services/textResourceConfiguration.js";
+import { IEditorGroupsService, IEditorGroup } from "../../../services/editor/common/editorGroupsService.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { IExtUri } from "../../../../base/common/resources.js";
+import { IDisposable, MutableDisposable } from "../../../../base/common/lifecycle.js";
+import { EditorInput } from "../../../common/editor/editorInput.js";
+let AbstractEditorWithViewState = class extends EditorPane {
+  constructor(id, group, viewStateStorageKey, telemetryService, instantiationService, storageService, textResourceConfigurationService, themeService, editorService, editorGroupService) {
+    super(id, group, telemetryService, themeService, storageService);
+    this.instantiationService = instantiationService;
+    this.textResourceConfigurationService = textResourceConfigurationService;
+    this.editorService = editorService;
+    this.editorGroupService = editorGroupService;
+    this.viewState = this.getEditorMemento(editorGroupService, textResourceConfigurationService, viewStateStorageKey, 100);
+  }
+  static {
+    __name(this, "AbstractEditorWithViewState");
+  }
+  viewState;
+  groupListener = this._register(new MutableDisposable());
+  editorViewStateDisposables;
+  setEditorVisible(visible) {
+    this.groupListener.value = this.group.onWillCloseEditor((e) => this.onWillCloseEditor(e));
+    super.setEditorVisible(visible);
+  }
+  onWillCloseEditor(e) {
+    const editor = e.editor;
+    if (editor === this.input) {
+      this.updateEditorViewState(editor);
+    }
+  }
+  clearInput() {
+    this.updateEditorViewState(this.input);
+    super.clearInput();
+  }
+  saveState() {
+    this.updateEditorViewState(this.input);
+    super.saveState();
+  }
+  updateEditorViewState(input) {
+    if (!input || !this.tracksEditorViewState(input)) {
+      return;
+    }
+    const resource = this.toEditorViewStateResource(input);
+    if (!resource) {
+      return;
+    }
+    if (!this.tracksDisposedEditorViewState()) {
+      if (!this.editorViewStateDisposables) {
+        this.editorViewStateDisposables = /* @__PURE__ */ new Map();
+      }
+      if (!this.editorViewStateDisposables.has(input)) {
+        this.editorViewStateDisposables.set(input, Event.once(input.onWillDispose)(() => {
+          this.clearEditorViewState(resource, this.group);
+          this.editorViewStateDisposables?.delete(input);
+        }));
+      }
+    }
+    if (input.isDisposed() && !this.tracksDisposedEditorViewState() || !this.shouldRestoreEditorViewState(input) && !this.group.contains(input)) {
+      this.clearEditorViewState(resource, this.group);
+    } else if (!input.isDisposed()) {
+      this.saveEditorViewState(resource);
+    }
+  }
+  shouldRestoreEditorViewState(input, context) {
+    if (context?.newInGroup) {
+      return this.textResourceConfigurationService.getValue(EditorResourceAccessor.getOriginalUri(input, { supportSideBySide: SideBySideEditor.PRIMARY }), "workbench.editor.restoreViewState") === false ? false : true;
+    }
+    return true;
+  }
+  getViewState() {
+    const input = this.input;
+    if (!input || !this.tracksEditorViewState(input)) {
+      return;
+    }
+    const resource = this.toEditorViewStateResource(input);
+    if (!resource) {
+      return;
+    }
+    return this.computeEditorViewState(resource);
+  }
+  saveEditorViewState(resource) {
+    const editorViewState = this.computeEditorViewState(resource);
+    if (!editorViewState) {
+      return;
+    }
+    this.viewState.saveEditorState(this.group, resource, editorViewState);
+  }
+  loadEditorViewState(input, context) {
+    if (!input) {
+      return void 0;
+    }
+    if (!this.tracksEditorViewState(input)) {
+      return void 0;
+    }
+    if (!this.shouldRestoreEditorViewState(input, context)) {
+      return void 0;
+    }
+    const resource = this.toEditorViewStateResource(input);
+    if (!resource) {
+      return;
+    }
+    return this.viewState.loadEditorState(this.group, resource);
+  }
+  moveEditorViewState(source, target, comparer) {
+    return this.viewState.moveEditorState(source, target, comparer);
+  }
+  clearEditorViewState(resource, group) {
+    this.viewState.clearEditorState(resource, group);
+  }
+  dispose() {
+    super.dispose();
+    if (this.editorViewStateDisposables) {
+      for (const [, disposables] of this.editorViewStateDisposables) {
+        disposables.dispose();
+      }
+      this.editorViewStateDisposables = void 0;
+    }
+  }
+  /**
+   * Whether view state should be tracked even when the editor is
+   * disposed.
+   *
+   * Subclasses should override this if the input can be restored
+   * from the resource at a later point, e.g. if backed by files.
+   */
+  tracksDisposedEditorViewState() {
+    return false;
+  }
+  //#endregion
+};
+AbstractEditorWithViewState = __decorateClass([
+  __decorateParam(3, ITelemetryService),
+  __decorateParam(4, IInstantiationService),
+  __decorateParam(5, IStorageService),
+  __decorateParam(6, ITextResourceConfigurationService),
+  __decorateParam(7, IThemeService),
+  __decorateParam(8, IEditorService),
+  __decorateParam(9, IEditorGroupsService)
+], AbstractEditorWithViewState);
+export {
+  AbstractEditorWithViewState
+};
+//# sourceMappingURL=editorWithViewState.js.map

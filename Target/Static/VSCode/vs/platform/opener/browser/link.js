@@ -1,1 +1,118 @@
-var y=Object.defineProperty,I=Object.getOwnPropertyDescriptor,v=(e,t,s,r)=>{for(var i,o=r>1?void 0:r?I(t,s):t,a=e.length-1;a>=0;a--)(i=e[a])&&(o=(r?i(t,s,o):i(o))||o);return r&&o&&y(t,s,o),o},p=(e,t)=>(s,r)=>t(s,r,e);import{$ as D,append as E,EventHelper as x,clearNode as H}from"../../../base/browser/dom.js";import{DomEmitter as d}from"../../../base/browser/event.js";import{StandardKeyboardEvent as _}from"../../../base/browser/keyboardEvent.js";import{EventType as T,Gesture as L}from"../../../base/browser/touch.js";import{Event as f}from"../../../base/common/event.js";import{KeyCode as w}from"../../../base/common/keyCodes.js";import{Disposable as S}from"../../../base/common/lifecycle.js";import{IOpenerService as C}from"../common/opener.js";import"./link.css";import{getDefaultHoverDelegate as M}from"../../../base/browser/ui/hover/hoverDelegateFactory.js";import"../../../base/browser/ui/hover/hoverDelegate.js";import{IHoverService as O}from"../../hover/browser/hover.js";let a=class extends S{constructor(e,t,s={},r,i){super(),this._link=t,this._hoverService=r,this.el=E(e,D("a.monaco-link",{tabIndex:t.tabIndex??0,href:t.href},t.label)),this.hoverDelegate=s.hoverDelegate??M("mouse"),this.setTooltip(t.title),this.el.setAttribute("role","button");const o=this._register(new d(this.el,"click")),a=this._register(new d(this.el,"keypress")),l=f.chain(a.event,(e=>e.map((e=>new _(e))).filter((e=>e.keyCode===w.Enter)))),h=this._register(new d(this.el,T.Tap)).event;this._register(L.addTarget(this.el));const n=f.any(o.event,l,h);this._register(n((e=>{this.enabled&&(x.stop(e,!0),s?.opener?s.opener(this._link.href):i.open(this._link.href,{allowCommands:!0}))}))),this.enabled=!0}el;hover;hoverDelegate;_enabled=!0;get enabled(){return this._enabled}set enabled(e){e?(this.el.setAttribute("aria-disabled","false"),this.el.tabIndex=0,this.el.style.pointerEvents="auto",this.el.style.opacity="1",this.el.style.cursor="pointer",this._enabled=!1):(this.el.setAttribute("aria-disabled","true"),this.el.tabIndex=-1,this.el.style.pointerEvents="none",this.el.style.opacity="0.4",this.el.style.cursor="default",this._enabled=!0),this._enabled=e}set link(e){"string"==typeof e.label?this.el.textContent=e.label:(H(this.el),this.el.appendChild(e.label)),this.el.href=e.href,typeof e.tabIndex<"u"&&(this.el.tabIndex=e.tabIndex),this.setTooltip(e.title),this._link=e}setTooltip(e){this.hoverDelegate.showNativeHover?this.el.title=e??"":!this.hover&&e?this.hover=this._register(this._hoverService.setupManagedHover(this.hoverDelegate,this.el,e)):this.hover&&this.hover.update(e)}};a=v([p(3,O),p(4,C)],a);export{a as Link};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { $, append, EventHelper, EventLike, clearNode } from "../../../base/browser/dom.js";
+import { DomEmitter } from "../../../base/browser/event.js";
+import { StandardKeyboardEvent } from "../../../base/browser/keyboardEvent.js";
+import { EventType as TouchEventType, Gesture } from "../../../base/browser/touch.js";
+import { Event } from "../../../base/common/event.js";
+import { KeyCode } from "../../../base/common/keyCodes.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { IOpenerService } from "../common/opener.js";
+import "./link.css";
+import { getDefaultHoverDelegate } from "../../../base/browser/ui/hover/hoverDelegateFactory.js";
+import { IHoverDelegate } from "../../../base/browser/ui/hover/hoverDelegate.js";
+import { IHoverService } from "../../hover/browser/hover.js";
+let Link = class extends Disposable {
+  constructor(container, _link, options = {}, _hoverService, openerService) {
+    super();
+    this._link = _link;
+    this._hoverService = _hoverService;
+    this.el = append(container, $("a.monaco-link", {
+      tabIndex: _link.tabIndex ?? 0,
+      href: _link.href
+    }, _link.label));
+    this.hoverDelegate = options.hoverDelegate ?? getDefaultHoverDelegate("mouse");
+    this.setTooltip(_link.title);
+    this.el.setAttribute("role", "button");
+    const onClickEmitter = this._register(new DomEmitter(this.el, "click"));
+    const onKeyPress = this._register(new DomEmitter(this.el, "keypress"));
+    const onEnterPress = Event.chain(
+      onKeyPress.event,
+      ($2) => $2.map((e) => new StandardKeyboardEvent(e)).filter((e) => e.keyCode === KeyCode.Enter)
+    );
+    const onTap = this._register(new DomEmitter(this.el, TouchEventType.Tap)).event;
+    this._register(Gesture.addTarget(this.el));
+    const onOpen = Event.any(onClickEmitter.event, onEnterPress, onTap);
+    this._register(onOpen((e) => {
+      if (!this.enabled) {
+        return;
+      }
+      EventHelper.stop(e, true);
+      if (options?.opener) {
+        options.opener(this._link.href);
+      } else {
+        openerService.open(this._link.href, { allowCommands: true });
+      }
+    }));
+    this.enabled = true;
+  }
+  static {
+    __name(this, "Link");
+  }
+  el;
+  hover;
+  hoverDelegate;
+  _enabled = true;
+  get enabled() {
+    return this._enabled;
+  }
+  set enabled(enabled) {
+    if (enabled) {
+      this.el.setAttribute("aria-disabled", "false");
+      this.el.tabIndex = 0;
+      this.el.style.pointerEvents = "auto";
+      this.el.style.opacity = "1";
+      this.el.style.cursor = "pointer";
+      this._enabled = false;
+    } else {
+      this.el.setAttribute("aria-disabled", "true");
+      this.el.tabIndex = -1;
+      this.el.style.pointerEvents = "none";
+      this.el.style.opacity = "0.4";
+      this.el.style.cursor = "default";
+      this._enabled = true;
+    }
+    this._enabled = enabled;
+  }
+  set link(link) {
+    if (typeof link.label === "string") {
+      this.el.textContent = link.label;
+    } else {
+      clearNode(this.el);
+      this.el.appendChild(link.label);
+    }
+    this.el.href = link.href;
+    if (typeof link.tabIndex !== "undefined") {
+      this.el.tabIndex = link.tabIndex;
+    }
+    this.setTooltip(link.title);
+    this._link = link;
+  }
+  setTooltip(title) {
+    if (this.hoverDelegate.showNativeHover) {
+      this.el.title = title ?? "";
+    } else if (!this.hover && title) {
+      this.hover = this._register(this._hoverService.setupManagedHover(this.hoverDelegate, this.el, title));
+    } else if (this.hover) {
+      this.hover.update(title);
+    }
+  }
+};
+Link = __decorateClass([
+  __decorateParam(3, IHoverService),
+  __decorateParam(4, IOpenerService)
+], Link);
+export {
+  Link
+};
+//# sourceMappingURL=link.js.map

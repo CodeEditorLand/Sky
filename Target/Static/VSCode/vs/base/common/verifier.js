@@ -1,1 +1,92 @@
-import{isObject as o}from"./types.js";class i{constructor(e){this.defaultValue=e}verify(e){return this.isType(e)?e:this.defaultValue}}class l extends i{isType(e){return"boolean"==typeof e}}class c extends i{isType(e){return"number"==typeof e}}class T extends i{isType(e){return e instanceof Set}}class f extends i{allowedValues;constructor(e,s){super(e),this.allowedValues=s}isType(e){return this.allowedValues.includes(e)}}class p extends i{constructor(e,s){super(e),this.verifier=s}verify(e){return this.isType(e)?a(this.verifier,e):this.defaultValue}isType(e){return o(e)}}function a(e,s){const r=Object.create(null);for(const t in e)if(Object.hasOwnProperty.call(e,t)){const i=e[t];r[t]=i.verify(s[t])}return r}export{l as BooleanVerifier,f as EnumVerifier,c as NumberVerifier,p as ObjectVerifier,T as SetVerifier,a as verifyObject};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { isObject } from "./types.js";
+class Verifier {
+  constructor(defaultValue) {
+    this.defaultValue = defaultValue;
+  }
+  static {
+    __name(this, "Verifier");
+  }
+  verify(value) {
+    if (!this.isType(value)) {
+      return this.defaultValue;
+    }
+    return value;
+  }
+}
+class BooleanVerifier extends Verifier {
+  static {
+    __name(this, "BooleanVerifier");
+  }
+  isType(value) {
+    return typeof value === "boolean";
+  }
+}
+class NumberVerifier extends Verifier {
+  static {
+    __name(this, "NumberVerifier");
+  }
+  isType(value) {
+    return typeof value === "number";
+  }
+}
+class SetVerifier extends Verifier {
+  static {
+    __name(this, "SetVerifier");
+  }
+  isType(value) {
+    return value instanceof Set;
+  }
+}
+class EnumVerifier extends Verifier {
+  static {
+    __name(this, "EnumVerifier");
+  }
+  allowedValues;
+  constructor(defaultValue, allowedValues) {
+    super(defaultValue);
+    this.allowedValues = allowedValues;
+  }
+  isType(value) {
+    return this.allowedValues.includes(value);
+  }
+}
+class ObjectVerifier extends Verifier {
+  constructor(defaultValue, verifier) {
+    super(defaultValue);
+    this.verifier = verifier;
+  }
+  static {
+    __name(this, "ObjectVerifier");
+  }
+  verify(value) {
+    if (!this.isType(value)) {
+      return this.defaultValue;
+    }
+    return verifyObject(this.verifier, value);
+  }
+  isType(value) {
+    return isObject(value);
+  }
+}
+function verifyObject(verifiers, value) {
+  const result = /* @__PURE__ */ Object.create(null);
+  for (const key in verifiers) {
+    if (Object.hasOwnProperty.call(verifiers, key)) {
+      const verifier = verifiers[key];
+      result[key] = verifier.verify(value[key]);
+    }
+  }
+  return result;
+}
+__name(verifyObject, "verifyObject");
+export {
+  BooleanVerifier,
+  EnumVerifier,
+  NumberVerifier,
+  ObjectVerifier,
+  SetVerifier,
+  verifyObject
+};
+//# sourceMappingURL=verifier.js.map

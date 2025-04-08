@@ -1,1 +1,156 @@
-var p=Object.defineProperty,v=Object.getOwnPropertyDescriptor,l=(e,i,t,r)=>{for(var o,n=r>1?void 0:r?v(i,t):i,s=e.length-1;s>=0;s--)(o=e[s])&&(n=(r?o(i,t,n):o(n))||n);return r&&n&&p(i,t,n),n},d=(e,i)=>(t,r)=>i(t,r,e);import{InstantiationType as D,registerSingleton as I}from"../../../../platform/instantiation/common/extensions.js";import{IInstantiationService as y,createDecorator as S}from"../../../../platform/instantiation/common/instantiation.js";import"../../../../base/common/cancellation.js";import{Emitter as C}from"../../../../base/common/event.js";import"../../../../base/common/lifecycle.js";import{StopWatch as A}from"../../../../base/common/stopwatch.js";import{LineRange as u}from"../../../common/core/lineRange.js";import"../../../common/diff/documentDiffProvider.js";import{DetailedLineRangeMapping as E,RangeMapping as M}from"../../../common/diff/rangeMapping.js";import"../../../common/model.js";import{IEditorWorkerService as b}from"../../../common/services/editorWorker.js";import{ITelemetryService as O}from"../../../../platform/telemetry/common/telemetry.js";const w=S("diffProviderFactoryService");let c=class{constructor(e){this.instantiationService=e}_serviceBrand;createDiffProvider(e){return this.instantiationService.createInstance(r,e)}};c=l([d(0,y)],c),I(w,c,D.Delayed);let r=class{constructor(e,i,t){this.editorWorkerService=i,this.telemetryService=t,this.setOptions(e)}onDidChangeEventEmitter=new C;onDidChange=this.onDidChangeEventEmitter.event;diffAlgorithm="advanced";diffAlgorithmOnDidChangeSubscription=void 0;static diffCache=new Map;dispose(){this.diffAlgorithmOnDidChangeSubscription?.dispose()}async computeDiff(e,i,t,o){if("string"!=typeof this.diffAlgorithm)return this.diffAlgorithm.computeDiff(e,i,t,o);if(e.isDisposed()||i.isDisposed())return{changes:[],identical:!0,quitEarly:!1,moves:[]};if(1===e.getLineCount()&&1===e.getLineMaxColumn(1))return 1===i.getLineCount()&&1===i.getLineMaxColumn(1)?{changes:[],identical:!0,quitEarly:!1,moves:[]}:{changes:[new E(new u(1,2),new u(1,i.getLineCount()+1),[new M(e.getFullModelRange(),i.getFullModelRange())])],identical:!1,quitEarly:!1,moves:[]};const n=JSON.stringify([e.uri.toString(),i.uri.toString()]),s=JSON.stringify([e.id,i.id,e.getAlternativeVersionId(),i.getAlternativeVersionId(),JSON.stringify(t)]),a=r.diffCache.get(n);if(a&&a.context===s)return a.result;const f=A.create(),c=await this.editorWorkerService.computeDiff(e.uri,i.uri,t,this.diffAlgorithm),m=f.elapsed();if(this.telemetryService.publicLog2("diffEditor.computeDiff",{timeMs:m,timedOut:c?.quitEarly??!0,detectedMoves:t.computeMoves?c?.moves.length??0:-1}),o.isCancellationRequested)return{changes:[],identical:!1,quitEarly:!0,moves:[]};if(!c)throw new Error("no diff result available");return r.diffCache.size>10&&r.diffCache.delete(r.diffCache.keys().next().value),r.diffCache.set(n,{result:c,context:s}),c}setOptions(e){let i=!1;e.diffAlgorithm&&this.diffAlgorithm!==e.diffAlgorithm&&(this.diffAlgorithmOnDidChangeSubscription?.dispose(),this.diffAlgorithmOnDidChangeSubscription=void 0,this.diffAlgorithm=e.diffAlgorithm,"string"!=typeof e.diffAlgorithm&&(this.diffAlgorithmOnDidChangeSubscription=e.diffAlgorithm.onDidChange((()=>this.onDidChangeEventEmitter.fire()))),i=!0),i&&this.onDidChangeEventEmitter.fire()}};r=l([d(1,b),d(2,O)],r);export{w as IDiffProviderFactoryService,c as WorkerBasedDiffProviderFactoryService,r as WorkerBasedDocumentDiffProvider};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { IInstantiationService, createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { IDisposable } from "../../../../base/common/lifecycle.js";
+import { StopWatch } from "../../../../base/common/stopwatch.js";
+import { LineRange } from "../../../common/core/lineRange.js";
+import { IDocumentDiff, IDocumentDiffProvider, IDocumentDiffProviderOptions } from "../../../common/diff/documentDiffProvider.js";
+import { DetailedLineRangeMapping, RangeMapping } from "../../../common/diff/rangeMapping.js";
+import { ITextModel } from "../../../common/model.js";
+import { DiffAlgorithmName, IEditorWorkerService } from "../../../common/services/editorWorker.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+const IDiffProviderFactoryService = createDecorator("diffProviderFactoryService");
+let WorkerBasedDiffProviderFactoryService = class {
+  constructor(instantiationService) {
+    this.instantiationService = instantiationService;
+  }
+  static {
+    __name(this, "WorkerBasedDiffProviderFactoryService");
+  }
+  _serviceBrand;
+  createDiffProvider(options) {
+    return this.instantiationService.createInstance(WorkerBasedDocumentDiffProvider, options);
+  }
+};
+WorkerBasedDiffProviderFactoryService = __decorateClass([
+  __decorateParam(0, IInstantiationService)
+], WorkerBasedDiffProviderFactoryService);
+registerSingleton(IDiffProviderFactoryService, WorkerBasedDiffProviderFactoryService, InstantiationType.Delayed);
+let WorkerBasedDocumentDiffProvider = class {
+  constructor(options, editorWorkerService, telemetryService) {
+    this.editorWorkerService = editorWorkerService;
+    this.telemetryService = telemetryService;
+    this.setOptions(options);
+  }
+  static {
+    __name(this, "WorkerBasedDocumentDiffProvider");
+  }
+  onDidChangeEventEmitter = new Emitter();
+  onDidChange = this.onDidChangeEventEmitter.event;
+  diffAlgorithm = "advanced";
+  diffAlgorithmOnDidChangeSubscription = void 0;
+  static diffCache = /* @__PURE__ */ new Map();
+  dispose() {
+    this.diffAlgorithmOnDidChangeSubscription?.dispose();
+  }
+  async computeDiff(original, modified, options, cancellationToken) {
+    if (typeof this.diffAlgorithm !== "string") {
+      return this.diffAlgorithm.computeDiff(original, modified, options, cancellationToken);
+    }
+    if (original.isDisposed() || modified.isDisposed()) {
+      return {
+        changes: [],
+        identical: true,
+        quitEarly: false,
+        moves: []
+      };
+    }
+    if (original.getLineCount() === 1 && original.getLineMaxColumn(1) === 1) {
+      if (modified.getLineCount() === 1 && modified.getLineMaxColumn(1) === 1) {
+        return {
+          changes: [],
+          identical: true,
+          quitEarly: false,
+          moves: []
+        };
+      }
+      return {
+        changes: [
+          new DetailedLineRangeMapping(
+            new LineRange(1, 2),
+            new LineRange(1, modified.getLineCount() + 1),
+            [
+              new RangeMapping(
+                original.getFullModelRange(),
+                modified.getFullModelRange()
+              )
+            ]
+          )
+        ],
+        identical: false,
+        quitEarly: false,
+        moves: []
+      };
+    }
+    const uriKey = JSON.stringify([original.uri.toString(), modified.uri.toString()]);
+    const context = JSON.stringify([original.id, modified.id, original.getAlternativeVersionId(), modified.getAlternativeVersionId(), JSON.stringify(options)]);
+    const c = WorkerBasedDocumentDiffProvider.diffCache.get(uriKey);
+    if (c && c.context === context) {
+      return c.result;
+    }
+    const sw = StopWatch.create();
+    const result = await this.editorWorkerService.computeDiff(original.uri, modified.uri, options, this.diffAlgorithm);
+    const timeMs = sw.elapsed();
+    this.telemetryService.publicLog2("diffEditor.computeDiff", {
+      timeMs,
+      timedOut: result?.quitEarly ?? true,
+      detectedMoves: options.computeMoves ? result?.moves.length ?? 0 : -1
+    });
+    if (cancellationToken.isCancellationRequested) {
+      return {
+        changes: [],
+        identical: false,
+        quitEarly: true,
+        moves: []
+      };
+    }
+    if (!result) {
+      throw new Error("no diff result available");
+    }
+    if (WorkerBasedDocumentDiffProvider.diffCache.size > 10) {
+      WorkerBasedDocumentDiffProvider.diffCache.delete(WorkerBasedDocumentDiffProvider.diffCache.keys().next().value);
+    }
+    WorkerBasedDocumentDiffProvider.diffCache.set(uriKey, { result, context });
+    return result;
+  }
+  setOptions(newOptions) {
+    let didChange = false;
+    if (newOptions.diffAlgorithm) {
+      if (this.diffAlgorithm !== newOptions.diffAlgorithm) {
+        this.diffAlgorithmOnDidChangeSubscription?.dispose();
+        this.diffAlgorithmOnDidChangeSubscription = void 0;
+        this.diffAlgorithm = newOptions.diffAlgorithm;
+        if (typeof newOptions.diffAlgorithm !== "string") {
+          this.diffAlgorithmOnDidChangeSubscription = newOptions.diffAlgorithm.onDidChange(() => this.onDidChangeEventEmitter.fire());
+        }
+        didChange = true;
+      }
+    }
+    if (didChange) {
+      this.onDidChangeEventEmitter.fire();
+    }
+  }
+};
+WorkerBasedDocumentDiffProvider = __decorateClass([
+  __decorateParam(1, IEditorWorkerService),
+  __decorateParam(2, ITelemetryService)
+], WorkerBasedDocumentDiffProvider);
+export {
+  IDiffProviderFactoryService,
+  WorkerBasedDiffProviderFactoryService,
+  WorkerBasedDocumentDiffProvider
+};
+//# sourceMappingURL=diffProviderFactoryService.js.map

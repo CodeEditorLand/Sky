@@ -1,1 +1,328 @@
-import"./selections.css";import{DynamicViewOverlay as I}from"../../view/dynamicViewOverlay.js";import"../../../common/core/range.js";import"../../view/renderingContext.js";import"../../../common/viewModel/viewContext.js";import"../../../common/viewEvents.js";import{editorSelectionForeground as v}from"../../../../platform/theme/common/colorRegistry.js";import{registerThemingParticipant as w}from"../../../../platform/theme/common/themeService.js";import{EditorOption as T}from"../../../common/config/editorOptions.js";var W=(t=>(t[t.EXTERN=0]="EXTERN",t[t.INTERN=1]="INTERN",t[t.FLAT=2]="FLAT",t))(W||{});class O{left;width;startStyle;endStyle;constructor(t){this.left=t.left,this.width=t.width,this.startStyle=null,this.endStyle=null}}class H{lineNumber;ranges;constructor(t,e){this.lineNumber=t,this.ranges=e}}function D(t){return new O(t)}function V(t){return new H(t.lineNumber,t.ranges.map(D))}class s extends I{static SELECTION_CLASS_NAME="selected-text";static SELECTION_TOP_LEFT="top-left-radius";static SELECTION_BOTTOM_LEFT="bottom-left-radius";static SELECTION_TOP_RIGHT="top-right-radius";static SELECTION_BOTTOM_RIGHT="bottom-right-radius";static EDITOR_BACKGROUND_CLASS_NAME="monaco-editor-background";static ROUNDED_PIECE_WIDTH=10;_context;_roundedSelection;_typicalHalfwidthCharacterWidth;_selections;_renderResult;constructor(t){super(),this._context=t;const e=this._context.configuration.options;this._roundedSelection=e.get(T.roundedSelection),this._typicalHalfwidthCharacterWidth=e.get(T.fontInfo).typicalHalfwidthCharacterWidth,this._selections=[],this._renderResult=null,this._context.addEventHandler(this)}dispose(){this._context.removeEventHandler(this),this._renderResult=null,super.dispose()}onConfigurationChanged(t){const e=this._context.configuration.options;return this._roundedSelection=e.get(T.roundedSelection),this._typicalHalfwidthCharacterWidth=e.get(T.fontInfo).typicalHalfwidthCharacterWidth,!0}onCursorStateChanged(t){return this._selections=t.selections.slice(0),!0}onDecorationsChanged(t){return!0}onFlushed(t){return!0}onLinesChanged(t){return!0}onLinesDeleted(t){return!0}onLinesInserted(t){return!0}onScrollChanged(t){return t.scrollTopChanged}onZonesChanged(t){return!0}_visibleRangesHaveGaps(t){for(let e=0,n=t.length;e<n;e++)if(t[e].ranges.length>1)return!0;return!1}_enrichVisibleRangesWithStyle(t,e,n){const i=this._typicalHalfwidthCharacterWidth/4;let s=null,o=null;if(n&&n.length>0&&e.length>0){const i=e[0].lineNumber;if(i===t.startLineNumber)for(let t=0;!s&&t<n.length;t++)n[t].lineNumber===i&&(s=n[t].ranges[0]);const r=e[e.length-1].lineNumber;if(r===t.endLineNumber)for(let t=n.length-1;!o&&t>=0;t--)n[t].lineNumber===r&&(o=n[t].ranges[0]);s&&!s.startStyle&&(s=null),o&&!o.startStyle&&(o=null)}for(let t=0,n=e.length;t<n;t++){const r=e[t].ranges[0],l=r.left,a=r.left+r.width,c={top:0,bottom:0},h={top:0,bottom:0};if(t>0){const n=e[t-1].ranges[0].left,s=e[t-1].ranges[0].left+e[t-1].ranges[0].width;C(l-n)<i?c.top=2:l>n&&(c.top=1),C(a-s)<i?h.top=2:n<a&&a<s&&(h.top=1)}else s&&(c.top=s.startStyle.top,h.top=s.endStyle.top);if(t+1<n){const n=e[t+1].ranges[0].left,s=e[t+1].ranges[0].left+e[t+1].ranges[0].width;C(l-n)<i?c.bottom=2:n<l&&l<s&&(c.bottom=1),C(a-s)<i?h.bottom=2:a<s&&(h.bottom=1)}else o&&(c.bottom=o.startStyle.bottom,h.bottom=o.endStyle.bottom);r.startStyle=c,r.endStyle=h}}_getVisibleRangesWithStyle(t,e,n){const i=(e.linesVisibleRangesForRange(t,!0)||[]).map(V);return!this._visibleRangesHaveGaps(i)&&this._roundedSelection&&this._enrichVisibleRangesWithStyle(e.visibleRange,i,n),i}_createSelectionPiece(t,e,n,i,s){return'<div class="cslr '+n+'" style="top:'+t.toString()+"px;bottom:"+e.toString()+"px;left:"+i.toString()+"px;width:"+s.toString()+'px;"></div>'}_actualRenderOneSelection(t,e,n,i){if(0===i.length)return;const o=!!i[0].ranges[0].startStyle,r=i[0].lineNumber,l=i[i.length-1].lineNumber;for(let a=0,c=i.length;a<c;a++){const c=i[a],h=c.lineNumber,_=h-e,d=n&&h===r?1:0,u=n&&h!==r&&h===l?1:0;let E="",S="";for(let t=0,e=c.ranges.length;t<e;t++){const e=c.ranges[t];if(o){const t=e.startStyle,n=e.endStyle;if(1===t.top||1===t.bottom){E+=this._createSelectionPiece(d,u,s.SELECTION_CLASS_NAME,e.left-s.ROUNDED_PIECE_WIDTH,s.ROUNDED_PIECE_WIDTH);let n=s.EDITOR_BACKGROUND_CLASS_NAME;1===t.top&&(n+=" "+s.SELECTION_TOP_RIGHT),1===t.bottom&&(n+=" "+s.SELECTION_BOTTOM_RIGHT),E+=this._createSelectionPiece(d,u,n,e.left-s.ROUNDED_PIECE_WIDTH,s.ROUNDED_PIECE_WIDTH)}if(1===n.top||1===n.bottom){E+=this._createSelectionPiece(d,u,s.SELECTION_CLASS_NAME,e.left+e.width,s.ROUNDED_PIECE_WIDTH);let t=s.EDITOR_BACKGROUND_CLASS_NAME;1===n.top&&(t+=" "+s.SELECTION_TOP_LEFT),1===n.bottom&&(t+=" "+s.SELECTION_BOTTOM_LEFT),E+=this._createSelectionPiece(d,u,t,e.left+e.width,s.ROUNDED_PIECE_WIDTH)}}let n=s.SELECTION_CLASS_NAME;if(o){const t=e.startStyle,i=e.endStyle;0===t.top&&(n+=" "+s.SELECTION_TOP_LEFT),0===t.bottom&&(n+=" "+s.SELECTION_BOTTOM_LEFT),0===i.top&&(n+=" "+s.SELECTION_TOP_RIGHT),0===i.bottom&&(n+=" "+s.SELECTION_BOTTOM_RIGHT)}S+=this._createSelectionPiece(d,u,n,e.left,e.width)}t[_][0]+=E,t[_][1]+=S}}_previousFrameVisibleRangesWithStyle=[];prepareRender(t){const e=[],n=t.visibleRange.startLineNumber,i=t.visibleRange.endLineNumber;for(let t=n;t<=i;t++){e[t-n]=["",""]}const s=[];for(let i=0,o=this._selections.length;i<o;i++){const o=this._selections[i];if(o.isEmpty()){s[i]=null;continue}const r=this._getVisibleRangesWithStyle(o,t,this._previousFrameVisibleRangesWithStyle[i]);s[i]=r,this._actualRenderOneSelection(e,n,this._selections.length>1,r)}this._previousFrameVisibleRangesWithStyle=s,this._renderResult=e.map((([t,e])=>t+e))}render(t,e){if(!this._renderResult)return"";const n=e-t;return n<0||n>=this._renderResult.length?"":this._renderResult[n]}}function C(t){return t<0?-t:t}w(((t,e)=>{const n=t.getColor(v);n&&!n.isTransparent()&&e.addRule(`.monaco-editor .view-line span.inline-selected-text { color: ${n}; }`)}));export{s as SelectionsOverlay};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import "./selections.css";
+import { DynamicViewOverlay } from "../../view/dynamicViewOverlay.js";
+import { Range } from "../../../common/core/range.js";
+import { HorizontalRange, LineVisibleRanges, RenderingContext } from "../../view/renderingContext.js";
+import { ViewContext } from "../../../common/viewModel/viewContext.js";
+import * as viewEvents from "../../../common/viewEvents.js";
+import { editorSelectionForeground } from "../../../../platform/theme/common/colorRegistry.js";
+import { registerThemingParticipant } from "../../../../platform/theme/common/themeService.js";
+import { EditorOption } from "../../../common/config/editorOptions.js";
+var CornerStyle = /* @__PURE__ */ ((CornerStyle2) => {
+  CornerStyle2[CornerStyle2["EXTERN"] = 0] = "EXTERN";
+  CornerStyle2[CornerStyle2["INTERN"] = 1] = "INTERN";
+  CornerStyle2[CornerStyle2["FLAT"] = 2] = "FLAT";
+  return CornerStyle2;
+})(CornerStyle || {});
+class HorizontalRangeWithStyle {
+  static {
+    __name(this, "HorizontalRangeWithStyle");
+  }
+  left;
+  width;
+  startStyle;
+  endStyle;
+  constructor(other) {
+    this.left = other.left;
+    this.width = other.width;
+    this.startStyle = null;
+    this.endStyle = null;
+  }
+}
+class LineVisibleRangesWithStyle {
+  static {
+    __name(this, "LineVisibleRangesWithStyle");
+  }
+  lineNumber;
+  ranges;
+  constructor(lineNumber, ranges) {
+    this.lineNumber = lineNumber;
+    this.ranges = ranges;
+  }
+}
+function toStyledRange(item) {
+  return new HorizontalRangeWithStyle(item);
+}
+__name(toStyledRange, "toStyledRange");
+function toStyled(item) {
+  return new LineVisibleRangesWithStyle(item.lineNumber, item.ranges.map(toStyledRange));
+}
+__name(toStyled, "toStyled");
+class SelectionsOverlay extends DynamicViewOverlay {
+  static {
+    __name(this, "SelectionsOverlay");
+  }
+  static SELECTION_CLASS_NAME = "selected-text";
+  static SELECTION_TOP_LEFT = "top-left-radius";
+  static SELECTION_BOTTOM_LEFT = "bottom-left-radius";
+  static SELECTION_TOP_RIGHT = "top-right-radius";
+  static SELECTION_BOTTOM_RIGHT = "bottom-right-radius";
+  static EDITOR_BACKGROUND_CLASS_NAME = "monaco-editor-background";
+  static ROUNDED_PIECE_WIDTH = 10;
+  _context;
+  _roundedSelection;
+  _typicalHalfwidthCharacterWidth;
+  _selections;
+  _renderResult;
+  constructor(context) {
+    super();
+    this._context = context;
+    const options = this._context.configuration.options;
+    this._roundedSelection = options.get(EditorOption.roundedSelection);
+    this._typicalHalfwidthCharacterWidth = options.get(EditorOption.fontInfo).typicalHalfwidthCharacterWidth;
+    this._selections = [];
+    this._renderResult = null;
+    this._context.addEventHandler(this);
+  }
+  dispose() {
+    this._context.removeEventHandler(this);
+    this._renderResult = null;
+    super.dispose();
+  }
+  // --- begin event handlers
+  onConfigurationChanged(e) {
+    const options = this._context.configuration.options;
+    this._roundedSelection = options.get(EditorOption.roundedSelection);
+    this._typicalHalfwidthCharacterWidth = options.get(EditorOption.fontInfo).typicalHalfwidthCharacterWidth;
+    return true;
+  }
+  onCursorStateChanged(e) {
+    this._selections = e.selections.slice(0);
+    return true;
+  }
+  onDecorationsChanged(e) {
+    return true;
+  }
+  onFlushed(e) {
+    return true;
+  }
+  onLinesChanged(e) {
+    return true;
+  }
+  onLinesDeleted(e) {
+    return true;
+  }
+  onLinesInserted(e) {
+    return true;
+  }
+  onScrollChanged(e) {
+    return e.scrollTopChanged;
+  }
+  onZonesChanged(e) {
+    return true;
+  }
+  // --- end event handlers
+  _visibleRangesHaveGaps(linesVisibleRanges) {
+    for (let i = 0, len = linesVisibleRanges.length; i < len; i++) {
+      const lineVisibleRanges = linesVisibleRanges[i];
+      if (lineVisibleRanges.ranges.length > 1) {
+        return true;
+      }
+    }
+    return false;
+  }
+  _enrichVisibleRangesWithStyle(viewport, linesVisibleRanges, previousFrame) {
+    const epsilon = this._typicalHalfwidthCharacterWidth / 4;
+    let previousFrameTop = null;
+    let previousFrameBottom = null;
+    if (previousFrame && previousFrame.length > 0 && linesVisibleRanges.length > 0) {
+      const topLineNumber = linesVisibleRanges[0].lineNumber;
+      if (topLineNumber === viewport.startLineNumber) {
+        for (let i = 0; !previousFrameTop && i < previousFrame.length; i++) {
+          if (previousFrame[i].lineNumber === topLineNumber) {
+            previousFrameTop = previousFrame[i].ranges[0];
+          }
+        }
+      }
+      const bottomLineNumber = linesVisibleRanges[linesVisibleRanges.length - 1].lineNumber;
+      if (bottomLineNumber === viewport.endLineNumber) {
+        for (let i = previousFrame.length - 1; !previousFrameBottom && i >= 0; i--) {
+          if (previousFrame[i].lineNumber === bottomLineNumber) {
+            previousFrameBottom = previousFrame[i].ranges[0];
+          }
+        }
+      }
+      if (previousFrameTop && !previousFrameTop.startStyle) {
+        previousFrameTop = null;
+      }
+      if (previousFrameBottom && !previousFrameBottom.startStyle) {
+        previousFrameBottom = null;
+      }
+    }
+    for (let i = 0, len = linesVisibleRanges.length; i < len; i++) {
+      const curLineRange = linesVisibleRanges[i].ranges[0];
+      const curLeft = curLineRange.left;
+      const curRight = curLineRange.left + curLineRange.width;
+      const startStyle = {
+        top: 0 /* EXTERN */,
+        bottom: 0 /* EXTERN */
+      };
+      const endStyle = {
+        top: 0 /* EXTERN */,
+        bottom: 0 /* EXTERN */
+      };
+      if (i > 0) {
+        const prevLeft = linesVisibleRanges[i - 1].ranges[0].left;
+        const prevRight = linesVisibleRanges[i - 1].ranges[0].left + linesVisibleRanges[i - 1].ranges[0].width;
+        if (abs(curLeft - prevLeft) < epsilon) {
+          startStyle.top = 2 /* FLAT */;
+        } else if (curLeft > prevLeft) {
+          startStyle.top = 1 /* INTERN */;
+        }
+        if (abs(curRight - prevRight) < epsilon) {
+          endStyle.top = 2 /* FLAT */;
+        } else if (prevLeft < curRight && curRight < prevRight) {
+          endStyle.top = 1 /* INTERN */;
+        }
+      } else if (previousFrameTop) {
+        startStyle.top = previousFrameTop.startStyle.top;
+        endStyle.top = previousFrameTop.endStyle.top;
+      }
+      if (i + 1 < len) {
+        const nextLeft = linesVisibleRanges[i + 1].ranges[0].left;
+        const nextRight = linesVisibleRanges[i + 1].ranges[0].left + linesVisibleRanges[i + 1].ranges[0].width;
+        if (abs(curLeft - nextLeft) < epsilon) {
+          startStyle.bottom = 2 /* FLAT */;
+        } else if (nextLeft < curLeft && curLeft < nextRight) {
+          startStyle.bottom = 1 /* INTERN */;
+        }
+        if (abs(curRight - nextRight) < epsilon) {
+          endStyle.bottom = 2 /* FLAT */;
+        } else if (curRight < nextRight) {
+          endStyle.bottom = 1 /* INTERN */;
+        }
+      } else if (previousFrameBottom) {
+        startStyle.bottom = previousFrameBottom.startStyle.bottom;
+        endStyle.bottom = previousFrameBottom.endStyle.bottom;
+      }
+      curLineRange.startStyle = startStyle;
+      curLineRange.endStyle = endStyle;
+    }
+  }
+  _getVisibleRangesWithStyle(selection, ctx, previousFrame) {
+    const _linesVisibleRanges = ctx.linesVisibleRangesForRange(selection, true) || [];
+    const linesVisibleRanges = _linesVisibleRanges.map(toStyled);
+    const visibleRangesHaveGaps = this._visibleRangesHaveGaps(linesVisibleRanges);
+    if (!visibleRangesHaveGaps && this._roundedSelection) {
+      this._enrichVisibleRangesWithStyle(ctx.visibleRange, linesVisibleRanges, previousFrame);
+    }
+    return linesVisibleRanges;
+  }
+  _createSelectionPiece(top, bottom, className, left, width) {
+    return '<div class="cslr ' + className + '" style="top:' + top.toString() + "px;bottom:" + bottom.toString() + "px;left:" + left.toString() + "px;width:" + width.toString() + 'px;"></div>';
+  }
+  _actualRenderOneSelection(output2, visibleStartLineNumber, hasMultipleSelections, visibleRanges) {
+    if (visibleRanges.length === 0) {
+      return;
+    }
+    const visibleRangesHaveStyle = !!visibleRanges[0].ranges[0].startStyle;
+    const firstLineNumber = visibleRanges[0].lineNumber;
+    const lastLineNumber = visibleRanges[visibleRanges.length - 1].lineNumber;
+    for (let i = 0, len = visibleRanges.length; i < len; i++) {
+      const lineVisibleRanges = visibleRanges[i];
+      const lineNumber = lineVisibleRanges.lineNumber;
+      const lineIndex = lineNumber - visibleStartLineNumber;
+      const top = hasMultipleSelections ? lineNumber === firstLineNumber ? 1 : 0 : 0;
+      const bottom = hasMultipleSelections ? lineNumber !== firstLineNumber && lineNumber === lastLineNumber ? 1 : 0 : 0;
+      let innerCornerOutput = "";
+      let restOfSelectionOutput = "";
+      for (let j = 0, lenJ = lineVisibleRanges.ranges.length; j < lenJ; j++) {
+        const visibleRange = lineVisibleRanges.ranges[j];
+        if (visibleRangesHaveStyle) {
+          const startStyle = visibleRange.startStyle;
+          const endStyle = visibleRange.endStyle;
+          if (startStyle.top === 1 /* INTERN */ || startStyle.bottom === 1 /* INTERN */) {
+            innerCornerOutput += this._createSelectionPiece(top, bottom, SelectionsOverlay.SELECTION_CLASS_NAME, visibleRange.left - SelectionsOverlay.ROUNDED_PIECE_WIDTH, SelectionsOverlay.ROUNDED_PIECE_WIDTH);
+            let className2 = SelectionsOverlay.EDITOR_BACKGROUND_CLASS_NAME;
+            if (startStyle.top === 1 /* INTERN */) {
+              className2 += " " + SelectionsOverlay.SELECTION_TOP_RIGHT;
+            }
+            if (startStyle.bottom === 1 /* INTERN */) {
+              className2 += " " + SelectionsOverlay.SELECTION_BOTTOM_RIGHT;
+            }
+            innerCornerOutput += this._createSelectionPiece(top, bottom, className2, visibleRange.left - SelectionsOverlay.ROUNDED_PIECE_WIDTH, SelectionsOverlay.ROUNDED_PIECE_WIDTH);
+          }
+          if (endStyle.top === 1 /* INTERN */ || endStyle.bottom === 1 /* INTERN */) {
+            innerCornerOutput += this._createSelectionPiece(top, bottom, SelectionsOverlay.SELECTION_CLASS_NAME, visibleRange.left + visibleRange.width, SelectionsOverlay.ROUNDED_PIECE_WIDTH);
+            let className2 = SelectionsOverlay.EDITOR_BACKGROUND_CLASS_NAME;
+            if (endStyle.top === 1 /* INTERN */) {
+              className2 += " " + SelectionsOverlay.SELECTION_TOP_LEFT;
+            }
+            if (endStyle.bottom === 1 /* INTERN */) {
+              className2 += " " + SelectionsOverlay.SELECTION_BOTTOM_LEFT;
+            }
+            innerCornerOutput += this._createSelectionPiece(top, bottom, className2, visibleRange.left + visibleRange.width, SelectionsOverlay.ROUNDED_PIECE_WIDTH);
+          }
+        }
+        let className = SelectionsOverlay.SELECTION_CLASS_NAME;
+        if (visibleRangesHaveStyle) {
+          const startStyle = visibleRange.startStyle;
+          const endStyle = visibleRange.endStyle;
+          if (startStyle.top === 0 /* EXTERN */) {
+            className += " " + SelectionsOverlay.SELECTION_TOP_LEFT;
+          }
+          if (startStyle.bottom === 0 /* EXTERN */) {
+            className += " " + SelectionsOverlay.SELECTION_BOTTOM_LEFT;
+          }
+          if (endStyle.top === 0 /* EXTERN */) {
+            className += " " + SelectionsOverlay.SELECTION_TOP_RIGHT;
+          }
+          if (endStyle.bottom === 0 /* EXTERN */) {
+            className += " " + SelectionsOverlay.SELECTION_BOTTOM_RIGHT;
+          }
+        }
+        restOfSelectionOutput += this._createSelectionPiece(top, bottom, className, visibleRange.left, visibleRange.width);
+      }
+      output2[lineIndex][0] += innerCornerOutput;
+      output2[lineIndex][1] += restOfSelectionOutput;
+    }
+  }
+  _previousFrameVisibleRangesWithStyle = [];
+  prepareRender(ctx) {
+    const output = [];
+    const visibleStartLineNumber = ctx.visibleRange.startLineNumber;
+    const visibleEndLineNumber = ctx.visibleRange.endLineNumber;
+    for (let lineNumber = visibleStartLineNumber; lineNumber <= visibleEndLineNumber; lineNumber++) {
+      const lineIndex = lineNumber - visibleStartLineNumber;
+      output[lineIndex] = ["", ""];
+    }
+    const thisFrameVisibleRangesWithStyle = [];
+    for (let i = 0, len = this._selections.length; i < len; i++) {
+      const selection = this._selections[i];
+      if (selection.isEmpty()) {
+        thisFrameVisibleRangesWithStyle[i] = null;
+        continue;
+      }
+      const visibleRangesWithStyle = this._getVisibleRangesWithStyle(selection, ctx, this._previousFrameVisibleRangesWithStyle[i]);
+      thisFrameVisibleRangesWithStyle[i] = visibleRangesWithStyle;
+      this._actualRenderOneSelection(output, visibleStartLineNumber, this._selections.length > 1, visibleRangesWithStyle);
+    }
+    this._previousFrameVisibleRangesWithStyle = thisFrameVisibleRangesWithStyle;
+    this._renderResult = output.map(([internalCorners, restOfSelection]) => internalCorners + restOfSelection);
+  }
+  render(startLineNumber, lineNumber) {
+    if (!this._renderResult) {
+      return "";
+    }
+    const lineIndex = lineNumber - startLineNumber;
+    if (lineIndex < 0 || lineIndex >= this._renderResult.length) {
+      return "";
+    }
+    return this._renderResult[lineIndex];
+  }
+}
+registerThemingParticipant((theme, collector) => {
+  const editorSelectionForegroundColor = theme.getColor(editorSelectionForeground);
+  if (editorSelectionForegroundColor && !editorSelectionForegroundColor.isTransparent()) {
+    collector.addRule(`.monaco-editor .view-line span.inline-selected-text { color: ${editorSelectionForegroundColor}; }`);
+  }
+});
+function abs(n) {
+  return n < 0 ? -n : n;
+}
+__name(abs, "abs");
+export {
+  SelectionsOverlay
+};
+//# sourceMappingURL=selections.js.map

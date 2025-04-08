@@ -1,1 +1,84 @@
-import*as e from"../../../../nls.js";import{Registry as t}from"../../../../platform/registry/common/platform.js";import{Extensions as o}from"../../../../platform/jsonschemas/common/jsonContributionRegistry.js";import"../../../../base/common/jsonSchema.js";import{fontIdErrorMessage as r,fontIdRegex as i,fontStyleRegex as s,fontWeightRegex as n,iconsSchemaId as a}from"../../../../platform/theme/common/iconRegistry.js";const c="vscode://schemas/product-icon-theme",p={type:"object",allowComments:!0,allowTrailingCommas:!0,properties:{fonts:{type:"array",items:{type:"object",properties:{id:{type:"string",description:e.localize("schema.id","The ID of the font."),pattern:i.source,patternErrorMessage:r},src:{type:"array",description:e.localize("schema.src","The location of the font."),items:{type:"object",properties:{path:{type:"string",description:e.localize("schema.font-path","The font path, relative to the current product icon theme file.")},format:{type:"string",description:e.localize("schema.font-format","The format of the font."),enum:["woff","woff2","truetype","opentype","embedded-opentype","svg"]}},required:["path","format"]}},weight:{type:"string",description:e.localize("schema.font-weight","The weight of the font. See https://developer.mozilla.org/en-US/docs/Web/CSS/font-weight for valid values."),anyOf:[{enum:["normal","bold","lighter","bolder"]},{type:"string",pattern:n.source}]},style:{type:"string",description:e.localize("schema.font-style","The style of the font. See https://developer.mozilla.org/en-US/docs/Web/CSS/font-style for valid values."),anyOf:[{enum:["normal","italic","oblique"]},{type:"string",pattern:s.source}]}},required:["id","src"]}},iconDefinitions:{description:e.localize("schema.iconDefinitions","Association of icon name to a font character."),$ref:a}}};function u(){t.as(o.JSONContribution).registerSchema(c,p)}export{u as registerProductIconThemeSchemas};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as nls from "../../../../nls.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { Extensions as JSONExtensions, IJSONContributionRegistry } from "../../../../platform/jsonschemas/common/jsonContributionRegistry.js";
+import { IJSONSchema } from "../../../../base/common/jsonSchema.js";
+import { fontIdErrorMessage, fontIdRegex, fontStyleRegex, fontWeightRegex, iconsSchemaId } from "../../../../platform/theme/common/iconRegistry.js";
+const schemaId = "vscode://schemas/product-icon-theme";
+const schema = {
+  type: "object",
+  allowComments: true,
+  allowTrailingCommas: true,
+  properties: {
+    fonts: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          id: {
+            type: "string",
+            description: nls.localize("schema.id", "The ID of the font."),
+            pattern: fontIdRegex.source,
+            patternErrorMessage: fontIdErrorMessage
+          },
+          src: {
+            type: "array",
+            description: nls.localize("schema.src", "The location of the font."),
+            items: {
+              type: "object",
+              properties: {
+                path: {
+                  type: "string",
+                  description: nls.localize("schema.font-path", "The font path, relative to the current product icon theme file.")
+                },
+                format: {
+                  type: "string",
+                  description: nls.localize("schema.font-format", "The format of the font."),
+                  enum: ["woff", "woff2", "truetype", "opentype", "embedded-opentype", "svg"]
+                }
+              },
+              required: [
+                "path",
+                "format"
+              ]
+            }
+          },
+          weight: {
+            type: "string",
+            description: nls.localize("schema.font-weight", "The weight of the font. See https://developer.mozilla.org/en-US/docs/Web/CSS/font-weight for valid values."),
+            anyOf: [
+              { enum: ["normal", "bold", "lighter", "bolder"] },
+              { type: "string", pattern: fontWeightRegex.source }
+            ]
+          },
+          style: {
+            type: "string",
+            description: nls.localize("schema.font-style", "The style of the font. See https://developer.mozilla.org/en-US/docs/Web/CSS/font-style for valid values."),
+            anyOf: [
+              { enum: ["normal", "italic", "oblique"] },
+              { type: "string", pattern: fontStyleRegex.source }
+            ]
+          }
+        },
+        required: [
+          "id",
+          "src"
+        ]
+      }
+    },
+    iconDefinitions: {
+      description: nls.localize("schema.iconDefinitions", "Association of icon name to a font character."),
+      $ref: iconsSchemaId
+    }
+  }
+};
+function registerProductIconThemeSchemas() {
+  const schemaRegistry = Registry.as(JSONExtensions.JSONContribution);
+  schemaRegistry.registerSchema(schemaId, schema);
+}
+__name(registerProductIconThemeSchemas, "registerProductIconThemeSchemas");
+export {
+  registerProductIconThemeSchemas
+};
+//# sourceMappingURL=productIconThemeSchema.js.map

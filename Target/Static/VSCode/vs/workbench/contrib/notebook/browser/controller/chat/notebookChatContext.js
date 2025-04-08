@@ -1,1 +1,26 @@
-import{localize as e}from"../../../../../../nls.js";import{MenuId as o}from"../../../../../../platform/actions/common/actions.js";import{RawContextKey as t}from"../../../../../../platform/contextkey/common/contextkey.js";const r=new t("notebookCellChatFocused",!1,e("notebookCellChatFocused","Whether the cell chat editor is focused")),_=new t("notebookChatHasActiveRequest",!1,e("notebookChatHasActiveRequest","Whether the cell chat editor has an active request")),s=new t("notebookChatUserDidEdit",!1,e("notebookChatUserDidEdit","Whether the user did changes ontop of the notebook cell chat")),h=new t("notebookChatOuterFocusPosition","",e("notebookChatOuterFocusPosition","Whether the focus of the notebook editor is above or below the cell chat")),c=o.for("cellChatInput"),l=o.for("cellChatWidget"),T=o.for("cellChatWidget.status"),E=o.for("cellChatWidget.feedback"),i=o.for("cellChatWidget.toolbar"),O=new t("notebookChatAgentRegistered",!1,e("notebookChatAgentRegistered","Whether a chat agent for notebook is registered"));export{r as CTX_NOTEBOOK_CELL_CHAT_FOCUSED,_ as CTX_NOTEBOOK_CHAT_HAS_ACTIVE_REQUEST,O as CTX_NOTEBOOK_CHAT_HAS_AGENT,h as CTX_NOTEBOOK_CHAT_OUTER_FOCUS_POSITION,s as CTX_NOTEBOOK_CHAT_USER_DID_EDIT,c as MENU_CELL_CHAT_INPUT,l as MENU_CELL_CHAT_WIDGET,E as MENU_CELL_CHAT_WIDGET_FEEDBACK,T as MENU_CELL_CHAT_WIDGET_STATUS,i as MENU_CELL_CHAT_WIDGET_TOOLBAR};
+import { localize } from "../../../../../../nls.js";
+import { MenuId } from "../../../../../../platform/actions/common/actions.js";
+import { RawContextKey } from "../../../../../../platform/contextkey/common/contextkey.js";
+const CTX_NOTEBOOK_CELL_CHAT_FOCUSED = new RawContextKey("notebookCellChatFocused", false, localize("notebookCellChatFocused", "Whether the cell chat editor is focused"));
+const CTX_NOTEBOOK_CHAT_HAS_ACTIVE_REQUEST = new RawContextKey("notebookChatHasActiveRequest", false, localize("notebookChatHasActiveRequest", "Whether the cell chat editor has an active request"));
+const CTX_NOTEBOOK_CHAT_USER_DID_EDIT = new RawContextKey("notebookChatUserDidEdit", false, localize("notebookChatUserDidEdit", "Whether the user did changes ontop of the notebook cell chat"));
+const CTX_NOTEBOOK_CHAT_OUTER_FOCUS_POSITION = new RawContextKey("notebookChatOuterFocusPosition", "", localize("notebookChatOuterFocusPosition", "Whether the focus of the notebook editor is above or below the cell chat"));
+const MENU_CELL_CHAT_INPUT = MenuId.for("cellChatInput");
+const MENU_CELL_CHAT_WIDGET = MenuId.for("cellChatWidget");
+const MENU_CELL_CHAT_WIDGET_STATUS = MenuId.for("cellChatWidget.status");
+const MENU_CELL_CHAT_WIDGET_FEEDBACK = MenuId.for("cellChatWidget.feedback");
+const MENU_CELL_CHAT_WIDGET_TOOLBAR = MenuId.for("cellChatWidget.toolbar");
+const CTX_NOTEBOOK_CHAT_HAS_AGENT = new RawContextKey("notebookChatAgentRegistered", false, localize("notebookChatAgentRegistered", "Whether a chat agent for notebook is registered"));
+export {
+  CTX_NOTEBOOK_CELL_CHAT_FOCUSED,
+  CTX_NOTEBOOK_CHAT_HAS_ACTIVE_REQUEST,
+  CTX_NOTEBOOK_CHAT_HAS_AGENT,
+  CTX_NOTEBOOK_CHAT_OUTER_FOCUS_POSITION,
+  CTX_NOTEBOOK_CHAT_USER_DID_EDIT,
+  MENU_CELL_CHAT_INPUT,
+  MENU_CELL_CHAT_WIDGET,
+  MENU_CELL_CHAT_WIDGET_FEEDBACK,
+  MENU_CELL_CHAT_WIDGET_STATUS,
+  MENU_CELL_CHAT_WIDGET_TOOLBAR
+};
+//# sourceMappingURL=notebookChatContext.js.map

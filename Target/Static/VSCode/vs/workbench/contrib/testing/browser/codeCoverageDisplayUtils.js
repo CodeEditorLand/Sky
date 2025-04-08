@@ -1,1 +1,88 @@
-import{assertNever as f}from"../../../../base/common/assert.js";import{clamp as u}from"../../../../base/common/numbers.js";import{localize as a}from"../../../../nls.js";import{chartsGreen as d,chartsRed as h,chartsYellow as C}from"../../../../platform/theme/common/colorRegistry.js";import{asCssVariableName as l}from"../../../../platform/theme/common/colorUtils.js";import"./testCoverageBars.js";import{TestingDisplayedCoveragePercent as m}from"../common/configuration.js";import{getTotalCoveragePercent as T}from"../common/testCoverage.js";import"../common/testId.js";import"../common/testResult.js";import"../common/testTypes.js";const c=e=>u(0===e.total?1:e.covered/e.total,0,1),p=[{color:`var(${l(h)})`,key:"red"},{color:`var(${l(C)})`,key:"yellow"},{color:`var(${l(d)})`,key:"green"}],A=(e,t)=>{let o=p[0].color,r=e;for(const{key:a,color:s}of p){const c=t[a]/100;c&&e>=c&&e-c<r&&(o=s,r=e-c)}return o},v=1e-7,x=(e,t=2)=>{const o=(100*e).toFixed(t);return e<1-v&&"100"===o?100-10**-t+"%":`${o}%`},G=(e,t)=>{switch(t){case m.Statement:return c(e.statement);case m.Minimum:{let t=c(e.statement);return e.branch&&(t=Math.min(t,c(e.branch))),e.declaration&&(t=Math.min(t,c(e.declaration))),t}case m.TotalCoverage:return T(e.statement,e.branch,e.declaration);default:f(t)}};function V(e,t,o){const r=[];for(const o of t.idsFromRoot()){const t=e.getTestById(o.toString());if(!t)break;r.push(t.label)}return r.slice(o).join(" › ")}var y;(e=>{e.showingFilterFor=e=>a("testing.coverageForTest",'Showing "{0}"',e),e.clickToChangeFiltering=a("changePerTestFilter","Click to view coverage for a single test"),e.percentCoverage=(e,t)=>a("testing.percentCoverage","{0} Coverage",x(e,t)),e.allTests=a("testing.allTests","All tests"),e.pickShowCoverage=a("testing.pickTest","Pick a test to show coverage for")})(y||={});export{G as calculateDisplayedStat,x as displayPercent,A as getCoverageColor,V as getLabelForItem,y as labels,c as percent};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { assertNever } from "../../../../base/common/assert.js";
+import { clamp } from "../../../../base/common/numbers.js";
+import { localize } from "../../../../nls.js";
+import { chartsGreen, chartsRed, chartsYellow } from "../../../../platform/theme/common/colorRegistry.js";
+import { asCssVariableName } from "../../../../platform/theme/common/colorUtils.js";
+import { CoverageBarSource } from "./testCoverageBars.js";
+import { ITestingCoverageBarThresholds, TestingDisplayedCoveragePercent } from "../common/configuration.js";
+import { getTotalCoveragePercent } from "../common/testCoverage.js";
+import { TestId } from "../common/testId.js";
+import { LiveTestResult } from "../common/testResult.js";
+import { ICoverageCount } from "../common/testTypes.js";
+const percent = /* @__PURE__ */ __name((cc) => clamp(cc.total === 0 ? 1 : cc.covered / cc.total, 0, 1), "percent");
+const colorThresholds = [
+  { color: `var(${asCssVariableName(chartsRed)})`, key: "red" },
+  { color: `var(${asCssVariableName(chartsYellow)})`, key: "yellow" },
+  { color: `var(${asCssVariableName(chartsGreen)})`, key: "green" }
+];
+const getCoverageColor = /* @__PURE__ */ __name((pct, thresholds) => {
+  let best = colorThresholds[0].color;
+  let distance = pct;
+  for (const { key, color } of colorThresholds) {
+    const t = thresholds[key] / 100;
+    if (t && pct >= t && pct - t < distance) {
+      best = color;
+      distance = pct - t;
+    }
+  }
+  return best;
+}, "getCoverageColor");
+const epsilon = 1e-7;
+const displayPercent = /* @__PURE__ */ __name((value, precision = 2) => {
+  const display = (value * 100).toFixed(precision);
+  if (value < 1 - epsilon && display === "100") {
+    return `${100 - 10 ** -precision}%`;
+  }
+  return `${display}%`;
+}, "displayPercent");
+const calculateDisplayedStat = /* @__PURE__ */ __name((coverage, method) => {
+  switch (method) {
+    case TestingDisplayedCoveragePercent.Statement:
+      return percent(coverage.statement);
+    case TestingDisplayedCoveragePercent.Minimum: {
+      let value = percent(coverage.statement);
+      if (coverage.branch) {
+        value = Math.min(value, percent(coverage.branch));
+      }
+      if (coverage.declaration) {
+        value = Math.min(value, percent(coverage.declaration));
+      }
+      return value;
+    }
+    case TestingDisplayedCoveragePercent.TotalCoverage:
+      return getTotalCoveragePercent(coverage.statement, coverage.branch, coverage.declaration);
+    default:
+      assertNever(method);
+  }
+}, "calculateDisplayedStat");
+function getLabelForItem(result, testId, commonPrefixLen) {
+  const parts = [];
+  for (const id of testId.idsFromRoot()) {
+    const item = result.getTestById(id.toString());
+    if (!item) {
+      break;
+    }
+    parts.push(item.label);
+  }
+  return parts.slice(commonPrefixLen).join(" \u203A ");
+}
+__name(getLabelForItem, "getLabelForItem");
+var labels;
+((labels2) => {
+  labels2.showingFilterFor = /* @__PURE__ */ __name((label) => localize("testing.coverageForTest", 'Showing "{0}"', label), "showingFilterFor");
+  labels2.clickToChangeFiltering = localize("changePerTestFilter", "Click to view coverage for a single test");
+  labels2.percentCoverage = /* @__PURE__ */ __name((percent2, precision) => localize("testing.percentCoverage", "{0} Coverage", displayPercent(percent2, precision)), "percentCoverage");
+  labels2.allTests = localize("testing.allTests", "All tests");
+  labels2.pickShowCoverage = localize("testing.pickTest", "Pick a test to show coverage for");
+})(labels || (labels = {}));
+export {
+  calculateDisplayedStat,
+  displayPercent,
+  getCoverageColor,
+  getLabelForItem,
+  labels,
+  percent
+};
+//# sourceMappingURL=codeCoverageDisplayUtils.js.map

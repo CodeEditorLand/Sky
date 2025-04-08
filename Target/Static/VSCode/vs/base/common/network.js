@@ -1,1 +1,289 @@
-import*as R from"./errors.js";import*as v from"./platform.js";import{equalsIgnoreCase as x,startsWithIgnoreCase as f}from"./strings.js";import{URI as a}from"./uri.js";import*as h from"./path.js";var c;function m(e,o){return a.isUri(e)?x(e.scheme,o):f(e,o+":")}function ne(e,...o){return o.some((o=>m(e,o)))}(e=>{e.inMemory="inmemory",e.vscode="vscode",e.internal="private",e.walkThrough="walkThrough",e.walkThroughSnippet="walkThroughSnippet",e.http="http",e.https="https",e.file="file",e.mailto="mailto",e.untitled="untitled",e.data="data",e.command="command",e.vscodeRemote="vscode-remote",e.vscodeRemoteResource="vscode-remote-resource",e.vscodeManagedRemoteResource="vscode-managed-remote-resource",e.vscodeUserData="vscode-userdata",e.vscodeCustomEditor="vscode-custom-editor",e.vscodeNotebookCell="vscode-notebook-cell",e.vscodeNotebookCellMetadata="vscode-notebook-cell-metadata",e.vscodeNotebookCellMetadataDiff="vscode-notebook-cell-metadata-diff",e.vscodeNotebookCellOutput="vscode-notebook-cell-output",e.vscodeNotebookCellOutputDiff="vscode-notebook-cell-output-diff",e.vscodeNotebookMetadata="vscode-notebook-metadata",e.vscodeInteractiveInput="vscode-interactive-input",e.vscodeSettings="vscode-settings",e.vscodeWorkspaceTrust="vscode-workspace-trust",e.vscodeTerminal="vscode-terminal",e.vscodeChatCodeBlock="vscode-chat-code-block",e.vscodeChatCodeCompareBlock="vscode-chat-code-compare-block",e.vscodeChatSesssion="vscode-chat-editor",e.webviewPanel="webview-panel",e.vscodeWebview="vscode-webview",e.extension="extension",e.vscodeFileResource="vscode-file",e.tmp="tmp",e.vsls="vsls",e.vscodeSourceControl="vscode-scm",e.commentsInput="comment",e.codeSetting="code-setting",e.outputChannel="output",e.accessibleView="accessible-view"})(c||={});const ie="vscode-tkn",U="tkn";class b{_hosts=Object.create(null);_ports=Object.create(null);_connectionTokens=Object.create(null);_preferredWebSchema="http";_delegate=null;_serverRootPath="/";setPreferredWebSchema(e){this._preferredWebSchema=e}setDelegate(e){this._delegate=e}setServerRootPath(e,o){this._serverRootPath=h.posix.join(o??"/",k(e))}getServerRootPath(){return this._serverRootPath}get _remoteResourcesPath(){return h.posix.join(this._serverRootPath,c.vscodeRemoteResource)}set(e,o,t){this._hosts[e]=o,this._ports[e]=t}setConnectionToken(e,o){this._connectionTokens[e]=o}getPreferredWebSchema(){return this._preferredWebSchema}rewrite(e){if(this._delegate)try{return this._delegate(e)}catch(o){return R.onUnexpectedError(o),e}const o=e.authority;let t=this._hosts[o];t&&-1!==t.indexOf(":")&&-1===t.indexOf("[")&&(t=`[${t}]`);const s=this._ports[o],r=this._connectionTokens[o];let n=`path=${encodeURIComponent(e.path)}`;return"string"==typeof r&&(n+=`&${U}=${encodeURIComponent(r)}`),a.from({scheme:v.isWeb?this._preferredWebSchema:c.vscodeRemoteResource,authority:`${t}:${s}`,path:this._remoteResourcesPath,query:n})}}const P=new b;function k(e){return`${e.quality??"oss"}-${e.commit??"dev"}`}const ce="vs/../../extensions",ae="vs/../../node_modules",pe="vs/../../node_modules.asar",de="vs/../../node_modules.asar.unpacked",C="vscode-app";class l{static FALLBACK_AUTHORITY=C;asBrowserUri(e){const o=this.toUri(e);return this.uriToBrowserUri(o)}uriToBrowserUri(e){return e.scheme===c.vscodeRemote?P.rewrite(e):e.scheme!==c.file||!v.isNative&&v.webWorkerOrigin!==`${c.vscodeFileResource}://${l.FALLBACK_AUTHORITY}`?e:e.with({scheme:c.vscodeFileResource,authority:e.authority||l.FALLBACK_AUTHORITY,query:null,fragment:null})}asFileUri(e){const o=this.toUri(e);return this.uriToFileUri(o)}uriToFileUri(e){return e.scheme===c.vscodeFileResource?e.with({scheme:c.file,authority:e.authority!==l.FALLBACK_AUTHORITY?e.authority:null,query:null,fragment:null}):e}toUri(e){if(a.isUri(e))return e;if(globalThis._VSCODE_FILE_ROOT){const o=globalThis._VSCODE_FILE_ROOT;if(/^\w[\w\d+.-]*:\/\//.test(o))return a.joinPath(a.parse(o,!0),e);const t=h.join(o,e);return a.file(t)}throw new Error("Cannot determine URI for module id!")}}const le=new l,ue=Object.freeze({"Cache-Control":"no-cache, no-store"}),ge=Object.freeze({"Document-Policy":"include-js-call-stacks-in-crash-reports"});var y;(e=>{const o=new Map([["1",{"Cross-Origin-Opener-Policy":"same-origin"}],["2",{"Cross-Origin-Embedder-Policy":"require-corp"}],["3",{"Cross-Origin-Opener-Policy":"same-origin","Cross-Origin-Embedder-Policy":"require-corp"}]]);e.CoopAndCoep=Object.freeze(o.get("3"));const t="vscode-coi";e.getHeadersFromQuery=function(e){let s;"string"==typeof e?s=new URL(e).searchParams:e instanceof URL?s=e.searchParams:a.isUri(e)&&(s=new URL(e.toString(!0)).searchParams);const r=s?.get(t);if(r)return o.get(r)},e.addSearchParam=function(e,o,s){if(!globalThis.crossOriginIsolated)return;const r=o&&s?"3":s?"2":"1";e instanceof URLSearchParams?e.set(t,r):e[t]=r}})(y||={});export{y as COI,ue as CacheControlheaders,ge as DocumentPolicyheaders,le as FileAccess,P as RemoteAuthorities,c as Schemas,C as VSCODE_AUTHORITY,ce as builtinExtensionsPath,ie as connectionTokenCookieName,U as connectionTokenQueryName,k as getServerProductSegment,m as matchesScheme,ne as matchesSomeScheme,pe as nodeModulesAsarPath,de as nodeModulesAsarUnpackedPath,ae as nodeModulesPath};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as errors from "./errors.js";
+import * as platform from "./platform.js";
+import { equalsIgnoreCase, startsWithIgnoreCase } from "./strings.js";
+import { URI } from "./uri.js";
+import * as paths from "./path.js";
+var Schemas;
+((Schemas2) => {
+  Schemas2.inMemory = "inmemory";
+  Schemas2.vscode = "vscode";
+  Schemas2.internal = "private";
+  Schemas2.walkThrough = "walkThrough";
+  Schemas2.walkThroughSnippet = "walkThroughSnippet";
+  Schemas2.http = "http";
+  Schemas2.https = "https";
+  Schemas2.file = "file";
+  Schemas2.mailto = "mailto";
+  Schemas2.untitled = "untitled";
+  Schemas2.data = "data";
+  Schemas2.command = "command";
+  Schemas2.vscodeRemote = "vscode-remote";
+  Schemas2.vscodeRemoteResource = "vscode-remote-resource";
+  Schemas2.vscodeManagedRemoteResource = "vscode-managed-remote-resource";
+  Schemas2.vscodeUserData = "vscode-userdata";
+  Schemas2.vscodeCustomEditor = "vscode-custom-editor";
+  Schemas2.vscodeNotebookCell = "vscode-notebook-cell";
+  Schemas2.vscodeNotebookCellMetadata = "vscode-notebook-cell-metadata";
+  Schemas2.vscodeNotebookCellMetadataDiff = "vscode-notebook-cell-metadata-diff";
+  Schemas2.vscodeNotebookCellOutput = "vscode-notebook-cell-output";
+  Schemas2.vscodeNotebookCellOutputDiff = "vscode-notebook-cell-output-diff";
+  Schemas2.vscodeNotebookMetadata = "vscode-notebook-metadata";
+  Schemas2.vscodeInteractiveInput = "vscode-interactive-input";
+  Schemas2.vscodeSettings = "vscode-settings";
+  Schemas2.vscodeWorkspaceTrust = "vscode-workspace-trust";
+  Schemas2.vscodeTerminal = "vscode-terminal";
+  Schemas2.vscodeChatCodeBlock = "vscode-chat-code-block";
+  Schemas2.vscodeChatCodeCompareBlock = "vscode-chat-code-compare-block";
+  Schemas2.vscodeChatSesssion = "vscode-chat-editor";
+  Schemas2.webviewPanel = "webview-panel";
+  Schemas2.vscodeWebview = "vscode-webview";
+  Schemas2.extension = "extension";
+  Schemas2.vscodeFileResource = "vscode-file";
+  Schemas2.tmp = "tmp";
+  Schemas2.vsls = "vsls";
+  Schemas2.vscodeSourceControl = "vscode-scm";
+  Schemas2.commentsInput = "comment";
+  Schemas2.codeSetting = "code-setting";
+  Schemas2.outputChannel = "output";
+  Schemas2.accessibleView = "accessible-view";
+})(Schemas || (Schemas = {}));
+function matchesScheme(target, scheme) {
+  if (URI.isUri(target)) {
+    return equalsIgnoreCase(target.scheme, scheme);
+  } else {
+    return startsWithIgnoreCase(target, scheme + ":");
+  }
+}
+__name(matchesScheme, "matchesScheme");
+function matchesSomeScheme(target, ...schemes) {
+  return schemes.some((scheme) => matchesScheme(target, scheme));
+}
+__name(matchesSomeScheme, "matchesSomeScheme");
+const connectionTokenCookieName = "vscode-tkn";
+const connectionTokenQueryName = "tkn";
+class RemoteAuthoritiesImpl {
+  static {
+    __name(this, "RemoteAuthoritiesImpl");
+  }
+  _hosts = /* @__PURE__ */ Object.create(null);
+  _ports = /* @__PURE__ */ Object.create(null);
+  _connectionTokens = /* @__PURE__ */ Object.create(null);
+  _preferredWebSchema = "http";
+  _delegate = null;
+  _serverRootPath = "/";
+  setPreferredWebSchema(schema) {
+    this._preferredWebSchema = schema;
+  }
+  setDelegate(delegate) {
+    this._delegate = delegate;
+  }
+  setServerRootPath(product, serverBasePath) {
+    this._serverRootPath = paths.posix.join(serverBasePath ?? "/", getServerProductSegment(product));
+  }
+  getServerRootPath() {
+    return this._serverRootPath;
+  }
+  get _remoteResourcesPath() {
+    return paths.posix.join(this._serverRootPath, Schemas.vscodeRemoteResource);
+  }
+  set(authority, host, port) {
+    this._hosts[authority] = host;
+    this._ports[authority] = port;
+  }
+  setConnectionToken(authority, connectionToken) {
+    this._connectionTokens[authority] = connectionToken;
+  }
+  getPreferredWebSchema() {
+    return this._preferredWebSchema;
+  }
+  rewrite(uri) {
+    if (this._delegate) {
+      try {
+        return this._delegate(uri);
+      } catch (err) {
+        errors.onUnexpectedError(err);
+        return uri;
+      }
+    }
+    const authority = uri.authority;
+    let host = this._hosts[authority];
+    if (host && host.indexOf(":") !== -1 && host.indexOf("[") === -1) {
+      host = `[${host}]`;
+    }
+    const port = this._ports[authority];
+    const connectionToken = this._connectionTokens[authority];
+    let query = `path=${encodeURIComponent(uri.path)}`;
+    if (typeof connectionToken === "string") {
+      query += `&${connectionTokenQueryName}=${encodeURIComponent(connectionToken)}`;
+    }
+    return URI.from({
+      scheme: platform.isWeb ? this._preferredWebSchema : Schemas.vscodeRemoteResource,
+      authority: `${host}:${port}`,
+      path: this._remoteResourcesPath,
+      query
+    });
+  }
+}
+const RemoteAuthorities = new RemoteAuthoritiesImpl();
+function getServerProductSegment(product) {
+  return `${product.quality ?? "oss"}-${product.commit ?? "dev"}`;
+}
+__name(getServerProductSegment, "getServerProductSegment");
+const builtinExtensionsPath = "vs/../../extensions";
+const nodeModulesPath = "vs/../../node_modules";
+const nodeModulesAsarPath = "vs/../../node_modules.asar";
+const nodeModulesAsarUnpackedPath = "vs/../../node_modules.asar.unpacked";
+const VSCODE_AUTHORITY = "vscode-app";
+class FileAccessImpl {
+  static {
+    __name(this, "FileAccessImpl");
+  }
+  static FALLBACK_AUTHORITY = VSCODE_AUTHORITY;
+  /**
+   * Returns a URI to use in contexts where the browser is responsible
+   * for loading (e.g. fetch()) or when used within the DOM.
+   *
+   * **Note:** use `dom.ts#asCSSUrl` whenever the URL is to be used in CSS context.
+   */
+  asBrowserUri(resourcePath) {
+    const uri = this.toUri(resourcePath);
+    return this.uriToBrowserUri(uri);
+  }
+  /**
+   * Returns a URI to use in contexts where the browser is responsible
+   * for loading (e.g. fetch()) or when used within the DOM.
+   *
+   * **Note:** use `dom.ts#asCSSUrl` whenever the URL is to be used in CSS context.
+   */
+  uriToBrowserUri(uri) {
+    if (uri.scheme === Schemas.vscodeRemote) {
+      return RemoteAuthorities.rewrite(uri);
+    }
+    if (
+      // ...only ever for `file` resources
+      uri.scheme === Schemas.file && // ...and we run in native environments
+      (platform.isNative || // ...or web worker extensions on desktop
+      platform.webWorkerOrigin === `${Schemas.vscodeFileResource}://${FileAccessImpl.FALLBACK_AUTHORITY}`)
+    ) {
+      return uri.with({
+        scheme: Schemas.vscodeFileResource,
+        // We need to provide an authority here so that it can serve
+        // as origin for network and loading matters in chromium.
+        // If the URI is not coming with an authority already, we
+        // add our own
+        authority: uri.authority || FileAccessImpl.FALLBACK_AUTHORITY,
+        query: null,
+        fragment: null
+      });
+    }
+    return uri;
+  }
+  /**
+   * Returns the `file` URI to use in contexts where node.js
+   * is responsible for loading.
+   */
+  asFileUri(resourcePath) {
+    const uri = this.toUri(resourcePath);
+    return this.uriToFileUri(uri);
+  }
+  /**
+   * Returns the `file` URI to use in contexts where node.js
+   * is responsible for loading.
+   */
+  uriToFileUri(uri) {
+    if (uri.scheme === Schemas.vscodeFileResource) {
+      return uri.with({
+        scheme: Schemas.file,
+        // Only preserve the `authority` if it is different from
+        // our fallback authority. This ensures we properly preserve
+        // Windows UNC paths that come with their own authority.
+        authority: uri.authority !== FileAccessImpl.FALLBACK_AUTHORITY ? uri.authority : null,
+        query: null,
+        fragment: null
+      });
+    }
+    return uri;
+  }
+  toUri(uriOrModule) {
+    if (URI.isUri(uriOrModule)) {
+      return uriOrModule;
+    }
+    if (globalThis._VSCODE_FILE_ROOT) {
+      const rootUriOrPath = globalThis._VSCODE_FILE_ROOT;
+      if (/^\w[\w\d+.-]*:\/\//.test(rootUriOrPath)) {
+        return URI.joinPath(URI.parse(rootUriOrPath, true), uriOrModule);
+      }
+      const modulePath = paths.join(rootUriOrPath, uriOrModule);
+      return URI.file(modulePath);
+    }
+    throw new Error("Cannot determine URI for module id!");
+  }
+}
+const FileAccess = new FileAccessImpl();
+const CacheControlheaders = Object.freeze({
+  "Cache-Control": "no-cache, no-store"
+});
+const DocumentPolicyheaders = Object.freeze({
+  "Document-Policy": "include-js-call-stacks-in-crash-reports"
+});
+var COI;
+((COI2) => {
+  const coiHeaders = /* @__PURE__ */ new Map([
+    ["1", { "Cross-Origin-Opener-Policy": "same-origin" }],
+    ["2", { "Cross-Origin-Embedder-Policy": "require-corp" }],
+    ["3", { "Cross-Origin-Opener-Policy": "same-origin", "Cross-Origin-Embedder-Policy": "require-corp" }]
+  ]);
+  COI2.CoopAndCoep = Object.freeze(coiHeaders.get("3"));
+  const coiSearchParamName = "vscode-coi";
+  function getHeadersFromQuery(url) {
+    let params;
+    if (typeof url === "string") {
+      params = new URL(url).searchParams;
+    } else if (url instanceof URL) {
+      params = url.searchParams;
+    } else if (URI.isUri(url)) {
+      params = new URL(url.toString(true)).searchParams;
+    }
+    const value = params?.get(coiSearchParamName);
+    if (!value) {
+      return void 0;
+    }
+    return coiHeaders.get(value);
+  }
+  COI2.getHeadersFromQuery = getHeadersFromQuery;
+  __name(getHeadersFromQuery, "getHeadersFromQuery");
+  function addSearchParam(urlOrSearch, coop, coep) {
+    if (!globalThis.crossOriginIsolated) {
+      return;
+    }
+    const value = coop && coep ? "3" : coep ? "2" : "1";
+    if (urlOrSearch instanceof URLSearchParams) {
+      urlOrSearch.set(coiSearchParamName, value);
+    } else {
+      urlOrSearch[coiSearchParamName] = value;
+    }
+  }
+  COI2.addSearchParam = addSearchParam;
+  __name(addSearchParam, "addSearchParam");
+})(COI || (COI = {}));
+export {
+  COI,
+  CacheControlheaders,
+  DocumentPolicyheaders,
+  FileAccess,
+  RemoteAuthorities,
+  Schemas,
+  VSCODE_AUTHORITY,
+  builtinExtensionsPath,
+  connectionTokenCookieName,
+  connectionTokenQueryName,
+  getServerProductSegment,
+  matchesScheme,
+  matchesSomeScheme,
+  nodeModulesAsarPath,
+  nodeModulesAsarUnpackedPath,
+  nodeModulesPath
+};
+//# sourceMappingURL=network.js.map

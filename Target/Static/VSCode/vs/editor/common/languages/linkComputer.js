@@ -1,1 +1,290 @@
-import{CharCode as e}from"../../../base/common/charCode.js";import{CharacterClassifier as A}from"../core/characterClassifier.js";import"../languages.js";var H=(e=>(e[e.Invalid=0]="Invalid",e[e.Start=1]="Start",e[e.H=2]="H",e[e.HT=3]="HT",e[e.HTT=4]="HTT",e[e.HTTP=5]="HTTP",e[e.F=6]="F",e[e.FI=7]="FI",e[e.FIL=8]="FIL",e[e.BeforeColon=9]="BeforeColon",e[e.AfterColon=10]="AfterColon",e[e.AlmostThere=11]="AlmostThere",e[e.End=12]="End",e[e.Accept=13]="Accept",e[e.LastKnownState=14]="LastKnownState",e))(H||{});class g{_data;rows;cols;constructor(e,t,a){const n=new Uint8Array(e*t);for(let r=0,o=e*t;r<o;r++)n[r]=a;this._data=n,this.rows=e,this.cols=t}get(e,t){return this._data[e*this.cols+t]}set(e,t,a){this._data[e*this.cols+t]=a}}class N{_states;_maxCharCode;constructor(e){let t=0,a=0;for(let n=0,r=e.length;n<r;n++){const[r,o,s]=e[n];o>t&&(t=o),r>a&&(a=r),s>a&&(a=s)}t++,a++;const n=new g(a,t,0);for(let t=0,a=e.length;t<a;t++){const[a,r,o]=e[t];n.set(a,r,o)}this._states=n,this._maxCharCode=t}nextState(e,t){return t<0||t>=this._maxCharCode?0:this._states.get(e,t)}}let F=null;function B(){return null===F&&(F=new N([[1,e.h,2],[1,e.H,2],[1,e.f,6],[1,e.F,6],[2,e.t,3],[2,e.T,3],[3,e.t,4],[3,e.T,4],[4,e.p,5],[4,e.P,5],[5,e.s,9],[5,e.S,9],[5,e.Colon,10],[6,e.i,7],[6,e.I,7],[7,e.l,8],[7,e.L,8],[8,e.e,9],[8,e.E,9],[9,e.Colon,10],[10,e.Slash,11],[11,e.Slash,12]])),F}var _=(e=>(e[e.None=0]="None",e[e.ForceTermination=1]="ForceTermination",e[e.CannotEndIn=2]="CannotEndIn",e))(_||{});let m=null;function y(){if(null===m){m=new A(0);const e=" \t<>'\"、。｡､，．：；‘〈「『〔（［｛｢｣｝］）〕』」〉’｀～…";for(let t=0;t<e.length;t++)m.set(e.charCodeAt(t),1);const t=".,;:";for(let e=0;e<t.length;e++)m.set(t.charCodeAt(e),2)}return m}class k{static _createLink(t,a,n,r,o){let s=o-1;do{const e=a.charCodeAt(s);if(2!==t.get(e))break;s--}while(s>r);if(r>0){const t=a.charCodeAt(r-1),n=a.charCodeAt(s);(t===e.OpenParen&&n===e.CloseParen||t===e.OpenSquareBracket&&n===e.CloseSquareBracket||t===e.OpenCurlyBrace&&n===e.CloseCurlyBrace)&&s--}return{range:{startLineNumber:n,startColumn:r+1,endLineNumber:n,endColumn:s+2},url:a.substring(r,s+1)}}static computeLinks(t,a=B()){const n=y(),r=[];for(let o=1,s=t.getLineCount();o<=s;o++){const s=t.getLineContent(o),c=s.length;let l=0,i=0,u=0,C=1,h=!1,f=!1,m=!1,d=!1;for(;l<c;){let t=!1;const c=s.charCodeAt(l);if(13===C){let a;switch(c){case e.OpenParen:h=!0,a=0;break;case e.CloseParen:a=h?0:1;break;case e.OpenSquareBracket:m=!0,f=!0,a=0;break;case e.CloseSquareBracket:m=!1,a=f?0:1;break;case e.OpenCurlyBrace:d=!0,a=0;break;case e.CloseCurlyBrace:a=d?0:1;break;case e.SingleQuote:case e.DoubleQuote:case e.BackTick:a=u===c?1:u===e.SingleQuote||u===e.DoubleQuote||u===e.BackTick?0:1;break;case e.Asterisk:a=u===e.Asterisk?1:0;break;case e.Pipe:a=u===e.Pipe?1:0;break;case e.Space:a=m?0:1;break;default:a=n.get(c)}1===a&&(r.push(k._createLink(n,s,o,i,l)),t=!0)}else if(12===C){let a;c===e.OpenSquareBracket?(f=!0,a=0):a=n.get(c),1===a?t=!0:C=13}else C=a.nextState(C,c),0===C&&(t=!0);t&&(C=1,h=!1,f=!1,d=!1,i=l+1,u=c),l++}13===C&&r.push(k._createLink(n,s,o,i,c))}return r}}function v(e){return e&&"function"==typeof e.getLineCount&&"function"==typeof e.getLineContent?k.computeLinks(e):[]}export{k as LinkComputer,H as State,N as StateMachine,v as computeLinks};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { CharCode } from "../../../base/common/charCode.js";
+import { CharacterClassifier } from "../core/characterClassifier.js";
+import { ILink } from "../languages.js";
+var State = /* @__PURE__ */ ((State2) => {
+  State2[State2["Invalid"] = 0] = "Invalid";
+  State2[State2["Start"] = 1] = "Start";
+  State2[State2["H"] = 2] = "H";
+  State2[State2["HT"] = 3] = "HT";
+  State2[State2["HTT"] = 4] = "HTT";
+  State2[State2["HTTP"] = 5] = "HTTP";
+  State2[State2["F"] = 6] = "F";
+  State2[State2["FI"] = 7] = "FI";
+  State2[State2["FIL"] = 8] = "FIL";
+  State2[State2["BeforeColon"] = 9] = "BeforeColon";
+  State2[State2["AfterColon"] = 10] = "AfterColon";
+  State2[State2["AlmostThere"] = 11] = "AlmostThere";
+  State2[State2["End"] = 12] = "End";
+  State2[State2["Accept"] = 13] = "Accept";
+  State2[State2["LastKnownState"] = 14] = "LastKnownState";
+  return State2;
+})(State || {});
+class Uint8Matrix {
+  static {
+    __name(this, "Uint8Matrix");
+  }
+  _data;
+  rows;
+  cols;
+  constructor(rows, cols, defaultValue) {
+    const data = new Uint8Array(rows * cols);
+    for (let i = 0, len = rows * cols; i < len; i++) {
+      data[i] = defaultValue;
+    }
+    this._data = data;
+    this.rows = rows;
+    this.cols = cols;
+  }
+  get(row, col) {
+    return this._data[row * this.cols + col];
+  }
+  set(row, col, value) {
+    this._data[row * this.cols + col] = value;
+  }
+}
+class StateMachine {
+  static {
+    __name(this, "StateMachine");
+  }
+  _states;
+  _maxCharCode;
+  constructor(edges) {
+    let maxCharCode = 0;
+    let maxState = 0 /* Invalid */;
+    for (let i = 0, len = edges.length; i < len; i++) {
+      const [from, chCode, to] = edges[i];
+      if (chCode > maxCharCode) {
+        maxCharCode = chCode;
+      }
+      if (from > maxState) {
+        maxState = from;
+      }
+      if (to > maxState) {
+        maxState = to;
+      }
+    }
+    maxCharCode++;
+    maxState++;
+    const states = new Uint8Matrix(maxState, maxCharCode, 0 /* Invalid */);
+    for (let i = 0, len = edges.length; i < len; i++) {
+      const [from, chCode, to] = edges[i];
+      states.set(from, chCode, to);
+    }
+    this._states = states;
+    this._maxCharCode = maxCharCode;
+  }
+  nextState(currentState, chCode) {
+    if (chCode < 0 || chCode >= this._maxCharCode) {
+      return 0 /* Invalid */;
+    }
+    return this._states.get(currentState, chCode);
+  }
+}
+let _stateMachine = null;
+function getStateMachine() {
+  if (_stateMachine === null) {
+    _stateMachine = new StateMachine([
+      [1 /* Start */, CharCode.h, 2 /* H */],
+      [1 /* Start */, CharCode.H, 2 /* H */],
+      [1 /* Start */, CharCode.f, 6 /* F */],
+      [1 /* Start */, CharCode.F, 6 /* F */],
+      [2 /* H */, CharCode.t, 3 /* HT */],
+      [2 /* H */, CharCode.T, 3 /* HT */],
+      [3 /* HT */, CharCode.t, 4 /* HTT */],
+      [3 /* HT */, CharCode.T, 4 /* HTT */],
+      [4 /* HTT */, CharCode.p, 5 /* HTTP */],
+      [4 /* HTT */, CharCode.P, 5 /* HTTP */],
+      [5 /* HTTP */, CharCode.s, 9 /* BeforeColon */],
+      [5 /* HTTP */, CharCode.S, 9 /* BeforeColon */],
+      [5 /* HTTP */, CharCode.Colon, 10 /* AfterColon */],
+      [6 /* F */, CharCode.i, 7 /* FI */],
+      [6 /* F */, CharCode.I, 7 /* FI */],
+      [7 /* FI */, CharCode.l, 8 /* FIL */],
+      [7 /* FI */, CharCode.L, 8 /* FIL */],
+      [8 /* FIL */, CharCode.e, 9 /* BeforeColon */],
+      [8 /* FIL */, CharCode.E, 9 /* BeforeColon */],
+      [9 /* BeforeColon */, CharCode.Colon, 10 /* AfterColon */],
+      [10 /* AfterColon */, CharCode.Slash, 11 /* AlmostThere */],
+      [11 /* AlmostThere */, CharCode.Slash, 12 /* End */]
+    ]);
+  }
+  return _stateMachine;
+}
+__name(getStateMachine, "getStateMachine");
+var CharacterClass = /* @__PURE__ */ ((CharacterClass2) => {
+  CharacterClass2[CharacterClass2["None"] = 0] = "None";
+  CharacterClass2[CharacterClass2["ForceTermination"] = 1] = "ForceTermination";
+  CharacterClass2[CharacterClass2["CannotEndIn"] = 2] = "CannotEndIn";
+  return CharacterClass2;
+})(CharacterClass || {});
+let _classifier = null;
+function getClassifier() {
+  if (_classifier === null) {
+    _classifier = new CharacterClassifier(0 /* None */);
+    const FORCE_TERMINATION_CHARACTERS = ` 	<>'"\u3001\u3002\uFF61\uFF64\uFF0C\uFF0E\uFF1A\uFF1B\u2018\u3008\u300C\u300E\u3014\uFF08\uFF3B\uFF5B\uFF62\uFF63\uFF5D\uFF3D\uFF09\u3015\u300F\u300D\u3009\u2019\uFF40\uFF5E\u2026`;
+    for (let i = 0; i < FORCE_TERMINATION_CHARACTERS.length; i++) {
+      _classifier.set(FORCE_TERMINATION_CHARACTERS.charCodeAt(i), 1 /* ForceTermination */);
+    }
+    const CANNOT_END_WITH_CHARACTERS = ".,;:";
+    for (let i = 0; i < CANNOT_END_WITH_CHARACTERS.length; i++) {
+      _classifier.set(CANNOT_END_WITH_CHARACTERS.charCodeAt(i), 2 /* CannotEndIn */);
+    }
+  }
+  return _classifier;
+}
+__name(getClassifier, "getClassifier");
+class LinkComputer {
+  static {
+    __name(this, "LinkComputer");
+  }
+  static _createLink(classifier, line, lineNumber, linkBeginIndex, linkEndIndex) {
+    let lastIncludedCharIndex = linkEndIndex - 1;
+    do {
+      const chCode = line.charCodeAt(lastIncludedCharIndex);
+      const chClass = classifier.get(chCode);
+      if (chClass !== 2 /* CannotEndIn */) {
+        break;
+      }
+      lastIncludedCharIndex--;
+    } while (lastIncludedCharIndex > linkBeginIndex);
+    if (linkBeginIndex > 0) {
+      const charCodeBeforeLink = line.charCodeAt(linkBeginIndex - 1);
+      const lastCharCodeInLink = line.charCodeAt(lastIncludedCharIndex);
+      if (charCodeBeforeLink === CharCode.OpenParen && lastCharCodeInLink === CharCode.CloseParen || charCodeBeforeLink === CharCode.OpenSquareBracket && lastCharCodeInLink === CharCode.CloseSquareBracket || charCodeBeforeLink === CharCode.OpenCurlyBrace && lastCharCodeInLink === CharCode.CloseCurlyBrace) {
+        lastIncludedCharIndex--;
+      }
+    }
+    return {
+      range: {
+        startLineNumber: lineNumber,
+        startColumn: linkBeginIndex + 1,
+        endLineNumber: lineNumber,
+        endColumn: lastIncludedCharIndex + 2
+      },
+      url: line.substring(linkBeginIndex, lastIncludedCharIndex + 1)
+    };
+  }
+  static computeLinks(model, stateMachine = getStateMachine()) {
+    const classifier = getClassifier();
+    const result = [];
+    for (let i = 1, lineCount = model.getLineCount(); i <= lineCount; i++) {
+      const line = model.getLineContent(i);
+      const len = line.length;
+      let j = 0;
+      let linkBeginIndex = 0;
+      let linkBeginChCode = 0;
+      let state = 1 /* Start */;
+      let hasOpenParens = false;
+      let hasOpenSquareBracket = false;
+      let inSquareBrackets = false;
+      let hasOpenCurlyBracket = false;
+      while (j < len) {
+        let resetStateMachine = false;
+        const chCode = line.charCodeAt(j);
+        if (state === 13 /* Accept */) {
+          let chClass;
+          switch (chCode) {
+            case CharCode.OpenParen:
+              hasOpenParens = true;
+              chClass = 0 /* None */;
+              break;
+            case CharCode.CloseParen:
+              chClass = hasOpenParens ? 0 /* None */ : 1 /* ForceTermination */;
+              break;
+            case CharCode.OpenSquareBracket:
+              inSquareBrackets = true;
+              hasOpenSquareBracket = true;
+              chClass = 0 /* None */;
+              break;
+            case CharCode.CloseSquareBracket:
+              inSquareBrackets = false;
+              chClass = hasOpenSquareBracket ? 0 /* None */ : 1 /* ForceTermination */;
+              break;
+            case CharCode.OpenCurlyBrace:
+              hasOpenCurlyBracket = true;
+              chClass = 0 /* None */;
+              break;
+            case CharCode.CloseCurlyBrace:
+              chClass = hasOpenCurlyBracket ? 0 /* None */ : 1 /* ForceTermination */;
+              break;
+            // The following three rules make it that ' or " or ` are allowed inside links
+            // only if the link is wrapped by some other quote character
+            case CharCode.SingleQuote:
+            case CharCode.DoubleQuote:
+            case CharCode.BackTick:
+              if (linkBeginChCode === chCode) {
+                chClass = 1 /* ForceTermination */;
+              } else if (linkBeginChCode === CharCode.SingleQuote || linkBeginChCode === CharCode.DoubleQuote || linkBeginChCode === CharCode.BackTick) {
+                chClass = 0 /* None */;
+              } else {
+                chClass = 1 /* ForceTermination */;
+              }
+              break;
+            case CharCode.Asterisk:
+              chClass = linkBeginChCode === CharCode.Asterisk ? 1 /* ForceTermination */ : 0 /* None */;
+              break;
+            case CharCode.Pipe:
+              chClass = linkBeginChCode === CharCode.Pipe ? 1 /* ForceTermination */ : 0 /* None */;
+              break;
+            case CharCode.Space:
+              chClass = inSquareBrackets ? 0 /* None */ : 1 /* ForceTermination */;
+              break;
+            default:
+              chClass = classifier.get(chCode);
+          }
+          if (chClass === 1 /* ForceTermination */) {
+            result.push(LinkComputer._createLink(classifier, line, i, linkBeginIndex, j));
+            resetStateMachine = true;
+          }
+        } else if (state === 12 /* End */) {
+          let chClass;
+          if (chCode === CharCode.OpenSquareBracket) {
+            hasOpenSquareBracket = true;
+            chClass = 0 /* None */;
+          } else {
+            chClass = classifier.get(chCode);
+          }
+          if (chClass === 1 /* ForceTermination */) {
+            resetStateMachine = true;
+          } else {
+            state = 13 /* Accept */;
+          }
+        } else {
+          state = stateMachine.nextState(state, chCode);
+          if (state === 0 /* Invalid */) {
+            resetStateMachine = true;
+          }
+        }
+        if (resetStateMachine) {
+          state = 1 /* Start */;
+          hasOpenParens = false;
+          hasOpenSquareBracket = false;
+          hasOpenCurlyBracket = false;
+          linkBeginIndex = j + 1;
+          linkBeginChCode = chCode;
+        }
+        j++;
+      }
+      if (state === 13 /* Accept */) {
+        result.push(LinkComputer._createLink(classifier, line, i, linkBeginIndex, len));
+      }
+    }
+    return result;
+  }
+}
+function computeLinks(model) {
+  if (!model || typeof model.getLineCount !== "function" || typeof model.getLineContent !== "function") {
+    return [];
+  }
+  return LinkComputer.computeLinks(model);
+}
+__name(computeLinks, "computeLinks");
+export {
+  LinkComputer,
+  State,
+  StateMachine,
+  computeLinks
+};
+//# sourceMappingURL=linkComputer.js.map

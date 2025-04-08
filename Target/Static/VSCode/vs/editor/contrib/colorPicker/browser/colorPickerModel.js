@@ -1,1 +1,82 @@
-import"../../../../base/common/color.js";import{Emitter as i}from"../../../../base/common/event.js";import"../../../common/languages.js";class p{constructor(o,e,t){this.presentationIndex=t,this.originalColor=o,this._color=o,this._colorPresentations=e}originalColor;_color;get color(){return this._color}set color(o){this._color.equals(o)||(this._color=o,this._onDidChangeColor.fire(o))}get presentation(){return this.colorPresentations[this.presentationIndex]}_colorPresentations;get colorPresentations(){return this._colorPresentations}set colorPresentations(o){this._colorPresentations=o,this.presentationIndex>o.length-1&&(this.presentationIndex=0),this._onDidChangePresentation.fire(this.presentation)}_onColorFlushed=new i;onColorFlushed=this._onColorFlushed.event;_onDidChangeColor=new i;onDidChangeColor=this._onDidChangeColor.event;_onDidChangePresentation=new i;onDidChangePresentation=this._onDidChangePresentation.event;selectNextColorPresentation(){this.presentationIndex=(this.presentationIndex+1)%this.colorPresentations.length,this.flushColor(),this._onDidChangePresentation.fire(this.presentation)}guessColorPresentation(o,e){let t=-1;for(let o=0;o<this.colorPresentations.length;o++)if(e.toLowerCase()===this.colorPresentations[o].label){t=o;break}if(-1===t){const o=e.split("(")[0].toLowerCase();for(let e=0;e<this.colorPresentations.length;e++)if(this.colorPresentations[e].label.toLowerCase().startsWith(o)){t=e;break}}-1!==t&&t!==this.presentationIndex&&(this.presentationIndex=t,this._onDidChangePresentation.fire(this.presentation))}flushColor(){this._onColorFlushed.fire(this._color)}}export{p as ColorPickerModel};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Color } from "../../../../base/common/color.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { IColorPresentation } from "../../../common/languages.js";
+class ColorPickerModel {
+  constructor(color, availableColorPresentations, presentationIndex) {
+    this.presentationIndex = presentationIndex;
+    this.originalColor = color;
+    this._color = color;
+    this._colorPresentations = availableColorPresentations;
+  }
+  static {
+    __name(this, "ColorPickerModel");
+  }
+  originalColor;
+  _color;
+  get color() {
+    return this._color;
+  }
+  set color(color) {
+    if (this._color.equals(color)) {
+      return;
+    }
+    this._color = color;
+    this._onDidChangeColor.fire(color);
+  }
+  get presentation() {
+    return this.colorPresentations[this.presentationIndex];
+  }
+  _colorPresentations;
+  get colorPresentations() {
+    return this._colorPresentations;
+  }
+  set colorPresentations(colorPresentations) {
+    this._colorPresentations = colorPresentations;
+    if (this.presentationIndex > colorPresentations.length - 1) {
+      this.presentationIndex = 0;
+    }
+    this._onDidChangePresentation.fire(this.presentation);
+  }
+  _onColorFlushed = new Emitter();
+  onColorFlushed = this._onColorFlushed.event;
+  _onDidChangeColor = new Emitter();
+  onDidChangeColor = this._onDidChangeColor.event;
+  _onDidChangePresentation = new Emitter();
+  onDidChangePresentation = this._onDidChangePresentation.event;
+  selectNextColorPresentation() {
+    this.presentationIndex = (this.presentationIndex + 1) % this.colorPresentations.length;
+    this.flushColor();
+    this._onDidChangePresentation.fire(this.presentation);
+  }
+  guessColorPresentation(color, originalText) {
+    let presentationIndex = -1;
+    for (let i = 0; i < this.colorPresentations.length; i++) {
+      if (originalText.toLowerCase() === this.colorPresentations[i].label) {
+        presentationIndex = i;
+        break;
+      }
+    }
+    if (presentationIndex === -1) {
+      const originalTextPrefix = originalText.split("(")[0].toLowerCase();
+      for (let i = 0; i < this.colorPresentations.length; i++) {
+        if (this.colorPresentations[i].label.toLowerCase().startsWith(originalTextPrefix)) {
+          presentationIndex = i;
+          break;
+        }
+      }
+    }
+    if (presentationIndex !== -1 && presentationIndex !== this.presentationIndex) {
+      this.presentationIndex = presentationIndex;
+      this._onDidChangePresentation.fire(this.presentation);
+    }
+  }
+  flushColor() {
+    this._onColorFlushed.fire(this._color);
+  }
+}
+export {
+  ColorPickerModel
+};
+//# sourceMappingURL=colorPickerModel.js.map

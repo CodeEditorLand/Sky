@@ -1,4 +1,399 @@
-var S=Object.defineProperty;var x=Object.getOwnPropertyDescriptor;var f=(p,r,e,t)=>{for(var o=t>1?void 0:t?x(r,e):r,n=p.length-1,i;n>=0;n--)(i=p[n])&&(o=(t?i(r,e,o):i(o))||o);return t&&o&&S(r,e,o),o},P=(p,r)=>(e,t)=>r(e,t,p);import{RenderedHoverParts as M}from"./hoverTypes.js";import{Disposable as b,DisposableStore as _,toDisposable as k}from"../../../../base/common/lifecycle.js";import{EditorHoverStatusBar as R}from"./contentHoverStatusBar.js";import"./hoverOperation.js";import{IKeybindingService as w}from"../../../../platform/keybinding/common/keybinding.js";import{ModelDecorationOptions as O}from"../../../common/model/textModel.js";import"../../../browser/editorBrowser.js";import{Position as C}from"../../../common/core/position.js";import{Range as B}from"../../../common/core/range.js";import"./contentHoverTypes.js";import*as m from"../../../../base/browser/dom.js";import"../../../common/languages.js";import{MarkdownHoverParticipant as L}from"./markdownHoverParticipant.js";import{HoverColorPickerParticipant as D}from"../../colorPicker/browser/hoverColorPicker/hoverColorPickerParticipant.js";import{localize as I}from"../../../../nls.js";import{InlayHintsHover as V}from"../../inlayHints/browser/inlayHintsHover.js";import{BugIndicatingError as N}from"../../../../base/common/errors.js";import"../../../../base/browser/ui/hover/hoverWidget.js";import{IHoverService as y}from"../../../../platform/hover/browser/hover.js";import"../../../common/core/offsetRange.js";let h=class extends b{closestMouseDistance;initialMousePosX;initialMousePosY;showAtPosition;showAtSecondaryPosition;shouldFocus;source;shouldAppearBeforeContent;_renderedHoverParts;constructor(r,e,t,o,n,i){super();const a=e.hoverParts;this._renderedHoverParts=this._register(new l(r,t,a,o,n,i));const d=e.options,c=d.anchor,{showAtPosition:s,showAtSecondaryPosition:v}=h.computeHoverPositions(r,c.range,a);this.shouldAppearBeforeContent=a.some(u=>u.isBeforeContent),this.showAtPosition=s,this.showAtSecondaryPosition=v,this.initialMousePosX=c.initialMousePosX,this.initialMousePosY=c.initialMousePosY,this.shouldFocus=d.shouldFocus,this.source=d.source}get domNode(){return this._renderedHoverParts.domNode}get domNodeHasChildren(){return this._renderedHoverParts.domNodeHasChildren}get focusedHoverPartIndex(){return this._renderedHoverParts.focusedHoverPartIndex}get hoverPartsCount(){return this._renderedHoverParts.hoverPartsCount}focusHoverPartWithIndex(r){this._renderedHoverParts.focusHoverPartWithIndex(r)}getAccessibleWidgetContent(){return this._renderedHoverParts.getAccessibleContent()}getAccessibleWidgetContentAtIndex(r){return this._renderedHoverParts.getAccessibleHoverContentAtIndex(r)}async updateHoverVerbosityLevel(r,e,t){this._renderedHoverParts.updateHoverVerbosityLevel(r,e,t)}doesHoverAtIndexSupportVerbosityAction(r,e){return this._renderedHoverParts.doesHoverAtIndexSupportVerbosityAction(r,e)}isColorPickerVisible(){return this._renderedHoverParts.isColorPickerVisible()}static computeHoverPositions(r,e,t){let o=1;if(r.hasModel()){const s=r._getViewModel(),v=s.coordinatesConverter,u=v.convertModelRangeToViewRange(e),H=s.getLineMinColumn(u.startLineNumber),g=new C(u.startLineNumber,H);o=v.convertViewPositionToModelPosition(g).column}const n=e.startLineNumber;let i=e.startColumn,a;for(const s of t){const v=s.range,u=v.startLineNumber===n,H=v.endLineNumber===n;if(u&&H){const A=v.startColumn,E=Math.min(i,A);i=Math.max(E,o)}s.forceShowAtRange&&(a=v)}let d,c;if(a){const s=a.getStartPosition();d=s,c=s}else d=e.getStartPosition(),c=new C(n,i);return{showAtPosition:d,showAtSecondaryPosition:c}}};h=f([P(4,w),P(5,y)],h);class T{constructor(r,e){this._statusBar=e;r.appendChild(this._statusBar.hoverElement)}get hoverElement(){return this._statusBar.hoverElement}get actions(){return this._statusBar.actions}dispose(){this._statusBar.dispose()}}let l=class extends b{static _DECORATION_OPTIONS=O.register({description:"content-hover-highlight",className:"hoverHighlight"});_renderedParts=[];_fragment;_context;_markdownHoverParticipant;_colorHoverParticipant;_focusedHoverPartIndex=-1;constructor(r,e,t,o,n,i){super(),this._context=o,this._fragment=document.createDocumentFragment(),this._register(this._renderParts(e,t,o,n,i)),this._register(this._registerListenersOnRenderedParts()),this._register(this._createEditorDecorations(r,t)),this._updateMarkdownAndColorParticipantInfo(e)}_createEditorDecorations(r,e){if(e.length===0)return b.None;let t=e[0].range;for(const n of e){const i=n.range;t=B.plusRange(t,i)}const o=r.createDecorationsCollection();return o.set([{range:t,options:l._DECORATION_OPTIONS}]),k(()=>{o.clear()})}_renderParts(r,e,t,o,n){const i=new R(o,n),a={fragment:this._fragment,statusBar:i,...t},d=new _;d.add(i);for(const s of r){const v=this._renderHoverPartsForParticipant(e,s,a);d.add(v);for(const u of v.renderedHoverParts)this._renderedParts.push({type:"hoverPart",participant:s,hoverPart:u.hoverPart,hoverElement:u.hoverElement})}const c=this._renderStatusBar(this._fragment,i);return c&&(d.add(c),this._renderedParts.push({type:"statusBar",hoverElement:c.hoverElement,actions:c.actions})),d}_renderHoverPartsForParticipant(r,e,t){const o=r.filter(i=>i.owner===e);return o.length>0?e.renderHoverParts(t,o):new M([])}_renderStatusBar(r,e){if(e.hasContent)return new T(r,e)}_registerListenersOnRenderedParts(){const r=new _;return this._renderedParts.forEach((e,t)=>{const o=e.hoverElement;o.tabIndex=0,r.add(m.addDisposableListener(o,m.EventType.FOCUS_IN,n=>{n.stopPropagation(),this._focusedHoverPartIndex=t})),r.add(m.addDisposableListener(o,m.EventType.FOCUS_OUT,n=>{n.stopPropagation(),this._focusedHoverPartIndex=-1}))}),r}_updateMarkdownAndColorParticipantInfo(r){const e=r.find(t=>t instanceof L&&!(t instanceof V));e&&(this._markdownHoverParticipant=e),this._colorHoverParticipant=r.find(t=>t instanceof D)}focusHoverPartWithIndex(r){r<0||r>=this._renderedParts.length||this._renderedParts[r].hoverElement.focus()}getAccessibleContent(){const r=[];for(let e=0;e<this._renderedParts.length;e++)r.push(this.getAccessibleHoverContentAtIndex(e));return r.join(`
-
-`)}getAccessibleHoverContentAtIndex(r){const e=this._renderedParts[r];if(!e)return"";if(e.type==="statusBar"){const t=[I("hoverAccessibilityStatusBar","This is a hover status bar.")];for(const o of e.actions){const n=o.actionKeybindingLabel;n?t.push(I("hoverAccessibilityStatusBarActionWithKeybinding","It has an action with label {0} and keybinding {1}.",o.actionLabel,n)):t.push(I("hoverAccessibilityStatusBarActionWithoutKeybinding","It has an action with label {0}.",o.actionLabel))}return t.join(`
-`)}return e.participant.getAccessibleContent(e.hoverPart)}async updateHoverVerbosityLevel(r,e,t){if(!this._markdownHoverParticipant)return;let o;e>=0?o={start:e,endExclusive:e+1}:o=this._findRangeOfMarkdownHoverParts(this._markdownHoverParticipant);for(let n=o.start;n<o.endExclusive;n++){const i=this._normalizedIndexToMarkdownHoverIndexRange(this._markdownHoverParticipant,n);if(i===void 0)continue;const a=await this._markdownHoverParticipant.updateMarkdownHoverVerbosityLevel(r,i);a&&(this._renderedParts[n]={type:"hoverPart",participant:this._markdownHoverParticipant,hoverPart:a.hoverPart,hoverElement:a.hoverElement})}t&&(e>=0?this.focusHoverPartWithIndex(e):this._context.focus()),this._context.onContentsChanged()}doesHoverAtIndexSupportVerbosityAction(r,e){if(!this._markdownHoverParticipant)return!1;const t=this._normalizedIndexToMarkdownHoverIndexRange(this._markdownHoverParticipant,r);return t===void 0?!1:this._markdownHoverParticipant.doesMarkdownHoverAtIndexSupportVerbosityAction(t,e)}isColorPickerVisible(){return this._colorHoverParticipant?.isColorPickerVisible()??!1}_normalizedIndexToMarkdownHoverIndexRange(r,e){const t=this._renderedParts[e];if(!t||t.type!=="hoverPart"||!(t.participant===r))return;const n=this._renderedParts.findIndex(i=>i.type==="hoverPart"&&i.participant===r);if(n===-1)throw new N;return e-n}_findRangeOfMarkdownHoverParts(r){const e=this._renderedParts.slice(),t=e.findIndex(i=>i.type==="hoverPart"&&i.participant===r),o=e.reverse().findIndex(i=>i.type==="hoverPart"&&i.participant===r),n=o>=0?e.length-o:o;return{start:t,endExclusive:n+1}}get domNode(){return this._fragment}get domNodeHasChildren(){return this._fragment.hasChildNodes()}get focusedHoverPartIndex(){return this._focusedHoverPartIndex}get hoverPartsCount(){return this._renderedParts.length}};l=f([P(4,w),P(5,y)],l);export{h as RenderedContentHover};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { IEditorHoverContext, IEditorHoverParticipant, IEditorHoverRenderContext, IHoverPart, IRenderedHoverParts, RenderedHoverParts } from "./hoverTypes.js";
+import { Disposable, DisposableStore, IDisposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { EditorHoverStatusBar } from "./contentHoverStatusBar.js";
+import { HoverStartSource } from "./hoverOperation.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { ModelDecorationOptions } from "../../../common/model/textModel.js";
+import { ICodeEditor } from "../../../browser/editorBrowser.js";
+import { Position } from "../../../common/core/position.js";
+import { Range } from "../../../common/core/range.js";
+import { ContentHoverResult } from "./contentHoverTypes.js";
+import * as dom from "../../../../base/browser/dom.js";
+import { HoverVerbosityAction } from "../../../common/languages.js";
+import { MarkdownHoverParticipant } from "./markdownHoverParticipant.js";
+import { HoverColorPickerParticipant } from "../../colorPicker/browser/hoverColorPicker/hoverColorPickerParticipant.js";
+import { localize } from "../../../../nls.js";
+import { InlayHintsHover } from "../../inlayHints/browser/inlayHintsHover.js";
+import { BugIndicatingError } from "../../../../base/common/errors.js";
+import { HoverAction } from "../../../../base/browser/ui/hover/hoverWidget.js";
+import { IHoverService } from "../../../../platform/hover/browser/hover.js";
+import { IOffsetRange } from "../../../common/core/offsetRange.js";
+let RenderedContentHover = class extends Disposable {
+  static {
+    __name(this, "RenderedContentHover");
+  }
+  closestMouseDistance;
+  initialMousePosX;
+  initialMousePosY;
+  showAtPosition;
+  showAtSecondaryPosition;
+  shouldFocus;
+  source;
+  shouldAppearBeforeContent;
+  _renderedHoverParts;
+  constructor(editor, hoverResult, participants, context, keybindingService, hoverService) {
+    super();
+    const parts = hoverResult.hoverParts;
+    this._renderedHoverParts = this._register(new RenderedContentHoverParts(
+      editor,
+      participants,
+      parts,
+      context,
+      keybindingService,
+      hoverService
+    ));
+    const contentHoverComputerOptions = hoverResult.options;
+    const anchor = contentHoverComputerOptions.anchor;
+    const { showAtPosition, showAtSecondaryPosition } = RenderedContentHover.computeHoverPositions(editor, anchor.range, parts);
+    this.shouldAppearBeforeContent = parts.some((m) => m.isBeforeContent);
+    this.showAtPosition = showAtPosition;
+    this.showAtSecondaryPosition = showAtSecondaryPosition;
+    this.initialMousePosX = anchor.initialMousePosX;
+    this.initialMousePosY = anchor.initialMousePosY;
+    this.shouldFocus = contentHoverComputerOptions.shouldFocus;
+    this.source = contentHoverComputerOptions.source;
+  }
+  get domNode() {
+    return this._renderedHoverParts.domNode;
+  }
+  get domNodeHasChildren() {
+    return this._renderedHoverParts.domNodeHasChildren;
+  }
+  get focusedHoverPartIndex() {
+    return this._renderedHoverParts.focusedHoverPartIndex;
+  }
+  get hoverPartsCount() {
+    return this._renderedHoverParts.hoverPartsCount;
+  }
+  focusHoverPartWithIndex(index) {
+    this._renderedHoverParts.focusHoverPartWithIndex(index);
+  }
+  getAccessibleWidgetContent() {
+    return this._renderedHoverParts.getAccessibleContent();
+  }
+  getAccessibleWidgetContentAtIndex(index) {
+    return this._renderedHoverParts.getAccessibleHoverContentAtIndex(index);
+  }
+  async updateHoverVerbosityLevel(action, index, focus) {
+    this._renderedHoverParts.updateHoverVerbosityLevel(action, index, focus);
+  }
+  doesHoverAtIndexSupportVerbosityAction(index, action) {
+    return this._renderedHoverParts.doesHoverAtIndexSupportVerbosityAction(index, action);
+  }
+  isColorPickerVisible() {
+    return this._renderedHoverParts.isColorPickerVisible();
+  }
+  static computeHoverPositions(editor, anchorRange, hoverParts) {
+    let startColumnBoundary = 1;
+    if (editor.hasModel()) {
+      const viewModel = editor._getViewModel();
+      const coordinatesConverter = viewModel.coordinatesConverter;
+      const anchorViewRange = coordinatesConverter.convertModelRangeToViewRange(anchorRange);
+      const anchorViewMinColumn = viewModel.getLineMinColumn(anchorViewRange.startLineNumber);
+      const anchorViewRangeStart = new Position(anchorViewRange.startLineNumber, anchorViewMinColumn);
+      startColumnBoundary = coordinatesConverter.convertViewPositionToModelPosition(anchorViewRangeStart).column;
+    }
+    const anchorStartLineNumber = anchorRange.startLineNumber;
+    let secondaryPositionColumn = anchorRange.startColumn;
+    let forceShowAtRange;
+    for (const hoverPart of hoverParts) {
+      const hoverPartRange = hoverPart.range;
+      const hoverPartRangeOnAnchorStartLine = hoverPartRange.startLineNumber === anchorStartLineNumber;
+      const hoverPartRangeOnAnchorEndLine = hoverPartRange.endLineNumber === anchorStartLineNumber;
+      const hoverPartRangeIsOnAnchorLine = hoverPartRangeOnAnchorStartLine && hoverPartRangeOnAnchorEndLine;
+      if (hoverPartRangeIsOnAnchorLine) {
+        const hoverPartStartColumn = hoverPartRange.startColumn;
+        const minSecondaryPositionColumn = Math.min(secondaryPositionColumn, hoverPartStartColumn);
+        secondaryPositionColumn = Math.max(minSecondaryPositionColumn, startColumnBoundary);
+      }
+      if (hoverPart.forceShowAtRange) {
+        forceShowAtRange = hoverPartRange;
+      }
+    }
+    let showAtPosition;
+    let showAtSecondaryPosition;
+    if (forceShowAtRange) {
+      const forceShowAtPosition = forceShowAtRange.getStartPosition();
+      showAtPosition = forceShowAtPosition;
+      showAtSecondaryPosition = forceShowAtPosition;
+    } else {
+      showAtPosition = anchorRange.getStartPosition();
+      showAtSecondaryPosition = new Position(anchorStartLineNumber, secondaryPositionColumn);
+    }
+    return {
+      showAtPosition,
+      showAtSecondaryPosition
+    };
+  }
+};
+RenderedContentHover = __decorateClass([
+  __decorateParam(4, IKeybindingService),
+  __decorateParam(5, IHoverService)
+], RenderedContentHover);
+class RenderedStatusBar {
+  constructor(fragment, _statusBar) {
+    this._statusBar = _statusBar;
+    fragment.appendChild(this._statusBar.hoverElement);
+  }
+  static {
+    __name(this, "RenderedStatusBar");
+  }
+  get hoverElement() {
+    return this._statusBar.hoverElement;
+  }
+  get actions() {
+    return this._statusBar.actions;
+  }
+  dispose() {
+    this._statusBar.dispose();
+  }
+}
+let RenderedContentHoverParts = class extends Disposable {
+  static {
+    __name(this, "RenderedContentHoverParts");
+  }
+  static _DECORATION_OPTIONS = ModelDecorationOptions.register({
+    description: "content-hover-highlight",
+    className: "hoverHighlight"
+  });
+  _renderedParts = [];
+  _fragment;
+  _context;
+  _markdownHoverParticipant;
+  _colorHoverParticipant;
+  _focusedHoverPartIndex = -1;
+  constructor(editor, participants, hoverParts, context, keybindingService, hoverService) {
+    super();
+    this._context = context;
+    this._fragment = document.createDocumentFragment();
+    this._register(this._renderParts(participants, hoverParts, context, keybindingService, hoverService));
+    this._register(this._registerListenersOnRenderedParts());
+    this._register(this._createEditorDecorations(editor, hoverParts));
+    this._updateMarkdownAndColorParticipantInfo(participants);
+  }
+  _createEditorDecorations(editor, hoverParts) {
+    if (hoverParts.length === 0) {
+      return Disposable.None;
+    }
+    let highlightRange = hoverParts[0].range;
+    for (const hoverPart of hoverParts) {
+      const hoverPartRange = hoverPart.range;
+      highlightRange = Range.plusRange(highlightRange, hoverPartRange);
+    }
+    const highlightDecoration = editor.createDecorationsCollection();
+    highlightDecoration.set([{
+      range: highlightRange,
+      options: RenderedContentHoverParts._DECORATION_OPTIONS
+    }]);
+    return toDisposable(() => {
+      highlightDecoration.clear();
+    });
+  }
+  _renderParts(participants, hoverParts, hoverContext, keybindingService, hoverService) {
+    const statusBar = new EditorHoverStatusBar(keybindingService, hoverService);
+    const hoverRenderingContext = {
+      fragment: this._fragment,
+      statusBar,
+      ...hoverContext
+    };
+    const disposables = new DisposableStore();
+    disposables.add(statusBar);
+    for (const participant of participants) {
+      const renderedHoverParts = this._renderHoverPartsForParticipant(hoverParts, participant, hoverRenderingContext);
+      disposables.add(renderedHoverParts);
+      for (const renderedHoverPart of renderedHoverParts.renderedHoverParts) {
+        this._renderedParts.push({
+          type: "hoverPart",
+          participant,
+          hoverPart: renderedHoverPart.hoverPart,
+          hoverElement: renderedHoverPart.hoverElement
+        });
+      }
+    }
+    const renderedStatusBar = this._renderStatusBar(this._fragment, statusBar);
+    if (renderedStatusBar) {
+      disposables.add(renderedStatusBar);
+      this._renderedParts.push({
+        type: "statusBar",
+        hoverElement: renderedStatusBar.hoverElement,
+        actions: renderedStatusBar.actions
+      });
+    }
+    return disposables;
+  }
+  _renderHoverPartsForParticipant(hoverParts, participant, hoverRenderingContext) {
+    const hoverPartsForParticipant = hoverParts.filter((hoverPart) => hoverPart.owner === participant);
+    const hasHoverPartsForParticipant = hoverPartsForParticipant.length > 0;
+    if (!hasHoverPartsForParticipant) {
+      return new RenderedHoverParts([]);
+    }
+    return participant.renderHoverParts(hoverRenderingContext, hoverPartsForParticipant);
+  }
+  _renderStatusBar(fragment, statusBar) {
+    if (!statusBar.hasContent) {
+      return void 0;
+    }
+    return new RenderedStatusBar(fragment, statusBar);
+  }
+  _registerListenersOnRenderedParts() {
+    const disposables = new DisposableStore();
+    this._renderedParts.forEach((renderedPart, index) => {
+      const element = renderedPart.hoverElement;
+      element.tabIndex = 0;
+      disposables.add(dom.addDisposableListener(element, dom.EventType.FOCUS_IN, (event) => {
+        event.stopPropagation();
+        this._focusedHoverPartIndex = index;
+      }));
+      disposables.add(dom.addDisposableListener(element, dom.EventType.FOCUS_OUT, (event) => {
+        event.stopPropagation();
+        this._focusedHoverPartIndex = -1;
+      }));
+    });
+    return disposables;
+  }
+  _updateMarkdownAndColorParticipantInfo(participants) {
+    const markdownHoverParticipant = participants.find((p) => {
+      return p instanceof MarkdownHoverParticipant && !(p instanceof InlayHintsHover);
+    });
+    if (markdownHoverParticipant) {
+      this._markdownHoverParticipant = markdownHoverParticipant;
+    }
+    this._colorHoverParticipant = participants.find((p) => p instanceof HoverColorPickerParticipant);
+  }
+  focusHoverPartWithIndex(index) {
+    if (index < 0 || index >= this._renderedParts.length) {
+      return;
+    }
+    this._renderedParts[index].hoverElement.focus();
+  }
+  getAccessibleContent() {
+    const content = [];
+    for (let i = 0; i < this._renderedParts.length; i++) {
+      content.push(this.getAccessibleHoverContentAtIndex(i));
+    }
+    return content.join("\n\n");
+  }
+  getAccessibleHoverContentAtIndex(index) {
+    const renderedPart = this._renderedParts[index];
+    if (!renderedPart) {
+      return "";
+    }
+    if (renderedPart.type === "statusBar") {
+      const statusBarDescription = [localize("hoverAccessibilityStatusBar", "This is a hover status bar.")];
+      for (const action of renderedPart.actions) {
+        const keybinding = action.actionKeybindingLabel;
+        if (keybinding) {
+          statusBarDescription.push(localize("hoverAccessibilityStatusBarActionWithKeybinding", "It has an action with label {0} and keybinding {1}.", action.actionLabel, keybinding));
+        } else {
+          statusBarDescription.push(localize("hoverAccessibilityStatusBarActionWithoutKeybinding", "It has an action with label {0}.", action.actionLabel));
+        }
+      }
+      return statusBarDescription.join("\n");
+    }
+    return renderedPart.participant.getAccessibleContent(renderedPart.hoverPart);
+  }
+  async updateHoverVerbosityLevel(action, index, focus) {
+    if (!this._markdownHoverParticipant) {
+      return;
+    }
+    let rangeOfIndicesToUpdate;
+    if (index >= 0) {
+      rangeOfIndicesToUpdate = { start: index, endExclusive: index + 1 };
+    } else {
+      rangeOfIndicesToUpdate = this._findRangeOfMarkdownHoverParts(this._markdownHoverParticipant);
+    }
+    for (let i = rangeOfIndicesToUpdate.start; i < rangeOfIndicesToUpdate.endExclusive; i++) {
+      const normalizedMarkdownHoverIndex = this._normalizedIndexToMarkdownHoverIndexRange(this._markdownHoverParticipant, i);
+      if (normalizedMarkdownHoverIndex === void 0) {
+        continue;
+      }
+      const renderedPart = await this._markdownHoverParticipant.updateMarkdownHoverVerbosityLevel(action, normalizedMarkdownHoverIndex);
+      if (!renderedPart) {
+        continue;
+      }
+      this._renderedParts[i] = {
+        type: "hoverPart",
+        participant: this._markdownHoverParticipant,
+        hoverPart: renderedPart.hoverPart,
+        hoverElement: renderedPart.hoverElement
+      };
+    }
+    if (focus) {
+      if (index >= 0) {
+        this.focusHoverPartWithIndex(index);
+      } else {
+        this._context.focus();
+      }
+    }
+    this._context.onContentsChanged();
+  }
+  doesHoverAtIndexSupportVerbosityAction(index, action) {
+    if (!this._markdownHoverParticipant) {
+      return false;
+    }
+    const normalizedMarkdownHoverIndex = this._normalizedIndexToMarkdownHoverIndexRange(this._markdownHoverParticipant, index);
+    if (normalizedMarkdownHoverIndex === void 0) {
+      return false;
+    }
+    return this._markdownHoverParticipant.doesMarkdownHoverAtIndexSupportVerbosityAction(normalizedMarkdownHoverIndex, action);
+  }
+  isColorPickerVisible() {
+    return this._colorHoverParticipant?.isColorPickerVisible() ?? false;
+  }
+  _normalizedIndexToMarkdownHoverIndexRange(markdownHoverParticipant, index) {
+    const renderedPart = this._renderedParts[index];
+    if (!renderedPart || renderedPart.type !== "hoverPart") {
+      return void 0;
+    }
+    const isHoverPartMarkdownHover = renderedPart.participant === markdownHoverParticipant;
+    if (!isHoverPartMarkdownHover) {
+      return void 0;
+    }
+    const firstIndexOfMarkdownHovers = this._renderedParts.findIndex(
+      (renderedPart2) => renderedPart2.type === "hoverPart" && renderedPart2.participant === markdownHoverParticipant
+    );
+    if (firstIndexOfMarkdownHovers === -1) {
+      throw new BugIndicatingError();
+    }
+    return index - firstIndexOfMarkdownHovers;
+  }
+  _findRangeOfMarkdownHoverParts(markdownHoverParticipant) {
+    const copiedRenderedParts = this._renderedParts.slice();
+    const firstIndexOfMarkdownHovers = copiedRenderedParts.findIndex((renderedPart) => renderedPart.type === "hoverPart" && renderedPart.participant === markdownHoverParticipant);
+    const inversedLastIndexOfMarkdownHovers = copiedRenderedParts.reverse().findIndex((renderedPart) => renderedPart.type === "hoverPart" && renderedPart.participant === markdownHoverParticipant);
+    const lastIndexOfMarkdownHovers = inversedLastIndexOfMarkdownHovers >= 0 ? copiedRenderedParts.length - inversedLastIndexOfMarkdownHovers : inversedLastIndexOfMarkdownHovers;
+    return { start: firstIndexOfMarkdownHovers, endExclusive: lastIndexOfMarkdownHovers + 1 };
+  }
+  get domNode() {
+    return this._fragment;
+  }
+  get domNodeHasChildren() {
+    return this._fragment.hasChildNodes();
+  }
+  get focusedHoverPartIndex() {
+    return this._focusedHoverPartIndex;
+  }
+  get hoverPartsCount() {
+    return this._renderedParts.length;
+  }
+};
+RenderedContentHoverParts = __decorateClass([
+  __decorateParam(4, IKeybindingService),
+  __decorateParam(5, IHoverService)
+], RenderedContentHoverParts);
+export {
+  RenderedContentHover
+};
+//# sourceMappingURL=contentHoverRendered.js.map

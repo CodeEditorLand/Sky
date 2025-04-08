@@ -1,1 +1,103 @@
-import{StandardWheelEvent as o}from"../../mouseEvent.js";import{AbstractScrollbar as S}from"./abstractScrollbar.js";import"./scrollableElementOptions.js";import{ARROW_IMG_SIZE as s}from"./scrollbarArrow.js";import{ScrollbarState as h}from"./scrollbarState.js";import{Codicon as c}from"../../../common/codicons.js";import{ScrollbarVisibility as a}from"../../../common/scrollable.js";class y extends S{constructor(r,e,t){const i=r.getScrollDimensions(),l=r.getCurrentScrollPosition();if(super({lazyRender:e.lazyRender,host:t,scrollbarState:new h(e.verticalHasArrows?e.arrowSize:0,e.vertical===a.Hidden?0:e.verticalScrollbarSize,0,i.height,i.scrollHeight,l.scrollTop),visibility:e.vertical,extraScrollbarClassName:"vertical",scrollable:r,scrollByPage:e.scrollByPage}),e.verticalHasArrows){const r=(e.arrowSize-s)/2,t=(e.verticalScrollbarSize-s)/2;this._createArrow({className:"scra",icon:c.scrollbarButtonUp,top:r,left:t,bottom:void 0,right:void 0,bgWidth:e.verticalScrollbarSize,bgHeight:e.arrowSize,onActivate:()=>this._host.onMouseWheel(new o(null,0,1))}),this._createArrow({className:"scra",icon:c.scrollbarButtonDown,top:void 0,left:t,bottom:r,right:void 0,bgWidth:e.verticalScrollbarSize,bgHeight:e.arrowSize,onActivate:()=>this._host.onMouseWheel(new o(null,0,-1))})}this._createSlider(0,Math.floor((e.verticalScrollbarSize-e.verticalSliderSize)/2),e.verticalSliderSize,void 0)}_updateSlider(r,e){this.slider.setHeight(r),this.slider.setTop(e)}_renderDomNode(r,e){this.domNode.setWidth(e),this.domNode.setHeight(r),this.domNode.setRight(0),this.domNode.setTop(0)}onDidScroll(r){return this._shouldRender=this._onElementScrollSize(r.scrollHeight)||this._shouldRender,this._shouldRender=this._onElementScrollPosition(r.scrollTop)||this._shouldRender,this._shouldRender=this._onElementSize(r.height)||this._shouldRender,this._shouldRender}_pointerDownRelativePosition(r,e){return e}_sliderPointerPosition(r){return r.pageY}_sliderOrthogonalPointerPosition(r){return r.pageX}_updateScrollbarSize(r){this.slider.setWidth(r)}writeScrollPosition(r,e){r.scrollTop=e}updateOptions(r){this.updateScrollbarSize(r.vertical===a.Hidden?0:r.verticalScrollbarSize),this._scrollbarState.setOppositeScrollbarSize(0),this._visibilityController.setVisibility(r.vertical),this._scrollByPage=r.scrollByPage}}export{y as VerticalScrollbar};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { StandardWheelEvent } from "../../mouseEvent.js";
+import { AbstractScrollbar, ISimplifiedPointerEvent, ScrollbarHost } from "./abstractScrollbar.js";
+import { ScrollableElementResolvedOptions } from "./scrollableElementOptions.js";
+import { ARROW_IMG_SIZE } from "./scrollbarArrow.js";
+import { ScrollbarState } from "./scrollbarState.js";
+import { Codicon } from "../../../common/codicons.js";
+import { INewScrollPosition, Scrollable, ScrollbarVisibility, ScrollEvent } from "../../../common/scrollable.js";
+class VerticalScrollbar extends AbstractScrollbar {
+  static {
+    __name(this, "VerticalScrollbar");
+  }
+  constructor(scrollable, options, host) {
+    const scrollDimensions = scrollable.getScrollDimensions();
+    const scrollPosition = scrollable.getCurrentScrollPosition();
+    super({
+      lazyRender: options.lazyRender,
+      host,
+      scrollbarState: new ScrollbarState(
+        options.verticalHasArrows ? options.arrowSize : 0,
+        options.vertical === ScrollbarVisibility.Hidden ? 0 : options.verticalScrollbarSize,
+        // give priority to vertical scroll bar over horizontal and let it scroll all the way to the bottom
+        0,
+        scrollDimensions.height,
+        scrollDimensions.scrollHeight,
+        scrollPosition.scrollTop
+      ),
+      visibility: options.vertical,
+      extraScrollbarClassName: "vertical",
+      scrollable,
+      scrollByPage: options.scrollByPage
+    });
+    if (options.verticalHasArrows) {
+      const arrowDelta = (options.arrowSize - ARROW_IMG_SIZE) / 2;
+      const scrollbarDelta = (options.verticalScrollbarSize - ARROW_IMG_SIZE) / 2;
+      this._createArrow({
+        className: "scra",
+        icon: Codicon.scrollbarButtonUp,
+        top: arrowDelta,
+        left: scrollbarDelta,
+        bottom: void 0,
+        right: void 0,
+        bgWidth: options.verticalScrollbarSize,
+        bgHeight: options.arrowSize,
+        onActivate: /* @__PURE__ */ __name(() => this._host.onMouseWheel(new StandardWheelEvent(null, 0, 1)), "onActivate")
+      });
+      this._createArrow({
+        className: "scra",
+        icon: Codicon.scrollbarButtonDown,
+        top: void 0,
+        left: scrollbarDelta,
+        bottom: arrowDelta,
+        right: void 0,
+        bgWidth: options.verticalScrollbarSize,
+        bgHeight: options.arrowSize,
+        onActivate: /* @__PURE__ */ __name(() => this._host.onMouseWheel(new StandardWheelEvent(null, 0, -1)), "onActivate")
+      });
+    }
+    this._createSlider(0, Math.floor((options.verticalScrollbarSize - options.verticalSliderSize) / 2), options.verticalSliderSize, void 0);
+  }
+  _updateSlider(sliderSize, sliderPosition) {
+    this.slider.setHeight(sliderSize);
+    this.slider.setTop(sliderPosition);
+  }
+  _renderDomNode(largeSize, smallSize) {
+    this.domNode.setWidth(smallSize);
+    this.domNode.setHeight(largeSize);
+    this.domNode.setRight(0);
+    this.domNode.setTop(0);
+  }
+  onDidScroll(e) {
+    this._shouldRender = this._onElementScrollSize(e.scrollHeight) || this._shouldRender;
+    this._shouldRender = this._onElementScrollPosition(e.scrollTop) || this._shouldRender;
+    this._shouldRender = this._onElementSize(e.height) || this._shouldRender;
+    return this._shouldRender;
+  }
+  _pointerDownRelativePosition(offsetX, offsetY) {
+    return offsetY;
+  }
+  _sliderPointerPosition(e) {
+    return e.pageY;
+  }
+  _sliderOrthogonalPointerPosition(e) {
+    return e.pageX;
+  }
+  _updateScrollbarSize(size) {
+    this.slider.setWidth(size);
+  }
+  writeScrollPosition(target, scrollPosition) {
+    target.scrollTop = scrollPosition;
+  }
+  updateOptions(options) {
+    this.updateScrollbarSize(options.vertical === ScrollbarVisibility.Hidden ? 0 : options.verticalScrollbarSize);
+    this._scrollbarState.setOppositeScrollbarSize(0);
+    this._visibilityController.setVisibility(options.vertical);
+    this._scrollByPage = options.scrollByPage;
+  }
+}
+export {
+  VerticalScrollbar
+};
+//# sourceMappingURL=verticalScrollbar.js.map

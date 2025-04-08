@@ -1,1 +1,449 @@
-var f=Object.defineProperty,x=Object.getOwnPropertyDescriptor,t=(e,t,o,n)=>{for(var s,i=n>1?void 0:n?x(t,o):t,r=e.length-1;r>=0;r--)(s=e[r])&&(i=(n?s(t,o,i):s(i))||i);return n&&i&&f(t,o,i),i};import{Schemas as h}from"../../../../base/common/network.js";import{joinPath as r}from"../../../../base/common/resources.js";import{URI as l}from"../../../../base/common/uri.js";import{IEnvironmentService as D}from"../../../../platform/environment/common/environment.js";import"../../../../platform/window/common/window.js";import"../common/environmentService.js";import"../../../browser/web.api.js";import"../../../../platform/product/common/productService.js";import{memoize as n}from"../../../../base/common/decorators.js";import{onUnexpectedError as c}from"../../../../base/common/errors.js";import{parseLineAndColumnAware as I}from"../../../../base/common/extpath.js";import{LogLevelToString as g}from"../../../../platform/log/common/log.js";import{isUndefined as b}from"../../../../base/common/types.js";import{refineServiceDecorator as y}from"../../../../platform/instantiation/common/instantiation.js";import"../../../../platform/editor/common/editor.js";import{EXTENSION_IDENTIFIER_WITH_LOG_REGEX as m}from"../../../../platform/environment/common/environmentService.js";const V=y(D);class o{constructor(e,t,o,n){if(this.workspaceId=e,this.logsHome=t,this.options=o,this.productService=n,o.workspaceProvider&&Array.isArray(o.workspaceProvider.payload))try{this.payload=new Map(o.workspaceProvider.payload)}catch(e){c(e)}}get remoteAuthority(){return this.options.remoteAuthority}get expectsResolverExtension(){return!!this.options.remoteAuthority?.includes("+")&&!this.options.webSocketFactory}get isBuilt(){return!!this.productService.commit}get logLevel(){const e=this.payload?.get("logLevel");return e?e.split(",").find((e=>!m.test(e))):void 0!==this.options.developmentOptions?.logLevel?g(this.options.developmentOptions?.logLevel):void 0}get extensionLogLevel(){const e=this.payload?.get("logLevel");if(e){const t=[];for(const o of e.split(",")){const e=m.exec(o);e&&e[1]&&e[2]&&t.push([e[1],e[2]])}return t.length?t:void 0}return void 0!==this.options.developmentOptions?.extensionLogLevel?this.options.developmentOptions?.extensionLogLevel.map((([e,t])=>[e,g(t)])):void 0}get profDurationMarkers(){const e=this.payload?.get("profDurationMarkers");if(e){const t=[];for(const o of e.split(","))t.push(o);return 2===t.length?t:void 0}}get windowLogsPath(){return this.logsHome}get logFile(){return r(this.windowLogsPath,"window.log")}get userRoamingDataHome(){return l.file("/User").with({scheme:h.vscodeUserData})}get argvResource(){return r(this.userRoamingDataHome,"argv.json")}get cacheHome(){return r(this.userRoamingDataHome,"caches")}get workspaceStorageHome(){return r(this.userRoamingDataHome,"workspaceStorage")}get localHistoryHome(){return r(this.userRoamingDataHome,"History")}get stateResource(){return r(this.userRoamingDataHome,"State","storage.json")}get userDataSyncHome(){return r(this.userRoamingDataHome,"sync",this.workspaceId)}get sync(){}get keyboardLayoutResource(){return r(this.userRoamingDataHome,"keyboardLayout.json")}get untitledWorkspacesHome(){return r(this.userRoamingDataHome,"Workspaces")}get serviceMachineIdResource(){return r(this.userRoamingDataHome,"machineid")}get extHostLogsPath(){return r(this.logsHome,"exthost")}extensionHostDebugEnvironment=void 0;get debugExtensionHost(){return this.extensionHostDebugEnvironment||(this.extensionHostDebugEnvironment=this.resolveExtensionHostDebugEnvironment()),this.extensionHostDebugEnvironment.params}get isExtensionDevelopment(){return this.extensionHostDebugEnvironment||(this.extensionHostDebugEnvironment=this.resolveExtensionHostDebugEnvironment()),this.extensionHostDebugEnvironment.isExtensionDevelopment}get extensionDevelopmentLocationURI(){return this.extensionHostDebugEnvironment||(this.extensionHostDebugEnvironment=this.resolveExtensionHostDebugEnvironment()),this.extensionHostDebugEnvironment.extensionDevelopmentLocationURI}get extensionDevelopmentLocationKind(){return this.extensionHostDebugEnvironment||(this.extensionHostDebugEnvironment=this.resolveExtensionHostDebugEnvironment()),this.extensionHostDebugEnvironment.extensionDevelopmentKind}get extensionTestsLocationURI(){return this.extensionHostDebugEnvironment||(this.extensionHostDebugEnvironment=this.resolveExtensionHostDebugEnvironment()),this.extensionHostDebugEnvironment.extensionTestsLocationURI}get extensionEnabledProposedApi(){return this.extensionHostDebugEnvironment||(this.extensionHostDebugEnvironment=this.resolveExtensionHostDebugEnvironment()),this.extensionHostDebugEnvironment.extensionEnabledProposedApi}get debugRenderer(){return this.extensionHostDebugEnvironment||(this.extensionHostDebugEnvironment=this.resolveExtensionHostDebugEnvironment()),this.extensionHostDebugEnvironment.debugRenderer}get enableSmokeTestDriver(){return this.options.developmentOptions?.enableSmokeTestDriver}get disableExtensions(){return"true"===this.payload?.get("disableExtensions")}get enableExtensions(){return this.options.enabledExtensions}get webviewExternalEndpoint(){const e=this.options.webviewEndpoint||this.productService.webviewContentExternalBaseUrlTemplate||"https://{{uuid}}.vscode-cdn.net/{{quality}}/{{commit}}/out/vs/workbench/contrib/webview/browser/pre/",t=this.payload?.get("webviewExternalEndpointCommit");return e.replace("{{commit}}",t??this.productService.commit??"ef65ac1ba57f57f2a3961bfe94aa20481caca4c6").replace("{{quality}}",(t?"insider":this.productService.quality)??"insider")}get extensionTelemetryLogResource(){return r(this.logsHome,"extensionTelemetry.log")}get disableTelemetry(){return!1}get verbose(){return"true"===this.payload?.get("verbose")}get logExtensionHostCommunication(){return"true"===this.payload?.get("logExtensionHostCommunication")}get skipReleaseNotes(){return"true"===this.payload?.get("skipReleaseNotes")}get skipWelcome(){return"true"===this.payload?.get("skipWelcome")}get disableWorkspaceTrust(){return!this.options.enableWorkspaceTrust}get profile(){return this.payload?.get("profile")}get editSessionId(){return this.options.editSessionId}payload;resolveExtensionHostDebugEnvironment(){const e={params:{port:null,break:!1},debugRenderer:!1,isExtensionDevelopment:!1,extensionDevelopmentLocationURI:void 0,extensionDevelopmentKind:void 0};if(this.payload)for(const[t,o]of this.payload)switch(t){case"extensionDevelopmentPath":e.extensionDevelopmentLocationURI||(e.extensionDevelopmentLocationURI=[]),e.extensionDevelopmentLocationURI.push(l.parse(o)),e.isExtensionDevelopment=!0;break;case"extensionDevelopmentKind":e.extensionDevelopmentKind=[o];break;case"extensionTestsPath":e.extensionTestsLocationURI=l.parse(o);break;case"debugRenderer":e.debugRenderer="true"===o;break;case"debugId":e.params.debugId=o;break;case"inspect-brk-extensions":e.params.port=parseInt(o),e.params.break=!0;break;case"inspect-extensions":e.params.port=parseInt(o);break;case"enableProposedApi":e.extensionEnabledProposedApi=[]}const t=this.options.developmentOptions;return t&&!e.isExtensionDevelopment&&(t.extensions?.length&&(e.extensionDevelopmentLocationURI=t.extensions.map((e=>l.revive(e))),e.isExtensionDevelopment=!0),t.extensionTestsPath&&(e.extensionTestsLocationURI=l.revive(t.extensionTestsPath))),e}get filesToOpenOrCreate(){if(this.payload){const e=this.payload.get("openFile");if(e){const t=l.parse(e);if(this.payload.has("gotoLineMode")){const e=I(t.path);return[{fileUri:t.with({path:e.path}),options:{selection:b(e.line)?void 0:{startLineNumber:e.line,startColumn:e.column||1}}}]}return[{fileUri:t}]}}}get filesToDiff(){if(this.payload){const e=this.payload.get("diffFilePrimary"),t=this.payload.get("diffFileSecondary");if(e&&t)return[{fileUri:l.parse(t)},{fileUri:l.parse(e)}]}}get filesToMerge(){if(this.payload){const e=this.payload.get("mergeFile1"),t=this.payload.get("mergeFile2"),o=this.payload.get("mergeFileBase"),n=this.payload.get("mergeFileResult");if(e&&t&&o&&n)return[{fileUri:l.parse(e)},{fileUri:l.parse(t)},{fileUri:l.parse(o)},{fileUri:l.parse(n)}]}}}t([n],o.prototype,"remoteAuthority",1),t([n],o.prototype,"expectsResolverExtension",1),t([n],o.prototype,"isBuilt",1),t([n],o.prototype,"logLevel",1),t([n],o.prototype,"windowLogsPath",1),t([n],o.prototype,"logFile",1),t([n],o.prototype,"userRoamingDataHome",1),t([n],o.prototype,"argvResource",1),t([n],o.prototype,"cacheHome",1),t([n],o.prototype,"workspaceStorageHome",1),t([n],o.prototype,"localHistoryHome",1),t([n],o.prototype,"stateResource",1),t([n],o.prototype,"userDataSyncHome",1),t([n],o.prototype,"sync",1),t([n],o.prototype,"keyboardLayoutResource",1),t([n],o.prototype,"untitledWorkspacesHome",1),t([n],o.prototype,"serviceMachineIdResource",1),t([n],o.prototype,"extHostLogsPath",1),t([n],o.prototype,"debugExtensionHost",1),t([n],o.prototype,"isExtensionDevelopment",1),t([n],o.prototype,"extensionDevelopmentLocationURI",1),t([n],o.prototype,"extensionDevelopmentLocationKind",1),t([n],o.prototype,"extensionTestsLocationURI",1),t([n],o.prototype,"extensionEnabledProposedApi",1),t([n],o.prototype,"debugRenderer",1),t([n],o.prototype,"enableSmokeTestDriver",1),t([n],o.prototype,"disableExtensions",1),t([n],o.prototype,"enableExtensions",1),t([n],o.prototype,"webviewExternalEndpoint",1),t([n],o.prototype,"extensionTelemetryLogResource",1),t([n],o.prototype,"disableTelemetry",1),t([n],o.prototype,"verbose",1),t([n],o.prototype,"logExtensionHostCommunication",1),t([n],o.prototype,"skipReleaseNotes",1),t([n],o.prototype,"skipWelcome",1),t([n],o.prototype,"disableWorkspaceTrust",1),t([n],o.prototype,"profile",1),t([n],o.prototype,"editSessionId",1),t([n],o.prototype,"filesToOpenOrCreate",1),t([n],o.prototype,"filesToDiff",1),t([n],o.prototype,"filesToMerge",1);export{o as BrowserWorkbenchEnvironmentService,V as IBrowserWorkbenchEnvironmentService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+import { Schemas } from "../../../../base/common/network.js";
+import { joinPath } from "../../../../base/common/resources.js";
+import { URI } from "../../../../base/common/uri.js";
+import { ExtensionKind, IEnvironmentService, IExtensionHostDebugParams } from "../../../../platform/environment/common/environment.js";
+import { IPath } from "../../../../platform/window/common/window.js";
+import { IWorkbenchEnvironmentService } from "../common/environmentService.js";
+import { IWorkbenchConstructionOptions } from "../../../browser/web.api.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+import { memoize } from "../../../../base/common/decorators.js";
+import { onUnexpectedError } from "../../../../base/common/errors.js";
+import { parseLineAndColumnAware } from "../../../../base/common/extpath.js";
+import { LogLevelToString } from "../../../../platform/log/common/log.js";
+import { isUndefined } from "../../../../base/common/types.js";
+import { refineServiceDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { ITextEditorOptions } from "../../../../platform/editor/common/editor.js";
+import { EXTENSION_IDENTIFIER_WITH_LOG_REGEX } from "../../../../platform/environment/common/environmentService.js";
+const IBrowserWorkbenchEnvironmentService = refineServiceDecorator(IEnvironmentService);
+class BrowserWorkbenchEnvironmentService {
+  constructor(workspaceId, logsHome, options, productService) {
+    this.workspaceId = workspaceId;
+    this.logsHome = logsHome;
+    this.options = options;
+    this.productService = productService;
+    if (options.workspaceProvider && Array.isArray(options.workspaceProvider.payload)) {
+      try {
+        this.payload = new Map(options.workspaceProvider.payload);
+      } catch (error) {
+        onUnexpectedError(error);
+      }
+    }
+  }
+  static {
+    __name(this, "BrowserWorkbenchEnvironmentService");
+  }
+  get remoteAuthority() {
+    return this.options.remoteAuthority;
+  }
+  get expectsResolverExtension() {
+    return !!this.options.remoteAuthority?.includes("+") && !this.options.webSocketFactory;
+  }
+  get isBuilt() {
+    return !!this.productService.commit;
+  }
+  get logLevel() {
+    const logLevelFromPayload = this.payload?.get("logLevel");
+    if (logLevelFromPayload) {
+      return logLevelFromPayload.split(",").find((entry) => !EXTENSION_IDENTIFIER_WITH_LOG_REGEX.test(entry));
+    }
+    return this.options.developmentOptions?.logLevel !== void 0 ? LogLevelToString(this.options.developmentOptions?.logLevel) : void 0;
+  }
+  get extensionLogLevel() {
+    const logLevelFromPayload = this.payload?.get("logLevel");
+    if (logLevelFromPayload) {
+      const result = [];
+      for (const entry of logLevelFromPayload.split(",")) {
+        const matches = EXTENSION_IDENTIFIER_WITH_LOG_REGEX.exec(entry);
+        if (matches && matches[1] && matches[2]) {
+          result.push([matches[1], matches[2]]);
+        }
+      }
+      return result.length ? result : void 0;
+    }
+    return this.options.developmentOptions?.extensionLogLevel !== void 0 ? this.options.developmentOptions?.extensionLogLevel.map(([extension, logLevel]) => [extension, LogLevelToString(logLevel)]) : void 0;
+  }
+  get profDurationMarkers() {
+    const profDurationMarkersFromPayload = this.payload?.get("profDurationMarkers");
+    if (profDurationMarkersFromPayload) {
+      const result = [];
+      for (const entry of profDurationMarkersFromPayload.split(",")) {
+        result.push(entry);
+      }
+      return result.length === 2 ? result : void 0;
+    }
+    return void 0;
+  }
+  get windowLogsPath() {
+    return this.logsHome;
+  }
+  get logFile() {
+    return joinPath(this.windowLogsPath, "window.log");
+  }
+  get userRoamingDataHome() {
+    return URI.file("/User").with({ scheme: Schemas.vscodeUserData });
+  }
+  get argvResource() {
+    return joinPath(this.userRoamingDataHome, "argv.json");
+  }
+  get cacheHome() {
+    return joinPath(this.userRoamingDataHome, "caches");
+  }
+  get workspaceStorageHome() {
+    return joinPath(this.userRoamingDataHome, "workspaceStorage");
+  }
+  get localHistoryHome() {
+    return joinPath(this.userRoamingDataHome, "History");
+  }
+  get stateResource() {
+    return joinPath(this.userRoamingDataHome, "State", "storage.json");
+  }
+  get userDataSyncHome() {
+    return joinPath(this.userRoamingDataHome, "sync", this.workspaceId);
+  }
+  get sync() {
+    return void 0;
+  }
+  get keyboardLayoutResource() {
+    return joinPath(this.userRoamingDataHome, "keyboardLayout.json");
+  }
+  get untitledWorkspacesHome() {
+    return joinPath(this.userRoamingDataHome, "Workspaces");
+  }
+  get serviceMachineIdResource() {
+    return joinPath(this.userRoamingDataHome, "machineid");
+  }
+  get extHostLogsPath() {
+    return joinPath(this.logsHome, "exthost");
+  }
+  extensionHostDebugEnvironment = void 0;
+  get debugExtensionHost() {
+    if (!this.extensionHostDebugEnvironment) {
+      this.extensionHostDebugEnvironment = this.resolveExtensionHostDebugEnvironment();
+    }
+    return this.extensionHostDebugEnvironment.params;
+  }
+  get isExtensionDevelopment() {
+    if (!this.extensionHostDebugEnvironment) {
+      this.extensionHostDebugEnvironment = this.resolveExtensionHostDebugEnvironment();
+    }
+    return this.extensionHostDebugEnvironment.isExtensionDevelopment;
+  }
+  get extensionDevelopmentLocationURI() {
+    if (!this.extensionHostDebugEnvironment) {
+      this.extensionHostDebugEnvironment = this.resolveExtensionHostDebugEnvironment();
+    }
+    return this.extensionHostDebugEnvironment.extensionDevelopmentLocationURI;
+  }
+  get extensionDevelopmentLocationKind() {
+    if (!this.extensionHostDebugEnvironment) {
+      this.extensionHostDebugEnvironment = this.resolveExtensionHostDebugEnvironment();
+    }
+    return this.extensionHostDebugEnvironment.extensionDevelopmentKind;
+  }
+  get extensionTestsLocationURI() {
+    if (!this.extensionHostDebugEnvironment) {
+      this.extensionHostDebugEnvironment = this.resolveExtensionHostDebugEnvironment();
+    }
+    return this.extensionHostDebugEnvironment.extensionTestsLocationURI;
+  }
+  get extensionEnabledProposedApi() {
+    if (!this.extensionHostDebugEnvironment) {
+      this.extensionHostDebugEnvironment = this.resolveExtensionHostDebugEnvironment();
+    }
+    return this.extensionHostDebugEnvironment.extensionEnabledProposedApi;
+  }
+  get debugRenderer() {
+    if (!this.extensionHostDebugEnvironment) {
+      this.extensionHostDebugEnvironment = this.resolveExtensionHostDebugEnvironment();
+    }
+    return this.extensionHostDebugEnvironment.debugRenderer;
+  }
+  get enableSmokeTestDriver() {
+    return this.options.developmentOptions?.enableSmokeTestDriver;
+  }
+  get disableExtensions() {
+    return this.payload?.get("disableExtensions") === "true";
+  }
+  get enableExtensions() {
+    return this.options.enabledExtensions;
+  }
+  get webviewExternalEndpoint() {
+    const endpoint = this.options.webviewEndpoint || this.productService.webviewContentExternalBaseUrlTemplate || "https://{{uuid}}.vscode-cdn.net/{{quality}}/{{commit}}/out/vs/workbench/contrib/webview/browser/pre/";
+    const webviewExternalEndpointCommit = this.payload?.get("webviewExternalEndpointCommit");
+    return endpoint.replace("{{commit}}", webviewExternalEndpointCommit ?? this.productService.commit ?? "ef65ac1ba57f57f2a3961bfe94aa20481caca4c6").replace("{{quality}}", (webviewExternalEndpointCommit ? "insider" : this.productService.quality) ?? "insider");
+  }
+  get extensionTelemetryLogResource() {
+    return joinPath(this.logsHome, "extensionTelemetry.log");
+  }
+  get disableTelemetry() {
+    return false;
+  }
+  get verbose() {
+    return this.payload?.get("verbose") === "true";
+  }
+  get logExtensionHostCommunication() {
+    return this.payload?.get("logExtensionHostCommunication") === "true";
+  }
+  get skipReleaseNotes() {
+    return this.payload?.get("skipReleaseNotes") === "true";
+  }
+  get skipWelcome() {
+    return this.payload?.get("skipWelcome") === "true";
+  }
+  get disableWorkspaceTrust() {
+    return !this.options.enableWorkspaceTrust;
+  }
+  get profile() {
+    return this.payload?.get("profile");
+  }
+  get editSessionId() {
+    return this.options.editSessionId;
+  }
+  payload;
+  resolveExtensionHostDebugEnvironment() {
+    const extensionHostDebugEnvironment = {
+      params: {
+        port: null,
+        break: false
+      },
+      debugRenderer: false,
+      isExtensionDevelopment: false,
+      extensionDevelopmentLocationURI: void 0,
+      extensionDevelopmentKind: void 0
+    };
+    if (this.payload) {
+      for (const [key, value] of this.payload) {
+        switch (key) {
+          case "extensionDevelopmentPath":
+            if (!extensionHostDebugEnvironment.extensionDevelopmentLocationURI) {
+              extensionHostDebugEnvironment.extensionDevelopmentLocationURI = [];
+            }
+            extensionHostDebugEnvironment.extensionDevelopmentLocationURI.push(URI.parse(value));
+            extensionHostDebugEnvironment.isExtensionDevelopment = true;
+            break;
+          case "extensionDevelopmentKind":
+            extensionHostDebugEnvironment.extensionDevelopmentKind = [value];
+            break;
+          case "extensionTestsPath":
+            extensionHostDebugEnvironment.extensionTestsLocationURI = URI.parse(value);
+            break;
+          case "debugRenderer":
+            extensionHostDebugEnvironment.debugRenderer = value === "true";
+            break;
+          case "debugId":
+            extensionHostDebugEnvironment.params.debugId = value;
+            break;
+          case "inspect-brk-extensions":
+            extensionHostDebugEnvironment.params.port = parseInt(value);
+            extensionHostDebugEnvironment.params.break = true;
+            break;
+          case "inspect-extensions":
+            extensionHostDebugEnvironment.params.port = parseInt(value);
+            break;
+          case "enableProposedApi":
+            extensionHostDebugEnvironment.extensionEnabledProposedApi = [];
+            break;
+        }
+      }
+    }
+    const developmentOptions = this.options.developmentOptions;
+    if (developmentOptions && !extensionHostDebugEnvironment.isExtensionDevelopment) {
+      if (developmentOptions.extensions?.length) {
+        extensionHostDebugEnvironment.extensionDevelopmentLocationURI = developmentOptions.extensions.map((e) => URI.revive(e));
+        extensionHostDebugEnvironment.isExtensionDevelopment = true;
+      }
+      if (developmentOptions.extensionTestsPath) {
+        extensionHostDebugEnvironment.extensionTestsLocationURI = URI.revive(developmentOptions.extensionTestsPath);
+      }
+    }
+    return extensionHostDebugEnvironment;
+  }
+  get filesToOpenOrCreate() {
+    if (this.payload) {
+      const fileToOpen = this.payload.get("openFile");
+      if (fileToOpen) {
+        const fileUri = URI.parse(fileToOpen);
+        if (this.payload.has("gotoLineMode")) {
+          const pathColumnAware = parseLineAndColumnAware(fileUri.path);
+          return [{
+            fileUri: fileUri.with({ path: pathColumnAware.path }),
+            options: {
+              selection: !isUndefined(pathColumnAware.line) ? { startLineNumber: pathColumnAware.line, startColumn: pathColumnAware.column || 1 } : void 0
+            }
+          }];
+        }
+        return [{ fileUri }];
+      }
+    }
+    return void 0;
+  }
+  get filesToDiff() {
+    if (this.payload) {
+      const fileToDiffPrimary = this.payload.get("diffFilePrimary");
+      const fileToDiffSecondary = this.payload.get("diffFileSecondary");
+      if (fileToDiffPrimary && fileToDiffSecondary) {
+        return [
+          { fileUri: URI.parse(fileToDiffSecondary) },
+          { fileUri: URI.parse(fileToDiffPrimary) }
+        ];
+      }
+    }
+    return void 0;
+  }
+  get filesToMerge() {
+    if (this.payload) {
+      const fileToMerge1 = this.payload.get("mergeFile1");
+      const fileToMerge2 = this.payload.get("mergeFile2");
+      const fileToMergeBase = this.payload.get("mergeFileBase");
+      const fileToMergeResult = this.payload.get("mergeFileResult");
+      if (fileToMerge1 && fileToMerge2 && fileToMergeBase && fileToMergeResult) {
+        return [
+          { fileUri: URI.parse(fileToMerge1) },
+          { fileUri: URI.parse(fileToMerge2) },
+          { fileUri: URI.parse(fileToMergeBase) },
+          { fileUri: URI.parse(fileToMergeResult) }
+        ];
+      }
+    }
+    return void 0;
+  }
+}
+__decorateClass([
+  memoize
+], BrowserWorkbenchEnvironmentService.prototype, "remoteAuthority", 1);
+__decorateClass([
+  memoize
+], BrowserWorkbenchEnvironmentService.prototype, "expectsResolverExtension", 1);
+__decorateClass([
+  memoize
+], BrowserWorkbenchEnvironmentService.prototype, "isBuilt", 1);
+__decorateClass([
+  memoize
+], BrowserWorkbenchEnvironmentService.prototype, "logLevel", 1);
+__decorateClass([
+  memoize
+], BrowserWorkbenchEnvironmentService.prototype, "windowLogsPath", 1);
+__decorateClass([
+  memoize
+], BrowserWorkbenchEnvironmentService.prototype, "logFile", 1);
+__decorateClass([
+  memoize
+], BrowserWorkbenchEnvironmentService.prototype, "userRoamingDataHome", 1);
+__decorateClass([
+  memoize
+], BrowserWorkbenchEnvironmentService.prototype, "argvResource", 1);
+__decorateClass([
+  memoize
+], BrowserWorkbenchEnvironmentService.prototype, "cacheHome", 1);
+__decorateClass([
+  memoize
+], BrowserWorkbenchEnvironmentService.prototype, "workspaceStorageHome", 1);
+__decorateClass([
+  memoize
+], BrowserWorkbenchEnvironmentService.prototype, "localHistoryHome", 1);
+__decorateClass([
+  memoize
+], BrowserWorkbenchEnvironmentService.prototype, "stateResource", 1);
+__decorateClass([
+  memoize
+], BrowserWorkbenchEnvironmentService.prototype, "userDataSyncHome", 1);
+__decorateClass([
+  memoize
+], BrowserWorkbenchEnvironmentService.prototype, "sync", 1);
+__decorateClass([
+  memoize
+], BrowserWorkbenchEnvironmentService.prototype, "keyboardLayoutResource", 1);
+__decorateClass([
+  memoize
+], BrowserWorkbenchEnvironmentService.prototype, "untitledWorkspacesHome", 1);
+__decorateClass([
+  memoize
+], BrowserWorkbenchEnvironmentService.prototype, "serviceMachineIdResource", 1);
+__decorateClass([
+  memoize
+], BrowserWorkbenchEnvironmentService.prototype, "extHostLogsPath", 1);
+__decorateClass([
+  memoize
+], BrowserWorkbenchEnvironmentService.prototype, "debugExtensionHost", 1);
+__decorateClass([
+  memoize
+], BrowserWorkbenchEnvironmentService.prototype, "isExtensionDevelopment", 1);
+__decorateClass([
+  memoize
+], BrowserWorkbenchEnvironmentService.prototype, "extensionDevelopmentLocationURI", 1);
+__decorateClass([
+  memoize
+], BrowserWorkbenchEnvironmentService.prototype, "extensionDevelopmentLocationKind", 1);
+__decorateClass([
+  memoize
+], BrowserWorkbenchEnvironmentService.prototype, "extensionTestsLocationURI", 1);
+__decorateClass([
+  memoize
+], BrowserWorkbenchEnvironmentService.prototype, "extensionEnabledProposedApi", 1);
+__decorateClass([
+  memoize
+], BrowserWorkbenchEnvironmentService.prototype, "debugRenderer", 1);
+__decorateClass([
+  memoize
+], BrowserWorkbenchEnvironmentService.prototype, "enableSmokeTestDriver", 1);
+__decorateClass([
+  memoize
+], BrowserWorkbenchEnvironmentService.prototype, "disableExtensions", 1);
+__decorateClass([
+  memoize
+], BrowserWorkbenchEnvironmentService.prototype, "enableExtensions", 1);
+__decorateClass([
+  memoize
+], BrowserWorkbenchEnvironmentService.prototype, "webviewExternalEndpoint", 1);
+__decorateClass([
+  memoize
+], BrowserWorkbenchEnvironmentService.prototype, "extensionTelemetryLogResource", 1);
+__decorateClass([
+  memoize
+], BrowserWorkbenchEnvironmentService.prototype, "disableTelemetry", 1);
+__decorateClass([
+  memoize
+], BrowserWorkbenchEnvironmentService.prototype, "verbose", 1);
+__decorateClass([
+  memoize
+], BrowserWorkbenchEnvironmentService.prototype, "logExtensionHostCommunication", 1);
+__decorateClass([
+  memoize
+], BrowserWorkbenchEnvironmentService.prototype, "skipReleaseNotes", 1);
+__decorateClass([
+  memoize
+], BrowserWorkbenchEnvironmentService.prototype, "skipWelcome", 1);
+__decorateClass([
+  memoize
+], BrowserWorkbenchEnvironmentService.prototype, "disableWorkspaceTrust", 1);
+__decorateClass([
+  memoize
+], BrowserWorkbenchEnvironmentService.prototype, "profile", 1);
+__decorateClass([
+  memoize
+], BrowserWorkbenchEnvironmentService.prototype, "editSessionId", 1);
+__decorateClass([
+  memoize
+], BrowserWorkbenchEnvironmentService.prototype, "filesToOpenOrCreate", 1);
+__decorateClass([
+  memoize
+], BrowserWorkbenchEnvironmentService.prototype, "filesToDiff", 1);
+__decorateClass([
+  memoize
+], BrowserWorkbenchEnvironmentService.prototype, "filesToMerge", 1);
+export {
+  BrowserWorkbenchEnvironmentService,
+  IBrowserWorkbenchEnvironmentService
+};
+//# sourceMappingURL=environmentService.js.map

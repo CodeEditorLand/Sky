@@ -1,1 +1,496 @@
-import*as _ from"../../../../base/browser/dom.js";import{createTrustedTypesPolicy as x}from"../../../../base/browser/trustedTypes.js";import{equals as f}from"../../../../base/common/arrays.js";import{Disposable as W,DisposableStore as F}from"../../../../base/common/lifecycle.js";import{ThemeIcon as M}from"../../../../base/common/themables.js";import"./stickyScroll.css";import{OverlayWidgetPositionPreference as R}from"../../../browser/editorBrowser.js";import{getColumnOfNodeOffset as w}from"../../../browser/viewParts/viewLines/viewLine.js";import{EmbeddedCodeEditorWidget as O}from"../../../browser/widget/codeEditor/embeddedCodeEditorWidget.js";import{EditorOption as a,RenderLineNumbersType as N}from"../../../common/config/editorOptions.js";import{Position as S}from"../../../common/core/position.js";import{StringBuilder as P}from"../../../common/core/stringBuilder.js";import{LineDecoration as $}from"../../../common/viewLayout/lineDecorations.js";import{RenderLineInput as A,renderViewLine as V}from"../../../common/viewLayout/viewLineRenderer.js";import{foldingCollapsedIcon as z,foldingExpandedIcon as G}from"../../folding/browser/foldingDecorations.js";import"../../folding/browser/foldingModel.js";import{Emitter as K}from"../../../../base/common/event.js";class k{constructor(e,i,t,n=null){this.startLineNumbers=e;this.endLineNumbers=i;this.lastLineRelativePosition=t;this.showEndForLine=n}equals(e){return!!e&&this.lastLineRelativePosition===e.lastLineRelativePosition&&this.showEndForLine===e.showEndForLine&&f(this.startLineNumbers,e.startLineNumbers)&&f(this.endLineNumbers,e.endLineNumbers)}static get Empty(){return new k([],[],0)}}const v=x("stickyScrollViewLayer",{createHTML:g=>g}),L="data-sticky-line-index",I="data-sticky-is-line",Y="data-sticky-is-line-number",D="data-sticky-is-folding-icon";class be extends W{_foldingIconStore=new F;_rootDomNode=document.createElement("div");_lineNumbersDomNode=document.createElement("div");_linesDomNodeScrollable=document.createElement("div");_linesDomNode=document.createElement("div");_editor;_previousState;_lineHeight;_renderedStickyLines=[];_lineNumbers=[];_lastLineRelativePosition=0;_minContentWidthInPx=0;_isOnGlyphMargin=!1;_height=-1;get height(){return this._height}_onDidChangeStickyScrollHeight=this._register(new K);onDidChangeStickyScrollHeight=this._onDidChangeStickyScrollHeight.event;constructor(e){super(),this._editor=e,this._lineHeight=e.getOption(a.lineHeight),this._lineNumbersDomNode.className="sticky-widget-line-numbers",this._lineNumbersDomNode.setAttribute("role","none"),this._linesDomNode.className="sticky-widget-lines",this._linesDomNode.setAttribute("role","list"),this._linesDomNodeScrollable.className="sticky-widget-lines-scrollable",this._linesDomNodeScrollable.appendChild(this._linesDomNode),this._rootDomNode.className="sticky-widget",this._rootDomNode.classList.toggle("peek",e instanceof O),this._rootDomNode.appendChild(this._lineNumbersDomNode),this._rootDomNode.appendChild(this._linesDomNodeScrollable),this._setHeight(0);const i=()=>{this._linesDomNode.style.left=this._editor.getOption(a.stickyScroll).scrollWithEditor?`-${this._editor.getScrollLeft()}px`:"0px"};this._register(this._editor.onDidChangeConfiguration(t=>{t.hasChanged(a.stickyScroll)&&i(),t.hasChanged(a.lineHeight)&&(this._lineHeight=this._editor.getOption(a.lineHeight))})),this._register(this._editor.onDidScrollChange(t=>{t.scrollLeftChanged&&i(),t.scrollWidthChanged&&this._updateWidgetWidth()})),this._register(this._editor.onDidChangeModel(()=>{i(),this._updateWidgetWidth()})),this._register(this._foldingIconStore),i(),this._register(this._editor.onDidLayoutChange(t=>{this._updateWidgetWidth()})),this._updateWidgetWidth()}get lineNumbers(){return this._lineNumbers}get lineNumberCount(){return this._lineNumbers.length}getRenderedStickyLine(e){return this._renderedStickyLines.find(i=>i.lineNumber===e)}getCurrentLines(){return this._lineNumbers}setState(e,i,t){if(t===void 0&&(!this._previousState&&!e||this._previousState&&this._previousState.equals(e)))return;const n=this._isWidgetHeightZero(e),s=n?void 0:e,r=n?0:this._findLineToRebuildWidgetFrom(e,t);this._renderRootNode(s,i,r),this._previousState=e}_isWidgetHeightZero(e){if(!e)return!0;const i=e.startLineNumbers.length*this._lineHeight+e.lastLineRelativePosition;if(i>0){this._lastLineRelativePosition=e.lastLineRelativePosition;const t=[...e.startLineNumbers];e.showEndForLine!==null&&(t[e.showEndForLine]=e.endLineNumbers[e.showEndForLine]),this._lineNumbers=t}else this._lastLineRelativePosition=0,this._lineNumbers=[];return i===0}_findLineToRebuildWidgetFrom(e,i){if(!e||!this._previousState)return 0;if(i!==void 0)return i;const t=this._previousState,n=e.startLineNumbers.findIndex(s=>!t.startLineNumbers.includes(s));return n===-1?0:n}_updateWidgetWidth(){const e=this._editor.getLayoutInfo(),i=e.contentLeft;this._lineNumbersDomNode.style.width=`${i}px`,this._linesDomNodeScrollable.style.setProperty("--vscode-editorStickyScroll-scrollableWidth",`${this._editor.getScrollWidth()-e.verticalScrollbarWidth}px`),this._rootDomNode.style.width=`${e.width-e.verticalScrollbarWidth}px`}_clearStickyLinesFromLine(e){this._foldingIconStore.clear();for(let i=e;i<this._renderedStickyLines.length;i++){const t=this._renderedStickyLines[i];t.lineNumberDomNode.remove(),t.lineDomNode.remove()}this._renderedStickyLines=this._renderedStickyLines.slice(0,e)}_useFoldingOpacityTransition(e){this._lineNumbersDomNode.style.setProperty("--vscode-editorStickyScroll-foldingOpacityTransition",`opacity ${e?.5:0}s`)}_setFoldingIconsVisibility(e){for(const i of this._renderedStickyLines){const t=i.foldingIcon;t&&t.setVisible(e?!0:t.isCollapsed)}}async _renderRootNode(e,i,t){if(this._clearStickyLinesFromLine(t),!e){this._setHeight(0);return}for(const o of this._renderedStickyLines)this._updatePosition(o);const n=this._editor.getLayoutInfo(),s=this._lineNumbers.slice(t);for(const[o,c]of s.entries()){const d=this._renderChildNode(o+t,c,i,n);d&&(this._linesDomNode.appendChild(d.lineDomNode),this._lineNumbersDomNode.appendChild(d.lineNumberDomNode),this._renderedStickyLines.push(d))}i&&(this._setFoldingHoverListeners(),this._useFoldingOpacityTransition(!this._isOnGlyphMargin));const r=this._lineNumbers.length*this._lineHeight+this._lastLineRelativePosition;this._setHeight(r),this._rootDomNode.style.marginLeft="0px",this._minContentWidthInPx=Math.max(...this._renderedStickyLines.map(o=>o.scrollWidth))+n.verticalScrollbarWidth,this._editor.layoutOverlayWidget(this)}_setHeight(e){this._height!==e&&(this._height=e,this._height===0?this._rootDomNode.style.display="none":(this._rootDomNode.style.display="block",this._lineNumbersDomNode.style.height=`${this._height}px`,this._linesDomNodeScrollable.style.height=`${this._height}px`,this._rootDomNode.style.height=`${this._height}px`),this._onDidChangeStickyScrollHeight.fire({height:this._height}))}_setFoldingHoverListeners(){this._editor.getOption(a.showFoldingControls)==="mouseover"&&(this._foldingIconStore.add(_.addDisposableListener(this._lineNumbersDomNode,_.EventType.MOUSE_ENTER,()=>{this._isOnGlyphMargin=!0,this._setFoldingIconsVisibility(!0)})),this._foldingIconStore.add(_.addDisposableListener(this._lineNumbersDomNode,_.EventType.MOUSE_LEAVE,()=>{this._isOnGlyphMargin=!1,this._useFoldingOpacityTransition(!0),this._setFoldingIconsVisibility(!1)})))}_renderChildNode(e,i,t,n){const s=this._editor._getViewModel();if(!s)return;const r=s.coordinatesConverter.convertModelPositionToViewPosition(new S(i,1)).lineNumber,o=s.getViewLineRenderingData(r),c=this._editor.getOption(a.lineNumbers);let d;try{d=$.filter(o.inlineDecorations,r,o.minColumn,o.maxColumn)}catch{d=[]}const u=this._lineHeight,C=new A(!0,!0,o.content,o.continuesWithWrappedLine,o.isBasicASCII,o.containsRTL,0,o.tokens,d,o.tabSize,o.startVisibleColumn,1,1,1,500,"none",!0,!0,null),b=new P(2e3),E=V(C,b);let y;v?y=v.createHTML(b.build()):y=b.build();const l=document.createElement("span");l.setAttribute(L,String(e)),l.setAttribute(I,""),l.setAttribute("role","listitem"),l.tabIndex=0,l.className="sticky-line-content",l.classList.add(`stickyLine${i}`),l.style.lineHeight=`${u}px`,l.innerHTML=y;const h=document.createElement("span");h.setAttribute(L,String(e)),h.setAttribute(Y,""),h.className="sticky-line-number",h.style.lineHeight=`${u}px`;const T=n.contentLeft;h.style.width=`${T}px`;const m=document.createElement("span");c.renderType===N.On||c.renderType===N.Interval&&i%10===0?m.innerText=i.toString():c.renderType===N.Relative&&(m.innerText=Math.abs(i-this._editor.getPosition().lineNumber).toString()),m.className="sticky-line-number-inner",m.style.width=`${n.lineNumbersWidth}px`,m.style.paddingLeft=`${n.lineNumbersLeft}px`,h.appendChild(m);const p=this._renderFoldingIconForLine(t,i);p&&(h.appendChild(p.domNode),p.domNode.style.left=`${n.lineNumbersWidth+n.lineNumbersLeft}px`),this._editor.applyFontInfo(l),this._editor.applyFontInfo(h),h.style.lineHeight=`${u}px`,l.style.lineHeight=`${u}px`,h.style.height=`${u}px`,l.style.height=`${u}px`;const H=new q(e,i,l,h,p,E.characterMapping,l.scrollWidth,u);return this._updatePosition(H)}_updatePosition(e){const i=e.index,t=e.lineDomNode,n=e.lineNumberDomNode;if(i===this._lineNumbers.length-1){const r="0";t.style.zIndex=r,n.style.zIndex=r;const o=`${i*this._lineHeight+this._lastLineRelativePosition+(e.foldingIcon?.isCollapsed?1:0)}px`;t.style.top=o,n.style.top=o}else{const r="1";t.style.zIndex=r,n.style.zIndex=r;const o=`${i*this._lineHeight}px`;t.style.top=o,n.style.top=o}return e}_renderFoldingIconForLine(e,i){const t=this._editor.getOption(a.showFoldingControls);if(!e||t==="never")return;const n=e.regions,s=n.findRange(i),r=n.getStartLineNumber(s);if(!(i===r))return;const c=n.isCollapsed(s),d=new B(c,r,n.getEndLineNumber(s),this._lineHeight);return d.setVisible(this._isOnGlyphMargin?!0:c||t==="always"),d.domNode.setAttribute(D,""),d}getId(){return"editor.contrib.stickyScrollWidget"}getDomNode(){return this._rootDomNode}getPosition(){return{preference:R.TOP_CENTER,stackOridinal:10}}getMinContentWidthInPx(){return this._minContentWidthInPx}focusLineWithIndex(e){0<=e&&e<this._renderedStickyLines.length&&this._renderedStickyLines[e].lineDomNode.focus()}getEditorPositionFromNode(e){if(!e||e.children.length>0)return null;const i=this._getRenderedStickyLineFromChildDomNode(e);if(!i)return null;const t=w(i.characterMapping,e,0);return new S(i.lineNumber,t)}getLineNumberFromChildDomNode(e){return this._getRenderedStickyLineFromChildDomNode(e)?.lineNumber??null}_getRenderedStickyLineFromChildDomNode(e){const i=this.getLineIndexFromChildDomNode(e);return i===null||i<0||i>=this._renderedStickyLines.length?null:this._renderedStickyLines[i]}getLineIndexFromChildDomNode(e){const i=this._getAttributeValue(e,L);return i?parseInt(i,10):null}isInStickyLine(e){return this._getAttributeValue(e,I)!==void 0}isInFoldingIconDomNode(e){return this._getAttributeValue(e,D)!==void 0}_getAttributeValue(e,i){for(;e&&e!==this._rootDomNode;){const t=e.getAttribute(i);if(t!==null)return t;e=e.parentElement}}}class q{constructor(e,i,t,n,s,r,o,c){this.index=e;this.lineNumber=i;this.lineDomNode=t;this.lineNumberDomNode=n;this.foldingIcon=s;this.characterMapping=r;this.scrollWidth=o;this.height=c}}class B{constructor(e,i,t,n){this.isCollapsed=e;this.foldingStartLine=i;this.foldingEndLine=t;this.dimension=n;this.domNode=document.createElement("div"),this.domNode.style.width="26px",this.domNode.style.height=`${n}px`,this.domNode.style.lineHeight=`${n}px`,this.domNode.className=M.asClassName(e?z:G)}domNode;setVisible(e){this.domNode.style.cursor=e?"pointer":"default",this.domNode.style.opacity=e?"1":"0"}}export{be as StickyScrollWidget,k as StickyScrollWidgetState};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as dom from "../../../../base/browser/dom.js";
+import { createTrustedTypesPolicy } from "../../../../base/browser/trustedTypes.js";
+import { equals } from "../../../../base/common/arrays.js";
+import { Disposable, DisposableStore } from "../../../../base/common/lifecycle.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import "./stickyScroll.css";
+import { ICodeEditor, IOverlayWidget, IOverlayWidgetPosition, OverlayWidgetPositionPreference } from "../../../browser/editorBrowser.js";
+import { getColumnOfNodeOffset } from "../../../browser/viewParts/viewLines/viewLine.js";
+import { EmbeddedCodeEditorWidget } from "../../../browser/widget/codeEditor/embeddedCodeEditorWidget.js";
+import { EditorLayoutInfo, EditorOption, RenderLineNumbersType } from "../../../common/config/editorOptions.js";
+import { Position } from "../../../common/core/position.js";
+import { StringBuilder } from "../../../common/core/stringBuilder.js";
+import { LineDecoration } from "../../../common/viewLayout/lineDecorations.js";
+import { CharacterMapping, RenderLineInput, renderViewLine } from "../../../common/viewLayout/viewLineRenderer.js";
+import { foldingCollapsedIcon, foldingExpandedIcon } from "../../folding/browser/foldingDecorations.js";
+import { FoldingModel } from "../../folding/browser/foldingModel.js";
+import { Emitter } from "../../../../base/common/event.js";
+class StickyScrollWidgetState {
+  constructor(startLineNumbers, endLineNumbers, lastLineRelativePosition, showEndForLine = null) {
+    this.startLineNumbers = startLineNumbers;
+    this.endLineNumbers = endLineNumbers;
+    this.lastLineRelativePosition = lastLineRelativePosition;
+    this.showEndForLine = showEndForLine;
+  }
+  static {
+    __name(this, "StickyScrollWidgetState");
+  }
+  equals(other) {
+    return !!other && this.lastLineRelativePosition === other.lastLineRelativePosition && this.showEndForLine === other.showEndForLine && equals(this.startLineNumbers, other.startLineNumbers) && equals(this.endLineNumbers, other.endLineNumbers);
+  }
+  static get Empty() {
+    return new StickyScrollWidgetState([], [], 0);
+  }
+}
+const _ttPolicy = createTrustedTypesPolicy("stickyScrollViewLayer", { createHTML: /* @__PURE__ */ __name((value) => value, "createHTML") });
+const STICKY_INDEX_ATTR = "data-sticky-line-index";
+const STICKY_IS_LINE_ATTR = "data-sticky-is-line";
+const STICKY_IS_LINE_NUMBER_ATTR = "data-sticky-is-line-number";
+const STICKY_IS_FOLDING_ICON_ATTR = "data-sticky-is-folding-icon";
+class StickyScrollWidget extends Disposable {
+  static {
+    __name(this, "StickyScrollWidget");
+  }
+  _foldingIconStore = new DisposableStore();
+  _rootDomNode = document.createElement("div");
+  _lineNumbersDomNode = document.createElement("div");
+  _linesDomNodeScrollable = document.createElement("div");
+  _linesDomNode = document.createElement("div");
+  _editor;
+  _previousState;
+  _lineHeight;
+  _renderedStickyLines = [];
+  _lineNumbers = [];
+  _lastLineRelativePosition = 0;
+  _minContentWidthInPx = 0;
+  _isOnGlyphMargin = false;
+  _height = -1;
+  get height() {
+    return this._height;
+  }
+  _onDidChangeStickyScrollHeight = this._register(new Emitter());
+  onDidChangeStickyScrollHeight = this._onDidChangeStickyScrollHeight.event;
+  constructor(editor) {
+    super();
+    this._editor = editor;
+    this._lineHeight = editor.getOption(EditorOption.lineHeight);
+    this._lineNumbersDomNode.className = "sticky-widget-line-numbers";
+    this._lineNumbersDomNode.setAttribute("role", "none");
+    this._linesDomNode.className = "sticky-widget-lines";
+    this._linesDomNode.setAttribute("role", "list");
+    this._linesDomNodeScrollable.className = "sticky-widget-lines-scrollable";
+    this._linesDomNodeScrollable.appendChild(this._linesDomNode);
+    this._rootDomNode.className = "sticky-widget";
+    this._rootDomNode.classList.toggle("peek", editor instanceof EmbeddedCodeEditorWidget);
+    this._rootDomNode.appendChild(this._lineNumbersDomNode);
+    this._rootDomNode.appendChild(this._linesDomNodeScrollable);
+    this._setHeight(0);
+    const updateScrollLeftPosition = /* @__PURE__ */ __name(() => {
+      this._linesDomNode.style.left = this._editor.getOption(EditorOption.stickyScroll).scrollWithEditor ? `-${this._editor.getScrollLeft()}px` : "0px";
+    }, "updateScrollLeftPosition");
+    this._register(this._editor.onDidChangeConfiguration((e) => {
+      if (e.hasChanged(EditorOption.stickyScroll)) {
+        updateScrollLeftPosition();
+      }
+      if (e.hasChanged(EditorOption.lineHeight)) {
+        this._lineHeight = this._editor.getOption(EditorOption.lineHeight);
+      }
+    }));
+    this._register(this._editor.onDidScrollChange((e) => {
+      if (e.scrollLeftChanged) {
+        updateScrollLeftPosition();
+      }
+      if (e.scrollWidthChanged) {
+        this._updateWidgetWidth();
+      }
+    }));
+    this._register(this._editor.onDidChangeModel(() => {
+      updateScrollLeftPosition();
+      this._updateWidgetWidth();
+    }));
+    this._register(this._foldingIconStore);
+    updateScrollLeftPosition();
+    this._register(this._editor.onDidLayoutChange((e) => {
+      this._updateWidgetWidth();
+    }));
+    this._updateWidgetWidth();
+  }
+  get lineNumbers() {
+    return this._lineNumbers;
+  }
+  get lineNumberCount() {
+    return this._lineNumbers.length;
+  }
+  getRenderedStickyLine(lineNumber) {
+    return this._renderedStickyLines.find((stickyLine) => stickyLine.lineNumber === lineNumber);
+  }
+  getCurrentLines() {
+    return this._lineNumbers;
+  }
+  setState(_state, foldingModel, _rebuildFromLine) {
+    if (_rebuildFromLine === void 0 && (!this._previousState && !_state || this._previousState && this._previousState.equals(_state))) {
+      return;
+    }
+    const isWidgetHeightZero = this._isWidgetHeightZero(_state);
+    const state = isWidgetHeightZero ? void 0 : _state;
+    const rebuildFromLine = isWidgetHeightZero ? 0 : this._findLineToRebuildWidgetFrom(_state, _rebuildFromLine);
+    this._renderRootNode(state, foldingModel, rebuildFromLine);
+    this._previousState = _state;
+  }
+  _isWidgetHeightZero(state) {
+    if (!state) {
+      return true;
+    }
+    const futureWidgetHeight = state.startLineNumbers.length * this._lineHeight + state.lastLineRelativePosition;
+    if (futureWidgetHeight > 0) {
+      this._lastLineRelativePosition = state.lastLineRelativePosition;
+      const lineNumbers = [...state.startLineNumbers];
+      if (state.showEndForLine !== null) {
+        lineNumbers[state.showEndForLine] = state.endLineNumbers[state.showEndForLine];
+      }
+      this._lineNumbers = lineNumbers;
+    } else {
+      this._lastLineRelativePosition = 0;
+      this._lineNumbers = [];
+    }
+    return futureWidgetHeight === 0;
+  }
+  _findLineToRebuildWidgetFrom(state, _rebuildFromLine) {
+    if (!state || !this._previousState) {
+      return 0;
+    }
+    if (_rebuildFromLine !== void 0) {
+      return _rebuildFromLine;
+    }
+    const previousState = this._previousState;
+    const indexOfLinesAlreadyRendered = state.startLineNumbers.findIndex((startLineNumber) => !previousState.startLineNumbers.includes(startLineNumber));
+    return indexOfLinesAlreadyRendered === -1 ? 0 : indexOfLinesAlreadyRendered;
+  }
+  _updateWidgetWidth() {
+    const layoutInfo = this._editor.getLayoutInfo();
+    const lineNumbersWidth = layoutInfo.contentLeft;
+    this._lineNumbersDomNode.style.width = `${lineNumbersWidth}px`;
+    this._linesDomNodeScrollable.style.setProperty("--vscode-editorStickyScroll-scrollableWidth", `${this._editor.getScrollWidth() - layoutInfo.verticalScrollbarWidth}px`);
+    this._rootDomNode.style.width = `${layoutInfo.width - layoutInfo.verticalScrollbarWidth}px`;
+  }
+  _clearStickyLinesFromLine(clearFromLine) {
+    this._foldingIconStore.clear();
+    for (let i = clearFromLine; i < this._renderedStickyLines.length; i++) {
+      const stickyLine = this._renderedStickyLines[i];
+      stickyLine.lineNumberDomNode.remove();
+      stickyLine.lineDomNode.remove();
+    }
+    this._renderedStickyLines = this._renderedStickyLines.slice(0, clearFromLine);
+  }
+  _useFoldingOpacityTransition(requireTransitions) {
+    this._lineNumbersDomNode.style.setProperty("--vscode-editorStickyScroll-foldingOpacityTransition", `opacity ${requireTransitions ? 0.5 : 0}s`);
+  }
+  _setFoldingIconsVisibility(allVisible) {
+    for (const line of this._renderedStickyLines) {
+      const foldingIcon = line.foldingIcon;
+      if (!foldingIcon) {
+        continue;
+      }
+      foldingIcon.setVisible(allVisible ? true : foldingIcon.isCollapsed);
+    }
+  }
+  async _renderRootNode(state, foldingModel, rebuildFromLine) {
+    this._clearStickyLinesFromLine(rebuildFromLine);
+    if (!state) {
+      this._setHeight(0);
+      return;
+    }
+    for (const stickyLine of this._renderedStickyLines) {
+      this._updatePosition(stickyLine);
+    }
+    const layoutInfo = this._editor.getLayoutInfo();
+    const linesToRender = this._lineNumbers.slice(rebuildFromLine);
+    for (const [index, line] of linesToRender.entries()) {
+      const stickyLine = this._renderChildNode(index + rebuildFromLine, line, foldingModel, layoutInfo);
+      if (!stickyLine) {
+        continue;
+      }
+      this._linesDomNode.appendChild(stickyLine.lineDomNode);
+      this._lineNumbersDomNode.appendChild(stickyLine.lineNumberDomNode);
+      this._renderedStickyLines.push(stickyLine);
+    }
+    if (foldingModel) {
+      this._setFoldingHoverListeners();
+      this._useFoldingOpacityTransition(!this._isOnGlyphMargin);
+    }
+    const widgetHeight = this._lineNumbers.length * this._lineHeight + this._lastLineRelativePosition;
+    this._setHeight(widgetHeight);
+    this._rootDomNode.style.marginLeft = "0px";
+    this._minContentWidthInPx = Math.max(...this._renderedStickyLines.map((l) => l.scrollWidth)) + layoutInfo.verticalScrollbarWidth;
+    this._editor.layoutOverlayWidget(this);
+  }
+  _setHeight(height) {
+    if (this._height === height) {
+      return;
+    }
+    this._height = height;
+    if (this._height === 0) {
+      this._rootDomNode.style.display = "none";
+    } else {
+      this._rootDomNode.style.display = "block";
+      this._lineNumbersDomNode.style.height = `${this._height}px`;
+      this._linesDomNodeScrollable.style.height = `${this._height}px`;
+      this._rootDomNode.style.height = `${this._height}px`;
+    }
+    this._onDidChangeStickyScrollHeight.fire({ height: this._height });
+  }
+  _setFoldingHoverListeners() {
+    const showFoldingControls = this._editor.getOption(EditorOption.showFoldingControls);
+    if (showFoldingControls !== "mouseover") {
+      return;
+    }
+    this._foldingIconStore.add(dom.addDisposableListener(this._lineNumbersDomNode, dom.EventType.MOUSE_ENTER, () => {
+      this._isOnGlyphMargin = true;
+      this._setFoldingIconsVisibility(true);
+    }));
+    this._foldingIconStore.add(dom.addDisposableListener(this._lineNumbersDomNode, dom.EventType.MOUSE_LEAVE, () => {
+      this._isOnGlyphMargin = false;
+      this._useFoldingOpacityTransition(true);
+      this._setFoldingIconsVisibility(false);
+    }));
+  }
+  _renderChildNode(index, line, foldingModel, layoutInfo) {
+    const viewModel = this._editor._getViewModel();
+    if (!viewModel) {
+      return;
+    }
+    const viewLineNumber = viewModel.coordinatesConverter.convertModelPositionToViewPosition(new Position(line, 1)).lineNumber;
+    const lineRenderingData = viewModel.getViewLineRenderingData(viewLineNumber);
+    const lineNumberOption = this._editor.getOption(EditorOption.lineNumbers);
+    let actualInlineDecorations;
+    try {
+      actualInlineDecorations = LineDecoration.filter(lineRenderingData.inlineDecorations, viewLineNumber, lineRenderingData.minColumn, lineRenderingData.maxColumn);
+    } catch (err) {
+      actualInlineDecorations = [];
+    }
+    const lineHeight = this._lineHeight;
+    const renderLineInput = new RenderLineInput(
+      true,
+      true,
+      lineRenderingData.content,
+      lineRenderingData.continuesWithWrappedLine,
+      lineRenderingData.isBasicASCII,
+      lineRenderingData.containsRTL,
+      0,
+      lineRenderingData.tokens,
+      actualInlineDecorations,
+      lineRenderingData.tabSize,
+      lineRenderingData.startVisibleColumn,
+      1,
+      1,
+      1,
+      500,
+      "none",
+      true,
+      true,
+      null
+    );
+    const sb = new StringBuilder(2e3);
+    const renderOutput = renderViewLine(renderLineInput, sb);
+    let newLine;
+    if (_ttPolicy) {
+      newLine = _ttPolicy.createHTML(sb.build());
+    } else {
+      newLine = sb.build();
+    }
+    const lineHTMLNode = document.createElement("span");
+    lineHTMLNode.setAttribute(STICKY_INDEX_ATTR, String(index));
+    lineHTMLNode.setAttribute(STICKY_IS_LINE_ATTR, "");
+    lineHTMLNode.setAttribute("role", "listitem");
+    lineHTMLNode.tabIndex = 0;
+    lineHTMLNode.className = "sticky-line-content";
+    lineHTMLNode.classList.add(`stickyLine${line}`);
+    lineHTMLNode.style.lineHeight = `${lineHeight}px`;
+    lineHTMLNode.innerHTML = newLine;
+    const lineNumberHTMLNode = document.createElement("span");
+    lineNumberHTMLNode.setAttribute(STICKY_INDEX_ATTR, String(index));
+    lineNumberHTMLNode.setAttribute(STICKY_IS_LINE_NUMBER_ATTR, "");
+    lineNumberHTMLNode.className = "sticky-line-number";
+    lineNumberHTMLNode.style.lineHeight = `${lineHeight}px`;
+    const lineNumbersWidth = layoutInfo.contentLeft;
+    lineNumberHTMLNode.style.width = `${lineNumbersWidth}px`;
+    const innerLineNumberHTML = document.createElement("span");
+    if (lineNumberOption.renderType === RenderLineNumbersType.On || lineNumberOption.renderType === RenderLineNumbersType.Interval && line % 10 === 0) {
+      innerLineNumberHTML.innerText = line.toString();
+    } else if (lineNumberOption.renderType === RenderLineNumbersType.Relative) {
+      innerLineNumberHTML.innerText = Math.abs(line - this._editor.getPosition().lineNumber).toString();
+    }
+    innerLineNumberHTML.className = "sticky-line-number-inner";
+    innerLineNumberHTML.style.width = `${layoutInfo.lineNumbersWidth}px`;
+    innerLineNumberHTML.style.paddingLeft = `${layoutInfo.lineNumbersLeft}px`;
+    lineNumberHTMLNode.appendChild(innerLineNumberHTML);
+    const foldingIcon = this._renderFoldingIconForLine(foldingModel, line);
+    if (foldingIcon) {
+      lineNumberHTMLNode.appendChild(foldingIcon.domNode);
+      foldingIcon.domNode.style.left = `${layoutInfo.lineNumbersWidth + layoutInfo.lineNumbersLeft}px`;
+    }
+    this._editor.applyFontInfo(lineHTMLNode);
+    this._editor.applyFontInfo(lineNumberHTMLNode);
+    lineNumberHTMLNode.style.lineHeight = `${lineHeight}px`;
+    lineHTMLNode.style.lineHeight = `${lineHeight}px`;
+    lineNumberHTMLNode.style.height = `${lineHeight}px`;
+    lineHTMLNode.style.height = `${lineHeight}px`;
+    const renderedLine = new RenderedStickyLine(index, line, lineHTMLNode, lineNumberHTMLNode, foldingIcon, renderOutput.characterMapping, lineHTMLNode.scrollWidth, lineHeight);
+    return this._updatePosition(renderedLine);
+  }
+  _updatePosition(stickyLine) {
+    const index = stickyLine.index;
+    const lineHTMLNode = stickyLine.lineDomNode;
+    const lineNumberHTMLNode = stickyLine.lineNumberDomNode;
+    const isLastLine = index === this._lineNumbers.length - 1;
+    if (isLastLine) {
+      const zIndex = "0";
+      lineHTMLNode.style.zIndex = zIndex;
+      lineNumberHTMLNode.style.zIndex = zIndex;
+      const top = `${index * this._lineHeight + this._lastLineRelativePosition + (stickyLine.foldingIcon?.isCollapsed ? 1 : 0)}px`;
+      lineHTMLNode.style.top = top;
+      lineNumberHTMLNode.style.top = top;
+    } else {
+      const zIndex = "1";
+      lineHTMLNode.style.zIndex = zIndex;
+      lineNumberHTMLNode.style.zIndex = zIndex;
+      const top = `${index * this._lineHeight}px`;
+      lineHTMLNode.style.top = top;
+      lineNumberHTMLNode.style.top = top;
+    }
+    return stickyLine;
+  }
+  _renderFoldingIconForLine(foldingModel, line) {
+    const showFoldingControls = this._editor.getOption(EditorOption.showFoldingControls);
+    if (!foldingModel || showFoldingControls === "never") {
+      return;
+    }
+    const foldingRegions = foldingModel.regions;
+    const indexOfFoldingRegion = foldingRegions.findRange(line);
+    const startLineNumber = foldingRegions.getStartLineNumber(indexOfFoldingRegion);
+    const isFoldingScope = line === startLineNumber;
+    if (!isFoldingScope) {
+      return;
+    }
+    const isCollapsed = foldingRegions.isCollapsed(indexOfFoldingRegion);
+    const foldingIcon = new StickyFoldingIcon(isCollapsed, startLineNumber, foldingRegions.getEndLineNumber(indexOfFoldingRegion), this._lineHeight);
+    foldingIcon.setVisible(this._isOnGlyphMargin ? true : isCollapsed || showFoldingControls === "always");
+    foldingIcon.domNode.setAttribute(STICKY_IS_FOLDING_ICON_ATTR, "");
+    return foldingIcon;
+  }
+  getId() {
+    return "editor.contrib.stickyScrollWidget";
+  }
+  getDomNode() {
+    return this._rootDomNode;
+  }
+  getPosition() {
+    return {
+      preference: OverlayWidgetPositionPreference.TOP_CENTER,
+      stackOridinal: 10
+    };
+  }
+  getMinContentWidthInPx() {
+    return this._minContentWidthInPx;
+  }
+  focusLineWithIndex(index) {
+    if (0 <= index && index < this._renderedStickyLines.length) {
+      this._renderedStickyLines[index].lineDomNode.focus();
+    }
+  }
+  /**
+   * Given a leaf dom node, tries to find the editor position.
+   */
+  getEditorPositionFromNode(spanDomNode) {
+    if (!spanDomNode || spanDomNode.children.length > 0) {
+      return null;
+    }
+    const renderedStickyLine = this._getRenderedStickyLineFromChildDomNode(spanDomNode);
+    if (!renderedStickyLine) {
+      return null;
+    }
+    const column = getColumnOfNodeOffset(renderedStickyLine.characterMapping, spanDomNode, 0);
+    return new Position(renderedStickyLine.lineNumber, column);
+  }
+  getLineNumberFromChildDomNode(domNode) {
+    return this._getRenderedStickyLineFromChildDomNode(domNode)?.lineNumber ?? null;
+  }
+  _getRenderedStickyLineFromChildDomNode(domNode) {
+    const index = this.getLineIndexFromChildDomNode(domNode);
+    if (index === null || index < 0 || index >= this._renderedStickyLines.length) {
+      return null;
+    }
+    return this._renderedStickyLines[index];
+  }
+  /**
+   * Given a child dom node, tries to find the line number attribute that was stored in the node.
+   * @returns the attribute value or null if none is found.
+   */
+  getLineIndexFromChildDomNode(domNode) {
+    const lineIndex = this._getAttributeValue(domNode, STICKY_INDEX_ATTR);
+    return lineIndex ? parseInt(lineIndex, 10) : null;
+  }
+  /**
+   * Given a child dom node, tries to find if it is (contained in) a sticky line.
+   * @returns a boolean.
+   */
+  isInStickyLine(domNode) {
+    const isInLine = this._getAttributeValue(domNode, STICKY_IS_LINE_ATTR);
+    return isInLine !== void 0;
+  }
+  /**
+   * Given a child dom node, tries to find if this dom node is (contained in) a sticky folding icon.
+   * @returns a boolean.
+   */
+  isInFoldingIconDomNode(domNode) {
+    const isInFoldingIcon = this._getAttributeValue(domNode, STICKY_IS_FOLDING_ICON_ATTR);
+    return isInFoldingIcon !== void 0;
+  }
+  /**
+   * Given the dom node, finds if it or its parent sequence contains the given attribute.
+   * @returns the attribute value or undefined.
+   */
+  _getAttributeValue(domNode, attribute) {
+    while (domNode && domNode !== this._rootDomNode) {
+      const line = domNode.getAttribute(attribute);
+      if (line !== null) {
+        return line;
+      }
+      domNode = domNode.parentElement;
+    }
+    return;
+  }
+}
+class RenderedStickyLine {
+  constructor(index, lineNumber, lineDomNode, lineNumberDomNode, foldingIcon, characterMapping, scrollWidth, height) {
+    this.index = index;
+    this.lineNumber = lineNumber;
+    this.lineDomNode = lineDomNode;
+    this.lineNumberDomNode = lineNumberDomNode;
+    this.foldingIcon = foldingIcon;
+    this.characterMapping = characterMapping;
+    this.scrollWidth = scrollWidth;
+    this.height = height;
+  }
+  static {
+    __name(this, "RenderedStickyLine");
+  }
+}
+class StickyFoldingIcon {
+  constructor(isCollapsed, foldingStartLine, foldingEndLine, dimension) {
+    this.isCollapsed = isCollapsed;
+    this.foldingStartLine = foldingStartLine;
+    this.foldingEndLine = foldingEndLine;
+    this.dimension = dimension;
+    this.domNode = document.createElement("div");
+    this.domNode.style.width = `26px`;
+    this.domNode.style.height = `${dimension}px`;
+    this.domNode.style.lineHeight = `${dimension}px`;
+    this.domNode.className = ThemeIcon.asClassName(isCollapsed ? foldingCollapsedIcon : foldingExpandedIcon);
+  }
+  static {
+    __name(this, "StickyFoldingIcon");
+  }
+  domNode;
+  setVisible(visible) {
+    this.domNode.style.cursor = visible ? "pointer" : "default";
+    this.domNode.style.opacity = visible ? "1" : "0";
+  }
+}
+export {
+  StickyScrollWidget,
+  StickyScrollWidgetState
+};
+//# sourceMappingURL=stickyScrollWidget.js.map

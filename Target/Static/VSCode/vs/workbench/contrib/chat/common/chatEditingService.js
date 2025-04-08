@@ -1,1 +1,85 @@
-import"../../../../base/common/cancellation.js";import"../../../../base/common/event.js";import"../../../../base/common/lifecycle.js";import"../../../../base/common/observable.js";import{URI as s}from"../../../../base/common/uri.js";import"../../../../editor/common/languages.js";import{localize as d}from"../../../../nls.js";import{RawContextKey as i}from"../../../../platform/contextkey/common/contextkey.js";import{createDecorator as a}from"../../../../platform/instantiation/common/instantiation.js";import"../../../common/editor.js";import"../../notebook/common/notebookCommon.js";import"./chatModel.js";const q=a("chatEditingService"),L="chat-editing-snapshot-text-model";var l=(e=>(e[e.Modified=0]="Modified",e[e.Accepted=1]="Accepted",e[e.Rejected=2]="Rejected",e))(l||{}),c=(e=>(e[e.Initial=0]="Initial",e[e.StreamingEdits=1]="StreamingEdits",e[e.Idle=2]="Idle",e[e.Disposed=3]="Disposed",e))(c||{});const I="chat-editing-multi-diff-source",_=new i("chatEditingWidgetFileState",void 0,d("chatEditingWidgetFileState","The current state of the file in the chat editing widget")),j=new i("chatEditingAgentSupportsReadonlyReferences",void 0,d("chatEditingAgentSupportsReadonlyReferences","Whether the chat editing agent supports readonly references (temporary)")),H=new i("decidedChatEditingResource",[]),N=new i("chatEditingResource",void 0),K=new i("inChatEditingSession",void 0),W=new i("hasUndecidedChatEditingResource",!1),B=new i("hasAppliedChatEdits",!1),G=new i("applyingChatEditsFailed",!1),V="chatEditingSessionFileLimit",z=10;var p=(e=>(e[e.Created=0]="Created",e[e.Modified=1]="Modified",e))(p||{});function J(e){return"object"==typeof e&&!!e&&"sessionId"in e}function Q(e,t){return s.from({scheme:I,authority:e.chatSessionId,query:t?"previous":void 0})}function X(e){return{chatSessionId:e.authority,showPreviousChanges:"previous"===e.query}}export{I as CHAT_EDITING_MULTI_DIFF_SOURCE_RESOLVER_SCHEME,p as ChatEditKind,c as ChatEditingSessionState,q as IChatEditingService,l as ModifiedFileEntryState,G as applyingChatEditsFailedContextKey,j as chatEditingAgentSupportsReadonlyReferencesContextKey,V as chatEditingMaxFileAssignmentName,N as chatEditingResourceContextKey,L as chatEditingSnapshotScheme,_ as chatEditingWidgetFileStateContextKey,H as decidedChatEditingResourceContextKey,z as defaultChatEditingMaxFileLimit,Q as getMultiDiffSourceUri,B as hasAppliedChatEditsContextKey,W as hasUndecidedChatEditingResourceContextKey,K as inChatEditingSessionContextKey,J as isChatEditingActionContext,X as parseChatMultiDiffUri};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { Event } from "../../../../base/common/event.js";
+import { IDisposable } from "../../../../base/common/lifecycle.js";
+import { IObservable, IReader, ITransaction } from "../../../../base/common/observable.js";
+import { URI } from "../../../../base/common/uri.js";
+import { TextEdit } from "../../../../editor/common/languages.js";
+import { localize } from "../../../../nls.js";
+import { RawContextKey } from "../../../../platform/contextkey/common/contextkey.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { IEditorPane } from "../../../common/editor.js";
+import { ICellEditOperation } from "../../notebook/common/notebookCommon.js";
+import { ChatModel, IChatResponseModel } from "./chatModel.js";
+const IChatEditingService = createDecorator("chatEditingService");
+const chatEditingSnapshotScheme = "chat-editing-snapshot-text-model";
+var ModifiedFileEntryState = /* @__PURE__ */ ((ModifiedFileEntryState2) => {
+  ModifiedFileEntryState2[ModifiedFileEntryState2["Modified"] = 0] = "Modified";
+  ModifiedFileEntryState2[ModifiedFileEntryState2["Accepted"] = 1] = "Accepted";
+  ModifiedFileEntryState2[ModifiedFileEntryState2["Rejected"] = 2] = "Rejected";
+  return ModifiedFileEntryState2;
+})(ModifiedFileEntryState || {});
+var ChatEditingSessionState = /* @__PURE__ */ ((ChatEditingSessionState2) => {
+  ChatEditingSessionState2[ChatEditingSessionState2["Initial"] = 0] = "Initial";
+  ChatEditingSessionState2[ChatEditingSessionState2["StreamingEdits"] = 1] = "StreamingEdits";
+  ChatEditingSessionState2[ChatEditingSessionState2["Idle"] = 2] = "Idle";
+  ChatEditingSessionState2[ChatEditingSessionState2["Disposed"] = 3] = "Disposed";
+  return ChatEditingSessionState2;
+})(ChatEditingSessionState || {});
+const CHAT_EDITING_MULTI_DIFF_SOURCE_RESOLVER_SCHEME = "chat-editing-multi-diff-source";
+const chatEditingWidgetFileStateContextKey = new RawContextKey("chatEditingWidgetFileState", void 0, localize("chatEditingWidgetFileState", "The current state of the file in the chat editing widget"));
+const chatEditingAgentSupportsReadonlyReferencesContextKey = new RawContextKey("chatEditingAgentSupportsReadonlyReferences", void 0, localize("chatEditingAgentSupportsReadonlyReferences", "Whether the chat editing agent supports readonly references (temporary)"));
+const decidedChatEditingResourceContextKey = new RawContextKey("decidedChatEditingResource", []);
+const chatEditingResourceContextKey = new RawContextKey("chatEditingResource", void 0);
+const inChatEditingSessionContextKey = new RawContextKey("inChatEditingSession", void 0);
+const hasUndecidedChatEditingResourceContextKey = new RawContextKey("hasUndecidedChatEditingResource", false);
+const hasAppliedChatEditsContextKey = new RawContextKey("hasAppliedChatEdits", false);
+const applyingChatEditsFailedContextKey = new RawContextKey("applyingChatEditsFailed", false);
+const chatEditingMaxFileAssignmentName = "chatEditingSessionFileLimit";
+const defaultChatEditingMaxFileLimit = 10;
+var ChatEditKind = /* @__PURE__ */ ((ChatEditKind2) => {
+  ChatEditKind2[ChatEditKind2["Created"] = 0] = "Created";
+  ChatEditKind2[ChatEditKind2["Modified"] = 1] = "Modified";
+  return ChatEditKind2;
+})(ChatEditKind || {});
+function isChatEditingActionContext(thing) {
+  return typeof thing === "object" && !!thing && "sessionId" in thing;
+}
+__name(isChatEditingActionContext, "isChatEditingActionContext");
+function getMultiDiffSourceUri(session, showPreviousChanges) {
+  return URI.from({
+    scheme: CHAT_EDITING_MULTI_DIFF_SOURCE_RESOLVER_SCHEME,
+    authority: session.chatSessionId,
+    query: showPreviousChanges ? "previous" : void 0
+  });
+}
+__name(getMultiDiffSourceUri, "getMultiDiffSourceUri");
+function parseChatMultiDiffUri(uri) {
+  const chatSessionId = uri.authority;
+  const showPreviousChanges = uri.query === "previous";
+  return { chatSessionId, showPreviousChanges };
+}
+__name(parseChatMultiDiffUri, "parseChatMultiDiffUri");
+export {
+  CHAT_EDITING_MULTI_DIFF_SOURCE_RESOLVER_SCHEME,
+  ChatEditKind,
+  ChatEditingSessionState,
+  IChatEditingService,
+  ModifiedFileEntryState,
+  applyingChatEditsFailedContextKey,
+  chatEditingAgentSupportsReadonlyReferencesContextKey,
+  chatEditingMaxFileAssignmentName,
+  chatEditingResourceContextKey,
+  chatEditingSnapshotScheme,
+  chatEditingWidgetFileStateContextKey,
+  decidedChatEditingResourceContextKey,
+  defaultChatEditingMaxFileLimit,
+  getMultiDiffSourceUri,
+  hasAppliedChatEditsContextKey,
+  hasUndecidedChatEditingResourceContextKey,
+  inChatEditingSessionContextKey,
+  isChatEditingActionContext,
+  parseChatMultiDiffUri
+};
+//# sourceMappingURL=chatEditingService.js.map

@@ -1,1 +1,49 @@
-import{CharCode as t}from"../../../base/common/charCode.js";var u=(n=>(n[n.Unknown=0]="Unknown",n[n.Invalid=3]="Invalid",n[n.LF=1]="LF",n[n.CRLF=2]="CRLF",n))(u||{});function C(n){let e=0,o=0,r=0,a=0;for(let C=0,d=n.length;C<d;C++){const i=n.charCodeAt(C);i===t.CarriageReturn?(0===e&&(o=C),e++,C+1<d&&n.charCodeAt(C+1)===t.LineFeed?(a|=2,C++):a|=3,r=C+1):i===t.LineFeed&&(a|=1,0===e&&(o=C),e++,r=C+1)}return 0===e&&(o=n.length),[e,o,n.length-r,a]}export{u as StringEOL,C as countEOL};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { CharCode } from "../../../base/common/charCode.js";
+var StringEOL = /* @__PURE__ */ ((StringEOL2) => {
+  StringEOL2[StringEOL2["Unknown"] = 0] = "Unknown";
+  StringEOL2[StringEOL2["Invalid"] = 3] = "Invalid";
+  StringEOL2[StringEOL2["LF"] = 1] = "LF";
+  StringEOL2[StringEOL2["CRLF"] = 2] = "CRLF";
+  return StringEOL2;
+})(StringEOL || {});
+function countEOL(text) {
+  let eolCount = 0;
+  let firstLineLength = 0;
+  let lastLineStart = 0;
+  let eol = 0 /* Unknown */;
+  for (let i = 0, len = text.length; i < len; i++) {
+    const chr = text.charCodeAt(i);
+    if (chr === CharCode.CarriageReturn) {
+      if (eolCount === 0) {
+        firstLineLength = i;
+      }
+      eolCount++;
+      if (i + 1 < len && text.charCodeAt(i + 1) === CharCode.LineFeed) {
+        eol |= 2 /* CRLF */;
+        i++;
+      } else {
+        eol |= 3 /* Invalid */;
+      }
+      lastLineStart = i + 1;
+    } else if (chr === CharCode.LineFeed) {
+      eol |= 1 /* LF */;
+      if (eolCount === 0) {
+        firstLineLength = i;
+      }
+      eolCount++;
+      lastLineStart = i + 1;
+    }
+  }
+  if (eolCount === 0) {
+    firstLineLength = text.length;
+  }
+  return [eolCount, firstLineLength, text.length - lastLineStart, eol];
+}
+__name(countEOL, "countEOL");
+export {
+  StringEOL,
+  countEOL
+};
+//# sourceMappingURL=eolCounter.js.map

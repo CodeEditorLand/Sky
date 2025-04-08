@@ -1,1 +1,94 @@
-import"../../../../browser/editorBrowser.js";import{EditorAction as c,EditorAction2 as a}from"../../../../browser/editorExtensions.js";import{KeyCode as n}from"../../../../../base/common/keyCodes.js";import{localize as d,localize2 as o}from"../../../../../nls.js";import{KeybindingWeight as s}from"../../../../../platform/keybinding/common/keybindingsRegistry.js";import{EditorContextKeys as l}from"../../../../common/editorContextKeys.js";import{MenuId as h}from"../../../../../platform/actions/common/actions.js";import{StandaloneColorPickerController as r}from"./standaloneColorPickerController.js";class f extends a{constructor(){super({id:"editor.action.showOrFocusStandaloneColorPicker",title:{...o("showOrFocusStandaloneColorPicker","Show or Focus Standalone Color Picker"),mnemonicTitle:d({key:"mishowOrFocusStandaloneColorPicker",comment:["&& denotes a mnemonic"]},"&&Show or Focus Standalone Color Picker")},precondition:void 0,menu:[{id:h.CommandPalette}],metadata:{description:o("showOrFocusStandaloneColorPickerDescription","Show or focus a standalone color picker which uses the default color provider. It displays hex/rgb/hsl colors.")}})}runEditorCommand(o,e){r.get(e)?.showOrFocus()}}class g extends c{constructor(){super({id:"editor.action.hideColorPicker",label:o({key:"hideColorPicker",comment:["Action that hides the color picker"]},"Hide the Color Picker"),precondition:l.standaloneColorPickerVisible.isEqualTo(!0),kbOpts:{primary:n.Escape,weight:s.EditorContrib},metadata:{description:o("hideColorPickerDescription","Hide the standalone color picker.")}})}run(o,e){r.get(e)?.hide()}}class x extends c{constructor(){super({id:"editor.action.insertColorWithStandaloneColorPicker",label:o({key:"insertColorWithStandaloneColorPicker",comment:["Action that inserts color with standalone color picker"]},"Insert Color with Standalone Color Picker"),precondition:l.standaloneColorPickerFocused.isEqualTo(!0),kbOpts:{primary:n.Enter,weight:s.EditorContrib},metadata:{description:o("insertColorWithStandaloneColorPickerDescription","Insert hex/rgb/hsl colors with the focused standalone color picker.")}})}run(o,e){r.get(e)?.insertColor()}}export{g as HideStandaloneColorPicker,x as InsertColorWithStandaloneColorPicker,f as ShowOrFocusStandaloneColorPicker};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { ICodeEditor } from "../../../../browser/editorBrowser.js";
+import { EditorAction, EditorAction2, ServicesAccessor } from "../../../../browser/editorExtensions.js";
+import { KeyCode } from "../../../../../base/common/keyCodes.js";
+import { localize, localize2 } from "../../../../../nls.js";
+import { KeybindingWeight } from "../../../../../platform/keybinding/common/keybindingsRegistry.js";
+import { EditorContextKeys } from "../../../../common/editorContextKeys.js";
+import { MenuId } from "../../../../../platform/actions/common/actions.js";
+import { StandaloneColorPickerController } from "./standaloneColorPickerController.js";
+class ShowOrFocusStandaloneColorPicker extends EditorAction2 {
+  static {
+    __name(this, "ShowOrFocusStandaloneColorPicker");
+  }
+  constructor() {
+    super({
+      id: "editor.action.showOrFocusStandaloneColorPicker",
+      title: {
+        ...localize2("showOrFocusStandaloneColorPicker", "Show or Focus Standalone Color Picker"),
+        mnemonicTitle: localize({ key: "mishowOrFocusStandaloneColorPicker", comment: ["&& denotes a mnemonic"] }, "&&Show or Focus Standalone Color Picker")
+      },
+      precondition: void 0,
+      menu: [
+        { id: MenuId.CommandPalette }
+      ],
+      metadata: {
+        description: localize2("showOrFocusStandaloneColorPickerDescription", "Show or focus a standalone color picker which uses the default color provider. It displays hex/rgb/hsl colors.")
+      }
+    });
+  }
+  runEditorCommand(_accessor, editor) {
+    StandaloneColorPickerController.get(editor)?.showOrFocus();
+  }
+}
+class HideStandaloneColorPicker extends EditorAction {
+  static {
+    __name(this, "HideStandaloneColorPicker");
+  }
+  constructor() {
+    super({
+      id: "editor.action.hideColorPicker",
+      label: localize2({
+        key: "hideColorPicker",
+        comment: [
+          "Action that hides the color picker"
+        ]
+      }, "Hide the Color Picker"),
+      precondition: EditorContextKeys.standaloneColorPickerVisible.isEqualTo(true),
+      kbOpts: {
+        primary: KeyCode.Escape,
+        weight: KeybindingWeight.EditorContrib
+      },
+      metadata: {
+        description: localize2("hideColorPickerDescription", "Hide the standalone color picker.")
+      }
+    });
+  }
+  run(_accessor, editor) {
+    StandaloneColorPickerController.get(editor)?.hide();
+  }
+}
+class InsertColorWithStandaloneColorPicker extends EditorAction {
+  static {
+    __name(this, "InsertColorWithStandaloneColorPicker");
+  }
+  constructor() {
+    super({
+      id: "editor.action.insertColorWithStandaloneColorPicker",
+      label: localize2({
+        key: "insertColorWithStandaloneColorPicker",
+        comment: [
+          "Action that inserts color with standalone color picker"
+        ]
+      }, "Insert Color with Standalone Color Picker"),
+      precondition: EditorContextKeys.standaloneColorPickerFocused.isEqualTo(true),
+      kbOpts: {
+        primary: KeyCode.Enter,
+        weight: KeybindingWeight.EditorContrib
+      },
+      metadata: {
+        description: localize2("insertColorWithStandaloneColorPickerDescription", "Insert hex/rgb/hsl colors with the focused standalone color picker.")
+      }
+    });
+  }
+  run(_accessor, editor) {
+    StandaloneColorPickerController.get(editor)?.insertColor();
+  }
+}
+export {
+  HideStandaloneColorPicker,
+  InsertColorWithStandaloneColorPicker,
+  ShowOrFocusStandaloneColorPicker
+};
+//# sourceMappingURL=standaloneColorPickerActions.js.map

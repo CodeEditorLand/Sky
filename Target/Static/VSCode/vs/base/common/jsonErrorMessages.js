@@ -1,1 +1,33 @@
-import{localize as e}from"../../nls.js";import{ParseErrorCode as r}from"./json.js";function a(t){switch(t){case r.InvalidSymbol:return e("error.invalidSymbol","Invalid symbol");case r.InvalidNumberFormat:return e("error.invalidNumberFormat","Invalid number format");case r.PropertyNameExpected:return e("error.propertyNameExpected","Property name expected");case r.ValueExpected:return e("error.valueExpected","Value expected");case r.ColonExpected:return e("error.colonExpected","Colon expected");case r.CommaExpected:return e("error.commaExpected","Comma expected");case r.CloseBraceExpected:return e("error.closeBraceExpected","Closing brace expected");case r.CloseBracketExpected:return e("error.closeBracketExpected","Closing bracket expected");case r.EndOfFileExpected:return e("error.endOfFileExpected","End of file expected");default:return""}}export{a as getParseErrorMessage};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { localize } from "../../nls.js";
+import { ParseErrorCode } from "./json.js";
+function getParseErrorMessage(errorCode) {
+  switch (errorCode) {
+    case ParseErrorCode.InvalidSymbol:
+      return localize("error.invalidSymbol", "Invalid symbol");
+    case ParseErrorCode.InvalidNumberFormat:
+      return localize("error.invalidNumberFormat", "Invalid number format");
+    case ParseErrorCode.PropertyNameExpected:
+      return localize("error.propertyNameExpected", "Property name expected");
+    case ParseErrorCode.ValueExpected:
+      return localize("error.valueExpected", "Value expected");
+    case ParseErrorCode.ColonExpected:
+      return localize("error.colonExpected", "Colon expected");
+    case ParseErrorCode.CommaExpected:
+      return localize("error.commaExpected", "Comma expected");
+    case ParseErrorCode.CloseBraceExpected:
+      return localize("error.closeBraceExpected", "Closing brace expected");
+    case ParseErrorCode.CloseBracketExpected:
+      return localize("error.closeBracketExpected", "Closing bracket expected");
+    case ParseErrorCode.EndOfFileExpected:
+      return localize("error.endOfFileExpected", "End of file expected");
+    default:
+      return "";
+  }
+}
+__name(getParseErrorMessage, "getParseErrorMessage");
+export {
+  getParseErrorMessage
+};
+//# sourceMappingURL=jsonErrorMessages.js.map

@@ -1,1 +1,198 @@
-var k=Object.defineProperty,S=Object.getOwnPropertyDescriptor,b=(e,t,o,i)=>{for(var r,s=i>1?void 0:i?S(t,o):t,n=e.length-1;n>=0;n--)(r=e[n])&&(s=(i?r(t,o,s):r(s))||s);return i&&s&&k(t,o,s),s},y=(e,t)=>(o,i)=>t(o,i,e);import{getWindow as T,n as s}from"../../../../../../../base/browser/dom.js";import{StandardMouseEvent as I}from"../../../../../../../base/browser/mouseEvent.js";import{Emitter as M}from"../../../../../../../base/common/event.js";import{Disposable as H}from"../../../../../../../base/common/lifecycle.js";import{constObservable as p,derived as u,observableValue as A}from"../../../../../../../base/common/observable.js";import{editorBackground as E,editorHoverForeground as L}from"../../../../../../../platform/theme/common/colorRegistry.js";import{asCssVariable as d}from"../../../../../../../platform/theme/common/colorUtils.js";import"../../../../../../browser/observableCodeEditor.js";import{Point as w}from"../../../../../../browser/point.js";import{Rect as x}from"../../../../../../browser/rect.js";import{LineSource as B,renderLines as P,RenderOptions as W}from"../../../../../../browser/widget/diffEditor/components/diffEditorViewZones/renderLines.js";import{EditorOption as f}from"../../../../../../common/config/editorOptions.js";import{SingleOffsetEdit as z}from"../../../../../../common/core/offsetEdit.js";import{OffsetRange as D}from"../../../../../../common/core/offsetRange.js";import"../../../../../../common/core/textEdit.js";import{ILanguageService as N}from"../../../../../../common/languages/language.js";import{LineTokens as $}from"../../../../../../common/tokens/lineTokens.js";import{TokenArray as F}from"../../../../../../common/tokens/tokenArray.js";import"../inlineEditsViewInterface.js";import{getModifiedBorderColor as R,getOriginalBorderColor as X,modifiedChangedTextOverlayColor as j,originalChangedTextOverlayColor as G}from"../theme.js";import{mapOutFalsy as U,rectToProps as _}from"../utils/utils.js";let g=class extends H{constructor(e,t,o,i){super(),this._editor=e,this._edit=t,this._tabAction=o,this._languageService=i,this._register(this._editor.createOverlayWidget({domNode:this._root.element,minContentWidthInPx:p(0),position:p({preference:{top:0,left:0}}),allowEditorOverflow:!1}))}static MAX_LENGTH=100;_onDidClick=this._register(new M);onDidClick=this._onDidClick.event;_start=this._editor.observePosition(p(this._edit.range.getStartPosition()),this._store);_end=this._editor.observePosition(p(this._edit.range.getEndPosition()),this._store);_line=document.createElement("div");_hoverableElement=A(this,null);isHovered=this._hoverableElement.map(((e,t)=>e?.didMouseMoveDuringHover.read(t)??!1));_renderTextEffect=u((e=>{const t=this._editor.model.get(),o=t.getLineContent(this._edit.range.startLineNumber),i=z.replace(new D(this._edit.range.startColumn-1,this._edit.range.endColumn-1),this._edit.text),r=i.apply(o),s=t.tokenization.tokenizeLinesAt(this._edit.range.startLineNumber,[r])?.[0];let n;n=s?F.fromLineTokens(s).slice(i.getRangeAfterApply()).toLineTokens(this._edit.text,this._languageService.languageIdCodec):$.createEmpty(this._edit.text,this._languageService.languageIdCodec);const a=P(new B([n]),W.fromEditor(this._editor.editor).withSetWidth(!1).withScrollBeyondLastColumn(0),[],this._line,!0);this._line.style.width=`${a.minWidthInPx}px`}));_layout=u(this,(e=>{this._renderTextEffect.read(e);const t=this._start.read(e),o=this._end.read(e);if(!t||!o||t.x>o.x||t.y>o.y)return;const i=this._editor.getOption(f.lineHeight).read(e),r=this._editor.scrollLeft.read(e),s=this._editor.getOption(f.fontInfo).read(e).typicalHalfwidthCharacterWidth,n=new w(3*s,4),a=x.fromPoints(t,o).withHeight(i).translateX(-r),d=x.fromPointSize(a.getLeftBottom().add(n),new w(this._edit.text.length*s,a.height)),l=d.withLeft(a.left);return{originalLine:a,modifiedLine:d,lowerBackground:l,lineHeight:i}}));_root=s.div({class:"word-replacement"},[u((e=>{const t=U(this._layout).read(e);if(!t)return[];const o=this._editor.layoutInfoContentLeft.read(e),i=X(this._tabAction).map((e=>d(e))).read(e),r=R(this._tabAction).map((e=>d(e))).read(e);return[s.div({style:{position:"absolute",top:0,left:o,width:this._editor.contentWidth,height:this._editor.editor.getContentHeight(),overflow:"hidden",pointerEvents:"none"}},[s.div({style:{position:"absolute",..._((e=>t.read(e).lowerBackground.withMargin(1,2,1,0))),background:d(E),cursor:"pointer",pointerEvents:"auto"},onmousedown:e=>{e.preventDefault()},onmouseup:e=>this._onDidClick.fire(new I(T(e),e)),obsRef:e=>{this._hoverableElement.set(e,void 0)}}),s.div({style:{position:"absolute",..._((e=>t.read(e).modifiedLine.withMargin(1,2))),fontFamily:this._editor.getOption(f.fontFamily),fontSize:this._editor.getOption(f.fontSize),fontWeight:this._editor.getOption(f.fontWeight),pointerEvents:"none",boxSizing:"border-box",borderRadius:"4px",border:`1px solid ${r}`,background:d(j),display:"flex",justifyContent:"center",alignItems:"center",outline:`2px solid ${d(E)}`}},[this._line]),s.div({style:{position:"absolute",..._((e=>t.read(e).originalLine.withMargin(1))),boxSizing:"border-box",borderRadius:"4px",border:`1px solid ${i}`,background:d(G),pointerEvents:"none"}},[]),s.svg({width:11,height:14,viewBox:"0 0 11 14",fill:"none",style:{position:"absolute",left:t.map((e=>e.modifiedLine.left-16)),top:t.map((e=>e.modifiedLine.top+Math.round((e.lineHeight-14-5)/2)))}},[s.svgElem("path",{d:"M1 0C1 2.98966 1 5.92087 1 8.49952C1 9.60409 1.89543 10.5 3 10.5H10.5",stroke:d(L)}),s.svgElem("path",{d:"M6 7.5L9.99999 10.49998L6 13.5",stroke:d(L)})])])]}))]).keepUpdated(this._store)};g=b([y(3,N)],g);export{g as InlineEditsWordReplacementView};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { getWindow, n, ObserverNodeWithElement } from "../../../../../../../base/browser/dom.js";
+import { IMouseEvent, StandardMouseEvent } from "../../../../../../../base/browser/mouseEvent.js";
+import { Emitter } from "../../../../../../../base/common/event.js";
+import { Disposable } from "../../../../../../../base/common/lifecycle.js";
+import { constObservable, derived, IObservable, observableValue } from "../../../../../../../base/common/observable.js";
+import { editorBackground, editorHoverForeground } from "../../../../../../../platform/theme/common/colorRegistry.js";
+import { asCssVariable } from "../../../../../../../platform/theme/common/colorUtils.js";
+import { ObservableCodeEditor } from "../../../../../../browser/observableCodeEditor.js";
+import { Point } from "../../../../../../browser/point.js";
+import { Rect } from "../../../../../../browser/rect.js";
+import { LineSource, renderLines, RenderOptions } from "../../../../../../browser/widget/diffEditor/components/diffEditorViewZones/renderLines.js";
+import { EditorOption } from "../../../../../../common/config/editorOptions.js";
+import { SingleOffsetEdit } from "../../../../../../common/core/offsetEdit.js";
+import { OffsetRange } from "../../../../../../common/core/offsetRange.js";
+import { SingleTextEdit } from "../../../../../../common/core/textEdit.js";
+import { ILanguageService } from "../../../../../../common/languages/language.js";
+import { LineTokens } from "../../../../../../common/tokens/lineTokens.js";
+import { TokenArray } from "../../../../../../common/tokens/tokenArray.js";
+import { IInlineEditsView, InlineEditTabAction } from "../inlineEditsViewInterface.js";
+import { getModifiedBorderColor, getOriginalBorderColor, modifiedChangedTextOverlayColor, originalChangedTextOverlayColor } from "../theme.js";
+import { mapOutFalsy, rectToProps } from "../utils/utils.js";
+let InlineEditsWordReplacementView = class extends Disposable {
+  constructor(_editor, _edit, _tabAction, _languageService) {
+    super();
+    this._editor = _editor;
+    this._edit = _edit;
+    this._tabAction = _tabAction;
+    this._languageService = _languageService;
+    this._register(this._editor.createOverlayWidget({
+      domNode: this._root.element,
+      minContentWidthInPx: constObservable(0),
+      position: constObservable({ preference: { top: 0, left: 0 } }),
+      allowEditorOverflow: false
+    }));
+  }
+  static {
+    __name(this, "InlineEditsWordReplacementView");
+  }
+  static MAX_LENGTH = 100;
+  _onDidClick = this._register(new Emitter());
+  onDidClick = this._onDidClick.event;
+  _start = this._editor.observePosition(constObservable(this._edit.range.getStartPosition()), this._store);
+  _end = this._editor.observePosition(constObservable(this._edit.range.getEndPosition()), this._store);
+  _line = document.createElement("div");
+  _hoverableElement = observableValue(this, null);
+  isHovered = this._hoverableElement.map((e, reader) => e?.didMouseMoveDuringHover.read(reader) ?? false);
+  _renderTextEffect = derived((_reader) => {
+    const tm = this._editor.model.get();
+    const origLine = tm.getLineContent(this._edit.range.startLineNumber);
+    const edit = SingleOffsetEdit.replace(new OffsetRange(this._edit.range.startColumn - 1, this._edit.range.endColumn - 1), this._edit.text);
+    const lineToTokenize = edit.apply(origLine);
+    const t = tm.tokenization.tokenizeLinesAt(this._edit.range.startLineNumber, [lineToTokenize])?.[0];
+    let tokens;
+    if (t) {
+      tokens = TokenArray.fromLineTokens(t).slice(edit.getRangeAfterApply()).toLineTokens(this._edit.text, this._languageService.languageIdCodec);
+    } else {
+      tokens = LineTokens.createEmpty(this._edit.text, this._languageService.languageIdCodec);
+    }
+    const res = renderLines(new LineSource([tokens]), RenderOptions.fromEditor(this._editor.editor).withSetWidth(false).withScrollBeyondLastColumn(0), [], this._line, true);
+    this._line.style.width = `${res.minWidthInPx}px`;
+  });
+  _layout = derived(this, (reader) => {
+    this._renderTextEffect.read(reader);
+    const widgetStart = this._start.read(reader);
+    const widgetEnd = this._end.read(reader);
+    if (!widgetStart || !widgetEnd || widgetStart.x > widgetEnd.x || widgetStart.y > widgetEnd.y) {
+      return void 0;
+    }
+    const lineHeight = this._editor.getOption(EditorOption.lineHeight).read(reader);
+    const scrollLeft = this._editor.scrollLeft.read(reader);
+    const w = this._editor.getOption(EditorOption.fontInfo).read(reader).typicalHalfwidthCharacterWidth;
+    const modifiedLeftOffset = 3 * w;
+    const modifiedTopOffset = 4;
+    const modifiedOffset = new Point(modifiedLeftOffset, modifiedTopOffset);
+    const originalLine = Rect.fromPoints(widgetStart, widgetEnd).withHeight(lineHeight).translateX(-scrollLeft);
+    const modifiedLine = Rect.fromPointSize(originalLine.getLeftBottom().add(modifiedOffset), new Point(this._edit.text.length * w, originalLine.height));
+    const lowerBackground = modifiedLine.withLeft(originalLine.left);
+    return {
+      originalLine,
+      modifiedLine,
+      lowerBackground,
+      lineHeight
+    };
+  });
+  _root = n.div({
+    class: "word-replacement"
+  }, [
+    derived((reader) => {
+      const layout = mapOutFalsy(this._layout).read(reader);
+      if (!layout) {
+        return [];
+      }
+      const contentLeft = this._editor.layoutInfoContentLeft.read(reader);
+      const borderWidth = 1;
+      const originalBorderColor = getOriginalBorderColor(this._tabAction).map((c) => asCssVariable(c)).read(reader);
+      const modifiedBorderColor = getModifiedBorderColor(this._tabAction).map((c) => asCssVariable(c)).read(reader);
+      return [
+        n.div({
+          style: {
+            position: "absolute",
+            top: 0,
+            left: contentLeft,
+            width: this._editor.contentWidth,
+            height: this._editor.editor.getContentHeight(),
+            overflow: "hidden",
+            pointerEvents: "none"
+          }
+        }, [
+          n.div({
+            style: {
+              position: "absolute",
+              ...rectToProps((reader2) => layout.read(reader2).lowerBackground.withMargin(borderWidth, 2 * borderWidth, borderWidth, 0)),
+              background: asCssVariable(editorBackground),
+              //boxShadow: `${asCssVariable(scrollbarShadow)} 0 6px 6px -6px`,
+              cursor: "pointer",
+              pointerEvents: "auto"
+            },
+            onmousedown: /* @__PURE__ */ __name((e) => {
+              e.preventDefault();
+            }, "onmousedown"),
+            onmouseup: /* @__PURE__ */ __name((e) => this._onDidClick.fire(new StandardMouseEvent(getWindow(e), e)), "onmouseup"),
+            obsRef: /* @__PURE__ */ __name((elem) => {
+              this._hoverableElement.set(elem, void 0);
+            }, "obsRef")
+          }),
+          n.div({
+            style: {
+              position: "absolute",
+              ...rectToProps((reader2) => layout.read(reader2).modifiedLine.withMargin(1, 2)),
+              fontFamily: this._editor.getOption(EditorOption.fontFamily),
+              fontSize: this._editor.getOption(EditorOption.fontSize),
+              fontWeight: this._editor.getOption(EditorOption.fontWeight),
+              pointerEvents: "none",
+              boxSizing: "border-box",
+              borderRadius: "4px",
+              border: `${borderWidth}px solid ${modifiedBorderColor}`,
+              background: asCssVariable(modifiedChangedTextOverlayColor),
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              outline: `2px solid ${asCssVariable(editorBackground)}`
+            }
+          }, [this._line]),
+          n.div({
+            style: {
+              position: "absolute",
+              ...rectToProps((reader2) => layout.read(reader2).originalLine.withMargin(1)),
+              boxSizing: "border-box",
+              borderRadius: "4px",
+              border: `${borderWidth}px solid ${originalBorderColor}`,
+              background: asCssVariable(originalChangedTextOverlayColor),
+              pointerEvents: "none"
+            }
+          }, []),
+          n.svg({
+            width: 11,
+            height: 14,
+            viewBox: "0 0 11 14",
+            fill: "none",
+            style: {
+              position: "absolute",
+              left: layout.map((l) => l.modifiedLine.left - 16),
+              top: layout.map((l) => l.modifiedLine.top + Math.round((l.lineHeight - 14 - 5) / 2))
+            }
+          }, [
+            n.svgElem("path", {
+              d: "M1 0C1 2.98966 1 5.92087 1 8.49952C1 9.60409 1.89543 10.5 3 10.5H10.5",
+              stroke: asCssVariable(editorHoverForeground)
+            }),
+            n.svgElem("path", {
+              d: "M6 7.5L9.99999 10.49998L6 13.5",
+              stroke: asCssVariable(editorHoverForeground)
+            })
+          ])
+        ])
+      ];
+    })
+  ]).keepUpdated(this._store);
+};
+InlineEditsWordReplacementView = __decorateClass([
+  __decorateParam(3, ILanguageService)
+], InlineEditsWordReplacementView);
+export {
+  InlineEditsWordReplacementView
+};
+//# sourceMappingURL=inlineEditsWordReplacementView.js.map

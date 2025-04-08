@@ -1,1 +1,156 @@
-import{EditorsOrder as o}from"../editor.js";import"./editorInput.js";import{Emitter as u}from"../../../base/common/event.js";import"./editorGroupModel.js";import{Disposable as l}from"../../../base/common/lifecycle.js";class d extends l{constructor(t){super();this.model=t;this._register(this.model.onDidModelChange(i=>{const r=i.editorIndex??i.editor;r!==void 0&&!this.filter(r)||this._onDidModelChange.fire(i)}))}_onDidModelChange=this._register(new u);onDidModelChange=this._onDidModelChange.event;get id(){return this.model.id}get isLocked(){return this.model.isLocked}get stickyCount(){return this.model.stickyCount}get activeEditor(){return this.model.activeEditor&&this.filter(this.model.activeEditor)?this.model.activeEditor:null}get previewEditor(){return this.model.previewEditor&&this.filter(this.model.previewEditor)?this.model.previewEditor:null}get selectedEditors(){return this.model.selectedEditors.filter(t=>this.filter(t))}isPinned(t){return this.model.isPinned(t)}isTransient(t){return this.model.isTransient(t)}isSticky(t){return this.model.isSticky(t)}isActive(t){return this.model.isActive(t)}isSelected(t){return this.model.isSelected(t)}isFirst(t){return this.model.isFirst(t,this.getEditors(o.SEQUENTIAL))}isLast(t){return this.model.isLast(t,this.getEditors(o.SEQUENTIAL))}getEditors(t,i){return this.model.getEditors(t,i).filter(s=>this.filter(s))}findEditor(t,i){const r=this.model.findEditor(t,i);if(r)return this.filter(r[1])?r:void 0}}class x extends d{get count(){return this.model.stickyCount}getEditors(e,t){return t?.excludeSticky?[]:e===o.SEQUENTIAL?this.model.getEditors(o.SEQUENTIAL).slice(0,this.model.stickyCount):super.getEditors(e,t)}isSticky(e){return!0}getEditorByIndex(e){return e<this.count?this.model.getEditorByIndex(e):void 0}indexOf(e,t,i){const r=this.model.indexOf(e,t,i);return r<0||r>=this.model.stickyCount?-1:r}contains(e,t){const i=this.model.indexOf(e,void 0,t);return i>=0&&i<this.model.stickyCount}filter(e){return this.model.isSticky(e)}}class k extends d{get count(){return this.model.count-this.model.stickyCount}get stickyCount(){return 0}isSticky(e){return!1}getEditors(e,t){return e===o.SEQUENTIAL?this.model.getEditors(o.SEQUENTIAL).slice(this.model.stickyCount):super.getEditors(e,t)}getEditorByIndex(e){return e>=0?this.model.getEditorByIndex(e+this.model.stickyCount):void 0}indexOf(e,t,i){const r=this.model.indexOf(e,t,i);return r<this.model.stickyCount||r>=this.model.count?-1:r-this.model.stickyCount}contains(e,t){const i=this.model.indexOf(e,void 0,t);return i>=this.model.stickyCount&&i<this.model.count}filter(e){return!this.model.isSticky(e)}}export{x as StickyEditorGroupModel,k as UnstickyEditorGroupModel};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { IUntypedEditorInput, IMatchEditorOptions, EditorsOrder, GroupIdentifier } from "../editor.js";
+import { EditorInput } from "./editorInput.js";
+import { Emitter } from "../../../base/common/event.js";
+import { IGroupModelChangeEvent, IReadonlyEditorGroupModel } from "./editorGroupModel.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+class FilteredEditorGroupModel extends Disposable {
+  constructor(model) {
+    super();
+    this.model = model;
+    this._register(this.model.onDidModelChange((e) => {
+      const candidateOrIndex = e.editorIndex ?? e.editor;
+      if (candidateOrIndex !== void 0) {
+        if (!this.filter(candidateOrIndex)) {
+          return;
+        }
+      }
+      this._onDidModelChange.fire(e);
+    }));
+  }
+  static {
+    __name(this, "FilteredEditorGroupModel");
+  }
+  _onDidModelChange = this._register(new Emitter());
+  onDidModelChange = this._onDidModelChange.event;
+  get id() {
+    return this.model.id;
+  }
+  get isLocked() {
+    return this.model.isLocked;
+  }
+  get stickyCount() {
+    return this.model.stickyCount;
+  }
+  get activeEditor() {
+    return this.model.activeEditor && this.filter(this.model.activeEditor) ? this.model.activeEditor : null;
+  }
+  get previewEditor() {
+    return this.model.previewEditor && this.filter(this.model.previewEditor) ? this.model.previewEditor : null;
+  }
+  get selectedEditors() {
+    return this.model.selectedEditors.filter((e) => this.filter(e));
+  }
+  isPinned(editorOrIndex) {
+    return this.model.isPinned(editorOrIndex);
+  }
+  isTransient(editorOrIndex) {
+    return this.model.isTransient(editorOrIndex);
+  }
+  isSticky(editorOrIndex) {
+    return this.model.isSticky(editorOrIndex);
+  }
+  isActive(editor) {
+    return this.model.isActive(editor);
+  }
+  isSelected(editorOrIndex) {
+    return this.model.isSelected(editorOrIndex);
+  }
+  isFirst(editor) {
+    return this.model.isFirst(editor, this.getEditors(EditorsOrder.SEQUENTIAL));
+  }
+  isLast(editor) {
+    return this.model.isLast(editor, this.getEditors(EditorsOrder.SEQUENTIAL));
+  }
+  getEditors(order, options) {
+    const editors = this.model.getEditors(order, options);
+    return editors.filter((e) => this.filter(e));
+  }
+  findEditor(candidate, options) {
+    const result = this.model.findEditor(candidate, options);
+    if (!result) {
+      return void 0;
+    }
+    return this.filter(result[1]) ? result : void 0;
+  }
+}
+class StickyEditorGroupModel extends FilteredEditorGroupModel {
+  static {
+    __name(this, "StickyEditorGroupModel");
+  }
+  get count() {
+    return this.model.stickyCount;
+  }
+  getEditors(order, options) {
+    if (options?.excludeSticky) {
+      return [];
+    }
+    if (order === EditorsOrder.SEQUENTIAL) {
+      return this.model.getEditors(EditorsOrder.SEQUENTIAL).slice(0, this.model.stickyCount);
+    }
+    return super.getEditors(order, options);
+  }
+  isSticky(editorOrIndex) {
+    return true;
+  }
+  getEditorByIndex(index) {
+    return index < this.count ? this.model.getEditorByIndex(index) : void 0;
+  }
+  indexOf(editor, editors, options) {
+    const editorIndex = this.model.indexOf(editor, editors, options);
+    if (editorIndex < 0 || editorIndex >= this.model.stickyCount) {
+      return -1;
+    }
+    return editorIndex;
+  }
+  contains(candidate, options) {
+    const editorIndex = this.model.indexOf(candidate, void 0, options);
+    return editorIndex >= 0 && editorIndex < this.model.stickyCount;
+  }
+  filter(candidateOrIndex) {
+    return this.model.isSticky(candidateOrIndex);
+  }
+}
+class UnstickyEditorGroupModel extends FilteredEditorGroupModel {
+  static {
+    __name(this, "UnstickyEditorGroupModel");
+  }
+  get count() {
+    return this.model.count - this.model.stickyCount;
+  }
+  get stickyCount() {
+    return 0;
+  }
+  isSticky(editorOrIndex) {
+    return false;
+  }
+  getEditors(order, options) {
+    if (order === EditorsOrder.SEQUENTIAL) {
+      return this.model.getEditors(EditorsOrder.SEQUENTIAL).slice(this.model.stickyCount);
+    }
+    return super.getEditors(order, options);
+  }
+  getEditorByIndex(index) {
+    return index >= 0 ? this.model.getEditorByIndex(index + this.model.stickyCount) : void 0;
+  }
+  indexOf(editor, editors, options) {
+    const editorIndex = this.model.indexOf(editor, editors, options);
+    if (editorIndex < this.model.stickyCount || editorIndex >= this.model.count) {
+      return -1;
+    }
+    return editorIndex - this.model.stickyCount;
+  }
+  contains(candidate, options) {
+    const editorIndex = this.model.indexOf(candidate, void 0, options);
+    return editorIndex >= this.model.stickyCount && editorIndex < this.model.count;
+  }
+  filter(candidateOrIndex) {
+    return !this.model.isSticky(candidateOrIndex);
+  }
+}
+export {
+  StickyEditorGroupModel,
+  UnstickyEditorGroupModel
+};
+//# sourceMappingURL=filteredEditorGroupModel.js.map

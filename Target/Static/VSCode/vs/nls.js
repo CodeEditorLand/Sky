@@ -1,1 +1,67 @@
-import{getNLSLanguage as u,getNLSMessages as d}from"./nls.messages.js";import{getNLSLanguage as I,getNLSMessages as b}from"./nls.messages.js";const c="pseudo"===u()||typeof document<"u"&&document.location&&"string"==typeof document.location.hash&&document.location.hash.indexOf("pseudo=true")>=0;function a(e,t){let n;return n=0===t.length?e:e.replace(/\{(\d+)\}/g,((e,n)=>{const o=n[0],s=t[o];let a=e;return"string"==typeof s?a=s:("number"==typeof s||"boolean"==typeof s||null==s)&&(a=String(s)),a})),c&&(n="［"+n.replace(/[aouei]/g,"$&$&")+"］"),n}function y(e,t,...n){return a("number"==typeof e?g(e,t):t,n)}function g(e,t){const n=d()?.[e];if("string"!=typeof n){if("string"==typeof t)return t;throw new Error(`!!! NLS MISSING: ${e} !!!`)}return n}function p(e,t,...n){let o;o="number"==typeof e?g(e,t):t;const s=a(o,n);return{value:s,original:t===o?s:a(t,n)}}export{I as getNLSLanguage,b as getNLSMessages,y as localize,p as localize2};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { getNLSLanguage, getNLSMessages } from "./nls.messages.js";
+import { getNLSLanguage as getNLSLanguage2, getNLSMessages as getNLSMessages2 } from "./nls.messages.js";
+const isPseudo = getNLSLanguage() === "pseudo" || typeof document !== "undefined" && document.location && typeof document.location.hash === "string" && document.location.hash.indexOf("pseudo=true") >= 0;
+function _format(message, args) {
+  let result;
+  if (args.length === 0) {
+    result = message;
+  } else {
+    result = message.replace(/\{(\d+)\}/g, (match, rest) => {
+      const index = rest[0];
+      const arg = args[index];
+      let result2 = match;
+      if (typeof arg === "string") {
+        result2 = arg;
+      } else if (typeof arg === "number" || typeof arg === "boolean" || arg === void 0 || arg === null) {
+        result2 = String(arg);
+      }
+      return result2;
+    });
+  }
+  if (isPseudo) {
+    result = "\uFF3B" + result.replace(/[aouei]/g, "$&$&") + "\uFF3D";
+  }
+  return result;
+}
+__name(_format, "_format");
+function localize(data, message, ...args) {
+  if (typeof data === "number") {
+    return _format(lookupMessage(data, message), args);
+  }
+  return _format(message, args);
+}
+__name(localize, "localize");
+function lookupMessage(index, fallback) {
+  const message = getNLSMessages()?.[index];
+  if (typeof message !== "string") {
+    if (typeof fallback === "string") {
+      return fallback;
+    }
+    throw new Error(`!!! NLS MISSING: ${index} !!!`);
+  }
+  return message;
+}
+__name(lookupMessage, "lookupMessage");
+function localize2(data, originalMessage, ...args) {
+  let message;
+  if (typeof data === "number") {
+    message = lookupMessage(data, originalMessage);
+  } else {
+    message = originalMessage;
+  }
+  const value = _format(message, args);
+  return {
+    value,
+    original: originalMessage === message ? value : _format(originalMessage, args)
+  };
+}
+__name(localize2, "localize2");
+export {
+  getNLSLanguage2 as getNLSLanguage,
+  getNLSMessages2 as getNLSMessages,
+  localize,
+  localize2
+};
+//# sourceMappingURL=nls.js.map

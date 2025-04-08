@@ -1,1 +1,100 @@
-var C=Object.defineProperty,E=Object.getOwnPropertyDescriptor,u=(o,t,e,r)=>{for(var n,s=r>1?void 0:r?E(t,e):t,i=o.length-1;i>=0;i--)(n=o[i])&&(s=(r?n(t,e,s):n(s))||s);return r&&s&&C(t,e,s),s},s=(o,t)=>(e,r)=>t(e,r,o);import{Disposable as x}from"../../../../../../base/common/lifecycle.js";import{localize2 as O}from"../../../../../../nls.js";import{Categories as R}from"../../../../../../platform/action/common/actionCommonCategories.js";import{Action2 as w,registerAction2 as N}from"../../../../../../platform/actions/common/actions.js";import{ICommandService as W}from"../../../../../../platform/commands/common/commands.js";import{IConfigurationService as A}from"../../../../../../platform/configuration/common/configuration.js";import{ContextKeyExpr as D,IContextKeyService as K}from"../../../../../../platform/contextkey/common/contextkey.js";import"../../../../../../platform/instantiation/common/instantiation.js";import{Registry as M}from"../../../../../../platform/registry/common/platform.js";import{IStorageService as f,StorageScope as S,StorageTarget as k}from"../../../../../../platform/storage/common/storage.js";import{Extensions as P}from"../../../../../common/contributions.js";import{Memento as h}from"../../../../../common/memento.js";import{NotebookSetting as l}from"../../../common/notebookCommon.js";import{HAS_OPENED_NOTEBOOK as G}from"../../../common/notebookContextKeys.js";import{NotebookEditorInput as I}from"../../../common/notebookEditorInput.js";import{IEditorService as L}from"../../../../../services/editor/common/editorService.js";import{LifecyclePhase as T}from"../../../../../services/lifecycle/common/lifecycle.js";const p="hasOpenedNotebook",v="hasShownNotebookGettingStarted";let a=class extends x{constructor(o,t,e,r,n){super();const s=G.bindTo(e),i=new h("notebookGettingStarted2",t),m=i.getMemento(S.PROFILE,k.USER);m[p]&&s.set(!0);const a=n.getValue(l.openGettingStarted)&&!m[v];if(!m[p]||a){const t=()=>{s.set(!0),m[p]=!0,a&&(r.executeCommand("workbench.action.openWalkthrough",{category:"notebooks",step:"notebookProfile"},!0),m[v]=!0),i.saveMemento()};if(o.activeEditor?.typeId===I.ID)return void t();const e=this._register(o.onDidActiveEditorChange((()=>{o.activeEditor?.typeId===I.ID&&(e.dispose(),t())})))}}};a=u([s(0,L),s(1,f),s(2,K),s(3,W),s(4,A)],a),M.as(P.Workbench).registerWorkbenchContribution(a,T.Restored),N(class extends w{constructor(){super({id:"workbench.notebook.layout.gettingStarted",title:O("workbench.notebook.layout.gettingStarted.label","Reset notebook getting started"),f1:!0,precondition:D.equals(`config.${l.openGettingStarted}`,!0),category:R.Developer})}run(o){const t=o.get(f),e=new h("notebookGettingStarted",t);e.getMemento(S.PROFILE,k.USER)[p]=void 0,e.saveMemento()}});export{a as NotebookGettingStarted};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Disposable } from "../../../../../../base/common/lifecycle.js";
+import { localize2 } from "../../../../../../nls.js";
+import { Categories } from "../../../../../../platform/action/common/actionCommonCategories.js";
+import { Action2, registerAction2 } from "../../../../../../platform/actions/common/actions.js";
+import { ICommandService } from "../../../../../../platform/commands/common/commands.js";
+import { IConfigurationService } from "../../../../../../platform/configuration/common/configuration.js";
+import { ContextKeyExpr, IContextKeyService } from "../../../../../../platform/contextkey/common/contextkey.js";
+import { ServicesAccessor } from "../../../../../../platform/instantiation/common/instantiation.js";
+import { Registry } from "../../../../../../platform/registry/common/platform.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../../../platform/storage/common/storage.js";
+import { IWorkbenchContribution, IWorkbenchContributionsRegistry, Extensions as WorkbenchExtensions } from "../../../../../common/contributions.js";
+import { Memento } from "../../../../../common/memento.js";
+import { NotebookSetting } from "../../../common/notebookCommon.js";
+import { HAS_OPENED_NOTEBOOK } from "../../../common/notebookContextKeys.js";
+import { NotebookEditorInput } from "../../../common/notebookEditorInput.js";
+import { IEditorService } from "../../../../../services/editor/common/editorService.js";
+import { LifecyclePhase } from "../../../../../services/lifecycle/common/lifecycle.js";
+const hasOpenedNotebookKey = "hasOpenedNotebook";
+const hasShownGettingStartedKey = "hasShownNotebookGettingStarted";
+let NotebookGettingStarted = class extends Disposable {
+  static {
+    __name(this, "NotebookGettingStarted");
+  }
+  constructor(_editorService, _storageService, _contextKeyService, _commandService, _configurationService) {
+    super();
+    const hasOpenedNotebook = HAS_OPENED_NOTEBOOK.bindTo(_contextKeyService);
+    const memento = new Memento("notebookGettingStarted2", _storageService);
+    const storedValue = memento.getMemento(StorageScope.PROFILE, StorageTarget.USER);
+    if (storedValue[hasOpenedNotebookKey]) {
+      hasOpenedNotebook.set(true);
+    }
+    const needToShowGettingStarted = _configurationService.getValue(NotebookSetting.openGettingStarted) && !storedValue[hasShownGettingStartedKey];
+    if (!storedValue[hasOpenedNotebookKey] || needToShowGettingStarted) {
+      const onDidOpenNotebook = /* @__PURE__ */ __name(() => {
+        hasOpenedNotebook.set(true);
+        storedValue[hasOpenedNotebookKey] = true;
+        if (needToShowGettingStarted) {
+          _commandService.executeCommand("workbench.action.openWalkthrough", { category: "notebooks", step: "notebookProfile" }, true);
+          storedValue[hasShownGettingStartedKey] = true;
+        }
+        memento.saveMemento();
+      }, "onDidOpenNotebook");
+      if (_editorService.activeEditor?.typeId === NotebookEditorInput.ID) {
+        onDidOpenNotebook();
+        return;
+      }
+      const listener = this._register(_editorService.onDidActiveEditorChange(() => {
+        if (_editorService.activeEditor?.typeId === NotebookEditorInput.ID) {
+          listener.dispose();
+          onDidOpenNotebook();
+        }
+      }));
+    }
+  }
+};
+NotebookGettingStarted = __decorateClass([
+  __decorateParam(0, IEditorService),
+  __decorateParam(1, IStorageService),
+  __decorateParam(2, IContextKeyService),
+  __decorateParam(3, ICommandService),
+  __decorateParam(4, IConfigurationService)
+], NotebookGettingStarted);
+Registry.as(WorkbenchExtensions.Workbench).registerWorkbenchContribution(NotebookGettingStarted, LifecyclePhase.Restored);
+registerAction2(class NotebookClearNotebookLayoutAction extends Action2 {
+  static {
+    __name(this, "NotebookClearNotebookLayoutAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.notebook.layout.gettingStarted",
+      title: localize2("workbench.notebook.layout.gettingStarted.label", "Reset notebook getting started"),
+      f1: true,
+      precondition: ContextKeyExpr.equals(`config.${NotebookSetting.openGettingStarted}`, true),
+      category: Categories.Developer
+    });
+  }
+  run(accessor) {
+    const storageService = accessor.get(IStorageService);
+    const memento = new Memento("notebookGettingStarted", storageService);
+    const storedValue = memento.getMemento(StorageScope.PROFILE, StorageTarget.USER);
+    storedValue[hasOpenedNotebookKey] = void 0;
+    memento.saveMemento();
+  }
+});
+export {
+  NotebookGettingStarted
+};
+//# sourceMappingURL=notebookGettingStarted.js.map

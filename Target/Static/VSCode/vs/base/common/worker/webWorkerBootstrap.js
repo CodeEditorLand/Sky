@@ -1,1 +1,32 @@
-import{WebWorkerServer as o}from"./webWorker.js";let s=!1;function t(r){if(s)throw new Error("WebWorker already initialized!");s=!0;const a=new o(e=>globalThis.postMessage(e),e=>r(e));return globalThis.onmessage=e=>{a.onmessage(e.data)},a}function W(r){globalThis.onmessage=a=>{s||t(r)}}export{W as bootstrapWebWorker,t as initialize};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { IWebWorkerServerRequestHandler, IWebWorkerServerRequestHandlerFactory, WebWorkerServer } from "./webWorker.js";
+let initialized = false;
+function initialize(factory) {
+  if (initialized) {
+    throw new Error("WebWorker already initialized!");
+  }
+  initialized = true;
+  const webWorkerServer = new WebWorkerServer(
+    (msg) => globalThis.postMessage(msg),
+    (workerServer) => factory(workerServer)
+  );
+  globalThis.onmessage = (e) => {
+    webWorkerServer.onmessage(e.data);
+  };
+  return webWorkerServer;
+}
+__name(initialize, "initialize");
+function bootstrapWebWorker(factory) {
+  globalThis.onmessage = (_e) => {
+    if (!initialized) {
+      initialize(factory);
+    }
+  };
+}
+__name(bootstrapWebWorker, "bootstrapWebWorker");
+export {
+  bootstrapWebWorker,
+  initialize
+};
+//# sourceMappingURL=webWorkerBootstrap.js.map

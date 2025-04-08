@@ -1,1 +1,143 @@
-var R=Object.defineProperty,g=Object.getOwnPropertyDescriptor,h=(e,o,r,s)=>{for(var t,i=s>1?void 0:s?g(o,r):o,a=e.length-1;a>=0;a--)(t=e[a])&&(i=(s?t(o,r,i):t(i))||i);return s&&i&&R(o,r,i),i},n=(e,o)=>(r,s)=>o(r,s,e);import{session as P}from"electron";import{Disposable as m,toDisposable as p}from"../../../base/common/lifecycle.js";import{COI as u,FileAccess as b,Schemas as s,CacheControlheaders as I,DocumentPolicyheaders as F}from"../../../base/common/network.js";import{basename as S,extname as C,normalize as f}from"../../../base/common/path.js";import{isLinux as U}from"../../../base/common/platform.js";import{TernarySearchTree as w}from"../../../base/common/ternarySearchTree.js";import{URI as d}from"../../../base/common/uri.js";import{generateUuid as y}from"../../../base/common/uuid.js";import{validatedIpcMain as v}from"../../../base/parts/ipc/electron-main/ipcMain.js";import{INativeEnvironmentService as T}from"../../environment/common/environment.js";import{ILogService as $}from"../../log/common/log.js";import"./protocol.js";import{IUserDataProfilesService as j}from"../../userDataProfile/common/userDataProfile.js";let c=class extends m{constructor(e,o,r){super(),this.environmentService=e,this.logService=r,this.addValidFileRoot(e.appRoot),this.addValidFileRoot(e.extensionsPath),this.addValidFileRoot(o.defaultProfile.globalStorageHome.with({scheme:s.file}).fsPath),this.addValidFileRoot(e.workspaceStorageHome.with({scheme:s.file}).fsPath),this.handleProtocols()}validRoots=w.forPaths(!U);validExtensions=new Set([".svg",".png",".jpg",".jpeg",".gif",".bmp",".webp",".mp4",".otf",".ttf"]);handleProtocols(){const{defaultSession:e}=P;e.protocol.registerFileProtocol(s.vscodeFileResource,((e,o)=>this.handleResourceRequest(e,o))),e.protocol.interceptFileProtocol(s.file,((e,o)=>this.handleFileRequest(e,o))),this._register(p((()=>{e.protocol.unregisterProtocol(s.vscodeFileResource),e.protocol.uninterceptProtocol(s.file)})))}addValidFileRoot(e){const o=f(e);return this.validRoots.get(o)?m.None:(this.validRoots.set(o,!0),p((()=>this.validRoots.delete(o))))}handleFileRequest(e,o){const r=d.parse(e.url);return this.logService.error(`Refused to load resource ${r.fsPath} from ${s.file}: protocol (original URL: ${e.url})`),o({error:-3})}handleResourceRequest(e,o){const r=this.requestToNormalizedFilePath(e),t=S(r);let i;return this.environmentService.crossOriginIsolated&&(i="workbench.html"===t||"workbench-dev.html"===t?u.CoopAndCoep:u.getHeadersFromQuery(e.url)),this.environmentService.isBuilt||(i={...i,...I}),("workbench.html"===t||"workbench-dev.html"===t)&&(i={...i,...F}),this.validRoots.findSubstr(r)||this.validExtensions.has(C(r).toLowerCase())?o({path:r,headers:i}):(this.logService.error(`${s.vscodeFileResource}: Refused to load resource ${r} from ${s.vscodeFileResource}: protocol (original URL: ${e.url})`),o({error:-3}))}requestToNormalizedFilePath(e){const o=d.parse(e.url),r=b.uriToFileUri(o);return f(r.fsPath)}createIPCObjectUrl(){let e;const o=d.from({scheme:"vscode",path:y()}),r=o.toString();return v.handle(r,(async()=>e)),this.logService.trace(`IPC Object URL: Registered new channel ${r}.`),{resource:o,update:o=>e=o,dispose:()=>{this.logService.trace(`IPC Object URL: Removed channel ${r}.`),v.removeHandler(r)}}}};c=h([n(0,T),n(1,j),n(2,$)],c);export{c as ProtocolMainService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { session } from "electron";
+import { Disposable, IDisposable, toDisposable } from "../../../base/common/lifecycle.js";
+import { COI, FileAccess, Schemas, CacheControlheaders, DocumentPolicyheaders } from "../../../base/common/network.js";
+import { basename, extname, normalize } from "../../../base/common/path.js";
+import { isLinux } from "../../../base/common/platform.js";
+import { TernarySearchTree } from "../../../base/common/ternarySearchTree.js";
+import { URI } from "../../../base/common/uri.js";
+import { generateUuid } from "../../../base/common/uuid.js";
+import { validatedIpcMain } from "../../../base/parts/ipc/electron-main/ipcMain.js";
+import { INativeEnvironmentService } from "../../environment/common/environment.js";
+import { ILogService } from "../../log/common/log.js";
+import { IIPCObjectUrl, IProtocolMainService } from "./protocol.js";
+import { IUserDataProfilesService } from "../../userDataProfile/common/userDataProfile.js";
+let ProtocolMainService = class extends Disposable {
+  // https://github.com/microsoft/vscode/issues/119384
+  constructor(environmentService, userDataProfilesService, logService) {
+    super();
+    this.environmentService = environmentService;
+    this.logService = logService;
+    this.addValidFileRoot(environmentService.appRoot);
+    this.addValidFileRoot(environmentService.extensionsPath);
+    this.addValidFileRoot(userDataProfilesService.defaultProfile.globalStorageHome.with({ scheme: Schemas.file }).fsPath);
+    this.addValidFileRoot(environmentService.workspaceStorageHome.with({ scheme: Schemas.file }).fsPath);
+    this.handleProtocols();
+  }
+  static {
+    __name(this, "ProtocolMainService");
+  }
+  validRoots = TernarySearchTree.forPaths(!isLinux);
+  validExtensions = /* @__PURE__ */ new Set([".svg", ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp", ".mp4", ".otf", ".ttf"]);
+  handleProtocols() {
+    const { defaultSession } = session;
+    defaultSession.protocol.registerFileProtocol(Schemas.vscodeFileResource, (request, callback) => this.handleResourceRequest(request, callback));
+    defaultSession.protocol.interceptFileProtocol(Schemas.file, (request, callback) => this.handleFileRequest(request, callback));
+    this._register(toDisposable(() => {
+      defaultSession.protocol.unregisterProtocol(Schemas.vscodeFileResource);
+      defaultSession.protocol.uninterceptProtocol(Schemas.file);
+    }));
+  }
+  addValidFileRoot(root) {
+    const normalizedRoot = normalize(root);
+    if (!this.validRoots.get(normalizedRoot)) {
+      this.validRoots.set(normalizedRoot, true);
+      return toDisposable(() => this.validRoots.delete(normalizedRoot));
+    }
+    return Disposable.None;
+  }
+  //#region file://
+  handleFileRequest(request, callback) {
+    const uri = URI.parse(request.url);
+    this.logService.error(`Refused to load resource ${uri.fsPath} from ${Schemas.file}: protocol (original URL: ${request.url})`);
+    return callback({
+      error: -3
+      /* ABORTED */
+    });
+  }
+  //#endregion
+  //#region vscode-file://
+  handleResourceRequest(request, callback) {
+    const path = this.requestToNormalizedFilePath(request);
+    const pathBasename = basename(path);
+    let headers;
+    if (this.environmentService.crossOriginIsolated) {
+      if (pathBasename === "workbench.html" || pathBasename === "workbench-dev.html") {
+        headers = COI.CoopAndCoep;
+      } else {
+        headers = COI.getHeadersFromQuery(request.url);
+      }
+    }
+    if (!this.environmentService.isBuilt) {
+      headers = {
+        ...headers,
+        ...CacheControlheaders
+      };
+    }
+    if (pathBasename === "workbench.html" || pathBasename === "workbench-dev.html") {
+      headers = {
+        ...headers,
+        ...DocumentPolicyheaders
+      };
+    }
+    if (this.validRoots.findSubstr(path)) {
+      return callback({ path, headers });
+    }
+    if (this.validExtensions.has(extname(path).toLowerCase())) {
+      return callback({ path, headers });
+    }
+    this.logService.error(`${Schemas.vscodeFileResource}: Refused to load resource ${path} from ${Schemas.vscodeFileResource}: protocol (original URL: ${request.url})`);
+    return callback({
+      error: -3
+      /* ABORTED */
+    });
+  }
+  requestToNormalizedFilePath(request) {
+    const requestUri = URI.parse(request.url);
+    const unnormalizedFileUri = FileAccess.uriToFileUri(requestUri);
+    return normalize(unnormalizedFileUri.fsPath);
+  }
+  //#endregion
+  //#region IPC Object URLs
+  createIPCObjectUrl() {
+    let obj = void 0;
+    const resource = URI.from({
+      scheme: "vscode",
+      // used for all our IPC communication (vscode:<channel>)
+      path: generateUuid()
+    });
+    const channel = resource.toString();
+    const handler = /* @__PURE__ */ __name(async () => obj, "handler");
+    validatedIpcMain.handle(channel, handler);
+    this.logService.trace(`IPC Object URL: Registered new channel ${channel}.`);
+    return {
+      resource,
+      update: /* @__PURE__ */ __name((updatedObj) => obj = updatedObj, "update"),
+      dispose: /* @__PURE__ */ __name(() => {
+        this.logService.trace(`IPC Object URL: Removed channel ${channel}.`);
+        validatedIpcMain.removeHandler(channel);
+      }, "dispose")
+    };
+  }
+  //#endregion
+};
+ProtocolMainService = __decorateClass([
+  __decorateParam(0, INativeEnvironmentService),
+  __decorateParam(1, IUserDataProfilesService),
+  __decorateParam(2, ILogService)
+], ProtocolMainService);
+export {
+  ProtocolMainService
+};
+//# sourceMappingURL=protocolMainService.js.map

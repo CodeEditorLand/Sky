@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/contrib/interactive/browser/interactiveCommon.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { RawContextKey } from '../../../../platform/contextkey/common/contextkey.js';\r\n\r\nexport const INTERACTIVE_INPUT_CURSOR_BOUNDARY = new RawContextKey<'none' | 'top' | 'bottom' | 'both'>('interactiveInputCursorAtBoundary', 'none');\r\n\r\nexport const ReplEditorSettings = {\r\n\tinteractiveWindowAlwaysScrollOnNewCell: 'interactiveWindow.alwaysScrollOnNewCell',\r\n\texecuteWithShiftEnter: 'interactiveWindow.executeWithShiftEnter',\r\n\tshowExecutionHint: 'interactiveWindow.showExecutionHint',\r\n};\r\n"],
+  "mappings": "AAKA,SAAS,qBAAqB;AAEvB,MAAM,oCAAoC,IAAI,cAAkD,oCAAoC,MAAM;AAE1I,MAAM,qBAAqB;AAAA,EACjC,wCAAwC;AAAA,EACxC,uBAAuB;AAAA,EACvB,mBAAmB;AACpB;",
+  "names": []
+}

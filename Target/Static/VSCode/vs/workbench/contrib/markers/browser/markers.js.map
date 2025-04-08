@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/contrib/markers/browser/markers.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { MarkersFilters } from './markersViewActions.js';\r\nimport { IView } from '../../../common/views.js';\r\nimport { MarkerElement, ResourceMarkers } from './markersModel.js';\r\nimport { MarkersViewMode } from '../common/markers.js';\r\n\r\nexport interface IMarkersView extends IView {\r\n\r\n\treadonly filters: MarkersFilters;\r\n\tfocusFilter(): void;\r\n\tclearFilterText(): void;\r\n\tgetFilterStats(): { total: number; filtered: number };\r\n\r\n\tgetFocusElement(): MarkerElement | undefined;\r\n\tgetFocusedSelectedElements(): MarkerElement[] | null;\r\n\tgetAllResourceMarkers(): ResourceMarkers[];\r\n\r\n\tcollapseAll(): void;\r\n\tsetMultiline(multiline: boolean): void;\r\n\tsetViewMode(viewMode: MarkersViewMode): void;\r\n}\r\n"],
+  "mappings": "AAKA,SAAS,sBAAsB;AAC/B,SAAS,aAAa;AACtB,SAAS,eAAe,uBAAuB;AAC/C,SAAS,uBAAuB;",
+  "names": []
+}

@@ -1,1 +1,125 @@
-var d=Object.defineProperty,u=Object.getOwnPropertyDescriptor,f=(e,r,t,o)=>{for(var s,i=o>1?void 0:o?u(r,t):r,n=e.length-1;n>=0;n--)(s=e[n])&&(i=(o?s(r,t,i):s(i))||i);return o&&i&&d(r,t,i),i},c=(e,r)=>(t,o)=>r(t,o,e);import{isValidBasename as v}from"../../../../base/common/extpath.js";import{Schemas as s}from"../../../../base/common/network.js";import{win32 as p,posix as U}from"../../../../base/common/path.js";import{OperatingSystem as l,OS as g}from"../../../../base/common/platform.js";import{basename as I}from"../../../../base/common/resources.js";import{URI as h}from"../../../../base/common/uri.js";import{createDecorator as S}from"../../../../platform/instantiation/common/instantiation.js";import{getVirtualWorkspaceScheme as R}from"../../../../platform/workspace/common/virtualWorkspace.js";import{IWorkspaceContextService as y}from"../../../../platform/workspace/common/workspace.js";import{IWorkbenchEnvironmentService as b}from"../../environment/common/environmentService.js";import{IRemoteAgentService as H}from"../../remote/common/remoteAgentService.js";const q=S("pathService");let i=class{constructor(e,r,t,o){this.localUserHome=e,this.remoteAgentService=r,this.environmentService=t,this.contextService=o,this.resolveOS=(async()=>(await this.remoteAgentService.getEnvironment())?.os||g)(),this.resolveUserHome=(async()=>{const r=await this.remoteAgentService.getEnvironment();return this.maybeUnresolvedUserHome=r?.userHome??e})()}resolveOS;resolveUserHome;maybeUnresolvedUserHome;hasValidBasename(e,r,t){return"string"==typeof r||typeof r>"u"?this.resolveOS.then((t=>this.doHasValidBasename(e,t,r))):this.doHasValidBasename(e,r,t)}doHasValidBasename(e,r,t){return e.scheme!==s.file&&e.scheme!==s.vscodeRemote||v(t??I(e),r===l.Windows)}get defaultUriScheme(){return i.findDefaultUriScheme(this.environmentService,this.contextService)}static findDefaultUriScheme(e,r){if(e.remoteAuthority)return s.vscodeRemote;const t=R(r.getWorkspace());if(t)return t;const o=r.getWorkspace().folders[0];if(o)return o.uri.scheme;const i=r.getWorkspace().configuration;return i?i.scheme:s.file}userHome(e){return e?.preferLocal?this.localUserHome:this.resolveUserHome}get resolvedUserHome(){return this.maybeUnresolvedUserHome}get path(){return this.resolveOS.then((e=>e===l.Windows?p:U))}async fileURI(e){let r="";if(await this.resolveOS===l.Windows&&(e=e.replace(/\\/g,"/")),"/"===e[0]&&"/"===e[1]){const t=e.indexOf("/",2);-1===t?(r=e.substring(2),e="/"):(r=e.substring(2,t),e=e.substring(t)||"/")}return h.from({scheme:s.file,authority:r,path:e,query:"",fragment:""})}};i=f([c(1,H),c(2,b),c(3,y)],i);export{i as AbstractPathService,q as IPathService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { isValidBasename } from "../../../../base/common/extpath.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { IPath, win32, posix } from "../../../../base/common/path.js";
+import { OperatingSystem, OS } from "../../../../base/common/platform.js";
+import { basename } from "../../../../base/common/resources.js";
+import { URI } from "../../../../base/common/uri.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { getVirtualWorkspaceScheme } from "../../../../platform/workspace/common/virtualWorkspace.js";
+import { IWorkspaceContextService } from "../../../../platform/workspace/common/workspace.js";
+import { IWorkbenchEnvironmentService } from "../../environment/common/environmentService.js";
+import { IRemoteAgentService } from "../../remote/common/remoteAgentService.js";
+const IPathService = createDecorator("pathService");
+let AbstractPathService = class {
+  constructor(localUserHome, remoteAgentService, environmentService, contextService) {
+    this.localUserHome = localUserHome;
+    this.remoteAgentService = remoteAgentService;
+    this.environmentService = environmentService;
+    this.contextService = contextService;
+    this.resolveOS = (async () => {
+      const env = await this.remoteAgentService.getEnvironment();
+      return env?.os || OS;
+    })();
+    this.resolveUserHome = (async () => {
+      const env = await this.remoteAgentService.getEnvironment();
+      const userHome = this.maybeUnresolvedUserHome = env?.userHome ?? localUserHome;
+      return userHome;
+    })();
+  }
+  static {
+    __name(this, "AbstractPathService");
+  }
+  resolveOS;
+  resolveUserHome;
+  maybeUnresolvedUserHome;
+  hasValidBasename(resource, arg2, basename2) {
+    if (typeof arg2 === "string" || typeof arg2 === "undefined") {
+      return this.resolveOS.then((os) => this.doHasValidBasename(resource, os, arg2));
+    }
+    return this.doHasValidBasename(resource, arg2, basename2);
+  }
+  doHasValidBasename(resource, os, name) {
+    if (resource.scheme === Schemas.file || resource.scheme === Schemas.vscodeRemote) {
+      return isValidBasename(name ?? basename(resource), os === OperatingSystem.Windows);
+    }
+    return true;
+  }
+  get defaultUriScheme() {
+    return AbstractPathService.findDefaultUriScheme(this.environmentService, this.contextService);
+  }
+  static findDefaultUriScheme(environmentService, contextService) {
+    if (environmentService.remoteAuthority) {
+      return Schemas.vscodeRemote;
+    }
+    const virtualWorkspace = getVirtualWorkspaceScheme(contextService.getWorkspace());
+    if (virtualWorkspace) {
+      return virtualWorkspace;
+    }
+    const firstFolder = contextService.getWorkspace().folders[0];
+    if (firstFolder) {
+      return firstFolder.uri.scheme;
+    }
+    const configuration = contextService.getWorkspace().configuration;
+    if (configuration) {
+      return configuration.scheme;
+    }
+    return Schemas.file;
+  }
+  userHome(options) {
+    return options?.preferLocal ? this.localUserHome : this.resolveUserHome;
+  }
+  get resolvedUserHome() {
+    return this.maybeUnresolvedUserHome;
+  }
+  get path() {
+    return this.resolveOS.then((os) => {
+      return os === OperatingSystem.Windows ? win32 : posix;
+    });
+  }
+  async fileURI(_path) {
+    let authority = "";
+    const os = await this.resolveOS;
+    if (os === OperatingSystem.Windows) {
+      _path = _path.replace(/\\/g, "/");
+    }
+    if (_path[0] === "/" && _path[1] === "/") {
+      const idx = _path.indexOf("/", 2);
+      if (idx === -1) {
+        authority = _path.substring(2);
+        _path = "/";
+      } else {
+        authority = _path.substring(2, idx);
+        _path = _path.substring(idx) || "/";
+      }
+    }
+    return URI.from({
+      scheme: Schemas.file,
+      authority,
+      path: _path,
+      query: "",
+      fragment: ""
+    });
+  }
+};
+AbstractPathService = __decorateClass([
+  __decorateParam(1, IRemoteAgentService),
+  __decorateParam(2, IWorkbenchEnvironmentService),
+  __decorateParam(3, IWorkspaceContextService)
+], AbstractPathService);
+export {
+  AbstractPathService,
+  IPathService
+};
+//# sourceMappingURL=pathService.js.map

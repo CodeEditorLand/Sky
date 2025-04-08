@@ -1,1 +1,74 @@
-import{observableValueOpts as g}from"./api.js";import{autorun as m,autorunDelta as h,autorunHandleChanges as u,autorunOpts as C,autorunWithStore as c,autorunWithStoreHandleChanges as f,autorunIterableDelta as y}from"./autorun.js";import{asyncTransaction as W,disposableObservableValue as S,globalTransaction as x,observableValue as D,subtransaction as T,transaction as E,TransactionImpl as F}from"./base.js";import{derived as L,derivedDisposable as k,derivedHandleChanges as w,derivedOpts as P,derivedWithSetter as H,derivedWithStore as R}from"./derived.js";import{ObservableLazy as A,ObservableLazyPromise as _,ObservablePromise as B,PromiseResult as G}from"./promise.js";import{derivedWithCancellationToken as j,waitForState as q}from"./utilsCancellation.js";import{constObservable as K,debouncedObservableDeprecated as M,debouncedObservable as N,derivedConstOnceDefined as Q,derivedObservableWithCache as X,derivedObservableWithWritableCache as Y,keepObserved as Z,latestChangedValue as $,mapObservableArrayCached as ee,observableFromEvent as re,observableFromEventOpts as ae,observableFromPromise as te,observableFromValueWithChangeEvent as oe,observableSignal as ne,observableSignalFromEvent as be,recomputeInitiallyAndOnChange as le,runOnChange as se,runOnChangeWithStore as ie,runOnChangeWithCancellationToken as ve,signalFromObservable as de,ValueWithChangeEventFromObservable as pe,wasEventTriggeredRecently as ge}from"./utils.js";import{}from"./debugName.js";import{recordChanges as he}from"./changeTracker.js";import{addLogger as e,setLogObservableFn as a}from"./logging/logging.js";import{ConsoleObservableLogger as t,logObservableToConsole as o}from"./logging/consoleObservableLogger.js";import{DevToolsLogger as n}from"./logging/debugger/devToolsLogger.js";import{env as r}from"../process.js";a(o);const b=!1;r&&r.VSCODE_DEV_DEBUG&&e(n.getInstance());export{A as ObservableLazy,_ as ObservableLazyPromise,B as ObservablePromise,G as PromiseResult,F as TransactionImpl,pe as ValueWithChangeEventFromObservable,W as asyncTransaction,m as autorun,h as autorunDelta,u as autorunHandleChanges,y as autorunIterableDelta,C as autorunOpts,c as autorunWithStore,f as autorunWithStoreHandleChanges,K as constObservable,N as debouncedObservable,M as debouncedObservableDeprecated,L as derived,Q as derivedConstOnceDefined,k as derivedDisposable,w as derivedHandleChanges,X as derivedObservableWithCache,Y as derivedObservableWithWritableCache,P as derivedOpts,j as derivedWithCancellationToken,H as derivedWithSetter,R as derivedWithStore,S as disposableObservableValue,x as globalTransaction,Z as keepObserved,$ as latestChangedValue,ee as mapObservableArrayCached,re as observableFromEvent,ae as observableFromEventOpts,te as observableFromPromise,oe as observableFromValueWithChangeEvent,ne as observableSignal,be as observableSignalFromEvent,D as observableValue,g as observableValueOpts,le as recomputeInitiallyAndOnChange,he as recordChanges,se as runOnChange,ve as runOnChangeWithCancellationToken,ie as runOnChangeWithStore,de as signalFromObservable,T as subtransaction,E as transaction,q as waitForState,ge as wasEventTriggeredRecently};
+import { observableValueOpts } from "./api.js";
+import { autorun, autorunDelta, autorunHandleChanges, autorunOpts, autorunWithStore, autorunWithStoreHandleChanges, autorunIterableDelta } from "./autorun.js";
+import { asyncTransaction, disposableObservableValue, globalTransaction, observableValue, subtransaction, transaction, TransactionImpl } from "./base.js";
+import { derived, derivedDisposable, derivedHandleChanges, derivedOpts, derivedWithSetter, derivedWithStore } from "./derived.js";
+import { ObservableLazy, ObservableLazyPromise, ObservablePromise, PromiseResult } from "./promise.js";
+import { derivedWithCancellationToken, waitForState } from "./utilsCancellation.js";
+import { constObservable, debouncedObservableDeprecated, debouncedObservable, derivedConstOnceDefined, derivedObservableWithCache, derivedObservableWithWritableCache, keepObserved, latestChangedValue, mapObservableArrayCached, observableFromEvent, observableFromEventOpts, observableFromPromise, observableFromValueWithChangeEvent, observableSignal, observableSignalFromEvent, recomputeInitiallyAndOnChange, runOnChange, runOnChangeWithStore, runOnChangeWithCancellationToken, signalFromObservable, ValueWithChangeEventFromObservable, wasEventTriggeredRecently } from "./utils.js";
+import {} from "./debugName.js";
+import { recordChanges } from "./changeTracker.js";
+import { addLogger, setLogObservableFn } from "./logging/logging.js";
+import { ConsoleObservableLogger, logObservableToConsole } from "./logging/consoleObservableLogger.js";
+import { DevToolsLogger } from "./logging/debugger/devToolsLogger.js";
+import { env } from "../process.js";
+setLogObservableFn(logObservableToConsole);
+const enableLogging = false;
+if (enableLogging) {
+  addLogger(new ConsoleObservableLogger());
+}
+if (env && env["VSCODE_DEV_DEBUG"]) {
+  addLogger(DevToolsLogger.getInstance());
+}
+export {
+  ObservableLazy,
+  ObservableLazyPromise,
+  ObservablePromise,
+  PromiseResult,
+  TransactionImpl,
+  ValueWithChangeEventFromObservable,
+  asyncTransaction,
+  autorun,
+  autorunDelta,
+  autorunHandleChanges,
+  autorunIterableDelta,
+  autorunOpts,
+  autorunWithStore,
+  autorunWithStoreHandleChanges,
+  constObservable,
+  debouncedObservable,
+  debouncedObservableDeprecated,
+  derived,
+  derivedConstOnceDefined,
+  derivedDisposable,
+  derivedHandleChanges,
+  derivedObservableWithCache,
+  derivedObservableWithWritableCache,
+  derivedOpts,
+  derivedWithCancellationToken,
+  derivedWithSetter,
+  derivedWithStore,
+  disposableObservableValue,
+  globalTransaction,
+  keepObserved,
+  latestChangedValue,
+  mapObservableArrayCached,
+  observableFromEvent,
+  observableFromEventOpts,
+  observableFromPromise,
+  observableFromValueWithChangeEvent,
+  observableSignal,
+  observableSignalFromEvent,
+  observableValue,
+  observableValueOpts,
+  recomputeInitiallyAndOnChange,
+  recordChanges,
+  runOnChange,
+  runOnChangeWithCancellationToken,
+  runOnChangeWithStore,
+  signalFromObservable,
+  subtransaction,
+  transaction,
+  waitForState,
+  wasEventTriggeredRecently
+};
+//# sourceMappingURL=index.js.map

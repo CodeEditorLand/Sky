@@ -1,1 +1,354 @@
-var A=Object.defineProperty,O=Object.getOwnPropertyDescriptor,w=(e,t,i,n)=>{for(var r,o=n>1?void 0:n?O(t,i):t,s=e.length-1;s>=0;s--)(r=e[s])&&(o=(n?r(t,i,o):r(o))||o);return n&&o&&A(t,i,o),o},y=(e,t)=>(i,n)=>t(i,n,e);import{computeLevenshteinDistance as $}from"../../../../base/common/diff/diff.js";import{Emitter as j,Event as W}from"../../../../base/common/event.js";import{markdownCommandLink as L,MarkdownString as K}from"../../../../base/common/htmlContent.js";import{findNodeAtLocation as b,parseTree as q}from"../../../../base/common/json.js";import{Disposable as z,DisposableStore as B,dispose as G,MutableDisposable as J}from"../../../../base/common/lifecycle.js";import"../../../../base/common/observable.js";import{isEqual as E}from"../../../../base/common/resources.js";import{Range as Q}from"../../../../editor/common/core/range.js";import"../../../../editor/common/languages.js";import"../../../../editor/common/model.js";import{ILanguageFeaturesService as U}from"../../../../editor/common/services/languageFeatures.js";import{localize as u}from"../../../../nls.js";import{IMarkerService as X,MarkerSeverity as Y}from"../../../../platform/markers/common/markers.js";import"../../../common/contributions.js";import{IConfigurationResolverService as Z}from"../../../services/configurationResolver/common/configurationResolver.js";import{ConfigurationResolverExpression as R}from"../../../services/configurationResolver/common/configurationResolverExpression.js";import{IMcpConfigPathsService as F}from"../common/mcpConfigPathsService.js";import{mcpConfigurationSection as ee}from"../common/mcpConfiguration.js";import{IMcpRegistry as te}from"../common/mcpRegistryTypes.js";import{IMcpService as ie,McpConnectionState as _}from"../common/mcpTypes.js";import{EditStoredInput as ne,RemoveStoredInput as H,RestartServer as T,ShowOutput as P,StartServer as re,StopServer as V}from"./mcpCommands.js";const k="vscode.mcp";let M=class extends z{constructor(e,t,i,n,r,o){super(),this._mcpRegistry=t,this._mcpConfigPathsService=i,this._mcpService=n,this._markerService=r,this._configurationResolverService=o;const s=[{pattern:"**/.vscode/mcp.json"},{pattern:"**/settings.json"},{pattern:"**/workspace.json"}],a=this._register(new j),c={onDidChange:a.event,provideCodeLenses:(e,t)=>this._provideCodeLenses(e,(()=>a.fire(c)))};this._register(e.codeLensProvider.register(s,c)),this._register(e.inlayHintsProvider.register(s,{onDidChangeInlayHints:t.onDidChangeInputs,provideInlayHints:(e,t)=>this._provideInlayHints(e,t)}))}_cachedMcpSection=this._register(new J);_parseModel(e){if(this._cachedMcpSection.value?.model===e)return this._cachedMcpSection.value;const t=e.uri,i=this._mcpConfigPathsService.paths.get().find((e=>E(e.uri,t)));if(!i)return;const n=e.getValue(),r=q(n),o=[e.onDidChangeContent((()=>this._cachedMcpSection.clear())),e.onWillDispose((()=>this._cachedMcpSection.clear()))];return this._addDiagnostics(e,n,r,i),this._cachedMcpSection.value={model:e,tree:r,inConfig:i,dispose:()=>{this._markerService.remove(k,[t]),G(o)}}}_addDiagnostics(e,t,i,n){const r=b(i,n.section?[...n.section,"servers"]:["servers"]);if(!r)return;const o=e=>{let t="",i=1/0;for(const n of this._configurationResolverService.resolvableVariables){const r=$(e,n);r<i&&(i=r,t=n)}return t},s=[];D(r,(i=>{const n=R.parse(i.value);for(const{id:r,name:a,arg:c}of n.unresolved())if(!this._configurationResolverService.resolvableVariables.has(a)){const n=t.indexOf(r,i.offset);if(-1===n)continue;const m=e.getPositionAt(n),d=e.getPositionAt(n+r.length);s.push({severity:Y.Warning,message:u("mcp.variableNotFound","Variable `{0}` not found, did you mean ${{1}}?",a,o(a)+(c?`:${c}`:"")),startLineNumber:m.lineNumber,startColumn:m.column,endLineNumber:d.lineNumber,endColumn:d.column,modelVersionId:e.getVersionId()})}})),s.length?this._markerService.changeOne(k,e.uri,s):this._markerService.remove(k,[e.uri])}_provideCodeLenses(e,t){const i=this._parseModel(e);if(!i)return;const{tree:n,inConfig:r}=i,o=b(n,r.section?[...r.section,"servers"]:["servers"]);if(!o)return;const s=new B,a={lenses:[],dispose:()=>s.dispose()},c=e=>(s.add(W.fromObservableLight(e)(t)),e.get()),m=c(this._mcpRegistry.collections).find((t=>E(t.presentation?.origin,e.uri)));if(!m)return a;const d=c(this._mcpService.servers).filter((e=>e.collection.id===m.id));for(const t of o.children||[]){if("property"!==t.type||"string"!==t.children?.[0]?.type)continue;const i=t.children[0].value,n=d.find((e=>e.definition.label===i));if(!n)continue;const r=Q.fromPositions(e.getPositionAt(t.children[0].offset));switch(c(n.connectionState).state){case _.Kind.Error:a.lenses.push({range:r,command:{id:P.ID,title:"$(error) "+u("server.error","Error"),arguments:[n.definition.id]}},{range:r,command:{id:T.ID,title:u("mcp.restart","Restart"),arguments:[n.definition.id]}});break;case _.Kind.Starting:a.lenses.push({range:r,command:{id:P.ID,title:"$(loading~spin) "+u("server.starting","Starting"),arguments:[n.definition.id]}},{range:r,command:{id:V.ID,title:u("cancel","Cancel"),arguments:[n.definition.id]}});break;case _.Kind.Running:a.lenses.push({range:r,command:{id:P.ID,title:"$(check) "+u("server.running","Running"),arguments:[n.definition.id]}},{range:r,command:{id:V.ID,title:u("mcp.stop","Stop"),arguments:[n.definition.id]}},{range:r,command:{id:T.ID,title:u("mcp.restart","Restart"),arguments:[n.definition.id]}},{range:r,command:{id:"",title:u("server.toolCount","{0} tools",c(n.tools).length)}});break;case _.Kind.Stopped:{a.lenses.push({range:r,command:{id:re.ID,title:"$(debug-start) "+u("mcp.start","Start"),arguments:[n.definition.id]}});const e=c(n.tools).length;e&&a.lenses.push({range:r,command:{id:"",title:u("server.toolCountCached","{0} cached tools",e)}})}}}return a}async _provideInlayHints(e,t){const i=this._parseModel(e);if(!i)return;const{tree:n,inConfig:r}=i,o=r.section?b(n,[...r.section]):n;if(!o)return;const s=b(o,["inputs"]);if(!s)return;const a=await this._mcpRegistry.getSavedInputs(r.scope),c=[],m=b(o,["servers"]);return m&&D(m,(e=>{const t=R.parse(e.value);for(const{id:i}of t.unresolved()){const t=a[i];t&&d(i,e.offset+e.value.indexOf(i)+i.length,t)}})),function(e){if("array"===e.type&&e.children)for(const t of e.children){if("object"!==t.type||!t.children)continue;const e=t.children.find((e=>"property"===e.type&&"id"===e.children?.[0].value));if(!e)continue;const i=e.children[1];if(!i||"string"!==i.type||!i.value)continue;const n="${input:"+i.value+"}",r=a[n];r&&d(n,i.offset+1+i.length,r)}}(s),{hints:c,dispose:()=>{}};function d(t,i,n){const o=new K([L({id:ne.ID,title:u("edit","Edit"),arguments:[t,e.uri,ee,r.target]}),L({id:H.ID,title:u("clear","Clear"),arguments:[r.scope,t]}),L({id:H.ID,title:u("clearAll","Clear All"),arguments:[r.scope]})].join(" | "),{isTrusted:!0}),s={label:"= "+("promptString"===n.input?.type&&n.input.password?"*".repeat(10):n.value||""),position:e.getPositionAt(i),tooltip:o,paddingLeft:!0};return c.push(s),s}}};function D(e,t){"string"===e.type&&"string"==typeof e.value&&e.value.includes(R.VARIABLE_LHS)?t(e):"property"===e.type?e.children?.slice(1).forEach((e=>D(e,t))):e.children?.forEach((e=>D(e,t)))}M=w([y(0,U),y(1,te),y(2,F),y(3,ie),y(4,X),y(5,Z)],M);export{M as McpLanguageFeatures};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { computeLevenshteinDistance } from "../../../../base/common/diff/diff.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { markdownCommandLink, MarkdownString } from "../../../../base/common/htmlContent.js";
+import { findNodeAtLocation, Node, parseTree } from "../../../../base/common/json.js";
+import { Disposable, DisposableStore, dispose, IDisposable, MutableDisposable } from "../../../../base/common/lifecycle.js";
+import { IObservable } from "../../../../base/common/observable.js";
+import { isEqual } from "../../../../base/common/resources.js";
+import { Range } from "../../../../editor/common/core/range.js";
+import { CodeLensList, CodeLensProvider, InlayHint, InlayHintList } from "../../../../editor/common/languages.js";
+import { ITextModel } from "../../../../editor/common/model.js";
+import { ILanguageFeaturesService } from "../../../../editor/common/services/languageFeatures.js";
+import { localize } from "../../../../nls.js";
+import { IMarkerData, IMarkerService, MarkerSeverity } from "../../../../platform/markers/common/markers.js";
+import { IWorkbenchContribution } from "../../../common/contributions.js";
+import { IConfigurationResolverService } from "../../../services/configurationResolver/common/configurationResolver.js";
+import { ConfigurationResolverExpression, IResolvedValue } from "../../../services/configurationResolver/common/configurationResolverExpression.js";
+import { IMcpConfigPath, IMcpConfigPathsService } from "../common/mcpConfigPathsService.js";
+import { mcpConfigurationSection } from "../common/mcpConfiguration.js";
+import { IMcpRegistry } from "../common/mcpRegistryTypes.js";
+import { IMcpService, McpConnectionState } from "../common/mcpTypes.js";
+import { EditStoredInput, RemoveStoredInput, RestartServer, ShowOutput, StartServer, StopServer } from "./mcpCommands.js";
+const diagnosticOwner = "vscode.mcp";
+let McpLanguageFeatures = class extends Disposable {
+  constructor(languageFeaturesService, _mcpRegistry, _mcpConfigPathsService, _mcpService, _markerService, _configurationResolverService) {
+    super();
+    this._mcpRegistry = _mcpRegistry;
+    this._mcpConfigPathsService = _mcpConfigPathsService;
+    this._mcpService = _mcpService;
+    this._markerService = _markerService;
+    this._configurationResolverService = _configurationResolverService;
+    const patterns = [
+      { pattern: "**/.vscode/mcp.json" },
+      { pattern: "**/settings.json" },
+      { pattern: "**/workspace.json" }
+    ];
+    const onDidChangeCodeLens = this._register(new Emitter());
+    const codeLensProvider = {
+      onDidChange: onDidChangeCodeLens.event,
+      provideCodeLenses: /* @__PURE__ */ __name((model, range) => this._provideCodeLenses(model, () => onDidChangeCodeLens.fire(codeLensProvider)), "provideCodeLenses")
+    };
+    this._register(languageFeaturesService.codeLensProvider.register(patterns, codeLensProvider));
+    this._register(languageFeaturesService.inlayHintsProvider.register(patterns, {
+      onDidChangeInlayHints: _mcpRegistry.onDidChangeInputs,
+      provideInlayHints: /* @__PURE__ */ __name((model, range) => this._provideInlayHints(model, range), "provideInlayHints")
+    }));
+  }
+  static {
+    __name(this, "McpLanguageFeatures");
+  }
+  _cachedMcpSection = this._register(new MutableDisposable());
+  /** Simple mechanism to avoid extra json parsing for hints+lenses */
+  _parseModel(model) {
+    if (this._cachedMcpSection.value?.model === model) {
+      return this._cachedMcpSection.value;
+    }
+    const uri = model.uri;
+    const inConfig = this._mcpConfigPathsService.paths.get().find((u) => isEqual(u.uri, uri));
+    if (!inConfig) {
+      return void 0;
+    }
+    const value = model.getValue();
+    const tree = parseTree(value);
+    const listeners = [
+      model.onDidChangeContent(() => this._cachedMcpSection.clear()),
+      model.onWillDispose(() => this._cachedMcpSection.clear())
+    ];
+    this._addDiagnostics(model, value, tree, inConfig);
+    return this._cachedMcpSection.value = {
+      model,
+      tree,
+      inConfig,
+      dispose: /* @__PURE__ */ __name(() => {
+        this._markerService.remove(diagnosticOwner, [uri]);
+        dispose(listeners);
+      }, "dispose")
+    };
+  }
+  _addDiagnostics(tm, value, tree, inConfig) {
+    const serversNode = findNodeAtLocation(tree, inConfig.section ? [...inConfig.section, "servers"] : ["servers"]);
+    if (!serversNode) {
+      return;
+    }
+    const getClosestMatchingVariable = /* @__PURE__ */ __name((name) => {
+      let bestValue = "";
+      let bestDistance = Infinity;
+      for (const variable of this._configurationResolverService.resolvableVariables) {
+        const distance = computeLevenshteinDistance(name, variable);
+        if (distance < bestDistance) {
+          bestDistance = distance;
+          bestValue = variable;
+        }
+      }
+      return bestValue;
+    }, "getClosestMatchingVariable");
+    const diagnostics = [];
+    forEachPropertyWithReplacement(serversNode, (node) => {
+      const expr = ConfigurationResolverExpression.parse(node.value);
+      for (const { id, name, arg } of expr.unresolved()) {
+        if (!this._configurationResolverService.resolvableVariables.has(name)) {
+          const position = value.indexOf(id, node.offset);
+          if (position === -1) {
+            continue;
+          }
+          const start = tm.getPositionAt(position);
+          const end = tm.getPositionAt(position + id.length);
+          diagnostics.push({
+            severity: MarkerSeverity.Warning,
+            message: localize("mcp.variableNotFound", "Variable `{0}` not found, did you mean ${{1}}?", name, getClosestMatchingVariable(name) + (arg ? `:${arg}` : "")),
+            startLineNumber: start.lineNumber,
+            startColumn: start.column,
+            endLineNumber: end.lineNumber,
+            endColumn: end.column,
+            modelVersionId: tm.getVersionId()
+          });
+        }
+      }
+    });
+    if (diagnostics.length) {
+      this._markerService.changeOne(diagnosticOwner, tm.uri, diagnostics);
+    } else {
+      this._markerService.remove(diagnosticOwner, [tm.uri]);
+    }
+  }
+  _provideCodeLenses(model, onDidChangeCodeLens) {
+    const parsed = this._parseModel(model);
+    if (!parsed) {
+      return void 0;
+    }
+    const { tree, inConfig } = parsed;
+    const serversNode = findNodeAtLocation(tree, inConfig.section ? [...inConfig.section, "servers"] : ["servers"]);
+    if (!serversNode) {
+      return void 0;
+    }
+    const store = new DisposableStore();
+    const lenses = { lenses: [], dispose: /* @__PURE__ */ __name(() => store.dispose(), "dispose") };
+    const read = /* @__PURE__ */ __name((observable) => {
+      store.add(Event.fromObservableLight(observable)(onDidChangeCodeLens));
+      return observable.get();
+    }, "read");
+    const collection = read(this._mcpRegistry.collections).find((c) => isEqual(c.presentation?.origin, model.uri));
+    if (!collection) {
+      return lenses;
+    }
+    const mcpServers = read(this._mcpService.servers).filter((s) => s.collection.id === collection.id);
+    for (const node of serversNode.children || []) {
+      if (node.type !== "property" || node.children?.[0]?.type !== "string") {
+        continue;
+      }
+      const name = node.children[0].value;
+      const server = mcpServers.find((s) => s.definition.label === name);
+      if (!server) {
+        continue;
+      }
+      const range = Range.fromPositions(model.getPositionAt(node.children[0].offset));
+      switch (read(server.connectionState).state) {
+        case McpConnectionState.Kind.Error:
+          lenses.lenses.push({
+            range,
+            command: {
+              id: ShowOutput.ID,
+              title: "$(error) " + localize("server.error", "Error"),
+              arguments: [server.definition.id]
+            }
+          }, {
+            range,
+            command: {
+              id: RestartServer.ID,
+              title: localize("mcp.restart", "Restart"),
+              arguments: [server.definition.id]
+            }
+          });
+          break;
+        case McpConnectionState.Kind.Starting:
+          lenses.lenses.push({
+            range,
+            command: {
+              id: ShowOutput.ID,
+              title: "$(loading~spin) " + localize("server.starting", "Starting"),
+              arguments: [server.definition.id]
+            }
+          }, {
+            range,
+            command: {
+              id: StopServer.ID,
+              title: localize("cancel", "Cancel"),
+              arguments: [server.definition.id]
+            }
+          });
+          break;
+        case McpConnectionState.Kind.Running:
+          lenses.lenses.push({
+            range,
+            command: {
+              id: ShowOutput.ID,
+              title: "$(check) " + localize("server.running", "Running"),
+              arguments: [server.definition.id]
+            }
+          }, {
+            range,
+            command: {
+              id: StopServer.ID,
+              title: localize("mcp.stop", "Stop"),
+              arguments: [server.definition.id]
+            }
+          }, {
+            range,
+            command: {
+              id: RestartServer.ID,
+              title: localize("mcp.restart", "Restart"),
+              arguments: [server.definition.id]
+            }
+          }, {
+            range,
+            command: {
+              id: "",
+              title: localize("server.toolCount", "{0} tools", read(server.tools).length)
+            }
+          });
+          break;
+        case McpConnectionState.Kind.Stopped: {
+          lenses.lenses.push({
+            range,
+            command: {
+              id: StartServer.ID,
+              title: "$(debug-start) " + localize("mcp.start", "Start"),
+              arguments: [server.definition.id]
+            }
+          });
+          const toolCount = read(server.tools).length;
+          if (toolCount) {
+            lenses.lenses.push({
+              range,
+              command: {
+                id: "",
+                title: localize("server.toolCountCached", "{0} cached tools", toolCount)
+              }
+            });
+          }
+        }
+      }
+    }
+    return lenses;
+  }
+  async _provideInlayHints(model, range) {
+    const parsed = this._parseModel(model);
+    if (!parsed) {
+      return void 0;
+    }
+    const { tree, inConfig } = parsed;
+    const mcpSection = inConfig.section ? findNodeAtLocation(tree, [...inConfig.section]) : tree;
+    if (!mcpSection) {
+      return void 0;
+    }
+    const inputsNode = findNodeAtLocation(mcpSection, ["inputs"]);
+    if (!inputsNode) {
+      return void 0;
+    }
+    const inputs = await this._mcpRegistry.getSavedInputs(inConfig.scope);
+    const hints = [];
+    const serversNode = findNodeAtLocation(mcpSection, ["servers"]);
+    if (serversNode) {
+      annotateServers(serversNode);
+    }
+    annotateInputs(inputsNode);
+    return { hints, dispose: /* @__PURE__ */ __name(() => {
+    }, "dispose") };
+    function annotateServers(servers) {
+      forEachPropertyWithReplacement(servers, (node) => {
+        const expr = ConfigurationResolverExpression.parse(node.value);
+        for (const { id } of expr.unresolved()) {
+          const saved = inputs[id];
+          if (saved) {
+            pushAnnotation(id, node.offset + node.value.indexOf(id) + id.length, saved);
+          }
+        }
+      });
+    }
+    __name(annotateServers, "annotateServers");
+    function annotateInputs(node) {
+      if (node.type !== "array" || !node.children) {
+        return;
+      }
+      for (const input of node.children) {
+        if (input.type !== "object" || !input.children) {
+          continue;
+        }
+        const idProp = input.children.find((c) => c.type === "property" && c.children?.[0].value === "id");
+        if (!idProp) {
+          continue;
+        }
+        const id = idProp.children[1];
+        if (!id || id.type !== "string" || !id.value) {
+          continue;
+        }
+        const savedId = "${input:" + id.value + "}";
+        const saved = inputs[savedId];
+        if (saved) {
+          pushAnnotation(savedId, id.offset + 1 + id.length, saved);
+        }
+      }
+    }
+    __name(annotateInputs, "annotateInputs");
+    function pushAnnotation(savedId, offset, saved) {
+      const tooltip = new MarkdownString([
+        markdownCommandLink({ id: EditStoredInput.ID, title: localize("edit", "Edit"), arguments: [savedId, model.uri, mcpConfigurationSection, inConfig.target] }),
+        markdownCommandLink({ id: RemoveStoredInput.ID, title: localize("clear", "Clear"), arguments: [inConfig.scope, savedId] }),
+        markdownCommandLink({ id: RemoveStoredInput.ID, title: localize("clearAll", "Clear All"), arguments: [inConfig.scope] })
+      ].join(" | "), { isTrusted: true });
+      const hint = {
+        label: "= " + (saved.input?.type === "promptString" && saved.input.password ? "*".repeat(10) : saved.value || ""),
+        position: model.getPositionAt(offset),
+        tooltip,
+        paddingLeft: true
+      };
+      hints.push(hint);
+      return hint;
+    }
+    __name(pushAnnotation, "pushAnnotation");
+  }
+};
+McpLanguageFeatures = __decorateClass([
+  __decorateParam(0, ILanguageFeaturesService),
+  __decorateParam(1, IMcpRegistry),
+  __decorateParam(2, IMcpConfigPathsService),
+  __decorateParam(3, IMcpService),
+  __decorateParam(4, IMarkerService),
+  __decorateParam(5, IConfigurationResolverService)
+], McpLanguageFeatures);
+function forEachPropertyWithReplacement(node, callback) {
+  if (node.type === "string" && typeof node.value === "string" && node.value.includes(ConfigurationResolverExpression.VARIABLE_LHS)) {
+    callback(node);
+  } else if (node.type === "property") {
+    node.children?.slice(1).forEach((n) => forEachPropertyWithReplacement(n, callback));
+  } else {
+    node.children?.forEach((n) => forEachPropertyWithReplacement(n, callback));
+  }
+}
+__name(forEachPropertyWithReplacement, "forEachPropertyWithReplacement");
+export {
+  McpLanguageFeatures
+};
+//# sourceMappingURL=mcpLanguageFeatures.js.map

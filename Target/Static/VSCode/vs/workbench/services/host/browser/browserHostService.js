@@ -1,1 +1,523 @@
-var M=Object.defineProperty;var _=Object.getOwnPropertyDescriptor;var w=(m,p,e,i)=>{for(var o=i>1?void 0:i?_(p,e):p,r=m.length-1,n;r>=0;r--)(n=m[r])&&(o=(i?n(p,e,o):n(o))||o);return i&&o&&M(p,e,o),o},l=(m,p)=>(e,i)=>p(e,i,m);import{Emitter as y,Event as u}from"../../../../base/common/event.js";import{IHostService as N}from"./host.js";import{InstantiationType as B,registerSingleton as H}from"../../../../platform/instantiation/common/extensions.js";import{ILayoutService as V}from"../../../../platform/layout/browser/layoutService.js";import{IEditorService as K}from"../../editor/common/editorService.js";import{IConfigurationService as j}from"../../../../platform/configuration/common/configuration.js";import{isFolderToOpen as I,isWorkspaceToOpen as R,isFileToOpen as q}from"../../../../platform/window/common/window.js";import{isResourceEditorInput as h,pathsToEditors as b}from"../../../common/editor.js";import{whenEditorClosed as G}from"../../../browser/editor.js";import"../../../browser/web.api.js";import{IFileService as z}from"../../../../platform/files/common/files.js";import{ILabelService as Z,Verbosity as L}from"../../../../platform/label/common/label.js";import{EventType as W,ModifierKeyEmitter as D,addDisposableListener as E,addDisposableThrottledListener as J,detectFullscreen as U,disposableWindowInterval as Q,getActiveDocument as X,getWindowId as x,onDidRegisterWindow as k,trackFocus as A}from"../../../../base/browser/dom.js";import{Disposable as Y,DisposableStore as $,toDisposable as ee}from"../../../../base/common/lifecycle.js";import{IBrowserWorkbenchEnvironmentService as ie}from"../../environment/browser/environmentService.js";import{memoize as F}from"../../../../base/common/decorators.js";import{parseLineAndColumnAware as re}from"../../../../base/common/extpath.js";import"../../../../platform/workspaces/common/workspaces.js";import{IWorkspaceEditingService as C}from"../../workspaces/common/workspaceEditing.js";import{IInstantiationService as oe}from"../../../../platform/instantiation/common/instantiation.js";import{ILifecycleService as te,ShutdownReason as O}from"../../lifecycle/common/lifecycle.js";import"../../lifecycle/browser/lifecycleService.js";import{ILogService as ne}from"../../../../platform/log/common/log.js";import{getWorkspaceIdentifier as se}from"../../workspaces/browser/workspaces.js";import{localize as T}from"../../../../nls.js";import ae from"../../../../base/common/severity.js";import{IDialogService as de}from"../../../../platform/dialogs/common/dialogs.js";import{DomEmitter as ce}from"../../../../base/browser/event.js";import{isUndefined as le}from"../../../../base/common/types.js";import{isTemporaryWorkspace as ue,IWorkspaceContextService as fe}from"../../../../platform/workspace/common/workspace.js";import"../../../../editor/browser/editorExtensions.js";import{Schemas as pe}from"../../../../base/common/network.js";import"../../../../platform/editor/common/editor.js";import{coalesce as P}from"../../../../base/common/arrays.js";import{mainWindow as g,isAuxiliaryWindow as he}from"../../../../base/browser/window.js";import{isIOS as me,isMacintosh as ve}from"../../../../base/common/platform.js";import{IUserDataProfilesService as we}from"../../../../platform/userDataProfile/common/userDataProfile.js";import"../../../../base/common/uri.js";import{VSBuffer as ge}from"../../../../base/common/buffer.js";var Se=(i=>(i[i.Unknown=1]="Unknown",i[i.Keyboard=2]="Keyboard",i[i.Api=3]="Api",i))(Se||{});let f=class extends Y{constructor(e,i,o,r,n,d,a,c,v,t,s){super();this.layoutService=e;this.configurationService=i;this.fileService=o;this.labelService=r;this.environmentService=n;this.instantiationService=d;this.lifecycleService=a;this.logService=c;this.dialogService=v;this.contextService=t;this.userDataProfilesService=s;n.options?.workspaceProvider?this.workspaceProvider=n.options.workspaceProvider:this.workspaceProvider=new class{workspace=void 0;trusted=void 0;async open(){return!0}},this.registerListeners()}workspaceProvider;shutdownReason=1;registerListeners(){this._register(this.lifecycleService.onBeforeShutdown(e=>this.onBeforeShutdown(e))),this._register(D.getInstance().event(()=>this.updateShutdownReasonFromEvent()))}onBeforeShutdown(e){switch(this.shutdownReason){case 1:case 2:{const i=this.configurationService.getValue("window.confirmBeforeClose");(i==="always"||i==="keyboardOnly"&&this.shutdownReason===2)&&e.veto(!0,"veto.confirmBeforeClose");break}case 3:break}this.shutdownReason=1}updateShutdownReasonFromEvent(){this.shutdownReason!==3&&(D.getInstance().isModifierPressed?this.shutdownReason=2:this.shutdownReason=1)}get onDidChangeFocus(){const e=this._register(new y);return this._register(u.runAndSubscribe(k,({window:i,disposables:o})=>{const r=o.add(A(i)),n=o.add(new ce(i.document,"visibilitychange"));u.any(u.map(r.onDidFocus,()=>this.hasFocus,o),u.map(r.onDidBlur,()=>this.hasFocus,o),u.map(n.event,()=>this.hasFocus,o),u.map(this.onDidChangeActiveWindow,()=>this.hasFocus,o))(d=>e.fire(d))},{window:g,disposables:this._store})),u.latch(e.event,void 0,this._store)}get hasFocus(){return X().hasFocus()}async hadLastFocus(){return!0}async focus(e){e.focus()}get onDidChangeActiveWindow(){const e=this._register(new y);return this._register(u.runAndSubscribe(k,({window:i,disposables:o})=>{const r=x(i),n=o.add(A(i));o.add(n.onDidFocus(()=>e.fire(r))),he(i)&&o.add(Q(i,()=>{const d=i.document.hasFocus();return d&&e.fire(r),d},100,20))},{window:g,disposables:this._store})),u.latch(e.event,void 0,this._store)}get onDidChangeFullScreen(){const e=this._register(new y);return this._register(u.runAndSubscribe(k,({window:i,disposables:o})=>{const r=x(i),n=me&&i.visualViewport?i.visualViewport:i;for(const d of[W.FULLSCREEN_CHANGE,W.WK_FULLSCREEN_CHANGE])o.add(E(i.document,d,()=>e.fire({windowId:r,fullscreen:!!U(i)})));o.add(J(n,W.RESIZE,()=>e.fire({windowId:r,fullscreen:!!U(i)}),void 0,ve?2e3:800))},{window:g,disposables:this._store})),e.event}openWindow(e,i){return Array.isArray(e)?this.doOpenWindow(e,i):this.doOpenEmptyWindow(e)}async doOpenWindow(e,i){const o=this.preservePayload(!1,i),r=[],n=[],d=[];for(const a of e)a.label=a.label||this.getRecentLabel(a),I(a)?i?.addMode?n.push({uri:a.folderUri}):i?.removeMode?d.push(a.folderUri):this.doOpen({folderUri:a.folderUri},{reuse:this.shouldReuse(i,!1),payload:o}):R(a)?this.doOpen({workspaceUri:a.workspaceUri},{reuse:this.shouldReuse(i,!1),payload:o}):q(a)&&r.push(a);(n.length>0||d.length>0)&&this.withServices(async a=>{const c=a.get(C);n.length>0&&await c.addFolders(n),d.length>0&&await c.removeFolders(d)}),r.length>0&&this.withServices(async a=>{const c=a.get(K);if(i?.mergeMode&&r.length===4){const t=P(await b(r,this.fileService,this.logService));if(t.length!==4||!h(t[0])||!h(t[1])||!h(t[2])||!h(t[3]))return;if(this.shouldReuse(i,!0))c.openEditor({input1:{resource:t[0].resource},input2:{resource:t[1].resource},base:{resource:t[2].resource},result:{resource:t[3].resource},options:{pinned:!0}});else{const s=new Map;s.set("mergeFile1",t[0].resource.toString()),s.set("mergeFile2",t[1].resource.toString()),s.set("mergeFileBase",t[2].resource.toString()),s.set("mergeFileResult",t[3].resource.toString()),this.doOpen(void 0,{payload:Array.from(s.entries())})}}else if(i?.diffMode&&r.length===2){const t=P(await b(r,this.fileService,this.logService));if(t.length!==2||!h(t[0])||!h(t[1]))return;if(this.shouldReuse(i,!0))c.openEditor({original:{resource:t[0].resource},modified:{resource:t[1].resource},options:{pinned:!0}});else{const s=new Map;s.set("diffFileSecondary",t[0].resource.toString()),s.set("diffFilePrimary",t[1].resource.toString()),this.doOpen(void 0,{payload:Array.from(s.entries())})}}else for(const t of r)if(this.shouldReuse(i,!0)){let s=[];if(i?.gotoLineMode){const S=re(t.fileUri.path);s=[{fileUri:t.fileUri.with({path:S.path}),options:{selection:le(S.line)?void 0:{startLineNumber:S.line,startColumn:S.column||1}}}]}else s=[t];c.openEditors(P(await b(s,this.fileService,this.logService)),void 0,{validateTrust:!0})}else{const s=new Map;s.set("openFile",t.fileUri.toString()),i?.gotoLineMode&&s.set("gotoLineMode","true"),this.doOpen(void 0,{payload:Array.from(s.entries())})}const v=i?.waitMarkerFileURI;v&&(async()=>(await this.instantiationService.invokeFunction(t=>G(t,r.map(s=>s.fileUri))),await this.fileService.del(v)))()})}withServices(e){this.instantiationService.invokeFunction(i=>e(i))}preservePayload(e,i){const o=new Array;!e&&this.environmentService.extensionDevelopmentLocationURI&&(o.push(["extensionDevelopmentPath",this.environmentService.extensionDevelopmentLocationURI.toString()]),this.environmentService.debugExtensionHost.debugId&&o.push(["debugId",this.environmentService.debugExtensionHost.debugId]),this.environmentService.debugExtensionHost.port&&o.push(["inspect-brk-extensions",String(this.environmentService.debugExtensionHost.port)]));const r=i?.forceProfile?this.userDataProfilesService.profiles.find(n=>n.name===i?.forceProfile):void 0;return r&&!r.isDefault&&o.push(["profile",r.name]),o.length?o:void 0}getRecentLabel(e){return I(e)?this.labelService.getWorkspaceLabel(e.folderUri,{verbose:L.LONG}):R(e)?this.labelService.getWorkspaceLabel(se(e.workspaceUri),{verbose:L.LONG}):this.labelService.getUriLabel(e.fileUri,{appendWorkspaceSuffix:!0})}shouldReuse(e=Object.create(null),i){if(e.waitMarkerFileURI)return!0;const o=this.configurationService.getValue("window"),r=i?o?.openFilesInNewWindow||"off":o?.openFoldersInNewWindow||"default";let n=(e.preferNewWindow||!!e.forceNewWindow)&&!e.forceReuseWindow;return!e.forceNewWindow&&!e.forceReuseWindow&&(r==="on"||r==="off")&&(n=r==="on"),!n}async doOpenEmptyWindow(e){return this.doOpen(void 0,{reuse:e?.forceReuseWindow,payload:this.preservePayload(!0,e)})}async doOpen(e,i){if(e&&I(e)&&e.folderUri.scheme===pe.file&&ue(this.contextService.getWorkspace())){this.withServices(async r=>{await r.get(C).updateFolders(0,this.contextService.getWorkspace().folders.length,[{uri:e.folderUri}])});return}if(i?.reuse&&await this.handleExpectedShutdown(O.LOAD),!await this.workspaceProvider.open(e,i)){const{confirmed:r}=await this.dialogService.confirm({type:ae.Warning,message:T("unableToOpenExternal","The browser interrupted the opening of a new tab or window. Press 'Open' to open it anyway."),primaryButton:T({key:"open",comment:["&& denotes a mnemonic"]},"&&Open")});r&&await this.workspaceProvider.open(e,i)}}async toggleFullScreen(e){const i=this.layoutService.getContainer(e);if(e.document.fullscreen!==void 0)if(e.document.fullscreen)try{return await e.document.exitFullscreen()}catch{this.logService.warn("toggleFullScreen(): exitFullscreen failed")}else try{return await i.requestFullscreen()}catch{this.logService.warn("toggleFullScreen(): requestFullscreen failed")}if(e.document.webkitIsFullScreen!==void 0)try{e.document.webkitIsFullScreen?e.document.webkitExitFullscreen():i.webkitRequestFullscreen()}catch{this.logService.warn("toggleFullScreen(): requestFullscreen/exitFullscreen failed")}}async moveTop(e){}async getCursorScreenPoint(){}async restart(){this.reload()}async reload(){await this.handleExpectedShutdown(O.RELOAD),g.location.reload()}async close(){await this.handleExpectedShutdown(O.CLOSE),g.close()}async withExpectedShutdown(e){const i=this.shutdownReason;try{return this.shutdownReason=3,await e()}finally{this.shutdownReason=i}}async handleExpectedShutdown(e){return this.shutdownReason=3,this.lifecycleService.withExpectedShutdown(e)}async getScreenshot(){const e=new $,i=document.createElement("video");e.add(ee(()=>i.remove()));let o;try{o=await navigator.mediaDevices.getDisplayMedia({audio:!1,video:!0}),i.srcObject=o,i.play(),await Promise.all([new Promise(c=>e.add(E(i,"loadedmetadata",()=>c()))),new Promise(c=>e.add(E(i,"canplaythrough",()=>c())))]);const r=document.createElement("canvas");r.width=i.videoWidth,r.height=i.videoHeight;const n=r.getContext("2d");if(!n)return;n.drawImage(i,0,0,r.width,r.height);const d=await new Promise(c=>r.toBlob(v=>c(v),"image/jpeg",.95));if(!d)throw new Error("Failed to create blob from canvas");const a=await d.bytes();return ge.wrap(a)}catch(r){console.error("Error taking screenshot:",r);return}finally{if(e.dispose(),o)for(const r of o.getTracks())r.stop()}}async getNativeWindowHandle(e){}};w([F],f.prototype,"onDidChangeFocus",1),w([F],f.prototype,"onDidChangeActiveWindow",1),w([F],f.prototype,"onDidChangeFullScreen",1),f=w([l(0,V),l(1,j),l(2,z),l(3,Z),l(4,ie),l(5,oe),l(6,te),l(7,ne),l(8,de),l(9,fe),l(10,we)],f),H(N,f,B.Delayed);export{f as BrowserHostService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { IHostService } from "./host.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { ILayoutService } from "../../../../platform/layout/browser/layoutService.js";
+import { IEditorService } from "../../editor/common/editorService.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IWindowSettings, IWindowOpenable, IOpenWindowOptions, isFolderToOpen, isWorkspaceToOpen, isFileToOpen, IOpenEmptyWindowOptions, IPathData, IFileToOpen } from "../../../../platform/window/common/window.js";
+import { isResourceEditorInput, pathsToEditors } from "../../../common/editor.js";
+import { whenEditorClosed } from "../../../browser/editor.js";
+import { IWorkspace, IWorkspaceProvider } from "../../../browser/web.api.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { ILabelService, Verbosity } from "../../../../platform/label/common/label.js";
+import { EventType, ModifierKeyEmitter, addDisposableListener, addDisposableThrottledListener, detectFullscreen, disposableWindowInterval, getActiveDocument, getWindowId, onDidRegisterWindow, trackFocus } from "../../../../base/browser/dom.js";
+import { Disposable, DisposableStore, toDisposable } from "../../../../base/common/lifecycle.js";
+import { IBrowserWorkbenchEnvironmentService } from "../../environment/browser/environmentService.js";
+import { memoize } from "../../../../base/common/decorators.js";
+import { parseLineAndColumnAware } from "../../../../base/common/extpath.js";
+import { IWorkspaceFolderCreationData } from "../../../../platform/workspaces/common/workspaces.js";
+import { IWorkspaceEditingService } from "../../workspaces/common/workspaceEditing.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { ILifecycleService, BeforeShutdownEvent, ShutdownReason } from "../../lifecycle/common/lifecycle.js";
+import { BrowserLifecycleService } from "../../lifecycle/browser/lifecycleService.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { getWorkspaceIdentifier } from "../../workspaces/browser/workspaces.js";
+import { localize } from "../../../../nls.js";
+import Severity from "../../../../base/common/severity.js";
+import { IDialogService } from "../../../../platform/dialogs/common/dialogs.js";
+import { DomEmitter } from "../../../../base/browser/event.js";
+import { isUndefined } from "../../../../base/common/types.js";
+import { isTemporaryWorkspace, IWorkspaceContextService } from "../../../../platform/workspace/common/workspace.js";
+import { ServicesAccessor } from "../../../../editor/browser/editorExtensions.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { ITextEditorOptions } from "../../../../platform/editor/common/editor.js";
+import { coalesce } from "../../../../base/common/arrays.js";
+import { mainWindow, isAuxiliaryWindow } from "../../../../base/browser/window.js";
+import { isIOS, isMacintosh } from "../../../../base/common/platform.js";
+import { IUserDataProfilesService } from "../../../../platform/userDataProfile/common/userDataProfile.js";
+import { URI } from "../../../../base/common/uri.js";
+import { VSBuffer } from "../../../../base/common/buffer.js";
+var HostShutdownReason = /* @__PURE__ */ ((HostShutdownReason2) => {
+  HostShutdownReason2[HostShutdownReason2["Unknown"] = 1] = "Unknown";
+  HostShutdownReason2[HostShutdownReason2["Keyboard"] = 2] = "Keyboard";
+  HostShutdownReason2[HostShutdownReason2["Api"] = 3] = "Api";
+  return HostShutdownReason2;
+})(HostShutdownReason || {});
+let BrowserHostService = class extends Disposable {
+  constructor(layoutService, configurationService, fileService, labelService, environmentService, instantiationService, lifecycleService, logService, dialogService, contextService, userDataProfilesService) {
+    super();
+    this.layoutService = layoutService;
+    this.configurationService = configurationService;
+    this.fileService = fileService;
+    this.labelService = labelService;
+    this.environmentService = environmentService;
+    this.instantiationService = instantiationService;
+    this.lifecycleService = lifecycleService;
+    this.logService = logService;
+    this.dialogService = dialogService;
+    this.contextService = contextService;
+    this.userDataProfilesService = userDataProfilesService;
+    if (environmentService.options?.workspaceProvider) {
+      this.workspaceProvider = environmentService.options.workspaceProvider;
+    } else {
+      this.workspaceProvider = new class {
+        workspace = void 0;
+        trusted = void 0;
+        async open() {
+          return true;
+        }
+      }();
+    }
+    this.registerListeners();
+  }
+  static {
+    __name(this, "BrowserHostService");
+  }
+  workspaceProvider;
+  shutdownReason = 1 /* Unknown */;
+  registerListeners() {
+    this._register(this.lifecycleService.onBeforeShutdown((e) => this.onBeforeShutdown(e)));
+    this._register(ModifierKeyEmitter.getInstance().event(() => this.updateShutdownReasonFromEvent()));
+  }
+  onBeforeShutdown(e) {
+    switch (this.shutdownReason) {
+      // Unknown / Keyboard shows veto depending on setting
+      case 1 /* Unknown */:
+      case 2 /* Keyboard */: {
+        const confirmBeforeClose = this.configurationService.getValue("window.confirmBeforeClose");
+        if (confirmBeforeClose === "always" || confirmBeforeClose === "keyboardOnly" && this.shutdownReason === 2 /* Keyboard */) {
+          e.veto(true, "veto.confirmBeforeClose");
+        }
+        break;
+      }
+      // Api never shows veto
+      case 3 /* Api */:
+        break;
+    }
+    this.shutdownReason = 1 /* Unknown */;
+  }
+  updateShutdownReasonFromEvent() {
+    if (this.shutdownReason === 3 /* Api */) {
+      return;
+    }
+    if (ModifierKeyEmitter.getInstance().isModifierPressed) {
+      this.shutdownReason = 2 /* Keyboard */;
+    } else {
+      this.shutdownReason = 1 /* Unknown */;
+    }
+  }
+  get onDidChangeFocus() {
+    const emitter = this._register(new Emitter());
+    this._register(Event.runAndSubscribe(onDidRegisterWindow, ({ window, disposables }) => {
+      const focusTracker = disposables.add(trackFocus(window));
+      const visibilityTracker = disposables.add(new DomEmitter(window.document, "visibilitychange"));
+      Event.any(
+        Event.map(focusTracker.onDidFocus, () => this.hasFocus, disposables),
+        Event.map(focusTracker.onDidBlur, () => this.hasFocus, disposables),
+        Event.map(visibilityTracker.event, () => this.hasFocus, disposables),
+        Event.map(this.onDidChangeActiveWindow, () => this.hasFocus, disposables)
+      )((focus) => emitter.fire(focus));
+    }, { window: mainWindow, disposables: this._store }));
+    return Event.latch(emitter.event, void 0, this._store);
+  }
+  get hasFocus() {
+    return getActiveDocument().hasFocus();
+  }
+  async hadLastFocus() {
+    return true;
+  }
+  async focus(targetWindow) {
+    targetWindow.focus();
+  }
+  get onDidChangeActiveWindow() {
+    const emitter = this._register(new Emitter());
+    this._register(Event.runAndSubscribe(onDidRegisterWindow, ({ window, disposables }) => {
+      const windowId = getWindowId(window);
+      const focusTracker = disposables.add(trackFocus(window));
+      disposables.add(focusTracker.onDidFocus(() => emitter.fire(windowId)));
+      if (isAuxiliaryWindow(window)) {
+        disposables.add(disposableWindowInterval(window, () => {
+          const hasFocus = window.document.hasFocus();
+          if (hasFocus) {
+            emitter.fire(windowId);
+          }
+          return hasFocus;
+        }, 100, 20));
+      }
+    }, { window: mainWindow, disposables: this._store }));
+    return Event.latch(emitter.event, void 0, this._store);
+  }
+  get onDidChangeFullScreen() {
+    const emitter = this._register(new Emitter());
+    this._register(Event.runAndSubscribe(onDidRegisterWindow, ({ window, disposables }) => {
+      const windowId = getWindowId(window);
+      const viewport = isIOS && window.visualViewport ? window.visualViewport : window;
+      for (const event of [EventType.FULLSCREEN_CHANGE, EventType.WK_FULLSCREEN_CHANGE]) {
+        disposables.add(addDisposableListener(window.document, event, () => emitter.fire({ windowId, fullscreen: !!detectFullscreen(window) })));
+      }
+      disposables.add(addDisposableThrottledListener(
+        viewport,
+        EventType.RESIZE,
+        () => emitter.fire({ windowId, fullscreen: !!detectFullscreen(window) }),
+        void 0,
+        isMacintosh ? 2e3 : 800
+        /* can be throttled */
+      ));
+    }, { window: mainWindow, disposables: this._store }));
+    return emitter.event;
+  }
+  openWindow(arg1, arg2) {
+    if (Array.isArray(arg1)) {
+      return this.doOpenWindow(arg1, arg2);
+    }
+    return this.doOpenEmptyWindow(arg1);
+  }
+  async doOpenWindow(toOpen, options) {
+    const payload = this.preservePayload(false, options);
+    const fileOpenables = [];
+    const foldersToAdd = [];
+    const foldersToRemove = [];
+    for (const openable of toOpen) {
+      openable.label = openable.label || this.getRecentLabel(openable);
+      if (isFolderToOpen(openable)) {
+        if (options?.addMode) {
+          foldersToAdd.push({ uri: openable.folderUri });
+        } else if (options?.removeMode) {
+          foldersToRemove.push(openable.folderUri);
+        } else {
+          this.doOpen({ folderUri: openable.folderUri }, { reuse: this.shouldReuse(
+            options,
+            false
+            /* no file */
+          ), payload });
+        }
+      } else if (isWorkspaceToOpen(openable)) {
+        this.doOpen({ workspaceUri: openable.workspaceUri }, { reuse: this.shouldReuse(
+          options,
+          false
+          /* no file */
+        ), payload });
+      } else if (isFileToOpen(openable)) {
+        fileOpenables.push(openable);
+      }
+    }
+    if (foldersToAdd.length > 0 || foldersToRemove.length > 0) {
+      this.withServices(async (accessor) => {
+        const workspaceEditingService = accessor.get(IWorkspaceEditingService);
+        if (foldersToAdd.length > 0) {
+          await workspaceEditingService.addFolders(foldersToAdd);
+        }
+        if (foldersToRemove.length > 0) {
+          await workspaceEditingService.removeFolders(foldersToRemove);
+        }
+      });
+    }
+    if (fileOpenables.length > 0) {
+      this.withServices(async (accessor) => {
+        const editorService = accessor.get(IEditorService);
+        if (options?.mergeMode && fileOpenables.length === 4) {
+          const editors = coalesce(await pathsToEditors(fileOpenables, this.fileService, this.logService));
+          if (editors.length !== 4 || !isResourceEditorInput(editors[0]) || !isResourceEditorInput(editors[1]) || !isResourceEditorInput(editors[2]) || !isResourceEditorInput(editors[3])) {
+            return;
+          }
+          if (this.shouldReuse(
+            options,
+            true
+            /* file */
+          )) {
+            editorService.openEditor({
+              input1: { resource: editors[0].resource },
+              input2: { resource: editors[1].resource },
+              base: { resource: editors[2].resource },
+              result: { resource: editors[3].resource },
+              options: { pinned: true }
+            });
+          } else {
+            const environment = /* @__PURE__ */ new Map();
+            environment.set("mergeFile1", editors[0].resource.toString());
+            environment.set("mergeFile2", editors[1].resource.toString());
+            environment.set("mergeFileBase", editors[2].resource.toString());
+            environment.set("mergeFileResult", editors[3].resource.toString());
+            this.doOpen(void 0, { payload: Array.from(environment.entries()) });
+          }
+        } else if (options?.diffMode && fileOpenables.length === 2) {
+          const editors = coalesce(await pathsToEditors(fileOpenables, this.fileService, this.logService));
+          if (editors.length !== 2 || !isResourceEditorInput(editors[0]) || !isResourceEditorInput(editors[1])) {
+            return;
+          }
+          if (this.shouldReuse(
+            options,
+            true
+            /* file */
+          )) {
+            editorService.openEditor({
+              original: { resource: editors[0].resource },
+              modified: { resource: editors[1].resource },
+              options: { pinned: true }
+            });
+          } else {
+            const environment = /* @__PURE__ */ new Map();
+            environment.set("diffFileSecondary", editors[0].resource.toString());
+            environment.set("diffFilePrimary", editors[1].resource.toString());
+            this.doOpen(void 0, { payload: Array.from(environment.entries()) });
+          }
+        } else {
+          for (const openable of fileOpenables) {
+            if (this.shouldReuse(
+              options,
+              true
+              /* file */
+            )) {
+              let openables = [];
+              if (options?.gotoLineMode) {
+                const pathColumnAware = parseLineAndColumnAware(openable.fileUri.path);
+                openables = [{
+                  fileUri: openable.fileUri.with({ path: pathColumnAware.path }),
+                  options: {
+                    selection: !isUndefined(pathColumnAware.line) ? { startLineNumber: pathColumnAware.line, startColumn: pathColumnAware.column || 1 } : void 0
+                  }
+                }];
+              } else {
+                openables = [openable];
+              }
+              editorService.openEditors(coalesce(await pathsToEditors(openables, this.fileService, this.logService)), void 0, { validateTrust: true });
+            } else {
+              const environment = /* @__PURE__ */ new Map();
+              environment.set("openFile", openable.fileUri.toString());
+              if (options?.gotoLineMode) {
+                environment.set("gotoLineMode", "true");
+              }
+              this.doOpen(void 0, { payload: Array.from(environment.entries()) });
+            }
+          }
+        }
+        const waitMarkerFileURI = options?.waitMarkerFileURI;
+        if (waitMarkerFileURI) {
+          (async () => {
+            await this.instantiationService.invokeFunction((accessor2) => whenEditorClosed(accessor2, fileOpenables.map((fileOpenable) => fileOpenable.fileUri)));
+            await this.fileService.del(waitMarkerFileURI);
+          })();
+        }
+      });
+    }
+  }
+  withServices(fn) {
+    this.instantiationService.invokeFunction((accessor) => fn(accessor));
+  }
+  preservePayload(isEmptyWindow, options) {
+    const newPayload = new Array();
+    if (!isEmptyWindow && this.environmentService.extensionDevelopmentLocationURI) {
+      newPayload.push(["extensionDevelopmentPath", this.environmentService.extensionDevelopmentLocationURI.toString()]);
+      if (this.environmentService.debugExtensionHost.debugId) {
+        newPayload.push(["debugId", this.environmentService.debugExtensionHost.debugId]);
+      }
+      if (this.environmentService.debugExtensionHost.port) {
+        newPayload.push(["inspect-brk-extensions", String(this.environmentService.debugExtensionHost.port)]);
+      }
+    }
+    const newWindowProfile = options?.forceProfile ? this.userDataProfilesService.profiles.find((profile) => profile.name === options?.forceProfile) : void 0;
+    if (newWindowProfile && !newWindowProfile.isDefault) {
+      newPayload.push(["profile", newWindowProfile.name]);
+    }
+    return newPayload.length ? newPayload : void 0;
+  }
+  getRecentLabel(openable) {
+    if (isFolderToOpen(openable)) {
+      return this.labelService.getWorkspaceLabel(openable.folderUri, { verbose: Verbosity.LONG });
+    }
+    if (isWorkspaceToOpen(openable)) {
+      return this.labelService.getWorkspaceLabel(getWorkspaceIdentifier(openable.workspaceUri), { verbose: Verbosity.LONG });
+    }
+    return this.labelService.getUriLabel(openable.fileUri, { appendWorkspaceSuffix: true });
+  }
+  shouldReuse(options = /* @__PURE__ */ Object.create(null), isFile) {
+    if (options.waitMarkerFileURI) {
+      return true;
+    }
+    const windowConfig = this.configurationService.getValue("window");
+    const openInNewWindowConfig = isFile ? windowConfig?.openFilesInNewWindow || "off" : windowConfig?.openFoldersInNewWindow || "default";
+    let openInNewWindow = (options.preferNewWindow || !!options.forceNewWindow) && !options.forceReuseWindow;
+    if (!options.forceNewWindow && !options.forceReuseWindow && (openInNewWindowConfig === "on" || openInNewWindowConfig === "off")) {
+      openInNewWindow = openInNewWindowConfig === "on";
+    }
+    return !openInNewWindow;
+  }
+  async doOpenEmptyWindow(options) {
+    return this.doOpen(void 0, {
+      reuse: options?.forceReuseWindow,
+      payload: this.preservePayload(true, options)
+    });
+  }
+  async doOpen(workspace, options) {
+    if (workspace && isFolderToOpen(workspace) && workspace.folderUri.scheme === Schemas.file && isTemporaryWorkspace(this.contextService.getWorkspace())) {
+      this.withServices(async (accessor) => {
+        const workspaceEditingService = accessor.get(IWorkspaceEditingService);
+        await workspaceEditingService.updateFolders(0, this.contextService.getWorkspace().folders.length, [{ uri: workspace.folderUri }]);
+      });
+      return;
+    }
+    if (options?.reuse) {
+      await this.handleExpectedShutdown(ShutdownReason.LOAD);
+    }
+    const opened = await this.workspaceProvider.open(workspace, options);
+    if (!opened) {
+      const { confirmed } = await this.dialogService.confirm({
+        type: Severity.Warning,
+        message: localize("unableToOpenExternal", "The browser interrupted the opening of a new tab or window. Press 'Open' to open it anyway."),
+        primaryButton: localize({ key: "open", comment: ["&& denotes a mnemonic"] }, "&&Open")
+      });
+      if (confirmed) {
+        await this.workspaceProvider.open(workspace, options);
+      }
+    }
+  }
+  async toggleFullScreen(targetWindow) {
+    const target = this.layoutService.getContainer(targetWindow);
+    if (targetWindow.document.fullscreen !== void 0) {
+      if (!targetWindow.document.fullscreen) {
+        try {
+          return await target.requestFullscreen();
+        } catch (error) {
+          this.logService.warn("toggleFullScreen(): requestFullscreen failed");
+        }
+      } else {
+        try {
+          return await targetWindow.document.exitFullscreen();
+        } catch (error) {
+          this.logService.warn("toggleFullScreen(): exitFullscreen failed");
+        }
+      }
+    }
+    if (targetWindow.document.webkitIsFullScreen !== void 0) {
+      try {
+        if (!targetWindow.document.webkitIsFullScreen) {
+          target.webkitRequestFullscreen();
+        } else {
+          targetWindow.document.webkitExitFullscreen();
+        }
+      } catch {
+        this.logService.warn("toggleFullScreen(): requestFullscreen/exitFullscreen failed");
+      }
+    }
+  }
+  async moveTop(targetWindow) {
+  }
+  async getCursorScreenPoint() {
+    return void 0;
+  }
+  //#endregion
+  //#region Lifecycle
+  async restart() {
+    this.reload();
+  }
+  async reload() {
+    await this.handleExpectedShutdown(ShutdownReason.RELOAD);
+    mainWindow.location.reload();
+  }
+  async close() {
+    await this.handleExpectedShutdown(ShutdownReason.CLOSE);
+    mainWindow.close();
+  }
+  async withExpectedShutdown(expectedShutdownTask) {
+    const previousShutdownReason = this.shutdownReason;
+    try {
+      this.shutdownReason = 3 /* Api */;
+      return await expectedShutdownTask();
+    } finally {
+      this.shutdownReason = previousShutdownReason;
+    }
+  }
+  async handleExpectedShutdown(reason) {
+    this.shutdownReason = 3 /* Api */;
+    return this.lifecycleService.withExpectedShutdown(reason);
+  }
+  //#endregion
+  //#region Screenshots
+  async getScreenshot() {
+    const store = new DisposableStore();
+    const video = document.createElement("video");
+    store.add(toDisposable(() => video.remove()));
+    let stream;
+    try {
+      stream = await navigator.mediaDevices.getDisplayMedia({
+        audio: false,
+        video: true
+      });
+      video.srcObject = stream;
+      video.play();
+      await Promise.all([
+        new Promise((r) => store.add(addDisposableListener(video, "loadedmetadata", () => r()))),
+        new Promise((r) => store.add(addDisposableListener(video, "canplaythrough", () => r())))
+      ]);
+      const canvas = document.createElement("canvas");
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        return void 0;
+      }
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const blob = await new Promise((resolve) => canvas.toBlob((blob2) => resolve(blob2), "image/jpeg", 0.95));
+      if (!blob) {
+        throw new Error("Failed to create blob from canvas");
+      }
+      const buf = await blob.bytes();
+      return VSBuffer.wrap(buf);
+    } catch (error) {
+      console.error("Error taking screenshot:", error);
+      return void 0;
+    } finally {
+      store.dispose();
+      if (stream) {
+        for (const track of stream.getTracks()) {
+          track.stop();
+        }
+      }
+    }
+  }
+  //#endregion
+  //#region Native Handle
+  async getNativeWindowHandle(_windowId) {
+    return void 0;
+  }
+  //#endregion
+};
+__decorateClass([
+  memoize
+], BrowserHostService.prototype, "onDidChangeFocus", 1);
+__decorateClass([
+  memoize
+], BrowserHostService.prototype, "onDidChangeActiveWindow", 1);
+__decorateClass([
+  memoize
+], BrowserHostService.prototype, "onDidChangeFullScreen", 1);
+BrowserHostService = __decorateClass([
+  __decorateParam(0, ILayoutService),
+  __decorateParam(1, IConfigurationService),
+  __decorateParam(2, IFileService),
+  __decorateParam(3, ILabelService),
+  __decorateParam(4, IBrowserWorkbenchEnvironmentService),
+  __decorateParam(5, IInstantiationService),
+  __decorateParam(6, ILifecycleService),
+  __decorateParam(7, ILogService),
+  __decorateParam(8, IDialogService),
+  __decorateParam(9, IWorkspaceContextService),
+  __decorateParam(10, IUserDataProfilesService)
+], BrowserHostService);
+registerSingleton(IHostService, BrowserHostService, InstantiationType.Delayed);
+export {
+  BrowserHostService
+};
+//# sourceMappingURL=browserHostService.js.map

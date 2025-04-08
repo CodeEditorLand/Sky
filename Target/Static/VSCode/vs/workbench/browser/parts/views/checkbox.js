@@ -1,1 +1,112 @@
-import*as h from"../../../../base/browser/dom.js";import"../../../../base/browser/ui/hover/hoverDelegate.js";import{Toggle as a}from"../../../../base/browser/ui/toggle/toggle.js";import{Codicon as t}from"../../../../base/common/codicons.js";import{Emitter as l}from"../../../../base/common/event.js";import{Disposable as r}from"../../../../base/common/lifecycle.js";import{localize as s}from"../../../../nls.js";import{defaultToggleStyles as n}from"../../../../platform/theme/browser/defaultStyles.js";import"../../../common/views.js";class y extends r{_onDidChangeCheckboxState=this._register(new l);onDidChangeCheckboxState=this._onDidChangeCheckboxState.event;setCheckboxState(o){this._onDidChangeCheckboxState.fire([o])}}class c extends r{constructor(e,i,d,m){super();this.checkboxStateHandler=i;this.hoverDelegate=d;this.hoverService=m;this.checkboxContainer=e}toggle;checkboxContainer;hover;static checkboxClass="custom-view-tree-node-item-checkbox";render(e){e.checkbox&&(this.toggle?(this.toggle.checked=e.checkbox.isChecked,this.toggle.setIcon(this.toggle.checked?t.check:void 0)):this.createCheckbox(e))}createCheckbox(e){e.checkbox&&(this.toggle=new a({isChecked:e.checkbox.isChecked,title:"",icon:e.checkbox.isChecked?t.check:void 0,...n}),this.setHover(e.checkbox),this.setAccessibilityInformation(e.checkbox),this.toggle.domNode.classList.add(c.checkboxClass),this.toggle.domNode.tabIndex=1,h.append(this.checkboxContainer,this.toggle.domNode),this.registerListener(e))}registerListener(e){this.toggle&&(this._register({dispose:()=>this.removeCheckbox()}),this._register(this.toggle),this._register(this.toggle.onChange(()=>{this.setCheckbox(e)})))}setHover(e){this.toggle&&(this.hover?this.hover.update(e.tooltip):this.hover=this._register(this.hoverService.setupManagedHover(this.hoverDelegate,this.toggle.domNode,this.checkboxHoverContent(e))))}setCheckbox(e){this.toggle&&e.checkbox&&(e.checkbox.isChecked=this.toggle.checked,this.toggle.setIcon(this.toggle.checked?t.check:void 0),this.setHover(e.checkbox),this.setAccessibilityInformation(e.checkbox),this.checkboxStateHandler.setCheckboxState(e))}checkboxHoverContent(e){return e.tooltip?e.tooltip:e.isChecked?s("checked","Checked"):s("unchecked","Unchecked")}setAccessibilityInformation(e){this.toggle&&e.accessibilityInformation&&(this.toggle.domNode.ariaLabel=e.accessibilityInformation.label,e.accessibilityInformation.role&&(this.toggle.domNode.role=e.accessibilityInformation.role))}removeCheckbox(){const e=this.checkboxContainer.children;for(const i of e)i.remove()}}export{y as CheckboxStateHandler,c as TreeItemCheckbox};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as DOM from "../../../../base/browser/dom.js";
+import { IHoverDelegate } from "../../../../base/browser/ui/hover/hoverDelegate.js";
+import { Toggle } from "../../../../base/browser/ui/toggle/toggle.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { localize } from "../../../../nls.js";
+import { defaultToggleStyles } from "../../../../platform/theme/browser/defaultStyles.js";
+import { ITreeItem, ITreeItemCheckboxState } from "../../../common/views.js";
+class CheckboxStateHandler extends Disposable {
+  static {
+    __name(this, "CheckboxStateHandler");
+  }
+  _onDidChangeCheckboxState = this._register(new Emitter());
+  onDidChangeCheckboxState = this._onDidChangeCheckboxState.event;
+  setCheckboxState(node) {
+    this._onDidChangeCheckboxState.fire([node]);
+  }
+}
+class TreeItemCheckbox extends Disposable {
+  constructor(container, checkboxStateHandler, hoverDelegate, hoverService) {
+    super();
+    this.checkboxStateHandler = checkboxStateHandler;
+    this.hoverDelegate = hoverDelegate;
+    this.hoverService = hoverService;
+    this.checkboxContainer = container;
+  }
+  static {
+    __name(this, "TreeItemCheckbox");
+  }
+  toggle;
+  checkboxContainer;
+  hover;
+  static checkboxClass = "custom-view-tree-node-item-checkbox";
+  render(node) {
+    if (node.checkbox) {
+      if (!this.toggle) {
+        this.createCheckbox(node);
+      } else {
+        this.toggle.checked = node.checkbox.isChecked;
+        this.toggle.setIcon(this.toggle.checked ? Codicon.check : void 0);
+      }
+    }
+  }
+  createCheckbox(node) {
+    if (node.checkbox) {
+      this.toggle = new Toggle({
+        isChecked: node.checkbox.isChecked,
+        title: "",
+        icon: node.checkbox.isChecked ? Codicon.check : void 0,
+        ...defaultToggleStyles
+      });
+      this.setHover(node.checkbox);
+      this.setAccessibilityInformation(node.checkbox);
+      this.toggle.domNode.classList.add(TreeItemCheckbox.checkboxClass);
+      this.toggle.domNode.tabIndex = 1;
+      DOM.append(this.checkboxContainer, this.toggle.domNode);
+      this.registerListener(node);
+    }
+  }
+  registerListener(node) {
+    if (this.toggle) {
+      this._register({ dispose: /* @__PURE__ */ __name(() => this.removeCheckbox(), "dispose") });
+      this._register(this.toggle);
+      this._register(this.toggle.onChange(() => {
+        this.setCheckbox(node);
+      }));
+    }
+  }
+  setHover(checkbox) {
+    if (this.toggle) {
+      if (!this.hover) {
+        this.hover = this._register(this.hoverService.setupManagedHover(this.hoverDelegate, this.toggle.domNode, this.checkboxHoverContent(checkbox)));
+      } else {
+        this.hover.update(checkbox.tooltip);
+      }
+    }
+  }
+  setCheckbox(node) {
+    if (this.toggle && node.checkbox) {
+      node.checkbox.isChecked = this.toggle.checked;
+      this.toggle.setIcon(this.toggle.checked ? Codicon.check : void 0);
+      this.setHover(node.checkbox);
+      this.setAccessibilityInformation(node.checkbox);
+      this.checkboxStateHandler.setCheckboxState(node);
+    }
+  }
+  checkboxHoverContent(checkbox) {
+    return checkbox.tooltip ? checkbox.tooltip : checkbox.isChecked ? localize("checked", "Checked") : localize("unchecked", "Unchecked");
+  }
+  setAccessibilityInformation(checkbox) {
+    if (this.toggle && checkbox.accessibilityInformation) {
+      this.toggle.domNode.ariaLabel = checkbox.accessibilityInformation.label;
+      if (checkbox.accessibilityInformation.role) {
+        this.toggle.domNode.role = checkbox.accessibilityInformation.role;
+      }
+    }
+  }
+  removeCheckbox() {
+    const children = this.checkboxContainer.children;
+    for (const child of children) {
+      child.remove();
+    }
+  }
+}
+export {
+  CheckboxStateHandler,
+  TreeItemCheckbox
+};
+//# sourceMappingURL=checkbox.js.map

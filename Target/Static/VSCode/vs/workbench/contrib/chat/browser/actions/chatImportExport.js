@@ -1,1 +1,103 @@
-import{VSBuffer as x}from"../../../../../base/common/buffer.js";import{joinPath as l}from"../../../../../base/common/resources.js";import"../../../../../editor/browser/editorExtensions.js";import{localize as I,localize2 as f}from"../../../../../nls.js";import{Action2 as p,registerAction2 as m}from"../../../../../platform/actions/common/actions.js";import{IFileDialogService as d}from"../../../../../platform/dialogs/common/dialogs.js";import{IFileService as h}from"../../../../../platform/files/common/files.js";import{CHAT_CATEGORY as g}from"./chatActions.js";import{IChatWidgetService as A}from"../chat.js";import"../chatEditor.js";import{ChatEditorInput as y}from"../chatEditorInput.js";import{ChatContextKeys as u}from"../../common/chatContextKeys.js";import{isExportableSessionData as F}from"../../common/chatModel.js";import{IChatService as b}from"../../common/chatService.js";import{IEditorService as D}from"../../../../services/editor/common/editorService.js";const S="chat.json",v=[{name:I("chat.file.label","Chat Session"),extensions:["json"]}];function q(){m(class extends p{constructor(){super({id:"workbench.action.chat.export",category:g,title:f("chat.export.label","Export Chat..."),precondition:u.enabled,f1:!0})}async run(t,...o){const e=t.get(A),r=t.get(d),i=t.get(h),a=t.get(b),s=e.lastFocusedWidget;if(!s||!s.viewModel)return;const n=l(await r.defaultFilePath(),S),c=await r.showSaveDialog({defaultUri:n,filters:v});if(!c)return;const m=a.getSession(s.viewModel.sessionId);if(!m)return;const f=x.fromString(JSON.stringify(m.toExport(),void 0,2));await i.writeFile(c,f)}}),m(class extends p{constructor(){super({id:"workbench.action.chat.import",title:f("chat.import.label","Import Chat..."),category:g,precondition:u.enabled,f1:!0})}async run(t,...o){const e=t.get(d),r=t.get(h),i=t.get(D),a=l(await e.defaultFilePath(),S),s=await e.showOpenDialog({defaultUri:a,canSelectFiles:!0,filters:v});if(!s)return;const n=await r.readFile(s[0]);try{const t=JSON.parse(n.value.toString());if(!F(t))throw new Error("Invalid chat session data");const o={target:{data:t},pinned:!0};await i.openEditor({resource:y.getNewEditorUri(),options:o})}catch(t){throw t}}})}export{q as registerChatExportActions};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { VSBuffer } from "../../../../../base/common/buffer.js";
+import { joinPath } from "../../../../../base/common/resources.js";
+import { ServicesAccessor } from "../../../../../editor/browser/editorExtensions.js";
+import { localize, localize2 } from "../../../../../nls.js";
+import { Action2, registerAction2 } from "../../../../../platform/actions/common/actions.js";
+import { IFileDialogService } from "../../../../../platform/dialogs/common/dialogs.js";
+import { IFileService } from "../../../../../platform/files/common/files.js";
+import { CHAT_CATEGORY } from "./chatActions.js";
+import { IChatWidgetService } from "../chat.js";
+import { IChatEditorOptions } from "../chatEditor.js";
+import { ChatEditorInput } from "../chatEditorInput.js";
+import { ChatContextKeys } from "../../common/chatContextKeys.js";
+import { isExportableSessionData } from "../../common/chatModel.js";
+import { IChatService } from "../../common/chatService.js";
+import { IEditorService } from "../../../../services/editor/common/editorService.js";
+const defaultFileName = "chat.json";
+const filters = [{ name: localize("chat.file.label", "Chat Session"), extensions: ["json"] }];
+function registerChatExportActions() {
+  registerAction2(class ExportChatAction extends Action2 {
+    static {
+      __name(this, "ExportChatAction");
+    }
+    constructor() {
+      super({
+        id: "workbench.action.chat.export",
+        category: CHAT_CATEGORY,
+        title: localize2("chat.export.label", "Export Chat..."),
+        precondition: ChatContextKeys.enabled,
+        f1: true
+      });
+    }
+    async run(accessor, ...args) {
+      const widgetService = accessor.get(IChatWidgetService);
+      const fileDialogService = accessor.get(IFileDialogService);
+      const fileService = accessor.get(IFileService);
+      const chatService = accessor.get(IChatService);
+      const widget = widgetService.lastFocusedWidget;
+      if (!widget || !widget.viewModel) {
+        return;
+      }
+      const defaultUri = joinPath(await fileDialogService.defaultFilePath(), defaultFileName);
+      const result = await fileDialogService.showSaveDialog({
+        defaultUri,
+        filters
+      });
+      if (!result) {
+        return;
+      }
+      const model = chatService.getSession(widget.viewModel.sessionId);
+      if (!model) {
+        return;
+      }
+      const content = VSBuffer.fromString(JSON.stringify(model.toExport(), void 0, 2));
+      await fileService.writeFile(result, content);
+    }
+  });
+  registerAction2(class ImportChatAction extends Action2 {
+    static {
+      __name(this, "ImportChatAction");
+    }
+    constructor() {
+      super({
+        id: "workbench.action.chat.import",
+        title: localize2("chat.import.label", "Import Chat..."),
+        category: CHAT_CATEGORY,
+        precondition: ChatContextKeys.enabled,
+        f1: true
+      });
+    }
+    async run(accessor, ...args) {
+      const fileDialogService = accessor.get(IFileDialogService);
+      const fileService = accessor.get(IFileService);
+      const editorService = accessor.get(IEditorService);
+      const defaultUri = joinPath(await fileDialogService.defaultFilePath(), defaultFileName);
+      const result = await fileDialogService.showOpenDialog({
+        defaultUri,
+        canSelectFiles: true,
+        filters
+      });
+      if (!result) {
+        return;
+      }
+      const content = await fileService.readFile(result[0]);
+      try {
+        const data = JSON.parse(content.value.toString());
+        if (!isExportableSessionData(data)) {
+          throw new Error("Invalid chat session data");
+        }
+        const options = { target: { data }, pinned: true };
+        await editorService.openEditor({ resource: ChatEditorInput.getNewEditorUri(), options });
+      } catch (err) {
+        throw err;
+      }
+    }
+  });
+}
+__name(registerChatExportActions, "registerChatExportActions");
+export {
+  registerChatExportActions
+};
+//# sourceMappingURL=chatImportExport.js.map

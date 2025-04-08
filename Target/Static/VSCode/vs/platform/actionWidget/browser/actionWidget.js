@@ -1,1 +1,239 @@
-var E=Object.defineProperty,B=Object.getOwnPropertyDescriptor,I=(e,t,i,o)=>{for(var n,s=o>1?void 0:o?B(t,i):t,r=e.length-1;r>=0;r--)(n=e[r])&&(s=(o?n(t,i,s):n(s))||s);return o&&s&&E(t,i,s),s},C=(e,t)=>(i,o)=>t(i,o,e);import*as l from"../../../base/browser/dom.js";import{ActionBar as L}from"../../../base/browser/ui/actionbar/actionbar.js";import"../../../base/browser/ui/contextview/contextview.js";import"../../../base/common/actions.js";import{KeyCode as n,KeyMod as d}from"../../../base/common/keyCodes.js";import{Disposable as k,DisposableStore as V,MutableDisposable as T}from"../../../base/common/lifecycle.js";import"./actionWidget.css";import{localize as _,localize2 as h}from"../../../nls.js";import{acceptSelectedActionCommand as W,ActionList as K,previewSelectedActionCommand as M}from"./actionList.js";import{Action2 as A,registerAction2 as y}from"../../actions/common/actions.js";import{IContextKeyService as P,RawContextKey as N}from"../../contextkey/common/contextkey.js";import{IContextViewService as O}from"../../contextview/browser/contextView.js";import{InstantiationType as H,registerSingleton as U}from"../../instantiation/common/extensions.js";import{createDecorator as z,IInstantiationService as R}from"../../instantiation/common/instantiation.js";import{KeybindingWeight as $}from"../../keybinding/common/keybindingsRegistry.js";import{inputActiveOptionBackground as F,registerColor as j}from"../../theme/common/colorRegistry.js";j("actionBar.toggledBackground",F,_("actionBar.toggledBackground","Background color for toggled action items in action bar."));const v={Visible:new N("codeActionMenuVisible",!1,_("codeActionMenuVisible","Whether the action widget list is visible"))},g=z("actionWidgetService");let a=class extends k{constructor(e,t,i){super(),this._contextViewService=e,this._contextKeyService=t,this._instantiationService=i}get isVisible(){return v.Visible.getValue(this._contextKeyService)||!1}_list=this._register(new T);show(e,t,i,o,n,s,r){const c=v.Visible.bindTo(this._contextKeyService),a=this._instantiationService.createInstance(K,e,t,i,o);this._contextViewService.showContextView({getAnchor:()=>n,render:e=>(c.set(!0),this._renderWidget(e,a,r??[])),onHide:e=>{c.reset(),this._onWidgetClosed(e)}},s,!1)}acceptSelected(e){this._list.value?.acceptSelected(e)}focusPrevious(){this._list?.value?.focusPrevious()}focusNext(){this._list?.value?.focusNext()}hide(e){this._list.value?.hide(e),this._list.clear()}clear(){this._list.clear()}_renderWidget(e,t,i){const o=document.createElement("div");if(o.classList.add("action-widget"),e.appendChild(o),this._list.value=t,!this._list.value)throw new Error("List has no value");o.appendChild(this._list.value.domNode);const n=new V,s=document.createElement("div"),r=e.appendChild(s);r.classList.add("context-view-block"),n.add(l.addDisposableListener(r,l.EventType.MOUSE_DOWN,(e=>e.stopPropagation())));const c=document.createElement("div"),a=e.appendChild(c);a.classList.add("context-view-pointerBlock"),n.add(l.addDisposableListener(a,l.EventType.POINTER_MOVE,(()=>a.remove()))),n.add(l.addDisposableListener(a,l.EventType.MOUSE_DOWN,(()=>a.remove())));let d=0;if(i.length){const e=this._createActionBar(".action-widget-action-bar",i);e&&(o.appendChild(e.getContainer().parentElement),n.add(e),d=e.getContainer().offsetWidth)}const p=this._list.value?.layout(d);o.style.width=`${p}px`;const m=n.add(l.trackFocus(e));return n.add(m.onDidBlur((()=>this.hide(!0)))),n}_createActionBar(e,t){if(!t.length)return;const i=l.$(e),o=new L(i);return o.push(t,{icon:!1,label:!0}),o}_onWidgetClosed(e){this._list.value?.hide(e)}};a=I([C(0,O),C(1,P),C(2,R)],a),U(g,a,H.Delayed);const f=$.EditorContrib+1e3;y(class extends A{constructor(){super({id:"hideCodeActionWidget",title:h("hideCodeActionWidget.title","Hide action widget"),precondition:v.Visible,keybinding:{weight:f,primary:n.Escape,secondary:[d.Shift|n.Escape]}})}run(e){e.get(g).hide(!0)}}),y(class extends A{constructor(){super({id:"selectPrevCodeAction",title:h("selectPrevCodeAction.title","Select previous action"),precondition:v.Visible,keybinding:{weight:f,primary:n.UpArrow,secondary:[d.CtrlCmd|n.UpArrow],mac:{primary:n.UpArrow,secondary:[d.CtrlCmd|n.UpArrow,d.WinCtrl|n.KeyP]}}})}run(e){const t=e.get(g);t instanceof a&&t.focusPrevious()}}),y(class extends A{constructor(){super({id:"selectNextCodeAction",title:h("selectNextCodeAction.title","Select next action"),precondition:v.Visible,keybinding:{weight:f,primary:n.DownArrow,secondary:[d.CtrlCmd|n.DownArrow],mac:{primary:n.DownArrow,secondary:[d.CtrlCmd|n.DownArrow,d.WinCtrl|n.KeyN]}}})}run(e){const t=e.get(g);t instanceof a&&t.focusNext()}}),y(class extends A{constructor(){super({id:W,title:h("acceptSelected.title","Accept selected action"),precondition:v.Visible,keybinding:{weight:f,primary:n.Enter,secondary:[d.CtrlCmd|n.Period]}})}run(e){const t=e.get(g);t instanceof a&&t.acceptSelected()}}),y(class extends A{constructor(){super({id:M,title:h("previewSelected.title","Preview selected action"),precondition:v.Visible,keybinding:{weight:f,primary:d.CtrlCmd|n.Enter}})}run(e){const t=e.get(g);t instanceof a&&t.acceptSelected(!0)}});export{g as IActionWidgetService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import * as dom from "../../../base/browser/dom.js";
+import { ActionBar } from "../../../base/browser/ui/actionbar/actionbar.js";
+import { IAnchor } from "../../../base/browser/ui/contextview/contextview.js";
+import { IAction } from "../../../base/common/actions.js";
+import { KeyCode, KeyMod } from "../../../base/common/keyCodes.js";
+import { Disposable, DisposableStore, IDisposable, MutableDisposable } from "../../../base/common/lifecycle.js";
+import "./actionWidget.css";
+import { localize, localize2 } from "../../../nls.js";
+import { acceptSelectedActionCommand, ActionList, IActionListDelegate, IActionListItem, previewSelectedActionCommand } from "./actionList.js";
+import { Action2, registerAction2 } from "../../actions/common/actions.js";
+import { IContextKeyService, RawContextKey } from "../../contextkey/common/contextkey.js";
+import { IContextViewService } from "../../contextview/browser/contextView.js";
+import { InstantiationType, registerSingleton } from "../../instantiation/common/extensions.js";
+import { createDecorator, IInstantiationService, ServicesAccessor } from "../../instantiation/common/instantiation.js";
+import { KeybindingWeight } from "../../keybinding/common/keybindingsRegistry.js";
+import { inputActiveOptionBackground, registerColor } from "../../theme/common/colorRegistry.js";
+registerColor(
+  "actionBar.toggledBackground",
+  inputActiveOptionBackground,
+  localize("actionBar.toggledBackground", "Background color for toggled action items in action bar.")
+);
+const ActionWidgetContextKeys = {
+  Visible: new RawContextKey("codeActionMenuVisible", false, localize("codeActionMenuVisible", "Whether the action widget list is visible"))
+};
+const IActionWidgetService = createDecorator("actionWidgetService");
+let ActionWidgetService = class extends Disposable {
+  constructor(_contextViewService, _contextKeyService, _instantiationService) {
+    super();
+    this._contextViewService = _contextViewService;
+    this._contextKeyService = _contextKeyService;
+    this._instantiationService = _instantiationService;
+  }
+  static {
+    __name(this, "ActionWidgetService");
+  }
+  get isVisible() {
+    return ActionWidgetContextKeys.Visible.getValue(this._contextKeyService) || false;
+  }
+  _list = this._register(new MutableDisposable());
+  show(user, supportsPreview, items, delegate, anchor, container, actionBarActions) {
+    const visibleContext = ActionWidgetContextKeys.Visible.bindTo(this._contextKeyService);
+    const list = this._instantiationService.createInstance(ActionList, user, supportsPreview, items, delegate);
+    this._contextViewService.showContextView({
+      getAnchor: /* @__PURE__ */ __name(() => anchor, "getAnchor"),
+      render: /* @__PURE__ */ __name((container2) => {
+        visibleContext.set(true);
+        return this._renderWidget(container2, list, actionBarActions ?? []);
+      }, "render"),
+      onHide: /* @__PURE__ */ __name((didCancel) => {
+        visibleContext.reset();
+        this._onWidgetClosed(didCancel);
+      }, "onHide")
+    }, container, false);
+  }
+  acceptSelected(preview) {
+    this._list.value?.acceptSelected(preview);
+  }
+  focusPrevious() {
+    this._list?.value?.focusPrevious();
+  }
+  focusNext() {
+    this._list?.value?.focusNext();
+  }
+  hide(didCancel) {
+    this._list.value?.hide(didCancel);
+    this._list.clear();
+  }
+  clear() {
+    this._list.clear();
+  }
+  _renderWidget(element, list, actionBarActions) {
+    const widget = document.createElement("div");
+    widget.classList.add("action-widget");
+    element.appendChild(widget);
+    this._list.value = list;
+    if (this._list.value) {
+      widget.appendChild(this._list.value.domNode);
+    } else {
+      throw new Error("List has no value");
+    }
+    const renderDisposables = new DisposableStore();
+    const menuBlock = document.createElement("div");
+    const block = element.appendChild(menuBlock);
+    block.classList.add("context-view-block");
+    renderDisposables.add(dom.addDisposableListener(block, dom.EventType.MOUSE_DOWN, (e) => e.stopPropagation()));
+    const pointerBlockDiv = document.createElement("div");
+    const pointerBlock = element.appendChild(pointerBlockDiv);
+    pointerBlock.classList.add("context-view-pointerBlock");
+    renderDisposables.add(dom.addDisposableListener(pointerBlock, dom.EventType.POINTER_MOVE, () => pointerBlock.remove()));
+    renderDisposables.add(dom.addDisposableListener(pointerBlock, dom.EventType.MOUSE_DOWN, () => pointerBlock.remove()));
+    let actionBarWidth = 0;
+    if (actionBarActions.length) {
+      const actionBar = this._createActionBar(".action-widget-action-bar", actionBarActions);
+      if (actionBar) {
+        widget.appendChild(actionBar.getContainer().parentElement);
+        renderDisposables.add(actionBar);
+        actionBarWidth = actionBar.getContainer().offsetWidth;
+      }
+    }
+    const width = this._list.value?.layout(actionBarWidth);
+    widget.style.width = `${width}px`;
+    const focusTracker = renderDisposables.add(dom.trackFocus(element));
+    renderDisposables.add(focusTracker.onDidBlur(() => this.hide(true)));
+    return renderDisposables;
+  }
+  _createActionBar(className, actions) {
+    if (!actions.length) {
+      return void 0;
+    }
+    const container = dom.$(className);
+    const actionBar = new ActionBar(container);
+    actionBar.push(actions, { icon: false, label: true });
+    return actionBar;
+  }
+  _onWidgetClosed(didCancel) {
+    this._list.value?.hide(didCancel);
+  }
+};
+ActionWidgetService = __decorateClass([
+  __decorateParam(0, IContextViewService),
+  __decorateParam(1, IContextKeyService),
+  __decorateParam(2, IInstantiationService)
+], ActionWidgetService);
+registerSingleton(IActionWidgetService, ActionWidgetService, InstantiationType.Delayed);
+const weight = KeybindingWeight.EditorContrib + 1e3;
+registerAction2(class extends Action2 {
+  constructor() {
+    super({
+      id: "hideCodeActionWidget",
+      title: localize2("hideCodeActionWidget.title", "Hide action widget"),
+      precondition: ActionWidgetContextKeys.Visible,
+      keybinding: {
+        weight,
+        primary: KeyCode.Escape,
+        secondary: [KeyMod.Shift | KeyCode.Escape]
+      }
+    });
+  }
+  run(accessor) {
+    accessor.get(IActionWidgetService).hide(true);
+  }
+});
+registerAction2(class extends Action2 {
+  constructor() {
+    super({
+      id: "selectPrevCodeAction",
+      title: localize2("selectPrevCodeAction.title", "Select previous action"),
+      precondition: ActionWidgetContextKeys.Visible,
+      keybinding: {
+        weight,
+        primary: KeyCode.UpArrow,
+        secondary: [KeyMod.CtrlCmd | KeyCode.UpArrow],
+        mac: { primary: KeyCode.UpArrow, secondary: [KeyMod.CtrlCmd | KeyCode.UpArrow, KeyMod.WinCtrl | KeyCode.KeyP] }
+      }
+    });
+  }
+  run(accessor) {
+    const widgetService = accessor.get(IActionWidgetService);
+    if (widgetService instanceof ActionWidgetService) {
+      widgetService.focusPrevious();
+    }
+  }
+});
+registerAction2(class extends Action2 {
+  constructor() {
+    super({
+      id: "selectNextCodeAction",
+      title: localize2("selectNextCodeAction.title", "Select next action"),
+      precondition: ActionWidgetContextKeys.Visible,
+      keybinding: {
+        weight,
+        primary: KeyCode.DownArrow,
+        secondary: [KeyMod.CtrlCmd | KeyCode.DownArrow],
+        mac: { primary: KeyCode.DownArrow, secondary: [KeyMod.CtrlCmd | KeyCode.DownArrow, KeyMod.WinCtrl | KeyCode.KeyN] }
+      }
+    });
+  }
+  run(accessor) {
+    const widgetService = accessor.get(IActionWidgetService);
+    if (widgetService instanceof ActionWidgetService) {
+      widgetService.focusNext();
+    }
+  }
+});
+registerAction2(class extends Action2 {
+  constructor() {
+    super({
+      id: acceptSelectedActionCommand,
+      title: localize2("acceptSelected.title", "Accept selected action"),
+      precondition: ActionWidgetContextKeys.Visible,
+      keybinding: {
+        weight,
+        primary: KeyCode.Enter,
+        secondary: [KeyMod.CtrlCmd | KeyCode.Period]
+      }
+    });
+  }
+  run(accessor) {
+    const widgetService = accessor.get(IActionWidgetService);
+    if (widgetService instanceof ActionWidgetService) {
+      widgetService.acceptSelected();
+    }
+  }
+});
+registerAction2(class extends Action2 {
+  constructor() {
+    super({
+      id: previewSelectedActionCommand,
+      title: localize2("previewSelected.title", "Preview selected action"),
+      precondition: ActionWidgetContextKeys.Visible,
+      keybinding: {
+        weight,
+        primary: KeyMod.CtrlCmd | KeyCode.Enter
+      }
+    });
+  }
+  run(accessor) {
+    const widgetService = accessor.get(IActionWidgetService);
+    if (widgetService instanceof ActionWidgetService) {
+      widgetService.acceptSelected(true);
+    }
+  }
+});
+export {
+  IActionWidgetService
+};
+//# sourceMappingURL=actionWidget.js.map

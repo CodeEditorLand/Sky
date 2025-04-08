@@ -1,1 +1,578 @@
-import y from"@parcel/watcher";import{promises as E}from"fs";import{tmpdir as A,homedir as x}from"os";import{URI as P}from"../../../../../base/common/uri.js";import{DeferredPromise as m,RunOnceScheduler as I,RunOnceWorker as D,ThrottledWorker as T}from"../../../../../base/common/async.js";import{CancellationTokenSource as R}from"../../../../../base/common/cancellation.js";import{toErrorMessage as C}from"../../../../../base/common/errorMessage.js";import{Emitter as w,Event as b}from"../../../../../base/common/event.js";import{randomPath as S,isEqual as k,isEqualOrParent as $}from"../../../../../base/common/extpath.js";import{GLOBSTAR as N,patternsEquals as q}from"../../../../../base/common/glob.js";import{BaseWatcher as M}from"../baseWatcher.js";import{TernarySearchTree as U}from"../../../../../base/common/ternarySearchTree.js";import{normalizeNFC as H}from"../../../../../base/common/normalization.js";import{normalize as K,join as O}from"../../../../../base/common/path.js";import{isLinux as p,isMacintosh as z,isWindows as F}from"../../../../../base/common/platform.js";import{realcase as B,realpath as j}from"../../../../../base/node/extpath.js";import{FileChangeType as d}from"../../../common/files.js";import{coalesceEvents as G,parseWatcherPatterns as _,isFiltered as Y}from"../../../common/watcher.js";import{Disposable as V,DisposableStore as X,toDisposable as W}from"../../../../../base/common/lifecycle.js";class L extends V{constructor(t,i,r,s,n,o){super();this.ready=t;this.request=i;this.restarts=r;this.token=s;this.worker=n;this.stopFn=o;this.includes=this.request.includes?_(this.request.path,this.request.includes):void 0,this.excludes=this.request.excludes?_(this.request.path,this.request.excludes):void 0,this._register(W(()=>this.subscriptions.clear()))}_onDidStop=this._register(new w);onDidStop=this._onDidStop.event;_onDidFail=this._register(new w);onDidFail=this._onDidFail.event;didFail=!1;get failed(){return this.didFail}didStop=!1;get stopped(){return this.didStop}includes;excludes;subscriptions=new Map;subscribe(t,i){t=P.file(t).fsPath;let r=this.subscriptions.get(t);return r||(r=new Set,this.subscriptions.set(t,r)),r.add(i),W(()=>{const s=this.subscriptions.get(t);s&&(s.delete(i),s.size===0&&this.subscriptions.delete(t))})}get subscriptionsCount(){return this.subscriptions.size}notifyFileChange(t,i){const r=this.subscriptions.get(t);if(r)for(const s of r)s(i)}notifyWatchFailed(){this.didFail=!0,this._onDidFail.fire()}include(t){return!this.includes||this.includes.length===0?!0:this.includes.some(i=>i(t))}exclude(t){return!!this.excludes?.some(i=>i(t))}async stop(t){this.didStop=!0;try{await this.stopFn()}finally{this._onDidStop.fire({joinRestart:t}),this.dispose()}}}class a extends M{static MAP_PARCEL_WATCHER_ACTION_TO_FILE_CHANGE=new Map([["create",d.ADDED],["update",d.UPDATED],["delete",d.DELETED]]);static PREDEFINED_EXCLUDES={win32:[],darwin:[O(x(),"Library","Containers")],linux:[]};static PARCEL_WATCHER_BACKEND=F?"windows":p?"inotify":"fs-events";_onDidError=this._register(new w);onDidError=this._onDidError.event;_watchers=new Map;get watchers(){return this._watchers.values()}static FILE_CHANGES_HANDLER_DELAY=75;throttledFileChangesEmitter=this._register(new T({maxWorkChunkSize:500,throttleDelay:200,maxBufferedWork:3e4},e=>this._onDidChangeFile.fire(e)));enospcErrorLogged=!1;constructor(){super(),this.registerListeners()}registerListeners(){const e=i=>this.onUnexpectedError(i),t=i=>this.onUnexpectedError(i);process.on("uncaughtException",e),process.on("unhandledRejection",t),this._register(W(()=>{process.off("uncaughtException",e),process.off("unhandledRejection",t)}))}async doWatch(e){e=await this.removeDuplicateRequests(e);const t=[],i=new Set(Array.from(this.watchers));for(const r of e){const s=this._watchers.get(this.requestToWatcherKey(r));s&&q(s.request.excludes,r.excludes)&&q(s.request.includes,r.includes)&&s.request.pollingInterval===r.pollingInterval?i.delete(s):t.push(r)}t.length&&this.trace(`Request to start watching: ${t.map(r=>this.requestToString(r)).join(",")}`),i.size&&this.trace(`Request to stop watching: ${Array.from(i).map(r=>this.requestToString(r.request)).join(",")}`);for(const r of i)await this.stopWatching(r);for(const r of t)r.pollingInterval?await this.startPolling(r,r.pollingInterval):await this.startWatching(r)}requestToWatcherKey(e){return typeof e.correlationId=="number"?e.correlationId:this.pathToWatcherKey(e.path)}pathToWatcherKey(e){return p?e:e.toLowerCase()}async startPolling(e,t,i=0){const r=new R,s=new m,n=S(A(),"vscode-watcher-snapshot"),o=new L(s.p,e,i,r.token,new D(f=>this.handleParcelEvents(f,o),a.FILE_CHANGES_HANDLER_DELAY),async()=>{r.dispose(!0),o.worker.flush(),o.worker.dispose(),u.dispose(),await E.unlink(n)});this._watchers.set(this.requestToWatcherKey(e),o);const{realPath:c,realPathDiffers:h,realPathLength:g}=await this.normalizePath(e);this.trace(`Started watching: '${c}' with polling interval '${t}'`);let l=0;const u=new I(async()=>{if(l++,r.token.isCancellationRequested)return;const f=y;try{if(l>1){const v=await f.getEventsSince(c,n,{ignore:this.addPredefinedExcludes(e.excludes),backend:a.PARCEL_WATCHER_BACKEND});if(r.token.isCancellationRequested)return;this.onParcelEvents(v,o,h,g)}await f.writeSnapshot(c,n,{ignore:this.addPredefinedExcludes(e.excludes),backend:a.PARCEL_WATCHER_BACKEND})}catch(v){this.onUnexpectedError(v,e)}l===1&&s.complete(),!r.token.isCancellationRequested&&u.schedule()},t);u.schedule(0)}async startWatching(e,t=0){const i=new R,r=new m,s=new L(r.p,e,t,i.token,new D(h=>this.handleParcelEvents(h,s),a.FILE_CHANGES_HANDLER_DELAY),async()=>{i.dispose(!0),s.worker.flush(),s.worker.dispose(),await(await r.p)?.unsubscribe()});this._watchers.set(this.requestToWatcherKey(e),s);const{realPath:n,realPathDiffers:o,realPathLength:c}=await this.normalizePath(e);try{const g=await y.subscribe(n,(l,u)=>{s.token.isCancellationRequested||(l&&this.onUnexpectedError(l,e),this.onParcelEvents(u,s,o,c))},{backend:a.PARCEL_WATCHER_BACKEND,ignore:this.addPredefinedExcludes(s.request.excludes)});this.trace(`Started watching: '${n}' with backend '${a.PARCEL_WATCHER_BACKEND}'`),r.complete(g)}catch(h){this.onUnexpectedError(h,e),r.complete(void 0),s.notifyWatchFailed(),this._onDidWatchFail.fire(e)}}addPredefinedExcludes(e){const t=[...e],i=a.PREDEFINED_EXCLUDES[process.platform];if(Array.isArray(i))for(const r of i)t.includes(r)||t.push(r);return t}onParcelEvents(e,t,i,r){if(e.length===0)return;this.normalizeEvents(e,t.request,i,r);const s=this.handleIncludes(t,e);for(const n of s)t.worker.work(n)}handleIncludes(e,t){const i=[];for(const{path:r,type:s}of t){const n=a.MAP_PARCEL_WATCHER_ACTION_TO_FILE_CHANGE.get(s);this.verboseLogging&&this.traceWithCorrelation(`${n===d.ADDED?"[ADDED]":n===d.DELETED?"[DELETED]":"[CHANGED]"} ${r}`,e.request),e.include(r)?i.push({type:n,resource:P.file(r),cId:e.request.correlationId}):this.verboseLogging&&this.traceWithCorrelation(` >> ignored (not included) ${r}`,e.request)}return i}handleParcelEvents(e,t){const i=G(e),{events:r,rootDeleted:s}=this.filterEvents(i,t);this.emitEvents(r,t),s&&this.onWatchedPathDeleted(t)}emitEvents(e,t){if(e.length===0)return;this.throttledFileChangesEmitter.work(e)?this.throttledFileChangesEmitter.pending>0&&this.trace(`started throttling events due to large amount of file change events at once (pending: ${this.throttledFileChangesEmitter.pending}, most recent change: ${e[0].resource.fsPath}). Use 'files.watcherExclude' setting to exclude folders with lots of changing files (e.g. compilation output).`,t):this.warn(`started ignoring events due to too many file change events at once (incoming: ${e.length}, most recent change: ${e[0].resource.fsPath}). Use 'files.watcherExclude' setting to exclude folders with lots of changing files (e.g. compilation output).`)}async normalizePath(e){let t=e.path,i=!1,r=e.path.length;try{t=await j(e.path),e.path===t&&(t=await B(e.path)??e.path),e.path!==t&&(r=t.length,i=!0,this.trace(`correcting a path to watch that seems to be a symbolic link or wrong casing (original: ${e.path}, real: ${t})`))}catch{}return{realPath:t,realPathDiffers:i,realPathLength:r}}normalizeEvents(e,t,i,r){for(const s of e)z&&(s.path=H(s.path)),F&&t.path.length<=3&&(s.path=K(s.path)),i&&(s.path=t.path+s.path.substr(r))}filterEvents(e,t){const i=[];let r=!1;const s=this.isCorrelated(t.request)?t.request.filter:void 0;for(const n of e){if(t.subscriptionsCount>0&&t.notifyFileChange(n.resource.fsPath,n),r=n.type===d.DELETED&&k(n.resource.fsPath,t.request.path,!p),Y(n,s)){this.verboseLogging&&this.traceWithCorrelation(` >> ignored (filtered) ${n.resource.fsPath}`,t.request);continue}this.traceEvent(n,t.request),i.push(n)}return{events:i,rootDeleted:r}}onWatchedPathDeleted(e){this.warn("Watcher shutdown because watched path got deleted",e),e.notifyWatchFailed(),this._onDidWatchFail.fire(e.request)}onUnexpectedError(e,t){const i=C(e);i.indexOf("No space left on device")!==-1?this.enospcErrorLogged||(this.error("Inotify limit reached (ENOSPC)",t),this.enospcErrorLogged=!0):i.indexOf("File system must be re-scanned")!==-1?this.error(i,t):(this.error(`Unexpected error: ${i} (EUNKNOWN)`,t),this._onDidError.fire({request:t,error:i}))}async stop(){await super.stop();for(const e of this.watchers)await this.stopWatching(e)}restartWatching(e,t=800){const i=new I(async()=>{if(e.token.isCancellationRequested)return;const r=new m;try{await this.stopWatching(e,r.p),e.request.pollingInterval?await this.startPolling(e.request,e.request.pollingInterval,e.restarts+1):await this.startWatching(e.request,e.restarts+1)}finally{r.complete()}},t);i.schedule(),e.token.onCancellationRequested(()=>i.dispose())}async stopWatching(e,t){this.trace("stopping file watcher",e),this._watchers.delete(this.requestToWatcherKey(e.request));try{await e.stop(t)}catch(i){this.error(`Unexpected error stopping watcher: ${C(i)}`,e.request)}}async removeDuplicateRequests(e,t=!0){e.sort((s,n)=>s.path.length-n.path.length);const i=new Map;for(const s of e){if(s.excludes.includes(N))continue;let n=i.get(s.correlationId);n||(n=new Map,i.set(s.correlationId,n));const o=this.pathToWatcherKey(s.path);n.has(o)&&this.trace(`ignoring a request for watching who's path is already watched: ${this.requestToString(s)}`),n.set(o,s)}const r=[];for(const s of i.values()){const n=U.forPaths(!p);for(const o of s.values()){if(n.findSubstr(o.path))if(n.has(o.path))this.trace(`ignoring a request for watching who's path is already watched: ${this.requestToString(o)}`);else try{if(!(await E.lstat(o.path)).isSymbolicLink()){this.trace(`ignoring a request for watching who's parent is already watched: ${this.requestToString(o)}`);continue}}catch(c){this.trace(`ignoring a request for watching who's lstat failed to resolve: ${this.requestToString(o)} (error: ${c})`),this._onDidWatchFail.fire(o);continue}if(t&&!await this.isPathValid(o.path)){this._onDidWatchFail.fire(o);continue}n.set(o.path,o)}r.push(...Array.from(n).map(([,o])=>o))}return r}async isPathValid(e){try{if(!(await E.stat(e)).isDirectory())return this.trace(`ignoring a path for watching that is a file and not a folder: ${e}`),!1}catch(t){return this.trace(`ignoring a path for watching who's stat info failed to resolve: ${e} (error: ${t})`),!1}return!0}subscribe(e,t){for(const i of this.watchers){if(i.failed||!$(e,i.request.path,!p)||i.exclude(e)||!i.include(e))continue;const r=new X;return r.add(b.once(i.onDidStop)(async s=>{await s.joinRestart,!r.isDisposed&&t(!0)})),r.add(b.once(i.onDidFail)(()=>t(!0))),r.add(i.subscribe(e,s=>t(null,s))),r}}trace(e,t){this.verboseLogging&&this._onDidLogMessage.fire({type:"trace",message:this.toMessage(e,t?.request)})}warn(e,t){this._onDidLogMessage.fire({type:"warn",message:this.toMessage(e,t?.request)})}error(e,t){this._onDidLogMessage.fire({type:"error",message:this.toMessage(e,t)})}toMessage(e,t){return t?`[File Watcher] ${e} (path: ${t.path})`:`[File Watcher ('parcel')] ${e}`}get recursiveWatcher(){return this}}export{a as ParcelWatcher,L as ParcelWatcherInstance};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import parcelWatcher from "@parcel/watcher";
+import { promises } from "fs";
+import { tmpdir, homedir } from "os";
+import { URI } from "../../../../../base/common/uri.js";
+import { DeferredPromise, RunOnceScheduler, RunOnceWorker, ThrottledWorker } from "../../../../../base/common/async.js";
+import { CancellationToken, CancellationTokenSource } from "../../../../../base/common/cancellation.js";
+import { toErrorMessage } from "../../../../../base/common/errorMessage.js";
+import { Emitter, Event } from "../../../../../base/common/event.js";
+import { randomPath, isEqual, isEqualOrParent } from "../../../../../base/common/extpath.js";
+import { GLOBSTAR, ParsedPattern, patternsEquals } from "../../../../../base/common/glob.js";
+import { BaseWatcher } from "../baseWatcher.js";
+import { TernarySearchTree } from "../../../../../base/common/ternarySearchTree.js";
+import { normalizeNFC } from "../../../../../base/common/normalization.js";
+import { normalize, join } from "../../../../../base/common/path.js";
+import { isLinux, isMacintosh, isWindows } from "../../../../../base/common/platform.js";
+import { realcase, realpath } from "../../../../../base/node/extpath.js";
+import { FileChangeType, IFileChange } from "../../../common/files.js";
+import { coalesceEvents, IRecursiveWatchRequest, parseWatcherPatterns, IRecursiveWatcherWithSubscribe, isFiltered, IWatcherErrorEvent } from "../../../common/watcher.js";
+import { Disposable, DisposableStore, IDisposable, toDisposable } from "../../../../../base/common/lifecycle.js";
+class ParcelWatcherInstance extends Disposable {
+  constructor(ready, request, restarts, token, worker, stopFn) {
+    super();
+    this.ready = ready;
+    this.request = request;
+    this.restarts = restarts;
+    this.token = token;
+    this.worker = worker;
+    this.stopFn = stopFn;
+    this.includes = this.request.includes ? parseWatcherPatterns(this.request.path, this.request.includes) : void 0;
+    this.excludes = this.request.excludes ? parseWatcherPatterns(this.request.path, this.request.excludes) : void 0;
+    this._register(toDisposable(() => this.subscriptions.clear()));
+  }
+  static {
+    __name(this, "ParcelWatcherInstance");
+  }
+  _onDidStop = this._register(new Emitter());
+  onDidStop = this._onDidStop.event;
+  _onDidFail = this._register(new Emitter());
+  onDidFail = this._onDidFail.event;
+  didFail = false;
+  get failed() {
+    return this.didFail;
+  }
+  didStop = false;
+  get stopped() {
+    return this.didStop;
+  }
+  includes;
+  excludes;
+  subscriptions = /* @__PURE__ */ new Map();
+  subscribe(path, callback) {
+    path = URI.file(path).fsPath;
+    let subscriptions = this.subscriptions.get(path);
+    if (!subscriptions) {
+      subscriptions = /* @__PURE__ */ new Set();
+      this.subscriptions.set(path, subscriptions);
+    }
+    subscriptions.add(callback);
+    return toDisposable(() => {
+      const subscriptions2 = this.subscriptions.get(path);
+      if (subscriptions2) {
+        subscriptions2.delete(callback);
+        if (subscriptions2.size === 0) {
+          this.subscriptions.delete(path);
+        }
+      }
+    });
+  }
+  get subscriptionsCount() {
+    return this.subscriptions.size;
+  }
+  notifyFileChange(path, change) {
+    const subscriptions = this.subscriptions.get(path);
+    if (subscriptions) {
+      for (const subscription of subscriptions) {
+        subscription(change);
+      }
+    }
+  }
+  notifyWatchFailed() {
+    this.didFail = true;
+    this._onDidFail.fire();
+  }
+  include(path) {
+    if (!this.includes || this.includes.length === 0) {
+      return true;
+    }
+    return this.includes.some((include) => include(path));
+  }
+  exclude(path) {
+    return Boolean(this.excludes?.some((exclude) => exclude(path)));
+  }
+  async stop(joinRestart) {
+    this.didStop = true;
+    try {
+      await this.stopFn();
+    } finally {
+      this._onDidStop.fire({ joinRestart });
+      this.dispose();
+    }
+  }
+}
+class ParcelWatcher extends BaseWatcher {
+  static {
+    __name(this, "ParcelWatcher");
+  }
+  static MAP_PARCEL_WATCHER_ACTION_TO_FILE_CHANGE = /* @__PURE__ */ new Map(
+    [
+      ["create", FileChangeType.ADDED],
+      ["update", FileChangeType.UPDATED],
+      ["delete", FileChangeType.DELETED]
+    ]
+  );
+  static PREDEFINED_EXCLUDES = {
+    "win32": [],
+    "darwin": [
+      join(homedir(), "Library", "Containers")
+      // Triggers access dialog from macOS 14 (https://github.com/microsoft/vscode/issues/208105)
+    ],
+    "linux": []
+  };
+  static PARCEL_WATCHER_BACKEND = isWindows ? "windows" : isLinux ? "inotify" : "fs-events";
+  _onDidError = this._register(new Emitter());
+  onDidError = this._onDidError.event;
+  _watchers = /* @__PURE__ */ new Map();
+  get watchers() {
+    return this._watchers.values();
+  }
+  // A delay for collecting file changes from Parcel
+  // before collecting them for coalescing and emitting.
+  // Parcel internally uses 50ms as delay, so we use 75ms,
+  // to schedule sufficiently after Parcel.
+  //
+  // Note: since Parcel 2.0.7, the very first event is
+  // emitted without delay if no events occured over a
+  // duration of 500ms. But we always want to aggregate
+  // events to apply our coleasing logic.
+  //
+  static FILE_CHANGES_HANDLER_DELAY = 75;
+  // Reduce likelyhood of spam from file events via throttling.
+  // (https://github.com/microsoft/vscode/issues/124723)
+  throttledFileChangesEmitter = this._register(new ThrottledWorker(
+    {
+      maxWorkChunkSize: 500,
+      // only process up to 500 changes at once before...
+      throttleDelay: 200,
+      // ...resting for 200ms until we process events again...
+      maxBufferedWork: 3e4
+      // ...but never buffering more than 30000 events in memory
+    },
+    (events) => this._onDidChangeFile.fire(events)
+  ));
+  enospcErrorLogged = false;
+  constructor() {
+    super();
+    this.registerListeners();
+  }
+  registerListeners() {
+    const onUncaughtException = /* @__PURE__ */ __name((error) => this.onUnexpectedError(error), "onUncaughtException");
+    const onUnhandledRejection = /* @__PURE__ */ __name((error) => this.onUnexpectedError(error), "onUnhandledRejection");
+    process.on("uncaughtException", onUncaughtException);
+    process.on("unhandledRejection", onUnhandledRejection);
+    this._register(toDisposable(() => {
+      process.off("uncaughtException", onUncaughtException);
+      process.off("unhandledRejection", onUnhandledRejection);
+    }));
+  }
+  async doWatch(requests) {
+    requests = await this.removeDuplicateRequests(requests);
+    const requestsToStart = [];
+    const watchersToStop = new Set(Array.from(this.watchers));
+    for (const request of requests) {
+      const watcher = this._watchers.get(this.requestToWatcherKey(request));
+      if (watcher && patternsEquals(watcher.request.excludes, request.excludes) && patternsEquals(watcher.request.includes, request.includes) && watcher.request.pollingInterval === request.pollingInterval) {
+        watchersToStop.delete(watcher);
+      } else {
+        requestsToStart.push(request);
+      }
+    }
+    if (requestsToStart.length) {
+      this.trace(`Request to start watching: ${requestsToStart.map((request) => this.requestToString(request)).join(",")}`);
+    }
+    if (watchersToStop.size) {
+      this.trace(`Request to stop watching: ${Array.from(watchersToStop).map((watcher) => this.requestToString(watcher.request)).join(",")}`);
+    }
+    for (const watcher of watchersToStop) {
+      await this.stopWatching(watcher);
+    }
+    for (const request of requestsToStart) {
+      if (request.pollingInterval) {
+        await this.startPolling(request, request.pollingInterval);
+      } else {
+        await this.startWatching(request);
+      }
+    }
+  }
+  requestToWatcherKey(request) {
+    return typeof request.correlationId === "number" ? request.correlationId : this.pathToWatcherKey(request.path);
+  }
+  pathToWatcherKey(path) {
+    return isLinux ? path : path.toLowerCase();
+  }
+  async startPolling(request, pollingInterval, restarts = 0) {
+    const cts = new CancellationTokenSource();
+    const instance = new DeferredPromise();
+    const snapshotFile = randomPath(tmpdir(), "vscode-watcher-snapshot");
+    const watcher = new ParcelWatcherInstance(
+      instance.p,
+      request,
+      restarts,
+      cts.token,
+      new RunOnceWorker((events) => this.handleParcelEvents(events, watcher), ParcelWatcher.FILE_CHANGES_HANDLER_DELAY),
+      async () => {
+        cts.dispose(true);
+        watcher.worker.flush();
+        watcher.worker.dispose();
+        pollingWatcher.dispose();
+        await promises.unlink(snapshotFile);
+      }
+    );
+    this._watchers.set(this.requestToWatcherKey(request), watcher);
+    const { realPath, realPathDiffers, realPathLength } = await this.normalizePath(request);
+    this.trace(`Started watching: '${realPath}' with polling interval '${pollingInterval}'`);
+    let counter = 0;
+    const pollingWatcher = new RunOnceScheduler(async () => {
+      counter++;
+      if (cts.token.isCancellationRequested) {
+        return;
+      }
+      const parcelWatcherLib = parcelWatcher;
+      try {
+        if (counter > 1) {
+          const parcelEvents = await parcelWatcherLib.getEventsSince(realPath, snapshotFile, { ignore: this.addPredefinedExcludes(request.excludes), backend: ParcelWatcher.PARCEL_WATCHER_BACKEND });
+          if (cts.token.isCancellationRequested) {
+            return;
+          }
+          this.onParcelEvents(parcelEvents, watcher, realPathDiffers, realPathLength);
+        }
+        await parcelWatcherLib.writeSnapshot(realPath, snapshotFile, { ignore: this.addPredefinedExcludes(request.excludes), backend: ParcelWatcher.PARCEL_WATCHER_BACKEND });
+      } catch (error) {
+        this.onUnexpectedError(error, request);
+      }
+      if (counter === 1) {
+        instance.complete();
+      }
+      if (cts.token.isCancellationRequested) {
+        return;
+      }
+      pollingWatcher.schedule();
+    }, pollingInterval);
+    pollingWatcher.schedule(0);
+  }
+  async startWatching(request, restarts = 0) {
+    const cts = new CancellationTokenSource();
+    const instance = new DeferredPromise();
+    const watcher = new ParcelWatcherInstance(
+      instance.p,
+      request,
+      restarts,
+      cts.token,
+      new RunOnceWorker((events) => this.handleParcelEvents(events, watcher), ParcelWatcher.FILE_CHANGES_HANDLER_DELAY),
+      async () => {
+        cts.dispose(true);
+        watcher.worker.flush();
+        watcher.worker.dispose();
+        const watcherInstance = await instance.p;
+        await watcherInstance?.unsubscribe();
+      }
+    );
+    this._watchers.set(this.requestToWatcherKey(request), watcher);
+    const { realPath, realPathDiffers, realPathLength } = await this.normalizePath(request);
+    try {
+      const parcelWatcherLib = parcelWatcher;
+      const parcelWatcherInstance = await parcelWatcherLib.subscribe(realPath, (error, parcelEvents) => {
+        if (watcher.token.isCancellationRequested) {
+          return;
+        }
+        if (error) {
+          this.onUnexpectedError(error, request);
+        }
+        this.onParcelEvents(parcelEvents, watcher, realPathDiffers, realPathLength);
+      }, {
+        backend: ParcelWatcher.PARCEL_WATCHER_BACKEND,
+        ignore: this.addPredefinedExcludes(watcher.request.excludes)
+      });
+      this.trace(`Started watching: '${realPath}' with backend '${ParcelWatcher.PARCEL_WATCHER_BACKEND}'`);
+      instance.complete(parcelWatcherInstance);
+    } catch (error) {
+      this.onUnexpectedError(error, request);
+      instance.complete(void 0);
+      watcher.notifyWatchFailed();
+      this._onDidWatchFail.fire(request);
+    }
+  }
+  addPredefinedExcludes(initialExcludes) {
+    const excludes = [...initialExcludes];
+    const predefinedExcludes = ParcelWatcher.PREDEFINED_EXCLUDES[process.platform];
+    if (Array.isArray(predefinedExcludes)) {
+      for (const exclude of predefinedExcludes) {
+        if (!excludes.includes(exclude)) {
+          excludes.push(exclude);
+        }
+      }
+    }
+    return excludes;
+  }
+  onParcelEvents(parcelEvents, watcher, realPathDiffers, realPathLength) {
+    if (parcelEvents.length === 0) {
+      return;
+    }
+    this.normalizeEvents(parcelEvents, watcher.request, realPathDiffers, realPathLength);
+    const includedEvents = this.handleIncludes(watcher, parcelEvents);
+    for (const includedEvent of includedEvents) {
+      watcher.worker.work(includedEvent);
+    }
+  }
+  handleIncludes(watcher, parcelEvents) {
+    const events = [];
+    for (const { path, type: parcelEventType } of parcelEvents) {
+      const type = ParcelWatcher.MAP_PARCEL_WATCHER_ACTION_TO_FILE_CHANGE.get(parcelEventType);
+      if (this.verboseLogging) {
+        this.traceWithCorrelation(`${type === FileChangeType.ADDED ? "[ADDED]" : type === FileChangeType.DELETED ? "[DELETED]" : "[CHANGED]"} ${path}`, watcher.request);
+      }
+      if (!watcher.include(path)) {
+        if (this.verboseLogging) {
+          this.traceWithCorrelation(` >> ignored (not included) ${path}`, watcher.request);
+        }
+      } else {
+        events.push({ type, resource: URI.file(path), cId: watcher.request.correlationId });
+      }
+    }
+    return events;
+  }
+  handleParcelEvents(parcelEvents, watcher) {
+    const coalescedEvents = coalesceEvents(parcelEvents);
+    const { events: filteredEvents, rootDeleted } = this.filterEvents(coalescedEvents, watcher);
+    this.emitEvents(filteredEvents, watcher);
+    if (rootDeleted) {
+      this.onWatchedPathDeleted(watcher);
+    }
+  }
+  emitEvents(events, watcher) {
+    if (events.length === 0) {
+      return;
+    }
+    const worked = this.throttledFileChangesEmitter.work(events);
+    if (!worked) {
+      this.warn(`started ignoring events due to too many file change events at once (incoming: ${events.length}, most recent change: ${events[0].resource.fsPath}). Use 'files.watcherExclude' setting to exclude folders with lots of changing files (e.g. compilation output).`);
+    } else {
+      if (this.throttledFileChangesEmitter.pending > 0) {
+        this.trace(`started throttling events due to large amount of file change events at once (pending: ${this.throttledFileChangesEmitter.pending}, most recent change: ${events[0].resource.fsPath}). Use 'files.watcherExclude' setting to exclude folders with lots of changing files (e.g. compilation output).`, watcher);
+      }
+    }
+  }
+  async normalizePath(request) {
+    let realPath = request.path;
+    let realPathDiffers = false;
+    let realPathLength = request.path.length;
+    try {
+      realPath = await realpath(request.path);
+      if (request.path === realPath) {
+        realPath = await realcase(request.path) ?? request.path;
+      }
+      if (request.path !== realPath) {
+        realPathLength = realPath.length;
+        realPathDiffers = true;
+        this.trace(`correcting a path to watch that seems to be a symbolic link or wrong casing (original: ${request.path}, real: ${realPath})`);
+      }
+    } catch (error) {
+    }
+    return { realPath, realPathDiffers, realPathLength };
+  }
+  normalizeEvents(events, request, realPathDiffers, realPathLength) {
+    for (const event of events) {
+      if (isMacintosh) {
+        event.path = normalizeNFC(event.path);
+      }
+      if (isWindows) {
+        if (request.path.length <= 3) {
+          event.path = normalize(event.path);
+        }
+      }
+      if (realPathDiffers) {
+        event.path = request.path + event.path.substr(realPathLength);
+      }
+    }
+  }
+  filterEvents(events, watcher) {
+    const filteredEvents = [];
+    let rootDeleted = false;
+    const filter = this.isCorrelated(watcher.request) ? watcher.request.filter : void 0;
+    for (const event of events) {
+      if (watcher.subscriptionsCount > 0) {
+        watcher.notifyFileChange(event.resource.fsPath, event);
+      }
+      rootDeleted = event.type === FileChangeType.DELETED && isEqual(event.resource.fsPath, watcher.request.path, !isLinux);
+      if (isFiltered(event, filter)) {
+        if (this.verboseLogging) {
+          this.traceWithCorrelation(` >> ignored (filtered) ${event.resource.fsPath}`, watcher.request);
+        }
+        continue;
+      }
+      this.traceEvent(event, watcher.request);
+      filteredEvents.push(event);
+    }
+    return { events: filteredEvents, rootDeleted };
+  }
+  onWatchedPathDeleted(watcher) {
+    this.warn("Watcher shutdown because watched path got deleted", watcher);
+    watcher.notifyWatchFailed();
+    this._onDidWatchFail.fire(watcher.request);
+  }
+  onUnexpectedError(error, request) {
+    const msg = toErrorMessage(error);
+    if (msg.indexOf("No space left on device") !== -1) {
+      if (!this.enospcErrorLogged) {
+        this.error("Inotify limit reached (ENOSPC)", request);
+        this.enospcErrorLogged = true;
+      }
+    } else if (msg.indexOf("File system must be re-scanned") !== -1) {
+      this.error(msg, request);
+    } else {
+      this.error(`Unexpected error: ${msg} (EUNKNOWN)`, request);
+      this._onDidError.fire({ request, error: msg });
+    }
+  }
+  async stop() {
+    await super.stop();
+    for (const watcher of this.watchers) {
+      await this.stopWatching(watcher);
+    }
+  }
+  restartWatching(watcher, delay = 800) {
+    const scheduler = new RunOnceScheduler(async () => {
+      if (watcher.token.isCancellationRequested) {
+        return;
+      }
+      const restartPromise = new DeferredPromise();
+      try {
+        await this.stopWatching(watcher, restartPromise.p);
+        if (watcher.request.pollingInterval) {
+          await this.startPolling(watcher.request, watcher.request.pollingInterval, watcher.restarts + 1);
+        } else {
+          await this.startWatching(watcher.request, watcher.restarts + 1);
+        }
+      } finally {
+        restartPromise.complete();
+      }
+    }, delay);
+    scheduler.schedule();
+    watcher.token.onCancellationRequested(() => scheduler.dispose());
+  }
+  async stopWatching(watcher, joinRestart) {
+    this.trace(`stopping file watcher`, watcher);
+    this._watchers.delete(this.requestToWatcherKey(watcher.request));
+    try {
+      await watcher.stop(joinRestart);
+    } catch (error) {
+      this.error(`Unexpected error stopping watcher: ${toErrorMessage(error)}`, watcher.request);
+    }
+  }
+  async removeDuplicateRequests(requests, validatePaths = true) {
+    requests.sort((requestA, requestB) => requestA.path.length - requestB.path.length);
+    const mapCorrelationtoRequests = /* @__PURE__ */ new Map();
+    for (const request of requests) {
+      if (request.excludes.includes(GLOBSTAR)) {
+        continue;
+      }
+      let requestsForCorrelation = mapCorrelationtoRequests.get(request.correlationId);
+      if (!requestsForCorrelation) {
+        requestsForCorrelation = /* @__PURE__ */ new Map();
+        mapCorrelationtoRequests.set(request.correlationId, requestsForCorrelation);
+      }
+      const path = this.pathToWatcherKey(request.path);
+      if (requestsForCorrelation.has(path)) {
+        this.trace(`ignoring a request for watching who's path is already watched: ${this.requestToString(request)}`);
+      }
+      requestsForCorrelation.set(path, request);
+    }
+    const normalizedRequests = [];
+    for (const requestsForCorrelation of mapCorrelationtoRequests.values()) {
+      const requestTrie = TernarySearchTree.forPaths(!isLinux);
+      for (const request of requestsForCorrelation.values()) {
+        if (requestTrie.findSubstr(request.path)) {
+          if (requestTrie.has(request.path)) {
+            this.trace(`ignoring a request for watching who's path is already watched: ${this.requestToString(request)}`);
+          } else {
+            try {
+              if (!(await promises.lstat(request.path)).isSymbolicLink()) {
+                this.trace(`ignoring a request for watching who's parent is already watched: ${this.requestToString(request)}`);
+                continue;
+              }
+            } catch (error) {
+              this.trace(`ignoring a request for watching who's lstat failed to resolve: ${this.requestToString(request)} (error: ${error})`);
+              this._onDidWatchFail.fire(request);
+              continue;
+            }
+          }
+        }
+        if (validatePaths && !await this.isPathValid(request.path)) {
+          this._onDidWatchFail.fire(request);
+          continue;
+        }
+        requestTrie.set(request.path, request);
+      }
+      normalizedRequests.push(...Array.from(requestTrie).map(([, request]) => request));
+    }
+    return normalizedRequests;
+  }
+  async isPathValid(path) {
+    try {
+      const stat = await promises.stat(path);
+      if (!stat.isDirectory()) {
+        this.trace(`ignoring a path for watching that is a file and not a folder: ${path}`);
+        return false;
+      }
+    } catch (error) {
+      this.trace(`ignoring a path for watching who's stat info failed to resolve: ${path} (error: ${error})`);
+      return false;
+    }
+    return true;
+  }
+  subscribe(path, callback) {
+    for (const watcher of this.watchers) {
+      if (watcher.failed) {
+        continue;
+      }
+      if (!isEqualOrParent(path, watcher.request.path, !isLinux)) {
+        continue;
+      }
+      if (watcher.exclude(path) || !watcher.include(path)) {
+        continue;
+      }
+      const disposables = new DisposableStore();
+      disposables.add(Event.once(watcher.onDidStop)(async (e) => {
+        await e.joinRestart;
+        if (disposables.isDisposed) {
+          return;
+        }
+        callback(
+          true
+          /* error */
+        );
+      }));
+      disposables.add(Event.once(watcher.onDidFail)(() => callback(
+        true
+        /* error */
+      )));
+      disposables.add(watcher.subscribe(path, (change) => callback(null, change)));
+      return disposables;
+    }
+    return void 0;
+  }
+  trace(message, watcher) {
+    if (this.verboseLogging) {
+      this._onDidLogMessage.fire({ type: "trace", message: this.toMessage(message, watcher?.request) });
+    }
+  }
+  warn(message, watcher) {
+    this._onDidLogMessage.fire({ type: "warn", message: this.toMessage(message, watcher?.request) });
+  }
+  error(message, request) {
+    this._onDidLogMessage.fire({ type: "error", message: this.toMessage(message, request) });
+  }
+  toMessage(message, request) {
+    return request ? `[File Watcher] ${message} (path: ${request.path})` : `[File Watcher ('parcel')] ${message}`;
+  }
+  get recursiveWatcher() {
+    return this;
+  }
+}
+export {
+  ParcelWatcher,
+  ParcelWatcherInstance
+};
+//# sourceMappingURL=parcelWatcher.js.map

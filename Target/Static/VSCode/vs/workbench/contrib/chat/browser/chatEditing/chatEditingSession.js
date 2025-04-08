@@ -1,1 +1,863 @@
-var L=Object.defineProperty;var W=Object.getOwnPropertyDescriptor;var M=(p,d,e,t)=>{for(var i=t>1?void 0:t?W(d,e):d,s=p.length-1,n;s>=0;s--)(n=p[s])&&(i=(t?n(d,e,i):n(i))||i);return t&&i&&L(d,e,i),i},l=(p,d)=>(e,t)=>d(e,t,p);import{equals as G,binarySearch2 as j}from"../../../../../base/common/arrays.js";import{findLast as V}from"../../../../../base/common/arraysFind.js";import{DeferredPromise as O,Sequencer as z,SequencerByKey as K,timeout as $}from"../../../../../base/common/async.js";import{CancellationToken as J}from"../../../../../base/common/cancellation.js";import{BugIndicatingError as Q}from"../../../../../base/common/errors.js";import{Emitter as X}from"../../../../../base/common/event.js";import{Iterable as Y}from"../../../../../base/common/iterator.js";import{Disposable as Z,dispose as ee}from"../../../../../base/common/lifecycle.js";import{ResourceMap as y}from"../../../../../base/common/map.js";import{asyncTransaction as g,autorun as te,derived as _,derivedOpts as P,derivedWithStore as ie,ObservablePromise as x,observableValue as E,transaction as H}from"../../../../../base/common/observable.js";import{isEqual as h}from"../../../../../base/common/resources.js";import"../../../../../base/common/uri.js";import{IBulkEditService as se}from"../../../../../editor/browser/services/bulkEditService.js";import"../../../../../editor/common/languages.js";import{ILanguageService as ne}from"../../../../../editor/common/languages/language.js";import"../../../../../editor/common/model.js";import{IEditorWorkerService as re}from"../../../../../editor/common/services/editorWorker.js";import{IModelService as oe}from"../../../../../editor/common/services/model.js";import{ITextModelService as ae}from"../../../../../editor/common/services/resolverService.js";import{localize as de}from"../../../../../nls.js";import{AccessibilitySignal as T,IAccessibilitySignalService as fe}from"../../../../../platform/accessibilitySignal/browser/accessibilitySignalService.js";import{IConfigurationService as pe}from"../../../../../platform/configuration/common/configuration.js";import{EditorActivation as k}from"../../../../../platform/editor/common/editor.js";import{IInstantiationService as ce}from"../../../../../platform/instantiation/common/instantiation.js";import{observableConfigValue as le}from"../../../../../platform/observable/common/platformObservableUtils.js";import{DiffEditorInput as he}from"../../../../common/editor/diffEditorInput.js";import{IEditorGroupsService as ue}from"../../../../services/editor/common/editorGroupsService.js";import{IEditorService as Ie}from"../../../../services/editor/common/editorService.js";import"../../../multiDiffEditor/browser/multiDiffEditor.js";import{MultiDiffEditorInput as F}from"../../../multiDiffEditor/browser/multiDiffEditorInput.js";import{CellUri as v}from"../../../notebook/common/notebookCommon.js";import{INotebookService as Se}from"../../../notebook/common/notebookService.js";import{ChatEditingSessionState as u,ChatEditKind as R,getMultiDiffSourceUri as me,ModifiedFileEntryState as ge}from"../../common/chatEditingService.js";import"../../common/chatModel.js";import{IChatService as ye}from"../../common/chatService.js";import{ChatEditingModifiedDocumentEntry as _e}from"./chatEditingModifiedDocumentEntry.js";import{AbstractChatEditingModifiedFileEntry as Ee}from"./chatEditingModifiedFileEntry.js";import{ChatEditingModifiedNotebookEntry as C}from"./chatEditingModifiedNotebookEntry.js";import{ChatEditingSessionStorage as U}from"./chatEditingSessionStorage.js";import{ChatEditingTextModelContentProvider as ve}from"./chatEditingTextModelContentProviders.js";import{ChatEditingModifiedNotebookDiff as be}from"./notebook/chatEditingModifiedNotebookDiff.js";const q="d19944f6-f46c-4e17-911b-79a8e843c7c0";class we extends z{constructor(e,t){super();this._minDuration=e;this._maxOverallDelay=t}_size=0;queue(e){this._size+=1;const t=this._size*this._minDuration>this._maxOverallDelay;return super.queue(async()=>{try{const i=e(),s=t?Promise.resolve(void 0):$(this._minDuration,J.None),[n]=await Promise.all([i,s]);return n}finally{this._size-=1}})}}function A(p){const d=p.at(-1);return d?d.startIndex+d.stops.length:0}function N(p,d){return!p||!d?p===d:h(p.snapshotUri,d.snapshotUri)&&p.current===d.current}function B(p,d,e){const t=e.findIndex(a=>a.requestId===p);if(t===-1)return;const i=e[t],s=i.stops.findIndex(a=>a.stopId===d);if(s===-1)return;const n=i.stops[s].entries,o=s<i.stops.length-1?i.stops[s+1].entries:i.postEdit||e[t+1]?.stops[0].entries;if(o)return{current:n,next:o}}function De(p,d){let e;for(const i of d){const s=i.stops.find(n=>n.entries.has(p));if(s){e=s;break}}let t;for(let i=d.length-1;i>=0;i--){const s=d[i];if(s.postEdit?.has(p)){t=s.postEdit;break}const n=V(s.stops,o=>o.entries.has(p));if(n){t=n.entries;break}}if(!(!e||!t))return{current:e.entries,next:t}}let b=class extends Z{constructor(e,t,i,s,n,o,a,r,f,c,m,I,w,S,D){super();this.chatSessionId=e;this.isGlobalEditingSession=t;this._lookupExternalEntry=i;this._instantiationService=s;this._modelService=n;this._languageService=o;this._textModelService=a;this._bulkEditService=r;this._editorGroupsService=f;this._editorService=c;this._chatService=m;this._notebookService=I;this._editorWorkerService=w;this._configurationService=S;this._accessibilitySignalService=D;this._ignoreTrimWhitespaceObservable=le("diffEditor.ignoreTrimWhitespace",!0,this._configurationService)}_state=E(this,u.Initial);_linearHistory=E(this,[]);_linearHistoryIndex=E(this,0);_initialFileContents=new y;_entriesObs=E(this,[]);get entries(){return this._assertNotDisposed(),this._entriesObs}_editorPane;get state(){return this._state}canUndo=_(e=>this.state.read(e)!==u.Idle?!1:this._linearHistoryIndex.read(e)>0);canRedo=_(e=>this.state.read(e)!==u.Idle?!1:this._linearHistoryIndex.read(e)<A(this._linearHistory.read(e)));_onDidDispose=new X;get onDidDispose(){return this._assertNotDisposed(),this._onDidDispose.event}async init(){const e=await this._instantiationService.createInstance(U,this.chatSessionId).restoreState();if(e){for(const[t,i]of e.initialFileContents)this._initialFileContents.set(t,i);await g(async t=>{this._pendingSnapshot=e.pendingSnapshot,await this._restoreSnapshot(e.recentSnapshot,t,!1),this._linearHistory.set(e.linearHistory,t),this._linearHistoryIndex.set(e.linearHistoryIndex,t),this._state.set(u.Idle,t)})}else this._state.set(u.Idle,void 0);this._register(te(t=>{this.entries.read(t).forEach(s=>{s.state.read(t)})}))}_getEntry(e){return e=v.parse(e)?.notebook??e,this._entriesObs.get().find(t=>h(t.modifiedURI,e))}getEntry(e){return this._getEntry(e)}readEntry(e,t){return e=v.parse(e)?.notebook??e,this._entriesObs.read(t).find(i=>h(i.modifiedURI,e))}storeState(){const e=this._instantiationService.createInstance(U,this.chatSessionId),t={initialFileContents:this._initialFileContents,pendingSnapshot:this._pendingSnapshot,recentSnapshot:this._createSnapshot(void 0,void 0),linearHistoryIndex:this._linearHistoryIndex.get(),linearHistory:this._linearHistory.get()};return e.storeState(t)}_findSnapshot(e){return this._linearHistory.get().find(t=>t.requestId===e)}_findEditStop(e,t){const i=this._findSnapshot(e);if(!i)return;const s=i.stops.findIndex(n=>n.stopId===t);return s===-1?void 0:{stop:i.stops[s],snapshot:i,historyIndex:i.startIndex+s}}_ensurePendingSnapshot(){this._pendingSnapshot??=this._createSnapshot(void 0,void 0)}_diffsBetweenStops=new Map;_fullDiffs=new Map;_ignoreTrimWhitespaceObservable;_entryDiffBetweenTextStops(e,t){const i=ie(this,(s,n)=>{const o=t.read(s);if(!o)return;const a=Promise.all(o.map(r=>this._textModelService.createModelReference(r))).then(r=>(n.isDisposed?r.forEach(f=>f.dispose()):r.forEach(f=>n.add(f)),r));return new x(a)});return _(s=>{const o=i.read(s)?.promiseResult.read(s)?.data;if(!o)return;const a=e.read(s);if(a?.before&&C.canHandleSnapshot(a.before)){const c=this._instantiationService.createInstance(be,a.before,a.after);return new x(c.computeDiff())}const r=this._ignoreTrimWhitespaceObservable.read(s),f=this._editorWorkerService.computeDiff(o[0].object.textEditorModel.uri,o[1].object.textEditorModel.uri,{ignoreTrimWhitespace:r,computeMoves:!1,maxComputationTimeMs:3e3},"advanced").then(c=>{const m={originalURI:o[0].object.textEditorModel.uri,modifiedURI:o[1].object.textEditorModel.uri,identical:!!c?.identical,quitEarly:!c||c.quitEarly,added:0,removed:0};if(c)for(const I of c.changes)m.removed+=I.original.endLineNumberExclusive-I.original.startLineNumber,m.added+=I.modified.endLineNumberExclusive-I.modified.startLineNumber;return m});return new x(f)})}_createDiffBetweenStopsObservable(e,t,i){const s=P({equalsFn:(a,r)=>N(a?.before,r?.before)&&N(a?.after,r?.after)},a=>{const r=t?B(t,i,this._linearHistory.read(a)):De(e,this._linearHistory.read(a));if(!r)return;const f=r.current.get(e),c=r.next.get(e);if(!(!f||!c))return{before:f,after:c}}),n=P({equalsFn:(a,r)=>G(a,r,h)},a=>{const r=s.read(a);if(r)return[r.before.snapshotUri,r.after.snapshotUri]}),o=this._entryDiffBetweenTextStops(s,n);return _(a=>o.read(a)?.promiseResult.read(a)?.data||void 0)}getEntryDiffBetweenStops(e,t,i){if(t){const s=`${e}\0${t}\0${i}`;let n=this._diffsBetweenStops.get(s);return n||(n=this._createDiffBetweenStopsObservable(e,t,i),this._diffsBetweenStops.set(s,n)),n}else{const s=e.toString();let n=this._fullDiffs.get(s);return n||(n=this._createDiffBetweenStopsObservable(e,t,i),this._fullDiffs.set(s,n)),n}}createSnapshot(e,t,i=t!==void 0){const s=i?this._createEmptySnapshot(t):this._createSnapshot(e,t),n=this._linearHistoryIndex.get(),o=[];for(const r of this._linearHistory.get())n-r.startIndex<r.stops.length?o.push({requestId:r.requestId,stops:r.stops.slice(0,n-r.startIndex),startIndex:r.startIndex,postEdit:void 0}):o.push(r);const a=o.at(-1);e&&a?.requestId===e?o[o.length-1]={...a,stops:[...a.stops,s],postEdit:void 0}:o.push({requestId:e,startIndex:a?a.startIndex+a.stops.length:0,stops:[s],postEdit:void 0}),H(r=>{const f=o[o.length-1];this._linearHistory.set(o,r),this._linearHistoryIndex.set(f.startIndex+f.stops.length,r)})}_createEmptySnapshot(e){return{stopId:e,entries:new y}}_createSnapshot(e,t){const i=new y;for(const s of this._entriesObs.get())i.set(s.modifiedURI,s.createSnapshot(e,t));return{stopId:t,entries:i}}getSnapshot(e,t,i){const s=t===q?this._findSnapshot(e)?.postEdit:this._findEditStop(e,t)?.stop.entries;return s&&[...s.values()].find(n=>h(n.snapshotUri,i))}async getSnapshotModel(e,t,i){const s=this.getSnapshot(e,t,i);return s?this._modelService.createModel(s.current,this._languageService.createById(s.languageId),i,!1):null}getSnapshotUri(e,t,i){return B(e,i,this._linearHistory.get())?.next.get(t)?.snapshotUri}_pendingSnapshot;async restoreSnapshot(e,t){if(e!==void 0){const i=this._findEditStop(e,t);i&&(this._ensurePendingSnapshot(),await g(async s=>{this._linearHistoryIndex.set(i.historyIndex,s),await this._restoreSnapshot(i.stop,s)}),this._updateRequestHiddenState())}else{const i=this._pendingSnapshot;if(!i)return;this._pendingSnapshot=void 0,await this._restoreSnapshot(i,void 0)}}async _restoreSnapshot({entries:e},t,i=!0){for(const n of this._entriesObs.get())e.get(n.modifiedURI)||(n.resetToInitialContent(),n.dispose());const s=[];for(const n of e.values()){const o=await this._getOrCreateModifiedFileEntry(n.resource,n.telemetryInfo),a=n.state===ge.Modified||i;o.restoreFromSnapshot(n,a),s.push(o)}this._entriesObs.set(s,t)}remove(...e){this._assertNotDisposed();let t=!1;for(const i of e){const s=this._entriesObs.get().find(n=>h(n.modifiedURI,i));if(s){s.dispose();const n=this._entriesObs.get().filter(o=>!h(o.modifiedURI,i));this._entriesObs.set(n,void 0),t=!0}}}_assertNotDisposed(){if(this._state.get()===u.Disposed)throw new Q("Cannot access a disposed editing session")}async accept(...e){this._assertNotDisposed(),await g(async t=>{e.length===0&&await Promise.all(this._entriesObs.get().map(i=>i.accept(t)));for(const i of e){const s=this._entriesObs.get().find(n=>h(n.modifiedURI,i));s&&await s.accept(t)}}),this._accessibilitySignalService.playSignal(T.editsKept,{allowManyInParallel:!0})}async reject(...e){this._assertNotDisposed(),await g(async t=>{e.length===0&&await Promise.all(this._entriesObs.get().map(i=>i.reject(t)));for(const i of e){const s=this._entriesObs.get().find(n=>h(n.modifiedURI,i));s&&await s.reject(t)}}),this._accessibilitySignalService.playSignal(T.editsUndone,{allowManyInParallel:!0})}async show(e){if(this._assertNotDisposed(),this._editorPane){if(this._editorPane.isVisible())return;if(this._editorPane.input){await this._editorGroupsService.activeGroup.openEditor(this._editorPane.input,{pinned:!0,activation:k.ACTIVATE});return}}const t=F.fromResourceMultiDiffEditorInput({multiDiffSource:me(this,e),label:de("multiDiffEditorInput.name","Suggested Edits")},this._instantiationService);this._editorPane=await this._editorGroupsService.activeGroup.openEditor(t,{pinned:!0,activation:k.ACTIVATE})}_stopPromise;async stop(e=!1){this._stopPromise??=Promise.allSettled([this._performStop(),this.storeState()]).then(()=>{}),await this._stopPromise,e&&await this._instantiationService.createInstance(U,this.chatSessionId).clearState()}async _performStop(){const e=[Ee.scheme,ve.scheme];await Promise.allSettled(this._editorGroupsService.groups.flatMap(async t=>t.editors.map(async i=>{(i instanceof F&&i.initialResources?.some(s=>s.originalUri&&e.indexOf(s.originalUri.scheme)!==-1)||i instanceof he&&i.original.resource&&e.indexOf(i.original.resource.scheme)!==-1)&&await t.closeEditor(i)})))}dispose(){this._assertNotDisposed(),this._chatService.cancelCurrentRequestForSession(this.chatSessionId),ee(this._entriesObs.get()),super.dispose(),this._state.set(u.Disposed,void 0),this._onDidDispose.fire(),this._onDidDispose.dispose()}_streamingEditLocks=new K;get isDisposed(){return this._state.get()===u.Disposed}startStreamingEdits(e,t,i){const s=new O,n=new O,o=new we(15,1e3);o.queue(()=>n.p),this._streamingEditLocks.queue(e.toString(),async()=>(this.isDisposed||await this._acceptStreamingEditsStart(t,i,e),n.complete(),s.p));let a=!1;return{pushText:r=>{o.queue(async()=>{this.isDisposed||await this._acceptEdits(e,r,!1,t)})},pushNotebookCellText:(r,f)=>{o.queue(async()=>{this.isDisposed||await this._acceptEdits(r,f,!1,t)})},pushNotebook:r=>{o.queue(async()=>{this.isDisposed||await this._acceptEdits(e,r,!1,t)})},complete:()=>{a||(a=!0,o.queue(async()=>{this.isDisposed||(await this._acceptEdits(e,[],!0,t),await this._resolve(t.requestId,i,e),s.complete())}))}}}_getHistoryEntryByLinearIndex(e){const t=this._linearHistory.get(),i=j(t.length,n=>t[n].startIndex-e),s=t[i<0?~i-1:i];if(!(!s||e-s.startIndex>=s.stops.length))return{entry:s,stop:s.stops[e-s.startIndex]}}async undoInteraction(){const e=this._linearHistoryIndex.get()-1,t=this._getHistoryEntryByLinearIndex(e);t&&(this._ensurePendingSnapshot(),await g(async i=>{await this._restoreSnapshot(t.stop,i),this._linearHistoryIndex.set(e,i)}),this._updateRequestHiddenState())}async redoInteraction(){const e=A(this._linearHistory.get()),t=this._linearHistoryIndex.get()+1;if(t>e)return;const i=t===e?this._pendingSnapshot:this._getHistoryEntryByLinearIndex(t)?.stop;i&&(await g(async s=>{await this._restoreSnapshot(i,s),this._linearHistoryIndex.set(t,s)}),this._updateRequestHiddenState())}_updateRequestHiddenState(){const e=this._linearHistory.get(),t=this._linearHistoryIndex.get(),i=[];for(const s of e)s.requestId&&(s.startIndex>=t?i.push({requestId:s.requestId}):s.startIndex+s.stops.length>t&&i.push({requestId:s.requestId,afterUndoStop:s.stops[t-s.startIndex].stopId}));this._chatService.getSession(this.chatSessionId)?.setDisabledRequests(i)}async _acceptStreamingEditsStart(e,t,i){const s=await this._getOrCreateModifiedFileEntry(i,this._getTelemetryInfoForModel(e));H(n=>{this._state.set(u.StreamingEdits,n),s.acceptStreamingEditsStart(e,n),this.ensureEditInUndoStopMatches(e.requestId,t,s,!1,n)})}ensureEditInUndoStopMatches(e,t,i,s,n){const o=this._linearHistory.get(),a=o.findIndex(S=>S.requestId===e);if(a===-1)return;const r=o[a];let f=r.stops.findIndex(S=>S.stopId===t);if(f===-1)return;if(s){if(f===r.stops.length-1){const S=new y(r.postEdit||this._createEmptySnapshot(void 0).entries);if(!r.postEdit||!i.equalsSnapshot(S.get(i.modifiedURI))){S.set(i.modifiedURI,i.createSnapshot(e,q));const D=o.slice();D[a]={...r,postEdit:S},this._linearHistory.set(D,n)}return}f++}const c=r.stops[f];if(i.equalsSnapshot(c.entries.get(i.modifiedURI)))return;const m=new y(c.entries);m.set(i.modifiedURI,i.createSnapshot(e,c.stopId));const I=r.stops.slice();I[f]={...c,entries:m};const w=o.slice();w[a]={...r,stops:I},this._linearHistory.set(w,n)}async _acceptEdits(e,t,i,s){this._fullDiffs.delete(e.toString()),await(await this._getOrCreateModifiedFileEntry(e,this._getTelemetryInfoForModel(s))).acceptAgentEdits(e,t,i,s)}_getTelemetryInfoForModel(e){return new class{get agentId(){return e.agent?.id}get command(){return e.slashCommand?.name}get sessionId(){return e.session.sessionId}get requestId(){return e.requestId}get result(){return e.result}}}async _resolve(e,t,i){await g(async s=>{Y.some(this._streamingEditLocks.keys(),a=>a!==i.toString())||this._state.set(u.Idle,s);const o=this._getEntry(i);if(o)return this.ensureEditInUndoStopMatches(e,t,o,!0,s),o.acceptStreamingEditsEnd(s)})}async _getOrCreateModifiedFileEntry(e,t){e=v.parse(e)?.notebook??e;const i=this._entriesObs.get().find(r=>h(r.modifiedURI,e));if(i)return t.requestId!==i.telemetryInfo.requestId&&i.updateTelemetryInfo(t),i;let s;const n=this._lookupExternalEntry(e);if(n)s=n;else{const r=this._initialFileContents.get(e);s=await this._createModifiedFileEntry(e,t,!1,r),r||this._initialFileContents.set(e,s.initialContent)}const o=s.onDidDelete(()=>{const r=this._entriesObs.get().filter(f=>!h(f.modifiedURI,s.modifiedURI));this._entriesObs.set(r,void 0),this._editorService.closeEditors(this._editorService.findEditors(s.modifiedURI)),n||s.dispose(),this._store.delete(o)});this._store.add(o);const a=[...this._entriesObs.get(),s];return this._entriesObs.set(a,void 0),s}async _createModifiedFileEntry(e,t,i=!1,s){const n={collapse:r=>this._collapse(e,r)},o=i?R.Created:R.Modified,a=v.parse(e)?.notebook||e;try{if(this._notebookService.hasSupportedNotebooks(a))return await C.create(a,n,t,o,s,this._instantiationService);{const r=await this._textModelService.createModelReference(e);return this._instantiationService.createInstance(_e,r,n,t,o,s)}}catch(r){if(i)throw r;return await this._bulkEditService.apply({edits:[{newResource:e}]}),this._editorService.openEditor({resource:e,options:{inactive:!0,preserveFocus:!0,pinned:!0}}),this._notebookService.hasSupportedNotebooks(a)?await C.create(e,n,t,R.Created,s,this._instantiationService):this._createModifiedFileEntry(e,t,!0,s)}}_collapse(e,t){const i=this._editorPane?.findDocumentDiffItem(e);i&&this._editorPane?.viewModel?.items.get().find(s=>h(s.originalUri,i.originalUri)&&h(s.modifiedUri,i.modifiedUri))?.collapsed.set(!0,t)}};b=M([l(3,ce),l(4,oe),l(5,ne),l(6,ae),l(7,se),l(8,ue),l(9,Ie),l(10,ye),l(11,Se),l(12,re),l(13,pe),l(14,fe)],b);export{b as ChatEditingSession};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { equals as arraysEqual, binarySearch2 } from "../../../../../base/common/arrays.js";
+import { findLast } from "../../../../../base/common/arraysFind.js";
+import { DeferredPromise, ITask, Sequencer, SequencerByKey, timeout } from "../../../../../base/common/async.js";
+import { CancellationToken } from "../../../../../base/common/cancellation.js";
+import { BugIndicatingError } from "../../../../../base/common/errors.js";
+import { Emitter } from "../../../../../base/common/event.js";
+import { Iterable } from "../../../../../base/common/iterator.js";
+import { Disposable, dispose } from "../../../../../base/common/lifecycle.js";
+import { ResourceMap } from "../../../../../base/common/map.js";
+import { asyncTransaction, autorun, derived, derivedOpts, derivedWithStore, IObservable, IReader, ITransaction, ObservablePromise, observableValue, transaction } from "../../../../../base/common/observable.js";
+import { isEqual } from "../../../../../base/common/resources.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { IBulkEditService } from "../../../../../editor/browser/services/bulkEditService.js";
+import { TextEdit } from "../../../../../editor/common/languages.js";
+import { ILanguageService } from "../../../../../editor/common/languages/language.js";
+import { ITextModel } from "../../../../../editor/common/model.js";
+import { IEditorWorkerService } from "../../../../../editor/common/services/editorWorker.js";
+import { IModelService } from "../../../../../editor/common/services/model.js";
+import { ITextModelService } from "../../../../../editor/common/services/resolverService.js";
+import { localize } from "../../../../../nls.js";
+import { AccessibilitySignal, IAccessibilitySignalService } from "../../../../../platform/accessibilitySignal/browser/accessibilitySignalService.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { EditorActivation } from "../../../../../platform/editor/common/editor.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { observableConfigValue } from "../../../../../platform/observable/common/platformObservableUtils.js";
+import { DiffEditorInput } from "../../../../common/editor/diffEditorInput.js";
+import { IEditorGroupsService } from "../../../../services/editor/common/editorGroupsService.js";
+import { IEditorService } from "../../../../services/editor/common/editorService.js";
+import { MultiDiffEditor } from "../../../multiDiffEditor/browser/multiDiffEditor.js";
+import { MultiDiffEditorInput } from "../../../multiDiffEditor/browser/multiDiffEditorInput.js";
+import { CellUri, ICellEditOperation } from "../../../notebook/common/notebookCommon.js";
+import { INotebookService } from "../../../notebook/common/notebookService.js";
+import { ChatEditingSessionState, ChatEditKind, getMultiDiffSourceUri, IChatEditingSession, IEditSessionEntryDiff, IModifiedFileEntry, IStreamingEdits, ModifiedFileEntryState } from "../../common/chatEditingService.js";
+import { IChatRequestDisablement, IChatResponseModel } from "../../common/chatModel.js";
+import { IChatService } from "../../common/chatService.js";
+import { ChatEditingModifiedDocumentEntry } from "./chatEditingModifiedDocumentEntry.js";
+import { AbstractChatEditingModifiedFileEntry, IModifiedEntryTelemetryInfo, ISnapshotEntry } from "./chatEditingModifiedFileEntry.js";
+import { ChatEditingModifiedNotebookEntry } from "./chatEditingModifiedNotebookEntry.js";
+import { ChatEditingSessionStorage, IChatEditingSessionSnapshot, IChatEditingSessionStop, StoredSessionState } from "./chatEditingSessionStorage.js";
+import { ChatEditingTextModelContentProvider } from "./chatEditingTextModelContentProviders.js";
+import { ChatEditingModifiedNotebookDiff } from "./notebook/chatEditingModifiedNotebookDiff.js";
+const POST_EDIT_STOP_ID = "d19944f6-f46c-4e17-911b-79a8e843c7c0";
+class ThrottledSequencer extends Sequencer {
+  constructor(_minDuration, _maxOverallDelay) {
+    super();
+    this._minDuration = _minDuration;
+    this._maxOverallDelay = _maxOverallDelay;
+  }
+  static {
+    __name(this, "ThrottledSequencer");
+  }
+  _size = 0;
+  queue(promiseTask) {
+    this._size += 1;
+    const noDelay = this._size * this._minDuration > this._maxOverallDelay;
+    return super.queue(async () => {
+      try {
+        const p1 = promiseTask();
+        const p2 = noDelay ? Promise.resolve(void 0) : timeout(this._minDuration, CancellationToken.None);
+        const [result] = await Promise.all([p1, p2]);
+        return result;
+      } finally {
+        this._size -= 1;
+      }
+    });
+  }
+}
+function getMaxHistoryIndex(history) {
+  const lastHistory = history.at(-1);
+  return lastHistory ? lastHistory.startIndex + lastHistory.stops.length : 0;
+}
+__name(getMaxHistoryIndex, "getMaxHistoryIndex");
+function snapshotsEqualForDiff(a, b) {
+  if (!a || !b) {
+    return a === b;
+  }
+  return isEqual(a.snapshotUri, b.snapshotUri) && a.current === b.current;
+}
+__name(snapshotsEqualForDiff, "snapshotsEqualForDiff");
+function getCurrentAndNextStop(requestId, stopId, history) {
+  const snapshotIndex = history.findIndex((s) => s.requestId === requestId);
+  if (snapshotIndex === -1) {
+    return void 0;
+  }
+  const snapshot = history[snapshotIndex];
+  const stopIndex = snapshot.stops.findIndex((s) => s.stopId === stopId);
+  if (stopIndex === -1) {
+    return void 0;
+  }
+  const current = snapshot.stops[stopIndex].entries;
+  const next = stopIndex < snapshot.stops.length - 1 ? snapshot.stops[stopIndex + 1].entries : snapshot.postEdit || history[snapshotIndex + 1]?.stops[0].entries;
+  if (!next) {
+    return void 0;
+  }
+  return { current, next };
+}
+__name(getCurrentAndNextStop, "getCurrentAndNextStop");
+function getFirstAndLastStop(uri, history) {
+  let firstStopWithUri;
+  for (const snapshot of history) {
+    const stop = snapshot.stops.find((s) => s.entries.has(uri));
+    if (stop) {
+      firstStopWithUri = stop;
+      break;
+    }
+  }
+  let lastStopWithUri;
+  for (let i = history.length - 1; i >= 0; i--) {
+    const snapshot = history[i];
+    if (snapshot.postEdit?.has(uri)) {
+      lastStopWithUri = snapshot.postEdit;
+      break;
+    }
+    const stop = findLast(snapshot.stops, (s) => s.entries.has(uri));
+    if (stop) {
+      lastStopWithUri = stop.entries;
+      break;
+    }
+  }
+  if (!firstStopWithUri || !lastStopWithUri) {
+    return void 0;
+  }
+  return { current: firstStopWithUri.entries, next: lastStopWithUri };
+}
+__name(getFirstAndLastStop, "getFirstAndLastStop");
+let ChatEditingSession = class extends Disposable {
+  constructor(chatSessionId, isGlobalEditingSession, _lookupExternalEntry, _instantiationService, _modelService, _languageService, _textModelService, _bulkEditService, _editorGroupsService, _editorService, _chatService, _notebookService, _editorWorkerService, _configurationService, _accessibilitySignalService) {
+    super();
+    this.chatSessionId = chatSessionId;
+    this.isGlobalEditingSession = isGlobalEditingSession;
+    this._lookupExternalEntry = _lookupExternalEntry;
+    this._instantiationService = _instantiationService;
+    this._modelService = _modelService;
+    this._languageService = _languageService;
+    this._textModelService = _textModelService;
+    this._bulkEditService = _bulkEditService;
+    this._editorGroupsService = _editorGroupsService;
+    this._editorService = _editorService;
+    this._chatService = _chatService;
+    this._notebookService = _notebookService;
+    this._editorWorkerService = _editorWorkerService;
+    this._configurationService = _configurationService;
+    this._accessibilitySignalService = _accessibilitySignalService;
+    this._ignoreTrimWhitespaceObservable = observableConfigValue("diffEditor.ignoreTrimWhitespace", true, this._configurationService);
+  }
+  static {
+    __name(this, "ChatEditingSession");
+  }
+  _state = observableValue(this, ChatEditingSessionState.Initial);
+  _linearHistory = observableValue(this, []);
+  _linearHistoryIndex = observableValue(this, 0);
+  /**
+   * Contains the contents of a file when the AI first began doing edits to it.
+   */
+  _initialFileContents = new ResourceMap();
+  _entriesObs = observableValue(this, []);
+  get entries() {
+    this._assertNotDisposed();
+    return this._entriesObs;
+  }
+  _editorPane;
+  get state() {
+    return this._state;
+  }
+  canUndo = derived((r) => {
+    if (this.state.read(r) !== ChatEditingSessionState.Idle) {
+      return false;
+    }
+    const linearHistoryIndex = this._linearHistoryIndex.read(r);
+    return linearHistoryIndex > 0;
+  });
+  canRedo = derived((r) => {
+    if (this.state.read(r) !== ChatEditingSessionState.Idle) {
+      return false;
+    }
+    const linearHistoryIndex = this._linearHistoryIndex.read(r);
+    return linearHistoryIndex < getMaxHistoryIndex(this._linearHistory.read(r));
+  });
+  // public hiddenRequestIds = derived<string[]>((r) => {
+  // 	const linearHistory = this._linearHistory.read(r);
+  // 	const linearHistoryIndex = this._linearHistoryIndex.read(r);
+  // 	return linearHistory.slice(linearHistoryIndex).map(s => s.requestId).filter((r): r is string => !!r);
+  // });
+  _onDidDispose = new Emitter();
+  get onDidDispose() {
+    this._assertNotDisposed();
+    return this._onDidDispose.event;
+  }
+  async init() {
+    const restoredSessionState = await this._instantiationService.createInstance(ChatEditingSessionStorage, this.chatSessionId).restoreState();
+    if (restoredSessionState) {
+      for (const [uri, content] of restoredSessionState.initialFileContents) {
+        this._initialFileContents.set(uri, content);
+      }
+      await asyncTransaction(async (tx) => {
+        this._pendingSnapshot = restoredSessionState.pendingSnapshot;
+        await this._restoreSnapshot(restoredSessionState.recentSnapshot, tx, false);
+        this._linearHistory.set(restoredSessionState.linearHistory, tx);
+        this._linearHistoryIndex.set(restoredSessionState.linearHistoryIndex, tx);
+        this._state.set(ChatEditingSessionState.Idle, tx);
+      });
+    } else {
+      this._state.set(ChatEditingSessionState.Idle, void 0);
+    }
+    this._register(autorun((reader) => {
+      const entries = this.entries.read(reader);
+      entries.forEach((entry) => {
+        entry.state.read(reader);
+      });
+    }));
+  }
+  _getEntry(uri) {
+    uri = CellUri.parse(uri)?.notebook ?? uri;
+    return this._entriesObs.get().find((e) => isEqual(e.modifiedURI, uri));
+  }
+  getEntry(uri) {
+    return this._getEntry(uri);
+  }
+  readEntry(uri, reader) {
+    uri = CellUri.parse(uri)?.notebook ?? uri;
+    return this._entriesObs.read(reader).find((e) => isEqual(e.modifiedURI, uri));
+  }
+  storeState() {
+    const storage = this._instantiationService.createInstance(ChatEditingSessionStorage, this.chatSessionId);
+    const state = {
+      initialFileContents: this._initialFileContents,
+      pendingSnapshot: this._pendingSnapshot,
+      recentSnapshot: this._createSnapshot(void 0, void 0),
+      linearHistoryIndex: this._linearHistoryIndex.get(),
+      linearHistory: this._linearHistory.get()
+    };
+    return storage.storeState(state);
+  }
+  _findSnapshot(requestId) {
+    return this._linearHistory.get().find((s) => s.requestId === requestId);
+  }
+  _findEditStop(requestId, undoStop) {
+    const snapshot = this._findSnapshot(requestId);
+    if (!snapshot) {
+      return void 0;
+    }
+    const idx = snapshot.stops.findIndex((s) => s.stopId === undoStop);
+    return idx === -1 ? void 0 : { stop: snapshot.stops[idx], snapshot, historyIndex: snapshot.startIndex + idx };
+  }
+  _ensurePendingSnapshot() {
+    this._pendingSnapshot ??= this._createSnapshot(void 0, void 0);
+  }
+  _diffsBetweenStops = /* @__PURE__ */ new Map();
+  _fullDiffs = /* @__PURE__ */ new Map();
+  _ignoreTrimWhitespaceObservable;
+  /**
+   * Gets diff for text entries between stops.
+   * @param entriesContent Observable that observes either snapshot entry
+   * @param modelUrisObservable Observable that observes only the snapshot URIs.
+   */
+  _entryDiffBetweenTextStops(entriesContent, modelUrisObservable) {
+    const modelRefsPromise = derivedWithStore(this, (reader, store) => {
+      const modelUris = modelUrisObservable.read(reader);
+      if (!modelUris) {
+        return void 0;
+      }
+      const promise = Promise.all(modelUris.map((u) => this._textModelService.createModelReference(u))).then((refs) => {
+        if (store.isDisposed) {
+          refs.forEach((r) => r.dispose());
+        } else {
+          refs.forEach((r) => store.add(r));
+        }
+        return refs;
+      });
+      return new ObservablePromise(promise);
+    });
+    return derived((reader) => {
+      const refs2 = modelRefsPromise.read(reader)?.promiseResult.read(reader);
+      const refs = refs2?.data;
+      if (!refs) {
+        return;
+      }
+      const entries = entriesContent.read(reader);
+      if (entries?.before && ChatEditingModifiedNotebookEntry.canHandleSnapshot(entries.before)) {
+        const diffService = this._instantiationService.createInstance(ChatEditingModifiedNotebookDiff, entries.before, entries.after);
+        return new ObservablePromise(diffService.computeDiff());
+      }
+      const ignoreTrimWhitespace = this._ignoreTrimWhitespaceObservable.read(reader);
+      const promise = this._editorWorkerService.computeDiff(
+        refs[0].object.textEditorModel.uri,
+        refs[1].object.textEditorModel.uri,
+        { ignoreTrimWhitespace, computeMoves: false, maxComputationTimeMs: 3e3 },
+        "advanced"
+      ).then((diff) => {
+        const entryDiff = {
+          originalURI: refs[0].object.textEditorModel.uri,
+          modifiedURI: refs[1].object.textEditorModel.uri,
+          identical: !!diff?.identical,
+          quitEarly: !diff || diff.quitEarly,
+          added: 0,
+          removed: 0
+        };
+        if (diff) {
+          for (const change of diff.changes) {
+            entryDiff.removed += change.original.endLineNumberExclusive - change.original.startLineNumber;
+            entryDiff.added += change.modified.endLineNumberExclusive - change.modified.startLineNumber;
+          }
+        }
+        return entryDiff;
+      });
+      return new ObservablePromise(promise);
+    });
+  }
+  _createDiffBetweenStopsObservable(uri, requestId, stopId) {
+    const entries = derivedOpts(
+      {
+        equalsFn: /* @__PURE__ */ __name((a, b) => snapshotsEqualForDiff(a?.before, b?.before) && snapshotsEqualForDiff(a?.after, b?.after), "equalsFn")
+      },
+      (reader) => {
+        const stops = requestId ? getCurrentAndNextStop(requestId, stopId, this._linearHistory.read(reader)) : getFirstAndLastStop(uri, this._linearHistory.read(reader));
+        if (!stops) {
+          return void 0;
+        }
+        const before = stops.current.get(uri);
+        const after = stops.next.get(uri);
+        if (!before || !after) {
+          return void 0;
+        }
+        return { before, after };
+      }
+    );
+    const modelUrisObservable = derivedOpts({ equalsFn: /* @__PURE__ */ __name((a, b) => arraysEqual(a, b, isEqual), "equalsFn") }, (reader) => {
+      const entriesValue = entries.read(reader);
+      if (!entriesValue) {
+        return void 0;
+      }
+      return [entriesValue.before.snapshotUri, entriesValue.after.snapshotUri];
+    });
+    const diff = this._entryDiffBetweenTextStops(entries, modelUrisObservable);
+    return derived((reader) => {
+      return diff.read(reader)?.promiseResult.read(reader)?.data || void 0;
+    });
+  }
+  getEntryDiffBetweenStops(uri, requestId, stopId) {
+    if (requestId) {
+      const key = `${uri}\0${requestId}\0${stopId}`;
+      let observable = this._diffsBetweenStops.get(key);
+      if (!observable) {
+        observable = this._createDiffBetweenStopsObservable(uri, requestId, stopId);
+        this._diffsBetweenStops.set(key, observable);
+      }
+      return observable;
+    } else {
+      const key = uri.toString();
+      let observable = this._fullDiffs.get(key);
+      if (!observable) {
+        observable = this._createDiffBetweenStopsObservable(uri, requestId, stopId);
+        this._fullDiffs.set(key, observable);
+      }
+      return observable;
+    }
+  }
+  createSnapshot(requestId, undoStop, makeEmpty = undoStop !== void 0) {
+    const snapshot = makeEmpty ? this._createEmptySnapshot(undoStop) : this._createSnapshot(requestId, undoStop);
+    const linearHistoryPtr = this._linearHistoryIndex.get();
+    const newLinearHistory = [];
+    for (const entry of this._linearHistory.get()) {
+      if (linearHistoryPtr - entry.startIndex < entry.stops.length) {
+        newLinearHistory.push({ requestId: entry.requestId, stops: entry.stops.slice(0, linearHistoryPtr - entry.startIndex), startIndex: entry.startIndex, postEdit: void 0 });
+      } else {
+        newLinearHistory.push(entry);
+      }
+    }
+    const lastEntry = newLinearHistory.at(-1);
+    if (requestId && lastEntry?.requestId === requestId) {
+      newLinearHistory[newLinearHistory.length - 1] = { ...lastEntry, stops: [...lastEntry.stops, snapshot], postEdit: void 0 };
+    } else {
+      newLinearHistory.push({ requestId, startIndex: lastEntry ? lastEntry.startIndex + lastEntry.stops.length : 0, stops: [snapshot], postEdit: void 0 });
+    }
+    transaction((tx) => {
+      const last = newLinearHistory[newLinearHistory.length - 1];
+      this._linearHistory.set(newLinearHistory, tx);
+      this._linearHistoryIndex.set(last.startIndex + last.stops.length, tx);
+    });
+  }
+  _createEmptySnapshot(undoStop) {
+    return {
+      stopId: undoStop,
+      entries: new ResourceMap()
+    };
+  }
+  _createSnapshot(requestId, undoStop) {
+    const entries = new ResourceMap();
+    for (const entry of this._entriesObs.get()) {
+      entries.set(entry.modifiedURI, entry.createSnapshot(requestId, undoStop));
+    }
+    return {
+      stopId: undoStop,
+      entries
+    };
+  }
+  getSnapshot(requestId, undoStop, snapshotUri) {
+    const entries = undoStop === POST_EDIT_STOP_ID ? this._findSnapshot(requestId)?.postEdit : this._findEditStop(requestId, undoStop)?.stop.entries;
+    return entries && [...entries.values()].find((e) => isEqual(e.snapshotUri, snapshotUri));
+  }
+  async getSnapshotModel(requestId, undoStop, snapshotUri) {
+    const snapshotEntry = this.getSnapshot(requestId, undoStop, snapshotUri);
+    if (!snapshotEntry) {
+      return null;
+    }
+    return this._modelService.createModel(snapshotEntry.current, this._languageService.createById(snapshotEntry.languageId), snapshotUri, false);
+  }
+  getSnapshotUri(requestId, uri, stopId) {
+    const stops = getCurrentAndNextStop(requestId, stopId, this._linearHistory.get());
+    return stops?.next.get(uri)?.snapshotUri;
+  }
+  /**
+   * A snapshot representing the state of the working set before a new request has been sent
+   */
+  _pendingSnapshot;
+  async restoreSnapshot(requestId, stopId) {
+    if (requestId !== void 0) {
+      const stopRef = this._findEditStop(requestId, stopId);
+      if (stopRef) {
+        this._ensurePendingSnapshot();
+        await asyncTransaction(async (tx) => {
+          this._linearHistoryIndex.set(stopRef.historyIndex, tx);
+          await this._restoreSnapshot(stopRef.stop, tx);
+        });
+        this._updateRequestHiddenState();
+      }
+    } else {
+      const pendingSnapshot = this._pendingSnapshot;
+      if (!pendingSnapshot) {
+        return;
+      }
+      this._pendingSnapshot = void 0;
+      await this._restoreSnapshot(pendingSnapshot, void 0);
+    }
+  }
+  async _restoreSnapshot({ entries }, tx, restoreResolvedToDisk = true) {
+    for (const entry of this._entriesObs.get()) {
+      const snapshotEntry = entries.get(entry.modifiedURI);
+      if (!snapshotEntry) {
+        entry.resetToInitialContent();
+        entry.dispose();
+      }
+    }
+    const entriesArr = [];
+    for (const snapshotEntry of entries.values()) {
+      const entry = await this._getOrCreateModifiedFileEntry(snapshotEntry.resource, snapshotEntry.telemetryInfo);
+      const restoreToDisk = snapshotEntry.state === ModifiedFileEntryState.Modified || restoreResolvedToDisk;
+      entry.restoreFromSnapshot(snapshotEntry, restoreToDisk);
+      entriesArr.push(entry);
+    }
+    this._entriesObs.set(entriesArr, tx);
+  }
+  remove(...uris) {
+    this._assertNotDisposed();
+    let didRemoveUris = false;
+    for (const uri of uris) {
+      const entry = this._entriesObs.get().find((e) => isEqual(e.modifiedURI, uri));
+      if (entry) {
+        entry.dispose();
+        const newEntries = this._entriesObs.get().filter((e) => !isEqual(e.modifiedURI, uri));
+        this._entriesObs.set(newEntries, void 0);
+        didRemoveUris = true;
+      }
+    }
+    if (!didRemoveUris) {
+      return;
+    }
+  }
+  _assertNotDisposed() {
+    if (this._state.get() === ChatEditingSessionState.Disposed) {
+      throw new BugIndicatingError(`Cannot access a disposed editing session`);
+    }
+  }
+  async accept(...uris) {
+    this._assertNotDisposed();
+    await asyncTransaction(async (tx) => {
+      if (uris.length === 0) {
+        await Promise.all(this._entriesObs.get().map((entry) => entry.accept(tx)));
+      }
+      for (const uri of uris) {
+        const entry = this._entriesObs.get().find((e) => isEqual(e.modifiedURI, uri));
+        if (entry) {
+          await entry.accept(tx);
+        }
+      }
+    });
+    this._accessibilitySignalService.playSignal(AccessibilitySignal.editsKept, { allowManyInParallel: true });
+  }
+  async reject(...uris) {
+    this._assertNotDisposed();
+    await asyncTransaction(async (tx) => {
+      if (uris.length === 0) {
+        await Promise.all(this._entriesObs.get().map((entry) => entry.reject(tx)));
+      }
+      for (const uri of uris) {
+        const entry = this._entriesObs.get().find((e) => isEqual(e.modifiedURI, uri));
+        if (entry) {
+          await entry.reject(tx);
+        }
+      }
+    });
+    this._accessibilitySignalService.playSignal(AccessibilitySignal.editsUndone, { allowManyInParallel: true });
+  }
+  async show(previousChanges) {
+    this._assertNotDisposed();
+    if (this._editorPane) {
+      if (this._editorPane.isVisible()) {
+        return;
+      } else if (this._editorPane.input) {
+        await this._editorGroupsService.activeGroup.openEditor(this._editorPane.input, { pinned: true, activation: EditorActivation.ACTIVATE });
+        return;
+      }
+    }
+    const input = MultiDiffEditorInput.fromResourceMultiDiffEditorInput({
+      multiDiffSource: getMultiDiffSourceUri(this, previousChanges),
+      label: localize("multiDiffEditorInput.name", "Suggested Edits")
+    }, this._instantiationService);
+    this._editorPane = await this._editorGroupsService.activeGroup.openEditor(input, { pinned: true, activation: EditorActivation.ACTIVATE });
+  }
+  _stopPromise;
+  async stop(clearState = false) {
+    this._stopPromise ??= Promise.allSettled([this._performStop(), this.storeState()]).then(() => {
+    });
+    await this._stopPromise;
+    if (clearState) {
+      await this._instantiationService.createInstance(ChatEditingSessionStorage, this.chatSessionId).clearState();
+    }
+  }
+  async _performStop() {
+    const schemes = [AbstractChatEditingModifiedFileEntry.scheme, ChatEditingTextModelContentProvider.scheme];
+    await Promise.allSettled(this._editorGroupsService.groups.flatMap(async (g) => {
+      return g.editors.map(async (e) => {
+        if (e instanceof MultiDiffEditorInput && e.initialResources?.some((r) => r.originalUri && schemes.indexOf(r.originalUri.scheme) !== -1) || e instanceof DiffEditorInput && e.original.resource && schemes.indexOf(e.original.resource.scheme) !== -1) {
+          await g.closeEditor(e);
+        }
+      });
+    }));
+  }
+  dispose() {
+    this._assertNotDisposed();
+    this._chatService.cancelCurrentRequestForSession(this.chatSessionId);
+    dispose(this._entriesObs.get());
+    super.dispose();
+    this._state.set(ChatEditingSessionState.Disposed, void 0);
+    this._onDidDispose.fire();
+    this._onDidDispose.dispose();
+  }
+  _streamingEditLocks = new SequencerByKey();
+  get isDisposed() {
+    return this._state.get() === ChatEditingSessionState.Disposed;
+  }
+  startStreamingEdits(resource, responseModel, inUndoStop) {
+    const completePromise = new DeferredPromise();
+    const startPromise = new DeferredPromise();
+    const sequencer = new ThrottledSequencer(15, 1e3);
+    sequencer.queue(() => startPromise.p);
+    this._streamingEditLocks.queue(resource.toString(), async () => {
+      if (!this.isDisposed) {
+        await this._acceptStreamingEditsStart(responseModel, inUndoStop, resource);
+      }
+      startPromise.complete();
+      return completePromise.p;
+    });
+    let didComplete = false;
+    return {
+      pushText: /* @__PURE__ */ __name((edits) => {
+        sequencer.queue(async () => {
+          if (!this.isDisposed) {
+            await this._acceptEdits(resource, edits, false, responseModel);
+          }
+        });
+      }, "pushText"),
+      pushNotebookCellText: /* @__PURE__ */ __name((cell, edits) => {
+        sequencer.queue(async () => {
+          if (!this.isDisposed) {
+            await this._acceptEdits(cell, edits, false, responseModel);
+          }
+        });
+      }, "pushNotebookCellText"),
+      pushNotebook: /* @__PURE__ */ __name((edits) => {
+        sequencer.queue(async () => {
+          if (!this.isDisposed) {
+            await this._acceptEdits(resource, edits, false, responseModel);
+          }
+        });
+      }, "pushNotebook"),
+      complete: /* @__PURE__ */ __name(() => {
+        if (didComplete) {
+          return;
+        }
+        didComplete = true;
+        sequencer.queue(async () => {
+          if (!this.isDisposed) {
+            await this._acceptEdits(resource, [], true, responseModel);
+            await this._resolve(responseModel.requestId, inUndoStop, resource);
+            completePromise.complete();
+          }
+        });
+      }, "complete")
+    };
+  }
+  _getHistoryEntryByLinearIndex(index) {
+    const history = this._linearHistory.get();
+    const searchedIndex = binarySearch2(history.length, (e) => history[e].startIndex - index);
+    const entry = history[searchedIndex < 0 ? ~searchedIndex - 1 : searchedIndex];
+    if (!entry || index - entry.startIndex >= entry.stops.length) {
+      return void 0;
+    }
+    return {
+      entry,
+      stop: entry.stops[index - entry.startIndex]
+    };
+  }
+  async undoInteraction() {
+    const newIndex = this._linearHistoryIndex.get() - 1;
+    const previousSnapshot = this._getHistoryEntryByLinearIndex(newIndex);
+    if (!previousSnapshot) {
+      return;
+    }
+    this._ensurePendingSnapshot();
+    await asyncTransaction(async (tx) => {
+      await this._restoreSnapshot(previousSnapshot.stop, tx);
+      this._linearHistoryIndex.set(newIndex, tx);
+    });
+    this._updateRequestHiddenState();
+  }
+  async redoInteraction() {
+    const maxIndex = getMaxHistoryIndex(this._linearHistory.get());
+    const newIndex = this._linearHistoryIndex.get() + 1;
+    if (newIndex > maxIndex) {
+      return;
+    }
+    const nextSnapshot = newIndex === maxIndex ? this._pendingSnapshot : this._getHistoryEntryByLinearIndex(newIndex)?.stop;
+    if (!nextSnapshot) {
+      return;
+    }
+    await asyncTransaction(async (tx) => {
+      await this._restoreSnapshot(nextSnapshot, tx);
+      this._linearHistoryIndex.set(newIndex, tx);
+    });
+    this._updateRequestHiddenState();
+  }
+  _updateRequestHiddenState() {
+    const history = this._linearHistory.get();
+    const index = this._linearHistoryIndex.get();
+    const undoRequests = [];
+    for (const entry of history) {
+      if (!entry.requestId) {
+      } else if (entry.startIndex >= index) {
+        undoRequests.push({ requestId: entry.requestId });
+      } else if (entry.startIndex + entry.stops.length > index) {
+        undoRequests.push({ requestId: entry.requestId, afterUndoStop: entry.stops[index - entry.startIndex].stopId });
+      }
+    }
+    this._chatService.getSession(this.chatSessionId)?.setDisabledRequests(undoRequests);
+  }
+  async _acceptStreamingEditsStart(responseModel, undoStop, resource) {
+    const entry = await this._getOrCreateModifiedFileEntry(resource, this._getTelemetryInfoForModel(responseModel));
+    transaction((tx) => {
+      this._state.set(ChatEditingSessionState.StreamingEdits, tx);
+      entry.acceptStreamingEditsStart(responseModel, tx);
+      this.ensureEditInUndoStopMatches(responseModel.requestId, undoStop, entry, false, tx);
+    });
+  }
+  /**
+   * Ensures the state of the file in the given snapshot matches the current
+   * state of the {@param entry}. This is used to handle concurrent file edits.
+   *
+   * Given the case of two different edits, we will place and undo stop right
+   * before we `textEditGroup` in the underlying markdown stream, but at the
+   * time those are added the edits haven't been made yet, so both files will
+   * simply have the unmodified state.
+   *
+   * This method is called after each edit, so after the first file finishes
+   * being edits, it will update its content in the second undo snapshot such
+   * that it can be undone successfully.
+   *
+   * We ensure that the same file is not concurrently edited via the
+   * {@link _streamingEditLocks}, avoiding race conditions.
+   *
+   * @param next If true, this will edit the snapshot _after_ the undo stop
+   */
+  ensureEditInUndoStopMatches(requestId, undoStop, entry, next, tx) {
+    const history = this._linearHistory.get();
+    const snapIndex = history.findIndex((s) => s.requestId === requestId);
+    if (snapIndex === -1) {
+      return;
+    }
+    const snap = history[snapIndex];
+    let stopIndex = snap.stops.findIndex((s) => s.stopId === undoStop);
+    if (stopIndex === -1) {
+      return;
+    }
+    if (next) {
+      if (stopIndex === snap.stops.length - 1) {
+        const postEdit = new ResourceMap(snap.postEdit || this._createEmptySnapshot(void 0).entries);
+        if (!snap.postEdit || !entry.equalsSnapshot(postEdit.get(entry.modifiedURI))) {
+          postEdit.set(entry.modifiedURI, entry.createSnapshot(requestId, POST_EDIT_STOP_ID));
+          const newHistory2 = history.slice();
+          newHistory2[snapIndex] = { ...snap, postEdit };
+          this._linearHistory.set(newHistory2, tx);
+        }
+        return;
+      }
+      stopIndex++;
+    }
+    const stop = snap.stops[stopIndex];
+    if (entry.equalsSnapshot(stop.entries.get(entry.modifiedURI))) {
+      return;
+    }
+    const newMap = new ResourceMap(stop.entries);
+    newMap.set(entry.modifiedURI, entry.createSnapshot(requestId, stop.stopId));
+    const newStop = snap.stops.slice();
+    newStop[stopIndex] = { ...stop, entries: newMap };
+    const newHistory = history.slice();
+    newHistory[snapIndex] = { ...snap, stops: newStop };
+    this._linearHistory.set(newHistory, tx);
+  }
+  async _acceptEdits(resource, textEdits, isLastEdits, responseModel) {
+    this._fullDiffs.delete(resource.toString());
+    const entry = await this._getOrCreateModifiedFileEntry(resource, this._getTelemetryInfoForModel(responseModel));
+    await entry.acceptAgentEdits(resource, textEdits, isLastEdits, responseModel);
+  }
+  _getTelemetryInfoForModel(responseModel) {
+    return new class {
+      get agentId() {
+        return responseModel.agent?.id;
+      }
+      get command() {
+        return responseModel.slashCommand?.name;
+      }
+      get sessionId() {
+        return responseModel.session.sessionId;
+      }
+      get requestId() {
+        return responseModel.requestId;
+      }
+      get result() {
+        return responseModel.result;
+      }
+    }();
+  }
+  async _resolve(requestId, undoStop, resource) {
+    await asyncTransaction(async (tx) => {
+      const hasOtherTasks = Iterable.some(this._streamingEditLocks.keys(), (k) => k !== resource.toString());
+      if (!hasOtherTasks) {
+        this._state.set(ChatEditingSessionState.Idle, tx);
+      }
+      const entry = this._getEntry(resource);
+      if (!entry) {
+        return;
+      }
+      this.ensureEditInUndoStopMatches(
+        requestId,
+        undoStop,
+        entry,
+        /* next= */
+        true,
+        tx
+      );
+      return entry.acceptStreamingEditsEnd(tx);
+    });
+  }
+  /**
+   * Retrieves or creates a modified file entry.
+   *
+   * @returns The modified file entry.
+   */
+  async _getOrCreateModifiedFileEntry(resource, telemetryInfo) {
+    resource = CellUri.parse(resource)?.notebook ?? resource;
+    const existingEntry = this._entriesObs.get().find((e) => isEqual(e.modifiedURI, resource));
+    if (existingEntry) {
+      if (telemetryInfo.requestId !== existingEntry.telemetryInfo.requestId) {
+        existingEntry.updateTelemetryInfo(telemetryInfo);
+      }
+      return existingEntry;
+    }
+    let entry;
+    const existingExternalEntry = this._lookupExternalEntry(resource);
+    if (existingExternalEntry) {
+      entry = existingExternalEntry;
+    } else {
+      const initialContent = this._initialFileContents.get(resource);
+      entry = await this._createModifiedFileEntry(resource, telemetryInfo, false, initialContent);
+      if (!initialContent) {
+        this._initialFileContents.set(resource, entry.initialContent);
+      }
+    }
+    const listener = entry.onDidDelete(() => {
+      const newEntries = this._entriesObs.get().filter((e) => !isEqual(e.modifiedURI, entry.modifiedURI));
+      this._entriesObs.set(newEntries, void 0);
+      this._editorService.closeEditors(this._editorService.findEditors(entry.modifiedURI));
+      if (!existingExternalEntry) {
+        entry.dispose();
+      }
+      this._store.delete(listener);
+    });
+    this._store.add(listener);
+    const entriesArr = [...this._entriesObs.get(), entry];
+    this._entriesObs.set(entriesArr, void 0);
+    return entry;
+  }
+  async _createModifiedFileEntry(resource, telemetryInfo, mustExist = false, initialContent) {
+    const multiDiffEntryDelegate = { collapse: /* @__PURE__ */ __name((transaction2) => this._collapse(resource, transaction2), "collapse") };
+    const chatKind = mustExist ? ChatEditKind.Created : ChatEditKind.Modified;
+    const notebookUri = CellUri.parse(resource)?.notebook || resource;
+    try {
+      if (this._notebookService.hasSupportedNotebooks(notebookUri)) {
+        return await ChatEditingModifiedNotebookEntry.create(notebookUri, multiDiffEntryDelegate, telemetryInfo, chatKind, initialContent, this._instantiationService);
+      } else {
+        const ref = await this._textModelService.createModelReference(resource);
+        return this._instantiationService.createInstance(ChatEditingModifiedDocumentEntry, ref, multiDiffEntryDelegate, telemetryInfo, chatKind, initialContent);
+      }
+    } catch (err) {
+      if (mustExist) {
+        throw err;
+      }
+      await this._bulkEditService.apply({ edits: [{ newResource: resource }] });
+      this._editorService.openEditor({ resource, options: { inactive: true, preserveFocus: true, pinned: true } });
+      if (this._notebookService.hasSupportedNotebooks(notebookUri)) {
+        return await ChatEditingModifiedNotebookEntry.create(resource, multiDiffEntryDelegate, telemetryInfo, ChatEditKind.Created, initialContent, this._instantiationService);
+      } else {
+        return this._createModifiedFileEntry(resource, telemetryInfo, true, initialContent);
+      }
+    }
+  }
+  _collapse(resource, transaction2) {
+    const multiDiffItem = this._editorPane?.findDocumentDiffItem(resource);
+    if (multiDiffItem) {
+      this._editorPane?.viewModel?.items.get().find((documentDiffItem) => isEqual(documentDiffItem.originalUri, multiDiffItem.originalUri) && isEqual(documentDiffItem.modifiedUri, multiDiffItem.modifiedUri))?.collapsed.set(true, transaction2);
+    }
+  }
+};
+ChatEditingSession = __decorateClass([
+  __decorateParam(3, IInstantiationService),
+  __decorateParam(4, IModelService),
+  __decorateParam(5, ILanguageService),
+  __decorateParam(6, ITextModelService),
+  __decorateParam(7, IBulkEditService),
+  __decorateParam(8, IEditorGroupsService),
+  __decorateParam(9, IEditorService),
+  __decorateParam(10, IChatService),
+  __decorateParam(11, INotebookService),
+  __decorateParam(12, IEditorWorkerService),
+  __decorateParam(13, IConfigurationService),
+  __decorateParam(14, IAccessibilitySignalService)
+], ChatEditingSession);
+export {
+  ChatEditingSession
+};
+//# sourceMappingURL=chatEditingSession.js.map

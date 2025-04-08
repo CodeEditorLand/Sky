@@ -1,1 +1,46 @@
-var I=Object.defineProperty,h=Object.getOwnPropertyDescriptor,c=(e,o,s,t)=>{for(var r,i=t>1?void 0:t?h(o,s):o,p=e.length-1;p>=0;p--)(r=e[p])&&(i=(t?r(o,s,i):r(i))||i);return t&&i&&I(o,s,i),i},i=(e,o)=>(s,t)=>o(s,t,e);import"../../../common/contributions.js";import{IDebugService as d,State as f}from"../common/debug.js";import{dispose as n}from"../../../../base/common/lifecycle.js";import{IHostService as D}from"../../../services/host/browser/host.js";import{ITitleService as S}from"../../../services/title/browser/titleService.js";let r=class{toDispose=[];constructor(e,o,s){const t=()=>{e.state!==f.Stopped||o.hasFocus?s.updateProperties({prefix:""}):s.updateProperties({prefix:"🔴"})};this.toDispose.push(e.onDidChangeState(t)),this.toDispose.push(o.onDidChangeFocus(t))}dispose(){n(this.toDispose)}};r=c([i(0,d),i(1,D),i(2,S)],r);export{r as DebugTitleContribution};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { IWorkbenchContribution } from "../../../common/contributions.js";
+import { IDebugService, State } from "../common/debug.js";
+import { dispose, IDisposable } from "../../../../base/common/lifecycle.js";
+import { IHostService } from "../../../services/host/browser/host.js";
+import { ITitleService } from "../../../services/title/browser/titleService.js";
+let DebugTitleContribution = class {
+  static {
+    __name(this, "DebugTitleContribution");
+  }
+  toDispose = [];
+  constructor(debugService, hostService, titleService) {
+    const updateTitle = /* @__PURE__ */ __name(() => {
+      if (debugService.state === State.Stopped && !hostService.hasFocus) {
+        titleService.updateProperties({ prefix: "\u{1F534}" });
+      } else {
+        titleService.updateProperties({ prefix: "" });
+      }
+    }, "updateTitle");
+    this.toDispose.push(debugService.onDidChangeState(updateTitle));
+    this.toDispose.push(hostService.onDidChangeFocus(updateTitle));
+  }
+  dispose() {
+    dispose(this.toDispose);
+  }
+};
+DebugTitleContribution = __decorateClass([
+  __decorateParam(0, IDebugService),
+  __decorateParam(1, IHostService),
+  __decorateParam(2, ITitleService)
+], DebugTitleContribution);
+export {
+  DebugTitleContribution
+};
+//# sourceMappingURL=debugTitle.js.map

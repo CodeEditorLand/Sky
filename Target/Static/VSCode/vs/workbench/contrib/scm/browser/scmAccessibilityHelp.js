@@ -1,1 +1,130 @@
-var S=Object.defineProperty,f=Object.getOwnPropertyDescriptor,h=(e,o,s,t)=>{for(var r,i=t>1?void 0:t?f(o,s):o,c=e.length-1;c>=0;c--)(r=e[c])&&(i=(t?r(o,s,i):r(i))||i);return t&&i&&S(o,s,i),i},u=(e,o)=>(s,t)=>o(s,t,e);import{Disposable as b}from"../../../../base/common/lifecycle.js";import{localize as o}from"../../../../nls.js";import{AccessibleViewType as d,AccessibleViewProviderId as C}from"../../../../platform/accessibility/browser/accessibleView.js";import"../../../../platform/accessibility/browser/accessibleViewRegistry.js";import{ICommandService as v}from"../../../../platform/commands/common/commands.js";import{ContextKeyExpr as m}from"../../../../platform/contextkey/common/contextkey.js";import"../../../../platform/instantiation/common/instantiation.js";import{FocusedViewContext as l,SidebarFocusContext as V}from"../../../common/contextkeys.js";import{IViewsService as w}from"../../../services/views/common/viewsService.js";import{AccessibilityVerbositySettingId as I}from"../../accessibility/browser/accessibilityConfiguration.js";import{HISTORY_VIEW_PANE_ID as k,ISCMViewService as g,REPOSITORIES_VIEW_PANE_ID as _,VIEW_PANE_ID as R}from"../common/scm.js";class K{name="scm";type=d.Help;priority=100;when=m.or(m.and(m.equals("activeViewlet","workbench.view.scm"),V),m.equals(l.key,_),m.equals(l.key,R),m.equals(l.key,k));getProvider(e){const o=e.get(v),s=e.get(g),t=e.get(w);return new a(o,s,t)}}let a=class extends b{constructor(e,o,s){super(),this._commandService=e,this._scmViewService=o,this._viewsService=s,this._focusedView=this._viewsService.getFocusedViewName()}id=C.SourceControl;verbositySettingKey=I.SourceControl;options={type:d.Help};_focusedView;onClose(){switch(this._focusedView){case"Source Control":this._commandService.executeCommand("workbench.scm");break;case"Source Control Repositories":this._commandService.executeCommand("workbench.scm.repositories");break;case"Source Control Graph":this._commandService.executeCommand("workbench.scm.history");break;default:this._commandService.executeCommand("workbench.view.scm")}}provideContent(){const e=[];if(this._scmViewService.visibleRepositories.length>1){const s=this._scmViewService.visibleRepositories.map((e=>e.provider.name)).join(", ");e.push(o("state-msg1","Visible repositories: {0}",s))}const s=this._scmViewService.focusedRepository;if(s){e.push(o("state-msg2","Repository: {0}",s.provider.name));const t=s.provider.historyProvider.get()?.historyItemRef.get();t&&e.push(o("state-msg3","History item reference: {0}",t.name)),s.input.visible&&s.input.enabled&&""!==s.input.value&&e.push(o("state-msg4","Commit message: {0}",s.input.value));const r=s.provider.actionButton.get();if(r){const s=r.command.tooltip??r.command.title,t=r.enabled?o("enabled","enabled"):o("disabled","disabled");e.push(o("state-msg5","Action button: {0}, {1}",s,t))}const i=[];for(const e of s.provider.groups)i.push(`${e.label} (${e.resources.length} resource(s))`);s.provider.groups.map((e=>e.label)).join(", "),e.push(o("state-msg6","Resource groups: {0}",i.join(", ")))}return e.push(o("scm-repositories-msg1",'Use the "Source Control: Focus on Source Control Repositories View" command to open the Source Control Repositories view.')),e.push(o("scm-repositories-msg2","The Source Control Repositories view lists all repositories from the workspace and is only shown when the workspace contains more than one repository.")),e.push(o("scm-repositories-msg3","Once the Source Control Repositories view is opened you can:")),e.push(o("scm-repositories-msg4"," - Use the up/down arrow keys to navigate the list of repositories.")),e.push(o("scm-repositories-msg5"," - Use the Enter or Space keys to select a repository.")),e.push(o("scm-repositories-msg6"," - Use Shift + up/down keys to select multiple repositories.")),e.push(o("scm-msg1",'Use the "Source Control: Focus on Source Control View" command to open the Source Control view.')),e.push(o("scm-msg2","The Source Control view displays the resource groups and resources of the repository. If the workspace contains more than one repository it will list the resource groups and resources of the repositories selected in the Source Control Repositories view.")),e.push(o("scm-msg3","Once the Source Control view is opened you can:")),e.push(o("scm-msg4"," - Use the up/down arrow keys to navigate the list of repositories, resource groups and resources.")),e.push(o("scm-msg5"," - Use the Space key to expand or collapse a resource group.")),e.push(o("scm-graph-msg1",'Use the "Source Control: Focus on Source Control Graph View" command to open the Source Control Graph view.')),e.push(o("scm-graph-msg2","The Source Control Graph view displays a graph history items of the repository. If the workspace contains more than one repository it will list the history items of the active repository.")),e.push(o("scm-graph-msg3","Once the Source Control Graph view is opened you can:")),e.push(o("scm-graph-msg4"," - Use the up/down arrow keys to navigate the list of history items.")),e.push(o("scm-graph-msg5"," - Use the Space key to open the history item details in the multi-file diff editor.")),e.join("\n")}};a=h([u(0,v),u(1,g),u(2,w)],a);export{K as SCMAccessibilityHelp};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { localize } from "../../../../nls.js";
+import { AccessibleViewType, AccessibleContentProvider, IAccessibleViewContentProvider, AccessibleViewProviderId } from "../../../../platform/accessibility/browser/accessibleView.js";
+import { IAccessibleViewImplementation } from "../../../../platform/accessibility/browser/accessibleViewRegistry.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { ContextKeyExpr } from "../../../../platform/contextkey/common/contextkey.js";
+import { ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+import { FocusedViewContext, SidebarFocusContext } from "../../../common/contextkeys.js";
+import { IViewsService } from "../../../services/views/common/viewsService.js";
+import { AccessibilityVerbositySettingId } from "../../accessibility/browser/accessibilityConfiguration.js";
+import { HISTORY_VIEW_PANE_ID, ISCMViewService, REPOSITORIES_VIEW_PANE_ID, VIEW_PANE_ID } from "../common/scm.js";
+class SCMAccessibilityHelp {
+  static {
+    __name(this, "SCMAccessibilityHelp");
+  }
+  name = "scm";
+  type = AccessibleViewType.Help;
+  priority = 100;
+  when = ContextKeyExpr.or(
+    ContextKeyExpr.and(ContextKeyExpr.equals("activeViewlet", "workbench.view.scm"), SidebarFocusContext),
+    ContextKeyExpr.equals(FocusedViewContext.key, REPOSITORIES_VIEW_PANE_ID),
+    ContextKeyExpr.equals(FocusedViewContext.key, VIEW_PANE_ID),
+    ContextKeyExpr.equals(FocusedViewContext.key, HISTORY_VIEW_PANE_ID)
+  );
+  getProvider(accessor) {
+    const commandService = accessor.get(ICommandService);
+    const scmViewService = accessor.get(ISCMViewService);
+    const viewsService = accessor.get(IViewsService);
+    return new SCMAccessibilityHelpContentProvider(commandService, scmViewService, viewsService);
+  }
+}
+let SCMAccessibilityHelpContentProvider = class extends Disposable {
+  constructor(_commandService, _scmViewService, _viewsService) {
+    super();
+    this._commandService = _commandService;
+    this._scmViewService = _scmViewService;
+    this._viewsService = _viewsService;
+    this._focusedView = this._viewsService.getFocusedViewName();
+  }
+  static {
+    __name(this, "SCMAccessibilityHelpContentProvider");
+  }
+  id = AccessibleViewProviderId.SourceControl;
+  verbositySettingKey = AccessibilityVerbositySettingId.SourceControl;
+  options = { type: AccessibleViewType.Help };
+  _focusedView;
+  onClose() {
+    switch (this._focusedView) {
+      case "Source Control":
+        this._commandService.executeCommand("workbench.scm");
+        break;
+      case "Source Control Repositories":
+        this._commandService.executeCommand("workbench.scm.repositories");
+        break;
+      case "Source Control Graph":
+        this._commandService.executeCommand("workbench.scm.history");
+        break;
+      default:
+        this._commandService.executeCommand("workbench.view.scm");
+    }
+  }
+  provideContent() {
+    const content = [];
+    if (this._scmViewService.visibleRepositories.length > 1) {
+      const repositoryList = this._scmViewService.visibleRepositories.map((r) => r.provider.name).join(", ");
+      content.push(localize("state-msg1", "Visible repositories: {0}", repositoryList));
+    }
+    const focusedRepository = this._scmViewService.focusedRepository;
+    if (focusedRepository) {
+      content.push(localize("state-msg2", "Repository: {0}", focusedRepository.provider.name));
+      const currentHistoryItemRef = focusedRepository.provider.historyProvider.get()?.historyItemRef.get();
+      if (currentHistoryItemRef) {
+        content.push(localize("state-msg3", "History item reference: {0}", currentHistoryItemRef.name));
+      }
+      if (focusedRepository.input.visible && focusedRepository.input.enabled && focusedRepository.input.value !== "") {
+        content.push(localize("state-msg4", "Commit message: {0}", focusedRepository.input.value));
+      }
+      const actionButton = focusedRepository.provider.actionButton.get();
+      if (actionButton) {
+        const label = actionButton.command.tooltip ?? actionButton.command.title;
+        const enablementLabel = actionButton.enabled ? localize("enabled", "enabled") : localize("disabled", "disabled");
+        content.push(localize("state-msg5", "Action button: {0}, {1}", label, enablementLabel));
+      }
+      const resourceGroups = [];
+      for (const resourceGroup of focusedRepository.provider.groups) {
+        resourceGroups.push(`${resourceGroup.label} (${resourceGroup.resources.length} resource(s))`);
+      }
+      focusedRepository.provider.groups.map((g) => g.label).join(", ");
+      content.push(localize("state-msg6", "Resource groups: {0}", resourceGroups.join(", ")));
+    }
+    content.push(localize("scm-repositories-msg1", 'Use the "Source Control: Focus on Source Control Repositories View" command to open the Source Control Repositories view.'));
+    content.push(localize("scm-repositories-msg2", "The Source Control Repositories view lists all repositories from the workspace and is only shown when the workspace contains more than one repository."));
+    content.push(localize("scm-repositories-msg3", "Once the Source Control Repositories view is opened you can:"));
+    content.push(localize("scm-repositories-msg4", " - Use the up/down arrow keys to navigate the list of repositories."));
+    content.push(localize("scm-repositories-msg5", " - Use the Enter or Space keys to select a repository."));
+    content.push(localize("scm-repositories-msg6", " - Use Shift + up/down keys to select multiple repositories."));
+    content.push(localize("scm-msg1", 'Use the "Source Control: Focus on Source Control View" command to open the Source Control view.'));
+    content.push(localize("scm-msg2", "The Source Control view displays the resource groups and resources of the repository. If the workspace contains more than one repository it will list the resource groups and resources of the repositories selected in the Source Control Repositories view."));
+    content.push(localize("scm-msg3", "Once the Source Control view is opened you can:"));
+    content.push(localize("scm-msg4", " - Use the up/down arrow keys to navigate the list of repositories, resource groups and resources."));
+    content.push(localize("scm-msg5", " - Use the Space key to expand or collapse a resource group."));
+    content.push(localize("scm-graph-msg1", 'Use the "Source Control: Focus on Source Control Graph View" command to open the Source Control Graph view.'));
+    content.push(localize("scm-graph-msg2", "The Source Control Graph view displays a graph history items of the repository. If the workspace contains more than one repository it will list the history items of the active repository."));
+    content.push(localize("scm-graph-msg3", "Once the Source Control Graph view is opened you can:"));
+    content.push(localize("scm-graph-msg4", " - Use the up/down arrow keys to navigate the list of history items."));
+    content.push(localize("scm-graph-msg5", " - Use the Space key to open the history item details in the multi-file diff editor."));
+    return content.join("\n");
+  }
+};
+SCMAccessibilityHelpContentProvider = __decorateClass([
+  __decorateParam(0, ICommandService),
+  __decorateParam(1, ISCMViewService),
+  __decorateParam(2, IViewsService)
+], SCMAccessibilityHelpContentProvider);
+export {
+  SCMAccessibilityHelp
+};
+//# sourceMappingURL=scmAccessibilityHelp.js.map

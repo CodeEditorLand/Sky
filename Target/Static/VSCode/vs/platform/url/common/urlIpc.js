@@ -1,1 +1,87 @@
-import"../../../base/common/cancellation.js";import"../../../base/common/event.js";import{URI as s}from"../../../base/common/uri.js";import"../../../base/parts/ipc/common/ipc.js";import"../../log/common/log.js";import"./url.js";class E{constructor(e){this.handler=e}listen(e,t){throw new Error(`Event not found: ${t}`)}call(e,t,r){if("handleURL"===t)return this.handler.handleURL(s.revive(r[0]),r[1]);throw new Error(`Call not found: ${t}`)}}class ${constructor(e){this.channel=e}handleURL(e,t){return this.channel.call("handleURL",[e.toJSON(),t])}}class O{constructor(e,t){this.next=e,this.logService=t}async routeCall(e,t,r,o){if("handleURL"!==t)throw new Error(`Call not found: ${t}`);if(Array.isArray(r)&&r.length>0){const t=s.revive(r[0]);if(this.logService.trace("URLHandlerRouter#routeCall() with URI argument",t.toString(!0)),t.query){const r=/\bwindowId=(\d+)/.exec(t.query);if(r){const o=r[1];this.logService.trace(`URLHandlerRouter#routeCall(): found windowId query parameter with value "${o}"`,t.toString(!0));const n=new RegExp(`window:${o}`),l=e.connections.find((e=>(this.logService.trace("URLHandlerRouter#routeCall(): testing connection",e.ctx),n.test(e.ctx))));if(l)return this.logService.trace("URLHandlerRouter#routeCall(): found a connection to route",t.toString(!0)),l;this.logService.trace("URLHandlerRouter#routeCall(): did not find a connection to route",t.toString(!0))}else this.logService.trace("URLHandlerRouter#routeCall(): did not find windowId query parameter",t.toString(!0))}}else this.logService.trace("URLHandlerRouter#routeCall() without URI argument");return this.next.routeCall(e,t,r,o)}routeEvent(e,t){throw new Error(`Event not found: ${t}`)}}export{E as URLHandlerChannel,$ as URLHandlerChannelClient,O as URLHandlerRouter};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { CancellationToken } from "../../../base/common/cancellation.js";
+import { Event } from "../../../base/common/event.js";
+import { URI } from "../../../base/common/uri.js";
+import { Client, IChannel, IClientRouter, IConnectionHub, IServerChannel } from "../../../base/parts/ipc/common/ipc.js";
+import { ILogService } from "../../log/common/log.js";
+import { IOpenURLOptions, IURLHandler } from "./url.js";
+class URLHandlerChannel {
+  constructor(handler) {
+    this.handler = handler;
+  }
+  static {
+    __name(this, "URLHandlerChannel");
+  }
+  listen(_, event) {
+    throw new Error(`Event not found: ${event}`);
+  }
+  call(_, command, arg) {
+    switch (command) {
+      case "handleURL":
+        return this.handler.handleURL(URI.revive(arg[0]), arg[1]);
+    }
+    throw new Error(`Call not found: ${command}`);
+  }
+}
+class URLHandlerChannelClient {
+  constructor(channel) {
+    this.channel = channel;
+  }
+  static {
+    __name(this, "URLHandlerChannelClient");
+  }
+  handleURL(uri, options) {
+    return this.channel.call("handleURL", [uri.toJSON(), options]);
+  }
+}
+class URLHandlerRouter {
+  constructor(next, logService) {
+    this.next = next;
+    this.logService = logService;
+  }
+  static {
+    __name(this, "URLHandlerRouter");
+  }
+  async routeCall(hub, command, arg, cancellationToken) {
+    if (command !== "handleURL") {
+      throw new Error(`Call not found: ${command}`);
+    }
+    if (Array.isArray(arg) && arg.length > 0) {
+      const uri = URI.revive(arg[0]);
+      this.logService.trace("URLHandlerRouter#routeCall() with URI argument", uri.toString(true));
+      if (uri.query) {
+        const match = /\bwindowId=(\d+)/.exec(uri.query);
+        if (match) {
+          const windowId = match[1];
+          this.logService.trace(`URLHandlerRouter#routeCall(): found windowId query parameter with value "${windowId}"`, uri.toString(true));
+          const regex = new RegExp(`window:${windowId}`);
+          const connection = hub.connections.find((c) => {
+            this.logService.trace("URLHandlerRouter#routeCall(): testing connection", c.ctx);
+            return regex.test(c.ctx);
+          });
+          if (connection) {
+            this.logService.trace("URLHandlerRouter#routeCall(): found a connection to route", uri.toString(true));
+            return connection;
+          } else {
+            this.logService.trace("URLHandlerRouter#routeCall(): did not find a connection to route", uri.toString(true));
+          }
+        } else {
+          this.logService.trace("URLHandlerRouter#routeCall(): did not find windowId query parameter", uri.toString(true));
+        }
+      }
+    } else {
+      this.logService.trace("URLHandlerRouter#routeCall() without URI argument");
+    }
+    return this.next.routeCall(hub, command, arg, cancellationToken);
+  }
+  routeEvent(_, event) {
+    throw new Error(`Event not found: ${event}`);
+  }
+}
+export {
+  URLHandlerChannel,
+  URLHandlerChannelClient,
+  URLHandlerRouter
+};
+//# sourceMappingURL=urlIpc.js.map

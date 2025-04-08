@@ -1,1 +1,38 @@
-import{Codicon as c}from"../../../../../base/common/codicons.js";import"../../../../../editor/browser/editorExtensions.js";import{localize2 as a}from"../../../../../nls.js";import{Categories as n}from"../../../../../platform/action/common/actionCommonCategories.js";import{Action2 as s,registerAction2 as m}from"../../../../../platform/actions/common/actions.js";import{INativeHostService as l}from"../../../../../platform/native/common/native.js";import{IChatService as p}from"../../common/chatService.js";function A(){m(e)}class e extends s{static ID="workbench.action.chat.openStorageFolder";constructor(){super({id:e.ID,title:a("workbench.action.chat.openStorageFolder.label","Open Chat Storage Folder"),icon:c.attach,category:n.Developer,f1:!0})}async run(o,...t){const e=o.get(p),r=o.get(l),a=e.getChatStorageFolder();r.showItemInFolder(a.fsPath)}}export{A as registerChatDeveloperActions};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Codicon } from "../../../../../base/common/codicons.js";
+import { ServicesAccessor } from "../../../../../editor/browser/editorExtensions.js";
+import { localize2 } from "../../../../../nls.js";
+import { Categories } from "../../../../../platform/action/common/actionCommonCategories.js";
+import { Action2, registerAction2 } from "../../../../../platform/actions/common/actions.js";
+import { INativeHostService } from "../../../../../platform/native/common/native.js";
+import { IChatService } from "../../common/chatService.js";
+function registerChatDeveloperActions() {
+  registerAction2(OpenChatStorageFolderAction);
+}
+__name(registerChatDeveloperActions, "registerChatDeveloperActions");
+class OpenChatStorageFolderAction extends Action2 {
+  static {
+    __name(this, "OpenChatStorageFolderAction");
+  }
+  static ID = "workbench.action.chat.openStorageFolder";
+  constructor() {
+    super({
+      id: OpenChatStorageFolderAction.ID,
+      title: localize2("workbench.action.chat.openStorageFolder.label", "Open Chat Storage Folder"),
+      icon: Codicon.attach,
+      category: Categories.Developer,
+      f1: true
+    });
+  }
+  async run(accessor, ...args) {
+    const chatService = accessor.get(IChatService);
+    const nativeHostService = accessor.get(INativeHostService);
+    const storagePath = chatService.getChatStorageFolder();
+    nativeHostService.showItemInFolder(storagePath.fsPath);
+  }
+}
+export {
+  registerChatDeveloperActions
+};
+//# sourceMappingURL=chatDeveloperActions.js.map

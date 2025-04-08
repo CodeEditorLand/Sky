@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/editor/contrib/hover/browser/hoverUtils.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport * as dom from '../../../../base/browser/dom.js';\r\n\r\nexport function isMousePositionWithinElement(element: HTMLElement, posx: number, posy: number): boolean {\r\n\tconst elementRect = dom.getDomNodePagePosition(element);\r\n\tif (posx < elementRect.left\r\n\t\t|| posx > elementRect.left + elementRect.width\r\n\t\t|| posy < elementRect.top\r\n\t\t|| posy > elementRect.top + elementRect.height) {\r\n\t\treturn false;\r\n\t}\r\n\treturn true;\r\n}\r\n"],
+  "mappings": ";;AAKA,YAAY,SAAS;AAEd,SAAS,6BAA6B,SAAsB,MAAc,MAAuB;AACvG,QAAM,cAAc,IAAI,uBAAuB,OAAO;AACtD,MAAI,OAAO,YAAY,QACnB,OAAO,YAAY,OAAO,YAAY,SACtC,OAAO,YAAY,OACnB,OAAO,YAAY,MAAM,YAAY,QAAQ;AAChD,WAAO;AAAA,EACR;AACA,SAAO;AACR;AATgB;",
+  "names": []
+}

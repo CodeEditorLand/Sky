@@ -1,3 +1,117 @@
-import{HierarchicalKind as n}from"../../../../base/common/hierarchicalKind.js";import"../../../../base/common/jsonSchema.js";import{KeyCode as a,KeyMod as C}from"../../../../base/common/keyCodes.js";import*as i from"../../../../nls.js";import{KeybindingWeight as d}from"../../../../platform/keybinding/common/keybindingsRegistry.js";import"../../../browser/editorBrowser.js";import{EditorAction as c,EditorCommand as p,EditorContributionInstantiation as A,registerEditorAction as m,registerEditorCommand as l,registerEditorContribution as E}from"../../../browser/editorExtensions.js";import{EditorContextKeys as f}from"../../../common/editorContextKeys.js";import{registerEditorFeature as P}from"../../../common/editorFeatures.js";import{CopyPasteController as r,changePasteTypeCommandId as b,pasteWidgetVisibleCtx as u}from"./copyPasteController.js";import{DefaultPasteProvidersFeature as w,DefaultTextPasteOrDropEditProvider as I}from"./defaultProviders.js";const S="editor.action.pasteAs";E(r.ID,r,A.Eager),P(w),l(new class extends p{constructor(){super({id:b,precondition:u,kbOpts:{weight:d.EditorContrib,primary:C.CtrlCmd|a.Period}})}runEditorCommand(s,e){return r.get(e)?.changePasteType()}}),l(new class extends p{constructor(){super({id:"editor.hidePasteWidget",precondition:u,kbOpts:{weight:d.EditorContrib,primary:a.Escape}})}runEditorCommand(s,e){r.get(e)?.clearWidgets()}}),m(class h extends c{static argsSchema={oneOf:[{type:"object",required:["kind"],properties:{kind:{type:"string",description:i.localize("pasteAs.kind",`The kind of the paste edit to try pasting with.
-If there are multiple edits for this kind, the editor will show a picker. If there are no edits of this kind, the editor will show an error message.`)}}},{type:"object",required:["preferences"],properties:{preferences:{type:"array",description:i.localize("pasteAs.preferences",`List of preferred paste edit kind to try applying.
-The first edit matching the preferences will be applied.`),items:{type:"string"}}}}]};constructor(){super({id:S,label:i.localize2("pasteAs","Paste As..."),precondition:f.writable,metadata:{description:"Paste as",args:[{name:"args",schema:h.argsSchema}]}})}run(e,g,t){let o;return t&&("kind"in t?o={only:new n(t.kind)}:"preferences"in t&&(o={preferences:t.preferences.map(y=>new n(y))})),r.get(g)?.pasteAs(o)}}),m(class extends c{constructor(){super({id:"editor.action.pasteAsText",label:i.localize2("pasteAsText","Paste as Text"),precondition:f.writable})}run(s,e){return r.get(e)?.pasteAs({providerId:I.id})}});export{S as pasteAsCommandId};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { HierarchicalKind } from "../../../../base/common/hierarchicalKind.js";
+import { IJSONSchema, SchemaToType } from "../../../../base/common/jsonSchema.js";
+import { KeyCode, KeyMod } from "../../../../base/common/keyCodes.js";
+import * as nls from "../../../../nls.js";
+import { KeybindingWeight } from "../../../../platform/keybinding/common/keybindingsRegistry.js";
+import { ICodeEditor } from "../../../browser/editorBrowser.js";
+import { EditorAction, EditorCommand, EditorContributionInstantiation, ServicesAccessor, registerEditorAction, registerEditorCommand, registerEditorContribution } from "../../../browser/editorExtensions.js";
+import { EditorContextKeys } from "../../../common/editorContextKeys.js";
+import { registerEditorFeature } from "../../../common/editorFeatures.js";
+import { CopyPasteController, PastePreference, changePasteTypeCommandId, pasteWidgetVisibleCtx } from "./copyPasteController.js";
+import { DefaultPasteProvidersFeature, DefaultTextPasteOrDropEditProvider } from "./defaultProviders.js";
+const pasteAsCommandId = "editor.action.pasteAs";
+registerEditorContribution(CopyPasteController.ID, CopyPasteController, EditorContributionInstantiation.Eager);
+registerEditorFeature(DefaultPasteProvidersFeature);
+registerEditorCommand(new class extends EditorCommand {
+  constructor() {
+    super({
+      id: changePasteTypeCommandId,
+      precondition: pasteWidgetVisibleCtx,
+      kbOpts: {
+        weight: KeybindingWeight.EditorContrib,
+        primary: KeyMod.CtrlCmd | KeyCode.Period
+      }
+    });
+  }
+  runEditorCommand(_accessor, editor) {
+    return CopyPasteController.get(editor)?.changePasteType();
+  }
+}());
+registerEditorCommand(new class extends EditorCommand {
+  constructor() {
+    super({
+      id: "editor.hidePasteWidget",
+      precondition: pasteWidgetVisibleCtx,
+      kbOpts: {
+        weight: KeybindingWeight.EditorContrib,
+        primary: KeyCode.Escape
+      }
+    });
+  }
+  runEditorCommand(_accessor, editor) {
+    CopyPasteController.get(editor)?.clearWidgets();
+  }
+}());
+registerEditorAction(class PasteAsAction extends EditorAction {
+  static {
+    __name(this, "PasteAsAction");
+  }
+  static argsSchema = {
+    oneOf: [
+      {
+        type: "object",
+        required: ["kind"],
+        properties: {
+          kind: {
+            type: "string",
+            description: nls.localize("pasteAs.kind", "The kind of the paste edit to try pasting with.\nIf there are multiple edits for this kind, the editor will show a picker. If there are no edits of this kind, the editor will show an error message.")
+          }
+        }
+      },
+      {
+        type: "object",
+        required: ["preferences"],
+        properties: {
+          preferences: {
+            type: "array",
+            description: nls.localize("pasteAs.preferences", "List of preferred paste edit kind to try applying.\nThe first edit matching the preferences will be applied."),
+            items: { type: "string" }
+          }
+        }
+      }
+    ]
+  };
+  constructor() {
+    super({
+      id: pasteAsCommandId,
+      label: nls.localize2("pasteAs", "Paste As..."),
+      precondition: EditorContextKeys.writable,
+      metadata: {
+        description: "Paste as",
+        args: [{
+          name: "args",
+          schema: PasteAsAction.argsSchema
+        }]
+      }
+    });
+  }
+  run(_accessor, editor, args) {
+    let preference;
+    if (args) {
+      if ("kind" in args) {
+        preference = { only: new HierarchicalKind(args.kind) };
+      } else if ("preferences" in args) {
+        preference = { preferences: args.preferences.map((kind) => new HierarchicalKind(kind)) };
+      }
+    }
+    return CopyPasteController.get(editor)?.pasteAs(preference);
+  }
+});
+registerEditorAction(class extends EditorAction {
+  constructor() {
+    super({
+      id: "editor.action.pasteAsText",
+      label: nls.localize2("pasteAsText", "Paste as Text"),
+      precondition: EditorContextKeys.writable
+    });
+  }
+  run(_accessor, editor) {
+    return CopyPasteController.get(editor)?.pasteAs({ providerId: DefaultTextPasteOrDropEditProvider.id });
+  }
+});
+export {
+  pasteAsCommandId
+};
+//# sourceMappingURL=copyPasteContribution.js.map

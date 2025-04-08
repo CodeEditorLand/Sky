@@ -1,7 +1,148 @@
-import{equals as d}from"../../../../../base/common/arrays.js";import{splitLines as m}from"../../../../../base/common/strings.js";import{Position as p}from"../../../../common/core/position.js";import{Range as l}from"../../../../common/core/range.js";import{SingleTextEdit as o,TextEdit as a}from"../../../../common/core/textEdit.js";import{LineDecoration as c}from"../../../../common/viewLayout/lineDecorations.js";import"../../../../common/viewModel.js";import"../../../../common/core/columnRange.js";class h{constructor(e,t){this.lineNumber=e;this.parts=t}equals(e){return this.lineNumber===e.lineNumber&&this.parts.length===e.parts.length&&this.parts.every((t,n)=>t.equals(e.parts[n]))}render(e,t=!1){return new a([...this.parts.map(n=>new o(l.fromPositions(new p(this.lineNumber,n.column)),t?`[${n.lines.map(r=>r.line).join(`
-`)}]`:n.lines.map(r=>r.line).join(`
-`)))]).applyToString(e)}renderForScreenReader(e){if(this.parts.length===0)return"";const t=this.parts[this.parts.length-1],n=e.substr(0,t.column-1);return new a([...this.parts.map(s=>new o(l.fromPositions(new p(1,s.column)),s.lines.map(u=>u.line).join(`
-`)))]).applyToString(n).substring(this.parts[0].column-1)}isEmpty(){return this.parts.every(e=>e.lines.length===0)}get lineCount(){return 1+this.parts.reduce((e,t)=>e+t.lines.length-1,0)}}class x{constructor(e,t,n,r=[]){this.column=e;this.text=t;this.preview=n;this._inlineDecorations=r;this.lines=m(this.text).map((s,u)=>({line:s,lineDecorations:c.filter(this._inlineDecorations,u+1,1,s.length+1)}))}lines;equals(e){return this.column===e.column&&this.lines.length===e.lines.length&&this.lines.every((t,n)=>t.line===e.lines[n].line&&c.equalsArr(t.lineDecorations,e.lines[n].lineDecorations))}}class g{constructor(e,t,n,r=0){this.lineNumber=e;this.columnRange=t;this.text=n;this.additionalReservedLineCount=r;this.parts=[new x(this.columnRange.endColumnExclusive,this.text,!1)],this.newLines=m(this.text)}parts;newLines;renderForScreenReader(e){return this.newLines.join(`
-`)}render(e,t=!1){const n=this.columnRange.toRange(this.lineNumber);return t?new a([new o(l.fromPositions(n.getStartPosition()),"("),new o(l.fromPositions(n.getEndPosition()),`)[${this.newLines.join(`
-`)}]`)]).applyToString(e):new a([new o(n,this.newLines.join(`
-`))]).applyToString(e)}get lineCount(){return this.newLines.length}isEmpty(){return this.parts.every(e=>e.lines.length===0)}equals(e){return this.lineNumber===e.lineNumber&&this.columnRange.equals(e.columnRange)&&this.newLines.length===e.newLines.length&&this.newLines.every((t,n)=>t===e.newLines[n])&&this.additionalReservedLineCount===e.additionalReservedLineCount}}function D(i,e){return d(i,e,f)}function f(i,e){return i===e?!0:!i||!e?!1:i instanceof h&&e instanceof h||i instanceof g&&e instanceof g?i.equals(e):!1}export{h as GhostText,x as GhostTextPart,g as GhostTextReplacement,f as ghostTextOrReplacementEquals,D as ghostTextsOrReplacementsEqual};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { equals } from "../../../../../base/common/arrays.js";
+import { splitLines } from "../../../../../base/common/strings.js";
+import { Position } from "../../../../common/core/position.js";
+import { Range } from "../../../../common/core/range.js";
+import { SingleTextEdit, TextEdit } from "../../../../common/core/textEdit.js";
+import { LineDecoration } from "../../../../common/viewLayout/lineDecorations.js";
+import { InlineDecoration } from "../../../../common/viewModel.js";
+import { ColumnRange } from "../../../../common/core/columnRange.js";
+class GhostText {
+  constructor(lineNumber, parts) {
+    this.lineNumber = lineNumber;
+    this.parts = parts;
+  }
+  static {
+    __name(this, "GhostText");
+  }
+  equals(other) {
+    return this.lineNumber === other.lineNumber && this.parts.length === other.parts.length && this.parts.every((part, index) => part.equals(other.parts[index]));
+  }
+  /**
+   * Only used for testing/debugging.
+  */
+  render(documentText, debug = false) {
+    return new TextEdit([
+      ...this.parts.map((p) => new SingleTextEdit(
+        Range.fromPositions(new Position(this.lineNumber, p.column)),
+        debug ? `[${p.lines.map((line) => line.line).join("\n")}]` : p.lines.map((line) => line.line).join("\n")
+      ))
+    ]).applyToString(documentText);
+  }
+  renderForScreenReader(lineText) {
+    if (this.parts.length === 0) {
+      return "";
+    }
+    const lastPart = this.parts[this.parts.length - 1];
+    const cappedLineText = lineText.substr(0, lastPart.column - 1);
+    const text = new TextEdit([
+      ...this.parts.map((p) => new SingleTextEdit(
+        Range.fromPositions(new Position(1, p.column)),
+        p.lines.map((line) => line.line).join("\n")
+      ))
+    ]).applyToString(cappedLineText);
+    return text.substring(this.parts[0].column - 1);
+  }
+  isEmpty() {
+    return this.parts.every((p) => p.lines.length === 0);
+  }
+  get lineCount() {
+    return 1 + this.parts.reduce((r, p) => r + p.lines.length - 1, 0);
+  }
+}
+class GhostTextPart {
+  constructor(column, text, preview, _inlineDecorations = []) {
+    this.column = column;
+    this.text = text;
+    this.preview = preview;
+    this._inlineDecorations = _inlineDecorations;
+    this.lines = splitLines(this.text).map((line, i) => ({
+      line,
+      lineDecorations: LineDecoration.filter(this._inlineDecorations, i + 1, 1, line.length + 1)
+    }));
+  }
+  static {
+    __name(this, "GhostTextPart");
+  }
+  lines;
+  equals(other) {
+    return this.column === other.column && this.lines.length === other.lines.length && this.lines.every(
+      (line, index) => line.line === other.lines[index].line && LineDecoration.equalsArr(line.lineDecorations, other.lines[index].lineDecorations)
+    );
+  }
+}
+class GhostTextReplacement {
+  constructor(lineNumber, columnRange, text, additionalReservedLineCount = 0) {
+    this.lineNumber = lineNumber;
+    this.columnRange = columnRange;
+    this.text = text;
+    this.additionalReservedLineCount = additionalReservedLineCount;
+    this.parts = [
+      new GhostTextPart(
+        this.columnRange.endColumnExclusive,
+        this.text,
+        false
+      )
+    ];
+    this.newLines = splitLines(this.text);
+  }
+  static {
+    __name(this, "GhostTextReplacement");
+  }
+  parts;
+  newLines;
+  renderForScreenReader(_lineText) {
+    return this.newLines.join("\n");
+  }
+  render(documentText, debug = false) {
+    const replaceRange = this.columnRange.toRange(this.lineNumber);
+    if (debug) {
+      return new TextEdit([
+        new SingleTextEdit(Range.fromPositions(replaceRange.getStartPosition()), "("),
+        new SingleTextEdit(Range.fromPositions(replaceRange.getEndPosition()), `)[${this.newLines.join("\n")}]`)
+      ]).applyToString(documentText);
+    } else {
+      return new TextEdit([
+        new SingleTextEdit(replaceRange, this.newLines.join("\n"))
+      ]).applyToString(documentText);
+    }
+  }
+  get lineCount() {
+    return this.newLines.length;
+  }
+  isEmpty() {
+    return this.parts.every((p) => p.lines.length === 0);
+  }
+  equals(other) {
+    return this.lineNumber === other.lineNumber && this.columnRange.equals(other.columnRange) && this.newLines.length === other.newLines.length && this.newLines.every((line, index) => line === other.newLines[index]) && this.additionalReservedLineCount === other.additionalReservedLineCount;
+  }
+}
+function ghostTextsOrReplacementsEqual(a, b) {
+  return equals(a, b, ghostTextOrReplacementEquals);
+}
+__name(ghostTextsOrReplacementsEqual, "ghostTextsOrReplacementsEqual");
+function ghostTextOrReplacementEquals(a, b) {
+  if (a === b) {
+    return true;
+  }
+  if (!a || !b) {
+    return false;
+  }
+  if (a instanceof GhostText && b instanceof GhostText) {
+    return a.equals(b);
+  }
+  if (a instanceof GhostTextReplacement && b instanceof GhostTextReplacement) {
+    return a.equals(b);
+  }
+  return false;
+}
+__name(ghostTextOrReplacementEquals, "ghostTextOrReplacementEquals");
+export {
+  GhostText,
+  GhostTextPart,
+  GhostTextReplacement,
+  ghostTextOrReplacementEquals,
+  ghostTextsOrReplacementsEqual
+};
+//# sourceMappingURL=ghostText.js.map

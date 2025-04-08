@@ -1,1 +1,359 @@
-import{assertNever as D}from"../../../../../base/common/assert.js";import{AsyncIterableObject as q,DeferredPromise as B}from"../../../../../base/common/async.js";import{CancellationToken as U,CancellationTokenSource as F}from"../../../../../base/common/cancellation.js";import{onUnexpectedExternalError as S}from"../../../../../base/common/errors.js";import{Disposable as G}from"../../../../../base/common/lifecycle.js";import{SetMap as O}from"../../../../../base/common/map.js";import{generateUuid as W}from"../../../../../base/common/uuid.js";import"../../../../common/core/editOperation.js";import{SingleOffsetEdit as j}from"../../../../common/core/offsetEdit.js";import{OffsetRange as z}from"../../../../common/core/offsetRange.js";import{Position as b}from"../../../../common/core/position.js";import{Range as h}from"../../../../common/core/range.js";import{SingleTextEdit as K}from"../../../../common/core/textEdit.js";import"../../../../common/languageFeatureRegistry.js";import{InlineCompletionTriggerKind as $}from"../../../../common/languages.js";import"../../../../common/languages/languageConfigurationRegistry.js";import"../../../../common/model.js";import{fixBracketsInLine as H}from"../../../../common/model/bracketPairsTextModelPart/fixBrackets.js";import{TextModelText as J}from"../../../../common/model/textModelText.js";import{SnippetParser as Z,Text as Q}from"../../../snippet/browser/snippetParser.js";import{getReadonlyEmptyArray as V}from"../utils.js";async function Ae(o,e,t,s,m=U.None,u){const l=W(),d=new F(m),n=d.token,r={...s,requestUuid:l},f=e instanceof b?ee(e,t):e,g=o.all(t),y=new O;for(const i of g)i.groupId&&y.add(i.groupId,i);function T(i){if(!i.yieldsToGroupIds)return[];const a=[];for(const c of i.yieldsToGroupIds||[]){const I=y.get(c);for(const p of I)a.push(p)}return a}const P=new Map,x=new Set;function w(i,a){if(a=[...a,i],x.has(i))return a;x.add(i);try{const c=T(i);for(const I of c){const p=w(I,a);if(p)return p}}finally{x.delete(i)}}function v(i){const a=P.get(i);if(a)return a;const c=w(i,[]);c&&S(new Error(`Inline completions: cyclic yield-to dependency detected. Path: ${c.map(p=>p.toString?p.toString():""+p).join(" -> ")}`));const I=new B;return P.set(i,I.p),(async()=>{if(!c){const p=T(i);for(const A of p){const R=await v(A);if(R&&R.inlineCompletions.items.length>0)return}}return k(i)})().then(p=>I.complete(p),p=>I.error(p)),I.p}async function k(i){let a;try{e instanceof b?a=await i.provideInlineCompletions(t,e,r,n):a=await i.provideInlineEditsForRange?.(t,e,r,n)}catch(I){S(I);return}if(!a)return;const c=new _(a,i);return X(n,()=>c.removeRef()),c}const M=q.fromPromisesResolveOrder(g.map(v));if(n.isCancellationRequested)return d.dispose(!0),new E([],new Set,[]);const N=await Y(r,M,f,t,u);return d.dispose(!0),N}function X(o,e){if(o.isCancellationRequested)return e(),G.None;{const t=o.onCancellationRequested(()=>{t.dispose(),e()});return{dispose:()=>t.dispose()}}}async function Y(o,e,t,s,m){const u=new Map;let l=!1;const d=[];for await(const n of e)if(n){n.addRef(),d.push(n);for(const r of n.inlineCompletions.items){if(!o.includeInlineEdits&&(r.isInlineEdit||r.showInlineEditMenu)||!o.includeInlineCompletions&&!(r.isInlineEdit||r.showInlineEditMenu))continue;const f=C.from(r,n,t,s,m);u.set(f.hash(),f),!(r.isInlineEdit||r.showInlineEditMenu)&&o.triggerKind===$.Automatic&&(f.toSingleTextEdit().removeCommonPrefix(new J(s)).isEmpty||(l=!0))}if(l)break}return new E(Array.from(u.values()),new Set(u.keys()),d)}class E{constructor(e,t,s){this.completions=e;this.hashs=t;this.providerResults=s}has(e){return this.hashs.has(e.hash())}isEmpty(){return this.completions.length===0||this.completions.every(e=>e.range.isEmpty()&&e.insertText.length===0)}dispose(){for(const e of this.providerResults)e.removeRef()}}class _{constructor(e,t){this.inlineCompletions=e;this.provider=t}refCount=1;addRef(){this.refCount++}removeRef(){this.refCount--,this.refCount===0&&this.provider.freeInlineCompletions(this.inlineCompletions)}}class C{constructor(e,t,s,m,u,l,d,n,r,f,g,y=`InlineCompletion:${C.ID++}`){this.filterText=e;this.command=t;this.shownCommand=s;this.action=m;this.range=u;this.insertText=l;this.snippetInfo=d;this.cursorShowRange=n;this.additionalTextEdits=r;this.sourceInlineCompletion=f;this.source=g;this.id=y}static from(e,t,s,m,u){let l,d,n=e.range?h.lift(e.range):s;if(typeof e.insertText=="string"){if(l=e.insertText,u&&e.completeBracketPairs){l=L(l,n.getStartPosition(),m,u);const r=l.length-e.insertText.length;r!==0&&(n=new h(n.startLineNumber,n.startColumn,n.endLineNumber,n.endColumn+r))}d=void 0}else if("snippet"in e.insertText){const r=e.insertText.snippet.length;if(u&&e.completeBracketPairs){e.insertText.snippet=L(e.insertText.snippet,n.getStartPosition(),m,u);const g=e.insertText.snippet.length-r;g!==0&&(n=new h(n.startLineNumber,n.startColumn,n.endLineNumber,n.endColumn+g))}const f=new Z().parse(e.insertText.snippet);f.children.length===1&&f.children[0]instanceof Q?(l=f.children[0].value,d=void 0):(l=f.toString(),d={snippet:e.insertText.snippet,range:n})}else D(e.insertText);return new C(l,e.command,e.shownCommand,e.action,n,l,d,h.lift(e.showRange)??void 0,e.additionalTextEdits||V(),e,t)}static ID=1;_didCallShow=!1;get isInlineEdit(){return this.sourceInlineCompletion.isInlineEdit}get didShow(){return this._didCallShow}markAsShown(){this._didCallShow=!0}withRangeInsertTextAndFilterText(e,t,s){return new C(s,this.command,this.shownCommand,this.action,e,t,this.snippetInfo,this.cursorShowRange,this.additionalTextEdits,this.sourceInlineCompletion,this.source,this.id)}hash(){return JSON.stringify({insertText:this.insertText,range:this.range.toString()})}toSingleTextEdit(){return new K(this.range,this.insertText)}}function ee(o,e){const t=e.getWordAtPosition(o),s=e.getLineMaxColumn(o.lineNumber);return t?new h(o.lineNumber,t.startColumn,o.lineNumber,s):h.fromPositions(o,o.with(void 0,s))}function L(o,e,t,s){const m=t.getLineContent(e.lineNumber),u=j.replace(new z(e.column-1,m.length),o),d=t.tokenization.tokenizeLinesAt(e.lineNumber,[u.apply(m)])?.[0].sliceZeroCopy(u.getRangeAfterApply());return d?H(d,s):o}export{C as InlineCompletionItem,_ as InlineCompletionList,E as InlineCompletionProviderResult,Ae as provideInlineCompletions};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { assertNever } from "../../../../../base/common/assert.js";
+import { AsyncIterableObject, DeferredPromise } from "../../../../../base/common/async.js";
+import { CancellationToken, CancellationTokenSource } from "../../../../../base/common/cancellation.js";
+import { onUnexpectedExternalError } from "../../../../../base/common/errors.js";
+import { Disposable, IDisposable } from "../../../../../base/common/lifecycle.js";
+import { SetMap } from "../../../../../base/common/map.js";
+import { generateUuid } from "../../../../../base/common/uuid.js";
+import { ISingleEditOperation } from "../../../../common/core/editOperation.js";
+import { SingleOffsetEdit } from "../../../../common/core/offsetEdit.js";
+import { OffsetRange } from "../../../../common/core/offsetRange.js";
+import { Position } from "../../../../common/core/position.js";
+import { Range } from "../../../../common/core/range.js";
+import { SingleTextEdit } from "../../../../common/core/textEdit.js";
+import { LanguageFeatureRegistry } from "../../../../common/languageFeatureRegistry.js";
+import { Command, InlineCompletion, InlineCompletionContext, InlineCompletionProviderGroupId, InlineCompletions, InlineCompletionsProvider, InlineCompletionTriggerKind } from "../../../../common/languages.js";
+import { ILanguageConfigurationService } from "../../../../common/languages/languageConfigurationRegistry.js";
+import { ITextModel } from "../../../../common/model.js";
+import { fixBracketsInLine } from "../../../../common/model/bracketPairsTextModelPart/fixBrackets.js";
+import { TextModelText } from "../../../../common/model/textModelText.js";
+import { SnippetParser, Text } from "../../../snippet/browser/snippetParser.js";
+import { getReadonlyEmptyArray } from "../utils.js";
+async function provideInlineCompletions(registry, positionOrRange, model, context, baseToken = CancellationToken.None, languageConfigurationService) {
+  const requestUuid = generateUuid();
+  const tokenSource = new CancellationTokenSource(baseToken);
+  const token = tokenSource.token;
+  const contextWithUuid = { ...context, requestUuid };
+  const defaultReplaceRange = positionOrRange instanceof Position ? getDefaultRange(positionOrRange, model) : positionOrRange;
+  const providers = registry.all(model);
+  const multiMap = new SetMap();
+  for (const provider of providers) {
+    if (provider.groupId) {
+      multiMap.add(provider.groupId, provider);
+    }
+  }
+  function getPreferredProviders(provider) {
+    if (!provider.yieldsToGroupIds) {
+      return [];
+    }
+    const result2 = [];
+    for (const groupId of provider.yieldsToGroupIds || []) {
+      const providers2 = multiMap.get(groupId);
+      for (const p of providers2) {
+        result2.push(p);
+      }
+    }
+    return result2;
+  }
+  __name(getPreferredProviders, "getPreferredProviders");
+  const states = /* @__PURE__ */ new Map();
+  const seen = /* @__PURE__ */ new Set();
+  function findPreferredProviderCircle(provider, stack) {
+    stack = [...stack, provider];
+    if (seen.has(provider)) {
+      return stack;
+    }
+    seen.add(provider);
+    try {
+      const preferred = getPreferredProviders(provider);
+      for (const p of preferred) {
+        const c = findPreferredProviderCircle(p, stack);
+        if (c) {
+          return c;
+        }
+      }
+    } finally {
+      seen.delete(provider);
+    }
+    return void 0;
+  }
+  __name(findPreferredProviderCircle, "findPreferredProviderCircle");
+  function queryProviderOrPreferredProvider(provider) {
+    const state = states.get(provider);
+    if (state) {
+      return state;
+    }
+    const circle = findPreferredProviderCircle(provider, []);
+    if (circle) {
+      onUnexpectedExternalError(new Error(`Inline completions: cyclic yield-to dependency detected. Path: ${circle.map((s) => s.toString ? s.toString() : "" + s).join(" -> ")}`));
+    }
+    const deferredPromise = new DeferredPromise();
+    states.set(provider, deferredPromise.p);
+    (async () => {
+      if (!circle) {
+        const preferred = getPreferredProviders(provider);
+        for (const p of preferred) {
+          const result2 = await queryProviderOrPreferredProvider(p);
+          if (result2 && result2.inlineCompletions.items.length > 0) {
+            return void 0;
+          }
+        }
+      }
+      return query(provider);
+    })().then((c) => deferredPromise.complete(c), (e) => deferredPromise.error(e));
+    return deferredPromise.p;
+  }
+  __name(queryProviderOrPreferredProvider, "queryProviderOrPreferredProvider");
+  async function query(provider) {
+    let result2;
+    try {
+      if (positionOrRange instanceof Position) {
+        result2 = await provider.provideInlineCompletions(model, positionOrRange, contextWithUuid, token);
+      } else {
+        result2 = await provider.provideInlineEditsForRange?.(model, positionOrRange, contextWithUuid, token);
+      }
+    } catch (e) {
+      onUnexpectedExternalError(e);
+      return void 0;
+    }
+    if (!result2) {
+      return void 0;
+    }
+    const list = new InlineCompletionList(result2, provider);
+    runWhenCancelled(token, () => list.removeRef());
+    return list;
+  }
+  __name(query, "query");
+  const inlineCompletionLists = AsyncIterableObject.fromPromisesResolveOrder(providers.map(queryProviderOrPreferredProvider));
+  if (token.isCancellationRequested) {
+    tokenSource.dispose(true);
+    return new InlineCompletionProviderResult([], /* @__PURE__ */ new Set(), []);
+  }
+  const result = await addRefAndCreateResult(contextWithUuid, inlineCompletionLists, defaultReplaceRange, model, languageConfigurationService);
+  tokenSource.dispose(true);
+  return result;
+}
+__name(provideInlineCompletions, "provideInlineCompletions");
+function runWhenCancelled(token, callback) {
+  if (token.isCancellationRequested) {
+    callback();
+    return Disposable.None;
+  } else {
+    const listener = token.onCancellationRequested(() => {
+      listener.dispose();
+      callback();
+    });
+    return { dispose: /* @__PURE__ */ __name(() => listener.dispose(), "dispose") };
+  }
+}
+__name(runWhenCancelled, "runWhenCancelled");
+async function addRefAndCreateResult(context, inlineCompletionLists, defaultReplaceRange, model, languageConfigurationService) {
+  const itemsByHash = /* @__PURE__ */ new Map();
+  let shouldStop = false;
+  const lists = [];
+  for await (const completions of inlineCompletionLists) {
+    if (!completions) {
+      continue;
+    }
+    completions.addRef();
+    lists.push(completions);
+    for (const item of completions.inlineCompletions.items) {
+      if (!context.includeInlineEdits && (item.isInlineEdit || item.showInlineEditMenu)) {
+        continue;
+      }
+      if (!context.includeInlineCompletions && !(item.isInlineEdit || item.showInlineEditMenu)) {
+        continue;
+      }
+      const inlineCompletionItem = InlineCompletionItem.from(
+        item,
+        completions,
+        defaultReplaceRange,
+        model,
+        languageConfigurationService
+      );
+      itemsByHash.set(inlineCompletionItem.hash(), inlineCompletionItem);
+      if (!(item.isInlineEdit || item.showInlineEditMenu) && context.triggerKind === InlineCompletionTriggerKind.Automatic) {
+        const minifiedEdit = inlineCompletionItem.toSingleTextEdit().removeCommonPrefix(new TextModelText(model));
+        if (!minifiedEdit.isEmpty) {
+          shouldStop = true;
+        }
+      }
+    }
+    if (shouldStop) {
+      break;
+    }
+  }
+  return new InlineCompletionProviderResult(Array.from(itemsByHash.values()), new Set(itemsByHash.keys()), lists);
+}
+__name(addRefAndCreateResult, "addRefAndCreateResult");
+class InlineCompletionProviderResult {
+  constructor(completions, hashs, providerResults) {
+    this.completions = completions;
+    this.hashs = hashs;
+    this.providerResults = providerResults;
+  }
+  static {
+    __name(this, "InlineCompletionProviderResult");
+  }
+  has(item) {
+    return this.hashs.has(item.hash());
+  }
+  // TODO: This is not complete as it does not take the textmodel into account
+  isEmpty() {
+    return this.completions.length === 0 || this.completions.every((c) => c.range.isEmpty() && c.insertText.length === 0);
+  }
+  dispose() {
+    for (const result of this.providerResults) {
+      result.removeRef();
+    }
+  }
+}
+class InlineCompletionList {
+  constructor(inlineCompletions, provider) {
+    this.inlineCompletions = inlineCompletions;
+    this.provider = provider;
+  }
+  static {
+    __name(this, "InlineCompletionList");
+  }
+  refCount = 1;
+  addRef() {
+    this.refCount++;
+  }
+  removeRef() {
+    this.refCount--;
+    if (this.refCount === 0) {
+      this.provider.freeInlineCompletions(this.inlineCompletions);
+    }
+  }
+}
+class InlineCompletionItem {
+  constructor(filterText, command, shownCommand, action, range, insertText, snippetInfo, cursorShowRange, additionalTextEdits, sourceInlineCompletion, source, id = `InlineCompletion:${InlineCompletionItem.ID++}`) {
+    this.filterText = filterText;
+    this.command = command;
+    this.shownCommand = shownCommand;
+    this.action = action;
+    this.range = range;
+    this.insertText = insertText;
+    this.snippetInfo = snippetInfo;
+    this.cursorShowRange = cursorShowRange;
+    this.additionalTextEdits = additionalTextEdits;
+    this.sourceInlineCompletion = sourceInlineCompletion;
+    this.source = source;
+    this.id = id;
+  }
+  static {
+    __name(this, "InlineCompletionItem");
+  }
+  static from(inlineCompletion, source, defaultReplaceRange, textModel, languageConfigurationService) {
+    let insertText;
+    let snippetInfo;
+    let range = inlineCompletion.range ? Range.lift(inlineCompletion.range) : defaultReplaceRange;
+    if (typeof inlineCompletion.insertText === "string") {
+      insertText = inlineCompletion.insertText;
+      if (languageConfigurationService && inlineCompletion.completeBracketPairs) {
+        insertText = closeBrackets(
+          insertText,
+          range.getStartPosition(),
+          textModel,
+          languageConfigurationService
+        );
+        const diff = insertText.length - inlineCompletion.insertText.length;
+        if (diff !== 0) {
+          range = new Range(range.startLineNumber, range.startColumn, range.endLineNumber, range.endColumn + diff);
+        }
+      }
+      snippetInfo = void 0;
+    } else if ("snippet" in inlineCompletion.insertText) {
+      const preBracketCompletionLength = inlineCompletion.insertText.snippet.length;
+      if (languageConfigurationService && inlineCompletion.completeBracketPairs) {
+        inlineCompletion.insertText.snippet = closeBrackets(
+          inlineCompletion.insertText.snippet,
+          range.getStartPosition(),
+          textModel,
+          languageConfigurationService
+        );
+        const diff = inlineCompletion.insertText.snippet.length - preBracketCompletionLength;
+        if (diff !== 0) {
+          range = new Range(range.startLineNumber, range.startColumn, range.endLineNumber, range.endColumn + diff);
+        }
+      }
+      const snippet = new SnippetParser().parse(inlineCompletion.insertText.snippet);
+      if (snippet.children.length === 1 && snippet.children[0] instanceof Text) {
+        insertText = snippet.children[0].value;
+        snippetInfo = void 0;
+      } else {
+        insertText = snippet.toString();
+        snippetInfo = {
+          snippet: inlineCompletion.insertText.snippet,
+          range
+        };
+      }
+    } else {
+      assertNever(inlineCompletion.insertText);
+    }
+    return new InlineCompletionItem(
+      insertText,
+      inlineCompletion.command,
+      inlineCompletion.shownCommand,
+      inlineCompletion.action,
+      range,
+      insertText,
+      snippetInfo,
+      Range.lift(inlineCompletion.showRange) ?? void 0,
+      inlineCompletion.additionalTextEdits || getReadonlyEmptyArray(),
+      inlineCompletion,
+      source
+    );
+  }
+  static ID = 1;
+  _didCallShow = false;
+  get isInlineEdit() {
+    return this.sourceInlineCompletion.isInlineEdit;
+  }
+  get didShow() {
+    return this._didCallShow;
+  }
+  markAsShown() {
+    this._didCallShow = true;
+  }
+  withRangeInsertTextAndFilterText(updatedRange, updatedInsertText, updatedFilterText) {
+    return new InlineCompletionItem(
+      updatedFilterText,
+      this.command,
+      this.shownCommand,
+      this.action,
+      updatedRange,
+      updatedInsertText,
+      this.snippetInfo,
+      this.cursorShowRange,
+      this.additionalTextEdits,
+      this.sourceInlineCompletion,
+      this.source,
+      this.id
+    );
+  }
+  hash() {
+    return JSON.stringify({ insertText: this.insertText, range: this.range.toString() });
+  }
+  toSingleTextEdit() {
+    return new SingleTextEdit(this.range, this.insertText);
+  }
+}
+function getDefaultRange(position, model) {
+  const word = model.getWordAtPosition(position);
+  const maxColumn = model.getLineMaxColumn(position.lineNumber);
+  return word ? new Range(position.lineNumber, word.startColumn, position.lineNumber, maxColumn) : Range.fromPositions(position, position.with(void 0, maxColumn));
+}
+__name(getDefaultRange, "getDefaultRange");
+function closeBrackets(text, position, model, languageConfigurationService) {
+  const currentLine = model.getLineContent(position.lineNumber);
+  const edit = SingleOffsetEdit.replace(new OffsetRange(position.column - 1, currentLine.length), text);
+  const proposedLineTokens = model.tokenization.tokenizeLinesAt(position.lineNumber, [edit.apply(currentLine)]);
+  const textTokens = proposedLineTokens?.[0].sliceZeroCopy(edit.getRangeAfterApply());
+  if (!textTokens) {
+    return text;
+  }
+  const fixedText = fixBracketsInLine(textTokens, languageConfigurationService);
+  return fixedText;
+}
+__name(closeBrackets, "closeBrackets");
+export {
+  InlineCompletionItem,
+  InlineCompletionList,
+  InlineCompletionProviderResult,
+  provideInlineCompletions
+};
+//# sourceMappingURL=provideInlineCompletions.js.map

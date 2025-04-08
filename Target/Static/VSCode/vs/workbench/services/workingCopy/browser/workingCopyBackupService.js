@@ -1,1 +1,42 @@
-var I=Object.defineProperty,f=Object.getOwnPropertyDescriptor,a=(o,r,e,n)=>{for(var s,m=n>1?void 0:n?f(r,e):r,i=o.length-1;i>=0;i--)(s=o[i])&&(m=(n?s(r,e,m):s(m))||m);return n&&m&&I(r,e,m),m},m=(o,r)=>(e,n)=>r(e,n,o);import{IFileService as k}from"../../../../platform/files/common/files.js";import{IWorkbenchEnvironmentService as v}from"../../environment/common/environmentService.js";import{ILogService as S}from"../../../../platform/log/common/log.js";import{WorkingCopyBackupService as g}from"../common/workingCopyBackupService.js";import{InstantiationType as W,registerSingleton as h}from"../../../../platform/instantiation/common/extensions.js";import{IWorkingCopyBackupService as u}from"../common/workingCopyBackup.js";import{joinPath as b}from"../../../../base/common/resources.js";import{IWorkspaceContextService as l}from"../../../../platform/workspace/common/workspace.js";import{WorkbenchPhase as x,registerWorkbenchContribution2 as C}from"../../../common/contributions.js";import{BrowserWorkingCopyBackupTracker as s}from"./workingCopyBackupTracker.js";let n=class extends g{constructor(o,r,e,n){super(b(r.userRoamingDataHome,"Backups",o.getWorkspace().id),e,n)}};n=a([m(0,l),m(1,v),m(2,k),m(3,S)],n),h(u,n,W.Eager),C(s.ID,s,x.BlockStartup);export{n as BrowserWorkingCopyBackupService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { IWorkbenchEnvironmentService } from "../../environment/common/environmentService.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { WorkingCopyBackupService } from "../common/workingCopyBackupService.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { IWorkingCopyBackupService } from "../common/workingCopyBackup.js";
+import { joinPath } from "../../../../base/common/resources.js";
+import { IWorkspaceContextService } from "../../../../platform/workspace/common/workspace.js";
+import { WorkbenchPhase, registerWorkbenchContribution2 } from "../../../common/contributions.js";
+import { BrowserWorkingCopyBackupTracker } from "./workingCopyBackupTracker.js";
+let BrowserWorkingCopyBackupService = class extends WorkingCopyBackupService {
+  static {
+    __name(this, "BrowserWorkingCopyBackupService");
+  }
+  constructor(contextService, environmentService, fileService, logService) {
+    super(joinPath(environmentService.userRoamingDataHome, "Backups", contextService.getWorkspace().id), fileService, logService);
+  }
+};
+BrowserWorkingCopyBackupService = __decorateClass([
+  __decorateParam(0, IWorkspaceContextService),
+  __decorateParam(1, IWorkbenchEnvironmentService),
+  __decorateParam(2, IFileService),
+  __decorateParam(3, ILogService)
+], BrowserWorkingCopyBackupService);
+registerSingleton(IWorkingCopyBackupService, BrowserWorkingCopyBackupService, InstantiationType.Eager);
+registerWorkbenchContribution2(BrowserWorkingCopyBackupTracker.ID, BrowserWorkingCopyBackupTracker, WorkbenchPhase.BlockStartup);
+export {
+  BrowserWorkingCopyBackupService
+};
+//# sourceMappingURL=workingCopyBackupService.js.map

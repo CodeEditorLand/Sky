@@ -1,1 +1,34 @@
-import*as m from"crypto";import*as h from"fs";import{createSingleCallFunction as f}from"../common/functional.js";async function p(s,t){if(await new Promise((i,c)=>{const e=h.createReadStream(s),r=m.createHash("sha256");e.pipe(r);const n=f((o,a)=>{e.removeAllListeners(),r.removeAllListeners(),o?c(o):i(a)});e.once("error",n),e.once("end",n),r.once("error",n),r.once("data",o=>n(void 0,o.toString("hex")))})!==t)throw new Error("Hash mismatch")}export{p as checksum};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as crypto from "crypto";
+import * as fs from "fs";
+import { createSingleCallFunction } from "../common/functional.js";
+async function checksum(path, sha256hash) {
+  const checksumPromise = new Promise((resolve, reject) => {
+    const input = fs.createReadStream(path);
+    const hash2 = crypto.createHash("sha256");
+    input.pipe(hash2);
+    const done = createSingleCallFunction((err, result) => {
+      input.removeAllListeners();
+      hash2.removeAllListeners();
+      if (err) {
+        reject(err);
+      } else {
+        resolve(result);
+      }
+    });
+    input.once("error", done);
+    input.once("end", done);
+    hash2.once("error", done);
+    hash2.once("data", (data) => done(void 0, data.toString("hex")));
+  });
+  const hash = await checksumPromise;
+  if (hash !== sha256hash) {
+    throw new Error("Hash mismatch");
+  }
+}
+__name(checksum, "checksum");
+export {
+  checksum
+};
+//# sourceMappingURL=crypto.js.map

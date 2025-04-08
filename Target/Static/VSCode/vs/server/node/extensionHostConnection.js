@@ -1,1 +1,316 @@
-var H=Object.defineProperty,b=Object.getOwnPropertyDescriptor,g=(e,s,t,o)=>{for(var n,r=o>1?void 0:o?b(s,t):s,i=e.length-1;i>=0;i--)(n=e[i])&&(r=(o?n(s,t,r):n(r))||r);return o&&r&&H(s,t,r),r},f=(e,s)=>(t,o)=>s(t,o,e);import*as C from"child_process";import*as y from"net";import{VSBuffer as S}from"../../base/common/buffer.js";import{Emitter as I,Event as p}from"../../base/common/event.js";import{Disposable as w,DisposableStore as N,toDisposable as D}from"../../base/common/lifecycle.js";import{FileAccess as R}from"../../base/common/network.js";import{delimiter as T,join as u}from"../../base/common/path.js";import{isWindows as E}from"../../base/common/platform.js";import{removeDangerousEnvVariables as O}from"../../base/common/processes.js";import{createRandomIPCHandle as $,NodeSocket as k}from"../../base/parts/ipc/node/ipc.net.js";import{IConfigurationService as A}from"../../platform/configuration/common/configuration.js";import{ILogService as L}from"../../platform/log/common/log.js";import"../../platform/remote/common/remoteAgentConnection.js";import{getResolvedShellEnv as B}from"../../platform/shell/node/shellEnv.js";import{IExtensionHostStatusService as V}from"./extensionHostStatusService.js";import{getNLSConfiguration as M}from"./remoteLanguagePacks.js";import{IServerEnvironmentService as W}from"./serverEnvironmentService.js";import{IPCExtHostConnection as F,SocketExtHostConnection as U,writeExtHostConnection as P}from"../../workbench/services/extensions/common/extensionHostEnv.js";import"../../workbench/services/extensions/common/extensionHostProtocol.js";async function G(e={},s,t,o,n,r){const i=await M(t,o.userDataPath);let c={};if(s)try{c=await B(r,n,o.args,process.env)}catch(e){n.error("ExtensionHostConnection#buildUserEnvironment resolving shell environment failed",e)}const a={...process.env,...c,VSCODE_ESM_ENTRYPOINT:"vs/workbench/api/node/extensionHostProcess",VSCODE_HANDLES_UNCAUGHT_ERRORS:"true",VSCODE_NLS_CONFIG:JSON.stringify(i),...e},l=o.isBuilt?u(o.appRoot,"bin"):u(o.appRoot,"resources","server","bin-dev"),m=u(l,"remote-cli");let h=K(a,"PATH");return h=h?m+T+h:m,j(a,"PATH",h),o.args["without-browser-env-var"]||(a.BROWSER=u(l,"helpers",E?"browser.cmd":"browser.sh")),X(a),a}class x{constructor(e,s){this.socket=e,this.initialDataChunk=s}socketDrain(){return this.socket.drain()}toIExtHostSocketMessage(){let e,s,t;return this.socket instanceof k?(e=!0,s=!1,t=S.alloc(0)):(e=!1,s=this.socket.permessageDeflate,t=this.socket.recordedInflateBytes),{type:"VSCODE_EXTHOST_IPC_SOCKET",initialDataChunk:this.initialDataChunk.buffer.toString("base64"),skipWebSocketFrames:e,permessageDeflate:s,inflateBytes:t.buffer.toString("base64")}}}let m=class extends w{constructor(e,s,t,o,n,r,i,c){super(),this._reconnectionToken=e,this._environmentService=n,this._logService=r,this._extensionHostStatusService=i,this._configurationService=c,this._canSendSocket=!E||!this._environmentService.args["socket-path"],this._disposed=!1,this._remoteAddress=s,this._extensionHostProcess=null,this._connectionData=new x(t,o),this._log("New connection established.")}_onClose=new I;onClose=this._onClose.event;_canSendSocket;_disposed;_remoteAddress;_extensionHostProcess;_connectionData;dispose(){this._cleanResources(),super.dispose()}get _logPrefix(){return`[${this._remoteAddress}][${this._reconnectionToken.substr(0,8)}][ExtensionHostConnection] `}_log(e){this._logService.info(`${this._logPrefix}${e}`)}_logError(e){this._logService.error(`${this._logPrefix}${e}`)}async _pipeSockets(e,s){const t=new N;t.add(s.socket),t.add(D((()=>{e.destroy()})));const o=()=>{t.dispose()};t.add(s.socket.onEnd(o)),t.add(s.socket.onClose(o)),t.add(p.fromNodeEventEmitter(e,"end")(o)),t.add(p.fromNodeEventEmitter(e,"close")(o)),t.add(p.fromNodeEventEmitter(e,"error")(o)),t.add(s.socket.onData((s=>e.write(s.buffer)))),t.add(p.fromNodeEventEmitter(e,"data")((e=>{s.socket.write(S.wrap(e))}))),s.initialDataChunk.byteLength>0&&e.write(s.initialDataChunk.buffer)}async _sendSocketToExtensionHost(e,s){await s.socketDrain();const t=s.toIExtHostSocketMessage();let o;o=s.socket instanceof k?s.socket.socket:s.socket.socket.socket,e.send(t,o)}shortenReconnectionGraceTimeIfNecessary(){if(!this._extensionHostProcess)return;this._extensionHostProcess.send({type:"VSCODE_EXTHOST_IPC_REDUCE_GRACE_TIME"})}acceptReconnection(e,s,t){this._remoteAddress=e,this._log("The client has reconnected.");const o=new x(s,t);this._extensionHostProcess?this._sendSocketToExtensionHost(this._extensionHostProcess,o):this._connectionData=o}_cleanResources(){this._disposed||(this._disposed=!0,this._connectionData&&(this._connectionData.socket.end(),this._connectionData=null),this._extensionHostProcess&&(this._extensionHostProcess.kill(),this._extensionHostProcess=null),this._onClose.fire(void 0))}async start(e){try{let s=process.execArgv?process.execArgv.filter((e=>!/^--inspect(-brk)?=/.test(e))):[];e.port&&!process.pkg&&(s=[`--inspect${e.break?"-brk":""}=${e.port}`]);const t=await G(e.env,!0,e.language,this._environmentService,this._logService,this._configurationService);let o;if(O(t),this._canSendSocket)P(new U,t),o=null;else{const{namedPipeServer:e,pipeName:s}=await this._listenOnPipe();P(new F(s),t),o=e}const n={env:t,execArgv:s,silent:!0};n.execArgv.unshift("--dns-result-order=ipv4first");const r=["--type=extensionHost","--transformURIs"],i=this._environmentService.args["use-host-proxy"];r.push("--useHostProxy="+(i?"true":"false")),this._extensionHostProcess=C.fork(R.asFileUri("bootstrap-fork").fsPath,r,n);const c=this._extensionHostProcess.pid;this._log(`<${c}> Launched Extension Host Process.`),this._extensionHostProcess.stdout.setEncoding("utf8"),this._extensionHostProcess.stderr.setEncoding("utf8");const a=p.fromNodeEventEmitter(this._extensionHostProcess.stdout,"data"),l=p.fromNodeEventEmitter(this._extensionHostProcess.stderr,"data");if(this._register(a((e=>this._log(`<${c}> ${e}`)))),this._register(l((e=>this._log(`<${c}><stderr> ${e}`)))),this._extensionHostProcess.on("error",(e=>{this._logError(`<${c}> Extension Host Process had an error`),this._logService.error(e),this._cleanResources()})),this._extensionHostProcess.on("exit",((e,s)=>{this._extensionHostStatusService.setExitInfo(this._reconnectionToken,{code:e,signal:s}),this._log(`<${c}> Extension Host Process exited with code: ${e}, signal: ${s}.`),this._cleanResources()})),o)o.on("connection",(e=>{o.close(),this._pipeSockets(e,this._connectionData)}));else{const e=s=>{"VSCODE_EXTHOST_IPC_READY"===s.type&&(this._extensionHostProcess.removeListener("message",e),this._sendSocketToExtensionHost(this._extensionHostProcess,this._connectionData),this._connectionData=null)};this._extensionHostProcess.on("message",e)}}catch(e){console.error("ExtensionHostConnection errored"),e&&console.error(e)}}_listenOnPipe(){return new Promise(((e,s)=>{const t=$(),o=y.createServer();o.on("error",s),o.listen(t,(()=>{o?.removeListener("error",s),e({pipeName:t,namedPipeServer:o})}))}))}};function K(e,s){const t=Object.keys(e).filter((e=>e.toLowerCase()===s.toLowerCase()));return e[t.length>0?t[0]:s]}function j(e,s,t){const o=Object.keys(e).filter((e=>e.toLowerCase()===s.toLowerCase()));e[o.length>0?o[0]:s]=t}function X(e){for(const s of Object.keys(e))null===e[s]&&delete e[s]}m=g([f(4,W),f(5,L),f(6,V),f(7,A)],m);export{m as ExtensionHostConnection,G as buildUserEnvironment};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import * as cp from "child_process";
+import * as net from "net";
+import { VSBuffer } from "../../base/common/buffer.js";
+import { Emitter, Event } from "../../base/common/event.js";
+import { Disposable, DisposableStore, toDisposable } from "../../base/common/lifecycle.js";
+import { FileAccess } from "../../base/common/network.js";
+import { delimiter, join } from "../../base/common/path.js";
+import { IProcessEnvironment, isWindows } from "../../base/common/platform.js";
+import { removeDangerousEnvVariables } from "../../base/common/processes.js";
+import { createRandomIPCHandle, NodeSocket, WebSocketNodeSocket } from "../../base/parts/ipc/node/ipc.net.js";
+import { IConfigurationService } from "../../platform/configuration/common/configuration.js";
+import { ILogService } from "../../platform/log/common/log.js";
+import { IRemoteExtensionHostStartParams } from "../../platform/remote/common/remoteAgentConnection.js";
+import { getResolvedShellEnv } from "../../platform/shell/node/shellEnv.js";
+import { IExtensionHostStatusService } from "./extensionHostStatusService.js";
+import { getNLSConfiguration } from "./remoteLanguagePacks.js";
+import { IServerEnvironmentService } from "./serverEnvironmentService.js";
+import { IPCExtHostConnection, SocketExtHostConnection, writeExtHostConnection } from "../../workbench/services/extensions/common/extensionHostEnv.js";
+import { IExtHostReadyMessage, IExtHostReduceGraceTimeMessage, IExtHostSocketMessage } from "../../workbench/services/extensions/common/extensionHostProtocol.js";
+async function buildUserEnvironment(startParamsEnv = {}, withUserShellEnvironment, language, environmentService, logService, configurationService) {
+  const nlsConfig = await getNLSConfiguration(language, environmentService.userDataPath);
+  let userShellEnv = {};
+  if (withUserShellEnvironment) {
+    try {
+      userShellEnv = await getResolvedShellEnv(configurationService, logService, environmentService.args, process.env);
+    } catch (error) {
+      logService.error("ExtensionHostConnection#buildUserEnvironment resolving shell environment failed", error);
+    }
+  }
+  const processEnv = process.env;
+  const env = {
+    ...processEnv,
+    ...userShellEnv,
+    ...{
+      VSCODE_ESM_ENTRYPOINT: "vs/workbench/api/node/extensionHostProcess",
+      VSCODE_HANDLES_UNCAUGHT_ERRORS: "true",
+      VSCODE_NLS_CONFIG: JSON.stringify(nlsConfig)
+    },
+    ...startParamsEnv
+  };
+  const binFolder = environmentService.isBuilt ? join(environmentService.appRoot, "bin") : join(environmentService.appRoot, "resources", "server", "bin-dev");
+  const remoteCliBinFolder = join(binFolder, "remote-cli");
+  let PATH = readCaseInsensitive(env, "PATH");
+  if (PATH) {
+    PATH = remoteCliBinFolder + delimiter + PATH;
+  } else {
+    PATH = remoteCliBinFolder;
+  }
+  setCaseInsensitive(env, "PATH", PATH);
+  if (!environmentService.args["without-browser-env-var"]) {
+    env.BROWSER = join(binFolder, "helpers", isWindows ? "browser.cmd" : "browser.sh");
+  }
+  removeNulls(env);
+  return env;
+}
+__name(buildUserEnvironment, "buildUserEnvironment");
+class ConnectionData {
+  constructor(socket, initialDataChunk) {
+    this.socket = socket;
+    this.initialDataChunk = initialDataChunk;
+  }
+  static {
+    __name(this, "ConnectionData");
+  }
+  socketDrain() {
+    return this.socket.drain();
+  }
+  toIExtHostSocketMessage() {
+    let skipWebSocketFrames;
+    let permessageDeflate;
+    let inflateBytes;
+    if (this.socket instanceof NodeSocket) {
+      skipWebSocketFrames = true;
+      permessageDeflate = false;
+      inflateBytes = VSBuffer.alloc(0);
+    } else {
+      skipWebSocketFrames = false;
+      permessageDeflate = this.socket.permessageDeflate;
+      inflateBytes = this.socket.recordedInflateBytes;
+    }
+    return {
+      type: "VSCODE_EXTHOST_IPC_SOCKET",
+      initialDataChunk: this.initialDataChunk.buffer.toString("base64"),
+      skipWebSocketFrames,
+      permessageDeflate,
+      inflateBytes: inflateBytes.buffer.toString("base64")
+    };
+  }
+}
+let ExtensionHostConnection = class extends Disposable {
+  constructor(_reconnectionToken, remoteAddress, socket, initialDataChunk, _environmentService, _logService, _extensionHostStatusService, _configurationService) {
+    super();
+    this._reconnectionToken = _reconnectionToken;
+    this._environmentService = _environmentService;
+    this._logService = _logService;
+    this._extensionHostStatusService = _extensionHostStatusService;
+    this._configurationService = _configurationService;
+    this._canSendSocket = !isWindows || !this._environmentService.args["socket-path"];
+    this._disposed = false;
+    this._remoteAddress = remoteAddress;
+    this._extensionHostProcess = null;
+    this._connectionData = new ConnectionData(socket, initialDataChunk);
+    this._log(`New connection established.`);
+  }
+  static {
+    __name(this, "ExtensionHostConnection");
+  }
+  _onClose = new Emitter();
+  onClose = this._onClose.event;
+  _canSendSocket;
+  _disposed;
+  _remoteAddress;
+  _extensionHostProcess;
+  _connectionData;
+  dispose() {
+    this._cleanResources();
+    super.dispose();
+  }
+  get _logPrefix() {
+    return `[${this._remoteAddress}][${this._reconnectionToken.substr(0, 8)}][ExtensionHostConnection] `;
+  }
+  _log(_str) {
+    this._logService.info(`${this._logPrefix}${_str}`);
+  }
+  _logError(_str) {
+    this._logService.error(`${this._logPrefix}${_str}`);
+  }
+  async _pipeSockets(extHostSocket, connectionData) {
+    const disposables = new DisposableStore();
+    disposables.add(connectionData.socket);
+    disposables.add(toDisposable(() => {
+      extHostSocket.destroy();
+    }));
+    const stopAndCleanup = /* @__PURE__ */ __name(() => {
+      disposables.dispose();
+    }, "stopAndCleanup");
+    disposables.add(connectionData.socket.onEnd(stopAndCleanup));
+    disposables.add(connectionData.socket.onClose(stopAndCleanup));
+    disposables.add(Event.fromNodeEventEmitter(extHostSocket, "end")(stopAndCleanup));
+    disposables.add(Event.fromNodeEventEmitter(extHostSocket, "close")(stopAndCleanup));
+    disposables.add(Event.fromNodeEventEmitter(extHostSocket, "error")(stopAndCleanup));
+    disposables.add(connectionData.socket.onData((e) => extHostSocket.write(e.buffer)));
+    disposables.add(Event.fromNodeEventEmitter(extHostSocket, "data")((e) => {
+      connectionData.socket.write(VSBuffer.wrap(e));
+    }));
+    if (connectionData.initialDataChunk.byteLength > 0) {
+      extHostSocket.write(connectionData.initialDataChunk.buffer);
+    }
+  }
+  async _sendSocketToExtensionHost(extensionHostProcess, connectionData) {
+    await connectionData.socketDrain();
+    const msg = connectionData.toIExtHostSocketMessage();
+    let socket;
+    if (connectionData.socket instanceof NodeSocket) {
+      socket = connectionData.socket.socket;
+    } else {
+      socket = connectionData.socket.socket.socket;
+    }
+    extensionHostProcess.send(msg, socket);
+  }
+  shortenReconnectionGraceTimeIfNecessary() {
+    if (!this._extensionHostProcess) {
+      return;
+    }
+    const msg = {
+      type: "VSCODE_EXTHOST_IPC_REDUCE_GRACE_TIME"
+    };
+    this._extensionHostProcess.send(msg);
+  }
+  acceptReconnection(remoteAddress, _socket, initialDataChunk) {
+    this._remoteAddress = remoteAddress;
+    this._log(`The client has reconnected.`);
+    const connectionData = new ConnectionData(_socket, initialDataChunk);
+    if (!this._extensionHostProcess) {
+      this._connectionData = connectionData;
+      return;
+    }
+    this._sendSocketToExtensionHost(this._extensionHostProcess, connectionData);
+  }
+  _cleanResources() {
+    if (this._disposed) {
+      return;
+    }
+    this._disposed = true;
+    if (this._connectionData) {
+      this._connectionData.socket.end();
+      this._connectionData = null;
+    }
+    if (this._extensionHostProcess) {
+      this._extensionHostProcess.kill();
+      this._extensionHostProcess = null;
+    }
+    this._onClose.fire(void 0);
+  }
+  async start(startParams) {
+    try {
+      let execArgv = process.execArgv ? process.execArgv.filter((a) => !/^--inspect(-brk)?=/.test(a)) : [];
+      if (startParams.port && !process.pkg) {
+        execArgv = [`--inspect${startParams.break ? "-brk" : ""}=${startParams.port}`];
+      }
+      const env = await buildUserEnvironment(startParams.env, true, startParams.language, this._environmentService, this._logService, this._configurationService);
+      removeDangerousEnvVariables(env);
+      let extHostNamedPipeServer;
+      if (this._canSendSocket) {
+        writeExtHostConnection(new SocketExtHostConnection(), env);
+        extHostNamedPipeServer = null;
+      } else {
+        const { namedPipeServer, pipeName } = await this._listenOnPipe();
+        writeExtHostConnection(new IPCExtHostConnection(pipeName), env);
+        extHostNamedPipeServer = namedPipeServer;
+      }
+      const opts = {
+        env,
+        execArgv,
+        silent: true
+      };
+      opts.execArgv.unshift("--dns-result-order=ipv4first");
+      const args = ["--type=extensionHost", `--transformURIs`];
+      const useHostProxy = this._environmentService.args["use-host-proxy"];
+      args.push(`--useHostProxy=${useHostProxy ? "true" : "false"}`);
+      this._extensionHostProcess = cp.fork(FileAccess.asFileUri("bootstrap-fork").fsPath, args, opts);
+      const pid = this._extensionHostProcess.pid;
+      this._log(`<${pid}> Launched Extension Host Process.`);
+      this._extensionHostProcess.stdout.setEncoding("utf8");
+      this._extensionHostProcess.stderr.setEncoding("utf8");
+      const onStdout = Event.fromNodeEventEmitter(this._extensionHostProcess.stdout, "data");
+      const onStderr = Event.fromNodeEventEmitter(this._extensionHostProcess.stderr, "data");
+      this._register(onStdout((e) => this._log(`<${pid}> ${e}`)));
+      this._register(onStderr((e) => this._log(`<${pid}><stderr> ${e}`)));
+      this._extensionHostProcess.on("error", (err) => {
+        this._logError(`<${pid}> Extension Host Process had an error`);
+        this._logService.error(err);
+        this._cleanResources();
+      });
+      this._extensionHostProcess.on("exit", (code, signal) => {
+        this._extensionHostStatusService.setExitInfo(this._reconnectionToken, { code, signal });
+        this._log(`<${pid}> Extension Host Process exited with code: ${code}, signal: ${signal}.`);
+        this._cleanResources();
+      });
+      if (extHostNamedPipeServer) {
+        extHostNamedPipeServer.on("connection", (socket) => {
+          extHostNamedPipeServer.close();
+          this._pipeSockets(socket, this._connectionData);
+        });
+      } else {
+        const messageListener = /* @__PURE__ */ __name((msg) => {
+          if (msg.type === "VSCODE_EXTHOST_IPC_READY") {
+            this._extensionHostProcess.removeListener("message", messageListener);
+            this._sendSocketToExtensionHost(this._extensionHostProcess, this._connectionData);
+            this._connectionData = null;
+          }
+        }, "messageListener");
+        this._extensionHostProcess.on("message", messageListener);
+      }
+    } catch (error) {
+      console.error("ExtensionHostConnection errored");
+      if (error) {
+        console.error(error);
+      }
+    }
+  }
+  _listenOnPipe() {
+    return new Promise((resolve, reject) => {
+      const pipeName = createRandomIPCHandle();
+      const namedPipeServer = net.createServer();
+      namedPipeServer.on("error", reject);
+      namedPipeServer.listen(pipeName, () => {
+        namedPipeServer?.removeListener("error", reject);
+        resolve({ pipeName, namedPipeServer });
+      });
+    });
+  }
+};
+ExtensionHostConnection = __decorateClass([
+  __decorateParam(4, IServerEnvironmentService),
+  __decorateParam(5, ILogService),
+  __decorateParam(6, IExtensionHostStatusService),
+  __decorateParam(7, IConfigurationService)
+], ExtensionHostConnection);
+function readCaseInsensitive(env, key) {
+  const pathKeys = Object.keys(env).filter((k) => k.toLowerCase() === key.toLowerCase());
+  const pathKey = pathKeys.length > 0 ? pathKeys[0] : key;
+  return env[pathKey];
+}
+__name(readCaseInsensitive, "readCaseInsensitive");
+function setCaseInsensitive(env, key, value) {
+  const pathKeys = Object.keys(env).filter((k) => k.toLowerCase() === key.toLowerCase());
+  const pathKey = pathKeys.length > 0 ? pathKeys[0] : key;
+  env[pathKey] = value;
+}
+__name(setCaseInsensitive, "setCaseInsensitive");
+function removeNulls(env) {
+  for (const key of Object.keys(env)) {
+    if (env[key] === null) {
+      delete env[key];
+    }
+  }
+}
+__name(removeNulls, "removeNulls");
+export {
+  ExtensionHostConnection,
+  buildUserEnvironment
+};
+//# sourceMappingURL=extensionHostConnection.js.map

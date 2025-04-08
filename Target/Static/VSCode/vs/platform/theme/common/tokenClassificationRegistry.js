@@ -1,1 +1,471 @@
-import{RunOnceScheduler as D}from"../../../base/common/async.js";import{Color as y}from"../../../base/common/color.js";import{Emitter as N}from"../../../base/common/event.js";import"../../../base/common/jsonSchema.js";import*as o from"../../../nls.js";import{Extensions as _}from"../../jsonschemas/common/jsonContributionRegistry.js";import*as v from"../../registry/common/platform.js";import"./themeService.js";const w="*",C=":",O=".",p="\\w+[-_\\w+]*",S=`^${p}$`,E=`^(${p}|\\*)(\\${O}${p})*(${C}${p})?$`,B="^(\\s*(italic|bold|underline|strikethrough))*\\s*$";class f{constructor(e,t,o,r,i){this.foreground=e,this.bold=t,this.underline=o,this.strikethrough=r,this.italic=i}}var $;(e=>{e.toJSONObject=function(e){return{_foreground:void 0===e.foreground?null:y.Format.CSS.formatHexA(e.foreground,!0),_bold:void 0===e.bold?null:e.bold,_underline:void 0===e.underline?null:e.underline,_italic:void 0===e.italic?null:e.italic,_strikethrough:void 0===e.strikethrough?null:e.strikethrough}},e.fromJSONObject=function(t){if(t){const o=e=>"boolean"==typeof e?e:void 0;return new e((e=>"string"==typeof e?y.fromHex(e):void 0)(t._foreground),o(t._bold),o(t._underline),o(t._strikethrough),o(t._italic))}},e.equals=function(e,t){return e===t||void 0!==e&&void 0!==t&&(e.foreground instanceof y?e.foreground.equals(t.foreground):void 0===t.foreground)&&e.bold===t.bold&&e.underline===t.underline&&e.strikethrough===t.strikethrough&&e.italic===t.italic},e.is=function(t){return t instanceof e},e.fromData=function(t){return new e(t.foreground,t.bold,t.underline,t.strikethrough,t.italic)},e.fromSettings=function(t,o,r,i,n,s){let l;if(void 0!==t&&(l=y.fromHex(t)),void 0!==o){r=s=i=n=!1;const e=/italic|bold|underline|strikethrough/g;let t;for(;t=e.exec(o);)switch(t[0]){case"bold":r=!0;break;case"italic":s=!0;break;case"underline":i=!0;break;case"strikethrough":n=!0}}return new e(l,r,i,n,s)}})(f||={}),(e=>{e.fromJSONObject=function(e,t){if(t&&"string"==typeof t._selector&&t._style){const o=f.fromJSONObject(t._style);if(o)try{return{selector:e.parseTokenSelector(t._selector),style:o}}catch{}}},e.toJSONObject=function(e){return{_selector:e.selector.id,_style:f.toJSONObject(e.style)}},e.equals=function(e,t){return e===t||void 0!==e&&void 0!==t&&e.selector&&t.selector&&e.selector.id===t.selector.id&&f.equals(e.style,t.style)},e.is=function(e){return e&&e.selector&&"string"==typeof e.selector.id&&f.is(e.style)}})($||={});const A={TokenClassificationContribution:"base.contributions.tokenClassification"};class J{_onDidChangeSchema=new N;onDidChangeSchema=this._onDidChangeSchema.event;currentTypeNumber=0;currentModifierBit=1;tokenTypeById;tokenModifierById;tokenStylingDefaultRules=[];typeHierarchy;tokenStylingSchema={type:"object",properties:{},patternProperties:{[E]:k()},additionalProperties:!1,definitions:{style:{type:"object",description:o.localize("schema.token.settings","Colors and styles for the token."),properties:{foreground:{type:"string",description:o.localize("schema.token.foreground","Foreground color for the token."),format:"color-hex",default:"#ff0000"},background:{type:"string",deprecationMessage:o.localize("schema.token.background.warning","Token background colors are currently not supported.")},fontStyle:{type:"string",description:o.localize("schema.token.fontStyle","Sets the all font styles of the rule: 'italic', 'bold', 'underline' or 'strikethrough' or a combination. All styles that are not listed are unset. The empty string unsets all styles."),pattern:B,patternErrorMessage:o.localize("schema.fontStyle.error","Font style must be 'italic', 'bold', 'underline' or 'strikethrough' or a combination. The empty string unsets all styles."),defaultSnippets:[{label:o.localize("schema.token.fontStyle.none","None (clear inherited style)"),bodyText:'""'},{body:"italic"},{body:"bold"},{body:"underline"},{body:"strikethrough"},{body:"italic bold"},{body:"italic underline"},{body:"italic strikethrough"},{body:"bold underline"},{body:"bold strikethrough"},{body:"underline strikethrough"},{body:"italic bold underline"},{body:"italic bold strikethrough"},{body:"italic underline strikethrough"},{body:"bold underline strikethrough"},{body:"italic bold underline strikethrough"}]},bold:{type:"boolean",description:o.localize("schema.token.bold","Sets or unsets the font style to bold. Note, the presence of 'fontStyle' overrides this setting.")},italic:{type:"boolean",description:o.localize("schema.token.italic","Sets or unsets the font style to italic. Note, the presence of 'fontStyle' overrides this setting.")},underline:{type:"boolean",description:o.localize("schema.token.underline","Sets or unsets the font style to underline. Note, the presence of 'fontStyle' overrides this setting.")},strikethrough:{type:"boolean",description:o.localize("schema.token.strikethrough","Sets or unsets the font style to strikethrough. Note, the presence of 'fontStyle' overrides this setting.")}},defaultSnippets:[{body:{foreground:"${1:#FF0000}",fontStyle:"${2:bold}"}}]}}};constructor(){this.tokenTypeById=Object.create(null),this.tokenModifierById=Object.create(null),this.typeHierarchy=Object.create(null)}registerTokenType(e,t,o,r){if(!e.match(S))throw new Error("Invalid token type id.");if(o&&!o.match(S))throw new Error("Invalid token super type id.");const i={num:this.currentTypeNumber++,id:e,superType:o,description:t,deprecationMessage:r};this.tokenTypeById[e]=i;const n=k(t,r);this.tokenStylingSchema.properties[e]=n,this.typeHierarchy=Object.create(null)}registerTokenModifier(e,t,o){if(!e.match(S))throw new Error("Invalid token modifier id.");const r=this.currentModifierBit;this.currentModifierBit=2*this.currentModifierBit;const i={num:r,id:e,description:t,deprecationMessage:o};this.tokenModifierById[e]=i,this.tokenStylingSchema.properties[`*.${e}`]=k(t,o)}parseTokenSelector(e,t){const o=P(e,t);return o.type?{match:(e,t,r)=>{let i=0;if(void 0!==o.language){if(o.language!==r)return-1;i+=10}if(o.type!==w){const t=this.getTypeHierarchy(e).indexOf(o.type);if(-1===t)return-1;i+=100-t}for(const e of o.modifiers)if(-1===t.indexOf(e))return-1;return i+100*o.modifiers.length},id:`${[o.type,...o.modifiers.sort()].join(".")}${void 0!==o.language?":"+o.language:""}`}:{match:()=>-1,id:"$invalid"}}registerTokenStyleDefault(e,t){this.tokenStylingDefaultRules.push({selector:e,defaults:t})}deregisterTokenStyleDefault(e){const t=e.id;this.tokenStylingDefaultRules=this.tokenStylingDefaultRules.filter((e=>e.selector.id!==t))}deregisterTokenType(e){delete this.tokenTypeById[e],delete this.tokenStylingSchema.properties[e],this.typeHierarchy=Object.create(null)}deregisterTokenModifier(e){delete this.tokenModifierById[e],delete this.tokenStylingSchema.properties[`*.${e}`]}getTokenTypes(){return Object.keys(this.tokenTypeById).map((e=>this.tokenTypeById[e]))}getTokenModifiers(){return Object.keys(this.tokenModifierById).map((e=>this.tokenModifierById[e]))}getTokenStylingSchema(){return this.tokenStylingSchema}getTokenStylingDefaultRules(){return this.tokenStylingDefaultRules}getTypeHierarchy(e){let t=this.typeHierarchy[e];if(!t){this.typeHierarchy[e]=t=[e];let o=this.tokenTypeById[e];for(;o&&o.superType;)t.push(o.superType),o=this.tokenTypeById[o.superType]}return t}toString(){return Object.keys(this.tokenTypeById).sort(((e,t)=>{const o=-1===e.indexOf(".")?0:1,r=-1===t.indexOf(".")?0:1;return o!==r?o-r:e.localeCompare(t)})).map((e=>`- \`${e}\`: ${this.tokenTypeById[e].description}`)).join("\n")}}const x=C.charCodeAt(0),L=O.charCodeAt(0);function P(e,t){let o=e.length,r=t;const i=[];for(let t=o-1;t>=0;t--){const n=e.charCodeAt(t);if(n===x||n===L){const s=e.substring(t+1,o);o=t,n===x?r=s:i.push(s)}}return{type:e.substring(0,o),modifiers:i,language:r}}const g=j();function j(){const e=new J;function t(t,o,i=[],n,s){return e.registerTokenType(t,o,n,s),i&&r(t,i),t}function r(t,o){try{const r=e.parseTokenSelector(t);e.registerTokenStyleDefault(r,{scopesToProbe:o})}catch(e){console.log(e)}}return t("comment",o.localize("comment","Style for comments."),[["comment"]]),t("string",o.localize("string","Style for strings."),[["string"]]),t("keyword",o.localize("keyword","Style for keywords."),[["keyword.control"]]),t("number",o.localize("number","Style for numbers."),[["constant.numeric"]]),t("regexp",o.localize("regexp","Style for expressions."),[["constant.regexp"]]),t("operator",o.localize("operator","Style for operators."),[["keyword.operator"]]),t("namespace",o.localize("namespace","Style for namespaces."),[["entity.name.namespace"]]),t("type",o.localize("type","Style for types."),[["entity.name.type"],["support.type"]]),t("struct",o.localize("struct","Style for structs."),[["entity.name.type.struct"]]),t("class",o.localize("class","Style for classes."),[["entity.name.type.class"],["support.class"]]),t("interface",o.localize("interface","Style for interfaces."),[["entity.name.type.interface"]]),t("enum",o.localize("enum","Style for enums."),[["entity.name.type.enum"]]),t("typeParameter",o.localize("typeParameter","Style for type parameters."),[["entity.name.type.parameter"]]),t("function",o.localize("function","Style for functions"),[["entity.name.function"],["support.function"]]),t("member",o.localize("member","Style for member functions"),[],"method","Deprecated use `method` instead"),t("method",o.localize("method","Style for method (member functions)"),[["entity.name.function.member"],["support.function"]]),t("macro",o.localize("macro","Style for macros."),[["entity.name.function.preprocessor"]]),t("variable",o.localize("variable","Style for variables."),[["variable.other.readwrite"],["entity.name.variable"]]),t("parameter",o.localize("parameter","Style for parameters."),[["variable.parameter"]]),t("property",o.localize("property","Style for properties."),[["variable.other.property"]]),t("enumMember",o.localize("enumMember","Style for enum members."),[["variable.other.enummember"]]),t("event",o.localize("event","Style for events."),[["variable.other.event"]]),t("decorator",o.localize("decorator","Style for decorators & annotations."),[["entity.name.decorator"],["entity.name.function"]]),t("label",o.localize("labels","Style for labels. "),void 0),e.registerTokenModifier("declaration",o.localize("declaration","Style for all symbol declarations."),void 0),e.registerTokenModifier("documentation",o.localize("documentation","Style to use for references in documentation."),void 0),e.registerTokenModifier("static",o.localize("static","Style to use for symbols that are static."),void 0),e.registerTokenModifier("abstract",o.localize("abstract","Style to use for symbols that are abstract."),void 0),e.registerTokenModifier("deprecated",o.localize("deprecated","Style to use for symbols that are deprecated."),void 0),e.registerTokenModifier("modification",o.localize("modification","Style to use for write accesses."),void 0),e.registerTokenModifier("async",o.localize("async","Style to use for symbols that are async."),void 0),e.registerTokenModifier("readonly",o.localize("readonly","Style to use for symbols that are read-only."),void 0),r("variable.readonly",[["variable.other.constant"]]),r("property.readonly",[["variable.other.constant.property"]]),r("type.defaultLibrary",[["support.type"]]),r("class.defaultLibrary",[["support.class"]]),r("interface.defaultLibrary",[["support.class"]]),r("variable.defaultLibrary",[["support.variable"],["support.other.variable"]]),r("variable.defaultLibrary.readonly",[["support.constant"]]),r("property.defaultLibrary",[["support.variable.property"]]),r("property.defaultLibrary.readonly",[["support.constant.property"]]),r("function.defaultLibrary",[["support.function"]]),r("member.defaultLibrary",[["support.function"]]),e}function Z(){return g}function k(e,t){return{description:e,deprecationMessage:t,defaultSnippets:[{body:"${1:#ff0000}"}],anyOf:[{type:"string",format:"color-hex"},{$ref:"#/definitions/style"}]}}v.Registry.add(A.TokenClassificationContribution,g);const M="vscode://schemas/token-styling",R=v.Registry.as(_.JSONContribution);R.registerSchema(M,g.getTokenStylingSchema());const I=new D((()=>R.notifySchemaChanged(M)),200);g.onDidChangeSchema((()=>{I.isScheduled()||I.schedule()}));export{$ as SemanticTokenRule,f as TokenStyle,Z as getTokenClassificationRegistry,P as parseClassifierString,M as tokenStylingSchemaId,S as typeAndModifierIdPattern};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { RunOnceScheduler } from "../../../base/common/async.js";
+import { Color } from "../../../base/common/color.js";
+import { Emitter, Event } from "../../../base/common/event.js";
+import { IJSONSchema, IJSONSchemaMap } from "../../../base/common/jsonSchema.js";
+import * as nls from "../../../nls.js";
+import { Extensions as JSONExtensions, IJSONContributionRegistry } from "../../jsonschemas/common/jsonContributionRegistry.js";
+import * as platform from "../../registry/common/platform.js";
+import { IColorTheme } from "./themeService.js";
+const TOKEN_TYPE_WILDCARD = "*";
+const TOKEN_CLASSIFIER_LANGUAGE_SEPARATOR = ":";
+const CLASSIFIER_MODIFIER_SEPARATOR = ".";
+const idPattern = "\\w+[-_\\w+]*";
+const typeAndModifierIdPattern = `^${idPattern}$`;
+const selectorPattern = `^(${idPattern}|\\*)(\\${CLASSIFIER_MODIFIER_SEPARATOR}${idPattern})*(${TOKEN_CLASSIFIER_LANGUAGE_SEPARATOR}${idPattern})?$`;
+const fontStylePattern = "^(\\s*(italic|bold|underline|strikethrough))*\\s*$";
+class TokenStyle {
+  constructor(foreground, bold, underline, strikethrough, italic) {
+    this.foreground = foreground;
+    this.bold = bold;
+    this.underline = underline;
+    this.strikethrough = strikethrough;
+    this.italic = italic;
+  }
+  static {
+    __name(this, "TokenStyle");
+  }
+}
+((TokenStyle2) => {
+  function toJSONObject(style) {
+    return {
+      _foreground: style.foreground === void 0 ? null : Color.Format.CSS.formatHexA(style.foreground, true),
+      _bold: style.bold === void 0 ? null : style.bold,
+      _underline: style.underline === void 0 ? null : style.underline,
+      _italic: style.italic === void 0 ? null : style.italic,
+      _strikethrough: style.strikethrough === void 0 ? null : style.strikethrough
+    };
+  }
+  TokenStyle2.toJSONObject = toJSONObject;
+  __name(toJSONObject, "toJSONObject");
+  function fromJSONObject(obj) {
+    if (obj) {
+      const boolOrUndef = /* @__PURE__ */ __name((b) => typeof b === "boolean" ? b : void 0, "boolOrUndef");
+      const colorOrUndef = /* @__PURE__ */ __name((s) => typeof s === "string" ? Color.fromHex(s) : void 0, "colorOrUndef");
+      return new TokenStyle2(
+        colorOrUndef(obj._foreground),
+        boolOrUndef(obj._bold),
+        boolOrUndef(obj._underline),
+        boolOrUndef(obj._strikethrough),
+        boolOrUndef(obj._italic)
+      );
+    }
+    return void 0;
+  }
+  TokenStyle2.fromJSONObject = fromJSONObject;
+  __name(fromJSONObject, "fromJSONObject");
+  function equals(s1, s2) {
+    if (s1 === s2) {
+      return true;
+    }
+    return s1 !== void 0 && s2 !== void 0 && (s1.foreground instanceof Color ? s1.foreground.equals(s2.foreground) : s2.foreground === void 0) && s1.bold === s2.bold && s1.underline === s2.underline && s1.strikethrough === s2.strikethrough && s1.italic === s2.italic;
+  }
+  TokenStyle2.equals = equals;
+  __name(equals, "equals");
+  function is(s) {
+    return s instanceof TokenStyle2;
+  }
+  TokenStyle2.is = is;
+  __name(is, "is");
+  function fromData(data) {
+    return new TokenStyle2(data.foreground, data.bold, data.underline, data.strikethrough, data.italic);
+  }
+  TokenStyle2.fromData = fromData;
+  __name(fromData, "fromData");
+  function fromSettings(foreground, fontStyle, bold, underline, strikethrough, italic) {
+    let foregroundColor = void 0;
+    if (foreground !== void 0) {
+      foregroundColor = Color.fromHex(foreground);
+    }
+    if (fontStyle !== void 0) {
+      bold = italic = underline = strikethrough = false;
+      const expression = /italic|bold|underline|strikethrough/g;
+      let match;
+      while (match = expression.exec(fontStyle)) {
+        switch (match[0]) {
+          case "bold":
+            bold = true;
+            break;
+          case "italic":
+            italic = true;
+            break;
+          case "underline":
+            underline = true;
+            break;
+          case "strikethrough":
+            strikethrough = true;
+            break;
+        }
+      }
+    }
+    return new TokenStyle2(foregroundColor, bold, underline, strikethrough, italic);
+  }
+  TokenStyle2.fromSettings = fromSettings;
+  __name(fromSettings, "fromSettings");
+})(TokenStyle || (TokenStyle = {}));
+var SemanticTokenRule;
+((SemanticTokenRule2) => {
+  function fromJSONObject(registry, o) {
+    if (o && typeof o._selector === "string" && o._style) {
+      const style = TokenStyle.fromJSONObject(o._style);
+      if (style) {
+        try {
+          return { selector: registry.parseTokenSelector(o._selector), style };
+        } catch (_ignore) {
+        }
+      }
+    }
+    return void 0;
+  }
+  SemanticTokenRule2.fromJSONObject = fromJSONObject;
+  __name(fromJSONObject, "fromJSONObject");
+  function toJSONObject(rule) {
+    return {
+      _selector: rule.selector.id,
+      _style: TokenStyle.toJSONObject(rule.style)
+    };
+  }
+  SemanticTokenRule2.toJSONObject = toJSONObject;
+  __name(toJSONObject, "toJSONObject");
+  function equals(r1, r2) {
+    if (r1 === r2) {
+      return true;
+    }
+    return r1 !== void 0 && r2 !== void 0 && r1.selector && r2.selector && r1.selector.id === r2.selector.id && TokenStyle.equals(r1.style, r2.style);
+  }
+  SemanticTokenRule2.equals = equals;
+  __name(equals, "equals");
+  function is(r) {
+    return r && r.selector && typeof r.selector.id === "string" && TokenStyle.is(r.style);
+  }
+  SemanticTokenRule2.is = is;
+  __name(is, "is");
+})(SemanticTokenRule || (SemanticTokenRule = {}));
+const Extensions = {
+  TokenClassificationContribution: "base.contributions.tokenClassification"
+};
+class TokenClassificationRegistry {
+  static {
+    __name(this, "TokenClassificationRegistry");
+  }
+  _onDidChangeSchema = new Emitter();
+  onDidChangeSchema = this._onDidChangeSchema.event;
+  currentTypeNumber = 0;
+  currentModifierBit = 1;
+  tokenTypeById;
+  tokenModifierById;
+  tokenStylingDefaultRules = [];
+  typeHierarchy;
+  tokenStylingSchema = {
+    type: "object",
+    properties: {},
+    patternProperties: {
+      [selectorPattern]: getStylingSchemeEntry()
+    },
+    //errorMessage: nls.localize('schema.token.errors', 'Valid token selectors have the form (*|tokenType)(.tokenModifier)*(:tokenLanguage)?.'),
+    additionalProperties: false,
+    definitions: {
+      style: {
+        type: "object",
+        description: nls.localize("schema.token.settings", "Colors and styles for the token."),
+        properties: {
+          foreground: {
+            type: "string",
+            description: nls.localize("schema.token.foreground", "Foreground color for the token."),
+            format: "color-hex",
+            default: "#ff0000"
+          },
+          background: {
+            type: "string",
+            deprecationMessage: nls.localize("schema.token.background.warning", "Token background colors are currently not supported.")
+          },
+          fontStyle: {
+            type: "string",
+            description: nls.localize("schema.token.fontStyle", "Sets the all font styles of the rule: 'italic', 'bold', 'underline' or 'strikethrough' or a combination. All styles that are not listed are unset. The empty string unsets all styles."),
+            pattern: fontStylePattern,
+            patternErrorMessage: nls.localize("schema.fontStyle.error", "Font style must be 'italic', 'bold', 'underline' or 'strikethrough' or a combination. The empty string unsets all styles."),
+            defaultSnippets: [
+              { label: nls.localize("schema.token.fontStyle.none", "None (clear inherited style)"), bodyText: '""' },
+              { body: "italic" },
+              { body: "bold" },
+              { body: "underline" },
+              { body: "strikethrough" },
+              { body: "italic bold" },
+              { body: "italic underline" },
+              { body: "italic strikethrough" },
+              { body: "bold underline" },
+              { body: "bold strikethrough" },
+              { body: "underline strikethrough" },
+              { body: "italic bold underline" },
+              { body: "italic bold strikethrough" },
+              { body: "italic underline strikethrough" },
+              { body: "bold underline strikethrough" },
+              { body: "italic bold underline strikethrough" }
+            ]
+          },
+          bold: {
+            type: "boolean",
+            description: nls.localize("schema.token.bold", "Sets or unsets the font style to bold. Note, the presence of 'fontStyle' overrides this setting.")
+          },
+          italic: {
+            type: "boolean",
+            description: nls.localize("schema.token.italic", "Sets or unsets the font style to italic. Note, the presence of 'fontStyle' overrides this setting.")
+          },
+          underline: {
+            type: "boolean",
+            description: nls.localize("schema.token.underline", "Sets or unsets the font style to underline. Note, the presence of 'fontStyle' overrides this setting.")
+          },
+          strikethrough: {
+            type: "boolean",
+            description: nls.localize("schema.token.strikethrough", "Sets or unsets the font style to strikethrough. Note, the presence of 'fontStyle' overrides this setting.")
+          }
+        },
+        defaultSnippets: [{ body: { foreground: "${1:#FF0000}", fontStyle: "${2:bold}" } }]
+      }
+    }
+  };
+  constructor() {
+    this.tokenTypeById = /* @__PURE__ */ Object.create(null);
+    this.tokenModifierById = /* @__PURE__ */ Object.create(null);
+    this.typeHierarchy = /* @__PURE__ */ Object.create(null);
+  }
+  registerTokenType(id, description, superType, deprecationMessage) {
+    if (!id.match(typeAndModifierIdPattern)) {
+      throw new Error("Invalid token type id.");
+    }
+    if (superType && !superType.match(typeAndModifierIdPattern)) {
+      throw new Error("Invalid token super type id.");
+    }
+    const num = this.currentTypeNumber++;
+    const tokenStyleContribution = { num, id, superType, description, deprecationMessage };
+    this.tokenTypeById[id] = tokenStyleContribution;
+    const stylingSchemeEntry = getStylingSchemeEntry(description, deprecationMessage);
+    this.tokenStylingSchema.properties[id] = stylingSchemeEntry;
+    this.typeHierarchy = /* @__PURE__ */ Object.create(null);
+  }
+  registerTokenModifier(id, description, deprecationMessage) {
+    if (!id.match(typeAndModifierIdPattern)) {
+      throw new Error("Invalid token modifier id.");
+    }
+    const num = this.currentModifierBit;
+    this.currentModifierBit = this.currentModifierBit * 2;
+    const tokenStyleContribution = { num, id, description, deprecationMessage };
+    this.tokenModifierById[id] = tokenStyleContribution;
+    this.tokenStylingSchema.properties[`*.${id}`] = getStylingSchemeEntry(description, deprecationMessage);
+  }
+  parseTokenSelector(selectorString, language) {
+    const selector = parseClassifierString(selectorString, language);
+    if (!selector.type) {
+      return {
+        match: /* @__PURE__ */ __name(() => -1, "match"),
+        id: "$invalid"
+      };
+    }
+    return {
+      match: /* @__PURE__ */ __name((type, modifiers, language2) => {
+        let score = 0;
+        if (selector.language !== void 0) {
+          if (selector.language !== language2) {
+            return -1;
+          }
+          score += 10;
+        }
+        if (selector.type !== TOKEN_TYPE_WILDCARD) {
+          const hierarchy = this.getTypeHierarchy(type);
+          const level = hierarchy.indexOf(selector.type);
+          if (level === -1) {
+            return -1;
+          }
+          score += 100 - level;
+        }
+        for (const selectorModifier of selector.modifiers) {
+          if (modifiers.indexOf(selectorModifier) === -1) {
+            return -1;
+          }
+        }
+        return score + selector.modifiers.length * 100;
+      }, "match"),
+      id: `${[selector.type, ...selector.modifiers.sort()].join(".")}${selector.language !== void 0 ? ":" + selector.language : ""}`
+    };
+  }
+  registerTokenStyleDefault(selector, defaults) {
+    this.tokenStylingDefaultRules.push({ selector, defaults });
+  }
+  deregisterTokenStyleDefault(selector) {
+    const selectorString = selector.id;
+    this.tokenStylingDefaultRules = this.tokenStylingDefaultRules.filter((r) => r.selector.id !== selectorString);
+  }
+  deregisterTokenType(id) {
+    delete this.tokenTypeById[id];
+    delete this.tokenStylingSchema.properties[id];
+    this.typeHierarchy = /* @__PURE__ */ Object.create(null);
+  }
+  deregisterTokenModifier(id) {
+    delete this.tokenModifierById[id];
+    delete this.tokenStylingSchema.properties[`*.${id}`];
+  }
+  getTokenTypes() {
+    return Object.keys(this.tokenTypeById).map((id) => this.tokenTypeById[id]);
+  }
+  getTokenModifiers() {
+    return Object.keys(this.tokenModifierById).map((id) => this.tokenModifierById[id]);
+  }
+  getTokenStylingSchema() {
+    return this.tokenStylingSchema;
+  }
+  getTokenStylingDefaultRules() {
+    return this.tokenStylingDefaultRules;
+  }
+  getTypeHierarchy(typeId) {
+    let hierarchy = this.typeHierarchy[typeId];
+    if (!hierarchy) {
+      this.typeHierarchy[typeId] = hierarchy = [typeId];
+      let type = this.tokenTypeById[typeId];
+      while (type && type.superType) {
+        hierarchy.push(type.superType);
+        type = this.tokenTypeById[type.superType];
+      }
+    }
+    return hierarchy;
+  }
+  toString() {
+    const sorter = /* @__PURE__ */ __name((a, b) => {
+      const cat1 = a.indexOf(".") === -1 ? 0 : 1;
+      const cat2 = b.indexOf(".") === -1 ? 0 : 1;
+      if (cat1 !== cat2) {
+        return cat1 - cat2;
+      }
+      return a.localeCompare(b);
+    }, "sorter");
+    return Object.keys(this.tokenTypeById).sort(sorter).map((k) => `- \`${k}\`: ${this.tokenTypeById[k].description}`).join("\n");
+  }
+}
+const CHAR_LANGUAGE = TOKEN_CLASSIFIER_LANGUAGE_SEPARATOR.charCodeAt(0);
+const CHAR_MODIFIER = CLASSIFIER_MODIFIER_SEPARATOR.charCodeAt(0);
+function parseClassifierString(s, defaultLanguage) {
+  let k = s.length;
+  let language = defaultLanguage;
+  const modifiers = [];
+  for (let i = k - 1; i >= 0; i--) {
+    const ch = s.charCodeAt(i);
+    if (ch === CHAR_LANGUAGE || ch === CHAR_MODIFIER) {
+      const segment = s.substring(i + 1, k);
+      k = i;
+      if (ch === CHAR_LANGUAGE) {
+        language = segment;
+      } else {
+        modifiers.push(segment);
+      }
+    }
+  }
+  const type = s.substring(0, k);
+  return { type, modifiers, language };
+}
+__name(parseClassifierString, "parseClassifierString");
+const tokenClassificationRegistry = createDefaultTokenClassificationRegistry();
+platform.Registry.add(Extensions.TokenClassificationContribution, tokenClassificationRegistry);
+function createDefaultTokenClassificationRegistry() {
+  const registry = new TokenClassificationRegistry();
+  function registerTokenType(id, description, scopesToProbe = [], superType, deprecationMessage) {
+    registry.registerTokenType(id, description, superType, deprecationMessage);
+    if (scopesToProbe) {
+      registerTokenStyleDefault(id, scopesToProbe);
+    }
+    return id;
+  }
+  __name(registerTokenType, "registerTokenType");
+  function registerTokenStyleDefault(selectorString, scopesToProbe) {
+    try {
+      const selector = registry.parseTokenSelector(selectorString);
+      registry.registerTokenStyleDefault(selector, { scopesToProbe });
+    } catch (e) {
+      console.log(e);
+    }
+  }
+  __name(registerTokenStyleDefault, "registerTokenStyleDefault");
+  registerTokenType("comment", nls.localize("comment", "Style for comments."), [["comment"]]);
+  registerTokenType("string", nls.localize("string", "Style for strings."), [["string"]]);
+  registerTokenType("keyword", nls.localize("keyword", "Style for keywords."), [["keyword.control"]]);
+  registerTokenType("number", nls.localize("number", "Style for numbers."), [["constant.numeric"]]);
+  registerTokenType("regexp", nls.localize("regexp", "Style for expressions."), [["constant.regexp"]]);
+  registerTokenType("operator", nls.localize("operator", "Style for operators."), [["keyword.operator"]]);
+  registerTokenType("namespace", nls.localize("namespace", "Style for namespaces."), [["entity.name.namespace"]]);
+  registerTokenType("type", nls.localize("type", "Style for types."), [["entity.name.type"], ["support.type"]]);
+  registerTokenType("struct", nls.localize("struct", "Style for structs."), [["entity.name.type.struct"]]);
+  registerTokenType("class", nls.localize("class", "Style for classes."), [["entity.name.type.class"], ["support.class"]]);
+  registerTokenType("interface", nls.localize("interface", "Style for interfaces."), [["entity.name.type.interface"]]);
+  registerTokenType("enum", nls.localize("enum", "Style for enums."), [["entity.name.type.enum"]]);
+  registerTokenType("typeParameter", nls.localize("typeParameter", "Style for type parameters."), [["entity.name.type.parameter"]]);
+  registerTokenType("function", nls.localize("function", "Style for functions"), [["entity.name.function"], ["support.function"]]);
+  registerTokenType("member", nls.localize("member", "Style for member functions"), [], "method", "Deprecated use `method` instead");
+  registerTokenType("method", nls.localize("method", "Style for method (member functions)"), [["entity.name.function.member"], ["support.function"]]);
+  registerTokenType("macro", nls.localize("macro", "Style for macros."), [["entity.name.function.preprocessor"]]);
+  registerTokenType("variable", nls.localize("variable", "Style for variables."), [["variable.other.readwrite"], ["entity.name.variable"]]);
+  registerTokenType("parameter", nls.localize("parameter", "Style for parameters."), [["variable.parameter"]]);
+  registerTokenType("property", nls.localize("property", "Style for properties."), [["variable.other.property"]]);
+  registerTokenType("enumMember", nls.localize("enumMember", "Style for enum members."), [["variable.other.enummember"]]);
+  registerTokenType("event", nls.localize("event", "Style for events."), [["variable.other.event"]]);
+  registerTokenType("decorator", nls.localize("decorator", "Style for decorators & annotations."), [["entity.name.decorator"], ["entity.name.function"]]);
+  registerTokenType("label", nls.localize("labels", "Style for labels. "), void 0);
+  registry.registerTokenModifier("declaration", nls.localize("declaration", "Style for all symbol declarations."), void 0);
+  registry.registerTokenModifier("documentation", nls.localize("documentation", "Style to use for references in documentation."), void 0);
+  registry.registerTokenModifier("static", nls.localize("static", "Style to use for symbols that are static."), void 0);
+  registry.registerTokenModifier("abstract", nls.localize("abstract", "Style to use for symbols that are abstract."), void 0);
+  registry.registerTokenModifier("deprecated", nls.localize("deprecated", "Style to use for symbols that are deprecated."), void 0);
+  registry.registerTokenModifier("modification", nls.localize("modification", "Style to use for write accesses."), void 0);
+  registry.registerTokenModifier("async", nls.localize("async", "Style to use for symbols that are async."), void 0);
+  registry.registerTokenModifier("readonly", nls.localize("readonly", "Style to use for symbols that are read-only."), void 0);
+  registerTokenStyleDefault("variable.readonly", [["variable.other.constant"]]);
+  registerTokenStyleDefault("property.readonly", [["variable.other.constant.property"]]);
+  registerTokenStyleDefault("type.defaultLibrary", [["support.type"]]);
+  registerTokenStyleDefault("class.defaultLibrary", [["support.class"]]);
+  registerTokenStyleDefault("interface.defaultLibrary", [["support.class"]]);
+  registerTokenStyleDefault("variable.defaultLibrary", [["support.variable"], ["support.other.variable"]]);
+  registerTokenStyleDefault("variable.defaultLibrary.readonly", [["support.constant"]]);
+  registerTokenStyleDefault("property.defaultLibrary", [["support.variable.property"]]);
+  registerTokenStyleDefault("property.defaultLibrary.readonly", [["support.constant.property"]]);
+  registerTokenStyleDefault("function.defaultLibrary", [["support.function"]]);
+  registerTokenStyleDefault("member.defaultLibrary", [["support.function"]]);
+  return registry;
+}
+__name(createDefaultTokenClassificationRegistry, "createDefaultTokenClassificationRegistry");
+function getTokenClassificationRegistry() {
+  return tokenClassificationRegistry;
+}
+__name(getTokenClassificationRegistry, "getTokenClassificationRegistry");
+function getStylingSchemeEntry(description, deprecationMessage) {
+  return {
+    description,
+    deprecationMessage,
+    defaultSnippets: [{ body: "${1:#ff0000}" }],
+    anyOf: [
+      {
+        type: "string",
+        format: "color-hex"
+      },
+      {
+        $ref: "#/definitions/style"
+      }
+    ]
+  };
+}
+__name(getStylingSchemeEntry, "getStylingSchemeEntry");
+const tokenStylingSchemaId = "vscode://schemas/token-styling";
+const schemaRegistry = platform.Registry.as(JSONExtensions.JSONContribution);
+schemaRegistry.registerSchema(tokenStylingSchemaId, tokenClassificationRegistry.getTokenStylingSchema());
+const delayer = new RunOnceScheduler(() => schemaRegistry.notifySchemaChanged(tokenStylingSchemaId), 200);
+tokenClassificationRegistry.onDidChangeSchema(() => {
+  if (!delayer.isScheduled()) {
+    delayer.schedule();
+  }
+});
+export {
+  SemanticTokenRule,
+  TokenStyle,
+  getTokenClassificationRegistry,
+  parseClassifierString,
+  tokenStylingSchemaId,
+  typeAndModifierIdPattern
+};
+//# sourceMappingURL=tokenClassificationRegistry.js.map

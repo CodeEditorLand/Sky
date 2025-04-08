@@ -1,1 +1,159 @@
-var _=Object.defineProperty;var S=Object.getOwnPropertyDescriptor;var I=(o,i,e,t)=>{for(var n=t>1?void 0:t?S(i,e):i,s=o.length-1,r;s>=0;s--)(r=o[s])&&(n=(t?r(i,e,n):r(n))||n);return t&&n&&_(i,e,n),n},E=(o,i)=>(e,t)=>i(e,t,o);import{Emitter as x}from"../../../base/common/event.js";import{Disposable as u}from"../../../base/common/lifecycle.js";import{isUndefinedOrNull as c}from"../../../base/common/types.js";import{DISABLED_EXTENSIONS_STORAGE_PATH as m,IExtensionManagementService as p,InstallOperation as D}from"./extensionManagement.js";import{areSameExtensions as l}from"./extensionManagementUtil.js";import{IStorageService as v,StorageScope as d,StorageTarget as b}from"../../storage/common/storage.js";let h=class extends u{_onDidChangeEnablement=new x;onDidChangeEnablement=this._onDidChangeEnablement.event;storageManager;constructor(i,e){super(),this.storageManager=this._register(new y(i)),this._register(this.storageManager.onDidChange(t=>this._onDidChangeEnablement.fire({extensions:t,source:"storage"}))),this._register(e.onDidInstallExtensions(t=>t.forEach(({local:n,operation:s})=>{n&&s===D.Migrate&&this._removeFromDisabledExtensions(n.identifier)})))}async enableExtension(i,e){return this._removeFromDisabledExtensions(i)?(this._onDidChangeEnablement.fire({extensions:[i],source:e}),!0):!1}async disableExtension(i,e){return this._addToDisabledExtensions(i)?(this._onDidChangeEnablement.fire({extensions:[i],source:e}),!0):!1}getDisabledExtensions(){return this._getExtensions(m)}async getDisabledExtensionsAsync(){return this.getDisabledExtensions()}_addToDisabledExtensions(i){const e=this.getDisabledExtensions();return e.every(t=>!l(t,i))?(e.push(i),this._setDisabledExtensions(e),!0):!1}_removeFromDisabledExtensions(i){const e=this.getDisabledExtensions();for(let t=0;t<e.length;t++){const n=e[t];if(l(n,i))return e.splice(t,1),this._setDisabledExtensions(e),!0}return!1}_setDisabledExtensions(i){this._setExtensions(m,i)}_getExtensions(i){return this.storageManager.get(i,d.PROFILE)}_setExtensions(i,e){this.storageManager.set(i,e,d.PROFILE)}};h=I([E(0,v),E(1,p)],h);class y extends u{constructor(e){super();this.storageService=e;this._register(e.onDidChangeValue(d.PROFILE,void 0,this._store)(t=>this.onDidStorageChange(t)))}storage=Object.create(null);_onDidChange=this._register(new x);onDidChange=this._onDidChange.event;get(e,t){let n;return t===d.PROFILE?(c(this.storage[e])&&(this.storage[e]=this._get(e,t)),n=this.storage[e]):n=this._get(e,t),JSON.parse(n)}set(e,t,n){const s=JSON.stringify(t.map(({id:g,uuid:a})=>({id:g,uuid:a})));this._get(e,n)!==s&&(n===d.PROFILE&&(t.length?this.storage[e]=s:delete this.storage[e]),this._set(e,t.length?s:void 0,n))}onDidStorageChange(e){if(!c(this.storage[e.key])&&this._get(e.key,e.scope)!==this.storage[e.key]){const n=this.get(e.key,e.scope);delete this.storage[e.key];const s=this.get(e.key,e.scope),r=n.filter(a=>!s.some(f=>l(a,f))),g=s.filter(a=>!n.some(f=>l(f,a)));(r.length||g.length)&&this._onDidChange.fire([...r,...g])}}_get(e,t){return this.storageService.get(e,t,"[]")}_set(e,t,n){t?this.storageService.store(e,t,n,b.MACHINE):this.storageService.remove(e,n)}}export{h as GlobalExtensionEnablementService,y as StorageManager};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Emitter, Event } from "../../../base/common/event.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { isUndefinedOrNull } from "../../../base/common/types.js";
+import { DISABLED_EXTENSIONS_STORAGE_PATH, IExtensionIdentifier, IExtensionManagementService, IGlobalExtensionEnablementService, InstallOperation } from "./extensionManagement.js";
+import { areSameExtensions } from "./extensionManagementUtil.js";
+import { IProfileStorageValueChangeEvent, IStorageService, StorageScope, StorageTarget } from "../../storage/common/storage.js";
+let GlobalExtensionEnablementService = class extends Disposable {
+  static {
+    __name(this, "GlobalExtensionEnablementService");
+  }
+  _onDidChangeEnablement = new Emitter();
+  onDidChangeEnablement = this._onDidChangeEnablement.event;
+  storageManager;
+  constructor(storageService, extensionManagementService) {
+    super();
+    this.storageManager = this._register(new StorageManager(storageService));
+    this._register(this.storageManager.onDidChange((extensions) => this._onDidChangeEnablement.fire({ extensions, source: "storage" })));
+    this._register(extensionManagementService.onDidInstallExtensions((e) => e.forEach(({ local, operation }) => {
+      if (local && operation === InstallOperation.Migrate) {
+        this._removeFromDisabledExtensions(local.identifier);
+      }
+    })));
+  }
+  async enableExtension(extension, source) {
+    if (this._removeFromDisabledExtensions(extension)) {
+      this._onDidChangeEnablement.fire({ extensions: [extension], source });
+      return true;
+    }
+    return false;
+  }
+  async disableExtension(extension, source) {
+    if (this._addToDisabledExtensions(extension)) {
+      this._onDidChangeEnablement.fire({ extensions: [extension], source });
+      return true;
+    }
+    return false;
+  }
+  getDisabledExtensions() {
+    return this._getExtensions(DISABLED_EXTENSIONS_STORAGE_PATH);
+  }
+  async getDisabledExtensionsAsync() {
+    return this.getDisabledExtensions();
+  }
+  _addToDisabledExtensions(identifier) {
+    const disabledExtensions = this.getDisabledExtensions();
+    if (disabledExtensions.every((e) => !areSameExtensions(e, identifier))) {
+      disabledExtensions.push(identifier);
+      this._setDisabledExtensions(disabledExtensions);
+      return true;
+    }
+    return false;
+  }
+  _removeFromDisabledExtensions(identifier) {
+    const disabledExtensions = this.getDisabledExtensions();
+    for (let index = 0; index < disabledExtensions.length; index++) {
+      const disabledExtension = disabledExtensions[index];
+      if (areSameExtensions(disabledExtension, identifier)) {
+        disabledExtensions.splice(index, 1);
+        this._setDisabledExtensions(disabledExtensions);
+        return true;
+      }
+    }
+    return false;
+  }
+  _setDisabledExtensions(disabledExtensions) {
+    this._setExtensions(DISABLED_EXTENSIONS_STORAGE_PATH, disabledExtensions);
+  }
+  _getExtensions(storageId) {
+    return this.storageManager.get(storageId, StorageScope.PROFILE);
+  }
+  _setExtensions(storageId, extensions) {
+    this.storageManager.set(storageId, extensions, StorageScope.PROFILE);
+  }
+};
+GlobalExtensionEnablementService = __decorateClass([
+  __decorateParam(0, IStorageService),
+  __decorateParam(1, IExtensionManagementService)
+], GlobalExtensionEnablementService);
+class StorageManager extends Disposable {
+  constructor(storageService) {
+    super();
+    this.storageService = storageService;
+    this._register(storageService.onDidChangeValue(StorageScope.PROFILE, void 0, this._store)((e) => this.onDidStorageChange(e)));
+  }
+  static {
+    __name(this, "StorageManager");
+  }
+  storage = /* @__PURE__ */ Object.create(null);
+  _onDidChange = this._register(new Emitter());
+  onDidChange = this._onDidChange.event;
+  get(key, scope) {
+    let value;
+    if (scope === StorageScope.PROFILE) {
+      if (isUndefinedOrNull(this.storage[key])) {
+        this.storage[key] = this._get(key, scope);
+      }
+      value = this.storage[key];
+    } else {
+      value = this._get(key, scope);
+    }
+    return JSON.parse(value);
+  }
+  set(key, value, scope) {
+    const newValue = JSON.stringify(value.map(({ id, uuid }) => ({ id, uuid })));
+    const oldValue = this._get(key, scope);
+    if (oldValue !== newValue) {
+      if (scope === StorageScope.PROFILE) {
+        if (value.length) {
+          this.storage[key] = newValue;
+        } else {
+          delete this.storage[key];
+        }
+      }
+      this._set(key, value.length ? newValue : void 0, scope);
+    }
+  }
+  onDidStorageChange(storageChangeEvent) {
+    if (!isUndefinedOrNull(this.storage[storageChangeEvent.key])) {
+      const newValue = this._get(storageChangeEvent.key, storageChangeEvent.scope);
+      if (newValue !== this.storage[storageChangeEvent.key]) {
+        const oldValues = this.get(storageChangeEvent.key, storageChangeEvent.scope);
+        delete this.storage[storageChangeEvent.key];
+        const newValues = this.get(storageChangeEvent.key, storageChangeEvent.scope);
+        const added = oldValues.filter((oldValue) => !newValues.some((newValue2) => areSameExtensions(oldValue, newValue2)));
+        const removed = newValues.filter((newValue2) => !oldValues.some((oldValue) => areSameExtensions(oldValue, newValue2)));
+        if (added.length || removed.length) {
+          this._onDidChange.fire([...added, ...removed]);
+        }
+      }
+    }
+  }
+  _get(key, scope) {
+    return this.storageService.get(key, scope, "[]");
+  }
+  _set(key, value, scope) {
+    if (value) {
+      this.storageService.store(key, value, scope, StorageTarget.MACHINE);
+    } else {
+      this.storageService.remove(key, scope);
+    }
+  }
+}
+export {
+  GlobalExtensionEnablementService,
+  StorageManager
+};
+//# sourceMappingURL=extensionEnablementService.js.map

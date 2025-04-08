@@ -1,1 +1,2 @@
-import"../../model/mirrorTextModel.js";
+import { IModelChangedEvent } from "../../model/mirrorTextModel.js";
+//# sourceMappingURL=textModelSync.protocol.js.map

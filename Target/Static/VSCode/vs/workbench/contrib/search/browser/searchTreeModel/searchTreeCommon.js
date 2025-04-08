@@ -1,1 +1,147 @@
-import"../../../../../editor/common/core/range.js";import"../../../../services/search/common/search.js";import"../../../../../base/common/cancellation.js";import{URI as i}from"../../../../../base/common/uri.js";import"../../../../../editor/common/model.js";import"../../../../../platform/files/common/files.js";import"../../../../../platform/progress/common/progress.js";import"../../../../services/search/common/replace.js";import"../../../notebook/browser/notebookEditorWidget.js";import"./rangeDecorations.js";import"../../../../../base/common/event.js";function z(e,t){do{if(t.includes(e))return!0}while(!S(e.parent())&&(e=e.parent()));return!1}var l=(e=>(e[e.PANEL=0]="PANEL",e[e.QUICK_ACCESS=1]="QUICK_ACCESS",e))(l||{});const J="plainTextSearch",V="aiTextSearch";function Y(e){const t=[];let o=e;for(;!n(o);)t.push(o),o=o.parent();return t}const h="SEARCH_MODEL_",s="SEARCH_RESULT_",o="TEXT_SEARCH_HEADING_",d="FOLDER_MATCH_",I="FILE_MATCH_",u="MATCH_";function Z(e){const t={elements:[],added:!1,removed:!1};return e.forEach((e=>{e.added&&(t.added=!0),e.removed&&(t.removed=!0),t.elements=t.elements.concat(e.elements)})),t}function $(e){return"object"==typeof e&&null!==e&&"function"==typeof e.id&&e.id().startsWith(h)}function S(e){return"object"==typeof e&&null!==e&&"function"==typeof e.id&&e.id().startsWith(s)}function n(e){return"object"==typeof e&&null!==e&&"function"==typeof e.id&&e.id().startsWith(o)}function j(e){return n(e)&&"function"==typeof e.replace&&"function"==typeof e.replaceAll}function c(e){return"object"==typeof e&&null!==e&&"function"==typeof e.id&&e.id().startsWith(d)}function M(e){return c(e)&&e.resource instanceof i}function ee(e){return M(e)&&"function"==typeof e.createAndConfigureFileMatch}function re(e){return c(e)&&"function"==typeof e.createAndConfigureFileMatch}function p(e){return"object"==typeof e&&null!==e&&"function"==typeof e.id&&e.id().startsWith(I)}function ae(e){return"object"==typeof e&&null!==e&&"function"==typeof e.id&&e.id().startsWith(u)}function te(e){return"object"==typeof e&&null!==e&&"function"==typeof e.id&&e.id().startsWith(o)}function oe(e){const t=[],o=[];return e.forEach((e=>{p(e)?o.push(e):t.push(e)})),o.concat(t.map((e=>e.allDownstreamFileMatches())).flat())}export{V as AI_TEXT_SEARCH_RESULT_ID,I as FILE_MATCH_PREFIX,d as FOLDER_MATCH_PREFIX,u as MATCH_PREFIX,J as PLAIN_TEXT_SEARCH__RESULT_ID,h as SEARCH_MODEL_PREFIX,s as SEARCH_RESULT_PREFIX,l as SearchModelLocation,o as TEXT_SEARCH_HEADING_PREFIX,z as arrayContainsElementOrParent,Y as createParentList,oe as getFileMatches,j as isPlainTextSearchHeading,te as isSearchHeader,$ as isSearchModel,S as isSearchResult,p as isSearchTreeFileMatch,c as isSearchTreeFolderMatch,re as isSearchTreeFolderMatchNoRoot,M as isSearchTreeFolderMatchWithResource,ee as isSearchTreeFolderMatchWorkspaceRoot,ae as isSearchTreeMatch,n as isTextSearchHeading,Z as mergeSearchResultEvents};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Range } from "../../../../../editor/common/core/range.js";
+import { IAITextQuery, IFileMatch, ISearchComplete, ISearchProgressItem, ISearchRange, ITextQuery, ITextSearchQuery, ITextSearchResult } from "../../../../services/search/common/search.js";
+import { CancellationToken } from "../../../../../base/common/cancellation.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { ITextModel } from "../../../../../editor/common/model.js";
+import { IFileStatWithPartialMetadata, IFileService } from "../../../../../platform/files/common/files.js";
+import { IProgress, IProgressStep } from "../../../../../platform/progress/common/progress.js";
+import { ReplacePattern } from "../../../../services/search/common/replace.js";
+import { NotebookEditorWidget } from "../../../notebook/browser/notebookEditorWidget.js";
+import { RangeHighlightDecorations } from "./rangeDecorations.js";
+import { Event } from "../../../../../base/common/event.js";
+function arrayContainsElementOrParent(element, testArray) {
+  do {
+    if (testArray.includes(element)) {
+      return true;
+    }
+  } while (!isSearchResult(element.parent()) && (element = element.parent()));
+  return false;
+}
+__name(arrayContainsElementOrParent, "arrayContainsElementOrParent");
+var SearchModelLocation = /* @__PURE__ */ ((SearchModelLocation2) => {
+  SearchModelLocation2[SearchModelLocation2["PANEL"] = 0] = "PANEL";
+  SearchModelLocation2[SearchModelLocation2["QUICK_ACCESS"] = 1] = "QUICK_ACCESS";
+  return SearchModelLocation2;
+})(SearchModelLocation || {});
+const PLAIN_TEXT_SEARCH__RESULT_ID = "plainTextSearch";
+const AI_TEXT_SEARCH_RESULT_ID = "aiTextSearch";
+function createParentList(element) {
+  const parentArray = [];
+  let currElement = element;
+  while (!isTextSearchHeading(currElement)) {
+    parentArray.push(currElement);
+    currElement = currElement.parent();
+  }
+  return parentArray;
+}
+__name(createParentList, "createParentList");
+const SEARCH_MODEL_PREFIX = "SEARCH_MODEL_";
+const SEARCH_RESULT_PREFIX = "SEARCH_RESULT_";
+const TEXT_SEARCH_HEADING_PREFIX = "TEXT_SEARCH_HEADING_";
+const FOLDER_MATCH_PREFIX = "FOLDER_MATCH_";
+const FILE_MATCH_PREFIX = "FILE_MATCH_";
+const MATCH_PREFIX = "MATCH_";
+function mergeSearchResultEvents(events) {
+  const retEvent = {
+    elements: [],
+    added: false,
+    removed: false
+  };
+  events.forEach((e) => {
+    if (e.added) {
+      retEvent.added = true;
+    }
+    if (e.removed) {
+      retEvent.removed = true;
+    }
+    retEvent.elements = retEvent.elements.concat(e.elements);
+  });
+  return retEvent;
+}
+__name(mergeSearchResultEvents, "mergeSearchResultEvents");
+function isSearchModel(obj) {
+  return typeof obj === "object" && obj !== null && typeof obj.id === "function" && obj.id().startsWith(SEARCH_MODEL_PREFIX);
+}
+__name(isSearchModel, "isSearchModel");
+function isSearchResult(obj) {
+  return typeof obj === "object" && obj !== null && typeof obj.id === "function" && obj.id().startsWith(SEARCH_RESULT_PREFIX);
+}
+__name(isSearchResult, "isSearchResult");
+function isTextSearchHeading(obj) {
+  return typeof obj === "object" && obj !== null && typeof obj.id === "function" && obj.id().startsWith(TEXT_SEARCH_HEADING_PREFIX);
+}
+__name(isTextSearchHeading, "isTextSearchHeading");
+function isPlainTextSearchHeading(obj) {
+  return isTextSearchHeading(obj) && typeof obj.replace === "function" && typeof obj.replaceAll === "function";
+}
+__name(isPlainTextSearchHeading, "isPlainTextSearchHeading");
+function isSearchTreeFolderMatch(obj) {
+  return typeof obj === "object" && obj !== null && typeof obj.id === "function" && obj.id().startsWith(FOLDER_MATCH_PREFIX);
+}
+__name(isSearchTreeFolderMatch, "isSearchTreeFolderMatch");
+function isSearchTreeFolderMatchWithResource(obj) {
+  return isSearchTreeFolderMatch(obj) && obj.resource instanceof URI;
+}
+__name(isSearchTreeFolderMatchWithResource, "isSearchTreeFolderMatchWithResource");
+function isSearchTreeFolderMatchWorkspaceRoot(obj) {
+  return isSearchTreeFolderMatchWithResource(obj) && typeof obj.createAndConfigureFileMatch === "function";
+}
+__name(isSearchTreeFolderMatchWorkspaceRoot, "isSearchTreeFolderMatchWorkspaceRoot");
+function isSearchTreeFolderMatchNoRoot(obj) {
+  return isSearchTreeFolderMatch(obj) && typeof obj.createAndConfigureFileMatch === "function";
+}
+__name(isSearchTreeFolderMatchNoRoot, "isSearchTreeFolderMatchNoRoot");
+function isSearchTreeFileMatch(obj) {
+  return typeof obj === "object" && obj !== null && typeof obj.id === "function" && obj.id().startsWith(FILE_MATCH_PREFIX);
+}
+__name(isSearchTreeFileMatch, "isSearchTreeFileMatch");
+function isSearchTreeMatch(obj) {
+  return typeof obj === "object" && obj !== null && typeof obj.id === "function" && obj.id().startsWith(MATCH_PREFIX);
+}
+__name(isSearchTreeMatch, "isSearchTreeMatch");
+function isSearchHeader(obj) {
+  return typeof obj === "object" && obj !== null && typeof obj.id === "function" && obj.id().startsWith(TEXT_SEARCH_HEADING_PREFIX);
+}
+__name(isSearchHeader, "isSearchHeader");
+function getFileMatches(matches) {
+  const folderMatches = [];
+  const fileMatches = [];
+  matches.forEach((e) => {
+    if (isSearchTreeFileMatch(e)) {
+      fileMatches.push(e);
+    } else {
+      folderMatches.push(e);
+    }
+  });
+  return fileMatches.concat(folderMatches.map((e) => e.allDownstreamFileMatches()).flat());
+}
+__name(getFileMatches, "getFileMatches");
+export {
+  AI_TEXT_SEARCH_RESULT_ID,
+  FILE_MATCH_PREFIX,
+  FOLDER_MATCH_PREFIX,
+  MATCH_PREFIX,
+  PLAIN_TEXT_SEARCH__RESULT_ID,
+  SEARCH_MODEL_PREFIX,
+  SEARCH_RESULT_PREFIX,
+  SearchModelLocation,
+  TEXT_SEARCH_HEADING_PREFIX,
+  arrayContainsElementOrParent,
+  createParentList,
+  getFileMatches,
+  isPlainTextSearchHeading,
+  isSearchHeader,
+  isSearchModel,
+  isSearchResult,
+  isSearchTreeFileMatch,
+  isSearchTreeFolderMatch,
+  isSearchTreeFolderMatchNoRoot,
+  isSearchTreeFolderMatchWithResource,
+  isSearchTreeFolderMatchWorkspaceRoot,
+  isSearchTreeMatch,
+  isTextSearchHeading,
+  mergeSearchResultEvents
+};
+//# sourceMappingURL=searchTreeCommon.js.map

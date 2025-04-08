@@ -1,1 +1,972 @@
-var ae=Object.defineProperty,ce=Object.getOwnPropertyDescriptor,w=(e,t,r,s)=>{for(var i,o=s>1?void 0:s?ce(t,r):t,n=e.length-1;n>=0;n--)(i=e[n])&&(o=(s?i(t,r,o):i(o))||o);return s&&o&&ae(t,r,o),o},h=(e,t)=>(r,s)=>t(r,s,e);import{$ as c,addDisposableListener as R,addStandardDisposableListener as de,append as u,clearNode as O,EventHelper as j,EventType as A,isAncestorOfActiveElement as le}from"../../../../base/browser/dom.js";import{ActionBar as ue}from"../../../../base/browser/ui/actionbar/actionbar.js";import{ButtonBar as G}from"../../../../base/browser/ui/button/button.js";import{InputBox as pe,MessageType as N}from"../../../../base/browser/ui/inputbox/inputBox.js";import{DomScrollableElement as he}from"../../../../base/browser/ui/scrollbar/scrollableElement.js";import"../../../../base/browser/ui/table/table.js";import{Action as Y}from"../../../../base/common/actions.js";import"../../../../base/common/cancellation.js";import{Codicon as y}from"../../../../base/common/codicons.js";import{debounce as me}from"../../../../base/common/decorators.js";import{Emitter as H}from"../../../../base/common/event.js";import{KeyCode as I,KeyMod as q}from"../../../../base/common/keyCodes.js";import{normalizeDriveLetter as $}from"../../../../base/common/labels.js";import{Disposable as fe,DisposableStore as D}from"../../../../base/common/lifecycle.js";import{parseLinkedText as z}from"../../../../base/common/linkedText.js";import{Schemas as W}from"../../../../base/common/network.js";import{ScrollbarVisibility as X}from"../../../../base/common/scrollable.js";import{URI as Te}from"../../../../base/common/uri.js";import{localize as r}from"../../../../nls.js";import{ConfigurationScope as be,Extensions as Ie}from"../../../../platform/configuration/common/configurationRegistry.js";import{IContextViewService as ge}from"../../../../platform/contextview/browser/contextView.js";import{IFileDialogService as ve}from"../../../../platform/dialogs/common/dialogs.js";import{IInstantiationService as J}from"../../../../platform/instantiation/common/instantiation.js";import{ILabelService as Q}from"../../../../platform/label/common/label.js";import{WorkbenchTable as ke}from"../../../../platform/list/browser/listService.js";import{Link as Z}from"../../../../platform/opener/browser/link.js";import{Registry as Ee}from"../../../../platform/registry/common/platform.js";import{isVirtualResource as ee,isVirtualWorkspace as we}from"../../../../platform/workspace/common/virtualWorkspace.js";import{IStorageService as Se}from"../../../../platform/storage/common/storage.js";import{ITelemetryService as ye}from"../../../../platform/telemetry/common/telemetry.js";import{asCssVariable as P,buttonBackground as xe,buttonSecondaryBackground as Ce,editorErrorForeground as Ue}from"../../../../platform/theme/common/colorRegistry.js";import{IWorkspaceContextService as te,toWorkspaceIdentifier as De,WorkbenchState as f}from"../../../../platform/workspace/common/workspace.js";import{IThemeService as We}from"../../../../platform/theme/common/themeService.js";import{ThemeIcon as x}from"../../../../base/common/themables.js";import{IWorkspaceTrustManagementService as re}from"../../../../platform/workspace/common/workspaceTrust.js";import{EditorPane as Le}from"../../../browser/parts/editor/editorPane.js";import"../../../common/editor.js";import{debugIconStartForeground as Me}from"../../debug/browser/debugColors.js";import{IExtensionsWorkbenchService as Ae,LIST_WORKSPACE_UNSUPPORTED_EXTENSIONS_COMMAND_ID as ie}from"../../extensions/common/extensions.js";import{APPLICATION_SCOPES as He,IWorkbenchConfigurationService as Pe}from"../../../services/configuration/common/configuration.js";import{IExtensionManifestPropertiesService as Fe}from"../../../services/extensions/common/extensionManifestPropertiesService.js";import{IUriIdentityService as se}from"../../../../platform/uriIdentity/common/uriIdentity.js";import"../../../services/workspaces/browser/workspaceTrustEditorInput.js";import"../../../../platform/editor/common/editor.js";import{getExtensionDependencies as Be}from"../../../../platform/extensionManagement/common/extensionManagementUtil.js";import{EnablementState as F,IWorkbenchExtensionEnablementService as _e}from"../../../services/extensionManagement/common/extensionManagement.js";import{posix as B,win32 as Re}from"../../../../base/common/path.js";import{hasDriveLetter as ne,toSlashes as Oe}from"../../../../base/common/extpath.js";import{StandardKeyboardEvent as Ne}from"../../../../base/browser/keyboardEvent.js";import{IProductService as Ye}from"../../../../platform/product/common/productService.js";import{registerIcon as C}from"../../../../platform/theme/common/iconRegistry.js";import{defaultButtonStyles as oe,defaultInputBoxStyles as qe}from"../../../../platform/theme/browser/defaultStyles.js";import{isMacintosh as K}from"../../../../base/common/platform.js";import{IKeybindingService as Ke}from"../../../../platform/keybinding/common/keybinding.js";import"../../../../base/common/keybindings.js";import{basename as Ve,dirname as je}from"../../../../base/common/resources.js";import"../../../services/editor/common/editorGroupsService.js";const Ge=C("workspace-trust-banner",y.shield,r("shieldIcon","Icon for workspace trust ion the banner.")),$e=C("workspace-trust-editor-check",y.check,r("checkListIcon","Icon for the checkmark in the workspace trust editor.")),ze=C("workspace-trust-editor-cross",y.x,r("xListIcon","Icon for the cross in the workspace trust editor.")),Xe=C("workspace-trust-editor-folder-picker",y.folder,r("folderPickerIcon","Icon for the pick folder icon in the workspace trust editor.")),Je=C("workspace-trust-editor-edit-folder",y.edit,r("editIcon","Icon for the edit folder icon in the workspace trust editor.")),Qe=C("workspace-trust-editor-remove-folder",y.close,r("removeIcon","Icon for the remove folder icon in the workspace trust editor."));let L=class extends fe{constructor(e,t,s,i,o,n,a){super(),this.container=e,this.instantiationService=t,this.workspaceService=s,this.workspaceTrustManagementService=i,this.uriService=o,this.labelService=n,this.fileDialogService=a,this.descriptionElement=e.appendChild(c(".workspace-trusted-folders-description"));const l=e.appendChild(c(".trusted-uris-table")),d=e.appendChild(c(".trusted-uris-button-bar"));this.table=this.instantiationService.createInstance(ke,"WorkspaceTrust",l,new U,[{label:r("hostColumnLabel","Host"),tooltip:"",weight:1,templateId:k.TEMPLATE_ID,project:e=>e},{label:r("pathColumnLabel","Path"),tooltip:"",weight:8,templateId:v.TEMPLATE_ID,project:e=>e},{label:"",tooltip:"",weight:1,minimumWidth:75,maximumWidth:75,templateId:g.TEMPLATE_ID,project:e=>e}],[this.instantiationService.createInstance(k),this.instantiationService.createInstance(v,this),this.instantiationService.createInstance(g,this,this.currentWorkspaceUri)],{horizontalScrolling:!1,alwaysConsumeMouseWheel:!1,openOnSingleClick:!1,multipleSelectionSupport:!1,accessibilityProvider:{getAriaLabel:e=>{const t=_(this.labelService,e);return void 0===t||0===t.length?r("trustedFolderAriaLabel","{0}, trusted",this.labelService.getUriLabel(e.uri)):r("trustedFolderWithHostAriaLabel","{0} on {1}, trusted",this.labelService.getUriLabel(e.uri),t)},getWidgetAriaLabel:()=>r("trustedFoldersAndWorkspaces","Trusted Folders & Workspaces")},identityProvider:{getId:e=>e.uri.toString()}}),this._register(this.table.onDidOpen((e=>{e&&e.element&&!e.browserEvent?.defaultPrevented&&this.edit(e.element,!0)})));const u=this._register(new G(d)),h=this._register(u.addButton({title:r("addButton","Add Folder"),...oe}));h.label=r("addButton","Add Folder"),this._register(h.onDidClick((async()=>{const e=await this.fileDialogService.showOpenDialog({canSelectFiles:!1,canSelectFolders:!0,canSelectMany:!1,defaultUri:this.currentWorkspaceUri,openLabel:r("trustUri","Trust Folder"),title:r("selectTrustedUri","Select Folder To Trust")});e&&this.workspaceTrustManagementService.setUrisTrust(e,!0)}))),this._register(this.workspaceTrustManagementService.onDidChangeTrustedFolders((()=>{this.updateTable()})))}_onDidAcceptEdit=this._register(new H);onDidAcceptEdit=this._onDidAcceptEdit.event;_onDidRejectEdit=this._register(new H);onDidRejectEdit=this._onDidRejectEdit.event;_onEdit=this._register(new H);onEdit=this._onEdit.event;_onDelete=this._register(new H);onDelete=this._onDelete.event;table;descriptionElement;getIndexOfTrustedUriEntry(e){const t=this.trustedUriEntries.indexOf(e);if(-1===t)for(let t=0;t<this.trustedUriEntries.length;t++)if(this.trustedUriEntries[t].uri===e.uri)return t;return t}selectTrustedUriEntry(e,t=!0){const r=this.getIndexOfTrustedUriEntry(e);-1!==r&&(t&&(this.table.domFocus(),this.table.setFocus([r])),this.table.setSelection([r]))}get currentWorkspaceUri(){return this.workspaceService.getWorkspace().folders[0]?.uri||Te.file("/")}get trustedUriEntries(){const e=this.workspaceService.getWorkspace(),t=e.folders.map((e=>e.uri));return e.configuration&&t.push(e.configuration),this.workspaceTrustManagementService.getTrustedUris().map((e=>{let r=!1;for(const s of t)r=r||this.uriService.extUri.isEqualOrParent(s,e);return{uri:e,parentOfWorkspaceItem:r}})).sort(((e,t)=>{if(e.uri.scheme!==t.uri.scheme){if(e.uri.scheme===W.file)return-1;if(t.uri.scheme===W.file)return 1}const r=e.uri.path.endsWith(".code-workspace"),s=t.uri.path.endsWith(".code-workspace");if(r!==s){if(r)return 1;if(s)return-1}return e.uri.fsPath.localeCompare(t.uri.fsPath)}))}layout(){this.table.layout(this.trustedUriEntries.length*U.ROW_HEIGHT+U.HEADER_ROW_HEIGHT,void 0)}updateTable(){const e=this.trustedUriEntries;this.container.classList.toggle("empty",0===e.length),this.descriptionElement.innerText=e.length?r("trustedFoldersDescription","You trust the following folders, their subfolders, and workspace files."):r("noTrustedFoldersDescriptions","You haven't trusted any folders or workspace files yet."),this.table.splice(0,Number.POSITIVE_INFINITY,this.trustedUriEntries),this.layout()}validateUri(e,t){if(!t)return null;if("vscode-vfs"===t.uri.scheme){const s=e.split(B.sep).filter((e=>e.length));if(0===s.length&&e.startsWith(B.sep))return{type:N.WARNING,content:r({key:"trustAll",comment:["The {0} will be a host name where repositories are hosted."]},"You will trust all repositories on {0}.",_(this.labelService,t))};if(1===s.length)return{type:N.WARNING,content:r({key:"trustOrg",comment:["The {0} will be an organization or user name.","The {1} will be a host name where repositories are hosted."]},"You will trust all repositories and forks under '{0}' on {1}.",s[0],_(this.labelService,t))};if(s.length>2)return{type:N.ERROR,content:r("invalidTrust","You cannot trust individual folders within a repository.",e)}}return null}acceptEdit(e,t){const r=this.workspaceTrustManagementService.getTrustedUris(),s=r.findIndex((t=>this.uriService.extUri.isEqual(t,e.uri)));s>=r.length||-1===s?r.push(t):r[s]=t,this.workspaceTrustManagementService.setTrustedUris(r),this._onDidAcceptEdit.fire(e)}rejectEdit(e){this._onDidRejectEdit.fire(e)}async delete(e){this.table.focusNext(),await this.workspaceTrustManagementService.setUrisTrust([e.uri],!1),0===this.table.getFocus().length&&this.table.focusLast(),this._onDelete.fire(e),this.table.domFocus()}async edit(e,t){if((e.uri.scheme===W.file||e.uri.scheme===this.currentWorkspaceUri.scheme&&this.uriService.extUri.isEqualAuthority(this.currentWorkspaceUri.authority,e.uri.authority)&&!ee(e.uri))&&t){const t=await this.fileDialogService.showOpenDialog({canSelectFiles:!1,canSelectFolders:!0,canSelectMany:!1,defaultUri:e.uri,openLabel:r("trustUri","Trust Folder"),title:r("selectTrustedUri","Select Folder To Trust")});t?this.acceptEdit(e,t[0]):this.rejectEdit(e)}else this.selectTrustedUriEntry(e),this._onEdit.fire(e)}};L=w([h(1,J),h(2,te),h(3,re),h(4,se),h(5,Q),h(6,ve)],L);class U{static HEADER_ROW_HEIGHT=30;static ROW_HEIGHT=24;headerRowHeight=U.HEADER_ROW_HEIGHT;getHeight(e){return U.ROW_HEIGHT}}let g=class{constructor(e,t,r){this.table=e,this.currentWorkspaceUri=t,this.uriService=r}static TEMPLATE_ID="actions";templateId=g.TEMPLATE_ID;renderTemplate(e){const t=e.appendChild(c(".actions"));return{actionBar:new ue(t)}}renderElement(e,t,r,s){r.actionBar.clear();const i=[];(e.uri.scheme===W.file||e.uri.scheme===this.currentWorkspaceUri.scheme&&this.uriService.extUri.isEqualAuthority(this.currentWorkspaceUri.authority,e.uri.authority)&&!ee(e.uri))&&i.push(this.createPickerAction(e)),i.push(this.createEditAction(e)),i.push(this.createDeleteAction(e)),r.actionBar.push(i,{icon:!0})}createEditAction(e){return{label:"",class:x.asClassName(Je),enabled:!0,id:"editTrustedUri",tooltip:r("editTrustedUri","Edit Path"),run:()=>{this.table.edit(e,!1)}}}createPickerAction(e){return{label:"",class:x.asClassName(Xe),enabled:!0,id:"pickerTrustedUri",tooltip:r("pickerTrustedUri","Open File Picker"),run:()=>{this.table.edit(e,!0)}}}createDeleteAction(e){return{label:"",class:x.asClassName(Qe),enabled:!0,id:"deleteTrustedUri",tooltip:r("deleteTrustedUri","Delete Path"),run:async()=>{await this.table.delete(e)}}}disposeTemplate(e){e.actionBar.dispose()}};g=w([h(2,se)],g);let v=class{constructor(e,t){this.table=e,this.contextViewService=t}static TEMPLATE_ID="path";templateId=v.TEMPLATE_ID;currentItem;renderTemplate(e){const t=e.appendChild(c(".path")),r=t.appendChild(c("div.path-label")),s=new pe(t,this.contextViewService,{validationOptions:{validation:e=>this.table.validateUri(e,this.currentItem)},inputBoxStyles:qe}),i=new D,o=i.add(new D);return{element:t,pathLabel:r,pathInput:s,disposables:i,renderDisposables:o}}renderElement(e,t,r,s){r.renderDisposables.clear(),this.currentItem=e,r.renderDisposables.add(this.table.onEdit((async t=>{e===t&&(r.element.classList.add("input-mode"),r.pathInput.focus(),r.pathInput.select(),r.element.parentElement.style.paddingLeft="0px")}))),r.renderDisposables.add(R(r.pathInput.element,A.DBLCLICK,(e=>{j.stop(e)})));const i=()=>{r.element.classList.remove("input-mode"),r.element.parentElement.style.paddingLeft="5px"},o=()=>{i();const t=r.pathInput.value,s=ne(t)?e.uri.with({path:B.sep+Oe(t)}):e.uri.with({path:t});r.pathLabel.innerText=this.formatPath(s),s&&this.table.acceptEdit(e,s)},n=()=>{i(),r.pathInput.value=a,this.table.rejectEdit(e)};r.renderDisposables.add(de(r.pathInput.inputElement,A.KEY_DOWN,(e=>{let t=!1;e.equals(I.Enter)?(o(),t=!0):e.equals(I.Escape)&&(n(),t=!0),t&&(e.preventDefault(),e.stopPropagation())}))),r.renderDisposables.add(R(r.pathInput.inputElement,A.BLUR,(()=>{n()})));const a=this.formatPath(e.uri);r.pathInput.value=a,r.pathLabel.innerText=a,r.element.classList.toggle("current-workspace-parent",e.parentOfWorkspaceItem)}disposeTemplate(e){e.disposables.dispose(),e.renderDisposables.dispose()}formatPath(e){if(e.scheme===W.file)return $(e.fsPath);if(e.path.startsWith(B.sep)){const t=e.path.substring(1);if(ne(t,!0))return $(Re.normalize(t),!0)}return e.path}};function _(e,t){return t.uri.authority?e.getHostLabel(t.uri.scheme,t.uri.authority):r("localAuthority","Local")}v=w([h(1,ge)],v);let k=class{constructor(e){this.labelService=e}static TEMPLATE_ID="host";templateId=k.TEMPLATE_ID;renderTemplate(e){const t=new D,r=t.add(new D),s=e.appendChild(c(".host")),i=s.appendChild(c("div.host-label")),o=s.appendChild(c("div.button-bar"));return{element:s,hostContainer:i,buttonBarContainer:o,disposables:t,renderDisposables:r}}renderElement(e,t,r,s){r.renderDisposables.clear(),r.renderDisposables.add({dispose:()=>{O(r.buttonBarContainer)}}),r.hostContainer.innerText=_(this.labelService,e),r.element.classList.toggle("current-workspace-parent",e.parentOfWorkspaceItem),r.hostContainer.style.display="",r.buttonBarContainer.style.display="none"}disposeTemplate(e){e.disposables.dispose()}};k=w([h(0,Q)],k);let S=class extends Le{constructor(e,t,r,s,i,o,n,a,c,l,d,u,h){super(S.ID,e,t,r,s),this.workspaceService=i,this.extensionWorkbenchService=o,this.extensionManifestPropertiesService=n,this.instantiationService=a,this.workspaceTrustManagementService=c,this.configurationService=l,this.extensionEnablementService=d,this.productService=u,this.keybindingService=h}static ID="workbench.editor.workspaceTrust";rootElement;headerContainer;headerTitleContainer;headerTitleIcon;headerTitleText;headerDescription;bodyScrollBar;affectedFeaturesContainer;trustedContainer;untrustedContainer;configurationContainer;workspaceTrustedUrisTable;createEditor(e){this.rootElement=u(e,c(".workspace-trust-editor",{tabindex:"0"})),this.createHeaderElement(this.rootElement);const t=c(".workspace-trust-editor-body");this.bodyScrollBar=this._register(new he(t,{horizontal:X.Hidden,vertical:X.Auto})),u(this.rootElement,this.bodyScrollBar.getDomNode()),this.createAffectedFeaturesElement(t),this.createConfigurationElement(t),this.rootElement.style.setProperty("--workspace-trust-selected-color",P(xe)),this.rootElement.style.setProperty("--workspace-trust-unselected-color",P(Ce)),this.rootElement.style.setProperty("--workspace-trust-check-color",P(Me)),this.rootElement.style.setProperty("--workspace-trust-x-color",P(Ue)),this._register(R(this.rootElement,A.KEY_DOWN,(e=>{const t=new Ne(e);if(t.equals(I.UpArrow)||t.equals(I.DownArrow)){const e=[this.headerContainer,this.trustedContainer,this.untrustedContainer,this.configurationContainer];let r=e.findIndex((e=>le(e)));t.equals(I.DownArrow)?r++:t.equals(I.UpArrow)&&(r=Math.max(0,r),r--),r+=e.length,r%=e.length,e[r].focus()}else t.equals(I.Escape)?this.rootElement.focus():t.equals(q.CtrlCmd|I.Enter)?this.workspaceTrustManagementService.canSetWorkspaceTrust()&&this.workspaceTrustManagementService.setWorkspaceTrust(!this.workspaceTrustManagementService.isWorkspaceTrusted()):t.equals(q.CtrlCmd|q.Shift|I.Enter)&&this.workspaceTrustManagementService.canSetParentFolderTrust()&&this.workspaceTrustManagementService.setParentFolderTrust(!0)})))}focus(){super.focus(),this.rootElement.focus()}async setInput(e,t,r,s){await super.setInput(e,t,r,s),!s.isCancellationRequested&&(await this.workspaceTrustManagementService.workspaceTrustInitialized,this.registerListeners(),await this.render())}registerListeners(){this._register(this.extensionWorkbenchService.onChange((()=>this.render()))),this._register(this.configurationService.onDidChangeRestrictedSettings((()=>this.render()))),this._register(this.workspaceTrustManagementService.onDidChangeTrust((()=>this.render()))),this._register(this.workspaceTrustManagementService.onDidChangeTrustedFolders((()=>this.render())))}getHeaderContainerClass(e){return e?"workspace-trust-header workspace-trust-trusted":"workspace-trust-header workspace-trust-untrusted"}getHeaderTitleText(e){if(e){if(this.workspaceTrustManagementService.isWorkspaceTrustForced())return r("trustedUnsettableWindow","This window is trusted");switch(this.workspaceService.getWorkbenchState()){case f.EMPTY:return r("trustedHeaderWindow","You trust this window");case f.FOLDER:return r("trustedHeaderFolder","You trust this folder");case f.WORKSPACE:return r("trustedHeaderWorkspace","You trust this workspace")}}return r("untrustedHeader","You are in Restricted Mode")}getHeaderTitleIconClassNames(e){return x.asClassNameArray(Ge)}getFeaturesHeaderText(e){let t="",s="";switch(this.workspaceService.getWorkbenchState()){case f.EMPTY:t=e?r("trustedWindow","In a Trusted Window"):r("untrustedWorkspace","In Restricted Mode"),s=e?r("trustedWindowSubtitle","You trust the authors of the files in the current window. All features are enabled:"):r("untrustedWindowSubtitle","You do not trust the authors of the files in the current window. The following features are disabled:");break;case f.FOLDER:t=e?r("trustedFolder","In a Trusted Folder"):r("untrustedWorkspace","In Restricted Mode"),s=e?r("trustedFolderSubtitle","You trust the authors of the files in the current folder. All features are enabled:"):r("untrustedFolderSubtitle","You do not trust the authors of the files in the current folder. The following features are disabled:");break;case f.WORKSPACE:t=e?r("trustedWorkspace","In a Trusted Workspace"):r("untrustedWorkspace","In Restricted Mode"),s=e?r("trustedWorkspaceSubtitle","You trust the authors of the files in the current workspace. All features are enabled:"):r("untrustedWorkspaceSubtitle","You do not trust the authors of the files in the current workspace. The following features are disabled:")}return[t,s]}rendering=!1;rerenderDisposables=this._register(new D);async render(){if(this.rendering)return;this.rendering=!0,this.rerenderDisposables.clear();const e=this.workspaceTrustManagementService.isWorkspaceTrusted();this.rootElement.classList.toggle("trusted",e),this.rootElement.classList.toggle("untrusted",!e),this.headerTitleText.innerText=this.getHeaderTitleText(e),this.headerTitleIcon.className="workspace-trust-title-icon",this.headerTitleIcon.classList.add(...this.getHeaderTitleIconClassNames(e)),this.headerDescription.innerText="";u(this.headerDescription,c("div")).innerText=e?r("trustedDescription","All features are enabled because trust has been granted to the workspace."):r("untrustedDescription","{0} is in a restricted mode intended for safe code browsing.",this.productService.nameShort);const t=u(this.headerDescription,c("div")),s=r({key:"workspaceTrustEditorHeaderActions",comment:["Please ensure the markdown link syntax is not broken up with whitespace [text block](link block)"]},"[Configure your settings]({0}) or [learn more](https://aka.ms/vscode-workspace-trust).","command:workbench.trust.configure");for(const e of z(s).nodes)"string"==typeof e?u(t,document.createTextNode(e)):this.rerenderDisposables.add(this.instantiationService.createInstance(Z,t,{...e,tabIndex:-1},{}));this.headerContainer.className=this.getHeaderContainerClass(e),this.rootElement.setAttribute("aria-label",`${r("root element label","Manage Workspace Trust")}:  ${this.headerContainer.innerText}`);const i=this.configurationService.restrictedSettings,o=Ee.as(Ie.Configuration),n=i.default.filter((e=>{const t=o.getConfigurationProperties()[e];if(t.scope&&(He.includes(t.scope)||t.scope===be.MACHINE))return!1;if(t.deprecationMessage||t.markdownDeprecationMessage){if(i.workspace?.includes(e))return!0;if(i.workspaceFolder)for(const t of i.workspaceFolder.values())if(t.includes(e))return!0;return!1}return!0})).length;this.renderAffectedFeatures(n,this.getExtensionCount()),this.workspaceTrustedUrisTable.updateTable(),this.bodyScrollBar.getDomNode().style.height=`calc(100% - ${this.headerContainer.clientHeight}px)`,this.bodyScrollBar.scanDomNode(),this.rendering=!1}getExtensionCount(){const e=new Set,t=we(this.workspaceService.getWorkspace()),r=this.extensionWorkbenchService.local.filter((e=>e.local)).map((e=>e.local));for(const s of r){const i=this.extensionEnablementService.getEnablementState(s);i!==F.EnabledGlobally&&i!==F.EnabledWorkspace&&i!==F.DisabledByTrustRequirement&&i!==F.DisabledByExtensionDependency||t&&!1===this.extensionManifestPropertiesService.getExtensionVirtualWorkspaceSupportType(s.manifest)||(!0===this.extensionManifestPropertiesService.getExtensionUntrustedWorkspaceSupportType(s.manifest)?Be(r,s).some((e=>!1===this.extensionManifestPropertiesService.getExtensionUntrustedWorkspaceSupportType(e.manifest)))&&e.add(s.identifier.id):e.add(s.identifier.id))}return e.size}createHeaderElement(e){this.headerContainer=u(e,c(".workspace-trust-header",{tabIndex:"0"})),this.headerTitleContainer=u(this.headerContainer,c(".workspace-trust-title")),this.headerTitleIcon=u(this.headerTitleContainer,c(".workspace-trust-title-icon")),this.headerTitleText=u(this.headerTitleContainer,c(".workspace-trust-title-text")),this.headerDescription=u(this.headerContainer,c(".workspace-trust-description"))}createConfigurationElement(e){this.configurationContainer=u(e,c(".workspace-trust-settings",{tabIndex:"0"}));u(this.configurationContainer,c(".workspace-trusted-folders-title")).innerText=r("trustedFoldersAndWorkspaces","Trusted Folders & Workspaces"),this.workspaceTrustedUrisTable=this._register(this.instantiationService.createInstance(L,this.configurationContainer))}createAffectedFeaturesElement(e){this.affectedFeaturesContainer=u(e,c(".workspace-trust-features")),this.trustedContainer=u(this.affectedFeaturesContainer,c(".workspace-trust-limitations.trusted",{tabIndex:"0"})),this.untrustedContainer=u(this.affectedFeaturesContainer,c(".workspace-trust-limitations.untrusted",{tabIndex:"0"}))}async renderAffectedFeatures(e,t){O(this.trustedContainer),O(this.untrustedContainer);const[s,i]=this.getFeaturesHeaderText(!0);this.renderLimitationsHeaderElement(this.trustedContainer,s,i);const o=this.workspaceService.getWorkbenchState()===f.EMPTY?[r("trustedTasks","Tasks are allowed to run"),r("trustedDebugging","Debugging is enabled"),r("trustedExtensions","All enabled extensions are activated")]:[r("trustedTasks","Tasks are allowed to run"),r("trustedDebugging","Debugging is enabled"),r("trustedSettings","All workspace settings are applied"),r("trustedExtensions","All enabled extensions are activated")];this.renderLimitationsListElement(this.trustedContainer,o,x.asClassNameArray($e));const[n,a]=this.getFeaturesHeaderText(!1);this.renderLimitationsHeaderElement(this.untrustedContainer,n,a);const c=this.workspaceService.getWorkbenchState()===f.EMPTY?[r("untrustedTasks","Tasks are not allowed to run"),r("untrustedDebugging","Debugging is disabled"),V(r({key:"untrustedExtensions",comment:["Please ensure the markdown link syntax is not broken up with whitespace [text block](link block)"]},"[{0} extensions]({1}) are disabled or have limited functionality",t,`command:${ie}`))]:[r("untrustedTasks","Tasks are not allowed to run"),r("untrustedDebugging","Debugging is disabled"),V(e?r({key:"untrustedSettings",comment:["Please ensure the markdown link syntax is not broken up with whitespace [text block](link block)"]},"[{0} workspace settings]({1}) are not applied",e,"command:settings.filterUntrusted"):r("no untrustedSettings","Workspace settings requiring trust are not applied")),V(r({key:"untrustedExtensions",comment:["Please ensure the markdown link syntax is not broken up with whitespace [text block](link block)"]},"[{0} extensions]({1}) are disabled or have limited functionality",t,`command:${ie}`))];this.renderLimitationsListElement(this.untrustedContainer,c,x.asClassNameArray(ze)),this.workspaceTrustManagementService.isWorkspaceTrusted()?this.workspaceTrustManagementService.canSetWorkspaceTrust()?this.addDontTrustButtonToElement(this.untrustedContainer):this.addTrustedTextToElement(this.untrustedContainer):this.workspaceTrustManagementService.canSetWorkspaceTrust()&&this.addTrustButtonToElement(this.trustedContainer)}createButtonRow(e,t,s){const i=u(e,c(".workspace-trust-buttons-row")),o=u(i,c(".workspace-trust-buttons")),n=this.rerenderDisposables.add(new G(o));for(const{action:e,keybinding:i}of t){const t=n.addButtonWithDescription(oe);t.label=e.label,t.enabled=void 0!==s?s:e.enabled,t.description=i.getLabel(),t.element.ariaLabel=e.label+", "+r("keyboardShortcut","Keyboard Shortcut: {0}",i.getAriaLabel()),this.rerenderDisposables.add(t.onDidClick((t=>{t&&j.stop(t,!0),e.run()})))}}addTrustButtonToElement(e){const t=[{action:this.rerenderDisposables.add(new Y("workspace.trust.button.action.grant",r("trustButton","Trust"),void 0,!0,(async()=>{await this.workspaceTrustManagementService.setWorkspaceTrust(!0)}))),keybinding:this.keybindingService.resolveUserBinding(K?"Cmd+Enter":"Ctrl+Enter")[0]}];if(this.workspaceTrustManagementService.canSetParentFolderTrust()){const s=De(this.workspaceService.getWorkspace()),i=Ve(je(s.uri));u(e,c(".trust-message-box")).innerText=r("trustMessage","Trust the authors of all files in the current folder or its parent '{0}'.",i);const o=this.rerenderDisposables.add(new Y("workspace.trust.button.action.grantParent",r("trustParentButton","Trust Parent"),void 0,!0,(async()=>{await this.workspaceTrustManagementService.setParentFolderTrust(!0)})));t.push({action:o,keybinding:this.keybindingService.resolveUserBinding(K?"Cmd+Shift+Enter":"Ctrl+Shift+Enter")[0]})}this.createButtonRow(e,t)}addDontTrustButtonToElement(e){this.createButtonRow(e,[{action:this.rerenderDisposables.add(new Y("workspace.trust.button.action.deny",r("dontTrustButton","Don't Trust"),void 0,!0,(async()=>{await this.workspaceTrustManagementService.setWorkspaceTrust(!1)}))),keybinding:this.keybindingService.resolveUserBinding(K?"Cmd+Enter":"Ctrl+Enter")[0]}])}addTrustedTextToElement(e){if(this.workspaceService.getWorkbenchState()===f.EMPTY)return;const t=u(e,c(".workspace-trust-untrusted-description"));this.workspaceTrustManagementService.isWorkspaceTrustForced()?t.innerText=r("trustedForcedReason","This window is trusted by nature of the workspace that is opened."):t.innerText=this.workspaceService.getWorkbenchState()===f.WORKSPACE?r("untrustedWorkspaceReason","This workspace is trusted via the bolded entries in the trusted folders below."):r("untrustedFolderReason","This folder is trusted via the bolded entries in the trusted folders below.")}renderLimitationsHeaderElement(e,t,r){const s=u(e,c(".workspace-trust-limitations-header")),i=u(s,c(".workspace-trust-limitations-title")),o=u(i,c(".workspace-trust-limitations-title-text")),n=u(s,c(".workspace-trust-limitations-subtitle"));o.innerText=t,n.innerText=r}renderLimitationsListElement(e,t,r){const s=u(e,c(".workspace-trust-limitations-list-container")),i=u(s,c("ul"));for(const e of t){const t=u(i,c("li")),s=u(t,c(".list-item-icon")),o=u(t,c(".list-item-text"));s.classList.add(...r);const n=z(e);for(const e of n.nodes)"string"==typeof e?u(o,document.createTextNode(e)):this.rerenderDisposables.add(this.instantiationService.createInstance(Z,o,{...e,tabIndex:-1},{}))}}layoutParticipants=[];layout(e){this.isVisible()&&(this.workspaceTrustedUrisTable.layout(),this.layoutParticipants.forEach((e=>{e.layout()})),this.bodyScrollBar.scanDomNode())}};function V(e){return e.replace(/(.*)\[(.+)\]\s*\((.+)\)(.*)/,"$1[$2]($3)$4")}w([me(100)],S.prototype,"render",1),S=w([h(1,ye),h(2,We),h(3,Se),h(4,te),h(5,Ae),h(6,Fe),h(7,J),h(8,re),h(9,Pe),h(10,_e),h(11,Ye),h(12,Ke)],S);export{S as WorkspaceTrustEditor,Ge as shieldIcon};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { $, addDisposableListener, addStandardDisposableListener, append, clearNode, Dimension, EventHelper, EventType, isAncestorOfActiveElement } from "../../../../base/browser/dom.js";
+import { ActionBar } from "../../../../base/browser/ui/actionbar/actionbar.js";
+import { ButtonBar } from "../../../../base/browser/ui/button/button.js";
+import { IMessage, InputBox, MessageType } from "../../../../base/browser/ui/inputbox/inputBox.js";
+import { DomScrollableElement } from "../../../../base/browser/ui/scrollbar/scrollableElement.js";
+import { ITableRenderer, ITableVirtualDelegate } from "../../../../base/browser/ui/table/table.js";
+import { Action, IAction } from "../../../../base/common/actions.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { debounce } from "../../../../base/common/decorators.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { KeyCode, KeyMod } from "../../../../base/common/keyCodes.js";
+import { normalizeDriveLetter } from "../../../../base/common/labels.js";
+import { Disposable, DisposableStore } from "../../../../base/common/lifecycle.js";
+import { parseLinkedText } from "../../../../base/common/linkedText.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { ScrollbarVisibility } from "../../../../base/common/scrollable.js";
+import { URI } from "../../../../base/common/uri.js";
+import { localize } from "../../../../nls.js";
+import { ConfigurationScope, Extensions, IConfigurationRegistry } from "../../../../platform/configuration/common/configurationRegistry.js";
+import { IContextViewService } from "../../../../platform/contextview/browser/contextView.js";
+import { IFileDialogService } from "../../../../platform/dialogs/common/dialogs.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { ILabelService } from "../../../../platform/label/common/label.js";
+import { WorkbenchTable } from "../../../../platform/list/browser/listService.js";
+import { Link } from "../../../../platform/opener/browser/link.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { isVirtualResource, isVirtualWorkspace } from "../../../../platform/workspace/common/virtualWorkspace.js";
+import { IStorageService } from "../../../../platform/storage/common/storage.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { asCssVariable, buttonBackground, buttonSecondaryBackground, editorErrorForeground } from "../../../../platform/theme/common/colorRegistry.js";
+import { ISingleFolderWorkspaceIdentifier, IWorkspaceContextService, toWorkspaceIdentifier, WorkbenchState } from "../../../../platform/workspace/common/workspace.js";
+import { IThemeService } from "../../../../platform/theme/common/themeService.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { IWorkspaceTrustManagementService } from "../../../../platform/workspace/common/workspaceTrust.js";
+import { EditorPane } from "../../../browser/parts/editor/editorPane.js";
+import { IEditorOpenContext } from "../../../common/editor.js";
+import { debugIconStartForeground } from "../../debug/browser/debugColors.js";
+import { IExtensionsWorkbenchService, LIST_WORKSPACE_UNSUPPORTED_EXTENSIONS_COMMAND_ID } from "../../extensions/common/extensions.js";
+import { APPLICATION_SCOPES, IWorkbenchConfigurationService } from "../../../services/configuration/common/configuration.js";
+import { IExtensionManifestPropertiesService } from "../../../services/extensions/common/extensionManifestPropertiesService.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import { WorkspaceTrustEditorInput } from "../../../services/workspaces/browser/workspaceTrustEditorInput.js";
+import { IEditorOptions } from "../../../../platform/editor/common/editor.js";
+import { getExtensionDependencies } from "../../../../platform/extensionManagement/common/extensionManagementUtil.js";
+import { EnablementState, IWorkbenchExtensionEnablementService } from "../../../services/extensionManagement/common/extensionManagement.js";
+import { posix, win32 } from "../../../../base/common/path.js";
+import { hasDriveLetter, toSlashes } from "../../../../base/common/extpath.js";
+import { StandardKeyboardEvent } from "../../../../base/browser/keyboardEvent.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+import { registerIcon } from "../../../../platform/theme/common/iconRegistry.js";
+import { defaultButtonStyles, defaultInputBoxStyles } from "../../../../platform/theme/browser/defaultStyles.js";
+import { isMacintosh } from "../../../../base/common/platform.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { ResolvedKeybinding } from "../../../../base/common/keybindings.js";
+import { basename, dirname } from "../../../../base/common/resources.js";
+import { IEditorGroup } from "../../../services/editor/common/editorGroupsService.js";
+const shieldIcon = registerIcon("workspace-trust-banner", Codicon.shield, localize("shieldIcon", "Icon for workspace trust ion the banner."));
+const checkListIcon = registerIcon("workspace-trust-editor-check", Codicon.check, localize("checkListIcon", "Icon for the checkmark in the workspace trust editor."));
+const xListIcon = registerIcon("workspace-trust-editor-cross", Codicon.x, localize("xListIcon", "Icon for the cross in the workspace trust editor."));
+const folderPickerIcon = registerIcon("workspace-trust-editor-folder-picker", Codicon.folder, localize("folderPickerIcon", "Icon for the pick folder icon in the workspace trust editor."));
+const editIcon = registerIcon("workspace-trust-editor-edit-folder", Codicon.edit, localize("editIcon", "Icon for the edit folder icon in the workspace trust editor."));
+const removeIcon = registerIcon("workspace-trust-editor-remove-folder", Codicon.close, localize("removeIcon", "Icon for the remove folder icon in the workspace trust editor."));
+let WorkspaceTrustedUrisTable = class extends Disposable {
+  constructor(container, instantiationService, workspaceService, workspaceTrustManagementService, uriService, labelService, fileDialogService) {
+    super();
+    this.container = container;
+    this.instantiationService = instantiationService;
+    this.workspaceService = workspaceService;
+    this.workspaceTrustManagementService = workspaceTrustManagementService;
+    this.uriService = uriService;
+    this.labelService = labelService;
+    this.fileDialogService = fileDialogService;
+    this.descriptionElement = container.appendChild($(".workspace-trusted-folders-description"));
+    const tableElement = container.appendChild($(".trusted-uris-table"));
+    const addButtonBarElement = container.appendChild($(".trusted-uris-button-bar"));
+    this.table = this.instantiationService.createInstance(
+      WorkbenchTable,
+      "WorkspaceTrust",
+      tableElement,
+      new TrustedUriTableVirtualDelegate(),
+      [
+        {
+          label: localize("hostColumnLabel", "Host"),
+          tooltip: "",
+          weight: 1,
+          templateId: TrustedUriHostColumnRenderer.TEMPLATE_ID,
+          project(row) {
+            return row;
+          }
+        },
+        {
+          label: localize("pathColumnLabel", "Path"),
+          tooltip: "",
+          weight: 8,
+          templateId: TrustedUriPathColumnRenderer.TEMPLATE_ID,
+          project(row) {
+            return row;
+          }
+        },
+        {
+          label: "",
+          tooltip: "",
+          weight: 1,
+          minimumWidth: 75,
+          maximumWidth: 75,
+          templateId: TrustedUriActionsColumnRenderer.TEMPLATE_ID,
+          project(row) {
+            return row;
+          }
+        }
+      ],
+      [
+        this.instantiationService.createInstance(TrustedUriHostColumnRenderer),
+        this.instantiationService.createInstance(TrustedUriPathColumnRenderer, this),
+        this.instantiationService.createInstance(TrustedUriActionsColumnRenderer, this, this.currentWorkspaceUri)
+      ],
+      {
+        horizontalScrolling: false,
+        alwaysConsumeMouseWheel: false,
+        openOnSingleClick: false,
+        multipleSelectionSupport: false,
+        accessibilityProvider: {
+          getAriaLabel: /* @__PURE__ */ __name((item) => {
+            const hostLabel = getHostLabel(this.labelService, item);
+            if (hostLabel === void 0 || hostLabel.length === 0) {
+              return localize("trustedFolderAriaLabel", "{0}, trusted", this.labelService.getUriLabel(item.uri));
+            }
+            return localize("trustedFolderWithHostAriaLabel", "{0} on {1}, trusted", this.labelService.getUriLabel(item.uri), hostLabel);
+          }, "getAriaLabel"),
+          getWidgetAriaLabel: /* @__PURE__ */ __name(() => localize("trustedFoldersAndWorkspaces", "Trusted Folders & Workspaces"), "getWidgetAriaLabel")
+        },
+        identityProvider: {
+          getId(element) {
+            return element.uri.toString();
+          }
+        }
+      }
+    );
+    this._register(this.table.onDidOpen((item) => {
+      if (item && item.element && !item.browserEvent?.defaultPrevented) {
+        this.edit(item.element, true);
+      }
+    }));
+    const buttonBar = this._register(new ButtonBar(addButtonBarElement));
+    const addButton = this._register(buttonBar.addButton({ title: localize("addButton", "Add Folder"), ...defaultButtonStyles }));
+    addButton.label = localize("addButton", "Add Folder");
+    this._register(addButton.onDidClick(async () => {
+      const uri = await this.fileDialogService.showOpenDialog({
+        canSelectFiles: false,
+        canSelectFolders: true,
+        canSelectMany: false,
+        defaultUri: this.currentWorkspaceUri,
+        openLabel: localize("trustUri", "Trust Folder"),
+        title: localize("selectTrustedUri", "Select Folder To Trust")
+      });
+      if (uri) {
+        this.workspaceTrustManagementService.setUrisTrust(uri, true);
+      }
+    }));
+    this._register(this.workspaceTrustManagementService.onDidChangeTrustedFolders(() => {
+      this.updateTable();
+    }));
+  }
+  static {
+    __name(this, "WorkspaceTrustedUrisTable");
+  }
+  _onDidAcceptEdit = this._register(new Emitter());
+  onDidAcceptEdit = this._onDidAcceptEdit.event;
+  _onDidRejectEdit = this._register(new Emitter());
+  onDidRejectEdit = this._onDidRejectEdit.event;
+  _onEdit = this._register(new Emitter());
+  onEdit = this._onEdit.event;
+  _onDelete = this._register(new Emitter());
+  onDelete = this._onDelete.event;
+  table;
+  descriptionElement;
+  getIndexOfTrustedUriEntry(item) {
+    const index = this.trustedUriEntries.indexOf(item);
+    if (index === -1) {
+      for (let i = 0; i < this.trustedUriEntries.length; i++) {
+        if (this.trustedUriEntries[i].uri === item.uri) {
+          return i;
+        }
+      }
+    }
+    return index;
+  }
+  selectTrustedUriEntry(item, focus = true) {
+    const index = this.getIndexOfTrustedUriEntry(item);
+    if (index !== -1) {
+      if (focus) {
+        this.table.domFocus();
+        this.table.setFocus([index]);
+      }
+      this.table.setSelection([index]);
+    }
+  }
+  get currentWorkspaceUri() {
+    return this.workspaceService.getWorkspace().folders[0]?.uri || URI.file("/");
+  }
+  get trustedUriEntries() {
+    const currentWorkspace = this.workspaceService.getWorkspace();
+    const currentWorkspaceUris = currentWorkspace.folders.map((folder) => folder.uri);
+    if (currentWorkspace.configuration) {
+      currentWorkspaceUris.push(currentWorkspace.configuration);
+    }
+    const entries = this.workspaceTrustManagementService.getTrustedUris().map((uri) => {
+      let relatedToCurrentWorkspace = false;
+      for (const workspaceUri of currentWorkspaceUris) {
+        relatedToCurrentWorkspace = relatedToCurrentWorkspace || this.uriService.extUri.isEqualOrParent(workspaceUri, uri);
+      }
+      return {
+        uri,
+        parentOfWorkspaceItem: relatedToCurrentWorkspace
+      };
+    });
+    const sortedEntries = entries.sort((a, b) => {
+      if (a.uri.scheme !== b.uri.scheme) {
+        if (a.uri.scheme === Schemas.file) {
+          return -1;
+        }
+        if (b.uri.scheme === Schemas.file) {
+          return 1;
+        }
+      }
+      const aIsWorkspace = a.uri.path.endsWith(".code-workspace");
+      const bIsWorkspace = b.uri.path.endsWith(".code-workspace");
+      if (aIsWorkspace !== bIsWorkspace) {
+        if (aIsWorkspace) {
+          return 1;
+        }
+        if (bIsWorkspace) {
+          return -1;
+        }
+      }
+      return a.uri.fsPath.localeCompare(b.uri.fsPath);
+    });
+    return sortedEntries;
+  }
+  layout() {
+    this.table.layout(this.trustedUriEntries.length * TrustedUriTableVirtualDelegate.ROW_HEIGHT + TrustedUriTableVirtualDelegate.HEADER_ROW_HEIGHT, void 0);
+  }
+  updateTable() {
+    const entries = this.trustedUriEntries;
+    this.container.classList.toggle("empty", entries.length === 0);
+    this.descriptionElement.innerText = entries.length ? localize("trustedFoldersDescription", "You trust the following folders, their subfolders, and workspace files.") : localize("noTrustedFoldersDescriptions", "You haven't trusted any folders or workspace files yet.");
+    this.table.splice(0, Number.POSITIVE_INFINITY, this.trustedUriEntries);
+    this.layout();
+  }
+  validateUri(path, item) {
+    if (!item) {
+      return null;
+    }
+    if (item.uri.scheme === "vscode-vfs") {
+      const segments = path.split(posix.sep).filter((s) => s.length);
+      if (segments.length === 0 && path.startsWith(posix.sep)) {
+        return {
+          type: MessageType.WARNING,
+          content: localize({ key: "trustAll", comment: ["The {0} will be a host name where repositories are hosted."] }, "You will trust all repositories on {0}.", getHostLabel(this.labelService, item))
+        };
+      }
+      if (segments.length === 1) {
+        return {
+          type: MessageType.WARNING,
+          content: localize({ key: "trustOrg", comment: ["The {0} will be an organization or user name.", "The {1} will be a host name where repositories are hosted."] }, "You will trust all repositories and forks under '{0}' on {1}.", segments[0], getHostLabel(this.labelService, item))
+        };
+      }
+      if (segments.length > 2) {
+        return {
+          type: MessageType.ERROR,
+          content: localize("invalidTrust", "You cannot trust individual folders within a repository.", path)
+        };
+      }
+    }
+    return null;
+  }
+  acceptEdit(item, uri) {
+    const trustedFolders = this.workspaceTrustManagementService.getTrustedUris();
+    const index = trustedFolders.findIndex((u) => this.uriService.extUri.isEqual(u, item.uri));
+    if (index >= trustedFolders.length || index === -1) {
+      trustedFolders.push(uri);
+    } else {
+      trustedFolders[index] = uri;
+    }
+    this.workspaceTrustManagementService.setTrustedUris(trustedFolders);
+    this._onDidAcceptEdit.fire(item);
+  }
+  rejectEdit(item) {
+    this._onDidRejectEdit.fire(item);
+  }
+  async delete(item) {
+    this.table.focusNext();
+    await this.workspaceTrustManagementService.setUrisTrust([item.uri], false);
+    if (this.table.getFocus().length === 0) {
+      this.table.focusLast();
+    }
+    this._onDelete.fire(item);
+    this.table.domFocus();
+  }
+  async edit(item, usePickerIfPossible) {
+    const canUseOpenDialog = item.uri.scheme === Schemas.file || item.uri.scheme === this.currentWorkspaceUri.scheme && this.uriService.extUri.isEqualAuthority(this.currentWorkspaceUri.authority, item.uri.authority) && !isVirtualResource(item.uri);
+    if (canUseOpenDialog && usePickerIfPossible) {
+      const uri = await this.fileDialogService.showOpenDialog({
+        canSelectFiles: false,
+        canSelectFolders: true,
+        canSelectMany: false,
+        defaultUri: item.uri,
+        openLabel: localize("trustUri", "Trust Folder"),
+        title: localize("selectTrustedUri", "Select Folder To Trust")
+      });
+      if (uri) {
+        this.acceptEdit(item, uri[0]);
+      } else {
+        this.rejectEdit(item);
+      }
+    } else {
+      this.selectTrustedUriEntry(item);
+      this._onEdit.fire(item);
+    }
+  }
+};
+WorkspaceTrustedUrisTable = __decorateClass([
+  __decorateParam(1, IInstantiationService),
+  __decorateParam(2, IWorkspaceContextService),
+  __decorateParam(3, IWorkspaceTrustManagementService),
+  __decorateParam(4, IUriIdentityService),
+  __decorateParam(5, ILabelService),
+  __decorateParam(6, IFileDialogService)
+], WorkspaceTrustedUrisTable);
+class TrustedUriTableVirtualDelegate {
+  static {
+    __name(this, "TrustedUriTableVirtualDelegate");
+  }
+  static HEADER_ROW_HEIGHT = 30;
+  static ROW_HEIGHT = 24;
+  headerRowHeight = TrustedUriTableVirtualDelegate.HEADER_ROW_HEIGHT;
+  getHeight(item) {
+    return TrustedUriTableVirtualDelegate.ROW_HEIGHT;
+  }
+}
+let TrustedUriActionsColumnRenderer = class {
+  constructor(table, currentWorkspaceUri, uriService) {
+    this.table = table;
+    this.currentWorkspaceUri = currentWorkspaceUri;
+    this.uriService = uriService;
+  }
+  static {
+    __name(this, "TrustedUriActionsColumnRenderer");
+  }
+  static TEMPLATE_ID = "actions";
+  templateId = TrustedUriActionsColumnRenderer.TEMPLATE_ID;
+  renderTemplate(container) {
+    const element = container.appendChild($(".actions"));
+    const actionBar = new ActionBar(element);
+    return { actionBar };
+  }
+  renderElement(item, index, templateData, height) {
+    templateData.actionBar.clear();
+    const canUseOpenDialog = item.uri.scheme === Schemas.file || item.uri.scheme === this.currentWorkspaceUri.scheme && this.uriService.extUri.isEqualAuthority(this.currentWorkspaceUri.authority, item.uri.authority) && !isVirtualResource(item.uri);
+    const actions = [];
+    if (canUseOpenDialog) {
+      actions.push(this.createPickerAction(item));
+    }
+    actions.push(this.createEditAction(item));
+    actions.push(this.createDeleteAction(item));
+    templateData.actionBar.push(actions, { icon: true });
+  }
+  createEditAction(item) {
+    return {
+      label: "",
+      class: ThemeIcon.asClassName(editIcon),
+      enabled: true,
+      id: "editTrustedUri",
+      tooltip: localize("editTrustedUri", "Edit Path"),
+      run: /* @__PURE__ */ __name(() => {
+        this.table.edit(item, false);
+      }, "run")
+    };
+  }
+  createPickerAction(item) {
+    return {
+      label: "",
+      class: ThemeIcon.asClassName(folderPickerIcon),
+      enabled: true,
+      id: "pickerTrustedUri",
+      tooltip: localize("pickerTrustedUri", "Open File Picker"),
+      run: /* @__PURE__ */ __name(() => {
+        this.table.edit(item, true);
+      }, "run")
+    };
+  }
+  createDeleteAction(item) {
+    return {
+      label: "",
+      class: ThemeIcon.asClassName(removeIcon),
+      enabled: true,
+      id: "deleteTrustedUri",
+      tooltip: localize("deleteTrustedUri", "Delete Path"),
+      run: /* @__PURE__ */ __name(async () => {
+        await this.table.delete(item);
+      }, "run")
+    };
+  }
+  disposeTemplate(templateData) {
+    templateData.actionBar.dispose();
+  }
+};
+TrustedUriActionsColumnRenderer = __decorateClass([
+  __decorateParam(2, IUriIdentityService)
+], TrustedUriActionsColumnRenderer);
+let TrustedUriPathColumnRenderer = class {
+  constructor(table, contextViewService) {
+    this.table = table;
+    this.contextViewService = contextViewService;
+  }
+  static {
+    __name(this, "TrustedUriPathColumnRenderer");
+  }
+  static TEMPLATE_ID = "path";
+  templateId = TrustedUriPathColumnRenderer.TEMPLATE_ID;
+  currentItem;
+  renderTemplate(container) {
+    const element = container.appendChild($(".path"));
+    const pathLabel = element.appendChild($("div.path-label"));
+    const pathInput = new InputBox(element, this.contextViewService, {
+      validationOptions: {
+        validation: /* @__PURE__ */ __name((value) => this.table.validateUri(value, this.currentItem), "validation")
+      },
+      inputBoxStyles: defaultInputBoxStyles
+    });
+    const disposables = new DisposableStore();
+    const renderDisposables = disposables.add(new DisposableStore());
+    return {
+      element,
+      pathLabel,
+      pathInput,
+      disposables,
+      renderDisposables
+    };
+  }
+  renderElement(item, index, templateData, height) {
+    templateData.renderDisposables.clear();
+    this.currentItem = item;
+    templateData.renderDisposables.add(this.table.onEdit(async (e) => {
+      if (item === e) {
+        templateData.element.classList.add("input-mode");
+        templateData.pathInput.focus();
+        templateData.pathInput.select();
+        templateData.element.parentElement.style.paddingLeft = "0px";
+      }
+    }));
+    templateData.renderDisposables.add(addDisposableListener(templateData.pathInput.element, EventType.DBLCLICK, (e) => {
+      EventHelper.stop(e);
+    }));
+    const hideInputBox = /* @__PURE__ */ __name(() => {
+      templateData.element.classList.remove("input-mode");
+      templateData.element.parentElement.style.paddingLeft = "5px";
+    }, "hideInputBox");
+    const accept = /* @__PURE__ */ __name(() => {
+      hideInputBox();
+      const pathToUse = templateData.pathInput.value;
+      const uri = hasDriveLetter(pathToUse) ? item.uri.with({ path: posix.sep + toSlashes(pathToUse) }) : item.uri.with({ path: pathToUse });
+      templateData.pathLabel.innerText = this.formatPath(uri);
+      if (uri) {
+        this.table.acceptEdit(item, uri);
+      }
+    }, "accept");
+    const reject = /* @__PURE__ */ __name(() => {
+      hideInputBox();
+      templateData.pathInput.value = stringValue;
+      this.table.rejectEdit(item);
+    }, "reject");
+    templateData.renderDisposables.add(addStandardDisposableListener(templateData.pathInput.inputElement, EventType.KEY_DOWN, (e) => {
+      let handled = false;
+      if (e.equals(KeyCode.Enter)) {
+        accept();
+        handled = true;
+      } else if (e.equals(KeyCode.Escape)) {
+        reject();
+        handled = true;
+      }
+      if (handled) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    }));
+    templateData.renderDisposables.add(addDisposableListener(templateData.pathInput.inputElement, EventType.BLUR, () => {
+      reject();
+    }));
+    const stringValue = this.formatPath(item.uri);
+    templateData.pathInput.value = stringValue;
+    templateData.pathLabel.innerText = stringValue;
+    templateData.element.classList.toggle("current-workspace-parent", item.parentOfWorkspaceItem);
+  }
+  disposeTemplate(templateData) {
+    templateData.disposables.dispose();
+    templateData.renderDisposables.dispose();
+  }
+  formatPath(uri) {
+    if (uri.scheme === Schemas.file) {
+      return normalizeDriveLetter(uri.fsPath);
+    }
+    if (uri.path.startsWith(posix.sep)) {
+      const pathWithoutLeadingSeparator = uri.path.substring(1);
+      const isWindowsPath = hasDriveLetter(pathWithoutLeadingSeparator, true);
+      if (isWindowsPath) {
+        return normalizeDriveLetter(win32.normalize(pathWithoutLeadingSeparator), true);
+      }
+    }
+    return uri.path;
+  }
+};
+TrustedUriPathColumnRenderer = __decorateClass([
+  __decorateParam(1, IContextViewService)
+], TrustedUriPathColumnRenderer);
+function getHostLabel(labelService, item) {
+  return item.uri.authority ? labelService.getHostLabel(item.uri.scheme, item.uri.authority) : localize("localAuthority", "Local");
+}
+__name(getHostLabel, "getHostLabel");
+let TrustedUriHostColumnRenderer = class {
+  constructor(labelService) {
+    this.labelService = labelService;
+  }
+  static {
+    __name(this, "TrustedUriHostColumnRenderer");
+  }
+  static TEMPLATE_ID = "host";
+  templateId = TrustedUriHostColumnRenderer.TEMPLATE_ID;
+  renderTemplate(container) {
+    const disposables = new DisposableStore();
+    const renderDisposables = disposables.add(new DisposableStore());
+    const element = container.appendChild($(".host"));
+    const hostContainer = element.appendChild($("div.host-label"));
+    const buttonBarContainer = element.appendChild($("div.button-bar"));
+    return {
+      element,
+      hostContainer,
+      buttonBarContainer,
+      disposables,
+      renderDisposables
+    };
+  }
+  renderElement(item, index, templateData, height) {
+    templateData.renderDisposables.clear();
+    templateData.renderDisposables.add({ dispose: /* @__PURE__ */ __name(() => {
+      clearNode(templateData.buttonBarContainer);
+    }, "dispose") });
+    templateData.hostContainer.innerText = getHostLabel(this.labelService, item);
+    templateData.element.classList.toggle("current-workspace-parent", item.parentOfWorkspaceItem);
+    templateData.hostContainer.style.display = "";
+    templateData.buttonBarContainer.style.display = "none";
+  }
+  disposeTemplate(templateData) {
+    templateData.disposables.dispose();
+  }
+};
+TrustedUriHostColumnRenderer = __decorateClass([
+  __decorateParam(0, ILabelService)
+], TrustedUriHostColumnRenderer);
+let WorkspaceTrustEditor = class extends EditorPane {
+  constructor(group, telemetryService, themeService, storageService, workspaceService, extensionWorkbenchService, extensionManifestPropertiesService, instantiationService, workspaceTrustManagementService, configurationService, extensionEnablementService, productService, keybindingService) {
+    super(WorkspaceTrustEditor.ID, group, telemetryService, themeService, storageService);
+    this.workspaceService = workspaceService;
+    this.extensionWorkbenchService = extensionWorkbenchService;
+    this.extensionManifestPropertiesService = extensionManifestPropertiesService;
+    this.instantiationService = instantiationService;
+    this.workspaceTrustManagementService = workspaceTrustManagementService;
+    this.configurationService = configurationService;
+    this.extensionEnablementService = extensionEnablementService;
+    this.productService = productService;
+    this.keybindingService = keybindingService;
+  }
+  static {
+    __name(this, "WorkspaceTrustEditor");
+  }
+  static ID = "workbench.editor.workspaceTrust";
+  rootElement;
+  // Header Section
+  headerContainer;
+  headerTitleContainer;
+  headerTitleIcon;
+  headerTitleText;
+  headerDescription;
+  bodyScrollBar;
+  // Affected Features Section
+  affectedFeaturesContainer;
+  trustedContainer;
+  untrustedContainer;
+  // Settings Section
+  configurationContainer;
+  workspaceTrustedUrisTable;
+  createEditor(parent) {
+    this.rootElement = append(parent, $(".workspace-trust-editor", { tabindex: "0" }));
+    this.createHeaderElement(this.rootElement);
+    const scrollableContent = $(".workspace-trust-editor-body");
+    this.bodyScrollBar = this._register(new DomScrollableElement(scrollableContent, {
+      horizontal: ScrollbarVisibility.Hidden,
+      vertical: ScrollbarVisibility.Auto
+    }));
+    append(this.rootElement, this.bodyScrollBar.getDomNode());
+    this.createAffectedFeaturesElement(scrollableContent);
+    this.createConfigurationElement(scrollableContent);
+    this.rootElement.style.setProperty("--workspace-trust-selected-color", asCssVariable(buttonBackground));
+    this.rootElement.style.setProperty("--workspace-trust-unselected-color", asCssVariable(buttonSecondaryBackground));
+    this.rootElement.style.setProperty("--workspace-trust-check-color", asCssVariable(debugIconStartForeground));
+    this.rootElement.style.setProperty("--workspace-trust-x-color", asCssVariable(editorErrorForeground));
+    this._register(addDisposableListener(this.rootElement, EventType.KEY_DOWN, (e) => {
+      const event = new StandardKeyboardEvent(e);
+      if (event.equals(KeyCode.UpArrow) || event.equals(KeyCode.DownArrow)) {
+        const navOrder = [this.headerContainer, this.trustedContainer, this.untrustedContainer, this.configurationContainer];
+        const currentIndex = navOrder.findIndex((element) => {
+          return isAncestorOfActiveElement(element);
+        });
+        let newIndex = currentIndex;
+        if (event.equals(KeyCode.DownArrow)) {
+          newIndex++;
+        } else if (event.equals(KeyCode.UpArrow)) {
+          newIndex = Math.max(0, newIndex);
+          newIndex--;
+        }
+        newIndex += navOrder.length;
+        newIndex %= navOrder.length;
+        navOrder[newIndex].focus();
+      } else if (event.equals(KeyCode.Escape)) {
+        this.rootElement.focus();
+      } else if (event.equals(KeyMod.CtrlCmd | KeyCode.Enter)) {
+        if (this.workspaceTrustManagementService.canSetWorkspaceTrust()) {
+          this.workspaceTrustManagementService.setWorkspaceTrust(!this.workspaceTrustManagementService.isWorkspaceTrusted());
+        }
+      } else if (event.equals(KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.Enter)) {
+        if (this.workspaceTrustManagementService.canSetParentFolderTrust()) {
+          this.workspaceTrustManagementService.setParentFolderTrust(true);
+        }
+      }
+    }));
+  }
+  focus() {
+    super.focus();
+    this.rootElement.focus();
+  }
+  async setInput(input, options, context, token) {
+    await super.setInput(input, options, context, token);
+    if (token.isCancellationRequested) {
+      return;
+    }
+    await this.workspaceTrustManagementService.workspaceTrustInitialized;
+    this.registerListeners();
+    await this.render();
+  }
+  registerListeners() {
+    this._register(this.extensionWorkbenchService.onChange(() => this.render()));
+    this._register(this.configurationService.onDidChangeRestrictedSettings(() => this.render()));
+    this._register(this.workspaceTrustManagementService.onDidChangeTrust(() => this.render()));
+    this._register(this.workspaceTrustManagementService.onDidChangeTrustedFolders(() => this.render()));
+  }
+  getHeaderContainerClass(trusted) {
+    if (trusted) {
+      return "workspace-trust-header workspace-trust-trusted";
+    }
+    return "workspace-trust-header workspace-trust-untrusted";
+  }
+  getHeaderTitleText(trusted) {
+    if (trusted) {
+      if (this.workspaceTrustManagementService.isWorkspaceTrustForced()) {
+        return localize("trustedUnsettableWindow", "This window is trusted");
+      }
+      switch (this.workspaceService.getWorkbenchState()) {
+        case WorkbenchState.EMPTY:
+          return localize("trustedHeaderWindow", "You trust this window");
+        case WorkbenchState.FOLDER:
+          return localize("trustedHeaderFolder", "You trust this folder");
+        case WorkbenchState.WORKSPACE:
+          return localize("trustedHeaderWorkspace", "You trust this workspace");
+      }
+    }
+    return localize("untrustedHeader", "You are in Restricted Mode");
+  }
+  getHeaderTitleIconClassNames(trusted) {
+    return ThemeIcon.asClassNameArray(shieldIcon);
+  }
+  getFeaturesHeaderText(trusted) {
+    let title = "";
+    let subTitle = "";
+    switch (this.workspaceService.getWorkbenchState()) {
+      case WorkbenchState.EMPTY: {
+        title = trusted ? localize("trustedWindow", "In a Trusted Window") : localize("untrustedWorkspace", "In Restricted Mode");
+        subTitle = trusted ? localize("trustedWindowSubtitle", "You trust the authors of the files in the current window. All features are enabled:") : localize("untrustedWindowSubtitle", "You do not trust the authors of the files in the current window. The following features are disabled:");
+        break;
+      }
+      case WorkbenchState.FOLDER: {
+        title = trusted ? localize("trustedFolder", "In a Trusted Folder") : localize("untrustedWorkspace", "In Restricted Mode");
+        subTitle = trusted ? localize("trustedFolderSubtitle", "You trust the authors of the files in the current folder. All features are enabled:") : localize("untrustedFolderSubtitle", "You do not trust the authors of the files in the current folder. The following features are disabled:");
+        break;
+      }
+      case WorkbenchState.WORKSPACE: {
+        title = trusted ? localize("trustedWorkspace", "In a Trusted Workspace") : localize("untrustedWorkspace", "In Restricted Mode");
+        subTitle = trusted ? localize("trustedWorkspaceSubtitle", "You trust the authors of the files in the current workspace. All features are enabled:") : localize("untrustedWorkspaceSubtitle", "You do not trust the authors of the files in the current workspace. The following features are disabled:");
+        break;
+      }
+    }
+    return [title, subTitle];
+  }
+  rendering = false;
+  rerenderDisposables = this._register(new DisposableStore());
+  async render() {
+    if (this.rendering) {
+      return;
+    }
+    this.rendering = true;
+    this.rerenderDisposables.clear();
+    const isWorkspaceTrusted = this.workspaceTrustManagementService.isWorkspaceTrusted();
+    this.rootElement.classList.toggle("trusted", isWorkspaceTrusted);
+    this.rootElement.classList.toggle("untrusted", !isWorkspaceTrusted);
+    this.headerTitleText.innerText = this.getHeaderTitleText(isWorkspaceTrusted);
+    this.headerTitleIcon.className = "workspace-trust-title-icon";
+    this.headerTitleIcon.classList.add(...this.getHeaderTitleIconClassNames(isWorkspaceTrusted));
+    this.headerDescription.innerText = "";
+    const headerDescriptionText = append(this.headerDescription, $("div"));
+    headerDescriptionText.innerText = isWorkspaceTrusted ? localize("trustedDescription", "All features are enabled because trust has been granted to the workspace.") : localize("untrustedDescription", "{0} is in a restricted mode intended for safe code browsing.", this.productService.nameShort);
+    const headerDescriptionActions = append(this.headerDescription, $("div"));
+    const headerDescriptionActionsText = localize({ key: "workspaceTrustEditorHeaderActions", comment: ["Please ensure the markdown link syntax is not broken up with whitespace [text block](link block)"] }, "[Configure your settings]({0}) or [learn more](https://aka.ms/vscode-workspace-trust).", `command:workbench.trust.configure`);
+    for (const node of parseLinkedText(headerDescriptionActionsText).nodes) {
+      if (typeof node === "string") {
+        append(headerDescriptionActions, document.createTextNode(node));
+      } else {
+        this.rerenderDisposables.add(this.instantiationService.createInstance(Link, headerDescriptionActions, { ...node, tabIndex: -1 }, {}));
+      }
+    }
+    this.headerContainer.className = this.getHeaderContainerClass(isWorkspaceTrusted);
+    this.rootElement.setAttribute("aria-label", `${localize("root element label", "Manage Workspace Trust")}:  ${this.headerContainer.innerText}`);
+    const restrictedSettings = this.configurationService.restrictedSettings;
+    const configurationRegistry = Registry.as(Extensions.Configuration);
+    const settingsRequiringTrustedWorkspaceCount = restrictedSettings.default.filter((key) => {
+      const property = configurationRegistry.getConfigurationProperties()[key];
+      if (property.scope && (APPLICATION_SCOPES.includes(property.scope) || property.scope === ConfigurationScope.MACHINE)) {
+        return false;
+      }
+      if (property.deprecationMessage || property.markdownDeprecationMessage) {
+        if (restrictedSettings.workspace?.includes(key)) {
+          return true;
+        }
+        if (restrictedSettings.workspaceFolder) {
+          for (const workspaceFolderSettings of restrictedSettings.workspaceFolder.values()) {
+            if (workspaceFolderSettings.includes(key)) {
+              return true;
+            }
+          }
+        }
+        return false;
+      }
+      return true;
+    }).length;
+    this.renderAffectedFeatures(settingsRequiringTrustedWorkspaceCount, this.getExtensionCount());
+    this.workspaceTrustedUrisTable.updateTable();
+    this.bodyScrollBar.getDomNode().style.height = `calc(100% - ${this.headerContainer.clientHeight}px)`;
+    this.bodyScrollBar.scanDomNode();
+    this.rendering = false;
+  }
+  getExtensionCount() {
+    const set = /* @__PURE__ */ new Set();
+    const inVirtualWorkspace = isVirtualWorkspace(this.workspaceService.getWorkspace());
+    const localExtensions = this.extensionWorkbenchService.local.filter((ext) => ext.local).map((ext) => ext.local);
+    for (const extension of localExtensions) {
+      const enablementState = this.extensionEnablementService.getEnablementState(extension);
+      if (enablementState !== EnablementState.EnabledGlobally && enablementState !== EnablementState.EnabledWorkspace && enablementState !== EnablementState.DisabledByTrustRequirement && enablementState !== EnablementState.DisabledByExtensionDependency) {
+        continue;
+      }
+      if (inVirtualWorkspace && this.extensionManifestPropertiesService.getExtensionVirtualWorkspaceSupportType(extension.manifest) === false) {
+        continue;
+      }
+      if (this.extensionManifestPropertiesService.getExtensionUntrustedWorkspaceSupportType(extension.manifest) !== true) {
+        set.add(extension.identifier.id);
+        continue;
+      }
+      const dependencies = getExtensionDependencies(localExtensions, extension);
+      if (dependencies.some((ext) => this.extensionManifestPropertiesService.getExtensionUntrustedWorkspaceSupportType(ext.manifest) === false)) {
+        set.add(extension.identifier.id);
+      }
+    }
+    return set.size;
+  }
+  createHeaderElement(parent) {
+    this.headerContainer = append(parent, $(".workspace-trust-header", { tabIndex: "0" }));
+    this.headerTitleContainer = append(this.headerContainer, $(".workspace-trust-title"));
+    this.headerTitleIcon = append(this.headerTitleContainer, $(".workspace-trust-title-icon"));
+    this.headerTitleText = append(this.headerTitleContainer, $(".workspace-trust-title-text"));
+    this.headerDescription = append(this.headerContainer, $(".workspace-trust-description"));
+  }
+  createConfigurationElement(parent) {
+    this.configurationContainer = append(parent, $(".workspace-trust-settings", { tabIndex: "0" }));
+    const configurationTitle = append(this.configurationContainer, $(".workspace-trusted-folders-title"));
+    configurationTitle.innerText = localize("trustedFoldersAndWorkspaces", "Trusted Folders & Workspaces");
+    this.workspaceTrustedUrisTable = this._register(this.instantiationService.createInstance(WorkspaceTrustedUrisTable, this.configurationContainer));
+  }
+  createAffectedFeaturesElement(parent) {
+    this.affectedFeaturesContainer = append(parent, $(".workspace-trust-features"));
+    this.trustedContainer = append(this.affectedFeaturesContainer, $(".workspace-trust-limitations.trusted", { tabIndex: "0" }));
+    this.untrustedContainer = append(this.affectedFeaturesContainer, $(".workspace-trust-limitations.untrusted", { tabIndex: "0" }));
+  }
+  async renderAffectedFeatures(numSettings, numExtensions) {
+    clearNode(this.trustedContainer);
+    clearNode(this.untrustedContainer);
+    const [trustedTitle, trustedSubTitle] = this.getFeaturesHeaderText(true);
+    this.renderLimitationsHeaderElement(this.trustedContainer, trustedTitle, trustedSubTitle);
+    const trustedContainerItems = this.workspaceService.getWorkbenchState() === WorkbenchState.EMPTY ? [
+      localize("trustedTasks", "Tasks are allowed to run"),
+      localize("trustedDebugging", "Debugging is enabled"),
+      localize("trustedExtensions", "All enabled extensions are activated")
+    ] : [
+      localize("trustedTasks", "Tasks are allowed to run"),
+      localize("trustedDebugging", "Debugging is enabled"),
+      localize("trustedSettings", "All workspace settings are applied"),
+      localize("trustedExtensions", "All enabled extensions are activated")
+    ];
+    this.renderLimitationsListElement(this.trustedContainer, trustedContainerItems, ThemeIcon.asClassNameArray(checkListIcon));
+    const [untrustedTitle, untrustedSubTitle] = this.getFeaturesHeaderText(false);
+    this.renderLimitationsHeaderElement(this.untrustedContainer, untrustedTitle, untrustedSubTitle);
+    const untrustedContainerItems = this.workspaceService.getWorkbenchState() === WorkbenchState.EMPTY ? [
+      localize("untrustedTasks", "Tasks are not allowed to run"),
+      localize("untrustedDebugging", "Debugging is disabled"),
+      fixBadLocalizedLinks(localize({ key: "untrustedExtensions", comment: ["Please ensure the markdown link syntax is not broken up with whitespace [text block](link block)"] }, "[{0} extensions]({1}) are disabled or have limited functionality", numExtensions, `command:${LIST_WORKSPACE_UNSUPPORTED_EXTENSIONS_COMMAND_ID}`))
+    ] : [
+      localize("untrustedTasks", "Tasks are not allowed to run"),
+      localize("untrustedDebugging", "Debugging is disabled"),
+      fixBadLocalizedLinks(numSettings ? localize({ key: "untrustedSettings", comment: ["Please ensure the markdown link syntax is not broken up with whitespace [text block](link block)"] }, "[{0} workspace settings]({1}) are not applied", numSettings, "command:settings.filterUntrusted") : localize("no untrustedSettings", "Workspace settings requiring trust are not applied")),
+      fixBadLocalizedLinks(localize({ key: "untrustedExtensions", comment: ["Please ensure the markdown link syntax is not broken up with whitespace [text block](link block)"] }, "[{0} extensions]({1}) are disabled or have limited functionality", numExtensions, `command:${LIST_WORKSPACE_UNSUPPORTED_EXTENSIONS_COMMAND_ID}`))
+    ];
+    this.renderLimitationsListElement(this.untrustedContainer, untrustedContainerItems, ThemeIcon.asClassNameArray(xListIcon));
+    if (this.workspaceTrustManagementService.isWorkspaceTrusted()) {
+      if (this.workspaceTrustManagementService.canSetWorkspaceTrust()) {
+        this.addDontTrustButtonToElement(this.untrustedContainer);
+      } else {
+        this.addTrustedTextToElement(this.untrustedContainer);
+      }
+    } else {
+      if (this.workspaceTrustManagementService.canSetWorkspaceTrust()) {
+        this.addTrustButtonToElement(this.trustedContainer);
+      }
+    }
+  }
+  createButtonRow(parent, buttonInfo, enabled) {
+    const buttonRow = append(parent, $(".workspace-trust-buttons-row"));
+    const buttonContainer = append(buttonRow, $(".workspace-trust-buttons"));
+    const buttonBar = this.rerenderDisposables.add(new ButtonBar(buttonContainer));
+    for (const { action, keybinding } of buttonInfo) {
+      const button = buttonBar.addButtonWithDescription(defaultButtonStyles);
+      button.label = action.label;
+      button.enabled = enabled !== void 0 ? enabled : action.enabled;
+      button.description = keybinding.getLabel();
+      button.element.ariaLabel = action.label + ", " + localize("keyboardShortcut", "Keyboard Shortcut: {0}", keybinding.getAriaLabel());
+      this.rerenderDisposables.add(button.onDidClick((e) => {
+        if (e) {
+          EventHelper.stop(e, true);
+        }
+        action.run();
+      }));
+    }
+  }
+  addTrustButtonToElement(parent) {
+    const trustAction = this.rerenderDisposables.add(new Action("workspace.trust.button.action.grant", localize("trustButton", "Trust"), void 0, true, async () => {
+      await this.workspaceTrustManagementService.setWorkspaceTrust(true);
+    }));
+    const trustActions = [{ action: trustAction, keybinding: this.keybindingService.resolveUserBinding(isMacintosh ? "Cmd+Enter" : "Ctrl+Enter")[0] }];
+    if (this.workspaceTrustManagementService.canSetParentFolderTrust()) {
+      const workspaceIdentifier = toWorkspaceIdentifier(this.workspaceService.getWorkspace());
+      const name = basename(dirname(workspaceIdentifier.uri));
+      const trustMessageElement = append(parent, $(".trust-message-box"));
+      trustMessageElement.innerText = localize("trustMessage", "Trust the authors of all files in the current folder or its parent '{0}'.", name);
+      const trustParentAction = this.rerenderDisposables.add(new Action("workspace.trust.button.action.grantParent", localize("trustParentButton", "Trust Parent"), void 0, true, async () => {
+        await this.workspaceTrustManagementService.setParentFolderTrust(true);
+      }));
+      trustActions.push({ action: trustParentAction, keybinding: this.keybindingService.resolveUserBinding(isMacintosh ? "Cmd+Shift+Enter" : "Ctrl+Shift+Enter")[0] });
+    }
+    this.createButtonRow(parent, trustActions);
+  }
+  addDontTrustButtonToElement(parent) {
+    this.createButtonRow(parent, [{
+      action: this.rerenderDisposables.add(new Action("workspace.trust.button.action.deny", localize("dontTrustButton", "Don't Trust"), void 0, true, async () => {
+        await this.workspaceTrustManagementService.setWorkspaceTrust(false);
+      })),
+      keybinding: this.keybindingService.resolveUserBinding(isMacintosh ? "Cmd+Enter" : "Ctrl+Enter")[0]
+    }]);
+  }
+  addTrustedTextToElement(parent) {
+    if (this.workspaceService.getWorkbenchState() === WorkbenchState.EMPTY) {
+      return;
+    }
+    const textElement = append(parent, $(".workspace-trust-untrusted-description"));
+    if (!this.workspaceTrustManagementService.isWorkspaceTrustForced()) {
+      textElement.innerText = this.workspaceService.getWorkbenchState() === WorkbenchState.WORKSPACE ? localize("untrustedWorkspaceReason", "This workspace is trusted via the bolded entries in the trusted folders below.") : localize("untrustedFolderReason", "This folder is trusted via the bolded entries in the trusted folders below.");
+    } else {
+      textElement.innerText = localize("trustedForcedReason", "This window is trusted by nature of the workspace that is opened.");
+    }
+  }
+  renderLimitationsHeaderElement(parent, headerText, subtitleText) {
+    const limitationsHeaderContainer = append(parent, $(".workspace-trust-limitations-header"));
+    const titleElement = append(limitationsHeaderContainer, $(".workspace-trust-limitations-title"));
+    const textElement = append(titleElement, $(".workspace-trust-limitations-title-text"));
+    const subtitleElement = append(limitationsHeaderContainer, $(".workspace-trust-limitations-subtitle"));
+    textElement.innerText = headerText;
+    subtitleElement.innerText = subtitleText;
+  }
+  renderLimitationsListElement(parent, limitations, iconClassNames) {
+    const listContainer = append(parent, $(".workspace-trust-limitations-list-container"));
+    const limitationsList = append(listContainer, $("ul"));
+    for (const limitation of limitations) {
+      const limitationListItem = append(limitationsList, $("li"));
+      const icon = append(limitationListItem, $(".list-item-icon"));
+      const text = append(limitationListItem, $(".list-item-text"));
+      icon.classList.add(...iconClassNames);
+      const linkedText = parseLinkedText(limitation);
+      for (const node of linkedText.nodes) {
+        if (typeof node === "string") {
+          append(text, document.createTextNode(node));
+        } else {
+          this.rerenderDisposables.add(this.instantiationService.createInstance(Link, text, { ...node, tabIndex: -1 }, {}));
+        }
+      }
+    }
+  }
+  layoutParticipants = [];
+  layout(dimension) {
+    if (!this.isVisible()) {
+      return;
+    }
+    this.workspaceTrustedUrisTable.layout();
+    this.layoutParticipants.forEach((participant) => {
+      participant.layout();
+    });
+    this.bodyScrollBar.scanDomNode();
+  }
+};
+__decorateClass([
+  debounce(100)
+], WorkspaceTrustEditor.prototype, "render", 1);
+WorkspaceTrustEditor = __decorateClass([
+  __decorateParam(1, ITelemetryService),
+  __decorateParam(2, IThemeService),
+  __decorateParam(3, IStorageService),
+  __decorateParam(4, IWorkspaceContextService),
+  __decorateParam(5, IExtensionsWorkbenchService),
+  __decorateParam(6, IExtensionManifestPropertiesService),
+  __decorateParam(7, IInstantiationService),
+  __decorateParam(8, IWorkspaceTrustManagementService),
+  __decorateParam(9, IWorkbenchConfigurationService),
+  __decorateParam(10, IWorkbenchExtensionEnablementService),
+  __decorateParam(11, IProductService),
+  __decorateParam(12, IKeybindingService)
+], WorkspaceTrustEditor);
+function fixBadLocalizedLinks(badString) {
+  const regex = /(.*)\[(.+)\]\s*\((.+)\)(.*)/;
+  return badString.replace(regex, "$1[$2]($3)$4");
+}
+__name(fixBadLocalizedLinks, "fixBadLocalizedLinks");
+export {
+  WorkspaceTrustEditor,
+  shieldIcon
+};
+//# sourceMappingURL=workspaceTrustEditor.js.map

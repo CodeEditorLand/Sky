@@ -1,1 +1,99 @@
-var h=Object.defineProperty;var y=Object.getOwnPropertyDescriptor;var u=(a,r,t,e)=>{for(var i=e>1?void 0:e?y(r,t):r,p=a.length-1,m;p>=0;p--)(m=a[p])&&(i=(e?m(r,t,i):m(i))||i);return e&&i&&h(r,t,i),i},o=(a,r)=>(t,e)=>r(t,e,a);import{timeout as g}from"../../../../base/common/async.js";import{VSBuffer as k}from"../../../../base/common/buffer.js";import{joinPath as O}from"../../../../base/common/resources.js";import{generateUuid as P}from"../../../../base/common/uuid.js";import{IConfigurationService as w}from"../../../../platform/configuration/common/configuration.js";import{IFileService as x}from"../../../../platform/files/common/files.js";import{ILogService as T}from"../../../../platform/log/common/log.js";import{INativeHostService as E}from"../../../../platform/native/common/native.js";import"../../../../platform/profiling/common/profiling.js";import{IProfileAnalysisWorkerService as N,ProfilingOutput as $}from"../../../../platform/profiling/electron-sandbox/profileAnalysisWorkerService.js";import{INativeWorkbenchEnvironmentService as D}from"../../../services/environment/electron-sandbox/environmentService.js";import{parseExtensionDevOptions as V}from"../../../services/extensions/common/extensionDevOptions.js";import{ITimerService as W}from"../../../services/timer/browser/timerService.js";let v=class{constructor(r,t,e,i,p,m,I){this._environmentService=r;this._fileService=t;this._logService=e;V(r).isExtensionDevTestFromCli||p.perfBaseline.then(f=>{if((r.isBuilt?e.info:e.trace).apply(e,[`[perf] Render performance baseline is ${f}ms`]),f<0)return;const S=f*10,c=new PerformanceObserver(async b=>{c.takeRecords();const l=b.getEntries().map(n=>n.duration).reduce((n,s)=>Math.max(n,s),0);if(l<S)return;if(!m.getValue("application.experimental.rendererProfiling")){e.debug(`[perf] SLOW task detected (${l}ms) but renderer profiling is disabled via 'application.experimental.rendererProfiling'`);return}const d=P();e.warn(`[perf] Renderer reported VERY LONG TASK (${l}ms), starting profiling session '${d}'`),c.disconnect();for(let n=0;n<3;n++)try{const s=await i.profileRenderer(d,5e3);if(await I.analyseBottomUp(s,_=>"<<renderer>>",f,!0)===$.Interesting){this._store(s,d);break}g(15e3)}catch(s){e.error(s);break}c.observe({entryTypes:["longtask"]})});c.observe({entryTypes:["longtask"]}),this._observer=c})}_observer;dispose(){this._observer?.disconnect()}async _store(r,t){const e=O(this._environmentService.tmpDir,`renderer-${Math.random().toString(16).slice(2,8)}.cpuprofile.json`);await this._fileService.writeFile(e,k.fromString(JSON.stringify(r))),this._logService.info(`[perf] stored profile to DISK '${e}'`,t)}};v=u([o(0,D),o(1,x),o(2,T),o(3,E),o(4,W),o(5,w),o(6,N)],v);export{v as RendererProfiling};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { timeout } from "../../../../base/common/async.js";
+import { VSBuffer } from "../../../../base/common/buffer.js";
+import { joinPath } from "../../../../base/common/resources.js";
+import { generateUuid } from "../../../../base/common/uuid.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { INativeHostService } from "../../../../platform/native/common/native.js";
+import { IV8Profile } from "../../../../platform/profiling/common/profiling.js";
+import { IProfileAnalysisWorkerService, ProfilingOutput } from "../../../../platform/profiling/electron-sandbox/profileAnalysisWorkerService.js";
+import { INativeWorkbenchEnvironmentService } from "../../../services/environment/electron-sandbox/environmentService.js";
+import { parseExtensionDevOptions } from "../../../services/extensions/common/extensionDevOptions.js";
+import { ITimerService } from "../../../services/timer/browser/timerService.js";
+let RendererProfiling = class {
+  constructor(_environmentService, _fileService, _logService, nativeHostService, timerService, configService, profileAnalysisService) {
+    this._environmentService = _environmentService;
+    this._fileService = _fileService;
+    this._logService = _logService;
+    const devOpts = parseExtensionDevOptions(_environmentService);
+    if (devOpts.isExtensionDevTestFromCli) {
+      return;
+    }
+    timerService.perfBaseline.then((perfBaseline) => {
+      (_environmentService.isBuilt ? _logService.info : _logService.trace).apply(_logService, [`[perf] Render performance baseline is ${perfBaseline}ms`]);
+      if (perfBaseline < 0) {
+        return;
+      }
+      const slowThreshold = perfBaseline * 10;
+      const obs = new PerformanceObserver(async (list) => {
+        obs.takeRecords();
+        const maxDuration = list.getEntries().map((e) => e.duration).reduce((p, c) => Math.max(p, c), 0);
+        if (maxDuration < slowThreshold) {
+          return;
+        }
+        if (!configService.getValue("application.experimental.rendererProfiling")) {
+          _logService.debug(`[perf] SLOW task detected (${maxDuration}ms) but renderer profiling is disabled via 'application.experimental.rendererProfiling'`);
+          return;
+        }
+        const sessionId = generateUuid();
+        _logService.warn(`[perf] Renderer reported VERY LONG TASK (${maxDuration}ms), starting profiling session '${sessionId}'`);
+        obs.disconnect();
+        for (let i = 0; i < 3; i++) {
+          try {
+            const profile = await nativeHostService.profileRenderer(sessionId, 5e3);
+            const output = await profileAnalysisService.analyseBottomUp(profile, (_url) => "<<renderer>>", perfBaseline, true);
+            if (output === ProfilingOutput.Interesting) {
+              this._store(profile, sessionId);
+              break;
+            }
+            timeout(15e3);
+          } catch (err) {
+            _logService.error(err);
+            break;
+          }
+        }
+        obs.observe({ entryTypes: ["longtask"] });
+      });
+      obs.observe({ entryTypes: ["longtask"] });
+      this._observer = obs;
+    });
+  }
+  static {
+    __name(this, "RendererProfiling");
+  }
+  _observer;
+  dispose() {
+    this._observer?.disconnect();
+  }
+  async _store(profile, sessionId) {
+    const path = joinPath(this._environmentService.tmpDir, `renderer-${Math.random().toString(16).slice(2, 8)}.cpuprofile.json`);
+    await this._fileService.writeFile(path, VSBuffer.fromString(JSON.stringify(profile)));
+    this._logService.info(`[perf] stored profile to DISK '${path}'`, sessionId);
+  }
+};
+RendererProfiling = __decorateClass([
+  __decorateParam(0, INativeWorkbenchEnvironmentService),
+  __decorateParam(1, IFileService),
+  __decorateParam(2, ILogService),
+  __decorateParam(3, INativeHostService),
+  __decorateParam(4, ITimerService),
+  __decorateParam(5, IConfigurationService),
+  __decorateParam(6, IProfileAnalysisWorkerService)
+], RendererProfiling);
+export {
+  RendererProfiling
+};
+//# sourceMappingURL=rendererAutoProfiler.js.map

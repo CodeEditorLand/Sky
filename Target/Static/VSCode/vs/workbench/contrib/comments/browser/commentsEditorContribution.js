@@ -1,1 +1,450 @@
-import{KeyChord as b,KeyCode as s,KeyMod as i}from"../../../../base/common/keyCodes.js";import"./media/review.css";import{isCodeEditor as N,isDiffEditor as L}from"../../../../editor/browser/editorBrowser.js";import{EditorContributionInstantiation as W,registerEditorContribution as G}from"../../../../editor/browser/editorExtensions.js";import{ICodeEditorService as R}from"../../../../editor/browser/services/codeEditorService.js";import*as r from"../../../../nls.js";import"../../../../platform/instantiation/common/instantiation.js";import{KeybindingsRegistry as E,KeybindingWeight as g}from"../../../../platform/keybinding/common/keybindingsRegistry.js";import{ICommentService as w}from"./commentService.js";import{ctxCommentEditorFocused as S,SimpleCommentEditor as P}from"./simpleCommentEditor.js";import{IEditorService as O}from"../../../services/editor/common/editorService.js";import{Action2 as l,MenuId as C,registerAction2 as d}from"../../../../platform/actions/common/actions.js";import{EditorContextKeys as I}from"../../../../editor/common/editorContextKeys.js";import{CommentController as c,ID as D}from"./commentsController.js";import{Range as M}from"../../../../editor/common/core/range.js";import{INotificationService as T}from"../../../../platform/notification/common/notification.js";import{CommentContextKeys as m}from"../common/commentContextKeys.js";import{CONTEXT_ACCESSIBILITY_MODE_ENABLED as z}from"../../../../platform/accessibility/common/accessibility.js";import{ContextKeyExpr as f}from"../../../../platform/contextkey/common/contextkey.js";import{accessibilityHelpIsShown as K,accessibleViewCurrentProviderId as F}from"../../accessibility/browser/accessibilityConfiguration.js";import{CommentCommandId as a}from"../common/commentCommandIds.js";import{registerWorkbenchContribution2 as U,WorkbenchPhase as B}from"../../../common/contributions.js";import{CommentsInputContentProvider as H}from"./commentsInputContentProvider.js";import{AccessibleViewProviderId as k}from"../../../../platform/accessibility/browser/accessibleView.js";import{CommentWidgetFocus as _}from"./commentThreadZoneWidget.js";import{IKeybindingService as q}from"../../../../platform/keybinding/common/keybinding.js";function u(e){let o=e.get(O).activeTextEditorControl;return L(o)&&(o=o.getOriginalEditor().hasTextFocus()?o.getOriginalEditor():o.getModifiedEditor()),N(o)&&o.hasModel()?o:null}function x(e){const o=u(e);if(!o)return;const t=c.get(o);return t||void 0}G(D,c,W.AfterFirstRender),U(H.ID,H,B.BlockRestore),E.registerCommandAndKeybindingRule({id:a.NextThread,handler:async(e,o)=>{const t=u(e);if(!t)return Promise.resolve();const n=c.get(t);if(!n)return Promise.resolve();n.nextCommentThread(!0)},weight:g.EditorContrib,primary:i.Alt|s.F9}),E.registerCommandAndKeybindingRule({id:a.PreviousThread,handler:async(e,o)=>{const t=u(e);if(!t)return Promise.resolve();const n=c.get(t);if(!n)return Promise.resolve();n.previousCommentThread(!0)},weight:g.EditorContrib,primary:i.Shift|i.Alt|s.F9}),d(class extends l{constructor(){super({id:a.NextCommentedRange,title:{value:r.localize("comments.NextCommentedRange","Go to Next Commented Range"),original:"Go to Next Commented Range"},category:{value:r.localize("commentsCategory","Comments"),original:"Comments"},menu:[{id:C.CommandPalette,when:m.activeEditorHasCommentingRange}],keybinding:{primary:i.Alt|s.F10,weight:g.EditorContrib,when:m.activeEditorHasCommentingRange}})}run(e,...o){const t=u(e);if(!t)return;const n=c.get(t);n&&n.nextCommentThread(!1)}}),d(class extends l{constructor(){super({id:a.PreviousCommentedRange,title:{value:r.localize("comments.previousCommentedRange","Go to Previous Commented Range"),original:"Go to Previous Commented Range"},category:{value:r.localize("commentsCategory","Comments"),original:"Comments"},menu:[{id:C.CommandPalette,when:m.activeEditorHasCommentingRange}],keybinding:{primary:i.Shift|i.Alt|s.F10,weight:g.EditorContrib,when:m.activeEditorHasCommentingRange}})}run(e,...o){const t=u(e);if(!t)return;const n=c.get(t);n&&n.previousCommentThread(!1)}}),d(class extends l{constructor(){super({id:a.NextRange,title:{value:r.localize("comments.nextCommentingRange","Go to Next Commenting Range"),original:"Go to Next Commenting Range"},category:{value:r.localize("commentsCategory","Comments"),original:"Comments"},menu:[{id:C.CommandPalette,when:m.activeEditorHasCommentingRange}],keybinding:{primary:b(i.CtrlCmd|s.KeyK,i.CtrlCmd|i.Alt|s.DownArrow),weight:g.EditorContrib,when:f.and(z,f.or(I.focus,m.commentFocused,f.and(K,F.isEqualTo(k.Comments))))}})}run(e,o){const t=u(e);if(!t)return;const n=c.get(t);n&&n.nextCommentingRange()}}),d(class extends l{constructor(){super({id:a.PreviousRange,title:{value:r.localize("comments.previousCommentingRange","Go to Previous Commenting Range"),original:"Go to Previous Commenting Range"},category:{value:r.localize("commentsCategory","Comments"),original:"Comments"},menu:[{id:C.CommandPalette,when:m.activeEditorHasCommentingRange}],keybinding:{primary:b(i.CtrlCmd|s.KeyK,i.CtrlCmd|i.Alt|s.UpArrow),weight:g.EditorContrib,when:f.and(z,f.or(I.focus,m.commentFocused,f.and(K,F.isEqualTo(k.Comments))))}})}async run(e,...o){const t=u(e);if(!t)return;const n=c.get(t);n&&n.previousCommentingRange()}}),d(class extends l{constructor(){super({id:a.ToggleCommenting,title:{value:r.localize("comments.toggleCommenting","Toggle Editor Commenting"),original:"Toggle Editor Commenting"},category:{value:r.localize("commentsCategory","Comments"),original:"Comments"},menu:[{id:C.CommandPalette,when:m.WorkspaceHasCommenting}]})}run(e,...o){const t=e.get(w),n=t.isCommentingEnabled;t.enableCommenting(!n)}}),d(class extends l{constructor(){super({id:a.Add,title:{value:r.localize("comments.addCommand","Add Comment on Current Selection"),original:"Add Comment on Current Selection"},category:{value:r.localize("commentsCategory","Comments"),original:"Comments"},menu:[{id:C.CommandPalette,when:m.activeCursorHasCommentingRange}],keybinding:{primary:b(i.CtrlCmd|s.KeyK,i.CtrlCmd|i.Alt|s.KeyC),weight:g.EditorContrib,when:m.activeCursorHasCommentingRange}})}async run(e,o){const t=u(e);if(!t)return;const n=c.get(t);if(!n)return;const i=o?.range?new M(o.range.startLineNumber,o.range.startLineNumber,o.range.endLineNumber,o.range.endColumn):o?.fileComment?void 0:t.getSelection();await n.addOrToggleCommentAtLine(i,void 0)}}),d(class extends l{constructor(){super({id:a.FocusCommentOnCurrentLine,title:{value:r.localize("comments.focusCommentOnCurrentLine","Focus Comment on Current Line"),original:"Focus Comment on Current Line"},category:{value:r.localize("commentsCategory","Comments"),original:"Comments"},f1:!0,precondition:m.activeCursorHasComment})}async run(e,...o){const t=u(e);if(!t)return;const n=c.get(t);if(!n)return;const i=t.getSelection(),m=e.get(T);let s=!1;try{const e=n.getCommentsAtLine(i);0===e.length?s=!0:await n.revealCommentThread(e[0].commentThread.threadId,void 0,!1,_.Widget)}catch{s=!0}s&&m.error(r.localize("comments.focusCommand.error","The cursor must be on a line with a comment to focus the comment"))}}),d(class extends l{constructor(){super({id:a.CollapseAll,title:{value:r.localize("comments.collapseAll","Collapse All Comments"),original:"Collapse All Comments"},category:{value:r.localize("commentsCategory","Comments"),original:"Comments"},menu:[{id:C.CommandPalette,when:m.WorkspaceHasCommenting}]})}run(e,...o){x(e)?.collapseAll()}}),d(class extends l{constructor(){super({id:a.ExpandAll,title:{value:r.localize("comments.expandAll","Expand All Comments"),original:"Expand All Comments"},category:{value:r.localize("commentsCategory","Comments"),original:"Comments"},menu:[{id:C.CommandPalette,when:m.WorkspaceHasCommenting}]})}run(e,...o){x(e)?.expandAll()}}),d(class extends l{constructor(){super({id:a.ExpandUnresolved,title:{value:r.localize("comments.expandUnresolved","Expand Unresolved Comments"),original:"Expand Unresolved Comments"},category:{value:r.localize("commentsCategory","Comments"),original:"Comments"},menu:[{id:C.CommandPalette,when:m.WorkspaceHasCommenting}]})}run(e,...o){x(e)?.expandUnresolved()}}),E.registerCommandAndKeybindingRule({id:a.Submit,weight:g.EditorContrib,primary:i.CtrlCmd|s.Enter,when:S,handler:(e,o)=>{const t=e.get(R).getFocusedCodeEditor();t instanceof P&&t.getParentThread().submitComment()}}),E.registerCommandAndKeybindingRule({id:a.Hide,weight:g.EditorContrib,primary:s.Escape,secondary:[i.Shift|s.Escape],when:f.or(S,m.commentFocused),handler:async(e,o)=>{const t=e.get(R).getFocusedCodeEditor();if(await e.get(q).enableKeybindingHoldMode(a.Hide),t instanceof P)t.getParentThread().collapse();else if(t){const o=c.get(t);if(!o)return;const n=e.get(T),i=e.get(w);let m=!1;try{const e=i.lastActiveCommentcontroller?.activeComment;e?o.collapseAndFocusRange(e.thread.threadId):m=!0}catch{m=!0}m&&n.error(r.localize("comments.focusCommand.error","The cursor must be on a line with a comment to focus the comment"))}}});export{u as getActiveEditor};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { KeyChord, KeyCode, KeyMod } from "../../../../base/common/keyCodes.js";
+import "./media/review.css";
+import { IActiveCodeEditor, isCodeEditor, isDiffEditor } from "../../../../editor/browser/editorBrowser.js";
+import { EditorContributionInstantiation, registerEditorContribution } from "../../../../editor/browser/editorExtensions.js";
+import { ICodeEditorService } from "../../../../editor/browser/services/codeEditorService.js";
+import * as nls from "../../../../nls.js";
+import { ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+import { KeybindingsRegistry, KeybindingWeight } from "../../../../platform/keybinding/common/keybindingsRegistry.js";
+import { ICommentService } from "./commentService.js";
+import { ctxCommentEditorFocused, SimpleCommentEditor } from "./simpleCommentEditor.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { Action2, MenuId, registerAction2 } from "../../../../platform/actions/common/actions.js";
+import { EditorContextKeys } from "../../../../editor/common/editorContextKeys.js";
+import { CommentController, ID } from "./commentsController.js";
+import { IRange, Range } from "../../../../editor/common/core/range.js";
+import { INotificationService } from "../../../../platform/notification/common/notification.js";
+import { CommentContextKeys } from "../common/commentContextKeys.js";
+import { CONTEXT_ACCESSIBILITY_MODE_ENABLED } from "../../../../platform/accessibility/common/accessibility.js";
+import { ContextKeyExpr } from "../../../../platform/contextkey/common/contextkey.js";
+import { accessibilityHelpIsShown, accessibleViewCurrentProviderId } from "../../accessibility/browser/accessibilityConfiguration.js";
+import { CommentCommandId } from "../common/commentCommandIds.js";
+import { registerWorkbenchContribution2, WorkbenchPhase } from "../../../common/contributions.js";
+import { CommentsInputContentProvider } from "./commentsInputContentProvider.js";
+import { AccessibleViewProviderId } from "../../../../platform/accessibility/browser/accessibleView.js";
+import { CommentWidgetFocus } from "./commentThreadZoneWidget.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+registerEditorContribution(ID, CommentController, EditorContributionInstantiation.AfterFirstRender);
+registerWorkbenchContribution2(CommentsInputContentProvider.ID, CommentsInputContentProvider, WorkbenchPhase.BlockRestore);
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  id: CommentCommandId.NextThread,
+  handler: /* @__PURE__ */ __name(async (accessor, args) => {
+    const activeEditor = getActiveEditor(accessor);
+    if (!activeEditor) {
+      return Promise.resolve();
+    }
+    const controller = CommentController.get(activeEditor);
+    if (!controller) {
+      return Promise.resolve();
+    }
+    controller.nextCommentThread(true);
+  }, "handler"),
+  weight: KeybindingWeight.EditorContrib,
+  primary: KeyMod.Alt | KeyCode.F9
+});
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  id: CommentCommandId.PreviousThread,
+  handler: /* @__PURE__ */ __name(async (accessor, args) => {
+    const activeEditor = getActiveEditor(accessor);
+    if (!activeEditor) {
+      return Promise.resolve();
+    }
+    const controller = CommentController.get(activeEditor);
+    if (!controller) {
+      return Promise.resolve();
+    }
+    controller.previousCommentThread(true);
+  }, "handler"),
+  weight: KeybindingWeight.EditorContrib,
+  primary: KeyMod.Shift | KeyMod.Alt | KeyCode.F9
+});
+registerAction2(class extends Action2 {
+  constructor() {
+    super({
+      id: CommentCommandId.NextCommentedRange,
+      title: {
+        value: nls.localize("comments.NextCommentedRange", "Go to Next Commented Range"),
+        original: "Go to Next Commented Range"
+      },
+      category: {
+        value: nls.localize("commentsCategory", "Comments"),
+        original: "Comments"
+      },
+      menu: [{
+        id: MenuId.CommandPalette,
+        when: CommentContextKeys.activeEditorHasCommentingRange
+      }],
+      keybinding: {
+        primary: KeyMod.Alt | KeyCode.F10,
+        weight: KeybindingWeight.EditorContrib,
+        when: CommentContextKeys.activeEditorHasCommentingRange
+      }
+    });
+  }
+  run(accessor, ...args) {
+    const activeEditor = getActiveEditor(accessor);
+    if (!activeEditor) {
+      return;
+    }
+    const controller = CommentController.get(activeEditor);
+    if (!controller) {
+      return;
+    }
+    controller.nextCommentThread(false);
+  }
+});
+registerAction2(class extends Action2 {
+  constructor() {
+    super({
+      id: CommentCommandId.PreviousCommentedRange,
+      title: {
+        value: nls.localize("comments.previousCommentedRange", "Go to Previous Commented Range"),
+        original: "Go to Previous Commented Range"
+      },
+      category: {
+        value: nls.localize("commentsCategory", "Comments"),
+        original: "Comments"
+      },
+      menu: [{
+        id: MenuId.CommandPalette,
+        when: CommentContextKeys.activeEditorHasCommentingRange
+      }],
+      keybinding: {
+        primary: KeyMod.Shift | KeyMod.Alt | KeyCode.F10,
+        weight: KeybindingWeight.EditorContrib,
+        when: CommentContextKeys.activeEditorHasCommentingRange
+      }
+    });
+  }
+  run(accessor, ...args) {
+    const activeEditor = getActiveEditor(accessor);
+    if (!activeEditor) {
+      return;
+    }
+    const controller = CommentController.get(activeEditor);
+    if (!controller) {
+      return;
+    }
+    controller.previousCommentThread(false);
+  }
+});
+registerAction2(class extends Action2 {
+  constructor() {
+    super({
+      id: CommentCommandId.NextRange,
+      title: {
+        value: nls.localize("comments.nextCommentingRange", "Go to Next Commenting Range"),
+        original: "Go to Next Commenting Range"
+      },
+      category: {
+        value: nls.localize("commentsCategory", "Comments"),
+        original: "Comments"
+      },
+      menu: [{
+        id: MenuId.CommandPalette,
+        when: CommentContextKeys.activeEditorHasCommentingRange
+      }],
+      keybinding: {
+        primary: KeyChord(KeyMod.CtrlCmd | KeyCode.KeyK, KeyMod.CtrlCmd | KeyMod.Alt | KeyCode.DownArrow),
+        weight: KeybindingWeight.EditorContrib,
+        when: ContextKeyExpr.and(CONTEXT_ACCESSIBILITY_MODE_ENABLED, ContextKeyExpr.or(EditorContextKeys.focus, CommentContextKeys.commentFocused, ContextKeyExpr.and(accessibilityHelpIsShown, accessibleViewCurrentProviderId.isEqualTo(AccessibleViewProviderId.Comments))))
+      }
+    });
+  }
+  run(accessor, args) {
+    const activeEditor = getActiveEditor(accessor);
+    if (!activeEditor) {
+      return;
+    }
+    const controller = CommentController.get(activeEditor);
+    if (!controller) {
+      return;
+    }
+    controller.nextCommentingRange();
+  }
+});
+registerAction2(class extends Action2 {
+  constructor() {
+    super({
+      id: CommentCommandId.PreviousRange,
+      title: {
+        value: nls.localize("comments.previousCommentingRange", "Go to Previous Commenting Range"),
+        original: "Go to Previous Commenting Range"
+      },
+      category: {
+        value: nls.localize("commentsCategory", "Comments"),
+        original: "Comments"
+      },
+      menu: [{
+        id: MenuId.CommandPalette,
+        when: CommentContextKeys.activeEditorHasCommentingRange
+      }],
+      keybinding: {
+        primary: KeyChord(KeyMod.CtrlCmd | KeyCode.KeyK, KeyMod.CtrlCmd | KeyMod.Alt | KeyCode.UpArrow),
+        weight: KeybindingWeight.EditorContrib,
+        when: ContextKeyExpr.and(CONTEXT_ACCESSIBILITY_MODE_ENABLED, ContextKeyExpr.or(EditorContextKeys.focus, CommentContextKeys.commentFocused, ContextKeyExpr.and(accessibilityHelpIsShown, accessibleViewCurrentProviderId.isEqualTo(AccessibleViewProviderId.Comments))))
+      }
+    });
+  }
+  async run(accessor, ...args) {
+    const activeEditor = getActiveEditor(accessor);
+    if (!activeEditor) {
+      return;
+    }
+    const controller = CommentController.get(activeEditor);
+    if (!controller) {
+      return;
+    }
+    controller.previousCommentingRange();
+  }
+});
+registerAction2(class extends Action2 {
+  constructor() {
+    super({
+      id: CommentCommandId.ToggleCommenting,
+      title: {
+        value: nls.localize("comments.toggleCommenting", "Toggle Editor Commenting"),
+        original: "Toggle Editor Commenting"
+      },
+      category: {
+        value: nls.localize("commentsCategory", "Comments"),
+        original: "Comments"
+      },
+      menu: [{
+        id: MenuId.CommandPalette,
+        when: CommentContextKeys.WorkspaceHasCommenting
+      }]
+    });
+  }
+  run(accessor, ...args) {
+    const commentService = accessor.get(ICommentService);
+    const enable = commentService.isCommentingEnabled;
+    commentService.enableCommenting(!enable);
+  }
+});
+registerAction2(class extends Action2 {
+  constructor() {
+    super({
+      id: CommentCommandId.Add,
+      title: {
+        value: nls.localize("comments.addCommand", "Add Comment on Current Selection"),
+        original: "Add Comment on Current Selection"
+      },
+      category: {
+        value: nls.localize("commentsCategory", "Comments"),
+        original: "Comments"
+      },
+      menu: [{
+        id: MenuId.CommandPalette,
+        when: CommentContextKeys.activeCursorHasCommentingRange
+      }],
+      keybinding: {
+        primary: KeyChord(KeyMod.CtrlCmd | KeyCode.KeyK, KeyMod.CtrlCmd | KeyMod.Alt | KeyCode.KeyC),
+        weight: KeybindingWeight.EditorContrib,
+        when: CommentContextKeys.activeCursorHasCommentingRange
+      }
+    });
+  }
+  async run(accessor, args) {
+    const activeEditor = getActiveEditor(accessor);
+    if (!activeEditor) {
+      return;
+    }
+    const controller = CommentController.get(activeEditor);
+    if (!controller) {
+      return;
+    }
+    const position = args?.range ? new Range(args.range.startLineNumber, args.range.startLineNumber, args.range.endLineNumber, args.range.endColumn) : args?.fileComment ? void 0 : activeEditor.getSelection();
+    await controller.addOrToggleCommentAtLine(position, void 0);
+  }
+});
+registerAction2(class extends Action2 {
+  constructor() {
+    super({
+      id: CommentCommandId.FocusCommentOnCurrentLine,
+      title: {
+        value: nls.localize("comments.focusCommentOnCurrentLine", "Focus Comment on Current Line"),
+        original: "Focus Comment on Current Line"
+      },
+      category: {
+        value: nls.localize("commentsCategory", "Comments"),
+        original: "Comments"
+      },
+      f1: true,
+      precondition: CommentContextKeys.activeCursorHasComment
+    });
+  }
+  async run(accessor, ...args) {
+    const activeEditor = getActiveEditor(accessor);
+    if (!activeEditor) {
+      return;
+    }
+    const controller = CommentController.get(activeEditor);
+    if (!controller) {
+      return;
+    }
+    const position = activeEditor.getSelection();
+    const notificationService = accessor.get(INotificationService);
+    let error = false;
+    try {
+      const commentAtLine = controller.getCommentsAtLine(position);
+      if (commentAtLine.length === 0) {
+        error = true;
+      } else {
+        await controller.revealCommentThread(commentAtLine[0].commentThread.threadId, void 0, false, CommentWidgetFocus.Widget);
+      }
+    } catch (e) {
+      error = true;
+    }
+    if (error) {
+      notificationService.error(nls.localize("comments.focusCommand.error", "The cursor must be on a line with a comment to focus the comment"));
+    }
+  }
+});
+registerAction2(class extends Action2 {
+  constructor() {
+    super({
+      id: CommentCommandId.CollapseAll,
+      title: {
+        value: nls.localize("comments.collapseAll", "Collapse All Comments"),
+        original: "Collapse All Comments"
+      },
+      category: {
+        value: nls.localize("commentsCategory", "Comments"),
+        original: "Comments"
+      },
+      menu: [{
+        id: MenuId.CommandPalette,
+        when: CommentContextKeys.WorkspaceHasCommenting
+      }]
+    });
+  }
+  run(accessor, ...args) {
+    getActiveController(accessor)?.collapseAll();
+  }
+});
+registerAction2(class extends Action2 {
+  constructor() {
+    super({
+      id: CommentCommandId.ExpandAll,
+      title: {
+        value: nls.localize("comments.expandAll", "Expand All Comments"),
+        original: "Expand All Comments"
+      },
+      category: {
+        value: nls.localize("commentsCategory", "Comments"),
+        original: "Comments"
+      },
+      menu: [{
+        id: MenuId.CommandPalette,
+        when: CommentContextKeys.WorkspaceHasCommenting
+      }]
+    });
+  }
+  run(accessor, ...args) {
+    getActiveController(accessor)?.expandAll();
+  }
+});
+registerAction2(class extends Action2 {
+  constructor() {
+    super({
+      id: CommentCommandId.ExpandUnresolved,
+      title: {
+        value: nls.localize("comments.expandUnresolved", "Expand Unresolved Comments"),
+        original: "Expand Unresolved Comments"
+      },
+      category: {
+        value: nls.localize("commentsCategory", "Comments"),
+        original: "Comments"
+      },
+      menu: [{
+        id: MenuId.CommandPalette,
+        when: CommentContextKeys.WorkspaceHasCommenting
+      }]
+    });
+  }
+  run(accessor, ...args) {
+    getActiveController(accessor)?.expandUnresolved();
+  }
+});
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  id: CommentCommandId.Submit,
+  weight: KeybindingWeight.EditorContrib,
+  primary: KeyMod.CtrlCmd | KeyCode.Enter,
+  when: ctxCommentEditorFocused,
+  handler: /* @__PURE__ */ __name((accessor, args) => {
+    const activeCodeEditor = accessor.get(ICodeEditorService).getFocusedCodeEditor();
+    if (activeCodeEditor instanceof SimpleCommentEditor) {
+      activeCodeEditor.getParentThread().submitComment();
+    }
+  }, "handler")
+});
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  id: CommentCommandId.Hide,
+  weight: KeybindingWeight.EditorContrib,
+  primary: KeyCode.Escape,
+  secondary: [KeyMod.Shift | KeyCode.Escape],
+  when: ContextKeyExpr.or(ctxCommentEditorFocused, CommentContextKeys.commentFocused),
+  handler: /* @__PURE__ */ __name(async (accessor, args) => {
+    const activeCodeEditor = accessor.get(ICodeEditorService).getFocusedCodeEditor();
+    const keybindingService = accessor.get(IKeybindingService);
+    await keybindingService.enableKeybindingHoldMode(CommentCommandId.Hide);
+    if (activeCodeEditor instanceof SimpleCommentEditor) {
+      activeCodeEditor.getParentThread().collapse();
+    } else if (activeCodeEditor) {
+      const controller = CommentController.get(activeCodeEditor);
+      if (!controller) {
+        return;
+      }
+      const notificationService = accessor.get(INotificationService);
+      const commentService = accessor.get(ICommentService);
+      let error = false;
+      try {
+        const activeComment = commentService.lastActiveCommentcontroller?.activeComment;
+        if (!activeComment) {
+          error = true;
+        } else {
+          controller.collapseAndFocusRange(activeComment.thread.threadId);
+        }
+      } catch (e) {
+        error = true;
+      }
+      if (error) {
+        notificationService.error(nls.localize("comments.focusCommand.error", "The cursor must be on a line with a comment to focus the comment"));
+      }
+    }
+  }, "handler")
+});
+function getActiveEditor(accessor) {
+  let activeTextEditorControl = accessor.get(IEditorService).activeTextEditorControl;
+  if (isDiffEditor(activeTextEditorControl)) {
+    if (activeTextEditorControl.getOriginalEditor().hasTextFocus()) {
+      activeTextEditorControl = activeTextEditorControl.getOriginalEditor();
+    } else {
+      activeTextEditorControl = activeTextEditorControl.getModifiedEditor();
+    }
+  }
+  if (!isCodeEditor(activeTextEditorControl) || !activeTextEditorControl.hasModel()) {
+    return null;
+  }
+  return activeTextEditorControl;
+}
+__name(getActiveEditor, "getActiveEditor");
+function getActiveController(accessor) {
+  const activeEditor = getActiveEditor(accessor);
+  if (!activeEditor) {
+    return void 0;
+  }
+  const controller = CommentController.get(activeEditor);
+  if (!controller) {
+    return void 0;
+  }
+  return controller;
+}
+__name(getActiveController, "getActiveController");
+export {
+  getActiveEditor
+};
+//# sourceMappingURL=commentsEditorContribution.js.map

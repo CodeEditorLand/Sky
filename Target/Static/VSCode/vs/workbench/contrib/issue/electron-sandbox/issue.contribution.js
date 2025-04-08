@@ -1,1 +1,95 @@
-var k=Object.defineProperty,b=Object.getOwnPropertyDescriptor,a=(e,o,s,r)=>{for(var t,i=r>1?void 0:r?b(o,s):o,n=e.length-1;n>=0;n--)(t=e[n])&&(i=(r?t(o,s,i):t(i))||i);return r&&i&&k(o,s,i),i},m=(e,o)=>(s,r)=>o(s,r,e);import"../../../../base/common/lifecycle.js";import{localize as u,localize2 as y}from"../../../../nls.js";import{Categories as h}from"../../../../platform/action/common/actionCommonCategories.js";import{Action2 as R,registerAction2 as A}from"../../../../platform/actions/common/actions.js";import{IConfigurationService as P}from"../../../../platform/configuration/common/configuration.js";import{InstantiationType as l,registerSingleton as f}from"../../../../platform/instantiation/common/extensions.js";import"../../../../platform/instantiation/common/instantiation.js";import{IProductService as x}from"../../../../platform/product/common/productService.js";import{Extensions as v}from"../../../../platform/quickinput/common/quickAccess.js";import{Registry as I}from"../../../../platform/registry/common/platform.js";import{Extensions as Q}from"../../../common/contributions.js";import{LifecyclePhase as S}from"../../../services/lifecycle/common/lifecycle.js";import{IssueQuickAccess as d}from"../browser/issueQuickAccess.js";import"../browser/issueTroubleshoot.js";import{BaseIssueContribution as D}from"../common/issue.contribution.js";import{IIssueFormService as C,IWorkbenchIssueService as g,IssueType as E}from"../common/issue.js";import{NativeIssueService as W}from"./issueService.js";import{NativeIssueFormService as T}from"./nativeIssueFormService.js";import"./processMainService.js";f(g,W,l.Delayed),f(C,T,l.Delayed);let t=class extends D{constructor(e,o){if(super(e,o),!o.getValue("telemetry.feedback.enabled"))return;let s;e.reportIssueUrl&&this._register(A(p));const r=()=>{s=I.as(v.Quickaccess).registerQuickAccessProvider({ctor:d,prefix:d.PREFIX,contextKey:"inReportIssuePicker",placeholder:u("tasksQuickAccessPlaceholder","Type the name of an extension to report on."),helpEntries:[{description:u("openIssueReporter","Open Issue Reporter"),commandId:"workbench.action.openIssueReporter"}]})};this._register(o.onDidChangeConfiguration((e=>{!o.getValue("extensions.experimental.issueQuickAccess")&&s?(s.dispose(),s=void 0):s||r()}))),o.getValue("extensions.experimental.issueQuickAccess")&&r()}};t=a([m(0,x),m(1,P)],t),I.as(Q.Workbench).registerWorkbenchContribution(t,S.Restored);class p extends R{static ID="workbench.action.reportPerformanceIssueUsingReporter";constructor(){super({id:p.ID,title:y({key:"reportPerformanceIssue",comment:["Here, 'issue' means problem or bug"]},"Report Performance Issue..."),category:h.Help,f1:!0})}async run(e){return e.get(g).openReporter({issueType:E.PerformanceIssue})}}
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { IDisposable } from "../../../../base/common/lifecycle.js";
+import { localize, localize2 } from "../../../../nls.js";
+import { Categories } from "../../../../platform/action/common/actionCommonCategories.js";
+import { Action2, registerAction2 } from "../../../../platform/actions/common/actions.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+import { IQuickAccessRegistry, Extensions as QuickAccessExtensions } from "../../../../platform/quickinput/common/quickAccess.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { Extensions, IWorkbenchContributionsRegistry } from "../../../common/contributions.js";
+import { LifecyclePhase } from "../../../services/lifecycle/common/lifecycle.js";
+import { IssueQuickAccess } from "../browser/issueQuickAccess.js";
+import "../browser/issueTroubleshoot.js";
+import { BaseIssueContribution } from "../common/issue.contribution.js";
+import { IIssueFormService, IWorkbenchIssueService, IssueType } from "../common/issue.js";
+import { NativeIssueService } from "./issueService.js";
+import { NativeIssueFormService } from "./nativeIssueFormService.js";
+import "./processMainService.js";
+registerSingleton(IWorkbenchIssueService, NativeIssueService, InstantiationType.Delayed);
+registerSingleton(IIssueFormService, NativeIssueFormService, InstantiationType.Delayed);
+let NativeIssueContribution = class extends BaseIssueContribution {
+  static {
+    __name(this, "NativeIssueContribution");
+  }
+  constructor(productService, configurationService) {
+    super(productService, configurationService);
+    if (!configurationService.getValue("telemetry.feedback.enabled")) {
+      return;
+    }
+    if (productService.reportIssueUrl) {
+      this._register(registerAction2(ReportPerformanceIssueUsingReporterAction));
+    }
+    let disposable;
+    const registerQuickAccessProvider = /* @__PURE__ */ __name(() => {
+      disposable = Registry.as(QuickAccessExtensions.Quickaccess).registerQuickAccessProvider({
+        ctor: IssueQuickAccess,
+        prefix: IssueQuickAccess.PREFIX,
+        contextKey: "inReportIssuePicker",
+        placeholder: localize("tasksQuickAccessPlaceholder", "Type the name of an extension to report on."),
+        helpEntries: [{
+          description: localize("openIssueReporter", "Open Issue Reporter"),
+          commandId: "workbench.action.openIssueReporter"
+        }]
+      });
+    }, "registerQuickAccessProvider");
+    this._register(configurationService.onDidChangeConfiguration((e) => {
+      if (!configurationService.getValue("extensions.experimental.issueQuickAccess") && disposable) {
+        disposable.dispose();
+        disposable = void 0;
+      } else if (!disposable) {
+        registerQuickAccessProvider();
+      }
+    }));
+    if (configurationService.getValue("extensions.experimental.issueQuickAccess")) {
+      registerQuickAccessProvider();
+    }
+  }
+};
+NativeIssueContribution = __decorateClass([
+  __decorateParam(0, IProductService),
+  __decorateParam(1, IConfigurationService)
+], NativeIssueContribution);
+Registry.as(Extensions.Workbench).registerWorkbenchContribution(NativeIssueContribution, LifecyclePhase.Restored);
+class ReportPerformanceIssueUsingReporterAction extends Action2 {
+  static {
+    __name(this, "ReportPerformanceIssueUsingReporterAction");
+  }
+  static ID = "workbench.action.reportPerformanceIssueUsingReporter";
+  constructor() {
+    super({
+      id: ReportPerformanceIssueUsingReporterAction.ID,
+      title: localize2({ key: "reportPerformanceIssue", comment: [`Here, 'issue' means problem or bug`] }, "Report Performance Issue..."),
+      category: Categories.Help,
+      f1: true
+    });
+  }
+  async run(accessor) {
+    const issueService = accessor.get(IWorkbenchIssueService);
+    return issueService.openReporter({ issueType: IssueType.PerformanceIssue });
+  }
+}
+//# sourceMappingURL=issue.contribution.js.map

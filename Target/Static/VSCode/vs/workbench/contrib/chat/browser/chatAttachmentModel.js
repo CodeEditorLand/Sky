@@ -1,1 +1,141 @@
-var d=Object.defineProperty,g=Object.getOwnPropertyDescriptor,h=(t,e,i,a)=>{for(var s,r=a>1?void 0:a?g(e,i):e,o=t.length-1;o>=0;o--)(s=t[o])&&(r=(a?s(e,i,r):s(r))||r);return a&&r&&d(e,i,r),r},s=(t,e)=>(i,a)=>e(i,a,t);import{URI as f}from"../../../../base/common/uri.js";import{Emitter as p}from"../../../../base/common/event.js";import{basename as m}from"../../../../base/common/resources.js";import"../../../../editor/common/core/range.js";import{Disposable as I}from"../../../../base/common/lifecycle.js";import"../common/chatModel.js";import{IInstantiationService as C}from"../../../../platform/instantiation/common/instantiation.js";import{ChatPromptAttachmentsCollection as v}from"./chatAttachmentModel/chatPromptAttachmentsCollection.js";import{IFileService as u}from"../../../../platform/files/common/files.js";import{resizeImage as y}from"./imageUtils.js";import{IDialogService as b}from"../../../../platform/dialogs/common/dialogs.js";import{localize as c}from"../../../../nls.js";let o=class extends I{constructor(t,e,i){super(),this.initService=t,this.fileService=e,this.dialogService=i,this.promptInstructions=this._register(this.initService.createInstance(v)).onUpdate((()=>{this._onDidChangeContext.fire()}))}promptInstructions;_attachments=new Map;get attachments(){return Array.from(this._attachments.values())}_onDidChangeContext=this._register(new p);onDidChangeContext=this._onDidChangeContext.event;get size(){return this._attachments.size}get fileAttachments(){return this.attachments.reduce(((t,e)=>(e.isFile&&f.isUri(e.value)&&t.push(e.value),t)),[])}getAttachmentIDs(){return new Set(this._attachments.keys())}clear(){this._attachments.clear(),this._onDidChangeContext.fire()}delete(...t){for(const e of t)this._attachments.delete(e);this._onDidChangeContext.fire()}async addFile(t,e){/\.(png|jpe?g|gif|bmp|webp)$/i.test(t.path)?this.addContext(await this.asImageVariableEntry(t)):this.addContext(this.asVariableEntry(t,e))}addFolder(t){this.addContext({value:t,id:t.toString(),name:m(t),isFile:!1,isDirectory:!0})}asVariableEntry(t,e){return{value:e?{uri:t,range:e}:t,id:t.toString()+(e?.toString()??""),name:m(t),isFile:!0}}async asImageVariableEntry(t){const e=m(t),i=await this.fileService.readFile(t);if(i.size>31457280)throw this.dialogService.error(c("imageTooLarge","Image is too large"),c("imageTooLargeMessage","The image {0} is too large to be attached.",e)),new Error("Image is too large");const a=await y(i.value.buffer);return{id:t.toString(),name:e,fullName:t.path,value:a,kind:"image",isFile:!1,references:[{reference:t,kind:"reference"}]}}addContext(...t){let e=!1;for(const i of t)this._attachments.has(i.id)||(this._attachments.set(i.id,i),e=!0);e&&this._onDidChangeContext.fire()}clearAndSetContext(...t){this.clear(),this.addContext(...t)}};o=h([s(0,C),s(1,u),s(2,b)],o);export{o as ChatAttachmentModel};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { URI } from "../../../../base/common/uri.js";
+import { Emitter } from "../../../../base/common/event.js";
+import { basename } from "../../../../base/common/resources.js";
+import { IRange } from "../../../../editor/common/core/range.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { IChatRequestVariableEntry } from "../common/chatModel.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { ChatPromptAttachmentsCollection } from "./chatAttachmentModel/chatPromptAttachmentsCollection.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { resizeImage } from "./imageUtils.js";
+import { IDialogService } from "../../../../platform/dialogs/common/dialogs.js";
+import { localize } from "../../../../nls.js";
+let ChatAttachmentModel = class extends Disposable {
+  constructor(initService, fileService, dialogService) {
+    super();
+    this.initService = initService;
+    this.fileService = fileService;
+    this.dialogService = dialogService;
+    this.promptInstructions = this._register(
+      this.initService.createInstance(ChatPromptAttachmentsCollection)
+    ).onUpdate(() => {
+      this._onDidChangeContext.fire();
+    });
+  }
+  static {
+    __name(this, "ChatAttachmentModel");
+  }
+  /**
+   * Collection on prompt instruction attachments.
+   */
+  promptInstructions;
+  _attachments = /* @__PURE__ */ new Map();
+  get attachments() {
+    return Array.from(this._attachments.values());
+  }
+  _onDidChangeContext = this._register(new Emitter());
+  onDidChangeContext = this._onDidChangeContext.event;
+  get size() {
+    return this._attachments.size;
+  }
+  get fileAttachments() {
+    return this.attachments.reduce((acc, file) => {
+      if (file.isFile && URI.isUri(file.value)) {
+        acc.push(file.value);
+      }
+      return acc;
+    }, []);
+  }
+  getAttachmentIDs() {
+    return new Set(this._attachments.keys());
+  }
+  clear() {
+    this._attachments.clear();
+    this._onDidChangeContext.fire();
+  }
+  delete(...variableEntryIds) {
+    for (const variableEntryId of variableEntryIds) {
+      this._attachments.delete(variableEntryId);
+    }
+    this._onDidChangeContext.fire();
+  }
+  async addFile(uri, range) {
+    if (/\.(png|jpe?g|gif|bmp|webp)$/i.test(uri.path)) {
+      this.addContext(await this.asImageVariableEntry(uri));
+      return;
+    }
+    this.addContext(this.asVariableEntry(uri, range));
+  }
+  addFolder(uri) {
+    this.addContext({
+      value: uri,
+      id: uri.toString(),
+      name: basename(uri),
+      isFile: false,
+      isDirectory: true
+    });
+  }
+  asVariableEntry(uri, range) {
+    return {
+      value: range ? { uri, range } : uri,
+      id: uri.toString() + (range?.toString() ?? ""),
+      name: basename(uri),
+      isFile: true
+    };
+  }
+  async asImageVariableEntry(uri) {
+    const fileName = basename(uri);
+    const readFile = await this.fileService.readFile(uri);
+    if (readFile.size > 30 * 1024 * 1024) {
+      this.dialogService.error(localize("imageTooLarge", "Image is too large"), localize("imageTooLargeMessage", "The image {0} is too large to be attached.", fileName));
+      throw new Error("Image is too large");
+    }
+    const resizedImage = await resizeImage(readFile.value.buffer);
+    return {
+      id: uri.toString(),
+      name: fileName,
+      fullName: uri.path,
+      value: resizedImage,
+      kind: "image",
+      isFile: false,
+      references: [{ reference: uri, kind: "reference" }]
+    };
+  }
+  addContext(...attachments) {
+    let hasAdded = false;
+    for (const attachment of attachments) {
+      if (!this._attachments.has(attachment.id)) {
+        this._attachments.set(attachment.id, attachment);
+        hasAdded = true;
+      }
+    }
+    if (hasAdded) {
+      this._onDidChangeContext.fire();
+    }
+  }
+  clearAndSetContext(...attachments) {
+    this.clear();
+    this.addContext(...attachments);
+  }
+};
+ChatAttachmentModel = __decorateClass([
+  __decorateParam(0, IInstantiationService),
+  __decorateParam(1, IFileService),
+  __decorateParam(2, IDialogService)
+], ChatAttachmentModel);
+export {
+  ChatAttachmentModel
+};
+//# sourceMappingURL=chatAttachmentModel.js.map

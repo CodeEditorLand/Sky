@@ -1,1 +1,164 @@
-var x=Object.defineProperty,O=Object.getOwnPropertyDescriptor,u=(o,t,e,r)=>{for(var i,n=r>1?void 0:r?O(t,e):t,s=o.length-1;s>=0;s--)(i=o[s])&&(n=(r?i(t,e,n):i(n))||n);return r&&n&&x(t,e,n),n},n=(o,t)=>(e,r)=>t(e,r,o);import{EditorOption as M}from"../../../../editor/common/config/editorOptions.js";import{EditorContributionInstantiation as m,EditorExtensionsRegistry as I}from"../../../../editor/browser/editorExtensions.js";import{ICodeEditorService as H}from"../../../../editor/browser/services/codeEditorService.js";import{CodeEditorWidget as W}from"../../../../editor/browser/widget/codeEditor/codeEditorWidget.js";import{RawContextKey as F}from"../../../../platform/contextkey/common/contextkey.js";import{IInstantiationService as w}from"../../../../platform/instantiation/common/instantiation.js";import{ICommandService as A}from"../../../../platform/commands/common/commands.js";import{MenuPreventer as g}from"../../codeEditor/browser/menuPreventer.js";import{EditorDictation as f}from"../../codeEditor/browser/dictation/editorDictation.js";import{ContextMenuController as h}from"../../../../editor/contrib/contextmenu/browser/contextmenu.js";import{SuggestController as E}from"../../../../editor/contrib/suggest/browser/suggestController.js";import{SnippetController2 as C}from"../../../../editor/contrib/snippet/browser/snippetController2.js";import{TabCompletionController as b}from"../../snippets/browser/tabCompletion.js";import{IThemeService as R}from"../../../../platform/theme/common/themeService.js";import{INotificationService as z}from"../../../../platform/notification/common/notification.js";import{IAccessibilityService as N}from"../../../../platform/accessibility/common/accessibility.js";import"../common/commentThreadWidget.js";import{CommentContextKeys as V}from"../common/commentContextKeys.js";import{ILanguageConfigurationService as B}from"../../../../editor/common/languages/languageConfigurationRegistry.js";import{ILanguageFeaturesService as K}from"../../../../editor/common/services/languageFeatures.js";import"../../../../platform/configuration/common/configuration.js";import"../../../../editor/browser/editorBrowser.js";import{clamp as y}from"../../../../base/common/numbers.js";import{CopyPasteController as k}from"../../../../editor/contrib/dropOrPasteInto/browser/copyPasteController.js";import{CodeActionController as P}from"../../../../editor/contrib/codeAction/browser/codeActionController.js";import{DropIntoEditorController as G}from"../../../../editor/contrib/dropOrPasteInto/browser/dropIntoEditorController.js";import{InlineCompletionsController as q}from"../../../../editor/contrib/inlineCompletions/browser/controller/inlineCompletionsController.js";import{LinkDetector as X}from"../../../../editor/contrib/links/browser/links.js";import{MessageController as j}from"../../../../editor/contrib/message/browser/messageController.js";import{SelectionClipboardContributionID as J}from"../../codeEditor/browser/selectionClipboard.js";import{MenuId as Q}from"../../../../platform/actions/common/actions.js";import{ContentHoverController as U}from"../../../../editor/contrib/hover/browser/contentHoverController.js";import{GlyphHoverController as Y}from"../../../../editor/contrib/hover/browser/glyphHoverController.js";import{PlaceholderTextContribution as Z}from"../../../../editor/contrib/placeholderText/browser/placeholderTextContribution.js";const $=new F("commentEditorFocused",!1),c=90,tt=450;let d=class extends W{_parentThread;_commentEditorFocused;_commentEditorEmpty;constructor(o,t,e,r,i,n,s,a,c,d,l,p){super(o,t,{contributions:[{id:g.ID,ctor:g,instantiation:m.BeforeFirstInteraction},{id:h.ID,ctor:h,instantiation:m.BeforeFirstInteraction},{id:E.ID,ctor:E,instantiation:m.Eager},{id:C.ID,ctor:C,instantiation:m.Lazy},{id:b.ID,ctor:b,instantiation:m.Eager},{id:f.ID,ctor:f,instantiation:m.Lazy},...I.getSomeEditorContributions([k.ID,G.ID,X.ID,j.ID,U.ID,Y.ID,J,q.ID,P.ID,Z.ID])],contextMenuId:Q.SimpleEditorContext},i,n,s,e,a,c,d,l,p),this._commentEditorFocused=$.bindTo(e),this._commentEditorEmpty=V.commentIsEmpty.bindTo(e),this._commentEditorEmpty.set(!this.getModel()?.getValueLength()),this._parentThread=r,this._register(this.onDidFocusEditorWidget((o=>this._commentEditorFocused.set(!0)))),this._register(this.onDidChangeModelContent((o=>this._commentEditorEmpty.set(!this.getModel()?.getValueLength())))),this._register(this.onDidBlurEditorWidget((o=>this._commentEditorFocused.reset())))}getParentThread(){return this._parentThread}_getActions(){return I.getEditorActions()}updateOptions(o){const t={...o,lineNumbers:"off"};super.updateOptions(t)}static getEditorOptions(o){return{wordWrap:"on",glyphMargin:!1,lineNumbers:"off",folding:!1,selectOnLineNumbers:!1,scrollbar:{vertical:"visible",verticalScrollbarSize:14,horizontal:"auto",useShadows:!0,verticalHasArrows:!1,horizontalHasArrows:!1,alwaysConsumeMouseWheel:!1},overviewRulerLanes:2,lineDecorationsWidth:0,scrollBeyondLastLine:!1,renderLineHighlight:"none",fixedOverflowWidgets:!0,acceptSuggestionOnEnter:"smart",minimap:{enabled:!1},dropIntoEditor:{enabled:!0},autoClosingBrackets:o.getValue("editor.autoClosingBrackets"),quickSuggestions:!1,accessibilitySupport:o.getValue("editor.accessibilitySupport"),fontFamily:o.getValue("editor.fontFamily"),fontSize:o.getValue("editor.fontSize")}}};function qt(o,t,e){const r=t.getLayoutInfo(),i=t.getOption(M.lineHeight),n=t._getViewModel()?.getLineCount()*i;if(n>r.height||n<r.height&&e>c){const t=Math.ceil((n-r.height)/i),e=r.height+i*t;return y(e,c,y(o.getLayoutInfo().height-90,c,tt))}return e}d=u([n(4,w),n(5,H),n(6,A),n(7,R),n(8,z),n(9,N),n(10,B),n(11,K)],d);export{tt as MAX_EDITOR_HEIGHT,c as MIN_EDITOR_HEIGHT,d as SimpleCommentEditor,qt as calculateEditorHeight,$ as ctxCommentEditorFocused};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { EditorOption, IEditorOptions } from "../../../../editor/common/config/editorOptions.js";
+import { EditorAction, EditorContributionInstantiation, EditorExtensionsRegistry, IEditorContributionDescription } from "../../../../editor/browser/editorExtensions.js";
+import { ICodeEditorService } from "../../../../editor/browser/services/codeEditorService.js";
+import { CodeEditorWidget, ICodeEditorWidgetOptions } from "../../../../editor/browser/widget/codeEditor/codeEditorWidget.js";
+import { IContextKeyService, RawContextKey, IContextKey } from "../../../../platform/contextkey/common/contextkey.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { MenuPreventer } from "../../codeEditor/browser/menuPreventer.js";
+import { EditorDictation } from "../../codeEditor/browser/dictation/editorDictation.js";
+import { ContextMenuController } from "../../../../editor/contrib/contextmenu/browser/contextmenu.js";
+import { SuggestController } from "../../../../editor/contrib/suggest/browser/suggestController.js";
+import { SnippetController2 } from "../../../../editor/contrib/snippet/browser/snippetController2.js";
+import { TabCompletionController } from "../../snippets/browser/tabCompletion.js";
+import { IThemeService } from "../../../../platform/theme/common/themeService.js";
+import { INotificationService } from "../../../../platform/notification/common/notification.js";
+import { IAccessibilityService } from "../../../../platform/accessibility/common/accessibility.js";
+import { ICommentThreadWidget } from "../common/commentThreadWidget.js";
+import { CommentContextKeys } from "../common/commentContextKeys.js";
+import { ILanguageConfigurationService } from "../../../../editor/common/languages/languageConfigurationRegistry.js";
+import { ILanguageFeaturesService } from "../../../../editor/common/services/languageFeatures.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { ICodeEditor } from "../../../../editor/browser/editorBrowser.js";
+import { clamp } from "../../../../base/common/numbers.js";
+import { CopyPasteController } from "../../../../editor/contrib/dropOrPasteInto/browser/copyPasteController.js";
+import { CodeActionController } from "../../../../editor/contrib/codeAction/browser/codeActionController.js";
+import { DropIntoEditorController } from "../../../../editor/contrib/dropOrPasteInto/browser/dropIntoEditorController.js";
+import { InlineCompletionsController } from "../../../../editor/contrib/inlineCompletions/browser/controller/inlineCompletionsController.js";
+import { LinkDetector } from "../../../../editor/contrib/links/browser/links.js";
+import { MessageController } from "../../../../editor/contrib/message/browser/messageController.js";
+import { SelectionClipboardContributionID } from "../../codeEditor/browser/selectionClipboard.js";
+import { MenuId } from "../../../../platform/actions/common/actions.js";
+import { ContentHoverController } from "../../../../editor/contrib/hover/browser/contentHoverController.js";
+import { GlyphHoverController } from "../../../../editor/contrib/hover/browser/glyphHoverController.js";
+import { PlaceholderTextContribution } from "../../../../editor/contrib/placeholderText/browser/placeholderTextContribution.js";
+const ctxCommentEditorFocused = new RawContextKey("commentEditorFocused", false);
+const MIN_EDITOR_HEIGHT = 5 * 18;
+const MAX_EDITOR_HEIGHT = 25 * 18;
+let SimpleCommentEditor = class extends CodeEditorWidget {
+  static {
+    __name(this, "SimpleCommentEditor");
+  }
+  _parentThread;
+  _commentEditorFocused;
+  _commentEditorEmpty;
+  constructor(domElement, options, scopedContextKeyService, parentThread, instantiationService, codeEditorService, commandService, themeService, notificationService, accessibilityService, languageConfigurationService, languageFeaturesService) {
+    const codeEditorWidgetOptions = {
+      contributions: [
+        { id: MenuPreventer.ID, ctor: MenuPreventer, instantiation: EditorContributionInstantiation.BeforeFirstInteraction },
+        { id: ContextMenuController.ID, ctor: ContextMenuController, instantiation: EditorContributionInstantiation.BeforeFirstInteraction },
+        { id: SuggestController.ID, ctor: SuggestController, instantiation: EditorContributionInstantiation.Eager },
+        { id: SnippetController2.ID, ctor: SnippetController2, instantiation: EditorContributionInstantiation.Lazy },
+        { id: TabCompletionController.ID, ctor: TabCompletionController, instantiation: EditorContributionInstantiation.Eager },
+        // eager because it needs to define a context key
+        { id: EditorDictation.ID, ctor: EditorDictation, instantiation: EditorContributionInstantiation.Lazy },
+        ...EditorExtensionsRegistry.getSomeEditorContributions([
+          CopyPasteController.ID,
+          DropIntoEditorController.ID,
+          LinkDetector.ID,
+          MessageController.ID,
+          ContentHoverController.ID,
+          GlyphHoverController.ID,
+          SelectionClipboardContributionID,
+          InlineCompletionsController.ID,
+          CodeActionController.ID,
+          PlaceholderTextContribution.ID
+        ])
+      ],
+      contextMenuId: MenuId.SimpleEditorContext
+    };
+    super(domElement, options, codeEditorWidgetOptions, instantiationService, codeEditorService, commandService, scopedContextKeyService, themeService, notificationService, accessibilityService, languageConfigurationService, languageFeaturesService);
+    this._commentEditorFocused = ctxCommentEditorFocused.bindTo(scopedContextKeyService);
+    this._commentEditorEmpty = CommentContextKeys.commentIsEmpty.bindTo(scopedContextKeyService);
+    this._commentEditorEmpty.set(!this.getModel()?.getValueLength());
+    this._parentThread = parentThread;
+    this._register(this.onDidFocusEditorWidget((_) => this._commentEditorFocused.set(true)));
+    this._register(this.onDidChangeModelContent((e) => this._commentEditorEmpty.set(!this.getModel()?.getValueLength())));
+    this._register(this.onDidBlurEditorWidget((_) => this._commentEditorFocused.reset()));
+  }
+  getParentThread() {
+    return this._parentThread;
+  }
+  _getActions() {
+    return EditorExtensionsRegistry.getEditorActions();
+  }
+  updateOptions(newOptions) {
+    const withLineNumberRemoved = { ...newOptions, lineNumbers: "off" };
+    super.updateOptions(withLineNumberRemoved);
+  }
+  static getEditorOptions(configurationService) {
+    return {
+      wordWrap: "on",
+      glyphMargin: false,
+      lineNumbers: "off",
+      folding: false,
+      selectOnLineNumbers: false,
+      scrollbar: {
+        vertical: "visible",
+        verticalScrollbarSize: 14,
+        horizontal: "auto",
+        useShadows: true,
+        verticalHasArrows: false,
+        horizontalHasArrows: false,
+        alwaysConsumeMouseWheel: false
+      },
+      overviewRulerLanes: 2,
+      lineDecorationsWidth: 0,
+      scrollBeyondLastLine: false,
+      renderLineHighlight: "none",
+      fixedOverflowWidgets: true,
+      acceptSuggestionOnEnter: "smart",
+      minimap: {
+        enabled: false
+      },
+      dropIntoEditor: { enabled: true },
+      autoClosingBrackets: configurationService.getValue("editor.autoClosingBrackets"),
+      quickSuggestions: false,
+      accessibilitySupport: configurationService.getValue("editor.accessibilitySupport"),
+      fontFamily: configurationService.getValue("editor.fontFamily"),
+      fontSize: configurationService.getValue("editor.fontSize")
+    };
+  }
+};
+SimpleCommentEditor = __decorateClass([
+  __decorateParam(4, IInstantiationService),
+  __decorateParam(5, ICodeEditorService),
+  __decorateParam(6, ICommandService),
+  __decorateParam(7, IThemeService),
+  __decorateParam(8, INotificationService),
+  __decorateParam(9, IAccessibilityService),
+  __decorateParam(10, ILanguageConfigurationService),
+  __decorateParam(11, ILanguageFeaturesService)
+], SimpleCommentEditor);
+function calculateEditorHeight(parentEditor, editor, currentHeight) {
+  const layoutInfo = editor.getLayoutInfo();
+  const lineHeight = editor.getOption(EditorOption.lineHeight);
+  const contentHeight = editor._getViewModel()?.getLineCount() * lineHeight;
+  if (contentHeight > layoutInfo.height || contentHeight < layoutInfo.height && currentHeight > MIN_EDITOR_HEIGHT) {
+    const linesToAdd = Math.ceil((contentHeight - layoutInfo.height) / lineHeight);
+    const proposedHeight = layoutInfo.height + lineHeight * linesToAdd;
+    return clamp(proposedHeight, MIN_EDITOR_HEIGHT, clamp(parentEditor.getLayoutInfo().height - 90, MIN_EDITOR_HEIGHT, MAX_EDITOR_HEIGHT));
+  }
+  return currentHeight;
+}
+__name(calculateEditorHeight, "calculateEditorHeight");
+export {
+  MAX_EDITOR_HEIGHT,
+  MIN_EDITOR_HEIGHT,
+  SimpleCommentEditor,
+  calculateEditorHeight,
+  ctxCommentEditorFocused
+};
+//# sourceMappingURL=simpleCommentEditor.js.map

@@ -1,1 +1,227 @@
-import"../../../../platform/update/common/update.config.contribution.js";import{localize as c,localize2 as n}from"../../../../nls.js";import{Registry as N}from"../../../../platform/registry/common/platform.js";import{Extensions as k}from"../../../common/contributions.js";import{Categories as x}from"../../../../platform/action/common/actionCommonCategories.js";import{MenuId as g,registerAction2 as i,Action2 as a}from"../../../../platform/actions/common/actions.js";import{ProductContribution as D,UpdateContribution as E,CONTEXT_UPDATE_STATE as l,SwitchProductQualityContribution as T,RELEASE_NOTES_URL as f,showReleaseNotesInEditor as y,DOWNLOAD_URL as U}from"./update.js";import{LifecyclePhase as S}from"../../../services/lifecycle/common/lifecycle.js";import t from"../../../../platform/product/common/product.js";import{IUpdateService as d,StateType as p}from"../../../../platform/update/common/update.js";import{IInstantiationService as A}from"../../../../platform/instantiation/common/instantiation.js";import{isWindows as F}from"../../../../base/common/platform.js";import{IFileDialogService as P}from"../../../../platform/dialogs/common/dialogs.js";import{mnemonicButtonLabel as W}from"../../../../base/common/labels.js";import{ShowCurrentReleaseNotesActionId as L,ShowCurrentReleaseNotesFromCurrentFileActionId as O}from"../common/update.js";import{IsWebContext as R}from"../../../../platform/contextkey/common/contextkeys.js";import{IOpenerService as C}from"../../../../platform/opener/common/opener.js";import{IProductService as h}from"../../../../platform/product/common/productService.js";import{URI as b}from"../../../../base/common/uri.js";import{ContextKeyExpr as I}from"../../../../platform/contextkey/common/contextkey.js";const v=N.as(k.Workbench);v.registerWorkbenchContribution(D,S.Restored),v.registerWorkbenchContribution(E,S.Restored),v.registerWorkbenchContribution(T,S.Restored);class _ extends a{constructor(){super({id:L,title:{...n("showReleaseNotes","Show Release Notes"),mnemonicTitle:c({key:"mshowReleaseNotes",comment:["&& denotes a mnemonic"]},"Show &&Release Notes")},category:{value:t.nameShort,original:t.nameShort},f1:!0,precondition:f,menu:[{id:g.MenubarHelpMenu,group:"1_welcome",order:5,when:f}]})}async run(e){const o=e.get(A),t=e.get(h),a=e.get(C);try{await y(o,t.version,!1)}catch{if(!t.releaseNotesUrl)throw new Error(c("update.noReleaseNotesOnline","This version of {0} does not have release notes online",t.nameLong));await a.open(b.parse(t.releaseNotesUrl))}}}class q extends a{constructor(){super({id:O,title:{...n("showReleaseNotesCurrentFile","Open Current File as Release Notes"),mnemonicTitle:c({key:"mshowReleaseNotes",comment:["&& denotes a mnemonic"]},"Show &&Release Notes")},category:n("developerCategory","Developer"),f1:!0})}async run(e){const o=e.get(A),t=e.get(h);try{await y(o,t.version,!0)}catch{throw new Error(c("releaseNotesFromFileNone","Cannot open the current file as Release Notes"))}}}i(_),i(q);class M extends a{constructor(){super({id:"update.checkForUpdate",title:n("checkForUpdates","Check for Updates..."),category:{value:t.nameShort,original:t.nameShort},f1:!0,precondition:l.isEqualTo(p.Idle)})}async run(e){return e.get(d).checkForUpdates(!0)}}class B extends a{constructor(){super({id:"update.downloadUpdate",title:n("downloadUpdate","Download Update"),category:{value:t.nameShort,original:t.nameShort},f1:!0,precondition:l.isEqualTo(p.AvailableForDownload)})}async run(e){await e.get(d).downloadUpdate()}}class z extends a{constructor(){super({id:"update.installUpdate",title:n("installUpdate","Install Update"),category:{value:t.nameShort,original:t.nameShort},f1:!0,precondition:l.isEqualTo(p.Downloaded)})}async run(e){await e.get(d).applyUpdate()}}class H extends a{constructor(){super({id:"update.restartToUpdate",title:n("restartToUpdate","Restart to Update"),category:{value:t.nameShort,original:t.nameShort},f1:!0,precondition:l.isEqualTo(p.Ready)})}async run(e){await e.get(d).quitAndInstall()}}class w extends a{static ID="workbench.action.download";constructor(){super({id:w.ID,title:n("openDownloadPage","Download {0}",t.nameLong),precondition:I.and(R,U),f1:!0,menu:[{id:g.StatusBarWindowIndicatorMenu,when:I.and(R,U)}]})}run(e){const o=e.get(h),t=e.get(C);o.downloadUrl&&t.open(b.parse(o.downloadUrl))}}if(i(w),i(M),i(B),i(z),i(H),F){class e extends a{constructor(){super({id:"_update.applyupdate",title:n("applyUpdate","Apply Update..."),category:x.Developer,f1:!0,precondition:l.isEqualTo(p.Idle)})}async run(e){const o=e.get(d),t=await e.get(P).showOpenDialog({title:c("pickUpdate","Apply Update"),filters:[{name:"Setup",extensions:["exe"]}],canSelectFiles:!0,openLabel:W(c({key:"updateButton",comment:["&& denotes a mnemonic"]},"&&Update"))});!t||!t[0]||await o._applySpecificUpdate(t[0].fsPath)}}i(e)}export{M as CheckForUpdateAction,_ as ShowCurrentReleaseNotesAction,q as ShowCurrentReleaseNotesFromCurrentFileAction};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import "../../../../platform/update/common/update.config.contribution.js";
+import { localize, localize2 } from "../../../../nls.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { IWorkbenchContributionsRegistry, Extensions as WorkbenchExtensions } from "../../../common/contributions.js";
+import { Categories } from "../../../../platform/action/common/actionCommonCategories.js";
+import { MenuId, registerAction2, Action2 } from "../../../../platform/actions/common/actions.js";
+import { ProductContribution, UpdateContribution, CONTEXT_UPDATE_STATE, SwitchProductQualityContribution, RELEASE_NOTES_URL, showReleaseNotesInEditor, DOWNLOAD_URL } from "./update.js";
+import { LifecyclePhase } from "../../../services/lifecycle/common/lifecycle.js";
+import product from "../../../../platform/product/common/product.js";
+import { IUpdateService, StateType } from "../../../../platform/update/common/update.js";
+import { IInstantiationService, ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+import { isWindows } from "../../../../base/common/platform.js";
+import { IFileDialogService } from "../../../../platform/dialogs/common/dialogs.js";
+import { mnemonicButtonLabel } from "../../../../base/common/labels.js";
+import { ShowCurrentReleaseNotesActionId, ShowCurrentReleaseNotesFromCurrentFileActionId } from "../common/update.js";
+import { IsWebContext } from "../../../../platform/contextkey/common/contextkeys.js";
+import { IOpenerService } from "../../../../platform/opener/common/opener.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+import { URI } from "../../../../base/common/uri.js";
+import { ContextKeyExpr } from "../../../../platform/contextkey/common/contextkey.js";
+const workbench = Registry.as(WorkbenchExtensions.Workbench);
+workbench.registerWorkbenchContribution(ProductContribution, LifecyclePhase.Restored);
+workbench.registerWorkbenchContribution(UpdateContribution, LifecyclePhase.Restored);
+workbench.registerWorkbenchContribution(SwitchProductQualityContribution, LifecyclePhase.Restored);
+class ShowCurrentReleaseNotesAction extends Action2 {
+  static {
+    __name(this, "ShowCurrentReleaseNotesAction");
+  }
+  constructor() {
+    super({
+      id: ShowCurrentReleaseNotesActionId,
+      title: {
+        ...localize2("showReleaseNotes", "Show Release Notes"),
+        mnemonicTitle: localize({ key: "mshowReleaseNotes", comment: ["&& denotes a mnemonic"] }, "Show &&Release Notes")
+      },
+      category: { value: product.nameShort, original: product.nameShort },
+      f1: true,
+      precondition: RELEASE_NOTES_URL,
+      menu: [{
+        id: MenuId.MenubarHelpMenu,
+        group: "1_welcome",
+        order: 5,
+        when: RELEASE_NOTES_URL
+      }]
+    });
+  }
+  async run(accessor) {
+    const instantiationService = accessor.get(IInstantiationService);
+    const productService = accessor.get(IProductService);
+    const openerService = accessor.get(IOpenerService);
+    try {
+      await showReleaseNotesInEditor(instantiationService, productService.version, false);
+    } catch (err) {
+      if (productService.releaseNotesUrl) {
+        await openerService.open(URI.parse(productService.releaseNotesUrl));
+      } else {
+        throw new Error(localize("update.noReleaseNotesOnline", "This version of {0} does not have release notes online", productService.nameLong));
+      }
+    }
+  }
+}
+class ShowCurrentReleaseNotesFromCurrentFileAction extends Action2 {
+  static {
+    __name(this, "ShowCurrentReleaseNotesFromCurrentFileAction");
+  }
+  constructor() {
+    super({
+      id: ShowCurrentReleaseNotesFromCurrentFileActionId,
+      title: {
+        ...localize2("showReleaseNotesCurrentFile", "Open Current File as Release Notes"),
+        mnemonicTitle: localize({ key: "mshowReleaseNotes", comment: ["&& denotes a mnemonic"] }, "Show &&Release Notes")
+      },
+      category: localize2("developerCategory", "Developer"),
+      f1: true
+    });
+  }
+  async run(accessor) {
+    const instantiationService = accessor.get(IInstantiationService);
+    const productService = accessor.get(IProductService);
+    try {
+      await showReleaseNotesInEditor(instantiationService, productService.version, true);
+    } catch (err) {
+      throw new Error(localize("releaseNotesFromFileNone", "Cannot open the current file as Release Notes"));
+    }
+  }
+}
+registerAction2(ShowCurrentReleaseNotesAction);
+registerAction2(ShowCurrentReleaseNotesFromCurrentFileAction);
+class CheckForUpdateAction extends Action2 {
+  static {
+    __name(this, "CheckForUpdateAction");
+  }
+  constructor() {
+    super({
+      id: "update.checkForUpdate",
+      title: localize2("checkForUpdates", "Check for Updates..."),
+      category: { value: product.nameShort, original: product.nameShort },
+      f1: true,
+      precondition: CONTEXT_UPDATE_STATE.isEqualTo(StateType.Idle)
+    });
+  }
+  async run(accessor) {
+    const updateService = accessor.get(IUpdateService);
+    return updateService.checkForUpdates(true);
+  }
+}
+class DownloadUpdateAction extends Action2 {
+  static {
+    __name(this, "DownloadUpdateAction");
+  }
+  constructor() {
+    super({
+      id: "update.downloadUpdate",
+      title: localize2("downloadUpdate", "Download Update"),
+      category: { value: product.nameShort, original: product.nameShort },
+      f1: true,
+      precondition: CONTEXT_UPDATE_STATE.isEqualTo(StateType.AvailableForDownload)
+    });
+  }
+  async run(accessor) {
+    await accessor.get(IUpdateService).downloadUpdate();
+  }
+}
+class InstallUpdateAction extends Action2 {
+  static {
+    __name(this, "InstallUpdateAction");
+  }
+  constructor() {
+    super({
+      id: "update.installUpdate",
+      title: localize2("installUpdate", "Install Update"),
+      category: { value: product.nameShort, original: product.nameShort },
+      f1: true,
+      precondition: CONTEXT_UPDATE_STATE.isEqualTo(StateType.Downloaded)
+    });
+  }
+  async run(accessor) {
+    await accessor.get(IUpdateService).applyUpdate();
+  }
+}
+class RestartToUpdateAction extends Action2 {
+  static {
+    __name(this, "RestartToUpdateAction");
+  }
+  constructor() {
+    super({
+      id: "update.restartToUpdate",
+      title: localize2("restartToUpdate", "Restart to Update"),
+      category: { value: product.nameShort, original: product.nameShort },
+      f1: true,
+      precondition: CONTEXT_UPDATE_STATE.isEqualTo(StateType.Ready)
+    });
+  }
+  async run(accessor) {
+    await accessor.get(IUpdateService).quitAndInstall();
+  }
+}
+class DownloadAction extends Action2 {
+  static {
+    __name(this, "DownloadAction");
+  }
+  static ID = "workbench.action.download";
+  constructor() {
+    super({
+      id: DownloadAction.ID,
+      title: localize2("openDownloadPage", "Download {0}", product.nameLong),
+      precondition: ContextKeyExpr.and(IsWebContext, DOWNLOAD_URL),
+      // Only show when running in a web browser and a download url is available
+      f1: true,
+      menu: [{
+        id: MenuId.StatusBarWindowIndicatorMenu,
+        when: ContextKeyExpr.and(IsWebContext, DOWNLOAD_URL)
+      }]
+    });
+  }
+  run(accessor) {
+    const productService = accessor.get(IProductService);
+    const openerService = accessor.get(IOpenerService);
+    if (productService.downloadUrl) {
+      openerService.open(URI.parse(productService.downloadUrl));
+    }
+  }
+}
+registerAction2(DownloadAction);
+registerAction2(CheckForUpdateAction);
+registerAction2(DownloadUpdateAction);
+registerAction2(InstallUpdateAction);
+registerAction2(RestartToUpdateAction);
+if (isWindows) {
+  class DeveloperApplyUpdateAction extends Action2 {
+    static {
+      __name(this, "DeveloperApplyUpdateAction");
+    }
+    constructor() {
+      super({
+        id: "_update.applyupdate",
+        title: localize2("applyUpdate", "Apply Update..."),
+        category: Categories.Developer,
+        f1: true,
+        precondition: CONTEXT_UPDATE_STATE.isEqualTo(StateType.Idle)
+      });
+    }
+    async run(accessor) {
+      const updateService = accessor.get(IUpdateService);
+      const fileDialogService = accessor.get(IFileDialogService);
+      const updatePath = await fileDialogService.showOpenDialog({
+        title: localize("pickUpdate", "Apply Update"),
+        filters: [{ name: "Setup", extensions: ["exe"] }],
+        canSelectFiles: true,
+        openLabel: mnemonicButtonLabel(localize({ key: "updateButton", comment: ["&& denotes a mnemonic"] }, "&&Update"))
+      });
+      if (!updatePath || !updatePath[0]) {
+        return;
+      }
+      await updateService._applySpecificUpdate(updatePath[0].fsPath);
+    }
+  }
+  registerAction2(DeveloperApplyUpdateAction);
+}
+export {
+  CheckForUpdateAction,
+  ShowCurrentReleaseNotesAction,
+  ShowCurrentReleaseNotesFromCurrentFileAction
+};
+//# sourceMappingURL=update.contribution.js.map

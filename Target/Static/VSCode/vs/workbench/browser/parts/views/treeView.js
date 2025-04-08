@@ -1,2 +1,1853 @@
-var Ae=Object.defineProperty;var Ee=Object.getOwnPropertyDescriptor;var w=(m,n,e,i)=>{for(var t=i>1?void 0:i?Ee(n,e):n,r=m.length-1,o;r>=0;r--)(o=m[r])&&(t=(i?o(n,e,t):o(t))||t);return i&&t&&Ae(n,e,t),t},l=(m,n)=>(e,i)=>n(e,i,m);import{DataTransfers as U}from"../../../../base/browser/dnd.js";import*as g from"../../../../base/browser/dom.js";import*as Me from"../../../../base/browser/cssValue.js";import{renderMarkdownAsPlaintext as Ve}from"../../../../base/browser/markdownRenderer.js";import{ActionBar as ke}from"../../../../base/browser/ui/actionbar/actionbar.js";import{ActionViewItem as Re}from"../../../../base/browser/ui/actionbar/actionViewItems.js";import"../../../../base/browser/ui/hover/hoverDelegate.js";import"../../../../base/browser/ui/list/list.js";import"../../../../base/browser/ui/list/listView.js";import{TreeDragOverBubble as Le}from"../../../../base/browser/ui/tree/tree.js";import{CollapseAllAction as Pe}from"../../../../base/browser/ui/tree/treeDefaults.js";import{ActionRunner as He,Separator as ie}from"../../../../base/common/actions.js";import{timeout as Ke}from"../../../../base/common/async.js";import{CancellationToken as re,CancellationTokenSource as Fe}from"../../../../base/common/cancellation.js";import{Codicon as ne}from"../../../../base/common/codicons.js";import{isCancellationError as Ne}from"../../../../base/common/errors.js";import{Emitter as v,Event as Oe}from"../../../../base/common/event.js";import{createMatches as oe}from"../../../../base/common/filters.js";import{isMarkdownString as se,MarkdownString as ze}from"../../../../base/common/htmlContent.js";import{Disposable as $,DisposableStore as ae,MutableDisposable as Be,toDisposable as Ue}from"../../../../base/common/lifecycle.js";import{Mimes as W}from"../../../../base/common/mime.js";import{Schemas as le}from"../../../../base/common/network.js";import{basename as de,dirname as $e}from"../../../../base/common/resources.js";import{isFalsyOrWhitespace as We}from"../../../../base/common/strings.js";import{isString as G}from"../../../../base/common/types.js";import{URI as S}from"../../../../base/common/uri.js";import{generateUuid as Ge}from"../../../../base/common/uuid.js";import"./media/views.css";import{VSDataTransfer as qe}from"../../../../base/common/dataTransfer.js";import{localize as x}from"../../../../nls.js";import{createActionViewItem as Je,getContextMenuActions as je}from"../../../../platform/actions/browser/menuEntryActionViewItem.js";import{Action2 as ce,IMenuService as Xe,MenuId as M,MenuRegistry as Qe,registerAction2 as he}from"../../../../platform/actions/common/actions.js";import{CommandsRegistry as Ye,ICommandService as me}from"../../../../platform/commands/common/commands.js";import{IConfigurationService as V}from"../../../../platform/configuration/common/configuration.js";import{ContextKeyExpr as k,IContextKeyService as R,RawContextKey as L}from"../../../../platform/contextkey/common/contextkey.js";import{IContextMenuService as q}from"../../../../platform/contextview/browser/contextView.js";import{FileKind as P}from"../../../../platform/files/common/files.js";import{IInstantiationService as _}from"../../../../platform/instantiation/common/instantiation.js";import{IKeybindingService as J}from"../../../../platform/keybinding/common/keybinding.js";import{ILabelService as pe}from"../../../../platform/label/common/label.js";import{WorkbenchAsyncDataTree as Ze}from"../../../../platform/list/browser/listService.js";import{ILogService as j}from"../../../../platform/log/common/log.js";import{INotificationService as X}from"../../../../platform/notification/common/notification.js";import{IOpenerService as Q}from"../../../../platform/opener/common/opener.js";import{IProgressService as ue}from"../../../../platform/progress/common/progress.js";import{Registry as et}from"../../../../platform/registry/common/platform.js";import{ITelemetryService as tt}from"../../../../platform/telemetry/common/telemetry.js";import{ColorScheme as fe}from"../../../../platform/theme/common/theme.js";import{FileThemeIcon as ge,FolderThemeIcon as Y,IThemeService as H}from"../../../../platform/theme/common/themeService.js";import{ThemeIcon as it}from"../../../../base/common/themables.js";import{fillEditorsDragData as rt}from"../../dnd.js";import{ResourceLabels as nt}from"../../labels.js";import{API_OPEN_DIFF_EDITOR_COMMAND_ID as ot,API_OPEN_EDITOR_COMMAND_ID as st}from"../editor/editorCommands.js";import{getLocationBasedViewColors as Ie,ViewPane as at}from"./viewPane.js";import"./viewsViewlet.js";import{Extensions as lt,IViewDescriptorService as Z,ResolvableTreeItem as ve,TreeItemCollapsibleState as y}from"../../../common/views.js";import{IActivityService as Te,NumberBadge as dt}from"../../../services/activity/common/activity.js";import{IExtensionService as ct}from"../../../services/extensions/common/extensions.js";import{IHoverService as K,WorkbenchHoverDelegate as ht}from"../../../../platform/hover/browser/hover.js";import{CodeDataTransfers as mt,LocalSelectionTransfer as pt}from"../../../../platform/dnd/browser/dnd.js";import{toExternalVSDataTransfer as be}from"../../../../editor/browser/dnd.js";import{CheckboxStateHandler as ut,TreeItemCheckbox as ye}from"./checkbox.js";import{setTimeout0 as ft}from"../../../../base/common/platform.js";import"../../../../base/browser/ui/aria/aria.js";import{TelemetryTrustedValue as gt}from"../../../../platform/telemetry/common/telemetryUtils.js";import{ITreeViewsDnDService as It}from"../../../../editor/common/services/treeViewsDndService.js";import{DraggedTreeItemsIdentifier as F}from"../../../../editor/common/services/treeViewsDnd.js";import{MarkdownRenderer as vt}from"../../../../editor/browser/widget/markdownRenderer/browser/markdownRenderer.js";import{parseLinkedText as Tt}from"../../../../base/common/linkedText.js";import{Button as bt}from"../../../../base/browser/ui/button/button.js";import{defaultButtonStyles as yt}from"../../../../platform/theme/browser/defaultStyles.js";import{IAccessibleViewInformationService as Ct}from"../../../services/accessibility/common/accessibleViewInformationService.js";import"../../../../editor/common/languages.js";let N=class extends at{treeView;_container;_actionRunner;constructor(n,e,i,t,r,o,s,d,c,h,a,p){super({...n,titleMenuId:M.ViewTitle,donotForwardArgs:!1},e,i,t,r,o,s,d,c,a,p);const{treeView:u}=et.as(lt.ViewsRegistry).getView(n.id);this.treeView=u,this._register(this.treeView.onDidChangeActions(()=>this.updateActions(),this)),this._register(this.treeView.onDidChangeTitle(f=>this.updateTitle(f))),this._register(this.treeView.onDidChangeDescription(f=>this.updateTitleDescription(f))),this._register(Ue(()=>{this._container&&this.treeView.container&&this._container===this.treeView.container&&this.treeView.setVisibility(!1)})),this._register(this.onDidChangeBodyVisibility(()=>this.updateTreeVisibility())),this._register(this.treeView.onDidChangeWelcomeState(()=>this._onDidChangeViewWelcomeState.fire())),n.title!==this.treeView.title&&this.updateTitle(this.treeView.title),n.titleDescription!==this.treeView.description&&this.updateTitleDescription(this.treeView.description),this._actionRunner=this._register(new xe(h,()=>this.treeView.getSelection())),this.updateTreeVisibility()}focus(){super.focus(),this.treeView.focus()}renderBody(n){this._container=n,super.renderBody(n),this.renderTreeView(n)}shouldShowWelcome(){return(this.treeView.dataProvider===void 0||!!this.treeView.dataProvider.isTreeEmpty)&&(this.treeView.message===void 0||this.treeView.message==="")}layoutBody(n,e){super.layoutBody(n,e),this.layoutTreeView(n,e)}getOptimalWidth(){return this.treeView.getOptimalWidth()}renderTreeView(n){this.treeView.show(n)}layoutTreeView(n,e){this.treeView.layout(n,e)}updateTreeVisibility(){this.treeView.setVisibility(this.isBodyVisible())}getActionRunner(){return this._actionRunner}getActionsContext(){return{$treeViewId:this.id,$focusedTreeItem:!0,$selectedTreeItems:!0}}};N=w([l(1,J),l(2,q),l(3,V),l(4,R),l(5,Z),l(6,_),l(7,Q),l(8,H),l(9,X),l(10,K),l(11,Ct)],N);class ee{label={label:"root"};handle="0";parentHandle=void 0;collapsibleState=y.Expanded;children=void 0}function Ce(m){const n=Ye.getCommand(m);if(n){const e=Qe.getCommand(n.id);return e&&e.precondition}}function Se(m,n){const e=m.originalId?m.originalId:m.id,i=Ce(e);return i?n.contextMatchesRules(i):!0}function we(m){return!!m&&typeof m!="string"&&"element"in m&&"disposables"in m}const St=x("no-dataprovider","There is no data provider registered that can provide view data."),wt=new L("customTreeView",!1);class xt extends Ze{}let D=class extends ${constructor(e,i,t,r,o,s,d,c,h,a,p,u,f,T,z,I){super();this.id=e;this._title=i;this.themeService=t;this.instantiationService=r;this.commandService=o;this.configurationService=s;this.progressService=d;this.contextMenuService=c;this.keybindingService=h;this.notificationService=a;this.viewDescriptorService=p;this.hoverService=u;this.contextKeyService=f;this.activityService=T;this.logService=z;this.openerService=I;this.root=new ee,this.lastActive=this.root}isVisible=!1;_hasIconForParentNode=!1;_hasIconForLeafNode=!1;collapseAllContextKey;collapseAllContext;collapseAllToggleContextKey;collapseAllToggleContext;refreshContextKey;refreshContext;focused=!1;domNode;treeContainer;_messageValue;_canSelectMany=!1;_manuallyManageCheckboxes=!1;messageElement;tree;treeLabels;treeViewDnd;_container;root;markdownRenderer;elementsToRefresh=[];lastSelection=[];lastActive;_onDidExpandItem=this._register(new v);onDidExpandItem=this._onDidExpandItem.event;_onDidCollapseItem=this._register(new v);onDidCollapseItem=this._onDidCollapseItem.event;_onDidChangeSelectionAndFocus=this._register(new v);onDidChangeSelectionAndFocus=this._onDidChangeSelectionAndFocus.event;_onDidChangeVisibility=this._register(new v);onDidChangeVisibility=this._onDidChangeVisibility.event;_onDidChangeActions=this._register(new v);onDidChangeActions=this._onDidChangeActions.event;_onDidChangeWelcomeState=this._register(new v);onDidChangeWelcomeState=this._onDidChangeWelcomeState.event;_onDidChangeTitle=this._register(new v);onDidChangeTitle=this._onDidChangeTitle.event;_onDidChangeDescription=this._register(new v);onDidChangeDescription=this._onDidChangeDescription.event;_onDidChangeCheckboxState=this._register(new v);onDidChangeCheckboxState=this._onDidChangeCheckboxState.event;_onDidCompleteRefresh=this._register(new v);_isInitialized=!1;initialize(){this._isInitialized||(this._isInitialized=!0,this.contextKeyService.bufferChangeEvents(()=>{this.initializeShowCollapseAllAction(),this.initializeCollapseAllToggle(),this.initializeShowRefreshAction()}),this.treeViewDnd=this.instantiationService.createInstance(E,this.id),this._dragAndDropController&&(this.treeViewDnd.controller=this._dragAndDropController),this._register(this.configurationService.onDidChangeConfiguration(e=>{e.affectsConfiguration("explorer.decorations")&&this.doRefresh([this.root])})),this._register(this.viewDescriptorService.onDidChangeLocation(({views:e,from:i,to:t})=>{e.some(r=>r.id===this.id)&&this.tree?.updateOptions({overrideStyles:Ie(this.viewLocation).listOverrideStyles})})),this.registerActions(),this.create())}get viewContainer(){return this.viewDescriptorService.getViewContainerByViewId(this.id)}get viewLocation(){return this.viewDescriptorService.getViewLocationById(this.id)}_dragAndDropController;get dragAndDropController(){return this._dragAndDropController}set dragAndDropController(e){this._dragAndDropController=e,this.treeViewDnd&&(this.treeViewDnd.controller=e)}_dataProvider;get dataProvider(){return this._dataProvider}set dataProvider(e){if(e){this.visible&&this.activate();const i=this;this._dataProvider=new class{_isEmpty=!0;_onDidChangeEmpty=new v;onDidChangeEmpty=this._onDidChangeEmpty.event;get isTreeEmpty(){return this._isEmpty}async getChildren(t){return(await this.getChildrenBatch(t?[t]:void 0))?.[0]}updateEmptyState(t,r){if(t.length===1&&t[0]instanceof ee){const o=this._isEmpty;this._isEmpty=r.length===0||r[0].length===0,o!==this._isEmpty&&this._onDidChangeEmpty.fire()}}findCheckboxesUpdated(t,r){if(r.length===0)return[];const o=[];for(let s=0;s<t.length;s++){const d=t[s],c=r[s];for(const h of c)h.parent=d,!i.manuallyManageCheckboxes&&d?.checkbox?.isChecked===!0&&h.checkbox?.isChecked===!1&&(h.checkbox.isChecked=!0,o.push(h))}return o}async getChildrenBatch(t){let r,o=[];if(t&&t.every(s=>!!s.children))r=t.map(s=>s.children);else{t=t??[i.root];const s=await(t.length===1&&t[0]instanceof ee?te(e,void 0):te(e,t));for(let d=0;d<t.length;d++){const c=t[d];c.children=s?s[d]:void 0}r=s??[],o=this.findCheckboxesUpdated(t,r)}return this.updateEmptyState(t,r),o.length>0&&i._onDidChangeCheckboxState.fire(o),r}},this._dataProvider.onDidChangeEmpty&&this._register(this._dataProvider.onDidChangeEmpty(()=>{this.updateCollapseAllToggle(),this._onDidChangeWelcomeState.fire()})),this.updateMessage(),this.refresh()}else this._dataProvider=void 0,this.treeDisposables.clear(),this.activated=!1,this.updateMessage();this._onDidChangeWelcomeState.fire()}_message;get message(){return this._message}set message(e){this._message=e,this.updateMessage(),this._onDidChangeWelcomeState.fire()}get title(){return this._title}set title(e){this._title=e,this.tree&&(this.tree.ariaLabel=this._title),this._onDidChangeTitle.fire(this._title)}_description;get description(){return this._description}set description(e){this._description=e,this._onDidChangeDescription.fire(this._description)}_badge;_activity=this._register(new Be);get badge(){return this._badge}set badge(e){if(!(this._badge?.value===e?.value&&this._badge?.tooltip===e?.tooltip))if(this._badge=e,e){const i={badge:new dt(e.value,()=>e.tooltip),priority:50};this._activity.value=this.activityService.showViewActivity(this.id,i)}else this._activity.clear()}get canSelectMany(){return this._canSelectMany}set canSelectMany(e){const i=this._canSelectMany;this._canSelectMany=e,this._canSelectMany!==i&&this.tree?.updateOptions({multipleSelectionSupport:this.canSelectMany})}get manuallyManageCheckboxes(){return this._manuallyManageCheckboxes}set manuallyManageCheckboxes(e){this._manuallyManageCheckboxes=e}get hasIconForParentNode(){return this._hasIconForParentNode}get hasIconForLeafNode(){return this._hasIconForLeafNode}get visible(){return this.isVisible}initializeShowCollapseAllAction(e=!1){return this.collapseAllContext||(this.collapseAllContextKey=new L(`treeView.${this.id}.enableCollapseAll`,e,x("treeView.enableCollapseAll","Whether the tree view with id {0} enables collapse all.",this.id)),this.collapseAllContext=this.collapseAllContextKey.bindTo(this.contextKeyService)),!0}get showCollapseAllAction(){return this.initializeShowCollapseAllAction(),!!this.collapseAllContext?.get()}set showCollapseAllAction(e){this.initializeShowCollapseAllAction(e),this.collapseAllContext?.set(e)}initializeShowRefreshAction(e=!1){this.refreshContext||(this.refreshContextKey=new L(`treeView.${this.id}.enableRefresh`,e,x("treeView.enableRefresh","Whether the tree view with id {0} enables refresh.",this.id)),this.refreshContext=this.refreshContextKey.bindTo(this.contextKeyService))}get showRefreshAction(){return this.initializeShowRefreshAction(),!!this.refreshContext?.get()}set showRefreshAction(e){this.initializeShowRefreshAction(e),this.refreshContext?.set(e)}registerActions(){const e=this;this._register(he(class extends ce{constructor(){super({id:`workbench.actions.treeView.${e.id}.refresh`,title:x("refresh","Refresh"),menu:{id:M.ViewTitle,when:k.and(k.equals("view",e.id),e.refreshContextKey),group:"navigation",order:Number.MAX_SAFE_INTEGER-1},icon:ne.refresh})}async run(){return e.refresh()}})),this._register(he(class extends ce{constructor(){super({id:`workbench.actions.treeView.${e.id}.collapseAll`,title:x("collapseAll","Collapse All"),menu:{id:M.ViewTitle,when:k.and(k.equals("view",e.id),e.collapseAllContextKey),group:"navigation",order:Number.MAX_SAFE_INTEGER},precondition:e.collapseAllToggleContextKey,icon:ne.collapseAll})}async run(){if(e.tree)return new Pe(e.tree,!0).run()}}))}setVisibility(e){this.initialize(),e=!!e,this.isVisible!==e&&(this.isVisible=e,this.tree&&(this.isVisible?g.show(this.tree.getHTMLElement()):g.hide(this.tree.getHTMLElement()),this.isVisible&&this.elementsToRefresh.length&&this.dataProvider&&(this.doRefresh(this.elementsToRefresh),this.elementsToRefresh=[])),ft(()=>{this.dataProvider&&this._onDidChangeVisibility.fire(this.isVisible)}),this.visible&&this.activate())}activated=!1;focus(e=!0,i){if(this.tree&&this.root.children&&this.root.children.length>0){const t=i??this.tree.getSelection()[0];t&&e&&this.tree.reveal(t,.5),this.tree.domFocus()}else this.tree&&this.treeContainer&&!this.treeContainer.classList.contains("hide")?this.tree.domFocus():this.domNode.focus()}show(e){this._container=e,g.append(e,this.domNode)}create(){this.domNode=g.$(".tree-explorer-viewlet-tree-view"),this.messageElement=g.append(this.domNode,g.$(".message")),this.updateMessage(),this.treeContainer=g.append(this.domNode,g.$(".customview-tree")),this.treeContainer.classList.add("file-icon-themable-tree","show-file-icons");const e=this._register(g.trackFocus(this.domNode));this._register(e.onDidFocus(()=>this.focused=!0)),this._register(e.onDidBlur(()=>this.focused=!1))}treeDisposables=this._register(new ae);createTree(){this.treeDisposables.clear();const e=Je.bind(void 0,this.instantiationService),i=this.treeDisposables.add(this.instantiationService.createInstance(A,this.id));this.treeLabels=this.treeDisposables.add(this.instantiationService.createInstance(nt,this));const t=this.instantiationService.createInstance(At,this,a=>this.progressService.withProgress({location:this.id},()=>a)),r=this.treeDisposables.add(new Et(this.themeService)),o=this.treeDisposables.add(new ut),s=this.treeDisposables.add(this.instantiationService.createInstance(C,this.id,i,this.treeLabels,e,r,o,()=>this.manuallyManageCheckboxes));this.treeDisposables.add(s.onDidChangeCheckboxState(a=>this._onDidChangeCheckboxState.fire(a)));const d=this._title;this.tree=this.treeDisposables.add(this.instantiationService.createInstance(xt,this.id,this.treeContainer,new _t,[s],t,{identityProvider:new Dt,accessibilityProvider:{getAriaLabel(a){if(a.accessibilityInformation)return a.accessibilityInformation.label;if(G(a.tooltip))return a.tooltip;{if(a.resourceUri&&!a.label)return null;let p="";return a.label&&(p+=a.label.label+" "),a.description&&(p+=a.description),p}},getRole(a){return a.accessibilityInformation?.role??"treeitem"},getWidgetAriaLabel(){return d}},keyboardNavigationLabelProvider:{getKeyboardNavigationLabel:a=>a.label?a.label.label:a.resourceUri?de(S.revive(a.resourceUri)):void 0},expandOnlyOnTwistieClick:a=>!!a.command||!!a.checkbox||this.configurationService.getValue("workbench.tree.expandMode")==="doubleClick",collapseByDefault:a=>a.collapsibleState!==y.Expanded,multipleSelectionSupport:this.canSelectMany,dnd:this.treeViewDnd,overrideStyles:Ie(this.viewLocation).listOverrideStyles})),this.treeDisposables.add(s.onDidChangeMenuContext(a=>a.forEach(p=>this.tree?.rerender(p)))),this.treeDisposables.add(this.tree),i.setContextKeyService(this.tree.contextKeyService),r.tree=this.tree;const c=this.treeDisposables.add(new xe(this.notificationService,()=>this.tree.getSelection()));s.actionRunner=c,this.tree.contextKeyService.createKey(this.id,!0),wt.bindTo(this.tree.contextKeyService).set(!0),this.treeDisposables.add(this.tree.onContextMenu(a=>this.onContextMenu(i,a,c))),this.treeDisposables.add(this.tree.onDidChangeSelection(a=>{this.lastSelection=a.elements,this.lastActive=this.tree?.getFocus()[0]??this.lastActive,this._onDidChangeSelectionAndFocus.fire({selection:this.lastSelection,focus:this.lastActive})})),this.treeDisposables.add(this.tree.onDidChangeFocus(a=>{a.elements.length&&a.elements[0]!==this.lastActive&&(this.lastActive=a.elements[0],this.lastSelection=this.tree?.getSelection()??this.lastSelection,this._onDidChangeSelectionAndFocus.fire({selection:this.lastSelection,focus:this.lastActive}))})),this.treeDisposables.add(this.tree.onDidChangeCollapseState(a=>{if(!a.node.element)return;const p=Array.isArray(a.node.element.element)?a.node.element.element[0]:a.node.element.element;a.node.collapsed?this._onDidCollapseItem.fire(p):this._onDidExpandItem.fire(p)})),this.tree.setInput(this.root).then(()=>this.updateContentAreas()),this.treeDisposables.add(this.tree.onDidOpen(async a=>{if(!a.browserEvent||a.browserEvent.target&&a.browserEvent.target.classList.contains(ye.checkboxClass))return;const p=this.tree.getSelection(),u=await this.resolveCommand(p.length===1?p[0]:void 0);if(u&&Se(u,this.contextKeyService)){let f=u.arguments||[];(u.id===st||u.id===ot)&&(f=[...f,a]);try{await this.commandService.executeCommand(u.id,...f)}catch(T){this.notificationService.error(T)}}})),this.treeDisposables.add(i.onDidChange(a=>{this.tree?.hasNode(a)&&this.tree?.rerender(a)}))}async resolveCommand(e){let i=e?.command;return e&&!i&&e instanceof ve&&e.hasResolve&&(await e.resolve(re.None),i=e.command),i}onContextMenu(e,i,t){this.hoverService.hideHover();const r=i.element;if(r===null)return;const o=i.browserEvent;o.preventDefault(),o.stopPropagation(),this.tree.setFocus([r]);let s=this.canSelectMany?this.getSelection():[];s.find(c=>c.handle===r.handle)||(s=[r]);const d=e.getResourceContextActions(s);d.length&&this.contextMenuService.showContextMenu({getAnchor:()=>i.anchor,getActions:()=>d,getActionViewItem:c=>{const h=this.keybindingService.lookupKeybinding(c.id);if(h)return new Re(c,c,{label:!0,keybinding:h.getLabel()})},onHide:c=>{c&&this.tree.domFocus()},getActionsContext:()=>({$treeViewId:this.id,$treeItemHandle:r.handle}),actionRunner:t})}updateMessage(){this._message?this.showMessage(this._message):this.dataProvider?this.hideMessage():this.showMessage(St),this.updateContentAreas()}processMessage(e,i){const t=e.value.split(`
-`),r=[];let o=!1;for(const d of t){const c=Tt(d);if(c.nodes.length===1&&typeof c.nodes[0]!="string"){const h=c.nodes[0],a=document.createElement("div");a.classList.add("button-container");const p=new bt(a,{title:h.title,secondary:o,supportIcons:!0,...yt});p.label=h.label,p.onDidClick(f=>{this.openerService.open(h.href,{allowCommands:!0})},null,i);const u=S.parse(h.href);if(u.scheme===le.command){const f=Ce(u.path);f&&(p.enabled=this.contextKeyService.contextMatchesRules(f),i.add(this.contextKeyService.onDidChangeContext(T=>{T.affectsSome(new Set(f.keys()))&&(p.enabled=this.contextKeyService.contextMatchesRules(f))})))}i.add(p),o=!0,r.push(a)}else{o=!1;const h=this.markdownRenderer.render(new ze(d,{isTrusted:e.isTrusted,supportThemeIcons:e.supportThemeIcons,supportHtml:e.supportHtml}));r.push(h.element),i.add(h)}}const s=document.createElement("div");s.classList.add("rendered-message");for(const d of r)g.isHTMLElement(d)?s.appendChild(d):s.appendChild(d.element);return s}showMessage(e){if(we(this._messageValue)&&this._messageValue.disposables.dispose(),se(e)&&!this.markdownRenderer&&(this.markdownRenderer=this.instantiationService.createInstance(vt,{})),se(e)){const i=new ae,t=this.processMessage(e,i);this._messageValue={element:t,disposables:i}}else this._messageValue=e;this.messageElement&&(this.messageElement.classList.remove("hide"),this.resetMessageElement(),typeof this._messageValue=="string"&&!We(this._messageValue)?this.messageElement.textContent=this._messageValue:we(this._messageValue)&&this.messageElement.appendChild(this._messageValue.element),this.layout(this._height,this._width))}hideMessage(){this.resetMessageElement(),this.messageElement?.classList.add("hide"),this.layout(this._height,this._width)}resetMessageElement(){this.messageElement&&g.clearNode(this.messageElement)}_height=0;_width=0;layout(e,i){if(e&&i&&this.messageElement&&this.treeContainer){this._height=e,this._width=i;const t=e-g.getTotalHeight(this.messageElement);this.treeContainer.style.height=t+"px",this.tree?.layout(t,i)}}getOptimalWidth(){if(this.tree){const e=this.tree.getHTMLElement(),i=[].slice.call(e.querySelectorAll(".outline-item-label > a"));return g.getLargestChildWidth(e,i)}return 0}updateCheckboxes(e){return De(e)}async refresh(e,i){if(this.dataProvider&&this.tree){this.refreshing&&await Oe.toPromise(this._onDidCompleteRefresh.event),e||(e=[this.root],this.elementsToRefresh=[]);for(const t of e)t.children=void 0;if(this.isVisible){const t=this.updateCheckboxes(i??[]);return this.doRefresh(e.concat(t))}else if(this.elementsToRefresh.length){const t=new Set;this.elementsToRefresh.forEach(r=>t.add(r.handle));for(const r of e)t.has(r.handle)||this.elementsToRefresh.push(r)}else this.elementsToRefresh.push(...e)}}async expand(e){const i=this.tree;if(i)try{e=Array.isArray(e)?e:[e];for(const t of e)await i.expand(t,!1)}catch{}}isCollapsed(e){return!!this.tree?.isCollapsed(e)}setSelection(e){this.tree?.setSelection(e)}getSelection(){return this.tree?.getSelection()??[]}setFocus(e){this.tree&&(e?(this.focus(!0,e),this.tree.setFocus([e])):this.tree.getFocus().length===0&&this.tree.setFocus([]))}async reveal(e){if(this.tree)return this.tree.reveal(e)}refreshing=!1;async doRefresh(e){const i=this.tree;if(i&&this.visible){this.refreshing=!0;const t=i.getSelection();try{await Promise.all(e.map(o=>i.updateChildren(o,!0,!0)))}catch(o){this.logService.error(o)}const r=i.getSelection();(t.length!==r.length||t.some((o,s)=>o.handle!==r[s].handle))&&(this.lastSelection=r,this._onDidChangeSelectionAndFocus.fire({selection:this.lastSelection,focus:this.lastActive})),this.refreshing=!1,this._onDidCompleteRefresh.fire(),this.updateContentAreas(),this.focused&&this.focus(!1),this.updateCollapseAllToggle()}}initializeCollapseAllToggle(){this.collapseAllToggleContext||(this.collapseAllToggleContextKey=new L(`treeView.${this.id}.toggleCollapseAll`,!1,x("treeView.toggleCollapseAll","Whether collapse all is toggled for the tree view with id {0}.",this.id)),this.collapseAllToggleContext=this.collapseAllToggleContextKey.bindTo(this.contextKeyService))}updateCollapseAllToggle(){this.showCollapseAllAction&&(this.initializeCollapseAllToggle(),this.collapseAllToggleContext?.set(!!this.root.children&&this.root.children.length>0&&this.root.children.some(e=>e.collapsibleState!==y.None)))}updateContentAreas(){const e=!this.root.children||this.root.children.length===0;this._messageValue&&e&&!this.refreshing&&this.treeContainer?(this.dragAndDropController||this.treeContainer.classList.add("hide"),this.domNode.setAttribute("tabindex","0")):this.treeContainer&&(this.treeContainer.classList.remove("hide"),this.domNode===g.getActiveElement()&&this.focus(),this.domNode.removeAttribute("tabindex"))}get container(){return this._container}};D=w([l(2,H),l(3,_),l(4,me),l(5,V),l(6,ue),l(7,q),l(8,J),l(9,X),l(10,Z),l(11,K),l(12,R),l(13,Te),l(14,j),l(15,Q)],D);class Dt{getId(n){return n.handle}}class _t{getHeight(n){return C.ITEM_HEIGHT}getTemplateId(n){return C.TREE_TEMPLATE_ID}}async function te(m,n){return m.getChildrenBatch?m.getChildrenBatch(n):n?Promise.all(n.map(e=>m.getChildren(e).then(i=>i??[]))):[await m.getChildren()].filter(e=>e!==void 0)}class At{constructor(n,e){this.treeView=n;this.withProgress=e}hasChildren(n){return!!this.treeView.dataProvider&&n.collapsibleState!==y.None}batch;batchPromise;async getChildren(n){const e=this.treeView.dataProvider;if(!e)return[];this.batch===void 0?(this.batch=[n],this.batchPromise=void 0):this.batch.push(n);const i=this.batch.length-1;return new Promise((t,r)=>{setTimeout(async()=>{const o=this.batch;this.batch=void 0,this.batchPromise||(this.batchPromise=this.withProgress(te(e,o)));try{const s=await this.batchPromise;t(s&&i<s.length?s[i]:[])}catch(s){s.message.startsWith("Bad progress location:")||r(s)}},0)})}}let C=class extends ${constructor(e,i,t,r,o,s,d,c,h,a,p,u,f){super();this.treeViewId=e;this.menus=i;this.labels=t;this.actionViewItemProvider=r;this.aligner=o;this.checkboxStateHandler=s;this.manuallyManageCheckboxes=d;this.themeService=c;this.configurationService=h;this.labelService=a;this.contextKeyService=p;this.hoverService=u;this._hoverDelegate=this._register(f.createInstance(ht,"mouse",void 0,{})),this._register(this.themeService.onDidFileIconThemeChange(()=>this.rerender())),this._register(this.themeService.onDidColorThemeChange(()=>this.rerender())),this._register(s.onDidChangeCheckboxState(T=>{this.updateCheckboxes(T)})),this._register(this.contextKeyService.onDidChangeContext(T=>this.onDidChangeContext(T)))}static ITEM_HEIGHT=22;static TREE_TEMPLATE_ID="treeExplorer";_onDidChangeCheckboxState=this._register(new v);onDidChangeCheckboxState=this._onDidChangeCheckboxState.event;_onDidChangeMenuContext=this._register(new v);onDidChangeMenuContext=this._onDidChangeMenuContext.event;_actionRunner;_hoverDelegate;_hasCheckbox=!1;_renderedElements=new Map;get templateId(){return C.TREE_TEMPLATE_ID}set actionRunner(e){this._actionRunner=e}renderTemplate(e){e.classList.add("custom-view-tree-node-item");const i=g.append(e,g.$("")),t=this.labels.create(e,{supportHighlights:!0,hoverDelegate:this._hoverDelegate}),r=g.prepend(t.element,g.$(".custom-view-tree-node-item-icon")),o=g.append(t.element,g.$(".actions")),s=new ke(o,{actionViewItemProvider:this.actionViewItemProvider});return{resourceLabel:t,icon:r,checkboxContainer:i,actionBar:s,container:e}}getHover(e,i,t){return!(t instanceof ve)||!t.hasResolve?i&&!t.tooltip?void 0:t.tooltip===void 0?e:G(t.tooltip)?t.tooltip!==""?t.tooltip:void 0:{markdown:t.tooltip,markdownNotSupportedFallback:i?void 0:Ve(t.tooltip)}:{markdown:typeof t.tooltip=="string"?t.tooltip:r=>new Promise(o=>{t.resolve(r).then(()=>o(t.tooltip))}),markdownNotSupportedFallback:i?void 0:e??""}}renderElement(e,i,t){const r=e.element,o=r.resourceUri?S.revive(r.resourceUri):null,s=r.label?r.label:o?{label:de(o)}:void 0,d=G(r.description)?r.description:o&&r.description===!0?this.labelService.getUriLabel($e(o),{relative:!0}):void 0,c=s?s.label:void 0,h=s&&s.highlights&&c?s.highlights.map(([I,b])=>{if(I<0&&(I=c.length+I),b<0&&(b=c.length+b),I>=c.length||b>c.length)return{start:0,end:0};if(I>b){const B=I;I=b,b=B}return{start:I,end:b}}):void 0,a=this.themeService.getColorTheme().type===fe.LIGHT?r.icon:r.iconDark,p=a?S.revive(a):void 0,u=this.getHover(c,o,r);t.actionBar.clear(),t.icon.style.color="";let f=!0;if(r.command&&(f=Se(r.command,this.contextKeyService)),this.renderCheckbox(r,t),o){const I=this.configurationService.getValue("explorer.decorations"),b=o||S.parse("missing:_icon_resource");t.resourceLabel.setResource({name:c,description:d,resource:b},{fileKind:this.getFileKind(r),title:u,hideIcon:this.shouldHideResourceLabelIcon(p,r.themeIcon),fileDecorations:I,extraClasses:["custom-view-tree-node-item-resourceLabel"],matches:h||oe(e.filterData),strikethrough:s?.strikethrough,disabledCommand:!f,labelEscapeNewLines:!0,forceLabel:!!r.label})}else t.resourceLabel.setResource({name:c,description:d},{title:u,hideIcon:!0,extraClasses:["custom-view-tree-node-item-resourceLabel"],matches:h||oe(e.filterData),strikethrough:s?.strikethrough,disabledCommand:!f,labelEscapeNewLines:!0});if(p)t.icon.className="custom-view-tree-node-item-icon",t.icon.style.backgroundImage=Me.asCSSUrl(p);else{let I;this.shouldShowThemeIcon(!!o,r.themeIcon)&&(I=it.asClassName(r.themeIcon),r.themeIcon.color&&(t.icon.style.color=this.themeService.getColorTheme().getColor(r.themeIcon.color.id)?.toString()??"")),t.icon.className=I?`custom-view-tree-node-item-icon ${I}`:"",t.icon.style.backgroundImage=""}f||(t.icon.className=t.icon.className+" disabled",t.container.parentElement&&(t.container.parentElement.className=t.container.parentElement.className+" disabled")),t.actionBar.context={$treeViewId:this.treeViewId,$treeItemHandle:r.handle};const T=this.menus.getResourceActions([r]);t.actionBar.push(T,{icon:!0,label:!1}),this._actionRunner&&(t.actionBar.actionRunner=this._actionRunner),this.setAlignment(t.container,r);const z=this._renderedElements.get(e.element.handle)??[];this._renderedElements.set(e.element.handle,[...z,{original:e,rendered:t}])}rerender(){const e=new Set(this._renderedElements.keys());for(const i of e){const t=this._renderedElements.get(i)??[];for(const r of t)this.disposeElement(r.original,0,r.rendered),this.renderElement(r.original,0,r.rendered)}}renderCheckbox(e,i){if(e.checkbox){if(this._hasCheckbox||(this._hasCheckbox=!0,this.rerender()),!i.checkbox){const t=new ye(i.checkboxContainer,this.checkboxStateHandler,this._hoverDelegate,this.hoverService);i.checkbox=t}i.checkbox.render(e)}else i.checkbox&&(i.checkbox.dispose(),i.checkbox=void 0)}setAlignment(e,i){e.parentElement.classList.toggle("align-icon-with-twisty",!this._hasCheckbox&&this.aligner.alignIconWithTwisty(i))}shouldHideResourceLabelIcon(e,i){return!!e||!!i&&!this.isFileKindThemeIcon(i)}shouldShowThemeIcon(e,i){return i?!(e&&this.isFileKindThemeIcon(i)):!1}isFolderThemeIcon(e){return e?.id===Y.id}isFileKindThemeIcon(e){return e?e.id===ge.id||this.isFolderThemeIcon(e):!1}getFileKind(e){if(e.themeIcon)switch(e.themeIcon.id){case ge.id:return P.FILE;case Y.id:return P.FOLDER}return e.collapsibleState===y.Collapsed||e.collapsibleState===y.Expanded?P.FOLDER:P.FILE}onDidChangeContext(e){const i=[];for(const[t,r]of this._renderedElements)for(const o of r)(e.affectsSome(this.menus.getElementOverlayContexts(o.original.element))||e.affectsSome(this.menus.getEntireMenuContexts()))&&i.push(o.original.element);i.length&&this._onDidChangeMenuContext.fire(i)}updateCheckboxes(e){let i=[];this.manuallyManageCheckboxes()?i=e:i=De(e),i.forEach(t=>{const r=this._renderedElements.get(t.handle);r&&r.forEach(o=>o.rendered.checkbox?.render(t))}),this._onDidChangeCheckboxState.fire(i)}disposeElement(e,i,t){const r=this._renderedElements.get(e.element.handle)??[],o=r.findIndex(s=>t===s.rendered);r.length===1?this._renderedElements.delete(e.element.handle):r.length>0&&r.splice(o,1),t.checkbox?.dispose(),t.checkbox=void 0}disposeTemplate(e){e.resourceLabel.dispose(),e.actionBar.dispose()}};C=w([l(7,H),l(8,V),l(9,pe),l(10,R),l(11,K),l(12,_)],C);class Et extends ${constructor(e){super();this.themeService=e}_tree;set tree(e){this._tree=e}alignIconWithTwisty(e){if(e.collapsibleState!==y.None||!this.hasIcon(e))return!1;if(this._tree){const i=this._tree.getParentElement(e)||this._tree.getInput();return this.hasIcon(i)?!!i.children&&i.children.some(t=>t.collapsibleState!==y.None&&!this.hasIcon(t)):!!i.children&&i.children.every(t=>t.collapsibleState===y.None||!this.hasIcon(t))}else return!1}hasIcon(e){if(this.themeService.getColorTheme().type===fe.LIGHT?e.icon:e.iconDark)return!0;if(e.resourceUri||e.themeIcon){const t=this.themeService.getFileIconTheme();return(e.themeIcon?e.themeIcon.id===Y.id:e.collapsibleState!==y.None)?t.hasFileIcons&&t.hasFolderIcons:t.hasFileIcons}return!1}}class xe extends He{constructor(e,i){super();this.getSelectedResources=i;this._register(this.onDidRun(t=>{t.error&&!Ne(t.error)&&e.error(x("command-error","Error running command {1}: {0}. This is likely caused by the extension that contributes {1}.",t.error.message,t.action.id))}))}async runAction(e,i){const t=this.getSelectedResources();let r,o=!1;t.length>1&&(r=t.map(s=>((s.handle===i.$treeItemHandle||i.$selectedTreeItems)&&(o=!0),{$treeViewId:i.$treeViewId,$treeItemHandle:s.handle}))),!o&&r&&(r=void 0),await e.run(i,r)}}let A=class{constructor(n,e){this.id=n;this.menuService=e}contextKeyService;_onDidChange=new v;onDidChange=this._onDidChange.event;getResourceActions(n){return this.getActions(this.getMenuId(),n).primary}getResourceContextActions(n){return this.getActions(this.getMenuId(),n).secondary}setContextKeyService(n){this.contextKeyService=n}filterNonUniversalActions(n,e){const i=new Set(e.map(t=>t.id));for(const t of n){const r=t.keys();for(const o of r)i.has(o)||t.delete(o)}}buildMenu(n){const e=[];for(const i of n)i.size>0&&(e.length&&e.push(new ie),e.push(...i.values()));return e}createGroups(n){const e=[];let i=new Map;for(const t of n)t instanceof ie?(e.push(i),i=new Map):i.set(t.id,t);return e.push(i),e}getElementOverlayContexts(n){return new Map([["view",this.id],["viewItem",n.contextValue]])}getEntireMenuContexts(){return this.menuService.getMenuContexts(this.getMenuId())}getMenuId(){return M.ViewItemContext}getActions(n,e){if(!this.contextKeyService)return{primary:[],secondary:[]};let i=[],t=[];for(let r=0;r<e.length;r++){const o=e[r],s=this.contextKeyService.createOverlay(this.getElementOverlayContexts(o)),d=this.menuService.getMenuActions(n,s,{shouldForwardArgs:!0}),c=je(d,"inline");r===0?(i=this.createGroups(c.primary),t=this.createGroups(c.secondary)):(this.filterNonUniversalActions(i,c.primary),this.filterNonUniversalActions(t,c.secondary))}return{primary:this.buildMenu(i),secondary:this.buildMenu(t)}}dispose(){this.contextKeyService=void 0}};A=w([l(1,Xe)],A);let O=class extends D{constructor(e,i,t,r,o,s,d,c,h,a,p,u,f,T,z,I,b,B,_e){super(e,i,r,o,s,d,c,h,a,p,u,T,f,I,B,_e);this.extensionId=t;this.extensionService=z;this.telemetryService=b}activate(){this.activated||(this.telemetryService.publicLog2("Extension:ViewActivate",{extensionId:new gt(this.extensionId),id:this.id}),this.createTree(),this.progressService.withProgress({location:this.id},()=>this.extensionService.activateByEvent(`onView:${this.id}`)).then(()=>Ke(2e3)).then(()=>{this.updateMessage()}),this.activated=!0)}};O=w([l(3,H),l(4,_),l(5,me),l(6,V),l(7,ue),l(8,q),l(9,J),l(10,X),l(11,Z),l(12,R),l(13,K),l(14,ct),l(15,Te),l(16,tt),l(17,j),l(18,Q)],O);class Rr extends D{activate(){this.activated||(this.createTree(),this.activated=!0)}}let E=class{constructor(n,e,i,t,r){this.treeId=n;this.labelService=e;this.instantiationService=i;this.treeViewsDragAndDropService=t;this.logService=r;this.treeMimeType=`application/vnd.code.tree.${n.toLowerCase()}`}treeMimeType;treeItemsTransfer=pt.getInstance();dragCancellationToken;dndController;set controller(n){this.dndController=n}handleDragAndLog(n,e,i,t){return n.handleDrag(e,i,t).then(r=>{if(r){const o=[];for(const s of r)s[0]!==this.treeMimeType&&n.dragMimeTypes.findIndex(d=>d===s[0])<0&&o.push(s[0]);o.length&&this.logService.warn(`Drag and drop controller for tree ${this.treeId} adds the following data transfer types but does not declare them in dragMimeTypes: ${o.join(", ")}`)}return r})}addExtensionProvidedTransferTypes(n,e){if(!n.dataTransfer||!this.dndController)return;const i=Ge();this.dragCancellationToken=new Fe,this.treeViewsDragAndDropService.addDragOperationTransfer(i,this.handleDragAndLog(this.dndController,e,i,this.dragCancellationToken.token)),this.treeItemsTransfer.setData([new F(i)],F.prototype),n.dataTransfer.clearData(W.text),this.dndController.dragMimeTypes.find(t=>t===W.uriList)&&n.dataTransfer?.setData(U.RESOURCES,""),this.dndController.dragMimeTypes.forEach(t=>{n.dataTransfer?.setData(t,"")})}addResourceInfoToTransfer(n,e){if(e.length&&n.dataTransfer){this.instantiationService.invokeFunction(t=>rt(t,e,n));const i=e.filter(t=>t.scheme===le.file).map(t=>t.fsPath);i.length&&n.dataTransfer.setData(mt.FILES,JSON.stringify(i))}}onDragStart(n,e){if(e.dataTransfer){const i=n.getData(),t=[],r={id:this.treeId,itemHandles:[]};i.forEach(o=>{r.itemHandles.push(o.handle),o.resourceUri&&t.push(S.revive(o.resourceUri))}),this.addResourceInfoToTransfer(e,t),this.addExtensionProvidedTransferTypes(e,r.itemHandles),e.dataTransfer.setData(this.treeMimeType,JSON.stringify(r))}}debugLog(n){n.size?this.logService.debug(`TreeView dragged mime types: ${Array.from(n).join(", ")}`):this.logService.debug("TreeView dragged with no supported mime types.")}onDragOver(n,e,i,t,r){const o=be(r.dataTransfer),s=new Set(Array.from(o,h=>h[0]));if(r.dataTransfer){for(const h of r.dataTransfer.items)if(h.kind==="file"||h.type===U.RESOURCES.toLowerCase()){s.add(W.uriList);break}}this.debugLog(s);const d=this.dndController;return!d||!r.dataTransfer||d.dropMimeTypes.length===0?!1:Array.from(s).some((h,a)=>h===this.treeMimeType?!0:d.dropMimeTypes.indexOf(h)>=0)?{accept:!0,bubble:Le.Down,autoExpand:!0}:!1}getDragURI(n){return this.dndController?n.resourceUri?S.revive(n.resourceUri).toString():n.handle:null}getDragLabel(n){if(!this.dndController)return;if(n.length>1)return String(n.length);const e=n[0];return e.label?e.label.label:e.resourceUri?this.labelService.getUriLabel(S.revive(e.resourceUri)):void 0}async drop(n,e,i,t,r){const o=this.dndController;if(!r.dataTransfer||!o)return;let s,d;this.treeItemsTransfer.hasData(F.prototype)&&(d=this.treeItemsTransfer.getData(F.prototype)[0].identifier);const c=be(r.dataTransfer,!0),h=new qe;for(const[p,u]of c)if((p===this.treeMimeType||o.dropMimeTypes.includes(p)||u.asFile()&&o.dropMimeTypes.includes(U.FILES.toLowerCase()))&&(h.append(p,u),p===this.treeMimeType))try{s=JSON.parse(await u.asString())}catch{}const a=await this.treeViewsDragAndDropService.removeDragOperationTransfer(d);if(a)for(const[p,u]of a)h.append(p,u);return o.handleDrop(h,e,re.None,d,s?.id,s?.itemHandles)}onDragEnd(n){n.dataTransfer?.dropEffect==="none"&&this.dragCancellationToken?.cancel()}dispose(){}};E=w([l(1,pe),l(2,_),l(3,It),l(4,j)],E);function De(m){const n=[];for(const e of m)if(e.checkbox!==void 0){const i=o=>{for(const s of o.children??[])s.checkbox!==void 0&&o.checkbox!==void 0&&s.checkbox.isChecked!==o.checkbox.isChecked&&(s.checkbox.isChecked=o.checkbox.isChecked,n.push(s),i(s))};i(e);const t=new Set,r=o=>{if(o.parent&&o.parent.checkbox!==void 0&&o.parent.children){if(t.has(o.parent))return;t.add(o.parent);let s=!1,d=!1;for(const c of o.parent.children){if(s&&d)break;c.checkbox!==void 0&&(c.checkbox.isChecked?d=!0:s=!0)}d&&!s&&o.parent.checkbox.isChecked!==!0?(o.parent.checkbox.isChecked=!0,n.push(o.parent),r(o.parent)):s&&o.parent.checkbox.isChecked!==!1&&(o.parent.checkbox.isChecked=!1,n.push(o.parent),r(o.parent))}};r(e)}return m.concat(n)}export{O as CustomTreeView,E as CustomTreeViewDragAndDrop,wt as RawCustomTreeViewContextKey,Rr as TreeView,N as TreeViewPane};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { DataTransfers, IDragAndDropData } from "../../../../base/browser/dnd.js";
+import * as DOM from "../../../../base/browser/dom.js";
+import * as cssJs from "../../../../base/browser/cssValue.js";
+import { renderMarkdownAsPlaintext } from "../../../../base/browser/markdownRenderer.js";
+import { ActionBar, IActionViewItemProvider } from "../../../../base/browser/ui/actionbar/actionbar.js";
+import { ActionViewItem } from "../../../../base/browser/ui/actionbar/actionViewItems.js";
+import { IHoverDelegate } from "../../../../base/browser/ui/hover/hoverDelegate.js";
+import { IIdentityProvider, IListVirtualDelegate } from "../../../../base/browser/ui/list/list.js";
+import { ElementsDragAndDropData, ListViewTargetSector } from "../../../../base/browser/ui/list/listView.js";
+import { IAsyncDataSource, ITreeContextMenuEvent, ITreeDragAndDrop, ITreeDragOverReaction, ITreeNode, ITreeRenderer, TreeDragOverBubble } from "../../../../base/browser/ui/tree/tree.js";
+import { CollapseAllAction } from "../../../../base/browser/ui/tree/treeDefaults.js";
+import { ActionRunner, IAction, Separator } from "../../../../base/common/actions.js";
+import { timeout } from "../../../../base/common/async.js";
+import { CancellationToken, CancellationTokenSource } from "../../../../base/common/cancellation.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { isCancellationError } from "../../../../base/common/errors.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { createMatches, FuzzyScore } from "../../../../base/common/filters.js";
+import { IMarkdownString, isMarkdownString, MarkdownString } from "../../../../base/common/htmlContent.js";
+import { Disposable, DisposableStore, IDisposable, MutableDisposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { Mimes } from "../../../../base/common/mime.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { basename, dirname } from "../../../../base/common/resources.js";
+import { isFalsyOrWhitespace } from "../../../../base/common/strings.js";
+import { isString } from "../../../../base/common/types.js";
+import { URI } from "../../../../base/common/uri.js";
+import { generateUuid } from "../../../../base/common/uuid.js";
+import "./media/views.css";
+import { VSDataTransfer } from "../../../../base/common/dataTransfer.js";
+import { localize } from "../../../../nls.js";
+import { createActionViewItem, getContextMenuActions } from "../../../../platform/actions/browser/menuEntryActionViewItem.js";
+import { Action2, IMenuService, MenuId, MenuRegistry, registerAction2 } from "../../../../platform/actions/common/actions.js";
+import { CommandsRegistry, ICommandService } from "../../../../platform/commands/common/commands.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { ContextKeyExpr, ContextKeyExpression, IContextKey, IContextKeyChangeEvent, IContextKeyService, RawContextKey } from "../../../../platform/contextkey/common/contextkey.js";
+import { IContextMenuService } from "../../../../platform/contextview/browser/contextView.js";
+import { FileKind } from "../../../../platform/files/common/files.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { ILabelService } from "../../../../platform/label/common/label.js";
+import { WorkbenchAsyncDataTree } from "../../../../platform/list/browser/listService.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { INotificationService } from "../../../../platform/notification/common/notification.js";
+import { IOpenerService } from "../../../../platform/opener/common/opener.js";
+import { IProgressService } from "../../../../platform/progress/common/progress.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { ColorScheme } from "../../../../platform/theme/common/theme.js";
+import { FileThemeIcon, FolderThemeIcon, IThemeService } from "../../../../platform/theme/common/themeService.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { fillEditorsDragData } from "../../dnd.js";
+import { IResourceLabel, ResourceLabels } from "../../labels.js";
+import { API_OPEN_DIFF_EDITOR_COMMAND_ID, API_OPEN_EDITOR_COMMAND_ID } from "../editor/editorCommands.js";
+import { getLocationBasedViewColors, IViewPaneOptions, ViewPane } from "./viewPane.js";
+import { IViewletViewOptions } from "./viewsViewlet.js";
+import { Extensions, ITreeItem, ITreeItemLabel, ITreeView, ITreeViewDataProvider, ITreeViewDescriptor, ITreeViewDragAndDropController, IViewBadge, IViewDescriptorService, IViewsRegistry, ResolvableTreeItem, TreeCommand, TreeItemCollapsibleState, TreeViewItemHandleArg, TreeViewPaneHandleArg, ViewContainer, ViewContainerLocation } from "../../../common/views.js";
+import { IActivityService, NumberBadge } from "../../../services/activity/common/activity.js";
+import { IExtensionService } from "../../../services/extensions/common/extensions.js";
+import { IHoverService, WorkbenchHoverDelegate } from "../../../../platform/hover/browser/hover.js";
+import { CodeDataTransfers, LocalSelectionTransfer } from "../../../../platform/dnd/browser/dnd.js";
+import { toExternalVSDataTransfer } from "../../../../editor/browser/dnd.js";
+import { CheckboxStateHandler, TreeItemCheckbox } from "./checkbox.js";
+import { setTimeout0 } from "../../../../base/common/platform.js";
+import { AriaRole } from "../../../../base/browser/ui/aria/aria.js";
+import { TelemetryTrustedValue } from "../../../../platform/telemetry/common/telemetryUtils.js";
+import { ITreeViewsDnDService } from "../../../../editor/common/services/treeViewsDndService.js";
+import { DraggedTreeItemsIdentifier } from "../../../../editor/common/services/treeViewsDnd.js";
+import { IMarkdownRenderResult, MarkdownRenderer } from "../../../../editor/browser/widget/markdownRenderer/browser/markdownRenderer.js";
+import { parseLinkedText } from "../../../../base/common/linkedText.js";
+import { Button } from "../../../../base/browser/ui/button/button.js";
+import { defaultButtonStyles } from "../../../../platform/theme/browser/defaultStyles.js";
+import { IAccessibleViewInformationService } from "../../../services/accessibility/common/accessibleViewInformationService.js";
+import { Command } from "../../../../editor/common/languages.js";
+let TreeViewPane = class extends ViewPane {
+  static {
+    __name(this, "TreeViewPane");
+  }
+  treeView;
+  _container;
+  _actionRunner;
+  constructor(options, keybindingService, contextMenuService, configurationService, contextKeyService, viewDescriptorService, instantiationService, openerService, themeService, notificationService, hoverService, accessibleViewService) {
+    super({ ...options, titleMenuId: MenuId.ViewTitle, donotForwardArgs: false }, keybindingService, contextMenuService, configurationService, contextKeyService, viewDescriptorService, instantiationService, openerService, themeService, hoverService, accessibleViewService);
+    const { treeView } = Registry.as(Extensions.ViewsRegistry).getView(options.id);
+    this.treeView = treeView;
+    this._register(this.treeView.onDidChangeActions(() => this.updateActions(), this));
+    this._register(this.treeView.onDidChangeTitle((newTitle) => this.updateTitle(newTitle)));
+    this._register(this.treeView.onDidChangeDescription((newDescription) => this.updateTitleDescription(newDescription)));
+    this._register(toDisposable(() => {
+      if (this._container && this.treeView.container && this._container === this.treeView.container) {
+        this.treeView.setVisibility(false);
+      }
+    }));
+    this._register(this.onDidChangeBodyVisibility(() => this.updateTreeVisibility()));
+    this._register(this.treeView.onDidChangeWelcomeState(() => this._onDidChangeViewWelcomeState.fire()));
+    if (options.title !== this.treeView.title) {
+      this.updateTitle(this.treeView.title);
+    }
+    if (options.titleDescription !== this.treeView.description) {
+      this.updateTitleDescription(this.treeView.description);
+    }
+    this._actionRunner = this._register(new MultipleSelectionActionRunner(notificationService, () => this.treeView.getSelection()));
+    this.updateTreeVisibility();
+  }
+  focus() {
+    super.focus();
+    this.treeView.focus();
+  }
+  renderBody(container) {
+    this._container = container;
+    super.renderBody(container);
+    this.renderTreeView(container);
+  }
+  shouldShowWelcome() {
+    return (this.treeView.dataProvider === void 0 || !!this.treeView.dataProvider.isTreeEmpty) && (this.treeView.message === void 0 || this.treeView.message === "");
+  }
+  layoutBody(height, width) {
+    super.layoutBody(height, width);
+    this.layoutTreeView(height, width);
+  }
+  getOptimalWidth() {
+    return this.treeView.getOptimalWidth();
+  }
+  renderTreeView(container) {
+    this.treeView.show(container);
+  }
+  layoutTreeView(height, width) {
+    this.treeView.layout(height, width);
+  }
+  updateTreeVisibility() {
+    this.treeView.setVisibility(this.isBodyVisible());
+  }
+  getActionRunner() {
+    return this._actionRunner;
+  }
+  getActionsContext() {
+    return { $treeViewId: this.id, $focusedTreeItem: true, $selectedTreeItems: true };
+  }
+};
+TreeViewPane = __decorateClass([
+  __decorateParam(1, IKeybindingService),
+  __decorateParam(2, IContextMenuService),
+  __decorateParam(3, IConfigurationService),
+  __decorateParam(4, IContextKeyService),
+  __decorateParam(5, IViewDescriptorService),
+  __decorateParam(6, IInstantiationService),
+  __decorateParam(7, IOpenerService),
+  __decorateParam(8, IThemeService),
+  __decorateParam(9, INotificationService),
+  __decorateParam(10, IHoverService),
+  __decorateParam(11, IAccessibleViewInformationService)
+], TreeViewPane);
+class Root {
+  static {
+    __name(this, "Root");
+  }
+  label = { label: "root" };
+  handle = "0";
+  parentHandle = void 0;
+  collapsibleState = TreeItemCollapsibleState.Expanded;
+  children = void 0;
+}
+function commandPreconditions(commandId) {
+  const command = CommandsRegistry.getCommand(commandId);
+  if (command) {
+    const commandAction = MenuRegistry.getCommand(command.id);
+    return commandAction && commandAction.precondition;
+  }
+  return void 0;
+}
+__name(commandPreconditions, "commandPreconditions");
+function isTreeCommandEnabled(treeCommand, contextKeyService) {
+  const commandId = treeCommand.originalId ? treeCommand.originalId : treeCommand.id;
+  const precondition = commandPreconditions(commandId);
+  if (precondition) {
+    return contextKeyService.contextMatchesRules(precondition);
+  }
+  return true;
+}
+__name(isTreeCommandEnabled, "isTreeCommandEnabled");
+function isRenderedMessageValue(messageValue) {
+  return !!messageValue && typeof messageValue !== "string" && "element" in messageValue && "disposables" in messageValue;
+}
+__name(isRenderedMessageValue, "isRenderedMessageValue");
+const noDataProviderMessage = localize("no-dataprovider", "There is no data provider registered that can provide view data.");
+const RawCustomTreeViewContextKey = new RawContextKey("customTreeView", false);
+class Tree extends WorkbenchAsyncDataTree {
+  static {
+    __name(this, "Tree");
+  }
+}
+let AbstractTreeView = class extends Disposable {
+  constructor(id, _title, themeService, instantiationService, commandService, configurationService, progressService, contextMenuService, keybindingService, notificationService, viewDescriptorService, hoverService, contextKeyService, activityService, logService, openerService) {
+    super();
+    this.id = id;
+    this._title = _title;
+    this.themeService = themeService;
+    this.instantiationService = instantiationService;
+    this.commandService = commandService;
+    this.configurationService = configurationService;
+    this.progressService = progressService;
+    this.contextMenuService = contextMenuService;
+    this.keybindingService = keybindingService;
+    this.notificationService = notificationService;
+    this.viewDescriptorService = viewDescriptorService;
+    this.hoverService = hoverService;
+    this.contextKeyService = contextKeyService;
+    this.activityService = activityService;
+    this.logService = logService;
+    this.openerService = openerService;
+    this.root = new Root();
+    this.lastActive = this.root;
+  }
+  static {
+    __name(this, "AbstractTreeView");
+  }
+  isVisible = false;
+  _hasIconForParentNode = false;
+  _hasIconForLeafNode = false;
+  collapseAllContextKey;
+  collapseAllContext;
+  collapseAllToggleContextKey;
+  collapseAllToggleContext;
+  refreshContextKey;
+  refreshContext;
+  focused = false;
+  domNode;
+  treeContainer;
+  _messageValue;
+  _canSelectMany = false;
+  _manuallyManageCheckboxes = false;
+  messageElement;
+  tree;
+  treeLabels;
+  treeViewDnd;
+  _container;
+  root;
+  markdownRenderer;
+  elementsToRefresh = [];
+  lastSelection = [];
+  lastActive;
+  _onDidExpandItem = this._register(new Emitter());
+  onDidExpandItem = this._onDidExpandItem.event;
+  _onDidCollapseItem = this._register(new Emitter());
+  onDidCollapseItem = this._onDidCollapseItem.event;
+  _onDidChangeSelectionAndFocus = this._register(new Emitter());
+  onDidChangeSelectionAndFocus = this._onDidChangeSelectionAndFocus.event;
+  _onDidChangeVisibility = this._register(new Emitter());
+  onDidChangeVisibility = this._onDidChangeVisibility.event;
+  _onDidChangeActions = this._register(new Emitter());
+  onDidChangeActions = this._onDidChangeActions.event;
+  _onDidChangeWelcomeState = this._register(new Emitter());
+  onDidChangeWelcomeState = this._onDidChangeWelcomeState.event;
+  _onDidChangeTitle = this._register(new Emitter());
+  onDidChangeTitle = this._onDidChangeTitle.event;
+  _onDidChangeDescription = this._register(new Emitter());
+  onDidChangeDescription = this._onDidChangeDescription.event;
+  _onDidChangeCheckboxState = this._register(new Emitter());
+  onDidChangeCheckboxState = this._onDidChangeCheckboxState.event;
+  _onDidCompleteRefresh = this._register(new Emitter());
+  _isInitialized = false;
+  initialize() {
+    if (this._isInitialized) {
+      return;
+    }
+    this._isInitialized = true;
+    this.contextKeyService.bufferChangeEvents(() => {
+      this.initializeShowCollapseAllAction();
+      this.initializeCollapseAllToggle();
+      this.initializeShowRefreshAction();
+    });
+    this.treeViewDnd = this.instantiationService.createInstance(CustomTreeViewDragAndDrop, this.id);
+    if (this._dragAndDropController) {
+      this.treeViewDnd.controller = this._dragAndDropController;
+    }
+    this._register(this.configurationService.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration("explorer.decorations")) {
+        this.doRefresh([this.root]);
+      }
+    }));
+    this._register(this.viewDescriptorService.onDidChangeLocation(({ views, from, to }) => {
+      if (views.some((v) => v.id === this.id)) {
+        this.tree?.updateOptions({ overrideStyles: getLocationBasedViewColors(this.viewLocation).listOverrideStyles });
+      }
+    }));
+    this.registerActions();
+    this.create();
+  }
+  get viewContainer() {
+    return this.viewDescriptorService.getViewContainerByViewId(this.id);
+  }
+  get viewLocation() {
+    return this.viewDescriptorService.getViewLocationById(this.id);
+  }
+  _dragAndDropController;
+  get dragAndDropController() {
+    return this._dragAndDropController;
+  }
+  set dragAndDropController(dnd) {
+    this._dragAndDropController = dnd;
+    if (this.treeViewDnd) {
+      this.treeViewDnd.controller = dnd;
+    }
+  }
+  _dataProvider;
+  get dataProvider() {
+    return this._dataProvider;
+  }
+  set dataProvider(dataProvider) {
+    if (dataProvider) {
+      if (this.visible) {
+        this.activate();
+      }
+      const self = this;
+      this._dataProvider = new class {
+        _isEmpty = true;
+        _onDidChangeEmpty = new Emitter();
+        onDidChangeEmpty = this._onDidChangeEmpty.event;
+        get isTreeEmpty() {
+          return this._isEmpty;
+        }
+        async getChildren(element) {
+          const batches = await this.getChildrenBatch(element ? [element] : void 0);
+          return batches?.[0];
+        }
+        updateEmptyState(nodes, childrenGroups) {
+          if (nodes.length === 1 && nodes[0] instanceof Root) {
+            const oldEmpty = this._isEmpty;
+            this._isEmpty = childrenGroups.length === 0 || childrenGroups[0].length === 0;
+            if (oldEmpty !== this._isEmpty) {
+              this._onDidChangeEmpty.fire();
+            }
+          }
+        }
+        findCheckboxesUpdated(nodes, childrenGroups) {
+          if (childrenGroups.length === 0) {
+            return [];
+          }
+          const checkboxesUpdated = [];
+          for (let i = 0; i < nodes.length; i++) {
+            const node = nodes[i];
+            const children = childrenGroups[i];
+            for (const child of children) {
+              child.parent = node;
+              if (!self.manuallyManageCheckboxes && node?.checkbox?.isChecked === true && child.checkbox?.isChecked === false) {
+                child.checkbox.isChecked = true;
+                checkboxesUpdated.push(child);
+              }
+            }
+          }
+          return checkboxesUpdated;
+        }
+        async getChildrenBatch(nodes) {
+          let childrenGroups;
+          let checkboxesUpdated = [];
+          if (nodes && nodes.every((node) => !!node.children)) {
+            childrenGroups = nodes.map((node) => node.children);
+          } else {
+            nodes = nodes ?? [self.root];
+            const batchedChildren = await (nodes.length === 1 && nodes[0] instanceof Root ? doGetChildrenOrBatch(dataProvider, void 0) : doGetChildrenOrBatch(dataProvider, nodes));
+            for (let i = 0; i < nodes.length; i++) {
+              const node = nodes[i];
+              node.children = batchedChildren ? batchedChildren[i] : void 0;
+            }
+            childrenGroups = batchedChildren ?? [];
+            checkboxesUpdated = this.findCheckboxesUpdated(nodes, childrenGroups);
+          }
+          this.updateEmptyState(nodes, childrenGroups);
+          if (checkboxesUpdated.length > 0) {
+            self._onDidChangeCheckboxState.fire(checkboxesUpdated);
+          }
+          return childrenGroups;
+        }
+      }();
+      if (this._dataProvider.onDidChangeEmpty) {
+        this._register(this._dataProvider.onDidChangeEmpty(() => {
+          this.updateCollapseAllToggle();
+          this._onDidChangeWelcomeState.fire();
+        }));
+      }
+      this.updateMessage();
+      this.refresh();
+    } else {
+      this._dataProvider = void 0;
+      this.treeDisposables.clear();
+      this.activated = false;
+      this.updateMessage();
+    }
+    this._onDidChangeWelcomeState.fire();
+  }
+  _message;
+  get message() {
+    return this._message;
+  }
+  set message(message) {
+    this._message = message;
+    this.updateMessage();
+    this._onDidChangeWelcomeState.fire();
+  }
+  get title() {
+    return this._title;
+  }
+  set title(name) {
+    this._title = name;
+    if (this.tree) {
+      this.tree.ariaLabel = this._title;
+    }
+    this._onDidChangeTitle.fire(this._title);
+  }
+  _description;
+  get description() {
+    return this._description;
+  }
+  set description(description) {
+    this._description = description;
+    this._onDidChangeDescription.fire(this._description);
+  }
+  _badge;
+  _activity = this._register(new MutableDisposable());
+  get badge() {
+    return this._badge;
+  }
+  set badge(badge) {
+    if (this._badge?.value === badge?.value && this._badge?.tooltip === badge?.tooltip) {
+      return;
+    }
+    this._badge = badge;
+    if (badge) {
+      const activity = {
+        badge: new NumberBadge(badge.value, () => badge.tooltip),
+        priority: 50
+      };
+      this._activity.value = this.activityService.showViewActivity(this.id, activity);
+    } else {
+      this._activity.clear();
+    }
+  }
+  get canSelectMany() {
+    return this._canSelectMany;
+  }
+  set canSelectMany(canSelectMany) {
+    const oldCanSelectMany = this._canSelectMany;
+    this._canSelectMany = canSelectMany;
+    if (this._canSelectMany !== oldCanSelectMany) {
+      this.tree?.updateOptions({ multipleSelectionSupport: this.canSelectMany });
+    }
+  }
+  get manuallyManageCheckboxes() {
+    return this._manuallyManageCheckboxes;
+  }
+  set manuallyManageCheckboxes(manuallyManageCheckboxes) {
+    this._manuallyManageCheckboxes = manuallyManageCheckboxes;
+  }
+  get hasIconForParentNode() {
+    return this._hasIconForParentNode;
+  }
+  get hasIconForLeafNode() {
+    return this._hasIconForLeafNode;
+  }
+  get visible() {
+    return this.isVisible;
+  }
+  initializeShowCollapseAllAction(startingValue = false) {
+    if (!this.collapseAllContext) {
+      this.collapseAllContextKey = new RawContextKey(`treeView.${this.id}.enableCollapseAll`, startingValue, localize("treeView.enableCollapseAll", "Whether the tree view with id {0} enables collapse all.", this.id));
+      this.collapseAllContext = this.collapseAllContextKey.bindTo(this.contextKeyService);
+    }
+    return true;
+  }
+  get showCollapseAllAction() {
+    this.initializeShowCollapseAllAction();
+    return !!this.collapseAllContext?.get();
+  }
+  set showCollapseAllAction(showCollapseAllAction) {
+    this.initializeShowCollapseAllAction(showCollapseAllAction);
+    this.collapseAllContext?.set(showCollapseAllAction);
+  }
+  initializeShowRefreshAction(startingValue = false) {
+    if (!this.refreshContext) {
+      this.refreshContextKey = new RawContextKey(`treeView.${this.id}.enableRefresh`, startingValue, localize("treeView.enableRefresh", "Whether the tree view with id {0} enables refresh.", this.id));
+      this.refreshContext = this.refreshContextKey.bindTo(this.contextKeyService);
+    }
+  }
+  get showRefreshAction() {
+    this.initializeShowRefreshAction();
+    return !!this.refreshContext?.get();
+  }
+  set showRefreshAction(showRefreshAction) {
+    this.initializeShowRefreshAction(showRefreshAction);
+    this.refreshContext?.set(showRefreshAction);
+  }
+  registerActions() {
+    const that = this;
+    this._register(registerAction2(class extends Action2 {
+      constructor() {
+        super({
+          id: `workbench.actions.treeView.${that.id}.refresh`,
+          title: localize("refresh", "Refresh"),
+          menu: {
+            id: MenuId.ViewTitle,
+            when: ContextKeyExpr.and(ContextKeyExpr.equals("view", that.id), that.refreshContextKey),
+            group: "navigation",
+            order: Number.MAX_SAFE_INTEGER - 1
+          },
+          icon: Codicon.refresh
+        });
+      }
+      async run() {
+        return that.refresh();
+      }
+    }));
+    this._register(registerAction2(class extends Action2 {
+      constructor() {
+        super({
+          id: `workbench.actions.treeView.${that.id}.collapseAll`,
+          title: localize("collapseAll", "Collapse All"),
+          menu: {
+            id: MenuId.ViewTitle,
+            when: ContextKeyExpr.and(ContextKeyExpr.equals("view", that.id), that.collapseAllContextKey),
+            group: "navigation",
+            order: Number.MAX_SAFE_INTEGER
+          },
+          precondition: that.collapseAllToggleContextKey,
+          icon: Codicon.collapseAll
+        });
+      }
+      async run() {
+        if (that.tree) {
+          return new CollapseAllAction(that.tree, true).run();
+        }
+      }
+    }));
+  }
+  setVisibility(isVisible) {
+    this.initialize();
+    isVisible = !!isVisible;
+    if (this.isVisible === isVisible) {
+      return;
+    }
+    this.isVisible = isVisible;
+    if (this.tree) {
+      if (this.isVisible) {
+        DOM.show(this.tree.getHTMLElement());
+      } else {
+        DOM.hide(this.tree.getHTMLElement());
+      }
+      if (this.isVisible && this.elementsToRefresh.length && this.dataProvider) {
+        this.doRefresh(this.elementsToRefresh);
+        this.elementsToRefresh = [];
+      }
+    }
+    setTimeout0(() => {
+      if (this.dataProvider) {
+        this._onDidChangeVisibility.fire(this.isVisible);
+      }
+    });
+    if (this.visible) {
+      this.activate();
+    }
+  }
+  activated = false;
+  focus(reveal = true, revealItem) {
+    if (this.tree && this.root.children && this.root.children.length > 0) {
+      const element = revealItem ?? this.tree.getSelection()[0];
+      if (element && reveal) {
+        this.tree.reveal(element, 0.5);
+      }
+      this.tree.domFocus();
+    } else if (this.tree && this.treeContainer && !this.treeContainer.classList.contains("hide")) {
+      this.tree.domFocus();
+    } else {
+      this.domNode.focus();
+    }
+  }
+  show(container) {
+    this._container = container;
+    DOM.append(container, this.domNode);
+  }
+  create() {
+    this.domNode = DOM.$(".tree-explorer-viewlet-tree-view");
+    this.messageElement = DOM.append(this.domNode, DOM.$(".message"));
+    this.updateMessage();
+    this.treeContainer = DOM.append(this.domNode, DOM.$(".customview-tree"));
+    this.treeContainer.classList.add("file-icon-themable-tree", "show-file-icons");
+    const focusTracker = this._register(DOM.trackFocus(this.domNode));
+    this._register(focusTracker.onDidFocus(() => this.focused = true));
+    this._register(focusTracker.onDidBlur(() => this.focused = false));
+  }
+  treeDisposables = this._register(new DisposableStore());
+  createTree() {
+    this.treeDisposables.clear();
+    const actionViewItemProvider = createActionViewItem.bind(void 0, this.instantiationService);
+    const treeMenus = this.treeDisposables.add(this.instantiationService.createInstance(TreeMenus, this.id));
+    this.treeLabels = this.treeDisposables.add(this.instantiationService.createInstance(ResourceLabels, this));
+    const dataSource = this.instantiationService.createInstance(TreeDataSource, this, (task) => this.progressService.withProgress({ location: this.id }, () => task));
+    const aligner = this.treeDisposables.add(new Aligner(this.themeService));
+    const checkboxStateHandler = this.treeDisposables.add(new CheckboxStateHandler());
+    const renderer = this.treeDisposables.add(this.instantiationService.createInstance(TreeRenderer, this.id, treeMenus, this.treeLabels, actionViewItemProvider, aligner, checkboxStateHandler, () => this.manuallyManageCheckboxes));
+    this.treeDisposables.add(renderer.onDidChangeCheckboxState((e) => this._onDidChangeCheckboxState.fire(e)));
+    const widgetAriaLabel = this._title;
+    this.tree = this.treeDisposables.add(this.instantiationService.createInstance(
+      Tree,
+      this.id,
+      this.treeContainer,
+      new TreeViewDelegate(),
+      [renderer],
+      dataSource,
+      {
+        identityProvider: new TreeViewIdentityProvider(),
+        accessibilityProvider: {
+          getAriaLabel(element) {
+            if (element.accessibilityInformation) {
+              return element.accessibilityInformation.label;
+            }
+            if (isString(element.tooltip)) {
+              return element.tooltip;
+            } else {
+              if (element.resourceUri && !element.label) {
+                return null;
+              }
+              let buildAriaLabel = "";
+              if (element.label) {
+                buildAriaLabel += element.label.label + " ";
+              }
+              if (element.description) {
+                buildAriaLabel += element.description;
+              }
+              return buildAriaLabel;
+            }
+          },
+          getRole(element) {
+            return element.accessibilityInformation?.role ?? "treeitem";
+          },
+          getWidgetAriaLabel() {
+            return widgetAriaLabel;
+          }
+        },
+        keyboardNavigationLabelProvider: {
+          getKeyboardNavigationLabel: /* @__PURE__ */ __name((item) => {
+            return item.label ? item.label.label : item.resourceUri ? basename(URI.revive(item.resourceUri)) : void 0;
+          }, "getKeyboardNavigationLabel")
+        },
+        expandOnlyOnTwistieClick: /* @__PURE__ */ __name((e) => {
+          return !!e.command || !!e.checkbox || this.configurationService.getValue("workbench.tree.expandMode") === "doubleClick";
+        }, "expandOnlyOnTwistieClick"),
+        collapseByDefault: /* @__PURE__ */ __name((e) => {
+          return e.collapsibleState !== TreeItemCollapsibleState.Expanded;
+        }, "collapseByDefault"),
+        multipleSelectionSupport: this.canSelectMany,
+        dnd: this.treeViewDnd,
+        overrideStyles: getLocationBasedViewColors(this.viewLocation).listOverrideStyles
+      }
+    ));
+    this.treeDisposables.add(renderer.onDidChangeMenuContext((e) => e.forEach((e2) => this.tree?.rerender(e2))));
+    this.treeDisposables.add(this.tree);
+    treeMenus.setContextKeyService(this.tree.contextKeyService);
+    aligner.tree = this.tree;
+    const actionRunner = this.treeDisposables.add(new MultipleSelectionActionRunner(this.notificationService, () => this.tree.getSelection()));
+    renderer.actionRunner = actionRunner;
+    this.tree.contextKeyService.createKey(this.id, true);
+    const customTreeKey = RawCustomTreeViewContextKey.bindTo(this.tree.contextKeyService);
+    customTreeKey.set(true);
+    this.treeDisposables.add(this.tree.onContextMenu((e) => this.onContextMenu(treeMenus, e, actionRunner)));
+    this.treeDisposables.add(this.tree.onDidChangeSelection((e) => {
+      this.lastSelection = e.elements;
+      this.lastActive = this.tree?.getFocus()[0] ?? this.lastActive;
+      this._onDidChangeSelectionAndFocus.fire({ selection: this.lastSelection, focus: this.lastActive });
+    }));
+    this.treeDisposables.add(this.tree.onDidChangeFocus((e) => {
+      if (e.elements.length && e.elements[0] !== this.lastActive) {
+        this.lastActive = e.elements[0];
+        this.lastSelection = this.tree?.getSelection() ?? this.lastSelection;
+        this._onDidChangeSelectionAndFocus.fire({ selection: this.lastSelection, focus: this.lastActive });
+      }
+    }));
+    this.treeDisposables.add(this.tree.onDidChangeCollapseState((e) => {
+      if (!e.node.element) {
+        return;
+      }
+      const element = Array.isArray(e.node.element.element) ? e.node.element.element[0] : e.node.element.element;
+      if (e.node.collapsed) {
+        this._onDidCollapseItem.fire(element);
+      } else {
+        this._onDidExpandItem.fire(element);
+      }
+    }));
+    this.tree.setInput(this.root).then(() => this.updateContentAreas());
+    this.treeDisposables.add(this.tree.onDidOpen(async (e) => {
+      if (!e.browserEvent) {
+        return;
+      }
+      if (e.browserEvent.target && e.browserEvent.target.classList.contains(TreeItemCheckbox.checkboxClass)) {
+        return;
+      }
+      const selection = this.tree.getSelection();
+      const command = await this.resolveCommand(selection.length === 1 ? selection[0] : void 0);
+      if (command && isTreeCommandEnabled(command, this.contextKeyService)) {
+        let args = command.arguments || [];
+        if (command.id === API_OPEN_EDITOR_COMMAND_ID || command.id === API_OPEN_DIFF_EDITOR_COMMAND_ID) {
+          args = [...args, e];
+        }
+        try {
+          await this.commandService.executeCommand(command.id, ...args);
+        } catch (err) {
+          this.notificationService.error(err);
+        }
+      }
+    }));
+    this.treeDisposables.add(treeMenus.onDidChange((changed) => {
+      if (this.tree?.hasNode(changed)) {
+        this.tree?.rerender(changed);
+      }
+    }));
+  }
+  async resolveCommand(element) {
+    let command = element?.command;
+    if (element && !command) {
+      if (element instanceof ResolvableTreeItem && element.hasResolve) {
+        await element.resolve(CancellationToken.None);
+        command = element.command;
+      }
+    }
+    return command;
+  }
+  onContextMenu(treeMenus, treeEvent, actionRunner) {
+    this.hoverService.hideHover();
+    const node = treeEvent.element;
+    if (node === null) {
+      return;
+    }
+    const event = treeEvent.browserEvent;
+    event.preventDefault();
+    event.stopPropagation();
+    this.tree.setFocus([node]);
+    let selected = this.canSelectMany ? this.getSelection() : [];
+    if (!selected.find((item) => item.handle === node.handle)) {
+      selected = [node];
+    }
+    const actions = treeMenus.getResourceContextActions(selected);
+    if (!actions.length) {
+      return;
+    }
+    this.contextMenuService.showContextMenu({
+      getAnchor: /* @__PURE__ */ __name(() => treeEvent.anchor, "getAnchor"),
+      getActions: /* @__PURE__ */ __name(() => actions, "getActions"),
+      getActionViewItem: /* @__PURE__ */ __name((action) => {
+        const keybinding = this.keybindingService.lookupKeybinding(action.id);
+        if (keybinding) {
+          return new ActionViewItem(action, action, { label: true, keybinding: keybinding.getLabel() });
+        }
+        return void 0;
+      }, "getActionViewItem"),
+      onHide: /* @__PURE__ */ __name((wasCancelled) => {
+        if (wasCancelled) {
+          this.tree.domFocus();
+        }
+      }, "onHide"),
+      getActionsContext: /* @__PURE__ */ __name(() => ({ $treeViewId: this.id, $treeItemHandle: node.handle }), "getActionsContext"),
+      actionRunner
+    });
+  }
+  updateMessage() {
+    if (this._message) {
+      this.showMessage(this._message);
+    } else if (!this.dataProvider) {
+      this.showMessage(noDataProviderMessage);
+    } else {
+      this.hideMessage();
+    }
+    this.updateContentAreas();
+  }
+  processMessage(message, disposables) {
+    const lines = message.value.split("\n");
+    const result = [];
+    let hasFoundButton = false;
+    for (const line of lines) {
+      const linkedText = parseLinkedText(line);
+      if (linkedText.nodes.length === 1 && typeof linkedText.nodes[0] !== "string") {
+        const node = linkedText.nodes[0];
+        const buttonContainer = document.createElement("div");
+        buttonContainer.classList.add("button-container");
+        const button = new Button(buttonContainer, { title: node.title, secondary: hasFoundButton, supportIcons: true, ...defaultButtonStyles });
+        button.label = node.label;
+        button.onDidClick((_) => {
+          this.openerService.open(node.href, { allowCommands: true });
+        }, null, disposables);
+        const href = URI.parse(node.href);
+        if (href.scheme === Schemas.command) {
+          const preConditions = commandPreconditions(href.path);
+          if (preConditions) {
+            button.enabled = this.contextKeyService.contextMatchesRules(preConditions);
+            disposables.add(this.contextKeyService.onDidChangeContext((e) => {
+              if (e.affectsSome(new Set(preConditions.keys()))) {
+                button.enabled = this.contextKeyService.contextMatchesRules(preConditions);
+              }
+            }));
+          }
+        }
+        disposables.add(button);
+        hasFoundButton = true;
+        result.push(buttonContainer);
+      } else {
+        hasFoundButton = false;
+        const rendered = this.markdownRenderer.render(new MarkdownString(line, { isTrusted: message.isTrusted, supportThemeIcons: message.supportThemeIcons, supportHtml: message.supportHtml }));
+        result.push(rendered.element);
+        disposables.add(rendered);
+      }
+    }
+    const container = document.createElement("div");
+    container.classList.add("rendered-message");
+    for (const child of result) {
+      if (DOM.isHTMLElement(child)) {
+        container.appendChild(child);
+      } else {
+        container.appendChild(child.element);
+      }
+    }
+    return container;
+  }
+  showMessage(message) {
+    if (isRenderedMessageValue(this._messageValue)) {
+      this._messageValue.disposables.dispose();
+    }
+    if (isMarkdownString(message) && !this.markdownRenderer) {
+      this.markdownRenderer = this.instantiationService.createInstance(MarkdownRenderer, {});
+    }
+    if (isMarkdownString(message)) {
+      const disposables = new DisposableStore();
+      const renderedMessage = this.processMessage(message, disposables);
+      this._messageValue = { element: renderedMessage, disposables };
+    } else {
+      this._messageValue = message;
+    }
+    if (!this.messageElement) {
+      return;
+    }
+    this.messageElement.classList.remove("hide");
+    this.resetMessageElement();
+    if (typeof this._messageValue === "string" && !isFalsyOrWhitespace(this._messageValue)) {
+      this.messageElement.textContent = this._messageValue;
+    } else if (isRenderedMessageValue(this._messageValue)) {
+      this.messageElement.appendChild(this._messageValue.element);
+    }
+    this.layout(this._height, this._width);
+  }
+  hideMessage() {
+    this.resetMessageElement();
+    this.messageElement?.classList.add("hide");
+    this.layout(this._height, this._width);
+  }
+  resetMessageElement() {
+    if (this.messageElement) {
+      DOM.clearNode(this.messageElement);
+    }
+  }
+  _height = 0;
+  _width = 0;
+  layout(height, width) {
+    if (height && width && this.messageElement && this.treeContainer) {
+      this._height = height;
+      this._width = width;
+      const treeHeight = height - DOM.getTotalHeight(this.messageElement);
+      this.treeContainer.style.height = treeHeight + "px";
+      this.tree?.layout(treeHeight, width);
+    }
+  }
+  getOptimalWidth() {
+    if (this.tree) {
+      const parentNode = this.tree.getHTMLElement();
+      const childNodes = [].slice.call(parentNode.querySelectorAll(".outline-item-label > a"));
+      return DOM.getLargestChildWidth(parentNode, childNodes);
+    }
+    return 0;
+  }
+  updateCheckboxes(elements) {
+    return setCascadingCheckboxUpdates(elements);
+  }
+  async refresh(elements, checkboxes) {
+    if (this.dataProvider && this.tree) {
+      if (this.refreshing) {
+        await Event.toPromise(this._onDidCompleteRefresh.event);
+      }
+      if (!elements) {
+        elements = [this.root];
+        this.elementsToRefresh = [];
+      }
+      for (const element of elements) {
+        element.children = void 0;
+      }
+      if (this.isVisible) {
+        const affectedElements = this.updateCheckboxes(checkboxes ?? []);
+        return this.doRefresh(elements.concat(affectedElements));
+      } else {
+        if (this.elementsToRefresh.length) {
+          const seen = /* @__PURE__ */ new Set();
+          this.elementsToRefresh.forEach((element) => seen.add(element.handle));
+          for (const element of elements) {
+            if (!seen.has(element.handle)) {
+              this.elementsToRefresh.push(element);
+            }
+          }
+        } else {
+          this.elementsToRefresh.push(...elements);
+        }
+      }
+    }
+    return void 0;
+  }
+  async expand(itemOrItems) {
+    const tree = this.tree;
+    if (!tree) {
+      return;
+    }
+    try {
+      itemOrItems = Array.isArray(itemOrItems) ? itemOrItems : [itemOrItems];
+      for (const element of itemOrItems) {
+        await tree.expand(element, false);
+      }
+    } catch (e) {
+    }
+  }
+  isCollapsed(item) {
+    return !!this.tree?.isCollapsed(item);
+  }
+  setSelection(items) {
+    this.tree?.setSelection(items);
+  }
+  getSelection() {
+    return this.tree?.getSelection() ?? [];
+  }
+  setFocus(item) {
+    if (this.tree) {
+      if (item) {
+        this.focus(true, item);
+        this.tree.setFocus([item]);
+      } else if (this.tree.getFocus().length === 0) {
+        this.tree.setFocus([]);
+      }
+    }
+  }
+  async reveal(item) {
+    if (this.tree) {
+      return this.tree.reveal(item);
+    }
+  }
+  refreshing = false;
+  async doRefresh(elements) {
+    const tree = this.tree;
+    if (tree && this.visible) {
+      this.refreshing = true;
+      const oldSelection = tree.getSelection();
+      try {
+        await Promise.all(elements.map((element) => tree.updateChildren(element, true, true)));
+      } catch (e) {
+        this.logService.error(e);
+      }
+      const newSelection = tree.getSelection();
+      if (oldSelection.length !== newSelection.length || oldSelection.some((value, index) => value.handle !== newSelection[index].handle)) {
+        this.lastSelection = newSelection;
+        this._onDidChangeSelectionAndFocus.fire({ selection: this.lastSelection, focus: this.lastActive });
+      }
+      this.refreshing = false;
+      this._onDidCompleteRefresh.fire();
+      this.updateContentAreas();
+      if (this.focused) {
+        this.focus(false);
+      }
+      this.updateCollapseAllToggle();
+    }
+  }
+  initializeCollapseAllToggle() {
+    if (!this.collapseAllToggleContext) {
+      this.collapseAllToggleContextKey = new RawContextKey(`treeView.${this.id}.toggleCollapseAll`, false, localize("treeView.toggleCollapseAll", "Whether collapse all is toggled for the tree view with id {0}.", this.id));
+      this.collapseAllToggleContext = this.collapseAllToggleContextKey.bindTo(this.contextKeyService);
+    }
+  }
+  updateCollapseAllToggle() {
+    if (this.showCollapseAllAction) {
+      this.initializeCollapseAllToggle();
+      this.collapseAllToggleContext?.set(!!this.root.children && this.root.children.length > 0 && this.root.children.some((value) => value.collapsibleState !== TreeItemCollapsibleState.None));
+    }
+  }
+  updateContentAreas() {
+    const isTreeEmpty = !this.root.children || this.root.children.length === 0;
+    if (this._messageValue && isTreeEmpty && !this.refreshing && this.treeContainer) {
+      if (!this.dragAndDropController) {
+        this.treeContainer.classList.add("hide");
+      }
+      this.domNode.setAttribute("tabindex", "0");
+    } else if (this.treeContainer) {
+      this.treeContainer.classList.remove("hide");
+      if (this.domNode === DOM.getActiveElement()) {
+        this.focus();
+      }
+      this.domNode.removeAttribute("tabindex");
+    }
+  }
+  get container() {
+    return this._container;
+  }
+};
+AbstractTreeView = __decorateClass([
+  __decorateParam(2, IThemeService),
+  __decorateParam(3, IInstantiationService),
+  __decorateParam(4, ICommandService),
+  __decorateParam(5, IConfigurationService),
+  __decorateParam(6, IProgressService),
+  __decorateParam(7, IContextMenuService),
+  __decorateParam(8, IKeybindingService),
+  __decorateParam(9, INotificationService),
+  __decorateParam(10, IViewDescriptorService),
+  __decorateParam(11, IHoverService),
+  __decorateParam(12, IContextKeyService),
+  __decorateParam(13, IActivityService),
+  __decorateParam(14, ILogService),
+  __decorateParam(15, IOpenerService)
+], AbstractTreeView);
+class TreeViewIdentityProvider {
+  static {
+    __name(this, "TreeViewIdentityProvider");
+  }
+  getId(element) {
+    return element.handle;
+  }
+}
+class TreeViewDelegate {
+  static {
+    __name(this, "TreeViewDelegate");
+  }
+  getHeight(element) {
+    return TreeRenderer.ITEM_HEIGHT;
+  }
+  getTemplateId(element) {
+    return TreeRenderer.TREE_TEMPLATE_ID;
+  }
+}
+async function doGetChildrenOrBatch(dataProvider, nodes) {
+  if (dataProvider.getChildrenBatch) {
+    return dataProvider.getChildrenBatch(nodes);
+  } else {
+    if (nodes) {
+      return Promise.all(nodes.map((node) => dataProvider.getChildren(node).then((children) => children ?? [])));
+    } else {
+      return [await dataProvider.getChildren()].filter((children) => children !== void 0);
+    }
+  }
+}
+__name(doGetChildrenOrBatch, "doGetChildrenOrBatch");
+class TreeDataSource {
+  constructor(treeView, withProgress) {
+    this.treeView = treeView;
+    this.withProgress = withProgress;
+  }
+  static {
+    __name(this, "TreeDataSource");
+  }
+  hasChildren(element) {
+    return !!this.treeView.dataProvider && element.collapsibleState !== TreeItemCollapsibleState.None;
+  }
+  batch;
+  batchPromise;
+  async getChildren(element) {
+    const dataProvider = this.treeView.dataProvider;
+    if (!dataProvider) {
+      return [];
+    }
+    if (this.batch === void 0) {
+      this.batch = [element];
+      this.batchPromise = void 0;
+    } else {
+      this.batch.push(element);
+    }
+    const indexInBatch = this.batch.length - 1;
+    return new Promise((resolve, reject) => {
+      setTimeout(async () => {
+        const batch = this.batch;
+        this.batch = void 0;
+        if (!this.batchPromise) {
+          this.batchPromise = this.withProgress(doGetChildrenOrBatch(dataProvider, batch));
+        }
+        try {
+          const result = await this.batchPromise;
+          resolve(result && indexInBatch < result.length ? result[indexInBatch] : []);
+        } catch (e) {
+          if (!e.message.startsWith("Bad progress location:")) {
+            reject(e);
+          }
+        }
+      }, 0);
+    });
+  }
+}
+let TreeRenderer = class extends Disposable {
+  // tree item handle to template data
+  constructor(treeViewId, menus, labels, actionViewItemProvider, aligner, checkboxStateHandler, manuallyManageCheckboxes, themeService, configurationService, labelService, contextKeyService, hoverService, instantiationService) {
+    super();
+    this.treeViewId = treeViewId;
+    this.menus = menus;
+    this.labels = labels;
+    this.actionViewItemProvider = actionViewItemProvider;
+    this.aligner = aligner;
+    this.checkboxStateHandler = checkboxStateHandler;
+    this.manuallyManageCheckboxes = manuallyManageCheckboxes;
+    this.themeService = themeService;
+    this.configurationService = configurationService;
+    this.labelService = labelService;
+    this.contextKeyService = contextKeyService;
+    this.hoverService = hoverService;
+    this._hoverDelegate = this._register(instantiationService.createInstance(WorkbenchHoverDelegate, "mouse", void 0, {}));
+    this._register(this.themeService.onDidFileIconThemeChange(() => this.rerender()));
+    this._register(this.themeService.onDidColorThemeChange(() => this.rerender()));
+    this._register(checkboxStateHandler.onDidChangeCheckboxState((items) => {
+      this.updateCheckboxes(items);
+    }));
+    this._register(this.contextKeyService.onDidChangeContext((e) => this.onDidChangeContext(e)));
+  }
+  static {
+    __name(this, "TreeRenderer");
+  }
+  static ITEM_HEIGHT = 22;
+  static TREE_TEMPLATE_ID = "treeExplorer";
+  _onDidChangeCheckboxState = this._register(new Emitter());
+  onDidChangeCheckboxState = this._onDidChangeCheckboxState.event;
+  _onDidChangeMenuContext = this._register(new Emitter());
+  onDidChangeMenuContext = this._onDidChangeMenuContext.event;
+  _actionRunner;
+  _hoverDelegate;
+  _hasCheckbox = false;
+  _renderedElements = /* @__PURE__ */ new Map();
+  get templateId() {
+    return TreeRenderer.TREE_TEMPLATE_ID;
+  }
+  set actionRunner(actionRunner) {
+    this._actionRunner = actionRunner;
+  }
+  renderTemplate(container) {
+    container.classList.add("custom-view-tree-node-item");
+    const checkboxContainer = DOM.append(container, DOM.$(""));
+    const resourceLabel = this.labels.create(container, { supportHighlights: true, hoverDelegate: this._hoverDelegate });
+    const icon = DOM.prepend(resourceLabel.element, DOM.$(".custom-view-tree-node-item-icon"));
+    const actionsContainer = DOM.append(resourceLabel.element, DOM.$(".actions"));
+    const actionBar = new ActionBar(actionsContainer, {
+      actionViewItemProvider: this.actionViewItemProvider
+    });
+    return { resourceLabel, icon, checkboxContainer, actionBar, container };
+  }
+  getHover(label, resource, node) {
+    if (!(node instanceof ResolvableTreeItem) || !node.hasResolve) {
+      if (resource && !node.tooltip) {
+        return void 0;
+      } else if (node.tooltip === void 0) {
+        return label;
+      } else if (!isString(node.tooltip)) {
+        return { markdown: node.tooltip, markdownNotSupportedFallback: resource ? void 0 : renderMarkdownAsPlaintext(node.tooltip) };
+      } else if (node.tooltip !== "") {
+        return node.tooltip;
+      } else {
+        return void 0;
+      }
+    }
+    return {
+      markdown: typeof node.tooltip === "string" ? node.tooltip : (token) => {
+        return new Promise((resolve) => {
+          node.resolve(token).then(() => resolve(node.tooltip));
+        });
+      },
+      markdownNotSupportedFallback: resource ? void 0 : label ?? ""
+      // Passing undefined as the fallback for a resource falls back to the old native hover
+    };
+  }
+  renderElement(element, index, templateData) {
+    const node = element.element;
+    const resource = node.resourceUri ? URI.revive(node.resourceUri) : null;
+    const treeItemLabel = node.label ? node.label : resource ? { label: basename(resource) } : void 0;
+    const description = isString(node.description) ? node.description : resource && node.description === true ? this.labelService.getUriLabel(dirname(resource), { relative: true }) : void 0;
+    const label = treeItemLabel ? treeItemLabel.label : void 0;
+    const matches = treeItemLabel && treeItemLabel.highlights && label ? treeItemLabel.highlights.map(([start, end]) => {
+      if (start < 0) {
+        start = label.length + start;
+      }
+      if (end < 0) {
+        end = label.length + end;
+      }
+      if (start >= label.length || end > label.length) {
+        return { start: 0, end: 0 };
+      }
+      if (start > end) {
+        const swap = start;
+        start = end;
+        end = swap;
+      }
+      return { start, end };
+    }) : void 0;
+    const icon = this.themeService.getColorTheme().type === ColorScheme.LIGHT ? node.icon : node.iconDark;
+    const iconUrl = icon ? URI.revive(icon) : void 0;
+    const title = this.getHover(label, resource, node);
+    templateData.actionBar.clear();
+    templateData.icon.style.color = "";
+    let commandEnabled = true;
+    if (node.command) {
+      commandEnabled = isTreeCommandEnabled(node.command, this.contextKeyService);
+    }
+    this.renderCheckbox(node, templateData);
+    if (resource) {
+      const fileDecorations = this.configurationService.getValue("explorer.decorations");
+      const labelResource = resource ? resource : URI.parse("missing:_icon_resource");
+      templateData.resourceLabel.setResource({ name: label, description, resource: labelResource }, {
+        fileKind: this.getFileKind(node),
+        title,
+        hideIcon: this.shouldHideResourceLabelIcon(iconUrl, node.themeIcon),
+        fileDecorations,
+        extraClasses: ["custom-view-tree-node-item-resourceLabel"],
+        matches: matches ? matches : createMatches(element.filterData),
+        strikethrough: treeItemLabel?.strikethrough,
+        disabledCommand: !commandEnabled,
+        labelEscapeNewLines: true,
+        forceLabel: !!node.label
+      });
+    } else {
+      templateData.resourceLabel.setResource({ name: label, description }, {
+        title,
+        hideIcon: true,
+        extraClasses: ["custom-view-tree-node-item-resourceLabel"],
+        matches: matches ? matches : createMatches(element.filterData),
+        strikethrough: treeItemLabel?.strikethrough,
+        disabledCommand: !commandEnabled,
+        labelEscapeNewLines: true
+      });
+    }
+    if (iconUrl) {
+      templateData.icon.className = "custom-view-tree-node-item-icon";
+      templateData.icon.style.backgroundImage = cssJs.asCSSUrl(iconUrl);
+    } else {
+      let iconClass;
+      if (this.shouldShowThemeIcon(!!resource, node.themeIcon)) {
+        iconClass = ThemeIcon.asClassName(node.themeIcon);
+        if (node.themeIcon.color) {
+          templateData.icon.style.color = this.themeService.getColorTheme().getColor(node.themeIcon.color.id)?.toString() ?? "";
+        }
+      }
+      templateData.icon.className = iconClass ? `custom-view-tree-node-item-icon ${iconClass}` : "";
+      templateData.icon.style.backgroundImage = "";
+    }
+    if (!commandEnabled) {
+      templateData.icon.className = templateData.icon.className + " disabled";
+      if (templateData.container.parentElement) {
+        templateData.container.parentElement.className = templateData.container.parentElement.className + " disabled";
+      }
+    }
+    templateData.actionBar.context = { $treeViewId: this.treeViewId, $treeItemHandle: node.handle };
+    const menuActions = this.menus.getResourceActions([node]);
+    templateData.actionBar.push(menuActions, { icon: true, label: false });
+    if (this._actionRunner) {
+      templateData.actionBar.actionRunner = this._actionRunner;
+    }
+    this.setAlignment(templateData.container, node);
+    const renderedItems = this._renderedElements.get(element.element.handle) ?? [];
+    this._renderedElements.set(element.element.handle, [...renderedItems, { original: element, rendered: templateData }]);
+  }
+  rerender() {
+    const keys = new Set(this._renderedElements.keys());
+    for (const key of keys) {
+      const values = this._renderedElements.get(key) ?? [];
+      for (const value of values) {
+        this.disposeElement(value.original, 0, value.rendered);
+        this.renderElement(value.original, 0, value.rendered);
+      }
+    }
+  }
+  renderCheckbox(node, templateData) {
+    if (node.checkbox) {
+      if (!this._hasCheckbox) {
+        this._hasCheckbox = true;
+        this.rerender();
+      }
+      if (!templateData.checkbox) {
+        const checkbox = new TreeItemCheckbox(templateData.checkboxContainer, this.checkboxStateHandler, this._hoverDelegate, this.hoverService);
+        templateData.checkbox = checkbox;
+      }
+      templateData.checkbox.render(node);
+    } else if (templateData.checkbox) {
+      templateData.checkbox.dispose();
+      templateData.checkbox = void 0;
+    }
+  }
+  setAlignment(container, treeItem) {
+    container.parentElement.classList.toggle("align-icon-with-twisty", !this._hasCheckbox && this.aligner.alignIconWithTwisty(treeItem));
+  }
+  shouldHideResourceLabelIcon(iconUrl, icon) {
+    return !!iconUrl || !!icon && !this.isFileKindThemeIcon(icon);
+  }
+  shouldShowThemeIcon(hasResource, icon) {
+    if (!icon) {
+      return false;
+    }
+    return !(hasResource && this.isFileKindThemeIcon(icon));
+  }
+  isFolderThemeIcon(icon) {
+    return icon?.id === FolderThemeIcon.id;
+  }
+  isFileKindThemeIcon(icon) {
+    if (icon) {
+      return icon.id === FileThemeIcon.id || this.isFolderThemeIcon(icon);
+    } else {
+      return false;
+    }
+  }
+  getFileKind(node) {
+    if (node.themeIcon) {
+      switch (node.themeIcon.id) {
+        case FileThemeIcon.id:
+          return FileKind.FILE;
+        case FolderThemeIcon.id:
+          return FileKind.FOLDER;
+      }
+    }
+    return node.collapsibleState === TreeItemCollapsibleState.Collapsed || node.collapsibleState === TreeItemCollapsibleState.Expanded ? FileKind.FOLDER : FileKind.FILE;
+  }
+  onDidChangeContext(e) {
+    const items = [];
+    for (const [_, elements] of this._renderedElements) {
+      for (const element of elements) {
+        if (e.affectsSome(this.menus.getElementOverlayContexts(element.original.element)) || e.affectsSome(this.menus.getEntireMenuContexts())) {
+          items.push(element.original.element);
+        }
+      }
+    }
+    if (items.length) {
+      this._onDidChangeMenuContext.fire(items);
+    }
+  }
+  updateCheckboxes(items) {
+    let allItems = [];
+    if (!this.manuallyManageCheckboxes()) {
+      allItems = setCascadingCheckboxUpdates(items);
+    } else {
+      allItems = items;
+    }
+    allItems.forEach((item) => {
+      const renderedItems = this._renderedElements.get(item.handle);
+      if (renderedItems) {
+        renderedItems.forEach((renderedItems2) => renderedItems2.rendered.checkbox?.render(item));
+      }
+    });
+    this._onDidChangeCheckboxState.fire(allItems);
+  }
+  disposeElement(resource, index, templateData) {
+    const itemRenders = this._renderedElements.get(resource.element.handle) ?? [];
+    const renderedIndex = itemRenders.findIndex((renderedItem) => templateData === renderedItem.rendered);
+    if (itemRenders.length === 1) {
+      this._renderedElements.delete(resource.element.handle);
+    } else if (itemRenders.length > 0) {
+      itemRenders.splice(renderedIndex, 1);
+    }
+    templateData.checkbox?.dispose();
+    templateData.checkbox = void 0;
+  }
+  disposeTemplate(templateData) {
+    templateData.resourceLabel.dispose();
+    templateData.actionBar.dispose();
+  }
+};
+TreeRenderer = __decorateClass([
+  __decorateParam(7, IThemeService),
+  __decorateParam(8, IConfigurationService),
+  __decorateParam(9, ILabelService),
+  __decorateParam(10, IContextKeyService),
+  __decorateParam(11, IHoverService),
+  __decorateParam(12, IInstantiationService)
+], TreeRenderer);
+class Aligner extends Disposable {
+  constructor(themeService) {
+    super();
+    this.themeService = themeService;
+  }
+  static {
+    __name(this, "Aligner");
+  }
+  _tree;
+  set tree(tree) {
+    this._tree = tree;
+  }
+  alignIconWithTwisty(treeItem) {
+    if (treeItem.collapsibleState !== TreeItemCollapsibleState.None) {
+      return false;
+    }
+    if (!this.hasIcon(treeItem)) {
+      return false;
+    }
+    if (this._tree) {
+      const parent = this._tree.getParentElement(treeItem) || this._tree.getInput();
+      if (this.hasIcon(parent)) {
+        return !!parent.children && parent.children.some((c) => c.collapsibleState !== TreeItemCollapsibleState.None && !this.hasIcon(c));
+      }
+      return !!parent.children && parent.children.every((c) => c.collapsibleState === TreeItemCollapsibleState.None || !this.hasIcon(c));
+    } else {
+      return false;
+    }
+  }
+  hasIcon(node) {
+    const icon = this.themeService.getColorTheme().type === ColorScheme.LIGHT ? node.icon : node.iconDark;
+    if (icon) {
+      return true;
+    }
+    if (node.resourceUri || node.themeIcon) {
+      const fileIconTheme = this.themeService.getFileIconTheme();
+      const isFolder = node.themeIcon ? node.themeIcon.id === FolderThemeIcon.id : node.collapsibleState !== TreeItemCollapsibleState.None;
+      if (isFolder) {
+        return fileIconTheme.hasFileIcons && fileIconTheme.hasFolderIcons;
+      }
+      return fileIconTheme.hasFileIcons;
+    }
+    return false;
+  }
+}
+class MultipleSelectionActionRunner extends ActionRunner {
+  constructor(notificationService, getSelectedResources) {
+    super();
+    this.getSelectedResources = getSelectedResources;
+    this._register(this.onDidRun((e) => {
+      if (e.error && !isCancellationError(e.error)) {
+        notificationService.error(localize("command-error", "Error running command {1}: {0}. This is likely caused by the extension that contributes {1}.", e.error.message, e.action.id));
+      }
+    }));
+  }
+  static {
+    __name(this, "MultipleSelectionActionRunner");
+  }
+  async runAction(action, context) {
+    const selection = this.getSelectedResources();
+    let selectionHandleArgs = void 0;
+    let actionInSelected = false;
+    if (selection.length > 1) {
+      selectionHandleArgs = selection.map((selected) => {
+        if (selected.handle === context.$treeItemHandle || context.$selectedTreeItems) {
+          actionInSelected = true;
+        }
+        return { $treeViewId: context.$treeViewId, $treeItemHandle: selected.handle };
+      });
+    }
+    if (!actionInSelected && selectionHandleArgs) {
+      selectionHandleArgs = void 0;
+    }
+    await action.run(context, selectionHandleArgs);
+  }
+}
+let TreeMenus = class {
+  constructor(id, menuService) {
+    this.id = id;
+    this.menuService = menuService;
+  }
+  static {
+    __name(this, "TreeMenus");
+  }
+  contextKeyService;
+  _onDidChange = new Emitter();
+  onDidChange = this._onDidChange.event;
+  /**
+   * Gets only the actions that apply to all of the given elements.
+   */
+  getResourceActions(elements) {
+    const actions = this.getActions(this.getMenuId(), elements);
+    return actions.primary;
+  }
+  /**
+   * Gets only the actions that apply to all of the given elements.
+   */
+  getResourceContextActions(elements) {
+    return this.getActions(this.getMenuId(), elements).secondary;
+  }
+  setContextKeyService(service) {
+    this.contextKeyService = service;
+  }
+  filterNonUniversalActions(groups, newActions) {
+    const newActionsSet = new Set(newActions.map((a) => a.id));
+    for (const group of groups) {
+      const actions = group.keys();
+      for (const action of actions) {
+        if (!newActionsSet.has(action)) {
+          group.delete(action);
+        }
+      }
+    }
+  }
+  buildMenu(groups) {
+    const result = [];
+    for (const group of groups) {
+      if (group.size > 0) {
+        if (result.length) {
+          result.push(new Separator());
+        }
+        result.push(...group.values());
+      }
+    }
+    return result;
+  }
+  createGroups(actions) {
+    const groups = [];
+    let group = /* @__PURE__ */ new Map();
+    for (const action of actions) {
+      if (action instanceof Separator) {
+        groups.push(group);
+        group = /* @__PURE__ */ new Map();
+      } else {
+        group.set(action.id, action);
+      }
+    }
+    groups.push(group);
+    return groups;
+  }
+  getElementOverlayContexts(element) {
+    return /* @__PURE__ */ new Map([
+      ["view", this.id],
+      ["viewItem", element.contextValue]
+    ]);
+  }
+  getEntireMenuContexts() {
+    return this.menuService.getMenuContexts(this.getMenuId());
+  }
+  getMenuId() {
+    return MenuId.ViewItemContext;
+  }
+  getActions(menuId, elements) {
+    if (!this.contextKeyService) {
+      return { primary: [], secondary: [] };
+    }
+    let primaryGroups = [];
+    let secondaryGroups = [];
+    for (let i = 0; i < elements.length; i++) {
+      const element = elements[i];
+      const contextKeyService = this.contextKeyService.createOverlay(this.getElementOverlayContexts(element));
+      const menuData = this.menuService.getMenuActions(menuId, contextKeyService, { shouldForwardArgs: true });
+      const result = getContextMenuActions(menuData, "inline");
+      if (i === 0) {
+        primaryGroups = this.createGroups(result.primary);
+        secondaryGroups = this.createGroups(result.secondary);
+      } else {
+        this.filterNonUniversalActions(primaryGroups, result.primary);
+        this.filterNonUniversalActions(secondaryGroups, result.secondary);
+      }
+    }
+    return { primary: this.buildMenu(primaryGroups), secondary: this.buildMenu(secondaryGroups) };
+  }
+  dispose() {
+    this.contextKeyService = void 0;
+  }
+};
+TreeMenus = __decorateClass([
+  __decorateParam(1, IMenuService)
+], TreeMenus);
+let CustomTreeView = class extends AbstractTreeView {
+  constructor(id, title, extensionId, themeService, instantiationService, commandService, configurationService, progressService, contextMenuService, keybindingService, notificationService, viewDescriptorService, contextKeyService, hoverService, extensionService, activityService, telemetryService, logService, openerService) {
+    super(id, title, themeService, instantiationService, commandService, configurationService, progressService, contextMenuService, keybindingService, notificationService, viewDescriptorService, hoverService, contextKeyService, activityService, logService, openerService);
+    this.extensionId = extensionId;
+    this.extensionService = extensionService;
+    this.telemetryService = telemetryService;
+  }
+  static {
+    __name(this, "CustomTreeView");
+  }
+  activate() {
+    if (!this.activated) {
+      this.telemetryService.publicLog2("Extension:ViewActivate", {
+        extensionId: new TelemetryTrustedValue(this.extensionId),
+        id: this.id
+      });
+      this.createTree();
+      this.progressService.withProgress({ location: this.id }, () => this.extensionService.activateByEvent(`onView:${this.id}`)).then(() => timeout(2e3)).then(() => {
+        this.updateMessage();
+      });
+      this.activated = true;
+    }
+  }
+};
+CustomTreeView = __decorateClass([
+  __decorateParam(3, IThemeService),
+  __decorateParam(4, IInstantiationService),
+  __decorateParam(5, ICommandService),
+  __decorateParam(6, IConfigurationService),
+  __decorateParam(7, IProgressService),
+  __decorateParam(8, IContextMenuService),
+  __decorateParam(9, IKeybindingService),
+  __decorateParam(10, INotificationService),
+  __decorateParam(11, IViewDescriptorService),
+  __decorateParam(12, IContextKeyService),
+  __decorateParam(13, IHoverService),
+  __decorateParam(14, IExtensionService),
+  __decorateParam(15, IActivityService),
+  __decorateParam(16, ITelemetryService),
+  __decorateParam(17, ILogService),
+  __decorateParam(18, IOpenerService)
+], CustomTreeView);
+class TreeView extends AbstractTreeView {
+  static {
+    __name(this, "TreeView");
+  }
+  activate() {
+    if (!this.activated) {
+      this.createTree();
+      this.activated = true;
+    }
+  }
+}
+let CustomTreeViewDragAndDrop = class {
+  constructor(treeId, labelService, instantiationService, treeViewsDragAndDropService, logService) {
+    this.treeId = treeId;
+    this.labelService = labelService;
+    this.instantiationService = instantiationService;
+    this.treeViewsDragAndDropService = treeViewsDragAndDropService;
+    this.logService = logService;
+    this.treeMimeType = `application/vnd.code.tree.${treeId.toLowerCase()}`;
+  }
+  static {
+    __name(this, "CustomTreeViewDragAndDrop");
+  }
+  treeMimeType;
+  treeItemsTransfer = LocalSelectionTransfer.getInstance();
+  dragCancellationToken;
+  dndController;
+  set controller(controller) {
+    this.dndController = controller;
+  }
+  handleDragAndLog(dndController, itemHandles, uuid, dragCancellationToken) {
+    return dndController.handleDrag(itemHandles, uuid, dragCancellationToken).then((additionalDataTransfer) => {
+      if (additionalDataTransfer) {
+        const unlistedTypes = [];
+        for (const item of additionalDataTransfer) {
+          if (item[0] !== this.treeMimeType && dndController.dragMimeTypes.findIndex((value) => value === item[0]) < 0) {
+            unlistedTypes.push(item[0]);
+          }
+        }
+        if (unlistedTypes.length) {
+          this.logService.warn(`Drag and drop controller for tree ${this.treeId} adds the following data transfer types but does not declare them in dragMimeTypes: ${unlistedTypes.join(", ")}`);
+        }
+      }
+      return additionalDataTransfer;
+    });
+  }
+  addExtensionProvidedTransferTypes(originalEvent, itemHandles) {
+    if (!originalEvent.dataTransfer || !this.dndController) {
+      return;
+    }
+    const uuid = generateUuid();
+    this.dragCancellationToken = new CancellationTokenSource();
+    this.treeViewsDragAndDropService.addDragOperationTransfer(uuid, this.handleDragAndLog(this.dndController, itemHandles, uuid, this.dragCancellationToken.token));
+    this.treeItemsTransfer.setData([new DraggedTreeItemsIdentifier(uuid)], DraggedTreeItemsIdentifier.prototype);
+    originalEvent.dataTransfer.clearData(Mimes.text);
+    if (this.dndController.dragMimeTypes.find((element) => element === Mimes.uriList)) {
+      originalEvent.dataTransfer?.setData(DataTransfers.RESOURCES, "");
+    }
+    this.dndController.dragMimeTypes.forEach((supportedType) => {
+      originalEvent.dataTransfer?.setData(supportedType, "");
+    });
+  }
+  addResourceInfoToTransfer(originalEvent, resources) {
+    if (resources.length && originalEvent.dataTransfer) {
+      this.instantiationService.invokeFunction((accessor) => fillEditorsDragData(accessor, resources, originalEvent));
+      const fileResources = resources.filter((s) => s.scheme === Schemas.file).map((r) => r.fsPath);
+      if (fileResources.length) {
+        originalEvent.dataTransfer.setData(CodeDataTransfers.FILES, JSON.stringify(fileResources));
+      }
+    }
+  }
+  onDragStart(data, originalEvent) {
+    if (originalEvent.dataTransfer) {
+      const treeItemsData = data.getData();
+      const resources = [];
+      const sourceInfo = {
+        id: this.treeId,
+        itemHandles: []
+      };
+      treeItemsData.forEach((item) => {
+        sourceInfo.itemHandles.push(item.handle);
+        if (item.resourceUri) {
+          resources.push(URI.revive(item.resourceUri));
+        }
+      });
+      this.addResourceInfoToTransfer(originalEvent, resources);
+      this.addExtensionProvidedTransferTypes(originalEvent, sourceInfo.itemHandles);
+      originalEvent.dataTransfer.setData(
+        this.treeMimeType,
+        JSON.stringify(sourceInfo)
+      );
+    }
+  }
+  debugLog(types) {
+    if (types.size) {
+      this.logService.debug(`TreeView dragged mime types: ${Array.from(types).join(", ")}`);
+    } else {
+      this.logService.debug(`TreeView dragged with no supported mime types.`);
+    }
+  }
+  onDragOver(data, targetElement, targetIndex, targetSector, originalEvent) {
+    const dataTransfer = toExternalVSDataTransfer(originalEvent.dataTransfer);
+    const types = new Set(Array.from(dataTransfer, (x) => x[0]));
+    if (originalEvent.dataTransfer) {
+      for (const item of originalEvent.dataTransfer.items) {
+        if (item.kind === "file" || item.type === DataTransfers.RESOURCES.toLowerCase()) {
+          types.add(Mimes.uriList);
+          break;
+        }
+      }
+    }
+    this.debugLog(types);
+    const dndController = this.dndController;
+    if (!dndController || !originalEvent.dataTransfer || dndController.dropMimeTypes.length === 0) {
+      return false;
+    }
+    const dragContainersSupportedType = Array.from(types).some((value, index) => {
+      if (value === this.treeMimeType) {
+        return true;
+      } else {
+        return dndController.dropMimeTypes.indexOf(value) >= 0;
+      }
+    });
+    if (dragContainersSupportedType) {
+      return { accept: true, bubble: TreeDragOverBubble.Down, autoExpand: true };
+    }
+    return false;
+  }
+  getDragURI(element) {
+    if (!this.dndController) {
+      return null;
+    }
+    return element.resourceUri ? URI.revive(element.resourceUri).toString() : element.handle;
+  }
+  getDragLabel(elements) {
+    if (!this.dndController) {
+      return void 0;
+    }
+    if (elements.length > 1) {
+      return String(elements.length);
+    }
+    const element = elements[0];
+    return element.label ? element.label.label : element.resourceUri ? this.labelService.getUriLabel(URI.revive(element.resourceUri)) : void 0;
+  }
+  async drop(data, targetNode, targetIndex, targetSector, originalEvent) {
+    const dndController = this.dndController;
+    if (!originalEvent.dataTransfer || !dndController) {
+      return;
+    }
+    let treeSourceInfo;
+    let willDropUuid;
+    if (this.treeItemsTransfer.hasData(DraggedTreeItemsIdentifier.prototype)) {
+      willDropUuid = this.treeItemsTransfer.getData(DraggedTreeItemsIdentifier.prototype)[0].identifier;
+    }
+    const originalDataTransfer = toExternalVSDataTransfer(originalEvent.dataTransfer, true);
+    const outDataTransfer = new VSDataTransfer();
+    for (const [type, item] of originalDataTransfer) {
+      if (type === this.treeMimeType || dndController.dropMimeTypes.includes(type) || item.asFile() && dndController.dropMimeTypes.includes(DataTransfers.FILES.toLowerCase())) {
+        outDataTransfer.append(type, item);
+        if (type === this.treeMimeType) {
+          try {
+            treeSourceInfo = JSON.parse(await item.asString());
+          } catch {
+          }
+        }
+      }
+    }
+    const additionalDataTransfer = await this.treeViewsDragAndDropService.removeDragOperationTransfer(willDropUuid);
+    if (additionalDataTransfer) {
+      for (const [type, item] of additionalDataTransfer) {
+        outDataTransfer.append(type, item);
+      }
+    }
+    return dndController.handleDrop(outDataTransfer, targetNode, CancellationToken.None, willDropUuid, treeSourceInfo?.id, treeSourceInfo?.itemHandles);
+  }
+  onDragEnd(originalEvent) {
+    if (originalEvent.dataTransfer?.dropEffect === "none") {
+      this.dragCancellationToken?.cancel();
+    }
+  }
+  dispose() {
+  }
+};
+CustomTreeViewDragAndDrop = __decorateClass([
+  __decorateParam(1, ILabelService),
+  __decorateParam(2, IInstantiationService),
+  __decorateParam(3, ITreeViewsDnDService),
+  __decorateParam(4, ILogService)
+], CustomTreeViewDragAndDrop);
+function setCascadingCheckboxUpdates(items) {
+  const additionalItems = [];
+  for (const item of items) {
+    if (item.checkbox !== void 0) {
+      const checkChildren = /* @__PURE__ */ __name((currentItem) => {
+        for (const child of currentItem.children ?? []) {
+          if (child.checkbox !== void 0 && currentItem.checkbox !== void 0 && child.checkbox.isChecked !== currentItem.checkbox.isChecked) {
+            child.checkbox.isChecked = currentItem.checkbox.isChecked;
+            additionalItems.push(child);
+            checkChildren(child);
+          }
+        }
+      }, "checkChildren");
+      checkChildren(item);
+      const visitedParents = /* @__PURE__ */ new Set();
+      const checkParents = /* @__PURE__ */ __name((currentItem) => {
+        if (currentItem.parent && currentItem.parent.checkbox !== void 0 && currentItem.parent.children) {
+          if (visitedParents.has(currentItem.parent)) {
+            return;
+          } else {
+            visitedParents.add(currentItem.parent);
+          }
+          let someUnchecked = false;
+          let someChecked = false;
+          for (const child of currentItem.parent.children) {
+            if (someUnchecked && someChecked) {
+              break;
+            }
+            if (child.checkbox !== void 0) {
+              if (child.checkbox.isChecked) {
+                someChecked = true;
+              } else {
+                someUnchecked = true;
+              }
+            }
+          }
+          if (someChecked && !someUnchecked && currentItem.parent.checkbox.isChecked !== true) {
+            currentItem.parent.checkbox.isChecked = true;
+            additionalItems.push(currentItem.parent);
+            checkParents(currentItem.parent);
+          } else if (someUnchecked && currentItem.parent.checkbox.isChecked !== false) {
+            currentItem.parent.checkbox.isChecked = false;
+            additionalItems.push(currentItem.parent);
+            checkParents(currentItem.parent);
+          }
+        }
+      }, "checkParents");
+      checkParents(item);
+    }
+  }
+  return items.concat(additionalItems);
+}
+__name(setCascadingCheckboxUpdates, "setCascadingCheckboxUpdates");
+export {
+  CustomTreeView,
+  CustomTreeViewDragAndDrop,
+  RawCustomTreeViewContextKey,
+  TreeView,
+  TreeViewPane
+};
+//# sourceMappingURL=treeView.js.map

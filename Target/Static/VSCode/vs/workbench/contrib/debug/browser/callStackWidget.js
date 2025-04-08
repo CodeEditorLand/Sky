@@ -1,1 +1,654 @@
-var Q=Object.defineProperty,Y=Object.getOwnPropertyDescriptor,d=(e,t,o,i)=>{for(var s,r=i>1?void 0:i?Y(t,o):t,n=e.length-1;n>=0;n--)(s=e[n])&&(r=(i?s(t,o,r):s(r))||r);return i&&r&&Q(t,o,r),r},c=(e,t)=>(o,i)=>t(o,i,e);import*as m from"../../../../base/browser/dom.js";import{Button as O}from"../../../../base/browser/ui/button/button.js";import"../../../../base/browser/ui/list/list.js";import"../../../../base/browser/ui/list/listWidget.js";import{assertNever as W}from"../../../../base/common/assert.js";import{CancellationTokenSource as N}from"../../../../base/common/cancellation.js";import{Codicon as C}from"../../../../base/common/codicons.js";import{Emitter as Z}from"../../../../base/common/event.js";import{Disposable as _,DisposableStore as y,toDisposable as S}from"../../../../base/common/lifecycle.js";import{autorun as H,autorunWithStore as $,derived as P,observableValue as E,transaction as ee}from"../../../../base/common/observable.js";import"../../../../base/common/themables.js";import{Constants as B}from"../../../../base/common/uint.js";import"../../../../base/common/uri.js";import{generateUuid as te}from"../../../../base/common/uuid.js";import"../../../../editor/browser/editorBrowser.js";import{EditorContributionInstantiation as ie}from"../../../../editor/browser/editorExtensions.js";import{CodeEditorWidget as re}from"../../../../editor/browser/widget/codeEditor/codeEditorWidget.js";import{EmbeddedCodeEditorWidget as oe}from"../../../../editor/browser/widget/codeEditor/embeddedCodeEditorWidget.js";import"../../../../editor/common/config/editorOptions.js";import{Position as ae}from"../../../../editor/common/core/position.js";import{Range as k}from"../../../../editor/common/core/range.js";import"../../../../editor/common/core/wordHelper.js";import"../../../../editor/common/editorCommon.js";import"../../../../editor/common/languages.js";import{ITextModelService as ne}from"../../../../editor/common/services/resolverService.js";import{ClickLinkGesture as se}from"../../../../editor/contrib/gotoSymbol/browser/link/clickLinkGesture.js";import{localize as D,localize2 as le}from"../../../../nls.js";import{createActionViewItem as ce}from"../../../../platform/actions/browser/menuEntryActionViewItem.js";import{MenuWorkbenchToolBar as de}from"../../../../platform/actions/browser/toolbar.js";import{Action2 as me,MenuId as G,registerAction2 as pe}from"../../../../platform/actions/common/actions.js";import{TextEditorSelectionRevealType as V}from"../../../../platform/editor/common/editor.js";import{IInstantiationService as F}from"../../../../platform/instantiation/common/instantiation.js";import{ILabelService as ue}from"../../../../platform/label/common/label.js";import{WorkbenchList as he}from"../../../../platform/list/browser/listService.js";import{INotificationService as be}from"../../../../platform/notification/common/notification.js";import{defaultButtonStyles as Ie}from"../../../../platform/theme/browser/defaultStyles.js";import{ResourceLabel as U}from"../../../browser/labels.js";import{IEditorService as z,SIDE_GROUP as fe}from"../../../services/editor/common/editorService.js";import{makeStackFrameColumnDecoration as ge,TOP_STACK_FRAME_DECORATION as ve}from"./callStackEditorContribution.js";import"./media/callStackWidget.css";class w{constructor(e,t,o=1,i=1){this.name=e,this.source=t,this.line=o,this.column=i}}class A{constructor(e,t){this.label=e,this.load=t}}class Se{showHeader=E("CustomStackFrame.showHeader",!0);icon}class K extends w{editorHeight=E("WrappedCallStackFrame.height",this.source?100:0);collapsed=E("WrappedCallStackFrame.collapsed",!1);height=P((e=>this.collapsed.read(e)?x:x+this.editorHeight.read(e)));constructor(e){super(e.name,e.source,e.line,e.column)}}class L{constructor(e){this.original=e}collapsed=E("WrappedCallStackFrame.collapsed",!1);height=P((e=>{const t=this.original.showHeader.read(e)?x:0;return this.collapsed.read(e)?t:t+this.original.height.read(e)}))}const ke=e=>e instanceof K||e instanceof L,X="multiCallStackWidget";let M=class extends _{list;layoutEmitter=this._register(new Z);currentFramesDs=this._register(new y);cts;get onDidChangeContentHeight(){return this.list.onDidChangeContentHeight}get onDidScroll(){return this.list.onDidScroll}get contentHeight(){return this.list.contentHeight}constructor(e,t,o){super(),e.classList.add(X),this._register(S((()=>e.classList.remove(X)))),this.list=this._register(o.createInstance(he,"TestResultStackWidget",e,new Le,[o.createInstance(p,t,this.layoutEmitter.event),o.createInstance(u),o.createInstance(R),o.createInstance(h,(e=>this.loadFrame(e)))],{multipleSelectionSupport:!1,mouseSupport:!1,keyboardSupport:!1,setRowLineHeight:!1,alwaysConsumeMouseWheel:!1,accessibilityProvider:o.createInstance(T)}))}setFrames(e){this.currentFramesDs.clear(),this.cts=new N,this._register(S((()=>this.cts.dispose(!0)))),this.list.splice(0,this.list.length,this.mapFrames(e))}layout(e,t){this.list.layout(e,t),this.layoutEmitter.fire()}collapseAll(){ee((e=>{for(let t=0;t<this.list.length;t++){const o=this.list.element(t);ke(o)&&o.collapsed.set(!0,e)}}))}async loadFrame(e){if(!this.cts)return;const t=await e.load(this.cts.token);if(this.cts.token.isCancellationRequested)return;const o=this.list.indexOf(e);this.list.splice(o,1,this.mapFrames(t))}mapFrames(e){const t=[];for(const o of e){if(o instanceof A){t.push(o);continue}const e=o instanceof Se?new L(o):new K(o);t.push(e),this.currentFramesDs.add(H((t=>{const o=e.height.read(t),i=this.list.indexOf(e);-1!==i&&this.list.updateElementHeight(i,o)})))}return t}};M=d([c(2,F)],M);let T=class{constructor(e){this.labelService=e}getAriaLabel(e){return e instanceof A?e.label:e instanceof L?e.original.label:e instanceof w?e.source&&e.line?D({comment:["{0} is an extension-defined label, then line number and filename"],key:"stackTraceLabel"},"{0}, line {1} in {2}",e.name,e.line,this.labelService.getUriLabel(e.source,{relative:!0})):e.name:void W(e)}getWidgetAriaLabel(){return D("stackTrace","Stack Trace")}};T=d([c(0,ue)],T);class Le{getHeight(e){return e instanceof w||e instanceof L?e.height.get():e instanceof A?x:void W(e)}getTemplateId(e){return e instanceof w?e.source?p.templateId:u.templateId:e instanceof A?h.templateId:e instanceof L?R.templateId:void W(e)}}const q={scrollBeyondLastLine:!1,scrollbar:{vertical:"hidden",horizontal:"hidden",handleMouseWheel:!1,useShadows:!1},overviewRulerLanes:0,fixedOverflowWidgets:!0,overviewRulerBorder:!1,stickyScroll:{enabled:!1},minimap:{enabled:!1},readOnly:!0,automaticLayout:!1},j=()=>m.h("div.multiCallStackFrame",[m.h("div.header@header",[m.h("div.collapse-button@collapseButton"),m.h("div.title.show-file-icons@title"),m.h("div.actions@actions")]),m.h("div.editorParent",[m.h("div.editorContainer@editor")])]),x=24;let f=class{constructor(e){this.instantiationService=e}renderTemplate(e){const t=j();e.appendChild(t.root);const o=new y;e.classList.add("multiCallStackFrameContainer"),o.add(S((()=>{e.classList.remove("multiCallStackFrameContainer"),t.root.remove()})));const i=o.add(this.instantiationService.createInstance(U,t.title,{})),s=o.add(new O(t.collapseButton,{})),r=te();return t.editor.id=r,t.editor.role="region",t.collapseButton.setAttribute("aria-controls",r),this.finishRenderTemplate({container:e,decorations:[],elements:t,label:i,collapse:s,elementStore:o.add(new y),templateStore:o})}renderElement(e,t,o,i){const{elementStore:s}=o;s.clear();const r=e;this.setupCollapseButton(r,o)}setupCollapseButton(e,{elementStore:t,elements:o,collapse:i}){t.add(H((t=>{i.element.className="";const s=e.collapsed.read(t);i.icon=s?C.chevronRight:C.chevronDown,i.element.ariaExpanded=String(!s),o.root.classList.toggle("collapsed",s)})));const s=()=>e.collapsed.set(!e.collapsed.get(),void 0);t.add(i.onDidClick(s)),t.add(m.addDisposableListener(o.title,"click",s))}disposeElement(e,t,o,i){o.elementStore.clear()}disposeTemplate(e){e.templateStore.dispose()}};f=d([c(0,F)],f);const J=2;let p=class extends f{constructor(e,t,o,i){super(i),this.containingEditor=e,this.onLayout=t,this.modelService=o}static templateId="f";templateId=p.templateId;finishRenderTemplate(e){const t=[{id:g.ID,instantiation:ie.BeforeFirstInteraction,ctor:g}],o=this.containingEditor?this.instantiationService.createInstance(oe,e.elements.editor,q,{isSimpleWidget:!0,contributions:t},this.containingEditor):this.instantiationService.createInstance(re,e.elements.editor,q,{isSimpleWidget:!0,contributions:t});e.templateStore.add(o);const i=e.templateStore.add(this.instantiationService.createInstance(de,e.elements.actions,G.DebugCallStackToolbar,{menuOptions:{shouldForwardArgs:!0},actionViewItemProvider:(e,t)=>ce(this.instantiationService,e,t)}));return{...e,editor:o,toolbar:i}}renderElement(e,t,o,i){super.renderElement(e,t,o,i);const{elementStore:s,editor:r}=o,n=e,a=n.source;o.label.element.setFile(a);const l=new N;s.add(S((()=>l.dispose(!0)))),this.modelService.createModelReference(a).then((e=>{if(l.token.isCancellationRequested)return e.dispose();s.add(e),r.setModel(e.object.textEditorModel),this.setupEditorAfterModel(n,o),this.setupEditorLayout(n,o)}))}setupEditorLayout(e,{elementStore:t,container:o,editor:i}){const s=()=>{const t=i.getContentHeight();i.layout({width:o.clientWidth,height:t});const s=i.getContentHeight();s!==t&&i.layout({width:o.clientWidth,height:s}),e.editorHeight.set(s,void 0)};t.add(i.onDidChangeModelDecorations(s)),t.add(i.onDidChangeModelContent(s)),t.add(i.onDidChangeModelOptions(s)),t.add(this.onLayout(s)),s()}setupEditorAfterModel(e,t){const o=k.fromPositions({column:e.column??1,lineNumber:e.line??1});t.toolbar.context={uri:e.source,range:o},t.editor.setHiddenAreas([k.fromPositions({column:1,lineNumber:1},{column:1,lineNumber:Math.max(1,e.line-2-1)}),k.fromPositions({column:1,lineNumber:e.line+2+1},{column:1,lineNumber:B.MAX_SAFE_SMALL_INTEGER})]),t.editor.changeDecorations((e=>{for(const o of t.decorations)e.removeDecoration(o);t.decorations.length=0;const i=o.setStartPosition(o.startLineNumber,1),s=!!t.editor.getModel()?.getValueInRange(i).trim(),r=o.setEndPosition(o.startLineNumber,B.MAX_SAFE_SMALL_INTEGER);t.decorations.push(e.addDecoration(r,ge(!s))),t.decorations.push(e.addDecoration(r,ve))})),e.editorHeight.set(t.editor.getContentHeight(),void 0)}};p=d([c(2,ne),c(3,F)],p);let u=class{constructor(e){this.instantiationService=e}static templateId="m";templateId=u.templateId;renderTemplate(e){const t=j();t.root.classList.add("missing"),e.appendChild(t.root);return{elements:t,label:this.instantiationService.createInstance(U,t.title,{})}}renderElement(e,t,o){const i=e;o.label.element.setResource({name:i.name,description:D("stackFrameLocation","Line {0} column {1}",i.line,i.column),range:{startLineNumber:i.line,startColumn:i.column,endColumn:i.column,endLineNumber:i.line}},{icon:C.fileBinary})}disposeTemplate(e){e.label.dispose(),e.elements.root.remove()}};u=d([c(0,F)],u);class R extends f{static templateId="c";templateId=R.templateId;finishRenderTemplate(e){return e}renderElement(e,t,o,i){super.renderElement(e,t,o,i);const s=e,{elementStore:r,container:n,label:a}=o;a.element.setResource({name:s.original.label},{icon:s.original.icon}),r.add(H((e=>{o.elements.header.style.display=s.original.showHeader.read(e)?"":"none"}))),r.add($(((e,t)=>{s.collapsed.read(e)||t.add(s.original.render(n))})));const l=s.original.renderActions?.(o.elements.actions);l&&r.add(l)}}let h=class{constructor(e,t){this.loadFrames=e,this.notificationService=t}static templateId="s";templateId=h.templateId;renderTemplate(e){const t=new y,o=new O(e,{title:"",...Ie}),i={button:o,store:t};return t.add(o),t.add(o.onDidClick((()=>{!i.current||!o.enabled||(o.enabled=!1,this.loadFrames(i.current).catch((e=>{this.notificationService.error(D("failedToLoadFrames","Failed to load stack frames: {0}",e.message))})))}))),i}renderElement(e,t,o,i){const s=e;o.button.enabled=!0,o.button.label=s.label,o.current=s}disposeTemplate(e){e.store.dispose()}};h=d([c(1,be)],h);let g=class extends _{constructor(e,t){super(),this.editor=e,this.linkDecorations=e.createDecorationsCollection(),this._register(S((()=>this.linkDecorations.clear())));const o=this._register(new se(e));this._register(o.onMouseMoveOrRelevantKeyDown((([e,t])=>{this.onMove(e)}))),this._register(o.onExecute((e=>{const o=this.editor.getModel();!this.current||!o||t.openEditor({resource:o.uri,options:{selection:k.fromPositions(new ae(this.current.line,this.current.word.startColumn)),selectionRevealType:V.CenterIfOutsideViewport}},e.hasSideBySideModifier?fe:void 0)})))}static ID="clickToLocation";linkDecorations;current;onMove(e){if(!e.hasTriggerModifier)return this.clear();const t=e.target.position,o=t&&this.editor.getModel()?.getWordAtPosition(t);if(!o)return this.clear();const i=this.current?.word;i&&i.startColumn===o.startColumn&&i.endColumn===o.endColumn&&i.word===o.word||(this.current={word:o,line:t.lineNumber},this.linkDecorations.set([{range:new k(t.lineNumber,o.startColumn,t.lineNumber,o.endColumn),options:{description:"call-stack-go-to-file-link",inlineClassName:"call-stack-go-to-file-link"}}]))}clear(){this.linkDecorations.clear(),this.current=void 0}};g=d([c(1,z)],g),pe(class extends me{constructor(){super({id:"callStackWidget.goToFile",title:le("goToFile","Open File"),icon:C.goToFile,menu:{id:G.DebugCallStackToolbar,order:22,group:"navigation"}})}async run(e,{uri:t,range:o}){await e.get(z).openEditor({resource:t,options:{selection:o,selectionRevealType:V.CenterIfOutsideViewport}})}});export{x as CALL_STACK_WIDGET_HEADER_HEIGHT,w as CallStackFrame,M as CallStackWidget,Se as CustomStackFrame,A as SkippedCallFrames};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import * as dom from "../../../../base/browser/dom.js";
+import { Button } from "../../../../base/browser/ui/button/button.js";
+import { IListRenderer, IListVirtualDelegate } from "../../../../base/browser/ui/list/list.js";
+import { IListAccessibilityProvider } from "../../../../base/browser/ui/list/listWidget.js";
+import { assertNever } from "../../../../base/common/assert.js";
+import { CancellationToken, CancellationTokenSource } from "../../../../base/common/cancellation.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { Disposable, DisposableStore, IDisposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { autorun, autorunWithStore, derived, IObservable, ISettableObservable, observableValue, transaction } from "../../../../base/common/observable.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { Constants } from "../../../../base/common/uint.js";
+import { URI } from "../../../../base/common/uri.js";
+import { generateUuid } from "../../../../base/common/uuid.js";
+import { ICodeEditor } from "../../../../editor/browser/editorBrowser.js";
+import { EditorContributionCtor, EditorContributionInstantiation, IEditorContributionDescription } from "../../../../editor/browser/editorExtensions.js";
+import { CodeEditorWidget } from "../../../../editor/browser/widget/codeEditor/codeEditorWidget.js";
+import { EmbeddedCodeEditorWidget } from "../../../../editor/browser/widget/codeEditor/embeddedCodeEditorWidget.js";
+import { IEditorOptions } from "../../../../editor/common/config/editorOptions.js";
+import { Position } from "../../../../editor/common/core/position.js";
+import { Range } from "../../../../editor/common/core/range.js";
+import { IWordAtPosition } from "../../../../editor/common/core/wordHelper.js";
+import { IEditorContribution, IEditorDecorationsCollection } from "../../../../editor/common/editorCommon.js";
+import { Location } from "../../../../editor/common/languages.js";
+import { ITextModelService } from "../../../../editor/common/services/resolverService.js";
+import { ClickLinkGesture, ClickLinkMouseEvent } from "../../../../editor/contrib/gotoSymbol/browser/link/clickLinkGesture.js";
+import { localize, localize2 } from "../../../../nls.js";
+import { createActionViewItem } from "../../../../platform/actions/browser/menuEntryActionViewItem.js";
+import { MenuWorkbenchToolBar } from "../../../../platform/actions/browser/toolbar.js";
+import { Action2, MenuId, registerAction2 } from "../../../../platform/actions/common/actions.js";
+import { TextEditorSelectionRevealType } from "../../../../platform/editor/common/editor.js";
+import { IInstantiationService, ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+import { ILabelService } from "../../../../platform/label/common/label.js";
+import { WorkbenchList } from "../../../../platform/list/browser/listService.js";
+import { INotificationService } from "../../../../platform/notification/common/notification.js";
+import { defaultButtonStyles } from "../../../../platform/theme/browser/defaultStyles.js";
+import { ResourceLabel } from "../../../browser/labels.js";
+import { IEditorService, SIDE_GROUP } from "../../../services/editor/common/editorService.js";
+import { makeStackFrameColumnDecoration, TOP_STACK_FRAME_DECORATION } from "./callStackEditorContribution.js";
+import "./media/callStackWidget.css";
+class CallStackFrame {
+  constructor(name, source, line = 1, column = 1) {
+    this.name = name;
+    this.source = source;
+    this.line = line;
+    this.column = column;
+  }
+  static {
+    __name(this, "CallStackFrame");
+  }
+}
+class SkippedCallFrames {
+  constructor(label, load) {
+    this.label = label;
+    this.load = load;
+  }
+  static {
+    __name(this, "SkippedCallFrames");
+  }
+}
+class CustomStackFrame {
+  static {
+    __name(this, "CustomStackFrame");
+  }
+  showHeader = observableValue("CustomStackFrame.showHeader", true);
+  icon;
+}
+class WrappedCallStackFrame extends CallStackFrame {
+  static {
+    __name(this, "WrappedCallStackFrame");
+  }
+  editorHeight = observableValue("WrappedCallStackFrame.height", this.source ? 100 : 0);
+  collapsed = observableValue("WrappedCallStackFrame.collapsed", false);
+  height = derived((reader) => {
+    return this.collapsed.read(reader) ? CALL_STACK_WIDGET_HEADER_HEIGHT : CALL_STACK_WIDGET_HEADER_HEIGHT + this.editorHeight.read(reader);
+  });
+  constructor(original) {
+    super(original.name, original.source, original.line, original.column);
+  }
+}
+class WrappedCustomStackFrame {
+  constructor(original) {
+    this.original = original;
+  }
+  static {
+    __name(this, "WrappedCustomStackFrame");
+  }
+  collapsed = observableValue("WrappedCallStackFrame.collapsed", false);
+  height = derived((reader) => {
+    const headerHeight = this.original.showHeader.read(reader) ? CALL_STACK_WIDGET_HEADER_HEIGHT : 0;
+    return this.collapsed.read(reader) ? headerHeight : headerHeight + this.original.height.read(reader);
+  });
+}
+const isFrameLike = /* @__PURE__ */ __name((item) => item instanceof WrappedCallStackFrame || item instanceof WrappedCustomStackFrame, "isFrameLike");
+const WIDGET_CLASS_NAME = "multiCallStackWidget";
+let CallStackWidget = class extends Disposable {
+  static {
+    __name(this, "CallStackWidget");
+  }
+  list;
+  layoutEmitter = this._register(new Emitter());
+  currentFramesDs = this._register(new DisposableStore());
+  cts;
+  get onDidChangeContentHeight() {
+    return this.list.onDidChangeContentHeight;
+  }
+  get onDidScroll() {
+    return this.list.onDidScroll;
+  }
+  get contentHeight() {
+    return this.list.contentHeight;
+  }
+  constructor(container, containingEditor, instantiationService) {
+    super();
+    container.classList.add(WIDGET_CLASS_NAME);
+    this._register(toDisposable(() => container.classList.remove(WIDGET_CLASS_NAME)));
+    this.list = this._register(instantiationService.createInstance(
+      WorkbenchList,
+      "TestResultStackWidget",
+      container,
+      new StackDelegate(),
+      [
+        instantiationService.createInstance(FrameCodeRenderer, containingEditor, this.layoutEmitter.event),
+        instantiationService.createInstance(MissingCodeRenderer),
+        instantiationService.createInstance(CustomRenderer),
+        instantiationService.createInstance(SkippedRenderer, (i) => this.loadFrame(i))
+      ],
+      {
+        multipleSelectionSupport: false,
+        mouseSupport: false,
+        keyboardSupport: false,
+        setRowLineHeight: false,
+        alwaysConsumeMouseWheel: false,
+        accessibilityProvider: instantiationService.createInstance(StackAccessibilityProvider)
+      }
+    ));
+  }
+  /** Replaces the call frames display in the view. */
+  setFrames(frames) {
+    this.currentFramesDs.clear();
+    this.cts = new CancellationTokenSource();
+    this._register(toDisposable(() => this.cts.dispose(true)));
+    this.list.splice(0, this.list.length, this.mapFrames(frames));
+  }
+  layout(height, width) {
+    this.list.layout(height, width);
+    this.layoutEmitter.fire();
+  }
+  collapseAll() {
+    transaction((tx) => {
+      for (let i = 0; i < this.list.length; i++) {
+        const frame = this.list.element(i);
+        if (isFrameLike(frame)) {
+          frame.collapsed.set(true, tx);
+        }
+      }
+    });
+  }
+  async loadFrame(replacing) {
+    if (!this.cts) {
+      return;
+    }
+    const frames = await replacing.load(this.cts.token);
+    if (this.cts.token.isCancellationRequested) {
+      return;
+    }
+    const index = this.list.indexOf(replacing);
+    this.list.splice(index, 1, this.mapFrames(frames));
+  }
+  mapFrames(frames) {
+    const result = [];
+    for (const frame of frames) {
+      if (frame instanceof SkippedCallFrames) {
+        result.push(frame);
+        continue;
+      }
+      const wrapped = frame instanceof CustomStackFrame ? new WrappedCustomStackFrame(frame) : new WrappedCallStackFrame(frame);
+      result.push(wrapped);
+      this.currentFramesDs.add(autorun((reader) => {
+        const height = wrapped.height.read(reader);
+        const idx = this.list.indexOf(wrapped);
+        if (idx !== -1) {
+          this.list.updateElementHeight(idx, height);
+        }
+      }));
+    }
+    return result;
+  }
+};
+CallStackWidget = __decorateClass([
+  __decorateParam(2, IInstantiationService)
+], CallStackWidget);
+let StackAccessibilityProvider = class {
+  constructor(labelService) {
+    this.labelService = labelService;
+  }
+  static {
+    __name(this, "StackAccessibilityProvider");
+  }
+  getAriaLabel(e) {
+    if (e instanceof SkippedCallFrames) {
+      return e.label;
+    }
+    if (e instanceof WrappedCustomStackFrame) {
+      return e.original.label;
+    }
+    if (e instanceof CallStackFrame) {
+      if (e.source && e.line) {
+        return localize({
+          comment: ["{0} is an extension-defined label, then line number and filename"],
+          key: "stackTraceLabel"
+        }, "{0}, line {1} in {2}", e.name, e.line, this.labelService.getUriLabel(e.source, { relative: true }));
+      }
+      return e.name;
+    }
+    assertNever(e);
+  }
+  getWidgetAriaLabel() {
+    return localize("stackTrace", "Stack Trace");
+  }
+};
+StackAccessibilityProvider = __decorateClass([
+  __decorateParam(0, ILabelService)
+], StackAccessibilityProvider);
+class StackDelegate {
+  static {
+    __name(this, "StackDelegate");
+  }
+  getHeight(element) {
+    if (element instanceof CallStackFrame || element instanceof WrappedCustomStackFrame) {
+      return element.height.get();
+    }
+    if (element instanceof SkippedCallFrames) {
+      return CALL_STACK_WIDGET_HEADER_HEIGHT;
+    }
+    assertNever(element);
+  }
+  getTemplateId(element) {
+    if (element instanceof CallStackFrame) {
+      return element.source ? FrameCodeRenderer.templateId : MissingCodeRenderer.templateId;
+    }
+    if (element instanceof SkippedCallFrames) {
+      return SkippedRenderer.templateId;
+    }
+    if (element instanceof WrappedCustomStackFrame) {
+      return CustomRenderer.templateId;
+    }
+    assertNever(element);
+  }
+}
+const editorOptions = {
+  scrollBeyondLastLine: false,
+  scrollbar: {
+    vertical: "hidden",
+    horizontal: "hidden",
+    handleMouseWheel: false,
+    useShadows: false
+  },
+  overviewRulerLanes: 0,
+  fixedOverflowWidgets: true,
+  overviewRulerBorder: false,
+  stickyScroll: { enabled: false },
+  minimap: { enabled: false },
+  readOnly: true,
+  automaticLayout: false
+};
+const makeFrameElements = /* @__PURE__ */ __name(() => dom.h("div.multiCallStackFrame", [
+  dom.h("div.header@header", [
+    dom.h("div.collapse-button@collapseButton"),
+    dom.h("div.title.show-file-icons@title"),
+    dom.h("div.actions@actions")
+  ]),
+  dom.h("div.editorParent", [
+    dom.h("div.editorContainer@editor")
+  ])
+]), "makeFrameElements");
+const CALL_STACK_WIDGET_HEADER_HEIGHT = 24;
+let AbstractFrameRenderer = class {
+  constructor(instantiationService) {
+    this.instantiationService = instantiationService;
+  }
+  static {
+    __name(this, "AbstractFrameRenderer");
+  }
+  renderTemplate(container) {
+    const elements = makeFrameElements();
+    container.appendChild(elements.root);
+    const templateStore = new DisposableStore();
+    container.classList.add("multiCallStackFrameContainer");
+    templateStore.add(toDisposable(() => {
+      container.classList.remove("multiCallStackFrameContainer");
+      elements.root.remove();
+    }));
+    const label = templateStore.add(this.instantiationService.createInstance(ResourceLabel, elements.title, {}));
+    const collapse = templateStore.add(new Button(elements.collapseButton, {}));
+    const contentId = generateUuid();
+    elements.editor.id = contentId;
+    elements.editor.role = "region";
+    elements.collapseButton.setAttribute("aria-controls", contentId);
+    return this.finishRenderTemplate({
+      container,
+      decorations: [],
+      elements,
+      label,
+      collapse,
+      elementStore: templateStore.add(new DisposableStore()),
+      templateStore
+    });
+  }
+  renderElement(element, index, template, height) {
+    const { elementStore } = template;
+    elementStore.clear();
+    const item = element;
+    this.setupCollapseButton(item, template);
+  }
+  setupCollapseButton(item, { elementStore, elements, collapse }) {
+    elementStore.add(autorun((reader) => {
+      collapse.element.className = "";
+      const collapsed = item.collapsed.read(reader);
+      collapse.icon = collapsed ? Codicon.chevronRight : Codicon.chevronDown;
+      collapse.element.ariaExpanded = String(!collapsed);
+      elements.root.classList.toggle("collapsed", collapsed);
+    }));
+    const toggleCollapse = /* @__PURE__ */ __name(() => item.collapsed.set(!item.collapsed.get(), void 0), "toggleCollapse");
+    elementStore.add(collapse.onDidClick(toggleCollapse));
+    elementStore.add(dom.addDisposableListener(elements.title, "click", toggleCollapse));
+  }
+  disposeElement(element, index, templateData, height) {
+    templateData.elementStore.clear();
+  }
+  disposeTemplate(templateData) {
+    templateData.templateStore.dispose();
+  }
+};
+AbstractFrameRenderer = __decorateClass([
+  __decorateParam(0, IInstantiationService)
+], AbstractFrameRenderer);
+const CONTEXT_LINES = 2;
+let FrameCodeRenderer = class extends AbstractFrameRenderer {
+  constructor(containingEditor, onLayout, modelService, instantiationService) {
+    super(instantiationService);
+    this.containingEditor = containingEditor;
+    this.onLayout = onLayout;
+    this.modelService = modelService;
+  }
+  static {
+    __name(this, "FrameCodeRenderer");
+  }
+  static templateId = "f";
+  templateId = FrameCodeRenderer.templateId;
+  finishRenderTemplate(data) {
+    const contributions = [{
+      id: ClickToLocationContribution.ID,
+      instantiation: EditorContributionInstantiation.BeforeFirstInteraction,
+      ctor: ClickToLocationContribution
+    }];
+    const editor = this.containingEditor ? this.instantiationService.createInstance(
+      EmbeddedCodeEditorWidget,
+      data.elements.editor,
+      editorOptions,
+      { isSimpleWidget: true, contributions },
+      this.containingEditor
+    ) : this.instantiationService.createInstance(
+      CodeEditorWidget,
+      data.elements.editor,
+      editorOptions,
+      { isSimpleWidget: true, contributions }
+    );
+    data.templateStore.add(editor);
+    const toolbar = data.templateStore.add(this.instantiationService.createInstance(MenuWorkbenchToolBar, data.elements.actions, MenuId.DebugCallStackToolbar, {
+      menuOptions: { shouldForwardArgs: true },
+      actionViewItemProvider: /* @__PURE__ */ __name((action, options) => createActionViewItem(this.instantiationService, action, options), "actionViewItemProvider")
+    }));
+    return { ...data, editor, toolbar };
+  }
+  renderElement(element, index, template, height) {
+    super.renderElement(element, index, template, height);
+    const { elementStore, editor } = template;
+    const item = element;
+    const uri = item.source;
+    template.label.element.setFile(uri);
+    const cts = new CancellationTokenSource();
+    elementStore.add(toDisposable(() => cts.dispose(true)));
+    this.modelService.createModelReference(uri).then((reference) => {
+      if (cts.token.isCancellationRequested) {
+        return reference.dispose();
+      }
+      elementStore.add(reference);
+      editor.setModel(reference.object.textEditorModel);
+      this.setupEditorAfterModel(item, template);
+      this.setupEditorLayout(item, template);
+    });
+  }
+  setupEditorLayout(item, { elementStore, container, editor }) {
+    const layout = /* @__PURE__ */ __name(() => {
+      const prev = editor.getContentHeight();
+      editor.layout({ width: container.clientWidth, height: prev });
+      const next = editor.getContentHeight();
+      if (next !== prev) {
+        editor.layout({ width: container.clientWidth, height: next });
+      }
+      item.editorHeight.set(next, void 0);
+    }, "layout");
+    elementStore.add(editor.onDidChangeModelDecorations(layout));
+    elementStore.add(editor.onDidChangeModelContent(layout));
+    elementStore.add(editor.onDidChangeModelOptions(layout));
+    elementStore.add(this.onLayout(layout));
+    layout();
+  }
+  setupEditorAfterModel(item, template) {
+    const range = Range.fromPositions({
+      column: item.column ?? 1,
+      lineNumber: item.line ?? 1
+    });
+    template.toolbar.context = { uri: item.source, range };
+    template.editor.setHiddenAreas([
+      Range.fromPositions(
+        { column: 1, lineNumber: 1 },
+        { column: 1, lineNumber: Math.max(1, item.line - CONTEXT_LINES - 1) }
+      ),
+      Range.fromPositions(
+        { column: 1, lineNumber: item.line + CONTEXT_LINES + 1 },
+        { column: 1, lineNumber: Constants.MAX_SAFE_SMALL_INTEGER }
+      )
+    ]);
+    template.editor.changeDecorations((accessor) => {
+      for (const d of template.decorations) {
+        accessor.removeDecoration(d);
+      }
+      template.decorations.length = 0;
+      const beforeRange = range.setStartPosition(range.startLineNumber, 1);
+      const hasCharactersBefore = !!template.editor.getModel()?.getValueInRange(beforeRange).trim();
+      const decoRange = range.setEndPosition(range.startLineNumber, Constants.MAX_SAFE_SMALL_INTEGER);
+      template.decorations.push(accessor.addDecoration(
+        decoRange,
+        makeStackFrameColumnDecoration(!hasCharactersBefore)
+      ));
+      template.decorations.push(accessor.addDecoration(
+        decoRange,
+        TOP_STACK_FRAME_DECORATION
+      ));
+    });
+    item.editorHeight.set(template.editor.getContentHeight(), void 0);
+  }
+};
+FrameCodeRenderer = __decorateClass([
+  __decorateParam(2, ITextModelService),
+  __decorateParam(3, IInstantiationService)
+], FrameCodeRenderer);
+let MissingCodeRenderer = class {
+  constructor(instantiationService) {
+    this.instantiationService = instantiationService;
+  }
+  static {
+    __name(this, "MissingCodeRenderer");
+  }
+  static templateId = "m";
+  templateId = MissingCodeRenderer.templateId;
+  renderTemplate(container) {
+    const elements = makeFrameElements();
+    elements.root.classList.add("missing");
+    container.appendChild(elements.root);
+    const label = this.instantiationService.createInstance(ResourceLabel, elements.title, {});
+    return { elements, label };
+  }
+  renderElement(element, _index, templateData) {
+    const cast = element;
+    templateData.label.element.setResource({
+      name: cast.name,
+      description: localize("stackFrameLocation", "Line {0} column {1}", cast.line, cast.column),
+      range: { startLineNumber: cast.line, startColumn: cast.column, endColumn: cast.column, endLineNumber: cast.line }
+    }, {
+      icon: Codicon.fileBinary
+    });
+  }
+  disposeTemplate(templateData) {
+    templateData.label.dispose();
+    templateData.elements.root.remove();
+  }
+};
+MissingCodeRenderer = __decorateClass([
+  __decorateParam(0, IInstantiationService)
+], MissingCodeRenderer);
+class CustomRenderer extends AbstractFrameRenderer {
+  static {
+    __name(this, "CustomRenderer");
+  }
+  static templateId = "c";
+  templateId = CustomRenderer.templateId;
+  finishRenderTemplate(data) {
+    return data;
+  }
+  renderElement(element, index, template, height) {
+    super.renderElement(element, index, template, height);
+    const item = element;
+    const { elementStore, container, label } = template;
+    label.element.setResource({ name: item.original.label }, { icon: item.original.icon });
+    elementStore.add(autorun((reader) => {
+      template.elements.header.style.display = item.original.showHeader.read(reader) ? "" : "none";
+    }));
+    elementStore.add(autorunWithStore((reader, store) => {
+      if (!item.collapsed.read(reader)) {
+        store.add(item.original.render(container));
+      }
+    }));
+    const actions = item.original.renderActions?.(template.elements.actions);
+    if (actions) {
+      elementStore.add(actions);
+    }
+  }
+}
+let SkippedRenderer = class {
+  constructor(loadFrames, notificationService) {
+    this.loadFrames = loadFrames;
+    this.notificationService = notificationService;
+  }
+  static {
+    __name(this, "SkippedRenderer");
+  }
+  static templateId = "s";
+  templateId = SkippedRenderer.templateId;
+  renderTemplate(container) {
+    const store = new DisposableStore();
+    const button = new Button(container, { title: "", ...defaultButtonStyles });
+    const data = { button, store };
+    store.add(button);
+    store.add(button.onDidClick(() => {
+      if (!data.current || !button.enabled) {
+        return;
+      }
+      button.enabled = false;
+      this.loadFrames(data.current).catch((e) => {
+        this.notificationService.error(localize("failedToLoadFrames", "Failed to load stack frames: {0}", e.message));
+      });
+    }));
+    return data;
+  }
+  renderElement(element, index, templateData, height) {
+    const cast = element;
+    templateData.button.enabled = true;
+    templateData.button.label = cast.label;
+    templateData.current = cast;
+  }
+  disposeTemplate(templateData) {
+    templateData.store.dispose();
+  }
+};
+SkippedRenderer = __decorateClass([
+  __decorateParam(1, INotificationService)
+], SkippedRenderer);
+let ClickToLocationContribution = class extends Disposable {
+  constructor(editor, editorService) {
+    super();
+    this.editor = editor;
+    this.linkDecorations = editor.createDecorationsCollection();
+    this._register(toDisposable(() => this.linkDecorations.clear()));
+    const clickLinkGesture = this._register(new ClickLinkGesture(editor));
+    this._register(clickLinkGesture.onMouseMoveOrRelevantKeyDown(([mouseEvent, keyboardEvent]) => {
+      this.onMove(mouseEvent);
+    }));
+    this._register(clickLinkGesture.onExecute((e) => {
+      const model = this.editor.getModel();
+      if (!this.current || !model) {
+        return;
+      }
+      editorService.openEditor({
+        resource: model.uri,
+        options: {
+          selection: Range.fromPositions(new Position(this.current.line, this.current.word.startColumn)),
+          selectionRevealType: TextEditorSelectionRevealType.CenterIfOutsideViewport
+        }
+      }, e.hasSideBySideModifier ? SIDE_GROUP : void 0);
+    }));
+  }
+  static {
+    __name(this, "ClickToLocationContribution");
+  }
+  static ID = "clickToLocation";
+  linkDecorations;
+  current;
+  onMove(mouseEvent) {
+    if (!mouseEvent.hasTriggerModifier) {
+      return this.clear();
+    }
+    const position = mouseEvent.target.position;
+    const word = position && this.editor.getModel()?.getWordAtPosition(position);
+    if (!word) {
+      return this.clear();
+    }
+    const prev = this.current?.word;
+    if (prev && prev.startColumn === word.startColumn && prev.endColumn === word.endColumn && prev.word === word.word) {
+      return;
+    }
+    this.current = { word, line: position.lineNumber };
+    this.linkDecorations.set([{
+      range: new Range(position.lineNumber, word.startColumn, position.lineNumber, word.endColumn),
+      options: {
+        description: "call-stack-go-to-file-link",
+        inlineClassName: "call-stack-go-to-file-link"
+      }
+    }]);
+  }
+  clear() {
+    this.linkDecorations.clear();
+    this.current = void 0;
+  }
+};
+ClickToLocationContribution = __decorateClass([
+  __decorateParam(1, IEditorService)
+], ClickToLocationContribution);
+registerAction2(class extends Action2 {
+  constructor() {
+    super({
+      id: "callStackWidget.goToFile",
+      title: localize2("goToFile", "Open File"),
+      icon: Codicon.goToFile,
+      menu: {
+        id: MenuId.DebugCallStackToolbar,
+        order: 22,
+        group: "navigation"
+      }
+    });
+  }
+  async run(accessor, { uri, range }) {
+    const editorService = accessor.get(IEditorService);
+    await editorService.openEditor({
+      resource: uri,
+      options: {
+        selection: range,
+        selectionRevealType: TextEditorSelectionRevealType.CenterIfOutsideViewport
+      }
+    });
+  }
+});
+export {
+  CALL_STACK_WIDGET_HEADER_HEIGHT,
+  CallStackFrame,
+  CallStackWidget,
+  CustomStackFrame,
+  SkippedCallFrames
+};
+//# sourceMappingURL=callStackWidget.js.map

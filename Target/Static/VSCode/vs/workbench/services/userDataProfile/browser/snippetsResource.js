@@ -1,1 +1,173 @@
-var y=Object.defineProperty,v=Object.getOwnPropertyDescriptor,l=(e,t,i,s)=>{for(var r,o=s>1?void 0:s?v(t,i):t,n=e.length-1;n>=0;n--)(r=e[n])&&(o=(s?r(t,i,o):r(o))||o);return s&&o&&y(t,i,o),o},o=(e,t)=>(i,s)=>t(i,s,e);import{VSBuffer as d}from"../../../../base/common/buffer.js";import"../../../../base/common/collections.js";import{ResourceSet as P}from"../../../../base/common/map.js";import"../../../../base/common/uri.js";import{localize as S}from"../../../../nls.js";import{FileOperationError as g,FileOperationResult as U,IFileService as m}from"../../../../platform/files/common/files.js";import{IInstantiationService as x}from"../../../../platform/instantiation/common/instantiation.js";import{IUriIdentityService as I}from"../../../../platform/uriIdentity/common/uriIdentity.js";import{ProfileResourceType as D}from"../../../../platform/userDataProfile/common/userDataProfile.js";import{API_OPEN_EDITOR_COMMAND_ID as C}from"../../../browser/parts/editor/editorCommands.js";import{TreeItemCollapsibleState as u}from"../../../common/views.js";import{IUserDataProfileService as b}from"../common/userDataProfile.js";let p=class{constructor(e,t,i){this.userDataProfileService=e,this.fileService=t,this.uriIdentityService=i}async initialize(e){const t=JSON.parse(e);for(const e in t.snippets){const i=this.uriIdentityService.extUri.joinPath(this.userDataProfileService.currentProfile.snippetsHome,e);await this.fileService.writeFile(i,d.fromString(t.snippets[e]))}}};p=l([o(0,b),o(1,m),o(2,I)],p);let c=class{constructor(e,t){this.fileService=e,this.uriIdentityService=t}async getContent(e,t){const i=await this.getSnippets(e,t);return JSON.stringify({snippets:i})}async apply(e,t){const i=JSON.parse(e);for(const e in i.snippets){const s=this.uriIdentityService.extUri.joinPath(t.snippetsHome,e);await this.fileService.writeFile(s,d.fromString(i.snippets[e]))}}async getSnippets(e,t){const i={},s=await this.getSnippetsResources(e,t);for(const t of s){const s=this.uriIdentityService.extUri.relativePath(e.snippetsHome,t),r=await this.fileService.readFile(t);i[s]=r.value.toString()}return i}async getSnippetsResources(e,t){const i=[];let s;try{s=await this.fileService.resolve(e.snippetsHome)}catch(e){if(e instanceof g&&e.fileOperationResult===U.FILE_NOT_FOUND)return i;throw e}for(const{resource:e}of s.children||[]){if(t?.has(e))continue;const s=this.uriIdentityService.extUri.extname(e);(".json"===s||".code-snippets"===s)&&i.push(e)}return i}};c=l([o(0,m),o(1,I)],c);let f=class{constructor(e,t,i){this.profile=e,this.instantiationService=t,this.uriIdentityService=i,this.handle=this.profile.snippetsHome.toString()}type=D.Snippets;handle;label={label:S("snippets","Snippets")};collapsibleState=u.Collapsed;checkbox;excludedSnippets=new P;async getChildren(){const e=await this.instantiationService.createInstance(c).getSnippetsResources(this.profile),t=this;return e.map((e=>({handle:e.toString(),parent:t,resourceUri:e,collapsibleState:u.None,accessibilityInformation:{label:this.uriIdentityService.extUri.basename(e)},checkbox:t.checkbox?{get isChecked(){return!t.excludedSnippets.has(e)},set isChecked(i){i?t.excludedSnippets.delete(e):t.excludedSnippets.add(e)},accessibilityInformation:{label:S("exclude","Select Snippet {0}",this.uriIdentityService.extUri.basename(e))}}:void 0,command:{id:C,title:"",arguments:[e,void 0,void 0]}})))}async hasContent(){return(await this.instantiationService.createInstance(c).getSnippetsResources(this.profile)).length>0}async getContent(){return this.instantiationService.createInstance(c).getContent(this.profile,this.excludedSnippets)}isFromDefaultProfile(){return!this.profile.isDefault&&!!this.profile.useDefaultFlags?.snippets}};f=l([o(1,x),o(2,I)],f);export{c as SnippetsResource,p as SnippetsResourceInitializer,f as SnippetsResourceTreeItem};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { VSBuffer } from "../../../../base/common/buffer.js";
+import { IStringDictionary } from "../../../../base/common/collections.js";
+import { ResourceSet } from "../../../../base/common/map.js";
+import { URI } from "../../../../base/common/uri.js";
+import { localize } from "../../../../nls.js";
+import { FileOperationError, FileOperationResult, IFileService, IFileStat } from "../../../../platform/files/common/files.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import { IUserDataProfile, ProfileResourceType } from "../../../../platform/userDataProfile/common/userDataProfile.js";
+import { API_OPEN_EDITOR_COMMAND_ID } from "../../../browser/parts/editor/editorCommands.js";
+import { ITreeItemCheckboxState, TreeItemCollapsibleState } from "../../../common/views.js";
+import { IProfileResource, IProfileResourceChildTreeItem, IProfileResourceInitializer, IProfileResourceTreeItem, IUserDataProfileService } from "../common/userDataProfile.js";
+let SnippetsResourceInitializer = class {
+  constructor(userDataProfileService, fileService, uriIdentityService) {
+    this.userDataProfileService = userDataProfileService;
+    this.fileService = fileService;
+    this.uriIdentityService = uriIdentityService;
+  }
+  static {
+    __name(this, "SnippetsResourceInitializer");
+  }
+  async initialize(content) {
+    const snippetsContent = JSON.parse(content);
+    for (const key in snippetsContent.snippets) {
+      const resource = this.uriIdentityService.extUri.joinPath(this.userDataProfileService.currentProfile.snippetsHome, key);
+      await this.fileService.writeFile(resource, VSBuffer.fromString(snippetsContent.snippets[key]));
+    }
+  }
+};
+SnippetsResourceInitializer = __decorateClass([
+  __decorateParam(0, IUserDataProfileService),
+  __decorateParam(1, IFileService),
+  __decorateParam(2, IUriIdentityService)
+], SnippetsResourceInitializer);
+let SnippetsResource = class {
+  constructor(fileService, uriIdentityService) {
+    this.fileService = fileService;
+    this.uriIdentityService = uriIdentityService;
+  }
+  static {
+    __name(this, "SnippetsResource");
+  }
+  async getContent(profile, excluded) {
+    const snippets = await this.getSnippets(profile, excluded);
+    return JSON.stringify({ snippets });
+  }
+  async apply(content, profile) {
+    const snippetsContent = JSON.parse(content);
+    for (const key in snippetsContent.snippets) {
+      const resource = this.uriIdentityService.extUri.joinPath(profile.snippetsHome, key);
+      await this.fileService.writeFile(resource, VSBuffer.fromString(snippetsContent.snippets[key]));
+    }
+  }
+  async getSnippets(profile, excluded) {
+    const snippets = {};
+    const snippetsResources = await this.getSnippetsResources(profile, excluded);
+    for (const resource of snippetsResources) {
+      const key = this.uriIdentityService.extUri.relativePath(profile.snippetsHome, resource);
+      const content = await this.fileService.readFile(resource);
+      snippets[key] = content.value.toString();
+    }
+    return snippets;
+  }
+  async getSnippetsResources(profile, excluded) {
+    const snippets = [];
+    let stat;
+    try {
+      stat = await this.fileService.resolve(profile.snippetsHome);
+    } catch (e) {
+      if (e instanceof FileOperationError && e.fileOperationResult === FileOperationResult.FILE_NOT_FOUND) {
+        return snippets;
+      } else {
+        throw e;
+      }
+    }
+    for (const { resource } of stat.children || []) {
+      if (excluded?.has(resource)) {
+        continue;
+      }
+      const extension = this.uriIdentityService.extUri.extname(resource);
+      if (extension === ".json" || extension === ".code-snippets") {
+        snippets.push(resource);
+      }
+    }
+    return snippets;
+  }
+};
+SnippetsResource = __decorateClass([
+  __decorateParam(0, IFileService),
+  __decorateParam(1, IUriIdentityService)
+], SnippetsResource);
+let SnippetsResourceTreeItem = class {
+  constructor(profile, instantiationService, uriIdentityService) {
+    this.profile = profile;
+    this.instantiationService = instantiationService;
+    this.uriIdentityService = uriIdentityService;
+    this.handle = this.profile.snippetsHome.toString();
+  }
+  static {
+    __name(this, "SnippetsResourceTreeItem");
+  }
+  type = ProfileResourceType.Snippets;
+  handle;
+  label = { label: localize("snippets", "Snippets") };
+  collapsibleState = TreeItemCollapsibleState.Collapsed;
+  checkbox;
+  excludedSnippets = new ResourceSet();
+  async getChildren() {
+    const snippetsResources = await this.instantiationService.createInstance(SnippetsResource).getSnippetsResources(this.profile);
+    const that = this;
+    return snippetsResources.map((resource) => ({
+      handle: resource.toString(),
+      parent: that,
+      resourceUri: resource,
+      collapsibleState: TreeItemCollapsibleState.None,
+      accessibilityInformation: {
+        label: this.uriIdentityService.extUri.basename(resource)
+      },
+      checkbox: that.checkbox ? {
+        get isChecked() {
+          return !that.excludedSnippets.has(resource);
+        },
+        set isChecked(value) {
+          if (value) {
+            that.excludedSnippets.delete(resource);
+          } else {
+            that.excludedSnippets.add(resource);
+          }
+        },
+        accessibilityInformation: {
+          label: localize("exclude", "Select Snippet {0}", this.uriIdentityService.extUri.basename(resource))
+        }
+      } : void 0,
+      command: {
+        id: API_OPEN_EDITOR_COMMAND_ID,
+        title: "",
+        arguments: [resource, void 0, void 0]
+      }
+    }));
+  }
+  async hasContent() {
+    const snippetsResources = await this.instantiationService.createInstance(SnippetsResource).getSnippetsResources(this.profile);
+    return snippetsResources.length > 0;
+  }
+  async getContent() {
+    return this.instantiationService.createInstance(SnippetsResource).getContent(this.profile, this.excludedSnippets);
+  }
+  isFromDefaultProfile() {
+    return !this.profile.isDefault && !!this.profile.useDefaultFlags?.snippets;
+  }
+};
+SnippetsResourceTreeItem = __decorateClass([
+  __decorateParam(1, IInstantiationService),
+  __decorateParam(2, IUriIdentityService)
+], SnippetsResourceTreeItem);
+export {
+  SnippetsResource,
+  SnippetsResourceInitializer,
+  SnippetsResourceTreeItem
+};
+//# sourceMappingURL=snippetsResource.js.map

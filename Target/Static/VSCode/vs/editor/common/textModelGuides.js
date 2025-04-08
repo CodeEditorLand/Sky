@@ -1,1 +1,40 @@
-import"./core/position.js";var u=(e=>(e[e.Disabled=0]="Disabled",e[e.EnabledForActive=1]="EnabledForActive",e[e.Enabled=2]="Enabled",e))(u||{});class m{constructor(e,i,o,t,s,n){if(this.visibleColumn=e,this.column=i,this.className=o,this.horizontalLine=t,this.forWrappedLinesAfterColumn=s,this.forWrappedLinesBeforeOrAtColumn=n,-1!==e==(-1!==i))throw new Error}}class c{constructor(e,i){this.top=e,this.endColumn=i}}export{u as HorizontalGuidesState,m as IndentGuide,c as IndentGuideHorizontalLine};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { IPosition } from "./core/position.js";
+var HorizontalGuidesState = /* @__PURE__ */ ((HorizontalGuidesState2) => {
+  HorizontalGuidesState2[HorizontalGuidesState2["Disabled"] = 0] = "Disabled";
+  HorizontalGuidesState2[HorizontalGuidesState2["EnabledForActive"] = 1] = "EnabledForActive";
+  HorizontalGuidesState2[HorizontalGuidesState2["Enabled"] = 2] = "Enabled";
+  return HorizontalGuidesState2;
+})(HorizontalGuidesState || {});
+class IndentGuide {
+  constructor(visibleColumn, column, className, horizontalLine, forWrappedLinesAfterColumn, forWrappedLinesBeforeOrAtColumn) {
+    this.visibleColumn = visibleColumn;
+    this.column = column;
+    this.className = className;
+    this.horizontalLine = horizontalLine;
+    this.forWrappedLinesAfterColumn = forWrappedLinesAfterColumn;
+    this.forWrappedLinesBeforeOrAtColumn = forWrappedLinesBeforeOrAtColumn;
+    if (visibleColumn !== -1 === (column !== -1)) {
+      throw new Error();
+    }
+  }
+  static {
+    __name(this, "IndentGuide");
+  }
+}
+class IndentGuideHorizontalLine {
+  constructor(top, endColumn) {
+    this.top = top;
+    this.endColumn = endColumn;
+  }
+  static {
+    __name(this, "IndentGuideHorizontalLine");
+  }
+}
+export {
+  HorizontalGuidesState,
+  IndentGuide,
+  IndentGuideHorizontalLine
+};
+//# sourceMappingURL=textModelGuides.js.map

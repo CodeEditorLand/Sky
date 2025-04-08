@@ -1,1 +1,285 @@
-var u=Object.defineProperty;var I=Object.getOwnPropertyDescriptor;var y=(d,l,e,t)=>{for(var i=t>1?void 0:t?I(l,e):l,o=d.length-1,a;o>=0;o--)(a=d[o])&&(i=(t?a(l,e,i):a(i))||i);return t&&i&&u(l,e,i),i},c=(d,l)=>(e,t)=>l(e,t,d);import{Promises as x}from"../../../base/common/async.js";import{getErrorMessage as m}from"../../../base/common/errors.js";import{Disposable as D}from"../../../base/common/lifecycle.js";import{Schemas as E}from"../../../base/common/network.js";import{joinPath as v}from"../../../base/common/resources.js";import*as P from"../../../base/common/semver/semver.js";import"../../../base/common/uri.js";import{generateUuid as U}from"../../../base/common/uuid.js";import{Promises as R}from"../../../base/node/pfs.js";import{buffer as b,CorruptZipMessage as F}from"../../../base/node/zip.js";import{INativeEnvironmentService as M}from"../../environment/common/environment.js";import{toExtensionManagementError as w}from"../common/abstractExtensionManagementService.js";import{ExtensionManagementError as G,ExtensionManagementErrorCode as f,ExtensionSignatureVerificationCode as p,IExtensionGalleryService as A}from"../common/extensionManagement.js";import{ExtensionKey as S,groupByExtension as L}from"../common/extensionManagementUtil.js";import{fromExtractError as C}from"./extensionManagementUtil.js";import{IExtensionSignatureVerificationService as N}from"./extensionSignatureVerificationService.js";import"../../extensions/common/extensions.js";import{FileOperationResult as T,IFileService as V,toFileOperationResult as $}from"../../files/common/files.js";import{ILogService as O}from"../../log/common/log.js";import{ITelemetryService as j}from"../../telemetry/common/telemetry.js";import{IUriIdentityService as W}from"../../uriIdentity/common/uriIdentity.js";let h=class extends D{constructor(e,t,i,o,a,n,r){super();this.fileService=t;this.extensionGalleryService=i;this.extensionSignatureVerificationService=o;this.telemetryService=a;this.uriIdentityService=n;this.logService=r;this.extensionsDownloadDir=e.extensionsDownloadLocation,this.extensionsTrashDir=n.extUri.joinPath(e.extensionsDownloadLocation,".trash"),this.cache=20,this.cleanUpPromise=this.cleanUp()}static SignatureArchiveExtension=".sigzip";extensionsDownloadDir;extensionsTrashDir;cache;cleanUpPromise;async download(e,t,i,o){await this.cleanUpPromise;const a=await this.downloadVSIX(e,t);if(!i)return{location:a,verificationStatus:void 0};if(!e.isSigned)return{location:a,verificationStatus:p.NotSigned};let n;try{n=await this.downloadSignatureArchive(e);const r=(await this.extensionSignatureVerificationService.verify(e.identifier.id,e.version,a.fsPath,n.fsPath,o))?.code;if(r===p.PackageIsInvalidZip||r===p.SignatureArchiveIsInvalidZip){try{await this.delete(a)}catch(s){this.logService.error(s)}throw new G(F,f.CorruptZip)}return{location:a,verificationStatus:r}}catch(r){try{await this.delete(a)}catch(s){this.logService.error(s)}throw r}finally{if(n)try{await this.delete(n)}catch(r){this.logService.error(r)}}}async downloadVSIX(e,t){try{const i=v(this.extensionsDownloadDir,this.getName(e)),o=await this.doDownload(e,"vsix",async()=>{await this.downloadFile(e,i,a=>this.extensionGalleryService.download(e,a,t));try{await this.validate(i.fsPath,"extension/package.json")}catch(a){try{await this.fileService.del(i)}catch(n){this.logService.warn(`Error while deleting: ${i.path}`,m(n))}throw a}},2);return o>1&&this.telemetryService.publicLog2("extensiongallery:downloadvsix:retry",{extensionId:e.identifier.id,attempts:o}),i}catch(i){throw w(i,f.Download)}}async downloadSignatureArchive(e){try{const t=v(this.extensionsDownloadDir,`${this.getName(e)}${h.SignatureArchiveExtension}`),i=await this.doDownload(e,"sigzip",async()=>{await this.extensionGalleryService.downloadSignatureArchive(e,t);try{await this.validate(t.fsPath,".signature.p7s")}catch(o){try{await this.fileService.del(t)}catch(a){this.logService.warn(`Error while deleting: ${t.path}`,m(a))}throw o}},2);return i>1&&this.telemetryService.publicLog2("extensiongallery:downloadsigzip:retry",{extensionId:e.identifier.id,attempts:i}),t}catch(t){throw w(t,f.DownloadSignature)}}async downloadFile(e,t,i){if(await this.fileService.exists(t))return;if(t.scheme!==E.file){await i(t);return}const o=v(this.extensionsDownloadDir,`.${U()}`);try{await i(o)}catch(a){try{await this.fileService.del(o)}catch{}throw a}try{await R.rename(o.fsPath,t.fsPath,2*60*1e3)}catch(a){try{await this.fileService.del(o)}catch{}let n=!1;try{n=await this.fileService.exists(t)}catch{}if(n)this.logService.info("Rename failed because the file was downloaded by another source. So ignoring renaming.",e.identifier.id,t.path);else throw this.logService.info(`Rename failed because of ${m(a)}. Deleted the file from downloaded location`,o.path),a}}async doDownload(e,t,i,o){let a=1;for(;;)try{return await i(),a}catch(n){if(a++>o)throw n;this.logService.warn(`Failed downloading ${t}. ${m(n)}. Retry again...`,e.identifier.id)}}async validate(e,t){try{await b(e,t)}catch(i){throw C(i)}}async delete(e){await this.cleanUpPromise;const t=this.uriIdentityService.extUri.relativePath(this.extensionsDownloadDir,e);t?await this.fileService.move(e,this.uriIdentityService.extUri.joinPath(this.extensionsTrashDir,t),!0):await this.fileService.del(e)}async cleanUp(){try{if(!await this.fileService.exists(this.extensionsDownloadDir)){this.logService.trace("Extension VSIX downloads cache dir does not exist");return}try{await this.fileService.del(this.extensionsTrashDir,{recursive:!0})}catch(t){$(t)!==T.FILE_NOT_FOUND&&this.logService.error(t)}const e=await this.fileService.resolve(this.extensionsDownloadDir,{resolveMetadata:!0});if(e.children){const t=[],i=[],o=[];for(const r of e.children)if(r.name.endsWith(h.SignatureArchiveExtension))o.push(r.resource);else{const s=S.parse(r.name);s&&i.push([s,r])}const a=L(i,([r])=>r),n=[];for(const r of a)r.sort((s,g)=>P.rcompare(s[0].version,g[0].version)),t.push(...r.slice(1).map(s=>s[1].resource)),n.push(r[0][1]);n.sort((r,s)=>r.mtime-s.mtime),t.push(...n.slice(0,Math.max(0,n.length-this.cache)).map(r=>r.resource)),t.push(...o),await x.settled(t.map(r=>(this.logService.trace("Deleting from cache",r.path),this.fileService.del(r))))}}catch(e){this.logService.error(e)}}getName(e){return S.create(e).toString().toLowerCase()}};h=y([c(0,M),c(1,V),c(2,A),c(3,N),c(4,j),c(5,W),c(6,O)],h);export{h as ExtensionsDownloader};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Promises } from "../../../base/common/async.js";
+import { getErrorMessage } from "../../../base/common/errors.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { Schemas } from "../../../base/common/network.js";
+import { joinPath } from "../../../base/common/resources.js";
+import * as semver from "../../../base/common/semver/semver.js";
+import { URI } from "../../../base/common/uri.js";
+import { generateUuid } from "../../../base/common/uuid.js";
+import { Promises as FSPromises } from "../../../base/node/pfs.js";
+import { buffer, CorruptZipMessage } from "../../../base/node/zip.js";
+import { INativeEnvironmentService } from "../../environment/common/environment.js";
+import { toExtensionManagementError } from "../common/abstractExtensionManagementService.js";
+import { ExtensionManagementError, ExtensionManagementErrorCode, ExtensionSignatureVerificationCode, IExtensionGalleryService, IGalleryExtension, InstallOperation } from "../common/extensionManagement.js";
+import { ExtensionKey, groupByExtension } from "../common/extensionManagementUtil.js";
+import { fromExtractError } from "./extensionManagementUtil.js";
+import { IExtensionSignatureVerificationService } from "./extensionSignatureVerificationService.js";
+import { TargetPlatform } from "../../extensions/common/extensions.js";
+import { FileOperationResult, IFileService, IFileStatWithMetadata, toFileOperationResult } from "../../files/common/files.js";
+import { ILogService } from "../../log/common/log.js";
+import { ITelemetryService } from "../../telemetry/common/telemetry.js";
+import { IUriIdentityService } from "../../uriIdentity/common/uriIdentity.js";
+let ExtensionsDownloader = class extends Disposable {
+  constructor(environmentService, fileService, extensionGalleryService, extensionSignatureVerificationService, telemetryService, uriIdentityService, logService) {
+    super();
+    this.fileService = fileService;
+    this.extensionGalleryService = extensionGalleryService;
+    this.extensionSignatureVerificationService = extensionSignatureVerificationService;
+    this.telemetryService = telemetryService;
+    this.uriIdentityService = uriIdentityService;
+    this.logService = logService;
+    this.extensionsDownloadDir = environmentService.extensionsDownloadLocation;
+    this.extensionsTrashDir = uriIdentityService.extUri.joinPath(environmentService.extensionsDownloadLocation, `.trash`);
+    this.cache = 20;
+    this.cleanUpPromise = this.cleanUp();
+  }
+  static {
+    __name(this, "ExtensionsDownloader");
+  }
+  static SignatureArchiveExtension = ".sigzip";
+  extensionsDownloadDir;
+  extensionsTrashDir;
+  cache;
+  cleanUpPromise;
+  async download(extension, operation, verifySignature, clientTargetPlatform) {
+    await this.cleanUpPromise;
+    const location = await this.downloadVSIX(extension, operation);
+    if (!verifySignature) {
+      return { location, verificationStatus: void 0 };
+    }
+    if (!extension.isSigned) {
+      return { location, verificationStatus: ExtensionSignatureVerificationCode.NotSigned };
+    }
+    let signatureArchiveLocation;
+    try {
+      signatureArchiveLocation = await this.downloadSignatureArchive(extension);
+      const verificationStatus = (await this.extensionSignatureVerificationService.verify(extension.identifier.id, extension.version, location.fsPath, signatureArchiveLocation.fsPath, clientTargetPlatform))?.code;
+      if (verificationStatus === ExtensionSignatureVerificationCode.PackageIsInvalidZip || verificationStatus === ExtensionSignatureVerificationCode.SignatureArchiveIsInvalidZip) {
+        try {
+          await this.delete(location);
+        } catch (error) {
+          this.logService.error(error);
+        }
+        throw new ExtensionManagementError(CorruptZipMessage, ExtensionManagementErrorCode.CorruptZip);
+      }
+      return { location, verificationStatus };
+    } catch (error) {
+      try {
+        await this.delete(location);
+      } catch (error2) {
+        this.logService.error(error2);
+      }
+      throw error;
+    } finally {
+      if (signatureArchiveLocation) {
+        try {
+          await this.delete(signatureArchiveLocation);
+        } catch (error) {
+          this.logService.error(error);
+        }
+      }
+    }
+  }
+  async downloadVSIX(extension, operation) {
+    try {
+      const location = joinPath(this.extensionsDownloadDir, this.getName(extension));
+      const attempts = await this.doDownload(extension, "vsix", async () => {
+        await this.downloadFile(extension, location, (location2) => this.extensionGalleryService.download(extension, location2, operation));
+        try {
+          await this.validate(location.fsPath, "extension/package.json");
+        } catch (error) {
+          try {
+            await this.fileService.del(location);
+          } catch (e) {
+            this.logService.warn(`Error while deleting: ${location.path}`, getErrorMessage(e));
+          }
+          throw error;
+        }
+      }, 2);
+      if (attempts > 1) {
+        this.telemetryService.publicLog2("extensiongallery:downloadvsix:retry", {
+          extensionId: extension.identifier.id,
+          attempts
+        });
+      }
+      return location;
+    } catch (e) {
+      throw toExtensionManagementError(e, ExtensionManagementErrorCode.Download);
+    }
+  }
+  async downloadSignatureArchive(extension) {
+    try {
+      const location = joinPath(this.extensionsDownloadDir, `${this.getName(extension)}${ExtensionsDownloader.SignatureArchiveExtension}`);
+      const attempts = await this.doDownload(extension, "sigzip", async () => {
+        await this.extensionGalleryService.downloadSignatureArchive(extension, location);
+        try {
+          await this.validate(location.fsPath, ".signature.p7s");
+        } catch (error) {
+          try {
+            await this.fileService.del(location);
+          } catch (e) {
+            this.logService.warn(`Error while deleting: ${location.path}`, getErrorMessage(e));
+          }
+          throw error;
+        }
+      }, 2);
+      if (attempts > 1) {
+        this.telemetryService.publicLog2("extensiongallery:downloadsigzip:retry", {
+          extensionId: extension.identifier.id,
+          attempts
+        });
+      }
+      return location;
+    } catch (e) {
+      throw toExtensionManagementError(e, ExtensionManagementErrorCode.DownloadSignature);
+    }
+  }
+  async downloadFile(extension, location, downloadFn) {
+    if (await this.fileService.exists(location)) {
+      return;
+    }
+    if (location.scheme !== Schemas.file) {
+      await downloadFn(location);
+      return;
+    }
+    const tempLocation = joinPath(this.extensionsDownloadDir, `.${generateUuid()}`);
+    try {
+      await downloadFn(tempLocation);
+    } catch (error) {
+      try {
+        await this.fileService.del(tempLocation);
+      } catch (e) {
+      }
+      throw error;
+    }
+    try {
+      await FSPromises.rename(
+        tempLocation.fsPath,
+        location.fsPath,
+        2 * 60 * 1e3
+        /* Retry for 2 minutes */
+      );
+    } catch (error) {
+      try {
+        await this.fileService.del(tempLocation);
+      } catch (e) {
+      }
+      let exists = false;
+      try {
+        exists = await this.fileService.exists(location);
+      } catch (e) {
+      }
+      if (exists) {
+        this.logService.info(`Rename failed because the file was downloaded by another source. So ignoring renaming.`, extension.identifier.id, location.path);
+      } else {
+        this.logService.info(`Rename failed because of ${getErrorMessage(error)}. Deleted the file from downloaded location`, tempLocation.path);
+        throw error;
+      }
+    }
+  }
+  async doDownload(extension, name, downloadFn, retries) {
+    let attempts = 1;
+    while (true) {
+      try {
+        await downloadFn();
+        return attempts;
+      } catch (e) {
+        if (attempts++ > retries) {
+          throw e;
+        }
+        this.logService.warn(`Failed downloading ${name}. ${getErrorMessage(e)}. Retry again...`, extension.identifier.id);
+      }
+    }
+  }
+  async validate(zipPath, filePath) {
+    try {
+      await buffer(zipPath, filePath);
+    } catch (e) {
+      throw fromExtractError(e);
+    }
+  }
+  async delete(location) {
+    await this.cleanUpPromise;
+    const trashRelativePath = this.uriIdentityService.extUri.relativePath(this.extensionsDownloadDir, location);
+    if (trashRelativePath) {
+      await this.fileService.move(location, this.uriIdentityService.extUri.joinPath(this.extensionsTrashDir, trashRelativePath), true);
+    } else {
+      await this.fileService.del(location);
+    }
+  }
+  async cleanUp() {
+    try {
+      if (!await this.fileService.exists(this.extensionsDownloadDir)) {
+        this.logService.trace("Extension VSIX downloads cache dir does not exist");
+        return;
+      }
+      try {
+        await this.fileService.del(this.extensionsTrashDir, { recursive: true });
+      } catch (error) {
+        if (toFileOperationResult(error) !== FileOperationResult.FILE_NOT_FOUND) {
+          this.logService.error(error);
+        }
+      }
+      const folderStat = await this.fileService.resolve(this.extensionsDownloadDir, { resolveMetadata: true });
+      if (folderStat.children) {
+        const toDelete = [];
+        const vsixs = [];
+        const signatureArchives = [];
+        for (const stat of folderStat.children) {
+          if (stat.name.endsWith(ExtensionsDownloader.SignatureArchiveExtension)) {
+            signatureArchives.push(stat.resource);
+          } else {
+            const extension = ExtensionKey.parse(stat.name);
+            if (extension) {
+              vsixs.push([extension, stat]);
+            }
+          }
+        }
+        const byExtension = groupByExtension(vsixs, ([extension]) => extension);
+        const distinct = [];
+        for (const p of byExtension) {
+          p.sort((a, b) => semver.rcompare(a[0].version, b[0].version));
+          toDelete.push(...p.slice(1).map((e) => e[1].resource));
+          distinct.push(p[0][1]);
+        }
+        distinct.sort((a, b) => a.mtime - b.mtime);
+        toDelete.push(...distinct.slice(0, Math.max(0, distinct.length - this.cache)).map((s) => s.resource));
+        toDelete.push(...signatureArchives);
+        await Promises.settled(toDelete.map((resource) => {
+          this.logService.trace("Deleting from cache", resource.path);
+          return this.fileService.del(resource);
+        }));
+      }
+    } catch (e) {
+      this.logService.error(e);
+    }
+  }
+  getName(extension) {
+    return ExtensionKey.create(extension).toString().toLowerCase();
+  }
+};
+ExtensionsDownloader = __decorateClass([
+  __decorateParam(0, INativeEnvironmentService),
+  __decorateParam(1, IFileService),
+  __decorateParam(2, IExtensionGalleryService),
+  __decorateParam(3, IExtensionSignatureVerificationService),
+  __decorateParam(4, ITelemetryService),
+  __decorateParam(5, IUriIdentityService),
+  __decorateParam(6, ILogService)
+], ExtensionsDownloader);
+export {
+  ExtensionsDownloader
+};
+//# sourceMappingURL=extensionDownloader.js.map

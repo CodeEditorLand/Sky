@@ -1,1 +1,366 @@
-import{Throttler as U}from"../../../base/common/async.js";import{VSBuffer as v}from"../../../base/common/buffer.js";import{Emitter as T,Event as C}from"../../../base/common/event.js";import{Disposable as x}from"../../../base/common/lifecycle.js";import{ExtUri as N}from"../../../base/common/resources.js";import{isString as E}from"../../../base/common/types.js";import{URI as b}from"../../../base/common/uri.js";import{localize as p}from"../../../nls.js";import{createFileSystemProviderError as y,FileChangeType as B,FileSystemProviderCapabilities as R,FileSystemProviderErrorCode as c,FileType as s}from"../common/files.js";import"../../../base/browser/indexedDB.js";import{BroadcastDataChannel as _}from"../../../base/browser/broadcast.js";const I=y(p("fileNotExists","File does not exist"),c.FileNotFound),O=y(p("fileIsDirectory","File is Directory"),c.FileIsADirectory),S=y(p("fileNotDirectory","File is not a directory"),c.FileNotADirectory),W=y(p("dirIsNotEmpty","Directory is not empty"),c.Unknown),A=y(p("fileExceedsStorageQuota","File exceeds available storage quota"),c.FileExceedsStorageQuota),a=u=>y(p("internal","Internal error occurred in IndexedDB File System Provider. ({0})",u),c.Unknown);class w{constructor(n){this.entry=n;this.type=n.type}type;read(n){return this.doRead(n.split("/").filter(e=>e.length))}doRead(n){if(n.length===0)return this.entry;if(this.entry.type!==s.Directory)throw a("Internal error reading from IndexedDBFSNode -- expected directory at "+this.entry.path);const e=this.entry.children.get(n[0]);if(e)return e.doRead(n.slice(1))}delete(n){const e=n.split("/").filter(t=>t.length);if(e.length===0){if(this.entry.type!==s.Directory)throw a("Internal error deleting from IndexedDBFSNode. Expected root entry to be directory");this.entry.children.clear()}else return this.doDelete(e,n)}doDelete(n,e){if(n.length===0)throw a(`Internal error deleting from IndexedDBFSNode -- got no deletion path parts (encountered while deleting ${e})`);if(this.entry.type!==s.Directory)throw a("Internal error deleting from IndexedDBFSNode -- expected directory at "+this.entry.path);if(n.length===1)this.entry.children.delete(n[0]);else{const t=this.entry.children.get(n[0]);if(!t)throw a("Internal error deleting from IndexedDBFSNode -- expected entry at "+this.entry.path+"/"+t);t.doDelete(n.slice(1),e)}}add(n,e){this.doAdd(n.split("/").filter(t=>t.length),e,n)}doAdd(n,e,t){if(n.length===0)throw a(`Internal error creating IndexedDBFSNode -- adding empty path (encountered while adding ${t})`);if(this.entry.type!==s.Directory)throw a(`Internal error creating IndexedDBFSNode -- parent is not a directory (encountered while adding ${t})`);if(n.length===1){const i=n[0],r=this.entry.children.get(i);if(e.type==="dir"){if(r?.entry.type===s.File)throw a(`Internal error creating IndexedDBFSNode -- overwriting file with directory: ${this.entry.path}/${i} (encountered while adding ${t})`);this.entry.children.set(i,r??new w({type:s.Directory,path:this.entry.path+"/"+i,children:new Map}))}else{if(r?.entry.type===s.Directory)throw a(`Internal error creating IndexedDBFSNode -- overwriting directory with file: ${this.entry.path}/${i} (encountered while adding ${t})`);this.entry.children.set(i,new w({type:s.File,path:this.entry.path+"/"+i,size:e.size}))}}else if(n.length>1){const i=n[0];let r=this.entry.children.get(i);if(!r)r=new w({children:new Map,path:this.entry.path+"/"+i,type:s.Directory}),this.entry.children.set(i,r);else if(r.type===s.File)throw a(`Internal error creating IndexedDBFSNode -- overwriting file entry with directory: ${this.entry.path}/${i} (encountered while adding ${t})`);r.doAdd(n.slice(1),e,t)}}print(n=""){console.log(n+this.entry.path),this.entry.type===s.Directory&&this.entry.children.forEach(e=>e.print(n+" "))}}class ne extends x{constructor(e,t,i,r){super();this.scheme=e;this.indexedDB=t;this.store=i;this.writeManyThrottler=new U,r&&(this.changesBroadcastChannel=this._register(new _(`vscode.indexedDB.${e}.changes`)),this._register(this.changesBroadcastChannel.onDidReceiveData(o=>{this._onDidChangeFile.fire(o.map(d=>({type:d.type,resource:b.revive(d.resource)})))})))}capabilities=R.FileReadWrite|R.PathCaseSensitive;onDidChangeCapabilities=C.None;extUri=new N(()=>!1);changesBroadcastChannel;_onDidChangeFile=this._register(new T);onDidChangeFile=this._onDidChangeFile.event;mtimes=new Map;cachedFiletree;writeManyThrottler;watch(e,t){return x.None}async mkdir(e){try{if((await this.stat(e)).type===s.File)throw S}catch{}(await this.getFiletree()).add(e.path,{type:"dir"})}async stat(e){const t=(await this.getFiletree()).read(e.path);if(t?.type===s.File)return{type:s.File,ctime:0,mtime:this.mtimes.get(e.toString())||0,size:t.size??(await this.readFile(e)).byteLength};if(t?.type===s.Directory)return{type:s.Directory,ctime:0,mtime:0,size:0};throw I}async readdir(e){try{const t=(await this.getFiletree()).read(e.path);if(!t)return[];if(t.type!==s.Directory)throw S;return[...t.children.entries()].map(([i,r])=>[i,r.type])}catch(t){throw t}}async readFile(e){try{const t=await this.indexedDB.runInTransaction(this.store,"readonly",o=>o.get(e.path));if(t===void 0)throw I;const i=t instanceof Uint8Array?t:E(t)?v.fromString(t).buffer:void 0;if(i===void 0)throw a(`IndexedDB entry at "${e.path}" in unexpected format`);return(await this.getFiletree()).add(e.path,{type:"file",size:i.byteLength}),i}catch(t){throw t}}async writeFile(e,t,i){try{if((await this.stat(e).catch(()=>{}))?.type===s.Directory)throw O;await this.bulkWrite([[e,t]])}catch(r){throw r}}async rename(e,t,i){const r=await this.getFiletree(),o=r.read(e.path);if(!o)throw I;const d=r.read(t.path);if(d){if(!i.overwrite)throw y("file exists already",c.FileExists);if(d.type!==o.type)throw y("Cannot rename files with different types",c.Unknown);await this.delete(t,{recursive:!0,useTrash:!1,atomic:!1})}const f=l=>this.extUri.joinPath(t,this.extUri.relativePath(e,e.with({path:l}))||""),F=await this.tree(e),g=[];for(const l of F)l[1]===s.File?g.push(l):l[1]===s.Directory&&r.add(f(l[0]).path,{type:"dir"});if(g.length){const l=[],m=await this.indexedDB.runInTransaction(this.store,"readonly",h=>g.map(([D])=>h.get(D)));for(let h=0;h<g.length;h++){const D=m[h]instanceof Uint8Array?m[h]:E(m[h])?v.fromString(m[h]).buffer:void 0;D&&l.push([f(g[h][0]),D])}await this.bulkWrite(l)}await this.delete(e,{recursive:!0,useTrash:!1,atomic:!1})}async delete(e,t){let i;try{i=await this.stat(e)}catch(o){if(o.code===c.FileNotFound)return;throw o}let r;if(t.recursive)r=(await this.tree(e)).map(([d])=>d);else{if(i.type===s.Directory&&(await this.readdir(e)).length)throw W;r=[e.path]}await this.deleteKeys(r),(await this.getFiletree()).delete(e.path),r.forEach(o=>this.mtimes.delete(o)),this.triggerChanges(r.map(o=>({resource:e.with({path:o}),type:B.DELETED})))}async tree(e){const t=await this.stat(e),i=[[e.path,t.type]];if(t.type===s.Directory){const r=await this.readdir(e);for(const[o,d]of r){const f=this.extUri.joinPath(e,o);if(i.push([f.path,d]),d===s.Directory){const F=await this.tree(f);i.push(...F)}}}return i}triggerChanges(e){e.length&&(this._onDidChangeFile.fire(e),this.changesBroadcastChannel?.postData(e))}getFiletree(){return this.cachedFiletree||(this.cachedFiletree=(async()=>{const e=new w({children:new Map,path:"",type:s.Directory});return(await this.indexedDB.runInTransaction(this.store,"readonly",r=>r.getAllKeys())).map(r=>r.toString()).forEach(r=>e.add(r,{type:"file"})),e})()),this.cachedFiletree}async bulkWrite(e){e.forEach(([i,r])=>this.fileWriteBatch.push({content:r,resource:i})),await this.writeManyThrottler.queue(()=>this.writeMany());const t=await this.getFiletree();for(const[i,r]of e)t.add(i.path,{type:"file",size:r.byteLength}),this.mtimes.set(i.toString(),Date.now());this.triggerChanges(e.map(([i])=>({resource:i,type:B.UPDATED})))}fileWriteBatch=[];async writeMany(){if(this.fileWriteBatch.length){const e=this.fileWriteBatch.splice(0,this.fileWriteBatch.length);try{await this.indexedDB.runInTransaction(this.store,"readwrite",t=>e.map(i=>t.put(i.content,i.resource.path)))}catch(t){throw t instanceof DOMException&&t.name==="QuotaExceededError"?A:t}}}async deleteKeys(e){e.length&&await this.indexedDB.runInTransaction(this.store,"readwrite",t=>e.map(i=>t.delete(i)))}async reset(){await this.indexedDB.runInTransaction(this.store,"readwrite",e=>e.clear())}}export{ne as IndexedDBFileSystemProvider};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Throttler } from "../../../base/common/async.js";
+import { VSBuffer } from "../../../base/common/buffer.js";
+import { Emitter, Event } from "../../../base/common/event.js";
+import { Disposable, IDisposable } from "../../../base/common/lifecycle.js";
+import { ExtUri } from "../../../base/common/resources.js";
+import { isString } from "../../../base/common/types.js";
+import { URI, UriDto } from "../../../base/common/uri.js";
+import { localize } from "../../../nls.js";
+import { createFileSystemProviderError, FileChangeType, IFileDeleteOptions, IFileOverwriteOptions, FileSystemProviderCapabilities, FileSystemProviderErrorCode, FileType, IFileWriteOptions, IFileChange, IFileSystemProviderWithFileReadWriteCapability, IStat, IWatchOptions } from "../common/files.js";
+import { IndexedDB } from "../../../base/browser/indexedDB.js";
+import { BroadcastDataChannel } from "../../../base/browser/broadcast.js";
+const ERR_FILE_NOT_FOUND = createFileSystemProviderError(localize("fileNotExists", "File does not exist"), FileSystemProviderErrorCode.FileNotFound);
+const ERR_FILE_IS_DIR = createFileSystemProviderError(localize("fileIsDirectory", "File is Directory"), FileSystemProviderErrorCode.FileIsADirectory);
+const ERR_FILE_NOT_DIR = createFileSystemProviderError(localize("fileNotDirectory", "File is not a directory"), FileSystemProviderErrorCode.FileNotADirectory);
+const ERR_DIR_NOT_EMPTY = createFileSystemProviderError(localize("dirIsNotEmpty", "Directory is not empty"), FileSystemProviderErrorCode.Unknown);
+const ERR_FILE_EXCEEDS_STORAGE_QUOTA = createFileSystemProviderError(localize("fileExceedsStorageQuota", "File exceeds available storage quota"), FileSystemProviderErrorCode.FileExceedsStorageQuota);
+const ERR_UNKNOWN_INTERNAL = /* @__PURE__ */ __name((message) => createFileSystemProviderError(localize("internal", "Internal error occurred in IndexedDB File System Provider. ({0})", message), FileSystemProviderErrorCode.Unknown), "ERR_UNKNOWN_INTERNAL");
+class IndexedDBFileSystemNode {
+  constructor(entry) {
+    this.entry = entry;
+    this.type = entry.type;
+  }
+  static {
+    __name(this, "IndexedDBFileSystemNode");
+  }
+  type;
+  read(path) {
+    return this.doRead(path.split("/").filter((p) => p.length));
+  }
+  doRead(pathParts) {
+    if (pathParts.length === 0) {
+      return this.entry;
+    }
+    if (this.entry.type !== FileType.Directory) {
+      throw ERR_UNKNOWN_INTERNAL("Internal error reading from IndexedDBFSNode -- expected directory at " + this.entry.path);
+    }
+    const next = this.entry.children.get(pathParts[0]);
+    if (!next) {
+      return void 0;
+    }
+    return next.doRead(pathParts.slice(1));
+  }
+  delete(path) {
+    const toDelete = path.split("/").filter((p) => p.length);
+    if (toDelete.length === 0) {
+      if (this.entry.type !== FileType.Directory) {
+        throw ERR_UNKNOWN_INTERNAL(`Internal error deleting from IndexedDBFSNode. Expected root entry to be directory`);
+      }
+      this.entry.children.clear();
+    } else {
+      return this.doDelete(toDelete, path);
+    }
+  }
+  doDelete(pathParts, originalPath) {
+    if (pathParts.length === 0) {
+      throw ERR_UNKNOWN_INTERNAL(`Internal error deleting from IndexedDBFSNode -- got no deletion path parts (encountered while deleting ${originalPath})`);
+    } else if (this.entry.type !== FileType.Directory) {
+      throw ERR_UNKNOWN_INTERNAL("Internal error deleting from IndexedDBFSNode -- expected directory at " + this.entry.path);
+    } else if (pathParts.length === 1) {
+      this.entry.children.delete(pathParts[0]);
+    } else {
+      const next = this.entry.children.get(pathParts[0]);
+      if (!next) {
+        throw ERR_UNKNOWN_INTERNAL("Internal error deleting from IndexedDBFSNode -- expected entry at " + this.entry.path + "/" + next);
+      }
+      next.doDelete(pathParts.slice(1), originalPath);
+    }
+  }
+  add(path, entry) {
+    this.doAdd(path.split("/").filter((p) => p.length), entry, path);
+  }
+  doAdd(pathParts, entry, originalPath) {
+    if (pathParts.length === 0) {
+      throw ERR_UNKNOWN_INTERNAL(`Internal error creating IndexedDBFSNode -- adding empty path (encountered while adding ${originalPath})`);
+    } else if (this.entry.type !== FileType.Directory) {
+      throw ERR_UNKNOWN_INTERNAL(`Internal error creating IndexedDBFSNode -- parent is not a directory (encountered while adding ${originalPath})`);
+    } else if (pathParts.length === 1) {
+      const next = pathParts[0];
+      const existing = this.entry.children.get(next);
+      if (entry.type === "dir") {
+        if (existing?.entry.type === FileType.File) {
+          throw ERR_UNKNOWN_INTERNAL(`Internal error creating IndexedDBFSNode -- overwriting file with directory: ${this.entry.path}/${next} (encountered while adding ${originalPath})`);
+        }
+        this.entry.children.set(next, existing ?? new IndexedDBFileSystemNode({
+          type: FileType.Directory,
+          path: this.entry.path + "/" + next,
+          children: /* @__PURE__ */ new Map()
+        }));
+      } else {
+        if (existing?.entry.type === FileType.Directory) {
+          throw ERR_UNKNOWN_INTERNAL(`Internal error creating IndexedDBFSNode -- overwriting directory with file: ${this.entry.path}/${next} (encountered while adding ${originalPath})`);
+        }
+        this.entry.children.set(next, new IndexedDBFileSystemNode({
+          type: FileType.File,
+          path: this.entry.path + "/" + next,
+          size: entry.size
+        }));
+      }
+    } else if (pathParts.length > 1) {
+      const next = pathParts[0];
+      let childNode = this.entry.children.get(next);
+      if (!childNode) {
+        childNode = new IndexedDBFileSystemNode({
+          children: /* @__PURE__ */ new Map(),
+          path: this.entry.path + "/" + next,
+          type: FileType.Directory
+        });
+        this.entry.children.set(next, childNode);
+      } else if (childNode.type === FileType.File) {
+        throw ERR_UNKNOWN_INTERNAL(`Internal error creating IndexedDBFSNode -- overwriting file entry with directory: ${this.entry.path}/${next} (encountered while adding ${originalPath})`);
+      }
+      childNode.doAdd(pathParts.slice(1), entry, originalPath);
+    }
+  }
+  print(indentation = "") {
+    console.log(indentation + this.entry.path);
+    if (this.entry.type === FileType.Directory) {
+      this.entry.children.forEach((child) => child.print(indentation + " "));
+    }
+  }
+}
+class IndexedDBFileSystemProvider extends Disposable {
+  constructor(scheme, indexedDB, store, watchCrossWindowChanges) {
+    super();
+    this.scheme = scheme;
+    this.indexedDB = indexedDB;
+    this.store = store;
+    this.writeManyThrottler = new Throttler();
+    if (watchCrossWindowChanges) {
+      this.changesBroadcastChannel = this._register(new BroadcastDataChannel(`vscode.indexedDB.${scheme}.changes`));
+      this._register(this.changesBroadcastChannel.onDidReceiveData((changes) => {
+        this._onDidChangeFile.fire(changes.map((c) => ({ type: c.type, resource: URI.revive(c.resource) })));
+      }));
+    }
+  }
+  static {
+    __name(this, "IndexedDBFileSystemProvider");
+  }
+  capabilities = FileSystemProviderCapabilities.FileReadWrite | FileSystemProviderCapabilities.PathCaseSensitive;
+  onDidChangeCapabilities = Event.None;
+  extUri = new ExtUri(() => false);
+  changesBroadcastChannel;
+  _onDidChangeFile = this._register(new Emitter());
+  onDidChangeFile = this._onDidChangeFile.event;
+  mtimes = /* @__PURE__ */ new Map();
+  cachedFiletree;
+  writeManyThrottler;
+  watch(resource, opts) {
+    return Disposable.None;
+  }
+  async mkdir(resource) {
+    try {
+      const resourceStat = await this.stat(resource);
+      if (resourceStat.type === FileType.File) {
+        throw ERR_FILE_NOT_DIR;
+      }
+    } catch (error) {
+    }
+    (await this.getFiletree()).add(resource.path, { type: "dir" });
+  }
+  async stat(resource) {
+    const entry = (await this.getFiletree()).read(resource.path);
+    if (entry?.type === FileType.File) {
+      return {
+        type: FileType.File,
+        ctime: 0,
+        mtime: this.mtimes.get(resource.toString()) || 0,
+        size: entry.size ?? (await this.readFile(resource)).byteLength
+      };
+    }
+    if (entry?.type === FileType.Directory) {
+      return {
+        type: FileType.Directory,
+        ctime: 0,
+        mtime: 0,
+        size: 0
+      };
+    }
+    throw ERR_FILE_NOT_FOUND;
+  }
+  async readdir(resource) {
+    try {
+      const entry = (await this.getFiletree()).read(resource.path);
+      if (!entry) {
+        return [];
+      }
+      if (entry.type !== FileType.Directory) {
+        throw ERR_FILE_NOT_DIR;
+      } else {
+        return [...entry.children.entries()].map(([name, node]) => [name, node.type]);
+      }
+    } catch (error) {
+      throw error;
+    }
+  }
+  async readFile(resource) {
+    try {
+      const result = await this.indexedDB.runInTransaction(this.store, "readonly", (objectStore) => objectStore.get(resource.path));
+      if (result === void 0) {
+        throw ERR_FILE_NOT_FOUND;
+      }
+      const buffer = result instanceof Uint8Array ? result : isString(result) ? VSBuffer.fromString(result).buffer : void 0;
+      if (buffer === void 0) {
+        throw ERR_UNKNOWN_INTERNAL(`IndexedDB entry at "${resource.path}" in unexpected format`);
+      }
+      const fileTree = await this.getFiletree();
+      fileTree.add(resource.path, { type: "file", size: buffer.byteLength });
+      return buffer;
+    } catch (error) {
+      throw error;
+    }
+  }
+  async writeFile(resource, content, opts) {
+    try {
+      const existing = await this.stat(resource).catch(() => void 0);
+      if (existing?.type === FileType.Directory) {
+        throw ERR_FILE_IS_DIR;
+      }
+      await this.bulkWrite([[resource, content]]);
+    } catch (error) {
+      throw error;
+    }
+  }
+  async rename(from, to, opts) {
+    const fileTree = await this.getFiletree();
+    const fromEntry = fileTree.read(from.path);
+    if (!fromEntry) {
+      throw ERR_FILE_NOT_FOUND;
+    }
+    const toEntry = fileTree.read(to.path);
+    if (toEntry) {
+      if (!opts.overwrite) {
+        throw createFileSystemProviderError("file exists already", FileSystemProviderErrorCode.FileExists);
+      }
+      if (toEntry.type !== fromEntry.type) {
+        throw createFileSystemProviderError("Cannot rename files with different types", FileSystemProviderErrorCode.Unknown);
+      }
+      await this.delete(to, { recursive: true, useTrash: false, atomic: false });
+    }
+    const toTargetResource = /* @__PURE__ */ __name((path) => this.extUri.joinPath(to, this.extUri.relativePath(from, from.with({ path })) || ""), "toTargetResource");
+    const sourceEntries = await this.tree(from);
+    const sourceFiles = [];
+    for (const sourceEntry of sourceEntries) {
+      if (sourceEntry[1] === FileType.File) {
+        sourceFiles.push(sourceEntry);
+      } else if (sourceEntry[1] === FileType.Directory) {
+        fileTree.add(toTargetResource(sourceEntry[0]).path, { type: "dir" });
+      }
+    }
+    if (sourceFiles.length) {
+      const targetFiles = [];
+      const sourceFilesContents = await this.indexedDB.runInTransaction(this.store, "readonly", (objectStore) => sourceFiles.map(([path]) => objectStore.get(path)));
+      for (let index = 0; index < sourceFiles.length; index++) {
+        const content = sourceFilesContents[index] instanceof Uint8Array ? sourceFilesContents[index] : isString(sourceFilesContents[index]) ? VSBuffer.fromString(sourceFilesContents[index]).buffer : void 0;
+        if (content) {
+          targetFiles.push([toTargetResource(sourceFiles[index][0]), content]);
+        }
+      }
+      await this.bulkWrite(targetFiles);
+    }
+    await this.delete(from, { recursive: true, useTrash: false, atomic: false });
+  }
+  async delete(resource, opts) {
+    let stat;
+    try {
+      stat = await this.stat(resource);
+    } catch (e) {
+      if (e.code === FileSystemProviderErrorCode.FileNotFound) {
+        return;
+      }
+      throw e;
+    }
+    let toDelete;
+    if (opts.recursive) {
+      const tree = await this.tree(resource);
+      toDelete = tree.map(([path]) => path);
+    } else {
+      if (stat.type === FileType.Directory && (await this.readdir(resource)).length) {
+        throw ERR_DIR_NOT_EMPTY;
+      }
+      toDelete = [resource.path];
+    }
+    await this.deleteKeys(toDelete);
+    (await this.getFiletree()).delete(resource.path);
+    toDelete.forEach((key) => this.mtimes.delete(key));
+    this.triggerChanges(toDelete.map((path) => ({ resource: resource.with({ path }), type: FileChangeType.DELETED })));
+  }
+  async tree(resource) {
+    const stat = await this.stat(resource);
+    const allEntries = [[resource.path, stat.type]];
+    if (stat.type === FileType.Directory) {
+      const dirEntries = await this.readdir(resource);
+      for (const [key, type] of dirEntries) {
+        const childResource = this.extUri.joinPath(resource, key);
+        allEntries.push([childResource.path, type]);
+        if (type === FileType.Directory) {
+          const childEntries = await this.tree(childResource);
+          allEntries.push(...childEntries);
+        }
+      }
+    }
+    return allEntries;
+  }
+  triggerChanges(changes) {
+    if (changes.length) {
+      this._onDidChangeFile.fire(changes);
+      this.changesBroadcastChannel?.postData(changes);
+    }
+  }
+  getFiletree() {
+    if (!this.cachedFiletree) {
+      this.cachedFiletree = (async () => {
+        const rootNode = new IndexedDBFileSystemNode({
+          children: /* @__PURE__ */ new Map(),
+          path: "",
+          type: FileType.Directory
+        });
+        const result = await this.indexedDB.runInTransaction(this.store, "readonly", (objectStore) => objectStore.getAllKeys());
+        const keys = result.map((key) => key.toString());
+        keys.forEach((key) => rootNode.add(key, { type: "file" }));
+        return rootNode;
+      })();
+    }
+    return this.cachedFiletree;
+  }
+  async bulkWrite(files) {
+    files.forEach(([resource, content]) => this.fileWriteBatch.push({ content, resource }));
+    await this.writeManyThrottler.queue(() => this.writeMany());
+    const fileTree = await this.getFiletree();
+    for (const [resource, content] of files) {
+      fileTree.add(resource.path, { type: "file", size: content.byteLength });
+      this.mtimes.set(resource.toString(), Date.now());
+    }
+    this.triggerChanges(files.map(([resource]) => ({ resource, type: FileChangeType.UPDATED })));
+  }
+  fileWriteBatch = [];
+  async writeMany() {
+    if (this.fileWriteBatch.length) {
+      const fileBatch = this.fileWriteBatch.splice(0, this.fileWriteBatch.length);
+      try {
+        await this.indexedDB.runInTransaction(this.store, "readwrite", (objectStore) => fileBatch.map((entry) => {
+          return objectStore.put(entry.content, entry.resource.path);
+        }));
+      } catch (ex) {
+        if (ex instanceof DOMException && ex.name === "QuotaExceededError") {
+          throw ERR_FILE_EXCEEDS_STORAGE_QUOTA;
+        }
+        throw ex;
+      }
+    }
+  }
+  async deleteKeys(keys) {
+    if (keys.length) {
+      await this.indexedDB.runInTransaction(this.store, "readwrite", (objectStore) => keys.map((key) => objectStore.delete(key)));
+    }
+  }
+  async reset() {
+    await this.indexedDB.runInTransaction(this.store, "readwrite", (objectStore) => objectStore.clear());
+  }
+}
+export {
+  IndexedDBFileSystemProvider
+};
+//# sourceMappingURL=indexedDBFileSystemProvider.js.map

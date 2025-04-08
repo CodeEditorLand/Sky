@@ -1,1 +1,226 @@
-var b=Object.defineProperty,I=Object.getOwnPropertyDescriptor,C=(e,t,o,r)=>{for(var i,s=r>1?void 0:r?I(t,o):t,n=e.length-1;n>=0;n--)(i=e[n])&&(s=(r?i(t,o,s):i(s))||s);return r&&s&&b(t,o,s),s},d=(e,t)=>(o,r)=>t(o,r,e);import"../colorPicker.css";import{Disposable as g,MutableDisposable as y}from"../../../../../base/common/lifecycle.js";import"../../../hover/browser/hoverTypes.js";import{ContentWidgetPositionPreference as p}from"../../../../browser/editorBrowser.js";import{PositionAffinity as S}from"../../../../common/model.js";import"../../../../common/core/position.js";import{IInstantiationService as k}from"../../../../../platform/instantiation/common/instantiation.js";import{EditorHoverStatusBar as E}from"../../../hover/browser/contentHoverStatusBar.js";import{IKeybindingService as H}from"../../../../../platform/keybinding/common/keybinding.js";import{Emitter as B}from"../../../../../base/common/event.js";import{EditorOption as x}from"../../../../common/config/editorOptions.js";import"../../../../common/languages.js";import{ILanguageFeaturesService as L}from"../../../../common/services/languageFeatures.js";import"../../../../../platform/contextkey/common/contextkey.js";import"../../../../common/core/range.js";import{DefaultDocumentColorProvider as D}from"../defaultDocumentColorProvider.js";import{IEditorWorkerService as R}from"../../../../common/services/editorWorker.js";import{StandaloneColorPickerParticipant as N}from"./standaloneColorPickerParticipant.js";import*as W from"../../../../../base/browser/dom.js";import"../colorPickerParts/colorPickerInsertButton.js";import{IHoverService as w}from"../../../../../platform/hover/browser/hover.js";class M{constructor(e,t){this.value=e,this.foundInEditor=t}}const P=8,O=22;let l=class extends g{constructor(e,t,o,r,i,s,n,a){super(),this._editor=e,this._standaloneColorPickerVisible=t,this._standaloneColorPickerFocused=o,this._keybindingService=i,this._languageFeaturesService=s,this._editorWorkerService=n,this._hoverService=a,this._standaloneColorPickerVisible.set(!0),this._standaloneColorPickerParticipant=r.createInstance(N,this._editor),this._position=this._editor._getViewModel()?.getPrimaryCursorState().modelState.position;const d=this._editor.getSelection(),c=d?{startLineNumber:d.startLineNumber,startColumn:d.startColumn,endLineNumber:d.endLineNumber,endColumn:d.endColumn}:{startLineNumber:0,endLineNumber:0,endColumn:0,startColumn:0},l=this._register(W.trackFocus(this._body));this._register(l.onDidBlur((e=>{this.hide()}))),this._register(l.onDidFocus((e=>{this.focus()}))),this._register(this._editor.onDidChangeCursorPosition((()=>{this._selectionSetInEditor?this._selectionSetInEditor=!1:this.hide()}))),this._register(this._editor.onMouseMove((e=>{const t=e.target.element?.classList;t&&t.contains("colorpicker-color-decoration")&&this.hide()}))),this._register(this.onResult((e=>{this._render(e.value,e.foundInEditor)}))),this._start(c),this._body.style.zIndex="50",this._editor.addContentWidget(this)}static ID="editor.contrib.standaloneColorPickerWidget";allowEditorOverflow=!0;_position=void 0;_standaloneColorPickerParticipant;_body=document.createElement("div");_colorHover=null;_selectionSetInEditor=!1;_onResult=this._register(new B);onResult=this._onResult.event;_renderedHoverParts=this._register(new y);_renderedStatusBar=this._register(new y);updateEditor(){this._colorHover&&this._standaloneColorPickerParticipant.updateEditorModel(this._colorHover)}getId(){return l.ID}getDomNode(){return this._body}getPosition(){if(!this._position)return null;const e=this._editor.getOption(x.hover).above;return{position:this._position,secondaryPosition:this._position,preference:e?[p.ABOVE,p.BELOW]:[p.BELOW,p.ABOVE],positionAffinity:S.None}}hide(){this.dispose(),this._standaloneColorPickerVisible.set(!1),this._standaloneColorPickerFocused.set(!1),this._editor.removeContentWidget(this),this._editor.focus()}focus(){this._standaloneColorPickerFocused.set(!0),this._body.focus()}async _start(e){const t=await this._computeAsync(e);t&&this._onResult.fire(new M(t.result,t.foundInEditor))}async _computeAsync(e){if(!this._editor.hasModel())return null;const t={range:e,color:{red:0,green:0,blue:0,alpha:1}},o=await this._standaloneColorPickerParticipant.createColorHover(t,new D(this._editorWorkerService),this._languageFeaturesService.colorProvider);return o?{result:o.colorHover,foundInEditor:o.foundInEditor}:null}_render(e,t){const o=document.createDocumentFragment();this._renderedStatusBar.value=this._register(new E(this._keybindingService,this._hoverService));const r={fragment:o,statusBar:this._renderedStatusBar.value,onContentsChanged:()=>{},setMinimumDimensions:()=>{},hide:()=>this.hide(),focus:()=>this.focus()};if(this._colorHover=e,this._renderedHoverParts.value=this._standaloneColorPickerParticipant.renderHoverParts(r,[e]),!this._renderedHoverParts.value)return this._renderedStatusBar.clear(),void this._renderedHoverParts.clear();const i=this._renderedHoverParts.value.colorPicker;this._body.classList.add("standalone-colorpicker-body"),this._body.style.maxHeight=Math.max(this._editor.getLayoutInfo().height/4,250)+"px",this._body.style.maxWidth=Math.max(.66*this._editor.getLayoutInfo().width,500)+"px",this._body.tabIndex=0,this._body.appendChild(o),i.layout();const s=i.body,n=s.saturationBox.domNode.clientWidth,a=s.domNode.clientWidth-n-O-8,d=i.body.enterButton;d?.onClicked((()=>{this.updateEditor(),this.hide()}));const c=i.header;c.pickedColorNode.style.width=n+8+"px";c.originalColorNode.style.width=a+"px",i.header.closeButton?.onClicked((()=>{this.hide()})),t&&(d&&(d.button.textContent="Replace"),this._selectionSetInEditor=!0,this._editor.setSelection(e.range)),this._editor.layoutContentWidget(this)}};l=C([d(3,k),d(4,H),d(5,L),d(6,R),d(7,w)],l);export{l as StandaloneColorPickerWidget};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import "../colorPicker.css";
+import { Disposable, MutableDisposable } from "../../../../../base/common/lifecycle.js";
+import { IEditorHoverRenderContext } from "../../../hover/browser/hoverTypes.js";
+import { ContentWidgetPositionPreference, ICodeEditor, IContentWidget, IContentWidgetPosition } from "../../../../browser/editorBrowser.js";
+import { PositionAffinity } from "../../../../common/model.js";
+import { Position } from "../../../../common/core/position.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { EditorHoverStatusBar } from "../../../hover/browser/contentHoverStatusBar.js";
+import { IKeybindingService } from "../../../../../platform/keybinding/common/keybinding.js";
+import { Emitter } from "../../../../../base/common/event.js";
+import { EditorOption } from "../../../../common/config/editorOptions.js";
+import { IColorInformation } from "../../../../common/languages.js";
+import { ILanguageFeaturesService } from "../../../../common/services/languageFeatures.js";
+import { IContextKey } from "../../../../../platform/contextkey/common/contextkey.js";
+import { IRange } from "../../../../common/core/range.js";
+import { DefaultDocumentColorProvider } from "../defaultDocumentColorProvider.js";
+import { IEditorWorkerService } from "../../../../common/services/editorWorker.js";
+import { StandaloneColorPickerHover, StandaloneColorPickerParticipant, StandaloneColorPickerRenderedParts } from "./standaloneColorPickerParticipant.js";
+import * as dom from "../../../../../base/browser/dom.js";
+import { InsertButton } from "../colorPickerParts/colorPickerInsertButton.js";
+import { IHoverService } from "../../../../../platform/hover/browser/hover.js";
+class StandaloneColorPickerResult {
+  // The color picker result consists of: an array of color results and a boolean indicating if the color was found in the editor
+  constructor(value, foundInEditor) {
+    this.value = value;
+    this.foundInEditor = foundInEditor;
+  }
+  static {
+    __name(this, "StandaloneColorPickerResult");
+  }
+}
+const PADDING = 8;
+const CLOSE_BUTTON_WIDTH = 22;
+let StandaloneColorPickerWidget = class extends Disposable {
+  constructor(_editor, _standaloneColorPickerVisible, _standaloneColorPickerFocused, _instantiationService, _keybindingService, _languageFeaturesService, _editorWorkerService, _hoverService) {
+    super();
+    this._editor = _editor;
+    this._standaloneColorPickerVisible = _standaloneColorPickerVisible;
+    this._standaloneColorPickerFocused = _standaloneColorPickerFocused;
+    this._keybindingService = _keybindingService;
+    this._languageFeaturesService = _languageFeaturesService;
+    this._editorWorkerService = _editorWorkerService;
+    this._hoverService = _hoverService;
+    this._standaloneColorPickerVisible.set(true);
+    this._standaloneColorPickerParticipant = _instantiationService.createInstance(StandaloneColorPickerParticipant, this._editor);
+    this._position = this._editor._getViewModel()?.getPrimaryCursorState().modelState.position;
+    const editorSelection = this._editor.getSelection();
+    const selection = editorSelection ? {
+      startLineNumber: editorSelection.startLineNumber,
+      startColumn: editorSelection.startColumn,
+      endLineNumber: editorSelection.endLineNumber,
+      endColumn: editorSelection.endColumn
+    } : { startLineNumber: 0, endLineNumber: 0, endColumn: 0, startColumn: 0 };
+    const focusTracker = this._register(dom.trackFocus(this._body));
+    this._register(focusTracker.onDidBlur((_) => {
+      this.hide();
+    }));
+    this._register(focusTracker.onDidFocus((_) => {
+      this.focus();
+    }));
+    this._register(this._editor.onDidChangeCursorPosition(() => {
+      if (!this._selectionSetInEditor) {
+        this.hide();
+      } else {
+        this._selectionSetInEditor = false;
+      }
+    }));
+    this._register(this._editor.onMouseMove((e) => {
+      const classList = e.target.element?.classList;
+      if (classList && classList.contains("colorpicker-color-decoration")) {
+        this.hide();
+      }
+    }));
+    this._register(this.onResult((result) => {
+      this._render(result.value, result.foundInEditor);
+    }));
+    this._start(selection);
+    this._body.style.zIndex = "50";
+    this._editor.addContentWidget(this);
+  }
+  static {
+    __name(this, "StandaloneColorPickerWidget");
+  }
+  static ID = "editor.contrib.standaloneColorPickerWidget";
+  allowEditorOverflow = true;
+  _position = void 0;
+  _standaloneColorPickerParticipant;
+  _body = document.createElement("div");
+  _colorHover = null;
+  _selectionSetInEditor = false;
+  _onResult = this._register(new Emitter());
+  onResult = this._onResult.event;
+  _renderedHoverParts = this._register(new MutableDisposable());
+  _renderedStatusBar = this._register(new MutableDisposable());
+  updateEditor() {
+    if (this._colorHover) {
+      this._standaloneColorPickerParticipant.updateEditorModel(this._colorHover);
+    }
+  }
+  getId() {
+    return StandaloneColorPickerWidget.ID;
+  }
+  getDomNode() {
+    return this._body;
+  }
+  getPosition() {
+    if (!this._position) {
+      return null;
+    }
+    const positionPreference = this._editor.getOption(EditorOption.hover).above;
+    return {
+      position: this._position,
+      secondaryPosition: this._position,
+      preference: positionPreference ? [ContentWidgetPositionPreference.ABOVE, ContentWidgetPositionPreference.BELOW] : [ContentWidgetPositionPreference.BELOW, ContentWidgetPositionPreference.ABOVE],
+      positionAffinity: PositionAffinity.None
+    };
+  }
+  hide() {
+    this.dispose();
+    this._standaloneColorPickerVisible.set(false);
+    this._standaloneColorPickerFocused.set(false);
+    this._editor.removeContentWidget(this);
+    this._editor.focus();
+  }
+  focus() {
+    this._standaloneColorPickerFocused.set(true);
+    this._body.focus();
+  }
+  async _start(selection) {
+    const computeAsyncResult = await this._computeAsync(selection);
+    if (!computeAsyncResult) {
+      return;
+    }
+    this._onResult.fire(new StandaloneColorPickerResult(computeAsyncResult.result, computeAsyncResult.foundInEditor));
+  }
+  async _computeAsync(range) {
+    if (!this._editor.hasModel()) {
+      return null;
+    }
+    const colorInfo = {
+      range,
+      color: { red: 0, green: 0, blue: 0, alpha: 1 }
+    };
+    const colorHoverResult = await this._standaloneColorPickerParticipant.createColorHover(colorInfo, new DefaultDocumentColorProvider(this._editorWorkerService), this._languageFeaturesService.colorProvider);
+    if (!colorHoverResult) {
+      return null;
+    }
+    return { result: colorHoverResult.colorHover, foundInEditor: colorHoverResult.foundInEditor };
+  }
+  _render(colorHover, foundInEditor) {
+    const fragment = document.createDocumentFragment();
+    this._renderedStatusBar.value = this._register(new EditorHoverStatusBar(this._keybindingService, this._hoverService));
+    const context = {
+      fragment,
+      statusBar: this._renderedStatusBar.value,
+      onContentsChanged: /* @__PURE__ */ __name(() => {
+      }, "onContentsChanged"),
+      setMinimumDimensions: /* @__PURE__ */ __name(() => {
+      }, "setMinimumDimensions"),
+      hide: /* @__PURE__ */ __name(() => this.hide(), "hide"),
+      focus: /* @__PURE__ */ __name(() => this.focus(), "focus")
+    };
+    this._colorHover = colorHover;
+    this._renderedHoverParts.value = this._standaloneColorPickerParticipant.renderHoverParts(context, [colorHover]);
+    if (!this._renderedHoverParts.value) {
+      this._renderedStatusBar.clear();
+      this._renderedHoverParts.clear();
+      return;
+    }
+    const colorPicker = this._renderedHoverParts.value.colorPicker;
+    this._body.classList.add("standalone-colorpicker-body");
+    this._body.style.maxHeight = Math.max(this._editor.getLayoutInfo().height / 4, 250) + "px";
+    this._body.style.maxWidth = Math.max(this._editor.getLayoutInfo().width * 0.66, 500) + "px";
+    this._body.tabIndex = 0;
+    this._body.appendChild(fragment);
+    colorPicker.layout();
+    const colorPickerBody = colorPicker.body;
+    const saturationBoxWidth = colorPickerBody.saturationBox.domNode.clientWidth;
+    const widthOfOriginalColorBox = colorPickerBody.domNode.clientWidth - saturationBoxWidth - CLOSE_BUTTON_WIDTH - PADDING;
+    const enterButton = colorPicker.body.enterButton;
+    enterButton?.onClicked(() => {
+      this.updateEditor();
+      this.hide();
+    });
+    const colorPickerHeader = colorPicker.header;
+    const pickedColorNode = colorPickerHeader.pickedColorNode;
+    pickedColorNode.style.width = saturationBoxWidth + PADDING + "px";
+    const originalColorNode = colorPickerHeader.originalColorNode;
+    originalColorNode.style.width = widthOfOriginalColorBox + "px";
+    const closeButton = colorPicker.header.closeButton;
+    closeButton?.onClicked(() => {
+      this.hide();
+    });
+    if (foundInEditor) {
+      if (enterButton) {
+        enterButton.button.textContent = "Replace";
+      }
+      this._selectionSetInEditor = true;
+      this._editor.setSelection(colorHover.range);
+    }
+    this._editor.layoutContentWidget(this);
+  }
+};
+StandaloneColorPickerWidget = __decorateClass([
+  __decorateParam(3, IInstantiationService),
+  __decorateParam(4, IKeybindingService),
+  __decorateParam(5, ILanguageFeaturesService),
+  __decorateParam(6, IEditorWorkerService),
+  __decorateParam(7, IHoverService)
+], StandaloneColorPickerWidget);
+export {
+  StandaloneColorPickerWidget
+};
+//# sourceMappingURL=standaloneColorPickerWidget.js.map

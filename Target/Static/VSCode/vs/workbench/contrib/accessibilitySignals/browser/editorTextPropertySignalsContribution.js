@@ -1,1 +1,235 @@
-var x=Object.defineProperty;var O=Object.getOwnPropertyDescriptor;var I=(d,n,t,e)=>{for(var i=e>1?void 0:e?O(n,t):n,s=d.length-1,a;s>=0;s--)(a=d[s])&&(i=(e?a(n,t,i):a(i))||i);return e&&i&&x(n,t,i),i},g=(d,n)=>(t,e)=>n(t,e,d);import{disposableTimeout as T}from"../../../../base/common/async.js";import{Disposable as D,DisposableStore as F}from"../../../../base/common/lifecycle.js";import{autorun as N,autorunWithStore as w,derived as R,observableFromEvent as W,observableFromPromise as V,observableFromValueWithChangeEvent as B,observableSignalFromEvent as L,wasEventTriggeredRecently as j}from"../../../../base/common/observable.js";import{isDefined as q}from"../../../../base/common/types.js";import{isCodeEditor as z,isDiffEditor as G}from"../../../../editor/browser/editorBrowser.js";import"../../../../editor/common/core/position.js";import{CursorChangeReason as M}from"../../../../editor/common/cursorEvents.js";import"../../../../editor/common/model.js";import{FoldingController as H}from"../../../../editor/contrib/folding/browser/folding.js";import{AccessibilitySignal as v,IAccessibilitySignalService as J}from"../../../../platform/accessibilitySignal/browser/accessibilitySignalService.js";import{IInstantiationService as K}from"../../../../platform/instantiation/common/instantiation.js";import{IMarkerService as Q,MarkerSeverity as k}from"../../../../platform/markers/common/markers.js";import"../../../common/contributions.js";import{IEditorService as U}from"../../../services/editor/common/editorService.js";import{IDebugService as X}from"../../debug/common/debug.js";let A=class extends D{constructor(t,e,i){super();this._editorService=t;this._instantiationService=e;this._accessibilitySignalService=i;this._register(w((s,a)=>{if(!this._someAccessibilitySignalIsEnabled.read(s))return;const r=this._activeEditorObservable.read(s);r&&this._registerAccessibilitySignalsForEditor(r.editor,r.model,a)}))}_textProperties=[this._instantiationService.createInstance(m,v.errorAtPosition,v.errorOnLine,k.Error),this._instantiationService.createInstance(m,v.warningAtPosition,v.warningOnLine,k.Warning),this._instantiationService.createInstance(Y),this._instantiationService.createInstance(y)];_someAccessibilitySignalIsEnabled=R(this,t=>this._textProperties.flatMap(e=>[e.lineSignal,e.positionSignal]).filter(q).some(e=>B(this,this._accessibilitySignalService.getEnabledState(e,!1)).read(t)));_activeEditorObservable=W(this,this._editorService.onDidActiveEditorChange,t=>{const e=this._editorService.activeTextEditorControl,i=G(e)?e.getOriginalEditor():z(e)?e:void 0;return i&&i.hasModel()?{editor:i,model:i.getModel()}:void 0});_registerAccessibilitySignalsForEditor(t,e,i){let s=-1;const a=new Set,r=i.add(new F),u=this._textProperties.map(c=>({source:c.createSource(t,e),property:c})),C=j(t.onDidChangeModelContent,100,i);i.add(t.onDidChangeCursorPosition(c=>{if(r.clear(),c&&c.reason!==M.Explicit&&c.reason!==M.NotSet){a.clear();return}const h=(o,S,b)=>{const l=b==="line"?o.lineSignal:o.positionSignal;if(!(!l||!this._accessibilitySignalService.getEnabledState(l,!1).value||!S.isPresent(E,b,void 0))){for(const p of["sound","announcement"])if(this._accessibilitySignalService.getEnabledState(l,!1,p).value){const P=this._accessibilitySignalService.getDelayMs(l,p,b)+(C.get()?1e3:0);r.add(T(()=>{S.isPresent(E,b,void 0)&&((b!=="line"||!a.has(o))&&this._accessibilitySignalService.playSignal(l,{modality:p}),a.add(o))},P))}}},E=c.position,_=E.lineNumber;if(_!==s){a.clear(),s=_;for(const o of u)h(o.property,o.source,"line")}for(const o of u)h(o.property,o.source,"positional");for(const o of u){if(![o.property.lineSignal,o.property.positionSignal].some(l=>l&&this._accessibilitySignalService.getEnabledState(l,!1).value))return;let S,b;r.add(N(l=>{const p=o.source.isPresentAtPosition(c.position,l),P=o.source.isPresentOnLine(c.position.lineNumber,l);S!==void 0&&S!==void 0&&(!S&&p&&h(o.property,o.source,"positional"),!b&&P&&h(o.property,o.source,"line")),S=p,b=P}))}}))}};A=I([g(0,U),g(1,K),g(2,J)],A);class f{static notPresent=new f({isPresentAtPosition:()=>!1,isPresentOnLine:()=>!1});isPresentOnLine;isPresentAtPosition;constructor(n){this.isPresentOnLine=n.isPresentOnLine,this.isPresentAtPosition=n.isPresentAtPosition??(()=>!1)}isPresent(n,t,e){return t==="line"?this.isPresentOnLine(n.lineNumber,e):this.isPresentAtPosition(n,e)}}let m=class{constructor(n,t,e,i){this.positionSignal=n;this.lineSignal=t;this.severity=e;this.markerService=i}debounceWhileTyping=!0;createSource(n,t){const e=L("onMarkerChanged",this.markerService.onMarkerChanged);return new f({isPresentAtPosition:(i,s)=>(e.read(s),this.markerService.read({resource:t.uri}).some(r=>r.severity===this.severity&&r.startLineNumber<=i.lineNumber&&i.lineNumber<=r.endLineNumber&&r.startColumn<=i.column&&i.column<=r.endColumn)),isPresentOnLine:(i,s)=>(e.read(s),this.markerService.read({resource:t.uri}).some(r=>r.severity===this.severity&&r.startLineNumber<=i&&i<=r.endLineNumber))})}};m=I([g(3,Q)],m);class Y{lineSignal=v.foldedArea;createSource(n,t){const e=H.get(n);if(!e)return f.notPresent;const i=V(e.getFoldingModel()??Promise.resolve(void 0));return new f({isPresentOnLine(s,a){const u=i.read(a).value?.getRegionAtLine(s);return u?u.isCollapsed&&u.startLineNumber===s:!1}})}}let y=class{constructor(n){this.debugService=n}lineSignal=v.break;createSource(n,t){const e=L("onDidChangeBreakpoints",this.debugService.getModel().onDidChangeBreakpoints),i=this.debugService;return new f({isPresentOnLine(s,a){return e.read(a),i.getModel().getBreakpoints({uri:t.uri,lineNumber:s}).length>0}})}};y=I([g(0,X)],y);export{A as EditorTextPropertySignalsContribution};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { disposableTimeout } from "../../../../base/common/async.js";
+import { Disposable, DisposableStore } from "../../../../base/common/lifecycle.js";
+import { IReader, autorun, autorunWithStore, derived, observableFromEvent, observableFromPromise, observableFromValueWithChangeEvent, observableSignalFromEvent, wasEventTriggeredRecently } from "../../../../base/common/observable.js";
+import { isDefined } from "../../../../base/common/types.js";
+import { ICodeEditor, isCodeEditor, isDiffEditor } from "../../../../editor/browser/editorBrowser.js";
+import { Position } from "../../../../editor/common/core/position.js";
+import { CursorChangeReason } from "../../../../editor/common/cursorEvents.js";
+import { ITextModel } from "../../../../editor/common/model.js";
+import { FoldingController } from "../../../../editor/contrib/folding/browser/folding.js";
+import { AccessibilityModality, AccessibilitySignal, IAccessibilitySignalService } from "../../../../platform/accessibilitySignal/browser/accessibilitySignalService.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IMarkerService, MarkerSeverity } from "../../../../platform/markers/common/markers.js";
+import { IWorkbenchContribution } from "../../../common/contributions.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { IDebugService } from "../../debug/common/debug.js";
+let EditorTextPropertySignalsContribution = class extends Disposable {
+  constructor(_editorService, _instantiationService, _accessibilitySignalService) {
+    super();
+    this._editorService = _editorService;
+    this._instantiationService = _instantiationService;
+    this._accessibilitySignalService = _accessibilitySignalService;
+    this._register(autorunWithStore((reader, store) => {
+      if (!this._someAccessibilitySignalIsEnabled.read(reader)) {
+        return;
+      }
+      const activeEditor = this._activeEditorObservable.read(reader);
+      if (activeEditor) {
+        this._registerAccessibilitySignalsForEditor(activeEditor.editor, activeEditor.model, store);
+      }
+    }));
+  }
+  static {
+    __name(this, "EditorTextPropertySignalsContribution");
+  }
+  _textProperties = [
+    this._instantiationService.createInstance(MarkerTextProperty, AccessibilitySignal.errorAtPosition, AccessibilitySignal.errorOnLine, MarkerSeverity.Error),
+    this._instantiationService.createInstance(MarkerTextProperty, AccessibilitySignal.warningAtPosition, AccessibilitySignal.warningOnLine, MarkerSeverity.Warning),
+    this._instantiationService.createInstance(FoldedAreaTextProperty),
+    this._instantiationService.createInstance(BreakpointTextProperty)
+  ];
+  _someAccessibilitySignalIsEnabled = derived(
+    this,
+    (reader) => this._textProperties.flatMap((p) => [p.lineSignal, p.positionSignal]).filter(isDefined).some((signal) => observableFromValueWithChangeEvent(this, this._accessibilitySignalService.getEnabledState(signal, false)).read(reader))
+  );
+  _activeEditorObservable = observableFromEvent(
+    this,
+    this._editorService.onDidActiveEditorChange,
+    (_) => {
+      const activeTextEditorControl = this._editorService.activeTextEditorControl;
+      const editor = isDiffEditor(activeTextEditorControl) ? activeTextEditorControl.getOriginalEditor() : isCodeEditor(activeTextEditorControl) ? activeTextEditorControl : void 0;
+      return editor && editor.hasModel() ? { editor, model: editor.getModel() } : void 0;
+    }
+  );
+  _registerAccessibilitySignalsForEditor(editor, editorModel, store) {
+    let lastLine = -1;
+    const ignoredLineSignalsForCurrentLine = /* @__PURE__ */ new Set();
+    const timeouts = store.add(new DisposableStore());
+    const propertySources = this._textProperties.map((p) => ({ source: p.createSource(editor, editorModel), property: p }));
+    const didType = wasEventTriggeredRecently(editor.onDidChangeModelContent, 100, store);
+    store.add(editor.onDidChangeCursorPosition((args) => {
+      timeouts.clear();
+      if (args && args.reason !== CursorChangeReason.Explicit && args.reason !== CursorChangeReason.NotSet) {
+        ignoredLineSignalsForCurrentLine.clear();
+        return;
+      }
+      const trigger = /* @__PURE__ */ __name((property, source, mode) => {
+        const signal = mode === "line" ? property.lineSignal : property.positionSignal;
+        if (!signal || !this._accessibilitySignalService.getEnabledState(signal, false).value || !source.isPresent(position, mode, void 0)) {
+          return;
+        }
+        for (const modality of ["sound", "announcement"]) {
+          if (this._accessibilitySignalService.getEnabledState(signal, false, modality).value) {
+            const delay = this._accessibilitySignalService.getDelayMs(signal, modality, mode) + (didType.get() ? 1e3 : 0);
+            timeouts.add(disposableTimeout(() => {
+              if (source.isPresent(position, mode, void 0)) {
+                if (!(mode === "line") || !ignoredLineSignalsForCurrentLine.has(property)) {
+                  this._accessibilitySignalService.playSignal(signal, { modality });
+                }
+                ignoredLineSignalsForCurrentLine.add(property);
+              }
+            }, delay));
+          }
+        }
+      }, "trigger");
+      const position = args.position;
+      const lineNumber = position.lineNumber;
+      if (lineNumber !== lastLine) {
+        ignoredLineSignalsForCurrentLine.clear();
+        lastLine = lineNumber;
+        for (const p of propertySources) {
+          trigger(p.property, p.source, "line");
+        }
+      }
+      for (const p of propertySources) {
+        trigger(p.property, p.source, "positional");
+      }
+      for (const s of propertySources) {
+        if (![s.property.lineSignal, s.property.positionSignal].some((s2) => s2 && this._accessibilitySignalService.getEnabledState(s2, false).value)) {
+          return;
+        }
+        let lastValueAtPosition = void 0;
+        let lastValueOnLine = void 0;
+        timeouts.add(autorun((reader) => {
+          const newValueAtPosition = s.source.isPresentAtPosition(args.position, reader);
+          const newValueOnLine = s.source.isPresentOnLine(args.position.lineNumber, reader);
+          if (lastValueAtPosition !== void 0 && lastValueAtPosition !== void 0) {
+            if (!lastValueAtPosition && newValueAtPosition) {
+              trigger(s.property, s.source, "positional");
+            }
+            if (!lastValueOnLine && newValueOnLine) {
+              trigger(s.property, s.source, "line");
+            }
+          }
+          lastValueAtPosition = newValueAtPosition;
+          lastValueOnLine = newValueOnLine;
+        }));
+      }
+    }));
+  }
+};
+EditorTextPropertySignalsContribution = __decorateClass([
+  __decorateParam(0, IEditorService),
+  __decorateParam(1, IInstantiationService),
+  __decorateParam(2, IAccessibilitySignalService)
+], EditorTextPropertySignalsContribution);
+class TextPropertySource {
+  static {
+    __name(this, "TextPropertySource");
+  }
+  static notPresent = new TextPropertySource({ isPresentAtPosition: /* @__PURE__ */ __name(() => false, "isPresentAtPosition"), isPresentOnLine: /* @__PURE__ */ __name(() => false, "isPresentOnLine") });
+  isPresentOnLine;
+  isPresentAtPosition;
+  constructor(options) {
+    this.isPresentOnLine = options.isPresentOnLine;
+    this.isPresentAtPosition = options.isPresentAtPosition ?? (() => false);
+  }
+  isPresent(position, mode, reader) {
+    return mode === "line" ? this.isPresentOnLine(position.lineNumber, reader) : this.isPresentAtPosition(position, reader);
+  }
+}
+let MarkerTextProperty = class {
+  constructor(positionSignal, lineSignal, severity, markerService) {
+    this.positionSignal = positionSignal;
+    this.lineSignal = lineSignal;
+    this.severity = severity;
+    this.markerService = markerService;
+  }
+  static {
+    __name(this, "MarkerTextProperty");
+  }
+  debounceWhileTyping = true;
+  createSource(editor, model) {
+    const obs = observableSignalFromEvent("onMarkerChanged", this.markerService.onMarkerChanged);
+    return new TextPropertySource({
+      isPresentAtPosition: /* @__PURE__ */ __name((position, reader) => {
+        obs.read(reader);
+        const hasMarker = this.markerService.read({ resource: model.uri }).some(
+          (m) => m.severity === this.severity && m.startLineNumber <= position.lineNumber && position.lineNumber <= m.endLineNumber && m.startColumn <= position.column && position.column <= m.endColumn
+        );
+        return hasMarker;
+      }, "isPresentAtPosition"),
+      isPresentOnLine: /* @__PURE__ */ __name((lineNumber, reader) => {
+        obs.read(reader);
+        const hasMarker = this.markerService.read({ resource: model.uri }).some(
+          (m) => m.severity === this.severity && m.startLineNumber <= lineNumber && lineNumber <= m.endLineNumber
+        );
+        return hasMarker;
+      }, "isPresentOnLine")
+    });
+  }
+};
+MarkerTextProperty = __decorateClass([
+  __decorateParam(3, IMarkerService)
+], MarkerTextProperty);
+class FoldedAreaTextProperty {
+  static {
+    __name(this, "FoldedAreaTextProperty");
+  }
+  lineSignal = AccessibilitySignal.foldedArea;
+  createSource(editor, _model) {
+    const foldingController = FoldingController.get(editor);
+    if (!foldingController) {
+      return TextPropertySource.notPresent;
+    }
+    const foldingModel = observableFromPromise(foldingController.getFoldingModel() ?? Promise.resolve(void 0));
+    return new TextPropertySource({
+      isPresentOnLine(lineNumber, reader) {
+        const m = foldingModel.read(reader);
+        const regionAtLine = m.value?.getRegionAtLine(lineNumber);
+        const hasFolding = !regionAtLine ? false : regionAtLine.isCollapsed && regionAtLine.startLineNumber === lineNumber;
+        return hasFolding;
+      }
+    });
+  }
+}
+let BreakpointTextProperty = class {
+  constructor(debugService) {
+    this.debugService = debugService;
+  }
+  static {
+    __name(this, "BreakpointTextProperty");
+  }
+  lineSignal = AccessibilitySignal.break;
+  createSource(editor, model) {
+    const signal = observableSignalFromEvent("onDidChangeBreakpoints", this.debugService.getModel().onDidChangeBreakpoints);
+    const debugService = this.debugService;
+    return new TextPropertySource({
+      isPresentOnLine(lineNumber, reader) {
+        signal.read(reader);
+        const breakpoints = debugService.getModel().getBreakpoints({ uri: model.uri, lineNumber });
+        const hasBreakpoints = breakpoints.length > 0;
+        return hasBreakpoints;
+      }
+    });
+  }
+};
+BreakpointTextProperty = __decorateClass([
+  __decorateParam(0, IDebugService)
+], BreakpointTextProperty);
+export {
+  EditorTextPropertySignalsContribution
+};
+//# sourceMappingURL=editorTextPropertySignalsContribution.js.map

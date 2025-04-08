@@ -1,1 +1,49 @@
-var f=Object.defineProperty,l=Object.getOwnPropertyDescriptor,m=(o,r,t,e)=>{for(var s,i=e>1?void 0:e?l(r,t):r,a=o.length-1;a>=0;a--)(s=o[a])&&(i=(e?s(r,t,i):s(i))||i);return e&&i&&f(r,t,i),i},c=(o,r)=>(t,e)=>r(t,e,o);import{Disposable as p,DisposableStore as b}from"../../../../base/common/lifecycle.js";import{autorun as u}from"../../../../base/common/observable.js";import{IConfigurationService as I}from"../../../../platform/configuration/common/configuration.js";import{IInstantiationService as d}from"../../../../platform/instantiation/common/instantiation.js";import{observableConfigValue as g}from"../../../../platform/observable/common/platformObservableUtils.js";import"../../../common/contributions.js";import{mcpDiscoveryRegistry as S}from"../common/discovery/mcpDiscovery.js";import{mcpEnabledSection as h}from"../common/mcpConfiguration.js";let a=class extends p{static ID="workbench.contrib.mcp.discovery";constructor(o,r){super();const t=g(h,!0,r),e=this._register(new b);this._register(u((r=>{if(t.read(r))for(const r of S.getAll())e.add(o.createInstance(r)).start();else e.clear()})))}};a=m([c(0,d),c(1,I)],a);export{a as McpDiscovery};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Disposable, DisposableStore } from "../../../../base/common/lifecycle.js";
+import { autorun } from "../../../../base/common/observable.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { observableConfigValue } from "../../../../platform/observable/common/platformObservableUtils.js";
+import { IWorkbenchContribution } from "../../../common/contributions.js";
+import { mcpDiscoveryRegistry } from "../common/discovery/mcpDiscovery.js";
+import { mcpEnabledSection } from "../common/mcpConfiguration.js";
+let McpDiscovery = class extends Disposable {
+  static {
+    __name(this, "McpDiscovery");
+  }
+  static ID = "workbench.contrib.mcp.discovery";
+  constructor(instantiationService, configurationService) {
+    super();
+    const enabled = observableConfigValue(mcpEnabledSection, true, configurationService);
+    const store = this._register(new DisposableStore());
+    this._register(autorun((reader) => {
+      if (enabled.read(reader)) {
+        for (const discovery of mcpDiscoveryRegistry.getAll()) {
+          const inst = store.add(instantiationService.createInstance(discovery));
+          inst.start();
+        }
+      } else {
+        store.clear();
+      }
+    }));
+  }
+};
+McpDiscovery = __decorateClass([
+  __decorateParam(0, IInstantiationService),
+  __decorateParam(1, IConfigurationService)
+], McpDiscovery);
+export {
+  McpDiscovery
+};
+//# sourceMappingURL=mcpDiscovery.js.map

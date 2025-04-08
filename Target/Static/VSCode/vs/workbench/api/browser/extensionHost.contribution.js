@@ -1,1 +1,118 @@
-var s=Object.defineProperty,I=Object.getOwnPropertyDescriptor,a=(i,a,r,e)=>{for(var t,n=e>1?void 0:e?I(a,r):a,o=i.length-1;o>=0;o--)(t=i[o])&&(n=(e?t(a,r,n):t(n))||n);return e&&n&&s(a,r,n),n},c=(i,a)=>(r,e)=>a(r,e,i);import{WorkbenchPhase as h,registerWorkbenchContribution2 as S}from"../../common/contributions.js";import{IInstantiationService as f}from"../../../platform/instantiation/common/instantiation.js";import{JSONValidationExtensionPoint as l}from"../common/jsonValidationExtensionPoint.js";import{ColorExtensionPoint as v}from"../../services/themes/common/colorExtensionPoint.js";import{IconExtensionPoint as b}from"../../services/themes/common/iconExtensionPoint.js";import{TokenClassificationExtensionPoints as u}from"../../services/themes/common/tokenClassificationExtensionPoint.js";import{LanguageConfigurationFileHandler as k}from"../../contrib/codeEditor/common/languageConfigurationExtensionPoint.js";import{StatusBarItemsExtensionPoint as C}from"./statusBarExtensionPoint.js";import"./mainThreadLocalization.js";import"./mainThreadBulkEdits.js";import"./mainThreadLanguageModels.js";import"./mainThreadChatAgents2.js";import"./mainThreadChatCodeMapper.js";import"./mainThreadLanguageModelTools.js";import"./mainThreadEmbeddings.js";import"./mainThreadCodeInsets.js";import"./mainThreadCLICommands.js";import"./mainThreadClipboard.js";import"./mainThreadCommands.js";import"./mainThreadConfiguration.js";import"./mainThreadConsole.js";import"./mainThreadDebugService.js";import"./mainThreadDecorations.js";import"./mainThreadDiagnostics.js";import"./mainThreadDialogs.js";import"./mainThreadDocumentContentProviders.js";import"./mainThreadDocuments.js";import"./mainThreadDocumentsAndEditors.js";import"./mainThreadEditor.js";import"./mainThreadEditors.js";import"./mainThreadEditorTabs.js";import"./mainThreadErrors.js";import"./mainThreadExtensionService.js";import"./mainThreadFileSystem.js";import"./mainThreadFileSystemEventService.js";import"./mainThreadLanguageFeatures.js";import"./mainThreadLanguages.js";import"./mainThreadLogService.js";import"./mainThreadMessageService.js";import"./mainThreadManagedSockets.js";import"./mainThreadOutputService.js";import"./mainThreadProgress.js";import"./mainThreadQuickDiff.js";import"./mainThreadQuickOpen.js";import"./mainThreadRemoteConnectionData.js";import"./mainThreadSaveParticipant.js";import"./mainThreadSpeech.js";import"./mainThreadEditSessionIdentityParticipant.js";import"./mainThreadSCM.js";import"./mainThreadSearch.js";import"./mainThreadStatusBar.js";import"./mainThreadStorage.js";import"./mainThreadTelemetry.js";import"./mainThreadTerminalService.js";import"./mainThreadTerminalShellIntegration.js";import"./mainThreadTheming.js";import"./mainThreadTreeViews.js";import"./mainThreadDownloadService.js";import"./mainThreadUrls.js";import"./mainThreadUriOpeners.js";import"./mainThreadWindow.js";import"./mainThreadWebviewManager.js";import"./mainThreadWorkspace.js";import"./mainThreadComments.js";import"./mainThreadNotebook.js";import"./mainThreadNotebookKernels.js";import"./mainThreadNotebookDocumentsAndEditors.js";import"./mainThreadNotebookRenderers.js";import"./mainThreadNotebookSaveParticipant.js";import"./mainThreadInteractive.js";import"./mainThreadTask.js";import"./mainThreadLabelService.js";import"./mainThreadTunnelService.js";import"./mainThreadAuthentication.js";import"./mainThreadTimeline.js";import"./mainThreadTesting.js";import"./mainThreadSecretState.js";import"./mainThreadShare.js";import"./mainThreadProfileContentHandlers.js";import"./mainThreadAiRelatedInformation.js";import"./mainThreadAiEmbeddingVector.js";import"./mainThreadMcp.js";import"./mainThreadChatStatus.js";let r=class{constructor(i){this.instantiationService=i,this.instantiationService.createInstance(l),this.instantiationService.createInstance(v),this.instantiationService.createInstance(b),this.instantiationService.createInstance(u),this.instantiationService.createInstance(k),this.instantiationService.createInstance(C)}static ID="workbench.contrib.extensionPoints"};r=a([c(0,f)],r),S(r.ID,r,h.BlockStartup);export{r as ExtensionPoints};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { IWorkbenchContribution, WorkbenchPhase, registerWorkbenchContribution2 } from "../../common/contributions.js";
+import { IInstantiationService } from "../../../platform/instantiation/common/instantiation.js";
+import { JSONValidationExtensionPoint } from "../common/jsonValidationExtensionPoint.js";
+import { ColorExtensionPoint } from "../../services/themes/common/colorExtensionPoint.js";
+import { IconExtensionPoint } from "../../services/themes/common/iconExtensionPoint.js";
+import { TokenClassificationExtensionPoints } from "../../services/themes/common/tokenClassificationExtensionPoint.js";
+import { LanguageConfigurationFileHandler } from "../../contrib/codeEditor/common/languageConfigurationExtensionPoint.js";
+import { StatusBarItemsExtensionPoint } from "./statusBarExtensionPoint.js";
+import "./mainThreadLocalization.js";
+import "./mainThreadBulkEdits.js";
+import "./mainThreadLanguageModels.js";
+import "./mainThreadChatAgents2.js";
+import "./mainThreadChatCodeMapper.js";
+import "./mainThreadLanguageModelTools.js";
+import "./mainThreadEmbeddings.js";
+import "./mainThreadCodeInsets.js";
+import "./mainThreadCLICommands.js";
+import "./mainThreadClipboard.js";
+import "./mainThreadCommands.js";
+import "./mainThreadConfiguration.js";
+import "./mainThreadConsole.js";
+import "./mainThreadDebugService.js";
+import "./mainThreadDecorations.js";
+import "./mainThreadDiagnostics.js";
+import "./mainThreadDialogs.js";
+import "./mainThreadDocumentContentProviders.js";
+import "./mainThreadDocuments.js";
+import "./mainThreadDocumentsAndEditors.js";
+import "./mainThreadEditor.js";
+import "./mainThreadEditors.js";
+import "./mainThreadEditorTabs.js";
+import "./mainThreadErrors.js";
+import "./mainThreadExtensionService.js";
+import "./mainThreadFileSystem.js";
+import "./mainThreadFileSystemEventService.js";
+import "./mainThreadLanguageFeatures.js";
+import "./mainThreadLanguages.js";
+import "./mainThreadLogService.js";
+import "./mainThreadMessageService.js";
+import "./mainThreadManagedSockets.js";
+import "./mainThreadOutputService.js";
+import "./mainThreadProgress.js";
+import "./mainThreadQuickDiff.js";
+import "./mainThreadQuickOpen.js";
+import "./mainThreadRemoteConnectionData.js";
+import "./mainThreadSaveParticipant.js";
+import "./mainThreadSpeech.js";
+import "./mainThreadEditSessionIdentityParticipant.js";
+import "./mainThreadSCM.js";
+import "./mainThreadSearch.js";
+import "./mainThreadStatusBar.js";
+import "./mainThreadStorage.js";
+import "./mainThreadTelemetry.js";
+import "./mainThreadTerminalService.js";
+import "./mainThreadTerminalShellIntegration.js";
+import "./mainThreadTheming.js";
+import "./mainThreadTreeViews.js";
+import "./mainThreadDownloadService.js";
+import "./mainThreadUrls.js";
+import "./mainThreadUriOpeners.js";
+import "./mainThreadWindow.js";
+import "./mainThreadWebviewManager.js";
+import "./mainThreadWorkspace.js";
+import "./mainThreadComments.js";
+import "./mainThreadNotebook.js";
+import "./mainThreadNotebookKernels.js";
+import "./mainThreadNotebookDocumentsAndEditors.js";
+import "./mainThreadNotebookRenderers.js";
+import "./mainThreadNotebookSaveParticipant.js";
+import "./mainThreadInteractive.js";
+import "./mainThreadTask.js";
+import "./mainThreadLabelService.js";
+import "./mainThreadTunnelService.js";
+import "./mainThreadAuthentication.js";
+import "./mainThreadTimeline.js";
+import "./mainThreadTesting.js";
+import "./mainThreadSecretState.js";
+import "./mainThreadShare.js";
+import "./mainThreadProfileContentHandlers.js";
+import "./mainThreadAiRelatedInformation.js";
+import "./mainThreadAiEmbeddingVector.js";
+import "./mainThreadMcp.js";
+import "./mainThreadChatStatus.js";
+let ExtensionPoints = class {
+  constructor(instantiationService) {
+    this.instantiationService = instantiationService;
+    this.instantiationService.createInstance(JSONValidationExtensionPoint);
+    this.instantiationService.createInstance(ColorExtensionPoint);
+    this.instantiationService.createInstance(IconExtensionPoint);
+    this.instantiationService.createInstance(TokenClassificationExtensionPoints);
+    this.instantiationService.createInstance(LanguageConfigurationFileHandler);
+    this.instantiationService.createInstance(StatusBarItemsExtensionPoint);
+  }
+  static {
+    __name(this, "ExtensionPoints");
+  }
+  static ID = "workbench.contrib.extensionPoints";
+};
+ExtensionPoints = __decorateClass([
+  __decorateParam(0, IInstantiationService)
+], ExtensionPoints);
+registerWorkbenchContribution2(ExtensionPoints.ID, ExtensionPoints, WorkbenchPhase.BlockStartup);
+export {
+  ExtensionPoints
+};
+//# sourceMappingURL=extensionHost.contribution.js.map

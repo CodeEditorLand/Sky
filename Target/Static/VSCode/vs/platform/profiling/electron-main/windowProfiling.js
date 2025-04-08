@@ -1,1 +1,54 @@
-var p=Object.defineProperty,m=Object.getOwnPropertyDescriptor,c=(e,o,t,n)=>{for(var i,s=n>1?void 0:n?m(o,t):o,r=e.length-1;r>=0;r--)(i=e[r])&&(s=(n?i(o,t,s):i(s))||s);return n&&s&&p(o,t,s),s},d=(e,o)=>(t,n)=>o(t,n,e);import"electron";import{timeout as w}from"../../../base/common/async.js";import{ILogService as l}from"../../log/common/log.js";import"../common/profiling.js";let n=class{constructor(e,o,t){this._window=e,this._sessionId=o,this._logService=t}async inspect(e){await this._connect();const o=this._window.webContents.debugger;await o.sendCommand("Profiler.start"),this._logService.warn("[perf] profiling STARTED",this._sessionId),await w(e);const t=await o.sendCommand("Profiler.stop");return this._logService.warn("[perf] profiling DONE",this._sessionId),await this._disconnect(),t.profile}async _connect(){const e=this._window.webContents.debugger;e.attach(),await e.sendCommand("Profiler.enable")}async _disconnect(){const e=this._window.webContents.debugger;await e.sendCommand("Profiler.disable"),e.detach()}};n=c([d(2,l)],n);export{n as WindowProfiler};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { BrowserWindow } from "electron";
+import { timeout } from "../../../base/common/async.js";
+import { ILogService } from "../../log/common/log.js";
+import { IV8Profile } from "../common/profiling.js";
+let WindowProfiler = class {
+  constructor(_window, _sessionId, _logService) {
+    this._window = _window;
+    this._sessionId = _sessionId;
+    this._logService = _logService;
+  }
+  static {
+    __name(this, "WindowProfiler");
+  }
+  async inspect(duration) {
+    await this._connect();
+    const inspector = this._window.webContents.debugger;
+    await inspector.sendCommand("Profiler.start");
+    this._logService.warn("[perf] profiling STARTED", this._sessionId);
+    await timeout(duration);
+    const data = await inspector.sendCommand("Profiler.stop");
+    this._logService.warn("[perf] profiling DONE", this._sessionId);
+    await this._disconnect();
+    return data.profile;
+  }
+  async _connect() {
+    const inspector = this._window.webContents.debugger;
+    inspector.attach();
+    await inspector.sendCommand("Profiler.enable");
+  }
+  async _disconnect() {
+    const inspector = this._window.webContents.debugger;
+    await inspector.sendCommand("Profiler.disable");
+    inspector.detach();
+  }
+};
+WindowProfiler = __decorateClass([
+  __decorateParam(2, ILogService)
+], WindowProfiler);
+export {
+  WindowProfiler
+};
+//# sourceMappingURL=windowProfiling.js.map

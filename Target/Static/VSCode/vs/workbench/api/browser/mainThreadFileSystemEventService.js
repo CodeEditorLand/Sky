@@ -1,1 +1,253 @@
-var F=Object.defineProperty,M=Object.getOwnPropertyDescriptor,H=(e,t,i)=>t in e?F(e,t,{enumerable:!0,configurable:!0,writable:!0,value:i}):e[t]=i,R=(e,t,i,s)=>{for(var n,o=s>1?void 0:s?M(t,i):t,r=e.length-1;r>=0;r--)(n=e[r])&&(o=(s?n(t,i,o):n(o))||o);return s&&o&&F(t,i,o),o},m=(e,t)=>(i,s)=>t(i,s,e),b=(e,t,i)=>H(e,"symbol"!=typeof t?t+"":t,i);import{DisposableMap as K,DisposableStore as P}from"../../../base/common/lifecycle.js";import{FileOperation as p,IFileService as B}from"../../../platform/files/common/files.js";import{extHostNamedCustomer as J}from"../../services/extensions/common/extHostCustomers.js";import{ExtHostContext as q,MainContext as V}from"../common/extHost.protocol.js";import{localize as t}from"../../../nls.js";import{IWorkingCopyFileService as Y}from"../../services/workingCopy/common/workingCopyFileService.js";import{IBulkEditService as G}from"../../../editor/browser/services/bulkEditService.js";import{IProgressService as z,ProgressLocation as j}from"../../../platform/progress/common/progress.js";import{raceCancellation as Q}from"../../../base/common/async.js";import{CancellationTokenSource as X}from"../../../base/common/cancellation.js";import{IDialogService as Z}from"../../../platform/dialogs/common/dialogs.js";import _ from"../../../base/common/severity.js";import{IStorageService as $,StorageScope as I,StorageTarget as ee}from"../../../platform/storage/common/storage.js";import{Action2 as te,registerAction2 as ie}from"../../../platform/actions/common/actions.js";import"../../../platform/instantiation/common/instantiation.js";import{ILogService as N}from"../../../platform/log/common/log.js";import{IEnvironmentService as ne}from"../../../platform/environment/common/environment.js";import{IUriIdentityService as re}from"../../../platform/uriIdentity/common/uriIdentity.js";import{reviveWorkspaceEditDto as oe}from"./mainThreadBulkEdits.js";import{URI as se}from"../../../base/common/uri.js";let g=class{constructor(e,i,s,n,o,r,a,c,m,l,d){this._fileService=i,this._logService=d,this._proxy=e.getProxy(q.ExtHostFileSystemEventService),this._listener.add(i.onDidFilesChange((e=>{this._proxy.$onFileEvent({created:e.rawAdded,changed:e.rawUpdated,deleted:e.rawDeleted})})));const h=this,f=new class{async participate(e,i,s,d,f){if(s?.isUndoing)return;const u=new X(f),v=setTimeout((()=>u.cancel()),d),w=await o.withProgress({location:j.Notification,title:this._progressLabel(i),cancellable:!0,delay:Math.min(d/2,3e3)},(()=>{const t=h._proxy.$onWillRunFileOperation(i,e,d,u.token);return Q(t,u.token)}),(()=>{u.cancel()})).finally((()=>{u.dispose(),clearTimeout(v)}));if(!w||0===w.edit.edits.length)return;const y=w.edit.edits.some((e=>e.metadata?.needsConfirmation));let x=a.getBoolean(g.MementoKeyAdditionalEdits,I.PROFILE);if(m.extensionTestsLocationURI&&(x=!1),void 0===x){let e;if(e=1===w.extensionNames.length?i===p.CREATE?t("ask.1.create","Extension '{0}' wants to make refactoring changes with this file creation",w.extensionNames[0]):i===p.COPY?t("ask.1.copy","Extension '{0}' wants to make refactoring changes with this file copy",w.extensionNames[0]):i===p.MOVE?t("ask.1.move","Extension '{0}' wants to make refactoring changes with this file move",w.extensionNames[0]):t("ask.1.delete","Extension '{0}' wants to make refactoring changes with this file deletion",w.extensionNames[0]):i===p.CREATE?t({key:"ask.N.create",comment:['{0} is a number, e.g "3 extensions want..."']},"{0} extensions want to make refactoring changes with this file creation",w.extensionNames.length):i===p.COPY?t({key:"ask.N.copy",comment:['{0} is a number, e.g "3 extensions want..."']},"{0} extensions want to make refactoring changes with this file copy",w.extensionNames.length):i===p.MOVE?t({key:"ask.N.move",comment:['{0} is a number, e.g "3 extensions want..."']},"{0} extensions want to make refactoring changes with this file move",w.extensionNames.length):t({key:"ask.N.delete",comment:['{0} is a number, e.g "3 extensions want..."']},"{0} extensions want to make refactoring changes with this file deletion",w.extensionNames.length),y){const{confirmed:i}=await r.confirm({type:_.Info,message:e,primaryButton:t("preview","Show &&Preview"),cancelButton:t("cancel","Skip Changes")});if(x=!0,!i)return}else{let i;(S=i||={})[S.OK=0]="OK",S[S.Preview=1]="Preview",S[S.Cancel=2]="Cancel";const{result:s,checkboxChecked:n}=await r.prompt({type:_.Info,message:e,buttons:[{label:t({key:"ok",comment:["&& denotes a mnemonic"]},"&&OK"),run:()=>0},{label:t({key:"preview",comment:["&& denotes a mnemonic"]},"Show &&Preview"),run:()=>1}],cancelButton:{label:t("cancel","Skip Changes"),run:()=>2},checkbox:{label:t("again","Do not ask me again")}});if(2===s)return;x=1===s,n&&a.store(g.MementoKeyAdditionalEdits,x,I.PROFILE,ee.USER)}}var S;c.info("[onWill-handler] applying additional workspace edit from extensions",w.extensionNames),await n.apply(oe(w.edit,l),{undoRedoGroupId:s?.undoRedoGroupId,showPreview:x})}_progressLabel(e){switch(e){case p.CREATE:return t("msg-create","Running 'File Create' participants...");case p.MOVE:return t("msg-rename","Running 'File Rename' participants...");case p.COPY:return t("msg-copy","Running 'File Copy' participants...");case p.DELETE:return t("msg-delete","Running 'File Delete' participants...");case p.WRITE:return t("msg-write","Running 'File Write' participants...")}}};this._listener.add(s.addFileOperationParticipant(f)),this._listener.add(s.onDidRunWorkingCopyFileOperation((e=>this._proxy.$onDidRunFileOperation(e.operation,e.files))))}_proxy;_listener=new P;_watches=new K;async $watch(e,t,i,s,n){const o=se.revive(i),r={...s};if(r.recursive)try{(await this._fileService.stat(o)).isDirectory||(r.recursive=!1)}catch{}if(n&&!r.recursive){this._logService.trace(`MainThreadFileSystemEventService#$watch(): request to start watching correlated (extension: ${e}, path: ${o.toString(!0)}, recursive: ${r.recursive}, session: ${t}, excludes: ${JSON.stringify(r.excludes)}, includes: ${JSON.stringify(r.includes)})`);const i=new P,s=i.add(this._fileService.createWatcher(o,{...r,recursive:!1}));i.add(s.onDidChange((e=>{this._proxy.$onFileEvent({session:t,created:e.rawAdded,changed:e.rawUpdated,deleted:e.rawDeleted})}))),this._watches.set(t,i)}else{this._logService.trace(`MainThreadFileSystemEventService#$watch(): request to start watching uncorrelated (extension: ${e}, path: ${o.toString(!0)}, recursive: ${r.recursive}, session: ${t}, excludes: ${JSON.stringify(r.excludes)}, includes: ${JSON.stringify(r.includes)})`);const i=this._fileService.watch(o,r);this._watches.set(t,i)}}$unwatch(e){this._watches.has(e)&&(this._logService.trace(`MainThreadFileSystemEventService#$unwatch(): request to stop watching (session: ${e})`),this._watches.deleteAndDispose(e))}dispose(){this._listener.dispose(),this._watches.dispose()}};b(g,"MementoKeyAdditionalEdits","file.particpants.additionalEdits"),g=R([J(V.MainThreadFileSystemEventService),m(1,B),m(2,Y),m(3,G),m(4,z),m(5,Z),m(6,$),m(7,N),m(8,ne),m(9,re),m(10,N)],g),ie(class extends te{constructor(){super({id:"files.participants.resetChoice",title:{value:t("label","Reset choice for 'File operation needs preview'"),original:"Reset choice for 'File operation needs preview'"},f1:!0})}run(e){e.get($).remove(g.MementoKeyAdditionalEdits,I.PROFILE)}});export{g as MainThreadFileSystemEventService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
+import { DisposableMap, DisposableStore } from "../../../base/common/lifecycle.js";
+import { FileOperation, IFileService, IWatchOptions } from "../../../platform/files/common/files.js";
+import { extHostNamedCustomer, IExtHostContext } from "../../services/extensions/common/extHostCustomers.js";
+import { ExtHostContext, ExtHostFileSystemEventServiceShape, MainContext, MainThreadFileSystemEventServiceShape } from "../common/extHost.protocol.js";
+import { localize } from "../../../nls.js";
+import { IWorkingCopyFileOperationParticipant, IWorkingCopyFileService, SourceTargetPair, IFileOperationUndoRedoInfo } from "../../services/workingCopy/common/workingCopyFileService.js";
+import { IBulkEditService } from "../../../editor/browser/services/bulkEditService.js";
+import { IProgressService, ProgressLocation } from "../../../platform/progress/common/progress.js";
+import { raceCancellation } from "../../../base/common/async.js";
+import { CancellationToken, CancellationTokenSource } from "../../../base/common/cancellation.js";
+import { IDialogService } from "../../../platform/dialogs/common/dialogs.js";
+import Severity from "../../../base/common/severity.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../platform/storage/common/storage.js";
+import { Action2, registerAction2 } from "../../../platform/actions/common/actions.js";
+import { ServicesAccessor } from "../../../platform/instantiation/common/instantiation.js";
+import { ILogService } from "../../../platform/log/common/log.js";
+import { IEnvironmentService } from "../../../platform/environment/common/environment.js";
+import { IUriIdentityService } from "../../../platform/uriIdentity/common/uriIdentity.js";
+import { reviveWorkspaceEditDto } from "./mainThreadBulkEdits.js";
+import { UriComponents, URI } from "../../../base/common/uri.js";
+let MainThreadFileSystemEventService = class {
+  constructor(extHostContext, _fileService, workingCopyFileService, bulkEditService, progressService, dialogService, storageService, logService, envService, uriIdentService, _logService) {
+    this._fileService = _fileService;
+    this._logService = _logService;
+    this._proxy = extHostContext.getProxy(ExtHostContext.ExtHostFileSystemEventService);
+    this._listener.add(_fileService.onDidFilesChange((event) => {
+      this._proxy.$onFileEvent({
+        created: event.rawAdded,
+        changed: event.rawUpdated,
+        deleted: event.rawDeleted
+      });
+    }));
+    const that = this;
+    const fileOperationParticipant = new class {
+      async participate(files, operation, undoInfo, timeout, token) {
+        if (undoInfo?.isUndoing) {
+          return;
+        }
+        const cts = new CancellationTokenSource(token);
+        const timer = setTimeout(() => cts.cancel(), timeout);
+        const data = await progressService.withProgress({
+          location: ProgressLocation.Notification,
+          title: this._progressLabel(operation),
+          cancellable: true,
+          delay: Math.min(timeout / 2, 3e3)
+        }, () => {
+          const onWillEvent = that._proxy.$onWillRunFileOperation(operation, files, timeout, cts.token);
+          return raceCancellation(onWillEvent, cts.token);
+        }, () => {
+          cts.cancel();
+        }).finally(() => {
+          cts.dispose();
+          clearTimeout(timer);
+        });
+        if (!data || data.edit.edits.length === 0) {
+          return;
+        }
+        const needsConfirmation = data.edit.edits.some((edit) => edit.metadata?.needsConfirmation);
+        let showPreview = storageService.getBoolean(MainThreadFileSystemEventService.MementoKeyAdditionalEdits, StorageScope.PROFILE);
+        if (envService.extensionTestsLocationURI) {
+          showPreview = false;
+        }
+        if (showPreview === void 0) {
+          let message;
+          if (data.extensionNames.length === 1) {
+            if (operation === FileOperation.CREATE) {
+              message = localize("ask.1.create", "Extension '{0}' wants to make refactoring changes with this file creation", data.extensionNames[0]);
+            } else if (operation === FileOperation.COPY) {
+              message = localize("ask.1.copy", "Extension '{0}' wants to make refactoring changes with this file copy", data.extensionNames[0]);
+            } else if (operation === FileOperation.MOVE) {
+              message = localize("ask.1.move", "Extension '{0}' wants to make refactoring changes with this file move", data.extensionNames[0]);
+            } else {
+              message = localize("ask.1.delete", "Extension '{0}' wants to make refactoring changes with this file deletion", data.extensionNames[0]);
+            }
+          } else {
+            if (operation === FileOperation.CREATE) {
+              message = localize({ key: "ask.N.create", comment: ['{0} is a number, e.g "3 extensions want..."'] }, "{0} extensions want to make refactoring changes with this file creation", data.extensionNames.length);
+            } else if (operation === FileOperation.COPY) {
+              message = localize({ key: "ask.N.copy", comment: ['{0} is a number, e.g "3 extensions want..."'] }, "{0} extensions want to make refactoring changes with this file copy", data.extensionNames.length);
+            } else if (operation === FileOperation.MOVE) {
+              message = localize({ key: "ask.N.move", comment: ['{0} is a number, e.g "3 extensions want..."'] }, "{0} extensions want to make refactoring changes with this file move", data.extensionNames.length);
+            } else {
+              message = localize({ key: "ask.N.delete", comment: ['{0} is a number, e.g "3 extensions want..."'] }, "{0} extensions want to make refactoring changes with this file deletion", data.extensionNames.length);
+            }
+          }
+          if (needsConfirmation) {
+            const { confirmed } = await dialogService.confirm({
+              type: Severity.Info,
+              message,
+              primaryButton: localize("preview", "Show &&Preview"),
+              cancelButton: localize("cancel", "Skip Changes")
+            });
+            showPreview = true;
+            if (!confirmed) {
+              return;
+            }
+          } else {
+            let Choice;
+            ((Choice2) => {
+              Choice2[Choice2["OK"] = 0] = "OK";
+              Choice2[Choice2["Preview"] = 1] = "Preview";
+              Choice2[Choice2["Cancel"] = 2] = "Cancel";
+            })(Choice || (Choice = {}));
+            const { result, checkboxChecked } = await dialogService.prompt({
+              type: Severity.Info,
+              message,
+              buttons: [
+                {
+                  label: localize({ key: "ok", comment: ["&& denotes a mnemonic"] }, "&&OK"),
+                  run: /* @__PURE__ */ __name(() => 0 /* OK */, "run")
+                },
+                {
+                  label: localize({ key: "preview", comment: ["&& denotes a mnemonic"] }, "Show &&Preview"),
+                  run: /* @__PURE__ */ __name(() => 1 /* Preview */, "run")
+                }
+              ],
+              cancelButton: {
+                label: localize("cancel", "Skip Changes"),
+                run: /* @__PURE__ */ __name(() => 2 /* Cancel */, "run")
+              },
+              checkbox: { label: localize("again", "Do not ask me again") }
+            });
+            if (result === 2 /* Cancel */) {
+              return;
+            }
+            showPreview = result === 1 /* Preview */;
+            if (checkboxChecked) {
+              storageService.store(MainThreadFileSystemEventService.MementoKeyAdditionalEdits, showPreview, StorageScope.PROFILE, StorageTarget.USER);
+            }
+          }
+        }
+        logService.info("[onWill-handler] applying additional workspace edit from extensions", data.extensionNames);
+        await bulkEditService.apply(
+          reviveWorkspaceEditDto(data.edit, uriIdentService),
+          { undoRedoGroupId: undoInfo?.undoRedoGroupId, showPreview }
+        );
+      }
+      _progressLabel(operation) {
+        switch (operation) {
+          case FileOperation.CREATE:
+            return localize("msg-create", "Running 'File Create' participants...");
+          case FileOperation.MOVE:
+            return localize("msg-rename", "Running 'File Rename' participants...");
+          case FileOperation.COPY:
+            return localize("msg-copy", "Running 'File Copy' participants...");
+          case FileOperation.DELETE:
+            return localize("msg-delete", "Running 'File Delete' participants...");
+          case FileOperation.WRITE:
+            return localize("msg-write", "Running 'File Write' participants...");
+        }
+      }
+    }();
+    this._listener.add(workingCopyFileService.addFileOperationParticipant(fileOperationParticipant));
+    this._listener.add(workingCopyFileService.onDidRunWorkingCopyFileOperation((e) => this._proxy.$onDidRunFileOperation(e.operation, e.files)));
+  }
+  _proxy;
+  _listener = new DisposableStore();
+  _watches = new DisposableMap();
+  async $watch(extensionId, session, resource, unvalidatedOpts, correlate) {
+    const uri = URI.revive(resource);
+    const opts = {
+      ...unvalidatedOpts
+    };
+    if (opts.recursive) {
+      try {
+        const stat = await this._fileService.stat(uri);
+        if (!stat.isDirectory) {
+          opts.recursive = false;
+        }
+      } catch (error) {
+      }
+    }
+    if (correlate && !opts.recursive) {
+      this._logService.trace(`MainThreadFileSystemEventService#$watch(): request to start watching correlated (extension: ${extensionId}, path: ${uri.toString(true)}, recursive: ${opts.recursive}, session: ${session}, excludes: ${JSON.stringify(opts.excludes)}, includes: ${JSON.stringify(opts.includes)})`);
+      const watcherDisposables = new DisposableStore();
+      const subscription = watcherDisposables.add(this._fileService.createWatcher(uri, { ...opts, recursive: false }));
+      watcherDisposables.add(subscription.onDidChange((event) => {
+        this._proxy.$onFileEvent({
+          session,
+          created: event.rawAdded,
+          changed: event.rawUpdated,
+          deleted: event.rawDeleted
+        });
+      }));
+      this._watches.set(session, watcherDisposables);
+    } else {
+      this._logService.trace(`MainThreadFileSystemEventService#$watch(): request to start watching uncorrelated (extension: ${extensionId}, path: ${uri.toString(true)}, recursive: ${opts.recursive}, session: ${session}, excludes: ${JSON.stringify(opts.excludes)}, includes: ${JSON.stringify(opts.includes)})`);
+      const subscription = this._fileService.watch(uri, opts);
+      this._watches.set(session, subscription);
+    }
+  }
+  $unwatch(session) {
+    if (this._watches.has(session)) {
+      this._logService.trace(`MainThreadFileSystemEventService#$unwatch(): request to stop watching (session: ${session})`);
+      this._watches.deleteAndDispose(session);
+    }
+  }
+  dispose() {
+    this._listener.dispose();
+    this._watches.dispose();
+  }
+};
+__name(MainThreadFileSystemEventService, "MainThreadFileSystemEventService");
+__publicField(MainThreadFileSystemEventService, "MementoKeyAdditionalEdits", `file.particpants.additionalEdits`);
+MainThreadFileSystemEventService = __decorateClass([
+  extHostNamedCustomer(MainContext.MainThreadFileSystemEventService),
+  __decorateParam(1, IFileService),
+  __decorateParam(2, IWorkingCopyFileService),
+  __decorateParam(3, IBulkEditService),
+  __decorateParam(4, IProgressService),
+  __decorateParam(5, IDialogService),
+  __decorateParam(6, IStorageService),
+  __decorateParam(7, ILogService),
+  __decorateParam(8, IEnvironmentService),
+  __decorateParam(9, IUriIdentityService),
+  __decorateParam(10, ILogService)
+], MainThreadFileSystemEventService);
+registerAction2(class ResetMemento extends Action2 {
+  static {
+    __name(this, "ResetMemento");
+  }
+  constructor() {
+    super({
+      id: "files.participants.resetChoice",
+      title: {
+        value: localize("label", "Reset choice for 'File operation needs preview'"),
+        original: `Reset choice for 'File operation needs preview'`
+      },
+      f1: true
+    });
+  }
+  run(accessor) {
+    accessor.get(IStorageService).remove(MainThreadFileSystemEventService.MementoKeyAdditionalEdits, StorageScope.PROFILE);
+  }
+});
+export {
+  MainThreadFileSystemEventService
+};
+//# sourceMappingURL=mainThreadFileSystemEventService.js.map

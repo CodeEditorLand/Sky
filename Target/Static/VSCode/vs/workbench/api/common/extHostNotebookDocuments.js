@@ -1,1 +1,37 @@
-import{Emitter as i}from"../../../base/common/event.js";import{URI as t}from"../../../base/common/uri.js";import"./extHost.protocol.js";import"./extHostNotebook.js";import"../../contrib/notebook/common/notebookCommon.js";import"../../services/extensions/common/proxyIdentifier.js";class h{constructor(o){this._notebooksAndEditors=o}_onDidSaveNotebookDocument=new i;onDidSaveNotebookDocument=this._onDidSaveNotebookDocument.event;_onDidChangeNotebookDocument=new i;onDidChangeNotebookDocument=this._onDidChangeNotebookDocument.event;$acceptModelChanged(o,e,n,i){const s=this._notebooksAndEditors.getNotebookDocument(t.revive(o)).acceptModelChanged(e.value,n,i);this._onDidChangeNotebookDocument.fire(s)}$acceptDirtyStateChanged(o,e){this._notebooksAndEditors.getNotebookDocument(t.revive(o)).acceptDirty(e)}$acceptModelSaved(o){const e=this._notebooksAndEditors.getNotebookDocument(t.revive(o));this._onDidSaveNotebookDocument.fire(e.apiNotebook)}}export{h as ExtHostNotebookDocuments};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Emitter } from "../../../base/common/event.js";
+import { URI, UriComponents } from "../../../base/common/uri.js";
+import * as extHostProtocol from "./extHost.protocol.js";
+import { ExtHostNotebookController } from "./extHostNotebook.js";
+import { NotebookDocumentMetadata } from "../../contrib/notebook/common/notebookCommon.js";
+import { SerializableObjectWithBuffers } from "../../services/extensions/common/proxyIdentifier.js";
+class ExtHostNotebookDocuments {
+  constructor(_notebooksAndEditors) {
+    this._notebooksAndEditors = _notebooksAndEditors;
+  }
+  static {
+    __name(this, "ExtHostNotebookDocuments");
+  }
+  _onDidSaveNotebookDocument = new Emitter();
+  onDidSaveNotebookDocument = this._onDidSaveNotebookDocument.event;
+  _onDidChangeNotebookDocument = new Emitter();
+  onDidChangeNotebookDocument = this._onDidChangeNotebookDocument.event;
+  $acceptModelChanged(uri, event, isDirty, newMetadata) {
+    const document = this._notebooksAndEditors.getNotebookDocument(URI.revive(uri));
+    const e = document.acceptModelChanged(event.value, isDirty, newMetadata);
+    this._onDidChangeNotebookDocument.fire(e);
+  }
+  $acceptDirtyStateChanged(uri, isDirty) {
+    const document = this._notebooksAndEditors.getNotebookDocument(URI.revive(uri));
+    document.acceptDirty(isDirty);
+  }
+  $acceptModelSaved(uri) {
+    const document = this._notebooksAndEditors.getNotebookDocument(URI.revive(uri));
+    this._onDidSaveNotebookDocument.fire(document.apiNotebook);
+  }
+}
+export {
+  ExtHostNotebookDocuments
+};
+//# sourceMappingURL=extHostNotebookDocuments.js.map

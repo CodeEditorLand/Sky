@@ -1,1 +1,40 @@
-import"./extHostSecretState.js";import{ExtensionIdentifier as o}from"../../../platform/extensions/common/extensions.js";import{Event as i}from"../../../base/common/event.js";import{DisposableStore as r}from"../../../base/common/lifecycle.js";class g{_id;#e;onDidChange;disposables=new r;constructor(e,t){this._id=o.toKey(e.identifier),this.#e=t,this.onDidChange=i.map(i.filter(this.#e.onDidChangePassword,s=>s.extensionId===this._id),s=>({key:s.key}),this.disposables)}dispose(){this.disposables.dispose()}get(e){return this.#e.get(this._id,e)}store(e,t){return this.#e.store(this._id,e,t)}delete(e){return this.#e.delete(this._id,e)}}export{g as ExtensionSecrets};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { ExtHostSecretState } from "./extHostSecretState.js";
+import { ExtensionIdentifier, IExtensionDescription } from "../../../platform/extensions/common/extensions.js";
+import { Event } from "../../../base/common/event.js";
+import { DisposableStore } from "../../../base/common/lifecycle.js";
+class ExtensionSecrets {
+  static {
+    __name(this, "ExtensionSecrets");
+  }
+  _id;
+  #secretState;
+  onDidChange;
+  disposables = new DisposableStore();
+  constructor(extensionDescription, secretState) {
+    this._id = ExtensionIdentifier.toKey(extensionDescription.identifier);
+    this.#secretState = secretState;
+    this.onDidChange = Event.map(
+      Event.filter(this.#secretState.onDidChangePassword, (e) => e.extensionId === this._id),
+      (e) => ({ key: e.key }),
+      this.disposables
+    );
+  }
+  dispose() {
+    this.disposables.dispose();
+  }
+  get(key) {
+    return this.#secretState.get(this._id, key);
+  }
+  store(key, value) {
+    return this.#secretState.store(this._id, key, value);
+  }
+  delete(key) {
+    return this.#secretState.delete(this._id, key);
+  }
+}
+export {
+  ExtensionSecrets
+};
+//# sourceMappingURL=extHostSecrets.js.map

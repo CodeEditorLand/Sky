@@ -1,1 +1,63 @@
-import{HistoryNavigator2 as i}from"../../../../base/common/history.js";import{Disposable as s}from"../../../../base/common/lifecycle.js";import{ResourceMap as o}from"../../../../base/common/map.js";import"../../../../base/common/uri.js";import{createDecorator as n}from"../../../../platform/instantiation/common/instantiation.js";const I=n("IInteractiveHistoryService");class v extends s{_history;constructor(){super(),this._history=new o}matchesCurrent(t,s){const r=this._history.get(t);return!!r&&r.current()===s}addToHistory(t,s){const r=this._history.get(t);r?(r.resetCursor(),r.add(s)):this._history.set(t,new i([s],50))}getPreviousValue(t){return this._history.get(t)?.previous()??null}getNextValue(t){return this._history.get(t)?.next()??null}replaceLast(t,s){const r=this._history.get(t);r?(r.replaceLast(s),r.resetCursor()):this._history.set(t,new i([s],50))}clearHistory(t){this._history.delete(t)}has(t){return!!this._history.has(t)}}export{I as IInteractiveHistoryService,v as InteractiveHistoryService};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { HistoryNavigator2 } from "../../../../base/common/history.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { ResourceMap } from "../../../../base/common/map.js";
+import { URI } from "../../../../base/common/uri.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+const IInteractiveHistoryService = createDecorator("IInteractiveHistoryService");
+class InteractiveHistoryService extends Disposable {
+  static {
+    __name(this, "InteractiveHistoryService");
+  }
+  _history;
+  constructor() {
+    super();
+    this._history = new ResourceMap();
+  }
+  matchesCurrent(uri, value) {
+    const history = this._history.get(uri);
+    if (!history) {
+      return false;
+    }
+    return history.current() === value;
+  }
+  addToHistory(uri, value) {
+    const history = this._history.get(uri);
+    if (!history) {
+      this._history.set(uri, new HistoryNavigator2([value], 50));
+      return;
+    }
+    history.resetCursor();
+    history.add(value);
+  }
+  getPreviousValue(uri) {
+    const history = this._history.get(uri);
+    return history?.previous() ?? null;
+  }
+  getNextValue(uri) {
+    const history = this._history.get(uri);
+    return history?.next() ?? null;
+  }
+  replaceLast(uri, value) {
+    const history = this._history.get(uri);
+    if (!history) {
+      this._history.set(uri, new HistoryNavigator2([value], 50));
+      return;
+    } else {
+      history.replaceLast(value);
+      history.resetCursor();
+    }
+  }
+  clearHistory(uri) {
+    this._history.delete(uri);
+  }
+  has(uri) {
+    return this._history.has(uri) ? true : false;
+  }
+}
+export {
+  IInteractiveHistoryService,
+  InteractiveHistoryService
+};
+//# sourceMappingURL=interactiveHistoryService.js.map

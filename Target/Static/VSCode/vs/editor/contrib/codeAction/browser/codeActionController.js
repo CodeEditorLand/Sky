@@ -1,1 +1,376 @@
-var M=Object.defineProperty;var T=Object.getOwnPropertyDescriptor;var S=(h,a,i,e)=>{for(var o=e>1?void 0:e?T(a,i):a,t=h.length-1,r;t>=0;t--)(r=h[t])&&(o=(e?r(a,i,o):r(o))||o);return e&&o&&M(a,i,o),o},l=(h,a)=>(i,e)=>a(i,e,h);import{getDomNodePagePosition as P}from"../../../../base/browser/dom.js";import*as x from"../../../../base/browser/ui/aria/aria.js";import"../../../../base/browser/ui/contextview/contextview.js";import"../../../../base/common/actions.js";import"../../../../base/common/cancellation.js";import"../../../../base/common/color.js";import{onUnexpectedError as W}from"../../../../base/common/errors.js";import{HierarchicalKind as R}from"../../../../base/common/hierarchicalKind.js";import{Lazy as B}from"../../../../base/common/lazy.js";import{Disposable as F,MutableDisposable as k}from"../../../../base/common/lifecycle.js";import{localize as b}from"../../../../nls.js";import"../../../../platform/actionWidget/browser/actionList.js";import{IActionWidgetService as E}from"../../../../platform/actionWidget/browser/actionWidget.js";import{ICommandService as N}from"../../../../platform/commands/common/commands.js";import{IConfigurationService as H}from"../../../../platform/configuration/common/configuration.js";import{IContextKeyService as O}from"../../../../platform/contextkey/common/contextkey.js";import{IInstantiationService as D}from"../../../../platform/instantiation/common/instantiation.js";import{IMarkerService as K}from"../../../../platform/markers/common/markers.js";import{IEditorProgressService as L}from"../../../../platform/progress/common/progress.js";import{editorFindMatchHighlight as V,editorFindMatchHighlightBorder as q}from"../../../../platform/theme/common/colorRegistry.js";import{isHighContrast as z}from"../../../../platform/theme/common/theme.js";import{registerThemingParticipant as $}from"../../../../platform/theme/common/themeService.js";import"../../../browser/editorBrowser.js";import{Position as G}from"../../../common/core/position.js";import{ScrollType as Q}from"../../../common/editorCommon.js";import{CodeActionTriggerType as I}from"../../../common/languages.js";import"../../../common/model.js";import{ModelDecorationOptions as U}from"../../../common/model/textModel.js";import{ILanguageFeaturesService as j}from"../../../common/services/languageFeatures.js";import{MessageController as _}from"../../message/browser/messageController.js";import{CodeActionAutoApply as f,CodeActionKind as A,CodeActionTriggerSource as J}from"../common/types.js";import{ApplyCodeActionReason as v,applyCodeAction as X}from"./codeAction.js";import{CodeActionKeybindingResolver as Y}from"./codeActionKeybindingResolver.js";import{toMenuItems as Z}from"./codeActionMenu.js";import{CodeActionModel as ii,CodeActionsState as ei}from"./codeActionModel.js";import{LightBulbWidget as ti}from"./lightBulbWidget.js";const oi="quickfix-edit-highlight";let g=class extends F{constructor(i,e,o,t,r,u,y,C,d,p,c){super();this._commandService=y;this._configurationService=C;this._actionWidgetService=d;this._instantiationService=p;this._progressService=c;this._editor=i,this._model=this._register(new ii(this._editor,r.codeActionProvider,e,o,u,C)),this._register(this._model.onDidChangeState(s=>this.update(s))),this._lightBulbWidget=new B(()=>{const s=this._editor.getContribution(ti.ID);return s&&this._register(s.onClick(n=>this.showCodeActionsFromLightbulb(n.actions,n))),s}),this._resolver=t.createInstance(Y),this._register(this._editor.onDidLayoutChange(()=>this._actionWidgetService.hide()))}static ID="editor.contrib.codeActionController";static get(i){return i.getContribution(g.ID)}_editor;_model;_lightBulbWidget;_activeCodeActions=this._register(new k);_showDisabled=!1;_resolver;_disposed=!1;dispose(){this._disposed=!0,super.dispose()}async showCodeActionsFromLightbulb(i,e){if(i.allAIFixes&&i.validActions.length===1){const o=i.validActions[0],t=o.action.command;t&&t.id==="inlineChat.start"&&t.arguments&&t.arguments.length>=1&&(t.arguments[0]={...t.arguments[0],autoSend:!1}),await this.applyCodeAction(o,!1,!1,v.FromAILightbulb);return}await this.showCodeActionList(i,e,{includeDisabledActions:!1,fromLightbulb:!0})}showCodeActions(i,e,o){return this.showCodeActionList(e,o,{includeDisabledActions:!1,fromLightbulb:!1})}hideCodeActions(){this._actionWidgetService.hide()}manualTriggerAtCurrentPosition(i,e,o,t){if(!this._editor.hasModel())return;_.get(this._editor)?.closeMessage();const r=this._editor.getPosition();this._trigger({type:I.Invoke,triggerAction:e,filter:o,autoApply:t,context:{notAvailableMessage:i,position:r}})}_trigger(i){return this._model.trigger(i)}async applyCodeAction(i,e,o,t){const r=this._progressService.show(!0,500);try{await this._instantiationService.invokeFunction(X,i,t,{preview:o,editor:this._editor})}finally{e&&this._trigger({type:I.Auto,triggerAction:J.QuickFix,filter:{}}),r.done()}}hideLightBulbWidget(){this._lightBulbWidget.rawValue?.hide(),this._lightBulbWidget.rawValue?.gutterHide()}async update(i){if(i.type!==ei.Type.Triggered){this.hideLightBulbWidget();return}let e;try{e=await i.actions}catch(t){W(t);return}if(!(this._disposed||this._editor.getSelection()?.startLineNumber!==i.position.lineNumber))if(this._lightBulbWidget.value?.update(e,i.trigger,i.position),i.trigger.type===I.Invoke){if(i.trigger.filter?.include){const r=this.tryGetValidActionToApply(i.trigger,e);if(r){try{this.hideLightBulbWidget(),await this.applyCodeAction(r,!1,!1,v.FromCodeActions)}finally{e.dispose()}return}if(i.trigger.context){const u=this.getInvalidActionThatWouldHaveBeenApplied(i.trigger,e);if(u&&u.action.disabled){_.get(this._editor)?.showMessage(u.action.disabled,i.trigger.context.position),e.dispose();return}}}const t=!!i.trigger.filter?.include;if(i.trigger.context&&(!e.allActions.length||!t&&!e.validActions.length)){_.get(this._editor)?.showMessage(i.trigger.context.notAvailableMessage,i.trigger.context.position),this._activeCodeActions.value=e,e.dispose();return}this._activeCodeActions.value=e,this.showCodeActionList(e,this.toCoords(i.position),{includeDisabledActions:t,fromLightbulb:!1})}else this._actionWidgetService.isVisible?e.dispose():this._activeCodeActions.value=e}getInvalidActionThatWouldHaveBeenApplied(i,e){if(e.allActions.length&&(i.autoApply===f.First&&e.validActions.length===0||i.autoApply===f.IfSingle&&e.allActions.length===1))return e.allActions.find(({action:o})=>o.disabled)}tryGetValidActionToApply(i,e){if(e.validActions.length&&(i.autoApply===f.First&&e.validActions.length>0||i.autoApply===f.IfSingle&&e.validActions.length===1))return e.validActions[0]}static DECORATION=U.register({description:"quickfix-highlight",className:oi});async showCodeActionList(i,e,o){const t=this._editor.createDecorationsCollection(),r=this._editor.getDomNode();if(!r)return;const u=o.includeDisabledActions&&(this._showDisabled||i.validActions.length===0)?i.allActions:i.validActions;if(!u.length)return;const y=G.isIPosition(e)?this.toCoords(e):e,C={onSelect:async(d,p)=>{this.applyCodeAction(d,!0,!!p,o.fromLightbulb?v.FromAILightbulb:v.FromCodeActions),this._actionWidgetService.hide(!1),t.clear()},onHide:d=>{this._editor?.focus(),t.clear()},onHover:async(d,p)=>{if(p.isCancellationRequested)return;let c=!1;const s=d.action.kind;if(s){const n=new R(s);c=[A.RefactorExtract,A.RefactorInline,A.RefactorRewrite,A.RefactorMove,A.Source].some(w=>w.contains(n))}return{canPreview:c||!!d.action.edit?.edits.length}},onFocus:d=>{if(d&&d.action){const p=d.action.ranges,c=d.action.diagnostics;if(t.clear(),p&&p.length>0){const s=c&&c?.length>1?c.map(n=>({range:n,options:g.DECORATION})):p.map(n=>({range:n,options:g.DECORATION}));t.set(s)}else if(c&&c.length>0){const s=c.map(m=>({range:m,options:g.DECORATION}));t.set(s);const n=c[0];if(n.startLineNumber&&n.startColumn){const m=this._editor.getModel()?.getWordAtPosition({lineNumber:n.startLineNumber,column:n.startColumn})?.word;x.status(b("editingNewSelection","Context: {0} at line {1} and column {2}.",m,n.startLineNumber,n.startColumn))}}}else t.clear()}};this._actionWidgetService.show("codeActionWidget",!0,Z(u,this._shouldShowHeaders(),this._resolver.getResolver()),C,y,r,this._getActionBarActions(i,e,o))}toCoords(i){if(!this._editor.hasModel())return{x:0,y:0};this._editor.revealPosition(i,Q.Immediate),this._editor.render();const e=this._editor.getScrolledVisiblePosition(i),o=P(this._editor.getDomNode()),t=o.left+e.left,r=o.top+e.top+e.height;return{x:t,y:r}}_shouldShowHeaders(){const i=this._editor?.getModel();return this._configurationService.getValue("editor.codeActionWidget.showHeaders",{resource:i?.uri})}_getActionBarActions(i,e,o){if(o.fromLightbulb)return[];const t=i.documentation.map(r=>({id:r.id,label:r.title,tooltip:r.tooltip??"",class:void 0,enabled:!0,run:()=>this._commandService.executeCommand(r.id,...r.arguments??[])}));return o.includeDisabledActions&&i.validActions.length>0&&i.allActions.length!==i.validActions.length&&t.push(this._showDisabled?{id:"hideMoreActions",label:b("hideMoreActions","Hide Disabled"),enabled:!0,tooltip:"",class:void 0,run:()=>(this._showDisabled=!1,this.showCodeActionList(i,e,o))}:{id:"showMoreActions",label:b("showMoreActions","Show Disabled"),enabled:!0,tooltip:"",class:void 0,run:()=>(this._showDisabled=!0,this.showCodeActionList(i,e,o))}),t}};g=S([l(1,K),l(2,O),l(3,D),l(4,j),l(5,L),l(6,N),l(7,H),l(8,E),l(9,D),l(10,L)],g),$((h,a)=>{((o,t)=>{t&&a.addRule(`.monaco-editor ${o} { background-color: ${t}; }`)})(".quickfix-edit-highlight",h.getColor(V));const e=h.getColor(q);e&&a.addRule(`.monaco-editor .quickfix-edit-highlight { border: 1px ${z(h.type)?"dotted":"solid"} ${e}; box-sizing: border-box; }`)});export{g as CodeActionController};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { getDomNodePagePosition } from "../../../../base/browser/dom.js";
+import * as aria from "../../../../base/browser/ui/aria/aria.js";
+import { IAnchor } from "../../../../base/browser/ui/contextview/contextview.js";
+import { IAction } from "../../../../base/common/actions.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { Color } from "../../../../base/common/color.js";
+import { onUnexpectedError } from "../../../../base/common/errors.js";
+import { HierarchicalKind } from "../../../../base/common/hierarchicalKind.js";
+import { Lazy } from "../../../../base/common/lazy.js";
+import { Disposable, MutableDisposable } from "../../../../base/common/lifecycle.js";
+import { localize } from "../../../../nls.js";
+import { IActionListDelegate } from "../../../../platform/actionWidget/browser/actionList.js";
+import { IActionWidgetService } from "../../../../platform/actionWidget/browser/actionWidget.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IMarkerService } from "../../../../platform/markers/common/markers.js";
+import { IEditorProgressService } from "../../../../platform/progress/common/progress.js";
+import { editorFindMatchHighlight, editorFindMatchHighlightBorder } from "../../../../platform/theme/common/colorRegistry.js";
+import { isHighContrast } from "../../../../platform/theme/common/theme.js";
+import { registerThemingParticipant } from "../../../../platform/theme/common/themeService.js";
+import { ICodeEditor } from "../../../browser/editorBrowser.js";
+import { IPosition, Position } from "../../../common/core/position.js";
+import { IEditorContribution, ScrollType } from "../../../common/editorCommon.js";
+import { CodeActionTriggerType } from "../../../common/languages.js";
+import { IModelDeltaDecoration } from "../../../common/model.js";
+import { ModelDecorationOptions } from "../../../common/model/textModel.js";
+import { ILanguageFeaturesService } from "../../../common/services/languageFeatures.js";
+import { MessageController } from "../../message/browser/messageController.js";
+import { CodeActionAutoApply, CodeActionFilter, CodeActionItem, CodeActionKind, CodeActionSet, CodeActionTrigger, CodeActionTriggerSource } from "../common/types.js";
+import { ApplyCodeActionReason, applyCodeAction } from "./codeAction.js";
+import { CodeActionKeybindingResolver } from "./codeActionKeybindingResolver.js";
+import { toMenuItems } from "./codeActionMenu.js";
+import { CodeActionModel, CodeActionsState } from "./codeActionModel.js";
+import { LightBulbWidget } from "./lightBulbWidget.js";
+const DECORATION_CLASS_NAME = "quickfix-edit-highlight";
+let CodeActionController = class extends Disposable {
+  constructor(editor, markerService, contextKeyService, instantiationService, languageFeaturesService, progressService, _commandService, _configurationService, _actionWidgetService, _instantiationService, _progressService) {
+    super();
+    this._commandService = _commandService;
+    this._configurationService = _configurationService;
+    this._actionWidgetService = _actionWidgetService;
+    this._instantiationService = _instantiationService;
+    this._progressService = _progressService;
+    this._editor = editor;
+    this._model = this._register(new CodeActionModel(this._editor, languageFeaturesService.codeActionProvider, markerService, contextKeyService, progressService, _configurationService));
+    this._register(this._model.onDidChangeState((newState) => this.update(newState)));
+    this._lightBulbWidget = new Lazy(() => {
+      const widget = this._editor.getContribution(LightBulbWidget.ID);
+      if (widget) {
+        this._register(widget.onClick((e) => this.showCodeActionsFromLightbulb(e.actions, e)));
+      }
+      return widget;
+    });
+    this._resolver = instantiationService.createInstance(CodeActionKeybindingResolver);
+    this._register(this._editor.onDidLayoutChange(() => this._actionWidgetService.hide()));
+  }
+  static {
+    __name(this, "CodeActionController");
+  }
+  static ID = "editor.contrib.codeActionController";
+  static get(editor) {
+    return editor.getContribution(CodeActionController.ID);
+  }
+  _editor;
+  _model;
+  _lightBulbWidget;
+  _activeCodeActions = this._register(new MutableDisposable());
+  _showDisabled = false;
+  _resolver;
+  _disposed = false;
+  dispose() {
+    this._disposed = true;
+    super.dispose();
+  }
+  async showCodeActionsFromLightbulb(actions, at) {
+    if (actions.allAIFixes && actions.validActions.length === 1) {
+      const actionItem = actions.validActions[0];
+      const command = actionItem.action.command;
+      if (command && command.id === "inlineChat.start") {
+        if (command.arguments && command.arguments.length >= 1) {
+          command.arguments[0] = { ...command.arguments[0], autoSend: false };
+        }
+      }
+      await this.applyCodeAction(actionItem, false, false, ApplyCodeActionReason.FromAILightbulb);
+      return;
+    }
+    await this.showCodeActionList(actions, at, { includeDisabledActions: false, fromLightbulb: true });
+  }
+  showCodeActions(_trigger, actions, at) {
+    return this.showCodeActionList(actions, at, { includeDisabledActions: false, fromLightbulb: false });
+  }
+  hideCodeActions() {
+    this._actionWidgetService.hide();
+  }
+  manualTriggerAtCurrentPosition(notAvailableMessage, triggerAction, filter, autoApply) {
+    if (!this._editor.hasModel()) {
+      return;
+    }
+    MessageController.get(this._editor)?.closeMessage();
+    const triggerPosition = this._editor.getPosition();
+    this._trigger({ type: CodeActionTriggerType.Invoke, triggerAction, filter, autoApply, context: { notAvailableMessage, position: triggerPosition } });
+  }
+  _trigger(trigger) {
+    return this._model.trigger(trigger);
+  }
+  async applyCodeAction(action, retrigger, preview, actionReason) {
+    const progress = this._progressService.show(true, 500);
+    try {
+      await this._instantiationService.invokeFunction(applyCodeAction, action, actionReason, { preview, editor: this._editor });
+    } finally {
+      if (retrigger) {
+        this._trigger({ type: CodeActionTriggerType.Auto, triggerAction: CodeActionTriggerSource.QuickFix, filter: {} });
+      }
+      progress.done();
+    }
+  }
+  hideLightBulbWidget() {
+    this._lightBulbWidget.rawValue?.hide();
+    this._lightBulbWidget.rawValue?.gutterHide();
+  }
+  async update(newState) {
+    if (newState.type !== CodeActionsState.Type.Triggered) {
+      this.hideLightBulbWidget();
+      return;
+    }
+    let actions;
+    try {
+      actions = await newState.actions;
+    } catch (e) {
+      onUnexpectedError(e);
+      return;
+    }
+    if (this._disposed) {
+      return;
+    }
+    const selection = this._editor.getSelection();
+    if (selection?.startLineNumber !== newState.position.lineNumber) {
+      return;
+    }
+    this._lightBulbWidget.value?.update(actions, newState.trigger, newState.position);
+    if (newState.trigger.type === CodeActionTriggerType.Invoke) {
+      if (newState.trigger.filter?.include) {
+        const validActionToApply = this.tryGetValidActionToApply(newState.trigger, actions);
+        if (validActionToApply) {
+          try {
+            this.hideLightBulbWidget();
+            await this.applyCodeAction(validActionToApply, false, false, ApplyCodeActionReason.FromCodeActions);
+          } finally {
+            actions.dispose();
+          }
+          return;
+        }
+        if (newState.trigger.context) {
+          const invalidAction = this.getInvalidActionThatWouldHaveBeenApplied(newState.trigger, actions);
+          if (invalidAction && invalidAction.action.disabled) {
+            MessageController.get(this._editor)?.showMessage(invalidAction.action.disabled, newState.trigger.context.position);
+            actions.dispose();
+            return;
+          }
+        }
+      }
+      const includeDisabledActions = !!newState.trigger.filter?.include;
+      if (newState.trigger.context) {
+        if (!actions.allActions.length || !includeDisabledActions && !actions.validActions.length) {
+          MessageController.get(this._editor)?.showMessage(newState.trigger.context.notAvailableMessage, newState.trigger.context.position);
+          this._activeCodeActions.value = actions;
+          actions.dispose();
+          return;
+        }
+      }
+      this._activeCodeActions.value = actions;
+      this.showCodeActionList(actions, this.toCoords(newState.position), { includeDisabledActions, fromLightbulb: false });
+    } else {
+      if (this._actionWidgetService.isVisible) {
+        actions.dispose();
+      } else {
+        this._activeCodeActions.value = actions;
+      }
+    }
+  }
+  getInvalidActionThatWouldHaveBeenApplied(trigger, actions) {
+    if (!actions.allActions.length) {
+      return void 0;
+    }
+    if (trigger.autoApply === CodeActionAutoApply.First && actions.validActions.length === 0 || trigger.autoApply === CodeActionAutoApply.IfSingle && actions.allActions.length === 1) {
+      return actions.allActions.find(({ action }) => action.disabled);
+    }
+    return void 0;
+  }
+  tryGetValidActionToApply(trigger, actions) {
+    if (!actions.validActions.length) {
+      return void 0;
+    }
+    if (trigger.autoApply === CodeActionAutoApply.First && actions.validActions.length > 0 || trigger.autoApply === CodeActionAutoApply.IfSingle && actions.validActions.length === 1) {
+      return actions.validActions[0];
+    }
+    return void 0;
+  }
+  static DECORATION = ModelDecorationOptions.register({
+    description: "quickfix-highlight",
+    className: DECORATION_CLASS_NAME
+  });
+  async showCodeActionList(actions, at, options) {
+    const currentDecorations = this._editor.createDecorationsCollection();
+    const editorDom = this._editor.getDomNode();
+    if (!editorDom) {
+      return;
+    }
+    const actionsToShow = options.includeDisabledActions && (this._showDisabled || actions.validActions.length === 0) ? actions.allActions : actions.validActions;
+    if (!actionsToShow.length) {
+      return;
+    }
+    const anchor = Position.isIPosition(at) ? this.toCoords(at) : at;
+    const delegate = {
+      onSelect: /* @__PURE__ */ __name(async (action, preview) => {
+        this.applyCodeAction(
+          action,
+          /* retrigger */
+          true,
+          !!preview,
+          options.fromLightbulb ? ApplyCodeActionReason.FromAILightbulb : ApplyCodeActionReason.FromCodeActions
+        );
+        this._actionWidgetService.hide(false);
+        currentDecorations.clear();
+      }, "onSelect"),
+      onHide: /* @__PURE__ */ __name((didCancel) => {
+        this._editor?.focus();
+        currentDecorations.clear();
+      }, "onHide"),
+      onHover: /* @__PURE__ */ __name(async (action, token) => {
+        if (token.isCancellationRequested) {
+          return;
+        }
+        let canPreview = false;
+        const actionKind = action.action.kind;
+        if (actionKind) {
+          const hierarchicalKind = new HierarchicalKind(actionKind);
+          const refactorKinds = [
+            CodeActionKind.RefactorExtract,
+            CodeActionKind.RefactorInline,
+            CodeActionKind.RefactorRewrite,
+            CodeActionKind.RefactorMove,
+            CodeActionKind.Source
+          ];
+          canPreview = refactorKinds.some((refactorKind) => refactorKind.contains(hierarchicalKind));
+        }
+        return { canPreview: canPreview || !!action.action.edit?.edits.length };
+      }, "onHover"),
+      onFocus: /* @__PURE__ */ __name((action) => {
+        if (action && action.action) {
+          const ranges = action.action.ranges;
+          const diagnostics = action.action.diagnostics;
+          currentDecorations.clear();
+          if (ranges && ranges.length > 0) {
+            const decorations = diagnostics && diagnostics?.length > 1 ? diagnostics.map((diagnostic) => ({ range: diagnostic, options: CodeActionController.DECORATION })) : ranges.map((range) => ({ range, options: CodeActionController.DECORATION }));
+            currentDecorations.set(decorations);
+          } else if (diagnostics && diagnostics.length > 0) {
+            const decorations = diagnostics.map((diagnostic2) => ({ range: diagnostic2, options: CodeActionController.DECORATION }));
+            currentDecorations.set(decorations);
+            const diagnostic = diagnostics[0];
+            if (diagnostic.startLineNumber && diagnostic.startColumn) {
+              const selectionText = this._editor.getModel()?.getWordAtPosition({ lineNumber: diagnostic.startLineNumber, column: diagnostic.startColumn })?.word;
+              aria.status(localize("editingNewSelection", "Context: {0} at line {1} and column {2}.", selectionText, diagnostic.startLineNumber, diagnostic.startColumn));
+            }
+          }
+        } else {
+          currentDecorations.clear();
+        }
+      }, "onFocus")
+    };
+    this._actionWidgetService.show(
+      "codeActionWidget",
+      true,
+      toMenuItems(actionsToShow, this._shouldShowHeaders(), this._resolver.getResolver()),
+      delegate,
+      anchor,
+      editorDom,
+      this._getActionBarActions(actions, at, options)
+    );
+  }
+  toCoords(position) {
+    if (!this._editor.hasModel()) {
+      return { x: 0, y: 0 };
+    }
+    this._editor.revealPosition(position, ScrollType.Immediate);
+    this._editor.render();
+    const cursorCoords = this._editor.getScrolledVisiblePosition(position);
+    const editorCoords = getDomNodePagePosition(this._editor.getDomNode());
+    const x = editorCoords.left + cursorCoords.left;
+    const y = editorCoords.top + cursorCoords.top + cursorCoords.height;
+    return { x, y };
+  }
+  _shouldShowHeaders() {
+    const model = this._editor?.getModel();
+    return this._configurationService.getValue("editor.codeActionWidget.showHeaders", { resource: model?.uri });
+  }
+  _getActionBarActions(actions, at, options) {
+    if (options.fromLightbulb) {
+      return [];
+    }
+    const resultActions = actions.documentation.map((command) => ({
+      id: command.id,
+      label: command.title,
+      tooltip: command.tooltip ?? "",
+      class: void 0,
+      enabled: true,
+      run: /* @__PURE__ */ __name(() => this._commandService.executeCommand(command.id, ...command.arguments ?? []), "run")
+    }));
+    if (options.includeDisabledActions && actions.validActions.length > 0 && actions.allActions.length !== actions.validActions.length) {
+      resultActions.push(this._showDisabled ? {
+        id: "hideMoreActions",
+        label: localize("hideMoreActions", "Hide Disabled"),
+        enabled: true,
+        tooltip: "",
+        class: void 0,
+        run: /* @__PURE__ */ __name(() => {
+          this._showDisabled = false;
+          return this.showCodeActionList(actions, at, options);
+        }, "run")
+      } : {
+        id: "showMoreActions",
+        label: localize("showMoreActions", "Show Disabled"),
+        enabled: true,
+        tooltip: "",
+        class: void 0,
+        run: /* @__PURE__ */ __name(() => {
+          this._showDisabled = true;
+          return this.showCodeActionList(actions, at, options);
+        }, "run")
+      });
+    }
+    return resultActions;
+  }
+};
+CodeActionController = __decorateClass([
+  __decorateParam(1, IMarkerService),
+  __decorateParam(2, IContextKeyService),
+  __decorateParam(3, IInstantiationService),
+  __decorateParam(4, ILanguageFeaturesService),
+  __decorateParam(5, IEditorProgressService),
+  __decorateParam(6, ICommandService),
+  __decorateParam(7, IConfigurationService),
+  __decorateParam(8, IActionWidgetService),
+  __decorateParam(9, IInstantiationService),
+  __decorateParam(10, IEditorProgressService)
+], CodeActionController);
+registerThemingParticipant((theme, collector) => {
+  const addBackgroundColorRule = /* @__PURE__ */ __name((selector, color) => {
+    if (color) {
+      collector.addRule(`.monaco-editor ${selector} { background-color: ${color}; }`);
+    }
+  }, "addBackgroundColorRule");
+  addBackgroundColorRule(".quickfix-edit-highlight", theme.getColor(editorFindMatchHighlight));
+  const findMatchHighlightBorder = theme.getColor(editorFindMatchHighlightBorder);
+  if (findMatchHighlightBorder) {
+    collector.addRule(`.monaco-editor .quickfix-edit-highlight { border: 1px ${isHighContrast(theme.type) ? "dotted" : "solid"} ${findMatchHighlightBorder}; box-sizing: border-box; }`);
+  }
+});
+export {
+  CodeActionController
+};
+//# sourceMappingURL=codeActionController.js.map

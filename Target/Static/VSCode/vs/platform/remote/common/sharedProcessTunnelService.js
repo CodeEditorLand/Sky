@@ -1,1 +1,9 @@
-import{createDecorator as e}from"../../instantiation/common/instantiation.js";import"./remoteAgentConnection.js";const o=e("sharedProcessTunnelService"),t="sharedProcessTunnel";export{o as ISharedProcessTunnelService,t as ipcSharedProcessTunnelChannelName};
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+import { IAddress } from "./remoteAgentConnection.js";
+const ISharedProcessTunnelService = createDecorator("sharedProcessTunnelService");
+const ipcSharedProcessTunnelChannelName = "sharedProcessTunnel";
+export {
+  ISharedProcessTunnelService,
+  ipcSharedProcessTunnelChannelName
+};
+//# sourceMappingURL=sharedProcessTunnelService.js.map

@@ -1,7 +1,179 @@
-import{illegalArgument as c}from"./errors.js";import{escapeIcons as m}from"./iconLabels.js";import{Schemas as h}from"./network.js";import{isEqual as f}from"./resources.js";import{escapeRegExpCharacters as k}from"./strings.js";import{URI as o}from"./uri.js";var w=(n=>(n[n.Paragraph=0]="Paragraph",n[n.Break=1]="Break",n))(w||{});class a{value;isTrusted;supportThemeIcons;supportHtml;baseUri;uris;static lift(r){const n=new a(r.value,r);return n.uris=r.uris,n.baseUri=r.baseUri?o.revive(r.baseUri):void 0,n}constructor(r="",n=!1){if(this.value=r,typeof this.value!="string")throw c("value");typeof n=="boolean"?(this.isTrusted=n,this.supportThemeIcons=!1,this.supportHtml=!1):(this.isTrusted=n.isTrusted??void 0,this.supportThemeIcons=n.supportThemeIcons??!1,this.supportHtml=n.supportHtml??!1)}appendText(r,n=0){return this.value+=l(this.supportThemeIcons?m(r):r).replace(/([ \t]+)/g,(t,s)=>"&nbsp;".repeat(s.length)).replace(/\>/gm,"\\>").replace(/\n/g,n===1?`\\
-`:`
-
-`),this}appendMarkdown(r){return this.value+=r,this}appendCodeblock(r,n){return this.value+=`
-${S(n,r)}
-`,this}appendLink(r,n,t){return this.value+="[",this.value+=this._escape(n,"]"),this.value+="](",this.value+=this._escape(String(r),")"),t&&(this.value+=` "${this._escape(this._escape(t,'"'),")")}"`),this.value+=")",this}_escape(r,n){const t=new RegExp(k(n),"g");return r.replace(t,(s,i)=>r.charAt(i-1)!=="\\"?`\\${s}`:s)}}function I(e){return b(e)?!e.value:Array.isArray(e)?e.every(I):!0}function b(e){return e instanceof a?!0:e&&typeof e=="object"?typeof e.value=="string"&&(typeof e.isTrusted=="boolean"||typeof e.isTrusted=="object"||e.isTrusted===void 0)&&(typeof e.supportThemeIcons=="boolean"||e.supportThemeIcons===void 0):!1}function C(e,r){return e===r?!0:!e||!r?!1:e.value===r.value&&e.isTrusted===r.isTrusted&&e.supportThemeIcons===r.supportThemeIcons&&e.supportHtml===r.supportHtml&&(e.baseUri===r.baseUri||!!e.baseUri&&!!r.baseUri&&f(o.from(e.baseUri),o.from(r.baseUri)))}function l(e){return e.replace(/[\\`*_{}[\]()#+\-!~]/g,"\\$&")}function S(e,r){const n=e.match(/^`+/gm)?.reduce((s,i)=>s.length>i.length?s:i).length??0,t=n>=3?n+1:3;return[`${"`".repeat(t)}${r}`,e,`${"`".repeat(t)}`].join(`
-`)}function F(e){return e.replace(/"/g,"&quot;")}function H(e){return e&&e.replace(/\\([\\`*_{}[\]()#+\-.!~])/g,"$1")}function E(e){const r=[],n=e.split("|").map(s=>s.trim());e=n[0];const t=n[1];if(t){const s=/height=(\d+)/.exec(t),i=/width=(\d+)/.exec(t),p=s?s[1]:"",u=i?i[1]:"",d=isFinite(parseInt(u)),g=isFinite(parseInt(p));d&&r.push(`width="${u}"`),g&&r.push(`height="${p}"`)}return{href:e,dimensions:r}}function _(e){const r=o.from({scheme:h.command,path:e.id,query:e.arguments?.length?encodeURIComponent(JSON.stringify(e.arguments)):void 0}).toString();return`[${l(e.title)}](${r})`}export{a as MarkdownString,w as MarkdownStringTextNewlineStyle,S as appendEscapedMarkdownCodeBlockFence,F as escapeDoubleQuotes,l as escapeMarkdownSyntaxTokens,I as isEmptyMarkdownString,b as isMarkdownString,_ as markdownCommandLink,C as markdownStringEqual,E as parseHrefAndDimensions,H as removeMarkdownEscapes};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { illegalArgument } from "./errors.js";
+import { escapeIcons } from "./iconLabels.js";
+import { Schemas } from "./network.js";
+import { isEqual } from "./resources.js";
+import { escapeRegExpCharacters } from "./strings.js";
+import { URI, UriComponents } from "./uri.js";
+var MarkdownStringTextNewlineStyle = /* @__PURE__ */ ((MarkdownStringTextNewlineStyle2) => {
+  MarkdownStringTextNewlineStyle2[MarkdownStringTextNewlineStyle2["Paragraph"] = 0] = "Paragraph";
+  MarkdownStringTextNewlineStyle2[MarkdownStringTextNewlineStyle2["Break"] = 1] = "Break";
+  return MarkdownStringTextNewlineStyle2;
+})(MarkdownStringTextNewlineStyle || {});
+class MarkdownString {
+  static {
+    __name(this, "MarkdownString");
+  }
+  value;
+  isTrusted;
+  supportThemeIcons;
+  supportHtml;
+  baseUri;
+  uris;
+  static lift(dto) {
+    const markdownString = new MarkdownString(dto.value, dto);
+    markdownString.uris = dto.uris;
+    markdownString.baseUri = dto.baseUri ? URI.revive(dto.baseUri) : void 0;
+    return markdownString;
+  }
+  constructor(value = "", isTrustedOrOptions = false) {
+    this.value = value;
+    if (typeof this.value !== "string") {
+      throw illegalArgument("value");
+    }
+    if (typeof isTrustedOrOptions === "boolean") {
+      this.isTrusted = isTrustedOrOptions;
+      this.supportThemeIcons = false;
+      this.supportHtml = false;
+    } else {
+      this.isTrusted = isTrustedOrOptions.isTrusted ?? void 0;
+      this.supportThemeIcons = isTrustedOrOptions.supportThemeIcons ?? false;
+      this.supportHtml = isTrustedOrOptions.supportHtml ?? false;
+    }
+  }
+  appendText(value, newlineStyle = 0 /* Paragraph */) {
+    this.value += escapeMarkdownSyntaxTokens(this.supportThemeIcons ? escapeIcons(value) : value).replace(/([ \t]+)/g, (_match, g1) => "&nbsp;".repeat(g1.length)).replace(/\>/gm, "\\>").replace(/\n/g, newlineStyle === 1 /* Break */ ? "\\\n" : "\n\n");
+    return this;
+  }
+  appendMarkdown(value) {
+    this.value += value;
+    return this;
+  }
+  appendCodeblock(langId, code) {
+    this.value += `
+${appendEscapedMarkdownCodeBlockFence(code, langId)}
+`;
+    return this;
+  }
+  appendLink(target, label, title) {
+    this.value += "[";
+    this.value += this._escape(label, "]");
+    this.value += "](";
+    this.value += this._escape(String(target), ")");
+    if (title) {
+      this.value += ` "${this._escape(this._escape(title, '"'), ")")}"`;
+    }
+    this.value += ")";
+    return this;
+  }
+  _escape(value, ch) {
+    const r = new RegExp(escapeRegExpCharacters(ch), "g");
+    return value.replace(r, (match, offset) => {
+      if (value.charAt(offset - 1) !== "\\") {
+        return `\\${match}`;
+      } else {
+        return match;
+      }
+    });
+  }
+}
+function isEmptyMarkdownString(oneOrMany) {
+  if (isMarkdownString(oneOrMany)) {
+    return !oneOrMany.value;
+  } else if (Array.isArray(oneOrMany)) {
+    return oneOrMany.every(isEmptyMarkdownString);
+  } else {
+    return true;
+  }
+}
+__name(isEmptyMarkdownString, "isEmptyMarkdownString");
+function isMarkdownString(thing) {
+  if (thing instanceof MarkdownString) {
+    return true;
+  } else if (thing && typeof thing === "object") {
+    return typeof thing.value === "string" && (typeof thing.isTrusted === "boolean" || typeof thing.isTrusted === "object" || thing.isTrusted === void 0) && (typeof thing.supportThemeIcons === "boolean" || thing.supportThemeIcons === void 0);
+  }
+  return false;
+}
+__name(isMarkdownString, "isMarkdownString");
+function markdownStringEqual(a, b) {
+  if (a === b) {
+    return true;
+  } else if (!a || !b) {
+    return false;
+  } else {
+    return a.value === b.value && a.isTrusted === b.isTrusted && a.supportThemeIcons === b.supportThemeIcons && a.supportHtml === b.supportHtml && (a.baseUri === b.baseUri || !!a.baseUri && !!b.baseUri && isEqual(URI.from(a.baseUri), URI.from(b.baseUri)));
+  }
+}
+__name(markdownStringEqual, "markdownStringEqual");
+function escapeMarkdownSyntaxTokens(text) {
+  return text.replace(/[\\`*_{}[\]()#+\-!~]/g, "\\$&");
+}
+__name(escapeMarkdownSyntaxTokens, "escapeMarkdownSyntaxTokens");
+function appendEscapedMarkdownCodeBlockFence(code, langId) {
+  const longestFenceLength = code.match(/^`+/gm)?.reduce((a, b) => a.length > b.length ? a : b).length ?? 0;
+  const desiredFenceLength = longestFenceLength >= 3 ? longestFenceLength + 1 : 3;
+  return [
+    `${"`".repeat(desiredFenceLength)}${langId}`,
+    code,
+    `${"`".repeat(desiredFenceLength)}`
+  ].join("\n");
+}
+__name(appendEscapedMarkdownCodeBlockFence, "appendEscapedMarkdownCodeBlockFence");
+function escapeDoubleQuotes(input) {
+  return input.replace(/"/g, "&quot;");
+}
+__name(escapeDoubleQuotes, "escapeDoubleQuotes");
+function removeMarkdownEscapes(text) {
+  if (!text) {
+    return text;
+  }
+  return text.replace(/\\([\\`*_{}[\]()#+\-.!~])/g, "$1");
+}
+__name(removeMarkdownEscapes, "removeMarkdownEscapes");
+function parseHrefAndDimensions(href) {
+  const dimensions = [];
+  const splitted = href.split("|").map((s) => s.trim());
+  href = splitted[0];
+  const parameters = splitted[1];
+  if (parameters) {
+    const heightFromParams = /height=(\d+)/.exec(parameters);
+    const widthFromParams = /width=(\d+)/.exec(parameters);
+    const height = heightFromParams ? heightFromParams[1] : "";
+    const width = widthFromParams ? widthFromParams[1] : "";
+    const widthIsFinite = isFinite(parseInt(width));
+    const heightIsFinite = isFinite(parseInt(height));
+    if (widthIsFinite) {
+      dimensions.push(`width="${width}"`);
+    }
+    if (heightIsFinite) {
+      dimensions.push(`height="${height}"`);
+    }
+  }
+  return { href, dimensions };
+}
+__name(parseHrefAndDimensions, "parseHrefAndDimensions");
+function markdownCommandLink(command) {
+  const uri = URI.from({
+    scheme: Schemas.command,
+    path: command.id,
+    query: command.arguments?.length ? encodeURIComponent(JSON.stringify(command.arguments)) : void 0
+  }).toString();
+  return `[${escapeMarkdownSyntaxTokens(command.title)}](${uri})`;
+}
+__name(markdownCommandLink, "markdownCommandLink");
+export {
+  MarkdownString,
+  MarkdownStringTextNewlineStyle,
+  appendEscapedMarkdownCodeBlockFence,
+  escapeDoubleQuotes,
+  escapeMarkdownSyntaxTokens,
+  isEmptyMarkdownString,
+  isMarkdownString,
+  markdownCommandLink,
+  markdownStringEqual,
+  parseHrefAndDimensions,
+  removeMarkdownEscapes
+};
+//# sourceMappingURL=htmlContent.js.map

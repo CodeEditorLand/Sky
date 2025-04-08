@@ -1,1 +1,26 @@
-import{matchesFuzzy as s,matchesFuzzy2 as a}from"../../../../base/common/filters.js";import*as l from"../../../../base/common/strings.js";class h{constructor(s,t,e){this.filter=s,s=s.trim(),this.showResolved=t,this.showUnresolved=e;const i=s.startsWith("!");this.textFilter={text:(i?l.ltrim(s,"!"):s).trim(),negate:i}}static _filter=a;static _messageFilter=s;showResolved=!0;showUnresolved=!0;textFilter}export{h as FilterOptions};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { IFilter, matchesFuzzy, matchesFuzzy2 } from "../../../../base/common/filters.js";
+import * as strings from "../../../../base/common/strings.js";
+class FilterOptions {
+  constructor(filter, showResolved, showUnresolved) {
+    this.filter = filter;
+    filter = filter.trim();
+    this.showResolved = showResolved;
+    this.showUnresolved = showUnresolved;
+    const negate = filter.startsWith("!");
+    this.textFilter = { text: (negate ? strings.ltrim(filter, "!") : filter).trim(), negate };
+  }
+  static {
+    __name(this, "FilterOptions");
+  }
+  static _filter = matchesFuzzy2;
+  static _messageFilter = matchesFuzzy;
+  showResolved = true;
+  showUnresolved = true;
+  textFilter;
+}
+export {
+  FilterOptions
+};
+//# sourceMappingURL=commentsFilterOptions.js.map

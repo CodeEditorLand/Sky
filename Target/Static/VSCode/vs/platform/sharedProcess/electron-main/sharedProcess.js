@@ -1,1 +1,163 @@
-var f=Object.defineProperty;var g=Object.getOwnPropertyDescriptor;var h=(n,t,e,i)=>{for(var r=i>1?void 0:i?g(t,e):t,s=n.length-1,a;s>=0;s--)(a=n[s])&&(r=(i?a(t,e,r):a(r))||r);return i&&r&&f(t,e,r),r},o=(n,t)=>(e,i)=>t(e,i,n);import"electron";import{validatedIpcMain as l}from"../../../base/parts/ipc/electron-main/ipcMain.js";import{Barrier as m,DeferredPromise as v}from"../../../base/common/async.js";import{Disposable as u}from"../../../base/common/lifecycle.js";import{IEnvironmentMainService as P}from"../../environment/electron-main/environmentMainService.js";import{ILifecycleMainService as S}from"../../lifecycle/electron-main/lifecycleMainService.js";import{ILogService as w}from"../../log/common/log.js";import"../node/sharedProcess.js";import{IUserDataProfilesService as I}from"../../userDataProfile/common/userDataProfile.js";import{IPolicyService as M}from"../../policy/common/policy.js";import{ILoggerMainService as C}from"../../log/electron-main/loggerService.js";import{UtilityProcess as D}from"../../utilityProcess/electron-main/utilityProcess.js";import{NullTelemetryService as L}from"../../telemetry/common/telemetryUtils.js";import{parseSharedProcessDebugPort as R}from"../../environment/node/environmentService.js";import{assertIsDefined as _}from"../../../base/common/types.js";import{SharedProcessChannelConnection as p,SharedProcessRawConnection as y,SharedProcessLifecycle as d}from"../common/sharedProcess.js";import{Emitter as W}from"../../../base/common/event.js";let c=class extends u{constructor(e,i,r,s,a,b,q,B,U){super();this.machineId=e;this.sqmId=i;this.devDeviceId=r;this.environmentMainService=s;this.userDataProfilesService=a;this.lifecycleMainService=b;this.logService=q;this.loggerMainService=B;this.policyService=U;this.registerListeners()}firstWindowConnectionBarrier=new m;utilityProcess=void 0;utilityProcessLogListener=void 0;_onDidCrash=this._register(new W);onDidCrash=this._onDidCrash.event;registerListeners(){l.on(p.request,(e,i)=>this.onWindowConnection(e,i,p.response)),l.on(y.request,(e,i)=>this.onWindowConnection(e,i,y.response)),this._register(this.lifecycleMainService.onWillShutdown(()=>this.onWillShutdown()))}async onWindowConnection(e,i,r){this.logService.trace(`[SharedProcess] onWindowConnection for: ${r}`),this.firstWindowConnectionBarrier.isOpen()||this.firstWindowConnectionBarrier.open(),await this.whenReady();const s=await this.connect(r);if(e.sender.isDestroyed())return s.close();e.sender.postMessage(r,i,[s])}onWillShutdown(){this.logService.trace("[SharedProcess] onWillShutdown"),this.utilityProcess?.postMessage(d.exit),this.utilityProcess=void 0}_whenReady=void 0;whenReady(){return this._whenReady||(this._whenReady=(async()=>{await this.whenIpcReady;const e=new v;this.utilityProcess?.once(d.initDone,()=>e.complete()),await e.p,this.utilityProcessLogListener?.dispose(),this.logService.trace("[SharedProcess] Overall ready")})()),this._whenReady}_whenIpcReady=void 0;get whenIpcReady(){return this._whenIpcReady||(this._whenIpcReady=(async()=>{await this.firstWindowConnectionBarrier.wait(),this.createUtilityProcess();const e=new v;this.utilityProcess?.once(d.ipcReady,()=>e.complete()),await e.p,this.logService.trace("[SharedProcess] IPC ready")})()),this._whenIpcReady}createUtilityProcess(){this.utilityProcess=this._register(new D(this.logService,L,this.lifecycleMainService)),this.utilityProcessLogListener=this.utilityProcess.onMessage(r=>{typeof r.warning=="string"?this.logService.warn(r.warning):typeof r.error=="string"&&this.logService.error(r.error)});const e=R(this.environmentMainService.args,this.environmentMainService.isBuilt);let i;e.port&&(i=["--nolazy"],e.break?i.push(`--inspect-brk=${e.port}`):i.push(`--inspect=${e.port}`)),this.utilityProcess.start({type:"shared-process",entryPoint:"vs/code/electron-utility/sharedProcess/sharedProcessMain",payload:this.createSharedProcessConfiguration(),respondToAuthRequestsFromMainProcess:!0,execArgv:i}),this._register(this.utilityProcess.onCrash(()=>this._onDidCrash.fire()))}createSharedProcessConfiguration(){return{machineId:this.machineId,sqmId:this.sqmId,devDeviceId:this.devDeviceId,codeCachePath:this.environmentMainService.codeCachePath,profiles:{home:this.userDataProfilesService.profilesHome,all:this.userDataProfilesService.profiles},args:this.environmentMainService.args,logLevel:this.loggerMainService.getLogLevel(),loggers:this.loggerMainService.getGlobalLoggers(),policiesData:this.policyService.serialize()}}async connect(e){return await this.whenIpcReady,_(this.utilityProcess).connect(e)}};c=h([o(3,P),o(4,I),o(5,S),o(6,w),o(7,C),o(8,M)],c);export{c as SharedProcess};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { IpcMainEvent, MessagePortMain } from "electron";
+import { validatedIpcMain } from "../../../base/parts/ipc/electron-main/ipcMain.js";
+import { Barrier, DeferredPromise } from "../../../base/common/async.js";
+import { Disposable, IDisposable } from "../../../base/common/lifecycle.js";
+import { IEnvironmentMainService } from "../../environment/electron-main/environmentMainService.js";
+import { ILifecycleMainService } from "../../lifecycle/electron-main/lifecycleMainService.js";
+import { ILogService } from "../../log/common/log.js";
+import { ISharedProcessConfiguration } from "../node/sharedProcess.js";
+import { IUserDataProfilesService } from "../../userDataProfile/common/userDataProfile.js";
+import { IPolicyService } from "../../policy/common/policy.js";
+import { ILoggerMainService } from "../../log/electron-main/loggerService.js";
+import { UtilityProcess } from "../../utilityProcess/electron-main/utilityProcess.js";
+import { NullTelemetryService } from "../../telemetry/common/telemetryUtils.js";
+import { parseSharedProcessDebugPort } from "../../environment/node/environmentService.js";
+import { assertIsDefined } from "../../../base/common/types.js";
+import { SharedProcessChannelConnection, SharedProcessRawConnection, SharedProcessLifecycle } from "../common/sharedProcess.js";
+import { Emitter } from "../../../base/common/event.js";
+let SharedProcess = class extends Disposable {
+  constructor(machineId, sqmId, devDeviceId, environmentMainService, userDataProfilesService, lifecycleMainService, logService, loggerMainService, policyService) {
+    super();
+    this.machineId = machineId;
+    this.sqmId = sqmId;
+    this.devDeviceId = devDeviceId;
+    this.environmentMainService = environmentMainService;
+    this.userDataProfilesService = userDataProfilesService;
+    this.lifecycleMainService = lifecycleMainService;
+    this.logService = logService;
+    this.loggerMainService = loggerMainService;
+    this.policyService = policyService;
+    this.registerListeners();
+  }
+  static {
+    __name(this, "SharedProcess");
+  }
+  firstWindowConnectionBarrier = new Barrier();
+  utilityProcess = void 0;
+  utilityProcessLogListener = void 0;
+  _onDidCrash = this._register(new Emitter());
+  onDidCrash = this._onDidCrash.event;
+  registerListeners() {
+    validatedIpcMain.on(SharedProcessChannelConnection.request, (e, nonce) => this.onWindowConnection(e, nonce, SharedProcessChannelConnection.response));
+    validatedIpcMain.on(SharedProcessRawConnection.request, (e, nonce) => this.onWindowConnection(e, nonce, SharedProcessRawConnection.response));
+    this._register(this.lifecycleMainService.onWillShutdown(() => this.onWillShutdown()));
+  }
+  async onWindowConnection(e, nonce, responseChannel) {
+    this.logService.trace(`[SharedProcess] onWindowConnection for: ${responseChannel}`);
+    if (!this.firstWindowConnectionBarrier.isOpen()) {
+      this.firstWindowConnectionBarrier.open();
+    }
+    await this.whenReady();
+    const port = await this.connect(responseChannel);
+    if (e.sender.isDestroyed()) {
+      return port.close();
+    }
+    e.sender.postMessage(responseChannel, nonce, [port]);
+  }
+  onWillShutdown() {
+    this.logService.trace("[SharedProcess] onWillShutdown");
+    this.utilityProcess?.postMessage(SharedProcessLifecycle.exit);
+    this.utilityProcess = void 0;
+  }
+  _whenReady = void 0;
+  whenReady() {
+    if (!this._whenReady) {
+      this._whenReady = (async () => {
+        await this.whenIpcReady;
+        const whenReady = new DeferredPromise();
+        this.utilityProcess?.once(SharedProcessLifecycle.initDone, () => whenReady.complete());
+        await whenReady.p;
+        this.utilityProcessLogListener?.dispose();
+        this.logService.trace("[SharedProcess] Overall ready");
+      })();
+    }
+    return this._whenReady;
+  }
+  _whenIpcReady = void 0;
+  get whenIpcReady() {
+    if (!this._whenIpcReady) {
+      this._whenIpcReady = (async () => {
+        await this.firstWindowConnectionBarrier.wait();
+        this.createUtilityProcess();
+        const sharedProcessIpcReady = new DeferredPromise();
+        this.utilityProcess?.once(SharedProcessLifecycle.ipcReady, () => sharedProcessIpcReady.complete());
+        await sharedProcessIpcReady.p;
+        this.logService.trace("[SharedProcess] IPC ready");
+      })();
+    }
+    return this._whenIpcReady;
+  }
+  createUtilityProcess() {
+    this.utilityProcess = this._register(new UtilityProcess(this.logService, NullTelemetryService, this.lifecycleMainService));
+    this.utilityProcessLogListener = this.utilityProcess.onMessage((e) => {
+      if (typeof e.warning === "string") {
+        this.logService.warn(e.warning);
+      } else if (typeof e.error === "string") {
+        this.logService.error(e.error);
+      }
+    });
+    const inspectParams = parseSharedProcessDebugPort(this.environmentMainService.args, this.environmentMainService.isBuilt);
+    let execArgv = void 0;
+    if (inspectParams.port) {
+      execArgv = ["--nolazy"];
+      if (inspectParams.break) {
+        execArgv.push(`--inspect-brk=${inspectParams.port}`);
+      } else {
+        execArgv.push(`--inspect=${inspectParams.port}`);
+      }
+    }
+    this.utilityProcess.start({
+      type: "shared-process",
+      entryPoint: "vs/code/electron-utility/sharedProcess/sharedProcessMain",
+      payload: this.createSharedProcessConfiguration(),
+      respondToAuthRequestsFromMainProcess: true,
+      execArgv
+    });
+    this._register(this.utilityProcess.onCrash(() => this._onDidCrash.fire()));
+  }
+  createSharedProcessConfiguration() {
+    return {
+      machineId: this.machineId,
+      sqmId: this.sqmId,
+      devDeviceId: this.devDeviceId,
+      codeCachePath: this.environmentMainService.codeCachePath,
+      profiles: {
+        home: this.userDataProfilesService.profilesHome,
+        all: this.userDataProfilesService.profiles
+      },
+      args: this.environmentMainService.args,
+      logLevel: this.loggerMainService.getLogLevel(),
+      loggers: this.loggerMainService.getGlobalLoggers(),
+      policiesData: this.policyService.serialize()
+    };
+  }
+  async connect(payload) {
+    await this.whenIpcReady;
+    const utilityProcess = assertIsDefined(this.utilityProcess);
+    return utilityProcess.connect(payload);
+  }
+};
+SharedProcess = __decorateClass([
+  __decorateParam(3, IEnvironmentMainService),
+  __decorateParam(4, IUserDataProfilesService),
+  __decorateParam(5, ILifecycleMainService),
+  __decorateParam(6, ILogService),
+  __decorateParam(7, ILoggerMainService),
+  __decorateParam(8, IPolicyService)
+], SharedProcess);
+export {
+  SharedProcess
+};
+//# sourceMappingURL=sharedProcess.js.map

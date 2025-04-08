@@ -1,1 +1,34 @@
-var d=Object.defineProperty,x=Object.getOwnPropertyDescriptor,l=(e,o,t,r)=>{for(var s,m=r>1?void 0:r?x(o,t):o,a=e.length-1;a>=0;a--)(s=e[a])&&(m=(r?s(o,t,m):s(m))||m);return r&&m&&d(o,t,m),m},c=(e,o)=>(t,r)=>o(t,r,e);import{localize as a}from"../../../nls.js";import{ILoggerService as p}from"../../../platform/log/common/log.js";import{LogService as I}from"../../../platform/log/common/logService.js";import{IExtHostInitDataService as f}from"./extHostInitDataService.js";let m=class extends I{constructor(e,o,t){const r=t.remote.isRemote?"remoteexthost":e?"workerexthost":"exthost",s=t.remote.isRemote?a("remote","Extension Host (Remote)"):e?a("worker","Extension Host (Worker)"):a("local","Extension Host");super(o.createLogger(r,{name:s}))}};m=l([c(1,p),c(2,f)],m);export{m as ExtHostLogService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { localize } from "../../../nls.js";
+import { ILoggerService } from "../../../platform/log/common/log.js";
+import { LogService } from "../../../platform/log/common/logService.js";
+import { IExtHostInitDataService } from "./extHostInitDataService.js";
+let ExtHostLogService = class extends LogService {
+  static {
+    __name(this, "ExtHostLogService");
+  }
+  constructor(isWorker, loggerService, initData) {
+    const id = initData.remote.isRemote ? "remoteexthost" : isWorker ? "workerexthost" : "exthost";
+    const name = initData.remote.isRemote ? localize("remote", "Extension Host (Remote)") : isWorker ? localize("worker", "Extension Host (Worker)") : localize("local", "Extension Host");
+    super(loggerService.createLogger(id, { name }));
+  }
+};
+ExtHostLogService = __decorateClass([
+  __decorateParam(1, ILoggerService),
+  __decorateParam(2, IExtHostInitDataService)
+], ExtHostLogService);
+export {
+  ExtHostLogService
+};
+//# sourceMappingURL=extHostLogService.js.map

@@ -1,1 +1,14 @@
-import{KeyCode as r,KeyMod as e}from"../../../../base/common/keyCodes.js";import{KeybindingWeight as i,KeybindingsRegistry as o}from"../../../../platform/keybinding/common/keybindingsRegistry.js";import{ITerminalProfileResolverService as n,TerminalCommandId as t}from"../common/terminal.js";import{InstantiationType as m,registerSingleton as l}from"../../../../platform/instantiation/common/extensions.js";import{BrowserTerminalProfileResolverService as y}from"./terminalProfileResolverService.js";import{TerminalContextKeys as d}from"../common/terminalContextKey.js";l(n,y,m.Delayed),o.registerKeybindingRule({id:t.New,weight:i.WorkbenchContrib,when:d.notFocus,primary:e.CtrlCmd|e.Shift|r.KeyC});
+import { KeyCode, KeyMod } from "../../../../base/common/keyCodes.js";
+import { KeybindingWeight, KeybindingsRegistry } from "../../../../platform/keybinding/common/keybindingsRegistry.js";
+import { ITerminalProfileResolverService, TerminalCommandId } from "../common/terminal.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { BrowserTerminalProfileResolverService } from "./terminalProfileResolverService.js";
+import { TerminalContextKeys } from "../common/terminalContextKey.js";
+registerSingleton(ITerminalProfileResolverService, BrowserTerminalProfileResolverService, InstantiationType.Delayed);
+KeybindingsRegistry.registerKeybindingRule({
+  id: TerminalCommandId.New,
+  weight: KeybindingWeight.WorkbenchContrib,
+  when: TerminalContextKeys.notFocus,
+  primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyC
+});
+//# sourceMappingURL=terminal.web.contribution.js.map

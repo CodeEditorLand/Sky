@@ -1,1 +1,155 @@
-var f=Object.defineProperty,T=Object.getOwnPropertyDescriptor,h=(e,t,r,i)=>{for(var o,s=i>1?void 0:i?T(t,r):t,n=e.length-1;n>=0;n--)(o=e[n])&&(s=(i?o(t,r,s):o(s))||s);return i&&s&&f(t,r,s),s};import{memoize as C}from"./decorators.js";import{PathIterator as c}from"./ternarySearchTree.js";import*as m from"./path.js";import{extUri as N}from"./resources.js";import{URI as p}from"./uri.js";class a{constructor(e,t,r,i=void 0,o=void 0){this.uri=e,this.relativePath=t,this.context=r,this.element=i,this.parent=o}_children=new Map;get childrenCount(){return this._children.size}get children(){return this._children.values()}get name(){return m.posix.basename(this.relativePath)}get(e){return this._children.get(e)}set(e,t){this._children.set(e,t)}delete(e){this._children.delete(e)}clear(){this._children.clear()}}function u(e,t){typeof e.element<"u"&&t.push(e.element);for(const r of e.children)u(r,t);return t}h([C],a.prototype,"name",1);class U{constructor(e,t=p.file("/"),r=N){this.extUri=r,this.root=new a(t,"",e)}root;static getRoot(e){for(;e.parent;)e=e.parent;return e}static collect(e){return u(e,[])}static isResourceNode(e){return e instanceof a}add(e,t){const r=this.extUri.relativePath(this.root.uri,e)||e.path,i=new c(!1).reset(r);let o=this.root,s="";for(;;){const e=i.value();s=s+"/"+e;let r=o.get(e);if(r?i.hasNext()||(r.element=t):(r=new a(this.extUri.joinPath(this.root.uri,s),s,this.root.context,i.hasNext()?void 0:t,o),o.set(e,r)),o=r,!i.hasNext())return;i.next()}}delete(e){const t=this.extUri.relativePath(this.root.uri,e)||e.path,r=new c(!1).reset(t);return this._delete(this.root,r)}_delete(e,t){const r=t.value(),i=e.get(r);if(i){if(t.hasNext()){const o=this._delete(i,t.next());return typeof o<"u"&&0===i.childrenCount&&e.delete(r),o}return e.delete(r),i.element}}clear(){this.root.clear()}getNode(e){const t=this.extUri.relativePath(this.root.uri,e)||e.path,r=new c(!1).reset(t);let i=this.root;for(;;){const e=r.value(),t=i.get(e);if(!t||!r.hasNext())return t;i=t,r.next()}}}export{U as ResourceTree};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+import { memoize } from "./decorators.js";
+import { PathIterator } from "./ternarySearchTree.js";
+import * as paths from "./path.js";
+import { extUri as defaultExtUri, IExtUri } from "./resources.js";
+import { URI } from "./uri.js";
+class Node {
+  constructor(uri, relativePath, context, element = void 0, parent = void 0) {
+    this.uri = uri;
+    this.relativePath = relativePath;
+    this.context = context;
+    this.element = element;
+    this.parent = parent;
+  }
+  static {
+    __name(this, "Node");
+  }
+  _children = /* @__PURE__ */ new Map();
+  get childrenCount() {
+    return this._children.size;
+  }
+  get children() {
+    return this._children.values();
+  }
+  get name() {
+    return paths.posix.basename(this.relativePath);
+  }
+  get(path) {
+    return this._children.get(path);
+  }
+  set(path, child) {
+    this._children.set(path, child);
+  }
+  delete(path) {
+    this._children.delete(path);
+  }
+  clear() {
+    this._children.clear();
+  }
+}
+__decorateClass([
+  memoize
+], Node.prototype, "name", 1);
+function collect(node, result) {
+  if (typeof node.element !== "undefined") {
+    result.push(node.element);
+  }
+  for (const child of node.children) {
+    collect(child, result);
+  }
+  return result;
+}
+__name(collect, "collect");
+class ResourceTree {
+  constructor(context, rootURI = URI.file("/"), extUri = defaultExtUri) {
+    this.extUri = extUri;
+    this.root = new Node(rootURI, "", context);
+  }
+  static {
+    __name(this, "ResourceTree");
+  }
+  root;
+  static getRoot(node) {
+    while (node.parent) {
+      node = node.parent;
+    }
+    return node;
+  }
+  static collect(node) {
+    return collect(node, []);
+  }
+  static isResourceNode(obj) {
+    return obj instanceof Node;
+  }
+  add(uri, element) {
+    const key = this.extUri.relativePath(this.root.uri, uri) || uri.path;
+    const iterator = new PathIterator(false).reset(key);
+    let node = this.root;
+    let path = "";
+    while (true) {
+      const name = iterator.value();
+      path = path + "/" + name;
+      let child = node.get(name);
+      if (!child) {
+        child = new Node(
+          this.extUri.joinPath(this.root.uri, path),
+          path,
+          this.root.context,
+          iterator.hasNext() ? void 0 : element,
+          node
+        );
+        node.set(name, child);
+      } else if (!iterator.hasNext()) {
+        child.element = element;
+      }
+      node = child;
+      if (!iterator.hasNext()) {
+        return;
+      }
+      iterator.next();
+    }
+  }
+  delete(uri) {
+    const key = this.extUri.relativePath(this.root.uri, uri) || uri.path;
+    const iterator = new PathIterator(false).reset(key);
+    return this._delete(this.root, iterator);
+  }
+  _delete(node, iterator) {
+    const name = iterator.value();
+    const child = node.get(name);
+    if (!child) {
+      return void 0;
+    }
+    if (iterator.hasNext()) {
+      const result = this._delete(child, iterator.next());
+      if (typeof result !== "undefined" && child.childrenCount === 0) {
+        node.delete(name);
+      }
+      return result;
+    }
+    node.delete(name);
+    return child.element;
+  }
+  clear() {
+    this.root.clear();
+  }
+  getNode(uri) {
+    const key = this.extUri.relativePath(this.root.uri, uri) || uri.path;
+    const iterator = new PathIterator(false).reset(key);
+    let node = this.root;
+    while (true) {
+      const name = iterator.value();
+      const child = node.get(name);
+      if (!child || !iterator.hasNext()) {
+        return child;
+      }
+      node = child;
+      iterator.next();
+    }
+  }
+}
+export {
+  ResourceTree
+};
+//# sourceMappingURL=resourceTree.js.map

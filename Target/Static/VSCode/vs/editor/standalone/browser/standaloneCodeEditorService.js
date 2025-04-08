@@ -1,1 +1,105 @@
-var u=Object.defineProperty,I=Object.getOwnPropertyDescriptor,m=(e,t,o,r)=>{for(var i,s=r>1?void 0:r?I(t,o):t,n=e.length-1;n>=0;n--)(i=e[n])&&(s=(r?i(t,o,s):i(s))||s);return r&&s&&u(t,o,s),s},l=(e,t)=>(o,r)=>t(o,r,e);import{windowOpenNoOpener as f}from"../../../base/browser/dom.js";import{Schemas as c}from"../../../base/common/network.js";import"../../../base/common/uri.js";import"../../browser/editorBrowser.js";import{AbstractCodeEditorService as a}from"../../browser/services/abstractCodeEditorService.js";import{ICodeEditorService as C}from"../../browser/services/codeEditorService.js";import"../../common/core/range.js";import{ScrollType as p}from"../../common/editorCommon.js";import"../../common/model.js";import{IContextKeyService as h}from"../../../platform/contextkey/common/contextkey.js";import"../../../platform/editor/common/editor.js";import{InstantiationType as E,registerSingleton as v}from"../../../platform/instantiation/common/extensions.js";import{IThemeService as g}from"../../../platform/theme/common/themeService.js";let s=class extends a{_editorIsOpen;_activeCodeEditor;constructor(e,t){super(t),this._register(this.onCodeEditorAdd((()=>this._checkContextKey()))),this._register(this.onCodeEditorRemove((()=>this._checkContextKey()))),this._editorIsOpen=e.createKey("editorIsOpen",!1),this._activeCodeEditor=null,this._register(this.registerCodeEditorOpenHandler((async(e,t,o)=>t?this.doOpenEditor(t,e):null)))}_checkContextKey(){let e=!1;for(const t of this.listCodeEditors())if(!t.isSimpleWidget){e=!0;break}this._editorIsOpen.set(e)}setActiveCodeEditor(e){this._activeCodeEditor=e}getActiveCodeEditor(){return this._activeCodeEditor}doOpenEditor(e,t){if(!this.findModel(e,t.resource)){if(t.resource){const o=t.resource.scheme;if(o===c.http||o===c.https)return f(t.resource.toString()),e}return null}const o=t.options?t.options.selection:null;if(o)if("number"==typeof o.endLineNumber&&"number"==typeof o.endColumn)e.setSelection(o),e.revealRangeInCenter(o,p.Immediate);else{const t={lineNumber:o.startLineNumber,column:o.startColumn};e.setPosition(t),e.revealPositionInCenter(t,p.Immediate)}return e}findModel(e,t){const o=e.getModel();return o&&o.uri.toString()!==t.toString()?null:o}};s=m([l(0,h),l(1,g)],s),v(C,s,E.Eager);export{s as StandaloneCodeEditorService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { windowOpenNoOpener } from "../../../base/browser/dom.js";
+import { Schemas } from "../../../base/common/network.js";
+import { URI } from "../../../base/common/uri.js";
+import { ICodeEditor } from "../../browser/editorBrowser.js";
+import { AbstractCodeEditorService } from "../../browser/services/abstractCodeEditorService.js";
+import { ICodeEditorService } from "../../browser/services/codeEditorService.js";
+import { IRange } from "../../common/core/range.js";
+import { ScrollType } from "../../common/editorCommon.js";
+import { ITextModel } from "../../common/model.js";
+import { IContextKey, IContextKeyService } from "../../../platform/contextkey/common/contextkey.js";
+import { ITextResourceEditorInput } from "../../../platform/editor/common/editor.js";
+import { InstantiationType, registerSingleton } from "../../../platform/instantiation/common/extensions.js";
+import { IThemeService } from "../../../platform/theme/common/themeService.js";
+let StandaloneCodeEditorService = class extends AbstractCodeEditorService {
+  static {
+    __name(this, "StandaloneCodeEditorService");
+  }
+  _editorIsOpen;
+  _activeCodeEditor;
+  constructor(contextKeyService, themeService) {
+    super(themeService);
+    this._register(this.onCodeEditorAdd(() => this._checkContextKey()));
+    this._register(this.onCodeEditorRemove(() => this._checkContextKey()));
+    this._editorIsOpen = contextKeyService.createKey("editorIsOpen", false);
+    this._activeCodeEditor = null;
+    this._register(this.registerCodeEditorOpenHandler(async (input, source, sideBySide) => {
+      if (!source) {
+        return null;
+      }
+      return this.doOpenEditor(source, input);
+    }));
+  }
+  _checkContextKey() {
+    let hasCodeEditor = false;
+    for (const editor of this.listCodeEditors()) {
+      if (!editor.isSimpleWidget) {
+        hasCodeEditor = true;
+        break;
+      }
+    }
+    this._editorIsOpen.set(hasCodeEditor);
+  }
+  setActiveCodeEditor(activeCodeEditor) {
+    this._activeCodeEditor = activeCodeEditor;
+  }
+  getActiveCodeEditor() {
+    return this._activeCodeEditor;
+  }
+  doOpenEditor(editor, input) {
+    const model = this.findModel(editor, input.resource);
+    if (!model) {
+      if (input.resource) {
+        const schema = input.resource.scheme;
+        if (schema === Schemas.http || schema === Schemas.https) {
+          windowOpenNoOpener(input.resource.toString());
+          return editor;
+        }
+      }
+      return null;
+    }
+    const selection = input.options ? input.options.selection : null;
+    if (selection) {
+      if (typeof selection.endLineNumber === "number" && typeof selection.endColumn === "number") {
+        editor.setSelection(selection);
+        editor.revealRangeInCenter(selection, ScrollType.Immediate);
+      } else {
+        const pos = {
+          lineNumber: selection.startLineNumber,
+          column: selection.startColumn
+        };
+        editor.setPosition(pos);
+        editor.revealPositionInCenter(pos, ScrollType.Immediate);
+      }
+    }
+    return editor;
+  }
+  findModel(editor, resource) {
+    const model = editor.getModel();
+    if (model && model.uri.toString() !== resource.toString()) {
+      return null;
+    }
+    return model;
+  }
+};
+StandaloneCodeEditorService = __decorateClass([
+  __decorateParam(0, IContextKeyService),
+  __decorateParam(1, IThemeService)
+], StandaloneCodeEditorService);
+registerSingleton(ICodeEditorService, StandaloneCodeEditorService, InstantiationType.Eager);
+export {
+  StandaloneCodeEditorService
+};
+//# sourceMappingURL=standaloneCodeEditorService.js.map

@@ -1,1 +1,85 @@
-import{compareBy as o,numberComparator as i}from"../../../../base/common/arrays.js";class d{edits;constructor(e){this.edits=e.slice().sort(o(r=>r.offset,i))}applyToArray(e){for(let r=this.edits.length-1;r>=0;r--){const t=this.edits[r];e.splice(t.offset,t.length,...new Array(t.newLength))}}}class m{constructor(e,r,t){this.offset=e;this.length=r;this.newLength=t}toString(){return`[${this.offset}, +${this.length}) -> +${this.newLength}}`}}class s{constructor(e){this.transformation=e}static fromMany(e){const r=e.map(t=>new s(t));return new a(r)}idx=0;offset=0;transform(e){let r=this.transformation.edits[this.idx];for(;r&&r.offset+r.length<=e;)this.offset+=r.newLength-r.length,this.idx++,r=this.transformation.edits[this.idx];if(!(r&&r.offset<=e))return e+this.offset}}class a{constructor(e){this.transformers=e}transform(e){for(const r of this.transformers){const t=r.transform(e);if(t===void 0)return;e=t}return e}}export{d as ArrayEdit,a as CombinedIndexTransformer,s as MonotonousIndexTransformer,m as SingleArrayEdit};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { compareBy, numberComparator } from "../../../../base/common/arrays.js";
+class ArrayEdit {
+  static {
+    __name(this, "ArrayEdit");
+  }
+  edits;
+  constructor(edits) {
+    this.edits = edits.slice().sort(compareBy((c) => c.offset, numberComparator));
+  }
+  applyToArray(array) {
+    for (let i = this.edits.length - 1; i >= 0; i--) {
+      const c = this.edits[i];
+      array.splice(c.offset, c.length, ...new Array(c.newLength));
+    }
+  }
+}
+class SingleArrayEdit {
+  constructor(offset, length, newLength) {
+    this.offset = offset;
+    this.length = length;
+    this.newLength = newLength;
+  }
+  static {
+    __name(this, "SingleArrayEdit");
+  }
+  toString() {
+    return `[${this.offset}, +${this.length}) -> +${this.newLength}}`;
+  }
+}
+class MonotonousIndexTransformer {
+  constructor(transformation) {
+    this.transformation = transformation;
+  }
+  static {
+    __name(this, "MonotonousIndexTransformer");
+  }
+  static fromMany(transformations) {
+    const transformers = transformations.map((t) => new MonotonousIndexTransformer(t));
+    return new CombinedIndexTransformer(transformers);
+  }
+  idx = 0;
+  offset = 0;
+  /**
+   * Precondition: index >= previous-value-of(index).
+   */
+  transform(index) {
+    let nextChange = this.transformation.edits[this.idx];
+    while (nextChange && nextChange.offset + nextChange.length <= index) {
+      this.offset += nextChange.newLength - nextChange.length;
+      this.idx++;
+      nextChange = this.transformation.edits[this.idx];
+    }
+    if (nextChange && nextChange.offset <= index) {
+      return void 0;
+    }
+    return index + this.offset;
+  }
+}
+class CombinedIndexTransformer {
+  constructor(transformers) {
+    this.transformers = transformers;
+  }
+  static {
+    __name(this, "CombinedIndexTransformer");
+  }
+  transform(index) {
+    for (const transformer of this.transformers) {
+      const result = transformer.transform(index);
+      if (result === void 0) {
+        return void 0;
+      }
+      index = result;
+    }
+    return index;
+  }
+}
+export {
+  ArrayEdit,
+  CombinedIndexTransformer,
+  MonotonousIndexTransformer,
+  SingleArrayEdit
+};
+//# sourceMappingURL=arrayOperation.js.map

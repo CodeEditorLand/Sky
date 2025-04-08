@@ -1,1 +1,52 @@
-import"../../../base/common/lifecycle.js";import"./descriptors.js";import"./serviceCollection.js";var n;(e=>{e.serviceIds=new Map,e.DI_TARGET="$di$target",e.DI_DEPENDENCIES="$di$dependencies",e.getServiceDependencies=function(n){return n[e.DI_DEPENDENCIES]||[]}})(n||={});const I=a("instantiationService");function c(e,r,t){r[n.DI_TARGET]===r?r[n.DI_DEPENDENCIES].push({id:e,index:t}):(r[n.DI_DEPENDENCIES]=[{id:e,index:t}],r[n.DI_TARGET]=r)}function a(e){if(n.serviceIds.has(e))return n.serviceIds.get(e);const r=function(e,n,t){if(3!==arguments.length)throw new Error("@IServiceName-decorator can only be used to decorate a parameter");c(r,e,t)};return r.toString=()=>e,n.serviceIds.set(e,r),r}function f(e){return e}export{I as IInstantiationService,n as _util,a as createDecorator,f as refineServiceDecorator};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { DisposableStore } from "../../../base/common/lifecycle.js";
+import * as descriptors from "./descriptors.js";
+import { ServiceCollection } from "./serviceCollection.js";
+var _util;
+((_util2) => {
+  _util2.serviceIds = /* @__PURE__ */ new Map();
+  _util2.DI_TARGET = "$di$target";
+  _util2.DI_DEPENDENCIES = "$di$dependencies";
+  function getServiceDependencies(ctor) {
+    return ctor[_util2.DI_DEPENDENCIES] || [];
+  }
+  _util2.getServiceDependencies = getServiceDependencies;
+  __name(getServiceDependencies, "getServiceDependencies");
+})(_util || (_util = {}));
+const IInstantiationService = createDecorator("instantiationService");
+function storeServiceDependency(id, target, index) {
+  if (target[_util.DI_TARGET] === target) {
+    target[_util.DI_DEPENDENCIES].push({ id, index });
+  } else {
+    target[_util.DI_DEPENDENCIES] = [{ id, index }];
+    target[_util.DI_TARGET] = target;
+  }
+}
+__name(storeServiceDependency, "storeServiceDependency");
+function createDecorator(serviceId) {
+  if (_util.serviceIds.has(serviceId)) {
+    return _util.serviceIds.get(serviceId);
+  }
+  const id = /* @__PURE__ */ __name(function(target, key, index) {
+    if (arguments.length !== 3) {
+      throw new Error("@IServiceName-decorator can only be used to decorate a parameter");
+    }
+    storeServiceDependency(id, target, index);
+  }, "id");
+  id.toString = () => serviceId;
+  _util.serviceIds.set(serviceId, id);
+  return id;
+}
+__name(createDecorator, "createDecorator");
+function refineServiceDecorator(serviceIdentifier) {
+  return serviceIdentifier;
+}
+__name(refineServiceDecorator, "refineServiceDecorator");
+export {
+  IInstantiationService,
+  _util,
+  createDecorator,
+  refineServiceDecorator
+};
+//# sourceMappingURL=instantiation.js.map

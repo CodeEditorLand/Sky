@@ -1,1 +1,78 @@
-import"../../../../base/common/async.js";import"../../../../base/common/cancellation.js";import"../../../../base/common/event.js";import"../../../../base/common/htmlContent.js";import"../../../../base/common/themables.js";import{URI as a}from"../../../../base/common/uri.js";import{Range as i}from"../../../../editor/common/core/range.js";import"../../../../editor/common/core/selection.js";import"../../../../editor/common/languages.js";import"../../../../platform/files/common/files.js";import{createDecorator as r}from"../../../../platform/instantiation/common/instantiation.js";import"../../notebook/common/notebookCommon.js";import"../../search/common/search.js";import"./chatAgents.js";import"./chatModel.js";import"./chatParserTypes.js";import"./chatRequestParser.js";import"./chatVariables.js";import"./constants.js";import"./languageModelToolsService.js";var s=(o=>(o[o.Info=0]="Info",o[o.Warning=1]="Warning",o[o.Error=2]="Error",o))(s||{});function d(o){return!!o&&"object"==typeof o&&"uri"in o&&o.uri instanceof a&&"version"in o&&"number"==typeof o.version&&"ranges"in o&&Array.isArray(o.ranges)&&o.ranges.every(i.isIRange)}function ce(o){return!!o&&"object"==typeof o&&"documents"in o&&Array.isArray(o.documents)&&o.documents.every(d)}var I=(o=>(o[o.Complete=1]="Complete",o[o.Partial=2]="Partial",o[o.Omitted=3]="Omitted",o))(I||{}),l=(o=>(o[o.Down=0]="Down",o[o.Up=1]="Up",o))(l||{}),c=(o=>(o.IncorrectCode="incorrectCode",o.DidNotFollowInstructions="didNotFollowInstructions",o.IncompleteCode="incompleteCode",o.MissingContext="missingContext",o.PoorlyWrittenOrFormatted="poorlyWrittenOrFormatted",o.RefusedAValidRequest="refusedAValidRequest",o.OffensiveOrUnsafe="offensiveOrUnsafe",o.Other="other",o.WillReportIssue="willReportIssue",o))(c||{}),C=(o=>(o[o.Action=1]="Action",o[o.Toolbar=2]="Toolbar",o))(C||{});const Ce=r("IChatService"),pe="accessibility.voice.keywordActivation";export{l as ChatAgentVoteDirection,c as ChatAgentVoteDownReason,C as ChatCopyKind,s as ChatErrorLevel,I as ChatResponseReferencePartStatusKind,Ce as IChatService,pe as KEYWORD_ACTIVIATION_SETTING_ID,d as isIDocumentContext,ce as isIUsedContext};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { DeferredPromise } from "../../../../base/common/async.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { Event } from "../../../../base/common/event.js";
+import { IMarkdownString } from "../../../../base/common/htmlContent.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IRange, Range } from "../../../../editor/common/core/range.js";
+import { ISelection } from "../../../../editor/common/core/selection.js";
+import { Command, Location, TextEdit } from "../../../../editor/common/languages.js";
+import { FileType } from "../../../../platform/files/common/files.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { ICellEditOperation } from "../../notebook/common/notebookCommon.js";
+import { IWorkspaceSymbol } from "../../search/common/search.js";
+import { IChatAgentCommand, IChatAgentData, IChatAgentResult } from "./chatAgents.js";
+import { ChatModel, IChatModel, IChatRequestModel, IChatRequestVariableData, IChatRequestVariableEntry, IChatResponseModel, IExportableChatData, ISerializableChatData } from "./chatModel.js";
+import { IParsedChatRequest } from "./chatParserTypes.js";
+import { IChatParserContext } from "./chatRequestParser.js";
+import { IChatRequestVariableValue } from "./chatVariables.js";
+import { ChatAgentLocation, ChatMode } from "./constants.js";
+import { IPreparedToolInvocation, IToolConfirmationMessages, IToolResult } from "./languageModelToolsService.js";
+var ChatErrorLevel = /* @__PURE__ */ ((ChatErrorLevel2) => {
+  ChatErrorLevel2[ChatErrorLevel2["Info"] = 0] = "Info";
+  ChatErrorLevel2[ChatErrorLevel2["Warning"] = 1] = "Warning";
+  ChatErrorLevel2[ChatErrorLevel2["Error"] = 2] = "Error";
+  return ChatErrorLevel2;
+})(ChatErrorLevel || {});
+function isIDocumentContext(obj) {
+  return !!obj && typeof obj === "object" && "uri" in obj && obj.uri instanceof URI && "version" in obj && typeof obj.version === "number" && "ranges" in obj && Array.isArray(obj.ranges) && obj.ranges.every(Range.isIRange);
+}
+__name(isIDocumentContext, "isIDocumentContext");
+function isIUsedContext(obj) {
+  return !!obj && typeof obj === "object" && "documents" in obj && Array.isArray(obj.documents) && obj.documents.every(isIDocumentContext);
+}
+__name(isIUsedContext, "isIUsedContext");
+var ChatResponseReferencePartStatusKind = /* @__PURE__ */ ((ChatResponseReferencePartStatusKind2) => {
+  ChatResponseReferencePartStatusKind2[ChatResponseReferencePartStatusKind2["Complete"] = 1] = "Complete";
+  ChatResponseReferencePartStatusKind2[ChatResponseReferencePartStatusKind2["Partial"] = 2] = "Partial";
+  ChatResponseReferencePartStatusKind2[ChatResponseReferencePartStatusKind2["Omitted"] = 3] = "Omitted";
+  return ChatResponseReferencePartStatusKind2;
+})(ChatResponseReferencePartStatusKind || {});
+var ChatAgentVoteDirection = /* @__PURE__ */ ((ChatAgentVoteDirection2) => {
+  ChatAgentVoteDirection2[ChatAgentVoteDirection2["Down"] = 0] = "Down";
+  ChatAgentVoteDirection2[ChatAgentVoteDirection2["Up"] = 1] = "Up";
+  return ChatAgentVoteDirection2;
+})(ChatAgentVoteDirection || {});
+var ChatAgentVoteDownReason = /* @__PURE__ */ ((ChatAgentVoteDownReason2) => {
+  ChatAgentVoteDownReason2["IncorrectCode"] = "incorrectCode";
+  ChatAgentVoteDownReason2["DidNotFollowInstructions"] = "didNotFollowInstructions";
+  ChatAgentVoteDownReason2["IncompleteCode"] = "incompleteCode";
+  ChatAgentVoteDownReason2["MissingContext"] = "missingContext";
+  ChatAgentVoteDownReason2["PoorlyWrittenOrFormatted"] = "poorlyWrittenOrFormatted";
+  ChatAgentVoteDownReason2["RefusedAValidRequest"] = "refusedAValidRequest";
+  ChatAgentVoteDownReason2["OffensiveOrUnsafe"] = "offensiveOrUnsafe";
+  ChatAgentVoteDownReason2["Other"] = "other";
+  ChatAgentVoteDownReason2["WillReportIssue"] = "willReportIssue";
+  return ChatAgentVoteDownReason2;
+})(ChatAgentVoteDownReason || {});
+var ChatCopyKind = /* @__PURE__ */ ((ChatCopyKind2) => {
+  ChatCopyKind2[ChatCopyKind2["Action"] = 1] = "Action";
+  ChatCopyKind2[ChatCopyKind2["Toolbar"] = 2] = "Toolbar";
+  return ChatCopyKind2;
+})(ChatCopyKind || {});
+const IChatService = createDecorator("IChatService");
+const KEYWORD_ACTIVIATION_SETTING_ID = "accessibility.voice.keywordActivation";
+export {
+  ChatAgentVoteDirection,
+  ChatAgentVoteDownReason,
+  ChatCopyKind,
+  ChatErrorLevel,
+  ChatResponseReferencePartStatusKind,
+  IChatService,
+  KEYWORD_ACTIVIATION_SETTING_ID,
+  isIDocumentContext,
+  isIUsedContext
+};
+//# sourceMappingURL=chatService.js.map

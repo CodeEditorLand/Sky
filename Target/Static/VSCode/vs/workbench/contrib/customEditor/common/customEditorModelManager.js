@@ -1,1 +1,76 @@
-import{createSingleCallFunction as s}from"../../../../base/common/functional.js";import"../../../../base/common/lifecycle.js";import"../../../../base/common/uri.js";import"../../../../platform/uriIdentity/common/uriIdentity.js";import"./customEditor.js";class h{_uriIdentityService;constructor(e){this._uriIdentityService=e}_references=new Map;async getAllModels(e){const t=`${e.toString()}@@@`,i=[];for(const[r,o]of this._references)r.startsWith(t)&&o.model&&i.push(await o.model);return i}async get(e,t){const i=this.key(e,t);return this._references.get(i)?.model}tryRetain(e,t){const i=this.key(e,t),r=this._references.get(i);if(r)return r.counter++,r.model.then(o=>({object:o,dispose:s(()=>{--r.counter<=0&&(r.model.then(n=>n.dispose()),this._references.delete(i))})}))}add(e,t,i){const r=this.key(e,t);if(this._references.get(r))throw new Error("Model already exists");return this._references.set(r,{viewType:t,model:i,counter:0}),this.tryRetain(e,t)}disposeAllModelsForView(e){for(const[t,i]of this._references)i.viewType===e&&(i.model.then(r=>r.dispose()),this._references.delete(t))}key(e,t){return e=this._uriIdentityService.asCanonicalUri(e),`${e.toString()}@@@${t}`}}export{h as CustomEditorModelManager};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { createSingleCallFunction } from "../../../../base/common/functional.js";
+import { IReference } from "../../../../base/common/lifecycle.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import { ICustomEditorModel, ICustomEditorModelManager } from "./customEditor.js";
+class CustomEditorModelManager {
+  static {
+    __name(this, "CustomEditorModelManager");
+  }
+  _uriIdentityService;
+  constructor(uriIdentityService) {
+    this._uriIdentityService = uriIdentityService;
+  }
+  _references = /* @__PURE__ */ new Map();
+  async getAllModels(resource) {
+    const keyStart = `${resource.toString()}@@@`;
+    const models = [];
+    for (const [key, entry] of this._references) {
+      if (key.startsWith(keyStart) && entry.model) {
+        models.push(await entry.model);
+      }
+    }
+    return models;
+  }
+  async get(resource, viewType) {
+    const key = this.key(resource, viewType);
+    const entry = this._references.get(key);
+    return entry?.model;
+  }
+  tryRetain(resource, viewType) {
+    const key = this.key(resource, viewType);
+    const entry = this._references.get(key);
+    if (!entry) {
+      return void 0;
+    }
+    entry.counter++;
+    return entry.model.then((model) => {
+      return {
+        object: model,
+        dispose: createSingleCallFunction(() => {
+          if (--entry.counter <= 0) {
+            entry.model.then((x) => x.dispose());
+            this._references.delete(key);
+          }
+        })
+      };
+    });
+  }
+  add(resource, viewType, model) {
+    const key = this.key(resource, viewType);
+    const existing = this._references.get(key);
+    if (existing) {
+      throw new Error("Model already exists");
+    }
+    this._references.set(key, { viewType, model, counter: 0 });
+    return this.tryRetain(resource, viewType);
+  }
+  disposeAllModelsForView(viewType) {
+    for (const [key, value] of this._references) {
+      if (value.viewType === viewType) {
+        value.model.then((x) => x.dispose());
+        this._references.delete(key);
+      }
+    }
+  }
+  key(resource, viewType) {
+    resource = this._uriIdentityService.asCanonicalUri(resource);
+    return `${resource.toString()}@@@${viewType}`;
+  }
+}
+export {
+  CustomEditorModelManager
+};
+//# sourceMappingURL=customEditorModelManager.js.map

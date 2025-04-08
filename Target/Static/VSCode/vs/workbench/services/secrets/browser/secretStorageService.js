@@ -1,1 +1,74 @@
-var S=Object.defineProperty,a=Object.getOwnPropertyDescriptor,g=(e,r,t,o)=>{for(var s,i=o>1?void 0:o?a(r,t):r,n=e.length-1;n>=0;n--)(s=e[n])&&(i=(o?s(r,t,i):s(i))||i);return o&&i&&S(r,t,i),i},n=(e,r)=>(t,o)=>r(t,o,e);import{SequencerByKey as u}from"../../../../base/common/async.js";import{IEncryptionService as v}from"../../../../platform/encryption/common/encryptionService.js";import{InstantiationType as m,registerSingleton as p}from"../../../../platform/instantiation/common/extensions.js";import{ILogService as h}from"../../../../platform/log/common/log.js";import{ISecretStorageService as f,BaseSecretStorageService as P}from"../../../../platform/secrets/common/secrets.js";import{IStorageService as _}from"../../../../platform/storage/common/storage.js";import{IBrowserWorkbenchEnvironmentService as I}from"../../environment/browser/environmentService.js";let s=class extends P{_secretStorageProvider;_embedderSequencer;constructor(e,r,t,o){super(!0,e,r,o),t.options?.secretStorageProvider&&(this._secretStorageProvider=t.options.secretStorageProvider,this._embedderSequencer=new u)}get(e){return this._secretStorageProvider?this._embedderSequencer.queue(e,(()=>this._secretStorageProvider.get(e))):super.get(e)}set(e,r){return this._secretStorageProvider?this._embedderSequencer.queue(e,(async()=>{await this._secretStorageProvider.set(e,r),this.onDidChangeSecretEmitter.fire(e)})):super.set(e,r)}delete(e){return this._secretStorageProvider?this._embedderSequencer.queue(e,(async()=>{await this._secretStorageProvider.delete(e),this.onDidChangeSecretEmitter.fire(e)})):super.delete(e)}get type(){return this._secretStorageProvider?this._secretStorageProvider.type:super.type}};s=g([n(0,_),n(1,v),n(2,I),n(3,h)],s),p(f,s,m.Delayed);export{s as BrowserSecretStorageService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { SequencerByKey } from "../../../../base/common/async.js";
+import { IEncryptionService } from "../../../../platform/encryption/common/encryptionService.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { ISecretStorageProvider, ISecretStorageService, BaseSecretStorageService } from "../../../../platform/secrets/common/secrets.js";
+import { IStorageService } from "../../../../platform/storage/common/storage.js";
+import { IBrowserWorkbenchEnvironmentService } from "../../environment/browser/environmentService.js";
+let BrowserSecretStorageService = class extends BaseSecretStorageService {
+  static {
+    __name(this, "BrowserSecretStorageService");
+  }
+  _secretStorageProvider;
+  _embedderSequencer;
+  constructor(storageService, encryptionService, environmentService, logService) {
+    super(true, storageService, encryptionService, logService);
+    if (environmentService.options?.secretStorageProvider) {
+      this._secretStorageProvider = environmentService.options.secretStorageProvider;
+      this._embedderSequencer = new SequencerByKey();
+    }
+  }
+  get(key) {
+    if (this._secretStorageProvider) {
+      return this._embedderSequencer.queue(key, () => this._secretStorageProvider.get(key));
+    }
+    return super.get(key);
+  }
+  set(key, value) {
+    if (this._secretStorageProvider) {
+      return this._embedderSequencer.queue(key, async () => {
+        await this._secretStorageProvider.set(key, value);
+        this.onDidChangeSecretEmitter.fire(key);
+      });
+    }
+    return super.set(key, value);
+  }
+  delete(key) {
+    if (this._secretStorageProvider) {
+      return this._embedderSequencer.queue(key, async () => {
+        await this._secretStorageProvider.delete(key);
+        this.onDidChangeSecretEmitter.fire(key);
+      });
+    }
+    return super.delete(key);
+  }
+  get type() {
+    if (this._secretStorageProvider) {
+      return this._secretStorageProvider.type;
+    }
+    return super.type;
+  }
+};
+BrowserSecretStorageService = __decorateClass([
+  __decorateParam(0, IStorageService),
+  __decorateParam(1, IEncryptionService),
+  __decorateParam(2, IBrowserWorkbenchEnvironmentService),
+  __decorateParam(3, ILogService)
+], BrowserSecretStorageService);
+registerSingleton(ISecretStorageService, BrowserSecretStorageService, InstantiationType.Delayed);
+export {
+  BrowserSecretStorageService
+};
+//# sourceMappingURL=secretStorageService.js.map

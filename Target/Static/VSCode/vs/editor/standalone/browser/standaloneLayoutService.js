@@ -1,1 +1,82 @@
-var u=Object.defineProperty,v=Object.getOwnPropertyDescriptor,m=(e,t,o,r)=>{for(var i,n=r>1?void 0:r?v(t,o):t,a=e.length-1;a>=0;a--)(i=e[a])&&(n=(r?i(t,o,n):i(n))||n);return r&&n&&u(t,o,n),n},C=(e,t)=>(o,r)=>t(o,r,e);import*as f from"../../../base/browser/dom.js";import{mainWindow as E}from"../../../base/browser/window.js";import{coalesce as g}from"../../../base/common/arrays.js";import{Event as a}from"../../../base/common/event.js";import{ICodeEditorService as l}from"../../browser/services/codeEditorService.js";import{InstantiationType as p,registerSingleton as y}from"../../../platform/instantiation/common/extensions.js";import{ILayoutService as I}from"../../../platform/layout/browser/layoutService.js";let r=class{constructor(e){this._codeEditorService=e}onDidLayoutMainContainer=a.None;onDidLayoutActiveContainer=a.None;onDidLayoutContainer=a.None;onDidChangeActiveContainer=a.None;onDidAddContainer=a.None;get mainContainer(){return this._codeEditorService.listCodeEditors().at(0)?.getContainerDomNode()??E.document.body}get activeContainer(){return(this._codeEditorService.getFocusedCodeEditor()??this._codeEditorService.getActiveCodeEditor())?.getContainerDomNode()??this.mainContainer}get mainContainerDimension(){return f.getClientArea(this.mainContainer)}get activeContainerDimension(){return f.getClientArea(this.activeContainer)}mainContainerOffset={top:0,quickPickTop:0};activeContainerOffset={top:0,quickPickTop:0};get containers(){return g(this._codeEditorService.listCodeEditors().map((e=>e.getContainerDomNode())))}getContainer(){return this.activeContainer}whenContainerStylesLoaded(){}focus(){this._codeEditorService.getFocusedCodeEditor()?.focus()}};r=m([C(0,l)],r);let d=class extends r{constructor(e,t){super(t),this._container=e}get mainContainer(){return this._container}};d=m([C(1,l)],d),y(I,r,p.Delayed);export{d as EditorScopedLayoutService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import * as dom from "../../../base/browser/dom.js";
+import { mainWindow } from "../../../base/browser/window.js";
+import { coalesce } from "../../../base/common/arrays.js";
+import { Event } from "../../../base/common/event.js";
+import { ICodeEditorService } from "../../browser/services/codeEditorService.js";
+import { InstantiationType, registerSingleton } from "../../../platform/instantiation/common/extensions.js";
+import { ILayoutOffsetInfo, ILayoutService } from "../../../platform/layout/browser/layoutService.js";
+let StandaloneLayoutService = class {
+  constructor(_codeEditorService) {
+    this._codeEditorService = _codeEditorService;
+  }
+  static {
+    __name(this, "StandaloneLayoutService");
+  }
+  onDidLayoutMainContainer = Event.None;
+  onDidLayoutActiveContainer = Event.None;
+  onDidLayoutContainer = Event.None;
+  onDidChangeActiveContainer = Event.None;
+  onDidAddContainer = Event.None;
+  get mainContainer() {
+    return this._codeEditorService.listCodeEditors().at(0)?.getContainerDomNode() ?? mainWindow.document.body;
+  }
+  get activeContainer() {
+    const activeCodeEditor = this._codeEditorService.getFocusedCodeEditor() ?? this._codeEditorService.getActiveCodeEditor();
+    return activeCodeEditor?.getContainerDomNode() ?? this.mainContainer;
+  }
+  get mainContainerDimension() {
+    return dom.getClientArea(this.mainContainer);
+  }
+  get activeContainerDimension() {
+    return dom.getClientArea(this.activeContainer);
+  }
+  mainContainerOffset = { top: 0, quickPickTop: 0 };
+  activeContainerOffset = { top: 0, quickPickTop: 0 };
+  get containers() {
+    return coalesce(this._codeEditorService.listCodeEditors().map((codeEditor) => codeEditor.getContainerDomNode()));
+  }
+  getContainer() {
+    return this.activeContainer;
+  }
+  whenContainerStylesLoaded() {
+    return void 0;
+  }
+  focus() {
+    this._codeEditorService.getFocusedCodeEditor()?.focus();
+  }
+};
+StandaloneLayoutService = __decorateClass([
+  __decorateParam(0, ICodeEditorService)
+], StandaloneLayoutService);
+let EditorScopedLayoutService = class extends StandaloneLayoutService {
+  constructor(_container, codeEditorService) {
+    super(codeEditorService);
+    this._container = _container;
+  }
+  static {
+    __name(this, "EditorScopedLayoutService");
+  }
+  get mainContainer() {
+    return this._container;
+  }
+};
+EditorScopedLayoutService = __decorateClass([
+  __decorateParam(1, ICodeEditorService)
+], EditorScopedLayoutService);
+registerSingleton(ILayoutService, StandaloneLayoutService, InstantiationType.Delayed);
+export {
+  EditorScopedLayoutService
+};
+//# sourceMappingURL=standaloneLayoutService.js.map

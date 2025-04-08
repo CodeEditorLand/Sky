@@ -1,1 +1,298 @@
-import{BugIndicatingError as L}from"../../common/errors.js";import{DisposableStore as R}from"../../common/lifecycle.js";import{derived as T,derivedOpts as c,derivedWithStore as w,observableValue as y}from"../../common/observable.js";import{isSVGElement as N}from"../dom.js";var A;(a=>{function e(l=void 0){return(r,s,i)=>{const o=s.class;delete s.class;const u=s.ref;delete s.ref;const v=s.obsRef;return delete s.obsRef,new D(r,u,v,l,o,s,i)}}function t(l,r=void 0){const s=e(r);return(i,o)=>s(l,i,o)}a.div=t("div"),a.elem=e(void 0),a.svg=t("svg","http://www.w3.org/2000/svg"),a.svgElem=e("http://www.w3.org/2000/svg");function h(){let l;const r=function(s){l=s};return Object.defineProperty(r,"element",{get(){if(!l)throw new L("Make sure the ref is set before accessing the element. Maybe wrong initialization order?");return l}}),r}a.ref=h})(A||={});class g{_deriveds=[];_element;constructor(t,n,d,p,m,h,a){this._element=p?document.createElementNS(p,t):document.createElement(t),n&&n(this._element),d&&this._deriveds.push(w((r,s)=>{d(this),s.add({dispose:()=>{d(null)}})})),m&&(M(m)?this._deriveds.push(T(this,r=>{E(this._element,O(m,r))})):E(this._element,O(m,void 0)));for(const[r,s]of Object.entries(h))if(r==="style")for(const[i,o]of Object.entries(s)){const u=b(i);f(o)?this._deriveds.push(c({owner:this,debugName:()=>`set.style.${u}`},v=>{this._element.style.setProperty(u,V(o.read(v)))})):this._element.style.setProperty(u,V(o))}else r==="tabIndex"?f(s)?this._deriveds.push(T(this,i=>{this._element.tabIndex=s.read(i)})):this._element.tabIndex=s:r.startsWith("on")?this._element[r]=s:f(s)?this._deriveds.push(c({owner:this,debugName:()=>`set.${r}`},i=>{I(this._element,r,s.read(i))})):I(this._element,r,s);if(a){let r=function(i,o){return f(o)?r(i,o.read(i)):Array.isArray(o)?o.flatMap(u=>r(i,u)):o instanceof g?(i&&o.readEffect(i),[o._element]):o?[o]:[]};var l=r;const s=T(this,i=>{this._element.replaceChildren(...r(i,a))});this._deriveds.push(s),x(a)||s.get()}}readEffect(t){for(const n of this._deriveds)n.read(t)}keepUpdated(t){return T(n=>{this.readEffect(n)}).recomputeInitiallyAndOnChange(t),this}toDisposableLiveElement(){const t=new R;return this.keepUpdated(t),new C(this._element,t)}}function E(e,t){N(e)?e.setAttribute("class",t):e.className=t}function _(e,t,n){if(f(e)){n(e.read(t));return}if(Array.isArray(e)){for(const d of e)_(d,t,n);return}n(e)}function O(e,t){let n="";return _(e,t,d=>{d&&(n.length===0?n=d:n+=" "+d)}),n}function M(e){return f(e)?!0:Array.isArray(e)?e.some(t=>M(t)):!1}function V(e){return typeof e=="number"?e+"px":e}function x(e){return f(e)?!0:Array.isArray(e)?e.some(t=>x(t)):!1}class C{constructor(t,n){this.element=t;this._disposable=n}dispose(){this._disposable.dispose()}}class D extends g{get element(){return this._element}_isHovered=void 0;get isHovered(){if(!this._isHovered){const t=y("hovered",!1);this._element.addEventListener("mouseenter",n=>t.set(!0,void 0)),this._element.addEventListener("mouseleave",n=>t.set(!1,void 0)),this._isHovered=t}return this._isHovered}_didMouseMoveDuringHover=void 0;get didMouseMoveDuringHover(){if(!this._didMouseMoveDuringHover){let t=!1;const n=y("didMouseMoveDuringHover",!1);this._element.addEventListener("mouseenter",d=>{t=!0}),this._element.addEventListener("mousemove",d=>{t&&n.set(!0,void 0)}),this._element.addEventListener("mouseleave",d=>{t=!1,n.set(!1,void 0)}),this._didMouseMoveDuringHover=n}return this._didMouseMoveDuringHover}}function I(e,t,n){n==null?e.removeAttribute(b(t)):e.setAttribute(b(t),String(n))}function b(e){return e.replace(/([a-z])([A-Z])/g,"$1-$2").toLowerCase()}function f(e){return e&&typeof e=="object"&&e.read!==void 0&&e.reportChanges!==void 0}export{C as LiveElement,g as ObserverNode,D as ObserverNodeWithElement,A as n};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { BugIndicatingError } from "../../common/errors.js";
+import { DisposableStore, IDisposable } from "../../common/lifecycle.js";
+import { derived, derivedOpts, derivedWithStore, IObservable, IReader, observableValue } from "../../common/observable.js";
+import { isSVGElement } from "../dom.js";
+var n;
+((n2) => {
+  function nodeNs(elementNs = void 0) {
+    return (tag, attributes, children) => {
+      const className = attributes.class;
+      delete attributes.class;
+      const ref2 = attributes.ref;
+      delete attributes.ref;
+      const obsRef = attributes.obsRef;
+      delete attributes.obsRef;
+      return new ObserverNodeWithElement(tag, ref2, obsRef, elementNs, className, attributes, children);
+    };
+  }
+  __name(nodeNs, "nodeNs");
+  function node(tag, elementNs = void 0) {
+    const f = nodeNs(elementNs);
+    return (attributes, children) => {
+      return f(tag, attributes, children);
+    };
+  }
+  __name(node, "node");
+  n2.div = node("div");
+  n2.elem = nodeNs(void 0);
+  n2.svg = node("svg", "http://www.w3.org/2000/svg");
+  n2.svgElem = nodeNs("http://www.w3.org/2000/svg");
+  function ref() {
+    let value = void 0;
+    const result = /* @__PURE__ */ __name(function(val) {
+      value = val;
+    }, "result");
+    Object.defineProperty(result, "element", {
+      get() {
+        if (!value) {
+          throw new BugIndicatingError("Make sure the ref is set before accessing the element. Maybe wrong initialization order?");
+        }
+        return value;
+      }
+    });
+    return result;
+  }
+  n2.ref = ref;
+  __name(ref, "ref");
+})(n || (n = {}));
+class ObserverNode {
+  static {
+    __name(this, "ObserverNode");
+  }
+  _deriveds = [];
+  _element;
+  constructor(tag, ref, obsRef, ns, className, attributes, children) {
+    this._element = ns ? document.createElementNS(ns, tag) : document.createElement(tag);
+    if (ref) {
+      ref(this._element);
+    }
+    if (obsRef) {
+      this._deriveds.push(derivedWithStore((_reader, store) => {
+        obsRef(this);
+        store.add({
+          dispose: /* @__PURE__ */ __name(() => {
+            obsRef(null);
+          }, "dispose")
+        });
+      }));
+    }
+    if (className) {
+      if (hasObservable(className)) {
+        this._deriveds.push(derived(this, (reader) => {
+          setClassName(this._element, getClassName(className, reader));
+        }));
+      } else {
+        setClassName(this._element, getClassName(className, void 0));
+      }
+    }
+    for (const [key, value] of Object.entries(attributes)) {
+      if (key === "style") {
+        for (const [cssKey, cssValue] of Object.entries(value)) {
+          const key2 = camelCaseToHyphenCase(cssKey);
+          if (isObservable(cssValue)) {
+            this._deriveds.push(derivedOpts({ owner: this, debugName: /* @__PURE__ */ __name(() => `set.style.${key2}`, "debugName") }, (reader) => {
+              this._element.style.setProperty(key2, convertCssValue(cssValue.read(reader)));
+            }));
+          } else {
+            this._element.style.setProperty(key2, convertCssValue(cssValue));
+          }
+        }
+      } else if (key === "tabIndex") {
+        if (isObservable(value)) {
+          this._deriveds.push(derived(this, (reader) => {
+            this._element.tabIndex = value.read(reader);
+          }));
+        } else {
+          this._element.tabIndex = value;
+        }
+      } else if (key.startsWith("on")) {
+        this._element[key] = value;
+      } else {
+        if (isObservable(value)) {
+          this._deriveds.push(derivedOpts({ owner: this, debugName: /* @__PURE__ */ __name(() => `set.${key}`, "debugName") }, (reader) => {
+            setOrRemoveAttribute(this._element, key, value.read(reader));
+          }));
+        } else {
+          setOrRemoveAttribute(this._element, key, value);
+        }
+      }
+    }
+    if (children) {
+      let getChildren2 = function(reader, children2) {
+        if (isObservable(children2)) {
+          return getChildren2(reader, children2.read(reader));
+        }
+        if (Array.isArray(children2)) {
+          return children2.flatMap((c) => getChildren2(reader, c));
+        }
+        if (children2 instanceof ObserverNode) {
+          if (reader) {
+            children2.readEffect(reader);
+          }
+          return [children2._element];
+        }
+        if (children2) {
+          return [children2];
+        }
+        return [];
+      };
+      var getChildren = getChildren2;
+      __name(getChildren2, "getChildren");
+      const d = derived(this, (reader) => {
+        this._element.replaceChildren(...getChildren2(reader, children));
+      });
+      this._deriveds.push(d);
+      if (!childrenIsObservable(children)) {
+        d.get();
+      }
+    }
+  }
+  readEffect(reader) {
+    for (const d of this._deriveds) {
+      d.read(reader);
+    }
+  }
+  keepUpdated(store) {
+    derived((reader) => {
+      this.readEffect(reader);
+    }).recomputeInitiallyAndOnChange(store);
+    return this;
+  }
+  /**
+   * Creates a live element that will keep the element updated as long as the returned object is not disposed.
+  */
+  toDisposableLiveElement() {
+    const store = new DisposableStore();
+    this.keepUpdated(store);
+    return new LiveElement(this._element, store);
+  }
+}
+function setClassName(domNode, className) {
+  if (isSVGElement(domNode)) {
+    domNode.setAttribute("class", className);
+  } else {
+    domNode.className = className;
+  }
+}
+__name(setClassName, "setClassName");
+function resolve(value, reader, cb) {
+  if (isObservable(value)) {
+    cb(value.read(reader));
+    return;
+  }
+  if (Array.isArray(value)) {
+    for (const v of value) {
+      resolve(v, reader, cb);
+    }
+    return;
+  }
+  cb(value);
+}
+__name(resolve, "resolve");
+function getClassName(className, reader) {
+  let result = "";
+  resolve(className, reader, (val) => {
+    if (val) {
+      if (result.length === 0) {
+        result = val;
+      } else {
+        result += " " + val;
+      }
+    }
+  });
+  return result;
+}
+__name(getClassName, "getClassName");
+function hasObservable(value) {
+  if (isObservable(value)) {
+    return true;
+  }
+  if (Array.isArray(value)) {
+    return value.some((v) => hasObservable(v));
+  }
+  return false;
+}
+__name(hasObservable, "hasObservable");
+function convertCssValue(value) {
+  if (typeof value === "number") {
+    return value + "px";
+  }
+  return value;
+}
+__name(convertCssValue, "convertCssValue");
+function childrenIsObservable(children) {
+  if (isObservable(children)) {
+    return true;
+  }
+  if (Array.isArray(children)) {
+    return children.some((c) => childrenIsObservable(c));
+  }
+  return false;
+}
+__name(childrenIsObservable, "childrenIsObservable");
+class LiveElement {
+  constructor(element, _disposable) {
+    this.element = element;
+    this._disposable = _disposable;
+  }
+  static {
+    __name(this, "LiveElement");
+  }
+  dispose() {
+    this._disposable.dispose();
+  }
+}
+class ObserverNodeWithElement extends ObserverNode {
+  static {
+    __name(this, "ObserverNodeWithElement");
+  }
+  get element() {
+    return this._element;
+  }
+  _isHovered = void 0;
+  get isHovered() {
+    if (!this._isHovered) {
+      const hovered = observableValue("hovered", false);
+      this._element.addEventListener("mouseenter", (_e) => hovered.set(true, void 0));
+      this._element.addEventListener("mouseleave", (_e) => hovered.set(false, void 0));
+      this._isHovered = hovered;
+    }
+    return this._isHovered;
+  }
+  _didMouseMoveDuringHover = void 0;
+  get didMouseMoveDuringHover() {
+    if (!this._didMouseMoveDuringHover) {
+      let _hovering = false;
+      const hovered = observableValue("didMouseMoveDuringHover", false);
+      this._element.addEventListener("mouseenter", (_e) => {
+        _hovering = true;
+      });
+      this._element.addEventListener("mousemove", (_e) => {
+        if (_hovering) {
+          hovered.set(true, void 0);
+        }
+      });
+      this._element.addEventListener("mouseleave", (_e) => {
+        _hovering = false;
+        hovered.set(false, void 0);
+      });
+      this._didMouseMoveDuringHover = hovered;
+    }
+    return this._didMouseMoveDuringHover;
+  }
+}
+function setOrRemoveAttribute(element, key, value) {
+  if (value === null || value === void 0) {
+    element.removeAttribute(camelCaseToHyphenCase(key));
+  } else {
+    element.setAttribute(camelCaseToHyphenCase(key), String(value));
+  }
+}
+__name(setOrRemoveAttribute, "setOrRemoveAttribute");
+function camelCaseToHyphenCase(str) {
+  return str.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase();
+}
+__name(camelCaseToHyphenCase, "camelCaseToHyphenCase");
+function isObservable(obj) {
+  return obj && typeof obj === "object" && obj["read"] !== void 0 && obj["reportChanges"] !== void 0;
+}
+__name(isObservable, "isObservable");
+export {
+  LiveElement,
+  ObserverNode,
+  ObserverNodeWithElement,
+  n
+};
+//# sourceMappingURL=n.js.map

@@ -1,1 +1,495 @@
-var S=Object.defineProperty,f=Object.getOwnPropertyDescriptor,b=(e,t,n,o)=>{for(var i,a=o>1?void 0:o?f(t,n):t,s=e.length-1;s>=0;s--)(i=e[s])&&(a=(o?i(t,n,a):i(a))||a);return o&&a&&S(t,n,a),a},u=(e,t)=>(n,o)=>t(n,o,e);import{SubmenuAction as E}from"../../../base/common/actions.js";import{MicrotaskEmitter as A}from"../../../base/common/event.js";import{DisposableStore as k,dispose as I,markAsSingleton as p,toDisposable as h}from"../../../base/common/lifecycle.js";import{LinkedList as v}from"../../../base/common/linkedList.js";import{ThemeIcon as w}from"../../../base/common/themables.js";import"../../action/common/action.js";import"../../action/common/actionCommonCategories.js";import{CommandsRegistry as T,ICommandService as D}from"../../commands/common/commands.js";import{ContextKeyExpr as g,IContextKeyService as N}from"../../contextkey/common/contextkey.js";import{createDecorator as M}from"../../instantiation/common/instantiation.js";import{KeybindingsRegistry as x}from"../../keybinding/common/keybindingsRegistry.js";function B(e){return void 0!==e.command}function ne(e){return void 0!==e.submenu}class e{static _instances=new Map;static CommandPalette=new e("CommandPalette");static DebugBreakpointsContext=new e("DebugBreakpointsContext");static DebugCallStackContext=new e("DebugCallStackContext");static DebugConsoleContext=new e("DebugConsoleContext");static DebugVariablesContext=new e("DebugVariablesContext");static NotebookVariablesContext=new e("NotebookVariablesContext");static DebugHoverContext=new e("DebugHoverContext");static DebugWatchContext=new e("DebugWatchContext");static DebugToolBar=new e("DebugToolBar");static DebugToolBarStop=new e("DebugToolBarStop");static DebugDisassemblyContext=new e("DebugDisassemblyContext");static DebugCallStackToolbar=new e("DebugCallStackToolbar");static DebugCreateConfiguration=new e("DebugCreateConfiguration");static EditorContext=new e("EditorContext");static SimpleEditorContext=new e("SimpleEditorContext");static EditorContent=new e("EditorContent");static EditorLineNumberContext=new e("EditorLineNumberContext");static EditorContextCopy=new e("EditorContextCopy");static EditorContextPeek=new e("EditorContextPeek");static EditorContextShare=new e("EditorContextShare");static EditorTitle=new e("EditorTitle");static EditorTitleRun=new e("EditorTitleRun");static EditorTitleContext=new e("EditorTitleContext");static EditorTitleContextShare=new e("EditorTitleContextShare");static EmptyEditorGroup=new e("EmptyEditorGroup");static EmptyEditorGroupContext=new e("EmptyEditorGroupContext");static EditorTabsBarContext=new e("EditorTabsBarContext");static EditorTabsBarShowTabsSubmenu=new e("EditorTabsBarShowTabsSubmenu");static EditorTabsBarShowTabsZenModeSubmenu=new e("EditorTabsBarShowTabsZenModeSubmenu");static EditorActionsPositionSubmenu=new e("EditorActionsPositionSubmenu");static ExplorerContext=new e("ExplorerContext");static ExplorerContextShare=new e("ExplorerContextShare");static ExtensionContext=new e("ExtensionContext");static ExtensionEditorContextMenu=new e("ExtensionEditorContextMenu");static GlobalActivity=new e("GlobalActivity");static CommandCenter=new e("CommandCenter");static CommandCenterCenter=new e("CommandCenterCenter");static LayoutControlMenuSubmenu=new e("LayoutControlMenuSubmenu");static LayoutControlMenu=new e("LayoutControlMenu");static MenubarMainMenu=new e("MenubarMainMenu");static MenubarAppearanceMenu=new e("MenubarAppearanceMenu");static MenubarDebugMenu=new e("MenubarDebugMenu");static MenubarEditMenu=new e("MenubarEditMenu");static MenubarCopy=new e("MenubarCopy");static MenubarFileMenu=new e("MenubarFileMenu");static MenubarGoMenu=new e("MenubarGoMenu");static MenubarHelpMenu=new e("MenubarHelpMenu");static MenubarLayoutMenu=new e("MenubarLayoutMenu");static MenubarNewBreakpointMenu=new e("MenubarNewBreakpointMenu");static PanelAlignmentMenu=new e("PanelAlignmentMenu");static PanelPositionMenu=new e("PanelPositionMenu");static ActivityBarPositionMenu=new e("ActivityBarPositionMenu");static MenubarPreferencesMenu=new e("MenubarPreferencesMenu");static MenubarRecentMenu=new e("MenubarRecentMenu");static MenubarSelectionMenu=new e("MenubarSelectionMenu");static MenubarShare=new e("MenubarShare");static MenubarSwitchEditorMenu=new e("MenubarSwitchEditorMenu");static MenubarSwitchGroupMenu=new e("MenubarSwitchGroupMenu");static MenubarTerminalMenu=new e("MenubarTerminalMenu");static MenubarTerminalSuggestStatusMenu=new e("MenubarTerminalSuggestStatusMenu");static MenubarViewMenu=new e("MenubarViewMenu");static MenubarHomeMenu=new e("MenubarHomeMenu");static OpenEditorsContext=new e("OpenEditorsContext");static OpenEditorsContextShare=new e("OpenEditorsContextShare");static ProblemsPanelContext=new e("ProblemsPanelContext");static SCMInputBox=new e("SCMInputBox");static SCMChangeContext=new e("SCMChangeContext");static SCMResourceContext=new e("SCMResourceContext");static SCMResourceContextShare=new e("SCMResourceContextShare");static SCMResourceFolderContext=new e("SCMResourceFolderContext");static SCMResourceGroupContext=new e("SCMResourceGroupContext");static SCMSourceControl=new e("SCMSourceControl");static SCMSourceControlInline=new e("SCMSourceControlInline");static SCMSourceControlTitle=new e("SCMSourceControlTitle");static SCMHistoryTitle=new e("SCMHistoryTitle");static SCMHistoryItemContext=new e("SCMHistoryItemContext");static SCMHistoryItemHover=new e("SCMHistoryItemHover");static SCMHistoryItemRefContext=new e("SCMHistoryItemRefContext");static SCMTitle=new e("SCMTitle");static SearchContext=new e("SearchContext");static SearchActionMenu=new e("SearchActionContext");static StatusBarWindowIndicatorMenu=new e("StatusBarWindowIndicatorMenu");static StatusBarRemoteIndicatorMenu=new e("StatusBarRemoteIndicatorMenu");static StickyScrollContext=new e("StickyScrollContext");static TestItem=new e("TestItem");static TestItemGutter=new e("TestItemGutter");static TestProfilesContext=new e("TestProfilesContext");static TestMessageContext=new e("TestMessageContext");static TestMessageContent=new e("TestMessageContent");static TestPeekElement=new e("TestPeekElement");static TestPeekTitle=new e("TestPeekTitle");static TestCallStack=new e("TestCallStack");static TestCoverageFilterItem=new e("TestCoverageFilterItem");static TouchBarContext=new e("TouchBarContext");static TitleBar=new e("TitleBar");static TitleBarContext=new e("TitleBarContext");static TitleBarTitleContext=new e("TitleBarTitleContext");static TunnelContext=new e("TunnelContext");static TunnelPrivacy=new e("TunnelPrivacy");static TunnelProtocol=new e("TunnelProtocol");static TunnelPortInline=new e("TunnelInline");static TunnelTitle=new e("TunnelTitle");static TunnelLocalAddressInline=new e("TunnelLocalAddressInline");static TunnelOriginInline=new e("TunnelOriginInline");static ViewItemContext=new e("ViewItemContext");static ViewContainerTitle=new e("ViewContainerTitle");static ViewContainerTitleContext=new e("ViewContainerTitleContext");static ViewTitle=new e("ViewTitle");static ViewTitleContext=new e("ViewTitleContext");static CommentEditorActions=new e("CommentEditorActions");static CommentThreadTitle=new e("CommentThreadTitle");static CommentThreadActions=new e("CommentThreadActions");static CommentThreadAdditionalActions=new e("CommentThreadAdditionalActions");static CommentThreadTitleContext=new e("CommentThreadTitleContext");static CommentThreadCommentContext=new e("CommentThreadCommentContext");static CommentTitle=new e("CommentTitle");static CommentActions=new e("CommentActions");static CommentsViewThreadActions=new e("CommentsViewThreadActions");static InteractiveToolbar=new e("InteractiveToolbar");static InteractiveCellTitle=new e("InteractiveCellTitle");static InteractiveCellDelete=new e("InteractiveCellDelete");static InteractiveCellExecute=new e("InteractiveCellExecute");static InteractiveInputExecute=new e("InteractiveInputExecute");static InteractiveInputConfig=new e("InteractiveInputConfig");static ReplInputExecute=new e("ReplInputExecute");static IssueReporter=new e("IssueReporter");static NotebookToolbar=new e("NotebookToolbar");static NotebookToolbarContext=new e("NotebookToolbarContext");static NotebookStickyScrollContext=new e("NotebookStickyScrollContext");static NotebookCellTitle=new e("NotebookCellTitle");static NotebookCellDelete=new e("NotebookCellDelete");static NotebookCellInsert=new e("NotebookCellInsert");static NotebookCellBetween=new e("NotebookCellBetween");static NotebookCellListTop=new e("NotebookCellTop");static NotebookCellExecute=new e("NotebookCellExecute");static NotebookCellExecuteGoTo=new e("NotebookCellExecuteGoTo");static NotebookCellExecutePrimary=new e("NotebookCellExecutePrimary");static NotebookDiffCellInputTitle=new e("NotebookDiffCellInputTitle");static NotebookDiffDocumentMetadata=new e("NotebookDiffDocumentMetadata");static NotebookDiffCellMetadataTitle=new e("NotebookDiffCellMetadataTitle");static NotebookDiffCellOutputsTitle=new e("NotebookDiffCellOutputsTitle");static NotebookOutputToolbar=new e("NotebookOutputToolbar");static NotebookOutlineFilter=new e("NotebookOutlineFilter");static NotebookOutlineActionMenu=new e("NotebookOutlineActionMenu");static NotebookEditorLayoutConfigure=new e("NotebookEditorLayoutConfigure");static NotebookKernelSource=new e("NotebookKernelSource");static BulkEditTitle=new e("BulkEditTitle");static BulkEditContext=new e("BulkEditContext");static TimelineItemContext=new e("TimelineItemContext");static TimelineTitle=new e("TimelineTitle");static TimelineTitleContext=new e("TimelineTitleContext");static TimelineFilterSubMenu=new e("TimelineFilterSubMenu");static AccountsContext=new e("AccountsContext");static SidebarTitle=new e("SidebarTitle");static PanelTitle=new e("PanelTitle");static AuxiliaryBarTitle=new e("AuxiliaryBarTitle");static AuxiliaryBarHeader=new e("AuxiliaryBarHeader");static TerminalInstanceContext=new e("TerminalInstanceContext");static TerminalEditorInstanceContext=new e("TerminalEditorInstanceContext");static TerminalNewDropdownContext=new e("TerminalNewDropdownContext");static TerminalTabContext=new e("TerminalTabContext");static TerminalTabEmptyAreaContext=new e("TerminalTabEmptyAreaContext");static TerminalStickyScrollContext=new e("TerminalStickyScrollContext");static WebviewContext=new e("WebviewContext");static InlineCompletionsActions=new e("InlineCompletionsActions");static InlineEditsActions=new e("InlineEditsActions");static NewFile=new e("NewFile");static MergeInput1Toolbar=new e("MergeToolbar1Toolbar");static MergeInput2Toolbar=new e("MergeToolbar2Toolbar");static MergeBaseToolbar=new e("MergeBaseToolbar");static MergeInputResultToolbar=new e("MergeToolbarResultToolbar");static InlineSuggestionToolbar=new e("InlineSuggestionToolbar");static InlineEditToolbar=new e("InlineEditToolbar");static ChatContext=new e("ChatContext");static ChatCodeBlock=new e("ChatCodeblock");static ChatCompareBlock=new e("ChatCompareBlock");static ChatMessageTitle=new e("ChatMessageTitle");static ChatMessageFooter=new e("ChatMessageFooter");static ChatExecute=new e("ChatExecute");static ChatExecuteSecondary=new e("ChatExecuteSecondary");static ChatInput=new e("ChatInput");static ChatInputSide=new e("ChatInputSide");static ChatModelPicker=new e("ChatModelPicker");static ChatEditingWidgetToolbar=new e("ChatEditingWidgetToolbar");static ChatEditingEditorContent=new e("ChatEditingEditorContent");static ChatEditingEditorHunk=new e("ChatEditingEditorHunk");static ChatEditingDeletedNotebookCell=new e("ChatEditingDeletedNotebookCell");static ChatInputAttachmentToolbar=new e("ChatInputAttachmentToolbar");static ChatEditingWidgetModifiedFilesToolbar=new e("ChatEditingWidgetModifiedFilesToolbar");static ChatInputResourceAttachmentContext=new e("ChatInputResourceAttachmentContext");static ChatInputSymbolAttachmentContext=new e("ChatInputSymbolAttachmentContext");static ChatInlineResourceAnchorContext=new e("ChatInlineResourceAnchorContext");static ChatInlineSymbolAnchorContext=new e("ChatInlineSymbolAnchorContext");static ChatEditingCodeBlockContext=new e("ChatEditingCodeBlockContext");static ChatTitleBarMenu=new e("ChatTitleBarMenu");static ChatAttachmentsContext=new e("ChatAttachmentsContext");static AccessibleView=new e("AccessibleView");static MultiDiffEditorFileToolbar=new e("MultiDiffEditorFileToolbar");static DiffEditorHunkToolbar=new e("DiffEditorHunkToolbar");static DiffEditorSelectionToolbar=new e("DiffEditorSelectionToolbar");static for(t){return e._instances.get(t)??new e(t)}id;constructor(t){if(e._instances.has(t))throw new TypeError(`MenuId with identifier '${t}' already exists. Use MenuId.for(ident) or a unique identifier`);e._instances.set(t,this),this.id=t}}const oe=M("menuService");class d{constructor(e){this.id=e,this.has=t=>t===e}static _all=new Map;static for(e){let t=this._all.get(e);return t||(t=new d(e),this._all.set(e,t)),t}static merge(e){const t=new Set;for(const n of e)n instanceof d&&t.add(n.id);return t}has}const y=new class{_commands=new Map;_menuItems=new Map;_onDidChangeMenu=new A({merge:d.merge});onDidChangeMenu=this._onDidChangeMenu.event;addCommand(t){return this._commands.set(t.id,t),this._onDidChangeMenu.fire(d.for(e.CommandPalette)),p(h((()=>{this._commands.delete(t.id)&&this._onDidChangeMenu.fire(d.for(e.CommandPalette))})))}getCommand(e){return this._commands.get(e)}getCommands(){const e=new Map;return this._commands.forEach(((t,n)=>e.set(n,t))),e}appendMenuItem(e,t){let n=this._menuItems.get(e);n||(n=new v,this._menuItems.set(e,n));const o=n.push(t);return this._onDidChangeMenu.fire(d.for(e)),p(h((()=>{o(),this._onDidChangeMenu.fire(d.for(e))})))}appendMenuItems(e){const t=new k;for(const{id:n,item:o}of e)t.add(this.appendMenuItem(n,o));return t}getMenuItems(t){let n;return n=this._menuItems.has(t)?[...this._menuItems.get(t)]:[],t===e.CommandPalette&&this._appendImplicitItems(n),n}_appendImplicitItems(e){const t=new Set;for(const n of e)B(n)&&(t.add(n.command.id),n.alt&&t.add(n.alt.id));this._commands.forEach(((n,o)=>{t.has(o)||e.push({command:n})}))}};class ie extends E{constructor(e,t,n){super(`submenuitem.${e.submenu.id}`,"string"==typeof e.title?e.title:e.title.value,n,"submenu"),this.item=e,this.hideActions=t}}let m=class{constructor(e,t,n,o,i,a,s){let r;if(this.hideActions=o,this.menuKeybinding=i,this._commandService=s,this.id=e.id,this.label=m.label(e,n),this.tooltip=("string"==typeof e.tooltip?e.tooltip:e.tooltip?.value)??"",this.enabled=!e.precondition||a.contextMatchesRules(e.precondition),this.checked=void 0,e.toggled){const t=e.toggled.condition?e.toggled:{condition:e.toggled};this.checked=a.contextMatchesRules(t.condition),this.checked&&t.tooltip&&(this.tooltip="string"==typeof t.tooltip?t.tooltip:t.tooltip.value),this.checked&&w.isThemeIcon(t.icon)&&(r=t.icon),this.checked&&t.title&&(this.label="string"==typeof t.title?t.title:t.title.value)}r||(r=w.isThemeIcon(e.icon)?e.icon:void 0),this.item=e,this.alt=t?new m(t,void 0,n,o,void 0,a,s):void 0,this._options=n,this.class=r&&w.asClassName(r)}static label(e,t){return t?.renderShortTitle&&e.shortTitle?"string"==typeof e.shortTitle?e.shortTitle:e.shortTitle.value:"string"==typeof e.title?e.title:e.title.value}item;alt;_options;id;label;tooltip;class;enabled;checked;run(...e){let t=[];return this._options?.arg&&(t=[...t,this._options.arg]),this._options?.shouldForwardArgs&&(t=[...t,...e]),this._commandService.executeCommand(this.id,...t)}};m=b([u(5,N),u(6,D)],m);class ae{constructor(e){this.desc=e}}function re(t){const n=[],o=new t,{f1:i,menu:a,keybinding:s,...r}=o.desc;if(T.getCommand(r.id))throw new Error(`Cannot register two commands with the same id: ${r.id}`);if(n.push(T.registerCommand({id:r.id,handler:(e,...t)=>o.run(e,...t),metadata:r.metadata??{description:o.desc.title}})),Array.isArray(a))for(const e of a)n.push(y.appendMenuItem(e.id,{command:{...r,precondition:null===e.precondition?void 0:r.precondition},...e}));else a&&n.push(y.appendMenuItem(a.id,{command:{...r,precondition:null===a.precondition?void 0:r.precondition},...a}));if(i&&(n.push(y.appendMenuItem(e.CommandPalette,{command:r,when:r.precondition})),n.push(y.addCommand(r))),Array.isArray(s))for(const e of s)n.push(x.registerKeybindingRule({...e,id:r.id,when:r.precondition?g.and(r.precondition,e.when):e.when}));else s&&n.push(x.registerKeybindingRule({...s,id:r.id,when:r.precondition?g.and(r.precondition,s.when):s.when}));return{dispose(){I(n)}}}export{ae as Action2,oe as IMenuService,e as MenuId,m as MenuItemAction,y as MenuRegistry,ie as SubmenuItemAction,B as isIMenuItem,ne as isISubmenuItem,re as registerAction2};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { IAction, SubmenuAction } from "../../../base/common/actions.js";
+import { Event, MicrotaskEmitter } from "../../../base/common/event.js";
+import { DisposableStore, dispose, IDisposable, markAsSingleton, toDisposable } from "../../../base/common/lifecycle.js";
+import { LinkedList } from "../../../base/common/linkedList.js";
+import { ThemeIcon } from "../../../base/common/themables.js";
+import { ICommandAction, ICommandActionTitle, Icon, ILocalizedString } from "../../action/common/action.js";
+import { Categories } from "../../action/common/actionCommonCategories.js";
+import { CommandsRegistry, ICommandService } from "../../commands/common/commands.js";
+import { ContextKeyExpr, ContextKeyExpression, IContextKeyService } from "../../contextkey/common/contextkey.js";
+import { createDecorator, ServicesAccessor } from "../../instantiation/common/instantiation.js";
+import { IKeybindingRule, KeybindingsRegistry } from "../../keybinding/common/keybindingsRegistry.js";
+function isIMenuItem(item) {
+  return item.command !== void 0;
+}
+__name(isIMenuItem, "isIMenuItem");
+function isISubmenuItem(item) {
+  return item.submenu !== void 0;
+}
+__name(isISubmenuItem, "isISubmenuItem");
+class MenuId {
+  static {
+    __name(this, "MenuId");
+  }
+  static _instances = /* @__PURE__ */ new Map();
+  static CommandPalette = new MenuId("CommandPalette");
+  static DebugBreakpointsContext = new MenuId("DebugBreakpointsContext");
+  static DebugCallStackContext = new MenuId("DebugCallStackContext");
+  static DebugConsoleContext = new MenuId("DebugConsoleContext");
+  static DebugVariablesContext = new MenuId("DebugVariablesContext");
+  static NotebookVariablesContext = new MenuId("NotebookVariablesContext");
+  static DebugHoverContext = new MenuId("DebugHoverContext");
+  static DebugWatchContext = new MenuId("DebugWatchContext");
+  static DebugToolBar = new MenuId("DebugToolBar");
+  static DebugToolBarStop = new MenuId("DebugToolBarStop");
+  static DebugDisassemblyContext = new MenuId("DebugDisassemblyContext");
+  static DebugCallStackToolbar = new MenuId("DebugCallStackToolbar");
+  static DebugCreateConfiguration = new MenuId("DebugCreateConfiguration");
+  static EditorContext = new MenuId("EditorContext");
+  static SimpleEditorContext = new MenuId("SimpleEditorContext");
+  static EditorContent = new MenuId("EditorContent");
+  static EditorLineNumberContext = new MenuId("EditorLineNumberContext");
+  static EditorContextCopy = new MenuId("EditorContextCopy");
+  static EditorContextPeek = new MenuId("EditorContextPeek");
+  static EditorContextShare = new MenuId("EditorContextShare");
+  static EditorTitle = new MenuId("EditorTitle");
+  static EditorTitleRun = new MenuId("EditorTitleRun");
+  static EditorTitleContext = new MenuId("EditorTitleContext");
+  static EditorTitleContextShare = new MenuId("EditorTitleContextShare");
+  static EmptyEditorGroup = new MenuId("EmptyEditorGroup");
+  static EmptyEditorGroupContext = new MenuId("EmptyEditorGroupContext");
+  static EditorTabsBarContext = new MenuId("EditorTabsBarContext");
+  static EditorTabsBarShowTabsSubmenu = new MenuId("EditorTabsBarShowTabsSubmenu");
+  static EditorTabsBarShowTabsZenModeSubmenu = new MenuId("EditorTabsBarShowTabsZenModeSubmenu");
+  static EditorActionsPositionSubmenu = new MenuId("EditorActionsPositionSubmenu");
+  static ExplorerContext = new MenuId("ExplorerContext");
+  static ExplorerContextShare = new MenuId("ExplorerContextShare");
+  static ExtensionContext = new MenuId("ExtensionContext");
+  static ExtensionEditorContextMenu = new MenuId("ExtensionEditorContextMenu");
+  static GlobalActivity = new MenuId("GlobalActivity");
+  static CommandCenter = new MenuId("CommandCenter");
+  static CommandCenterCenter = new MenuId("CommandCenterCenter");
+  static LayoutControlMenuSubmenu = new MenuId("LayoutControlMenuSubmenu");
+  static LayoutControlMenu = new MenuId("LayoutControlMenu");
+  static MenubarMainMenu = new MenuId("MenubarMainMenu");
+  static MenubarAppearanceMenu = new MenuId("MenubarAppearanceMenu");
+  static MenubarDebugMenu = new MenuId("MenubarDebugMenu");
+  static MenubarEditMenu = new MenuId("MenubarEditMenu");
+  static MenubarCopy = new MenuId("MenubarCopy");
+  static MenubarFileMenu = new MenuId("MenubarFileMenu");
+  static MenubarGoMenu = new MenuId("MenubarGoMenu");
+  static MenubarHelpMenu = new MenuId("MenubarHelpMenu");
+  static MenubarLayoutMenu = new MenuId("MenubarLayoutMenu");
+  static MenubarNewBreakpointMenu = new MenuId("MenubarNewBreakpointMenu");
+  static PanelAlignmentMenu = new MenuId("PanelAlignmentMenu");
+  static PanelPositionMenu = new MenuId("PanelPositionMenu");
+  static ActivityBarPositionMenu = new MenuId("ActivityBarPositionMenu");
+  static MenubarPreferencesMenu = new MenuId("MenubarPreferencesMenu");
+  static MenubarRecentMenu = new MenuId("MenubarRecentMenu");
+  static MenubarSelectionMenu = new MenuId("MenubarSelectionMenu");
+  static MenubarShare = new MenuId("MenubarShare");
+  static MenubarSwitchEditorMenu = new MenuId("MenubarSwitchEditorMenu");
+  static MenubarSwitchGroupMenu = new MenuId("MenubarSwitchGroupMenu");
+  static MenubarTerminalMenu = new MenuId("MenubarTerminalMenu");
+  static MenubarTerminalSuggestStatusMenu = new MenuId("MenubarTerminalSuggestStatusMenu");
+  static MenubarViewMenu = new MenuId("MenubarViewMenu");
+  static MenubarHomeMenu = new MenuId("MenubarHomeMenu");
+  static OpenEditorsContext = new MenuId("OpenEditorsContext");
+  static OpenEditorsContextShare = new MenuId("OpenEditorsContextShare");
+  static ProblemsPanelContext = new MenuId("ProblemsPanelContext");
+  static SCMInputBox = new MenuId("SCMInputBox");
+  static SCMChangeContext = new MenuId("SCMChangeContext");
+  static SCMResourceContext = new MenuId("SCMResourceContext");
+  static SCMResourceContextShare = new MenuId("SCMResourceContextShare");
+  static SCMResourceFolderContext = new MenuId("SCMResourceFolderContext");
+  static SCMResourceGroupContext = new MenuId("SCMResourceGroupContext");
+  static SCMSourceControl = new MenuId("SCMSourceControl");
+  static SCMSourceControlInline = new MenuId("SCMSourceControlInline");
+  static SCMSourceControlTitle = new MenuId("SCMSourceControlTitle");
+  static SCMHistoryTitle = new MenuId("SCMHistoryTitle");
+  static SCMHistoryItemContext = new MenuId("SCMHistoryItemContext");
+  static SCMHistoryItemHover = new MenuId("SCMHistoryItemHover");
+  static SCMHistoryItemRefContext = new MenuId("SCMHistoryItemRefContext");
+  static SCMTitle = new MenuId("SCMTitle");
+  static SearchContext = new MenuId("SearchContext");
+  static SearchActionMenu = new MenuId("SearchActionContext");
+  static StatusBarWindowIndicatorMenu = new MenuId("StatusBarWindowIndicatorMenu");
+  static StatusBarRemoteIndicatorMenu = new MenuId("StatusBarRemoteIndicatorMenu");
+  static StickyScrollContext = new MenuId("StickyScrollContext");
+  static TestItem = new MenuId("TestItem");
+  static TestItemGutter = new MenuId("TestItemGutter");
+  static TestProfilesContext = new MenuId("TestProfilesContext");
+  static TestMessageContext = new MenuId("TestMessageContext");
+  static TestMessageContent = new MenuId("TestMessageContent");
+  static TestPeekElement = new MenuId("TestPeekElement");
+  static TestPeekTitle = new MenuId("TestPeekTitle");
+  static TestCallStack = new MenuId("TestCallStack");
+  static TestCoverageFilterItem = new MenuId("TestCoverageFilterItem");
+  static TouchBarContext = new MenuId("TouchBarContext");
+  static TitleBar = new MenuId("TitleBar");
+  static TitleBarContext = new MenuId("TitleBarContext");
+  static TitleBarTitleContext = new MenuId("TitleBarTitleContext");
+  static TunnelContext = new MenuId("TunnelContext");
+  static TunnelPrivacy = new MenuId("TunnelPrivacy");
+  static TunnelProtocol = new MenuId("TunnelProtocol");
+  static TunnelPortInline = new MenuId("TunnelInline");
+  static TunnelTitle = new MenuId("TunnelTitle");
+  static TunnelLocalAddressInline = new MenuId("TunnelLocalAddressInline");
+  static TunnelOriginInline = new MenuId("TunnelOriginInline");
+  static ViewItemContext = new MenuId("ViewItemContext");
+  static ViewContainerTitle = new MenuId("ViewContainerTitle");
+  static ViewContainerTitleContext = new MenuId("ViewContainerTitleContext");
+  static ViewTitle = new MenuId("ViewTitle");
+  static ViewTitleContext = new MenuId("ViewTitleContext");
+  static CommentEditorActions = new MenuId("CommentEditorActions");
+  static CommentThreadTitle = new MenuId("CommentThreadTitle");
+  static CommentThreadActions = new MenuId("CommentThreadActions");
+  static CommentThreadAdditionalActions = new MenuId("CommentThreadAdditionalActions");
+  static CommentThreadTitleContext = new MenuId("CommentThreadTitleContext");
+  static CommentThreadCommentContext = new MenuId("CommentThreadCommentContext");
+  static CommentTitle = new MenuId("CommentTitle");
+  static CommentActions = new MenuId("CommentActions");
+  static CommentsViewThreadActions = new MenuId("CommentsViewThreadActions");
+  static InteractiveToolbar = new MenuId("InteractiveToolbar");
+  static InteractiveCellTitle = new MenuId("InteractiveCellTitle");
+  static InteractiveCellDelete = new MenuId("InteractiveCellDelete");
+  static InteractiveCellExecute = new MenuId("InteractiveCellExecute");
+  static InteractiveInputExecute = new MenuId("InteractiveInputExecute");
+  static InteractiveInputConfig = new MenuId("InteractiveInputConfig");
+  static ReplInputExecute = new MenuId("ReplInputExecute");
+  static IssueReporter = new MenuId("IssueReporter");
+  static NotebookToolbar = new MenuId("NotebookToolbar");
+  static NotebookToolbarContext = new MenuId("NotebookToolbarContext");
+  static NotebookStickyScrollContext = new MenuId("NotebookStickyScrollContext");
+  static NotebookCellTitle = new MenuId("NotebookCellTitle");
+  static NotebookCellDelete = new MenuId("NotebookCellDelete");
+  static NotebookCellInsert = new MenuId("NotebookCellInsert");
+  static NotebookCellBetween = new MenuId("NotebookCellBetween");
+  static NotebookCellListTop = new MenuId("NotebookCellTop");
+  static NotebookCellExecute = new MenuId("NotebookCellExecute");
+  static NotebookCellExecuteGoTo = new MenuId("NotebookCellExecuteGoTo");
+  static NotebookCellExecutePrimary = new MenuId("NotebookCellExecutePrimary");
+  static NotebookDiffCellInputTitle = new MenuId("NotebookDiffCellInputTitle");
+  static NotebookDiffDocumentMetadata = new MenuId("NotebookDiffDocumentMetadata");
+  static NotebookDiffCellMetadataTitle = new MenuId("NotebookDiffCellMetadataTitle");
+  static NotebookDiffCellOutputsTitle = new MenuId("NotebookDiffCellOutputsTitle");
+  static NotebookOutputToolbar = new MenuId("NotebookOutputToolbar");
+  static NotebookOutlineFilter = new MenuId("NotebookOutlineFilter");
+  static NotebookOutlineActionMenu = new MenuId("NotebookOutlineActionMenu");
+  static NotebookEditorLayoutConfigure = new MenuId("NotebookEditorLayoutConfigure");
+  static NotebookKernelSource = new MenuId("NotebookKernelSource");
+  static BulkEditTitle = new MenuId("BulkEditTitle");
+  static BulkEditContext = new MenuId("BulkEditContext");
+  static TimelineItemContext = new MenuId("TimelineItemContext");
+  static TimelineTitle = new MenuId("TimelineTitle");
+  static TimelineTitleContext = new MenuId("TimelineTitleContext");
+  static TimelineFilterSubMenu = new MenuId("TimelineFilterSubMenu");
+  static AccountsContext = new MenuId("AccountsContext");
+  static SidebarTitle = new MenuId("SidebarTitle");
+  static PanelTitle = new MenuId("PanelTitle");
+  static AuxiliaryBarTitle = new MenuId("AuxiliaryBarTitle");
+  static AuxiliaryBarHeader = new MenuId("AuxiliaryBarHeader");
+  static TerminalInstanceContext = new MenuId("TerminalInstanceContext");
+  static TerminalEditorInstanceContext = new MenuId("TerminalEditorInstanceContext");
+  static TerminalNewDropdownContext = new MenuId("TerminalNewDropdownContext");
+  static TerminalTabContext = new MenuId("TerminalTabContext");
+  static TerminalTabEmptyAreaContext = new MenuId("TerminalTabEmptyAreaContext");
+  static TerminalStickyScrollContext = new MenuId("TerminalStickyScrollContext");
+  static WebviewContext = new MenuId("WebviewContext");
+  static InlineCompletionsActions = new MenuId("InlineCompletionsActions");
+  static InlineEditsActions = new MenuId("InlineEditsActions");
+  static NewFile = new MenuId("NewFile");
+  static MergeInput1Toolbar = new MenuId("MergeToolbar1Toolbar");
+  static MergeInput2Toolbar = new MenuId("MergeToolbar2Toolbar");
+  static MergeBaseToolbar = new MenuId("MergeBaseToolbar");
+  static MergeInputResultToolbar = new MenuId("MergeToolbarResultToolbar");
+  static InlineSuggestionToolbar = new MenuId("InlineSuggestionToolbar");
+  static InlineEditToolbar = new MenuId("InlineEditToolbar");
+  static ChatContext = new MenuId("ChatContext");
+  static ChatCodeBlock = new MenuId("ChatCodeblock");
+  static ChatCompareBlock = new MenuId("ChatCompareBlock");
+  static ChatMessageTitle = new MenuId("ChatMessageTitle");
+  static ChatMessageFooter = new MenuId("ChatMessageFooter");
+  static ChatExecute = new MenuId("ChatExecute");
+  static ChatExecuteSecondary = new MenuId("ChatExecuteSecondary");
+  static ChatInput = new MenuId("ChatInput");
+  static ChatInputSide = new MenuId("ChatInputSide");
+  static ChatModelPicker = new MenuId("ChatModelPicker");
+  static ChatEditingWidgetToolbar = new MenuId("ChatEditingWidgetToolbar");
+  static ChatEditingEditorContent = new MenuId("ChatEditingEditorContent");
+  static ChatEditingEditorHunk = new MenuId("ChatEditingEditorHunk");
+  static ChatEditingDeletedNotebookCell = new MenuId("ChatEditingDeletedNotebookCell");
+  static ChatInputAttachmentToolbar = new MenuId("ChatInputAttachmentToolbar");
+  static ChatEditingWidgetModifiedFilesToolbar = new MenuId("ChatEditingWidgetModifiedFilesToolbar");
+  static ChatInputResourceAttachmentContext = new MenuId("ChatInputResourceAttachmentContext");
+  static ChatInputSymbolAttachmentContext = new MenuId("ChatInputSymbolAttachmentContext");
+  static ChatInlineResourceAnchorContext = new MenuId("ChatInlineResourceAnchorContext");
+  static ChatInlineSymbolAnchorContext = new MenuId("ChatInlineSymbolAnchorContext");
+  static ChatEditingCodeBlockContext = new MenuId("ChatEditingCodeBlockContext");
+  static ChatTitleBarMenu = new MenuId("ChatTitleBarMenu");
+  static ChatAttachmentsContext = new MenuId("ChatAttachmentsContext");
+  static AccessibleView = new MenuId("AccessibleView");
+  static MultiDiffEditorFileToolbar = new MenuId("MultiDiffEditorFileToolbar");
+  static DiffEditorHunkToolbar = new MenuId("DiffEditorHunkToolbar");
+  static DiffEditorSelectionToolbar = new MenuId("DiffEditorSelectionToolbar");
+  /**
+   * Create or reuse a `MenuId` with the given identifier
+   */
+  static for(identifier) {
+    return MenuId._instances.get(identifier) ?? new MenuId(identifier);
+  }
+  id;
+  /**
+   * Create a new `MenuId` with the unique identifier. Will throw if a menu
+   * with the identifier already exists, use `MenuId.for(ident)` or a unique
+   * identifier
+   */
+  constructor(identifier) {
+    if (MenuId._instances.has(identifier)) {
+      throw new TypeError(`MenuId with identifier '${identifier}' already exists. Use MenuId.for(ident) or a unique identifier`);
+    }
+    MenuId._instances.set(identifier, this);
+    this.id = identifier;
+  }
+}
+const IMenuService = createDecorator("menuService");
+class MenuRegistryChangeEvent {
+  constructor(id) {
+    this.id = id;
+    this.has = (candidate) => candidate === id;
+  }
+  static {
+    __name(this, "MenuRegistryChangeEvent");
+  }
+  static _all = /* @__PURE__ */ new Map();
+  static for(id) {
+    let value = this._all.get(id);
+    if (!value) {
+      value = new MenuRegistryChangeEvent(id);
+      this._all.set(id, value);
+    }
+    return value;
+  }
+  static merge(events) {
+    const ids = /* @__PURE__ */ new Set();
+    for (const item of events) {
+      if (item instanceof MenuRegistryChangeEvent) {
+        ids.add(item.id);
+      }
+    }
+    return ids;
+  }
+  has;
+}
+const MenuRegistry = new class {
+  _commands = /* @__PURE__ */ new Map();
+  _menuItems = /* @__PURE__ */ new Map();
+  _onDidChangeMenu = new MicrotaskEmitter({
+    merge: MenuRegistryChangeEvent.merge
+  });
+  onDidChangeMenu = this._onDidChangeMenu.event;
+  addCommand(command) {
+    this._commands.set(command.id, command);
+    this._onDidChangeMenu.fire(MenuRegistryChangeEvent.for(MenuId.CommandPalette));
+    return markAsSingleton(toDisposable(() => {
+      if (this._commands.delete(command.id)) {
+        this._onDidChangeMenu.fire(MenuRegistryChangeEvent.for(MenuId.CommandPalette));
+      }
+    }));
+  }
+  getCommand(id) {
+    return this._commands.get(id);
+  }
+  getCommands() {
+    const map = /* @__PURE__ */ new Map();
+    this._commands.forEach((value, key) => map.set(key, value));
+    return map;
+  }
+  appendMenuItem(id, item) {
+    let list = this._menuItems.get(id);
+    if (!list) {
+      list = new LinkedList();
+      this._menuItems.set(id, list);
+    }
+    const rm = list.push(item);
+    this._onDidChangeMenu.fire(MenuRegistryChangeEvent.for(id));
+    return markAsSingleton(toDisposable(() => {
+      rm();
+      this._onDidChangeMenu.fire(MenuRegistryChangeEvent.for(id));
+    }));
+  }
+  appendMenuItems(items) {
+    const result = new DisposableStore();
+    for (const { id, item } of items) {
+      result.add(this.appendMenuItem(id, item));
+    }
+    return result;
+  }
+  getMenuItems(id) {
+    let result;
+    if (this._menuItems.has(id)) {
+      result = [...this._menuItems.get(id)];
+    } else {
+      result = [];
+    }
+    if (id === MenuId.CommandPalette) {
+      this._appendImplicitItems(result);
+    }
+    return result;
+  }
+  _appendImplicitItems(result) {
+    const set = /* @__PURE__ */ new Set();
+    for (const item of result) {
+      if (isIMenuItem(item)) {
+        set.add(item.command.id);
+        if (item.alt) {
+          set.add(item.alt.id);
+        }
+      }
+    }
+    this._commands.forEach((command, id) => {
+      if (!set.has(id)) {
+        result.push({ command });
+      }
+    });
+  }
+}();
+class SubmenuItemAction extends SubmenuAction {
+  constructor(item, hideActions, actions) {
+    super(`submenuitem.${item.submenu.id}`, typeof item.title === "string" ? item.title : item.title.value, actions, "submenu");
+    this.item = item;
+    this.hideActions = hideActions;
+  }
+  static {
+    __name(this, "SubmenuItemAction");
+  }
+}
+let MenuItemAction = class {
+  constructor(item, alt, options, hideActions, menuKeybinding, contextKeyService, _commandService) {
+    this.hideActions = hideActions;
+    this.menuKeybinding = menuKeybinding;
+    this._commandService = _commandService;
+    this.id = item.id;
+    this.label = MenuItemAction.label(item, options);
+    this.tooltip = (typeof item.tooltip === "string" ? item.tooltip : item.tooltip?.value) ?? "";
+    this.enabled = !item.precondition || contextKeyService.contextMatchesRules(item.precondition);
+    this.checked = void 0;
+    let icon;
+    if (item.toggled) {
+      const toggled = item.toggled.condition ? item.toggled : { condition: item.toggled };
+      this.checked = contextKeyService.contextMatchesRules(toggled.condition);
+      if (this.checked && toggled.tooltip) {
+        this.tooltip = typeof toggled.tooltip === "string" ? toggled.tooltip : toggled.tooltip.value;
+      }
+      if (this.checked && ThemeIcon.isThemeIcon(toggled.icon)) {
+        icon = toggled.icon;
+      }
+      if (this.checked && toggled.title) {
+        this.label = typeof toggled.title === "string" ? toggled.title : toggled.title.value;
+      }
+    }
+    if (!icon) {
+      icon = ThemeIcon.isThemeIcon(item.icon) ? item.icon : void 0;
+    }
+    this.item = item;
+    this.alt = alt ? new MenuItemAction(alt, void 0, options, hideActions, void 0, contextKeyService, _commandService) : void 0;
+    this._options = options;
+    this.class = icon && ThemeIcon.asClassName(icon);
+  }
+  static {
+    __name(this, "MenuItemAction");
+  }
+  static label(action, options) {
+    return options?.renderShortTitle && action.shortTitle ? typeof action.shortTitle === "string" ? action.shortTitle : action.shortTitle.value : typeof action.title === "string" ? action.title : action.title.value;
+  }
+  item;
+  alt;
+  _options;
+  id;
+  label;
+  tooltip;
+  class;
+  enabled;
+  checked;
+  run(...args) {
+    let runArgs = [];
+    if (this._options?.arg) {
+      runArgs = [...runArgs, this._options.arg];
+    }
+    if (this._options?.shouldForwardArgs) {
+      runArgs = [...runArgs, ...args];
+    }
+    return this._commandService.executeCommand(this.id, ...runArgs);
+  }
+};
+MenuItemAction = __decorateClass([
+  __decorateParam(5, IContextKeyService),
+  __decorateParam(6, ICommandService)
+], MenuItemAction);
+class Action2 {
+  constructor(desc) {
+    this.desc = desc;
+  }
+  static {
+    __name(this, "Action2");
+  }
+}
+function registerAction2(ctor) {
+  const disposables = [];
+  const action = new ctor();
+  const { f1, menu, keybinding, ...command } = action.desc;
+  if (CommandsRegistry.getCommand(command.id)) {
+    throw new Error(`Cannot register two commands with the same id: ${command.id}`);
+  }
+  disposables.push(CommandsRegistry.registerCommand({
+    id: command.id,
+    handler: /* @__PURE__ */ __name((accessor, ...args) => action.run(accessor, ...args), "handler"),
+    metadata: command.metadata ?? { description: action.desc.title }
+  }));
+  if (Array.isArray(menu)) {
+    for (const item of menu) {
+      disposables.push(MenuRegistry.appendMenuItem(item.id, { command: { ...command, precondition: item.precondition === null ? void 0 : command.precondition }, ...item }));
+    }
+  } else if (menu) {
+    disposables.push(MenuRegistry.appendMenuItem(menu.id, { command: { ...command, precondition: menu.precondition === null ? void 0 : command.precondition }, ...menu }));
+  }
+  if (f1) {
+    disposables.push(MenuRegistry.appendMenuItem(MenuId.CommandPalette, { command, when: command.precondition }));
+    disposables.push(MenuRegistry.addCommand(command));
+  }
+  if (Array.isArray(keybinding)) {
+    for (const item of keybinding) {
+      disposables.push(KeybindingsRegistry.registerKeybindingRule({
+        ...item,
+        id: command.id,
+        when: command.precondition ? ContextKeyExpr.and(command.precondition, item.when) : item.when
+      }));
+    }
+  } else if (keybinding) {
+    disposables.push(KeybindingsRegistry.registerKeybindingRule({
+      ...keybinding,
+      id: command.id,
+      when: command.precondition ? ContextKeyExpr.and(command.precondition, keybinding.when) : keybinding.when
+    }));
+  }
+  return {
+    dispose() {
+      dispose(disposables);
+    }
+  };
+}
+__name(registerAction2, "registerAction2");
+export {
+  Action2,
+  IMenuService,
+  MenuId,
+  MenuItemAction,
+  MenuRegistry,
+  SubmenuItemAction,
+  isIMenuItem,
+  isISubmenuItem,
+  registerAction2
+};
+//# sourceMappingURL=actions.js.map

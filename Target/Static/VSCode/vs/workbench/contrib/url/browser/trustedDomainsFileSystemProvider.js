@@ -1,4 +1,34 @@
-var g=Object.defineProperty;var v=Object.getOwnPropertyDescriptor;var l=(r,i,t,e)=>{for(var o=e>1?void 0:e?v(i,t):i,s=r.length-1,n;s>=0;s--)(n=r[s])&&(o=(e?n(i,t,o):n(o))||o);return e&&o&&g(i,t,o),o},a=(r,i)=>(t,e)=>i(t,e,r);import{Event as p}from"../../../../base/common/event.js";import{parse as O}from"../../../../base/common/json.js";import"../../../../base/common/lifecycle.js";import"../../../../base/common/uri.js";import{FileSystemProviderCapabilities as T,FileType as P,IFileService as y}from"../../../../platform/files/common/files.js";import{IStorageService as D,StorageScope as m,StorageTarget as h}from"../../../../platform/storage/common/storage.js";import"../../../common/contributions.js";import{VSBuffer as f}from"../../../../base/common/buffer.js";import{readTrustedDomains as R,TRUSTED_DOMAINS_CONTENT_STORAGE_KEY as d,TRUSTED_DOMAINS_STORAGE_KEY as C}from"./trustedDomains.js";import{assertIsDefined as E}from"../../../../base/common/types.js";import{IInstantiationService as F}from"../../../../platform/instantiation/common/instantiation.js";const b="trustedDomains",_={type:P.File,ctime:Date.now(),mtime:Date.now(),size:0},u=`// Links matching one or more entries in the list below can be opened without link protection.
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Event } from "../../../../base/common/event.js";
+import { parse } from "../../../../base/common/json.js";
+import { IDisposable } from "../../../../base/common/lifecycle.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IFileDeleteOptions, IFileOverwriteOptions, FileSystemProviderCapabilities, FileType, IFileWriteOptions, IFileService, IStat, IWatchOptions, IFileSystemProviderWithFileReadWriteCapability } from "../../../../platform/files/common/files.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { IWorkbenchContribution } from "../../../common/contributions.js";
+import { VSBuffer } from "../../../../base/common/buffer.js";
+import { readTrustedDomains, TRUSTED_DOMAINS_CONTENT_STORAGE_KEY, TRUSTED_DOMAINS_STORAGE_KEY } from "./trustedDomains.js";
+import { assertIsDefined } from "../../../../base/common/types.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+const TRUSTED_DOMAINS_SCHEMA = "trustedDomains";
+const TRUSTED_DOMAINS_STAT = {
+  type: FileType.File,
+  ctime: Date.now(),
+  mtime: Date.now(),
+  size: 0
+};
+const CONFIG_HELP_TEXT_PRE = `// Links matching one or more entries in the list below can be opened without link protection.
 // The following examples show what entries can look like:
 // - "https://microsoft.com": Matches this specific domain using https
 // - "https://microsoft.com:8080": Matches this specific domain on this port using https
@@ -12,14 +42,110 @@ var g=Object.defineProperty;var v=Object.getOwnPropertyDescriptor;var l=(r,i,t,e
 // - "http://192.168.0.*: Matches all IP's with this prefix using http
 // - "*": Match all domains using either http or https
 //
-`,I=`//
+`;
+const CONFIG_HELP_TEXT_AFTER = `//
 // You can use the "Manage Trusted Domains" command to open this file.
 // Save this file to apply the trusted domains rules.
-`,A=`[
+`;
+const CONFIG_PLACEHOLDER_TEXT = `[
 	// "https://microsoft.com"
-]`;function U(r,i,t){let e=u;return r.length>0?(e+=`// By default, VS Code trusts "localhost" as well as the following domains:
-`,r.forEach(o=>{e+=`// - "${o}"
-`})):e+=`// By default, VS Code trusts "localhost".
-`,e+=I,e+=t?`
-// Currently configuring trust for ${t}
-`:"",i.length===0?e+=A:e+=JSON.stringify(i,null,2),e}let c=class{constructor(i,t,e){this.fileService=i;this.storageService=t;this.instantiationService=e;this.fileService.registerProvider(b,this)}static ID="workbench.contrib.trustedDomainsFileSystemProvider";capabilities=T.FileReadWrite;onDidChangeCapabilities=p.None;onDidChangeFile=p.None;stat(i){return Promise.resolve(_)}async readFile(i){let t=this.storageService.get(d,m.APPLICATION);const e=i.fragment,{defaultTrustedDomains:o,trustedDomains:s}=await this.instantiationService.invokeFunction(R);return(!t||t.indexOf(u)===-1||t.indexOf(I)===-1||t.indexOf(e??"")===-1||[...o,...s].some(S=>!E(t).includes(S)))&&(t=U(o,s,e)),f.fromString(t).buffer}writeFile(i,t,e){try{const o=f.wrap(t).toString(),s=O(o);this.storageService.store(d,o,m.APPLICATION,h.USER),this.storageService.store(C,JSON.stringify(s)||"",m.APPLICATION,h.USER)}catch{}return Promise.resolve()}watch(i,t){return{dispose(){}}}mkdir(i){return Promise.resolve(void 0)}readdir(i){return Promise.resolve(void 0)}delete(i,t){return Promise.resolve(void 0)}rename(i,t,e){return Promise.resolve(void 0)}};c=l([a(0,y),a(1,D),a(2,F)],c);export{c as TrustedDomainsFileSystemProvider};
+]`;
+function computeTrustedDomainContent(defaultTrustedDomains, trustedDomains, configuring) {
+  let content = CONFIG_HELP_TEXT_PRE;
+  if (defaultTrustedDomains.length > 0) {
+    content += `// By default, VS Code trusts "localhost" as well as the following domains:
+`;
+    defaultTrustedDomains.forEach((d) => {
+      content += `// - "${d}"
+`;
+    });
+  } else {
+    content += `// By default, VS Code trusts "localhost".
+`;
+  }
+  content += CONFIG_HELP_TEXT_AFTER;
+  content += configuring ? `
+// Currently configuring trust for ${configuring}
+` : "";
+  if (trustedDomains.length === 0) {
+    content += CONFIG_PLACEHOLDER_TEXT;
+  } else {
+    content += JSON.stringify(trustedDomains, null, 2);
+  }
+  return content;
+}
+__name(computeTrustedDomainContent, "computeTrustedDomainContent");
+let TrustedDomainsFileSystemProvider = class {
+  constructor(fileService, storageService, instantiationService) {
+    this.fileService = fileService;
+    this.storageService = storageService;
+    this.instantiationService = instantiationService;
+    this.fileService.registerProvider(TRUSTED_DOMAINS_SCHEMA, this);
+  }
+  static {
+    __name(this, "TrustedDomainsFileSystemProvider");
+  }
+  static ID = "workbench.contrib.trustedDomainsFileSystemProvider";
+  capabilities = FileSystemProviderCapabilities.FileReadWrite;
+  onDidChangeCapabilities = Event.None;
+  onDidChangeFile = Event.None;
+  stat(resource) {
+    return Promise.resolve(TRUSTED_DOMAINS_STAT);
+  }
+  async readFile(resource) {
+    let trustedDomainsContent = this.storageService.get(
+      TRUSTED_DOMAINS_CONTENT_STORAGE_KEY,
+      StorageScope.APPLICATION
+    );
+    const configuring = resource.fragment;
+    const { defaultTrustedDomains, trustedDomains } = await this.instantiationService.invokeFunction(readTrustedDomains);
+    if (!trustedDomainsContent || trustedDomainsContent.indexOf(CONFIG_HELP_TEXT_PRE) === -1 || trustedDomainsContent.indexOf(CONFIG_HELP_TEXT_AFTER) === -1 || trustedDomainsContent.indexOf(configuring ?? "") === -1 || [...defaultTrustedDomains, ...trustedDomains].some((d) => !assertIsDefined(trustedDomainsContent).includes(d))) {
+      trustedDomainsContent = computeTrustedDomainContent(defaultTrustedDomains, trustedDomains, configuring);
+    }
+    const buffer = VSBuffer.fromString(trustedDomainsContent).buffer;
+    return buffer;
+  }
+  writeFile(resource, content, opts) {
+    try {
+      const trustedDomainsContent = VSBuffer.wrap(content).toString();
+      const trustedDomains = parse(trustedDomainsContent);
+      this.storageService.store(TRUSTED_DOMAINS_CONTENT_STORAGE_KEY, trustedDomainsContent, StorageScope.APPLICATION, StorageTarget.USER);
+      this.storageService.store(
+        TRUSTED_DOMAINS_STORAGE_KEY,
+        JSON.stringify(trustedDomains) || "",
+        StorageScope.APPLICATION,
+        StorageTarget.USER
+      );
+    } catch (err) {
+    }
+    return Promise.resolve();
+  }
+  watch(resource, opts) {
+    return {
+      dispose() {
+        return;
+      }
+    };
+  }
+  mkdir(resource) {
+    return Promise.resolve(void 0);
+  }
+  readdir(resource) {
+    return Promise.resolve(void 0);
+  }
+  delete(resource, opts) {
+    return Promise.resolve(void 0);
+  }
+  rename(from, to, opts) {
+    return Promise.resolve(void 0);
+  }
+};
+TrustedDomainsFileSystemProvider = __decorateClass([
+  __decorateParam(0, IFileService),
+  __decorateParam(1, IStorageService),
+  __decorateParam(2, IInstantiationService)
+], TrustedDomainsFileSystemProvider);
+export {
+  TrustedDomainsFileSystemProvider
+};
+//# sourceMappingURL=trustedDomainsFileSystemProvider.js.map

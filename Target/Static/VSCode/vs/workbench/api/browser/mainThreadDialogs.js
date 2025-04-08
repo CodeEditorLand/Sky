@@ -1,1 +1,78 @@
-var d=Object.defineProperty,v=Object.getOwnPropertyDescriptor,s=(e,t,i,o)=>{for(var s,l=o>1?void 0:o?v(t,i):t,r=e.length-1;r>=0;r--)(s=e[r])&&(l=(o?s(t,i,l):s(l))||l);return o&&l&&d(t,i,l),l},c=(e,t)=>(i,o)=>t(i,o,e);import{URI as f}from"../../../base/common/uri.js";import{MainContext as u}from"../common/extHost.protocol.js";import{extHostNamedCustomer as O}from"../../services/extensions/common/extHostCustomers.js";import{IFileDialogService as p}from"../../../platform/dialogs/common/dialogs.js";let l=class{constructor(e,t){this._fileDialogService=t}dispose(){}async $showOpenDialog(e){const t=l._convertOpenOptions(e);return t.defaultUri||(t.defaultUri=await this._fileDialogService.defaultFilePath()),Promise.resolve(this._fileDialogService.showOpenDialog(t))}async $showSaveDialog(e){const t=l._convertSaveOptions(e);return t.defaultUri||(t.defaultUri=await this._fileDialogService.defaultFilePath()),Promise.resolve(this._fileDialogService.showSaveDialog(t))}static _convertOpenOptions(e){const t={openLabel:e?.openLabel||void 0,canSelectFiles:e?.canSelectFiles||!e?.canSelectFiles&&!e?.canSelectFolders,canSelectFolders:e?.canSelectFolders,canSelectMany:e?.canSelectMany,defaultUri:e?.defaultUri?f.revive(e.defaultUri):void 0,title:e?.title||void 0,availableFileSystems:[]};if(e?.filters){t.filters=[];for(const[i,o]of Object.entries(e.filters))t.filters.push({name:i,extensions:o})}return t}static _convertSaveOptions(e){const t={defaultUri:e?.defaultUri?f.revive(e.defaultUri):void 0,saveLabel:e?.saveLabel||void 0,title:e?.title||void 0};if(e?.filters){t.filters=[];for(const[i,o]of Object.entries(e.filters))t.filters.push({name:i,extensions:o})}return t}};l=s([O(u.MainThreadDialogs),c(1,p)],l);export{l as MainThreadDialogs};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { URI } from "../../../base/common/uri.js";
+import { MainThreadDiaglogsShape, MainContext, MainThreadDialogOpenOptions, MainThreadDialogSaveOptions } from "../common/extHost.protocol.js";
+import { extHostNamedCustomer, IExtHostContext } from "../../services/extensions/common/extHostCustomers.js";
+import { IFileDialogService, IOpenDialogOptions, ISaveDialogOptions } from "../../../platform/dialogs/common/dialogs.js";
+let MainThreadDialogs = class {
+  constructor(context, _fileDialogService) {
+    this._fileDialogService = _fileDialogService;
+  }
+  dispose() {
+  }
+  async $showOpenDialog(options) {
+    const convertedOptions = MainThreadDialogs._convertOpenOptions(options);
+    if (!convertedOptions.defaultUri) {
+      convertedOptions.defaultUri = await this._fileDialogService.defaultFilePath();
+    }
+    return Promise.resolve(this._fileDialogService.showOpenDialog(convertedOptions));
+  }
+  async $showSaveDialog(options) {
+    const convertedOptions = MainThreadDialogs._convertSaveOptions(options);
+    if (!convertedOptions.defaultUri) {
+      convertedOptions.defaultUri = await this._fileDialogService.defaultFilePath();
+    }
+    return Promise.resolve(this._fileDialogService.showSaveDialog(convertedOptions));
+  }
+  static _convertOpenOptions(options) {
+    const result = {
+      openLabel: options?.openLabel || void 0,
+      canSelectFiles: options?.canSelectFiles || !options?.canSelectFiles && !options?.canSelectFolders,
+      canSelectFolders: options?.canSelectFolders,
+      canSelectMany: options?.canSelectMany,
+      defaultUri: options?.defaultUri ? URI.revive(options.defaultUri) : void 0,
+      title: options?.title || void 0,
+      availableFileSystems: []
+    };
+    if (options?.filters) {
+      result.filters = [];
+      for (const [key, value] of Object.entries(options.filters)) {
+        result.filters.push({ name: key, extensions: value });
+      }
+    }
+    return result;
+  }
+  static _convertSaveOptions(options) {
+    const result = {
+      defaultUri: options?.defaultUri ? URI.revive(options.defaultUri) : void 0,
+      saveLabel: options?.saveLabel || void 0,
+      title: options?.title || void 0
+    };
+    if (options?.filters) {
+      result.filters = [];
+      for (const [key, value] of Object.entries(options.filters)) {
+        result.filters.push({ name: key, extensions: value });
+      }
+    }
+    return result;
+  }
+};
+__name(MainThreadDialogs, "MainThreadDialogs");
+MainThreadDialogs = __decorateClass([
+  extHostNamedCustomer(MainContext.MainThreadDialogs),
+  __decorateParam(1, IFileDialogService)
+], MainThreadDialogs);
+export {
+  MainThreadDialogs
+};
+//# sourceMappingURL=mainThreadDialogs.js.map

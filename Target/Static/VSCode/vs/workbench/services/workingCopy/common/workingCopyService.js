@@ -1,4 +1,188 @@
-import{createDecorator as C}from"../../../../platform/instantiation/common/instantiation.js";import{InstantiationType as k,registerSingleton as l}from"../../../../platform/instantiation/common/extensions.js";import{Emitter as t}from"../../../../base/common/event.js";import{URI as u}from"../../../../base/common/uri.js";import{Disposable as h,toDisposable as f,DisposableStore as I,DisposableMap as c}from"../../../../base/common/lifecycle.js";import{ResourceMap as D}from"../../../../base/common/map.js";import"./workingCopy.js";import{onUnexpectedError as W}from"../../../../base/common/errors.js";const m=C("workingCopyService");class v extends Error{constructor(e,o){super(e),this.name="WorkingCopyLeakError",this.stack=o}}class r extends h{_onDidRegister=this._register(new t);onDidRegister=this._onDidRegister.event;_onDidUnregister=this._register(new t);onDidUnregister=this._onDidUnregister.event;_onDidChangeDirty=this._register(new t);onDidChangeDirty=this._onDidChangeDirty.event;_onDidChangeContent=this._register(new t);onDidChangeContent=this._onDidChangeContent.event;_onDidSave=this._register(new t);onDidSave=this._onDidSave.event;get workingCopies(){return Array.from(this._workingCopies.values())}_workingCopies=new Set;mapResourceToWorkingCopies=new D;mapWorkingCopyToListeners=this._register(new c);registerWorkingCopy(e){let o=this.mapResourceToWorkingCopies.get(e.resource);if(o?.has(e.typeId))throw new Error(`Cannot register more than one working copy with the same resource ${e.resource.toString()} and type ${e.typeId}.`);this._workingCopies.add(e),o||(o=new Map,this.mapResourceToWorkingCopies.set(e.resource,o)),o.set(e.typeId,e);const i=new I;i.add(e.onDidChangeContent(()=>this._onDidChangeContent.fire(e))),i.add(e.onDidChangeDirty(()=>this._onDidChangeDirty.fire(e))),i.add(e.onDidSave(s=>this._onDidSave.fire({workingCopy:e,...s}))),this.mapWorkingCopyToListeners.set(e,i),this._onDidRegister.fire(e),e.isDirty()&&this._onDidChangeDirty.fire(e);const n=this.trackLeaks(e);return f(()=>{n&&this.untrackLeaks(n),this.unregisterWorkingCopy(e),this._onDidUnregister.fire(e)})}unregisterWorkingCopy(e){this._workingCopies.delete(e);const o=this.mapResourceToWorkingCopies.get(e.resource);o?.delete(e.typeId)&&o.size===0&&this.mapResourceToWorkingCopies.delete(e.resource),e.isDirty()&&this._onDidChangeDirty.fire(e),this.mapWorkingCopyToListeners.deleteAndDispose(e)}has(e){return u.isUri(e)?this.mapResourceToWorkingCopies.has(e):this.mapResourceToWorkingCopies.get(e.resource)?.has(e.typeId)??!1}get(e){return this.mapResourceToWorkingCopies.get(e.resource)?.get(e.typeId)}getAll(e){const o=this.mapResourceToWorkingCopies.get(e);if(o)return Array.from(o.values())}static LEAK_TRACKING_THRESHOLD=256;static LEAK_REPORTING_THRESHOLD=2*r.LEAK_TRACKING_THRESHOLD;static LEAK_REPORTED=!1;mapLeakToCounter=new Map;trackLeaks(e){if(r.LEAK_REPORTED||this._workingCopies.size<r.LEAK_TRACKING_THRESHOLD)return;const o=`${e.resource.scheme}#${e.typeId||"<no typeId>"}
-${new Error().stack?.split(`
-`).slice(2).join(`
-`)??""}`,i=(this.mapLeakToCounter.get(o)??0)+1;if(this.mapLeakToCounter.set(o,i),this._workingCopies.size>r.LEAK_REPORTING_THRESHOLD){r.LEAK_REPORTED=!0;const[n,s]=Array.from(this.mapLeakToCounter.entries()).reduce(([g,a],[y,d])=>d>a?[y,d]:[g,a]),p=`Potential working copy LEAK detected, having ${this._workingCopies.size} working copies already. Most frequent owner (${s})`;W(new v(p,n))}return o}untrackLeaks(e){const o=(this.mapLeakToCounter.get(e)??1)-1;this.mapLeakToCounter.set(e,o),o===0&&this.mapLeakToCounter.delete(e)}get hasDirty(){for(const e of this._workingCopies)if(e.isDirty())return!0;return!1}get dirtyCount(){let e=0;for(const o of this._workingCopies)o.isDirty()&&e++;return e}get dirtyWorkingCopies(){return this.workingCopies.filter(e=>e.isDirty())}get modifiedCount(){let e=0;for(const o of this._workingCopies)o.isModified()&&e++;return e}get modifiedWorkingCopies(){return this.workingCopies.filter(e=>e.isModified())}isDirty(e,o){const i=this.mapResourceToWorkingCopies.get(e);if(i){if(typeof o=="string")return i.get(o)?.isDirty()??!1;for(const[,n]of i)if(n.isDirty())return!0}return!1}}l(m,r,k.Delayed);export{m as IWorkingCopyService,r as WorkingCopyService};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { Event, Emitter } from "../../../../base/common/event.js";
+import { URI } from "../../../../base/common/uri.js";
+import { Disposable, IDisposable, toDisposable, DisposableStore, DisposableMap } from "../../../../base/common/lifecycle.js";
+import { ResourceMap } from "../../../../base/common/map.js";
+import { IWorkingCopy, IWorkingCopyIdentifier, IWorkingCopySaveEvent as IBaseWorkingCopySaveEvent } from "./workingCopy.js";
+import { onUnexpectedError } from "../../../../base/common/errors.js";
+const IWorkingCopyService = createDecorator("workingCopyService");
+class WorkingCopyLeakError extends Error {
+  static {
+    __name(this, "WorkingCopyLeakError");
+  }
+  constructor(message, stack) {
+    super(message);
+    this.name = "WorkingCopyLeakError";
+    this.stack = stack;
+  }
+}
+class WorkingCopyService extends Disposable {
+  static {
+    __name(this, "WorkingCopyService");
+  }
+  //#region Events
+  _onDidRegister = this._register(new Emitter());
+  onDidRegister = this._onDidRegister.event;
+  _onDidUnregister = this._register(new Emitter());
+  onDidUnregister = this._onDidUnregister.event;
+  _onDidChangeDirty = this._register(new Emitter());
+  onDidChangeDirty = this._onDidChangeDirty.event;
+  _onDidChangeContent = this._register(new Emitter());
+  onDidChangeContent = this._onDidChangeContent.event;
+  _onDidSave = this._register(new Emitter());
+  onDidSave = this._onDidSave.event;
+  //#endregion
+  //#region Registry
+  get workingCopies() {
+    return Array.from(this._workingCopies.values());
+  }
+  _workingCopies = /* @__PURE__ */ new Set();
+  mapResourceToWorkingCopies = new ResourceMap();
+  mapWorkingCopyToListeners = this._register(new DisposableMap());
+  registerWorkingCopy(workingCopy) {
+    let workingCopiesForResource = this.mapResourceToWorkingCopies.get(workingCopy.resource);
+    if (workingCopiesForResource?.has(workingCopy.typeId)) {
+      throw new Error(`Cannot register more than one working copy with the same resource ${workingCopy.resource.toString()} and type ${workingCopy.typeId}.`);
+    }
+    this._workingCopies.add(workingCopy);
+    if (!workingCopiesForResource) {
+      workingCopiesForResource = /* @__PURE__ */ new Map();
+      this.mapResourceToWorkingCopies.set(workingCopy.resource, workingCopiesForResource);
+    }
+    workingCopiesForResource.set(workingCopy.typeId, workingCopy);
+    const disposables = new DisposableStore();
+    disposables.add(workingCopy.onDidChangeContent(() => this._onDidChangeContent.fire(workingCopy)));
+    disposables.add(workingCopy.onDidChangeDirty(() => this._onDidChangeDirty.fire(workingCopy)));
+    disposables.add(workingCopy.onDidSave((e) => this._onDidSave.fire({ workingCopy, ...e })));
+    this.mapWorkingCopyToListeners.set(workingCopy, disposables);
+    this._onDidRegister.fire(workingCopy);
+    if (workingCopy.isDirty()) {
+      this._onDidChangeDirty.fire(workingCopy);
+    }
+    const leakId = this.trackLeaks(workingCopy);
+    return toDisposable(() => {
+      if (leakId) {
+        this.untrackLeaks(leakId);
+      }
+      this.unregisterWorkingCopy(workingCopy);
+      this._onDidUnregister.fire(workingCopy);
+    });
+  }
+  unregisterWorkingCopy(workingCopy) {
+    this._workingCopies.delete(workingCopy);
+    const workingCopiesForResource = this.mapResourceToWorkingCopies.get(workingCopy.resource);
+    if (workingCopiesForResource?.delete(workingCopy.typeId) && workingCopiesForResource.size === 0) {
+      this.mapResourceToWorkingCopies.delete(workingCopy.resource);
+    }
+    if (workingCopy.isDirty()) {
+      this._onDidChangeDirty.fire(workingCopy);
+    }
+    this.mapWorkingCopyToListeners.deleteAndDispose(workingCopy);
+  }
+  has(resourceOrIdentifier) {
+    if (URI.isUri(resourceOrIdentifier)) {
+      return this.mapResourceToWorkingCopies.has(resourceOrIdentifier);
+    }
+    return this.mapResourceToWorkingCopies.get(resourceOrIdentifier.resource)?.has(resourceOrIdentifier.typeId) ?? false;
+  }
+  get(identifier) {
+    return this.mapResourceToWorkingCopies.get(identifier.resource)?.get(identifier.typeId);
+  }
+  getAll(resource) {
+    const workingCopies = this.mapResourceToWorkingCopies.get(resource);
+    if (!workingCopies) {
+      return void 0;
+    }
+    return Array.from(workingCopies.values());
+  }
+  //#endregion
+  //#region Leak Monitoring
+  static LEAK_TRACKING_THRESHOLD = 256;
+  static LEAK_REPORTING_THRESHOLD = 2 * WorkingCopyService.LEAK_TRACKING_THRESHOLD;
+  static LEAK_REPORTED = false;
+  mapLeakToCounter = /* @__PURE__ */ new Map();
+  trackLeaks(workingCopy) {
+    if (WorkingCopyService.LEAK_REPORTED || this._workingCopies.size < WorkingCopyService.LEAK_TRACKING_THRESHOLD) {
+      return void 0;
+    }
+    const leakId = `${workingCopy.resource.scheme}#${workingCopy.typeId || "<no typeId>"}
+${new Error().stack?.split("\n").slice(2).join("\n") ?? ""}`;
+    const leakCounter = (this.mapLeakToCounter.get(leakId) ?? 0) + 1;
+    this.mapLeakToCounter.set(leakId, leakCounter);
+    if (this._workingCopies.size > WorkingCopyService.LEAK_REPORTING_THRESHOLD) {
+      WorkingCopyService.LEAK_REPORTED = true;
+      const [topLeak, topCount] = Array.from(this.mapLeakToCounter.entries()).reduce(
+        ([topLeak2, topCount2], [key, val]) => val > topCount2 ? [key, val] : [topLeak2, topCount2]
+      );
+      const message = `Potential working copy LEAK detected, having ${this._workingCopies.size} working copies already. Most frequent owner (${topCount})`;
+      onUnexpectedError(new WorkingCopyLeakError(message, topLeak));
+    }
+    return leakId;
+  }
+  untrackLeaks(leakId) {
+    const stackCounter = (this.mapLeakToCounter.get(leakId) ?? 1) - 1;
+    this.mapLeakToCounter.set(leakId, stackCounter);
+    if (stackCounter === 0) {
+      this.mapLeakToCounter.delete(leakId);
+    }
+  }
+  //#endregion
+  //#region Dirty Tracking
+  get hasDirty() {
+    for (const workingCopy of this._workingCopies) {
+      if (workingCopy.isDirty()) {
+        return true;
+      }
+    }
+    return false;
+  }
+  get dirtyCount() {
+    let totalDirtyCount = 0;
+    for (const workingCopy of this._workingCopies) {
+      if (workingCopy.isDirty()) {
+        totalDirtyCount++;
+      }
+    }
+    return totalDirtyCount;
+  }
+  get dirtyWorkingCopies() {
+    return this.workingCopies.filter((workingCopy) => workingCopy.isDirty());
+  }
+  get modifiedCount() {
+    let totalModifiedCount = 0;
+    for (const workingCopy of this._workingCopies) {
+      if (workingCopy.isModified()) {
+        totalModifiedCount++;
+      }
+    }
+    return totalModifiedCount;
+  }
+  get modifiedWorkingCopies() {
+    return this.workingCopies.filter((workingCopy) => workingCopy.isModified());
+  }
+  isDirty(resource, typeId) {
+    const workingCopies = this.mapResourceToWorkingCopies.get(resource);
+    if (workingCopies) {
+      if (typeof typeId === "string") {
+        return workingCopies.get(typeId)?.isDirty() ?? false;
+      } else {
+        for (const [, workingCopy] of workingCopies) {
+          if (workingCopy.isDirty()) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
+  //#endregion
+}
+registerSingleton(IWorkingCopyService, WorkingCopyService, InstantiationType.Delayed);
+export {
+  IWorkingCopyService,
+  WorkingCopyService
+};
+//# sourceMappingURL=workingCopyService.js.map

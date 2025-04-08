@@ -1,1 +1,31 @@
-import{StopWatch as i}from"../../../../base/common/stopwatch.js";import"../../../browser/editorBrowser.js";import{EditorAction as n,registerEditorAction as r}from"../../../browser/editorExtensions.js";import*as c from"../../../../nls.js";class s extends n{constructor(){super({id:"editor.action.forceRetokenize",label:c.localize2("forceRetokenize","Developer: Force Retokenize"),precondition:void 0})}run(o,e){if(!e.hasModel())return;const t=e.getModel();t.tokenization.resetTokenization();const r=new i;t.tokenization.forceTokenization(t.getLineCount()),r.stop(),console.log(`tokenization took ${r.elapsed()}`)}}r(s);
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { StopWatch } from "../../../../base/common/stopwatch.js";
+import { ICodeEditor } from "../../../browser/editorBrowser.js";
+import { EditorAction, registerEditorAction, ServicesAccessor } from "../../../browser/editorExtensions.js";
+import * as nls from "../../../../nls.js";
+class ForceRetokenizeAction extends EditorAction {
+  static {
+    __name(this, "ForceRetokenizeAction");
+  }
+  constructor() {
+    super({
+      id: "editor.action.forceRetokenize",
+      label: nls.localize2("forceRetokenize", "Developer: Force Retokenize"),
+      precondition: void 0
+    });
+  }
+  run(accessor, editor) {
+    if (!editor.hasModel()) {
+      return;
+    }
+    const model = editor.getModel();
+    model.tokenization.resetTokenization();
+    const sw = new StopWatch();
+    model.tokenization.forceTokenization(model.getLineCount());
+    sw.stop();
+    console.log(`tokenization took ${sw.elapsed()}`);
+  }
+}
+registerEditorAction(ForceRetokenizeAction);
+//# sourceMappingURL=tokenization.js.map

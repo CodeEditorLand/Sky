@@ -1,1 +1,38 @@
-var m=Object.defineProperty,l=Object.getOwnPropertyDescriptor,a=(e,r,t,o)=>{for(var i,n=o>1?void 0:o?l(r,t):r,s=e.length-1;s>=0;s--)(i=e[s])&&(n=(o?i(r,t,n):i(n))||n);return o&&n&&m(r,t,n),n},p=(e,r)=>(t,o)=>r(t,o,e);import{ProxyChannel as d}from"../../../base/parts/ipc/common/ipc.js";import{IMainProcessService as u}from"../../ipc/common/mainProcessService.js";import"./native.js";let i=class{constructor(e,r){return this.windowId=e,d.toService(r.getChannel("nativeHost"),{context:e,properties:(()=>{const r=new Map;return r.set("windowId",e),r})()})}};i=a([p(1,u)],i);export{i as NativeHostService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { ProxyChannel } from "../../../base/parts/ipc/common/ipc.js";
+import { IMainProcessService } from "../../ipc/common/mainProcessService.js";
+import { INativeHostService } from "./native.js";
+let NativeHostService = class {
+  constructor(windowId, mainProcessService) {
+    this.windowId = windowId;
+    return ProxyChannel.toService(mainProcessService.getChannel("nativeHost"), {
+      context: windowId,
+      properties: (() => {
+        const properties = /* @__PURE__ */ new Map();
+        properties.set("windowId", windowId);
+        return properties;
+      })()
+    });
+  }
+  static {
+    __name(this, "NativeHostService");
+  }
+};
+NativeHostService = __decorateClass([
+  __decorateParam(1, IMainProcessService)
+], NativeHostService);
+export {
+  NativeHostService
+};
+//# sourceMappingURL=nativeHostService.js.map

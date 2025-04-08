@@ -1,1 +1,135 @@
-import"../../../../base/common/collections.js";function v(e,d,a){const t={},o={},s=new Set;if(!d)return{local:{added:t,updated:o,removed:[...s.values()]},remote:{added:e,updated:{},removed:[]},conflicts:[]};const u=f(e,d);if(0===u.added.size&&0===u.removed.size&&0===u.updated.size)return{local:{added:t,updated:o,removed:[...s.values()]},remote:{added:{},updated:{},removed:[]},conflicts:[]};const r=f(a,e),n=f(a,d),c={},l={},v=new Set,i=new Set;for(const e of r.removed.values())n.updated.has(e)?t[e]=d[e]:v.add(e);for(const e of n.removed.values())i.has(e)||(r.updated.has(e)?i.add(e):s.add(e));for(const d of r.updated.values())i.has(d)||(n.updated.has(d)?u.updated.has(d)&&i.add(d):l[d]=e[d]);for(const a of n.updated.values())i.has(a)||(r.updated.has(a)?u.updated.has(a)&&i.add(a):void 0!==e[a]&&(o[a]=d[a]));for(const d of r.added.values())i.has(d)||(n.added.has(d)?u.updated.has(d)&&i.add(d):c[d]=e[d]);for(const e of n.added.values())i.has(e)||(r.added.has(e)?u.updated.has(e)&&i.add(e):t[e]=d[e]);return{local:{added:t,removed:[...s.values()],updated:o},remote:{added:c,removed:[...v.values()],updated:l},conflicts:[...i.values()]}}function f(e,d){const a=e?Object.keys(e):[],t=d?Object.keys(d):[],o=t.filter((e=>!a.includes(e))).reduce(((e,d)=>(e.add(d),e)),new Set),s=a.filter((e=>!t.includes(e))).reduce(((e,d)=>(e.add(d),e)),new Set),u=new Set;for(const t of a){if(s.has(t))continue;e[t]!==d[t]&&u.add(t)}return{added:o,removed:s,updated:u}}function y(e,d){const{added:a,removed:t,updated:o}=f(e,d);return 0===a.size&&0===t.size&&0===o.size}export{y as areSame,v as merge};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { IStringDictionary } from "../../../../base/common/collections.js";
+function merge(local, remote, base) {
+  const localAdded = {};
+  const localUpdated = {};
+  const localRemoved = /* @__PURE__ */ new Set();
+  if (!remote) {
+    return {
+      local: { added: localAdded, updated: localUpdated, removed: [...localRemoved.values()] },
+      remote: { added: local, updated: {}, removed: [] },
+      conflicts: []
+    };
+  }
+  const localToRemote = compare(local, remote);
+  if (localToRemote.added.size === 0 && localToRemote.removed.size === 0 && localToRemote.updated.size === 0) {
+    return {
+      local: { added: localAdded, updated: localUpdated, removed: [...localRemoved.values()] },
+      remote: { added: {}, updated: {}, removed: [] },
+      conflicts: []
+    };
+  }
+  const baseToLocal = compare(base, local);
+  const baseToRemote = compare(base, remote);
+  const remoteAdded = {};
+  const remoteUpdated = {};
+  const remoteRemoved = /* @__PURE__ */ new Set();
+  const conflicts = /* @__PURE__ */ new Set();
+  for (const key of baseToLocal.removed.values()) {
+    if (baseToRemote.updated.has(key)) {
+      localAdded[key] = remote[key];
+    } else {
+      remoteRemoved.add(key);
+    }
+  }
+  for (const key of baseToRemote.removed.values()) {
+    if (conflicts.has(key)) {
+      continue;
+    }
+    if (baseToLocal.updated.has(key)) {
+      conflicts.add(key);
+    } else {
+      localRemoved.add(key);
+    }
+  }
+  for (const key of baseToLocal.updated.values()) {
+    if (conflicts.has(key)) {
+      continue;
+    }
+    if (baseToRemote.updated.has(key)) {
+      if (localToRemote.updated.has(key)) {
+        conflicts.add(key);
+      }
+    } else {
+      remoteUpdated[key] = local[key];
+    }
+  }
+  for (const key of baseToRemote.updated.values()) {
+    if (conflicts.has(key)) {
+      continue;
+    }
+    if (baseToLocal.updated.has(key)) {
+      if (localToRemote.updated.has(key)) {
+        conflicts.add(key);
+      }
+    } else if (local[key] !== void 0) {
+      localUpdated[key] = remote[key];
+    }
+  }
+  for (const key of baseToLocal.added.values()) {
+    if (conflicts.has(key)) {
+      continue;
+    }
+    if (baseToRemote.added.has(key)) {
+      if (localToRemote.updated.has(key)) {
+        conflicts.add(key);
+      }
+    } else {
+      remoteAdded[key] = local[key];
+    }
+  }
+  for (const key of baseToRemote.added.values()) {
+    if (conflicts.has(key)) {
+      continue;
+    }
+    if (baseToLocal.added.has(key)) {
+      if (localToRemote.updated.has(key)) {
+        conflicts.add(key);
+      }
+    } else {
+      localAdded[key] = remote[key];
+    }
+  }
+  return {
+    local: { added: localAdded, removed: [...localRemoved.values()], updated: localUpdated },
+    remote: { added: remoteAdded, removed: [...remoteRemoved.values()], updated: remoteUpdated },
+    conflicts: [...conflicts.values()]
+  };
+}
+__name(merge, "merge");
+function compare(from, to) {
+  const fromKeys = from ? Object.keys(from) : [];
+  const toKeys = to ? Object.keys(to) : [];
+  const added = toKeys.filter((key) => !fromKeys.includes(key)).reduce((r, key) => {
+    r.add(key);
+    return r;
+  }, /* @__PURE__ */ new Set());
+  const removed = fromKeys.filter((key) => !toKeys.includes(key)).reduce((r, key) => {
+    r.add(key);
+    return r;
+  }, /* @__PURE__ */ new Set());
+  const updated = /* @__PURE__ */ new Set();
+  for (const key of fromKeys) {
+    if (removed.has(key)) {
+      continue;
+    }
+    const fromPrompt = from[key];
+    const toPrompt = to[key];
+    if (fromPrompt !== toPrompt) {
+      updated.add(key);
+    }
+  }
+  return { added, removed, updated };
+}
+__name(compare, "compare");
+function areSame(a, b) {
+  const { added, removed, updated } = compare(a, b);
+  return added.size === 0 && removed.size === 0 && updated.size === 0;
+}
+__name(areSame, "areSame");
+export {
+  areSame,
+  merge
+};
+//# sourceMappingURL=promptsMerge.js.map

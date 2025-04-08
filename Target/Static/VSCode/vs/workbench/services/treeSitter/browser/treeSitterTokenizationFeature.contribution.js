@@ -1,1 +1,70 @@
-var I=Object.defineProperty,k=Object.getOwnPropertyDescriptor,S=(e,t,r,o)=>{for(var i,a=o>1?void 0:o?k(t,r):t,n=e.length-1;n>=0;n--)(i=e[n])&&(a=(o?i(t,r,a):i(a))||a);return o&&a&&I(t,r,a),a},p=(e,t)=>(r,o)=>t(r,o,e);import{registerSingleton as u,InstantiationType as f}from"../../../../platform/instantiation/common/extensions.js";import{WorkbenchPhase as w,registerWorkbenchContribution2 as b}from"../../../common/contributions.js";import{TreeSitterTextModelService as v}from"../../../../editor/common/services/treeSitter/treeSitterParserService.js";import{ITreeSitterImporter as h,ITreeSitterParserService as g,TreeSitterImporter as C}from"../../../../editor/common/services/treeSitterParserService.js";import{ITreeSitterTokenizationFeature as x}from"./treeSitterTokenizationFeature.js";import"../../../../platform/instantiation/common/instantiation.js";import{CommandsRegistry as z}from"../../../../platform/commands/common/commands.js";import"../../../../base/common/uri.js";import{TreeSitterTokenizationRegistry as E}from"../../../../editor/common/languages.js";import{ITextFileService as M}from"../../textfile/common/textfiles.js";import{StopWatch as y}from"../../../../base/common/stopwatch.js";let m=class{static ID="workbench.contrib.treeSitterTokenizationInstantiator";constructor(e,t){}};m=S([p(0,g),p(1,x)],m),u(h,C,f.Eager),u(g,v,f.Eager),b(m.ID,m,w.BlockRestore),z.registerCommand("_workbench.colorizeTreeSitterTokens",(async(e,t)=>{const r=e.get(g),o=e.get(M),i=t?(await o.files.resolve(t)).textEditorModel:void 0;if(!i)throw new Error(`Cannot resolve text model for resource ${t}`);const a=await E.getOrCreate(i.getLanguageId());if(!a)throw new Error(`Cannot resolve tokenizer for language ${i.getLanguageId()}`);const n=await r.getTextModelTreeSitter(i);if(!n)throw new Error(`Cannot resolve tree sitter parser for language ${i.getLanguageId()}`);const s=new y;await n.parse(),s.stop();let m=0,c=0;for(let e=1;e<=i.getLineCount();e++){const t=a.tokenizeEncodedInstrumented(e,i);t&&(m+=t.captureTime,c+=t.metadataTime)}return n.dispose(),i.dispose(),{parseTime:s.elapsed(),captureTime:m,metadataTime:c}}));
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { registerSingleton, InstantiationType } from "../../../../platform/instantiation/common/extensions.js";
+import { IWorkbenchContribution, WorkbenchPhase, registerWorkbenchContribution2 } from "../../../common/contributions.js";
+import { TreeSitterTextModelService } from "../../../../editor/common/services/treeSitter/treeSitterParserService.js";
+import { ITreeSitterImporter, ITreeSitterParserService, TreeSitterImporter } from "../../../../editor/common/services/treeSitterParserService.js";
+import { ITreeSitterTokenizationFeature } from "./treeSitterTokenizationFeature.js";
+import { ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+import { CommandsRegistry } from "../../../../platform/commands/common/commands.js";
+import { URI } from "../../../../base/common/uri.js";
+import { TreeSitterTokenizationRegistry } from "../../../../editor/common/languages.js";
+import { ITextFileService } from "../../textfile/common/textfiles.js";
+import { StopWatch } from "../../../../base/common/stopwatch.js";
+let TreeSitterTokenizationInstantiator = class {
+  static {
+    __name(this, "TreeSitterTokenizationInstantiator");
+  }
+  static ID = "workbench.contrib.treeSitterTokenizationInstantiator";
+  constructor(_treeSitterTokenizationService, _treeSitterTokenizationFeature) {
+  }
+};
+TreeSitterTokenizationInstantiator = __decorateClass([
+  __decorateParam(0, ITreeSitterParserService),
+  __decorateParam(1, ITreeSitterTokenizationFeature)
+], TreeSitterTokenizationInstantiator);
+registerSingleton(ITreeSitterImporter, TreeSitterImporter, InstantiationType.Eager);
+registerSingleton(ITreeSitterParserService, TreeSitterTextModelService, InstantiationType.Eager);
+registerWorkbenchContribution2(TreeSitterTokenizationInstantiator.ID, TreeSitterTokenizationInstantiator, WorkbenchPhase.BlockRestore);
+CommandsRegistry.registerCommand("_workbench.colorizeTreeSitterTokens", async (accessor, resource) => {
+  const treeSitterParserService = accessor.get(ITreeSitterParserService);
+  const textModelService = accessor.get(ITextFileService);
+  const textModel = resource ? (await textModelService.files.resolve(resource)).textEditorModel : void 0;
+  if (!textModel) {
+    throw new Error(`Cannot resolve text model for resource ${resource}`);
+  }
+  const tokenizer = await TreeSitterTokenizationRegistry.getOrCreate(textModel.getLanguageId());
+  if (!tokenizer) {
+    throw new Error(`Cannot resolve tokenizer for language ${textModel.getLanguageId()}`);
+  }
+  const textModelTreeSitter = await treeSitterParserService.getTextModelTreeSitter(textModel);
+  if (!textModelTreeSitter) {
+    throw new Error(`Cannot resolve tree sitter parser for language ${textModel.getLanguageId()}`);
+  }
+  const stopwatch = new StopWatch();
+  await textModelTreeSitter.parse();
+  stopwatch.stop();
+  let captureTime = 0;
+  let metadataTime = 0;
+  for (let i = 1; i <= textModel.getLineCount(); i++) {
+    const result = tokenizer.tokenizeEncodedInstrumented(i, textModel);
+    if (result) {
+      captureTime += result.captureTime;
+      metadataTime += result.metadataTime;
+    }
+  }
+  textModelTreeSitter.dispose();
+  textModel.dispose();
+  return { parseTime: stopwatch.elapsed(), captureTime, metadataTime };
+});
+//# sourceMappingURL=treeSitterTokenizationFeature.contribution.js.map

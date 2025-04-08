@@ -1,2 +1,192 @@
-import"../../../base/common/event.js";import"../../../base/common/themables.js";import"../../../base/common/htmlContent.js";import{basename as g}from"../../../base/common/resources.js";import m from"../../../base/common/severity.js";import"../../../base/common/uri.js";import{localize as a}from"../../../nls.js";import{createDecorator as u}from"../../instantiation/common/instantiation.js";import"../../telemetry/common/telemetry.js";import"../../../base/parts/sandbox/common/electronTypes.js";import{mnemonicButtonLabel as I}from"../../../base/common/labels.js";import{isLinux as d,isMacintosh as f,isWindows as y}from"../../../base/common/platform.js";import"../../product/common/productService.js";import{deepClone as P}from"../../../base/common/objects.js";const N=u("dialogService");var h=(e=>(e[e.Confirmation=1]="Confirmation",e[e.Prompt=2]="Prompt",e[e.Input=3]="Input",e))(h||{});class V{getConfirmationButtons(n){return this.getButtons(n,1)}getPromptButtons(n){return this.getButtons(n,2)}getInputButtons(n){return this.getButtons(n,3)}getButtons(n,o){const e=[];switch(o){case 1:{const t=n;t.primaryButton?e.push(t.primaryButton):e.push(a({key:"yesButton",comment:["&& denotes a mnemonic"]},"&&Yes")),t.cancelButton?e.push(t.cancelButton):e.push(a("cancelButton","Cancel"));break}case 2:{const t=n;Array.isArray(t.buttons)&&t.buttons.length>0&&e.push(...t.buttons.map(i=>i.label)),t.cancelButton&&(t.cancelButton===!0?e.push(a("cancelButton","Cancel")):typeof t.cancelButton=="string"?e.push(t.cancelButton):t.cancelButton.label?e.push(t.cancelButton.label):e.push(a("cancelButton","Cancel"))),e.length===0&&e.push(a({key:"okButton",comment:["&& denotes a mnemonic"]},"&&OK"));break}case 3:{const t=n;t.primaryButton?e.push(t.primaryButton):e.push(a({key:"okButton",comment:["&& denotes a mnemonic"]},"&&OK")),t.cancelButton?e.push(t.cancelButton):e.push(a("cancelButton","Cancel"));break}}return e}getDialogType(n){if(typeof n=="string")return n;if(typeof n=="number")return n===m.Info?"info":n===m.Error?"error":n===m.Warning?"warning":"none"}getPromptResult(n,o,e){const t=[...n.buttons??[]];n.cancelButton&&typeof n.cancelButton!="string"&&typeof n.cancelButton!="boolean"&&t.push(n.cancelButton);let i=t[o]?.run({checkboxChecked:e});return i instanceof Promise||(i=Promise.resolve(i)),{result:i,checkboxChecked:e}}}const j=u("fileDialogService");var x=(e=>(e[e.SAVE=0]="SAVE",e[e.DONT_SAVE=1]="DONT_SAVE",e[e.CANCEL=2]="CANCEL",e))(x||{});const c=10;function q(s){const n=[];return n.push(...s.slice(0,c).map(o=>typeof o=="string"?o:g(o))),s.length>c&&(s.length-c===1?n.push(a("moreFile","...1 additional file not shown")):n.push(a("moreFiles","...{0} additional files not shown",s.length-c))),n.push(""),n.join(`
-`)}function z(s,n){const o=P(s);let e=(o.buttons??[]).map(l=>I(l).withMnemonic),t=(s.buttons||[]).map((l,p)=>p),i=0,r=o.cancelId??e.length-1;if(e.length>1){const l=typeof r=="number"?e[r]:void 0;if(d||f){if(typeof l=="string"&&e.length>1&&r!==1){e.splice(r,1),e.splice(1,0,l);const p=t[r];t.splice(r,1),t.splice(1,0,p),r=1}d&&e.length>1&&(e=e.reverse(),t=t.reverse(),i=e.length-1,typeof l=="string"&&(r=i-1))}else if(y&&typeof l=="string"&&e.length>1&&r!==e.length-1){e.splice(r,1),e.push(l);const p=t[r];t.splice(r,1),t.push(p),r=e.length-1}}return o.buttons=e,o.defaultId=i,o.cancelId=r,o.noLink=!0,o.title=o.title||n.nameLong,{options:o,buttonIndeces:t}}export{V as AbstractDialogHandler,x as ConfirmResult,N as IDialogService,j as IFileDialogService,q as getFileNamesMessage,z as massageMessageBoxOptions};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Event } from "../../../base/common/event.js";
+import { ThemeIcon } from "../../../base/common/themables.js";
+import { IMarkdownString } from "../../../base/common/htmlContent.js";
+import { basename } from "../../../base/common/resources.js";
+import Severity from "../../../base/common/severity.js";
+import { URI } from "../../../base/common/uri.js";
+import { localize } from "../../../nls.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+import { ITelemetryData } from "../../telemetry/common/telemetry.js";
+import { MessageBoxOptions } from "../../../base/parts/sandbox/common/electronTypes.js";
+import { mnemonicButtonLabel } from "../../../base/common/labels.js";
+import { isLinux, isMacintosh, isWindows } from "../../../base/common/platform.js";
+import { IProductService } from "../../product/common/productService.js";
+import { deepClone } from "../../../base/common/objects.js";
+const IDialogService = createDecorator("dialogService");
+var DialogKind = /* @__PURE__ */ ((DialogKind2) => {
+  DialogKind2[DialogKind2["Confirmation"] = 1] = "Confirmation";
+  DialogKind2[DialogKind2["Prompt"] = 2] = "Prompt";
+  DialogKind2[DialogKind2["Input"] = 3] = "Input";
+  return DialogKind2;
+})(DialogKind || {});
+class AbstractDialogHandler {
+  static {
+    __name(this, "AbstractDialogHandler");
+  }
+  getConfirmationButtons(dialog) {
+    return this.getButtons(dialog, 1 /* Confirmation */);
+  }
+  getPromptButtons(dialog) {
+    return this.getButtons(dialog, 2 /* Prompt */);
+  }
+  getInputButtons(dialog) {
+    return this.getButtons(dialog, 3 /* Input */);
+  }
+  getButtons(dialog, kind) {
+    const buttons = [];
+    switch (kind) {
+      case 1 /* Confirmation */: {
+        const confirmationDialog = dialog;
+        if (confirmationDialog.primaryButton) {
+          buttons.push(confirmationDialog.primaryButton);
+        } else {
+          buttons.push(localize({ key: "yesButton", comment: ["&& denotes a mnemonic"] }, "&&Yes"));
+        }
+        if (confirmationDialog.cancelButton) {
+          buttons.push(confirmationDialog.cancelButton);
+        } else {
+          buttons.push(localize("cancelButton", "Cancel"));
+        }
+        break;
+      }
+      case 2 /* Prompt */: {
+        const promptDialog = dialog;
+        if (Array.isArray(promptDialog.buttons) && promptDialog.buttons.length > 0) {
+          buttons.push(...promptDialog.buttons.map((button) => button.label));
+        }
+        if (promptDialog.cancelButton) {
+          if (promptDialog.cancelButton === true) {
+            buttons.push(localize("cancelButton", "Cancel"));
+          } else if (typeof promptDialog.cancelButton === "string") {
+            buttons.push(promptDialog.cancelButton);
+          } else {
+            if (promptDialog.cancelButton.label) {
+              buttons.push(promptDialog.cancelButton.label);
+            } else {
+              buttons.push(localize("cancelButton", "Cancel"));
+            }
+          }
+        }
+        if (buttons.length === 0) {
+          buttons.push(localize({ key: "okButton", comment: ["&& denotes a mnemonic"] }, "&&OK"));
+        }
+        break;
+      }
+      case 3 /* Input */: {
+        const inputDialog = dialog;
+        if (inputDialog.primaryButton) {
+          buttons.push(inputDialog.primaryButton);
+        } else {
+          buttons.push(localize({ key: "okButton", comment: ["&& denotes a mnemonic"] }, "&&OK"));
+        }
+        if (inputDialog.cancelButton) {
+          buttons.push(inputDialog.cancelButton);
+        } else {
+          buttons.push(localize("cancelButton", "Cancel"));
+        }
+        break;
+      }
+    }
+    return buttons;
+  }
+  getDialogType(type) {
+    if (typeof type === "string") {
+      return type;
+    }
+    if (typeof type === "number") {
+      return type === Severity.Info ? "info" : type === Severity.Error ? "error" : type === Severity.Warning ? "warning" : "none";
+    }
+    return void 0;
+  }
+  getPromptResult(prompt, buttonIndex, checkboxChecked) {
+    const promptButtons = [...prompt.buttons ?? []];
+    if (prompt.cancelButton && typeof prompt.cancelButton !== "string" && typeof prompt.cancelButton !== "boolean") {
+      promptButtons.push(prompt.cancelButton);
+    }
+    let result = promptButtons[buttonIndex]?.run({ checkboxChecked });
+    if (!(result instanceof Promise)) {
+      result = Promise.resolve(result);
+    }
+    return { result, checkboxChecked };
+  }
+}
+const IFileDialogService = createDecorator("fileDialogService");
+var ConfirmResult = /* @__PURE__ */ ((ConfirmResult2) => {
+  ConfirmResult2[ConfirmResult2["SAVE"] = 0] = "SAVE";
+  ConfirmResult2[ConfirmResult2["DONT_SAVE"] = 1] = "DONT_SAVE";
+  ConfirmResult2[ConfirmResult2["CANCEL"] = 2] = "CANCEL";
+  return ConfirmResult2;
+})(ConfirmResult || {});
+const MAX_CONFIRM_FILES = 10;
+function getFileNamesMessage(fileNamesOrResources) {
+  const message = [];
+  message.push(...fileNamesOrResources.slice(0, MAX_CONFIRM_FILES).map((fileNameOrResource) => typeof fileNameOrResource === "string" ? fileNameOrResource : basename(fileNameOrResource)));
+  if (fileNamesOrResources.length > MAX_CONFIRM_FILES) {
+    if (fileNamesOrResources.length - MAX_CONFIRM_FILES === 1) {
+      message.push(localize("moreFile", "...1 additional file not shown"));
+    } else {
+      message.push(localize("moreFiles", "...{0} additional files not shown", fileNamesOrResources.length - MAX_CONFIRM_FILES));
+    }
+  }
+  message.push("");
+  return message.join("\n");
+}
+__name(getFileNamesMessage, "getFileNamesMessage");
+function massageMessageBoxOptions(options, productService) {
+  const massagedOptions = deepClone(options);
+  let buttons = (massagedOptions.buttons ?? []).map((button) => mnemonicButtonLabel(button).withMnemonic);
+  let buttonIndeces = (options.buttons || []).map((button, index) => index);
+  let defaultId = 0;
+  let cancelId = massagedOptions.cancelId ?? buttons.length - 1;
+  if (buttons.length > 1) {
+    const cancelButton = typeof cancelId === "number" ? buttons[cancelId] : void 0;
+    if (isLinux || isMacintosh) {
+      if (typeof cancelButton === "string" && buttons.length > 1 && cancelId !== 1) {
+        buttons.splice(cancelId, 1);
+        buttons.splice(1, 0, cancelButton);
+        const cancelButtonIndex = buttonIndeces[cancelId];
+        buttonIndeces.splice(cancelId, 1);
+        buttonIndeces.splice(1, 0, cancelButtonIndex);
+        cancelId = 1;
+      }
+      if (isLinux && buttons.length > 1) {
+        buttons = buttons.reverse();
+        buttonIndeces = buttonIndeces.reverse();
+        defaultId = buttons.length - 1;
+        if (typeof cancelButton === "string") {
+          cancelId = defaultId - 1;
+        }
+      }
+    } else if (isWindows) {
+      if (typeof cancelButton === "string" && buttons.length > 1 && cancelId !== buttons.length - 1) {
+        buttons.splice(cancelId, 1);
+        buttons.push(cancelButton);
+        const buttonIndex = buttonIndeces[cancelId];
+        buttonIndeces.splice(cancelId, 1);
+        buttonIndeces.push(buttonIndex);
+        cancelId = buttons.length - 1;
+      }
+    }
+  }
+  massagedOptions.buttons = buttons;
+  massagedOptions.defaultId = defaultId;
+  massagedOptions.cancelId = cancelId;
+  massagedOptions.noLink = true;
+  massagedOptions.title = massagedOptions.title || productService.nameLong;
+  return {
+    options: massagedOptions,
+    buttonIndeces
+  };
+}
+__name(massageMessageBoxOptions, "massageMessageBoxOptions");
+export {
+  AbstractDialogHandler,
+  ConfirmResult,
+  IDialogService,
+  IFileDialogService,
+  getFileNamesMessage,
+  massageMessageBoxOptions
+};
+//# sourceMappingURL=dialogs.js.map

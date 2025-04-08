@@ -1,1 +1,313 @@
-import{getDomNodePagePosition as w,h as W}from"../../../../../../../base/browser/dom.js";import{KeybindingLabel as X,unthemedKeybindingLabelOptions as A}from"../../../../../../../base/browser/ui/keybindingLabel/keybindingLabel.js";import{numberComparator as Y}from"../../../../../../../base/common/arrays.js";import{findFirstMin as U}from"../../../../../../../base/common/arraysFind.js";import{toDisposable as k}from"../../../../../../../base/common/lifecycle.js";import{derived as c,derivedObservableWithCache as D,derivedOpts as H,observableValue as E,transaction as K}from"../../../../../../../base/common/observable.js";import{OS as z}from"../../../../../../../base/common/platform.js";import{getIndentationLength as V,splitLines as j}from"../../../../../../../base/common/strings.js";import{URI as q}from"../../../../../../../base/common/uri.js";import{MenuEntryActionViewItem as Q}from"../../../../../../../platform/actions/browser/menuEntryActionViewItem.js";import"../../../../../../browser/editorBrowser.js";import"../../../../../../browser/observableCodeEditor.js";import"../../../../../../browser/point.js";import"../../../../../../browser/rect.js";import{EditorOption as S}from"../../../../../../common/config/editorOptions.js";import"../../../../../../common/core/lineRange.js";import{OffsetRange as G}from"../../../../../../common/core/offsetRange.js";import{Position as J}from"../../../../../../common/core/position.js";import{Range as Z}from"../../../../../../common/core/range.js";import{SingleTextEdit as tt,TextEdit as et}from"../../../../../../common/core/textEdit.js";import{RangeMapping as nt}from"../../../../../../common/diff/rangeMapping.js";import"../../../../../../common/model.js";import{indentOfLine as P}from"../../../../../../common/model/textModel.js";function Xt(e,t,n){e.layoutInfo.read(n),e.value.read(n);const o=e.model.read(n);if(!o)return 0;let i=0;e.scrollTop.read(n);for(let r=t.startLineNumber;r<t.endLineNumberExclusive;r++){const m=o.getLineMaxColumn(r);let l=e.editor.getOffsetForColumn(r,m);if(l===-1){const f=e.editor.getOption(S.fontInfo).typicalHalfwidthCharacterWidth;l=m*f}i=Math.max(i,l)}const a=t.mapToLineArray(r=>o.getLineContent(r));return i<5&&a.some(r=>r.length>0)&&o.uri.scheme!=="file"&&console.error("unexpected width"),i}function At(e,t,n){return e.layoutInfo.read(n),e.value.read(n),e.model.read(n)?(e.scrollTop.read(n),e.editor.getOffsetForColumn(t.lineNumber,t.column)):0}function Yt(e,t,n,o){const i=o.getModel();if(!i)return{prefixTrim:0,prefixLeftOffset:0};const a=e.map(d=>d.isSingleLine()?d.startColumn-1:0),r=t.mapToLineArray(d=>P(i.getLineContent(d))),m=n.filter(d=>d!=="").map(d=>P(d)),l=Math.min(...a,...r,...m);let f;if(i.getLineIndentColumn(t.startLineNumber)>=l+1)f=o.getOffsetForColumn(t.startLineNumber,l+1);else if(n.length>0)f=ot(n[0].slice(0,l),o,i);else return{prefixTrim:0,prefixLeftOffset:0};return{prefixTrim:l,prefixLeftOffset:f}}function ot(e,t,n){const o=t.getOption(S.fontInfo).typicalHalfwidthCharacterWidth,i=n.getOptions().tabSize*o,a=e.split("	").length-1;return(e.length-a)*o+a*i}class Ut extends Q{_updateLabelListener=this._register(this._contextKeyService.onDidChangeContext(()=>{this.updateLabel()}));updateLabel(){const t=this._keybindingService.lookupKeybinding(this._action.id,this._contextKeyService,!0);if(!t)return super.updateLabel();if(this.label){const n=W("div.keybinding").root;this._register(new X(n,z,{disableTitle:!0,...A})).set(t),this.label.textContent=this._action.label,this.label.appendChild(n),this.label.classList.add("inlineSuggestionStatusBarItemLabel")}}updateTooltip(){}}class F{constructor(t){this.scheme=t}static _modelId=0;getUniqueUri(){return q.from({scheme:this.scheme,path:new Date().toString()+String(F._modelId++)})}}function kt(e,t){const n=[];for(const o of e){const i=t.mapRange(o.modifiedRange);n.push(new nt(o.originalRange,i))}return n}function Dt(...e){return e.filter(t=>typeof t=="string").join(" ")}function it(e,t){return new Z(t.lineNumber,t.column+e.start,t.lineNumber,t.column+e.endExclusive)}function Ht(e,t){const n=j(e),o=[],i=U(t.mapToLineArray(a=>V(n[a-1])),Y);return t.forEach(a=>{o.push(new tt(it(new G(0,i),new J(a,1)),""))}),new et(o)}class rt{_data="";moveTo(t){return this._data+=`M ${t.x} ${t.y} `,this}lineTo(t){return this._data+=`L ${t.x} ${t.y} `,this}curveTo(t,n){return this._data+=`Q ${t.x} ${t.y} ${n.x} ${n.y} `,this}curveTo2(t,n,o){return this._data+=`C ${t.x} ${t.y} ${n.x} ${n.y} ${o.x} ${o.y} `,this}build(){return this._data}}function Kt(e,t,n,o={}){const i=e.topLeft,a=i.deltaX(e.width),r=i.deltaY(e.height),m=r.deltaX(e.width),{top:l,bottom:f,left:p,right:d}=typeof t=="number"?{top:t,bottom:t,left:t,right:t}:t,{topLeft:v,topRight:R,bottomLeft:y,bottomRight:I}=typeof n=="number"?{topLeft:n,topRight:n,bottomLeft:n,bottomRight:n}:n,u=e.height+l+f,h=e.width+p+d,b=i.deltaX(-p).deltaY(-l),g=a.deltaX(d).deltaY(-l),_=b.deltaY(Math.min(v,u/2)),O=b.deltaX(Math.min(v,h/2)),$=g.deltaX(-Math.min(R,h/2)),C=g.deltaY(Math.min(R,u/2)),T=r.deltaX(-p).deltaY(f),L=m.deltaX(d).deltaY(f),B=T.deltaX(Math.min(y,h/2)),x=T.deltaY(-Math.min(y,u/2)),N=L.deltaY(-Math.min(I,u/2)),M=L.deltaX(-Math.min(I,h/2)),s=new rt;return o.hideLeft||s.moveTo(x).lineTo(_),!o.hideLeft&&!o.hideTop?s.curveTo(b,O):s.moveTo(O),o.hideTop||s.lineTo($),!o.hideTop&&!o.hideRight?s.curveTo(g,C):s.moveTo(C),o.hideRight||s.lineTo(N),!o.hideRight&&!o.hideBottom?s.curveTo(L,M):s.moveTo(M),o.hideBottom||s.lineTo(B),!o.hideBottom&&!o.hideLeft?s.curveTo(T,x):s.moveTo(x),s.build()}function zt(e){const t=D(void 0,(n,o)=>e.read(n)||o);return H({debugName:()=>`${e.debugName}.mapOutFalsy`},n=>{if(t.read(n),!!e.read(n))return t})}function Vt(e,t){const n=w(e),o=E("top",n.top),i=E("left",n.left),a=new ResizeObserver(()=>{K(r=>{const m=w(e);o.set(m.top,r),i.set(m.left,r)})});return a.observe(e),t.add(k(()=>a.disconnect())),{top:o,left:i}}function jt(e){return{left:c(t=>e(t).left),top:c(t=>e(t).top),width:c(t=>e(t).right-e(t).left),height:c(t=>e(t).bottom-e(t).top)}}export{rt as PathBuilder,Ut as StatusBarViewItem,F as UniqueUriGenerator,kt as applyEditToModifiedRangeMappings,Dt as classNames,Kt as createRectangle,Ht as createReindentEdit,ot as getContentRenderWidth,At as getOffsetForPos,Yt as getPrefixTrim,zt as mapOutFalsy,Xt as maxContentWidthInRange,Vt as observeElementPosition,jt as rectToProps};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { getDomNodePagePosition, h } from "../../../../../../../base/browser/dom.js";
+import { KeybindingLabel, unthemedKeybindingLabelOptions } from "../../../../../../../base/browser/ui/keybindingLabel/keybindingLabel.js";
+import { numberComparator } from "../../../../../../../base/common/arrays.js";
+import { findFirstMin } from "../../../../../../../base/common/arraysFind.js";
+import { DisposableStore, toDisposable } from "../../../../../../../base/common/lifecycle.js";
+import { derived, derivedObservableWithCache, derivedOpts, IObservable, IReader, observableValue, transaction } from "../../../../../../../base/common/observable.js";
+import { OS } from "../../../../../../../base/common/platform.js";
+import { getIndentationLength, splitLines } from "../../../../../../../base/common/strings.js";
+import { URI } from "../../../../../../../base/common/uri.js";
+import { MenuEntryActionViewItem } from "../../../../../../../platform/actions/browser/menuEntryActionViewItem.js";
+import { ICodeEditor } from "../../../../../../browser/editorBrowser.js";
+import { ObservableCodeEditor } from "../../../../../../browser/observableCodeEditor.js";
+import { Point } from "../../../../../../browser/point.js";
+import { Rect } from "../../../../../../browser/rect.js";
+import { EditorOption } from "../../../../../../common/config/editorOptions.js";
+import { LineRange } from "../../../../../../common/core/lineRange.js";
+import { OffsetRange } from "../../../../../../common/core/offsetRange.js";
+import { Position } from "../../../../../../common/core/position.js";
+import { Range } from "../../../../../../common/core/range.js";
+import { SingleTextEdit, TextEdit } from "../../../../../../common/core/textEdit.js";
+import { RangeMapping } from "../../../../../../common/diff/rangeMapping.js";
+import { ITextModel } from "../../../../../../common/model.js";
+import { indentOfLine } from "../../../../../../common/model/textModel.js";
+function maxContentWidthInRange(editor, range, reader) {
+  editor.layoutInfo.read(reader);
+  editor.value.read(reader);
+  const model = editor.model.read(reader);
+  if (!model) {
+    return 0;
+  }
+  let maxContentWidth = 0;
+  editor.scrollTop.read(reader);
+  for (let i = range.startLineNumber; i < range.endLineNumberExclusive; i++) {
+    const column = model.getLineMaxColumn(i);
+    let lineContentWidth = editor.editor.getOffsetForColumn(i, column);
+    if (lineContentWidth === -1) {
+      const typicalHalfwidthCharacterWidth = editor.editor.getOption(EditorOption.fontInfo).typicalHalfwidthCharacterWidth;
+      const approximation = column * typicalHalfwidthCharacterWidth;
+      lineContentWidth = approximation;
+    }
+    maxContentWidth = Math.max(maxContentWidth, lineContentWidth);
+  }
+  const lines = range.mapToLineArray((l) => model.getLineContent(l));
+  if (maxContentWidth < 5 && lines.some((l) => l.length > 0) && model.uri.scheme !== "file") {
+    console.error("unexpected width");
+  }
+  return maxContentWidth;
+}
+__name(maxContentWidthInRange, "maxContentWidthInRange");
+function getOffsetForPos(editor, pos, reader) {
+  editor.layoutInfo.read(reader);
+  editor.value.read(reader);
+  const model = editor.model.read(reader);
+  if (!model) {
+    return 0;
+  }
+  editor.scrollTop.read(reader);
+  const lineContentWidth = editor.editor.getOffsetForColumn(pos.lineNumber, pos.column);
+  return lineContentWidth;
+}
+__name(getOffsetForPos, "getOffsetForPos");
+function getPrefixTrim(diffRanges, originalLinesRange, modifiedLines, editor) {
+  const textModel = editor.getModel();
+  if (!textModel) {
+    return { prefixTrim: 0, prefixLeftOffset: 0 };
+  }
+  const replacementStart = diffRanges.map((r) => r.isSingleLine() ? r.startColumn - 1 : 0);
+  const originalIndents = originalLinesRange.mapToLineArray((line) => indentOfLine(textModel.getLineContent(line)));
+  const modifiedIndents = modifiedLines.filter((line) => line !== "").map((line) => indentOfLine(line));
+  const prefixTrim = Math.min(...replacementStart, ...originalIndents, ...modifiedIndents);
+  let prefixLeftOffset;
+  const startLineIndent = textModel.getLineIndentColumn(originalLinesRange.startLineNumber);
+  if (startLineIndent >= prefixTrim + 1) {
+    prefixLeftOffset = editor.getOffsetForColumn(originalLinesRange.startLineNumber, prefixTrim + 1);
+  } else if (modifiedLines.length > 0) {
+    prefixLeftOffset = getContentRenderWidth(modifiedLines[0].slice(0, prefixTrim), editor, textModel);
+  } else {
+    return { prefixTrim: 0, prefixLeftOffset: 0 };
+  }
+  return { prefixTrim, prefixLeftOffset };
+}
+__name(getPrefixTrim, "getPrefixTrim");
+function getContentRenderWidth(content, editor, textModel) {
+  const w = editor.getOption(EditorOption.fontInfo).typicalHalfwidthCharacterWidth;
+  const tabSize = textModel.getOptions().tabSize * w;
+  const numTabs = content.split("	").length - 1;
+  const numNoneTabs = content.length - numTabs;
+  return numNoneTabs * w + numTabs * tabSize;
+}
+__name(getContentRenderWidth, "getContentRenderWidth");
+class StatusBarViewItem extends MenuEntryActionViewItem {
+  static {
+    __name(this, "StatusBarViewItem");
+  }
+  _updateLabelListener = this._register(this._contextKeyService.onDidChangeContext(() => {
+    this.updateLabel();
+  }));
+  updateLabel() {
+    const kb = this._keybindingService.lookupKeybinding(this._action.id, this._contextKeyService, true);
+    if (!kb) {
+      return super.updateLabel();
+    }
+    if (this.label) {
+      const div = h("div.keybinding").root;
+      const keybindingLabel = this._register(new KeybindingLabel(div, OS, { disableTitle: true, ...unthemedKeybindingLabelOptions }));
+      keybindingLabel.set(kb);
+      this.label.textContent = this._action.label;
+      this.label.appendChild(div);
+      this.label.classList.add("inlineSuggestionStatusBarItemLabel");
+    }
+  }
+  updateTooltip() {
+  }
+}
+class UniqueUriGenerator {
+  constructor(scheme) {
+    this.scheme = scheme;
+  }
+  static {
+    __name(this, "UniqueUriGenerator");
+  }
+  static _modelId = 0;
+  getUniqueUri() {
+    return URI.from({ scheme: this.scheme, path: (/* @__PURE__ */ new Date()).toString() + String(UniqueUriGenerator._modelId++) });
+  }
+}
+function applyEditToModifiedRangeMappings(rangeMapping, edit) {
+  const updatedMappings = [];
+  for (const m of rangeMapping) {
+    const updatedRange = edit.mapRange(m.modifiedRange);
+    updatedMappings.push(new RangeMapping(m.originalRange, updatedRange));
+  }
+  return updatedMappings;
+}
+__name(applyEditToModifiedRangeMappings, "applyEditToModifiedRangeMappings");
+function classNames(...classes) {
+  return classes.filter((c) => typeof c === "string").join(" ");
+}
+__name(classNames, "classNames");
+function offsetRangeToRange(columnOffsetRange, startPos) {
+  return new Range(
+    startPos.lineNumber,
+    startPos.column + columnOffsetRange.start,
+    startPos.lineNumber,
+    startPos.column + columnOffsetRange.endExclusive
+  );
+}
+__name(offsetRangeToRange, "offsetRangeToRange");
+function createReindentEdit(text, range) {
+  const newLines = splitLines(text);
+  const edits = [];
+  const minIndent = findFirstMin(range.mapToLineArray((l) => getIndentationLength(newLines[l - 1])), numberComparator);
+  range.forEach((lineNumber) => {
+    edits.push(new SingleTextEdit(offsetRangeToRange(new OffsetRange(0, minIndent), new Position(lineNumber, 1)), ""));
+  });
+  return new TextEdit(edits);
+}
+__name(createReindentEdit, "createReindentEdit");
+class PathBuilder {
+  static {
+    __name(this, "PathBuilder");
+  }
+  _data = "";
+  moveTo(point) {
+    this._data += `M ${point.x} ${point.y} `;
+    return this;
+  }
+  lineTo(point) {
+    this._data += `L ${point.x} ${point.y} `;
+    return this;
+  }
+  curveTo(cp, to) {
+    this._data += `Q ${cp.x} ${cp.y} ${to.x} ${to.y} `;
+    return this;
+  }
+  curveTo2(cp1, cp2, to) {
+    this._data += `C ${cp1.x} ${cp1.y} ${cp2.x} ${cp2.y} ${to.x} ${to.y} `;
+    return this;
+  }
+  build() {
+    return this._data;
+  }
+}
+function createRectangle(layout, padding, borderRadius, options = {}) {
+  const topLeftInner = layout.topLeft;
+  const topRightInner = topLeftInner.deltaX(layout.width);
+  const bottomLeftInner = topLeftInner.deltaY(layout.height);
+  const bottomRightInner = bottomLeftInner.deltaX(layout.width);
+  const { top: paddingTop, bottom: paddingBottom, left: paddingLeft, right: paddingRight } = typeof padding === "number" ? { top: padding, bottom: padding, left: padding, right: padding } : padding;
+  const { topLeft: radiusTL, topRight: radiusTR, bottomLeft: radiusBL, bottomRight: radiusBR } = typeof borderRadius === "number" ? { topLeft: borderRadius, topRight: borderRadius, bottomLeft: borderRadius, bottomRight: borderRadius } : borderRadius;
+  const totalHeight = layout.height + paddingTop + paddingBottom;
+  const totalWidth = layout.width + paddingLeft + paddingRight;
+  const topLeft = topLeftInner.deltaX(-paddingLeft).deltaY(-paddingTop);
+  const topRight = topRightInner.deltaX(paddingRight).deltaY(-paddingTop);
+  const topLeftBefore = topLeft.deltaY(Math.min(radiusTL, totalHeight / 2));
+  const topLeftAfter = topLeft.deltaX(Math.min(radiusTL, totalWidth / 2));
+  const topRightBefore = topRight.deltaX(-Math.min(radiusTR, totalWidth / 2));
+  const topRightAfter = topRight.deltaY(Math.min(radiusTR, totalHeight / 2));
+  const bottomLeft = bottomLeftInner.deltaX(-paddingLeft).deltaY(paddingBottom);
+  const bottomRight = bottomRightInner.deltaX(paddingRight).deltaY(paddingBottom);
+  const bottomLeftBefore = bottomLeft.deltaX(Math.min(radiusBL, totalWidth / 2));
+  const bottomLeftAfter = bottomLeft.deltaY(-Math.min(radiusBL, totalHeight / 2));
+  const bottomRightBefore = bottomRight.deltaY(-Math.min(radiusBR, totalHeight / 2));
+  const bottomRightAfter = bottomRight.deltaX(-Math.min(radiusBR, totalWidth / 2));
+  const path = new PathBuilder();
+  if (!options.hideLeft) {
+    path.moveTo(bottomLeftAfter).lineTo(topLeftBefore);
+  }
+  if (!options.hideLeft && !options.hideTop) {
+    path.curveTo(topLeft, topLeftAfter);
+  } else {
+    path.moveTo(topLeftAfter);
+  }
+  if (!options.hideTop) {
+    path.lineTo(topRightBefore);
+  }
+  if (!options.hideTop && !options.hideRight) {
+    path.curveTo(topRight, topRightAfter);
+  } else {
+    path.moveTo(topRightAfter);
+  }
+  if (!options.hideRight) {
+    path.lineTo(bottomRightBefore);
+  }
+  if (!options.hideRight && !options.hideBottom) {
+    path.curveTo(bottomRight, bottomRightAfter);
+  } else {
+    path.moveTo(bottomRightAfter);
+  }
+  if (!options.hideBottom) {
+    path.lineTo(bottomLeftBefore);
+  }
+  if (!options.hideBottom && !options.hideLeft) {
+    path.curveTo(bottomLeft, bottomLeftAfter);
+  } else {
+    path.moveTo(bottomLeftAfter);
+  }
+  return path.build();
+}
+__name(createRectangle, "createRectangle");
+function mapOutFalsy(obs) {
+  const nonUndefinedObs = derivedObservableWithCache(void 0, (reader, lastValue) => obs.read(reader) || lastValue);
+  return derivedOpts({
+    debugName: /* @__PURE__ */ __name(() => `${obs.debugName}.mapOutFalsy`, "debugName")
+  }, (reader) => {
+    nonUndefinedObs.read(reader);
+    const val = obs.read(reader);
+    if (!val) {
+      return void 0;
+    }
+    return nonUndefinedObs;
+  });
+}
+__name(mapOutFalsy, "mapOutFalsy");
+function observeElementPosition(element, store) {
+  const topLeft = getDomNodePagePosition(element);
+  const top = observableValue("top", topLeft.top);
+  const left = observableValue("left", topLeft.left);
+  const resizeObserver = new ResizeObserver(() => {
+    transaction((tx) => {
+      const topLeft2 = getDomNodePagePosition(element);
+      top.set(topLeft2.top, tx);
+      left.set(topLeft2.left, tx);
+    });
+  });
+  resizeObserver.observe(element);
+  store.add(toDisposable(() => resizeObserver.disconnect()));
+  return {
+    top,
+    left
+  };
+}
+__name(observeElementPosition, "observeElementPosition");
+function rectToProps(fn) {
+  return {
+    left: derived((reader) => (
+      /** @description left */
+      fn(reader).left
+    )),
+    top: derived((reader) => (
+      /** @description top */
+      fn(reader).top
+    )),
+    width: derived((reader) => (
+      /** @description width */
+      fn(reader).right - fn(reader).left
+    )),
+    height: derived((reader) => (
+      /** @description height */
+      fn(reader).bottom - fn(reader).top
+    ))
+  };
+}
+__name(rectToProps, "rectToProps");
+export {
+  PathBuilder,
+  StatusBarViewItem,
+  UniqueUriGenerator,
+  applyEditToModifiedRangeMappings,
+  classNames,
+  createRectangle,
+  createReindentEdit,
+  getContentRenderWidth,
+  getOffsetForPos,
+  getPrefixTrim,
+  mapOutFalsy,
+  maxContentWidthInRange,
+  observeElementPosition,
+  rectToProps
+};
+//# sourceMappingURL=utils.js.map

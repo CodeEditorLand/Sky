@@ -1,1 +1,114 @@
-import"./linesDecorations.css";import{DecorationToRender as v,DedupOverlay as g}from"../glyphMargin/glyphMargin.js";import"../../view/renderingContext.js";import"../../../common/viewModel/viewContext.js";import"../../../common/viewEvents.js";import{EditorOption as h}from"../../../common/config/editorOptions.js";class R extends g{_context;_decorationsLeft;_decorationsWidth;_renderResult;constructor(e){super(),this._context=e;const t=this._context.configuration.options.get(h.layoutInfo);this._decorationsLeft=t.decorationsLeft,this._decorationsWidth=t.decorationsWidth,this._renderResult=null,this._context.addEventHandler(this)}dispose(){this._context.removeEventHandler(this),this._renderResult=null,super.dispose()}onConfigurationChanged(e){const t=this._context.configuration.options.get(h.layoutInfo);return this._decorationsLeft=t.decorationsLeft,this._decorationsWidth=t.decorationsWidth,!0}onDecorationsChanged(e){return!0}onFlushed(e){return!0}onLinesChanged(e){return!0}onLinesDeleted(e){return!0}onLinesInserted(e){return!0}onScrollChanged(e){return e.scrollTopChanged}onZonesChanged(e){return!0}_getDecorations(e){const t=e.getDecorationsInViewport(),n=[];let o=0;for(let e=0,r=t.length;e<r;e++){const r=t[e],i=r.options.linesDecorationsClassName,s=r.options.zIndex;i&&(n[o++]=new v(r.range.startLineNumber,r.range.endLineNumber,i,r.options.linesDecorationsTooltip??null,s));const a=r.options.firstLineDecorationClassName;a&&(n[o++]=new v(r.range.startLineNumber,r.range.startLineNumber,a,r.options.linesDecorationsTooltip??null,s))}return n}prepareRender(e){const t=e.visibleRange.startLineNumber,n=e.visibleRange.endLineNumber,o=this._render(t,n,this._getDecorations(e)),r='" style="left:'+this._decorationsLeft.toString()+"px;width:"+this._decorationsWidth.toString()+'px;"></div>',i=[];for(let e=t;e<=n;e++){const n=e-t,s=o[n].getDecorations();let a="";for(const e of s){let t='<div class="cldr '+e.className;null!==e.tooltip&&(t+='" title="'+e.tooltip),t+=r,a+=t}i[n]=a}this._renderResult=i}render(e,t){return this._renderResult?this._renderResult[t-e]:""}}export{R as LinesDecorationsOverlay};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import "./linesDecorations.css";
+import { DecorationToRender, DedupOverlay } from "../glyphMargin/glyphMargin.js";
+import { RenderingContext } from "../../view/renderingContext.js";
+import { ViewContext } from "../../../common/viewModel/viewContext.js";
+import * as viewEvents from "../../../common/viewEvents.js";
+import { EditorOption } from "../../../common/config/editorOptions.js";
+class LinesDecorationsOverlay extends DedupOverlay {
+  static {
+    __name(this, "LinesDecorationsOverlay");
+  }
+  _context;
+  _decorationsLeft;
+  _decorationsWidth;
+  _renderResult;
+  constructor(context) {
+    super();
+    this._context = context;
+    const options = this._context.configuration.options;
+    const layoutInfo = options.get(EditorOption.layoutInfo);
+    this._decorationsLeft = layoutInfo.decorationsLeft;
+    this._decorationsWidth = layoutInfo.decorationsWidth;
+    this._renderResult = null;
+    this._context.addEventHandler(this);
+  }
+  dispose() {
+    this._context.removeEventHandler(this);
+    this._renderResult = null;
+    super.dispose();
+  }
+  // --- begin event handlers
+  onConfigurationChanged(e) {
+    const options = this._context.configuration.options;
+    const layoutInfo = options.get(EditorOption.layoutInfo);
+    this._decorationsLeft = layoutInfo.decorationsLeft;
+    this._decorationsWidth = layoutInfo.decorationsWidth;
+    return true;
+  }
+  onDecorationsChanged(e) {
+    return true;
+  }
+  onFlushed(e) {
+    return true;
+  }
+  onLinesChanged(e) {
+    return true;
+  }
+  onLinesDeleted(e) {
+    return true;
+  }
+  onLinesInserted(e) {
+    return true;
+  }
+  onScrollChanged(e) {
+    return e.scrollTopChanged;
+  }
+  onZonesChanged(e) {
+    return true;
+  }
+  // --- end event handlers
+  _getDecorations(ctx) {
+    const decorations = ctx.getDecorationsInViewport();
+    const r = [];
+    let rLen = 0;
+    for (let i = 0, len = decorations.length; i < len; i++) {
+      const d = decorations[i];
+      const linesDecorationsClassName = d.options.linesDecorationsClassName;
+      const zIndex = d.options.zIndex;
+      if (linesDecorationsClassName) {
+        r[rLen++] = new DecorationToRender(d.range.startLineNumber, d.range.endLineNumber, linesDecorationsClassName, d.options.linesDecorationsTooltip ?? null, zIndex);
+      }
+      const firstLineDecorationClassName = d.options.firstLineDecorationClassName;
+      if (firstLineDecorationClassName) {
+        r[rLen++] = new DecorationToRender(d.range.startLineNumber, d.range.startLineNumber, firstLineDecorationClassName, d.options.linesDecorationsTooltip ?? null, zIndex);
+      }
+    }
+    return r;
+  }
+  prepareRender(ctx) {
+    const visibleStartLineNumber = ctx.visibleRange.startLineNumber;
+    const visibleEndLineNumber = ctx.visibleRange.endLineNumber;
+    const toRender = this._render(visibleStartLineNumber, visibleEndLineNumber, this._getDecorations(ctx));
+    const left = this._decorationsLeft.toString();
+    const width = this._decorationsWidth.toString();
+    const common = '" style="left:' + left + "px;width:" + width + 'px;"></div>';
+    const output = [];
+    for (let lineNumber = visibleStartLineNumber; lineNumber <= visibleEndLineNumber; lineNumber++) {
+      const lineIndex = lineNumber - visibleStartLineNumber;
+      const decorations = toRender[lineIndex].getDecorations();
+      let lineOutput = "";
+      for (const decoration of decorations) {
+        let addition = '<div class="cldr ' + decoration.className;
+        if (decoration.tooltip !== null) {
+          addition += '" title="' + decoration.tooltip;
+        }
+        addition += common;
+        lineOutput += addition;
+      }
+      output[lineIndex] = lineOutput;
+    }
+    this._renderResult = output;
+  }
+  render(startLineNumber, lineNumber) {
+    if (!this._renderResult) {
+      return "";
+    }
+    return this._renderResult[lineNumber - startLineNumber];
+  }
+}
+export {
+  LinesDecorationsOverlay
+};
+//# sourceMappingURL=linesDecorations.js.map

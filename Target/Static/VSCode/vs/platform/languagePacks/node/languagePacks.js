@@ -1,1 +1,224 @@
-var P=Object.defineProperty;var k=Object.getOwnPropertyDescriptor;var f=(s,r,i,t)=>{for(var e=t>1?void 0:t?k(r,i):r,n=s.length-1,a;n>=0;n--)(a=s[n])&&(e=(t?a(r,i,e):a(e))||e);return t&&e&&P(r,i,e),e},o=(s,r)=>(i,t)=>r(i,t,s);import*as v from"fs";import{createHash as L}from"crypto";import{equals as x}from"../../../base/common/arrays.js";import{Queue as E}from"../../../base/common/async.js";import{Disposable as b}from"../../../base/common/lifecycle.js";import{Schemas as y}from"../../../base/common/network.js";import{join as h}from"../../../base/common/path.js";import{Promises as S}from"../../../base/node/pfs.js";import{INativeEnvironmentService as d}from"../../environment/common/environment.js";import{IExtensionGalleryService as w,IExtensionManagementService as F}from"../../extensionManagement/common/extensionManagement.js";import{areSameExtensions as p}from"../../extensionManagement/common/extensionManagementUtil.js";import{ILogService as I}from"../../log/common/log.js";import"../../extensions/common/extensions.js";import{LanguagePackBaseService as z}from"../common/languagePacks.js";import{URI as N}from"../../../base/common/uri.js";let u=class extends z{constructor(i,t,e,n){super(e);this.extensionManagementService=i;this.logService=n;this.cache=this._register(new g(t,n)),this.extensionManagementService.registerParticipant({postInstall:async a=>this.postInstallExtension(a),postUninstall:async a=>this.postUninstallExtension(a)})}cache;async getBuiltInExtensionTranslationsUri(i,t){const n=(await this.cache.getLanguagePacks())[t];if(!n){this.logService.warn(`No language pack found for ${t}`);return}const a=n.translations[i];return a?N.file(a):void 0}async getInstalledLanguages(){const i=await this.cache.getLanguagePacks(),t=Object.keys(i).map(e=>{const n=i[e];return{...this.createQuickPickItem(e,n.label),extensionId:n.extensions[0].extensionIdentifier.id}});return t.push(this.createQuickPickItem("en","English")),t.sort((e,n)=>e.label.localeCompare(n.label)),t}async postInstallExtension(i){i&&i.manifest&&i.manifest.contributes&&i.manifest.contributes.localizations&&i.manifest.contributes.localizations.length&&(this.logService.info("Adding language packs from the extension",i.identifier.id),await this.update())}async postUninstallExtension(i){const t=await this.cache.getLanguagePacks();Object.keys(t).some(e=>t[e]&&t[e].extensions.some(n=>p(n.extensionIdentifier,i.identifier)))&&(this.logService.info("Removing language packs from the extension",i.identifier.id),await this.update())}async update(){const[i,t]=await Promise.all([this.cache.getLanguagePacks(),this.extensionManagementService.getInstalled()]),e=await this.cache.update(t);return!x(Object.keys(i),Object.keys(e))}};u=f([o(0,F),o(1,d),o(2,w),o(3,I)],u);let g=class extends b{constructor(i,t){super();this.logService=t;this.languagePacksFilePath=h(i.userDataPath,"languagepacks.json"),this.languagePacksFileLimiter=new E}languagePacks={};languagePacksFilePath;languagePacksFileLimiter;initializedCache;getLanguagePacks(){return this.languagePacksFileLimiter.size||!this.initializedCache?this.withLanguagePacks().then(()=>this.languagePacks):Promise.resolve(this.languagePacks)}update(i){return this.withLanguagePacks(t=>{Object.keys(t).forEach(e=>delete t[e]),this.createLanguagePacksFromExtensions(t,...i)}).then(()=>this.languagePacks)}createLanguagePacksFromExtensions(i,...t){for(const e of t)e&&e.manifest&&e.manifest.contributes&&e.manifest.contributes.localizations&&e.manifest.contributes.localizations.length&&this.createLanguagePacksFromExtension(i,e);Object.keys(i).forEach(e=>this.updateHash(i[e]))}createLanguagePacksFromExtension(i,t){const e=t.identifier,n=t.manifest.contributes&&t.manifest.contributes.localizations?t.manifest.contributes.localizations:[];for(const a of n)if(t.location.scheme===y.file&&j(a)){let c=i[a.languageId];c||(c={hash:"",extensions:[],translations:{},label:a.localizedLanguageName??a.languageName},i[a.languageId]=c);const m=c.extensions.filter(l=>p(l.extensionIdentifier,e))[0];m?m.version=t.manifest.version:c.extensions.push({extensionIdentifier:e,version:t.manifest.version});for(const l of a.translations)c.translations[l.id]=h(t.location.fsPath,l.path)}}updateHash(i){if(i){const t=L("md5");for(const e of i.extensions)t.update(e.extensionIdentifier.uuid||e.extensionIdentifier.id).update(e.version);i.hash=t.digest("hex")}}withLanguagePacks(i=()=>null){return this.languagePacksFileLimiter.queue(()=>{let t=null;return v.promises.readFile(this.languagePacksFilePath,"utf8").then(void 0,e=>e.code==="ENOENT"?Promise.resolve("{}"):Promise.reject(e)).then(e=>{try{return JSON.parse(e)}catch{return{}}}).then(e=>(t=i(e),e)).then(e=>{for(const a of Object.keys(e))e[a]||delete e[a];this.languagePacks=e,this.initializedCache=!0;const n=JSON.stringify(this.languagePacks);return this.logService.debug("Writing language packs",n),S.writeFile(this.languagePacksFilePath,n)}).then(()=>t,e=>this.logService.error(e))})}};g=f([o(0,d),o(1,I)],g);function j(s){if(typeof s.languageId!="string"||!Array.isArray(s.translations)||s.translations.length===0)return!1;for(const r of s.translations)if(typeof r.id!="string"||typeof r.path!="string")return!1;return!(s.languageName&&typeof s.languageName!="string"||s.localizedLanguageName&&typeof s.localizedLanguageName!="string")}export{u as NativeLanguagePackService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import * as fs from "fs";
+import { createHash } from "crypto";
+import { equals } from "../../../base/common/arrays.js";
+import { Queue } from "../../../base/common/async.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { Schemas } from "../../../base/common/network.js";
+import { join } from "../../../base/common/path.js";
+import { Promises } from "../../../base/node/pfs.js";
+import { INativeEnvironmentService } from "../../environment/common/environment.js";
+import { IExtensionGalleryService, IExtensionIdentifier, IExtensionManagementService, ILocalExtension } from "../../extensionManagement/common/extensionManagement.js";
+import { areSameExtensions } from "../../extensionManagement/common/extensionManagementUtil.js";
+import { ILogService } from "../../log/common/log.js";
+import { ILocalizationContribution } from "../../extensions/common/extensions.js";
+import { ILanguagePackItem, LanguagePackBaseService } from "../common/languagePacks.js";
+import { URI } from "../../../base/common/uri.js";
+let NativeLanguagePackService = class extends LanguagePackBaseService {
+  constructor(extensionManagementService, environmentService, extensionGalleryService, logService) {
+    super(extensionGalleryService);
+    this.extensionManagementService = extensionManagementService;
+    this.logService = logService;
+    this.cache = this._register(new LanguagePacksCache(environmentService, logService));
+    this.extensionManagementService.registerParticipant({
+      postInstall: /* @__PURE__ */ __name(async (extension) => {
+        return this.postInstallExtension(extension);
+      }, "postInstall"),
+      postUninstall: /* @__PURE__ */ __name(async (extension) => {
+        return this.postUninstallExtension(extension);
+      }, "postUninstall")
+    });
+  }
+  static {
+    __name(this, "NativeLanguagePackService");
+  }
+  cache;
+  async getBuiltInExtensionTranslationsUri(id, language) {
+    const packs = await this.cache.getLanguagePacks();
+    const pack = packs[language];
+    if (!pack) {
+      this.logService.warn(`No language pack found for ${language}`);
+      return void 0;
+    }
+    const translation = pack.translations[id];
+    return translation ? URI.file(translation) : void 0;
+  }
+  async getInstalledLanguages() {
+    const languagePacks = await this.cache.getLanguagePacks();
+    const languages = Object.keys(languagePacks).map((locale) => {
+      const languagePack = languagePacks[locale];
+      const baseQuickPick = this.createQuickPickItem(locale, languagePack.label);
+      return {
+        ...baseQuickPick,
+        extensionId: languagePack.extensions[0].extensionIdentifier.id
+      };
+    });
+    languages.push(this.createQuickPickItem("en", "English"));
+    languages.sort((a, b) => a.label.localeCompare(b.label));
+    return languages;
+  }
+  async postInstallExtension(extension) {
+    if (extension && extension.manifest && extension.manifest.contributes && extension.manifest.contributes.localizations && extension.manifest.contributes.localizations.length) {
+      this.logService.info("Adding language packs from the extension", extension.identifier.id);
+      await this.update();
+    }
+  }
+  async postUninstallExtension(extension) {
+    const languagePacks = await this.cache.getLanguagePacks();
+    if (Object.keys(languagePacks).some((language) => languagePacks[language] && languagePacks[language].extensions.some((e) => areSameExtensions(e.extensionIdentifier, extension.identifier)))) {
+      this.logService.info("Removing language packs from the extension", extension.identifier.id);
+      await this.update();
+    }
+  }
+  async update() {
+    const [current, installed] = await Promise.all([this.cache.getLanguagePacks(), this.extensionManagementService.getInstalled()]);
+    const updated = await this.cache.update(installed);
+    return !equals(Object.keys(current), Object.keys(updated));
+  }
+};
+NativeLanguagePackService = __decorateClass([
+  __decorateParam(0, IExtensionManagementService),
+  __decorateParam(1, INativeEnvironmentService),
+  __decorateParam(2, IExtensionGalleryService),
+  __decorateParam(3, ILogService)
+], NativeLanguagePackService);
+let LanguagePacksCache = class extends Disposable {
+  constructor(environmentService, logService) {
+    super();
+    this.logService = logService;
+    this.languagePacksFilePath = join(environmentService.userDataPath, "languagepacks.json");
+    this.languagePacksFileLimiter = new Queue();
+  }
+  static {
+    __name(this, "LanguagePacksCache");
+  }
+  languagePacks = {};
+  languagePacksFilePath;
+  languagePacksFileLimiter;
+  initializedCache;
+  getLanguagePacks() {
+    if (this.languagePacksFileLimiter.size || !this.initializedCache) {
+      return this.withLanguagePacks().then(() => this.languagePacks);
+    }
+    return Promise.resolve(this.languagePacks);
+  }
+  update(extensions) {
+    return this.withLanguagePacks((languagePacks) => {
+      Object.keys(languagePacks).forEach((language) => delete languagePacks[language]);
+      this.createLanguagePacksFromExtensions(languagePacks, ...extensions);
+    }).then(() => this.languagePacks);
+  }
+  createLanguagePacksFromExtensions(languagePacks, ...extensions) {
+    for (const extension of extensions) {
+      if (extension && extension.manifest && extension.manifest.contributes && extension.manifest.contributes.localizations && extension.manifest.contributes.localizations.length) {
+        this.createLanguagePacksFromExtension(languagePacks, extension);
+      }
+    }
+    Object.keys(languagePacks).forEach((languageId) => this.updateHash(languagePacks[languageId]));
+  }
+  createLanguagePacksFromExtension(languagePacks, extension) {
+    const extensionIdentifier = extension.identifier;
+    const localizations = extension.manifest.contributes && extension.manifest.contributes.localizations ? extension.manifest.contributes.localizations : [];
+    for (const localizationContribution of localizations) {
+      if (extension.location.scheme === Schemas.file && isValidLocalization(localizationContribution)) {
+        let languagePack = languagePacks[localizationContribution.languageId];
+        if (!languagePack) {
+          languagePack = {
+            hash: "",
+            extensions: [],
+            translations: {},
+            label: localizationContribution.localizedLanguageName ?? localizationContribution.languageName
+          };
+          languagePacks[localizationContribution.languageId] = languagePack;
+        }
+        const extensionInLanguagePack = languagePack.extensions.filter((e) => areSameExtensions(e.extensionIdentifier, extensionIdentifier))[0];
+        if (extensionInLanguagePack) {
+          extensionInLanguagePack.version = extension.manifest.version;
+        } else {
+          languagePack.extensions.push({ extensionIdentifier, version: extension.manifest.version });
+        }
+        for (const translation of localizationContribution.translations) {
+          languagePack.translations[translation.id] = join(extension.location.fsPath, translation.path);
+        }
+      }
+    }
+  }
+  updateHash(languagePack) {
+    if (languagePack) {
+      const md5 = createHash("md5");
+      for (const extension of languagePack.extensions) {
+        md5.update(extension.extensionIdentifier.uuid || extension.extensionIdentifier.id).update(extension.version);
+      }
+      languagePack.hash = md5.digest("hex");
+    }
+  }
+  withLanguagePacks(fn = () => null) {
+    return this.languagePacksFileLimiter.queue(() => {
+      let result = null;
+      return fs.promises.readFile(this.languagePacksFilePath, "utf8").then(void 0, (err) => err.code === "ENOENT" ? Promise.resolve("{}") : Promise.reject(err)).then((raw) => {
+        try {
+          return JSON.parse(raw);
+        } catch (e) {
+          return {};
+        }
+      }).then((languagePacks) => {
+        result = fn(languagePacks);
+        return languagePacks;
+      }).then((languagePacks) => {
+        for (const language of Object.keys(languagePacks)) {
+          if (!languagePacks[language]) {
+            delete languagePacks[language];
+          }
+        }
+        this.languagePacks = languagePacks;
+        this.initializedCache = true;
+        const raw = JSON.stringify(this.languagePacks);
+        this.logService.debug("Writing language packs", raw);
+        return Promises.writeFile(this.languagePacksFilePath, raw);
+      }).then(() => result, (error) => this.logService.error(error));
+    });
+  }
+};
+LanguagePacksCache = __decorateClass([
+  __decorateParam(0, INativeEnvironmentService),
+  __decorateParam(1, ILogService)
+], LanguagePacksCache);
+function isValidLocalization(localization) {
+  if (typeof localization.languageId !== "string") {
+    return false;
+  }
+  if (!Array.isArray(localization.translations) || localization.translations.length === 0) {
+    return false;
+  }
+  for (const translation of localization.translations) {
+    if (typeof translation.id !== "string") {
+      return false;
+    }
+    if (typeof translation.path !== "string") {
+      return false;
+    }
+  }
+  if (localization.languageName && typeof localization.languageName !== "string") {
+    return false;
+  }
+  if (localization.localizedLanguageName && typeof localization.localizedLanguageName !== "string") {
+    return false;
+  }
+  return true;
+}
+__name(isValidLocalization, "isValidLocalization");
+export {
+  NativeLanguagePackService
+};
+//# sourceMappingURL=languagePacks.js.map

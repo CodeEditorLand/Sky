@@ -1,1 +1,5 @@
-import{EditorContributionInstantiation as o,registerEditorContribution as i}from"../../../../editor/browser/editorExtensions.js";import{wrapInHotClass1 as n}from"../../../../platform/observable/common/wrapInHotClass.js";import{InlineCompletionLanguageStatusBarContribution as t}from"./inlineCompletionLanguageStatusBarContribution.js";i(t.Id,n(t.hot),o.Eventually);
+import { EditorContributionInstantiation, registerEditorContribution } from "../../../../editor/browser/editorExtensions.js";
+import { wrapInHotClass1 } from "../../../../platform/observable/common/wrapInHotClass.js";
+import { InlineCompletionLanguageStatusBarContribution } from "./inlineCompletionLanguageStatusBarContribution.js";
+registerEditorContribution(InlineCompletionLanguageStatusBarContribution.Id, wrapInHotClass1(InlineCompletionLanguageStatusBarContribution.hot), EditorContributionInstantiation.Eventually);
+//# sourceMappingURL=inlineCompletions.contribution.js.map

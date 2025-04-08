@@ -1,1 +1,187 @@
-var C=Object.defineProperty,w=Object.getOwnPropertyDescriptor,f=(e,t,o,n)=>{for(var s,i=n>1?void 0:n?w(t,o):t,r=e.length-1;r>=0;r--)(s=e[r])&&(i=(n?s(t,o,i):s(i))||i);return n&&i&&C(t,o,i),i},s=(e,t)=>(o,n)=>t(o,n,e);import{ButtonBar as L}from"../../../base/browser/ui/button/button.js";import{createInstantHoverDelegate as B}from"../../../base/browser/ui/hover/hoverDelegateFactory.js";import{ActionRunner as D,SubmenuAction as O}from"../../../base/common/actions.js";import{Codicon as R}from"../../../base/common/codicons.js";import{Emitter as k}from"../../../base/common/event.js";import{DisposableStore as S}from"../../../base/common/lifecycle.js";import{ThemeIcon as E}from"../../../base/common/themables.js";import{localize as I}from"../../../nls.js";import{getActionBarActions as H}from"./menuEntryActionViewItem.js";import"./toolbar.js";import{IMenuService as T,MenuItemAction as K}from"../common/actions.js";import{IContextKeyService as P}from"../../contextkey/common/contextkey.js";import{IContextMenuService as y}from"../../contextview/browser/contextView.js";import{IHoverService as g}from"../../hover/browser/hover.js";import{IKeybindingService as _}from"../../keybinding/common/keybinding.js";import{ITelemetryService as A}from"../../telemetry/common/telemetry.js";let h=class extends L{constructor(e,t,o,n,s,i){super(e),this._options=t,this._contextMenuService=o,this._keybindingService=n,this._hoverService=i,this._actionRunner=this._store.add(new D),t?.telemetrySource&&this._actionRunner.onDidRun((e=>{s.publicLog2("workbenchActionExecuted",{id:e.action.id,from:t.telemetrySource})}),void 0,this._store)}_store=new S;_updateStore=new S;_actionRunner;_onDidChange=new k;onDidChange=this._onDidChange.event;dispose(){this._onDidChange.dispose(),this._updateStore.dispose(),this._store.dispose(),super.dispose()}update(e,t){const o=this._options?.buttonConfigProvider??(()=>({showLabel:!0}));this._updateStore.clear(),this.clear();const n=this._updateStore.add(B());for(let t=0;t<e.length;t++){const s=t>0,i=e[t];let r,a;if(i instanceof O&&i.actions.length>0){const[e,...n]=i.actions;r=e,a=this.addButtonWithDropdown({secondary:o(r,t)?.isSecondary??s,actionRunner:this._actionRunner,actions:n,contextMenuProvider:this._contextMenuService,ariaLabel:r.label,supportIcons:!0})}else r=i,a=this.addButton({secondary:o(r,t)?.isSecondary??s,ariaLabel:r.label,supportIcons:!0});a.enabled=r.enabled,a.checked=r.checked??!1,a.element.classList.add("default-colors");const c=o(r,t)?.showLabel??!0;c?a.label=r.label:a.element.classList.add("monaco-text-button"),o(r,t)?.showIcon&&(r instanceof K&&E.isThemeIcon(r.item.icon)?c?a.label=`$(${r.item.icon.id}) ${r.label}`:a.icon=r.item.icon:r.class&&a.element.classList.add(...r.class.split(" ")));const d=this._keybindingService.lookupKeybinding(r.id);let l;l=d?I("labelWithKeybinding","{0} ({1})",r.tooltip||r.label,d.getLabel()):r.tooltip||r.label,this._updateStore.add(this._hoverService.setupManagedHover(n,a.element,l)),this._updateStore.add(a.onDidClick((async()=>{this._actionRunner.run(r)})))}if(t.length>0){const e=this.addButton({secondary:!0,ariaLabel:I("moreActions","More Actions")});e.icon=R.dropDownButton,e.element.classList.add("default-colors","monaco-text-button"),e.enabled=!0,this._updateStore.add(this._hoverService.setupManagedHover(n,e.element,I("moreActions","More Actions"))),this._updateStore.add(e.onDidClick((async()=>{this._contextMenuService.showContextMenu({getAnchor:()=>e.element,getActions:()=>t,actionRunner:this._actionRunner,onHide:()=>e.element.setAttribute("aria-expanded","false")}),e.element.setAttribute("aria-expanded","true")})))}this._onDidChange.fire(this)}};h=f([s(2,y),s(3,_),s(4,A),s(5,g)],h);let v=class extends h{constructor(e,t,o,n,s,i,r,a,c){super(e,o,i,r,a,c);const d=n.createMenu(t,s);this._store.add(d);const l=()=>{this.clear();const e=H(d.getActions(o?.menuOptions),o?.toolbarOptions?.primaryGroup);super.update(e.primary,e.secondary)};this._store.add(d.onDidChange(l)),l()}dispose(){super.dispose()}update(e){throw new Error("Use Menu or WorkbenchButtonBar")}};v=f([s(3,T),s(4,P),s(5,y),s(6,_),s(7,A),s(8,g)],v);export{v as MenuWorkbenchButtonBar,h as WorkbenchButtonBar};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { ButtonBar, IButton } from "../../../base/browser/ui/button/button.js";
+import { createInstantHoverDelegate } from "../../../base/browser/ui/hover/hoverDelegateFactory.js";
+import { ActionRunner, IAction, IActionRunner, SubmenuAction, WorkbenchActionExecutedClassification, WorkbenchActionExecutedEvent } from "../../../base/common/actions.js";
+import { Codicon } from "../../../base/common/codicons.js";
+import { Emitter, Event } from "../../../base/common/event.js";
+import { DisposableStore } from "../../../base/common/lifecycle.js";
+import { ThemeIcon } from "../../../base/common/themables.js";
+import { localize } from "../../../nls.js";
+import { getActionBarActions } from "./menuEntryActionViewItem.js";
+import { IToolBarRenderOptions } from "./toolbar.js";
+import { MenuId, IMenuService, MenuItemAction, IMenuActionOptions } from "../common/actions.js";
+import { IContextKeyService } from "../../contextkey/common/contextkey.js";
+import { IContextMenuService } from "../../contextview/browser/contextView.js";
+import { IHoverService } from "../../hover/browser/hover.js";
+import { IKeybindingService } from "../../keybinding/common/keybinding.js";
+import { ITelemetryService } from "../../telemetry/common/telemetry.js";
+let WorkbenchButtonBar = class extends ButtonBar {
+  constructor(container, _options, _contextMenuService, _keybindingService, telemetryService, _hoverService) {
+    super(container);
+    this._options = _options;
+    this._contextMenuService = _contextMenuService;
+    this._keybindingService = _keybindingService;
+    this._hoverService = _hoverService;
+    this._actionRunner = this._store.add(new ActionRunner());
+    if (_options?.telemetrySource) {
+      this._actionRunner.onDidRun((e) => {
+        telemetryService.publicLog2(
+          "workbenchActionExecuted",
+          { id: e.action.id, from: _options.telemetrySource }
+        );
+      }, void 0, this._store);
+    }
+  }
+  static {
+    __name(this, "WorkbenchButtonBar");
+  }
+  _store = new DisposableStore();
+  _updateStore = new DisposableStore();
+  _actionRunner;
+  _onDidChange = new Emitter();
+  onDidChange = this._onDidChange.event;
+  dispose() {
+    this._onDidChange.dispose();
+    this._updateStore.dispose();
+    this._store.dispose();
+    super.dispose();
+  }
+  update(actions, secondary) {
+    const conifgProvider = this._options?.buttonConfigProvider ?? (() => ({ showLabel: true }));
+    this._updateStore.clear();
+    this.clear();
+    const hoverDelegate = this._updateStore.add(createInstantHoverDelegate());
+    for (let i = 0; i < actions.length; i++) {
+      const secondary2 = i > 0;
+      const actionOrSubmenu = actions[i];
+      let action;
+      let btn;
+      if (actionOrSubmenu instanceof SubmenuAction && actionOrSubmenu.actions.length > 0) {
+        const [first, ...rest] = actionOrSubmenu.actions;
+        action = first;
+        btn = this.addButtonWithDropdown({
+          secondary: conifgProvider(action, i)?.isSecondary ?? secondary2,
+          actionRunner: this._actionRunner,
+          actions: rest,
+          contextMenuProvider: this._contextMenuService,
+          ariaLabel: action.label,
+          supportIcons: true
+        });
+      } else {
+        action = actionOrSubmenu;
+        btn = this.addButton({
+          secondary: conifgProvider(action, i)?.isSecondary ?? secondary2,
+          ariaLabel: action.label,
+          supportIcons: true
+        });
+      }
+      btn.enabled = action.enabled;
+      btn.checked = action.checked ?? false;
+      btn.element.classList.add("default-colors");
+      const showLabel = conifgProvider(action, i)?.showLabel ?? true;
+      if (showLabel) {
+        btn.label = action.label;
+      } else {
+        btn.element.classList.add("monaco-text-button");
+      }
+      if (conifgProvider(action, i)?.showIcon) {
+        if (action instanceof MenuItemAction && ThemeIcon.isThemeIcon(action.item.icon)) {
+          if (!showLabel) {
+            btn.icon = action.item.icon;
+          } else {
+            btn.label = `$(${action.item.icon.id}) ${action.label}`;
+          }
+        } else if (action.class) {
+          btn.element.classList.add(...action.class.split(" "));
+        }
+      }
+      const kb = this._keybindingService.lookupKeybinding(action.id);
+      let tooltip;
+      if (kb) {
+        tooltip = localize("labelWithKeybinding", "{0} ({1})", action.tooltip || action.label, kb.getLabel());
+      } else {
+        tooltip = action.tooltip || action.label;
+      }
+      this._updateStore.add(this._hoverService.setupManagedHover(hoverDelegate, btn.element, tooltip));
+      this._updateStore.add(btn.onDidClick(async () => {
+        this._actionRunner.run(action);
+      }));
+    }
+    if (secondary.length > 0) {
+      const btn = this.addButton({
+        secondary: true,
+        ariaLabel: localize("moreActions", "More Actions")
+      });
+      btn.icon = Codicon.dropDownButton;
+      btn.element.classList.add("default-colors", "monaco-text-button");
+      btn.enabled = true;
+      this._updateStore.add(this._hoverService.setupManagedHover(hoverDelegate, btn.element, localize("moreActions", "More Actions")));
+      this._updateStore.add(btn.onDidClick(async () => {
+        this._contextMenuService.showContextMenu({
+          getAnchor: /* @__PURE__ */ __name(() => btn.element, "getAnchor"),
+          getActions: /* @__PURE__ */ __name(() => secondary, "getActions"),
+          actionRunner: this._actionRunner,
+          onHide: /* @__PURE__ */ __name(() => btn.element.setAttribute("aria-expanded", "false"), "onHide")
+        });
+        btn.element.setAttribute("aria-expanded", "true");
+      }));
+    }
+    this._onDidChange.fire(this);
+  }
+};
+WorkbenchButtonBar = __decorateClass([
+  __decorateParam(2, IContextMenuService),
+  __decorateParam(3, IKeybindingService),
+  __decorateParam(4, ITelemetryService),
+  __decorateParam(5, IHoverService)
+], WorkbenchButtonBar);
+let MenuWorkbenchButtonBar = class extends WorkbenchButtonBar {
+  static {
+    __name(this, "MenuWorkbenchButtonBar");
+  }
+  constructor(container, menuId, options, menuService, contextKeyService, contextMenuService, keybindingService, telemetryService, hoverService) {
+    super(container, options, contextMenuService, keybindingService, telemetryService, hoverService);
+    const menu = menuService.createMenu(menuId, contextKeyService);
+    this._store.add(menu);
+    const update = /* @__PURE__ */ __name(() => {
+      this.clear();
+      const actions = getActionBarActions(
+        menu.getActions(options?.menuOptions),
+        options?.toolbarOptions?.primaryGroup
+      );
+      super.update(actions.primary, actions.secondary);
+    }, "update");
+    this._store.add(menu.onDidChange(update));
+    update();
+  }
+  dispose() {
+    super.dispose();
+  }
+  update(_actions) {
+    throw new Error("Use Menu or WorkbenchButtonBar");
+  }
+};
+MenuWorkbenchButtonBar = __decorateClass([
+  __decorateParam(3, IMenuService),
+  __decorateParam(4, IContextKeyService),
+  __decorateParam(5, IContextMenuService),
+  __decorateParam(6, IKeybindingService),
+  __decorateParam(7, ITelemetryService),
+  __decorateParam(8, IHoverService)
+], MenuWorkbenchButtonBar);
+export {
+  MenuWorkbenchButtonBar,
+  WorkbenchButtonBar
+};
+//# sourceMappingURL=buttonbar.js.map

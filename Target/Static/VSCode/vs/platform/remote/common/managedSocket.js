@@ -1,6 +1,110 @@
-import{VSBuffer as c,encodeBase64 as f}from"../../../base/common/buffer.js";import{Emitter as b,PauseableEmitter as E}from"../../../base/common/event.js";import{Disposable as v,DisposableStore as S}from"../../../base/common/lifecycle.js";import{SocketDiagnostics as g}from"../../../base/parts/ipc/common/ipc.net.js";const h=(t,d,r)=>{const e=new Uint8Array(16);for(let o=0;o<16;o++)e[o]=Math.round(Math.random()*256);const s=f(c.wrap(e));return[`GET ws://localhost${t}?${d}&skipWebSocketFrames=true HTTP/1.1`,"Connection: Upgrade","Upgrade: websocket",`Sec-WebSocket-Key: ${s}`].join(`\r
-`)+`\r
-\r
-`},m=c.fromString(`\r
-\r
-`);async function B(t,d,r,e,s){t.write(c.fromString(h(d,r,e)));const n=new S;try{return await new Promise((o,p)=>{let i;n.add(t.onData(a=>{i?i=c.concat([i,a],i.byteLength+a.byteLength):i=a;const l=i.indexOf(m);if(l===-1)return;o(t),t.pauseData();const u=i.slice(l+m.byteLength);u.byteLength&&s.onData.fire(u)})),n.add(t.onClose(a=>p(a??new Error("socket closed")))),n.add(t.onEnd(()=>p(new Error("socket ended"))))})}catch(o){throw t.dispose(),o}finally{n.dispose()}}class L extends v{constructor(r,e){super();this.debugLabel=r;this._register(e.onData),this._register(e.onData.event(s=>this.pausableDataEmitter.fire(s))),this.onClose=this._register(e.onClose).event,this.onEnd=this._register(e.onEnd).event}pausableDataEmitter=this._register(new E);onData=(...r)=>(this.pausableDataEmitter.isPaused&&queueMicrotask(()=>this.pausableDataEmitter.resume()),this.pausableDataEmitter.event(...r));onClose;onEnd;didDisposeEmitter=this._register(new b);onDidDispose=this.didDisposeEmitter.event;ended=!1;pauseData(){this.pausableDataEmitter.pause()}drain(){return Promise.resolve()}end(){this.ended=!0,this.closeRemote()}traceSocketEvent(r,e){g.traceSocketEvent(this,this.debugLabel,r,e)}dispose(){this.ended||this.closeRemote(),this.didDisposeEmitter.fire(),super.dispose()}}export{L as ManagedSocket,B as connectManagedSocket,h as makeRawSocketHeaders,m as socketRawEndHeaderSequence};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { VSBuffer, encodeBase64 } from "../../../base/common/buffer.js";
+import { Emitter, Event, PauseableEmitter } from "../../../base/common/event.js";
+import { Disposable, DisposableStore } from "../../../base/common/lifecycle.js";
+import { ISocket, SocketCloseEvent, SocketDiagnostics, SocketDiagnosticsEventType } from "../../../base/parts/ipc/common/ipc.net.js";
+const makeRawSocketHeaders = /* @__PURE__ */ __name((path, query, deubgLabel) => {
+  const buffer = new Uint8Array(16);
+  for (let i = 0; i < 16; i++) {
+    buffer[i] = Math.round(Math.random() * 256);
+  }
+  const nonce = encodeBase64(VSBuffer.wrap(buffer));
+  const headers = [
+    `GET ws://localhost${path}?${query}&skipWebSocketFrames=true HTTP/1.1`,
+    `Connection: Upgrade`,
+    `Upgrade: websocket`,
+    `Sec-WebSocket-Key: ${nonce}`
+  ];
+  return headers.join("\r\n") + "\r\n\r\n";
+}, "makeRawSocketHeaders");
+const socketRawEndHeaderSequence = VSBuffer.fromString("\r\n\r\n");
+async function connectManagedSocket(socket, path, query, debugLabel, half) {
+  socket.write(VSBuffer.fromString(makeRawSocketHeaders(path, query, debugLabel)));
+  const d = new DisposableStore();
+  try {
+    return await new Promise((resolve, reject) => {
+      let dataSoFar;
+      d.add(socket.onData((d_1) => {
+        if (!dataSoFar) {
+          dataSoFar = d_1;
+        } else {
+          dataSoFar = VSBuffer.concat([dataSoFar, d_1], dataSoFar.byteLength + d_1.byteLength);
+        }
+        const index = dataSoFar.indexOf(socketRawEndHeaderSequence);
+        if (index === -1) {
+          return;
+        }
+        resolve(socket);
+        socket.pauseData();
+        const rest = dataSoFar.slice(index + socketRawEndHeaderSequence.byteLength);
+        if (rest.byteLength) {
+          half.onData.fire(rest);
+        }
+      }));
+      d.add(socket.onClose((err) => reject(err ?? new Error("socket closed"))));
+      d.add(socket.onEnd(() => reject(new Error("socket ended"))));
+    });
+  } catch (e) {
+    socket.dispose();
+    throw e;
+  } finally {
+    d.dispose();
+  }
+}
+__name(connectManagedSocket, "connectManagedSocket");
+class ManagedSocket extends Disposable {
+  constructor(debugLabel, half) {
+    super();
+    this.debugLabel = debugLabel;
+    this._register(half.onData);
+    this._register(half.onData.event((data) => this.pausableDataEmitter.fire(data)));
+    this.onClose = this._register(half.onClose).event;
+    this.onEnd = this._register(half.onEnd).event;
+  }
+  static {
+    __name(this, "ManagedSocket");
+  }
+  pausableDataEmitter = this._register(new PauseableEmitter());
+  onData = /* @__PURE__ */ __name((...args) => {
+    if (this.pausableDataEmitter.isPaused) {
+      queueMicrotask(() => this.pausableDataEmitter.resume());
+    }
+    return this.pausableDataEmitter.event(...args);
+  }, "onData");
+  onClose;
+  onEnd;
+  didDisposeEmitter = this._register(new Emitter());
+  onDidDispose = this.didDisposeEmitter.event;
+  ended = false;
+  /** Pauses data events until a new listener comes in onData() */
+  pauseData() {
+    this.pausableDataEmitter.pause();
+  }
+  /** Flushes data to the socket. */
+  drain() {
+    return Promise.resolve();
+  }
+  /** Ends the remote socket. */
+  end() {
+    this.ended = true;
+    this.closeRemote();
+  }
+  traceSocketEvent(type, data) {
+    SocketDiagnostics.traceSocketEvent(this, this.debugLabel, type, data);
+  }
+  dispose() {
+    if (!this.ended) {
+      this.closeRemote();
+    }
+    this.didDisposeEmitter.fire();
+    super.dispose();
+  }
+}
+export {
+  ManagedSocket,
+  connectManagedSocket,
+  makeRawSocketHeaders,
+  socketRawEndHeaderSequence
+};
+//# sourceMappingURL=managedSocket.js.map

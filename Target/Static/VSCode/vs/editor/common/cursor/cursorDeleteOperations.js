@@ -1,1 +1,221 @@
-import*as E from"../../../base/common/strings.js";import{ReplaceCommand as d}from"../commands/replaceCommand.js";import"../config/editorOptions.js";import{EditOperationResult as I,EditOperationType as N,isQuote as R}from"../cursorCommon.js";import{CursorColumns as M}from"../core/cursorColumns.js";import{MoveOperations as w}from"./cursorMoveOperations.js";import{Range as b}from"../core/range.js";import"../core/selection.js";import"../editorCommon.js";import"../languages/languageConfiguration.js";import{Position as y}from"../core/position.js";class S{static deleteRight(e,t,n,o){const i=[];let r=e!==N.DeletingRight;for(let e=0,s=o.length;e<s;e++){const s=o[e];let l=s;if(l.isEmpty()){const e=s.getPosition(),o=w.right(t,n,e);l=new b(o.lineNumber,o.column,e.lineNumber,e.column)}l.isEmpty()?i[e]=null:(l.startLineNumber!==l.endLineNumber&&(r=!0),i[e]=new d(l,""))}return[r,i]}static isAutoClosingPairDelete(e,t,n,o,i,r,s){if("never"===t&&"never"===n||"never"===e)return!1;for(let l=0,u=r.length;l<u;l++){const u=r[l],m=u.getPosition();if(!u.isEmpty())return!1;const a=i.getLineContent(m.lineNumber);if(m.column<2||m.column>=a.length+1)return!1;const c=a.charAt(m.column-2),g=o.get(c);if(!g)return!1;if(R(c)){if("never"===n)return!1}else if("never"===t)return!1;const f=a.charAt(m.column-1);let b=!1;for(const e of g)e.open===c&&e.close===f&&(b=!0);if(!b)return!1;if("auto"===e){let e=!1;for(let t=0,n=s.length;t<n;t++){const n=s[t];if(m.lineNumber===n.startLineNumber&&m.column===n.startColumn){e=!0;break}}if(!e)return!1}}return!0}static _runAutoClosingPairDelete(e,t,n){const o=[];for(let e=0,t=n.length;e<t;e++){const t=n[e].getPosition(),i=new b(t.lineNumber,t.column-1,t.lineNumber,t.column+1);o[e]=new d(i,"")}return[!0,o]}static deleteLeft(e,t,n,o,i){if(this.isAutoClosingPairDelete(t.autoClosingDelete,t.autoClosingBrackets,t.autoClosingQuotes,t.autoClosingPairs.autoClosingPairsOpenByEnd,n,o,i))return this._runAutoClosingPairDelete(t,n,o);const r=[];let s=e!==N.DeletingLeft;for(let e=0,i=o.length;e<i;e++){const i=S.getDeleteRange(o[e],n,t);i.isEmpty()?r[e]=null:(i.startLineNumber!==i.endLineNumber&&(s=!0),r[e]=new d(i,""))}return[s,r]}static getDeleteRange(e,t,n){if(!e.isEmpty())return e;const o=e.getPosition();if(n.useTabStops&&o.column>1){const e=t.getLineContent(o.lineNumber),i=E.firstNonWhitespaceIndex(e),r=-1===i?e.length+1:i+1;if(o.column<=r){const e=n.visibleColumnFromColumn(t,o),i=M.prevIndentTabStop(e,n.indentSize),r=n.columnFromVisibleColumn(t,o.lineNumber,i);return new b(o.lineNumber,r,o.lineNumber,o.column)}}return b.fromPositions(S.getPositionAfterDeleteLeft(o,t),o)}static getPositionAfterDeleteLeft(e,t){if(e.column>1){const n=E.getLeftDeleteOffset(e.column-1,t.getLineContent(e.lineNumber));return e.with(void 0,n+1)}if(e.lineNumber>1){const n=e.lineNumber-1;return new y(n,t.getLineMaxColumn(n))}return e}static cut(e,t,n){const o=[];let i=null;n.sort(((e,t)=>y.compare(e.getStartPosition(),t.getEndPosition())));for(let r=0,s=n.length;r<s;r++){const s=n[r];if(s.isEmpty())if(e.emptySelectionClipboard){const e=s.getPosition();let n,l,u,m;e.lineNumber<t.getLineCount()?(n=e.lineNumber,l=1,u=e.lineNumber+1,m=1):e.lineNumber>1&&i?.endLineNumber!==e.lineNumber?(n=e.lineNumber-1,l=t.getLineMaxColumn(e.lineNumber-1),u=e.lineNumber,m=t.getLineMaxColumn(e.lineNumber)):(n=e.lineNumber,l=1,u=e.lineNumber,m=t.getLineMaxColumn(e.lineNumber));const a=new b(n,l,u,m);i=a,a.isEmpty()?o[r]=null:o[r]=new d(a,"")}else o[r]=null;else o[r]=new d(s,"")}return new I(N.Other,o,{shouldPushStackElementBefore:!0,shouldPushStackElementAfter:!0})}}export{S as DeleteOperations};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as strings from "../../../base/common/strings.js";
+import { ReplaceCommand } from "../commands/replaceCommand.js";
+import { EditorAutoClosingEditStrategy, EditorAutoClosingStrategy } from "../config/editorOptions.js";
+import { CursorConfiguration, EditOperationResult, EditOperationType, ICursorSimpleModel, isQuote } from "../cursorCommon.js";
+import { CursorColumns } from "../core/cursorColumns.js";
+import { MoveOperations } from "./cursorMoveOperations.js";
+import { Range } from "../core/range.js";
+import { Selection } from "../core/selection.js";
+import { ICommand } from "../editorCommon.js";
+import { StandardAutoClosingPairConditional } from "../languages/languageConfiguration.js";
+import { Position } from "../core/position.js";
+class DeleteOperations {
+  static {
+    __name(this, "DeleteOperations");
+  }
+  static deleteRight(prevEditOperationType, config, model, selections) {
+    const commands = [];
+    let shouldPushStackElementBefore = prevEditOperationType !== EditOperationType.DeletingRight;
+    for (let i = 0, len = selections.length; i < len; i++) {
+      const selection = selections[i];
+      let deleteSelection = selection;
+      if (deleteSelection.isEmpty()) {
+        const position = selection.getPosition();
+        const rightOfPosition = MoveOperations.right(config, model, position);
+        deleteSelection = new Range(
+          rightOfPosition.lineNumber,
+          rightOfPosition.column,
+          position.lineNumber,
+          position.column
+        );
+      }
+      if (deleteSelection.isEmpty()) {
+        commands[i] = null;
+        continue;
+      }
+      if (deleteSelection.startLineNumber !== deleteSelection.endLineNumber) {
+        shouldPushStackElementBefore = true;
+      }
+      commands[i] = new ReplaceCommand(deleteSelection, "");
+    }
+    return [shouldPushStackElementBefore, commands];
+  }
+  static isAutoClosingPairDelete(autoClosingDelete, autoClosingBrackets, autoClosingQuotes, autoClosingPairsOpen, model, selections, autoClosedCharacters) {
+    if (autoClosingBrackets === "never" && autoClosingQuotes === "never") {
+      return false;
+    }
+    if (autoClosingDelete === "never") {
+      return false;
+    }
+    for (let i = 0, len = selections.length; i < len; i++) {
+      const selection = selections[i];
+      const position = selection.getPosition();
+      if (!selection.isEmpty()) {
+        return false;
+      }
+      const lineText = model.getLineContent(position.lineNumber);
+      if (position.column < 2 || position.column >= lineText.length + 1) {
+        return false;
+      }
+      const character = lineText.charAt(position.column - 2);
+      const autoClosingPairCandidates = autoClosingPairsOpen.get(character);
+      if (!autoClosingPairCandidates) {
+        return false;
+      }
+      if (isQuote(character)) {
+        if (autoClosingQuotes === "never") {
+          return false;
+        }
+      } else {
+        if (autoClosingBrackets === "never") {
+          return false;
+        }
+      }
+      const afterCharacter = lineText.charAt(position.column - 1);
+      let foundAutoClosingPair = false;
+      for (const autoClosingPairCandidate of autoClosingPairCandidates) {
+        if (autoClosingPairCandidate.open === character && autoClosingPairCandidate.close === afterCharacter) {
+          foundAutoClosingPair = true;
+        }
+      }
+      if (!foundAutoClosingPair) {
+        return false;
+      }
+      if (autoClosingDelete === "auto") {
+        let found = false;
+        for (let j = 0, lenJ = autoClosedCharacters.length; j < lenJ; j++) {
+          const autoClosedCharacter = autoClosedCharacters[j];
+          if (position.lineNumber === autoClosedCharacter.startLineNumber && position.column === autoClosedCharacter.startColumn) {
+            found = true;
+            break;
+          }
+        }
+        if (!found) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+  static _runAutoClosingPairDelete(config, model, selections) {
+    const commands = [];
+    for (let i = 0, len = selections.length; i < len; i++) {
+      const position = selections[i].getPosition();
+      const deleteSelection = new Range(
+        position.lineNumber,
+        position.column - 1,
+        position.lineNumber,
+        position.column + 1
+      );
+      commands[i] = new ReplaceCommand(deleteSelection, "");
+    }
+    return [true, commands];
+  }
+  static deleteLeft(prevEditOperationType, config, model, selections, autoClosedCharacters) {
+    if (this.isAutoClosingPairDelete(config.autoClosingDelete, config.autoClosingBrackets, config.autoClosingQuotes, config.autoClosingPairs.autoClosingPairsOpenByEnd, model, selections, autoClosedCharacters)) {
+      return this._runAutoClosingPairDelete(config, model, selections);
+    }
+    const commands = [];
+    let shouldPushStackElementBefore = prevEditOperationType !== EditOperationType.DeletingLeft;
+    for (let i = 0, len = selections.length; i < len; i++) {
+      const deleteRange = DeleteOperations.getDeleteRange(selections[i], model, config);
+      if (deleteRange.isEmpty()) {
+        commands[i] = null;
+        continue;
+      }
+      if (deleteRange.startLineNumber !== deleteRange.endLineNumber) {
+        shouldPushStackElementBefore = true;
+      }
+      commands[i] = new ReplaceCommand(deleteRange, "");
+    }
+    return [shouldPushStackElementBefore, commands];
+  }
+  static getDeleteRange(selection, model, config) {
+    if (!selection.isEmpty()) {
+      return selection;
+    }
+    const position = selection.getPosition();
+    if (config.useTabStops && position.column > 1) {
+      const lineContent = model.getLineContent(position.lineNumber);
+      const firstNonWhitespaceIndex = strings.firstNonWhitespaceIndex(lineContent);
+      const lastIndentationColumn = firstNonWhitespaceIndex === -1 ? (
+        /* entire string is whitespace */
+        lineContent.length + 1
+      ) : firstNonWhitespaceIndex + 1;
+      if (position.column <= lastIndentationColumn) {
+        const fromVisibleColumn = config.visibleColumnFromColumn(model, position);
+        const toVisibleColumn = CursorColumns.prevIndentTabStop(fromVisibleColumn, config.indentSize);
+        const toColumn = config.columnFromVisibleColumn(model, position.lineNumber, toVisibleColumn);
+        return new Range(position.lineNumber, toColumn, position.lineNumber, position.column);
+      }
+    }
+    return Range.fromPositions(DeleteOperations.getPositionAfterDeleteLeft(position, model), position);
+  }
+  static getPositionAfterDeleteLeft(position, model) {
+    if (position.column > 1) {
+      const idx = strings.getLeftDeleteOffset(position.column - 1, model.getLineContent(position.lineNumber));
+      return position.with(void 0, idx + 1);
+    } else if (position.lineNumber > 1) {
+      const newLine = position.lineNumber - 1;
+      return new Position(newLine, model.getLineMaxColumn(newLine));
+    } else {
+      return position;
+    }
+  }
+  static cut(config, model, selections) {
+    const commands = [];
+    let lastCutRange = null;
+    selections.sort((a, b) => Position.compare(a.getStartPosition(), b.getEndPosition()));
+    for (let i = 0, len = selections.length; i < len; i++) {
+      const selection = selections[i];
+      if (selection.isEmpty()) {
+        if (config.emptySelectionClipboard) {
+          const position = selection.getPosition();
+          let startLineNumber, startColumn, endLineNumber, endColumn;
+          if (position.lineNumber < model.getLineCount()) {
+            startLineNumber = position.lineNumber;
+            startColumn = 1;
+            endLineNumber = position.lineNumber + 1;
+            endColumn = 1;
+          } else if (position.lineNumber > 1 && lastCutRange?.endLineNumber !== position.lineNumber) {
+            startLineNumber = position.lineNumber - 1;
+            startColumn = model.getLineMaxColumn(position.lineNumber - 1);
+            endLineNumber = position.lineNumber;
+            endColumn = model.getLineMaxColumn(position.lineNumber);
+          } else {
+            startLineNumber = position.lineNumber;
+            startColumn = 1;
+            endLineNumber = position.lineNumber;
+            endColumn = model.getLineMaxColumn(position.lineNumber);
+          }
+          const deleteSelection = new Range(
+            startLineNumber,
+            startColumn,
+            endLineNumber,
+            endColumn
+          );
+          lastCutRange = deleteSelection;
+          if (!deleteSelection.isEmpty()) {
+            commands[i] = new ReplaceCommand(deleteSelection, "");
+          } else {
+            commands[i] = null;
+          }
+        } else {
+          commands[i] = null;
+        }
+      } else {
+        commands[i] = new ReplaceCommand(selection, "");
+      }
+    }
+    return new EditOperationResult(EditOperationType.Other, commands, {
+      shouldPushStackElementBefore: true,
+      shouldPushStackElementAfter: true
+    });
+  }
+}
+export {
+  DeleteOperations
+};
+//# sourceMappingURL=cursorDeleteOperations.js.map

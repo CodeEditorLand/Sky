@@ -1,1 +1,46 @@
-import{Schemas as c}from"../../../../base/common/network.js";import"../../../../base/common/uri.js";import{localize2 as v}from"../../../../nls.js";import{INativeEnvironmentService as l}from"../../../../platform/environment/common/environment.js";import{IRemoteAuthorityResolverService as f}from"../../../../platform/remote/common/remoteAuthorityResolver.js";import{registerTerminalAction as p}from"../browser/terminalActions.js";import{TerminalCommandId as u}from"../common/terminal.js";import{IHistoryService as d}from"../../../services/history/common/history.js";function C(){p({id:u.NewLocal,title:v("workbench.action.terminal.newLocal","Create New Integrated Terminal (Local)"),run:async(e,o)=>{const r=o.get(d),t=o.get(f),i=o.get(l);let m;try{const e=r.getLastActiveWorkspaceRoot(c.vscodeRemote);if(e){const o=await t.getCanonicalURI(e);o.scheme===c.file&&(m=o)}}catch{}m||(m=i.userHome);const s=await e.service.createTerminal({cwd:m});return s?(e.service.setActiveInstance(s),e.groupService.showPanel(!0)):Promise.resolve(void 0)}})}export{C as registerRemoteContributions};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Schemas } from "../../../../base/common/network.js";
+import { URI } from "../../../../base/common/uri.js";
+import { localize2 } from "../../../../nls.js";
+import { INativeEnvironmentService } from "../../../../platform/environment/common/environment.js";
+import { IRemoteAuthorityResolverService } from "../../../../platform/remote/common/remoteAuthorityResolver.js";
+import { registerTerminalAction } from "../browser/terminalActions.js";
+import { TerminalCommandId } from "../common/terminal.js";
+import { IHistoryService } from "../../../services/history/common/history.js";
+function registerRemoteContributions() {
+  registerTerminalAction({
+    id: TerminalCommandId.NewLocal,
+    title: localize2("workbench.action.terminal.newLocal", "Create New Integrated Terminal (Local)"),
+    run: /* @__PURE__ */ __name(async (c, accessor) => {
+      const historyService = accessor.get(IHistoryService);
+      const remoteAuthorityResolverService = accessor.get(IRemoteAuthorityResolverService);
+      const nativeEnvironmentService = accessor.get(INativeEnvironmentService);
+      let cwd;
+      try {
+        const activeWorkspaceRootUri = historyService.getLastActiveWorkspaceRoot(Schemas.vscodeRemote);
+        if (activeWorkspaceRootUri) {
+          const canonicalUri = await remoteAuthorityResolverService.getCanonicalURI(activeWorkspaceRootUri);
+          if (canonicalUri.scheme === Schemas.file) {
+            cwd = canonicalUri;
+          }
+        }
+      } catch {
+      }
+      if (!cwd) {
+        cwd = nativeEnvironmentService.userHome;
+      }
+      const instance = await c.service.createTerminal({ cwd });
+      if (!instance) {
+        return Promise.resolve(void 0);
+      }
+      c.service.setActiveInstance(instance);
+      return c.groupService.showPanel(true);
+    }, "run")
+  });
+}
+__name(registerRemoteContributions, "registerRemoteContributions");
+export {
+  registerRemoteContributions
+};
+//# sourceMappingURL=terminalRemote.js.map

@@ -1,1 +1,228 @@
-var x=Object.defineProperty,S=Object.getOwnPropertyDescriptor,c=(e,r,t,s)=>{for(var i,o=s>1?void 0:s?S(r,t):r,n=e.length-1;n>=0;n--)(i=e[n])&&(o=(s?i(r,t,o):i(o))||o);return s&&o&&x(r,t,o),o},l=(e,r)=>(t,s)=>r(t,s,e);import{binarySearch2 as M,equals as y}from"../../../../base/common/arrays.js";import{Emitter as C}from"../../../../base/common/event.js";import{DisposableStore as P,toDisposable as b}from"../../../../base/common/lifecycle.js";import{LinkedList as L}from"../../../../base/common/linkedList.js";import{compare as g}from"../../../../base/common/strings.js";import{URI as I}from"../../../../base/common/uri.js";import"../../../common/core/position.js";import{Range as h}from"../../../common/core/range.js";import"../../../common/model.js";import{InstantiationType as U,registerSingleton as D}from"../../../../platform/instantiation/common/extensions.js";import{createDecorator as R}from"../../../../platform/instantiation/common/instantiation.js";import{IMarkerService as k,MarkerSeverity as f}from"../../../../platform/markers/common/markers.js";import{IConfigurationService as v}from"../../../../platform/configuration/common/configuration.js";import{isEqual as N}from"../../../../base/common/resources.js";class p{constructor(e,r,t){this.marker=e,this.index=r,this.total=t}}let u=class{constructor(e,r,t){this._markerService=r,this._configService=t,I.isUri(e)?this._resourceFilter=r=>r.toString()===e.toString():e&&(this._resourceFilter=e);const s=this._configService.getValue("problems.sortOrder"),i=(e,r)=>{let t=g(e.resource.toString(),r.resource.toString());return 0===t&&(t="position"===s?h.compareRangesUsingStarts(e,r)||f.compare(e.severity,r.severity):f.compare(e.severity,r.severity)||h.compareRangesUsingStarts(e,r)),t},o=()=>{let r=this._markerService.read({resource:I.isUri(e)?e:void 0,severities:f.Error|f.Warning|f.Info});return"function"==typeof e&&(r=r.filter((e=>this._resourceFilter(e.resource)))),r.sort(i),!y(r,this._markers,((e,r)=>e.resource.toString()===r.resource.toString()&&e.startLineNumber===r.startLineNumber&&e.startColumn===r.startColumn&&e.endLineNumber===r.endLineNumber&&e.endColumn===r.endColumn&&e.severity===r.severity&&e.message===r.message))&&(this._markers=r,!0)};o(),this._dispoables.add(r.onMarkerChanged((e=>{(!this._resourceFilter||e.some((e=>this._resourceFilter(e))))&&o()&&(this._nextIdx=-1,this._onDidChange.fire())})))}_onDidChange=new C;onDidChange=this._onDidChange.event;_resourceFilter;_dispoables=new P;_markers=[];_nextIdx=-1;dispose(){this._dispoables.dispose(),this._onDidChange.dispose()}matches(e){return!this._resourceFilter&&!e||!(!this._resourceFilter||!e)&&this._resourceFilter(e)}get selected(){const e=this._markers[this._nextIdx];return e&&new p(e,this._nextIdx+1,this._markers.length)}_initIdx(e,r,t){let s=this._markers.findIndex((r=>N(r.resource,e.uri)));if(s<0)s=M(this._markers.length,(r=>g(this._markers[r].resource.toString(),e.uri.toString()))),s<0&&(s=~s),this._nextIdx=t?s:(this._markers.length+s-1)%this._markers.length;else{let i=!1,o=!1;for(let t=s;t<this._markers.length;t++){let s=h.lift(this._markers[t]);if(s.isEmpty()){const r=e.getWordAtPosition(s.getStartPosition());r&&(s=new h(s.startLineNumber,r.startColumn,s.startLineNumber,r.endColumn))}if(r&&(s.containsPosition(r)||r.isBeforeOrEqual(s.getStartPosition()))){this._nextIdx=t,i=!0,o=!s.containsPosition(r);break}if(this._markers[t].resource.toString()!==e.uri.toString())break}i?o&&!t&&(this._nextIdx-=1):this._nextIdx=t?0:this._markers.length-1}this._nextIdx<0&&(this._nextIdx=this._markers.length-1)}resetIndex(){this._nextIdx=-1}move(e,r,t){if(0===this._markers.length)return!1;const s=this._nextIdx;return-1===this._nextIdx?this._initIdx(r,t,e):e?this._nextIdx=(this._nextIdx+1)%this._markers.length:e||(this._nextIdx=(this._nextIdx-1+this._markers.length)%this._markers.length),s!==this._nextIdx}find(e,r){let t=this._markers.findIndex((r=>r.resource.toString()===e.toString()));if(!(t<0))for(;t<this._markers.length;t++)if(h.containsPosition(this._markers[t],r))return new p(this._markers[t],t+1,this._markers.length)}};u=c([l(1,k),l(2,v)],u);const E=R("IMarkerNavigationService");let _=class{constructor(e,r){this._markerService=e,this._configService=r}_serviceBrand;_provider=new L;registerProvider(e){const r=this._provider.unshift(e);return b((()=>r()))}getMarkerList(e){for(const r of this._provider){const t=r.getMarkerList(e);if(t)return t}return new u(e,this._markerService,this._configService)}};_=c([l(0,k),l(1,v)],_),D(E,_,U.Delayed);export{E as IMarkerNavigationService,p as MarkerCoordinate,u as MarkerList};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { binarySearch2, equals } from "../../../../base/common/arrays.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { DisposableStore, IDisposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { LinkedList } from "../../../../base/common/linkedList.js";
+import { compare } from "../../../../base/common/strings.js";
+import { URI } from "../../../../base/common/uri.js";
+import { Position } from "../../../common/core/position.js";
+import { Range } from "../../../common/core/range.js";
+import { ITextModel } from "../../../common/model.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { IMarker, IMarkerService, MarkerSeverity } from "../../../../platform/markers/common/markers.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { isEqual } from "../../../../base/common/resources.js";
+class MarkerCoordinate {
+  constructor(marker, index, total) {
+    this.marker = marker;
+    this.index = index;
+    this.total = total;
+  }
+  static {
+    __name(this, "MarkerCoordinate");
+  }
+}
+let MarkerList = class {
+  constructor(resourceFilter, _markerService, _configService) {
+    this._markerService = _markerService;
+    this._configService = _configService;
+    if (URI.isUri(resourceFilter)) {
+      this._resourceFilter = (uri) => uri.toString() === resourceFilter.toString();
+    } else if (resourceFilter) {
+      this._resourceFilter = resourceFilter;
+    }
+    const compareOrder = this._configService.getValue("problems.sortOrder");
+    const compareMarker = /* @__PURE__ */ __name((a, b) => {
+      let res = compare(a.resource.toString(), b.resource.toString());
+      if (res === 0) {
+        if (compareOrder === "position") {
+          res = Range.compareRangesUsingStarts(a, b) || MarkerSeverity.compare(a.severity, b.severity);
+        } else {
+          res = MarkerSeverity.compare(a.severity, b.severity) || Range.compareRangesUsingStarts(a, b);
+        }
+      }
+      return res;
+    }, "compareMarker");
+    const updateMarker = /* @__PURE__ */ __name(() => {
+      let newMarkers = this._markerService.read({
+        resource: URI.isUri(resourceFilter) ? resourceFilter : void 0,
+        severities: MarkerSeverity.Error | MarkerSeverity.Warning | MarkerSeverity.Info
+      });
+      if (typeof resourceFilter === "function") {
+        newMarkers = newMarkers.filter((m) => this._resourceFilter(m.resource));
+      }
+      newMarkers.sort(compareMarker);
+      if (equals(
+        newMarkers,
+        this._markers,
+        (a, b) => a.resource.toString() === b.resource.toString() && a.startLineNumber === b.startLineNumber && a.startColumn === b.startColumn && a.endLineNumber === b.endLineNumber && a.endColumn === b.endColumn && a.severity === b.severity && a.message === b.message
+      )) {
+        return false;
+      }
+      this._markers = newMarkers;
+      return true;
+    }, "updateMarker");
+    updateMarker();
+    this._dispoables.add(_markerService.onMarkerChanged((uris) => {
+      if (!this._resourceFilter || uris.some((uri) => this._resourceFilter(uri))) {
+        if (updateMarker()) {
+          this._nextIdx = -1;
+          this._onDidChange.fire();
+        }
+      }
+    }));
+  }
+  static {
+    __name(this, "MarkerList");
+  }
+  _onDidChange = new Emitter();
+  onDidChange = this._onDidChange.event;
+  _resourceFilter;
+  _dispoables = new DisposableStore();
+  _markers = [];
+  _nextIdx = -1;
+  dispose() {
+    this._dispoables.dispose();
+    this._onDidChange.dispose();
+  }
+  matches(uri) {
+    if (!this._resourceFilter && !uri) {
+      return true;
+    }
+    if (!this._resourceFilter || !uri) {
+      return false;
+    }
+    return this._resourceFilter(uri);
+  }
+  get selected() {
+    const marker = this._markers[this._nextIdx];
+    return marker && new MarkerCoordinate(marker, this._nextIdx + 1, this._markers.length);
+  }
+  _initIdx(model, position, fwd) {
+    let idx = this._markers.findIndex((marker) => isEqual(marker.resource, model.uri));
+    if (idx < 0) {
+      idx = binarySearch2(this._markers.length, (idx2) => compare(this._markers[idx2].resource.toString(), model.uri.toString()));
+      if (idx < 0) {
+        idx = ~idx;
+      }
+      if (fwd) {
+        this._nextIdx = idx;
+      } else {
+        this._nextIdx = (this._markers.length + idx - 1) % this._markers.length;
+      }
+    } else {
+      let found = false;
+      let wentPast = false;
+      for (let i = idx; i < this._markers.length; i++) {
+        let range = Range.lift(this._markers[i]);
+        if (range.isEmpty()) {
+          const word = model.getWordAtPosition(range.getStartPosition());
+          if (word) {
+            range = new Range(range.startLineNumber, word.startColumn, range.startLineNumber, word.endColumn);
+          }
+        }
+        if (position && (range.containsPosition(position) || position.isBeforeOrEqual(range.getStartPosition()))) {
+          this._nextIdx = i;
+          found = true;
+          wentPast = !range.containsPosition(position);
+          break;
+        }
+        if (this._markers[i].resource.toString() !== model.uri.toString()) {
+          break;
+        }
+      }
+      if (!found) {
+        this._nextIdx = fwd ? 0 : this._markers.length - 1;
+      } else if (wentPast && !fwd) {
+        this._nextIdx -= 1;
+      }
+    }
+    if (this._nextIdx < 0) {
+      this._nextIdx = this._markers.length - 1;
+    }
+  }
+  resetIndex() {
+    this._nextIdx = -1;
+  }
+  move(fwd, model, position) {
+    if (this._markers.length === 0) {
+      return false;
+    }
+    const oldIdx = this._nextIdx;
+    if (this._nextIdx === -1) {
+      this._initIdx(model, position, fwd);
+    } else if (fwd) {
+      this._nextIdx = (this._nextIdx + 1) % this._markers.length;
+    } else if (!fwd) {
+      this._nextIdx = (this._nextIdx - 1 + this._markers.length) % this._markers.length;
+    }
+    if (oldIdx !== this._nextIdx) {
+      return true;
+    }
+    return false;
+  }
+  find(uri, position) {
+    let idx = this._markers.findIndex((marker) => marker.resource.toString() === uri.toString());
+    if (idx < 0) {
+      return void 0;
+    }
+    for (; idx < this._markers.length; idx++) {
+      if (Range.containsPosition(this._markers[idx], position)) {
+        return new MarkerCoordinate(this._markers[idx], idx + 1, this._markers.length);
+      }
+    }
+    return void 0;
+  }
+};
+MarkerList = __decorateClass([
+  __decorateParam(1, IMarkerService),
+  __decorateParam(2, IConfigurationService)
+], MarkerList);
+const IMarkerNavigationService = createDecorator("IMarkerNavigationService");
+let MarkerNavigationService = class {
+  constructor(_markerService, _configService) {
+    this._markerService = _markerService;
+    this._configService = _configService;
+  }
+  static {
+    __name(this, "MarkerNavigationService");
+  }
+  _serviceBrand;
+  _provider = new LinkedList();
+  registerProvider(provider) {
+    const remove = this._provider.unshift(provider);
+    return toDisposable(() => remove());
+  }
+  getMarkerList(resource) {
+    for (const provider of this._provider) {
+      const result = provider.getMarkerList(resource);
+      if (result) {
+        return result;
+      }
+    }
+    return new MarkerList(resource, this._markerService, this._configService);
+  }
+};
+MarkerNavigationService = __decorateClass([
+  __decorateParam(0, IMarkerService),
+  __decorateParam(1, IConfigurationService)
+], MarkerNavigationService);
+registerSingleton(IMarkerNavigationService, MarkerNavigationService, InstantiationType.Delayed);
+export {
+  IMarkerNavigationService,
+  MarkerCoordinate,
+  MarkerList
+};
+//# sourceMappingURL=markerNavigationService.js.map

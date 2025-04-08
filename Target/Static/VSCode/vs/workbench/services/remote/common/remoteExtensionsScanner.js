@@ -1,1 +1,90 @@
-var l=Object.defineProperty,v=Object.getOwnPropertyDescriptor,m=(e,t,o,n)=>{for(var r,i=n>1?void 0:n?v(t,o):t,s=e.length-1;s>=0;s--)(r=e[s])&&(i=(n?r(t,o,i):r(i))||i);return n&&i&&l(t,o,i),i},t=(e,t)=>(o,n)=>t(o,n,e);import{IRemoteAgentService as f}from"./remoteAgentService.js";import{IRemoteExtensionsScannerService as p,RemoteExtensionsScannerChannelName as S}from"../../../../platform/remote/common/remoteExtensionsScanner.js";import*as g from"../../../../base/common/platform.js";import"../../../../base/parts/ipc/common/ipc.js";import"../../../../platform/extensions/common/extensions.js";import{URI as h}from"../../../../base/common/uri.js";import{IUserDataProfileService as I}from"../../userDataProfile/common/userDataProfile.js";import{IRemoteUserDataProfilesService as u}from"../../userDataProfile/common/remoteUserDataProfiles.js";import{IWorkbenchEnvironmentService as P}from"../../environment/common/environmentService.js";import{ILogService as d}from"../../../../platform/log/common/log.js";import{InstantiationType as x,registerSingleton as y}from"../../../../platform/instantiation/common/extensions.js";import{IActiveLanguagePackService as E}from"../../localization/common/locale.js";import{IWorkbenchExtensionManagementService as D}from"../../extensionManagement/common/extensionManagement.js";import"../../../../base/common/types.js";import"../../../../platform/extensionManagement/common/extensionManagement.js";let s=class{constructor(e,t,o,n,r,i,s){this.remoteAgentService=e,this.environmentService=t,this.userDataProfileService=o,this.remoteUserDataProfilesService=n,this.activeLanguagePackService=r,this.extensionManagementService=i,this.logService=s}whenExtensionsReady(){return this.withChannel((e=>e.call("whenExtensionsReady")),{failed:[]})}async scanExtensions(){try{const e=await this.activeLanguagePackService.getExtensionIdProvidingCurrentLocale();return await this.withChannel((async t=>{const o=this.userDataProfileService.currentProfile.isDefault?void 0:(await this.remoteUserDataProfilesService.getRemoteProfile(this.userDataProfileService.currentProfile)).extensionsResource,n=await t.call("scanExtensions",[g.language,o,this.extensionManagementService.getInstalledWorkspaceExtensionLocations(),this.environmentService.extensionDevelopmentLocationURI,e]);return n.forEach((e=>{e.extensionLocation=h.revive(e.extensionLocation)})),n}),[])}catch(e){return this.logService.error(e),[]}}withChannel(e,t){const o=this.remoteAgentService.getConnection();return o?o.withChannel(S,(t=>e(t))):Promise.resolve(t)}};s=m([t(0,f),t(1,P),t(2,I),t(3,u),t(4,E),t(5,D),t(6,d)],s),y(p,s,x.Delayed);
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { IRemoteAgentService } from "./remoteAgentService.js";
+import { IRemoteExtensionsScannerService, RemoteExtensionsScannerChannelName } from "../../../../platform/remote/common/remoteExtensionsScanner.js";
+import * as platform from "../../../../base/common/platform.js";
+import { IChannel } from "../../../../base/parts/ipc/common/ipc.js";
+import { IExtensionDescription } from "../../../../platform/extensions/common/extensions.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IUserDataProfileService } from "../../userDataProfile/common/userDataProfile.js";
+import { IRemoteUserDataProfilesService } from "../../userDataProfile/common/remoteUserDataProfiles.js";
+import { IWorkbenchEnvironmentService } from "../../environment/common/environmentService.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { IActiveLanguagePackService } from "../../localization/common/locale.js";
+import { IWorkbenchExtensionManagementService } from "../../extensionManagement/common/extensionManagement.js";
+import { Mutable } from "../../../../base/common/types.js";
+import { InstallExtensionSummary } from "../../../../platform/extensionManagement/common/extensionManagement.js";
+let RemoteExtensionsScannerService = class {
+  constructor(remoteAgentService, environmentService, userDataProfileService, remoteUserDataProfilesService, activeLanguagePackService, extensionManagementService, logService) {
+    this.remoteAgentService = remoteAgentService;
+    this.environmentService = environmentService;
+    this.userDataProfileService = userDataProfileService;
+    this.remoteUserDataProfilesService = remoteUserDataProfilesService;
+    this.activeLanguagePackService = activeLanguagePackService;
+    this.extensionManagementService = extensionManagementService;
+    this.logService = logService;
+  }
+  static {
+    __name(this, "RemoteExtensionsScannerService");
+  }
+  whenExtensionsReady() {
+    return this.withChannel(
+      (channel) => channel.call("whenExtensionsReady"),
+      { failed: [] }
+    );
+  }
+  async scanExtensions() {
+    try {
+      const languagePack = await this.activeLanguagePackService.getExtensionIdProvidingCurrentLocale();
+      return await this.withChannel(
+        async (channel) => {
+          const profileLocation = this.userDataProfileService.currentProfile.isDefault ? void 0 : (await this.remoteUserDataProfilesService.getRemoteProfile(this.userDataProfileService.currentProfile)).extensionsResource;
+          const scannedExtensions = await channel.call("scanExtensions", [
+            platform.language,
+            profileLocation,
+            this.extensionManagementService.getInstalledWorkspaceExtensionLocations(),
+            this.environmentService.extensionDevelopmentLocationURI,
+            languagePack
+          ]);
+          scannedExtensions.forEach((extension) => {
+            extension.extensionLocation = URI.revive(extension.extensionLocation);
+          });
+          return scannedExtensions;
+        },
+        []
+      );
+    } catch (error) {
+      this.logService.error(error);
+      return [];
+    }
+  }
+  withChannel(callback, fallback) {
+    const connection = this.remoteAgentService.getConnection();
+    if (!connection) {
+      return Promise.resolve(fallback);
+    }
+    return connection.withChannel(RemoteExtensionsScannerChannelName, (channel) => callback(channel));
+  }
+};
+RemoteExtensionsScannerService = __decorateClass([
+  __decorateParam(0, IRemoteAgentService),
+  __decorateParam(1, IWorkbenchEnvironmentService),
+  __decorateParam(2, IUserDataProfileService),
+  __decorateParam(3, IRemoteUserDataProfilesService),
+  __decorateParam(4, IActiveLanguagePackService),
+  __decorateParam(5, IWorkbenchExtensionManagementService),
+  __decorateParam(6, ILogService)
+], RemoteExtensionsScannerService);
+registerSingleton(IRemoteExtensionsScannerService, RemoteExtensionsScannerService, InstantiationType.Delayed);
+//# sourceMappingURL=remoteExtensionsScanner.js.map

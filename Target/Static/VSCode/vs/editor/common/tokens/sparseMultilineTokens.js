@@ -1,1 +1,407 @@
-import{CharCode as p}from"../../../base/common/charCode.js";import{Position as C}from"../core/position.js";import{Range as d}from"../core/range.js";import{countEOL as T}from"../core/eolCounter.js";class L{static create(t,e){return new L(t,new g(e))}_startLineNumber;_endLineNumber;_tokens;get startLineNumber(){return this._startLineNumber}get endLineNumber(){return this._endLineNumber}constructor(t,e){this._startLineNumber=t,this._tokens=e,this._endLineNumber=this._startLineNumber+this._tokens.getMaxDeltaLine()}toString(){return this._tokens.toString(this._startLineNumber)}_updateEndLineNumber(){this._endLineNumber=this._startLineNumber+this._tokens.getMaxDeltaLine()}isEmpty(){return this._tokens.isEmpty()}getLineTokens(t){return this._startLineNumber<=t&&t<=this._endLineNumber?this._tokens.getLineTokens(t-this._startLineNumber):null}getRange(){const t=this._tokens.getRange();return t&&new d(this._startLineNumber+t.startLineNumber,t.startColumn,this._startLineNumber+t.endLineNumber,t.endColumn)}removeTokens(t){const e=t.startLineNumber-this._startLineNumber,n=t.endLineNumber-this._startLineNumber;this._startLineNumber+=this._tokens.removeTokens(e,t.startColumn-1,n,t.endColumn-1),this._updateEndLineNumber()}split(t){const e=t.startLineNumber-this._startLineNumber,n=t.endLineNumber-this._startLineNumber,[s,r,i]=this._tokens.split(e,t.startColumn-1,n,t.endColumn-1);return[new L(this._startLineNumber,s),new L(this._startLineNumber+i,r)]}applyEdit(t,e){const[n,s,r]=T(e);this.acceptEdit(t,n,s,r,e.length>0?e.charCodeAt(0):p.Null)}acceptEdit(t,e,n,s,r){this._acceptDeleteRange(t),this._acceptInsertText(new C(t.startLineNumber,t.startColumn),e,n,s,r),this._updateEndLineNumber()}_acceptDeleteRange(t){if(t.startLineNumber===t.endLineNumber&&t.startColumn===t.endColumn)return;const e=t.startLineNumber-this._startLineNumber,n=t.endLineNumber-this._startLineNumber;if(n<0){const t=n-e;return void(this._startLineNumber-=t)}const s=this._tokens.getMaxDeltaLine();if(!(e>=s+1)){if(e<0&&n>=s+1)return this._startLineNumber=0,void this._tokens.clear();if(e<0){const s=-e;this._startLineNumber-=s,this._tokens.acceptDeleteRange(t.startColumn-1,0,0,n,t.endColumn-1)}else this._tokens.acceptDeleteRange(0,e,t.startColumn-1,n,t.endColumn-1)}}_acceptInsertText(t,e,n,s,r){if(0===e&&0===n)return;const i=t.lineNumber-this._startLineNumber;if(i<0)return void(this._startLineNumber+=e);i>=this._tokens.getMaxDeltaLine()+1||this._tokens.acceptInsertText(i,t.column-1,e,n,s,r)}}class g{_tokens;_tokenCount;constructor(t){this._tokens=t,this._tokenCount=t.length/4}toString(t){const e=[];for(let n=0;n<this._tokenCount;n++)e.push(`(${this._getDeltaLine(n)+t},${this._getStartCharacter(n)}-${this._getEndCharacter(n)})`);return`[${e.join(",")}]`}getMaxDeltaLine(){const t=this._getTokenCount();return 0===t?-1:this._getDeltaLine(t-1)}getRange(){const t=this._getTokenCount();if(0===t)return null;const e=this._getStartCharacter(0),n=this._getDeltaLine(t-1),s=this._getEndCharacter(t-1);return new d(0,e+1,n,s+1)}_getTokenCount(){return this._tokenCount}_getDeltaLine(t){return this._tokens[4*t]}_getStartCharacter(t){return this._tokens[4*t+1]}_getEndCharacter(t){return this._tokens[4*t+2]}isEmpty(){return 0===this._getTokenCount()}getLineTokens(t){let e=0,n=this._getTokenCount()-1;for(;e<n;){const s=e+Math.floor((n-e)/2),r=this._getDeltaLine(s);if(r<t)e=s+1;else{if(!(r>t)){let r=s;for(;r>e&&this._getDeltaLine(r-1)===t;)r--;let i=s;for(;i<n&&this._getDeltaLine(i+1)===t;)i++;return new N(this._tokens.subarray(4*r,4*i+4))}n=s-1}}return this._getDeltaLine(e)===t?new N(this._tokens.subarray(4*e,4*e+4)):null}clear(){this._tokenCount=0}removeTokens(t,e,n,s){const r=this._tokens,i=this._tokenCount;let o=0,a=!1,u=0;for(let h=0;h<i;h++){const i=4*h,_=r[i],c=r[i+1],l=r[i+2],m=r[i+3];if((_>t||_===t&&l>=e)&&(_<n||_===n&&c<=s))a=!0;else{if(0===o&&(u=_),a){const t=4*o;r[t]=_-u,r[t+1]=c,r[t+2]=l,r[t+3]=m}o++}}return this._tokenCount=o,u}split(t,e,n,s){const r=this._tokens,i=this._tokenCount,o=[],a=[];let u=o,h=0,_=0;for(let o=0;o<i;o++){const i=4*o,c=r[i],l=r[i+1],m=r[i+2],L=r[i+3];if(c>t||c===t&&m>=e){if(c<n||c===n&&l<=s)continue;u!==a&&(u=a,h=0,_=c)}u[h++]=c-_,u[h++]=l,u[h++]=m,u[h++]=L}return[new g(new Uint32Array(o)),new g(new Uint32Array(a)),_]}acceptDeleteRange(t,e,n,s,r){const i=this._tokens,o=this._tokenCount,a=s-e;let u=0,h=!1;for(let _=0;_<o;_++){const c=4*_;let l=i[c],m=i[c+1],L=i[c+2];const g=i[c+3];if(l<e||l===e&&L<=n){u++;continue}if(l===e&&m<n)l===s&&L>r?L-=r-n:L=n;else if(l===e&&m===n){if(!(l===s&&L>r)){h=!0;continue}L-=r-n}else if(l<s||l===s&&m<r){if(!(l===s&&L>r)){h=!0;continue}l=e,m=n,L=m+(L-r)}else if(l>s){if(0===a&&!h){u=o;break}l-=a}else{if(!(l===s&&m>=r))throw new Error("Not possible!");t&&0===l&&(m+=t,L+=t),l-=a,m-=r-n,L-=r-n}const k=4*u;i[k]=l,i[k+1]=m,i[k+2]=L,i[k+3]=g,u++}this._tokenCount=u}acceptInsertText(t,e,n,s,r,i){const o=0===n&&1===s&&(i>=p.Digit0&&i<=p.Digit9||i>=p.A&&i<=p.Z||i>=p.a&&i<=p.z),a=this._tokens,u=this._tokenCount;for(let i=0;i<u;i++){const u=4*i;let h=a[u],_=a[u+1],c=a[u+2];if(!(h<t||h===t&&c<e)){if(h===t&&c===e){if(!o)continue;c+=1}else if(h===t&&_<e&&e<c)0===n?c+=s:c=e;else{if(h===t&&_===e&&o)continue;if(h===t)if(h+=n,0===n)_+=s,c+=s;else{const t=c-_;_=r+(_-e),c=_+t}else h+=n}a[u]=h,a[u+1]=_,a[u+2]=c}}}}class N{_tokens;constructor(t){this._tokens=t}getCount(){return this._tokens.length/4}getStartCharacter(t){return this._tokens[4*t+1]}getEndCharacter(t){return this._tokens[4*t+2]}getMetadata(t){return this._tokens[4*t+3]}}export{N as SparseLineTokens,L as SparseMultilineTokens};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { CharCode } from "../../../base/common/charCode.js";
+import { Position } from "../core/position.js";
+import { IRange, Range } from "../core/range.js";
+import { countEOL } from "../core/eolCounter.js";
+class SparseMultilineTokens {
+  static {
+    __name(this, "SparseMultilineTokens");
+  }
+  static create(startLineNumber, tokens) {
+    return new SparseMultilineTokens(startLineNumber, new SparseMultilineTokensStorage(tokens));
+  }
+  _startLineNumber;
+  _endLineNumber;
+  _tokens;
+  /**
+   * (Inclusive) start line number for these tokens.
+   */
+  get startLineNumber() {
+    return this._startLineNumber;
+  }
+  /**
+   * (Inclusive) end line number for these tokens.
+   */
+  get endLineNumber() {
+    return this._endLineNumber;
+  }
+  constructor(startLineNumber, tokens) {
+    this._startLineNumber = startLineNumber;
+    this._tokens = tokens;
+    this._endLineNumber = this._startLineNumber + this._tokens.getMaxDeltaLine();
+  }
+  toString() {
+    return this._tokens.toString(this._startLineNumber);
+  }
+  _updateEndLineNumber() {
+    this._endLineNumber = this._startLineNumber + this._tokens.getMaxDeltaLine();
+  }
+  isEmpty() {
+    return this._tokens.isEmpty();
+  }
+  getLineTokens(lineNumber) {
+    if (this._startLineNumber <= lineNumber && lineNumber <= this._endLineNumber) {
+      return this._tokens.getLineTokens(lineNumber - this._startLineNumber);
+    }
+    return null;
+  }
+  getRange() {
+    const deltaRange = this._tokens.getRange();
+    if (!deltaRange) {
+      return deltaRange;
+    }
+    return new Range(this._startLineNumber + deltaRange.startLineNumber, deltaRange.startColumn, this._startLineNumber + deltaRange.endLineNumber, deltaRange.endColumn);
+  }
+  removeTokens(range) {
+    const startLineIndex = range.startLineNumber - this._startLineNumber;
+    const endLineIndex = range.endLineNumber - this._startLineNumber;
+    this._startLineNumber += this._tokens.removeTokens(startLineIndex, range.startColumn - 1, endLineIndex, range.endColumn - 1);
+    this._updateEndLineNumber();
+  }
+  split(range) {
+    const startLineIndex = range.startLineNumber - this._startLineNumber;
+    const endLineIndex = range.endLineNumber - this._startLineNumber;
+    const [a, b, bDeltaLine] = this._tokens.split(startLineIndex, range.startColumn - 1, endLineIndex, range.endColumn - 1);
+    return [new SparseMultilineTokens(this._startLineNumber, a), new SparseMultilineTokens(this._startLineNumber + bDeltaLine, b)];
+  }
+  applyEdit(range, text) {
+    const [eolCount, firstLineLength, lastLineLength] = countEOL(text);
+    this.acceptEdit(range, eolCount, firstLineLength, lastLineLength, text.length > 0 ? text.charCodeAt(0) : CharCode.Null);
+  }
+  acceptEdit(range, eolCount, firstLineLength, lastLineLength, firstCharCode) {
+    this._acceptDeleteRange(range);
+    this._acceptInsertText(new Position(range.startLineNumber, range.startColumn), eolCount, firstLineLength, lastLineLength, firstCharCode);
+    this._updateEndLineNumber();
+  }
+  _acceptDeleteRange(range) {
+    if (range.startLineNumber === range.endLineNumber && range.startColumn === range.endColumn) {
+      return;
+    }
+    const firstLineIndex = range.startLineNumber - this._startLineNumber;
+    const lastLineIndex = range.endLineNumber - this._startLineNumber;
+    if (lastLineIndex < 0) {
+      const deletedLinesCount = lastLineIndex - firstLineIndex;
+      this._startLineNumber -= deletedLinesCount;
+      return;
+    }
+    const tokenMaxDeltaLine = this._tokens.getMaxDeltaLine();
+    if (firstLineIndex >= tokenMaxDeltaLine + 1) {
+      return;
+    }
+    if (firstLineIndex < 0 && lastLineIndex >= tokenMaxDeltaLine + 1) {
+      this._startLineNumber = 0;
+      this._tokens.clear();
+      return;
+    }
+    if (firstLineIndex < 0) {
+      const deletedBefore = -firstLineIndex;
+      this._startLineNumber -= deletedBefore;
+      this._tokens.acceptDeleteRange(range.startColumn - 1, 0, 0, lastLineIndex, range.endColumn - 1);
+    } else {
+      this._tokens.acceptDeleteRange(0, firstLineIndex, range.startColumn - 1, lastLineIndex, range.endColumn - 1);
+    }
+  }
+  _acceptInsertText(position, eolCount, firstLineLength, lastLineLength, firstCharCode) {
+    if (eolCount === 0 && firstLineLength === 0) {
+      return;
+    }
+    const lineIndex = position.lineNumber - this._startLineNumber;
+    if (lineIndex < 0) {
+      this._startLineNumber += eolCount;
+      return;
+    }
+    const tokenMaxDeltaLine = this._tokens.getMaxDeltaLine();
+    if (lineIndex >= tokenMaxDeltaLine + 1) {
+      return;
+    }
+    this._tokens.acceptInsertText(lineIndex, position.column - 1, eolCount, firstLineLength, lastLineLength, firstCharCode);
+  }
+}
+class SparseMultilineTokensStorage {
+  static {
+    __name(this, "SparseMultilineTokensStorage");
+  }
+  /**
+   * The encoding of tokens is:
+   *  4*i    deltaLine (from `startLineNumber`)
+   *  4*i+1  startCharacter (from the line start)
+   *  4*i+2  endCharacter (from the line start)
+   *  4*i+3  metadata
+   */
+  _tokens;
+  _tokenCount;
+  constructor(tokens) {
+    this._tokens = tokens;
+    this._tokenCount = tokens.length / 4;
+  }
+  toString(startLineNumber) {
+    const pieces = [];
+    for (let i = 0; i < this._tokenCount; i++) {
+      pieces.push(`(${this._getDeltaLine(i) + startLineNumber},${this._getStartCharacter(i)}-${this._getEndCharacter(i)})`);
+    }
+    return `[${pieces.join(",")}]`;
+  }
+  getMaxDeltaLine() {
+    const tokenCount = this._getTokenCount();
+    if (tokenCount === 0) {
+      return -1;
+    }
+    return this._getDeltaLine(tokenCount - 1);
+  }
+  getRange() {
+    const tokenCount = this._getTokenCount();
+    if (tokenCount === 0) {
+      return null;
+    }
+    const startChar = this._getStartCharacter(0);
+    const maxDeltaLine = this._getDeltaLine(tokenCount - 1);
+    const endChar = this._getEndCharacter(tokenCount - 1);
+    return new Range(0, startChar + 1, maxDeltaLine, endChar + 1);
+  }
+  _getTokenCount() {
+    return this._tokenCount;
+  }
+  _getDeltaLine(tokenIndex) {
+    return this._tokens[4 * tokenIndex];
+  }
+  _getStartCharacter(tokenIndex) {
+    return this._tokens[4 * tokenIndex + 1];
+  }
+  _getEndCharacter(tokenIndex) {
+    return this._tokens[4 * tokenIndex + 2];
+  }
+  isEmpty() {
+    return this._getTokenCount() === 0;
+  }
+  getLineTokens(deltaLine) {
+    let low = 0;
+    let high = this._getTokenCount() - 1;
+    while (low < high) {
+      const mid = low + Math.floor((high - low) / 2);
+      const midDeltaLine = this._getDeltaLine(mid);
+      if (midDeltaLine < deltaLine) {
+        low = mid + 1;
+      } else if (midDeltaLine > deltaLine) {
+        high = mid - 1;
+      } else {
+        let min = mid;
+        while (min > low && this._getDeltaLine(min - 1) === deltaLine) {
+          min--;
+        }
+        let max = mid;
+        while (max < high && this._getDeltaLine(max + 1) === deltaLine) {
+          max++;
+        }
+        return new SparseLineTokens(this._tokens.subarray(4 * min, 4 * max + 4));
+      }
+    }
+    if (this._getDeltaLine(low) === deltaLine) {
+      return new SparseLineTokens(this._tokens.subarray(4 * low, 4 * low + 4));
+    }
+    return null;
+  }
+  clear() {
+    this._tokenCount = 0;
+  }
+  removeTokens(startDeltaLine, startChar, endDeltaLine, endChar) {
+    const tokens = this._tokens;
+    const tokenCount = this._tokenCount;
+    let newTokenCount = 0;
+    let hasDeletedTokens = false;
+    let firstDeltaLine = 0;
+    for (let i = 0; i < tokenCount; i++) {
+      const srcOffset = 4 * i;
+      const tokenDeltaLine = tokens[srcOffset];
+      const tokenStartCharacter = tokens[srcOffset + 1];
+      const tokenEndCharacter = tokens[srcOffset + 2];
+      const tokenMetadata = tokens[srcOffset + 3];
+      if ((tokenDeltaLine > startDeltaLine || tokenDeltaLine === startDeltaLine && tokenEndCharacter >= startChar) && (tokenDeltaLine < endDeltaLine || tokenDeltaLine === endDeltaLine && tokenStartCharacter <= endChar)) {
+        hasDeletedTokens = true;
+      } else {
+        if (newTokenCount === 0) {
+          firstDeltaLine = tokenDeltaLine;
+        }
+        if (hasDeletedTokens) {
+          const destOffset = 4 * newTokenCount;
+          tokens[destOffset] = tokenDeltaLine - firstDeltaLine;
+          tokens[destOffset + 1] = tokenStartCharacter;
+          tokens[destOffset + 2] = tokenEndCharacter;
+          tokens[destOffset + 3] = tokenMetadata;
+        }
+        newTokenCount++;
+      }
+    }
+    this._tokenCount = newTokenCount;
+    return firstDeltaLine;
+  }
+  split(startDeltaLine, startChar, endDeltaLine, endChar) {
+    const tokens = this._tokens;
+    const tokenCount = this._tokenCount;
+    const aTokens = [];
+    const bTokens = [];
+    let destTokens = aTokens;
+    let destOffset = 0;
+    let destFirstDeltaLine = 0;
+    for (let i = 0; i < tokenCount; i++) {
+      const srcOffset = 4 * i;
+      const tokenDeltaLine = tokens[srcOffset];
+      const tokenStartCharacter = tokens[srcOffset + 1];
+      const tokenEndCharacter = tokens[srcOffset + 2];
+      const tokenMetadata = tokens[srcOffset + 3];
+      if (tokenDeltaLine > startDeltaLine || tokenDeltaLine === startDeltaLine && tokenEndCharacter >= startChar) {
+        if (tokenDeltaLine < endDeltaLine || tokenDeltaLine === endDeltaLine && tokenStartCharacter <= endChar) {
+          continue;
+        } else {
+          if (destTokens !== bTokens) {
+            destTokens = bTokens;
+            destOffset = 0;
+            destFirstDeltaLine = tokenDeltaLine;
+          }
+        }
+      }
+      destTokens[destOffset++] = tokenDeltaLine - destFirstDeltaLine;
+      destTokens[destOffset++] = tokenStartCharacter;
+      destTokens[destOffset++] = tokenEndCharacter;
+      destTokens[destOffset++] = tokenMetadata;
+    }
+    return [new SparseMultilineTokensStorage(new Uint32Array(aTokens)), new SparseMultilineTokensStorage(new Uint32Array(bTokens)), destFirstDeltaLine];
+  }
+  acceptDeleteRange(horizontalShiftForFirstLineTokens, startDeltaLine, startCharacter, endDeltaLine, endCharacter) {
+    const tokens = this._tokens;
+    const tokenCount = this._tokenCount;
+    const deletedLineCount = endDeltaLine - startDeltaLine;
+    let newTokenCount = 0;
+    let hasDeletedTokens = false;
+    for (let i = 0; i < tokenCount; i++) {
+      const srcOffset = 4 * i;
+      let tokenDeltaLine = tokens[srcOffset];
+      let tokenStartCharacter = tokens[srcOffset + 1];
+      let tokenEndCharacter = tokens[srcOffset + 2];
+      const tokenMetadata = tokens[srcOffset + 3];
+      if (tokenDeltaLine < startDeltaLine || tokenDeltaLine === startDeltaLine && tokenEndCharacter <= startCharacter) {
+        newTokenCount++;
+        continue;
+      } else if (tokenDeltaLine === startDeltaLine && tokenStartCharacter < startCharacter) {
+        if (tokenDeltaLine === endDeltaLine && tokenEndCharacter > endCharacter) {
+          tokenEndCharacter -= endCharacter - startCharacter;
+        } else {
+          tokenEndCharacter = startCharacter;
+        }
+      } else if (tokenDeltaLine === startDeltaLine && tokenStartCharacter === startCharacter) {
+        if (tokenDeltaLine === endDeltaLine && tokenEndCharacter > endCharacter) {
+          tokenEndCharacter -= endCharacter - startCharacter;
+        } else {
+          hasDeletedTokens = true;
+          continue;
+        }
+      } else if (tokenDeltaLine < endDeltaLine || tokenDeltaLine === endDeltaLine && tokenStartCharacter < endCharacter) {
+        if (tokenDeltaLine === endDeltaLine && tokenEndCharacter > endCharacter) {
+          tokenDeltaLine = startDeltaLine;
+          tokenStartCharacter = startCharacter;
+          tokenEndCharacter = tokenStartCharacter + (tokenEndCharacter - endCharacter);
+        } else {
+          hasDeletedTokens = true;
+          continue;
+        }
+      } else if (tokenDeltaLine > endDeltaLine) {
+        if (deletedLineCount === 0 && !hasDeletedTokens) {
+          newTokenCount = tokenCount;
+          break;
+        }
+        tokenDeltaLine -= deletedLineCount;
+      } else if (tokenDeltaLine === endDeltaLine && tokenStartCharacter >= endCharacter) {
+        if (horizontalShiftForFirstLineTokens && tokenDeltaLine === 0) {
+          tokenStartCharacter += horizontalShiftForFirstLineTokens;
+          tokenEndCharacter += horizontalShiftForFirstLineTokens;
+        }
+        tokenDeltaLine -= deletedLineCount;
+        tokenStartCharacter -= endCharacter - startCharacter;
+        tokenEndCharacter -= endCharacter - startCharacter;
+      } else {
+        throw new Error(`Not possible!`);
+      }
+      const destOffset = 4 * newTokenCount;
+      tokens[destOffset] = tokenDeltaLine;
+      tokens[destOffset + 1] = tokenStartCharacter;
+      tokens[destOffset + 2] = tokenEndCharacter;
+      tokens[destOffset + 3] = tokenMetadata;
+      newTokenCount++;
+    }
+    this._tokenCount = newTokenCount;
+  }
+  acceptInsertText(deltaLine, character, eolCount, firstLineLength, lastLineLength, firstCharCode) {
+    const isInsertingPreciselyOneWordCharacter = eolCount === 0 && firstLineLength === 1 && (firstCharCode >= CharCode.Digit0 && firstCharCode <= CharCode.Digit9 || firstCharCode >= CharCode.A && firstCharCode <= CharCode.Z || firstCharCode >= CharCode.a && firstCharCode <= CharCode.z);
+    const tokens = this._tokens;
+    const tokenCount = this._tokenCount;
+    for (let i = 0; i < tokenCount; i++) {
+      const offset = 4 * i;
+      let tokenDeltaLine = tokens[offset];
+      let tokenStartCharacter = tokens[offset + 1];
+      let tokenEndCharacter = tokens[offset + 2];
+      if (tokenDeltaLine < deltaLine || tokenDeltaLine === deltaLine && tokenEndCharacter < character) {
+        continue;
+      } else if (tokenDeltaLine === deltaLine && tokenEndCharacter === character) {
+        if (isInsertingPreciselyOneWordCharacter) {
+          tokenEndCharacter += 1;
+        } else {
+          continue;
+        }
+      } else if (tokenDeltaLine === deltaLine && tokenStartCharacter < character && character < tokenEndCharacter) {
+        if (eolCount === 0) {
+          tokenEndCharacter += firstLineLength;
+        } else {
+          tokenEndCharacter = character;
+        }
+      } else {
+        if (tokenDeltaLine === deltaLine && tokenStartCharacter === character) {
+          if (isInsertingPreciselyOneWordCharacter) {
+            continue;
+          }
+        }
+        if (tokenDeltaLine === deltaLine) {
+          tokenDeltaLine += eolCount;
+          if (eolCount === 0) {
+            tokenStartCharacter += firstLineLength;
+            tokenEndCharacter += firstLineLength;
+          } else {
+            const tokenLength = tokenEndCharacter - tokenStartCharacter;
+            tokenStartCharacter = lastLineLength + (tokenStartCharacter - character);
+            tokenEndCharacter = tokenStartCharacter + tokenLength;
+          }
+        } else {
+          tokenDeltaLine += eolCount;
+        }
+      }
+      tokens[offset] = tokenDeltaLine;
+      tokens[offset + 1] = tokenStartCharacter;
+      tokens[offset + 2] = tokenEndCharacter;
+    }
+  }
+}
+class SparseLineTokens {
+  static {
+    __name(this, "SparseLineTokens");
+  }
+  _tokens;
+  constructor(tokens) {
+    this._tokens = tokens;
+  }
+  getCount() {
+    return this._tokens.length / 4;
+  }
+  getStartCharacter(tokenIndex) {
+    return this._tokens[4 * tokenIndex + 1];
+  }
+  getEndCharacter(tokenIndex) {
+    return this._tokens[4 * tokenIndex + 2];
+  }
+  getMetadata(tokenIndex) {
+    return this._tokens[4 * tokenIndex + 3];
+  }
+}
+export {
+  SparseLineTokens,
+  SparseMultilineTokens
+};
+//# sourceMappingURL=sparseMultilineTokens.js.map

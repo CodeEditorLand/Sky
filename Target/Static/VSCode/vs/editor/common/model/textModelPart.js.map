@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/editor/common/model/textModelPart.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { Disposable } from '../../../base/common/lifecycle.js';\r\n\r\nexport class TextModelPart extends Disposable {\r\n\tprivate _isDisposed = false;\r\n\r\n\tpublic override dispose(): void {\r\n\t\tsuper.dispose();\r\n\t\tthis._isDisposed = true;\r\n\t}\r\n\tprotected assertNotDisposed(): void {\r\n\t\tif (this._isDisposed) {\r\n\t\t\tthrow new Error('TextModelPart is disposed!');\r\n\t\t}\r\n\t}\r\n}\r\n"],
+  "mappings": ";;AAKA,SAAS,kBAAkB;AAEpB,MAAM,sBAAsB,WAAW;AAAA,EAP9C,OAO8C;AAAA;AAAA;AAAA,EACrC,cAAc;AAAA,EAEN,UAAgB;AAC/B,UAAM,QAAQ;AACd,SAAK,cAAc;AAAA,EACpB;AAAA,EACU,oBAA0B;AACnC,QAAI,KAAK,aAAa;AACrB,YAAM,IAAI,MAAM,4BAA4B;AAAA,IAC7C;AAAA,EACD;AACD;",
+  "names": []
+}

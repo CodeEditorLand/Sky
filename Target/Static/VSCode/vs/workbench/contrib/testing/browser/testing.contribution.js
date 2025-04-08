@@ -1,1 +1,253 @@
-import{EditorContributionInstantiation as y,registerEditorContribution as w}from"../../../../editor/browser/editorExtensions.js";import{localize as S,localize2 as I}from"../../../../nls.js";import{registerAction2 as g}from"../../../../platform/actions/common/actions.js";import{CommandsRegistry as l,ICommandService as U}from"../../../../platform/commands/common/commands.js";import{Extensions as _}from"../../../../platform/configuration/common/configurationRegistry.js";import{ContextKeyExpr as z}from"../../../../platform/contextkey/common/contextkey.js";import{IFileService as $}from"../../../../platform/files/common/files.js";import{SyncDescriptor as T}from"../../../../platform/instantiation/common/descriptors.js";import{InstantiationType as s,registerSingleton as c}from"../../../../platform/instantiation/common/extensions.js";import"../../../../platform/instantiation/common/instantiation.js";import{IOpenerService as G}from"../../../../platform/opener/common/opener.js";import{IProgressService as K}from"../../../../platform/progress/common/progress.js";import{Registry as d}from"../../../../platform/registry/common/platform.js";import{ViewPaneContainer as q}from"../../../browser/parts/views/viewPaneContainer.js";import{Extensions as R}from"../../../common/contributions.js";import{Extensions as V,ViewContainerLocation as F}from"../../../common/views.js";import{REVEAL_IN_EXPLORER_COMMAND_ID as H}from"../../files/browser/fileConstants.js";import{CodeCoverageDecorations as X}from"./codeCoverageDecorations.js";import{testingResultsIcon as W,testingViewIcon as h}from"./icons.js";import{TestCoverageView as j}from"./testCoverageView.js";import{TestingDecorationService as J,TestingDecorations as Q}from"./testingDecorations.js";import{TestingExplorerView as Y}from"./testingExplorerView.js";import{CloseTestPeek as Z,CollapsePeekStack as ee,GoToNextMessageAction as te,GoToPreviousMessageAction as re,OpenMessageInEditorAction as oe,TestResultsView as ie,TestingOutputPeekController as ne,TestingPeekOpener as N,ToggleTestingPeekHistory as se}from"./testingOutputPeek.js";import{TestingProgressTrigger as ce}from"./testingProgressUiService.js";import{TestingViewPaneContainer as ae}from"./testingViewPaneContainer.js";import{testingConfiguration as me}from"../common/configuration.js";import{TestCommandId as E,Testing as i}from"../common/constants.js";import{ITestCoverageService as le,TestCoverageService as ge}from"../common/testCoverageService.js";import{ITestExplorerFilterState as P,TestExplorerFilterState as de}from"../common/testExplorerFilterState.js";import{TestId as O,TestPosition as pe}from"../common/testId.js";import{canUseProfileWithTest as ue,ITestProfileService as M,TestProfileService as fe}from"../common/testProfileService.js";import{ITestResultService as B,TestResultService as Ie}from"../common/testResultService.js";import{ITestResultStorage as Te,TestResultStorage as Ce}from"../common/testResultStorage.js";import{ITestService as p}from"../common/testService.js";import{TestService as ve}from"../common/testServiceImpl.js";import"../common/testTypes.js";import{TestingContentProvider as ye}from"../common/testingContentProvider.js";import{TestingContextKeys as b}from"../common/testingContextKeys.js";import{ITestingContinuousRunService as x,TestingContinuousRunService as we}from"../common/testingContinuousRunService.js";import{ITestingDecorationsService as L}from"../common/testingDecorations.js";import{ITestingPeekOpener as k}from"../common/testingPeekOpener.js";import{LifecyclePhase as D}from"../../../services/lifecycle/common/lifecycle.js";import{IViewsService as Se}from"../../../services/views/common/viewsService.js";import{allTestActions as Re,discoverAndRunTests as Ve}from"./testExplorerActions.js";import"./testingConfigurationUi.js";import"../../../../base/common/uri.js";c(p,ve,s.Delayed),c(Te,Ce,s.Delayed),c(M,fe,s.Delayed),c(le,ge,s.Delayed),c(x,we,s.Delayed),c(B,Ie,s.Delayed),c(P,de,s.Delayed),c(k,N,s.Delayed),c(L,J,s.Delayed);const he=d.as(V.ViewContainersRegistry).registerViewContainer({id:i.ViewletId,title:I("test","Testing"),ctorDescriptor:new T(ae),icon:h,alwaysUseContainerInfo:!0,order:6,openCommandActionDescriptor:{id:i.ViewletId,mnemonicTitle:S({key:"miViewTesting",comment:["&& denotes a mnemonic"]},"T&&esting"),order:4},hideIfEmpty:!0},F.Sidebar),Ee=d.as(V.ViewContainersRegistry).registerViewContainer({id:i.ResultsPanelId,title:I("testResultsPanelName","Test Results"),icon:W,ctorDescriptor:new T(q,[i.ResultsPanelId,{mergeViewWithContainerWhenSingleView:!0}]),hideIfEmpty:!0,order:3},F.Panel,{doNotRegisterOpenCommand:!0}),C=d.as(V.ViewsRegistry);C.registerViews([{id:i.ResultsViewId,name:I("testResultsPanelName","Test Results"),containerIcon:W,canToggleVisibility:!1,canMoveView:!0,when:b.hasAnyResults.isEqualTo(!0),ctorDescriptor:new T(ie)}],Ee),C.registerViewWelcomeContent(i.ExplorerViewId,{content:S("noTestProvidersRegistered","No tests have been found in this workspace yet.")}),C.registerViewWelcomeContent(i.ExplorerViewId,{content:"["+S("searchForAdditionalTestExtensions","Install Additional Test Extensions...")+`](command:${E.SearchForTestExtension})`,order:10}),C.registerViews([{id:i.ExplorerViewId,name:I("testExplorer","Test Explorer"),ctorDescriptor:new T(Y),canToggleVisibility:!0,canMoveView:!0,weight:80,order:-999,containerIcon:h,when:z.greater(b.providerCount.key,0)},{id:i.CoverageViewId,name:I("testCoverage","Test Coverage"),ctorDescriptor:new T(j),canToggleVisibility:!0,canMoveView:!0,weight:80,order:-998,containerIcon:h,when:b.isTestCoverageOpen}],he),Re.forEach(g),g(oe),g(re),g(te),g(Z),g(se),g(ee),d.as(R.Workbench).registerWorkbenchContribution(ye,D.Restored),d.as(R.Workbench).registerWorkbenchContribution(N,D.Eventually),d.as(R.Workbench).registerWorkbenchContribution(ce,D.Eventually),w(i.OutputPeekContributionId,ne,y.AfterFirstRender),w(i.DecorationsContributionId,Q,y.AfterFirstRender),w(i.CoverageDecorationsContributionId,X,y.Eventually),l.registerCommand({id:"_revealTestInExplorer",handler:async(e,t,o)=>{e.get(P).reveal.set("string"==typeof t?t:t.extId,void 0),e.get(Se).openView(i.ExplorerViewId,o)}}),l.registerCommand({id:E.StartContinousRunFromExtension,handler:async(e,t,o)=>{const s=e.get(M),r=e.get(p).collection,i=s.getControllerProfiles(t.controllerId).find((e=>e.profileId===t.profileId));if(!i?.supportsContinuousRun)return;const n=e.get(x);for(const e of o){const t=r.getNodeById(e.extId);t&&ue(i,t)&&n.start([i],t.item.extId)}}}),l.registerCommand({id:E.StopContinousRunFromExtension,handler:async(e,t)=>{const o=e.get(x);for(const e of t)o.stop(e.extId)}}),l.registerCommand({id:"vscode.peekTestError",handler:async(e,t)=>{const o=e.get(B).getStateById(t);if(!o)return!1;const[s,r]=o,i=e.get(k);if(i.tryPeekFirstError(s,r))return!0;for(const e of s.tests)if(O.compare(r.item.extId,e.item.extId)===pe.IsChild&&i.tryPeekFirstError(s,e))return!0;return!1}}),l.registerCommand({id:"vscode.revealTest",handler:async(e,t,o)=>{const s=e.get(p).collection.getNodeById(t);if(!s)return;const r=e.get(U),i=e.get($),n=e.get(G),{range:a,uri:m}=s.item;if(!m)return;const c=e.get(L).getDecoratedTestPosition(m,t)||a?.getStartPosition();e.get(P).reveal.set(t,void 0),e.get(k).closeAllPeeks();let l=!0;try{(await i.stat(m)).isFile||(l=!1)}catch{}l?await n.open(c?m.with({fragment:`L${c.lineNumber}:${c.column}`}):m,{openToSide:o?.openToSide,editorOptions:{preserveFocus:o?.preserveFocus}}):await r.executeCommand(H,m)}}),l.registerCommand({id:"vscode.runTestsById",handler:async(e,t,...o)=>{const s=e.get(p);await Ve(e.get(p).collection,e.get(K),o,(e=>s.runTests({group:t,tests:e})))}}),l.registerCommand({id:"vscode.testing.getControllersWithTests",handler:async e=>[...e.get(p).collection.rootItems].filter((e=>e.children.size>0)).map((e=>e.controllerId))}),l.registerCommand({id:"vscode.testing.getTestsInFile",handler:async(e,t)=>[...e.get(p).collection.getNodeByUrl(t)].map((e=>O.split(e.item.extId)))}),d.as(_.Configuration).registerConfiguration(me);
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { EditorContributionInstantiation, registerEditorContribution } from "../../../../editor/browser/editorExtensions.js";
+import { localize, localize2 } from "../../../../nls.js";
+import { registerAction2 } from "../../../../platform/actions/common/actions.js";
+import { CommandsRegistry, ICommandService } from "../../../../platform/commands/common/commands.js";
+import { Extensions as ConfigurationExtensions, IConfigurationRegistry } from "../../../../platform/configuration/common/configurationRegistry.js";
+import { ContextKeyExpr } from "../../../../platform/contextkey/common/contextkey.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { SyncDescriptor } from "../../../../platform/instantiation/common/descriptors.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+import { IOpenerService } from "../../../../platform/opener/common/opener.js";
+import { IProgressService } from "../../../../platform/progress/common/progress.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { ViewPaneContainer } from "../../../browser/parts/views/viewPaneContainer.js";
+import { IWorkbenchContributionsRegistry, Extensions as WorkbenchExtensions } from "../../../common/contributions.js";
+import { IViewContainersRegistry, IViewsRegistry, Extensions as ViewContainerExtensions, ViewContainerLocation } from "../../../common/views.js";
+import { REVEAL_IN_EXPLORER_COMMAND_ID } from "../../files/browser/fileConstants.js";
+import { CodeCoverageDecorations } from "./codeCoverageDecorations.js";
+import { testingResultsIcon, testingViewIcon } from "./icons.js";
+import { TestCoverageView } from "./testCoverageView.js";
+import { TestingDecorationService, TestingDecorations } from "./testingDecorations.js";
+import { TestingExplorerView } from "./testingExplorerView.js";
+import { CloseTestPeek, CollapsePeekStack, GoToNextMessageAction, GoToPreviousMessageAction, OpenMessageInEditorAction, TestResultsView, TestingOutputPeekController, TestingPeekOpener, ToggleTestingPeekHistory } from "./testingOutputPeek.js";
+import { TestingProgressTrigger } from "./testingProgressUiService.js";
+import { TestingViewPaneContainer } from "./testingViewPaneContainer.js";
+import { testingConfiguration } from "../common/configuration.js";
+import { TestCommandId, Testing } from "../common/constants.js";
+import { ITestCoverageService, TestCoverageService } from "../common/testCoverageService.js";
+import { ITestExplorerFilterState, TestExplorerFilterState } from "../common/testExplorerFilterState.js";
+import { TestId, TestPosition } from "../common/testId.js";
+import { canUseProfileWithTest, ITestProfileService, TestProfileService } from "../common/testProfileService.js";
+import { ITestResultService, TestResultService } from "../common/testResultService.js";
+import { ITestResultStorage, TestResultStorage } from "../common/testResultStorage.js";
+import { ITestService } from "../common/testService.js";
+import { TestService } from "../common/testServiceImpl.js";
+import { ITestItem, ITestRunProfileReference, TestRunProfileBitset } from "../common/testTypes.js";
+import { TestingContentProvider } from "../common/testingContentProvider.js";
+import { TestingContextKeys } from "../common/testingContextKeys.js";
+import { ITestingContinuousRunService, TestingContinuousRunService } from "../common/testingContinuousRunService.js";
+import { ITestingDecorationsService } from "../common/testingDecorations.js";
+import { ITestingPeekOpener } from "../common/testingPeekOpener.js";
+import { LifecyclePhase } from "../../../services/lifecycle/common/lifecycle.js";
+import { IViewsService } from "../../../services/views/common/viewsService.js";
+import { allTestActions, discoverAndRunTests } from "./testExplorerActions.js";
+import "./testingConfigurationUi.js";
+import { URI } from "../../../../base/common/uri.js";
+registerSingleton(ITestService, TestService, InstantiationType.Delayed);
+registerSingleton(ITestResultStorage, TestResultStorage, InstantiationType.Delayed);
+registerSingleton(ITestProfileService, TestProfileService, InstantiationType.Delayed);
+registerSingleton(ITestCoverageService, TestCoverageService, InstantiationType.Delayed);
+registerSingleton(ITestingContinuousRunService, TestingContinuousRunService, InstantiationType.Delayed);
+registerSingleton(ITestResultService, TestResultService, InstantiationType.Delayed);
+registerSingleton(ITestExplorerFilterState, TestExplorerFilterState, InstantiationType.Delayed);
+registerSingleton(ITestingPeekOpener, TestingPeekOpener, InstantiationType.Delayed);
+registerSingleton(ITestingDecorationsService, TestingDecorationService, InstantiationType.Delayed);
+const viewContainer = Registry.as(ViewContainerExtensions.ViewContainersRegistry).registerViewContainer({
+  id: Testing.ViewletId,
+  title: localize2("test", "Testing"),
+  ctorDescriptor: new SyncDescriptor(TestingViewPaneContainer),
+  icon: testingViewIcon,
+  alwaysUseContainerInfo: true,
+  order: 6,
+  openCommandActionDescriptor: {
+    id: Testing.ViewletId,
+    mnemonicTitle: localize({ key: "miViewTesting", comment: ["&& denotes a mnemonic"] }, "T&&esting"),
+    // todo: coordinate with joh whether this is available
+    // keybindings: { primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.US_SEMICOLON },
+    order: 4
+  },
+  hideIfEmpty: true
+}, ViewContainerLocation.Sidebar);
+const testResultsViewContainer = Registry.as(ViewContainerExtensions.ViewContainersRegistry).registerViewContainer({
+  id: Testing.ResultsPanelId,
+  title: localize2("testResultsPanelName", "Test Results"),
+  icon: testingResultsIcon,
+  ctorDescriptor: new SyncDescriptor(ViewPaneContainer, [Testing.ResultsPanelId, { mergeViewWithContainerWhenSingleView: true }]),
+  hideIfEmpty: true,
+  order: 3
+}, ViewContainerLocation.Panel, { doNotRegisterOpenCommand: true });
+const viewsRegistry = Registry.as(ViewContainerExtensions.ViewsRegistry);
+viewsRegistry.registerViews([{
+  id: Testing.ResultsViewId,
+  name: localize2("testResultsPanelName", "Test Results"),
+  containerIcon: testingResultsIcon,
+  canToggleVisibility: false,
+  canMoveView: true,
+  when: TestingContextKeys.hasAnyResults.isEqualTo(true),
+  ctorDescriptor: new SyncDescriptor(TestResultsView)
+}], testResultsViewContainer);
+viewsRegistry.registerViewWelcomeContent(Testing.ExplorerViewId, {
+  content: localize("noTestProvidersRegistered", "No tests have been found in this workspace yet.")
+});
+viewsRegistry.registerViewWelcomeContent(Testing.ExplorerViewId, {
+  content: "[" + localize("searchForAdditionalTestExtensions", "Install Additional Test Extensions...") + `](command:${TestCommandId.SearchForTestExtension})`,
+  order: 10
+});
+viewsRegistry.registerViews([{
+  id: Testing.ExplorerViewId,
+  name: localize2("testExplorer", "Test Explorer"),
+  ctorDescriptor: new SyncDescriptor(TestingExplorerView),
+  canToggleVisibility: true,
+  canMoveView: true,
+  weight: 80,
+  order: -999,
+  containerIcon: testingViewIcon,
+  when: ContextKeyExpr.greater(TestingContextKeys.providerCount.key, 0)
+}, {
+  id: Testing.CoverageViewId,
+  name: localize2("testCoverage", "Test Coverage"),
+  ctorDescriptor: new SyncDescriptor(TestCoverageView),
+  canToggleVisibility: true,
+  canMoveView: true,
+  weight: 80,
+  order: -998,
+  containerIcon: testingViewIcon,
+  when: TestingContextKeys.isTestCoverageOpen
+}], viewContainer);
+allTestActions.forEach(registerAction2);
+registerAction2(OpenMessageInEditorAction);
+registerAction2(GoToPreviousMessageAction);
+registerAction2(GoToNextMessageAction);
+registerAction2(CloseTestPeek);
+registerAction2(ToggleTestingPeekHistory);
+registerAction2(CollapsePeekStack);
+Registry.as(WorkbenchExtensions.Workbench).registerWorkbenchContribution(TestingContentProvider, LifecyclePhase.Restored);
+Registry.as(WorkbenchExtensions.Workbench).registerWorkbenchContribution(TestingPeekOpener, LifecyclePhase.Eventually);
+Registry.as(WorkbenchExtensions.Workbench).registerWorkbenchContribution(TestingProgressTrigger, LifecyclePhase.Eventually);
+registerEditorContribution(Testing.OutputPeekContributionId, TestingOutputPeekController, EditorContributionInstantiation.AfterFirstRender);
+registerEditorContribution(Testing.DecorationsContributionId, TestingDecorations, EditorContributionInstantiation.AfterFirstRender);
+registerEditorContribution(Testing.CoverageDecorationsContributionId, CodeCoverageDecorations, EditorContributionInstantiation.Eventually);
+CommandsRegistry.registerCommand({
+  id: "_revealTestInExplorer",
+  handler: /* @__PURE__ */ __name(async (accessor, testId, focus) => {
+    accessor.get(ITestExplorerFilterState).reveal.set(typeof testId === "string" ? testId : testId.extId, void 0);
+    accessor.get(IViewsService).openView(Testing.ExplorerViewId, focus);
+  }, "handler")
+});
+CommandsRegistry.registerCommand({
+  id: TestCommandId.StartContinousRunFromExtension,
+  handler: /* @__PURE__ */ __name(async (accessor, profileRef, tests) => {
+    const profiles = accessor.get(ITestProfileService);
+    const collection = accessor.get(ITestService).collection;
+    const profile = profiles.getControllerProfiles(profileRef.controllerId).find((p) => p.profileId === profileRef.profileId);
+    if (!profile?.supportsContinuousRun) {
+      return;
+    }
+    const crService = accessor.get(ITestingContinuousRunService);
+    for (const test of tests) {
+      const found = collection.getNodeById(test.extId);
+      if (found && canUseProfileWithTest(profile, found)) {
+        crService.start([profile], found.item.extId);
+      }
+    }
+  }, "handler")
+});
+CommandsRegistry.registerCommand({
+  id: TestCommandId.StopContinousRunFromExtension,
+  handler: /* @__PURE__ */ __name(async (accessor, tests) => {
+    const crService = accessor.get(ITestingContinuousRunService);
+    for (const test of tests) {
+      crService.stop(test.extId);
+    }
+  }, "handler")
+});
+CommandsRegistry.registerCommand({
+  id: "vscode.peekTestError",
+  handler: /* @__PURE__ */ __name(async (accessor, extId) => {
+    const lookup = accessor.get(ITestResultService).getStateById(extId);
+    if (!lookup) {
+      return false;
+    }
+    const [result, ownState] = lookup;
+    const opener = accessor.get(ITestingPeekOpener);
+    if (opener.tryPeekFirstError(result, ownState)) {
+      return true;
+    }
+    for (const test of result.tests) {
+      if (TestId.compare(ownState.item.extId, test.item.extId) === TestPosition.IsChild && opener.tryPeekFirstError(result, test)) {
+        return true;
+      }
+    }
+    return false;
+  }, "handler")
+});
+CommandsRegistry.registerCommand({
+  id: "vscode.revealTest",
+  handler: /* @__PURE__ */ __name(async (accessor, extId, opts) => {
+    const test = accessor.get(ITestService).collection.getNodeById(extId);
+    if (!test) {
+      return;
+    }
+    const commandService = accessor.get(ICommandService);
+    const fileService = accessor.get(IFileService);
+    const openerService = accessor.get(IOpenerService);
+    const { range, uri } = test.item;
+    if (!uri) {
+      return;
+    }
+    const position = accessor.get(ITestingDecorationsService).getDecoratedTestPosition(uri, extId) || range?.getStartPosition();
+    accessor.get(ITestExplorerFilterState).reveal.set(extId, void 0);
+    accessor.get(ITestingPeekOpener).closeAllPeeks();
+    let isFile = true;
+    try {
+      if (!(await fileService.stat(uri)).isFile) {
+        isFile = false;
+      }
+    } catch {
+    }
+    if (!isFile) {
+      await commandService.executeCommand(REVEAL_IN_EXPLORER_COMMAND_ID, uri);
+      return;
+    }
+    await openerService.open(
+      position ? uri.with({ fragment: `L${position.lineNumber}:${position.column}` }) : uri,
+      {
+        openToSide: opts?.openToSide,
+        editorOptions: {
+          preserveFocus: opts?.preserveFocus
+        }
+      }
+    );
+  }, "handler")
+});
+CommandsRegistry.registerCommand({
+  id: "vscode.runTestsById",
+  handler: /* @__PURE__ */ __name(async (accessor, group, ...testIds) => {
+    const testService = accessor.get(ITestService);
+    await discoverAndRunTests(
+      accessor.get(ITestService).collection,
+      accessor.get(IProgressService),
+      testIds,
+      (tests) => testService.runTests({ group, tests })
+    );
+  }, "handler")
+});
+CommandsRegistry.registerCommand({
+  id: "vscode.testing.getControllersWithTests",
+  handler: /* @__PURE__ */ __name(async (accessor) => {
+    const testService = accessor.get(ITestService);
+    return [...testService.collection.rootItems].filter((r) => r.children.size > 0).map((r) => r.controllerId);
+  }, "handler")
+});
+CommandsRegistry.registerCommand({
+  id: "vscode.testing.getTestsInFile",
+  handler: /* @__PURE__ */ __name(async (accessor, uri) => {
+    const testService = accessor.get(ITestService);
+    return [...testService.collection.getNodeByUrl(uri)].map((t) => TestId.split(t.item.extId));
+  }, "handler")
+});
+Registry.as(ConfigurationExtensions.Configuration).registerConfiguration(testingConfiguration);
+//# sourceMappingURL=testing.contribution.js.map

@@ -1,1 +1,232 @@
-var E=Object.defineProperty;var O=Object.getOwnPropertyDescriptor;var I=(i,o,t,n)=>{for(var d=n>1?void 0:n?O(o,t):o,a=i.length-1,m;a>=0;a--)(m=i[a])&&(d=(n?m(o,t,d):m(d))||d);return n&&d&&E(o,t,d),d},v=(i,o)=>(t,n)=>o(t,n,i);import{n as r}from"../../../../../../../base/browser/dom.js";import{ActionBar as w}from"../../../../../../../base/browser/ui/actionbar/actionbar.js";import{renderIcon as y}from"../../../../../../../base/browser/ui/iconLabel/iconLabels.js";import{KeybindingLabel as K,unthemedKeybindingLabelOptions as k}from"../../../../../../../base/browser/ui/keybindingLabel/keybindingLabel.js";import"../../../../../../../base/common/actions.js";import{Codicon as s}from"../../../../../../../base/common/codicons.js";import"../../../../../../../base/common/keybindings.js";import{autorun as H,constObservable as T,derived as B,derivedWithStore as A,observableFromEvent as L,observableValue as F}from"../../../../../../../base/common/observable.js";import{OS as j}from"../../../../../../../base/common/platform.js";import{ThemeIcon as D}from"../../../../../../../base/common/themables.js";import{localize as c}from"../../../../../../../nls.js";import{ICommandService as R}from"../../../../../../../platform/commands/common/commands.js";import{IContextKeyService as N}from"../../../../../../../platform/contextkey/common/contextkey.js";import{nativeHoverDelegate as z}from"../../../../../../../platform/hover/browser/hover.js";import{IKeybindingService as W}from"../../../../../../../platform/keybinding/common/keybinding.js";import{asCssVariable as u,descriptionForeground as $,editorActionListForeground as V,editorHoverBorder as q}from"../../../../../../../platform/theme/common/colorRegistry.js";import"../../../../../../browser/observableCodeEditor.js";import{EditorOption as J}from"../../../../../../common/config/editorOptions.js";import{hideInlineCompletionId as M,inlineSuggestCommitId as P,jumpToNextInlineEditId as Q,toggleShowCollapsedId as C}from"../../../controller/commandIds.js";import{InlineEditTabAction as _}from"../inlineEditsViewInterface.js";import"../utils/utils.js";let p=class{constructor(o,t,n,d,a,m){this._model=o;this._close=t;this._editorObs=n;this._contextKeyService=d;this._keybindingService=a;this._commandService=m;this._inlineEditsShowCollapsed=this._editorObs.getOption(J.inlineSuggest).map(b=>b.edits.showCollapsed)}_inlineEditsShowCollapsed;toDisposableLiveElement(){return this._createHoverContent().toDisposableLiveElement()}_createHoverContent(){const o=F("active",void 0),t=e=>({title:e.title,icon:e.icon,keybinding:typeof e.commandId=="string"?this._getKeybinding(e.commandArgs?void 0:e.commandId):B(l=>typeof e.commandId=="string"?void 0:this._getKeybinding(e.commandArgs?void 0:e.commandId.read(l)).read(l)),isActive:o.map(l=>l===e.id),onHoverChange:l=>o.set(l?e.id:void 0,void 0),onAction:()=>(this._close(!0),this._commandService.executeCommand(typeof e.commandId=="string"?e.commandId:e.commandId.get(),...e.commandArgs??[]))}),n=X(this._model.displayName),d=g(t({id:"gotoAndAccept",title:`${c("goto","Go To")} / ${c("accept","Accept")}`,icon:this._model.tabAction.map(e=>e===_.Accept?s.check:s.arrowRight),commandId:this._model.tabAction.map(e=>e===_.Accept?P:Q)})),a=g(t({id:"reject",title:c("reject","Reject"),icon:s.close,commandId:M})),m=this._model.extensionCommands.map((e,l)=>g(t({id:e.id+"_"+l,title:e.title,icon:s.symbolEvent,commandId:e.id,commandArgs:e.arguments}))),b=this._inlineEditsShowCollapsed.map(e=>g(t(e?{id:"showExpanded",title:c("showExpanded","Show Expanded"),icon:s.expandAll,commandId:C}:{id:"showCollapsed",title:c("showCollapsed","Show Collapsed"),icon:s.collapseAll,commandId:C}))),x=g(t({id:"settings",title:c("settings","Settings"),icon:s.gear,commandId:"workbench.action.openSettings",commandArgs:["@tag:nextEditSuggestions"]})),h=this._model.action?[this._model.action]:[],f=h.length>0?Y(h.map(e=>({id:e.id,label:e.title,enabled:!0,run:()=>this._commandService.executeCommand(e.id,...e.arguments??[]),class:void 0,tooltip:e.tooltip??e.title})),{hoverDelegate:z}):void 0;return U([n,d,a,b,x,m.length?S():void 0,...m,f?S():void 0,f])}_getKeybinding(o){return o?L(this._contextKeyService.onDidChangeContext,()=>this._keybindingService.lookupKeybinding(o)):T(void 0)}};p=I([v(3,N),v(4,W),v(5,R)],p);function U(i){return r.div({class:"content",style:{margin:4,minWidth:150}},i)}function X(i){return r.div({class:"header",style:{color:u($),fontSize:"12px",fontWeight:"600",padding:"0 10px",lineHeight:26}},[i])}function g(i){return A((o,t)=>r.div({class:["monaco-menu-option",i.isActive?.map(n=>n&&"active")],onmouseenter:()=>i.onHoverChange?.(!0),onmouseleave:()=>i.onHoverChange?.(!1),onclick:i.onAction,onkeydown:n=>{n.key==="Enter"&&i.onAction?.()},tabIndex:0,style:{borderRadius:3}},[r.elem("span",{style:{fontSize:16,display:"flex"}},[D.isThemeIcon(i.icon)?y(i.icon):i.icon.map(n=>y(n))]),r.elem("span",{},[i.title]),r.div({style:{marginLeft:"auto",opacity:"0.6"},ref:n=>{const d=t.add(new K(n,j,{disableTitle:!0,...k}));t.add(H(a=>{d.set(i.keybinding.read(a))}))}})]))}function Y(i,o){return A((t,n)=>r.div({class:["action-widget-action-bar"],style:{padding:"0 10px"}},[r.div({ref:d=>{n.add(new w(d,o)).push(i,{icon:!1,label:!0})}})]))}function S(){return r.div({id:"inline-edit-gutter-indicator-menu-separator",class:"menu-separator",style:{color:u(V),padding:"4px 0"}},r.div({style:{borderBottom:`1px solid ${u(q)}`}}))}export{p as GutterIndicatorMenuContent};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { ChildNode, LiveElement, n } from "../../../../../../../base/browser/dom.js";
+import { ActionBar, IActionBarOptions } from "../../../../../../../base/browser/ui/actionbar/actionbar.js";
+import { renderIcon } from "../../../../../../../base/browser/ui/iconLabel/iconLabels.js";
+import { KeybindingLabel, unthemedKeybindingLabelOptions } from "../../../../../../../base/browser/ui/keybindingLabel/keybindingLabel.js";
+import { IAction } from "../../../../../../../base/common/actions.js";
+import { Codicon } from "../../../../../../../base/common/codicons.js";
+import { ResolvedKeybinding } from "../../../../../../../base/common/keybindings.js";
+import { IObservable, autorun, constObservable, derived, derivedWithStore, observableFromEvent, observableValue } from "../../../../../../../base/common/observable.js";
+import { OS } from "../../../../../../../base/common/platform.js";
+import { ThemeIcon } from "../../../../../../../base/common/themables.js";
+import { localize } from "../../../../../../../nls.js";
+import { ICommandService } from "../../../../../../../platform/commands/common/commands.js";
+import { IContextKeyService } from "../../../../../../../platform/contextkey/common/contextkey.js";
+import { nativeHoverDelegate } from "../../../../../../../platform/hover/browser/hover.js";
+import { IKeybindingService } from "../../../../../../../platform/keybinding/common/keybinding.js";
+import { asCssVariable, descriptionForeground, editorActionListForeground, editorHoverBorder } from "../../../../../../../platform/theme/common/colorRegistry.js";
+import { ObservableCodeEditor } from "../../../../../../browser/observableCodeEditor.js";
+import { EditorOption } from "../../../../../../common/config/editorOptions.js";
+import { hideInlineCompletionId, inlineSuggestCommitId, jumpToNextInlineEditId, toggleShowCollapsedId } from "../../../controller/commandIds.js";
+import { IInlineEditModel, InlineEditTabAction } from "../inlineEditsViewInterface.js";
+import { FirstFnArg } from "../utils/utils.js";
+let GutterIndicatorMenuContent = class {
+  constructor(_model, _close, _editorObs, _contextKeyService, _keybindingService, _commandService) {
+    this._model = _model;
+    this._close = _close;
+    this._editorObs = _editorObs;
+    this._contextKeyService = _contextKeyService;
+    this._keybindingService = _keybindingService;
+    this._commandService = _commandService;
+    this._inlineEditsShowCollapsed = this._editorObs.getOption(EditorOption.inlineSuggest).map((s) => s.edits.showCollapsed);
+  }
+  static {
+    __name(this, "GutterIndicatorMenuContent");
+  }
+  _inlineEditsShowCollapsed;
+  toDisposableLiveElement() {
+    return this._createHoverContent().toDisposableLiveElement();
+  }
+  _createHoverContent() {
+    const activeElement = observableValue("active", void 0);
+    const createOptionArgs = /* @__PURE__ */ __name((options) => {
+      return {
+        title: options.title,
+        icon: options.icon,
+        keybinding: typeof options.commandId === "string" ? this._getKeybinding(options.commandArgs ? void 0 : options.commandId) : derived((reader) => typeof options.commandId === "string" ? void 0 : this._getKeybinding(options.commandArgs ? void 0 : options.commandId.read(reader)).read(reader)),
+        isActive: activeElement.map((v) => v === options.id),
+        onHoverChange: /* @__PURE__ */ __name((v) => activeElement.set(v ? options.id : void 0, void 0), "onHoverChange"),
+        onAction: /* @__PURE__ */ __name(() => {
+          this._close(true);
+          return this._commandService.executeCommand(typeof options.commandId === "string" ? options.commandId : options.commandId.get(), ...options.commandArgs ?? []);
+        }, "onAction")
+      };
+    }, "createOptionArgs");
+    const title = header(this._model.displayName);
+    const gotoAndAccept = option(createOptionArgs({
+      id: "gotoAndAccept",
+      title: `${localize("goto", "Go To")} / ${localize("accept", "Accept")}`,
+      icon: this._model.tabAction.map((action) => action === InlineEditTabAction.Accept ? Codicon.check : Codicon.arrowRight),
+      commandId: this._model.tabAction.map((action) => action === InlineEditTabAction.Accept ? inlineSuggestCommitId : jumpToNextInlineEditId)
+    }));
+    const reject = option(createOptionArgs({
+      id: "reject",
+      title: localize("reject", "Reject"),
+      icon: Codicon.close,
+      commandId: hideInlineCompletionId
+    }));
+    const extensionCommands = this._model.extensionCommands.map((c, idx) => option(createOptionArgs({ id: c.id + "_" + idx, title: c.title, icon: Codicon.symbolEvent, commandId: c.id, commandArgs: c.arguments })));
+    const toggleCollapsedMode = this._inlineEditsShowCollapsed.map(
+      (showCollapsed) => showCollapsed ? option(createOptionArgs({
+        id: "showExpanded",
+        title: localize("showExpanded", "Show Expanded"),
+        icon: Codicon.expandAll,
+        commandId: toggleShowCollapsedId
+      })) : option(createOptionArgs({
+        id: "showCollapsed",
+        title: localize("showCollapsed", "Show Collapsed"),
+        icon: Codicon.collapseAll,
+        commandId: toggleShowCollapsedId
+      }))
+    );
+    const settings = option(createOptionArgs({
+      id: "settings",
+      title: localize("settings", "Settings"),
+      icon: Codicon.gear,
+      commandId: "workbench.action.openSettings",
+      commandArgs: ["@tag:nextEditSuggestions"]
+    }));
+    const actions = this._model.action ? [this._model.action] : [];
+    const actionBarFooter = actions.length > 0 ? actionBar(
+      actions.map((action) => ({
+        id: action.id,
+        label: action.title,
+        enabled: true,
+        run: /* @__PURE__ */ __name(() => this._commandService.executeCommand(action.id, ...action.arguments ?? []), "run"),
+        class: void 0,
+        tooltip: action.tooltip ?? action.title
+      })),
+      {
+        hoverDelegate: nativeHoverDelegate
+        /* unable to show hover inside another hover */
+      }
+    ) : void 0;
+    return hoverContent([
+      title,
+      gotoAndAccept,
+      reject,
+      toggleCollapsedMode,
+      settings,
+      extensionCommands.length ? separator() : void 0,
+      ...extensionCommands,
+      actionBarFooter ? separator() : void 0,
+      actionBarFooter
+    ]);
+  }
+  _getKeybinding(commandId) {
+    if (!commandId) {
+      return constObservable(void 0);
+    }
+    return observableFromEvent(this._contextKeyService.onDidChangeContext, () => this._keybindingService.lookupKeybinding(commandId));
+  }
+};
+GutterIndicatorMenuContent = __decorateClass([
+  __decorateParam(3, IContextKeyService),
+  __decorateParam(4, IKeybindingService),
+  __decorateParam(5, ICommandService)
+], GutterIndicatorMenuContent);
+function hoverContent(content) {
+  return n.div({
+    class: "content",
+    style: {
+      margin: 4,
+      minWidth: 150
+    }
+  }, content);
+}
+__name(hoverContent, "hoverContent");
+function header(title) {
+  return n.div({
+    class: "header",
+    style: {
+      color: asCssVariable(descriptionForeground),
+      fontSize: "12px",
+      fontWeight: "600",
+      padding: "0 10px",
+      lineHeight: 26
+    }
+  }, [title]);
+}
+__name(header, "header");
+function option(props) {
+  return derivedWithStore((_reader, store) => n.div({
+    class: ["monaco-menu-option", props.isActive?.map((v) => v && "active")],
+    onmouseenter: /* @__PURE__ */ __name(() => props.onHoverChange?.(true), "onmouseenter"),
+    onmouseleave: /* @__PURE__ */ __name(() => props.onHoverChange?.(false), "onmouseleave"),
+    onclick: props.onAction,
+    onkeydown: /* @__PURE__ */ __name((e) => {
+      if (e.key === "Enter") {
+        props.onAction?.();
+      }
+    }, "onkeydown"),
+    tabIndex: 0,
+    style: {
+      borderRadius: 3
+      // same as hover widget border radius
+    }
+  }, [
+    n.elem("span", {
+      style: {
+        fontSize: 16,
+        display: "flex"
+      }
+    }, [ThemeIcon.isThemeIcon(props.icon) ? renderIcon(props.icon) : props.icon.map((icon) => renderIcon(icon))]),
+    n.elem("span", {}, [props.title]),
+    n.div({
+      style: { marginLeft: "auto", opacity: "0.6" },
+      ref: /* @__PURE__ */ __name((elem) => {
+        const keybindingLabel = store.add(new KeybindingLabel(elem, OS, { disableTitle: true, ...unthemedKeybindingLabelOptions }));
+        store.add(autorun((reader) => {
+          keybindingLabel.set(props.keybinding.read(reader));
+        }));
+      }, "ref")
+    })
+  ]));
+}
+__name(option, "option");
+function actionBar(actions, options) {
+  return derivedWithStore((_reader, store) => n.div({
+    class: ["action-widget-action-bar"],
+    style: {
+      padding: "0 10px"
+    }
+  }, [
+    n.div({
+      ref: /* @__PURE__ */ __name((elem) => {
+        const actionBar2 = store.add(new ActionBar(elem, options));
+        actionBar2.push(actions, { icon: false, label: true });
+      }, "ref")
+    })
+  ]));
+}
+__name(actionBar, "actionBar");
+function separator() {
+  return n.div({
+    id: "inline-edit-gutter-indicator-menu-separator",
+    class: "menu-separator",
+    style: {
+      color: asCssVariable(editorActionListForeground),
+      padding: "4px 0"
+    }
+  }, n.div({
+    style: {
+      borderBottom: `1px solid ${asCssVariable(editorHoverBorder)}`
+    }
+  }));
+}
+__name(separator, "separator");
+export {
+  GutterIndicatorMenuContent
+};
+//# sourceMappingURL=gutterIndicatorMenu.js.map

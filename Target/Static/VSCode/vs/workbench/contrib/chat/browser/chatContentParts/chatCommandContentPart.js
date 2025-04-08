@@ -1,1 +1,50 @@
-var c=Object.defineProperty,p=Object.getOwnPropertyDescriptor,d=(o,t,e,m)=>{for(var s,r=m>1?void 0:m?p(t,e):t,n=o.length-1;n>=0;n--)(s=o[n])&&(r=(m?s(t,e,r):s(r))||r);return m&&r&&c(t,e,r),r},l=(o,t)=>(e,m)=>t(e,m,o);import*as C from"../../../../../base/browser/dom.js";import{Button as h}from"../../../../../base/browser/ui/button/button.js";import{Disposable as b}from"../../../../../base/common/lifecycle.js";import{localize as f}from"../../../../../nls.js";import{ICommandService as u}from"../../../../../platform/commands/common/commands.js";import{defaultButtonStyles as I}from"../../../../../platform/theme/browser/defaultStyles.js";import"./chatContentParts.js";import"../../common/chatModel.js";import"../../common/chatService.js";import{isResponseVM as R}from"../../common/chatViewModel.js";const S=C.$;let s=class extends b{constructor(o,t,e){super(),this.commandService=e,this.domNode=S(".chat-command-button");const m=!R(t.element)||!t.element.isStale,s=m?o.command.tooltip:f("commandButtonDisabled","Button not available in restored chat"),r=this._register(new h(this.domNode,{...I,supportIcons:!0,title:s}));r.label=o.command.title,r.enabled=m,this._register(r.onDidClick((()=>this.commandService.executeCommand(o.command.id,...o.command.arguments??[]))))}domNode;hasSameContent(o){return"command"===o.kind}};s=d([l(2,u)],s);export{s as ChatCommandButtonContentPart};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import * as dom from "../../../../../base/browser/dom.js";
+import { Button } from "../../../../../base/browser/ui/button/button.js";
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { localize } from "../../../../../nls.js";
+import { ICommandService } from "../../../../../platform/commands/common/commands.js";
+import { defaultButtonStyles } from "../../../../../platform/theme/browser/defaultStyles.js";
+import { IChatContentPart, IChatContentPartRenderContext } from "./chatContentParts.js";
+import { IChatProgressRenderableResponseContent } from "../../common/chatModel.js";
+import { IChatCommandButton } from "../../common/chatService.js";
+import { isResponseVM } from "../../common/chatViewModel.js";
+const $ = dom.$;
+let ChatCommandButtonContentPart = class extends Disposable {
+  constructor(commandButton, context, commandService) {
+    super();
+    this.commandService = commandService;
+    this.domNode = $(".chat-command-button");
+    const enabled = !isResponseVM(context.element) || !context.element.isStale;
+    const tooltip = enabled ? commandButton.command.tooltip : localize("commandButtonDisabled", "Button not available in restored chat");
+    const button = this._register(new Button(this.domNode, { ...defaultButtonStyles, supportIcons: true, title: tooltip }));
+    button.label = commandButton.command.title;
+    button.enabled = enabled;
+    this._register(button.onDidClick(() => this.commandService.executeCommand(commandButton.command.id, ...commandButton.command.arguments ?? [])));
+  }
+  static {
+    __name(this, "ChatCommandButtonContentPart");
+  }
+  domNode;
+  hasSameContent(other) {
+    return other.kind === "command";
+  }
+};
+ChatCommandButtonContentPart = __decorateClass([
+  __decorateParam(2, ICommandService)
+], ChatCommandButtonContentPart);
+export {
+  ChatCommandButtonContentPart
+};
+//# sourceMappingURL=chatCommandContentPart.js.map

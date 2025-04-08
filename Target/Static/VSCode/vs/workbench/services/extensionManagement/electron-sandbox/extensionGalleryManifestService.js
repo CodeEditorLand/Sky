@@ -1,1 +1,189 @@
-var x=Object.defineProperty;var M=Object.getOwnPropertyDescriptor;var g=(a,o,e,r)=>{for(var t=r>1?void 0:r?M(o,e):o,i=a.length-1,s;i>=0;i--)(s=a[i])&&(t=(r?s(o,e,t):s(t))||t);return r&&t&&x(o,e,t),t},n=(a,o)=>(e,r)=>o(e,r,a);import{CancellationToken as G}from"../../../../base/common/cancellation.js";import{Emitter as I}from"../../../../base/common/event.js";import"../../../../base/parts/request/common/request.js";import{localize as v}from"../../../../nls.js";import{IConfigurationService as E}from"../../../../platform/configuration/common/configuration.js";import{IDialogService as C}from"../../../../platform/dialogs/common/dialogs.js";import{IEnvironmentService as A}from"../../../../platform/environment/common/environment.js";import{IExtensionGalleryManifestService as P,ExtensionGalleryServiceUrlConfigKey as m}from"../../../../platform/extensionManagement/common/extensionGalleryManifest.js";import{ExtensionGalleryManifestService as D}from"../../../../platform/extensionManagement/common/extensionGalleryManifestService.js";import{resolveMarketplaceHeaders as k}from"../../../../platform/externalServices/common/marketplace.js";import{IFileService as _}from"../../../../platform/files/common/files.js";import{InstantiationType as w,registerSingleton as H}from"../../../../platform/instantiation/common/extensions.js";import{ISharedProcessService as U}from"../../../../platform/ipc/electron-sandbox/services.js";import{ILogService as q}from"../../../../platform/log/common/log.js";import{IProductService as R}from"../../../../platform/product/common/productService.js";import{asJson as T,IRequestService as F}from"../../../../platform/request/common/request.js";import{IStorageService as b}from"../../../../platform/storage/common/storage.js";import{ITelemetryService as K}from"../../../../platform/telemetry/common/telemetry.js";import{IDefaultAccountService as L}from"../../accounts/common/defaultAccount.js";import{IHostService as z}from"../../host/browser/host.js";import{IRemoteAgentService as N}from"../../remote/common/remoteAgentService.js";let l=class extends D{constructor(e,r,t,i,s,h,y,d,V,j,B,J,O){super(e);this.configurationService=d;this.requestService=V;this.defaultAccountService=j;this.dialogService=B;this.hostService=J;this.logService=O;this.commonHeadersPromise=k(e.version,e,r,d,t,s,i);const c=[y.getChannel("extensionGalleryManifest")],u=h.getConnection();u&&c.push(u.getChannel("extensionGalleryManifest")),this.getExtensionGalleryManifest().then(p=>{c.forEach(f=>f.call("setExtensionGalleryManifest",[p])),this._register(this.onDidChangeExtensionGalleryManifest(f=>c.forEach(S=>S.call("setExtensionGalleryManifest",[f]))))})}commonHeadersPromise;extensionGalleryManifest=null;_onDidChangeExtensionGalleryManifest=this._register(new I);onDidChangeExtensionGalleryManifest=this._onDidChangeExtensionGalleryManifest.event;extensionGalleryManifestPromise;async getExtensionGalleryManifest(){return this.extensionGalleryManifestPromise||(this.extensionGalleryManifestPromise=this.doGetExtensionGalleryManifest()),await this.extensionGalleryManifestPromise,this.extensionGalleryManifest?this.extensionGalleryManifest[1]:null}async doGetExtensionGalleryManifest(){const e=this.productService.extensionsGallery?.serviceUrl;if(!e){this.extensionGalleryManifest=null;return}const r=this.configurationService.getValue(m);if(r&&this.checkAccess(await this.defaultAccountService.getDefaultAccount())&&(this.extensionGalleryManifest=[r,await this.getExtensionGalleryManifestFromServiceUrl(r)]),!this.extensionGalleryManifest){const t=await super.getExtensionGalleryManifest();t&&(this.extensionGalleryManifest=[e,t])}this._register(this.defaultAccountService.onDidChangeDefaultAccount(t=>{if(!r)return;const i=this.checkAccess(t);i&&this.extensionGalleryManifest?.[0]===r||!i&&this.extensionGalleryManifest?.[0]===e||(this.extensionGalleryManifest=null,this._onDidChangeExtensionGalleryManifest.fire(null),this.requestRestart())})),this._register(this.configurationService.onDidChangeConfiguration(t=>{if(!t.affectsConfiguration(m))return;const i=this.configurationService.getValue(m);!i&&this.extensionGalleryManifest?.[0]===e||i&&this.extensionGalleryManifest?.[0]===i||(this.extensionGalleryManifest=null,this._onDidChangeExtensionGalleryManifest.fire(null),this.requestRestart())}))}checkAccess(e){return e?(this.logService.debug("[Marketplace] Checking Account SKU access for configured gallery",e.access_type_sku),e.access_type_sku&&this.productService.extensionsGallery?.accessSKUs?.includes(e.access_type_sku)?(this.logService.debug("[Marketplace] Account has access to configured gallery"),!0):(this.logService.debug("[Marketplace] Checking enterprise account access for configured gallery",e.enterprise),e.enterprise)):(this.logService.debug("[Marketplace] Checking account access for configured gallery: No account found"),!1)}async requestRestart(){if((await this.dialogService.confirm({message:v("extensionGalleryManifestService.accountChange","{0} is now configured to a different Marketplace. Please restart to apply the changes.",this.productService.nameLong),primaryButton:v({key:"restart",comment:["&& denotes a mnemonic"]},"&&Restart")})).confirmed)return this.hostService.restart()}async getExtensionGalleryManifestFromServiceUrl(e){const t={...await this.commonHeadersPromise,"Content-Type":"application/json","Accept-Encoding":"gzip"};try{const i=await this.requestService.request({type:"GET",url:e,headers:t},G.None),s=await T(i);if(!s)throw new Error("Unable to retrieve extension gallery manifest.");return s}catch(i){throw this.logService.error("[Marketplace] Error retrieving extension gallery manifest",i),i}}};l=g([n(0,R),n(1,A),n(2,_),n(3,K),n(4,b),n(5,N),n(6,U),n(7,E),n(8,F),n(9,L),n(10,C),n(11,z),n(12,q)],l),H(P,l,w.Eager);export{l as WorkbenchExtensionGalleryManifestService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { Emitter } from "../../../../base/common/event.js";
+import { IHeaders } from "../../../../base/parts/request/common/request.js";
+import { localize } from "../../../../nls.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IDialogService } from "../../../../platform/dialogs/common/dialogs.js";
+import { IEnvironmentService } from "../../../../platform/environment/common/environment.js";
+import { IExtensionGalleryManifestService, IExtensionGalleryManifest, ExtensionGalleryServiceUrlConfigKey } from "../../../../platform/extensionManagement/common/extensionGalleryManifest.js";
+import { ExtensionGalleryManifestService } from "../../../../platform/extensionManagement/common/extensionGalleryManifestService.js";
+import { resolveMarketplaceHeaders } from "../../../../platform/externalServices/common/marketplace.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { ISharedProcessService } from "../../../../platform/ipc/electron-sandbox/services.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+import { asJson, IRequestService } from "../../../../platform/request/common/request.js";
+import { IStorageService } from "../../../../platform/storage/common/storage.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { IDefaultAccount, IDefaultAccountService } from "../../accounts/common/defaultAccount.js";
+import { IHostService } from "../../host/browser/host.js";
+import { IRemoteAgentService } from "../../remote/common/remoteAgentService.js";
+let WorkbenchExtensionGalleryManifestService = class extends ExtensionGalleryManifestService {
+  constructor(productService, environmentService, fileService, telemetryService, storageService, remoteAgentService, sharedProcessService, configurationService, requestService, defaultAccountService, dialogService, hostService, logService) {
+    super(productService);
+    this.configurationService = configurationService;
+    this.requestService = requestService;
+    this.defaultAccountService = defaultAccountService;
+    this.dialogService = dialogService;
+    this.hostService = hostService;
+    this.logService = logService;
+    this.commonHeadersPromise = resolveMarketplaceHeaders(
+      productService.version,
+      productService,
+      environmentService,
+      configurationService,
+      fileService,
+      storageService,
+      telemetryService
+    );
+    const channels = [sharedProcessService.getChannel("extensionGalleryManifest")];
+    const remoteConnection = remoteAgentService.getConnection();
+    if (remoteConnection) {
+      channels.push(remoteConnection.getChannel("extensionGalleryManifest"));
+    }
+    this.getExtensionGalleryManifest().then((manifest) => {
+      channels.forEach((channel) => channel.call("setExtensionGalleryManifest", [manifest]));
+      this._register(this.onDidChangeExtensionGalleryManifest((manifest2) => channels.forEach((channel) => channel.call("setExtensionGalleryManifest", [manifest2]))));
+    });
+  }
+  static {
+    __name(this, "WorkbenchExtensionGalleryManifestService");
+  }
+  commonHeadersPromise;
+  extensionGalleryManifest = null;
+  _onDidChangeExtensionGalleryManifest = this._register(new Emitter());
+  onDidChangeExtensionGalleryManifest = this._onDidChangeExtensionGalleryManifest.event;
+  extensionGalleryManifestPromise;
+  async getExtensionGalleryManifest() {
+    if (!this.extensionGalleryManifestPromise) {
+      this.extensionGalleryManifestPromise = this.doGetExtensionGalleryManifest();
+    }
+    await this.extensionGalleryManifestPromise;
+    return this.extensionGalleryManifest ? this.extensionGalleryManifest[1] : null;
+  }
+  async doGetExtensionGalleryManifest() {
+    const defaultServiceUrl = this.productService.extensionsGallery?.serviceUrl;
+    if (!defaultServiceUrl) {
+      this.extensionGalleryManifest = null;
+      return;
+    }
+    const configuredServiceUrl = this.configurationService.getValue(ExtensionGalleryServiceUrlConfigKey);
+    if (configuredServiceUrl && this.checkAccess(await this.defaultAccountService.getDefaultAccount())) {
+      this.extensionGalleryManifest = [configuredServiceUrl, await this.getExtensionGalleryManifestFromServiceUrl(configuredServiceUrl)];
+    }
+    if (!this.extensionGalleryManifest) {
+      const defaultExtensionGalleryManifest = await super.getExtensionGalleryManifest();
+      if (defaultExtensionGalleryManifest) {
+        this.extensionGalleryManifest = [defaultServiceUrl, defaultExtensionGalleryManifest];
+      }
+    }
+    this._register(this.defaultAccountService.onDidChangeDefaultAccount((account) => {
+      if (!configuredServiceUrl) {
+        return;
+      }
+      const canAccess = this.checkAccess(account);
+      if (canAccess && this.extensionGalleryManifest?.[0] === configuredServiceUrl) {
+        return;
+      }
+      if (!canAccess && this.extensionGalleryManifest?.[0] === defaultServiceUrl) {
+        return;
+      }
+      this.extensionGalleryManifest = null;
+      this._onDidChangeExtensionGalleryManifest.fire(null);
+      this.requestRestart();
+    }));
+    this._register(this.configurationService.onDidChangeConfiguration((e) => {
+      if (!e.affectsConfiguration(ExtensionGalleryServiceUrlConfigKey)) {
+        return;
+      }
+      const configuredServiceUrl2 = this.configurationService.getValue(ExtensionGalleryServiceUrlConfigKey);
+      if (!configuredServiceUrl2 && this.extensionGalleryManifest?.[0] === defaultServiceUrl) {
+        return;
+      }
+      if (configuredServiceUrl2 && this.extensionGalleryManifest?.[0] === configuredServiceUrl2) {
+        return;
+      }
+      this.extensionGalleryManifest = null;
+      this._onDidChangeExtensionGalleryManifest.fire(null);
+      this.requestRestart();
+    }));
+  }
+  checkAccess(account) {
+    if (!account) {
+      this.logService.debug("[Marketplace] Checking account access for configured gallery: No account found");
+      return false;
+    }
+    this.logService.debug("[Marketplace] Checking Account SKU access for configured gallery", account.access_type_sku);
+    if (account.access_type_sku && this.productService.extensionsGallery?.accessSKUs?.includes(account.access_type_sku)) {
+      this.logService.debug("[Marketplace] Account has access to configured gallery");
+      return true;
+    }
+    this.logService.debug("[Marketplace] Checking enterprise account access for configured gallery", account.enterprise);
+    return account.enterprise;
+  }
+  async requestRestart() {
+    const confirmation = await this.dialogService.confirm({
+      message: localize("extensionGalleryManifestService.accountChange", "{0} is now configured to a different Marketplace. Please restart to apply the changes.", this.productService.nameLong),
+      primaryButton: localize({ key: "restart", comment: ["&& denotes a mnemonic"] }, "&&Restart")
+    });
+    if (confirmation.confirmed) {
+      return this.hostService.restart();
+    }
+  }
+  async getExtensionGalleryManifestFromServiceUrl(url) {
+    const commonHeaders = await this.commonHeadersPromise;
+    const headers = {
+      ...commonHeaders,
+      "Content-Type": "application/json",
+      "Accept-Encoding": "gzip"
+    };
+    try {
+      const context = await this.requestService.request({
+        type: "GET",
+        url,
+        headers
+      }, CancellationToken.None);
+      const extensionGalleryManifest = await asJson(context);
+      if (!extensionGalleryManifest) {
+        throw new Error("Unable to retrieve extension gallery manifest.");
+      }
+      return extensionGalleryManifest;
+    } catch (error) {
+      this.logService.error("[Marketplace] Error retrieving extension gallery manifest", error);
+      throw error;
+    }
+  }
+};
+WorkbenchExtensionGalleryManifestService = __decorateClass([
+  __decorateParam(0, IProductService),
+  __decorateParam(1, IEnvironmentService),
+  __decorateParam(2, IFileService),
+  __decorateParam(3, ITelemetryService),
+  __decorateParam(4, IStorageService),
+  __decorateParam(5, IRemoteAgentService),
+  __decorateParam(6, ISharedProcessService),
+  __decorateParam(7, IConfigurationService),
+  __decorateParam(8, IRequestService),
+  __decorateParam(9, IDefaultAccountService),
+  __decorateParam(10, IDialogService),
+  __decorateParam(11, IHostService),
+  __decorateParam(12, ILogService)
+], WorkbenchExtensionGalleryManifestService);
+registerSingleton(IExtensionGalleryManifestService, WorkbenchExtensionGalleryManifestService, InstantiationType.Eager);
+export {
+  WorkbenchExtensionGalleryManifestService
+};
+//# sourceMappingURL=extensionGalleryManifestService.js.map

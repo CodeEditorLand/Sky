@@ -1,9 +1,144 @@
-var u=Object.defineProperty;var S=Object.getOwnPropertyDescriptor;var f=(p,r,o,n)=>{for(var i=n>1?void 0:n?S(r,o):r,a=p.length-1,e;a>=0;a--)(e=p[a])&&(i=(n?e(r,o,i):e(i))||i);return n&&i&&u(r,o,i),i},t=(p,r)=>(o,n)=>r(o,n,p);import"../../../common/contributions.js";import{localize as l}from"../../../../nls.js";import{dirname as I,basename as d}from"../../../../base/common/resources.js";import{ITextModelService as y}from"../../../../editor/common/services/resolverService.js";import{IDialogService as _}from"../../../../platform/dialogs/common/dialogs.js";import{INativeWorkbenchEnvironmentService as g}from"../../../services/environment/electron-sandbox/environmentService.js";import{ILifecycleService as b,LifecyclePhase as x}from"../../../services/lifecycle/common/lifecycle.js";import{PerfviewContrib as k}from"../browser/perfviewEditor.js";import{IExtensionService as w}from"../../../services/extensions/common/extensions.js";import{IClipboardService as P}from"../../../../platform/clipboard/common/clipboardService.js";import{URI as h}from"../../../../base/common/uri.js";import{IOpenerService as F}from"../../../../platform/opener/common/opener.js";import{INativeHostService as R}from"../../../../platform/native/common/native.js";import{IProductService as M}from"../../../../platform/product/common/productService.js";import{IFileService as C}from"../../../../platform/files/common/files.js";import{ILabelService as E}from"../../../../platform/label/common/label.js";let m=class{constructor(r,o,n,i,a,e,s,c,v,L,U){this._dialogService=r;this._environmentService=o;this._textModelResolverService=n;this._clipboardService=i;this._openerService=s;this._nativeHostService=c;this._productService=v;this._fileService=L;this._labelService=U;Promise.all([a.when(x.Eventually),e.whenInstalledExtensionsRegistered()]).then(()=>{this._stopProfiling()})}_stopProfiling(){if(!this._environmentService.args["prof-startup-prefix"])return;const r=h.file(this._environmentService.args["prof-startup-prefix"]),o=I(r),n=d(r),i=["--prof-startup"];this._fileService.readFile(r).then(e=>i.push(...e.toString().split("|"))).then(()=>this._fileService.del(r,{recursive:!0})).then(()=>new Promise(e=>{const s=()=>{this._fileService.exists(r).then(c=>{c?e():setTimeout(s,500)})};s()})).then(()=>this._fileService.del(r,{recursive:!0})).then(()=>this._fileService.resolve(o).then(e=>(e.children?e.children.filter(s=>s.resource.path.includes(n)):[]).map(s=>s.resource))).then(e=>{const s=e.reduce((c,v)=>`${c}${this._labelService.getUriLabel(v)}
-`,`
-`);return this._dialogService.confirm({type:"info",message:l("prof.message","Successfully created profiles."),detail:l("prof.detail",`Please create an issue and manually attach the following files:
-{0}`,s),primaryButton:l({key:"prof.restartAndFileIssue",comment:["&& denotes a mnemonic"]},"&&Create Issue and Restart"),cancelButton:l("prof.restart","Restart")}).then(c=>{c.confirmed?Promise.all([this._nativeHostService.showItemInFolder(e[0].fsPath),this._createPerfIssue(e.map(v=>d(v)))]).then(()=>this._dialogService.confirm({type:"info",message:l("prof.thanks","Thanks for helping us."),detail:l("prof.detail.restart","A final restart is required to continue to use '{0}'. Again, thank you for your contribution.",this._productService.nameLong),primaryButton:l({key:"prof.restart.button",comment:["&& denotes a mnemonic"]},"&&Restart")}).then(v=>{v.confirmed&&this._nativeHostService.relaunch({removeArgs:i})})):this._nativeHostService.relaunch({removeArgs:i})})})}async _createPerfIssue(r){const o=this._productService.reportIssueUrl;if(!o)return;const n=k.get(),i=await this._textModelResolverService.createModelReference(n.getInputUri());try{await this._clipboardService.writeText(i.object.textEditorModel.getValue())}finally{i.dispose()}const a=`
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { IWorkbenchContribution } from "../../../common/contributions.js";
+import { localize } from "../../../../nls.js";
+import { dirname, basename } from "../../../../base/common/resources.js";
+import { ITextModelService } from "../../../../editor/common/services/resolverService.js";
+import { IDialogService } from "../../../../platform/dialogs/common/dialogs.js";
+import { INativeWorkbenchEnvironmentService } from "../../../services/environment/electron-sandbox/environmentService.js";
+import { ILifecycleService, LifecyclePhase } from "../../../services/lifecycle/common/lifecycle.js";
+import { PerfviewContrib } from "../browser/perfviewEditor.js";
+import { IExtensionService } from "../../../services/extensions/common/extensions.js";
+import { IClipboardService } from "../../../../platform/clipboard/common/clipboardService.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IOpenerService } from "../../../../platform/opener/common/opener.js";
+import { INativeHostService } from "../../../../platform/native/common/native.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { ILabelService } from "../../../../platform/label/common/label.js";
+let StartupProfiler = class {
+  constructor(_dialogService, _environmentService, _textModelResolverService, _clipboardService, lifecycleService, extensionService, _openerService, _nativeHostService, _productService, _fileService, _labelService) {
+    this._dialogService = _dialogService;
+    this._environmentService = _environmentService;
+    this._textModelResolverService = _textModelResolverService;
+    this._clipboardService = _clipboardService;
+    this._openerService = _openerService;
+    this._nativeHostService = _nativeHostService;
+    this._productService = _productService;
+    this._fileService = _fileService;
+    this._labelService = _labelService;
+    Promise.all([
+      lifecycleService.when(LifecyclePhase.Eventually),
+      extensionService.whenInstalledExtensionsRegistered()
+    ]).then(() => {
+      this._stopProfiling();
+    });
+  }
+  static {
+    __name(this, "StartupProfiler");
+  }
+  _stopProfiling() {
+    if (!this._environmentService.args["prof-startup-prefix"]) {
+      return;
+    }
+    const profileFilenamePrefix = URI.file(this._environmentService.args["prof-startup-prefix"]);
+    const dir = dirname(profileFilenamePrefix);
+    const prefix = basename(profileFilenamePrefix);
+    const removeArgs = ["--prof-startup"];
+    const markerFile = this._fileService.readFile(profileFilenamePrefix).then((value) => removeArgs.push(...value.toString().split("|"))).then(() => this._fileService.del(profileFilenamePrefix, { recursive: true })).then(() => new Promise((resolve) => {
+      const check = /* @__PURE__ */ __name(() => {
+        this._fileService.exists(profileFilenamePrefix).then((exists) => {
+          if (exists) {
+            resolve();
+          } else {
+            setTimeout(check, 500);
+          }
+        });
+      }, "check");
+      check();
+    })).then(() => this._fileService.del(profileFilenamePrefix, { recursive: true }));
+    markerFile.then(() => {
+      return this._fileService.resolve(dir).then((stat) => {
+        return (stat.children ? stat.children.filter((value) => value.resource.path.includes(prefix)) : []).map((stat2) => stat2.resource);
+      });
+    }).then((files) => {
+      const profileFiles = files.reduce((prev, cur) => `${prev}${this._labelService.getUriLabel(cur)}
+`, "\n");
+      return this._dialogService.confirm({
+        type: "info",
+        message: localize("prof.message", "Successfully created profiles."),
+        detail: localize("prof.detail", "Please create an issue and manually attach the following files:\n{0}", profileFiles),
+        primaryButton: localize({ key: "prof.restartAndFileIssue", comment: ["&& denotes a mnemonic"] }, "&&Create Issue and Restart"),
+        cancelButton: localize("prof.restart", "Restart")
+      }).then((res) => {
+        if (res.confirmed) {
+          Promise.all([
+            this._nativeHostService.showItemInFolder(files[0].fsPath),
+            this._createPerfIssue(files.map((file) => basename(file)))
+          ]).then(() => {
+            return this._dialogService.confirm({
+              type: "info",
+              message: localize("prof.thanks", "Thanks for helping us."),
+              detail: localize("prof.detail.restart", "A final restart is required to continue to use '{0}'. Again, thank you for your contribution.", this._productService.nameLong),
+              primaryButton: localize({ key: "prof.restart.button", comment: ["&& denotes a mnemonic"] }, "&&Restart")
+            }).then((res2) => {
+              if (res2.confirmed) {
+                this._nativeHostService.relaunch({ removeArgs });
+              }
+            });
+          });
+        } else {
+          this._nativeHostService.relaunch({ removeArgs });
+        }
+      });
+    });
+  }
+  async _createPerfIssue(files) {
+    const reportIssueUrl = this._productService.reportIssueUrl;
+    if (!reportIssueUrl) {
+      return;
+    }
+    const contrib = PerfviewContrib.get();
+    const ref = await this._textModelResolverService.createModelReference(contrib.getInputUri());
+    try {
+      await this._clipboardService.writeText(ref.object.textEditorModel.getValue());
+    } finally {
+      ref.dispose();
+    }
+    const body = `
 1. :warning: We have copied additional data to your clipboard. Make sure to **paste** here. :warning:
 1. :warning: Make sure to **attach** these files from your *home*-directory: :warning:
-${r.map(c=>`-\`${c}\``).join(`
-`)}
-`,e=o,s=e.indexOf("?")===-1?"?":"&";this._openerService.open(h.parse(`${e}${s}body=${encodeURIComponent(a)}`))}};m=f([t(0,_),t(1,g),t(2,y),t(3,P),t(4,b),t(5,w),t(6,F),t(7,R),t(8,M),t(9,C),t(10,E)],m);export{m as StartupProfiler};
+${files.map((file) => `-\`${file}\``).join("\n")}
+`;
+    const baseUrl = reportIssueUrl;
+    const queryStringPrefix = baseUrl.indexOf("?") === -1 ? "?" : "&";
+    this._openerService.open(URI.parse(`${baseUrl}${queryStringPrefix}body=${encodeURIComponent(body)}`));
+  }
+};
+StartupProfiler = __decorateClass([
+  __decorateParam(0, IDialogService),
+  __decorateParam(1, INativeWorkbenchEnvironmentService),
+  __decorateParam(2, ITextModelService),
+  __decorateParam(3, IClipboardService),
+  __decorateParam(4, ILifecycleService),
+  __decorateParam(5, IExtensionService),
+  __decorateParam(6, IOpenerService),
+  __decorateParam(7, INativeHostService),
+  __decorateParam(8, IProductService),
+  __decorateParam(9, IFileService),
+  __decorateParam(10, ILabelService)
+], StartupProfiler);
+export {
+  StartupProfiler
+};
+//# sourceMappingURL=startupProfiler.js.map

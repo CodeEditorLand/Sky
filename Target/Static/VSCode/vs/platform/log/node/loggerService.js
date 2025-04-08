@@ -1,1 +1,18 @@
-import"../../../base/common/uri.js";import{generateUuid as g}from"../../../base/common/uuid.js";import{AbstractLoggerService as t}from"../common/log.js";import{SpdLogLogger as L}from"./spdlogLog.js";class f extends t{doCreateLogger(o,e,r){return new L(g(),o.fsPath,!r?.donotRotate,!!r?.donotUseFormatters,e)}}export{f as LoggerService};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { URI } from "../../../base/common/uri.js";
+import { generateUuid } from "../../../base/common/uuid.js";
+import { AbstractLoggerService, ILogger, ILoggerOptions, ILoggerService, LogLevel } from "../common/log.js";
+import { SpdLogLogger } from "./spdlogLog.js";
+class LoggerService extends AbstractLoggerService {
+  static {
+    __name(this, "LoggerService");
+  }
+  doCreateLogger(resource, logLevel, options) {
+    return new SpdLogLogger(generateUuid(), resource.fsPath, !options?.donotRotate, !!options?.donotUseFormatters, logLevel);
+  }
+}
+export {
+  LoggerService
+};
+//# sourceMappingURL=loggerService.js.map

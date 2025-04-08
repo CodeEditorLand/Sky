@@ -1,1 +1,448 @@
-var C=Object.defineProperty,I=Object.getOwnPropertyDescriptor,y=(e,t,o,s)=>{for(var r,i=s>1?void 0:s?I(t,o):t,n=e.length-1;n>=0;n--)(r=e[n])&&(i=(s?r(t,o,i):r(i))||i);return s&&i&&C(t,o,i),i},u=(e,t)=>(o,s)=>t(o,s,e);import"../../../../base/common/uri.js";import{Event as S}from"../../../../base/common/event.js";import{VSBuffer as g}from"../../../../base/common/buffer.js";import{deepClone as U}from"../../../../base/common/objects.js";import{isPromptFile as x}from"../../../prompts/common/constants.js";import{IStorageService as b}from"../../../storage/common/storage.js";import{ITelemetryService as F}from"../../../telemetry/common/telemetry.js";import"../../../../base/common/collections.js";import"../../../../base/common/cancellation.js";import{IUriIdentityService as j}from"../../../uriIdentity/common/uriIdentity.js";import{IEnvironmentService as D}from"../../../environment/common/environment.js";import"../../../userDataProfile/common/userDataProfile.js";import{IConfigurationService as L}from"../../../configuration/common/configuration.js";import{areSame as k,merge as P}from"./promptsMerge.js";import{AbstractSynchroniser as M}from"../abstractSynchronizer.js";import{FileOperationError as N,FileOperationResult as O,IFileService as A}from"../../../files/common/files.js";import{Change as s,IUserDataSyncLocalStoreService as E,IUserDataSyncLogService as $,IUserDataSyncEnablementService as _,IUserDataSyncStoreService as q,SyncResource as T,USER_DATA_SYNC_SCHEME as a}from"../userDataSync.js";function B(e){return JSON.parse(e.content)}let d=class extends M{version=1;promptsFolder;constructor(e,t,o,s,r,i,n,a,c,l,h,m){super({syncResource:T.Prompts,profile:e},t,s,o,r,i,n,l,h,a,c,m),this.promptsFolder=e.promptsHome,this._register(this.fileService.watch(o.userRoamingDataHome)),this._register(this.fileService.watch(this.promptsFolder)),this._register(S.filter(this.fileService.onDidFilesChange,(e=>e.affects(this.promptsFolder)))((()=>this.triggerLocalChange())))}async generateSyncPreview(e,t,o){const s=await this.getPromptsFileContents(),r=this.toPromptContents(s),i=e.syncData?this.parsePrompts(e.syncData):null,n=(t=null===t&&o?e:t)&&t.syncData?this.parsePrompts(t.syncData):null;i?this.logService.trace(`${this.syncResourceLogLabel}: Merging remote prompts with local prompts...`):this.logService.trace(`${this.syncResourceLogLabel}: Remote prompts does not exist. Synchronizing prompts for the first time.`);const a=P(r,i,n);return this.getResourcePreviews(a,s,i||{},n||{})}async hasRemoteChanged(e){const t=e.syncData?this.parsePrompts(e.syncData):null;if(null===t)return!0;const o=await this.getPromptsFileContents(),s=this.toPromptContents(o),r=P(s,t,t);return Object.keys(r.remote.added).length>0||Object.keys(r.remote.updated).length>0||r.remote.removed.length>0||r.conflicts.length>0}async getMergeResult(e,t){return e.previewResult}async getAcceptResult(e,t,o,r){if(this.extUri.isEqualOrParent(t,this.syncPreviewFolder.with({scheme:a,authority:"local"})))return{content:e.fileContent?e.fileContent.value.toString():null,localChange:s.None,remoteChange:e.fileContent?null!==e.remoteContent?s.Modified:s.Added:s.Deleted};if(this.extUri.isEqualOrParent(t,this.syncPreviewFolder.with({scheme:a,authority:"remote"})))return{content:e.remoteContent,localChange:null!==e.remoteContent?e.fileContent?s.Modified:s.Added:s.Deleted,remoteChange:s.None};if(this.extUri.isEqualOrParent(t,this.syncPreviewFolder))return void 0===o?{content:e.previewResult.content,localChange:e.previewResult.localChange,remoteChange:e.previewResult.remoteChange}:{content:o,localChange:null===o?null!==e.fileContent?s.Deleted:s.None:s.Modified,remoteChange:null===o?null!==e.remoteContent?s.Deleted:s.None:s.Modified};throw new Error(`Invalid Resource: ${t.toString()}`)}async applyResult(e,t,o,r){const i=o.map((([e,t])=>({...e,acceptResult:t})));i.every((({localChange:e,remoteChange:t})=>e===s.None&&t===s.None))&&this.logService.info(`${this.syncResourceLogLabel}: No changes found during synchronizing prompts.`),i.some((({localChange:e})=>e!==s.None))&&(await this.updateLocalBackup(i),await this.updateLocalPrompts(i,r)),i.some((({remoteChange:e})=>e!==s.None))&&(e=await this.updateRemotePrompts(i,e,r)),t?.ref!==e.ref&&(this.logService.trace(`${this.syncResourceLogLabel}: Updating last synchronized prompts...`),await this.updateLastSyncUserData(e),this.logService.info(`${this.syncResourceLogLabel}: Updated last synchronized prompts`));for(const{previewResource:e}of i)try{await this.fileService.del(e)}catch{}}getResourcePreviews(e,t,o,r){const i=new Map;for(const t of Object.keys(e.local.added)){const r={content:e.local.added[t],hasConflicts:!1,localChange:s.Added,remoteChange:s.None};i.set(t,{baseResource:this.extUri.joinPath(this.syncPreviewFolder,t).with({scheme:a,authority:"base"}),baseContent:null,fileContent:null,localResource:this.extUri.joinPath(this.syncPreviewFolder,t).with({scheme:a,authority:"local"}),localContent:null,remoteResource:this.extUri.joinPath(this.syncPreviewFolder,t).with({scheme:a,authority:"remote"}),remoteContent:o[t],previewResource:this.extUri.joinPath(this.syncPreviewFolder,t),previewResult:r,localChange:r.localChange,remoteChange:r.remoteChange,acceptedResource:this.extUri.joinPath(this.syncPreviewFolder,t).with({scheme:a,authority:"accepted"})})}for(const n of Object.keys(e.local.updated)){const c={content:e.local.updated[n],hasConflicts:!1,localChange:s.Modified,remoteChange:s.None},l=t[n]?t[n].value.toString():null;i.set(n,{baseResource:this.extUri.joinPath(this.syncPreviewFolder,n).with({scheme:a,authority:"base"}),baseContent:r[n]??null,localResource:this.extUri.joinPath(this.syncPreviewFolder,n).with({scheme:a,authority:"local"}),fileContent:t[n],localContent:l,remoteResource:this.extUri.joinPath(this.syncPreviewFolder,n).with({scheme:a,authority:"remote"}),remoteContent:o[n],previewResource:this.extUri.joinPath(this.syncPreviewFolder,n),previewResult:c,localChange:c.localChange,remoteChange:c.remoteChange,acceptedResource:this.extUri.joinPath(this.syncPreviewFolder,n).with({scheme:a,authority:"accepted"})})}for(const o of e.local.removed){const e={content:null,hasConflicts:!1,localChange:s.Deleted,remoteChange:s.None},n=t[o]?t[o].value.toString():null;i.set(o,{baseResource:this.extUri.joinPath(this.syncPreviewFolder,o).with({scheme:a,authority:"base"}),baseContent:r[o]??null,localResource:this.extUri.joinPath(this.syncPreviewFolder,o).with({scheme:a,authority:"local"}),fileContent:t[o],localContent:n,remoteResource:this.extUri.joinPath(this.syncPreviewFolder,o).with({scheme:a,authority:"remote"}),remoteContent:null,previewResource:this.extUri.joinPath(this.syncPreviewFolder,o),previewResult:e,localChange:e.localChange,remoteChange:e.remoteChange,acceptedResource:this.extUri.joinPath(this.syncPreviewFolder,o).with({scheme:a,authority:"accepted"})})}for(const o of Object.keys(e.remote.added)){const n={content:e.remote.added[o],hasConflicts:!1,localChange:s.None,remoteChange:s.Added},c=t[o]?t[o].value.toString():null;i.set(o,{baseResource:this.extUri.joinPath(this.syncPreviewFolder,o).with({scheme:a,authority:"base"}),baseContent:r[o]??null,localResource:this.extUri.joinPath(this.syncPreviewFolder,o).with({scheme:a,authority:"local"}),fileContent:t[o],localContent:c,remoteResource:this.extUri.joinPath(this.syncPreviewFolder,o).with({scheme:a,authority:"remote"}),remoteContent:null,previewResource:this.extUri.joinPath(this.syncPreviewFolder,o),previewResult:n,localChange:n.localChange,remoteChange:n.remoteChange,acceptedResource:this.extUri.joinPath(this.syncPreviewFolder,o).with({scheme:a,authority:"accepted"})})}for(const n of Object.keys(e.remote.updated)){const c={content:e.remote.updated[n],hasConflicts:!1,localChange:s.None,remoteChange:s.Modified},l=t[n]?t[n].value.toString():null;i.set(n,{baseResource:this.extUri.joinPath(this.syncPreviewFolder,n).with({scheme:a,authority:"base"}),baseContent:r[n]??null,localResource:this.extUri.joinPath(this.syncPreviewFolder,n).with({scheme:a,authority:"local"}),fileContent:t[n],localContent:l,remoteResource:this.extUri.joinPath(this.syncPreviewFolder,n).with({scheme:a,authority:"remote"}),remoteContent:o[n],previewResource:this.extUri.joinPath(this.syncPreviewFolder,n),previewResult:c,localChange:c.localChange,remoteChange:c.remoteChange,acceptedResource:this.extUri.joinPath(this.syncPreviewFolder,n).with({scheme:a,authority:"accepted"})})}for(const t of e.remote.removed){const e={content:null,hasConflicts:!1,localChange:s.None,remoteChange:s.Deleted};i.set(t,{baseResource:this.extUri.joinPath(this.syncPreviewFolder,t).with({scheme:a,authority:"base"}),baseContent:r[t]??null,localResource:this.extUri.joinPath(this.syncPreviewFolder,t).with({scheme:a,authority:"local"}),fileContent:null,localContent:null,remoteResource:this.extUri.joinPath(this.syncPreviewFolder,t).with({scheme:a,authority:"remote"}),remoteContent:o[t],previewResource:this.extUri.joinPath(this.syncPreviewFolder,t),previewResult:e,localChange:e.localChange,remoteChange:e.remoteChange,acceptedResource:this.extUri.joinPath(this.syncPreviewFolder,t).with({scheme:a,authority:"accepted"})})}for(const n of e.conflicts){const e={content:r[n]??null,hasConflicts:!0,localChange:t[n]?s.Modified:s.Added,remoteChange:o[n]?s.Modified:s.Added},c=t[n]?t[n].value.toString():null;i.set(n,{baseResource:this.extUri.joinPath(this.syncPreviewFolder,n).with({scheme:a,authority:"base"}),baseContent:r[n]??null,localResource:this.extUri.joinPath(this.syncPreviewFolder,n).with({scheme:a,authority:"local"}),fileContent:t[n]||null,localContent:c,remoteResource:this.extUri.joinPath(this.syncPreviewFolder,n).with({scheme:a,authority:"remote"}),remoteContent:o[n]||null,previewResource:this.extUri.joinPath(this.syncPreviewFolder,n),previewResult:e,localChange:e.localChange,remoteChange:e.remoteChange,acceptedResource:this.extUri.joinPath(this.syncPreviewFolder,n).with({scheme:a,authority:"accepted"})})}for(const e of Object.keys(t))if(!i.has(e)){const n={content:t[e]?t[e].value.toString():null,hasConflicts:!1,localChange:s.None,remoteChange:s.None},c=t[e]?t[e].value.toString():null;i.set(e,{baseResource:this.extUri.joinPath(this.syncPreviewFolder,e).with({scheme:a,authority:"base"}),baseContent:r[e]??null,localResource:this.extUri.joinPath(this.syncPreviewFolder,e).with({scheme:a,authority:"local"}),fileContent:t[e]||null,localContent:c,remoteResource:this.extUri.joinPath(this.syncPreviewFolder,e).with({scheme:a,authority:"remote"}),remoteContent:o[e]||null,previewResource:this.extUri.joinPath(this.syncPreviewFolder,e),previewResult:n,localChange:n.localChange,remoteChange:n.remoteChange,acceptedResource:this.extUri.joinPath(this.syncPreviewFolder,e).with({scheme:a,authority:"accepted"})})}return[...i.values()]}async resolveContent(e){return this.extUri.isEqualOrParent(e,this.syncPreviewFolder.with({scheme:a,authority:"remote"}))||this.extUri.isEqualOrParent(e,this.syncPreviewFolder.with({scheme:a,authority:"local"}))||this.extUri.isEqualOrParent(e,this.syncPreviewFolder.with({scheme:a,authority:"base"}))||this.extUri.isEqualOrParent(e,this.syncPreviewFolder.with({scheme:a,authority:"accepted"}))?this.resolvePreviewContent(e):null}async hasLocalData(){try{const e=await this.getPromptsFileContents();if(Object.keys(e).length)return!0}catch{}return!1}async updateLocalBackup(e){const t={};for(const o of e)o.fileContent&&(t[this.extUri.basename(o.localResource)]=o.fileContent);await this.backupLocal(JSON.stringify(this.toPromptContents(t)))}async updateLocalPrompts(e,t){for(const{fileContent:o,acceptResult:r,localResource:i,remoteResource:n,localChange:a}of e)if(a!==s.None){const e=n?this.extUri.basename(n):this.extUri.basename(i),c=this.extUri.joinPath(this.promptsFolder,e);a===s.Deleted?(this.logService.trace(`${this.syncResourceLogLabel}: Deleting prompt...`,this.extUri.basename(c)),await this.fileService.del(c),this.logService.info(`${this.syncResourceLogLabel}: Deleted prompt`,this.extUri.basename(c))):a===s.Added?(this.logService.trace(`${this.syncResourceLogLabel}: Creating prompt...`,this.extUri.basename(c)),await this.fileService.createFile(c,g.fromString(r.content),{overwrite:t}),this.logService.info(`${this.syncResourceLogLabel}: Created prompt`,this.extUri.basename(c))):(this.logService.trace(`${this.syncResourceLogLabel}: Updating prompt...`,this.extUri.basename(c)),await this.fileService.writeFile(c,g.fromString(r.content),t?void 0:o),this.logService.info(`${this.syncResourceLogLabel}: Updated prompt`,this.extUri.basename(c)))}}async updateRemotePrompts(e,t,o){const r=t.syncData?this.parsePrompts(t.syncData):{},i=U(r);for(const{acceptResult:t,localResource:o,remoteResource:r,remoteChange:n}of e)if(n!==s.None){const e=o?this.extUri.basename(o):this.extUri.basename(r);n===s.Deleted?delete i[e]:i[e]=t.content}return k(r,i)||(this.logService.trace(`${this.syncResourceLogLabel}: Updating remote prompts...`),t=await this.updateRemoteUserData(JSON.stringify(i),o?null:t.ref),this.logService.info(`${this.syncResourceLogLabel}: Updated remote prompts`)),t}parsePrompts(e){return B(e)}toPromptContents(e){const t={};for(const o of Object.keys(e))t[o]=e[o].value.toString();return t}async getPromptsFileContents(){const e={};let t;try{t=await this.fileService.resolve(this.promptsFolder)}catch(t){if(t instanceof N&&t.fileOperationResult===O.FILE_NOT_FOUND)return e;throw t}for(const o of t.children||[]){const t=o.resource;if(!x(t))continue;const s=this.extUri.relativePath(this.promptsFolder,t),r=await this.fileService.readFile(t);e[s]=r}return e}};d=y([u(2,D),u(3,A),u(4,b),u(5,q),u(6,E),u(7,$),u(8,L),u(9,_),u(10,F),u(11,j)],d);export{d as PromptsSynchronizer,B as parsePrompts};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { URI } from "../../../../base/common/uri.js";
+import { Event } from "../../../../base/common/event.js";
+import { VSBuffer } from "../../../../base/common/buffer.js";
+import { deepClone } from "../../../../base/common/objects.js";
+import { isPromptFile } from "../../../prompts/common/constants.js";
+import { IStorageService } from "../../../storage/common/storage.js";
+import { ITelemetryService } from "../../../telemetry/common/telemetry.js";
+import { IStringDictionary } from "../../../../base/common/collections.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { IUriIdentityService } from "../../../uriIdentity/common/uriIdentity.js";
+import { IEnvironmentService } from "../../../environment/common/environment.js";
+import { IUserDataProfile } from "../../../userDataProfile/common/userDataProfile.js";
+import { IConfigurationService } from "../../../configuration/common/configuration.js";
+import { areSame, IMergeResult as IPromptsMergeResult, merge } from "./promptsMerge.js";
+import { AbstractSynchroniser, IAcceptResult, IFileResourcePreview, IMergeResult } from "../abstractSynchronizer.js";
+import { FileOperationError, FileOperationResult, IFileContent, IFileService, IFileStat } from "../../../files/common/files.js";
+import { Change, IRemoteUserData, ISyncData, IUserDataSyncLocalStoreService, IUserDataSynchroniser, IUserDataSyncLogService, IUserDataSyncEnablementService, IUserDataSyncStoreService, SyncResource, USER_DATA_SYNC_SCHEME } from "../userDataSync.js";
+function parsePrompts(syncData) {
+  return JSON.parse(syncData.content);
+}
+__name(parsePrompts, "parsePrompts");
+let PromptsSynchronizer = class extends AbstractSynchroniser {
+  static {
+    __name(this, "PromptsSynchronizer");
+  }
+  version = 1;
+  promptsFolder;
+  constructor(profile, collection, environmentService, fileService, storageService, userDataSyncStoreService, userDataSyncLocalStoreService, logService, configurationService, userDataSyncEnablementService, telemetryService, uriIdentityService) {
+    const syncResource = { syncResource: SyncResource.Prompts, profile };
+    super(
+      syncResource,
+      collection,
+      fileService,
+      environmentService,
+      storageService,
+      userDataSyncStoreService,
+      userDataSyncLocalStoreService,
+      userDataSyncEnablementService,
+      telemetryService,
+      logService,
+      configurationService,
+      uriIdentityService
+    );
+    this.promptsFolder = profile.promptsHome;
+    this._register(this.fileService.watch(environmentService.userRoamingDataHome));
+    this._register(this.fileService.watch(this.promptsFolder));
+    this._register(Event.filter(this.fileService.onDidFilesChange, (e) => e.affects(this.promptsFolder))(() => this.triggerLocalChange()));
+  }
+  async generateSyncPreview(remoteUserData, lastSyncUserData, isRemoteDataFromCurrentMachine) {
+    const local = await this.getPromptsFileContents();
+    const localPrompts = this.toPromptContents(local);
+    const remotePrompts = remoteUserData.syncData ? this.parsePrompts(remoteUserData.syncData) : null;
+    lastSyncUserData = lastSyncUserData === null && isRemoteDataFromCurrentMachine ? remoteUserData : lastSyncUserData;
+    const lastSyncPrompts = lastSyncUserData && lastSyncUserData.syncData ? this.parsePrompts(lastSyncUserData.syncData) : null;
+    if (remotePrompts) {
+      this.logService.trace(`${this.syncResourceLogLabel}: Merging remote prompts with local prompts...`);
+    } else {
+      this.logService.trace(`${this.syncResourceLogLabel}: Remote prompts does not exist. Synchronizing prompts for the first time.`);
+    }
+    const mergeResult = merge(localPrompts, remotePrompts, lastSyncPrompts);
+    return this.getResourcePreviews(mergeResult, local, remotePrompts || {}, lastSyncPrompts || {});
+  }
+  async hasRemoteChanged(lastSyncUserData) {
+    const lastSync = lastSyncUserData.syncData ? this.parsePrompts(lastSyncUserData.syncData) : null;
+    if (lastSync === null) {
+      return true;
+    }
+    const local = await this.getPromptsFileContents();
+    const localPrompts = this.toPromptContents(local);
+    const mergeResult = merge(localPrompts, lastSync, lastSync);
+    return Object.keys(mergeResult.remote.added).length > 0 || Object.keys(mergeResult.remote.updated).length > 0 || mergeResult.remote.removed.length > 0 || mergeResult.conflicts.length > 0;
+  }
+  async getMergeResult(resourcePreview, token) {
+    return resourcePreview.previewResult;
+  }
+  async getAcceptResult(resourcePreview, resource, content, token) {
+    if (this.extUri.isEqualOrParent(resource, this.syncPreviewFolder.with({ scheme: USER_DATA_SYNC_SCHEME, authority: "local" }))) {
+      return {
+        content: resourcePreview.fileContent ? resourcePreview.fileContent.value.toString() : null,
+        localChange: Change.None,
+        remoteChange: resourcePreview.fileContent ? resourcePreview.remoteContent !== null ? Change.Modified : Change.Added : Change.Deleted
+      };
+    }
+    if (this.extUri.isEqualOrParent(resource, this.syncPreviewFolder.with({ scheme: USER_DATA_SYNC_SCHEME, authority: "remote" }))) {
+      return {
+        content: resourcePreview.remoteContent,
+        localChange: resourcePreview.remoteContent !== null ? resourcePreview.fileContent ? Change.Modified : Change.Added : Change.Deleted,
+        remoteChange: Change.None
+      };
+    }
+    if (this.extUri.isEqualOrParent(resource, this.syncPreviewFolder)) {
+      if (content === void 0) {
+        return {
+          content: resourcePreview.previewResult.content,
+          localChange: resourcePreview.previewResult.localChange,
+          remoteChange: resourcePreview.previewResult.remoteChange
+        };
+      } else {
+        return {
+          content,
+          localChange: content === null ? resourcePreview.fileContent !== null ? Change.Deleted : Change.None : Change.Modified,
+          remoteChange: content === null ? resourcePreview.remoteContent !== null ? Change.Deleted : Change.None : Change.Modified
+        };
+      }
+    }
+    throw new Error(`Invalid Resource: ${resource.toString()}`);
+  }
+  async applyResult(remoteUserData, lastSyncUserData, resourcePreviews, force) {
+    const accptedResourcePreviews = resourcePreviews.map(([resourcePreview, acceptResult]) => ({ ...resourcePreview, acceptResult }));
+    if (accptedResourcePreviews.every(({ localChange, remoteChange }) => localChange === Change.None && remoteChange === Change.None)) {
+      this.logService.info(`${this.syncResourceLogLabel}: No changes found during synchronizing prompts.`);
+    }
+    if (accptedResourcePreviews.some(({ localChange }) => localChange !== Change.None)) {
+      await this.updateLocalBackup(accptedResourcePreviews);
+      await this.updateLocalPrompts(accptedResourcePreviews, force);
+    }
+    if (accptedResourcePreviews.some(({ remoteChange }) => remoteChange !== Change.None)) {
+      remoteUserData = await this.updateRemotePrompts(accptedResourcePreviews, remoteUserData, force);
+    }
+    if (lastSyncUserData?.ref !== remoteUserData.ref) {
+      this.logService.trace(`${this.syncResourceLogLabel}: Updating last synchronized prompts...`);
+      await this.updateLastSyncUserData(remoteUserData);
+      this.logService.info(`${this.syncResourceLogLabel}: Updated last synchronized prompts`);
+    }
+    for (const { previewResource } of accptedResourcePreviews) {
+      try {
+        await this.fileService.del(previewResource);
+      } catch (e) {
+      }
+    }
+  }
+  getResourcePreviews(mergeResult, localFileContent, remote, base) {
+    const resourcePreviews = /* @__PURE__ */ new Map();
+    for (const key of Object.keys(mergeResult.local.added)) {
+      const previewResult = {
+        content: mergeResult.local.added[key],
+        hasConflicts: false,
+        localChange: Change.Added,
+        remoteChange: Change.None
+      };
+      resourcePreviews.set(key, {
+        baseResource: this.extUri.joinPath(this.syncPreviewFolder, key).with({ scheme: USER_DATA_SYNC_SCHEME, authority: "base" }),
+        baseContent: null,
+        fileContent: null,
+        localResource: this.extUri.joinPath(this.syncPreviewFolder, key).with({ scheme: USER_DATA_SYNC_SCHEME, authority: "local" }),
+        localContent: null,
+        remoteResource: this.extUri.joinPath(this.syncPreviewFolder, key).with({ scheme: USER_DATA_SYNC_SCHEME, authority: "remote" }),
+        remoteContent: remote[key],
+        previewResource: this.extUri.joinPath(this.syncPreviewFolder, key),
+        previewResult,
+        localChange: previewResult.localChange,
+        remoteChange: previewResult.remoteChange,
+        acceptedResource: this.extUri.joinPath(this.syncPreviewFolder, key).with({ scheme: USER_DATA_SYNC_SCHEME, authority: "accepted" })
+      });
+    }
+    for (const key of Object.keys(mergeResult.local.updated)) {
+      const previewResult = {
+        content: mergeResult.local.updated[key],
+        hasConflicts: false,
+        localChange: Change.Modified,
+        remoteChange: Change.None
+      };
+      const localContent = localFileContent[key] ? localFileContent[key].value.toString() : null;
+      resourcePreviews.set(key, {
+        baseResource: this.extUri.joinPath(this.syncPreviewFolder, key).with({ scheme: USER_DATA_SYNC_SCHEME, authority: "base" }),
+        baseContent: base[key] ?? null,
+        localResource: this.extUri.joinPath(this.syncPreviewFolder, key).with({ scheme: USER_DATA_SYNC_SCHEME, authority: "local" }),
+        fileContent: localFileContent[key],
+        localContent,
+        remoteResource: this.extUri.joinPath(this.syncPreviewFolder, key).with({ scheme: USER_DATA_SYNC_SCHEME, authority: "remote" }),
+        remoteContent: remote[key],
+        previewResource: this.extUri.joinPath(this.syncPreviewFolder, key),
+        previewResult,
+        localChange: previewResult.localChange,
+        remoteChange: previewResult.remoteChange,
+        acceptedResource: this.extUri.joinPath(this.syncPreviewFolder, key).with({ scheme: USER_DATA_SYNC_SCHEME, authority: "accepted" })
+      });
+    }
+    for (const key of mergeResult.local.removed) {
+      const previewResult = {
+        content: null,
+        hasConflicts: false,
+        localChange: Change.Deleted,
+        remoteChange: Change.None
+      };
+      const localContent = localFileContent[key] ? localFileContent[key].value.toString() : null;
+      resourcePreviews.set(key, {
+        baseResource: this.extUri.joinPath(this.syncPreviewFolder, key).with({ scheme: USER_DATA_SYNC_SCHEME, authority: "base" }),
+        baseContent: base[key] ?? null,
+        localResource: this.extUri.joinPath(this.syncPreviewFolder, key).with({ scheme: USER_DATA_SYNC_SCHEME, authority: "local" }),
+        fileContent: localFileContent[key],
+        localContent,
+        remoteResource: this.extUri.joinPath(this.syncPreviewFolder, key).with({ scheme: USER_DATA_SYNC_SCHEME, authority: "remote" }),
+        remoteContent: null,
+        previewResource: this.extUri.joinPath(this.syncPreviewFolder, key),
+        previewResult,
+        localChange: previewResult.localChange,
+        remoteChange: previewResult.remoteChange,
+        acceptedResource: this.extUri.joinPath(this.syncPreviewFolder, key).with({ scheme: USER_DATA_SYNC_SCHEME, authority: "accepted" })
+      });
+    }
+    for (const key of Object.keys(mergeResult.remote.added)) {
+      const previewResult = {
+        content: mergeResult.remote.added[key],
+        hasConflicts: false,
+        localChange: Change.None,
+        remoteChange: Change.Added
+      };
+      const localContent = localFileContent[key] ? localFileContent[key].value.toString() : null;
+      resourcePreviews.set(key, {
+        baseResource: this.extUri.joinPath(this.syncPreviewFolder, key).with({ scheme: USER_DATA_SYNC_SCHEME, authority: "base" }),
+        baseContent: base[key] ?? null,
+        localResource: this.extUri.joinPath(this.syncPreviewFolder, key).with({ scheme: USER_DATA_SYNC_SCHEME, authority: "local" }),
+        fileContent: localFileContent[key],
+        localContent,
+        remoteResource: this.extUri.joinPath(this.syncPreviewFolder, key).with({ scheme: USER_DATA_SYNC_SCHEME, authority: "remote" }),
+        remoteContent: null,
+        previewResource: this.extUri.joinPath(this.syncPreviewFolder, key),
+        previewResult,
+        localChange: previewResult.localChange,
+        remoteChange: previewResult.remoteChange,
+        acceptedResource: this.extUri.joinPath(this.syncPreviewFolder, key).with({ scheme: USER_DATA_SYNC_SCHEME, authority: "accepted" })
+      });
+    }
+    for (const key of Object.keys(mergeResult.remote.updated)) {
+      const previewResult = {
+        content: mergeResult.remote.updated[key],
+        hasConflicts: false,
+        localChange: Change.None,
+        remoteChange: Change.Modified
+      };
+      const localContent = localFileContent[key] ? localFileContent[key].value.toString() : null;
+      resourcePreviews.set(key, {
+        baseResource: this.extUri.joinPath(this.syncPreviewFolder, key).with({ scheme: USER_DATA_SYNC_SCHEME, authority: "base" }),
+        baseContent: base[key] ?? null,
+        localResource: this.extUri.joinPath(this.syncPreviewFolder, key).with({ scheme: USER_DATA_SYNC_SCHEME, authority: "local" }),
+        fileContent: localFileContent[key],
+        localContent,
+        remoteResource: this.extUri.joinPath(this.syncPreviewFolder, key).with({ scheme: USER_DATA_SYNC_SCHEME, authority: "remote" }),
+        remoteContent: remote[key],
+        previewResource: this.extUri.joinPath(this.syncPreviewFolder, key),
+        previewResult,
+        localChange: previewResult.localChange,
+        remoteChange: previewResult.remoteChange,
+        acceptedResource: this.extUri.joinPath(this.syncPreviewFolder, key).with({ scheme: USER_DATA_SYNC_SCHEME, authority: "accepted" })
+      });
+    }
+    for (const key of mergeResult.remote.removed) {
+      const previewResult = {
+        content: null,
+        hasConflicts: false,
+        localChange: Change.None,
+        remoteChange: Change.Deleted
+      };
+      resourcePreviews.set(key, {
+        baseResource: this.extUri.joinPath(this.syncPreviewFolder, key).with({ scheme: USER_DATA_SYNC_SCHEME, authority: "base" }),
+        baseContent: base[key] ?? null,
+        localResource: this.extUri.joinPath(this.syncPreviewFolder, key).with({ scheme: USER_DATA_SYNC_SCHEME, authority: "local" }),
+        fileContent: null,
+        localContent: null,
+        remoteResource: this.extUri.joinPath(this.syncPreviewFolder, key).with({ scheme: USER_DATA_SYNC_SCHEME, authority: "remote" }),
+        remoteContent: remote[key],
+        previewResource: this.extUri.joinPath(this.syncPreviewFolder, key),
+        previewResult,
+        localChange: previewResult.localChange,
+        remoteChange: previewResult.remoteChange,
+        acceptedResource: this.extUri.joinPath(this.syncPreviewFolder, key).with({ scheme: USER_DATA_SYNC_SCHEME, authority: "accepted" })
+      });
+    }
+    for (const key of mergeResult.conflicts) {
+      const previewResult = {
+        content: base[key] ?? null,
+        hasConflicts: true,
+        localChange: localFileContent[key] ? Change.Modified : Change.Added,
+        remoteChange: remote[key] ? Change.Modified : Change.Added
+      };
+      const localContent = localFileContent[key] ? localFileContent[key].value.toString() : null;
+      resourcePreviews.set(key, {
+        baseResource: this.extUri.joinPath(this.syncPreviewFolder, key).with({ scheme: USER_DATA_SYNC_SCHEME, authority: "base" }),
+        baseContent: base[key] ?? null,
+        localResource: this.extUri.joinPath(this.syncPreviewFolder, key).with({ scheme: USER_DATA_SYNC_SCHEME, authority: "local" }),
+        fileContent: localFileContent[key] || null,
+        localContent,
+        remoteResource: this.extUri.joinPath(this.syncPreviewFolder, key).with({ scheme: USER_DATA_SYNC_SCHEME, authority: "remote" }),
+        remoteContent: remote[key] || null,
+        previewResource: this.extUri.joinPath(this.syncPreviewFolder, key),
+        previewResult,
+        localChange: previewResult.localChange,
+        remoteChange: previewResult.remoteChange,
+        acceptedResource: this.extUri.joinPath(this.syncPreviewFolder, key).with({ scheme: USER_DATA_SYNC_SCHEME, authority: "accepted" })
+      });
+    }
+    for (const key of Object.keys(localFileContent)) {
+      if (!resourcePreviews.has(key)) {
+        const previewResult = {
+          content: localFileContent[key] ? localFileContent[key].value.toString() : null,
+          hasConflicts: false,
+          localChange: Change.None,
+          remoteChange: Change.None
+        };
+        const localContent = localFileContent[key] ? localFileContent[key].value.toString() : null;
+        resourcePreviews.set(key, {
+          baseResource: this.extUri.joinPath(this.syncPreviewFolder, key).with({ scheme: USER_DATA_SYNC_SCHEME, authority: "base" }),
+          baseContent: base[key] ?? null,
+          localResource: this.extUri.joinPath(this.syncPreviewFolder, key).with({ scheme: USER_DATA_SYNC_SCHEME, authority: "local" }),
+          fileContent: localFileContent[key] || null,
+          localContent,
+          remoteResource: this.extUri.joinPath(this.syncPreviewFolder, key).with({ scheme: USER_DATA_SYNC_SCHEME, authority: "remote" }),
+          remoteContent: remote[key] || null,
+          previewResource: this.extUri.joinPath(this.syncPreviewFolder, key),
+          previewResult,
+          localChange: previewResult.localChange,
+          remoteChange: previewResult.remoteChange,
+          acceptedResource: this.extUri.joinPath(this.syncPreviewFolder, key).with({ scheme: USER_DATA_SYNC_SCHEME, authority: "accepted" })
+        });
+      }
+    }
+    return [...resourcePreviews.values()];
+  }
+  async resolveContent(uri) {
+    if (this.extUri.isEqualOrParent(uri, this.syncPreviewFolder.with({ scheme: USER_DATA_SYNC_SCHEME, authority: "remote" })) || this.extUri.isEqualOrParent(uri, this.syncPreviewFolder.with({ scheme: USER_DATA_SYNC_SCHEME, authority: "local" })) || this.extUri.isEqualOrParent(uri, this.syncPreviewFolder.with({ scheme: USER_DATA_SYNC_SCHEME, authority: "base" })) || this.extUri.isEqualOrParent(uri, this.syncPreviewFolder.with({ scheme: USER_DATA_SYNC_SCHEME, authority: "accepted" }))) {
+      return this.resolvePreviewContent(uri);
+    }
+    return null;
+  }
+  async hasLocalData() {
+    try {
+      const local = await this.getPromptsFileContents();
+      if (Object.keys(local).length) {
+        return true;
+      }
+    } catch (error) {
+    }
+    return false;
+  }
+  async updateLocalBackup(resourcePreviews) {
+    const local = {};
+    for (const resourcePreview of resourcePreviews) {
+      if (resourcePreview.fileContent) {
+        local[this.extUri.basename(resourcePreview.localResource)] = resourcePreview.fileContent;
+      }
+    }
+    await this.backupLocal(JSON.stringify(this.toPromptContents(local)));
+  }
+  async updateLocalPrompts(resourcePreviews, force) {
+    for (const { fileContent, acceptResult, localResource, remoteResource, localChange } of resourcePreviews) {
+      if (localChange !== Change.None) {
+        const key = remoteResource ? this.extUri.basename(remoteResource) : this.extUri.basename(localResource);
+        const resource = this.extUri.joinPath(this.promptsFolder, key);
+        if (localChange === Change.Deleted) {
+          this.logService.trace(`${this.syncResourceLogLabel}: Deleting prompt...`, this.extUri.basename(resource));
+          await this.fileService.del(resource);
+          this.logService.info(`${this.syncResourceLogLabel}: Deleted prompt`, this.extUri.basename(resource));
+        } else if (localChange === Change.Added) {
+          this.logService.trace(`${this.syncResourceLogLabel}: Creating prompt...`, this.extUri.basename(resource));
+          await this.fileService.createFile(resource, VSBuffer.fromString(acceptResult.content), { overwrite: force });
+          this.logService.info(`${this.syncResourceLogLabel}: Created prompt`, this.extUri.basename(resource));
+        } else {
+          this.logService.trace(`${this.syncResourceLogLabel}: Updating prompt...`, this.extUri.basename(resource));
+          await this.fileService.writeFile(resource, VSBuffer.fromString(acceptResult.content), force ? void 0 : fileContent);
+          this.logService.info(`${this.syncResourceLogLabel}: Updated prompt`, this.extUri.basename(resource));
+        }
+      }
+    }
+  }
+  async updateRemotePrompts(resourcePreviews, remoteUserData, forcePush) {
+    const currentPrompts = remoteUserData.syncData ? this.parsePrompts(remoteUserData.syncData) : {};
+    const newPrompts = deepClone(currentPrompts);
+    for (const { acceptResult, localResource, remoteResource, remoteChange } of resourcePreviews) {
+      if (remoteChange !== Change.None) {
+        const key = localResource ? this.extUri.basename(localResource) : this.extUri.basename(remoteResource);
+        if (remoteChange === Change.Deleted) {
+          delete newPrompts[key];
+        } else {
+          newPrompts[key] = acceptResult.content;
+        }
+      }
+    }
+    if (!areSame(currentPrompts, newPrompts)) {
+      this.logService.trace(`${this.syncResourceLogLabel}: Updating remote prompts...`);
+      remoteUserData = await this.updateRemoteUserData(JSON.stringify(newPrompts), forcePush ? null : remoteUserData.ref);
+      this.logService.info(`${this.syncResourceLogLabel}: Updated remote prompts`);
+    }
+    return remoteUserData;
+  }
+  parsePrompts(syncData) {
+    return parsePrompts(syncData);
+  }
+  toPromptContents(fileContents) {
+    const prompts = {};
+    for (const key of Object.keys(fileContents)) {
+      prompts[key] = fileContents[key].value.toString();
+    }
+    return prompts;
+  }
+  async getPromptsFileContents() {
+    const prompts = {};
+    let stat;
+    try {
+      stat = await this.fileService.resolve(this.promptsFolder);
+    } catch (e) {
+      if (e instanceof FileOperationError && e.fileOperationResult === FileOperationResult.FILE_NOT_FOUND) {
+        return prompts;
+      } else {
+        throw e;
+      }
+    }
+    for (const entry of stat.children || []) {
+      const resource = entry.resource;
+      if (!isPromptFile(resource)) {
+        continue;
+      }
+      const key = this.extUri.relativePath(this.promptsFolder, resource);
+      const content = await this.fileService.readFile(resource);
+      prompts[key] = content;
+    }
+    return prompts;
+  }
+};
+PromptsSynchronizer = __decorateClass([
+  __decorateParam(2, IEnvironmentService),
+  __decorateParam(3, IFileService),
+  __decorateParam(4, IStorageService),
+  __decorateParam(5, IUserDataSyncStoreService),
+  __decorateParam(6, IUserDataSyncLocalStoreService),
+  __decorateParam(7, IUserDataSyncLogService),
+  __decorateParam(8, IConfigurationService),
+  __decorateParam(9, IUserDataSyncEnablementService),
+  __decorateParam(10, ITelemetryService),
+  __decorateParam(11, IUriIdentityService)
+], PromptsSynchronizer);
+export {
+  PromptsSynchronizer,
+  parsePrompts
+};
+//# sourceMappingURL=promptsSync.js.map

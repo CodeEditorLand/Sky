@@ -1,1 +1,178 @@
-var w=Object.defineProperty,y=Object.getOwnPropertyDescriptor,I=(e,o,t,r)=>{for(var n,i=r>1?void 0:r?y(o,t):o,s=e.length-1;s>=0;s--)(n=e[s])&&(i=(r?n(o,t,i):n(i))||i);return r&&i&&w(o,t,i),i},d=(e,o)=>(t,r)=>o(t,r,e);import*as u from"../../../../../base/browser/dom.js";import{MarkdownString as T}from"../../../../../base/common/htmlContent.js";import{DisposableStore as C}from"../../../../../base/common/lifecycle.js";import{autorun as b,autorunWithStore as E,constObservable as _}from"../../../../../base/common/observable.js";import{MouseTargetType as c}from"../../../../browser/editorBrowser.js";import{EditorOption as f}from"../../../../common/config/editorOptions.js";import{Range as A}from"../../../../common/core/range.js";import{ILanguageService as x}from"../../../../common/languages/language.js";import"../../../../common/model.js";import{HoverAnchorType as R,HoverForeignElementAnchor as p,RenderedHoverParts as P}from"../../../hover/browser/hoverTypes.js";import{InlineCompletionsController as S}from"../controller/inlineCompletionsController.js";import{InlineSuggestionHintsContentWidget as N}from"./inlineCompletionsHintsWidget.js";import{MarkdownRenderer as O}from"../../../../browser/widget/markdownRenderer/browser/markdownRenderer.js";import*as H from"../../../../../nls.js";import{IAccessibilityService as M}from"../../../../../platform/accessibility/common/accessibility.js";import{IInstantiationService as D}from"../../../../../platform/instantiation/common/instantiation.js";import{IOpenerService as k}from"../../../../../platform/opener/common/opener.js";import{ITelemetryService as F}from"../../../../../platform/telemetry/common/telemetry.js";import{GhostTextView as W}from"../view/ghostText/ghostTextView.js";class B{constructor(e,o,t){this.owner=e,this.range=o,this.controller=t}isValidForHoverAnchor(e){return e.type===R.Range&&this.range.startColumn<=e.range.startColumn&&this.range.endColumn>=e.range.endColumn}}let m=class{constructor(e,o,t,r,n,i){this._editor=e,this._languageService=o,this._openerService=t,this.accessibilityService=r,this._instantiationService=n,this._telemetryService=i}hoverOrdinal=4;suggestHoverAnchor(e){const o=S.get(this._editor);if(!o)return null;const t=e.target;if(t.type===c.CONTENT_VIEW_ZONE){const r=t.detail;if(o.shouldShowHoverAtViewZone(r.viewZoneId))return new p(1e3,this,A.fromPositions(this._editor.getModel().validatePosition(r.positionBefore||r.position)),e.event.posx,e.event.posy,!1)}if(t.type===c.CONTENT_EMPTY&&o.shouldShowHoverAt(t.range))return new p(1e3,this,t.range,e.event.posx,e.event.posy,!1);if(t.type===c.CONTENT_TEXT&&t.detail.mightBeForeignElement&&o.shouldShowHoverAt(t.range))return new p(1e3,this,t.range,e.event.posx,e.event.posy,!1);if(t.type===c.CONTENT_WIDGET&&t.element){const r=W.getWarningWidgetContext(t.element);if(r&&o.shouldShowHoverAt(r.range))return new p(1e3,this,r.range,e.event.posx,e.event.posy,!1)}return null}computeSync(e,o){if("onHover"!==this._editor.getOption(f.inlineSuggest).showToolbar)return[];const t=S.get(this._editor);return t&&t.shouldShowHoverAt(e.range)?[new B(this,e.range,t)]:[]}renderHoverParts(e,o){const t=new C,r=o[0];this._telemetryService.publicLog2("inlineCompletionHover.shown"),this.accessibilityService.isScreenReaderOptimized()&&!this._editor.getOption(f.screenReaderAnnounceInlineSuggestion)&&t.add(this.renderScreenReaderText(e,r));const n=r.controller.model.get(),i=document.createElement("div");e.fragment.appendChild(i),t.add(E(((o,t)=>{const r=t.add(this._instantiationService.createInstance(N.hot.read(o),this._editor,!1,_(null),n.selectedInlineCompletionIndex,n.inlineCompletionsCount,n.activeCommands,n.warning,(()=>{e.onContentsChanged()})));i.replaceChildren(r.getDomNode())}))),n.triggerExplicitly();return new P([{hoverPart:r,hoverElement:i,dispose(){t.dispose()}}])}getAccessibleContent(e){return H.localize("hoverAccessibilityStatusBar","There are inline completions here")}renderScreenReaderText(e,o){const t=new C,r=u.$,n=r("div.hover-row.markdown-hover"),i=u.append(n,r("div.hover-contents",{"aria-live":"assertive"})),s=new O({editor:this._editor},this._languageService,this._openerService);return t.add(b((r=>{const n=o.controller.model.read(r)?.primaryGhostText.read(r);if(n){const o=this._editor.getModel().getLineContent(n.lineNumber);(o=>{const r=H.localize("inlineSuggestionFollows","Suggestion:"),n=t.add(s.render((new T).appendText(r).appendCodeblock("text",o),{asyncRenderCallback:()=>{i.className="hover-contents code-hover-contents",e.onContentsChanged()}}));i.replaceChildren(n.element)})(n.renderForScreenReader(o))}else u.reset(i)}))),e.fragment.appendChild(n),t}};m=I([d(1,x),d(2,k),d(3,M),d(4,D),d(5,F)],m);export{B as InlineCompletionsHover,m as InlineCompletionsHoverParticipant};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import * as dom from "../../../../../base/browser/dom.js";
+import { MarkdownString } from "../../../../../base/common/htmlContent.js";
+import { DisposableStore, IDisposable } from "../../../../../base/common/lifecycle.js";
+import { autorun, autorunWithStore, constObservable } from "../../../../../base/common/observable.js";
+import { ICodeEditor, IEditorMouseEvent, MouseTargetType } from "../../../../browser/editorBrowser.js";
+import { EditorOption } from "../../../../common/config/editorOptions.js";
+import { Range } from "../../../../common/core/range.js";
+import { ILanguageService } from "../../../../common/languages/language.js";
+import { IModelDecoration } from "../../../../common/model.js";
+import { HoverAnchor, HoverAnchorType, HoverForeignElementAnchor, IEditorHoverParticipant, IEditorHoverRenderContext, IHoverPart, IRenderedHoverPart, IRenderedHoverParts, RenderedHoverParts } from "../../../hover/browser/hoverTypes.js";
+import { InlineCompletionsController } from "../controller/inlineCompletionsController.js";
+import { InlineSuggestionHintsContentWidget } from "./inlineCompletionsHintsWidget.js";
+import { MarkdownRenderer } from "../../../../browser/widget/markdownRenderer/browser/markdownRenderer.js";
+import * as nls from "../../../../../nls.js";
+import { IAccessibilityService } from "../../../../../platform/accessibility/common/accessibility.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { IOpenerService } from "../../../../../platform/opener/common/opener.js";
+import { ITelemetryService } from "../../../../../platform/telemetry/common/telemetry.js";
+import { GhostTextView } from "../view/ghostText/ghostTextView.js";
+class InlineCompletionsHover {
+  constructor(owner, range, controller) {
+    this.owner = owner;
+    this.range = range;
+    this.controller = controller;
+  }
+  static {
+    __name(this, "InlineCompletionsHover");
+  }
+  isValidForHoverAnchor(anchor) {
+    return anchor.type === HoverAnchorType.Range && this.range.startColumn <= anchor.range.startColumn && this.range.endColumn >= anchor.range.endColumn;
+  }
+}
+let InlineCompletionsHoverParticipant = class {
+  constructor(_editor, _languageService, _openerService, accessibilityService, _instantiationService, _telemetryService) {
+    this._editor = _editor;
+    this._languageService = _languageService;
+    this._openerService = _openerService;
+    this.accessibilityService = accessibilityService;
+    this._instantiationService = _instantiationService;
+    this._telemetryService = _telemetryService;
+  }
+  static {
+    __name(this, "InlineCompletionsHoverParticipant");
+  }
+  hoverOrdinal = 4;
+  suggestHoverAnchor(mouseEvent) {
+    const controller = InlineCompletionsController.get(this._editor);
+    if (!controller) {
+      return null;
+    }
+    const target = mouseEvent.target;
+    if (target.type === MouseTargetType.CONTENT_VIEW_ZONE) {
+      const viewZoneData = target.detail;
+      if (controller.shouldShowHoverAtViewZone(viewZoneData.viewZoneId)) {
+        return new HoverForeignElementAnchor(1e3, this, Range.fromPositions(this._editor.getModel().validatePosition(viewZoneData.positionBefore || viewZoneData.position)), mouseEvent.event.posx, mouseEvent.event.posy, false);
+      }
+    }
+    if (target.type === MouseTargetType.CONTENT_EMPTY) {
+      if (controller.shouldShowHoverAt(target.range)) {
+        return new HoverForeignElementAnchor(1e3, this, target.range, mouseEvent.event.posx, mouseEvent.event.posy, false);
+      }
+    }
+    if (target.type === MouseTargetType.CONTENT_TEXT) {
+      const mightBeForeignElement = target.detail.mightBeForeignElement;
+      if (mightBeForeignElement && controller.shouldShowHoverAt(target.range)) {
+        return new HoverForeignElementAnchor(1e3, this, target.range, mouseEvent.event.posx, mouseEvent.event.posy, false);
+      }
+    }
+    if (target.type === MouseTargetType.CONTENT_WIDGET && target.element) {
+      const ctx = GhostTextView.getWarningWidgetContext(target.element);
+      if (ctx && controller.shouldShowHoverAt(ctx.range)) {
+        return new HoverForeignElementAnchor(1e3, this, ctx.range, mouseEvent.event.posx, mouseEvent.event.posy, false);
+      }
+    }
+    return null;
+  }
+  computeSync(anchor, lineDecorations) {
+    if (this._editor.getOption(EditorOption.inlineSuggest).showToolbar !== "onHover") {
+      return [];
+    }
+    const controller = InlineCompletionsController.get(this._editor);
+    if (controller && controller.shouldShowHoverAt(anchor.range)) {
+      return [new InlineCompletionsHover(this, anchor.range, controller)];
+    }
+    return [];
+  }
+  renderHoverParts(context, hoverParts) {
+    const disposables = new DisposableStore();
+    const part = hoverParts[0];
+    this._telemetryService.publicLog2("inlineCompletionHover.shown");
+    if (this.accessibilityService.isScreenReaderOptimized() && !this._editor.getOption(EditorOption.screenReaderAnnounceInlineSuggestion)) {
+      disposables.add(this.renderScreenReaderText(context, part));
+    }
+    const model = part.controller.model.get();
+    const widgetNode = document.createElement("div");
+    context.fragment.appendChild(widgetNode);
+    disposables.add(autorunWithStore((reader, store) => {
+      const w = store.add(this._instantiationService.createInstance(
+        InlineSuggestionHintsContentWidget.hot.read(reader),
+        this._editor,
+        false,
+        constObservable(null),
+        model.selectedInlineCompletionIndex,
+        model.inlineCompletionsCount,
+        model.activeCommands,
+        model.warning,
+        () => {
+          context.onContentsChanged();
+        }
+      ));
+      widgetNode.replaceChildren(w.getDomNode());
+    }));
+    model.triggerExplicitly();
+    const renderedHoverPart = {
+      hoverPart: part,
+      hoverElement: widgetNode,
+      dispose() {
+        disposables.dispose();
+      }
+    };
+    return new RenderedHoverParts([renderedHoverPart]);
+  }
+  getAccessibleContent(hoverPart) {
+    return nls.localize("hoverAccessibilityStatusBar", "There are inline completions here");
+  }
+  renderScreenReaderText(context, part) {
+    const disposables = new DisposableStore();
+    const $ = dom.$;
+    const markdownHoverElement = $("div.hover-row.markdown-hover");
+    const hoverContentsElement = dom.append(markdownHoverElement, $("div.hover-contents", { ["aria-live"]: "assertive" }));
+    const renderer = new MarkdownRenderer({ editor: this._editor }, this._languageService, this._openerService);
+    const render = /* @__PURE__ */ __name((code) => {
+      const inlineSuggestionAvailable = nls.localize("inlineSuggestionFollows", "Suggestion:");
+      const renderedContents = disposables.add(renderer.render(new MarkdownString().appendText(inlineSuggestionAvailable).appendCodeblock("text", code), {
+        asyncRenderCallback: /* @__PURE__ */ __name(() => {
+          hoverContentsElement.className = "hover-contents code-hover-contents";
+          context.onContentsChanged();
+        }, "asyncRenderCallback")
+      }));
+      hoverContentsElement.replaceChildren(renderedContents.element);
+    }, "render");
+    disposables.add(autorun((reader) => {
+      const ghostText = part.controller.model.read(reader)?.primaryGhostText.read(reader);
+      if (ghostText) {
+        const lineText = this._editor.getModel().getLineContent(ghostText.lineNumber);
+        render(ghostText.renderForScreenReader(lineText));
+      } else {
+        dom.reset(hoverContentsElement);
+      }
+    }));
+    context.fragment.appendChild(markdownHoverElement);
+    return disposables;
+  }
+};
+InlineCompletionsHoverParticipant = __decorateClass([
+  __decorateParam(1, ILanguageService),
+  __decorateParam(2, IOpenerService),
+  __decorateParam(3, IAccessibilityService),
+  __decorateParam(4, IInstantiationService),
+  __decorateParam(5, ITelemetryService)
+], InlineCompletionsHoverParticipant);
+export {
+  InlineCompletionsHover,
+  InlineCompletionsHoverParticipant
+};
+//# sourceMappingURL=hoverParticipant.js.map

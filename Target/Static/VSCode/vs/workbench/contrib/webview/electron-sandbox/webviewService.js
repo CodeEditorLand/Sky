@@ -1,1 +1,19 @@
-import"../browser/webview.js";import{WebviewService as t}from"../browser/webviewService.js";import{ElectronWebviewElement as r}from"./webviewElement.js";class c extends t{createWebviewElement(e){const t=this._instantiationService.createInstance(r,e,this._webviewThemeDataProvider);return this.registerNewWebview(t),t}}export{c as ElectronWebviewService};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { IWebviewElement, WebviewInitInfo } from "../browser/webview.js";
+import { WebviewService } from "../browser/webviewService.js";
+import { ElectronWebviewElement } from "./webviewElement.js";
+class ElectronWebviewService extends WebviewService {
+  static {
+    __name(this, "ElectronWebviewService");
+  }
+  createWebviewElement(initInfo) {
+    const webview = this._instantiationService.createInstance(ElectronWebviewElement, initInfo, this._webviewThemeDataProvider);
+    this.registerNewWebview(webview);
+    return webview;
+  }
+}
+export {
+  ElectronWebviewService
+};
+//# sourceMappingURL=webviewService.js.map

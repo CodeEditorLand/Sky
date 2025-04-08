@@ -1,1 +1,297 @@
-import{localize2 as A}from"../../../nls.js";import{IEditorGroupsService as D,GroupDirection as s,GroupLocation as I}from"../../services/editor/common/editorGroupsService.js";import{IWorkbenchLayoutService as f,Parts as e}from"../../services/layout/browser/layoutService.js";import{Action2 as d,registerAction2 as P}from"../../../platform/actions/common/actions.js";import{Categories as R}from"../../../platform/action/common/actionCommonCategories.js";import{Direction as u}from"../../../base/browser/ui/grid/grid.js";import{KeyCode as l,KeyMod as w}from"../../../base/common/keyCodes.js";import{IEditorService as B}from"../../services/editor/common/editorService.js";import"../../common/panecomposite.js";import"../../common/composite.js";import{IPaneCompositePartService as S}from"../../services/panecomposite/browser/panecomposite.js";import{ViewContainerLocation as T}from"../../common/views.js";import{KeybindingWeight as v}from"../../../platform/keybinding/common/keybindingsRegistry.js";import"../../../platform/instantiation/common/instantiation.js";import{getActiveWindow as g}from"../../../base/browser/dom.js";import{isAuxiliaryWindow as L}from"../../../base/browser/window.js";class p extends d{constructor(e,t){super(e),this.direction=t}run(t){const i=t.get(f),o=t.get(D),r=t.get(S),s=i.hasFocus(e.EDITOR_PART),a=i.hasFocus(e.PANEL_PART),n=i.hasFocus(e.SIDEBAR_PART),c=i.hasFocus(e.AUXILIARYBAR_PART);let A;if(s){if(this.navigateAcrossEditorGroup(this.toGroupDirection(this.direction),o))return;A=i.getVisibleNeighborPart(e.EDITOR_PART,this.direction)}a&&(A=i.getVisibleNeighborPart(e.PANEL_PART,this.direction)),n&&(A=i.getVisibleNeighborPart(e.SIDEBAR_PART,this.direction)),c&&(A=A=i.getVisibleNeighborPart(e.AUXILIARYBAR_PART,this.direction)),A===e.EDITOR_PART?this.navigateBackToEditorGroup(this.toGroupDirection(this.direction),o)||this.navigateToEditorGroup(this.direction===u.Right?I.FIRST:I.LAST,o):A===e.SIDEBAR_PART?this.navigateToSidebar(i,r):A===e.PANEL_PART?this.navigateToPanel(i,r):A===e.AUXILIARYBAR_PART&&this.navigateToAuxiliaryBar(i,r)}async navigateToPanel(t,i){if(!t.isVisible(e.PANEL_PART))return!1;const o=i.getActivePaneComposite(T.Panel);if(!o)return!1;const r=o.getId();return await i.openPaneComposite(r,T.Panel,!0)||!1}async navigateToSidebar(t,i){if(!t.isVisible(e.SIDEBAR_PART))return!1;const o=i.getActivePaneComposite(T.Sidebar);if(!o)return!1;const r=o.getId();return!!await i.openPaneComposite(r,T.Sidebar,!0)}async navigateToAuxiliaryBar(t,i){if(!t.isVisible(e.AUXILIARYBAR_PART))return!1;const o=i.getActivePaneComposite(T.AuxiliaryBar);if(!o)return!1;const r=o.getId();return await i.openPaneComposite(r,T.AuxiliaryBar,!0)||!1}navigateAcrossEditorGroup(e,t){return this.doNavigateToEditorGroup({direction:e},t)}navigateToEditorGroup(e,t){return this.doNavigateToEditorGroup({location:e},t)}navigateBackToEditorGroup(e,t){if(!t.activeGroup)return!1;const i=this.toOppositeDirection(e);return!t.findGroup({direction:i},t.activeGroup)&&(t.activeGroup.focus(),!0)}toGroupDirection(e){switch(e){case u.Down:return s.DOWN;case u.Left:return s.LEFT;case u.Right:return s.RIGHT;case u.Up:return s.UP}}toOppositeDirection(e){switch(e){case s.UP:return s.DOWN;case s.RIGHT:return s.LEFT;case s.LEFT:return s.RIGHT;case s.DOWN:return s.UP}}doNavigateToEditorGroup(e,t){const i=t.findGroup(e,t.activeGroup);return!!i&&(i.focus(),!0)}}P(class extends p{constructor(){super({id:"workbench.action.navigateLeft",title:A("navigateLeft","Navigate to the View on the Left"),category:R.View,f1:!0},u.Left)}}),P(class extends p{constructor(){super({id:"workbench.action.navigateRight",title:A("navigateRight","Navigate to the View on the Right"),category:R.View,f1:!0},u.Right)}}),P(class extends p{constructor(){super({id:"workbench.action.navigateUp",title:A("navigateUp","Navigate to the View Above"),category:R.View,f1:!0},u.Up)}}),P(class extends p{constructor(){super({id:"workbench.action.navigateDown",title:A("navigateDown","Navigate to the View Below"),category:R.View,f1:!0},u.Down)}});class h extends d{constructor(e,t){super(e),this.focusNext=t}run(e){const t=e.get(f),i=e.get(B);this.focusNextOrPreviousPart(t,i,this.focusNext)}findVisibleNeighbour(t,i,o){const r=g();let s;if(L(r))if(i===e.EDITOR_PART)s=e.STATUSBAR_PART;else s=e.EDITOR_PART;else switch(i){case e.EDITOR_PART:s=o?e.PANEL_PART:e.SIDEBAR_PART;break;case e.PANEL_PART:s=o?e.AUXILIARYBAR_PART:e.EDITOR_PART;break;case e.AUXILIARYBAR_PART:s=o?e.STATUSBAR_PART:e.PANEL_PART;break;case e.STATUSBAR_PART:s=o?e.ACTIVITYBAR_PART:e.AUXILIARYBAR_PART;break;case e.ACTIVITYBAR_PART:s=o?e.SIDEBAR_PART:e.STATUSBAR_PART;break;case e.SIDEBAR_PART:s=o?e.EDITOR_PART:e.ACTIVITYBAR_PART;break;default:s=e.EDITOR_PART}return t.isVisible(s,r)||s===e.EDITOR_PART?s:this.findVisibleNeighbour(t,s,o)}focusNextOrPreviousPart(t,i,o){let r;i.activeEditorPane?.hasFocus()||t.hasFocus(e.EDITOR_PART)?r=e.EDITOR_PART:t.hasFocus(e.ACTIVITYBAR_PART)?r=e.ACTIVITYBAR_PART:t.hasFocus(e.STATUSBAR_PART)?r=e.STATUSBAR_PART:t.hasFocus(e.SIDEBAR_PART)?r=e.SIDEBAR_PART:t.hasFocus(e.AUXILIARYBAR_PART)?r=e.AUXILIARYBAR_PART:t.hasFocus(e.PANEL_PART)&&(r=e.PANEL_PART),t.focusPart(r?this.findVisibleNeighbour(t,r,o):e.EDITOR_PART,g())}}P(class extends h{constructor(){super({id:"workbench.action.focusNextPart",title:A("focusNextPart","Focus Next Part"),category:R.View,f1:!0,keybinding:{primary:l.F6,weight:v.WorkbenchContrib}},!0)}}),P(class extends h{constructor(){super({id:"workbench.action.focusPreviousPart",title:A("focusPreviousPart","Focus Previous Part"),category:R.View,f1:!0,keybinding:{primary:w.Shift|l.F6,weight:v.WorkbenchContrib}},!1)}});
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { localize2 } from "../../../nls.js";
+import { IEditorGroupsService, GroupDirection, GroupLocation, IFindGroupScope } from "../../services/editor/common/editorGroupsService.js";
+import { IWorkbenchLayoutService, Parts } from "../../services/layout/browser/layoutService.js";
+import { Action2, IAction2Options, registerAction2 } from "../../../platform/actions/common/actions.js";
+import { Categories } from "../../../platform/action/common/actionCommonCategories.js";
+import { Direction } from "../../../base/browser/ui/grid/grid.js";
+import { KeyCode, KeyMod } from "../../../base/common/keyCodes.js";
+import { IEditorService } from "../../services/editor/common/editorService.js";
+import { IPaneComposite } from "../../common/panecomposite.js";
+import { IComposite } from "../../common/composite.js";
+import { IPaneCompositePartService } from "../../services/panecomposite/browser/panecomposite.js";
+import { ViewContainerLocation } from "../../common/views.js";
+import { KeybindingWeight } from "../../../platform/keybinding/common/keybindingsRegistry.js";
+import { ServicesAccessor } from "../../../platform/instantiation/common/instantiation.js";
+import { getActiveWindow } from "../../../base/browser/dom.js";
+import { isAuxiliaryWindow } from "../../../base/browser/window.js";
+class BaseNavigationAction extends Action2 {
+  constructor(options, direction) {
+    super(options);
+    this.direction = direction;
+  }
+  static {
+    __name(this, "BaseNavigationAction");
+  }
+  run(accessor) {
+    const layoutService = accessor.get(IWorkbenchLayoutService);
+    const editorGroupService = accessor.get(IEditorGroupsService);
+    const paneCompositeService = accessor.get(IPaneCompositePartService);
+    const isEditorFocus = layoutService.hasFocus(Parts.EDITOR_PART);
+    const isPanelFocus = layoutService.hasFocus(Parts.PANEL_PART);
+    const isSidebarFocus = layoutService.hasFocus(Parts.SIDEBAR_PART);
+    const isAuxiliaryBarFocus = layoutService.hasFocus(Parts.AUXILIARYBAR_PART);
+    let neighborPart;
+    if (isEditorFocus) {
+      const didNavigate = this.navigateAcrossEditorGroup(this.toGroupDirection(this.direction), editorGroupService);
+      if (didNavigate) {
+        return;
+      }
+      neighborPart = layoutService.getVisibleNeighborPart(Parts.EDITOR_PART, this.direction);
+    }
+    if (isPanelFocus) {
+      neighborPart = layoutService.getVisibleNeighborPart(Parts.PANEL_PART, this.direction);
+    }
+    if (isSidebarFocus) {
+      neighborPart = layoutService.getVisibleNeighborPart(Parts.SIDEBAR_PART, this.direction);
+    }
+    if (isAuxiliaryBarFocus) {
+      neighborPart = neighborPart = layoutService.getVisibleNeighborPart(Parts.AUXILIARYBAR_PART, this.direction);
+    }
+    if (neighborPart === Parts.EDITOR_PART) {
+      if (!this.navigateBackToEditorGroup(this.toGroupDirection(this.direction), editorGroupService)) {
+        this.navigateToEditorGroup(this.direction === Direction.Right ? GroupLocation.FIRST : GroupLocation.LAST, editorGroupService);
+      }
+    } else if (neighborPart === Parts.SIDEBAR_PART) {
+      this.navigateToSidebar(layoutService, paneCompositeService);
+    } else if (neighborPart === Parts.PANEL_PART) {
+      this.navigateToPanel(layoutService, paneCompositeService);
+    } else if (neighborPart === Parts.AUXILIARYBAR_PART) {
+      this.navigateToAuxiliaryBar(layoutService, paneCompositeService);
+    }
+  }
+  async navigateToPanel(layoutService, paneCompositeService) {
+    if (!layoutService.isVisible(Parts.PANEL_PART)) {
+      return false;
+    }
+    const activePanel = paneCompositeService.getActivePaneComposite(ViewContainerLocation.Panel);
+    if (!activePanel) {
+      return false;
+    }
+    const activePanelId = activePanel.getId();
+    const res = await paneCompositeService.openPaneComposite(activePanelId, ViewContainerLocation.Panel, true);
+    if (!res) {
+      return false;
+    }
+    return res;
+  }
+  async navigateToSidebar(layoutService, paneCompositeService) {
+    if (!layoutService.isVisible(Parts.SIDEBAR_PART)) {
+      return false;
+    }
+    const activeViewlet = paneCompositeService.getActivePaneComposite(ViewContainerLocation.Sidebar);
+    if (!activeViewlet) {
+      return false;
+    }
+    const activeViewletId = activeViewlet.getId();
+    const viewlet = await paneCompositeService.openPaneComposite(activeViewletId, ViewContainerLocation.Sidebar, true);
+    return !!viewlet;
+  }
+  async navigateToAuxiliaryBar(layoutService, paneCompositeService) {
+    if (!layoutService.isVisible(Parts.AUXILIARYBAR_PART)) {
+      return false;
+    }
+    const activePanel = paneCompositeService.getActivePaneComposite(ViewContainerLocation.AuxiliaryBar);
+    if (!activePanel) {
+      return false;
+    }
+    const activePanelId = activePanel.getId();
+    const res = await paneCompositeService.openPaneComposite(activePanelId, ViewContainerLocation.AuxiliaryBar, true);
+    if (!res) {
+      return false;
+    }
+    return res;
+  }
+  navigateAcrossEditorGroup(direction, editorGroupService) {
+    return this.doNavigateToEditorGroup({ direction }, editorGroupService);
+  }
+  navigateToEditorGroup(location, editorGroupService) {
+    return this.doNavigateToEditorGroup({ location }, editorGroupService);
+  }
+  navigateBackToEditorGroup(direction, editorGroupService) {
+    if (!editorGroupService.activeGroup) {
+      return false;
+    }
+    const oppositeDirection = this.toOppositeDirection(direction);
+    const groupInBetween = editorGroupService.findGroup({ direction: oppositeDirection }, editorGroupService.activeGroup);
+    if (!groupInBetween) {
+      editorGroupService.activeGroup.focus();
+      return true;
+    }
+    return false;
+  }
+  toGroupDirection(direction) {
+    switch (direction) {
+      case Direction.Down:
+        return GroupDirection.DOWN;
+      case Direction.Left:
+        return GroupDirection.LEFT;
+      case Direction.Right:
+        return GroupDirection.RIGHT;
+      case Direction.Up:
+        return GroupDirection.UP;
+    }
+  }
+  toOppositeDirection(direction) {
+    switch (direction) {
+      case GroupDirection.UP:
+        return GroupDirection.DOWN;
+      case GroupDirection.RIGHT:
+        return GroupDirection.LEFT;
+      case GroupDirection.LEFT:
+        return GroupDirection.RIGHT;
+      case GroupDirection.DOWN:
+        return GroupDirection.UP;
+    }
+  }
+  doNavigateToEditorGroup(scope, editorGroupService) {
+    const targetGroup = editorGroupService.findGroup(scope, editorGroupService.activeGroup);
+    if (targetGroup) {
+      targetGroup.focus();
+      return true;
+    }
+    return false;
+  }
+}
+registerAction2(class extends BaseNavigationAction {
+  constructor() {
+    super({
+      id: "workbench.action.navigateLeft",
+      title: localize2("navigateLeft", "Navigate to the View on the Left"),
+      category: Categories.View,
+      f1: true
+    }, Direction.Left);
+  }
+});
+registerAction2(class extends BaseNavigationAction {
+  constructor() {
+    super({
+      id: "workbench.action.navigateRight",
+      title: localize2("navigateRight", "Navigate to the View on the Right"),
+      category: Categories.View,
+      f1: true
+    }, Direction.Right);
+  }
+});
+registerAction2(class extends BaseNavigationAction {
+  constructor() {
+    super({
+      id: "workbench.action.navigateUp",
+      title: localize2("navigateUp", "Navigate to the View Above"),
+      category: Categories.View,
+      f1: true
+    }, Direction.Up);
+  }
+});
+registerAction2(class extends BaseNavigationAction {
+  constructor() {
+    super({
+      id: "workbench.action.navigateDown",
+      title: localize2("navigateDown", "Navigate to the View Below"),
+      category: Categories.View,
+      f1: true
+    }, Direction.Down);
+  }
+});
+class BaseFocusAction extends Action2 {
+  constructor(options, focusNext) {
+    super(options);
+    this.focusNext = focusNext;
+  }
+  static {
+    __name(this, "BaseFocusAction");
+  }
+  run(accessor) {
+    const layoutService = accessor.get(IWorkbenchLayoutService);
+    const editorService = accessor.get(IEditorService);
+    this.focusNextOrPreviousPart(layoutService, editorService, this.focusNext);
+  }
+  findVisibleNeighbour(layoutService, part, next) {
+    const activeWindow = getActiveWindow();
+    const windowIsAuxiliary = isAuxiliaryWindow(activeWindow);
+    let neighbour;
+    if (windowIsAuxiliary) {
+      switch (part) {
+        case Parts.EDITOR_PART:
+          neighbour = Parts.STATUSBAR_PART;
+          break;
+        default:
+          neighbour = Parts.EDITOR_PART;
+      }
+    } else {
+      switch (part) {
+        case Parts.EDITOR_PART:
+          neighbour = next ? Parts.PANEL_PART : Parts.SIDEBAR_PART;
+          break;
+        case Parts.PANEL_PART:
+          neighbour = next ? Parts.AUXILIARYBAR_PART : Parts.EDITOR_PART;
+          break;
+        case Parts.AUXILIARYBAR_PART:
+          neighbour = next ? Parts.STATUSBAR_PART : Parts.PANEL_PART;
+          break;
+        case Parts.STATUSBAR_PART:
+          neighbour = next ? Parts.ACTIVITYBAR_PART : Parts.AUXILIARYBAR_PART;
+          break;
+        case Parts.ACTIVITYBAR_PART:
+          neighbour = next ? Parts.SIDEBAR_PART : Parts.STATUSBAR_PART;
+          break;
+        case Parts.SIDEBAR_PART:
+          neighbour = next ? Parts.EDITOR_PART : Parts.ACTIVITYBAR_PART;
+          break;
+        default:
+          neighbour = Parts.EDITOR_PART;
+      }
+    }
+    if (layoutService.isVisible(neighbour, activeWindow) || neighbour === Parts.EDITOR_PART) {
+      return neighbour;
+    }
+    return this.findVisibleNeighbour(layoutService, neighbour, next);
+  }
+  focusNextOrPreviousPart(layoutService, editorService, next) {
+    let currentlyFocusedPart;
+    if (editorService.activeEditorPane?.hasFocus() || layoutService.hasFocus(Parts.EDITOR_PART)) {
+      currentlyFocusedPart = Parts.EDITOR_PART;
+    } else if (layoutService.hasFocus(Parts.ACTIVITYBAR_PART)) {
+      currentlyFocusedPart = Parts.ACTIVITYBAR_PART;
+    } else if (layoutService.hasFocus(Parts.STATUSBAR_PART)) {
+      currentlyFocusedPart = Parts.STATUSBAR_PART;
+    } else if (layoutService.hasFocus(Parts.SIDEBAR_PART)) {
+      currentlyFocusedPart = Parts.SIDEBAR_PART;
+    } else if (layoutService.hasFocus(Parts.AUXILIARYBAR_PART)) {
+      currentlyFocusedPart = Parts.AUXILIARYBAR_PART;
+    } else if (layoutService.hasFocus(Parts.PANEL_PART)) {
+      currentlyFocusedPart = Parts.PANEL_PART;
+    }
+    layoutService.focusPart(currentlyFocusedPart ? this.findVisibleNeighbour(layoutService, currentlyFocusedPart, next) : Parts.EDITOR_PART, getActiveWindow());
+  }
+}
+registerAction2(class extends BaseFocusAction {
+  constructor() {
+    super({
+      id: "workbench.action.focusNextPart",
+      title: localize2("focusNextPart", "Focus Next Part"),
+      category: Categories.View,
+      f1: true,
+      keybinding: {
+        primary: KeyCode.F6,
+        weight: KeybindingWeight.WorkbenchContrib
+      }
+    }, true);
+  }
+});
+registerAction2(class extends BaseFocusAction {
+  constructor() {
+    super({
+      id: "workbench.action.focusPreviousPart",
+      title: localize2("focusPreviousPart", "Focus Previous Part"),
+      category: Categories.View,
+      f1: true,
+      keybinding: {
+        primary: KeyMod.Shift | KeyCode.F6,
+        weight: KeybindingWeight.WorkbenchContrib
+      }
+    }, false);
+  }
+});
+//# sourceMappingURL=navigationActions.js.map

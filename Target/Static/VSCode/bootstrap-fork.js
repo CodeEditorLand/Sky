@@ -1,2 +1,166 @@
-import*as O from"./vs/base/common/performance.js";import{removeGlobalNodeJsModuleLookupPaths as h,devInjectNodeModuleLookupPath as S}from"./bootstrap-node.js";import{bootstrapESM as m}from"./bootstrap-esm.js";O.mark("code/fork/start");function P(){function d(e){const s=[],i=[];if(e.length)for(let t=0;t<e.length;t++){let r=e[t];if(typeof r>"u")r="undefined";else if(r instanceof Error){const o=r;o.stack?r=o.stack:r=o.toString()}i.push(r)}try{const t=JSON.stringify(i,function(r,o){if(E(o)||Array.isArray(o)){if(s.indexOf(o)!==-1)return"[Circular]";s.push(o)}return o});return t.length>1e5?"Output omitted for a large object that exceeds the limits":t}catch(t){return`Output omitted for an object that cannot be inspected ('${t.toString()}')`}}function l(e){try{process.send&&process.send(e)}catch{}}function E(e){return typeof e=="object"&&e!==null&&!Array.isArray(e)&&!(e instanceof RegExp)&&!(e instanceof Date)}function g(e,s){l({type:"__$console",severity:e,arguments:s})}function c(e,s){Object.defineProperty(console,e,{set:()=>{},get:()=>function(){g(s,d(arguments))}})}function u(e,s){const i=process[e],t=i.write;let r="";Object.defineProperty(i,"write",{set:()=>{},get:()=>(o,p,_)=>{r+=o.toString(p);const f=r.length>1048576?r.length:r.lastIndexOf(`
-`);f!==-1&&(console[s](r.slice(0,f)),r=r.slice(f+1)),t.call(i,o,p,_)}})}process.env.VSCODE_VERBOSE_LOGGING==="true"?(c("info","log"),c("log","log"),c("warn","warn"),c("error","error")):(console.log=function(){},console.warn=function(){},console.info=function(){},c("error","error")),u("stderr","error"),u("stdout","log")}function y(){process.on("uncaughtException",function(n){console.error("Uncaught Exception: ",n)}),process.on("unhandledRejection",function(n){console.error("Unhandled Promise Rejection: ",n)})}function R(){const n=Number(process.env.VSCODE_PARENT_PID);typeof n=="number"&&!isNaN(n)&&setInterval(function(){try{process.kill(n,0)}catch{process.exit()}},5e3)}function N(){const n=process.env.VSCODE_CRASH_REPORTER_PROCESS_TYPE;if(n)try{process.crashReporter&&typeof process.crashReporter.addExtraParameter=="function"&&process.crashReporter.addExtraParameter("processType",n)}catch(a){console.error(a)}}N(),h(),process.env.VSCODE_DEV_INJECT_NODE_MODULE_LOOKUP_PATH&&S(process.env.VSCODE_DEV_INJECT_NODE_MODULE_LOOKUP_PATH),process.send&&process.env.VSCODE_PIPE_LOGGING==="true"&&P(),process.env.VSCODE_HANDLES_UNCAUGHT_ERRORS||y(),process.env.VSCODE_PARENT_PID&&R(),await m(),await import([`./${process.env.VSCODE_ESM_ENTRYPOINT}.js`].join("/"));
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as performance from "./vs/base/common/performance.js";
+import { removeGlobalNodeJsModuleLookupPaths, devInjectNodeModuleLookupPath } from "./bootstrap-node.js";
+import { bootstrapESM } from "./bootstrap-esm.js";
+performance.mark("code/fork/start");
+function pipeLoggingToParent() {
+  const MAX_STREAM_BUFFER_LENGTH = 1024 * 1024;
+  const MAX_LENGTH = 1e5;
+  function safeToString(args) {
+    const seen = [];
+    const argsArray = [];
+    if (args.length) {
+      for (let i = 0; i < args.length; i++) {
+        let arg = args[i];
+        if (typeof arg === "undefined") {
+          arg = "undefined";
+        } else if (arg instanceof Error) {
+          const errorObj = arg;
+          if (errorObj.stack) {
+            arg = errorObj.stack;
+          } else {
+            arg = errorObj.toString();
+          }
+        }
+        argsArray.push(arg);
+      }
+    }
+    try {
+      const res = JSON.stringify(argsArray, function(key, value) {
+        if (isObject(value) || Array.isArray(value)) {
+          if (seen.indexOf(value) !== -1) {
+            return "[Circular]";
+          }
+          seen.push(value);
+        }
+        return value;
+      });
+      if (res.length > MAX_LENGTH) {
+        return "Output omitted for a large object that exceeds the limits";
+      }
+      return res;
+    } catch (error) {
+      return `Output omitted for an object that cannot be inspected ('${error.toString()}')`;
+    }
+  }
+  __name(safeToString, "safeToString");
+  function safeSend(arg) {
+    try {
+      if (process.send) {
+        process.send(arg);
+      }
+    } catch (error) {
+    }
+  }
+  __name(safeSend, "safeSend");
+  function isObject(obj) {
+    return typeof obj === "object" && obj !== null && !Array.isArray(obj) && !(obj instanceof RegExp) && !(obj instanceof Date);
+  }
+  __name(isObject, "isObject");
+  function safeSendConsoleMessage(severity, args) {
+    safeSend({ type: "__$console", severity, arguments: args });
+  }
+  __name(safeSendConsoleMessage, "safeSendConsoleMessage");
+  function wrapConsoleMethod(method, severity) {
+    Object.defineProperty(console, method, {
+      set: /* @__PURE__ */ __name(() => {
+      }, "set"),
+      get: /* @__PURE__ */ __name(() => function() {
+        safeSendConsoleMessage(severity, safeToString(arguments));
+      }, "get")
+    });
+  }
+  __name(wrapConsoleMethod, "wrapConsoleMethod");
+  function wrapStream(streamName, severity) {
+    const stream = process[streamName];
+    const original = stream.write;
+    let buf = "";
+    Object.defineProperty(stream, "write", {
+      set: /* @__PURE__ */ __name(() => {
+      }, "set"),
+      get: /* @__PURE__ */ __name(() => (chunk, encoding, callback) => {
+        buf += chunk.toString(encoding);
+        const eol = buf.length > MAX_STREAM_BUFFER_LENGTH ? buf.length : buf.lastIndexOf("\n");
+        if (eol !== -1) {
+          console[severity](buf.slice(0, eol));
+          buf = buf.slice(eol + 1);
+        }
+        original.call(stream, chunk, encoding, callback);
+      }, "get")
+    });
+  }
+  __name(wrapStream, "wrapStream");
+  if (process.env["VSCODE_VERBOSE_LOGGING"] === "true") {
+    wrapConsoleMethod("info", "log");
+    wrapConsoleMethod("log", "log");
+    wrapConsoleMethod("warn", "warn");
+    wrapConsoleMethod("error", "error");
+  } else {
+    console.log = function() {
+    };
+    console.warn = function() {
+    };
+    console.info = function() {
+    };
+    wrapConsoleMethod("error", "error");
+  }
+  wrapStream("stderr", "error");
+  wrapStream("stdout", "log");
+}
+__name(pipeLoggingToParent, "pipeLoggingToParent");
+function handleExceptions() {
+  process.on("uncaughtException", function(err) {
+    console.error("Uncaught Exception: ", err);
+  });
+  process.on("unhandledRejection", function(reason) {
+    console.error("Unhandled Promise Rejection: ", reason);
+  });
+}
+__name(handleExceptions, "handleExceptions");
+function terminateWhenParentTerminates() {
+  const parentPid = Number(process.env["VSCODE_PARENT_PID"]);
+  if (typeof parentPid === "number" && !isNaN(parentPid)) {
+    setInterval(function() {
+      try {
+        process.kill(parentPid, 0);
+      } catch (e) {
+        process.exit();
+      }
+    }, 5e3);
+  }
+}
+__name(terminateWhenParentTerminates, "terminateWhenParentTerminates");
+function configureCrashReporter() {
+  const crashReporterProcessType = process.env["VSCODE_CRASH_REPORTER_PROCESS_TYPE"];
+  if (crashReporterProcessType) {
+    try {
+      if (process["crashReporter"] && typeof process["crashReporter"].addExtraParameter === "function") {
+        process["crashReporter"].addExtraParameter("processType", crashReporterProcessType);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
+}
+__name(configureCrashReporter, "configureCrashReporter");
+configureCrashReporter();
+removeGlobalNodeJsModuleLookupPaths();
+if (process.env["VSCODE_DEV_INJECT_NODE_MODULE_LOOKUP_PATH"]) {
+  devInjectNodeModuleLookupPath(process.env["VSCODE_DEV_INJECT_NODE_MODULE_LOOKUP_PATH"]);
+}
+if (!!process.send && process.env["VSCODE_PIPE_LOGGING"] === "true") {
+  pipeLoggingToParent();
+}
+if (!process.env["VSCODE_HANDLES_UNCAUGHT_ERRORS"]) {
+  handleExceptions();
+}
+if (process.env["VSCODE_PARENT_PID"]) {
+  terminateWhenParentTerminates();
+}
+await bootstrapESM();
+await import(
+  [`./${process.env["VSCODE_ESM_ENTRYPOINT"]}.js`].join("/")
+  /* workaround: esbuild prints some strange warnings when trying to inline? */
+);
+//# sourceMappingURL=bootstrap-fork.js.map

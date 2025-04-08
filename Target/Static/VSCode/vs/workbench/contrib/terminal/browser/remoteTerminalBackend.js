@@ -1,1 +1,332 @@
-var O=Object.defineProperty,W=Object.getOwnPropertyDescriptor,S=(e,t,n,r)=>{for(var o,a=r>1?void 0:r?W(t,n):t,i=e.length-1;i>=0;i--)(o=e[i])&&(a=(r?o(t,n,a):o(a))||a);return r&&a&&O(t,n,a),a},o=(e,t)=>(n,r)=>t(n,r,e);import{DeferredPromise as M}from"../../../../base/common/async.js";import{Emitter as A}from"../../../../base/common/event.js";import{revive as q}from"../../../../base/common/marshalling.js";import{mark as v}from"../../../../base/common/performance.js";import{OperatingSystem as B}from"../../../../base/common/platform.js";import{StopWatch as N}from"../../../../base/common/stopwatch.js";import{ICommandService as H}from"../../../../platform/commands/common/commands.js";import{IConfigurationService as z}from"../../../../platform/configuration/common/configuration.js";import{IInstantiationService as D}from"../../../../platform/instantiation/common/instantiation.js";import{Registry as K}from"../../../../platform/registry/common/platform.js";import{IRemoteAuthorityResolverService as V}from"../../../../platform/remote/common/remoteAuthorityResolver.js";import{IStorageService as F,StorageScope as c,StorageTarget as G}from"../../../../platform/storage/common/storage.js";import"../../../../platform/terminal/common/capabilities/capabilities.js";import{ITerminalLogService as Q,TerminalExtensions as $,TerminalSettingId as y}from"../../../../platform/terminal/common/terminal.js";import"../../../../platform/terminal/common/terminalProcess.js";import{IWorkspaceContextService as j}from"../../../../platform/workspace/common/workspace.js";import"../../../common/contributions.js";import{BaseTerminalBackend as J}from"./baseTerminalBackend.js";import{RemotePty as b}from"./remotePty.js";import{ITerminalInstanceService as U}from"./terminal.js";import{RemoteTerminalChannelClient as X,REMOTE_TERMINAL_CHANNEL_NAME as Y}from"../common/remote/remoteTerminalChannel.js";import{TERMINAL_CONFIG_SECTION as Z}from"../common/terminal.js";import{TerminalStorageKeys as h}from"../common/terminalStorageKeys.js";import{IConfigurationResolverService as ee}from"../../../services/configurationResolver/common/configurationResolver.js";import{IHistoryService as te}from"../../../services/history/common/history.js";import{IRemoteAgentService as L}from"../../../services/remote/common/remoteAgentService.js";import{IStatusbarService as ne}from"../../../services/statusbar/browser/statusbar.js";let I=class{static ID="remoteTerminalBackend";constructor(e,t,n){const r=t.getConnection();if(r?.remoteAuthority){const t=e.createInstance(X,r.remoteAuthority,r.getChannel(Y)),o=e.createInstance(d,r.remoteAuthority,t);K.as($.Backend).registerTerminalBackend(o),n.didRegisterBackend(o)}}};I=S([o(0,D),o(1,L),o(2,U)],I);let d=class extends J{constructor(e,t,n,r,o,a,i,s,m,c,l,h,d){super(t,o,l,c,d,m),this.remoteAuthority=e,this._remoteTerminalChannel=t,this._remoteAgentService=n,this._instantiationService=r,this._commandService=a,this._storageService=i,this._remoteAuthorityResolverService=s,this._historyService=l,this._configurationService=h,this._remoteTerminalChannel.onProcessData((e=>this._ptys.get(e.id)?.handleData(e.event))),this._remoteTerminalChannel.onProcessReplay((e=>{this._ptys.get(e.id)?.handleReplay(e.event),e.event.commands.commands.length>0&&this._onRestoreCommands.fire({id:e.id,commands:e.event.commands.commands})})),this._remoteTerminalChannel.onProcessOrphanQuestion((e=>this._ptys.get(e.id)?.handleOrphanQuestion())),this._remoteTerminalChannel.onDidRequestDetach((e=>this._onDidRequestDetach.fire(e))),this._remoteTerminalChannel.onProcessReady((e=>this._ptys.get(e.id)?.handleReady(e.event))),this._remoteTerminalChannel.onDidChangeProperty((e=>this._ptys.get(e.id)?.handleDidChangeProperty(e.property))),this._remoteTerminalChannel.onProcessExit((e=>{const t=this._ptys.get(e.id);t&&(t.handleExit(e.event),this._ptys.delete(e.id))}));const p=["_remoteCLI.openExternal","_remoteCLI.windowOpen","_remoteCLI.getSystemStatus","_remoteCLI.manageExtensions"];this._remoteTerminalChannel.onExecuteCommand((async e=>{if(!this._ptys.get(e.persistentProcessId))return;const t=e.reqId,n=e.commandId;if(!p.includes(n))return void this._remoteTerminalChannel.sendCommandResult(t,!0,"Invalid remote cli command: "+n);const r=e.commandArgs.map((e=>q(e)));try{const n=await this._commandService.executeCommand(e.commandId,...r);this._remoteTerminalChannel.sendCommandResult(t,!1,n)}catch(e){this._remoteTerminalChannel.sendCommandResult(t,!0,e)}})),this._onPtyHostConnected.fire()}_ptys=new Map;_whenConnected=new M;get whenReady(){return this._whenConnected.p}setReady(){this._whenConnected.complete()}_onDidRequestDetach=this._register(new A);onDidRequestDetach=this._onDidRequestDetach.event;_onRestoreCommands=this._register(new A);onRestoreCommands=this._onRestoreCommands.event;async requestDetachInstance(e,t){if(!this._remoteTerminalChannel)throw new Error("Cannot request detach instance when there is no remote!");return this._remoteTerminalChannel.requestDetachInstance(e,t)}async acceptDetachInstanceReply(e,t){if(!this._remoteTerminalChannel)throw new Error("Cannot accept detached instance when there is no remote!");if(t)return this._remoteTerminalChannel.acceptDetachInstanceReply(e,t);this._logService.warn("Cannot attach to feature terminals, custom pty terminals, or those without a persistentProcessId")}async persistTerminalState(){if(!this._remoteTerminalChannel)throw new Error("Cannot persist terminal state when there is no remote!");const e=Array.from(this._ptys.keys()),t=await this._remoteTerminalChannel.serializeTerminalState(e);this._storageService.store(h.TerminalBufferState,t,c.WORKSPACE,G.MACHINE)}async createProcess(e,t,n,r,o,a,i,s){if(!this._remoteTerminalChannel)throw new Error("Cannot create remote terminal when there is no remote!");if(!await this._remoteAgentService.getEnvironment())throw new Error("Could not fetch remote environment");const m=this._configurationService.getValue(Z),c={"terminal.integrated.env.windows":this._configurationService.getValue(y.EnvWindows),"terminal.integrated.env.osx":this._configurationService.getValue(y.EnvMacOs),"terminal.integrated.env.linux":this._configurationService.getValue(y.EnvLinux),"terminal.integrated.cwd":this._configurationService.getValue(y.Cwd),"terminal.integrated.detectLocale":m.detectLocale},l={name:e.name,executable:e.executable,args:e.args,cwd:e.cwd,env:e.env,useShellEnvironment:e.useShellEnvironment,reconnectionProperties:e.reconnectionProperties,type:e.type,isFeatureTerminal:e.isFeatureTerminal,tabActions:e.tabActions,shellIntegrationEnvironmentReporting:e.shellIntegrationEnvironmentReporting},h=this._historyService.getLastActiveWorkspaceRoot(),d=await this._remoteTerminalChannel.createProcess(l,c,h,i,s,n,r,o),p=this._instantiationService.createInstance(b,d.persistentTerminalId,s,this._remoteTerminalChannel);return this._ptys.set(d.persistentTerminalId,p),p}async attachToProcess(e){if(!this._remoteTerminalChannel)throw new Error("Cannot create remote terminal when there is no remote!");try{await this._remoteTerminalChannel.attachToProcess(e);const t=this._instantiationService.createInstance(b,e,!0,this._remoteTerminalChannel);return this._ptys.set(e,t),t}catch(e){this._logService.trace(`Couldn't attach to process ${e.message}`)}}async attachToRevivedProcess(e){if(!this._remoteTerminalChannel)throw new Error("Cannot create remote terminal when there is no remote!");try{const t=await this._remoteTerminalChannel.getRevivedPtyNewId(e)??e;return await this.attachToProcess(t)}catch(e){this._logService.trace(`Couldn't attach to process ${e.message}`)}}async listProcesses(){return this._remoteTerminalChannel.listProcesses()}async getLatency(){const e=new N,t=await this._remoteTerminalChannel.getLatency();return e.stop(),[{label:"window<->ptyhostservice<->ptyhost",latency:e.elapsed()},...t]}async updateProperty(e,t,n){await this._remoteTerminalChannel.updateProperty(e,t,n)}async updateTitle(e,t,n){await this._remoteTerminalChannel.updateTitle(e,t,n)}async updateIcon(e,t,n,r){await this._remoteTerminalChannel.updateIcon(e,t,n,r)}async getDefaultSystemShell(e){return this._remoteTerminalChannel.getDefaultSystemShell(e)||""}async getProfiles(e,t,n){return this._remoteTerminalChannel.getProfiles(e,t,n)||[]}async getEnvironment(){return this._remoteTerminalChannel.getEnvironment()||{}}async getShellEnvironment(){const e=this._remoteAgentService.getConnection();return e?(await this._remoteAuthorityResolverService.resolveAuthority(e.remoteAuthority)).options?.extensionHostEnv:void 0}async getWslPath(e,t){return(await this._remoteAgentService.getEnvironment())?.os!==B.Windows?e:this._remoteTerminalChannel.getWslPath(e,t)||e}async setTerminalLayoutInfo(e){if(!this._remoteTerminalChannel)throw new Error("Cannot call setActiveInstanceId when there is no remote");return this._remoteTerminalChannel.setTerminalLayoutInfo(e)}async reduceConnectionGraceTime(){if(!this._remoteTerminalChannel)throw new Error("Cannot reduce grace time when there is no remote");return this._remoteTerminalChannel.reduceConnectionGraceTime()}async getTerminalLayoutInfo(){if(!this._remoteTerminalChannel)throw new Error("Cannot call getActiveInstanceId when there is no remote");const e=this._getWorkspaceId(),t=this._storageService.get(h.TerminalBufferState,c.WORKSPACE),n=this._deserializeTerminalState(t);if(n&&n.length>0)try{v("code/terminal/willReviveTerminalProcessesRemote"),await this._remoteTerminalChannel.reviveTerminalProcesses(e,n,Intl.DateTimeFormat().resolvedOptions().locale),v("code/terminal/didReviveTerminalProcessesRemote"),this._storageService.remove(h.TerminalBufferState,c.WORKSPACE);const t=this._storageService.get(h.TerminalLayoutInfo,c.WORKSPACE);t&&(v("code/terminal/willSetTerminalLayoutInfoRemote"),await this._remoteTerminalChannel.setTerminalLayoutInfo(JSON.parse(t)),v("code/terminal/didSetTerminalLayoutInfoRemote"),this._storageService.remove(h.TerminalLayoutInfo,c.WORKSPACE))}catch(e){this._logService.warn("RemoteTerminalBackend#getTerminalLayoutInfo Error",e&&"object"==typeof e&&"message"in e?e.message:e)}return this._remoteTerminalChannel.getTerminalLayoutInfo()}async getPerformanceMarks(){return this._remoteTerminalChannel.getPerformanceMarks()}installAutoReply(e,t){return this._remoteTerminalChannel.installAutoReply(e,t)}uninstallAllAutoReplies(){return this._remoteTerminalChannel.uninstallAllAutoReplies()}};d=S([o(2,L),o(3,D),o(4,Q),o(5,H),o(6,F),o(7,V),o(8,j),o(9,ee),o(10,te),o(11,z),o(12,ne)],d);export{I as RemoteTerminalBackendContribution};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { DeferredPromise } from "../../../../base/common/async.js";
+import { Emitter } from "../../../../base/common/event.js";
+import { revive } from "../../../../base/common/marshalling.js";
+import { PerformanceMark, mark } from "../../../../base/common/performance.js";
+import { IProcessEnvironment, OperatingSystem } from "../../../../base/common/platform.js";
+import { StopWatch } from "../../../../base/common/stopwatch.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { IRemoteAuthorityResolverService } from "../../../../platform/remote/common/remoteAuthorityResolver.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { ISerializedTerminalCommand } from "../../../../platform/terminal/common/capabilities/capabilities.js";
+import { IPtyHostLatencyMeasurement, IShellLaunchConfig, IShellLaunchConfigDto, ITerminalBackend, ITerminalBackendRegistry, ITerminalChildProcess, ITerminalEnvironment, ITerminalLogService, ITerminalProcessOptions, ITerminalProfile, ITerminalsLayoutInfo, ITerminalsLayoutInfoById, ProcessPropertyType, TerminalExtensions, TerminalIcon, TerminalSettingId, TitleEventSource } from "../../../../platform/terminal/common/terminal.js";
+import { IProcessDetails } from "../../../../platform/terminal/common/terminalProcess.js";
+import { IWorkspaceContextService } from "../../../../platform/workspace/common/workspace.js";
+import { IWorkbenchContribution } from "../../../common/contributions.js";
+import { BaseTerminalBackend } from "./baseTerminalBackend.js";
+import { RemotePty } from "./remotePty.js";
+import { ITerminalInstanceService } from "./terminal.js";
+import { RemoteTerminalChannelClient, REMOTE_TERMINAL_CHANNEL_NAME } from "../common/remote/remoteTerminalChannel.js";
+import { ICompleteTerminalConfiguration, ITerminalConfiguration, TERMINAL_CONFIG_SECTION } from "../common/terminal.js";
+import { TerminalStorageKeys } from "../common/terminalStorageKeys.js";
+import { IConfigurationResolverService } from "../../../services/configurationResolver/common/configurationResolver.js";
+import { IHistoryService } from "../../../services/history/common/history.js";
+import { IRemoteAgentService } from "../../../services/remote/common/remoteAgentService.js";
+import { IStatusbarService } from "../../../services/statusbar/browser/statusbar.js";
+let RemoteTerminalBackendContribution = class {
+  static {
+    __name(this, "RemoteTerminalBackendContribution");
+  }
+  static ID = "remoteTerminalBackend";
+  constructor(instantiationService, remoteAgentService, terminalInstanceService) {
+    const connection = remoteAgentService.getConnection();
+    if (connection?.remoteAuthority) {
+      const channel = instantiationService.createInstance(RemoteTerminalChannelClient, connection.remoteAuthority, connection.getChannel(REMOTE_TERMINAL_CHANNEL_NAME));
+      const backend = instantiationService.createInstance(RemoteTerminalBackend, connection.remoteAuthority, channel);
+      Registry.as(TerminalExtensions.Backend).registerTerminalBackend(backend);
+      terminalInstanceService.didRegisterBackend(backend);
+    }
+  }
+};
+RemoteTerminalBackendContribution = __decorateClass([
+  __decorateParam(0, IInstantiationService),
+  __decorateParam(1, IRemoteAgentService),
+  __decorateParam(2, ITerminalInstanceService)
+], RemoteTerminalBackendContribution);
+let RemoteTerminalBackend = class extends BaseTerminalBackend {
+  constructor(remoteAuthority, _remoteTerminalChannel, _remoteAgentService, _instantiationService, logService, _commandService, _storageService, _remoteAuthorityResolverService, workspaceContextService, configurationResolverService, _historyService, _configurationService, statusBarService) {
+    super(_remoteTerminalChannel, logService, _historyService, configurationResolverService, statusBarService, workspaceContextService);
+    this.remoteAuthority = remoteAuthority;
+    this._remoteTerminalChannel = _remoteTerminalChannel;
+    this._remoteAgentService = _remoteAgentService;
+    this._instantiationService = _instantiationService;
+    this._commandService = _commandService;
+    this._storageService = _storageService;
+    this._remoteAuthorityResolverService = _remoteAuthorityResolverService;
+    this._historyService = _historyService;
+    this._configurationService = _configurationService;
+    this._remoteTerminalChannel.onProcessData((e) => this._ptys.get(e.id)?.handleData(e.event));
+    this._remoteTerminalChannel.onProcessReplay((e) => {
+      this._ptys.get(e.id)?.handleReplay(e.event);
+      if (e.event.commands.commands.length > 0) {
+        this._onRestoreCommands.fire({ id: e.id, commands: e.event.commands.commands });
+      }
+    });
+    this._remoteTerminalChannel.onProcessOrphanQuestion((e) => this._ptys.get(e.id)?.handleOrphanQuestion());
+    this._remoteTerminalChannel.onDidRequestDetach((e) => this._onDidRequestDetach.fire(e));
+    this._remoteTerminalChannel.onProcessReady((e) => this._ptys.get(e.id)?.handleReady(e.event));
+    this._remoteTerminalChannel.onDidChangeProperty((e) => this._ptys.get(e.id)?.handleDidChangeProperty(e.property));
+    this._remoteTerminalChannel.onProcessExit((e) => {
+      const pty = this._ptys.get(e.id);
+      if (pty) {
+        pty.handleExit(e.event);
+        this._ptys.delete(e.id);
+      }
+    });
+    const allowedCommands = ["_remoteCLI.openExternal", "_remoteCLI.windowOpen", "_remoteCLI.getSystemStatus", "_remoteCLI.manageExtensions"];
+    this._remoteTerminalChannel.onExecuteCommand(async (e) => {
+      const pty = this._ptys.get(e.persistentProcessId);
+      if (!pty) {
+        return;
+      }
+      const reqId = e.reqId;
+      const commandId = e.commandId;
+      if (!allowedCommands.includes(commandId)) {
+        this._remoteTerminalChannel.sendCommandResult(reqId, true, "Invalid remote cli command: " + commandId);
+        return;
+      }
+      const commandArgs = e.commandArgs.map((arg) => revive(arg));
+      try {
+        const result = await this._commandService.executeCommand(e.commandId, ...commandArgs);
+        this._remoteTerminalChannel.sendCommandResult(reqId, false, result);
+      } catch (err) {
+        this._remoteTerminalChannel.sendCommandResult(reqId, true, err);
+      }
+    });
+    this._onPtyHostConnected.fire();
+  }
+  static {
+    __name(this, "RemoteTerminalBackend");
+  }
+  _ptys = /* @__PURE__ */ new Map();
+  _whenConnected = new DeferredPromise();
+  get whenReady() {
+    return this._whenConnected.p;
+  }
+  setReady() {
+    this._whenConnected.complete();
+  }
+  _onDidRequestDetach = this._register(new Emitter());
+  onDidRequestDetach = this._onDidRequestDetach.event;
+  _onRestoreCommands = this._register(new Emitter());
+  onRestoreCommands = this._onRestoreCommands.event;
+  async requestDetachInstance(workspaceId, instanceId) {
+    if (!this._remoteTerminalChannel) {
+      throw new Error(`Cannot request detach instance when there is no remote!`);
+    }
+    return this._remoteTerminalChannel.requestDetachInstance(workspaceId, instanceId);
+  }
+  async acceptDetachInstanceReply(requestId, persistentProcessId) {
+    if (!this._remoteTerminalChannel) {
+      throw new Error(`Cannot accept detached instance when there is no remote!`);
+    } else if (!persistentProcessId) {
+      this._logService.warn("Cannot attach to feature terminals, custom pty terminals, or those without a persistentProcessId");
+      return;
+    }
+    return this._remoteTerminalChannel.acceptDetachInstanceReply(requestId, persistentProcessId);
+  }
+  async persistTerminalState() {
+    if (!this._remoteTerminalChannel) {
+      throw new Error(`Cannot persist terminal state when there is no remote!`);
+    }
+    const ids = Array.from(this._ptys.keys());
+    const serialized = await this._remoteTerminalChannel.serializeTerminalState(ids);
+    this._storageService.store(TerminalStorageKeys.TerminalBufferState, serialized, StorageScope.WORKSPACE, StorageTarget.MACHINE);
+  }
+  async createProcess(shellLaunchConfig, cwd, cols, rows, unicodeVersion, env, options, shouldPersist) {
+    if (!this._remoteTerminalChannel) {
+      throw new Error(`Cannot create remote terminal when there is no remote!`);
+    }
+    const remoteEnv = await this._remoteAgentService.getEnvironment();
+    if (!remoteEnv) {
+      throw new Error("Could not fetch remote environment");
+    }
+    const terminalConfig = this._configurationService.getValue(TERMINAL_CONFIG_SECTION);
+    const configuration = {
+      "terminal.integrated.env.windows": this._configurationService.getValue(TerminalSettingId.EnvWindows),
+      "terminal.integrated.env.osx": this._configurationService.getValue(TerminalSettingId.EnvMacOs),
+      "terminal.integrated.env.linux": this._configurationService.getValue(TerminalSettingId.EnvLinux),
+      "terminal.integrated.cwd": this._configurationService.getValue(TerminalSettingId.Cwd),
+      "terminal.integrated.detectLocale": terminalConfig.detectLocale
+    };
+    const shellLaunchConfigDto = {
+      name: shellLaunchConfig.name,
+      executable: shellLaunchConfig.executable,
+      args: shellLaunchConfig.args,
+      cwd: shellLaunchConfig.cwd,
+      env: shellLaunchConfig.env,
+      useShellEnvironment: shellLaunchConfig.useShellEnvironment,
+      reconnectionProperties: shellLaunchConfig.reconnectionProperties,
+      type: shellLaunchConfig.type,
+      isFeatureTerminal: shellLaunchConfig.isFeatureTerminal,
+      tabActions: shellLaunchConfig.tabActions,
+      shellIntegrationEnvironmentReporting: shellLaunchConfig.shellIntegrationEnvironmentReporting
+    };
+    const activeWorkspaceRootUri = this._historyService.getLastActiveWorkspaceRoot();
+    const result = await this._remoteTerminalChannel.createProcess(
+      shellLaunchConfigDto,
+      configuration,
+      activeWorkspaceRootUri,
+      options,
+      shouldPersist,
+      cols,
+      rows,
+      unicodeVersion
+    );
+    const pty = this._instantiationService.createInstance(RemotePty, result.persistentTerminalId, shouldPersist, this._remoteTerminalChannel);
+    this._ptys.set(result.persistentTerminalId, pty);
+    return pty;
+  }
+  async attachToProcess(id) {
+    if (!this._remoteTerminalChannel) {
+      throw new Error(`Cannot create remote terminal when there is no remote!`);
+    }
+    try {
+      await this._remoteTerminalChannel.attachToProcess(id);
+      const pty = this._instantiationService.createInstance(RemotePty, id, true, this._remoteTerminalChannel);
+      this._ptys.set(id, pty);
+      return pty;
+    } catch (e) {
+      this._logService.trace(`Couldn't attach to process ${e.message}`);
+    }
+    return void 0;
+  }
+  async attachToRevivedProcess(id) {
+    if (!this._remoteTerminalChannel) {
+      throw new Error(`Cannot create remote terminal when there is no remote!`);
+    }
+    try {
+      const newId = await this._remoteTerminalChannel.getRevivedPtyNewId(id) ?? id;
+      return await this.attachToProcess(newId);
+    } catch (e) {
+      this._logService.trace(`Couldn't attach to process ${e.message}`);
+    }
+    return void 0;
+  }
+  async listProcesses() {
+    return this._remoteTerminalChannel.listProcesses();
+  }
+  async getLatency() {
+    const sw = new StopWatch();
+    const results = await this._remoteTerminalChannel.getLatency();
+    sw.stop();
+    return [
+      {
+        label: "window<->ptyhostservice<->ptyhost",
+        latency: sw.elapsed()
+      },
+      ...results
+    ];
+  }
+  async updateProperty(id, property, value) {
+    await this._remoteTerminalChannel.updateProperty(id, property, value);
+  }
+  async updateTitle(id, title, titleSource) {
+    await this._remoteTerminalChannel.updateTitle(id, title, titleSource);
+  }
+  async updateIcon(id, userInitiated, icon, color) {
+    await this._remoteTerminalChannel.updateIcon(id, userInitiated, icon, color);
+  }
+  async getDefaultSystemShell(osOverride) {
+    return this._remoteTerminalChannel.getDefaultSystemShell(osOverride) || "";
+  }
+  async getProfiles(profiles, defaultProfile, includeDetectedProfiles) {
+    return this._remoteTerminalChannel.getProfiles(profiles, defaultProfile, includeDetectedProfiles) || [];
+  }
+  async getEnvironment() {
+    return this._remoteTerminalChannel.getEnvironment() || {};
+  }
+  async getShellEnvironment() {
+    const connection = this._remoteAgentService.getConnection();
+    if (!connection) {
+      return void 0;
+    }
+    const resolverResult = await this._remoteAuthorityResolverService.resolveAuthority(connection.remoteAuthority);
+    return resolverResult.options?.extensionHostEnv;
+  }
+  async getWslPath(original, direction) {
+    const env = await this._remoteAgentService.getEnvironment();
+    if (env?.os !== OperatingSystem.Windows) {
+      return original;
+    }
+    return this._remoteTerminalChannel.getWslPath(original, direction) || original;
+  }
+  async setTerminalLayoutInfo(layout) {
+    if (!this._remoteTerminalChannel) {
+      throw new Error(`Cannot call setActiveInstanceId when there is no remote`);
+    }
+    return this._remoteTerminalChannel.setTerminalLayoutInfo(layout);
+  }
+  async reduceConnectionGraceTime() {
+    if (!this._remoteTerminalChannel) {
+      throw new Error("Cannot reduce grace time when there is no remote");
+    }
+    return this._remoteTerminalChannel.reduceConnectionGraceTime();
+  }
+  async getTerminalLayoutInfo() {
+    if (!this._remoteTerminalChannel) {
+      throw new Error(`Cannot call getActiveInstanceId when there is no remote`);
+    }
+    const workspaceId = this._getWorkspaceId();
+    const serializedState = this._storageService.get(TerminalStorageKeys.TerminalBufferState, StorageScope.WORKSPACE);
+    const reviveBufferState = this._deserializeTerminalState(serializedState);
+    if (reviveBufferState && reviveBufferState.length > 0) {
+      try {
+        mark("code/terminal/willReviveTerminalProcessesRemote");
+        await this._remoteTerminalChannel.reviveTerminalProcesses(workspaceId, reviveBufferState, Intl.DateTimeFormat().resolvedOptions().locale);
+        mark("code/terminal/didReviveTerminalProcessesRemote");
+        this._storageService.remove(TerminalStorageKeys.TerminalBufferState, StorageScope.WORKSPACE);
+        const layoutInfo = this._storageService.get(TerminalStorageKeys.TerminalLayoutInfo, StorageScope.WORKSPACE);
+        if (layoutInfo) {
+          mark("code/terminal/willSetTerminalLayoutInfoRemote");
+          await this._remoteTerminalChannel.setTerminalLayoutInfo(JSON.parse(layoutInfo));
+          mark("code/terminal/didSetTerminalLayoutInfoRemote");
+          this._storageService.remove(TerminalStorageKeys.TerminalLayoutInfo, StorageScope.WORKSPACE);
+        }
+      } catch (e) {
+        this._logService.warn("RemoteTerminalBackend#getTerminalLayoutInfo Error", e && typeof e === "object" && "message" in e ? e.message : e);
+      }
+    }
+    return this._remoteTerminalChannel.getTerminalLayoutInfo();
+  }
+  async getPerformanceMarks() {
+    return this._remoteTerminalChannel.getPerformanceMarks();
+  }
+  installAutoReply(match, reply) {
+    return this._remoteTerminalChannel.installAutoReply(match, reply);
+  }
+  uninstallAllAutoReplies() {
+    return this._remoteTerminalChannel.uninstallAllAutoReplies();
+  }
+};
+RemoteTerminalBackend = __decorateClass([
+  __decorateParam(2, IRemoteAgentService),
+  __decorateParam(3, IInstantiationService),
+  __decorateParam(4, ITerminalLogService),
+  __decorateParam(5, ICommandService),
+  __decorateParam(6, IStorageService),
+  __decorateParam(7, IRemoteAuthorityResolverService),
+  __decorateParam(8, IWorkspaceContextService),
+  __decorateParam(9, IConfigurationResolverService),
+  __decorateParam(10, IHistoryService),
+  __decorateParam(11, IConfigurationService),
+  __decorateParam(12, IStatusbarService)
+], RemoteTerminalBackend);
+export {
+  RemoteTerminalBackendContribution
+};
+//# sourceMappingURL=remoteTerminalBackend.js.map

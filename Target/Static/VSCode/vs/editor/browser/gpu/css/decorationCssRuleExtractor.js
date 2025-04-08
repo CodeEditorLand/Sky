@@ -1,1 +1,61 @@
-import{$ as h,getActiveDocument as m}from"../../../../base/browser/dom.js";import{Disposable as a,toDisposable as p}from"../../../../base/common/lifecycle.js";import"./media/decorationCssRuleExtractor.css";class d extends a{_container;_dummyElement;_ruleCache=new Map;constructor(){super(),this._container=h("div.monaco-decoration-css-rule-extractor"),this._dummyElement=h("span"),this._container.appendChild(this._dummyElement),this._register(p(()=>this._container.remove()))}getStyleRules(n,t){const r=this._ruleCache.get(t);if(r)return r;this._dummyElement.className=t,n.appendChild(this._container);const s=this._getStyleRules(t);return this._ruleCache.set(t,s),n.removeChild(this._container),s}_getStyleRules(n){const t=[],s=[...m().styleSheets];for(let i=0;i<s.length;i++){const u=s[i];for(const e of u.cssRules)if(e instanceof CSSImportRule)e.styleSheet&&s.push(e.styleSheet);else if(e instanceof CSSStyleRule){const o=`.${n}`,c=e.selectorText.indexOf(o);if(c!==-1){const l=c+o.length;(e.selectorText.length===l||e.selectorText.substring(l,l+1).match(/[ :]/))&&t.push(e)}}}return t}}export{d as DecorationCssRuleExtractor};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { $, getActiveDocument } from "../../../../base/browser/dom.js";
+import { Disposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import "./media/decorationCssRuleExtractor.css";
+class DecorationCssRuleExtractor extends Disposable {
+  static {
+    __name(this, "DecorationCssRuleExtractor");
+  }
+  _container;
+  _dummyElement;
+  _ruleCache = /* @__PURE__ */ new Map();
+  constructor() {
+    super();
+    this._container = $("div.monaco-decoration-css-rule-extractor");
+    this._dummyElement = $("span");
+    this._container.appendChild(this._dummyElement);
+    this._register(toDisposable(() => this._container.remove()));
+  }
+  getStyleRules(canvas, decorationClassName) {
+    const existing = this._ruleCache.get(decorationClassName);
+    if (existing) {
+      return existing;
+    }
+    this._dummyElement.className = decorationClassName;
+    canvas.appendChild(this._container);
+    const rules = this._getStyleRules(decorationClassName);
+    this._ruleCache.set(decorationClassName, rules);
+    canvas.removeChild(this._container);
+    return rules;
+  }
+  _getStyleRules(className) {
+    const rules = [];
+    const doc = getActiveDocument();
+    const stylesheets = [...doc.styleSheets];
+    for (let i = 0; i < stylesheets.length; i++) {
+      const stylesheet = stylesheets[i];
+      for (const rule of stylesheet.cssRules) {
+        if (rule instanceof CSSImportRule) {
+          if (rule.styleSheet) {
+            stylesheets.push(rule.styleSheet);
+          }
+        } else if (rule instanceof CSSStyleRule) {
+          const searchTerm = `.${className}`;
+          const index = rule.selectorText.indexOf(searchTerm);
+          if (index !== -1) {
+            const endOfResult = index + searchTerm.length;
+            if (rule.selectorText.length === endOfResult || rule.selectorText.substring(endOfResult, endOfResult + 1).match(/[ :]/)) {
+              rules.push(rule);
+            }
+          }
+        }
+      }
+    }
+    return rules;
+  }
+}
+export {
+  DecorationCssRuleExtractor
+};
+//# sourceMappingURL=decorationCssRuleExtractor.js.map

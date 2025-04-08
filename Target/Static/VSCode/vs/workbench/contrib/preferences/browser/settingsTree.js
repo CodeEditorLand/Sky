@@ -1,4 +1,558 @@
-var rt=Object.defineProperty;var st=Object.getOwnPropertyDescriptor;var b=(o,t,e,n)=>{for(var i=n>1?void 0:n?st(t,e):t,r=o.length-1,s;r>=0;r--)(s=o[r])&&(i=(n?s(t,e,i):s(i))||i);return n&&i&&rt(t,e,i),i},S=(o,t)=>(e,n)=>t(e,n,o);import{BrowserFeatures as ot}from"../../../../base/browser/canIUse.js";import*as g from"../../../../base/browser/dom.js";import*as at from"../../../../base/browser/domStylesheets.js";import{StandardKeyboardEvent as lt}from"../../../../base/browser/keyboardEvent.js";import{renderMarkdownAsPlaintext as ct}from"../../../../base/browser/markdownRenderer.js";import"../../../../base/browser/mouseEvent.js";import*as pe from"../../../../base/browser/ui/aria/aria.js";import{Button as ie}from"../../../../base/browser/ui/button/button.js";import{SimpleIconLabel as me}from"../../../../base/browser/ui/iconLabel/simpleIconLabel.js";import{InputBox as Se}from"../../../../base/browser/ui/inputbox/inputBox.js";import{CachedListVirtualDelegate as dt}from"../../../../base/browser/ui/list/list.js";import{DefaultStyleController as gt}from"../../../../base/browser/ui/list/listWidget.js";import{SelectBox as ut}from"../../../../base/browser/ui/selectBox/selectBox.js";import{Toggle as pt,unthemedToggleStyles as mt}from"../../../../base/browser/ui/toggle/toggle.js";import{ToolBar as St}from"../../../../base/browser/ui/toolbar/toolbar.js";import{RenderIndentGuides as It}from"../../../../base/browser/ui/tree/abstractTree.js";import"../../../../base/browser/ui/tree/objectTree.js";import{ObjectTreeModel as Tt}from"../../../../base/browser/ui/tree/objectTreeModel.js";import{TreeVisibility as ft}from"../../../../base/browser/ui/tree/tree.js";import{Action as B,Separator as Ie}from"../../../../base/common/actions.js";import{distinct as Et}from"../../../../base/common/arrays.js";import{Codicon as vt}from"../../../../base/common/codicons.js";import{onUnexpectedError as Te}from"../../../../base/common/errors.js";import{Emitter as y,Event as C}from"../../../../base/common/event.js";import"../../../../base/common/jsonSchema.js";import{KeyCode as q}from"../../../../base/common/keyCodes.js";import{Disposable as fe,DisposableStore as j,isDisposable as re,toDisposable as se}from"../../../../base/common/lifecycle.js";import{isIOS as Ee}from"../../../../base/common/platform.js";import{escapeRegExpCharacters as ht}from"../../../../base/common/strings.js";import{isDefined as A,isUndefinedOrNull as J}from"../../../../base/common/types.js";import{URI as bt}from"../../../../base/common/uri.js";import{MarkdownRenderer as yt}from"../../../../editor/browser/widget/markdownRenderer/browser/markdownRenderer.js";import{ILanguageService as xt}from"../../../../editor/common/languages/language.js";import{localize as T}from"../../../../nls.js";import{IClipboardService as oe}from"../../../../platform/clipboard/common/clipboardService.js";import{ICommandService as ve}from"../../../../platform/commands/common/commands.js";import{ConfigurationTarget as V,IConfigurationService as he,getLanguageTagSettingPlainKey as Lt}from"../../../../platform/configuration/common/configuration.js";import"../../../../platform/configuration/common/configurationRegistry.js";import{IContextKeyService as Ct}from"../../../../platform/contextkey/common/contextkey.js";import{IContextMenuService as be,IContextViewService as ye}from"../../../../platform/contextview/browser/contextView.js";import{IHoverService as Dt}from"../../../../platform/hover/browser/hover.js";import{IInstantiationService as ae}from"../../../../platform/instantiation/common/instantiation.js";import{IKeybindingService as Ot}from"../../../../platform/keybinding/common/keybinding.js";import{IListService as _t,WorkbenchObjectTree as kt}from"../../../../platform/list/browser/listService.js";import"../../../../platform/log/common/log.js";import{IOpenerService as wt}from"../../../../platform/opener/common/opener.js";import{IProductService as xe}from"../../../../platform/product/common/productService.js";import{ITelemetryService as Mt}from"../../../../platform/telemetry/common/telemetry.js";import{defaultButtonStyles as le,getInputBoxStyle as Le,getListStyles as Nt,getSelectBoxStyles as jt}from"../../../../platform/theme/browser/defaultStyles.js";import{editorBackground as x,foreground as F}from"../../../../platform/theme/common/colorRegistry.js";import{IThemeService as At}from"../../../../platform/theme/common/themeService.js";import{IUserDataProfilesService as Vt}from"../../../../platform/userDataProfile/common/userDataProfile.js";import{getIgnoredSettings as ce}from"../../../../platform/userDataSync/common/settingsMerge.js";import{IUserDataSyncEnablementService as Rt,getDefaultIgnoredSettings as X}from"../../../../platform/userDataSync/common/userDataSync.js";import{APPLICATION_SCOPES as Bt,APPLY_ALL_PROFILES_SETTING as H,IWorkbenchConfigurationService as Ce}from"../../../services/configuration/common/configuration.js";import{IWorkbenchEnvironmentService as Ht}from"../../../services/environment/common/environmentService.js";import{IExtensionService as Pt}from"../../../services/extensions/common/extensions.js";import{SETTINGS_AUTHORITY as Ft,SettingValueType as h}from"../../../services/preferences/common/preferences.js";import{getInvalidTypeError as De}from"../../../services/preferences/common/preferencesValidation.js";import{IExtensionsWorkbenchService as Gt}from"../../extensions/common/extensions.js";import{LANGUAGE_SETTING_TAG as Wt,SETTINGS_EDITOR_COMMAND_SHOW_CONTEXT_MENU as Ut,compareTwoNullableNumbers as Oe}from"../common/preferences.js";import{settingsNumberInputBackground as Kt,settingsNumberInputBorder as $t,settingsNumberInputForeground as qt,settingsSelectBackground as Jt,settingsSelectBorder as Xt,settingsSelectForeground as Yt,settingsSelectListBorder as zt,settingsTextInputBackground as Qt,settingsTextInputBorder as Zt,settingsTextInputForeground as en}from"../common/settingsEditorColorRegistry.js";import{settingsMoreActionIcon as tn}from"./preferencesIcons.js";import"./preferencesWidgets.js";import{SettingsTreeIndicatorsLabel as _e,getIndicatorsLabelAriaLabel as nn}from"./settingsEditorSettingIndicators.js";import"./settingsLayout.js";import{SettingsTreeGroupElement as P,SettingsTreeNewExtensionsElement as ke,SettingsTreeSettingElement as R,inspectSetting as rn,objectSettingSupportsRemoveDefaultValue as we,settingKeyToDisplayFormat as sn}from"./settingsTreeModels.js";import{ExcludeSettingWidget as on,IncludeSettingWidget as an,ListSettingWidget as ln,ObjectSettingCheckboxWidget as Me,ObjectSettingDropdownWidget as Ne}from"./settingsWidgets.js";const m=g.$;function cn(o){const t=typeof o.defaultValue=="object"?o.defaultValue??{}:{},e=o.isConfigured?{...t,...o.scopeValue}:t;return Object.keys(e).filter(n=>!!e[n]).map(n=>{const i=t[n];let r;if(i===e[n]&&o.setting.type==="object"&&o.defaultValueSource instanceof Map){const c=o.defaultValueSource.get(`${o.setting.key}.${n}`);r=typeof c=="string"?c:c?.displayName}const s=e[n],a=typeof s=="boolean"?void 0:s.when;return{value:{type:"string",data:n},sibling:a,elementType:o.valueType,source:r}})}function dn(o,t){const e=new Set(o);return t.forEach(({key:n})=>e.delete(n.data)),e.size===0}function G(o){if(o.anyOf)return o.anyOf.map(G).flat();const t=o.enumDescriptions??[];return(o.enum??[]).map((e,n)=>{const i=n<t.length?t[n]:void 0;return{value:e,description:i}})}function W(o){return o.anyOf?o.anyOf.map(W).some(e=>e==="enum")?"enum":"string":o.type==="boolean"?"boolean":o.type==="string"&&A(o.enum)&&o.enum.length>0?"enum":"string"}function de(o,t,e){return o==="boolean"?{type:o,data:!!t}:o==="enum"?{type:o,data:""+t,options:e}:{type:o,data:""+t}}function je(o){const t=typeof o.defaultValue=="object"?o.defaultValue??{}:{},e=typeof o.scopeValue=="object"?o.scopeValue??{}:{},n=o.isConfigured?{...t,...e}:o.hasPolicyValue?o.scopeValue:t,{objectProperties:i,objectPatternProperties:r,objectAdditionalProperties:s}=o.setting,a=Object.entries(r??{}).map(([l,d])=>({pattern:new RegExp(l),schema:d})),c=Object.entries(i??{}).map(([l,d])=>({value:l,description:d.description}));return Object.keys(n).map(l=>{const d=t[l];let p;if(d===n[l]&&o.setting.type==="object"&&o.defaultValueSource instanceof Map){const v=o.defaultValueSource.get(`${o.setting.key}.${l}`);p=typeof v=="string"?v:v?.displayName}if(A(i)&&l in i){const v=G(i[l]);return{key:{type:"enum",data:l,options:c},value:de(W(i[l]),n[l],v),keyDescription:i[l].description,removable:J(d),resetable:!J(d),source:p}}const f=d===void 0||we(o.setting.key),E=!!d&&d!==n[l],I=a.find(({pattern:v})=>v.test(l))?.schema;if(I){const v=G(I);return{key:{type:"string",data:l},value:de(W(I),n[l],v),keyDescription:I.description,removable:f,resetable:E,source:p}}const D=G(typeof s=="boolean"?{}:s??{});return{key:{type:"string",data:l},value:de(typeof s=="object"?W(s):"string",n[l],D),keyDescription:typeof s=="object"?s.description:void 0,removable:f,resetable:E,source:p}}).filter(l=>!J(l.value.data))}function gn(o){const t=typeof o.defaultValue=="object"?o.defaultValue??{}:{},e=typeof o.scopeValue=="object"?o.scopeValue??{}:{},n=o.isConfigured?{...t,...e}:t,{objectProperties:i}=o.setting,r=[];for(const s in i){const a=t[s];let c;if(a===n[s]&&o.setting.type==="object"&&o.defaultValueSource instanceof Map){const l=o.defaultValueSource.get(s);c=typeof l=="string"?l:l?.displayName}r.push({key:{type:"string",data:s},value:{type:"boolean",data:!!n[s]},keyDescription:i[s].description,removable:!1,resetable:!0,source:c})}return r}function un(o){return(t,e)=>{const n=[];return o.setting.enum&&o.setting.enum.forEach((i,r)=>{if(!o.setting.uniqueItems||e!==void 0&&i===t[e]||!t.includes(i)){const s=o.setting.enumDescriptions?.[r];n.push({value:i,description:s})}}),n.length>0?{type:"enum",data:n[0].value,options:n}:void 0}}function pn(o){const{objectProperties:t}=o.setting,e=Object.keys(t??{});return n=>{const i=new Set(n),r=[];return e.forEach(s=>{i.has(s)||r.push({value:s,description:t[s].description})}),r.length>0?{type:"enum",data:r[0].value,options:r}:void 0}}function mn(o){const{objectProperties:t,objectPatternProperties:e,objectAdditionalProperties:n}=o.setting,i=Object.entries(e??{}).map(([r,s])=>({pattern:new RegExp(r),schema:s}));return r=>{let s;A(t)&&r in t&&(s=t[r]);const a=s??i.find(({pattern:c})=>c.test(r))?.schema;if(A(a)?s=a:A(n)&&typeof n=="object"&&(s=n),A(s)){const c=W(s);if(c==="boolean")return{type:c,data:s.default??!0};if(c==="enum"){const l=G(s);return{type:c,data:s.default??l[0].value,options:l}}else return{type:c,data:s.default??""}}}}function Y(o){return o==="number"||o==="integer"}function Sn(o,t){const e={};for(const n in t){let i;const r=o.setting.objectPatternProperties,s=o.setting.objectProperties,a=o.setting.objectAdditionalProperties;if(s){for(const c in s)if(c===n){i=Y(s[c].type);break}}if(i===void 0&&r){for(const c in r)if(n.match(c)){i=Y(r[c].type);break}}i===void 0&&a&&typeof a!="boolean"&&Y(a.type)&&(i=!0),e[n]=i?Number(t[n]):t[n]}return e}function In(o){if(!o.value||!Array.isArray(o.value))return[];if(o.setting.arrayItemType==="enum"){let t=[];return o.setting.enum&&(t=o.setting.enum.map((e,n)=>({value:e,description:o.setting.enumDescriptions?.[n]}))),o.value.map(e=>({value:{type:"enum",data:e,options:t}}))}else return o.value.map(t=>({value:{type:"string",data:t}}))}function Tn(o,t){return o.setting.enum&&o.setting.uniqueItems?o.setting.enum.length-t.length>0:!0}function wr(o,t,e){const n=Re(t);return{tree:Ae(o,n,e),leftoverSettings:n}}function Mr(o,t,e,n){return[...Re(o)].filter(r=>r.restricted&&rn(r.key,t,e,n).isConfigured)}async function Nr(o,t){const e=new Map,n=(s,a,c)=>{if(!e.has(s)){const l={id:s,label:a,children:[]};e.set(s,l)}e.get(s).children.push(c)},i=async s=>{const a=s.sections.map(E=>E.settings).flat(),c=s.extensionInfo.id,l=await o.getExtension(c),d=l?.displayName??l?.name??c,f={id:s.id&&s.id!==c?s.id:s.title,label:s.title,order:s.order,settings:a};n(c,d,f)},r=t.map(s=>i(s));return Promise.all(r).then(()=>{const s=[];for(const a of e.values()){for(const c of a.children)c.settings?.sort((l,d)=>Oe(l.order,d.order));if(a.children.length===1)s.push({id:a.id,label:a.children[0].label,settings:a.children[0].settings});else{a.children.sort((l,d)=>Oe(l.order,d.order));const c=a.children.find(l=>l.label===a.label);if(c&&!c.children){const l=a.children.filter(d=>d!==c);s.push({id:a.id,label:a.label,settings:c.settings,children:l})}else s.push(a)}}return s.sort((a,c)=>a.label.localeCompare(c.label)),{id:"extensions",label:T("extensions","Extensions"),children:s}})}function Ae(o,t,e){let n;o.children&&(n=o.children.filter(r=>r.hide!==!0).map(r=>Ae(r,t,e)).filter(r=>r.children?.length||r.settings?.length));let i;if(o.settings&&(i=o.settings.map(r=>En(t,r,e)).flat()),!n&&!i)throw new Error(`TOC node has no child groups or settings: ${o.id}`);return{id:o.id,label:o.label,children:n,settings:i}}const fn=[/^settingsSync\..*/,/^sync\..*/,/^workbench.fontAliasing$/];function En(o,t,e){const n=[];return o.forEach(i=>{hn(i,t)&&(n.push(i),o.delete(i))}),!n.length&&!fn.some(i=>i.test(t))&&e.warn(`Settings pattern "${t}" doesn't match any settings`),n.sort((i,r)=>i.key.localeCompare(r.key))}const Ve=new Map;function vn(o){return o=ht(o).replace(/\\\*/g,".*"),new RegExp(`^${o}$`,"i")}function hn(o,t){let e=Ve.get(t);return e||(e=vn(t),Ve.set(t,e)),e.test(o.key)}function Re(o){const t=new Set;for(const e of o)for(const n of e.sections)for(const i of n.settings)(!i.overrides||!i.overrides.length)&&t.add(i);return t}const Be="settings.text.template",He="settings.multilineText.template",Pe="settings.number.template",Fe="settings.enum.template",Ge="settings.bool.template",We="settings.array.template",Ue="settings.exclude.template",Ke="settings.include.template",$e="settings.object.template",qe="settings.boolObject.template",z="settings.complex.template",Je="settings.complexObject.template",Xe="settings.newExtensions.template",Ye="settings.group.template",ze="settings.extensionToggle.template";function bn(o){o.querySelectorAll(`
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { BrowserFeatures } from "../../../../base/browser/canIUse.js";
+import * as DOM from "../../../../base/browser/dom.js";
+import * as domStylesheetsJs from "../../../../base/browser/domStylesheets.js";
+import { StandardKeyboardEvent } from "../../../../base/browser/keyboardEvent.js";
+import { renderMarkdownAsPlaintext } from "../../../../base/browser/markdownRenderer.js";
+import { IMouseEvent } from "../../../../base/browser/mouseEvent.js";
+import * as aria from "../../../../base/browser/ui/aria/aria.js";
+import { Button } from "../../../../base/browser/ui/button/button.js";
+import { SimpleIconLabel } from "../../../../base/browser/ui/iconLabel/simpleIconLabel.js";
+import { IInputOptions, InputBox } from "../../../../base/browser/ui/inputbox/inputBox.js";
+import { CachedListVirtualDelegate } from "../../../../base/browser/ui/list/list.js";
+import { DefaultStyleController, IListAccessibilityProvider } from "../../../../base/browser/ui/list/listWidget.js";
+import { ISelectOptionItem, SelectBox } from "../../../../base/browser/ui/selectBox/selectBox.js";
+import { Toggle, unthemedToggleStyles } from "../../../../base/browser/ui/toggle/toggle.js";
+import { ToolBar } from "../../../../base/browser/ui/toolbar/toolbar.js";
+import { RenderIndentGuides } from "../../../../base/browser/ui/tree/abstractTree.js";
+import { IObjectTreeOptions } from "../../../../base/browser/ui/tree/objectTree.js";
+import { ObjectTreeModel } from "../../../../base/browser/ui/tree/objectTreeModel.js";
+import { ITreeFilter, ITreeModel, ITreeNode, ITreeRenderer, TreeFilterResult, TreeVisibility } from "../../../../base/browser/ui/tree/tree.js";
+import { Action, IAction, Separator } from "../../../../base/common/actions.js";
+import { distinct } from "../../../../base/common/arrays.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { onUnexpectedError } from "../../../../base/common/errors.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { IJSONSchema } from "../../../../base/common/jsonSchema.js";
+import { KeyCode } from "../../../../base/common/keyCodes.js";
+import { Disposable, DisposableStore, isDisposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { isIOS } from "../../../../base/common/platform.js";
+import { escapeRegExpCharacters } from "../../../../base/common/strings.js";
+import { isDefined, isUndefinedOrNull } from "../../../../base/common/types.js";
+import { URI } from "../../../../base/common/uri.js";
+import { MarkdownRenderer } from "../../../../editor/browser/widget/markdownRenderer/browser/markdownRenderer.js";
+import { ILanguageService } from "../../../../editor/common/languages/language.js";
+import { localize } from "../../../../nls.js";
+import { IClipboardService } from "../../../../platform/clipboard/common/clipboardService.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { ConfigurationTarget, IConfigurationService, getLanguageTagSettingPlainKey } from "../../../../platform/configuration/common/configuration.js";
+import { ConfigurationScope } from "../../../../platform/configuration/common/configurationRegistry.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IContextMenuService, IContextViewService } from "../../../../platform/contextview/browser/contextView.js";
+import { IHoverService } from "../../../../platform/hover/browser/hover.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { IListService, WorkbenchObjectTree } from "../../../../platform/list/browser/listService.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { IOpenerService } from "../../../../platform/opener/common/opener.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { defaultButtonStyles, getInputBoxStyle, getListStyles, getSelectBoxStyles } from "../../../../platform/theme/browser/defaultStyles.js";
+import { editorBackground, foreground } from "../../../../platform/theme/common/colorRegistry.js";
+import { IThemeService } from "../../../../platform/theme/common/themeService.js";
+import { IUserDataProfilesService } from "../../../../platform/userDataProfile/common/userDataProfile.js";
+import { getIgnoredSettings } from "../../../../platform/userDataSync/common/settingsMerge.js";
+import { IUserDataSyncEnablementService, getDefaultIgnoredSettings } from "../../../../platform/userDataSync/common/userDataSync.js";
+import { APPLICATION_SCOPES, APPLY_ALL_PROFILES_SETTING, IWorkbenchConfigurationService } from "../../../services/configuration/common/configuration.js";
+import { IWorkbenchEnvironmentService } from "../../../services/environment/common/environmentService.js";
+import { IExtensionService } from "../../../services/extensions/common/extensions.js";
+import { ISetting, ISettingsGroup, SETTINGS_AUTHORITY, SettingValueType } from "../../../services/preferences/common/preferences.js";
+import { getInvalidTypeError } from "../../../services/preferences/common/preferencesValidation.js";
+import { IExtensionsWorkbenchService } from "../../extensions/common/extensions.js";
+import { LANGUAGE_SETTING_TAG, SETTINGS_EDITOR_COMMAND_SHOW_CONTEXT_MENU, compareTwoNullableNumbers } from "../common/preferences.js";
+import { settingsNumberInputBackground, settingsNumberInputBorder, settingsNumberInputForeground, settingsSelectBackground, settingsSelectBorder, settingsSelectForeground, settingsSelectListBorder, settingsTextInputBackground, settingsTextInputBorder, settingsTextInputForeground } from "../common/settingsEditorColorRegistry.js";
+import { settingsMoreActionIcon } from "./preferencesIcons.js";
+import { SettingsTarget } from "./preferencesWidgets.js";
+import { ISettingOverrideClickEvent, SettingsTreeIndicatorsLabel, getIndicatorsLabelAriaLabel } from "./settingsEditorSettingIndicators.js";
+import { ITOCEntry } from "./settingsLayout.js";
+import { ISettingsEditorViewState, SettingsTreeElement, SettingsTreeGroupChild, SettingsTreeGroupElement, SettingsTreeNewExtensionsElement, SettingsTreeSettingElement, inspectSetting, objectSettingSupportsRemoveDefaultValue, settingKeyToDisplayFormat } from "./settingsTreeModels.js";
+import { ExcludeSettingWidget, IBoolObjectDataItem, IIncludeExcludeDataItem, IListDataItem, IObjectDataItem, IObjectEnumOption, IObjectKeySuggester, IObjectValueSuggester, IncludeSettingWidget, ListSettingWidget, ObjectSettingCheckboxWidget, ObjectSettingDropdownWidget, ObjectValue, SettingListEvent } from "./settingsWidgets.js";
+const $ = DOM.$;
+function getIncludeExcludeDisplayValue(element) {
+  const elementDefaultValue = typeof element.defaultValue === "object" ? element.defaultValue ?? {} : {};
+  const data = element.isConfigured ? { ...elementDefaultValue, ...element.scopeValue } : elementDefaultValue;
+  return Object.keys(data).filter((key) => !!data[key]).map((key) => {
+    const defaultValue = elementDefaultValue[key];
+    let source;
+    if (defaultValue === data[key] && element.setting.type === "object" && element.defaultValueSource instanceof Map) {
+      const defaultSource = element.defaultValueSource.get(`${element.setting.key}.${key}`);
+      source = typeof defaultSource === "string" ? defaultSource : defaultSource?.displayName;
+    }
+    const value = data[key];
+    const sibling = typeof value === "boolean" ? void 0 : value.when;
+    return {
+      value: {
+        type: "string",
+        data: key
+      },
+      sibling,
+      elementType: element.valueType,
+      source
+    };
+  });
+}
+__name(getIncludeExcludeDisplayValue, "getIncludeExcludeDisplayValue");
+function areAllPropertiesDefined(properties, itemsToDisplay) {
+  const staticProperties = new Set(properties);
+  itemsToDisplay.forEach(({ key }) => staticProperties.delete(key.data));
+  return staticProperties.size === 0;
+}
+__name(areAllPropertiesDefined, "areAllPropertiesDefined");
+function getEnumOptionsFromSchema(schema) {
+  if (schema.anyOf) {
+    return schema.anyOf.map(getEnumOptionsFromSchema).flat();
+  }
+  const enumDescriptions = schema.enumDescriptions ?? [];
+  return (schema.enum ?? []).map((value, idx) => {
+    const description = idx < enumDescriptions.length ? enumDescriptions[idx] : void 0;
+    return { value, description };
+  });
+}
+__name(getEnumOptionsFromSchema, "getEnumOptionsFromSchema");
+function getObjectValueType(schema) {
+  if (schema.anyOf) {
+    const subTypes = schema.anyOf.map(getObjectValueType);
+    if (subTypes.some((type) => type === "enum")) {
+      return "enum";
+    }
+    return "string";
+  }
+  if (schema.type === "boolean") {
+    return "boolean";
+  } else if (schema.type === "string" && isDefined(schema.enum) && schema.enum.length > 0) {
+    return "enum";
+  } else {
+    return "string";
+  }
+}
+__name(getObjectValueType, "getObjectValueType");
+function getObjectEntryValueDisplayValue(type, data, options) {
+  if (type === "boolean") {
+    return { type, data: !!data };
+  } else if (type === "enum") {
+    return { type, data: "" + data, options };
+  } else {
+    return { type, data: "" + data };
+  }
+}
+__name(getObjectEntryValueDisplayValue, "getObjectEntryValueDisplayValue");
+function getObjectDisplayValue(element) {
+  const elementDefaultValue = typeof element.defaultValue === "object" ? element.defaultValue ?? {} : {};
+  const elementScopeValue = typeof element.scopeValue === "object" ? element.scopeValue ?? {} : {};
+  const data = element.isConfigured ? { ...elementDefaultValue, ...elementScopeValue } : element.hasPolicyValue ? element.scopeValue : elementDefaultValue;
+  const { objectProperties, objectPatternProperties, objectAdditionalProperties } = element.setting;
+  const patternsAndSchemas = Object.entries(objectPatternProperties ?? {}).map(([pattern, schema]) => ({
+    pattern: new RegExp(pattern),
+    schema
+  }));
+  const wellDefinedKeyEnumOptions = Object.entries(objectProperties ?? {}).map(
+    ([key, schema]) => ({ value: key, description: schema.description })
+  );
+  return Object.keys(data).map((key) => {
+    const defaultValue = elementDefaultValue[key];
+    let source;
+    if (defaultValue === data[key] && element.setting.type === "object" && element.defaultValueSource instanceof Map) {
+      const defaultSource = element.defaultValueSource.get(`${element.setting.key}.${key}`);
+      source = typeof defaultSource === "string" ? defaultSource : defaultSource?.displayName;
+    }
+    if (isDefined(objectProperties) && key in objectProperties) {
+      const valueEnumOptions = getEnumOptionsFromSchema(objectProperties[key]);
+      return {
+        key: {
+          type: "enum",
+          data: key,
+          options: wellDefinedKeyEnumOptions
+        },
+        value: getObjectEntryValueDisplayValue(getObjectValueType(objectProperties[key]), data[key], valueEnumOptions),
+        keyDescription: objectProperties[key].description,
+        removable: isUndefinedOrNull(defaultValue),
+        resetable: !isUndefinedOrNull(defaultValue),
+        source
+      };
+    }
+    const removable = defaultValue === void 0 || objectSettingSupportsRemoveDefaultValue(element.setting.key);
+    const resetable = !!defaultValue && defaultValue !== data[key];
+    const schema = patternsAndSchemas.find(({ pattern }) => pattern.test(key))?.schema;
+    if (schema) {
+      const valueEnumOptions = getEnumOptionsFromSchema(schema);
+      return {
+        key: { type: "string", data: key },
+        value: getObjectEntryValueDisplayValue(getObjectValueType(schema), data[key], valueEnumOptions),
+        keyDescription: schema.description,
+        removable,
+        resetable,
+        source
+      };
+    }
+    const additionalValueEnums = getEnumOptionsFromSchema(
+      typeof objectAdditionalProperties === "boolean" ? {} : objectAdditionalProperties ?? {}
+    );
+    return {
+      key: { type: "string", data: key },
+      value: getObjectEntryValueDisplayValue(
+        typeof objectAdditionalProperties === "object" ? getObjectValueType(objectAdditionalProperties) : "string",
+        data[key],
+        additionalValueEnums
+      ),
+      keyDescription: typeof objectAdditionalProperties === "object" ? objectAdditionalProperties.description : void 0,
+      removable,
+      resetable,
+      source
+    };
+  }).filter((item) => !isUndefinedOrNull(item.value.data));
+}
+__name(getObjectDisplayValue, "getObjectDisplayValue");
+function getBoolObjectDisplayValue(element) {
+  const elementDefaultValue = typeof element.defaultValue === "object" ? element.defaultValue ?? {} : {};
+  const elementScopeValue = typeof element.scopeValue === "object" ? element.scopeValue ?? {} : {};
+  const data = element.isConfigured ? { ...elementDefaultValue, ...elementScopeValue } : elementDefaultValue;
+  const { objectProperties } = element.setting;
+  const displayValues = [];
+  for (const key in objectProperties) {
+    const defaultValue = elementDefaultValue[key];
+    let source;
+    if (defaultValue === data[key] && element.setting.type === "object" && element.defaultValueSource instanceof Map) {
+      const defaultSource = element.defaultValueSource.get(key);
+      source = typeof defaultSource === "string" ? defaultSource : defaultSource?.displayName;
+    }
+    displayValues.push({
+      key: {
+        type: "string",
+        data: key
+      },
+      value: {
+        type: "boolean",
+        data: !!data[key]
+      },
+      keyDescription: objectProperties[key].description,
+      removable: false,
+      resetable: true,
+      source
+    });
+  }
+  return displayValues;
+}
+__name(getBoolObjectDisplayValue, "getBoolObjectDisplayValue");
+function createArraySuggester(element) {
+  return (keys, idx) => {
+    const enumOptions = [];
+    if (element.setting.enum) {
+      element.setting.enum.forEach((key, i) => {
+        if (!element.setting.uniqueItems || idx !== void 0 && key === keys[idx] || !keys.includes(key)) {
+          const description = element.setting.enumDescriptions?.[i];
+          enumOptions.push({ value: key, description });
+        }
+      });
+    }
+    return enumOptions.length > 0 ? { type: "enum", data: enumOptions[0].value, options: enumOptions } : void 0;
+  };
+}
+__name(createArraySuggester, "createArraySuggester");
+function createObjectKeySuggester(element) {
+  const { objectProperties } = element.setting;
+  const allStaticKeys = Object.keys(objectProperties ?? {});
+  return (keys) => {
+    const existingKeys = new Set(keys);
+    const enumOptions = [];
+    allStaticKeys.forEach((staticKey) => {
+      if (!existingKeys.has(staticKey)) {
+        enumOptions.push({ value: staticKey, description: objectProperties[staticKey].description });
+      }
+    });
+    return enumOptions.length > 0 ? { type: "enum", data: enumOptions[0].value, options: enumOptions } : void 0;
+  };
+}
+__name(createObjectKeySuggester, "createObjectKeySuggester");
+function createObjectValueSuggester(element) {
+  const { objectProperties, objectPatternProperties, objectAdditionalProperties } = element.setting;
+  const patternsAndSchemas = Object.entries(objectPatternProperties ?? {}).map(([pattern, schema]) => ({
+    pattern: new RegExp(pattern),
+    schema
+  }));
+  return (key) => {
+    let suggestedSchema;
+    if (isDefined(objectProperties) && key in objectProperties) {
+      suggestedSchema = objectProperties[key];
+    }
+    const patternSchema = suggestedSchema ?? patternsAndSchemas.find(({ pattern }) => pattern.test(key))?.schema;
+    if (isDefined(patternSchema)) {
+      suggestedSchema = patternSchema;
+    } else if (isDefined(objectAdditionalProperties) && typeof objectAdditionalProperties === "object") {
+      suggestedSchema = objectAdditionalProperties;
+    }
+    if (isDefined(suggestedSchema)) {
+      const type = getObjectValueType(suggestedSchema);
+      if (type === "boolean") {
+        return { type, data: suggestedSchema.default ?? true };
+      } else if (type === "enum") {
+        const options = getEnumOptionsFromSchema(suggestedSchema);
+        return { type, data: suggestedSchema.default ?? options[0].value, options };
+      } else {
+        return { type, data: suggestedSchema.default ?? "" };
+      }
+    }
+    return;
+  };
+}
+__name(createObjectValueSuggester, "createObjectValueSuggester");
+function isNonNullableNumericType(type) {
+  return type === "number" || type === "integer";
+}
+__name(isNonNullableNumericType, "isNonNullableNumericType");
+function parseNumericObjectValues(dataElement, v) {
+  const newRecord = {};
+  for (const key in v) {
+    let keyMatchesNumericProperty;
+    const patternProperties = dataElement.setting.objectPatternProperties;
+    const properties = dataElement.setting.objectProperties;
+    const additionalProperties = dataElement.setting.objectAdditionalProperties;
+    if (properties) {
+      for (const propKey in properties) {
+        if (propKey === key) {
+          keyMatchesNumericProperty = isNonNullableNumericType(properties[propKey].type);
+          break;
+        }
+      }
+    }
+    if (keyMatchesNumericProperty === void 0 && patternProperties) {
+      for (const patternKey in patternProperties) {
+        if (key.match(patternKey)) {
+          keyMatchesNumericProperty = isNonNullableNumericType(patternProperties[patternKey].type);
+          break;
+        }
+      }
+    }
+    if (keyMatchesNumericProperty === void 0 && additionalProperties && typeof additionalProperties !== "boolean") {
+      if (isNonNullableNumericType(additionalProperties.type)) {
+        keyMatchesNumericProperty = true;
+      }
+    }
+    newRecord[key] = keyMatchesNumericProperty ? Number(v[key]) : v[key];
+  }
+  return newRecord;
+}
+__name(parseNumericObjectValues, "parseNumericObjectValues");
+function getListDisplayValue(element) {
+  if (!element.value || !Array.isArray(element.value)) {
+    return [];
+  }
+  if (element.setting.arrayItemType === "enum") {
+    let enumOptions = [];
+    if (element.setting.enum) {
+      enumOptions = element.setting.enum.map((setting, i) => {
+        return {
+          value: setting,
+          description: element.setting.enumDescriptions?.[i]
+        };
+      });
+    }
+    return element.value.map((key) => {
+      return {
+        value: {
+          type: "enum",
+          data: key,
+          options: enumOptions
+        }
+      };
+    });
+  } else {
+    return element.value.map((key) => {
+      return {
+        value: {
+          type: "string",
+          data: key
+        }
+      };
+    });
+  }
+}
+__name(getListDisplayValue, "getListDisplayValue");
+function getShowAddButtonList(dataElement, listDisplayValue) {
+  if (dataElement.setting.enum && dataElement.setting.uniqueItems) {
+    return dataElement.setting.enum.length - listDisplayValue.length > 0;
+  } else {
+    return true;
+  }
+}
+__name(getShowAddButtonList, "getShowAddButtonList");
+function resolveSettingsTree(tocData, coreSettingsGroups, logService) {
+  const allSettings = getFlatSettings(coreSettingsGroups);
+  return {
+    tree: _resolveSettingsTree(tocData, allSettings, logService),
+    leftoverSettings: allSettings
+  };
+}
+__name(resolveSettingsTree, "resolveSettingsTree");
+function resolveConfiguredUntrustedSettings(groups, target, languageFilter, configurationService) {
+  const allSettings = getFlatSettings(groups);
+  return [...allSettings].filter((setting) => setting.restricted && inspectSetting(setting.key, target, languageFilter, configurationService).isConfigured);
+}
+__name(resolveConfiguredUntrustedSettings, "resolveConfiguredUntrustedSettings");
+async function createTocTreeForExtensionSettings(extensionService, groups) {
+  const extGroupTree = /* @__PURE__ */ new Map();
+  const addEntryToTree = /* @__PURE__ */ __name((extensionId, extensionName, childEntry) => {
+    if (!extGroupTree.has(extensionId)) {
+      const rootEntry = {
+        id: extensionId,
+        label: extensionName,
+        children: []
+      };
+      extGroupTree.set(extensionId, rootEntry);
+    }
+    extGroupTree.get(extensionId).children.push(childEntry);
+  }, "addEntryToTree");
+  const processGroupEntry = /* @__PURE__ */ __name(async (group) => {
+    const flatSettings = group.sections.map((section) => section.settings).flat();
+    const extensionId = group.extensionInfo.id;
+    const extension = await extensionService.getExtension(extensionId);
+    const extensionName = extension?.displayName ?? extension?.name ?? extensionId;
+    const settingGroupId = group.id && group.id !== extensionId ? group.id : group.title;
+    const childEntry = {
+      id: settingGroupId,
+      label: group.title,
+      order: group.order,
+      settings: flatSettings
+    };
+    addEntryToTree(extensionId, extensionName, childEntry);
+  }, "processGroupEntry");
+  const processPromises = groups.map((g) => processGroupEntry(g));
+  return Promise.all(processPromises).then(() => {
+    const extGroups = [];
+    for (const extensionRootEntry of extGroupTree.values()) {
+      for (const child of extensionRootEntry.children) {
+        child.settings?.sort((a, b) => {
+          return compareTwoNullableNumbers(a.order, b.order);
+        });
+      }
+      if (extensionRootEntry.children.length === 1) {
+        extGroups.push({
+          id: extensionRootEntry.id,
+          label: extensionRootEntry.children[0].label,
+          settings: extensionRootEntry.children[0].settings
+        });
+      } else {
+        extensionRootEntry.children.sort((a, b) => {
+          return compareTwoNullableNumbers(a.order, b.order);
+        });
+        const ungroupedChild = extensionRootEntry.children.find((child) => child.label === extensionRootEntry.label);
+        if (ungroupedChild && !ungroupedChild.children) {
+          const groupedChildren = extensionRootEntry.children.filter((child) => child !== ungroupedChild);
+          extGroups.push({
+            id: extensionRootEntry.id,
+            label: extensionRootEntry.label,
+            settings: ungroupedChild.settings,
+            children: groupedChildren
+          });
+        } else {
+          extGroups.push(extensionRootEntry);
+        }
+      }
+    }
+    extGroups.sort((a, b) => a.label.localeCompare(b.label));
+    return {
+      id: "extensions",
+      label: localize("extensions", "Extensions"),
+      children: extGroups
+    };
+  });
+}
+__name(createTocTreeForExtensionSettings, "createTocTreeForExtensionSettings");
+function _resolveSettingsTree(tocData, allSettings, logService) {
+  let children;
+  if (tocData.children) {
+    children = tocData.children.filter((child) => child.hide !== true).map((child) => _resolveSettingsTree(child, allSettings, logService)).filter((child) => child.children?.length || child.settings?.length);
+  }
+  let settings;
+  if (tocData.settings) {
+    settings = tocData.settings.map((pattern) => getMatchingSettings(allSettings, pattern, logService)).flat();
+  }
+  if (!children && !settings) {
+    throw new Error(`TOC node has no child groups or settings: ${tocData.id}`);
+  }
+  return {
+    id: tocData.id,
+    label: tocData.label,
+    children,
+    settings
+  };
+}
+__name(_resolveSettingsTree, "_resolveSettingsTree");
+const knownDynamicSettingGroups = [
+  /^settingsSync\..*/,
+  /^sync\..*/,
+  /^workbench.fontAliasing$/
+];
+function getMatchingSettings(allSettings, pattern, logService) {
+  const result = [];
+  allSettings.forEach((s) => {
+    if (settingMatches(s, pattern)) {
+      result.push(s);
+      allSettings.delete(s);
+    }
+  });
+  if (!result.length && !knownDynamicSettingGroups.some((r) => r.test(pattern))) {
+    logService.warn(`Settings pattern "${pattern}" doesn't match any settings`);
+  }
+  return result.sort((a, b) => a.key.localeCompare(b.key));
+}
+__name(getMatchingSettings, "getMatchingSettings");
+const settingPatternCache = /* @__PURE__ */ new Map();
+function createSettingMatchRegExp(pattern) {
+  pattern = escapeRegExpCharacters(pattern).replace(/\\\*/g, ".*");
+  return new RegExp(`^${pattern}$`, "i");
+}
+__name(createSettingMatchRegExp, "createSettingMatchRegExp");
+function settingMatches(s, pattern) {
+  let regExp = settingPatternCache.get(pattern);
+  if (!regExp) {
+    regExp = createSettingMatchRegExp(pattern);
+    settingPatternCache.set(pattern, regExp);
+  }
+  return regExp.test(s.key);
+}
+__name(settingMatches, "settingMatches");
+function getFlatSettings(settingsGroups) {
+  const result = /* @__PURE__ */ new Set();
+  for (const group of settingsGroups) {
+    for (const section of group.sections) {
+      for (const s of section.settings) {
+        if (!s.overrides || !s.overrides.length) {
+          result.add(s);
+        }
+      }
+    }
+  }
+  return result;
+}
+__name(getFlatSettings, "getFlatSettings");
+const SETTINGS_TEXT_TEMPLATE_ID = "settings.text.template";
+const SETTINGS_MULTILINE_TEXT_TEMPLATE_ID = "settings.multilineText.template";
+const SETTINGS_NUMBER_TEMPLATE_ID = "settings.number.template";
+const SETTINGS_ENUM_TEMPLATE_ID = "settings.enum.template";
+const SETTINGS_BOOL_TEMPLATE_ID = "settings.bool.template";
+const SETTINGS_ARRAY_TEMPLATE_ID = "settings.array.template";
+const SETTINGS_EXCLUDE_TEMPLATE_ID = "settings.exclude.template";
+const SETTINGS_INCLUDE_TEMPLATE_ID = "settings.include.template";
+const SETTINGS_OBJECT_TEMPLATE_ID = "settings.object.template";
+const SETTINGS_BOOL_OBJECT_TEMPLATE_ID = "settings.boolObject.template";
+const SETTINGS_COMPLEX_TEMPLATE_ID = "settings.complex.template";
+const SETTINGS_COMPLEX_OBJECT_TEMPLATE_ID = "settings.complexObject.template";
+const SETTINGS_NEW_EXTENSIONS_TEMPLATE_ID = "settings.newExtensions.template";
+const SETTINGS_ELEMENT_TEMPLATE_ID = "settings.group.template";
+const SETTINGS_EXTENSION_TOGGLE_TEMPLATE_ID = "settings.extensionToggle.template";
+function removeChildrenFromTabOrder(node) {
+  const focusableElements = node.querySelectorAll(`
 		[tabindex="0"],
 		input:not([tabindex="-1"]),
 		select:not([tabindex="-1"]),
@@ -6,4 +560,1705 @@ var rt=Object.defineProperty;var st=Object.getOwnPropertyDescriptor;var b=(o,t,e
 		a:not([tabindex="-1"]),
 		button:not([tabindex="-1"]),
 		area:not([tabindex="-1"])
-	`).forEach(e=>{e.setAttribute(u.ELEMENT_FOCUSABLE_ATTR,"true"),e.setAttribute("tabindex","-1")})}function yn(o){o.querySelectorAll(`[${u.ELEMENT_FOCUSABLE_ATTR}="true"]`).forEach(e=>{e.removeAttribute(u.ELEMENT_FOCUSABLE_ATTR),e.setAttribute("tabindex","0")})}let u=class extends fe{constructor(e,n,i,r,s,a,c,l,d,p,f,E,I,D,v){super();this.settingActions=e;this.disposableActionFactory=n;this._themeService=i;this._contextViewService=r;this._openerService=s;this._instantiationService=a;this._commandService=c;this._contextMenuService=l;this._keybindingService=d;this._configService=p;this._extensionsService=f;this._extensionsWorkbenchService=E;this._productService=I;this._telemetryService=D;this._hoverService=v;this.markdownRenderer=a.createInstance(yt,{}),this.ignoredSettings=ce(X(),this._configService),this._register(this._configService.onDidChangeConfiguration(L=>{this.ignoredSettings=ce(X(),this._configService),this._onDidChangeIgnoredSettings.fire()}))}static CONTROL_CLASS="setting-control-focus-target";static CONTROL_SELECTOR="."+this.CONTROL_CLASS;static CONTENTS_CLASS="setting-item-contents";static CONTENTS_SELECTOR="."+this.CONTENTS_CLASS;static ALL_ROWS_SELECTOR=".monaco-list-row";static SETTING_KEY_ATTR="data-key";static SETTING_ID_ATTR="data-id";static ELEMENT_FOCUSABLE_ATTR="data-focusable";_onDidClickOverrideElement=this._register(new y);onDidClickOverrideElement=this._onDidClickOverrideElement.event;_onDidChangeSetting=this._register(new y);onDidChangeSetting=this._onDidChangeSetting.event;_onDidOpenSettings=this._register(new y);onDidOpenSettings=this._onDidOpenSettings.event;_onDidClickSettingLink=this._register(new y);onDidClickSettingLink=this._onDidClickSettingLink.event;_onDidFocusSetting=this._register(new y);onDidFocusSetting=this._onDidFocusSetting.event;ignoredSettings;_onDidChangeIgnoredSettings=this._register(new y);onDidChangeIgnoredSettings=this._onDidChangeIgnoredSettings.event;_onDidChangeSettingHeight=this._register(new y);onDidChangeSettingHeight=this._onDidChangeSettingHeight.event;_onApplyFilter=this._register(new y);onApplyFilter=this._onApplyFilter.event;markdownRenderer;renderCommonTemplate(e,n,i){n.classList.add("setting-item"),n.classList.add("setting-item-"+i);const r=new j,s=g.append(n,m(u.CONTENTS_SELECTOR));s.classList.add("settings-row-inner-container");const a=g.append(s,m(".setting-item-title")),c=g.append(a,m(".setting-item-cat-label-container")),l=g.append(c,m("span.setting-item-category")),d=g.append(c,m("span.setting-item-label")),p=r.add(new me(d)),f=r.add(this._instantiationService.createInstance(_e,a)),E=g.append(s,m(".setting-item-description")),I=g.append(s,m(".setting-item-modified-indicator"));r.add(this._hoverService.setupDelayedHover(I,{content:T("modified","The setting has been configured in the current scope.")}));const D=g.append(s,m(".setting-item-value")),v=g.append(D,m("div.setting-item-control")),L=g.append(s,m(".setting-item-deprecation-message")),O=g.append(s,m(".setting-toolbar-container")),ue=this.renderSettingToolbar(O),it={toDispose:r,elementDisposables:r.add(new j),containerElement:s,categoryElement:l,labelElement:p,descriptionElement:E,controlElement:v,deprecationWarningElement:L,indicatorsLabel:f,toolbar:ue};return r.add(g.addDisposableListener(v,g.EventType.MOUSE_DOWN,ne=>ne.stopPropagation())),r.add(g.addDisposableListener(a,g.EventType.MOUSE_ENTER,ne=>s.classList.add("mouseover"))),r.add(g.addDisposableListener(a,g.EventType.MOUSE_LEAVE,ne=>s.classList.remove("mouseover"))),it}addSettingElementFocusHandler(e){const n=g.trackFocus(e.containerElement);e.toDispose.add(n),e.toDispose.add(n.onDidBlur(()=>{e.containerElement.classList.contains("focused")&&e.containerElement.classList.remove("focused")})),e.toDispose.add(n.onDidFocus(()=>{e.containerElement.classList.add("focused"),e.context&&this._onDidFocusSetting.fire(e.context)}))}renderSettingToolbar(e){const n=this._keybindingService.lookupKeybinding(Ut);let i=T("settingsContextMenuTitle","More Actions... ");return n&&(i+=` (${n&&n.getLabel()})`),new St(e,this._contextMenuService,{toggleMenuTitle:i,renderDropdownAsChildElement:!Ee,moreIcon:tn})}renderSettingElement(e,n,i){const r=e.element;r.inspectSelf(),i.context=r,i.toolbar.context=r;const s=this.disposableActionFactory(r.setting,r.settingsTarget);s.forEach(p=>re(p)&&i.elementDisposables.add(p)),i.toolbar.setActions([],[...this.settingActions,...s]);const a=r.setting;i.containerElement.classList.toggle("is-configured",r.isConfigured),i.containerElement.setAttribute(u.SETTING_KEY_ATTR,r.setting.key),i.containerElement.setAttribute(u.SETTING_ID_ATTR,r.id);const c=a.key+(r.isConfigured?" - Modified":"");if(i.categoryElement.textContent=r.displayCategory?r.displayCategory+": ":"",i.elementDisposables.add(this._hoverService.setupDelayedHover(i.categoryElement,{content:c})),i.labelElement.text=r.displayLabel,i.labelElement.title=c,i.descriptionElement.innerText="",r.setting.descriptionIsMarkdown){const p=this.renderSettingMarkdown(r,i.containerElement,r.description,i.elementDisposables);i.descriptionElement.appendChild(p)}else i.descriptionElement.innerText=r.description;i.indicatorsLabel.updateScopeOverrides(r,this._onDidClickOverrideElement,this._onApplyFilter),i.elementDisposables.add(this._configService.onDidChangeConfiguration(p=>{p.affectsConfiguration(H)&&i.indicatorsLabel.updateScopeOverrides(r,this._onDidClickOverrideElement,this._onApplyFilter)}));const l=p=>this._onDidChangeSetting.fire({key:r.setting.key,value:p,type:i.context.valueType,manualReset:!1,scope:r.setting.scope}),d=r.setting.deprecationMessage||"";d&&r.setting.deprecationMessageIsMarkdown?(i.deprecationWarningElement.innerText="",i.deprecationWarningElement.appendChild(this.renderSettingMarkdown(r,i.containerElement,r.setting.deprecationMessage,i.elementDisposables))):i.deprecationWarningElement.innerText=d,i.deprecationWarningElement.prepend(m(".codicon.codicon-error")),i.containerElement.classList.toggle("is-deprecated",!!d),this.renderValue(r,i,l),i.indicatorsLabel.updateWorkspaceTrust(r),i.indicatorsLabel.updateSyncIgnored(r,this.ignoredSettings),i.indicatorsLabel.updateDefaultOverrideIndicator(r),i.indicatorsLabel.updatePreviewIndicator(r),i.elementDisposables.add(this.onDidChangeIgnoredSettings(()=>{i.indicatorsLabel.updateSyncIgnored(r,this.ignoredSettings)})),this.updateSettingTabbable(r,i),i.elementDisposables.add(r.onDidChangeTabbable(()=>{this.updateSettingTabbable(r,i)}))}updateSettingTabbable(e,n){e.tabbable?yn(n.containerElement):bn(n.containerElement)}renderSettingMarkdown(e,n,i,r){i=ge(i);const s=this.markdownRenderer.render({value:i,isTrusted:!0},{actionHandler:{callback:a=>{if(a.startsWith("#")){const c={source:e,targetKey:a.substring(1)};this._onDidClickSettingLink.fire(c)}else this._openerService.open(a,{allowCommands:!0}).catch(Te)},disposables:r},asyncRenderCallback:()=>{const a=n.clientHeight;a&&this._onDidChangeSettingHeight.fire({element:e,height:a})}});return r.add(s),s.element.classList.add("setting-item-markdown"),tt(s.element),s.element}disposeTemplate(e){e.toDispose.dispose()}disposeElement(e,n,i,r){i.elementDisposables?.clear()}};u=b([S(2,At),S(3,ye),S(4,wt),S(5,ae),S(6,ve),S(7,be),S(8,Ot),S(9,he),S(10,Pt),S(11,Gt),S(12,xe),S(13,Mt),S(14,Dt)],u);class xn{templateId=Ye;renderTemplate(t){return t.classList.add("group-title"),{parent:t,toDispose:new j}}renderElement(t,e,n){n.parent.innerText="";const i=g.append(n.parent,m("div.settings-group-title-label.settings-row-inner-container"));i.classList.add(`settings-group-level-${t.element.level}`),i.textContent=t.element.label,t.element.isFirstGroup&&i.classList.add("settings-group-first")}disposeTemplate(t){t.toDispose.dispose()}}let U=class{constructor(t){this._commandService=t}templateId=Xe;renderTemplate(t){const e=new j;t.classList.add("setting-item-new-extensions");const n=new ie(t,{title:!0,...le});e.add(n),e.add(n.onDidClick(()=>{i.context&&this._commandService.executeCommand("workbench.extensions.action.showExtensionsWithIds",i.context.extensionIds)})),n.label=T("newExtensionsButtonLabel","Show matching extensions"),n.element.classList.add("settings-new-extensions-button");const i={button:n,toDispose:e};return i}renderElement(t,e,n){n.context=t.element}disposeTemplate(t){t.toDispose.dispose()}};U=b([S(0,ve)],U);class $ extends u{static EDIT_IN_JSON_LABEL=T("editInSettingsJson","Edit in settings.json");templateId=z;renderTemplate(t){const e=this.renderCommonTemplate(null,t,"complex"),n=g.append(e.controlElement,m("a.edit-in-settings-button"));n.classList.add(u.CONTROL_CLASS),n.role="button";const i=m(".setting-item-validation-message");e.containerElement.appendChild(i);const r={...e,button:n,validationErrorMessageElement:i};return this.addSettingElementFocusHandler(r),r}renderElement(t,e,n){super.renderSettingElement(t,e,n)}renderValue(t,e,n){const i=Lt(t.setting.key),r=T("editLanguageSettingLabel","Edit settings for {0}",i),s=t.setting.isLanguageTagSetting;e.button.textContent=s?r:$.EDIT_IN_JSON_LABEL;const a=c=>{s?this._onApplyFilter.fire(`@${Wt}${i}`):this._onDidOpenSettings.fire(t.setting.key),c.preventDefault(),c.stopPropagation()};e.elementDisposables.add(g.addDisposableListener(e.button,g.EventType.CLICK,c=>{a(c)})),e.elementDisposables.add(g.addDisposableListener(e.button,g.EventType.KEY_DOWN,c=>{const l=new lt(c);(l.equals(q.Space)||l.equals(q.Enter))&&a(c)})),this.renderValidations(t,e),s?e.button.setAttribute("aria-label",r):e.button.setAttribute("aria-label",`${$.EDIT_IN_JSON_LABEL}: ${t.setting.key}`)}renderValidations(t,e){const n=t.isConfigured&&De(t.value,t.setting.type);if(n){e.containerElement.classList.add("invalid-input"),e.validationErrorMessageElement.innerText=n;return}e.containerElement.classList.remove("invalid-input")}}class Ln extends ${templateId=Je;renderTemplate(t){const e=this.renderCommonTemplate(null,t,"list"),n=e.toDispose.add(this._instantiationService.createInstance(Ne,e.controlElement));n.domNode.classList.add(u.CONTROL_CLASS);const i=g.append(g.append(e.controlElement,m(".complex-object-edit-in-settings-button-container")),m("a.complex-object.edit-in-settings-button"));i.classList.add(u.CONTROL_CLASS),i.role="button";const r=m(".setting-item-validation-message");e.containerElement.appendChild(r);const s={...e,button:i,validationErrorMessageElement:r,objectSettingWidget:n};return this.addSettingElementFocusHandler(s),s}renderValue(t,e,n){const i=je(t);e.objectSettingWidget.setValue(i,{settingKey:t.setting.key,showAddButton:!1,isReadOnly:!0}),e.button.parentElement?.classList.toggle("hide",t.hasPolicyValue),super.renderValue(t,e,n)}}class Cn extends u{templateId=We;renderTemplate(t){const e=this.renderCommonTemplate(null,t,"list"),n=e.containerElement.querySelector(".setting-item-description"),i=m(".setting-item-validation-message");n.after(i);const r=this._instantiationService.createInstance(ln,e.controlElement);r.domNode.classList.add(u.CONTROL_CLASS),e.toDispose.add(r);const s={...e,listWidget:r,validationErrorMessageElement:i};return this.addSettingElementFocusHandler(s),e.toDispose.add(r.onDidChangeList(a=>{const c=this.computeNewList(s,a);s.onChange?.(c)})),s}computeNewList(t,e){if(t.context){let n=[];if(Array.isArray(t.context.scopeValue)?n=[...t.context.scopeValue]:Array.isArray(t.context.value)&&(n=[...t.context.value]),e.type==="move"){const i=e.sourceIndex,r=e.targetIndex,s=n.splice(i,1)[0];n.splice(r,0,s)}else if(e.type==="remove"||e.type==="reset")n.splice(e.targetIndex,1);else if(e.type==="change"){const i=e.newItem.value.data.toString();e.targetIndex>-1?n[e.targetIndex]=i:n.push(i)}else e.type==="add"&&n.push(e.newItem.value.data.toString());return t.context.defaultValue&&Array.isArray(t.context.defaultValue)&&t.context.defaultValue.length===n.length&&t.context.defaultValue.join()===n.join()?void 0:n}}renderElement(t,e,n){super.renderSettingElement(t,e,n)}renderValue(t,e,n){const i=In(t),r=t.setting.enum?un(t):void 0;e.listWidget.setValue(i,{showAddButton:Tn(t,i),keySuggester:r}),e.context=t,e.elementDisposables.add(se(()=>{e.listWidget.cancelEdit()})),e.onChange=s=>{if(s&&!ee(t,e,s,!1)){const a=t.setting.arrayItemType,c=Y(a)?s.map(l=>+l):s;n(c)}else n(s)},ee(t,e,i.map(s=>s.value.data.toString()),!0)}}class Qe extends u{renderTemplateWithWidget(t,e){e.domNode.classList.add(u.CONTROL_CLASS),t.toDispose.add(e);const n=t.containerElement.querySelector(".setting-item-description"),i=m(".setting-item-validation-message");n.after(i);const r={...t,validationErrorMessageElement:i};return e instanceof Me?r.objectCheckboxWidget=e:r.objectDropdownWidget=e,this.addSettingElementFocusHandler(r),r}renderElement(t,e,n){super.renderSettingElement(t,e,n)}}class Dn extends Qe{templateId=$e;renderTemplate(t){const e=this.renderCommonTemplate(null,t,"list"),n=this._instantiationService.createInstance(Ne,e.controlElement),i=this.renderTemplateWithWidget(e,n);return e.toDispose.add(n.onDidChangeList(r=>{this.onDidChangeObject(i,r)})),i}onDidChangeObject(t,e){const n=t.objectDropdownWidget;if(t.context){const i=we(t.context.setting.key),r=typeof t.context.defaultValue=="object"?t.context.defaultValue??{}:{},s=typeof t.context.scopeValue=="object"?t.context.scopeValue??{}:{},a={...t.context.scopeValue},c=[];if(n.items.forEach((d,p)=>{(e.type==="change"||e.type==="move")&&e.targetIndex===p?(e.originalItem.key.data!==e.newItem.key.data&&i&&e.originalItem.key.data in r?a[e.originalItem.key.data]=null:delete a[e.originalItem.key.data],a[e.newItem.key.data]=e.newItem.value.data,c.push(e.newItem)):(e.type!=="change"&&e.type!=="move"||e.newItem.key.data!==d.key.data)&&(a[d.key.data]=d.value.data,c.push(d))}),e.type==="remove"||e.type==="reset"){const d=e.originalItem.key.data,p=e.type==="remove"&&i&&r[d]===e.originalItem.value.data;p?a[d]=null:delete a[d];const f=c.findIndex(I=>I.key.data===d),E=r[d];p||J(r[d])&&f>-1?c.splice(f,1):!p&&f>-1&&(c[f].value.data=E)}else e.type==="add"&&(a[e.newItem.key.data]=e.newItem.value.data,c.push(e.newItem));Object.entries(a).forEach(([d,p])=>{s[d]!==p&&r[d]===p&&!(i&&p===null)&&delete a[d]});const l=Object.keys(a).length===0?void 0:a;t.objectDropdownWidget.setValue(c),t.onChange?.(l)}}renderValue(t,e,n){const i=je(t),{key:r,objectProperties:s,objectPatternProperties:a,objectAdditionalProperties:c}=t.setting;e.objectDropdownWidget.setValue(i,{settingKey:r,showAddButton:c===!1?!dn(Object.keys(s??{}),i)||A(a):!0,keySuggester:pn(t),valueSuggester:mn(t)}),e.context=t,e.elementDisposables.add(se(()=>{e.objectDropdownWidget.cancelEdit()})),e.onChange=l=>{if(l&&!ee(t,e,l,!1)){const d=Sn(t,l);n(d)}else n(l)},ee(t,e,t.value,!0)}}class On extends Qe{templateId=qe;renderTemplate(t){const e=this.renderCommonTemplate(null,t,"list"),n=this._instantiationService.createInstance(Me,e.controlElement),i=this.renderTemplateWithWidget(e,n);return e.toDispose.add(n.onDidChangeList(r=>{this.onDidChangeObject(i,r)})),i}onDidChangeObject(t,e){if(t.context){const n=t.objectCheckboxWidget,i=typeof t.context.defaultValue=="object"?t.context.defaultValue??{}:{},r=typeof t.context.scopeValue=="object"?t.context.scopeValue??{}:{},s={...t.context.scopeValue},a=[];if(e.type!=="change"){console.warn("Unexpected event type",e.type,"for bool object setting",t.context.setting.key);return}n.items.forEach((l,d)=>{e.targetIndex===d?(s[e.newItem.key.data]=e.newItem.value.data,a.push(e.newItem)):e.newItem.key.data!==l.key.data&&(s[l.key.data]=l.value.data,a.push(l))}),Object.entries(s).forEach(([l,d])=>{r[l]!==d&&i[l]===d&&delete s[l]});const c=Object.keys(s).length===0?void 0:s;t.objectCheckboxWidget.setValue(a),t.onChange?.(c),this._onDidFocusSetting.fire(t.context)}}renderValue(t,e,n){const i=gn(t),{key:r}=t.setting;e.objectCheckboxWidget.setValue(i,{settingKey:r}),e.context=t,e.onChange=s=>{n(s)}}}class Ze extends u{renderTemplate(t){const e=this.renderCommonTemplate(null,t,"list"),n=this._instantiationService.createInstance(this.isExclude()?on:an,e.controlElement);n.domNode.classList.add(u.CONTROL_CLASS),e.toDispose.add(n);const i={...e,includeExcludeWidget:n};return this.addSettingElementFocusHandler(i),e.toDispose.add(n.onDidChangeList(r=>this.onDidChangeIncludeExclude(i,r))),i}onDidChangeIncludeExclude(t,e){if(t.context){let r=function(s){const a=Object.keys(s).sort((l,d)=>l.localeCompare(d)),c={};for(const l of a)c[l]=s[l];return c};var n=r;const i={...t.context.scopeValue};e.type!=="add"&&(e.originalItem.value.data.toString()in t.context.defaultValue?i[e.originalItem.value.data.toString()]=!1:delete i[e.originalItem.value.data.toString()]),(e.type==="change"||e.type==="add"||e.type==="move")&&(e.newItem.value.data.toString()in t.context.defaultValue&&!e.newItem.sibling?delete i[e.newItem.value.data.toString()]:i[e.newItem.value.data.toString()]=e.newItem.sibling?{when:e.newItem.sibling}:!0),this._onDidChangeSetting.fire({key:t.context.setting.key,value:Object.keys(i).length===0?void 0:r(i),type:t.context.valueType,manualReset:!1,scope:t.context.setting.scope})}}renderElement(t,e,n){super.renderSettingElement(t,e,n)}renderValue(t,e,n){const i=cn(t);e.includeExcludeWidget.setValue(i),e.context=t,e.elementDisposables.add(se(()=>{e.includeExcludeWidget.cancelEdit()}))}}class _n extends Ze{templateId=Ue;isExclude(){return!0}}class kn extends Ze{templateId=Ke;isExclude(){return!1}}const wn=Le({inputBackground:Qt,inputForeground:en,inputBorder:Zt});class et extends u{MULTILINE_MAX_HEIGHT=150;renderTemplate(t,e){const n=this.renderCommonTemplate(null,t,"text"),i=g.append(n.containerElement,m(".setting-item-validation-message")),r={flexibleHeight:e,flexibleWidth:!1,flexibleMaxHeight:this.MULTILINE_MAX_HEIGHT,inputBoxStyles:wn},s=new Se(n.controlElement,this._contextViewService,r);n.toDispose.add(s),n.toDispose.add(s.onDidChange(c=>{a.onChange?.(c)})),n.toDispose.add(s),s.inputElement.classList.add(u.CONTROL_CLASS),s.inputElement.tabIndex=0;const a={...n,inputBox:s,validationErrorMessageElement:i};return this.addSettingElementFocusHandler(a),a}renderElement(t,e,n){super.renderSettingElement(t,e,n)}renderValue(t,e,n){e.onChange=void 0,e.inputBox.value=t.value,e.inputBox.setAriaLabel(t.setting.key),e.onChange=i=>{Z(t,e,!1)||n(i)},Z(t,e,!0)}}class Mn extends et{templateId=Be;renderTemplate(t){const e=super.renderTemplate(t,!1);return e.toDispose.add(g.addStandardDisposableListener(e.inputBox.inputElement,g.EventType.KEY_DOWN,n=>{(n.equals(q.UpArrow)||n.equals(q.DownArrow))&&n.preventDefault()})),e}}class Nn extends et{templateId=He;renderTemplate(t){return super.renderTemplate(t,!0)}renderValue(t,e,n){const i=r=>{t.value=r,n(r)};super.renderValue(t,e,i),e.elementDisposables.add(e.inputBox.onDidHeightChange(r=>{e.containerElement.clientHeight&&this._onDidChangeSettingHeight.fire({element:t,height:e.containerElement.clientHeight})})),e.inputBox.layout()}}class jn extends u{templateId=Fe;renderTemplate(t){const e=this.renderCommonTemplate(null,t,"enum"),n=jt({selectBackground:Jt,selectForeground:Yt,selectBorder:Xt,selectListBorder:zt}),i=new ut([],0,this._contextViewService,n,{useCustomDrawn:!(Ee&&ot.pointerEvents)});e.toDispose.add(i),i.render(e.controlElement);const r=e.controlElement.querySelector("select");r&&(r.classList.add(u.CONTROL_CLASS),r.tabIndex=0),e.toDispose.add(i.onDidSelect(c=>{a.onChange?.(c.index)}));const s=e.containerElement.insertBefore(m(".setting-item-enumDescription"),e.descriptionElement.nextSibling),a={...e,selectBox:i,selectElement:r,enumDescriptionElement:s};return this.addSettingElementFocusHandler(a),a}renderElement(t,e,n){super.renderSettingElement(t,e,n)}renderValue(t,e,n){const i=t.setting.enumItemLabels?[...t.setting.enumItemLabels]:[],r=t.setting.enumDescriptions?[...t.setting.enumDescriptions]:[],s=[...t.setting.enum],a=t.setting.enumDescriptionsAreMarkdown,c=new j;e.elementDisposables.add(c);let l=!1;s.includes(t.defaultValue)||(s.unshift(t.defaultValue),r.unshift(""),i.unshift(""),l=!0);const d=nt(String(t.defaultValue)),p=s.map(String).map(nt).map((E,I)=>{const D=r[I]&&(a?ge(r[I],!1):r[I]);return{text:i[I]?i[I]:E,detail:i[I]?E:"",description:D,descriptionIsMarkdown:a,descriptionMarkdownActionHandler:{callback:v=>{this._openerService.open(v).catch(Te)},disposables:c},decoratorRight:E===d||l&&I===0?T("settings.Default","default"):""}});e.selectBox.setOptions(p),e.selectBox.setAriaLabel(t.setting.key);let f=s.indexOf(t.value);f===-1&&(f=0),e.onChange=void 0,e.selectBox.select(f),e.onChange=E=>{n(l&&E===0?t.defaultValue:s[E])},e.enumDescriptionElement.innerText=""}}const An=Le({inputBackground:Kt,inputForeground:qt,inputBorder:$t});class Vn extends u{templateId=Pe;renderTemplate(t){const e=super.renderCommonTemplate(null,t,"number"),n=g.append(e.containerElement,m(".setting-item-validation-message")),i=new Se(e.controlElement,this._contextViewService,{type:"number",inputBoxStyles:An});e.toDispose.add(i),e.toDispose.add(i.onDidChange(s=>{r.onChange?.(s)})),e.toDispose.add(i),i.inputElement.classList.add(u.CONTROL_CLASS),i.inputElement.tabIndex=0;const r={...e,inputBox:i,validationErrorMessageElement:n};return this.addSettingElementFocusHandler(r),r}renderElement(t,e,n){super.renderSettingElement(t,e,n)}renderValue(t,e,n){const i=t.valueType==="integer"||t.valueType==="nullable-integer"?parseInt:parseFloat,r=t.valueType==="nullable-integer"||t.valueType==="nullable-number"?s=>s===""?null:i(s):i;e.onChange=void 0,e.inputBox.value=typeof t.value=="number"?t.value.toString():"",e.inputBox.step=t.valueType.includes("integer")?"1":"any",e.inputBox.setAriaLabel(t.setting.key),e.onChange=s=>{Z(t,e,!1)||n(r(s))},Z(t,e,!0)}}class Rn extends u{templateId=Ge;renderTemplate(t){t.classList.add("setting-item"),t.classList.add("setting-item-bool");const e=new j,n=g.append(t,m(u.CONTENTS_SELECTOR));n.classList.add("settings-row-inner-container");const i=g.append(n,m(".setting-item-title")),r=g.append(i,m("span.setting-item-category")),s=g.append(i,m("span.setting-item-label")),a=e.add(new me(s)),c=this._instantiationService.createInstance(_e,i),l=g.append(n,m(".setting-item-value-description")),d=g.append(l,m(".setting-item-bool-control")),p=g.append(l,m(".setting-item-description")),f=g.append(n,m(".setting-item-modified-indicator"));e.add(this._hoverService.setupDelayedHover(f,{content:T("modified","The setting has been configured in the current scope.")}));const E=g.append(n,m(".setting-item-deprecation-message")),I=new pt({icon:vt.check,actionClassName:"setting-value-checkbox",isChecked:!0,title:"",...mt});d.appendChild(I.domNode),e.add(I),e.add(I.onChange(()=>{L.onChange(I.checked)})),e.add(g.addDisposableListener(p,g.EventType.MOUSE_DOWN,O=>{O.target.tagName.toLowerCase()!=="a"&&(L.checkbox.checked=!L.checkbox.checked,L.onChange(I.checked)),g.EventHelper.stop(O)})),I.domNode.classList.add(u.CONTROL_CLASS);const D=g.append(n,m(".setting-toolbar-container")),v=this.renderSettingToolbar(D);e.add(v);const L={toDispose:e,elementDisposables:e.add(new j),containerElement:n,categoryElement:r,labelElement:a,controlElement:d,checkbox:I,descriptionElement:p,deprecationWarningElement:E,indicatorsLabel:c,toolbar:v};return this.addSettingElementFocusHandler(L),e.add(g.addDisposableListener(d,"mousedown",O=>O.stopPropagation())),e.add(g.addDisposableListener(i,g.EventType.MOUSE_ENTER,O=>n.classList.add("mouseover"))),e.add(g.addDisposableListener(i,g.EventType.MOUSE_LEAVE,O=>n.classList.remove("mouseover"))),L}renderElement(t,e,n){super.renderSettingElement(t,e,n)}renderValue(t,e,n){e.onChange=void 0,e.checkbox.checked=t.value,e.checkbox.setTitle(t.setting.key),e.onChange=n}}class Bn extends u{templateId=ze;_onDidDismissExtensionSetting=this._register(new y);onDidDismissExtensionSetting=this._onDidDismissExtensionSetting.event;renderTemplate(t){const e=super.renderCommonTemplate(null,t,"extension-toggle"),n=new ie(e.containerElement,{title:!1,...le});n.element.classList.add("setting-item-extension-toggle-button"),n.label=T("showExtension","Show Extension");const i=new ie(e.containerElement,{title:!1,secondary:!0,...le});i.element.classList.add("setting-item-extension-dismiss-button"),i.label=T("dismiss","Dismiss");const r={...e,actionButton:n,dismissButton:i};return this.addSettingElementFocusHandler(r),r}renderElement(t,e,n){super.renderSettingElement(t,e,n)}renderValue(t,e,n){e.elementDisposables.clear();const i=t.setting.displayExtensionId;e.elementDisposables.add(e.actionButton.onDidClick(async()=>{this._telemetryService.publicLog2("ManageExtensionClick",{extensionId:i}),this._commandService.executeCommand("extension.open",i)})),e.elementDisposables.add(e.dismissButton.onDidClick(async()=>{this._telemetryService.publicLog2("DismissExtensionClick",{extensionId:i}),this._onDidDismissExtensionSetting.fire(i)}))}}let Q=class extends fe{constructor(e,n,i,r){super();this._instantiationService=e;this._contextMenuService=n;this._contextViewService=i;this._userDataSyncEnablementService=r;this.settingActions=[new B("settings.resetSetting",T("resetSettingLabel","Reset Setting"),void 0,void 0,async d=>{d instanceof R&&(d.isUntrusted||this._onDidChangeSetting.fire({key:d.setting.key,value:void 0,type:d.setting.type,manualReset:!0,scope:d.setting.scope}))}),new Ie,this._instantiationService.createInstance(_),this._instantiationService.createInstance(k),this._instantiationService.createInstance(w)];const s=(d,p)=>this.getActionsForSetting(d,p),a=d=>[],c=this._instantiationService.createInstance(Bn,[],a),l=[this._instantiationService.createInstance(Rn,this.settingActions,s),this._instantiationService.createInstance(Vn,this.settingActions,s),this._instantiationService.createInstance(Cn,this.settingActions,s),this._instantiationService.createInstance($,this.settingActions,s),this._instantiationService.createInstance(Ln,this.settingActions,s),this._instantiationService.createInstance(Mn,this.settingActions,s),this._instantiationService.createInstance(Nn,this.settingActions,s),this._instantiationService.createInstance(_n,this.settingActions,s),this._instantiationService.createInstance(kn,this.settingActions,s),this._instantiationService.createInstance(jn,this.settingActions,s),this._instantiationService.createInstance(Dn,this.settingActions,s),this._instantiationService.createInstance(On,this.settingActions,s),c];this.onDidClickOverrideElement=C.any(...l.map(d=>d.onDidClickOverrideElement)),this.onDidChangeSetting=C.any(...l.map(d=>d.onDidChangeSetting),this._onDidChangeSetting.event),this.onDidDismissExtensionSetting=c.onDidDismissExtensionSetting,this.onDidOpenSettings=C.any(...l.map(d=>d.onDidOpenSettings)),this.onDidClickSettingLink=C.any(...l.map(d=>d.onDidClickSettingLink)),this.onDidFocusSetting=C.any(...l.map(d=>d.onDidFocusSetting)),this.onDidChangeSettingHeight=C.any(...l.map(d=>d.onDidChangeSettingHeight)),this.onApplyFilter=C.any(...l.map(d=>d.onApplyFilter)),this.allRenderers=[...l,this._instantiationService.createInstance(xn),this._instantiationService.createInstance(U)]}onDidClickOverrideElement;_onDidChangeSetting=this._register(new y);onDidChangeSetting;onDidDismissExtensionSetting;onDidOpenSettings;onDidClickSettingLink;onDidFocusSetting;onDidChangeSettingHeight;onApplyFilter;allRenderers;settingActions;getActionsForSetting(e,n){const i=[];return!(e.scope&&Bt.includes(e.scope))&&n===V.USER_LOCAL&&i.push(this._instantiationService.createInstance(N,e)),this._userDataSyncEnablementService.isEnabled()&&!e.disallowSyncIgnore&&i.push(this._instantiationService.createInstance(M,e)),i.length&&i.splice(0,0,new Ie),i}cancelSuggesters(){this._contextViewService.hideContextView()}showContextMenu(e,n){const i=n.querySelector(".monaco-toolbar");i&&this._contextMenuService.showContextMenu({getActions:()=>this.settingActions,getAnchor:()=>i,getActionsContext:()=>e})}getSettingDOMElementForDOMElement(e){const n=g.findParentWithClass(e,u.CONTENTS_CLASS);return n||null}getDOMElementsForSettingKey(e,n){return e.querySelectorAll(`[${u.SETTING_KEY_ATTR}="${n}"]`)}getKeyForDOMElementInSetting(e){const n=this.getSettingDOMElementForDOMElement(e);return n&&n.getAttribute(u.SETTING_KEY_ATTR)}getIdForDOMElementInSetting(e){const n=this.getSettingDOMElementForDOMElement(e);return n&&n.getAttribute(u.SETTING_ID_ATTR)}dispose(){super.dispose(),this.settingActions.forEach(e=>{re(e)&&e.dispose()}),this.allRenderers.forEach(e=>{re(e)&&e.dispose()})}};Q=b([S(0,ae),S(1,be),S(2,ye),S(3,Rt)],Q);function Z(o,t,e){if(o.setting.validator){const n=o.setting.validator(t.inputBox.value);if(n){t.containerElement.classList.add("invalid-input"),t.validationErrorMessageElement.innerText=n;const i=T("validationError","Validation Error.");return t.inputBox.inputElement.parentElement.setAttribute("aria-label",[i,n].join(" ")),e||pe.status(i+" "+n),!0}else t.inputBox.inputElement.parentElement.removeAttribute("aria-label")}return t.containerElement.classList.remove("invalid-input"),!1}function ee(o,t,e,n){if(t.containerElement.classList.add("invalid-input"),o.setting.validator){const i=o.setting.validator(e);if(i&&i!==""){t.containerElement.classList.add("invalid-input"),t.validationErrorMessageElement.innerText=i;const r=T("validationError","Validation Error.");return t.containerElement.setAttribute("aria-label",[o.setting.key,r,i].join(" ")),n||pe.status(r+" "+i),!0}else t.containerElement.setAttribute("aria-label",o.setting.key),t.containerElement.classList.remove("invalid-input")}return!1}function tt(o){for(let t=0;t<o.childNodes.length;t++){const e=o.childNodes.item(t);(e.tagName&&e.tagName.toLowerCase())==="img"?e.remove():tt(e)}}function ge(o,t=!0){return o.replace(/`#([^#\s`]+)#`|'#([^#\s']+)#'/g,(e,n,i)=>{const r=n??i,s=sn(r),a=`${s.category}: ${s.label}`;return t?`[${a}](#${r} "${r}")`:`"${a}"`})}function nt(o){return o&&o.replace(/\n/g,"\\n").replace(/\r/g,"\\r")}let K=class{constructor(t,e){this.viewState=t;this.environmentService=e}filter(t,e){if(this.viewState.filterToCategory&&t instanceof R&&!this.settingContainedInGroup(t.setting,this.viewState.filterToCategory))return!1;if(t instanceof R&&this.viewState.settingsTarget!==V.USER_LOCAL){const n=!!this.environmentService.remoteAuthority;if(!t.matchesScope(this.viewState.settingsTarget,n))return!1}return t instanceof P?typeof t.count=="number"?t.count>0:ft.Recurse:!(t instanceof ke&&(this.viewState.tagFilters?.size||this.viewState.filterToCategory))}settingContainedInGroup(t,e){return e.children.some(n=>n instanceof P?this.settingContainedInGroup(t,n):n instanceof R?n.setting.key===t.key:!1)}};K=b([S(1,Ht)],K);class Hn extends dt{getTemplateId(t){if(t instanceof P)return Ye;if(t instanceof R)return t.valueType===h.ExtensionToggle?ze:t.isConfigured&&De(t.value,t.setting.type)?z:t.valueType===h.Boolean?Ge:t.valueType===h.Integer||t.valueType===h.Number||t.valueType===h.NullableInteger||t.valueType===h.NullableNumber?Pe:t.valueType===h.MultilineString?He:t.valueType===h.String?Be:t.valueType===h.Enum?Fe:t.valueType===h.Array?We:t.valueType===h.Exclude?Ue:t.valueType===h.Include?Ke:t.valueType===h.Object?$e:t.valueType===h.BooleanObject?qe:t.valueType===h.ComplexObject?Je:(t.valueType===h.LanguageTag,z);if(t instanceof ke)return Xe;throw new Error("unknown element type: "+t)}hasDynamicHeight(t){return!(t instanceof P)}estimateHeight(t){return t instanceof P?42:t instanceof R&&t.valueType===h.Boolean?78:104}}class Pn extends Tt{isCollapsible(t){return!1}setCollapsed(t,e,n){return!1}}class Fn{constructor(t,e,n){this.configurationService=t;this.languageService=e;this.userDataProfilesService=n}getAriaLabel(t){if(t instanceof R){const e=[];if(e.push(`${t.displayCategory} ${t.displayLabel}.`),t.isConfigured){const r=T("settings.Modified","Modified.");e.push(r)}const n=nn(t,this.configurationService,this.userDataProfilesService,this.languageService);n.length&&e.push(`${n}.`);const i=ct({value:ge(t.description,!1)});return i.length&&e.push(i),e.join(" ")}else return t instanceof P?t.label:t.id}getWidgetAriaLabel(){return T("settings","Settings")}}let te=class extends kt{constructor(t,e,n,i,r,s,a,c,l){super("SettingsTree",t,new Hn,n,{horizontalScrolling:!1,supportDynamicHeights:!0,scrollToActiveElement:!0,identityProvider:{getId(d){return d.id}},accessibilityProvider:new Fn(s,c,l),styleController:d=>new gt(at.createStyleSheet(t),d),filter:a.createInstance(K,e),smoothScrolling:s.getValue("workbench.list.smoothScrolling"),multipleSelectionSupport:!1,findWidgetEnabled:!1,renderIndentGuides:It.None,transformOptimization:!1},a,i,r,s),this.getHTMLElement().classList.add("settings-editor-tree"),this.style(Nt({listBackground:x,listActiveSelectionBackground:x,listActiveSelectionForeground:F,listFocusAndSelectionBackground:x,listFocusAndSelectionForeground:F,listFocusBackground:x,listFocusForeground:F,listHoverForeground:F,listHoverBackground:x,listHoverOutline:x,listFocusOutline:x,listInactiveSelectionBackground:x,listInactiveSelectionForeground:F,listInactiveFocusBackground:x,listInactiveFocusOutline:x,treeIndentGuidesStroke:void 0,treeInactiveIndentGuidesStroke:void 0})),this.disposables.add(s.onDidChangeConfiguration(d=>{d.affectsConfiguration("workbench.list.smoothScrolling")&&this.updateOptions({smoothScrolling:s.getValue("workbench.list.smoothScrolling")})}))}createModel(t,e){return new Pn(t,e)}};te=b([S(3,Ct),S(4,_t),S(5,Ce),S(6,ae),S(7,xt),S(8,Vt)],te);let _=class extends B{constructor(e){super(_.ID,_.LABEL);this.clipboardService=e}static ID="settings.copySettingId";static LABEL=T("copySettingIdLabel","Copy Setting ID");async run(e){return e&&await this.clipboardService.writeText(e.setting.key),Promise.resolve(void 0)}};_=b([S(0,oe)],_);let k=class extends B{constructor(e){super(k.ID,k.LABEL);this.clipboardService=e}static ID="settings.copySettingAsJSON";static LABEL=T("copySettingAsJSONLabel","Copy Setting as JSON");async run(e){if(e){const n=`"${e.setting.key}": ${JSON.stringify(e.value,void 0,"  ")}`;await this.clipboardService.writeText(n)}return Promise.resolve(void 0)}};k=b([S(0,oe)],k);let w=class extends B{constructor(e,n){super(w.ID,w.LABEL);this.clipboardService=e;this.productService=n}static ID="settings.copySettingAsURL";static LABEL=T("copySettingAsURLLabel","Copy Setting as URL");async run(e){if(e){const n=e.setting.key,i=this.productService.urlProtocol,r=bt.from({scheme:i,authority:Ft,path:`/${n}`},!0);await this.clipboardService.writeText(r.toString())}return Promise.resolve(void 0)}};w=b([S(0,oe),S(1,xe)],w);let M=class extends B{constructor(e,n){super(M.ID,M.LABEL);this.setting=e;this.configService=n;this._register(C.filter(n.onDidChangeConfiguration,i=>i.affectsConfiguration("settingsSync.ignoredSettings"))(()=>this.update())),this.update()}static ID="settings.stopSyncingSetting";static LABEL=T("stopSyncingSetting","Sync This Setting");async update(){const e=ce(X(),this.configService);this.checked=!e.includes(this.setting.key)}async run(){let e=[...this.configService.getValue("settingsSync.ignoredSettings")];e=e.filter(s=>s!==this.setting.key&&s!==`-${this.setting.key}`);const i=X().includes(this.setting.key),r=!this.checked;return r&&i&&e.push(`-${this.setting.key}`),!r&&!i&&e.push(this.setting.key),this.configService.updateValue("settingsSync.ignoredSettings",e.length?e:void 0,V.USER),Promise.resolve(void 0)}};M=b([S(1,he)],M);let N=class extends B{constructor(e,n){super(N.ID,N.LABEL);this.setting=e;this.configService=n;this._register(C.filter(n.onDidChangeConfiguration,i=>i.affectsConfiguration(H))(()=>this.update())),this.update()}static ID="settings.applyToAllProfiles";static LABEL=T("applyToAllProfiles","Apply Setting to all Profiles");update(){const e=this.configService.getValue(H);this.checked=e.includes(this.setting.key)}async run(){const e=this.configService.getValue(H)??[];this.checked?e.splice(e.indexOf(this.setting.key),1):e.push(this.setting.key);const n=Et(e);this.checked?(await this.configService.updateValue(this.setting.key,this.configService.inspect(this.setting.key).application?.value,V.USER_LOCAL),await this.configService.updateValue(H,n.length?n:void 0,V.USER_LOCAL)):(await this.configService.updateValue(H,n.length?n:void 0,V.USER_LOCAL),await this.configService.updateValue(this.setting.key,this.configService.inspect(this.setting.key).userLocal?.value,V.USER_LOCAL))}};N=b([S(1,Ce)],N);export{u as AbstractSettingRenderer,Pn as NonCollapsibleObjectTreeModel,$ as SettingComplexRenderer,U as SettingNewExtensionsRenderer,Q as SettingTreeRenderers,te as SettingsTree,K as SettingsTreeFilter,vn as createSettingMatchRegExp,Nr as createTocTreeForExtensionSettings,Mr as resolveConfiguredUntrustedSettings,wr as resolveSettingsTree};
+	`);
+  focusableElements.forEach((element) => {
+    element.setAttribute(AbstractSettingRenderer.ELEMENT_FOCUSABLE_ATTR, "true");
+    element.setAttribute("tabindex", "-1");
+  });
+}
+__name(removeChildrenFromTabOrder, "removeChildrenFromTabOrder");
+function addChildrenToTabOrder(node) {
+  const focusableElements = node.querySelectorAll(
+    `[${AbstractSettingRenderer.ELEMENT_FOCUSABLE_ATTR}="true"]`
+  );
+  focusableElements.forEach((element) => {
+    element.removeAttribute(AbstractSettingRenderer.ELEMENT_FOCUSABLE_ATTR);
+    element.setAttribute("tabindex", "0");
+  });
+}
+__name(addChildrenToTabOrder, "addChildrenToTabOrder");
+let AbstractSettingRenderer = class extends Disposable {
+  constructor(settingActions, disposableActionFactory, _themeService, _contextViewService, _openerService, _instantiationService, _commandService, _contextMenuService, _keybindingService, _configService, _extensionsService, _extensionsWorkbenchService, _productService, _telemetryService, _hoverService) {
+    super();
+    this.settingActions = settingActions;
+    this.disposableActionFactory = disposableActionFactory;
+    this._themeService = _themeService;
+    this._contextViewService = _contextViewService;
+    this._openerService = _openerService;
+    this._instantiationService = _instantiationService;
+    this._commandService = _commandService;
+    this._contextMenuService = _contextMenuService;
+    this._keybindingService = _keybindingService;
+    this._configService = _configService;
+    this._extensionsService = _extensionsService;
+    this._extensionsWorkbenchService = _extensionsWorkbenchService;
+    this._productService = _productService;
+    this._telemetryService = _telemetryService;
+    this._hoverService = _hoverService;
+    this.markdownRenderer = _instantiationService.createInstance(MarkdownRenderer, {});
+    this.ignoredSettings = getIgnoredSettings(getDefaultIgnoredSettings(), this._configService);
+    this._register(this._configService.onDidChangeConfiguration((e) => {
+      this.ignoredSettings = getIgnoredSettings(getDefaultIgnoredSettings(), this._configService);
+      this._onDidChangeIgnoredSettings.fire();
+    }));
+  }
+  static {
+    __name(this, "AbstractSettingRenderer");
+  }
+  static CONTROL_CLASS = "setting-control-focus-target";
+  static CONTROL_SELECTOR = "." + this.CONTROL_CLASS;
+  static CONTENTS_CLASS = "setting-item-contents";
+  static CONTENTS_SELECTOR = "." + this.CONTENTS_CLASS;
+  static ALL_ROWS_SELECTOR = ".monaco-list-row";
+  static SETTING_KEY_ATTR = "data-key";
+  static SETTING_ID_ATTR = "data-id";
+  static ELEMENT_FOCUSABLE_ATTR = "data-focusable";
+  _onDidClickOverrideElement = this._register(new Emitter());
+  onDidClickOverrideElement = this._onDidClickOverrideElement.event;
+  _onDidChangeSetting = this._register(new Emitter());
+  onDidChangeSetting = this._onDidChangeSetting.event;
+  _onDidOpenSettings = this._register(new Emitter());
+  onDidOpenSettings = this._onDidOpenSettings.event;
+  _onDidClickSettingLink = this._register(new Emitter());
+  onDidClickSettingLink = this._onDidClickSettingLink.event;
+  _onDidFocusSetting = this._register(new Emitter());
+  onDidFocusSetting = this._onDidFocusSetting.event;
+  ignoredSettings;
+  _onDidChangeIgnoredSettings = this._register(new Emitter());
+  onDidChangeIgnoredSettings = this._onDidChangeIgnoredSettings.event;
+  _onDidChangeSettingHeight = this._register(new Emitter());
+  onDidChangeSettingHeight = this._onDidChangeSettingHeight.event;
+  _onApplyFilter = this._register(new Emitter());
+  onApplyFilter = this._onApplyFilter.event;
+  markdownRenderer;
+  renderCommonTemplate(tree, _container, typeClass) {
+    _container.classList.add("setting-item");
+    _container.classList.add("setting-item-" + typeClass);
+    const toDispose = new DisposableStore();
+    const container = DOM.append(_container, $(AbstractSettingRenderer.CONTENTS_SELECTOR));
+    container.classList.add("settings-row-inner-container");
+    const titleElement = DOM.append(container, $(".setting-item-title"));
+    const labelCategoryContainer = DOM.append(titleElement, $(".setting-item-cat-label-container"));
+    const categoryElement = DOM.append(labelCategoryContainer, $("span.setting-item-category"));
+    const labelElementContainer = DOM.append(labelCategoryContainer, $("span.setting-item-label"));
+    const labelElement = toDispose.add(new SimpleIconLabel(labelElementContainer));
+    const indicatorsLabel = toDispose.add(this._instantiationService.createInstance(SettingsTreeIndicatorsLabel, titleElement));
+    const descriptionElement = DOM.append(container, $(".setting-item-description"));
+    const modifiedIndicatorElement = DOM.append(container, $(".setting-item-modified-indicator"));
+    toDispose.add(this._hoverService.setupDelayedHover(modifiedIndicatorElement, {
+      content: localize("modified", "The setting has been configured in the current scope.")
+    }));
+    const valueElement = DOM.append(container, $(".setting-item-value"));
+    const controlElement = DOM.append(valueElement, $("div.setting-item-control"));
+    const deprecationWarningElement = DOM.append(container, $(".setting-item-deprecation-message"));
+    const toolbarContainer = DOM.append(container, $(".setting-toolbar-container"));
+    const toolbar = this.renderSettingToolbar(toolbarContainer);
+    const template = {
+      toDispose,
+      elementDisposables: toDispose.add(new DisposableStore()),
+      containerElement: container,
+      categoryElement,
+      labelElement,
+      descriptionElement,
+      controlElement,
+      deprecationWarningElement,
+      indicatorsLabel,
+      toolbar
+    };
+    toDispose.add(DOM.addDisposableListener(controlElement, DOM.EventType.MOUSE_DOWN, (e) => e.stopPropagation()));
+    toDispose.add(DOM.addDisposableListener(titleElement, DOM.EventType.MOUSE_ENTER, (e) => container.classList.add("mouseover")));
+    toDispose.add(DOM.addDisposableListener(titleElement, DOM.EventType.MOUSE_LEAVE, (e) => container.classList.remove("mouseover")));
+    return template;
+  }
+  addSettingElementFocusHandler(template) {
+    const focusTracker = DOM.trackFocus(template.containerElement);
+    template.toDispose.add(focusTracker);
+    template.toDispose.add(focusTracker.onDidBlur(() => {
+      if (template.containerElement.classList.contains("focused")) {
+        template.containerElement.classList.remove("focused");
+      }
+    }));
+    template.toDispose.add(focusTracker.onDidFocus(() => {
+      template.containerElement.classList.add("focused");
+      if (template.context) {
+        this._onDidFocusSetting.fire(template.context);
+      }
+    }));
+  }
+  renderSettingToolbar(container) {
+    const toggleMenuKeybinding = this._keybindingService.lookupKeybinding(SETTINGS_EDITOR_COMMAND_SHOW_CONTEXT_MENU);
+    let toggleMenuTitle = localize("settingsContextMenuTitle", "More Actions... ");
+    if (toggleMenuKeybinding) {
+      toggleMenuTitle += ` (${toggleMenuKeybinding && toggleMenuKeybinding.getLabel()})`;
+    }
+    const toolbar = new ToolBar(container, this._contextMenuService, {
+      toggleMenuTitle,
+      renderDropdownAsChildElement: !isIOS,
+      moreIcon: settingsMoreActionIcon
+    });
+    return toolbar;
+  }
+  renderSettingElement(node, index, template) {
+    const element = node.element;
+    element.inspectSelf();
+    template.context = element;
+    template.toolbar.context = element;
+    const actions = this.disposableActionFactory(element.setting, element.settingsTarget);
+    actions.forEach((a) => isDisposable(a) && template.elementDisposables.add(a));
+    template.toolbar.setActions([], [...this.settingActions, ...actions]);
+    const setting = element.setting;
+    template.containerElement.classList.toggle("is-configured", element.isConfigured);
+    template.containerElement.setAttribute(AbstractSettingRenderer.SETTING_KEY_ATTR, element.setting.key);
+    template.containerElement.setAttribute(AbstractSettingRenderer.SETTING_ID_ATTR, element.id);
+    const titleTooltip = setting.key + (element.isConfigured ? " - Modified" : "");
+    template.categoryElement.textContent = element.displayCategory ? element.displayCategory + ": " : "";
+    template.elementDisposables.add(this._hoverService.setupDelayedHover(template.categoryElement, { content: titleTooltip }));
+    template.labelElement.text = element.displayLabel;
+    template.labelElement.title = titleTooltip;
+    template.descriptionElement.innerText = "";
+    if (element.setting.descriptionIsMarkdown) {
+      const renderedDescription = this.renderSettingMarkdown(element, template.containerElement, element.description, template.elementDisposables);
+      template.descriptionElement.appendChild(renderedDescription);
+    } else {
+      template.descriptionElement.innerText = element.description;
+    }
+    template.indicatorsLabel.updateScopeOverrides(element, this._onDidClickOverrideElement, this._onApplyFilter);
+    template.elementDisposables.add(this._configService.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration(APPLY_ALL_PROFILES_SETTING)) {
+        template.indicatorsLabel.updateScopeOverrides(element, this._onDidClickOverrideElement, this._onApplyFilter);
+      }
+    }));
+    const onChange = /* @__PURE__ */ __name((value) => this._onDidChangeSetting.fire({
+      key: element.setting.key,
+      value,
+      type: template.context.valueType,
+      manualReset: false,
+      scope: element.setting.scope
+    }), "onChange");
+    const deprecationText = element.setting.deprecationMessage || "";
+    if (deprecationText && element.setting.deprecationMessageIsMarkdown) {
+      template.deprecationWarningElement.innerText = "";
+      template.deprecationWarningElement.appendChild(this.renderSettingMarkdown(element, template.containerElement, element.setting.deprecationMessage, template.elementDisposables));
+    } else {
+      template.deprecationWarningElement.innerText = deprecationText;
+    }
+    template.deprecationWarningElement.prepend($(".codicon.codicon-error"));
+    template.containerElement.classList.toggle("is-deprecated", !!deprecationText);
+    this.renderValue(element, template, onChange);
+    template.indicatorsLabel.updateWorkspaceTrust(element);
+    template.indicatorsLabel.updateSyncIgnored(element, this.ignoredSettings);
+    template.indicatorsLabel.updateDefaultOverrideIndicator(element);
+    template.indicatorsLabel.updatePreviewIndicator(element);
+    template.elementDisposables.add(this.onDidChangeIgnoredSettings(() => {
+      template.indicatorsLabel.updateSyncIgnored(element, this.ignoredSettings);
+    }));
+    this.updateSettingTabbable(element, template);
+    template.elementDisposables.add(element.onDidChangeTabbable(() => {
+      this.updateSettingTabbable(element, template);
+    }));
+  }
+  updateSettingTabbable(element, template) {
+    if (element.tabbable) {
+      addChildrenToTabOrder(template.containerElement);
+    } else {
+      removeChildrenFromTabOrder(template.containerElement);
+    }
+  }
+  renderSettingMarkdown(element, container, text, disposables) {
+    text = fixSettingLinks(text);
+    const renderedMarkdown = this.markdownRenderer.render({ value: text, isTrusted: true }, {
+      actionHandler: {
+        callback: /* @__PURE__ */ __name((content) => {
+          if (content.startsWith("#")) {
+            const e = {
+              source: element,
+              targetKey: content.substring(1)
+            };
+            this._onDidClickSettingLink.fire(e);
+          } else {
+            this._openerService.open(content, { allowCommands: true }).catch(onUnexpectedError);
+          }
+        }, "callback"),
+        disposables
+      },
+      asyncRenderCallback: /* @__PURE__ */ __name(() => {
+        const height = container.clientHeight;
+        if (height) {
+          this._onDidChangeSettingHeight.fire({ element, height });
+        }
+      }, "asyncRenderCallback")
+    });
+    disposables.add(renderedMarkdown);
+    renderedMarkdown.element.classList.add("setting-item-markdown");
+    cleanRenderedMarkdown(renderedMarkdown.element);
+    return renderedMarkdown.element;
+  }
+  disposeTemplate(template) {
+    template.toDispose.dispose();
+  }
+  disposeElement(_element, _index, template, _height) {
+    template.elementDisposables?.clear();
+  }
+};
+AbstractSettingRenderer = __decorateClass([
+  __decorateParam(2, IThemeService),
+  __decorateParam(3, IContextViewService),
+  __decorateParam(4, IOpenerService),
+  __decorateParam(5, IInstantiationService),
+  __decorateParam(6, ICommandService),
+  __decorateParam(7, IContextMenuService),
+  __decorateParam(8, IKeybindingService),
+  __decorateParam(9, IConfigurationService),
+  __decorateParam(10, IExtensionService),
+  __decorateParam(11, IExtensionsWorkbenchService),
+  __decorateParam(12, IProductService),
+  __decorateParam(13, ITelemetryService),
+  __decorateParam(14, IHoverService)
+], AbstractSettingRenderer);
+class SettingGroupRenderer {
+  static {
+    __name(this, "SettingGroupRenderer");
+  }
+  templateId = SETTINGS_ELEMENT_TEMPLATE_ID;
+  renderTemplate(container) {
+    container.classList.add("group-title");
+    const template = {
+      parent: container,
+      toDispose: new DisposableStore()
+    };
+    return template;
+  }
+  renderElement(element, index, templateData) {
+    templateData.parent.innerText = "";
+    const labelElement = DOM.append(templateData.parent, $("div.settings-group-title-label.settings-row-inner-container"));
+    labelElement.classList.add(`settings-group-level-${element.element.level}`);
+    labelElement.textContent = element.element.label;
+    if (element.element.isFirstGroup) {
+      labelElement.classList.add("settings-group-first");
+    }
+  }
+  disposeTemplate(templateData) {
+    templateData.toDispose.dispose();
+  }
+}
+let SettingNewExtensionsRenderer = class {
+  constructor(_commandService) {
+    this._commandService = _commandService;
+  }
+  static {
+    __name(this, "SettingNewExtensionsRenderer");
+  }
+  templateId = SETTINGS_NEW_EXTENSIONS_TEMPLATE_ID;
+  renderTemplate(container) {
+    const toDispose = new DisposableStore();
+    container.classList.add("setting-item-new-extensions");
+    const button = new Button(container, { title: true, ...defaultButtonStyles });
+    toDispose.add(button);
+    toDispose.add(button.onDidClick(() => {
+      if (template.context) {
+        this._commandService.executeCommand("workbench.extensions.action.showExtensionsWithIds", template.context.extensionIds);
+      }
+    }));
+    button.label = localize("newExtensionsButtonLabel", "Show matching extensions");
+    button.element.classList.add("settings-new-extensions-button");
+    const template = {
+      button,
+      toDispose
+    };
+    return template;
+  }
+  renderElement(element, index, templateData) {
+    templateData.context = element.element;
+  }
+  disposeTemplate(template) {
+    template.toDispose.dispose();
+  }
+};
+SettingNewExtensionsRenderer = __decorateClass([
+  __decorateParam(0, ICommandService)
+], SettingNewExtensionsRenderer);
+class SettingComplexRenderer extends AbstractSettingRenderer {
+  static {
+    __name(this, "SettingComplexRenderer");
+  }
+  static EDIT_IN_JSON_LABEL = localize("editInSettingsJson", "Edit in settings.json");
+  templateId = SETTINGS_COMPLEX_TEMPLATE_ID;
+  renderTemplate(container) {
+    const common = this.renderCommonTemplate(null, container, "complex");
+    const openSettingsButton = DOM.append(common.controlElement, $("a.edit-in-settings-button"));
+    openSettingsButton.classList.add(AbstractSettingRenderer.CONTROL_CLASS);
+    openSettingsButton.role = "button";
+    const validationErrorMessageElement = $(".setting-item-validation-message");
+    common.containerElement.appendChild(validationErrorMessageElement);
+    const template = {
+      ...common,
+      button: openSettingsButton,
+      validationErrorMessageElement
+    };
+    this.addSettingElementFocusHandler(template);
+    return template;
+  }
+  renderElement(element, index, templateData) {
+    super.renderSettingElement(element, index, templateData);
+  }
+  renderValue(dataElement, template, onChange) {
+    const plainKey = getLanguageTagSettingPlainKey(dataElement.setting.key);
+    const editLanguageSettingLabel = localize("editLanguageSettingLabel", "Edit settings for {0}", plainKey);
+    const isLanguageTagSetting = dataElement.setting.isLanguageTagSetting;
+    template.button.textContent = isLanguageTagSetting ? editLanguageSettingLabel : SettingComplexRenderer.EDIT_IN_JSON_LABEL;
+    const onClickOrKeydown = /* @__PURE__ */ __name((e) => {
+      if (isLanguageTagSetting) {
+        this._onApplyFilter.fire(`@${LANGUAGE_SETTING_TAG}${plainKey}`);
+      } else {
+        this._onDidOpenSettings.fire(dataElement.setting.key);
+      }
+      e.preventDefault();
+      e.stopPropagation();
+    }, "onClickOrKeydown");
+    template.elementDisposables.add(DOM.addDisposableListener(template.button, DOM.EventType.CLICK, (e) => {
+      onClickOrKeydown(e);
+    }));
+    template.elementDisposables.add(DOM.addDisposableListener(template.button, DOM.EventType.KEY_DOWN, (e) => {
+      const ev = new StandardKeyboardEvent(e);
+      if (ev.equals(KeyCode.Space) || ev.equals(KeyCode.Enter)) {
+        onClickOrKeydown(e);
+      }
+    }));
+    this.renderValidations(dataElement, template);
+    if (isLanguageTagSetting) {
+      template.button.setAttribute("aria-label", editLanguageSettingLabel);
+    } else {
+      template.button.setAttribute("aria-label", `${SettingComplexRenderer.EDIT_IN_JSON_LABEL}: ${dataElement.setting.key}`);
+    }
+  }
+  renderValidations(dataElement, template) {
+    const errMsg = dataElement.isConfigured && getInvalidTypeError(dataElement.value, dataElement.setting.type);
+    if (errMsg) {
+      template.containerElement.classList.add("invalid-input");
+      template.validationErrorMessageElement.innerText = errMsg;
+      return;
+    }
+    template.containerElement.classList.remove("invalid-input");
+  }
+}
+class SettingComplexObjectRenderer extends SettingComplexRenderer {
+  static {
+    __name(this, "SettingComplexObjectRenderer");
+  }
+  templateId = SETTINGS_COMPLEX_OBJECT_TEMPLATE_ID;
+  renderTemplate(container) {
+    const common = this.renderCommonTemplate(null, container, "list");
+    const objectSettingWidget = common.toDispose.add(this._instantiationService.createInstance(ObjectSettingDropdownWidget, common.controlElement));
+    objectSettingWidget.domNode.classList.add(AbstractSettingRenderer.CONTROL_CLASS);
+    const openSettingsButton = DOM.append(DOM.append(common.controlElement, $(".complex-object-edit-in-settings-button-container")), $("a.complex-object.edit-in-settings-button"));
+    openSettingsButton.classList.add(AbstractSettingRenderer.CONTROL_CLASS);
+    openSettingsButton.role = "button";
+    const validationErrorMessageElement = $(".setting-item-validation-message");
+    common.containerElement.appendChild(validationErrorMessageElement);
+    const template = {
+      ...common,
+      button: openSettingsButton,
+      validationErrorMessageElement,
+      objectSettingWidget
+    };
+    this.addSettingElementFocusHandler(template);
+    return template;
+  }
+  renderValue(dataElement, template, onChange) {
+    const items = getObjectDisplayValue(dataElement);
+    template.objectSettingWidget.setValue(items, {
+      settingKey: dataElement.setting.key,
+      showAddButton: false,
+      isReadOnly: true
+    });
+    template.button.parentElement?.classList.toggle("hide", dataElement.hasPolicyValue);
+    super.renderValue(dataElement, template, onChange);
+  }
+}
+class SettingArrayRenderer extends AbstractSettingRenderer {
+  static {
+    __name(this, "SettingArrayRenderer");
+  }
+  templateId = SETTINGS_ARRAY_TEMPLATE_ID;
+  renderTemplate(container) {
+    const common = this.renderCommonTemplate(null, container, "list");
+    const descriptionElement = common.containerElement.querySelector(".setting-item-description");
+    const validationErrorMessageElement = $(".setting-item-validation-message");
+    descriptionElement.after(validationErrorMessageElement);
+    const listWidget = this._instantiationService.createInstance(ListSettingWidget, common.controlElement);
+    listWidget.domNode.classList.add(AbstractSettingRenderer.CONTROL_CLASS);
+    common.toDispose.add(listWidget);
+    const template = {
+      ...common,
+      listWidget,
+      validationErrorMessageElement
+    };
+    this.addSettingElementFocusHandler(template);
+    common.toDispose.add(
+      listWidget.onDidChangeList((e) => {
+        const newList = this.computeNewList(template, e);
+        template.onChange?.(newList);
+      })
+    );
+    return template;
+  }
+  computeNewList(template, e) {
+    if (template.context) {
+      let newValue = [];
+      if (Array.isArray(template.context.scopeValue)) {
+        newValue = [...template.context.scopeValue];
+      } else if (Array.isArray(template.context.value)) {
+        newValue = [...template.context.value];
+      }
+      if (e.type === "move") {
+        const sourceIndex = e.sourceIndex;
+        const targetIndex = e.targetIndex;
+        const splicedElem = newValue.splice(sourceIndex, 1)[0];
+        newValue.splice(targetIndex, 0, splicedElem);
+      } else if (e.type === "remove" || e.type === "reset") {
+        newValue.splice(e.targetIndex, 1);
+      } else if (e.type === "change") {
+        const itemValueData = e.newItem.value.data.toString();
+        if (e.targetIndex > -1) {
+          newValue[e.targetIndex] = itemValueData;
+        } else {
+          newValue.push(itemValueData);
+        }
+      } else if (e.type === "add") {
+        newValue.push(e.newItem.value.data.toString());
+      }
+      if (template.context.defaultValue && Array.isArray(template.context.defaultValue) && template.context.defaultValue.length === newValue.length && template.context.defaultValue.join() === newValue.join()) {
+        return void 0;
+      }
+      return newValue;
+    }
+    return void 0;
+  }
+  renderElement(element, index, templateData) {
+    super.renderSettingElement(element, index, templateData);
+  }
+  renderValue(dataElement, template, onChange) {
+    const value = getListDisplayValue(dataElement);
+    const keySuggester = dataElement.setting.enum ? createArraySuggester(dataElement) : void 0;
+    template.listWidget.setValue(value, {
+      showAddButton: getShowAddButtonList(dataElement, value),
+      keySuggester
+    });
+    template.context = dataElement;
+    template.elementDisposables.add(toDisposable(() => {
+      template.listWidget.cancelEdit();
+    }));
+    template.onChange = (v) => {
+      if (v && !renderArrayValidations(dataElement, template, v, false)) {
+        const itemType = dataElement.setting.arrayItemType;
+        const arrToSave = isNonNullableNumericType(itemType) ? v.map((a) => +a) : v;
+        onChange(arrToSave);
+      } else {
+        onChange(v);
+      }
+    };
+    renderArrayValidations(dataElement, template, value.map((v) => v.value.data.toString()), true);
+  }
+}
+class AbstractSettingObjectRenderer extends AbstractSettingRenderer {
+  static {
+    __name(this, "AbstractSettingObjectRenderer");
+  }
+  renderTemplateWithWidget(common, widget) {
+    widget.domNode.classList.add(AbstractSettingRenderer.CONTROL_CLASS);
+    common.toDispose.add(widget);
+    const descriptionElement = common.containerElement.querySelector(".setting-item-description");
+    const validationErrorMessageElement = $(".setting-item-validation-message");
+    descriptionElement.after(validationErrorMessageElement);
+    const template = {
+      ...common,
+      validationErrorMessageElement
+    };
+    if (widget instanceof ObjectSettingCheckboxWidget) {
+      template.objectCheckboxWidget = widget;
+    } else {
+      template.objectDropdownWidget = widget;
+    }
+    this.addSettingElementFocusHandler(template);
+    return template;
+  }
+  renderElement(element, index, templateData) {
+    super.renderSettingElement(element, index, templateData);
+  }
+}
+class SettingObjectRenderer extends AbstractSettingObjectRenderer {
+  static {
+    __name(this, "SettingObjectRenderer");
+  }
+  templateId = SETTINGS_OBJECT_TEMPLATE_ID;
+  renderTemplate(container) {
+    const common = this.renderCommonTemplate(null, container, "list");
+    const widget = this._instantiationService.createInstance(ObjectSettingDropdownWidget, common.controlElement);
+    const template = this.renderTemplateWithWidget(common, widget);
+    common.toDispose.add(widget.onDidChangeList((e) => {
+      this.onDidChangeObject(template, e);
+    }));
+    return template;
+  }
+  onDidChangeObject(template, e) {
+    const widget = template.objectDropdownWidget;
+    if (template.context) {
+      const settingSupportsRemoveDefault = objectSettingSupportsRemoveDefaultValue(template.context.setting.key);
+      const defaultValue = typeof template.context.defaultValue === "object" ? template.context.defaultValue ?? {} : {};
+      const scopeValue = typeof template.context.scopeValue === "object" ? template.context.scopeValue ?? {} : {};
+      const newValue = { ...template.context.scopeValue };
+      const newItems = [];
+      widget.items.forEach((item, idx) => {
+        if ((e.type === "change" || e.type === "move") && e.targetIndex === idx) {
+          if (e.originalItem.key.data !== e.newItem.key.data && settingSupportsRemoveDefault && e.originalItem.key.data in defaultValue) {
+            newValue[e.originalItem.key.data] = null;
+          } else {
+            delete newValue[e.originalItem.key.data];
+          }
+          newValue[e.newItem.key.data] = e.newItem.value.data;
+          newItems.push(e.newItem);
+        } else if (e.type !== "change" && e.type !== "move" || e.newItem.key.data !== item.key.data) {
+          newValue[item.key.data] = item.value.data;
+          newItems.push(item);
+        }
+      });
+      if (e.type === "remove" || e.type === "reset") {
+        const objectKey = e.originalItem.key.data;
+        const removingDefaultValue = e.type === "remove" && settingSupportsRemoveDefault && defaultValue[objectKey] === e.originalItem.value.data;
+        if (removingDefaultValue) {
+          newValue[objectKey] = null;
+        } else {
+          delete newValue[objectKey];
+        }
+        const itemToDelete = newItems.findIndex((item) => item.key.data === objectKey);
+        const defaultItemValue = defaultValue[objectKey];
+        if (removingDefaultValue || isUndefinedOrNull(defaultValue[objectKey]) && itemToDelete > -1) {
+          newItems.splice(itemToDelete, 1);
+        } else if (!removingDefaultValue && itemToDelete > -1) {
+          newItems[itemToDelete].value.data = defaultItemValue;
+        }
+      } else if (e.type === "add") {
+        newValue[e.newItem.key.data] = e.newItem.value.data;
+        newItems.push(e.newItem);
+      }
+      Object.entries(newValue).forEach(([key, value]) => {
+        if (scopeValue[key] !== value && defaultValue[key] === value && !(settingSupportsRemoveDefault && value === null)) {
+          delete newValue[key];
+        }
+      });
+      const newObject = Object.keys(newValue).length === 0 ? void 0 : newValue;
+      template.objectDropdownWidget.setValue(newItems);
+      template.onChange?.(newObject);
+    }
+  }
+  renderValue(dataElement, template, onChange) {
+    const items = getObjectDisplayValue(dataElement);
+    const { key, objectProperties, objectPatternProperties, objectAdditionalProperties } = dataElement.setting;
+    template.objectDropdownWidget.setValue(items, {
+      settingKey: key,
+      showAddButton: objectAdditionalProperties === false ? !areAllPropertiesDefined(Object.keys(objectProperties ?? {}), items) || isDefined(objectPatternProperties) : true,
+      keySuggester: createObjectKeySuggester(dataElement),
+      valueSuggester: createObjectValueSuggester(dataElement)
+    });
+    template.context = dataElement;
+    template.elementDisposables.add(toDisposable(() => {
+      template.objectDropdownWidget.cancelEdit();
+    }));
+    template.onChange = (v) => {
+      if (v && !renderArrayValidations(dataElement, template, v, false)) {
+        const parsedRecord = parseNumericObjectValues(dataElement, v);
+        onChange(parsedRecord);
+      } else {
+        onChange(v);
+      }
+    };
+    renderArrayValidations(dataElement, template, dataElement.value, true);
+  }
+}
+class SettingBoolObjectRenderer extends AbstractSettingObjectRenderer {
+  static {
+    __name(this, "SettingBoolObjectRenderer");
+  }
+  templateId = SETTINGS_BOOL_OBJECT_TEMPLATE_ID;
+  renderTemplate(container) {
+    const common = this.renderCommonTemplate(null, container, "list");
+    const widget = this._instantiationService.createInstance(ObjectSettingCheckboxWidget, common.controlElement);
+    const template = this.renderTemplateWithWidget(common, widget);
+    common.toDispose.add(widget.onDidChangeList((e) => {
+      this.onDidChangeObject(template, e);
+    }));
+    return template;
+  }
+  onDidChangeObject(template, e) {
+    if (template.context) {
+      const widget = template.objectCheckboxWidget;
+      const defaultValue = typeof template.context.defaultValue === "object" ? template.context.defaultValue ?? {} : {};
+      const scopeValue = typeof template.context.scopeValue === "object" ? template.context.scopeValue ?? {} : {};
+      const newValue = { ...template.context.scopeValue };
+      const newItems = [];
+      if (e.type !== "change") {
+        console.warn("Unexpected event type", e.type, "for bool object setting", template.context.setting.key);
+        return;
+      }
+      widget.items.forEach((item, idx) => {
+        if (e.targetIndex === idx) {
+          newValue[e.newItem.key.data] = e.newItem.value.data;
+          newItems.push(e.newItem);
+        } else if (e.newItem.key.data !== item.key.data) {
+          newValue[item.key.data] = item.value.data;
+          newItems.push(item);
+        }
+      });
+      Object.entries(newValue).forEach(([key, value]) => {
+        if (scopeValue[key] !== value && defaultValue[key] === value) {
+          delete newValue[key];
+        }
+      });
+      const newObject = Object.keys(newValue).length === 0 ? void 0 : newValue;
+      template.objectCheckboxWidget.setValue(newItems);
+      template.onChange?.(newObject);
+      this._onDidFocusSetting.fire(template.context);
+    }
+  }
+  renderValue(dataElement, template, onChange) {
+    const items = getBoolObjectDisplayValue(dataElement);
+    const { key } = dataElement.setting;
+    template.objectCheckboxWidget.setValue(items, {
+      settingKey: key
+    });
+    template.context = dataElement;
+    template.onChange = (v) => {
+      onChange(v);
+    };
+  }
+}
+class SettingIncludeExcludeRenderer extends AbstractSettingRenderer {
+  static {
+    __name(this, "SettingIncludeExcludeRenderer");
+  }
+  renderTemplate(container) {
+    const common = this.renderCommonTemplate(null, container, "list");
+    const includeExcludeWidget = this._instantiationService.createInstance(this.isExclude() ? ExcludeSettingWidget : IncludeSettingWidget, common.controlElement);
+    includeExcludeWidget.domNode.classList.add(AbstractSettingRenderer.CONTROL_CLASS);
+    common.toDispose.add(includeExcludeWidget);
+    const template = {
+      ...common,
+      includeExcludeWidget
+    };
+    this.addSettingElementFocusHandler(template);
+    common.toDispose.add(includeExcludeWidget.onDidChangeList((e) => this.onDidChangeIncludeExclude(template, e)));
+    return template;
+  }
+  onDidChangeIncludeExclude(template, e) {
+    if (template.context) {
+      let sortKeys2 = function(obj) {
+        const sortedKeys = Object.keys(obj).sort((a, b) => a.localeCompare(b));
+        const retVal = {};
+        for (const key of sortedKeys) {
+          retVal[key] = obj[key];
+        }
+        return retVal;
+      };
+      var sortKeys = sortKeys2;
+      __name(sortKeys2, "sortKeys");
+      const newValue = { ...template.context.scopeValue };
+      if (e.type !== "add") {
+        if (e.originalItem.value.data.toString() in template.context.defaultValue) {
+          newValue[e.originalItem.value.data.toString()] = false;
+        } else {
+          delete newValue[e.originalItem.value.data.toString()];
+        }
+      }
+      if (e.type === "change" || e.type === "add" || e.type === "move") {
+        if (e.newItem.value.data.toString() in template.context.defaultValue && !e.newItem.sibling) {
+          delete newValue[e.newItem.value.data.toString()];
+        } else {
+          newValue[e.newItem.value.data.toString()] = e.newItem.sibling ? { when: e.newItem.sibling } : true;
+        }
+      }
+      this._onDidChangeSetting.fire({
+        key: template.context.setting.key,
+        value: Object.keys(newValue).length === 0 ? void 0 : sortKeys2(newValue),
+        type: template.context.valueType,
+        manualReset: false,
+        scope: template.context.setting.scope
+      });
+    }
+  }
+  renderElement(element, index, templateData) {
+    super.renderSettingElement(element, index, templateData);
+  }
+  renderValue(dataElement, template, onChange) {
+    const value = getIncludeExcludeDisplayValue(dataElement);
+    template.includeExcludeWidget.setValue(value);
+    template.context = dataElement;
+    template.elementDisposables.add(toDisposable(() => {
+      template.includeExcludeWidget.cancelEdit();
+    }));
+  }
+}
+class SettingExcludeRenderer extends SettingIncludeExcludeRenderer {
+  static {
+    __name(this, "SettingExcludeRenderer");
+  }
+  templateId = SETTINGS_EXCLUDE_TEMPLATE_ID;
+  isExclude() {
+    return true;
+  }
+}
+class SettingIncludeRenderer extends SettingIncludeExcludeRenderer {
+  static {
+    __name(this, "SettingIncludeRenderer");
+  }
+  templateId = SETTINGS_INCLUDE_TEMPLATE_ID;
+  isExclude() {
+    return false;
+  }
+}
+const settingsInputBoxStyles = getInputBoxStyle({
+  inputBackground: settingsTextInputBackground,
+  inputForeground: settingsTextInputForeground,
+  inputBorder: settingsTextInputBorder
+});
+class AbstractSettingTextRenderer extends AbstractSettingRenderer {
+  static {
+    __name(this, "AbstractSettingTextRenderer");
+  }
+  MULTILINE_MAX_HEIGHT = 150;
+  renderTemplate(_container, useMultiline) {
+    const common = this.renderCommonTemplate(null, _container, "text");
+    const validationErrorMessageElement = DOM.append(common.containerElement, $(".setting-item-validation-message"));
+    const inputBoxOptions = {
+      flexibleHeight: useMultiline,
+      flexibleWidth: false,
+      flexibleMaxHeight: this.MULTILINE_MAX_HEIGHT,
+      inputBoxStyles: settingsInputBoxStyles
+    };
+    const inputBox = new InputBox(common.controlElement, this._contextViewService, inputBoxOptions);
+    common.toDispose.add(inputBox);
+    common.toDispose.add(
+      inputBox.onDidChange((e) => {
+        template.onChange?.(e);
+      })
+    );
+    common.toDispose.add(inputBox);
+    inputBox.inputElement.classList.add(AbstractSettingRenderer.CONTROL_CLASS);
+    inputBox.inputElement.tabIndex = 0;
+    const template = {
+      ...common,
+      inputBox,
+      validationErrorMessageElement
+    };
+    this.addSettingElementFocusHandler(template);
+    return template;
+  }
+  renderElement(element, index, templateData) {
+    super.renderSettingElement(element, index, templateData);
+  }
+  renderValue(dataElement, template, onChange) {
+    template.onChange = void 0;
+    template.inputBox.value = dataElement.value;
+    template.inputBox.setAriaLabel(dataElement.setting.key);
+    template.onChange = (value) => {
+      if (!renderValidations(dataElement, template, false)) {
+        onChange(value);
+      }
+    };
+    renderValidations(dataElement, template, true);
+  }
+}
+class SettingTextRenderer extends AbstractSettingTextRenderer {
+  static {
+    __name(this, "SettingTextRenderer");
+  }
+  templateId = SETTINGS_TEXT_TEMPLATE_ID;
+  renderTemplate(_container) {
+    const template = super.renderTemplate(_container, false);
+    template.toDispose.add(DOM.addStandardDisposableListener(template.inputBox.inputElement, DOM.EventType.KEY_DOWN, (e) => {
+      if (e.equals(KeyCode.UpArrow) || e.equals(KeyCode.DownArrow)) {
+        e.preventDefault();
+      }
+    }));
+    return template;
+  }
+}
+class SettingMultilineTextRenderer extends AbstractSettingTextRenderer {
+  static {
+    __name(this, "SettingMultilineTextRenderer");
+  }
+  templateId = SETTINGS_MULTILINE_TEXT_TEMPLATE_ID;
+  renderTemplate(_container) {
+    return super.renderTemplate(_container, true);
+  }
+  renderValue(dataElement, template, onChange) {
+    const onChangeOverride = /* @__PURE__ */ __name((value) => {
+      dataElement.value = value;
+      onChange(value);
+    }, "onChangeOverride");
+    super.renderValue(dataElement, template, onChangeOverride);
+    template.elementDisposables.add(
+      template.inputBox.onDidHeightChange((e) => {
+        const height = template.containerElement.clientHeight;
+        if (height) {
+          this._onDidChangeSettingHeight.fire({
+            element: dataElement,
+            height: template.containerElement.clientHeight
+          });
+        }
+      })
+    );
+    template.inputBox.layout();
+  }
+}
+class SettingEnumRenderer extends AbstractSettingRenderer {
+  static {
+    __name(this, "SettingEnumRenderer");
+  }
+  templateId = SETTINGS_ENUM_TEMPLATE_ID;
+  renderTemplate(container) {
+    const common = this.renderCommonTemplate(null, container, "enum");
+    const styles = getSelectBoxStyles({
+      selectBackground: settingsSelectBackground,
+      selectForeground: settingsSelectForeground,
+      selectBorder: settingsSelectBorder,
+      selectListBorder: settingsSelectListBorder
+    });
+    const selectBox = new SelectBox([], 0, this._contextViewService, styles, {
+      useCustomDrawn: !(isIOS && BrowserFeatures.pointerEvents)
+    });
+    common.toDispose.add(selectBox);
+    selectBox.render(common.controlElement);
+    const selectElement = common.controlElement.querySelector("select");
+    if (selectElement) {
+      selectElement.classList.add(AbstractSettingRenderer.CONTROL_CLASS);
+      selectElement.tabIndex = 0;
+    }
+    common.toDispose.add(
+      selectBox.onDidSelect((e) => {
+        template.onChange?.(e.index);
+      })
+    );
+    const enumDescriptionElement = common.containerElement.insertBefore($(".setting-item-enumDescription"), common.descriptionElement.nextSibling);
+    const template = {
+      ...common,
+      selectBox,
+      selectElement,
+      enumDescriptionElement
+    };
+    this.addSettingElementFocusHandler(template);
+    return template;
+  }
+  renderElement(element, index, templateData) {
+    super.renderSettingElement(element, index, templateData);
+  }
+  renderValue(dataElement, template, onChange) {
+    const enumItemLabels = dataElement.setting.enumItemLabels ? [...dataElement.setting.enumItemLabels] : [];
+    const enumDescriptions = dataElement.setting.enumDescriptions ? [...dataElement.setting.enumDescriptions] : [];
+    const settingEnum = [...dataElement.setting.enum];
+    const enumDescriptionsAreMarkdown = dataElement.setting.enumDescriptionsAreMarkdown;
+    const disposables = new DisposableStore();
+    template.elementDisposables.add(disposables);
+    let createdDefault = false;
+    if (!settingEnum.includes(dataElement.defaultValue)) {
+      settingEnum.unshift(dataElement.defaultValue);
+      enumDescriptions.unshift("");
+      enumItemLabels.unshift("");
+      createdDefault = true;
+    }
+    const stringifiedDefaultValue = escapeInvisibleChars(String(dataElement.defaultValue));
+    const displayOptions = settingEnum.map(String).map(escapeInvisibleChars).map((data, index) => {
+      const description = enumDescriptions[index] && (enumDescriptionsAreMarkdown ? fixSettingLinks(enumDescriptions[index], false) : enumDescriptions[index]);
+      return {
+        text: enumItemLabels[index] ? enumItemLabels[index] : data,
+        detail: enumItemLabels[index] ? data : "",
+        description,
+        descriptionIsMarkdown: enumDescriptionsAreMarkdown,
+        descriptionMarkdownActionHandler: {
+          callback: /* @__PURE__ */ __name((content) => {
+            this._openerService.open(content).catch(onUnexpectedError);
+          }, "callback"),
+          disposables
+        },
+        decoratorRight: data === stringifiedDefaultValue || createdDefault && index === 0 ? localize("settings.Default", "default") : ""
+      };
+    });
+    template.selectBox.setOptions(displayOptions);
+    template.selectBox.setAriaLabel(dataElement.setting.key);
+    let idx = settingEnum.indexOf(dataElement.value);
+    if (idx === -1) {
+      idx = 0;
+    }
+    template.onChange = void 0;
+    template.selectBox.select(idx);
+    template.onChange = (idx2) => {
+      if (createdDefault && idx2 === 0) {
+        onChange(dataElement.defaultValue);
+      } else {
+        onChange(settingEnum[idx2]);
+      }
+    };
+    template.enumDescriptionElement.innerText = "";
+  }
+}
+const settingsNumberInputBoxStyles = getInputBoxStyle({
+  inputBackground: settingsNumberInputBackground,
+  inputForeground: settingsNumberInputForeground,
+  inputBorder: settingsNumberInputBorder
+});
+class SettingNumberRenderer extends AbstractSettingRenderer {
+  static {
+    __name(this, "SettingNumberRenderer");
+  }
+  templateId = SETTINGS_NUMBER_TEMPLATE_ID;
+  renderTemplate(_container) {
+    const common = super.renderCommonTemplate(null, _container, "number");
+    const validationErrorMessageElement = DOM.append(common.containerElement, $(".setting-item-validation-message"));
+    const inputBox = new InputBox(common.controlElement, this._contextViewService, { type: "number", inputBoxStyles: settingsNumberInputBoxStyles });
+    common.toDispose.add(inputBox);
+    common.toDispose.add(
+      inputBox.onDidChange((e) => {
+        template.onChange?.(e);
+      })
+    );
+    common.toDispose.add(inputBox);
+    inputBox.inputElement.classList.add(AbstractSettingRenderer.CONTROL_CLASS);
+    inputBox.inputElement.tabIndex = 0;
+    const template = {
+      ...common,
+      inputBox,
+      validationErrorMessageElement
+    };
+    this.addSettingElementFocusHandler(template);
+    return template;
+  }
+  renderElement(element, index, templateData) {
+    super.renderSettingElement(element, index, templateData);
+  }
+  renderValue(dataElement, template, onChange) {
+    const numParseFn = dataElement.valueType === "integer" || dataElement.valueType === "nullable-integer" ? parseInt : parseFloat;
+    const nullNumParseFn = dataElement.valueType === "nullable-integer" || dataElement.valueType === "nullable-number" ? (v) => v === "" ? null : numParseFn(v) : numParseFn;
+    template.onChange = void 0;
+    template.inputBox.value = typeof dataElement.value === "number" ? dataElement.value.toString() : "";
+    template.inputBox.step = dataElement.valueType.includes("integer") ? "1" : "any";
+    template.inputBox.setAriaLabel(dataElement.setting.key);
+    template.onChange = (value) => {
+      if (!renderValidations(dataElement, template, false)) {
+        onChange(nullNumParseFn(value));
+      }
+    };
+    renderValidations(dataElement, template, true);
+  }
+}
+class SettingBoolRenderer extends AbstractSettingRenderer {
+  static {
+    __name(this, "SettingBoolRenderer");
+  }
+  templateId = SETTINGS_BOOL_TEMPLATE_ID;
+  renderTemplate(_container) {
+    _container.classList.add("setting-item");
+    _container.classList.add("setting-item-bool");
+    const toDispose = new DisposableStore();
+    const container = DOM.append(_container, $(AbstractSettingRenderer.CONTENTS_SELECTOR));
+    container.classList.add("settings-row-inner-container");
+    const titleElement = DOM.append(container, $(".setting-item-title"));
+    const categoryElement = DOM.append(titleElement, $("span.setting-item-category"));
+    const labelElementContainer = DOM.append(titleElement, $("span.setting-item-label"));
+    const labelElement = toDispose.add(new SimpleIconLabel(labelElementContainer));
+    const indicatorsLabel = this._instantiationService.createInstance(SettingsTreeIndicatorsLabel, titleElement);
+    const descriptionAndValueElement = DOM.append(container, $(".setting-item-value-description"));
+    const controlElement = DOM.append(descriptionAndValueElement, $(".setting-item-bool-control"));
+    const descriptionElement = DOM.append(descriptionAndValueElement, $(".setting-item-description"));
+    const modifiedIndicatorElement = DOM.append(container, $(".setting-item-modified-indicator"));
+    toDispose.add(this._hoverService.setupDelayedHover(modifiedIndicatorElement, {
+      content: localize("modified", "The setting has been configured in the current scope.")
+    }));
+    const deprecationWarningElement = DOM.append(container, $(".setting-item-deprecation-message"));
+    const checkbox = new Toggle({ icon: Codicon.check, actionClassName: "setting-value-checkbox", isChecked: true, title: "", ...unthemedToggleStyles });
+    controlElement.appendChild(checkbox.domNode);
+    toDispose.add(checkbox);
+    toDispose.add(checkbox.onChange(() => {
+      template.onChange(checkbox.checked);
+    }));
+    toDispose.add(DOM.addDisposableListener(descriptionElement, DOM.EventType.MOUSE_DOWN, (e) => {
+      const targetElement = e.target;
+      if (targetElement.tagName.toLowerCase() !== "a") {
+        template.checkbox.checked = !template.checkbox.checked;
+        template.onChange(checkbox.checked);
+      }
+      DOM.EventHelper.stop(e);
+    }));
+    checkbox.domNode.classList.add(AbstractSettingRenderer.CONTROL_CLASS);
+    const toolbarContainer = DOM.append(container, $(".setting-toolbar-container"));
+    const toolbar = this.renderSettingToolbar(toolbarContainer);
+    toDispose.add(toolbar);
+    const template = {
+      toDispose,
+      elementDisposables: toDispose.add(new DisposableStore()),
+      containerElement: container,
+      categoryElement,
+      labelElement,
+      controlElement,
+      checkbox,
+      descriptionElement,
+      deprecationWarningElement,
+      indicatorsLabel,
+      toolbar
+    };
+    this.addSettingElementFocusHandler(template);
+    toDispose.add(DOM.addDisposableListener(controlElement, "mousedown", (e) => e.stopPropagation()));
+    toDispose.add(DOM.addDisposableListener(titleElement, DOM.EventType.MOUSE_ENTER, (e) => container.classList.add("mouseover")));
+    toDispose.add(DOM.addDisposableListener(titleElement, DOM.EventType.MOUSE_LEAVE, (e) => container.classList.remove("mouseover")));
+    return template;
+  }
+  renderElement(element, index, templateData) {
+    super.renderSettingElement(element, index, templateData);
+  }
+  renderValue(dataElement, template, onChange) {
+    template.onChange = void 0;
+    template.checkbox.checked = dataElement.value;
+    template.checkbox.setTitle(dataElement.setting.key);
+    template.onChange = onChange;
+  }
+}
+class SettingsExtensionToggleRenderer extends AbstractSettingRenderer {
+  static {
+    __name(this, "SettingsExtensionToggleRenderer");
+  }
+  templateId = SETTINGS_EXTENSION_TOGGLE_TEMPLATE_ID;
+  _onDidDismissExtensionSetting = this._register(new Emitter());
+  onDidDismissExtensionSetting = this._onDidDismissExtensionSetting.event;
+  renderTemplate(_container) {
+    const common = super.renderCommonTemplate(null, _container, "extension-toggle");
+    const actionButton = new Button(common.containerElement, {
+      title: false,
+      ...defaultButtonStyles
+    });
+    actionButton.element.classList.add("setting-item-extension-toggle-button");
+    actionButton.label = localize("showExtension", "Show Extension");
+    const dismissButton = new Button(common.containerElement, {
+      title: false,
+      secondary: true,
+      ...defaultButtonStyles
+    });
+    dismissButton.element.classList.add("setting-item-extension-dismiss-button");
+    dismissButton.label = localize("dismiss", "Dismiss");
+    const template = {
+      ...common,
+      actionButton,
+      dismissButton
+    };
+    this.addSettingElementFocusHandler(template);
+    return template;
+  }
+  renderElement(element, index, templateData) {
+    super.renderSettingElement(element, index, templateData);
+  }
+  renderValue(dataElement, template, onChange) {
+    template.elementDisposables.clear();
+    const extensionId = dataElement.setting.displayExtensionId;
+    template.elementDisposables.add(template.actionButton.onDidClick(async () => {
+      this._telemetryService.publicLog2("ManageExtensionClick", { extensionId });
+      this._commandService.executeCommand("extension.open", extensionId);
+    }));
+    template.elementDisposables.add(template.dismissButton.onDidClick(async () => {
+      this._telemetryService.publicLog2("DismissExtensionClick", { extensionId });
+      this._onDidDismissExtensionSetting.fire(extensionId);
+    }));
+  }
+}
+let SettingTreeRenderers = class extends Disposable {
+  constructor(_instantiationService, _contextMenuService, _contextViewService, _userDataSyncEnablementService) {
+    super();
+    this._instantiationService = _instantiationService;
+    this._contextMenuService = _contextMenuService;
+    this._contextViewService = _contextViewService;
+    this._userDataSyncEnablementService = _userDataSyncEnablementService;
+    this.settingActions = [
+      new Action("settings.resetSetting", localize("resetSettingLabel", "Reset Setting"), void 0, void 0, async (context) => {
+        if (context instanceof SettingsTreeSettingElement) {
+          if (!context.isUntrusted) {
+            this._onDidChangeSetting.fire({
+              key: context.setting.key,
+              value: void 0,
+              type: context.setting.type,
+              manualReset: true,
+              scope: context.setting.scope
+            });
+          }
+        }
+      }),
+      new Separator(),
+      this._instantiationService.createInstance(CopySettingIdAction),
+      this._instantiationService.createInstance(CopySettingAsJSONAction),
+      this._instantiationService.createInstance(CopySettingAsURLAction)
+    ];
+    const actionFactory = /* @__PURE__ */ __name((setting, settingTarget) => this.getActionsForSetting(setting, settingTarget), "actionFactory");
+    const emptyActionFactory = /* @__PURE__ */ __name((_) => [], "emptyActionFactory");
+    const extensionRenderer = this._instantiationService.createInstance(SettingsExtensionToggleRenderer, [], emptyActionFactory);
+    const settingRenderers = [
+      this._instantiationService.createInstance(SettingBoolRenderer, this.settingActions, actionFactory),
+      this._instantiationService.createInstance(SettingNumberRenderer, this.settingActions, actionFactory),
+      this._instantiationService.createInstance(SettingArrayRenderer, this.settingActions, actionFactory),
+      this._instantiationService.createInstance(SettingComplexRenderer, this.settingActions, actionFactory),
+      this._instantiationService.createInstance(SettingComplexObjectRenderer, this.settingActions, actionFactory),
+      this._instantiationService.createInstance(SettingTextRenderer, this.settingActions, actionFactory),
+      this._instantiationService.createInstance(SettingMultilineTextRenderer, this.settingActions, actionFactory),
+      this._instantiationService.createInstance(SettingExcludeRenderer, this.settingActions, actionFactory),
+      this._instantiationService.createInstance(SettingIncludeRenderer, this.settingActions, actionFactory),
+      this._instantiationService.createInstance(SettingEnumRenderer, this.settingActions, actionFactory),
+      this._instantiationService.createInstance(SettingObjectRenderer, this.settingActions, actionFactory),
+      this._instantiationService.createInstance(SettingBoolObjectRenderer, this.settingActions, actionFactory),
+      extensionRenderer
+    ];
+    this.onDidClickOverrideElement = Event.any(...settingRenderers.map((r) => r.onDidClickOverrideElement));
+    this.onDidChangeSetting = Event.any(
+      ...settingRenderers.map((r) => r.onDidChangeSetting),
+      this._onDidChangeSetting.event
+    );
+    this.onDidDismissExtensionSetting = extensionRenderer.onDidDismissExtensionSetting;
+    this.onDidOpenSettings = Event.any(...settingRenderers.map((r) => r.onDidOpenSettings));
+    this.onDidClickSettingLink = Event.any(...settingRenderers.map((r) => r.onDidClickSettingLink));
+    this.onDidFocusSetting = Event.any(...settingRenderers.map((r) => r.onDidFocusSetting));
+    this.onDidChangeSettingHeight = Event.any(...settingRenderers.map((r) => r.onDidChangeSettingHeight));
+    this.onApplyFilter = Event.any(...settingRenderers.map((r) => r.onApplyFilter));
+    this.allRenderers = [
+      ...settingRenderers,
+      this._instantiationService.createInstance(SettingGroupRenderer),
+      this._instantiationService.createInstance(SettingNewExtensionsRenderer)
+    ];
+  }
+  static {
+    __name(this, "SettingTreeRenderers");
+  }
+  onDidClickOverrideElement;
+  _onDidChangeSetting = this._register(new Emitter());
+  onDidChangeSetting;
+  onDidDismissExtensionSetting;
+  onDidOpenSettings;
+  onDidClickSettingLink;
+  onDidFocusSetting;
+  onDidChangeSettingHeight;
+  onApplyFilter;
+  allRenderers;
+  settingActions;
+  getActionsForSetting(setting, settingTarget) {
+    const actions = [];
+    if (!(setting.scope && APPLICATION_SCOPES.includes(setting.scope)) && settingTarget === ConfigurationTarget.USER_LOCAL) {
+      actions.push(this._instantiationService.createInstance(ApplySettingToAllProfilesAction, setting));
+    }
+    if (this._userDataSyncEnablementService.isEnabled() && !setting.disallowSyncIgnore) {
+      actions.push(this._instantiationService.createInstance(SyncSettingAction, setting));
+    }
+    if (actions.length) {
+      actions.splice(0, 0, new Separator());
+    }
+    return actions;
+  }
+  cancelSuggesters() {
+    this._contextViewService.hideContextView();
+  }
+  showContextMenu(element, settingDOMElement) {
+    const toolbarElement = settingDOMElement.querySelector(".monaco-toolbar");
+    if (toolbarElement) {
+      this._contextMenuService.showContextMenu({
+        getActions: /* @__PURE__ */ __name(() => this.settingActions, "getActions"),
+        getAnchor: /* @__PURE__ */ __name(() => toolbarElement, "getAnchor"),
+        getActionsContext: /* @__PURE__ */ __name(() => element, "getActionsContext")
+      });
+    }
+  }
+  getSettingDOMElementForDOMElement(domElement) {
+    const parent = DOM.findParentWithClass(domElement, AbstractSettingRenderer.CONTENTS_CLASS);
+    if (parent) {
+      return parent;
+    }
+    return null;
+  }
+  getDOMElementsForSettingKey(treeContainer, key) {
+    return treeContainer.querySelectorAll(`[${AbstractSettingRenderer.SETTING_KEY_ATTR}="${key}"]`);
+  }
+  getKeyForDOMElementInSetting(element) {
+    const settingElement = this.getSettingDOMElementForDOMElement(element);
+    return settingElement && settingElement.getAttribute(AbstractSettingRenderer.SETTING_KEY_ATTR);
+  }
+  getIdForDOMElementInSetting(element) {
+    const settingElement = this.getSettingDOMElementForDOMElement(element);
+    return settingElement && settingElement.getAttribute(AbstractSettingRenderer.SETTING_ID_ATTR);
+  }
+  dispose() {
+    super.dispose();
+    this.settingActions.forEach((action) => {
+      if (isDisposable(action)) {
+        action.dispose();
+      }
+    });
+    this.allRenderers.forEach((renderer) => {
+      if (isDisposable(renderer)) {
+        renderer.dispose();
+      }
+    });
+  }
+};
+SettingTreeRenderers = __decorateClass([
+  __decorateParam(0, IInstantiationService),
+  __decorateParam(1, IContextMenuService),
+  __decorateParam(2, IContextViewService),
+  __decorateParam(3, IUserDataSyncEnablementService)
+], SettingTreeRenderers);
+function renderValidations(dataElement, template, calledOnStartup) {
+  if (dataElement.setting.validator) {
+    const errMsg = dataElement.setting.validator(template.inputBox.value);
+    if (errMsg) {
+      template.containerElement.classList.add("invalid-input");
+      template.validationErrorMessageElement.innerText = errMsg;
+      const validationError = localize("validationError", "Validation Error.");
+      template.inputBox.inputElement.parentElement.setAttribute("aria-label", [validationError, errMsg].join(" "));
+      if (!calledOnStartup) {
+        aria.status(validationError + " " + errMsg);
+      }
+      return true;
+    } else {
+      template.inputBox.inputElement.parentElement.removeAttribute("aria-label");
+    }
+  }
+  template.containerElement.classList.remove("invalid-input");
+  return false;
+}
+__name(renderValidations, "renderValidations");
+function renderArrayValidations(dataElement, template, value, calledOnStartup) {
+  template.containerElement.classList.add("invalid-input");
+  if (dataElement.setting.validator) {
+    const errMsg = dataElement.setting.validator(value);
+    if (errMsg && errMsg !== "") {
+      template.containerElement.classList.add("invalid-input");
+      template.validationErrorMessageElement.innerText = errMsg;
+      const validationError = localize("validationError", "Validation Error.");
+      template.containerElement.setAttribute("aria-label", [dataElement.setting.key, validationError, errMsg].join(" "));
+      if (!calledOnStartup) {
+        aria.status(validationError + " " + errMsg);
+      }
+      return true;
+    } else {
+      template.containerElement.setAttribute("aria-label", dataElement.setting.key);
+      template.containerElement.classList.remove("invalid-input");
+    }
+  }
+  return false;
+}
+__name(renderArrayValidations, "renderArrayValidations");
+function cleanRenderedMarkdown(element) {
+  for (let i = 0; i < element.childNodes.length; i++) {
+    const child = element.childNodes.item(i);
+    const tagName = child.tagName && child.tagName.toLowerCase();
+    if (tagName === "img") {
+      child.remove();
+    } else {
+      cleanRenderedMarkdown(child);
+    }
+  }
+}
+__name(cleanRenderedMarkdown, "cleanRenderedMarkdown");
+function fixSettingLinks(text, linkify = true) {
+  return text.replace(/`#([^#\s`]+)#`|'#([^#\s']+)#'/g, (match, backticksGroup, quotesGroup) => {
+    const settingKey = backticksGroup ?? quotesGroup;
+    const targetDisplayFormat = settingKeyToDisplayFormat(settingKey);
+    const targetName = `${targetDisplayFormat.category}: ${targetDisplayFormat.label}`;
+    return linkify ? `[${targetName}](#${settingKey} "${settingKey}")` : `"${targetName}"`;
+  });
+}
+__name(fixSettingLinks, "fixSettingLinks");
+function escapeInvisibleChars(enumValue) {
+  return enumValue && enumValue.replace(/\n/g, "\\n").replace(/\r/g, "\\r");
+}
+__name(escapeInvisibleChars, "escapeInvisibleChars");
+let SettingsTreeFilter = class {
+  constructor(viewState, environmentService) {
+    this.viewState = viewState;
+    this.environmentService = environmentService;
+  }
+  static {
+    __name(this, "SettingsTreeFilter");
+  }
+  filter(element, parentVisibility) {
+    if (this.viewState.filterToCategory && element instanceof SettingsTreeSettingElement) {
+      if (!this.settingContainedInGroup(element.setting, this.viewState.filterToCategory)) {
+        return false;
+      }
+    }
+    if (element instanceof SettingsTreeSettingElement && this.viewState.settingsTarget !== ConfigurationTarget.USER_LOCAL) {
+      const isRemote = !!this.environmentService.remoteAuthority;
+      if (!element.matchesScope(this.viewState.settingsTarget, isRemote)) {
+        return false;
+      }
+    }
+    if (element instanceof SettingsTreeGroupElement) {
+      if (typeof element.count === "number") {
+        return element.count > 0;
+      }
+      return TreeVisibility.Recurse;
+    }
+    if (element instanceof SettingsTreeNewExtensionsElement) {
+      if (this.viewState.tagFilters?.size || this.viewState.filterToCategory) {
+        return false;
+      }
+    }
+    return true;
+  }
+  settingContainedInGroup(setting, group) {
+    return group.children.some((child) => {
+      if (child instanceof SettingsTreeGroupElement) {
+        return this.settingContainedInGroup(setting, child);
+      } else if (child instanceof SettingsTreeSettingElement) {
+        return child.setting.key === setting.key;
+      } else {
+        return false;
+      }
+    });
+  }
+};
+SettingsTreeFilter = __decorateClass([
+  __decorateParam(1, IWorkbenchEnvironmentService)
+], SettingsTreeFilter);
+class SettingsTreeDelegate extends CachedListVirtualDelegate {
+  static {
+    __name(this, "SettingsTreeDelegate");
+  }
+  getTemplateId(element) {
+    if (element instanceof SettingsTreeGroupElement) {
+      return SETTINGS_ELEMENT_TEMPLATE_ID;
+    }
+    if (element instanceof SettingsTreeSettingElement) {
+      if (element.valueType === SettingValueType.ExtensionToggle) {
+        return SETTINGS_EXTENSION_TOGGLE_TEMPLATE_ID;
+      }
+      const invalidTypeError = element.isConfigured && getInvalidTypeError(element.value, element.setting.type);
+      if (invalidTypeError) {
+        return SETTINGS_COMPLEX_TEMPLATE_ID;
+      }
+      if (element.valueType === SettingValueType.Boolean) {
+        return SETTINGS_BOOL_TEMPLATE_ID;
+      }
+      if (element.valueType === SettingValueType.Integer || element.valueType === SettingValueType.Number || element.valueType === SettingValueType.NullableInteger || element.valueType === SettingValueType.NullableNumber) {
+        return SETTINGS_NUMBER_TEMPLATE_ID;
+      }
+      if (element.valueType === SettingValueType.MultilineString) {
+        return SETTINGS_MULTILINE_TEXT_TEMPLATE_ID;
+      }
+      if (element.valueType === SettingValueType.String) {
+        return SETTINGS_TEXT_TEMPLATE_ID;
+      }
+      if (element.valueType === SettingValueType.Enum) {
+        return SETTINGS_ENUM_TEMPLATE_ID;
+      }
+      if (element.valueType === SettingValueType.Array) {
+        return SETTINGS_ARRAY_TEMPLATE_ID;
+      }
+      if (element.valueType === SettingValueType.Exclude) {
+        return SETTINGS_EXCLUDE_TEMPLATE_ID;
+      }
+      if (element.valueType === SettingValueType.Include) {
+        return SETTINGS_INCLUDE_TEMPLATE_ID;
+      }
+      if (element.valueType === SettingValueType.Object) {
+        return SETTINGS_OBJECT_TEMPLATE_ID;
+      }
+      if (element.valueType === SettingValueType.BooleanObject) {
+        return SETTINGS_BOOL_OBJECT_TEMPLATE_ID;
+      }
+      if (element.valueType === SettingValueType.ComplexObject) {
+        return SETTINGS_COMPLEX_OBJECT_TEMPLATE_ID;
+      }
+      if (element.valueType === SettingValueType.LanguageTag) {
+        return SETTINGS_COMPLEX_TEMPLATE_ID;
+      }
+      return SETTINGS_COMPLEX_TEMPLATE_ID;
+    }
+    if (element instanceof SettingsTreeNewExtensionsElement) {
+      return SETTINGS_NEW_EXTENSIONS_TEMPLATE_ID;
+    }
+    throw new Error("unknown element type: " + element);
+  }
+  hasDynamicHeight(element) {
+    return !(element instanceof SettingsTreeGroupElement);
+  }
+  estimateHeight(element) {
+    if (element instanceof SettingsTreeGroupElement) {
+      return 42;
+    }
+    return element instanceof SettingsTreeSettingElement && element.valueType === SettingValueType.Boolean ? 78 : 104;
+  }
+}
+class NonCollapsibleObjectTreeModel extends ObjectTreeModel {
+  static {
+    __name(this, "NonCollapsibleObjectTreeModel");
+  }
+  isCollapsible(element) {
+    return false;
+  }
+  setCollapsed(element, collapsed, recursive) {
+    return false;
+  }
+}
+class SettingsTreeAccessibilityProvider {
+  constructor(configurationService, languageService, userDataProfilesService) {
+    this.configurationService = configurationService;
+    this.languageService = languageService;
+    this.userDataProfilesService = userDataProfilesService;
+  }
+  static {
+    __name(this, "SettingsTreeAccessibilityProvider");
+  }
+  getAriaLabel(element) {
+    if (element instanceof SettingsTreeSettingElement) {
+      const ariaLabelSections = [];
+      ariaLabelSections.push(`${element.displayCategory} ${element.displayLabel}.`);
+      if (element.isConfigured) {
+        const modifiedText = localize("settings.Modified", "Modified.");
+        ariaLabelSections.push(modifiedText);
+      }
+      const indicatorsLabelAriaLabel = getIndicatorsLabelAriaLabel(element, this.configurationService, this.userDataProfilesService, this.languageService);
+      if (indicatorsLabelAriaLabel.length) {
+        ariaLabelSections.push(`${indicatorsLabelAriaLabel}.`);
+      }
+      const descriptionWithoutSettingLinks = renderMarkdownAsPlaintext({ value: fixSettingLinks(element.description, false) });
+      if (descriptionWithoutSettingLinks.length) {
+        ariaLabelSections.push(descriptionWithoutSettingLinks);
+      }
+      return ariaLabelSections.join(" ");
+    } else if (element instanceof SettingsTreeGroupElement) {
+      return element.label;
+    } else {
+      return element.id;
+    }
+  }
+  getWidgetAriaLabel() {
+    return localize("settings", "Settings");
+  }
+}
+let SettingsTree = class extends WorkbenchObjectTree {
+  static {
+    __name(this, "SettingsTree");
+  }
+  constructor(container, viewState, renderers, contextKeyService, listService, configurationService, instantiationService, languageService, userDataProfilesService) {
+    super(
+      "SettingsTree",
+      container,
+      new SettingsTreeDelegate(),
+      renderers,
+      {
+        horizontalScrolling: false,
+        supportDynamicHeights: true,
+        scrollToActiveElement: true,
+        identityProvider: {
+          getId(e) {
+            return e.id;
+          }
+        },
+        accessibilityProvider: new SettingsTreeAccessibilityProvider(configurationService, languageService, userDataProfilesService),
+        styleController: /* @__PURE__ */ __name((id) => new DefaultStyleController(domStylesheetsJs.createStyleSheet(container), id), "styleController"),
+        filter: instantiationService.createInstance(SettingsTreeFilter, viewState),
+        smoothScrolling: configurationService.getValue("workbench.list.smoothScrolling"),
+        multipleSelectionSupport: false,
+        findWidgetEnabled: false,
+        renderIndentGuides: RenderIndentGuides.None,
+        transformOptimization: false
+        // Disable transform optimization #177470
+      },
+      instantiationService,
+      contextKeyService,
+      listService,
+      configurationService
+    );
+    this.getHTMLElement().classList.add("settings-editor-tree");
+    this.style(getListStyles({
+      listBackground: editorBackground,
+      listActiveSelectionBackground: editorBackground,
+      listActiveSelectionForeground: foreground,
+      listFocusAndSelectionBackground: editorBackground,
+      listFocusAndSelectionForeground: foreground,
+      listFocusBackground: editorBackground,
+      listFocusForeground: foreground,
+      listHoverForeground: foreground,
+      listHoverBackground: editorBackground,
+      listHoverOutline: editorBackground,
+      listFocusOutline: editorBackground,
+      listInactiveSelectionBackground: editorBackground,
+      listInactiveSelectionForeground: foreground,
+      listInactiveFocusBackground: editorBackground,
+      listInactiveFocusOutline: editorBackground,
+      treeIndentGuidesStroke: void 0,
+      treeInactiveIndentGuidesStroke: void 0
+    }));
+    this.disposables.add(configurationService.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration("workbench.list.smoothScrolling")) {
+        this.updateOptions({
+          smoothScrolling: configurationService.getValue("workbench.list.smoothScrolling")
+        });
+      }
+    }));
+  }
+  createModel(user, options) {
+    return new NonCollapsibleObjectTreeModel(user, options);
+  }
+};
+SettingsTree = __decorateClass([
+  __decorateParam(3, IContextKeyService),
+  __decorateParam(4, IListService),
+  __decorateParam(5, IWorkbenchConfigurationService),
+  __decorateParam(6, IInstantiationService),
+  __decorateParam(7, ILanguageService),
+  __decorateParam(8, IUserDataProfilesService)
+], SettingsTree);
+let CopySettingIdAction = class extends Action {
+  constructor(clipboardService) {
+    super(CopySettingIdAction.ID, CopySettingIdAction.LABEL);
+    this.clipboardService = clipboardService;
+  }
+  static {
+    __name(this, "CopySettingIdAction");
+  }
+  static ID = "settings.copySettingId";
+  static LABEL = localize("copySettingIdLabel", "Copy Setting ID");
+  async run(context) {
+    if (context) {
+      await this.clipboardService.writeText(context.setting.key);
+    }
+    return Promise.resolve(void 0);
+  }
+};
+CopySettingIdAction = __decorateClass([
+  __decorateParam(0, IClipboardService)
+], CopySettingIdAction);
+let CopySettingAsJSONAction = class extends Action {
+  constructor(clipboardService) {
+    super(CopySettingAsJSONAction.ID, CopySettingAsJSONAction.LABEL);
+    this.clipboardService = clipboardService;
+  }
+  static {
+    __name(this, "CopySettingAsJSONAction");
+  }
+  static ID = "settings.copySettingAsJSON";
+  static LABEL = localize("copySettingAsJSONLabel", "Copy Setting as JSON");
+  async run(context) {
+    if (context) {
+      const jsonResult = `"${context.setting.key}": ${JSON.stringify(context.value, void 0, "  ")}`;
+      await this.clipboardService.writeText(jsonResult);
+    }
+    return Promise.resolve(void 0);
+  }
+};
+CopySettingAsJSONAction = __decorateClass([
+  __decorateParam(0, IClipboardService)
+], CopySettingAsJSONAction);
+let CopySettingAsURLAction = class extends Action {
+  constructor(clipboardService, productService) {
+    super(CopySettingAsURLAction.ID, CopySettingAsURLAction.LABEL);
+    this.clipboardService = clipboardService;
+    this.productService = productService;
+  }
+  static {
+    __name(this, "CopySettingAsURLAction");
+  }
+  static ID = "settings.copySettingAsURL";
+  static LABEL = localize("copySettingAsURLLabel", "Copy Setting as URL");
+  async run(context) {
+    if (context) {
+      const settingKey = context.setting.key;
+      const product = this.productService.urlProtocol;
+      const uri = URI.from({ scheme: product, authority: SETTINGS_AUTHORITY, path: `/${settingKey}` }, true);
+      await this.clipboardService.writeText(uri.toString());
+    }
+    return Promise.resolve(void 0);
+  }
+};
+CopySettingAsURLAction = __decorateClass([
+  __decorateParam(0, IClipboardService),
+  __decorateParam(1, IProductService)
+], CopySettingAsURLAction);
+let SyncSettingAction = class extends Action {
+  constructor(setting, configService) {
+    super(SyncSettingAction.ID, SyncSettingAction.LABEL);
+    this.setting = setting;
+    this.configService = configService;
+    this._register(Event.filter(configService.onDidChangeConfiguration, (e) => e.affectsConfiguration("settingsSync.ignoredSettings"))(() => this.update()));
+    this.update();
+  }
+  static {
+    __name(this, "SyncSettingAction");
+  }
+  static ID = "settings.stopSyncingSetting";
+  static LABEL = localize("stopSyncingSetting", "Sync This Setting");
+  async update() {
+    const ignoredSettings = getIgnoredSettings(getDefaultIgnoredSettings(), this.configService);
+    this.checked = !ignoredSettings.includes(this.setting.key);
+  }
+  async run() {
+    let currentValue = [...this.configService.getValue("settingsSync.ignoredSettings")];
+    currentValue = currentValue.filter((v) => v !== this.setting.key && v !== `-${this.setting.key}`);
+    const defaultIgnoredSettings = getDefaultIgnoredSettings();
+    const isDefaultIgnored = defaultIgnoredSettings.includes(this.setting.key);
+    const askedToSync = !this.checked;
+    if (askedToSync && isDefaultIgnored) {
+      currentValue.push(`-${this.setting.key}`);
+    }
+    if (!askedToSync && !isDefaultIgnored) {
+      currentValue.push(this.setting.key);
+    }
+    this.configService.updateValue("settingsSync.ignoredSettings", currentValue.length ? currentValue : void 0, ConfigurationTarget.USER);
+    return Promise.resolve(void 0);
+  }
+};
+SyncSettingAction = __decorateClass([
+  __decorateParam(1, IConfigurationService)
+], SyncSettingAction);
+let ApplySettingToAllProfilesAction = class extends Action {
+  constructor(setting, configService) {
+    super(ApplySettingToAllProfilesAction.ID, ApplySettingToAllProfilesAction.LABEL);
+    this.setting = setting;
+    this.configService = configService;
+    this._register(Event.filter(configService.onDidChangeConfiguration, (e) => e.affectsConfiguration(APPLY_ALL_PROFILES_SETTING))(() => this.update()));
+    this.update();
+  }
+  static {
+    __name(this, "ApplySettingToAllProfilesAction");
+  }
+  static ID = "settings.applyToAllProfiles";
+  static LABEL = localize("applyToAllProfiles", "Apply Setting to all Profiles");
+  update() {
+    const allProfilesSettings = this.configService.getValue(APPLY_ALL_PROFILES_SETTING);
+    this.checked = allProfilesSettings.includes(this.setting.key);
+  }
+  async run() {
+    const value = this.configService.getValue(APPLY_ALL_PROFILES_SETTING) ?? [];
+    if (this.checked) {
+      value.splice(value.indexOf(this.setting.key), 1);
+    } else {
+      value.push(this.setting.key);
+    }
+    const newValue = distinct(value);
+    if (this.checked) {
+      await this.configService.updateValue(this.setting.key, this.configService.inspect(this.setting.key).application?.value, ConfigurationTarget.USER_LOCAL);
+      await this.configService.updateValue(APPLY_ALL_PROFILES_SETTING, newValue.length ? newValue : void 0, ConfigurationTarget.USER_LOCAL);
+    } else {
+      await this.configService.updateValue(APPLY_ALL_PROFILES_SETTING, newValue.length ? newValue : void 0, ConfigurationTarget.USER_LOCAL);
+      await this.configService.updateValue(this.setting.key, this.configService.inspect(this.setting.key).userLocal?.value, ConfigurationTarget.USER_LOCAL);
+    }
+  }
+};
+ApplySettingToAllProfilesAction = __decorateClass([
+  __decorateParam(1, IWorkbenchConfigurationService)
+], ApplySettingToAllProfilesAction);
+export {
+  AbstractSettingRenderer,
+  NonCollapsibleObjectTreeModel,
+  SettingComplexRenderer,
+  SettingNewExtensionsRenderer,
+  SettingTreeRenderers,
+  SettingsTree,
+  SettingsTreeFilter,
+  createSettingMatchRegExp,
+  createTocTreeForExtensionSettings,
+  resolveConfiguredUntrustedSettings,
+  resolveSettingsTree
+};
+//# sourceMappingURL=settingsTree.js.map

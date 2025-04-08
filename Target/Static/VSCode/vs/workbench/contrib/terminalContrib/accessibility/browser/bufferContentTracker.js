@@ -1,1 +1,141 @@
-var u=Object.defineProperty,m=Object.getOwnPropertyDescriptor,g=(e,t,i,r)=>{for(var s,n=r>1?void 0:r?m(t,i):t,o=e.length-1;o>=0;o--)(s=e[o])&&(n=(r?s(t,i,n):s(n))||n);return r&&n&&u(t,i,n),n},d=(e,t)=>(i,r)=>t(i,r,e);import{Disposable as v}from"../../../../../base/common/lifecycle.js";import{IConfigurationService as w}from"../../../../../platform/configuration/common/configuration.js";import{ITerminalLogService as b,TerminalSettingId as C}from"../../../../../platform/terminal/common/terminal.js";import"../../../terminal/browser/terminal.js";let p=class extends v{constructor(e,t,i){super(),this._xterm=e,this._configurationService=t,this._logService=i}_lastCachedMarker;_priorEditorViewportLineCount=0;_lines=[];get lines(){return this._lines}bufferToEditorLineMapping=new Map;reset(){this._lines=[],this._lastCachedMarker=void 0,this.update()}update(){this._lastCachedMarker?.isDisposed&&(this._lines=[],this._lastCachedMarker=void 0),this._removeViewportContent(),this._updateCachedContent(),this._updateViewportContent(),this._lastCachedMarker=this._register(this._xterm.raw.registerMarker()),this._logService.debug("Buffer content tracker: set ",this._lines.length," lines")}_updateCachedContent(){const e=this._xterm.raw.buffer.active,t=this._lastCachedMarker?.line?this._lastCachedMarker.line-this._xterm.raw.rows+1:0,i=e.baseY;if(t<0||t>i)return;const r=this._configurationService.getValue(C.Scrollback)+this._xterm.raw.rows-1,s=i-t;if(s+this._lines.length>r){const e=s+this._lines.length-r;for(let t=0;t<e;t++)this._lines.shift();this._logService.debug("Buffer content tracker: removed ",e," lines from top of cached lines, now ",this._lines.length," lines")}const n=[];let o="";for(let r=t;r<i;r++){const t=e.getLine(r);if(!t)continue;this.bufferToEditorLineMapping.set(r,this._lines.length+n.length);const i=e.getLine(r+1)?.isWrapped;o+=t.translateToString(!i),(o&&!i||r===e.baseY+this._xterm.raw.rows-1)&&t.length&&(n.push(o),o="")}this._logService.debug("Buffer content tracker:",n.length," lines cached"),this._lines.push(...n)}_removeViewportContent(){if(!this._lines.length)return;let e=this._priorEditorViewportLineCount,t=1;for(;e;)this.bufferToEditorLineMapping.forEach(((e,i)=>{e===this._lines.length-t&&this.bufferToEditorLineMapping.delete(i)})),this._lines.pop(),t++,e--;this._logService.debug("Buffer content tracker: removed lines from viewport, now ",this._lines.length," lines cached")}_updateViewportContent(){const e=this._xterm.raw.buffer.active;this._priorEditorViewportLineCount=0;let t="";for(let i=e.baseY;i<e.baseY+this._xterm.raw.rows;i++){const r=e.getLine(i);if(!r)continue;this.bufferToEditorLineMapping.set(i,this._lines.length);const s=e.getLine(i+1)?.isWrapped;t+=r.translateToString(!s),(t&&!s||i===e.baseY+this._xterm.raw.rows-1)&&t.length&&(this._priorEditorViewportLineCount++,this._lines.push(t),t="")}this._logService.debug("Viewport content update complete, ",this._lines.length," lines in the viewport")}};p=g([d(1,w),d(2,b)],p);export{p as BufferContentTracker};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { ITerminalLogService, TerminalSettingId } from "../../../../../platform/terminal/common/terminal.js";
+import { IXtermTerminal } from "../../../terminal/browser/terminal.js";
+let BufferContentTracker = class extends Disposable {
+  constructor(_xterm, _configurationService, _logService) {
+    super();
+    this._xterm = _xterm;
+    this._configurationService = _configurationService;
+    this._logService = _logService;
+  }
+  static {
+    __name(this, "BufferContentTracker");
+  }
+  /**
+   * Marks the last part of the buffer that was cached
+   */
+  _lastCachedMarker;
+  /**
+   * The number of wrapped lines in the viewport when the last cached marker was set
+   */
+  _priorEditorViewportLineCount = 0;
+  _lines = [];
+  get lines() {
+    return this._lines;
+  }
+  bufferToEditorLineMapping = /* @__PURE__ */ new Map();
+  reset() {
+    this._lines = [];
+    this._lastCachedMarker = void 0;
+    this.update();
+  }
+  update() {
+    if (this._lastCachedMarker?.isDisposed) {
+      this._lines = [];
+      this._lastCachedMarker = void 0;
+    }
+    this._removeViewportContent();
+    this._updateCachedContent();
+    this._updateViewportContent();
+    this._lastCachedMarker = this._register(this._xterm.raw.registerMarker());
+    this._logService.debug("Buffer content tracker: set ", this._lines.length, " lines");
+  }
+  _updateCachedContent() {
+    const buffer = this._xterm.raw.buffer.active;
+    const start = this._lastCachedMarker?.line ? this._lastCachedMarker.line - this._xterm.raw.rows + 1 : 0;
+    const end = buffer.baseY;
+    if (start < 0 || start > end) {
+      return;
+    }
+    const scrollback = this._configurationService.getValue(TerminalSettingId.Scrollback);
+    const maxBufferSize = scrollback + this._xterm.raw.rows - 1;
+    const linesToAdd = end - start;
+    if (linesToAdd + this._lines.length > maxBufferSize) {
+      const numToRemove = linesToAdd + this._lines.length - maxBufferSize;
+      for (let i = 0; i < numToRemove; i++) {
+        this._lines.shift();
+      }
+      this._logService.debug("Buffer content tracker: removed ", numToRemove, " lines from top of cached lines, now ", this._lines.length, " lines");
+    }
+    const cachedLines = [];
+    let currentLine = "";
+    for (let i = start; i < end; i++) {
+      const line = buffer.getLine(i);
+      if (!line) {
+        continue;
+      }
+      this.bufferToEditorLineMapping.set(i, this._lines.length + cachedLines.length);
+      const isWrapped = buffer.getLine(i + 1)?.isWrapped;
+      currentLine += line.translateToString(!isWrapped);
+      if (currentLine && !isWrapped || i === buffer.baseY + this._xterm.raw.rows - 1) {
+        if (line.length) {
+          cachedLines.push(currentLine);
+          currentLine = "";
+        }
+      }
+    }
+    this._logService.debug("Buffer content tracker:", cachedLines.length, " lines cached");
+    this._lines.push(...cachedLines);
+  }
+  _removeViewportContent() {
+    if (!this._lines.length) {
+      return;
+    }
+    let linesToRemove = this._priorEditorViewportLineCount;
+    let index = 1;
+    while (linesToRemove) {
+      this.bufferToEditorLineMapping.forEach((value, key) => {
+        if (value === this._lines.length - index) {
+          this.bufferToEditorLineMapping.delete(key);
+        }
+      });
+      this._lines.pop();
+      index++;
+      linesToRemove--;
+    }
+    this._logService.debug("Buffer content tracker: removed lines from viewport, now ", this._lines.length, " lines cached");
+  }
+  _updateViewportContent() {
+    const buffer = this._xterm.raw.buffer.active;
+    this._priorEditorViewportLineCount = 0;
+    let currentLine = "";
+    for (let i = buffer.baseY; i < buffer.baseY + this._xterm.raw.rows; i++) {
+      const line = buffer.getLine(i);
+      if (!line) {
+        continue;
+      }
+      this.bufferToEditorLineMapping.set(i, this._lines.length);
+      const isWrapped = buffer.getLine(i + 1)?.isWrapped;
+      currentLine += line.translateToString(!isWrapped);
+      if (currentLine && !isWrapped || i === buffer.baseY + this._xterm.raw.rows - 1) {
+        if (currentLine.length) {
+          this._priorEditorViewportLineCount++;
+          this._lines.push(currentLine);
+          currentLine = "";
+        }
+      }
+    }
+    this._logService.debug("Viewport content update complete, ", this._lines.length, " lines in the viewport");
+  }
+};
+BufferContentTracker = __decorateClass([
+  __decorateParam(1, IConfigurationService),
+  __decorateParam(2, ITerminalLogService)
+], BufferContentTracker);
+export {
+  BufferContentTracker
+};
+//# sourceMappingURL=bufferContentTracker.js.map

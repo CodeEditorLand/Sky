@@ -1,1 +1,136 @@
-var v=Object.defineProperty;var _=Object.getOwnPropertyDescriptor;var g=(c,a,t,e)=>{for(var i=e>1?void 0:e?_(a,t):a,s=c.length-1,n;s>=0;s--)(n=c[s])&&(i=(e?n(a,t,i):n(i))||i);return e&&i&&v(a,t,i),i},f=(c,a)=>(t,e)=>a(t,e,c);import{CancellationTokenSource as m}from"../../../../base/common/cancellation.js";import{CancellationError as b}from"../../../../base/common/errors.js";import{Disposable as M,DisposableStore as I,MutableDisposable as D,toDisposable as y}from"../../../../base/common/lifecycle.js";import{autorun as h,observableValue as S}from"../../../../base/common/observable.js";import{localize as u}from"../../../../nls.js";import{IInstantiationService as K}from"../../../../platform/instantiation/common/instantiation.js";import{log as C}from"../../../../platform/log/common/log.js";import"./mcpRegistryTypes.js";import{McpServerRequestHandler as H}from"./mcpServerRequestHandler.js";import{McpConnectionState as r}from"./mcpTypes.js";let p=class extends M{constructor(t,e,i,s,n,o){super();this._collection=t;this.definition=e;this._delegate=i;this.launchDefinition=s;this._logger=n;this._instantiationService=o}_launch=this._register(new D);_state=S("mcpServerState",{state:r.Kind.Stopped});_requestHandler=S("mcpServerRequestHandler",void 0);state=this._state;handler=this._requestHandler;async start(){const t=this._state.get();if(!r.canBeStarted(t.state))return this._waitForState(r.Kind.Running,r.Kind.Error);this._launch.value=void 0,this._state.set({state:r.Kind.Starting},void 0),this._logger.info(u("mcpServer.starting","Starting server {0}",this.definition.label));try{const e=this._delegate.start(this._collection,this.definition,this.launchDefinition);return this._launch.value=this.adoptLaunch(e),this._waitForState(r.Kind.Running,r.Kind.Error)}catch(e){const i={state:r.Kind.Error,message:e instanceof Error?e.message:String(e)};return this._state.set(i,void 0),i}}adoptLaunch(t){const e=new I,i=new m;e.add(y(()=>i.dispose(!0))),e.add(t),e.add(t.onDidLog(({level:n,message:o})=>{C(this._logger,n,o)}));let s=!1;return e.add(h(n=>{const o=t.state.read(n);this._state.set(o,void 0),this._logger.info(u("mcpServer.state","Connection state: {0}",r.toString(o))),o.state===r.Kind.Running&&!s&&(s=!0,H.create(this._instantiationService,t,this._logger,i.token).then(d=>{e.isDisposed?d.dispose():this._requestHandler.set(d,void 0)},d=>{if(!e.isDisposed){let l=d.message;d instanceof b?(l="Server exited before responding to `initialize` request.",this._logger.error(l)):this._logger.error(d),this._state.set({state:r.Kind.Error,message:l},void 0)}e.dispose()}))})),{dispose:()=>e.dispose(),object:t}}async stop(){this._logger.info(u("mcpServer.stopping","Stopping server {0}",this.definition.label)),this._launch.value?.object.stop(),await this._waitForState(r.Kind.Stopped,r.Kind.Error)}dispose(){this._requestHandler.get()?.dispose(),super.dispose(),this._state.set({state:r.Kind.Stopped},void 0)}_waitForState(...t){const e=this._state.get();return t.includes(e.state)?Promise.resolve(e):new Promise(i=>{const s=h(n=>{const o=this._state.read(n);t.includes(o.state)&&(s.dispose(),i(o))})})}};p=g([f(5,K)],p);export{p as McpServerConnection};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { CancellationTokenSource } from "../../../../base/common/cancellation.js";
+import { CancellationError } from "../../../../base/common/errors.js";
+import { Disposable, DisposableStore, IReference, MutableDisposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { autorun, IObservable, observableValue } from "../../../../base/common/observable.js";
+import { localize } from "../../../../nls.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { ILogger, log } from "../../../../platform/log/common/log.js";
+import { IMcpHostDelegate, IMcpMessageTransport } from "./mcpRegistryTypes.js";
+import { McpServerRequestHandler } from "./mcpServerRequestHandler.js";
+import { IMcpServerConnection, McpCollectionDefinition, McpConnectionState, McpServerDefinition, McpServerLaunch } from "./mcpTypes.js";
+let McpServerConnection = class extends Disposable {
+  constructor(_collection, definition, _delegate, launchDefinition, _logger, _instantiationService) {
+    super();
+    this._collection = _collection;
+    this.definition = definition;
+    this._delegate = _delegate;
+    this.launchDefinition = launchDefinition;
+    this._logger = _logger;
+    this._instantiationService = _instantiationService;
+  }
+  static {
+    __name(this, "McpServerConnection");
+  }
+  _launch = this._register(new MutableDisposable());
+  _state = observableValue("mcpServerState", { state: McpConnectionState.Kind.Stopped });
+  _requestHandler = observableValue("mcpServerRequestHandler", void 0);
+  state = this._state;
+  handler = this._requestHandler;
+  /** @inheritdoc */
+  async start() {
+    const currentState = this._state.get();
+    if (!McpConnectionState.canBeStarted(currentState.state)) {
+      return this._waitForState(McpConnectionState.Kind.Running, McpConnectionState.Kind.Error);
+    }
+    this._launch.value = void 0;
+    this._state.set({ state: McpConnectionState.Kind.Starting }, void 0);
+    this._logger.info(localize("mcpServer.starting", "Starting server {0}", this.definition.label));
+    try {
+      const launch = this._delegate.start(this._collection, this.definition, this.launchDefinition);
+      this._launch.value = this.adoptLaunch(launch);
+      return this._waitForState(McpConnectionState.Kind.Running, McpConnectionState.Kind.Error);
+    } catch (e) {
+      const errorState = {
+        state: McpConnectionState.Kind.Error,
+        message: e instanceof Error ? e.message : String(e)
+      };
+      this._state.set(errorState, void 0);
+      return errorState;
+    }
+  }
+  adoptLaunch(launch) {
+    const store = new DisposableStore();
+    const cts = new CancellationTokenSource();
+    store.add(toDisposable(() => cts.dispose(true)));
+    store.add(launch);
+    store.add(launch.onDidLog(({ level, message }) => {
+      log(this._logger, level, message);
+    }));
+    let didStart = false;
+    store.add(autorun((reader) => {
+      const state = launch.state.read(reader);
+      this._state.set(state, void 0);
+      this._logger.info(localize("mcpServer.state", "Connection state: {0}", McpConnectionState.toString(state)));
+      if (state.state === McpConnectionState.Kind.Running && !didStart) {
+        didStart = true;
+        McpServerRequestHandler.create(this._instantiationService, launch, this._logger, cts.token).then(
+          (handler) => {
+            if (!store.isDisposed) {
+              this._requestHandler.set(handler, void 0);
+            } else {
+              handler.dispose();
+            }
+          },
+          (err) => {
+            if (!store.isDisposed) {
+              let message = err.message;
+              if (err instanceof CancellationError) {
+                message = "Server exited before responding to `initialize` request.";
+                this._logger.error(message);
+              } else {
+                this._logger.error(err);
+              }
+              this._state.set({ state: McpConnectionState.Kind.Error, message }, void 0);
+            }
+            store.dispose();
+          }
+        );
+      }
+    }));
+    return { dispose: /* @__PURE__ */ __name(() => store.dispose(), "dispose"), object: launch };
+  }
+  async stop() {
+    this._logger.info(localize("mcpServer.stopping", "Stopping server {0}", this.definition.label));
+    this._launch.value?.object.stop();
+    await this._waitForState(McpConnectionState.Kind.Stopped, McpConnectionState.Kind.Error);
+  }
+  dispose() {
+    this._requestHandler.get()?.dispose();
+    super.dispose();
+    this._state.set({ state: McpConnectionState.Kind.Stopped }, void 0);
+  }
+  _waitForState(...kinds) {
+    const current = this._state.get();
+    if (kinds.includes(current.state)) {
+      return Promise.resolve(current);
+    }
+    return new Promise((resolve) => {
+      const disposable = autorun((reader) => {
+        const state = this._state.read(reader);
+        if (kinds.includes(state.state)) {
+          disposable.dispose();
+          resolve(state);
+        }
+      });
+    });
+  }
+};
+McpServerConnection = __decorateClass([
+  __decorateParam(5, IInstantiationService)
+], McpServerConnection);
+export {
+  McpServerConnection
+};
+//# sourceMappingURL=mcpServerConnection.js.map

@@ -1,1 +1,51 @@
-import{CharCode as u}from"../../../base/common/charCode.js";import"../../../base/common/keybindings.js";import"../../contextkey/common/contextkey.js";class y{_resolvedKeybindingItemBrand=void 0;resolvedKeybinding;chords;bubble;command;commandArgs;when;isDefault;extensionId;isBuiltinExtension;constructor(t,e,i,n,o,r,h){this.resolvedKeybinding=t,this.chords=t?s(t.getDispatchChords()):[],t&&0===this.chords.length&&(this.chords=s(t.getSingleModifierDispatchChords())),this.bubble=!!e&&e.charCodeAt(0)===u.Caret,this.command=this.bubble?e.substr(1):e,this.commandArgs=i,this.when=n,this.isDefault=o,this.extensionId=r,this.isBuiltinExtension=h}}function s(s){const t=[];for(let e=0,i=s.length;e<i;e++){const i=s[e];if(!i)return[];t.push(i)}return t}export{y as ResolvedKeybindingItem,s as toEmptyArrayIfContainsNull};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { CharCode } from "../../../base/common/charCode.js";
+import { ResolvedKeybinding } from "../../../base/common/keybindings.js";
+import { ContextKeyExpression } from "../../contextkey/common/contextkey.js";
+class ResolvedKeybindingItem {
+  static {
+    __name(this, "ResolvedKeybindingItem");
+  }
+  _resolvedKeybindingItemBrand = void 0;
+  resolvedKeybinding;
+  chords;
+  bubble;
+  command;
+  commandArgs;
+  when;
+  isDefault;
+  extensionId;
+  isBuiltinExtension;
+  constructor(resolvedKeybinding, command, commandArgs, when, isDefault, extensionId, isBuiltinExtension) {
+    this.resolvedKeybinding = resolvedKeybinding;
+    this.chords = resolvedKeybinding ? toEmptyArrayIfContainsNull(resolvedKeybinding.getDispatchChords()) : [];
+    if (resolvedKeybinding && this.chords.length === 0) {
+      this.chords = toEmptyArrayIfContainsNull(resolvedKeybinding.getSingleModifierDispatchChords());
+    }
+    this.bubble = command ? command.charCodeAt(0) === CharCode.Caret : false;
+    this.command = this.bubble ? command.substr(1) : command;
+    this.commandArgs = commandArgs;
+    this.when = when;
+    this.isDefault = isDefault;
+    this.extensionId = extensionId;
+    this.isBuiltinExtension = isBuiltinExtension;
+  }
+}
+function toEmptyArrayIfContainsNull(arr) {
+  const result = [];
+  for (let i = 0, len = arr.length; i < len; i++) {
+    const element = arr[i];
+    if (!element) {
+      return [];
+    }
+    result.push(element);
+  }
+  return result;
+}
+__name(toEmptyArrayIfContainsNull, "toEmptyArrayIfContainsNull");
+export {
+  ResolvedKeybindingItem,
+  toEmptyArrayIfContainsNull
+};
+//# sourceMappingURL=resolvedKeybindingItem.js.map

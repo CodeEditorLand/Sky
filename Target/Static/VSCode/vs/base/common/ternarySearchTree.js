@@ -1,1 +1,634 @@
-import{shuffle as m}from"./arrays.js";import{CharCode as l}from"./charCode.js";import{compare as p,compareIgnoreCase as v,compareSubstring as I,compareSubstringIgnoreCase as b}from"./strings.js";import"./uri.js";class K{_value="";_pos=0;reset(t){return this._value=t,this._pos=0,this}next(){return this._pos+=1,this}hasNext(){return this._pos<this._value.length-1}cmp(t){return t.charCodeAt(0)-this._value.charCodeAt(this._pos)}value(){return this._value[this._pos]}}class V{constructor(t=!0){this._caseSensitive=t}_value;_from;_to;reset(t){return this._value=t,this._from=0,this._to=0,this.next()}hasNext(){return this._to<this._value.length}next(){this._from=this._to;let t=!0;for(;this._to<this._value.length;this._to++)if(this._value.charCodeAt(this._to)===l.Period){if(!t)break;this._from++}else t=!1;return this}cmp(t){return this._caseSensitive?I(t,this._value,0,t.length,this._from,this._to):b(t,this._value,0,t.length,this._from,this._to)}value(){return this._value.substring(this._from,this._to)}}class y{constructor(t=!0,e=!0){this._splitOnBackslash=t,this._caseSensitive=e}_value;_valueLen;_from;_to;reset(t){this._from=0,this._to=0,this._value=t,this._valueLen=t.length;for(let e=t.length-1;e>=0;e--,this._valueLen--){const t=this._value.charCodeAt(e);if(!(t===l.Slash||this._splitOnBackslash&&t===l.Backslash))break}return this.next()}hasNext(){return this._to<this._valueLen}next(){this._from=this._to;let t=!0;for(;this._to<this._valueLen;this._to++){const e=this._value.charCodeAt(this._to);if(e===l.Slash||this._splitOnBackslash&&e===l.Backslash){if(!t)break;this._from++}else t=!1}return this}cmp(t){return this._caseSensitive?I(t,this._value,0,t.length,this._from,this._to):b(t,this._value,0,t.length,this._from,this._to)}value(){return this._value.substring(this._from,this._to)}}var S=(t=>(t[t.Scheme=1]="Scheme",t[t.Authority=2]="Authority",t[t.Path=3]="Path",t[t.Query=4]="Query",t[t.Fragment=5]="Fragment",t))(S||{});class x{constructor(t,e){this._ignorePathCasing=t,this._ignoreQueryAndFragment=e}_pathIterator;_value;_states=[];_stateIdx=0;reset(t){return this._value=t,this._states=[],this._value.scheme&&this._states.push(1),this._value.authority&&this._states.push(2),this._value.path&&(this._pathIterator=new y(!1,!this._ignorePathCasing(t)),this._pathIterator.reset(t.path),this._pathIterator.value()&&this._states.push(3)),this._ignoreQueryAndFragment(t)||(this._value.query&&this._states.push(4),this._value.fragment&&this._states.push(5)),this._stateIdx=0,this}next(){return 3===this._states[this._stateIdx]&&this._pathIterator.hasNext()?this._pathIterator.next():this._stateIdx+=1,this}hasNext(){return 3===this._states[this._stateIdx]&&this._pathIterator.hasNext()||this._stateIdx<this._states.length-1}cmp(t){if(1===this._states[this._stateIdx])return v(t,this._value.scheme);if(2===this._states[this._stateIdx])return v(t,this._value.authority);if(3===this._states[this._stateIdx])return this._pathIterator.cmp(t);if(4===this._states[this._stateIdx])return p(t,this._value.query);if(5===this._states[this._stateIdx])return p(t,this._value.fragment);throw new Error}value(){if(1===this._states[this._stateIdx])return this._value.scheme;if(2===this._states[this._stateIdx])return this._value.authority;if(3===this._states[this._stateIdx])return this._pathIterator.value();if(4===this._states[this._stateIdx])return this._value.query;if(5===this._states[this._stateIdx])return this._value.fragment;throw new Error}}class o{static Val=Symbol("undefined_placeholder");static wrap(t){return void 0===t?o.Val:t}static unwrap(t){return t===o.Val?void 0:t}}class g{height=1;segment;value;key;left;mid;right;isEmpty(){return!this.left&&!this.mid&&!this.right&&void 0===this.value}rotateLeft(){const t=this.right;return this.right=t.left,t.left=this,this.updateHeight(),t.updateHeight(),t}rotateRight(){const t=this.left;return this.left=t.right,t.right=this,this.updateHeight(),t.updateHeight(),t}updateHeight(){this.height=1+Math.max(this.heightLeft,this.heightRight)}balanceFactor(){return this.heightRight-this.heightLeft}get heightLeft(){return this.left?.height??0}get heightRight(){return this.right?.height??0}}var w=(t=>(t[t.Left=-1]="Left",t[t.Mid=0]="Mid",t[t.Right=1]="Right",t))(w||{});class u{static forUris(t=()=>!1,e=()=>!1){return new u(new x(t,e))}static forPaths(t=!1){return new u(new y(void 0,!t))}static forStrings(){return new u(new K)}static forConfigKeys(){return new u(new V)}_iter;_root;constructor(t){this._iter=t}clear(){this._root=void 0}fill(t,e){if(e){const s=e.slice(0);m(s);for(const e of s)this.set(e,t)}else{const e=t.slice(0);m(e);for(const t of e)this.set(t[0],t[1])}}set(t,e){const s=this._iter.reset(t);let i;this._root||(this._root=new g,this._root.segment=s.value());const r=[];for(i=this._root;;){const t=s.cmp(i.segment);if(t>0)i.left||(i.left=new g,i.left.segment=s.value()),r.push([-1,i]),i=i.left;else if(t<0)i.right||(i.right=new g,i.right.segment=s.value()),r.push([1,i]),i=i.right;else{if(!s.hasNext())break;s.next(),i.mid||(i.mid=new g,i.mid.segment=s.value()),r.push([0,i]),i=i.mid}}const h=o.unwrap(i.value);i.value=o.wrap(e),i.key=t;for(let t=r.length-1;t>=0;t--){const e=r[t][1];e.updateHeight();const s=e.balanceFactor();if(s<-1||s>1){const s=r[t][0],i=r[t+1][0];if(1===s&&1===i)r[t][1]=e.rotateLeft();else if(-1===s&&-1===i)r[t][1]=e.rotateRight();else if(1===s&&-1===i)e.right=r[t+1][1]=r[t+1][1].rotateRight(),r[t][1]=e.rotateLeft();else{if(-1!==s||1!==i)throw new Error;e.left=r[t+1][1]=r[t+1][1].rotateLeft(),r[t][1]=e.rotateRight()}if(t>0)switch(r[t-1][0]){case-1:r[t-1][1].left=r[t][1];break;case 1:r[t-1][1].right=r[t][1];break;case 0:r[t-1][1].mid=r[t][1]}else this._root=r[0][1]}}return h}get(t){return o.unwrap(this._getNode(t)?.value)}_getNode(t){const e=this._iter.reset(t);let s=this._root;for(;s;){const t=e.cmp(s.segment);if(t>0)s=s.left;else if(t<0)s=s.right;else{if(!e.hasNext())break;e.next(),s=s.mid}}return s}has(t){const e=this._getNode(t);return!(void 0===e?.value&&void 0===e?.mid)}delete(t){return this._delete(t,!1)}deleteSuperstr(t){return this._delete(t,!0)}_delete(t,e){const s=this._iter.reset(t),i=[];let r=this._root;for(;r;){const t=s.cmp(r.segment);if(t>0)i.push([-1,r]),r=r.left;else if(t<0)i.push([1,r]),r=r.right;else{if(!s.hasNext())break;s.next(),i.push([0,r]),r=r.mid}}if(r){if(e?(r.left=void 0,r.mid=void 0,r.right=void 0,r.height=1):(r.key=void 0,r.value=void 0),!r.mid&&!r.value)if(r.left&&r.right){const t=this._min(r.right);if(t.key){const{key:e,value:s,segment:i}=t;this._delete(t.key,!1),r.key=e,r.value=s,r.segment=i}}else{const t=r.left??r.right;if(i.length>0){const[e,s]=i[i.length-1];switch(e){case-1:s.left=t;break;case 0:s.mid=t;break;case 1:s.right=t}}else this._root=t}for(let t=i.length-1;t>=0;t--){const e=i[t][1];e.updateHeight();const s=e.balanceFactor();if(s>1?(e.right.balanceFactor()>=0||(e.right=e.right.rotateRight()),i[t][1]=e.rotateLeft()):s<-1&&(e.left.balanceFactor()<=0||(e.left=e.left.rotateLeft()),i[t][1]=e.rotateRight()),t>0)switch(i[t-1][0]){case-1:i[t-1][1].left=i[t][1];break;case 1:i[t-1][1].right=i[t][1];break;case 0:i[t-1][1].mid=i[t][1]}else this._root=i[0][1]}}}_min(t){for(;t.left;)t=t.left;return t}findSubstr(t){const e=this._iter.reset(t);let s,i=this._root;for(;i;){const t=e.cmp(i.segment);if(t>0)i=i.left;else if(t<0)i=i.right;else{if(!e.hasNext())break;e.next(),s=o.unwrap(i.value)||s,i=i.mid}}return i&&o.unwrap(i.value)||s}findSuperstr(t){return this._findSuperstrOrElement(t,!1)}_findSuperstrOrElement(t,e){const s=this._iter.reset(t);let i=this._root;for(;i;){const t=s.cmp(i.segment);if(t>0)i=i.left;else if(t<0)i=i.right;else{if(!s.hasNext())return i.mid?this._entries(i.mid):e?o.unwrap(i.value):void 0;s.next(),i=i.mid}}}hasElementOrSubtree(t){return void 0!==this._findSuperstrOrElement(t,!0)}forEach(t){for(const[e,s]of this)t(s,e)}*[Symbol.iterator](){yield*this._entries(this._root)}_entries(t){const e=[];return this._dfsEntries(t,e),e[Symbol.iterator]()}_dfsEntries(t,e){t&&(t.left&&this._dfsEntries(t.left,e),void 0!==t.value&&e.push([t.key,o.unwrap(t.value)]),t.mid&&this._dfsEntries(t.mid,e),t.right&&this._dfsEntries(t.right,e))}_isBalanced(){const t=e=>{if(!e)return!0;const s=e.balanceFactor();return!(s<-1||s>1)&&(t(e.left)&&t(e.right))};return t(this._root)}}export{V as ConfigKeysIterator,y as PathIterator,K as StringIterator,u as TernarySearchTree,x as UriIterator};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { shuffle } from "./arrays.js";
+import { CharCode } from "./charCode.js";
+import { compare, compareIgnoreCase, compareSubstring, compareSubstringIgnoreCase } from "./strings.js";
+import { URI } from "./uri.js";
+class StringIterator {
+  static {
+    __name(this, "StringIterator");
+  }
+  _value = "";
+  _pos = 0;
+  reset(key) {
+    this._value = key;
+    this._pos = 0;
+    return this;
+  }
+  next() {
+    this._pos += 1;
+    return this;
+  }
+  hasNext() {
+    return this._pos < this._value.length - 1;
+  }
+  cmp(a) {
+    const aCode = a.charCodeAt(0);
+    const thisCode = this._value.charCodeAt(this._pos);
+    return aCode - thisCode;
+  }
+  value() {
+    return this._value[this._pos];
+  }
+}
+class ConfigKeysIterator {
+  constructor(_caseSensitive = true) {
+    this._caseSensitive = _caseSensitive;
+  }
+  static {
+    __name(this, "ConfigKeysIterator");
+  }
+  _value;
+  _from;
+  _to;
+  reset(key) {
+    this._value = key;
+    this._from = 0;
+    this._to = 0;
+    return this.next();
+  }
+  hasNext() {
+    return this._to < this._value.length;
+  }
+  next() {
+    this._from = this._to;
+    let justSeps = true;
+    for (; this._to < this._value.length; this._to++) {
+      const ch = this._value.charCodeAt(this._to);
+      if (ch === CharCode.Period) {
+        if (justSeps) {
+          this._from++;
+        } else {
+          break;
+        }
+      } else {
+        justSeps = false;
+      }
+    }
+    return this;
+  }
+  cmp(a) {
+    return this._caseSensitive ? compareSubstring(a, this._value, 0, a.length, this._from, this._to) : compareSubstringIgnoreCase(a, this._value, 0, a.length, this._from, this._to);
+  }
+  value() {
+    return this._value.substring(this._from, this._to);
+  }
+}
+class PathIterator {
+  constructor(_splitOnBackslash = true, _caseSensitive = true) {
+    this._splitOnBackslash = _splitOnBackslash;
+    this._caseSensitive = _caseSensitive;
+  }
+  static {
+    __name(this, "PathIterator");
+  }
+  _value;
+  _valueLen;
+  _from;
+  _to;
+  reset(key) {
+    this._from = 0;
+    this._to = 0;
+    this._value = key;
+    this._valueLen = key.length;
+    for (let pos = key.length - 1; pos >= 0; pos--, this._valueLen--) {
+      const ch = this._value.charCodeAt(pos);
+      if (!(ch === CharCode.Slash || this._splitOnBackslash && ch === CharCode.Backslash)) {
+        break;
+      }
+    }
+    return this.next();
+  }
+  hasNext() {
+    return this._to < this._valueLen;
+  }
+  next() {
+    this._from = this._to;
+    let justSeps = true;
+    for (; this._to < this._valueLen; this._to++) {
+      const ch = this._value.charCodeAt(this._to);
+      if (ch === CharCode.Slash || this._splitOnBackslash && ch === CharCode.Backslash) {
+        if (justSeps) {
+          this._from++;
+        } else {
+          break;
+        }
+      } else {
+        justSeps = false;
+      }
+    }
+    return this;
+  }
+  cmp(a) {
+    return this._caseSensitive ? compareSubstring(a, this._value, 0, a.length, this._from, this._to) : compareSubstringIgnoreCase(a, this._value, 0, a.length, this._from, this._to);
+  }
+  value() {
+    return this._value.substring(this._from, this._to);
+  }
+}
+var UriIteratorState = /* @__PURE__ */ ((UriIteratorState2) => {
+  UriIteratorState2[UriIteratorState2["Scheme"] = 1] = "Scheme";
+  UriIteratorState2[UriIteratorState2["Authority"] = 2] = "Authority";
+  UriIteratorState2[UriIteratorState2["Path"] = 3] = "Path";
+  UriIteratorState2[UriIteratorState2["Query"] = 4] = "Query";
+  UriIteratorState2[UriIteratorState2["Fragment"] = 5] = "Fragment";
+  return UriIteratorState2;
+})(UriIteratorState || {});
+class UriIterator {
+  constructor(_ignorePathCasing, _ignoreQueryAndFragment) {
+    this._ignorePathCasing = _ignorePathCasing;
+    this._ignoreQueryAndFragment = _ignoreQueryAndFragment;
+  }
+  static {
+    __name(this, "UriIterator");
+  }
+  _pathIterator;
+  _value;
+  _states = [];
+  _stateIdx = 0;
+  reset(key) {
+    this._value = key;
+    this._states = [];
+    if (this._value.scheme) {
+      this._states.push(1 /* Scheme */);
+    }
+    if (this._value.authority) {
+      this._states.push(2 /* Authority */);
+    }
+    if (this._value.path) {
+      this._pathIterator = new PathIterator(false, !this._ignorePathCasing(key));
+      this._pathIterator.reset(key.path);
+      if (this._pathIterator.value()) {
+        this._states.push(3 /* Path */);
+      }
+    }
+    if (!this._ignoreQueryAndFragment(key)) {
+      if (this._value.query) {
+        this._states.push(4 /* Query */);
+      }
+      if (this._value.fragment) {
+        this._states.push(5 /* Fragment */);
+      }
+    }
+    this._stateIdx = 0;
+    return this;
+  }
+  next() {
+    if (this._states[this._stateIdx] === 3 /* Path */ && this._pathIterator.hasNext()) {
+      this._pathIterator.next();
+    } else {
+      this._stateIdx += 1;
+    }
+    return this;
+  }
+  hasNext() {
+    return this._states[this._stateIdx] === 3 /* Path */ && this._pathIterator.hasNext() || this._stateIdx < this._states.length - 1;
+  }
+  cmp(a) {
+    if (this._states[this._stateIdx] === 1 /* Scheme */) {
+      return compareIgnoreCase(a, this._value.scheme);
+    } else if (this._states[this._stateIdx] === 2 /* Authority */) {
+      return compareIgnoreCase(a, this._value.authority);
+    } else if (this._states[this._stateIdx] === 3 /* Path */) {
+      return this._pathIterator.cmp(a);
+    } else if (this._states[this._stateIdx] === 4 /* Query */) {
+      return compare(a, this._value.query);
+    } else if (this._states[this._stateIdx] === 5 /* Fragment */) {
+      return compare(a, this._value.fragment);
+    }
+    throw new Error();
+  }
+  value() {
+    if (this._states[this._stateIdx] === 1 /* Scheme */) {
+      return this._value.scheme;
+    } else if (this._states[this._stateIdx] === 2 /* Authority */) {
+      return this._value.authority;
+    } else if (this._states[this._stateIdx] === 3 /* Path */) {
+      return this._pathIterator.value();
+    } else if (this._states[this._stateIdx] === 4 /* Query */) {
+      return this._value.query;
+    } else if (this._states[this._stateIdx] === 5 /* Fragment */) {
+      return this._value.fragment;
+    }
+    throw new Error();
+  }
+}
+class Undef {
+  static {
+    __name(this, "Undef");
+  }
+  static Val = Symbol("undefined_placeholder");
+  static wrap(value) {
+    return value === void 0 ? Undef.Val : value;
+  }
+  static unwrap(value) {
+    return value === Undef.Val ? void 0 : value;
+  }
+}
+class TernarySearchTreeNode {
+  static {
+    __name(this, "TernarySearchTreeNode");
+  }
+  height = 1;
+  segment;
+  value;
+  key;
+  left;
+  mid;
+  right;
+  isEmpty() {
+    return !this.left && !this.mid && !this.right && this.value === void 0;
+  }
+  rotateLeft() {
+    const tmp = this.right;
+    this.right = tmp.left;
+    tmp.left = this;
+    this.updateHeight();
+    tmp.updateHeight();
+    return tmp;
+  }
+  rotateRight() {
+    const tmp = this.left;
+    this.left = tmp.right;
+    tmp.right = this;
+    this.updateHeight();
+    tmp.updateHeight();
+    return tmp;
+  }
+  updateHeight() {
+    this.height = 1 + Math.max(this.heightLeft, this.heightRight);
+  }
+  balanceFactor() {
+    return this.heightRight - this.heightLeft;
+  }
+  get heightLeft() {
+    return this.left?.height ?? 0;
+  }
+  get heightRight() {
+    return this.right?.height ?? 0;
+  }
+}
+var Dir = /* @__PURE__ */ ((Dir2) => {
+  Dir2[Dir2["Left"] = -1] = "Left";
+  Dir2[Dir2["Mid"] = 0] = "Mid";
+  Dir2[Dir2["Right"] = 1] = "Right";
+  return Dir2;
+})(Dir || {});
+class TernarySearchTree {
+  static {
+    __name(this, "TernarySearchTree");
+  }
+  static forUris(ignorePathCasing = () => false, ignoreQueryAndFragment = () => false) {
+    return new TernarySearchTree(new UriIterator(ignorePathCasing, ignoreQueryAndFragment));
+  }
+  static forPaths(ignorePathCasing = false) {
+    return new TernarySearchTree(new PathIterator(void 0, !ignorePathCasing));
+  }
+  static forStrings() {
+    return new TernarySearchTree(new StringIterator());
+  }
+  static forConfigKeys() {
+    return new TernarySearchTree(new ConfigKeysIterator());
+  }
+  _iter;
+  _root;
+  constructor(segments) {
+    this._iter = segments;
+  }
+  clear() {
+    this._root = void 0;
+  }
+  fill(values, keys) {
+    if (keys) {
+      const arr = keys.slice(0);
+      shuffle(arr);
+      for (const k of arr) {
+        this.set(k, values);
+      }
+    } else {
+      const arr = values.slice(0);
+      shuffle(arr);
+      for (const entry of arr) {
+        this.set(entry[0], entry[1]);
+      }
+    }
+  }
+  set(key, element) {
+    const iter = this._iter.reset(key);
+    let node;
+    if (!this._root) {
+      this._root = new TernarySearchTreeNode();
+      this._root.segment = iter.value();
+    }
+    const stack = [];
+    node = this._root;
+    while (true) {
+      const val = iter.cmp(node.segment);
+      if (val > 0) {
+        if (!node.left) {
+          node.left = new TernarySearchTreeNode();
+          node.left.segment = iter.value();
+        }
+        stack.push([-1 /* Left */, node]);
+        node = node.left;
+      } else if (val < 0) {
+        if (!node.right) {
+          node.right = new TernarySearchTreeNode();
+          node.right.segment = iter.value();
+        }
+        stack.push([1 /* Right */, node]);
+        node = node.right;
+      } else if (iter.hasNext()) {
+        iter.next();
+        if (!node.mid) {
+          node.mid = new TernarySearchTreeNode();
+          node.mid.segment = iter.value();
+        }
+        stack.push([0 /* Mid */, node]);
+        node = node.mid;
+      } else {
+        break;
+      }
+    }
+    const oldElement = Undef.unwrap(node.value);
+    node.value = Undef.wrap(element);
+    node.key = key;
+    for (let i = stack.length - 1; i >= 0; i--) {
+      const node2 = stack[i][1];
+      node2.updateHeight();
+      const bf = node2.balanceFactor();
+      if (bf < -1 || bf > 1) {
+        const d1 = stack[i][0];
+        const d2 = stack[i + 1][0];
+        if (d1 === 1 /* Right */ && d2 === 1 /* Right */) {
+          stack[i][1] = node2.rotateLeft();
+        } else if (d1 === -1 /* Left */ && d2 === -1 /* Left */) {
+          stack[i][1] = node2.rotateRight();
+        } else if (d1 === 1 /* Right */ && d2 === -1 /* Left */) {
+          node2.right = stack[i + 1][1] = stack[i + 1][1].rotateRight();
+          stack[i][1] = node2.rotateLeft();
+        } else if (d1 === -1 /* Left */ && d2 === 1 /* Right */) {
+          node2.left = stack[i + 1][1] = stack[i + 1][1].rotateLeft();
+          stack[i][1] = node2.rotateRight();
+        } else {
+          throw new Error();
+        }
+        if (i > 0) {
+          switch (stack[i - 1][0]) {
+            case -1 /* Left */:
+              stack[i - 1][1].left = stack[i][1];
+              break;
+            case 1 /* Right */:
+              stack[i - 1][1].right = stack[i][1];
+              break;
+            case 0 /* Mid */:
+              stack[i - 1][1].mid = stack[i][1];
+              break;
+          }
+        } else {
+          this._root = stack[0][1];
+        }
+      }
+    }
+    return oldElement;
+  }
+  get(key) {
+    return Undef.unwrap(this._getNode(key)?.value);
+  }
+  _getNode(key) {
+    const iter = this._iter.reset(key);
+    let node = this._root;
+    while (node) {
+      const val = iter.cmp(node.segment);
+      if (val > 0) {
+        node = node.left;
+      } else if (val < 0) {
+        node = node.right;
+      } else if (iter.hasNext()) {
+        iter.next();
+        node = node.mid;
+      } else {
+        break;
+      }
+    }
+    return node;
+  }
+  has(key) {
+    const node = this._getNode(key);
+    return !(node?.value === void 0 && node?.mid === void 0);
+  }
+  delete(key) {
+    return this._delete(key, false);
+  }
+  deleteSuperstr(key) {
+    return this._delete(key, true);
+  }
+  _delete(key, superStr) {
+    const iter = this._iter.reset(key);
+    const stack = [];
+    let node = this._root;
+    while (node) {
+      const val = iter.cmp(node.segment);
+      if (val > 0) {
+        stack.push([-1 /* Left */, node]);
+        node = node.left;
+      } else if (val < 0) {
+        stack.push([1 /* Right */, node]);
+        node = node.right;
+      } else if (iter.hasNext()) {
+        iter.next();
+        stack.push([0 /* Mid */, node]);
+        node = node.mid;
+      } else {
+        break;
+      }
+    }
+    if (!node) {
+      return;
+    }
+    if (superStr) {
+      node.left = void 0;
+      node.mid = void 0;
+      node.right = void 0;
+      node.height = 1;
+    } else {
+      node.key = void 0;
+      node.value = void 0;
+    }
+    if (!node.mid && !node.value) {
+      if (node.left && node.right) {
+        const min = this._min(node.right);
+        if (min.key) {
+          const { key: key2, value, segment } = min;
+          this._delete(min.key, false);
+          node.key = key2;
+          node.value = value;
+          node.segment = segment;
+        }
+      } else {
+        const newChild = node.left ?? node.right;
+        if (stack.length > 0) {
+          const [dir, parent] = stack[stack.length - 1];
+          switch (dir) {
+            case -1 /* Left */:
+              parent.left = newChild;
+              break;
+            case 0 /* Mid */:
+              parent.mid = newChild;
+              break;
+            case 1 /* Right */:
+              parent.right = newChild;
+              break;
+          }
+        } else {
+          this._root = newChild;
+        }
+      }
+    }
+    for (let i = stack.length - 1; i >= 0; i--) {
+      const node2 = stack[i][1];
+      node2.updateHeight();
+      const bf = node2.balanceFactor();
+      if (bf > 1) {
+        if (node2.right.balanceFactor() >= 0) {
+          stack[i][1] = node2.rotateLeft();
+        } else {
+          node2.right = node2.right.rotateRight();
+          stack[i][1] = node2.rotateLeft();
+        }
+      } else if (bf < -1) {
+        if (node2.left.balanceFactor() <= 0) {
+          stack[i][1] = node2.rotateRight();
+        } else {
+          node2.left = node2.left.rotateLeft();
+          stack[i][1] = node2.rotateRight();
+        }
+      }
+      if (i > 0) {
+        switch (stack[i - 1][0]) {
+          case -1 /* Left */:
+            stack[i - 1][1].left = stack[i][1];
+            break;
+          case 1 /* Right */:
+            stack[i - 1][1].right = stack[i][1];
+            break;
+          case 0 /* Mid */:
+            stack[i - 1][1].mid = stack[i][1];
+            break;
+        }
+      } else {
+        this._root = stack[0][1];
+      }
+    }
+  }
+  _min(node) {
+    while (node.left) {
+      node = node.left;
+    }
+    return node;
+  }
+  findSubstr(key) {
+    const iter = this._iter.reset(key);
+    let node = this._root;
+    let candidate = void 0;
+    while (node) {
+      const val = iter.cmp(node.segment);
+      if (val > 0) {
+        node = node.left;
+      } else if (val < 0) {
+        node = node.right;
+      } else if (iter.hasNext()) {
+        iter.next();
+        candidate = Undef.unwrap(node.value) || candidate;
+        node = node.mid;
+      } else {
+        break;
+      }
+    }
+    return node && Undef.unwrap(node.value) || candidate;
+  }
+  findSuperstr(key) {
+    return this._findSuperstrOrElement(key, false);
+  }
+  _findSuperstrOrElement(key, allowValue) {
+    const iter = this._iter.reset(key);
+    let node = this._root;
+    while (node) {
+      const val = iter.cmp(node.segment);
+      if (val > 0) {
+        node = node.left;
+      } else if (val < 0) {
+        node = node.right;
+      } else if (iter.hasNext()) {
+        iter.next();
+        node = node.mid;
+      } else {
+        if (!node.mid) {
+          if (allowValue) {
+            return Undef.unwrap(node.value);
+          } else {
+            return void 0;
+          }
+        } else {
+          return this._entries(node.mid);
+        }
+      }
+    }
+    return void 0;
+  }
+  hasElementOrSubtree(key) {
+    return this._findSuperstrOrElement(key, true) !== void 0;
+  }
+  forEach(callback) {
+    for (const [key, value] of this) {
+      callback(value, key);
+    }
+  }
+  *[Symbol.iterator]() {
+    yield* this._entries(this._root);
+  }
+  _entries(node) {
+    const result = [];
+    this._dfsEntries(node, result);
+    return result[Symbol.iterator]();
+  }
+  _dfsEntries(node, bucket) {
+    if (!node) {
+      return;
+    }
+    if (node.left) {
+      this._dfsEntries(node.left, bucket);
+    }
+    if (node.value !== void 0) {
+      bucket.push([node.key, Undef.unwrap(node.value)]);
+    }
+    if (node.mid) {
+      this._dfsEntries(node.mid, bucket);
+    }
+    if (node.right) {
+      this._dfsEntries(node.right, bucket);
+    }
+  }
+  // for debug/testing
+  _isBalanced() {
+    const nodeIsBalanced = /* @__PURE__ */ __name((node) => {
+      if (!node) {
+        return true;
+      }
+      const bf = node.balanceFactor();
+      if (bf < -1 || bf > 1) {
+        return false;
+      }
+      return nodeIsBalanced(node.left) && nodeIsBalanced(node.right);
+    }, "nodeIsBalanced");
+    return nodeIsBalanced(this._root);
+  }
+}
+export {
+  ConfigKeysIterator,
+  PathIterator,
+  StringIterator,
+  TernarySearchTree,
+  UriIterator
+};
+//# sourceMappingURL=ternarySearchTree.js.map

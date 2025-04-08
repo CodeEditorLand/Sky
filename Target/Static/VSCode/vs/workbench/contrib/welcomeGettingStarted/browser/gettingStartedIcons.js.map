@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/contrib/welcomeGettingStarted/browser/gettingStartedIcons.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { localize } from '../../../../nls.js'; import { Codicon } from '../../../../base/common/codicons.js';\r\nimport { registerIcon } from '../../../../platform/theme/common/iconRegistry.js';\r\n\r\nexport const gettingStartedUncheckedCodicon = registerIcon('getting-started-step-unchecked', Codicon.circleLargeOutline, localize('gettingStartedUnchecked', \"Used to represent walkthrough steps which have not been completed\"));\r\nexport const gettingStartedCheckedCodicon = registerIcon('getting-started-step-checked', Codicon.passFilled, localize('gettingStartedChecked', \"Used to represent walkthrough steps which have been completed\"));\r\n"],
+  "mappings": "AAKA,SAAS,gBAAgB;AAAsB,SAAS,eAAe;AACvE,SAAS,oBAAoB;AAEtB,MAAM,iCAAiC,aAAa,kCAAkC,QAAQ,oBAAoB,SAAS,2BAA2B,mEAAmE,CAAC;AAC1N,MAAM,+BAA+B,aAAa,gCAAgC,QAAQ,YAAY,SAAS,yBAAyB,+DAA+D,CAAC;",
+  "names": []
+}

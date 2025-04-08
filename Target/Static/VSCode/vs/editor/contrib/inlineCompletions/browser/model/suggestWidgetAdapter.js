@@ -1,1 +1,241 @@
-import{compareBy as A,numberComparator as P}from"../../../../../base/common/arrays.js";import{findFirstMax as K}from"../../../../../base/common/arraysFind.js";import{Emitter as W,Event as E}from"../../../../../base/common/event.js";import{Disposable as v}from"../../../../../base/common/lifecycle.js";import"../../../../browser/editorBrowser.js";import{Position as w}from"../../../../common/core/position.js";import{Range as R}from"../../../../common/core/range.js";import{SingleTextEdit as D}from"../../../../common/core/textEdit.js";import{CompletionItemInsertTextRule as O,SelectedSuggestionInfo as F}from"../../../../common/languages.js";import"../../../../common/model.js";import{singleTextEditAugments as M,singleTextRemoveCommonPrefix as b}from"./singleTextEditHelpers.js";import{SnippetParser as V}from"../../../snippet/browser/snippetParser.js";import{SnippetSession as q}from"../../../snippet/browser/snippetSession.js";import"../../../suggest/browser/suggest.js";import{SuggestController as a}from"../../../suggest/browser/suggestController.js";import"../../../../browser/observableCodeEditor.js";import{observableFromEvent as U}from"../../../../../base/common/observable.js";class B extends v{constructor(e,t,o){super();this.editor=e;this.suggestControllerPreselector=t;this.onWillAccept=o;this._register(e.onKeyDown(r=>{r.shiftKey&&!this.isShiftKeyPressed&&(this.isShiftKeyPressed=!0,this.update(this._isActive))})),this._register(e.onKeyUp(r=>{r.shiftKey&&this.isShiftKeyPressed&&(this.isShiftKeyPressed=!1,this.update(this._isActive))}));const i=a.get(this.editor);if(i){this._register(i.registerSelector({priority:100,select:(d,n,f)=>{const l=this.editor.getModel();if(!l)return-1;const m=this.suggestControllerPreselector(),h=m?b(m,l):void 0;if(!h)return-1;const x=w.lift(n),_=f.map((g,C)=>{const T=p.fromSuggestion(i,l,x,g,this.isShiftKeyPressed),I=b(T.toSingleTextEdit(),l),y=M(h,I);return{index:C,valid:y,prefixLength:I.text.length,suggestItem:g}}).filter(g=>g&&g.valid&&g.prefixLength>0),S=K(_,A(g=>g.prefixLength,P));return S?S.index:-1}}));let r=!1;const c=()=>{r||(r=!0,this._register(i.widget.value.onDidShow(()=>{this.isSuggestWidgetVisible=!0,this.update(!0)})),this._register(i.widget.value.onDidHide(()=>{this.isSuggestWidgetVisible=!1,this.update(!1)})),this._register(i.widget.value.onDidFocus(()=>{this.isSuggestWidgetVisible=!0,this.update(!0)})))};this._register(E.once(i.model.onDidTrigger)(d=>{c()})),this._register(i.onWillInsertSuggestItem(d=>{const n=this.editor.getPosition(),f=this.editor.getModel();if(!n||!f)return;const l=p.fromSuggestion(i,f,n,d.item,this.isShiftKeyPressed);this.onWillAccept(l)}))}this.update(this._isActive)}isSuggestWidgetVisible=!1;isShiftKeyPressed=!1;_isActive=!1;_currentSuggestItemInfo=void 0;get selectedItem(){return this._currentSuggestItemInfo}_onDidSelectedItemChange=this._register(new W);onDidSelectedItemChange=this._onDidSelectedItemChange.event;update(e){const t=this.getSuggestItemInfo();(this._isActive!==e||!L(this._currentSuggestItemInfo,t))&&(this._isActive=e,this._currentSuggestItemInfo=t,this._onDidSelectedItemChange.fire())}getSuggestItemInfo(){const e=a.get(this.editor);if(!e||!this.isSuggestWidgetVisible)return;const t=e.widget.value.getFocusedItem(),o=this.editor.getPosition(),i=this.editor.getModel();if(!(!t||!o||!i))return p.fromSuggestion(e,i,o,t.item,this.isShiftKeyPressed)}stopForceRenderingAbove(){a.get(this.editor)?.stopForceRenderingAbove()}forceRenderingAbove(){a.get(this.editor)?.forceRenderingAbove()}}class p{constructor(s,e,t,o){this.range=s;this.insertText=e;this.completionItemKind=t;this.isSnippetText=o}static fromSuggestion(s,e,t,o,i){let{insertText:r}=o.completion,c=!1;if(o.completion.insertTextRules&O.InsertAsSnippet){const n=new V().parse(r);n.children.length<100&&q.adjustWhitespace(e,t,!0,n),r=n.toString(),c=!0}const d=s.getOverwriteInfo(o,i);return new p(R.fromPositions(t.delta(0,-d.overwriteBefore),t.delta(0,Math.max(d.overwriteAfter,0))),r,o.completion.kind,c)}equals(s){return this.range.equalsRange(s.range)&&this.insertText===s.insertText&&this.completionItemKind===s.completionItemKind&&this.isSnippetText===s.isSnippetText}toSelectedSuggestionInfo(){return new F(this.range,this.insertText,this.completionItemKind,this.isSnippetText)}toSingleTextEdit(){return new D(this.range,this.insertText)}}function L(u,s){return u===s?!0:!u||!s?!1:u.equals(s)}class ue extends v{constructor(e,t,o){super();this._editorObs=e;this._handleSuggestAccepted=t;this._suggestControllerPreselector=o}_suggestWidgetAdaptor=this._register(new B(this._editorObs.editor,()=>(this._editorObs.forceUpdate(),this._suggestControllerPreselector()),e=>this._editorObs.forceUpdate(t=>{this._handleSuggestAccepted(e)})));selectedItem=U(this,e=>this._suggestWidgetAdaptor.onDidSelectedItemChange(()=>{this._editorObs.forceUpdate(t=>e(void 0))}),()=>this._suggestWidgetAdaptor.selectedItem);stopForceRenderingAbove(){this._suggestWidgetAdaptor.stopForceRenderingAbove()}forceRenderingAbove(){this._suggestWidgetAdaptor.forceRenderingAbove()}}export{ue as ObservableSuggestWidgetAdapter,p as SuggestItemInfo,B as SuggestWidgetAdaptor};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { compareBy, numberComparator } from "../../../../../base/common/arrays.js";
+import { findFirstMax } from "../../../../../base/common/arraysFind.js";
+import { Emitter, Event } from "../../../../../base/common/event.js";
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { ICodeEditor } from "../../../../browser/editorBrowser.js";
+import { Position } from "../../../../common/core/position.js";
+import { Range } from "../../../../common/core/range.js";
+import { SingleTextEdit } from "../../../../common/core/textEdit.js";
+import { CompletionItemInsertTextRule, CompletionItemKind, SelectedSuggestionInfo } from "../../../../common/languages.js";
+import { ITextModel } from "../../../../common/model.js";
+import { singleTextEditAugments, singleTextRemoveCommonPrefix } from "./singleTextEditHelpers.js";
+import { SnippetParser } from "../../../snippet/browser/snippetParser.js";
+import { SnippetSession } from "../../../snippet/browser/snippetSession.js";
+import { CompletionItem } from "../../../suggest/browser/suggest.js";
+import { SuggestController } from "../../../suggest/browser/suggestController.js";
+import { ObservableCodeEditor } from "../../../../browser/observableCodeEditor.js";
+import { observableFromEvent } from "../../../../../base/common/observable.js";
+class SuggestWidgetAdaptor extends Disposable {
+  constructor(editor, suggestControllerPreselector, onWillAccept) {
+    super();
+    this.editor = editor;
+    this.suggestControllerPreselector = suggestControllerPreselector;
+    this.onWillAccept = onWillAccept;
+    this._register(editor.onKeyDown((e) => {
+      if (e.shiftKey && !this.isShiftKeyPressed) {
+        this.isShiftKeyPressed = true;
+        this.update(this._isActive);
+      }
+    }));
+    this._register(editor.onKeyUp((e) => {
+      if (e.shiftKey && this.isShiftKeyPressed) {
+        this.isShiftKeyPressed = false;
+        this.update(this._isActive);
+      }
+    }));
+    const suggestController = SuggestController.get(this.editor);
+    if (suggestController) {
+      this._register(suggestController.registerSelector({
+        priority: 100,
+        select: /* @__PURE__ */ __name((model, pos, suggestItems) => {
+          const textModel = this.editor.getModel();
+          if (!textModel) {
+            return -1;
+          }
+          const i = this.suggestControllerPreselector();
+          const itemToPreselect = i ? singleTextRemoveCommonPrefix(i, textModel) : void 0;
+          if (!itemToPreselect) {
+            return -1;
+          }
+          const position = Position.lift(pos);
+          const candidates = suggestItems.map((suggestItem, index) => {
+            const suggestItemInfo = SuggestItemInfo.fromSuggestion(suggestController, textModel, position, suggestItem, this.isShiftKeyPressed);
+            const suggestItemTextEdit = singleTextRemoveCommonPrefix(suggestItemInfo.toSingleTextEdit(), textModel);
+            const valid = singleTextEditAugments(itemToPreselect, suggestItemTextEdit);
+            return { index, valid, prefixLength: suggestItemTextEdit.text.length, suggestItem };
+          }).filter((item) => item && item.valid && item.prefixLength > 0);
+          const result = findFirstMax(
+            candidates,
+            compareBy((s) => s.prefixLength, numberComparator)
+          );
+          return result ? result.index : -1;
+        }, "select")
+      }));
+      let isBoundToSuggestWidget = false;
+      const bindToSuggestWidget = /* @__PURE__ */ __name(() => {
+        if (isBoundToSuggestWidget) {
+          return;
+        }
+        isBoundToSuggestWidget = true;
+        this._register(suggestController.widget.value.onDidShow(() => {
+          this.isSuggestWidgetVisible = true;
+          this.update(true);
+        }));
+        this._register(suggestController.widget.value.onDidHide(() => {
+          this.isSuggestWidgetVisible = false;
+          this.update(false);
+        }));
+        this._register(suggestController.widget.value.onDidFocus(() => {
+          this.isSuggestWidgetVisible = true;
+          this.update(true);
+        }));
+      }, "bindToSuggestWidget");
+      this._register(Event.once(suggestController.model.onDidTrigger)((e) => {
+        bindToSuggestWidget();
+      }));
+      this._register(suggestController.onWillInsertSuggestItem((e) => {
+        const position = this.editor.getPosition();
+        const model = this.editor.getModel();
+        if (!position || !model) {
+          return void 0;
+        }
+        const suggestItemInfo = SuggestItemInfo.fromSuggestion(
+          suggestController,
+          model,
+          position,
+          e.item,
+          this.isShiftKeyPressed
+        );
+        this.onWillAccept(suggestItemInfo);
+      }));
+    }
+    this.update(this._isActive);
+  }
+  static {
+    __name(this, "SuggestWidgetAdaptor");
+  }
+  isSuggestWidgetVisible = false;
+  isShiftKeyPressed = false;
+  _isActive = false;
+  _currentSuggestItemInfo = void 0;
+  get selectedItem() {
+    return this._currentSuggestItemInfo;
+  }
+  _onDidSelectedItemChange = this._register(new Emitter());
+  onDidSelectedItemChange = this._onDidSelectedItemChange.event;
+  update(newActive) {
+    const newInlineCompletion = this.getSuggestItemInfo();
+    if (this._isActive !== newActive || !suggestItemInfoEquals(this._currentSuggestItemInfo, newInlineCompletion)) {
+      this._isActive = newActive;
+      this._currentSuggestItemInfo = newInlineCompletion;
+      this._onDidSelectedItemChange.fire();
+    }
+  }
+  getSuggestItemInfo() {
+    const suggestController = SuggestController.get(this.editor);
+    if (!suggestController || !this.isSuggestWidgetVisible) {
+      return void 0;
+    }
+    const focusedItem = suggestController.widget.value.getFocusedItem();
+    const position = this.editor.getPosition();
+    const model = this.editor.getModel();
+    if (!focusedItem || !position || !model) {
+      return void 0;
+    }
+    return SuggestItemInfo.fromSuggestion(
+      suggestController,
+      model,
+      position,
+      focusedItem.item,
+      this.isShiftKeyPressed
+    );
+  }
+  stopForceRenderingAbove() {
+    const suggestController = SuggestController.get(this.editor);
+    suggestController?.stopForceRenderingAbove();
+  }
+  forceRenderingAbove() {
+    const suggestController = SuggestController.get(this.editor);
+    suggestController?.forceRenderingAbove();
+  }
+}
+class SuggestItemInfo {
+  constructor(range, insertText, completionItemKind, isSnippetText) {
+    this.range = range;
+    this.insertText = insertText;
+    this.completionItemKind = completionItemKind;
+    this.isSnippetText = isSnippetText;
+  }
+  static {
+    __name(this, "SuggestItemInfo");
+  }
+  static fromSuggestion(suggestController, model, position, item, toggleMode) {
+    let { insertText } = item.completion;
+    let isSnippetText = false;
+    if (item.completion.insertTextRules & CompletionItemInsertTextRule.InsertAsSnippet) {
+      const snippet = new SnippetParser().parse(insertText);
+      if (snippet.children.length < 100) {
+        SnippetSession.adjustWhitespace(model, position, true, snippet);
+      }
+      insertText = snippet.toString();
+      isSnippetText = true;
+    }
+    const info = suggestController.getOverwriteInfo(item, toggleMode);
+    return new SuggestItemInfo(
+      Range.fromPositions(
+        position.delta(0, -info.overwriteBefore),
+        position.delta(0, Math.max(info.overwriteAfter, 0))
+      ),
+      insertText,
+      item.completion.kind,
+      isSnippetText
+    );
+  }
+  equals(other) {
+    return this.range.equalsRange(other.range) && this.insertText === other.insertText && this.completionItemKind === other.completionItemKind && this.isSnippetText === other.isSnippetText;
+  }
+  toSelectedSuggestionInfo() {
+    return new SelectedSuggestionInfo(this.range, this.insertText, this.completionItemKind, this.isSnippetText);
+  }
+  toSingleTextEdit() {
+    return new SingleTextEdit(this.range, this.insertText);
+  }
+}
+function suggestItemInfoEquals(a, b) {
+  if (a === b) {
+    return true;
+  }
+  if (!a || !b) {
+    return false;
+  }
+  return a.equals(b);
+}
+__name(suggestItemInfoEquals, "suggestItemInfoEquals");
+class ObservableSuggestWidgetAdapter extends Disposable {
+  constructor(_editorObs, _handleSuggestAccepted, _suggestControllerPreselector) {
+    super();
+    this._editorObs = _editorObs;
+    this._handleSuggestAccepted = _handleSuggestAccepted;
+    this._suggestControllerPreselector = _suggestControllerPreselector;
+  }
+  static {
+    __name(this, "ObservableSuggestWidgetAdapter");
+  }
+  _suggestWidgetAdaptor = this._register(new SuggestWidgetAdaptor(
+    this._editorObs.editor,
+    () => {
+      this._editorObs.forceUpdate();
+      return this._suggestControllerPreselector();
+    },
+    (item) => this._editorObs.forceUpdate((_tx) => {
+      this._handleSuggestAccepted(item);
+    })
+  ));
+  selectedItem = observableFromEvent(this, (cb) => this._suggestWidgetAdaptor.onDidSelectedItemChange(() => {
+    this._editorObs.forceUpdate((_tx) => cb(void 0));
+  }), () => this._suggestWidgetAdaptor.selectedItem);
+  stopForceRenderingAbove() {
+    this._suggestWidgetAdaptor.stopForceRenderingAbove();
+  }
+  forceRenderingAbove() {
+    this._suggestWidgetAdaptor.forceRenderingAbove();
+  }
+}
+export {
+  ObservableSuggestWidgetAdapter,
+  SuggestItemInfo,
+  SuggestWidgetAdaptor
+};
+//# sourceMappingURL=suggestWidgetAdapter.js.map

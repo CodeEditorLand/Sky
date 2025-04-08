@@ -1,1 +1,165 @@
-var y=Object.defineProperty,D=Object.getOwnPropertyDescriptor,v=(e,s,t,o)=>{for(var i,r=o>1?void 0:o?D(s,t):s,n=e.length-1;n>=0;n--)(i=e[n])&&(r=(o?i(s,t,r):i(r))||r);return o&&r&&y(s,t,r),r},h=(e,s)=>(t,o)=>s(t,o,e);import{disposableTimeout as _}from"../../../base/common/async.js";import{Emitter as u}from"../../../base/common/event.js";import{Disposable as m,DisposableMap as b}from"../../../base/common/lifecycle.js";import{observableValue as f}from"../../../base/common/observable.js";import{LogLevel as d}from"../../../platform/log/common/log.js";import{IMcpRegistry as x}from"../../contrib/mcp/common/mcpRegistryTypes.js";import{McpConnectionState as p,McpServerDefinition as C,McpServerTransportType as L}from"../../contrib/mcp/common/mcpTypes.js";import"../../contrib/mcp/common/modelContextProtocol.js";import{ExtensionHostKind as M,extensionHostKindToString as H}from"../../services/extensions/common/extensionHostKind.js";import{extHostNamedCustomer as R}from"../../services/extensions/common/extHostCustomers.js";import{ExtHostContext as E,MainContext as I}from"../common/extHost.protocol.js";let c=class extends m{constructor(e,s){super(),this._extHostContext=e,this._mcpRegistry=s;const t=e.getProxy(E.ExtHostMcp);this._register(this._mcpRegistry.registerDelegate({priority:e.extensionHostKind===M.LocalWebWorker?0:1,waitForInitialProviderPromises:()=>t.$waitForInitialCollectionProviders(),canStart:(s,t)=>!(s.remoteAuthority!==e.remoteAuthority||t.launch.type===L.Stdio&&e.extensionHostKind===M.LocalWebWorker),start:(s,o,i)=>{const r=++this._serverIdCounter,n=new P(e.extensionHostKind,(()=>t.$stopMcp(r)),(e=>t.$sendMessage(r,JSON.stringify(e))));return this._servers.set(r,n),t.$startMcp(r,i),n}}))}_serverIdCounter=0;_servers=new Map;_collectionDefinitions=this._register(new b);$upsertMcpCollection(e,s){const t=s.map(C.fromSerialized),o=this._collectionDefinitions.get(e.id);if(o)o.servers.set(t,void 0);else{const s=f("mcpServers",t),o=this._mcpRegistry.registerCollection({...e,remoteAuthority:this._extHostContext.remoteAuthority,serverDefinitions:s});this._collectionDefinitions.set(e.id,{fromExtHost:e,servers:s,dispose:()=>o.dispose()})}}$deleteMcpCollection(e){this._collectionDefinitions.deleteAndDispose(e)}$onDidChangeState(e,s){const t=this._servers.get(e);t&&(t.state.set(s,void 0),p.isRunning(s)||(t.dispose(),this._servers.delete(e)))}$onDidPublishLog(e,s,t){"string"==typeof s&&(t=s=d.Info),this._servers.get(e)?.pushLog(s,t)}$onDidReceiveMessage(e,s){this._servers.get(e)?.pushMessage(s)}dispose(){for(const e of this._servers.values())e.extHostDispose();this._servers.clear(),super.dispose()}};c=v([R(I.MainThreadMcp),h(1,x)],c);class P extends m{constructor(e,s,t){super(),this.stop=s,this.send=t,this._register(_((()=>{this.pushLog(d.Info,`Starting server from ${H(e)} extension host`)})))}state=f("mcpServerState",{state:p.Kind.Starting});_onDidLog=this._register(new u);onDidLog=this._onDidLog.event;_onDidReceiveMessage=this._register(new u);onDidReceiveMessage=this._onDidReceiveMessage.event;pushLog(e,s){this._onDidLog.fire({message:s,level:e})}pushMessage(e){let s;try{s=JSON.parse(e)}catch{this.pushLog(d.Warning,`Failed to parse message: ${JSON.stringify(e)}`)}s&&this._onDidReceiveMessage.fire(s)}extHostDispose(){p.isRunning(this.state.get())&&(this.pushLog(d.Warning,"Extension host shut down, server will stop."),this.state.set({state:p.Kind.Stopped},void 0)),this.dispose()}dispose(){p.isRunning(this.state.get())&&this.stop(),super.dispose()}}export{c as MainThreadMcp};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { disposableTimeout } from "../../../base/common/async.js";
+import { Emitter } from "../../../base/common/event.js";
+import { Disposable, DisposableMap } from "../../../base/common/lifecycle.js";
+import { ISettableObservable, observableValue } from "../../../base/common/observable.js";
+import { LogLevel } from "../../../platform/log/common/log.js";
+import { IMcpMessageTransport, IMcpRegistry } from "../../contrib/mcp/common/mcpRegistryTypes.js";
+import { McpCollectionDefinition, McpConnectionState, McpServerDefinition, McpServerTransportType } from "../../contrib/mcp/common/mcpTypes.js";
+import { MCP } from "../../contrib/mcp/common/modelContextProtocol.js";
+import { ExtensionHostKind, extensionHostKindToString } from "../../services/extensions/common/extensionHostKind.js";
+import { IExtHostContext, extHostNamedCustomer } from "../../services/extensions/common/extHostCustomers.js";
+import { ExtHostContext, MainContext, MainThreadMcpShape } from "../common/extHost.protocol.js";
+let MainThreadMcp = class extends Disposable {
+  constructor(_extHostContext, _mcpRegistry) {
+    super();
+    this._extHostContext = _extHostContext;
+    this._mcpRegistry = _mcpRegistry;
+    const proxy = _extHostContext.getProxy(ExtHostContext.ExtHostMcp);
+    this._register(this._mcpRegistry.registerDelegate({
+      // Prefer Node.js extension hosts when they're available. No CORS issues etc.
+      priority: _extHostContext.extensionHostKind === ExtensionHostKind.LocalWebWorker ? 0 : 1,
+      waitForInitialProviderPromises() {
+        return proxy.$waitForInitialCollectionProviders();
+      },
+      canStart(collection, serverDefinition) {
+        if (collection.remoteAuthority !== _extHostContext.remoteAuthority) {
+          return false;
+        }
+        if (serverDefinition.launch.type === McpServerTransportType.Stdio && _extHostContext.extensionHostKind === ExtensionHostKind.LocalWebWorker) {
+          return false;
+        }
+        return true;
+      },
+      start: /* @__PURE__ */ __name((collection, _serverDefiniton, resolveLaunch) => {
+        const id = ++this._serverIdCounter;
+        const launch = new ExtHostMcpServerLaunch(
+          _extHostContext.extensionHostKind,
+          () => proxy.$stopMcp(id),
+          (msg) => proxy.$sendMessage(id, JSON.stringify(msg))
+        );
+        this._servers.set(id, launch);
+        proxy.$startMcp(id, resolveLaunch);
+        return launch;
+      }, "start")
+    }));
+  }
+  _serverIdCounter = 0;
+  _servers = /* @__PURE__ */ new Map();
+  _collectionDefinitions = this._register(new DisposableMap());
+  $upsertMcpCollection(collection, serversDto) {
+    const servers = serversDto.map(McpServerDefinition.fromSerialized);
+    const existing = this._collectionDefinitions.get(collection.id);
+    if (existing) {
+      existing.servers.set(servers, void 0);
+    } else {
+      const serverDefinitions = observableValue("mcpServers", servers);
+      const handle = this._mcpRegistry.registerCollection({
+        ...collection,
+        remoteAuthority: this._extHostContext.remoteAuthority,
+        serverDefinitions
+      });
+      this._collectionDefinitions.set(collection.id, {
+        fromExtHost: collection,
+        servers: serverDefinitions,
+        dispose: /* @__PURE__ */ __name(() => handle.dispose(), "dispose")
+      });
+    }
+  }
+  $deleteMcpCollection(collectionId) {
+    this._collectionDefinitions.deleteAndDispose(collectionId);
+  }
+  $onDidChangeState(id, update) {
+    const server = this._servers.get(id);
+    if (!server) {
+      return;
+    }
+    server.state.set(update, void 0);
+    if (!McpConnectionState.isRunning(update)) {
+      server.dispose();
+      this._servers.delete(id);
+    }
+  }
+  $onDidPublishLog(id, level, log) {
+    if (typeof level === "string") {
+      level = LogLevel.Info;
+      log = level;
+    }
+    this._servers.get(id)?.pushLog(level, log);
+  }
+  $onDidReceiveMessage(id, message) {
+    this._servers.get(id)?.pushMessage(message);
+  }
+  dispose() {
+    for (const server of this._servers.values()) {
+      server.extHostDispose();
+    }
+    this._servers.clear();
+    super.dispose();
+  }
+};
+__name(MainThreadMcp, "MainThreadMcp");
+MainThreadMcp = __decorateClass([
+  extHostNamedCustomer(MainContext.MainThreadMcp),
+  __decorateParam(1, IMcpRegistry)
+], MainThreadMcp);
+class ExtHostMcpServerLaunch extends Disposable {
+  constructor(extHostKind, stop, send) {
+    super();
+    this.stop = stop;
+    this.send = send;
+    this._register(disposableTimeout(() => {
+      this.pushLog(LogLevel.Info, `Starting server from ${extensionHostKindToString(extHostKind)} extension host`);
+    }));
+  }
+  static {
+    __name(this, "ExtHostMcpServerLaunch");
+  }
+  state = observableValue("mcpServerState", { state: McpConnectionState.Kind.Starting });
+  _onDidLog = this._register(new Emitter());
+  onDidLog = this._onDidLog.event;
+  _onDidReceiveMessage = this._register(new Emitter());
+  onDidReceiveMessage = this._onDidReceiveMessage.event;
+  pushLog(level, message) {
+    this._onDidLog.fire({ message, level });
+  }
+  pushMessage(message) {
+    let parsed;
+    try {
+      parsed = JSON.parse(message);
+    } catch (e) {
+      this.pushLog(LogLevel.Warning, `Failed to parse message: ${JSON.stringify(message)}`);
+    }
+    if (parsed) {
+      this._onDidReceiveMessage.fire(parsed);
+    }
+  }
+  extHostDispose() {
+    if (McpConnectionState.isRunning(this.state.get())) {
+      this.pushLog(LogLevel.Warning, "Extension host shut down, server will stop.");
+      this.state.set({ state: McpConnectionState.Kind.Stopped }, void 0);
+    }
+    this.dispose();
+  }
+  dispose() {
+    if (McpConnectionState.isRunning(this.state.get())) {
+      this.stop();
+    }
+    super.dispose();
+  }
+}
+export {
+  MainThreadMcp
+};
+//# sourceMappingURL=mainThreadMcp.js.map

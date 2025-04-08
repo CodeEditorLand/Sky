@@ -1,1 +1,118 @@
-import{hash as m}from"../../../../base/common/hash.js";import{URI as l}from"../../../../base/common/uri.js";import"../../../../platform/instantiation/common/instantiation.js";import"../../../../platform/terminal/common/terminal.js";import{getIconRegistry as d}from"../../../../platform/theme/common/iconRegistry.js";import{ColorScheme as p}from"../../../../platform/theme/common/theme.js";import"../../../../platform/theme/common/themeService.js";import{ThemeIcon as g}from"../../../../base/common/themables.js";import"./terminal.js";import{ITerminalProfileResolverService as u}from"../common/terminal.js";import{ansiColorMap as I}from"../common/terminalColorRegistry.js";import{createStyleSheet as h}from"../../../../base/browser/domStylesheets.js";import{DisposableStore as C}from"../../../../base/common/lifecycle.js";function f(o){let t;if("string"==typeof o?t=o:o.color?t=o.color.replace(/\./g,"_"):g.isThemeIcon(o.icon)&&o.icon.color&&(t=o.icon.color.id.replace(/\./g,"_")),t)return`terminal-icon-${t.replace(/\./g,"_")}`}function a(o){const t=[];for(const n in I)o.getColor(n)&&!n.toLowerCase().includes("bright")&&t.push(n);return t}function G(o){const t=new C,n=a(o),e=h(void 0,void 0,t);let i="";for(const t of n){const n=f(t),e=o.getColor(t);e&&(i+=`.monaco-workbench .${n} .codicon:first-child:not(.codicon-split-horizontal):not(.codicon-trashcan):not(.file-icon){ color: ${e} !important; }`)}return e.textContent=i,t}function H(o,t){const n=a(o);let e="";for(const i of n){const n=f(i),r=o.getColor(i);r&&(e+=t?`.monaco-workbench .show-file-icons .predefined-file-icon.terminal-tab.${n}::before,.monaco-workbench .show-file-icons .file-icon.terminal-tab.${n}::before{ color: ${r} !important; }`:`.monaco-workbench .${n} .codicon:first-child:not(.codicon-split-horizontal):not(.codicon-trashcan):not(.file-icon){ color: ${r} !important; }`)}return e}function M(o,t,n){const e=o.icon;if(!e)return;const i=[];let r;if(n){if("string"==typeof e&&(e.startsWith("$(")||d().getIcon(e)))return i;"string"==typeof e&&(r=l.parse(e))}if(e instanceof l?r=e:e instanceof Object&&"light"in e&&"dark"in e&&(r=t===p.LIGHT?e.light:e.dark),r instanceof l){const o=`terminal-uri-icon-${m(r.path).toString(36)}`;i.push(o),i.push("terminal-uri-icon")}return i}function N(o,t){return!t.icon||t.icon instanceof Object&&!("id"in t.icon)?o.get(u).getDefaultIcon().id:"string"==typeof t.icon?t.icon:t.icon.id}export{G as createColorStyleElement,f as getColorClass,H as getColorStyleContent,N as getIconId,a as getStandardColors,M as getUriClasses};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { hash } from "../../../../base/common/hash.js";
+import { URI } from "../../../../base/common/uri.js";
+import { ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+import { IExtensionTerminalProfile, ITerminalProfile } from "../../../../platform/terminal/common/terminal.js";
+import { getIconRegistry } from "../../../../platform/theme/common/iconRegistry.js";
+import { ColorScheme } from "../../../../platform/theme/common/theme.js";
+import { IColorTheme } from "../../../../platform/theme/common/themeService.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { ITerminalInstance } from "./terminal.js";
+import { ITerminalProfileResolverService } from "../common/terminal.js";
+import { ansiColorMap } from "../common/terminalColorRegistry.js";
+import { createStyleSheet } from "../../../../base/browser/domStylesheets.js";
+import { DisposableStore, IDisposable } from "../../../../base/common/lifecycle.js";
+function getColorClass(terminalOrColorKey) {
+  let color = void 0;
+  if (typeof terminalOrColorKey === "string") {
+    color = terminalOrColorKey;
+  } else if (terminalOrColorKey.color) {
+    color = terminalOrColorKey.color.replace(/\./g, "_");
+  } else if (ThemeIcon.isThemeIcon(terminalOrColorKey.icon) && terminalOrColorKey.icon.color) {
+    color = terminalOrColorKey.icon.color.id.replace(/\./g, "_");
+  }
+  if (color) {
+    return `terminal-icon-${color.replace(/\./g, "_")}`;
+  }
+  return void 0;
+}
+__name(getColorClass, "getColorClass");
+function getStandardColors(colorTheme) {
+  const standardColors = [];
+  for (const colorKey in ansiColorMap) {
+    const color = colorTheme.getColor(colorKey);
+    if (color && !colorKey.toLowerCase().includes("bright")) {
+      standardColors.push(colorKey);
+    }
+  }
+  return standardColors;
+}
+__name(getStandardColors, "getStandardColors");
+function createColorStyleElement(colorTheme) {
+  const disposable = new DisposableStore();
+  const standardColors = getStandardColors(colorTheme);
+  const styleElement = createStyleSheet(void 0, void 0, disposable);
+  let css = "";
+  for (const colorKey of standardColors) {
+    const colorClass = getColorClass(colorKey);
+    const color = colorTheme.getColor(colorKey);
+    if (color) {
+      css += `.monaco-workbench .${colorClass} .codicon:first-child:not(.codicon-split-horizontal):not(.codicon-trashcan):not(.file-icon){ color: ${color} !important; }`;
+    }
+  }
+  styleElement.textContent = css;
+  return disposable;
+}
+__name(createColorStyleElement, "createColorStyleElement");
+function getColorStyleContent(colorTheme, editor) {
+  const standardColors = getStandardColors(colorTheme);
+  let css = "";
+  for (const colorKey of standardColors) {
+    const colorClass = getColorClass(colorKey);
+    const color = colorTheme.getColor(colorKey);
+    if (color) {
+      if (editor) {
+        css += `.monaco-workbench .show-file-icons .predefined-file-icon.terminal-tab.${colorClass}::before,.monaco-workbench .show-file-icons .file-icon.terminal-tab.${colorClass}::before{ color: ${color} !important; }`;
+      } else {
+        css += `.monaco-workbench .${colorClass} .codicon:first-child:not(.codicon-split-horizontal):not(.codicon-trashcan):not(.file-icon){ color: ${color} !important; }`;
+      }
+    }
+  }
+  return css;
+}
+__name(getColorStyleContent, "getColorStyleContent");
+function getUriClasses(terminal, colorScheme, extensionContributed) {
+  const icon = terminal.icon;
+  if (!icon) {
+    return void 0;
+  }
+  const iconClasses = [];
+  let uri = void 0;
+  if (extensionContributed) {
+    if (typeof icon === "string" && (icon.startsWith("$(") || getIconRegistry().getIcon(icon))) {
+      return iconClasses;
+    } else if (typeof icon === "string") {
+      uri = URI.parse(icon);
+    }
+  }
+  if (icon instanceof URI) {
+    uri = icon;
+  } else if (icon instanceof Object && "light" in icon && "dark" in icon) {
+    uri = colorScheme === ColorScheme.LIGHT ? icon.light : icon.dark;
+  }
+  if (uri instanceof URI) {
+    const uriIconKey = hash(uri.path).toString(36);
+    const className = `terminal-uri-icon-${uriIconKey}`;
+    iconClasses.push(className);
+    iconClasses.push(`terminal-uri-icon`);
+  }
+  return iconClasses;
+}
+__name(getUriClasses, "getUriClasses");
+function getIconId(accessor, terminal) {
+  if (!terminal.icon || terminal.icon instanceof Object && !("id" in terminal.icon)) {
+    return accessor.get(ITerminalProfileResolverService).getDefaultIcon().id;
+  }
+  return typeof terminal.icon === "string" ? terminal.icon : terminal.icon.id;
+}
+__name(getIconId, "getIconId");
+export {
+  createColorStyleElement,
+  getColorClass,
+  getColorStyleContent,
+  getIconId,
+  getStandardColors,
+  getUriClasses
+};
+//# sourceMappingURL=terminalIcon.js.map

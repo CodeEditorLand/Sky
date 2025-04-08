@@ -1,1 +1,10 @@
-import{InstantiationType as e,registerSingleton as r}from"../../../../platform/instantiation/common/extensions.js";import{ISpeechService as i}from"../common/speechService.js";import{SpeechService as o}from"./speechService.js";r(i,o,e.Eager);
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { ISpeechService } from "../common/speechService.js";
+import { SpeechService } from "./speechService.js";
+registerSingleton(
+  ISpeechService,
+  SpeechService,
+  InstantiationType.Eager
+  /* Reads Extension Points */
+);
+//# sourceMappingURL=speech.contribution.js.map

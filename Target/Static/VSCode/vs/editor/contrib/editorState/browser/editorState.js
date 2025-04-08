@@ -1,1 +1,131 @@
-import*as a from"../../../../base/common/strings.js";import"../../../browser/editorBrowser.js";import"../../../common/core/position.js";import{Range as l}from"../../../common/core/range.js";import{CancellationTokenSource as c}from"../../../../base/common/cancellation.js";import{DisposableStore as d}from"../../../../base/common/lifecycle.js";import"../../../common/model.js";import{EditorKeybindingCancellationTokenSource as p}from"./keybindingCancellation.js";var h=(o=>(o[o.Value=1]="Value",o[o.Selection=2]="Selection",o[o.Position=4]="Position",o[o.Scroll=8]="Scroll",o))(h||{});class n{flags;position;selection;modelVersionId;scrollLeft;scrollTop;constructor(o,s){if(this.flags=s,1&this.flags){const s=o.getModel();this.modelVersionId=s?a.format("{0}#{1}",s.uri.toString(),s.getVersionId()):null}else this.modelVersionId=null;4&this.flags?this.position=o.getPosition():this.position=null,2&this.flags?this.selection=o.getSelection():this.selection=null,8&this.flags?(this.scrollLeft=o.getScrollLeft(),this.scrollTop=o.getScrollTop()):(this.scrollLeft=-1,this.scrollTop=-1)}_equals(o){if(!(o instanceof n))return!1;const s=o;return!(this.modelVersionId!==s.modelVersionId||this.scrollLeft!==s.scrollLeft||this.scrollTop!==s.scrollTop||!this.position&&s.position||this.position&&!s.position||this.position&&s.position&&!this.position.equals(s.position)||!this.selection&&s.selection||this.selection&&!s.selection||this.selection&&s.selection&&!this.selection.equalsRange(s.selection))}validate(o){return this._equals(new n(o,this.flags))}}class V extends p{_listener=new d;constructor(o,s,e,i){super(o,i),4&s&&this._listener.add(o.onDidChangeCursorPosition((o=>{(!e||!l.containsPosition(e,o.position))&&this.cancel()}))),2&s&&this._listener.add(o.onDidChangeCursorSelection((o=>{(!e||!l.containsRange(e,o.selection))&&this.cancel()}))),8&s&&this._listener.add(o.onDidScrollChange((o=>this.cancel()))),1&s&&(this._listener.add(o.onDidChangeModel((o=>this.cancel()))),this._listener.add(o.onDidChangeModelContent((o=>this.cancel()))))}dispose(){this._listener.dispose(),super.dispose()}}class E extends c{_listener;constructor(o,s){super(s),this._listener=o.onDidChangeContent((()=>this.cancel()))}dispose(){this._listener.dispose(),super.dispose()}}export{h as CodeEditorStateFlag,n as EditorState,V as EditorStateCancellationTokenSource,E as TextModelCancellationTokenSource};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as strings from "../../../../base/common/strings.js";
+import { ICodeEditor, IActiveCodeEditor } from "../../../browser/editorBrowser.js";
+import { Position } from "../../../common/core/position.js";
+import { Range, IRange } from "../../../common/core/range.js";
+import { CancellationTokenSource, CancellationToken } from "../../../../base/common/cancellation.js";
+import { IDisposable, DisposableStore } from "../../../../base/common/lifecycle.js";
+import { ITextModel } from "../../../common/model.js";
+import { EditorKeybindingCancellationTokenSource } from "./keybindingCancellation.js";
+var CodeEditorStateFlag = /* @__PURE__ */ ((CodeEditorStateFlag2) => {
+  CodeEditorStateFlag2[CodeEditorStateFlag2["Value"] = 1] = "Value";
+  CodeEditorStateFlag2[CodeEditorStateFlag2["Selection"] = 2] = "Selection";
+  CodeEditorStateFlag2[CodeEditorStateFlag2["Position"] = 4] = "Position";
+  CodeEditorStateFlag2[CodeEditorStateFlag2["Scroll"] = 8] = "Scroll";
+  return CodeEditorStateFlag2;
+})(CodeEditorStateFlag || {});
+class EditorState {
+  static {
+    __name(this, "EditorState");
+  }
+  flags;
+  position;
+  selection;
+  modelVersionId;
+  scrollLeft;
+  scrollTop;
+  constructor(editor, flags) {
+    this.flags = flags;
+    if ((this.flags & 1 /* Value */) !== 0) {
+      const model = editor.getModel();
+      this.modelVersionId = model ? strings.format("{0}#{1}", model.uri.toString(), model.getVersionId()) : null;
+    } else {
+      this.modelVersionId = null;
+    }
+    if ((this.flags & 4 /* Position */) !== 0) {
+      this.position = editor.getPosition();
+    } else {
+      this.position = null;
+    }
+    if ((this.flags & 2 /* Selection */) !== 0) {
+      this.selection = editor.getSelection();
+    } else {
+      this.selection = null;
+    }
+    if ((this.flags & 8 /* Scroll */) !== 0) {
+      this.scrollLeft = editor.getScrollLeft();
+      this.scrollTop = editor.getScrollTop();
+    } else {
+      this.scrollLeft = -1;
+      this.scrollTop = -1;
+    }
+  }
+  _equals(other) {
+    if (!(other instanceof EditorState)) {
+      return false;
+    }
+    const state = other;
+    if (this.modelVersionId !== state.modelVersionId) {
+      return false;
+    }
+    if (this.scrollLeft !== state.scrollLeft || this.scrollTop !== state.scrollTop) {
+      return false;
+    }
+    if (!this.position && state.position || this.position && !state.position || this.position && state.position && !this.position.equals(state.position)) {
+      return false;
+    }
+    if (!this.selection && state.selection || this.selection && !state.selection || this.selection && state.selection && !this.selection.equalsRange(state.selection)) {
+      return false;
+    }
+    return true;
+  }
+  validate(editor) {
+    return this._equals(new EditorState(editor, this.flags));
+  }
+}
+class EditorStateCancellationTokenSource extends EditorKeybindingCancellationTokenSource {
+  static {
+    __name(this, "EditorStateCancellationTokenSource");
+  }
+  _listener = new DisposableStore();
+  constructor(editor, flags, range, parent) {
+    super(editor, parent);
+    if (flags & 4 /* Position */) {
+      this._listener.add(editor.onDidChangeCursorPosition((e) => {
+        if (!range || !Range.containsPosition(range, e.position)) {
+          this.cancel();
+        }
+      }));
+    }
+    if (flags & 2 /* Selection */) {
+      this._listener.add(editor.onDidChangeCursorSelection((e) => {
+        if (!range || !Range.containsRange(range, e.selection)) {
+          this.cancel();
+        }
+      }));
+    }
+    if (flags & 8 /* Scroll */) {
+      this._listener.add(editor.onDidScrollChange((_) => this.cancel()));
+    }
+    if (flags & 1 /* Value */) {
+      this._listener.add(editor.onDidChangeModel((_) => this.cancel()));
+      this._listener.add(editor.onDidChangeModelContent((_) => this.cancel()));
+    }
+  }
+  dispose() {
+    this._listener.dispose();
+    super.dispose();
+  }
+}
+class TextModelCancellationTokenSource extends CancellationTokenSource {
+  static {
+    __name(this, "TextModelCancellationTokenSource");
+  }
+  _listener;
+  constructor(model, parent) {
+    super(parent);
+    this._listener = model.onDidChangeContent(() => this.cancel());
+  }
+  dispose() {
+    this._listener.dispose();
+    super.dispose();
+  }
+}
+export {
+  CodeEditorStateFlag,
+  EditorState,
+  EditorStateCancellationTokenSource,
+  TextModelCancellationTokenSource
+};
+//# sourceMappingURL=editorState.js.map

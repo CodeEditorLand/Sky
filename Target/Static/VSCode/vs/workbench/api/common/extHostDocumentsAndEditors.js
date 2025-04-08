@@ -1,1 +1,187 @@
-var _=Object.defineProperty,g=Object.getOwnPropertyDescriptor,D=(t,e,o,s)=>{for(var i,r=s>1?void 0:s?g(e,o):e,n=t.length-1;n>=0;n--)(i=t[n])&&(r=(s?i(e,o,r):i(r))||r);return s&&r&&_(e,o,r),r},m=(t,e)=>(o,s)=>e(o,s,t);import*as u from"../../../base/common/assert.js";import"vscode";import{Emitter as c}from"../../../base/common/event.js";import{dispose as f}from"../../../base/common/lifecycle.js";import{URI as v}from"../../../base/common/uri.js";import{createDecorator as y}from"../../../platform/instantiation/common/instantiation.js";import{MainContext as x}from"./extHost.protocol.js";import{ExtHostDocumentData as H}from"./extHostDocumentData.js";import{IExtHostRpcService as T}from"./extHostRpcService.js";import{ExtHostTextEditor as A}from"./extHostTextEditor.js";import*as E from"./extHostTypeConverters.js";import{ILogService as I}from"../../../platform/log/common/log.js";import{ResourceMap as w}from"../../../base/common/map.js";import{Schemas as h}from"../../../base/common/network.js";import{Iterable as R}from"../../../base/common/iterator.js";import{Lazy as C}from"../../../base/common/lazy.js";class S{constructor(t){this.value=t}_count=0;ref(){this._count++}unref(){return 0==--this._count}}let a=class{constructor(t,e){this._extHostRpc=t,this._logService=e}_serviceBrand;_activeEditorId=null;_editors=new Map;_documents=new w;_onDidAddDocuments=new c;_onDidRemoveDocuments=new c;_onDidChangeVisibleTextEditors=new c;_onDidChangeActiveTextEditor=new c;onDidAddDocuments=this._onDidAddDocuments.event;onDidRemoveDocuments=this._onDidRemoveDocuments.event;onDidChangeVisibleTextEditors=this._onDidChangeVisibleTextEditors.event;onDidChangeActiveTextEditor=this._onDidChangeActiveTextEditor.event;$acceptDocumentsAndEditorsDelta(t){this.acceptDocumentsAndEditorsDelta(t)}acceptDocumentsAndEditorsDelta(t){const e=[],o=[],s=[];if(t.removedDocuments)for(const o of t.removedDocuments){const t=v.revive(o),s=this._documents.get(t);s?.unref()&&(this._documents.delete(t),e.push(s.value))}if(t.addedDocuments)for(const e of t.addedDocuments){const t=v.revive(e.uri);let s=this._documents.get(t);if(s&&t.scheme!==h.vscodeNotebookCell&&t.scheme!==h.vscodeInteractiveInput)throw new Error(`document '${t} already exists!'`);s||(s=new S(new H(this._extHostRpc.getProxy(x.MainThreadDocuments),t,e.lines,e.EOL,e.versionId,e.languageId,e.isDirty,e.encoding)),this._documents.set(t,s),o.push(s.value)),s.ref()}if(t.removedEditors)for(const e of t.removedEditors){const t=this._editors.get(e);this._editors.delete(e),t&&s.push(t)}if(t.addedEditors)for(const e of t.addedEditors){const t=v.revive(e.documentUri);u.ok(this._documents.has(t),`document '${t}' does not exist`),u.ok(!this._editors.has(e.id),`editor '${e.id}' already exists!`);const o=this._documents.get(t).value,s=new A(e.id,this._extHostRpc.getProxy(x.MainThreadTextEditors),this._logService,new C((()=>o.document)),e.selections.map(E.Selection.to),e.options,e.visibleRanges.map((t=>E.Range.to(t))),"number"==typeof e.editorPosition?E.ViewColumn.to(e.editorPosition):void 0);this._editors.set(e.id,s)}void 0!==t.newActiveEditor&&(u.ok(null===t.newActiveEditor||this._editors.has(t.newActiveEditor),`active editor '${t.newActiveEditor}' does not exist`),this._activeEditorId=t.newActiveEditor),f(e),f(s),t.removedDocuments&&this._onDidRemoveDocuments.fire(e),t.addedDocuments&&this._onDidAddDocuments.fire(o),(t.removedEditors||t.addedEditors)&&this._onDidChangeVisibleTextEditors.fire(this.allEditors().map((t=>t.value))),void 0!==t.newActiveEditor&&this._onDidChangeActiveTextEditor.fire(this.activeEditor())}getDocument(t){return this._documents.get(t)?.value}allDocuments(){return R.map(this._documents.values(),(t=>t.value))}getEditor(t){return this._editors.get(t)}activeEditor(t){if(!this._activeEditorId)return;const e=this._editors.get(this._activeEditorId);return t?e:e?.value}allEditors(){return[...this._editors.values()]}};a=D([m(0,T),m(1,I)],a);const Q=y("IExtHostDocumentsAndEditors");export{a as ExtHostDocumentsAndEditors,Q as IExtHostDocumentsAndEditors};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import * as assert from "../../../base/common/assert.js";
+import * as vscode from "vscode";
+import { Emitter, Event } from "../../../base/common/event.js";
+import { dispose } from "../../../base/common/lifecycle.js";
+import { URI } from "../../../base/common/uri.js";
+import { createDecorator } from "../../../platform/instantiation/common/instantiation.js";
+import { ExtHostDocumentsAndEditorsShape, IDocumentsAndEditorsDelta, MainContext } from "./extHost.protocol.js";
+import { ExtHostDocumentData } from "./extHostDocumentData.js";
+import { IExtHostRpcService } from "./extHostRpcService.js";
+import { ExtHostTextEditor } from "./extHostTextEditor.js";
+import * as typeConverters from "./extHostTypeConverters.js";
+import { ILogService } from "../../../platform/log/common/log.js";
+import { ResourceMap } from "../../../base/common/map.js";
+import { Schemas } from "../../../base/common/network.js";
+import { Iterable } from "../../../base/common/iterator.js";
+import { Lazy } from "../../../base/common/lazy.js";
+class Reference {
+  constructor(value) {
+    this.value = value;
+  }
+  static {
+    __name(this, "Reference");
+  }
+  _count = 0;
+  ref() {
+    this._count++;
+  }
+  unref() {
+    return --this._count === 0;
+  }
+}
+let ExtHostDocumentsAndEditors = class {
+  constructor(_extHostRpc, _logService) {
+    this._extHostRpc = _extHostRpc;
+    this._logService = _logService;
+  }
+  static {
+    __name(this, "ExtHostDocumentsAndEditors");
+  }
+  _serviceBrand;
+  _activeEditorId = null;
+  _editors = /* @__PURE__ */ new Map();
+  _documents = new ResourceMap();
+  _onDidAddDocuments = new Emitter();
+  _onDidRemoveDocuments = new Emitter();
+  _onDidChangeVisibleTextEditors = new Emitter();
+  _onDidChangeActiveTextEditor = new Emitter();
+  onDidAddDocuments = this._onDidAddDocuments.event;
+  onDidRemoveDocuments = this._onDidRemoveDocuments.event;
+  onDidChangeVisibleTextEditors = this._onDidChangeVisibleTextEditors.event;
+  onDidChangeActiveTextEditor = this._onDidChangeActiveTextEditor.event;
+  $acceptDocumentsAndEditorsDelta(delta) {
+    this.acceptDocumentsAndEditorsDelta(delta);
+  }
+  acceptDocumentsAndEditorsDelta(delta) {
+    const removedDocuments = [];
+    const addedDocuments = [];
+    const removedEditors = [];
+    if (delta.removedDocuments) {
+      for (const uriComponent of delta.removedDocuments) {
+        const uri = URI.revive(uriComponent);
+        const data = this._documents.get(uri);
+        if (data?.unref()) {
+          this._documents.delete(uri);
+          removedDocuments.push(data.value);
+        }
+      }
+    }
+    if (delta.addedDocuments) {
+      for (const data of delta.addedDocuments) {
+        const resource = URI.revive(data.uri);
+        let ref = this._documents.get(resource);
+        if (ref) {
+          if (resource.scheme !== Schemas.vscodeNotebookCell && resource.scheme !== Schemas.vscodeInteractiveInput) {
+            throw new Error(`document '${resource} already exists!'`);
+          }
+        }
+        if (!ref) {
+          ref = new Reference(new ExtHostDocumentData(
+            this._extHostRpc.getProxy(MainContext.MainThreadDocuments),
+            resource,
+            data.lines,
+            data.EOL,
+            data.versionId,
+            data.languageId,
+            data.isDirty,
+            data.encoding
+          ));
+          this._documents.set(resource, ref);
+          addedDocuments.push(ref.value);
+        }
+        ref.ref();
+      }
+    }
+    if (delta.removedEditors) {
+      for (const id of delta.removedEditors) {
+        const editor = this._editors.get(id);
+        this._editors.delete(id);
+        if (editor) {
+          removedEditors.push(editor);
+        }
+      }
+    }
+    if (delta.addedEditors) {
+      for (const data of delta.addedEditors) {
+        const resource = URI.revive(data.documentUri);
+        assert.ok(this._documents.has(resource), `document '${resource}' does not exist`);
+        assert.ok(!this._editors.has(data.id), `editor '${data.id}' already exists!`);
+        const documentData = this._documents.get(resource).value;
+        const editor = new ExtHostTextEditor(
+          data.id,
+          this._extHostRpc.getProxy(MainContext.MainThreadTextEditors),
+          this._logService,
+          new Lazy(() => documentData.document),
+          data.selections.map(typeConverters.Selection.to),
+          data.options,
+          data.visibleRanges.map((range) => typeConverters.Range.to(range)),
+          typeof data.editorPosition === "number" ? typeConverters.ViewColumn.to(data.editorPosition) : void 0
+        );
+        this._editors.set(data.id, editor);
+      }
+    }
+    if (delta.newActiveEditor !== void 0) {
+      assert.ok(delta.newActiveEditor === null || this._editors.has(delta.newActiveEditor), `active editor '${delta.newActiveEditor}' does not exist`);
+      this._activeEditorId = delta.newActiveEditor;
+    }
+    dispose(removedDocuments);
+    dispose(removedEditors);
+    if (delta.removedDocuments) {
+      this._onDidRemoveDocuments.fire(removedDocuments);
+    }
+    if (delta.addedDocuments) {
+      this._onDidAddDocuments.fire(addedDocuments);
+    }
+    if (delta.removedEditors || delta.addedEditors) {
+      this._onDidChangeVisibleTextEditors.fire(this.allEditors().map((editor) => editor.value));
+    }
+    if (delta.newActiveEditor !== void 0) {
+      this._onDidChangeActiveTextEditor.fire(this.activeEditor());
+    }
+  }
+  getDocument(uri) {
+    return this._documents.get(uri)?.value;
+  }
+  allDocuments() {
+    return Iterable.map(this._documents.values(), (ref) => ref.value);
+  }
+  getEditor(id) {
+    return this._editors.get(id);
+  }
+  activeEditor(internal) {
+    if (!this._activeEditorId) {
+      return void 0;
+    }
+    const editor = this._editors.get(this._activeEditorId);
+    if (internal) {
+      return editor;
+    } else {
+      return editor?.value;
+    }
+  }
+  allEditors() {
+    return [...this._editors.values()];
+  }
+};
+ExtHostDocumentsAndEditors = __decorateClass([
+  __decorateParam(0, IExtHostRpcService),
+  __decorateParam(1, ILogService)
+], ExtHostDocumentsAndEditors);
+const IExtHostDocumentsAndEditors = createDecorator("IExtHostDocumentsAndEditors");
+export {
+  ExtHostDocumentsAndEditors,
+  IExtHostDocumentsAndEditors
+};
+//# sourceMappingURL=extHostDocumentsAndEditors.js.map

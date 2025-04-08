@@ -1,1 +1,2 @@
-import"./searchExtTypes.js";
+import { FileSearchProviderFolderOptions, FileSearchProviderOptions, TextSearchProviderFolderOptions, TextSearchProviderOptions } from "./searchExtTypes.js";
+//# sourceMappingURL=searchExtTypesInternal.js.map

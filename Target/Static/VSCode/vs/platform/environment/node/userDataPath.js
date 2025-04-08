@@ -1,1 +1,58 @@
-import*as a from"os";import*as e from"path";import"../common/argv.js";const p=process.env.VSCODE_CWD||process.cwd();function P(r,o){const n=c(r,o),s=[n];return e.isAbsolute(n)||s.unshift(p),e.resolve(...s)}function c(r,o){process.env.VSCODE_DEV&&(o="code-oss-dev");const n=process.env.VSCODE_PORTABLE;if(n)return e.join(n,"user-data");let s=process.env.VSCODE_APPDATA;if(s)return e.join(s,o);const t=r["user-data-dir"];if(t)return t;switch(process.platform){case"win32":if(s=process.env.APPDATA,!s){const r=process.env.USERPROFILE;if("string"!=typeof r)throw new Error("Windows: Unexpected undefined %USERPROFILE% environment variable");s=e.join(r,"AppData","Roaming")}break;case"darwin":s=e.join(a.homedir(),"Library","Application Support");break;case"linux":s=process.env.XDG_CONFIG_HOME||e.join(a.homedir(),".config");break;default:throw new Error("Platform not supported")}return e.join(s,o)}export{P as getUserDataPath};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as os from "os";
+import * as path from "path";
+import { NativeParsedArgs } from "../common/argv.js";
+const cwd = process.env["VSCODE_CWD"] || process.cwd();
+function getUserDataPath(cliArgs, productName) {
+  const userDataPath = doGetUserDataPath(cliArgs, productName);
+  const pathsToResolve = [userDataPath];
+  if (!path.isAbsolute(userDataPath)) {
+    pathsToResolve.unshift(cwd);
+  }
+  return path.resolve(...pathsToResolve);
+}
+__name(getUserDataPath, "getUserDataPath");
+function doGetUserDataPath(cliArgs, productName) {
+  if (process.env["VSCODE_DEV"]) {
+    productName = "code-oss-dev";
+  }
+  const portablePath = process.env["VSCODE_PORTABLE"];
+  if (portablePath) {
+    return path.join(portablePath, "user-data");
+  }
+  let appDataPath = process.env["VSCODE_APPDATA"];
+  if (appDataPath) {
+    return path.join(appDataPath, productName);
+  }
+  const cliPath = cliArgs["user-data-dir"];
+  if (cliPath) {
+    return cliPath;
+  }
+  switch (process.platform) {
+    case "win32":
+      appDataPath = process.env["APPDATA"];
+      if (!appDataPath) {
+        const userProfile = process.env["USERPROFILE"];
+        if (typeof userProfile !== "string") {
+          throw new Error("Windows: Unexpected undefined %USERPROFILE% environment variable");
+        }
+        appDataPath = path.join(userProfile, "AppData", "Roaming");
+      }
+      break;
+    case "darwin":
+      appDataPath = path.join(os.homedir(), "Library", "Application Support");
+      break;
+    case "linux":
+      appDataPath = process.env["XDG_CONFIG_HOME"] || path.join(os.homedir(), ".config");
+      break;
+    default:
+      throw new Error("Platform not supported");
+  }
+  return path.join(appDataPath, productName);
+}
+__name(doGetUserDataPath, "doGetUserDataPath");
+export {
+  getUserDataPath
+};
+//# sourceMappingURL=userDataPath.js.map

@@ -1,1 +1,162 @@
-var f=Object.defineProperty;var g=Object.getOwnPropertyDescriptor;var h=(i,n,e,t)=>{for(var o=t>1?void 0:t?g(n,e):n,d=i.length-1,r;d>=0;d--)(r=i[d])&&(o=(t?r(n,e,o):r(o))||o);return t&&o&&f(n,e,o),o},p=(i,n)=>(e,t)=>n(e,t,i);import{ButtonWithIcon as b}from"../../../../../base/browser/ui/button/button.js";import{Codicon as m}from"../../../../../base/common/codicons.js";import{Emitter as I}from"../../../../../base/common/event.js";import"../../../../../base/common/htmlContent.js";import{Disposable as _}from"../../../../../base/common/lifecycle.js";import{localize as u}from"../../../../../nls.js";import"../../common/chatViewModel.js";import"../chat.js";import"./chatContentParts.js";import{$ as c}from"./chatReferencesContentPart.js";import"./chatMarkdownContentPart.js";import"../codeBlockPart.js";import"../../../../../editor/common/model.js";import"./chatCollections.js";import{IContextKeyService as x}from"../../../../../platform/contextkey/common/contextkey.js";import{autorun as C,observableValue as v}from"../../../../../base/common/observable.js";class y extends _{constructor(e,t){super();this.title=e;this.context=t;this.hasFollowingContent=this.context.contentIndex+1<this.context.content.length}_domNode;_onDidChangeHeight=this._register(new I);onDidChangeHeight=this._onDidChangeHeight.event;hasFollowingContent;_isExpanded=v(this,!1);get domNode(){return this._domNode??=this.init(),this._domNode}init(){const e=this.title,t=c(".chat-used-context-label",void 0),o=this._register(new b(t,{buttonBackground:void 0,buttonBorder:void 0,buttonForeground:void 0,buttonHoverBackground:void 0,buttonSecondaryBackground:void 0,buttonSecondaryForeground:void 0,buttonSecondaryHoverBackground:void 0,buttonSeparator:void 0}));this._domNode=c(".chat-used-context",void 0,t),o.label=e,this._register(o.onDidClick(()=>{const r=this._isExpanded.get();this._isExpanded.set(!r,void 0)})),this._register(C(r=>{const s=this._isExpanded.read(r);o.icon=s?m.chevronDown:m.chevronRight,this._domNode?.classList.toggle("chat-used-context-collapsed",!s),this.updateAriaLabel(o.element,typeof e=="string"?e:e.value,this.isExpanded()),this._domNode?.isConnected&&queueMicrotask(()=>{this._onDidChangeHeight.fire()})}));const d=this.initContent();return this._domNode.appendChild(d),this._domNode}updateAriaLabel(e,t,o){e.ariaLabel=o?u("usedReferencesExpanded","{0}, expanded",t):u("usedReferencesCollapsed","{0}, collapsed",t)}addDisposable(e){this._register(e)}get expanded(){return this._isExpanded}isExpanded(){return this._isExpanded.get()}setExpanded(e){this._isExpanded.set(e,void 0)}}let a=class extends y{constructor(e,t,o,d,r,s={},l,k){super(e,t);this.editorPool=o;this.textModel=d;this.languageId=r;this.options=s;this.codeBlockInfo=l;this.contextKeyService=k;this._contentDomNode=c("div.chat-collapsible-editor-content"),this._editorReference=this.editorPool.get(),this.codeblocks=[{...l,focus:()=>{this._editorReference.object.focus(),l.focus()}}]}_editorReference;_contentDomNode;_currentWidth=0;codeblocks=[];dispose(){this._editorReference?.dispose(),super.dispose()}initContent(){const e={languageId:this.languageId,textModel:this.textModel,codeBlockIndex:this.codeBlockInfo.codeBlockIndex,codeBlockPartIndex:0,element:this.context.element,parentContextKeyService:this.contextKeyService,renderOptions:this.options};return this._editorReference.object.render(e,this._currentWidth||300),this._register(this._editorReference.object.onDidChangeContentHeight(()=>this._onDidChangeHeight.fire())),this._contentDomNode.appendChild(this._editorReference.object.element),this._register(C(t=>{const o=this._isExpanded.read(t);this._contentDomNode.style.display=o?"block":"none"})),this._contentDomNode}hasSameContent(e,t,o){return!1}layout(e){this._currentWidth=e,this._editorReference.object.layout(e)}};a=h([p(7,x)],a);export{y as ChatCollapsibleContentPart,a as ChatCollapsibleEditorContentPart};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { ButtonWithIcon } from "../../../../../base/browser/ui/button/button.js";
+import { Codicon } from "../../../../../base/common/codicons.js";
+import { Emitter } from "../../../../../base/common/event.js";
+import { IMarkdownString } from "../../../../../base/common/htmlContent.js";
+import { Disposable, IDisposable } from "../../../../../base/common/lifecycle.js";
+import { localize } from "../../../../../nls.js";
+import { IChatRendererContent } from "../../common/chatViewModel.js";
+import { ChatTreeItem, IChatCodeBlockInfo } from "../chat.js";
+import { IChatContentPart, IChatContentPartRenderContext } from "./chatContentParts.js";
+import { $ } from "./chatReferencesContentPart.js";
+import { EditorPool } from "./chatMarkdownContentPart.js";
+import { CodeBlockPart, ICodeBlockData, ICodeBlockRenderOptions } from "../codeBlockPart.js";
+import { ITextModel } from "../../../../../editor/common/model.js";
+import { IDisposableReference } from "./chatCollections.js";
+import { IContextKeyService } from "../../../../../platform/contextkey/common/contextkey.js";
+import { autorun, IObservable, observableValue } from "../../../../../base/common/observable.js";
+class ChatCollapsibleContentPart extends Disposable {
+  constructor(title, context) {
+    super();
+    this.title = title;
+    this.context = context;
+    this.hasFollowingContent = this.context.contentIndex + 1 < this.context.content.length;
+  }
+  static {
+    __name(this, "ChatCollapsibleContentPart");
+  }
+  _domNode;
+  _onDidChangeHeight = this._register(new Emitter());
+  onDidChangeHeight = this._onDidChangeHeight.event;
+  hasFollowingContent;
+  _isExpanded = observableValue(this, false);
+  get domNode() {
+    this._domNode ??= this.init();
+    return this._domNode;
+  }
+  init() {
+    const referencesLabel = this.title;
+    const buttonElement = $(".chat-used-context-label", void 0);
+    const collapseButton = this._register(new ButtonWithIcon(buttonElement, {
+      buttonBackground: void 0,
+      buttonBorder: void 0,
+      buttonForeground: void 0,
+      buttonHoverBackground: void 0,
+      buttonSecondaryBackground: void 0,
+      buttonSecondaryForeground: void 0,
+      buttonSecondaryHoverBackground: void 0,
+      buttonSeparator: void 0
+    }));
+    this._domNode = $(".chat-used-context", void 0, buttonElement);
+    collapseButton.label = referencesLabel;
+    this._register(collapseButton.onDidClick(() => {
+      const value = this._isExpanded.get();
+      this._isExpanded.set(!value, void 0);
+    }));
+    this._register(autorun((r) => {
+      const value = this._isExpanded.read(r);
+      collapseButton.icon = value ? Codicon.chevronDown : Codicon.chevronRight;
+      this._domNode?.classList.toggle("chat-used-context-collapsed", !value);
+      this.updateAriaLabel(collapseButton.element, typeof referencesLabel === "string" ? referencesLabel : referencesLabel.value, this.isExpanded());
+      if (this._domNode?.isConnected) {
+        queueMicrotask(() => {
+          this._onDidChangeHeight.fire();
+        });
+      }
+    }));
+    const content = this.initContent();
+    this._domNode.appendChild(content);
+    return this._domNode;
+  }
+  updateAriaLabel(element, label, expanded) {
+    element.ariaLabel = expanded ? localize("usedReferencesExpanded", "{0}, expanded", label) : localize("usedReferencesCollapsed", "{0}, collapsed", label);
+  }
+  addDisposable(disposable) {
+    this._register(disposable);
+  }
+  get expanded() {
+    return this._isExpanded;
+  }
+  isExpanded() {
+    return this._isExpanded.get();
+  }
+  setExpanded(value) {
+    this._isExpanded.set(value, void 0);
+  }
+}
+let ChatCollapsibleEditorContentPart = class extends ChatCollapsibleContentPart {
+  constructor(title, context, editorPool, textModel, languageId, options = {}, codeBlockInfo, contextKeyService) {
+    super(title, context);
+    this.editorPool = editorPool;
+    this.textModel = textModel;
+    this.languageId = languageId;
+    this.options = options;
+    this.codeBlockInfo = codeBlockInfo;
+    this.contextKeyService = contextKeyService;
+    this._contentDomNode = $("div.chat-collapsible-editor-content");
+    this._editorReference = this.editorPool.get();
+    this.codeblocks = [{
+      ...codeBlockInfo,
+      focus: /* @__PURE__ */ __name(() => {
+        this._editorReference.object.focus();
+        codeBlockInfo.focus();
+      }, "focus")
+    }];
+  }
+  static {
+    __name(this, "ChatCollapsibleEditorContentPart");
+  }
+  _editorReference;
+  _contentDomNode;
+  _currentWidth = 0;
+  codeblocks = [];
+  dispose() {
+    this._editorReference?.dispose();
+    super.dispose();
+  }
+  initContent() {
+    const data = {
+      languageId: this.languageId,
+      textModel: this.textModel,
+      codeBlockIndex: this.codeBlockInfo.codeBlockIndex,
+      codeBlockPartIndex: 0,
+      element: this.context.element,
+      parentContextKeyService: this.contextKeyService,
+      renderOptions: this.options
+    };
+    this._editorReference.object.render(data, this._currentWidth || 300);
+    this._register(this._editorReference.object.onDidChangeContentHeight(() => this._onDidChangeHeight.fire()));
+    this._contentDomNode.appendChild(this._editorReference.object.element);
+    this._register(autorun((r) => {
+      const value = this._isExpanded.read(r);
+      this._contentDomNode.style.display = value ? "block" : "none";
+    }));
+    return this._contentDomNode;
+  }
+  hasSameContent(other, followingContent, element) {
+    return false;
+  }
+  layout(width) {
+    this._currentWidth = width;
+    this._editorReference.object.layout(width);
+  }
+};
+ChatCollapsibleEditorContentPart = __decorateClass([
+  __decorateParam(7, IContextKeyService)
+], ChatCollapsibleEditorContentPart);
+export {
+  ChatCollapsibleContentPart,
+  ChatCollapsibleEditorContentPart
+};
+//# sourceMappingURL=chatCollapsibleContentPart.js.map

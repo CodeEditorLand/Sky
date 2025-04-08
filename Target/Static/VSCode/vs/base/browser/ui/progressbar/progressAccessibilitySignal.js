@@ -1,1 +1,23 @@
-import"../../../common/lifecycle.js";const r=()=>({msLoopTime:-1,msDelayTime:-1,dispose:()=>{}});let s=r;function l(e){s=e}function t(e,i){return s(e,i)}export{t as getProgressAcccessibilitySignalScheduler,l as setProgressAcccessibilitySignalScheduler};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { IDisposable } from "../../../common/lifecycle.js";
+const nullScopedAccessibilityProgressSignalFactory = /* @__PURE__ */ __name(() => ({
+  msLoopTime: -1,
+  msDelayTime: -1,
+  dispose: /* @__PURE__ */ __name(() => {
+  }, "dispose")
+}), "nullScopedAccessibilityProgressSignalFactory");
+let progressAccessibilitySignalSchedulerFactory = nullScopedAccessibilityProgressSignalFactory;
+function setProgressAcccessibilitySignalScheduler(progressAccessibilitySignalScheduler) {
+  progressAccessibilitySignalSchedulerFactory = progressAccessibilitySignalScheduler;
+}
+__name(setProgressAcccessibilitySignalScheduler, "setProgressAcccessibilitySignalScheduler");
+function getProgressAcccessibilitySignalScheduler(msDelayTime, msLoopTime) {
+  return progressAccessibilitySignalSchedulerFactory(msDelayTime, msLoopTime);
+}
+__name(getProgressAcccessibilitySignalScheduler, "getProgressAcccessibilitySignalScheduler");
+export {
+  getProgressAcccessibilitySignalScheduler,
+  setProgressAcccessibilitySignalScheduler
+};
+//# sourceMappingURL=progressAccessibilitySignal.js.map

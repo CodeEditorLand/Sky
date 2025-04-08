@@ -1,1 +1,91 @@
-var u=Object.defineProperty,b=Object.getOwnPropertyDescriptor,m=(e,t,o,n)=>{for(var i,s=n>1?void 0:n?b(t,o):t,r=e.length-1;r>=0;r--)(i=e[r])&&(s=(n?i(t,o,s):i(s))||s);return n&&s&&u(t,o,s),s},f=(e,t)=>(o,n)=>t(o,n,e);import{createStyleSheet as p}from"../../../../base/browser/domStylesheets.js";import{Event as h}from"../../../../base/common/event.js";import{Disposable as y,DisposableStore as w,toDisposable as E}from"../../../../base/common/lifecycle.js";import{clamp as _}from"../../../../base/common/numbers.js";import{IConfigurationService as g}from"../../../../platform/configuration/common/configuration.js";import"../../../common/contributions.js";import{AccessibilityWorkbenchSettingId as l,ViewDimUnfocusedOpacityProperties as d}from"./accessibilityConfiguration.js";let c=class extends y{_styleElement;_styleElementDisposables=void 0;constructor(e){super(),this._register(E((()=>this._removeStyleElement()))),this._register(h.runAndSubscribe(e.onDidChangeConfiguration,(t=>{if(t&&!t.affectsConfiguration(l.DimUnfocusedEnabled)&&!t.affectsConfiguration(l.DimUnfocusedOpacity))return;let o="";if(k(e.getValue(l.DimUnfocusedEnabled),!1)){const t=_(S(e.getValue(l.DimUnfocusedOpacity),d.Default),d.Minimum,d.Maximum);if(1!==t){const e=new Set,n=`filter: opacity(${t});`;e.add(`.monaco-workbench .pane-body.integrated-terminal:not(:focus-within) .tabs-container { ${n} }`),e.add(`.monaco-workbench .pane-body.integrated-terminal .terminal-wrapper:not(:focus-within) { ${n} }`),e.add(`.monaco-workbench .editor-instance:not(:focus-within) .monaco-editor { ${n} }`),e.add(`.monaco-workbench .editor-instance:not(:focus-within) .breadcrumbs-below-tabs { ${n} }`),e.add(`.monaco-workbench .editor-instance:not(:focus-within) .terminal-wrapper { ${n} }`),e.add(`.monaco-workbench .editor-instance:not(:focus-within) .settings-editor { ${n} }`),e.add(`.monaco-workbench .editor-instance:not(:focus-within) .keybindings-editor { ${n} }`),e.add(`.monaco-workbench .editor-instance:not(:focus-within) .monaco-editor-pane-placeholder { ${n} }`),e.add(`.monaco-workbench .editor-instance:not(:focus-within) .gettingStartedContainer { ${n} }`),o=[...e].join("\n")}}0===o.length?this._removeStyleElement():this._getStyleElement().textContent=o})))}_getStyleElement(){return this._styleElement||(this._styleElementDisposables=new w,this._styleElement=p(void 0,void 0,this._styleElementDisposables),this._styleElement.className="accessibilityUnfocusedViewOpacity"),this._styleElement}_removeStyleElement(){this._styleElementDisposables?.dispose(),this._styleElementDisposables=void 0,this._styleElement=void 0}};function k(e,t){return"boolean"==typeof e?e:t}function S(e,t){return"number"==typeof e?e:t}c=m([f(0,g)],c);export{c as UnfocusedViewDimmingContribution};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { createStyleSheet } from "../../../../base/browser/domStylesheets.js";
+import { Event } from "../../../../base/common/event.js";
+import { Disposable, DisposableStore, toDisposable } from "../../../../base/common/lifecycle.js";
+import { clamp } from "../../../../base/common/numbers.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IWorkbenchContribution } from "../../../common/contributions.js";
+import { AccessibilityWorkbenchSettingId, ViewDimUnfocusedOpacityProperties } from "./accessibilityConfiguration.js";
+let UnfocusedViewDimmingContribution = class extends Disposable {
+  static {
+    __name(this, "UnfocusedViewDimmingContribution");
+  }
+  _styleElement;
+  _styleElementDisposables = void 0;
+  constructor(configurationService) {
+    super();
+    this._register(toDisposable(() => this._removeStyleElement()));
+    this._register(Event.runAndSubscribe(configurationService.onDidChangeConfiguration, (e) => {
+      if (e && !e.affectsConfiguration(AccessibilityWorkbenchSettingId.DimUnfocusedEnabled) && !e.affectsConfiguration(AccessibilityWorkbenchSettingId.DimUnfocusedOpacity)) {
+        return;
+      }
+      let cssTextContent = "";
+      const enabled = ensureBoolean(configurationService.getValue(AccessibilityWorkbenchSettingId.DimUnfocusedEnabled), false);
+      if (enabled) {
+        const opacity = clamp(
+          ensureNumber(configurationService.getValue(AccessibilityWorkbenchSettingId.DimUnfocusedOpacity), ViewDimUnfocusedOpacityProperties.Default),
+          ViewDimUnfocusedOpacityProperties.Minimum,
+          ViewDimUnfocusedOpacityProperties.Maximum
+        );
+        if (opacity !== 1) {
+          const rules = /* @__PURE__ */ new Set();
+          const filterRule = `filter: opacity(${opacity});`;
+          rules.add(`.monaco-workbench .pane-body.integrated-terminal:not(:focus-within) .tabs-container { ${filterRule} }`);
+          rules.add(`.monaco-workbench .pane-body.integrated-terminal .terminal-wrapper:not(:focus-within) { ${filterRule} }`);
+          rules.add(`.monaco-workbench .editor-instance:not(:focus-within) .monaco-editor { ${filterRule} }`);
+          rules.add(`.monaco-workbench .editor-instance:not(:focus-within) .breadcrumbs-below-tabs { ${filterRule} }`);
+          rules.add(`.monaco-workbench .editor-instance:not(:focus-within) .terminal-wrapper { ${filterRule} }`);
+          rules.add(`.monaco-workbench .editor-instance:not(:focus-within) .settings-editor { ${filterRule} }`);
+          rules.add(`.monaco-workbench .editor-instance:not(:focus-within) .keybindings-editor { ${filterRule} }`);
+          rules.add(`.monaco-workbench .editor-instance:not(:focus-within) .monaco-editor-pane-placeholder { ${filterRule} }`);
+          rules.add(`.monaco-workbench .editor-instance:not(:focus-within) .gettingStartedContainer { ${filterRule} }`);
+          cssTextContent = [...rules].join("\n");
+        }
+      }
+      if (cssTextContent.length === 0) {
+        this._removeStyleElement();
+      } else {
+        this._getStyleElement().textContent = cssTextContent;
+      }
+    }));
+  }
+  _getStyleElement() {
+    if (!this._styleElement) {
+      this._styleElementDisposables = new DisposableStore();
+      this._styleElement = createStyleSheet(void 0, void 0, this._styleElementDisposables);
+      this._styleElement.className = "accessibilityUnfocusedViewOpacity";
+    }
+    return this._styleElement;
+  }
+  _removeStyleElement() {
+    this._styleElementDisposables?.dispose();
+    this._styleElementDisposables = void 0;
+    this._styleElement = void 0;
+  }
+};
+UnfocusedViewDimmingContribution = __decorateClass([
+  __decorateParam(0, IConfigurationService)
+], UnfocusedViewDimmingContribution);
+function ensureBoolean(value, defaultValue) {
+  return typeof value === "boolean" ? value : defaultValue;
+}
+__name(ensureBoolean, "ensureBoolean");
+function ensureNumber(value, defaultValue) {
+  return typeof value === "number" ? value : defaultValue;
+}
+__name(ensureNumber, "ensureNumber");
+export {
+  UnfocusedViewDimmingContribution
+};
+//# sourceMappingURL=unfocusedViewDimmingContribution.js.map

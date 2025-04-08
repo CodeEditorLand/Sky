@@ -1,1 +1,64 @@
-import{DisposableStore as d}from"../../../../base/common/lifecycle.js";import"../../../browser/editorBrowser.js";import"./suggestModel.js";class a{static _maxSelectionLength=51200;_disposables=new d;_lastOvertyped=[];_locked=!1;constructor(e,i){this._disposables.add(e.onWillType(()=>{if(this._locked||!e.hasModel())return;const s=e.getSelections(),n=s.length;let o=!1;for(let t=0;t<n;t++)if(!s[t].isEmpty()){o=!0;break}if(!o){this._lastOvertyped.length!==0&&(this._lastOvertyped.length=0);return}this._lastOvertyped=[];const r=e.getModel();for(let t=0;t<n;t++){const l=s[t];if(r.getValueLengthInRange(l)>a._maxSelectionLength)return;this._lastOvertyped[t]={value:r.getValueInRange(l),multiline:l.startLineNumber!==l.endLineNumber}}})),this._disposables.add(i.onDidTrigger(s=>{this._locked=!0})),this._disposables.add(i.onDidCancel(s=>{this._locked=!1}))}getLastOvertypedInfo(e){if(e>=0&&e<this._lastOvertyped.length)return this._lastOvertyped[e]}dispose(){this._disposables.dispose()}}export{a as OvertypingCapturer};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { DisposableStore, IDisposable } from "../../../../base/common/lifecycle.js";
+import { ICodeEditor } from "../../../browser/editorBrowser.js";
+import { SuggestModel } from "./suggestModel.js";
+class OvertypingCapturer {
+  static {
+    __name(this, "OvertypingCapturer");
+  }
+  static _maxSelectionLength = 51200;
+  _disposables = new DisposableStore();
+  _lastOvertyped = [];
+  _locked = false;
+  constructor(editor, suggestModel) {
+    this._disposables.add(editor.onWillType(() => {
+      if (this._locked || !editor.hasModel()) {
+        return;
+      }
+      const selections = editor.getSelections();
+      const selectionsLength = selections.length;
+      let willOvertype = false;
+      for (let i = 0; i < selectionsLength; i++) {
+        if (!selections[i].isEmpty()) {
+          willOvertype = true;
+          break;
+        }
+      }
+      if (!willOvertype) {
+        if (this._lastOvertyped.length !== 0) {
+          this._lastOvertyped.length = 0;
+        }
+        return;
+      }
+      this._lastOvertyped = [];
+      const model = editor.getModel();
+      for (let i = 0; i < selectionsLength; i++) {
+        const selection = selections[i];
+        if (model.getValueLengthInRange(selection) > OvertypingCapturer._maxSelectionLength) {
+          return;
+        }
+        this._lastOvertyped[i] = { value: model.getValueInRange(selection), multiline: selection.startLineNumber !== selection.endLineNumber };
+      }
+    }));
+    this._disposables.add(suggestModel.onDidTrigger((e) => {
+      this._locked = true;
+    }));
+    this._disposables.add(suggestModel.onDidCancel((e) => {
+      this._locked = false;
+    }));
+  }
+  getLastOvertypedInfo(idx) {
+    if (idx >= 0 && idx < this._lastOvertyped.length) {
+      return this._lastOvertyped[idx];
+    }
+    return void 0;
+  }
+  dispose() {
+    this._disposables.dispose();
+  }
+}
+export {
+  OvertypingCapturer
+};
+//# sourceMappingURL=suggestOvertypingCapturer.js.map

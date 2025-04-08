@@ -1,1 +1,175 @@
-var m=Object.defineProperty,v=Object.getOwnPropertyDescriptor,p=(e,t,r,i)=>{for(var o,s=i>1?void 0:i?v(t,r):t,n=e.length-1;n>=0;n--)(o=e[n])&&(s=(i?o(t,r,s):o(s))||s);return i&&s&&m(t,r,s),s},s=(e,t)=>(r,i)=>t(r,i,e);import{Event as y}from"../../../../base/common/event.js";import{Registry as x}from"../../../../platform/registry/common/platform.js";import{ResourceMap as T}from"../../../../base/common/map.js";import{createDecorator as g,IInstantiationService as S}from"../../../../platform/instantiation/common/instantiation.js";import{EditorExtensions as U,isResourceDiffEditorInput as F,isResourceSideBySideEditorInput as h,DEFAULT_EDITOR_ASSOCIATION as I,isResourceMergeEditorInput as R}from"../../../common/editor.js";import"../../../common/editor/editorInput.js";import{IUntitledTextEditorService as P}from"../../untitled/common/untitledTextEditorService.js";import{Schemas as u}from"../../../../base/common/network.js";import{DiffEditorInput as b}from"../../../common/editor/diffEditorInput.js";import{SideBySideEditorInput as D}from"../../../common/editor/sideBySideEditorInput.js";import{TextResourceEditorInput as E}from"../../../common/editor/textResourceEditorInput.js";import{UntitledTextEditorInput as f}from"../../untitled/common/untitledTextEditorInput.js";import"../../untitled/common/untitledTextEditorModel.js";import{basename as C}from"../../../../base/common/resources.js";import{URI as O}from"../../../../base/common/uri.js";import{IUriIdentityService as N}from"../../../../platform/uriIdentity/common/uriIdentity.js";import{IFileService as w}from"../../../../platform/files/common/files.js";import{IEditorResolverService as M,RegisteredEditorPriority as _}from"../../editor/common/editorResolverService.js";import{Disposable as B}from"../../../../base/common/lifecycle.js";import{InstantiationType as A,registerSingleton as G}from"../../../../platform/instantiation/common/extensions.js";const L=g("textEditorService");let c=class extends B{constructor(e,t,r,i,o){super(),this.untitledTextEditorService=e,this.instantiationService=t,this.uriIdentityService=r,this.fileService=i,this.editorResolverService=o,this.registerDefaultEditor()}editorInputCache=new T;fileEditorFactory=x.as(U.EditorFactory).getFileEditorFactory();registerDefaultEditor(){this._register(this.editorResolverService.registerEditor("*",{id:I.id,label:I.displayName,detail:I.providerDisplayName,priority:_.builtin},{},{createEditorInput:e=>({editor:this.createTextEditor(e)}),createUntitledEditorInput:e=>({editor:this.createTextEditor(e)}),createDiffEditorInput:e=>({editor:this.createTextEditor(e)})}))}async resolveTextEditor(e){return this.createTextEditor(e)}createTextEditor(e){if(R(e))return this.createTextEditor(e.result);if(F(e)){const t=this.createTextEditor(e.original),r=this.createTextEditor(e.modified);return this.instantiationService.createInstance(b,e.label,e.description,t,r,void 0)}if(h(e)){const t=this.createTextEditor(e.primary),r=this.createTextEditor(e.secondary);return this.instantiationService.createInstance(D,e.label,e.description,r,t)}const t=e;if(t.forceUntitled||!t.resource||t.resource.scheme===u.untitled){const e={languageId:t.languageId,initialValue:t.contents,encoding:t.encoding};let r;return r=t.resource?.scheme===u.untitled?this.untitledTextEditorService.create({untitledResource:t.resource,...e}):this.untitledTextEditorService.create({associatedResource:t.resource,...e}),this.createOrGetCached(r.resource,(()=>this.instantiationService.createInstance(f,r)))}const r=e;if(r.resource instanceof O){const e=r.label||C(r.resource),t=r.resource,i=this.uriIdentityService.asCanonicalUri(t);return this.createOrGetCached(i,(()=>r.forceFile||this.fileService.hasProvider(i)?this.fileEditorFactory.createFileEditor(i,t,r.label,r.description,r.encoding,r.languageId,r.contents,this.instantiationService):this.instantiationService.createInstance(E,i,r.label,r.description,r.languageId,r.contents)),(i=>{i instanceof f||(i instanceof E?(e&&i.setName(e),r.description&&i.setDescription(r.description),r.languageId&&i.setPreferredLanguageId(r.languageId),"string"==typeof r.contents&&i.setPreferredContents(r.contents)):(i.setPreferredResource(t),r.label&&i.setPreferredName(r.label),r.description&&i.setPreferredDescription(r.description),r.encoding&&i.setPreferredEncoding(r.encoding),r.languageId&&i.setPreferredLanguageId(r.languageId),"string"==typeof r.contents&&i.setPreferredContents(r.contents)))}))}throw new Error(`ITextEditorService: Unable to create texteditor from ${JSON.stringify(e)}`)}createOrGetCached(e,t,r){let i=this.editorInputCache.get(e);return i?(r?.(i),i):(i=t(),this.editorInputCache.set(e,i),y.once(i.onWillDispose)((()=>this.editorInputCache.delete(e))),i)}};c=p([s(0,P),s(1,S),s(2,N),s(3,w),s(4,M)],c),G(L,c,A.Eager);export{L as ITextEditorService,c as TextEditorService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Event } from "../../../../base/common/event.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { ResourceMap } from "../../../../base/common/map.js";
+import { createDecorator, IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IEditorFactoryRegistry, IFileEditorInput, IUntypedEditorInput, IUntypedFileEditorInput, EditorExtensions, isResourceDiffEditorInput, isResourceSideBySideEditorInput, IUntitledTextResourceEditorInput, DEFAULT_EDITOR_ASSOCIATION, isResourceMergeEditorInput } from "../../../common/editor.js";
+import { EditorInput } from "../../../common/editor/editorInput.js";
+import { INewUntitledTextEditorOptions, IUntitledTextEditorService } from "../../untitled/common/untitledTextEditorService.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { DiffEditorInput } from "../../../common/editor/diffEditorInput.js";
+import { SideBySideEditorInput } from "../../../common/editor/sideBySideEditorInput.js";
+import { TextResourceEditorInput } from "../../../common/editor/textResourceEditorInput.js";
+import { UntitledTextEditorInput } from "../../untitled/common/untitledTextEditorInput.js";
+import { IUntitledTextEditorModel } from "../../untitled/common/untitledTextEditorModel.js";
+import { basename } from "../../../../base/common/resources.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { IEditorResolverService, RegisteredEditorPriority } from "../../editor/common/editorResolverService.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+const ITextEditorService = createDecorator("textEditorService");
+let TextEditorService = class extends Disposable {
+  constructor(untitledTextEditorService, instantiationService, uriIdentityService, fileService, editorResolverService) {
+    super();
+    this.untitledTextEditorService = untitledTextEditorService;
+    this.instantiationService = instantiationService;
+    this.uriIdentityService = uriIdentityService;
+    this.fileService = fileService;
+    this.editorResolverService = editorResolverService;
+    this.registerDefaultEditor();
+  }
+  static {
+    __name(this, "TextEditorService");
+  }
+  editorInputCache = new ResourceMap();
+  fileEditorFactory = Registry.as(EditorExtensions.EditorFactory).getFileEditorFactory();
+  registerDefaultEditor() {
+    this._register(this.editorResolverService.registerEditor(
+      "*",
+      {
+        id: DEFAULT_EDITOR_ASSOCIATION.id,
+        label: DEFAULT_EDITOR_ASSOCIATION.displayName,
+        detail: DEFAULT_EDITOR_ASSOCIATION.providerDisplayName,
+        priority: RegisteredEditorPriority.builtin
+      },
+      {},
+      {
+        createEditorInput: /* @__PURE__ */ __name((editor) => ({ editor: this.createTextEditor(editor) }), "createEditorInput"),
+        createUntitledEditorInput: /* @__PURE__ */ __name((untitledEditor) => ({ editor: this.createTextEditor(untitledEditor) }), "createUntitledEditorInput"),
+        createDiffEditorInput: /* @__PURE__ */ __name((diffEditor) => ({ editor: this.createTextEditor(diffEditor) }), "createDiffEditorInput")
+      }
+    ));
+  }
+  async resolveTextEditor(input) {
+    return this.createTextEditor(input);
+  }
+  createTextEditor(input) {
+    if (isResourceMergeEditorInput(input)) {
+      return this.createTextEditor(input.result);
+    }
+    if (isResourceDiffEditorInput(input)) {
+      const original = this.createTextEditor(input.original);
+      const modified = this.createTextEditor(input.modified);
+      return this.instantiationService.createInstance(DiffEditorInput, input.label, input.description, original, modified, void 0);
+    }
+    if (isResourceSideBySideEditorInput(input)) {
+      const primary = this.createTextEditor(input.primary);
+      const secondary = this.createTextEditor(input.secondary);
+      return this.instantiationService.createInstance(SideBySideEditorInput, input.label, input.description, secondary, primary);
+    }
+    const untitledInput = input;
+    if (untitledInput.forceUntitled || !untitledInput.resource || untitledInput.resource.scheme === Schemas.untitled) {
+      const untitledOptions = {
+        languageId: untitledInput.languageId,
+        initialValue: untitledInput.contents,
+        encoding: untitledInput.encoding
+      };
+      let untitledModel;
+      if (untitledInput.resource?.scheme === Schemas.untitled) {
+        untitledModel = this.untitledTextEditorService.create({ untitledResource: untitledInput.resource, ...untitledOptions });
+      } else {
+        untitledModel = this.untitledTextEditorService.create({ associatedResource: untitledInput.resource, ...untitledOptions });
+      }
+      return this.createOrGetCached(untitledModel.resource, () => this.instantiationService.createInstance(UntitledTextEditorInput, untitledModel));
+    }
+    const textResourceEditorInput = input;
+    if (textResourceEditorInput.resource instanceof URI) {
+      const label = textResourceEditorInput.label || basename(textResourceEditorInput.resource);
+      const preferredResource = textResourceEditorInput.resource;
+      const canonicalResource = this.uriIdentityService.asCanonicalUri(preferredResource);
+      return this.createOrGetCached(canonicalResource, () => {
+        if (textResourceEditorInput.forceFile || this.fileService.hasProvider(canonicalResource)) {
+          return this.fileEditorFactory.createFileEditor(canonicalResource, preferredResource, textResourceEditorInput.label, textResourceEditorInput.description, textResourceEditorInput.encoding, textResourceEditorInput.languageId, textResourceEditorInput.contents, this.instantiationService);
+        }
+        return this.instantiationService.createInstance(TextResourceEditorInput, canonicalResource, textResourceEditorInput.label, textResourceEditorInput.description, textResourceEditorInput.languageId, textResourceEditorInput.contents);
+      }, (cachedInput) => {
+        if (cachedInput instanceof UntitledTextEditorInput) {
+          return;
+        } else if (!(cachedInput instanceof TextResourceEditorInput)) {
+          cachedInput.setPreferredResource(preferredResource);
+          if (textResourceEditorInput.label) {
+            cachedInput.setPreferredName(textResourceEditorInput.label);
+          }
+          if (textResourceEditorInput.description) {
+            cachedInput.setPreferredDescription(textResourceEditorInput.description);
+          }
+          if (textResourceEditorInput.encoding) {
+            cachedInput.setPreferredEncoding(textResourceEditorInput.encoding);
+          }
+          if (textResourceEditorInput.languageId) {
+            cachedInput.setPreferredLanguageId(textResourceEditorInput.languageId);
+          }
+          if (typeof textResourceEditorInput.contents === "string") {
+            cachedInput.setPreferredContents(textResourceEditorInput.contents);
+          }
+        } else {
+          if (label) {
+            cachedInput.setName(label);
+          }
+          if (textResourceEditorInput.description) {
+            cachedInput.setDescription(textResourceEditorInput.description);
+          }
+          if (textResourceEditorInput.languageId) {
+            cachedInput.setPreferredLanguageId(textResourceEditorInput.languageId);
+          }
+          if (typeof textResourceEditorInput.contents === "string") {
+            cachedInput.setPreferredContents(textResourceEditorInput.contents);
+          }
+        }
+      });
+    }
+    throw new Error(`ITextEditorService: Unable to create texteditor from ${JSON.stringify(input)}`);
+  }
+  createOrGetCached(resource, factoryFn, cachedFn) {
+    let input = this.editorInputCache.get(resource);
+    if (input) {
+      cachedFn?.(input);
+      return input;
+    }
+    input = factoryFn();
+    this.editorInputCache.set(resource, input);
+    Event.once(input.onWillDispose)(() => this.editorInputCache.delete(resource));
+    return input;
+  }
+};
+TextEditorService = __decorateClass([
+  __decorateParam(0, IUntitledTextEditorService),
+  __decorateParam(1, IInstantiationService),
+  __decorateParam(2, IUriIdentityService),
+  __decorateParam(3, IFileService),
+  __decorateParam(4, IEditorResolverService)
+], TextEditorService);
+registerSingleton(
+  ITextEditorService,
+  TextEditorService,
+  InstantiationType.Eager
+  /* do not change: https://github.com/microsoft/vscode/issues/137675 */
+);
+export {
+  ITextEditorService,
+  TextEditorService
+};
+//# sourceMappingURL=textEditorService.js.map

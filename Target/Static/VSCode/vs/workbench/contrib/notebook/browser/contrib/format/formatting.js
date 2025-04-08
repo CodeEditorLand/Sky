@@ -1,1 +1,232 @@
-var j=Object.defineProperty,z=Object.getOwnPropertyDescriptor,h=(e,o,t,r)=>{for(var i,s=r>1?void 0:r?z(o,t):o,n=e.length-1;n>=0;n--)(i=e[n])&&(s=(r?i(o,t,s):i(s))||s);return r&&s&&j(o,t,s),s},c=(e,o)=>(t,r)=>o(t,r,e);import{localize as F,localize2 as A}from"../../../../../../nls.js";import{CancellationToken as g}from"../../../../../../base/common/cancellation.js";import{KeyCode as E,KeyMod as s}from"../../../../../../base/common/keyCodes.js";import{Disposable as G,DisposableStore as M}from"../../../../../../base/common/lifecycle.js";import"../../../../../../editor/browser/editorBrowser.js";import{EditorAction as H,registerEditorAction as U}from"../../../../../../editor/browser/editorExtensions.js";import{IBulkEditService as T,ResourceTextEdit as W}from"../../../../../../editor/browser/services/bulkEditService.js";import{EditorContextKeys as d}from"../../../../../../editor/common/editorContextKeys.js";import{IEditorWorkerService as K}from"../../../../../../editor/common/services/editorWorker.js";import{ILanguageFeaturesService as R}from"../../../../../../editor/common/services/languageFeatures.js";import{ITextModelService as O}from"../../../../../../editor/common/services/resolverService.js";import{FormattingMode as y,formatDocumentWithSelectedProvider as Y,getDocumentFormattingEditsWithSelectedProvider as P}from"../../../../../../editor/contrib/format/browser/format.js";import{Action2 as q,MenuId as J,registerAction2 as Q}from"../../../../../../platform/actions/common/actions.js";import{ContextKeyExpr as k}from"../../../../../../platform/contextkey/common/contextkey.js";import{IInstantiationService as x}from"../../../../../../platform/instantiation/common/instantiation.js";import{KeybindingWeight as _}from"../../../../../../platform/keybinding/common/keybindingsRegistry.js";import{Progress as D}from"../../../../../../platform/progress/common/progress.js";import{NOTEBOOK_ACTIONS_CATEGORY as X}from"../../controller/coreActions.js";import{getNotebookEditorFromEditorPane as Z}from"../../notebookBrowser.js";import{NOTEBOOK_EDITOR_EDITABLE as B,NOTEBOOK_IS_ACTIVE_EDITOR as L}from"../../../common/notebookContextKeys.js";import{IEditorService as $}from"../../../../../services/editor/common/editorService.js";import"../../../common/notebookExecutionStateService.js";import{INotebookExecutionService as ee}from"../../../common/notebookExecutionService.js";import{NotebookSetting as oe}from"../../../common/notebookCommon.js";import{IConfigurationService as te}from"../../../../../../platform/configuration/common/configuration.js";import{LifecyclePhase as re}from"../../../../../services/lifecycle/common/lifecycle.js";import{Registry as ie}from"../../../../../../platform/registry/common/platform.js";import{Extensions as ne}from"../../../../../common/contributions.js";import{INotebookService as ae}from"../../../common/notebookService.js";import{CodeActionParticipantUtils as ce}from"../saveParticipants/saveParticipants.js";Q(class extends q{constructor(){super({id:"notebook.format",title:A("format.title","Format Notebook"),category:X,precondition:k.and(L,B),keybinding:{when:d.editorTextFocus.toNegated(),primary:s.Shift|s.Alt|E.KeyF,linux:{primary:s.CtrlCmd|s.Shift|E.KeyI},weight:_.WorkbenchContrib},f1:!0,menu:{id:J.EditorContext,when:k.and(d.inCompositeEditor,d.hasDocumentFormattingProvider),group:"1_modification",order:1.3}})}async run(e){const o=e.get($),t=e.get(O),r=e.get(K),i=e.get(R),s=e.get(T),n=e.get(x),a=Z(o.activeEditorPane);if(!a||!a.hasModel())return;const c=a.textModel,m=await n.invokeFunction(ce.checkAndRunFormatCodeAction,c,D.None,g.None),l=new M;try{if(!m){const e=await Promise.all(c.cells.map((async e=>{const o=await t.createModelReference(e.uri);l.add(o);const s=o.object.textEditorModel,n=await P(r,i,s,y.Explicit,g.None),a=[];if(n){for(const e of n)a.push(new W(s.uri,e,s.getVersionId()));return a}return[]})));await s.apply(e.flat(),{label:F("label","Format Notebook"),code:"undoredo.formatNotebook"})}}finally{l.dispose()}}}),U(class extends H{constructor(){super({id:"notebook.formatCell",label:A("formatCell.label","Format Cell"),precondition:k.and(L,B,d.inCompositeEditor,d.writable,d.hasDocumentFormattingProvider),kbOpts:{kbExpr:k.and(d.editorTextFocus),primary:s.Shift|s.Alt|E.KeyF,linux:{primary:s.CtrlCmd|s.Shift|E.KeyI},weight:_.EditorContrib},contextMenuOpts:{group:"1_modification",order:1.301}})}async run(e,o){o.hasModel()&&await e.get(x).invokeFunction(Y,o,y.Explicit,D.None,g.None,!0)}});let v=class{constructor(e,o,t,r,i,s){this.bulkEditService=e,this.languageFeaturesService=o,this.textModelService=t,this.editorWorkerService=r,this.configurationService=i,this._notebookService=s}async onWillExecuteCell(e){if(!this.configurationService.getValue(oe.formatOnCellExecution))return;const o=new M;try{const t=await Promise.all(e.map((async e=>{const t=this._notebookService.getNotebookTextModel(e.notebook);if(!t)return[];let r;for(const o of t.cells)if(o.handle===e.cellHandle){r=o;break}if(!r)return[];const i=await this.textModelService.createModelReference(r.uri);o.add(i);const s=i.object.textEditorModel,n=await P(this.editorWorkerService,this.languageFeaturesService,s,y.Silent,g.None),a=[];return n?(a.push(...n.map((e=>new W(s.uri,e,s.getVersionId())))),a):[]})));await this.bulkEditService.apply(t.flat(),{label:F("formatCells.label","Format Cells"),code:"undoredo.notebooks.onWillExecuteFormat"})}finally{o.dispose()}}};v=h([c(0,T),c(1,R),c(2,O),c(3,K),c(4,te),c(5,ae)],v);let b=class extends G{constructor(e,o){super(),this.instantiationService=e,this.notebookExecutionService=o,this.registerKernelExecutionParticipants()}registerKernelExecutionParticipants(){this._register(this.notebookExecutionService.registerExecutionParticipant(this.instantiationService.createInstance(v)))}};b=h([c(0,x),c(1,ee)],b);const se=ie.as(ne.Workbench);se.registerWorkbenchContribution(b,re.Restored);export{b as CellExecutionParticipantsContribution};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { localize, localize2 } from "../../../../../../nls.js";
+import { CancellationToken } from "../../../../../../base/common/cancellation.js";
+import { KeyCode, KeyMod } from "../../../../../../base/common/keyCodes.js";
+import { Disposable, DisposableStore } from "../../../../../../base/common/lifecycle.js";
+import { ICodeEditor } from "../../../../../../editor/browser/editorBrowser.js";
+import { EditorAction, registerEditorAction } from "../../../../../../editor/browser/editorExtensions.js";
+import { IBulkEditService, ResourceTextEdit } from "../../../../../../editor/browser/services/bulkEditService.js";
+import { EditorContextKeys } from "../../../../../../editor/common/editorContextKeys.js";
+import { IEditorWorkerService } from "../../../../../../editor/common/services/editorWorker.js";
+import { ILanguageFeaturesService } from "../../../../../../editor/common/services/languageFeatures.js";
+import { ITextModelService } from "../../../../../../editor/common/services/resolverService.js";
+import { FormattingMode, formatDocumentWithSelectedProvider, getDocumentFormattingEditsWithSelectedProvider } from "../../../../../../editor/contrib/format/browser/format.js";
+import { Action2, MenuId, registerAction2 } from "../../../../../../platform/actions/common/actions.js";
+import { ContextKeyExpr } from "../../../../../../platform/contextkey/common/contextkey.js";
+import { IInstantiationService, ServicesAccessor } from "../../../../../../platform/instantiation/common/instantiation.js";
+import { KeybindingWeight } from "../../../../../../platform/keybinding/common/keybindingsRegistry.js";
+import { Progress } from "../../../../../../platform/progress/common/progress.js";
+import { NOTEBOOK_ACTIONS_CATEGORY } from "../../controller/coreActions.js";
+import { getNotebookEditorFromEditorPane } from "../../notebookBrowser.js";
+import { NOTEBOOK_EDITOR_EDITABLE, NOTEBOOK_IS_ACTIVE_EDITOR } from "../../../common/notebookContextKeys.js";
+import { IEditorService } from "../../../../../services/editor/common/editorService.js";
+import { INotebookCellExecution } from "../../../common/notebookExecutionStateService.js";
+import { ICellExecutionParticipant, INotebookExecutionService } from "../../../common/notebookExecutionService.js";
+import { NotebookSetting } from "../../../common/notebookCommon.js";
+import { IConfigurationService } from "../../../../../../platform/configuration/common/configuration.js";
+import { LifecyclePhase } from "../../../../../services/lifecycle/common/lifecycle.js";
+import { Registry } from "../../../../../../platform/registry/common/platform.js";
+import { IWorkbenchContribution, IWorkbenchContributionsRegistry, Extensions as WorkbenchContributionsExtensions } from "../../../../../common/contributions.js";
+import { INotebookService } from "../../../common/notebookService.js";
+import { CodeActionParticipantUtils } from "../saveParticipants/saveParticipants.js";
+registerAction2(class extends Action2 {
+  constructor() {
+    super({
+      id: "notebook.format",
+      title: localize2("format.title", "Format Notebook"),
+      category: NOTEBOOK_ACTIONS_CATEGORY,
+      precondition: ContextKeyExpr.and(NOTEBOOK_IS_ACTIVE_EDITOR, NOTEBOOK_EDITOR_EDITABLE),
+      keybinding: {
+        when: EditorContextKeys.editorTextFocus.toNegated(),
+        primary: KeyMod.Shift | KeyMod.Alt | KeyCode.KeyF,
+        linux: { primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyI },
+        weight: KeybindingWeight.WorkbenchContrib
+      },
+      f1: true,
+      menu: {
+        id: MenuId.EditorContext,
+        when: ContextKeyExpr.and(EditorContextKeys.inCompositeEditor, EditorContextKeys.hasDocumentFormattingProvider),
+        group: "1_modification",
+        order: 1.3
+      }
+    });
+  }
+  async run(accessor) {
+    const editorService = accessor.get(IEditorService);
+    const textModelService = accessor.get(ITextModelService);
+    const editorWorkerService = accessor.get(IEditorWorkerService);
+    const languageFeaturesService = accessor.get(ILanguageFeaturesService);
+    const bulkEditService = accessor.get(IBulkEditService);
+    const instantiationService = accessor.get(IInstantiationService);
+    const editor = getNotebookEditorFromEditorPane(editorService.activeEditorPane);
+    if (!editor || !editor.hasModel()) {
+      return;
+    }
+    const notebook = editor.textModel;
+    const formatApplied = await instantiationService.invokeFunction(CodeActionParticipantUtils.checkAndRunFormatCodeAction, notebook, Progress.None, CancellationToken.None);
+    const disposable = new DisposableStore();
+    try {
+      if (!formatApplied) {
+        const allCellEdits = await Promise.all(notebook.cells.map(async (cell) => {
+          const ref = await textModelService.createModelReference(cell.uri);
+          disposable.add(ref);
+          const model = ref.object.textEditorModel;
+          const formatEdits = await getDocumentFormattingEditsWithSelectedProvider(
+            editorWorkerService,
+            languageFeaturesService,
+            model,
+            FormattingMode.Explicit,
+            CancellationToken.None
+          );
+          const edits = [];
+          if (formatEdits) {
+            for (const edit of formatEdits) {
+              edits.push(new ResourceTextEdit(model.uri, edit, model.getVersionId()));
+            }
+            return edits;
+          }
+          return [];
+        }));
+        await bulkEditService.apply(
+          /* edit */
+          allCellEdits.flat(),
+          { label: localize("label", "Format Notebook"), code: "undoredo.formatNotebook" }
+        );
+      }
+    } finally {
+      disposable.dispose();
+    }
+  }
+});
+registerEditorAction(class FormatCellAction extends EditorAction {
+  static {
+    __name(this, "FormatCellAction");
+  }
+  constructor() {
+    super({
+      id: "notebook.formatCell",
+      label: localize2("formatCell.label", "Format Cell"),
+      precondition: ContextKeyExpr.and(NOTEBOOK_IS_ACTIVE_EDITOR, NOTEBOOK_EDITOR_EDITABLE, EditorContextKeys.inCompositeEditor, EditorContextKeys.writable, EditorContextKeys.hasDocumentFormattingProvider),
+      kbOpts: {
+        kbExpr: ContextKeyExpr.and(EditorContextKeys.editorTextFocus),
+        primary: KeyMod.Shift | KeyMod.Alt | KeyCode.KeyF,
+        linux: { primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyI },
+        weight: KeybindingWeight.EditorContrib
+      },
+      contextMenuOpts: {
+        group: "1_modification",
+        order: 1.301
+      }
+    });
+  }
+  async run(accessor, editor) {
+    if (editor.hasModel()) {
+      const instaService = accessor.get(IInstantiationService);
+      await instaService.invokeFunction(formatDocumentWithSelectedProvider, editor, FormattingMode.Explicit, Progress.None, CancellationToken.None, true);
+    }
+  }
+});
+let FormatOnCellExecutionParticipant = class {
+  constructor(bulkEditService, languageFeaturesService, textModelService, editorWorkerService, configurationService, _notebookService) {
+    this.bulkEditService = bulkEditService;
+    this.languageFeaturesService = languageFeaturesService;
+    this.textModelService = textModelService;
+    this.editorWorkerService = editorWorkerService;
+    this.configurationService = configurationService;
+    this._notebookService = _notebookService;
+  }
+  static {
+    __name(this, "FormatOnCellExecutionParticipant");
+  }
+  async onWillExecuteCell(executions) {
+    const enabled = this.configurationService.getValue(NotebookSetting.formatOnCellExecution);
+    if (!enabled) {
+      return;
+    }
+    const disposable = new DisposableStore();
+    try {
+      const allCellEdits = await Promise.all(executions.map(async (cellExecution) => {
+        const nbModel = this._notebookService.getNotebookTextModel(cellExecution.notebook);
+        if (!nbModel) {
+          return [];
+        }
+        let activeCell;
+        for (const cell of nbModel.cells) {
+          if (cell.handle === cellExecution.cellHandle) {
+            activeCell = cell;
+            break;
+          }
+        }
+        if (!activeCell) {
+          return [];
+        }
+        const ref = await this.textModelService.createModelReference(activeCell.uri);
+        disposable.add(ref);
+        const model = ref.object.textEditorModel;
+        const formatEdits = await getDocumentFormattingEditsWithSelectedProvider(
+          this.editorWorkerService,
+          this.languageFeaturesService,
+          model,
+          FormattingMode.Silent,
+          CancellationToken.None
+        );
+        const edits = [];
+        if (formatEdits) {
+          edits.push(...formatEdits.map((edit) => new ResourceTextEdit(model.uri, edit, model.getVersionId())));
+          return edits;
+        }
+        return [];
+      }));
+      await this.bulkEditService.apply(
+        /* edit */
+        allCellEdits.flat(),
+        { label: localize("formatCells.label", "Format Cells"), code: "undoredo.notebooks.onWillExecuteFormat" }
+      );
+    } finally {
+      disposable.dispose();
+    }
+  }
+};
+FormatOnCellExecutionParticipant = __decorateClass([
+  __decorateParam(0, IBulkEditService),
+  __decorateParam(1, ILanguageFeaturesService),
+  __decorateParam(2, ITextModelService),
+  __decorateParam(3, IEditorWorkerService),
+  __decorateParam(4, IConfigurationService),
+  __decorateParam(5, INotebookService)
+], FormatOnCellExecutionParticipant);
+let CellExecutionParticipantsContribution = class extends Disposable {
+  constructor(instantiationService, notebookExecutionService) {
+    super();
+    this.instantiationService = instantiationService;
+    this.notebookExecutionService = notebookExecutionService;
+    this.registerKernelExecutionParticipants();
+  }
+  static {
+    __name(this, "CellExecutionParticipantsContribution");
+  }
+  registerKernelExecutionParticipants() {
+    this._register(this.notebookExecutionService.registerExecutionParticipant(this.instantiationService.createInstance(FormatOnCellExecutionParticipant)));
+  }
+};
+CellExecutionParticipantsContribution = __decorateClass([
+  __decorateParam(0, IInstantiationService),
+  __decorateParam(1, INotebookExecutionService)
+], CellExecutionParticipantsContribution);
+const workbenchContributionsRegistry = Registry.as(WorkbenchContributionsExtensions.Workbench);
+workbenchContributionsRegistry.registerWorkbenchContribution(CellExecutionParticipantsContribution, LifecyclePhase.Restored);
+export {
+  CellExecutionParticipantsContribution
+};
+//# sourceMappingURL=formatting.js.map

@@ -1,1 +1,626 @@
-import*as y from"../../../../nls.js";import"../../../../base/common/uri.js";import{EditorResourceAccessor as L,SideBySideEditor as F,SaveReason as w,EditorsOrder as ue,EditorInputCapabilities as D}from"../../../common/editor.js";import{SideBySideEditorInput as ve}from"../../../common/editor/sideBySideEditorInput.js";import{isWorkspaceToOpen as fe}from"../../../../platform/window/common/window.js";import{IHostService as q}from"../../../services/host/browser/host.js";import{IInstantiationService as J}from"../../../../platform/instantiation/common/instantiation.js";import{IWorkspaceContextService as Q,UNTITLED_WORKSPACE_NAME as Ee}from"../../../../platform/workspace/common/workspace.js";import{ExplorerFocusCondition as Se,TextFileContentProvider as Z,VIEWLET_ID as x,ExplorerCompressedFocusContext as K,ExplorerCompressedFirstFocusContext as $,ExplorerCompressedLastFocusContext as ee,FilesExplorerFocusCondition as R,ExplorerFolderContext as Ie,VIEW_ID as ye}from"../common/files.js";import"./explorerViewlet.js";import{IClipboardService as W}from"../../../../platform/clipboard/common/clipboardService.js";import{toErrorMessage as te}from"../../../../base/common/errorMessage.js";import{CommandsRegistry as f,ICommandService as he}from"../../../../platform/commands/common/commands.js";import{IContextKeyService as we,ContextKeyExpr as b}from"../../../../platform/contextkey/common/contextkey.js";import{IFileService as N}from"../../../../platform/files/common/files.js";import{KeybindingsRegistry as g,KeybindingWeight as C}from"../../../../platform/keybinding/common/keybindingsRegistry.js";import{KeyMod as d,KeyCode as a,KeyChord as E}from"../../../../base/common/keyCodes.js";import{isWeb as re,isWindows as ie}from"../../../../base/common/platform.js";import{ITextModelService as Ae}from"../../../../editor/common/services/resolverService.js";import{getResourceForCommand as _,getMultiSelectedResources as O,getOpenEditorsViewMultiSelection as oe,IExplorerService as h}from"./files.js";import{IWorkspaceEditingService as Re}from"../../../services/workspaces/common/workspaceEditing.js";import{resolveCommandsContext as be}from"../../../browser/parts/editor/editorCommandsContext.js";import{Schemas as U}from"../../../../base/common/network.js";import{INotificationService as ne,Severity as _e}from"../../../../platform/notification/common/notification.js";import{EditorContextKeys as M}from"../../../../editor/common/editorContextKeys.js";import{IEditorService as p,SIDE_GROUP as Oe}from"../../../services/editor/common/editorService.js";import{IEditorGroupsService as S,GroupsOrder as de}from"../../../services/editor/common/editorGroupsService.js";import{ILabelService as V}from"../../../../platform/label/common/label.js";import{basename as De,joinPath as ae,isEqual as xe}from"../../../../base/common/resources.js";import{dispose as se}from"../../../../base/common/lifecycle.js";import{IEnvironmentService as Ke}from"../../../../platform/environment/common/environment.js";import{ICodeEditorService as Me}from"../../../../editor/browser/services/codeEditorService.js";import{EmbeddedCodeEditorWidget as Pe}from"../../../../editor/browser/widget/codeEditor/embeddedCodeEditorWidget.js";import{ITextFileService as Te}from"../../../services/textfile/common/textfiles.js";import{IUriIdentityService as Le}from"../../../../platform/uriIdentity/common/uriIdentity.js";import{isCancellationError as Fe}from"../../../../base/common/errors.js";import{toAction as le}from"../../../../base/common/actions.js";import{EditorOpenSource as We,EditorResolution as Ne}from"../../../../platform/editor/common/editor.js";import{hash as Ue}from"../../../../base/common/hash.js";import{IConfigurationService as k}from"../../../../platform/configuration/common/configuration.js";import{IPaneCompositePartService as P}from"../../../services/panecomposite/browser/panecomposite.js";import{ViewContainerLocation as T}from"../../../common/views.js";import{IViewsService as Ve}from"../../../services/views/common/viewsService.js";import{OPEN_TO_SIDE_COMMAND_ID as ke,COMPARE_WITH_SAVED_COMMAND_ID as je,SELECT_FOR_COMPARE_COMMAND_ID as Ge,ResourceSelectedForCompareContext as He,COMPARE_SELECTED_COMMAND_ID as Xe,COMPARE_RESOURCE_COMMAND_ID as ze,COPY_PATH_COMMAND_ID as me,COPY_RELATIVE_PATH_COMMAND_ID as ce,REVEAL_IN_EXPLORER_COMMAND_ID as Ye,OPEN_WITH_EXPLORER_COMMAND_ID as Be,SAVE_FILE_COMMAND_ID as qe,SAVE_FILE_WITHOUT_FORMATTING_COMMAND_ID as Je,SAVE_FILE_AS_COMMAND_ID as Qe,SAVE_ALL_COMMAND_ID as Ze,SAVE_ALL_IN_GROUP_COMMAND_ID as $e,SAVE_FILES_COMMAND_ID as et,REVERT_FILE_COMMAND_ID as tt,REMOVE_ROOT_FOLDER_COMMAND_ID as rt,PREVIOUS_COMPRESSED_FOLDER as it,NEXT_COMPRESSED_FOLDER as ot,FIRST_COMPRESSED_FOLDER as nt,LAST_COMPRESSED_FOLDER as dt,NEW_UNTITLED_FILE_COMMAND_ID as at,NEW_UNTITLED_FILE_LABEL as st,NEW_FILE_COMMAND_ID as lt}from"./fileConstants.js";import{IFileDialogService as mt}from"../../../../platform/dialogs/common/dialogs.js";import{RemoveRootFolderAction as ct}from"../../../browser/actions/workspaceActions.js";import{OpenEditorsView as pt}from"./views/openEditorsView.js";import"./views/explorerView.js";import{IListService as v}from"../../../../platform/list/browser/listService.js";const hr=(e,t,r)=>{if(Array.isArray(t)){const o=e.get(q),i=e.get(Ke);t=t.map((e=>fe(e)&&e.workspaceUri.scheme===U.untitled?{workspaceUri:ae(i.untitledWorkspacesHome,e.workspaceUri.path,Ee)}:e)),o.openWindow(t,r)}},wr=(e,t)=>{e.get(q).openWindow(t)};g.registerCommandAndKeybindingRule({weight:C.WorkbenchContrib,when:Se,primary:d.CtrlCmd|a.Enter,mac:{primary:d.WinCtrl|a.Enter},id:ke,handler:async(e,t)=>{const r=e.get(p),o=e.get(N),i=e.get(h),a=O(t,e.get(v),r,e.get(S),i);if(a.length){const e=a.filter((e=>e.scheme===U.untitled)),t=a.filter((e=>e.scheme!==U.untitled)),n=(await Promise.all(t.map((async e=>i.findClosest(e)||await o.stat(e))))).filter((e=>!e.isDirectory)).map((e=>({resource:e.resource,options:{pinned:!0}}))).concat(...e.map((e=>({resource:e,options:{pinned:!0}}))));await r.openEditors(n,Oe)}}}),g.registerCommandAndKeybindingRule({weight:C.WorkbenchContrib+10,when:b.and(R,Ie.toNegated()),primary:a.Enter,mac:{primary:d.CtrlCmd|a.DownArrow},id:"explorer.openAndPassFocus",handler:async(e,t)=>{const r=e.get(p),o=e.get(h).getContext(!0);o.length&&await r.openEditors(o.map((e=>({resource:e.resource,options:{preserveFocus:!1,pinned:!0}}))))}});const j="showModifications";let G,H,I=[];async function X(e,t,r,o,i){if(e.length){const a=ie?"\r\n":"\n";let n;const s=t?"explorer.copyRelativePathSeparator":"explorer.copyPathSeparator",d=i.getValue(s);("/"===d||"\\"===d)&&(n=d);const m=e.map((e=>o.getUriLabel(e,{relative:t,noPrefix:!0,separator:n}))).join(a);await r.writeText(m)}}g.registerCommandAndKeybindingRule({id:je,when:void 0,weight:C.WorkbenchContrib,primary:E(d.CtrlCmd|a.KeyK,a.KeyD),handler:async(e,t)=>{const r=e.get(J),o=e.get(Ae),i=e.get(p),a=e.get(N),n=e.get(v);let s=!1;if(0===I.length){s=!0;const e=r.createInstance(Z);I.push(e),I.push(o.registerTextModelContentProvider(j,e))}const d=_(t,i,n);if(d&&a.hasProvider(d)){const e=De(d),t=y.localize("modifiedLabel","{0} (in file) ↔ {1}",e,e);try{await Z.open(d,j,t,i,{pinned:!0}),s&&I.push(i.onDidVisibleEditorsChange((()=>{i.editors.some((e=>!!L.getCanonicalUri(e,{supportSideBySide:F.SECONDARY,filterByScheme:j})))||(I=se(I))})))}catch{I=se(I)}}}}),f.registerCommand({id:Ge,handler:(e,t)=>{G=_(t,e.get(p),e.get(v)),H||(H=He.bindTo(e.get(we))),H.set(!0)}}),f.registerCommand({id:Xe,handler:async(e,t)=>{const r=e.get(p),o=O(t,e.get(v),r,e.get(S),e.get(h));return 2!==o.length||r.openEditor({original:{resource:o[0]},modified:{resource:o[1]},options:{pinned:!0}})}}),f.registerCommand({id:ze,handler:(e,t)=>{const r=e.get(p),o=_(t,r,e.get(v));G&&o&&r.openEditor({original:{resource:G},modified:{resource:o},options:{pinned:!0}})}});const pe=async(e,t)=>{const r=O(t,e.get(v),e.get(p),e.get(S),e.get(h));await X(r,!1,e.get(W),e.get(V),e.get(k))};g.registerCommandAndKeybindingRule({weight:C.WorkbenchContrib,when:M.focus.toNegated(),primary:d.CtrlCmd|d.Alt|a.KeyC,win:{primary:d.Shift|d.Alt|a.KeyC},id:me,handler:pe}),g.registerCommandAndKeybindingRule({weight:C.WorkbenchContrib,when:M.focus,primary:E(d.CtrlCmd|a.KeyK,d.CtrlCmd|d.Alt|a.KeyC),win:{primary:d.Shift|d.Alt|a.KeyC},id:me,handler:pe});const ge=async(e,t)=>{const r=O(t,e.get(v),e.get(p),e.get(S),e.get(h));await X(r,!0,e.get(W),e.get(V),e.get(k))};async function z(e,t){const r=e.get(S),o=e.get(Me),i=e.get(Te);let a=oe(e);if(!a){const e=r.activeGroup;e.activeEditor&&(a=[],e.activeEditor instanceof ve&&!t?.saveAs&&!e.activeEditor.primary.hasCapability(D.Untitled)&&!e.activeEditor.secondary.hasCapability(D.Untitled)&&e.activeEditor.secondary.isModified()?(a.push({groupId:e.id,editor:e.activeEditor.primary}),a.push({groupId:e.id,editor:e.activeEditor.secondary})):a.push({groupId:e.id,editor:e.activeEditor}))}if(!a||0===a.length)return;await Y(e,a,t);const n=o.getFocusedCodeEditor();if(n instanceof Pe&&!n.isSimpleWidget){const e=n.getModel()?.uri;e&&!a.some((({editor:t})=>xe(L.getCanonicalUri(t,{supportSideBySide:F.PRIMARY}),e)))&&(i.files.get(e)?.isReadonly()||await i.save(e,t))}}function Ce(e,t,r){const o=[];for(const e of t)for(const t of e.getEditors(ue.MOST_RECENTLY_ACTIVE))t.isDirty()&&o.push({groupId:e.id,editor:t});return Y(e,o,r)}async function Y(e,t,r){const o=e.get(p),i=e.get(ne),a=e.get(J);try{await o.save(t,r)}catch(e){if(!Fe(e)){const n=[le({id:"workbench.action.files.saveEditors",label:y.localize("retry","Retry"),run:()=>a.invokeFunction((e=>Y(e,t,r)))})],s=t.filter((({editor:e})=>!e.hasCapability(D.Untitled)));s.length>0&&n.push(le({id:"workbench.action.files.revertEditors",label:s.length>1?y.localize("revertAll","Revert All"):y.localize("revert","Revert"),run:()=>o.revert(s)})),i.notify({id:t.map((({editor:e})=>Ue(e.resource?.toString()))).join(),severity:_e.Error,message:y.localize({key:"genericSaveError",comment:["{0} is the resource that failed to save and {1} the error message"]},"Failed to save '{0}': {1}",t.map((({editor:e})=>e.getName())).join(", "),te(e,!1)),actions:{primary:n}})}}}g.registerCommandAndKeybindingRule({weight:C.WorkbenchContrib,when:M.focus.toNegated(),primary:d.CtrlCmd|d.Shift|d.Alt|a.KeyC,win:{primary:E(d.CtrlCmd|a.KeyK,d.CtrlCmd|d.Shift|a.KeyC)},id:ce,handler:ge}),g.registerCommandAndKeybindingRule({weight:C.WorkbenchContrib,when:M.focus,primary:E(d.CtrlCmd|a.KeyK,d.CtrlCmd|d.Shift|d.Alt|a.KeyC),win:{primary:E(d.CtrlCmd|a.KeyK,d.CtrlCmd|d.Shift|a.KeyC)},id:ce,handler:ge}),g.registerCommandAndKeybindingRule({weight:C.WorkbenchContrib,when:void 0,primary:E(d.CtrlCmd|a.KeyK,a.KeyP),id:"workbench.action.files.copyPathOfActiveFile",handler:async e=>{const t=e.get(p).activeEditor,r=L.getOriginalUri(t,{supportSideBySide:F.PRIMARY});await X(r?[r]:[],!1,e.get(W),e.get(V),e.get(k))}}),f.registerCommand({id:Ye,handler:async(e,t)=>{const r=e.get(Ve),o=e.get(Q),i=e.get(h),a=e.get(p),n=e.get(v),s=_(t,a,n);if(s&&o.isInsideWorkspace(s)){const e=await r.openView(ye,!1);if(e){const t=e.autoReveal;e.autoReveal=!1,e.setExpanded(!0),await i.select(s,"force"),e.focus(),e.autoReveal=t}}else{const e=r.getViewWithId(pt.ID);e&&(e.setExpanded(!0),e.focus())}}}),f.registerCommand({id:Be,handler:async(e,t)=>{const r=e.get(p),o=e.get(v),i=_(t,r,o);if(i)return r.openEditor({resource:i,options:{override:Ne.PICK,source:We.USER}})}}),g.registerCommandAndKeybindingRule({when:void 0,weight:C.WorkbenchContrib,primary:d.CtrlCmd|a.KeyS,id:qe,handler:e=>z(e,{reason:w.EXPLICIT,force:!0})}),g.registerCommandAndKeybindingRule({when:void 0,weight:C.WorkbenchContrib,primary:E(d.CtrlCmd|a.KeyK,a.KeyS),win:{primary:E(d.CtrlCmd|a.KeyK,d.CtrlCmd|d.Shift|a.KeyS)},id:Je,handler:e=>z(e,{reason:w.EXPLICIT,force:!0,skipSaveParticipants:!0})}),g.registerCommandAndKeybindingRule({id:Qe,weight:C.WorkbenchContrib,when:void 0,primary:d.CtrlCmd|d.Shift|a.KeyS,handler:e=>z(e,{reason:w.EXPLICIT,saveAs:!0})}),g.registerCommandAndKeybindingRule({when:void 0,weight:C.WorkbenchContrib,primary:void 0,mac:{primary:d.CtrlCmd|d.Alt|a.KeyS},win:{primary:E(d.CtrlCmd|a.KeyK,a.KeyS)},id:Ze,handler:e=>Ce(e,e.get(S).getGroups(de.MOST_RECENTLY_ACTIVE),{reason:w.EXPLICIT})}),f.registerCommand({id:$e,handler:(e,t,r)=>{const o=e.get(S),i=be([r],e.get(p),o,e.get(v));let a;return a=i.groupedEditors.length?i.groupedEditors.map((({group:e})=>e)):o.getGroups(de.MOST_RECENTLY_ACTIVE),Ce(e,a,{reason:w.EXPLICIT})}}),f.registerCommand({id:et,handler:async e=>(await e.get(p).saveAll({includeUntitled:!1,reason:w.EXPLICIT})).success}),f.registerCommand({id:tt,handler:async e=>{const t=e.get(S),r=e.get(p);let o=oe(e);if(!o){const e=t.activeGroup;e.activeEditor&&(o=[{groupId:e.id,editor:e.activeEditor}])}if(o&&0!==o.length)try{await r.revert(o.filter((({editor:e})=>!e.hasCapability(D.Untitled))),{force:!0})}catch(t){e.get(ne).error(y.localize("genericRevertError","Failed to revert '{0}': {1}",o.map((({editor:e})=>e.getName())).join(", "),te(t,!1)))}}}),f.registerCommand({id:rt,handler:(e,t)=>{const r=e.get(Q),o=e.get(Le),i=r.getWorkspace(),a=O(t,e.get(v),e.get(p),e.get(S),e.get(h)).filter((e=>i.folders.some((t=>o.extUri.isEqual(t.uri,e)))));return 0===a.length?e.get(he).executeCommand(ct.ID):e.get(Re).removeFolders(a)}}),g.registerCommandAndKeybindingRule({weight:C.WorkbenchContrib+10,when:b.and(R,K,$.negate()),primary:a.LeftArrow,id:it,handler:e=>{const t=e.get(P).getActivePaneComposite(T.Sidebar);t?.getId()===x&&t.getViewPaneContainer().getExplorerView().previousCompressedStat()}}),g.registerCommandAndKeybindingRule({weight:C.WorkbenchContrib+10,when:b.and(R,K,ee.negate()),primary:a.RightArrow,id:ot,handler:e=>{const t=e.get(P).getActivePaneComposite(T.Sidebar);t?.getId()===x&&t.getViewPaneContainer().getExplorerView().nextCompressedStat()}}),g.registerCommandAndKeybindingRule({weight:C.WorkbenchContrib+10,when:b.and(R,K,$.negate()),primary:a.Home,id:nt,handler:e=>{const t=e.get(P).getActivePaneComposite(T.Sidebar);t?.getId()===x&&t.getViewPaneContainer().getExplorerView().firstCompressedStat()}}),g.registerCommandAndKeybindingRule({weight:C.WorkbenchContrib+10,when:b.and(R,K,ee.negate()),primary:a.End,id:dt,handler:e=>{const t=e.get(P).getActivePaneComposite(T.Sidebar);t?.getId()===x&&t.getViewPaneContainer().getExplorerView().lastCompressedStat()}}),g.registerCommandAndKeybindingRule({weight:C.WorkbenchContrib,when:null,primary:re?ie?E(d.CtrlCmd|a.KeyK,a.KeyN):d.CtrlCmd|d.Alt|a.KeyN:d.CtrlCmd|a.KeyN,secondary:re?[d.CtrlCmd|a.KeyN]:void 0,id:at,metadata:{description:st,args:[{isOptional:!0,name:"New Untitled Text File arguments",description:"The editor view type or language ID if known",schema:{type:"object",properties:{viewType:{type:"string"},languageId:{type:"string"}}}}]},handler:async(e,t)=>{await e.get(p).openEditor({resource:void 0,options:{override:t?.viewType,pinned:!0},languageId:t?.languageId})}}),f.registerCommand({id:lt,handler:async(e,t)=>{const r=e.get(p),o=e.get(mt),i=e.get(N),a=y.localize("newFileCommand.saveLabel","Create File"),n=ae(await o.defaultFilePath(),t?.fileName??"Untitled.txt"),s=await o.showSaveDialog({saveLabel:a,title:a,defaultUri:n});s&&(await i.createFile(s,void 0,{overwrite:!0}),await r.openEditor({resource:s,options:{override:t?.viewType,pinned:!0},languageId:t?.languageId}))}});export{wr as newWindowCommand,hr as openWindowCommand};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as nls from "../../../../nls.js";
+import { URI } from "../../../../base/common/uri.js";
+import { EditorResourceAccessor, IEditorCommandsContext, SideBySideEditor, IEditorIdentifier, SaveReason, EditorsOrder, EditorInputCapabilities } from "../../../common/editor.js";
+import { SideBySideEditorInput } from "../../../common/editor/sideBySideEditorInput.js";
+import { IWindowOpenable, IOpenWindowOptions, isWorkspaceToOpen, IOpenEmptyWindowOptions } from "../../../../platform/window/common/window.js";
+import { IHostService } from "../../../services/host/browser/host.js";
+import { ServicesAccessor, IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IWorkspaceContextService, UNTITLED_WORKSPACE_NAME } from "../../../../platform/workspace/common/workspace.js";
+import { ExplorerFocusCondition, TextFileContentProvider, VIEWLET_ID, ExplorerCompressedFocusContext, ExplorerCompressedFirstFocusContext, ExplorerCompressedLastFocusContext, FilesExplorerFocusCondition, ExplorerFolderContext, VIEW_ID } from "../common/files.js";
+import { ExplorerViewPaneContainer } from "./explorerViewlet.js";
+import { IClipboardService } from "../../../../platform/clipboard/common/clipboardService.js";
+import { toErrorMessage } from "../../../../base/common/errorMessage.js";
+import { CommandsRegistry, ICommandHandler, ICommandService } from "../../../../platform/commands/common/commands.js";
+import { IContextKey, IContextKeyService, ContextKeyExpr } from "../../../../platform/contextkey/common/contextkey.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { KeybindingsRegistry, KeybindingWeight } from "../../../../platform/keybinding/common/keybindingsRegistry.js";
+import { KeyMod, KeyCode, KeyChord } from "../../../../base/common/keyCodes.js";
+import { isWeb, isWindows } from "../../../../base/common/platform.js";
+import { ITextModelService } from "../../../../editor/common/services/resolverService.js";
+import { getResourceForCommand, getMultiSelectedResources, getOpenEditorsViewMultiSelection, IExplorerService } from "./files.js";
+import { IWorkspaceEditingService } from "../../../services/workspaces/common/workspaceEditing.js";
+import { resolveCommandsContext } from "../../../browser/parts/editor/editorCommandsContext.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { INotificationService, Severity } from "../../../../platform/notification/common/notification.js";
+import { EditorContextKeys } from "../../../../editor/common/editorContextKeys.js";
+import { IEditorService, SIDE_GROUP, ISaveEditorsOptions } from "../../../services/editor/common/editorService.js";
+import { IEditorGroupsService, GroupsOrder, IEditorGroup } from "../../../services/editor/common/editorGroupsService.js";
+import { ILabelService } from "../../../../platform/label/common/label.js";
+import { basename, joinPath, isEqual } from "../../../../base/common/resources.js";
+import { IDisposable, dispose } from "../../../../base/common/lifecycle.js";
+import { IEnvironmentService } from "../../../../platform/environment/common/environment.js";
+import { ICodeEditorService } from "../../../../editor/browser/services/codeEditorService.js";
+import { EmbeddedCodeEditorWidget } from "../../../../editor/browser/widget/codeEditor/embeddedCodeEditorWidget.js";
+import { ITextFileService } from "../../../services/textfile/common/textfiles.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import { isCancellationError } from "../../../../base/common/errors.js";
+import { IAction, toAction } from "../../../../base/common/actions.js";
+import { EditorOpenSource, EditorResolution } from "../../../../platform/editor/common/editor.js";
+import { hash } from "../../../../base/common/hash.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IPaneCompositePartService } from "../../../services/panecomposite/browser/panecomposite.js";
+import { ViewContainerLocation } from "../../../common/views.js";
+import { IViewsService } from "../../../services/views/common/viewsService.js";
+import { OPEN_TO_SIDE_COMMAND_ID, COMPARE_WITH_SAVED_COMMAND_ID, SELECT_FOR_COMPARE_COMMAND_ID, ResourceSelectedForCompareContext, COMPARE_SELECTED_COMMAND_ID, COMPARE_RESOURCE_COMMAND_ID, COPY_PATH_COMMAND_ID, COPY_RELATIVE_PATH_COMMAND_ID, REVEAL_IN_EXPLORER_COMMAND_ID, OPEN_WITH_EXPLORER_COMMAND_ID, SAVE_FILE_COMMAND_ID, SAVE_FILE_WITHOUT_FORMATTING_COMMAND_ID, SAVE_FILE_AS_COMMAND_ID, SAVE_ALL_COMMAND_ID, SAVE_ALL_IN_GROUP_COMMAND_ID, SAVE_FILES_COMMAND_ID, REVERT_FILE_COMMAND_ID, REMOVE_ROOT_FOLDER_COMMAND_ID, PREVIOUS_COMPRESSED_FOLDER, NEXT_COMPRESSED_FOLDER, FIRST_COMPRESSED_FOLDER, LAST_COMPRESSED_FOLDER, NEW_UNTITLED_FILE_COMMAND_ID, NEW_UNTITLED_FILE_LABEL, NEW_FILE_COMMAND_ID } from "./fileConstants.js";
+import { IFileDialogService } from "../../../../platform/dialogs/common/dialogs.js";
+import { RemoveRootFolderAction } from "../../../browser/actions/workspaceActions.js";
+import { OpenEditorsView } from "./views/openEditorsView.js";
+import { ExplorerView } from "./views/explorerView.js";
+import { IListService } from "../../../../platform/list/browser/listService.js";
+const openWindowCommand = /* @__PURE__ */ __name((accessor, toOpen, options) => {
+  if (Array.isArray(toOpen)) {
+    const hostService = accessor.get(IHostService);
+    const environmentService = accessor.get(IEnvironmentService);
+    toOpen = toOpen.map((openable) => {
+      if (isWorkspaceToOpen(openable) && openable.workspaceUri.scheme === Schemas.untitled) {
+        return {
+          workspaceUri: joinPath(environmentService.untitledWorkspacesHome, openable.workspaceUri.path, UNTITLED_WORKSPACE_NAME)
+        };
+      }
+      return openable;
+    });
+    hostService.openWindow(toOpen, options);
+  }
+}, "openWindowCommand");
+const newWindowCommand = /* @__PURE__ */ __name((accessor, options) => {
+  const hostService = accessor.get(IHostService);
+  hostService.openWindow(options);
+}, "newWindowCommand");
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  weight: KeybindingWeight.WorkbenchContrib,
+  when: ExplorerFocusCondition,
+  primary: KeyMod.CtrlCmd | KeyCode.Enter,
+  mac: {
+    primary: KeyMod.WinCtrl | KeyCode.Enter
+  },
+  id: OPEN_TO_SIDE_COMMAND_ID,
+  handler: /* @__PURE__ */ __name(async (accessor, resource) => {
+    const editorService = accessor.get(IEditorService);
+    const fileService = accessor.get(IFileService);
+    const explorerService = accessor.get(IExplorerService);
+    const resources = getMultiSelectedResources(resource, accessor.get(IListService), editorService, accessor.get(IEditorGroupsService), explorerService);
+    if (resources.length) {
+      const untitledResources = resources.filter((resource2) => resource2.scheme === Schemas.untitled);
+      const fileResources = resources.filter((resource2) => resource2.scheme !== Schemas.untitled);
+      const items = await Promise.all(fileResources.map(async (resource2) => {
+        const item = explorerService.findClosest(resource2);
+        if (item) {
+          return item;
+        }
+        return await fileService.stat(resource2);
+      }));
+      const files = items.filter((i) => !i.isDirectory);
+      const editors = files.map((f) => ({
+        resource: f.resource,
+        options: { pinned: true }
+      })).concat(...untitledResources.map((untitledResource) => ({ resource: untitledResource, options: { pinned: true } })));
+      await editorService.openEditors(editors, SIDE_GROUP);
+    }
+  }, "handler")
+});
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  weight: KeybindingWeight.WorkbenchContrib + 10,
+  when: ContextKeyExpr.and(FilesExplorerFocusCondition, ExplorerFolderContext.toNegated()),
+  primary: KeyCode.Enter,
+  mac: {
+    primary: KeyMod.CtrlCmd | KeyCode.DownArrow
+  },
+  id: "explorer.openAndPassFocus",
+  handler: /* @__PURE__ */ __name(async (accessor, _resource) => {
+    const editorService = accessor.get(IEditorService);
+    const explorerService = accessor.get(IExplorerService);
+    const resources = explorerService.getContext(true);
+    if (resources.length) {
+      await editorService.openEditors(resources.map((r) => ({ resource: r.resource, options: { preserveFocus: false, pinned: true } })));
+    }
+  }, "handler")
+});
+const COMPARE_WITH_SAVED_SCHEMA = "showModifications";
+let providerDisposables = [];
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  id: COMPARE_WITH_SAVED_COMMAND_ID,
+  when: void 0,
+  weight: KeybindingWeight.WorkbenchContrib,
+  primary: KeyChord(KeyMod.CtrlCmd | KeyCode.KeyK, KeyCode.KeyD),
+  handler: /* @__PURE__ */ __name(async (accessor, resource) => {
+    const instantiationService = accessor.get(IInstantiationService);
+    const textModelService = accessor.get(ITextModelService);
+    const editorService = accessor.get(IEditorService);
+    const fileService = accessor.get(IFileService);
+    const listService = accessor.get(IListService);
+    let registerEditorListener = false;
+    if (providerDisposables.length === 0) {
+      registerEditorListener = true;
+      const provider = instantiationService.createInstance(TextFileContentProvider);
+      providerDisposables.push(provider);
+      providerDisposables.push(textModelService.registerTextModelContentProvider(COMPARE_WITH_SAVED_SCHEMA, provider));
+    }
+    const uri = getResourceForCommand(resource, editorService, listService);
+    if (uri && fileService.hasProvider(uri)) {
+      const name = basename(uri);
+      const editorLabel = nls.localize("modifiedLabel", "{0} (in file) \u2194 {1}", name, name);
+      try {
+        await TextFileContentProvider.open(uri, COMPARE_WITH_SAVED_SCHEMA, editorLabel, editorService, { pinned: true });
+        if (registerEditorListener) {
+          providerDisposables.push(editorService.onDidVisibleEditorsChange(() => {
+            if (!editorService.editors.some((editor) => !!EditorResourceAccessor.getCanonicalUri(editor, { supportSideBySide: SideBySideEditor.SECONDARY, filterByScheme: COMPARE_WITH_SAVED_SCHEMA }))) {
+              providerDisposables = dispose(providerDisposables);
+            }
+          }));
+        }
+      } catch {
+        providerDisposables = dispose(providerDisposables);
+      }
+    }
+  }, "handler")
+});
+let globalResourceToCompare;
+let resourceSelectedForCompareContext;
+CommandsRegistry.registerCommand({
+  id: SELECT_FOR_COMPARE_COMMAND_ID,
+  handler: /* @__PURE__ */ __name((accessor, resource) => {
+    globalResourceToCompare = getResourceForCommand(resource, accessor.get(IEditorService), accessor.get(IListService));
+    if (!resourceSelectedForCompareContext) {
+      resourceSelectedForCompareContext = ResourceSelectedForCompareContext.bindTo(accessor.get(IContextKeyService));
+    }
+    resourceSelectedForCompareContext.set(true);
+  }, "handler")
+});
+CommandsRegistry.registerCommand({
+  id: COMPARE_SELECTED_COMMAND_ID,
+  handler: /* @__PURE__ */ __name(async (accessor, resource) => {
+    const editorService = accessor.get(IEditorService);
+    const resources = getMultiSelectedResources(resource, accessor.get(IListService), editorService, accessor.get(IEditorGroupsService), accessor.get(IExplorerService));
+    if (resources.length === 2) {
+      return editorService.openEditor({
+        original: { resource: resources[0] },
+        modified: { resource: resources[1] },
+        options: { pinned: true }
+      });
+    }
+    return true;
+  }, "handler")
+});
+CommandsRegistry.registerCommand({
+  id: COMPARE_RESOURCE_COMMAND_ID,
+  handler: /* @__PURE__ */ __name((accessor, resource) => {
+    const editorService = accessor.get(IEditorService);
+    const rightResource = getResourceForCommand(resource, editorService, accessor.get(IListService));
+    if (globalResourceToCompare && rightResource) {
+      editorService.openEditor({
+        original: { resource: globalResourceToCompare },
+        modified: { resource: rightResource },
+        options: { pinned: true }
+      });
+    }
+  }, "handler")
+});
+async function resourcesToClipboard(resources, relative, clipboardService, labelService, configurationService) {
+  if (resources.length) {
+    const lineDelimiter = isWindows ? "\r\n" : "\n";
+    let separator = void 0;
+    const copyRelativeOrFullPathSeparatorSection = relative ? "explorer.copyRelativePathSeparator" : "explorer.copyPathSeparator";
+    const copyRelativeOrFullPathSeparator = configurationService.getValue(copyRelativeOrFullPathSeparatorSection);
+    if (copyRelativeOrFullPathSeparator === "/" || copyRelativeOrFullPathSeparator === "\\") {
+      separator = copyRelativeOrFullPathSeparator;
+    }
+    const text = resources.map((resource) => labelService.getUriLabel(resource, { relative, noPrefix: true, separator })).join(lineDelimiter);
+    await clipboardService.writeText(text);
+  }
+}
+__name(resourcesToClipboard, "resourcesToClipboard");
+const copyPathCommandHandler = /* @__PURE__ */ __name(async (accessor, resource) => {
+  const resources = getMultiSelectedResources(resource, accessor.get(IListService), accessor.get(IEditorService), accessor.get(IEditorGroupsService), accessor.get(IExplorerService));
+  await resourcesToClipboard(resources, false, accessor.get(IClipboardService), accessor.get(ILabelService), accessor.get(IConfigurationService));
+}, "copyPathCommandHandler");
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  weight: KeybindingWeight.WorkbenchContrib,
+  when: EditorContextKeys.focus.toNegated(),
+  primary: KeyMod.CtrlCmd | KeyMod.Alt | KeyCode.KeyC,
+  win: {
+    primary: KeyMod.Shift | KeyMod.Alt | KeyCode.KeyC
+  },
+  id: COPY_PATH_COMMAND_ID,
+  handler: copyPathCommandHandler
+});
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  weight: KeybindingWeight.WorkbenchContrib,
+  when: EditorContextKeys.focus,
+  primary: KeyChord(KeyMod.CtrlCmd | KeyCode.KeyK, KeyMod.CtrlCmd | KeyMod.Alt | KeyCode.KeyC),
+  win: {
+    primary: KeyMod.Shift | KeyMod.Alt | KeyCode.KeyC
+  },
+  id: COPY_PATH_COMMAND_ID,
+  handler: copyPathCommandHandler
+});
+const copyRelativePathCommandHandler = /* @__PURE__ */ __name(async (accessor, resource) => {
+  const resources = getMultiSelectedResources(resource, accessor.get(IListService), accessor.get(IEditorService), accessor.get(IEditorGroupsService), accessor.get(IExplorerService));
+  await resourcesToClipboard(resources, true, accessor.get(IClipboardService), accessor.get(ILabelService), accessor.get(IConfigurationService));
+}, "copyRelativePathCommandHandler");
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  weight: KeybindingWeight.WorkbenchContrib,
+  when: EditorContextKeys.focus.toNegated(),
+  primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyMod.Alt | KeyCode.KeyC,
+  win: {
+    primary: KeyChord(KeyMod.CtrlCmd | KeyCode.KeyK, KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyC)
+  },
+  id: COPY_RELATIVE_PATH_COMMAND_ID,
+  handler: copyRelativePathCommandHandler
+});
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  weight: KeybindingWeight.WorkbenchContrib,
+  when: EditorContextKeys.focus,
+  primary: KeyChord(KeyMod.CtrlCmd | KeyCode.KeyK, KeyMod.CtrlCmd | KeyMod.Shift | KeyMod.Alt | KeyCode.KeyC),
+  win: {
+    primary: KeyChord(KeyMod.CtrlCmd | KeyCode.KeyK, KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyC)
+  },
+  id: COPY_RELATIVE_PATH_COMMAND_ID,
+  handler: copyRelativePathCommandHandler
+});
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  weight: KeybindingWeight.WorkbenchContrib,
+  when: void 0,
+  primary: KeyChord(KeyMod.CtrlCmd | KeyCode.KeyK, KeyCode.KeyP),
+  id: "workbench.action.files.copyPathOfActiveFile",
+  handler: /* @__PURE__ */ __name(async (accessor) => {
+    const editorService = accessor.get(IEditorService);
+    const activeInput = editorService.activeEditor;
+    const resource = EditorResourceAccessor.getOriginalUri(activeInput, { supportSideBySide: SideBySideEditor.PRIMARY });
+    const resources = resource ? [resource] : [];
+    await resourcesToClipboard(resources, false, accessor.get(IClipboardService), accessor.get(ILabelService), accessor.get(IConfigurationService));
+  }, "handler")
+});
+CommandsRegistry.registerCommand({
+  id: REVEAL_IN_EXPLORER_COMMAND_ID,
+  handler: /* @__PURE__ */ __name(async (accessor, resource) => {
+    const viewService = accessor.get(IViewsService);
+    const contextService = accessor.get(IWorkspaceContextService);
+    const explorerService = accessor.get(IExplorerService);
+    const editorService = accessor.get(IEditorService);
+    const listService = accessor.get(IListService);
+    const uri = getResourceForCommand(resource, editorService, listService);
+    if (uri && contextService.isInsideWorkspace(uri)) {
+      const explorerView = await viewService.openView(VIEW_ID, false);
+      if (explorerView) {
+        const oldAutoReveal = explorerView.autoReveal;
+        explorerView.autoReveal = false;
+        explorerView.setExpanded(true);
+        await explorerService.select(uri, "force");
+        explorerView.focus();
+        explorerView.autoReveal = oldAutoReveal;
+      }
+    } else {
+      const openEditorsView = viewService.getViewWithId(OpenEditorsView.ID);
+      if (openEditorsView) {
+        openEditorsView.setExpanded(true);
+        openEditorsView.focus();
+      }
+    }
+  }, "handler")
+});
+CommandsRegistry.registerCommand({
+  id: OPEN_WITH_EXPLORER_COMMAND_ID,
+  handler: /* @__PURE__ */ __name(async (accessor, resource) => {
+    const editorService = accessor.get(IEditorService);
+    const listService = accessor.get(IListService);
+    const uri = getResourceForCommand(resource, editorService, listService);
+    if (uri) {
+      return editorService.openEditor({ resource: uri, options: { override: EditorResolution.PICK, source: EditorOpenSource.USER } });
+    }
+    return void 0;
+  }, "handler")
+});
+async function saveSelectedEditors(accessor, options) {
+  const editorGroupService = accessor.get(IEditorGroupsService);
+  const codeEditorService = accessor.get(ICodeEditorService);
+  const textFileService = accessor.get(ITextFileService);
+  let editors = getOpenEditorsViewMultiSelection(accessor);
+  if (!editors) {
+    const activeGroup = editorGroupService.activeGroup;
+    if (activeGroup.activeEditor) {
+      editors = [];
+      if (activeGroup.activeEditor instanceof SideBySideEditorInput && !options?.saveAs && !(activeGroup.activeEditor.primary.hasCapability(EditorInputCapabilities.Untitled) || activeGroup.activeEditor.secondary.hasCapability(EditorInputCapabilities.Untitled)) && activeGroup.activeEditor.secondary.isModified()) {
+        editors.push({ groupId: activeGroup.id, editor: activeGroup.activeEditor.primary });
+        editors.push({ groupId: activeGroup.id, editor: activeGroup.activeEditor.secondary });
+      } else {
+        editors.push({ groupId: activeGroup.id, editor: activeGroup.activeEditor });
+      }
+    }
+  }
+  if (!editors || editors.length === 0) {
+    return;
+  }
+  await doSaveEditors(accessor, editors, options);
+  const focusedCodeEditor = codeEditorService.getFocusedCodeEditor();
+  if (focusedCodeEditor instanceof EmbeddedCodeEditorWidget && !focusedCodeEditor.isSimpleWidget) {
+    const resource = focusedCodeEditor.getModel()?.uri;
+    if (resource && !editors.some(({ editor }) => isEqual(EditorResourceAccessor.getCanonicalUri(editor, { supportSideBySide: SideBySideEditor.PRIMARY }), resource))) {
+      const model = textFileService.files.get(resource);
+      if (!model?.isReadonly()) {
+        await textFileService.save(resource, options);
+      }
+    }
+  }
+}
+__name(saveSelectedEditors, "saveSelectedEditors");
+function saveDirtyEditorsOfGroups(accessor, groups, options) {
+  const dirtyEditors = [];
+  for (const group of groups) {
+    for (const editor of group.getEditors(EditorsOrder.MOST_RECENTLY_ACTIVE)) {
+      if (editor.isDirty()) {
+        dirtyEditors.push({ groupId: group.id, editor });
+      }
+    }
+  }
+  return doSaveEditors(accessor, dirtyEditors, options);
+}
+__name(saveDirtyEditorsOfGroups, "saveDirtyEditorsOfGroups");
+async function doSaveEditors(accessor, editors, options) {
+  const editorService = accessor.get(IEditorService);
+  const notificationService = accessor.get(INotificationService);
+  const instantiationService = accessor.get(IInstantiationService);
+  try {
+    await editorService.save(editors, options);
+  } catch (error) {
+    if (!isCancellationError(error)) {
+      const actions = [toAction({ id: "workbench.action.files.saveEditors", label: nls.localize("retry", "Retry"), run: /* @__PURE__ */ __name(() => instantiationService.invokeFunction((accessor2) => doSaveEditors(accessor2, editors, options)), "run") })];
+      const editorsToRevert = editors.filter(
+        ({ editor }) => !editor.hasCapability(EditorInputCapabilities.Untitled)
+        /* all except untitled to prevent unexpected data-loss */
+      );
+      if (editorsToRevert.length > 0) {
+        actions.push(toAction({ id: "workbench.action.files.revertEditors", label: editorsToRevert.length > 1 ? nls.localize("revertAll", "Revert All") : nls.localize("revert", "Revert"), run: /* @__PURE__ */ __name(() => editorService.revert(editorsToRevert), "run") }));
+      }
+      notificationService.notify({
+        id: editors.map(({ editor }) => hash(editor.resource?.toString())).join(),
+        // ensure unique notification ID per set of editor
+        severity: Severity.Error,
+        message: nls.localize({ key: "genericSaveError", comment: ["{0} is the resource that failed to save and {1} the error message"] }, "Failed to save '{0}': {1}", editors.map(({ editor }) => editor.getName()).join(", "), toErrorMessage(error, false)),
+        actions: { primary: actions }
+      });
+    }
+  }
+}
+__name(doSaveEditors, "doSaveEditors");
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  when: void 0,
+  weight: KeybindingWeight.WorkbenchContrib,
+  primary: KeyMod.CtrlCmd | KeyCode.KeyS,
+  id: SAVE_FILE_COMMAND_ID,
+  handler: /* @__PURE__ */ __name((accessor) => {
+    return saveSelectedEditors(accessor, {
+      reason: SaveReason.EXPLICIT,
+      force: true
+      /* force save even when non-dirty */
+    });
+  }, "handler")
+});
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  when: void 0,
+  weight: KeybindingWeight.WorkbenchContrib,
+  primary: KeyChord(KeyMod.CtrlCmd | KeyCode.KeyK, KeyCode.KeyS),
+  win: { primary: KeyChord(KeyMod.CtrlCmd | KeyCode.KeyK, KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyS) },
+  id: SAVE_FILE_WITHOUT_FORMATTING_COMMAND_ID,
+  handler: /* @__PURE__ */ __name((accessor) => {
+    return saveSelectedEditors(accessor, { reason: SaveReason.EXPLICIT, force: true, skipSaveParticipants: true });
+  }, "handler")
+});
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  id: SAVE_FILE_AS_COMMAND_ID,
+  weight: KeybindingWeight.WorkbenchContrib,
+  when: void 0,
+  primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyS,
+  handler: /* @__PURE__ */ __name((accessor) => {
+    return saveSelectedEditors(accessor, { reason: SaveReason.EXPLICIT, saveAs: true });
+  }, "handler")
+});
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  when: void 0,
+  weight: KeybindingWeight.WorkbenchContrib,
+  primary: void 0,
+  mac: { primary: KeyMod.CtrlCmd | KeyMod.Alt | KeyCode.KeyS },
+  win: { primary: KeyChord(KeyMod.CtrlCmd | KeyCode.KeyK, KeyCode.KeyS) },
+  id: SAVE_ALL_COMMAND_ID,
+  handler: /* @__PURE__ */ __name((accessor) => {
+    return saveDirtyEditorsOfGroups(accessor, accessor.get(IEditorGroupsService).getGroups(GroupsOrder.MOST_RECENTLY_ACTIVE), { reason: SaveReason.EXPLICIT });
+  }, "handler")
+});
+CommandsRegistry.registerCommand({
+  id: SAVE_ALL_IN_GROUP_COMMAND_ID,
+  handler: /* @__PURE__ */ __name((accessor, _, editorContext) => {
+    const editorGroupsService = accessor.get(IEditorGroupsService);
+    const resolvedContext = resolveCommandsContext([editorContext], accessor.get(IEditorService), editorGroupsService, accessor.get(IListService));
+    let groups = void 0;
+    if (!resolvedContext.groupedEditors.length) {
+      groups = editorGroupsService.getGroups(GroupsOrder.MOST_RECENTLY_ACTIVE);
+    } else {
+      groups = resolvedContext.groupedEditors.map(({ group }) => group);
+    }
+    return saveDirtyEditorsOfGroups(accessor, groups, { reason: SaveReason.EXPLICIT });
+  }, "handler")
+});
+CommandsRegistry.registerCommand({
+  id: SAVE_FILES_COMMAND_ID,
+  handler: /* @__PURE__ */ __name(async (accessor) => {
+    const editorService = accessor.get(IEditorService);
+    const res = await editorService.saveAll({ includeUntitled: false, reason: SaveReason.EXPLICIT });
+    return res.success;
+  }, "handler")
+});
+CommandsRegistry.registerCommand({
+  id: REVERT_FILE_COMMAND_ID,
+  handler: /* @__PURE__ */ __name(async (accessor) => {
+    const editorGroupService = accessor.get(IEditorGroupsService);
+    const editorService = accessor.get(IEditorService);
+    let editors = getOpenEditorsViewMultiSelection(accessor);
+    if (!editors) {
+      const activeGroup = editorGroupService.activeGroup;
+      if (activeGroup.activeEditor) {
+        editors = [{ groupId: activeGroup.id, editor: activeGroup.activeEditor }];
+      }
+    }
+    if (!editors || editors.length === 0) {
+      return;
+    }
+    try {
+      await editorService.revert(editors.filter(
+        ({ editor }) => !editor.hasCapability(EditorInputCapabilities.Untitled)
+        /* all except untitled */
+      ), { force: true });
+    } catch (error) {
+      const notificationService = accessor.get(INotificationService);
+      notificationService.error(nls.localize("genericRevertError", "Failed to revert '{0}': {1}", editors.map(({ editor }) => editor.getName()).join(", "), toErrorMessage(error, false)));
+    }
+  }, "handler")
+});
+CommandsRegistry.registerCommand({
+  id: REMOVE_ROOT_FOLDER_COMMAND_ID,
+  handler: /* @__PURE__ */ __name((accessor, resource) => {
+    const contextService = accessor.get(IWorkspaceContextService);
+    const uriIdentityService = accessor.get(IUriIdentityService);
+    const workspace = contextService.getWorkspace();
+    const resources = getMultiSelectedResources(resource, accessor.get(IListService), accessor.get(IEditorService), accessor.get(IEditorGroupsService), accessor.get(IExplorerService)).filter(
+      (resource2) => workspace.folders.some((folder) => uriIdentityService.extUri.isEqual(folder.uri, resource2))
+      // Need to verify resources are workspaces since multi selection can trigger this command on some non workspace resources
+    );
+    if (resources.length === 0) {
+      const commandService = accessor.get(ICommandService);
+      return commandService.executeCommand(RemoveRootFolderAction.ID);
+    }
+    const workspaceEditingService = accessor.get(IWorkspaceEditingService);
+    return workspaceEditingService.removeFolders(resources);
+  }, "handler")
+});
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  weight: KeybindingWeight.WorkbenchContrib + 10,
+  when: ContextKeyExpr.and(FilesExplorerFocusCondition, ExplorerCompressedFocusContext, ExplorerCompressedFirstFocusContext.negate()),
+  primary: KeyCode.LeftArrow,
+  id: PREVIOUS_COMPRESSED_FOLDER,
+  handler: /* @__PURE__ */ __name((accessor) => {
+    const paneCompositeService = accessor.get(IPaneCompositePartService);
+    const viewlet = paneCompositeService.getActivePaneComposite(ViewContainerLocation.Sidebar);
+    if (viewlet?.getId() !== VIEWLET_ID) {
+      return;
+    }
+    const explorer = viewlet.getViewPaneContainer();
+    const view = explorer.getExplorerView();
+    view.previousCompressedStat();
+  }, "handler")
+});
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  weight: KeybindingWeight.WorkbenchContrib + 10,
+  when: ContextKeyExpr.and(FilesExplorerFocusCondition, ExplorerCompressedFocusContext, ExplorerCompressedLastFocusContext.negate()),
+  primary: KeyCode.RightArrow,
+  id: NEXT_COMPRESSED_FOLDER,
+  handler: /* @__PURE__ */ __name((accessor) => {
+    const paneCompositeService = accessor.get(IPaneCompositePartService);
+    const viewlet = paneCompositeService.getActivePaneComposite(ViewContainerLocation.Sidebar);
+    if (viewlet?.getId() !== VIEWLET_ID) {
+      return;
+    }
+    const explorer = viewlet.getViewPaneContainer();
+    const view = explorer.getExplorerView();
+    view.nextCompressedStat();
+  }, "handler")
+});
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  weight: KeybindingWeight.WorkbenchContrib + 10,
+  when: ContextKeyExpr.and(FilesExplorerFocusCondition, ExplorerCompressedFocusContext, ExplorerCompressedFirstFocusContext.negate()),
+  primary: KeyCode.Home,
+  id: FIRST_COMPRESSED_FOLDER,
+  handler: /* @__PURE__ */ __name((accessor) => {
+    const paneCompositeService = accessor.get(IPaneCompositePartService);
+    const viewlet = paneCompositeService.getActivePaneComposite(ViewContainerLocation.Sidebar);
+    if (viewlet?.getId() !== VIEWLET_ID) {
+      return;
+    }
+    const explorer = viewlet.getViewPaneContainer();
+    const view = explorer.getExplorerView();
+    view.firstCompressedStat();
+  }, "handler")
+});
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  weight: KeybindingWeight.WorkbenchContrib + 10,
+  when: ContextKeyExpr.and(FilesExplorerFocusCondition, ExplorerCompressedFocusContext, ExplorerCompressedLastFocusContext.negate()),
+  primary: KeyCode.End,
+  id: LAST_COMPRESSED_FOLDER,
+  handler: /* @__PURE__ */ __name((accessor) => {
+    const paneCompositeService = accessor.get(IPaneCompositePartService);
+    const viewlet = paneCompositeService.getActivePaneComposite(ViewContainerLocation.Sidebar);
+    if (viewlet?.getId() !== VIEWLET_ID) {
+      return;
+    }
+    const explorer = viewlet.getViewPaneContainer();
+    const view = explorer.getExplorerView();
+    view.lastCompressedStat();
+  }, "handler")
+});
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  weight: KeybindingWeight.WorkbenchContrib,
+  when: null,
+  primary: isWeb ? isWindows ? KeyChord(KeyMod.CtrlCmd | KeyCode.KeyK, KeyCode.KeyN) : KeyMod.CtrlCmd | KeyMod.Alt | KeyCode.KeyN : KeyMod.CtrlCmd | KeyCode.KeyN,
+  secondary: isWeb ? [KeyMod.CtrlCmd | KeyCode.KeyN] : void 0,
+  id: NEW_UNTITLED_FILE_COMMAND_ID,
+  metadata: {
+    description: NEW_UNTITLED_FILE_LABEL,
+    args: [
+      {
+        isOptional: true,
+        name: "New Untitled Text File arguments",
+        description: "The editor view type or language ID if known",
+        schema: {
+          "type": "object",
+          "properties": {
+            "viewType": {
+              "type": "string"
+            },
+            "languageId": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    ]
+  },
+  handler: /* @__PURE__ */ __name(async (accessor, args) => {
+    const editorService = accessor.get(IEditorService);
+    await editorService.openEditor({
+      resource: void 0,
+      options: {
+        override: args?.viewType,
+        pinned: true
+      },
+      languageId: args?.languageId
+    });
+  }, "handler")
+});
+CommandsRegistry.registerCommand({
+  id: NEW_FILE_COMMAND_ID,
+  handler: /* @__PURE__ */ __name(async (accessor, args) => {
+    const editorService = accessor.get(IEditorService);
+    const dialogService = accessor.get(IFileDialogService);
+    const fileService = accessor.get(IFileService);
+    const createFileLocalized = nls.localize("newFileCommand.saveLabel", "Create File");
+    const defaultFileUri = joinPath(await dialogService.defaultFilePath(), args?.fileName ?? "Untitled.txt");
+    const saveUri = await dialogService.showSaveDialog({ saveLabel: createFileLocalized, title: createFileLocalized, defaultUri: defaultFileUri });
+    if (!saveUri) {
+      return;
+    }
+    await fileService.createFile(saveUri, void 0, { overwrite: true });
+    await editorService.openEditor({
+      resource: saveUri,
+      options: {
+        override: args?.viewType,
+        pinned: true
+      },
+      languageId: args?.languageId
+    });
+  }, "handler")
+});
+export {
+  newWindowCommand,
+  openWindowCommand
+};
+//# sourceMappingURL=fileCommands.js.map

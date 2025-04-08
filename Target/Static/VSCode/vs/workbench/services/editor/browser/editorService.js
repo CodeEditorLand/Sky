@@ -1,1 +1,794 @@
-var B=Object.defineProperty;var L=Object.getOwnPropertyDescriptor;var x=(S,E,e,i)=>{for(var t=i>1?void 0:i?L(E,e):E,o=S.length-1,r;o>=0;o--)(r=S[o])&&(t=(i?r(E,e,t):r(t))||t);return i&&t&&B(E,e,t),t},c=(S,E)=>(e,i)=>E(e,i,S);import{IInstantiationService as N}from"../../../../platform/instantiation/common/instantiation.js";import"../../../../platform/editor/common/editor.js";import{SideBySideEditor as g,isEditorInputWithOptions as G,SaveReason as q,EditorsOrder as v,EditorResourceAccessor as R,EditorInputCapabilities as m,isResourceDiffEditorInput as Y,isResourceEditorInput as H,isEditorInput as y,isEditorInputWithOptionsAndGroup as P,isResourceMergeEditorInput as Q}from"../../../common/editor.js";import{EditorInput as j}from"../../../common/editor/editorInput.js";import{SideBySideEditorInput as X}from"../../../common/editor/sideBySideEditorInput.js";import{ResourceMap as z,ResourceSet as W}from"../../../../base/common/map.js";import{IFileService as J,FileOperation as D,FileChangesEvent as K,FileChangeType as Z}from"../../../../platform/files/common/files.js";import{Event as $,Emitter as f}from"../../../../base/common/event.js";import{URI as u}from"../../../../base/common/uri.js";import{joinPath as ee}from"../../../../base/common/resources.js";import{DiffEditorInput as ie}from"../../../common/editor/diffEditorInput.js";import{SideBySideEditor as te}from"../../../browser/parts/editor/sideBySideEditor.js";import{IEditorGroupsService as re,GroupsOrder as C,isEditorReplacement as F}from"../common/editorGroupsService.js";import{IEditorService as oe,isPreferredGroup as ne}from"../common/editorService.js";import{IConfigurationService as se}from"../../../../platform/configuration/common/configuration.js";import{Disposable as de,dispose as A,DisposableStore as ae}from"../../../../base/common/lifecycle.js";import{coalesce as h,distinct as pe}from"../../../../base/common/arrays.js";import{isCodeEditor as b,isDiffEditor as U,isCompositeEditor as ue}from"../../../../editor/browser/editorBrowser.js";import"../../../browser/parts/editor/editor.js";import{registerSingleton as ce}from"../../../../platform/instantiation/common/extensions.js";import{isUndefined as k}from"../../../../base/common/types.js";import{EditorsObserver as Ee}from"../../../browser/parts/editor/editorsObserver.js";import{Promises as T,timeout as le}from"../../../../base/common/async.js";import{IWorkspaceContextService as fe}from"../../../../platform/workspace/common/workspace.js";import{indexOfPath as Ie}from"../../../../base/common/extpath.js";import{IUriIdentityService as ve}from"../../../../platform/uriIdentity/common/uriIdentity.js";import{IEditorResolverService as he,ResolvedStatus as w}from"../common/editorResolverService.js";import{IWorkspaceTrustRequestService as ge,WorkspaceTrustUriResponse as _}from"../../../../platform/workspace/common/workspaceTrust.js";import{IHostService as me}from"../../host/browser/host.js";import{findGroup as M}from"../common/editorGroupFinder.js";import{ITextEditorService as ye}from"../../textfile/common/textEditorService.js";import{SyncDescriptor as Ce}from"../../../../platform/instantiation/common/descriptors.js";let I=class extends de{constructor(e,i,t,o,r,n,s,d,a,p,l){super();this.editorGroupService=i;this.instantiationService=t;this.fileService=o;this.configurationService=r;this.contextService=n;this.uriIdentityService=s;this.editorResolverService=d;this.workspaceTrustRequestService=a;this.hostService=p;this.textEditorService=l;this.editorGroupsContainer=e??i,this.editorsObserver=this._register(this.instantiationService.createInstance(Ee,this.editorGroupsContainer)),this.onConfigurationUpdated(),this.registerListeners()}_onDidActiveEditorChange=this._register(new f);onDidActiveEditorChange=this._onDidActiveEditorChange.event;_onDidVisibleEditorsChange=this._register(new f);onDidVisibleEditorsChange=this._onDidVisibleEditorsChange.event;_onDidEditorsChange=this._register(new f);onDidEditorsChange=this._onDidEditorsChange.event;_onWillOpenEditor=this._register(new f);onWillOpenEditor=this._onWillOpenEditor.event;_onDidCloseEditor=this._register(new f);onDidCloseEditor=this._onDidCloseEditor.event;_onDidOpenEditorFail=this._register(new f);onDidOpenEditorFail=this._onDidOpenEditorFail.event;_onDidMostRecentlyActiveEditorsChange=this._register(new f);onDidMostRecentlyActiveEditorsChange=this._onDidMostRecentlyActiveEditorsChange.event;editorGroupsContainer;createScoped(e,i){return i.add(new I(e==="main"?this.editorGroupService.mainPart:e,this.editorGroupService,this.instantiationService,this.fileService,this.configurationService,this.contextService,this.uriIdentityService,this.editorResolverService,this.workspaceTrustRequestService,this.hostService,this.textEditorService))}registerListeners(){this.editorGroupsContainer===this.editorGroupService.mainPart||this.editorGroupsContainer===this.editorGroupService?this.editorGroupService.whenReady.then(()=>this.onEditorGroupsReady()):this.onEditorGroupsReady(),this._register(this.editorGroupsContainer.onDidChangeActiveGroup(e=>this.handleActiveEditorChange(e))),this._register(this.editorGroupsContainer.onDidAddGroup(e=>this.registerGroupListeners(e))),this._register(this.editorsObserver.onDidMostRecentlyActiveEditorsChange(()=>this._onDidMostRecentlyActiveEditorsChange.fire())),this._register(this.onDidVisibleEditorsChange(()=>this.handleVisibleEditorsChange())),this._register(this.fileService.onDidRunOperation(e=>this.onDidRunFileOperation(e))),this._register(this.fileService.onDidFilesChange(e=>this.onDidFilesChange(e))),this._register(this.configurationService.onDidChangeConfiguration(e=>this.onConfigurationUpdated(e)))}lastActiveEditor=void 0;onEditorGroupsReady(){for(const e of this.editorGroupsContainer.groups)this.registerGroupListeners(e);this.activeEditor&&(this.doHandleActiveEditorChangeEvent(),this._onDidVisibleEditorsChange.fire())}handleActiveEditorChange(e){e===this.editorGroupsContainer.activeGroup&&(!this.lastActiveEditor&&!e.activeEditor||this.doHandleActiveEditorChangeEvent())}doHandleActiveEditorChangeEvent(){const e=this.editorGroupsContainer.activeGroup;this.lastActiveEditor=e.activeEditor??void 0,this._onDidActiveEditorChange.fire()}registerGroupListeners(e){const i=new ae;i.add(e.onDidModelChange(t=>{this._onDidEditorsChange.fire({groupId:e.id,event:t})})),i.add(e.onDidActiveEditorChange(()=>{this.handleActiveEditorChange(e),this._onDidVisibleEditorsChange.fire()})),i.add(e.onWillOpenEditor(t=>{this._onWillOpenEditor.fire(t)})),i.add(e.onDidCloseEditor(t=>{this._onDidCloseEditor.fire(t)})),i.add(e.onDidOpenEditorFail(t=>{this._onDidOpenEditorFail.fire({editor:t,groupId:e.id})})),$.once(e.onWillDispose)(()=>{A(i)})}activeOutOfWorkspaceWatchers=new z;handleVisibleEditorsChange(){const e=new W;for(const i of this.visibleEditors){const t=pe(h([R.getCanonicalUri(i,{supportSideBySide:g.PRIMARY}),R.getCanonicalUri(i,{supportSideBySide:g.SECONDARY})]),o=>o.toString());for(const o of t)this.fileService.hasProvider(o)&&!this.contextService.isInsideWorkspace(o)&&e.add(o)}for(const i of this.activeOutOfWorkspaceWatchers.keys())e.has(i)||(A(this.activeOutOfWorkspaceWatchers.get(i)),this.activeOutOfWorkspaceWatchers.delete(i));for(const i of e.keys())if(!this.activeOutOfWorkspaceWatchers.get(i)){const t=this.fileService.watch(i);this.activeOutOfWorkspaceWatchers.set(i,t)}}async onDidRunFileOperation(e){e.isOperation(D.MOVE)&&this.handleMovedFile(e.resource,e.target.resource),(e.isOperation(D.DELETE)||e.isOperation(D.MOVE))&&this.handleDeletedFile(e.resource,!1,e.target?e.target.resource:void 0)}onDidFilesChange(e){e.gotDeleted()&&this.handleDeletedFile(e,!0)}async handleMovedFile(e,i){for(const t of this.editorGroupsContainer.groups){const o=[];for(const r of t.editors){const n=r.resource;if(!n||!this.uriIdentityService.extUri.isEqualOrParent(n,e))continue;let s;if(this.uriIdentityService.extUri.isEqual(e,n))s=i;else{const p=Ie(n.path,e.path,this.uriIdentityService.extUri.ignorePathCasing(n));s=ee(i,n.path.substr(p+e.path.length+1))}const d=await r.rename(t.id,s);if(!d)return;const a={preserveFocus:!0,pinned:t.isPinned(r),sticky:t.isSticky(r),index:t.getIndexOfEditor(r),inactive:!t.isActive(r)};y(d.editor)?o.push({editor:r,replacement:d.editor,options:{...d.options,...a}}):o.push({editor:r,replacement:{...d.editor,options:{...d.editor.options,...a}}})}o.length&&this.replaceEditors(o,t)}}closeOnFileDelete=!1;onConfigurationUpdated(e){if(e&&!e.affectsConfiguration("workbench.editor.closeOnFileDelete"))return;const i=this.configurationService.getValue();typeof i.workbench?.editor?.closeOnFileDelete=="boolean"?this.closeOnFileDelete=i.workbench.editor.closeOnFileDelete:this.closeOnFileDelete=!1}handleDeletedFile(e,i,t){for(const o of this.getAllNonDirtyEditors({includeUntitled:!1,supportSideBySide:!0}))(async()=>{const r=o.resource;if(r&&(this.closeOnFileDelete||!i)){if(t&&this.uriIdentityService.extUri.isEqualOrParent(r,t))return;let n=!1;if(e instanceof K?n=e.contains(r,Z.DELETED):n=this.uriIdentityService.extUri.isEqualOrParent(r,e),!n)return;let s=!1;i&&this.fileService.hasProvider(r)&&(await le(100),s=await this.fileService.exists(r)),!s&&!o.isDisposed()&&o.dispose()}})()}getAllNonDirtyEditors(e){const i=[];function t(o){o.hasCapability(m.Untitled)&&!e.includeUntitled||o.isDirty()||i.push(o)}for(const o of this.editors)e.supportSideBySide&&o instanceof X?(t(o.primary),t(o.secondary)):t(o);return i}editorsObserver;get activeEditorPane(){return this.editorGroupsContainer.activeGroup?.activeEditorPane}get activeTextEditorControl(){const e=this.activeEditorPane;if(e){const i=e.getControl();if(b(i)||U(i))return i;if(ue(i)&&b(i.activeCodeEditor))return i.activeCodeEditor}}get activeTextEditorLanguageId(){let e;const i=this.activeTextEditorControl;return U(i)?e=i.getModifiedEditor():e=i,e?.getModel()?.getLanguageId()}get count(){return this.editorsObserver.count}get editors(){return this.getEditors(v.SEQUENTIAL).map(({editor:e})=>e)}getEditors(e,i){switch(e){case v.MOST_RECENTLY_ACTIVE:return i?.excludeSticky?this.editorsObserver.editors.filter(({groupId:t,editor:o})=>!this.editorGroupsContainer.getGroup(t)?.isSticky(o)):this.editorsObserver.editors;case v.SEQUENTIAL:{const t=[];for(const o of this.editorGroupsContainer.getGroups(C.GRID_APPEARANCE))t.push(...o.getEditors(v.SEQUENTIAL,i).map(r=>({editor:r,groupId:o.id})));return t}}}get activeEditor(){const e=this.editorGroupsContainer.activeGroup;return e?e.activeEditor??void 0:void 0}get visibleEditorPanes(){return h(this.editorGroupsContainer.groups.map(e=>e.activeEditorPane))}get visibleTextEditorControls(){return this.doGetVisibleTextEditorControls(this.visibleEditorPanes)}doGetVisibleTextEditorControls(e){const i=[];for(const t of e){const o=[];t instanceof te?(o.push(t.getPrimaryEditorPane()?.getControl()),o.push(t.getSecondaryEditorPane()?.getControl())):o.push(t.getControl());for(const r of o)(b(r)||U(r))&&i.push(r)}return i}getVisibleTextEditorControls(e){return this.doGetVisibleTextEditorControls(h(this.editorGroupsContainer.getGroups(e===v.SEQUENTIAL?C.GRID_APPEARANCE:C.MOST_RECENTLY_ACTIVE).map(i=>i.activeEditorPane)))}get visibleEditors(){return h(this.editorGroupsContainer.groups.map(e=>e.activeEditor))}async openEditor(e,i,t){let o,r=y(e)?i:e.options,n;if(ne(i)&&(t=i),!y(e)){const s=await this.editorResolverService.resolveEditor(e,t);if(s===w.ABORT)return;P(s)&&(o=s.editor,r=s.options,n=s.group)}if(o||(o=y(e)?e:await this.textEditorService.resolveTextEditor(e)),!n){let s;const d=this.instantiationService.invokeFunction(M,{editor:o,options:r},t);d instanceof Promise?[n,s]=await d:[n,s]=d,s&&(r={...r,activation:s})}return n.openEditor(o,r)}async openEditors(e,i,t){if(t?.validateTrust&&!await this.handleWorkspaceTrust(e))return[];const o=new Map;for(const n of e){let s,d;if(!G(n)){const p=await this.editorResolverService.resolveEditor(n,i);if(p===w.ABORT)continue;P(p)&&(s=p,d=p.group)}if(s||(s=G(n)?n:{editor:await this.textEditorService.resolveTextEditor(n),options:n.options}),!d){const p=this.instantiationService.invokeFunction(M,s,i);p instanceof Promise?[d]=await p:[d]=p}let a=o.get(d);a||(a=[],o.set(d,a)),a.push(s)}const r=[];for(const[n,s]of o)r.push(n.openEditors(s));return h(await T.settled(r))}async handleWorkspaceTrust(e){const{resources:i,diffMode:t,mergeMode:o}=this.extractEditorResources(e);switch(await this.workspaceTrustRequestService.requestOpenFilesTrust(i)){case _.Open:return!0;case _.OpenInNewWindow:return await this.hostService.openWindow(i.map(n=>({fileUri:n})),{forceNewWindow:!0,diffMode:t,mergeMode:o}),!1;case _.Cancel:return!1}}extractEditorResources(e){const i=new W;let t=!1,o=!1;for(const r of e)if(G(r)){const n=R.getOriginalUri(r.editor,{supportSideBySide:g.BOTH});u.isUri(n)?i.add(n):n&&(n.primary&&i.add(n.primary),n.secondary&&i.add(n.secondary),t=r.editor instanceof ie)}else Q(r)&&(u.isUri(r.input1)&&i.add(r.input1.resource),u.isUri(r.input2)&&i.add(r.input2.resource),u.isUri(r.base)&&i.add(r.base.resource),u.isUri(r.result)&&i.add(r.result.resource),o=!0),Y(r)?(u.isUri(r.original.resource)&&i.add(r.original.resource),u.isUri(r.modified.resource)&&i.add(r.modified.resource),t=!0):H(r)&&i.add(r.resource);return{resources:Array.from(i.keys()),diffMode:t,mergeMode:o}}isOpened(e){return this.editorsObserver.hasEditor({resource:this.uriIdentityService.asCanonicalUri(e.resource),typeId:e.typeId,editorId:e.editorId})}isVisible(e){for(const i of this.editorGroupsContainer.groups)if(i.activeEditor?.matches(e))return!0;return!1}async closeEditor({editor:e,groupId:i},t){await this.editorGroupsContainer.getGroup(i)?.closeEditor(e,t)}async closeEditors(e,i){const t=new Map;for(const{editor:o,groupId:r}of e){const n=this.editorGroupsContainer.getGroup(r);if(!n)continue;let s=t.get(n);s||(s=[],t.set(n,s)),s.push(o)}for(const[o,r]of t)await o.closeEditors(r,i)}findEditors(e,i,t){const o=u.isUri(e)?e:e.resource,r=u.isUri(e)?void 0:e.typeId;if(i?.supportSideBySide!==g.ANY&&i?.supportSideBySide!==g.SECONDARY&&!this.editorsObserver.hasEditors(o))return u.isUri(e)||k(t)?[]:void 0;if(k(t)){const n=[];for(const s of this.editorGroupsContainer.getGroups(C.MOST_RECENTLY_ACTIVE)){const d=[];if(u.isUri(e))d.push(...this.findEditors(e,i,s));else{const a=this.findEditors(e,i,s);a&&d.push(a)}n.push(...d.map(a=>({editor:a,groupId:s.id})))}return n}else{const n=typeof t=="number"?this.editorGroupsContainer.getGroup(t):t;if(u.isUri(e))return n?n.findEditors(o,i):[];{if(!n)return;const s=n.findEditors(o,i);for(const d of s)if(d.typeId===r)return d;return}}}async replaceEditors(e,i){const t=typeof i=="number"?this.editorGroupsContainer.getGroup(i):i,o=[];for(const r of e){let n;if(!y(r.replacement)){const s=await this.editorResolverService.resolveEditor(r.replacement,t);if(s===w.ABORT)continue;P(s)&&(n={editor:r.editor,replacement:s.editor,options:s.options,forceReplaceDirty:r.forceReplaceDirty})}n||(n={editor:r.editor,replacement:F(r)?r.replacement:await this.textEditorService.resolveTextEditor(r.replacement),options:F(r)?r.options:r.replacement.options,forceReplaceDirty:r.forceReplaceDirty}),o.push(n)}return t?.replaceEditors(o)}async save(e,i){Array.isArray(e)||(e=[e]);const t=this.getUniqueEditors(e),o=[],r=[];if(i?.saveAs)r.push(...t);else for(const{groupId:s,editor:d}of t)d.hasCapability(m.Untitled)?r.push({groupId:s,editor:d}):o.push({groupId:s,editor:d});const n=await T.settled(o.map(({groupId:s,editor:d})=>(i?.reason===q.EXPLICIT&&this.editorGroupsContainer.getGroup(s)?.pinEditor(d),d.save(s,i))));for(const{groupId:s,editor:d}of r){if(d.isDisposed())continue;const p={pinned:!0,viewState:(await this.openEditor(d,s))?.getViewState()},l=i?.saveAs?await d.saveAs(s,i):await d.save(s,i);if(n.push(l),!l)break;if(!d.matches(l)){const V=d.hasCapability(m.Untitled)?this.editorGroupsContainer.groups.map(O=>O.id):[s];for(const O of V)l instanceof j?await this.replaceEditors([{editor:d,replacement:l,options:p}],O):await this.replaceEditors([{editor:d,replacement:{...l,options:p}}],O)}}return{success:n.every(s=>!!s),editors:h(n)}}saveAll(e){return this.save(this.getAllModifiedEditors(e),e)}async revert(e,i){Array.isArray(e)||(e=[e]);const t=this.getUniqueEditors(e);return await T.settled(t.map(async({groupId:o,editor:r})=>(this.editorGroupsContainer.getGroup(o)?.pinEditor(r),r.revert(o,i)))),!t.some(({editor:o})=>o.isDirty())}async revertAll(e){return this.revert(this.getAllModifiedEditors(e),e)}getAllModifiedEditors(e){const i=[];for(const t of this.editorGroupsContainer.getGroups(C.MOST_RECENTLY_ACTIVE))for(const o of t.getEditors(v.MOST_RECENTLY_ACTIVE))o.isModified()&&((typeof e?.includeUntitled=="boolean"||!e?.includeUntitled?.includeScratchpad)&&o.hasCapability(m.Scratchpad)||!e?.includeUntitled&&o.hasCapability(m.Untitled)||e?.excludeSticky&&t.isSticky(o)||i.push({groupId:t.id,editor:o}));return i}getUniqueEditors(e){const i=[];for(const{editor:t,groupId:o}of e)i.some(r=>r.editor.matches(t))||i.push({editor:t,groupId:o});return i}dispose(){super.dispose(),this.activeOutOfWorkspaceWatchers.forEach(e=>A(e)),this.activeOutOfWorkspaceWatchers.clear()}};I=x([c(1,re),c(2,N),c(3,J),c(4,se),c(5,fe),c(6,ve),c(7,he),c(8,ge),c(9,me),c(10,ye)],I),ce(oe,new Ce(I,[void 0],!1));export{I as EditorService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IResourceEditorInput, IEditorOptions, EditorActivation, IResourceEditorInputIdentifier, ITextResourceEditorInput } from "../../../../platform/editor/common/editor.js";
+import { SideBySideEditor, IEditorPane, GroupIdentifier, IUntitledTextResourceEditorInput, IResourceDiffEditorInput, EditorInputWithOptions, isEditorInputWithOptions, IEditorIdentifier, IEditorCloseEvent, ITextDiffEditorPane, IRevertOptions, SaveReason, EditorsOrder, IWorkbenchEditorConfiguration, EditorResourceAccessor, IVisibleEditorPane, EditorInputCapabilities, isResourceDiffEditorInput, IUntypedEditorInput, isResourceEditorInput, isEditorInput, isEditorInputWithOptionsAndGroup, IFindEditorOptions, isResourceMergeEditorInput, IEditorWillOpenEvent, IEditorControl } from "../../../common/editor.js";
+import { EditorInput } from "../../../common/editor/editorInput.js";
+import { SideBySideEditorInput } from "../../../common/editor/sideBySideEditorInput.js";
+import { ResourceMap, ResourceSet } from "../../../../base/common/map.js";
+import { IFileService, FileOperationEvent, FileOperation, FileChangesEvent, FileChangeType } from "../../../../platform/files/common/files.js";
+import { Event, Emitter } from "../../../../base/common/event.js";
+import { URI } from "../../../../base/common/uri.js";
+import { joinPath } from "../../../../base/common/resources.js";
+import { DiffEditorInput } from "../../../common/editor/diffEditorInput.js";
+import { SideBySideEditor as SideBySideEditorPane } from "../../../browser/parts/editor/sideBySideEditor.js";
+import { IEditorGroupsService, IEditorGroup, GroupsOrder, IEditorReplacement, isEditorReplacement, ICloseEditorOptions, IEditorGroupsContainer } from "../common/editorGroupsService.js";
+import { IUntypedEditorReplacement, IEditorService, ISaveEditorsOptions, ISaveAllEditorsOptions, IRevertAllEditorsOptions, IBaseSaveRevertAllEditorOptions, IOpenEditorsOptions, PreferredGroup, isPreferredGroup, IEditorsChangeEvent, ISaveEditorsResult } from "../common/editorService.js";
+import { IConfigurationChangeEvent, IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { Disposable, IDisposable, dispose, DisposableStore } from "../../../../base/common/lifecycle.js";
+import { coalesce, distinct } from "../../../../base/common/arrays.js";
+import { isCodeEditor, isDiffEditor, ICodeEditor, IDiffEditor, isCompositeEditor } from "../../../../editor/browser/editorBrowser.js";
+import { IEditorGroupView, EditorServiceImpl } from "../../../browser/parts/editor/editor.js";
+import { registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { isUndefined } from "../../../../base/common/types.js";
+import { EditorsObserver } from "../../../browser/parts/editor/editorsObserver.js";
+import { Promises, timeout } from "../../../../base/common/async.js";
+import { IWorkspaceContextService } from "../../../../platform/workspace/common/workspace.js";
+import { indexOfPath } from "../../../../base/common/extpath.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import { IEditorResolverService, ResolvedStatus } from "../common/editorResolverService.js";
+import { IWorkspaceTrustRequestService, WorkspaceTrustUriResponse } from "../../../../platform/workspace/common/workspaceTrust.js";
+import { IHostService } from "../../host/browser/host.js";
+import { findGroup } from "../common/editorGroupFinder.js";
+import { ITextEditorService } from "../../textfile/common/textEditorService.js";
+import { SyncDescriptor } from "../../../../platform/instantiation/common/descriptors.js";
+let EditorService = class extends Disposable {
+  constructor(editorGroupsContainer, editorGroupService, instantiationService, fileService, configurationService, contextService, uriIdentityService, editorResolverService, workspaceTrustRequestService, hostService, textEditorService) {
+    super();
+    this.editorGroupService = editorGroupService;
+    this.instantiationService = instantiationService;
+    this.fileService = fileService;
+    this.configurationService = configurationService;
+    this.contextService = contextService;
+    this.uriIdentityService = uriIdentityService;
+    this.editorResolverService = editorResolverService;
+    this.workspaceTrustRequestService = workspaceTrustRequestService;
+    this.hostService = hostService;
+    this.textEditorService = textEditorService;
+    this.editorGroupsContainer = editorGroupsContainer ?? editorGroupService;
+    this.editorsObserver = this._register(this.instantiationService.createInstance(EditorsObserver, this.editorGroupsContainer));
+    this.onConfigurationUpdated();
+    this.registerListeners();
+  }
+  static {
+    __name(this, "EditorService");
+  }
+  //#region events
+  _onDidActiveEditorChange = this._register(new Emitter());
+  onDidActiveEditorChange = this._onDidActiveEditorChange.event;
+  _onDidVisibleEditorsChange = this._register(new Emitter());
+  onDidVisibleEditorsChange = this._onDidVisibleEditorsChange.event;
+  _onDidEditorsChange = this._register(new Emitter());
+  onDidEditorsChange = this._onDidEditorsChange.event;
+  _onWillOpenEditor = this._register(new Emitter());
+  onWillOpenEditor = this._onWillOpenEditor.event;
+  _onDidCloseEditor = this._register(new Emitter());
+  onDidCloseEditor = this._onDidCloseEditor.event;
+  _onDidOpenEditorFail = this._register(new Emitter());
+  onDidOpenEditorFail = this._onDidOpenEditorFail.event;
+  _onDidMostRecentlyActiveEditorsChange = this._register(new Emitter());
+  onDidMostRecentlyActiveEditorsChange = this._onDidMostRecentlyActiveEditorsChange.event;
+  //#endregion
+  editorGroupsContainer;
+  createScoped(editorGroupsContainer, disposables) {
+    return disposables.add(new EditorService(editorGroupsContainer === "main" ? this.editorGroupService.mainPart : editorGroupsContainer, this.editorGroupService, this.instantiationService, this.fileService, this.configurationService, this.contextService, this.uriIdentityService, this.editorResolverService, this.workspaceTrustRequestService, this.hostService, this.textEditorService));
+  }
+  registerListeners() {
+    if (this.editorGroupsContainer === this.editorGroupService.mainPart || this.editorGroupsContainer === this.editorGroupService) {
+      this.editorGroupService.whenReady.then(() => this.onEditorGroupsReady());
+    } else {
+      this.onEditorGroupsReady();
+    }
+    this._register(this.editorGroupsContainer.onDidChangeActiveGroup((group) => this.handleActiveEditorChange(group)));
+    this._register(this.editorGroupsContainer.onDidAddGroup((group) => this.registerGroupListeners(group)));
+    this._register(this.editorsObserver.onDidMostRecentlyActiveEditorsChange(() => this._onDidMostRecentlyActiveEditorsChange.fire()));
+    this._register(this.onDidVisibleEditorsChange(() => this.handleVisibleEditorsChange()));
+    this._register(this.fileService.onDidRunOperation((e) => this.onDidRunFileOperation(e)));
+    this._register(this.fileService.onDidFilesChange((e) => this.onDidFilesChange(e)));
+    this._register(this.configurationService.onDidChangeConfiguration((e) => this.onConfigurationUpdated(e)));
+  }
+  //#region Editor & group event handlers
+  lastActiveEditor = void 0;
+  onEditorGroupsReady() {
+    for (const group of this.editorGroupsContainer.groups) {
+      this.registerGroupListeners(group);
+    }
+    if (this.activeEditor) {
+      this.doHandleActiveEditorChangeEvent();
+      this._onDidVisibleEditorsChange.fire();
+    }
+  }
+  handleActiveEditorChange(group) {
+    if (group !== this.editorGroupsContainer.activeGroup) {
+      return;
+    }
+    if (!this.lastActiveEditor && !group.activeEditor) {
+      return;
+    }
+    this.doHandleActiveEditorChangeEvent();
+  }
+  doHandleActiveEditorChangeEvent() {
+    const activeGroup = this.editorGroupsContainer.activeGroup;
+    this.lastActiveEditor = activeGroup.activeEditor ?? void 0;
+    this._onDidActiveEditorChange.fire();
+  }
+  registerGroupListeners(group) {
+    const groupDisposables = new DisposableStore();
+    groupDisposables.add(group.onDidModelChange((e) => {
+      this._onDidEditorsChange.fire({ groupId: group.id, event: e });
+    }));
+    groupDisposables.add(group.onDidActiveEditorChange(() => {
+      this.handleActiveEditorChange(group);
+      this._onDidVisibleEditorsChange.fire();
+    }));
+    groupDisposables.add(group.onWillOpenEditor((e) => {
+      this._onWillOpenEditor.fire(e);
+    }));
+    groupDisposables.add(group.onDidCloseEditor((e) => {
+      this._onDidCloseEditor.fire(e);
+    }));
+    groupDisposables.add(group.onDidOpenEditorFail((editor) => {
+      this._onDidOpenEditorFail.fire({ editor, groupId: group.id });
+    }));
+    Event.once(group.onWillDispose)(() => {
+      dispose(groupDisposables);
+    });
+  }
+  //#endregion
+  //#region Visible Editors Change: Install file watchers for out of workspace resources that became visible
+  activeOutOfWorkspaceWatchers = new ResourceMap();
+  handleVisibleEditorsChange() {
+    const visibleOutOfWorkspaceResources = new ResourceSet();
+    for (const editor of this.visibleEditors) {
+      const resources = distinct(coalesce([
+        EditorResourceAccessor.getCanonicalUri(editor, { supportSideBySide: SideBySideEditor.PRIMARY }),
+        EditorResourceAccessor.getCanonicalUri(editor, { supportSideBySide: SideBySideEditor.SECONDARY })
+      ]), (resource) => resource.toString());
+      for (const resource of resources) {
+        if (this.fileService.hasProvider(resource) && !this.contextService.isInsideWorkspace(resource)) {
+          visibleOutOfWorkspaceResources.add(resource);
+        }
+      }
+    }
+    for (const resource of this.activeOutOfWorkspaceWatchers.keys()) {
+      if (!visibleOutOfWorkspaceResources.has(resource)) {
+        dispose(this.activeOutOfWorkspaceWatchers.get(resource));
+        this.activeOutOfWorkspaceWatchers.delete(resource);
+      }
+    }
+    for (const resource of visibleOutOfWorkspaceResources.keys()) {
+      if (!this.activeOutOfWorkspaceWatchers.get(resource)) {
+        const disposable = this.fileService.watch(resource);
+        this.activeOutOfWorkspaceWatchers.set(resource, disposable);
+      }
+    }
+  }
+  //#endregion
+  //#region File Changes: Move & Deletes to move or close opend editors
+  async onDidRunFileOperation(e) {
+    if (e.isOperation(FileOperation.MOVE)) {
+      this.handleMovedFile(e.resource, e.target.resource);
+    }
+    if (e.isOperation(FileOperation.DELETE) || e.isOperation(FileOperation.MOVE)) {
+      this.handleDeletedFile(e.resource, false, e.target ? e.target.resource : void 0);
+    }
+  }
+  onDidFilesChange(e) {
+    if (e.gotDeleted()) {
+      this.handleDeletedFile(e, true);
+    }
+  }
+  async handleMovedFile(source, target) {
+    for (const group of this.editorGroupsContainer.groups) {
+      const replacements = [];
+      for (const editor of group.editors) {
+        const resource = editor.resource;
+        if (!resource || !this.uriIdentityService.extUri.isEqualOrParent(resource, source)) {
+          continue;
+        }
+        let targetResource;
+        if (this.uriIdentityService.extUri.isEqual(source, resource)) {
+          targetResource = target;
+        } else {
+          const index = indexOfPath(resource.path, source.path, this.uriIdentityService.extUri.ignorePathCasing(resource));
+          targetResource = joinPath(target, resource.path.substr(index + source.path.length + 1));
+        }
+        const moveResult = await editor.rename(group.id, targetResource);
+        if (!moveResult) {
+          return;
+        }
+        const optionOverrides = {
+          preserveFocus: true,
+          pinned: group.isPinned(editor),
+          sticky: group.isSticky(editor),
+          index: group.getIndexOfEditor(editor),
+          inactive: !group.isActive(editor)
+        };
+        if (isEditorInput(moveResult.editor)) {
+          replacements.push({
+            editor,
+            replacement: moveResult.editor,
+            options: {
+              ...moveResult.options,
+              ...optionOverrides
+            }
+          });
+        } else {
+          replacements.push({
+            editor,
+            replacement: {
+              ...moveResult.editor,
+              options: {
+                ...moveResult.editor.options,
+                ...optionOverrides
+              }
+            }
+          });
+        }
+      }
+      if (replacements.length) {
+        this.replaceEditors(replacements, group);
+      }
+    }
+  }
+  closeOnFileDelete = false;
+  onConfigurationUpdated(e) {
+    if (e && !e.affectsConfiguration("workbench.editor.closeOnFileDelete")) {
+      return;
+    }
+    const configuration = this.configurationService.getValue();
+    if (typeof configuration.workbench?.editor?.closeOnFileDelete === "boolean") {
+      this.closeOnFileDelete = configuration.workbench.editor.closeOnFileDelete;
+    } else {
+      this.closeOnFileDelete = false;
+    }
+  }
+  handleDeletedFile(arg1, isExternal, movedTo) {
+    for (const editor of this.getAllNonDirtyEditors({ includeUntitled: false, supportSideBySide: true })) {
+      (async () => {
+        const resource = editor.resource;
+        if (!resource) {
+          return;
+        }
+        if (this.closeOnFileDelete || !isExternal) {
+          if (movedTo && this.uriIdentityService.extUri.isEqualOrParent(resource, movedTo)) {
+            return;
+          }
+          let matches = false;
+          if (arg1 instanceof FileChangesEvent) {
+            matches = arg1.contains(resource, FileChangeType.DELETED);
+          } else {
+            matches = this.uriIdentityService.extUri.isEqualOrParent(resource, arg1);
+          }
+          if (!matches) {
+            return;
+          }
+          let exists = false;
+          if (isExternal && this.fileService.hasProvider(resource)) {
+            await timeout(100);
+            exists = await this.fileService.exists(resource);
+          }
+          if (!exists && !editor.isDisposed()) {
+            editor.dispose();
+          }
+        }
+      })();
+    }
+  }
+  getAllNonDirtyEditors(options) {
+    const editors = [];
+    function conditionallyAddEditor(editor) {
+      if (editor.hasCapability(EditorInputCapabilities.Untitled) && !options.includeUntitled) {
+        return;
+      }
+      if (editor.isDirty()) {
+        return;
+      }
+      editors.push(editor);
+    }
+    __name(conditionallyAddEditor, "conditionallyAddEditor");
+    for (const editor of this.editors) {
+      if (options.supportSideBySide && editor instanceof SideBySideEditorInput) {
+        conditionallyAddEditor(editor.primary);
+        conditionallyAddEditor(editor.secondary);
+      } else {
+        conditionallyAddEditor(editor);
+      }
+    }
+    return editors;
+  }
+  //#endregion
+  //#region Editor accessors
+  editorsObserver;
+  get activeEditorPane() {
+    return this.editorGroupsContainer.activeGroup?.activeEditorPane;
+  }
+  get activeTextEditorControl() {
+    const activeEditorPane = this.activeEditorPane;
+    if (activeEditorPane) {
+      const activeControl = activeEditorPane.getControl();
+      if (isCodeEditor(activeControl) || isDiffEditor(activeControl)) {
+        return activeControl;
+      }
+      if (isCompositeEditor(activeControl) && isCodeEditor(activeControl.activeCodeEditor)) {
+        return activeControl.activeCodeEditor;
+      }
+    }
+    return void 0;
+  }
+  get activeTextEditorLanguageId() {
+    let activeCodeEditor = void 0;
+    const activeTextEditorControl = this.activeTextEditorControl;
+    if (isDiffEditor(activeTextEditorControl)) {
+      activeCodeEditor = activeTextEditorControl.getModifiedEditor();
+    } else {
+      activeCodeEditor = activeTextEditorControl;
+    }
+    return activeCodeEditor?.getModel()?.getLanguageId();
+  }
+  get count() {
+    return this.editorsObserver.count;
+  }
+  get editors() {
+    return this.getEditors(EditorsOrder.SEQUENTIAL).map(({ editor }) => editor);
+  }
+  getEditors(order, options) {
+    switch (order) {
+      // MRU
+      case EditorsOrder.MOST_RECENTLY_ACTIVE:
+        if (options?.excludeSticky) {
+          return this.editorsObserver.editors.filter(({ groupId, editor }) => !this.editorGroupsContainer.getGroup(groupId)?.isSticky(editor));
+        }
+        return this.editorsObserver.editors;
+      // Sequential
+      case EditorsOrder.SEQUENTIAL: {
+        const editors = [];
+        for (const group of this.editorGroupsContainer.getGroups(GroupsOrder.GRID_APPEARANCE)) {
+          editors.push(...group.getEditors(EditorsOrder.SEQUENTIAL, options).map((editor) => ({ editor, groupId: group.id })));
+        }
+        return editors;
+      }
+    }
+  }
+  get activeEditor() {
+    const activeGroup = this.editorGroupsContainer.activeGroup;
+    return activeGroup ? activeGroup.activeEditor ?? void 0 : void 0;
+  }
+  get visibleEditorPanes() {
+    return coalesce(this.editorGroupsContainer.groups.map((group) => group.activeEditorPane));
+  }
+  get visibleTextEditorControls() {
+    return this.doGetVisibleTextEditorControls(this.visibleEditorPanes);
+  }
+  doGetVisibleTextEditorControls(editorPanes) {
+    const visibleTextEditorControls = [];
+    for (const editorPane of editorPanes) {
+      const controls = [];
+      if (editorPane instanceof SideBySideEditorPane) {
+        controls.push(editorPane.getPrimaryEditorPane()?.getControl());
+        controls.push(editorPane.getSecondaryEditorPane()?.getControl());
+      } else {
+        controls.push(editorPane.getControl());
+      }
+      for (const control of controls) {
+        if (isCodeEditor(control) || isDiffEditor(control)) {
+          visibleTextEditorControls.push(control);
+        }
+      }
+    }
+    return visibleTextEditorControls;
+  }
+  getVisibleTextEditorControls(order) {
+    return this.doGetVisibleTextEditorControls(coalesce(this.editorGroupsContainer.getGroups(order === EditorsOrder.SEQUENTIAL ? GroupsOrder.GRID_APPEARANCE : GroupsOrder.MOST_RECENTLY_ACTIVE).map((group) => group.activeEditorPane)));
+  }
+  get visibleEditors() {
+    return coalesce(this.editorGroupsContainer.groups.map((group) => group.activeEditor));
+  }
+  async openEditor(editor, optionsOrPreferredGroup, preferredGroup) {
+    let typedEditor = void 0;
+    let options = isEditorInput(editor) ? optionsOrPreferredGroup : editor.options;
+    let group = void 0;
+    if (isPreferredGroup(optionsOrPreferredGroup)) {
+      preferredGroup = optionsOrPreferredGroup;
+    }
+    if (!isEditorInput(editor)) {
+      const resolvedEditor = await this.editorResolverService.resolveEditor(editor, preferredGroup);
+      if (resolvedEditor === ResolvedStatus.ABORT) {
+        return;
+      }
+      if (isEditorInputWithOptionsAndGroup(resolvedEditor)) {
+        typedEditor = resolvedEditor.editor;
+        options = resolvedEditor.options;
+        group = resolvedEditor.group;
+      }
+    }
+    if (!typedEditor) {
+      typedEditor = isEditorInput(editor) ? editor : await this.textEditorService.resolveTextEditor(editor);
+    }
+    if (!group) {
+      let activation = void 0;
+      const findGroupResult = this.instantiationService.invokeFunction(findGroup, { editor: typedEditor, options }, preferredGroup);
+      if (findGroupResult instanceof Promise) {
+        [group, activation] = await findGroupResult;
+      } else {
+        [group, activation] = findGroupResult;
+      }
+      if (activation) {
+        options = { ...options, activation };
+      }
+    }
+    return group.openEditor(typedEditor, options);
+  }
+  async openEditors(editors, preferredGroup, options) {
+    if (options?.validateTrust) {
+      const editorsTrusted = await this.handleWorkspaceTrust(editors);
+      if (!editorsTrusted) {
+        return [];
+      }
+    }
+    const mapGroupToTypedEditors = /* @__PURE__ */ new Map();
+    for (const editor of editors) {
+      let typedEditor = void 0;
+      let group = void 0;
+      if (!isEditorInputWithOptions(editor)) {
+        const resolvedEditor = await this.editorResolverService.resolveEditor(editor, preferredGroup);
+        if (resolvedEditor === ResolvedStatus.ABORT) {
+          continue;
+        }
+        if (isEditorInputWithOptionsAndGroup(resolvedEditor)) {
+          typedEditor = resolvedEditor;
+          group = resolvedEditor.group;
+        }
+      }
+      if (!typedEditor) {
+        typedEditor = isEditorInputWithOptions(editor) ? editor : { editor: await this.textEditorService.resolveTextEditor(editor), options: editor.options };
+      }
+      if (!group) {
+        const findGroupResult = this.instantiationService.invokeFunction(findGroup, typedEditor, preferredGroup);
+        if (findGroupResult instanceof Promise) {
+          [group] = await findGroupResult;
+        } else {
+          [group] = findGroupResult;
+        }
+      }
+      let targetGroupEditors = mapGroupToTypedEditors.get(group);
+      if (!targetGroupEditors) {
+        targetGroupEditors = [];
+        mapGroupToTypedEditors.set(group, targetGroupEditors);
+      }
+      targetGroupEditors.push(typedEditor);
+    }
+    const result = [];
+    for (const [group, editors2] of mapGroupToTypedEditors) {
+      result.push(group.openEditors(editors2));
+    }
+    return coalesce(await Promises.settled(result));
+  }
+  async handleWorkspaceTrust(editors) {
+    const { resources, diffMode, mergeMode } = this.extractEditorResources(editors);
+    const trustResult = await this.workspaceTrustRequestService.requestOpenFilesTrust(resources);
+    switch (trustResult) {
+      case WorkspaceTrustUriResponse.Open:
+        return true;
+      case WorkspaceTrustUriResponse.OpenInNewWindow:
+        await this.hostService.openWindow(resources.map((resource) => ({ fileUri: resource })), { forceNewWindow: true, diffMode, mergeMode });
+        return false;
+      case WorkspaceTrustUriResponse.Cancel:
+        return false;
+    }
+  }
+  extractEditorResources(editors) {
+    const resources = new ResourceSet();
+    let diffMode = false;
+    let mergeMode = false;
+    for (const editor of editors) {
+      if (isEditorInputWithOptions(editor)) {
+        const resource = EditorResourceAccessor.getOriginalUri(editor.editor, { supportSideBySide: SideBySideEditor.BOTH });
+        if (URI.isUri(resource)) {
+          resources.add(resource);
+        } else if (resource) {
+          if (resource.primary) {
+            resources.add(resource.primary);
+          }
+          if (resource.secondary) {
+            resources.add(resource.secondary);
+          }
+          diffMode = editor.editor instanceof DiffEditorInput;
+        }
+      } else {
+        if (isResourceMergeEditorInput(editor)) {
+          if (URI.isUri(editor.input1)) {
+            resources.add(editor.input1.resource);
+          }
+          if (URI.isUri(editor.input2)) {
+            resources.add(editor.input2.resource);
+          }
+          if (URI.isUri(editor.base)) {
+            resources.add(editor.base.resource);
+          }
+          if (URI.isUri(editor.result)) {
+            resources.add(editor.result.resource);
+          }
+          mergeMode = true;
+        }
+        if (isResourceDiffEditorInput(editor)) {
+          if (URI.isUri(editor.original.resource)) {
+            resources.add(editor.original.resource);
+          }
+          if (URI.isUri(editor.modified.resource)) {
+            resources.add(editor.modified.resource);
+          }
+          diffMode = true;
+        } else if (isResourceEditorInput(editor)) {
+          resources.add(editor.resource);
+        }
+      }
+    }
+    return {
+      resources: Array.from(resources.keys()),
+      diffMode,
+      mergeMode
+    };
+  }
+  //#endregion
+  //#region isOpened() / isVisible()
+  isOpened(editor) {
+    return this.editorsObserver.hasEditor({
+      resource: this.uriIdentityService.asCanonicalUri(editor.resource),
+      typeId: editor.typeId,
+      editorId: editor.editorId
+    });
+  }
+  isVisible(editor) {
+    for (const group of this.editorGroupsContainer.groups) {
+      if (group.activeEditor?.matches(editor)) {
+        return true;
+      }
+    }
+    return false;
+  }
+  //#endregion
+  //#region closeEditor()
+  async closeEditor({ editor, groupId }, options) {
+    const group = this.editorGroupsContainer.getGroup(groupId);
+    await group?.closeEditor(editor, options);
+  }
+  //#endregion
+  //#region closeEditors()
+  async closeEditors(editors, options) {
+    const mapGroupToEditors = /* @__PURE__ */ new Map();
+    for (const { editor, groupId } of editors) {
+      const group = this.editorGroupsContainer.getGroup(groupId);
+      if (!group) {
+        continue;
+      }
+      let editors2 = mapGroupToEditors.get(group);
+      if (!editors2) {
+        editors2 = [];
+        mapGroupToEditors.set(group, editors2);
+      }
+      editors2.push(editor);
+    }
+    for (const [group, editors2] of mapGroupToEditors) {
+      await group.closeEditors(editors2, options);
+    }
+  }
+  findEditors(arg1, options, arg2) {
+    const resource = URI.isUri(arg1) ? arg1 : arg1.resource;
+    const typeId = URI.isUri(arg1) ? void 0 : arg1.typeId;
+    if (options?.supportSideBySide !== SideBySideEditor.ANY && options?.supportSideBySide !== SideBySideEditor.SECONDARY) {
+      if (!this.editorsObserver.hasEditors(resource)) {
+        if (URI.isUri(arg1) || isUndefined(arg2)) {
+          return [];
+        }
+        return void 0;
+      }
+    }
+    if (!isUndefined(arg2)) {
+      const targetGroup = typeof arg2 === "number" ? this.editorGroupsContainer.getGroup(arg2) : arg2;
+      if (URI.isUri(arg1)) {
+        if (!targetGroup) {
+          return [];
+        }
+        return targetGroup.findEditors(resource, options);
+      } else {
+        if (!targetGroup) {
+          return void 0;
+        }
+        const editors = targetGroup.findEditors(resource, options);
+        for (const editor of editors) {
+          if (editor.typeId === typeId) {
+            return editor;
+          }
+        }
+        return void 0;
+      }
+    } else {
+      const result = [];
+      for (const group of this.editorGroupsContainer.getGroups(GroupsOrder.MOST_RECENTLY_ACTIVE)) {
+        const editors = [];
+        if (URI.isUri(arg1)) {
+          editors.push(...this.findEditors(arg1, options, group));
+        } else {
+          const editor = this.findEditors(arg1, options, group);
+          if (editor) {
+            editors.push(editor);
+          }
+        }
+        result.push(...editors.map((editor) => ({ editor, groupId: group.id })));
+      }
+      return result;
+    }
+  }
+  async replaceEditors(replacements, group) {
+    const targetGroup = typeof group === "number" ? this.editorGroupsContainer.getGroup(group) : group;
+    const typedReplacements = [];
+    for (const replacement of replacements) {
+      let typedReplacement = void 0;
+      if (!isEditorInput(replacement.replacement)) {
+        const resolvedEditor = await this.editorResolverService.resolveEditor(
+          replacement.replacement,
+          targetGroup
+        );
+        if (resolvedEditor === ResolvedStatus.ABORT) {
+          continue;
+        }
+        if (isEditorInputWithOptionsAndGroup(resolvedEditor)) {
+          typedReplacement = {
+            editor: replacement.editor,
+            replacement: resolvedEditor.editor,
+            options: resolvedEditor.options,
+            forceReplaceDirty: replacement.forceReplaceDirty
+          };
+        }
+      }
+      if (!typedReplacement) {
+        typedReplacement = {
+          editor: replacement.editor,
+          replacement: isEditorReplacement(replacement) ? replacement.replacement : await this.textEditorService.resolveTextEditor(replacement.replacement),
+          options: isEditorReplacement(replacement) ? replacement.options : replacement.replacement.options,
+          forceReplaceDirty: replacement.forceReplaceDirty
+        };
+      }
+      typedReplacements.push(typedReplacement);
+    }
+    return targetGroup?.replaceEditors(typedReplacements);
+  }
+  //#endregion
+  //#region save/revert
+  async save(editors, options) {
+    if (!Array.isArray(editors)) {
+      editors = [editors];
+    }
+    const uniqueEditors = this.getUniqueEditors(editors);
+    const editorsToSaveParallel = [];
+    const editorsToSaveSequentially = [];
+    if (options?.saveAs) {
+      editorsToSaveSequentially.push(...uniqueEditors);
+    } else {
+      for (const { groupId, editor } of uniqueEditors) {
+        if (editor.hasCapability(EditorInputCapabilities.Untitled)) {
+          editorsToSaveSequentially.push({ groupId, editor });
+        } else {
+          editorsToSaveParallel.push({ groupId, editor });
+        }
+      }
+    }
+    const saveResults = await Promises.settled(editorsToSaveParallel.map(({ groupId, editor }) => {
+      if (options?.reason === SaveReason.EXPLICIT) {
+        this.editorGroupsContainer.getGroup(groupId)?.pinEditor(editor);
+      }
+      return editor.save(groupId, options);
+    }));
+    for (const { groupId, editor } of editorsToSaveSequentially) {
+      if (editor.isDisposed()) {
+        continue;
+      }
+      const editorPane = await this.openEditor(editor, groupId);
+      const editorOptions = {
+        pinned: true,
+        viewState: editorPane?.getViewState()
+      };
+      const result = options?.saveAs ? await editor.saveAs(groupId, options) : await editor.save(groupId, options);
+      saveResults.push(result);
+      if (!result) {
+        break;
+      }
+      if (!editor.matches(result)) {
+        const targetGroups = editor.hasCapability(EditorInputCapabilities.Untitled) ? this.editorGroupsContainer.groups.map((group) => group.id) : [groupId];
+        for (const targetGroup of targetGroups) {
+          if (result instanceof EditorInput) {
+            await this.replaceEditors([{ editor, replacement: result, options: editorOptions }], targetGroup);
+          } else {
+            await this.replaceEditors([{ editor, replacement: { ...result, options: editorOptions } }], targetGroup);
+          }
+        }
+      }
+    }
+    return {
+      success: saveResults.every((result) => !!result),
+      editors: coalesce(saveResults)
+    };
+  }
+  saveAll(options) {
+    return this.save(this.getAllModifiedEditors(options), options);
+  }
+  async revert(editors, options) {
+    if (!Array.isArray(editors)) {
+      editors = [editors];
+    }
+    const uniqueEditors = this.getUniqueEditors(editors);
+    await Promises.settled(uniqueEditors.map(async ({ groupId, editor }) => {
+      this.editorGroupsContainer.getGroup(groupId)?.pinEditor(editor);
+      return editor.revert(groupId, options);
+    }));
+    return !uniqueEditors.some(({ editor }) => editor.isDirty());
+  }
+  async revertAll(options) {
+    return this.revert(this.getAllModifiedEditors(options), options);
+  }
+  getAllModifiedEditors(options) {
+    const editors = [];
+    for (const group of this.editorGroupsContainer.getGroups(GroupsOrder.MOST_RECENTLY_ACTIVE)) {
+      for (const editor of group.getEditors(EditorsOrder.MOST_RECENTLY_ACTIVE)) {
+        if (!editor.isModified()) {
+          continue;
+        }
+        if ((typeof options?.includeUntitled === "boolean" || !options?.includeUntitled?.includeScratchpad) && editor.hasCapability(EditorInputCapabilities.Scratchpad)) {
+          continue;
+        }
+        if (!options?.includeUntitled && editor.hasCapability(EditorInputCapabilities.Untitled)) {
+          continue;
+        }
+        if (options?.excludeSticky && group.isSticky(editor)) {
+          continue;
+        }
+        editors.push({ groupId: group.id, editor });
+      }
+    }
+    return editors;
+  }
+  getUniqueEditors(editors) {
+    const uniqueEditors = [];
+    for (const { editor, groupId } of editors) {
+      if (uniqueEditors.some((uniqueEditor) => uniqueEditor.editor.matches(editor))) {
+        continue;
+      }
+      uniqueEditors.push({ editor, groupId });
+    }
+    return uniqueEditors;
+  }
+  //#endregion
+  dispose() {
+    super.dispose();
+    this.activeOutOfWorkspaceWatchers.forEach((disposable) => dispose(disposable));
+    this.activeOutOfWorkspaceWatchers.clear();
+  }
+};
+EditorService = __decorateClass([
+  __decorateParam(1, IEditorGroupsService),
+  __decorateParam(2, IInstantiationService),
+  __decorateParam(3, IFileService),
+  __decorateParam(4, IConfigurationService),
+  __decorateParam(5, IWorkspaceContextService),
+  __decorateParam(6, IUriIdentityService),
+  __decorateParam(7, IEditorResolverService),
+  __decorateParam(8, IWorkspaceTrustRequestService),
+  __decorateParam(9, IHostService),
+  __decorateParam(10, ITextEditorService)
+], EditorService);
+registerSingleton(IEditorService, new SyncDescriptor(EditorService, [void 0], false));
+export {
+  EditorService
+};
+//# sourceMappingURL=editorService.js.map

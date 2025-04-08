@@ -1,1 +1,156 @@
-var g=Object.defineProperty,v=Object.getOwnPropertyDescriptor,m=(e,r,i,s)=>{for(var t,a=s>1?void 0:s?v(r,i):r,o=e.length-1;o>=0;o--)(t=e[o])&&(a=(s?t(r,i,a):t(a))||a);return s&&a&&g(r,i,a),a},n=(e,r)=>(i,s)=>r(i,s,e);import{DisposableStore as f,toDisposable as C}from"../../../base/common/lifecycle.js";import{Schemas as l}from"../../../base/common/network.js";import{URI as P}from"../../../base/common/uri.js";import*as I from"../../../base/node/pfs.js";import{ILogService as _}from"../../../platform/log/common/log.js";import{IExtHostConfiguration as T}from"../common/extHostConfiguration.js";import{IExtHostInitDataService as b}from"../common/extHostInitDataService.js";import{IExtHostRpcService as F}from"../common/extHostRpcService.js";import{ExtHostSearch as x,reviveQuery as y}from"../common/extHostSearch.js";import{IURITransformerService as E}from"../common/extHostUriTransformerService.js";import{isSerializedFileMatch as H}from"../../services/search/common/search.js";import"../../services/search/common/textSearchManager.js";import{SearchService as R}from"../../services/search/node/rawSearchService.js";import{RipgrepSearchProvider as u}from"../../services/search/node/ripgrepSearchProvider.js";import{OutputChannel as p}from"../../services/search/node/ripgrepSearchUtils.js";import{NativeTextSearchManager as w}from"../../services/search/node/textSearchManager.js";let c=class extends x{constructor(e,r,i,s,t){super(e,i,t),this.configurationService=s,this.getNumThreads=this.getNumThreads.bind(this),this.getNumThreadsCached=this.getNumThreadsCached.bind(this),this.handleConfigurationChanged=this.handleConfigurationChanged.bind(this);const a=new p("RipgrepSearchUD",this._logService);this._disposables.add(this.registerTextSearchProvider(l.vscodeUserData,new u(a,this.getNumThreadsCached))),r.remote.isRemote&&r.remote.authority&&this._registerEHSearchProviders(),s.getConfigProvider().then((e=>{this.isDisposed||this._disposables.add(e.onDidChangeConfiguration(this.handleConfigurationChanged))}))}_pfs=I;_internalFileSearchHandle=-1;_internalFileSearchProvider=null;_registeredEHSearchProvider=!1;_numThreadsPromise;_disposables=new f;isDisposed=!1;handleConfigurationChanged(e){e.affectsConfiguration("search")&&(this._numThreadsPromise=void 0)}async getNumThreads(){return(await this.configurationService.getConfigProvider()).getConfiguration("search").get("ripgrep.maxThreads")}async getNumThreadsCached(){return this._numThreadsPromise||(this._numThreadsPromise=this.getNumThreads()),this._numThreadsPromise}dispose(){this.isDisposed=!0,this._disposables.dispose()}$enableExtensionHostSearch(){this._registerEHSearchProviders()}_registerEHSearchProviders(){if(this._registeredEHSearchProvider)return;this._registeredEHSearchProvider=!0;const e=new p("RipgrepSearchEH",this._logService);this._disposables.add(this.registerTextSearchProvider(l.file,new u(e,this.getNumThreadsCached))),this._disposables.add(this.registerInternalFileSearchProvider(l.file,new R("fileSearchProvider",this.getNumThreadsCached)))}registerInternalFileSearchProvider(e,r){const i=this._handlePool++;return this._internalFileSearchProvider=r,this._internalFileSearchHandle=i,this._proxy.$registerFileSearchProvider(i,this._transformScheme(e)),C((()=>{this._internalFileSearchProvider=null,this._proxy.$unregisterProvider(i)}))}$provideFileSearchResults(e,r,i,s){const t=y(i);if(e===this._internalFileSearchHandle){const i=Date.now();return this.doInternalFileSearch(e,r,t,s).then((e=>{const r=Date.now()-i;return this._logService.debug(`Ext host file search time: ${r}ms`),e}))}return super.$provideFileSearchResults(e,r,i,s)}async doInternalFileSearchWithCustomCallback(e,r,i){if(!this._internalFileSearchProvider)throw new Error("No internal file search handler");const s=await this.getNumThreadsCached();return this._internalFileSearchProvider.doFileSearch(e,s,(e=>{H(e)&&(e=[e]),Array.isArray(e)?i(e.map((e=>P.file(e.path)))):e.message&&this._logService.debug("ExtHostSearch",e.message)}),r)}async doInternalFileSearch(e,r,i,s){return this.doInternalFileSearchWithCustomCallback(i,s,(i=>{this._proxy.$handleFileMatch(e,r,i)}))}$clearCache(e){return this._internalFileSearchProvider?.clearCache(e),super.$clearCache(e)}createTextSearchManager(e,r){return new w(e,r,void 0,"textSearchProvider")}};c=m([n(0,F),n(1,b),n(2,E),n(3,T),n(4,_)],c);export{c as NativeExtHostSearch};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { DisposableStore, IDisposable, toDisposable } from "../../../base/common/lifecycle.js";
+import { Schemas } from "../../../base/common/network.js";
+import { URI } from "../../../base/common/uri.js";
+import * as pfs from "../../../base/node/pfs.js";
+import { ILogService } from "../../../platform/log/common/log.js";
+import { IExtHostConfiguration } from "../common/extHostConfiguration.js";
+import { IExtHostInitDataService } from "../common/extHostInitDataService.js";
+import { IExtHostRpcService } from "../common/extHostRpcService.js";
+import { ExtHostSearch, reviveQuery } from "../common/extHostSearch.js";
+import { IURITransformerService } from "../common/extHostUriTransformerService.js";
+import { IFileQuery, IRawFileQuery, ISearchCompleteStats, ISerializedSearchProgressItem, isSerializedFileMatch, ITextQuery } from "../../services/search/common/search.js";
+import { TextSearchManager } from "../../services/search/common/textSearchManager.js";
+import { SearchService } from "../../services/search/node/rawSearchService.js";
+import { RipgrepSearchProvider } from "../../services/search/node/ripgrepSearchProvider.js";
+import { OutputChannel } from "../../services/search/node/ripgrepSearchUtils.js";
+import { NativeTextSearchManager } from "../../services/search/node/textSearchManager.js";
+let NativeExtHostSearch = class extends ExtHostSearch {
+  constructor(extHostRpc, initData, _uriTransformer, configurationService, _logService) {
+    super(extHostRpc, _uriTransformer, _logService);
+    this.configurationService = configurationService;
+    this.getNumThreads = this.getNumThreads.bind(this);
+    this.getNumThreadsCached = this.getNumThreadsCached.bind(this);
+    this.handleConfigurationChanged = this.handleConfigurationChanged.bind(this);
+    const outputChannel = new OutputChannel("RipgrepSearchUD", this._logService);
+    this._disposables.add(this.registerTextSearchProvider(Schemas.vscodeUserData, new RipgrepSearchProvider(outputChannel, this.getNumThreadsCached)));
+    if (initData.remote.isRemote && initData.remote.authority) {
+      this._registerEHSearchProviders();
+    }
+    configurationService.getConfigProvider().then((provider) => {
+      if (this.isDisposed) {
+        return;
+      }
+      this._disposables.add(provider.onDidChangeConfiguration(this.handleConfigurationChanged));
+    });
+  }
+  static {
+    __name(this, "NativeExtHostSearch");
+  }
+  _pfs = pfs;
+  // allow extending for tests
+  _internalFileSearchHandle = -1;
+  _internalFileSearchProvider = null;
+  _registeredEHSearchProvider = false;
+  _numThreadsPromise;
+  _disposables = new DisposableStore();
+  isDisposed = false;
+  handleConfigurationChanged(event) {
+    if (!event.affectsConfiguration("search")) {
+      return;
+    }
+    this._numThreadsPromise = void 0;
+  }
+  async getNumThreads() {
+    const configProvider = await this.configurationService.getConfigProvider();
+    const numThreads = configProvider.getConfiguration("search").get("ripgrep.maxThreads");
+    return numThreads;
+  }
+  async getNumThreadsCached() {
+    if (!this._numThreadsPromise) {
+      this._numThreadsPromise = this.getNumThreads();
+    }
+    return this._numThreadsPromise;
+  }
+  dispose() {
+    this.isDisposed = true;
+    this._disposables.dispose();
+  }
+  $enableExtensionHostSearch() {
+    this._registerEHSearchProviders();
+  }
+  _registerEHSearchProviders() {
+    if (this._registeredEHSearchProvider) {
+      return;
+    }
+    this._registeredEHSearchProvider = true;
+    const outputChannel = new OutputChannel("RipgrepSearchEH", this._logService);
+    this._disposables.add(this.registerTextSearchProvider(Schemas.file, new RipgrepSearchProvider(outputChannel, this.getNumThreadsCached)));
+    this._disposables.add(this.registerInternalFileSearchProvider(Schemas.file, new SearchService("fileSearchProvider", this.getNumThreadsCached)));
+  }
+  registerInternalFileSearchProvider(scheme, provider) {
+    const handle = this._handlePool++;
+    this._internalFileSearchProvider = provider;
+    this._internalFileSearchHandle = handle;
+    this._proxy.$registerFileSearchProvider(handle, this._transformScheme(scheme));
+    return toDisposable(() => {
+      this._internalFileSearchProvider = null;
+      this._proxy.$unregisterProvider(handle);
+    });
+  }
+  $provideFileSearchResults(handle, session, rawQuery, token) {
+    const query = reviveQuery(rawQuery);
+    if (handle === this._internalFileSearchHandle) {
+      const start = Date.now();
+      return this.doInternalFileSearch(handle, session, query, token).then((result) => {
+        const elapsed = Date.now() - start;
+        this._logService.debug(`Ext host file search time: ${elapsed}ms`);
+        return result;
+      });
+    }
+    return super.$provideFileSearchResults(handle, session, rawQuery, token);
+  }
+  async doInternalFileSearchWithCustomCallback(rawQuery, token, handleFileMatch) {
+    const onResult = /* @__PURE__ */ __name((ev) => {
+      if (isSerializedFileMatch(ev)) {
+        ev = [ev];
+      }
+      if (Array.isArray(ev)) {
+        handleFileMatch(ev.map((m) => URI.file(m.path)));
+        return;
+      }
+      if (ev.message) {
+        this._logService.debug("ExtHostSearch", ev.message);
+      }
+    }, "onResult");
+    if (!this._internalFileSearchProvider) {
+      throw new Error("No internal file search handler");
+    }
+    const numThreads = await this.getNumThreadsCached();
+    return this._internalFileSearchProvider.doFileSearch(rawQuery, numThreads, onResult, token);
+  }
+  async doInternalFileSearch(handle, session, rawQuery, token) {
+    return this.doInternalFileSearchWithCustomCallback(rawQuery, token, (data) => {
+      this._proxy.$handleFileMatch(handle, session, data);
+    });
+  }
+  $clearCache(cacheKey) {
+    this._internalFileSearchProvider?.clearCache(cacheKey);
+    return super.$clearCache(cacheKey);
+  }
+  createTextSearchManager(query, provider) {
+    return new NativeTextSearchManager(query, provider, void 0, "textSearchProvider");
+  }
+};
+NativeExtHostSearch = __decorateClass([
+  __decorateParam(0, IExtHostRpcService),
+  __decorateParam(1, IExtHostInitDataService),
+  __decorateParam(2, IURITransformerService),
+  __decorateParam(3, IExtHostConfiguration),
+  __decorateParam(4, ILogService)
+], NativeExtHostSearch);
+export {
+  NativeExtHostSearch
+};
+//# sourceMappingURL=extHostSearch.js.map

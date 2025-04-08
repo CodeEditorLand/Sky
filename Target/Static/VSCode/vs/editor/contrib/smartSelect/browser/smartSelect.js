@@ -1,1 +1,284 @@
-var F=Object.defineProperty;var O=Object.getOwnPropertyDescriptor;var x=(l,i,e,n)=>{for(var c=n>1?void 0:n?O(i,e):i,t=l.length-1,o;t>=0;t--)(o=l[t])&&(c=(n?o(i,e,c):o(c))||c);return n&&c&&F(i,e,c),c},C=(l,i)=>(e,n)=>i(e,n,l);import*as L from"../../../../base/common/arrays.js";import{CancellationToken as E}from"../../../../base/common/cancellation.js";import{onUnexpectedExternalError as q}from"../../../../base/common/errors.js";import{KeyCode as b,KeyMod as a}from"../../../../base/common/keyCodes.js";import"../../../../base/common/lifecycle.js";import"../../../browser/editorBrowser.js";import{EditorAction as D,EditorContributionInstantiation as z,registerEditorAction as w,registerEditorContribution as B}from"../../../browser/editorExtensions.js";import{EditorOption as K}from"../../../common/config/editorOptions.js";import{Position as _}from"../../../common/core/position.js";import{Range as h}from"../../../common/core/range.js";import{Selection as U}from"../../../common/core/selection.js";import"../../../common/editorCommon.js";import{EditorContextKeys as I}from"../../../common/editorContextKeys.js";import"../../../common/model.js";import"../../../common/languages.js";import{BracketSelectionRangeProvider as G}from"./bracketSelections.js";import{WordSelectionRangeProvider as j}from"./wordSelections.js";import*as v from"../../../../nls.js";import{MenuId as A}from"../../../../platform/actions/common/actions.js";import{CommandsRegistry as N}from"../../../../platform/commands/common/commands.js";import{KeybindingWeight as k}from"../../../../platform/keybinding/common/keybindingsRegistry.js";import{ILanguageFeaturesService as M}from"../../../common/services/languageFeatures.js";import"../../../common/languageFeatureRegistry.js";import{ITextModelService as H}from"../../../common/services/resolverService.js";import{assertType as J}from"../../../../base/common/types.js";import{URI as Q}from"../../../../base/common/uri.js";class P{constructor(i,e){this.index=i;this.ranges=e}mov(i){const e=this.index+(i?1:-1);if(e<0||e>=this.ranges.length)return this;const n=new P(e,this.ranges);return n.ranges[e].equalsRange(this.ranges[this.index])?n.mov(i):n}}let u=class{constructor(i,e){this._editor=i;this._languageFeaturesService=e}static ID="editor.contrib.smartSelectController";static get(i){return i.getContribution(u.ID)}_state;_selectionListener;_ignoreSelection=!1;dispose(){this._selectionListener?.dispose()}async run(i){if(!this._editor.hasModel())return;const e=this._editor.getSelections(),n=this._editor.getModel();if(this._state||await T(this._languageFeaturesService.selectionRangeProvider,n,e.map(t=>t.getPosition()),this._editor.getOption(K.smartSelect),E.None).then(t=>{if(!(!L.isNonEmptyArray(t)||t.length!==e.length)&&!(!this._editor.hasModel()||!L.equals(this._editor.getSelections(),e,(o,g)=>o.equalsSelection(g)))){for(let o=0;o<t.length;o++)t[o]=t[o].filter(g=>g.containsPosition(e[o].getStartPosition())&&g.containsPosition(e[o].getEndPosition())),t[o].unshift(e[o]);this._state=t.map(o=>new P(0,o)),this._selectionListener?.dispose(),this._selectionListener=this._editor.onDidChangeCursorPosition(()=>{this._ignoreSelection||(this._selectionListener?.dispose(),this._state=void 0)})}}),!this._state)return;this._state=this._state.map(t=>t.mov(i));const c=this._state.map(t=>U.fromPositions(t.ranges[t.index].getStartPosition(),t.ranges[t.index].getEndPosition()));this._ignoreSelection=!0;try{this._editor.setSelections(c)}finally{this._ignoreSelection=!1}}};u=x([C(1,M)],u);class W extends D{_forward;constructor(i,e){super(e),this._forward=i}async run(i,e){const n=u.get(e);n&&await n.run(this._forward)}}class V extends W{constructor(){super(!0,{id:"editor.action.smartSelect.expand",label:v.localize2("smartSelect.expand","Expand Selection"),precondition:void 0,kbOpts:{kbExpr:I.editorTextFocus,primary:a.Shift|a.Alt|b.RightArrow,mac:{primary:a.CtrlCmd|a.WinCtrl|a.Shift|b.RightArrow,secondary:[a.WinCtrl|a.Shift|b.RightArrow]},weight:k.EditorContrib},menuOpts:{menuId:A.MenubarSelectionMenu,group:"1_basic",title:v.localize({key:"miSmartSelectGrow",comment:["&& denotes a mnemonic"]},"&&Expand Selection"),order:2}})}}N.registerCommandAlias("editor.action.smartSelect.grow","editor.action.smartSelect.expand");class X extends W{constructor(){super(!1,{id:"editor.action.smartSelect.shrink",label:v.localize2("smartSelect.shrink","Shrink Selection"),precondition:void 0,kbOpts:{kbExpr:I.editorTextFocus,primary:a.Shift|a.Alt|b.LeftArrow,mac:{primary:a.CtrlCmd|a.WinCtrl|a.Shift|b.LeftArrow,secondary:[a.WinCtrl|a.Shift|b.LeftArrow]},weight:k.EditorContrib},menuOpts:{menuId:A.MenubarSelectionMenu,group:"1_basic",title:v.localize({key:"miSmartSelectShrink",comment:["&& denotes a mnemonic"]},"&&Shrink Selection"),order:3}})}}B(u.ID,u,z.Lazy),w(V),w(X);async function T(l,i,e,n,c){const t=l.all(i).concat(new j(n.selectSubwords));t.length===1&&t.unshift(new G);const o=[],g=[];for(const y of t)o.push(Promise.resolve(y.provideSelectionRanges(i,e,c)).then(m=>{if(L.isNonEmptyArray(m)&&m.length===e.length)for(let d=0;d<e.length;d++){g[d]||(g[d]=[]);for(const p of m[d])h.isIRange(p.range)&&h.containsPosition(p.range,e[d])&&g[d].push(h.lift(p.range))}},q));return await Promise.all(o),g.map(y=>{if(y.length===0)return[];y.sort((s,r)=>_.isBefore(s.getStartPosition(),r.getStartPosition())?1:_.isBefore(r.getStartPosition(),s.getStartPosition())||_.isBefore(s.getEndPosition(),r.getEndPosition())?-1:_.isBefore(r.getEndPosition(),s.getEndPosition())?1:0);const m=[];let d;for(const s of y)(!d||h.containsRange(s,d)&&!h.equalsRange(s,d))&&(m.push(s),d=s);if(!n.selectLeadingAndTrailingWhitespace)return m;const p=[m[0]];for(let s=1;s<m.length;s++){const r=m[s-1],f=m[s];if(f.startLineNumber!==r.startLineNumber||f.endLineNumber!==r.endLineNumber){const S=new h(r.startLineNumber,i.getLineFirstNonWhitespaceColumn(r.startLineNumber),r.endLineNumber,i.getLineLastNonWhitespaceColumn(r.endLineNumber));S.containsRange(r)&&!S.equalsRange(r)&&f.containsRange(S)&&!f.equalsRange(S)&&p.push(S);const R=new h(r.startLineNumber,1,r.endLineNumber,i.getLineMaxColumn(r.endLineNumber));R.containsRange(r)&&!R.equalsRange(S)&&f.containsRange(R)&&!f.equalsRange(R)&&p.push(R)}p.push(f)}return p})}N.registerCommand("_executeSelectionRangeProvider",async function(l,...i){const[e,n]=i;J(Q.isUri(e));const c=l.get(M).selectionRangeProvider,t=await l.get(H).createModelReference(e);try{return T(c,t.object.textEditorModel,n,{selectLeadingAndTrailingWhitespace:!0,selectSubwords:!0},E.None)}finally{t.dispose()}});export{u as SmartSelectController,T as provideSelectionRanges};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import * as arrays from "../../../../base/common/arrays.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { onUnexpectedExternalError } from "../../../../base/common/errors.js";
+import { KeyCode, KeyMod } from "../../../../base/common/keyCodes.js";
+import { IDisposable } from "../../../../base/common/lifecycle.js";
+import { ICodeEditor } from "../../../browser/editorBrowser.js";
+import { EditorAction, EditorContributionInstantiation, IActionOptions, registerEditorAction, registerEditorContribution, ServicesAccessor } from "../../../browser/editorExtensions.js";
+import { EditorOption } from "../../../common/config/editorOptions.js";
+import { Position } from "../../../common/core/position.js";
+import { Range } from "../../../common/core/range.js";
+import { Selection } from "../../../common/core/selection.js";
+import { IEditorContribution } from "../../../common/editorCommon.js";
+import { EditorContextKeys } from "../../../common/editorContextKeys.js";
+import { ITextModel } from "../../../common/model.js";
+import * as languages from "../../../common/languages.js";
+import { BracketSelectionRangeProvider } from "./bracketSelections.js";
+import { WordSelectionRangeProvider } from "./wordSelections.js";
+import * as nls from "../../../../nls.js";
+import { MenuId } from "../../../../platform/actions/common/actions.js";
+import { CommandsRegistry } from "../../../../platform/commands/common/commands.js";
+import { KeybindingWeight } from "../../../../platform/keybinding/common/keybindingsRegistry.js";
+import { ILanguageFeaturesService } from "../../../common/services/languageFeatures.js";
+import { LanguageFeatureRegistry } from "../../../common/languageFeatureRegistry.js";
+import { ITextModelService } from "../../../common/services/resolverService.js";
+import { assertType } from "../../../../base/common/types.js";
+import { URI } from "../../../../base/common/uri.js";
+class SelectionRanges {
+  constructor(index, ranges) {
+    this.index = index;
+    this.ranges = ranges;
+  }
+  static {
+    __name(this, "SelectionRanges");
+  }
+  mov(fwd) {
+    const index = this.index + (fwd ? 1 : -1);
+    if (index < 0 || index >= this.ranges.length) {
+      return this;
+    }
+    const res = new SelectionRanges(index, this.ranges);
+    if (res.ranges[index].equalsRange(this.ranges[this.index])) {
+      return res.mov(fwd);
+    }
+    return res;
+  }
+}
+let SmartSelectController = class {
+  constructor(_editor, _languageFeaturesService) {
+    this._editor = _editor;
+    this._languageFeaturesService = _languageFeaturesService;
+  }
+  static {
+    __name(this, "SmartSelectController");
+  }
+  static ID = "editor.contrib.smartSelectController";
+  static get(editor) {
+    return editor.getContribution(SmartSelectController.ID);
+  }
+  _state;
+  _selectionListener;
+  _ignoreSelection = false;
+  dispose() {
+    this._selectionListener?.dispose();
+  }
+  async run(forward) {
+    if (!this._editor.hasModel()) {
+      return;
+    }
+    const selections = this._editor.getSelections();
+    const model = this._editor.getModel();
+    if (!this._state) {
+      await provideSelectionRanges(this._languageFeaturesService.selectionRangeProvider, model, selections.map((s) => s.getPosition()), this._editor.getOption(EditorOption.smartSelect), CancellationToken.None).then((ranges) => {
+        if (!arrays.isNonEmptyArray(ranges) || ranges.length !== selections.length) {
+          return;
+        }
+        if (!this._editor.hasModel() || !arrays.equals(this._editor.getSelections(), selections, (a, b) => a.equalsSelection(b))) {
+          return;
+        }
+        for (let i = 0; i < ranges.length; i++) {
+          ranges[i] = ranges[i].filter((range) => {
+            return range.containsPosition(selections[i].getStartPosition()) && range.containsPosition(selections[i].getEndPosition());
+          });
+          ranges[i].unshift(selections[i]);
+        }
+        this._state = ranges.map((ranges2) => new SelectionRanges(0, ranges2));
+        this._selectionListener?.dispose();
+        this._selectionListener = this._editor.onDidChangeCursorPosition(() => {
+          if (!this._ignoreSelection) {
+            this._selectionListener?.dispose();
+            this._state = void 0;
+          }
+        });
+      });
+    }
+    if (!this._state) {
+      return;
+    }
+    this._state = this._state.map((state) => state.mov(forward));
+    const newSelections = this._state.map((state) => Selection.fromPositions(state.ranges[state.index].getStartPosition(), state.ranges[state.index].getEndPosition()));
+    this._ignoreSelection = true;
+    try {
+      this._editor.setSelections(newSelections);
+    } finally {
+      this._ignoreSelection = false;
+    }
+  }
+};
+SmartSelectController = __decorateClass([
+  __decorateParam(1, ILanguageFeaturesService)
+], SmartSelectController);
+class AbstractSmartSelect extends EditorAction {
+  static {
+    __name(this, "AbstractSmartSelect");
+  }
+  _forward;
+  constructor(forward, opts) {
+    super(opts);
+    this._forward = forward;
+  }
+  async run(_accessor, editor) {
+    const controller = SmartSelectController.get(editor);
+    if (controller) {
+      await controller.run(this._forward);
+    }
+  }
+}
+class GrowSelectionAction extends AbstractSmartSelect {
+  static {
+    __name(this, "GrowSelectionAction");
+  }
+  constructor() {
+    super(true, {
+      id: "editor.action.smartSelect.expand",
+      label: nls.localize2("smartSelect.expand", "Expand Selection"),
+      precondition: void 0,
+      kbOpts: {
+        kbExpr: EditorContextKeys.editorTextFocus,
+        primary: KeyMod.Shift | KeyMod.Alt | KeyCode.RightArrow,
+        mac: {
+          primary: KeyMod.CtrlCmd | KeyMod.WinCtrl | KeyMod.Shift | KeyCode.RightArrow,
+          secondary: [KeyMod.WinCtrl | KeyMod.Shift | KeyCode.RightArrow]
+        },
+        weight: KeybindingWeight.EditorContrib
+      },
+      menuOpts: {
+        menuId: MenuId.MenubarSelectionMenu,
+        group: "1_basic",
+        title: nls.localize({ key: "miSmartSelectGrow", comment: ["&& denotes a mnemonic"] }, "&&Expand Selection"),
+        order: 2
+      }
+    });
+  }
+}
+CommandsRegistry.registerCommandAlias("editor.action.smartSelect.grow", "editor.action.smartSelect.expand");
+class ShrinkSelectionAction extends AbstractSmartSelect {
+  static {
+    __name(this, "ShrinkSelectionAction");
+  }
+  constructor() {
+    super(false, {
+      id: "editor.action.smartSelect.shrink",
+      label: nls.localize2("smartSelect.shrink", "Shrink Selection"),
+      precondition: void 0,
+      kbOpts: {
+        kbExpr: EditorContextKeys.editorTextFocus,
+        primary: KeyMod.Shift | KeyMod.Alt | KeyCode.LeftArrow,
+        mac: {
+          primary: KeyMod.CtrlCmd | KeyMod.WinCtrl | KeyMod.Shift | KeyCode.LeftArrow,
+          secondary: [KeyMod.WinCtrl | KeyMod.Shift | KeyCode.LeftArrow]
+        },
+        weight: KeybindingWeight.EditorContrib
+      },
+      menuOpts: {
+        menuId: MenuId.MenubarSelectionMenu,
+        group: "1_basic",
+        title: nls.localize({ key: "miSmartSelectShrink", comment: ["&& denotes a mnemonic"] }, "&&Shrink Selection"),
+        order: 3
+      }
+    });
+  }
+}
+registerEditorContribution(SmartSelectController.ID, SmartSelectController, EditorContributionInstantiation.Lazy);
+registerEditorAction(GrowSelectionAction);
+registerEditorAction(ShrinkSelectionAction);
+async function provideSelectionRanges(registry, model, positions, options, token) {
+  const providers = registry.all(model).concat(new WordSelectionRangeProvider(options.selectSubwords));
+  if (providers.length === 1) {
+    providers.unshift(new BracketSelectionRangeProvider());
+  }
+  const work = [];
+  const allRawRanges = [];
+  for (const provider of providers) {
+    work.push(Promise.resolve(provider.provideSelectionRanges(model, positions, token)).then((allProviderRanges) => {
+      if (arrays.isNonEmptyArray(allProviderRanges) && allProviderRanges.length === positions.length) {
+        for (let i = 0; i < positions.length; i++) {
+          if (!allRawRanges[i]) {
+            allRawRanges[i] = [];
+          }
+          for (const oneProviderRanges of allProviderRanges[i]) {
+            if (Range.isIRange(oneProviderRanges.range) && Range.containsPosition(oneProviderRanges.range, positions[i])) {
+              allRawRanges[i].push(Range.lift(oneProviderRanges.range));
+            }
+          }
+        }
+      }
+    }, onUnexpectedExternalError));
+  }
+  await Promise.all(work);
+  return allRawRanges.map((oneRawRanges) => {
+    if (oneRawRanges.length === 0) {
+      return [];
+    }
+    oneRawRanges.sort((a, b) => {
+      if (Position.isBefore(a.getStartPosition(), b.getStartPosition())) {
+        return 1;
+      } else if (Position.isBefore(b.getStartPosition(), a.getStartPosition())) {
+        return -1;
+      } else if (Position.isBefore(a.getEndPosition(), b.getEndPosition())) {
+        return -1;
+      } else if (Position.isBefore(b.getEndPosition(), a.getEndPosition())) {
+        return 1;
+      } else {
+        return 0;
+      }
+    });
+    const oneRanges = [];
+    let last;
+    for (const range of oneRawRanges) {
+      if (!last || Range.containsRange(range, last) && !Range.equalsRange(range, last)) {
+        oneRanges.push(range);
+        last = range;
+      }
+    }
+    if (!options.selectLeadingAndTrailingWhitespace) {
+      return oneRanges;
+    }
+    const oneRangesWithTrivia = [oneRanges[0]];
+    for (let i = 1; i < oneRanges.length; i++) {
+      const prev = oneRanges[i - 1];
+      const cur = oneRanges[i];
+      if (cur.startLineNumber !== prev.startLineNumber || cur.endLineNumber !== prev.endLineNumber) {
+        const rangeNoWhitespace = new Range(prev.startLineNumber, model.getLineFirstNonWhitespaceColumn(prev.startLineNumber), prev.endLineNumber, model.getLineLastNonWhitespaceColumn(prev.endLineNumber));
+        if (rangeNoWhitespace.containsRange(prev) && !rangeNoWhitespace.equalsRange(prev) && cur.containsRange(rangeNoWhitespace) && !cur.equalsRange(rangeNoWhitespace)) {
+          oneRangesWithTrivia.push(rangeNoWhitespace);
+        }
+        const rangeFull = new Range(prev.startLineNumber, 1, prev.endLineNumber, model.getLineMaxColumn(prev.endLineNumber));
+        if (rangeFull.containsRange(prev) && !rangeFull.equalsRange(rangeNoWhitespace) && cur.containsRange(rangeFull) && !cur.equalsRange(rangeFull)) {
+          oneRangesWithTrivia.push(rangeFull);
+        }
+      }
+      oneRangesWithTrivia.push(cur);
+    }
+    return oneRangesWithTrivia;
+  });
+}
+__name(provideSelectionRanges, "provideSelectionRanges");
+CommandsRegistry.registerCommand("_executeSelectionRangeProvider", async function(accessor, ...args) {
+  const [resource, positions] = args;
+  assertType(URI.isUri(resource));
+  const registry = accessor.get(ILanguageFeaturesService).selectionRangeProvider;
+  const reference = await accessor.get(ITextModelService).createModelReference(resource);
+  try {
+    return provideSelectionRanges(registry, reference.object.textEditorModel, positions, { selectLeadingAndTrailingWhitespace: true, selectSubwords: true }, CancellationToken.None);
+  } finally {
+    reference.dispose();
+  }
+});
+export {
+  SmartSelectController,
+  provideSelectionRanges
+};
+//# sourceMappingURL=smartSelect.js.map

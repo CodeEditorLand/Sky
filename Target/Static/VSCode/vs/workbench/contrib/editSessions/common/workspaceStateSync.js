@@ -1,1 +1,181 @@
-var D=Object.defineProperty,h=Object.getOwnPropertyDescriptor,g=(e,t,r,o)=>{for(var s,n=o>1?void 0:o?h(t,r):t,a=e.length-1;a>=0;a--)(s=e[a])&&(n=(o?s(t,r,n):s(n))||n);return o&&n&&D(t,r,n),n},i=(e,t)=>(r,o)=>t(r,o,e);import{CancellationTokenSource as y}from"../../../../base/common/cancellation.js";import"../../../../base/common/collections.js";import{Emitter as I}from"../../../../base/common/event.js";import{parse as R,stringify as b}from"../../../../base/common/marshalling.js";import"../../../../base/common/uri.js";import{IConfigurationService as E}from"../../../../platform/configuration/common/configuration.js";import{IEnvironmentService as k}from"../../../../platform/environment/common/environment.js";import{IFileService as U}from"../../../../platform/files/common/files.js";import{IStorageService as P,StorageScope as d,StorageTarget as p}from"../../../../platform/storage/common/storage.js";import{ITelemetryService as C}from"../../../../platform/telemetry/common/telemetry.js";import{IUriIdentityService as A}from"../../../../platform/uriIdentity/common/uriIdentity.js";import"../../../../platform/userDataProfile/common/userDataProfile.js";import{AbstractSynchroniser as _}from"../../../../platform/userDataSync/common/abstractSynchronizer.js";import{SyncResource as T}from"../../../../platform/userDataSync/common/userDataSync.js";import{IEditSessionsStorageService as W}from"./editSessions.js";import{IWorkspaceIdentityService as O}from"../../../services/workspaces/common/workspaceIdentityService.js";class M{_serviceBrand;async writeResource(){}async getAllResourceRefs(){return[]}async resolveResourceContent(){return null}}class L{_serviceBrand;_onDidChangeEnablement=new I;onDidChangeEnablement=this._onDidChangeEnablement.event;_onDidChangeResourceEnablement=new I;onDidChangeResourceEnablement=this._onDidChangeResourceEnablement.event;isEnabled(){return!0}canToggleEnablement(){return!0}setEnablement(e){}isResourceEnabled(e){return!0}isResourceEnablementConfigured(e){return!1}setResourceEnablement(e,t){}getResourceSyncStateVersion(e){}}let v=class extends _{constructor(e,t,r,o,s,n,a,i,c,m,l,p){const S=new M,u=new L;super({syncResource:T.WorkspaceState,profile:e},t,s,n,c,r,S,u,a,o,i,m),this.workspaceIdentityService=l,this.editSessionsStorageService=p}version=1;async sync(){const e=new y,t=await this.workspaceIdentityService.getWorkspaceStateFolders(e.token);if(!t.length)return null;await this.storageService.flush();const r=this.storageService.keys(d.WORKSPACE,p.USER);if(!r.length)return null;const o={};r.forEach((e=>{const t=this.storageService.get(e,d.WORKSPACE);t&&(o[e]=t)}));const s={folders:t,storage:o,version:this.version};return await this.editSessionsStorageService.write("workspaceState",b(s)),null}async apply(){const e=this.editSessionsStorageService.lastReadResources.get("editSessions")?.content,t=e?JSON.parse(e).workspaceStateId:void 0,r=await this.editSessionsStorageService.read("workspaceState",t);if(!r)return null;const o=R(r.content);if(!o)return this.logService.info("Skipping initializing workspace state because remote workspace state does not exist."),null;const s=new y,n=await this.workspaceIdentityService.matches(o.folders,s.token);if(!n)return this.logService.info("Skipping initializing workspace state because remote workspace state does not match current workspace."),null;const a={};for(const e of Object.keys(o.storage))a[e]=o.storage[e];if(Object.keys(a).length){const e=[];for(const t of Object.keys(a))try{const r=R(a[t]);n(r),e.push({key:t,value:r,scope:d.WORKSPACE,target:p.USER})}catch{e.push({key:t,value:a[t],scope:d.WORKSPACE,target:p.USER})}this.storageService.storeAll(e,!0)}return this.editSessionsStorageService.delete("workspaceState",r.ref),null}applyResult(e,t,r,o){throw new Error("Method not implemented.")}async generateSyncPreview(e,t,r,o,s){return[]}getMergeResult(e,t){throw new Error("Method not implemented.")}getAcceptResult(e,t,r,o){throw new Error("Method not implemented.")}async hasRemoteChanged(e){return!0}async hasLocalData(){return!1}async resolveContent(e){return null}};v=g([i(4,U),i(5,k),i(6,C),i(7,E),i(8,P),i(9,A),i(10,O),i(11,W)],v);export{v as WorkspaceStateSynchroniser};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { CancellationToken, CancellationTokenSource } from "../../../../base/common/cancellation.js";
+import { IStringDictionary } from "../../../../base/common/collections.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { parse, stringify } from "../../../../base/common/marshalling.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IEnvironmentService } from "../../../../platform/environment/common/environment.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { IStorageEntry, IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import { IUserDataProfile } from "../../../../platform/userDataProfile/common/userDataProfile.js";
+import { AbstractSynchroniser, IAcceptResult, IMergeResult, IResourcePreview, ISyncResourcePreview } from "../../../../platform/userDataSync/common/abstractSynchronizer.js";
+import { IRemoteUserData, IResourceRefHandle, IUserDataSyncLocalStoreService, IUserDataSyncConfiguration, IUserDataSyncEnablementService, IUserDataSyncLogService, IUserDataSyncStoreService, IUserDataSynchroniser, IWorkspaceState, SyncResource, IUserDataSyncResourcePreview } from "../../../../platform/userDataSync/common/userDataSync.js";
+import { EditSession, IEditSessionsStorageService } from "./editSessions.js";
+import { IWorkspaceIdentityService } from "../../../services/workspaces/common/workspaceIdentityService.js";
+class NullBackupStoreService {
+  static {
+    __name(this, "NullBackupStoreService");
+  }
+  _serviceBrand;
+  async writeResource() {
+    return;
+  }
+  async getAllResourceRefs() {
+    return [];
+  }
+  async resolveResourceContent() {
+    return null;
+  }
+}
+class NullEnablementService {
+  static {
+    __name(this, "NullEnablementService");
+  }
+  _serviceBrand;
+  _onDidChangeEnablement = new Emitter();
+  onDidChangeEnablement = this._onDidChangeEnablement.event;
+  _onDidChangeResourceEnablement = new Emitter();
+  onDidChangeResourceEnablement = this._onDidChangeResourceEnablement.event;
+  isEnabled() {
+    return true;
+  }
+  canToggleEnablement() {
+    return true;
+  }
+  setEnablement(_enabled) {
+  }
+  isResourceEnabled(_resource) {
+    return true;
+  }
+  isResourceEnablementConfigured(_resource) {
+    return false;
+  }
+  setResourceEnablement(_resource, _enabled) {
+  }
+  getResourceSyncStateVersion(_resource) {
+    return void 0;
+  }
+}
+let WorkspaceStateSynchroniser = class extends AbstractSynchroniser {
+  constructor(profile, collection, userDataSyncStoreService, logService, fileService, environmentService, telemetryService, configurationService, storageService, uriIdentityService, workspaceIdentityService, editSessionsStorageService) {
+    const userDataSyncLocalStoreService = new NullBackupStoreService();
+    const userDataSyncEnablementService = new NullEnablementService();
+    super({ syncResource: SyncResource.WorkspaceState, profile }, collection, fileService, environmentService, storageService, userDataSyncStoreService, userDataSyncLocalStoreService, userDataSyncEnablementService, telemetryService, logService, configurationService, uriIdentityService);
+    this.workspaceIdentityService = workspaceIdentityService;
+    this.editSessionsStorageService = editSessionsStorageService;
+  }
+  static {
+    __name(this, "WorkspaceStateSynchroniser");
+  }
+  version = 1;
+  async sync() {
+    const cancellationTokenSource = new CancellationTokenSource();
+    const folders = await this.workspaceIdentityService.getWorkspaceStateFolders(cancellationTokenSource.token);
+    if (!folders.length) {
+      return null;
+    }
+    await this.storageService.flush();
+    const keys = this.storageService.keys(StorageScope.WORKSPACE, StorageTarget.USER);
+    if (!keys.length) {
+      return null;
+    }
+    const contributedData = {};
+    keys.forEach((key) => {
+      const data = this.storageService.get(key, StorageScope.WORKSPACE);
+      if (data) {
+        contributedData[key] = data;
+      }
+    });
+    const content = { folders, storage: contributedData, version: this.version };
+    await this.editSessionsStorageService.write("workspaceState", stringify(content));
+    return null;
+  }
+  async apply() {
+    const payload = this.editSessionsStorageService.lastReadResources.get("editSessions")?.content;
+    const workspaceStateId = payload ? JSON.parse(payload).workspaceStateId : void 0;
+    const resource = await this.editSessionsStorageService.read("workspaceState", workspaceStateId);
+    if (!resource) {
+      return null;
+    }
+    const remoteWorkspaceState = parse(resource.content);
+    if (!remoteWorkspaceState) {
+      this.logService.info("Skipping initializing workspace state because remote workspace state does not exist.");
+      return null;
+    }
+    const cancellationTokenSource = new CancellationTokenSource();
+    const replaceUris = await this.workspaceIdentityService.matches(remoteWorkspaceState.folders, cancellationTokenSource.token);
+    if (!replaceUris) {
+      this.logService.info("Skipping initializing workspace state because remote workspace state does not match current workspace.");
+      return null;
+    }
+    const storage = {};
+    for (const key of Object.keys(remoteWorkspaceState.storage)) {
+      storage[key] = remoteWorkspaceState.storage[key];
+    }
+    if (Object.keys(storage).length) {
+      const storageEntries = [];
+      for (const key of Object.keys(storage)) {
+        try {
+          const value = parse(storage[key]);
+          replaceUris(value);
+          storageEntries.push({ key, value, scope: StorageScope.WORKSPACE, target: StorageTarget.USER });
+        } catch {
+          storageEntries.push({ key, value: storage[key], scope: StorageScope.WORKSPACE, target: StorageTarget.USER });
+        }
+      }
+      this.storageService.storeAll(storageEntries, true);
+    }
+    this.editSessionsStorageService.delete("workspaceState", resource.ref);
+    return null;
+  }
+  // TODO@joyceerhl implement AbstractSynchronizer in full
+  applyResult(remoteUserData, lastSyncUserData, result, force) {
+    throw new Error("Method not implemented.");
+  }
+  async generateSyncPreview(remoteUserData, lastSyncUserData, isRemoteDataFromCurrentMachine, userDataSyncConfiguration, token) {
+    return [];
+  }
+  getMergeResult(resourcePreview, token) {
+    throw new Error("Method not implemented.");
+  }
+  getAcceptResult(resourcePreview, resource, content, token) {
+    throw new Error("Method not implemented.");
+  }
+  async hasRemoteChanged(lastSyncUserData) {
+    return true;
+  }
+  async hasLocalData() {
+    return false;
+  }
+  async resolveContent(uri) {
+    return null;
+  }
+};
+WorkspaceStateSynchroniser = __decorateClass([
+  __decorateParam(4, IFileService),
+  __decorateParam(5, IEnvironmentService),
+  __decorateParam(6, ITelemetryService),
+  __decorateParam(7, IConfigurationService),
+  __decorateParam(8, IStorageService),
+  __decorateParam(9, IUriIdentityService),
+  __decorateParam(10, IWorkspaceIdentityService),
+  __decorateParam(11, IEditSessionsStorageService)
+], WorkspaceStateSynchroniser);
+export {
+  WorkspaceStateSynchroniser
+};
+//# sourceMappingURL=workspaceStateSync.js.map

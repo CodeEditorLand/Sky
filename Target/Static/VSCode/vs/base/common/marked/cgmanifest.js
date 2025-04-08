@@ -1,1 +1,5 @@
-var i="../../../../Asset/cgmanifest-HY3FAPMG.json";export{i as default};
+var cgmanifest_default = "../../../../Asset/cgmanifest-HY3FAPMG.json";
+export {
+  cgmanifest_default as default
+};
+//# sourceMappingURL=cgmanifest.js.map

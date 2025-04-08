@@ -1,1 +1,35 @@
-var u=Object.defineProperty,n=Object.getOwnPropertyDescriptor,v=(a,e,t,o)=>{for(var s,r=o>1?void 0:o?n(e,t):e,i=a.length-1;i>=0;i--)(s=a[i])&&(r=(o?s(e,t,r):s(r))||r);return o&&r&&u(e,t,r),r},p=(a,e)=>(t,o)=>e(t,o,a);import{Disposable as g}from"../../../../base/common/lifecycle.js";import{ILanguagePackService as l}from"../../../../platform/languagePacks/common/languagePacks.js";import"../../../../platform/languagePacks/node/languagePacks.js";let t=class extends g{constructor(a){super(),this.localizationsService=a,this.updateLocalizations()}updateLocalizations(){this.localizationsService.update()}};t=v([p(0,l)],t);export{t as LocalizationsUpdater};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { ILanguagePackService } from "../../../../platform/languagePacks/common/languagePacks.js";
+import { NativeLanguagePackService } from "../../../../platform/languagePacks/node/languagePacks.js";
+let LocalizationsUpdater = class extends Disposable {
+  constructor(localizationsService) {
+    super();
+    this.localizationsService = localizationsService;
+    this.updateLocalizations();
+  }
+  static {
+    __name(this, "LocalizationsUpdater");
+  }
+  updateLocalizations() {
+    this.localizationsService.update();
+  }
+};
+LocalizationsUpdater = __decorateClass([
+  __decorateParam(0, ILanguagePackService)
+], LocalizationsUpdater);
+export {
+  LocalizationsUpdater
+};
+//# sourceMappingURL=localizationsUpdater.js.map

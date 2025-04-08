@@ -1,1 +1,659 @@
-var q=Object.defineProperty,$=Object.getOwnPropertyDescriptor,k=(e,t,r,i)=>{for(var s,o=i>1?void 0:i?$(t,r):t,n=e.length-1;n>=0;n--)(s=e[n])&&(o=(i?s(t,r,o):s(o))||o);return i&&o&&q(t,r,o),o},S=(e,t)=>(r,i)=>t(r,i,e);import"./markersFileDecorations.js";import{ContextKeyExpr as m}from"../../../../platform/contextkey/common/contextkey.js";import{Extensions as U}from"../../../../platform/configuration/common/configurationRegistry.js";import{Categories as H}from"../../../../platform/action/common/actionCommonCategories.js";import{KeybindingsRegistry as v,KeybindingWeight as p}from"../../../../platform/keybinding/common/keybindingsRegistry.js";import{KeyCode as w,KeyMod as g}from"../../../../base/common/keyCodes.js";import{localize as o,localize2 as u}from"../../../../nls.js";import{Marker as C,RelatedInformation as Y,ResourceMarkers as j}from"./markersModel.js";import{MarkersView as z}from"./markersView.js";import{MenuId as _,registerAction2 as c,Action2 as W}from"../../../../platform/actions/common/actions.js";import{Registry as f}from"../../../../platform/registry/common/platform.js";import{MarkersViewMode as b,Markers as e,MarkersContextKeys as l}from"../common/markers.js";import E from"./messages.js";import{Extensions as Q}from"../../../common/contributions.js";import"./markers.js";import{LifecyclePhase as D}from"../../../services/lifecycle/common/lifecycle.js";import{IClipboardService as K}from"../../../../platform/clipboard/common/clipboardService.js";import{Disposable as P,MutableDisposable as X}from"../../../../base/common/lifecycle.js";import{IStatusbarService as J,StatusbarAlignment as T}from"../../../services/statusbar/browser/statusbar.js";import{IMarkerService as O}from"../../../../platform/markers/common/markers.js";import{Extensions as x,ViewContainerLocation as Z}from"../../../common/views.js";import{IViewsService as M}from"../../../services/views/common/viewsService.js";import{getVisbileViewContextKey as F,FocusedViewContext as N}from"../../../common/contextkeys.js";import{ViewPaneContainer as ee}from"../../../browser/parts/views/viewPaneContainer.js";import{SyncDescriptor as L}from"../../../../platform/instantiation/common/descriptors.js";import"../../../../platform/instantiation/common/instantiation.js";import{Codicon as y}from"../../../../base/common/codicons.js";import{registerIcon as re}from"../../../../platform/theme/common/iconRegistry.js";import{ViewAction as I}from"../../../browser/parts/views/viewPane.js";import{IActivityService as ie,NumberBadge as te}from"../../../services/activity/common/activity.js";import{viewFilterSubmenu as h}from"../../../browser/parts/views/viewFilter.js";import{IConfigurationService as se}from"../../../../platform/configuration/common/configuration.js";import{problemsConfigurationNodeBase as oe}from"../../../common/configuration.js";v.registerCommandAndKeybindingRule({id:e.MARKER_OPEN_ACTION_ID,weight:p.WorkbenchContrib,when:m.and(l.MarkerFocusContextKey),primary:w.Enter,mac:{primary:w.Enter,secondary:[g.CtrlCmd|w.DownArrow]},handler:(t,r)=>{const i=t.get(M).getActiveViewWithId(e.MARKERS_VIEW_ID);i.openFileAtElement(i.getFocusElement(),!1,!1,!0)}}),v.registerCommandAndKeybindingRule({id:e.MARKER_OPEN_SIDE_ACTION_ID,weight:p.WorkbenchContrib,when:m.and(l.MarkerFocusContextKey),primary:g.CtrlCmd|w.Enter,mac:{primary:g.WinCtrl|w.Enter},handler:(t,r)=>{const i=t.get(M).getActiveViewWithId(e.MARKERS_VIEW_ID);i.openFileAtElement(i.getFocusElement(),!1,!0,!0)}}),v.registerCommandAndKeybindingRule({id:e.MARKER_SHOW_PANEL_ID,weight:p.WorkbenchContrib,when:void 0,primary:void 0,handler:async(t,r)=>{await t.get(M).openView(e.MARKERS_VIEW_ID)}}),v.registerCommandAndKeybindingRule({id:e.MARKER_SHOW_QUICK_FIX,weight:p.WorkbenchContrib,when:l.MarkerFocusContextKey,primary:g.CtrlCmd|w.Period,handler:(t,r)=>{const i=t.get(M).getActiveViewWithId(e.MARKERS_VIEW_ID),s=i.getFocusElement();s instanceof C&&i.showQuickFixes(s)}}),f.as(U.Configuration).registerConfiguration({...oe,properties:{"problems.autoReveal":{description:E.PROBLEMS_PANEL_CONFIGURATION_AUTO_REVEAL,type:"boolean",default:!0},"problems.defaultViewMode":{description:E.PROBLEMS_PANEL_CONFIGURATION_VIEW_MODE,type:"string",default:"tree",enum:["table","tree"]},"problems.showCurrentInStatus":{description:E.PROBLEMS_PANEL_CONFIGURATION_SHOW_CURRENT_STATUS,type:"boolean",default:!1},"problems.sortOrder":{description:E.PROBLEMS_PANEL_CONFIGURATION_COMPARE_ORDER,type:"string",default:"severity",enum:["severity","position"],enumDescriptions:[E.PROBLEMS_PANEL_CONFIGURATION_COMPARE_ORDER_SEVERITY,E.PROBLEMS_PANEL_CONFIGURATION_COMPARE_ORDER_POSITION]}}});const G=re("markers-view-icon",y.warning,o("markersViewIcon","View icon of the markers view.")),ne=f.as(x.ViewContainersRegistry).registerViewContainer({id:e.MARKERS_CONTAINER_ID,title:E.MARKERS_PANEL_TITLE_PROBLEMS,icon:G,hideIfEmpty:!0,order:0,ctorDescriptor:new L(ee,[e.MARKERS_CONTAINER_ID,{mergeViewWithContainerWhenSingleView:!0}]),storageId:e.MARKERS_VIEW_STORAGE_ID},Z.Panel,{doNotRegisterOpenCommand:!0});f.as(x.ViewsRegistry).registerViews([{id:e.MARKERS_VIEW_ID,containerIcon:G,name:E.MARKERS_PANEL_TITLE_PROBLEMS,canToggleVisibility:!0,canMoveView:!0,ctorDescriptor:new L(z),openCommandActionDescriptor:{id:"workbench.actions.view.problems",mnemonicTitle:o({key:"miMarker",comment:["&& denotes a mnemonic"]},"&&Problems"),keybindings:{primary:g.CtrlCmd|g.Shift|w.KeyM},order:0}}],ne);const B=f.as(Q.Workbench);c(class extends I{constructor(){super({id:`workbench.actions.table.${e.MARKERS_VIEW_ID}.viewAsTree`,title:o("viewAsTree","View as Tree"),metadata:{description:u("viewAsTreeDescription","Show the problems view as a tree.")},menu:{id:_.ViewTitle,when:m.and(m.equals("view",e.MARKERS_VIEW_ID),l.MarkersViewModeContextKey.isEqualTo(b.Table)),group:"navigation",order:3},icon:y.listTree,viewId:e.MARKERS_VIEW_ID})}async runInView(e,t){t.setViewMode(b.Tree)}}),c(class extends I{constructor(){super({id:`workbench.actions.table.${e.MARKERS_VIEW_ID}.viewAsTable`,title:o("viewAsTable","View as Table"),metadata:{description:u("viewAsTableDescription","Show the problems view as a table.")},menu:{id:_.ViewTitle,when:m.and(m.equals("view",e.MARKERS_VIEW_ID),l.MarkersViewModeContextKey.isEqualTo(b.Tree)),group:"navigation",order:3},icon:y.listFlat,viewId:e.MARKERS_VIEW_ID})}async runInView(e,t){t.setViewMode(b.Table)}}),c(class extends I{constructor(){super({id:`workbench.actions.${e.MARKERS_VIEW_ID}.toggleErrors`,title:o("show errors","Show Errors"),metadata:{description:u("toggleErrorsDescription","Show or hide errors in the problems view.")},category:o("problems","Problems"),toggled:l.ShowErrorsFilterContextKey,menu:{id:h,group:"1_filter",when:m.equals("view",e.MARKERS_VIEW_ID),order:1},viewId:e.MARKERS_VIEW_ID})}async runInView(e,t){t.filters.showErrors=!t.filters.showErrors}}),c(class extends I{constructor(){super({id:`workbench.actions.${e.MARKERS_VIEW_ID}.toggleWarnings`,title:o("show warnings","Show Warnings"),metadata:{description:u("toggleWarningsDescription","Show or hide warnings in the problems view.")},category:o("problems","Problems"),toggled:l.ShowWarningsFilterContextKey,menu:{id:h,group:"1_filter",when:m.equals("view",e.MARKERS_VIEW_ID),order:2},viewId:e.MARKERS_VIEW_ID})}async runInView(e,t){t.filters.showWarnings=!t.filters.showWarnings}}),c(class extends I{constructor(){super({id:`workbench.actions.${e.MARKERS_VIEW_ID}.toggleInfos`,title:o("show infos","Show Infos"),category:o("problems","Problems"),toggled:l.ShowInfoFilterContextKey,metadata:{description:u("toggleInfosDescription","Show or hide infos in the problems view.")},menu:{id:h,group:"1_filter",when:m.equals("view",e.MARKERS_VIEW_ID),order:3},viewId:e.MARKERS_VIEW_ID})}async runInView(e,t){t.filters.showInfos=!t.filters.showInfos}}),c(class extends I{constructor(){super({id:`workbench.actions.${e.MARKERS_VIEW_ID}.toggleActiveFile`,title:o("show active file","Show Active File Only"),metadata:{description:u("toggleActiveFileDescription","Show or hide problems (errors, warnings, info) only from the active file in the problems view.")},category:o("problems","Problems"),toggled:l.ShowActiveFileFilterContextKey,menu:{id:h,group:"2_filter",when:m.equals("view",e.MARKERS_VIEW_ID),order:1},viewId:e.MARKERS_VIEW_ID})}async runInView(e,t){t.filters.activeFile=!t.filters.activeFile}}),c(class extends I{constructor(){super({id:`workbench.actions.${e.MARKERS_VIEW_ID}.toggleExcludedFiles`,title:o("show excluded files","Show Excluded Files"),metadata:{description:u("toggleExcludedFilesDescription","Show or hide excluded files in the problems view.")},category:o("problems","Problems"),toggled:l.ShowExcludedFilesFilterContextKey.negate(),menu:{id:h,group:"2_filter",when:m.equals("view",e.MARKERS_VIEW_ID),order:2},viewId:e.MARKERS_VIEW_ID})}async runInView(e,t){t.filters.excludedFiles=!t.filters.excludedFiles}}),c(class extends W{constructor(){super({id:"workbench.action.problems.focus",title:E.MARKERS_PANEL_SHOW_LABEL,category:H.View,f1:!0})}async run(t){t.get(M).openView(e.MARKERS_VIEW_ID,!0)}}),c(class extends I{constructor(){const t=m.and(N.isEqualTo(e.MARKERS_VIEW_ID),l.MarkersTreeVisibilityContextKey,l.RelatedInformationFocusContextKey.toNegated());super({id:e.MARKER_COPY_ACTION_ID,title:u("copyMarker","Copy"),menu:{id:_.ProblemsPanelContext,when:t,group:"navigation"},keybinding:{weight:p.WorkbenchContrib,primary:g.CtrlCmd|w.KeyC,when:t},viewId:e.MARKERS_VIEW_ID})}async runInView(e,t){const r=e.get(K),i=t.getFocusedSelectedElements()||t.getAllResourceMarkers(),s=[],o=e=>{s.includes(e)||s.push(e)};for(const e of i)e instanceof j?e.markers.forEach(o):e instanceof C&&o(e);s.length&&await r.writeText(`[${s}]`)}}),c(class extends I{constructor(){super({id:e.MARKER_COPY_MESSAGE_ACTION_ID,title:u("copyMessage","Copy Message"),menu:{id:_.ProblemsPanelContext,when:l.MarkerFocusContextKey,group:"navigation"},viewId:e.MARKERS_VIEW_ID})}async runInView(e,t){const r=e.get(K),i=t.getFocusElement();i instanceof C&&await r.writeText(i.marker.message)}}),c(class extends I{constructor(){super({id:e.RELATED_INFORMATION_COPY_MESSAGE_ACTION_ID,title:u("copyMessage","Copy Message"),menu:{id:_.ProblemsPanelContext,when:l.RelatedInformationFocusContextKey,group:"navigation"},viewId:e.MARKERS_VIEW_ID})}async runInView(e,t){const r=e.get(K),i=t.getFocusElement();i instanceof Y&&await r.writeText(i.raw.message)}}),c(class extends I{constructor(){super({id:e.FOCUS_PROBLEMS_FROM_FILTER,title:o("focusProblemsList","Focus problems view"),keybinding:{when:l.MarkerViewFilterFocusContextKey,weight:p.WorkbenchContrib,primary:g.CtrlCmd|w.DownArrow},viewId:e.MARKERS_VIEW_ID})}async runInView(e,t){t.focus()}}),c(class extends I{constructor(){super({id:e.MARKERS_VIEW_FOCUS_FILTER,title:o("focusProblemsFilter","Focus problems filter"),keybinding:{when:N.isEqualTo(e.MARKERS_VIEW_ID),weight:p.WorkbenchContrib,primary:g.CtrlCmd|w.KeyF},viewId:e.MARKERS_VIEW_ID})}async runInView(e,t){t.focusFilter()}}),c(class extends I{constructor(){super({id:e.MARKERS_VIEW_SHOW_MULTILINE_MESSAGE,title:u("show multiline","Show message in multiple lines"),category:o("problems","Problems"),menu:{id:_.CommandPalette,when:m.has(F(e.MARKERS_VIEW_ID))},viewId:e.MARKERS_VIEW_ID})}async runInView(e,t){t.setMultiline(!0)}}),c(class extends I{constructor(){super({id:e.MARKERS_VIEW_SHOW_SINGLELINE_MESSAGE,title:u("show singleline","Show message in single line"),category:o("problems","Problems"),menu:{id:_.CommandPalette,when:m.has(F(e.MARKERS_VIEW_ID))},viewId:e.MARKERS_VIEW_ID})}async runInView(e,t){t.setMultiline(!1)}}),c(class extends I{constructor(){super({id:e.MARKERS_VIEW_CLEAR_FILTER_TEXT,title:o("clearFiltersText","Clear filters text"),category:o("problems","Problems"),keybinding:{when:l.MarkerViewFilterFocusContextKey,weight:p.WorkbenchContrib,primary:w.Escape},viewId:e.MARKERS_VIEW_ID})}async runInView(e,t){t.clearFilterText()}}),c(class extends I{constructor(){super({id:`workbench.actions.treeView.${e.MARKERS_VIEW_ID}.collapseAll`,title:o("collapseAll","Collapse All"),menu:{id:_.ViewTitle,when:m.and(m.equals("view",e.MARKERS_VIEW_ID),l.MarkersViewModeContextKey.isEqualTo(b.Tree)),group:"navigation",order:2},icon:y.collapseAll,viewId:e.MARKERS_VIEW_ID})}async runInView(e,t){return t.collapseAll()}}),c(class extends W{constructor(){super({id:e.TOGGLE_MARKERS_VIEW_ACTION_ID,title:E.MARKERS_PANEL_TOGGLE_LABEL})}async run(t){const r=t.get(M);r.isViewVisible(e.MARKERS_VIEW_ID)?r.closeView(e.MARKERS_VIEW_ID):r.openView(e.MARKERS_VIEW_ID,!0)}});let A=class extends P{constructor(e,t,r){super(),this.markerService=e,this.statusbarService=t,this.configurationService=r,this.markersStatusItem=this._register(this.statusbarService.addEntry(this.getMarkersItem(),"status.problems",T.LEFT,50));const i=()=>{this.markersStatusItemOff=this.statusbarService.addEntry(this.getMarkersItemTurnedOff(),"status.problemsVisibility",T.LEFT,49)};let s=this.configurationService.getValue("problems.visibility");s||i(),this._register(this.markerService.onMarkerChanged((()=>{this.markersStatusItem.update(this.getMarkersItem())}))),this._register(this.configurationService.onDidChangeConfiguration((e=>{e.affectsConfiguration("problems.visibility")&&(this.markersStatusItem.update(this.getMarkersItem()),s=this.configurationService.getValue("problems.visibility"),s||this.markersStatusItemOff?s&&this.markersStatusItemOff&&(this.markersStatusItemOff.dispose(),this.markersStatusItemOff=void 0):i())})))}markersStatusItem;markersStatusItemOff;getMarkersItem(){const e=this.markerService.getStatistics(),t=this.getMarkersTooltip(e);return{name:o("status.problems","Problems"),text:this.getMarkersText(e),ariaLabel:t,tooltip:t,command:"workbench.actions.view.toggleProblems"}}getMarkersItemTurnedOff(){this.statusbarService.updateEntryVisibility("status.problemsVisibility",!0);const e="workbench.action.openSettings",t=o("status.problemsVisibilityOff","Problems are turned off. Click to open settings.");return{name:o("status.problemsVisibility","Problems Visibility"),text:"$(whole-word)",ariaLabel:t,tooltip:t,kind:"warning",command:{title:e,arguments:["@id:problems.visibility"],id:e}}}getMarkersTooltip(e){const t=[];return e.errors>0&&t.push((r=e.errors,o("totalErrors","Errors: {0}",r))),e.warnings>0&&t.push((e=>o("totalWarnings","Warnings: {0}",e))(e.warnings)),e.infos>0&&t.push((e=>o("totalInfos","Infos: {0}",e))(e.infos)),0===t.length?o("noProblems","No Problems"):t.join(", ");var r}getMarkersText(e){const t=[];return t.push("$(error) "+this.packNumber(e.errors)),t.push("$(warning) "+this.packNumber(e.warnings)),e.infos>0&&t.push("$(info) "+this.packNumber(e.infos)),t.join(" ")}packNumber(e){const t=o("manyProblems","10K+");return e>9999?t:e>999?e.toString().charAt(0)+"K":e.toString()}};A=k([S(0,O),S(1,J),S(2,se)],A),B.registerWorkbenchContribution(A,D.Restored);let V=class extends P{constructor(e,t){super(),this.activityService=e,this.markerService=t,this._register(this.markerService.onMarkerChanged((()=>this.updateBadge()))),this.updateBadge()}activity=this._register(new X);updateBadge(){const{errors:t,warnings:r,infos:i}=this.markerService.getStatistics(),s=t+r+i;if(s>0){const t=o("totalProblems","Total {0} Problems",s);this.activity.value=this.activityService.showViewActivity(e.MARKERS_VIEW_ID,{badge:new te(s,(()=>t))})}else this.activity.value=void 0}};V=k([S(0,ie),S(1,O)],V),B.registerWorkbenchContribution(V,D.Restored);
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import "./markersFileDecorations.js";
+import { ContextKeyExpr } from "../../../../platform/contextkey/common/contextkey.js";
+import { Extensions, IConfigurationRegistry } from "../../../../platform/configuration/common/configurationRegistry.js";
+import { Categories } from "../../../../platform/action/common/actionCommonCategories.js";
+import { KeybindingsRegistry, KeybindingWeight } from "../../../../platform/keybinding/common/keybindingsRegistry.js";
+import { KeyCode, KeyMod } from "../../../../base/common/keyCodes.js";
+import { localize, localize2 } from "../../../../nls.js";
+import { Marker, RelatedInformation, ResourceMarkers } from "./markersModel.js";
+import { MarkersView } from "./markersView.js";
+import { MenuId, registerAction2, Action2 } from "../../../../platform/actions/common/actions.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { MarkersViewMode, Markers, MarkersContextKeys } from "../common/markers.js";
+import Messages from "./messages.js";
+import { IWorkbenchContributionsRegistry, Extensions as WorkbenchExtensions, IWorkbenchContribution } from "../../../common/contributions.js";
+import { IMarkersView } from "./markers.js";
+import { LifecyclePhase } from "../../../services/lifecycle/common/lifecycle.js";
+import { IClipboardService } from "../../../../platform/clipboard/common/clipboardService.js";
+import { Disposable, IDisposable, MutableDisposable } from "../../../../base/common/lifecycle.js";
+import { IStatusbarEntryAccessor, IStatusbarService, StatusbarAlignment, IStatusbarEntry } from "../../../services/statusbar/browser/statusbar.js";
+import { IMarkerService, MarkerStatistics } from "../../../../platform/markers/common/markers.js";
+import { ViewContainer, IViewContainersRegistry, Extensions as ViewContainerExtensions, ViewContainerLocation, IViewsRegistry } from "../../../common/views.js";
+import { IViewsService } from "../../../services/views/common/viewsService.js";
+import { getVisbileViewContextKey, FocusedViewContext } from "../../../common/contextkeys.js";
+import { ViewPaneContainer } from "../../../browser/parts/views/viewPaneContainer.js";
+import { SyncDescriptor } from "../../../../platform/instantiation/common/descriptors.js";
+import { ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { registerIcon } from "../../../../platform/theme/common/iconRegistry.js";
+import { ViewAction } from "../../../browser/parts/views/viewPane.js";
+import { IActivityService, NumberBadge } from "../../../services/activity/common/activity.js";
+import { viewFilterSubmenu } from "../../../browser/parts/views/viewFilter.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { problemsConfigurationNodeBase } from "../../../common/configuration.js";
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  id: Markers.MARKER_OPEN_ACTION_ID,
+  weight: KeybindingWeight.WorkbenchContrib,
+  when: ContextKeyExpr.and(MarkersContextKeys.MarkerFocusContextKey),
+  primary: KeyCode.Enter,
+  mac: {
+    primary: KeyCode.Enter,
+    secondary: [KeyMod.CtrlCmd | KeyCode.DownArrow]
+  },
+  handler: /* @__PURE__ */ __name((accessor, args) => {
+    const markersView = accessor.get(IViewsService).getActiveViewWithId(Markers.MARKERS_VIEW_ID);
+    markersView.openFileAtElement(markersView.getFocusElement(), false, false, true);
+  }, "handler")
+});
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  id: Markers.MARKER_OPEN_SIDE_ACTION_ID,
+  weight: KeybindingWeight.WorkbenchContrib,
+  when: ContextKeyExpr.and(MarkersContextKeys.MarkerFocusContextKey),
+  primary: KeyMod.CtrlCmd | KeyCode.Enter,
+  mac: {
+    primary: KeyMod.WinCtrl | KeyCode.Enter
+  },
+  handler: /* @__PURE__ */ __name((accessor, args) => {
+    const markersView = accessor.get(IViewsService).getActiveViewWithId(Markers.MARKERS_VIEW_ID);
+    markersView.openFileAtElement(markersView.getFocusElement(), false, true, true);
+  }, "handler")
+});
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  id: Markers.MARKER_SHOW_PANEL_ID,
+  weight: KeybindingWeight.WorkbenchContrib,
+  when: void 0,
+  primary: void 0,
+  handler: /* @__PURE__ */ __name(async (accessor, args) => {
+    await accessor.get(IViewsService).openView(Markers.MARKERS_VIEW_ID);
+  }, "handler")
+});
+KeybindingsRegistry.registerCommandAndKeybindingRule({
+  id: Markers.MARKER_SHOW_QUICK_FIX,
+  weight: KeybindingWeight.WorkbenchContrib,
+  when: MarkersContextKeys.MarkerFocusContextKey,
+  primary: KeyMod.CtrlCmd | KeyCode.Period,
+  handler: /* @__PURE__ */ __name((accessor, args) => {
+    const markersView = accessor.get(IViewsService).getActiveViewWithId(Markers.MARKERS_VIEW_ID);
+    const focusedElement = markersView.getFocusElement();
+    if (focusedElement instanceof Marker) {
+      markersView.showQuickFixes(focusedElement);
+    }
+  }, "handler")
+});
+Registry.as(Extensions.Configuration).registerConfiguration({
+  ...problemsConfigurationNodeBase,
+  "properties": {
+    "problems.autoReveal": {
+      "description": Messages.PROBLEMS_PANEL_CONFIGURATION_AUTO_REVEAL,
+      "type": "boolean",
+      "default": true
+    },
+    "problems.defaultViewMode": {
+      "description": Messages.PROBLEMS_PANEL_CONFIGURATION_VIEW_MODE,
+      "type": "string",
+      "default": "tree",
+      "enum": ["table", "tree"]
+    },
+    "problems.showCurrentInStatus": {
+      "description": Messages.PROBLEMS_PANEL_CONFIGURATION_SHOW_CURRENT_STATUS,
+      "type": "boolean",
+      "default": false
+    },
+    "problems.sortOrder": {
+      "description": Messages.PROBLEMS_PANEL_CONFIGURATION_COMPARE_ORDER,
+      "type": "string",
+      "default": "severity",
+      "enum": ["severity", "position"],
+      "enumDescriptions": [
+        Messages.PROBLEMS_PANEL_CONFIGURATION_COMPARE_ORDER_SEVERITY,
+        Messages.PROBLEMS_PANEL_CONFIGURATION_COMPARE_ORDER_POSITION
+      ]
+    }
+  }
+});
+const markersViewIcon = registerIcon("markers-view-icon", Codicon.warning, localize("markersViewIcon", "View icon of the markers view."));
+const VIEW_CONTAINER = Registry.as(ViewContainerExtensions.ViewContainersRegistry).registerViewContainer({
+  id: Markers.MARKERS_CONTAINER_ID,
+  title: Messages.MARKERS_PANEL_TITLE_PROBLEMS,
+  icon: markersViewIcon,
+  hideIfEmpty: true,
+  order: 0,
+  ctorDescriptor: new SyncDescriptor(ViewPaneContainer, [Markers.MARKERS_CONTAINER_ID, { mergeViewWithContainerWhenSingleView: true }]),
+  storageId: Markers.MARKERS_VIEW_STORAGE_ID
+}, ViewContainerLocation.Panel, { doNotRegisterOpenCommand: true });
+Registry.as(ViewContainerExtensions.ViewsRegistry).registerViews([{
+  id: Markers.MARKERS_VIEW_ID,
+  containerIcon: markersViewIcon,
+  name: Messages.MARKERS_PANEL_TITLE_PROBLEMS,
+  canToggleVisibility: true,
+  canMoveView: true,
+  ctorDescriptor: new SyncDescriptor(MarkersView),
+  openCommandActionDescriptor: {
+    id: "workbench.actions.view.problems",
+    mnemonicTitle: localize({ key: "miMarker", comment: ["&& denotes a mnemonic"] }, "&&Problems"),
+    keybindings: { primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyM },
+    order: 0
+  }
+}], VIEW_CONTAINER);
+const workbenchRegistry = Registry.as(WorkbenchExtensions.Workbench);
+registerAction2(class extends ViewAction {
+  constructor() {
+    super({
+      id: `workbench.actions.table.${Markers.MARKERS_VIEW_ID}.viewAsTree`,
+      title: localize("viewAsTree", "View as Tree"),
+      metadata: {
+        description: localize2("viewAsTreeDescription", "Show the problems view as a tree.")
+      },
+      menu: {
+        id: MenuId.ViewTitle,
+        when: ContextKeyExpr.and(ContextKeyExpr.equals("view", Markers.MARKERS_VIEW_ID), MarkersContextKeys.MarkersViewModeContextKey.isEqualTo(MarkersViewMode.Table)),
+        group: "navigation",
+        order: 3
+      },
+      icon: Codicon.listTree,
+      viewId: Markers.MARKERS_VIEW_ID
+    });
+  }
+  async runInView(serviceAccessor, view) {
+    view.setViewMode(MarkersViewMode.Tree);
+  }
+});
+registerAction2(class extends ViewAction {
+  constructor() {
+    super({
+      id: `workbench.actions.table.${Markers.MARKERS_VIEW_ID}.viewAsTable`,
+      title: localize("viewAsTable", "View as Table"),
+      metadata: {
+        description: localize2("viewAsTableDescription", "Show the problems view as a table.")
+      },
+      menu: {
+        id: MenuId.ViewTitle,
+        when: ContextKeyExpr.and(ContextKeyExpr.equals("view", Markers.MARKERS_VIEW_ID), MarkersContextKeys.MarkersViewModeContextKey.isEqualTo(MarkersViewMode.Tree)),
+        group: "navigation",
+        order: 3
+      },
+      icon: Codicon.listFlat,
+      viewId: Markers.MARKERS_VIEW_ID
+    });
+  }
+  async runInView(serviceAccessor, view) {
+    view.setViewMode(MarkersViewMode.Table);
+  }
+});
+registerAction2(class extends ViewAction {
+  constructor() {
+    super({
+      id: `workbench.actions.${Markers.MARKERS_VIEW_ID}.toggleErrors`,
+      title: localize("show errors", "Show Errors"),
+      metadata: {
+        description: localize2("toggleErrorsDescription", "Show or hide errors in the problems view.")
+      },
+      category: localize("problems", "Problems"),
+      toggled: MarkersContextKeys.ShowErrorsFilterContextKey,
+      menu: {
+        id: viewFilterSubmenu,
+        group: "1_filter",
+        when: ContextKeyExpr.equals("view", Markers.MARKERS_VIEW_ID),
+        order: 1
+      },
+      viewId: Markers.MARKERS_VIEW_ID
+    });
+  }
+  async runInView(serviceAccessor, view) {
+    view.filters.showErrors = !view.filters.showErrors;
+  }
+});
+registerAction2(class extends ViewAction {
+  constructor() {
+    super({
+      id: `workbench.actions.${Markers.MARKERS_VIEW_ID}.toggleWarnings`,
+      title: localize("show warnings", "Show Warnings"),
+      metadata: {
+        description: localize2("toggleWarningsDescription", "Show or hide warnings in the problems view.")
+      },
+      category: localize("problems", "Problems"),
+      toggled: MarkersContextKeys.ShowWarningsFilterContextKey,
+      menu: {
+        id: viewFilterSubmenu,
+        group: "1_filter",
+        when: ContextKeyExpr.equals("view", Markers.MARKERS_VIEW_ID),
+        order: 2
+      },
+      viewId: Markers.MARKERS_VIEW_ID
+    });
+  }
+  async runInView(serviceAccessor, view) {
+    view.filters.showWarnings = !view.filters.showWarnings;
+  }
+});
+registerAction2(class extends ViewAction {
+  constructor() {
+    super({
+      id: `workbench.actions.${Markers.MARKERS_VIEW_ID}.toggleInfos`,
+      title: localize("show infos", "Show Infos"),
+      category: localize("problems", "Problems"),
+      toggled: MarkersContextKeys.ShowInfoFilterContextKey,
+      metadata: {
+        description: localize2("toggleInfosDescription", "Show or hide infos in the problems view.")
+      },
+      menu: {
+        id: viewFilterSubmenu,
+        group: "1_filter",
+        when: ContextKeyExpr.equals("view", Markers.MARKERS_VIEW_ID),
+        order: 3
+      },
+      viewId: Markers.MARKERS_VIEW_ID
+    });
+  }
+  async runInView(serviceAccessor, view) {
+    view.filters.showInfos = !view.filters.showInfos;
+  }
+});
+registerAction2(class extends ViewAction {
+  constructor() {
+    super({
+      id: `workbench.actions.${Markers.MARKERS_VIEW_ID}.toggleActiveFile`,
+      title: localize("show active file", "Show Active File Only"),
+      metadata: {
+        description: localize2("toggleActiveFileDescription", "Show or hide problems (errors, warnings, info) only from the active file in the problems view.")
+      },
+      category: localize("problems", "Problems"),
+      toggled: MarkersContextKeys.ShowActiveFileFilterContextKey,
+      menu: {
+        id: viewFilterSubmenu,
+        group: "2_filter",
+        when: ContextKeyExpr.equals("view", Markers.MARKERS_VIEW_ID),
+        order: 1
+      },
+      viewId: Markers.MARKERS_VIEW_ID
+    });
+  }
+  async runInView(serviceAccessor, view) {
+    view.filters.activeFile = !view.filters.activeFile;
+  }
+});
+registerAction2(class extends ViewAction {
+  constructor() {
+    super({
+      id: `workbench.actions.${Markers.MARKERS_VIEW_ID}.toggleExcludedFiles`,
+      title: localize("show excluded files", "Show Excluded Files"),
+      metadata: {
+        description: localize2("toggleExcludedFilesDescription", "Show or hide excluded files in the problems view.")
+      },
+      category: localize("problems", "Problems"),
+      toggled: MarkersContextKeys.ShowExcludedFilesFilterContextKey.negate(),
+      menu: {
+        id: viewFilterSubmenu,
+        group: "2_filter",
+        when: ContextKeyExpr.equals("view", Markers.MARKERS_VIEW_ID),
+        order: 2
+      },
+      viewId: Markers.MARKERS_VIEW_ID
+    });
+  }
+  async runInView(serviceAccessor, view) {
+    view.filters.excludedFiles = !view.filters.excludedFiles;
+  }
+});
+registerAction2(class extends Action2 {
+  constructor() {
+    super({
+      id: "workbench.action.problems.focus",
+      title: Messages.MARKERS_PANEL_SHOW_LABEL,
+      category: Categories.View,
+      f1: true
+    });
+  }
+  async run(accessor) {
+    accessor.get(IViewsService).openView(Markers.MARKERS_VIEW_ID, true);
+  }
+});
+registerAction2(class extends ViewAction {
+  constructor() {
+    const when = ContextKeyExpr.and(FocusedViewContext.isEqualTo(Markers.MARKERS_VIEW_ID), MarkersContextKeys.MarkersTreeVisibilityContextKey, MarkersContextKeys.RelatedInformationFocusContextKey.toNegated());
+    super({
+      id: Markers.MARKER_COPY_ACTION_ID,
+      title: localize2("copyMarker", "Copy"),
+      menu: {
+        id: MenuId.ProblemsPanelContext,
+        when,
+        group: "navigation"
+      },
+      keybinding: {
+        weight: KeybindingWeight.WorkbenchContrib,
+        primary: KeyMod.CtrlCmd | KeyCode.KeyC,
+        when
+      },
+      viewId: Markers.MARKERS_VIEW_ID
+    });
+  }
+  async runInView(serviceAccessor, markersView) {
+    const clipboardService = serviceAccessor.get(IClipboardService);
+    const selection = markersView.getFocusedSelectedElements() || markersView.getAllResourceMarkers();
+    const markers = [];
+    const addMarker = /* @__PURE__ */ __name((marker) => {
+      if (!markers.includes(marker)) {
+        markers.push(marker);
+      }
+    }, "addMarker");
+    for (const selected of selection) {
+      if (selected instanceof ResourceMarkers) {
+        selected.markers.forEach(addMarker);
+      } else if (selected instanceof Marker) {
+        addMarker(selected);
+      }
+    }
+    if (markers.length) {
+      await clipboardService.writeText(`[${markers}]`);
+    }
+  }
+});
+registerAction2(class extends ViewAction {
+  constructor() {
+    super({
+      id: Markers.MARKER_COPY_MESSAGE_ACTION_ID,
+      title: localize2("copyMessage", "Copy Message"),
+      menu: {
+        id: MenuId.ProblemsPanelContext,
+        when: MarkersContextKeys.MarkerFocusContextKey,
+        group: "navigation"
+      },
+      viewId: Markers.MARKERS_VIEW_ID
+    });
+  }
+  async runInView(serviceAccessor, markersView) {
+    const clipboardService = serviceAccessor.get(IClipboardService);
+    const element = markersView.getFocusElement();
+    if (element instanceof Marker) {
+      await clipboardService.writeText(element.marker.message);
+    }
+  }
+});
+registerAction2(class extends ViewAction {
+  constructor() {
+    super({
+      id: Markers.RELATED_INFORMATION_COPY_MESSAGE_ACTION_ID,
+      title: localize2("copyMessage", "Copy Message"),
+      menu: {
+        id: MenuId.ProblemsPanelContext,
+        when: MarkersContextKeys.RelatedInformationFocusContextKey,
+        group: "navigation"
+      },
+      viewId: Markers.MARKERS_VIEW_ID
+    });
+  }
+  async runInView(serviceAccessor, markersView) {
+    const clipboardService = serviceAccessor.get(IClipboardService);
+    const element = markersView.getFocusElement();
+    if (element instanceof RelatedInformation) {
+      await clipboardService.writeText(element.raw.message);
+    }
+  }
+});
+registerAction2(class extends ViewAction {
+  constructor() {
+    super({
+      id: Markers.FOCUS_PROBLEMS_FROM_FILTER,
+      title: localize("focusProblemsList", "Focus problems view"),
+      keybinding: {
+        when: MarkersContextKeys.MarkerViewFilterFocusContextKey,
+        weight: KeybindingWeight.WorkbenchContrib,
+        primary: KeyMod.CtrlCmd | KeyCode.DownArrow
+      },
+      viewId: Markers.MARKERS_VIEW_ID
+    });
+  }
+  async runInView(serviceAccessor, markersView) {
+    markersView.focus();
+  }
+});
+registerAction2(class extends ViewAction {
+  constructor() {
+    super({
+      id: Markers.MARKERS_VIEW_FOCUS_FILTER,
+      title: localize("focusProblemsFilter", "Focus problems filter"),
+      keybinding: {
+        when: FocusedViewContext.isEqualTo(Markers.MARKERS_VIEW_ID),
+        weight: KeybindingWeight.WorkbenchContrib,
+        primary: KeyMod.CtrlCmd | KeyCode.KeyF
+      },
+      viewId: Markers.MARKERS_VIEW_ID
+    });
+  }
+  async runInView(serviceAccessor, markersView) {
+    markersView.focusFilter();
+  }
+});
+registerAction2(class extends ViewAction {
+  constructor() {
+    super({
+      id: Markers.MARKERS_VIEW_SHOW_MULTILINE_MESSAGE,
+      title: localize2("show multiline", "Show message in multiple lines"),
+      category: localize("problems", "Problems"),
+      menu: {
+        id: MenuId.CommandPalette,
+        when: ContextKeyExpr.has(getVisbileViewContextKey(Markers.MARKERS_VIEW_ID))
+      },
+      viewId: Markers.MARKERS_VIEW_ID
+    });
+  }
+  async runInView(serviceAccessor, markersView) {
+    markersView.setMultiline(true);
+  }
+});
+registerAction2(class extends ViewAction {
+  constructor() {
+    super({
+      id: Markers.MARKERS_VIEW_SHOW_SINGLELINE_MESSAGE,
+      title: localize2("show singleline", "Show message in single line"),
+      category: localize("problems", "Problems"),
+      menu: {
+        id: MenuId.CommandPalette,
+        when: ContextKeyExpr.has(getVisbileViewContextKey(Markers.MARKERS_VIEW_ID))
+      },
+      viewId: Markers.MARKERS_VIEW_ID
+    });
+  }
+  async runInView(serviceAccessor, markersView) {
+    markersView.setMultiline(false);
+  }
+});
+registerAction2(class extends ViewAction {
+  constructor() {
+    super({
+      id: Markers.MARKERS_VIEW_CLEAR_FILTER_TEXT,
+      title: localize("clearFiltersText", "Clear filters text"),
+      category: localize("problems", "Problems"),
+      keybinding: {
+        when: MarkersContextKeys.MarkerViewFilterFocusContextKey,
+        weight: KeybindingWeight.WorkbenchContrib,
+        primary: KeyCode.Escape
+      },
+      viewId: Markers.MARKERS_VIEW_ID
+    });
+  }
+  async runInView(serviceAccessor, markersView) {
+    markersView.clearFilterText();
+  }
+});
+registerAction2(class extends ViewAction {
+  constructor() {
+    super({
+      id: `workbench.actions.treeView.${Markers.MARKERS_VIEW_ID}.collapseAll`,
+      title: localize("collapseAll", "Collapse All"),
+      menu: {
+        id: MenuId.ViewTitle,
+        when: ContextKeyExpr.and(ContextKeyExpr.equals("view", Markers.MARKERS_VIEW_ID), MarkersContextKeys.MarkersViewModeContextKey.isEqualTo(MarkersViewMode.Tree)),
+        group: "navigation",
+        order: 2
+      },
+      icon: Codicon.collapseAll,
+      viewId: Markers.MARKERS_VIEW_ID
+    });
+  }
+  async runInView(serviceAccessor, view) {
+    return view.collapseAll();
+  }
+});
+registerAction2(class extends Action2 {
+  constructor() {
+    super({
+      id: Markers.TOGGLE_MARKERS_VIEW_ACTION_ID,
+      title: Messages.MARKERS_PANEL_TOGGLE_LABEL
+    });
+  }
+  async run(accessor) {
+    const viewsService = accessor.get(IViewsService);
+    if (viewsService.isViewVisible(Markers.MARKERS_VIEW_ID)) {
+      viewsService.closeView(Markers.MARKERS_VIEW_ID);
+    } else {
+      viewsService.openView(Markers.MARKERS_VIEW_ID, true);
+    }
+  }
+});
+let MarkersStatusBarContributions = class extends Disposable {
+  constructor(markerService, statusbarService, configurationService) {
+    super();
+    this.markerService = markerService;
+    this.statusbarService = statusbarService;
+    this.configurationService = configurationService;
+    this.markersStatusItem = this._register(this.statusbarService.addEntry(
+      this.getMarkersItem(),
+      "status.problems",
+      StatusbarAlignment.LEFT,
+      50
+      /* Medium Priority */
+    ));
+    const addStatusBarEntry = /* @__PURE__ */ __name(() => {
+      this.markersStatusItemOff = this.statusbarService.addEntry(this.getMarkersItemTurnedOff(), "status.problemsVisibility", StatusbarAlignment.LEFT, 49);
+    }, "addStatusBarEntry");
+    let config = this.configurationService.getValue("problems.visibility");
+    if (!config) {
+      addStatusBarEntry();
+    }
+    this._register(this.markerService.onMarkerChanged(() => {
+      this.markersStatusItem.update(this.getMarkersItem());
+    }));
+    this._register(this.configurationService.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration("problems.visibility")) {
+        this.markersStatusItem.update(this.getMarkersItem());
+        config = this.configurationService.getValue("problems.visibility");
+        if (!config && !this.markersStatusItemOff) {
+          addStatusBarEntry();
+        } else if (config && this.markersStatusItemOff) {
+          this.markersStatusItemOff.dispose();
+          this.markersStatusItemOff = void 0;
+        }
+      }
+    }));
+  }
+  static {
+    __name(this, "MarkersStatusBarContributions");
+  }
+  markersStatusItem;
+  markersStatusItemOff;
+  getMarkersItem() {
+    const markersStatistics = this.markerService.getStatistics();
+    const tooltip = this.getMarkersTooltip(markersStatistics);
+    return {
+      name: localize("status.problems", "Problems"),
+      text: this.getMarkersText(markersStatistics),
+      ariaLabel: tooltip,
+      tooltip,
+      command: "workbench.actions.view.toggleProblems"
+    };
+  }
+  getMarkersItemTurnedOff() {
+    this.statusbarService.updateEntryVisibility("status.problemsVisibility", true);
+    const openSettingsCommand = "workbench.action.openSettings";
+    const configureSettingsLabel = "@id:problems.visibility";
+    const tooltip = localize("status.problemsVisibilityOff", "Problems are turned off. Click to open settings.");
+    return {
+      name: localize("status.problemsVisibility", "Problems Visibility"),
+      text: "$(whole-word)",
+      ariaLabel: tooltip,
+      tooltip,
+      kind: "warning",
+      command: { title: openSettingsCommand, arguments: [configureSettingsLabel], id: openSettingsCommand }
+    };
+  }
+  getMarkersTooltip(stats) {
+    const errorTitle = /* @__PURE__ */ __name((n) => localize("totalErrors", "Errors: {0}", n), "errorTitle");
+    const warningTitle = /* @__PURE__ */ __name((n) => localize("totalWarnings", "Warnings: {0}", n), "warningTitle");
+    const infoTitle = /* @__PURE__ */ __name((n) => localize("totalInfos", "Infos: {0}", n), "infoTitle");
+    const titles = [];
+    if (stats.errors > 0) {
+      titles.push(errorTitle(stats.errors));
+    }
+    if (stats.warnings > 0) {
+      titles.push(warningTitle(stats.warnings));
+    }
+    if (stats.infos > 0) {
+      titles.push(infoTitle(stats.infos));
+    }
+    if (titles.length === 0) {
+      return localize("noProblems", "No Problems");
+    }
+    return titles.join(", ");
+  }
+  getMarkersText(stats) {
+    const problemsText = [];
+    problemsText.push("$(error) " + this.packNumber(stats.errors));
+    problemsText.push("$(warning) " + this.packNumber(stats.warnings));
+    if (stats.infos > 0) {
+      problemsText.push("$(info) " + this.packNumber(stats.infos));
+    }
+    return problemsText.join(" ");
+  }
+  packNumber(n) {
+    const manyProblems = localize("manyProblems", "10K+");
+    return n > 9999 ? manyProblems : n > 999 ? n.toString().charAt(0) + "K" : n.toString();
+  }
+};
+MarkersStatusBarContributions = __decorateClass([
+  __decorateParam(0, IMarkerService),
+  __decorateParam(1, IStatusbarService),
+  __decorateParam(2, IConfigurationService)
+], MarkersStatusBarContributions);
+workbenchRegistry.registerWorkbenchContribution(MarkersStatusBarContributions, LifecyclePhase.Restored);
+let ActivityUpdater = class extends Disposable {
+  constructor(activityService, markerService) {
+    super();
+    this.activityService = activityService;
+    this.markerService = markerService;
+    this._register(this.markerService.onMarkerChanged(() => this.updateBadge()));
+    this.updateBadge();
+  }
+  static {
+    __name(this, "ActivityUpdater");
+  }
+  activity = this._register(new MutableDisposable());
+  updateBadge() {
+    const { errors, warnings, infos } = this.markerService.getStatistics();
+    const total = errors + warnings + infos;
+    if (total > 0) {
+      const message = localize("totalProblems", "Total {0} Problems", total);
+      this.activity.value = this.activityService.showViewActivity(Markers.MARKERS_VIEW_ID, { badge: new NumberBadge(total, () => message) });
+    } else {
+      this.activity.value = void 0;
+    }
+  }
+};
+ActivityUpdater = __decorateClass([
+  __decorateParam(0, IActivityService),
+  __decorateParam(1, IMarkerService)
+], ActivityUpdater);
+workbenchRegistry.registerWorkbenchContribution(ActivityUpdater, LifecyclePhase.Restored);
+//# sourceMappingURL=markers.contribution.js.map

@@ -1,1 +1,51 @@
-import{BaseToken as n}from"../../baseToken.js";import{assert as t}from"../../../../../base/common/assert.js";import{Range as o}from"../../../../../editor/common/core/range.js";class r extends n{constructor(e,s){t(!isNaN(e),"The line number must not be a NaN."),t(e>0,`The line number must be >= 1, got "${e}".`),super(new o(e,1,e,s.length+1)),this.text=s}equals(e){return!!(super.equals(e)&&e instanceof r)&&this.text===e.text}toString(){return`line("${this.text}")${this.range}`}}export{r as Line};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { BaseToken } from "../../baseToken.js";
+import { assert } from "../../../../../base/common/assert.js";
+import { Range } from "../../../../../editor/common/core/range.js";
+class Line extends BaseToken {
+  constructor(lineNumber, text) {
+    assert(
+      !isNaN(lineNumber),
+      `The line number must not be a NaN.`
+    );
+    assert(
+      lineNumber > 0,
+      `The line number must be >= 1, got "${lineNumber}".`
+    );
+    super(
+      new Range(
+        lineNumber,
+        1,
+        lineNumber,
+        text.length + 1
+      )
+    );
+    this.text = text;
+  }
+  static {
+    __name(this, "Line");
+  }
+  /**
+   * Check if this token is equal to another one.
+   */
+  equals(other) {
+    if (!super.equals(other)) {
+      return false;
+    }
+    if (!(other instanceof Line)) {
+      return false;
+    }
+    return this.text === other.text;
+  }
+  /**
+   * Returns a string representation of the token.
+   */
+  toString() {
+    return `line("${this.text}")${this.range}`;
+  }
+}
+export {
+  Line
+};
+//# sourceMappingURL=line.js.map

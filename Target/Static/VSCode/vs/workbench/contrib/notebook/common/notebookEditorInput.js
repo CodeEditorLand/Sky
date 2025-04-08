@@ -1,4 +1,323 @@
-var D=Object.defineProperty;var C=Object.getOwnPropertyDescriptor;var v=(s,c,e,t)=>{for(var i=t>1?void 0:t?C(c,e):c,r=s.length-1,o;r>=0;r--)(o=s[r])&&(i=(t?o(c,e,i):o(i))||i);return t&&i&&D(c,e,i),i},n=(s,c)=>(e,t)=>c(e,t,s);import*as _ from"../../../../base/common/glob.js";import{EditorInputCapabilities as d,Verbosity as N,isResourceEditorInput as j}from"../../../common/editor.js";import"../../../common/editor/editorInput.js";import{INotebookService as x,SimpleNotebookProviderInfo as U}from"./notebookService.js";import"../../../../base/common/uri.js";import{isEqual as I,joinPath as b}from"../../../../base/common/resources.js";import"../../../../platform/instantiation/common/instantiation.js";import{IFileDialogService as T}from"../../../../platform/dialogs/common/dialogs.js";import{INotebookEditorModelResolverService as P}from"./notebookEditorModelResolverService.js";import"../../../../base/common/lifecycle.js";import{CellEditType as L,CellUri as m}from"./notebookCommon.js";import{ILabelService as A}from"../../../../platform/label/common/label.js";import{Schemas as F}from"../../../../base/common/network.js";import{IFileService as O}from"../../../../platform/files/common/files.js";import{AbstractResourceEditorInput as $}from"../../../common/editor/resourceEditorInput.js";import"../../../../platform/editor/common/editor.js";import{onUnexpectedError as G}from"../../../../base/common/errors.js";import{VSBuffer as W}from"../../../../base/common/buffer.js";import"../../../services/workingCopy/common/workingCopy.js";import"./notebookProvider.js";import"./notebookPerformance.js";import{IFilesConfigurationService as z}from"../../../services/filesConfiguration/common/filesConfigurationService.js";import{IExtensionService as B}from"../../../services/extensions/common/extensions.js";import{localize as y}from"../../../../nls.js";import{IEditorService as H}from"../../../services/editor/common/editorService.js";import"../../../../base/common/htmlContent.js";import{ITextResourceConfigurationService as V}from"../../../../editor/common/services/textResourceConfiguration.js";import{ICustomEditorLabelService as q}from"../../../services/editor/common/customEditorLabelService.js";let l=class extends ${constructor(e,t,i,r,o,f,a,R,g,S,k,p,M,E){super(e,t,R,g,S,M,E);this.viewType=i;this.options=r;this._notebookService=o;this._notebookModelResolverService=f;this._fileDialogService=a;this._defaultDirtyState=!!r.startDirty,this._sideLoadedListener=o.onDidAddNotebookDocument(u=>{u.viewType===this.viewType&&u.uri.toString()===this.resource.toString()&&this.resolve().catch(G)}),this._register(k.onWillStop(u=>{if(!u.auto&&!this.isDirty())return;const w=u.auto?y("vetoAutoExtHostRestart","An extension provided notebook for '{0}' is still open that would close otherwise.",this.getName()):y("vetoExtHostRestart","An extension provided notebook for '{0}' could not be saved.",this.getName());u.veto((async()=>{const h=p.findEditors(this);return u.auto?!0:!(h.length>0&&(await p.save(h[0])).success)})(),w)}))}static getOrCreate(e,t,i,r,o={}){const f=e.createInstance(l,t,i,r,o);return i&&f.setPreferredResource(i),f}static ID="workbench.input.notebook";editorModelReference=null;_sideLoadedListener;_defaultDirtyState=!1;dispose(){this._sideLoadedListener.dispose(),this.editorModelReference?.dispose(),this.editorModelReference=null,super.dispose()}get typeId(){return l.ID}get editorId(){return this.viewType}get capabilities(){let e=d.None;return this.resource.scheme===F.untitled&&(e|=d.Untitled),this.editorModelReference?this.editorModelReference.object.isReadonly()&&(e|=d.Readonly):this.filesConfigurationService.isReadonly(this.resource)&&(e|=d.Readonly),e&d.Readonly||(e|=d.CanDropIntoEditor),e}getDescription(e=N.MEDIUM){if(!this.hasCapability(d.Untitled)||this.editorModelReference?.object.hasAssociatedFilePath())return super.getDescription(e)}isReadonly(){return this.editorModelReference?this.editorModelReference.object.isReadonly():this.filesConfigurationService.isReadonly(this.resource)}isDirty(){return this.editorModelReference?this.editorModelReference.object.isDirty():this._defaultDirtyState}isSaving(){const e=this.editorModelReference?.object;return!e||!e.isDirty()||e.hasErrorState||this.hasCapability(d.Untitled)?!1:this.filesConfigurationService.hasShortAutoSaveDelay(this)}async save(e,t){if(this.editorModelReference)return this.hasCapability(d.Untitled)?this.saveAs(e,t):(await this.editorModelReference.object.save(t),this)}async saveAs(e,t){if(!this.editorModelReference)return;const i=this._notebookService.getContributedNotebookType(this.viewType);if(!i)return;const r=this.hasCapability(d.Untitled)?await this._suggestName(i,this.labelService.getUriBasenameLabel(this.resource)):this.editorModelReference.object.resource;let o;if(this.editorModelReference.object.hasAssociatedFilePath())o=r;else if(o=await this._fileDialogService.pickFileToSave(r,t?.availableFileSystems),!o)return;if(!i.matches(o)){const f=i.selectors.map(a=>typeof a=="string"?a:_.isRelativePattern(a)?`${a} (base ${a.base})`:a.exclude?`${a.include} (exclude: ${a.exclude})`:`${a.include}`).join(", ");throw new Error(`File name ${o} is not supported by ${i.providerDisplayName}.
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import * as glob from "../../../../base/common/glob.js";
+import { GroupIdentifier, ISaveOptions, IMoveResult, IRevertOptions, EditorInputCapabilities, Verbosity, IUntypedEditorInput, IFileLimitedEditorInputOptions, isResourceEditorInput } from "../../../common/editor.js";
+import { EditorInput } from "../../../common/editor/editorInput.js";
+import { INotebookService, SimpleNotebookProviderInfo } from "./notebookService.js";
+import { URI } from "../../../../base/common/uri.js";
+import { isEqual, joinPath } from "../../../../base/common/resources.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IFileDialogService } from "../../../../platform/dialogs/common/dialogs.js";
+import { INotebookEditorModelResolverService } from "./notebookEditorModelResolverService.js";
+import { IDisposable, IReference } from "../../../../base/common/lifecycle.js";
+import { CellEditType, CellUri, IResolvedNotebookEditorModel } from "./notebookCommon.js";
+import { ILabelService } from "../../../../platform/label/common/label.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { AbstractResourceEditorInput } from "../../../common/editor/resourceEditorInput.js";
+import { IResourceEditorInput } from "../../../../platform/editor/common/editor.js";
+import { onUnexpectedError } from "../../../../base/common/errors.js";
+import { VSBuffer } from "../../../../base/common/buffer.js";
+import { IWorkingCopyIdentifier } from "../../../services/workingCopy/common/workingCopy.js";
+import { NotebookProviderInfo } from "./notebookProvider.js";
+import { NotebookPerfMarks } from "./notebookPerformance.js";
+import { IFilesConfigurationService } from "../../../services/filesConfiguration/common/filesConfigurationService.js";
+import { IExtensionService } from "../../../services/extensions/common/extensions.js";
+import { localize } from "../../../../nls.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { IMarkdownString } from "../../../../base/common/htmlContent.js";
+import { ITextResourceConfigurationService } from "../../../../editor/common/services/textResourceConfiguration.js";
+import { ICustomEditorLabelService } from "../../../services/editor/common/customEditorLabelService.js";
+let NotebookEditorInput = class extends AbstractResourceEditorInput {
+  constructor(resource, preferredResource, viewType, options, _notebookService, _notebookModelResolverService, _fileDialogService, labelService, fileService, filesConfigurationService, extensionService, editorService, textResourceConfigurationService, customEditorLabelService) {
+    super(resource, preferredResource, labelService, fileService, filesConfigurationService, textResourceConfigurationService, customEditorLabelService);
+    this.viewType = viewType;
+    this.options = options;
+    this._notebookService = _notebookService;
+    this._notebookModelResolverService = _notebookModelResolverService;
+    this._fileDialogService = _fileDialogService;
+    this._defaultDirtyState = !!options.startDirty;
+    this._sideLoadedListener = _notebookService.onDidAddNotebookDocument((e) => {
+      if (e.viewType === this.viewType && e.uri.toString() === this.resource.toString()) {
+        this.resolve().catch(onUnexpectedError);
+      }
+    });
+    this._register(extensionService.onWillStop((e) => {
+      if (!e.auto && !this.isDirty()) {
+        return;
+      }
+      const reason = e.auto ? localize("vetoAutoExtHostRestart", "An extension provided notebook for '{0}' is still open that would close otherwise.", this.getName()) : localize("vetoExtHostRestart", "An extension provided notebook for '{0}' could not be saved.", this.getName());
+      e.veto((async () => {
+        const editors = editorService.findEditors(this);
+        if (e.auto) {
+          return true;
+        }
+        if (editors.length > 0) {
+          const result = await editorService.save(editors[0]);
+          if (result.success) {
+            return false;
+          }
+        }
+        return true;
+      })(), reason);
+    }));
+  }
+  static {
+    __name(this, "NotebookEditorInput");
+  }
+  static getOrCreate(instantiationService, resource, preferredResource, viewType, options = {}) {
+    const editor = instantiationService.createInstance(NotebookEditorInput, resource, preferredResource, viewType, options);
+    if (preferredResource) {
+      editor.setPreferredResource(preferredResource);
+    }
+    return editor;
+  }
+  static ID = "workbench.input.notebook";
+  editorModelReference = null;
+  _sideLoadedListener;
+  _defaultDirtyState = false;
+  dispose() {
+    this._sideLoadedListener.dispose();
+    this.editorModelReference?.dispose();
+    this.editorModelReference = null;
+    super.dispose();
+  }
+  get typeId() {
+    return NotebookEditorInput.ID;
+  }
+  get editorId() {
+    return this.viewType;
+  }
+  get capabilities() {
+    let capabilities = EditorInputCapabilities.None;
+    if (this.resource.scheme === Schemas.untitled) {
+      capabilities |= EditorInputCapabilities.Untitled;
+    }
+    if (this.editorModelReference) {
+      if (this.editorModelReference.object.isReadonly()) {
+        capabilities |= EditorInputCapabilities.Readonly;
+      }
+    } else {
+      if (this.filesConfigurationService.isReadonly(this.resource)) {
+        capabilities |= EditorInputCapabilities.Readonly;
+      }
+    }
+    if (!(capabilities & EditorInputCapabilities.Readonly)) {
+      capabilities |= EditorInputCapabilities.CanDropIntoEditor;
+    }
+    return capabilities;
+  }
+  getDescription(verbosity = Verbosity.MEDIUM) {
+    if (!this.hasCapability(EditorInputCapabilities.Untitled) || this.editorModelReference?.object.hasAssociatedFilePath()) {
+      return super.getDescription(verbosity);
+    }
+    return void 0;
+  }
+  isReadonly() {
+    if (!this.editorModelReference) {
+      return this.filesConfigurationService.isReadonly(this.resource);
+    }
+    return this.editorModelReference.object.isReadonly();
+  }
+  isDirty() {
+    if (!this.editorModelReference) {
+      return this._defaultDirtyState;
+    }
+    return this.editorModelReference.object.isDirty();
+  }
+  isSaving() {
+    const model = this.editorModelReference?.object;
+    if (!model || !model.isDirty() || model.hasErrorState || this.hasCapability(EditorInputCapabilities.Untitled)) {
+      return false;
+    }
+    return this.filesConfigurationService.hasShortAutoSaveDelay(this);
+  }
+  async save(group, options) {
+    if (this.editorModelReference) {
+      if (this.hasCapability(EditorInputCapabilities.Untitled)) {
+        return this.saveAs(group, options);
+      } else {
+        await this.editorModelReference.object.save(options);
+      }
+      return this;
+    }
+    return void 0;
+  }
+  async saveAs(group, options) {
+    if (!this.editorModelReference) {
+      return void 0;
+    }
+    const provider = this._notebookService.getContributedNotebookType(this.viewType);
+    if (!provider) {
+      return void 0;
+    }
+    const pathCandidate = this.hasCapability(EditorInputCapabilities.Untitled) ? await this._suggestName(provider, this.labelService.getUriBasenameLabel(this.resource)) : this.editorModelReference.object.resource;
+    let target;
+    if (this.editorModelReference.object.hasAssociatedFilePath()) {
+      target = pathCandidate;
+    } else {
+      target = await this._fileDialogService.pickFileToSave(pathCandidate, options?.availableFileSystems);
+      if (!target) {
+        return void 0;
+      }
+    }
+    if (!provider.matches(target)) {
+      const patterns = provider.selectors.map((pattern) => {
+        if (typeof pattern === "string") {
+          return pattern;
+        }
+        if (glob.isRelativePattern(pattern)) {
+          return `${pattern} (base ${pattern.base})`;
+        }
+        if (pattern.exclude) {
+          return `${pattern.include} (exclude: ${pattern.exclude})`;
+        } else {
+          return `${pattern.include}`;
+        }
+      }).join(", ");
+      throw new Error(`File name ${target} is not supported by ${provider.providerDisplayName}.
 
 Please make sure the file name matches following patterns:
-${f}`)}return await this.editorModelReference.object.saveAs(o)}async _suggestName(e,t){const i=e.selectors[0];let r=i&&typeof i=="string"?i:void 0;if(!r&&i){const o=i.include;typeof o=="string"&&(r=o)}if(r){const o=/^\*\.([A-Za-z_-]*)$/.exec(r);if(o&&o.length>1){const f=o[1];if(!t.endsWith(f))return b(await this._fileDialogService.defaultFilePath(),t+"."+f)}}return b(await this._fileDialogService.defaultFilePath(),t)}async rename(e,t){if(this.editorModelReference)return{editor:{resource:t},options:{override:this.viewType}}}async revert(e,t){this.editorModelReference&&this.editorModelReference.object.isDirty()&&await this.editorModelReference.object.revert(t)}async resolve(e,t){if(!await this._notebookService.canResolve(this.viewType))return null;if(t?.mark("extensionActivated"),this._sideLoadedListener.dispose(),this.editorModelReference)this.editorModelReference.object.load({limits:this.ensureLimits(e)});else{const i=!!(this.capabilities&d.Scratchpad),r=await this._notebookModelResolverService.resolve(this.resource,this.viewType,{limits:this.ensureLimits(e),scratchpad:i,viewType:this.editorId});if(this.editorModelReference)return r.dispose(),this.editorModelReference.object;if(this.editorModelReference=r,this.isDisposed())return this.editorModelReference.dispose(),this.editorModelReference=null,null;this._register(this.editorModelReference.object.onDidChangeDirty(()=>this._onDidChangeDirty.fire())),this._register(this.editorModelReference.object.onDidChangeReadonly(()=>this._onDidChangeCapabilities.fire())),this._register(this.editorModelReference.object.onDidRevertUntitled(()=>this.dispose())),this.editorModelReference.object.isDirty()&&this._onDidChangeDirty.fire()}if(this.options._backupId){const i=await this._notebookService.withNotebookDataProvider(this.editorModelReference.object.notebook.viewType);if(!(i instanceof U))throw new Error("CANNOT open file notebook with this provider");const r=await i.serializer.dataToNotebook(W.fromString(JSON.stringify({__webview_backup:this.options._backupId})));this.editorModelReference.object.notebook.applyEdits([{editType:L.Replace,index:0,count:this.editorModelReference.object.notebook.length,cells:r.cells}],!0,void 0,()=>{},void 0,!1),this.options._workingCopy&&(this.options._backupId=void 0,this.options._workingCopy=void 0,this.options.startDirty=void 0)}return this.editorModelReference.object}toUntyped(){return{resource:this.resource,options:{override:this.viewType}}}matches(e){return super.matches(e)?!0:e instanceof l?this.viewType===e.viewType&&I(this.resource,e.resource):j(e)&&e.resource.scheme===m.scheme?I(this.resource,m.parse(e.resource)?.notebook):!1}};l=v([n(4,x),n(5,P),n(6,T),n(7,A),n(8,O),n(9,z),n(10,B),n(11,H),n(12,V),n(13,q)],l);function $e(s){return!!s&&typeof s=="object"&&Array.isArray(s.editorInputs)&&s.editorInputs.every(c=>c instanceof l)}function Ge(s){return!!s&&typeof s=="object"&&s.typeId===l.ID}export{l as NotebookEditorInput,$e as isCompositeNotebookEditorInput,Ge as isNotebookEditorInput};
+${patterns}`);
+    }
+    return await this.editorModelReference.object.saveAs(target);
+  }
+  async _suggestName(provider, suggestedFilename) {
+    const firstSelector = provider.selectors[0];
+    let selectorStr = firstSelector && typeof firstSelector === "string" ? firstSelector : void 0;
+    if (!selectorStr && firstSelector) {
+      const include = firstSelector.include;
+      if (typeof include === "string") {
+        selectorStr = include;
+      }
+    }
+    if (selectorStr) {
+      const matches = /^\*\.([A-Za-z_-]*)$/.exec(selectorStr);
+      if (matches && matches.length > 1) {
+        const fileExt = matches[1];
+        if (!suggestedFilename.endsWith(fileExt)) {
+          return joinPath(await this._fileDialogService.defaultFilePath(), suggestedFilename + "." + fileExt);
+        }
+      }
+    }
+    return joinPath(await this._fileDialogService.defaultFilePath(), suggestedFilename);
+  }
+  // called when users rename a notebook document
+  async rename(group, target) {
+    if (this.editorModelReference) {
+      return { editor: { resource: target }, options: { override: this.viewType } };
+    }
+    return void 0;
+  }
+  async revert(_group, options) {
+    if (this.editorModelReference && this.editorModelReference.object.isDirty()) {
+      await this.editorModelReference.object.revert(options);
+    }
+  }
+  async resolve(_options, perf) {
+    if (!await this._notebookService.canResolve(this.viewType)) {
+      return null;
+    }
+    perf?.mark("extensionActivated");
+    this._sideLoadedListener.dispose();
+    if (!this.editorModelReference) {
+      const scratchpad = this.capabilities & EditorInputCapabilities.Scratchpad ? true : false;
+      const ref = await this._notebookModelResolverService.resolve(this.resource, this.viewType, { limits: this.ensureLimits(_options), scratchpad, viewType: this.editorId });
+      if (this.editorModelReference) {
+        ref.dispose();
+        return this.editorModelReference.object;
+      }
+      this.editorModelReference = ref;
+      if (this.isDisposed()) {
+        this.editorModelReference.dispose();
+        this.editorModelReference = null;
+        return null;
+      }
+      this._register(this.editorModelReference.object.onDidChangeDirty(() => this._onDidChangeDirty.fire()));
+      this._register(this.editorModelReference.object.onDidChangeReadonly(() => this._onDidChangeCapabilities.fire()));
+      this._register(this.editorModelReference.object.onDidRevertUntitled(() => this.dispose()));
+      if (this.editorModelReference.object.isDirty()) {
+        this._onDidChangeDirty.fire();
+      }
+    } else {
+      this.editorModelReference.object.load({ limits: this.ensureLimits(_options) });
+    }
+    if (this.options._backupId) {
+      const info = await this._notebookService.withNotebookDataProvider(this.editorModelReference.object.notebook.viewType);
+      if (!(info instanceof SimpleNotebookProviderInfo)) {
+        throw new Error("CANNOT open file notebook with this provider");
+      }
+      const data = await info.serializer.dataToNotebook(VSBuffer.fromString(JSON.stringify({ __webview_backup: this.options._backupId })));
+      this.editorModelReference.object.notebook.applyEdits([
+        {
+          editType: CellEditType.Replace,
+          index: 0,
+          count: this.editorModelReference.object.notebook.length,
+          cells: data.cells
+        }
+      ], true, void 0, () => void 0, void 0, false);
+      if (this.options._workingCopy) {
+        this.options._backupId = void 0;
+        this.options._workingCopy = void 0;
+        this.options.startDirty = void 0;
+      }
+    }
+    return this.editorModelReference.object;
+  }
+  toUntyped() {
+    return {
+      resource: this.resource,
+      options: {
+        override: this.viewType
+      }
+    };
+  }
+  matches(otherInput) {
+    if (super.matches(otherInput)) {
+      return true;
+    }
+    if (otherInput instanceof NotebookEditorInput) {
+      return this.viewType === otherInput.viewType && isEqual(this.resource, otherInput.resource);
+    }
+    if (isResourceEditorInput(otherInput) && otherInput.resource.scheme === CellUri.scheme) {
+      return isEqual(this.resource, CellUri.parse(otherInput.resource)?.notebook);
+    }
+    return false;
+  }
+};
+NotebookEditorInput = __decorateClass([
+  __decorateParam(4, INotebookService),
+  __decorateParam(5, INotebookEditorModelResolverService),
+  __decorateParam(6, IFileDialogService),
+  __decorateParam(7, ILabelService),
+  __decorateParam(8, IFileService),
+  __decorateParam(9, IFilesConfigurationService),
+  __decorateParam(10, IExtensionService),
+  __decorateParam(11, IEditorService),
+  __decorateParam(12, ITextResourceConfigurationService),
+  __decorateParam(13, ICustomEditorLabelService)
+], NotebookEditorInput);
+function isCompositeNotebookEditorInput(thing) {
+  return !!thing && typeof thing === "object" && Array.isArray(thing.editorInputs) && thing.editorInputs.every((input) => input instanceof NotebookEditorInput);
+}
+__name(isCompositeNotebookEditorInput, "isCompositeNotebookEditorInput");
+function isNotebookEditorInput(thing) {
+  return !!thing && typeof thing === "object" && thing.typeId === NotebookEditorInput.ID;
+}
+__name(isNotebookEditorInput, "isNotebookEditorInput");
+export {
+  NotebookEditorInput,
+  isCompositeNotebookEditorInput,
+  isNotebookEditorInput
+};
+//# sourceMappingURL=notebookEditorInput.js.map

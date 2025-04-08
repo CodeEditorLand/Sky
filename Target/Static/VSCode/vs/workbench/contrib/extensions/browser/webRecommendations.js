@@ -1,1 +1,51 @@
-var v=Object.defineProperty,d=Object.getOwnPropertyDescriptor,c=(e,n,o,t)=>{for(var r,i=t>1?void 0:t?d(n,o):n,s=e.length-1;s>=0;s--)(r=e[s])&&(i=(t?r(n,o,i):r(i))||i);return t&&i&&v(n,o,i),i},m=(e,n)=>(o,t)=>n(o,t,e);import{ExtensionRecommendations as x}from"./extensionRecommendations.js";import{IProductService as S}from"../../../../platform/product/common/productService.js";import{ExtensionRecommendationReason as p}from"../../../services/extensionRecommendations/common/extensionRecommendations.js";import{localize as E}from"../../../../nls.js";import{IExtensionManagementServerService as g}from"../../../services/extensionManagement/common/extensionManagement.js";let i=class extends x{constructor(e,n){super(),this.productService=e,this.extensionManagementServerService=n}_recommendations=[];get recommendations(){return this._recommendations}async doActivate(){this.extensionManagementServerService.webExtensionManagementServer&&!this.extensionManagementServerService.localExtensionManagementServer&&!this.extensionManagementServerService.remoteExtensionManagementServer&&Array.isArray(this.productService.webExtensionTips)&&(this._recommendations=this.productService.webExtensionTips.map((e=>({extension:e.toLowerCase(),reason:{reasonId:p.Application,reasonText:E("reason","This extension is recommended for {0} for the Web",this.productService.nameLong)}}))))}};i=c([m(0,S),m(1,g)],i);export{i as WebRecommendations};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { ExtensionRecommendations, ExtensionRecommendation } from "./extensionRecommendations.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+import { ExtensionRecommendationReason } from "../../../services/extensionRecommendations/common/extensionRecommendations.js";
+import { localize } from "../../../../nls.js";
+import { IExtensionManagementServerService } from "../../../services/extensionManagement/common/extensionManagement.js";
+let WebRecommendations = class extends ExtensionRecommendations {
+  constructor(productService, extensionManagementServerService) {
+    super();
+    this.productService = productService;
+    this.extensionManagementServerService = extensionManagementServerService;
+  }
+  static {
+    __name(this, "WebRecommendations");
+  }
+  _recommendations = [];
+  get recommendations() {
+    return this._recommendations;
+  }
+  async doActivate() {
+    const isOnlyWeb = this.extensionManagementServerService.webExtensionManagementServer && !this.extensionManagementServerService.localExtensionManagementServer && !this.extensionManagementServerService.remoteExtensionManagementServer;
+    if (isOnlyWeb && Array.isArray(this.productService.webExtensionTips)) {
+      this._recommendations = this.productService.webExtensionTips.map((extensionId) => ({
+        extension: extensionId.toLowerCase(),
+        reason: {
+          reasonId: ExtensionRecommendationReason.Application,
+          reasonText: localize("reason", "This extension is recommended for {0} for the Web", this.productService.nameLong)
+        }
+      }));
+    }
+  }
+};
+WebRecommendations = __decorateClass([
+  __decorateParam(0, IProductService),
+  __decorateParam(1, IExtensionManagementServerService)
+], WebRecommendations);
+export {
+  WebRecommendations
+};
+//# sourceMappingURL=webRecommendations.js.map

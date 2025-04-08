@@ -1,1 +1,462 @@
-var D=Object.defineProperty,G=Object.getOwnPropertyDescriptor,g=(e,t,s,r)=>{for(var a,o=r>1?void 0:r?G(t,s):t,i=e.length-1;i>=0;i--)(a=e[i])&&(o=(r?a(t,s,o):a(o))||o);return r&&o&&D(t,s,o),o},d=(e,t)=>(s,r)=>t(s,r,e);import*as a from"../../../../base/browser/dom.js";import{CountBadge as R}from"../../../../base/browser/ui/countBadge/countBadge.js";import"../../../../base/browser/ui/list/list.js";import"../../../../base/browser/ui/list/listWidget.js";import"../../../../base/browser/ui/tree/tree.js";import{Disposable as x,DisposableStore as y}from"../../../../base/common/lifecycle.js";import*as q from"../../../../base/common/path.js";import*as h from"../../../../nls.js";import{IConfigurationService as H}from"../../../../platform/configuration/common/configuration.js";import{FileKind as C}from"../../../../platform/files/common/files.js";import{ILabelService as O}from"../../../../platform/label/common/label.js";import"../../../services/search/common/search.js";import{IWorkspaceContextService as F}from"../../../../platform/workspace/common/workspace.js";import"../../../browser/labels.js";import"./searchView.js";import{isEqual as U}from"../../../../base/common/resources.js";import"../../../../base/browser/ui/tree/objectTree.js";import"../../../../base/browser/ui/tree/compressedObjectTreeModel.js";import{MenuId as L}from"../../../../platform/actions/common/actions.js";import{IInstantiationService as E}from"../../../../platform/instantiation/common/instantiation.js";import{HiddenItemStrategy as K,MenuWorkbenchToolBar as w}from"../../../../platform/actions/browser/toolbar.js";import"./searchActionsRemoveReplace.js";import{IContextKeyService as b}from"../../../../platform/contextkey/common/contextkey.js";import{ServiceCollection as A}from"../../../../platform/instantiation/common/serviceCollection.js";import{defaultCountBadgeStyles as V}from"../../../../platform/theme/browser/defaultStyles.js";import{SearchContext as l}from"../common/constants.js";import{getDefaultHoverDelegate as P}from"../../../../base/browser/ui/hover/hoverDelegateFactory.js";import{IHoverService as j}from"../../../../platform/hover/browser/hover.js";import{Codicon as J}from"../../../../base/common/codicons.js";import{isSearchTreeMatch as $,isSearchTreeFileMatch as B,isSearchTreeFolderMatch as z,isTextSearchHeading as Q,isSearchTreeFolderMatchWorkspaceRoot as X,isSearchTreeFolderMatchNoRoot as Y,isPlainTextSearchHeading as Z}from"./searchTreeModel/searchTreeCommon.js";import{isSearchTreeAIFileMatch as ee}from"./AISearch/aiSearchModelBase.js";class k{static ITEM_HEIGHT=22;getHeight(e){return k.ITEM_HEIGHT}getTemplateId(e){if(z(e))return S.TEMPLATE_ID;if(B(e))return v.TEMPLATE_ID;if($(e))return f.TEMPLATE_ID;if(Q(e))return T.TEMPLATE_ID;throw console.error("Invalid search tree element",e),new Error("Invalid search tree element")}}let T=class extends x{constructor(e,t,s,r){super(),this.labels=e,this.contextService=t,this.instantiationService=s,this.contextKeyService=r}static TEMPLATE_ID="textResultMatch";templateId=T.TEMPLATE_ID;disposeCompressedElements(e,t,s,r){}renderTemplate(e){const t=new y,s=a.append(e,a.$(".textsearchresult")),r=this.labels.create(s,{supportDescriptionHighlights:!0,supportHighlights:!0,supportIcons:!0});t.add(r);const o=a.append(s,a.$(".actionBarContainer")),i=t.add(this.contextKeyService.createScoped(e)),n=t.add(this.instantiationService.createChild(new A([b,i]))),l=t.add(n.createInstance(w,o,L.SearchActionMenu,{menuOptions:{shouldForwardArgs:!0},highlightToggledItems:!0,hiddenItemStrategy:K.Ignore,toolbarOptions:{primaryGroup:e=>/^inline/.test(e)}}));return{label:r,disposables:t,actions:l,contextKeyService:i}}async renderElement(e,t,s,r){if(Z(e.element))s.label.setLabel(h.localize("searchFolderMatch.plainText.label","Text Results")),l.AIResultsTitle.bindTo(s.contextKeyService).set(!1),l.MatchFocusKey.bindTo(s.contextKeyService).set(!1),l.FileFocusKey.bindTo(s.contextKeyService).set(!1),l.FolderFocusKey.bindTo(s.contextKeyService).set(!1);else{let t="Copilot";try{t=await e.element.parent().searchModel.getAITextResultProviderName()||"Copilot"}catch{}const r=h.localize({key:"searchFolderMatch.aiText.label",comment:["This is displayed before the AI text search results, where {0} will be in the place of the AI name (ie: Copilot)"]},"{0} Results",t);s.label.setLabel(`$(${J.copilot.id}) ${r}`),l.AIResultsTitle.bindTo(s.contextKeyService).set(!0),l.MatchFocusKey.bindTo(s.contextKeyService).set(!1),l.FileFocusKey.bindTo(s.contextKeyService).set(!1),l.FolderFocusKey.bindTo(s.contextKeyService).set(!1)}}disposeTemplate(e){e.disposables.dispose()}renderCompressedElements(e,t,s,r){}};T=g([d(1,F),d(2,E),d(3,b)],T);let S=class extends x{constructor(e,t,s,r,a,o){super(),this.searchView=e,this.labels=t,this.contextService=s,this.labelService=r,this.instantiationService=a,this.contextKeyService=o}static TEMPLATE_ID="folderMatch";templateId=S.TEMPLATE_ID;renderCompressedElements(e,t,s,r){const a=e.element,o=a.elements[a.elements.length-1],i=a.elements.map((e=>e.name()));if(o.resource){const e=X(o)?C.ROOT_FOLDER:C.FOLDER;s.label.setResource({resource:o.resource,name:i},{fileKind:e,separator:this.labelService.getSeparator(o.resource.scheme)})}else s.label.setLabel(h.localize("searchFolderMatch.other.label","Other files"));this.renderFolderDetails(o,s)}renderTemplate(e){const t=new y,s=a.append(e,a.$(".foldermatch")),r=this.labels.create(s,{supportDescriptionHighlights:!0,supportHighlights:!0});t.add(r);const o=new R(a.append(s,a.$(".badge")),{},V);t.add(o);const i=a.append(s,a.$(".actionBarContainer")),n=new y;t.add(n);const c=t.add(this.contextKeyService.createScoped(e));l.AIResultsTitle.bindTo(c).set(!1),l.MatchFocusKey.bindTo(c).set(!1),l.FileFocusKey.bindTo(c).set(!1),l.FolderFocusKey.bindTo(c).set(!0);const d=t.add(this.instantiationService.createChild(new A([b,c])));return{label:r,badge:o,actions:t.add(d.createInstance(w,i,L.SearchActionMenu,{menuOptions:{shouldForwardArgs:!0},hiddenItemStrategy:K.Ignore,toolbarOptions:{primaryGroup:e=>/^inline/.test(e)}})),disposables:t,elementDisposables:n,contextKeyService:c}}renderElement(e,t,s){const r=e.element;if(r.resource){const e=this.contextService.getWorkspaceFolder(r.resource);e&&U(e.uri,r.resource)?s.label.setFile(r.resource,{fileKind:C.ROOT_FOLDER,hidePath:!0}):s.label.setFile(r.resource,{fileKind:C.FOLDER,hidePath:this.searchView.isTreeLayoutViewVisible})}else s.label.setLabel(h.localize("searchFolderMatch.other.label","Other files"));l.IsEditableItemKey.bindTo(s.contextKeyService).set(!r.hasOnlyReadOnlyMatches()),s.elementDisposables.add(r.onChange((()=>{l.IsEditableItemKey.bindTo(s.contextKeyService).set(!r.hasOnlyReadOnlyMatches())}))),this.renderFolderDetails(r,s)}disposeElement(e,t,s){s.elementDisposables.clear()}disposeCompressedElements(e,t,s,r){s.elementDisposables.clear()}disposeTemplate(e){e.disposables.dispose()}renderFolderDetails(e,t){const s=e.recursiveMatchCount();t.badge.setCount(s),t.badge.setTitleFormat(s>1?h.localize("searchFileMatches","{0} files found",s):h.localize("searchFileMatch","{0} file found",s)),t.actions.context={viewer:this.searchView.getControl(),element:e}}};S=g([d(2,F),d(3,O),d(4,E),d(5,b)],S);let v=class extends x{constructor(e,t,s,r,a,o){super(),this.searchView=e,this.labels=t,this.contextService=s,this.configurationService=r,this.instantiationService=a,this.contextKeyService=o}static TEMPLATE_ID="fileMatch";templateId=v.TEMPLATE_ID;renderCompressedElements(e,t,s,r){throw new Error("Should never happen since node is incompressible.")}renderTemplate(e){const t=new y,s=new y;t.add(s);const r=a.append(e,a.$(".filematch")),o=this.labels.create(r);t.add(o);const i=new R(a.append(r,a.$(".badge")),{},V);t.add(i);const n=a.append(r,a.$(".actionBarContainer")),c=t.add(this.contextKeyService.createScoped(e));l.AIResultsTitle.bindTo(c).set(!1),l.MatchFocusKey.bindTo(c).set(!1),l.FileFocusKey.bindTo(c).set(!0),l.FolderFocusKey.bindTo(c).set(!1);const d=t.add(this.instantiationService.createChild(new A([b,c])));return{el:r,label:o,badge:i,actions:t.add(d.createInstance(w,n,L.SearchActionMenu,{menuOptions:{shouldForwardArgs:!0},hiddenItemStrategy:K.Ignore,toolbarOptions:{primaryGroup:e=>/^inline/.test(e)}})),disposables:t,elementDisposables:s,contextKeyService:c}}renderElement(e,t,s){const r=e.element;s.el.setAttribute("data-resource",r.resource.toString());const a=this.configurationService.getValue("search").decorations;s.label.setFile(r.resource,{range:ee(r)?r.getFullRange():void 0,hidePath:this.searchView.isTreeLayoutViewVisible&&!Y(r.parent()),hideIcon:!1,fileDecorations:{colors:a.colors,badges:a.badges}});const o=r.count();s.badge.setCount(o),s.badge.setTitleFormat(o>1?h.localize("searchMatches","{0} matches found",o):h.localize("searchMatch","{0} match found",o)),s.actions.context={viewer:this.searchView.getControl(),element:r},l.IsEditableItemKey.bindTo(s.contextKeyService).set(!r.hasOnlyReadOnlyMatches()),s.elementDisposables.add(r.onChange((()=>{l.IsEditableItemKey.bindTo(s.contextKeyService).set(!r.hasOnlyReadOnlyMatches())}))),s.el.parentElement?.parentElement?.querySelector(".monaco-tl-twistie")?.classList.add("force-twistie")}disposeElement(e,t,s){s.elementDisposables.clear()}disposeTemplate(e){e.disposables.dispose()}};v=g([d(2,F),d(3,H),d(4,E),d(5,b)],v);let f=class extends x{constructor(e,t,s,r,a,o){super(),this.searchView=e,this.contextService=t,this.configurationService=s,this.instantiationService=r,this.contextKeyService=a,this.hoverService=o}static TEMPLATE_ID="match";templateId=f.TEMPLATE_ID;renderCompressedElements(e,t,s,r){throw new Error("Should never happen since node is incompressible.")}renderTemplate(e){e.classList.add("linematch");const t=a.append(e,a.$("span.matchLineNum")),s=a.append(e,a.$("a.plain.match")),r=a.append(s,a.$("span")),o=a.append(s,a.$("span.findInFileMatch")),i=a.append(s,a.$("span.replaceMatch")),n=a.append(s,a.$("span")),c=a.append(e,a.$("span.actionBarContainer")),d=new y,h=d.add(this.contextKeyService.createScoped(e));l.AIResultsTitle.bindTo(h).set(!1),l.MatchFocusKey.bindTo(h).set(!0),l.FileFocusKey.bindTo(h).set(!1),l.FolderFocusKey.bindTo(h).set(!1);const m=d.add(this.instantiationService.createChild(new A([b,h])));return{parent:s,before:r,match:o,replace:i,after:n,lineNumber:t,actions:d.add(m.createInstance(w,c,L.SearchActionMenu,{menuOptions:{shouldForwardArgs:!0},hiddenItemStrategy:K.Ignore,toolbarOptions:{primaryGroup:e=>/^inline/.test(e)}})),disposables:d,contextKeyService:h}}renderElement(e,t,s){const r=e.element,a=r.preview(),o=this.searchView.model.isReplaceActive()&&!!this.searchView.model.replaceString&&!r.isReadonly;s.before.textContent=a.before,s.match.textContent=a.inside,s.match.classList.toggle("replace",o),s.replace.textContent=o?r.replaceString:"",s.after.textContent=a.after;const i=(a.fullBefore+(o?r.replaceString:a.inside)+a.after).trim().substr(0,999);s.disposables.add(this.hoverService.setupManagedHover(P("mouse"),s.parent,i)),l.IsEditableItemKey.bindTo(s.contextKeyService).set(!r.isReadonly);const n=r.range().endLineNumber-r.range().startLineNumber,c=n>0?`+${n}`:"",d=this.configurationService.getValue("search").showLineNumbers,h=d?`${r.range().startLineNumber}:`:"";s.lineNumber.classList.toggle("show",n>0||d),s.lineNumber.textContent=h+c,s.disposables.add(this.hoverService.setupManagedHover(P("mouse"),s.lineNumber,this.getMatchTitle(r,d))),s.actions.context={viewer:this.searchView.getControl(),element:r}}disposeTemplate(e){e.disposables.dispose()}getMatchTitle(e,t){const s=e.range().startLineNumber,r=e.range().endLineNumber-e.range().startLineNumber;return(t?h.localize("lineNumStr","From line {0}",s,r)+" ":"")+(r>0?"+ "+h.localize("numLinesStr","{0} more lines",r):"")}};f=g([d(1,F),d(2,H),d(3,E),d(4,b),d(5,j)],f);let N=class{constructor(e,t){this.searchView=e,this.labelService=t}getWidgetAriaLabel(){return h.localize("search","Search")}getAriaLabel(e){if(z(e)){const t=e.allDownstreamFileMatches().reduce(((e,t)=>e+t.count()),0);return e.resource?h.localize("folderMatchAriaLabel","{0} matches in folder root {1}, Search result",t,e.name()):h.localize("otherFilesAriaLabel","{0} matches outside of the workspace, Search result",t)}if(B(e)){const t=this.labelService.getUriLabel(e.resource,{relative:!0})||e.resource.fsPath;return h.localize("fileMatchAriaLabel","{0} matches in file {1} of folder {2}, Search result",e.count(),e.name(),q.dirname(t))}if($(e)){const t=e,s=this.searchView.model,r=s.isReplaceActive()&&!!s.replaceString,a=t.getMatchString(),o=t.range(),i=t.text().substr(0,o.endColumn+150);return r?h.localize("replacePreviewResultAria","'{0}' at column {1} replace {2} with {3}",i,o.startColumn,a,t.replaceString):h.localize("searchResultAria","'{0}' at column {1} found {2}",i,o.startColumn,a)}return null}};N=g([d(1,O)],N);export{v as FileMatchRenderer,S as FolderMatchRenderer,f as MatchRenderer,N as SearchAccessibilityProvider,k as SearchDelegate,T as TextSearchResultRenderer};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import * as DOM from "../../../../base/browser/dom.js";
+import { CountBadge } from "../../../../base/browser/ui/countBadge/countBadge.js";
+import { IListVirtualDelegate } from "../../../../base/browser/ui/list/list.js";
+import { IListAccessibilityProvider } from "../../../../base/browser/ui/list/listWidget.js";
+import { ITreeNode } from "../../../../base/browser/ui/tree/tree.js";
+import { Disposable, DisposableStore } from "../../../../base/common/lifecycle.js";
+import * as paths from "../../../../base/common/path.js";
+import * as nls from "../../../../nls.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { FileKind } from "../../../../platform/files/common/files.js";
+import { ILabelService } from "../../../../platform/label/common/label.js";
+import { ISearchConfigurationProperties } from "../../../services/search/common/search.js";
+import { IWorkspaceContextService } from "../../../../platform/workspace/common/workspace.js";
+import { IResourceLabel, ResourceLabels } from "../../../browser/labels.js";
+import { SearchView } from "./searchView.js";
+import { isEqual } from "../../../../base/common/resources.js";
+import { ICompressibleTreeRenderer } from "../../../../base/browser/ui/tree/objectTree.js";
+import { ICompressedTreeNode } from "../../../../base/browser/ui/tree/compressedObjectTreeModel.js";
+import { MenuId } from "../../../../platform/actions/common/actions.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { HiddenItemStrategy, MenuWorkbenchToolBar } from "../../../../platform/actions/browser/toolbar.js";
+import { ISearchActionContext } from "./searchActionsRemoveReplace.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { ServiceCollection } from "../../../../platform/instantiation/common/serviceCollection.js";
+import { defaultCountBadgeStyles } from "../../../../platform/theme/browser/defaultStyles.js";
+import { SearchContext } from "../common/constants.js";
+import { getDefaultHoverDelegate } from "../../../../base/browser/ui/hover/hoverDelegateFactory.js";
+import { IHoverService } from "../../../../platform/hover/browser/hover.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { ISearchTreeMatch, isSearchTreeMatch, RenderableMatch, ITextSearchHeading, ISearchTreeFolderMatch, ISearchTreeFileMatch, isSearchTreeFileMatch, isSearchTreeFolderMatch, isTextSearchHeading, ISearchModel, isSearchTreeFolderMatchWorkspaceRoot, isSearchTreeFolderMatchNoRoot, isPlainTextSearchHeading } from "./searchTreeModel/searchTreeCommon.js";
+import { isSearchTreeAIFileMatch } from "./AISearch/aiSearchModelBase.js";
+class SearchDelegate {
+  static {
+    __name(this, "SearchDelegate");
+  }
+  static ITEM_HEIGHT = 22;
+  getHeight(element) {
+    return SearchDelegate.ITEM_HEIGHT;
+  }
+  getTemplateId(element) {
+    if (isSearchTreeFolderMatch(element)) {
+      return FolderMatchRenderer.TEMPLATE_ID;
+    } else if (isSearchTreeFileMatch(element)) {
+      return FileMatchRenderer.TEMPLATE_ID;
+    } else if (isSearchTreeMatch(element)) {
+      return MatchRenderer.TEMPLATE_ID;
+    } else if (isTextSearchHeading(element)) {
+      return TextSearchResultRenderer.TEMPLATE_ID;
+    }
+    console.error("Invalid search tree element", element);
+    throw new Error("Invalid search tree element");
+  }
+}
+let TextSearchResultRenderer = class extends Disposable {
+  constructor(labels, contextService, instantiationService, contextKeyService) {
+    super();
+    this.labels = labels;
+    this.contextService = contextService;
+    this.instantiationService = instantiationService;
+    this.contextKeyService = contextKeyService;
+  }
+  static {
+    __name(this, "TextSearchResultRenderer");
+  }
+  static TEMPLATE_ID = "textResultMatch";
+  templateId = TextSearchResultRenderer.TEMPLATE_ID;
+  disposeCompressedElements(node, index, templateData, height) {
+  }
+  renderTemplate(container) {
+    const disposables = new DisposableStore();
+    const textSearchResultElement = DOM.append(container, DOM.$(".textsearchresult"));
+    const label = this.labels.create(textSearchResultElement, { supportDescriptionHighlights: true, supportHighlights: true, supportIcons: true });
+    disposables.add(label);
+    const actionBarContainer = DOM.append(textSearchResultElement, DOM.$(".actionBarContainer"));
+    const contextKeyServiceMain = disposables.add(this.contextKeyService.createScoped(container));
+    const instantiationService = disposables.add(this.instantiationService.createChild(new ServiceCollection([IContextKeyService, contextKeyServiceMain])));
+    const actions = disposables.add(instantiationService.createInstance(MenuWorkbenchToolBar, actionBarContainer, MenuId.SearchActionMenu, {
+      menuOptions: {
+        shouldForwardArgs: true
+      },
+      highlightToggledItems: true,
+      hiddenItemStrategy: HiddenItemStrategy.Ignore,
+      toolbarOptions: {
+        primaryGroup: /* @__PURE__ */ __name((g) => /^inline/.test(g), "primaryGroup")
+      }
+    }));
+    return { label, disposables, actions, contextKeyService: contextKeyServiceMain };
+  }
+  async renderElement(node, index, templateData, height) {
+    if (isPlainTextSearchHeading(node.element)) {
+      templateData.label.setLabel(nls.localize("searchFolderMatch.plainText.label", "Text Results"));
+      SearchContext.AIResultsTitle.bindTo(templateData.contextKeyService).set(false);
+      SearchContext.MatchFocusKey.bindTo(templateData.contextKeyService).set(false);
+      SearchContext.FileFocusKey.bindTo(templateData.contextKeyService).set(false);
+      SearchContext.FolderFocusKey.bindTo(templateData.contextKeyService).set(false);
+    } else {
+      let aiName = "Copilot";
+      try {
+        aiName = await node.element.parent().searchModel.getAITextResultProviderName() || "Copilot";
+      } catch {
+      }
+      const localizedLabel = nls.localize({
+        key: "searchFolderMatch.aiText.label",
+        comment: ["This is displayed before the AI text search results, where {0} will be in the place of the AI name (ie: Copilot)"]
+      }, "{0} Results", aiName);
+      templateData.label.setLabel(`$(${Codicon.copilot.id}) ${localizedLabel}`);
+      SearchContext.AIResultsTitle.bindTo(templateData.contextKeyService).set(true);
+      SearchContext.MatchFocusKey.bindTo(templateData.contextKeyService).set(false);
+      SearchContext.FileFocusKey.bindTo(templateData.contextKeyService).set(false);
+      SearchContext.FolderFocusKey.bindTo(templateData.contextKeyService).set(false);
+    }
+  }
+  disposeTemplate(templateData) {
+    templateData.disposables.dispose();
+  }
+  renderCompressedElements(node, index, templateData, height) {
+  }
+};
+TextSearchResultRenderer = __decorateClass([
+  __decorateParam(1, IWorkspaceContextService),
+  __decorateParam(2, IInstantiationService),
+  __decorateParam(3, IContextKeyService)
+], TextSearchResultRenderer);
+let FolderMatchRenderer = class extends Disposable {
+  constructor(searchView, labels, contextService, labelService, instantiationService, contextKeyService) {
+    super();
+    this.searchView = searchView;
+    this.labels = labels;
+    this.contextService = contextService;
+    this.labelService = labelService;
+    this.instantiationService = instantiationService;
+    this.contextKeyService = contextKeyService;
+  }
+  static {
+    __name(this, "FolderMatchRenderer");
+  }
+  static TEMPLATE_ID = "folderMatch";
+  templateId = FolderMatchRenderer.TEMPLATE_ID;
+  renderCompressedElements(node, index, templateData, height) {
+    const compressed = node.element;
+    const folder = compressed.elements[compressed.elements.length - 1];
+    const label = compressed.elements.map((e) => e.name());
+    if (folder.resource) {
+      const fileKind = isSearchTreeFolderMatchWorkspaceRoot(folder) ? FileKind.ROOT_FOLDER : FileKind.FOLDER;
+      templateData.label.setResource({ resource: folder.resource, name: label }, {
+        fileKind,
+        separator: this.labelService.getSeparator(folder.resource.scheme)
+      });
+    } else {
+      templateData.label.setLabel(nls.localize("searchFolderMatch.other.label", "Other files"));
+    }
+    this.renderFolderDetails(folder, templateData);
+  }
+  renderTemplate(container) {
+    const disposables = new DisposableStore();
+    const folderMatchElement = DOM.append(container, DOM.$(".foldermatch"));
+    const label = this.labels.create(folderMatchElement, { supportDescriptionHighlights: true, supportHighlights: true });
+    disposables.add(label);
+    const badge = new CountBadge(DOM.append(folderMatchElement, DOM.$(".badge")), {}, defaultCountBadgeStyles);
+    disposables.add(badge);
+    const actionBarContainer = DOM.append(folderMatchElement, DOM.$(".actionBarContainer"));
+    const elementDisposables = new DisposableStore();
+    disposables.add(elementDisposables);
+    const contextKeyServiceMain = disposables.add(this.contextKeyService.createScoped(container));
+    SearchContext.AIResultsTitle.bindTo(contextKeyServiceMain).set(false);
+    SearchContext.MatchFocusKey.bindTo(contextKeyServiceMain).set(false);
+    SearchContext.FileFocusKey.bindTo(contextKeyServiceMain).set(false);
+    SearchContext.FolderFocusKey.bindTo(contextKeyServiceMain).set(true);
+    const instantiationService = disposables.add(this.instantiationService.createChild(new ServiceCollection([IContextKeyService, contextKeyServiceMain])));
+    const actions = disposables.add(instantiationService.createInstance(MenuWorkbenchToolBar, actionBarContainer, MenuId.SearchActionMenu, {
+      menuOptions: {
+        shouldForwardArgs: true
+      },
+      hiddenItemStrategy: HiddenItemStrategy.Ignore,
+      toolbarOptions: {
+        primaryGroup: /* @__PURE__ */ __name((g) => /^inline/.test(g), "primaryGroup")
+      }
+    }));
+    return {
+      label,
+      badge,
+      actions,
+      disposables,
+      elementDisposables,
+      contextKeyService: contextKeyServiceMain
+    };
+  }
+  renderElement(node, index, templateData) {
+    const folderMatch = node.element;
+    if (folderMatch.resource) {
+      const workspaceFolder = this.contextService.getWorkspaceFolder(folderMatch.resource);
+      if (workspaceFolder && isEqual(workspaceFolder.uri, folderMatch.resource)) {
+        templateData.label.setFile(folderMatch.resource, { fileKind: FileKind.ROOT_FOLDER, hidePath: true });
+      } else {
+        templateData.label.setFile(folderMatch.resource, { fileKind: FileKind.FOLDER, hidePath: this.searchView.isTreeLayoutViewVisible });
+      }
+    } else {
+      templateData.label.setLabel(nls.localize("searchFolderMatch.other.label", "Other files"));
+    }
+    SearchContext.IsEditableItemKey.bindTo(templateData.contextKeyService).set(!folderMatch.hasOnlyReadOnlyMatches());
+    templateData.elementDisposables.add(folderMatch.onChange(() => {
+      SearchContext.IsEditableItemKey.bindTo(templateData.contextKeyService).set(!folderMatch.hasOnlyReadOnlyMatches());
+    }));
+    this.renderFolderDetails(folderMatch, templateData);
+  }
+  disposeElement(element, index, templateData) {
+    templateData.elementDisposables.clear();
+  }
+  disposeCompressedElements(node, index, templateData, height) {
+    templateData.elementDisposables.clear();
+  }
+  disposeTemplate(templateData) {
+    templateData.disposables.dispose();
+  }
+  renderFolderDetails(folder, templateData) {
+    const count = folder.recursiveMatchCount();
+    templateData.badge.setCount(count);
+    templateData.badge.setTitleFormat(count > 1 ? nls.localize("searchFileMatches", "{0} files found", count) : nls.localize("searchFileMatch", "{0} file found", count));
+    templateData.actions.context = { viewer: this.searchView.getControl(), element: folder };
+  }
+};
+FolderMatchRenderer = __decorateClass([
+  __decorateParam(2, IWorkspaceContextService),
+  __decorateParam(3, ILabelService),
+  __decorateParam(4, IInstantiationService),
+  __decorateParam(5, IContextKeyService)
+], FolderMatchRenderer);
+let FileMatchRenderer = class extends Disposable {
+  constructor(searchView, labels, contextService, configurationService, instantiationService, contextKeyService) {
+    super();
+    this.searchView = searchView;
+    this.labels = labels;
+    this.contextService = contextService;
+    this.configurationService = configurationService;
+    this.instantiationService = instantiationService;
+    this.contextKeyService = contextKeyService;
+  }
+  static {
+    __name(this, "FileMatchRenderer");
+  }
+  static TEMPLATE_ID = "fileMatch";
+  templateId = FileMatchRenderer.TEMPLATE_ID;
+  renderCompressedElements(node, index, templateData, height) {
+    throw new Error("Should never happen since node is incompressible.");
+  }
+  renderTemplate(container) {
+    const disposables = new DisposableStore();
+    const elementDisposables = new DisposableStore();
+    disposables.add(elementDisposables);
+    const fileMatchElement = DOM.append(container, DOM.$(".filematch"));
+    const label = this.labels.create(fileMatchElement);
+    disposables.add(label);
+    const badge = new CountBadge(DOM.append(fileMatchElement, DOM.$(".badge")), {}, defaultCountBadgeStyles);
+    disposables.add(badge);
+    const actionBarContainer = DOM.append(fileMatchElement, DOM.$(".actionBarContainer"));
+    const contextKeyServiceMain = disposables.add(this.contextKeyService.createScoped(container));
+    SearchContext.AIResultsTitle.bindTo(contextKeyServiceMain).set(false);
+    SearchContext.MatchFocusKey.bindTo(contextKeyServiceMain).set(false);
+    SearchContext.FileFocusKey.bindTo(contextKeyServiceMain).set(true);
+    SearchContext.FolderFocusKey.bindTo(contextKeyServiceMain).set(false);
+    const instantiationService = disposables.add(this.instantiationService.createChild(new ServiceCollection([IContextKeyService, contextKeyServiceMain])));
+    const actions = disposables.add(instantiationService.createInstance(MenuWorkbenchToolBar, actionBarContainer, MenuId.SearchActionMenu, {
+      menuOptions: {
+        shouldForwardArgs: true
+      },
+      hiddenItemStrategy: HiddenItemStrategy.Ignore,
+      toolbarOptions: {
+        primaryGroup: /* @__PURE__ */ __name((g) => /^inline/.test(g), "primaryGroup")
+      }
+    }));
+    return {
+      el: fileMatchElement,
+      label,
+      badge,
+      actions,
+      disposables,
+      elementDisposables,
+      contextKeyService: contextKeyServiceMain
+    };
+  }
+  renderElement(node, index, templateData) {
+    const fileMatch = node.element;
+    templateData.el.setAttribute("data-resource", fileMatch.resource.toString());
+    const decorationConfig = this.configurationService.getValue("search").decorations;
+    templateData.label.setFile(fileMatch.resource, { range: isSearchTreeAIFileMatch(fileMatch) ? fileMatch.getFullRange() : void 0, hidePath: this.searchView.isTreeLayoutViewVisible && !isSearchTreeFolderMatchNoRoot(fileMatch.parent()), hideIcon: false, fileDecorations: { colors: decorationConfig.colors, badges: decorationConfig.badges } });
+    const count = fileMatch.count();
+    templateData.badge.setCount(count);
+    templateData.badge.setTitleFormat(count > 1 ? nls.localize("searchMatches", "{0} matches found", count) : nls.localize("searchMatch", "{0} match found", count));
+    templateData.actions.context = { viewer: this.searchView.getControl(), element: fileMatch };
+    SearchContext.IsEditableItemKey.bindTo(templateData.contextKeyService).set(!fileMatch.hasOnlyReadOnlyMatches());
+    templateData.elementDisposables.add(fileMatch.onChange(() => {
+      SearchContext.IsEditableItemKey.bindTo(templateData.contextKeyService).set(!fileMatch.hasOnlyReadOnlyMatches());
+    }));
+    const twistieContainer = templateData.el.parentElement?.parentElement?.querySelector(".monaco-tl-twistie");
+    twistieContainer?.classList.add("force-twistie");
+  }
+  disposeElement(element, index, templateData) {
+    templateData.elementDisposables.clear();
+  }
+  disposeTemplate(templateData) {
+    templateData.disposables.dispose();
+  }
+};
+FileMatchRenderer = __decorateClass([
+  __decorateParam(2, IWorkspaceContextService),
+  __decorateParam(3, IConfigurationService),
+  __decorateParam(4, IInstantiationService),
+  __decorateParam(5, IContextKeyService)
+], FileMatchRenderer);
+let MatchRenderer = class extends Disposable {
+  constructor(searchView, contextService, configurationService, instantiationService, contextKeyService, hoverService) {
+    super();
+    this.searchView = searchView;
+    this.contextService = contextService;
+    this.configurationService = configurationService;
+    this.instantiationService = instantiationService;
+    this.contextKeyService = contextKeyService;
+    this.hoverService = hoverService;
+  }
+  static {
+    __name(this, "MatchRenderer");
+  }
+  static TEMPLATE_ID = "match";
+  templateId = MatchRenderer.TEMPLATE_ID;
+  renderCompressedElements(node, index, templateData, height) {
+    throw new Error("Should never happen since node is incompressible.");
+  }
+  renderTemplate(container) {
+    container.classList.add("linematch");
+    const lineNumber = DOM.append(container, DOM.$("span.matchLineNum"));
+    const parent = DOM.append(container, DOM.$("a.plain.match"));
+    const before = DOM.append(parent, DOM.$("span"));
+    const match = DOM.append(parent, DOM.$("span.findInFileMatch"));
+    const replace = DOM.append(parent, DOM.$("span.replaceMatch"));
+    const after = DOM.append(parent, DOM.$("span"));
+    const actionBarContainer = DOM.append(container, DOM.$("span.actionBarContainer"));
+    const disposables = new DisposableStore();
+    const contextKeyServiceMain = disposables.add(this.contextKeyService.createScoped(container));
+    SearchContext.AIResultsTitle.bindTo(contextKeyServiceMain).set(false);
+    SearchContext.MatchFocusKey.bindTo(contextKeyServiceMain).set(true);
+    SearchContext.FileFocusKey.bindTo(contextKeyServiceMain).set(false);
+    SearchContext.FolderFocusKey.bindTo(contextKeyServiceMain).set(false);
+    const instantiationService = disposables.add(this.instantiationService.createChild(new ServiceCollection([IContextKeyService, contextKeyServiceMain])));
+    const actions = disposables.add(instantiationService.createInstance(MenuWorkbenchToolBar, actionBarContainer, MenuId.SearchActionMenu, {
+      menuOptions: {
+        shouldForwardArgs: true
+      },
+      hiddenItemStrategy: HiddenItemStrategy.Ignore,
+      toolbarOptions: {
+        primaryGroup: /* @__PURE__ */ __name((g) => /^inline/.test(g), "primaryGroup")
+      }
+    }));
+    return {
+      parent,
+      before,
+      match,
+      replace,
+      after,
+      lineNumber,
+      actions,
+      disposables,
+      contextKeyService: contextKeyServiceMain
+    };
+  }
+  renderElement(node, index, templateData) {
+    const match = node.element;
+    const preview = match.preview();
+    const replace = this.searchView.model.isReplaceActive() && !!this.searchView.model.replaceString && !match.isReadonly;
+    templateData.before.textContent = preview.before;
+    templateData.match.textContent = preview.inside;
+    templateData.match.classList.toggle("replace", replace);
+    templateData.replace.textContent = replace ? match.replaceString : "";
+    templateData.after.textContent = preview.after;
+    const title = (preview.fullBefore + (replace ? match.replaceString : preview.inside) + preview.after).trim().substr(0, 999);
+    templateData.disposables.add(this.hoverService.setupManagedHover(getDefaultHoverDelegate("mouse"), templateData.parent, title));
+    SearchContext.IsEditableItemKey.bindTo(templateData.contextKeyService).set(!match.isReadonly);
+    const numLines = match.range().endLineNumber - match.range().startLineNumber;
+    const extraLinesStr = numLines > 0 ? `+${numLines}` : "";
+    const showLineNumbers = this.configurationService.getValue("search").showLineNumbers;
+    const lineNumberStr = showLineNumbers ? `${match.range().startLineNumber}:` : "";
+    templateData.lineNumber.classList.toggle("show", numLines > 0 || showLineNumbers);
+    templateData.lineNumber.textContent = lineNumberStr + extraLinesStr;
+    templateData.disposables.add(this.hoverService.setupManagedHover(getDefaultHoverDelegate("mouse"), templateData.lineNumber, this.getMatchTitle(match, showLineNumbers)));
+    templateData.actions.context = { viewer: this.searchView.getControl(), element: match };
+  }
+  disposeTemplate(templateData) {
+    templateData.disposables.dispose();
+  }
+  getMatchTitle(match, showLineNumbers) {
+    const startLine = match.range().startLineNumber;
+    const numLines = match.range().endLineNumber - match.range().startLineNumber;
+    const lineNumStr = showLineNumbers ? nls.localize("lineNumStr", "From line {0}", startLine, numLines) + " " : "";
+    const numLinesStr = numLines > 0 ? "+ " + nls.localize("numLinesStr", "{0} more lines", numLines) : "";
+    return lineNumStr + numLinesStr;
+  }
+};
+MatchRenderer = __decorateClass([
+  __decorateParam(1, IWorkspaceContextService),
+  __decorateParam(2, IConfigurationService),
+  __decorateParam(3, IInstantiationService),
+  __decorateParam(4, IContextKeyService),
+  __decorateParam(5, IHoverService)
+], MatchRenderer);
+let SearchAccessibilityProvider = class {
+  constructor(searchView, labelService) {
+    this.searchView = searchView;
+    this.labelService = labelService;
+  }
+  static {
+    __name(this, "SearchAccessibilityProvider");
+  }
+  getWidgetAriaLabel() {
+    return nls.localize("search", "Search");
+  }
+  getAriaLabel(element) {
+    if (isSearchTreeFolderMatch(element)) {
+      const count = element.allDownstreamFileMatches().reduce((total, current) => total + current.count(), 0);
+      return element.resource ? nls.localize("folderMatchAriaLabel", "{0} matches in folder root {1}, Search result", count, element.name()) : nls.localize("otherFilesAriaLabel", "{0} matches outside of the workspace, Search result", count);
+    }
+    if (isSearchTreeFileMatch(element)) {
+      const path = this.labelService.getUriLabel(element.resource, { relative: true }) || element.resource.fsPath;
+      return nls.localize("fileMatchAriaLabel", "{0} matches in file {1} of folder {2}, Search result", element.count(), element.name(), paths.dirname(path));
+    }
+    if (isSearchTreeMatch(element)) {
+      const match = element;
+      const searchModel = this.searchView.model;
+      const replace = searchModel.isReplaceActive() && !!searchModel.replaceString;
+      const matchString = match.getMatchString();
+      const range = match.range();
+      const matchText = match.text().substr(0, range.endColumn + 150);
+      if (replace) {
+        return nls.localize("replacePreviewResultAria", "'{0}' at column {1} replace {2} with {3}", matchText, range.startColumn, matchString, match.replaceString);
+      }
+      return nls.localize("searchResultAria", "'{0}' at column {1} found {2}", matchText, range.startColumn, matchString);
+    }
+    return null;
+  }
+};
+SearchAccessibilityProvider = __decorateClass([
+  __decorateParam(1, ILabelService)
+], SearchAccessibilityProvider);
+export {
+  FileMatchRenderer,
+  FolderMatchRenderer,
+  MatchRenderer,
+  SearchAccessibilityProvider,
+  SearchDelegate,
+  TextSearchResultRenderer
+};
+//# sourceMappingURL=searchResultsView.js.map

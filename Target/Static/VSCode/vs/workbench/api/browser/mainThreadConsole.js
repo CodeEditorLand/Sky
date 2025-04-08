@@ -1,1 +1,48 @@
-var p=Object.defineProperty,x=Object.getOwnPropertyDescriptor,l=(o,e,s,t)=>{for(var n,r=t>1?void 0:t?x(e,s):e,i=o.length-1;i>=0;i--)(n=o[i])&&(r=(t?n(e,s,r):n(r))||r);return t&&r&&p(e,s,r),r},v=(o,e)=>(s,t)=>e(s,t,o);import{extHostNamedCustomer as E}from"../../services/extensions/common/extHostCustomers.js";import{MainContext as a}from"../common/extHost.protocol.js";import{IEnvironmentService as c}from"../../../platform/environment/common/environment.js";import{log as g}from"../../../base/common/console.js";import{logRemoteEntry as C,logRemoteEntryIfError as S}from"../../services/extensions/common/remoteConsoleUtil.js";import{parseExtensionDevOptions as f}from"../../services/extensions/common/extensionDevOptions.js";import{ILogService as I}from"../../../platform/log/common/log.js";let s=class{constructor(o,e,s){this._environmentService=e,this._logService=s;const t=f(this._environmentService);this._isExtensionDevTestFromCli=t.isExtensionDevTestFromCli}_isExtensionDevTestFromCli;dispose(){}$logExtensionHostMessage(o){this._isExtensionDevTestFromCli?C(this._logService,o):(S(this._logService,o,"Extension Host"),g(o,"Extension Host"))}};s=l([E(a.MainThreadConsole),v(1,c),v(2,I)],s);export{s as MainThreadConsole};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { extHostNamedCustomer, IExtHostContext } from "../../services/extensions/common/extHostCustomers.js";
+import { MainContext, MainThreadConsoleShape } from "../common/extHost.protocol.js";
+import { IEnvironmentService } from "../../../platform/environment/common/environment.js";
+import { IRemoteConsoleLog, log } from "../../../base/common/console.js";
+import { logRemoteEntry, logRemoteEntryIfError } from "../../services/extensions/common/remoteConsoleUtil.js";
+import { parseExtensionDevOptions } from "../../services/extensions/common/extensionDevOptions.js";
+import { ILogService } from "../../../platform/log/common/log.js";
+let MainThreadConsole = class {
+  constructor(_extHostContext, _environmentService, _logService) {
+    this._environmentService = _environmentService;
+    this._logService = _logService;
+    const devOpts = parseExtensionDevOptions(this._environmentService);
+    this._isExtensionDevTestFromCli = devOpts.isExtensionDevTestFromCli;
+  }
+  _isExtensionDevTestFromCli;
+  dispose() {
+  }
+  $logExtensionHostMessage(entry) {
+    if (this._isExtensionDevTestFromCli) {
+      logRemoteEntry(this._logService, entry);
+    } else {
+      logRemoteEntryIfError(this._logService, entry, "Extension Host");
+      log(entry, "Extension Host");
+    }
+  }
+};
+__name(MainThreadConsole, "MainThreadConsole");
+MainThreadConsole = __decorateClass([
+  extHostNamedCustomer(MainContext.MainThreadConsole),
+  __decorateParam(1, IEnvironmentService),
+  __decorateParam(2, ILogService)
+], MainThreadConsole);
+export {
+  MainThreadConsole
+};
+//# sourceMappingURL=mainThreadConsole.js.map

@@ -1,1 +1,38 @@
-var d=Object.defineProperty,h=Object.getOwnPropertyDescriptor,u=(e,r,s,t)=>{for(var o,a=t>1?void 0:t?h(r,s):r,c=e.length-1;c>=0;c--)(o=e[c])&&(a=(t?o(r,s,a):o(a))||a);return t&&a&&d(r,s,a),a},m=(e,r)=>(s,t)=>r(s,t,e);import{RunOnceScheduler as n}from"../../../../base/common/async.js";import{Disposable as l}from"../../../../base/common/lifecycle.js";import{IUserDataProfilesService as S}from"../../../../platform/userDataProfile/common/userDataProfile.js";let t=class extends l{constructor(e){super(),this._register(new n((()=>{e.cleanUp()}),1e4)).schedule()}};t=u([m(0,S)],t);export{t as UserDataProfilesCleaner};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { RunOnceScheduler } from "../../../../base/common/async.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { IUserDataProfilesService } from "../../../../platform/userDataProfile/common/userDataProfile.js";
+let UserDataProfilesCleaner = class extends Disposable {
+  static {
+    __name(this, "UserDataProfilesCleaner");
+  }
+  constructor(userDataProfilesService) {
+    super();
+    const scheduler = this._register(new RunOnceScheduler(
+      () => {
+        userDataProfilesService.cleanUp();
+      },
+      10 * 1e3
+      /* after 10s */
+    ));
+    scheduler.schedule();
+  }
+};
+UserDataProfilesCleaner = __decorateClass([
+  __decorateParam(0, IUserDataProfilesService)
+], UserDataProfilesCleaner);
+export {
+  UserDataProfilesCleaner
+};
+//# sourceMappingURL=userDataProfilesCleaner.js.map

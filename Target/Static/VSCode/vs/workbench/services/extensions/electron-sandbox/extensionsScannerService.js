@@ -1,1 +1,61 @@
-var l=Object.defineProperty,p=Object.getOwnPropertyDescriptor,a=(e,o,r,t)=>{for(var n,i=t>1?void 0:t?p(o,r):o,s=e.length-1;s>=0;s--)(n=e[s])&&(i=(t?n(o,r,i):n(i))||i);return t&&i&&l(o,r,i),i},e=(e,o)=>(r,t)=>o(r,t,e);import{URI as c}from"../../../../base/common/uri.js";import{INativeEnvironmentService as P}from"../../../../platform/environment/common/environment.js";import{IExtensionsProfileScannerService as u}from"../../../../platform/extensionManagement/common/extensionsProfileScannerService.js";import{IExtensionsScannerService as U,NativeExtensionsScannerService as d}from"../../../../platform/extensionManagement/common/extensionsScannerService.js";import{IFileService as x}from"../../../../platform/files/common/files.js";import{InstantiationType as D,registerSingleton as E}from"../../../../platform/instantiation/common/extensions.js";import{IInstantiationService as g}from"../../../../platform/instantiation/common/instantiation.js";import{ILogService as y}from"../../../../platform/log/common/log.js";import{IProductService as N}from"../../../../platform/product/common/productService.js";import{IUriIdentityService as h}from"../../../../platform/uriIdentity/common/uriIdentity.js";import{IUserDataProfilesService as F}from"../../../../platform/userDataProfile/common/userDataProfile.js";import{IUserDataProfileService as L}from"../../userDataProfile/common/userDataProfile.js";let s=class extends d{constructor(e,o,r,t,n,i,s,a,m){super(c.file(i.builtinExtensionsPath),c.file(i.extensionsPath),i.userHome,e.currentProfile,o,r,t,n,i,s,a,m)}};s=a([e(0,L),e(1,F),e(2,u),e(3,x),e(4,y),e(5,P),e(6,N),e(7,h),e(8,g)],s),E(U,s,D.Delayed);export{s as ExtensionsScannerService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { URI } from "../../../../base/common/uri.js";
+import { INativeEnvironmentService } from "../../../../platform/environment/common/environment.js";
+import { IExtensionsProfileScannerService } from "../../../../platform/extensionManagement/common/extensionsProfileScannerService.js";
+import { IExtensionsScannerService, NativeExtensionsScannerService } from "../../../../platform/extensionManagement/common/extensionsScannerService.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import { IUserDataProfilesService } from "../../../../platform/userDataProfile/common/userDataProfile.js";
+import { IUserDataProfileService } from "../../userDataProfile/common/userDataProfile.js";
+let ExtensionsScannerService = class extends NativeExtensionsScannerService {
+  static {
+    __name(this, "ExtensionsScannerService");
+  }
+  constructor(userDataProfileService, userDataProfilesService, extensionsProfileScannerService, fileService, logService, environmentService, productService, uriIdentityService, instantiationService) {
+    super(
+      URI.file(environmentService.builtinExtensionsPath),
+      URI.file(environmentService.extensionsPath),
+      environmentService.userHome,
+      userDataProfileService.currentProfile,
+      userDataProfilesService,
+      extensionsProfileScannerService,
+      fileService,
+      logService,
+      environmentService,
+      productService,
+      uriIdentityService,
+      instantiationService
+    );
+  }
+};
+ExtensionsScannerService = __decorateClass([
+  __decorateParam(0, IUserDataProfileService),
+  __decorateParam(1, IUserDataProfilesService),
+  __decorateParam(2, IExtensionsProfileScannerService),
+  __decorateParam(3, IFileService),
+  __decorateParam(4, ILogService),
+  __decorateParam(5, INativeEnvironmentService),
+  __decorateParam(6, IProductService),
+  __decorateParam(7, IUriIdentityService),
+  __decorateParam(8, IInstantiationService)
+], ExtensionsScannerService);
+registerSingleton(IExtensionsScannerService, ExtensionsScannerService, InstantiationType.Delayed);
+export {
+  ExtensionsScannerService
+};
+//# sourceMappingURL=extensionsScannerService.js.map

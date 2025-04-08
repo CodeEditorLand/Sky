@@ -1,1 +1,158 @@
-var E=Object.defineProperty,k=Object.getOwnPropertyDescriptor,I=(e,o,t,i)=>{for(var r,s=i>1?void 0:i?k(o,t):o,n=e.length-1;n>=0;n--)(r=e[n])&&(s=(i?r(o,t,s):r(s))||s);return i&&s&&E(o,t,s),s},u=(e,o)=>(t,i)=>o(t,i,e);import{h as N,reset as C}from"../../../../../../base/browser/dom.js";import{renderLabelWithIcons as S}from"../../../../../../base/browser/ui/iconLabel/iconLabels.js";import{BugIndicatingError as O}from"../../../../../../base/common/errors.js";import{autorun as y,autorunWithStore as A,derived as L}from"../../../../../../base/common/observable.js";import{MinimapPosition as W,OverviewRulerLane as _}from"../../../../../../editor/common/model.js";import{localize as h}from"../../../../../../nls.js";import{MenuId as x}from"../../../../../../platform/actions/common/actions.js";import{IConfigurationService as B}from"../../../../../../platform/configuration/common/configuration.js";import{IInstantiationService as T}from"../../../../../../platform/instantiation/common/instantiation.js";import{applyObservableDecorations as V}from"../../utils.js";import{handledConflictMinimapOverViewRulerColor as R,unhandledConflictMinimapOverViewRulerColor as D}from"../colors.js";import{EditorGutter as G}from"../editorGutter.js";import"../viewModel.js";import{CodeEditorView as H,TitleMenu as P,createSelectionsAutorun as j}from"./codeEditorView.js";let m=class extends H{constructor(e,o,t){super(o,e,t),this._register(j(this,((e,o)=>e))),this._register(o.createInstance(P,x.MergeBaseToolbar,this.htmlElements.title)),this._register(A(((e,o)=>{this.checkboxesVisible.read(e)&&o.add(new G(this.editor,this.htmlElements.gutterDiv,{getIntersectingGutterItems:(e,o)=>[],createView:(e,o)=>{throw new O}}))}))),this._register(y((e=>{const o=this.viewModel.read(e);if(!o)return;this.editor.setModel(o.model.base),C(this.htmlElements.title,...S(h("base","Base")));const t=o.baseShowDiffAgainst.read(e);let i;if(t){const e=h("compareWith","Comparing with {0}",1===t?o.model.input1.title:o.model.input2.title),r=h("compareWithTooltip","Differences are highlighted with a background color.");i=N("span",{title:r},[e]).root}C(this.htmlElements.description,...i?[i]:[])}))),this._register(V(this.editor,this.decorations))}decorations=L(this,(e=>{const o=this.viewModel.read(e);if(!o)return[];const t=o.model,i=t.base,r=o.activeModifiedBaseRange.read(e),s=o.showNonConflictingChanges.read(e),n=this.showDeletionMarkers.read(e),a=[];for(const d of t.modifiedBaseRanges.read(e)){const m=d.baseRange;if(!m)continue;const l=t.isHandled(d).read(e);if(!d.isConflicting&&l&&!s)continue;const c=["merge-editor-block"];let p=[0,0,0,0];l&&c.push("handled"),d===r&&(c.push("focused"),p=[0,2,0,2]),c.push("base");const f=o.baseShowDiffAgainst.read(e);if(f)for(const e of d.getInputDiffs(f)){const o=e.inputRange.toInclusiveRange();o&&a.push({range:o,options:{className:"merge-editor-diff base",description:"Merge Editor",isWholeLine:!0}});for(const o of e.rangeMappings)(n||!o.inputRange.isEmpty())&&a.push({range:o.inputRange,options:{className:o.inputRange.isEmpty()?"merge-editor-diff-empty-word base":"merge-editor-diff-word base",description:"Merge Editor",showIfCollapsed:!0}})}a.push({range:m.toInclusiveRangeOrEmpty(),options:{showIfCollapsed:!0,blockClassName:c.join(" "),blockPadding:p,blockIsAfterEnd:m.startLineNumber>i.getLineCount(),description:"Merge Editor",minimap:{position:W.Gutter,color:{id:l?R:D}},overviewRuler:d.isConflicting?{position:_.Center,color:{id:l?R:D}}:void 0}})}return a}))};m=I([u(1,T),u(2,B)],m);export{m as BaseCodeEditorView};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { h, reset } from "../../../../../../base/browser/dom.js";
+import { renderLabelWithIcons } from "../../../../../../base/browser/ui/iconLabel/iconLabels.js";
+import { BugIndicatingError } from "../../../../../../base/common/errors.js";
+import { IObservable, autorun, autorunWithStore, derived } from "../../../../../../base/common/observable.js";
+import { IModelDeltaDecoration, MinimapPosition, OverviewRulerLane } from "../../../../../../editor/common/model.js";
+import { localize } from "../../../../../../nls.js";
+import { MenuId } from "../../../../../../platform/actions/common/actions.js";
+import { IConfigurationService } from "../../../../../../platform/configuration/common/configuration.js";
+import { IInstantiationService } from "../../../../../../platform/instantiation/common/instantiation.js";
+import { applyObservableDecorations } from "../../utils.js";
+import { handledConflictMinimapOverViewRulerColor, unhandledConflictMinimapOverViewRulerColor } from "../colors.js";
+import { EditorGutter } from "../editorGutter.js";
+import { MergeEditorViewModel } from "../viewModel.js";
+import { CodeEditorView, TitleMenu, createSelectionsAutorun } from "./codeEditorView.js";
+let BaseCodeEditorView = class extends CodeEditorView {
+  static {
+    __name(this, "BaseCodeEditorView");
+  }
+  constructor(viewModel, instantiationService, configurationService) {
+    super(instantiationService, viewModel, configurationService);
+    this._register(
+      createSelectionsAutorun(this, (baseRange, viewModel2) => baseRange)
+    );
+    this._register(
+      instantiationService.createInstance(TitleMenu, MenuId.MergeBaseToolbar, this.htmlElements.title)
+    );
+    this._register(
+      autorunWithStore((reader, store) => {
+        if (this.checkboxesVisible.read(reader)) {
+          store.add(new EditorGutter(this.editor, this.htmlElements.gutterDiv, {
+            getIntersectingGutterItems: /* @__PURE__ */ __name((range, reader2) => [], "getIntersectingGutterItems"),
+            createView: /* @__PURE__ */ __name((item, target) => {
+              throw new BugIndicatingError();
+            }, "createView")
+          }));
+        }
+      })
+    );
+    this._register(
+      autorun((reader) => {
+        const vm = this.viewModel.read(reader);
+        if (!vm) {
+          return;
+        }
+        this.editor.setModel(vm.model.base);
+        reset(this.htmlElements.title, ...renderLabelWithIcons(localize("base", "Base")));
+        const baseShowDiffAgainst = vm.baseShowDiffAgainst.read(reader);
+        let node = void 0;
+        if (baseShowDiffAgainst) {
+          const label = localize("compareWith", "Comparing with {0}", baseShowDiffAgainst === 1 ? vm.model.input1.title : vm.model.input2.title);
+          const tooltip = localize("compareWithTooltip", "Differences are highlighted with a background color.");
+          node = h("span", { title: tooltip }, [label]).root;
+        }
+        reset(this.htmlElements.description, ...node ? [node] : []);
+      })
+    );
+    this._register(applyObservableDecorations(this.editor, this.decorations));
+  }
+  decorations = derived(this, (reader) => {
+    const viewModel = this.viewModel.read(reader);
+    if (!viewModel) {
+      return [];
+    }
+    const model = viewModel.model;
+    const textModel = model.base;
+    const activeModifiedBaseRange = viewModel.activeModifiedBaseRange.read(reader);
+    const showNonConflictingChanges = viewModel.showNonConflictingChanges.read(reader);
+    const showDeletionMarkers = this.showDeletionMarkers.read(reader);
+    const result = [];
+    for (const modifiedBaseRange of model.modifiedBaseRanges.read(reader)) {
+      const range = modifiedBaseRange.baseRange;
+      if (!range) {
+        continue;
+      }
+      const isHandled = model.isHandled(modifiedBaseRange).read(reader);
+      if (!modifiedBaseRange.isConflicting && isHandled && !showNonConflictingChanges) {
+        continue;
+      }
+      const blockClassNames = ["merge-editor-block"];
+      let blockPadding = [0, 0, 0, 0];
+      if (isHandled) {
+        blockClassNames.push("handled");
+      }
+      if (modifiedBaseRange === activeModifiedBaseRange) {
+        blockClassNames.push("focused");
+        blockPadding = [0, 2, 0, 2];
+      }
+      blockClassNames.push("base");
+      const inputToDiffAgainst = viewModel.baseShowDiffAgainst.read(reader);
+      if (inputToDiffAgainst) {
+        for (const diff of modifiedBaseRange.getInputDiffs(inputToDiffAgainst)) {
+          const range2 = diff.inputRange.toInclusiveRange();
+          if (range2) {
+            result.push({
+              range: range2,
+              options: {
+                className: `merge-editor-diff base`,
+                description: "Merge Editor",
+                isWholeLine: true
+              }
+            });
+          }
+          for (const diff2 of diff.rangeMappings) {
+            if (showDeletionMarkers || !diff2.inputRange.isEmpty()) {
+              result.push({
+                range: diff2.inputRange,
+                options: {
+                  className: diff2.inputRange.isEmpty() ? `merge-editor-diff-empty-word base` : `merge-editor-diff-word base`,
+                  description: "Merge Editor",
+                  showIfCollapsed: true
+                }
+              });
+            }
+          }
+        }
+      }
+      result.push({
+        range: range.toInclusiveRangeOrEmpty(),
+        options: {
+          showIfCollapsed: true,
+          blockClassName: blockClassNames.join(" "),
+          blockPadding,
+          blockIsAfterEnd: range.startLineNumber > textModel.getLineCount(),
+          description: "Merge Editor",
+          minimap: {
+            position: MinimapPosition.Gutter,
+            color: { id: isHandled ? handledConflictMinimapOverViewRulerColor : unhandledConflictMinimapOverViewRulerColor }
+          },
+          overviewRuler: modifiedBaseRange.isConflicting ? {
+            position: OverviewRulerLane.Center,
+            color: { id: isHandled ? handledConflictMinimapOverViewRulerColor : unhandledConflictMinimapOverViewRulerColor }
+          } : void 0
+        }
+      });
+    }
+    return result;
+  });
+};
+BaseCodeEditorView = __decorateClass([
+  __decorateParam(1, IInstantiationService),
+  __decorateParam(2, IConfigurationService)
+], BaseCodeEditorView);
+export {
+  BaseCodeEditorView
+};
+//# sourceMappingURL=baseCodeEditorView.js.map

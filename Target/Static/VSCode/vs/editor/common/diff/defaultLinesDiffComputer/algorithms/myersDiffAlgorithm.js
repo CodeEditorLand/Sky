@@ -1,1 +1,150 @@
-import{OffsetRange as D}from"../../../core/offsetRange.js";import{DiffAlgorithmResult as w,InfiniteTimeout as P,SequenceDiff as X}from"./diffAlgorithm.js";class V{compute(t,e,r=P.instance){if(0===t.length||0===e.length)return w.trivial(t,e);const i=t,n=e;function s(t,e){for(;t<i.length&&e<n.length&&i.getElement(t)===n.getElement(e);)t++,e++;return t}let g=0;const h=new q;h.set(0,s(0,0));const l=new L;l.set(0,0===h.get(0)?null:new k(null,0,0,h.get(0)));let o=0;t:for(;;){if(g++,!r.isValid())return w.trivialTimedOut(i,n);const t=-Math.min(g,n.length+g%2),e=Math.min(g,i.length+g%2);for(o=t;o<=e;o+=2){let r=0;const g=o===e?-1:h.get(o+1),a=o===t?-1:h.get(o-1)+1;r++;const f=Math.min(Math.max(g,a),i.length),A=f-o;if(r++,f>i.length||A>n.length)continue;const v=s(f,A);h.set(o,v);const c=f===g?l.get(o+1):l.get(o-1);if(l.set(o,v!==f?new k(c,f,A,v-f):c),h.get(o)===i.length&&h.get(o)-o===n.length)break t}}let a=l.get(o);const f=[];let A=i.length,v=n.length;for(;;){const t=a?a.x+a.length:0,e=a?a.y+a.length:0;if((t!==A||e!==v)&&f.push(new X(new D(t,A),new D(e,v))),!a)break;A=a.x,v=a.y,a=a.prev}return f.reverse(),new w(f,!1)}}class k{constructor(t,e,r,i){this.prev=t,this.x=e,this.y=r,this.length=i}}class q{positiveArr=new Int32Array(10);negativeArr=new Int32Array(10);get(t){return t<0?(t=-t-1,this.negativeArr[t]):this.positiveArr[t]}set(t,e){if(t<0){if((t=-t-1)>=this.negativeArr.length){const t=this.negativeArr;this.negativeArr=new Int32Array(2*t.length),this.negativeArr.set(t)}this.negativeArr[t]=e}else{if(t>=this.positiveArr.length){const t=this.positiveArr;this.positiveArr=new Int32Array(2*t.length),this.positiveArr.set(t)}this.positiveArr[t]=e}}}class L{positiveArr=[];negativeArr=[];get(t){return t<0?(t=-t-1,this.negativeArr[t]):this.positiveArr[t]}set(t,e){t<0?(t=-t-1,this.negativeArr[t]=e):this.positiveArr[t]=e}}export{V as MyersDiffAlgorithm};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { OffsetRange } from "../../../core/offsetRange.js";
+import { DiffAlgorithmResult, IDiffAlgorithm, ISequence, ITimeout, InfiniteTimeout, SequenceDiff } from "./diffAlgorithm.js";
+class MyersDiffAlgorithm {
+  static {
+    __name(this, "MyersDiffAlgorithm");
+  }
+  compute(seq1, seq2, timeout = InfiniteTimeout.instance) {
+    if (seq1.length === 0 || seq2.length === 0) {
+      return DiffAlgorithmResult.trivial(seq1, seq2);
+    }
+    const seqX = seq1;
+    const seqY = seq2;
+    function getXAfterSnake(x, y) {
+      while (x < seqX.length && y < seqY.length && seqX.getElement(x) === seqY.getElement(y)) {
+        x++;
+        y++;
+      }
+      return x;
+    }
+    __name(getXAfterSnake, "getXAfterSnake");
+    let d = 0;
+    const V = new FastInt32Array();
+    V.set(0, getXAfterSnake(0, 0));
+    const paths = new FastArrayNegativeIndices();
+    paths.set(0, V.get(0) === 0 ? null : new SnakePath(null, 0, 0, V.get(0)));
+    let k = 0;
+    loop: while (true) {
+      d++;
+      if (!timeout.isValid()) {
+        return DiffAlgorithmResult.trivialTimedOut(seqX, seqY);
+      }
+      const lowerBound = -Math.min(d, seqY.length + d % 2);
+      const upperBound = Math.min(d, seqX.length + d % 2);
+      for (k = lowerBound; k <= upperBound; k += 2) {
+        let step = 0;
+        const maxXofDLineTop = k === upperBound ? -1 : V.get(k + 1);
+        const maxXofDLineLeft = k === lowerBound ? -1 : V.get(k - 1) + 1;
+        step++;
+        const x = Math.min(Math.max(maxXofDLineTop, maxXofDLineLeft), seqX.length);
+        const y = x - k;
+        step++;
+        if (x > seqX.length || y > seqY.length) {
+          continue;
+        }
+        const newMaxX = getXAfterSnake(x, y);
+        V.set(k, newMaxX);
+        const lastPath = x === maxXofDLineTop ? paths.get(k + 1) : paths.get(k - 1);
+        paths.set(k, newMaxX !== x ? new SnakePath(lastPath, x, y, newMaxX - x) : lastPath);
+        if (V.get(k) === seqX.length && V.get(k) - k === seqY.length) {
+          break loop;
+        }
+      }
+    }
+    let path = paths.get(k);
+    const result = [];
+    let lastAligningPosS1 = seqX.length;
+    let lastAligningPosS2 = seqY.length;
+    while (true) {
+      const endX = path ? path.x + path.length : 0;
+      const endY = path ? path.y + path.length : 0;
+      if (endX !== lastAligningPosS1 || endY !== lastAligningPosS2) {
+        result.push(new SequenceDiff(
+          new OffsetRange(endX, lastAligningPosS1),
+          new OffsetRange(endY, lastAligningPosS2)
+        ));
+      }
+      if (!path) {
+        break;
+      }
+      lastAligningPosS1 = path.x;
+      lastAligningPosS2 = path.y;
+      path = path.prev;
+    }
+    result.reverse();
+    return new DiffAlgorithmResult(result, false);
+  }
+}
+class SnakePath {
+  constructor(prev, x, y, length) {
+    this.prev = prev;
+    this.x = x;
+    this.y = y;
+    this.length = length;
+  }
+  static {
+    __name(this, "SnakePath");
+  }
+}
+class FastInt32Array {
+  static {
+    __name(this, "FastInt32Array");
+  }
+  positiveArr = new Int32Array(10);
+  negativeArr = new Int32Array(10);
+  get(idx) {
+    if (idx < 0) {
+      idx = -idx - 1;
+      return this.negativeArr[idx];
+    } else {
+      return this.positiveArr[idx];
+    }
+  }
+  set(idx, value) {
+    if (idx < 0) {
+      idx = -idx - 1;
+      if (idx >= this.negativeArr.length) {
+        const arr = this.negativeArr;
+        this.negativeArr = new Int32Array(arr.length * 2);
+        this.negativeArr.set(arr);
+      }
+      this.negativeArr[idx] = value;
+    } else {
+      if (idx >= this.positiveArr.length) {
+        const arr = this.positiveArr;
+        this.positiveArr = new Int32Array(arr.length * 2);
+        this.positiveArr.set(arr);
+      }
+      this.positiveArr[idx] = value;
+    }
+  }
+}
+class FastArrayNegativeIndices {
+  static {
+    __name(this, "FastArrayNegativeIndices");
+  }
+  positiveArr = [];
+  negativeArr = [];
+  get(idx) {
+    if (idx < 0) {
+      idx = -idx - 1;
+      return this.negativeArr[idx];
+    } else {
+      return this.positiveArr[idx];
+    }
+  }
+  set(idx, value) {
+    if (idx < 0) {
+      idx = -idx - 1;
+      this.negativeArr[idx] = value;
+    } else {
+      this.positiveArr[idx] = value;
+    }
+  }
+}
+export {
+  MyersDiffAlgorithm
+};
+//# sourceMappingURL=myersDiffAlgorithm.js.map

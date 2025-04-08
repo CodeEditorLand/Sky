@@ -1,1 +1,296 @@
-var P=Object.defineProperty,N=Object.getOwnPropertyDescriptor,y=(e,t,s,o)=>{for(var i,n=o>1?void 0:o?N(t,s):t,r=e.length-1;r>=0;r--)(i=e[r])&&(n=(o?i(t,s,n):i(n))||n);return o&&n&&P(t,s,n),n},u=(e,t)=>(s,o)=>t(s,o,e);import{Disposable as O}from"../../../../base/common/lifecycle.js";import{localize as a}from"../../../../nls.js";import{SyncDescriptor as D}from"../../../../platform/instantiation/common/descriptors.js";import{IInstantiationService as W}from"../../../../platform/instantiation/common/instantiation.js";import{Registry as $}from"../../../../platform/registry/common/platform.js";import{TreeView as F,TreeViewPane as R}from"../../../browser/parts/views/treeView.js";import{Extensions as H,TreeItemCollapsibleState as g}from"../../../common/views.js";import{ChangeType as K,EDIT_SESSIONS_DATA_VIEW_ID as U,EDIT_SESSIONS_SCHEME as T,EDIT_SESSIONS_SHOW_VIEW as M,EDIT_SESSIONS_TITLE as f,IEditSessionsStorageService as b}from"../common/editSessions.js";import{URI as h}from"../../../../base/common/uri.js";import{fromNow as A}from"../../../../base/common/date.js";import{Codicon as m}from"../../../../base/common/codicons.js";import{API_OPEN_EDITOR_COMMAND_ID as Y}from"../../../browser/parts/editor/editorCommands.js";import{registerAction2 as v,Action2 as I,MenuId as E}from"../../../../platform/actions/common/actions.js";import{ContextKeyExpr as l,IContextKeyService as q,RawContextKey as J}from"../../../../platform/contextkey/common/contextkey.js";import{ICommandService as _}from"../../../../platform/commands/common/commands.js";import{IDialogService as V}from"../../../../platform/dialogs/common/dialogs.js";import{IWorkspaceContextService as L}from"../../../../platform/workspace/common/workspace.js";import{joinPath as j}from"../../../../base/common/resources.js";import{IFileService as B}from"../../../../platform/files/common/files.js";import{basename as z}from"../../../../base/common/path.js";const k="editSessionsCount",X=new J(k,0);let w=class extends O{constructor(e,t){super(),this.instantiationService=t,this.registerViews(e)}registerViews(e){const t=U,s=this.instantiationService.createInstance(F,t,f.value);s.showCollapseAllAction=!0,s.showRefreshAction=!0,s.dataProvider=this.instantiationService.createInstance(p);const o=$.as(H.ViewsRegistry);o.registerViews([{id:t,name:f,ctorDescriptor:new D(R),canToggleVisibility:!0,canMoveView:!1,treeView:s,collapsed:!1,when:l.and(M),order:100,hideByDefault:!0}],e),o.registerViewWelcomeContent(t,{content:a("noStoredChanges","You have no stored changes in the cloud to display.\n{0}",`[${a("storeWorkingChangesTitle","Store Working Changes")}](command:workbench.editSessions.actions.store)`),when:l.equals(k,0),order:1}),this._register(v(class extends I{constructor(){super({id:"workbench.editSessions.actions.resume",title:a("workbench.editSessions.actions.resume.v2","Resume Working Changes"),icon:m.desktopDownload,menu:{id:E.ViewItemContext,when:l.and(l.equals("view",t),l.regex("viewItem",/edit-session/i)),group:"inline"}})}async run(e,t){const o=h.parse(t.$treeItemHandle).path.substring(1);await e.get(_).executeCommand("workbench.editSessions.actions.resumeLatest",o,!0),await s.refresh()}})),this._register(v(class extends I{constructor(){super({id:"workbench.editSessions.actions.store",title:a("workbench.editSessions.actions.store.v2","Store Working Changes"),icon:m.cloudUpload})}async run(e,t){await e.get(_).executeCommand("workbench.editSessions.actions.storeCurrent"),await s.refresh()}})),this._register(v(class extends I{constructor(){super({id:"workbench.editSessions.actions.delete",title:a("workbench.editSessions.actions.delete.v2","Delete Working Changes"),icon:m.trash,menu:{id:E.ViewItemContext,when:l.and(l.equals("view",t),l.regex("viewItem",/edit-session/i)),group:"inline"}})}async run(e,t){const o=h.parse(t.$treeItemHandle).path.substring(1),i=e.get(V),n=e.get(b);(await i.confirm({message:a("confirm delete.v2","Are you sure you want to permanently delete your working changes with ref {0}?",o),detail:a("confirm delete detail.v2"," You cannot undo this action."),type:"warning",title:f.value})).confirmed&&(await n.delete("editSessions",o),await s.refresh())}})),this._register(v(class extends I{constructor(){super({id:"workbench.editSessions.actions.deleteAll",title:a("workbench.editSessions.actions.deleteAll","Delete All Working Changes from Cloud"),icon:m.trash,menu:{id:E.ViewTitle,when:l.and(l.equals("view",t),l.greater(k,0))}})}async run(e){const t=e.get(V),o=e.get(b);(await t.confirm({message:a("confirm delete all","Are you sure you want to permanently delete all stored changes from the cloud?"),detail:a("confirm delete all detail"," You cannot undo this action."),type:"warning",title:f.value})).confirmed&&(await o.delete("editSessions",null),await s.refresh())}}))}};w=y([u(1,W)],w);let p=class{constructor(e,t,s,o){this.editSessionsStorageService=e,this.contextKeyService=t,this.workspaceContextService=s,this.fileService=o,this.editSessionsCount=X.bindTo(this.contextKeyService)}editSessionsCount;async getChildren(e){if(!e)return this.getAllEditSessions();const[t,s,o]=h.parse(e.handle).path.substring(1).split("/");return t&&!s?this.getEditSession(t):t&&s&&!o?this.getEditSessionFolderContents(t,s):[]}async getAllEditSessions(){const e=await this.editSessionsStorageService.list("editSessions");this.editSessionsCount.set(e.length);const t=[];for(const s of e){const e=h.from({scheme:T,authority:"remote-session-content",path:`/${s.ref}`}),o=await this.editSessionsStorageService.read("editSessions",s.ref);if(!o)continue;const i=JSON.parse(o.content),n=i.folders.map((e=>e.name)).join(", ")??s.ref,r=i.machine,a=r?await this.editSessionsStorageService.getMachineById(r):void 0,c=void 0===a?A(s.created,!0):`${A(s.created,!0)}  •  ${a}`;t.push({handle:e.toString(),collapsibleState:g.Collapsed,label:{label:n},description:c,themeIcon:m.repo,contextValue:"edit-session"})}return t}async getEditSession(e){const t=await this.editSessionsStorageService.read("editSessions",e);if(!t)return[];const s=JSON.parse(t.content);if(1===s.folders.length){const t=s.folders[0];return this.getEditSessionFolderContents(e,t.name)}return s.folders.map((e=>({handle:h.from({scheme:T,authority:"remote-session-content",path:`/${t.ref}/${e.name}`}).toString(),collapsibleState:g.Collapsed,label:{label:e.name},themeIcon:m.folder})))}async getEditSessionFolderContents(e,t){const s=await this.editSessionsStorageService.read("editSessions",e);if(!s)return[];const o=JSON.parse(s.content),i=this.workspaceContextService.getWorkspace().folders.find((e=>e.name===t)),n=o.folders.find((e=>e.name===t));return n?Promise.all(n.workingChanges.map((async e=>{const o=h.from({scheme:T,authority:"remote-session-content",path:`/${s.ref}/${t}/${e.relativeFilePath}`});if(i?.uri){const t=j(i.uri,e.relativeFilePath);if(e.type===K.Addition&&await this.fileService.exists(t))return{handle:o.toString(),resourceUri:o,collapsibleState:g.None,label:{label:e.relativeFilePath},themeIcon:m.file,command:{id:"vscode.diff",title:a("compare changes","Compare Changes"),arguments:[t,o,`${z(e.relativeFilePath)} (${a("local copy","Local Copy")} ↔ ${a("cloud changes","Cloud Changes")})`,void 0]}}}return{handle:o.toString(),resourceUri:o,collapsibleState:g.None,label:{label:e.relativeFilePath},themeIcon:m.file,command:{id:Y,title:a("open file","Open File"),arguments:[o,void 0,void 0]}}}))):[]}};p=y([u(0,b),u(1,q),u(2,L),u(3,B)],p);export{w as EditSessionsDataViews};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { localize } from "../../../../nls.js";
+import { SyncDescriptor } from "../../../../platform/instantiation/common/descriptors.js";
+import { IInstantiationService, ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { TreeView, TreeViewPane } from "../../../browser/parts/views/treeView.js";
+import { Extensions, ITreeItem, ITreeViewDataProvider, ITreeViewDescriptor, IViewsRegistry, TreeItemCollapsibleState, TreeViewItemHandleArg, ViewContainer } from "../../../common/views.js";
+import { ChangeType, EDIT_SESSIONS_DATA_VIEW_ID, EDIT_SESSIONS_SCHEME, EDIT_SESSIONS_SHOW_VIEW, EDIT_SESSIONS_TITLE, EditSession, IEditSessionsStorageService } from "../common/editSessions.js";
+import { URI } from "../../../../base/common/uri.js";
+import { fromNow } from "../../../../base/common/date.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { API_OPEN_EDITOR_COMMAND_ID } from "../../../browser/parts/editor/editorCommands.js";
+import { registerAction2, Action2, MenuId } from "../../../../platform/actions/common/actions.js";
+import { ContextKeyExpr, IContextKeyService, RawContextKey } from "../../../../platform/contextkey/common/contextkey.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { IDialogService } from "../../../../platform/dialogs/common/dialogs.js";
+import { IWorkspaceContextService } from "../../../../platform/workspace/common/workspace.js";
+import { joinPath } from "../../../../base/common/resources.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { basename } from "../../../../base/common/path.js";
+const EDIT_SESSIONS_COUNT_KEY = "editSessionsCount";
+const EDIT_SESSIONS_COUNT_CONTEXT_KEY = new RawContextKey(EDIT_SESSIONS_COUNT_KEY, 0);
+let EditSessionsDataViews = class extends Disposable {
+  constructor(container, instantiationService) {
+    super();
+    this.instantiationService = instantiationService;
+    this.registerViews(container);
+  }
+  static {
+    __name(this, "EditSessionsDataViews");
+  }
+  registerViews(container) {
+    const viewId = EDIT_SESSIONS_DATA_VIEW_ID;
+    const treeView = this.instantiationService.createInstance(TreeView, viewId, EDIT_SESSIONS_TITLE.value);
+    treeView.showCollapseAllAction = true;
+    treeView.showRefreshAction = true;
+    treeView.dataProvider = this.instantiationService.createInstance(EditSessionDataViewDataProvider);
+    const viewsRegistry = Registry.as(Extensions.ViewsRegistry);
+    viewsRegistry.registerViews([{
+      id: viewId,
+      name: EDIT_SESSIONS_TITLE,
+      ctorDescriptor: new SyncDescriptor(TreeViewPane),
+      canToggleVisibility: true,
+      canMoveView: false,
+      treeView,
+      collapsed: false,
+      when: ContextKeyExpr.and(EDIT_SESSIONS_SHOW_VIEW),
+      order: 100,
+      hideByDefault: true
+    }], container);
+    viewsRegistry.registerViewWelcomeContent(viewId, {
+      content: localize(
+        "noStoredChanges",
+        "You have no stored changes in the cloud to display.\n{0}",
+        `[${localize("storeWorkingChangesTitle", "Store Working Changes")}](command:workbench.editSessions.actions.store)`
+      ),
+      when: ContextKeyExpr.equals(EDIT_SESSIONS_COUNT_KEY, 0),
+      order: 1
+    });
+    this._register(registerAction2(class extends Action2 {
+      constructor() {
+        super({
+          id: "workbench.editSessions.actions.resume",
+          title: localize("workbench.editSessions.actions.resume.v2", "Resume Working Changes"),
+          icon: Codicon.desktopDownload,
+          menu: {
+            id: MenuId.ViewItemContext,
+            when: ContextKeyExpr.and(ContextKeyExpr.equals("view", viewId), ContextKeyExpr.regex("viewItem", /edit-session/i)),
+            group: "inline"
+          }
+        });
+      }
+      async run(accessor, handle) {
+        const editSessionId = URI.parse(handle.$treeItemHandle).path.substring(1);
+        const commandService = accessor.get(ICommandService);
+        await commandService.executeCommand("workbench.editSessions.actions.resumeLatest", editSessionId, true);
+        await treeView.refresh();
+      }
+    }));
+    this._register(registerAction2(class extends Action2 {
+      constructor() {
+        super({
+          id: "workbench.editSessions.actions.store",
+          title: localize("workbench.editSessions.actions.store.v2", "Store Working Changes"),
+          icon: Codicon.cloudUpload
+        });
+      }
+      async run(accessor, handle) {
+        const commandService = accessor.get(ICommandService);
+        await commandService.executeCommand("workbench.editSessions.actions.storeCurrent");
+        await treeView.refresh();
+      }
+    }));
+    this._register(registerAction2(class extends Action2 {
+      constructor() {
+        super({
+          id: "workbench.editSessions.actions.delete",
+          title: localize("workbench.editSessions.actions.delete.v2", "Delete Working Changes"),
+          icon: Codicon.trash,
+          menu: {
+            id: MenuId.ViewItemContext,
+            when: ContextKeyExpr.and(ContextKeyExpr.equals("view", viewId), ContextKeyExpr.regex("viewItem", /edit-session/i)),
+            group: "inline"
+          }
+        });
+      }
+      async run(accessor, handle) {
+        const editSessionId = URI.parse(handle.$treeItemHandle).path.substring(1);
+        const dialogService = accessor.get(IDialogService);
+        const editSessionStorageService = accessor.get(IEditSessionsStorageService);
+        const result = await dialogService.confirm({
+          message: localize("confirm delete.v2", "Are you sure you want to permanently delete your working changes with ref {0}?", editSessionId),
+          detail: localize("confirm delete detail.v2", " You cannot undo this action."),
+          type: "warning",
+          title: EDIT_SESSIONS_TITLE.value
+        });
+        if (result.confirmed) {
+          await editSessionStorageService.delete("editSessions", editSessionId);
+          await treeView.refresh();
+        }
+      }
+    }));
+    this._register(registerAction2(class extends Action2 {
+      constructor() {
+        super({
+          id: "workbench.editSessions.actions.deleteAll",
+          title: localize("workbench.editSessions.actions.deleteAll", "Delete All Working Changes from Cloud"),
+          icon: Codicon.trash,
+          menu: {
+            id: MenuId.ViewTitle,
+            when: ContextKeyExpr.and(ContextKeyExpr.equals("view", viewId), ContextKeyExpr.greater(EDIT_SESSIONS_COUNT_KEY, 0))
+          }
+        });
+      }
+      async run(accessor) {
+        const dialogService = accessor.get(IDialogService);
+        const editSessionStorageService = accessor.get(IEditSessionsStorageService);
+        const result = await dialogService.confirm({
+          message: localize("confirm delete all", "Are you sure you want to permanently delete all stored changes from the cloud?"),
+          detail: localize("confirm delete all detail", " You cannot undo this action."),
+          type: "warning",
+          title: EDIT_SESSIONS_TITLE.value
+        });
+        if (result.confirmed) {
+          await editSessionStorageService.delete("editSessions", null);
+          await treeView.refresh();
+        }
+      }
+    }));
+  }
+};
+EditSessionsDataViews = __decorateClass([
+  __decorateParam(1, IInstantiationService)
+], EditSessionsDataViews);
+let EditSessionDataViewDataProvider = class {
+  constructor(editSessionsStorageService, contextKeyService, workspaceContextService, fileService) {
+    this.editSessionsStorageService = editSessionsStorageService;
+    this.contextKeyService = contextKeyService;
+    this.workspaceContextService = workspaceContextService;
+    this.fileService = fileService;
+    this.editSessionsCount = EDIT_SESSIONS_COUNT_CONTEXT_KEY.bindTo(this.contextKeyService);
+  }
+  static {
+    __name(this, "EditSessionDataViewDataProvider");
+  }
+  editSessionsCount;
+  async getChildren(element) {
+    if (!element) {
+      return this.getAllEditSessions();
+    }
+    const [ref, folderName, filePath] = URI.parse(element.handle).path.substring(1).split("/");
+    if (ref && !folderName) {
+      return this.getEditSession(ref);
+    } else if (ref && folderName && !filePath) {
+      return this.getEditSessionFolderContents(ref, folderName);
+    }
+    return [];
+  }
+  async getAllEditSessions() {
+    const allEditSessions = await this.editSessionsStorageService.list("editSessions");
+    this.editSessionsCount.set(allEditSessions.length);
+    const editSessions = [];
+    for (const session of allEditSessions) {
+      const resource = URI.from({ scheme: EDIT_SESSIONS_SCHEME, authority: "remote-session-content", path: `/${session.ref}` });
+      const sessionData = await this.editSessionsStorageService.read("editSessions", session.ref);
+      if (!sessionData) {
+        continue;
+      }
+      const content = JSON.parse(sessionData.content);
+      const label = content.folders.map((folder) => folder.name).join(", ") ?? session.ref;
+      const machineId = content.machine;
+      const machineName = machineId ? await this.editSessionsStorageService.getMachineById(machineId) : void 0;
+      const description = machineName === void 0 ? fromNow(session.created, true) : `${fromNow(session.created, true)}\xA0\xA0\u2022\xA0\xA0${machineName}`;
+      editSessions.push({
+        handle: resource.toString(),
+        collapsibleState: TreeItemCollapsibleState.Collapsed,
+        label: { label },
+        description,
+        themeIcon: Codicon.repo,
+        contextValue: `edit-session`
+      });
+    }
+    return editSessions;
+  }
+  async getEditSession(ref) {
+    const data = await this.editSessionsStorageService.read("editSessions", ref);
+    if (!data) {
+      return [];
+    }
+    const content = JSON.parse(data.content);
+    if (content.folders.length === 1) {
+      const folder = content.folders[0];
+      return this.getEditSessionFolderContents(ref, folder.name);
+    }
+    return content.folders.map((folder) => {
+      const resource = URI.from({ scheme: EDIT_SESSIONS_SCHEME, authority: "remote-session-content", path: `/${data.ref}/${folder.name}` });
+      return {
+        handle: resource.toString(),
+        collapsibleState: TreeItemCollapsibleState.Collapsed,
+        label: { label: folder.name },
+        themeIcon: Codicon.folder
+      };
+    });
+  }
+  async getEditSessionFolderContents(ref, folderName) {
+    const data = await this.editSessionsStorageService.read("editSessions", ref);
+    if (!data) {
+      return [];
+    }
+    const content = JSON.parse(data.content);
+    const currentWorkspaceFolder = this.workspaceContextService.getWorkspace().folders.find((folder) => folder.name === folderName);
+    const editSessionFolder = content.folders.find((folder) => folder.name === folderName);
+    if (!editSessionFolder) {
+      return [];
+    }
+    return Promise.all(editSessionFolder.workingChanges.map(async (change) => {
+      const cloudChangeUri = URI.from({ scheme: EDIT_SESSIONS_SCHEME, authority: "remote-session-content", path: `/${data.ref}/${folderName}/${change.relativeFilePath}` });
+      if (currentWorkspaceFolder?.uri) {
+        const localCopy = joinPath(currentWorkspaceFolder.uri, change.relativeFilePath);
+        if (change.type === ChangeType.Addition && await this.fileService.exists(localCopy)) {
+          return {
+            handle: cloudChangeUri.toString(),
+            resourceUri: cloudChangeUri,
+            collapsibleState: TreeItemCollapsibleState.None,
+            label: { label: change.relativeFilePath },
+            themeIcon: Codicon.file,
+            command: {
+              id: "vscode.diff",
+              title: localize("compare changes", "Compare Changes"),
+              arguments: [
+                localCopy,
+                cloudChangeUri,
+                `${basename(change.relativeFilePath)} (${localize("local copy", "Local Copy")} \u2194 ${localize("cloud changes", "Cloud Changes")})`,
+                void 0
+              ]
+            }
+          };
+        }
+      }
+      return {
+        handle: cloudChangeUri.toString(),
+        resourceUri: cloudChangeUri,
+        collapsibleState: TreeItemCollapsibleState.None,
+        label: { label: change.relativeFilePath },
+        themeIcon: Codicon.file,
+        command: {
+          id: API_OPEN_EDITOR_COMMAND_ID,
+          title: localize("open file", "Open File"),
+          arguments: [cloudChangeUri, void 0, void 0]
+        }
+      };
+    }));
+  }
+};
+EditSessionDataViewDataProvider = __decorateClass([
+  __decorateParam(0, IEditSessionsStorageService),
+  __decorateParam(1, IContextKeyService),
+  __decorateParam(2, IWorkspaceContextService),
+  __decorateParam(3, IFileService)
+], EditSessionDataViewDataProvider);
+export {
+  EditSessionsDataViews
+};
+//# sourceMappingURL=editSessionsViews.js.map

@@ -1,1 +1,74 @@
-var d=Object.defineProperty,v=Object.getOwnPropertyDescriptor,g=(t,e,o,r)=>{for(var s,n=r>1?void 0:r?v(e,o):e,i=t.length-1;i>=0;i--)(s=t[i])&&(n=(r?s(e,o,n):s(n))||n);return r&&n&&d(e,o,n),n},c=(t,e)=>(o,r)=>e(o,r,t);import{AbstractExtHostConsoleForwarder as _}from"../common/extHostConsoleForwarder.js";import{IExtHostInitDataService as S}from"../common/extHostInitDataService.js";import{IExtHostRpcService as u}from"../common/extHostRpcService.js";import{NativeLogMarkers as f}from"../../services/extensions/common/extensionHostProtocol.js";const w=1048576;let n=class extends _{_isMakingConsoleCall=!1;constructor(t,e){super(t,e),this._wrapStream("stderr","error"),this._wrapStream("stdout","log")}_nativeConsoleLogMessage(t,e,o){const r="error"===t||"warn"===t?process.stderr:process.stdout;this._isMakingConsoleCall=!0,r.write(`\n${f.Start}\n`),e.apply(console,o),r.write(`\n${f.End}\n`),this._isMakingConsoleCall=!1}_wrapStream(t,e){const o=process[t],r=o.write;let s="";Object.defineProperty(o,"write",{set:()=>{},get:()=>(t,n,i)=>{if(!this._isMakingConsoleCall){s+=t.toString(n);const o=s.length>w?s.length:s.lastIndexOf("\n");-1!==o&&(console[e](s.slice(0,o)),s=s.slice(o+1))}r.call(o,t,n,i)}})}};n=g([c(0,u),c(1,S)],n);export{n as ExtHostConsoleForwarder};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { AbstractExtHostConsoleForwarder } from "../common/extHostConsoleForwarder.js";
+import { IExtHostInitDataService } from "../common/extHostInitDataService.js";
+import { IExtHostRpcService } from "../common/extHostRpcService.js";
+import { NativeLogMarkers } from "../../services/extensions/common/extensionHostProtocol.js";
+const MAX_STREAM_BUFFER_LENGTH = 1024 * 1024;
+let ExtHostConsoleForwarder = class extends AbstractExtHostConsoleForwarder {
+  static {
+    __name(this, "ExtHostConsoleForwarder");
+  }
+  _isMakingConsoleCall = false;
+  constructor(extHostRpc, initData) {
+    super(extHostRpc, initData);
+    this._wrapStream("stderr", "error");
+    this._wrapStream("stdout", "log");
+  }
+  _nativeConsoleLogMessage(method, original, args) {
+    const stream = method === "error" || method === "warn" ? process.stderr : process.stdout;
+    this._isMakingConsoleCall = true;
+    stream.write(`
+${NativeLogMarkers.Start}
+`);
+    original.apply(console, args);
+    stream.write(`
+${NativeLogMarkers.End}
+`);
+    this._isMakingConsoleCall = false;
+  }
+  /**
+   * Wraps process.stderr/stdout.write() so that it is transmitted to the
+   * renderer or CLI. It both calls through to the original method as well
+   * as to console.log with complete lines so that they're made available
+   * to the debugger/CLI.
+   */
+  _wrapStream(streamName, severity) {
+    const stream = process[streamName];
+    const original = stream.write;
+    let buf = "";
+    Object.defineProperty(stream, "write", {
+      set: /* @__PURE__ */ __name(() => {
+      }, "set"),
+      get: /* @__PURE__ */ __name(() => (chunk, encoding, callback) => {
+        if (!this._isMakingConsoleCall) {
+          buf += chunk.toString(encoding);
+          const eol = buf.length > MAX_STREAM_BUFFER_LENGTH ? buf.length : buf.lastIndexOf("\n");
+          if (eol !== -1) {
+            console[severity](buf.slice(0, eol));
+            buf = buf.slice(eol + 1);
+          }
+        }
+        original.call(stream, chunk, encoding, callback);
+      }, "get")
+    });
+  }
+};
+ExtHostConsoleForwarder = __decorateClass([
+  __decorateParam(0, IExtHostRpcService),
+  __decorateParam(1, IExtHostInitDataService)
+], ExtHostConsoleForwarder);
+export {
+  ExtHostConsoleForwarder
+};
+//# sourceMappingURL=extHostConsoleForwarder.js.map

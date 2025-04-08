@@ -1,1 +1,407 @@
-import{Emitter as b}from"../../../base/common/event.js";import{Disposable as h}from"../../../base/common/lifecycle.js";import{Scrollable as g,ScrollbarVisibility as d}from"../../../base/common/scrollable.js";import{EditorOption as n}from"../config/editorOptions.js";import{ScrollType as p}from"../editorCommon.js";import"../config/editorConfiguration.js";import{LinesLayout as m}from"./linesLayout.js";import{Viewport as u}from"../viewModel.js";import{ContentSizeChangedEvent as S}from"../viewModelEventDispatcher.js";const _=125;class s{width;contentWidth;scrollWidth;height;contentHeight;scrollHeight;constructor(t,e,i,o){(t|=0)<0&&(t=0),(e|=0)<0&&(e=0),(i|=0)<0&&(i=0),(o|=0)<0&&(o=0),this.width=t,this.contentWidth=e,this.scrollWidth=Math.max(t,e),this.height=i,this.contentHeight=o,this.scrollHeight=Math.max(i,o)}equals(t){return this.width===t.width&&this.contentWidth===t.contentWidth&&this.height===t.height&&this.contentHeight===t.contentHeight}}class f extends h{_scrollable;_dimensions;onDidScroll;_onDidContentSizeChange=this._register(new b);onDidContentSizeChange=this._onDidContentSizeChange.event;constructor(t,e){super(),this._dimensions=new s(0,0,0,0),this._scrollable=this._register(new g({forceIntegerValues:!0,smoothScrollDuration:t,scheduleAtNextAnimationFrame:e})),this.onDidScroll=this._scrollable.onScroll}getScrollable(){return this._scrollable}setSmoothScrollDuration(t){this._scrollable.setSmoothScrollDuration(t)}validateScrollPosition(t){return this._scrollable.validateScrollPosition(t)}getScrollDimensions(){return this._dimensions}setScrollDimensions(t){if(this._dimensions.equals(t))return;const e=this._dimensions;this._dimensions=t,this._scrollable.setScrollDimensions({width:t.width,scrollWidth:t.scrollWidth,height:t.height,scrollHeight:t.scrollHeight},!0);const i=e.contentWidth!==t.contentWidth,o=e.contentHeight!==t.contentHeight;(i||o)&&this._onDidContentSizeChange.fire(new S(e.contentWidth,e.contentHeight,t.contentWidth,t.contentHeight))}getFutureScrollPosition(){return this._scrollable.getFutureScrollPosition()}getCurrentScrollPosition(){return this._scrollable.getCurrentScrollPosition()}setScrollPositionNow(t){this._scrollable.setScrollPositionNow(t)}setScrollPositionSmooth(t){this._scrollable.setScrollPositionSmooth(t)}hasPendingScrollAnimation(){return this._scrollable.hasPendingScrollAnimation()}}class k extends h{_configuration;_linesLayout;_maxLineWidth;_overlayWidgetsMinWidth;_scrollable;onDidScroll;onDidContentSizeChange;constructor(t,e,i){super(),this._configuration=t;const o=this._configuration.options,l=o.get(n.layoutInfo),r=o.get(n.padding);this._linesLayout=new m(e,o.get(n.lineHeight),r.top,r.bottom),this._maxLineWidth=0,this._overlayWidgetsMinWidth=0,this._scrollable=this._register(new f(0,i)),this._configureSmoothScrollDuration(),this._scrollable.setScrollDimensions(new s(l.contentWidth,0,l.height,0)),this.onDidScroll=this._scrollable.onDidScroll,this.onDidContentSizeChange=this._scrollable.onDidContentSizeChange,this._updateHeight()}dispose(){super.dispose()}getScrollable(){return this._scrollable.getScrollable()}onHeightMaybeChanged(){this._updateHeight()}_configureSmoothScrollDuration(){this._scrollable.setSmoothScrollDuration(this._configuration.options.get(n.smoothScrolling)?_:0)}onConfigurationChanged(t){const e=this._configuration.options;if(t.hasChanged(n.lineHeight)&&this._linesLayout.setLineHeight(e.get(n.lineHeight)),t.hasChanged(n.padding)){const t=e.get(n.padding);this._linesLayout.setPadding(t.top,t.bottom)}if(t.hasChanged(n.layoutInfo)){const t=e.get(n.layoutInfo),i=t.contentWidth,o=t.height,l=this._scrollable.getScrollDimensions(),r=l.contentWidth;this._scrollable.setScrollDimensions(new s(i,l.contentWidth,o,this._getContentHeight(i,o,r)))}else this._updateHeight();t.hasChanged(n.smoothScrolling)&&this._configureSmoothScrollDuration()}onFlushed(t){this._linesLayout.onFlushed(t)}onLinesDeleted(t,e){this._linesLayout.onLinesDeleted(t,e)}onLinesInserted(t,e){this._linesLayout.onLinesInserted(t,e)}_getHorizontalScrollbarHeight(t,e){const i=this._configuration.options.get(n.scrollbar);return i.horizontal===d.Hidden||t>=e?0:i.horizontalScrollbarSize}_getContentHeight(t,e,i){const o=this._configuration.options;let s=this._linesLayout.getLinesTotalHeight();return o.get(n.scrollBeyondLastLine)?s+=Math.max(0,e-o.get(n.lineHeight)-o.get(n.padding).bottom):o.get(n.scrollbar).ignoreHorizontalScrollbarInContentHeight||(s+=this._getHorizontalScrollbarHeight(t,i)),s}_updateHeight(){const t=this._scrollable.getScrollDimensions(),e=t.width,i=t.height,o=t.contentWidth;this._scrollable.setScrollDimensions(new s(e,t.contentWidth,i,this._getContentHeight(e,i,o)))}getCurrentViewport(){const t=this._scrollable.getScrollDimensions(),e=this._scrollable.getCurrentScrollPosition();return new u(e.scrollTop,e.scrollLeft,t.width,t.height)}getFutureViewport(){const t=this._scrollable.getScrollDimensions(),e=this._scrollable.getFutureScrollPosition();return new u(e.scrollTop,e.scrollLeft,t.width,t.height)}_computeContentWidth(){const t=this._configuration.options,e=this._maxLineWidth,i=t.get(n.wrappingInfo),o=t.get(n.fontInfo),s=t.get(n.layoutInfo);if(i.isViewportWrapping){const i=t.get(n.minimap);return e>s.contentWidth+o.typicalHalfwidthCharacterWidth&&i.enabled&&"right"===i.side?e+s.verticalScrollbarWidth:e}{const i=t.get(n.scrollBeyondLastColumn)*o.typicalHalfwidthCharacterWidth,l=this._linesLayout.getWhitespaceMinWidth();return Math.max(e+i+s.verticalScrollbarWidth,l,this._overlayWidgetsMinWidth)}}setMaxLineWidth(t){this._maxLineWidth=t,this._updateContentWidth()}setOverlayWidgetsMinWidth(t){this._overlayWidgetsMinWidth=t,this._updateContentWidth()}_updateContentWidth(){const t=this._scrollable.getScrollDimensions();this._scrollable.setScrollDimensions(new s(t.width,this._computeContentWidth(),t.height,t.contentHeight)),this._updateHeight()}saveState(){const t=this._scrollable.getFutureScrollPosition(),e=t.scrollTop,i=this._linesLayout.getLineNumberAtOrAfterVerticalOffset(e);return{scrollTop:e,scrollTopWithoutViewZones:e-this._linesLayout.getWhitespaceAccumulatedHeightBeforeLineNumber(i),scrollLeft:t.scrollLeft}}changeWhitespace(t){const e=this._linesLayout.changeWhitespace(t);return e&&this.onHeightMaybeChanged(),e}getVerticalOffsetForLineNumber(t,e=!1){return this._linesLayout.getVerticalOffsetForLineNumber(t,e)}getVerticalOffsetAfterLineNumber(t,e=!1){return this._linesLayout.getVerticalOffsetAfterLineNumber(t,e)}isAfterLines(t){return this._linesLayout.isAfterLines(t)}isInTopPadding(t){return this._linesLayout.isInTopPadding(t)}isInBottomPadding(t){return this._linesLayout.isInBottomPadding(t)}getLineNumberAtVerticalOffset(t){return this._linesLayout.getLineNumberAtOrAfterVerticalOffset(t)}getWhitespaceAtVerticalOffset(t){return this._linesLayout.getWhitespaceAtVerticalOffset(t)}getLinesViewportData(){const t=this.getCurrentViewport();return this._linesLayout.getLinesViewportData(t.top,t.top+t.height)}getLinesViewportDataAtScrollTop(t){const e=this._scrollable.getScrollDimensions();return t+e.height>e.scrollHeight&&(t=e.scrollHeight-e.height),t<0&&(t=0),this._linesLayout.getLinesViewportData(t,t+e.height)}getWhitespaceViewportData(){const t=this.getCurrentViewport();return this._linesLayout.getWhitespaceViewportData(t.top,t.top+t.height)}getWhitespaces(){return this._linesLayout.getWhitespaces()}getContentWidth(){return this._scrollable.getScrollDimensions().contentWidth}getScrollWidth(){return this._scrollable.getScrollDimensions().scrollWidth}getContentHeight(){return this._scrollable.getScrollDimensions().contentHeight}getScrollHeight(){return this._scrollable.getScrollDimensions().scrollHeight}getCurrentScrollLeft(){return this._scrollable.getCurrentScrollPosition().scrollLeft}getCurrentScrollTop(){return this._scrollable.getCurrentScrollPosition().scrollTop}validateScrollPosition(t){return this._scrollable.validateScrollPosition(t)}setScrollPosition(t,e){e===p.Immediate?this._scrollable.setScrollPositionNow(t):this._scrollable.setScrollPositionSmooth(t)}hasPendingScrollAnimation(){return this._scrollable.hasPendingScrollAnimation()}deltaScrollNow(t,e){const i=this._scrollable.getCurrentScrollPosition();this._scrollable.setScrollPositionNow({scrollLeft:i.scrollLeft+t,scrollTop:i.scrollTop+e})}}export{k as ViewLayout};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Event, Emitter } from "../../../base/common/event.js";
+import { Disposable, IDisposable } from "../../../base/common/lifecycle.js";
+import { IScrollPosition, ScrollEvent, Scrollable, ScrollbarVisibility, INewScrollPosition } from "../../../base/common/scrollable.js";
+import { ConfigurationChangedEvent, EditorOption } from "../config/editorOptions.js";
+import { ScrollType } from "../editorCommon.js";
+import { IEditorConfiguration } from "../config/editorConfiguration.js";
+import { LinesLayout } from "./linesLayout.js";
+import { IEditorWhitespace, IPartialViewLinesViewportData, IViewLayout, IViewWhitespaceViewportData, IWhitespaceChangeAccessor, Viewport } from "../viewModel.js";
+import { ContentSizeChangedEvent } from "../viewModelEventDispatcher.js";
+const SMOOTH_SCROLLING_TIME = 125;
+class EditorScrollDimensions {
+  static {
+    __name(this, "EditorScrollDimensions");
+  }
+  width;
+  contentWidth;
+  scrollWidth;
+  height;
+  contentHeight;
+  scrollHeight;
+  constructor(width, contentWidth, height, contentHeight) {
+    width = width | 0;
+    contentWidth = contentWidth | 0;
+    height = height | 0;
+    contentHeight = contentHeight | 0;
+    if (width < 0) {
+      width = 0;
+    }
+    if (contentWidth < 0) {
+      contentWidth = 0;
+    }
+    if (height < 0) {
+      height = 0;
+    }
+    if (contentHeight < 0) {
+      contentHeight = 0;
+    }
+    this.width = width;
+    this.contentWidth = contentWidth;
+    this.scrollWidth = Math.max(width, contentWidth);
+    this.height = height;
+    this.contentHeight = contentHeight;
+    this.scrollHeight = Math.max(height, contentHeight);
+  }
+  equals(other) {
+    return this.width === other.width && this.contentWidth === other.contentWidth && this.height === other.height && this.contentHeight === other.contentHeight;
+  }
+}
+class EditorScrollable extends Disposable {
+  static {
+    __name(this, "EditorScrollable");
+  }
+  _scrollable;
+  _dimensions;
+  onDidScroll;
+  _onDidContentSizeChange = this._register(new Emitter());
+  onDidContentSizeChange = this._onDidContentSizeChange.event;
+  constructor(smoothScrollDuration, scheduleAtNextAnimationFrame) {
+    super();
+    this._dimensions = new EditorScrollDimensions(0, 0, 0, 0);
+    this._scrollable = this._register(new Scrollable({
+      forceIntegerValues: true,
+      smoothScrollDuration,
+      scheduleAtNextAnimationFrame
+    }));
+    this.onDidScroll = this._scrollable.onScroll;
+  }
+  getScrollable() {
+    return this._scrollable;
+  }
+  setSmoothScrollDuration(smoothScrollDuration) {
+    this._scrollable.setSmoothScrollDuration(smoothScrollDuration);
+  }
+  validateScrollPosition(scrollPosition) {
+    return this._scrollable.validateScrollPosition(scrollPosition);
+  }
+  getScrollDimensions() {
+    return this._dimensions;
+  }
+  setScrollDimensions(dimensions) {
+    if (this._dimensions.equals(dimensions)) {
+      return;
+    }
+    const oldDimensions = this._dimensions;
+    this._dimensions = dimensions;
+    this._scrollable.setScrollDimensions({
+      width: dimensions.width,
+      scrollWidth: dimensions.scrollWidth,
+      height: dimensions.height,
+      scrollHeight: dimensions.scrollHeight
+    }, true);
+    const contentWidthChanged = oldDimensions.contentWidth !== dimensions.contentWidth;
+    const contentHeightChanged = oldDimensions.contentHeight !== dimensions.contentHeight;
+    if (contentWidthChanged || contentHeightChanged) {
+      this._onDidContentSizeChange.fire(new ContentSizeChangedEvent(
+        oldDimensions.contentWidth,
+        oldDimensions.contentHeight,
+        dimensions.contentWidth,
+        dimensions.contentHeight
+      ));
+    }
+  }
+  getFutureScrollPosition() {
+    return this._scrollable.getFutureScrollPosition();
+  }
+  getCurrentScrollPosition() {
+    return this._scrollable.getCurrentScrollPosition();
+  }
+  setScrollPositionNow(update) {
+    this._scrollable.setScrollPositionNow(update);
+  }
+  setScrollPositionSmooth(update) {
+    this._scrollable.setScrollPositionSmooth(update);
+  }
+  hasPendingScrollAnimation() {
+    return this._scrollable.hasPendingScrollAnimation();
+  }
+}
+class ViewLayout extends Disposable {
+  static {
+    __name(this, "ViewLayout");
+  }
+  _configuration;
+  _linesLayout;
+  _maxLineWidth;
+  _overlayWidgetsMinWidth;
+  _scrollable;
+  onDidScroll;
+  onDidContentSizeChange;
+  constructor(configuration, lineCount, scheduleAtNextAnimationFrame) {
+    super();
+    this._configuration = configuration;
+    const options = this._configuration.options;
+    const layoutInfo = options.get(EditorOption.layoutInfo);
+    const padding = options.get(EditorOption.padding);
+    this._linesLayout = new LinesLayout(lineCount, options.get(EditorOption.lineHeight), padding.top, padding.bottom);
+    this._maxLineWidth = 0;
+    this._overlayWidgetsMinWidth = 0;
+    this._scrollable = this._register(new EditorScrollable(0, scheduleAtNextAnimationFrame));
+    this._configureSmoothScrollDuration();
+    this._scrollable.setScrollDimensions(new EditorScrollDimensions(
+      layoutInfo.contentWidth,
+      0,
+      layoutInfo.height,
+      0
+    ));
+    this.onDidScroll = this._scrollable.onDidScroll;
+    this.onDidContentSizeChange = this._scrollable.onDidContentSizeChange;
+    this._updateHeight();
+  }
+  dispose() {
+    super.dispose();
+  }
+  getScrollable() {
+    return this._scrollable.getScrollable();
+  }
+  onHeightMaybeChanged() {
+    this._updateHeight();
+  }
+  _configureSmoothScrollDuration() {
+    this._scrollable.setSmoothScrollDuration(this._configuration.options.get(EditorOption.smoothScrolling) ? SMOOTH_SCROLLING_TIME : 0);
+  }
+  // ---- begin view event handlers
+  onConfigurationChanged(e) {
+    const options = this._configuration.options;
+    if (e.hasChanged(EditorOption.lineHeight)) {
+      this._linesLayout.setLineHeight(options.get(EditorOption.lineHeight));
+    }
+    if (e.hasChanged(EditorOption.padding)) {
+      const padding = options.get(EditorOption.padding);
+      this._linesLayout.setPadding(padding.top, padding.bottom);
+    }
+    if (e.hasChanged(EditorOption.layoutInfo)) {
+      const layoutInfo = options.get(EditorOption.layoutInfo);
+      const width = layoutInfo.contentWidth;
+      const height = layoutInfo.height;
+      const scrollDimensions = this._scrollable.getScrollDimensions();
+      const contentWidth = scrollDimensions.contentWidth;
+      this._scrollable.setScrollDimensions(new EditorScrollDimensions(
+        width,
+        scrollDimensions.contentWidth,
+        height,
+        this._getContentHeight(width, height, contentWidth)
+      ));
+    } else {
+      this._updateHeight();
+    }
+    if (e.hasChanged(EditorOption.smoothScrolling)) {
+      this._configureSmoothScrollDuration();
+    }
+  }
+  onFlushed(lineCount) {
+    this._linesLayout.onFlushed(lineCount);
+  }
+  onLinesDeleted(fromLineNumber, toLineNumber) {
+    this._linesLayout.onLinesDeleted(fromLineNumber, toLineNumber);
+  }
+  onLinesInserted(fromLineNumber, toLineNumber) {
+    this._linesLayout.onLinesInserted(fromLineNumber, toLineNumber);
+  }
+  // ---- end view event handlers
+  _getHorizontalScrollbarHeight(width, scrollWidth) {
+    const options = this._configuration.options;
+    const scrollbar = options.get(EditorOption.scrollbar);
+    if (scrollbar.horizontal === ScrollbarVisibility.Hidden) {
+      return 0;
+    }
+    if (width >= scrollWidth) {
+      return 0;
+    }
+    return scrollbar.horizontalScrollbarSize;
+  }
+  _getContentHeight(width, height, contentWidth) {
+    const options = this._configuration.options;
+    let result = this._linesLayout.getLinesTotalHeight();
+    if (options.get(EditorOption.scrollBeyondLastLine)) {
+      result += Math.max(0, height - options.get(EditorOption.lineHeight) - options.get(EditorOption.padding).bottom);
+    } else if (!options.get(EditorOption.scrollbar).ignoreHorizontalScrollbarInContentHeight) {
+      result += this._getHorizontalScrollbarHeight(width, contentWidth);
+    }
+    return result;
+  }
+  _updateHeight() {
+    const scrollDimensions = this._scrollable.getScrollDimensions();
+    const width = scrollDimensions.width;
+    const height = scrollDimensions.height;
+    const contentWidth = scrollDimensions.contentWidth;
+    this._scrollable.setScrollDimensions(new EditorScrollDimensions(
+      width,
+      scrollDimensions.contentWidth,
+      height,
+      this._getContentHeight(width, height, contentWidth)
+    ));
+  }
+  // ---- Layouting logic
+  getCurrentViewport() {
+    const scrollDimensions = this._scrollable.getScrollDimensions();
+    const currentScrollPosition = this._scrollable.getCurrentScrollPosition();
+    return new Viewport(
+      currentScrollPosition.scrollTop,
+      currentScrollPosition.scrollLeft,
+      scrollDimensions.width,
+      scrollDimensions.height
+    );
+  }
+  getFutureViewport() {
+    const scrollDimensions = this._scrollable.getScrollDimensions();
+    const currentScrollPosition = this._scrollable.getFutureScrollPosition();
+    return new Viewport(
+      currentScrollPosition.scrollTop,
+      currentScrollPosition.scrollLeft,
+      scrollDimensions.width,
+      scrollDimensions.height
+    );
+  }
+  _computeContentWidth() {
+    const options = this._configuration.options;
+    const maxLineWidth = this._maxLineWidth;
+    const wrappingInfo = options.get(EditorOption.wrappingInfo);
+    const fontInfo = options.get(EditorOption.fontInfo);
+    const layoutInfo = options.get(EditorOption.layoutInfo);
+    if (wrappingInfo.isViewportWrapping) {
+      const minimap = options.get(EditorOption.minimap);
+      if (maxLineWidth > layoutInfo.contentWidth + fontInfo.typicalHalfwidthCharacterWidth) {
+        if (minimap.enabled && minimap.side === "right") {
+          return maxLineWidth + layoutInfo.verticalScrollbarWidth;
+        }
+      }
+      return maxLineWidth;
+    } else {
+      const extraHorizontalSpace = options.get(EditorOption.scrollBeyondLastColumn) * fontInfo.typicalHalfwidthCharacterWidth;
+      const whitespaceMinWidth = this._linesLayout.getWhitespaceMinWidth();
+      return Math.max(maxLineWidth + extraHorizontalSpace + layoutInfo.verticalScrollbarWidth, whitespaceMinWidth, this._overlayWidgetsMinWidth);
+    }
+  }
+  setMaxLineWidth(maxLineWidth) {
+    this._maxLineWidth = maxLineWidth;
+    this._updateContentWidth();
+  }
+  setOverlayWidgetsMinWidth(maxMinWidth) {
+    this._overlayWidgetsMinWidth = maxMinWidth;
+    this._updateContentWidth();
+  }
+  _updateContentWidth() {
+    const scrollDimensions = this._scrollable.getScrollDimensions();
+    this._scrollable.setScrollDimensions(new EditorScrollDimensions(
+      scrollDimensions.width,
+      this._computeContentWidth(),
+      scrollDimensions.height,
+      scrollDimensions.contentHeight
+    ));
+    this._updateHeight();
+  }
+  // ---- view state
+  saveState() {
+    const currentScrollPosition = this._scrollable.getFutureScrollPosition();
+    const scrollTop = currentScrollPosition.scrollTop;
+    const firstLineNumberInViewport = this._linesLayout.getLineNumberAtOrAfterVerticalOffset(scrollTop);
+    const whitespaceAboveFirstLine = this._linesLayout.getWhitespaceAccumulatedHeightBeforeLineNumber(firstLineNumberInViewport);
+    return {
+      scrollTop,
+      scrollTopWithoutViewZones: scrollTop - whitespaceAboveFirstLine,
+      scrollLeft: currentScrollPosition.scrollLeft
+    };
+  }
+  // ----
+  changeWhitespace(callback) {
+    const hadAChange = this._linesLayout.changeWhitespace(callback);
+    if (hadAChange) {
+      this.onHeightMaybeChanged();
+    }
+    return hadAChange;
+  }
+  getVerticalOffsetForLineNumber(lineNumber, includeViewZones = false) {
+    return this._linesLayout.getVerticalOffsetForLineNumber(lineNumber, includeViewZones);
+  }
+  getVerticalOffsetAfterLineNumber(lineNumber, includeViewZones = false) {
+    return this._linesLayout.getVerticalOffsetAfterLineNumber(lineNumber, includeViewZones);
+  }
+  isAfterLines(verticalOffset) {
+    return this._linesLayout.isAfterLines(verticalOffset);
+  }
+  isInTopPadding(verticalOffset) {
+    return this._linesLayout.isInTopPadding(verticalOffset);
+  }
+  isInBottomPadding(verticalOffset) {
+    return this._linesLayout.isInBottomPadding(verticalOffset);
+  }
+  getLineNumberAtVerticalOffset(verticalOffset) {
+    return this._linesLayout.getLineNumberAtOrAfterVerticalOffset(verticalOffset);
+  }
+  getWhitespaceAtVerticalOffset(verticalOffset) {
+    return this._linesLayout.getWhitespaceAtVerticalOffset(verticalOffset);
+  }
+  getLinesViewportData() {
+    const visibleBox = this.getCurrentViewport();
+    return this._linesLayout.getLinesViewportData(visibleBox.top, visibleBox.top + visibleBox.height);
+  }
+  getLinesViewportDataAtScrollTop(scrollTop) {
+    const scrollDimensions = this._scrollable.getScrollDimensions();
+    if (scrollTop + scrollDimensions.height > scrollDimensions.scrollHeight) {
+      scrollTop = scrollDimensions.scrollHeight - scrollDimensions.height;
+    }
+    if (scrollTop < 0) {
+      scrollTop = 0;
+    }
+    return this._linesLayout.getLinesViewportData(scrollTop, scrollTop + scrollDimensions.height);
+  }
+  getWhitespaceViewportData() {
+    const visibleBox = this.getCurrentViewport();
+    return this._linesLayout.getWhitespaceViewportData(visibleBox.top, visibleBox.top + visibleBox.height);
+  }
+  getWhitespaces() {
+    return this._linesLayout.getWhitespaces();
+  }
+  // ----
+  getContentWidth() {
+    const scrollDimensions = this._scrollable.getScrollDimensions();
+    return scrollDimensions.contentWidth;
+  }
+  getScrollWidth() {
+    const scrollDimensions = this._scrollable.getScrollDimensions();
+    return scrollDimensions.scrollWidth;
+  }
+  getContentHeight() {
+    const scrollDimensions = this._scrollable.getScrollDimensions();
+    return scrollDimensions.contentHeight;
+  }
+  getScrollHeight() {
+    const scrollDimensions = this._scrollable.getScrollDimensions();
+    return scrollDimensions.scrollHeight;
+  }
+  getCurrentScrollLeft() {
+    const currentScrollPosition = this._scrollable.getCurrentScrollPosition();
+    return currentScrollPosition.scrollLeft;
+  }
+  getCurrentScrollTop() {
+    const currentScrollPosition = this._scrollable.getCurrentScrollPosition();
+    return currentScrollPosition.scrollTop;
+  }
+  validateScrollPosition(scrollPosition) {
+    return this._scrollable.validateScrollPosition(scrollPosition);
+  }
+  setScrollPosition(position, type) {
+    if (type === ScrollType.Immediate) {
+      this._scrollable.setScrollPositionNow(position);
+    } else {
+      this._scrollable.setScrollPositionSmooth(position);
+    }
+  }
+  hasPendingScrollAnimation() {
+    return this._scrollable.hasPendingScrollAnimation();
+  }
+  deltaScrollNow(deltaScrollLeft, deltaScrollTop) {
+    const currentScrollPosition = this._scrollable.getCurrentScrollPosition();
+    this._scrollable.setScrollPositionNow({
+      scrollLeft: currentScrollPosition.scrollLeft + deltaScrollLeft,
+      scrollTop: currentScrollPosition.scrollTop + deltaScrollTop
+    });
+  }
+}
+export {
+  ViewLayout
+};
+//# sourceMappingURL=viewLayout.js.map

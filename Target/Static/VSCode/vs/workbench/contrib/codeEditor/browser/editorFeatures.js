@@ -1,1 +1,57 @@
-var h=Object.defineProperty,l=Object.getOwnPropertyDescriptor,f=(t,i,e,r)=>{for(var o,s=r>1?void 0:r?l(i,e):i,n=t.length-1;n>=0;n--)(o=t[n])&&(s=(r?o(i,e,s):o(s))||s);return r&&s&&h(i,e,s),s},c=(t,i)=>(e,r)=>i(e,r,t);import{onUnexpectedError as p}from"../../../../base/common/errors.js";import{Disposable as m}from"../../../../base/common/lifecycle.js";import{ICodeEditorService as b}from"../../../../editor/browser/services/codeEditorService.js";import{getEditorFeatures as d}from"../../../../editor/common/editorFeatures.js";import{IInstantiationService as I}from"../../../../platform/instantiation/common/instantiation.js";import{WorkbenchPhase as _,registerWorkbenchContribution2 as u}from"../../../common/contributions.js";let n=class extends m{constructor(t,i){super(),this._instantiationService=i,this._register(t.onWillCreateCodeEditor((()=>this._instantiate()))),this._register(t.onWillCreateDiffEditor((()=>this._instantiate()))),(t.listCodeEditors().length>0||t.listDiffEditors().length>0)&&this._instantiate()}static ID="workbench.contrib.editorFeaturesInstantiator";_instantiated=!1;_instantiate(){if(this._instantiated)return;this._instantiated=!0;const t=d();for(const i of t)try{const t=this._instantiationService.createInstance(i);"function"==typeof t.dispose&&this._register(t)}catch(t){p(t)}}};n=f([c(0,b),c(1,I)],n),u(n.ID,n,_.BlockRestore);
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { onUnexpectedError } from "../../../../base/common/errors.js";
+import { Disposable, IDisposable } from "../../../../base/common/lifecycle.js";
+import { ICodeEditorService } from "../../../../editor/browser/services/codeEditorService.js";
+import { getEditorFeatures } from "../../../../editor/common/editorFeatures.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IWorkbenchContribution, WorkbenchPhase, registerWorkbenchContribution2 } from "../../../common/contributions.js";
+let EditorFeaturesInstantiator = class extends Disposable {
+  constructor(codeEditorService, _instantiationService) {
+    super();
+    this._instantiationService = _instantiationService;
+    this._register(codeEditorService.onWillCreateCodeEditor(() => this._instantiate()));
+    this._register(codeEditorService.onWillCreateDiffEditor(() => this._instantiate()));
+    if (codeEditorService.listCodeEditors().length > 0 || codeEditorService.listDiffEditors().length > 0) {
+      this._instantiate();
+    }
+  }
+  static {
+    __name(this, "EditorFeaturesInstantiator");
+  }
+  static ID = "workbench.contrib.editorFeaturesInstantiator";
+  _instantiated = false;
+  _instantiate() {
+    if (this._instantiated) {
+      return;
+    }
+    this._instantiated = true;
+    const editorFeatures = getEditorFeatures();
+    for (const feature of editorFeatures) {
+      try {
+        const instance = this._instantiationService.createInstance(feature);
+        if (typeof instance.dispose === "function") {
+          this._register(instance);
+        }
+      } catch (err) {
+        onUnexpectedError(err);
+      }
+    }
+  }
+};
+EditorFeaturesInstantiator = __decorateClass([
+  __decorateParam(0, ICodeEditorService),
+  __decorateParam(1, IInstantiationService)
+], EditorFeaturesInstantiator);
+registerWorkbenchContribution2(EditorFeaturesInstantiator.ID, EditorFeaturesInstantiator, WorkbenchPhase.BlockRestore);
+//# sourceMappingURL=editorFeatures.js.map

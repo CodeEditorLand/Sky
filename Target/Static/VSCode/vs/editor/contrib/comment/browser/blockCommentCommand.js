@@ -1,1 +1,173 @@
-import{CharCode as d}from"../../../../base/common/charCode.js";import{EditOperation as c}from"../../../common/core/editOperation.js";import{Position as L}from"../../../common/core/position.js";import{Range as m}from"../../../common/core/range.js";import{Selection as O}from"../../../common/core/selection.js";import"../../../common/editorCommon.js";import"../../../common/model.js";import"../../../common/languages/languageConfigurationRegistry.js";class b{constructor(e,n,t){this.languageConfigurationService=t,this._selection=e,this._insertSpace=n,this._usedEndToken=null}_selection;_insertSpace;_usedEndToken;static _haystackHasNeedleAtOffset(e,n,t){if(t<0)return!1;const o=n.length;if(t+o>e.length)return!1;for(let r=0;r<o;r++){const o=e.charCodeAt(t+r),s=n.charCodeAt(r);if(!(o===s||o>=d.A&&o<=d.Z&&o+32===s||s>=d.A&&s<=d.Z&&s+32===o))return!1}return!0}_createOperationsForBlockComment(e,n,t,o,r,s){const i=e.startLineNumber,a=e.startColumn,c=e.endLineNumber,l=e.endColumn,u=r.getLineContent(i),g=r.getLineContent(c);let h,C=u.lastIndexOf(n,a-1+n.length),p=g.indexOf(t,l-1-t.length);if(-1!==C&&-1!==p)if(i===c)u.substring(C+n.length,p).indexOf(t)>=0&&(C=-1,p=-1);else{const e=u.substring(C+n.length),o=g.substring(0,p);(e.indexOf(t)>=0||o.indexOf(t)>=0)&&(C=-1,p=-1)}-1!==C&&-1!==p?(o&&C+n.length<u.length&&u.charCodeAt(C+n.length)===d.Space&&(n+=" "),o&&p>0&&g.charCodeAt(p-1)===d.Space&&(t=" "+t,p-=1),h=b._createRemoveBlockCommentOperations(new m(i,C+n.length+1,c,p+1),n,t)):(h=b._createAddBlockCommentOperations(e,n,t,this._insertSpace),this._usedEndToken=1===h.length?t:null);for(const e of h)s.addTrackedEditOperation(e.range,e.text)}static _createRemoveBlockCommentOperations(e,n,t){const o=[];return m.isEmpty(e)?o.push(c.delete(new m(e.startLineNumber,e.startColumn-n.length,e.endLineNumber,e.endColumn+t.length))):(o.push(c.delete(new m(e.startLineNumber,e.startColumn-n.length,e.startLineNumber,e.startColumn))),o.push(c.delete(new m(e.endLineNumber,e.endColumn,e.endLineNumber,e.endColumn+t.length)))),o}static _createAddBlockCommentOperations(e,n,t,o){const r=[];return m.isEmpty(e)?r.push(c.replace(new m(e.startLineNumber,e.startColumn,e.endLineNumber,e.endColumn),n+"  "+t)):(r.push(c.insert(new L(e.startLineNumber,e.startColumn),n+(o?" ":""))),r.push(c.insert(new L(e.endLineNumber,e.endColumn),(o?" ":"")+t))),r}getEditOperations(e,n){const t=this._selection.startLineNumber,o=this._selection.startColumn;e.tokenization.tokenizeIfCheap(t);const r=e.getLanguageIdAtPosition(t,o),s=this.languageConfigurationService.getLanguageConfiguration(r).comments;!s||!s.blockCommentStartToken||!s.blockCommentEndToken||this._createOperationsForBlockComment(this._selection,s.blockCommentStartToken,s.blockCommentEndToken,this._insertSpace,e,n)}computeCursorState(e,n){const t=n.getInverseEditOperations();if(2===t.length){const e=t[0],n=t[1];return new O(e.range.endLineNumber,e.range.endColumn,n.range.startLineNumber,n.range.startColumn)}{const e=t[0].range,n=this._usedEndToken?-this._usedEndToken.length-1:0;return new O(e.endLineNumber,e.endColumn+n,e.endLineNumber,e.endColumn+n)}}}export{b as BlockCommentCommand};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { CharCode } from "../../../../base/common/charCode.js";
+import { EditOperation, ISingleEditOperation } from "../../../common/core/editOperation.js";
+import { Position } from "../../../common/core/position.js";
+import { Range } from "../../../common/core/range.js";
+import { Selection } from "../../../common/core/selection.js";
+import { ICommand, ICursorStateComputerData, IEditOperationBuilder } from "../../../common/editorCommon.js";
+import { ITextModel } from "../../../common/model.js";
+import { ILanguageConfigurationService } from "../../../common/languages/languageConfigurationRegistry.js";
+class BlockCommentCommand {
+  constructor(selection, insertSpace, languageConfigurationService) {
+    this.languageConfigurationService = languageConfigurationService;
+    this._selection = selection;
+    this._insertSpace = insertSpace;
+    this._usedEndToken = null;
+  }
+  static {
+    __name(this, "BlockCommentCommand");
+  }
+  _selection;
+  _insertSpace;
+  _usedEndToken;
+  static _haystackHasNeedleAtOffset(haystack, needle, offset) {
+    if (offset < 0) {
+      return false;
+    }
+    const needleLength = needle.length;
+    const haystackLength = haystack.length;
+    if (offset + needleLength > haystackLength) {
+      return false;
+    }
+    for (let i = 0; i < needleLength; i++) {
+      const codeA = haystack.charCodeAt(offset + i);
+      const codeB = needle.charCodeAt(i);
+      if (codeA === codeB) {
+        continue;
+      }
+      if (codeA >= CharCode.A && codeA <= CharCode.Z && codeA + 32 === codeB) {
+        continue;
+      }
+      if (codeB >= CharCode.A && codeB <= CharCode.Z && codeB + 32 === codeA) {
+        continue;
+      }
+      return false;
+    }
+    return true;
+  }
+  _createOperationsForBlockComment(selection, startToken, endToken, insertSpace, model, builder) {
+    const startLineNumber = selection.startLineNumber;
+    const startColumn = selection.startColumn;
+    const endLineNumber = selection.endLineNumber;
+    const endColumn = selection.endColumn;
+    const startLineText = model.getLineContent(startLineNumber);
+    const endLineText = model.getLineContent(endLineNumber);
+    let startTokenIndex = startLineText.lastIndexOf(startToken, startColumn - 1 + startToken.length);
+    let endTokenIndex = endLineText.indexOf(endToken, endColumn - 1 - endToken.length);
+    if (startTokenIndex !== -1 && endTokenIndex !== -1) {
+      if (startLineNumber === endLineNumber) {
+        const lineBetweenTokens = startLineText.substring(startTokenIndex + startToken.length, endTokenIndex);
+        if (lineBetweenTokens.indexOf(endToken) >= 0) {
+          startTokenIndex = -1;
+          endTokenIndex = -1;
+        }
+      } else {
+        const startLineAfterStartToken = startLineText.substring(startTokenIndex + startToken.length);
+        const endLineBeforeEndToken = endLineText.substring(0, endTokenIndex);
+        if (startLineAfterStartToken.indexOf(endToken) >= 0 || endLineBeforeEndToken.indexOf(endToken) >= 0) {
+          startTokenIndex = -1;
+          endTokenIndex = -1;
+        }
+      }
+    }
+    let ops;
+    if (startTokenIndex !== -1 && endTokenIndex !== -1) {
+      if (insertSpace && startTokenIndex + startToken.length < startLineText.length && startLineText.charCodeAt(startTokenIndex + startToken.length) === CharCode.Space) {
+        startToken = startToken + " ";
+      }
+      if (insertSpace && endTokenIndex > 0 && endLineText.charCodeAt(endTokenIndex - 1) === CharCode.Space) {
+        endToken = " " + endToken;
+        endTokenIndex -= 1;
+      }
+      ops = BlockCommentCommand._createRemoveBlockCommentOperations(
+        new Range(startLineNumber, startTokenIndex + startToken.length + 1, endLineNumber, endTokenIndex + 1),
+        startToken,
+        endToken
+      );
+    } else {
+      ops = BlockCommentCommand._createAddBlockCommentOperations(selection, startToken, endToken, this._insertSpace);
+      this._usedEndToken = ops.length === 1 ? endToken : null;
+    }
+    for (const op of ops) {
+      builder.addTrackedEditOperation(op.range, op.text);
+    }
+  }
+  static _createRemoveBlockCommentOperations(r, startToken, endToken) {
+    const res = [];
+    if (!Range.isEmpty(r)) {
+      res.push(EditOperation.delete(new Range(
+        r.startLineNumber,
+        r.startColumn - startToken.length,
+        r.startLineNumber,
+        r.startColumn
+      )));
+      res.push(EditOperation.delete(new Range(
+        r.endLineNumber,
+        r.endColumn,
+        r.endLineNumber,
+        r.endColumn + endToken.length
+      )));
+    } else {
+      res.push(EditOperation.delete(new Range(
+        r.startLineNumber,
+        r.startColumn - startToken.length,
+        r.endLineNumber,
+        r.endColumn + endToken.length
+      )));
+    }
+    return res;
+  }
+  static _createAddBlockCommentOperations(r, startToken, endToken, insertSpace) {
+    const res = [];
+    if (!Range.isEmpty(r)) {
+      res.push(EditOperation.insert(new Position(r.startLineNumber, r.startColumn), startToken + (insertSpace ? " " : "")));
+      res.push(EditOperation.insert(new Position(r.endLineNumber, r.endColumn), (insertSpace ? " " : "") + endToken));
+    } else {
+      res.push(EditOperation.replace(new Range(
+        r.startLineNumber,
+        r.startColumn,
+        r.endLineNumber,
+        r.endColumn
+      ), startToken + "  " + endToken));
+    }
+    return res;
+  }
+  getEditOperations(model, builder) {
+    const startLineNumber = this._selection.startLineNumber;
+    const startColumn = this._selection.startColumn;
+    model.tokenization.tokenizeIfCheap(startLineNumber);
+    const languageId = model.getLanguageIdAtPosition(startLineNumber, startColumn);
+    const config = this.languageConfigurationService.getLanguageConfiguration(languageId).comments;
+    if (!config || !config.blockCommentStartToken || !config.blockCommentEndToken) {
+      return;
+    }
+    this._createOperationsForBlockComment(this._selection, config.blockCommentStartToken, config.blockCommentEndToken, this._insertSpace, model, builder);
+  }
+  computeCursorState(model, helper) {
+    const inverseEditOperations = helper.getInverseEditOperations();
+    if (inverseEditOperations.length === 2) {
+      const startTokenEditOperation = inverseEditOperations[0];
+      const endTokenEditOperation = inverseEditOperations[1];
+      return new Selection(
+        startTokenEditOperation.range.endLineNumber,
+        startTokenEditOperation.range.endColumn,
+        endTokenEditOperation.range.startLineNumber,
+        endTokenEditOperation.range.startColumn
+      );
+    } else {
+      const srcRange = inverseEditOperations[0].range;
+      const deltaColumn = this._usedEndToken ? -this._usedEndToken.length - 1 : 0;
+      return new Selection(
+        srcRange.endLineNumber,
+        srcRange.endColumn + deltaColumn,
+        srcRange.endLineNumber,
+        srcRange.endColumn + deltaColumn
+      );
+    }
+  }
+}
+export {
+  BlockCommentCommand
+};
+//# sourceMappingURL=blockCommentCommand.js.map

@@ -1,2 +1,395 @@
-var p=Object.defineProperty;var I=Object.getOwnPropertyDescriptor;var v=(l,o,e,n)=>{for(var i=n>1?void 0:n?I(o,e):o,t=l.length-1,r;t>=0;t--)(r=l[t])&&(i=(n?r(o,e,i):r(i))||i);return n&&i&&p(o,e,i),i},m=(l,o)=>(e,n)=>o(e,n,l);import{TerminalShellExecutionCommandLineConfidence as x}from"./extHostTypes.js";import{Disposable as E,DisposableStore as T,toDisposable as C}from"../../../base/common/lifecycle.js";import{createDecorator as b}from"../../../platform/instantiation/common/instantiation.js";import{MainContext as D}from"./extHost.protocol.js";import{IExtHostRpcService as y}from"./extHostRpcService.js";import{IExtHostTerminalService as w}from"./extHostTerminalService.js";import{Emitter as s}from"../../../base/common/event.js";import{URI as u}from"../../../base/common/uri.js";import{AsyncIterableObject as g,Barrier as L}from"../../../base/common/async.js";const Q=b("IExtHostTerminalShellIntegration");let c=class extends E{constructor(e,n){super();this._extHostTerminalService=n;this._proxy=e.getProxy(D.MainThreadTerminalShellIntegration),this._register(C(()=>{for(const[i,t]of this._activeShellIntegrations)t.dispose();this._activeShellIntegrations.clear()}))}_serviceBrand;_proxy;_activeShellIntegrations=new Map;_onDidChangeTerminalShellIntegration=new s;onDidChangeTerminalShellIntegration=this._onDidChangeTerminalShellIntegration.event;_onDidStartTerminalShellExecution=new s;onDidStartTerminalShellExecution=this._onDidStartTerminalShellExecution.event;_onDidEndTerminalShellExecution=new s;onDidEndTerminalShellExecution=this._onDidEndTerminalShellExecution.event;$shellIntegrationChange(e){const n=this._extHostTerminalService.getTerminalById(e);if(!n)return;const i=n.value;let t=this._activeShellIntegrations.get(e);t||(t=new R(n.value,this._onDidStartTerminalShellExecution),this._activeShellIntegrations.set(e,t),t.store.add(n.onWillDispose(()=>this._activeShellIntegrations.get(e)?.dispose())),t.store.add(t.onDidRequestShellExecution(r=>this._proxy.$executeCommand(e,r))),t.store.add(t.onDidRequestEndExecution(r=>this._onDidEndTerminalShellExecution.fire(r))),t.store.add(t.onDidRequestChangeShellIntegration(r=>this._onDidChangeTerminalShellIntegration.fire(r))),n.shellIntegration=t.value),this._onDidChangeTerminalShellIntegration.fire({terminal:i,shellIntegration:t.value})}$shellExecutionStart(e,n,i,t,r){this._activeShellIntegrations.has(e)||this.$shellIntegrationChange(e);const a={value:n,confidence:i,isTrusted:t};this._activeShellIntegrations.get(e)?.startShellExecution(a,u.revive(r))}$shellExecutionEnd(e,n,i,t,r){const a={value:n,confidence:i,isTrusted:t};this._activeShellIntegrations.get(e)?.endShellExecution(a,r)}$shellExecutionData(e,n){this._activeShellIntegrations.get(e)?.emitData(n)}$shellEnvChange(e,n,i,t){this._activeShellIntegrations.get(e)?.setEnv(n,i,t)}$cwdChange(e,n){this._activeShellIntegrations.get(e)?.setCwd(u.revive(n))}$closeTerminal(e){this._activeShellIntegrations.get(e)?.dispose(),this._activeShellIntegrations.delete(e)}};c=v([m(0,y),m(1,w)],c);class R extends E{constructor(e,n){super();this._terminal=e;this._onDidStartTerminalShellExecution=n;const i=this;this.value={get cwd(){return i._cwd},get env(){if(i._env)return Object.freeze({isTrusted:i._env.isTrusted,value:Object.freeze({...i._env.value})})},executeCommand(t,r){let a=t;if(r)for(const d of r)!d.match(/["'`]/)&&d.match(/\s/)?a+=` "${d}"`:a+=` ${d}`;i._onDidRequestShellExecution.fire(a);const f={value:a,confidence:x.High,isTrusted:!0};return i.requestNewShellExecution(f,i._cwd).value}}}_pendingExecutions=[];_pendingEndingExecution;_currentExecutionProperties;_currentExecution;get currentExecution(){return this._currentExecution}_env;_cwd;store=this._register(new T);value;_onDidRequestChangeShellIntegration=this._register(new s);onDidRequestChangeShellIntegration=this._onDidRequestChangeShellIntegration.event;_onDidRequestShellExecution=this._register(new s);onDidRequestShellExecution=this._onDidRequestShellExecution.event;_onDidRequestEndExecution=this._register(new s);onDidRequestEndExecution=this._onDidRequestEndExecution.event;_onDidRequestNewExecution=this._register(new s);onDidRequestNewExecution=this._onDidRequestNewExecution.event;requestNewShellExecution(e,n){const i=new _(e,n??this._cwd);return h(e.value).length>1&&(this._currentExecutionProperties={isMultiLine:!0,unresolvedCommandLines:h(e.value)}),this._pendingExecutions.push(i),this._onDidRequestNewExecution.fire(e.value),i}startShellExecution(e,n){if(this._pendingEndingExecution&&(this._onDidRequestEndExecution.fire({terminal:this._terminal,shellIntegration:this.value,execution:this._pendingEndingExecution.value,exitCode:void 0}),this._pendingEndingExecution=void 0),this._currentExecution){if(this._currentExecutionProperties?.isMultiLine&&this._currentExecutionProperties.unresolvedCommandLines){const t=S(this._currentExecutionProperties.unresolvedCommandLines,e);if(t){this._currentExecutionProperties.unresolvedCommandLines=t.unresolvedCommandLines;return}}this._currentExecution.endExecution(void 0),this._currentExecution.flush(),this._onDidRequestEndExecution.fire({terminal:this._terminal,shellIntegration:this.value,execution:this._currentExecution.value,exitCode:void 0})}let i;if(e.confidence===x.High)for(const[t,r]of this._pendingExecutions.entries())if(r.value.commandLine.value===e.value){i=r,this._currentExecutionProperties={isMultiLine:!1,unresolvedCommandLines:void 0},i=r,this._pendingExecutions.splice(t,1);break}else{const a=S(h(r.value.commandLine.value),e);if(a){this._currentExecutionProperties={isMultiLine:!0,unresolvedCommandLines:a.unresolvedCommandLines},i=r,this._pendingExecutions.splice(t,1);break}}else i=this._pendingExecutions.shift();i||(i=new _(e,n??this._cwd)),this._currentExecution=i,this._onDidStartTerminalShellExecution.fire({terminal:this._terminal,shellIntegration:this.value,execution:this._currentExecution.value})}emitData(e){this.currentExecution?.emitData(e)}endShellExecution(e,n){if(!(this._currentExecutionProperties?.isMultiLine&&this._currentExecutionProperties.unresolvedCommandLines&&this._currentExecutionProperties.unresolvedCommandLines.length>0)&&this._currentExecution){const i=this._currentExecutionProperties?.isMultiLine?this._currentExecution.value.commandLine:e;this._currentExecution.endExecution(i);const t=this._currentExecution;this._pendingEndingExecution=t,this._currentExecution=void 0,t.flush().then(()=>{this._pendingEndingExecution===t&&(this._onDidRequestEndExecution.fire({terminal:this._terminal,shellIntegration:this.value,execution:t.value,exitCode:n}),this._pendingEndingExecution=void 0)})}}setEnv(e,n,i){const t={};for(let r=0;r<e.length;r++)t[e[r]]=n[r];this._env={value:t,isTrusted:i},this._fireChangeEvent()}setCwd(e){let n=!1;u.isUri(this._cwd)?n=!u.isUri(e)||this._cwd.toString()!==e.toString():this._cwd!==e&&(n=!0),n&&(this._cwd=e,this._fireChangeEvent())}_fireChangeEvent(){this._onDidRequestChangeShellIntegration.fire({terminal:this._terminal,shellIntegration:this.value})}}class _{constructor(o,e){this._commandLine=o;this.cwd=e;const n=this;this.value={get commandLine(){return n._commandLine},get cwd(){return n.cwd},read(){return n._createDataStream()}}}value;_dataStream;_isEnded=!1;_createDataStream(){if(!this._dataStream){if(this._isEnded)return g.EMPTY;this._dataStream=new q}return this._dataStream.createIterable()}emitData(o){this._isEnded||this._dataStream?.emitData(o)}endExecution(o){o&&(this._commandLine=o),this._dataStream?.endExecution(),this._isEnded=!0}async flush(){this._dataStream&&(await this._dataStream.flush(),this._dataStream.dispose(),this._dataStream=void 0)}}class q extends E{_barrier;_iterables=[];_emitters=[];createIterable(){this._barrier||(this._barrier=new L);const o=this._barrier,e=new g(async n=>{this._emitters.push(n),await o.wait()});return this._iterables.push(e),e}emitData(o){for(const e of this._emitters)e.emitOne(o)}endExecution(){this._barrier?.open()}async flush(){await Promise.all(this._iterables.map(o=>o.toPromise()))}}function h(l){return l.split(`
-`).map(o=>o.trim()).filter(o=>o.length>0)}function S(l,o){if(l.length===0)return!1;const e=[...l],n=h(o.value);if(e&&e.length>0){for(;e.length>0&&e[0]===n[0];)e.shift(),n.shift();if(n.length===0)return{unresolvedCommandLines:e}}return!1}export{c as ExtHostTerminalShellIntegration,Q as IExtHostTerminalShellIntegration,R as InternalTerminalShellIntegration};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { TerminalShellExecutionCommandLineConfidence } from "./extHostTypes.js";
+import { Disposable, DisposableStore, toDisposable } from "../../../base/common/lifecycle.js";
+import { createDecorator } from "../../../platform/instantiation/common/instantiation.js";
+import { MainContext } from "./extHost.protocol.js";
+import { IExtHostRpcService } from "./extHostRpcService.js";
+import { IExtHostTerminalService } from "./extHostTerminalService.js";
+import { Emitter } from "../../../base/common/event.js";
+import { URI } from "../../../base/common/uri.js";
+import { AsyncIterableObject, Barrier } from "../../../base/common/async.js";
+const IExtHostTerminalShellIntegration = createDecorator("IExtHostTerminalShellIntegration");
+let ExtHostTerminalShellIntegration = class extends Disposable {
+  constructor(extHostRpc, _extHostTerminalService) {
+    super();
+    this._extHostTerminalService = _extHostTerminalService;
+    this._proxy = extHostRpc.getProxy(MainContext.MainThreadTerminalShellIntegration);
+    this._register(toDisposable(() => {
+      for (const [_, integration] of this._activeShellIntegrations) {
+        integration.dispose();
+      }
+      this._activeShellIntegrations.clear();
+    }));
+  }
+  static {
+    __name(this, "ExtHostTerminalShellIntegration");
+  }
+  _serviceBrand;
+  _proxy;
+  _activeShellIntegrations = /* @__PURE__ */ new Map();
+  _onDidChangeTerminalShellIntegration = new Emitter();
+  onDidChangeTerminalShellIntegration = this._onDidChangeTerminalShellIntegration.event;
+  _onDidStartTerminalShellExecution = new Emitter();
+  onDidStartTerminalShellExecution = this._onDidStartTerminalShellExecution.event;
+  _onDidEndTerminalShellExecution = new Emitter();
+  onDidEndTerminalShellExecution = this._onDidEndTerminalShellExecution.event;
+  $shellIntegrationChange(instanceId) {
+    const terminal = this._extHostTerminalService.getTerminalById(instanceId);
+    if (!terminal) {
+      return;
+    }
+    const apiTerminal = terminal.value;
+    let shellIntegration = this._activeShellIntegrations.get(instanceId);
+    if (!shellIntegration) {
+      shellIntegration = new InternalTerminalShellIntegration(terminal.value, this._onDidStartTerminalShellExecution);
+      this._activeShellIntegrations.set(instanceId, shellIntegration);
+      shellIntegration.store.add(terminal.onWillDispose(() => this._activeShellIntegrations.get(instanceId)?.dispose()));
+      shellIntegration.store.add(shellIntegration.onDidRequestShellExecution((commandLine) => this._proxy.$executeCommand(instanceId, commandLine)));
+      shellIntegration.store.add(shellIntegration.onDidRequestEndExecution((e) => this._onDidEndTerminalShellExecution.fire(e)));
+      shellIntegration.store.add(shellIntegration.onDidRequestChangeShellIntegration((e) => this._onDidChangeTerminalShellIntegration.fire(e)));
+      terminal.shellIntegration = shellIntegration.value;
+    }
+    this._onDidChangeTerminalShellIntegration.fire({
+      terminal: apiTerminal,
+      shellIntegration: shellIntegration.value
+    });
+  }
+  $shellExecutionStart(instanceId, commandLineValue, commandLineConfidence, isTrusted, cwd) {
+    if (!this._activeShellIntegrations.has(instanceId)) {
+      this.$shellIntegrationChange(instanceId);
+    }
+    const commandLine = {
+      value: commandLineValue,
+      confidence: commandLineConfidence,
+      isTrusted
+    };
+    this._activeShellIntegrations.get(instanceId)?.startShellExecution(commandLine, URI.revive(cwd));
+  }
+  $shellExecutionEnd(instanceId, commandLineValue, commandLineConfidence, isTrusted, exitCode) {
+    const commandLine = {
+      value: commandLineValue,
+      confidence: commandLineConfidence,
+      isTrusted
+    };
+    this._activeShellIntegrations.get(instanceId)?.endShellExecution(commandLine, exitCode);
+  }
+  $shellExecutionData(instanceId, data) {
+    this._activeShellIntegrations.get(instanceId)?.emitData(data);
+  }
+  $shellEnvChange(instanceId, shellEnvKeys, shellEnvValues, isTrusted) {
+    this._activeShellIntegrations.get(instanceId)?.setEnv(shellEnvKeys, shellEnvValues, isTrusted);
+  }
+  $cwdChange(instanceId, cwd) {
+    this._activeShellIntegrations.get(instanceId)?.setCwd(URI.revive(cwd));
+  }
+  $closeTerminal(instanceId) {
+    this._activeShellIntegrations.get(instanceId)?.dispose();
+    this._activeShellIntegrations.delete(instanceId);
+  }
+};
+ExtHostTerminalShellIntegration = __decorateClass([
+  __decorateParam(0, IExtHostRpcService),
+  __decorateParam(1, IExtHostTerminalService)
+], ExtHostTerminalShellIntegration);
+class InternalTerminalShellIntegration extends Disposable {
+  constructor(_terminal, _onDidStartTerminalShellExecution) {
+    super();
+    this._terminal = _terminal;
+    this._onDidStartTerminalShellExecution = _onDidStartTerminalShellExecution;
+    const that = this;
+    this.value = {
+      get cwd() {
+        return that._cwd;
+      },
+      get env() {
+        if (!that._env) {
+          return void 0;
+        }
+        return Object.freeze({
+          isTrusted: that._env.isTrusted,
+          value: Object.freeze({ ...that._env.value })
+        });
+      },
+      // executeCommand(commandLine: string): vscode.TerminalShellExecution;
+      // executeCommand(executable: string, args: string[]): vscode.TerminalShellExecution;
+      executeCommand(commandLineOrExecutable, args) {
+        let commandLineValue = commandLineOrExecutable;
+        if (args) {
+          for (const arg of args) {
+            const wrapInQuotes = !arg.match(/["'`]/) && arg.match(/\s/);
+            if (wrapInQuotes) {
+              commandLineValue += ` "${arg}"`;
+            } else {
+              commandLineValue += ` ${arg}`;
+            }
+          }
+        }
+        that._onDidRequestShellExecution.fire(commandLineValue);
+        const commandLine = {
+          value: commandLineValue,
+          confidence: TerminalShellExecutionCommandLineConfidence.High,
+          isTrusted: true
+        };
+        const execution = that.requestNewShellExecution(commandLine, that._cwd).value;
+        return execution;
+      }
+    };
+  }
+  static {
+    __name(this, "InternalTerminalShellIntegration");
+  }
+  _pendingExecutions = [];
+  _pendingEndingExecution;
+  _currentExecutionProperties;
+  _currentExecution;
+  get currentExecution() {
+    return this._currentExecution;
+  }
+  _env;
+  _cwd;
+  store = this._register(new DisposableStore());
+  value;
+  _onDidRequestChangeShellIntegration = this._register(new Emitter());
+  onDidRequestChangeShellIntegration = this._onDidRequestChangeShellIntegration.event;
+  _onDidRequestShellExecution = this._register(new Emitter());
+  onDidRequestShellExecution = this._onDidRequestShellExecution.event;
+  _onDidRequestEndExecution = this._register(new Emitter());
+  onDidRequestEndExecution = this._onDidRequestEndExecution.event;
+  _onDidRequestNewExecution = this._register(new Emitter());
+  onDidRequestNewExecution = this._onDidRequestNewExecution.event;
+  requestNewShellExecution(commandLine, cwd) {
+    const execution = new InternalTerminalShellExecution(commandLine, cwd ?? this._cwd);
+    const unresolvedCommandLines = splitAndSanitizeCommandLine(commandLine.value);
+    if (unresolvedCommandLines.length > 1) {
+      this._currentExecutionProperties = {
+        isMultiLine: true,
+        unresolvedCommandLines: splitAndSanitizeCommandLine(commandLine.value)
+      };
+    }
+    this._pendingExecutions.push(execution);
+    this._onDidRequestNewExecution.fire(commandLine.value);
+    return execution;
+  }
+  startShellExecution(commandLine, cwd) {
+    if (this._pendingEndingExecution) {
+      this._onDidRequestEndExecution.fire({ terminal: this._terminal, shellIntegration: this.value, execution: this._pendingEndingExecution.value, exitCode: void 0 });
+      this._pendingEndingExecution = void 0;
+    }
+    if (this._currentExecution) {
+      if (this._currentExecutionProperties?.isMultiLine && this._currentExecutionProperties.unresolvedCommandLines) {
+        const subExecutionResult = isSubExecution(this._currentExecutionProperties.unresolvedCommandLines, commandLine);
+        if (subExecutionResult) {
+          this._currentExecutionProperties.unresolvedCommandLines = subExecutionResult.unresolvedCommandLines;
+          return;
+        }
+      }
+      this._currentExecution.endExecution(void 0);
+      this._currentExecution.flush();
+      this._onDidRequestEndExecution.fire({ terminal: this._terminal, shellIntegration: this.value, execution: this._currentExecution.value, exitCode: void 0 });
+    }
+    let currentExecution;
+    if (commandLine.confidence === TerminalShellExecutionCommandLineConfidence.High) {
+      for (const [i, execution] of this._pendingExecutions.entries()) {
+        if (execution.value.commandLine.value === commandLine.value) {
+          currentExecution = execution;
+          this._currentExecutionProperties = {
+            isMultiLine: false,
+            unresolvedCommandLines: void 0
+          };
+          currentExecution = execution;
+          this._pendingExecutions.splice(i, 1);
+          break;
+        } else {
+          const subExecutionResult = isSubExecution(splitAndSanitizeCommandLine(execution.value.commandLine.value), commandLine);
+          if (subExecutionResult) {
+            this._currentExecutionProperties = {
+              isMultiLine: true,
+              unresolvedCommandLines: subExecutionResult.unresolvedCommandLines
+            };
+            currentExecution = execution;
+            this._pendingExecutions.splice(i, 1);
+            break;
+          }
+        }
+      }
+    } else {
+      currentExecution = this._pendingExecutions.shift();
+    }
+    if (!currentExecution) {
+      currentExecution = new InternalTerminalShellExecution(commandLine, cwd ?? this._cwd);
+    }
+    this._currentExecution = currentExecution;
+    this._onDidStartTerminalShellExecution.fire({ terminal: this._terminal, shellIntegration: this.value, execution: this._currentExecution.value });
+  }
+  emitData(data) {
+    this.currentExecution?.emitData(data);
+  }
+  endShellExecution(commandLine, exitCode) {
+    if (this._currentExecutionProperties?.isMultiLine) {
+      if (this._currentExecutionProperties.unresolvedCommandLines && this._currentExecutionProperties.unresolvedCommandLines.length > 0) {
+        return;
+      }
+    }
+    if (this._currentExecution) {
+      const commandLineForEvent = this._currentExecutionProperties?.isMultiLine ? this._currentExecution.value.commandLine : commandLine;
+      this._currentExecution.endExecution(commandLineForEvent);
+      const currentExecution = this._currentExecution;
+      this._pendingEndingExecution = currentExecution;
+      this._currentExecution = void 0;
+      currentExecution.flush().then(() => {
+        if (this._pendingEndingExecution === currentExecution) {
+          this._onDidRequestEndExecution.fire({ terminal: this._terminal, shellIntegration: this.value, execution: currentExecution.value, exitCode });
+          this._pendingEndingExecution = void 0;
+        }
+      });
+    }
+  }
+  setEnv(keys, values, isTrusted) {
+    const env = {};
+    for (let i = 0; i < keys.length; i++) {
+      env[keys[i]] = values[i];
+    }
+    this._env = { value: env, isTrusted };
+    this._fireChangeEvent();
+  }
+  setCwd(cwd) {
+    let wasChanged = false;
+    if (URI.isUri(this._cwd)) {
+      wasChanged = !URI.isUri(cwd) || this._cwd.toString() !== cwd.toString();
+    } else if (this._cwd !== cwd) {
+      wasChanged = true;
+    }
+    if (wasChanged) {
+      this._cwd = cwd;
+      this._fireChangeEvent();
+    }
+  }
+  _fireChangeEvent() {
+    this._onDidRequestChangeShellIntegration.fire({ terminal: this._terminal, shellIntegration: this.value });
+  }
+}
+class InternalTerminalShellExecution {
+  constructor(_commandLine, cwd) {
+    this._commandLine = _commandLine;
+    this.cwd = cwd;
+    const that = this;
+    this.value = {
+      get commandLine() {
+        return that._commandLine;
+      },
+      get cwd() {
+        return that.cwd;
+      },
+      read() {
+        return that._createDataStream();
+      }
+    };
+  }
+  static {
+    __name(this, "InternalTerminalShellExecution");
+  }
+  value;
+  _dataStream;
+  _isEnded = false;
+  _createDataStream() {
+    if (!this._dataStream) {
+      if (this._isEnded) {
+        return AsyncIterableObject.EMPTY;
+      }
+      this._dataStream = new ShellExecutionDataStream();
+    }
+    return this._dataStream.createIterable();
+  }
+  emitData(data) {
+    if (!this._isEnded) {
+      this._dataStream?.emitData(data);
+    }
+  }
+  endExecution(commandLine) {
+    if (commandLine) {
+      this._commandLine = commandLine;
+    }
+    this._dataStream?.endExecution();
+    this._isEnded = true;
+  }
+  async flush() {
+    if (this._dataStream) {
+      await this._dataStream.flush();
+      this._dataStream.dispose();
+      this._dataStream = void 0;
+    }
+  }
+}
+class ShellExecutionDataStream extends Disposable {
+  static {
+    __name(this, "ShellExecutionDataStream");
+  }
+  _barrier;
+  _iterables = [];
+  _emitters = [];
+  createIterable() {
+    if (!this._barrier) {
+      this._barrier = new Barrier();
+    }
+    const barrier = this._barrier;
+    const iterable = new AsyncIterableObject(async (emitter) => {
+      this._emitters.push(emitter);
+      await barrier.wait();
+    });
+    this._iterables.push(iterable);
+    return iterable;
+  }
+  emitData(data) {
+    for (const emitter of this._emitters) {
+      emitter.emitOne(data);
+    }
+  }
+  endExecution() {
+    this._barrier?.open();
+  }
+  async flush() {
+    await Promise.all(this._iterables.map((e) => e.toPromise()));
+  }
+}
+function splitAndSanitizeCommandLine(commandLine) {
+  return commandLine.split("\n").map((line) => line.trim()).filter((line) => line.length > 0);
+}
+__name(splitAndSanitizeCommandLine, "splitAndSanitizeCommandLine");
+function isSubExecution(unresolvedCommandLines, commandLine) {
+  if (unresolvedCommandLines.length === 0) {
+    return false;
+  }
+  const newUnresolvedCommandLines = [...unresolvedCommandLines];
+  const subExecutionLines = splitAndSanitizeCommandLine(commandLine.value);
+  if (newUnresolvedCommandLines && newUnresolvedCommandLines.length > 0) {
+    while (newUnresolvedCommandLines.length > 0) {
+      if (newUnresolvedCommandLines[0] !== subExecutionLines[0]) {
+        break;
+      }
+      newUnresolvedCommandLines.shift();
+      subExecutionLines.shift();
+    }
+    if (subExecutionLines.length === 0) {
+      return { unresolvedCommandLines: newUnresolvedCommandLines };
+    }
+  }
+  return false;
+}
+__name(isSubExecution, "isSubExecution");
+export {
+  ExtHostTerminalShellIntegration,
+  IExtHostTerminalShellIntegration,
+  InternalTerminalShellIntegration
+};
+//# sourceMappingURL=extHostTerminalShellIntegration.js.map

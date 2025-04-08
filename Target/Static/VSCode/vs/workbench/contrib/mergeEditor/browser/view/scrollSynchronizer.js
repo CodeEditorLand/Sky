@@ -1,1 +1,192 @@
-import{Disposable as v}from"../../../../../base/common/lifecycle.js";import{derivedWithStore as y}from"../../../../../base/common/observable.js";import"../../../../../editor/browser/widget/codeEditor/codeEditorWidget.js";import{ScrollType as m}from"../../../../../editor/common/editorCommon.js";import{DocumentLineRangeMap as f}from"../model/mapping.js";import{ReentrancyBarrier as R}from"../../../../../base/common/controlFlow.js";import"./editors/baseCodeEditorView.js";import"./mergeEditor.js";import"./viewModel.js";import"./editors/inputCodeEditorView.js";import"./editors/resultCodeEditorView.js";import"./editors/codeEditorView.js";import{BugIndicatingError as S}from"../../../../../base/common/errors.js";import{isDefined as I}from"../../../../../base/common/types.js";class U extends v{constructor(e,t,i,s,o,r){super(),this.viewModel=e,this.input1View=t,this.input2View=i,this.baseView=s,this.inputResultView=o,this.layout=r;const n=y(((e,t)=>{const i=this.baseView.read(e),s=[this.input1View,this.input2View,this.inputResultView,i].filter(I),o=(e,t,i)=>{this.reentrancyBarrier.runExclusivelyOrSkip((()=>{if(t){const t=e.editor.getScrollLeft();for(const i of s)i!==e&&i.editor.setScrollLeft(t,m.Immediate)}if(i){const t=e.editor.getScrollTop();for(const i of s)if(i!==e)if(this._shouldLock(e,i))i.editor.setScrollTop(t,m.Immediate);else{const t=this._getMapping(e,i);t&&this._synchronizeScrolling(e.editor,i.editor,t)}}}))};for(const e of s)t.add(e.editor.onDidScrollChange((t=>{this._isSyncing&&o(e,t.scrollLeftChanged,t.scrollTopChanged)})));return{update:()=>{o(this.inputResultView,!0,!0)}}})).recomputeInitiallyAndOnChange(this._store);this.updateScrolling=()=>{n.get().update()}}get model(){return this.viewModel.get()?.model}reentrancyBarrier=new R;updateScrolling;get lockResultWithInputs(){return"columns"===this.layout.get().kind}get lockBaseWithInputs(){return"mixed"===this.layout.get().kind&&!this.layout.get().showBaseAtTop}_isSyncing=!0;stopSync(){this._isSyncing=!1}startSync(){this._isSyncing=!0}_shouldLock(e,t){const i=e=>e===this.input1View||e===this.input2View;return i(e)&&t===this.inputResultView||i(t)&&e===this.inputResultView?this.lockResultWithInputs:i(e)&&t===this.baseView.get()||i(t)&&e===this.baseView.get()?this.lockBaseWithInputs:!(!i(e)||!i(t))}_getMapping(e,t){if(e===this.input1View){if(t===this.input2View)return;if(t===this.inputResultView)return this.model?.input1ResultMapping.get();if(t===this.baseView.get()){const e=this.model?.baseInput1Diffs.get();return e?new f(e,-1).reverse():void 0}}else if(e===this.input2View){if(t===this.input1View)return;if(t===this.inputResultView)return this.model?.input2ResultMapping.get();if(t===this.baseView.get()){const e=this.model?.baseInput2Diffs.get();return e?new f(e,-1).reverse():void 0}}else if(e===this.inputResultView){if(t===this.input1View)return this.model?.resultInput1Mapping.get();if(t===this.input2View)return this.model?.resultInput2Mapping.get();if(t===this.baseView.get()){const e=this.model?.resultBaseMapping.get();return e||void 0}}else if(e===this.baseView.get()){if(t===this.input1View){const e=this.model?.baseInput1Diffs.get();return e?new f(e,-1):void 0}if(t===this.input2View){const e=this.model?.baseInput2Diffs.get();return e?new f(e,-1):void 0}if(t===this.inputResultView){const e=this.model?.baseResultMapping.get();return e||void 0}}throw new S}_synchronizeScrolling(e,t,i){if(!i)return;const s=e.getVisibleRanges();if(0===s.length)return;const o=s[0].startLineNumber-1,r=i.project(o),n=r.inputRange,u=r.outputRange,l=t.getTopForLineNumber(u.startLineNumber),p=t.getTopForLineNumber(u.endLineNumberExclusive),a=e.getTopForLineNumber(n.startLineNumber),d=e.getTopForLineNumber(n.endLineNumberExclusive),h=l+(p-l)*Math.min((e.getScrollTop()-a)/(d-a),1);t.setScrollTop(h,m.Immediate)}}export{U as ScrollSynchronizer};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { derivedWithStore, IObservable } from "../../../../../base/common/observable.js";
+import { CodeEditorWidget } from "../../../../../editor/browser/widget/codeEditor/codeEditorWidget.js";
+import { ScrollType } from "../../../../../editor/common/editorCommon.js";
+import { DocumentLineRangeMap } from "../model/mapping.js";
+import { ReentrancyBarrier } from "../../../../../base/common/controlFlow.js";
+import { BaseCodeEditorView } from "./editors/baseCodeEditorView.js";
+import { IMergeEditorLayout } from "./mergeEditor.js";
+import { MergeEditorViewModel } from "./viewModel.js";
+import { InputCodeEditorView } from "./editors/inputCodeEditorView.js";
+import { ResultCodeEditorView } from "./editors/resultCodeEditorView.js";
+import { CodeEditorView } from "./editors/codeEditorView.js";
+import { BugIndicatingError } from "../../../../../base/common/errors.js";
+import { isDefined } from "../../../../../base/common/types.js";
+class ScrollSynchronizer extends Disposable {
+  constructor(viewModel, input1View, input2View, baseView, inputResultView, layout) {
+    super();
+    this.viewModel = viewModel;
+    this.input1View = input1View;
+    this.input2View = input2View;
+    this.baseView = baseView;
+    this.inputResultView = inputResultView;
+    this.layout = layout;
+    const s = derivedWithStore((reader, store) => {
+      const baseView2 = this.baseView.read(reader);
+      const editors = [this.input1View, this.input2View, this.inputResultView, baseView2].filter(isDefined);
+      const alignScrolling = /* @__PURE__ */ __name((source, updateScrollLeft, updateScrollTop) => {
+        this.reentrancyBarrier.runExclusivelyOrSkip(() => {
+          if (updateScrollLeft) {
+            const scrollLeft = source.editor.getScrollLeft();
+            for (const editorView of editors) {
+              if (editorView !== source) {
+                editorView.editor.setScrollLeft(scrollLeft, ScrollType.Immediate);
+              }
+            }
+          }
+          if (updateScrollTop) {
+            const scrollTop = source.editor.getScrollTop();
+            for (const editorView of editors) {
+              if (editorView !== source) {
+                if (this._shouldLock(source, editorView)) {
+                  editorView.editor.setScrollTop(scrollTop, ScrollType.Immediate);
+                } else {
+                  const m = this._getMapping(source, editorView);
+                  if (m) {
+                    this._synchronizeScrolling(source.editor, editorView.editor, m);
+                  }
+                }
+              }
+            }
+          }
+        });
+      }, "alignScrolling");
+      for (const editorView of editors) {
+        store.add(editorView.editor.onDidScrollChange((e) => {
+          if (!this._isSyncing) {
+            return;
+          }
+          alignScrolling(editorView, e.scrollLeftChanged, e.scrollTopChanged);
+        }));
+      }
+      return {
+        update: /* @__PURE__ */ __name(() => {
+          alignScrolling(this.inputResultView, true, true);
+        }, "update")
+      };
+    }).recomputeInitiallyAndOnChange(this._store);
+    this.updateScrolling = () => {
+      s.get().update();
+    };
+  }
+  static {
+    __name(this, "ScrollSynchronizer");
+  }
+  get model() {
+    return this.viewModel.get()?.model;
+  }
+  reentrancyBarrier = new ReentrancyBarrier();
+  updateScrolling;
+  get lockResultWithInputs() {
+    return this.layout.get().kind === "columns";
+  }
+  get lockBaseWithInputs() {
+    return this.layout.get().kind === "mixed" && !this.layout.get().showBaseAtTop;
+  }
+  _isSyncing = true;
+  stopSync() {
+    this._isSyncing = false;
+  }
+  startSync() {
+    this._isSyncing = true;
+  }
+  _shouldLock(editor1, editor2) {
+    const isInput = /* @__PURE__ */ __name((editor) => editor === this.input1View || editor === this.input2View, "isInput");
+    if (isInput(editor1) && editor2 === this.inputResultView || isInput(editor2) && editor1 === this.inputResultView) {
+      return this.lockResultWithInputs;
+    }
+    if (isInput(editor1) && editor2 === this.baseView.get() || isInput(editor2) && editor1 === this.baseView.get()) {
+      return this.lockBaseWithInputs;
+    }
+    if (isInput(editor1) && isInput(editor2)) {
+      return true;
+    }
+    return false;
+  }
+  _getMapping(editor1, editor2) {
+    if (editor1 === this.input1View) {
+      if (editor2 === this.input2View) {
+        return void 0;
+      } else if (editor2 === this.inputResultView) {
+        return this.model?.input1ResultMapping.get();
+      } else if (editor2 === this.baseView.get()) {
+        const b = this.model?.baseInput1Diffs.get();
+        if (!b) {
+          return void 0;
+        }
+        return new DocumentLineRangeMap(b, -1).reverse();
+      }
+    } else if (editor1 === this.input2View) {
+      if (editor2 === this.input1View) {
+        return void 0;
+      } else if (editor2 === this.inputResultView) {
+        return this.model?.input2ResultMapping.get();
+      } else if (editor2 === this.baseView.get()) {
+        const b = this.model?.baseInput2Diffs.get();
+        if (!b) {
+          return void 0;
+        }
+        return new DocumentLineRangeMap(b, -1).reverse();
+      }
+    } else if (editor1 === this.inputResultView) {
+      if (editor2 === this.input1View) {
+        return this.model?.resultInput1Mapping.get();
+      } else if (editor2 === this.input2View) {
+        return this.model?.resultInput2Mapping.get();
+      } else if (editor2 === this.baseView.get()) {
+        const b = this.model?.resultBaseMapping.get();
+        if (!b) {
+          return void 0;
+        }
+        return b;
+      }
+    } else if (editor1 === this.baseView.get()) {
+      if (editor2 === this.input1View) {
+        const b = this.model?.baseInput1Diffs.get();
+        if (!b) {
+          return void 0;
+        }
+        return new DocumentLineRangeMap(b, -1);
+      } else if (editor2 === this.input2View) {
+        const b = this.model?.baseInput2Diffs.get();
+        if (!b) {
+          return void 0;
+        }
+        return new DocumentLineRangeMap(b, -1);
+      } else if (editor2 === this.inputResultView) {
+        const b = this.model?.baseResultMapping.get();
+        if (!b) {
+          return void 0;
+        }
+        return b;
+      }
+    }
+    throw new BugIndicatingError();
+  }
+  _synchronizeScrolling(scrollingEditor, targetEditor, mapping) {
+    if (!mapping) {
+      return;
+    }
+    const visibleRanges = scrollingEditor.getVisibleRanges();
+    if (visibleRanges.length === 0) {
+      return;
+    }
+    const topLineNumber = visibleRanges[0].startLineNumber - 1;
+    const result = mapping.project(topLineNumber);
+    const sourceRange = result.inputRange;
+    const targetRange = result.outputRange;
+    const resultStartTopPx = targetEditor.getTopForLineNumber(targetRange.startLineNumber);
+    const resultEndPx = targetEditor.getTopForLineNumber(targetRange.endLineNumberExclusive);
+    const sourceStartTopPx = scrollingEditor.getTopForLineNumber(sourceRange.startLineNumber);
+    const sourceEndPx = scrollingEditor.getTopForLineNumber(sourceRange.endLineNumberExclusive);
+    const factor = Math.min((scrollingEditor.getScrollTop() - sourceStartTopPx) / (sourceEndPx - sourceStartTopPx), 1);
+    const resultScrollPosition = resultStartTopPx + (resultEndPx - resultStartTopPx) * factor;
+    targetEditor.setScrollTop(resultScrollPosition, ScrollType.Immediate);
+  }
+}
+export {
+  ScrollSynchronizer
+};
+//# sourceMappingURL=scrollSynchronizer.js.map

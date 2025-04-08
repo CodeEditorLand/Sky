@@ -1,1 +1,72 @@
-import*as a from"../../../../../../base/browser/dom.js";import"../../notebookBrowser.js";import{CellContentPart as l}from"../cellPart.js";class f extends l{constructor(e,o,r){super();this.notebookEditor=e;this.rootContainer=o;this.decorationContainer=r}didRenderCell(e){const o=[];this.rootContainer.classList.forEach(t=>{/^nb\-.*$/.test(t)&&o.push(t)}),o.forEach(t=>{this.rootContainer.classList.remove(t)}),this.decorationContainer.innerText="";const r=()=>{this.decorationContainer.innerText="",e.getCellDecorations().filter(t=>t.topClassName!==void 0).forEach(t=>{this.decorationContainer.append(a.$(`.${t.topClassName}`))})};this.cellDisposables.add(e.onCellDecorationsChanged(t=>{(t.added.find(s=>s.topClassName)||t.removed.find(s=>s.topClassName))&&r()})),r(),this.registerDecorations()}registerDecorations(){this.currentCell&&(this.cellDisposables.add(this.currentCell.onCellDecorationsChanged(e=>{e.added.forEach(o=>{o.className&&this.currentCell&&this.rootContainer.classList.add(o.className)}),e.removed.forEach(o=>{o.className&&this.currentCell&&this.rootContainer.classList.remove(o.className)})})),this.currentCell.getCellDecorations().forEach(e=>{e.className&&this.currentCell&&(this.rootContainer.classList.add(e.className),this.notebookEditor.deltaCellContainerClassNames(this.currentCell.id,[e.className],[],this.currentCell.cellKind)),e.outputClassName&&this.currentCell&&this.notebookEditor.deltaCellContainerClassNames(this.currentCell.id,[e.outputClassName],[],this.currentCell.cellKind)}))}}export{f as CellDecorations};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as DOM from "../../../../../../base/browser/dom.js";
+import { ICellViewModel, INotebookEditorDelegate } from "../../notebookBrowser.js";
+import { CellContentPart } from "../cellPart.js";
+class CellDecorations extends CellContentPart {
+  constructor(notebookEditor, rootContainer, decorationContainer) {
+    super();
+    this.notebookEditor = notebookEditor;
+    this.rootContainer = rootContainer;
+    this.decorationContainer = decorationContainer;
+  }
+  static {
+    __name(this, "CellDecorations");
+  }
+  didRenderCell(element) {
+    const removedClassNames = [];
+    this.rootContainer.classList.forEach((className) => {
+      if (/^nb\-.*$/.test(className)) {
+        removedClassNames.push(className);
+      }
+    });
+    removedClassNames.forEach((className) => {
+      this.rootContainer.classList.remove(className);
+    });
+    this.decorationContainer.innerText = "";
+    const generateCellTopDecorations = /* @__PURE__ */ __name(() => {
+      this.decorationContainer.innerText = "";
+      element.getCellDecorations().filter((options) => options.topClassName !== void 0).forEach((options) => {
+        this.decorationContainer.append(DOM.$(`.${options.topClassName}`));
+      });
+    }, "generateCellTopDecorations");
+    this.cellDisposables.add(element.onCellDecorationsChanged((e) => {
+      const modified = e.added.find((e2) => e2.topClassName) || e.removed.find((e2) => e2.topClassName);
+      if (modified) {
+        generateCellTopDecorations();
+      }
+    }));
+    generateCellTopDecorations();
+    this.registerDecorations();
+  }
+  registerDecorations() {
+    if (!this.currentCell) {
+      return;
+    }
+    this.cellDisposables.add(this.currentCell.onCellDecorationsChanged((e) => {
+      e.added.forEach((options) => {
+        if (options.className && this.currentCell) {
+          this.rootContainer.classList.add(options.className);
+        }
+      });
+      e.removed.forEach((options) => {
+        if (options.className && this.currentCell) {
+          this.rootContainer.classList.remove(options.className);
+        }
+      });
+    }));
+    this.currentCell.getCellDecorations().forEach((options) => {
+      if (options.className && this.currentCell) {
+        this.rootContainer.classList.add(options.className);
+        this.notebookEditor.deltaCellContainerClassNames(this.currentCell.id, [options.className], [], this.currentCell.cellKind);
+      }
+      if (options.outputClassName && this.currentCell) {
+        this.notebookEditor.deltaCellContainerClassNames(this.currentCell.id, [options.outputClassName], [], this.currentCell.cellKind);
+      }
+    });
+  }
+}
+export {
+  CellDecorations
+};
+//# sourceMappingURL=cellDecorations.js.map

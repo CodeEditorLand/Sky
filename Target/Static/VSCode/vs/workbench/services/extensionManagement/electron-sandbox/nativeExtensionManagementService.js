@@ -1,1 +1,96 @@
-var v=Object.defineProperty,d=Object.getOwnPropertyDescriptor,m=(e,o,t,i)=>{for(var n,r=i>1?void 0:i?d(o,t):o,s=e.length-1;s>=0;s--)(n=e[s])&&(r=(i?n(o,t,r):n(r))||r);return i&&r&&v(o,t,r),r},t=(e,o)=>(t,i)=>o(t,i,e);import"../../../../base/parts/ipc/common/ipc.js";import"../common/extensionManagement.js";import"../../../../base/common/uri.js";import{IAllowedExtensionsService as f}from"../../../../platform/extensionManagement/common/extensionManagement.js";import{IUriIdentityService as I}from"../../../../platform/uriIdentity/common/uriIdentity.js";import{IUserDataProfileService as p}from"../../userDataProfile/common/userDataProfile.js";import{joinPath as S}from"../../../../base/common/resources.js";import{Schemas as h}from"../../../../base/common/network.js";import{ILogService as u}from"../../../../platform/log/common/log.js";import{IDownloadService as w}from"../../../../platform/download/common/download.js";import{IFileService as E}from"../../../../platform/files/common/files.js";import{generateUuid as y}from"../../../../base/common/uuid.js";import{ProfileAwareExtensionManagementChannelClient as P}from"../common/extensionManagementChannelClient.js";import{ExtensionIdentifier as x,ExtensionType as U,isResolverExtension as g}from"../../../../platform/extensions/common/extensions.js";import{INativeWorkbenchEnvironmentService as D}from"../../environment/electron-sandbox/environmentService.js";import{IProductService as R}from"../../../../platform/product/common/productService.js";let s=class extends P{constructor(e,o,t,i,n,r,s,a,m){super(e,o,t,i,n),this.fileService=r,this.downloadService=s,this.nativeEnvironmentService=a,this.logService=m}filterEvent(e,o){return o||this.uriIdentityService.extUri.isEqual(this.userDataProfileService.currentProfile.extensionsResource,e)}async install(e,o){const{location:t,cleanup:i}=await this.downloadVsix(e);try{return await super.install(t,o)}finally{await i()}}async downloadVsix(e){if(e.scheme===h.file)return{location:e,async cleanup(){}};this.logService.trace("Downloading extension from",e.toString());const o=S(this.nativeEnvironmentService.extensionsDownloadLocation,y());return await this.downloadService.download(e,o),this.logService.info("Downloaded extension to",o.toString()),{location:o,cleanup:async()=>{try{await this.fileService.del(o)}catch(e){this.logService.error(e)}}}}async switchExtensionsProfile(e,o,t){if(this.nativeEnvironmentService.remoteAuthority){const o=(await this.getInstalled(U.User,e)).find((e=>g(e.manifest,this.nativeEnvironmentService.remoteAuthority)));o&&(t||(t=[]),t.push(new x(o.identifier.id)))}return super.switchExtensionsProfile(e,o,t)}};s=m([t(1,R),t(2,f),t(3,p),t(4,I),t(5,E),t(6,w),t(7,D),t(8,u)],s);export{s as NativeExtensionManagementService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { IChannel } from "../../../../base/parts/ipc/common/ipc.js";
+import { DidChangeProfileEvent, IProfileAwareExtensionManagementService } from "../common/extensionManagement.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IAllowedExtensionsService, ILocalExtension, InstallOptions } from "../../../../platform/extensionManagement/common/extensionManagement.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import { IUserDataProfileService } from "../../userDataProfile/common/userDataProfile.js";
+import { joinPath } from "../../../../base/common/resources.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { IDownloadService } from "../../../../platform/download/common/download.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { generateUuid } from "../../../../base/common/uuid.js";
+import { ProfileAwareExtensionManagementChannelClient } from "../common/extensionManagementChannelClient.js";
+import { ExtensionIdentifier, ExtensionType, isResolverExtension } from "../../../../platform/extensions/common/extensions.js";
+import { INativeWorkbenchEnvironmentService } from "../../environment/electron-sandbox/environmentService.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+let NativeExtensionManagementService = class extends ProfileAwareExtensionManagementChannelClient {
+  constructor(channel, productService, allowedExtensionsService, userDataProfileService, uriIdentityService, fileService, downloadService, nativeEnvironmentService, logService) {
+    super(channel, productService, allowedExtensionsService, userDataProfileService, uriIdentityService);
+    this.fileService = fileService;
+    this.downloadService = downloadService;
+    this.nativeEnvironmentService = nativeEnvironmentService;
+    this.logService = logService;
+  }
+  static {
+    __name(this, "NativeExtensionManagementService");
+  }
+  filterEvent(profileLocation, isApplicationScoped) {
+    return isApplicationScoped || this.uriIdentityService.extUri.isEqual(this.userDataProfileService.currentProfile.extensionsResource, profileLocation);
+  }
+  async install(vsix, options) {
+    const { location, cleanup } = await this.downloadVsix(vsix);
+    try {
+      return await super.install(location, options);
+    } finally {
+      await cleanup();
+    }
+  }
+  async downloadVsix(vsix) {
+    if (vsix.scheme === Schemas.file) {
+      return { location: vsix, async cleanup() {
+      } };
+    }
+    this.logService.trace("Downloading extension from", vsix.toString());
+    const location = joinPath(this.nativeEnvironmentService.extensionsDownloadLocation, generateUuid());
+    await this.downloadService.download(vsix, location);
+    this.logService.info("Downloaded extension to", location.toString());
+    const cleanup = /* @__PURE__ */ __name(async () => {
+      try {
+        await this.fileService.del(location);
+      } catch (error) {
+        this.logService.error(error);
+      }
+    }, "cleanup");
+    return { location, cleanup };
+  }
+  async switchExtensionsProfile(previousProfileLocation, currentProfileLocation, preserveExtensions) {
+    if (this.nativeEnvironmentService.remoteAuthority) {
+      const previousInstalledExtensions = await this.getInstalled(ExtensionType.User, previousProfileLocation);
+      const resolverExtension = previousInstalledExtensions.find((e) => isResolverExtension(e.manifest, this.nativeEnvironmentService.remoteAuthority));
+      if (resolverExtension) {
+        if (!preserveExtensions) {
+          preserveExtensions = [];
+        }
+        preserveExtensions.push(new ExtensionIdentifier(resolverExtension.identifier.id));
+      }
+    }
+    return super.switchExtensionsProfile(previousProfileLocation, currentProfileLocation, preserveExtensions);
+  }
+};
+NativeExtensionManagementService = __decorateClass([
+  __decorateParam(1, IProductService),
+  __decorateParam(2, IAllowedExtensionsService),
+  __decorateParam(3, IUserDataProfileService),
+  __decorateParam(4, IUriIdentityService),
+  __decorateParam(5, IFileService),
+  __decorateParam(6, IDownloadService),
+  __decorateParam(7, INativeWorkbenchEnvironmentService),
+  __decorateParam(8, ILogService)
+], NativeExtensionManagementService);
+export {
+  NativeExtensionManagementService
+};
+//# sourceMappingURL=nativeExtensionManagementService.js.map

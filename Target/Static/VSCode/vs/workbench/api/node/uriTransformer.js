@@ -1,1 +1,42 @@
-import{URITransformer as t}from"../../../base/common/uriIpc.js";function n(e){return{transformIncoming:e=>"vscode-remote"===e.scheme?{scheme:"file",path:e.path,query:e.query,fragment:e.fragment}:"file"===e.scheme?{scheme:"vscode-local",path:e.path,query:e.query,fragment:e.fragment}:e,transformOutgoing:r=>"file"===r.scheme?{scheme:"vscode-remote",authority:e,path:r.path,query:r.query,fragment:r.fragment}:"vscode-local"===r.scheme?{scheme:"file",path:r.path,query:r.query,fragment:r.fragment}:r,transformOutgoingScheme:e=>"file"===e?"vscode-remote":"vscode-local"===e?"file":e}}function o(e){return new t(n(e))}export{o as createURITransformer};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { UriParts, IRawURITransformer, URITransformer, IURITransformer } from "../../../base/common/uriIpc.js";
+function createRawURITransformer(remoteAuthority) {
+  return {
+    transformIncoming: /* @__PURE__ */ __name((uri) => {
+      if (uri.scheme === "vscode-remote") {
+        return { scheme: "file", path: uri.path, query: uri.query, fragment: uri.fragment };
+      }
+      if (uri.scheme === "file") {
+        return { scheme: "vscode-local", path: uri.path, query: uri.query, fragment: uri.fragment };
+      }
+      return uri;
+    }, "transformIncoming"),
+    transformOutgoing: /* @__PURE__ */ __name((uri) => {
+      if (uri.scheme === "file") {
+        return { scheme: "vscode-remote", authority: remoteAuthority, path: uri.path, query: uri.query, fragment: uri.fragment };
+      }
+      if (uri.scheme === "vscode-local") {
+        return { scheme: "file", path: uri.path, query: uri.query, fragment: uri.fragment };
+      }
+      return uri;
+    }, "transformOutgoing"),
+    transformOutgoingScheme: /* @__PURE__ */ __name((scheme) => {
+      if (scheme === "file") {
+        return "vscode-remote";
+      } else if (scheme === "vscode-local") {
+        return "file";
+      }
+      return scheme;
+    }, "transformOutgoingScheme")
+  };
+}
+__name(createRawURITransformer, "createRawURITransformer");
+function createURITransformer(remoteAuthority) {
+  return new URITransformer(createRawURITransformer(remoteAuthority));
+}
+__name(createURITransformer, "createURITransformer");
+export {
+  createURITransformer
+};
+//# sourceMappingURL=uriTransformer.js.map

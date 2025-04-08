@@ -1,1 +1,93 @@
-import{OffsetRange as c}from"../core/offsetRange.js";import"../languages.js";import{LineTokens as k}from"./lineTokens.js";class a{constructor(t){this._tokenInfo=t}static fromLineTokens(t){const e=[];for(let n=0;n<t.getCount();n++)e.push(new i(t.getTokenText(n),t.getMetadata(n)));return a.create(e)}static create(t){return new a(t)}toLineTokens(t){return k.createFromTextAndMetadata(this.map(((t,e)=>({text:e.text,metadata:e.metadata}))),t)}forEach(t){let e=0;for(const n of this._tokenInfo){t(new c(e,e+n.text.length),n),e+=n.text.length}}map(t){const e=[];let n=0;for(const a of this._tokenInfo){const o=new c(n,n+a.text.length);e.push(t(o,a)),n+=a.text.length}return e}slice(t){const e=[];let n=0;for(const a of this._tokenInfo){const o=n,s=o+a.text.length;if(s>t.start){if(o>=t.endExclusive)break;const n=Math.max(0,t.start-o),r=Math.max(0,s-t.endExclusive);e.push(new i(a.text.slice(n,a.text.length-r),a.metadata))}n+=a.text.length}return a.create(e)}append(t){const e=this._tokenInfo.concat(t._tokenInfo);return a.create(e)}}class i{constructor(t,e){this.text=t,this.metadata=e}}class p{_tokens=[];add(t,e){this._tokens.push(new i(t,e))}build(){return a.create(this._tokens)}}export{a as TokenWithTextArray,p as TokenWithTextArrayBuilder,i as TokenWithTextInfo};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { OffsetRange } from "../core/offsetRange.js";
+import { ILanguageIdCodec } from "../languages.js";
+import { LineTokens } from "./lineTokens.js";
+class TokenWithTextArray {
+  constructor(_tokenInfo) {
+    this._tokenInfo = _tokenInfo;
+  }
+  static {
+    __name(this, "TokenWithTextArray");
+  }
+  static fromLineTokens(lineTokens) {
+    const tokenInfo = [];
+    for (let i = 0; i < lineTokens.getCount(); i++) {
+      tokenInfo.push(new TokenWithTextInfo(lineTokens.getTokenText(i), lineTokens.getMetadata(i)));
+    }
+    return TokenWithTextArray.create(tokenInfo);
+  }
+  static create(tokenInfo) {
+    return new TokenWithTextArray(tokenInfo);
+  }
+  toLineTokens(decoder) {
+    return LineTokens.createFromTextAndMetadata(this.map((_r, t) => ({ text: t.text, metadata: t.metadata })), decoder);
+  }
+  forEach(cb) {
+    let lengthSum = 0;
+    for (const tokenInfo of this._tokenInfo) {
+      const range = new OffsetRange(lengthSum, lengthSum + tokenInfo.text.length);
+      cb(range, tokenInfo);
+      lengthSum += tokenInfo.text.length;
+    }
+  }
+  map(cb) {
+    const result = [];
+    let lengthSum = 0;
+    for (const tokenInfo of this._tokenInfo) {
+      const range = new OffsetRange(lengthSum, lengthSum + tokenInfo.text.length);
+      result.push(cb(range, tokenInfo));
+      lengthSum += tokenInfo.text.length;
+    }
+    return result;
+  }
+  slice(range) {
+    const result = [];
+    let lengthSum = 0;
+    for (const tokenInfo of this._tokenInfo) {
+      const tokenStart = lengthSum;
+      const tokenEndEx = tokenStart + tokenInfo.text.length;
+      if (tokenEndEx > range.start) {
+        if (tokenStart >= range.endExclusive) {
+          break;
+        }
+        const deltaBefore = Math.max(0, range.start - tokenStart);
+        const deltaAfter = Math.max(0, tokenEndEx - range.endExclusive);
+        result.push(new TokenWithTextInfo(tokenInfo.text.slice(deltaBefore, tokenInfo.text.length - deltaAfter), tokenInfo.metadata));
+      }
+      lengthSum += tokenInfo.text.length;
+    }
+    return TokenWithTextArray.create(result);
+  }
+  append(other) {
+    const result = this._tokenInfo.concat(other._tokenInfo);
+    return TokenWithTextArray.create(result);
+  }
+}
+class TokenWithTextInfo {
+  constructor(text, metadata) {
+    this.text = text;
+    this.metadata = metadata;
+  }
+  static {
+    __name(this, "TokenWithTextInfo");
+  }
+}
+class TokenWithTextArrayBuilder {
+  static {
+    __name(this, "TokenWithTextArrayBuilder");
+  }
+  _tokens = [];
+  add(text, metadata) {
+    this._tokens.push(new TokenWithTextInfo(text, metadata));
+  }
+  build() {
+    return TokenWithTextArray.create(this._tokens);
+  }
+}
+export {
+  TokenWithTextArray,
+  TokenWithTextArrayBuilder,
+  TokenWithTextInfo
+};
+//# sourceMappingURL=tokenWithTextArray.js.map

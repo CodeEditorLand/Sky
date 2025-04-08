@@ -1,1 +1,182 @@
-import{ShiftCommand as C}from"../commands/shiftCommand.js";import{CompositionSurroundSelectionCommand as T}from"../commands/surroundSelectionCommand.js";import{EditOperationResult as h,EditOperationType as I,isQuote as S}from"../cursorCommon.js";import"../core/range.js";import"../core/selection.js";import"../core/position.js";import"../editorCommon.js";import"../model.js";import{AutoClosingOpenCharTypeOperation as g,AutoClosingOvertypeOperation as y,AutoClosingOvertypeWithInterceptorsOperation as x,AutoIndentOperation as R,CompositionOperation as M,CompositionEndOvertypeOperation as E,EnterOperation as P,InterceptorElectricCharOperation as z,PasteOperation as v,shiftIndent as A,shouldSurroundChar as w,SimpleCharacterTypeOperation as W,SurroundSelectionOperation as k,TabOperation as Q,TypeWithoutInterceptorsOperation as U,unshiftIndent as B}from"./cursorTypeEditOperations.js";class tt{static indent(t,e,n){if(null===e||null===n)return[];const i=[];for(let e=0,o=n.length;e<o;e++)i[e]=new C(n[e],{isUnshift:!1,tabSize:t.tabSize,indentSize:t.indentSize,insertSpaces:t.insertSpaces,useTabStops:t.useTabStops,autoIndent:t.autoIndent},t.languageConfigurationService);return i}static outdent(t,e,n){const i=[];for(let e=0,o=n.length;e<o;e++)i[e]=new C(n[e],{isUnshift:!0,tabSize:t.tabSize,indentSize:t.indentSize,insertSpaces:t.insertSpaces,useTabStops:t.useTabStops,autoIndent:t.autoIndent},t.languageConfigurationService);return i}static shiftIndent(t,e,n){return A(t,e,n)}static unshiftIndent(t,e,n){return B(t,e,n)}static paste(t,e,n,i,o,s){return v.getEdits(t,e,n,i,o,s)}static tab(t,e,n){return Q.getCommands(t,e,n)}static compositionType(t,e,n,i,o,s,r,a){return M.getEdits(t,e,n,i,o,s,r,a)}static compositionEndWithInterceptors(t,e,n,i,o,s){if(!i)return null;let r=null;for(const t of i)if(null===r)r=t.insertedText;else if(r!==t.insertedText)return null;if(!r||1!==r.length)return E.getEdits(e,i);const a=r;let d=!1;for(const t of i)if(0!==t.deletedText.length){d=!0;break}if(d){if(!w(e,a)||!e.surroundingPairs.hasOwnProperty(a))return null;const t=S(a);for(const e of i)if(0!==e.deletedSelectionStart||e.deletedSelectionEnd!==e.deletedText.length||/^[ \t]+$/.test(e.deletedText)||t&&S(e.deletedText))return null;const n=[];for(const t of o){if(!t.isEmpty())return null;n.push(t.getPosition())}if(n.length!==i.length)return null;const s=[];for(let t=0,o=n.length;t<o;t++)s.push(new T(n[t],i[t].deletedText,e.surroundingPairs[a]));return new h(I.TypingOther,s,{shouldPushStackElementBefore:!0,shouldPushStackElementAfter:!1})}const u=x.getEdits(e,n,o,s,a);if(void 0!==u)return u;const l=g.getEdits(e,n,o,a,!0,!1);return void 0!==l?l:E.getEdits(e,i)}static typeWithInterceptors(t,e,n,i,o,s,r){const a=P.getEdits(n,i,o,r,t);if(void 0!==a)return a;const d=R.getEdits(n,i,o,r,t);if(void 0!==d)return d;const u=y.getEdits(e,n,i,o,s,r);if(void 0!==u)return u;const l=g.getEdits(n,i,o,r,!1,t);if(void 0!==l)return l;const c=k.getEdits(n,i,o,r,t);if(void 0!==c)return c;const p=z.getEdits(e,n,i,o,r,t);return void 0!==p?p:W.getEdits(n,e,o,r,t)}static typeWithoutInterceptors(t,e,n,i,o){return U.getEdits(t,i,o)}}class et{constructor(t,e,n,i,o,s,r){this.deletedText=t,this.deletedSelectionStart=e,this.deletedSelectionEnd=n,this.insertedText=i,this.insertedSelectionStart=o,this.insertedSelectionEnd=s,this.insertedTextRange=r}}export{et as CompositionOutcome,tt as TypeOperations};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { ShiftCommand } from "../commands/shiftCommand.js";
+import { CompositionSurroundSelectionCommand } from "../commands/surroundSelectionCommand.js";
+import { CursorConfiguration, EditOperationResult, EditOperationType, ICursorSimpleModel, isQuote } from "../cursorCommon.js";
+import { Range } from "../core/range.js";
+import { Selection } from "../core/selection.js";
+import { Position } from "../core/position.js";
+import { ICommand } from "../editorCommon.js";
+import { ITextModel } from "../model.js";
+import { AutoClosingOpenCharTypeOperation, AutoClosingOvertypeOperation, AutoClosingOvertypeWithInterceptorsOperation, AutoIndentOperation, CompositionOperation, CompositionEndOvertypeOperation, EnterOperation, InterceptorElectricCharOperation, PasteOperation, shiftIndent, shouldSurroundChar, SimpleCharacterTypeOperation, SurroundSelectionOperation, TabOperation, TypeWithoutInterceptorsOperation, unshiftIndent } from "./cursorTypeEditOperations.js";
+class TypeOperations {
+  static {
+    __name(this, "TypeOperations");
+  }
+  static indent(config, model, selections) {
+    if (model === null || selections === null) {
+      return [];
+    }
+    const commands = [];
+    for (let i = 0, len = selections.length; i < len; i++) {
+      commands[i] = new ShiftCommand(selections[i], {
+        isUnshift: false,
+        tabSize: config.tabSize,
+        indentSize: config.indentSize,
+        insertSpaces: config.insertSpaces,
+        useTabStops: config.useTabStops,
+        autoIndent: config.autoIndent
+      }, config.languageConfigurationService);
+    }
+    return commands;
+  }
+  static outdent(config, model, selections) {
+    const commands = [];
+    for (let i = 0, len = selections.length; i < len; i++) {
+      commands[i] = new ShiftCommand(selections[i], {
+        isUnshift: true,
+        tabSize: config.tabSize,
+        indentSize: config.indentSize,
+        insertSpaces: config.insertSpaces,
+        useTabStops: config.useTabStops,
+        autoIndent: config.autoIndent
+      }, config.languageConfigurationService);
+    }
+    return commands;
+  }
+  static shiftIndent(config, indentation, count) {
+    return shiftIndent(config, indentation, count);
+  }
+  static unshiftIndent(config, indentation, count) {
+    return unshiftIndent(config, indentation, count);
+  }
+  static paste(config, model, selections, text, pasteOnNewLine, multicursorText) {
+    return PasteOperation.getEdits(config, model, selections, text, pasteOnNewLine, multicursorText);
+  }
+  static tab(config, model, selections) {
+    return TabOperation.getCommands(config, model, selections);
+  }
+  static compositionType(prevEditOperationType, config, model, selections, text, replacePrevCharCnt, replaceNextCharCnt, positionDelta) {
+    return CompositionOperation.getEdits(prevEditOperationType, config, model, selections, text, replacePrevCharCnt, replaceNextCharCnt, positionDelta);
+  }
+  /**
+   * This is very similar with typing, but the character is already in the text buffer!
+   */
+  static compositionEndWithInterceptors(prevEditOperationType, config, model, compositions, selections, autoClosedCharacters) {
+    if (!compositions) {
+      return null;
+    }
+    let insertedText = null;
+    for (const composition of compositions) {
+      if (insertedText === null) {
+        insertedText = composition.insertedText;
+      } else if (insertedText !== composition.insertedText) {
+        return null;
+      }
+    }
+    if (!insertedText || insertedText.length !== 1) {
+      return CompositionEndOvertypeOperation.getEdits(config, compositions);
+    }
+    const ch = insertedText;
+    let hasDeletion = false;
+    for (const composition of compositions) {
+      if (composition.deletedText.length !== 0) {
+        hasDeletion = true;
+        break;
+      }
+    }
+    if (hasDeletion) {
+      if (!shouldSurroundChar(config, ch) || !config.surroundingPairs.hasOwnProperty(ch)) {
+        return null;
+      }
+      const isTypingAQuoteCharacter = isQuote(ch);
+      for (const composition of compositions) {
+        if (composition.deletedSelectionStart !== 0 || composition.deletedSelectionEnd !== composition.deletedText.length) {
+          return null;
+        }
+        if (/^[ \t]+$/.test(composition.deletedText)) {
+          return null;
+        }
+        if (isTypingAQuoteCharacter && isQuote(composition.deletedText)) {
+          return null;
+        }
+      }
+      const positions = [];
+      for (const selection of selections) {
+        if (!selection.isEmpty()) {
+          return null;
+        }
+        positions.push(selection.getPosition());
+      }
+      if (positions.length !== compositions.length) {
+        return null;
+      }
+      const commands = [];
+      for (let i = 0, len = positions.length; i < len; i++) {
+        commands.push(new CompositionSurroundSelectionCommand(positions[i], compositions[i].deletedText, config.surroundingPairs[ch]));
+      }
+      return new EditOperationResult(EditOperationType.TypingOther, commands, {
+        shouldPushStackElementBefore: true,
+        shouldPushStackElementAfter: false
+      });
+    }
+    const autoClosingOvertypeEdits = AutoClosingOvertypeWithInterceptorsOperation.getEdits(config, model, selections, autoClosedCharacters, ch);
+    if (autoClosingOvertypeEdits !== void 0) {
+      return autoClosingOvertypeEdits;
+    }
+    const autoClosingOpenCharEdits = AutoClosingOpenCharTypeOperation.getEdits(config, model, selections, ch, true, false);
+    if (autoClosingOpenCharEdits !== void 0) {
+      return autoClosingOpenCharEdits;
+    }
+    return CompositionEndOvertypeOperation.getEdits(config, compositions);
+  }
+  static typeWithInterceptors(isDoingComposition, prevEditOperationType, config, model, selections, autoClosedCharacters, ch) {
+    const enterEdits = EnterOperation.getEdits(config, model, selections, ch, isDoingComposition);
+    if (enterEdits !== void 0) {
+      return enterEdits;
+    }
+    const autoIndentEdits = AutoIndentOperation.getEdits(config, model, selections, ch, isDoingComposition);
+    if (autoIndentEdits !== void 0) {
+      return autoIndentEdits;
+    }
+    const autoClosingOverTypeEdits = AutoClosingOvertypeOperation.getEdits(prevEditOperationType, config, model, selections, autoClosedCharacters, ch);
+    if (autoClosingOverTypeEdits !== void 0) {
+      return autoClosingOverTypeEdits;
+    }
+    const autoClosingOpenCharEdits = AutoClosingOpenCharTypeOperation.getEdits(config, model, selections, ch, false, isDoingComposition);
+    if (autoClosingOpenCharEdits !== void 0) {
+      return autoClosingOpenCharEdits;
+    }
+    const surroundSelectionEdits = SurroundSelectionOperation.getEdits(config, model, selections, ch, isDoingComposition);
+    if (surroundSelectionEdits !== void 0) {
+      return surroundSelectionEdits;
+    }
+    const interceptorElectricCharOperation = InterceptorElectricCharOperation.getEdits(prevEditOperationType, config, model, selections, ch, isDoingComposition);
+    if (interceptorElectricCharOperation !== void 0) {
+      return interceptorElectricCharOperation;
+    }
+    return SimpleCharacterTypeOperation.getEdits(config, prevEditOperationType, selections, ch, isDoingComposition);
+  }
+  static typeWithoutInterceptors(prevEditOperationType, config, model, selections, str) {
+    return TypeWithoutInterceptorsOperation.getEdits(prevEditOperationType, selections, str);
+  }
+}
+class CompositionOutcome {
+  constructor(deletedText, deletedSelectionStart, deletedSelectionEnd, insertedText, insertedSelectionStart, insertedSelectionEnd, insertedTextRange) {
+    this.deletedText = deletedText;
+    this.deletedSelectionStart = deletedSelectionStart;
+    this.deletedSelectionEnd = deletedSelectionEnd;
+    this.insertedText = insertedText;
+    this.insertedSelectionStart = insertedSelectionStart;
+    this.insertedSelectionEnd = insertedSelectionEnd;
+    this.insertedTextRange = insertedTextRange;
+  }
+  static {
+    __name(this, "CompositionOutcome");
+  }
+}
+export {
+  CompositionOutcome,
+  TypeOperations
+};
+//# sourceMappingURL=cursorTypeOperations.js.map

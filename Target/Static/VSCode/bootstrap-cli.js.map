@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../Dependency/Microsoft/Dependency/Editor/src/bootstrap-cli.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\n// Delete `VSCODE_CWD` very early. We have seen\r\n// reports where `code .` would use the wrong\r\n// current working directory due to our variable\r\n// somehow escaping to the parent shell\r\n// (https://github.com/microsoft/vscode/issues/126399)\r\ndelete process.env['VSCODE_CWD'];\r\n"],
+  "mappings": "AAUA,OAAO,QAAQ,IAAI,YAAY;",
+  "names": []
+}

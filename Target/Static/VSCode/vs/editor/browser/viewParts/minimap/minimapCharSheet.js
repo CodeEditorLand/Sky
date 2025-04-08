@@ -1,1 +1,39 @@
-var r=(_=>(_[_.START_CH_CODE=32]="START_CH_CODE",_[_.END_CH_CODE=126]="END_CH_CODE",_[_.UNKNOWN_CODE=65533]="UNKNOWN_CODE",_[_.CHAR_COUNT=96]="CHAR_COUNT",_[_.SAMPLED_CHAR_HEIGHT=16]="SAMPLED_CHAR_HEIGHT",_[_.SAMPLED_CHAR_WIDTH=10]="SAMPLED_CHAR_WIDTH",_[_.BASE_CHAR_HEIGHT=2]="BASE_CHAR_HEIGHT",_[_.BASE_CHAR_WIDTH=1]="BASE_CHAR_WIDTH",_[_.RGBA_CHANNELS_CNT=4]="RGBA_CHANNELS_CNT",_[_.RGBA_SAMPLED_ROW_WIDTH=3840]="RGBA_SAMPLED_ROW_WIDTH",_))(r||{});const R=(()=>{const _=[];for(let C=32;C<=126;C++)_.push(C);return _.push(65533),_})(),C=(_,C)=>(_-=32)<0||_>96?C<=2?(_+96)%96:95:_;export{r as Constants,R as allCharCodes,C as getCharIndex};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var Constants = /* @__PURE__ */ ((Constants2) => {
+  Constants2[Constants2["START_CH_CODE"] = 32] = "START_CH_CODE";
+  Constants2[Constants2["END_CH_CODE"] = 126] = "END_CH_CODE";
+  Constants2[Constants2["UNKNOWN_CODE"] = 65533] = "UNKNOWN_CODE";
+  Constants2[Constants2["CHAR_COUNT"] = 96] = "CHAR_COUNT";
+  Constants2[Constants2["SAMPLED_CHAR_HEIGHT"] = 16] = "SAMPLED_CHAR_HEIGHT";
+  Constants2[Constants2["SAMPLED_CHAR_WIDTH"] = 10] = "SAMPLED_CHAR_WIDTH";
+  Constants2[Constants2["BASE_CHAR_HEIGHT"] = 2] = "BASE_CHAR_HEIGHT";
+  Constants2[Constants2["BASE_CHAR_WIDTH"] = 1] = "BASE_CHAR_WIDTH";
+  Constants2[Constants2["RGBA_CHANNELS_CNT"] = 4] = "RGBA_CHANNELS_CNT";
+  Constants2[Constants2["RGBA_SAMPLED_ROW_WIDTH"] = 3840] = "RGBA_SAMPLED_ROW_WIDTH";
+  return Constants2;
+})(Constants || {});
+const allCharCodes = (() => {
+  const v = [];
+  for (let i = 32 /* START_CH_CODE */; i <= 126 /* END_CH_CODE */; i++) {
+    v.push(i);
+  }
+  v.push(65533 /* UNKNOWN_CODE */);
+  return v;
+})();
+const getCharIndex = /* @__PURE__ */ __name((chCode, fontScale) => {
+  chCode -= 32 /* START_CH_CODE */;
+  if (chCode < 0 || chCode > 96 /* CHAR_COUNT */) {
+    if (fontScale <= 2) {
+      return (chCode + 96 /* CHAR_COUNT */) % 96 /* CHAR_COUNT */;
+    }
+    return 96 /* CHAR_COUNT */ - 1;
+  }
+  return chCode;
+}, "getCharIndex");
+export {
+  Constants,
+  allCharCodes,
+  getCharIndex
+};
+//# sourceMappingURL=minimapCharSheet.js.map

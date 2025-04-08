@@ -1,1 +1,432 @@
-var O=Object.defineProperty;var w=Object.getOwnPropertyDescriptor;var l=(s,e,i,t)=>{for(var r=t>1?void 0:t?w(e,i):e,o=s.length-1,d;o>=0;o--)(d=s[o])&&(r=(t?d(e,i,r):d(r))||r);return t&&r&&O(e,i,r),r},n=(s,e)=>(i,t)=>e(i,t,s);import{DisposableStore as K}from"../../../../base/common/lifecycle.js";import{Emitter as f,Event as C}from"../../../../base/common/event.js";import{ISCMViewService as k,ISCMService as D,ISCMRepositorySortKey as a}from"../common/scm.js";import{Iterable as c}from"../../../../base/common/iterator.js";import{IInstantiationService as V}from"../../../../platform/instantiation/common/instantiation.js";import{SCMMenus as E}from"./menus.js";import{IStorageService as P,StorageScope as _,StorageTarget as F}from"../../../../platform/storage/common/storage.js";import{debounce as Q}from"../../../../base/common/decorators.js";import{IWorkspaceContextService as U}from"../../../../platform/workspace/common/workspace.js";import{compareFileNames as L,comparePaths as g}from"../../../../base/common/comparers.js";import{basename as T}from"../../../../base/common/resources.js";import{binarySearch as W}from"../../../../base/common/arrays.js";import{IConfigurationService as A}from"../../../../platform/configuration/common/configuration.js";import{IContextKeyService as N,RawContextKey as q}from"../../../../platform/contextkey/common/contextkey.js";import{IExtensionService as H}from"../../../services/extensions/common/extensions.js";import{derivedObservableWithCache as $,derivedOpts as z,latestChangedValue as J,observableFromEventOpts as M,observableValue as j}from"../../../../base/common/observable.js";import{IEditorService as B}from"../../../services/editor/common/editorService.js";import{EditorResourceAccessor as G}from"../../../common/editor.js";import"../../../common/editor/editorInput.js";import{IQuickInputService as X}from"../../../../platform/quickinput/common/quickInput.js";import{ThemeIcon as Y}from"../../../../base/common/themables.js";import{Codicon as Z}from"../../../../base/common/codicons.js";import{localize as ee}from"../../../../nls.js";function u(s){return`${s.contextValue}:${s.label}${s.rootUri?`:${s.rootUri.toString()}`:""}`}function x(s,e){if(!e.provider.rootUri)return e.provider.label;const i=s.getWorkspaceFolder(e.provider.rootUri);return i?.uri.toString()===e.provider.rootUri.toString()?i.name:T(e.provider.rootUri)}const ie={RepositorySortKey:new q("scmRepositorySortKey",a.DiscoveryTime)};let S=class{constructor(e,i,t,r){this._placeHolder=e;this._autoQuickItemDescription=i;this._quickInputService=t;this._scmViewService=r;this._autoQuickPickItem={label:ee("auto","Auto"),description:this._autoQuickItemDescription,repository:"auto"}}_autoQuickPickItem;async pickRepository(){const e=[this._autoQuickPickItem,{type:"separator"}];return e.push(...this._scmViewService.repositories.map(i=>({label:i.provider.name,description:i.provider.rootUri?.fsPath,iconClass:Y.asClassName(Z.repo),repository:i}))),this._quickInputService.pick(e,{placeHolder:this._placeHolder})}};S=l([n(2,X),n(3,k)],S);let v=class{constructor(e,i,t,r,o,d,y,I){this.scmService=e;this.editorService=t;this.configurationService=d;this.storageService=y;this.workspaceContextService=I;this.menus=o.createInstance(E),this._focusedRepositoryObs=M({owner:this,equalsFn:()=>!1},this.onDidFocusRepository,()=>this.focusedRepository),this._activeEditorObs=M({owner:this,equalsFn:()=>!1},this.editorService.onDidActiveEditorChange,()=>this.editorService.activeEditor),this._activeEditorRepositoryObs=$(this,(p,h)=>{const R=this._activeEditorObs.read(p),m=G.getOriginalUri(R);if(!m)return h;const b=this.scmService.getRepository(m);return b?Object.create(b):h}),this._activeRepositoryPinnedObs=j(this,void 0),this._activeRepositoryObs=J(this,[this._activeEditorRepositoryObs,this._focusedRepositoryObs]),this.activeRepository=z({owner:this,equalsFn:(p,h)=>p?.id===h?.id},p=>{const h=this._activeRepositoryObs.read(p);return this._activeRepositoryPinnedObs.read(p)??h});try{this.previousState=JSON.parse(y.get("scm:view:visibleRepositories",_.WORKSPACE,""))}catch{}this._repositoriesSortKey=this.previousState?.sortKey??this.getViewSortOrder(),this._sortKeyContextKey=ie.RepositorySortKey.bindTo(i),this._sortKeyContextKey.set(this._repositoriesSortKey),e.onDidAddRepository(this.onDidAddRepository,this,this.disposables),e.onDidRemoveRepository(this.onDidRemoveRepository,this,this.disposables);for(const p of e.repositories)this.onDidAddRepository(p);y.onWillSaveState(this.onWillSaveState,this,this.disposables),r.onWillStop(()=>{this.onWillSaveState(),this.didFinishLoading=!1},this,this.disposables)}menus;didFinishLoading=!1;didSelectRepository=!1;previousState;disposables=new K;_repositories=[];get repositories(){return this._repositories.map(e=>e.repository)}get visibleRepositories(){return this._repositoriesSortKey===a.DiscoveryTime?this._repositories.filter(e=>e.selectionIndex!==-1).sort((e,i)=>e.selectionIndex-i.selectionIndex).map(e=>e.repository):this._repositories.filter(e=>e.selectionIndex!==-1).map(e=>e.repository)}set visibleRepositories(e){const i=new Set(e),t=new Set,r=new Set;for(const o of this._repositories)!i.has(o.repository)&&o.selectionIndex!==-1&&(o.selectionIndex=-1,r.add(o.repository)),i.has(o.repository)&&(o.selectionIndex===-1&&t.add(o.repository),o.selectionIndex=e.indexOf(o.repository));t.size===0&&r.size===0||(this._onDidSetVisibleRepositories.fire({added:t,removed:r}),this._repositories.find(o=>o.focused&&o.selectionIndex===-1)&&this.focus(this._repositories.find(o=>o.selectionIndex!==-1)?.repository))}_onDidChangeRepositories=new f;onDidChangeRepositories=this._onDidChangeRepositories.event;_onDidSetVisibleRepositories=new f;onDidChangeVisibleRepositories=C.any(this._onDidSetVisibleRepositories.event,C.debounce(this._onDidChangeRepositories.event,(e,i)=>{if(!e)return i;const t=new Set(e.added),r=new Set(e.removed);for(const o of i.added)r.has(o)?r.delete(o):t.add(o);for(const o of i.removed)t.has(o)?t.delete(o):r.add(o);return{added:t,removed:r}},0,void 0,void 0,void 0,this.disposables));get focusedRepository(){return this._repositories.find(e=>e.focused)?.repository}_onDidFocusRepository=new f;onDidFocusRepository=this._onDidFocusRepository.event;activeRepository;_activeEditorObs;_activeEditorRepositoryObs;_activeRepositoryObs;_activeRepositoryPinnedObs;_focusedRepositoryObs;_repositoriesSortKey;_sortKeyContextKey;onDidAddRepository(e){this.didFinishLoading||this.eventuallyFinishLoading();const i={repository:e,discoveryTime:Date.now(),focused:!1,selectionIndex:-1};let t=c.empty();if(this.previousState&&!this.didFinishLoading){const o=this.previousState.all.indexOf(u(e.provider));if(o===-1){const d=[];this.insertRepositoryView(this._repositories,i),this._repositories.forEach((y,I)=>{y.selectionIndex===-1&&d.push(y.repository),y.selectionIndex=I}),this._onDidChangeRepositories.fire({added:d,removed:c.empty()}),this.didSelectRepository=!1;return}if(this.previousState.visible.indexOf(o)===-1){if(this.didSelectRepository){this.insertRepositoryView(this._repositories,i),this._onDidChangeRepositories.fire({added:c.empty(),removed:c.empty()});return}}else this.didSelectRepository||(t=[...this.visibleRepositories],this._repositories.forEach(d=>{d.focused=!1,d.selectionIndex=-1}),this.didSelectRepository=!0)}const r=this.getMaxSelectionIndex();this.insertRepositoryView(this._repositories,{...i,selectionIndex:r+1}),this._onDidChangeRepositories.fire({added:[i.repository],removed:t}),this._repositories.find(o=>o.focused)||this.focus(e)}onDidRemoveRepository(e){this.didFinishLoading||this.eventuallyFinishLoading();const i=this._repositories.findIndex(o=>o.repository===e);if(i===-1)return;let t=c.empty();const r=this._repositories.splice(i,1);this._repositories.length>0&&this.visibleRepositories.length===0&&(this._repositories[0].selectionIndex=0,t=[this._repositories[0].repository]),this._onDidChangeRepositories.fire({added:t,removed:r.map(o=>o.repository)}),r.length===1&&r[0].focused&&this.visibleRepositories.length>0&&this.focus(this.visibleRepositories[0])}isVisible(e){return this._repositories.find(i=>i.repository===e)?.selectionIndex!==-1}toggleVisibility(e,i){if(typeof i>"u")i=!this.isVisible(e);else if(this.isVisible(e)===i)return;if(i)this.visibleRepositories=[...this.visibleRepositories,e];else{const t=this.visibleRepositories.indexOf(e);t>-1&&(this.visibleRepositories=[...this.visibleRepositories.slice(0,t),...this.visibleRepositories.slice(t+1)])}}toggleSortKey(e){this._repositoriesSortKey=e,this._sortKeyContextKey.set(this._repositoriesSortKey),this._repositories.sort(this.compareRepositories.bind(this)),this._onDidChangeRepositories.fire({added:c.empty(),removed:c.empty()})}focus(e){e&&!this.isVisible(e)||(this._repositories.forEach(i=>i.focused=i.repository===e),this._repositories.find(i=>i.focused)&&this._onDidFocusRepository.fire(e))}pinActiveRepository(e){this._activeRepositoryPinnedObs.set(e,void 0)}compareRepositories(e,i){if(this._repositoriesSortKey===a.DiscoveryTime)return e.discoveryTime-i.discoveryTime;if(this._repositoriesSortKey==="path"&&e.repository.provider.rootUri&&i.repository.provider.rootUri)return g(e.repository.provider.rootUri.fsPath,i.repository.provider.rootUri.fsPath);const t=x(this.workspaceContextService,e.repository),r=x(this.workspaceContextService,i.repository),o=L(t,r);return o===0&&e.repository.provider.rootUri&&i.repository.provider.rootUri?g(e.repository.provider.rootUri.fsPath,i.repository.provider.rootUri.fsPath):o}getMaxSelectionIndex(){return this._repositories.length===0?-1:Math.max(...this._repositories.map(e=>e.selectionIndex))}getViewSortOrder(){switch(this.configurationService.getValue("scm.repositories.sortOrder")){case"discovery time":return a.DiscoveryTime;case"name":return a.Name;case"path":return a.Path;default:return a.DiscoveryTime}}insertRepositoryView(e,i){const t=W(e,i,this.compareRepositories.bind(this));e.splice(t<0?~t:t,0,i)}onWillSaveState(){if(!this.didFinishLoading)return;const e=this.repositories.map(t=>u(t.provider)),i=this.visibleRepositories.map(t=>e.indexOf(u(t.provider)));this.previousState={all:e,sortKey:this._repositoriesSortKey,visible:i},this.storageService.store("scm:view:visibleRepositories",JSON.stringify(this.previousState),_.WORKSPACE,F.MACHINE)}eventuallyFinishLoading(){this.finishLoading()}finishLoading(){this.didFinishLoading||(this.didFinishLoading=!0)}dispose(){this.disposables.dispose(),this._onDidChangeRepositories.dispose(),this._onDidSetVisibleRepositories.dispose()}};l([Q(5e3)],v.prototype,"eventuallyFinishLoading",1),v=l([n(0,D),n(1,N),n(2,B),n(3,H),n(4,V),n(5,A),n(6,P),n(7,U)],v);export{ie as RepositoryContextKeys,S as RepositoryPicker,v as SCMViewService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { DisposableStore } from "../../../../base/common/lifecycle.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { ISCMViewService, ISCMRepository, ISCMService, ISCMViewVisibleRepositoryChangeEvent, ISCMMenus, ISCMProvider, ISCMRepositorySortKey } from "../common/scm.js";
+import { Iterable } from "../../../../base/common/iterator.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { SCMMenus } from "./menus.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { debounce } from "../../../../base/common/decorators.js";
+import { IWorkspaceContextService } from "../../../../platform/workspace/common/workspace.js";
+import { compareFileNames, comparePaths } from "../../../../base/common/comparers.js";
+import { basename } from "../../../../base/common/resources.js";
+import { binarySearch } from "../../../../base/common/arrays.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IContextKey, IContextKeyService, RawContextKey } from "../../../../platform/contextkey/common/contextkey.js";
+import { IExtensionService } from "../../../services/extensions/common/extensions.js";
+import { derivedObservableWithCache, derivedOpts, IObservable, ISettableObservable, latestChangedValue, observableFromEventOpts, observableValue } from "../../../../base/common/observable.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { EditorResourceAccessor } from "../../../common/editor.js";
+import { EditorInput } from "../../../common/editor/editorInput.js";
+import { IQuickInputService, IQuickPickItem, IQuickPickSeparator } from "../../../../platform/quickinput/common/quickInput.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { localize } from "../../../../nls.js";
+function getProviderStorageKey(provider) {
+  return `${provider.contextValue}:${provider.label}${provider.rootUri ? `:${provider.rootUri.toString()}` : ""}`;
+}
+__name(getProviderStorageKey, "getProviderStorageKey");
+function getRepositoryName(workspaceContextService, repository) {
+  if (!repository.provider.rootUri) {
+    return repository.provider.label;
+  }
+  const folder = workspaceContextService.getWorkspaceFolder(repository.provider.rootUri);
+  return folder?.uri.toString() === repository.provider.rootUri.toString() ? folder.name : basename(repository.provider.rootUri);
+}
+__name(getRepositoryName, "getRepositoryName");
+const RepositoryContextKeys = {
+  RepositorySortKey: new RawContextKey("scmRepositorySortKey", ISCMRepositorySortKey.DiscoveryTime)
+};
+let RepositoryPicker = class {
+  constructor(_placeHolder, _autoQuickItemDescription, _quickInputService, _scmViewService) {
+    this._placeHolder = _placeHolder;
+    this._autoQuickItemDescription = _autoQuickItemDescription;
+    this._quickInputService = _quickInputService;
+    this._scmViewService = _scmViewService;
+    this._autoQuickPickItem = {
+      label: localize("auto", "Auto"),
+      description: this._autoQuickItemDescription,
+      repository: "auto"
+    };
+  }
+  static {
+    __name(this, "RepositoryPicker");
+  }
+  _autoQuickPickItem;
+  async pickRepository() {
+    const picks = [
+      this._autoQuickPickItem,
+      { type: "separator" }
+    ];
+    picks.push(...this._scmViewService.repositories.map((r) => ({
+      label: r.provider.name,
+      description: r.provider.rootUri?.fsPath,
+      iconClass: ThemeIcon.asClassName(Codicon.repo),
+      repository: r
+    })));
+    return this._quickInputService.pick(picks, { placeHolder: this._placeHolder });
+  }
+};
+RepositoryPicker = __decorateClass([
+  __decorateParam(2, IQuickInputService),
+  __decorateParam(3, ISCMViewService)
+], RepositoryPicker);
+let SCMViewService = class {
+  constructor(scmService, contextKeyService, editorService, extensionService, instantiationService, configurationService, storageService, workspaceContextService) {
+    this.scmService = scmService;
+    this.editorService = editorService;
+    this.configurationService = configurationService;
+    this.storageService = storageService;
+    this.workspaceContextService = workspaceContextService;
+    this.menus = instantiationService.createInstance(SCMMenus);
+    this._focusedRepositoryObs = observableFromEventOpts(
+      {
+        owner: this,
+        equalsFn: /* @__PURE__ */ __name(() => false, "equalsFn")
+      },
+      this.onDidFocusRepository,
+      () => this.focusedRepository
+    );
+    this._activeEditorObs = observableFromEventOpts(
+      {
+        owner: this,
+        equalsFn: /* @__PURE__ */ __name(() => false, "equalsFn")
+      },
+      this.editorService.onDidActiveEditorChange,
+      () => this.editorService.activeEditor
+    );
+    this._activeEditorRepositoryObs = derivedObservableWithCache(
+      this,
+      (reader, lastValue) => {
+        const activeEditor = this._activeEditorObs.read(reader);
+        const activeResource = EditorResourceAccessor.getOriginalUri(activeEditor);
+        if (!activeResource) {
+          return lastValue;
+        }
+        const repository = this.scmService.getRepository(activeResource);
+        if (!repository) {
+          return lastValue;
+        }
+        return Object.create(repository);
+      }
+    );
+    this._activeRepositoryPinnedObs = observableValue(this, void 0);
+    this._activeRepositoryObs = latestChangedValue(this, [this._activeEditorRepositoryObs, this._focusedRepositoryObs]);
+    this.activeRepository = derivedOpts({
+      owner: this,
+      equalsFn: /* @__PURE__ */ __name((r1, r2) => r1?.id === r2?.id, "equalsFn")
+    }, (reader) => {
+      const activeRepository = this._activeRepositoryObs.read(reader);
+      const activeRepositoryPinned = this._activeRepositoryPinnedObs.read(reader);
+      return activeRepositoryPinned ?? activeRepository;
+    });
+    try {
+      this.previousState = JSON.parse(storageService.get("scm:view:visibleRepositories", StorageScope.WORKSPACE, ""));
+    } catch {
+    }
+    this._repositoriesSortKey = this.previousState?.sortKey ?? this.getViewSortOrder();
+    this._sortKeyContextKey = RepositoryContextKeys.RepositorySortKey.bindTo(contextKeyService);
+    this._sortKeyContextKey.set(this._repositoriesSortKey);
+    scmService.onDidAddRepository(this.onDidAddRepository, this, this.disposables);
+    scmService.onDidRemoveRepository(this.onDidRemoveRepository, this, this.disposables);
+    for (const repository of scmService.repositories) {
+      this.onDidAddRepository(repository);
+    }
+    storageService.onWillSaveState(this.onWillSaveState, this, this.disposables);
+    extensionService.onWillStop(() => {
+      this.onWillSaveState();
+      this.didFinishLoading = false;
+    }, this, this.disposables);
+  }
+  static {
+    __name(this, "SCMViewService");
+  }
+  menus;
+  didFinishLoading = false;
+  didSelectRepository = false;
+  previousState;
+  disposables = new DisposableStore();
+  _repositories = [];
+  get repositories() {
+    return this._repositories.map((r) => r.repository);
+  }
+  get visibleRepositories() {
+    if (this._repositoriesSortKey === ISCMRepositorySortKey.DiscoveryTime) {
+      return this._repositories.filter((r) => r.selectionIndex !== -1).sort((r1, r2) => r1.selectionIndex - r2.selectionIndex).map((r) => r.repository);
+    }
+    return this._repositories.filter((r) => r.selectionIndex !== -1).map((r) => r.repository);
+  }
+  set visibleRepositories(visibleRepositories) {
+    const set = new Set(visibleRepositories);
+    const added = /* @__PURE__ */ new Set();
+    const removed = /* @__PURE__ */ new Set();
+    for (const repositoryView of this._repositories) {
+      if (!set.has(repositoryView.repository) && repositoryView.selectionIndex !== -1) {
+        repositoryView.selectionIndex = -1;
+        removed.add(repositoryView.repository);
+      }
+      if (set.has(repositoryView.repository)) {
+        if (repositoryView.selectionIndex === -1) {
+          added.add(repositoryView.repository);
+        }
+        repositoryView.selectionIndex = visibleRepositories.indexOf(repositoryView.repository);
+      }
+    }
+    if (added.size === 0 && removed.size === 0) {
+      return;
+    }
+    this._onDidSetVisibleRepositories.fire({ added, removed });
+    if (this._repositories.find((r) => r.focused && r.selectionIndex === -1)) {
+      this.focus(this._repositories.find((r) => r.selectionIndex !== -1)?.repository);
+    }
+  }
+  _onDidChangeRepositories = new Emitter();
+  onDidChangeRepositories = this._onDidChangeRepositories.event;
+  _onDidSetVisibleRepositories = new Emitter();
+  onDidChangeVisibleRepositories = Event.any(
+    this._onDidSetVisibleRepositories.event,
+    Event.debounce(
+      this._onDidChangeRepositories.event,
+      (last, e) => {
+        if (!last) {
+          return e;
+        }
+        const added = new Set(last.added);
+        const removed = new Set(last.removed);
+        for (const repository of e.added) {
+          if (removed.has(repository)) {
+            removed.delete(repository);
+          } else {
+            added.add(repository);
+          }
+        }
+        for (const repository of e.removed) {
+          if (added.has(repository)) {
+            added.delete(repository);
+          } else {
+            removed.add(repository);
+          }
+        }
+        return { added, removed };
+      },
+      0,
+      void 0,
+      void 0,
+      void 0,
+      this.disposables
+    )
+  );
+  get focusedRepository() {
+    return this._repositories.find((r) => r.focused)?.repository;
+  }
+  _onDidFocusRepository = new Emitter();
+  onDidFocusRepository = this._onDidFocusRepository.event;
+  activeRepository;
+  _activeEditorObs;
+  _activeEditorRepositoryObs;
+  /**
+   * The focused repository takes precedence over the active editor repository when the observable
+   * values are updated in the same transaction (or during the initial read of the observable value).
+  */
+  _activeRepositoryObs;
+  _activeRepositoryPinnedObs;
+  _focusedRepositoryObs;
+  _repositoriesSortKey;
+  _sortKeyContextKey;
+  onDidAddRepository(repository) {
+    if (!this.didFinishLoading) {
+      this.eventuallyFinishLoading();
+    }
+    const repositoryView = {
+      repository,
+      discoveryTime: Date.now(),
+      focused: false,
+      selectionIndex: -1
+    };
+    let removed = Iterable.empty();
+    if (this.previousState && !this.didFinishLoading) {
+      const index = this.previousState.all.indexOf(getProviderStorageKey(repository.provider));
+      if (index === -1) {
+        const added = [];
+        this.insertRepositoryView(this._repositories, repositoryView);
+        this._repositories.forEach((repositoryView2, index2) => {
+          if (repositoryView2.selectionIndex === -1) {
+            added.push(repositoryView2.repository);
+          }
+          repositoryView2.selectionIndex = index2;
+        });
+        this._onDidChangeRepositories.fire({ added, removed: Iterable.empty() });
+        this.didSelectRepository = false;
+        return;
+      }
+      if (this.previousState.visible.indexOf(index) === -1) {
+        if (this.didSelectRepository) {
+          this.insertRepositoryView(this._repositories, repositoryView);
+          this._onDidChangeRepositories.fire({ added: Iterable.empty(), removed: Iterable.empty() });
+          return;
+        }
+      } else {
+        if (!this.didSelectRepository) {
+          removed = [...this.visibleRepositories];
+          this._repositories.forEach((r) => {
+            r.focused = false;
+            r.selectionIndex = -1;
+          });
+          this.didSelectRepository = true;
+        }
+      }
+    }
+    const maxSelectionIndex = this.getMaxSelectionIndex();
+    this.insertRepositoryView(this._repositories, { ...repositoryView, selectionIndex: maxSelectionIndex + 1 });
+    this._onDidChangeRepositories.fire({ added: [repositoryView.repository], removed });
+    if (!this._repositories.find((r) => r.focused)) {
+      this.focus(repository);
+    }
+  }
+  onDidRemoveRepository(repository) {
+    if (!this.didFinishLoading) {
+      this.eventuallyFinishLoading();
+    }
+    const repositoriesIndex = this._repositories.findIndex((r) => r.repository === repository);
+    if (repositoriesIndex === -1) {
+      return;
+    }
+    let added = Iterable.empty();
+    const repositoryView = this._repositories.splice(repositoriesIndex, 1);
+    if (this._repositories.length > 0 && this.visibleRepositories.length === 0) {
+      this._repositories[0].selectionIndex = 0;
+      added = [this._repositories[0].repository];
+    }
+    this._onDidChangeRepositories.fire({ added, removed: repositoryView.map((r) => r.repository) });
+    if (repositoryView.length === 1 && repositoryView[0].focused && this.visibleRepositories.length > 0) {
+      this.focus(this.visibleRepositories[0]);
+    }
+  }
+  isVisible(repository) {
+    return this._repositories.find((r) => r.repository === repository)?.selectionIndex !== -1;
+  }
+  toggleVisibility(repository, visible) {
+    if (typeof visible === "undefined") {
+      visible = !this.isVisible(repository);
+    } else if (this.isVisible(repository) === visible) {
+      return;
+    }
+    if (visible) {
+      this.visibleRepositories = [...this.visibleRepositories, repository];
+    } else {
+      const index = this.visibleRepositories.indexOf(repository);
+      if (index > -1) {
+        this.visibleRepositories = [
+          ...this.visibleRepositories.slice(0, index),
+          ...this.visibleRepositories.slice(index + 1)
+        ];
+      }
+    }
+  }
+  toggleSortKey(sortKey) {
+    this._repositoriesSortKey = sortKey;
+    this._sortKeyContextKey.set(this._repositoriesSortKey);
+    this._repositories.sort(this.compareRepositories.bind(this));
+    this._onDidChangeRepositories.fire({ added: Iterable.empty(), removed: Iterable.empty() });
+  }
+  focus(repository) {
+    if (repository && !this.isVisible(repository)) {
+      return;
+    }
+    this._repositories.forEach((r) => r.focused = r.repository === repository);
+    if (this._repositories.find((r) => r.focused)) {
+      this._onDidFocusRepository.fire(repository);
+    }
+  }
+  pinActiveRepository(repository) {
+    this._activeRepositoryPinnedObs.set(repository, void 0);
+  }
+  compareRepositories(op1, op2) {
+    if (this._repositoriesSortKey === ISCMRepositorySortKey.DiscoveryTime) {
+      return op1.discoveryTime - op2.discoveryTime;
+    }
+    if (this._repositoriesSortKey === "path" && op1.repository.provider.rootUri && op2.repository.provider.rootUri) {
+      return comparePaths(op1.repository.provider.rootUri.fsPath, op2.repository.provider.rootUri.fsPath);
+    }
+    const name1 = getRepositoryName(this.workspaceContextService, op1.repository);
+    const name2 = getRepositoryName(this.workspaceContextService, op2.repository);
+    const nameComparison = compareFileNames(name1, name2);
+    if (nameComparison === 0 && op1.repository.provider.rootUri && op2.repository.provider.rootUri) {
+      return comparePaths(op1.repository.provider.rootUri.fsPath, op2.repository.provider.rootUri.fsPath);
+    }
+    return nameComparison;
+  }
+  getMaxSelectionIndex() {
+    return this._repositories.length === 0 ? -1 : Math.max(...this._repositories.map((r) => r.selectionIndex));
+  }
+  getViewSortOrder() {
+    const sortOder = this.configurationService.getValue("scm.repositories.sortOrder");
+    switch (sortOder) {
+      case "discovery time":
+        return ISCMRepositorySortKey.DiscoveryTime;
+      case "name":
+        return ISCMRepositorySortKey.Name;
+      case "path":
+        return ISCMRepositorySortKey.Path;
+      default:
+        return ISCMRepositorySortKey.DiscoveryTime;
+    }
+  }
+  insertRepositoryView(repositories, repositoryView) {
+    const index = binarySearch(repositories, repositoryView, this.compareRepositories.bind(this));
+    repositories.splice(index < 0 ? ~index : index, 0, repositoryView);
+  }
+  onWillSaveState() {
+    if (!this.didFinishLoading) {
+      return;
+    }
+    const all = this.repositories.map((r) => getProviderStorageKey(r.provider));
+    const visible = this.visibleRepositories.map((r) => all.indexOf(getProviderStorageKey(r.provider)));
+    this.previousState = { all, sortKey: this._repositoriesSortKey, visible };
+    this.storageService.store("scm:view:visibleRepositories", JSON.stringify(this.previousState), StorageScope.WORKSPACE, StorageTarget.MACHINE);
+  }
+  eventuallyFinishLoading() {
+    this.finishLoading();
+  }
+  finishLoading() {
+    if (this.didFinishLoading) {
+      return;
+    }
+    this.didFinishLoading = true;
+  }
+  dispose() {
+    this.disposables.dispose();
+    this._onDidChangeRepositories.dispose();
+    this._onDidSetVisibleRepositories.dispose();
+  }
+};
+__decorateClass([
+  debounce(5e3)
+], SCMViewService.prototype, "eventuallyFinishLoading", 1);
+SCMViewService = __decorateClass([
+  __decorateParam(0, ISCMService),
+  __decorateParam(1, IContextKeyService),
+  __decorateParam(2, IEditorService),
+  __decorateParam(3, IExtensionService),
+  __decorateParam(4, IInstantiationService),
+  __decorateParam(5, IConfigurationService),
+  __decorateParam(6, IStorageService),
+  __decorateParam(7, IWorkspaceContextService)
+], SCMViewService);
+export {
+  RepositoryContextKeys,
+  RepositoryPicker,
+  SCMViewService
+};
+//# sourceMappingURL=scmViewService.js.map

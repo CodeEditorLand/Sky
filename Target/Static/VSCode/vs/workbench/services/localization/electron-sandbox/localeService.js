@@ -1,1 +1,175 @@
-var S=Object.defineProperty,f=Object.getOwnPropertyDescriptor,d=(e,i,t,r)=>{for(var a,o=r>1?void 0:r?f(i,t):i,s=e.length-1;s>=0;s--)(a=e[s])&&(o=(r?a(i,t,o):a(o))||o);return r&&o&&S(i,t,o),o},i=(e,i)=>(t,r)=>i(t,r,e);import{Language as g,LANGUAGE_DEFAULT as h}from"../../../../base/common/platform.js";import{IEnvironmentService as I}from"../../../../platform/environment/common/environment.js";import{INotificationService as y,Severity as w}from"../../../../platform/notification/common/notification.js";import{IJSONEditingService as P}from"../../configuration/common/jsonEditing.js";import{IActiveLanguagePackService as L,ILocaleService as E}from"../common/locale.js";import{ILanguagePackService as m}from"../../../../platform/languagePacks/common/languagePacks.js";import{IPaneCompositePartService as x}from"../../panecomposite/browser/panecomposite.js";import{ViewContainerLocation as D}from"../../../common/views.js";import{IExtensionManagementService as C}from"../../../../platform/extensionManagement/common/extensionManagement.js";import{IProgressService as V,ProgressLocation as b}from"../../../../platform/progress/common/progress.js";import{localize as s}from"../../../../nls.js";import{toAction as R}from"../../../../base/common/actions.js";import{ITextFileService as F}from"../../textfile/common/textfiles.js";import{parse as T}from"../../../../base/common/jsonc.js";import{IEditorService as k}from"../../editor/common/editorService.js";import{IHostService as M}from"../../host/browser/host.js";import{IDialogService as A}from"../../../../platform/dialogs/common/dialogs.js";import{IProductService as _}from"../../../../platform/product/common/productService.js";import{InstantiationType as p,registerSingleton as u}from"../../../../platform/instantiation/common/extensions.js";const O="workbench.view.extensions";let c=class{constructor(e,i,t,r,a,o,s,n,c,m,l,g){this.jsonEditingService=e,this.environmentService=i,this.notificationService=t,this.languagePackService=r,this.paneCompositePartService=a,this.extensionManagementService=o,this.progressService=s,this.textFileService=n,this.editorService=c,this.dialogService=m,this.hostService=l,this.productService=g}_serviceBrand;async validateLocaleFile(){try{const e=await this.textFileService.read(this.environmentService.argvResource,{encoding:"utf8"});T(e.value)}catch{return this.notificationService.notify({severity:w.Error,message:s("argvInvalid","Unable to write display language. Please open the runtime settings, correct errors/warnings in it and try again."),actions:{primary:[R({id:"openArgv",label:s("openArgv","Open Runtime Settings"),run:()=>this.editorService.openEditor({resource:this.environmentService.argvResource})})]}}),!1}return!0}async writeLocaleValue(e){return!!await this.validateLocaleFile()&&(await this.jsonEditingService.write(this.environmentService.argvResource,[{path:["locale"],value:e}],!0),!0)}async setLocale(e,i=!1){const t=e.id;if(t===g.value()||!t&&g.isDefaultVariant())return;const r=await this.languagePackService.getInstalledLanguages();try{if(!r.some((i=>i.id===e.id))){if("ms-ceintl"!==e.galleryExtension?.publisher.toLowerCase())return void((await this.paneCompositePartService.openPaneComposite(O,D.Sidebar))?.getViewPaneContainer()).search(`@id:${e.extensionId}`);await this.progressService.withProgress({location:b.Notification,title:s("installing","Installing {0} language support...",e.label)},(i=>this.extensionManagementService.installFromGallery(e.galleryExtension,{isMachineScoped:!1})))}if(!i&&!await this.showRestartDialog(e.label))return;await this.writeLocaleValue(t),await this.hostService.restart()}catch(e){this.notificationService.error(e)}}async clearLocalePreference(){try{await this.writeLocaleValue(void 0),g.isDefaultVariant()||await this.showRestartDialog("English")}catch(e){this.notificationService.error(e)}}async showRestartDialog(e){const{confirmed:i}=await this.dialogService.confirm({message:s("restartDisplayLanguageMessage1","Restart {0} to switch to {1}?",this.productService.nameLong,e),detail:s("restartDisplayLanguageDetail1","To change the display language to {0}, {1} needs to restart.",e,this.productService.nameLong),primaryButton:s({key:"restart",comment:["&& denotes a mnemonic character"]},"&&Restart")});return i}};c=d([i(0,P),i(1,I),i(2,y),i(3,m),i(4,x),i(5,C),i(6,V),i(7,F),i(8,k),i(9,A),i(10,M),i(11,_)],c);let l=class{constructor(e){this.languagePackService=e}_serviceBrand;async getExtensionIdProvidingCurrentLocale(){const e=g.value();return e===h?void 0:(await this.languagePackService.getInstalledLanguages()).find((i=>i.id===e))?.extensionId}};l=d([i(0,m)],l),u(E,c,p.Delayed),u(L,l,p.Delayed);
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Language, LANGUAGE_DEFAULT } from "../../../../base/common/platform.js";
+import { IEnvironmentService } from "../../../../platform/environment/common/environment.js";
+import { INotificationService, Severity } from "../../../../platform/notification/common/notification.js";
+import { IJSONEditingService } from "../../configuration/common/jsonEditing.js";
+import { IActiveLanguagePackService, ILocaleService } from "../common/locale.js";
+import { ILanguagePackItem, ILanguagePackService } from "../../../../platform/languagePacks/common/languagePacks.js";
+import { IPaneCompositePartService } from "../../panecomposite/browser/panecomposite.js";
+import { IViewPaneContainer, ViewContainerLocation } from "../../../common/views.js";
+import { IExtensionManagementService } from "../../../../platform/extensionManagement/common/extensionManagement.js";
+import { IProgressService, ProgressLocation } from "../../../../platform/progress/common/progress.js";
+import { localize } from "../../../../nls.js";
+import { toAction } from "../../../../base/common/actions.js";
+import { ITextFileService } from "../../textfile/common/textfiles.js";
+import { parse } from "../../../../base/common/jsonc.js";
+import { IEditorService } from "../../editor/common/editorService.js";
+import { IHostService } from "../../host/browser/host.js";
+import { IDialogService } from "../../../../platform/dialogs/common/dialogs.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+const EXTENSIONS_VIEWLET_ID = "workbench.view.extensions";
+let NativeLocaleService = class {
+  constructor(jsonEditingService, environmentService, notificationService, languagePackService, paneCompositePartService, extensionManagementService, progressService, textFileService, editorService, dialogService, hostService, productService) {
+    this.jsonEditingService = jsonEditingService;
+    this.environmentService = environmentService;
+    this.notificationService = notificationService;
+    this.languagePackService = languagePackService;
+    this.paneCompositePartService = paneCompositePartService;
+    this.extensionManagementService = extensionManagementService;
+    this.progressService = progressService;
+    this.textFileService = textFileService;
+    this.editorService = editorService;
+    this.dialogService = dialogService;
+    this.hostService = hostService;
+    this.productService = productService;
+  }
+  static {
+    __name(this, "NativeLocaleService");
+  }
+  _serviceBrand;
+  async validateLocaleFile() {
+    try {
+      const content = await this.textFileService.read(this.environmentService.argvResource, { encoding: "utf8" });
+      parse(content.value);
+    } catch (error) {
+      this.notificationService.notify({
+        severity: Severity.Error,
+        message: localize("argvInvalid", "Unable to write display language. Please open the runtime settings, correct errors/warnings in it and try again."),
+        actions: {
+          primary: [
+            toAction({
+              id: "openArgv",
+              label: localize("openArgv", "Open Runtime Settings"),
+              run: /* @__PURE__ */ __name(() => this.editorService.openEditor({ resource: this.environmentService.argvResource }), "run")
+            })
+          ]
+        }
+      });
+      return false;
+    }
+    return true;
+  }
+  async writeLocaleValue(locale) {
+    if (!await this.validateLocaleFile()) {
+      return false;
+    }
+    await this.jsonEditingService.write(this.environmentService.argvResource, [{ path: ["locale"], value: locale }], true);
+    return true;
+  }
+  async setLocale(languagePackItem, skipDialog = false) {
+    const locale = languagePackItem.id;
+    if (locale === Language.value() || !locale && Language.isDefaultVariant()) {
+      return;
+    }
+    const installedLanguages = await this.languagePackService.getInstalledLanguages();
+    try {
+      if (!installedLanguages.some((installedLanguage) => installedLanguage.id === languagePackItem.id)) {
+        if (languagePackItem.galleryExtension?.publisher.toLowerCase() !== "ms-ceintl") {
+          const viewlet = await this.paneCompositePartService.openPaneComposite(EXTENSIONS_VIEWLET_ID, ViewContainerLocation.Sidebar);
+          (viewlet?.getViewPaneContainer()).search(`@id:${languagePackItem.extensionId}`);
+          return;
+        }
+        await this.progressService.withProgress(
+          {
+            location: ProgressLocation.Notification,
+            title: localize("installing", "Installing {0} language support...", languagePackItem.label)
+          },
+          (progress) => this.extensionManagementService.installFromGallery(languagePackItem.galleryExtension, {
+            // Setting this to false is how you get the extension to be synced with Settings Sync (if enabled).
+            isMachineScoped: false
+          })
+        );
+      }
+      if (!skipDialog && !await this.showRestartDialog(languagePackItem.label)) {
+        return;
+      }
+      await this.writeLocaleValue(locale);
+      await this.hostService.restart();
+    } catch (err) {
+      this.notificationService.error(err);
+    }
+  }
+  async clearLocalePreference() {
+    try {
+      await this.writeLocaleValue(void 0);
+      if (!Language.isDefaultVariant()) {
+        await this.showRestartDialog("English");
+      }
+    } catch (err) {
+      this.notificationService.error(err);
+    }
+  }
+  async showRestartDialog(languageName) {
+    const { confirmed } = await this.dialogService.confirm({
+      message: localize("restartDisplayLanguageMessage1", "Restart {0} to switch to {1}?", this.productService.nameLong, languageName),
+      detail: localize(
+        "restartDisplayLanguageDetail1",
+        "To change the display language to {0}, {1} needs to restart.",
+        languageName,
+        this.productService.nameLong
+      ),
+      primaryButton: localize({ key: "restart", comment: ["&& denotes a mnemonic character"] }, "&&Restart")
+    });
+    return confirmed;
+  }
+};
+NativeLocaleService = __decorateClass([
+  __decorateParam(0, IJSONEditingService),
+  __decorateParam(1, IEnvironmentService),
+  __decorateParam(2, INotificationService),
+  __decorateParam(3, ILanguagePackService),
+  __decorateParam(4, IPaneCompositePartService),
+  __decorateParam(5, IExtensionManagementService),
+  __decorateParam(6, IProgressService),
+  __decorateParam(7, ITextFileService),
+  __decorateParam(8, IEditorService),
+  __decorateParam(9, IDialogService),
+  __decorateParam(10, IHostService),
+  __decorateParam(11, IProductService)
+], NativeLocaleService);
+let NativeActiveLanguagePackService = class {
+  constructor(languagePackService) {
+    this.languagePackService = languagePackService;
+  }
+  static {
+    __name(this, "NativeActiveLanguagePackService");
+  }
+  _serviceBrand;
+  async getExtensionIdProvidingCurrentLocale() {
+    const language = Language.value();
+    if (language === LANGUAGE_DEFAULT) {
+      return void 0;
+    }
+    const languages = await this.languagePackService.getInstalledLanguages();
+    const languagePack = languages.find((l) => l.id === language);
+    return languagePack?.extensionId;
+  }
+};
+NativeActiveLanguagePackService = __decorateClass([
+  __decorateParam(0, ILanguagePackService)
+], NativeActiveLanguagePackService);
+registerSingleton(ILocaleService, NativeLocaleService, InstantiationType.Delayed);
+registerSingleton(IActiveLanguagePackService, NativeActiveLanguagePackService, InstantiationType.Delayed);
+//# sourceMappingURL=localeService.js.map

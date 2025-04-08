@@ -1,1 +1,74 @@
-import{basename as i}from"../../../../../base/common/path.js";import{isWindows as r}from"../../../../../base/common/platform.js";import{SimpleCompletionItem as o}from"../../../../services/suggest/browser/simpleCompletionItem.js";var h=(e=>(e[e.File=0]="File",e[e.Folder=1]="Folder",e[e.Method=2]="Method",e[e.Alias=3]="Alias",e[e.Argument=4]="Argument",e[e.Option=5]="Option",e[e.OptionValue=6]="OptionValue",e[e.Flag=7]="Flag",e[e.InlineSuggestion=100]="InlineSuggestion",e[e.InlineSuggestionAlwaysOnTop=101]="InlineSuggestionAlwaysOnTop",e))(h||{});class f extends o{constructor(e){if(super(e),this.completion=e,this.labelLowExcludeFileExt=this.labelLow,this.labelLowNormalizedPath=this.labelLow,t(e)){r&&(this.labelLow=this.labelLow.replaceAll("/","\\"));const e=this.labelLow.lastIndexOf(".");e>0&&(this.labelLowExcludeFileExt=this.labelLow.substring(0,e),this.fileExtLow=this.labelLow.substring(e+1))}(t(e)||1===e.kind)&&(r&&(this.labelLowNormalizedPath=this.labelLow.replaceAll("\\","/")),1===e.kind&&(this.labelLowNormalizedPath=this.labelLowNormalizedPath.replace(/\/$/,"")),this.underscorePenalty=i(this.labelLowNormalizedPath).startsWith("_")?1:0)}labelLowExcludeFileExt;labelLowNormalizedPath;underscorePenalty=0;fileExtLow=""}function t(e){return!(0!==e.kind&&!e.isFileOverride)}export{f as TerminalCompletionItem,h as TerminalCompletionItemKind};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { basename } from "../../../../../base/common/path.js";
+import { isWindows } from "../../../../../base/common/platform.js";
+import { ISimpleCompletion, SimpleCompletionItem } from "../../../../services/suggest/browser/simpleCompletionItem.js";
+var TerminalCompletionItemKind = /* @__PURE__ */ ((TerminalCompletionItemKind2) => {
+  TerminalCompletionItemKind2[TerminalCompletionItemKind2["File"] = 0] = "File";
+  TerminalCompletionItemKind2[TerminalCompletionItemKind2["Folder"] = 1] = "Folder";
+  TerminalCompletionItemKind2[TerminalCompletionItemKind2["Method"] = 2] = "Method";
+  TerminalCompletionItemKind2[TerminalCompletionItemKind2["Alias"] = 3] = "Alias";
+  TerminalCompletionItemKind2[TerminalCompletionItemKind2["Argument"] = 4] = "Argument";
+  TerminalCompletionItemKind2[TerminalCompletionItemKind2["Option"] = 5] = "Option";
+  TerminalCompletionItemKind2[TerminalCompletionItemKind2["OptionValue"] = 6] = "OptionValue";
+  TerminalCompletionItemKind2[TerminalCompletionItemKind2["Flag"] = 7] = "Flag";
+  TerminalCompletionItemKind2[TerminalCompletionItemKind2["InlineSuggestion"] = 100] = "InlineSuggestion";
+  TerminalCompletionItemKind2[TerminalCompletionItemKind2["InlineSuggestionAlwaysOnTop"] = 101] = "InlineSuggestionAlwaysOnTop";
+  return TerminalCompletionItemKind2;
+})(TerminalCompletionItemKind || {});
+class TerminalCompletionItem extends SimpleCompletionItem {
+  constructor(completion) {
+    super(completion);
+    this.completion = completion;
+    this.labelLowExcludeFileExt = this.labelLow;
+    this.labelLowNormalizedPath = this.labelLow;
+    if (isFile(completion)) {
+      if (isWindows) {
+        this.labelLow = this.labelLow.replaceAll("/", "\\");
+      }
+      const extIndex = this.labelLow.lastIndexOf(".");
+      if (extIndex > 0) {
+        this.labelLowExcludeFileExt = this.labelLow.substring(0, extIndex);
+        this.fileExtLow = this.labelLow.substring(extIndex + 1);
+      }
+    }
+    if (isFile(completion) || completion.kind === 1 /* Folder */) {
+      if (isWindows) {
+        this.labelLowNormalizedPath = this.labelLow.replaceAll("\\", "/");
+      }
+      if (completion.kind === 1 /* Folder */) {
+        this.labelLowNormalizedPath = this.labelLowNormalizedPath.replace(/\/$/, "");
+      }
+      this.underscorePenalty = basename(this.labelLowNormalizedPath).startsWith("_") ? 1 : 0;
+    }
+  }
+  static {
+    __name(this, "TerminalCompletionItem");
+  }
+  /**
+   * {@link labelLow} without the file extension.
+   */
+  labelLowExcludeFileExt;
+  /**
+   * The lowercase label, when the completion is a file or directory this has  normalized path
+   * separators (/) on Windows and no trailing separator for directories.
+   */
+  labelLowNormalizedPath;
+  /**
+   * A penalty that applies to files or folders starting with the underscore character.
+   */
+  underscorePenalty = 0;
+  /**
+   * The file extension part from {@link labelLow}.
+   */
+  fileExtLow = "";
+}
+function isFile(completion) {
+  return !!(completion.kind === 0 /* File */ || completion.isFileOverride);
+}
+__name(isFile, "isFile");
+export {
+  TerminalCompletionItem,
+  TerminalCompletionItemKind
+};
+//# sourceMappingURL=terminalCompletionItem.js.map

@@ -1,1 +1,79 @@
-import"../../../base/common/event.js";import{ResourceMap as s}from"../../../base/common/map.js";import{URI as g}from"../../../base/common/uri.js";import"../../../base/parts/ipc/common/ipc.js";import{isLogLevel as l,log as c,LogLevel as i}from"../common/log.js";import"./loggerService.js";class E{constructor(e){this.loggerService=e}loggers=new s;listen(e,r,o){switch(r){case"onDidChangeLoggers":return o?this.loggerService.getOnDidChangeLoggersEvent(o):this.loggerService.onDidChangeLoggers;case"onDidChangeLogLevel":return o?this.loggerService.getOnDidChangeLogLevelEvent(o):this.loggerService.onDidChangeLogLevel;case"onDidChangeVisibility":return o?this.loggerService.getOnDidChangeVisibilityEvent(o):this.loggerService.onDidChangeVisibility}throw new Error(`Event not found: ${r}`)}async call(e,r,o){switch(r){case"createLogger":return void this.createLogger(g.revive(o[0]),o[1],o[2]);case"log":return this.log(g.revive(o[0]),o[1]);case"consoleLog":return this.consoleLog(o[0],o[1]);case"setLogLevel":return l(o[0])?this.loggerService.setLogLevel(o[0]):this.loggerService.setLogLevel(g.revive(o[0]),o[1]);case"setVisibility":return this.loggerService.setVisibility(g.revive(o[0]),o[1]);case"registerLogger":return this.loggerService.registerLogger({...o[0],resource:g.revive(o[0].resource)},o[1]);case"deregisterLogger":return this.loggerService.deregisterLogger(g.revive(o[0]))}throw new Error(`Call not found: ${r}`)}createLogger(e,r,o){this.loggers.set(e,this.loggerService.createLogger(e,r,o))}consoleLog(e,r){let o=console.log;switch(e){case i.Error:o=console.error;break;case i.Warning:o=console.warn;break;case i.Info:o=console.info}o.call(console,...r)}log(e,r){const o=this.loggers.get(e);if(!o)throw new Error("Create the logger before logging");for(const[e,g]of r)c(o,e,g)}}export{E as LoggerChannel};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Event } from "../../../base/common/event.js";
+import { ResourceMap } from "../../../base/common/map.js";
+import { URI } from "../../../base/common/uri.js";
+import { IServerChannel } from "../../../base/parts/ipc/common/ipc.js";
+import { ILogger, ILoggerOptions, isLogLevel, log, LogLevel } from "../common/log.js";
+import { ILoggerMainService } from "./loggerService.js";
+class LoggerChannel {
+  constructor(loggerService) {
+    this.loggerService = loggerService;
+  }
+  static {
+    __name(this, "LoggerChannel");
+  }
+  loggers = new ResourceMap();
+  listen(_, event, windowId) {
+    switch (event) {
+      case "onDidChangeLoggers":
+        return windowId ? this.loggerService.getOnDidChangeLoggersEvent(windowId) : this.loggerService.onDidChangeLoggers;
+      case "onDidChangeLogLevel":
+        return windowId ? this.loggerService.getOnDidChangeLogLevelEvent(windowId) : this.loggerService.onDidChangeLogLevel;
+      case "onDidChangeVisibility":
+        return windowId ? this.loggerService.getOnDidChangeVisibilityEvent(windowId) : this.loggerService.onDidChangeVisibility;
+    }
+    throw new Error(`Event not found: ${event}`);
+  }
+  async call(_, command, arg) {
+    switch (command) {
+      case "createLogger":
+        this.createLogger(URI.revive(arg[0]), arg[1], arg[2]);
+        return;
+      case "log":
+        return this.log(URI.revive(arg[0]), arg[1]);
+      case "consoleLog":
+        return this.consoleLog(arg[0], arg[1]);
+      case "setLogLevel":
+        return isLogLevel(arg[0]) ? this.loggerService.setLogLevel(arg[0]) : this.loggerService.setLogLevel(URI.revive(arg[0]), arg[1]);
+      case "setVisibility":
+        return this.loggerService.setVisibility(URI.revive(arg[0]), arg[1]);
+      case "registerLogger":
+        return this.loggerService.registerLogger({ ...arg[0], resource: URI.revive(arg[0].resource) }, arg[1]);
+      case "deregisterLogger":
+        return this.loggerService.deregisterLogger(URI.revive(arg[0]));
+    }
+    throw new Error(`Call not found: ${command}`);
+  }
+  createLogger(file, options, windowId) {
+    this.loggers.set(file, this.loggerService.createLogger(file, options, windowId));
+  }
+  consoleLog(level, args) {
+    let consoleFn = console.log;
+    switch (level) {
+      case LogLevel.Error:
+        consoleFn = console.error;
+        break;
+      case LogLevel.Warning:
+        consoleFn = console.warn;
+        break;
+      case LogLevel.Info:
+        consoleFn = console.info;
+        break;
+    }
+    consoleFn.call(console, ...args);
+  }
+  log(file, messages) {
+    const logger = this.loggers.get(file);
+    if (!logger) {
+      throw new Error("Create the logger before logging");
+    }
+    for (const [level, message] of messages) {
+      log(logger, level, message);
+    }
+  }
+}
+export {
+  LoggerChannel
+};
+//# sourceMappingURL=logIpc.js.map

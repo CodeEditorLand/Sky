@@ -1,1 +1,5 @@
-var i="../../../../Asset/README-L6O6VQLE.md";export{i as default};
+var README_default = "../../../../Asset/README-L6O6VQLE.md";
+export {
+  README_default as default
+};
+//# sourceMappingURL=README.js.map

@@ -1,1 +1,166 @@
-var y=Object.defineProperty;var u=Object.getOwnPropertyDescriptor;var m=(n,p,e,t)=>{for(var i=t>1?void 0:t?u(p,e):p,r=n.length-1,a;r>=0;r--)(a=n[r])&&(i=(t?a(p,e,i):a(i))||i);return t&&i&&y(p,e,i),i},g=(n,p)=>(e,t)=>p(e,t,n);import{getActiveWindow as c}from"../../../../base/browser/dom.js";import{CharCode as h}from"../../../../base/common/charCode.js";import{BugIndicatingError as f}from"../../../../base/common/errors.js";import{Emitter as d,Event as G}from"../../../../base/common/event.js";import{Disposable as v,dispose as T,MutableDisposable as R,toDisposable as P}from"../../../../base/common/lifecycle.js";import{NKeyMap as w}from"../../../../base/common/map.js";import{IInstantiationService as b}from"../../../../platform/instantiation/common/instantiation.js";import{IThemeService as A}from"../../../../platform/theme/common/themeService.js";import{MetadataConsts as o}from"../../../common/encodedTokenAttributes.js";import{GlyphRasterizer as x}from"../raster/glyphRasterizer.js";import{IdleTaskQueue as I}from"../taskQueue.js";import{TextureAtlasPage as _}from"./textureAtlasPage.js";let l=class extends v{constructor(e,t,i,r){super();this._maxTextureSize=e;this._themeService=i;this._instantiationService=r;this._allocatorType=t?.allocatorType??"slab",this._register(G.runAndSubscribe(this._themeService.onDidColorThemeChange,()=>{this._colorMap&&this.clear(),this._colorMap=this._themeService.getColorTheme().tokenColorMap}));const a=Math.max(1,Math.floor(c().devicePixelRatio));this.pageSize=Math.min(1024*a,this._maxTextureSize),this._initFirstPage(),this._register(P(()=>T(this._pages)))}_colorMap;_warmUpTask=this._register(new R);_warmedUpRasterizers=new Set;_allocatorType;static maximumPageCount=16;_pages=[];get pages(){return this._pages}pageSize;_glyphPageIndex=new w;_onDidDeleteGlyphs=this._register(new d);onDidDeleteGlyphs=this._onDidDeleteGlyphs.event;_initFirstPage(){const e=this._instantiationService.createInstance(_,0,this.pageSize,this._allocatorType);this._pages.push(e);const t=new x(1,"",1);e.getGlyph(t,"",0,0),t.dispose()}clear(){for(const e of this._pages)e.dispose();this._pages.length=0,this._glyphPageIndex.clear(),this._warmedUpRasterizers.clear(),this._warmUpTask.clear(),this._initFirstPage(),this._onDidDeleteGlyphs.fire()}getGlyph(e,t,i,r,a){return i&=~(o.LANGUAGEID_MASK|o.TOKEN_TYPE_MASK|o.BALANCED_BRACKETS_MASK),i|=Math.floor(a%1*10),this._warmedUpRasterizers.has(e.id)||(this._warmUpAtlas(e),this._warmedUpRasterizers.add(e.id)),this._tryGetGlyph(this._glyphPageIndex.get(t,i,r,e.cacheKey)??0,e,t,i,r)}_tryGetGlyph(e,t,i,r,a){return this._glyphPageIndex.set(e,i,r,a,t.cacheKey),this._pages[e].getGlyph(t,i,r,a)??(e+1<this._pages.length?this._tryGetGlyph(e+1,t,i,r,a):void 0)??this._getGlyphFromNewPage(t,i,r,a)}_getGlyphFromNewPage(e,t,i,r){if(this._pages.length>=l.maximumPageCount)throw new Error(`Attempt to create a texture atlas page past the limit ${l.maximumPageCount}`);return this._pages.push(this._instantiationService.createInstance(_,this._pages.length,this.pageSize,this._allocatorType)),this._glyphPageIndex.set(this._pages.length-1,t,i,r,e.cacheKey),this._pages[this._pages.length-1].getGlyph(e,t,i,r)}getUsagePreview(){return Promise.all(this._pages.map(e=>e.getUsagePreview()))}getStats(){return this._pages.map(e=>e.getStats())}_warmUpAtlas(e){const t=this._colorMap;if(!t)throw new f("Cannot warm atlas without color map");this._warmUpTask.value?.clear();const i=this._warmUpTask.value=new I;for(let r=h.A;r<=h.Z;r++)for(const a of t.keys())i.enqueue(()=>{for(let s=0;s<1;s+=.1)this.getGlyph(e,String.fromCharCode(r),a<<o.FOREGROUND_OFFSET&o.FOREGROUND_MASK,0,s)});for(let r=h.a;r<=h.z;r++)for(const a of t.keys())i.enqueue(()=>{for(let s=0;s<1;s+=.1)this.getGlyph(e,String.fromCharCode(r),a<<o.FOREGROUND_OFFSET&o.FOREGROUND_MASK,0,s)});for(let r=h.ExclamationMark;r<=h.Tilde;r++)for(const a of t.keys())i.enqueue(()=>{for(let s=0;s<1;s+=.1)this.getGlyph(e,String.fromCharCode(r),a<<o.FOREGROUND_OFFSET&o.FOREGROUND_MASK,0,s)})}};l=m([g(2,A),g(3,b)],l);export{l as TextureAtlas};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { getActiveWindow } from "../../../../base/browser/dom.js";
+import { CharCode } from "../../../../base/common/charCode.js";
+import { BugIndicatingError } from "../../../../base/common/errors.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { Disposable, dispose, MutableDisposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { NKeyMap } from "../../../../base/common/map.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IThemeService } from "../../../../platform/theme/common/themeService.js";
+import { MetadataConsts } from "../../../common/encodedTokenAttributes.js";
+import { GlyphRasterizer } from "../raster/glyphRasterizer.js";
+import { IdleTaskQueue } from "../taskQueue.js";
+import { AllocatorType, TextureAtlasPage } from "./textureAtlasPage.js";
+let TextureAtlas = class extends Disposable {
+  constructor(_maxTextureSize, options, _themeService, _instantiationService) {
+    super();
+    this._maxTextureSize = _maxTextureSize;
+    this._themeService = _themeService;
+    this._instantiationService = _instantiationService;
+    this._allocatorType = options?.allocatorType ?? "slab";
+    this._register(Event.runAndSubscribe(this._themeService.onDidColorThemeChange, () => {
+      if (this._colorMap) {
+        this.clear();
+      }
+      this._colorMap = this._themeService.getColorTheme().tokenColorMap;
+    }));
+    const dprFactor = Math.max(1, Math.floor(getActiveWindow().devicePixelRatio));
+    this.pageSize = Math.min(1024 * dprFactor, this._maxTextureSize);
+    this._initFirstPage();
+    this._register(toDisposable(() => dispose(this._pages)));
+  }
+  static {
+    __name(this, "TextureAtlas");
+  }
+  _colorMap;
+  _warmUpTask = this._register(new MutableDisposable());
+  _warmedUpRasterizers = /* @__PURE__ */ new Set();
+  _allocatorType;
+  /**
+   * The maximum number of texture atlas pages. This is currently a hard static cap that must not
+   * be reached.
+   */
+  static maximumPageCount = 16;
+  /**
+   * The main texture atlas pages which are both larger textures and more efficiently packed
+   * relative to the scratch page. The idea is the main pages are drawn to and uploaded to the GPU
+   * much less frequently so as to not drop frames.
+   */
+  _pages = [];
+  get pages() {
+    return this._pages;
+  }
+  pageSize;
+  /**
+   * A maps of glyph keys to the page to start searching for the glyph. This is set before
+   * searching to have as little runtime overhead (branching, intermediate variables) as possible,
+   * so it is not guaranteed to be the actual page the glyph is on. But it is guaranteed that all
+   * pages with a lower index do not contain the glyph.
+   */
+  _glyphPageIndex = new NKeyMap();
+  _onDidDeleteGlyphs = this._register(new Emitter());
+  onDidDeleteGlyphs = this._onDidDeleteGlyphs.event;
+  _initFirstPage() {
+    const firstPage = this._instantiationService.createInstance(TextureAtlasPage, 0, this.pageSize, this._allocatorType);
+    this._pages.push(firstPage);
+    const nullRasterizer = new GlyphRasterizer(1, "", 1);
+    firstPage.getGlyph(nullRasterizer, "", 0, 0);
+    nullRasterizer.dispose();
+  }
+  clear() {
+    for (const page of this._pages) {
+      page.dispose();
+    }
+    this._pages.length = 0;
+    this._glyphPageIndex.clear();
+    this._warmedUpRasterizers.clear();
+    this._warmUpTask.clear();
+    this._initFirstPage();
+    this._onDidDeleteGlyphs.fire();
+  }
+  getGlyph(rasterizer, chars, tokenMetadata, decorationStyleSetId, x) {
+    tokenMetadata &= ~(MetadataConsts.LANGUAGEID_MASK | MetadataConsts.TOKEN_TYPE_MASK | MetadataConsts.BALANCED_BRACKETS_MASK);
+    tokenMetadata |= Math.floor(x % 1 * 10);
+    if (!this._warmedUpRasterizers.has(rasterizer.id)) {
+      this._warmUpAtlas(rasterizer);
+      this._warmedUpRasterizers.add(rasterizer.id);
+    }
+    return this._tryGetGlyph(this._glyphPageIndex.get(chars, tokenMetadata, decorationStyleSetId, rasterizer.cacheKey) ?? 0, rasterizer, chars, tokenMetadata, decorationStyleSetId);
+  }
+  _tryGetGlyph(pageIndex, rasterizer, chars, tokenMetadata, decorationStyleSetId) {
+    this._glyphPageIndex.set(pageIndex, chars, tokenMetadata, decorationStyleSetId, rasterizer.cacheKey);
+    return this._pages[pageIndex].getGlyph(rasterizer, chars, tokenMetadata, decorationStyleSetId) ?? (pageIndex + 1 < this._pages.length ? this._tryGetGlyph(pageIndex + 1, rasterizer, chars, tokenMetadata, decorationStyleSetId) : void 0) ?? this._getGlyphFromNewPage(rasterizer, chars, tokenMetadata, decorationStyleSetId);
+  }
+  _getGlyphFromNewPage(rasterizer, chars, tokenMetadata, decorationStyleSetId) {
+    if (this._pages.length >= TextureAtlas.maximumPageCount) {
+      throw new Error(`Attempt to create a texture atlas page past the limit ${TextureAtlas.maximumPageCount}`);
+    }
+    this._pages.push(this._instantiationService.createInstance(TextureAtlasPage, this._pages.length, this.pageSize, this._allocatorType));
+    this._glyphPageIndex.set(this._pages.length - 1, chars, tokenMetadata, decorationStyleSetId, rasterizer.cacheKey);
+    return this._pages[this._pages.length - 1].getGlyph(rasterizer, chars, tokenMetadata, decorationStyleSetId);
+  }
+  getUsagePreview() {
+    return Promise.all(this._pages.map((e) => e.getUsagePreview()));
+  }
+  getStats() {
+    return this._pages.map((e) => e.getStats());
+  }
+  /**
+   * Warms up the atlas by rasterizing all printable ASCII characters for each token color. This
+   * is distrubuted over multiple idle callbacks to avoid blocking the main thread.
+   */
+  _warmUpAtlas(rasterizer) {
+    const colorMap = this._colorMap;
+    if (!colorMap) {
+      throw new BugIndicatingError("Cannot warm atlas without color map");
+    }
+    this._warmUpTask.value?.clear();
+    const taskQueue = this._warmUpTask.value = new IdleTaskQueue();
+    for (let code = CharCode.A; code <= CharCode.Z; code++) {
+      for (const fgColor of colorMap.keys()) {
+        taskQueue.enqueue(() => {
+          for (let x = 0; x < 1; x += 0.1) {
+            this.getGlyph(rasterizer, String.fromCharCode(code), fgColor << MetadataConsts.FOREGROUND_OFFSET & MetadataConsts.FOREGROUND_MASK, 0, x);
+          }
+        });
+      }
+    }
+    for (let code = CharCode.a; code <= CharCode.z; code++) {
+      for (const fgColor of colorMap.keys()) {
+        taskQueue.enqueue(() => {
+          for (let x = 0; x < 1; x += 0.1) {
+            this.getGlyph(rasterizer, String.fromCharCode(code), fgColor << MetadataConsts.FOREGROUND_OFFSET & MetadataConsts.FOREGROUND_MASK, 0, x);
+          }
+        });
+      }
+    }
+    for (let code = CharCode.ExclamationMark; code <= CharCode.Tilde; code++) {
+      for (const fgColor of colorMap.keys()) {
+        taskQueue.enqueue(() => {
+          for (let x = 0; x < 1; x += 0.1) {
+            this.getGlyph(rasterizer, String.fromCharCode(code), fgColor << MetadataConsts.FOREGROUND_OFFSET & MetadataConsts.FOREGROUND_MASK, 0, x);
+          }
+        });
+      }
+    }
+  }
+};
+TextureAtlas = __decorateClass([
+  __decorateParam(2, IThemeService),
+  __decorateParam(3, IInstantiationService)
+], TextureAtlas);
+export {
+  TextureAtlas
+};
+//# sourceMappingURL=textureAtlas.js.map

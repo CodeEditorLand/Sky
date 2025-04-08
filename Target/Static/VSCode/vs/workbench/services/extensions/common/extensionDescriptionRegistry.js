@@ -1,1 +1,348 @@
-import{ExtensionIdentifier as u,ExtensionIdentifierMap as x,ExtensionIdentifierSet as h}from"../../../../platform/extensions/common/extensions.js";import{Emitter as g}from"../../../../base/common/event.js";import*as E from"../../../../base/common/path.js";import{Disposable as v,toDisposable as f}from"../../../../base/common/lifecycle.js";import{promiseWithResolvers as I}from"../../../../base/common/async.js";class _{constructor(t,s){this.versionId=t,this.removedDueToLooping=s}}class d{constructor(t,s){this._activationEventsReader=t,this._extensionDescriptions=s,this._initialize()}static isHostExtension(t,s,e){if(s.getExtensionDescription(t))return!1;const i=e.getExtensionDescription(t);return!!i&&!(!i.main&&!i.browser||"none"!==i.api)}_onDidChange=new g;onDidChange=this._onDidChange.event;_versionId=0;_extensionDescriptions;_extensionsMap;_extensionsArr;_activationMap;_initialize(){this._extensionDescriptions.sort(L),this._extensionsMap=new x,this._extensionsArr=[],this._activationMap=new Map;for(const t of this._extensionDescriptions){if(this._extensionsMap.has(t.identifier)){console.error("Extension `"+t.identifier.value+"` is already registered");continue}this._extensionsMap.set(t.identifier,t),this._extensionsArr.push(t);const s=this._activationEventsReader.readActivationEvents(t);for(const e of s)this._activationMap.has(e)||this._activationMap.set(e,[]),this._activationMap.get(e).push(t)}}set(t){return this._extensionDescriptions=t,this._initialize(),this._versionId++,this._onDidChange.fire(void 0),{versionId:this._versionId}}deltaExtensions(t,s){this._extensionDescriptions=D(this._extensionDescriptions,s),this._extensionDescriptions=this._extensionDescriptions.concat(t);const e=d._findLoopingExtensions(this._extensionDescriptions);return this._extensionDescriptions=D(this._extensionDescriptions,e.map((t=>t.identifier))),this._initialize(),this._versionId++,this._onDidChange.fire(void 0),new _(this._versionId,e)}static _findLoopingExtensions(t){const s=new class{_arcs=new Map;_nodesSet=new Set;_nodesArr=[];addNode(t){this._nodesSet.has(t)||(this._nodesSet.add(t),this._nodesArr.push(t))}addArc(t,s){this.addNode(t),this.addNode(s),this._arcs.has(t)?this._arcs.get(t).push(s):this._arcs.set(t,[s])}getArcs(t){return this._arcs.has(t)?this._arcs.get(t):[]}hasOnlyGoodArcs(t,e){const i=s.getArcs(t);for(let t=0;t<i.length;t++)if(!e.has(i[t]))return!1;return!0}getNodes(){return this._nodesArr}},e=new x;for(const i of t)if(e.set(i.identifier,i),i.extensionDependencies)for(const t of i.extensionDependencies)s.addArc(u.toKey(i.identifier),u.toKey(t));const i=new Set;s.getNodes().filter((t=>0===s.getArcs(t).length)).forEach((t=>i.add(t)));const n=s.getNodes().filter((t=>!i.has(t)));let o;do{o=!1;for(let t=0;t<n.length;t++){const e=n[t];s.hasOnlyGoodArcs(e,i)&&(n.splice(t,1),t--,i.add(e),o=!0)}}while(o);return n.map((t=>e.get(t)))}containsActivationEvent(t){return this._activationMap.has(t)}containsExtension(t){return this._extensionsMap.has(t)}getExtensionDescriptionsForActivationEvent(t){const s=this._activationMap.get(t);return s?s.slice(0):[]}getAllExtensionDescriptions(){return this._extensionsArr.slice(0)}getSnapshot(){return new b(this._versionId,this.getAllExtensionDescriptions())}getExtensionDescription(t){return this._extensionsMap.get(t)||void 0}getExtensionDescriptionByUUID(t){for(const s of this._extensionsArr)if(s.uuid===t)return s}getExtensionDescriptionByIdOrUUID(t,s){return this.getExtensionDescription(t)??(s?this.getExtensionDescriptionByUUID(s):void 0)}}class b{constructor(t,s){this.versionId=t,this.extensions=s}}class C{_actual;_lock=new A;constructor(t){this._actual=new d(t,[])}async acquireLock(t){const s=await this._lock.acquire(t);return new m(this,s)}deltaExtensions(t,s,e){if(!t.isAcquiredFor(this))throw new Error("Lock is not held");return this._actual.deltaExtensions(s,e)}containsActivationEvent(t){return this._actual.containsActivationEvent(t)}containsExtension(t){return this._actual.containsExtension(t)}getExtensionDescriptionsForActivationEvent(t){return this._actual.getExtensionDescriptionsForActivationEvent(t)}getAllExtensionDescriptions(){return this._actual.getAllExtensionDescriptions()}getSnapshot(){return this._actual.getSnapshot()}getExtensionDescription(t){return this._actual.getExtensionDescription(t)}getExtensionDescriptionByUUID(t){return this._actual.getExtensionDescriptionByUUID(t)}getExtensionDescriptionByIdOrUUID(t,s){return this._actual.getExtensionDescriptionByIdOrUUID(t,s)}}class m extends v{constructor(t,s){super(),this._registry=t,this._register(s)}_isDisposed=!1;isAcquiredFor(t){return!this._isDisposed&&this._registry===t}}class y{constructor(t){this.name=t;const s=I();this.promise=s.promise,this._resolve=s.resolve}promise;_resolve;resolve(t){this._resolve(t)}}class A{_pendingCustomers=[];_isLocked=!1;async acquire(t){const s=new y(t);return this._pendingCustomers.push(s),this._advance(),s.promise}_advance(){if(this._isLocked||0===this._pendingCustomers.length)return;const t=this._pendingCustomers.shift();this._isLocked=!0;let s=!0;const e=setTimeout((()=>{s&&console.warn(`The customer named ${t.name} has been holding on to the lock for 30s. This might be a problem.`)}),3e4);t.resolve(f((()=>{s&&(clearTimeout(e),s=!1,this._isLocked=!1,this._advance())})))}}var R=(t=>(t[t.Builtin=0]="Builtin",t[t.User=1]="User",t[t.Dev=2]="Dev",t))(R||{});function L(t,s){const e=t.isBuiltin?0:t.isUnderDevelopment?2:1,i=s.isBuiltin?0:s.isUnderDevelopment?2:1;if(e!==i)return e-i;const n=E.posix.basename(t.extensionLocation.path),o=E.posix.basename(s.extensionLocation.path);return n<o?-1:n>o?1:0}function D(t,s){const e=new h(s);return t.filter((t=>!e.has(t.identifier)))}export{_ as DeltaExtensionsResult,d as ExtensionDescriptionRegistry,m as ExtensionDescriptionRegistryLock,b as ExtensionDescriptionRegistrySnapshot,C as LockableExtensionDescriptionRegistry};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { ExtensionIdentifier, ExtensionIdentifierMap, ExtensionIdentifierSet, IExtensionDescription } from "../../../../platform/extensions/common/extensions.js";
+import { Emitter } from "../../../../base/common/event.js";
+import * as path from "../../../../base/common/path.js";
+import { Disposable, IDisposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { promiseWithResolvers } from "../../../../base/common/async.js";
+class DeltaExtensionsResult {
+  constructor(versionId, removedDueToLooping) {
+    this.versionId = versionId;
+    this.removedDueToLooping = removedDueToLooping;
+  }
+  static {
+    __name(this, "DeltaExtensionsResult");
+  }
+}
+class ExtensionDescriptionRegistry {
+  constructor(_activationEventsReader, extensionDescriptions) {
+    this._activationEventsReader = _activationEventsReader;
+    this._extensionDescriptions = extensionDescriptions;
+    this._initialize();
+  }
+  static {
+    __name(this, "ExtensionDescriptionRegistry");
+  }
+  static isHostExtension(extensionId, myRegistry, globalRegistry) {
+    if (myRegistry.getExtensionDescription(extensionId)) {
+      return false;
+    }
+    const extensionDescription = globalRegistry.getExtensionDescription(extensionId);
+    if (!extensionDescription) {
+      return false;
+    }
+    if ((extensionDescription.main || extensionDescription.browser) && extensionDescription.api === "none") {
+      return true;
+    }
+    return false;
+  }
+  _onDidChange = new Emitter();
+  onDidChange = this._onDidChange.event;
+  _versionId = 0;
+  _extensionDescriptions;
+  _extensionsMap;
+  _extensionsArr;
+  _activationMap;
+  _initialize() {
+    this._extensionDescriptions.sort(extensionCmp);
+    this._extensionsMap = new ExtensionIdentifierMap();
+    this._extensionsArr = [];
+    this._activationMap = /* @__PURE__ */ new Map();
+    for (const extensionDescription of this._extensionDescriptions) {
+      if (this._extensionsMap.has(extensionDescription.identifier)) {
+        console.error("Extension `" + extensionDescription.identifier.value + "` is already registered");
+        continue;
+      }
+      this._extensionsMap.set(extensionDescription.identifier, extensionDescription);
+      this._extensionsArr.push(extensionDescription);
+      const activationEvents = this._activationEventsReader.readActivationEvents(extensionDescription);
+      for (const activationEvent of activationEvents) {
+        if (!this._activationMap.has(activationEvent)) {
+          this._activationMap.set(activationEvent, []);
+        }
+        this._activationMap.get(activationEvent).push(extensionDescription);
+      }
+    }
+  }
+  set(extensionDescriptions) {
+    this._extensionDescriptions = extensionDescriptions;
+    this._initialize();
+    this._versionId++;
+    this._onDidChange.fire(void 0);
+    return {
+      versionId: this._versionId
+    };
+  }
+  deltaExtensions(toAdd, toRemove) {
+    this._extensionDescriptions = removeExtensions(this._extensionDescriptions, toRemove);
+    this._extensionDescriptions = this._extensionDescriptions.concat(toAdd);
+    const looping = ExtensionDescriptionRegistry._findLoopingExtensions(this._extensionDescriptions);
+    this._extensionDescriptions = removeExtensions(this._extensionDescriptions, looping.map((ext) => ext.identifier));
+    this._initialize();
+    this._versionId++;
+    this._onDidChange.fire(void 0);
+    return new DeltaExtensionsResult(this._versionId, looping);
+  }
+  static _findLoopingExtensions(extensionDescriptions) {
+    const G = new class {
+      _arcs = /* @__PURE__ */ new Map();
+      _nodesSet = /* @__PURE__ */ new Set();
+      _nodesArr = [];
+      addNode(id) {
+        if (!this._nodesSet.has(id)) {
+          this._nodesSet.add(id);
+          this._nodesArr.push(id);
+        }
+      }
+      addArc(from, to) {
+        this.addNode(from);
+        this.addNode(to);
+        if (this._arcs.has(from)) {
+          this._arcs.get(from).push(to);
+        } else {
+          this._arcs.set(from, [to]);
+        }
+      }
+      getArcs(id) {
+        if (this._arcs.has(id)) {
+          return this._arcs.get(id);
+        }
+        return [];
+      }
+      hasOnlyGoodArcs(id, good2) {
+        const dependencies = G.getArcs(id);
+        for (let i = 0; i < dependencies.length; i++) {
+          if (!good2.has(dependencies[i])) {
+            return false;
+          }
+        }
+        return true;
+      }
+      getNodes() {
+        return this._nodesArr;
+      }
+    }();
+    const descs = new ExtensionIdentifierMap();
+    for (const extensionDescription of extensionDescriptions) {
+      descs.set(extensionDescription.identifier, extensionDescription);
+      if (extensionDescription.extensionDependencies) {
+        for (const depId of extensionDescription.extensionDependencies) {
+          G.addArc(ExtensionIdentifier.toKey(extensionDescription.identifier), ExtensionIdentifier.toKey(depId));
+        }
+      }
+    }
+    const good = /* @__PURE__ */ new Set();
+    G.getNodes().filter((id) => G.getArcs(id).length === 0).forEach((id) => good.add(id));
+    const nodes = G.getNodes().filter((id) => !good.has(id));
+    let madeProgress;
+    do {
+      madeProgress = false;
+      for (let i = 0; i < nodes.length; i++) {
+        const id = nodes[i];
+        if (G.hasOnlyGoodArcs(id, good)) {
+          nodes.splice(i, 1);
+          i--;
+          good.add(id);
+          madeProgress = true;
+        }
+      }
+    } while (madeProgress);
+    return nodes.map((id) => descs.get(id));
+  }
+  containsActivationEvent(activationEvent) {
+    return this._activationMap.has(activationEvent);
+  }
+  containsExtension(extensionId) {
+    return this._extensionsMap.has(extensionId);
+  }
+  getExtensionDescriptionsForActivationEvent(activationEvent) {
+    const extensions = this._activationMap.get(activationEvent);
+    return extensions ? extensions.slice(0) : [];
+  }
+  getAllExtensionDescriptions() {
+    return this._extensionsArr.slice(0);
+  }
+  getSnapshot() {
+    return new ExtensionDescriptionRegistrySnapshot(
+      this._versionId,
+      this.getAllExtensionDescriptions()
+    );
+  }
+  getExtensionDescription(extensionId) {
+    const extension = this._extensionsMap.get(extensionId);
+    return extension ? extension : void 0;
+  }
+  getExtensionDescriptionByUUID(uuid) {
+    for (const extensionDescription of this._extensionsArr) {
+      if (extensionDescription.uuid === uuid) {
+        return extensionDescription;
+      }
+    }
+    return void 0;
+  }
+  getExtensionDescriptionByIdOrUUID(extensionId, uuid) {
+    return this.getExtensionDescription(extensionId) ?? (uuid ? this.getExtensionDescriptionByUUID(uuid) : void 0);
+  }
+}
+class ExtensionDescriptionRegistrySnapshot {
+  constructor(versionId, extensions) {
+    this.versionId = versionId;
+    this.extensions = extensions;
+  }
+  static {
+    __name(this, "ExtensionDescriptionRegistrySnapshot");
+  }
+}
+class LockableExtensionDescriptionRegistry {
+  static {
+    __name(this, "LockableExtensionDescriptionRegistry");
+  }
+  _actual;
+  _lock = new Lock();
+  constructor(activationEventsReader) {
+    this._actual = new ExtensionDescriptionRegistry(activationEventsReader, []);
+  }
+  async acquireLock(customerName) {
+    const lock = await this._lock.acquire(customerName);
+    return new ExtensionDescriptionRegistryLock(this, lock);
+  }
+  deltaExtensions(acquiredLock, toAdd, toRemove) {
+    if (!acquiredLock.isAcquiredFor(this)) {
+      throw new Error("Lock is not held");
+    }
+    return this._actual.deltaExtensions(toAdd, toRemove);
+  }
+  containsActivationEvent(activationEvent) {
+    return this._actual.containsActivationEvent(activationEvent);
+  }
+  containsExtension(extensionId) {
+    return this._actual.containsExtension(extensionId);
+  }
+  getExtensionDescriptionsForActivationEvent(activationEvent) {
+    return this._actual.getExtensionDescriptionsForActivationEvent(activationEvent);
+  }
+  getAllExtensionDescriptions() {
+    return this._actual.getAllExtensionDescriptions();
+  }
+  getSnapshot() {
+    return this._actual.getSnapshot();
+  }
+  getExtensionDescription(extensionId) {
+    return this._actual.getExtensionDescription(extensionId);
+  }
+  getExtensionDescriptionByUUID(uuid) {
+    return this._actual.getExtensionDescriptionByUUID(uuid);
+  }
+  getExtensionDescriptionByIdOrUUID(extensionId, uuid) {
+    return this._actual.getExtensionDescriptionByIdOrUUID(extensionId, uuid);
+  }
+}
+class ExtensionDescriptionRegistryLock extends Disposable {
+  constructor(_registry, lock) {
+    super();
+    this._registry = _registry;
+    this._register(lock);
+  }
+  static {
+    __name(this, "ExtensionDescriptionRegistryLock");
+  }
+  _isDisposed = false;
+  isAcquiredFor(registry) {
+    return !this._isDisposed && this._registry === registry;
+  }
+}
+class LockCustomer {
+  constructor(name) {
+    this.name = name;
+    const withResolvers = promiseWithResolvers();
+    this.promise = withResolvers.promise;
+    this._resolve = withResolvers.resolve;
+  }
+  static {
+    __name(this, "LockCustomer");
+  }
+  promise;
+  _resolve;
+  resolve(value) {
+    this._resolve(value);
+  }
+}
+class Lock {
+  static {
+    __name(this, "Lock");
+  }
+  _pendingCustomers = [];
+  _isLocked = false;
+  async acquire(customerName) {
+    const customer = new LockCustomer(customerName);
+    this._pendingCustomers.push(customer);
+    this._advance();
+    return customer.promise;
+  }
+  _advance() {
+    if (this._isLocked) {
+      return;
+    }
+    if (this._pendingCustomers.length === 0) {
+      return;
+    }
+    const customer = this._pendingCustomers.shift();
+    this._isLocked = true;
+    let customerHoldsLock = true;
+    const logLongRunningCustomerTimeout = setTimeout(
+      () => {
+        if (customerHoldsLock) {
+          console.warn(`The customer named ${customer.name} has been holding on to the lock for 30s. This might be a problem.`);
+        }
+      },
+      30 * 1e3
+      /* 30 seconds */
+    );
+    const releaseLock = /* @__PURE__ */ __name(() => {
+      if (!customerHoldsLock) {
+        return;
+      }
+      clearTimeout(logLongRunningCustomerTimeout);
+      customerHoldsLock = false;
+      this._isLocked = false;
+      this._advance();
+    }, "releaseLock");
+    customer.resolve(toDisposable(releaseLock));
+  }
+}
+var SortBucket = /* @__PURE__ */ ((SortBucket2) => {
+  SortBucket2[SortBucket2["Builtin"] = 0] = "Builtin";
+  SortBucket2[SortBucket2["User"] = 1] = "User";
+  SortBucket2[SortBucket2["Dev"] = 2] = "Dev";
+  return SortBucket2;
+})(SortBucket || {});
+function extensionCmp(a, b) {
+  const aSortBucket = a.isBuiltin ? 0 /* Builtin */ : a.isUnderDevelopment ? 2 /* Dev */ : 1 /* User */;
+  const bSortBucket = b.isBuiltin ? 0 /* Builtin */ : b.isUnderDevelopment ? 2 /* Dev */ : 1 /* User */;
+  if (aSortBucket !== bSortBucket) {
+    return aSortBucket - bSortBucket;
+  }
+  const aLastSegment = path.posix.basename(a.extensionLocation.path);
+  const bLastSegment = path.posix.basename(b.extensionLocation.path);
+  if (aLastSegment < bLastSegment) {
+    return -1;
+  }
+  if (aLastSegment > bLastSegment) {
+    return 1;
+  }
+  return 0;
+}
+__name(extensionCmp, "extensionCmp");
+function removeExtensions(arr, toRemove) {
+  const toRemoveSet = new ExtensionIdentifierSet(toRemove);
+  return arr.filter((extension) => !toRemoveSet.has(extension.identifier));
+}
+__name(removeExtensions, "removeExtensions");
+export {
+  DeltaExtensionsResult,
+  ExtensionDescriptionRegistry,
+  ExtensionDescriptionRegistryLock,
+  ExtensionDescriptionRegistrySnapshot,
+  LockableExtensionDescriptionRegistry
+};
+//# sourceMappingURL=extensionDescriptionRegistry.js.map

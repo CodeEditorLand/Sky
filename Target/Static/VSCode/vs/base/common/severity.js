@@ -1,1 +1,53 @@
-import*as e from"./strings.js";var o=(r=>(r[r.Ignore=0]="Ignore",r[r.Info=1]="Info",r[r.Warning=2]="Warning",r[r.Error=3]="Error",r))(o||{});(r=>{const n="error",o="warning",a="info";r.fromValue=function(r){return r?e.equalsIgnoreCase(n,r)?3:e.equalsIgnoreCase(o,r)||e.equalsIgnoreCase("warn",r)?2:e.equalsIgnoreCase(a,r)?1:0:0},r.toString=function(r){switch(r){case 3:return n;case 2:return o;case 1:return a;default:return"ignore"}}})(o||={});var c=o;export{c as default};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as strings from "./strings.js";
+var Severity = /* @__PURE__ */ ((Severity2) => {
+  Severity2[Severity2["Ignore"] = 0] = "Ignore";
+  Severity2[Severity2["Info"] = 1] = "Info";
+  Severity2[Severity2["Warning"] = 2] = "Warning";
+  Severity2[Severity2["Error"] = 3] = "Error";
+  return Severity2;
+})(Severity || {});
+((Severity2) => {
+  const _error = "error";
+  const _warning = "warning";
+  const _warn = "warn";
+  const _info = "info";
+  const _ignore = "ignore";
+  function fromValue(value) {
+    if (!value) {
+      return 0 /* Ignore */;
+    }
+    if (strings.equalsIgnoreCase(_error, value)) {
+      return 3 /* Error */;
+    }
+    if (strings.equalsIgnoreCase(_warning, value) || strings.equalsIgnoreCase(_warn, value)) {
+      return 2 /* Warning */;
+    }
+    if (strings.equalsIgnoreCase(_info, value)) {
+      return 1 /* Info */;
+    }
+    return 0 /* Ignore */;
+  }
+  Severity2.fromValue = fromValue;
+  __name(fromValue, "fromValue");
+  function toString(severity) {
+    switch (severity) {
+      case 3 /* Error */:
+        return _error;
+      case 2 /* Warning */:
+        return _warning;
+      case 1 /* Info */:
+        return _info;
+      default:
+        return _ignore;
+    }
+  }
+  Severity2.toString = toString;
+  __name(toString, "toString");
+})(Severity || (Severity = {}));
+var severity_default = Severity;
+export {
+  severity_default as default
+};
+//# sourceMappingURL=severity.js.map

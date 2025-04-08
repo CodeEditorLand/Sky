@@ -1,1 +1,77 @@
-import{coalesce as l}from"../../../../base/common/arrays.js";import"../../../../base/common/cancellation.js";import"../../../browser/editorBrowser.js";import"../../../common/model.js";import"./hoverOperation.js";import{HoverAnchorType as m}from"./hoverTypes.js";import{AsyncIterableObject as a}from"../../../../base/common/async.js";class s{constructor(o,e){this._editor=o;this._participants=e}static _getLineDecorations(o,e){if(e.type!==m.Range&&!e.supportsMarkerHover)return[];const t=o.getModel(),r=e.range.startLineNumber;if(r>t.getLineCount())return[];const n=t.getLineMaxColumn(r);return o.getLineDecorations(r).filter(i=>{if(i.options.isWholeLine)return!0;const c=i.range.startLineNumber===r?i.range.startColumn:1,u=i.range.endLineNumber===r?i.range.endColumn:n;if(i.options.showIfCollapsed){if(c>e.range.startColumn+1||e.range.endColumn-1>u)return!1}else if(c>e.range.startColumn||e.range.endColumn>u)return!1;return!0})}computeAsync(o,e){const t=o.anchor;if(!this._editor.hasModel()||!t)return a.EMPTY;const r=s._getLineDecorations(this._editor,t);return a.merge(this._participants.map(n=>n.computeAsync?n.computeAsync(t,r,o.source,e):a.EMPTY))}computeSync(o){if(!this._editor.hasModel())return[];const e=o.anchor,t=s._getLineDecorations(this._editor,e);let r=[];for(const n of this._participants)r=r.concat(n.computeSync(e,t,o.source));return l(r)}}export{s as ContentHoverComputer};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { coalesce } from "../../../../base/common/arrays.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { IActiveCodeEditor, ICodeEditor } from "../../../browser/editorBrowser.js";
+import { IModelDecoration } from "../../../common/model.js";
+import { HoverStartSource, IHoverComputer } from "./hoverOperation.js";
+import { HoverAnchor, HoverAnchorType, IEditorHoverParticipant, IHoverPart } from "./hoverTypes.js";
+import { AsyncIterableObject } from "../../../../base/common/async.js";
+class ContentHoverComputer {
+  constructor(_editor, _participants) {
+    this._editor = _editor;
+    this._participants = _participants;
+  }
+  static {
+    __name(this, "ContentHoverComputer");
+  }
+  static _getLineDecorations(editor, anchor) {
+    if (anchor.type !== HoverAnchorType.Range && !anchor.supportsMarkerHover) {
+      return [];
+    }
+    const model = editor.getModel();
+    const lineNumber = anchor.range.startLineNumber;
+    if (lineNumber > model.getLineCount()) {
+      return [];
+    }
+    const maxColumn = model.getLineMaxColumn(lineNumber);
+    return editor.getLineDecorations(lineNumber).filter((d) => {
+      if (d.options.isWholeLine) {
+        return true;
+      }
+      const startColumn = d.range.startLineNumber === lineNumber ? d.range.startColumn : 1;
+      const endColumn = d.range.endLineNumber === lineNumber ? d.range.endColumn : maxColumn;
+      if (d.options.showIfCollapsed) {
+        if (startColumn > anchor.range.startColumn + 1 || anchor.range.endColumn - 1 > endColumn) {
+          return false;
+        }
+      } else {
+        if (startColumn > anchor.range.startColumn || anchor.range.endColumn > endColumn) {
+          return false;
+        }
+      }
+      return true;
+    });
+  }
+  computeAsync(options, token) {
+    const anchor = options.anchor;
+    if (!this._editor.hasModel() || !anchor) {
+      return AsyncIterableObject.EMPTY;
+    }
+    const lineDecorations = ContentHoverComputer._getLineDecorations(this._editor, anchor);
+    return AsyncIterableObject.merge(
+      this._participants.map((participant) => {
+        if (!participant.computeAsync) {
+          return AsyncIterableObject.EMPTY;
+        }
+        return participant.computeAsync(anchor, lineDecorations, options.source, token);
+      })
+    );
+  }
+  computeSync(options) {
+    if (!this._editor.hasModel()) {
+      return [];
+    }
+    const anchor = options.anchor;
+    const lineDecorations = ContentHoverComputer._getLineDecorations(this._editor, anchor);
+    let result = [];
+    for (const participant of this._participants) {
+      result = result.concat(participant.computeSync(anchor, lineDecorations, options.source));
+    }
+    return coalesce(result);
+  }
+}
+export {
+  ContentHoverComputer
+};
+//# sourceMappingURL=contentHoverComputer.js.map

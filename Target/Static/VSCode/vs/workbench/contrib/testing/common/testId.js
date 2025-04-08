@@ -1,1 +1,224 @@
-var a=(t=>(t.Delimiter="\0",t))(a||{}),c=(t=>(t[t.IsSame=0]="IsSame",t[t.Disconnected=1]="Disconnected",t[t.IsChild=2]="IsChild",t[t.IsParent=3]="IsParent",t))(c||{});class r{constructor(t,i=t.length){if(this.path=t,this.viewEnd=i,0===t.length||i<1)throw new Error("cannot create test with empty path")}stringifed;static fromExtHostTestItem(t,i,e=t.parent){if(t._isRoot)return new r([i]);const s=[t.id];for(let t=e;t&&t.id!==i;t=t.parent)s.push(t.id);return s.push(i),new r(s.reverse())}static isRoot(t){return!t.includes("\0")}static root(t){const i=t.indexOf("\0");return-1===i?t:t.slice(0,i)}static fromString(t){return new r(t.split("\0"))}static join(t,i){return new r([...t.path,i])}static split(t){return t.split("\0")}static joinToString(t,i){return t.toString()+"\0"+i}static parentId(t){const i=t.lastIndexOf("\0");return-1===i?void 0:t.slice(0,i)}static localId(t){const i=t.lastIndexOf("\0");return-1===i?t:t.slice(i+1)}static isChild(t,i){return"\0"===i[t.length]&&i.startsWith(t)}static compare(t,i){return t===i?0:r.isChild(t,i)?2:r.isChild(i,t)?3:1}static getLengthOfCommonPrefix(t,i){if(0===t)return 0;let r=0;for(;r<t-1;){for(let e=1;e<t;e++){const t=i(e-1),s=i(e);if(t.path[r]!==s.path[r])return r}r++}return r}get rootId(){return new r(this.path,1)}get parentId(){return this.viewEnd>1?new r(this.path,this.viewEnd-1):void 0}get localId(){return this.path[this.viewEnd-1]}get controllerId(){return this.path[0]}get isRoot(){return 1===this.viewEnd}*idsFromRoot(){for(let t=1;t<=this.viewEnd;t++)yield new r(this.path,t)}*idsToRoot(){for(let t=this.viewEnd;t>0;t--)yield new r(this.path,t)}compare(t){if("string"==typeof t)return r.compare(this.toString(),t);for(let i=0;i<t.viewEnd&&i<this.viewEnd;i++)if(t.path[i]!==this.path[i])return 1;return t.viewEnd>this.viewEnd?2:t.viewEnd<this.viewEnd?3:0}toJSON(){return this.toString()}toString(){if(!this.stringifed){this.stringifed=this.path[0];for(let t=1;t<this.viewEnd;t++)this.stringifed+="\0",this.stringifed+=this.path[t]}return this.stringifed}}export{r as TestId,a as TestIdPathParts,c as TestPosition};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var TestIdPathParts = /* @__PURE__ */ ((TestIdPathParts2) => {
+  TestIdPathParts2["Delimiter"] = "\0";
+  return TestIdPathParts2;
+})(TestIdPathParts || {});
+var TestPosition = /* @__PURE__ */ ((TestPosition2) => {
+  TestPosition2[TestPosition2["IsSame"] = 0] = "IsSame";
+  TestPosition2[TestPosition2["Disconnected"] = 1] = "Disconnected";
+  TestPosition2[TestPosition2["IsChild"] = 2] = "IsChild";
+  TestPosition2[TestPosition2["IsParent"] = 3] = "IsParent";
+  return TestPosition2;
+})(TestPosition || {});
+class TestId {
+  constructor(path, viewEnd = path.length) {
+    this.path = path;
+    this.viewEnd = viewEnd;
+    if (path.length === 0 || viewEnd < 1) {
+      throw new Error("cannot create test with empty path");
+    }
+  }
+  static {
+    __name(this, "TestId");
+  }
+  stringifed;
+  /**
+   * Creates a test ID from an ext host test item.
+   */
+  static fromExtHostTestItem(item, rootId, parent = item.parent) {
+    if (item._isRoot) {
+      return new TestId([rootId]);
+    }
+    const path = [item.id];
+    for (let i = parent; i && i.id !== rootId; i = i.parent) {
+      path.push(i.id);
+    }
+    path.push(rootId);
+    return new TestId(path.reverse());
+  }
+  /**
+   * Cheaply ets whether the ID refers to the root .
+   */
+  static isRoot(idString) {
+    return !idString.includes("\0" /* Delimiter */);
+  }
+  /**
+   * Cheaply gets whether the ID refers to the root .
+   */
+  static root(idString) {
+    const idx = idString.indexOf("\0" /* Delimiter */);
+    return idx === -1 ? idString : idString.slice(0, idx);
+  }
+  /**
+   * Creates a test ID from a serialized TestId instance.
+   */
+  static fromString(idString) {
+    return new TestId(idString.split("\0" /* Delimiter */));
+  }
+  /**
+   * Gets the ID resulting from adding b to the base ID.
+   */
+  static join(base, b) {
+    return new TestId([...base.path, b]);
+  }
+  /**
+   * Splits a test ID into its parts.
+   */
+  static split(idString) {
+    return idString.split("\0" /* Delimiter */);
+  }
+  /**
+   * Gets the string ID resulting from adding b to the base ID.
+   */
+  static joinToString(base, b) {
+    return base.toString() + "\0" /* Delimiter */ + b;
+  }
+  /**
+   * Cheaply gets the parent ID of a test identified with the string.
+   */
+  static parentId(idString) {
+    const idx = idString.lastIndexOf("\0" /* Delimiter */);
+    return idx === -1 ? void 0 : idString.slice(0, idx);
+  }
+  /**
+   * Cheaply gets the local ID of a test identified with the string.
+   */
+  static localId(idString) {
+    const idx = idString.lastIndexOf("\0" /* Delimiter */);
+    return idx === -1 ? idString : idString.slice(idx + "\0" /* Delimiter */.length);
+  }
+  /**
+   * Gets whether maybeChild is a child of maybeParent.
+   * todo@connor4312: review usages of this to see if using the WellDefinedPrefixTree is better
+   */
+  static isChild(maybeParent, maybeChild) {
+    return maybeChild[maybeParent.length] === "\0" /* Delimiter */ && maybeChild.startsWith(maybeParent);
+  }
+  /**
+   * Compares the position of the two ID strings.
+   * todo@connor4312: review usages of this to see if using the WellDefinedPrefixTree is better
+   */
+  static compare(a, b) {
+    if (a === b) {
+      return 0 /* IsSame */;
+    }
+    if (TestId.isChild(a, b)) {
+      return 2 /* IsChild */;
+    }
+    if (TestId.isChild(b, a)) {
+      return 3 /* IsParent */;
+    }
+    return 1 /* Disconnected */;
+  }
+  static getLengthOfCommonPrefix(length, getId) {
+    if (length === 0) {
+      return 0;
+    }
+    let commonPrefix = 0;
+    while (commonPrefix < length - 1) {
+      for (let i = 1; i < length; i++) {
+        const a = getId(i - 1);
+        const b = getId(i);
+        if (a.path[commonPrefix] !== b.path[commonPrefix]) {
+          return commonPrefix;
+        }
+      }
+      commonPrefix++;
+    }
+    return commonPrefix;
+  }
+  /**
+   * Gets the ID of the parent test.
+   */
+  get rootId() {
+    return new TestId(this.path, 1);
+  }
+  /**
+   * Gets the ID of the parent test.
+   */
+  get parentId() {
+    return this.viewEnd > 1 ? new TestId(this.path, this.viewEnd - 1) : void 0;
+  }
+  /**
+   * Gets the local ID of the current full test ID.
+   */
+  get localId() {
+    return this.path[this.viewEnd - 1];
+  }
+  /**
+   * Gets whether this ID refers to the root.
+   */
+  get controllerId() {
+    return this.path[0];
+  }
+  /**
+   * Gets whether this ID refers to the root.
+   */
+  get isRoot() {
+    return this.viewEnd === 1;
+  }
+  /**
+   * Returns an iterable that yields IDs of all parent items down to and
+   * including the current item.
+   */
+  *idsFromRoot() {
+    for (let i = 1; i <= this.viewEnd; i++) {
+      yield new TestId(this.path, i);
+    }
+  }
+  /**
+   * Returns an iterable that yields IDs of the current item up to the root
+   * item.
+   */
+  *idsToRoot() {
+    for (let i = this.viewEnd; i > 0; i--) {
+      yield new TestId(this.path, i);
+    }
+  }
+  /**
+   * Compares the other test ID with this one.
+   */
+  compare(other) {
+    if (typeof other === "string") {
+      return TestId.compare(this.toString(), other);
+    }
+    for (let i = 0; i < other.viewEnd && i < this.viewEnd; i++) {
+      if (other.path[i] !== this.path[i]) {
+        return 1 /* Disconnected */;
+      }
+    }
+    if (other.viewEnd > this.viewEnd) {
+      return 2 /* IsChild */;
+    }
+    if (other.viewEnd < this.viewEnd) {
+      return 3 /* IsParent */;
+    }
+    return 0 /* IsSame */;
+  }
+  /**
+   * Serializes the ID.
+   */
+  toJSON() {
+    return this.toString();
+  }
+  /**
+   * Serializes the ID to a string.
+   */
+  toString() {
+    if (!this.stringifed) {
+      this.stringifed = this.path[0];
+      for (let i = 1; i < this.viewEnd; i++) {
+        this.stringifed += "\0" /* Delimiter */;
+        this.stringifed += this.path[i];
+      }
+    }
+    return this.stringifed;
+  }
+}
+export {
+  TestId,
+  TestIdPathParts,
+  TestPosition
+};
+//# sourceMappingURL=testId.js.map

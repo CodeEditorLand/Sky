@@ -1,1 +1,62 @@
-var x=Object.defineProperty,b=Object.getOwnPropertyDescriptor,c=(e,t,o,s)=>{for(var l,r=s>1?void 0:s?b(t,o):t,n=e.length-1;n>=0;n--)(l=e[n])&&(r=(s?l(t,o,r):l(r))||r);return s&&r&&x(t,o,r),r},u=(e,t)=>(o,s)=>t(o,s,e);import*as o from"../../../../../../base/browser/dom.js";import{Codicon as h}from"../../../../../../base/common/codicons.js";import{ThemeIcon as L}from"../../../../../../base/common/themables.js";import{localize as a}from"../../../../../../nls.js";import{IKeybindingService as E}from"../../../../../../platform/keybinding/common/keybinding.js";import{EXPAND_CELL_OUTPUT_COMMAND_ID as f}from"../../notebookBrowser.js";import{CellContentPart as I}from"../cellPart.js";const m=o.$;let l=class extends I{constructor(e,t,s){super(),this.notebookEditor=e;const l=o.append(t,m("span.expandOutputPlaceholder"));l.textContent=a("cellOutputsCollapsedMsg","Outputs are collapsed");const r=o.append(t,m("span.expandOutputIcon"));r.classList.add(...L.asClassNameArray(h.more));const n=s.lookupKeybinding(f);n&&(l.title=a("cellExpandOutputButtonLabelWithDoubleClick","Double-click to expand cell output ({0})",n.getLabel()),t.title=a("cellExpandOutputButtonLabel","Expand Cell Output (${0})",n.getLabel())),o.hide(t),this._register(o.addDisposableListener(r,o.EventType.CLICK,(()=>this.expand()))),this._register(o.addDisposableListener(t,o.EventType.DBLCLICK,(()=>this.expand())))}expand(){!this.currentCell||!this.currentCell||this.notebookEditor.textModel.cells.indexOf(this.currentCell.model)<0||(this.currentCell.isOutputCollapsed=!this.currentCell.isOutputCollapsed)}};l=c([u(2,E)],l);export{l as CollapsedCellOutput};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import * as DOM from "../../../../../../base/browser/dom.js";
+import { Codicon } from "../../../../../../base/common/codicons.js";
+import { ThemeIcon } from "../../../../../../base/common/themables.js";
+import { localize } from "../../../../../../nls.js";
+import { IKeybindingService } from "../../../../../../platform/keybinding/common/keybinding.js";
+import { EXPAND_CELL_OUTPUT_COMMAND_ID, INotebookEditor } from "../../notebookBrowser.js";
+import { CellContentPart } from "../cellPart.js";
+const $ = DOM.$;
+let CollapsedCellOutput = class extends CellContentPart {
+  constructor(notebookEditor, cellOutputCollapseContainer, keybindingService) {
+    super();
+    this.notebookEditor = notebookEditor;
+    const placeholder = DOM.append(cellOutputCollapseContainer, $("span.expandOutputPlaceholder"));
+    placeholder.textContent = localize("cellOutputsCollapsedMsg", "Outputs are collapsed");
+    const expandIcon = DOM.append(cellOutputCollapseContainer, $("span.expandOutputIcon"));
+    expandIcon.classList.add(...ThemeIcon.asClassNameArray(Codicon.more));
+    const keybinding = keybindingService.lookupKeybinding(EXPAND_CELL_OUTPUT_COMMAND_ID);
+    if (keybinding) {
+      placeholder.title = localize("cellExpandOutputButtonLabelWithDoubleClick", "Double-click to expand cell output ({0})", keybinding.getLabel());
+      cellOutputCollapseContainer.title = localize("cellExpandOutputButtonLabel", "Expand Cell Output (${0})", keybinding.getLabel());
+    }
+    DOM.hide(cellOutputCollapseContainer);
+    this._register(DOM.addDisposableListener(expandIcon, DOM.EventType.CLICK, () => this.expand()));
+    this._register(DOM.addDisposableListener(cellOutputCollapseContainer, DOM.EventType.DBLCLICK, () => this.expand()));
+  }
+  static {
+    __name(this, "CollapsedCellOutput");
+  }
+  expand() {
+    if (!this.currentCell) {
+      return;
+    }
+    if (!this.currentCell) {
+      return;
+    }
+    const textModel = this.notebookEditor.textModel;
+    const index = textModel.cells.indexOf(this.currentCell.model);
+    if (index < 0) {
+      return;
+    }
+    this.currentCell.isOutputCollapsed = !this.currentCell.isOutputCollapsed;
+  }
+};
+CollapsedCellOutput = __decorateClass([
+  __decorateParam(2, IKeybindingService)
+], CollapsedCellOutput);
+export {
+  CollapsedCellOutput
+};
+//# sourceMappingURL=collapsedCellOutput.js.map

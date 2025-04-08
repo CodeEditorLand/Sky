@@ -1,1 +1,50 @@
-import"../../../../base/common/uri.js";import{createDecorator as r}from"../../../../platform/instantiation/common/instantiation.js";import"../../../../base/common/event.js";import"../../../../base/common/lifecycle.js";import"../../../../editor/common/languages.js";import"../../../../base/common/actions.js";import"../../../../platform/actions/common/actions.js";import"../../../../base/common/themables.js";import"../../../../base/common/htmlContent.js";import"../../../../base/common/resourceTree.js";import"./history.js";import"../../../../editor/common/model.js";import"../../../../base/common/observable.js";const T="workbench.view.scm",U="workbench.scm",A="workbench.scm.repositories",_="workbench.scm.history",O=r("scm");var n=(o=>(o[o.Error=0]="Error",o[o.Warning=1]="Warning",o[o.Information=2]="Information",o))(n||{}),i=(o=>(o[o.HistoryPrevious=0]="HistoryPrevious",o[o.HistoryNext=1]="HistoryNext",o))(i||{}),t=(o=>(o.DiscoveryTime="discoveryTime",o.Name="name",o.Path="path",o))(t||{});const B=r("scmView"),G="workbench.editor.scmChangesEditor";export{_ as HISTORY_VIEW_PANE_ID,t as ISCMRepositorySortKey,O as ISCMService,B as ISCMViewService,n as InputValidationType,A as REPOSITORIES_VIEW_PANE_ID,i as SCMInputChangeReason,G as SCM_CHANGES_EDITOR_ID,T as VIEWLET_ID,U as VIEW_PANE_ID};
+import { URI } from "../../../../base/common/uri.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { Event } from "../../../../base/common/event.js";
+import { IDisposable } from "../../../../base/common/lifecycle.js";
+import { Command } from "../../../../editor/common/languages.js";
+import { IAction } from "../../../../base/common/actions.js";
+import { IMenu } from "../../../../platform/actions/common/actions.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { IMarkdownString } from "../../../../base/common/htmlContent.js";
+import { ResourceTree } from "../../../../base/common/resourceTree.js";
+import { ISCMHistoryProvider } from "./history.js";
+import { ITextModel } from "../../../../editor/common/model.js";
+import { IObservable } from "../../../../base/common/observable.js";
+const VIEWLET_ID = "workbench.view.scm";
+const VIEW_PANE_ID = "workbench.scm";
+const REPOSITORIES_VIEW_PANE_ID = "workbench.scm.repositories";
+const HISTORY_VIEW_PANE_ID = "workbench.scm.history";
+const ISCMService = createDecorator("scm");
+var InputValidationType = /* @__PURE__ */ ((InputValidationType2) => {
+  InputValidationType2[InputValidationType2["Error"] = 0] = "Error";
+  InputValidationType2[InputValidationType2["Warning"] = 1] = "Warning";
+  InputValidationType2[InputValidationType2["Information"] = 2] = "Information";
+  return InputValidationType2;
+})(InputValidationType || {});
+var SCMInputChangeReason = /* @__PURE__ */ ((SCMInputChangeReason2) => {
+  SCMInputChangeReason2[SCMInputChangeReason2["HistoryPrevious"] = 0] = "HistoryPrevious";
+  SCMInputChangeReason2[SCMInputChangeReason2["HistoryNext"] = 1] = "HistoryNext";
+  return SCMInputChangeReason2;
+})(SCMInputChangeReason || {});
+var ISCMRepositorySortKey = /* @__PURE__ */ ((ISCMRepositorySortKey2) => {
+  ISCMRepositorySortKey2["DiscoveryTime"] = "discoveryTime";
+  ISCMRepositorySortKey2["Name"] = "name";
+  ISCMRepositorySortKey2["Path"] = "path";
+  return ISCMRepositorySortKey2;
+})(ISCMRepositorySortKey || {});
+const ISCMViewService = createDecorator("scmView");
+const SCM_CHANGES_EDITOR_ID = "workbench.editor.scmChangesEditor";
+export {
+  HISTORY_VIEW_PANE_ID,
+  ISCMRepositorySortKey,
+  ISCMService,
+  ISCMViewService,
+  InputValidationType,
+  REPOSITORIES_VIEW_PANE_ID,
+  SCMInputChangeReason,
+  SCM_CHANGES_EDITOR_ID,
+  VIEWLET_ID,
+  VIEW_PANE_ID
+};
+//# sourceMappingURL=scm.js.map

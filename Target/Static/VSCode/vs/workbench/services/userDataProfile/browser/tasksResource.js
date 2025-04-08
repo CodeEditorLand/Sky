@@ -1,1 +1,137 @@
-var d=Object.defineProperty,P=Object.getOwnPropertyDescriptor,a=(e,t,i,s)=>{for(var r,a=s>1?void 0:s?P(t,i):t,o=e.length-1;o>=0;o--)(r=e[o])&&(a=(s?r(t,i,a):r(a))||a);return s&&a&&d(t,i,a),a},i=(e,t)=>(i,s)=>t(i,s,e);import{VSBuffer as I}from"../../../../base/common/buffer.js";import{localize as g}from"../../../../nls.js";import{FileOperationError as y,FileOperationResult as h,IFileService as u}from"../../../../platform/files/common/files.js";import{IInstantiationService as k}from"../../../../platform/instantiation/common/instantiation.js";import{ILogService as m}from"../../../../platform/log/common/log.js";import{IUriIdentityService as C}from"../../../../platform/uriIdentity/common/uriIdentity.js";import{ProfileResourceType as S}from"../../../../platform/userDataProfile/common/userDataProfile.js";import{API_OPEN_EDITOR_COMMAND_ID as D}from"../../../browser/parts/editor/editorCommands.js";import{TreeItemCollapsibleState as v}from"../../../common/views.js";import{IUserDataProfileService as R}from"../common/userDataProfile.js";let l=class{constructor(e,t,i){this.userDataProfileService=e,this.fileService=t,this.logService=i}async initialize(e){const t=JSON.parse(e);t.tasks?await this.fileService.writeFile(this.userDataProfileService.currentProfile.tasksResource,I.fromString(t.tasks)):this.logService.info("Initializing Profile: No tasks to apply...")}};l=a([i(0,R),i(1,u),i(2,m)],l);let n=class{constructor(e,t){this.fileService=e,this.logService=t}async getContent(e){const t=await this.getTasksResourceContent(e);return JSON.stringify(t)}async getTasksResourceContent(e){return{tasks:await this.getTasksContent(e)}}async apply(e,t){const i=JSON.parse(e);i.tasks?await this.fileService.writeFile(t.tasksResource,I.fromString(i.tasks)):this.logService.info(`Importing Profile (${t.name}): No tasks to apply...`)}async getTasksContent(e){try{return(await this.fileService.readFile(e.tasksResource)).value.toString()}catch(e){if(e instanceof y&&e.fileOperationResult===h.FILE_NOT_FOUND)return null;throw e}}};n=a([i(0,u),i(1,m)],n);let c=class{constructor(e,t,i){this.profile=e,this.uriIdentityService=t,this.instantiationService=i}type=S.Tasks;handle=S.Tasks;label={label:g("tasks","Tasks")};collapsibleState=v.Expanded;checkbox;async getChildren(){return[{handle:this.profile.tasksResource.toString(),resourceUri:this.profile.tasksResource,collapsibleState:v.None,parent:this,accessibilityInformation:{label:this.uriIdentityService.extUri.basename(this.profile.settingsResource)},command:{id:D,title:"",arguments:[this.profile.tasksResource,void 0,void 0]}}]}async hasContent(){return null!==(await this.instantiationService.createInstance(n).getTasksResourceContent(this.profile)).tasks}async getContent(){return this.instantiationService.createInstance(n).getContent(this.profile)}isFromDefaultProfile(){return!this.profile.isDefault&&!!this.profile.useDefaultFlags?.tasks}};c=a([i(1,C),i(2,k)],c);export{n as TasksResource,l as TasksResourceInitializer,c as TasksResourceTreeItem};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { VSBuffer } from "../../../../base/common/buffer.js";
+import { localize } from "../../../../nls.js";
+import { FileOperationError, FileOperationResult, IFileService } from "../../../../platform/files/common/files.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import { IUserDataProfile, ProfileResourceType } from "../../../../platform/userDataProfile/common/userDataProfile.js";
+import { API_OPEN_EDITOR_COMMAND_ID } from "../../../browser/parts/editor/editorCommands.js";
+import { ITreeItemCheckboxState, TreeItemCollapsibleState } from "../../../common/views.js";
+import { IProfileResource, IProfileResourceChildTreeItem, IProfileResourceInitializer, IProfileResourceTreeItem, IUserDataProfileService } from "../common/userDataProfile.js";
+let TasksResourceInitializer = class {
+  constructor(userDataProfileService, fileService, logService) {
+    this.userDataProfileService = userDataProfileService;
+    this.fileService = fileService;
+    this.logService = logService;
+  }
+  static {
+    __name(this, "TasksResourceInitializer");
+  }
+  async initialize(content) {
+    const tasksContent = JSON.parse(content);
+    if (!tasksContent.tasks) {
+      this.logService.info(`Initializing Profile: No tasks to apply...`);
+      return;
+    }
+    await this.fileService.writeFile(this.userDataProfileService.currentProfile.tasksResource, VSBuffer.fromString(tasksContent.tasks));
+  }
+};
+TasksResourceInitializer = __decorateClass([
+  __decorateParam(0, IUserDataProfileService),
+  __decorateParam(1, IFileService),
+  __decorateParam(2, ILogService)
+], TasksResourceInitializer);
+let TasksResource = class {
+  constructor(fileService, logService) {
+    this.fileService = fileService;
+    this.logService = logService;
+  }
+  static {
+    __name(this, "TasksResource");
+  }
+  async getContent(profile) {
+    const tasksContent = await this.getTasksResourceContent(profile);
+    return JSON.stringify(tasksContent);
+  }
+  async getTasksResourceContent(profile) {
+    const tasksContent = await this.getTasksContent(profile);
+    return { tasks: tasksContent };
+  }
+  async apply(content, profile) {
+    const tasksContent = JSON.parse(content);
+    if (!tasksContent.tasks) {
+      this.logService.info(`Importing Profile (${profile.name}): No tasks to apply...`);
+      return;
+    }
+    await this.fileService.writeFile(profile.tasksResource, VSBuffer.fromString(tasksContent.tasks));
+  }
+  async getTasksContent(profile) {
+    try {
+      const content = await this.fileService.readFile(profile.tasksResource);
+      return content.value.toString();
+    } catch (error) {
+      if (error instanceof FileOperationError && error.fileOperationResult === FileOperationResult.FILE_NOT_FOUND) {
+        return null;
+      } else {
+        throw error;
+      }
+    }
+  }
+};
+TasksResource = __decorateClass([
+  __decorateParam(0, IFileService),
+  __decorateParam(1, ILogService)
+], TasksResource);
+let TasksResourceTreeItem = class {
+  constructor(profile, uriIdentityService, instantiationService) {
+    this.profile = profile;
+    this.uriIdentityService = uriIdentityService;
+    this.instantiationService = instantiationService;
+  }
+  static {
+    __name(this, "TasksResourceTreeItem");
+  }
+  type = ProfileResourceType.Tasks;
+  handle = ProfileResourceType.Tasks;
+  label = { label: localize("tasks", "Tasks") };
+  collapsibleState = TreeItemCollapsibleState.Expanded;
+  checkbox;
+  async getChildren() {
+    return [{
+      handle: this.profile.tasksResource.toString(),
+      resourceUri: this.profile.tasksResource,
+      collapsibleState: TreeItemCollapsibleState.None,
+      parent: this,
+      accessibilityInformation: {
+        label: this.uriIdentityService.extUri.basename(this.profile.settingsResource)
+      },
+      command: {
+        id: API_OPEN_EDITOR_COMMAND_ID,
+        title: "",
+        arguments: [this.profile.tasksResource, void 0, void 0]
+      }
+    }];
+  }
+  async hasContent() {
+    const tasksContent = await this.instantiationService.createInstance(TasksResource).getTasksResourceContent(this.profile);
+    return tasksContent.tasks !== null;
+  }
+  async getContent() {
+    return this.instantiationService.createInstance(TasksResource).getContent(this.profile);
+  }
+  isFromDefaultProfile() {
+    return !this.profile.isDefault && !!this.profile.useDefaultFlags?.tasks;
+  }
+};
+TasksResourceTreeItem = __decorateClass([
+  __decorateParam(1, IUriIdentityService),
+  __decorateParam(2, IInstantiationService)
+], TasksResourceTreeItem);
+export {
+  TasksResource,
+  TasksResourceInitializer,
+  TasksResourceTreeItem
+};
+//# sourceMappingURL=tasksResource.js.map

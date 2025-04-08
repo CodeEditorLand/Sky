@@ -1,1 +1,11 @@
-import{Codicon as i}from"../../../../base/common/codicons.js";import{localize as e}from"../../../../nls.js";import{registerColor as o,textLinkForeground as r}from"../../../../platform/theme/common/colorRegistry.js";import{registerIcon as n}from"../../../../platform/theme/common/iconRegistry.js";const l=n("extensions-verified-publisher",i.verifiedFilled,e("verifiedPublisher","Icon used for the verified extension publisher in the extensions view and editor.")),c=o("extensionIcon.verifiedForeground",r,e("extensionIconVerifiedForeground","The icon color for extension verified publisher."),!1);export{c as extensionVerifiedPublisherIconColor,l as verifiedPublisherIcon};
+import { Codicon } from "../../../../base/common/codicons.js";
+import { localize } from "../../../../nls.js";
+import { registerColor, textLinkForeground } from "../../../../platform/theme/common/colorRegistry.js";
+import { registerIcon } from "../../../../platform/theme/common/iconRegistry.js";
+const verifiedPublisherIcon = registerIcon("extensions-verified-publisher", Codicon.verifiedFilled, localize("verifiedPublisher", "Icon used for the verified extension publisher in the extensions view and editor."));
+const extensionVerifiedPublisherIconColor = registerColor("extensionIcon.verifiedForeground", textLinkForeground, localize("extensionIconVerifiedForeground", "The icon color for extension verified publisher."), false);
+export {
+  extensionVerifiedPublisherIconColor,
+  verifiedPublisherIcon
+};
+//# sourceMappingURL=extensionsIcons.js.map

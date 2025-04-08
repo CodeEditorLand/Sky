@@ -1,1 +1,34 @@
-import{homedir as s,tmpdir as i}from"os";import"../common/argv.js";import"../common/environment.js";import{AbstractNativeEnvironmentService as n,parseDebugParams as o}from"../common/environmentService.js";import{getUserDataPath as a}from"./userDataPath.js";import"../../product/common/productService.js";class h extends n{constructor(r,e){super(r,{homeDir:s(),tmpDir:i(),userDataDir:a(r,e.nameShort)},e)}}function f(r,e){return o(r["inspect-ptyhost"],r["inspect-brk-ptyhost"],5877,e,r.extensionEnvironment)}function g(r,e){return o(r["inspect-sharedprocess"],r["inspect-brk-sharedprocess"],5879,e,r.extensionEnvironment)}export{h as NativeEnvironmentService,f as parsePtyHostDebugPort,g as parseSharedProcessDebugPort};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { homedir, tmpdir } from "os";
+import { NativeParsedArgs } from "../common/argv.js";
+import { IDebugParams } from "../common/environment.js";
+import { AbstractNativeEnvironmentService, parseDebugParams } from "../common/environmentService.js";
+import { getUserDataPath } from "./userDataPath.js";
+import { IProductService } from "../../product/common/productService.js";
+class NativeEnvironmentService extends AbstractNativeEnvironmentService {
+  static {
+    __name(this, "NativeEnvironmentService");
+  }
+  constructor(args, productService) {
+    super(args, {
+      homeDir: homedir(),
+      tmpDir: tmpdir(),
+      userDataDir: getUserDataPath(args, productService.nameShort)
+    }, productService);
+  }
+}
+function parsePtyHostDebugPort(args, isBuilt) {
+  return parseDebugParams(args["inspect-ptyhost"], args["inspect-brk-ptyhost"], 5877, isBuilt, args.extensionEnvironment);
+}
+__name(parsePtyHostDebugPort, "parsePtyHostDebugPort");
+function parseSharedProcessDebugPort(args, isBuilt) {
+  return parseDebugParams(args["inspect-sharedprocess"], args["inspect-brk-sharedprocess"], 5879, isBuilt, args.extensionEnvironment);
+}
+__name(parseSharedProcessDebugPort, "parseSharedProcessDebugPort");
+export {
+  NativeEnvironmentService,
+  parsePtyHostDebugPort,
+  parseSharedProcessDebugPort
+};
+//# sourceMappingURL=environmentService.js.map

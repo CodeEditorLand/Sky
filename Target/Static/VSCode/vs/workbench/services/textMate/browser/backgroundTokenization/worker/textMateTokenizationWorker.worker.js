@@ -1,1 +1,112 @@
-import{URI as c}from"../../../../../../base/common/uri.js";import"../../../../../../editor/common/encodedTokenAttributes.js";import"../../../../../../editor/common/model/mirrorTextModel.js";import{TMGrammarFactory as d}from"../../../common/TMGrammarFactory.js";import"../../../common/TMScopeRegistry.js";import{TextMateWorkerTokenizer as u}from"./textMateWorkerTokenizer.js";import{importAMDNodeModule as l}from"../../../../../../amdX.js";import"../../../../../../base/common/worker/webWorker.js";import{TextMateWorkerHost as p}from"./textMateWorkerHost.js";function z(s){return new b(s)}class b{_requestHandlerBrand;_host;_models=new Map;_grammarCache=[];_grammarFactory=Promise.resolve(null);constructor(e){this._host=p.getChannel(e)}async $init(e){const a=e.grammarDefinitions.map(r=>({location:c.revive(r.location),language:r.language,scopeName:r.scopeName,embeddedLanguages:r.embeddedLanguages,tokenTypes:r.tokenTypes,injectTo:r.injectTo,balancedBracketSelectors:r.balancedBracketSelectors,unbalancedBracketSelectors:r.unbalancedBracketSelectors,sourceExtensionId:r.sourceExtensionId}));this._grammarFactory=this._loadTMGrammarFactory(a,e.onigurumaWASMUri)}async _loadTMGrammarFactory(e,a){const r=await l("vscode-textmate","release/main.js"),o=await l("vscode-oniguruma","release/main.js"),i=await(await fetch(a)).arrayBuffer();await o.loadWASM(i);const m=Promise.resolve({createOnigScanner:t=>o.createOnigScanner(t),createOnigString:t=>o.createOnigString(t)});return new d({logTrace:t=>{},logError:(t,g)=>console.error(t,g),readFile:t=>this._host.$readFile(t)},e,r,m)}$acceptNewModel(e){const a=c.revive(e.uri),r=this;this._models.set(e.controllerId,new u(a,e.lines,e.EOL,e.versionId,{async getOrCreateGrammar(o,n){const i=await r._grammarFactory;return i?(r._grammarCache[n]||(r._grammarCache[n]=i.createGrammar(o,n)),r._grammarCache[n]):Promise.resolve(null)},setTokensAndStates(o,n,i){r._host.$setTokensAndStates(e.controllerId,o,n,i)},reportTokenizationTime(o,n,i,m,t){r._host.$reportTokenizationTime(o,n,i,m,t)}},e.languageId,e.encodedLanguageId,e.maxTokenizationLineLength))}$acceptModelChanged(e,a){this._models.get(e).onEvents(a)}$retokenize(e,a,r){this._models.get(e).retokenize(a,r)}$acceptModelLanguageChanged(e,a,r){this._models.get(e).onLanguageId(a,r)}$acceptRemovedModel(e){const a=this._models.get(e);a&&(a.dispose(),this._models.delete(e))}async $acceptTheme(e,a){(await this._grammarFactory)?.setTheme(e,a)}$acceptMaxTokenizationLineLength(e,a){this._models.get(e).acceptMaxTokenizationLineLength(a)}}export{b as TextMateTokenizationWorker,z as create};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { URI, UriComponents } from "../../../../../../base/common/uri.js";
+import { LanguageId } from "../../../../../../editor/common/encodedTokenAttributes.js";
+import { IModelChangedEvent } from "../../../../../../editor/common/model/mirrorTextModel.js";
+import { ICreateGrammarResult, TMGrammarFactory } from "../../../common/TMGrammarFactory.js";
+import { IValidEmbeddedLanguagesMap, IValidGrammarDefinition, IValidTokenTypeMap } from "../../../common/TMScopeRegistry.js";
+import { TextMateWorkerTokenizer } from "./textMateWorkerTokenizer.js";
+import { importAMDNodeModule } from "../../../../../../amdX.js";
+import { IWebWorkerServerRequestHandler, IWebWorkerServer } from "../../../../../../base/common/worker/webWorker.js";
+import { TextMateWorkerHost } from "./textMateWorkerHost.js";
+function create(workerServer) {
+  return new TextMateTokenizationWorker(workerServer);
+}
+__name(create, "create");
+class TextMateTokenizationWorker {
+  static {
+    __name(this, "TextMateTokenizationWorker");
+  }
+  _requestHandlerBrand;
+  _host;
+  _models = /* @__PURE__ */ new Map();
+  _grammarCache = [];
+  _grammarFactory = Promise.resolve(null);
+  constructor(workerServer) {
+    this._host = TextMateWorkerHost.getChannel(workerServer);
+  }
+  async $init(_createData) {
+    const grammarDefinitions = _createData.grammarDefinitions.map((def) => {
+      return {
+        location: URI.revive(def.location),
+        language: def.language,
+        scopeName: def.scopeName,
+        embeddedLanguages: def.embeddedLanguages,
+        tokenTypes: def.tokenTypes,
+        injectTo: def.injectTo,
+        balancedBracketSelectors: def.balancedBracketSelectors,
+        unbalancedBracketSelectors: def.unbalancedBracketSelectors,
+        sourceExtensionId: def.sourceExtensionId
+      };
+    });
+    this._grammarFactory = this._loadTMGrammarFactory(grammarDefinitions, _createData.onigurumaWASMUri);
+  }
+  async _loadTMGrammarFactory(grammarDefinitions, onigurumaWASMUri) {
+    const vscodeTextmate = await importAMDNodeModule("vscode-textmate", "release/main.js");
+    const vscodeOniguruma = await importAMDNodeModule("vscode-oniguruma", "release/main.js");
+    const response = await fetch(onigurumaWASMUri);
+    const bytes = await response.arrayBuffer();
+    await vscodeOniguruma.loadWASM(bytes);
+    const onigLib = Promise.resolve({
+      createOnigScanner: /* @__PURE__ */ __name((sources) => vscodeOniguruma.createOnigScanner(sources), "createOnigScanner"),
+      createOnigString: /* @__PURE__ */ __name((str) => vscodeOniguruma.createOnigString(str), "createOnigString")
+    });
+    return new TMGrammarFactory({
+      logTrace: /* @__PURE__ */ __name((msg) => {
+      }, "logTrace"),
+      logError: /* @__PURE__ */ __name((msg, err) => console.error(msg, err), "logError"),
+      readFile: /* @__PURE__ */ __name((resource) => this._host.$readFile(resource), "readFile")
+    }, grammarDefinitions, vscodeTextmate, onigLib);
+  }
+  // These methods are called by the renderer
+  $acceptNewModel(data) {
+    const uri = URI.revive(data.uri);
+    const that = this;
+    this._models.set(data.controllerId, new TextMateWorkerTokenizer(uri, data.lines, data.EOL, data.versionId, {
+      async getOrCreateGrammar(languageId, encodedLanguageId) {
+        const grammarFactory = await that._grammarFactory;
+        if (!grammarFactory) {
+          return Promise.resolve(null);
+        }
+        if (!that._grammarCache[encodedLanguageId]) {
+          that._grammarCache[encodedLanguageId] = grammarFactory.createGrammar(languageId, encodedLanguageId);
+        }
+        return that._grammarCache[encodedLanguageId];
+      },
+      setTokensAndStates(versionId, tokens, stateDeltas) {
+        that._host.$setTokensAndStates(data.controllerId, versionId, tokens, stateDeltas);
+      },
+      reportTokenizationTime(timeMs, languageId, sourceExtensionId, lineLength, isRandomSample) {
+        that._host.$reportTokenizationTime(timeMs, languageId, sourceExtensionId, lineLength, isRandomSample);
+      }
+    }, data.languageId, data.encodedLanguageId, data.maxTokenizationLineLength));
+  }
+  $acceptModelChanged(controllerId, e) {
+    this._models.get(controllerId).onEvents(e);
+  }
+  $retokenize(controllerId, startLineNumber, endLineNumberExclusive) {
+    this._models.get(controllerId).retokenize(startLineNumber, endLineNumberExclusive);
+  }
+  $acceptModelLanguageChanged(controllerId, newLanguageId, newEncodedLanguageId) {
+    this._models.get(controllerId).onLanguageId(newLanguageId, newEncodedLanguageId);
+  }
+  $acceptRemovedModel(controllerId) {
+    const model = this._models.get(controllerId);
+    if (model) {
+      model.dispose();
+      this._models.delete(controllerId);
+    }
+  }
+  async $acceptTheme(theme, colorMap) {
+    const grammarFactory = await this._grammarFactory;
+    grammarFactory?.setTheme(theme, colorMap);
+  }
+  $acceptMaxTokenizationLineLength(controllerId, value) {
+    this._models.get(controllerId).acceptMaxTokenizationLineLength(value);
+  }
+}
+export {
+  TextMateTokenizationWorker,
+  create
+};
+//# sourceMappingURL=textMateTokenizationWorker.worker.js.map

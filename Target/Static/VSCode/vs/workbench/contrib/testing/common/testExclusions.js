@@ -1,1 +1,86 @@
-var u=Object.defineProperty,c=Object.getOwnPropertyDescriptor,s=(e,t,s,a)=>{for(var r,i=a>1?void 0:a?c(t,s):t,o=e.length-1;o>=0;o--)(r=e[o])&&(i=(a?r(t,s,i):r(i))||i);return a&&i&&u(t,s,i),i},n=(e,t)=>(s,a)=>t(s,a,e);import"../../../../base/common/event.js";import{Iterable as m}from"../../../../base/common/iterator.js";import{Disposable as h}from"../../../../base/common/lifecycle.js";import{IStorageService as v,StorageScope as p,StorageTarget as g}from"../../../../platform/storage/common/storage.js";import{MutableObservableValue as S}from"./observableValue.js";import{StoredValue as x}from"./storedValue.js";import"./testTypes.js";let a=class extends h{constructor(e){super(),this.storageService=e,this.excluded=this._register(S.stored(new x({key:"excludedTestItems",scope:p.WORKSPACE,target:g.MACHINE,serialization:{deserialize:e=>new Set(JSON.parse(e)),serialize:e=>JSON.stringify([...e])}},this.storageService),new Set)),this.onTestExclusionsChanged=this.excluded.onDidChange}excluded;onTestExclusionsChanged;get hasAny(){return this.excluded.value.size>0}get all(){return this.excluded.value}toggle(e,t){!0!==t&&this.excluded.value.has(e.item.extId)?this.excluded.value=new Set(m.filter(this.excluded.value,(t=>t!==e.item.extId))):!1!==t&&!this.excluded.value.has(e.item.extId)&&(this.excluded.value=new Set([...this.excluded.value,e.item.extId]))}contains(e){return this.excluded.value.has(e.item.extId)}clear(){this.excluded.value=new Set}};a=s([n(0,v)],a);export{a as TestExclusions};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Event } from "../../../../base/common/event.js";
+import { Iterable } from "../../../../base/common/iterator.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { MutableObservableValue } from "./observableValue.js";
+import { StoredValue } from "./storedValue.js";
+import { InternalTestItem } from "./testTypes.js";
+let TestExclusions = class extends Disposable {
+  constructor(storageService) {
+    super();
+    this.storageService = storageService;
+    this.excluded = this._register(
+      MutableObservableValue.stored(new StoredValue({
+        key: "excludedTestItems",
+        scope: StorageScope.WORKSPACE,
+        target: StorageTarget.MACHINE,
+        serialization: {
+          deserialize: /* @__PURE__ */ __name((v) => new Set(JSON.parse(v)), "deserialize"),
+          serialize: /* @__PURE__ */ __name((v) => JSON.stringify([...v]), "serialize")
+        }
+      }, this.storageService), /* @__PURE__ */ new Set())
+    );
+    this.onTestExclusionsChanged = this.excluded.onDidChange;
+  }
+  static {
+    __name(this, "TestExclusions");
+  }
+  excluded;
+  /**
+   * Event that fires when the excluded tests change.
+   */
+  onTestExclusionsChanged;
+  /**
+   * Gets whether there's any excluded tests.
+   */
+  get hasAny() {
+    return this.excluded.value.size > 0;
+  }
+  /**
+   * Gets all excluded tests.
+   */
+  get all() {
+    return this.excluded.value;
+  }
+  /**
+   * Sets whether a test is excluded.
+   */
+  toggle(test, exclude) {
+    if (exclude !== true && this.excluded.value.has(test.item.extId)) {
+      this.excluded.value = new Set(Iterable.filter(this.excluded.value, (e) => e !== test.item.extId));
+    } else if (exclude !== false && !this.excluded.value.has(test.item.extId)) {
+      this.excluded.value = /* @__PURE__ */ new Set([...this.excluded.value, test.item.extId]);
+    }
+  }
+  /**
+   * Gets whether a test is excluded.
+   */
+  contains(test) {
+    return this.excluded.value.has(test.item.extId);
+  }
+  /**
+   * Removes all test exclusions.
+   */
+  clear() {
+    this.excluded.value = /* @__PURE__ */ new Set();
+  }
+};
+TestExclusions = __decorateClass([
+  __decorateParam(0, IStorageService)
+], TestExclusions);
+export {
+  TestExclusions
+};
+//# sourceMappingURL=testExclusions.js.map

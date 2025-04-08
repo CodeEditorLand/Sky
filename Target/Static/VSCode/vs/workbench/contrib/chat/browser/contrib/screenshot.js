@@ -1,1 +1,20 @@
-import"../../../../../base/common/buffer.js";import{localize as r}from"../../../../../nls.js";import"../../common/chatModel.js";const o="screenshot-focused-window";function s(e){return{id:o,name:r("screenshot","Screenshot"),value:e.buffer,kind:"image"}}export{o as ScreenshotVariableId,s as convertBufferToScreenshotVariable};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { VSBuffer } from "../../../../../base/common/buffer.js";
+import { localize } from "../../../../../nls.js";
+import { IChatRequestVariableEntry } from "../../common/chatModel.js";
+const ScreenshotVariableId = "screenshot-focused-window";
+function convertBufferToScreenshotVariable(buffer) {
+  return {
+    id: ScreenshotVariableId,
+    name: localize("screenshot", "Screenshot"),
+    value: buffer.buffer,
+    kind: "image"
+  };
+}
+__name(convertBufferToScreenshotVariable, "convertBufferToScreenshotVariable");
+export {
+  ScreenshotVariableId,
+  convertBufferToScreenshotVariable
+};
+//# sourceMappingURL=screenshot.js.map

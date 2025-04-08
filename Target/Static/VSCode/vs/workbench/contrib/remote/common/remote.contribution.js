@@ -1,1 +1,373 @@
-var W=Object.defineProperty,E=Object.getOwnPropertyDescriptor,u=(e,t,o,r)=>{for(var i,n=r>1?void 0:r?E(t,o):t,s=e.length-1;s>=0;s--)(i=e[s])&&(n=(r?i(t,o,n):i(n))||n);return r&&n&&W(t,o,n),n},n=(e,t)=>(o,r)=>t(o,r,e);import{WorkbenchPhase as f,Extensions as O,registerWorkbenchContribution2 as b}from"../../../common/contributions.js";import{Registry as g}from"../../../../platform/registry/common/platform.js";import{LifecyclePhase as R}from"../../../services/lifecycle/common/lifecycle.js";import{ILabelService as L}from"../../../../platform/label/common/label.js";import{OperatingSystem as m,isWeb as C,OS as T}from"../../../../base/common/platform.js";import{Schemas as h}from"../../../../base/common/network.js";import{IRemoteAgentService as w}from"../../../services/remote/common/remoteAgentService.js";import{ILoggerService as N}from"../../../../platform/log/common/log.js";import{localize as e,localize2 as y}from"../../../../nls.js";import{Disposable as v}from"../../../../base/common/lifecycle.js";import{Extensions as B}from"../../../../platform/configuration/common/configurationRegistry.js";import"../../../../base/common/jsonSchema.js";import{IFileService as U}from"../../../../platform/files/common/files.js";import{IDialogService as j,IFileDialogService as z}from"../../../../platform/dialogs/common/dialogs.js";import{IWorkbenchEnvironmentService as _}from"../../../services/environment/common/environmentService.js";import{IWorkspaceContextService as q}from"../../../../platform/workspace/common/workspace.js";import"../../../../platform/instantiation/common/instantiation.js";import{Action2 as S,registerAction2 as A}from"../../../../platform/actions/common/actions.js";import{Categories as k}from"../../../../platform/action/common/actionCommonCategories.js";import{PersistentConnection as I}from"../../../../platform/remote/common/remoteAgentConnection.js";import{IDownloadService as M}from"../../../../platform/download/common/download.js";import{DownloadServiceChannel as $}from"../../../../platform/download/common/downloadIpc.js";import{RemoteLoggerChannelClient as Z}from"../../../../platform/log/common/logIpc.js";import{REMOTE_DEFAULT_IF_LOCAL_EXTENSIONS as K}from"../../../../platform/remote/common/remote.js";import H from"../../../../platform/product/common/product.js";const P="([a-z0-9A-Z][a-z0-9-A-Z]*)\\.([a-z0-9A-Z][a-z0-9-A-Z]*)$";let l=class{constructor(e,t){this.labelService=e,this.remoteAgentService=t,this.registerFormatters()}static ID="workbench.contrib.remoteLabel";registerFormatters(){this.remoteAgentService.getEnvironment().then((e=>{const t=e?.os||T,o={label:"${path}",separator:t===m.Windows?"\\":"/",tildify:t!==m.Windows,normalizeDriveLetter:t===m.Windows,workspaceSuffix:C?void 0:h.vscodeRemote};this.labelService.registerFormatter({scheme:h.vscodeRemote,formatting:o}),e&&this.labelService.registerFormatter({scheme:h.vscodeUserData,formatting:o})}))}};l=u([n(0,L),n(1,w)],l);let p=class extends v{constructor(e,t,o){super();const r=e.getConnection();r&&(r.registerChannel("download",new $(t)),r.withChannel("logger",(async e=>this._register(new Z(o,e)))))}};p=u([n(0,w),n(1,M),n(2,N)],p);let c=class extends v{constructor(e,t,o,r,i,n){super(),this.fileService=e,this.dialogService=t,this.environmentService=o,this.contextService=r,this.fileDialogService=i,this.environmentService.remoteAuthority&&n.getEnvironment().then((e=>{e&&this.validateRemoteWorkspace()}))}static ID="workbench.contrib.remoteInvalidWorkspaceDetector";async validateRemoteWorkspace(){const t=this.contextService.getWorkspace(),o=t.configuration??t.folders.at(0)?.uri;if(o&&!await this.fileService.exists(o))return(await this.dialogService.confirm({type:"warning",message:e("invalidWorkspaceMessage","Workspace does not exist"),detail:e("invalidWorkspaceDetail","Please select another workspace to open."),primaryButton:e({key:"invalidWorkspacePrimary",comment:["&& denotes a mnemonic"]},"&&Open Workspace...")})).confirmed?t.configuration?this.fileDialogService.pickWorkspaceAndOpen({}):this.fileDialogService.pickFolderAndOpen({}):void 0}};c=u([n(0,U),n(1,j),n(2,_),n(3,q),n(4,z),n(5,w)],c);const J=g.as(O.Workbench);b(l.ID,l,f.BlockStartup),J.registerWorkbenchContribution(p,R.Restored),b(c.ID,c,f.BlockStartup);const X=!0;{class e extends S{constructor(){super({id:"workbench.action.triggerReconnect",title:y("triggerReconnect","Connection: Trigger Reconnect"),category:k.Developer,f1:!0})}async run(e){I.debugTriggerReconnection()}}class t extends S{constructor(){super({id:"workbench.action.pauseSocketWriting",title:y("pauseSocketWriting","Connection: Pause socket writing"),category:k.Developer,f1:!0})}async run(e){I.debugPauseSocketWriting()}}A(e),A(t)}const F={type:"string",enum:["ui","workspace"],enumDescriptions:[e("ui","UI extension kind. In a remote window, such extensions are enabled only when available on the local machine."),e("workspace","Workspace extension kind. In a remote window, such extensions are enabled only when available on the remote.")]};g.as(B.Configuration).registerConfiguration({id:"remote",title:e("remote","Remote"),type:"object",properties:{"remote.extensionKind":{type:"object",markdownDescription:e("remote.extensionKind","Override the kind of an extension. `ui` extensions are installed and run on the local machine while `workspace` extensions are run on the remote. By overriding an extension's default kind using this setting, you specify if that extension should be installed and enabled locally or remotely."),patternProperties:{[P]:{oneOf:[{type:"array",items:F},F],default:["ui"]}},default:{"pub.name":["ui"]}},"remote.restoreForwardedPorts":{type:"boolean",markdownDescription:e("remote.restoreForwardedPorts","Restores the ports you forwarded in a workspace."),default:!0},"remote.autoForwardPorts":{type:"boolean",markdownDescription:e("remote.autoForwardPorts","When enabled, new running processes are detected and ports that they listen on are automatically forwarded. Disabling this setting will not prevent all ports from being forwarded. Even when disabled, extensions will still be able to cause ports to be forwarded, and opening some URLs will still cause ports to forwarded. Also see {0}.","`#remote.autoForwardPortsSource#`"),default:!0},"remote.autoForwardPortsSource":{type:"string",markdownDescription:e("remote.autoForwardPortsSource","Sets the source from which ports are automatically forwarded when {0} is true. When {0} is false, {1} will be used to find information about ports that have already been forwarded. On Windows and macOS remotes, the `process` and `hybrid` options have no effect and `output` will be used.","`#remote.autoForwardPorts#`","`#remote.autoForwardPortsSource#`"),enum:["process","output","hybrid"],enumDescriptions:[e("remote.autoForwardPortsSource.process","Ports will be automatically forwarded when discovered by watching for processes that are started and include a port."),e("remote.autoForwardPortsSource.output",'Ports will be automatically forwarded when discovered by reading terminal and debug output. Not all processes that use ports will print to the integrated terminal or debug console, so some ports will be missed. Ports forwarded based on output will not be "un-forwarded" until reload or until the port is closed by the user in the Ports view.'),e("remote.autoForwardPortsSource.hybrid",'Ports will be automatically forwarded when discovered by reading terminal and debug output. Not all processes that use ports will print to the integrated terminal or debug console, so some ports will be missed. Ports will be "un-forwarded" by watching for processes that listen on that port to be terminated.')],default:"process"},"remote.autoForwardPortsFallback":{type:"number",default:20,markdownDescription:e("remote.autoForwardPortFallback","The number of auto forwarded ports that will trigger the switch from `process` to `hybrid` when automatically forwarding ports and `remote.autoForwardPortsSource` is set to `process` by default. Set to `0` to disable the fallback. When `remote.autoForwardPortsFallback` hasn't been configured, but `remote.autoForwardPortsSource` has, `remote.autoForwardPortsFallback` will be treated as though it's set to `0`.")},"remote.forwardOnOpen":{type:"boolean",description:e("remote.forwardOnClick","Controls whether local URLs with a port will be forwarded when opened from the terminal and the debug console."),default:!0},"remote.portsAttributes":{type:"object",patternProperties:{"(^\\d+(-\\d+)?$)|(.+)":{type:"object",description:e("remote.portsAttributes.port",'A port, range of ports (ex. "40000-55000"), host and port (ex. "db:1234"), or regular expression (ex. ".+\\\\/server.js").  For a port number or range, the attributes will apply to that port number or range of port numbers. Attributes which use a regular expression will apply to ports whose associated process command line matches the expression.'),properties:{onAutoForward:{type:"string",enum:["notify","openBrowser","openBrowserOnce","openPreview","silent","ignore"],enumDescriptions:[e("remote.portsAttributes.notify","Shows a notification when a port is automatically forwarded."),e("remote.portsAttributes.openBrowser","Opens the browser when the port is automatically forwarded. Depending on your settings, this could open an embedded browser."),e("remote.portsAttributes.openBrowserOnce","Opens the browser when the port is automatically forwarded, but only the first time the port is forward during a session. Depending on your settings, this could open an embedded browser."),e("remote.portsAttributes.openPreview","Opens a preview in the same window when the port is automatically forwarded."),e("remote.portsAttributes.silent","Shows no notification and takes no action when this port is automatically forwarded."),e("remote.portsAttributes.ignore","This port will not be automatically forwarded.")],description:e("remote.portsAttributes.onForward","Defines the action that occurs when the port is discovered for automatic forwarding"),default:"notify"},elevateIfNeeded:{type:"boolean",description:e("remote.portsAttributes.elevateIfNeeded","Automatically prompt for elevation (if needed) when this port is forwarded. Elevate is required if the local port is a privileged port."),default:!1},label:{type:"string",description:e("remote.portsAttributes.label","Label that will be shown in the UI for this port."),default:e("remote.portsAttributes.labelDefault","Application")},requireLocalPort:{type:"boolean",markdownDescription:e("remote.portsAttributes.requireLocalPort","When true, a modal dialog will show if the chosen local port isn't used for forwarding."),default:!1},protocol:{type:"string",enum:["http","https"],description:e("remote.portsAttributes.protocol","The protocol to use when forwarding this port.")}},default:{label:e("remote.portsAttributes.labelDefault","Application"),onAutoForward:"notify"}}},markdownDescription:e("remote.portsAttributes",'Set properties that are applied when a specific port number is forwarded. For example:\n\n```\n"3000": {\n  "label": "Application"\n},\n"40000-55000": {\n  "onAutoForward": "ignore"\n},\n".+\\\\/server.js": {\n "onAutoForward": "openPreview"\n}\n```'),defaultSnippets:[{body:{"${1:3000}":{label:"${2:Application}",onAutoForward:"openPreview"}}}],errorMessage:e("remote.portsAttributes.patternError","Must be a port number, range of port numbers, or regular expression."),additionalProperties:!1,default:{443:{protocol:"https"},8443:{protocol:"https"}}},"remote.otherPortsAttributes":{type:"object",properties:{onAutoForward:{type:"string",enum:["notify","openBrowser","openPreview","silent","ignore"],enumDescriptions:[e("remote.portsAttributes.notify","Shows a notification when a port is automatically forwarded."),e("remote.portsAttributes.openBrowser","Opens the browser when the port is automatically forwarded. Depending on your settings, this could open an embedded browser."),e("remote.portsAttributes.openPreview","Opens a preview in the same window when the port is automatically forwarded."),e("remote.portsAttributes.silent","Shows no notification and takes no action when this port is automatically forwarded."),e("remote.portsAttributes.ignore","This port will not be automatically forwarded.")],description:e("remote.portsAttributes.onForward","Defines the action that occurs when the port is discovered for automatic forwarding"),default:"notify"},elevateIfNeeded:{type:"boolean",description:e("remote.portsAttributes.elevateIfNeeded","Automatically prompt for elevation (if needed) when this port is forwarded. Elevate is required if the local port is a privileged port."),default:!1},label:{type:"string",description:e("remote.portsAttributes.label","Label that will be shown in the UI for this port."),default:e("remote.portsAttributes.labelDefault","Application")},requireLocalPort:{type:"boolean",markdownDescription:e("remote.portsAttributes.requireLocalPort","When true, a modal dialog will show if the chosen local port isn't used for forwarding."),default:!1},protocol:{type:"string",enum:["http","https"],description:e("remote.portsAttributes.protocol","The protocol to use when forwarding this port.")}},defaultSnippets:[{body:{onAutoForward:"ignore"}}],markdownDescription:e("remote.portsAttributes.defaults",'Set default properties that are applied to all ports that don\'t get properties from the setting {0}. For example:\n\n```\n{\n  "onAutoForward": "ignore"\n}\n```',"`#remote.portsAttributes#`"),additionalProperties:!1},"remote.localPortHost":{type:"string",enum:["localhost","allInterfaces"],default:"localhost",description:e("remote.localPortHost","Specifies the local host name that will be used for port forwarding.")},[K]:{type:"array",markdownDescription:e("remote.defaultExtensionsIfInstalledLocally.markdownDescription","List of extensions to install upon connection to a remote when already installed locally."),default:H?.remoteDefaultExtensionsIfInstalledLocally||[],items:{type:"string",pattern:P,patternErrorMessage:e("remote.defaultExtensionsIfInstalledLocally.invalidFormat",'Extension identifier must be in format "publisher.name".')}}}});export{l as LabelContribution};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { IWorkbenchContribution, IWorkbenchContributionsRegistry, WorkbenchPhase, Extensions as WorkbenchExtensions, registerWorkbenchContribution2 } from "../../../common/contributions.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { LifecyclePhase } from "../../../services/lifecycle/common/lifecycle.js";
+import { ILabelService, ResourceLabelFormatting } from "../../../../platform/label/common/label.js";
+import { OperatingSystem, isWeb, OS } from "../../../../base/common/platform.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { IRemoteAgentService } from "../../../services/remote/common/remoteAgentService.js";
+import { ILoggerService } from "../../../../platform/log/common/log.js";
+import { localize, localize2 } from "../../../../nls.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { IConfigurationRegistry, Extensions as ConfigurationExtensions } from "../../../../platform/configuration/common/configurationRegistry.js";
+import { IJSONSchema } from "../../../../base/common/jsonSchema.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { IDialogService, IFileDialogService } from "../../../../platform/dialogs/common/dialogs.js";
+import { IWorkbenchEnvironmentService } from "../../../services/environment/common/environmentService.js";
+import { IWorkspaceContextService } from "../../../../platform/workspace/common/workspace.js";
+import { ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+import { Action2, registerAction2 } from "../../../../platform/actions/common/actions.js";
+import { Categories } from "../../../../platform/action/common/actionCommonCategories.js";
+import { PersistentConnection } from "../../../../platform/remote/common/remoteAgentConnection.js";
+import { IDownloadService } from "../../../../platform/download/common/download.js";
+import { DownloadServiceChannel } from "../../../../platform/download/common/downloadIpc.js";
+import { RemoteLoggerChannelClient } from "../../../../platform/log/common/logIpc.js";
+import { REMOTE_DEFAULT_IF_LOCAL_EXTENSIONS } from "../../../../platform/remote/common/remote.js";
+import product from "../../../../platform/product/common/product.js";
+const EXTENSION_IDENTIFIER_PATTERN = "([a-z0-9A-Z][a-z0-9-A-Z]*)\\.([a-z0-9A-Z][a-z0-9-A-Z]*)$";
+let LabelContribution = class {
+  constructor(labelService, remoteAgentService) {
+    this.labelService = labelService;
+    this.remoteAgentService = remoteAgentService;
+    this.registerFormatters();
+  }
+  static {
+    __name(this, "LabelContribution");
+  }
+  static ID = "workbench.contrib.remoteLabel";
+  registerFormatters() {
+    this.remoteAgentService.getEnvironment().then((remoteEnvironment) => {
+      const os = remoteEnvironment?.os || OS;
+      const formatting = {
+        label: "${path}",
+        separator: os === OperatingSystem.Windows ? "\\" : "/",
+        tildify: os !== OperatingSystem.Windows,
+        normalizeDriveLetter: os === OperatingSystem.Windows,
+        workspaceSuffix: isWeb ? void 0 : Schemas.vscodeRemote
+      };
+      this.labelService.registerFormatter({
+        scheme: Schemas.vscodeRemote,
+        formatting
+      });
+      if (remoteEnvironment) {
+        this.labelService.registerFormatter({
+          scheme: Schemas.vscodeUserData,
+          formatting
+        });
+      }
+    });
+  }
+};
+LabelContribution = __decorateClass([
+  __decorateParam(0, ILabelService),
+  __decorateParam(1, IRemoteAgentService)
+], LabelContribution);
+let RemoteChannelsContribution = class extends Disposable {
+  static {
+    __name(this, "RemoteChannelsContribution");
+  }
+  constructor(remoteAgentService, downloadService, loggerService) {
+    super();
+    const connection = remoteAgentService.getConnection();
+    if (connection) {
+      connection.registerChannel("download", new DownloadServiceChannel(downloadService));
+      connection.withChannel("logger", async (channel) => this._register(new RemoteLoggerChannelClient(loggerService, channel)));
+    }
+  }
+};
+RemoteChannelsContribution = __decorateClass([
+  __decorateParam(0, IRemoteAgentService),
+  __decorateParam(1, IDownloadService),
+  __decorateParam(2, ILoggerService)
+], RemoteChannelsContribution);
+let RemoteInvalidWorkspaceDetector = class extends Disposable {
+  constructor(fileService, dialogService, environmentService, contextService, fileDialogService, remoteAgentService) {
+    super();
+    this.fileService = fileService;
+    this.dialogService = dialogService;
+    this.environmentService = environmentService;
+    this.contextService = contextService;
+    this.fileDialogService = fileDialogService;
+    if (this.environmentService.remoteAuthority) {
+      remoteAgentService.getEnvironment().then((remoteEnv) => {
+        if (remoteEnv) {
+          this.validateRemoteWorkspace();
+        }
+      });
+    }
+  }
+  static {
+    __name(this, "RemoteInvalidWorkspaceDetector");
+  }
+  static ID = "workbench.contrib.remoteInvalidWorkspaceDetector";
+  async validateRemoteWorkspace() {
+    const workspace = this.contextService.getWorkspace();
+    const workspaceUriToStat = workspace.configuration ?? workspace.folders.at(0)?.uri;
+    if (!workspaceUriToStat) {
+      return;
+    }
+    const exists = await this.fileService.exists(workspaceUriToStat);
+    if (exists) {
+      return;
+    }
+    const res = await this.dialogService.confirm({
+      type: "warning",
+      message: localize("invalidWorkspaceMessage", "Workspace does not exist"),
+      detail: localize("invalidWorkspaceDetail", "Please select another workspace to open."),
+      primaryButton: localize({ key: "invalidWorkspacePrimary", comment: ["&& denotes a mnemonic"] }, "&&Open Workspace...")
+    });
+    if (res.confirmed) {
+      if (workspace.configuration) {
+        return this.fileDialogService.pickWorkspaceAndOpen({});
+      }
+      return this.fileDialogService.pickFolderAndOpen({});
+    }
+  }
+};
+RemoteInvalidWorkspaceDetector = __decorateClass([
+  __decorateParam(0, IFileService),
+  __decorateParam(1, IDialogService),
+  __decorateParam(2, IWorkbenchEnvironmentService),
+  __decorateParam(3, IWorkspaceContextService),
+  __decorateParam(4, IFileDialogService),
+  __decorateParam(5, IRemoteAgentService)
+], RemoteInvalidWorkspaceDetector);
+const workbenchContributionsRegistry = Registry.as(WorkbenchExtensions.Workbench);
+registerWorkbenchContribution2(LabelContribution.ID, LabelContribution, WorkbenchPhase.BlockStartup);
+workbenchContributionsRegistry.registerWorkbenchContribution(RemoteChannelsContribution, LifecyclePhase.Restored);
+registerWorkbenchContribution2(RemoteInvalidWorkspaceDetector.ID, RemoteInvalidWorkspaceDetector, WorkbenchPhase.BlockStartup);
+const enableDiagnostics = true;
+if (enableDiagnostics) {
+  class TriggerReconnectAction extends Action2 {
+    static {
+      __name(this, "TriggerReconnectAction");
+    }
+    constructor() {
+      super({
+        id: "workbench.action.triggerReconnect",
+        title: localize2("triggerReconnect", "Connection: Trigger Reconnect"),
+        category: Categories.Developer,
+        f1: true
+      });
+    }
+    async run(accessor) {
+      PersistentConnection.debugTriggerReconnection();
+    }
+  }
+  class PauseSocketWriting extends Action2 {
+    static {
+      __name(this, "PauseSocketWriting");
+    }
+    constructor() {
+      super({
+        id: "workbench.action.pauseSocketWriting",
+        title: localize2("pauseSocketWriting", "Connection: Pause socket writing"),
+        category: Categories.Developer,
+        f1: true
+      });
+    }
+    async run(accessor) {
+      PersistentConnection.debugPauseSocketWriting();
+    }
+  }
+  registerAction2(TriggerReconnectAction);
+  registerAction2(PauseSocketWriting);
+}
+const extensionKindSchema = {
+  type: "string",
+  enum: [
+    "ui",
+    "workspace"
+  ],
+  enumDescriptions: [
+    localize("ui", "UI extension kind. In a remote window, such extensions are enabled only when available on the local machine."),
+    localize("workspace", "Workspace extension kind. In a remote window, such extensions are enabled only when available on the remote.")
+  ]
+};
+Registry.as(ConfigurationExtensions.Configuration).registerConfiguration({
+  id: "remote",
+  title: localize("remote", "Remote"),
+  type: "object",
+  properties: {
+    "remote.extensionKind": {
+      type: "object",
+      markdownDescription: localize("remote.extensionKind", "Override the kind of an extension. `ui` extensions are installed and run on the local machine while `workspace` extensions are run on the remote. By overriding an extension's default kind using this setting, you specify if that extension should be installed and enabled locally or remotely."),
+      patternProperties: {
+        [EXTENSION_IDENTIFIER_PATTERN]: {
+          oneOf: [{ type: "array", items: extensionKindSchema }, extensionKindSchema],
+          default: ["ui"]
+        }
+      },
+      default: {
+        "pub.name": ["ui"]
+      }
+    },
+    "remote.restoreForwardedPorts": {
+      type: "boolean",
+      markdownDescription: localize("remote.restoreForwardedPorts", "Restores the ports you forwarded in a workspace."),
+      default: true
+    },
+    "remote.autoForwardPorts": {
+      type: "boolean",
+      markdownDescription: localize("remote.autoForwardPorts", "When enabled, new running processes are detected and ports that they listen on are automatically forwarded. Disabling this setting will not prevent all ports from being forwarded. Even when disabled, extensions will still be able to cause ports to be forwarded, and opening some URLs will still cause ports to forwarded. Also see {0}.", "`#remote.autoForwardPortsSource#`"),
+      default: true
+    },
+    "remote.autoForwardPortsSource": {
+      type: "string",
+      markdownDescription: localize("remote.autoForwardPortsSource", "Sets the source from which ports are automatically forwarded when {0} is true. When {0} is false, {1} will be used to find information about ports that have already been forwarded. On Windows and macOS remotes, the `process` and `hybrid` options have no effect and `output` will be used.", "`#remote.autoForwardPorts#`", "`#remote.autoForwardPortsSource#`"),
+      enum: ["process", "output", "hybrid"],
+      enumDescriptions: [
+        localize("remote.autoForwardPortsSource.process", "Ports will be automatically forwarded when discovered by watching for processes that are started and include a port."),
+        localize("remote.autoForwardPortsSource.output", 'Ports will be automatically forwarded when discovered by reading terminal and debug output. Not all processes that use ports will print to the integrated terminal or debug console, so some ports will be missed. Ports forwarded based on output will not be "un-forwarded" until reload or until the port is closed by the user in the Ports view.'),
+        localize("remote.autoForwardPortsSource.hybrid", 'Ports will be automatically forwarded when discovered by reading terminal and debug output. Not all processes that use ports will print to the integrated terminal or debug console, so some ports will be missed. Ports will be "un-forwarded" by watching for processes that listen on that port to be terminated.')
+      ],
+      default: "process"
+    },
+    "remote.autoForwardPortsFallback": {
+      type: "number",
+      default: 20,
+      markdownDescription: localize("remote.autoForwardPortFallback", "The number of auto forwarded ports that will trigger the switch from `process` to `hybrid` when automatically forwarding ports and `remote.autoForwardPortsSource` is set to `process` by default. Set to `0` to disable the fallback. When `remote.autoForwardPortsFallback` hasn't been configured, but `remote.autoForwardPortsSource` has, `remote.autoForwardPortsFallback` will be treated as though it's set to `0`.")
+    },
+    "remote.forwardOnOpen": {
+      type: "boolean",
+      description: localize("remote.forwardOnClick", "Controls whether local URLs with a port will be forwarded when opened from the terminal and the debug console."),
+      default: true
+    },
+    // Consider making changes to extensions\configuration-editing\schemas\devContainer.schema.src.json
+    // and extensions\configuration-editing\schemas\attachContainer.schema.json
+    // to keep in sync with devcontainer.json schema.
+    "remote.portsAttributes": {
+      type: "object",
+      patternProperties: {
+        "(^\\d+(-\\d+)?$)|(.+)": {
+          type: "object",
+          description: localize("remote.portsAttributes.port", 'A port, range of ports (ex. "40000-55000"), host and port (ex. "db:1234"), or regular expression (ex. ".+\\\\/server.js").  For a port number or range, the attributes will apply to that port number or range of port numbers. Attributes which use a regular expression will apply to ports whose associated process command line matches the expression.'),
+          properties: {
+            "onAutoForward": {
+              type: "string",
+              enum: ["notify", "openBrowser", "openBrowserOnce", "openPreview", "silent", "ignore"],
+              enumDescriptions: [
+                localize("remote.portsAttributes.notify", "Shows a notification when a port is automatically forwarded."),
+                localize("remote.portsAttributes.openBrowser", "Opens the browser when the port is automatically forwarded. Depending on your settings, this could open an embedded browser."),
+                localize("remote.portsAttributes.openBrowserOnce", "Opens the browser when the port is automatically forwarded, but only the first time the port is forward during a session. Depending on your settings, this could open an embedded browser."),
+                localize("remote.portsAttributes.openPreview", "Opens a preview in the same window when the port is automatically forwarded."),
+                localize("remote.portsAttributes.silent", "Shows no notification and takes no action when this port is automatically forwarded."),
+                localize("remote.portsAttributes.ignore", "This port will not be automatically forwarded.")
+              ],
+              description: localize("remote.portsAttributes.onForward", "Defines the action that occurs when the port is discovered for automatic forwarding"),
+              default: "notify"
+            },
+            "elevateIfNeeded": {
+              type: "boolean",
+              description: localize("remote.portsAttributes.elevateIfNeeded", "Automatically prompt for elevation (if needed) when this port is forwarded. Elevate is required if the local port is a privileged port."),
+              default: false
+            },
+            "label": {
+              type: "string",
+              description: localize("remote.portsAttributes.label", "Label that will be shown in the UI for this port."),
+              default: localize("remote.portsAttributes.labelDefault", "Application")
+            },
+            "requireLocalPort": {
+              type: "boolean",
+              markdownDescription: localize("remote.portsAttributes.requireLocalPort", "When true, a modal dialog will show if the chosen local port isn't used for forwarding."),
+              default: false
+            },
+            "protocol": {
+              type: "string",
+              enum: ["http", "https"],
+              description: localize("remote.portsAttributes.protocol", "The protocol to use when forwarding this port.")
+            }
+          },
+          default: {
+            "label": localize("remote.portsAttributes.labelDefault", "Application"),
+            "onAutoForward": "notify"
+          }
+        }
+      },
+      markdownDescription: localize("remote.portsAttributes", 'Set properties that are applied when a specific port number is forwarded. For example:\n\n```\n"3000": {\n  "label": "Application"\n},\n"40000-55000": {\n  "onAutoForward": "ignore"\n},\n".+\\\\/server.js": {\n "onAutoForward": "openPreview"\n}\n```'),
+      defaultSnippets: [{ body: { "${1:3000}": { label: "${2:Application}", onAutoForward: "openPreview" } } }],
+      errorMessage: localize("remote.portsAttributes.patternError", "Must be a port number, range of port numbers, or regular expression."),
+      additionalProperties: false,
+      default: {
+        "443": {
+          "protocol": "https"
+        },
+        "8443": {
+          "protocol": "https"
+        }
+      }
+    },
+    "remote.otherPortsAttributes": {
+      type: "object",
+      properties: {
+        "onAutoForward": {
+          type: "string",
+          enum: ["notify", "openBrowser", "openPreview", "silent", "ignore"],
+          enumDescriptions: [
+            localize("remote.portsAttributes.notify", "Shows a notification when a port is automatically forwarded."),
+            localize("remote.portsAttributes.openBrowser", "Opens the browser when the port is automatically forwarded. Depending on your settings, this could open an embedded browser."),
+            localize("remote.portsAttributes.openPreview", "Opens a preview in the same window when the port is automatically forwarded."),
+            localize("remote.portsAttributes.silent", "Shows no notification and takes no action when this port is automatically forwarded."),
+            localize("remote.portsAttributes.ignore", "This port will not be automatically forwarded.")
+          ],
+          description: localize("remote.portsAttributes.onForward", "Defines the action that occurs when the port is discovered for automatic forwarding"),
+          default: "notify"
+        },
+        "elevateIfNeeded": {
+          type: "boolean",
+          description: localize("remote.portsAttributes.elevateIfNeeded", "Automatically prompt for elevation (if needed) when this port is forwarded. Elevate is required if the local port is a privileged port."),
+          default: false
+        },
+        "label": {
+          type: "string",
+          description: localize("remote.portsAttributes.label", "Label that will be shown in the UI for this port."),
+          default: localize("remote.portsAttributes.labelDefault", "Application")
+        },
+        "requireLocalPort": {
+          type: "boolean",
+          markdownDescription: localize("remote.portsAttributes.requireLocalPort", "When true, a modal dialog will show if the chosen local port isn't used for forwarding."),
+          default: false
+        },
+        "protocol": {
+          type: "string",
+          enum: ["http", "https"],
+          description: localize("remote.portsAttributes.protocol", "The protocol to use when forwarding this port.")
+        }
+      },
+      defaultSnippets: [{ body: { onAutoForward: "ignore" } }],
+      markdownDescription: localize("remote.portsAttributes.defaults", 'Set default properties that are applied to all ports that don\'t get properties from the setting {0}. For example:\n\n```\n{\n  "onAutoForward": "ignore"\n}\n```', "`#remote.portsAttributes#`"),
+      additionalProperties: false
+    },
+    "remote.localPortHost": {
+      type: "string",
+      enum: ["localhost", "allInterfaces"],
+      default: "localhost",
+      description: localize("remote.localPortHost", "Specifies the local host name that will be used for port forwarding.")
+    },
+    [REMOTE_DEFAULT_IF_LOCAL_EXTENSIONS]: {
+      type: "array",
+      markdownDescription: localize("remote.defaultExtensionsIfInstalledLocally.markdownDescription", "List of extensions to install upon connection to a remote when already installed locally."),
+      default: product?.remoteDefaultExtensionsIfInstalledLocally || [],
+      items: {
+        type: "string",
+        pattern: EXTENSION_IDENTIFIER_PATTERN,
+        patternErrorMessage: localize("remote.defaultExtensionsIfInstalledLocally.invalidFormat", 'Extension identifier must be in format "publisher.name".')
+      }
+    }
+  }
+});
+export {
+  LabelContribution
+};
+//# sourceMappingURL=remote.contribution.js.map

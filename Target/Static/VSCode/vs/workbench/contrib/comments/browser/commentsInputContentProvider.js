@@ -1,1 +1,63 @@
-var p=Object.defineProperty,a=Object.getOwnPropertyDescriptor,c=(e,o,r,t)=>{for(var i,s=t>1?void 0:t?a(o,r):o,m=e.length-1;m>=0;m--)(i=e[m])&&(s=(t?i(o,r,s):i(s))||s);return t&&s&&p(o,r,s),s},n=(e,o)=>(r,t)=>o(r,t,e);import{Disposable as I}from"../../../../base/common/lifecycle.js";import{Schemas as u}from"../../../../base/common/network.js";import"../../../../base/common/uri.js";import"../../../../editor/browser/editorBrowser.js";import{ICodeEditorService as S}from"../../../../editor/browser/services/codeEditorService.js";import{ScrollType as g}from"../../../../editor/common/editorCommon.js";import{ILanguageService as f}from"../../../../editor/common/languages/language.js";import"../../../../editor/common/model.js";import{IModelService as v}from"../../../../editor/common/services/model.js";import{ITextModelService as x}from"../../../../editor/common/services/resolverService.js";import"../../../../platform/editor/common/editor.js";import{applyTextEditorOptions as E}from"../../../common/editor/editorOptions.js";import{SimpleCommentEditor as M}from"./simpleCommentEditor.js";let s=class extends I{constructor(e,o,r,t){super(),this._modelService=r,this._languageService=t,this._register(e.registerTextModelContentProvider(u.commentsInput,this)),this._register(o.registerCodeEditorOpenHandler((async(e,o,r)=>o instanceof M&&o.getModel()?.uri.toString()===e.resource.toString()?(e.options&&E(e.options,o,g.Immediate),o):null)))}static ID="comments.input.contentProvider";async provideTextContent(e){return this._modelService.getModel(e)??this._modelService.createModel("",this._languageService.createById("markdown"),e)}};s=c([n(0,x),n(1,S),n(2,v),n(3,f)],s);export{s as CommentsInputContentProvider};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { URI } from "../../../../base/common/uri.js";
+import { ICodeEditor } from "../../../../editor/browser/editorBrowser.js";
+import { ICodeEditorService } from "../../../../editor/browser/services/codeEditorService.js";
+import { IEditorContribution, ScrollType } from "../../../../editor/common/editorCommon.js";
+import { ILanguageService } from "../../../../editor/common/languages/language.js";
+import { ITextModel } from "../../../../editor/common/model.js";
+import { IModelService } from "../../../../editor/common/services/model.js";
+import { ITextModelContentProvider, ITextModelService } from "../../../../editor/common/services/resolverService.js";
+import { ITextResourceEditorInput } from "../../../../platform/editor/common/editor.js";
+import { applyTextEditorOptions } from "../../../common/editor/editorOptions.js";
+import { SimpleCommentEditor } from "./simpleCommentEditor.js";
+let CommentsInputContentProvider = class extends Disposable {
+  constructor(textModelService, codeEditorService, _modelService, _languageService) {
+    super();
+    this._modelService = _modelService;
+    this._languageService = _languageService;
+    this._register(textModelService.registerTextModelContentProvider(Schemas.commentsInput, this));
+    this._register(codeEditorService.registerCodeEditorOpenHandler(async (input, editor, _sideBySide) => {
+      if (!(editor instanceof SimpleCommentEditor)) {
+        return null;
+      }
+      if (editor.getModel()?.uri.toString() !== input.resource.toString()) {
+        return null;
+      }
+      if (input.options) {
+        applyTextEditorOptions(input.options, editor, ScrollType.Immediate);
+      }
+      return editor;
+    }));
+  }
+  static {
+    __name(this, "CommentsInputContentProvider");
+  }
+  static ID = "comments.input.contentProvider";
+  async provideTextContent(resource) {
+    const existing = this._modelService.getModel(resource);
+    return existing ?? this._modelService.createModel("", this._languageService.createById("markdown"), resource);
+  }
+};
+CommentsInputContentProvider = __decorateClass([
+  __decorateParam(0, ITextModelService),
+  __decorateParam(1, ICodeEditorService),
+  __decorateParam(2, IModelService),
+  __decorateParam(3, ILanguageService)
+], CommentsInputContentProvider);
+export {
+  CommentsInputContentProvider
+};
+//# sourceMappingURL=commentsInputContentProvider.js.map

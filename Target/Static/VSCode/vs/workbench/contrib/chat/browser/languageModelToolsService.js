@@ -1,4 +1,430 @@
-var E=Object.defineProperty;var R=Object.getOwnPropertyDescriptor;var v=(p,c,e,t)=>{for(var o=t>1?void 0:t?R(c,e):c,i=p.length-1,n;i>=0;i--)(n=p[i])&&(o=(t?n(c,e,o):n(o))||o);return t&&o&&E(c,e,o),o},s=(p,c)=>(e,t)=>c(e,t,p);import{renderStringAsPlaintext as k}from"../../../../base/browser/markdownRenderer.js";import{RunOnceScheduler as M}from"../../../../base/common/async.js";import{CancellationTokenSource as A}from"../../../../base/common/cancellation.js";import{toErrorMessage as K}from"../../../../base/common/errorMessage.js";import{CancellationError as I,isCancellationError as L}from"../../../../base/common/errors.js";import{Emitter as O}from"../../../../base/common/event.js";import{MarkdownString as q}from"../../../../base/common/htmlContent.js";import{Iterable as C}from"../../../../base/common/iterator.js";import{Lazy as y}from"../../../../base/common/lazy.js";import{Disposable as _,DisposableStore as w,dispose as $,toDisposable as T}from"../../../../base/common/lifecycle.js";import{LRUCache as P}from"../../../../base/common/map.js";import{localize as S}from"../../../../nls.js";import{IAccessibilityService as B}from"../../../../platform/accessibility/common/accessibility.js";import{IConfigurationService as N}from"../../../../platform/configuration/common/configuration.js";import{IContextKeyService as F}from"../../../../platform/contextkey/common/contextkey.js";import{IDialogService as J}from"../../../../platform/dialogs/common/dialogs.js";import{IInstantiationService as V}from"../../../../platform/instantiation/common/instantiation.js";import*as z from"../../../../platform/jsonschemas/common/jsonContributionRegistry.js";import{ILogService as j}from"../../../../platform/log/common/log.js";import{Registry as W}from"../../../../platform/registry/common/platform.js";import{IStorageService as U,StorageScope as x,StorageTarget as Y}from"../../../../platform/storage/common/storage.js";import{ITelemetryService as H}from"../../../../platform/telemetry/common/telemetry.js";import{IExtensionService as G}from"../../../services/extensions/common/extensions.js";import{ChatContextKeys as Q}from"../common/chatContextKeys.js";import"../common/chatModel.js";import{ChatToolInvocation as X}from"../common/chatProgressTypes/chatToolInvocation.js";import{IChatService as Z}from"../common/chatService.js";import{ChatConfiguration as b}from"../common/constants.js";import{createToolSchemaUri as ee,stringifyPromptTsxPart as oe}from"../common/languageModelToolsService.js";const D=W.as(z.Extensions.JSONContribution);let m=class extends _{constructor(e,t,o,i,n,d,u,f,r){super();this._instantiationService=e;this._extensionService=t;this._contextKeyService=o;this._chatService=i;this._dialogService=n;this._telemetryService=d;this._logService=u;this._configurationService=f;this._accessibilityService=r;this._workspaceToolConfirmStore=new y(()=>this._register(this._instantiationService.createInstance(l,x.WORKSPACE))),this._profileToolConfirmStore=new y(()=>this._register(this._instantiationService.createInstance(l,x.PROFILE))),this._register(this._contextKeyService.onDidChangeContext(a=>{a.affectsSome(this._toolContextKeys)&&this._onDidChangeToolsScheduler.schedule()})),this._register(this._configurationService.onDidChangeConfiguration(a=>{a.affectsConfiguration(b.ExtensionToolsEnabled)&&this._onDidChangeToolsScheduler.schedule()})),this._ctxToolsCount=Q.Tools.toolsCount.bindTo(o)}_serviceBrand;_onDidChangeTools=new O;onDidChangeTools=this._onDidChangeTools.event;_onDidChangeToolsScheduler=new M(()=>this._onDidChangeTools.fire(),750);_tools=new Map;_toolContextKeys=new Set;_ctxToolsCount;_callsByRequestId=new Map;_workspaceToolConfirmStore;_profileToolConfirmStore;_memoryToolConfirmStore=new Set;registerToolData(e){if(this._tools.has(e.id))throw new Error(`Tool "${e.id}" is already registered.`);this._tools.set(e.id,{data:e}),this._ctxToolsCount.set(this._tools.size),this._onDidChangeToolsScheduler.schedule(),e.when?.keys().forEach(o=>this._toolContextKeys.add(o));let t;if(e.inputSchema){t=new w;const o=ee(e.id).toString();D.registerSchema(o,e.inputSchema,t),t.add(D.registerSchemaAssociation(o,`/lm/tool/${e.id}/tool_input.json`))}return T(()=>{t?.dispose(),this._tools.delete(e.id),this._ctxToolsCount.set(this._tools.size),this._refreshAllToolContextKeys(),this._onDidChangeToolsScheduler.schedule()})}_refreshAllToolContextKeys(){this._toolContextKeys.clear();for(const e of this._tools.values())e.data.when?.keys().forEach(t=>this._toolContextKeys.add(t))}registerToolImplementation(e,t){const o=this._tools.get(e);if(!o)throw new Error(`Tool "${e}" was not contributed.`);if(o.impl)throw new Error(`Tool "${e}" already has an implementation.`);return o.impl=t,T(()=>{o.impl=void 0})}getTools(){const e=C.map(this._tools.values(),o=>o.data),t=this._configurationService.getValue(b.ExtensionToolsEnabled);return C.filter(e,o=>{const i=!o.when||this._contextKeyService.contextMatchesRules(o.when),n=o.source.type==="extension"&&!t?!o.source.isExternalTool:!0;return i&&n})}getTool(e){return this._getToolEntry(e)?.data}_getToolEntry(e){const t=this._tools.get(e);if(t&&(!t.data.when||this._contextKeyService.contextMatchesRules(t.data.when)))return t}getToolByName(e){for(const t of this.getTools())if(t.toolReferenceName===e)return t}setToolAutoConfirmation(e,t,o=!0){t==="workspace"?this._workspaceToolConfirmStore.value.setAutoConfirm(e,o):t==="profile"?this._profileToolConfirmStore.value.setAutoConfirm(e,o):this._memoryToolConfirmStore.add(e)}resetToolAutoConfirmation(){this._workspaceToolConfirmStore.value.reset(),this._profileToolConfirmStore.value.reset(),this._memoryToolConfirmStore.clear()}async invokeTool(e,t,o){this._logService.trace(`[LanguageModelToolsService#invokeTool] Invoking tool ${e.toolId} with parameters ${JSON.stringify(e.parameters)}`);let i=this._tools.get(e.toolId);if(!i)throw new Error(`Tool ${e.toolId} was not contributed`);if(!i.impl&&(await this._extensionService.activateByEvent(`onLanguageModelTool:${e.toolId}`),i=this._tools.get(e.toolId),!i?.impl))throw new Error(`Tool ${e.toolId} does not have an implementation registered.`);let n,d,u,f;try{if(e.context){u=new w;const r=this._chatService.getSession(e.context?.sessionId);if(!r)throw new Error("Tool called for unknown chat session");const a=r.getRequests().at(-1);d=a.id,e.modelId=a.modelId,this._callsByRequestId.has(d)||this._callsByRequestId.set(d,[]),this._callsByRequestId.get(d).push(u);const h=new A;u.add(T(()=>{h.dispose(!0)})),u.add(o.onCancellationRequested(()=>{n?.confirmed.complete(!1),h.cancel()})),u.add(h.token.onCancellationRequested(()=>{n?.confirmed.complete(!1)})),o=h.token;const g=await this.prepareToolInvocation(i,e,o);if(n=new X(g,i.data,e.callId),this.shouldAutoConfirm(i.data.id,i.data.runsInWorkspace)&&n.confirmed.complete(!0),r.acceptResponseProgress(a,n),g?.confirmationMessages){if(this._accessibilityService.alert(S("toolConfirmationMessage","Action required: {0}",g.confirmationMessages.title)),!await n.confirmed.p)throw new I;e.toolSpecificData=n?.toolSpecificData,e.toolSpecificData?.kind==="input"&&(e.parameters=e.toolSpecificData.rawInput,e.toolSpecificData=void 0)}}else{const r=await this.prepareToolInvocation(i,e,o);if(r?.confirmationMessages&&!(await this._dialogService.confirm({message:r.confirmationMessages.title,detail:k(r.confirmationMessages.message)})).confirmed)throw new I}if(o.isCancellationRequested)throw new I;return f=await i.impl.invoke(e,t,o),this.ensureToolDetails(e,f,i.data),this._telemetryService.publicLog2("languageModelToolInvoked",{result:"success",chatSessionId:e.context?.sessionId,toolId:i.data.id,toolExtensionId:i.data.source.type==="extension"?i.data.source.extensionId.value:void 0,toolSourceKind:i.data.source.type}),f}catch(r){const a=L(r)?"userCancelled":"error";throw this._telemetryService.publicLog2("languageModelToolInvoked",{result:a,chatSessionId:e.context?.sessionId,toolId:i.data.id,toolExtensionId:i.data.source.type==="extension"?i.data.source.extensionId.value:void 0,toolSourceKind:i.data.source.type}),this._logService.error(`[LanguageModelToolsService#invokeTool] Error from tool ${e.toolId} with parameters ${JSON.stringify(e.parameters)}:
-${K(r,!0)}`),r}finally{n?.complete(f),d&&u&&this.cleanupCallDisposables(d,u)}}async prepareToolInvocation(e,t,o){let i=e.impl.prepareToolInvocation?await e.impl.prepareToolInvocation(t.parameters,o):void 0;if(!i?.confirmationMessages&&e.data.requiresConfirmation&&e.data.source.type==="extension"){i||(i={});const n=S("tool.warning","{0} This tool is from the extension `{1}`. Please carefully review any requested actions.","$(info)",e.data.source.extensionId.value);i.confirmationMessages={title:S("msg.title","Run {0}",`"${e.data.displayName}"`),message:new q((e.data.userDescription??e.data.modelDescription)+`
-
-`+n,{supportThemeIcons:!0}),allowAutoConfirm:!0}}return i?.confirmationMessages&&(i.toolSpecificData?.kind!=="terminal"&&typeof i.confirmationMessages.allowAutoConfirm!="boolean"&&(i.confirmationMessages.allowAutoConfirm=!0),!i.toolSpecificData&&e.data.alwaysDisplayInputOutput&&(i.toolSpecificData={kind:"input",rawInput:t.parameters})),i}ensureToolDetails(e,t,o){!t.toolResultDetails&&o.alwaysDisplayInputOutput&&(t.toolResultDetails={input:JSON.stringify(e.parameters,void 0,2),output:this.toolResultToString(t)})}toolResultToString(e){const t=[];for(const o of e.content)o.kind==="text"?t.push(o.value):o.kind==="promptTsx"&&t.push(oe(o));return t.join("")}shouldAutoConfirm(e,t){if(this._workspaceToolConfirmStore.value.getAutoConfirm(e)||this._profileToolConfirmStore.value.getAutoConfirm(e)||this._memoryToolConfirmStore.has(e))return!0;const o=this._configurationService.inspect("chat.tools.autoApprove");let i=o.value??o.defaultValue;return typeof t=="boolean"&&(i=o.userLocalValue??o.applicationValue,t&&(i=o.workspaceValue??o.workspaceFolderValue??o.userRemoteValue??i)),i===!0||typeof i=="object"&&i.hasOwnProperty(e)&&i[e]===!0}cleanupCallDisposables(e,t){const o=this._callsByRequestId.get(e);if(o){const i=o.indexOf(t);i>-1&&o.splice(i,1),o.length===0&&this._callsByRequestId.delete(e)}t.dispose()}cancelToolCallsForRequest(e){const t=this._callsByRequestId.get(e);t&&(t.forEach(o=>o.dispose()),this._callsByRequestId.delete(e))}dispose(){super.dispose(),this._callsByRequestId.forEach(e=>$(e)),this._ctxToolsCount.reset()}};m=v([s(0,V),s(1,G),s(2,F),s(3,Z),s(4,J),s(5,H),s(6,j),s(7,N),s(8,B)],m);let l=class extends _{constructor(e,t){super();this._scope=e;this.storageService=t;const o=t.getObject(l.STORED_KEY,this._scope);if(o)for(const i of o)this._autoConfirmTools.set(i,!0);this._register(t.onWillSaveState(()=>{this._didChange&&(this.storageService.store(l.STORED_KEY,[...this._autoConfirmTools.keys()],this._scope,Y.MACHINE),this._didChange=!1)}))}static STORED_KEY="chat/autoconfirm";_autoConfirmTools=new P(100);_didChange=!1;reset(){this._autoConfirmTools.clear(),this._didChange=!0}getAutoConfirm(e){return this._autoConfirmTools.get(e)?(this._didChange=!0,!0):!1}setAutoConfirm(e,t){t?this._autoConfirmTools.set(e,!0):this._autoConfirmTools.delete(e),this._didChange=!0}};l=v([s(1,U)],l);export{m as LanguageModelToolsService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { renderStringAsPlaintext } from "../../../../base/browser/markdownRenderer.js";
+import { RunOnceScheduler } from "../../../../base/common/async.js";
+import { CancellationToken, CancellationTokenSource } from "../../../../base/common/cancellation.js";
+import { toErrorMessage } from "../../../../base/common/errorMessage.js";
+import { CancellationError, isCancellationError } from "../../../../base/common/errors.js";
+import { Emitter } from "../../../../base/common/event.js";
+import { MarkdownString } from "../../../../base/common/htmlContent.js";
+import { Iterable } from "../../../../base/common/iterator.js";
+import { Lazy } from "../../../../base/common/lazy.js";
+import { Disposable, DisposableStore, dispose, IDisposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { LRUCache } from "../../../../base/common/map.js";
+import { localize } from "../../../../nls.js";
+import { IAccessibilityService } from "../../../../platform/accessibility/common/accessibility.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IContextKey, IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IDialogService } from "../../../../platform/dialogs/common/dialogs.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import * as JSONContributionRegistry from "../../../../platform/jsonschemas/common/jsonContributionRegistry.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { IExtensionService } from "../../../services/extensions/common/extensions.js";
+import { ChatContextKeys } from "../common/chatContextKeys.js";
+import { ChatModel } from "../common/chatModel.js";
+import { ChatToolInvocation } from "../common/chatProgressTypes/chatToolInvocation.js";
+import { IChatService } from "../common/chatService.js";
+import { ChatConfiguration } from "../common/constants.js";
+import { CountTokensCallback, createToolSchemaUri, ILanguageModelToolsService, IPreparedToolInvocation, IToolData, IToolImpl, IToolInvocation, IToolResult, stringifyPromptTsxPart } from "../common/languageModelToolsService.js";
+const jsonSchemaRegistry = Registry.as(JSONContributionRegistry.Extensions.JSONContribution);
+let LanguageModelToolsService = class extends Disposable {
+  constructor(_instantiationService, _extensionService, _contextKeyService, _chatService, _dialogService, _telemetryService, _logService, _configurationService, _accessibilityService) {
+    super();
+    this._instantiationService = _instantiationService;
+    this._extensionService = _extensionService;
+    this._contextKeyService = _contextKeyService;
+    this._chatService = _chatService;
+    this._dialogService = _dialogService;
+    this._telemetryService = _telemetryService;
+    this._logService = _logService;
+    this._configurationService = _configurationService;
+    this._accessibilityService = _accessibilityService;
+    this._workspaceToolConfirmStore = new Lazy(() => this._register(this._instantiationService.createInstance(ToolConfirmStore, StorageScope.WORKSPACE)));
+    this._profileToolConfirmStore = new Lazy(() => this._register(this._instantiationService.createInstance(ToolConfirmStore, StorageScope.PROFILE)));
+    this._register(this._contextKeyService.onDidChangeContext((e) => {
+      if (e.affectsSome(this._toolContextKeys)) {
+        this._onDidChangeToolsScheduler.schedule();
+      }
+    }));
+    this._register(this._configurationService.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration(ChatConfiguration.ExtensionToolsEnabled)) {
+        this._onDidChangeToolsScheduler.schedule();
+      }
+    }));
+    this._ctxToolsCount = ChatContextKeys.Tools.toolsCount.bindTo(_contextKeyService);
+  }
+  static {
+    __name(this, "LanguageModelToolsService");
+  }
+  _serviceBrand;
+  _onDidChangeTools = new Emitter();
+  onDidChangeTools = this._onDidChangeTools.event;
+  /** Throttle tools updates because it sends all tools and runs on context key updates */
+  _onDidChangeToolsScheduler = new RunOnceScheduler(() => this._onDidChangeTools.fire(), 750);
+  _tools = /* @__PURE__ */ new Map();
+  _toolContextKeys = /* @__PURE__ */ new Set();
+  _ctxToolsCount;
+  _callsByRequestId = /* @__PURE__ */ new Map();
+  _workspaceToolConfirmStore;
+  _profileToolConfirmStore;
+  _memoryToolConfirmStore = /* @__PURE__ */ new Set();
+  registerToolData(toolData) {
+    if (this._tools.has(toolData.id)) {
+      throw new Error(`Tool "${toolData.id}" is already registered.`);
+    }
+    this._tools.set(toolData.id, { data: toolData });
+    this._ctxToolsCount.set(this._tools.size);
+    this._onDidChangeToolsScheduler.schedule();
+    toolData.when?.keys().forEach((key) => this._toolContextKeys.add(key));
+    let store;
+    if (toolData.inputSchema) {
+      store = new DisposableStore();
+      const schemaUrl = createToolSchemaUri(toolData.id).toString();
+      jsonSchemaRegistry.registerSchema(schemaUrl, toolData.inputSchema, store);
+      store.add(jsonSchemaRegistry.registerSchemaAssociation(schemaUrl, `/lm/tool/${toolData.id}/tool_input.json`));
+    }
+    return toDisposable(() => {
+      store?.dispose();
+      this._tools.delete(toolData.id);
+      this._ctxToolsCount.set(this._tools.size);
+      this._refreshAllToolContextKeys();
+      this._onDidChangeToolsScheduler.schedule();
+    });
+  }
+  _refreshAllToolContextKeys() {
+    this._toolContextKeys.clear();
+    for (const tool of this._tools.values()) {
+      tool.data.when?.keys().forEach((key) => this._toolContextKeys.add(key));
+    }
+  }
+  registerToolImplementation(id, tool) {
+    const entry = this._tools.get(id);
+    if (!entry) {
+      throw new Error(`Tool "${id}" was not contributed.`);
+    }
+    if (entry.impl) {
+      throw new Error(`Tool "${id}" already has an implementation.`);
+    }
+    entry.impl = tool;
+    return toDisposable(() => {
+      entry.impl = void 0;
+    });
+  }
+  getTools() {
+    const toolDatas = Iterable.map(this._tools.values(), (i) => i.data);
+    const extensionToolsEnabled = this._configurationService.getValue(ChatConfiguration.ExtensionToolsEnabled);
+    return Iterable.filter(
+      toolDatas,
+      (toolData) => {
+        const satisfiesWhenClause = !toolData.when || this._contextKeyService.contextMatchesRules(toolData.when);
+        const satisfiesExternalToolCheck = toolData.source.type === "extension" && !extensionToolsEnabled ? !toolData.source.isExternalTool : true;
+        return satisfiesWhenClause && satisfiesExternalToolCheck;
+      }
+    );
+  }
+  getTool(id) {
+    return this._getToolEntry(id)?.data;
+  }
+  _getToolEntry(id) {
+    const entry = this._tools.get(id);
+    if (entry && (!entry.data.when || this._contextKeyService.contextMatchesRules(entry.data.when))) {
+      return entry;
+    } else {
+      return void 0;
+    }
+  }
+  getToolByName(name) {
+    for (const toolData of this.getTools()) {
+      if (toolData.toolReferenceName === name) {
+        return toolData;
+      }
+    }
+    return void 0;
+  }
+  setToolAutoConfirmation(toolId, scope, autoConfirm = true) {
+    if (scope === "workspace") {
+      this._workspaceToolConfirmStore.value.setAutoConfirm(toolId, autoConfirm);
+    } else if (scope === "profile") {
+      this._profileToolConfirmStore.value.setAutoConfirm(toolId, autoConfirm);
+    } else {
+      this._memoryToolConfirmStore.add(toolId);
+    }
+  }
+  resetToolAutoConfirmation() {
+    this._workspaceToolConfirmStore.value.reset();
+    this._profileToolConfirmStore.value.reset();
+    this._memoryToolConfirmStore.clear();
+  }
+  async invokeTool(dto, countTokens, token) {
+    this._logService.trace(`[LanguageModelToolsService#invokeTool] Invoking tool ${dto.toolId} with parameters ${JSON.stringify(dto.parameters)}`);
+    let tool = this._tools.get(dto.toolId);
+    if (!tool) {
+      throw new Error(`Tool ${dto.toolId} was not contributed`);
+    }
+    if (!tool.impl) {
+      await this._extensionService.activateByEvent(`onLanguageModelTool:${dto.toolId}`);
+      tool = this._tools.get(dto.toolId);
+      if (!tool?.impl) {
+        throw new Error(`Tool ${dto.toolId} does not have an implementation registered.`);
+      }
+    }
+    let toolInvocation;
+    let requestId;
+    let store;
+    let toolResult;
+    try {
+      if (dto.context) {
+        store = new DisposableStore();
+        const model = this._chatService.getSession(dto.context?.sessionId);
+        if (!model) {
+          throw new Error(`Tool called for unknown chat session`);
+        }
+        const request = model.getRequests().at(-1);
+        requestId = request.id;
+        dto.modelId = request.modelId;
+        if (!this._callsByRequestId.has(requestId)) {
+          this._callsByRequestId.set(requestId, []);
+        }
+        this._callsByRequestId.get(requestId).push(store);
+        const source = new CancellationTokenSource();
+        store.add(toDisposable(() => {
+          source.dispose(true);
+        }));
+        store.add(token.onCancellationRequested(() => {
+          toolInvocation?.confirmed.complete(false);
+          source.cancel();
+        }));
+        store.add(source.token.onCancellationRequested(() => {
+          toolInvocation?.confirmed.complete(false);
+        }));
+        token = source.token;
+        const prepared = await this.prepareToolInvocation(tool, dto, token);
+        toolInvocation = new ChatToolInvocation(prepared, tool.data, dto.callId);
+        if (this.shouldAutoConfirm(tool.data.id, tool.data.runsInWorkspace)) {
+          toolInvocation.confirmed.complete(true);
+        }
+        model.acceptResponseProgress(request, toolInvocation);
+        if (prepared?.confirmationMessages) {
+          this._accessibilityService.alert(localize("toolConfirmationMessage", "Action required: {0}", prepared.confirmationMessages.title));
+          const userConfirmed = await toolInvocation.confirmed.p;
+          if (!userConfirmed) {
+            throw new CancellationError();
+          }
+          dto.toolSpecificData = toolInvocation?.toolSpecificData;
+          if (dto.toolSpecificData?.kind === "input") {
+            dto.parameters = dto.toolSpecificData.rawInput;
+            dto.toolSpecificData = void 0;
+          }
+        }
+      } else {
+        const prepared = await this.prepareToolInvocation(tool, dto, token);
+        if (prepared?.confirmationMessages) {
+          const result = await this._dialogService.confirm({ message: prepared.confirmationMessages.title, detail: renderStringAsPlaintext(prepared.confirmationMessages.message) });
+          if (!result.confirmed) {
+            throw new CancellationError();
+          }
+        }
+      }
+      if (token.isCancellationRequested) {
+        throw new CancellationError();
+      }
+      toolResult = await tool.impl.invoke(dto, countTokens, token);
+      this.ensureToolDetails(dto, toolResult, tool.data);
+      this._telemetryService.publicLog2(
+        "languageModelToolInvoked",
+        {
+          result: "success",
+          chatSessionId: dto.context?.sessionId,
+          toolId: tool.data.id,
+          toolExtensionId: tool.data.source.type === "extension" ? tool.data.source.extensionId.value : void 0,
+          toolSourceKind: tool.data.source.type
+        }
+      );
+      return toolResult;
+    } catch (err) {
+      const result = isCancellationError(err) ? "userCancelled" : "error";
+      this._telemetryService.publicLog2(
+        "languageModelToolInvoked",
+        {
+          result,
+          chatSessionId: dto.context?.sessionId,
+          toolId: tool.data.id,
+          toolExtensionId: tool.data.source.type === "extension" ? tool.data.source.extensionId.value : void 0,
+          toolSourceKind: tool.data.source.type
+        }
+      );
+      this._logService.error(`[LanguageModelToolsService#invokeTool] Error from tool ${dto.toolId} with parameters ${JSON.stringify(dto.parameters)}:
+${toErrorMessage(err, true)}`);
+      throw err;
+    } finally {
+      toolInvocation?.complete(toolResult);
+      if (requestId && store) {
+        this.cleanupCallDisposables(requestId, store);
+      }
+    }
+  }
+  async prepareToolInvocation(tool, dto, token) {
+    let prepared = tool.impl.prepareToolInvocation ? await tool.impl.prepareToolInvocation(dto.parameters, token) : void 0;
+    if (!prepared?.confirmationMessages && tool.data.requiresConfirmation && tool.data.source.type === "extension") {
+      if (!prepared) {
+        prepared = {};
+      }
+      const toolWarning = localize(
+        "tool.warning",
+        "{0} This tool is from the extension `{1}`. Please carefully review any requested actions.",
+        "$(info)",
+        tool.data.source.extensionId.value
+      );
+      prepared.confirmationMessages = {
+        title: localize("msg.title", "Run {0}", `"${tool.data.displayName}"`),
+        message: new MarkdownString((tool.data.userDescription ?? tool.data.modelDescription) + "\n\n" + toolWarning, { supportThemeIcons: true }),
+        allowAutoConfirm: true
+      };
+    }
+    if (prepared?.confirmationMessages) {
+      if (prepared.toolSpecificData?.kind !== "terminal" && typeof prepared.confirmationMessages.allowAutoConfirm !== "boolean") {
+        prepared.confirmationMessages.allowAutoConfirm = true;
+      }
+      if (!prepared.toolSpecificData && tool.data.alwaysDisplayInputOutput) {
+        prepared.toolSpecificData = {
+          kind: "input",
+          rawInput: dto.parameters
+        };
+      }
+    }
+    return prepared;
+  }
+  ensureToolDetails(dto, toolResult, toolData) {
+    if (!toolResult.toolResultDetails && toolData.alwaysDisplayInputOutput) {
+      toolResult.toolResultDetails = {
+        input: JSON.stringify(dto.parameters, void 0, 2),
+        output: this.toolResultToString(toolResult)
+      };
+    }
+  }
+  toolResultToString(toolResult) {
+    const strs = [];
+    for (const part of toolResult.content) {
+      if (part.kind === "text") {
+        strs.push(part.value);
+      } else if (part.kind === "promptTsx") {
+        strs.push(stringifyPromptTsxPart(part));
+      }
+    }
+    return strs.join("");
+  }
+  shouldAutoConfirm(toolId, runsInWorkspace) {
+    if (this._workspaceToolConfirmStore.value.getAutoConfirm(toolId) || this._profileToolConfirmStore.value.getAutoConfirm(toolId) || this._memoryToolConfirmStore.has(toolId)) {
+      return true;
+    }
+    const config = this._configurationService.inspect("chat.tools.autoApprove");
+    let value = config.value ?? config.defaultValue;
+    if (typeof runsInWorkspace === "boolean") {
+      value = config.userLocalValue ?? config.applicationValue;
+      if (runsInWorkspace) {
+        value = config.workspaceValue ?? config.workspaceFolderValue ?? config.userRemoteValue ?? value;
+      }
+    }
+    return value === true || typeof value === "object" && value.hasOwnProperty(toolId) && value[toolId] === true;
+  }
+  cleanupCallDisposables(requestId, store) {
+    const disposables = this._callsByRequestId.get(requestId);
+    if (disposables) {
+      const index = disposables.indexOf(store);
+      if (index > -1) {
+        disposables.splice(index, 1);
+      }
+      if (disposables.length === 0) {
+        this._callsByRequestId.delete(requestId);
+      }
+    }
+    store.dispose();
+  }
+  cancelToolCallsForRequest(requestId) {
+    const calls = this._callsByRequestId.get(requestId);
+    if (calls) {
+      calls.forEach((call) => call.dispose());
+      this._callsByRequestId.delete(requestId);
+    }
+  }
+  dispose() {
+    super.dispose();
+    this._callsByRequestId.forEach((calls) => dispose(calls));
+    this._ctxToolsCount.reset();
+  }
+};
+LanguageModelToolsService = __decorateClass([
+  __decorateParam(0, IInstantiationService),
+  __decorateParam(1, IExtensionService),
+  __decorateParam(2, IContextKeyService),
+  __decorateParam(3, IChatService),
+  __decorateParam(4, IDialogService),
+  __decorateParam(5, ITelemetryService),
+  __decorateParam(6, ILogService),
+  __decorateParam(7, IConfigurationService),
+  __decorateParam(8, IAccessibilityService)
+], LanguageModelToolsService);
+let ToolConfirmStore = class extends Disposable {
+  constructor(_scope, storageService) {
+    super();
+    this._scope = _scope;
+    this.storageService = storageService;
+    const stored = storageService.getObject(ToolConfirmStore.STORED_KEY, this._scope);
+    if (stored) {
+      for (const key of stored) {
+        this._autoConfirmTools.set(key, true);
+      }
+    }
+    this._register(storageService.onWillSaveState(() => {
+      if (this._didChange) {
+        this.storageService.store(ToolConfirmStore.STORED_KEY, [...this._autoConfirmTools.keys()], this._scope, StorageTarget.MACHINE);
+        this._didChange = false;
+      }
+    }));
+  }
+  static {
+    __name(this, "ToolConfirmStore");
+  }
+  static STORED_KEY = "chat/autoconfirm";
+  _autoConfirmTools = new LRUCache(100);
+  _didChange = false;
+  reset() {
+    this._autoConfirmTools.clear();
+    this._didChange = true;
+  }
+  getAutoConfirm(toolId) {
+    if (this._autoConfirmTools.get(toolId)) {
+      this._didChange = true;
+      return true;
+    }
+    return false;
+  }
+  setAutoConfirm(toolId, autoConfirm) {
+    if (autoConfirm) {
+      this._autoConfirmTools.set(toolId, true);
+    } else {
+      this._autoConfirmTools.delete(toolId);
+    }
+    this._didChange = true;
+  }
+};
+ToolConfirmStore = __decorateClass([
+  __decorateParam(1, IStorageService)
+], ToolConfirmStore);
+export {
+  LanguageModelToolsService
+};
+//# sourceMappingURL=languageModelToolsService.js.map

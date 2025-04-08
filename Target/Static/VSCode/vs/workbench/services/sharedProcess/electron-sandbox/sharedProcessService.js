@@ -1,1 +1,69 @@
-var P=Object.defineProperty,p=Object.getOwnPropertyDescriptor,c=(e,r,o,s)=>{for(var t,n=s>1?void 0:s?p(r,o):r,c=e.length-1;c>=0;c--)(t=e[c])&&(n=(s?t(r,o,n):t(n))||n);return s&&n&&P(r,o,n),n},d=(e,r)=>(o,s)=>r(o,s,e);import{Client as w}from"../../../../base/parts/ipc/common/ipc.mp.js";import{getDelayedChannel as S}from"../../../../base/parts/ipc/common/ipc.js";import{ILogService as g}from"../../../../platform/log/common/log.js";import{Disposable as v}from"../../../../base/common/lifecycle.js";import"../../../../platform/ipc/electron-sandbox/services.js";import{SharedProcessChannelConnection as h,SharedProcessRawConnection as l}from"../../../../platform/sharedProcess/common/sharedProcess.js";import{mark as m}from"../../../../base/common/performance.js";import{Barrier as f,timeout as u}from"../../../../base/common/async.js";import{acquirePort as C}from"../../../../base/parts/ipc/electron-sandbox/ipc.mp.js";let i=class extends v{constructor(e,r){super(),this.windowId=e,this.logService=r,this.withSharedProcessConnection=this.connect()}withSharedProcessConnection;restoredBarrier=new f;async connect(){this.logService.trace("Renderer->SharedProcess#connect"),await Promise.race([this.restoredBarrier.wait(),u(2e3)]),m("code/willConnectSharedProcess"),this.logService.trace("Renderer->SharedProcess#connect: before acquirePort");const e=await C(h.request,h.response);return m("code/didConnectSharedProcess"),this.logService.trace("Renderer->SharedProcess#connect: connection established"),this._register(new w(e,`window:${this.windowId}`))}notifyRestored(){this.restoredBarrier.isOpen()||this.restoredBarrier.open()}getChannel(e){return S(this.withSharedProcessConnection.then((r=>r.getChannel(e))))}registerChannel(e,r){this.withSharedProcessConnection.then((o=>o.registerChannel(e,r)))}async createRawConnection(){await this.withSharedProcessConnection,this.logService.trace("Renderer->SharedProcess#createRawConnection: before acquirePort");const e=await C(l.request,l.response);return this.logService.trace("Renderer->SharedProcess#createRawConnection: connection established"),e}};i=c([d(1,g)],i);export{i as SharedProcessService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Client as MessagePortClient } from "../../../../base/parts/ipc/common/ipc.mp.js";
+import { IChannel, IServerChannel, getDelayedChannel } from "../../../../base/parts/ipc/common/ipc.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { ISharedProcessService } from "../../../../platform/ipc/electron-sandbox/services.js";
+import { SharedProcessChannelConnection, SharedProcessRawConnection } from "../../../../platform/sharedProcess/common/sharedProcess.js";
+import { mark } from "../../../../base/common/performance.js";
+import { Barrier, timeout } from "../../../../base/common/async.js";
+import { acquirePort } from "../../../../base/parts/ipc/electron-sandbox/ipc.mp.js";
+let SharedProcessService = class extends Disposable {
+  constructor(windowId, logService) {
+    super();
+    this.windowId = windowId;
+    this.logService = logService;
+    this.withSharedProcessConnection = this.connect();
+  }
+  static {
+    __name(this, "SharedProcessService");
+  }
+  withSharedProcessConnection;
+  restoredBarrier = new Barrier();
+  async connect() {
+    this.logService.trace("Renderer->SharedProcess#connect");
+    await Promise.race([this.restoredBarrier.wait(), timeout(2e3)]);
+    mark("code/willConnectSharedProcess");
+    this.logService.trace("Renderer->SharedProcess#connect: before acquirePort");
+    const port = await acquirePort(SharedProcessChannelConnection.request, SharedProcessChannelConnection.response);
+    mark("code/didConnectSharedProcess");
+    this.logService.trace("Renderer->SharedProcess#connect: connection established");
+    return this._register(new MessagePortClient(port, `window:${this.windowId}`));
+  }
+  notifyRestored() {
+    if (!this.restoredBarrier.isOpen()) {
+      this.restoredBarrier.open();
+    }
+  }
+  getChannel(channelName) {
+    return getDelayedChannel(this.withSharedProcessConnection.then((connection) => connection.getChannel(channelName)));
+  }
+  registerChannel(channelName, channel) {
+    this.withSharedProcessConnection.then((connection) => connection.registerChannel(channelName, channel));
+  }
+  async createRawConnection() {
+    await this.withSharedProcessConnection;
+    this.logService.trace("Renderer->SharedProcess#createRawConnection: before acquirePort");
+    const port = await acquirePort(SharedProcessRawConnection.request, SharedProcessRawConnection.response);
+    this.logService.trace("Renderer->SharedProcess#createRawConnection: connection established");
+    return port;
+  }
+};
+SharedProcessService = __decorateClass([
+  __decorateParam(1, ILogService)
+], SharedProcessService);
+export {
+  SharedProcessService
+};
+//# sourceMappingURL=sharedProcessService.js.map

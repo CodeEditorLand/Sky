@@ -1,1 +1,47 @@
-import*as o from"../../../../base/common/strings.js";import{EditOperation as r}from"../../../common/core/editOperation.js";import{Position as s}from"../../../common/core/position.js";import"../../../common/core/selection.js";import"../../../common/editorCommon.js";import"../../../common/model.js";class x{_selection;_selectionId;constructor(o){this._selection=o,this._selectionId=null}getEditOperations(o,t){const e=a(o);e&&t.addEditOperation(e.range,e.text),this._selectionId=t.trackSelection(this._selection)}computeCursorState(o,t){return t.getTrackedSelection(this._selectionId)}}function a(t){const e=t.getLineCount(),n=t.getLineContent(e),i=-1===o.lastNonWhitespaceIndex(n);if(e&&!i)return r.insert(new s(e,t.getLineMaxColumn(e)),t.getEOL())}export{x as InsertFinalNewLineCommand,a as insertFinalNewLine};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as strings from "../../../../base/common/strings.js";
+import { EditOperation, ISingleEditOperation } from "../../../common/core/editOperation.js";
+import { Position } from "../../../common/core/position.js";
+import { Selection } from "../../../common/core/selection.js";
+import { ICommand, ICursorStateComputerData, IEditOperationBuilder } from "../../../common/editorCommon.js";
+import { ITextModel } from "../../../common/model.js";
+class InsertFinalNewLineCommand {
+  static {
+    __name(this, "InsertFinalNewLineCommand");
+  }
+  _selection;
+  _selectionId;
+  constructor(selection) {
+    this._selection = selection;
+    this._selectionId = null;
+  }
+  getEditOperations(model, builder) {
+    const op = insertFinalNewLine(model);
+    if (op) {
+      builder.addEditOperation(op.range, op.text);
+    }
+    this._selectionId = builder.trackSelection(this._selection);
+  }
+  computeCursorState(model, helper) {
+    return helper.getTrackedSelection(this._selectionId);
+  }
+}
+function insertFinalNewLine(model) {
+  const lineCount = model.getLineCount();
+  const lastLine = model.getLineContent(lineCount);
+  const lastLineIsEmptyOrWhitespace = strings.lastNonWhitespaceIndex(lastLine) === -1;
+  if (!lineCount || lastLineIsEmptyOrWhitespace) {
+    return;
+  }
+  return EditOperation.insert(
+    new Position(lineCount, model.getLineMaxColumn(lineCount)),
+    model.getEOL()
+  );
+}
+__name(insertFinalNewLine, "insertFinalNewLine");
+export {
+  InsertFinalNewLineCommand,
+  insertFinalNewLine
+};
+//# sourceMappingURL=insertFinalNewLineCommand.js.map

@@ -1,1 +1,418 @@
-var K=Object.defineProperty;var X=Object.getOwnPropertyDescriptor;var D=(g,p,e,i)=>{for(var o=i>1?void 0:i?X(p,e):p,n=g.length-1,t;n>=0;n--)(t=g[n])&&(o=(i?t(p,e,o):t(o))||o);return i&&o&&K(p,e,o),o},l=(g,p)=>(e,i)=>p(e,i,g);import{distinct as P}from"../../../../base/common/arrays.js";import{createCancelablePromise as A,Promises as k,raceCancellablePromises as q,raceCancellation as B,timeout as W}from"../../../../base/common/async.js";import{CancellationToken as G}from"../../../../base/common/cancellation.js";import{isCancellationError as J}from"../../../../base/common/errors.js";import{Emitter as V,Event as N}from"../../../../base/common/event.js";import{Disposable as L,DisposableStore as M,MutableDisposable as T,toDisposable as Y}from"../../../../base/common/lifecycle.js";import{isString as w}from"../../../../base/common/types.js";import"../../../../base/common/uri.js";import{localize as r}from"../../../../nls.js";import{IConfigurationService as j}from"../../../../platform/configuration/common/configuration.js";import"../../../../platform/extensionManagement/common/extensionManagement.js";import{areSameExtensions as z}from"../../../../platform/extensionManagement/common/extensionManagementUtil.js";import{RecommendationsNotificationResult as h,RecommendationSource as f,RecommendationSourceToString as R}from"../../../../platform/extensionRecommendations/common/extensionRecommendations.js";import{INotificationService as $,NotificationPriority as _,Severity as O}from"../../../../platform/notification/common/notification.js";import{IStorageService as Q,StorageScope as y,StorageTarget as U}from"../../../../platform/storage/common/storage.js";import{ITelemetryService as Z}from"../../../../platform/telemetry/common/telemetry.js";import{IUriIdentityService as ee}from"../../../../platform/uriIdentity/common/uriIdentity.js";import{IUserDataSyncEnablementService as ie,SyncResource as ne}from"../../../../platform/userDataSync/common/userDataSync.js";import{IExtensionsWorkbenchService as oe}from"../common/extensions.js";import{IWorkbenchEnvironmentService as te}from"../../../services/environment/common/environmentService.js";import{EnablementState as se,IWorkbenchExtensionManagementService as ae,IWorkbenchExtensionEnablementService as re}from"../../../services/extensionManagement/common/extensionManagement.js";import{IExtensionIgnoredRecommendationsService as ce}from"../../../services/extensionRecommendations/common/extensionRecommendations.js";const H="extensionsAssistant/importantRecommendationsIgnore",F="extensionsAssistant/workspaceRecommendationsIgnore";class me extends L{constructor(e,i,o,n){super();this.severity=e;this.message=i;this.choices=o;this.notificationService=n}_onDidClose=this._register(new V);onDidClose=this._onDidClose.event;_onDidChangeVisibility=this._register(new V);onDidChangeVisibility=this._onDidChangeVisibility.event;notificationHandle;cancelled=!1;show(){this.notificationHandle||this.updateNotificationHandle(this.notificationService.prompt(this.severity,this.message,this.choices,{sticky:!0,priority:_.OPTIONAL,onCancel:()=>this.cancelled=!0}))}hide(){this.notificationHandle&&(this.onDidCloseDisposable.clear(),this.notificationHandle.close(),this.cancelled=!1,this.updateNotificationHandle(this.notificationService.prompt(this.severity,this.message,this.choices,{priority:_.SILENT,onCancel:()=>this.cancelled=!0})))}isCancelled(){return this.cancelled}onDidCloseDisposable=this._register(new T);onDidChangeVisibilityDisposable=this._register(new T);updateNotificationHandle(e){this.onDidCloseDisposable.clear(),this.onDidChangeVisibilityDisposable.clear(),this.notificationHandle=e,this.onDidCloseDisposable.value=this.notificationHandle.onDidClose(()=>{this.onDidCloseDisposable.dispose(),this.onDidChangeVisibilityDisposable.dispose(),this._onDidClose.fire(),this._onDidClose.dispose(),this._onDidChangeVisibility.dispose()}),this.onDidChangeVisibilityDisposable.value=this.notificationHandle.onDidChangeVisibility(i=>this._onDidChangeVisibility.fire(i))}}let b=class extends L{constructor(e,i,o,n,t,s,a,m,S,c,v){super();this.configurationService=e;this.storageService=i;this.notificationService=o;this.telemetryService=n;this.extensionsWorkbenchService=t;this.extensionManagementService=s;this.extensionEnablementService=a;this.extensionIgnoredRecommendationsService=m;this.userDataSyncEnablementService=S;this.workbenchEnvironmentService=c;this.uriIdentityService=v}get ignoredRecommendations(){return P([...JSON.parse(this.storageService.get(H,y.PROFILE,"[]"))].map(e=>e.toLowerCase()))}recommendedExtensions=[];recommendationSources=[];hideVisibleNotificationPromise;visibleNotification;pendingNotificaitons=[];hasToIgnoreRecommendationNotifications(){const e=this.configurationService.getValue("extensions");return e.ignoreRecommendations||!!e.showRecommendationsOnlyOnDemand}async promptImportantExtensionsInstallNotification(e){const i=[...this.extensionIgnoredRecommendationsService.ignoredRecommendations,...this.ignoredRecommendations],o=e.extensions.filter(n=>!i.includes(n));return o.length?this.promptRecommendationsNotification({...e,extensions:o},{onDidInstallRecommendedExtensions:n=>n.forEach(t=>this.telemetryService.publicLog2("extensionRecommendations:popup",{userReaction:"install",extensionId:t.identifier.id,source:R(e.source)})),onDidShowRecommendedExtensions:n=>n.forEach(t=>this.telemetryService.publicLog2("extensionRecommendations:popup",{userReaction:"show",extensionId:t.identifier.id,source:R(e.source)})),onDidCancelRecommendedExtensions:n=>n.forEach(t=>this.telemetryService.publicLog2("extensionRecommendations:popup",{userReaction:"cancelled",extensionId:t.identifier.id,source:R(e.source)})),onDidNeverShowRecommendedExtensionsAgain:n=>{for(const t of n)this.addToImportantRecommendationsIgnore(t.identifier.id),this.telemetryService.publicLog2("extensionRecommendations:popup",{userReaction:"neverShowAgain",extensionId:t.identifier.id,source:R(e.source)});this.notificationService.prompt(O.Info,r("ignoreExtensionRecommendations","Do you want to ignore all extension recommendations?"),[{label:r("ignoreAll","Yes, Ignore All"),run:()=>this.setIgnoreRecommendationsConfig(!0)},{label:r("no","No"),run:()=>this.setIgnoreRecommendationsConfig(!1)}])}}):h.Ignored}async promptWorkspaceRecommendations(e){if(this.storageService.getBoolean(F,y.WORKSPACE,!1))return;let i=await this.extensionManagementService.getInstalled();i=i.filter(o=>this.extensionEnablementService.getEnablementState(o)!==se.DisabledByExtensionKind),e=e.filter(o=>i.every(n=>w(o)?!z({id:o},n.identifier):!this.uriIdentityService.extUri.isEqual(o,n.location))),e.length&&await this.promptRecommendationsNotification({extensions:e,source:f.WORKSPACE,name:r({key:"this repository",comment:["this repository means the current repository that is opened"]},"this repository")},{onDidInstallRecommendedExtensions:()=>this.telemetryService.publicLog2("extensionWorkspaceRecommendations:popup",{userReaction:"install"}),onDidShowRecommendedExtensions:()=>this.telemetryService.publicLog2("extensionWorkspaceRecommendations:popup",{userReaction:"show"}),onDidCancelRecommendedExtensions:()=>this.telemetryService.publicLog2("extensionWorkspaceRecommendations:popup",{userReaction:"cancelled"}),onDidNeverShowRecommendedExtensionsAgain:()=>{this.telemetryService.publicLog2("extensionWorkspaceRecommendations:popup",{userReaction:"neverShowAgain"}),this.storageService.store(F,!0,y.WORKSPACE,U.MACHINE)}})}async promptRecommendationsNotification({extensions:e,source:i,name:o,searchValue:n},t){if(this.hasToIgnoreRecommendationNotifications())return h.Ignored;if(i===f.EXE&&this.workbenchEnvironmentService.remoteAuthority)return h.IncompatibleWindow;if(i===f.EXE&&(this.recommendationSources.includes(f.EXE)||this.recommendationSources.length>=2))return h.TooMany;if(this.recommendationSources.push(i),i===f.EXE&&e.every(c=>w(c)&&this.recommendedExtensions.includes(c)))return h.Ignored;const s=await this.getInstallableExtensions(e);if(!s.length)return h.Ignored;this.recommendedExtensions=P([...this.recommendedExtensions,...e.filter(w)]);let a="";if(s.length===1)a=r("extensionFromPublisher","'{0}' extension from {1}",s[0].displayName,s[0].publisherDisplayName);else{const c=[...s.reduce((v,x)=>v.add(x.publisherDisplayName),new Set)];c.length>2?a=r("extensionsFromMultiplePublishers","extensions from {0}, {1} and others",c[0],c[1]):c.length===2?a=r("extensionsFromPublishers","extensions from {0} and {1}",c[0],c[1]):a=r("extensionsFromPublisher","extensions from {0}",c[0])}let m=r("recommended","Do you want to install the recommended {0} for {1}?",a,o);i===f.EXE&&(m=r({key:"exeRecommended",comment:["Placeholder string is the name of the software that is installed."]},"You have {0} installed on your system. Do you want to install the recommended {1} for it?",o,a)),n||(n=i===f.WORKSPACE?"@recommended":s.map(c=>`@id:${c.identifier.id}`).join(" "));const S=i===f.WORKSPACE?r("donotShowAgain","Don't Show Again for this Repository"):s.length>1?r("donotShowAgainExtension","Don't Show Again for these Extensions"):r("donotShowAgainExtensionSingle","Don't Show Again for this Extension");return q([this._registerP(this.showRecommendationsNotification(s,m,n,S,i,t)),this._registerP(this.waitUntilRecommendationsAreInstalled(s))])}showRecommendationsNotification(e,i,o,n,t,{onDidInstallRecommendedExtensions:s,onDidShowRecommendedExtensions:a,onDidCancelRecommendedExtensions:m,onDidNeverShowRecommendedExtensionsAgain:S}){return A(async c=>{let v=!1;const x=[],C=async u=>{this.extensionsWorkbenchService.openSearch(o),s(e);const E=[],I=[];for(const d of e)d.gallery?E.push(d.gallery):d.resourceExtension&&I.push(d);await k.settled([k.settled(e.map(d=>this.extensionsWorkbenchService.open(d,{pinned:!0}))),E.length?this.extensionManagementService.installGalleryExtensions(E.map(d=>({extension:d,options:{isMachineScoped:u}}))):Promise.resolve(),I.length?Promise.allSettled(I.map(d=>this.extensionsWorkbenchService.install(d))):Promise.resolve()])};x.push({label:r("install","Install"),run:()=>C(!1),menu:this.userDataSyncEnablementService.isEnabled()&&this.userDataSyncEnablementService.isResourceEnabled(ne.Extensions)?[{label:r("install and do no sync","Install (Do not sync)"),run:()=>C(!0)}]:void 0}),x.push({label:r("show recommendations","Show Recommendations"),run:async()=>{a(e);for(const u of e)this.extensionsWorkbenchService.open(u,{pinned:!0});this.extensionsWorkbenchService.openSearch(o)}},{label:n,isSecondary:!0,run:()=>{S(e)}});try{v=await this.doShowRecommendationsNotification(O.Info,i,x,t,c)}catch(u){if(!J(u))throw u}return v?h.Accepted:(m(e),h.Cancelled)})}waitUntilRecommendationsAreInstalled(e){const i=[],o=new M;return A(async n=>(o.add(n.onCancellationRequested(t=>o.dispose())),new Promise((t,s)=>{o.add(this.extensionManagementService.onInstallExtension(a=>{i.push(a.identifier.id.toLowerCase()),e.every(m=>i.includes(m.identifier.id.toLowerCase()))&&t(h.Accepted)}))})))}async doShowRecommendationsNotification(e,i,o,n,t){const s=new M;try{const a=s.add(new me(e,i,o,this.notificationService));if(s.add(N.once(N.filter(a.onDidChangeVisibility,m=>!m))(()=>this.showNextNotification())),this.visibleNotification){const m=this.pendingNotificaitons.length;s.add(t.onCancellationRequested(()=>this.pendingNotificaitons.splice(m,1))),this.pendingNotificaitons.push({recommendationsNotification:a,source:n,token:t}),n!==f.EXE&&n<=this.visibleNotification.source&&this.hideVisibleNotification(3e3)}else this.visibleNotification={recommendationsNotification:a,source:n,from:Date.now()},a.show();return await B(new Promise(m=>s.add(N.once(a.onDidClose)(m))),t),!a.isCancelled()}finally{s.dispose()}}showNextNotification(){const e=this.getNextPendingNotificationIndex(),[i]=e>-1?this.pendingNotificaitons.splice(e,1):[];W(i?500:0).then(()=>{this.unsetVisibileNotification(),i&&(this.visibleNotification={recommendationsNotification:i.recommendationsNotification,source:i.source,from:Date.now()},i.recommendationsNotification.show())})}getNextPendingNotificationIndex(){let e=this.pendingNotificaitons.length-1;if(this.pendingNotificaitons.length)for(let i=0;i<this.pendingNotificaitons.length;i++)this.pendingNotificaitons[i].source<=this.pendingNotificaitons[e].source&&(e=i);return e}hideVisibleNotification(e){if(this.visibleNotification&&!this.hideVisibleNotificationPromise){const i=this.visibleNotification;this.hideVisibleNotificationPromise=W(Math.max(e-(Date.now()-i.from),0)),this.hideVisibleNotificationPromise.then(()=>i.recommendationsNotification.hide())}}unsetVisibileNotification(){this.hideVisibleNotificationPromise?.cancel(),this.hideVisibleNotificationPromise=void 0,this.visibleNotification=void 0}async getInstallableExtensions(e){const i=[];if(e.length){const o=[],n=[];for(const t of e)typeof t=="string"?o.push(t):n.push(t);if(o.length){const t=await this.extensionsWorkbenchService.getExtensions(o.map(s=>({id:s})),{source:"install-recommendations"},G.None);for(const s of t)s.gallery&&await this.extensionManagementService.canInstall(s.gallery)===!0&&i.push(s)}if(n.length){const t=await this.extensionsWorkbenchService.getResourceExtensions(n,!0);for(const s of t)await this.extensionsWorkbenchService.canInstall(s)===!0&&i.push(s)}}return i}addToImportantRecommendationsIgnore(e){const i=[...this.ignoredRecommendations];i.includes(e.toLowerCase())||(i.push(e.toLowerCase()),this.storageService.store(H,JSON.stringify(i),y.PROFILE,U.USER))}setIgnoreRecommendationsConfig(e){this.configurationService.updateValue("extensions.ignoreRecommendations",e)}_registerP(e){return this._register(Y(()=>e.cancel())),e}};b=D([l(0,j),l(1,Q),l(2,$),l(3,Z),l(4,oe),l(5,ae),l(6,re),l(7,ce),l(8,ie),l(9,te),l(10,ee)],b);export{b as ExtensionRecommendationNotificationService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { distinct } from "../../../../base/common/arrays.js";
+import { CancelablePromise, createCancelablePromise, Promises, raceCancellablePromises, raceCancellation, timeout } from "../../../../base/common/async.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { isCancellationError } from "../../../../base/common/errors.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { Disposable, DisposableStore, MutableDisposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { isString } from "../../../../base/common/types.js";
+import { URI } from "../../../../base/common/uri.js";
+import { localize } from "../../../../nls.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IGalleryExtension } from "../../../../platform/extensionManagement/common/extensionManagement.js";
+import { areSameExtensions } from "../../../../platform/extensionManagement/common/extensionManagementUtil.js";
+import { IExtensionRecommendationNotificationService, IExtensionRecommendations, RecommendationsNotificationResult, RecommendationSource, RecommendationSourceToString } from "../../../../platform/extensionRecommendations/common/extensionRecommendations.js";
+import { INotificationHandle, INotificationService, IPromptChoice, IPromptChoiceWithMenu, NotificationPriority, Severity } from "../../../../platform/notification/common/notification.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import { IUserDataSyncEnablementService, SyncResource } from "../../../../platform/userDataSync/common/userDataSync.js";
+import { IExtension, IExtensionsWorkbenchService } from "../common/extensions.js";
+import { IWorkbenchEnvironmentService } from "../../../services/environment/common/environmentService.js";
+import { EnablementState, IWorkbenchExtensionManagementService, IWorkbenchExtensionEnablementService } from "../../../services/extensionManagement/common/extensionManagement.js";
+import { IExtensionIgnoredRecommendationsService } from "../../../services/extensionRecommendations/common/extensionRecommendations.js";
+const ignoreImportantExtensionRecommendationStorageKey = "extensionsAssistant/importantRecommendationsIgnore";
+const donotShowWorkspaceRecommendationsStorageKey = "extensionsAssistant/workspaceRecommendationsIgnore";
+class RecommendationsNotification extends Disposable {
+  constructor(severity, message, choices, notificationService) {
+    super();
+    this.severity = severity;
+    this.message = message;
+    this.choices = choices;
+    this.notificationService = notificationService;
+  }
+  static {
+    __name(this, "RecommendationsNotification");
+  }
+  _onDidClose = this._register(new Emitter());
+  onDidClose = this._onDidClose.event;
+  _onDidChangeVisibility = this._register(new Emitter());
+  onDidChangeVisibility = this._onDidChangeVisibility.event;
+  notificationHandle;
+  cancelled = false;
+  show() {
+    if (!this.notificationHandle) {
+      this.updateNotificationHandle(this.notificationService.prompt(this.severity, this.message, this.choices, { sticky: true, priority: NotificationPriority.OPTIONAL, onCancel: /* @__PURE__ */ __name(() => this.cancelled = true, "onCancel") }));
+    }
+  }
+  hide() {
+    if (this.notificationHandle) {
+      this.onDidCloseDisposable.clear();
+      this.notificationHandle.close();
+      this.cancelled = false;
+      this.updateNotificationHandle(this.notificationService.prompt(this.severity, this.message, this.choices, { priority: NotificationPriority.SILENT, onCancel: /* @__PURE__ */ __name(() => this.cancelled = true, "onCancel") }));
+    }
+  }
+  isCancelled() {
+    return this.cancelled;
+  }
+  onDidCloseDisposable = this._register(new MutableDisposable());
+  onDidChangeVisibilityDisposable = this._register(new MutableDisposable());
+  updateNotificationHandle(notificationHandle) {
+    this.onDidCloseDisposable.clear();
+    this.onDidChangeVisibilityDisposable.clear();
+    this.notificationHandle = notificationHandle;
+    this.onDidCloseDisposable.value = this.notificationHandle.onDidClose(() => {
+      this.onDidCloseDisposable.dispose();
+      this.onDidChangeVisibilityDisposable.dispose();
+      this._onDidClose.fire();
+      this._onDidClose.dispose();
+      this._onDidChangeVisibility.dispose();
+    });
+    this.onDidChangeVisibilityDisposable.value = this.notificationHandle.onDidChangeVisibility((e) => this._onDidChangeVisibility.fire(e));
+  }
+}
+let ExtensionRecommendationNotificationService = class extends Disposable {
+  constructor(configurationService, storageService, notificationService, telemetryService, extensionsWorkbenchService, extensionManagementService, extensionEnablementService, extensionIgnoredRecommendationsService, userDataSyncEnablementService, workbenchEnvironmentService, uriIdentityService) {
+    super();
+    this.configurationService = configurationService;
+    this.storageService = storageService;
+    this.notificationService = notificationService;
+    this.telemetryService = telemetryService;
+    this.extensionsWorkbenchService = extensionsWorkbenchService;
+    this.extensionManagementService = extensionManagementService;
+    this.extensionEnablementService = extensionEnablementService;
+    this.extensionIgnoredRecommendationsService = extensionIgnoredRecommendationsService;
+    this.userDataSyncEnablementService = userDataSyncEnablementService;
+    this.workbenchEnvironmentService = workbenchEnvironmentService;
+    this.uriIdentityService = uriIdentityService;
+  }
+  static {
+    __name(this, "ExtensionRecommendationNotificationService");
+  }
+  // Ignored Important Recommendations
+  get ignoredRecommendations() {
+    return distinct([...JSON.parse(this.storageService.get(ignoreImportantExtensionRecommendationStorageKey, StorageScope.PROFILE, "[]"))].map((i) => i.toLowerCase()));
+  }
+  recommendedExtensions = [];
+  recommendationSources = [];
+  hideVisibleNotificationPromise;
+  visibleNotification;
+  pendingNotificaitons = [];
+  hasToIgnoreRecommendationNotifications() {
+    const config = this.configurationService.getValue("extensions");
+    return config.ignoreRecommendations || !!config.showRecommendationsOnlyOnDemand;
+  }
+  async promptImportantExtensionsInstallNotification(extensionRecommendations) {
+    const ignoredRecommendations = [...this.extensionIgnoredRecommendationsService.ignoredRecommendations, ...this.ignoredRecommendations];
+    const extensions = extensionRecommendations.extensions.filter((id) => !ignoredRecommendations.includes(id));
+    if (!extensions.length) {
+      return RecommendationsNotificationResult.Ignored;
+    }
+    return this.promptRecommendationsNotification({ ...extensionRecommendations, extensions }, {
+      onDidInstallRecommendedExtensions: /* @__PURE__ */ __name((extensions2) => extensions2.forEach((extension) => this.telemetryService.publicLog2("extensionRecommendations:popup", { userReaction: "install", extensionId: extension.identifier.id, source: RecommendationSourceToString(extensionRecommendations.source) })), "onDidInstallRecommendedExtensions"),
+      onDidShowRecommendedExtensions: /* @__PURE__ */ __name((extensions2) => extensions2.forEach((extension) => this.telemetryService.publicLog2("extensionRecommendations:popup", { userReaction: "show", extensionId: extension.identifier.id, source: RecommendationSourceToString(extensionRecommendations.source) })), "onDidShowRecommendedExtensions"),
+      onDidCancelRecommendedExtensions: /* @__PURE__ */ __name((extensions2) => extensions2.forEach((extension) => this.telemetryService.publicLog2("extensionRecommendations:popup", { userReaction: "cancelled", extensionId: extension.identifier.id, source: RecommendationSourceToString(extensionRecommendations.source) })), "onDidCancelRecommendedExtensions"),
+      onDidNeverShowRecommendedExtensionsAgain: /* @__PURE__ */ __name((extensions2) => {
+        for (const extension of extensions2) {
+          this.addToImportantRecommendationsIgnore(extension.identifier.id);
+          this.telemetryService.publicLog2("extensionRecommendations:popup", { userReaction: "neverShowAgain", extensionId: extension.identifier.id, source: RecommendationSourceToString(extensionRecommendations.source) });
+        }
+        this.notificationService.prompt(
+          Severity.Info,
+          localize("ignoreExtensionRecommendations", "Do you want to ignore all extension recommendations?"),
+          [{
+            label: localize("ignoreAll", "Yes, Ignore All"),
+            run: /* @__PURE__ */ __name(() => this.setIgnoreRecommendationsConfig(true), "run")
+          }, {
+            label: localize("no", "No"),
+            run: /* @__PURE__ */ __name(() => this.setIgnoreRecommendationsConfig(false), "run")
+          }]
+        );
+      }, "onDidNeverShowRecommendedExtensionsAgain")
+    });
+  }
+  async promptWorkspaceRecommendations(recommendations) {
+    if (this.storageService.getBoolean(donotShowWorkspaceRecommendationsStorageKey, StorageScope.WORKSPACE, false)) {
+      return;
+    }
+    let installed = await this.extensionManagementService.getInstalled();
+    installed = installed.filter((l) => this.extensionEnablementService.getEnablementState(l) !== EnablementState.DisabledByExtensionKind);
+    recommendations = recommendations.filter((recommendation) => installed.every(
+      (local) => isString(recommendation) ? !areSameExtensions({ id: recommendation }, local.identifier) : !this.uriIdentityService.extUri.isEqual(recommendation, local.location)
+    ));
+    if (!recommendations.length) {
+      return;
+    }
+    await this.promptRecommendationsNotification({ extensions: recommendations, source: RecommendationSource.WORKSPACE, name: localize({ key: "this repository", comment: ["this repository means the current repository that is opened"] }, "this repository") }, {
+      onDidInstallRecommendedExtensions: /* @__PURE__ */ __name(() => this.telemetryService.publicLog2("extensionWorkspaceRecommendations:popup", { userReaction: "install" }), "onDidInstallRecommendedExtensions"),
+      onDidShowRecommendedExtensions: /* @__PURE__ */ __name(() => this.telemetryService.publicLog2("extensionWorkspaceRecommendations:popup", { userReaction: "show" }), "onDidShowRecommendedExtensions"),
+      onDidCancelRecommendedExtensions: /* @__PURE__ */ __name(() => this.telemetryService.publicLog2("extensionWorkspaceRecommendations:popup", { userReaction: "cancelled" }), "onDidCancelRecommendedExtensions"),
+      onDidNeverShowRecommendedExtensionsAgain: /* @__PURE__ */ __name(() => {
+        this.telemetryService.publicLog2("extensionWorkspaceRecommendations:popup", { userReaction: "neverShowAgain" });
+        this.storageService.store(donotShowWorkspaceRecommendationsStorageKey, true, StorageScope.WORKSPACE, StorageTarget.MACHINE);
+      }, "onDidNeverShowRecommendedExtensionsAgain")
+    });
+  }
+  async promptRecommendationsNotification({ extensions: extensionIds, source, name, searchValue }, recommendationsNotificationActions) {
+    if (this.hasToIgnoreRecommendationNotifications()) {
+      return RecommendationsNotificationResult.Ignored;
+    }
+    if (source === RecommendationSource.EXE && this.workbenchEnvironmentService.remoteAuthority) {
+      return RecommendationsNotificationResult.IncompatibleWindow;
+    }
+    if (source === RecommendationSource.EXE && (this.recommendationSources.includes(RecommendationSource.EXE) || this.recommendationSources.length >= 2)) {
+      return RecommendationsNotificationResult.TooMany;
+    }
+    this.recommendationSources.push(source);
+    if (source === RecommendationSource.EXE && extensionIds.every((id) => isString(id) && this.recommendedExtensions.includes(id))) {
+      return RecommendationsNotificationResult.Ignored;
+    }
+    const extensions = await this.getInstallableExtensions(extensionIds);
+    if (!extensions.length) {
+      return RecommendationsNotificationResult.Ignored;
+    }
+    this.recommendedExtensions = distinct([...this.recommendedExtensions, ...extensionIds.filter(isString)]);
+    let extensionsMessage = "";
+    if (extensions.length === 1) {
+      extensionsMessage = localize("extensionFromPublisher", "'{0}' extension from {1}", extensions[0].displayName, extensions[0].publisherDisplayName);
+    } else {
+      const publishers = [...extensions.reduce((result, extension) => result.add(extension.publisherDisplayName), /* @__PURE__ */ new Set())];
+      if (publishers.length > 2) {
+        extensionsMessage = localize("extensionsFromMultiplePublishers", "extensions from {0}, {1} and others", publishers[0], publishers[1]);
+      } else if (publishers.length === 2) {
+        extensionsMessage = localize("extensionsFromPublishers", "extensions from {0} and {1}", publishers[0], publishers[1]);
+      } else {
+        extensionsMessage = localize("extensionsFromPublisher", "extensions from {0}", publishers[0]);
+      }
+    }
+    let message = localize("recommended", "Do you want to install the recommended {0} for {1}?", extensionsMessage, name);
+    if (source === RecommendationSource.EXE) {
+      message = localize({ key: "exeRecommended", comment: ["Placeholder string is the name of the software that is installed."] }, "You have {0} installed on your system. Do you want to install the recommended {1} for it?", name, extensionsMessage);
+    }
+    if (!searchValue) {
+      searchValue = source === RecommendationSource.WORKSPACE ? "@recommended" : extensions.map((extensionId) => `@id:${extensionId.identifier.id}`).join(" ");
+    }
+    const donotShowAgainLabel = source === RecommendationSource.WORKSPACE ? localize("donotShowAgain", "Don't Show Again for this Repository") : extensions.length > 1 ? localize("donotShowAgainExtension", "Don't Show Again for these Extensions") : localize("donotShowAgainExtensionSingle", "Don't Show Again for this Extension");
+    return raceCancellablePromises([
+      this._registerP(this.showRecommendationsNotification(extensions, message, searchValue, donotShowAgainLabel, source, recommendationsNotificationActions)),
+      this._registerP(this.waitUntilRecommendationsAreInstalled(extensions))
+    ]);
+  }
+  showRecommendationsNotification(extensions, message, searchValue, donotShowAgainLabel, source, { onDidInstallRecommendedExtensions, onDidShowRecommendedExtensions, onDidCancelRecommendedExtensions, onDidNeverShowRecommendedExtensionsAgain }) {
+    return createCancelablePromise(async (token) => {
+      let accepted = false;
+      const choices = [];
+      const installExtensions = /* @__PURE__ */ __name(async (isMachineScoped) => {
+        this.extensionsWorkbenchService.openSearch(searchValue);
+        onDidInstallRecommendedExtensions(extensions);
+        const galleryExtensions = [], resourceExtensions = [];
+        for (const extension of extensions) {
+          if (extension.gallery) {
+            galleryExtensions.push(extension.gallery);
+          } else if (extension.resourceExtension) {
+            resourceExtensions.push(extension);
+          }
+        }
+        await Promises.settled([
+          Promises.settled(extensions.map((extension) => this.extensionsWorkbenchService.open(extension, { pinned: true }))),
+          galleryExtensions.length ? this.extensionManagementService.installGalleryExtensions(galleryExtensions.map((e) => ({ extension: e, options: { isMachineScoped } }))) : Promise.resolve(),
+          resourceExtensions.length ? Promise.allSettled(resourceExtensions.map((r) => this.extensionsWorkbenchService.install(r))) : Promise.resolve()
+        ]);
+      }, "installExtensions");
+      choices.push({
+        label: localize("install", "Install"),
+        run: /* @__PURE__ */ __name(() => installExtensions(false), "run"),
+        menu: this.userDataSyncEnablementService.isEnabled() && this.userDataSyncEnablementService.isResourceEnabled(SyncResource.Extensions) ? [{
+          label: localize("install and do no sync", "Install (Do not sync)"),
+          run: /* @__PURE__ */ __name(() => installExtensions(true), "run")
+        }] : void 0
+      });
+      choices.push(...[{
+        label: localize("show recommendations", "Show Recommendations"),
+        run: /* @__PURE__ */ __name(async () => {
+          onDidShowRecommendedExtensions(extensions);
+          for (const extension of extensions) {
+            this.extensionsWorkbenchService.open(extension, { pinned: true });
+          }
+          this.extensionsWorkbenchService.openSearch(searchValue);
+        }, "run")
+      }, {
+        label: donotShowAgainLabel,
+        isSecondary: true,
+        run: /* @__PURE__ */ __name(() => {
+          onDidNeverShowRecommendedExtensionsAgain(extensions);
+        }, "run")
+      }]);
+      try {
+        accepted = await this.doShowRecommendationsNotification(Severity.Info, message, choices, source, token);
+      } catch (error) {
+        if (!isCancellationError(error)) {
+          throw error;
+        }
+      }
+      if (accepted) {
+        return RecommendationsNotificationResult.Accepted;
+      } else {
+        onDidCancelRecommendedExtensions(extensions);
+        return RecommendationsNotificationResult.Cancelled;
+      }
+    });
+  }
+  waitUntilRecommendationsAreInstalled(extensions) {
+    const installedExtensions = [];
+    const disposables = new DisposableStore();
+    return createCancelablePromise(async (token) => {
+      disposables.add(token.onCancellationRequested((e) => disposables.dispose()));
+      return new Promise((c, e) => {
+        disposables.add(this.extensionManagementService.onInstallExtension((e2) => {
+          installedExtensions.push(e2.identifier.id.toLowerCase());
+          if (extensions.every((e3) => installedExtensions.includes(e3.identifier.id.toLowerCase()))) {
+            c(RecommendationsNotificationResult.Accepted);
+          }
+        }));
+      });
+    });
+  }
+  /**
+   * Show recommendations in Queue
+   * At any time only one recommendation is shown
+   * If a new recommendation comes in
+   * 		=> If no recommendation is visible, show it immediately
+   *		=> Otherwise, add to the pending queue
+   * 			=> If it is not exe based and has higher or same priority as current, hide the current notification after showing it for 3s.
+   * 			=> Otherwise wait until the current notification is hidden.
+   */
+  async doShowRecommendationsNotification(severity, message, choices, source, token) {
+    const disposables = new DisposableStore();
+    try {
+      const recommendationsNotification = disposables.add(new RecommendationsNotification(severity, message, choices, this.notificationService));
+      disposables.add(Event.once(Event.filter(recommendationsNotification.onDidChangeVisibility, (e) => !e))(() => this.showNextNotification()));
+      if (this.visibleNotification) {
+        const index = this.pendingNotificaitons.length;
+        disposables.add(token.onCancellationRequested(() => this.pendingNotificaitons.splice(index, 1)));
+        this.pendingNotificaitons.push({ recommendationsNotification, source, token });
+        if (source !== RecommendationSource.EXE && source <= this.visibleNotification.source) {
+          this.hideVisibleNotification(3e3);
+        }
+      } else {
+        this.visibleNotification = { recommendationsNotification, source, from: Date.now() };
+        recommendationsNotification.show();
+      }
+      await raceCancellation(new Promise((c) => disposables.add(Event.once(recommendationsNotification.onDidClose)(c))), token);
+      return !recommendationsNotification.isCancelled();
+    } finally {
+      disposables.dispose();
+    }
+  }
+  showNextNotification() {
+    const index = this.getNextPendingNotificationIndex();
+    const [nextNotificaiton] = index > -1 ? this.pendingNotificaitons.splice(index, 1) : [];
+    timeout(nextNotificaiton ? 500 : 0).then(() => {
+      this.unsetVisibileNotification();
+      if (nextNotificaiton) {
+        this.visibleNotification = { recommendationsNotification: nextNotificaiton.recommendationsNotification, source: nextNotificaiton.source, from: Date.now() };
+        nextNotificaiton.recommendationsNotification.show();
+      }
+    });
+  }
+  /**
+   * Return the recent high priroity pending notification
+   */
+  getNextPendingNotificationIndex() {
+    let index = this.pendingNotificaitons.length - 1;
+    if (this.pendingNotificaitons.length) {
+      for (let i = 0; i < this.pendingNotificaitons.length; i++) {
+        if (this.pendingNotificaitons[i].source <= this.pendingNotificaitons[index].source) {
+          index = i;
+        }
+      }
+    }
+    return index;
+  }
+  hideVisibleNotification(timeInMillis) {
+    if (this.visibleNotification && !this.hideVisibleNotificationPromise) {
+      const visibleNotification = this.visibleNotification;
+      this.hideVisibleNotificationPromise = timeout(Math.max(timeInMillis - (Date.now() - visibleNotification.from), 0));
+      this.hideVisibleNotificationPromise.then(() => visibleNotification.recommendationsNotification.hide());
+    }
+  }
+  unsetVisibileNotification() {
+    this.hideVisibleNotificationPromise?.cancel();
+    this.hideVisibleNotificationPromise = void 0;
+    this.visibleNotification = void 0;
+  }
+  async getInstallableExtensions(recommendations) {
+    const result = [];
+    if (recommendations.length) {
+      const galleryExtensions = [];
+      const resourceExtensions = [];
+      for (const recommendation of recommendations) {
+        if (typeof recommendation === "string") {
+          galleryExtensions.push(recommendation);
+        } else {
+          resourceExtensions.push(recommendation);
+        }
+      }
+      if (galleryExtensions.length) {
+        const extensions = await this.extensionsWorkbenchService.getExtensions(galleryExtensions.map((id) => ({ id })), { source: "install-recommendations" }, CancellationToken.None);
+        for (const extension of extensions) {
+          if (extension.gallery && await this.extensionManagementService.canInstall(extension.gallery) === true) {
+            result.push(extension);
+          }
+        }
+      }
+      if (resourceExtensions.length) {
+        const extensions = await this.extensionsWorkbenchService.getResourceExtensions(resourceExtensions, true);
+        for (const extension of extensions) {
+          if (await this.extensionsWorkbenchService.canInstall(extension) === true) {
+            result.push(extension);
+          }
+        }
+      }
+    }
+    return result;
+  }
+  addToImportantRecommendationsIgnore(id) {
+    const importantRecommendationsIgnoreList = [...this.ignoredRecommendations];
+    if (!importantRecommendationsIgnoreList.includes(id.toLowerCase())) {
+      importantRecommendationsIgnoreList.push(id.toLowerCase());
+      this.storageService.store(ignoreImportantExtensionRecommendationStorageKey, JSON.stringify(importantRecommendationsIgnoreList), StorageScope.PROFILE, StorageTarget.USER);
+    }
+  }
+  setIgnoreRecommendationsConfig(configVal) {
+    this.configurationService.updateValue("extensions.ignoreRecommendations", configVal);
+  }
+  _registerP(o) {
+    this._register(toDisposable(() => o.cancel()));
+    return o;
+  }
+};
+ExtensionRecommendationNotificationService = __decorateClass([
+  __decorateParam(0, IConfigurationService),
+  __decorateParam(1, IStorageService),
+  __decorateParam(2, INotificationService),
+  __decorateParam(3, ITelemetryService),
+  __decorateParam(4, IExtensionsWorkbenchService),
+  __decorateParam(5, IWorkbenchExtensionManagementService),
+  __decorateParam(6, IWorkbenchExtensionEnablementService),
+  __decorateParam(7, IExtensionIgnoredRecommendationsService),
+  __decorateParam(8, IUserDataSyncEnablementService),
+  __decorateParam(9, IWorkbenchEnvironmentService),
+  __decorateParam(10, IUriIdentityService)
+], ExtensionRecommendationNotificationService);
+export {
+  ExtensionRecommendationNotificationService
+};
+//# sourceMappingURL=extensionRecommendationNotificationService.js.map

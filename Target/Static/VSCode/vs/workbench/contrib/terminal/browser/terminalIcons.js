@@ -1,1 +1,32 @@
-import{Codicon as o}from"../../../../base/common/codicons.js";import{localize as e}from"../../../../nls.js";import{registerIcon as n}from"../../../../platform/theme/common/iconRegistry.js";const a=n("terminal-view-icon",o.terminal,e("terminalViewIcon","View icon of the terminal view.")),m=n("terminal-rename",o.edit,e("renameTerminalIcon","Icon for rename in the terminal quick menu.")),c=n("terminal-kill",o.trash,e("killTerminalIcon","Icon for killing a terminal instance.")),l=n("terminal-new",o.add,e("newTerminalIcon","Icon for creating a new terminal instance.")),s=n("terminal-configure-profile",o.gear,e("configureTerminalProfileIcon","Icon for creating a new terminal profile.")),f=n("terminal-decoration-mark",o.circleSmallFilled,e("terminalDecorationMark","Icon for a terminal decoration mark.")),d=n("terminal-decoration-incomplete",o.circle,e("terminalDecorationIncomplete","Icon for a terminal decoration of a command that was incomplete.")),p=n("terminal-decoration-error",o.errorSmall,e("terminalDecorationError","Icon for a terminal decoration of a command that errored.")),I=n("terminal-decoration-success",o.circleFilled,e("terminalDecorationSuccess","Icon for a terminal decoration of a command that was successful.")),u=n("terminal-command-history-remove",o.close,e("terminalCommandHistoryRemove","Icon for removing a terminal command from command history.")),y=n("terminal-command-history-output",o.output,e("terminalCommandHistoryOutput","Icon for viewing output of a terminal command.")),h=n("terminal-command-history-fuzzy-search",o.searchFuzzy,e("terminalCommandHistoryFuzzySearch","Icon for toggling fuzzy search of command history.")),g=n("terminal-command-history-open-file",o.symbolReference,e("terminalCommandHistoryOpenFile","Icon for opening a shell history file."));export{h as commandHistoryFuzzySearchIcon,g as commandHistoryOpenFileIcon,y as commandHistoryOutputIcon,u as commandHistoryRemoveIcon,s as configureTerminalProfileIcon,c as killTerminalIcon,l as newTerminalIcon,m as renameTerminalIcon,p as terminalDecorationError,d as terminalDecorationIncomplete,f as terminalDecorationMark,I as terminalDecorationSuccess,a as terminalViewIcon};
+import { Codicon } from "../../../../base/common/codicons.js";
+import { localize } from "../../../../nls.js";
+import { registerIcon } from "../../../../platform/theme/common/iconRegistry.js";
+const terminalViewIcon = registerIcon("terminal-view-icon", Codicon.terminal, localize("terminalViewIcon", "View icon of the terminal view."));
+const renameTerminalIcon = registerIcon("terminal-rename", Codicon.edit, localize("renameTerminalIcon", "Icon for rename in the terminal quick menu."));
+const killTerminalIcon = registerIcon("terminal-kill", Codicon.trash, localize("killTerminalIcon", "Icon for killing a terminal instance."));
+const newTerminalIcon = registerIcon("terminal-new", Codicon.add, localize("newTerminalIcon", "Icon for creating a new terminal instance."));
+const configureTerminalProfileIcon = registerIcon("terminal-configure-profile", Codicon.gear, localize("configureTerminalProfileIcon", "Icon for creating a new terminal profile."));
+const terminalDecorationMark = registerIcon("terminal-decoration-mark", Codicon.circleSmallFilled, localize("terminalDecorationMark", "Icon for a terminal decoration mark."));
+const terminalDecorationIncomplete = registerIcon("terminal-decoration-incomplete", Codicon.circle, localize("terminalDecorationIncomplete", "Icon for a terminal decoration of a command that was incomplete."));
+const terminalDecorationError = registerIcon("terminal-decoration-error", Codicon.errorSmall, localize("terminalDecorationError", "Icon for a terminal decoration of a command that errored."));
+const terminalDecorationSuccess = registerIcon("terminal-decoration-success", Codicon.circleFilled, localize("terminalDecorationSuccess", "Icon for a terminal decoration of a command that was successful."));
+const commandHistoryRemoveIcon = registerIcon("terminal-command-history-remove", Codicon.close, localize("terminalCommandHistoryRemove", "Icon for removing a terminal command from command history."));
+const commandHistoryOutputIcon = registerIcon("terminal-command-history-output", Codicon.output, localize("terminalCommandHistoryOutput", "Icon for viewing output of a terminal command."));
+const commandHistoryFuzzySearchIcon = registerIcon("terminal-command-history-fuzzy-search", Codicon.searchFuzzy, localize("terminalCommandHistoryFuzzySearch", "Icon for toggling fuzzy search of command history."));
+const commandHistoryOpenFileIcon = registerIcon("terminal-command-history-open-file", Codicon.symbolReference, localize("terminalCommandHistoryOpenFile", "Icon for opening a shell history file."));
+export {
+  commandHistoryFuzzySearchIcon,
+  commandHistoryOpenFileIcon,
+  commandHistoryOutputIcon,
+  commandHistoryRemoveIcon,
+  configureTerminalProfileIcon,
+  killTerminalIcon,
+  newTerminalIcon,
+  renameTerminalIcon,
+  terminalDecorationError,
+  terminalDecorationIncomplete,
+  terminalDecorationMark,
+  terminalDecorationSuccess,
+  terminalViewIcon
+};
+//# sourceMappingURL=terminalIcons.js.map

@@ -1,1 +1,12 @@
-import"../searchTreeModel/searchTreeCommon.js";import{Range as r}from"../../../../../editor/common/core/range.js";function c(e){return e&&e.getFullRange&&e.getFullRange()instanceof r}export{c as isSearchTreeAIFileMatch};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { ISearchTreeFileMatch } from "../searchTreeModel/searchTreeCommon.js";
+import { Range } from "../../../../../editor/common/core/range.js";
+function isSearchTreeAIFileMatch(obj) {
+  return obj && obj.getFullRange && obj.getFullRange() instanceof Range;
+}
+__name(isSearchTreeAIFileMatch, "isSearchTreeAIFileMatch");
+export {
+  isSearchTreeAIFileMatch
+};
+//# sourceMappingURL=aiSearchModelBase.js.map

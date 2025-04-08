@@ -1,1 +1,40 @@
-import{coalesce as i}from"../../../../base/common/arrays.js";import{VSBuffer as n}from"../../../../base/common/buffer.js";import"../../../../base/common/dataTransfer.js";class p{requestIdPool=0;dataTransferFiles=new Map;add(a){const r=this.requestIdPool++;return this.dataTransferFiles.set(r,i(Array.from(a,([,e])=>e.asFile()))),{id:r,dispose:()=>{this.dataTransferFiles.delete(r)}}}async resolveFileData(a,r){const e=this.dataTransferFiles.get(a);if(!e)throw new Error("No data transfer found");const s=e.find(t=>t.id===r);if(!s)throw new Error("No matching file found in data transfer");return n.wrap(await s.data())}dispose(){this.dataTransferFiles.clear()}}export{p as DataTransferFileCache};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { coalesce } from "../../../../base/common/arrays.js";
+import { VSBuffer } from "../../../../base/common/buffer.js";
+import { IDataTransferFile, IReadonlyVSDataTransfer } from "../../../../base/common/dataTransfer.js";
+class DataTransferFileCache {
+  static {
+    __name(this, "DataTransferFileCache");
+  }
+  requestIdPool = 0;
+  dataTransferFiles = /* @__PURE__ */ new Map();
+  add(dataTransfer) {
+    const requestId = this.requestIdPool++;
+    this.dataTransferFiles.set(requestId, coalesce(Array.from(dataTransfer, ([, item]) => item.asFile())));
+    return {
+      id: requestId,
+      dispose: /* @__PURE__ */ __name(() => {
+        this.dataTransferFiles.delete(requestId);
+      }, "dispose")
+    };
+  }
+  async resolveFileData(requestId, dataItemId) {
+    const files = this.dataTransferFiles.get(requestId);
+    if (!files) {
+      throw new Error("No data transfer found");
+    }
+    const file = files.find((file2) => file2.id === dataItemId);
+    if (!file) {
+      throw new Error("No matching file found in data transfer");
+    }
+    return VSBuffer.wrap(await file.data());
+  }
+  dispose() {
+    this.dataTransferFiles.clear();
+  }
+}
+export {
+  DataTransferFileCache
+};
+//# sourceMappingURL=dataTransferCache.js.map

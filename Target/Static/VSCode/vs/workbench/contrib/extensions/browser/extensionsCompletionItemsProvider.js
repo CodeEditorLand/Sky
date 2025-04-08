@@ -1,7 +1,78 @@
-var h=Object.defineProperty;var k=Object.getOwnPropertyDescriptor;var f=(a,r,i,t)=>{for(var e=t>1?void 0:t?k(r,i):r,o=a.length-1,s;o>=0;o--)(s=a[o])&&(e=(t?s(r,i,e):s(e))||e);return t&&e&&h(r,i,e),e},d=(a,r)=>(i,t)=>r(i,t,a);import{localize as I}from"../../../../nls.js";import"../../../../base/common/cancellation.js";import{getLocation as b,parse as P}from"../../../../base/common/json.js";import{Disposable as y}from"../../../../base/common/lifecycle.js";import"../../../../editor/common/core/position.js";import"../../../../editor/common/model.js";import{CompletionItemKind as x}from"../../../../editor/common/languages.js";import{IExtensionManagementService as T}from"../../../../platform/extensionManagement/common/extensionManagement.js";import"../../../common/contributions.js";import{Range as C}from"../../../../editor/common/core/range.js";import{ILanguageFeaturesService as S}from"../../../../editor/common/services/languageFeatures.js";let u=class extends y{constructor(i,t){super();this.extensionManagementService=i;this._register(t.completionProvider.register({language:"jsonc",pattern:"**/settings.json"},{_debugDisplayName:"extensionsCompletionProvider",provideCompletionItems:async(e,o,s,n)=>{const l=(p,m)=>{const g=p.getWordAtPosition(m);return g?new C(m.lineNumber,g.startColumn,m.lineNumber,g.endColumn):null},c=b(e.getValue(),e.getOffsetAt(o)),v=l(e,o)??C.fromPositions(o,o);if(c.path[0]==="extensions.supportUntrustedWorkspaces"&&c.path.length===2&&c.isAtPropertyKey){let p=[];try{p=Object.keys(P(e.getValue())["extensions.supportUntrustedWorkspaces"])}catch{}return{suggestions:await this.provideSupportUntrustedWorkspacesExtensionProposals(p,v)}}return{suggestions:[]}}}))}async provideSupportUntrustedWorkspacesExtensionProposals(i,t){const e=[],s=(await this.extensionManagementService.getInstalled()).filter(n=>n.manifest.main).filter(n=>i.indexOf(n.identifier.id)===-1);if(s.length)e.push(...s.map(n=>{const l=`"${n.identifier.id}": {
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { localize } from "../../../../nls.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { getLocation, parse } from "../../../../base/common/json.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { Position } from "../../../../editor/common/core/position.js";
+import { ITextModel } from "../../../../editor/common/model.js";
+import { CompletionContext, CompletionList, CompletionItemKind, CompletionItem } from "../../../../editor/common/languages.js";
+import { IExtensionManagementService } from "../../../../platform/extensionManagement/common/extensionManagement.js";
+import { IWorkbenchContribution } from "../../../common/contributions.js";
+import { Range } from "../../../../editor/common/core/range.js";
+import { ILanguageFeaturesService } from "../../../../editor/common/services/languageFeatures.js";
+let ExtensionsCompletionItemsProvider = class extends Disposable {
+  constructor(extensionManagementService, languageFeaturesService) {
+    super();
+    this.extensionManagementService = extensionManagementService;
+    this._register(languageFeaturesService.completionProvider.register({ language: "jsonc", pattern: "**/settings.json" }, {
+      _debugDisplayName: "extensionsCompletionProvider",
+      provideCompletionItems: /* @__PURE__ */ __name(async (model, position, _context, token) => {
+        const getWordRangeAtPosition = /* @__PURE__ */ __name((model2, position2) => {
+          const wordAtPosition = model2.getWordAtPosition(position2);
+          return wordAtPosition ? new Range(position2.lineNumber, wordAtPosition.startColumn, position2.lineNumber, wordAtPosition.endColumn) : null;
+        }, "getWordRangeAtPosition");
+        const location = getLocation(model.getValue(), model.getOffsetAt(position));
+        const range = getWordRangeAtPosition(model, position) ?? Range.fromPositions(position, position);
+        if (location.path[0] === "extensions.supportUntrustedWorkspaces" && location.path.length === 2 && location.isAtPropertyKey) {
+          let alreadyConfigured = [];
+          try {
+            alreadyConfigured = Object.keys(parse(model.getValue())["extensions.supportUntrustedWorkspaces"]);
+          } catch (e) {
+          }
+          return { suggestions: await this.provideSupportUntrustedWorkspacesExtensionProposals(alreadyConfigured, range) };
+        }
+        return { suggestions: [] };
+      }, "provideCompletionItems")
+    }));
+  }
+  static {
+    __name(this, "ExtensionsCompletionItemsProvider");
+  }
+  async provideSupportUntrustedWorkspacesExtensionProposals(alreadyConfigured, range) {
+    const suggestions = [];
+    const installedExtensions = (await this.extensionManagementService.getInstalled()).filter((e) => e.manifest.main);
+    const proposedExtensions = installedExtensions.filter((e) => alreadyConfigured.indexOf(e.identifier.id) === -1);
+    if (proposedExtensions.length) {
+      suggestions.push(...proposedExtensions.map((e) => {
+        const text = `"${e.identifier.id}": {
 	"supported": true,
-	"version": "${n.manifest.version}"
-},`;return{label:n.identifier.id,kind:x.Value,insertText:l,filterText:l,range:t}}));else{const n=`"vscode.csharp": {
-	"supported": true,
-	"version": "0.0.0"
-},`;e.push({label:I("exampleExtension","Example"),kind:x.Value,insertText:n,filterText:n,range:t})}return e}};u=f([d(0,T),d(1,S)],u);export{u as ExtensionsCompletionItemsProvider};
+	"version": "${e.manifest.version}"
+},`;
+        return { label: e.identifier.id, kind: CompletionItemKind.Value, insertText: text, filterText: text, range };
+      }));
+    } else {
+      const text = '"vscode.csharp": {\n	"supported": true,\n	"version": "0.0.0"\n},';
+      suggestions.push({ label: localize("exampleExtension", "Example"), kind: CompletionItemKind.Value, insertText: text, filterText: text, range });
+    }
+    return suggestions;
+  }
+};
+ExtensionsCompletionItemsProvider = __decorateClass([
+  __decorateParam(0, IExtensionManagementService),
+  __decorateParam(1, ILanguageFeaturesService)
+], ExtensionsCompletionItemsProvider);
+export {
+  ExtensionsCompletionItemsProvider
+};
+//# sourceMappingURL=extensionsCompletionItemsProvider.js.map

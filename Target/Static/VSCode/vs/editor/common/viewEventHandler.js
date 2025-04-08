@@ -1,1 +1,190 @@
-import{Disposable as s}from"../../base/common/lifecycle.js";import*as o from"./viewEvents.js";class u extends s{_shouldRender;constructor(){super(),this._shouldRender=!0}shouldRender(){return this._shouldRender}forceShouldRender(){this._shouldRender=!0}setShouldRender(){this._shouldRender=!0}onDidRender(){this._shouldRender=!1}onCompositionStart(e){return!1}onCompositionEnd(e){return!1}onConfigurationChanged(e){return!1}onCursorStateChanged(e){return!1}onDecorationsChanged(e){return!1}onFlushed(e){return!1}onFocusChanged(e){return!1}onLanguageConfigurationChanged(e){return!1}onLineMappingChanged(e){return!1}onLinesChanged(e){return!1}onLinesDeleted(e){return!1}onLinesInserted(e){return!1}onRevealRangeRequest(e){return!1}onScrollChanged(e){return!1}onThemeChanged(e){return!1}onTokensChanged(e){return!1}onTokensColorsChanged(e){return!1}onZonesChanged(e){return!1}handleEvents(e){let n=!1;for(let s=0,t=e.length;s<t;s++){const t=e[s];switch(t.type){case o.ViewEventType.ViewCompositionStart:this.onCompositionStart(t)&&(n=!0);break;case o.ViewEventType.ViewCompositionEnd:this.onCompositionEnd(t)&&(n=!0);break;case o.ViewEventType.ViewConfigurationChanged:this.onConfigurationChanged(t)&&(n=!0);break;case o.ViewEventType.ViewCursorStateChanged:this.onCursorStateChanged(t)&&(n=!0);break;case o.ViewEventType.ViewDecorationsChanged:this.onDecorationsChanged(t)&&(n=!0);break;case o.ViewEventType.ViewFlushed:this.onFlushed(t)&&(n=!0);break;case o.ViewEventType.ViewFocusChanged:this.onFocusChanged(t)&&(n=!0);break;case o.ViewEventType.ViewLanguageConfigurationChanged:this.onLanguageConfigurationChanged(t)&&(n=!0);break;case o.ViewEventType.ViewLineMappingChanged:this.onLineMappingChanged(t)&&(n=!0);break;case o.ViewEventType.ViewLinesChanged:this.onLinesChanged(t)&&(n=!0);break;case o.ViewEventType.ViewLinesDeleted:this.onLinesDeleted(t)&&(n=!0);break;case o.ViewEventType.ViewLinesInserted:this.onLinesInserted(t)&&(n=!0);break;case o.ViewEventType.ViewRevealRangeRequest:this.onRevealRangeRequest(t)&&(n=!0);break;case o.ViewEventType.ViewScrollChanged:this.onScrollChanged(t)&&(n=!0);break;case o.ViewEventType.ViewTokensChanged:this.onTokensChanged(t)&&(n=!0);break;case o.ViewEventType.ViewThemeChanged:this.onThemeChanged(t)&&(n=!0);break;case o.ViewEventType.ViewTokensColorsChanged:this.onTokensColorsChanged(t)&&(n=!0);break;case o.ViewEventType.ViewZonesChanged:this.onZonesChanged(t)&&(n=!0);break;default:console.info("View received unknown event: "),console.info(t)}}n&&(this._shouldRender=!0)}}export{u as ViewEventHandler};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Disposable } from "../../base/common/lifecycle.js";
+import * as viewEvents from "./viewEvents.js";
+class ViewEventHandler extends Disposable {
+  static {
+    __name(this, "ViewEventHandler");
+  }
+  _shouldRender;
+  constructor() {
+    super();
+    this._shouldRender = true;
+  }
+  shouldRender() {
+    return this._shouldRender;
+  }
+  forceShouldRender() {
+    this._shouldRender = true;
+  }
+  setShouldRender() {
+    this._shouldRender = true;
+  }
+  onDidRender() {
+    this._shouldRender = false;
+  }
+  // --- begin event handlers
+  onCompositionStart(e) {
+    return false;
+  }
+  onCompositionEnd(e) {
+    return false;
+  }
+  onConfigurationChanged(e) {
+    return false;
+  }
+  onCursorStateChanged(e) {
+    return false;
+  }
+  onDecorationsChanged(e) {
+    return false;
+  }
+  onFlushed(e) {
+    return false;
+  }
+  onFocusChanged(e) {
+    return false;
+  }
+  onLanguageConfigurationChanged(e) {
+    return false;
+  }
+  onLineMappingChanged(e) {
+    return false;
+  }
+  onLinesChanged(e) {
+    return false;
+  }
+  onLinesDeleted(e) {
+    return false;
+  }
+  onLinesInserted(e) {
+    return false;
+  }
+  onRevealRangeRequest(e) {
+    return false;
+  }
+  onScrollChanged(e) {
+    return false;
+  }
+  onThemeChanged(e) {
+    return false;
+  }
+  onTokensChanged(e) {
+    return false;
+  }
+  onTokensColorsChanged(e) {
+    return false;
+  }
+  onZonesChanged(e) {
+    return false;
+  }
+  // --- end event handlers
+  handleEvents(events) {
+    let shouldRender = false;
+    for (let i = 0, len = events.length; i < len; i++) {
+      const e = events[i];
+      switch (e.type) {
+        case viewEvents.ViewEventType.ViewCompositionStart:
+          if (this.onCompositionStart(e)) {
+            shouldRender = true;
+          }
+          break;
+        case viewEvents.ViewEventType.ViewCompositionEnd:
+          if (this.onCompositionEnd(e)) {
+            shouldRender = true;
+          }
+          break;
+        case viewEvents.ViewEventType.ViewConfigurationChanged:
+          if (this.onConfigurationChanged(e)) {
+            shouldRender = true;
+          }
+          break;
+        case viewEvents.ViewEventType.ViewCursorStateChanged:
+          if (this.onCursorStateChanged(e)) {
+            shouldRender = true;
+          }
+          break;
+        case viewEvents.ViewEventType.ViewDecorationsChanged:
+          if (this.onDecorationsChanged(e)) {
+            shouldRender = true;
+          }
+          break;
+        case viewEvents.ViewEventType.ViewFlushed:
+          if (this.onFlushed(e)) {
+            shouldRender = true;
+          }
+          break;
+        case viewEvents.ViewEventType.ViewFocusChanged:
+          if (this.onFocusChanged(e)) {
+            shouldRender = true;
+          }
+          break;
+        case viewEvents.ViewEventType.ViewLanguageConfigurationChanged:
+          if (this.onLanguageConfigurationChanged(e)) {
+            shouldRender = true;
+          }
+          break;
+        case viewEvents.ViewEventType.ViewLineMappingChanged:
+          if (this.onLineMappingChanged(e)) {
+            shouldRender = true;
+          }
+          break;
+        case viewEvents.ViewEventType.ViewLinesChanged:
+          if (this.onLinesChanged(e)) {
+            shouldRender = true;
+          }
+          break;
+        case viewEvents.ViewEventType.ViewLinesDeleted:
+          if (this.onLinesDeleted(e)) {
+            shouldRender = true;
+          }
+          break;
+        case viewEvents.ViewEventType.ViewLinesInserted:
+          if (this.onLinesInserted(e)) {
+            shouldRender = true;
+          }
+          break;
+        case viewEvents.ViewEventType.ViewRevealRangeRequest:
+          if (this.onRevealRangeRequest(e)) {
+            shouldRender = true;
+          }
+          break;
+        case viewEvents.ViewEventType.ViewScrollChanged:
+          if (this.onScrollChanged(e)) {
+            shouldRender = true;
+          }
+          break;
+        case viewEvents.ViewEventType.ViewTokensChanged:
+          if (this.onTokensChanged(e)) {
+            shouldRender = true;
+          }
+          break;
+        case viewEvents.ViewEventType.ViewThemeChanged:
+          if (this.onThemeChanged(e)) {
+            shouldRender = true;
+          }
+          break;
+        case viewEvents.ViewEventType.ViewTokensColorsChanged:
+          if (this.onTokensColorsChanged(e)) {
+            shouldRender = true;
+          }
+          break;
+        case viewEvents.ViewEventType.ViewZonesChanged:
+          if (this.onZonesChanged(e)) {
+            shouldRender = true;
+          }
+          break;
+        default:
+          console.info("View received unknown event: ");
+          console.info(e);
+      }
+    }
+    if (shouldRender) {
+      this._shouldRender = true;
+    }
+  }
+}
+export {
+  ViewEventHandler
+};
+//# sourceMappingURL=viewEventHandler.js.map

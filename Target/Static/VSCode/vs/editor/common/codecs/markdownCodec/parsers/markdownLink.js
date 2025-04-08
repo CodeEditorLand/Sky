@@ -1,1 +1,129 @@
-import{MarkdownLink as k}from"../tokens/markdownLink.js";import{NewLine as l}from"../../linesCodec/tokens/newLine.js";import{assert as T}from"../../../../../base/common/assert.js";import{FormFeed as m}from"../../simpleCodec/tokens/formFeed.js";import"../../simpleCodec/simpleDecoder.js";import{VerticalTab as d}from"../../simpleCodec/tokens/verticalTab.js";import{CarriageReturn as f}from"../../linesCodec/tokens/carriageReturn.js";import{RightBracket as w}from"../../simpleCodec/tokens/brackets.js";import{ParserBase as o}from"../../simpleCodec/parserBase.js";import{LeftParenthesis as i,RightParenthesis as h}from"../../simpleCodec/tokens/parentheses.js";const a=[f,l,d,m].map(r=>r.symbol);class v extends o{constructor(e){super([e])}accept(e){return a.includes(e.text)?{result:"failure",wasTokenConsumed:!1}:e instanceof w?{result:"success",nextParser:new C([...this.tokens,e]),wasTokenConsumed:!0}:(this.currentTokens.push(e),{result:"success",nextParser:this,wasTokenConsumed:!0})}}class C extends o{accept(e){return e instanceof i?{result:"success",wasTokenConsumed:!0,nextParser:new L([...this.tokens],e)}:{result:"failure",wasTokenConsumed:!1}}}class L extends o{constructor(n,t){super([t]);this.captionTokens=n}openParensCount=1;get tokens(){return[...this.captionTokens,...this.currentTokens]}accept(n){if(n instanceof i&&(this.openParensCount+=1),n instanceof h&&(this.openParensCount-=1,T(this.openParensCount>=0,`Unexpected right parenthesis token encountered: '${n}'.`),this.openParensCount===0)){const{startLineNumber:t,startColumn:u}=this.captionTokens[0].range,c=this.captionTokens.map(s=>s.text).join("");this.currentTokens.push(n);const p=this.currentTokens.map(s=>s.text).join("");return{result:"success",wasTokenConsumed:!0,nextParser:new k(t,u,c,p)}}return a.includes(n.text)?{result:"failure",wasTokenConsumed:!1}:(this.currentTokens.push(n),{result:"success",nextParser:this,wasTokenConsumed:!0})}}export{C as MarkdownLinkCaption,L as PartialMarkdownLink,v as PartialMarkdownLinkCaption};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { MarkdownLink } from "../tokens/markdownLink.js";
+import { NewLine } from "../../linesCodec/tokens/newLine.js";
+import { assert } from "../../../../../base/common/assert.js";
+import { FormFeed } from "../../simpleCodec/tokens/formFeed.js";
+import { TSimpleToken } from "../../simpleCodec/simpleDecoder.js";
+import { VerticalTab } from "../../simpleCodec/tokens/verticalTab.js";
+import { CarriageReturn } from "../../linesCodec/tokens/carriageReturn.js";
+import { LeftBracket, RightBracket } from "../../simpleCodec/tokens/brackets.js";
+import { ParserBase, TAcceptTokenResult } from "../../simpleCodec/parserBase.js";
+import { LeftParenthesis, RightParenthesis } from "../../simpleCodec/tokens/parentheses.js";
+const MARKDOWN_LINK_STOP_CHARACTERS = [CarriageReturn, NewLine, VerticalTab, FormFeed].map((token) => {
+  return token.symbol;
+});
+class PartialMarkdownLinkCaption extends ParserBase {
+  static {
+    __name(this, "PartialMarkdownLinkCaption");
+  }
+  constructor(token) {
+    super([token]);
+  }
+  accept(token) {
+    if (MARKDOWN_LINK_STOP_CHARACTERS.includes(token.text)) {
+      return {
+        result: "failure",
+        wasTokenConsumed: false
+      };
+    }
+    if (token instanceof RightBracket) {
+      return {
+        result: "success",
+        nextParser: new MarkdownLinkCaption([...this.tokens, token]),
+        wasTokenConsumed: true
+      };
+    }
+    this.currentTokens.push(token);
+    return {
+      result: "success",
+      nextParser: this,
+      wasTokenConsumed: true
+    };
+  }
+}
+class MarkdownLinkCaption extends ParserBase {
+  static {
+    __name(this, "MarkdownLinkCaption");
+  }
+  accept(token) {
+    if (token instanceof LeftParenthesis) {
+      return {
+        result: "success",
+        wasTokenConsumed: true,
+        nextParser: new PartialMarkdownLink([...this.tokens], token)
+      };
+    }
+    return {
+      result: "failure",
+      wasTokenConsumed: false
+    };
+  }
+}
+class PartialMarkdownLink extends ParserBase {
+  constructor(captionTokens, token) {
+    super([token]);
+    this.captionTokens = captionTokens;
+  }
+  static {
+    __name(this, "PartialMarkdownLink");
+  }
+  /**
+   * Number of open parenthesis in the sequence.
+   * See comment in the {@linkcode accept} method for more details.
+   */
+  openParensCount = 1;
+  get tokens() {
+    return [...this.captionTokens, ...this.currentTokens];
+  }
+  accept(token) {
+    if (token instanceof LeftParenthesis) {
+      this.openParensCount += 1;
+    }
+    if (token instanceof RightParenthesis) {
+      this.openParensCount -= 1;
+      assert(
+        this.openParensCount >= 0,
+        `Unexpected right parenthesis token encountered: '${token}'.`
+      );
+      if (this.openParensCount === 0) {
+        const { startLineNumber, startColumn } = this.captionTokens[0].range;
+        const caption = this.captionTokens.map((token2) => {
+          return token2.text;
+        }).join("");
+        this.currentTokens.push(token);
+        const reference = this.currentTokens.map((token2) => {
+          return token2.text;
+        }).join("");
+        return {
+          result: "success",
+          wasTokenConsumed: true,
+          nextParser: new MarkdownLink(
+            startLineNumber,
+            startColumn,
+            caption,
+            reference
+          )
+        };
+      }
+    }
+    if (MARKDOWN_LINK_STOP_CHARACTERS.includes(token.text)) {
+      return {
+        result: "failure",
+        wasTokenConsumed: false
+      };
+    }
+    this.currentTokens.push(token);
+    return {
+      result: "success",
+      nextParser: this,
+      wasTokenConsumed: true
+    };
+  }
+}
+export {
+  MarkdownLinkCaption,
+  PartialMarkdownLink,
+  PartialMarkdownLinkCaption
+};
+//# sourceMappingURL=markdownLink.js.map

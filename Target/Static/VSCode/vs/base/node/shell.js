@@ -1,1 +1,57 @@
-import{userInfo as l}from"os";import*as t from"../common/platform.js";import{getFirstAvailablePowerShellInstallation as o}from"./powershell.js";import*as a from"./processes.js";async function p(s,e){return s===t.OperatingSystem.Windows?t.isWindows?f():a.getWindowsShell(e):m(s,e)}let r=null;function m(s,e){if(t.isLinux&&s===t.OperatingSystem.Macintosh||t.isMacintosh&&s===t.OperatingSystem.Linux)return"/bin/bash";if(!r){let s;if(t.isWindows)s="/bin/bash";else{if(s=e.SHELL,!s)try{s=l().shell}catch{}s||(s="sh"),"/bin/false"===s&&(s="/bin/bash")}r=s}return r}let s=null;async function f(){return s||(s=(await o()).exePath),s}export{p as getSystemShell};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { userInfo } from "os";
+import * as platform from "../common/platform.js";
+import { getFirstAvailablePowerShellInstallation } from "./powershell.js";
+import * as processes from "./processes.js";
+async function getSystemShell(os, env) {
+  if (os === platform.OperatingSystem.Windows) {
+    if (platform.isWindows) {
+      return getSystemShellWindows();
+    }
+    return processes.getWindowsShell(env);
+  }
+  return getSystemShellUnixLike(os, env);
+}
+__name(getSystemShell, "getSystemShell");
+let _TERMINAL_DEFAULT_SHELL_UNIX_LIKE = null;
+function getSystemShellUnixLike(os, env) {
+  if (platform.isLinux && os === platform.OperatingSystem.Macintosh || platform.isMacintosh && os === platform.OperatingSystem.Linux) {
+    return "/bin/bash";
+  }
+  if (!_TERMINAL_DEFAULT_SHELL_UNIX_LIKE) {
+    let unixLikeTerminal;
+    if (platform.isWindows) {
+      unixLikeTerminal = "/bin/bash";
+    } else {
+      unixLikeTerminal = env["SHELL"];
+      if (!unixLikeTerminal) {
+        try {
+          unixLikeTerminal = userInfo().shell;
+        } catch (err) {
+        }
+      }
+      if (!unixLikeTerminal) {
+        unixLikeTerminal = "sh";
+      }
+      if (unixLikeTerminal === "/bin/false") {
+        unixLikeTerminal = "/bin/bash";
+      }
+    }
+    _TERMINAL_DEFAULT_SHELL_UNIX_LIKE = unixLikeTerminal;
+  }
+  return _TERMINAL_DEFAULT_SHELL_UNIX_LIKE;
+}
+__name(getSystemShellUnixLike, "getSystemShellUnixLike");
+let _TERMINAL_DEFAULT_SHELL_WINDOWS = null;
+async function getSystemShellWindows() {
+  if (!_TERMINAL_DEFAULT_SHELL_WINDOWS) {
+    _TERMINAL_DEFAULT_SHELL_WINDOWS = (await getFirstAvailablePowerShellInstallation()).exePath;
+  }
+  return _TERMINAL_DEFAULT_SHELL_WINDOWS;
+}
+__name(getSystemShellWindows, "getSystemShellWindows");
+export {
+  getSystemShell
+};
+//# sourceMappingURL=shell.js.map

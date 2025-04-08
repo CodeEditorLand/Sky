@@ -1,1 +1,110 @@
-import"../../base/common/event.js";import*as S from"../../base/common/platform.js";import*as h from"../../base/common/performance.js";import{URI as l}from"../../base/common/uri.js";import{createURITransformer as p}from"../../workbench/api/node/uriTransformer.js";import"../../workbench/services/remote/common/remoteAgentEnvironmentChannel.js";import"./serverEnvironmentService.js";import"../../base/parts/ipc/common/ipc.js";import{transformOutgoingURIs as u}from"../../base/common/uriIpc.js";import{listProcesses as I}from"../../base/node/ps.js";import{getMachineInfo as P,collectWorkspaceStats as _}from"../../platform/diagnostics/node/diagnosticsService.js";import"../../platform/diagnostics/common/diagnostics.js";import{basename as d}from"../../base/common/path.js";import"../../base/common/processes.js";import{ServerConnectionTokenType as E}from"./serverConnectionToken.js";import"./extensionHostStatusService.js";import"../../platform/userDataProfile/common/userDataProfile.js";import{joinPath as y}from"../../base/common/resources.js";class f{constructor(r,t,e,o){this._connectionToken=r;this._environmentService=t;this._userDataProfilesService=e;this._extensionHostStatusService=o}static _namePool=1;async call(r,t,e){switch(t){case"getEnvironmentData":{const o=e,s=p(o.remoteAuthority);let i=await this._getEnvironmentData(o.profile);return i=u(i,s),i}case"getExtensionHostExitInfo":{const o=e;return this._extensionHostStatusService.getExitInfo(o.reconnectionToken)}case"getDiagnosticInfo":{const o=e,s={machineInfo:P()},i=o.includeProcesses?I(process.pid):Promise.resolve();let m=[];const c={};if(o.folders){const a=p("");m=o.folders.map(n=>l.revive(a.transformIncoming(n))).filter(n=>n.scheme==="file").map(n=>_(n.fsPath,["node_modules",".git"]).then(g=>{c[d(n.fsPath)]=g}))}return Promise.all([i,...m]).then(([a,v])=>(s.processes=a||void 0,s.workspaceMetadata=o.folders?c:void 0,s))}}throw new Error(`IPC Command ${t} not found`)}listen(r,t,e){throw new Error("Not supported")}async _getEnvironmentData(r){r&&!this._userDataProfilesService.profiles.some(e=>e.id===r)&&await this._userDataProfilesService.createProfile(r,r);let t=!1;if(process.platform==="linux"){const e=process.glibcVersion;t=(e?parseInt(e.split(".")[1]):28)<=27||!!process.env.VSCODE_SERVER_CUSTOM_GLIBC_LINKER}return{pid:process.pid,connectionToken:this._connectionToken.type!==E.None?this._connectionToken.value:"",appRoot:l.file(this._environmentService.appRoot),settingsPath:this._environmentService.machineSettingsResource,logsPath:this._environmentService.logsHome,extensionHostLogsPath:y(this._environmentService.logsHome,`exthost${f._namePool++}`),globalStorageHome:this._userDataProfilesService.defaultProfile.globalStorageHome,workspaceStorageHome:this._environmentService.workspaceStorageHome,localHistoryHome:this._environmentService.localHistoryHome,userHome:this._environmentService.userHome,os:S.OS,arch:process.arch,marks:h.getMarks(),useHostProxy:!!this._environmentService.args["use-host-proxy"],profiles:{home:this._userDataProfilesService.profilesHome,all:[...this._userDataProfilesService.profiles].map(e=>({...e}))},isUnsupportedGlibc:t}}}export{f as RemoteAgentEnvironmentChannel};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Event } from "../../base/common/event.js";
+import * as platform from "../../base/common/platform.js";
+import * as performance from "../../base/common/performance.js";
+import { URI } from "../../base/common/uri.js";
+import { createURITransformer } from "../../workbench/api/node/uriTransformer.js";
+import { IRemoteAgentEnvironmentDTO, IGetEnvironmentDataArguments, IGetExtensionHostExitInfoArguments } from "../../workbench/services/remote/common/remoteAgentEnvironmentChannel.js";
+import { IServerEnvironmentService } from "./serverEnvironmentService.js";
+import { IServerChannel } from "../../base/parts/ipc/common/ipc.js";
+import { transformOutgoingURIs } from "../../base/common/uriIpc.js";
+import { listProcesses } from "../../base/node/ps.js";
+import { getMachineInfo, collectWorkspaceStats } from "../../platform/diagnostics/node/diagnosticsService.js";
+import { IDiagnosticInfoOptions, IDiagnosticInfo } from "../../platform/diagnostics/common/diagnostics.js";
+import { basename } from "../../base/common/path.js";
+import { ProcessItem } from "../../base/common/processes.js";
+import { ServerConnectionToken, ServerConnectionTokenType } from "./serverConnectionToken.js";
+import { IExtensionHostStatusService } from "./extensionHostStatusService.js";
+import { IUserDataProfilesService } from "../../platform/userDataProfile/common/userDataProfile.js";
+import { joinPath } from "../../base/common/resources.js";
+class RemoteAgentEnvironmentChannel {
+  constructor(_connectionToken, _environmentService, _userDataProfilesService, _extensionHostStatusService) {
+    this._connectionToken = _connectionToken;
+    this._environmentService = _environmentService;
+    this._userDataProfilesService = _userDataProfilesService;
+    this._extensionHostStatusService = _extensionHostStatusService;
+  }
+  static {
+    __name(this, "RemoteAgentEnvironmentChannel");
+  }
+  static _namePool = 1;
+  async call(_, command, arg) {
+    switch (command) {
+      case "getEnvironmentData": {
+        const args = arg;
+        const uriTransformer = createURITransformer(args.remoteAuthority);
+        let environmentData = await this._getEnvironmentData(args.profile);
+        environmentData = transformOutgoingURIs(environmentData, uriTransformer);
+        return environmentData;
+      }
+      case "getExtensionHostExitInfo": {
+        const args = arg;
+        return this._extensionHostStatusService.getExitInfo(args.reconnectionToken);
+      }
+      case "getDiagnosticInfo": {
+        const options = arg;
+        const diagnosticInfo = {
+          machineInfo: getMachineInfo()
+        };
+        const processesPromise = options.includeProcesses ? listProcesses(process.pid) : Promise.resolve();
+        let workspaceMetadataPromises = [];
+        const workspaceMetadata = {};
+        if (options.folders) {
+          const uriTransformer = createURITransformer("");
+          const folderPaths = options.folders.map((folder) => URI.revive(uriTransformer.transformIncoming(folder))).filter((uri) => uri.scheme === "file");
+          workspaceMetadataPromises = folderPaths.map((folder) => {
+            return collectWorkspaceStats(folder.fsPath, ["node_modules", ".git"]).then((stats) => {
+              workspaceMetadata[basename(folder.fsPath)] = stats;
+            });
+          });
+        }
+        return Promise.all([processesPromise, ...workspaceMetadataPromises]).then(([processes, _2]) => {
+          diagnosticInfo.processes = processes || void 0;
+          diagnosticInfo.workspaceMetadata = options.folders ? workspaceMetadata : void 0;
+          return diagnosticInfo;
+        });
+      }
+    }
+    throw new Error(`IPC Command ${command} not found`);
+  }
+  listen(_, event, arg) {
+    throw new Error("Not supported");
+  }
+  async _getEnvironmentData(profile) {
+    if (profile && !this._userDataProfilesService.profiles.some((p) => p.id === profile)) {
+      await this._userDataProfilesService.createProfile(profile, profile);
+    }
+    let isUnsupportedGlibc = false;
+    if (process.platform === "linux") {
+      const glibcVersion = process.glibcVersion;
+      const minorVersion = glibcVersion ? parseInt(glibcVersion.split(".")[1]) : 28;
+      isUnsupportedGlibc = minorVersion <= 27 || !!process.env["VSCODE_SERVER_CUSTOM_GLIBC_LINKER"];
+    }
+    return {
+      pid: process.pid,
+      connectionToken: this._connectionToken.type !== ServerConnectionTokenType.None ? this._connectionToken.value : "",
+      appRoot: URI.file(this._environmentService.appRoot),
+      settingsPath: this._environmentService.machineSettingsResource,
+      logsPath: this._environmentService.logsHome,
+      extensionHostLogsPath: joinPath(this._environmentService.logsHome, `exthost${RemoteAgentEnvironmentChannel._namePool++}`),
+      globalStorageHome: this._userDataProfilesService.defaultProfile.globalStorageHome,
+      workspaceStorageHome: this._environmentService.workspaceStorageHome,
+      localHistoryHome: this._environmentService.localHistoryHome,
+      userHome: this._environmentService.userHome,
+      os: platform.OS,
+      arch: process.arch,
+      marks: performance.getMarks(),
+      useHostProxy: !!this._environmentService.args["use-host-proxy"],
+      profiles: {
+        home: this._userDataProfilesService.profilesHome,
+        all: [...this._userDataProfilesService.profiles].map((profile2) => ({ ...profile2 }))
+      },
+      isUnsupportedGlibc
+    };
+  }
+}
+export {
+  RemoteAgentEnvironmentChannel
+};
+//# sourceMappingURL=remoteAgentEnvironmentImpl.js.map

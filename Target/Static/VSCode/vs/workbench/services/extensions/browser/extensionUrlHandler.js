@@ -1,2 +1,346 @@
-var T=Object.defineProperty;var C=Object.getOwnPropertyDescriptor;var x=(l,e,n,i)=>{for(var t=i>1?void 0:i?C(e,n):e,r=l.length-1,s;r>=0;r--)(s=l[r])&&(t=(i?s(e,n,t):s(t))||t);return i&&t&&T(e,n,t),t},d=(l,e)=>(n,i)=>e(n,i,l);import{localize as m,localize2 as R}from"../../../../nls.js";import{combinedDisposable as k,toDisposable as A}from"../../../../base/common/lifecycle.js";import{URI as D}from"../../../../base/common/uri.js";import{IConfigurationService as N}from"../../../../platform/configuration/common/configuration.js";import{IDialogService as P}from"../../../../platform/dialogs/common/dialogs.js";import{createDecorator as K}from"../../../../platform/instantiation/common/instantiation.js";import{IStorageService as E,StorageScope as p,StorageTarget as y}from"../../../../platform/storage/common/storage.js";import{IURLService as b}from"../../../../platform/url/common/url.js";import{IHostService as _}from"../../host/browser/host.js";import{ActivationKind as W,IExtensionService as B}from"../common/extensions.js";import{ExtensionIdentifier as c}from"../../../../platform/extensions/common/extensions.js";import{InstantiationType as M,registerSingleton as z}from"../../../../platform/instantiation/common/extensions.js";import{WorkbenchPhase as $,registerWorkbenchContribution2 as F}from"../../../common/contributions.js";import{Action2 as J,MenuId as Q,registerAction2 as V}from"../../../../platform/actions/common/actions.js";import{IQuickInputService as Y}from"../../../../platform/quickinput/common/quickInput.js";import{IsWebContext as G}from"../../../../platform/contextkey/common/contextkeys.js";import{IProductService as X}from"../../../../platform/product/common/productService.js";import{disposableWindowInterval as j}from"../../../../base/browser/dom.js";import{mainWindow as q}from"../../../../base/browser/window.js";import{ICommandService as Z}from"../../../../platform/commands/common/commands.js";import{isCancellationError as ee}from"../../../../base/common/errors.js";import{INotificationService as te}from"../../../../platform/notification/common/notification.js";import{MarkdownString as ne}from"../../../../base/common/htmlContent.js";const ie=5*60*1e3,re=30*1e3,S="extensionUrlHandler.urlToHandle",oe="extensions.confirmedUriHandlerExtensionIds",H="extensionUrlHandler.confirmedExtensions";function O(l){return/^[a-z0-9][a-z0-9\-]*\.[a-z0-9][a-z0-9\-]*$/i.test(l)}class L{constructor(e){this.storageService=e}get extensions(){const e=this.storageService.get(H,p.PROFILE,"[]");try{return JSON.parse(e)}catch{return[]}}has(e){return this.extensions.indexOf(e)>-1}add(e){this.set([...this.extensions,e])}set(e){this.storageService.store(H,JSON.stringify(e),p.PROFILE,y.MACHINE)}}const se=K("extensionUrlHandler");class ae{static handlers=new Set;static registerHandler(e){return this.handlers.add(e),A(()=>this.handlers.delete(e))}static getHandler(e){for(const n of this.handlers)if(n.canHandleURL(e))return n}}let I=class{constructor(e,n,i,t,r,s,h,v,U){this.extensionService=n;this.dialogService=i;this.commandService=t;this.hostService=r;this.storageService=s;this.configurationService=h;this.notificationService=v;this.productService=U;this.userTrustedExtensionsStorage=new L(s);const f=j(q,()=>this.garbageCollect(),re),a=this.storageService.get(S,p.WORKSPACE);a&&(this.storageService.remove(S,p.WORKSPACE),this.handleURL(D.revive(JSON.parse(a)),{trusted:!0})),this.disposable=k(e.registerHandler(this),f);const u=o.cache;setTimeout(()=>u.forEach(([g,w])=>this.handleURL(g,w)))}_serviceBrand;extensionHandlers=new Map;uriBuffer=new Map;userTrustedExtensionsStorage;disposable;async handleURL(e,n){if(!O(e.authority))return!1;const i=ae.getHandler(e);if(i){const a=await i.handleURL(e);if(a)return a}const t=e.authority,r=this.extensionHandlers.get(c.toKey(t));let s;if(r)s=r.extensionDisplayName;else{const a=await this.extensionService.getExtension(t);if(a)s=a.displayName??"";else return await this.handleUnhandledURL(e,t,n),!0}if(!(n?.trusted||this.productService.trustedExtensionProtocolHandlers?.includes(t)||this.didUserTrustExtension(c.toKey(t)))){const a=e.toString(!1);let u=a;u.length>40&&(u=`${u.substring(0,30)}...${u.substring(u.length-5)}`);const g=await this.dialogService.confirm({message:m("confirmUrl","Allow '{0}' extension to open this URI?",s),checkbox:{label:m("rememberConfirmUrl","Do not ask me again for this extension")},primaryButton:m({key:"open",comment:["&& denotes a mnemonic"]},"&&Open"),custom:{markdownDetails:[{markdown:new ne(`<div title="${a}" aria-label='${a}'>${u}</div>`,{supportHtml:!0})}]}});if(!g.confirmed)return!0;g.checkboxChecked&&this.userTrustedExtensionsStorage.add(c.toKey(t))}const v=this.extensionHandlers.get(c.toKey(t));if(v)return r?!1:await this.handleURLByExtension(t,v,e,n);const U=new Date().getTime();let f=this.uriBuffer.get(c.toKey(t));return f||(f=[],this.uriBuffer.set(c.toKey(t),f)),f.push({timestamp:U,uri:e}),await this.extensionService.activateByEvent(`onUri:${c.toKey(t)}`,W.Immediate),!0}registerExtensionHandler(e,n){this.extensionHandlers.set(c.toKey(e),n);const i=this.uriBuffer.get(c.toKey(e))||[];for(const{uri:t}of i)this.handleURLByExtension(e,n,t);this.uriBuffer.delete(c.toKey(e))}unregisterExtensionHandler(e){this.extensionHandlers.delete(c.toKey(e))}async handleURLByExtension(e,n,i,t){return await n.handleURL(i,t)}async handleUnhandledURL(e,n,i){try{await this.commandService.executeCommand("workbench.extensions.installExtension",n,{justification:{reason:`${m("installDetail","This extension wants to open a URI:")}
-${e.toString()}`,action:m("openUri","Open URI")},enable:!0})}catch(r){ee(r)||this.notificationService.error(r);return}if(await this.extensionService.getExtension(n))await this.handleURL(e,{...i,trusted:!0});else{if(!(await this.dialogService.confirm({message:m("reloadAndHandle","Extension '{0}' is not loaded. Would you like to reload the window to load the extension and open the URL?",n),primaryButton:m({key:"reloadAndOpen",comment:["&& denotes a mnemonic"]},"&&Reload Window and Open")})).confirmed)return;this.storageService.store(S,JSON.stringify(e.toJSON()),p.WORKSPACE,y.MACHINE),await this.hostService.reload()}}garbageCollect(){const e=new Date().getTime(),n=new Map;this.uriBuffer.forEach((i,t)=>{i=i.filter(({timestamp:r})=>e-r<ie),i.length>0&&n.set(t,i)}),this.uriBuffer=n}didUserTrustExtension(e){return this.userTrustedExtensionsStorage.has(e)?!0:this.getConfirmedTrustedExtensionIdsFromConfiguration().indexOf(e)>-1}getConfirmedTrustedExtensionIdsFromConfiguration(){const e=this.configurationService.getValue(oe);return Array.isArray(e)?e:[]}dispose(){this.disposable.dispose(),this.extensionHandlers.clear(),this.uriBuffer.clear()}};I=x([d(0,b),d(1,B),d(2,P),d(3,Z),d(4,_),d(5,E),d(6,N),d(7,te),d(8,X)],I),z(se,I,M.Eager);let o=class{static ID="workbench.contrib.extensionUrlBootstrapHandler";static _cache=[];static disposable;static get cache(){o.disposable.dispose();const e=o._cache;return o._cache=[],e}constructor(e){o.disposable=e.registerHandler(this)}async handleURL(e,n){return O(e.authority)?(o._cache.push([e,n]),!0):!1}};o=x([d(0,b)],o),F(o.ID,o,$.BlockRestore);class de extends J{constructor(){super({id:"workbench.extensions.action.manageAuthorizedExtensionURIs",title:R("manage","Manage Authorized Extension URIs..."),category:R("extensions","Extensions"),menu:{id:Q.CommandPalette,when:G.toNegated()}})}async run(e){const n=e.get(E),i=e.get(Y),t=new L(n),r=t.extensions.map(h=>({label:h,picked:!0}));if(r.length===0){await i.pick([{label:m("no","There are currently no authorized extension URIs.")}]);return}const s=await i.pick(r,{canPickMany:!0});s&&t.set(s.map(h=>h.label))}}V(de);export{ae as ExtensionUrlHandlerOverrideRegistry,se as IExtensionUrlHandler};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { localize, localize2 } from "../../../../nls.js";
+import { IDisposable, combinedDisposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IDialogService } from "../../../../platform/dialogs/common/dialogs.js";
+import { createDecorator, ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { IURLHandler, IURLService, IOpenURLOptions } from "../../../../platform/url/common/url.js";
+import { IHostService } from "../../host/browser/host.js";
+import { ActivationKind, IExtensionService } from "../common/extensions.js";
+import { ExtensionIdentifier } from "../../../../platform/extensions/common/extensions.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { IWorkbenchContribution, WorkbenchPhase, registerWorkbenchContribution2 } from "../../../common/contributions.js";
+import { Action2, MenuId, registerAction2 } from "../../../../platform/actions/common/actions.js";
+import { IQuickInputService, IQuickPickItem } from "../../../../platform/quickinput/common/quickInput.js";
+import { IsWebContext } from "../../../../platform/contextkey/common/contextkeys.js";
+import { IProductService } from "../../../../platform/product/common/productService.js";
+import { disposableWindowInterval } from "../../../../base/browser/dom.js";
+import { mainWindow } from "../../../../base/browser/window.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { isCancellationError } from "../../../../base/common/errors.js";
+import { INotificationService } from "../../../../platform/notification/common/notification.js";
+import { MarkdownString } from "../../../../base/common/htmlContent.js";
+const FIVE_MINUTES = 5 * 60 * 1e3;
+const THIRTY_SECONDS = 30 * 1e3;
+const URL_TO_HANDLE = "extensionUrlHandler.urlToHandle";
+const USER_TRUSTED_EXTENSIONS_CONFIGURATION_KEY = "extensions.confirmedUriHandlerExtensionIds";
+const USER_TRUSTED_EXTENSIONS_STORAGE_KEY = "extensionUrlHandler.confirmedExtensions";
+function isExtensionId(value) {
+  return /^[a-z0-9][a-z0-9\-]*\.[a-z0-9][a-z0-9\-]*$/i.test(value);
+}
+__name(isExtensionId, "isExtensionId");
+class UserTrustedExtensionIdStorage {
+  constructor(storageService) {
+    this.storageService = storageService;
+  }
+  static {
+    __name(this, "UserTrustedExtensionIdStorage");
+  }
+  get extensions() {
+    const userTrustedExtensionIdsJson = this.storageService.get(USER_TRUSTED_EXTENSIONS_STORAGE_KEY, StorageScope.PROFILE, "[]");
+    try {
+      return JSON.parse(userTrustedExtensionIdsJson);
+    } catch {
+      return [];
+    }
+  }
+  has(id) {
+    return this.extensions.indexOf(id) > -1;
+  }
+  add(id) {
+    this.set([...this.extensions, id]);
+  }
+  set(ids) {
+    this.storageService.store(USER_TRUSTED_EXTENSIONS_STORAGE_KEY, JSON.stringify(ids), StorageScope.PROFILE, StorageTarget.MACHINE);
+  }
+}
+const IExtensionUrlHandler = createDecorator("extensionUrlHandler");
+class ExtensionUrlHandlerOverrideRegistry {
+  static {
+    __name(this, "ExtensionUrlHandlerOverrideRegistry");
+  }
+  static handlers = /* @__PURE__ */ new Set();
+  static registerHandler(handler) {
+    this.handlers.add(handler);
+    return toDisposable(() => this.handlers.delete(handler));
+  }
+  static getHandler(uri) {
+    for (const handler of this.handlers) {
+      if (handler.canHandleURL(uri)) {
+        return handler;
+      }
+    }
+    return void 0;
+  }
+}
+let ExtensionUrlHandler = class {
+  constructor(urlService, extensionService, dialogService, commandService, hostService, storageService, configurationService, notificationService, productService) {
+    this.extensionService = extensionService;
+    this.dialogService = dialogService;
+    this.commandService = commandService;
+    this.hostService = hostService;
+    this.storageService = storageService;
+    this.configurationService = configurationService;
+    this.notificationService = notificationService;
+    this.productService = productService;
+    this.userTrustedExtensionsStorage = new UserTrustedExtensionIdStorage(storageService);
+    const interval = disposableWindowInterval(mainWindow, () => this.garbageCollect(), THIRTY_SECONDS);
+    const urlToHandleValue = this.storageService.get(URL_TO_HANDLE, StorageScope.WORKSPACE);
+    if (urlToHandleValue) {
+      this.storageService.remove(URL_TO_HANDLE, StorageScope.WORKSPACE);
+      this.handleURL(URI.revive(JSON.parse(urlToHandleValue)), { trusted: true });
+    }
+    this.disposable = combinedDisposable(
+      urlService.registerHandler(this),
+      interval
+    );
+    const cache = ExtensionUrlBootstrapHandler.cache;
+    setTimeout(() => cache.forEach(([uri, option]) => this.handleURL(uri, option)));
+  }
+  static {
+    __name(this, "ExtensionUrlHandler");
+  }
+  _serviceBrand;
+  extensionHandlers = /* @__PURE__ */ new Map();
+  uriBuffer = /* @__PURE__ */ new Map();
+  userTrustedExtensionsStorage;
+  disposable;
+  async handleURL(uri, options) {
+    if (!isExtensionId(uri.authority)) {
+      return false;
+    }
+    const overrideHandler = ExtensionUrlHandlerOverrideRegistry.getHandler(uri);
+    if (overrideHandler) {
+      const handled = await overrideHandler.handleURL(uri);
+      if (handled) {
+        return handled;
+      }
+    }
+    const extensionId = uri.authority;
+    const initialHandler = this.extensionHandlers.get(ExtensionIdentifier.toKey(extensionId));
+    let extensionDisplayName;
+    if (!initialHandler) {
+      const extension = await this.extensionService.getExtension(extensionId);
+      if (!extension) {
+        await this.handleUnhandledURL(uri, extensionId, options);
+        return true;
+      } else {
+        extensionDisplayName = extension.displayName ?? "";
+      }
+    } else {
+      extensionDisplayName = initialHandler.extensionDisplayName;
+    }
+    const trusted = options?.trusted || this.productService.trustedExtensionProtocolHandlers?.includes(extensionId) || this.didUserTrustExtension(ExtensionIdentifier.toKey(extensionId));
+    if (!trusted) {
+      const uriString = uri.toString(false);
+      let uriLabel = uriString;
+      if (uriLabel.length > 40) {
+        uriLabel = `${uriLabel.substring(0, 30)}...${uriLabel.substring(uriLabel.length - 5)}`;
+      }
+      const result = await this.dialogService.confirm({
+        message: localize("confirmUrl", "Allow '{0}' extension to open this URI?", extensionDisplayName),
+        checkbox: {
+          label: localize("rememberConfirmUrl", "Do not ask me again for this extension")
+        },
+        primaryButton: localize({ key: "open", comment: ["&& denotes a mnemonic"] }, "&&Open"),
+        custom: {
+          markdownDetails: [{
+            markdown: new MarkdownString(`<div title="${uriString}" aria-label='${uriString}'>${uriLabel}</div>`, { supportHtml: true })
+          }]
+        }
+      });
+      if (!result.confirmed) {
+        return true;
+      }
+      if (result.checkboxChecked) {
+        this.userTrustedExtensionsStorage.add(ExtensionIdentifier.toKey(extensionId));
+      }
+    }
+    const handler = this.extensionHandlers.get(ExtensionIdentifier.toKey(extensionId));
+    if (handler) {
+      if (!initialHandler) {
+        return await this.handleURLByExtension(extensionId, handler, uri, options);
+      }
+      return false;
+    }
+    const timestamp = (/* @__PURE__ */ new Date()).getTime();
+    let uris = this.uriBuffer.get(ExtensionIdentifier.toKey(extensionId));
+    if (!uris) {
+      uris = [];
+      this.uriBuffer.set(ExtensionIdentifier.toKey(extensionId), uris);
+    }
+    uris.push({ timestamp, uri });
+    await this.extensionService.activateByEvent(`onUri:${ExtensionIdentifier.toKey(extensionId)}`, ActivationKind.Immediate);
+    return true;
+  }
+  registerExtensionHandler(extensionId, handler) {
+    this.extensionHandlers.set(ExtensionIdentifier.toKey(extensionId), handler);
+    const uris = this.uriBuffer.get(ExtensionIdentifier.toKey(extensionId)) || [];
+    for (const { uri } of uris) {
+      this.handleURLByExtension(extensionId, handler, uri);
+    }
+    this.uriBuffer.delete(ExtensionIdentifier.toKey(extensionId));
+  }
+  unregisterExtensionHandler(extensionId) {
+    this.extensionHandlers.delete(ExtensionIdentifier.toKey(extensionId));
+  }
+  async handleURLByExtension(extensionId, handler, uri, options) {
+    return await handler.handleURL(uri, options);
+  }
+  async handleUnhandledURL(uri, extensionId, options) {
+    try {
+      await this.commandService.executeCommand("workbench.extensions.installExtension", extensionId, {
+        justification: {
+          reason: `${localize("installDetail", "This extension wants to open a URI:")}
+${uri.toString()}`,
+          action: localize("openUri", "Open URI")
+        },
+        enable: true
+      });
+    } catch (error) {
+      if (!isCancellationError(error)) {
+        this.notificationService.error(error);
+      }
+      return;
+    }
+    const extension = await this.extensionService.getExtension(extensionId);
+    if (extension) {
+      await this.handleURL(uri, { ...options, trusted: true });
+    } else {
+      const result = await this.dialogService.confirm({
+        message: localize("reloadAndHandle", "Extension '{0}' is not loaded. Would you like to reload the window to load the extension and open the URL?", extensionId),
+        primaryButton: localize({ key: "reloadAndOpen", comment: ["&& denotes a mnemonic"] }, "&&Reload Window and Open")
+      });
+      if (!result.confirmed) {
+        return;
+      }
+      this.storageService.store(URL_TO_HANDLE, JSON.stringify(uri.toJSON()), StorageScope.WORKSPACE, StorageTarget.MACHINE);
+      await this.hostService.reload();
+    }
+  }
+  // forget about all uris buffered more than 5 minutes ago
+  garbageCollect() {
+    const now = (/* @__PURE__ */ new Date()).getTime();
+    const uriBuffer = /* @__PURE__ */ new Map();
+    this.uriBuffer.forEach((uris, extensionId) => {
+      uris = uris.filter(({ timestamp }) => now - timestamp < FIVE_MINUTES);
+      if (uris.length > 0) {
+        uriBuffer.set(extensionId, uris);
+      }
+    });
+    this.uriBuffer = uriBuffer;
+  }
+  didUserTrustExtension(id) {
+    if (this.userTrustedExtensionsStorage.has(id)) {
+      return true;
+    }
+    return this.getConfirmedTrustedExtensionIdsFromConfiguration().indexOf(id) > -1;
+  }
+  getConfirmedTrustedExtensionIdsFromConfiguration() {
+    const trustedExtensionIds = this.configurationService.getValue(USER_TRUSTED_EXTENSIONS_CONFIGURATION_KEY);
+    if (!Array.isArray(trustedExtensionIds)) {
+      return [];
+    }
+    return trustedExtensionIds;
+  }
+  dispose() {
+    this.disposable.dispose();
+    this.extensionHandlers.clear();
+    this.uriBuffer.clear();
+  }
+};
+ExtensionUrlHandler = __decorateClass([
+  __decorateParam(0, IURLService),
+  __decorateParam(1, IExtensionService),
+  __decorateParam(2, IDialogService),
+  __decorateParam(3, ICommandService),
+  __decorateParam(4, IHostService),
+  __decorateParam(5, IStorageService),
+  __decorateParam(6, IConfigurationService),
+  __decorateParam(7, INotificationService),
+  __decorateParam(8, IProductService)
+], ExtensionUrlHandler);
+registerSingleton(IExtensionUrlHandler, ExtensionUrlHandler, InstantiationType.Eager);
+let ExtensionUrlBootstrapHandler = class {
+  static {
+    __name(this, "ExtensionUrlBootstrapHandler");
+  }
+  static ID = "workbench.contrib.extensionUrlBootstrapHandler";
+  static _cache = [];
+  static disposable;
+  static get cache() {
+    ExtensionUrlBootstrapHandler.disposable.dispose();
+    const result = ExtensionUrlBootstrapHandler._cache;
+    ExtensionUrlBootstrapHandler._cache = [];
+    return result;
+  }
+  constructor(urlService) {
+    ExtensionUrlBootstrapHandler.disposable = urlService.registerHandler(this);
+  }
+  async handleURL(uri, options) {
+    if (!isExtensionId(uri.authority)) {
+      return false;
+    }
+    ExtensionUrlBootstrapHandler._cache.push([uri, options]);
+    return true;
+  }
+};
+ExtensionUrlBootstrapHandler = __decorateClass([
+  __decorateParam(0, IURLService)
+], ExtensionUrlBootstrapHandler);
+registerWorkbenchContribution2(
+  ExtensionUrlBootstrapHandler.ID,
+  ExtensionUrlBootstrapHandler,
+  WorkbenchPhase.BlockRestore
+  /* registration only */
+);
+class ManageAuthorizedExtensionURIsAction extends Action2 {
+  static {
+    __name(this, "ManageAuthorizedExtensionURIsAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.extensions.action.manageAuthorizedExtensionURIs",
+      title: localize2("manage", "Manage Authorized Extension URIs..."),
+      category: localize2("extensions", "Extensions"),
+      menu: {
+        id: MenuId.CommandPalette,
+        when: IsWebContext.toNegated()
+      }
+    });
+  }
+  async run(accessor) {
+    const storageService = accessor.get(IStorageService);
+    const quickInputService = accessor.get(IQuickInputService);
+    const storage = new UserTrustedExtensionIdStorage(storageService);
+    const items = storage.extensions.map((label) => ({ label, picked: true }));
+    if (items.length === 0) {
+      await quickInputService.pick([{ label: localize("no", "There are currently no authorized extension URIs.") }]);
+      return;
+    }
+    const result = await quickInputService.pick(items, { canPickMany: true });
+    if (!result) {
+      return;
+    }
+    storage.set(result.map((item) => item.label));
+  }
+}
+registerAction2(ManageAuthorizedExtensionURIsAction);
+export {
+  ExtensionUrlHandlerOverrideRegistry,
+  IExtensionUrlHandler
+};
+//# sourceMappingURL=extensionUrlHandler.js.map

@@ -1,1 +1,663 @@
-import{KeyChord as ae,KeyCode as u,KeyMod as m}from"../../../../../base/common/keyCodes.js";import{Mimes as ce}from"../../../../../base/common/mime.js";import{URI as F}from"../../../../../base/common/uri.js";import"../../../../../editor/browser/editorBrowser.js";import{Selection as q}from"../../../../../editor/common/core/selection.js";import{CommandExecutor as se}from"../../../../../editor/common/cursor/cursor.js";import{EditorContextKeys as y}from"../../../../../editor/common/editorContextKeys.js";import{ILanguageService as de}from"../../../../../editor/common/languages/language.js";import{ILanguageConfigurationService as ue}from"../../../../../editor/common/languages/languageConfigurationRegistry.js";import{TrackedRangeStickiness as ge}from"../../../../../editor/common/model.js";import{getIconClasses as Ce}from"../../../../../editor/common/services/getIconClasses.js";import{IModelService as pe}from"../../../../../editor/common/services/model.js";import{LineCommentCommand as me,Type as ke}from"../../../../../editor/contrib/comment/browser/lineCommentCommand.js";import{localize as a,localize2 as G}from"../../../../../nls.js";import{MenuId as f,registerAction2 as k}from"../../../../../platform/actions/common/actions.js";import{IConfigurationService as Ee}from"../../../../../platform/configuration/common/configuration.js";import{ContextKeyExpr as r}from"../../../../../platform/contextkey/common/contextkey.js";import{InputFocusedContext as be,InputFocusedContextKey as v}from"../../../../../platform/contextkey/common/contextkeys.js";import{IDialogService as fe}from"../../../../../platform/dialogs/common/dialogs.js";import{IInstantiationService as Ie}from"../../../../../platform/instantiation/common/instantiation.js";import{KeybindingWeight as T}from"../../../../../platform/keybinding/common/keybindingsRegistry.js";import{INotificationService as Te}from"../../../../../platform/notification/common/notification.js";import{IQuickInputService as Q}from"../../../../../platform/quickinput/common/quickInput.js";import{InlineChatController as H}from"../../../inlineChat/browser/inlineChatController.js";import{CTX_INLINE_CHAT_FOCUSED as Se}from"../../../inlineChat/common/inlineChat.js";import{changeCellToKind as z,runDeleteAction as he}from"./cellOperations.js";import{CELL_TITLE_CELL_GROUP_ID as w,CELL_TITLE_OUTPUT_GROUP_ID as Oe,CellToolbarOrder as M,NOTEBOOK_EDITOR_WIDGET_ACTION_WEIGHT as V,NotebookAction as j,NotebookCellAction as h,NotebookMultiCellAction as Ne,executeNotebookCondition as X,findTargetCellEditor as Le}from"./coreActions.js";import{NotebookChangeTabDisplaySize as Ae,NotebookIndentUsingSpaces as _e,NotebookIndentUsingTabs as ye,NotebookIndentationToSpacesAction as ve,NotebookIndentationToTabsAction as we}from"./notebookIndentationActions.js";import{CHANGE_CELL_LANGUAGE as De,CellEditState as Me,DETECT_CELL_LANGUAGE as xe,QUIT_EDIT_CELL_COMMAND_ID as Y,getNotebookEditorFromEditorPane as Pe}from"../notebookBrowser.js";import*as L from"../notebookIcons.js";import{CellEditType as A,CellKind as _,NotebookCellExecutionState as x,NotebookSetting as J}from"../../common/notebookCommon.js";import{NOTEBOOK_CELL_EDITABLE as I,NOTEBOOK_CELL_HAS_OUTPUTS as P,NOTEBOOK_CELL_IS_FIRST_OUTPUT as Re,NOTEBOOK_CELL_LIST_FOCUSED as Ue,NOTEBOOK_CELL_MARKDOWN_EDIT_MODE as Z,NOTEBOOK_CELL_TYPE as D,NOTEBOOK_EDITOR_EDITABLE as E,NOTEBOOK_EDITOR_FOCUSED as O,NOTEBOOK_HAS_OUTPUTS as Ke,NOTEBOOK_IS_ACTIVE_EDITOR as $,NOTEBOOK_OUTPUT_FOCUSED as Be,NOTEBOOK_OUTPUT_INPUT_FOCUSED as ee,NOTEBOOK_USE_CONSOLIDATED_OUTPUT_BUTTON as te}from"../../common/notebookContextKeys.js";import{INotebookExecutionStateService as R}from"../../common/notebookExecutionStateService.js";import{INotebookKernelService as oe}from"../../common/notebookKernelService.js";import"../../common/notebookRange.js";import{IEditorService as We}from"../../../../services/editor/common/editorService.js";import{ILanguageDetectionService as ne}from"../../../../services/languageDetection/common/languageDetectionWorkerService.js";import{NotebookInlineVariablesController as Fe}from"../contrib/notebookVariables/notebookInlineVariables.js";const qe="notebook.clearAllCellsOutputs",Ge="notebook.cell.edit",Qe="notebook.cell.delete",He="notebook.cell.clearOutputs",ze="notebook.selectIndentation",Ve="notebook.commentSelectedCells";k(class extends h{constructor(){super({id:Ge,title:a("notebookActions.editCell","Edit Cell"),keybinding:{when:r.and(Ue,r.not(v),y.hoverFocused.toNegated(),ee.toNegated()),primary:u.Enter,weight:T.WorkbenchContrib},menu:{id:f.NotebookCellTitle,when:r.and(E.isEqualTo(!0),D.isEqualTo("markup"),Z.toNegated(),I),order:M.EditCell,group:w},icon:L.editIcon})}async runWithContext(t,e){if(!e.notebookEditor.hasModel())return;await e.notebookEditor.focusNotebookCell(e.cell,"editor");const o=e.cell?Le(e,e.cell):void 0;o&&o.hasTextFocus()&&H.get(o)?.getWidgetPosition()?.lineNumber===o.getPosition()?.lineNumber&&H.get(o)?.focus()}});const ie=r.and(O,be,Se.toNegated());k(class extends h{constructor(){super({id:Y,title:a("notebookActions.quitEdit","Stop Editing Cell"),menu:{id:f.NotebookCellTitle,when:r.and(D.isEqualTo("markup"),Z,I),order:M.SaveCell,group:w},icon:L.stopEditIcon,keybinding:[{when:r.and(ie,y.hoverVisible.toNegated(),y.hasNonEmptySelection.toNegated(),y.hasMultipleSelections.toNegated()),primary:u.Escape,weight:V-5},{when:r.and(O,Be),primary:u.Escape,weight:T.WorkbenchContrib+5},{when:r.and(ie,D.isEqualTo("markup")),primary:m.WinCtrl|u.Enter,win:{primary:m.CtrlCmd|m.Alt|u.Enter},weight:V-5}]})}async runWithContext(t,e){e.cell.cellKind===_.Markup&&e.cell.updateEditState(Me.Preview,Y),await e.notebookEditor.focusNotebookCell(e.cell,"container",{skipReveal:!0})}}),k(class extends h{constructor(){super({id:Qe,title:a("notebookActions.deleteCell","Delete Cell"),keybinding:{primary:u.Delete,mac:{primary:m.CtrlCmd|u.Backspace},when:r.and(O,r.not(v),ee.toNegated()),weight:T.WorkbenchContrib},menu:[{id:f.NotebookCellDelete,when:E,group:w},{id:f.InteractiveCellDelete,group:w}],icon:L.deleteCellIcon})}async runWithContext(t,e){if(!e.notebookEditor.hasModel())return;let o;const i=t.get(R).getCellExecution(e.cell.uri)?.state,l=t.get(Ee);if(i===x.Executing&&l.getValue(J.confirmDeleteRunningCell)){const s=t.get(fe),c=a("confirmDeleteButton","Delete");o=await s.confirm({type:"question",message:a("confirmDeleteButtonMessage","This cell is running, are you sure you want to delete it?"),primaryButton:c,checkbox:{label:a("doNotAskAgain","Do not ask me again")}})}else o={confirmed:!0};o.confirmed&&(o.checkboxChecked===!0&&await l.updateValue(J.confirmDeleteRunningCell,!1),he(e.notebookEditor,e.cell))}}),k(class extends h{constructor(){super({id:He,title:a("clearCellOutputs","Clear Cell Outputs"),menu:[{id:f.NotebookCellTitle,when:r.and(D.isEqualTo("code"),X,P,E,I,te.toNegated()),order:M.ClearCellOutput,group:Oe},{id:f.NotebookOutputToolbar,when:r.and(P,E,I,Re,te)}],keybinding:{when:r.and(O,r.not(v),P,E,I),primary:m.Alt|u.Delete,weight:T.WorkbenchContrib},icon:L.clearIcon})}async runWithContext(t,e){const o=t.get(R),n=e.notebookEditor;if(!n.hasModel()||!n.textModel.length)return;const i=e.cell,l=n.textModel.cells.indexOf(i.model);if(l<0)return;const s=!n.isReadOnly;n.textModel.applyEdits([{editType:A.Output,index:l,outputs:[]}],!0,void 0,()=>{},void 0,s),o.getCellExecution(e.cell.uri)?.state!==x.Executing&&e.notebookEditor.textModel.applyEdits([{editType:A.PartialInternalMetadata,index:l,internalMetadata:{runStartTime:null,runStartTimeAdjustment:null,runEndTime:null,executionOrder:null,lastRunSuccess:null}}],!0,void 0,()=>{},void 0,s)}}),k(class extends j{constructor(){super({id:qe,title:a("clearAllCellsOutputs","Clear All Outputs"),precondition:Ke,menu:[{id:f.EditorTitle,when:r.and($,r.notEquals("config.notebook.globalToolbar",!0)),group:"navigation",order:0},{id:f.NotebookToolbar,when:r.and(X,r.equals("config.notebook.globalToolbar",!0)),group:"navigation/execute",order:10}],icon:L.clearIcon})}async runWithContext(t,e){const o=t.get(R),n=e.notebookEditor;if(!n.hasModel()||!n.textModel.length)return;const i=!n.isReadOnly;n.textModel.applyEdits(n.textModel.cells.map((c,g)=>({editType:A.Output,index:g,outputs:[]})),!0,void 0,()=>{},void 0,i);const l=n.textModel.cells.map((c,g)=>{if(o.getCellExecution(c.uri)?.state!==x.Executing)return{editType:A.PartialInternalMetadata,index:g,internalMetadata:{runStartTime:null,runStartTimeAdjustment:null,runEndTime:null,executionOrder:null,lastRunSuccess:null}}}).filter(c=>!!c);l.length&&e.notebookEditor.textModel.applyEdits(l,!0,void 0,()=>{},void 0,i),n.getContribution(Fe.id).clearNotebookInlineDecorations()}}),k(class extends h{constructor(){super({id:De,title:a("changeLanguage","Change Cell Language"),keybinding:{weight:T.WorkbenchContrib,primary:ae(m.CtrlCmd|u.KeyK,u.KeyM),when:r.and(O,E,I)},metadata:{description:a("changeLanguage","Change Cell Language"),args:[{name:"range",description:"The cell range",schema:{type:"object",required:["start","end"],properties:{start:{type:"number"},end:{type:"number"}}}},{name:"language",description:"The target cell language",schema:{type:"string"}}]}})}getCellContextFromArgs(t,e,...o){if(!e||typeof e.start!="number"||typeof e.end!="number"||e.start>=e.end)return;const n=o.length&&typeof o[0]=="string"?o[0]:void 0,i=this.getEditorContextFromArgsOrActive(t);if(!(!i||!i.notebookEditor.hasModel()||e.start>=i.notebookEditor.getLength()))return{notebookEditor:i.notebookEditor,cell:i.notebookEditor.cellAt(e.start),language:n}}async runWithContext(t,e){e.language?await this.setLanguage(e,e.language):await this.showLanguagePicker(t,e)}async showLanguagePicker(t,e){const o=[],n=[],i=t.get(de),l=t.get(pe),s=t.get(Q),c=t.get(ne),g=t.get(oe);let S=e.notebookEditor.activeKernel?.supportedLanguages;if(!S){const b=g.getMatchingKernel(e.notebookEditor.textModel).all.flatMap(N=>N.supportedLanguages);S=b.length>0?b:i.getRegisteredLanguageIds()}new Set([...S,"markdown"]).forEach(p=>{let b;(e.cell.cellKind===_.Markup?p==="markdown":p===e.cell.language)?b=a("languageDescription","({0}) - Current Language",p):b=a("languageDescriptionConfigured","({0})",p);const N=i.getLanguageName(p);if(!N)return;const W={label:N,iconClasses:Ce(l,i,this.getFakeResource(N,i)),description:b,languageId:p};p==="markdown"||p===e.cell.language?o.push(W):n.push(W)}),n.sort((p,b)=>p.description.localeCompare(b.description));const U={label:a("autoDetect","Auto Detect")},le=[U,{type:"separator",label:a("languagesPicks","languages (identifier)")},...o,{type:"separator"},...n],K=await s.pick(le,{placeHolder:a("pickLanguageToConfigure","Select Language Mode")}),B=K===U?await c.detectLanguage(e.cell.uri):K?.languageId;B&&await this.setLanguage(e,B)}async setLanguage(t,e){await re(e,t)}getFakeResource(t,e){let o;const n=e.getLanguageIdByLanguageName(t);if(n){const i=e.getExtensions(n);if(i.length)o=F.file(i[0]);else{const l=e.getFilenames(n);l.length&&(o=F.file(l[0]))}}return o}}),k(class extends h{constructor(){super({id:xe,title:G("detectLanguage","Accept Detected Language for Cell"),f1:!0,precondition:r.and(E,I),keybinding:{primary:u.KeyD|m.Alt|m.Shift,weight:T.WorkbenchContrib}})}async runWithContext(t,e){const o=t.get(ne),n=t.get(Te),s=[...t.get(oe).getSelectedOrSuggestedKernel(e.notebookEditor.textModel)?.supportedLanguages??[]];s.push("markdown");const c=await o.detectLanguage(e.cell.uri,s);c?re(c,e):n.warn(a("noDetection","Unable to detect cell language"))}});async function re(d,t){if(d==="markdown"&&t.cell?.language!=="markdown"){const e=t.notebookEditor.getCellIndex(t.cell);await z(_.Markup,{cell:t.cell,notebookEditor:t.notebookEditor,ui:!0},"markdown",ce.markdown);const o=t.notebookEditor.cellAt(e);o&&await t.notebookEditor.focusNotebookCell(o,"editor")}else if(d!=="markdown"&&t.cell?.cellKind===_.Markup)await z(_.Code,{cell:t.cell,notebookEditor:t.notebookEditor,ui:!0},d);else{const e=t.notebookEditor.textModel.cells.indexOf(t.cell.model);t.notebookEditor.textModel.applyEdits([{editType:A.CellLanguage,index:e,language:d}],!0,void 0,()=>{},void 0,!t.notebookEditor.isReadOnly)}}k(class extends j{constructor(){super({id:ze,title:G("selectNotebookIndentation","Select Indentation"),f1:!0,precondition:r.and($,E,I)})}async runWithContext(t,e){await this.showNotebookIndentationPicker(t,e)}async showNotebookIndentationPicker(t,e){const o=t.get(Q),n=t.get(We),i=t.get(Ie),l=Pe(n.activeEditorPane);if(!l||l.isDisposed)return o.pick([{label:a("noNotebookEditor","No notebook editor active at this time")}]);if(l.isReadOnly)return o.pick([{label:a("noWritableCodeEditor","The active notebook editor is read-only.")}]);const s=[new ye,new _e,new Ae,new we,new ve].map(g=>({id:g.desc.id,label:g.desc.title.toString(),run:()=>{i.invokeFunction(g.run)}}));s.splice(3,0,{type:"separator",label:a("indentConvert","convert file")}),s.unshift({type:"separator",label:a("indentView","change view")});const c=await o.pick(s,{placeHolder:a("pickAction","Select Action"),matchOnDetail:!0});c&&(c.run(),e.notebookEditor.focus())}}),k(class extends Ne{constructor(){super({id:Ve,title:a("commentSelectedCells","Comment Selected Cells"),keybinding:{when:r.and(O,E,r.not(v)),primary:m.CtrlCmd|u.Slash,weight:T.WorkbenchContrib}})}async runWithContext(t,e){const o=t.get(ue);e.selectedCells.forEach(async n=>{const i=await n.resolveTextModel(),l=n.commentOptions,s=new me(o,new q(1,1,i.getLineCount(),i.getLineMaxColumn(i.getLineCount())),i.getOptions().tabSize,ke.Toggle,l.insertSpace??!0,l.ignoreEmptyLines??!0,!1),c=n.getSelections(),g=c.map(C=>i._setTrackedRange(null,C,ge.NeverGrowsWhenTypingAtEdges));se.executeCommands(i,c,[s]);const S=g.map(C=>i._getTrackedRange(C)).filter(C=>!!C).map(C=>new q(C.startLineNumber,C.startColumn,C.endLineNumber,C.endColumn));n.setSelections(S??[])})}});export{He as CLEAR_CELL_OUTPUTS_COMMAND_ID,Ve as COMMENT_SELECTED_CELLS_ID,ze as SELECT_NOTEBOOK_INDENTATION_ID};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { KeyChord, KeyCode, KeyMod } from "../../../../../base/common/keyCodes.js";
+import { Mimes } from "../../../../../base/common/mime.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { ICodeEditor } from "../../../../../editor/browser/editorBrowser.js";
+import { Selection } from "../../../../../editor/common/core/selection.js";
+import { CommandExecutor } from "../../../../../editor/common/cursor/cursor.js";
+import { EditorContextKeys } from "../../../../../editor/common/editorContextKeys.js";
+import { ILanguageService } from "../../../../../editor/common/languages/language.js";
+import { ILanguageConfigurationService } from "../../../../../editor/common/languages/languageConfigurationRegistry.js";
+import { TrackedRangeStickiness } from "../../../../../editor/common/model.js";
+import { getIconClasses } from "../../../../../editor/common/services/getIconClasses.js";
+import { IModelService } from "../../../../../editor/common/services/model.js";
+import { LineCommentCommand, Type } from "../../../../../editor/contrib/comment/browser/lineCommentCommand.js";
+import { localize, localize2 } from "../../../../../nls.js";
+import { MenuId, registerAction2 } from "../../../../../platform/actions/common/actions.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { ContextKeyExpr } from "../../../../../platform/contextkey/common/contextkey.js";
+import { InputFocusedContext, InputFocusedContextKey } from "../../../../../platform/contextkey/common/contextkeys.js";
+import { IConfirmationResult, IDialogService } from "../../../../../platform/dialogs/common/dialogs.js";
+import { IInstantiationService, ServicesAccessor } from "../../../../../platform/instantiation/common/instantiation.js";
+import { KeybindingWeight } from "../../../../../platform/keybinding/common/keybindingsRegistry.js";
+import { INotificationService } from "../../../../../platform/notification/common/notification.js";
+import { IQuickInputService, IQuickPickItem, QuickPickInput } from "../../../../../platform/quickinput/common/quickInput.js";
+import { InlineChatController } from "../../../inlineChat/browser/inlineChatController.js";
+import { CTX_INLINE_CHAT_FOCUSED } from "../../../inlineChat/common/inlineChat.js";
+import { changeCellToKind, runDeleteAction } from "./cellOperations.js";
+import { CELL_TITLE_CELL_GROUP_ID, CELL_TITLE_OUTPUT_GROUP_ID, CellToolbarOrder, INotebookActionContext, INotebookCellActionContext, INotebookCommandContext, NOTEBOOK_EDITOR_WIDGET_ACTION_WEIGHT, NotebookAction, NotebookCellAction, NotebookMultiCellAction, executeNotebookCondition, findTargetCellEditor } from "./coreActions.js";
+import { NotebookChangeTabDisplaySize, NotebookIndentUsingSpaces, NotebookIndentUsingTabs, NotebookIndentationToSpacesAction, NotebookIndentationToTabsAction } from "./notebookIndentationActions.js";
+import { CHANGE_CELL_LANGUAGE, CellEditState, DETECT_CELL_LANGUAGE, QUIT_EDIT_CELL_COMMAND_ID, getNotebookEditorFromEditorPane } from "../notebookBrowser.js";
+import * as icons from "../notebookIcons.js";
+import { CellEditType, CellKind, ICellEditOperation, NotebookCellExecutionState, NotebookSetting } from "../../common/notebookCommon.js";
+import { NOTEBOOK_CELL_EDITABLE, NOTEBOOK_CELL_HAS_OUTPUTS, NOTEBOOK_CELL_IS_FIRST_OUTPUT, NOTEBOOK_CELL_LIST_FOCUSED, NOTEBOOK_CELL_MARKDOWN_EDIT_MODE, NOTEBOOK_CELL_TYPE, NOTEBOOK_EDITOR_EDITABLE, NOTEBOOK_EDITOR_FOCUSED, NOTEBOOK_HAS_OUTPUTS, NOTEBOOK_IS_ACTIVE_EDITOR, NOTEBOOK_OUTPUT_FOCUSED, NOTEBOOK_OUTPUT_INPUT_FOCUSED, NOTEBOOK_USE_CONSOLIDATED_OUTPUT_BUTTON } from "../../common/notebookContextKeys.js";
+import { INotebookExecutionStateService } from "../../common/notebookExecutionStateService.js";
+import { INotebookKernelService } from "../../common/notebookKernelService.js";
+import { ICellRange } from "../../common/notebookRange.js";
+import { IEditorService } from "../../../../services/editor/common/editorService.js";
+import { ILanguageDetectionService } from "../../../../services/languageDetection/common/languageDetectionWorkerService.js";
+import { NotebookInlineVariablesController } from "../contrib/notebookVariables/notebookInlineVariables.js";
+const CLEAR_ALL_CELLS_OUTPUTS_COMMAND_ID = "notebook.clearAllCellsOutputs";
+const EDIT_CELL_COMMAND_ID = "notebook.cell.edit";
+const DELETE_CELL_COMMAND_ID = "notebook.cell.delete";
+const CLEAR_CELL_OUTPUTS_COMMAND_ID = "notebook.cell.clearOutputs";
+const SELECT_NOTEBOOK_INDENTATION_ID = "notebook.selectIndentation";
+const COMMENT_SELECTED_CELLS_ID = "notebook.commentSelectedCells";
+registerAction2(class EditCellAction extends NotebookCellAction {
+  static {
+    __name(this, "EditCellAction");
+  }
+  constructor() {
+    super(
+      {
+        id: EDIT_CELL_COMMAND_ID,
+        title: localize("notebookActions.editCell", "Edit Cell"),
+        keybinding: {
+          when: ContextKeyExpr.and(
+            NOTEBOOK_CELL_LIST_FOCUSED,
+            ContextKeyExpr.not(InputFocusedContextKey),
+            EditorContextKeys.hoverFocused.toNegated(),
+            NOTEBOOK_OUTPUT_INPUT_FOCUSED.toNegated()
+          ),
+          primary: KeyCode.Enter,
+          weight: KeybindingWeight.WorkbenchContrib
+        },
+        menu: {
+          id: MenuId.NotebookCellTitle,
+          when: ContextKeyExpr.and(
+            NOTEBOOK_EDITOR_EDITABLE.isEqualTo(true),
+            NOTEBOOK_CELL_TYPE.isEqualTo("markup"),
+            NOTEBOOK_CELL_MARKDOWN_EDIT_MODE.toNegated(),
+            NOTEBOOK_CELL_EDITABLE
+          ),
+          order: CellToolbarOrder.EditCell,
+          group: CELL_TITLE_CELL_GROUP_ID
+        },
+        icon: icons.editIcon
+      }
+    );
+  }
+  async runWithContext(accessor, context) {
+    if (!context.notebookEditor.hasModel()) {
+      return;
+    }
+    await context.notebookEditor.focusNotebookCell(context.cell, "editor");
+    const foundEditor = context.cell ? findTargetCellEditor(context, context.cell) : void 0;
+    if (foundEditor && foundEditor.hasTextFocus() && InlineChatController.get(foundEditor)?.getWidgetPosition()?.lineNumber === foundEditor.getPosition()?.lineNumber) {
+      InlineChatController.get(foundEditor)?.focus();
+    }
+  }
+});
+const quitEditCondition = ContextKeyExpr.and(
+  NOTEBOOK_EDITOR_FOCUSED,
+  InputFocusedContext,
+  CTX_INLINE_CHAT_FOCUSED.toNegated()
+);
+registerAction2(class QuitEditCellAction extends NotebookCellAction {
+  static {
+    __name(this, "QuitEditCellAction");
+  }
+  constructor() {
+    super(
+      {
+        id: QUIT_EDIT_CELL_COMMAND_ID,
+        title: localize("notebookActions.quitEdit", "Stop Editing Cell"),
+        menu: {
+          id: MenuId.NotebookCellTitle,
+          when: ContextKeyExpr.and(
+            NOTEBOOK_CELL_TYPE.isEqualTo("markup"),
+            NOTEBOOK_CELL_MARKDOWN_EDIT_MODE,
+            NOTEBOOK_CELL_EDITABLE
+          ),
+          order: CellToolbarOrder.SaveCell,
+          group: CELL_TITLE_CELL_GROUP_ID
+        },
+        icon: icons.stopEditIcon,
+        keybinding: [
+          {
+            when: ContextKeyExpr.and(
+              quitEditCondition,
+              EditorContextKeys.hoverVisible.toNegated(),
+              EditorContextKeys.hasNonEmptySelection.toNegated(),
+              EditorContextKeys.hasMultipleSelections.toNegated()
+            ),
+            primary: KeyCode.Escape,
+            weight: NOTEBOOK_EDITOR_WIDGET_ACTION_WEIGHT - 5
+          },
+          {
+            when: ContextKeyExpr.and(
+              NOTEBOOK_EDITOR_FOCUSED,
+              NOTEBOOK_OUTPUT_FOCUSED
+            ),
+            primary: KeyCode.Escape,
+            weight: KeybindingWeight.WorkbenchContrib + 5
+          },
+          {
+            when: ContextKeyExpr.and(
+              quitEditCondition,
+              NOTEBOOK_CELL_TYPE.isEqualTo("markup")
+            ),
+            primary: KeyMod.WinCtrl | KeyCode.Enter,
+            win: {
+              primary: KeyMod.CtrlCmd | KeyMod.Alt | KeyCode.Enter
+            },
+            weight: NOTEBOOK_EDITOR_WIDGET_ACTION_WEIGHT - 5
+          }
+        ]
+      }
+    );
+  }
+  async runWithContext(accessor, context) {
+    if (context.cell.cellKind === CellKind.Markup) {
+      context.cell.updateEditState(CellEditState.Preview, QUIT_EDIT_CELL_COMMAND_ID);
+    }
+    await context.notebookEditor.focusNotebookCell(context.cell, "container", { skipReveal: true });
+  }
+});
+registerAction2(class DeleteCellAction extends NotebookCellAction {
+  static {
+    __name(this, "DeleteCellAction");
+  }
+  constructor() {
+    super(
+      {
+        id: DELETE_CELL_COMMAND_ID,
+        title: localize("notebookActions.deleteCell", "Delete Cell"),
+        keybinding: {
+          primary: KeyCode.Delete,
+          mac: {
+            primary: KeyMod.CtrlCmd | KeyCode.Backspace
+          },
+          when: ContextKeyExpr.and(NOTEBOOK_EDITOR_FOCUSED, ContextKeyExpr.not(InputFocusedContextKey), NOTEBOOK_OUTPUT_INPUT_FOCUSED.toNegated()),
+          weight: KeybindingWeight.WorkbenchContrib
+        },
+        menu: [
+          {
+            id: MenuId.NotebookCellDelete,
+            when: NOTEBOOK_EDITOR_EDITABLE,
+            group: CELL_TITLE_CELL_GROUP_ID
+          },
+          {
+            id: MenuId.InteractiveCellDelete,
+            group: CELL_TITLE_CELL_GROUP_ID
+          }
+        ],
+        icon: icons.deleteCellIcon
+      }
+    );
+  }
+  async runWithContext(accessor, context) {
+    if (!context.notebookEditor.hasModel()) {
+      return;
+    }
+    let confirmation;
+    const notebookExecutionStateService = accessor.get(INotebookExecutionStateService);
+    const runState = notebookExecutionStateService.getCellExecution(context.cell.uri)?.state;
+    const configService = accessor.get(IConfigurationService);
+    if (runState === NotebookCellExecutionState.Executing && configService.getValue(NotebookSetting.confirmDeleteRunningCell)) {
+      const dialogService = accessor.get(IDialogService);
+      const primaryButton = localize("confirmDeleteButton", "Delete");
+      confirmation = await dialogService.confirm({
+        type: "question",
+        message: localize("confirmDeleteButtonMessage", "This cell is running, are you sure you want to delete it?"),
+        primaryButton,
+        checkbox: {
+          label: localize("doNotAskAgain", "Do not ask me again")
+        }
+      });
+    } else {
+      confirmation = { confirmed: true };
+    }
+    if (!confirmation.confirmed) {
+      return;
+    }
+    if (confirmation.checkboxChecked === true) {
+      await configService.updateValue(NotebookSetting.confirmDeleteRunningCell, false);
+    }
+    runDeleteAction(context.notebookEditor, context.cell);
+  }
+});
+registerAction2(class ClearCellOutputsAction extends NotebookCellAction {
+  static {
+    __name(this, "ClearCellOutputsAction");
+  }
+  constructor() {
+    super({
+      id: CLEAR_CELL_OUTPUTS_COMMAND_ID,
+      title: localize("clearCellOutputs", "Clear Cell Outputs"),
+      menu: [
+        {
+          id: MenuId.NotebookCellTitle,
+          when: ContextKeyExpr.and(NOTEBOOK_CELL_TYPE.isEqualTo("code"), executeNotebookCondition, NOTEBOOK_CELL_HAS_OUTPUTS, NOTEBOOK_EDITOR_EDITABLE, NOTEBOOK_CELL_EDITABLE, NOTEBOOK_USE_CONSOLIDATED_OUTPUT_BUTTON.toNegated()),
+          order: CellToolbarOrder.ClearCellOutput,
+          group: CELL_TITLE_OUTPUT_GROUP_ID
+        },
+        {
+          id: MenuId.NotebookOutputToolbar,
+          when: ContextKeyExpr.and(NOTEBOOK_CELL_HAS_OUTPUTS, NOTEBOOK_EDITOR_EDITABLE, NOTEBOOK_CELL_EDITABLE, NOTEBOOK_CELL_IS_FIRST_OUTPUT, NOTEBOOK_USE_CONSOLIDATED_OUTPUT_BUTTON)
+        }
+      ],
+      keybinding: {
+        when: ContextKeyExpr.and(NOTEBOOK_EDITOR_FOCUSED, ContextKeyExpr.not(InputFocusedContextKey), NOTEBOOK_CELL_HAS_OUTPUTS, NOTEBOOK_EDITOR_EDITABLE, NOTEBOOK_CELL_EDITABLE),
+        primary: KeyMod.Alt | KeyCode.Delete,
+        weight: KeybindingWeight.WorkbenchContrib
+      },
+      icon: icons.clearIcon
+    });
+  }
+  async runWithContext(accessor, context) {
+    const notebookExecutionStateService = accessor.get(INotebookExecutionStateService);
+    const editor = context.notebookEditor;
+    if (!editor.hasModel() || !editor.textModel.length) {
+      return;
+    }
+    const cell = context.cell;
+    const index = editor.textModel.cells.indexOf(cell.model);
+    if (index < 0) {
+      return;
+    }
+    const computeUndoRedo = !editor.isReadOnly;
+    editor.textModel.applyEdits([{ editType: CellEditType.Output, index, outputs: [] }], true, void 0, () => void 0, void 0, computeUndoRedo);
+    const runState = notebookExecutionStateService.getCellExecution(context.cell.uri)?.state;
+    if (runState !== NotebookCellExecutionState.Executing) {
+      context.notebookEditor.textModel.applyEdits([{
+        editType: CellEditType.PartialInternalMetadata,
+        index,
+        internalMetadata: {
+          runStartTime: null,
+          runStartTimeAdjustment: null,
+          runEndTime: null,
+          executionOrder: null,
+          lastRunSuccess: null
+        }
+      }], true, void 0, () => void 0, void 0, computeUndoRedo);
+    }
+  }
+});
+registerAction2(class ClearAllCellOutputsAction extends NotebookAction {
+  static {
+    __name(this, "ClearAllCellOutputsAction");
+  }
+  constructor() {
+    super({
+      id: CLEAR_ALL_CELLS_OUTPUTS_COMMAND_ID,
+      title: localize("clearAllCellsOutputs", "Clear All Outputs"),
+      precondition: NOTEBOOK_HAS_OUTPUTS,
+      menu: [
+        {
+          id: MenuId.EditorTitle,
+          when: ContextKeyExpr.and(
+            NOTEBOOK_IS_ACTIVE_EDITOR,
+            ContextKeyExpr.notEquals("config.notebook.globalToolbar", true)
+          ),
+          group: "navigation",
+          order: 0
+        },
+        {
+          id: MenuId.NotebookToolbar,
+          when: ContextKeyExpr.and(
+            executeNotebookCondition,
+            ContextKeyExpr.equals("config.notebook.globalToolbar", true)
+          ),
+          group: "navigation/execute",
+          order: 10
+        }
+      ],
+      icon: icons.clearIcon
+    });
+  }
+  async runWithContext(accessor, context) {
+    const notebookExecutionStateService = accessor.get(INotebookExecutionStateService);
+    const editor = context.notebookEditor;
+    if (!editor.hasModel() || !editor.textModel.length) {
+      return;
+    }
+    const computeUndoRedo = !editor.isReadOnly;
+    editor.textModel.applyEdits(
+      editor.textModel.cells.map((cell, index) => ({
+        editType: CellEditType.Output,
+        index,
+        outputs: []
+      })),
+      true,
+      void 0,
+      () => void 0,
+      void 0,
+      computeUndoRedo
+    );
+    const clearExecutionMetadataEdits = editor.textModel.cells.map((cell, index) => {
+      const runState = notebookExecutionStateService.getCellExecution(cell.uri)?.state;
+      if (runState !== NotebookCellExecutionState.Executing) {
+        return {
+          editType: CellEditType.PartialInternalMetadata,
+          index,
+          internalMetadata: {
+            runStartTime: null,
+            runStartTimeAdjustment: null,
+            runEndTime: null,
+            executionOrder: null,
+            lastRunSuccess: null
+          }
+        };
+      } else {
+        return void 0;
+      }
+    }).filter((edit) => !!edit);
+    if (clearExecutionMetadataEdits.length) {
+      context.notebookEditor.textModel.applyEdits(clearExecutionMetadataEdits, true, void 0, () => void 0, void 0, computeUndoRedo);
+    }
+    const controller = editor.getContribution(NotebookInlineVariablesController.id);
+    controller.clearNotebookInlineDecorations();
+  }
+});
+registerAction2(class ChangeCellLanguageAction extends NotebookCellAction {
+  static {
+    __name(this, "ChangeCellLanguageAction");
+  }
+  constructor() {
+    super({
+      id: CHANGE_CELL_LANGUAGE,
+      title: localize("changeLanguage", "Change Cell Language"),
+      keybinding: {
+        weight: KeybindingWeight.WorkbenchContrib,
+        primary: KeyChord(KeyMod.CtrlCmd | KeyCode.KeyK, KeyCode.KeyM),
+        when: ContextKeyExpr.and(NOTEBOOK_EDITOR_FOCUSED, NOTEBOOK_EDITOR_EDITABLE, NOTEBOOK_CELL_EDITABLE)
+      },
+      metadata: {
+        description: localize("changeLanguage", "Change Cell Language"),
+        args: [
+          {
+            name: "range",
+            description: "The cell range",
+            schema: {
+              "type": "object",
+              "required": ["start", "end"],
+              "properties": {
+                "start": {
+                  "type": "number"
+                },
+                "end": {
+                  "type": "number"
+                }
+              }
+            }
+          },
+          {
+            name: "language",
+            description: "The target cell language",
+            schema: {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    });
+  }
+  getCellContextFromArgs(accessor, context, ...additionalArgs) {
+    if (!context || typeof context.start !== "number" || typeof context.end !== "number" || context.start >= context.end) {
+      return;
+    }
+    const language = additionalArgs.length && typeof additionalArgs[0] === "string" ? additionalArgs[0] : void 0;
+    const activeEditorContext = this.getEditorContextFromArgsOrActive(accessor);
+    if (!activeEditorContext || !activeEditorContext.notebookEditor.hasModel() || context.start >= activeEditorContext.notebookEditor.getLength()) {
+      return;
+    }
+    return {
+      notebookEditor: activeEditorContext.notebookEditor,
+      cell: activeEditorContext.notebookEditor.cellAt(context.start),
+      language
+    };
+  }
+  async runWithContext(accessor, context) {
+    if (context.language) {
+      await this.setLanguage(context, context.language);
+    } else {
+      await this.showLanguagePicker(accessor, context);
+    }
+  }
+  async showLanguagePicker(accessor, context) {
+    const topItems = [];
+    const mainItems = [];
+    const languageService = accessor.get(ILanguageService);
+    const modelService = accessor.get(IModelService);
+    const quickInputService = accessor.get(IQuickInputService);
+    const languageDetectionService = accessor.get(ILanguageDetectionService);
+    const kernelService = accessor.get(INotebookKernelService);
+    let languages = context.notebookEditor.activeKernel?.supportedLanguages;
+    if (!languages) {
+      const matchResult = kernelService.getMatchingKernel(context.notebookEditor.textModel);
+      const allSupportedLanguages = matchResult.all.flatMap((kernel) => kernel.supportedLanguages);
+      languages = allSupportedLanguages.length > 0 ? allSupportedLanguages : languageService.getRegisteredLanguageIds();
+    }
+    const providerLanguages = /* @__PURE__ */ new Set([
+      ...languages,
+      "markdown"
+    ]);
+    providerLanguages.forEach((languageId2) => {
+      let description;
+      if (context.cell.cellKind === CellKind.Markup ? languageId2 === "markdown" : languageId2 === context.cell.language) {
+        description = localize("languageDescription", "({0}) - Current Language", languageId2);
+      } else {
+        description = localize("languageDescriptionConfigured", "({0})", languageId2);
+      }
+      const languageName = languageService.getLanguageName(languageId2);
+      if (!languageName) {
+        return;
+      }
+      const item = {
+        label: languageName,
+        iconClasses: getIconClasses(modelService, languageService, this.getFakeResource(languageName, languageService)),
+        description,
+        languageId: languageId2
+      };
+      if (languageId2 === "markdown" || languageId2 === context.cell.language) {
+        topItems.push(item);
+      } else {
+        mainItems.push(item);
+      }
+    });
+    mainItems.sort((a, b) => {
+      return a.description.localeCompare(b.description);
+    });
+    const autoDetectMode = {
+      label: localize("autoDetect", "Auto Detect")
+    };
+    const picks = [
+      autoDetectMode,
+      { type: "separator", label: localize("languagesPicks", "languages (identifier)") },
+      ...topItems,
+      { type: "separator" },
+      ...mainItems
+    ];
+    const selection = await quickInputService.pick(picks, { placeHolder: localize("pickLanguageToConfigure", "Select Language Mode") });
+    const languageId = selection === autoDetectMode ? await languageDetectionService.detectLanguage(context.cell.uri) : selection?.languageId;
+    if (languageId) {
+      await this.setLanguage(context, languageId);
+    }
+  }
+  async setLanguage(context, languageId) {
+    await setCellToLanguage(languageId, context);
+  }
+  /**
+   * Copied from editorStatus.ts
+   */
+  getFakeResource(lang, languageService) {
+    let fakeResource;
+    const languageId = languageService.getLanguageIdByLanguageName(lang);
+    if (languageId) {
+      const extensions = languageService.getExtensions(languageId);
+      if (extensions.length) {
+        fakeResource = URI.file(extensions[0]);
+      } else {
+        const filenames = languageService.getFilenames(languageId);
+        if (filenames.length) {
+          fakeResource = URI.file(filenames[0]);
+        }
+      }
+    }
+    return fakeResource;
+  }
+});
+registerAction2(class DetectCellLanguageAction extends NotebookCellAction {
+  static {
+    __name(this, "DetectCellLanguageAction");
+  }
+  constructor() {
+    super({
+      id: DETECT_CELL_LANGUAGE,
+      title: localize2("detectLanguage", "Accept Detected Language for Cell"),
+      f1: true,
+      precondition: ContextKeyExpr.and(NOTEBOOK_EDITOR_EDITABLE, NOTEBOOK_CELL_EDITABLE),
+      keybinding: { primary: KeyCode.KeyD | KeyMod.Alt | KeyMod.Shift, weight: KeybindingWeight.WorkbenchContrib }
+    });
+  }
+  async runWithContext(accessor, context) {
+    const languageDetectionService = accessor.get(ILanguageDetectionService);
+    const notificationService = accessor.get(INotificationService);
+    const kernelService = accessor.get(INotebookKernelService);
+    const kernel = kernelService.getSelectedOrSuggestedKernel(context.notebookEditor.textModel);
+    const providerLanguages = [...kernel?.supportedLanguages ?? []];
+    providerLanguages.push("markdown");
+    const detection = await languageDetectionService.detectLanguage(context.cell.uri, providerLanguages);
+    if (detection) {
+      setCellToLanguage(detection, context);
+    } else {
+      notificationService.warn(localize("noDetection", "Unable to detect cell language"));
+    }
+  }
+});
+async function setCellToLanguage(languageId, context) {
+  if (languageId === "markdown" && context.cell?.language !== "markdown") {
+    const idx = context.notebookEditor.getCellIndex(context.cell);
+    await changeCellToKind(CellKind.Markup, { cell: context.cell, notebookEditor: context.notebookEditor, ui: true }, "markdown", Mimes.markdown);
+    const newCell = context.notebookEditor.cellAt(idx);
+    if (newCell) {
+      await context.notebookEditor.focusNotebookCell(newCell, "editor");
+    }
+  } else if (languageId !== "markdown" && context.cell?.cellKind === CellKind.Markup) {
+    await changeCellToKind(CellKind.Code, { cell: context.cell, notebookEditor: context.notebookEditor, ui: true }, languageId);
+  } else {
+    const index = context.notebookEditor.textModel.cells.indexOf(context.cell.model);
+    context.notebookEditor.textModel.applyEdits(
+      [{ editType: CellEditType.CellLanguage, index, language: languageId }],
+      true,
+      void 0,
+      () => void 0,
+      void 0,
+      !context.notebookEditor.isReadOnly
+    );
+  }
+}
+__name(setCellToLanguage, "setCellToLanguage");
+registerAction2(class SelectNotebookIndentation extends NotebookAction {
+  static {
+    __name(this, "SelectNotebookIndentation");
+  }
+  constructor() {
+    super({
+      id: SELECT_NOTEBOOK_INDENTATION_ID,
+      title: localize2("selectNotebookIndentation", "Select Indentation"),
+      f1: true,
+      precondition: ContextKeyExpr.and(NOTEBOOK_IS_ACTIVE_EDITOR, NOTEBOOK_EDITOR_EDITABLE, NOTEBOOK_CELL_EDITABLE)
+    });
+  }
+  async runWithContext(accessor, context) {
+    await this.showNotebookIndentationPicker(accessor, context);
+  }
+  async showNotebookIndentationPicker(accessor, context) {
+    const quickInputService = accessor.get(IQuickInputService);
+    const editorService = accessor.get(IEditorService);
+    const instantiationService = accessor.get(IInstantiationService);
+    const activeNotebook = getNotebookEditorFromEditorPane(editorService.activeEditorPane);
+    if (!activeNotebook || activeNotebook.isDisposed) {
+      return quickInputService.pick([{ label: localize("noNotebookEditor", "No notebook editor active at this time") }]);
+    }
+    if (activeNotebook.isReadOnly) {
+      return quickInputService.pick([{ label: localize("noWritableCodeEditor", "The active notebook editor is read-only.") }]);
+    }
+    const picks = [
+      new NotebookIndentUsingTabs(),
+      // indent using tabs
+      new NotebookIndentUsingSpaces(),
+      // indent using spaces
+      new NotebookChangeTabDisplaySize(),
+      // change tab size
+      new NotebookIndentationToTabsAction(),
+      // convert indentation to tabs
+      new NotebookIndentationToSpacesAction()
+      // convert indentation to spaces
+    ].map((item) => {
+      return {
+        id: item.desc.id,
+        label: item.desc.title.toString(),
+        run: /* @__PURE__ */ __name(() => {
+          instantiationService.invokeFunction(item.run);
+        }, "run")
+      };
+    });
+    picks.splice(3, 0, { type: "separator", label: localize("indentConvert", "convert file") });
+    picks.unshift({ type: "separator", label: localize("indentView", "change view") });
+    const action = await quickInputService.pick(picks, { placeHolder: localize("pickAction", "Select Action"), matchOnDetail: true });
+    if (!action) {
+      return;
+    }
+    action.run();
+    context.notebookEditor.focus();
+    return;
+  }
+});
+registerAction2(class CommentSelectedCellsAction extends NotebookMultiCellAction {
+  static {
+    __name(this, "CommentSelectedCellsAction");
+  }
+  constructor() {
+    super({
+      id: COMMENT_SELECTED_CELLS_ID,
+      title: localize("commentSelectedCells", "Comment Selected Cells"),
+      keybinding: {
+        when: ContextKeyExpr.and(
+          NOTEBOOK_EDITOR_FOCUSED,
+          NOTEBOOK_EDITOR_EDITABLE,
+          ContextKeyExpr.not(InputFocusedContextKey)
+        ),
+        primary: KeyMod.CtrlCmd | KeyCode.Slash,
+        weight: KeybindingWeight.WorkbenchContrib
+      }
+    });
+  }
+  async runWithContext(accessor, context) {
+    const languageConfigurationService = accessor.get(ILanguageConfigurationService);
+    context.selectedCells.forEach(async (cellViewModel) => {
+      const textModel = await cellViewModel.resolveTextModel();
+      const commentsOptions = cellViewModel.commentOptions;
+      const cellCommentCommand = new LineCommentCommand(
+        languageConfigurationService,
+        new Selection(1, 1, textModel.getLineCount(), textModel.getLineMaxColumn(textModel.getLineCount())),
+        // comment the entire cell
+        textModel.getOptions().tabSize,
+        Type.Toggle,
+        commentsOptions.insertSpace ?? true,
+        commentsOptions.ignoreEmptyLines ?? true,
+        false
+      );
+      const cellEditorSelections = cellViewModel.getSelections();
+      const initialTrackedRangesIDs = cellEditorSelections.map((selection) => {
+        return textModel._setTrackedRange(null, selection, TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges);
+      });
+      CommandExecutor.executeCommands(textModel, cellEditorSelections, [cellCommentCommand]);
+      const newTrackedSelections = initialTrackedRangesIDs.map((i) => {
+        return textModel._getTrackedRange(i);
+      }).filter((r) => !!r).map((range) => {
+        return new Selection(range.startLineNumber, range.startColumn, range.endLineNumber, range.endColumn);
+      });
+      cellViewModel.setSelections(newTrackedSelections ?? []);
+    });
+  }
+});
+export {
+  CLEAR_CELL_OUTPUTS_COMMAND_ID,
+  COMMENT_SELECTED_CELLS_ID,
+  SELECT_NOTEBOOK_INDENTATION_ID
+};
+//# sourceMappingURL=editActions.js.map

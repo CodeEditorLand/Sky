@@ -1,1 +1,256 @@
-var y=Object.defineProperty;var b=Object.getOwnPropertyDescriptor;var c=(d,o,e,i)=>{for(var t=i>1?void 0:i?b(o,e):o,r=d.length-1,n;r>=0;r--)(n=d[r])&&(t=(i?n(o,e,t):n(t))||t);return i&&t&&y(o,e,t),t},s=(d,o)=>(e,i)=>o(e,i,d);import*as C from"../../../../base/browser/dom.js";import"../../../../base/browser/keyboardEvent.js";import{Toggle as g}from"../../../../base/browser/ui/toggle/toggle.js";import"../../../../base/browser/ui/contextview/contextview.js";import"../../../../base/browser/ui/inputbox/inputBox.js";import{Widget as f}from"../../../../base/browser/ui/widget.js";import{Codicon as S}from"../../../../base/common/codicons.js";import{Emitter as u}from"../../../../base/common/event.js";import{KeyCode as I}from"../../../../base/common/keyCodes.js";import*as p from"../../../../nls.js";import{ContextScopedHistoryInputBox as w}from"../../../../platform/history/browser/contextScopedHistoryWidget.js";import{showHistoryKeybindingHint as _}from"../../../../platform/history/browser/historyWidgetKeybindingHint.js";import{IConfigurationService as m}from"../../../../platform/configuration/common/configuration.js";import{IContextKeyService as v}from"../../../../platform/contextkey/common/contextkey.js";import{IKeybindingService as x}from"../../../../platform/keybinding/common/keybinding.js";import{defaultToggleStyles as E}from"../../../../platform/theme/browser/defaultStyles.js";import{getDefaultHoverDelegate as B}from"../../../../base/browser/ui/hover/hoverDelegateFactory.js";let h=class extends f{constructor(e,i,t,r,n,H){super();this.contextViewProvider=i;this.contextKeyService=r;this.configurationService=n;this.keybindingService=H;t={ariaLabel:p.localize("defaultLabel","input"),...t},this.width=t.width??100,this.render(t),e.appendChild(this.domNode)}static OPTION_CHANGE="optionChange";inputFocusTracker;width;domNode;inputBox;_onSubmit=this._register(new u);onSubmit=this._onSubmit.event;_onCancel=this._register(new u);onCancel=this._onCancel.event;dispose(){super.dispose(),this.inputFocusTracker?.dispose()}setWidth(e){this.width=e,this.contextViewProvider.layout(),this.setInputWidth()}getValue(){return this.inputBox.value}setValue(e){this.inputBox.value!==e&&(this.inputBox.value=e)}select(){this.inputBox.select()}focus(){this.inputBox.focus()}inputHasFocus(){return this.inputBox.hasFocus()}setInputWidth(){this.inputBox.width=this.width-this.getSubcontrolsWidth()-2}getSubcontrolsWidth(){return 0}getHistory(){return this.inputBox.getHistory()}clearHistory(){this.inputBox.clearHistory()}prependHistory(e){this.inputBox.prependHistory(e)}clear(){this.setValue("")}onSearchSubmit(){this.inputBox.addToHistory()}showNextTerm(){this.inputBox.showNextValue()}showPreviousTerm(){this.inputBox.showPreviousValue()}render(e){this.domNode=document.createElement("div"),this.domNode.classList.add("monaco-findInput");const i=e.history||[];this.inputBox=new w(this.domNode,this.contextViewProvider,{placeholder:e.placeholder,showPlaceholderOnFocus:e.showPlaceholderOnFocus,tooltip:e.tooltip,ariaLabel:e.ariaLabel,validationOptions:{validation:void 0},history:new Set(i),showHistoryHint:()=>_(this.keybindingService),inputBoxStyles:e.inputBoxStyles},this.contextKeyService),this._register(this.inputBox.onDidChange(()=>this._onSubmit.fire(!0))),this.inputFocusTracker=C.trackFocus(this.inputBox.inputElement),this.onkeyup(this.inputBox.inputElement,r=>this.onInputKeyUp(r));const t=document.createElement("div");t.className="controls",this.renderSubcontrols(t),this.domNode.appendChild(t),this.setInputWidth()}renderSubcontrols(e){}onInputKeyUp(e){switch(e.keyCode){case I.Enter:this.onSearchSubmit(),this._onSubmit.fire(!1);return;case I.Escape:this._onCancel.fire();return}}};h=c([s(3,v),s(4,m),s(5,x)],h);let a=class extends h{_onChangeSearchInEditorsBoxEmitter=this._register(new u);onChangeSearchInEditorsBox=this._onChangeSearchInEditorsBoxEmitter.event;constructor(o,e,i,t,r,n){super(o,e,i,t,r,n)}useSearchInEditorsBox;dispose(){super.dispose(),this.useSearchInEditorsBox.dispose()}onlySearchInOpenEditors(){return this.useSearchInEditorsBox.checked}setOnlySearchInOpenEditors(o){this.useSearchInEditorsBox.checked=o,this._onChangeSearchInEditorsBoxEmitter.fire()}getSubcontrolsWidth(){return super.getSubcontrolsWidth()+this.useSearchInEditorsBox.width()}renderSubcontrols(o){this.useSearchInEditorsBox=this._register(new g({icon:S.book,title:p.localize("onlySearchInOpenEditors","Search only in Open Editors"),isChecked:!1,hoverDelegate:B("element"),...E})),this._register(this.useSearchInEditorsBox.onChange(e=>{this._onChangeSearchInEditorsBoxEmitter.fire(),e||this.inputBox.focus()})),o.appendChild(this.useSearchInEditorsBox.domNode),super.renderSubcontrols(o)}};a=c([s(3,v),s(4,m),s(5,x)],a);let l=class extends h{_onChangeIgnoreBoxEmitter=this._register(new u);onChangeIgnoreBox=this._onChangeIgnoreBoxEmitter.event;constructor(o,e,i,t,r,n){super(o,e,i,t,r,n)}useExcludesAndIgnoreFilesBox;dispose(){super.dispose(),this.useExcludesAndIgnoreFilesBox.dispose()}useExcludesAndIgnoreFiles(){return this.useExcludesAndIgnoreFilesBox.checked}setUseExcludesAndIgnoreFiles(o){this.useExcludesAndIgnoreFilesBox.checked=o,this._onChangeIgnoreBoxEmitter.fire()}getSubcontrolsWidth(){return super.getSubcontrolsWidth()+this.useExcludesAndIgnoreFilesBox.width()}renderSubcontrols(o){this.useExcludesAndIgnoreFilesBox=this._register(new g({icon:S.exclude,actionClassName:"useExcludesAndIgnoreFiles",title:p.localize("useExcludesAndIgnoreFilesDescription","Use Exclude Settings and Ignore Files"),isChecked:!0,hoverDelegate:B("element"),...E})),this._register(this.useExcludesAndIgnoreFilesBox.onChange(e=>{this._onChangeIgnoreBoxEmitter.fire(),e||this.inputBox.focus()})),o.appendChild(this.useExcludesAndIgnoreFilesBox.domNode),super.renderSubcontrols(o)}};l=c([s(3,v),s(4,m),s(5,x)],l);export{l as ExcludePatternInputWidget,a as IncludePatternInputWidget,h as PatternInputWidget};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import * as dom from "../../../../base/browser/dom.js";
+import { IKeyboardEvent } from "../../../../base/browser/keyboardEvent.js";
+import { Toggle } from "../../../../base/browser/ui/toggle/toggle.js";
+import { IContextViewProvider } from "../../../../base/browser/ui/contextview/contextview.js";
+import { HistoryInputBox, IInputBoxStyles } from "../../../../base/browser/ui/inputbox/inputBox.js";
+import { Widget } from "../../../../base/browser/ui/widget.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { Emitter, Event as CommonEvent } from "../../../../base/common/event.js";
+import { KeyCode } from "../../../../base/common/keyCodes.js";
+import * as nls from "../../../../nls.js";
+import { ContextScopedHistoryInputBox } from "../../../../platform/history/browser/contextScopedHistoryWidget.js";
+import { showHistoryKeybindingHint } from "../../../../platform/history/browser/historyWidgetKeybindingHint.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { defaultToggleStyles } from "../../../../platform/theme/browser/defaultStyles.js";
+import { getDefaultHoverDelegate } from "../../../../base/browser/ui/hover/hoverDelegateFactory.js";
+let PatternInputWidget = class extends Widget {
+  constructor(parent, contextViewProvider, options, contextKeyService, configurationService, keybindingService) {
+    super();
+    this.contextViewProvider = contextViewProvider;
+    this.contextKeyService = contextKeyService;
+    this.configurationService = configurationService;
+    this.keybindingService = keybindingService;
+    options = {
+      ...{
+        ariaLabel: nls.localize("defaultLabel", "input")
+      },
+      ...options
+    };
+    this.width = options.width ?? 100;
+    this.render(options);
+    parent.appendChild(this.domNode);
+  }
+  static {
+    __name(this, "PatternInputWidget");
+  }
+  static OPTION_CHANGE = "optionChange";
+  inputFocusTracker;
+  width;
+  domNode;
+  inputBox;
+  _onSubmit = this._register(new Emitter());
+  onSubmit = this._onSubmit.event;
+  _onCancel = this._register(new Emitter());
+  onCancel = this._onCancel.event;
+  dispose() {
+    super.dispose();
+    this.inputFocusTracker?.dispose();
+  }
+  setWidth(newWidth) {
+    this.width = newWidth;
+    this.contextViewProvider.layout();
+    this.setInputWidth();
+  }
+  getValue() {
+    return this.inputBox.value;
+  }
+  setValue(value) {
+    if (this.inputBox.value !== value) {
+      this.inputBox.value = value;
+    }
+  }
+  select() {
+    this.inputBox.select();
+  }
+  focus() {
+    this.inputBox.focus();
+  }
+  inputHasFocus() {
+    return this.inputBox.hasFocus();
+  }
+  setInputWidth() {
+    this.inputBox.width = this.width - this.getSubcontrolsWidth() - 2;
+  }
+  getSubcontrolsWidth() {
+    return 0;
+  }
+  getHistory() {
+    return this.inputBox.getHistory();
+  }
+  clearHistory() {
+    this.inputBox.clearHistory();
+  }
+  prependHistory(history) {
+    this.inputBox.prependHistory(history);
+  }
+  clear() {
+    this.setValue("");
+  }
+  onSearchSubmit() {
+    this.inputBox.addToHistory();
+  }
+  showNextTerm() {
+    this.inputBox.showNextValue();
+  }
+  showPreviousTerm() {
+    this.inputBox.showPreviousValue();
+  }
+  render(options) {
+    this.domNode = document.createElement("div");
+    this.domNode.classList.add("monaco-findInput");
+    const history = options.history || [];
+    this.inputBox = new ContextScopedHistoryInputBox(this.domNode, this.contextViewProvider, {
+      placeholder: options.placeholder,
+      showPlaceholderOnFocus: options.showPlaceholderOnFocus,
+      tooltip: options.tooltip,
+      ariaLabel: options.ariaLabel,
+      validationOptions: {
+        validation: void 0
+      },
+      history: new Set(history),
+      showHistoryHint: /* @__PURE__ */ __name(() => showHistoryKeybindingHint(this.keybindingService), "showHistoryHint"),
+      inputBoxStyles: options.inputBoxStyles
+    }, this.contextKeyService);
+    this._register(this.inputBox.onDidChange(() => this._onSubmit.fire(true)));
+    this.inputFocusTracker = dom.trackFocus(this.inputBox.inputElement);
+    this.onkeyup(this.inputBox.inputElement, (keyboardEvent) => this.onInputKeyUp(keyboardEvent));
+    const controls = document.createElement("div");
+    controls.className = "controls";
+    this.renderSubcontrols(controls);
+    this.domNode.appendChild(controls);
+    this.setInputWidth();
+  }
+  renderSubcontrols(_controlsDiv) {
+  }
+  onInputKeyUp(keyboardEvent) {
+    switch (keyboardEvent.keyCode) {
+      case KeyCode.Enter:
+        this.onSearchSubmit();
+        this._onSubmit.fire(false);
+        return;
+      case KeyCode.Escape:
+        this._onCancel.fire();
+        return;
+    }
+  }
+};
+PatternInputWidget = __decorateClass([
+  __decorateParam(3, IContextKeyService),
+  __decorateParam(4, IConfigurationService),
+  __decorateParam(5, IKeybindingService)
+], PatternInputWidget);
+let IncludePatternInputWidget = class extends PatternInputWidget {
+  static {
+    __name(this, "IncludePatternInputWidget");
+  }
+  _onChangeSearchInEditorsBoxEmitter = this._register(new Emitter());
+  onChangeSearchInEditorsBox = this._onChangeSearchInEditorsBoxEmitter.event;
+  constructor(parent, contextViewProvider, options, contextKeyService, configurationService, keybindingService) {
+    super(parent, contextViewProvider, options, contextKeyService, configurationService, keybindingService);
+  }
+  useSearchInEditorsBox;
+  dispose() {
+    super.dispose();
+    this.useSearchInEditorsBox.dispose();
+  }
+  onlySearchInOpenEditors() {
+    return this.useSearchInEditorsBox.checked;
+  }
+  setOnlySearchInOpenEditors(value) {
+    this.useSearchInEditorsBox.checked = value;
+    this._onChangeSearchInEditorsBoxEmitter.fire();
+  }
+  getSubcontrolsWidth() {
+    return super.getSubcontrolsWidth() + this.useSearchInEditorsBox.width();
+  }
+  renderSubcontrols(controlsDiv) {
+    this.useSearchInEditorsBox = this._register(new Toggle({
+      icon: Codicon.book,
+      title: nls.localize("onlySearchInOpenEditors", "Search only in Open Editors"),
+      isChecked: false,
+      hoverDelegate: getDefaultHoverDelegate("element"),
+      ...defaultToggleStyles
+    }));
+    this._register(this.useSearchInEditorsBox.onChange((viaKeyboard) => {
+      this._onChangeSearchInEditorsBoxEmitter.fire();
+      if (!viaKeyboard) {
+        this.inputBox.focus();
+      }
+    }));
+    controlsDiv.appendChild(this.useSearchInEditorsBox.domNode);
+    super.renderSubcontrols(controlsDiv);
+  }
+};
+IncludePatternInputWidget = __decorateClass([
+  __decorateParam(3, IContextKeyService),
+  __decorateParam(4, IConfigurationService),
+  __decorateParam(5, IKeybindingService)
+], IncludePatternInputWidget);
+let ExcludePatternInputWidget = class extends PatternInputWidget {
+  static {
+    __name(this, "ExcludePatternInputWidget");
+  }
+  _onChangeIgnoreBoxEmitter = this._register(new Emitter());
+  onChangeIgnoreBox = this._onChangeIgnoreBoxEmitter.event;
+  constructor(parent, contextViewProvider, options, contextKeyService, configurationService, keybindingService) {
+    super(parent, contextViewProvider, options, contextKeyService, configurationService, keybindingService);
+  }
+  useExcludesAndIgnoreFilesBox;
+  dispose() {
+    super.dispose();
+    this.useExcludesAndIgnoreFilesBox.dispose();
+  }
+  useExcludesAndIgnoreFiles() {
+    return this.useExcludesAndIgnoreFilesBox.checked;
+  }
+  setUseExcludesAndIgnoreFiles(value) {
+    this.useExcludesAndIgnoreFilesBox.checked = value;
+    this._onChangeIgnoreBoxEmitter.fire();
+  }
+  getSubcontrolsWidth() {
+    return super.getSubcontrolsWidth() + this.useExcludesAndIgnoreFilesBox.width();
+  }
+  renderSubcontrols(controlsDiv) {
+    this.useExcludesAndIgnoreFilesBox = this._register(new Toggle({
+      icon: Codicon.exclude,
+      actionClassName: "useExcludesAndIgnoreFiles",
+      title: nls.localize("useExcludesAndIgnoreFilesDescription", "Use Exclude Settings and Ignore Files"),
+      isChecked: true,
+      hoverDelegate: getDefaultHoverDelegate("element"),
+      ...defaultToggleStyles
+    }));
+    this._register(this.useExcludesAndIgnoreFilesBox.onChange((viaKeyboard) => {
+      this._onChangeIgnoreBoxEmitter.fire();
+      if (!viaKeyboard) {
+        this.inputBox.focus();
+      }
+    }));
+    controlsDiv.appendChild(this.useExcludesAndIgnoreFilesBox.domNode);
+    super.renderSubcontrols(controlsDiv);
+  }
+};
+ExcludePatternInputWidget = __decorateClass([
+  __decorateParam(3, IContextKeyService),
+  __decorateParam(4, IConfigurationService),
+  __decorateParam(5, IKeybindingService)
+], ExcludePatternInputWidget);
+export {
+  ExcludePatternInputWidget,
+  IncludePatternInputWidget,
+  PatternInputWidget
+};
+//# sourceMappingURL=patternInputWidget.js.map

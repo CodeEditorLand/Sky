@@ -1,1 +1,458 @@
-import{Emitter as o}from"../../../../../base/common/event.js";import{hash as f,StringSHA1 as c}from"../../../../../base/common/hash.js";import{Disposable as C,DisposableStore as v,dispose as x}from"../../../../../base/common/lifecycle.js";import"../../../../../base/common/uri.js";import*as M from"../../../../../base/common/uuid.js";import{Range as I}from"../../../../../editor/common/core/range.js";import*as d from"../../../../../editor/common/model.js";import{PieceTreeTextBuffer as D}from"../../../../../editor/common/model/pieceTreeTextBuffer/pieceTreeTextBuffer.js";import{createTextBuffer as L}from"../../../../../editor/common/model/textModel.js";import{PLAINTEXT_LANGUAGE_ID as y}from"../../../../../editor/common/languages/modesRegistry.js";import"../../../../../editor/common/languages/language.js";import{NotebookCellOutputTextModel as T}from"./notebookCellOutputTextModel.js";import"../notebookCommon.js";import{ThrottledDelayer as O}from"../../../../../base/common/async.js";import"../../../../services/languageDetection/common/languageDetectionWorkerService.js";import{toFormattedString as S}from"../../../../../base/common/jsonFormatter.js";import"../../../../../editor/common/textModelEvents.js";import{splitLines as b}from"../../../../../base/common/strings.js";class h extends C{constructor(t,e,a,n,s,i,u,o,r,g,h,l,d=void 0){super(),this.uri=t,this.handle=e,this._source=a,this._language=n,this._mime=s,this.cellKind=i,this.collapseState=g,this.transientOptions=h,this._languageService=l,this._languageDetectionService=d,this._outputs=u.map((t=>new T(t))),this._metadata=o??{},this._internalMetadata=r??{}}_onDidChangeTextModel=this._register(new o);onDidChangeTextModel=this._onDidChangeTextModel.event;_onDidChangeOutputs=this._register(new o);onDidChangeOutputs=this._onDidChangeOutputs.event;_onDidChangeOutputItems=this._register(new o);onDidChangeOutputItems=this._onDidChangeOutputItems.event;_onDidChangeContent=this._register(new o);onDidChangeContent=this._onDidChangeContent.event;_onDidChangeMetadata=this._register(new o);onDidChangeMetadata=this._onDidChangeMetadata.event;_onDidChangeInternalMetadata=this._register(new o);onDidChangeInternalMetadata=this._onDidChangeInternalMetadata.event;_onDidChangeLanguage=this._register(new o);onDidChangeLanguage=this._onDidChangeLanguage.event;_outputs;get outputs(){return this._outputs}_metadata;get metadata(){return this._metadata}set metadata(t){this._metadata=t,this._hash=null,this._onDidChangeMetadata.fire()}_internalMetadata;get internalMetadata(){return this._internalMetadata}set internalMetadata(t){const e=this._internalMetadata.lastRunSuccess!==t.lastRunSuccess;t={...t,runStartTimeAdjustment:E(this._internalMetadata,t)},this._internalMetadata=t,this._hash=null,this._onDidChangeInternalMetadata.fire({lastRunSuccessChanged:e})}get language(){return this._language}set language(t){this._textModel&&this._textModel.getLanguageId()===this._languageService.getLanguageIdByLanguageName(t)&&this._textModel.getLanguageId()===this._languageService.getLanguageIdByLanguageName(this.language)||(this._hasLanguageSetExplicitly=!0,this._setLanguageInternal(t))}get mime(){return this._mime}set mime(t){this._mime!==t&&(this._mime=t,this._hash=null,this._onDidChangeContent.fire("mime"))}_textBuffer;get textBuffer(){return this._textBuffer||(this._textBuffer=this._register(L(this._source,d.DefaultEndOfLine.LF).textBuffer),this._register(this._textBuffer.onDidChangeContent((()=>{this._hash=null,this._textModel||this._onDidChangeContent.fire("content"),this.autoDetectLanguage()})))),this._textBuffer}_textBufferHash=null;_hash=null;_versionId=1;_alternativeId=1;get alternativeId(){return this._alternativeId}_textModelDisposables=this._register(new v);_textModel=void 0;get textModel(){return this._textModel}set textModel(t){this._textModel!==t&&(this._textModelDisposables.clear(),this._textModel=t,this._textModel&&(this.setRegisteredLanguage(this._languageService,this._textModel.getLanguageId(),this.language),this._textModelDisposables.add(this._textModel.onDidChangeLanguage((t=>this.setRegisteredLanguage(this._languageService,t.newLanguage,this.language)))),this._textModelDisposables.add(this._textModel.onWillDispose((()=>this.textModel=void 0))),this._textModelDisposables.add(this._textModel.onDidChangeContent((t=>{this._textModel&&(this._versionId=this._textModel.getVersionId(),this._alternativeId=this._textModel.getAlternativeVersionId()),this._textBufferHash=null,this._onDidChangeContent.fire("content"),this._onDidChangeContent.fire({type:"model",event:t})}))),this._textModel._overwriteVersionId(this._versionId),this._textModel._overwriteAlternativeVersionId(this._versionId),this._onDidChangeTextModel.fire()))}setRegisteredLanguage(t,e,a){const n=e===y||"jupyter"===e;!t.isRegisteredLanguageId(a)&&n?this._onDidChangeLanguage.fire(a):this.language=e}static AUTO_DETECT_LANGUAGE_THROTTLE_DELAY=600;autoDetectLanguageThrottler=this._register(new O(h.AUTO_DETECT_LANGUAGE_THROTTLE_DELAY));_autoLanguageDetectionEnabled=!1;_hasLanguageSetExplicitly=!1;get hasLanguageSetExplicitly(){return this._hasLanguageSetExplicitly}enableAutoLanguageDetection(){this._autoLanguageDetectionEnabled=!0,this.autoDetectLanguage()}async autoDetectLanguage(){this._autoLanguageDetectionEnabled&&this.autoDetectLanguageThrottler.trigger((()=>this._doAutoDetectLanguage()))}async _doAutoDetectLanguage(){if(this.hasLanguageSetExplicitly)return;const t=await(this._languageDetectionService?.detectLanguage(this.uri));t&&(this._textModel&&this._textModel.getLanguageId()===this._languageService.getLanguageIdByLanguageName(t)&&this._textModel.getLanguageId()===this._languageService.getLanguageIdByLanguageName(this.language)||this._setLanguageInternal(t))}_setLanguageInternal(t){const e=this._languageService.getLanguageIdByLanguageName(t);if(null!==e){if(this._textModel){const t=this._languageService.createById(e);this._textModel.setLanguage(t.languageId)}this._language!==t&&(this._language=t,this._hash=null,this._onDidChangeLanguage.fire(t),this._onDidChangeContent.fire("language"))}}resetTextBuffer(t){this._textBuffer=t}getValue(){const t=this.getFullModelRange();return"\n"===this.textBuffer.getEOL()?this.textBuffer.getValueInRange(t,d.EndOfLinePreference.LF):this.textBuffer.getValueInRange(t,d.EndOfLinePreference.CRLF)}getTextBufferHash(){if(null!==this._textBufferHash)return this._textBufferHash;const t=new c,e=this.textBuffer.createSnapshot(!1);let a;for(;a=e.read();)t.update(a);return this._textBufferHash=t.digest(),this._textBufferHash}getHashValue(){return null!==this._hash||(this._hash=f([f(this.language),this.getTextBufferHash(),this._getPersisentMetadata(),this.transientOptions.transientOutputs?[]:this._outputs.map((t=>({outputs:t.outputs.map((t=>({mime:t.mime,data:Array.from(t.data.buffer)}))),metadata:t.metadata})))])),this._hash}_getPersisentMetadata(){return B(this.transientOptions.transientCellMetadata,this.metadata,this.language)}getTextLength(){return this.textBuffer.getLength()}getFullModelRange(){const t=this.textBuffer.getLineCount();return new I(1,1,t,this.textBuffer.getLineLength(t)+1)}spliceNotebookCellOutputs(t){if(t.deleteCount>0&&t.newOutputs.length>0){const e=Math.min(t.deleteCount,t.newOutputs.length);for(let a=0;a<e;a++){const e=this.outputs[t.start+a],n=t.newOutputs[a];this.replaceOutput(e.outputId,n)}this.outputs.splice(t.start+e,t.deleteCount-e,...t.newOutputs.slice(e)).forEach((t=>t.dispose())),this._onDidChangeOutputs.fire({start:t.start+e,deleteCount:t.deleteCount-e,newOutputs:t.newOutputs.slice(e)})}else this.outputs.splice(t.start,t.deleteCount,...t.newOutputs).forEach((t=>t.dispose())),this._onDidChangeOutputs.fire(t)}replaceOutput(t,e){const a=this.outputs.findIndex((e=>e.outputId===t));return!(a<0)&&(this.outputs[a].replaceData({outputs:e.outputs,outputId:e.outputId,metadata:e.metadata}),e.dispose(),this._onDidChangeOutputItems.fire(),!0)}changeOutputItems(t,e,a){const n=this.outputs.findIndex((e=>e.outputId===t));if(n<0)return!1;const s=this.outputs[n];return e?s.appendData(a):s.replaceData({outputId:t,outputs:a,metadata:s.metadata}),this._onDidChangeOutputItems.fire(),!0}_outputNotEqualFastCheck(t,e){if(t.length!==e.length)return!1;for(let a=0;a<this.outputs.length;a++){const n=t[a],s=e[a];if(n.outputs.length!==s.outputs.length)return!1;for(let t=0;t<n.outputs.length;t++)if(n.outputs[t].mime!==s.outputs[t].mime||n.outputs[t].data.byteLength!==s.outputs[t].data.byteLength)return!1}return!0}equal(t){return!(this.language!==t.language||this.outputs.length!==t.outputs.length||this.getTextLength()!==t.getTextLength()||!this.transientOptions.transientOutputs&&!this._outputNotEqualFastCheck(this.outputs,t.outputs))&&this.getHashValue()===t.getHashValue()}fastEqual(t,e){if(this.language!==t.language||this.mime!==t.mime||this.cellKind!==t.cellKind||!e&&(this.internalMetadata?.executionOrder!==t.internalMetadata?.executionOrder||this.internalMetadata?.lastRunSuccess!==t.internalMetadata?.lastRunSuccess||this.internalMetadata?.runStartTime!==t.internalMetadata?.runStartTime||this.internalMetadata?.runStartTimeAdjustment!==t.internalMetadata?.runStartTimeAdjustment||this.internalMetadata?.runEndTime!==t.internalMetadata?.runEndTime))return!1;if(this._textBuffer){if(!h.linesAreEqual(this.textBuffer.getLinesContent(),t.source))return!1}else if(this._source!==t.source)return!1;return!0}static linesAreEqual(t,e){const a=b(e);if(t.length!==a.length)return!1;for(let e=0;e<t.length;e++)if(t[e]!==a[e])return!1;return!0}dispose(){x(this._outputs);const t=new D([],"","\n",!1,!1,!0,!0);t.dispose(),this._textBuffer=t,super.dispose()}}function ct(t){return{source:t.getValue(),language:t.language,mime:t.mime,cellKind:t.cellKind,outputs:t.outputs.map((t=>({outputs:t.outputs,outputId:M.generateUuid()}))),metadata:{}}}function E(t,e){if(t.runStartTime!==e.runStartTime&&"number"==typeof e.runStartTime){const t=Date.now()-e.runStartTime;return t<0?Math.abs(t):0}return e.runStartTimeAdjustment}function B(t,e,a,n){let s={};if(t){const a=new Set([...Object.keys(e)]);for(const n of a)t[n]||(s[n]=e[n])}else s=e;const i={language:a,...s};return a&&(i.language=a),S(n?g(i):i,{})}function g(t){return Array.isArray(t)?t.map(g):null!=t&&"object"==typeof t&&Object.keys(t).length>0?Object.keys(t).sort().reduce(((e,a)=>(e[a]=g(t[a]),e)),{}):t}export{h as NotebookCellTextModel,ct as cloneNotebookCellTextModel,B as getFormattedMetadataJSON,g as sortObjectPropertiesRecursively};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Emitter, Event } from "../../../../../base/common/event.js";
+import { hash, StringSHA1 } from "../../../../../base/common/hash.js";
+import { Disposable, DisposableStore, dispose } from "../../../../../base/common/lifecycle.js";
+import { URI } from "../../../../../base/common/uri.js";
+import * as UUID from "../../../../../base/common/uuid.js";
+import { Range } from "../../../../../editor/common/core/range.js";
+import * as model from "../../../../../editor/common/model.js";
+import { PieceTreeTextBuffer } from "../../../../../editor/common/model/pieceTreeTextBuffer/pieceTreeTextBuffer.js";
+import { createTextBuffer, TextModel } from "../../../../../editor/common/model/textModel.js";
+import { PLAINTEXT_LANGUAGE_ID } from "../../../../../editor/common/languages/modesRegistry.js";
+import { ILanguageService } from "../../../../../editor/common/languages/language.js";
+import { NotebookCellOutputTextModel } from "./notebookCellOutputTextModel.js";
+import { CellInternalMetadataChangedEvent, CellKind, ICell, ICellDto2, ICellOutput, IOutputDto, IOutputItemDto, NotebookCellCollapseState, NotebookCellInternalMetadata, NotebookCellMetadata, NotebookCellOutputsSplice, TransientCellMetadata, TransientOptions } from "../notebookCommon.js";
+import { ThrottledDelayer } from "../../../../../base/common/async.js";
+import { ILanguageDetectionService } from "../../../../services/languageDetection/common/languageDetectionWorkerService.js";
+import { toFormattedString } from "../../../../../base/common/jsonFormatter.js";
+import { IModelContentChangedEvent } from "../../../../../editor/common/textModelEvents.js";
+import { splitLines } from "../../../../../base/common/strings.js";
+class NotebookCellTextModel extends Disposable {
+  constructor(uri, handle, _source, _language, _mime, cellKind, outputs, metadata, internalMetadata, collapseState, transientOptions, _languageService, _languageDetectionService = void 0) {
+    super();
+    this.uri = uri;
+    this.handle = handle;
+    this._source = _source;
+    this._language = _language;
+    this._mime = _mime;
+    this.cellKind = cellKind;
+    this.collapseState = collapseState;
+    this.transientOptions = transientOptions;
+    this._languageService = _languageService;
+    this._languageDetectionService = _languageDetectionService;
+    this._outputs = outputs.map((op) => new NotebookCellOutputTextModel(op));
+    this._metadata = metadata ?? {};
+    this._internalMetadata = internalMetadata ?? {};
+  }
+  static {
+    __name(this, "NotebookCellTextModel");
+  }
+  _onDidChangeTextModel = this._register(new Emitter());
+  onDidChangeTextModel = this._onDidChangeTextModel.event;
+  _onDidChangeOutputs = this._register(new Emitter());
+  onDidChangeOutputs = this._onDidChangeOutputs.event;
+  _onDidChangeOutputItems = this._register(new Emitter());
+  onDidChangeOutputItems = this._onDidChangeOutputItems.event;
+  _onDidChangeContent = this._register(new Emitter());
+  onDidChangeContent = this._onDidChangeContent.event;
+  _onDidChangeMetadata = this._register(new Emitter());
+  onDidChangeMetadata = this._onDidChangeMetadata.event;
+  _onDidChangeInternalMetadata = this._register(new Emitter());
+  onDidChangeInternalMetadata = this._onDidChangeInternalMetadata.event;
+  _onDidChangeLanguage = this._register(new Emitter());
+  onDidChangeLanguage = this._onDidChangeLanguage.event;
+  _outputs;
+  get outputs() {
+    return this._outputs;
+  }
+  _metadata;
+  get metadata() {
+    return this._metadata;
+  }
+  set metadata(newMetadata) {
+    this._metadata = newMetadata;
+    this._hash = null;
+    this._onDidChangeMetadata.fire();
+  }
+  _internalMetadata;
+  get internalMetadata() {
+    return this._internalMetadata;
+  }
+  set internalMetadata(newInternalMetadata) {
+    const lastRunSuccessChanged = this._internalMetadata.lastRunSuccess !== newInternalMetadata.lastRunSuccess;
+    newInternalMetadata = {
+      ...newInternalMetadata,
+      ...{ runStartTimeAdjustment: computeRunStartTimeAdjustment(this._internalMetadata, newInternalMetadata) }
+    };
+    this._internalMetadata = newInternalMetadata;
+    this._hash = null;
+    this._onDidChangeInternalMetadata.fire({ lastRunSuccessChanged });
+  }
+  get language() {
+    return this._language;
+  }
+  set language(newLanguage) {
+    if (this._textModel && this._textModel.getLanguageId() === this._languageService.getLanguageIdByLanguageName(newLanguage) && this._textModel.getLanguageId() === this._languageService.getLanguageIdByLanguageName(this.language)) {
+      return;
+    }
+    this._hasLanguageSetExplicitly = true;
+    this._setLanguageInternal(newLanguage);
+  }
+  get mime() {
+    return this._mime;
+  }
+  set mime(newMime) {
+    if (this._mime === newMime) {
+      return;
+    }
+    this._mime = newMime;
+    this._hash = null;
+    this._onDidChangeContent.fire("mime");
+  }
+  _textBuffer;
+  get textBuffer() {
+    if (this._textBuffer) {
+      return this._textBuffer;
+    }
+    this._textBuffer = this._register(createTextBuffer(this._source, model.DefaultEndOfLine.LF).textBuffer);
+    this._register(this._textBuffer.onDidChangeContent(() => {
+      this._hash = null;
+      if (!this._textModel) {
+        this._onDidChangeContent.fire("content");
+      }
+      this.autoDetectLanguage();
+    }));
+    return this._textBuffer;
+  }
+  _textBufferHash = null;
+  _hash = null;
+  _versionId = 1;
+  _alternativeId = 1;
+  get alternativeId() {
+    return this._alternativeId;
+  }
+  _textModelDisposables = this._register(new DisposableStore());
+  _textModel = void 0;
+  get textModel() {
+    return this._textModel;
+  }
+  set textModel(m) {
+    if (this._textModel === m) {
+      return;
+    }
+    this._textModelDisposables.clear();
+    this._textModel = m;
+    if (this._textModel) {
+      this.setRegisteredLanguage(this._languageService, this._textModel.getLanguageId(), this.language);
+      this._textModelDisposables.add(this._textModel.onDidChangeLanguage((e) => this.setRegisteredLanguage(this._languageService, e.newLanguage, this.language)));
+      this._textModelDisposables.add(this._textModel.onWillDispose(() => this.textModel = void 0));
+      this._textModelDisposables.add(this._textModel.onDidChangeContent((e) => {
+        if (this._textModel) {
+          this._versionId = this._textModel.getVersionId();
+          this._alternativeId = this._textModel.getAlternativeVersionId();
+        }
+        this._textBufferHash = null;
+        this._onDidChangeContent.fire("content");
+        this._onDidChangeContent.fire({ type: "model", event: e });
+      }));
+      this._textModel._overwriteVersionId(this._versionId);
+      this._textModel._overwriteAlternativeVersionId(this._versionId);
+      this._onDidChangeTextModel.fire();
+    }
+  }
+  setRegisteredLanguage(languageService, newLanguage, currentLanguage) {
+    const isFallBackLanguage = newLanguage === PLAINTEXT_LANGUAGE_ID || newLanguage === "jupyter";
+    if (!languageService.isRegisteredLanguageId(currentLanguage) && isFallBackLanguage) {
+      this._onDidChangeLanguage.fire(currentLanguage);
+    } else {
+      this.language = newLanguage;
+    }
+  }
+  static AUTO_DETECT_LANGUAGE_THROTTLE_DELAY = 600;
+  autoDetectLanguageThrottler = this._register(new ThrottledDelayer(NotebookCellTextModel.AUTO_DETECT_LANGUAGE_THROTTLE_DELAY));
+  _autoLanguageDetectionEnabled = false;
+  _hasLanguageSetExplicitly = false;
+  get hasLanguageSetExplicitly() {
+    return this._hasLanguageSetExplicitly;
+  }
+  enableAutoLanguageDetection() {
+    this._autoLanguageDetectionEnabled = true;
+    this.autoDetectLanguage();
+  }
+  async autoDetectLanguage() {
+    if (this._autoLanguageDetectionEnabled) {
+      this.autoDetectLanguageThrottler.trigger(() => this._doAutoDetectLanguage());
+    }
+  }
+  async _doAutoDetectLanguage() {
+    if (this.hasLanguageSetExplicitly) {
+      return;
+    }
+    const newLanguage = await this._languageDetectionService?.detectLanguage(this.uri);
+    if (!newLanguage) {
+      return;
+    }
+    if (this._textModel && this._textModel.getLanguageId() === this._languageService.getLanguageIdByLanguageName(newLanguage) && this._textModel.getLanguageId() === this._languageService.getLanguageIdByLanguageName(this.language)) {
+      return;
+    }
+    this._setLanguageInternal(newLanguage);
+  }
+  _setLanguageInternal(newLanguage) {
+    const newLanguageId = this._languageService.getLanguageIdByLanguageName(newLanguage);
+    if (newLanguageId === null) {
+      return;
+    }
+    if (this._textModel) {
+      const languageId = this._languageService.createById(newLanguageId);
+      this._textModel.setLanguage(languageId.languageId);
+    }
+    if (this._language === newLanguage) {
+      return;
+    }
+    this._language = newLanguage;
+    this._hash = null;
+    this._onDidChangeLanguage.fire(newLanguage);
+    this._onDidChangeContent.fire("language");
+  }
+  resetTextBuffer(textBuffer) {
+    this._textBuffer = textBuffer;
+  }
+  getValue() {
+    const fullRange = this.getFullModelRange();
+    const eol = this.textBuffer.getEOL();
+    if (eol === "\n") {
+      return this.textBuffer.getValueInRange(fullRange, model.EndOfLinePreference.LF);
+    } else {
+      return this.textBuffer.getValueInRange(fullRange, model.EndOfLinePreference.CRLF);
+    }
+  }
+  getTextBufferHash() {
+    if (this._textBufferHash !== null) {
+      return this._textBufferHash;
+    }
+    const shaComputer = new StringSHA1();
+    const snapshot = this.textBuffer.createSnapshot(false);
+    let text;
+    while (text = snapshot.read()) {
+      shaComputer.update(text);
+    }
+    this._textBufferHash = shaComputer.digest();
+    return this._textBufferHash;
+  }
+  getHashValue() {
+    if (this._hash !== null) {
+      return this._hash;
+    }
+    this._hash = hash([hash(this.language), this.getTextBufferHash(), this._getPersisentMetadata(), this.transientOptions.transientOutputs ? [] : this._outputs.map((op) => ({
+      outputs: op.outputs.map((output) => ({
+        mime: output.mime,
+        data: Array.from(output.data.buffer)
+      })),
+      metadata: op.metadata
+    }))]);
+    return this._hash;
+  }
+  _getPersisentMetadata() {
+    return getFormattedMetadataJSON(this.transientOptions.transientCellMetadata, this.metadata, this.language);
+  }
+  getTextLength() {
+    return this.textBuffer.getLength();
+  }
+  getFullModelRange() {
+    const lineCount = this.textBuffer.getLineCount();
+    return new Range(1, 1, lineCount, this.textBuffer.getLineLength(lineCount) + 1);
+  }
+  spliceNotebookCellOutputs(splice) {
+    if (splice.deleteCount > 0 && splice.newOutputs.length > 0) {
+      const commonLen = Math.min(splice.deleteCount, splice.newOutputs.length);
+      for (let i = 0; i < commonLen; i++) {
+        const currentOutput = this.outputs[splice.start + i];
+        const newOutput = splice.newOutputs[i];
+        this.replaceOutput(currentOutput.outputId, newOutput);
+      }
+      const removed = this.outputs.splice(splice.start + commonLen, splice.deleteCount - commonLen, ...splice.newOutputs.slice(commonLen));
+      removed.forEach((output) => output.dispose());
+      this._onDidChangeOutputs.fire({ start: splice.start + commonLen, deleteCount: splice.deleteCount - commonLen, newOutputs: splice.newOutputs.slice(commonLen) });
+    } else {
+      const removed = this.outputs.splice(splice.start, splice.deleteCount, ...splice.newOutputs);
+      removed.forEach((output) => output.dispose());
+      this._onDidChangeOutputs.fire(splice);
+    }
+  }
+  replaceOutput(outputId, newOutputItem) {
+    const outputIndex = this.outputs.findIndex((output2) => output2.outputId === outputId);
+    if (outputIndex < 0) {
+      return false;
+    }
+    const output = this.outputs[outputIndex];
+    output.replaceData({
+      outputs: newOutputItem.outputs,
+      outputId: newOutputItem.outputId,
+      metadata: newOutputItem.metadata
+    });
+    newOutputItem.dispose();
+    this._onDidChangeOutputItems.fire();
+    return true;
+  }
+  changeOutputItems(outputId, append, items) {
+    const outputIndex = this.outputs.findIndex((output2) => output2.outputId === outputId);
+    if (outputIndex < 0) {
+      return false;
+    }
+    const output = this.outputs[outputIndex];
+    if (append) {
+      output.appendData(items);
+    } else {
+      output.replaceData({ outputId, outputs: items, metadata: output.metadata });
+    }
+    this._onDidChangeOutputItems.fire();
+    return true;
+  }
+  _outputNotEqualFastCheck(left, right) {
+    if (left.length !== right.length) {
+      return false;
+    }
+    for (let i = 0; i < this.outputs.length; i++) {
+      const l = left[i];
+      const r = right[i];
+      if (l.outputs.length !== r.outputs.length) {
+        return false;
+      }
+      for (let k = 0; k < l.outputs.length; k++) {
+        if (l.outputs[k].mime !== r.outputs[k].mime) {
+          return false;
+        }
+        if (l.outputs[k].data.byteLength !== r.outputs[k].data.byteLength) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+  equal(b) {
+    if (this.language !== b.language) {
+      return false;
+    }
+    if (this.outputs.length !== b.outputs.length) {
+      return false;
+    }
+    if (this.getTextLength() !== b.getTextLength()) {
+      return false;
+    }
+    if (!this.transientOptions.transientOutputs) {
+      if (!this._outputNotEqualFastCheck(this.outputs, b.outputs)) {
+        return false;
+      }
+    }
+    return this.getHashValue() === b.getHashValue();
+  }
+  /**
+   * Only compares
+   * - language
+   * - mime
+   * - cellKind
+   * - internal metadata (conditionally)
+   * - source
+   */
+  fastEqual(b, ignoreMetadata) {
+    if (this.language !== b.language) {
+      return false;
+    }
+    if (this.mime !== b.mime) {
+      return false;
+    }
+    if (this.cellKind !== b.cellKind) {
+      return false;
+    }
+    if (!ignoreMetadata) {
+      if (this.internalMetadata?.executionOrder !== b.internalMetadata?.executionOrder || this.internalMetadata?.lastRunSuccess !== b.internalMetadata?.lastRunSuccess || this.internalMetadata?.runStartTime !== b.internalMetadata?.runStartTime || this.internalMetadata?.runStartTimeAdjustment !== b.internalMetadata?.runStartTimeAdjustment || this.internalMetadata?.runEndTime !== b.internalMetadata?.runEndTime) {
+        return false;
+      }
+    }
+    if (this._textBuffer) {
+      if (!NotebookCellTextModel.linesAreEqual(this.textBuffer.getLinesContent(), b.source)) {
+        return false;
+      }
+    } else if (this._source !== b.source) {
+      return false;
+    }
+    return true;
+  }
+  static linesAreEqual(aLines, b) {
+    const bLines = splitLines(b);
+    if (aLines.length !== bLines.length) {
+      return false;
+    }
+    for (let i = 0; i < aLines.length; i++) {
+      if (aLines[i] !== bLines[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+  dispose() {
+    dispose(this._outputs);
+    const emptyDisposedTextBuffer = new PieceTreeTextBuffer([], "", "\n", false, false, true, true);
+    emptyDisposedTextBuffer.dispose();
+    this._textBuffer = emptyDisposedTextBuffer;
+    super.dispose();
+  }
+}
+function cloneNotebookCellTextModel(cell) {
+  return {
+    source: cell.getValue(),
+    language: cell.language,
+    mime: cell.mime,
+    cellKind: cell.cellKind,
+    outputs: cell.outputs.map((output) => ({
+      outputs: output.outputs,
+      /* paste should generate new outputId */
+      outputId: UUID.generateUuid()
+    })),
+    metadata: {}
+  };
+}
+__name(cloneNotebookCellTextModel, "cloneNotebookCellTextModel");
+function computeRunStartTimeAdjustment(oldMetadata, newMetadata) {
+  if (oldMetadata.runStartTime !== newMetadata.runStartTime && typeof newMetadata.runStartTime === "number") {
+    const offset = Date.now() - newMetadata.runStartTime;
+    return offset < 0 ? Math.abs(offset) : 0;
+  } else {
+    return newMetadata.runStartTimeAdjustment;
+  }
+}
+__name(computeRunStartTimeAdjustment, "computeRunStartTimeAdjustment");
+function getFormattedMetadataJSON(transientCellMetadata, metadata, language, sortKeys) {
+  let filteredMetadata = {};
+  if (transientCellMetadata) {
+    const keys = /* @__PURE__ */ new Set([...Object.keys(metadata)]);
+    for (const key of keys) {
+      if (!transientCellMetadata[key]) {
+        filteredMetadata[key] = metadata[key];
+      }
+    }
+  } else {
+    filteredMetadata = metadata;
+  }
+  const obj = {
+    language,
+    ...filteredMetadata
+  };
+  if (language) {
+    obj.language = language;
+  }
+  const metadataSource = toFormattedString(sortKeys ? sortObjectPropertiesRecursively(obj) : obj, {});
+  return metadataSource;
+}
+__name(getFormattedMetadataJSON, "getFormattedMetadataJSON");
+function sortObjectPropertiesRecursively(obj) {
+  if (Array.isArray(obj)) {
+    return obj.map(sortObjectPropertiesRecursively);
+  }
+  if (obj !== void 0 && obj !== null && typeof obj === "object" && Object.keys(obj).length > 0) {
+    return Object.keys(obj).sort().reduce((sortedObj, prop) => {
+      sortedObj[prop] = sortObjectPropertiesRecursively(obj[prop]);
+      return sortedObj;
+    }, {});
+  }
+  return obj;
+}
+__name(sortObjectPropertiesRecursively, "sortObjectPropertiesRecursively");
+export {
+  NotebookCellTextModel,
+  cloneNotebookCellTextModel,
+  getFormattedMetadataJSON,
+  sortObjectPropertiesRecursively
+};
+//# sourceMappingURL=notebookCellTextModel.js.map

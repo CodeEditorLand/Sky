@@ -1,1 +1,57 @@
-var l=Object.defineProperty,u=Object.getOwnPropertyDescriptor,c=(e,o,t,r)=>{for(var s,a=r>1?void 0:r?u(o,t):o,n=e.length-1;n>=0;n--)(s=e[n])&&(a=(r?s(o,t,a):s(a))||a);return r&&a&&l(o,t,a),a},p=(e,o)=>(t,r)=>o(t,r,e);import{Disposable as v}from"../../../../../base/common/lifecycle.js";import{IHoverService as f}from"../../../../../platform/hover/browser/hover.js";import"../../common/chatAgents.js";import{chatSubcommandLeader as h}from"../../common/chatParserTypes.js";import"../../common/chatViewModel.js";import"../chat.js";import"./chatContentParts.js";import{Codicon as C}from"../../../../../base/common/codicons.js";import{localize as I}from"../../../../../nls.js";import{Button as b}from"../../../../../base/browser/ui/button/button.js";import{generateUuid as S}from"../../../../../base/common/uuid.js";let s=class extends v{constructor(e,o,t){super(),this._hoverService=t,this.domNode.classList.add("chat-agent-command"),this.domNode.setAttribute("aria-label",e.name),this.domNode.setAttribute("role","button");const r=S(),s=document.createElement("span");this.domNode.appendChild(s),s.innerText=h+e.name,this._store.add(this._hoverService.setupDelayedHover(s,{content:e.description,appearance:{showPointer:!0}},{groupId:r}));const a=I("rerun","Rerun without {0}{1}",h,e.name),n=new b(this.domNode,{ariaLabel:a});n.icon=C.close,this._store.add(n.onDidClick((()=>o()))),this._store.add(n),this._store.add(this._hoverService.setupDelayedHover(n.element,{content:a,appearance:{showPointer:!0}},{groupId:r}))}domNode=document.createElement("span");hasSameContent(e,o,t){return!1}};s=c([p(2,f)],s);export{s as ChatAgentCommandContentPart};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { IHoverService } from "../../../../../platform/hover/browser/hover.js";
+import { IChatAgentCommand } from "../../common/chatAgents.js";
+import { chatSubcommandLeader } from "../../common/chatParserTypes.js";
+import { IChatRendererContent } from "../../common/chatViewModel.js";
+import { ChatTreeItem } from "../chat.js";
+import { IChatContentPart } from "./chatContentParts.js";
+import { Codicon } from "../../../../../base/common/codicons.js";
+import { localize } from "../../../../../nls.js";
+import { Button } from "../../../../../base/browser/ui/button/button.js";
+import { generateUuid } from "../../../../../base/common/uuid.js";
+let ChatAgentCommandContentPart = class extends Disposable {
+  constructor(cmd, onClick, _hoverService) {
+    super();
+    this._hoverService = _hoverService;
+    this.domNode.classList.add("chat-agent-command");
+    this.domNode.setAttribute("aria-label", cmd.name);
+    this.domNode.setAttribute("role", "button");
+    const groupId = generateUuid();
+    const commandSpan = document.createElement("span");
+    this.domNode.appendChild(commandSpan);
+    commandSpan.innerText = chatSubcommandLeader + cmd.name;
+    this._store.add(this._hoverService.setupDelayedHover(commandSpan, { content: cmd.description, appearance: { showPointer: true } }, { groupId }));
+    const rerun = localize("rerun", "Rerun without {0}{1}", chatSubcommandLeader, cmd.name);
+    const btn = new Button(this.domNode, { ariaLabel: rerun });
+    btn.icon = Codicon.close;
+    this._store.add(btn.onDidClick(() => onClick()));
+    this._store.add(btn);
+    this._store.add(this._hoverService.setupDelayedHover(btn.element, { content: rerun, appearance: { showPointer: true } }, { groupId }));
+  }
+  static {
+    __name(this, "ChatAgentCommandContentPart");
+  }
+  domNode = document.createElement("span");
+  hasSameContent(other, followingContent, element) {
+    return false;
+  }
+};
+ChatAgentCommandContentPart = __decorateClass([
+  __decorateParam(2, IHoverService)
+], ChatAgentCommandContentPart);
+export {
+  ChatAgentCommandContentPart
+};
+//# sourceMappingURL=chatAgentCommandContentPart.js.map

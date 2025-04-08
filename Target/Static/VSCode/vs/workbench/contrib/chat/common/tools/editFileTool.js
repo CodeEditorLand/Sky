@@ -1,4 +1,36 @@
-var w=Object.defineProperty;var y=Object.getOwnPropertyDescriptor;var S=(l,o,i,n)=>{for(var t=n>1?void 0:n?y(o,i):o,c=l.length-1,e;c>=0;c--)(e=l[c])&&(t=(n?e(o,i,t):e(t))||t);return n&&t&&w(o,i,t),t},a=(l,o)=>(i,n)=>o(i,n,l);import"../../../../../base/common/cancellation.js";import{MarkdownString as x}from"../../../../../base/common/htmlContent.js";import"../../../../../base/common/lifecycle.js";import{autorun as P}from"../../../../../base/common/observable.js";import{isEqual as E}from"../../../../../base/common/resources.js";import{URI as f}from"../../../../../base/common/uri.js";import{generateUuid as C}from"../../../../../base/common/uuid.js";import{localize as R}from"../../../../../nls.js";import{IWorkspaceContextService as M}from"../../../../../platform/workspace/common/workspace.js";import{SaveReason as F}from"../../../../common/editor.js";import{GroupsOrder as U,IEditorGroupsService as N}from"../../../../services/editor/common/editorGroupsService.js";import{ITextFileService as A}from"../../../../services/textfile/common/textfiles.js";import{CellUri as B}from"../../../notebook/common/notebookCommon.js";import{INotebookService as q}from"../../../notebook/common/notebookService.js";import{ICodeMapperService as G}from"../../common/chatCodeMapperService.js";import"../../common/chatModel.js";import{IChatService as D}from"../../common/chatService.js";import{ILanguageModelIgnoredFilesService as L}from"../../common/ignoredFiles.js";import"../../common/languageModelToolsService.js";import"./tools.js";const T=`
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { CancellationToken } from "../../../../../base/common/cancellation.js";
+import { MarkdownString } from "../../../../../base/common/htmlContent.js";
+import { IDisposable } from "../../../../../base/common/lifecycle.js";
+import { autorun } from "../../../../../base/common/observable.js";
+import { isEqual } from "../../../../../base/common/resources.js";
+import { URI, UriComponents } from "../../../../../base/common/uri.js";
+import { generateUuid } from "../../../../../base/common/uuid.js";
+import { localize } from "../../../../../nls.js";
+import { IWorkspaceContextService } from "../../../../../platform/workspace/common/workspace.js";
+import { SaveReason } from "../../../../common/editor.js";
+import { GroupsOrder, IEditorGroupsService } from "../../../../services/editor/common/editorGroupsService.js";
+import { ITextFileService } from "../../../../services/textfile/common/textfiles.js";
+import { CellUri } from "../../../notebook/common/notebookCommon.js";
+import { INotebookService } from "../../../notebook/common/notebookService.js";
+import { ICodeMapperService } from "../../common/chatCodeMapperService.js";
+import { ChatModel } from "../../common/chatModel.js";
+import { IChatService } from "../../common/chatService.js";
+import { ILanguageModelIgnoredFilesService } from "../../common/ignoredFiles.js";
+import { CountTokensCallback, IPreparedToolInvocation, IToolData, IToolImpl, IToolInvocation, IToolResult } from "../../common/languageModelToolsService.js";
+import { IToolInputProcessor } from "./tools.js";
+const codeInstructions = `
 The user is very smart and can understand how to apply your edits to their files, you just need to provide minimal hints.
 Avoid repeating existing code, instead use comments to represent regions of unchanged code. The user prefers that you are as concise as possible. For example:
 // ...existing code...
@@ -16,4 +48,186 @@ class Person {
 		return this.age;
 	}
 }
-`,ke="vscode_editFile",O="vscode_editFile_internal",Se={id:O,displayName:R("chat.tools.editFile","Edit File"),modelDescription:`Edit a file in the workspace. Use this tool once per file that needs to be modified, even if there are multiple changes for a file. Generate the "explanation" property first. ${T}`,source:{type:"internal"},inputSchema:{type:"object",properties:{explanation:{type:"string",description:"A short explanation of the edit being made. Can be the same as the explanation you showed to the user."},filePath:{type:"string",description:"An absolute path to the file to edit, or the URI of a untitled, not yet named, file, such as `untitled:Untitled-1."},code:{type:"string",description:"The code change to apply to the file. "+T}},required:["explanation","filePath","code"]}};let u=class{constructor(o,i,n,t,c,e,r){this.chatService=o;this.codeMapperService=i;this.workspaceContextService=n;this.ignoredFilesService=t;this.textFileService=c;this.notebookService=e;this.editorGroupsService=r}async invoke(o,i,n){if(!o.context)throw new Error("toolInvocationToken is required for this tool");const t=o.parameters,c=f.revive(t.file),e=B.parse(c)?.notebook||c;if(!this.workspaceContextService.isInsideWorkspace(e)&&!this.notebookService.getNotebookTextModel(e)&&!this.editorGroupsService.getGroups(U.MOST_RECENTLY_ACTIVE).some(m=>m.editors.some(v=>E(v.resource,e))))throw new Error(`File ${e.fsPath} can't be edited because it's not inside the current workspace`);if(await this.ignoredFilesService.fileIsIgnored(e,n))throw new Error(`File ${e.fsPath} can't be edited because it is configured to be ignored by Copilot`);const r=this.chatService.getSession(o.context?.sessionId),s=r.getRequests().at(-1);s.response?.response.getMarkdown().length&&r.acceptResponseProgress(s,{kind:"undoStop",id:C()}),r.acceptResponseProgress(s,{kind:"markdownContent",content:new x("\n````\n")}),r.acceptResponseProgress(s,{kind:"codeblockUri",uri:e,isEdit:!0}),r.acceptResponseProgress(s,{kind:"markdownContent",content:new x(t.code+"\n````\n")}),this.notebookService.hasSupportedNotebooks(e)&&this.notebookService.getNotebookTextModel(e)?r.acceptResponseProgress(s,{kind:"notebookEdit",edits:[],uri:e}):r.acceptResponseProgress(s,{kind:"textEdit",edits:[],uri:e});const h=r.editingSession;if(!h)throw new Error("This tool must be called from within an editing session");const g=await this.codeMapperService.mapCode({codeBlocks:[{code:t.code,resource:e,markdownBeforeBlock:t.explanation}],location:"tool",chatRequestId:o.chatRequestId},{textEdit:(p,d)=>{r.acceptResponseProgress(s,{kind:"textEdit",uri:p,edits:d})},notebookEdit(p,d){r.acceptResponseProgress(s,{kind:"notebookEdit",uri:p,edits:d})}},n);if(this.notebookService.hasSupportedNotebooks(e)&&this.notebookService.getNotebookTextModel(e)?r.acceptResponseProgress(s,{kind:"notebookEdit",uri:e,edits:[],done:!0}):r.acceptResponseProgress(s,{kind:"textEdit",uri:e,edits:[],done:!0}),g?.errorMessage)throw new Error(g.errorMessage);let I;return await new Promise(p=>{let d=!1;I=P(m=>{const k=h.entries.read(m)?.find(b=>b.modifiedURI.toString()===e.toString());k&&(k.isCurrentlyBeingModifiedBy.read(m)?d=!0:d&&p(!0))})}).finally(()=>{I.dispose()}),await this.textFileService.save(e,{reason:F.AUTO,skipSaveParticipants:!0}),{content:[{kind:"text",value:"The file was edited successfully"}]}}async prepareToolInvocation(o,i){return{presentation:"hidden"}}};u=S([a(0,D),a(1,G),a(2,M),a(3,L),a(4,A),a(5,q),a(6,N)],u);class xe{processInput(o){if(!o.filePath)return o;const i=o.filePath;return{file:i.startsWith("untitled:")?f.parse(i):f.file(i),explanation:o.explanation,code:o.code}}}export{u as EditTool,Se as EditToolData,xe as EditToolInputProcessor,ke as ExtensionEditToolId,O as InternalEditToolId};
+`;
+const ExtensionEditToolId = "vscode_editFile";
+const InternalEditToolId = "vscode_editFile_internal";
+const EditToolData = {
+  id: InternalEditToolId,
+  displayName: localize("chat.tools.editFile", "Edit File"),
+  modelDescription: `Edit a file in the workspace. Use this tool once per file that needs to be modified, even if there are multiple changes for a file. Generate the "explanation" property first. ${codeInstructions}`,
+  source: { type: "internal" },
+  inputSchema: {
+    type: "object",
+    properties: {
+      explanation: {
+        type: "string",
+        description: "A short explanation of the edit being made. Can be the same as the explanation you showed to the user."
+      },
+      filePath: {
+        type: "string",
+        description: "An absolute path to the file to edit, or the URI of a untitled, not yet named, file, such as `untitled:Untitled-1."
+      },
+      code: {
+        type: "string",
+        description: "The code change to apply to the file. " + codeInstructions
+      }
+    },
+    required: ["explanation", "filePath", "code"]
+  }
+};
+let EditTool = class {
+  constructor(chatService, codeMapperService, workspaceContextService, ignoredFilesService, textFileService, notebookService, editorGroupsService) {
+    this.chatService = chatService;
+    this.codeMapperService = codeMapperService;
+    this.workspaceContextService = workspaceContextService;
+    this.ignoredFilesService = ignoredFilesService;
+    this.textFileService = textFileService;
+    this.notebookService = notebookService;
+    this.editorGroupsService = editorGroupsService;
+  }
+  static {
+    __name(this, "EditTool");
+  }
+  async invoke(invocation, countTokens, token) {
+    if (!invocation.context) {
+      throw new Error("toolInvocationToken is required for this tool");
+    }
+    const parameters = invocation.parameters;
+    const fileUri = URI.revive(parameters.file);
+    const uri = CellUri.parse(fileUri)?.notebook || fileUri;
+    if (!this.workspaceContextService.isInsideWorkspace(uri) && !this.notebookService.getNotebookTextModel(uri)) {
+      const groupsByLastActive = this.editorGroupsService.getGroups(GroupsOrder.MOST_RECENTLY_ACTIVE);
+      const uriIsOpenInSomeEditor = groupsByLastActive.some((group) => {
+        return group.editors.some((editor) => {
+          return isEqual(editor.resource, uri);
+        });
+      });
+      if (!uriIsOpenInSomeEditor) {
+        throw new Error(`File ${uri.fsPath} can't be edited because it's not inside the current workspace`);
+      }
+    }
+    if (await this.ignoredFilesService.fileIsIgnored(uri, token)) {
+      throw new Error(`File ${uri.fsPath} can't be edited because it is configured to be ignored by Copilot`);
+    }
+    const model = this.chatService.getSession(invocation.context?.sessionId);
+    const request = model.getRequests().at(-1);
+    if (request.response?.response.getMarkdown().length) {
+      model.acceptResponseProgress(request, {
+        kind: "undoStop",
+        id: generateUuid()
+      });
+    }
+    model.acceptResponseProgress(request, {
+      kind: "markdownContent",
+      content: new MarkdownString("\n````\n")
+    });
+    model.acceptResponseProgress(request, {
+      kind: "codeblockUri",
+      uri,
+      isEdit: true
+    });
+    model.acceptResponseProgress(request, {
+      kind: "markdownContent",
+      content: new MarkdownString(parameters.code + "\n````\n")
+    });
+    if (this.notebookService.hasSupportedNotebooks(uri) && this.notebookService.getNotebookTextModel(uri)) {
+      model.acceptResponseProgress(request, {
+        kind: "notebookEdit",
+        edits: [],
+        uri
+      });
+    } else {
+      model.acceptResponseProgress(request, {
+        kind: "textEdit",
+        edits: [],
+        uri
+      });
+    }
+    const editSession = model.editingSession;
+    if (!editSession) {
+      throw new Error("This tool must be called from within an editing session");
+    }
+    const result = await this.codeMapperService.mapCode({
+      codeBlocks: [{ code: parameters.code, resource: uri, markdownBeforeBlock: parameters.explanation }],
+      location: "tool",
+      chatRequestId: invocation.chatRequestId
+    }, {
+      textEdit: /* @__PURE__ */ __name((target, edits) => {
+        model.acceptResponseProgress(request, { kind: "textEdit", uri: target, edits });
+      }, "textEdit"),
+      notebookEdit(target, edits) {
+        model.acceptResponseProgress(request, { kind: "notebookEdit", uri: target, edits });
+      }
+    }, token);
+    if (this.notebookService.hasSupportedNotebooks(uri) && this.notebookService.getNotebookTextModel(uri)) {
+      model.acceptResponseProgress(request, { kind: "notebookEdit", uri, edits: [], done: true });
+    } else {
+      model.acceptResponseProgress(request, { kind: "textEdit", uri, edits: [], done: true });
+    }
+    if (result?.errorMessage) {
+      throw new Error(result.errorMessage);
+    }
+    let dispose;
+    await new Promise((resolve) => {
+      let wasFileBeingModified = false;
+      dispose = autorun((r) => {
+        const entries = editSession.entries.read(r);
+        const currentFile = entries?.find((e) => e.modifiedURI.toString() === uri.toString());
+        if (currentFile) {
+          if (currentFile.isCurrentlyBeingModifiedBy.read(r)) {
+            wasFileBeingModified = true;
+          } else if (wasFileBeingModified) {
+            resolve(true);
+          }
+        }
+      });
+    }).finally(() => {
+      dispose.dispose();
+    });
+    await this.textFileService.save(uri, {
+      reason: SaveReason.AUTO,
+      skipSaveParticipants: true
+    });
+    return {
+      content: [{ kind: "text", value: "The file was edited successfully" }]
+    };
+  }
+  async prepareToolInvocation(parameters, token) {
+    return {
+      presentation: "hidden"
+    };
+  }
+};
+EditTool = __decorateClass([
+  __decorateParam(0, IChatService),
+  __decorateParam(1, ICodeMapperService),
+  __decorateParam(2, IWorkspaceContextService),
+  __decorateParam(3, ILanguageModelIgnoredFilesService),
+  __decorateParam(4, ITextFileService),
+  __decorateParam(5, INotebookService),
+  __decorateParam(6, IEditorGroupsService)
+], EditTool);
+class EditToolInputProcessor {
+  static {
+    __name(this, "EditToolInputProcessor");
+  }
+  processInput(input) {
+    if (!input.filePath) {
+      return input;
+    }
+    const filePath = input.filePath;
+    return {
+      file: filePath.startsWith("untitled:") ? URI.parse(filePath) : URI.file(filePath),
+      explanation: input.explanation,
+      code: input.code
+    };
+  }
+}
+export {
+  EditTool,
+  EditToolData,
+  EditToolInputProcessor,
+  ExtensionEditToolId,
+  InternalEditToolId
+};
+//# sourceMappingURL=editFileTool.js.map

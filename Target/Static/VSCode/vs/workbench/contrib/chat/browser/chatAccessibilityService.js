@@ -1,1 +1,66 @@
-var d=Object.defineProperty,m=Object.getOwnPropertyDescriptor,c=(i,e,s,t)=>{for(var r,a=t>1?void 0:t?m(e,s):e,o=i.length-1;o>=0;o--)(r=i[o])&&(a=(t?r(e,s,a):r(a))||a);return t&&a&&d(e,s,a),a},o=(i,e)=>(s,t)=>e(s,t,i);import{status as u}from"../../../../base/browser/ui/aria/aria.js";import{Disposable as f,DisposableMap as I}from"../../../../base/common/lifecycle.js";import{AccessibilitySignal as p,IAccessibilitySignalService as v}from"../../../../platform/accessibilitySignal/browser/accessibilitySignalService.js";import{IInstantiationService as _}from"../../../../platform/instantiation/common/instantiation.js";import{AccessibilityProgressSignalScheduler as y}from"../../../../platform/accessibilitySignal/browser/progressAccessibilitySignalScheduler.js";import"./chat.js";import"../common/chatViewModel.js";import{renderStringAsPlaintext as h}from"../../../../base/browser/markdownRenderer.js";import{MarkdownString as b}from"../../../../base/common/htmlContent.js";import{IConfigurationService as A}from"../../../../platform/configuration/common/configuration.js";import{AccessibilityVoiceSettingId as M}from"../../accessibility/browser/accessibilityConfiguration.js";const R=4e3;let l=class extends f{constructor(i,e,s){super(),this._accessibilitySignalService=i,this._instantiationService=e,this._configurationService=s}_pendingSignalMap=this._register(new I);_requestId=0;acceptRequest(){return this._requestId++,this._accessibilitySignalService.playSignal(p.chatRequestSent,{allowManyInParallel:!0}),this._pendingSignalMap.set(this._requestId,this._instantiationService.createInstance(y,R,void 0)),this._requestId}acceptResponse(i,e,s){this._pendingSignalMap.deleteAndDispose(e);const t="string"!=typeof i,r="string"==typeof i?i:i?.response.toString();if(this._accessibilitySignalService.playSignal(p.chatResponseReceived,{allowManyInParallel:!0}),!i||!r)return;const a=t&&i.errorDetails?` ${i.errorDetails.message}`:"",o=h(new b(r));(!s||"on"!==this._configurationService.getValue(M.AutoSynthesize))&&u(o+a)}};l=c([o(0,v),o(1,_),o(2,A)],l);export{l as ChatAccessibilityService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { status } from "../../../../base/browser/ui/aria/aria.js";
+import { Disposable, DisposableMap } from "../../../../base/common/lifecycle.js";
+import { AccessibilitySignal, IAccessibilitySignalService } from "../../../../platform/accessibilitySignal/browser/accessibilitySignalService.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { AccessibilityProgressSignalScheduler } from "../../../../platform/accessibilitySignal/browser/progressAccessibilitySignalScheduler.js";
+import { IChatAccessibilityService } from "./chat.js";
+import { IChatResponseViewModel } from "../common/chatViewModel.js";
+import { renderStringAsPlaintext } from "../../../../base/browser/markdownRenderer.js";
+import { MarkdownString } from "../../../../base/common/htmlContent.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { AccessibilityVoiceSettingId } from "../../accessibility/browser/accessibilityConfiguration.js";
+const CHAT_RESPONSE_PENDING_ALLOWANCE_MS = 4e3;
+let ChatAccessibilityService = class extends Disposable {
+  constructor(_accessibilitySignalService, _instantiationService, _configurationService) {
+    super();
+    this._accessibilitySignalService = _accessibilitySignalService;
+    this._instantiationService = _instantiationService;
+    this._configurationService = _configurationService;
+  }
+  static {
+    __name(this, "ChatAccessibilityService");
+  }
+  _pendingSignalMap = this._register(new DisposableMap());
+  _requestId = 0;
+  acceptRequest() {
+    this._requestId++;
+    this._accessibilitySignalService.playSignal(AccessibilitySignal.chatRequestSent, { allowManyInParallel: true });
+    this._pendingSignalMap.set(this._requestId, this._instantiationService.createInstance(AccessibilityProgressSignalScheduler, CHAT_RESPONSE_PENDING_ALLOWANCE_MS, void 0));
+    return this._requestId;
+  }
+  acceptResponse(response, requestId, isVoiceInput) {
+    this._pendingSignalMap.deleteAndDispose(requestId);
+    const isPanelChat = typeof response !== "string";
+    const responseContent = typeof response === "string" ? response : response?.response.toString();
+    this._accessibilitySignalService.playSignal(AccessibilitySignal.chatResponseReceived, { allowManyInParallel: true });
+    if (!response || !responseContent) {
+      return;
+    }
+    const errorDetails = isPanelChat && response.errorDetails ? ` ${response.errorDetails.message}` : "";
+    const plainTextResponse = renderStringAsPlaintext(new MarkdownString(responseContent));
+    if (!isVoiceInput || this._configurationService.getValue(AccessibilityVoiceSettingId.AutoSynthesize) !== "on") {
+      status(plainTextResponse + errorDetails);
+    }
+  }
+};
+ChatAccessibilityService = __decorateClass([
+  __decorateParam(0, IAccessibilitySignalService),
+  __decorateParam(1, IInstantiationService),
+  __decorateParam(2, IConfigurationService)
+], ChatAccessibilityService);
+export {
+  ChatAccessibilityService
+};
+//# sourceMappingURL=chatAccessibilityService.js.map

@@ -1,1 +1,33 @@
-var x=Object.defineProperty,a=Object.getOwnPropertyDescriptor,c=(o,e,t,r)=>{for(var i,s=r>1?void 0:r?a(e,t):e,n=o.length-1;n>=0;n--)(i=o[n])&&(s=(r?i(e,t,s):i(s))||s);return r&&s&&x(e,t,s),s},p=(o,e)=>(t,r)=>e(t,r,o);import{IInstantiationService as E}from"../../../../platform/instantiation/common/instantiation.js";import{LifecyclePhase as I}from"../../../services/lifecycle/common/lifecycle.js";import{Registry as l}from"../../../../platform/registry/common/platform.js";import{Extensions as P}from"../../../common/contributions.js";import{ViewsWelcomeContribution as W}from"./viewsWelcomeContribution.js";import{viewsWelcomeExtensionPointDescriptor as f}from"./viewsWelcomeExtensionPoint.js";import{ExtensionsRegistry as y}from"../../../services/extensions/common/extensionsRegistry.js";const R=y.registerExtensionPoint(f);let r=class{constructor(o){o.createInstance(W,R)}};r=c([p(0,E)],r),l.as(P.Workbench).registerWorkbenchContribution(r,I.Restored);
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { LifecyclePhase } from "../../../services/lifecycle/common/lifecycle.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { Extensions as WorkbenchExtensions, IWorkbenchContributionsRegistry } from "../../../common/contributions.js";
+import { ViewsWelcomeContribution } from "./viewsWelcomeContribution.js";
+import { ViewsWelcomeExtensionPoint, viewsWelcomeExtensionPointDescriptor } from "./viewsWelcomeExtensionPoint.js";
+import { ExtensionsRegistry } from "../../../services/extensions/common/extensionsRegistry.js";
+const extensionPoint = ExtensionsRegistry.registerExtensionPoint(viewsWelcomeExtensionPointDescriptor);
+let WorkbenchConfigurationContribution = class {
+  static {
+    __name(this, "WorkbenchConfigurationContribution");
+  }
+  constructor(instantiationService) {
+    instantiationService.createInstance(ViewsWelcomeContribution, extensionPoint);
+  }
+};
+WorkbenchConfigurationContribution = __decorateClass([
+  __decorateParam(0, IInstantiationService)
+], WorkbenchConfigurationContribution);
+Registry.as(WorkbenchExtensions.Workbench).registerWorkbenchContribution(WorkbenchConfigurationContribution, LifecyclePhase.Restored);
+//# sourceMappingURL=viewsWelcome.contribution.js.map

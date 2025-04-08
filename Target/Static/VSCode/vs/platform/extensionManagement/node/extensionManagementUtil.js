@@ -1,1 +1,38 @@
-import{buffer as o,ExtractError as i}from"../../../base/node/zip.js";import{localize as a}from"../../../nls.js";import{toExtensionManagementError as f}from"../common/abstractExtensionManagementService.js";import{ExtensionManagementError as s,ExtensionManagementErrorCode as e}from"../common/extensionManagement.js";import"../../extensions/common/extensions.js";function p(t){let n=e.Extract;return t instanceof i&&("CorruptZip"===t.type?n=e.CorruptZip:"Incomplete"===t.type&&(n=e.IncompleteZip)),f(t,n)}async function u(t){let n;try{n=await o(t,"extension/package.json")}catch(t){throw p(t)}try{return JSON.parse(n.toString("utf8"))}catch{throw new s(a("invalidManifest","VSIX invalid: package.json is not a JSON file."),e.Invalid)}}export{p as fromExtractError,u as getManifest};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { buffer, ExtractError } from "../../../base/node/zip.js";
+import { localize } from "../../../nls.js";
+import { toExtensionManagementError } from "../common/abstractExtensionManagementService.js";
+import { ExtensionManagementError, ExtensionManagementErrorCode } from "../common/extensionManagement.js";
+import { IExtensionManifest } from "../../extensions/common/extensions.js";
+function fromExtractError(e) {
+  let errorCode = ExtensionManagementErrorCode.Extract;
+  if (e instanceof ExtractError) {
+    if (e.type === "CorruptZip") {
+      errorCode = ExtensionManagementErrorCode.CorruptZip;
+    } else if (e.type === "Incomplete") {
+      errorCode = ExtensionManagementErrorCode.IncompleteZip;
+    }
+  }
+  return toExtensionManagementError(e, errorCode);
+}
+__name(fromExtractError, "fromExtractError");
+async function getManifest(vsixPath) {
+  let data;
+  try {
+    data = await buffer(vsixPath, "extension/package.json");
+  } catch (e) {
+    throw fromExtractError(e);
+  }
+  try {
+    return JSON.parse(data.toString("utf8"));
+  } catch (err) {
+    throw new ExtensionManagementError(localize("invalidManifest", "VSIX invalid: package.json is not a JSON file."), ExtensionManagementErrorCode.Invalid);
+  }
+}
+__name(getManifest, "getManifest");
+export {
+  fromExtractError,
+  getManifest
+};
+//# sourceMappingURL=extensionManagementUtil.js.map

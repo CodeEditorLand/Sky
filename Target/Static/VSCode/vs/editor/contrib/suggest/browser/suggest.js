@@ -1,1 +1,382 @@
-import{CancellationToken as D}from"../../../../base/common/cancellation.js";import{CancellationError as _,isCancellationError as W,onUnexpectedExternalError as F}from"../../../../base/common/errors.js";import{FuzzyScore as O}from"../../../../base/common/filters.js";import{DisposableStore as K,isDisposable as A}from"../../../../base/common/lifecycle.js";import{StopWatch as x}from"../../../../base/common/stopwatch.js";import{assertType as S}from"../../../../base/common/types.js";import{URI as z}from"../../../../base/common/uri.js";import"../../../browser/editorBrowser.js";import{Position as I}from"../../../common/core/position.js";import{Range as y}from"../../../common/core/range.js";import"../../../common/editorCommon.js";import"../../../common/model.js";import*as l from"../../../common/languages.js";import{ITextModelService as Q}from"../../../common/services/resolverService.js";import{SnippetParser as V}from"../../snippet/browser/snippetParser.js";import{localize as g}from"../../../../nls.js";import{MenuId as H}from"../../../../platform/actions/common/actions.js";import{CommandsRegistry as U}from"../../../../platform/commands/common/commands.js";import{RawContextKey as m}from"../../../../platform/contextkey/common/contextkey.js";import"../../../common/languageFeatureRegistry.js";import{ILanguageFeaturesService as j}from"../../../common/services/languageFeatures.js";import{historyNavigationVisible as B}from"../../../../platform/history/browser/contextScopedHistoryWidget.js";import"../../../common/config/editorOptions.js";import"../../../../platform/extensions/common/extensions.js";import{StandardTokenType as M}from"../../../common/encodedTokenAttributes.js";const Ne={Visible:B,HasFocusedSuggestion:new m("suggestWidgetHasFocusedSuggestion",!1,g("suggestWidgetHasSelection","Whether any suggestion is focused")),DetailsVisible:new m("suggestWidgetDetailsVisible",!1,g("suggestWidgetDetailsVisible","Whether suggestion details are visible")),MultipleSuggestions:new m("suggestWidgetMultipleSuggestions",!1,g("suggestWidgetMultipleSuggestions","Whether there are multiple suggestions to pick from")),MakesTextEdit:new m("suggestionMakesTextEdit",!0,g("suggestionMakesTextEdit","Whether inserting the current suggestion yields in a change or has everything already been typed")),AcceptSuggestionsOnEnter:new m("acceptSuggestionOnEnter",!0,g("acceptSuggestionOnEnter","Whether suggestions are inserted when pressing Enter")),HasInsertAndReplaceRange:new m("suggestionHasInsertAndReplaceRange",!1,g("suggestionHasInsertAndReplaceRange","Whether the current suggestion has insert and replace behaviour")),InsertMode:new m("suggestionInsertMode",void 0,{type:"string",description:g("suggestionInsertMode","Whether the default behaviour is to insert or replace")}),CanResolve:new m("suggestionCanResolve",!1,g("suggestionCanResolve","Whether the current suggestion supports to resolve further details"))},_e=new H("suggestWidgetStatusBar");class q{constructor(t,e,r,i){this.position=t;this.completion=e;this.container=r;this.provider=i;this.textLabel=typeof e.label=="string"?e.label:e.label?.label,this.labelLow=this.textLabel.toLowerCase(),this.isInvalid=!this.textLabel,this.sortTextLow=e.sortText&&e.sortText.toLowerCase(),this.filterTextLow=e.filterText&&e.filterText.toLowerCase(),this.extensionId=e.extensionId,y.isIRange(e.range)?(this.editStart=new I(e.range.startLineNumber,e.range.startColumn),this.editInsertEnd=new I(e.range.endLineNumber,e.range.endColumn),this.editReplaceEnd=new I(e.range.endLineNumber,e.range.endColumn),this.isInvalid=this.isInvalid||y.spansMultipleLines(e.range)||e.range.startLineNumber!==t.lineNumber):(this.editStart=new I(e.range.insert.startLineNumber,e.range.insert.startColumn),this.editInsertEnd=new I(e.range.insert.endLineNumber,e.range.insert.endColumn),this.editReplaceEnd=new I(e.range.replace.endLineNumber,e.range.replace.endColumn),this.isInvalid=this.isInvalid||y.spansMultipleLines(e.range.insert)||y.spansMultipleLines(e.range.replace)||e.range.insert.startLineNumber!==t.lineNumber||e.range.replace.startLineNumber!==t.lineNumber||e.range.insert.startColumn!==e.range.replace.startColumn),typeof i.resolveCompletionItem!="function"&&(this._resolveCache=Promise.resolve(),this._resolveDuration=0)}_brand;editStart;editInsertEnd;editReplaceEnd;textLabel;labelLow;sortTextLow;filterTextLow;isInvalid=!1;score=O.Default;distance=0;idx;word;extensionId;_resolveDuration;_resolveCache;get isResolved(){return this._resolveDuration!==void 0}get resolveDuration(){return this._resolveDuration!==void 0?this._resolveDuration:-1}async resolve(t){if(!this._resolveCache){const e=t.onCancellationRequested(()=>{this._resolveCache=void 0,this._resolveDuration=void 0}),r=new x(!0);this._resolveCache=Promise.resolve(this.provider.resolveCompletionItem(this.completion,t)).then(i=>{Object.assign(this.completion,i),this._resolveDuration=r.elapsed()},i=>{W(i)&&(this._resolveCache=void 0,this._resolveDuration=void 0)}).finally(()=>{e.dispose()})}return this._resolveCache}}var G=(r=>(r[r.Top=0]="Top",r[r.Inline=1]="Inline",r[r.Bottom=2]="Bottom",r))(G||{});class E{constructor(t=2,e=new Set,r=new Set,i=new Map,u=!0){this.snippetSortOrder=t;this.kindFilter=e;this.providerFilter=r;this.providerItemsToReuse=i;this.showDeprecated=u}static default=new E}let p;function We(){return p}function Fe(n){const t=p;return p=n,t}class J{constructor(t,e,r,i){this.items=t;this.needsClipboard=e;this.durations=r;this.disposable=i}}async function X(n,t,e,r=E.default,i={triggerKind:l.CompletionTriggerKind.Invoke},u=D.None){const L=new x;e=e.clone();const c=t.getWordAtPosition(e),f=c?new y(e.lineNumber,c.startColumn,e.lineNumber,c.endColumn):y.fromPositions(e),w={replace:f,insert:f.setEndPosition(e.lineNumber,e.column)},h=[],b=new K,v=[];let P=!1;const k=(C,s,d)=>{let a=!1;if(!s)return a;for(const o of s.suggestions)if(!r.kindFilter.has(o.kind)){if(!r.showDeprecated&&o?.tags?.includes(l.CompletionItemTag.Deprecated))continue;o.range||(o.range=w),o.sortText||(o.sortText=typeof o.label=="string"?o.label:o.label.label),!P&&o.insertTextRules&&o.insertTextRules&l.CompletionItemInsertTextRule.InsertAsSnippet&&(P=V.guessNeedsClipboard(o.insertText)),h.push(new q(e,o,s,C)),a=!0}return A(s)&&b.add(s),v.push({providerName:C._debugDisplayName??"unknown_provider",elapsedProvider:s.duration??-1,elapsedOverall:d.elapsed()}),a},N=(async()=>{if(!p||r.kindFilter.has(l.CompletionItemKind.Snippet))return;const C=r.providerItemsToReuse.get(p);if(C){C.forEach(a=>h.push(a));return}if(r.providerFilter.size>0&&!r.providerFilter.has(p))return;const s=new x,d=await p.provideCompletionItems(t,e,i,u);k(p,d,s)})();for(const C of n.orderedGroups(t)){let s=!1;if(await Promise.all(C.map(async d=>{if(r.providerItemsToReuse.has(d)){const a=r.providerItemsToReuse.get(d);a.forEach(o=>h.push(o)),s=s||a.length>0;return}if(!(r.providerFilter.size>0&&!r.providerFilter.has(d)))try{const a=new x,o=await d.provideCompletionItems(t,e,i,u);s=k(d,o,a)||s}catch(a){F(a)}})),s||u.isCancellationRequested)break}return await N,u.isCancellationRequested?(b.dispose(),Promise.reject(new _)):new J(h.sort($(r.snippetSortOrder)),P,{entries:v,elapsed:L.elapsed()},b)}function R(n,t){if(n.sortTextLow&&t.sortTextLow){if(n.sortTextLow<t.sortTextLow)return-1;if(n.sortTextLow>t.sortTextLow)return 1}return n.textLabel<t.textLabel?-1:n.textLabel>t.textLabel?1:n.completion.kind-t.completion.kind}function Y(n,t){if(n.completion.kind!==t.completion.kind){if(n.completion.kind===l.CompletionItemKind.Snippet)return-1;if(t.completion.kind===l.CompletionItemKind.Snippet)return 1}return R(n,t)}function Z(n,t){if(n.completion.kind!==t.completion.kind){if(n.completion.kind===l.CompletionItemKind.Snippet)return 1;if(t.completion.kind===l.CompletionItemKind.Snippet)return-1}return R(n,t)}const T=new Map;T.set(0,Y),T.set(2,Z),T.set(1,R);function $(n){return T.get(n)}U.registerCommand("_executeCompletionItemProvider",async(n,...t)=>{const[e,r,i,u]=t;S(z.isUri(e)),S(I.isIPosition(r)),S(typeof i=="string"||!i),S(typeof u=="number"||!u);const{completionProvider:L}=n.get(j),c=await n.get(Q).createModelReference(e);try{const f={incomplete:!1,suggestions:[]},w=[],h=c.object.textEditorModel.validatePosition(r),b=await X(L,c.object.textEditorModel,h,void 0,{triggerCharacter:i??void 0,triggerKind:i?l.CompletionTriggerKind.TriggerCharacter:l.CompletionTriggerKind.Invoke});for(const v of b.items)w.length<(u??0)&&w.push(v.resolve(D.None)),f.incomplete=f.incomplete||v.container.incomplete,f.suggestions.push(v.completion);try{return await Promise.all(w),f}finally{setTimeout(()=>b.disposable.dispose(),100)}}finally{c.dispose()}});function Oe(n,t){n.getContribution("editor.contrib.suggestController")?.triggerSuggest(new Set().add(t),void 0,!0)}class Ke{static isAllOff(t){return t.other==="off"&&t.comments==="off"&&t.strings==="off"}static isAllOn(t){return t.other==="on"&&t.comments==="on"&&t.strings==="on"}static valueFor(t,e){switch(e){case M.Comment:return t.comments;case M.String:return t.strings;default:return t.other}}}export{q as CompletionItem,J as CompletionItemModel,E as CompletionOptions,Ne as Context,Ke as QuickSuggestionsOptions,G as SnippetSortOrder,We as getSnippetSuggestSupport,$ as getSuggestionComparator,X as provideSuggestionItems,Fe as setSnippetSuggestSupport,Oe as showSimpleSuggestions,_e as suggestWidgetStatusbarMenu};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { CancellationError, isCancellationError, onUnexpectedExternalError } from "../../../../base/common/errors.js";
+import { FuzzyScore } from "../../../../base/common/filters.js";
+import { DisposableStore, IDisposable, isDisposable } from "../../../../base/common/lifecycle.js";
+import { StopWatch } from "../../../../base/common/stopwatch.js";
+import { assertType } from "../../../../base/common/types.js";
+import { URI } from "../../../../base/common/uri.js";
+import { ICodeEditor } from "../../../browser/editorBrowser.js";
+import { IPosition, Position } from "../../../common/core/position.js";
+import { Range } from "../../../common/core/range.js";
+import { IEditorContribution } from "../../../common/editorCommon.js";
+import { ITextModel } from "../../../common/model.js";
+import * as languages from "../../../common/languages.js";
+import { ITextModelService } from "../../../common/services/resolverService.js";
+import { SnippetParser } from "../../snippet/browser/snippetParser.js";
+import { localize } from "../../../../nls.js";
+import { MenuId } from "../../../../platform/actions/common/actions.js";
+import { CommandsRegistry } from "../../../../platform/commands/common/commands.js";
+import { RawContextKey } from "../../../../platform/contextkey/common/contextkey.js";
+import { LanguageFeatureRegistry } from "../../../common/languageFeatureRegistry.js";
+import { ILanguageFeaturesService } from "../../../common/services/languageFeatures.js";
+import { historyNavigationVisible } from "../../../../platform/history/browser/contextScopedHistoryWidget.js";
+import { InternalQuickSuggestionsOptions, QuickSuggestionsValue } from "../../../common/config/editorOptions.js";
+import { ExtensionIdentifier } from "../../../../platform/extensions/common/extensions.js";
+import { StandardTokenType } from "../../../common/encodedTokenAttributes.js";
+const Context = {
+  Visible: historyNavigationVisible,
+  HasFocusedSuggestion: new RawContextKey("suggestWidgetHasFocusedSuggestion", false, localize("suggestWidgetHasSelection", "Whether any suggestion is focused")),
+  DetailsVisible: new RawContextKey("suggestWidgetDetailsVisible", false, localize("suggestWidgetDetailsVisible", "Whether suggestion details are visible")),
+  MultipleSuggestions: new RawContextKey("suggestWidgetMultipleSuggestions", false, localize("suggestWidgetMultipleSuggestions", "Whether there are multiple suggestions to pick from")),
+  MakesTextEdit: new RawContextKey("suggestionMakesTextEdit", true, localize("suggestionMakesTextEdit", "Whether inserting the current suggestion yields in a change or has everything already been typed")),
+  AcceptSuggestionsOnEnter: new RawContextKey("acceptSuggestionOnEnter", true, localize("acceptSuggestionOnEnter", "Whether suggestions are inserted when pressing Enter")),
+  HasInsertAndReplaceRange: new RawContextKey("suggestionHasInsertAndReplaceRange", false, localize("suggestionHasInsertAndReplaceRange", "Whether the current suggestion has insert and replace behaviour")),
+  InsertMode: new RawContextKey("suggestionInsertMode", void 0, { type: "string", description: localize("suggestionInsertMode", "Whether the default behaviour is to insert or replace") }),
+  CanResolve: new RawContextKey("suggestionCanResolve", false, localize("suggestionCanResolve", "Whether the current suggestion supports to resolve further details"))
+};
+const suggestWidgetStatusbarMenu = new MenuId("suggestWidgetStatusBar");
+class CompletionItem {
+  constructor(position, completion, container, provider) {
+    this.position = position;
+    this.completion = completion;
+    this.container = container;
+    this.provider = provider;
+    this.textLabel = typeof completion.label === "string" ? completion.label : completion.label?.label;
+    this.labelLow = this.textLabel.toLowerCase();
+    this.isInvalid = !this.textLabel;
+    this.sortTextLow = completion.sortText && completion.sortText.toLowerCase();
+    this.filterTextLow = completion.filterText && completion.filterText.toLowerCase();
+    this.extensionId = completion.extensionId;
+    if (Range.isIRange(completion.range)) {
+      this.editStart = new Position(completion.range.startLineNumber, completion.range.startColumn);
+      this.editInsertEnd = new Position(completion.range.endLineNumber, completion.range.endColumn);
+      this.editReplaceEnd = new Position(completion.range.endLineNumber, completion.range.endColumn);
+      this.isInvalid = this.isInvalid || Range.spansMultipleLines(completion.range) || completion.range.startLineNumber !== position.lineNumber;
+    } else {
+      this.editStart = new Position(completion.range.insert.startLineNumber, completion.range.insert.startColumn);
+      this.editInsertEnd = new Position(completion.range.insert.endLineNumber, completion.range.insert.endColumn);
+      this.editReplaceEnd = new Position(completion.range.replace.endLineNumber, completion.range.replace.endColumn);
+      this.isInvalid = this.isInvalid || Range.spansMultipleLines(completion.range.insert) || Range.spansMultipleLines(completion.range.replace) || completion.range.insert.startLineNumber !== position.lineNumber || completion.range.replace.startLineNumber !== position.lineNumber || completion.range.insert.startColumn !== completion.range.replace.startColumn;
+    }
+    if (typeof provider.resolveCompletionItem !== "function") {
+      this._resolveCache = Promise.resolve();
+      this._resolveDuration = 0;
+    }
+  }
+  static {
+    __name(this, "CompletionItem");
+  }
+  _brand;
+  //
+  editStart;
+  editInsertEnd;
+  editReplaceEnd;
+  //
+  textLabel;
+  // perf
+  labelLow;
+  sortTextLow;
+  filterTextLow;
+  // validation
+  isInvalid = false;
+  // sorting, filtering
+  score = FuzzyScore.Default;
+  distance = 0;
+  idx;
+  word;
+  // instrumentation
+  extensionId;
+  // resolving
+  _resolveDuration;
+  _resolveCache;
+  // ---- resolving
+  get isResolved() {
+    return this._resolveDuration !== void 0;
+  }
+  get resolveDuration() {
+    return this._resolveDuration !== void 0 ? this._resolveDuration : -1;
+  }
+  async resolve(token) {
+    if (!this._resolveCache) {
+      const sub = token.onCancellationRequested(() => {
+        this._resolveCache = void 0;
+        this._resolveDuration = void 0;
+      });
+      const sw = new StopWatch(true);
+      this._resolveCache = Promise.resolve(this.provider.resolveCompletionItem(this.completion, token)).then((value) => {
+        Object.assign(this.completion, value);
+        this._resolveDuration = sw.elapsed();
+      }, (err) => {
+        if (isCancellationError(err)) {
+          this._resolveCache = void 0;
+          this._resolveDuration = void 0;
+        }
+      }).finally(() => {
+        sub.dispose();
+      });
+    }
+    return this._resolveCache;
+  }
+}
+var SnippetSortOrder = /* @__PURE__ */ ((SnippetSortOrder2) => {
+  SnippetSortOrder2[SnippetSortOrder2["Top"] = 0] = "Top";
+  SnippetSortOrder2[SnippetSortOrder2["Inline"] = 1] = "Inline";
+  SnippetSortOrder2[SnippetSortOrder2["Bottom"] = 2] = "Bottom";
+  return SnippetSortOrder2;
+})(SnippetSortOrder || {});
+class CompletionOptions {
+  constructor(snippetSortOrder = 2 /* Bottom */, kindFilter = /* @__PURE__ */ new Set(), providerFilter = /* @__PURE__ */ new Set(), providerItemsToReuse = /* @__PURE__ */ new Map(), showDeprecated = true) {
+    this.snippetSortOrder = snippetSortOrder;
+    this.kindFilter = kindFilter;
+    this.providerFilter = providerFilter;
+    this.providerItemsToReuse = providerItemsToReuse;
+    this.showDeprecated = showDeprecated;
+  }
+  static {
+    __name(this, "CompletionOptions");
+  }
+  static default = new CompletionOptions();
+}
+let _snippetSuggestSupport;
+function getSnippetSuggestSupport() {
+  return _snippetSuggestSupport;
+}
+__name(getSnippetSuggestSupport, "getSnippetSuggestSupport");
+function setSnippetSuggestSupport(support) {
+  const old = _snippetSuggestSupport;
+  _snippetSuggestSupport = support;
+  return old;
+}
+__name(setSnippetSuggestSupport, "setSnippetSuggestSupport");
+class CompletionItemModel {
+  constructor(items, needsClipboard, durations, disposable) {
+    this.items = items;
+    this.needsClipboard = needsClipboard;
+    this.durations = durations;
+    this.disposable = disposable;
+  }
+  static {
+    __name(this, "CompletionItemModel");
+  }
+}
+async function provideSuggestionItems(registry, model, position, options = CompletionOptions.default, context = { triggerKind: languages.CompletionTriggerKind.Invoke }, token = CancellationToken.None) {
+  const sw = new StopWatch();
+  position = position.clone();
+  const word = model.getWordAtPosition(position);
+  const defaultReplaceRange = word ? new Range(position.lineNumber, word.startColumn, position.lineNumber, word.endColumn) : Range.fromPositions(position);
+  const defaultRange = { replace: defaultReplaceRange, insert: defaultReplaceRange.setEndPosition(position.lineNumber, position.column) };
+  const result = [];
+  const disposables = new DisposableStore();
+  const durations = [];
+  let needsClipboard = false;
+  const onCompletionList = /* @__PURE__ */ __name((provider, container, sw2) => {
+    let didAddResult = false;
+    if (!container) {
+      return didAddResult;
+    }
+    for (const suggestion of container.suggestions) {
+      if (!options.kindFilter.has(suggestion.kind)) {
+        if (!options.showDeprecated && suggestion?.tags?.includes(languages.CompletionItemTag.Deprecated)) {
+          continue;
+        }
+        if (!suggestion.range) {
+          suggestion.range = defaultRange;
+        }
+        if (!suggestion.sortText) {
+          suggestion.sortText = typeof suggestion.label === "string" ? suggestion.label : suggestion.label.label;
+        }
+        if (!needsClipboard && suggestion.insertTextRules && suggestion.insertTextRules & languages.CompletionItemInsertTextRule.InsertAsSnippet) {
+          needsClipboard = SnippetParser.guessNeedsClipboard(suggestion.insertText);
+        }
+        result.push(new CompletionItem(position, suggestion, container, provider));
+        didAddResult = true;
+      }
+    }
+    if (isDisposable(container)) {
+      disposables.add(container);
+    }
+    durations.push({
+      providerName: provider._debugDisplayName ?? "unknown_provider",
+      elapsedProvider: container.duration ?? -1,
+      elapsedOverall: sw2.elapsed()
+    });
+    return didAddResult;
+  }, "onCompletionList");
+  const snippetCompletions = (async () => {
+    if (!_snippetSuggestSupport || options.kindFilter.has(languages.CompletionItemKind.Snippet)) {
+      return;
+    }
+    const reuseItems = options.providerItemsToReuse.get(_snippetSuggestSupport);
+    if (reuseItems) {
+      reuseItems.forEach((item) => result.push(item));
+      return;
+    }
+    if (options.providerFilter.size > 0 && !options.providerFilter.has(_snippetSuggestSupport)) {
+      return;
+    }
+    const sw2 = new StopWatch();
+    const list = await _snippetSuggestSupport.provideCompletionItems(model, position, context, token);
+    onCompletionList(_snippetSuggestSupport, list, sw2);
+  })();
+  for (const providerGroup of registry.orderedGroups(model)) {
+    let didAddResult = false;
+    await Promise.all(providerGroup.map(async (provider) => {
+      if (options.providerItemsToReuse.has(provider)) {
+        const items = options.providerItemsToReuse.get(provider);
+        items.forEach((item) => result.push(item));
+        didAddResult = didAddResult || items.length > 0;
+        return;
+      }
+      if (options.providerFilter.size > 0 && !options.providerFilter.has(provider)) {
+        return;
+      }
+      try {
+        const sw2 = new StopWatch();
+        const list = await provider.provideCompletionItems(model, position, context, token);
+        didAddResult = onCompletionList(provider, list, sw2) || didAddResult;
+      } catch (err) {
+        onUnexpectedExternalError(err);
+      }
+    }));
+    if (didAddResult || token.isCancellationRequested) {
+      break;
+    }
+  }
+  await snippetCompletions;
+  if (token.isCancellationRequested) {
+    disposables.dispose();
+    return Promise.reject(new CancellationError());
+  }
+  return new CompletionItemModel(
+    result.sort(getSuggestionComparator(options.snippetSortOrder)),
+    needsClipboard,
+    { entries: durations, elapsed: sw.elapsed() },
+    disposables
+  );
+}
+__name(provideSuggestionItems, "provideSuggestionItems");
+function defaultComparator(a, b) {
+  if (a.sortTextLow && b.sortTextLow) {
+    if (a.sortTextLow < b.sortTextLow) {
+      return -1;
+    } else if (a.sortTextLow > b.sortTextLow) {
+      return 1;
+    }
+  }
+  if (a.textLabel < b.textLabel) {
+    return -1;
+  } else if (a.textLabel > b.textLabel) {
+    return 1;
+  }
+  return a.completion.kind - b.completion.kind;
+}
+__name(defaultComparator, "defaultComparator");
+function snippetUpComparator(a, b) {
+  if (a.completion.kind !== b.completion.kind) {
+    if (a.completion.kind === languages.CompletionItemKind.Snippet) {
+      return -1;
+    } else if (b.completion.kind === languages.CompletionItemKind.Snippet) {
+      return 1;
+    }
+  }
+  return defaultComparator(a, b);
+}
+__name(snippetUpComparator, "snippetUpComparator");
+function snippetDownComparator(a, b) {
+  if (a.completion.kind !== b.completion.kind) {
+    if (a.completion.kind === languages.CompletionItemKind.Snippet) {
+      return 1;
+    } else if (b.completion.kind === languages.CompletionItemKind.Snippet) {
+      return -1;
+    }
+  }
+  return defaultComparator(a, b);
+}
+__name(snippetDownComparator, "snippetDownComparator");
+const _snippetComparators = /* @__PURE__ */ new Map();
+_snippetComparators.set(0 /* Top */, snippetUpComparator);
+_snippetComparators.set(2 /* Bottom */, snippetDownComparator);
+_snippetComparators.set(1 /* Inline */, defaultComparator);
+function getSuggestionComparator(snippetConfig) {
+  return _snippetComparators.get(snippetConfig);
+}
+__name(getSuggestionComparator, "getSuggestionComparator");
+CommandsRegistry.registerCommand("_executeCompletionItemProvider", async (accessor, ...args) => {
+  const [uri, position, triggerCharacter, maxItemsToResolve] = args;
+  assertType(URI.isUri(uri));
+  assertType(Position.isIPosition(position));
+  assertType(typeof triggerCharacter === "string" || !triggerCharacter);
+  assertType(typeof maxItemsToResolve === "number" || !maxItemsToResolve);
+  const { completionProvider } = accessor.get(ILanguageFeaturesService);
+  const ref = await accessor.get(ITextModelService).createModelReference(uri);
+  try {
+    const result = {
+      incomplete: false,
+      suggestions: []
+    };
+    const resolving = [];
+    const actualPosition = ref.object.textEditorModel.validatePosition(position);
+    const completions = await provideSuggestionItems(completionProvider, ref.object.textEditorModel, actualPosition, void 0, { triggerCharacter: triggerCharacter ?? void 0, triggerKind: triggerCharacter ? languages.CompletionTriggerKind.TriggerCharacter : languages.CompletionTriggerKind.Invoke });
+    for (const item of completions.items) {
+      if (resolving.length < (maxItemsToResolve ?? 0)) {
+        resolving.push(item.resolve(CancellationToken.None));
+      }
+      result.incomplete = result.incomplete || item.container.incomplete;
+      result.suggestions.push(item.completion);
+    }
+    try {
+      await Promise.all(resolving);
+      return result;
+    } finally {
+      setTimeout(() => completions.disposable.dispose(), 100);
+    }
+  } finally {
+    ref.dispose();
+  }
+});
+function showSimpleSuggestions(editor, provider) {
+  editor.getContribution("editor.contrib.suggestController")?.triggerSuggest(
+    (/* @__PURE__ */ new Set()).add(provider),
+    void 0,
+    true
+  );
+}
+__name(showSimpleSuggestions, "showSimpleSuggestions");
+class QuickSuggestionsOptions {
+  static {
+    __name(this, "QuickSuggestionsOptions");
+  }
+  static isAllOff(config) {
+    return config.other === "off" && config.comments === "off" && config.strings === "off";
+  }
+  static isAllOn(config) {
+    return config.other === "on" && config.comments === "on" && config.strings === "on";
+  }
+  static valueFor(config, tokenType) {
+    switch (tokenType) {
+      case StandardTokenType.Comment:
+        return config.comments;
+      case StandardTokenType.String:
+        return config.strings;
+      default:
+        return config.other;
+    }
+  }
+}
+export {
+  CompletionItem,
+  CompletionItemModel,
+  CompletionOptions,
+  Context,
+  QuickSuggestionsOptions,
+  SnippetSortOrder,
+  getSnippetSuggestSupport,
+  getSuggestionComparator,
+  provideSuggestionItems,
+  setSnippetSuggestSupport,
+  showSimpleSuggestions,
+  suggestWidgetStatusbarMenu
+};
+//# sourceMappingURL=suggest.js.map

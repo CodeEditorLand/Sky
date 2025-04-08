@@ -1,1 +1,19 @@
-class o{ctor;staticArguments;supportsDelayedInstantiation;constructor(t,s=[],o=!1){this.ctor=t,this.staticArguments=s,this.supportsDelayedInstantiation=o}}export{o as SyncDescriptor};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+class SyncDescriptor {
+  static {
+    __name(this, "SyncDescriptor");
+  }
+  ctor;
+  staticArguments;
+  supportsDelayedInstantiation;
+  constructor(ctor, staticArguments = [], supportsDelayedInstantiation = false) {
+    this.ctor = ctor;
+    this.staticArguments = staticArguments;
+    this.supportsDelayedInstantiation = supportsDelayedInstantiation;
+  }
+}
+export {
+  SyncDescriptor
+};
+//# sourceMappingURL=descriptors.js.map

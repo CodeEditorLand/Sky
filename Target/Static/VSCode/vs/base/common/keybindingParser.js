@@ -1,1 +1,94 @@
-import{KeyCodeUtils as h,ScanCodeUtils as c}from"./keyCodes.js";import{KeyCodeChord as i,ScanCodeChord as f,Keybinding as n}from"./keybindings.js";class y{static _readModifiers(t){t=t.toLowerCase().trim();let s,e,r=!1,i=!1,n=!1,a=!1;do{s=!1,/^ctrl(\+|\-)/.test(t)&&(r=!0,t=t.substr(5),s=!0),/^shift(\+|\-)/.test(t)&&(i=!0,t=t.substr(6),s=!0),/^alt(\+|\-)/.test(t)&&(n=!0,t=t.substr(4),s=!0),/^meta(\+|\-)/.test(t)&&(a=!0,t=t.substr(5),s=!0),/^win(\+|\-)/.test(t)&&(a=!0,t=t.substr(4),s=!0),/^cmd(\+|\-)/.test(t)&&(a=!0,t=t.substr(4),s=!0)}while(s);const o=t.indexOf(" ");return o>0?(e=t.substring(0,o),t=t.substring(o)):(e=t,t=""),{remains:t,ctrl:r,shift:i,alt:n,meta:a,key:e}}static parseChord(t){const s=this._readModifiers(t),e=s.key.match(/^\[([^\]]+)\]$/);if(e){const t=e[1],r=c.lowerCaseToEnum(t);return[new f(s.ctrl,s.shift,s.alt,s.meta,r),s.remains]}const r=h.fromUserSettings(s.key);return[new i(s.ctrl,s.shift,s.alt,s.meta,r),s.remains]}static parseKeybinding(t){if(!t)return null;const s=[];let e;for(;t.length>0;)[e,t]=this.parseChord(t),s.push(e);return s.length>0?new n(s):null}}export{y as KeybindingParser};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { KeyCodeUtils, ScanCodeUtils } from "./keyCodes.js";
+import { KeyCodeChord, ScanCodeChord, Keybinding, Chord } from "./keybindings.js";
+class KeybindingParser {
+  static {
+    __name(this, "KeybindingParser");
+  }
+  static _readModifiers(input) {
+    input = input.toLowerCase().trim();
+    let ctrl = false;
+    let shift = false;
+    let alt = false;
+    let meta = false;
+    let matchedModifier;
+    do {
+      matchedModifier = false;
+      if (/^ctrl(\+|\-)/.test(input)) {
+        ctrl = true;
+        input = input.substr("ctrl-".length);
+        matchedModifier = true;
+      }
+      if (/^shift(\+|\-)/.test(input)) {
+        shift = true;
+        input = input.substr("shift-".length);
+        matchedModifier = true;
+      }
+      if (/^alt(\+|\-)/.test(input)) {
+        alt = true;
+        input = input.substr("alt-".length);
+        matchedModifier = true;
+      }
+      if (/^meta(\+|\-)/.test(input)) {
+        meta = true;
+        input = input.substr("meta-".length);
+        matchedModifier = true;
+      }
+      if (/^win(\+|\-)/.test(input)) {
+        meta = true;
+        input = input.substr("win-".length);
+        matchedModifier = true;
+      }
+      if (/^cmd(\+|\-)/.test(input)) {
+        meta = true;
+        input = input.substr("cmd-".length);
+        matchedModifier = true;
+      }
+    } while (matchedModifier);
+    let key;
+    const firstSpaceIdx = input.indexOf(" ");
+    if (firstSpaceIdx > 0) {
+      key = input.substring(0, firstSpaceIdx);
+      input = input.substring(firstSpaceIdx);
+    } else {
+      key = input;
+      input = "";
+    }
+    return {
+      remains: input,
+      ctrl,
+      shift,
+      alt,
+      meta,
+      key
+    };
+  }
+  static parseChord(input) {
+    const mods = this._readModifiers(input);
+    const scanCodeMatch = mods.key.match(/^\[([^\]]+)\]$/);
+    if (scanCodeMatch) {
+      const strScanCode = scanCodeMatch[1];
+      const scanCode = ScanCodeUtils.lowerCaseToEnum(strScanCode);
+      return [new ScanCodeChord(mods.ctrl, mods.shift, mods.alt, mods.meta, scanCode), mods.remains];
+    }
+    const keyCode = KeyCodeUtils.fromUserSettings(mods.key);
+    return [new KeyCodeChord(mods.ctrl, mods.shift, mods.alt, mods.meta, keyCode), mods.remains];
+  }
+  static parseKeybinding(input) {
+    if (!input) {
+      return null;
+    }
+    const chords = [];
+    let chord;
+    while (input.length > 0) {
+      [chord, input] = this.parseChord(input);
+      chords.push(chord);
+    }
+    return chords.length > 0 ? new Keybinding(chords) : null;
+  }
+}
+export {
+  KeybindingParser
+};
+//# sourceMappingURL=keybindingParser.js.map

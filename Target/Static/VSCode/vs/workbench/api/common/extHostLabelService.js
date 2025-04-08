@@ -1,1 +1,26 @@
-import"../../../platform/label/common/label.js";import{toDisposable as t}from"../../../base/common/lifecycle.js";import{MainContext as o}from"./extHost.protocol.js";class m{_proxy;_handlePool=0;constructor(e){this._proxy=e.getProxy(o.MainThreadLabelService)}$registerResourceLabelFormatter(e){const r=this._handlePool++;return this._proxy.$registerResourceLabelFormatter(r,e),t(()=>{this._proxy.$unregisterResourceLabelFormatter(r)})}}export{m as ExtHostLabelService};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { ResourceLabelFormatter } from "../../../platform/label/common/label.js";
+import { IDisposable, toDisposable } from "../../../base/common/lifecycle.js";
+import { MainThreadLabelServiceShape, ExtHostLabelServiceShape, MainContext, IMainContext } from "./extHost.protocol.js";
+class ExtHostLabelService {
+  static {
+    __name(this, "ExtHostLabelService");
+  }
+  _proxy;
+  _handlePool = 0;
+  constructor(mainContext) {
+    this._proxy = mainContext.getProxy(MainContext.MainThreadLabelService);
+  }
+  $registerResourceLabelFormatter(formatter) {
+    const handle = this._handlePool++;
+    this._proxy.$registerResourceLabelFormatter(handle, formatter);
+    return toDisposable(() => {
+      this._proxy.$unregisterResourceLabelFormatter(handle);
+    });
+  }
+}
+export {
+  ExtHostLabelService
+};
+//# sourceMappingURL=extHostLabelService.js.map

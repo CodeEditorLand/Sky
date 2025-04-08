@@ -1,1 +1,195 @@
-var C=Object.defineProperty,D=Object.getOwnPropertyDescriptor,d=(e,o,i,t)=>{for(var r,a=t>1?void 0:t?D(o,i):o,s=e.length-1;s>=0;s--)(r=e[s])&&(a=(t?r(o,i,a):r(a))||a);return t&&a&&C(o,i,a),a},e=(e,o)=>(i,t)=>o(i,t,e);import{localize as a}from"../../../../nls.js";import{IWorkspaceEditingService as P}from"../common/workspaceEditing.js";import{URI as E}from"../../../../base/common/uri.js";import{hasWorkspaceFileExtension as H,isUntitledWorkspace as B,isWorkspaceIdentifier as L,IWorkspaceContextService as O}from"../../../../platform/workspace/common/workspace.js";import{IJSONEditingService as A}from"../../configuration/common/jsonEditing.js";import{IWorkspacesService as N}from"../../../../platform/workspaces/common/workspaces.js";import"../../configuration/browser/configurationService.js";import{IStorageService as R}from"../../../../platform/storage/common/storage.js";import{IExtensionService as T}from"../../extensions/common/extensions.js";import{IWorkingCopyBackupService as F}from"../../workingCopy/common/workingCopyBackup.js";import{ICommandService as M}from"../../../../platform/commands/common/commands.js";import{basename as V}from"../../../../base/common/resources.js";import{INotificationService as z,Severity as J}from"../../../../platform/notification/common/notification.js";import{IFileService as q}from"../../../../platform/files/common/files.js";import{INativeWorkbenchEnvironmentService as G}from"../../environment/electron-sandbox/environmentService.js";import{ILifecycleService as _,ShutdownReason as m}from"../../lifecycle/common/lifecycle.js";import{IFileDialogService as j,IDialogService as K}from"../../../../platform/dialogs/common/dialogs.js";import{InstantiationType as Q,registerSingleton as X}from"../../../../platform/instantiation/common/extensions.js";import{ILabelService as Y,Verbosity as Z}from"../../../../platform/label/common/label.js";import{ITextFileService as $}from"../../textfile/common/textfiles.js";import{IHostService as ee}from"../../host/browser/host.js";import{AbstractWorkspaceEditingService as ie}from"../browser/abstractWorkspaceEditingService.js";import{INativeHostService as re}from"../../../../platform/native/common/native.js";import{isMacintosh as te}from"../../../../base/common/platform.js";import{WorkingCopyBackupService as oe}from"../../workingCopy/common/workingCopyBackupService.js";import{IUriIdentityService as ae}from"../../../../platform/uriIdentity/common/uriIdentity.js";import{IWorkspaceTrustManagementService as se}from"../../../../platform/workspace/common/workspaceTrust.js";import{IWorkbenchConfigurationService as ne}from"../../configuration/common/configuration.js";import{IUserDataProfilesService as ce}from"../../../../platform/userDataProfile/common/userDataProfile.js";import{IUserDataProfileService as pe}from"../../userDataProfile/common/userDataProfile.js";import{ConfigurationTarget as ve}from"../../../../platform/configuration/common/configuration.js";let l=class extends ie{constructor(e,o,i,t,r,a,s,n,c,m,p,l,f,v,k,S,d,u,h,w,g,y){super(e,o,t,n,c,m,p,l,f,v,k,u,h,w,g,y),this.nativeHostService=i,this.storageService=r,this.extensionService=a,this.workingCopyBackupService=s,this.lifecycleService=S,this.labelService=d,this.registerListeners()}registerListeners(){this._register(this.lifecycleService.onBeforeShutdown((e=>{const o=this.saveUntitledBeforeShutdown(e.reason);e.veto(o,"veto.untitledWorkspace")})))}async saveUntitledBeforeShutdown(e){if(e!==m.LOAD&&e!==m.CLOSE)return!1;const o=this.getCurrentWorkspaceIdentifier();if(!o||!B(o.configPath,this.environmentService))return!1;const i=await this.nativeHostService.getWindowCount();if(e===m.CLOSE&&!te&&1===i)return!1;if(!1===this.configurationService.getValue("window.confirmSaveUntitledWorkspace"))return await this.workspacesService.deleteUntitledWorkspace(o),!1;let t=!1;const{result:r,checkboxChecked:s}=await this.dialogService.prompt({type:J.Warning,message:a("saveWorkspaceMessage","Do you want to save your workspace configuration as a file?"),detail:a("saveWorkspaceDetail","Save your workspace if you plan to open it again."),buttons:[{label:a({key:"save",comment:["&& denotes a mnemonic"]},"&&Save"),run:async()=>{const e=await this.pickNewWorkspacePath();if(!e||!H(e))return!0;try{await this.saveWorkspaceAs(o,e);const i=await this.workspacesService.getWorkspaceIdentifier(e);await this.workspacesService.addRecentlyOpened([{label:this.labelService.getWorkspaceLabel(i,{verbose:Z.LONG}),workspace:i,remoteAuthority:this.environmentService.remoteAuthority}]),await this.workspacesService.deleteUntitledWorkspace(o)}catch{}return!1}},{label:a({key:"doNotSave",comment:["&& denotes a mnemonic"]},"Do&&n't Save"),run:async()=>(await this.workspacesService.deleteUntitledWorkspace(o),!1)}],cancelButton:{run:()=>(t=!0,!0)},checkbox:{label:a("doNotAskAgain","Always discard untitled workspaces without asking")}});return!t&&s&&await this.configurationService.updateValue("window.confirmSaveUntitledWorkspace",!1,ve.USER),r}async isValidTargetWorkspacePath(e){return!(await this.nativeHostService.getWindows({includeAuxiliaryWindows:!1})).some((o=>L(o.workspace)&&this.uriIdentityService.extUri.isEqual(o.workspace.configPath,e)))||(await this.dialogService.info(a("workspaceOpenedMessage","Unable to save workspace '{0}'",V(e)),a("workspaceOpenedDetail","The workspace is already opened in another window. Please close that window first and then try again.")),!1)}async enterWorkspace(e){if(!await this.extensionService.stopExtensionHosts(a("restartExtensionHost.reason","Opening a multi-root workspace")))return;const o=await this.doEnterWorkspace(e);if(o&&(await this.storageService.switch(o.workspace,!0),this.workingCopyBackupService instanceof oe)){const e=o.backupPath?E.file(o.backupPath).with({scheme:this.environmentService.userRoamingDataHome.scheme}):void 0;this.workingCopyBackupService.reinitialize(e)}this.environmentService.remoteAuthority?this.hostService.reload():this.extensionService.startExtensionHosts()}};l=d([e(0,A),e(1,O),e(2,re),e(3,ne),e(4,R),e(5,T),e(6,F),e(7,z),e(8,M),e(9,q),e(10,$),e(11,N),e(12,G),e(13,j),e(14,K),e(15,_),e(16,Y),e(17,ee),e(18,ae),e(19,se),e(20,ce),e(21,pe)],l),X(P,l,Q.Delayed);export{l as NativeWorkspaceEditingService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { localize } from "../../../../nls.js";
+import { IWorkspaceEditingService } from "../common/workspaceEditing.js";
+import { URI } from "../../../../base/common/uri.js";
+import { hasWorkspaceFileExtension, isUntitledWorkspace, isWorkspaceIdentifier, IWorkspaceContextService } from "../../../../platform/workspace/common/workspace.js";
+import { IJSONEditingService } from "../../configuration/common/jsonEditing.js";
+import { IWorkspacesService } from "../../../../platform/workspaces/common/workspaces.js";
+import { WorkspaceService } from "../../configuration/browser/configurationService.js";
+import { IStorageService } from "../../../../platform/storage/common/storage.js";
+import { IExtensionService } from "../../extensions/common/extensions.js";
+import { IWorkingCopyBackupService } from "../../workingCopy/common/workingCopyBackup.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { basename } from "../../../../base/common/resources.js";
+import { INotificationService, Severity } from "../../../../platform/notification/common/notification.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { INativeWorkbenchEnvironmentService } from "../../environment/electron-sandbox/environmentService.js";
+import { ILifecycleService, ShutdownReason } from "../../lifecycle/common/lifecycle.js";
+import { IFileDialogService, IDialogService } from "../../../../platform/dialogs/common/dialogs.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { ILabelService, Verbosity } from "../../../../platform/label/common/label.js";
+import { ITextFileService } from "../../textfile/common/textfiles.js";
+import { IHostService } from "../../host/browser/host.js";
+import { AbstractWorkspaceEditingService } from "../browser/abstractWorkspaceEditingService.js";
+import { INativeHostService } from "../../../../platform/native/common/native.js";
+import { isMacintosh } from "../../../../base/common/platform.js";
+import { WorkingCopyBackupService } from "../../workingCopy/common/workingCopyBackupService.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import { IWorkspaceTrustManagementService } from "../../../../platform/workspace/common/workspaceTrust.js";
+import { IWorkbenchConfigurationService } from "../../configuration/common/configuration.js";
+import { IUserDataProfilesService } from "../../../../platform/userDataProfile/common/userDataProfile.js";
+import { IUserDataProfileService } from "../../userDataProfile/common/userDataProfile.js";
+import { ConfigurationTarget } from "../../../../platform/configuration/common/configuration.js";
+let NativeWorkspaceEditingService = class extends AbstractWorkspaceEditingService {
+  constructor(jsonEditingService, contextService, nativeHostService, configurationService, storageService, extensionService, workingCopyBackupService, notificationService, commandService, fileService, textFileService, workspacesService, environmentService, fileDialogService, dialogService, lifecycleService, labelService, hostService, uriIdentityService, workspaceTrustManagementService, userDataProfilesService, userDataProfileService) {
+    super(jsonEditingService, contextService, configurationService, notificationService, commandService, fileService, textFileService, workspacesService, environmentService, fileDialogService, dialogService, hostService, uriIdentityService, workspaceTrustManagementService, userDataProfilesService, userDataProfileService);
+    this.nativeHostService = nativeHostService;
+    this.storageService = storageService;
+    this.extensionService = extensionService;
+    this.workingCopyBackupService = workingCopyBackupService;
+    this.lifecycleService = lifecycleService;
+    this.labelService = labelService;
+    this.registerListeners();
+  }
+  static {
+    __name(this, "NativeWorkspaceEditingService");
+  }
+  registerListeners() {
+    this._register(this.lifecycleService.onBeforeShutdown((e) => {
+      const saveOperation = this.saveUntitledBeforeShutdown(e.reason);
+      e.veto(saveOperation, "veto.untitledWorkspace");
+    }));
+  }
+  async saveUntitledBeforeShutdown(reason) {
+    if (reason !== ShutdownReason.LOAD && reason !== ShutdownReason.CLOSE) {
+      return false;
+    }
+    const workspaceIdentifier = this.getCurrentWorkspaceIdentifier();
+    if (!workspaceIdentifier || !isUntitledWorkspace(workspaceIdentifier.configPath, this.environmentService)) {
+      return false;
+    }
+    const windowCount = await this.nativeHostService.getWindowCount();
+    if (reason === ShutdownReason.CLOSE && !isMacintosh && windowCount === 1) {
+      return false;
+    }
+    const confirmSaveUntitledWorkspace = this.configurationService.getValue("window.confirmSaveUntitledWorkspace") !== false;
+    if (!confirmSaveUntitledWorkspace) {
+      await this.workspacesService.deleteUntitledWorkspace(workspaceIdentifier);
+      return false;
+    }
+    let canceled = false;
+    const { result, checkboxChecked } = await this.dialogService.prompt({
+      type: Severity.Warning,
+      message: localize("saveWorkspaceMessage", "Do you want to save your workspace configuration as a file?"),
+      detail: localize("saveWorkspaceDetail", "Save your workspace if you plan to open it again."),
+      buttons: [
+        {
+          label: localize({ key: "save", comment: ["&& denotes a mnemonic"] }, "&&Save"),
+          run: /* @__PURE__ */ __name(async () => {
+            const newWorkspacePath = await this.pickNewWorkspacePath();
+            if (!newWorkspacePath || !hasWorkspaceFileExtension(newWorkspacePath)) {
+              return true;
+            }
+            try {
+              await this.saveWorkspaceAs(workspaceIdentifier, newWorkspacePath);
+              const newWorkspaceIdentifier = await this.workspacesService.getWorkspaceIdentifier(newWorkspacePath);
+              await this.workspacesService.addRecentlyOpened([{
+                label: this.labelService.getWorkspaceLabel(newWorkspaceIdentifier, { verbose: Verbosity.LONG }),
+                workspace: newWorkspaceIdentifier,
+                remoteAuthority: this.environmentService.remoteAuthority
+                // remember whether this was a remote window
+              }]);
+              await this.workspacesService.deleteUntitledWorkspace(workspaceIdentifier);
+            } catch (error) {
+            }
+            return false;
+          }, "run")
+        },
+        {
+          label: localize({ key: "doNotSave", comment: ["&& denotes a mnemonic"] }, "Do&&n't Save"),
+          run: /* @__PURE__ */ __name(async () => {
+            await this.workspacesService.deleteUntitledWorkspace(workspaceIdentifier);
+            return false;
+          }, "run")
+        }
+      ],
+      cancelButton: {
+        run: /* @__PURE__ */ __name(() => {
+          canceled = true;
+          return true;
+        }, "run")
+      },
+      checkbox: {
+        label: localize("doNotAskAgain", "Always discard untitled workspaces without asking")
+      }
+    });
+    if (!canceled && checkboxChecked) {
+      await this.configurationService.updateValue("window.confirmSaveUntitledWorkspace", false, ConfigurationTarget.USER);
+    }
+    return result;
+  }
+  async isValidTargetWorkspacePath(workspaceUri) {
+    const windows = await this.nativeHostService.getWindows({ includeAuxiliaryWindows: false });
+    if (windows.some((window) => isWorkspaceIdentifier(window.workspace) && this.uriIdentityService.extUri.isEqual(window.workspace.configPath, workspaceUri))) {
+      await this.dialogService.info(
+        localize("workspaceOpenedMessage", "Unable to save workspace '{0}'", basename(workspaceUri)),
+        localize("workspaceOpenedDetail", "The workspace is already opened in another window. Please close that window first and then try again.")
+      );
+      return false;
+    }
+    return true;
+  }
+  async enterWorkspace(workspaceUri) {
+    const stopped = await this.extensionService.stopExtensionHosts(localize("restartExtensionHost.reason", "Opening a multi-root workspace"));
+    if (!stopped) {
+      return;
+    }
+    const result = await this.doEnterWorkspace(workspaceUri);
+    if (result) {
+      await this.storageService.switch(
+        result.workspace,
+        true
+        /* preserve data */
+      );
+      if (this.workingCopyBackupService instanceof WorkingCopyBackupService) {
+        const newBackupWorkspaceHome = result.backupPath ? URI.file(result.backupPath).with({ scheme: this.environmentService.userRoamingDataHome.scheme }) : void 0;
+        this.workingCopyBackupService.reinitialize(newBackupWorkspaceHome);
+      }
+    }
+    if (this.environmentService.remoteAuthority) {
+      this.hostService.reload();
+    } else {
+      this.extensionService.startExtensionHosts();
+    }
+  }
+};
+NativeWorkspaceEditingService = __decorateClass([
+  __decorateParam(0, IJSONEditingService),
+  __decorateParam(1, IWorkspaceContextService),
+  __decorateParam(2, INativeHostService),
+  __decorateParam(3, IWorkbenchConfigurationService),
+  __decorateParam(4, IStorageService),
+  __decorateParam(5, IExtensionService),
+  __decorateParam(6, IWorkingCopyBackupService),
+  __decorateParam(7, INotificationService),
+  __decorateParam(8, ICommandService),
+  __decorateParam(9, IFileService),
+  __decorateParam(10, ITextFileService),
+  __decorateParam(11, IWorkspacesService),
+  __decorateParam(12, INativeWorkbenchEnvironmentService),
+  __decorateParam(13, IFileDialogService),
+  __decorateParam(14, IDialogService),
+  __decorateParam(15, ILifecycleService),
+  __decorateParam(16, ILabelService),
+  __decorateParam(17, IHostService),
+  __decorateParam(18, IUriIdentityService),
+  __decorateParam(19, IWorkspaceTrustManagementService),
+  __decorateParam(20, IUserDataProfilesService),
+  __decorateParam(21, IUserDataProfileService)
+], NativeWorkspaceEditingService);
+registerSingleton(IWorkspaceEditingService, NativeWorkspaceEditingService, InstantiationType.Delayed);
+export {
+  NativeWorkspaceEditingService
+};
+//# sourceMappingURL=workspaceEditingService.js.map

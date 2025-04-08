@@ -1,1 +1,102 @@
-var E=Object.defineProperty,f=Object.getOwnPropertyDescriptor,I=(e,t,i,s)=>{for(var r,o=s>1?void 0:s?f(t,i):t,n=e.length-1;n>=0;n--)(r=e[n])&&(o=(s?r(t,i,o):r(o))||o);return s&&o&&E(t,i,o),o},i=(e,t)=>(i,s)=>t(i,s,e);import{URI as h}from"../../../base/common/uri.js";import{INativeEnvironmentService as m}from"../../environment/common/environment.js";import{IFileService as d}from"../../files/common/files.js";import{ILogService as p}from"../../log/common/log.js";import{IStateReadService as u,IStateService as P}from"../../state/node/state.js";import{IUriIdentityService as l}from"../../uriIdentity/common/uriIdentity.js";import{UserDataProfilesService as g}from"../common/userDataProfile.js";import{isString as x}from"../../../base/common/types.js";import{SaveStrategy as y,StateService as O}from"../../state/node/stateService.js";let n=class extends g{constructor(e,t,i,s,r){super(i,s,t,r),this.stateReadonlyService=e,this.nativeEnvironmentService=i}getStoredProfiles(){return this.stateReadonlyService.getItem(n.PROFILES_KEY,[]).map((e=>({...e,location:x(e.location)?this.uriIdentityService.extUri.joinPath(this.profilesHome,e.location):h.revive(e.location)})))}getStoredProfileAssociations(){return this.stateReadonlyService.getItem(n.PROFILE_ASSOCIATIONS_KEY,{})}getDefaultProfileExtensionsLocation(){return this.uriIdentityService.extUri.joinPath(h.file(this.nativeEnvironmentService.extensionsPath).with({scheme:this.profilesHome.scheme}),"extensions.json")}};n=I([i(0,u),i(1,l),i(2,m),i(3,d),i(4,p)],n);let s=class extends n{constructor(e,t,i,s,r){super(e,t,i,s,r),this.stateService=e}saveStoredProfiles(e){e.length?this.stateService.setItem(s.PROFILES_KEY,e.map((e=>({...e,location:this.uriIdentityService.extUri.basename(e.location)})))):this.stateService.removeItem(s.PROFILES_KEY)}saveStoredProfileAssociations(e){e.emptyWindows||e.workspaces?this.stateService.setItem(s.PROFILE_ASSOCIATIONS_KEY,e):this.stateService.removeItem(s.PROFILE_ASSOCIATIONS_KEY)}};s=I([i(0,P),i(1,l),i(2,m),i(3,d),i(4,p)],s);let v=class extends s{constructor(e,t,i,s){super(new O(y.IMMEDIATE,t,s,i),e,t,i,s)}async init(){return await this.stateService.init(),super.init()}};v=I([i(0,l),i(1,m),i(2,d),i(3,p)],v);export{v as ServerUserDataProfilesService,n as UserDataProfilesReadonlyService,s as UserDataProfilesService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { URI, UriDto } from "../../../base/common/uri.js";
+import { INativeEnvironmentService } from "../../environment/common/environment.js";
+import { IFileService } from "../../files/common/files.js";
+import { ILogService } from "../../log/common/log.js";
+import { IStateReadService, IStateService } from "../../state/node/state.js";
+import { IUriIdentityService } from "../../uriIdentity/common/uriIdentity.js";
+import { IUserDataProfilesService, UserDataProfilesService as BaseUserDataProfilesService, StoredUserDataProfile, StoredProfileAssociations } from "../common/userDataProfile.js";
+import { isString } from "../../../base/common/types.js";
+import { SaveStrategy, StateService } from "../../state/node/stateService.js";
+let UserDataProfilesReadonlyService = class extends BaseUserDataProfilesService {
+  constructor(stateReadonlyService, uriIdentityService, nativeEnvironmentService, fileService, logService) {
+    super(nativeEnvironmentService, fileService, uriIdentityService, logService);
+    this.stateReadonlyService = stateReadonlyService;
+    this.nativeEnvironmentService = nativeEnvironmentService;
+  }
+  static {
+    __name(this, "UserDataProfilesReadonlyService");
+  }
+  getStoredProfiles() {
+    const storedProfilesState = this.stateReadonlyService.getItem(UserDataProfilesReadonlyService.PROFILES_KEY, []);
+    return storedProfilesState.map((p) => ({ ...p, location: isString(p.location) ? this.uriIdentityService.extUri.joinPath(this.profilesHome, p.location) : URI.revive(p.location) }));
+  }
+  getStoredProfileAssociations() {
+    return this.stateReadonlyService.getItem(UserDataProfilesReadonlyService.PROFILE_ASSOCIATIONS_KEY, {});
+  }
+  getDefaultProfileExtensionsLocation() {
+    return this.uriIdentityService.extUri.joinPath(URI.file(this.nativeEnvironmentService.extensionsPath).with({ scheme: this.profilesHome.scheme }), "extensions.json");
+  }
+};
+UserDataProfilesReadonlyService = __decorateClass([
+  __decorateParam(0, IStateReadService),
+  __decorateParam(1, IUriIdentityService),
+  __decorateParam(2, INativeEnvironmentService),
+  __decorateParam(3, IFileService),
+  __decorateParam(4, ILogService)
+], UserDataProfilesReadonlyService);
+let UserDataProfilesService = class extends UserDataProfilesReadonlyService {
+  constructor(stateService, uriIdentityService, environmentService, fileService, logService) {
+    super(stateService, uriIdentityService, environmentService, fileService, logService);
+    this.stateService = stateService;
+  }
+  static {
+    __name(this, "UserDataProfilesService");
+  }
+  saveStoredProfiles(storedProfiles) {
+    if (storedProfiles.length) {
+      this.stateService.setItem(UserDataProfilesService.PROFILES_KEY, storedProfiles.map((profile) => ({ ...profile, location: this.uriIdentityService.extUri.basename(profile.location) })));
+    } else {
+      this.stateService.removeItem(UserDataProfilesService.PROFILES_KEY);
+    }
+  }
+  saveStoredProfileAssociations(storedProfileAssociations) {
+    if (storedProfileAssociations.emptyWindows || storedProfileAssociations.workspaces) {
+      this.stateService.setItem(UserDataProfilesService.PROFILE_ASSOCIATIONS_KEY, storedProfileAssociations);
+    } else {
+      this.stateService.removeItem(UserDataProfilesService.PROFILE_ASSOCIATIONS_KEY);
+    }
+  }
+};
+UserDataProfilesService = __decorateClass([
+  __decorateParam(0, IStateService),
+  __decorateParam(1, IUriIdentityService),
+  __decorateParam(2, INativeEnvironmentService),
+  __decorateParam(3, IFileService),
+  __decorateParam(4, ILogService)
+], UserDataProfilesService);
+let ServerUserDataProfilesService = class extends UserDataProfilesService {
+  static {
+    __name(this, "ServerUserDataProfilesService");
+  }
+  constructor(uriIdentityService, environmentService, fileService, logService) {
+    super(new StateService(SaveStrategy.IMMEDIATE, environmentService, logService, fileService), uriIdentityService, environmentService, fileService, logService);
+  }
+  async init() {
+    await this.stateService.init();
+    return super.init();
+  }
+};
+ServerUserDataProfilesService = __decorateClass([
+  __decorateParam(0, IUriIdentityService),
+  __decorateParam(1, INativeEnvironmentService),
+  __decorateParam(2, IFileService),
+  __decorateParam(3, ILogService)
+], ServerUserDataProfilesService);
+export {
+  ServerUserDataProfilesService,
+  UserDataProfilesReadonlyService,
+  UserDataProfilesService
+};
+//# sourceMappingURL=userDataProfile.js.map

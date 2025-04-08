@@ -1,1 +1,62 @@
-class i{constructor(t,e){this._channelFactory=t,this._getHandler=e,this._channel=this._channelFactory({handleNotification:t=>{const e=t,n=this._getHandler().notifications[e[0]];if(!n)throw new Error(`Unknown notification "${e[0]}"!`);n(...e[1])},handleRequest:t=>{const e=t;try{return{type:"result",value:this._getHandler().requests[e[0]](...e[1])}}catch(t){return{type:"error",value:t}}}});const n=new Proxy({},{get:(t,e)=>async(...t)=>{const n=await this._channel.sendRequest([e,t]);if("error"===n.type)throw n.value;return n.value}}),i=new Proxy({},{get:(t,e)=>(...t)=>{this._channel.sendNotification([e,t])}});this.api={notifications:i,requests:n}}static createHost(t,e){return new i(t,e)}static createClient(t,e){return new i(t,e)}api;_channel}export{i as SimpleTypedRpcConnection};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+class SimpleTypedRpcConnection {
+  constructor(_channelFactory, _getHandler) {
+    this._channelFactory = _channelFactory;
+    this._getHandler = _getHandler;
+    this._channel = this._channelFactory({
+      handleNotification: /* @__PURE__ */ __name((notificationData) => {
+        const m = notificationData;
+        const fn = this._getHandler().notifications[m[0]];
+        if (!fn) {
+          throw new Error(`Unknown notification "${m[0]}"!`);
+        }
+        fn(...m[1]);
+      }, "handleNotification"),
+      handleRequest: /* @__PURE__ */ __name((requestData) => {
+        const m = requestData;
+        try {
+          const result = this._getHandler().requests[m[0]](...m[1]);
+          return { type: "result", value: result };
+        } catch (e) {
+          return { type: "error", value: e };
+        }
+      }, "handleRequest")
+    });
+    const requests = new Proxy({}, {
+      get: /* @__PURE__ */ __name((target, key) => {
+        return async (...args) => {
+          const result = await this._channel.sendRequest([key, args]);
+          if (result.type === "error") {
+            throw result.value;
+          } else {
+            return result.value;
+          }
+        };
+      }, "get")
+    });
+    const notifications = new Proxy({}, {
+      get: /* @__PURE__ */ __name((target, key) => {
+        return (...args) => {
+          this._channel.sendNotification([key, args]);
+        };
+      }, "get")
+    });
+    this.api = { notifications, requests };
+  }
+  static {
+    __name(this, "SimpleTypedRpcConnection");
+  }
+  static createHost(channelFactory, getHandler) {
+    return new SimpleTypedRpcConnection(channelFactory, getHandler);
+  }
+  static createClient(channelFactory, getHandler) {
+    return new SimpleTypedRpcConnection(channelFactory, getHandler);
+  }
+  api;
+  _channel;
+}
+export {
+  SimpleTypedRpcConnection
+};
+//# sourceMappingURL=rpc.js.map

@@ -1,1 +1,115 @@
-var d=Object.defineProperty,l=Object.getOwnPropertyDescriptor,c=(e,s,r,o)=>{for(var t,i=o>1?void 0:o?l(s,r):s,c=e.length-1;c>=0;c--)(t=e[c])&&(i=(o?t(s,r,i):t(i))||i);return o&&i&&d(s,r,i),i},a=(e,s)=>(r,o)=>s(r,o,e);import{parse as m}from"../../../base/common/path.js";import{debounce as p,throttle as f}from"../../../base/common/decorators.js";import{Emitter as g}from"../../../base/common/event.js";import{Disposable as v}from"../../../base/common/lifecycle.js";import"../../../base/common/processes.js";import{listProcesses as _}from"../../../base/node/ps.js";import{ILogService as u}from"../../log/common/log.js";var b=(e=>(e[e.InactiveThrottleDuration=5e3]="InactiveThrottleDuration",e[e.ActiveDebounceDuration=1e3]="ActiveDebounceDuration",e))(b||{});const C=[];let o=class extends v{constructor(e,s){super(),this._pid=e,this._logService=s}_hasChildProcesses=!1;set hasChildProcesses(e){this._hasChildProcesses!==e&&(this._hasChildProcesses=e,this._logService.debug("ChildProcessMonitor: Has child processes changed",e),this._onDidChangeHasChildProcesses.fire(e))}get hasChildProcesses(){return this._hasChildProcesses}_onDidChangeHasChildProcesses=this._register(new g);onDidChangeHasChildProcesses=this._onDidChangeHasChildProcesses.event;handleInput(){this._refreshActive()}handleOutput(){this._refreshInactive()}async _refreshActive(){if(!this._store.isDisposed)try{const e=await _(this._pid);this.hasChildProcesses=this._processContainsChildren(e)}catch(e){this._logService.debug("ChildProcessMonitor: Fetching process tree failed",e)}}_refreshInactive(){this._refreshActive()}_processContainsChildren(e){if(!e.children)return!1;if(1===e.children.length){const s=e.children[0];let r;if(s.cmd.startsWith('"'))r=s.cmd.substring(1,s.cmd.indexOf('"',1));else{const e=s.cmd.indexOf(" ");r=-1===e?s.cmd:s.cmd.substring(0,e)}return-1===C.indexOf(m(r).name)}return e.children.length>0}};c([p(1e3)],o.prototype,"_refreshActive",1),c([f(5e3)],o.prototype,"_refreshInactive",1),o=c([a(1,u)],o);export{o as ChildProcessMonitor,C as ignoreProcessNames};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { parse } from "../../../base/common/path.js";
+import { debounce, throttle } from "../../../base/common/decorators.js";
+import { Emitter } from "../../../base/common/event.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { ProcessItem } from "../../../base/common/processes.js";
+import { listProcesses } from "../../../base/node/ps.js";
+import { ILogService } from "../../log/common/log.js";
+var Constants = /* @__PURE__ */ ((Constants2) => {
+  Constants2[Constants2["InactiveThrottleDuration"] = 5e3] = "InactiveThrottleDuration";
+  Constants2[Constants2["ActiveDebounceDuration"] = 1e3] = "ActiveDebounceDuration";
+  return Constants2;
+})(Constants || {});
+const ignoreProcessNames = [];
+let ChildProcessMonitor = class extends Disposable {
+  constructor(_pid, _logService) {
+    super();
+    this._pid = _pid;
+    this._logService = _logService;
+  }
+  static {
+    __name(this, "ChildProcessMonitor");
+  }
+  _hasChildProcesses = false;
+  set hasChildProcesses(value) {
+    if (this._hasChildProcesses !== value) {
+      this._hasChildProcesses = value;
+      this._logService.debug("ChildProcessMonitor: Has child processes changed", value);
+      this._onDidChangeHasChildProcesses.fire(value);
+    }
+  }
+  /**
+   * Whether the process has child processes.
+   */
+  get hasChildProcesses() {
+    return this._hasChildProcesses;
+  }
+  _onDidChangeHasChildProcesses = this._register(new Emitter());
+  /**
+   * An event that fires when whether the process has child processes changes.
+   */
+  onDidChangeHasChildProcesses = this._onDidChangeHasChildProcesses.event;
+  /**
+   * Input was triggered on the process.
+   */
+  handleInput() {
+    this._refreshActive();
+  }
+  /**
+   * Output was triggered on the process.
+   */
+  handleOutput() {
+    this._refreshInactive();
+  }
+  async _refreshActive() {
+    if (this._store.isDisposed) {
+      return;
+    }
+    try {
+      const processItem = await listProcesses(this._pid);
+      this.hasChildProcesses = this._processContainsChildren(processItem);
+    } catch (e) {
+      this._logService.debug("ChildProcessMonitor: Fetching process tree failed", e);
+    }
+  }
+  _refreshInactive() {
+    this._refreshActive();
+  }
+  _processContainsChildren(processItem) {
+    if (!processItem.children) {
+      return false;
+    }
+    if (processItem.children.length === 1) {
+      const item = processItem.children[0];
+      let cmd;
+      if (item.cmd.startsWith(`"`)) {
+        cmd = item.cmd.substring(1, item.cmd.indexOf(`"`, 1));
+      } else {
+        const spaceIndex = item.cmd.indexOf(` `);
+        if (spaceIndex === -1) {
+          cmd = item.cmd;
+        } else {
+          cmd = item.cmd.substring(0, spaceIndex);
+        }
+      }
+      return ignoreProcessNames.indexOf(parse(cmd).name) === -1;
+    }
+    return processItem.children.length > 0;
+  }
+};
+__decorateClass([
+  debounce(1e3 /* ActiveDebounceDuration */)
+], ChildProcessMonitor.prototype, "_refreshActive", 1);
+__decorateClass([
+  throttle(5e3 /* InactiveThrottleDuration */)
+], ChildProcessMonitor.prototype, "_refreshInactive", 1);
+ChildProcessMonitor = __decorateClass([
+  __decorateParam(1, ILogService)
+], ChildProcessMonitor);
+export {
+  ChildProcessMonitor,
+  ignoreProcessNames
+};
+//# sourceMappingURL=childProcessMonitor.js.map

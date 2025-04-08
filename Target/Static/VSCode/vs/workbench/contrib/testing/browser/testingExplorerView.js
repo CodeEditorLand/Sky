@@ -1,1 +1,1462 @@
-var ze=Object.defineProperty;var Ne=Object.getOwnPropertyDescriptor;var P=(m,i,e,t)=>{for(var r=t>1?void 0:t?Ne(i,e):i,n=m.length-1,s;n>=0;n--)(s=m[n])&&(r=(t?s(i,e,r):s(r))||r);return t&&r&&ze(i,e,r),r},c=(m,i)=>(e,t)=>i(e,t,m);import*as f from"../../../../base/browser/dom.js";import"../../../../base/browser/keyboardEvent.js";import"../../../../base/browser/ui/actionbar/actionViewItems.js";import{ActionBar as se}from"../../../../base/browser/ui/actionbar/actionbar.js";import{Button as je}from"../../../../base/browser/ui/button/button.js";import{getDefaultHoverDelegate as ne}from"../../../../base/browser/ui/hover/hoverDelegateFactory.js";import{renderLabelWithIcons as Ke}from"../../../../base/browser/ui/iconLabel/iconLabels.js";import"../../../../base/browser/ui/list/list.js";import{DefaultKeyboardNavigationDelegate as $e}from"../../../../base/browser/ui/list/listWidget.js";import{TreeVisibility as O}from"../../../../base/browser/ui/tree/tree.js";import{Action as _,ActionRunner as Ue,Separator as ye}from"../../../../base/common/actions.js";import{mapFindFirst as Ge}from"../../../../base/common/arraysFind.js";import{RunOnceScheduler as Q,disposableTimeout as qe}from"../../../../base/common/async.js";import{groupBy as Qe}from"../../../../base/common/collections.js";import{Color as Ye,RGBA as Je}from"../../../../base/common/color.js";import{Emitter as Xe,Event as be}from"../../../../base/common/event.js";import"../../../../base/common/filters.js";import{Iterable as oe}from"../../../../base/common/iterator.js";import{KeyCode as Ze}from"../../../../base/common/keyCodes.js";import{Disposable as Y,DisposableStore as le,MutableDisposable as B}from"../../../../base/common/lifecycle.js";import{autorun as Ee,observableFromEvent as ae}from"../../../../base/common/observable.js";import{fuzzyContains as et}from"../../../../base/common/strings.js";import{ThemeIcon as J}from"../../../../base/common/themables.js";import{isDefined as H}from"../../../../base/common/types.js";import"../../../../base/common/uri.js";import{MarkdownRenderer as tt}from"../../../../editor/browser/widget/markdownRenderer/browser/markdownRenderer.js";import{localize as I}from"../../../../nls.js";import{DropdownWithPrimaryActionViewItem as Ce}from"../../../../platform/actions/browser/dropdownWithPrimaryActionViewItem.js";import{MenuEntryActionViewItem as it,createActionViewItem as rt,getActionBarActions as st,getFlatContextMenuActions as nt}from"../../../../platform/actions/browser/menuEntryActionViewItem.js";import{IMenuService as ce,MenuId as we,MenuItemAction as W}from"../../../../platform/actions/common/actions.js";import{ICommandService as xe}from"../../../../platform/commands/common/commands.js";import{IConfigurationService as ue}from"../../../../platform/configuration/common/configuration.js";import{IContextKeyService as de}from"../../../../platform/contextkey/common/contextkey.js";import{IContextMenuService as Re}from"../../../../platform/contextview/browser/contextView.js";import{IHoverService as X}from"../../../../platform/hover/browser/hover.js";import{IInstantiationService as k}from"../../../../platform/instantiation/common/instantiation.js";import{IKeybindingService as ot}from"../../../../platform/keybinding/common/keybinding.js";import{IOpenerService as lt}from"../../../../platform/opener/common/opener.js";import{UnmanagedProgress as at}from"../../../../platform/progress/common/progress.js";import{IStorageService as ct,StorageScope as z,StorageTarget as pe,WillSaveStateReason as ut}from"../../../../platform/storage/common/storage.js";import{defaultButtonStyles as dt}from"../../../../platform/theme/browser/defaultStyles.js";import{foreground as pt}from"../../../../platform/theme/common/colorRegistry.js";import{spinningLoading as ht}from"../../../../platform/theme/common/iconRegistry.js";import{IThemeService as mt,registerThemingParticipant as ft}from"../../../../platform/theme/common/themeService.js";import{IUriIdentityService as gt}from"../../../../platform/uriIdentity/common/uriIdentity.js";import{registerNavigableContainer as vt}from"../../../browser/actions/widgetNavigationCommands.js";import{ViewPane as It}from"../../../browser/parts/views/viewPane.js";import"../../../browser/parts/views/viewsViewlet.js";import{DiffEditorInput as Tt}from"../../../common/editor/diffEditorInput.js";import{IViewDescriptorService as St}from"../../../common/views.js";import{IActivityService as yt,IconBadge as De,NumberBadge as Fe}from"../../../services/activity/common/activity.js";import{IEditorGroupsService as bt}from"../../../services/editor/common/editorGroupsService.js";import{IEditorService as Et}from"../../../services/editor/common/editorService.js";import{TestingConfigKeys as x,TestingCountBadge as he,getTestingConfiguration as Z}from"../common/configuration.js";import{TestCommandId as R,TestExplorerViewMode as me,TestExplorerViewSorting as ee,Testing as Pe,labelForTestInState as Ct}from"../common/constants.js";import{StoredValue as wt}from"../common/storedValue.js";import{ITestExplorerFilterState as fe,TestFilterTerm as b}from"../common/testExplorerFilterState.js";import{TestId as ge}from"../common/testId.js";import{ITestProfileService as ve,canUseProfileWithTest as Ie}from"../common/testProfileService.js";import{LiveTestResult as xt,TestResultItemChangeReason as Rt}from"../common/testResult.js";import{ITestResultService as Ae}from"../common/testResultService.js";import{ITestService as te,testCollectionIsEmpty as Dt}from"../common/testService.js";import{TestControllerCapability as Ft,TestItemExpandState as Me,TestResultState as N,TestRunProfileBitset as C,testProfileBitset as Be,testResultStateToContextValues as Pt}from"../common/testTypes.js";import{TestingContextKeys as w}from"../common/testingContextKeys.js";import{ITestingContinuousRunService as ie}from"../common/testingContinuousRunService.js";import{ITestingPeekOpener as At}from"../common/testingPeekOpener.js";import{cmpPriority as Mt,isFailedState as _e,isStateWithResult as Bt,statesInOrder as _t}from"../common/testingStates.js";import{TestItemTreeElement as T,TestTreeErrorMessage as D}from"./explorerProjections/index.js";import{ListProjection as Lt}from"./explorerProjections/listProjection.js";import{getTestItemContextOverlay as Vt}from"./explorerProjections/testItemContextOverlay.js";import{TestingObjectTree as Ot}from"./explorerProjections/testingObjectTree.js";import"./explorerProjections/testingViewState.js";import{TreeProjection as Ht}from"./explorerProjections/treeProjection.js";import*as E from"./icons.js";import"./media/testing.css";import{DebugLastRun as Wt,ReRunLastRun as kt}from"./testExplorerActions.js";import{TestingExplorerFilter as zt}from"./testingExplorerFilter.js";import{collectTestStateCounts as Le,getTestProgressText as Nt}from"./testingProgressUiService.js";var jt=(e=>(e[e.Input=0]="Input",e[e.Tree=1]="Tree",e))(jt||{});let re=class extends It{constructor(e,t,r,n,s,a,u,p,d,o,h,g,v,S,y){super(e,r,t,n,u,a,s,p,d,h);this.testService=o;this.testProfileService=g;this.commandService=v;this.menuService=S;this.crService=y;const q=this._register(new Q(()=>this.layoutBody(),1));this._register(this.onDidChangeViewWelcomeState(()=>{this.shouldShowWelcome()||q.schedule()})),this._register(be.any(y.onDidChange,g.onDidChange)(()=>{this.updateActions()})),this._register(o.collection.onBusyProvidersChange(L=>{this.updateDiscoveryProgress(L)})),this._register(g.onDidChange(()=>this.updateActions()))}viewModel;filterActionBar=this._register(new B);container;treeHeader;discoveryProgress=this._register(new B);filter=this._register(new B);filterFocusListener=this._register(new B);dimensions={width:0,height:0};lastFocusState=0;get focusedTreeElements(){return this.viewModel.tree.getFocus().filter(H)}shouldShowWelcome(){return this.viewModel?.welcomeExperience===1}focus(){super.focus(),this.lastFocusState===1?this.viewModel.tree.domFocus():this.filter.value?.focus()}getTreeIncludeExclude(e,t,r="visible"){const n=this.viewModel.projection.value;if(!n)return{include:[],exclude:[]};const s=new Set,a=[],u=new Map,p=o=>{let h=u.get(o);return h===void 0&&(h=typeof e=="number"?!!this.testProfileService.getDefaultProfileForTest(e,o):Ie(e,o),u.set(o,h)),h},d=(o,h)=>{if(!(o instanceof T)||!this.viewModel.tree.hasElement(o))return;const g=this.viewModel.tree.getNode(o);if(!g.visible){h&&a.push(o.test);return}const v=g.children.filter(S=>S.visible&&S.element instanceof T&&p(S.element.test)).length;!h&&p(o.test)&&(v===0||v*2>=g.children.length)&&v!==1&&(s.add(o.test),h=!0);for(const S of o.children)d(S,h)};if(r==="selected"){const o=this.viewModel.tree.getSelection().filter(H);if(o.length){e:for(const h of o)if(h instanceof T){for(let g=h;g;g=g.parent)if(s.has(g.test))continue e;s.add(h.test),h.children.forEach(g=>d(g,!0))}return{include:[...s],exclude:a}}}for(const o of t||this.testService.collection.rootItems){const h=n.getElementByTestId(o.item.extId);if(h&&!(typeof e=="object"&&!Ie(e,o)))if(this.viewModel.tree.hasElement(h))d(h,!1);else{const g=[...h.children].reduce((v,S)=>this.viewModel.tree.hasElement(S)&&this.viewModel.tree.getNode(S).visible?v+1:v,0);h.children.size>0&&g*2>=h.children.size?(s.add(h.test),h.children.forEach(v=>d(v,!0))):h.children.forEach(v=>d(v,!1))}}return{include:[...s],exclude:a}}render(){super.render(),this._register(vt({name:"testingExplorerView",focusNotifiers:[this],focusNextWidget:()=>{this.viewModel.tree.isDOMFocused()||this.viewModel.tree.domFocus()},focusPreviousWidget:()=>{this.viewModel.tree.isDOMFocused()&&this.filter.value?.focus()}}))}renderBody(e){super.renderBody(e),this.container=f.append(e,f.$(".test-explorer")),this.treeHeader=f.append(this.container,f.$(".test-explorer-header")),this.filterActionBar.value=this.createFilterActionBar();const t=f.append(this.treeHeader,f.$(".result-summary-container"));this._register(this.instantiationService.createInstance(j,t));const r=f.append(this.container,f.$(".test-explorer-tree"));this.viewModel=this.instantiationService.createInstance(K,r,this.onDidChangeBodyVisibility),this._register(this.viewModel.tree.onDidFocus(()=>this.lastFocusState=1)),this._register(this.viewModel.onChangeWelcomeVisibility(()=>this._onDidChangeViewWelcomeState.fire())),this._register(this.viewModel),this._onDidChangeViewWelcomeState.fire()}createActionViewItem(e,t){switch(e.id){case R.FilterAction:return this.filter.value=this.instantiationService.createInstance(zt,e,t),this.filterFocusListener.value=this.filter.value.onDidFocus(()=>this.lastFocusState=0),this.filter.value;case R.RunSelectedAction:return this.getRunGroupDropdown(C.Run,e,t);case R.DebugSelectedAction:return this.getRunGroupDropdown(C.Debug,e,t);case R.StartContinousRun:case R.StopContinousRun:return this.getContinuousRunDropdown(e,t);default:return super.createActionViewItem(e,t)}}getTestConfigGroupActions(e){const t=[];let r=0,n=0,s=!1;const a=this.testProfileService.getGroupDefaultProfiles(e);for(const{profiles:g,controller:v}of this.testProfileService.all()){let S=!1;for(const y of g)y.group===e&&(S||(S=!0,r++,t.push(new _(`${v.id}.$root`,v.label.get(),void 0,!1))),s=s||y.hasConfigurationHandler,n++,t.push(new _(`${v.id}.${y.profileId}`,a.includes(y)?I("defaultTestProfile","{0} (Default)",y.label):y.label,void 0,void 0,()=>{const{include:q,exclude:L}=this.getTreeIncludeExclude(y);this.testService.runResolvedTests({exclude:L.map(V=>V.item.extId),group:y.group,targets:[{profileId:y.profileId,controllerId:y.controllerId,testIds:q.map(V=>V.item.extId)}]})})))}const u=[];e===C.Run&&u.push(["testing.profile.context.group","run"]),e===C.Debug&&u.push(["testing.profile.context.group","debug"]),e===C.Coverage&&u.push(["testing.profile.context.group","coverage"]);const p=this.contextKeyService.createOverlay(u),d=this.menuService.getMenuActions(we.TestProfilesContext,p),o=nt(d),h=[];return n>1&&h.push(new _("selectDefaultTestConfigurations",I("selectDefaultConfigs","Select Default Profile"),void 0,void 0,()=>this.commandService.executeCommand(R.SelectDefaultTestProfiles,e))),s&&h.push(new _("configureTestProfiles",I("configureTestProfiles","Configure Test Profiles"),void 0,void 0,()=>this.commandService.executeCommand(R.ConfigureTestProfilesAction,e))),{numberOfProfiles:n,actions:o.length>0?ye.join(t,o,h):ye.join(t,h)}}saveState(){this.filter.value?.saveState(),super.saveState()}getRunGroupDropdown(e,t,r){const n=this.getTestConfigGroupActions(e);if(n.numberOfProfiles<2)return super.createActionViewItem(t,r);const s=this.instantiationService.createInstance(W,{id:t.id,title:t.label,icon:e===C.Run?E.testingRunAllIcon:E.testingDebugAllIcon},void 0,void 0,void 0,void 0);return this.instantiationService.createInstance(Ce,s,this.getDropdownAction(),n.actions,"",r)}getDropdownAction(){return new _("selectRunConfig",I("testingSelectConfig","Select Configuration..."),"codicon-chevron-down",!0)}getContinuousRunDropdown(e,t){const r=[...oe.flatMap(this.testProfileService.all(),p=>this.testService.collection.getNodeById(p.controller.id)?.children.size?oe.filter(p.profiles,d=>d.supportsContinuousRun):oe.empty())];if(r.length<=1)return super.createActionViewItem(e,t);const n=this.instantiationService.createInstance(W,{id:e.id,title:e.label,icon:e.id===R.StartContinousRun?E.testingTurnContinuousRunOn:E.testingTurnContinuousRunOff},void 0,void 0,void 0,void 0),s=[],a=Qe(r,p=>p.group),u=this.crService;for(const p of[C.Run,C.Debug,C.Coverage]){const d=a[p];if(d){Object.keys(a).length>1&&s.push({id:`${p}.label`,label:Be[p],enabled:!1,class:void 0,tooltip:Be[p],run:()=>{}});for(const o of d)s.push({id:`${p}.${o.profileId}`,label:o.label,enabled:!0,class:void 0,tooltip:o.label,checked:u.isEnabledForProfile(o),run:()=>u.isEnabledForProfile(o)?u.stopProfile(o):u.start([o])})}}return this.instantiationService.createInstance(Ce,n,this.getDropdownAction(),s,"",t)}createFilterActionBar(){const e=new se(this.treeHeader,{actionViewItemProvider:(t,r)=>this.createActionViewItem(t,r),triggerKeys:{keyDown:!1,keys:[]}});return e.push(new _(R.FilterAction)),e.getContainer().classList.add("testing-filter-action-bar"),e}updateDiscoveryProgress(e){!e&&this.discoveryProgress?this.discoveryProgress.clear():e&&!this.discoveryProgress.value&&(this.discoveryProgress.value=this.instantiationService.createInstance(at,{location:this.getProgressLocation()}))}layoutBody(e=this.dimensions.height,t=this.dimensions.width){super.layoutBody(e,t),this.dimensions.height=e,this.dimensions.width=t,this.container.style.height=`${e}px`,this.viewModel?.layout(e-this.treeHeader.clientHeight,t),this.filter.value?.layout(t)}};re=P([c(1,Re),c(2,ot),c(3,ue),c(4,k),c(5,St),c(6,de),c(7,lt),c(8,mt),c(9,te),c(10,X),c(11,ve),c(12,xe),c(13,ce),c(14,ie)],re);const Kt=200;let j=class extends Y{constructor(e,t,r,n,s,a,u){super();this.container=e;this.resultService=t;this.activityService=r;this.crService=n;this.badgeType=s.getValue(x.CountBadge),this._register(t.onResultsChanged(this.render,this)),this._register(s.onDidChangeConfiguration(d=>{d.affectsConfiguration(x.CountBadge)&&(this.badgeType=s.getValue(x.CountBadge),this.render())})),this.countHover=this._register(u.setupManagedHover(ne("mouse"),this.elements.count,"")),this._register(new se(this.elements.rerun,{actionViewItemProvider:(d,o)=>rt(a,d,o)})).push(a.createInstance(W,{...new kt().desc,icon:E.testingRerunIcon},{...new Wt().desc,icon:E.testingDebugIcon},{},void 0,void 0),{icon:!0,label:!1}),this.render()}elementsWereAttached=!1;badgeType;lastBadge;countHover;badgeDisposable=this._register(new B);renderLoop=this._register(new Q(()=>this.render(),Kt));elements=f.h("div.result-summary",[f.h("div@status"),f.h("div@count"),f.h("div@count"),f.h("span"),f.h("duration@duration"),f.h("a@rerun")]);render(){const{results:e}=this.resultService,{count:t,root:r,status:n,duration:s,rerun:a}=this.elements;if(!e.length){this.elementsWereAttached&&(r.remove(),this.elementsWereAttached=!1),this.container.innerText=I("noResults","No test results yet."),this.badgeDisposable.clear();return}const u=e.filter(d=>!d.completedAt);let p;if(u.length){n.className=J.asClassName(ht),p=Le(!0,u),this.renderLoop.schedule();const d=u[u.length-1];s.textContent=G(Date.now()-d.startedAt),a.style.display="none"}else{const d=e[0],o=Ge(_t,h=>d.counts[h]>0?h:void 0);n.className=J.asClassName(E.testingStatesToIcons.get(o??N.Unset)),p=Le(!1,[d]),s.textContent=d instanceof xt?G(d.completedAt-d.startedAt):"",a.style.display="block"}t.textContent=`${p.passed}/${p.totalWillBeRun}`,this.countHover.update(Nt(p)),this.renderActivityBadge(p),this.elementsWereAttached||(f.clearNode(this.container),this.container.appendChild(r),this.elementsWereAttached=!0)}renderActivityBadge(e){if(e&&this.badgeType!==he.Off&&e[this.badgeType]!==0){if(this.lastBadge instanceof Fe&&this.lastBadge.number===e[this.badgeType])return;this.lastBadge=new Fe(e[this.badgeType],t=>this.getLocalizedBadgeString(this.badgeType,t))}else if(this.crService.isEnabled()){if(this.lastBadge instanceof De&&this.lastBadge.icon===E.testingContinuousIsOn)return;this.lastBadge=new De(E.testingContinuousIsOn,()=>I("testingContinuousBadge","Tests are being watched for changes"))}else{if(!this.lastBadge)return;this.lastBadge=void 0}this.badgeDisposable.value=this.lastBadge&&this.activityService.showViewActivity(Pe.ExplorerViewId,{badge:this.lastBadge})}getLocalizedBadgeString(e,t){switch(e){case he.Passed:return I("testingCountBadgePassed","{0} passed tests",t);case he.Skipped:return I("testingCountBadgeSkipped","{0} skipped tests",t);default:return I("testingCountBadgeFailed","{0} failed tests",t)}}};j=P([c(1,Ae),c(2,yt),c(3,ie),c(4,ue),c(5,k),c(6,X)],j);var $t=(t=>(t[t.None=0]="None",t[t.ForWorkspace=1]="ForWorkspace",t[t.ForDocument=2]="ForDocument",t))($t||{});let K=class extends Y{constructor(e,t,r,n,s,a,u,p,d,o,h,g,v,S,y,q,L){super();this.menuService=a;this.contextMenuService=u;this.testService=p;this.filterState=d;this.instantiationService=o;this.storageService=h;this.contextKeyService=g;this.testResults=v;this.peekOpener=S;this.testProfileService=y;this.crService=q;this.hasPendingReveal=!!d.reveal.get(),this.noTestForDocumentWidget=this._register(o.createInstance(U,e)),this.lastViewState=this._register(new wt({key:"testing.treeState",scope:z.WORKSPACE,target:pe.MACHINE},this.storageService)),this._viewMode=w.viewMode.bindTo(g),this._viewSorting=w.viewSorting.bindTo(g),this._viewMode.set(this.storageService.get("testing.viewMode",z.WORKSPACE,me.Tree)),this._viewSorting.set(this.storageService.get("testing.viewSorting",z.WORKSPACE,ee.ByLocation)),this.reevaluateWelcomeState(),this.filter=this.instantiationService.createInstance($,p.collection),this.tree=o.createInstance(Ot,"Test Explorer List",e,new Xt,[o.createInstance(M,this.actionRunner),o.createInstance(A)],{identityProvider:o.createInstance(Zt),hideTwistiesOfChildlessElements:!1,sorter:o.createInstance(qt,this),keyboardNavigationLabelProvider:o.createInstance(Jt),accessibilityProvider:o.createInstance(Yt),filter:this.filter,findWidgetEnabled:!1});const V=this._register(new Q(()=>{const l=this.tree.getOptimizedViewState(this.lastViewState.get({})),F=this.projection.value;F&&(F.lastState=l)},3e3));this._register(this.tree.onDidChangeCollapseState(l=>{l.node.element instanceof T&&(l.node.collapsed||this.projection.value?.expandElement(l.node.element,l.deep?1/0:0),V.schedule())})),this._register(this.crService.onDidChange(l=>{if(l){const F=this.projection.value?.getElementByTestId(l);this.tree.resort(F?.parent&&this.tree.hasElement(F.parent)?F.parent:null,!1)}})),this._register(t(l=>{l&&this.ensureProjection()})),this._register(this.tree.onContextMenu(l=>this.onContextMenu(l))),this._register(be.any(d.text.onDidChange,d.fuzzy.onDidChange,p.excluded.onTestExclusionsChanged)(()=>{if(!d.text.value)return this.tree.refilter();const l=this.filter.lastIncludedTests=new Set;this.tree.refilter(),this.filter.lastIncludedTests=void 0;for(const F of l)this.tree.expandTo(F)})),this._register(this.tree.onDidOpen(l=>{l.element instanceof T&&(d.didSelectTestInExplorer(l.element.test.item.extId),!l.element.children.size&&l.element.test.item.uri&&(this.tryPeekError(l.element)||L.executeCommand("vscode.revealTest",l.element.test.item.extId,{openToSide:l.sideBySide,preserveFocus:!0})))})),this._register(this.tree),this._register(this.onChangeWelcomeVisibility(l=>{this.noTestForDocumentWidget.setVisible(l===2)})),this._register(f.addStandardDisposableListener(this.tree.getHTMLElement(),"keydown",l=>{l.equals(Ze.Enter)?this.handleExecuteKeypress(l):$e.mightProducePrintableCharacter(l)&&(d.text.value=l.browserEvent.key,d.focusInput())})),this._register(Ee(l=>{this.revealById(d.reveal.read(l),void 0,!1)})),this._register(t(l=>{l&&d.focusInput()}));let Te=Z(r,x.FollowRunningTest);this._register(r.onDidChangeConfiguration(l=>{l.affectsConfiguration(x.FollowRunningTest)&&(Te=Z(r,x.FollowRunningTest))}));let Se=Z(r,x.AlwaysRevealTestOnStateChange);this._register(r.onDidChangeConfiguration(l=>{l.affectsConfiguration(x.AlwaysRevealTestOnStateChange)&&(Se=Z(r,x.AlwaysRevealTestOnStateChange))})),this._register(v.onTestChanged(l=>{Te&&l.reason===Rt.OwnStateChange&&(this.tree.selectionSize>1||l.item.ownComputedState!==N.Running&&!(l.previousState===N.Queued&&Bt(l.item.ownComputedState))||this.revealById(l.item.item.extId,Se,!1))})),this._register(v.onResultsChanged(()=>{this.tree.resort(null)})),this._register(this.testProfileService.onDidChange(()=>{this.tree.rerender()}));const He=ae(this,n.onDidEditorsChange,()=>new Set(s.groups.flatMap(l=>l.editors).map(l=>l.resource).filter(H))),We=ae(this,n.onDidActiveEditorChange,()=>n.activeEditor instanceof Tt?n.activeEditor.primary.resource:n.activeEditor?.resource),ke=ae(this.filterState.text.onDidChange,()=>this.filterState.text);this._register(Ee(l=>{ke.read(l),this.filterState.isFilteringFor(b.OpenedFiles)?this.filter.filterToDocumentUri([...He.read(l)]):this.filter.filterToDocumentUri([We.read(l)].filter(H)),(this.filterState.isFilteringFor(b.CurrentDoc)||this.filterState.isFilteringFor(b.OpenedFiles))&&this.tree.refilter()})),this._register(this.storageService.onWillSaveState(({reason:l})=>{l===ut.SHUTDOWN&&this.lastViewState.store(this.tree.getOptimizedViewState())}))}tree;filter;projection=this._register(new B);revealTimeout=new B;_viewMode;_viewSorting;welcomeVisibilityEmitter=new Xe;actionRunner=this._register(new Qt(()=>this.tree.getSelection().filter(H)));lastViewState;noTestForDocumentWidget;hasPendingReveal=!1;onChangeWelcomeVisibility=this.welcomeVisibilityEmitter.event;welcomeExperience=0;get viewMode(){return this._viewMode.get()??me.Tree}set viewMode(e){e!==this._viewMode.get()&&(this._viewMode.set(e),this.updatePreferredProjection(),this.storageService.store("testing.viewMode",e,z.WORKSPACE,pe.MACHINE))}get viewSorting(){return this._viewSorting.get()??ee.ByStatus}set viewSorting(e){e!==this._viewSorting.get()&&(this._viewSorting.set(e),this.tree.resort(null),this.storageService.store("testing.viewSorting",e,z.WORKSPACE,pe.MACHINE))}layout(e,t){this.tree.layout(e,t)}revealById(e,t=!0,r=!0){if(!e){this.hasPendingReveal=!1;return}const n=this.ensureProjection();let s=0;const a=[...ge.fromString(e).idsFromRoot()];for(let u=a.length-1;u>=s;u--){const p=n.getElementByTestId(a[u].toString());if(!p||!this.tree.hasElement(p))continue;if(u<a.length-1&&t){this.tree.expand(p),s=u+1,u=a.length-1;continue}let d=p;for(let o=p;o instanceof T;o=o.parent){if(o.test&&this.testService.excluded.contains(o.test)){this.filterState.toggleFilteringFor(b.Hidden,!0);break}!t&&this.tree.hasElement(o)&&this.tree.isCollapsed(o)&&(d=o)}this.filterState.reveal.set(void 0,void 0),this.hasPendingReveal=!1,r&&this.tree.domFocus(),this.tree.getRelativeTop(d)===null&&this.tree.reveal(d,.5),this.revealTimeout.value=qe(()=>{this.tree.setFocus([d]),this.tree.setSelection([d])},1);return}this.hasPendingReveal=!0}async collapseAll(){this.tree.collapseAll()}tryPeekError(e){const t=e.test&&this.testResults.getStateById(e.test.item.extId);return t&&t[1].tasks.some(r=>_e(r.state))?this.peekOpener.tryPeekFirstError(t[0],t[1],{preserveFocus:!0}):!1}onContextMenu(e){const t=e.element;if(!(t instanceof T))return;const{actions:r}=Oe(this.contextKeyService,this.menuService,this.testService,this.crService,this.testProfileService,t);this.contextMenuService.showContextMenu({getAnchor:()=>e.anchor,getActions:()=>r.secondary,getActionsContext:()=>t,actionRunner:this.actionRunner})}handleExecuteKeypress(e){const t=this.tree.getFocus(),r=this.tree.getSelection();let n;t.length===1&&r.includes(t[0])?(e.browserEvent?.preventDefault(),n=r):n=t;const s=n.filter(a=>a instanceof T);s.length&&this.testService.runTests({group:C.Run,tests:s.map(a=>a.test)})}reevaluateWelcomeState(){const t=this.testService.collection.busyProviders===0&&Dt(this.testService.collection)?this.filterState.isFilteringFor(b.CurrentDoc)?2:1:0;t!==this.welcomeExperience&&(this.welcomeExperience=t,this.welcomeVisibilityEmitter.fire(t))}ensureProjection(){return this.projection.value??this.updatePreferredProjection()}updatePreferredProjection(){this.projection.clear();const e=this.lastViewState.get({});this._viewMode.get()===me.List?this.projection.value=this.instantiationService.createInstance(Lt,e):this.projection.value=this.instantiationService.createInstance(Ht,e);const t=this._register(new Q(()=>this.applyProjectionChanges(),200));return this.projection.value.onUpdate(()=>{t.isScheduled()||t.schedule()}),this.applyProjectionChanges(),this.projection.value}applyProjectionChanges(){this.reevaluateWelcomeState(),this.projection.value?.applyTo(this.tree),this.tree.refilter(),this.hasPendingReveal&&this.revealById(this.filterState.reveal.get())}getSelectedTests(){return this.tree.getSelection()}};K=P([c(2,ue),c(3,Et),c(4,bt),c(5,ce),c(6,Re),c(7,te),c(8,fe),c(9,k),c(10,ct),c(11,de),c(12,Ae),c(13,At),c(14,ve),c(15,ie),c(16,xe)],K);var Ut=(t=>(t[t.Exclude=0]="Exclude",t[t.Inherit=1]="Inherit",t[t.Include=2]="Include",t))(Ut||{});const Gt=(m,i,e,t)=>{const r=[t?[t]:m.rootIds];for(;r.length;)for(const n of r.pop()){const s=m.getNodeById(n);if(s&&!(!s.item.uri||!i.extUri.isEqualOrParent(e,s.item.uri))){if(s.item.range||s.expand===Me.Expandable)return!0;r.push(s.children)}}return!1};let $=class{constructor(i,e,t,r){this.collection=i;this.state=e;this.testService=t;this.uriIdentityService=r}documentUris=[];lastIncludedTests;filter(i){if(i instanceof D)return O.Visible;if(i.test&&!this.state.isFilteringFor(b.Hidden)&&this.testService.excluded.contains(i.test))return O.Hidden;switch(Math.min(this.testFilterText(i),this.testLocation(i),this.testState(i),this.testTags(i))){case 0:return O.Hidden;case 2:return this.lastIncludedTests?.add(i),O.Visible;default:return O.Recurse}}filterToDocumentUri(i){this.documentUris=[...i]}testTags(i){return!this.state.includeTags.size&&!this.state.excludeTags.size||(!this.state.includeTags.size||i.test.item.tags.some(e=>this.state.includeTags.has(e)))&&i.test.item.tags.every(e=>!this.state.excludeTags.has(e))?2:1}testState(i){return this.state.isFilteringFor(b.Failed)?_e(i.state)?2:1:this.state.isFilteringFor(b.Executed)?i.state!==N.Unset?2:1:2}testLocation(i){return this.documentUris.length===0||!this.state.isFilteringFor(b.CurrentDoc)&&!this.state.isFilteringFor(b.OpenedFiles)||!(i instanceof T)||this.documentUris.some(e=>Gt(this.collection,this.uriIdentityService,e,i.test.item.extId))?2:1}testFilterText(i){if(this.state.globList.length===0)return 2;const e=this.state.fuzzy.value;for(let t=i;t;t=t.parent){let r=this.state.globList[0].include===!1?2:1;const n=t.test.item.label.toLowerCase();for(const{include:s,text:a}of this.state.globList)(e?et(n,a):n.includes(a))&&(r=s?2:0);if(r!==1)return r}return 1}};$=P([c(1,fe),c(2,te),c(3,gt)],$);class qt{constructor(i){this.viewModel=i}compare(i,e){if(i instanceof D||e instanceof D)return(i instanceof D?-1:0)+(e instanceof D?1:0);const t=(e.duration||0)-(i.duration||0);if(this.viewModel.viewSorting===ee.ByDuration&&t!==0)return t;const r=Mt(i.state,e.state);if(this.viewModel.viewSorting===ee.ByStatus&&r!==0)return r;let n=!1;if(i instanceof T&&e instanceof T&&i.test.item.uri&&e.test.item.uri&&i.test.item.uri.toString()===e.test.item.uri.toString()&&i.test.item.range&&e.test.item.range){n=!0;const u=i.test.item.range.startLineNumber-e.test.item.range.startLineNumber;if(u!==0)return u}const s=i.test.item.sortText,a=e.test.item.sortText;return n&&!s&&!a?0:(s||i.test.item.label).localeCompare(a||e.test.item.label)}}let U=class extends Y{el;constructor(i,e){super();const t=this.el=f.append(i,f.$(".testing-no-test-placeholder")),r=f.append(t,f.$("p"));r.innerText=I("testingNoTest","No tests were found in this file.");const n=I("testingFindExtension","Show Workspace Tests"),s=this._register(new je(t,{title:n,...dt}));s.label=n,this._register(s.onDidClick(()=>e.toggleFilteringFor(b.CurrentDoc,!1)))}setVisible(i){this.el.classList.toggle("visible",i)}};U=P([c(1,fe)],U);class Qt extends Ue{constructor(e){super();this.getSelectedTests=e}async runAction(e,t){if(!(e instanceof W))return super.runAction(e,t);const r=this.getSelectedTests(),a=(r.some(u=>u===t)?r:[t]).filter(u=>u instanceof T);await e.run(...a)}}const Ve=m=>{let i=Ct(m.description||m.test.item.label,m.state);return m instanceof T&&(m.duration!==void 0&&(i=I({key:"testing.treeElementLabelDuration",comment:["{0} is the original label in testing.treeElementLabel, {1} is a duration"]},"{0}, in {1}",i,G(m.duration))),m.retired&&(i=I({key:"testing.treeElementLabelOutdated",comment:["{0} is the original label in testing.treeElementLabel"]},"{0}, outdated result",i))),i};class Yt{getWidgetAriaLabel(){return I("testExplorer","Test Explorer")}getAriaLabel(i){return i instanceof D?i.description:Ve(i)}}class Jt{getKeyboardNavigationLabel(i){return i instanceof D?i.message:i.test.item.label}}class Xt{getHeight(i){return i instanceof D?27:22}getTemplateId(i){return i instanceof D?A.ID:M.ID}}class Zt{getId(i){return i.treeId}}let A=class{constructor(i,e){this.hoverService=i;this.renderer=e.createInstance(tt,{})}static ID="error";renderer;get templateId(){return A.ID}renderTemplate(i){return{label:f.append(i,f.$(".error")),disposable:new le}}renderElement({element:i},e,t){if(f.clearNode(t.label),typeof i.message=="string")t.label.innerText=i.message;else{const r=this.renderer.render(i.message,{inline:!0});t.label.appendChild(r.element)}t.disposable.add(this.hoverService.setupManagedHover(ne("mouse"),t.label,i.description))}disposeTemplate(i){i.disposable.dispose()}};A=P([c(0,X),c(1,k)],A);let M=class extends Y{constructor(e,t,r,n,s,a,u,p){super();this.actionRunner=e;this.menuService=t;this.testService=r;this.profiles=n;this.contextKeyService=s;this.instantiationService=a;this.crService=u;this.hoverService=p}static ID="testItem";templateId=M.ID;renderTemplate(e){e.classList.add("testing-stdtree-container");const t=f.append(e,f.$(".computed-state")),r=f.append(e,f.$(".label")),n=new le;f.append(e,f.$(J.asCSSSelector(E.testingHiddenIcon)));const s=n.add(new se(e,{actionRunner:this.actionRunner,actionViewItemProvider:(u,p)=>u instanceof W?this.instantiationService.createInstance(it,u,{hoverDelegate:p.hoverDelegate}):void 0}));n.add(this.profiles.onDidChange(()=>{a.current&&this.fillActionBar(a.current,a)})),n.add(this.crService.onDidChange(u=>{const p=a.current?.test.item.extId;p&&(!u||u===p||ge.isChild(p,u))&&this.fillActionBar(a.current,a)}));const a={wrapper:e,label:r,actionBar:s,icon:t,elementDisposable:new le,templateDisposable:n};return a}disposeTemplate(e){e.templateDisposable.clear()}disposeElement(e,t,r){r.elementDisposable.clear()}fillActionBar(e,t){const{actions:r,contextOverlay:n}=Oe(this.contextKeyService,this.menuService,this.testService,this.crService,this.profiles,e),s=!!n.getContextKeyValue(w.isContinuousModeOn.key),a=!s&&this.crService.isEnabledForAChildOf(e.test.item.extId);t.actionBar.domNode.classList.toggle("testing-is-continuous-run",s||a),t.actionBar.clear(),t.actionBar.context=e,t.actionBar.push(r.primary,{icon:!0,label:!1})}renderElement(e,t,r){r.elementDisposable.clear(),r.current=e.element,r.elementDisposable.add(e.element.onChange(()=>this._renderElement(e,r))),this._renderElement(e,r)}_renderElement(e,t){this.fillActionBar(e.element,t);const r=this.testService.excluded.contains(e.element.test);t.wrapper.classList.toggle("test-is-hidden",r);const n=E.testingStatesToIcons.get(e.element.test.expand===Me.BusyExpanding||e.element.test.item.busy?N.Running:e.element.state);t.icon.className="computed-state "+(n?J.asClassName(n):""),e.element.retired&&(t.icon.className+=" retired"),t.elementDisposable.add(this.hoverService.setupManagedHover(ne("mouse"),t.label,Ve(e.element))),e.element.test.item.label.trim()?f.reset(t.label,...Ke(e.element.test.item.label)):t.label.textContent="\xA0";let s=e.element.description;e.element.duration!==void 0&&(s=s?`${s}: ${G(e.element.duration)}`:G(e.element.duration)),s&&f.append(t.label,f.$("span.test-label-description",{},s))}};M=P([c(1,ce),c(2,te),c(3,ve),c(4,de),c(5,k),c(6,ie),c(7,X)],M);const G=m=>m<10?`${m.toFixed(1)}ms`:m<1e3?`${m.toFixed(0)}ms`:`${(m/1e3).toFixed(1)}s`,Oe=(m,i,e,t,r,n)=>{const s=n instanceof T?n.test:void 0,a=Vt(s,s?r.capabilitiesForTest(s.item):0);if(a.push(["view",Pe.ExplorerViewId]),s){const o=e.getTestController(s.controllerId),h=!!o&&r.getControllerProfiles(o.id).some(g=>g.supportsContinuousRun&&Ie(g,s));a.push([w.canRefreshTests.key,o&&!!(o.capabilities.get()&Ft.Refresh)&&ge.isRoot(s.item.extId)],[w.testItemIsHidden.key,e.excluded.contains(s)],[w.isContinuousModeOn.key,h&&t.isSpecificallyEnabledFor(s.item.extId)],[w.isParentRunningContinuously.key,h&&t.isEnabledForAParentOf(s.item.extId)],[w.supportsContinuousRun.key,h],[w.testResultOutdated.key,n.retired],[w.testResultState.key,Pt[n.state]])}const u=m.createOverlay(a),p=i.getMenuActions(we.TestItem,u,{shouldForwardArgs:!0});return{actions:st(p,"inline"),contextOverlay:u}};ft((m,i)=>{if(m.type==="dark"){const e=m.getColor(pt);if(e){const t=new Ye(new Je(e.rgba.r,e.rgba.g,e.rgba.b,.65));i.addRule(`.test-explorer .test-explorer-messages { color: ${t}; }`)}}});export{re as TestingExplorerView};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import * as dom from "../../../../base/browser/dom.js";
+import { IKeyboardEvent } from "../../../../base/browser/keyboardEvent.js";
+import { IActionViewItemOptions } from "../../../../base/browser/ui/actionbar/actionViewItems.js";
+import { ActionBar, IActionViewItem } from "../../../../base/browser/ui/actionbar/actionbar.js";
+import { Button } from "../../../../base/browser/ui/button/button.js";
+import { getDefaultHoverDelegate } from "../../../../base/browser/ui/hover/hoverDelegateFactory.js";
+import { renderLabelWithIcons } from "../../../../base/browser/ui/iconLabel/iconLabels.js";
+import { IIdentityProvider, IKeyboardNavigationLabelProvider, IListVirtualDelegate } from "../../../../base/browser/ui/list/list.js";
+import { DefaultKeyboardNavigationDelegate, IListAccessibilityProvider } from "../../../../base/browser/ui/list/listWidget.js";
+import { ITreeContextMenuEvent, ITreeFilter, ITreeNode, ITreeRenderer, ITreeSorter, TreeFilterResult, TreeVisibility } from "../../../../base/browser/ui/tree/tree.js";
+import { Action, ActionRunner, IAction, Separator } from "../../../../base/common/actions.js";
+import { mapFindFirst } from "../../../../base/common/arraysFind.js";
+import { RunOnceScheduler, disposableTimeout } from "../../../../base/common/async.js";
+import { groupBy } from "../../../../base/common/collections.js";
+import { Color, RGBA } from "../../../../base/common/color.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { FuzzyScore } from "../../../../base/common/filters.js";
+import { Iterable } from "../../../../base/common/iterator.js";
+import { KeyCode } from "../../../../base/common/keyCodes.js";
+import { Disposable, DisposableStore, MutableDisposable } from "../../../../base/common/lifecycle.js";
+import { autorun, observableFromEvent } from "../../../../base/common/observable.js";
+import { fuzzyContains } from "../../../../base/common/strings.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { isDefined } from "../../../../base/common/types.js";
+import { URI } from "../../../../base/common/uri.js";
+import { MarkdownRenderer } from "../../../../editor/browser/widget/markdownRenderer/browser/markdownRenderer.js";
+import { localize } from "../../../../nls.js";
+import { DropdownWithPrimaryActionViewItem } from "../../../../platform/actions/browser/dropdownWithPrimaryActionViewItem.js";
+import { MenuEntryActionViewItem, createActionViewItem, getActionBarActions, getFlatContextMenuActions } from "../../../../platform/actions/browser/menuEntryActionViewItem.js";
+import { IMenuService, MenuId, MenuItemAction } from "../../../../platform/actions/common/actions.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IContextKey, IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IContextMenuService } from "../../../../platform/contextview/browser/contextView.js";
+import { IHoverService } from "../../../../platform/hover/browser/hover.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { IOpenerService } from "../../../../platform/opener/common/opener.js";
+import { UnmanagedProgress } from "../../../../platform/progress/common/progress.js";
+import { IStorageService, StorageScope, StorageTarget, WillSaveStateReason } from "../../../../platform/storage/common/storage.js";
+import { defaultButtonStyles } from "../../../../platform/theme/browser/defaultStyles.js";
+import { foreground } from "../../../../platform/theme/common/colorRegistry.js";
+import { spinningLoading } from "../../../../platform/theme/common/iconRegistry.js";
+import { IThemeService, registerThemingParticipant } from "../../../../platform/theme/common/themeService.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import { registerNavigableContainer } from "../../../browser/actions/widgetNavigationCommands.js";
+import { ViewPane } from "../../../browser/parts/views/viewPane.js";
+import { IViewletViewOptions } from "../../../browser/parts/views/viewsViewlet.js";
+import { DiffEditorInput } from "../../../common/editor/diffEditorInput.js";
+import { IViewDescriptorService } from "../../../common/views.js";
+import { IActivityService, IconBadge, NumberBadge } from "../../../services/activity/common/activity.js";
+import { IEditorGroupsService } from "../../../services/editor/common/editorGroupsService.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { TestingConfigKeys, TestingCountBadge, getTestingConfiguration } from "../common/configuration.js";
+import { TestCommandId, TestExplorerViewMode, TestExplorerViewSorting, Testing, labelForTestInState } from "../common/constants.js";
+import { StoredValue } from "../common/storedValue.js";
+import { ITestExplorerFilterState, TestExplorerFilterState, TestFilterTerm } from "../common/testExplorerFilterState.js";
+import { TestId } from "../common/testId.js";
+import { ITestProfileService, canUseProfileWithTest } from "../common/testProfileService.js";
+import { LiveTestResult, TestResultItemChangeReason } from "../common/testResult.js";
+import { ITestResultService } from "../common/testResultService.js";
+import { IMainThreadTestCollection, ITestService, testCollectionIsEmpty } from "../common/testService.js";
+import { ITestRunProfile, InternalTestItem, TestControllerCapability, TestItemExpandState, TestResultState, TestRunProfileBitset, testProfileBitset, testResultStateToContextValues } from "../common/testTypes.js";
+import { TestingContextKeys } from "../common/testingContextKeys.js";
+import { ITestingContinuousRunService } from "../common/testingContinuousRunService.js";
+import { ITestingPeekOpener } from "../common/testingPeekOpener.js";
+import { cmpPriority, isFailedState, isStateWithResult, statesInOrder } from "../common/testingStates.js";
+import { ITestTreeProjection, TestExplorerTreeElement, TestItemTreeElement, TestTreeErrorMessage } from "./explorerProjections/index.js";
+import { ListProjection } from "./explorerProjections/listProjection.js";
+import { getTestItemContextOverlay } from "./explorerProjections/testItemContextOverlay.js";
+import { TestingObjectTree } from "./explorerProjections/testingObjectTree.js";
+import { ISerializedTestTreeCollapseState } from "./explorerProjections/testingViewState.js";
+import { TreeProjection } from "./explorerProjections/treeProjection.js";
+import * as icons from "./icons.js";
+import "./media/testing.css";
+import { DebugLastRun, ReRunLastRun } from "./testExplorerActions.js";
+import { TestingExplorerFilter } from "./testingExplorerFilter.js";
+import { CountSummary, collectTestStateCounts, getTestProgressText } from "./testingProgressUiService.js";
+var LastFocusState = /* @__PURE__ */ ((LastFocusState2) => {
+  LastFocusState2[LastFocusState2["Input"] = 0] = "Input";
+  LastFocusState2[LastFocusState2["Tree"] = 1] = "Tree";
+  return LastFocusState2;
+})(LastFocusState || {});
+let TestingExplorerView = class extends ViewPane {
+  constructor(options, contextMenuService, keybindingService, configurationService, instantiationService, viewDescriptorService, contextKeyService, openerService, themeService, testService, hoverService, testProfileService, commandService, menuService, crService) {
+    super(options, keybindingService, contextMenuService, configurationService, contextKeyService, viewDescriptorService, instantiationService, openerService, themeService, hoverService);
+    this.testService = testService;
+    this.testProfileService = testProfileService;
+    this.commandService = commandService;
+    this.menuService = menuService;
+    this.crService = crService;
+    const relayout = this._register(new RunOnceScheduler(() => this.layoutBody(), 1));
+    this._register(this.onDidChangeViewWelcomeState(() => {
+      if (!this.shouldShowWelcome()) {
+        relayout.schedule();
+      }
+    }));
+    this._register(Event.any(crService.onDidChange, testProfileService.onDidChange)(() => {
+      this.updateActions();
+    }));
+    this._register(testService.collection.onBusyProvidersChange((busy) => {
+      this.updateDiscoveryProgress(busy);
+    }));
+    this._register(testProfileService.onDidChange(() => this.updateActions()));
+  }
+  static {
+    __name(this, "TestingExplorerView");
+  }
+  viewModel;
+  filterActionBar = this._register(new MutableDisposable());
+  container;
+  treeHeader;
+  discoveryProgress = this._register(new MutableDisposable());
+  filter = this._register(new MutableDisposable());
+  filterFocusListener = this._register(new MutableDisposable());
+  dimensions = { width: 0, height: 0 };
+  lastFocusState = 0 /* Input */;
+  get focusedTreeElements() {
+    return this.viewModel.tree.getFocus().filter(isDefined);
+  }
+  shouldShowWelcome() {
+    return this.viewModel?.welcomeExperience === 1 /* ForWorkspace */;
+  }
+  focus() {
+    super.focus();
+    if (this.lastFocusState === 1 /* Tree */) {
+      this.viewModel.tree.domFocus();
+    } else {
+      this.filter.value?.focus();
+    }
+  }
+  /**
+   * Gets include/exclude items in the tree, based either on visible tests
+   * or a use selection. If a profile is given, only tests in that profile
+   * are collected. If a bitset is given, any test that can run in that
+   * bitset is collected.
+   */
+  getTreeIncludeExclude(profileOrBitset, withinItems, filterToType = "visible") {
+    const projection = this.viewModel.projection.value;
+    if (!projection) {
+      return { include: [], exclude: [] };
+    }
+    const include = /* @__PURE__ */ new Set();
+    const exclude = [];
+    const runnableWithProfileOrBitset = /* @__PURE__ */ new Map();
+    const isRunnableWithProfileOrBitset = /* @__PURE__ */ __name((item) => {
+      let value = runnableWithProfileOrBitset.get(item);
+      if (value === void 0) {
+        value = typeof profileOrBitset === "number" ? !!this.testProfileService.getDefaultProfileForTest(profileOrBitset, item) : canUseProfileWithTest(profileOrBitset, item);
+        runnableWithProfileOrBitset.set(item, value);
+      }
+      return value;
+    }, "isRunnableWithProfileOrBitset");
+    const attempt = /* @__PURE__ */ __name((element, alreadyIncluded) => {
+      if (!(element instanceof TestItemTreeElement) || !this.viewModel.tree.hasElement(element)) {
+        return;
+      }
+      const inTree = this.viewModel.tree.getNode(element);
+      if (!inTree.visible) {
+        if (alreadyIncluded) {
+          exclude.push(element.test);
+        }
+        return;
+      }
+      const visibleRunnableChildren = inTree.children.filter(
+        (c) => c.visible && c.element instanceof TestItemTreeElement && isRunnableWithProfileOrBitset(c.element.test)
+      ).length;
+      if (
+        // If it's not already included...
+        !alreadyIncluded && isRunnableWithProfileOrBitset(element.test) && (visibleRunnableChildren === 0 || visibleRunnableChildren * 2 >= inTree.children.length) && visibleRunnableChildren !== 1
+      ) {
+        include.add(element.test);
+        alreadyIncluded = true;
+      }
+      for (const child of element.children) {
+        attempt(child, alreadyIncluded);
+      }
+    }, "attempt");
+    if (filterToType === "selected") {
+      const sel = this.viewModel.tree.getSelection().filter(isDefined);
+      if (sel.length) {
+        L:
+          for (const node of sel) {
+            if (node instanceof TestItemTreeElement) {
+              for (let i = node; i; i = i.parent) {
+                if (include.has(i.test)) {
+                  continue L;
+                }
+              }
+              include.add(node.test);
+              node.children.forEach((c) => attempt(c, true));
+            }
+          }
+        return { include: [...include], exclude };
+      }
+    }
+    for (const root of withinItems || this.testService.collection.rootItems) {
+      const element = projection.getElementByTestId(root.item.extId);
+      if (!element) {
+        continue;
+      }
+      if (typeof profileOrBitset === "object" && !canUseProfileWithTest(profileOrBitset, root)) {
+        continue;
+      }
+      if (!this.viewModel.tree.hasElement(element)) {
+        const visibleChildren = [...element.children].reduce((acc, c) => this.viewModel.tree.hasElement(c) && this.viewModel.tree.getNode(c).visible ? acc + 1 : acc, 0);
+        if (element.children.size > 0 && visibleChildren * 2 >= element.children.size) {
+          include.add(element.test);
+          element.children.forEach((c) => attempt(c, true));
+        } else {
+          element.children.forEach((c) => attempt(c, false));
+        }
+      } else {
+        attempt(element, false);
+      }
+    }
+    return { include: [...include], exclude };
+  }
+  render() {
+    super.render();
+    this._register(registerNavigableContainer({
+      name: "testingExplorerView",
+      focusNotifiers: [this],
+      focusNextWidget: /* @__PURE__ */ __name(() => {
+        if (!this.viewModel.tree.isDOMFocused()) {
+          this.viewModel.tree.domFocus();
+        }
+      }, "focusNextWidget"),
+      focusPreviousWidget: /* @__PURE__ */ __name(() => {
+        if (this.viewModel.tree.isDOMFocused()) {
+          this.filter.value?.focus();
+        }
+      }, "focusPreviousWidget")
+    }));
+  }
+  /**
+   * @override
+   */
+  renderBody(container) {
+    super.renderBody(container);
+    this.container = dom.append(container, dom.$(".test-explorer"));
+    this.treeHeader = dom.append(this.container, dom.$(".test-explorer-header"));
+    this.filterActionBar.value = this.createFilterActionBar();
+    const messagesContainer = dom.append(this.treeHeader, dom.$(".result-summary-container"));
+    this._register(this.instantiationService.createInstance(ResultSummaryView, messagesContainer));
+    const listContainer = dom.append(this.container, dom.$(".test-explorer-tree"));
+    this.viewModel = this.instantiationService.createInstance(TestingExplorerViewModel, listContainer, this.onDidChangeBodyVisibility);
+    this._register(this.viewModel.tree.onDidFocus(() => this.lastFocusState = 1 /* Tree */));
+    this._register(this.viewModel.onChangeWelcomeVisibility(() => this._onDidChangeViewWelcomeState.fire()));
+    this._register(this.viewModel);
+    this._onDidChangeViewWelcomeState.fire();
+  }
+  /** @override  */
+  createActionViewItem(action, options) {
+    switch (action.id) {
+      case TestCommandId.FilterAction:
+        this.filter.value = this.instantiationService.createInstance(TestingExplorerFilter, action, options);
+        this.filterFocusListener.value = this.filter.value.onDidFocus(() => this.lastFocusState = 0 /* Input */);
+        return this.filter.value;
+      case TestCommandId.RunSelectedAction:
+        return this.getRunGroupDropdown(TestRunProfileBitset.Run, action, options);
+      case TestCommandId.DebugSelectedAction:
+        return this.getRunGroupDropdown(TestRunProfileBitset.Debug, action, options);
+      case TestCommandId.StartContinousRun:
+      case TestCommandId.StopContinousRun:
+        return this.getContinuousRunDropdown(action, options);
+      default:
+        return super.createActionViewItem(action, options);
+    }
+  }
+  /** @inheritdoc */
+  getTestConfigGroupActions(group) {
+    const profileActions = [];
+    let participatingGroups = 0;
+    let participatingProfiles = 0;
+    let hasConfigurable = false;
+    const defaults = this.testProfileService.getGroupDefaultProfiles(group);
+    for (const { profiles, controller } of this.testProfileService.all()) {
+      let hasAdded = false;
+      for (const profile of profiles) {
+        if (profile.group !== group) {
+          continue;
+        }
+        if (!hasAdded) {
+          hasAdded = true;
+          participatingGroups++;
+          profileActions.push(new Action(`${controller.id}.$root`, controller.label.get(), void 0, false));
+        }
+        hasConfigurable = hasConfigurable || profile.hasConfigurationHandler;
+        participatingProfiles++;
+        profileActions.push(new Action(
+          `${controller.id}.${profile.profileId}`,
+          defaults.includes(profile) ? localize("defaultTestProfile", "{0} (Default)", profile.label) : profile.label,
+          void 0,
+          void 0,
+          () => {
+            const { include, exclude } = this.getTreeIncludeExclude(profile);
+            this.testService.runResolvedTests({
+              exclude: exclude.map((e) => e.item.extId),
+              group: profile.group,
+              targets: [{
+                profileId: profile.profileId,
+                controllerId: profile.controllerId,
+                testIds: include.map((i) => i.item.extId)
+              }]
+            });
+          }
+        ));
+      }
+    }
+    const contextKeys = [];
+    if (group === TestRunProfileBitset.Run) {
+      contextKeys.push(["testing.profile.context.group", "run"]);
+    }
+    if (group === TestRunProfileBitset.Debug) {
+      contextKeys.push(["testing.profile.context.group", "debug"]);
+    }
+    if (group === TestRunProfileBitset.Coverage) {
+      contextKeys.push(["testing.profile.context.group", "coverage"]);
+    }
+    const key = this.contextKeyService.createOverlay(contextKeys);
+    const menu = this.menuService.getMenuActions(MenuId.TestProfilesContext, key);
+    const menuActions = getFlatContextMenuActions(menu);
+    const postActions = [];
+    if (participatingProfiles > 1) {
+      postActions.push(new Action(
+        "selectDefaultTestConfigurations",
+        localize("selectDefaultConfigs", "Select Default Profile"),
+        void 0,
+        void 0,
+        () => this.commandService.executeCommand(TestCommandId.SelectDefaultTestProfiles, group)
+      ));
+    }
+    if (hasConfigurable) {
+      postActions.push(new Action(
+        "configureTestProfiles",
+        localize("configureTestProfiles", "Configure Test Profiles"),
+        void 0,
+        void 0,
+        () => this.commandService.executeCommand(TestCommandId.ConfigureTestProfilesAction, group)
+      ));
+    }
+    return {
+      numberOfProfiles: participatingProfiles,
+      actions: menuActions.length > 0 ? Separator.join(profileActions, menuActions, postActions) : Separator.join(profileActions, postActions)
+    };
+  }
+  /**
+   * @override
+   */
+  saveState() {
+    this.filter.value?.saveState();
+    super.saveState();
+  }
+  getRunGroupDropdown(group, defaultAction, options) {
+    const dropdownActions = this.getTestConfigGroupActions(group);
+    if (dropdownActions.numberOfProfiles < 2) {
+      return super.createActionViewItem(defaultAction, options);
+    }
+    const primaryAction = this.instantiationService.createInstance(MenuItemAction, {
+      id: defaultAction.id,
+      title: defaultAction.label,
+      icon: group === TestRunProfileBitset.Run ? icons.testingRunAllIcon : icons.testingDebugAllIcon
+    }, void 0, void 0, void 0, void 0);
+    return this.instantiationService.createInstance(
+      DropdownWithPrimaryActionViewItem,
+      primaryAction,
+      this.getDropdownAction(),
+      dropdownActions.actions,
+      "",
+      options
+    );
+  }
+  getDropdownAction() {
+    return new Action("selectRunConfig", localize("testingSelectConfig", "Select Configuration..."), "codicon-chevron-down", true);
+  }
+  getContinuousRunDropdown(defaultAction, options) {
+    const allProfiles = [...Iterable.flatMap(this.testProfileService.all(), (cr) => {
+      if (this.testService.collection.getNodeById(cr.controller.id)?.children.size) {
+        return Iterable.filter(cr.profiles, (p) => p.supportsContinuousRun);
+      }
+      return Iterable.empty();
+    })];
+    if (allProfiles.length <= 1) {
+      return super.createActionViewItem(defaultAction, options);
+    }
+    const primaryAction = this.instantiationService.createInstance(MenuItemAction, {
+      id: defaultAction.id,
+      title: defaultAction.label,
+      icon: defaultAction.id === TestCommandId.StartContinousRun ? icons.testingTurnContinuousRunOn : icons.testingTurnContinuousRunOff
+    }, void 0, void 0, void 0, void 0);
+    const dropdownActions = [];
+    const groups = groupBy(allProfiles, (p) => p.group);
+    const crService = this.crService;
+    for (const group of [TestRunProfileBitset.Run, TestRunProfileBitset.Debug, TestRunProfileBitset.Coverage]) {
+      const profiles = groups[group];
+      if (!profiles) {
+        continue;
+      }
+      if (Object.keys(groups).length > 1) {
+        dropdownActions.push({
+          id: `${group}.label`,
+          label: testProfileBitset[group],
+          enabled: false,
+          class: void 0,
+          tooltip: testProfileBitset[group],
+          run: /* @__PURE__ */ __name(() => {
+          }, "run")
+        });
+      }
+      for (const profile of profiles) {
+        dropdownActions.push({
+          id: `${group}.${profile.profileId}`,
+          label: profile.label,
+          enabled: true,
+          class: void 0,
+          tooltip: profile.label,
+          checked: crService.isEnabledForProfile(profile),
+          run: /* @__PURE__ */ __name(() => crService.isEnabledForProfile(profile) ? crService.stopProfile(profile) : crService.start([profile]), "run")
+        });
+      }
+    }
+    return this.instantiationService.createInstance(
+      DropdownWithPrimaryActionViewItem,
+      primaryAction,
+      this.getDropdownAction(),
+      dropdownActions,
+      "",
+      options
+    );
+  }
+  createFilterActionBar() {
+    const bar = new ActionBar(this.treeHeader, {
+      actionViewItemProvider: /* @__PURE__ */ __name((action, options) => this.createActionViewItem(action, options), "actionViewItemProvider"),
+      triggerKeys: { keyDown: false, keys: [] }
+    });
+    bar.push(new Action(TestCommandId.FilterAction));
+    bar.getContainer().classList.add("testing-filter-action-bar");
+    return bar;
+  }
+  updateDiscoveryProgress(busy) {
+    if (!busy && this.discoveryProgress) {
+      this.discoveryProgress.clear();
+    } else if (busy && !this.discoveryProgress.value) {
+      this.discoveryProgress.value = this.instantiationService.createInstance(UnmanagedProgress, { location: this.getProgressLocation() });
+    }
+  }
+  /**
+   * @override
+   */
+  layoutBody(height = this.dimensions.height, width = this.dimensions.width) {
+    super.layoutBody(height, width);
+    this.dimensions.height = height;
+    this.dimensions.width = width;
+    this.container.style.height = `${height}px`;
+    this.viewModel?.layout(height - this.treeHeader.clientHeight, width);
+    this.filter.value?.layout(width);
+  }
+};
+TestingExplorerView = __decorateClass([
+  __decorateParam(1, IContextMenuService),
+  __decorateParam(2, IKeybindingService),
+  __decorateParam(3, IConfigurationService),
+  __decorateParam(4, IInstantiationService),
+  __decorateParam(5, IViewDescriptorService),
+  __decorateParam(6, IContextKeyService),
+  __decorateParam(7, IOpenerService),
+  __decorateParam(8, IThemeService),
+  __decorateParam(9, ITestService),
+  __decorateParam(10, IHoverService),
+  __decorateParam(11, ITestProfileService),
+  __decorateParam(12, ICommandService),
+  __decorateParam(13, IMenuService),
+  __decorateParam(14, ITestingContinuousRunService)
+], TestingExplorerView);
+const SUMMARY_RENDER_INTERVAL = 200;
+let ResultSummaryView = class extends Disposable {
+  constructor(container, resultService, activityService, crService, configurationService, instantiationService, hoverService) {
+    super();
+    this.container = container;
+    this.resultService = resultService;
+    this.activityService = activityService;
+    this.crService = crService;
+    this.badgeType = configurationService.getValue(TestingConfigKeys.CountBadge);
+    this._register(resultService.onResultsChanged(this.render, this));
+    this._register(configurationService.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration(TestingConfigKeys.CountBadge)) {
+        this.badgeType = configurationService.getValue(TestingConfigKeys.CountBadge);
+        this.render();
+      }
+    }));
+    this.countHover = this._register(hoverService.setupManagedHover(getDefaultHoverDelegate("mouse"), this.elements.count, ""));
+    const ab = this._register(new ActionBar(this.elements.rerun, {
+      actionViewItemProvider: /* @__PURE__ */ __name((action, options) => createActionViewItem(instantiationService, action, options), "actionViewItemProvider")
+    }));
+    ab.push(instantiationService.createInstance(
+      MenuItemAction,
+      { ...new ReRunLastRun().desc, icon: icons.testingRerunIcon },
+      { ...new DebugLastRun().desc, icon: icons.testingDebugIcon },
+      {},
+      void 0,
+      void 0
+    ), { icon: true, label: false });
+    this.render();
+  }
+  static {
+    __name(this, "ResultSummaryView");
+  }
+  elementsWereAttached = false;
+  badgeType;
+  lastBadge;
+  countHover;
+  badgeDisposable = this._register(new MutableDisposable());
+  renderLoop = this._register(new RunOnceScheduler(() => this.render(), SUMMARY_RENDER_INTERVAL));
+  elements = dom.h("div.result-summary", [
+    dom.h("div@status"),
+    dom.h("div@count"),
+    dom.h("div@count"),
+    dom.h("span"),
+    dom.h("duration@duration"),
+    dom.h("a@rerun")
+  ]);
+  render() {
+    const { results } = this.resultService;
+    const { count, root, status, duration, rerun } = this.elements;
+    if (!results.length) {
+      if (this.elementsWereAttached) {
+        root.remove();
+        this.elementsWereAttached = false;
+      }
+      this.container.innerText = localize("noResults", "No test results yet.");
+      this.badgeDisposable.clear();
+      return;
+    }
+    const live = results.filter((r) => !r.completedAt);
+    let counts;
+    if (live.length) {
+      status.className = ThemeIcon.asClassName(spinningLoading);
+      counts = collectTestStateCounts(true, live);
+      this.renderLoop.schedule();
+      const last = live[live.length - 1];
+      duration.textContent = formatDuration(Date.now() - last.startedAt);
+      rerun.style.display = "none";
+    } else {
+      const last = results[0];
+      const dominantState = mapFindFirst(statesInOrder, (s) => last.counts[s] > 0 ? s : void 0);
+      status.className = ThemeIcon.asClassName(icons.testingStatesToIcons.get(dominantState ?? TestResultState.Unset));
+      counts = collectTestStateCounts(false, [last]);
+      duration.textContent = last instanceof LiveTestResult ? formatDuration(last.completedAt - last.startedAt) : "";
+      rerun.style.display = "block";
+    }
+    count.textContent = `${counts.passed}/${counts.totalWillBeRun}`;
+    this.countHover.update(getTestProgressText(counts));
+    this.renderActivityBadge(counts);
+    if (!this.elementsWereAttached) {
+      dom.clearNode(this.container);
+      this.container.appendChild(root);
+      this.elementsWereAttached = true;
+    }
+  }
+  renderActivityBadge(countSummary) {
+    if (countSummary && this.badgeType !== TestingCountBadge.Off && countSummary[this.badgeType] !== 0) {
+      if (this.lastBadge instanceof NumberBadge && this.lastBadge.number === countSummary[this.badgeType]) {
+        return;
+      }
+      this.lastBadge = new NumberBadge(countSummary[this.badgeType], (num) => this.getLocalizedBadgeString(this.badgeType, num));
+    } else if (this.crService.isEnabled()) {
+      if (this.lastBadge instanceof IconBadge && this.lastBadge.icon === icons.testingContinuousIsOn) {
+        return;
+      }
+      this.lastBadge = new IconBadge(icons.testingContinuousIsOn, () => localize("testingContinuousBadge", "Tests are being watched for changes"));
+    } else {
+      if (!this.lastBadge) {
+        return;
+      }
+      this.lastBadge = void 0;
+    }
+    this.badgeDisposable.value = this.lastBadge && this.activityService.showViewActivity(Testing.ExplorerViewId, { badge: this.lastBadge });
+  }
+  getLocalizedBadgeString(countBadgeType, count) {
+    switch (countBadgeType) {
+      case TestingCountBadge.Passed:
+        return localize("testingCountBadgePassed", "{0} passed tests", count);
+      case TestingCountBadge.Skipped:
+        return localize("testingCountBadgeSkipped", "{0} skipped tests", count);
+      default:
+        return localize("testingCountBadgeFailed", "{0} failed tests", count);
+    }
+  }
+};
+ResultSummaryView = __decorateClass([
+  __decorateParam(1, ITestResultService),
+  __decorateParam(2, IActivityService),
+  __decorateParam(3, ITestingContinuousRunService),
+  __decorateParam(4, IConfigurationService),
+  __decorateParam(5, IInstantiationService),
+  __decorateParam(6, IHoverService)
+], ResultSummaryView);
+var WelcomeExperience = /* @__PURE__ */ ((WelcomeExperience2) => {
+  WelcomeExperience2[WelcomeExperience2["None"] = 0] = "None";
+  WelcomeExperience2[WelcomeExperience2["ForWorkspace"] = 1] = "ForWorkspace";
+  WelcomeExperience2[WelcomeExperience2["ForDocument"] = 2] = "ForDocument";
+  return WelcomeExperience2;
+})(WelcomeExperience || {});
+let TestingExplorerViewModel = class extends Disposable {
+  constructor(listContainer, onDidChangeVisibility, configurationService, editorService, editorGroupsService, menuService, contextMenuService, testService, filterState, instantiationService, storageService, contextKeyService, testResults, peekOpener, testProfileService, crService, commandService) {
+    super();
+    this.menuService = menuService;
+    this.contextMenuService = contextMenuService;
+    this.testService = testService;
+    this.filterState = filterState;
+    this.instantiationService = instantiationService;
+    this.storageService = storageService;
+    this.contextKeyService = contextKeyService;
+    this.testResults = testResults;
+    this.peekOpener = peekOpener;
+    this.testProfileService = testProfileService;
+    this.crService = crService;
+    this.hasPendingReveal = !!filterState.reveal.get();
+    this.noTestForDocumentWidget = this._register(instantiationService.createInstance(NoTestsForDocumentWidget, listContainer));
+    this.lastViewState = this._register(new StoredValue({
+      key: "testing.treeState",
+      scope: StorageScope.WORKSPACE,
+      target: StorageTarget.MACHINE
+    }, this.storageService));
+    this._viewMode = TestingContextKeys.viewMode.bindTo(contextKeyService);
+    this._viewSorting = TestingContextKeys.viewSorting.bindTo(contextKeyService);
+    this._viewMode.set(this.storageService.get("testing.viewMode", StorageScope.WORKSPACE, TestExplorerViewMode.Tree));
+    this._viewSorting.set(this.storageService.get("testing.viewSorting", StorageScope.WORKSPACE, TestExplorerViewSorting.ByLocation));
+    this.reevaluateWelcomeState();
+    this.filter = this.instantiationService.createInstance(TestsFilter, testService.collection);
+    this.tree = instantiationService.createInstance(
+      TestingObjectTree,
+      "Test Explorer List",
+      listContainer,
+      new ListDelegate(),
+      [
+        instantiationService.createInstance(TestItemRenderer, this.actionRunner),
+        instantiationService.createInstance(ErrorRenderer)
+      ],
+      {
+        identityProvider: instantiationService.createInstance(IdentityProvider),
+        hideTwistiesOfChildlessElements: false,
+        sorter: instantiationService.createInstance(TreeSorter, this),
+        keyboardNavigationLabelProvider: instantiationService.createInstance(TreeKeyboardNavigationLabelProvider),
+        accessibilityProvider: instantiationService.createInstance(ListAccessibilityProvider),
+        filter: this.filter,
+        findWidgetEnabled: false
+      }
+    );
+    const collapseStateSaver = this._register(new RunOnceScheduler(() => {
+      const state = this.tree.getOptimizedViewState(this.lastViewState.get({}));
+      const projection = this.projection.value;
+      if (projection) {
+        projection.lastState = state;
+      }
+    }, 3e3));
+    this._register(this.tree.onDidChangeCollapseState((evt) => {
+      if (evt.node.element instanceof TestItemTreeElement) {
+        if (!evt.node.collapsed) {
+          this.projection.value?.expandElement(evt.node.element, evt.deep ? Infinity : 0);
+        }
+        collapseStateSaver.schedule();
+      }
+    }));
+    this._register(this.crService.onDidChange((testId) => {
+      if (testId) {
+        const elem = this.projection.value?.getElementByTestId(testId);
+        this.tree.resort(elem?.parent && this.tree.hasElement(elem.parent) ? elem.parent : null, false);
+      }
+    }));
+    this._register(onDidChangeVisibility((visible) => {
+      if (visible) {
+        this.ensureProjection();
+      }
+    }));
+    this._register(this.tree.onContextMenu((e) => this.onContextMenu(e)));
+    this._register(Event.any(
+      filterState.text.onDidChange,
+      filterState.fuzzy.onDidChange,
+      testService.excluded.onTestExclusionsChanged
+    )(() => {
+      if (!filterState.text.value) {
+        return this.tree.refilter();
+      }
+      const items = this.filter.lastIncludedTests = /* @__PURE__ */ new Set();
+      this.tree.refilter();
+      this.filter.lastIncludedTests = void 0;
+      for (const test of items) {
+        this.tree.expandTo(test);
+      }
+    }));
+    this._register(this.tree.onDidOpen((e) => {
+      if (!(e.element instanceof TestItemTreeElement)) {
+        return;
+      }
+      filterState.didSelectTestInExplorer(e.element.test.item.extId);
+      if (!e.element.children.size && e.element.test.item.uri) {
+        if (!this.tryPeekError(e.element)) {
+          commandService.executeCommand("vscode.revealTest", e.element.test.item.extId, {
+            openToSide: e.sideBySide,
+            preserveFocus: true
+          });
+        }
+      }
+    }));
+    this._register(this.tree);
+    this._register(this.onChangeWelcomeVisibility((e) => {
+      this.noTestForDocumentWidget.setVisible(e === 2 /* ForDocument */);
+    }));
+    this._register(dom.addStandardDisposableListener(this.tree.getHTMLElement(), "keydown", (evt) => {
+      if (evt.equals(KeyCode.Enter)) {
+        this.handleExecuteKeypress(evt);
+      } else if (DefaultKeyboardNavigationDelegate.mightProducePrintableCharacter(evt)) {
+        filterState.text.value = evt.browserEvent.key;
+        filterState.focusInput();
+      }
+    }));
+    this._register(autorun((reader) => {
+      this.revealById(filterState.reveal.read(reader), void 0, false);
+    }));
+    this._register(onDidChangeVisibility((visible) => {
+      if (visible) {
+        filterState.focusInput();
+      }
+    }));
+    let followRunningTests = getTestingConfiguration(configurationService, TestingConfigKeys.FollowRunningTest);
+    this._register(configurationService.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration(TestingConfigKeys.FollowRunningTest)) {
+        followRunningTests = getTestingConfiguration(configurationService, TestingConfigKeys.FollowRunningTest);
+      }
+    }));
+    let alwaysRevealTestAfterStateChange = getTestingConfiguration(configurationService, TestingConfigKeys.AlwaysRevealTestOnStateChange);
+    this._register(configurationService.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration(TestingConfigKeys.AlwaysRevealTestOnStateChange)) {
+        alwaysRevealTestAfterStateChange = getTestingConfiguration(configurationService, TestingConfigKeys.AlwaysRevealTestOnStateChange);
+      }
+    }));
+    this._register(testResults.onTestChanged((evt) => {
+      if (!followRunningTests) {
+        return;
+      }
+      if (evt.reason !== TestResultItemChangeReason.OwnStateChange) {
+        return;
+      }
+      if (this.tree.selectionSize > 1) {
+        return;
+      }
+      if (evt.item.ownComputedState !== TestResultState.Running && !(evt.previousState === TestResultState.Queued && isStateWithResult(evt.item.ownComputedState))) {
+        return;
+      }
+      this.revealById(evt.item.item.extId, alwaysRevealTestAfterStateChange, false);
+    }));
+    this._register(testResults.onResultsChanged(() => {
+      this.tree.resort(null);
+    }));
+    this._register(this.testProfileService.onDidChange(() => {
+      this.tree.rerender();
+    }));
+    const allOpenEditorInputs = observableFromEvent(
+      this,
+      editorService.onDidEditorsChange,
+      () => new Set(editorGroupsService.groups.flatMap((g) => g.editors).map((e) => e.resource).filter(isDefined))
+    );
+    const activeResource = observableFromEvent(this, editorService.onDidActiveEditorChange, () => {
+      if (editorService.activeEditor instanceof DiffEditorInput) {
+        return editorService.activeEditor.primary.resource;
+      } else {
+        return editorService.activeEditor?.resource;
+      }
+    });
+    const filterText = observableFromEvent(this.filterState.text.onDidChange, () => this.filterState.text);
+    this._register(autorun((reader) => {
+      filterText.read(reader);
+      if (this.filterState.isFilteringFor(TestFilterTerm.OpenedFiles)) {
+        this.filter.filterToDocumentUri([...allOpenEditorInputs.read(reader)]);
+      } else {
+        this.filter.filterToDocumentUri([activeResource.read(reader)].filter(isDefined));
+      }
+      if (this.filterState.isFilteringFor(TestFilterTerm.CurrentDoc) || this.filterState.isFilteringFor(TestFilterTerm.OpenedFiles)) {
+        this.tree.refilter();
+      }
+    }));
+    this._register(this.storageService.onWillSaveState(({ reason }) => {
+      if (reason === WillSaveStateReason.SHUTDOWN) {
+        this.lastViewState.store(this.tree.getOptimizedViewState());
+      }
+    }));
+  }
+  static {
+    __name(this, "TestingExplorerViewModel");
+  }
+  tree;
+  filter;
+  projection = this._register(new MutableDisposable());
+  revealTimeout = new MutableDisposable();
+  _viewMode;
+  _viewSorting;
+  welcomeVisibilityEmitter = new Emitter();
+  actionRunner = this._register(new TestExplorerActionRunner(() => this.tree.getSelection().filter(isDefined)));
+  lastViewState;
+  noTestForDocumentWidget;
+  /**
+   * Whether there's a reveal request which has not yet been delivered. This
+   * can happen if the user asks to reveal before the test tree is loaded.
+   * We check to see if the reveal request is present on each tree update,
+   * and do it then if so.
+   */
+  hasPendingReveal = false;
+  /**
+   * Fires when the visibility of the placeholder state changes.
+   */
+  onChangeWelcomeVisibility = this.welcomeVisibilityEmitter.event;
+  /**
+   * Gets whether the welcome should be visible.
+   */
+  welcomeExperience = 0 /* None */;
+  get viewMode() {
+    return this._viewMode.get() ?? TestExplorerViewMode.Tree;
+  }
+  set viewMode(newMode) {
+    if (newMode === this._viewMode.get()) {
+      return;
+    }
+    this._viewMode.set(newMode);
+    this.updatePreferredProjection();
+    this.storageService.store("testing.viewMode", newMode, StorageScope.WORKSPACE, StorageTarget.MACHINE);
+  }
+  get viewSorting() {
+    return this._viewSorting.get() ?? TestExplorerViewSorting.ByStatus;
+  }
+  set viewSorting(newSorting) {
+    if (newSorting === this._viewSorting.get()) {
+      return;
+    }
+    this._viewSorting.set(newSorting);
+    this.tree.resort(null);
+    this.storageService.store("testing.viewSorting", newSorting, StorageScope.WORKSPACE, StorageTarget.MACHINE);
+  }
+  /**
+   * Re-layout the tree.
+   */
+  layout(height, width) {
+    this.tree.layout(height, width);
+  }
+  /**
+   * Tries to reveal by extension ID. Queues the request if the extension
+   * ID is not currently available.
+   */
+  revealById(id, expand = true, focus = true) {
+    if (!id) {
+      this.hasPendingReveal = false;
+      return;
+    }
+    const projection = this.ensureProjection();
+    let expandToLevel = 0;
+    const idPath = [...TestId.fromString(id).idsFromRoot()];
+    for (let i = idPath.length - 1; i >= expandToLevel; i--) {
+      const element = projection.getElementByTestId(idPath[i].toString());
+      if (!element || !this.tree.hasElement(element)) {
+        continue;
+      }
+      if (i < idPath.length - 1) {
+        if (expand) {
+          this.tree.expand(element);
+          expandToLevel = i + 1;
+          i = idPath.length - 1;
+          continue;
+        }
+      }
+      let focusTarget = element;
+      for (let n = element; n instanceof TestItemTreeElement; n = n.parent) {
+        if (n.test && this.testService.excluded.contains(n.test)) {
+          this.filterState.toggleFilteringFor(TestFilterTerm.Hidden, true);
+          break;
+        }
+        if (!expand && (this.tree.hasElement(n) && this.tree.isCollapsed(n))) {
+          focusTarget = n;
+        }
+      }
+      this.filterState.reveal.set(void 0, void 0);
+      this.hasPendingReveal = false;
+      if (focus) {
+        this.tree.domFocus();
+      }
+      if (this.tree.getRelativeTop(focusTarget) === null) {
+        this.tree.reveal(focusTarget, 0.5);
+      }
+      this.revealTimeout.value = disposableTimeout(() => {
+        this.tree.setFocus([focusTarget]);
+        this.tree.setSelection([focusTarget]);
+      }, 1);
+      return;
+    }
+    this.hasPendingReveal = true;
+  }
+  /**
+   * Collapse all items in the tree.
+   */
+  async collapseAll() {
+    this.tree.collapseAll();
+  }
+  /**
+   * Tries to peek the first test error, if the item is in a failed state.
+   */
+  tryPeekError(item) {
+    const lookup = item.test && this.testResults.getStateById(item.test.item.extId);
+    return lookup && lookup[1].tasks.some((s) => isFailedState(s.state)) ? this.peekOpener.tryPeekFirstError(lookup[0], lookup[1], { preserveFocus: true }) : false;
+  }
+  onContextMenu(evt) {
+    const element = evt.element;
+    if (!(element instanceof TestItemTreeElement)) {
+      return;
+    }
+    const { actions } = getActionableElementActions(this.contextKeyService, this.menuService, this.testService, this.crService, this.testProfileService, element);
+    this.contextMenuService.showContextMenu({
+      getAnchor: /* @__PURE__ */ __name(() => evt.anchor, "getAnchor"),
+      getActions: /* @__PURE__ */ __name(() => actions.secondary, "getActions"),
+      getActionsContext: /* @__PURE__ */ __name(() => element, "getActionsContext"),
+      actionRunner: this.actionRunner
+    });
+  }
+  handleExecuteKeypress(evt) {
+    const focused = this.tree.getFocus();
+    const selected = this.tree.getSelection();
+    let targeted;
+    if (focused.length === 1 && selected.includes(focused[0])) {
+      evt.browserEvent?.preventDefault();
+      targeted = selected;
+    } else {
+      targeted = focused;
+    }
+    const toRun = targeted.filter((e) => e instanceof TestItemTreeElement);
+    if (toRun.length) {
+      this.testService.runTests({
+        group: TestRunProfileBitset.Run,
+        tests: toRun.map((t) => t.test)
+      });
+    }
+  }
+  reevaluateWelcomeState() {
+    const shouldShowWelcome = this.testService.collection.busyProviders === 0 && testCollectionIsEmpty(this.testService.collection);
+    const welcomeExperience = shouldShowWelcome ? this.filterState.isFilteringFor(TestFilterTerm.CurrentDoc) ? 2 /* ForDocument */ : 1 /* ForWorkspace */ : 0 /* None */;
+    if (welcomeExperience !== this.welcomeExperience) {
+      this.welcomeExperience = welcomeExperience;
+      this.welcomeVisibilityEmitter.fire(welcomeExperience);
+    }
+  }
+  ensureProjection() {
+    return this.projection.value ?? this.updatePreferredProjection();
+  }
+  updatePreferredProjection() {
+    this.projection.clear();
+    const lastState = this.lastViewState.get({});
+    if (this._viewMode.get() === TestExplorerViewMode.List) {
+      this.projection.value = this.instantiationService.createInstance(ListProjection, lastState);
+    } else {
+      this.projection.value = this.instantiationService.createInstance(TreeProjection, lastState);
+    }
+    const scheduler = this._register(new RunOnceScheduler(() => this.applyProjectionChanges(), 200));
+    this.projection.value.onUpdate(() => {
+      if (!scheduler.isScheduled()) {
+        scheduler.schedule();
+      }
+    });
+    this.applyProjectionChanges();
+    return this.projection.value;
+  }
+  applyProjectionChanges() {
+    this.reevaluateWelcomeState();
+    this.projection.value?.applyTo(this.tree);
+    this.tree.refilter();
+    if (this.hasPendingReveal) {
+      this.revealById(this.filterState.reveal.get());
+    }
+  }
+  /**
+   * Gets the selected tests from the tree.
+   */
+  getSelectedTests() {
+    return this.tree.getSelection();
+  }
+};
+TestingExplorerViewModel = __decorateClass([
+  __decorateParam(2, IConfigurationService),
+  __decorateParam(3, IEditorService),
+  __decorateParam(4, IEditorGroupsService),
+  __decorateParam(5, IMenuService),
+  __decorateParam(6, IContextMenuService),
+  __decorateParam(7, ITestService),
+  __decorateParam(8, ITestExplorerFilterState),
+  __decorateParam(9, IInstantiationService),
+  __decorateParam(10, IStorageService),
+  __decorateParam(11, IContextKeyService),
+  __decorateParam(12, ITestResultService),
+  __decorateParam(13, ITestingPeekOpener),
+  __decorateParam(14, ITestProfileService),
+  __decorateParam(15, ITestingContinuousRunService),
+  __decorateParam(16, ICommandService)
+], TestingExplorerViewModel);
+var FilterResult = /* @__PURE__ */ ((FilterResult2) => {
+  FilterResult2[FilterResult2["Exclude"] = 0] = "Exclude";
+  FilterResult2[FilterResult2["Inherit"] = 1] = "Inherit";
+  FilterResult2[FilterResult2["Include"] = 2] = "Include";
+  return FilterResult2;
+})(FilterResult || {});
+const hasNodeInOrParentOfUri = /* @__PURE__ */ __name((collection, ident, testUri, fromNode) => {
+  const queue = [fromNode ? [fromNode] : collection.rootIds];
+  while (queue.length) {
+    for (const id of queue.pop()) {
+      const node = collection.getNodeById(id);
+      if (!node) {
+        continue;
+      }
+      if (!node.item.uri || !ident.extUri.isEqualOrParent(testUri, node.item.uri)) {
+        continue;
+      }
+      if (node.item.range || node.expand === TestItemExpandState.Expandable) {
+        return true;
+      }
+      queue.push(node.children);
+    }
+  }
+  return false;
+}, "hasNodeInOrParentOfUri");
+let TestsFilter = class {
+  constructor(collection, state, testService, uriIdentityService) {
+    this.collection = collection;
+    this.state = state;
+    this.testService = testService;
+    this.uriIdentityService = uriIdentityService;
+  }
+  static {
+    __name(this, "TestsFilter");
+  }
+  documentUris = [];
+  lastIncludedTests;
+  /**
+   * @inheritdoc
+   */
+  filter(element) {
+    if (element instanceof TestTreeErrorMessage) {
+      return TreeVisibility.Visible;
+    }
+    if (element.test && !this.state.isFilteringFor(TestFilterTerm.Hidden) && this.testService.excluded.contains(element.test)) {
+      return TreeVisibility.Hidden;
+    }
+    switch (Math.min(this.testFilterText(element), this.testLocation(element), this.testState(element), this.testTags(element))) {
+      case 0 /* Exclude */:
+        return TreeVisibility.Hidden;
+      case 2 /* Include */:
+        this.lastIncludedTests?.add(element);
+        return TreeVisibility.Visible;
+      default:
+        return TreeVisibility.Recurse;
+    }
+  }
+  filterToDocumentUri(uris) {
+    this.documentUris = [...uris];
+  }
+  testTags(element) {
+    if (!this.state.includeTags.size && !this.state.excludeTags.size) {
+      return 2 /* Include */;
+    }
+    return (this.state.includeTags.size ? element.test.item.tags.some((t) => this.state.includeTags.has(t)) : true) && element.test.item.tags.every((t) => !this.state.excludeTags.has(t)) ? 2 /* Include */ : 1 /* Inherit */;
+  }
+  testState(element) {
+    if (this.state.isFilteringFor(TestFilterTerm.Failed)) {
+      return isFailedState(element.state) ? 2 /* Include */ : 1 /* Inherit */;
+    }
+    if (this.state.isFilteringFor(TestFilterTerm.Executed)) {
+      return element.state !== TestResultState.Unset ? 2 /* Include */ : 1 /* Inherit */;
+    }
+    return 2 /* Include */;
+  }
+  testLocation(element) {
+    if (this.documentUris.length === 0) {
+      return 2 /* Include */;
+    }
+    if (!this.state.isFilteringFor(TestFilterTerm.CurrentDoc) && !this.state.isFilteringFor(TestFilterTerm.OpenedFiles) || !(element instanceof TestItemTreeElement)) {
+      return 2 /* Include */;
+    }
+    if (this.documentUris.some((uri) => hasNodeInOrParentOfUri(this.collection, this.uriIdentityService, uri, element.test.item.extId))) {
+      return 2 /* Include */;
+    }
+    return 1 /* Inherit */;
+  }
+  testFilterText(element) {
+    if (this.state.globList.length === 0) {
+      return 2 /* Include */;
+    }
+    const fuzzy = this.state.fuzzy.value;
+    for (let e = element; e; e = e.parent) {
+      let included = this.state.globList[0].include === false ? 2 /* Include */ : 1 /* Inherit */;
+      const data = e.test.item.label.toLowerCase();
+      for (const { include, text } of this.state.globList) {
+        if (fuzzy ? fuzzyContains(data, text) : data.includes(text)) {
+          included = include ? 2 /* Include */ : 0 /* Exclude */;
+        }
+      }
+      if (included !== 1 /* Inherit */) {
+        return included;
+      }
+    }
+    return 1 /* Inherit */;
+  }
+};
+TestsFilter = __decorateClass([
+  __decorateParam(1, ITestExplorerFilterState),
+  __decorateParam(2, ITestService),
+  __decorateParam(3, IUriIdentityService)
+], TestsFilter);
+class TreeSorter {
+  constructor(viewModel) {
+    this.viewModel = viewModel;
+  }
+  static {
+    __name(this, "TreeSorter");
+  }
+  compare(a, b) {
+    if (a instanceof TestTreeErrorMessage || b instanceof TestTreeErrorMessage) {
+      return (a instanceof TestTreeErrorMessage ? -1 : 0) + (b instanceof TestTreeErrorMessage ? 1 : 0);
+    }
+    const durationDelta = (b.duration || 0) - (a.duration || 0);
+    if (this.viewModel.viewSorting === TestExplorerViewSorting.ByDuration && durationDelta !== 0) {
+      return durationDelta;
+    }
+    const stateDelta = cmpPriority(a.state, b.state);
+    if (this.viewModel.viewSorting === TestExplorerViewSorting.ByStatus && stateDelta !== 0) {
+      return stateDelta;
+    }
+    let inSameLocation = false;
+    if (a instanceof TestItemTreeElement && b instanceof TestItemTreeElement && a.test.item.uri && b.test.item.uri && a.test.item.uri.toString() === b.test.item.uri.toString() && a.test.item.range && b.test.item.range) {
+      inSameLocation = true;
+      const delta = a.test.item.range.startLineNumber - b.test.item.range.startLineNumber;
+      if (delta !== 0) {
+        return delta;
+      }
+    }
+    const sa = a.test.item.sortText;
+    const sb = b.test.item.sortText;
+    return inSameLocation && !sa && !sb ? 0 : (sa || a.test.item.label).localeCompare(sb || b.test.item.label);
+  }
+}
+let NoTestsForDocumentWidget = class extends Disposable {
+  static {
+    __name(this, "NoTestsForDocumentWidget");
+  }
+  el;
+  constructor(container, filterState) {
+    super();
+    const el = this.el = dom.append(container, dom.$(".testing-no-test-placeholder"));
+    const emptyParagraph = dom.append(el, dom.$("p"));
+    emptyParagraph.innerText = localize("testingNoTest", "No tests were found in this file.");
+    const buttonLabel = localize("testingFindExtension", "Show Workspace Tests");
+    const button = this._register(new Button(el, { title: buttonLabel, ...defaultButtonStyles }));
+    button.label = buttonLabel;
+    this._register(button.onDidClick(() => filterState.toggleFilteringFor(TestFilterTerm.CurrentDoc, false)));
+  }
+  setVisible(isVisible) {
+    this.el.classList.toggle("visible", isVisible);
+  }
+};
+NoTestsForDocumentWidget = __decorateClass([
+  __decorateParam(1, ITestExplorerFilterState)
+], NoTestsForDocumentWidget);
+class TestExplorerActionRunner extends ActionRunner {
+  constructor(getSelectedTests) {
+    super();
+    this.getSelectedTests = getSelectedTests;
+  }
+  static {
+    __name(this, "TestExplorerActionRunner");
+  }
+  async runAction(action, context) {
+    if (!(action instanceof MenuItemAction)) {
+      return super.runAction(action, context);
+    }
+    const selection = this.getSelectedTests();
+    const contextIsSelected = selection.some((s) => s === context);
+    const actualContext = contextIsSelected ? selection : [context];
+    const actionable = actualContext.filter((t) => t instanceof TestItemTreeElement);
+    await action.run(...actionable);
+  }
+}
+const getLabelForTestTreeElement = /* @__PURE__ */ __name((element) => {
+  let label = labelForTestInState(element.description || element.test.item.label, element.state);
+  if (element instanceof TestItemTreeElement) {
+    if (element.duration !== void 0) {
+      label = localize({
+        key: "testing.treeElementLabelDuration",
+        comment: ["{0} is the original label in testing.treeElementLabel, {1} is a duration"]
+      }, "{0}, in {1}", label, formatDuration(element.duration));
+    }
+    if (element.retired) {
+      label = localize({
+        key: "testing.treeElementLabelOutdated",
+        comment: ["{0} is the original label in testing.treeElementLabel"]
+      }, "{0}, outdated result", label);
+    }
+  }
+  return label;
+}, "getLabelForTestTreeElement");
+class ListAccessibilityProvider {
+  static {
+    __name(this, "ListAccessibilityProvider");
+  }
+  getWidgetAriaLabel() {
+    return localize("testExplorer", "Test Explorer");
+  }
+  getAriaLabel(element) {
+    return element instanceof TestTreeErrorMessage ? element.description : getLabelForTestTreeElement(element);
+  }
+}
+class TreeKeyboardNavigationLabelProvider {
+  static {
+    __name(this, "TreeKeyboardNavigationLabelProvider");
+  }
+  getKeyboardNavigationLabel(element) {
+    return element instanceof TestTreeErrorMessage ? element.message : element.test.item.label;
+  }
+}
+class ListDelegate {
+  static {
+    __name(this, "ListDelegate");
+  }
+  getHeight(element) {
+    return element instanceof TestTreeErrorMessage ? 17 + 10 : 22;
+  }
+  getTemplateId(element) {
+    if (element instanceof TestTreeErrorMessage) {
+      return ErrorRenderer.ID;
+    }
+    return TestItemRenderer.ID;
+  }
+}
+class IdentityProvider {
+  static {
+    __name(this, "IdentityProvider");
+  }
+  getId(element) {
+    return element.treeId;
+  }
+}
+let ErrorRenderer = class {
+  constructor(hoverService, instantionService) {
+    this.hoverService = hoverService;
+    this.renderer = instantionService.createInstance(MarkdownRenderer, {});
+  }
+  static {
+    __name(this, "ErrorRenderer");
+  }
+  static ID = "error";
+  renderer;
+  get templateId() {
+    return ErrorRenderer.ID;
+  }
+  renderTemplate(container) {
+    const label = dom.append(container, dom.$(".error"));
+    return { label, disposable: new DisposableStore() };
+  }
+  renderElement({ element }, _, data) {
+    dom.clearNode(data.label);
+    if (typeof element.message === "string") {
+      data.label.innerText = element.message;
+    } else {
+      const result = this.renderer.render(element.message, { inline: true });
+      data.label.appendChild(result.element);
+    }
+    data.disposable.add(this.hoverService.setupManagedHover(getDefaultHoverDelegate("mouse"), data.label, element.description));
+  }
+  disposeTemplate(data) {
+    data.disposable.dispose();
+  }
+};
+ErrorRenderer = __decorateClass([
+  __decorateParam(0, IHoverService),
+  __decorateParam(1, IInstantiationService)
+], ErrorRenderer);
+let TestItemRenderer = class extends Disposable {
+  constructor(actionRunner, menuService, testService, profiles, contextKeyService, instantiationService, crService, hoverService) {
+    super();
+    this.actionRunner = actionRunner;
+    this.menuService = menuService;
+    this.testService = testService;
+    this.profiles = profiles;
+    this.contextKeyService = contextKeyService;
+    this.instantiationService = instantiationService;
+    this.crService = crService;
+    this.hoverService = hoverService;
+  }
+  static {
+    __name(this, "TestItemRenderer");
+  }
+  static ID = "testItem";
+  /**
+   * @inheritdoc
+   */
+  templateId = TestItemRenderer.ID;
+  /**
+   * @inheritdoc
+   */
+  renderTemplate(wrapper) {
+    wrapper.classList.add("testing-stdtree-container");
+    const icon = dom.append(wrapper, dom.$(".computed-state"));
+    const label = dom.append(wrapper, dom.$(".label"));
+    const disposable = new DisposableStore();
+    dom.append(wrapper, dom.$(ThemeIcon.asCSSSelector(icons.testingHiddenIcon)));
+    const actionBar = disposable.add(new ActionBar(wrapper, {
+      actionRunner: this.actionRunner,
+      actionViewItemProvider: /* @__PURE__ */ __name((action, options) => action instanceof MenuItemAction ? this.instantiationService.createInstance(MenuEntryActionViewItem, action, { hoverDelegate: options.hoverDelegate }) : void 0, "actionViewItemProvider")
+    }));
+    disposable.add(this.profiles.onDidChange(() => {
+      if (templateData.current) {
+        this.fillActionBar(templateData.current, templateData);
+      }
+    }));
+    disposable.add(this.crService.onDidChange((changed) => {
+      const id = templateData.current?.test.item.extId;
+      if (id && (!changed || changed === id || TestId.isChild(id, changed))) {
+        this.fillActionBar(templateData.current, templateData);
+      }
+    }));
+    const templateData = { wrapper, label, actionBar, icon, elementDisposable: new DisposableStore(), templateDisposable: disposable };
+    return templateData;
+  }
+  /**
+   * @inheritdoc
+   */
+  disposeTemplate(templateData) {
+    templateData.templateDisposable.clear();
+  }
+  /**
+   * @inheritdoc
+   */
+  disposeElement(_element, _, templateData) {
+    templateData.elementDisposable.clear();
+  }
+  fillActionBar(element, data) {
+    const { actions, contextOverlay } = getActionableElementActions(this.contextKeyService, this.menuService, this.testService, this.crService, this.profiles, element);
+    const crSelf = !!contextOverlay.getContextKeyValue(TestingContextKeys.isContinuousModeOn.key);
+    const crChild = !crSelf && this.crService.isEnabledForAChildOf(element.test.item.extId);
+    data.actionBar.domNode.classList.toggle("testing-is-continuous-run", crSelf || crChild);
+    data.actionBar.clear();
+    data.actionBar.context = element;
+    data.actionBar.push(actions.primary, { icon: true, label: false });
+  }
+  /**
+   * @inheritdoc
+   */
+  renderElement(node, _depth, data) {
+    data.elementDisposable.clear();
+    data.current = node.element;
+    data.elementDisposable.add(node.element.onChange(() => this._renderElement(node, data)));
+    this._renderElement(node, data);
+  }
+  _renderElement(node, data) {
+    this.fillActionBar(node.element, data);
+    const testHidden = this.testService.excluded.contains(node.element.test);
+    data.wrapper.classList.toggle("test-is-hidden", testHidden);
+    const icon = icons.testingStatesToIcons.get(
+      node.element.test.expand === TestItemExpandState.BusyExpanding || node.element.test.item.busy ? TestResultState.Running : node.element.state
+    );
+    data.icon.className = "computed-state " + (icon ? ThemeIcon.asClassName(icon) : "");
+    if (node.element.retired) {
+      data.icon.className += " retired";
+    }
+    data.elementDisposable.add(this.hoverService.setupManagedHover(getDefaultHoverDelegate("mouse"), data.label, getLabelForTestTreeElement(node.element)));
+    if (node.element.test.item.label.trim()) {
+      dom.reset(data.label, ...renderLabelWithIcons(node.element.test.item.label));
+    } else {
+      data.label.textContent = String.fromCharCode(160);
+    }
+    let description = node.element.description;
+    if (node.element.duration !== void 0) {
+      description = description ? `${description}: ${formatDuration(node.element.duration)}` : formatDuration(node.element.duration);
+    }
+    if (description) {
+      dom.append(data.label, dom.$("span.test-label-description", {}, description));
+    }
+  }
+};
+TestItemRenderer = __decorateClass([
+  __decorateParam(1, IMenuService),
+  __decorateParam(2, ITestService),
+  __decorateParam(3, ITestProfileService),
+  __decorateParam(4, IContextKeyService),
+  __decorateParam(5, IInstantiationService),
+  __decorateParam(6, ITestingContinuousRunService),
+  __decorateParam(7, IHoverService)
+], TestItemRenderer);
+const formatDuration = /* @__PURE__ */ __name((ms) => {
+  if (ms < 10) {
+    return `${ms.toFixed(1)}ms`;
+  }
+  if (ms < 1e3) {
+    return `${ms.toFixed(0)}ms`;
+  }
+  return `${(ms / 1e3).toFixed(1)}s`;
+}, "formatDuration");
+const getActionableElementActions = /* @__PURE__ */ __name((contextKeyService, menuService, testService, crService, profiles, element) => {
+  const test = element instanceof TestItemTreeElement ? element.test : void 0;
+  const contextKeys = getTestItemContextOverlay(test, test ? profiles.capabilitiesForTest(test.item) : 0);
+  contextKeys.push(["view", Testing.ExplorerViewId]);
+  if (test) {
+    const ctrl = testService.getTestController(test.controllerId);
+    const supportsCr = !!ctrl && profiles.getControllerProfiles(ctrl.id).some((p) => p.supportsContinuousRun && canUseProfileWithTest(p, test));
+    contextKeys.push([
+      TestingContextKeys.canRefreshTests.key,
+      ctrl && !!(ctrl.capabilities.get() & TestControllerCapability.Refresh) && TestId.isRoot(test.item.extId)
+    ], [
+      TestingContextKeys.testItemIsHidden.key,
+      testService.excluded.contains(test)
+    ], [
+      TestingContextKeys.isContinuousModeOn.key,
+      supportsCr && crService.isSpecificallyEnabledFor(test.item.extId)
+    ], [
+      TestingContextKeys.isParentRunningContinuously.key,
+      supportsCr && crService.isEnabledForAParentOf(test.item.extId)
+    ], [
+      TestingContextKeys.supportsContinuousRun.key,
+      supportsCr
+    ], [
+      TestingContextKeys.testResultOutdated.key,
+      element.retired
+    ], [
+      TestingContextKeys.testResultState.key,
+      testResultStateToContextValues[element.state]
+    ]);
+  }
+  const contextOverlay = contextKeyService.createOverlay(contextKeys);
+  const menu = menuService.getMenuActions(MenuId.TestItem, contextOverlay, {
+    shouldForwardArgs: true
+  });
+  const actions = getActionBarActions(menu, "inline");
+  return { actions, contextOverlay };
+}, "getActionableElementActions");
+registerThemingParticipant((theme, collector) => {
+  if (theme.type === "dark") {
+    const foregroundColor = theme.getColor(foreground);
+    if (foregroundColor) {
+      const fgWithOpacity = new Color(new RGBA(foregroundColor.rgba.r, foregroundColor.rgba.g, foregroundColor.rgba.b, 0.65));
+      collector.addRule(`.test-explorer .test-explorer-messages { color: ${fgWithOpacity}; }`);
+    }
+  }
+});
+export {
+  TestingExplorerView
+};
+//# sourceMappingURL=testingExplorerView.js.map

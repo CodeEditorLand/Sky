@@ -1,1 +1,61 @@
-import{getZoomLevel as t,setZoomFactor as d,setZoomLevel as s}from"../../../base/browser/browser.js";import{getActiveWindow as r,getWindows as f}from"../../../base/browser/dom.js";import{mainWindow as p}from"../../../base/browser/window.js";import"../../../base/parts/sandbox/common/sandboxTypes.js";import{ipcRenderer as l,webFrame as m}from"../../../base/parts/sandbox/electron-sandbox/globals.js";import{zoomLevelToZoomFactor as u}from"../common/window.js";var b=(e=>(e[e.ACTIVE_WINDOW=1]="ACTIVE_WINDOW",e[e.ALL_WINDOWS=2]="ALL_WINDOWS",e))(b||{});const c=8,I=-8;function a(o,n){o=Math.min(Math.max(o,I),c);const e=[];n===1?e.push(r()):n===2?e.push(...Array.from(f()).map(({window:i})=>i)):e.push(n);for(const i of e)x(i)?.webFrame?.setZoomLevel(o),d(u(o),i),s(o,i)}function x(o){if(o===p)return{ipcRenderer:l,webFrame:m};{const n=o;if(n?.vscode?.ipcRenderer&&n?.vscode?.webFrame)return n.vscode}}function y(o){a(t(typeof o=="number"?r():o)+1,o)}function M(o){a(t(typeof o=="number"?r():o)-1,o)}export{b as ApplyZoomTarget,c as MAX_ZOOM_LEVEL,I as MIN_ZOOM_LEVEL,a as applyZoom,y as zoomIn,M as zoomOut};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { getZoomLevel, setZoomFactor, setZoomLevel } from "../../../base/browser/browser.js";
+import { getActiveWindow, getWindows } from "../../../base/browser/dom.js";
+import { mainWindow } from "../../../base/browser/window.js";
+import { ISandboxConfiguration } from "../../../base/parts/sandbox/common/sandboxTypes.js";
+import { ISandboxGlobals, ipcRenderer, webFrame } from "../../../base/parts/sandbox/electron-sandbox/globals.js";
+import { zoomLevelToZoomFactor } from "../common/window.js";
+var ApplyZoomTarget = /* @__PURE__ */ ((ApplyZoomTarget2) => {
+  ApplyZoomTarget2[ApplyZoomTarget2["ACTIVE_WINDOW"] = 1] = "ACTIVE_WINDOW";
+  ApplyZoomTarget2[ApplyZoomTarget2["ALL_WINDOWS"] = 2] = "ALL_WINDOWS";
+  return ApplyZoomTarget2;
+})(ApplyZoomTarget || {});
+const MAX_ZOOM_LEVEL = 8;
+const MIN_ZOOM_LEVEL = -8;
+function applyZoom(zoomLevel, target) {
+  zoomLevel = Math.min(Math.max(zoomLevel, MIN_ZOOM_LEVEL), MAX_ZOOM_LEVEL);
+  const targetWindows = [];
+  if (target === 1 /* ACTIVE_WINDOW */) {
+    targetWindows.push(getActiveWindow());
+  } else if (target === 2 /* ALL_WINDOWS */) {
+    targetWindows.push(...Array.from(getWindows()).map(({ window }) => window));
+  } else {
+    targetWindows.push(target);
+  }
+  for (const targetWindow of targetWindows) {
+    getGlobals(targetWindow)?.webFrame?.setZoomLevel(zoomLevel);
+    setZoomFactor(zoomLevelToZoomFactor(zoomLevel), targetWindow);
+    setZoomLevel(zoomLevel, targetWindow);
+  }
+}
+__name(applyZoom, "applyZoom");
+function getGlobals(win) {
+  if (win === mainWindow) {
+    return { ipcRenderer, webFrame };
+  } else {
+    const auxiliaryWindow = win;
+    if (auxiliaryWindow?.vscode?.ipcRenderer && auxiliaryWindow?.vscode?.webFrame) {
+      return auxiliaryWindow.vscode;
+    }
+  }
+  return void 0;
+}
+__name(getGlobals, "getGlobals");
+function zoomIn(target) {
+  applyZoom(getZoomLevel(typeof target === "number" ? getActiveWindow() : target) + 1, target);
+}
+__name(zoomIn, "zoomIn");
+function zoomOut(target) {
+  applyZoom(getZoomLevel(typeof target === "number" ? getActiveWindow() : target) - 1, target);
+}
+__name(zoomOut, "zoomOut");
+export {
+  ApplyZoomTarget,
+  MAX_ZOOM_LEVEL,
+  MIN_ZOOM_LEVEL,
+  applyZoom,
+  zoomIn,
+  zoomOut
+};
+//# sourceMappingURL=window.js.map

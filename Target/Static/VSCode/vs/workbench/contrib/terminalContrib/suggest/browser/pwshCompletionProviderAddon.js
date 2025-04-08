@@ -1,1 +1,274 @@
-var y=Object.defineProperty,I=Object.getOwnPropertyDescriptor,c=(e,t,o,i)=>{for(var s,n=i>1?void 0:i?I(t,o):t,r=e.length-1;r>=0;r--)(s=e[r])&&(n=(i?s(t,o,n):s(n))||n);return i&&n&&y(t,o,n),n},f=(e,t)=>(o,i)=>t(o,i,e);import"./terminalCompletionService.js";import{Disposable as _}from"../../../../../base/common/lifecycle.js";import{Event as h,Emitter as T}from"../../../../../base/common/event.js";import{ShellIntegrationOscPs as b}from"../../../../../platform/terminal/common/xterm/shellIntegrationAddon.js";import*as v from"../../../../../base/browser/dom.js";import"../../../../../platform/terminal/common/capabilities/commandDetection/promptInputModel.js";import{sep as D}from"../../../../../base/common/path.js";import{SuggestAddon as S}from"./terminalSuggestAddon.js";import{Codicon as s}from"../../../../../base/common/codicons.js";import"../../../../../base/common/themables.js";import{terminalSuggestConfigSection as x}from"../common/terminalSuggestConfiguration.js";import{IConfigurationService as R}from"../../../../../platform/configuration/common/configuration.js";import{GeneralShellType as P}from"../../../../../platform/terminal/common/terminal.js";import{TerminalCapability as M}from"../../../../../platform/terminal/common/capabilities/capabilities.js";import{DeferredPromise as q}from"../../../../../base/common/async.js";import"../../../../../base/common/cancellation.js";import{TerminalCompletionItemKind as m}from"./terminalCompletionItem.js";var w=(e=>(e.Completions="Completions",e))(w||{}),A=(e=>(e.Contextual="[24~e",e))(A||{});let p=class extends _{constructor(e,t){super(),this._configurationService=t,this._register(h.runAndSubscribe(h.any(e.onDidAddCapabilityType,e.onDidRemoveCapabilityType),(()=>{const t=e.get(M.CommandDetection);t?this._promptInputModel!==t.promptInputModel&&(this._promptInputModel=t.promptInputModel):this._promptInputModel=void 0})))}id=p.ID;triggerCharacters;isBuiltin=!0;static ID="pwsh-shell-integration";shellTypes=[P.PowerShell];_lastUserDataTimestamp=0;_terminal;_mostRecentCompletion;_promptInputModel;_enableWidget=!0;isPasting=!1;_completionsDeferred=null;_onDidReceiveCompletions=this._register(new T);onDidReceiveCompletions=this._onDidReceiveCompletions.event;_onDidRequestSendText=this._register(new T);onDidRequestSendText=this._onDidRequestSendText.event;activate(e){this._terminal=e,this._register(e.onData((()=>{this._lastUserDataTimestamp=Date.now()}))),this._configurationService.getValue(x).enabled&&this._register(e.parser.registerOscHandler(b.VSCode,(e=>this._handleVSCodeSequence(e))))}_handleVSCodeSequence(e){if(!this._terminal)return!1;const[t,...o]=e.split(";");return"Completions"===t&&(this._handleCompletionsSequence(this._terminal,e,t,o),!0)}_handleCompletionsSequence(e,t,o,i){if(this._onDidReceiveCompletions.fire(),!e.element||!this._enableWidget||!this._promptInputModel)return void this._resolveCompletions(void 0);if(!v.isAncestorOfActiveElement(e.element))return void this._resolveCompletions(void 0);if(0===i.length)return void this._resolveCompletions(void 0);let s=0,n=this._promptInputModel.cursorIndex;s=parseInt(i[0]),n=parseInt(i[1]);const r=t.slice(o.length+i[0].length+i[1].length+i[2].length+4),l=F(0===i.length||0===r.length?void 0:JSON.parse(r),s,n);this._mostRecentCompletion?.kind===m.Folder&&l.every((e=>e.kind===m.Folder))&&l.push(this._mostRecentCompletion),this._mostRecentCompletion=void 0,this._resolveCompletions(l)}_resolveCompletions(e){this._completionsDeferred&&(this._completionsDeferred.complete(e),this._completionsDeferred=null)}_getCompletionsPromise(){return this._completionsDeferred=new q,this._completionsDeferred.p}provideCompletions(e,t,o,i){return-1===e.substring(0,t).trim().indexOf(" ")||(this._lastUserDataTimestamp>S.lastAcceptedCompletionTimestamp&&this._onDidRequestSendText.fire("[24~e"),i.isCancellationRequested)?Promise.resolve(void 0):new Promise((e=>{const t=this._getCompletionsPromise();this._register(i.onCancellationRequested((()=>{this._resolveCompletions(void 0)}))),t.then((t=>{i.isCancellationRequested?e(void 0):e(t)}))}))}};function F(e,t,o){if(!e)return[];let i;if(Array.isArray(e)){if(0===e.length)return[];i="string"==typeof e[0]?[e].map((e=>({CompletionText:e[0],ResultType:e[1],ToolTip:e[2],CustomIcon:e[3]}))):Array.isArray(e[0])?e.map((e=>({CompletionText:e[0],ResultType:e[1],ToolTip:e[2],CustomIcon:e[3]}))):e}else i=[e];return i.map((e=>V(e,t,o)))}function V(e,t,o){let i=e.CompletionText;if(4===e.ResultType&&!i.match(/^[\-+]$/)&&!i.match(/^\.\.?$/)&&!i.match(/[\\\/]$/)){const e=i.match(/(?<sep>[\\\/])/)?.groups?.sep??D;i+=e}const s=e.ToolTip??i,n=K(e.ResultType,e.CustomIcon);return 2===e.ResultType&&e.CompletionText.match(/\.[a-z0-9]{2,4}$/i)&&(e.ResultType=3),{label:i,provider:p.ID,icon:n,detail:s,kind:O[e.ResultType],isKeyword:12===e.ResultType,replacementIndex:t,replacementLength:o}}function K(e,t){if(t){const e=t in s?s[t]:s.symbolText;if(e)return e}return E[e]??s.symbolText}p=c([f(1,R)],p);const E={0:s.symbolText,1:s.history,2:s.symbolMethod,3:s.symbolFile,4:s.folder,5:s.symbolProperty,6:s.symbolMethod,7:s.symbolVariable,8:s.symbolValue,9:s.symbolVariable,10:s.symbolNamespace,11:s.symbolInterface,12:s.symbolKeyword,13:s.symbolKeyword},O={0:void 0,1:void 0,2:m.Method,3:m.File,4:m.Folder,5:m.Argument,6:m.Method,7:m.Argument,8:void 0,9:void 0,10:void 0,11:void 0,12:void 0,13:void 0};export{p as PwshCompletionProviderAddon,w as VSCodeSuggestOscPt,F as parseCompletionsFromShell};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { ITerminalCompletionProvider } from "./terminalCompletionService.js";
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { Event, Emitter } from "../../../../../base/common/event.js";
+import { ShellIntegrationOscPs } from "../../../../../platform/terminal/common/xterm/shellIntegrationAddon.js";
+import * as dom from "../../../../../base/browser/dom.js";
+import { IPromptInputModel } from "../../../../../platform/terminal/common/capabilities/commandDetection/promptInputModel.js";
+import { sep } from "../../../../../base/common/path.js";
+import { SuggestAddon } from "./terminalSuggestAddon.js";
+import { Codicon } from "../../../../../base/common/codicons.js";
+import { ThemeIcon } from "../../../../../base/common/themables.js";
+import { ITerminalSuggestConfiguration, terminalSuggestConfigSection } from "../common/terminalSuggestConfiguration.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { GeneralShellType } from "../../../../../platform/terminal/common/terminal.js";
+import { ITerminalCapabilityStore, TerminalCapability } from "../../../../../platform/terminal/common/capabilities/capabilities.js";
+import { DeferredPromise } from "../../../../../base/common/async.js";
+import { CancellationToken } from "../../../../../base/common/cancellation.js";
+import { ITerminalCompletion, TerminalCompletionItemKind } from "./terminalCompletionItem.js";
+var VSCodeSuggestOscPt = /* @__PURE__ */ ((VSCodeSuggestOscPt2) => {
+  VSCodeSuggestOscPt2["Completions"] = "Completions";
+  return VSCodeSuggestOscPt2;
+})(VSCodeSuggestOscPt || {});
+var RequestCompletionsSequence = /* @__PURE__ */ ((RequestCompletionsSequence2) => {
+  RequestCompletionsSequence2["Contextual"] = "\x1B[24~e";
+  return RequestCompletionsSequence2;
+})(RequestCompletionsSequence || {});
+let PwshCompletionProviderAddon = class extends Disposable {
+  constructor(capabilities, _configurationService) {
+    super();
+    this._configurationService = _configurationService;
+    this._register(Event.runAndSubscribe(Event.any(
+      capabilities.onDidAddCapabilityType,
+      capabilities.onDidRemoveCapabilityType
+    ), () => {
+      const commandDetection = capabilities.get(TerminalCapability.CommandDetection);
+      if (commandDetection) {
+        if (this._promptInputModel !== commandDetection.promptInputModel) {
+          this._promptInputModel = commandDetection.promptInputModel;
+        }
+      } else {
+        this._promptInputModel = void 0;
+      }
+    }));
+  }
+  static {
+    __name(this, "PwshCompletionProviderAddon");
+  }
+  id = PwshCompletionProviderAddon.ID;
+  triggerCharacters;
+  isBuiltin = true;
+  static ID = "pwsh-shell-integration";
+  shellTypes = [GeneralShellType.PowerShell];
+  _lastUserDataTimestamp = 0;
+  _terminal;
+  _mostRecentCompletion;
+  _promptInputModel;
+  _enableWidget = true;
+  isPasting = false;
+  _completionsDeferred = null;
+  _onDidReceiveCompletions = this._register(new Emitter());
+  onDidReceiveCompletions = this._onDidReceiveCompletions.event;
+  _onDidRequestSendText = this._register(new Emitter());
+  onDidRequestSendText = this._onDidRequestSendText.event;
+  activate(xterm) {
+    this._terminal = xterm;
+    this._register(xterm.onData(() => {
+      this._lastUserDataTimestamp = Date.now();
+    }));
+    const config = this._configurationService.getValue(terminalSuggestConfigSection);
+    const enabled = config.enabled;
+    if (!enabled) {
+      return;
+    }
+    this._register(xterm.parser.registerOscHandler(ShellIntegrationOscPs.VSCode, (data) => {
+      return this._handleVSCodeSequence(data);
+    }));
+  }
+  _handleVSCodeSequence(data) {
+    if (!this._terminal) {
+      return false;
+    }
+    const [command, ...args] = data.split(";");
+    switch (command) {
+      case "Completions" /* Completions */:
+        this._handleCompletionsSequence(this._terminal, data, command, args);
+        return true;
+    }
+    return false;
+  }
+  _handleCompletionsSequence(terminal, data, command, args) {
+    this._onDidReceiveCompletions.fire();
+    if (!terminal.element || !this._enableWidget || !this._promptInputModel) {
+      this._resolveCompletions(void 0);
+      return;
+    }
+    if (!dom.isAncestorOfActiveElement(terminal.element)) {
+      this._resolveCompletions(void 0);
+      return;
+    }
+    if (args.length === 0) {
+      this._resolveCompletions(void 0);
+      return;
+    }
+    let replacementIndex = 0;
+    let replacementLength = this._promptInputModel.cursorIndex;
+    replacementIndex = parseInt(args[0]);
+    replacementLength = parseInt(args[1]);
+    const payload = data.slice(
+      command.length + args[0].length + args[1].length + args[2].length + 4
+      /*semi-colons*/
+    );
+    const rawCompletions = args.length === 0 || payload.length === 0 ? void 0 : JSON.parse(payload);
+    const completions = parseCompletionsFromShell(rawCompletions, replacementIndex, replacementLength);
+    if (this._mostRecentCompletion?.kind === TerminalCompletionItemKind.Folder && completions.every((c) => c.kind === TerminalCompletionItemKind.Folder)) {
+      completions.push(this._mostRecentCompletion);
+    }
+    this._mostRecentCompletion = void 0;
+    this._resolveCompletions(completions);
+  }
+  _resolveCompletions(result) {
+    if (!this._completionsDeferred) {
+      return;
+    }
+    this._completionsDeferred.complete(result);
+    this._completionsDeferred = null;
+  }
+  _getCompletionsPromise() {
+    this._completionsDeferred = new DeferredPromise();
+    return this._completionsDeferred.p;
+  }
+  provideCompletions(value, cursorPosition, allowFallbackCompletions, token) {
+    if (value.substring(0, cursorPosition).trim().indexOf(" ") === -1) {
+      return Promise.resolve(void 0);
+    }
+    if (this._lastUserDataTimestamp > SuggestAddon.lastAcceptedCompletionTimestamp) {
+      this._onDidRequestSendText.fire("\x1B[24~e" /* Contextual */);
+    }
+    if (token.isCancellationRequested) {
+      return Promise.resolve(void 0);
+    }
+    return new Promise((resolve) => {
+      const completionPromise = this._getCompletionsPromise();
+      this._register(token.onCancellationRequested(() => {
+        this._resolveCompletions(void 0);
+      }));
+      completionPromise.then((result) => {
+        if (token.isCancellationRequested) {
+          resolve(void 0);
+        } else {
+          resolve(result);
+        }
+      });
+    });
+  }
+};
+PwshCompletionProviderAddon = __decorateClass([
+  __decorateParam(1, IConfigurationService)
+], PwshCompletionProviderAddon);
+function parseCompletionsFromShell(rawCompletions, replacementIndex, replacementLength) {
+  if (!rawCompletions) {
+    return [];
+  }
+  let typedRawCompletions;
+  if (!Array.isArray(rawCompletions)) {
+    typedRawCompletions = [rawCompletions];
+  } else {
+    if (rawCompletions.length === 0) {
+      return [];
+    }
+    if (typeof rawCompletions[0] === "string") {
+      typedRawCompletions = [rawCompletions].map((e) => ({
+        CompletionText: e[0],
+        ResultType: e[1],
+        ToolTip: e[2],
+        CustomIcon: e[3]
+      }));
+    } else if (Array.isArray(rawCompletions[0])) {
+      typedRawCompletions = rawCompletions.map((e) => ({
+        CompletionText: e[0],
+        ResultType: e[1],
+        ToolTip: e[2],
+        CustomIcon: e[3]
+      }));
+    } else {
+      typedRawCompletions = rawCompletions;
+    }
+  }
+  return typedRawCompletions.map((e) => rawCompletionToITerminalCompletion(e, replacementIndex, replacementLength));
+}
+__name(parseCompletionsFromShell, "parseCompletionsFromShell");
+function rawCompletionToITerminalCompletion(rawCompletion, replacementIndex, replacementLength) {
+  let label = rawCompletion.CompletionText;
+  if (rawCompletion.ResultType === 4 && !label.match(/^[\-+]$/) && // Don't add a `/` to `-` or `+` (navigate location history)
+  !label.match(/^\.\.?$/) && !label.match(/[\\\/]$/)) {
+    const separator = label.match(/(?<sep>[\\\/])/)?.groups?.sep ?? sep;
+    label = label + separator;
+  }
+  const detail = rawCompletion.ToolTip ?? label;
+  const icon = getIcon(rawCompletion.ResultType, rawCompletion.CustomIcon);
+  const isExecutable = rawCompletion.ResultType === 2 && rawCompletion.CompletionText.match(/\.[a-z0-9]{2,4}$/i);
+  if (isExecutable) {
+    rawCompletion.ResultType = 3;
+  }
+  return {
+    label,
+    provider: PwshCompletionProviderAddon.ID,
+    icon,
+    detail,
+    kind: pwshTypeToKindMap[rawCompletion.ResultType],
+    isKeyword: rawCompletion.ResultType === 12,
+    replacementIndex,
+    replacementLength
+  };
+}
+__name(rawCompletionToITerminalCompletion, "rawCompletionToITerminalCompletion");
+function getIcon(resultType, customIconId) {
+  if (customIconId) {
+    const icon = customIconId in Codicon ? Codicon[customIconId] : Codicon.symbolText;
+    if (icon) {
+      return icon;
+    }
+  }
+  return pwshTypeToIconMap[resultType] ?? Codicon.symbolText;
+}
+__name(getIcon, "getIcon");
+const pwshTypeToIconMap = {
+  0: Codicon.symbolText,
+  1: Codicon.history,
+  2: Codicon.symbolMethod,
+  3: Codicon.symbolFile,
+  4: Codicon.folder,
+  5: Codicon.symbolProperty,
+  6: Codicon.symbolMethod,
+  7: Codicon.symbolVariable,
+  8: Codicon.symbolValue,
+  9: Codicon.symbolVariable,
+  10: Codicon.symbolNamespace,
+  11: Codicon.symbolInterface,
+  12: Codicon.symbolKeyword,
+  13: Codicon.symbolKeyword
+};
+const pwshTypeToKindMap = {
+  0: void 0,
+  1: void 0,
+  2: TerminalCompletionItemKind.Method,
+  3: TerminalCompletionItemKind.File,
+  4: TerminalCompletionItemKind.Folder,
+  5: TerminalCompletionItemKind.Argument,
+  6: TerminalCompletionItemKind.Method,
+  7: TerminalCompletionItemKind.Argument,
+  8: void 0,
+  9: void 0,
+  10: void 0,
+  11: void 0,
+  12: void 0,
+  13: void 0
+};
+export {
+  PwshCompletionProviderAddon,
+  VSCodeSuggestOscPt,
+  parseCompletionsFromShell
+};
+//# sourceMappingURL=pwshCompletionProviderAddon.js.map

@@ -1,1 +1,1756 @@
-import{CancellationTokenSource as ht}from"../../../base/common/cancellation.js";import*as V from"../../../base/common/errors.js";import{Emitter as bt,Event as St}from"../../../base/common/event.js";import{combinedDisposable as Pt}from"../../../base/common/lifecycle.js";import{Schemas as J,matchesScheme as he}from"../../../base/common/network.js";import ne from"../../../base/common/severity.js";import{URI as A}from"../../../base/common/uri.js";import{TextEditorCursorStyle as ft}from"../../../editor/common/config/editorOptions.js";import{score as kt,targetsNotebooks as yt}from"../../../editor/common/languageSelector.js";import*as It from"../../../editor/common/languages/languageConfiguration.js";import{OverviewRulerLane as Ht}from"../../../editor/common/model.js";import{ExtensionError as xt,ExtensionIdentifierSet as Rt}from"../../../platform/extensions/common/extensions.js";import*as be from"../../../platform/files/common/files.js";import"../../../platform/instantiation/common/instantiation.js";import{ILogService as wt,ILoggerService as At,LogLevel as Ft}from"../../../platform/log/common/log.js";import{getRemoteName as Mt}from"../../../platform/remote/common/remoteHosts.js";import{TelemetryTrustedValue as Lt}from"../../../platform/telemetry/common/telemetryUtils.js";import{EditSessionIdentityMatch as Nt}from"../../../platform/workspace/common/editSessions.js";import{DebugConfigurationProviderTriggerKind as Se}from"../../contrib/debug/common/debug.js";import"../../services/extensions/common/extensionDescriptionRegistry.js";import{UIKind as Wt}from"../../services/extensions/common/extensionHostProtocol.js";import{checkProposedApiEnabled as s,isProposedApiEnabled as X}from"../../services/extensions/common/extensions.js";import"../../services/extensions/common/proxyIdentifier.js";import{ExcludeSettingOptions as Kt,TextSearchCompleteMessageType as Pe,TextSearchContext2 as Vt,TextSearchMatch2 as Bt}from"../../services/search/common/searchExtTypes.js";import{CandidatePortSource as Ut,ExtHostContext as a,MainContext as Q}from"./extHost.protocol.js";import{ExtHostRelatedInformation as Ot}from"./extHostAiRelatedInformation.js";import{ExtHostApiCommands as Qt}from"./extHostApiCommands.js";import{IExtHostApiDeprecationService as qt}from"./extHostApiDeprecationService.js";import{IExtHostAuthentication as zt}from"./extHostAuthentication.js";import{ExtHostBulkEdits as jt}from"./extHostBulkEdits.js";import{ExtHostChatAgents2 as Gt}from"./extHostChatAgents2.js";import{ExtHostChatStatus as _t}from"./extHostChatStatus.js";import{ExtHostClipboard as $t}from"./extHostClipboard.js";import{ExtHostEditorInsets as Jt}from"./extHostCodeInsets.js";import{ExtHostCodeMapper as Xt}from"./extHostCodeMapper.js";import{IExtHostCommands as Yt}from"./extHostCommands.js";import{createExtHostComments as Zt}from"./extHostComments.js";import{IExtHostConfiguration as er}from"./extHostConfiguration.js";import{ExtHostCustomEditors as tr}from"./extHostCustomEditors.js";import{IExtHostDebugService as rr}from"./extHostDebugService.js";import{IExtHostDecorations as or}from"./extHostDecorations.js";import{ExtHostDiagnostics as ir}from"./extHostDiagnostics.js";import{ExtHostDialogs as nr}from"./extHostDialogs.js";import{ExtHostDocumentContentProvider as sr}from"./extHostDocumentContentProviders.js";import{ExtHostDocumentSaveParticipant as ar}from"./extHostDocumentSaveParticipant.js";import{ExtHostDocuments as dr}from"./extHostDocuments.js";import{IExtHostDocumentsAndEditors as cr}from"./extHostDocumentsAndEditors.js";import{IExtHostEditorTabs as lr}from"./extHostEditorTabs.js";import{ExtHostEmbeddings as ur}from"./extHostEmbedding.js";import{ExtHostAiEmbeddingVector as gr}from"./extHostEmbeddingVector.js";import{Extension as Y,IExtHostExtensionService as mr}from"./extHostExtensionService.js";import{ExtHostFileSystem as vr}from"./extHostFileSystem.js";import{IExtHostConsumerFileSystem as pr}from"./extHostFileSystemConsumer.js";import{ExtHostFileSystemEventService as Tr}from"./extHostFileSystemEventService.js";import{IExtHostFileSystemInfo as Dr}from"./extHostFileSystemInfo.js";import{IExtHostInitDataService as Er}from"./extHostInitDataService.js";import{ExtHostInteractive as Cr}from"./extHostInteractive.js";import{ExtHostLabelService as hr}from"./extHostLabelService.js";import{ExtHostLanguageFeatures as br}from"./extHostLanguageFeatures.js";import{ExtHostLanguageModelTools as Sr}from"./extHostLanguageModelTools.js";import{IExtHostLanguageModels as Pr}from"./extHostLanguageModels.js";import{ExtHostLanguages as fr}from"./extHostLanguages.js";import{IExtHostLocalizationService as kr}from"./extHostLocalizationService.js";import{IExtHostManagedSockets as yr}from"./extHostManagedSockets.js";import{IExtHostMpcService as fe}from"./extHostMcp.js";import{ExtHostMessageService as Ir}from"./extHostMessageService.js";import{ExtHostNotebookController as Hr}from"./extHostNotebook.js";import{ExtHostNotebookDocumentSaveParticipant as xr}from"./extHostNotebookDocumentSaveParticipant.js";import{ExtHostNotebookDocuments as Rr}from"./extHostNotebookDocuments.js";import{ExtHostNotebookEditors as wr}from"./extHostNotebookEditors.js";import{ExtHostNotebookKernels as Ar}from"./extHostNotebookKernels.js";import{ExtHostNotebookRenderers as Fr}from"./extHostNotebookRenderers.js";import{IExtHostOutputService as Mr}from"./extHostOutput.js";import{ExtHostProfileContentHandlers as Lr}from"./extHostProfileContentHandler.js";import{ExtHostProgress as Nr}from"./extHostProgress.js";import{ExtHostQuickDiff as Wr}from"./extHostQuickDiff.js";import{createExtHostQuickOpen as Kr}from"./extHostQuickOpen.js";import{IExtHostRpcService as Vr}from"./extHostRpcService.js";import{ExtHostSCM as Br}from"./extHostSCM.js";import{IExtHostSearch as Ur}from"./extHostSearch.js";import{IExtHostSecretState as Or}from"./extHostSecretState.js";import{ExtHostShare as Qr}from"./extHostShare.js";import{ExtHostSpeech as qr}from"./extHostSpeech.js";import{ExtHostStatusBar as zr}from"./extHostStatusBar.js";import{IExtHostStorage as jr}from"./extHostStorage.js";import{IExtensionStoragePaths as Gr}from"./extHostStoragePaths.js";import{IExtHostTask as _r}from"./extHostTask.js";import{ExtHostTelemetryLogger as $r,IExtHostTelemetry as Jr,isNewAppInstall as Xr}from"./extHostTelemetry.js";import{IExtHostTerminalService as Yr}from"./extHostTerminalService.js";import{IExtHostTerminalShellIntegration as Zr}from"./extHostTerminalShellIntegration.js";import{IExtHostTesting as eo}from"./extHostTesting.js";import{ExtHostEditors as to}from"./extHostTextEditors.js";import{ExtHostTheming as ro}from"./extHostTheming.js";import{ExtHostTimeline as oo}from"./extHostTimeline.js";import{ExtHostTreeViews as io}from"./extHostTreeViews.js";import{IExtHostTunnelService as no}from"./extHostTunnelService.js";import*as so from"./extHostTypeConverters.js";import*as r from"./extHostTypes.js";import{ExtHostUriOpeners as ao}from"./extHostUriOpener.js";import{IURITransformerService as co}from"./extHostUriTransformerService.js";import{ExtHostUrls as lo}from"./extHostUrls.js";import{ExtHostWebviews as uo}from"./extHostWebview.js";import{ExtHostWebviewPanels as go}from"./extHostWebviewPanels.js";import{ExtHostWebviewViews as mo}from"./extHostWebviewView.js";import{IExtHostWindow as vo}from"./extHostWindow.js";import{IExtHostWorkspace as po}from"./extHostWorkspace.js";function Dn(e){const t=e.get(Er),o=e.get(Dr),i=e.get(pr),n=e.get(mr),l=e.get(po),d=e.get(Jr),m=e.get(er),g=e.get(co),c=e.get(Vr),u=e.get(jr),p=e.get(Gr),v=e.get(At),T=e.get(wt),x=e.get(no),C=e.get(qt),h=e.get(vo),E=e.get(Or),D=e.get(lr),S=e.get(yr),f=e.get(zt),b=e.get(Pr),P=e.get(fe);c.set(a.ExtHostFileSystemInfo,o),c.set(a.ExtHostLogLevelServiceShape,v),c.set(a.ExtHostWorkspace,l),c.set(a.ExtHostConfiguration,m),c.set(a.ExtHostExtensionService,n),c.set(a.ExtHostStorage,u),c.set(a.ExtHostTunnelService,x),c.set(a.ExtHostWindow,h),c.set(a.ExtHostSecretState,E),c.set(a.ExtHostTelemetry,d),c.set(a.ExtHostEditorTabs,D),c.set(a.ExtHostManagedSockets,S),c.set(a.ExtHostAuthentication,f),c.set(a.ExtHostChatProvider,b);const k=c.set(a.ExtHostDecorations,e.get(or)),H=c.set(a.ExtHostDocumentsAndEditors,e.get(cr)),I=c.set(a.ExtHostCommands,e.get(Yt)),y=c.set(a.ExtHostTerminalService,e.get(Yr)),w=c.set(a.ExtHostTerminalShellIntegration,e.get(Zr)),R=c.set(a.ExtHostDebugService,e.get(rr)),M=c.set(a.ExtHostSearch,e.get(Ur)),N=c.set(a.ExtHostTask,e.get(_r)),F=c.set(a.ExtHostOutputService,e.get(Mr)),L=c.set(a.ExtHostLocalization,e.get(kr)),j=c.set(a.ExtHostUrls,new lo(c)),K=c.set(a.ExtHostDocuments,new dr(c,H)),W=c.set(a.ExtHostDocumentContentProviders,new sr(c,H,T)),O=c.set(a.ExtHostDocumentSaveParticipant,new ar(T,K,c.getProxy(Q.MainThreadBulkEdits))),B=c.set(a.ExtHostNotebook,new Hr(c,I,H,K,i,M,T)),U=c.set(a.ExtHostNotebookDocuments,new Rr(B)),q=c.set(a.ExtHostNotebookEditors,new wr(T,B)),z=c.set(a.ExtHostNotebookKernels,new Ar(c,t,B,I,T)),G=c.set(a.ExtHostNotebookRenderers,new Fr(c,B)),$=c.set(a.ExtHostNotebookDocumentSaveParticipant,new xr(T,B,c.getProxy(Q.MainThreadBulkEdits))),Z=c.set(a.ExtHostEditors,new to(c,H)),_=c.set(a.ExtHostTreeViews,new io(c.getProxy(Q.MainThreadTreeViews),I,T)),ee=c.set(a.ExtHostEditorInsets,new Jt(c.getProxy(Q.MainThreadEditorInsets),Z,t.remote)),te=c.set(a.ExtHostDiagnostics,new ir(c,T,o,H)),re=c.set(a.ExtHostLanguages,new fr(c,K,I.converter,g)),oe=c.set(a.ExtHostLanguageFeatures,new br(c,g,K,I,te,T,C,d)),ie=c.set(a.ExtHostCodeMapper,new Xt(c)),se=c.set(a.ExtHostFileSystem,new vr(c,oe)),ae=c.set(a.ExtHostFileSystemEventService,new Tr(c,T,H)),le=c.set(a.ExtHostQuickOpen,Kr(c,l,I)),de=c.set(a.ExtHostSCM,new Br(c,I,K,T)),me=c.set(a.ExtHostQuickDiff,new Wr(c,g)),ge=c.set(a.ExtHostShare,new Qr(c,g)),ce=c.set(a.ExtHostComments,Zt(c,I,K)),ue=c.set(a.ExtHostProgress,new Nr(c.getProxy(Q.MainThreadProgress))),pe=c.set(a.ExtHostLabelService,new hr(c)),ve=c.set(a.ExtHostTheming,new ro(c)),Te=c.set(a.ExtHostTimeline,new oo(c,I)),xe=c.set(a.ExtHostWebviews,new uo(c,t.remote,l,T,C)),Ce=c.set(a.ExtHostWebviewPanels,new go(c,xe,l)),Ee=c.set(a.ExtHostCustomEditors,new tr(c,K,p,xe,Ce)),De=c.set(a.ExtHostWebviewViews,new mo(c,xe)),ke=c.set(a.ExtHostTesting,e.get(eo)),He=c.set(a.ExtHostUriOpeners,new ao(c)),Ie=c.set(a.ExtHostProfileContentHandlers,new Lr(c));c.set(a.ExtHostInteractive,new Cr(c,B,H,I,T));const ye=c.set(a.ExtHostLanguageModelTools,new Sr(c,b)),we=c.set(a.ExtHostChatAgents2,new Gt(c,T,I,K,b,te,ye)),Re=c.set(a.ExtHostAiRelatedInformation,new Ot(c)),Ae=c.set(a.ExtHostAiEmbeddingVector,new gr(c)),Me=c.set(a.ExtHostStatusBar,new zr(c,I.converter)),Ne=c.set(a.ExtHostSpeech,new qr(c)),Fe=c.set(a.ExtHostEmbeddings,new ur(c));c.set(a.ExtHostMcp,e.get(fe));const Le=Object.values(a);c.assertRegistered(Le);const je=new jt(c,H),Ke=new $t(c),Ve=new Ir(c,T),We=new nr(c),Oe=new _t(c);return Qt.register(I),function(e,o,a){function m(t){return(r,o,i)=>{const n=t((t=>{try{r.call(o,t)}catch(t){V.onUnexpectedExternalError(new xt(e.identifier,t,"FAILED to handle event"))}}));return i?.push(n),n}}const g=function(){let t=!e.isUnderDevelopment;function r(){t||(T.info(`Extension '${e.identifier.value}' uses a document selector without scheme. Learn more about this: https://go.microsoft.com/fwlink/?linkid=872305`),t=!0)}return function t(o){if(Array.isArray(o))o.forEach(t);else if("string"==typeof o)r();else{const t=o;typeof t.scheme>"u"&&r(),"boolean"==typeof t.exclusive&&s(e,"documentFiltersExclusive")}return o}}(),c={getSession:(t,r,o)=>(("object"==typeof o?.forceNewSession&&o.forceNewSession.learnMore||"object"==typeof o?.createIfNone&&o.createIfNone.learnMore)&&s(e,"authLearnMore"),f.getSession(e,t,r,o)),getAccounts:e=>f.getAccounts(e),hasSession:async(t,r)=>(s(e,"authSession"),!!await f.getSession(e,t,r,{silent:!0})),get onDidChangeSessions(){return m(f.getExtensionScopedSessionsEvent(e.identifier.value))},registerAuthenticationProvider:(e,t,r,o)=>f.registerAuthenticationProvider(e,t,r,o)},u={registerCommand:(t,r,o)=>I.registerCommand(!0,t,r,o,void 0,e),registerTextEditorCommand:(t,r,o)=>I.registerCommand(!0,t,((...e)=>{const i=Z.getActiveTextEditor();if(i)return i.edit((t=>{r.apply(o,[i,t,...e])})).then((e=>{e||T.warn("Edits from command "+t+" were not applied.")}),(e=>{T.warn("An error occurred while running command "+t,e)}));T.warn("Cannot execute "+t+" because there is no active text editor.")}),void 0,void 0,e),registerDiffInformationCommand:(t,r,o)=>(s(e,"diffCommand"),I.registerCommand(!0,t,(async(...e)=>{const i=H.activeEditor(!0);if(!i)return void T.warn("Cannot execute "+t+" because there is no active text editor.");const n=await Z.getDiffInformation(i.id);r.apply(o,[n,...e])}),void 0,void 0,e)),executeCommand:(e,...t)=>I.executeCommand(e,...t),getCommands:(e=!1)=>I.getCommands(e)},p={get machineId(){return t.telemetryInfo.machineId},get sessionId(){return t.telemetryInfo.sessionId},get language(){return t.environment.appLanguage},get appName(){return t.environment.appName},get appRoot(){return t.environment.appRoot?.fsPath??""},get appHost(){return t.environment.appHost},get uriScheme(){return t.environment.appUriScheme},get clipboard(){return Ke.value},get shell(){return y.getDefaultShell(!1)},get onDidChangeShell(){return m(y.onDidChangeShell)},get isTelemetryEnabled(){return d.getTelemetryConfiguration()},get onDidChangeTelemetryEnabled(){return m(d.onDidChangeTelemetryEnabled)},get telemetryConfiguration(){return s(e,"telemetry"),d.getTelemetryDetails()},get onDidChangeTelemetryConfiguration(){return s(e,"telemetry"),m(d.onDidChangeTelemetryConfiguration)},get isNewAppInstall(){return Xr(t.telemetryInfo.firstSessionDate)},createTelemetryLogger:(t,r)=>($r.validateSender(t),d.instantiateLogger(e,t,r)),openExternal:(e,r)=>h.openUri(e,{allowTunneling:!!t.remote.authority,allowContributedOpeners:r?.allowContributedOpeners}),async asExternalUri(e){if(e.scheme===t.environment.appUriScheme)return j.createAppUri(e);try{return await h.asExternalUri(e,{allowTunneling:!!t.remote.authority})}catch(t){if(he(e,J.http)||he(e,J.https))return e;throw t}},get remoteName(){return Mt(t.remote.authority)},get remoteAuthority(){return s(e,"resolvers"),t.remote.authority},get uiKind(){return t.uiKind},get logLevel(){return T.getLevel()},get onDidChangeLogLevel(){return m(T.onDidChangeLogLevel)},get appQuality(){return s(e,"resolvers"),t.quality},get appCommit(){return s(e,"resolvers"),t.commit}};t.environment.extensionTestsLocationURI||Object.freeze(p);const v={createTestController:(t,r,o)=>ke.createTestController(e,t,r,o),createTestObserver:()=>(s(e,"testObserver"),ke.createTestObserver()),runTests:t=>(s(e,"testObserver"),ke.runTests(t)),registerTestFollowupProvider:t=>(s(e,"testObserver"),ke.registerTestFollowupProvider(t)),get onDidChangeTestResults(){return s(e,"testObserver"),m(ke.onResultsChanged)},get testResults(){return s(e,"testObserver"),ke.results}},E=t.remote.isRemote?r.ExtensionKind.Workspace:r.ExtensionKind.UI,S={getExtension(t,r){X(e,"extensionsAny")||(r=!1);const i=o.mine.getExtensionDescription(t);if(i)return new Y(n,e.identifier,i,E,!1);if(r){const r=o.all.getExtensionDescription(t);if(r)return new Y(n,e.identifier,r,E,!0)}},get all(){const t=[];for(const r of o.mine.getAllExtensionDescriptions())t.push(new Y(n,e.identifier,r,E,!1));return t},get allAcrossExtensionHosts(){s(e,"extensionsAny");const t=new Rt(o.mine.getAllExtensionDescriptions().map((e=>e.identifier))),r=[];for(const i of o.all.getAllExtensionDescriptions()){const o=!t.has(i.identifier);r.push(new Y(n,e.identifier,i,E,o))}return r},get onDidChange(){return X(e,"extensionsAny")?m(St.any(o.mine.onDidChange,o.all.onDidChange)):m(o.mine.onDidChange)}},Q={createDiagnosticCollection:t=>te.createDiagnosticCollection(e.identifier,t),get onDidChangeDiagnostics(){return m(te.onDidChangeDiagnostics)},getDiagnostics:e=>te.getDiagnostics(e),getLanguages:()=>re.getLanguages(),setTextDocumentLanguage:(e,t)=>re.changeLanguage(e.uri,t),match(e,t){const r=so.LanguageSelector.from(e);let o;return yt(r)&&(o=B.notebookDocuments.find((e=>e.apiNotebook.getCells().find((e=>e.document===t))))?.apiNotebook),kt(r,t.uri,t.languageId,!0,o?.uri,o?.notebookType)},registerCodeActionsProvider:(t,r,o)=>oe.registerCodeActionProvider(e,g(t),r,o),registerDocumentPasteEditProvider:(t,r,o)=>oe.registerDocumentPasteEditProvider(e,g(t),r,o),registerCodeLensProvider:(t,r)=>oe.registerCodeLensProvider(e,g(t),r),registerDefinitionProvider:(t,r)=>oe.registerDefinitionProvider(e,g(t),r),registerDeclarationProvider:(t,r)=>oe.registerDeclarationProvider(e,g(t),r),registerImplementationProvider:(t,r)=>oe.registerImplementationProvider(e,g(t),r),registerTypeDefinitionProvider:(t,r)=>oe.registerTypeDefinitionProvider(e,g(t),r),registerHoverProvider:(t,r)=>oe.registerHoverProvider(e,g(t),r,e.identifier),registerEvaluatableExpressionProvider:(t,r)=>oe.registerEvaluatableExpressionProvider(e,g(t),r,e.identifier),registerInlineValuesProvider:(t,r)=>oe.registerInlineValuesProvider(e,g(t),r,e.identifier),registerDocumentHighlightProvider:(t,r)=>oe.registerDocumentHighlightProvider(e,g(t),r),registerMultiDocumentHighlightProvider:(t,r)=>oe.registerMultiDocumentHighlightProvider(e,g(t),r),registerLinkedEditingRangeProvider:(t,r)=>oe.registerLinkedEditingRangeProvider(e,g(t),r),registerReferenceProvider:(t,r)=>oe.registerReferenceProvider(e,g(t),r),registerRenameProvider:(t,r)=>oe.registerRenameProvider(e,g(t),r),registerNewSymbolNamesProvider:(t,r)=>(s(e,"newSymbolNamesProvider"),oe.registerNewSymbolNamesProvider(e,g(t),r)),registerDocumentSymbolProvider:(t,r,o)=>oe.registerDocumentSymbolProvider(e,g(t),r,o),registerWorkspaceSymbolProvider:t=>oe.registerWorkspaceSymbolProvider(e,t),registerDocumentFormattingEditProvider:(t,r)=>oe.registerDocumentFormattingEditProvider(e,g(t),r),registerDocumentRangeFormattingEditProvider:(t,r)=>oe.registerDocumentRangeFormattingEditProvider(e,g(t),r),registerOnTypeFormattingEditProvider:(t,r,o,...i)=>oe.registerOnTypeFormattingEditProvider(e,g(t),r,[o].concat(i)),registerDocumentSemanticTokensProvider:(t,r,o)=>oe.registerDocumentSemanticTokensProvider(e,g(t),r,o),registerDocumentRangeSemanticTokensProvider:(t,r,o)=>oe.registerDocumentRangeSemanticTokensProvider(e,g(t),r,o),registerSignatureHelpProvider:(t,r,o,...i)=>"object"==typeof o?oe.registerSignatureHelpProvider(e,g(t),r,o):oe.registerSignatureHelpProvider(e,g(t),r,typeof o>"u"?[]:[o,...i]),registerCompletionItemProvider:(t,r,...o)=>oe.registerCompletionItemProvider(e,g(t),r,o),registerInlineCompletionItemProvider:(t,r,o)=>(r.handleDidShowCompletionItem&&s(e,"inlineCompletionsAdditions"),r.handleDidPartiallyAcceptCompletionItem&&s(e,"inlineCompletionsAdditions"),o&&s(e,"inlineCompletionsAdditions"),oe.registerInlineCompletionsProvider(e,g(t),r,o)),registerInlineEditProvider:(t,r)=>(s(e,"inlineEdit"),oe.registerInlineEditProvider(e,g(t),r)),registerDocumentLinkProvider:(t,r)=>oe.registerDocumentLinkProvider(e,g(t),r),registerColorProvider:(t,r)=>oe.registerColorProvider(e,g(t),r),registerFoldingRangeProvider:(t,r)=>oe.registerFoldingRangeProvider(e,g(t),r),registerSelectionRangeProvider:(t,r)=>oe.registerSelectionRangeProvider(e,t,r),registerCallHierarchyProvider:(t,r)=>oe.registerCallHierarchyProvider(e,t,r),registerTypeHierarchyProvider:(t,r)=>oe.registerTypeHierarchyProvider(e,t,r),setLanguageConfiguration:(t,r)=>oe.setLanguageConfiguration(e,t,r),getTokenInformationAtPosition:(t,r)=>(s(e,"tokenInformation"),re.tokenAtPosition(t,r)),registerInlayHintsProvider:(t,r)=>oe.registerInlayHintsProvider(e,t,r),createLanguageStatusItem:(t,r)=>re.createLanguageStatusItem(e,t,r),registerDocumentDropEditProvider:(t,r,o)=>oe.registerDocumentOnDropEditProvider(e,t,r,o)},xe={get activeTextEditor(){return Z.getActiveTextEditor()},get visibleTextEditors(){return Z.getVisibleTextEditors()},get activeTerminal(){return y.activeTerminal},get terminals(){return y.terminals},async showTextDocument(t,r,o){A.isUri(t)&&t.scheme===J.vscodeRemote&&!t.authority&&C.report("workspace.showTextDocument",e,"A URI of 'vscode-remote' scheme requires an authority.");const i=await(A.isUri(t)?Promise.resolve(fe.openTextDocument(t)):Promise.resolve(t));return Z.showTextDocument(i,r,o)},createTextEditorDecorationType:t=>Z.createTextEditorDecorationType(e,t),onDidChangeActiveTextEditor:(e,t,r)=>m(Z.onDidChangeActiveTextEditor)(e,t,r),onDidChangeVisibleTextEditors:(e,t,r)=>m(Z.onDidChangeVisibleTextEditors)(e,t,r),onDidChangeTextEditorSelection:(e,t,r)=>m(Z.onDidChangeTextEditorSelection)(e,t,r),onDidChangeTextEditorOptions:(e,t,r)=>m(Z.onDidChangeTextEditorOptions)(e,t,r),onDidChangeTextEditorVisibleRanges:(e,t,r)=>m(Z.onDidChangeTextEditorVisibleRanges)(e,t,r),onDidChangeTextEditorViewColumn:(e,t,r)=>m(Z.onDidChangeTextEditorViewColumn)(e,t,r),onDidChangeTextEditorDiffInformation:(t,r,o)=>(s(e,"textEditorDiffInformation"),m(Z.onDidChangeTextEditorDiffInformation)(t,r,o)),onDidCloseTerminal:(e,t,r)=>m(y.onDidCloseTerminal)(e,t,r),onDidOpenTerminal:(e,t,r)=>m(y.onDidOpenTerminal)(e,t,r),onDidChangeActiveTerminal:(e,t,r)=>m(y.onDidChangeActiveTerminal)(e,t,r),onDidChangeTerminalDimensions:(t,r,o)=>(s(e,"terminalDimensions"),m(y.onDidChangeTerminalDimensions)(t,r,o)),onDidChangeTerminalState:(e,t,r)=>m(y.onDidChangeTerminalState)(e,t,r),onDidWriteTerminalData:(t,r,o)=>(s(e,"terminalDataWriteEvent"),m(y.onDidWriteTerminalData)(t,r,o)),onDidExecuteTerminalCommand:(t,r,o)=>(s(e,"terminalExecuteCommandEvent"),m(y.onDidExecuteTerminalCommand)(t,r,o)),onDidChangeTerminalShellIntegration:(e,t,r)=>m(w.onDidChangeTerminalShellIntegration)(e,t,r),onDidStartTerminalShellExecution:(e,t,r)=>m(w.onDidStartTerminalShellExecution)(e,t,r),onDidEndTerminalShellExecution:(e,t,r)=>m(w.onDidEndTerminalShellExecution)(e,t,r),get state(){return h.getState()},onDidChangeWindowState:(e,t,r)=>m(h.onDidChangeWindowState)(e,t,r),showInformationMessage:(t,...r)=>Ve.showMessage(e,ne.Info,t,r[0],r.slice(1)),showWarningMessage:(t,...r)=>Ve.showMessage(e,ne.Warning,t,r[0],r.slice(1)),showErrorMessage:(t,...r)=>Ve.showMessage(e,ne.Error,t,r[0],r.slice(1)),showQuickPick:(t,r,o)=>le.showQuickPick(e,t,r,o),showWorkspaceFolderPick:e=>le.showWorkspaceFolderPick(e),showInputBox:(e,t)=>le.showInput(e,t),showOpenDialog:e=>We.showOpenDialog(e),showSaveDialog:e=>We.showSaveDialog(e),createStatusBarItem(t,r,o){let i,n,s;return"string"==typeof t?(i=t,n=r,s=o):(n=t,s=r),Me.createStatusBarEntry(e,i,n,s)},setStatusBarMessage:(e,t)=>Me.setStatusBarMessage(e,t),withScmProgress:t=>(C.report("window.withScmProgress",e,"Use 'withProgress' instead."),ue.withProgress(e,{location:r.ProgressLocation.SourceControl},((e,r)=>t({report(e){}})))),withProgress:(t,r)=>ue.withProgress(e,t,r),createOutputChannel:(t,r)=>F.createOutputChannel(t,r,e),createWebviewPanel:(t,r,o,i)=>Ce.createWebviewPanel(e,t,r,o,i),createWebviewTextEditorInset:(t,r,o,i)=>(s(e,"editorInsets"),ee.createWebviewEditorInset(t,r,o,i,e)),createTerminal:(e,t,r)=>"object"==typeof e?"pty"in e?y.createExtensionTerminal(e):y.createTerminalFromOptions(e):y.createTerminal(e,t,r),registerTerminalLinkProvider:e=>y.registerLinkProvider(e),registerTerminalProfileProvider:(t,r)=>y.registerProfileProvider(e,t,r),registerTerminalCompletionProvider:(t,...r)=>(s(e,"terminalCompletionProvider"),y.registerTerminalCompletionProvider(e,t,...r)),registerTerminalQuickFixProvider:(t,r)=>(s(e,"terminalQuickFixProvider"),y.registerTerminalQuickFixProvider(t,e.identifier.value,r)),registerTreeDataProvider:(t,r)=>_.registerTreeDataProvider(t,r,e),createTreeView:(t,r)=>_.createTreeView(t,r,e),registerWebviewPanelSerializer:(t,r)=>Ce.registerWebviewPanelSerializer(e,t,r),registerCustomEditorProvider:(t,r,o={})=>Ee.registerCustomEditorProvider(e,t,r,o),registerFileDecorationProvider:t=>k.registerFileDecorationProvider(t,e),registerUriHandler:t=>j.registerUriHandler(e,t),createQuickPick:()=>le.createQuickPick(e),createInputBox:()=>le.createInputBox(e),get activeColorTheme(){return ve.activeColorTheme},onDidChangeActiveColorTheme:(e,t,r)=>m(ve.onDidChangeActiveColorTheme)(e,t,r),registerWebviewViewProvider:(t,r,o)=>De.registerWebviewViewProvider(e,t,r,o?.webviewOptions),get activeNotebookEditor(){return B.activeNotebookEditor},onDidChangeActiveNotebookEditor:(e,t,r)=>m(B.onDidChangeActiveNotebookEditor)(e,t,r),get visibleNotebookEditors(){return B.visibleNotebookEditors},get onDidChangeVisibleNotebookEditors(){return m(B.onDidChangeVisibleNotebookEditors)},onDidChangeNotebookEditorSelection:(e,t,r)=>m(q.onDidChangeNotebookEditorSelection)(e,t,r),onDidChangeNotebookEditorVisibleRanges:(e,t,r)=>m(q.onDidChangeNotebookEditorVisibleRanges)(e,t,r),showNotebookDocument:(e,t)=>B.showNotebookDocument(e,t),registerExternalUriOpener:(t,r,o)=>(s(e,"externalUriOpener"),He.registerExternalUriOpener(e.identifier,t,r,o)),registerProfileContentHandler:(t,r)=>(s(e,"profileContentHandlers"),Ie.registerProfileContentHandler(e,t,r)),registerQuickDiffProvider:(t,r,o,i)=>(s(e,"quickDiffProvider"),me.registerQuickDiffProvider(g(t),r,o,i)),get tabGroups(){return D.tabGroups},registerShareProvider:(t,r)=>(s(e,"shareProvider"),ge.registerShareProvider(g(t),r)),get nativeHandle(){return s(e,"nativeWindowHandle"),h.nativeHandle},createChatStatusItem:t=>(s(e,"chatStatusItem"),Oe.createChatStatusItem(e,t))},fe={get rootPath(){return C.report("workspace.rootPath",e,"Please use 'workspace.workspaceFolders' instead. More details: https://aka.ms/vscode-eliminating-rootpath"),l.getPath()},set rootPath(e){throw new V.ReadonlyError("rootPath")},getWorkspaceFolder:e=>l.getWorkspaceFolder(e),get workspaceFolders(){return l.getWorkspaceFolders()},get name(){return l.name},set name(e){throw new V.ReadonlyError("name")},get workspaceFile(){return l.workspaceFile},set workspaceFile(e){throw new V.ReadonlyError("workspaceFile")},updateWorkspaceFolders:(t,r,...o)=>l.updateWorkspaceFolders(e,t,r||0,...o),onDidChangeWorkspaceFolders:function(e,t,r){return m(l.onDidChangeWorkspace)(e,t,r)},asRelativePath:(e,t)=>l.getRelativePath(e,t),findFiles:(t,r,o,i)=>l.findFiles(t,r,o,e.identifier,i),findFiles2:(t,r,o)=>(s(e,"findFiles2"),l.findFiles2(t,r,e.identifier,o)),findTextInFiles:(t,r,o,i)=>{let n,a;return s(e,"findTextInFiles"),"object"==typeof r?(n=r,a=o):(n={},a=r,i=o),l.findTextInFiles(t,n||{},a,e.identifier,i)},findTextInFiles2:(t,r,o)=>(s(e,"findTextInFiles2"),s(e,"textSearchProvider2"),l.findTextInFiles2(t,r,e.identifier,o)),save:e=>l.save(e),saveAs:e=>l.saveAs(e),saveAll:e=>l.saveAll(e),applyEdit:(t,r)=>je.applyWorkspaceEdit(t,e,r),createFileSystemWatcher:(t,r,o,i)=>{const n={ignoreCreateEvents:!!r,ignoreChangeEvents:!!o,ignoreDeleteEvents:!!i};return ae.createFileSystemWatcher(l,a,e,t,n)},get textDocuments(){return K.getAllDocumentData().map((e=>e.document))},set textDocuments(e){throw new V.ReadonlyError("textDocuments")},openTextDocument(t,r){let o;if(r=r??t,"string"==typeof r?.encoding&&s(e,"textDocumentEncoding"),"string"==typeof t)o=Promise.resolve(A.file(t));else if(A.isUri(t))o=Promise.resolve(t);else{if(r&&"object"!=typeof r)throw new Error("illegal argument - uriOrFileNameOrOptions");o=K.createDocumentData(r)}return o.then((t=>(T.trace(`openTextDocument from ${e.identifier}`),t.scheme===J.vscodeRemote&&!t.authority&&C.report("workspace.openTextDocument",e,"A URI of 'vscode-remote' scheme requires an authority."),K.ensureDocumentData(t,r).then((e=>e.document)))))},onDidOpenTextDocument:(e,t,r)=>m(K.onDidAddDocument)(e,t,r),onDidCloseTextDocument:(e,t,r)=>m(K.onDidRemoveDocument)(e,t,r),onDidChangeTextDocument:(e,t,r)=>m(K.onDidChangeDocument)(e,t,r),onDidSaveTextDocument:(e,t,r)=>m(K.onDidSaveDocument)(e,t,r),onWillSaveTextDocument:(t,r,o)=>m(O.getOnWillSaveTextDocumentEvent(e))(t,r,o),get notebookDocuments(){return B.notebookDocuments.map((e=>e.apiNotebook))},async openNotebookDocument(e,t){let r;if(A.isUri(e))r=e,await B.openNotebookDocument(e);else{if("string"!=typeof e)throw new Error("Invalid arguments");r=A.revive(await B.createNotebookDocument({viewType:e,content:t}))}return B.getNotebookDocument(r).apiNotebook},onDidSaveNotebookDocument:(e,t,r)=>m(U.onDidSaveNotebookDocument)(e,t,r),onDidChangeNotebookDocument:(e,t,r)=>m(U.onDidChangeNotebookDocument)(e,t,r),onWillSaveNotebookDocument:(t,r,o)=>m($.getOnWillSaveNotebookDocumentEvent(e))(t,r,o),get onDidOpenNotebookDocument(){return m(B.onDidOpenNotebookDocument)},get onDidCloseNotebookDocument(){return m(B.onDidCloseNotebookDocument)},registerNotebookSerializer:(t,r,o,i)=>B.registerNotebookSerializer(e,t,r,o,X(e,"notebookLiveShare")?i:void 0),onDidChangeConfiguration:(e,t,r)=>m(a.onDidChangeConfiguration)(e,t,r),getConfiguration(t,r){return r=1===arguments.length?void 0:r,a.getConfiguration(t,r,e)},registerTextDocumentContentProvider:(e,t)=>W.registerTextDocumentContentProvider(e,t),registerTaskProvider:(t,r)=>(C.report("window.registerTaskProvider",e,"Use the corresponding function on the 'tasks' namespace instead"),N.registerTaskProvider(e,t,r)),registerFileSystemProvider:(t,r,o)=>Pt(se.registerFileSystemProvider(e,t,r,o),i.addFileSystemProvider(t,r,o)),get fs(){return i.value},registerFileSearchProvider:(t,r)=>(s(e,"fileSearchProvider"),M.registerFileSearchProviderOld(t,r)),registerTextSearchProvider:(t,r)=>(s(e,"textSearchProvider"),M.registerTextSearchProviderOld(t,r)),registerAITextSearchProvider:(t,r)=>(s(e,"aiTextSearchProvider"),s(e,"textSearchProvider2"),M.registerAITextSearchProvider(t,r)),registerFileSearchProvider2:(t,r)=>(s(e,"fileSearchProvider2"),M.registerFileSearchProvider(t,r)),registerTextSearchProvider2:(t,r)=>(s(e,"textSearchProvider2"),M.registerTextSearchProvider(t,r)),registerRemoteAuthorityResolver:(t,r)=>(s(e,"resolvers"),n.registerRemoteAuthorityResolver(t,r)),registerResourceLabelFormatter:t=>(s(e,"resolvers"),pe.$registerResourceLabelFormatter(t)),getRemoteExecServer:t=>(s(e,"resolvers"),n.getRemoteExecServer(t)),onDidCreateFiles:(e,t,r)=>m(ae.onDidCreateFile)(e,t,r),onDidDeleteFiles:(e,t,r)=>m(ae.onDidDeleteFile)(e,t,r),onDidRenameFiles:(e,t,r)=>m(ae.onDidRenameFile)(e,t,r),onWillCreateFiles:(t,r,o)=>m(ae.getOnWillCreateFileEvent(e))(t,r,o),onWillDeleteFiles:(t,r,o)=>m(ae.getOnWillDeleteFileEvent(e))(t,r,o),onWillRenameFiles:(t,r,o)=>m(ae.getOnWillRenameFileEvent(e))(t,r,o),openTunnel:t=>(s(e,"tunnels"),x.openTunnel(e,t).then((e=>{if(!e)throw new Error("cannot open tunnel");return e}))),get tunnels(){return s(e,"tunnels"),x.getTunnels()},onDidChangeTunnels:(t,r,o)=>(s(e,"tunnels"),m(x.onDidChangeTunnels)(t,r,o)),registerPortAttributesProvider:(t,r)=>(s(e,"portsAttributes"),x.registerPortsAttributesProvider(t,r)),registerTunnelProvider:(t,r)=>(s(e,"tunnelFactory"),x.registerTunnelProvider(t,r)),registerTimelineProvider:(t,r)=>(s(e,"timeline"),Te.registerTimelineProvider(t,r,e.identifier,I.converter)),get isTrusted(){return l.trusted},requestWorkspaceTrust:t=>(s(e,"workspaceTrust"),l.requestWorkspaceTrust(t)),onDidGrantWorkspaceTrust:(e,t,r)=>m(l.onDidGrantWorkspaceTrust)(e,t,r),registerEditSessionIdentityProvider:(t,r)=>(s(e,"editSessionIdentityProvider"),l.registerEditSessionIdentityProvider(t,r)),onWillCreateEditSessionIdentity:(t,r,o)=>(s(e,"editSessionIdentityProvider"),m(l.getOnWillCreateEditSessionIdentityEvent(e))(t,r,o)),registerCanonicalUriProvider:(t,r)=>(s(e,"canonicalUriProvider"),l.registerCanonicalUriProvider(t,r)),getCanonicalUri:(t,r,o)=>(s(e,"canonicalUriProvider"),l.provideCanonicalUri(t,r,o)),decode:(t,r,o)=>(s(e,"textDocumentEncoding"),l.decode(t,r,o)),encode:(t,r,o)=>(s(e,"textDocumentEncoding"),l.encode(t,r,o))},Le={get inputBox(){return C.report("scm.inputBox",e,"Use 'SourceControl.inputBox' instead"),de.getLastInputBox(e)},createSourceControl:(t,r,o)=>de.createSourceControl(e,t,r,o)},Be={createCommentController:(t,r)=>ce.createCommentController(e,t,r)},Ue={get activeDebugSession(){return R.activeDebugSession},get activeDebugConsole(){return R.activeDebugConsole},get breakpoints(){return R.breakpoints},get activeStackItem(){return R.activeStackItem},registerDebugVisualizationProvider:(t,r)=>(s(e,"debugVisualization"),R.registerDebugVisualizationProvider(e,t,r)),registerDebugVisualizationTreeProvider:(t,r)=>(s(e,"debugVisualization"),R.registerDebugVisualizationTree(e,t,r)),onDidStartDebugSession:(e,t,r)=>m(R.onDidStartDebugSession)(e,t,r),onDidTerminateDebugSession:(e,t,r)=>m(R.onDidTerminateDebugSession)(e,t,r),onDidChangeActiveDebugSession:(e,t,r)=>m(R.onDidChangeActiveDebugSession)(e,t,r),onDidReceiveDebugSessionCustomEvent:(e,t,r)=>m(R.onDidReceiveDebugSessionCustomEvent)(e,t,r),onDidChangeBreakpoints:(e,t,r)=>m(R.onDidChangeBreakpoints)(e,t,r),onDidChangeActiveStackItem:(e,t,r)=>m(R.onDidChangeActiveStackItem)(e,t,r),registerDebugConfigurationProvider:(e,t,r)=>R.registerDebugConfigurationProvider(e,t,r||Se.Initial),registerDebugAdapterDescriptorFactory:(t,r)=>R.registerDebugAdapterDescriptorFactory(e,t,r),registerDebugAdapterTrackerFactory:(e,t)=>R.registerDebugAdapterTrackerFactory(e,t),startDebugging:(e,t,r)=>!r||"object"==typeof r&&"configuration"in r?R.startDebugging(e,t,{parentSession:r}):R.startDebugging(e,t,r||{}),stopDebugging:e=>R.stopDebugging(e),addBreakpoints:e=>R.addBreakpoints(e),removeBreakpoints:e=>R.removeBreakpoints(e),asDebugSourceUri:(e,t)=>R.asDebugSourceUri(e,t)},Qe={registerTaskProvider:(t,r)=>N.registerTaskProvider(e,t,r),fetchTasks:e=>N.fetchTasks(e),executeTask:t=>N.executeTask(e,t),get taskExecutions(){return N.taskExecutions},onDidStartTask:(e,t,r)=>m(N.onDidStartTask)(e,t,r),onDidEndTask:(e,t,r)=>m(N.onDidEndTask)(e,t,r),onDidStartTaskProcess:(e,t,r)=>m(N.onDidStartTaskProcess)(e,t,r),onDidEndTaskProcess:(e,t,r)=>m(N.onDidEndTaskProcess)(e,t,r),onDidStartTaskProblemMatchers:(t,r,o)=>(s(e,"taskProblemMatcherStatus"),m(N.onDidStartTaskProblemMatchers)(t,r,o)),onDidEndTaskProblemMatchers:(t,r,o)=>(s(e,"taskProblemMatcherStatus"),m(N.onDidEndTaskProblemMatchers)(t,r,o))},qe={createNotebookController:(t,r,o,i,n)=>z.createNotebookController(e,t,r,o,i,X(e,"notebookMessaging")?n:void 0),registerNotebookCellStatusBarItemProvider:(t,r)=>B.registerNotebookCellStatusBarItemProvider(e,t,r),createRendererMessaging:t=>G.createRendererMessaging(e,t),createNotebookControllerDetectionTask:t=>(s(e,"notebookKernelSource"),z.createNotebookControllerDetectionTask(e,t)),registerKernelSourceActionProvider:(t,r)=>(s(e,"notebookKernelSource"),z.registerKernelSourceActionProvider(e,t,r)),onDidChangeNotebookCellExecutionState:(t,r,o)=>(s(e,"notebookCellExecutionState"),m(z.onDidChangeNotebookCellExecutionState)(t,r,o))},ze={t(...t){if("string"==typeof t[0]){const r=t.shift(),o=t&&"object"==typeof t[0]?t[0]:t;return L.getMessage(e.identifier.value,{message:r,args:o})}return L.getMessage(e.identifier.value,t[0])},get bundle(){return L.getBundle(e.identifier.value)},get uri(){return L.getBundleUri(e.identifier.value)}},Ge={transferActiveChat:t=>(s(e,"interactive"),we.transferActiveChat(t))},Je={getRelatedInformation:(t,r)=>(s(e,"aiRelatedInformation"),Re.getRelatedInformation(e,t,r)),registerRelatedInformationProvider:(t,r)=>(s(e,"aiRelatedInformation"),Re.registerRelatedInformationProvider(e,t,r)),registerEmbeddingVectorProvider:(t,r)=>(s(e,"aiRelatedInformation"),Ae.registerEmbeddingVectorProvider(e,t,r))},Xe={registerMappedEditsProvider:(t,r)=>(s(e,"mappedEditsProvider"),{dispose(){}}),registerMappedEditsProvider2:t=>(s(e,"mappedEditsProvider"),ie.registerMappedEditsProvider(e,t)),createChatParticipant:(t,r)=>we.createChatAgent(e,t,r),createDynamicChatParticipant:(t,r,o)=>(s(e,"chatParticipantPrivate"),we.createDynamicChatAgent(e,t,r,o)),registerChatParticipantDetectionProvider:t=>(s(e,"chatParticipantPrivate"),we.registerChatParticipantDetectionProvider(e,t)),registerRelatedFilesProvider:(t,r)=>(s(e,"chatEditing"),we.registerRelatedFilesProvider(e,t,r)),onDidDisposeChatSession:(t,r,o)=>(s(e,"chatParticipantPrivate"),m(we.onDidDisposeChatSession)(t,r,o))},Ye={selectChatModels:t=>b.selectLanguageModels(e,t??{}),onDidChangeChatModels:(e,t,r)=>b.onDidChangeProviders(e,t,r),registerChatModelProvider:(t,r,o)=>(s(e,"chatProvider"),b.registerLanguageModel(e,t,r,o)),get embeddingModels(){return s(e,"embeddings"),Fe.embeddingsModels},onDidChangeEmbeddingModels:(t,r,o)=>(s(e,"embeddings"),Fe.onDidChange(t,r,o)),registerEmbeddingsProvider:(t,r)=>(s(e,"embeddings"),Fe.registerEmbeddingsProvider(e,t,r)),computeEmbeddings:async(t,r,o)=>(s(e,"embeddings"),Fe.computeEmbeddings(t,r,o)),registerTool:(t,r)=>ye.registerTool(e,t,r),invokeTool:(t,r,o)=>ye.invokeTool(e,t,r,o),get tools(){return ye.getTools(e)},fileIsIgnored:(t,r)=>b.fileIsIgnored(e,t,r),registerIgnoredFileProvider:t=>b.registerIgnoredFileProvider(e,t),registerMcpConfigurationProvider:(t,r)=>(s(e,"mcpConfigurationProvider"),P.registerMcpConfigurationProvider(e,t,r))},$e={registerSpeechProvider:(t,r)=>(s(e,"speech"),Ne.registerProvider(e.identifier,t,r))};return{version:t.version,ai:Je,authentication:c,commands:u,comments:Be,chat:Xe,debug:Ue,env:p,extensions:S,interactive:Ge,l10n:ze,languages:Q,lm:Ye,notebooks:qe,scm:Le,speech:$e,tasks:Qe,tests:v,window:xe,workspace:fe,Breakpoint:r.Breakpoint,TerminalOutputAnchor:r.TerminalOutputAnchor,ChatResultFeedbackKind:r.ChatResultFeedbackKind,ChatVariableLevel:r.ChatVariableLevel,ChatCompletionItem:r.ChatCompletionItem,ChatReferenceDiagnostic:r.ChatReferenceDiagnostic,CallHierarchyIncomingCall:r.CallHierarchyIncomingCall,CallHierarchyItem:r.CallHierarchyItem,CallHierarchyOutgoingCall:r.CallHierarchyOutgoingCall,CancellationError:V.CancellationError,CancellationTokenSource:ht,CandidatePortSource:Ut,CodeAction:r.CodeAction,CodeActionKind:r.CodeActionKind,CodeActionTriggerKind:r.CodeActionTriggerKind,CodeLens:r.CodeLens,Color:r.Color,ColorInformation:r.ColorInformation,ColorPresentation:r.ColorPresentation,ColorThemeKind:r.ColorThemeKind,CommentMode:r.CommentMode,CommentState:r.CommentState,CommentThreadCollapsibleState:r.CommentThreadCollapsibleState,CommentThreadState:r.CommentThreadState,CommentThreadApplicability:r.CommentThreadApplicability,CommentThreadFocus:r.CommentThreadFocus,CompletionItem:r.CompletionItem,CompletionItemKind:r.CompletionItemKind,CompletionItemTag:r.CompletionItemTag,CompletionList:r.CompletionList,CompletionTriggerKind:r.CompletionTriggerKind,ConfigurationTarget:r.ConfigurationTarget,CustomExecution:r.CustomExecution,DebugAdapterExecutable:r.DebugAdapterExecutable,DebugAdapterInlineImplementation:r.DebugAdapterInlineImplementation,DebugAdapterNamedPipeServer:r.DebugAdapterNamedPipeServer,DebugAdapterServer:r.DebugAdapterServer,DebugConfigurationProviderTriggerKind:Se,DebugConsoleMode:r.DebugConsoleMode,DebugVisualization:r.DebugVisualization,DecorationRangeBehavior:r.DecorationRangeBehavior,Diagnostic:r.Diagnostic,DiagnosticRelatedInformation:r.DiagnosticRelatedInformation,DiagnosticSeverity:r.DiagnosticSeverity,DiagnosticTag:r.DiagnosticTag,Disposable:r.Disposable,DocumentHighlight:r.DocumentHighlight,DocumentHighlightKind:r.DocumentHighlightKind,MultiDocumentHighlight:r.MultiDocumentHighlight,DocumentLink:r.DocumentLink,DocumentSymbol:r.DocumentSymbol,EndOfLine:r.EndOfLine,EnvironmentVariableMutatorType:r.EnvironmentVariableMutatorType,EvaluatableExpression:r.EvaluatableExpression,InlineValueText:r.InlineValueText,InlineValueVariableLookup:r.InlineValueVariableLookup,InlineValueEvaluatableExpression:r.InlineValueEvaluatableExpression,InlineCompletionTriggerKind:r.InlineCompletionTriggerKind,EventEmitter:bt,ExtensionKind:r.ExtensionKind,ExtensionMode:r.ExtensionMode,ExternalUriOpenerPriority:r.ExternalUriOpenerPriority,FileChangeType:r.FileChangeType,FileDecoration:r.FileDecoration,FileDecoration2:r.FileDecoration,FileSystemError:r.FileSystemError,FileType:be.FileType,FilePermission:be.FilePermission,FoldingRange:r.FoldingRange,FoldingRangeKind:r.FoldingRangeKind,FunctionBreakpoint:r.FunctionBreakpoint,InlineCompletionItem:r.InlineSuggestion,InlineCompletionList:r.InlineSuggestionList,Hover:r.Hover,VerboseHover:r.VerboseHover,HoverVerbosityAction:r.HoverVerbosityAction,IndentAction:It.IndentAction,Location:r.Location,MarkdownString:r.MarkdownString,OverviewRulerLane:Ht,ParameterInformation:r.ParameterInformation,PortAutoForwardAction:r.PortAutoForwardAction,Position:r.Position,ProcessExecution:r.ProcessExecution,ProgressLocation:r.ProgressLocation,QuickInputButtonLocation:r.QuickInputButtonLocation,QuickInputButtons:r.QuickInputButtons,Range:r.Range,RelativePattern:r.RelativePattern,Selection:r.Selection,SelectionRange:r.SelectionRange,SemanticTokens:r.SemanticTokens,SemanticTokensBuilder:r.SemanticTokensBuilder,SemanticTokensEdit:r.SemanticTokensEdit,SemanticTokensEdits:r.SemanticTokensEdits,SemanticTokensLegend:r.SemanticTokensLegend,ShellExecution:r.ShellExecution,ShellQuoting:r.ShellQuoting,SignatureHelp:r.SignatureHelp,SignatureHelpTriggerKind:r.SignatureHelpTriggerKind,SignatureInformation:r.SignatureInformation,SnippetString:r.SnippetString,SourceBreakpoint:r.SourceBreakpoint,StandardTokenType:r.StandardTokenType,StatusBarAlignment:r.StatusBarAlignment,SymbolInformation:r.SymbolInformation,SymbolKind:r.SymbolKind,SymbolTag:r.SymbolTag,Task:r.Task,TaskEventKind:r.TaskEventKind,TaskGroup:r.TaskGroup,TaskPanelKind:r.TaskPanelKind,TaskRevealKind:r.TaskRevealKind,TaskScope:r.TaskScope,TerminalLink:r.TerminalLink,TerminalQuickFixTerminalCommand:r.TerminalQuickFixCommand,TerminalQuickFixOpener:r.TerminalQuickFixOpener,TerminalLocation:r.TerminalLocation,TerminalProfile:r.TerminalProfile,TerminalExitReason:r.TerminalExitReason,TerminalShellExecutionCommandLineConfidence:r.TerminalShellExecutionCommandLineConfidence,TerminalCompletionItem:r.TerminalCompletionItem,TerminalCompletionItemKind:r.TerminalCompletionItemKind,TerminalCompletionList:r.TerminalCompletionList,TerminalShellType:r.TerminalShellType,TextDocumentSaveReason:r.TextDocumentSaveReason,TextEdit:r.TextEdit,SnippetTextEdit:r.SnippetTextEdit,TextEditorCursorStyle:ft,TextEditorChangeKind:r.TextEditorChangeKind,TextEditorLineNumbersStyle:r.TextEditorLineNumbersStyle,TextEditorRevealType:r.TextEditorRevealType,TextEditorSelectionChangeKind:r.TextEditorSelectionChangeKind,SyntaxTokenType:r.SyntaxTokenType,TextDocumentChangeReason:r.TextDocumentChangeReason,ThemeColor:r.ThemeColor,ThemeIcon:r.ThemeIcon,TreeItem:r.TreeItem,TreeItemCheckboxState:r.TreeItemCheckboxState,TreeItemCollapsibleState:r.TreeItemCollapsibleState,TypeHierarchyItem:r.TypeHierarchyItem,UIKind:Wt,Uri:A,ViewColumn:r.ViewColumn,WorkspaceEdit:r.WorkspaceEdit,DocumentPasteTriggerKind:r.DocumentPasteTriggerKind,DocumentDropEdit:r.DocumentDropEdit,DocumentDropOrPasteEditKind:r.DocumentDropOrPasteEditKind,DocumentPasteEdit:r.DocumentPasteEdit,InlayHint:r.InlayHint,InlayHintLabelPart:r.InlayHintLabelPart,InlayHintKind:r.InlayHintKind,RemoteAuthorityResolverError:r.RemoteAuthorityResolverError,ResolvedAuthority:r.ResolvedAuthority,ManagedResolvedAuthority:r.ManagedResolvedAuthority,SourceControlInputBoxValidationType:r.SourceControlInputBoxValidationType,ExtensionRuntime:r.ExtensionRuntime,TimelineItem:r.TimelineItem,NotebookRange:r.NotebookRange,NotebookCellKind:r.NotebookCellKind,NotebookCellExecutionState:r.NotebookCellExecutionState,NotebookCellData:r.NotebookCellData,NotebookData:r.NotebookData,NotebookRendererScript:r.NotebookRendererScript,NotebookCellStatusBarAlignment:r.NotebookCellStatusBarAlignment,NotebookEditorRevealType:r.NotebookEditorRevealType,NotebookCellOutput:r.NotebookCellOutput,NotebookCellOutputItem:r.NotebookCellOutputItem,CellErrorStackFrame:r.CellErrorStackFrame,NotebookCellStatusBarItem:r.NotebookCellStatusBarItem,NotebookControllerAffinity:r.NotebookControllerAffinity,NotebookControllerAffinity2:r.NotebookControllerAffinity2,NotebookEdit:r.NotebookEdit,NotebookKernelSourceAction:r.NotebookKernelSourceAction,NotebookVariablesRequestKind:r.NotebookVariablesRequestKind,PortAttributes:r.PortAttributes,LinkedEditingRanges:r.LinkedEditingRanges,TestResultState:r.TestResultState,TestRunRequest:r.TestRunRequest,TestMessage:r.TestMessage,TestMessageStackFrame:r.TestMessageStackFrame,TestTag:r.TestTag,TestRunProfileKind:r.TestRunProfileKind,TextSearchCompleteMessageType:Pe,DataTransfer:r.DataTransfer,DataTransferItem:r.DataTransferItem,TestCoverageCount:r.TestCoverageCount,FileCoverage:r.FileCoverage,StatementCoverage:r.StatementCoverage,BranchCoverage:r.BranchCoverage,DeclarationCoverage:r.DeclarationCoverage,WorkspaceTrustState:r.WorkspaceTrustState,LanguageStatusSeverity:r.LanguageStatusSeverity,QuickPickItemKind:r.QuickPickItemKind,InputBoxValidationSeverity:r.InputBoxValidationSeverity,TabInputText:r.TextTabInput,TabInputTextDiff:r.TextDiffTabInput,TabInputTextMerge:r.TextMergeTabInput,TabInputCustom:r.CustomEditorTabInput,TabInputNotebook:r.NotebookEditorTabInput,TabInputNotebookDiff:r.NotebookDiffEditorTabInput,TabInputWebview:r.WebviewEditorTabInput,TabInputTerminal:r.TerminalEditorTabInput,TabInputInteractiveWindow:r.InteractiveWindowInput,TabInputChat:r.ChatEditorTabInput,TabInputTextMultiDiff:r.TextMultiDiffTabInput,TelemetryTrustedValue:Lt,LogLevel:Ft,EditSessionIdentityMatch:Nt,InteractiveSessionVoteDirection:r.InteractiveSessionVoteDirection,ChatCopyKind:r.ChatCopyKind,ChatEditingSessionActionOutcome:r.ChatEditingSessionActionOutcome,InteractiveEditorResponseFeedbackKind:r.InteractiveEditorResponseFeedbackKind,DebugStackFrame:r.DebugStackFrame,DebugThread:r.DebugThread,RelatedInformationType:r.RelatedInformationType,SpeechToTextStatus:r.SpeechToTextStatus,TextToSpeechStatus:r.TextToSpeechStatus,PartialAcceptTriggerKind:r.PartialAcceptTriggerKind,KeywordRecognitionStatus:r.KeywordRecognitionStatus,ChatResponseMarkdownPart:r.ChatResponseMarkdownPart,ChatResponseFileTreePart:r.ChatResponseFileTreePart,ChatResponseAnchorPart:r.ChatResponseAnchorPart,ChatResponseProgressPart:r.ChatResponseProgressPart,ChatResponseProgressPart2:r.ChatResponseProgressPart2,ChatResponseReferencePart:r.ChatResponseReferencePart,ChatResponseReferencePart2:r.ChatResponseReferencePart,ChatResponseCodeCitationPart:r.ChatResponseCodeCitationPart,ChatResponseCodeblockUriPart:r.ChatResponseCodeblockUriPart,ChatResponseWarningPart:r.ChatResponseWarningPart,ChatResponseTextEditPart:r.ChatResponseTextEditPart,ChatResponseNotebookEditPart:r.ChatResponseNotebookEditPart,ChatResponseMarkdownWithVulnerabilitiesPart:r.ChatResponseMarkdownWithVulnerabilitiesPart,ChatResponseCommandButtonPart:r.ChatResponseCommandButtonPart,ChatResponseConfirmationPart:r.ChatResponseConfirmationPart,ChatResponseMovePart:r.ChatResponseMovePart,ChatResponseReferencePartStatusKind:r.ChatResponseReferencePartStatusKind,ChatRequestTurn:r.ChatRequestTurn,ChatResponseTurn:r.ChatResponseTurn,ChatLocation:r.ChatLocation,ChatRequestEditorData:r.ChatRequestEditorData,ChatRequestNotebookData:r.ChatRequestNotebookData,ChatReferenceBinaryData:r.ChatReferenceBinaryData,LanguageModelChatMessageRole:r.LanguageModelChatMessageRole,LanguageModelChatMessage:r.LanguageModelChatMessage,LanguageModelChatMessage2:r.LanguageModelChatMessage2,LanguageModelToolResultPart:r.LanguageModelToolResultPart,LanguageModelTextPart:r.LanguageModelTextPart,LanguageModelToolCallPart:r.LanguageModelToolCallPart,LanguageModelError:r.LanguageModelError,LanguageModelToolResult:r.LanguageModelToolResult,LanguageModelDataPart:r.LanguageModelDataPart,ChatImageMimeType:r.ChatImageMimeType,ExtendedLanguageModelToolResult:r.ExtendedLanguageModelToolResult,PreparedTerminalToolInvocation:r.PreparedTerminalToolInvocation,LanguageModelChatToolMode:r.LanguageModelChatToolMode,LanguageModelPromptTsxPart:r.LanguageModelPromptTsxPart,NewSymbolName:r.NewSymbolName,NewSymbolNameTag:r.NewSymbolNameTag,NewSymbolNameTriggerKind:r.NewSymbolNameTriggerKind,InlineEdit:r.InlineEdit,InlineEditTriggerKind:r.InlineEditTriggerKind,ExcludeSettingOptions:Kt,TextSearchContext2:Vt,TextSearchMatch2:Bt,TextSearchCompleteMessageTypeNew:Pe,ChatErrorLevel:r.ChatErrorLevel,McpSSEServerDefinition:r.McpSSEServerDefinition,McpStdioServerDefinition:r.McpStdioServerDefinition}}}export{Dn as createApiFactoryAndRegisterActors};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { CancellationTokenSource } from "../../../base/common/cancellation.js";
+import * as errors from "../../../base/common/errors.js";
+import { Emitter, Event } from "../../../base/common/event.js";
+import { combinedDisposable } from "../../../base/common/lifecycle.js";
+import { Schemas, matchesScheme } from "../../../base/common/network.js";
+import Severity from "../../../base/common/severity.js";
+import { URI } from "../../../base/common/uri.js";
+import { TextEditorCursorStyle } from "../../../editor/common/config/editorOptions.js";
+import { score, targetsNotebooks } from "../../../editor/common/languageSelector.js";
+import * as languageConfiguration from "../../../editor/common/languages/languageConfiguration.js";
+import { OverviewRulerLane } from "../../../editor/common/model.js";
+import { ExtensionError, ExtensionIdentifierSet, IExtensionDescription } from "../../../platform/extensions/common/extensions.js";
+import * as files from "../../../platform/files/common/files.js";
+import { ServicesAccessor } from "../../../platform/instantiation/common/instantiation.js";
+import { ILogService, ILoggerService, LogLevel } from "../../../platform/log/common/log.js";
+import { getRemoteName } from "../../../platform/remote/common/remoteHosts.js";
+import { TelemetryTrustedValue } from "../../../platform/telemetry/common/telemetryUtils.js";
+import { EditSessionIdentityMatch } from "../../../platform/workspace/common/editSessions.js";
+import { DebugConfigurationProviderTriggerKind } from "../../contrib/debug/common/debug.js";
+import { ExtensionDescriptionRegistry } from "../../services/extensions/common/extensionDescriptionRegistry.js";
+import { UIKind } from "../../services/extensions/common/extensionHostProtocol.js";
+import { checkProposedApiEnabled, isProposedApiEnabled } from "../../services/extensions/common/extensions.js";
+import { ProxyIdentifier } from "../../services/extensions/common/proxyIdentifier.js";
+import { ExcludeSettingOptions, TextSearchCompleteMessageType, TextSearchContext2, TextSearchMatch2 } from "../../services/search/common/searchExtTypes.js";
+import { CandidatePortSource, ExtHostContext, ExtHostLogLevelServiceShape, MainContext } from "./extHost.protocol.js";
+import { ExtHostRelatedInformation } from "./extHostAiRelatedInformation.js";
+import { ExtHostApiCommands } from "./extHostApiCommands.js";
+import { IExtHostApiDeprecationService } from "./extHostApiDeprecationService.js";
+import { IExtHostAuthentication } from "./extHostAuthentication.js";
+import { ExtHostBulkEdits } from "./extHostBulkEdits.js";
+import { ExtHostChatAgents2 } from "./extHostChatAgents2.js";
+import { ExtHostChatStatus } from "./extHostChatStatus.js";
+import { ExtHostClipboard } from "./extHostClipboard.js";
+import { ExtHostEditorInsets } from "./extHostCodeInsets.js";
+import { ExtHostCodeMapper } from "./extHostCodeMapper.js";
+import { IExtHostCommands } from "./extHostCommands.js";
+import { createExtHostComments } from "./extHostComments.js";
+import { ExtHostConfigProvider, IExtHostConfiguration } from "./extHostConfiguration.js";
+import { ExtHostCustomEditors } from "./extHostCustomEditors.js";
+import { IExtHostDebugService } from "./extHostDebugService.js";
+import { IExtHostDecorations } from "./extHostDecorations.js";
+import { ExtHostDiagnostics } from "./extHostDiagnostics.js";
+import { ExtHostDialogs } from "./extHostDialogs.js";
+import { ExtHostDocumentContentProvider } from "./extHostDocumentContentProviders.js";
+import { ExtHostDocumentSaveParticipant } from "./extHostDocumentSaveParticipant.js";
+import { ExtHostDocuments } from "./extHostDocuments.js";
+import { IExtHostDocumentsAndEditors } from "./extHostDocumentsAndEditors.js";
+import { IExtHostEditorTabs } from "./extHostEditorTabs.js";
+import { ExtHostEmbeddings } from "./extHostEmbedding.js";
+import { ExtHostAiEmbeddingVector } from "./extHostEmbeddingVector.js";
+import { Extension, IExtHostExtensionService } from "./extHostExtensionService.js";
+import { ExtHostFileSystem } from "./extHostFileSystem.js";
+import { IExtHostConsumerFileSystem } from "./extHostFileSystemConsumer.js";
+import { ExtHostFileSystemEventService, FileSystemWatcherCreateOptions } from "./extHostFileSystemEventService.js";
+import { IExtHostFileSystemInfo } from "./extHostFileSystemInfo.js";
+import { IExtHostInitDataService } from "./extHostInitDataService.js";
+import { ExtHostInteractive } from "./extHostInteractive.js";
+import { ExtHostLabelService } from "./extHostLabelService.js";
+import { ExtHostLanguageFeatures } from "./extHostLanguageFeatures.js";
+import { ExtHostLanguageModelTools } from "./extHostLanguageModelTools.js";
+import { IExtHostLanguageModels } from "./extHostLanguageModels.js";
+import { ExtHostLanguages } from "./extHostLanguages.js";
+import { IExtHostLocalizationService } from "./extHostLocalizationService.js";
+import { IExtHostManagedSockets } from "./extHostManagedSockets.js";
+import { IExtHostMpcService } from "./extHostMcp.js";
+import { ExtHostMessageService } from "./extHostMessageService.js";
+import { ExtHostNotebookController } from "./extHostNotebook.js";
+import { ExtHostNotebookDocumentSaveParticipant } from "./extHostNotebookDocumentSaveParticipant.js";
+import { ExtHostNotebookDocuments } from "./extHostNotebookDocuments.js";
+import { ExtHostNotebookEditors } from "./extHostNotebookEditors.js";
+import { ExtHostNotebookKernels } from "./extHostNotebookKernels.js";
+import { ExtHostNotebookRenderers } from "./extHostNotebookRenderers.js";
+import { IExtHostOutputService } from "./extHostOutput.js";
+import { ExtHostProfileContentHandlers } from "./extHostProfileContentHandler.js";
+import { ExtHostProgress } from "./extHostProgress.js";
+import { ExtHostQuickDiff } from "./extHostQuickDiff.js";
+import { createExtHostQuickOpen } from "./extHostQuickOpen.js";
+import { IExtHostRpcService } from "./extHostRpcService.js";
+import { ExtHostSCM } from "./extHostSCM.js";
+import { IExtHostSearch } from "./extHostSearch.js";
+import { IExtHostSecretState } from "./extHostSecretState.js";
+import { ExtHostShare } from "./extHostShare.js";
+import { ExtHostSpeech } from "./extHostSpeech.js";
+import { ExtHostStatusBar } from "./extHostStatusBar.js";
+import { IExtHostStorage } from "./extHostStorage.js";
+import { IExtensionStoragePaths } from "./extHostStoragePaths.js";
+import { IExtHostTask } from "./extHostTask.js";
+import { ExtHostTelemetryLogger, IExtHostTelemetry, isNewAppInstall } from "./extHostTelemetry.js";
+import { IExtHostTerminalService } from "./extHostTerminalService.js";
+import { IExtHostTerminalShellIntegration } from "./extHostTerminalShellIntegration.js";
+import { IExtHostTesting } from "./extHostTesting.js";
+import { ExtHostEditors } from "./extHostTextEditors.js";
+import { ExtHostTheming } from "./extHostTheming.js";
+import { ExtHostTimeline } from "./extHostTimeline.js";
+import { ExtHostTreeViews } from "./extHostTreeViews.js";
+import { IExtHostTunnelService } from "./extHostTunnelService.js";
+import * as typeConverters from "./extHostTypeConverters.js";
+import * as extHostTypes from "./extHostTypes.js";
+import { ExtHostUriOpeners } from "./extHostUriOpener.js";
+import { IURITransformerService } from "./extHostUriTransformerService.js";
+import { ExtHostUrls } from "./extHostUrls.js";
+import { ExtHostWebviews } from "./extHostWebview.js";
+import { ExtHostWebviewPanels } from "./extHostWebviewPanels.js";
+import { ExtHostWebviewViews } from "./extHostWebviewView.js";
+import { IExtHostWindow } from "./extHostWindow.js";
+import { IExtHostWorkspace } from "./extHostWorkspace.js";
+function createApiFactoryAndRegisterActors(accessor) {
+  const initData = accessor.get(IExtHostInitDataService);
+  const extHostFileSystemInfo = accessor.get(IExtHostFileSystemInfo);
+  const extHostConsumerFileSystem = accessor.get(IExtHostConsumerFileSystem);
+  const extensionService = accessor.get(IExtHostExtensionService);
+  const extHostWorkspace = accessor.get(IExtHostWorkspace);
+  const extHostTelemetry = accessor.get(IExtHostTelemetry);
+  const extHostConfiguration = accessor.get(IExtHostConfiguration);
+  const uriTransformer = accessor.get(IURITransformerService);
+  const rpcProtocol = accessor.get(IExtHostRpcService);
+  const extHostStorage = accessor.get(IExtHostStorage);
+  const extensionStoragePaths = accessor.get(IExtensionStoragePaths);
+  const extHostLoggerService = accessor.get(ILoggerService);
+  const extHostLogService = accessor.get(ILogService);
+  const extHostTunnelService = accessor.get(IExtHostTunnelService);
+  const extHostApiDeprecation = accessor.get(IExtHostApiDeprecationService);
+  const extHostWindow = accessor.get(IExtHostWindow);
+  const extHostSecretState = accessor.get(IExtHostSecretState);
+  const extHostEditorTabs = accessor.get(IExtHostEditorTabs);
+  const extHostManagedSockets = accessor.get(IExtHostManagedSockets);
+  const extHostAuthentication = accessor.get(IExtHostAuthentication);
+  const extHostLanguageModels = accessor.get(IExtHostLanguageModels);
+  const extHostMcp = accessor.get(IExtHostMpcService);
+  rpcProtocol.set(ExtHostContext.ExtHostFileSystemInfo, extHostFileSystemInfo);
+  rpcProtocol.set(ExtHostContext.ExtHostLogLevelServiceShape, extHostLoggerService);
+  rpcProtocol.set(ExtHostContext.ExtHostWorkspace, extHostWorkspace);
+  rpcProtocol.set(ExtHostContext.ExtHostConfiguration, extHostConfiguration);
+  rpcProtocol.set(ExtHostContext.ExtHostExtensionService, extensionService);
+  rpcProtocol.set(ExtHostContext.ExtHostStorage, extHostStorage);
+  rpcProtocol.set(ExtHostContext.ExtHostTunnelService, extHostTunnelService);
+  rpcProtocol.set(ExtHostContext.ExtHostWindow, extHostWindow);
+  rpcProtocol.set(ExtHostContext.ExtHostSecretState, extHostSecretState);
+  rpcProtocol.set(ExtHostContext.ExtHostTelemetry, extHostTelemetry);
+  rpcProtocol.set(ExtHostContext.ExtHostEditorTabs, extHostEditorTabs);
+  rpcProtocol.set(ExtHostContext.ExtHostManagedSockets, extHostManagedSockets);
+  rpcProtocol.set(ExtHostContext.ExtHostAuthentication, extHostAuthentication);
+  rpcProtocol.set(ExtHostContext.ExtHostChatProvider, extHostLanguageModels);
+  const extHostDecorations = rpcProtocol.set(ExtHostContext.ExtHostDecorations, accessor.get(IExtHostDecorations));
+  const extHostDocumentsAndEditors = rpcProtocol.set(ExtHostContext.ExtHostDocumentsAndEditors, accessor.get(IExtHostDocumentsAndEditors));
+  const extHostCommands = rpcProtocol.set(ExtHostContext.ExtHostCommands, accessor.get(IExtHostCommands));
+  const extHostTerminalService = rpcProtocol.set(ExtHostContext.ExtHostTerminalService, accessor.get(IExtHostTerminalService));
+  const extHostTerminalShellIntegration = rpcProtocol.set(ExtHostContext.ExtHostTerminalShellIntegration, accessor.get(IExtHostTerminalShellIntegration));
+  const extHostDebugService = rpcProtocol.set(ExtHostContext.ExtHostDebugService, accessor.get(IExtHostDebugService));
+  const extHostSearch = rpcProtocol.set(ExtHostContext.ExtHostSearch, accessor.get(IExtHostSearch));
+  const extHostTask = rpcProtocol.set(ExtHostContext.ExtHostTask, accessor.get(IExtHostTask));
+  const extHostOutputService = rpcProtocol.set(ExtHostContext.ExtHostOutputService, accessor.get(IExtHostOutputService));
+  const extHostLocalization = rpcProtocol.set(ExtHostContext.ExtHostLocalization, accessor.get(IExtHostLocalizationService));
+  const extHostUrls = rpcProtocol.set(ExtHostContext.ExtHostUrls, new ExtHostUrls(rpcProtocol));
+  const extHostDocuments = rpcProtocol.set(ExtHostContext.ExtHostDocuments, new ExtHostDocuments(rpcProtocol, extHostDocumentsAndEditors));
+  const extHostDocumentContentProviders = rpcProtocol.set(ExtHostContext.ExtHostDocumentContentProviders, new ExtHostDocumentContentProvider(rpcProtocol, extHostDocumentsAndEditors, extHostLogService));
+  const extHostDocumentSaveParticipant = rpcProtocol.set(ExtHostContext.ExtHostDocumentSaveParticipant, new ExtHostDocumentSaveParticipant(extHostLogService, extHostDocuments, rpcProtocol.getProxy(MainContext.MainThreadBulkEdits)));
+  const extHostNotebook = rpcProtocol.set(ExtHostContext.ExtHostNotebook, new ExtHostNotebookController(rpcProtocol, extHostCommands, extHostDocumentsAndEditors, extHostDocuments, extHostConsumerFileSystem, extHostSearch, extHostLogService));
+  const extHostNotebookDocuments = rpcProtocol.set(ExtHostContext.ExtHostNotebookDocuments, new ExtHostNotebookDocuments(extHostNotebook));
+  const extHostNotebookEditors = rpcProtocol.set(ExtHostContext.ExtHostNotebookEditors, new ExtHostNotebookEditors(extHostLogService, extHostNotebook));
+  const extHostNotebookKernels = rpcProtocol.set(ExtHostContext.ExtHostNotebookKernels, new ExtHostNotebookKernels(rpcProtocol, initData, extHostNotebook, extHostCommands, extHostLogService));
+  const extHostNotebookRenderers = rpcProtocol.set(ExtHostContext.ExtHostNotebookRenderers, new ExtHostNotebookRenderers(rpcProtocol, extHostNotebook));
+  const extHostNotebookDocumentSaveParticipant = rpcProtocol.set(ExtHostContext.ExtHostNotebookDocumentSaveParticipant, new ExtHostNotebookDocumentSaveParticipant(extHostLogService, extHostNotebook, rpcProtocol.getProxy(MainContext.MainThreadBulkEdits)));
+  const extHostEditors = rpcProtocol.set(ExtHostContext.ExtHostEditors, new ExtHostEditors(rpcProtocol, extHostDocumentsAndEditors));
+  const extHostTreeViews = rpcProtocol.set(ExtHostContext.ExtHostTreeViews, new ExtHostTreeViews(rpcProtocol.getProxy(MainContext.MainThreadTreeViews), extHostCommands, extHostLogService));
+  const extHostEditorInsets = rpcProtocol.set(ExtHostContext.ExtHostEditorInsets, new ExtHostEditorInsets(rpcProtocol.getProxy(MainContext.MainThreadEditorInsets), extHostEditors, initData.remote));
+  const extHostDiagnostics = rpcProtocol.set(ExtHostContext.ExtHostDiagnostics, new ExtHostDiagnostics(rpcProtocol, extHostLogService, extHostFileSystemInfo, extHostDocumentsAndEditors));
+  const extHostLanguages = rpcProtocol.set(ExtHostContext.ExtHostLanguages, new ExtHostLanguages(rpcProtocol, extHostDocuments, extHostCommands.converter, uriTransformer));
+  const extHostLanguageFeatures = rpcProtocol.set(ExtHostContext.ExtHostLanguageFeatures, new ExtHostLanguageFeatures(rpcProtocol, uriTransformer, extHostDocuments, extHostCommands, extHostDiagnostics, extHostLogService, extHostApiDeprecation, extHostTelemetry));
+  const extHostCodeMapper = rpcProtocol.set(ExtHostContext.ExtHostCodeMapper, new ExtHostCodeMapper(rpcProtocol));
+  const extHostFileSystem = rpcProtocol.set(ExtHostContext.ExtHostFileSystem, new ExtHostFileSystem(rpcProtocol, extHostLanguageFeatures));
+  const extHostFileSystemEvent = rpcProtocol.set(ExtHostContext.ExtHostFileSystemEventService, new ExtHostFileSystemEventService(rpcProtocol, extHostLogService, extHostDocumentsAndEditors));
+  const extHostQuickOpen = rpcProtocol.set(ExtHostContext.ExtHostQuickOpen, createExtHostQuickOpen(rpcProtocol, extHostWorkspace, extHostCommands));
+  const extHostSCM = rpcProtocol.set(ExtHostContext.ExtHostSCM, new ExtHostSCM(rpcProtocol, extHostCommands, extHostDocuments, extHostLogService));
+  const extHostQuickDiff = rpcProtocol.set(ExtHostContext.ExtHostQuickDiff, new ExtHostQuickDiff(rpcProtocol, uriTransformer));
+  const extHostShare = rpcProtocol.set(ExtHostContext.ExtHostShare, new ExtHostShare(rpcProtocol, uriTransformer));
+  const extHostComment = rpcProtocol.set(ExtHostContext.ExtHostComments, createExtHostComments(rpcProtocol, extHostCommands, extHostDocuments));
+  const extHostProgress = rpcProtocol.set(ExtHostContext.ExtHostProgress, new ExtHostProgress(rpcProtocol.getProxy(MainContext.MainThreadProgress)));
+  const extHostLabelService = rpcProtocol.set(ExtHostContext.ExtHostLabelService, new ExtHostLabelService(rpcProtocol));
+  const extHostTheming = rpcProtocol.set(ExtHostContext.ExtHostTheming, new ExtHostTheming(rpcProtocol));
+  const extHostTimeline = rpcProtocol.set(ExtHostContext.ExtHostTimeline, new ExtHostTimeline(rpcProtocol, extHostCommands));
+  const extHostWebviews = rpcProtocol.set(ExtHostContext.ExtHostWebviews, new ExtHostWebviews(rpcProtocol, initData.remote, extHostWorkspace, extHostLogService, extHostApiDeprecation));
+  const extHostWebviewPanels = rpcProtocol.set(ExtHostContext.ExtHostWebviewPanels, new ExtHostWebviewPanels(rpcProtocol, extHostWebviews, extHostWorkspace));
+  const extHostCustomEditors = rpcProtocol.set(ExtHostContext.ExtHostCustomEditors, new ExtHostCustomEditors(rpcProtocol, extHostDocuments, extensionStoragePaths, extHostWebviews, extHostWebviewPanels));
+  const extHostWebviewViews = rpcProtocol.set(ExtHostContext.ExtHostWebviewViews, new ExtHostWebviewViews(rpcProtocol, extHostWebviews));
+  const extHostTesting = rpcProtocol.set(ExtHostContext.ExtHostTesting, accessor.get(IExtHostTesting));
+  const extHostUriOpeners = rpcProtocol.set(ExtHostContext.ExtHostUriOpeners, new ExtHostUriOpeners(rpcProtocol));
+  const extHostProfileContentHandlers = rpcProtocol.set(ExtHostContext.ExtHostProfileContentHandlers, new ExtHostProfileContentHandlers(rpcProtocol));
+  rpcProtocol.set(ExtHostContext.ExtHostInteractive, new ExtHostInteractive(rpcProtocol, extHostNotebook, extHostDocumentsAndEditors, extHostCommands, extHostLogService));
+  const extHostLanguageModelTools = rpcProtocol.set(ExtHostContext.ExtHostLanguageModelTools, new ExtHostLanguageModelTools(rpcProtocol, extHostLanguageModels));
+  const extHostChatAgents2 = rpcProtocol.set(ExtHostContext.ExtHostChatAgents2, new ExtHostChatAgents2(rpcProtocol, extHostLogService, extHostCommands, extHostDocuments, extHostLanguageModels, extHostDiagnostics, extHostLanguageModelTools));
+  const extHostAiRelatedInformation = rpcProtocol.set(ExtHostContext.ExtHostAiRelatedInformation, new ExtHostRelatedInformation(rpcProtocol));
+  const extHostAiEmbeddingVector = rpcProtocol.set(ExtHostContext.ExtHostAiEmbeddingVector, new ExtHostAiEmbeddingVector(rpcProtocol));
+  const extHostStatusBar = rpcProtocol.set(ExtHostContext.ExtHostStatusBar, new ExtHostStatusBar(rpcProtocol, extHostCommands.converter));
+  const extHostSpeech = rpcProtocol.set(ExtHostContext.ExtHostSpeech, new ExtHostSpeech(rpcProtocol));
+  const extHostEmbeddings = rpcProtocol.set(ExtHostContext.ExtHostEmbeddings, new ExtHostEmbeddings(rpcProtocol));
+  rpcProtocol.set(ExtHostContext.ExtHostMcp, accessor.get(IExtHostMpcService));
+  const expected = Object.values(ExtHostContext);
+  rpcProtocol.assertRegistered(expected);
+  const extHostBulkEdits = new ExtHostBulkEdits(rpcProtocol, extHostDocumentsAndEditors);
+  const extHostClipboard = new ExtHostClipboard(rpcProtocol);
+  const extHostMessageService = new ExtHostMessageService(rpcProtocol, extHostLogService);
+  const extHostDialogs = new ExtHostDialogs(rpcProtocol);
+  const extHostChatStatus = new ExtHostChatStatus(rpcProtocol);
+  ExtHostApiCommands.register(extHostCommands);
+  return function(extension, extensionInfo, configProvider) {
+    function _asExtensionEvent(actual) {
+      return (listener, thisArgs, disposables) => {
+        const handle = actual((e) => {
+          try {
+            listener.call(thisArgs, e);
+          } catch (err) {
+            errors.onUnexpectedExternalError(new ExtensionError(extension.identifier, err, "FAILED to handle event"));
+          }
+        });
+        disposables?.push(handle);
+        return handle;
+      };
+    }
+    __name(_asExtensionEvent, "_asExtensionEvent");
+    const checkSelector = function() {
+      let done = !extension.isUnderDevelopment;
+      function informOnce() {
+        if (!done) {
+          extHostLogService.info(`Extension '${extension.identifier.value}' uses a document selector without scheme. Learn more about this: https://go.microsoft.com/fwlink/?linkid=872305`);
+          done = true;
+        }
+      }
+      __name(informOnce, "informOnce");
+      return /* @__PURE__ */ __name(function perform(selector) {
+        if (Array.isArray(selector)) {
+          selector.forEach(perform);
+        } else if (typeof selector === "string") {
+          informOnce();
+        } else {
+          const filter = selector;
+          if (typeof filter.scheme === "undefined") {
+            informOnce();
+          }
+          if (typeof filter.exclusive === "boolean") {
+            checkProposedApiEnabled(extension, "documentFiltersExclusive");
+          }
+        }
+        return selector;
+      }, "perform");
+    }();
+    const authentication = {
+      getSession(providerId, scopes, options) {
+        if (typeof options?.forceNewSession === "object" && options.forceNewSession.learnMore || typeof options?.createIfNone === "object" && options.createIfNone.learnMore) {
+          checkProposedApiEnabled(extension, "authLearnMore");
+        }
+        return extHostAuthentication.getSession(extension, providerId, scopes, options);
+      },
+      getAccounts(providerId) {
+        return extHostAuthentication.getAccounts(providerId);
+      },
+      // TODO: remove this after GHPR and Codespaces move off of it
+      async hasSession(providerId, scopes) {
+        checkProposedApiEnabled(extension, "authSession");
+        return !!await extHostAuthentication.getSession(extension, providerId, scopes, { silent: true });
+      },
+      get onDidChangeSessions() {
+        return _asExtensionEvent(extHostAuthentication.getExtensionScopedSessionsEvent(extension.identifier.value));
+      },
+      registerAuthenticationProvider(id, label, provider, options) {
+        return extHostAuthentication.registerAuthenticationProvider(id, label, provider, options);
+      }
+    };
+    const commands = {
+      registerCommand(id, command, thisArgs) {
+        return extHostCommands.registerCommand(true, id, command, thisArgs, void 0, extension);
+      },
+      registerTextEditorCommand(id, callback, thisArg) {
+        return extHostCommands.registerCommand(true, id, (...args) => {
+          const activeTextEditor = extHostEditors.getActiveTextEditor();
+          if (!activeTextEditor) {
+            extHostLogService.warn("Cannot execute " + id + " because there is no active text editor.");
+            return void 0;
+          }
+          return activeTextEditor.edit((edit) => {
+            callback.apply(thisArg, [activeTextEditor, edit, ...args]);
+          }).then((result) => {
+            if (!result) {
+              extHostLogService.warn("Edits from command " + id + " were not applied.");
+            }
+          }, (err) => {
+            extHostLogService.warn("An error occurred while running command " + id, err);
+          });
+        }, void 0, void 0, extension);
+      },
+      registerDiffInformationCommand: /* @__PURE__ */ __name((id, callback, thisArg) => {
+        checkProposedApiEnabled(extension, "diffCommand");
+        return extHostCommands.registerCommand(true, id, async (...args) => {
+          const activeTextEditor = extHostDocumentsAndEditors.activeEditor(true);
+          if (!activeTextEditor) {
+            extHostLogService.warn("Cannot execute " + id + " because there is no active text editor.");
+            return void 0;
+          }
+          const diff = await extHostEditors.getDiffInformation(activeTextEditor.id);
+          callback.apply(thisArg, [diff, ...args]);
+        }, void 0, void 0, extension);
+      }, "registerDiffInformationCommand"),
+      executeCommand(id, ...args) {
+        return extHostCommands.executeCommand(id, ...args);
+      },
+      getCommands(filterInternal = false) {
+        return extHostCommands.getCommands(filterInternal);
+      }
+    };
+    const env = {
+      get machineId() {
+        return initData.telemetryInfo.machineId;
+      },
+      get sessionId() {
+        return initData.telemetryInfo.sessionId;
+      },
+      get language() {
+        return initData.environment.appLanguage;
+      },
+      get appName() {
+        return initData.environment.appName;
+      },
+      get appRoot() {
+        return initData.environment.appRoot?.fsPath ?? "";
+      },
+      get appHost() {
+        return initData.environment.appHost;
+      },
+      get uriScheme() {
+        return initData.environment.appUriScheme;
+      },
+      get clipboard() {
+        return extHostClipboard.value;
+      },
+      get shell() {
+        return extHostTerminalService.getDefaultShell(false);
+      },
+      get onDidChangeShell() {
+        return _asExtensionEvent(extHostTerminalService.onDidChangeShell);
+      },
+      get isTelemetryEnabled() {
+        return extHostTelemetry.getTelemetryConfiguration();
+      },
+      get onDidChangeTelemetryEnabled() {
+        return _asExtensionEvent(extHostTelemetry.onDidChangeTelemetryEnabled);
+      },
+      get telemetryConfiguration() {
+        checkProposedApiEnabled(extension, "telemetry");
+        return extHostTelemetry.getTelemetryDetails();
+      },
+      get onDidChangeTelemetryConfiguration() {
+        checkProposedApiEnabled(extension, "telemetry");
+        return _asExtensionEvent(extHostTelemetry.onDidChangeTelemetryConfiguration);
+      },
+      get isNewAppInstall() {
+        return isNewAppInstall(initData.telemetryInfo.firstSessionDate);
+      },
+      createTelemetryLogger(sender, options) {
+        ExtHostTelemetryLogger.validateSender(sender);
+        return extHostTelemetry.instantiateLogger(extension, sender, options);
+      },
+      openExternal(uri, options) {
+        return extHostWindow.openUri(uri, {
+          allowTunneling: !!initData.remote.authority,
+          allowContributedOpeners: options?.allowContributedOpeners
+        });
+      },
+      async asExternalUri(uri) {
+        if (uri.scheme === initData.environment.appUriScheme) {
+          return extHostUrls.createAppUri(uri);
+        }
+        try {
+          return await extHostWindow.asExternalUri(uri, { allowTunneling: !!initData.remote.authority });
+        } catch (err) {
+          if (matchesScheme(uri, Schemas.http) || matchesScheme(uri, Schemas.https)) {
+            return uri;
+          }
+          throw err;
+        }
+      },
+      get remoteName() {
+        return getRemoteName(initData.remote.authority);
+      },
+      get remoteAuthority() {
+        checkProposedApiEnabled(extension, "resolvers");
+        return initData.remote.authority;
+      },
+      get uiKind() {
+        return initData.uiKind;
+      },
+      get logLevel() {
+        return extHostLogService.getLevel();
+      },
+      get onDidChangeLogLevel() {
+        return _asExtensionEvent(extHostLogService.onDidChangeLogLevel);
+      },
+      get appQuality() {
+        checkProposedApiEnabled(extension, "resolvers");
+        return initData.quality;
+      },
+      get appCommit() {
+        checkProposedApiEnabled(extension, "resolvers");
+        return initData.commit;
+      }
+    };
+    if (!initData.environment.extensionTestsLocationURI) {
+      Object.freeze(env);
+    }
+    const tests = {
+      createTestController(provider, label, refreshHandler) {
+        return extHostTesting.createTestController(extension, provider, label, refreshHandler);
+      },
+      createTestObserver() {
+        checkProposedApiEnabled(extension, "testObserver");
+        return extHostTesting.createTestObserver();
+      },
+      runTests(provider) {
+        checkProposedApiEnabled(extension, "testObserver");
+        return extHostTesting.runTests(provider);
+      },
+      registerTestFollowupProvider(provider) {
+        checkProposedApiEnabled(extension, "testObserver");
+        return extHostTesting.registerTestFollowupProvider(provider);
+      },
+      get onDidChangeTestResults() {
+        checkProposedApiEnabled(extension, "testObserver");
+        return _asExtensionEvent(extHostTesting.onResultsChanged);
+      },
+      get testResults() {
+        checkProposedApiEnabled(extension, "testObserver");
+        return extHostTesting.results;
+      }
+    };
+    const extensionKind = initData.remote.isRemote ? extHostTypes.ExtensionKind.Workspace : extHostTypes.ExtensionKind.UI;
+    const extensions = {
+      getExtension(extensionId, includeFromDifferentExtensionHosts) {
+        if (!isProposedApiEnabled(extension, "extensionsAny")) {
+          includeFromDifferentExtensionHosts = false;
+        }
+        const mine = extensionInfo.mine.getExtensionDescription(extensionId);
+        if (mine) {
+          return new Extension(extensionService, extension.identifier, mine, extensionKind, false);
+        }
+        if (includeFromDifferentExtensionHosts) {
+          const foreign = extensionInfo.all.getExtensionDescription(extensionId);
+          if (foreign) {
+            return new Extension(extensionService, extension.identifier, foreign, extensionKind, true);
+          }
+        }
+        return void 0;
+      },
+      get all() {
+        const result = [];
+        for (const desc of extensionInfo.mine.getAllExtensionDescriptions()) {
+          result.push(new Extension(extensionService, extension.identifier, desc, extensionKind, false));
+        }
+        return result;
+      },
+      get allAcrossExtensionHosts() {
+        checkProposedApiEnabled(extension, "extensionsAny");
+        const local = new ExtensionIdentifierSet(extensionInfo.mine.getAllExtensionDescriptions().map((desc) => desc.identifier));
+        const result = [];
+        for (const desc of extensionInfo.all.getAllExtensionDescriptions()) {
+          const isFromDifferentExtensionHost = !local.has(desc.identifier);
+          result.push(new Extension(extensionService, extension.identifier, desc, extensionKind, isFromDifferentExtensionHost));
+        }
+        return result;
+      },
+      get onDidChange() {
+        if (isProposedApiEnabled(extension, "extensionsAny")) {
+          return _asExtensionEvent(Event.any(extensionInfo.mine.onDidChange, extensionInfo.all.onDidChange));
+        }
+        return _asExtensionEvent(extensionInfo.mine.onDidChange);
+      }
+    };
+    const languages = {
+      createDiagnosticCollection(name) {
+        return extHostDiagnostics.createDiagnosticCollection(extension.identifier, name);
+      },
+      get onDidChangeDiagnostics() {
+        return _asExtensionEvent(extHostDiagnostics.onDidChangeDiagnostics);
+      },
+      getDiagnostics: /* @__PURE__ */ __name((resource) => {
+        return extHostDiagnostics.getDiagnostics(resource);
+      }, "getDiagnostics"),
+      getLanguages() {
+        return extHostLanguages.getLanguages();
+      },
+      setTextDocumentLanguage(document, languageId) {
+        return extHostLanguages.changeLanguage(document.uri, languageId);
+      },
+      match(selector, document) {
+        const interalSelector = typeConverters.LanguageSelector.from(selector);
+        let notebook;
+        if (targetsNotebooks(interalSelector)) {
+          notebook = extHostNotebook.notebookDocuments.find((value) => value.apiNotebook.getCells().find((c) => c.document === document))?.apiNotebook;
+        }
+        return score(interalSelector, document.uri, document.languageId, true, notebook?.uri, notebook?.notebookType);
+      },
+      registerCodeActionsProvider(selector, provider, metadata) {
+        return extHostLanguageFeatures.registerCodeActionProvider(extension, checkSelector(selector), provider, metadata);
+      },
+      registerDocumentPasteEditProvider(selector, provider, metadata) {
+        return extHostLanguageFeatures.registerDocumentPasteEditProvider(extension, checkSelector(selector), provider, metadata);
+      },
+      registerCodeLensProvider(selector, provider) {
+        return extHostLanguageFeatures.registerCodeLensProvider(extension, checkSelector(selector), provider);
+      },
+      registerDefinitionProvider(selector, provider) {
+        return extHostLanguageFeatures.registerDefinitionProvider(extension, checkSelector(selector), provider);
+      },
+      registerDeclarationProvider(selector, provider) {
+        return extHostLanguageFeatures.registerDeclarationProvider(extension, checkSelector(selector), provider);
+      },
+      registerImplementationProvider(selector, provider) {
+        return extHostLanguageFeatures.registerImplementationProvider(extension, checkSelector(selector), provider);
+      },
+      registerTypeDefinitionProvider(selector, provider) {
+        return extHostLanguageFeatures.registerTypeDefinitionProvider(extension, checkSelector(selector), provider);
+      },
+      registerHoverProvider(selector, provider) {
+        return extHostLanguageFeatures.registerHoverProvider(extension, checkSelector(selector), provider, extension.identifier);
+      },
+      registerEvaluatableExpressionProvider(selector, provider) {
+        return extHostLanguageFeatures.registerEvaluatableExpressionProvider(extension, checkSelector(selector), provider, extension.identifier);
+      },
+      registerInlineValuesProvider(selector, provider) {
+        return extHostLanguageFeatures.registerInlineValuesProvider(extension, checkSelector(selector), provider, extension.identifier);
+      },
+      registerDocumentHighlightProvider(selector, provider) {
+        return extHostLanguageFeatures.registerDocumentHighlightProvider(extension, checkSelector(selector), provider);
+      },
+      registerMultiDocumentHighlightProvider(selector, provider) {
+        return extHostLanguageFeatures.registerMultiDocumentHighlightProvider(extension, checkSelector(selector), provider);
+      },
+      registerLinkedEditingRangeProvider(selector, provider) {
+        return extHostLanguageFeatures.registerLinkedEditingRangeProvider(extension, checkSelector(selector), provider);
+      },
+      registerReferenceProvider(selector, provider) {
+        return extHostLanguageFeatures.registerReferenceProvider(extension, checkSelector(selector), provider);
+      },
+      registerRenameProvider(selector, provider) {
+        return extHostLanguageFeatures.registerRenameProvider(extension, checkSelector(selector), provider);
+      },
+      registerNewSymbolNamesProvider(selector, provider) {
+        checkProposedApiEnabled(extension, "newSymbolNamesProvider");
+        return extHostLanguageFeatures.registerNewSymbolNamesProvider(extension, checkSelector(selector), provider);
+      },
+      registerDocumentSymbolProvider(selector, provider, metadata) {
+        return extHostLanguageFeatures.registerDocumentSymbolProvider(extension, checkSelector(selector), provider, metadata);
+      },
+      registerWorkspaceSymbolProvider(provider) {
+        return extHostLanguageFeatures.registerWorkspaceSymbolProvider(extension, provider);
+      },
+      registerDocumentFormattingEditProvider(selector, provider) {
+        return extHostLanguageFeatures.registerDocumentFormattingEditProvider(extension, checkSelector(selector), provider);
+      },
+      registerDocumentRangeFormattingEditProvider(selector, provider) {
+        return extHostLanguageFeatures.registerDocumentRangeFormattingEditProvider(extension, checkSelector(selector), provider);
+      },
+      registerOnTypeFormattingEditProvider(selector, provider, firstTriggerCharacter, ...moreTriggerCharacters) {
+        return extHostLanguageFeatures.registerOnTypeFormattingEditProvider(extension, checkSelector(selector), provider, [firstTriggerCharacter].concat(moreTriggerCharacters));
+      },
+      registerDocumentSemanticTokensProvider(selector, provider, legend) {
+        return extHostLanguageFeatures.registerDocumentSemanticTokensProvider(extension, checkSelector(selector), provider, legend);
+      },
+      registerDocumentRangeSemanticTokensProvider(selector, provider, legend) {
+        return extHostLanguageFeatures.registerDocumentRangeSemanticTokensProvider(extension, checkSelector(selector), provider, legend);
+      },
+      registerSignatureHelpProvider(selector, provider, firstItem, ...remaining) {
+        if (typeof firstItem === "object") {
+          return extHostLanguageFeatures.registerSignatureHelpProvider(extension, checkSelector(selector), provider, firstItem);
+        }
+        return extHostLanguageFeatures.registerSignatureHelpProvider(extension, checkSelector(selector), provider, typeof firstItem === "undefined" ? [] : [firstItem, ...remaining]);
+      },
+      registerCompletionItemProvider(selector, provider, ...triggerCharacters) {
+        return extHostLanguageFeatures.registerCompletionItemProvider(extension, checkSelector(selector), provider, triggerCharacters);
+      },
+      registerInlineCompletionItemProvider(selector, provider, metadata) {
+        if (provider.handleDidShowCompletionItem) {
+          checkProposedApiEnabled(extension, "inlineCompletionsAdditions");
+        }
+        if (provider.handleDidPartiallyAcceptCompletionItem) {
+          checkProposedApiEnabled(extension, "inlineCompletionsAdditions");
+        }
+        if (metadata) {
+          checkProposedApiEnabled(extension, "inlineCompletionsAdditions");
+        }
+        return extHostLanguageFeatures.registerInlineCompletionsProvider(extension, checkSelector(selector), provider, metadata);
+      },
+      registerInlineEditProvider(selector, provider) {
+        checkProposedApiEnabled(extension, "inlineEdit");
+        return extHostLanguageFeatures.registerInlineEditProvider(extension, checkSelector(selector), provider);
+      },
+      registerDocumentLinkProvider(selector, provider) {
+        return extHostLanguageFeatures.registerDocumentLinkProvider(extension, checkSelector(selector), provider);
+      },
+      registerColorProvider(selector, provider) {
+        return extHostLanguageFeatures.registerColorProvider(extension, checkSelector(selector), provider);
+      },
+      registerFoldingRangeProvider(selector, provider) {
+        return extHostLanguageFeatures.registerFoldingRangeProvider(extension, checkSelector(selector), provider);
+      },
+      registerSelectionRangeProvider(selector, provider) {
+        return extHostLanguageFeatures.registerSelectionRangeProvider(extension, selector, provider);
+      },
+      registerCallHierarchyProvider(selector, provider) {
+        return extHostLanguageFeatures.registerCallHierarchyProvider(extension, selector, provider);
+      },
+      registerTypeHierarchyProvider(selector, provider) {
+        return extHostLanguageFeatures.registerTypeHierarchyProvider(extension, selector, provider);
+      },
+      setLanguageConfiguration: /* @__PURE__ */ __name((language, configuration) => {
+        return extHostLanguageFeatures.setLanguageConfiguration(extension, language, configuration);
+      }, "setLanguageConfiguration"),
+      getTokenInformationAtPosition(doc, pos) {
+        checkProposedApiEnabled(extension, "tokenInformation");
+        return extHostLanguages.tokenAtPosition(doc, pos);
+      },
+      registerInlayHintsProvider(selector, provider) {
+        return extHostLanguageFeatures.registerInlayHintsProvider(extension, selector, provider);
+      },
+      createLanguageStatusItem(id, selector) {
+        return extHostLanguages.createLanguageStatusItem(extension, id, selector);
+      },
+      registerDocumentDropEditProvider(selector, provider, metadata) {
+        return extHostLanguageFeatures.registerDocumentOnDropEditProvider(extension, selector, provider, metadata);
+      }
+    };
+    const window = {
+      get activeTextEditor() {
+        return extHostEditors.getActiveTextEditor();
+      },
+      get visibleTextEditors() {
+        return extHostEditors.getVisibleTextEditors();
+      },
+      get activeTerminal() {
+        return extHostTerminalService.activeTerminal;
+      },
+      get terminals() {
+        return extHostTerminalService.terminals;
+      },
+      async showTextDocument(documentOrUri, columnOrOptions, preserveFocus) {
+        if (URI.isUri(documentOrUri) && documentOrUri.scheme === Schemas.vscodeRemote && !documentOrUri.authority) {
+          extHostApiDeprecation.report("workspace.showTextDocument", extension, `A URI of 'vscode-remote' scheme requires an authority.`);
+        }
+        const document = await (URI.isUri(documentOrUri) ? Promise.resolve(workspace.openTextDocument(documentOrUri)) : Promise.resolve(documentOrUri));
+        return extHostEditors.showTextDocument(document, columnOrOptions, preserveFocus);
+      },
+      createTextEditorDecorationType(options) {
+        return extHostEditors.createTextEditorDecorationType(extension, options);
+      },
+      onDidChangeActiveTextEditor(listener, thisArg, disposables) {
+        return _asExtensionEvent(extHostEditors.onDidChangeActiveTextEditor)(listener, thisArg, disposables);
+      },
+      onDidChangeVisibleTextEditors(listener, thisArg, disposables) {
+        return _asExtensionEvent(extHostEditors.onDidChangeVisibleTextEditors)(listener, thisArg, disposables);
+      },
+      onDidChangeTextEditorSelection(listener, thisArgs, disposables) {
+        return _asExtensionEvent(extHostEditors.onDidChangeTextEditorSelection)(listener, thisArgs, disposables);
+      },
+      onDidChangeTextEditorOptions(listener, thisArgs, disposables) {
+        return _asExtensionEvent(extHostEditors.onDidChangeTextEditorOptions)(listener, thisArgs, disposables);
+      },
+      onDidChangeTextEditorVisibleRanges(listener, thisArgs, disposables) {
+        return _asExtensionEvent(extHostEditors.onDidChangeTextEditorVisibleRanges)(listener, thisArgs, disposables);
+      },
+      onDidChangeTextEditorViewColumn(listener, thisArg, disposables) {
+        return _asExtensionEvent(extHostEditors.onDidChangeTextEditorViewColumn)(listener, thisArg, disposables);
+      },
+      onDidChangeTextEditorDiffInformation(listener, thisArg, disposables) {
+        checkProposedApiEnabled(extension, "textEditorDiffInformation");
+        return _asExtensionEvent(extHostEditors.onDidChangeTextEditorDiffInformation)(listener, thisArg, disposables);
+      },
+      onDidCloseTerminal(listener, thisArg, disposables) {
+        return _asExtensionEvent(extHostTerminalService.onDidCloseTerminal)(listener, thisArg, disposables);
+      },
+      onDidOpenTerminal(listener, thisArg, disposables) {
+        return _asExtensionEvent(extHostTerminalService.onDidOpenTerminal)(listener, thisArg, disposables);
+      },
+      onDidChangeActiveTerminal(listener, thisArg, disposables) {
+        return _asExtensionEvent(extHostTerminalService.onDidChangeActiveTerminal)(listener, thisArg, disposables);
+      },
+      onDidChangeTerminalDimensions(listener, thisArg, disposables) {
+        checkProposedApiEnabled(extension, "terminalDimensions");
+        return _asExtensionEvent(extHostTerminalService.onDidChangeTerminalDimensions)(listener, thisArg, disposables);
+      },
+      onDidChangeTerminalState(listener, thisArg, disposables) {
+        return _asExtensionEvent(extHostTerminalService.onDidChangeTerminalState)(listener, thisArg, disposables);
+      },
+      onDidWriteTerminalData(listener, thisArg, disposables) {
+        checkProposedApiEnabled(extension, "terminalDataWriteEvent");
+        return _asExtensionEvent(extHostTerminalService.onDidWriteTerminalData)(listener, thisArg, disposables);
+      },
+      onDidExecuteTerminalCommand(listener, thisArg, disposables) {
+        checkProposedApiEnabled(extension, "terminalExecuteCommandEvent");
+        return _asExtensionEvent(extHostTerminalService.onDidExecuteTerminalCommand)(listener, thisArg, disposables);
+      },
+      onDidChangeTerminalShellIntegration(listener, thisArg, disposables) {
+        return _asExtensionEvent(extHostTerminalShellIntegration.onDidChangeTerminalShellIntegration)(listener, thisArg, disposables);
+      },
+      onDidStartTerminalShellExecution(listener, thisArg, disposables) {
+        return _asExtensionEvent(extHostTerminalShellIntegration.onDidStartTerminalShellExecution)(listener, thisArg, disposables);
+      },
+      onDidEndTerminalShellExecution(listener, thisArg, disposables) {
+        return _asExtensionEvent(extHostTerminalShellIntegration.onDidEndTerminalShellExecution)(listener, thisArg, disposables);
+      },
+      get state() {
+        return extHostWindow.getState();
+      },
+      onDidChangeWindowState(listener, thisArg, disposables) {
+        return _asExtensionEvent(extHostWindow.onDidChangeWindowState)(listener, thisArg, disposables);
+      },
+      showInformationMessage(message, ...rest) {
+        return extHostMessageService.showMessage(extension, Severity.Info, message, rest[0], rest.slice(1));
+      },
+      showWarningMessage(message, ...rest) {
+        return extHostMessageService.showMessage(extension, Severity.Warning, message, rest[0], rest.slice(1));
+      },
+      showErrorMessage(message, ...rest) {
+        return extHostMessageService.showMessage(extension, Severity.Error, message, rest[0], rest.slice(1));
+      },
+      showQuickPick(items, options, token) {
+        return extHostQuickOpen.showQuickPick(extension, items, options, token);
+      },
+      showWorkspaceFolderPick(options) {
+        return extHostQuickOpen.showWorkspaceFolderPick(options);
+      },
+      showInputBox(options, token) {
+        return extHostQuickOpen.showInput(options, token);
+      },
+      showOpenDialog(options) {
+        return extHostDialogs.showOpenDialog(options);
+      },
+      showSaveDialog(options) {
+        return extHostDialogs.showSaveDialog(options);
+      },
+      createStatusBarItem(alignmentOrId, priorityOrAlignment, priorityArg) {
+        let id;
+        let alignment;
+        let priority;
+        if (typeof alignmentOrId === "string") {
+          id = alignmentOrId;
+          alignment = priorityOrAlignment;
+          priority = priorityArg;
+        } else {
+          alignment = alignmentOrId;
+          priority = priorityOrAlignment;
+        }
+        return extHostStatusBar.createStatusBarEntry(extension, id, alignment, priority);
+      },
+      setStatusBarMessage(text, timeoutOrThenable) {
+        return extHostStatusBar.setStatusBarMessage(text, timeoutOrThenable);
+      },
+      withScmProgress(task) {
+        extHostApiDeprecation.report(
+          "window.withScmProgress",
+          extension,
+          `Use 'withProgress' instead.`
+        );
+        return extHostProgress.withProgress(extension, { location: extHostTypes.ProgressLocation.SourceControl }, (progress, token) => task({ report(n) {
+        } }));
+      },
+      withProgress(options, task) {
+        return extHostProgress.withProgress(extension, options, task);
+      },
+      createOutputChannel(name, options) {
+        return extHostOutputService.createOutputChannel(name, options, extension);
+      },
+      createWebviewPanel(viewType, title, showOptions, options) {
+        return extHostWebviewPanels.createWebviewPanel(extension, viewType, title, showOptions, options);
+      },
+      createWebviewTextEditorInset(editor, line, height, options) {
+        checkProposedApiEnabled(extension, "editorInsets");
+        return extHostEditorInsets.createWebviewEditorInset(editor, line, height, options, extension);
+      },
+      createTerminal(nameOrOptions, shellPath, shellArgs) {
+        if (typeof nameOrOptions === "object") {
+          if ("pty" in nameOrOptions) {
+            return extHostTerminalService.createExtensionTerminal(nameOrOptions);
+          }
+          return extHostTerminalService.createTerminalFromOptions(nameOrOptions);
+        }
+        return extHostTerminalService.createTerminal(nameOrOptions, shellPath, shellArgs);
+      },
+      registerTerminalLinkProvider(provider) {
+        return extHostTerminalService.registerLinkProvider(provider);
+      },
+      registerTerminalProfileProvider(id, provider) {
+        return extHostTerminalService.registerProfileProvider(extension, id, provider);
+      },
+      registerTerminalCompletionProvider(provider, ...triggerCharacters) {
+        checkProposedApiEnabled(extension, "terminalCompletionProvider");
+        return extHostTerminalService.registerTerminalCompletionProvider(extension, provider, ...triggerCharacters);
+      },
+      registerTerminalQuickFixProvider(id, provider) {
+        checkProposedApiEnabled(extension, "terminalQuickFixProvider");
+        return extHostTerminalService.registerTerminalQuickFixProvider(id, extension.identifier.value, provider);
+      },
+      registerTreeDataProvider(viewId, treeDataProvider) {
+        return extHostTreeViews.registerTreeDataProvider(viewId, treeDataProvider, extension);
+      },
+      createTreeView(viewId, options) {
+        return extHostTreeViews.createTreeView(viewId, options, extension);
+      },
+      registerWebviewPanelSerializer: /* @__PURE__ */ __name((viewType, serializer) => {
+        return extHostWebviewPanels.registerWebviewPanelSerializer(extension, viewType, serializer);
+      }, "registerWebviewPanelSerializer"),
+      registerCustomEditorProvider: /* @__PURE__ */ __name((viewType, provider, options = {}) => {
+        return extHostCustomEditors.registerCustomEditorProvider(extension, viewType, provider, options);
+      }, "registerCustomEditorProvider"),
+      registerFileDecorationProvider(provider) {
+        return extHostDecorations.registerFileDecorationProvider(provider, extension);
+      },
+      registerUriHandler(handler) {
+        return extHostUrls.registerUriHandler(extension, handler);
+      },
+      createQuickPick() {
+        return extHostQuickOpen.createQuickPick(extension);
+      },
+      createInputBox() {
+        return extHostQuickOpen.createInputBox(extension);
+      },
+      get activeColorTheme() {
+        return extHostTheming.activeColorTheme;
+      },
+      onDidChangeActiveColorTheme(listener, thisArg, disposables) {
+        return _asExtensionEvent(extHostTheming.onDidChangeActiveColorTheme)(listener, thisArg, disposables);
+      },
+      registerWebviewViewProvider(viewId, provider, options) {
+        return extHostWebviewViews.registerWebviewViewProvider(extension, viewId, provider, options?.webviewOptions);
+      },
+      get activeNotebookEditor() {
+        return extHostNotebook.activeNotebookEditor;
+      },
+      onDidChangeActiveNotebookEditor(listener, thisArgs, disposables) {
+        return _asExtensionEvent(extHostNotebook.onDidChangeActiveNotebookEditor)(listener, thisArgs, disposables);
+      },
+      get visibleNotebookEditors() {
+        return extHostNotebook.visibleNotebookEditors;
+      },
+      get onDidChangeVisibleNotebookEditors() {
+        return _asExtensionEvent(extHostNotebook.onDidChangeVisibleNotebookEditors);
+      },
+      onDidChangeNotebookEditorSelection(listener, thisArgs, disposables) {
+        return _asExtensionEvent(extHostNotebookEditors.onDidChangeNotebookEditorSelection)(listener, thisArgs, disposables);
+      },
+      onDidChangeNotebookEditorVisibleRanges(listener, thisArgs, disposables) {
+        return _asExtensionEvent(extHostNotebookEditors.onDidChangeNotebookEditorVisibleRanges)(listener, thisArgs, disposables);
+      },
+      showNotebookDocument(document, options) {
+        return extHostNotebook.showNotebookDocument(document, options);
+      },
+      registerExternalUriOpener(id, opener, metadata) {
+        checkProposedApiEnabled(extension, "externalUriOpener");
+        return extHostUriOpeners.registerExternalUriOpener(extension.identifier, id, opener, metadata);
+      },
+      registerProfileContentHandler(id, handler) {
+        checkProposedApiEnabled(extension, "profileContentHandlers");
+        return extHostProfileContentHandlers.registerProfileContentHandler(extension, id, handler);
+      },
+      registerQuickDiffProvider(selector, quickDiffProvider, label, rootUri) {
+        checkProposedApiEnabled(extension, "quickDiffProvider");
+        return extHostQuickDiff.registerQuickDiffProvider(checkSelector(selector), quickDiffProvider, label, rootUri);
+      },
+      get tabGroups() {
+        return extHostEditorTabs.tabGroups;
+      },
+      registerShareProvider(selector, provider) {
+        checkProposedApiEnabled(extension, "shareProvider");
+        return extHostShare.registerShareProvider(checkSelector(selector), provider);
+      },
+      get nativeHandle() {
+        checkProposedApiEnabled(extension, "nativeWindowHandle");
+        return extHostWindow.nativeHandle;
+      },
+      createChatStatusItem: /* @__PURE__ */ __name((id) => {
+        checkProposedApiEnabled(extension, "chatStatusItem");
+        return extHostChatStatus.createChatStatusItem(extension, id);
+      }, "createChatStatusItem")
+    };
+    const workspace = {
+      get rootPath() {
+        extHostApiDeprecation.report(
+          "workspace.rootPath",
+          extension,
+          `Please use 'workspace.workspaceFolders' instead. More details: https://aka.ms/vscode-eliminating-rootpath`
+        );
+        return extHostWorkspace.getPath();
+      },
+      set rootPath(value) {
+        throw new errors.ReadonlyError("rootPath");
+      },
+      getWorkspaceFolder(resource) {
+        return extHostWorkspace.getWorkspaceFolder(resource);
+      },
+      get workspaceFolders() {
+        return extHostWorkspace.getWorkspaceFolders();
+      },
+      get name() {
+        return extHostWorkspace.name;
+      },
+      set name(value) {
+        throw new errors.ReadonlyError("name");
+      },
+      get workspaceFile() {
+        return extHostWorkspace.workspaceFile;
+      },
+      set workspaceFile(value) {
+        throw new errors.ReadonlyError("workspaceFile");
+      },
+      updateWorkspaceFolders: /* @__PURE__ */ __name((index, deleteCount, ...workspaceFoldersToAdd) => {
+        return extHostWorkspace.updateWorkspaceFolders(extension, index, deleteCount || 0, ...workspaceFoldersToAdd);
+      }, "updateWorkspaceFolders"),
+      onDidChangeWorkspaceFolders: /* @__PURE__ */ __name(function(listener, thisArgs, disposables) {
+        return _asExtensionEvent(extHostWorkspace.onDidChangeWorkspace)(listener, thisArgs, disposables);
+      }, "onDidChangeWorkspaceFolders"),
+      asRelativePath: /* @__PURE__ */ __name((pathOrUri, includeWorkspace) => {
+        return extHostWorkspace.getRelativePath(pathOrUri, includeWorkspace);
+      }, "asRelativePath"),
+      findFiles: /* @__PURE__ */ __name((include, exclude, maxResults, token) => {
+        return extHostWorkspace.findFiles(include, exclude, maxResults, extension.identifier, token);
+      }, "findFiles"),
+      findFiles2: /* @__PURE__ */ __name((filePattern, options, token) => {
+        checkProposedApiEnabled(extension, "findFiles2");
+        return extHostWorkspace.findFiles2(filePattern, options, extension.identifier, token);
+      }, "findFiles2"),
+      findTextInFiles: /* @__PURE__ */ __name((query, optionsOrCallback, callbackOrToken, token) => {
+        checkProposedApiEnabled(extension, "findTextInFiles");
+        let options;
+        let callback;
+        if (typeof optionsOrCallback === "object") {
+          options = optionsOrCallback;
+          callback = callbackOrToken;
+        } else {
+          options = {};
+          callback = optionsOrCallback;
+          token = callbackOrToken;
+        }
+        return extHostWorkspace.findTextInFiles(query, options || {}, callback, extension.identifier, token);
+      }, "findTextInFiles"),
+      findTextInFiles2: /* @__PURE__ */ __name((query, options, token) => {
+        checkProposedApiEnabled(extension, "findTextInFiles2");
+        checkProposedApiEnabled(extension, "textSearchProvider2");
+        return extHostWorkspace.findTextInFiles2(query, options, extension.identifier, token);
+      }, "findTextInFiles2"),
+      save: /* @__PURE__ */ __name((uri) => {
+        return extHostWorkspace.save(uri);
+      }, "save"),
+      saveAs: /* @__PURE__ */ __name((uri) => {
+        return extHostWorkspace.saveAs(uri);
+      }, "saveAs"),
+      saveAll: /* @__PURE__ */ __name((includeUntitled) => {
+        return extHostWorkspace.saveAll(includeUntitled);
+      }, "saveAll"),
+      applyEdit(edit, metadata) {
+        return extHostBulkEdits.applyWorkspaceEdit(edit, extension, metadata);
+      },
+      createFileSystemWatcher: /* @__PURE__ */ __name((pattern, optionsOrIgnoreCreate, ignoreChange, ignoreDelete) => {
+        const options = {
+          ignoreCreateEvents: Boolean(optionsOrIgnoreCreate),
+          ignoreChangeEvents: Boolean(ignoreChange),
+          ignoreDeleteEvents: Boolean(ignoreDelete)
+        };
+        return extHostFileSystemEvent.createFileSystemWatcher(extHostWorkspace, configProvider, extension, pattern, options);
+      }, "createFileSystemWatcher"),
+      get textDocuments() {
+        return extHostDocuments.getAllDocumentData().map((data) => data.document);
+      },
+      set textDocuments(value) {
+        throw new errors.ReadonlyError("textDocuments");
+      },
+      openTextDocument(uriOrFileNameOrOptions, options) {
+        let uriPromise;
+        options = options ?? uriOrFileNameOrOptions;
+        if (typeof options?.encoding === "string") {
+          checkProposedApiEnabled(extension, "textDocumentEncoding");
+        }
+        if (typeof uriOrFileNameOrOptions === "string") {
+          uriPromise = Promise.resolve(URI.file(uriOrFileNameOrOptions));
+        } else if (URI.isUri(uriOrFileNameOrOptions)) {
+          uriPromise = Promise.resolve(uriOrFileNameOrOptions);
+        } else if (!options || typeof options === "object") {
+          uriPromise = extHostDocuments.createDocumentData(options);
+        } else {
+          throw new Error("illegal argument - uriOrFileNameOrOptions");
+        }
+        return uriPromise.then((uri) => {
+          extHostLogService.trace(`openTextDocument from ${extension.identifier}`);
+          if (uri.scheme === Schemas.vscodeRemote && !uri.authority) {
+            extHostApiDeprecation.report("workspace.openTextDocument", extension, `A URI of 'vscode-remote' scheme requires an authority.`);
+          }
+          return extHostDocuments.ensureDocumentData(uri, options).then((documentData) => {
+            return documentData.document;
+          });
+        });
+      },
+      onDidOpenTextDocument: /* @__PURE__ */ __name((listener, thisArgs, disposables) => {
+        return _asExtensionEvent(extHostDocuments.onDidAddDocument)(listener, thisArgs, disposables);
+      }, "onDidOpenTextDocument"),
+      onDidCloseTextDocument: /* @__PURE__ */ __name((listener, thisArgs, disposables) => {
+        return _asExtensionEvent(extHostDocuments.onDidRemoveDocument)(listener, thisArgs, disposables);
+      }, "onDidCloseTextDocument"),
+      onDidChangeTextDocument: /* @__PURE__ */ __name((listener, thisArgs, disposables) => {
+        return _asExtensionEvent(extHostDocuments.onDidChangeDocument)(listener, thisArgs, disposables);
+      }, "onDidChangeTextDocument"),
+      onDidSaveTextDocument: /* @__PURE__ */ __name((listener, thisArgs, disposables) => {
+        return _asExtensionEvent(extHostDocuments.onDidSaveDocument)(listener, thisArgs, disposables);
+      }, "onDidSaveTextDocument"),
+      onWillSaveTextDocument: /* @__PURE__ */ __name((listener, thisArgs, disposables) => {
+        return _asExtensionEvent(extHostDocumentSaveParticipant.getOnWillSaveTextDocumentEvent(extension))(listener, thisArgs, disposables);
+      }, "onWillSaveTextDocument"),
+      get notebookDocuments() {
+        return extHostNotebook.notebookDocuments.map((d) => d.apiNotebook);
+      },
+      async openNotebookDocument(uriOrType, content) {
+        let uri;
+        if (URI.isUri(uriOrType)) {
+          uri = uriOrType;
+          await extHostNotebook.openNotebookDocument(uriOrType);
+        } else if (typeof uriOrType === "string") {
+          uri = URI.revive(await extHostNotebook.createNotebookDocument({ viewType: uriOrType, content }));
+        } else {
+          throw new Error("Invalid arguments");
+        }
+        return extHostNotebook.getNotebookDocument(uri).apiNotebook;
+      },
+      onDidSaveNotebookDocument(listener, thisArg, disposables) {
+        return _asExtensionEvent(extHostNotebookDocuments.onDidSaveNotebookDocument)(listener, thisArg, disposables);
+      },
+      onDidChangeNotebookDocument(listener, thisArg, disposables) {
+        return _asExtensionEvent(extHostNotebookDocuments.onDidChangeNotebookDocument)(listener, thisArg, disposables);
+      },
+      onWillSaveNotebookDocument(listener, thisArg, disposables) {
+        return _asExtensionEvent(extHostNotebookDocumentSaveParticipant.getOnWillSaveNotebookDocumentEvent(extension))(listener, thisArg, disposables);
+      },
+      get onDidOpenNotebookDocument() {
+        return _asExtensionEvent(extHostNotebook.onDidOpenNotebookDocument);
+      },
+      get onDidCloseNotebookDocument() {
+        return _asExtensionEvent(extHostNotebook.onDidCloseNotebookDocument);
+      },
+      registerNotebookSerializer(viewType, serializer, options, registration) {
+        return extHostNotebook.registerNotebookSerializer(extension, viewType, serializer, options, isProposedApiEnabled(extension, "notebookLiveShare") ? registration : void 0);
+      },
+      onDidChangeConfiguration: /* @__PURE__ */ __name((listener, thisArgs, disposables) => {
+        return _asExtensionEvent(configProvider.onDidChangeConfiguration)(listener, thisArgs, disposables);
+      }, "onDidChangeConfiguration"),
+      getConfiguration(section, scope) {
+        scope = arguments.length === 1 ? void 0 : scope;
+        return configProvider.getConfiguration(section, scope, extension);
+      },
+      registerTextDocumentContentProvider(scheme, provider) {
+        return extHostDocumentContentProviders.registerTextDocumentContentProvider(scheme, provider);
+      },
+      registerTaskProvider: /* @__PURE__ */ __name((type, provider) => {
+        extHostApiDeprecation.report(
+          "window.registerTaskProvider",
+          extension,
+          `Use the corresponding function on the 'tasks' namespace instead`
+        );
+        return extHostTask.registerTaskProvider(extension, type, provider);
+      }, "registerTaskProvider"),
+      registerFileSystemProvider(scheme, provider, options) {
+        return combinedDisposable(
+          extHostFileSystem.registerFileSystemProvider(extension, scheme, provider, options),
+          extHostConsumerFileSystem.addFileSystemProvider(scheme, provider, options)
+        );
+      },
+      get fs() {
+        return extHostConsumerFileSystem.value;
+      },
+      registerFileSearchProvider: /* @__PURE__ */ __name((scheme, provider) => {
+        checkProposedApiEnabled(extension, "fileSearchProvider");
+        return extHostSearch.registerFileSearchProviderOld(scheme, provider);
+      }, "registerFileSearchProvider"),
+      registerTextSearchProvider: /* @__PURE__ */ __name((scheme, provider) => {
+        checkProposedApiEnabled(extension, "textSearchProvider");
+        return extHostSearch.registerTextSearchProviderOld(scheme, provider);
+      }, "registerTextSearchProvider"),
+      registerAITextSearchProvider: /* @__PURE__ */ __name((scheme, provider) => {
+        checkProposedApiEnabled(extension, "aiTextSearchProvider");
+        checkProposedApiEnabled(extension, "textSearchProvider2");
+        return extHostSearch.registerAITextSearchProvider(scheme, provider);
+      }, "registerAITextSearchProvider"),
+      registerFileSearchProvider2: /* @__PURE__ */ __name((scheme, provider) => {
+        checkProposedApiEnabled(extension, "fileSearchProvider2");
+        return extHostSearch.registerFileSearchProvider(scheme, provider);
+      }, "registerFileSearchProvider2"),
+      registerTextSearchProvider2: /* @__PURE__ */ __name((scheme, provider) => {
+        checkProposedApiEnabled(extension, "textSearchProvider2");
+        return extHostSearch.registerTextSearchProvider(scheme, provider);
+      }, "registerTextSearchProvider2"),
+      registerRemoteAuthorityResolver: /* @__PURE__ */ __name((authorityPrefix, resolver) => {
+        checkProposedApiEnabled(extension, "resolvers");
+        return extensionService.registerRemoteAuthorityResolver(authorityPrefix, resolver);
+      }, "registerRemoteAuthorityResolver"),
+      registerResourceLabelFormatter: /* @__PURE__ */ __name((formatter) => {
+        checkProposedApiEnabled(extension, "resolvers");
+        return extHostLabelService.$registerResourceLabelFormatter(formatter);
+      }, "registerResourceLabelFormatter"),
+      getRemoteExecServer: /* @__PURE__ */ __name((authority) => {
+        checkProposedApiEnabled(extension, "resolvers");
+        return extensionService.getRemoteExecServer(authority);
+      }, "getRemoteExecServer"),
+      onDidCreateFiles: /* @__PURE__ */ __name((listener, thisArg, disposables) => {
+        return _asExtensionEvent(extHostFileSystemEvent.onDidCreateFile)(listener, thisArg, disposables);
+      }, "onDidCreateFiles"),
+      onDidDeleteFiles: /* @__PURE__ */ __name((listener, thisArg, disposables) => {
+        return _asExtensionEvent(extHostFileSystemEvent.onDidDeleteFile)(listener, thisArg, disposables);
+      }, "onDidDeleteFiles"),
+      onDidRenameFiles: /* @__PURE__ */ __name((listener, thisArg, disposables) => {
+        return _asExtensionEvent(extHostFileSystemEvent.onDidRenameFile)(listener, thisArg, disposables);
+      }, "onDidRenameFiles"),
+      onWillCreateFiles: /* @__PURE__ */ __name((listener, thisArg, disposables) => {
+        return _asExtensionEvent(extHostFileSystemEvent.getOnWillCreateFileEvent(extension))(listener, thisArg, disposables);
+      }, "onWillCreateFiles"),
+      onWillDeleteFiles: /* @__PURE__ */ __name((listener, thisArg, disposables) => {
+        return _asExtensionEvent(extHostFileSystemEvent.getOnWillDeleteFileEvent(extension))(listener, thisArg, disposables);
+      }, "onWillDeleteFiles"),
+      onWillRenameFiles: /* @__PURE__ */ __name((listener, thisArg, disposables) => {
+        return _asExtensionEvent(extHostFileSystemEvent.getOnWillRenameFileEvent(extension))(listener, thisArg, disposables);
+      }, "onWillRenameFiles"),
+      openTunnel: /* @__PURE__ */ __name((forward) => {
+        checkProposedApiEnabled(extension, "tunnels");
+        return extHostTunnelService.openTunnel(extension, forward).then((value) => {
+          if (!value) {
+            throw new Error("cannot open tunnel");
+          }
+          return value;
+        });
+      }, "openTunnel"),
+      get tunnels() {
+        checkProposedApiEnabled(extension, "tunnels");
+        return extHostTunnelService.getTunnels();
+      },
+      onDidChangeTunnels: /* @__PURE__ */ __name((listener, thisArg, disposables) => {
+        checkProposedApiEnabled(extension, "tunnels");
+        return _asExtensionEvent(extHostTunnelService.onDidChangeTunnels)(listener, thisArg, disposables);
+      }, "onDidChangeTunnels"),
+      registerPortAttributesProvider: /* @__PURE__ */ __name((portSelector, provider) => {
+        checkProposedApiEnabled(extension, "portsAttributes");
+        return extHostTunnelService.registerPortsAttributesProvider(portSelector, provider);
+      }, "registerPortAttributesProvider"),
+      registerTunnelProvider: /* @__PURE__ */ __name((tunnelProvider, information) => {
+        checkProposedApiEnabled(extension, "tunnelFactory");
+        return extHostTunnelService.registerTunnelProvider(tunnelProvider, information);
+      }, "registerTunnelProvider"),
+      registerTimelineProvider: /* @__PURE__ */ __name((scheme, provider) => {
+        checkProposedApiEnabled(extension, "timeline");
+        return extHostTimeline.registerTimelineProvider(scheme, provider, extension.identifier, extHostCommands.converter);
+      }, "registerTimelineProvider"),
+      get isTrusted() {
+        return extHostWorkspace.trusted;
+      },
+      requestWorkspaceTrust: /* @__PURE__ */ __name((options) => {
+        checkProposedApiEnabled(extension, "workspaceTrust");
+        return extHostWorkspace.requestWorkspaceTrust(options);
+      }, "requestWorkspaceTrust"),
+      onDidGrantWorkspaceTrust: /* @__PURE__ */ __name((listener, thisArgs, disposables) => {
+        return _asExtensionEvent(extHostWorkspace.onDidGrantWorkspaceTrust)(listener, thisArgs, disposables);
+      }, "onDidGrantWorkspaceTrust"),
+      registerEditSessionIdentityProvider: /* @__PURE__ */ __name((scheme, provider) => {
+        checkProposedApiEnabled(extension, "editSessionIdentityProvider");
+        return extHostWorkspace.registerEditSessionIdentityProvider(scheme, provider);
+      }, "registerEditSessionIdentityProvider"),
+      onWillCreateEditSessionIdentity: /* @__PURE__ */ __name((listener, thisArgs, disposables) => {
+        checkProposedApiEnabled(extension, "editSessionIdentityProvider");
+        return _asExtensionEvent(extHostWorkspace.getOnWillCreateEditSessionIdentityEvent(extension))(listener, thisArgs, disposables);
+      }, "onWillCreateEditSessionIdentity"),
+      registerCanonicalUriProvider: /* @__PURE__ */ __name((scheme, provider) => {
+        checkProposedApiEnabled(extension, "canonicalUriProvider");
+        return extHostWorkspace.registerCanonicalUriProvider(scheme, provider);
+      }, "registerCanonicalUriProvider"),
+      getCanonicalUri: /* @__PURE__ */ __name((uri, options, token) => {
+        checkProposedApiEnabled(extension, "canonicalUriProvider");
+        return extHostWorkspace.provideCanonicalUri(uri, options, token);
+      }, "getCanonicalUri"),
+      decode(content, uri, options) {
+        checkProposedApiEnabled(extension, "textDocumentEncoding");
+        return extHostWorkspace.decode(content, uri, options);
+      },
+      encode(content, uri, options) {
+        checkProposedApiEnabled(extension, "textDocumentEncoding");
+        return extHostWorkspace.encode(content, uri, options);
+      }
+    };
+    const scm = {
+      get inputBox() {
+        extHostApiDeprecation.report(
+          "scm.inputBox",
+          extension,
+          `Use 'SourceControl.inputBox' instead`
+        );
+        return extHostSCM.getLastInputBox(extension);
+      },
+      createSourceControl(id, label, rootUri) {
+        return extHostSCM.createSourceControl(extension, id, label, rootUri);
+      }
+    };
+    const comments = {
+      createCommentController(id, label) {
+        return extHostComment.createCommentController(extension, id, label);
+      }
+    };
+    const debug = {
+      get activeDebugSession() {
+        return extHostDebugService.activeDebugSession;
+      },
+      get activeDebugConsole() {
+        return extHostDebugService.activeDebugConsole;
+      },
+      get breakpoints() {
+        return extHostDebugService.breakpoints;
+      },
+      get activeStackItem() {
+        return extHostDebugService.activeStackItem;
+      },
+      registerDebugVisualizationProvider(id, provider) {
+        checkProposedApiEnabled(extension, "debugVisualization");
+        return extHostDebugService.registerDebugVisualizationProvider(extension, id, provider);
+      },
+      registerDebugVisualizationTreeProvider(id, provider) {
+        checkProposedApiEnabled(extension, "debugVisualization");
+        return extHostDebugService.registerDebugVisualizationTree(extension, id, provider);
+      },
+      onDidStartDebugSession(listener, thisArg, disposables) {
+        return _asExtensionEvent(extHostDebugService.onDidStartDebugSession)(listener, thisArg, disposables);
+      },
+      onDidTerminateDebugSession(listener, thisArg, disposables) {
+        return _asExtensionEvent(extHostDebugService.onDidTerminateDebugSession)(listener, thisArg, disposables);
+      },
+      onDidChangeActiveDebugSession(listener, thisArg, disposables) {
+        return _asExtensionEvent(extHostDebugService.onDidChangeActiveDebugSession)(listener, thisArg, disposables);
+      },
+      onDidReceiveDebugSessionCustomEvent(listener, thisArg, disposables) {
+        return _asExtensionEvent(extHostDebugService.onDidReceiveDebugSessionCustomEvent)(listener, thisArg, disposables);
+      },
+      onDidChangeBreakpoints(listener, thisArgs, disposables) {
+        return _asExtensionEvent(extHostDebugService.onDidChangeBreakpoints)(listener, thisArgs, disposables);
+      },
+      onDidChangeActiveStackItem(listener, thisArg, disposables) {
+        return _asExtensionEvent(extHostDebugService.onDidChangeActiveStackItem)(listener, thisArg, disposables);
+      },
+      registerDebugConfigurationProvider(debugType, provider, triggerKind) {
+        return extHostDebugService.registerDebugConfigurationProvider(debugType, provider, triggerKind || DebugConfigurationProviderTriggerKind.Initial);
+      },
+      registerDebugAdapterDescriptorFactory(debugType, factory) {
+        return extHostDebugService.registerDebugAdapterDescriptorFactory(extension, debugType, factory);
+      },
+      registerDebugAdapterTrackerFactory(debugType, factory) {
+        return extHostDebugService.registerDebugAdapterTrackerFactory(debugType, factory);
+      },
+      startDebugging(folder, nameOrConfig, parentSessionOrOptions) {
+        if (!parentSessionOrOptions || typeof parentSessionOrOptions === "object" && "configuration" in parentSessionOrOptions) {
+          return extHostDebugService.startDebugging(folder, nameOrConfig, { parentSession: parentSessionOrOptions });
+        }
+        return extHostDebugService.startDebugging(folder, nameOrConfig, parentSessionOrOptions || {});
+      },
+      stopDebugging(session) {
+        return extHostDebugService.stopDebugging(session);
+      },
+      addBreakpoints(breakpoints) {
+        return extHostDebugService.addBreakpoints(breakpoints);
+      },
+      removeBreakpoints(breakpoints) {
+        return extHostDebugService.removeBreakpoints(breakpoints);
+      },
+      asDebugSourceUri(source, session) {
+        return extHostDebugService.asDebugSourceUri(source, session);
+      }
+    };
+    const tasks = {
+      registerTaskProvider: /* @__PURE__ */ __name((type, provider) => {
+        return extHostTask.registerTaskProvider(extension, type, provider);
+      }, "registerTaskProvider"),
+      fetchTasks: /* @__PURE__ */ __name((filter) => {
+        return extHostTask.fetchTasks(filter);
+      }, "fetchTasks"),
+      executeTask: /* @__PURE__ */ __name((task) => {
+        return extHostTask.executeTask(extension, task);
+      }, "executeTask"),
+      get taskExecutions() {
+        return extHostTask.taskExecutions;
+      },
+      onDidStartTask: /* @__PURE__ */ __name((listeners, thisArgs, disposables) => {
+        return _asExtensionEvent(extHostTask.onDidStartTask)(listeners, thisArgs, disposables);
+      }, "onDidStartTask"),
+      onDidEndTask: /* @__PURE__ */ __name((listeners, thisArgs, disposables) => {
+        return _asExtensionEvent(extHostTask.onDidEndTask)(listeners, thisArgs, disposables);
+      }, "onDidEndTask"),
+      onDidStartTaskProcess: /* @__PURE__ */ __name((listeners, thisArgs, disposables) => {
+        return _asExtensionEvent(extHostTask.onDidStartTaskProcess)(listeners, thisArgs, disposables);
+      }, "onDidStartTaskProcess"),
+      onDidEndTaskProcess: /* @__PURE__ */ __name((listeners, thisArgs, disposables) => {
+        return _asExtensionEvent(extHostTask.onDidEndTaskProcess)(listeners, thisArgs, disposables);
+      }, "onDidEndTaskProcess"),
+      onDidStartTaskProblemMatchers: /* @__PURE__ */ __name((listeners, thisArgs, disposables) => {
+        checkProposedApiEnabled(extension, "taskProblemMatcherStatus");
+        return _asExtensionEvent(extHostTask.onDidStartTaskProblemMatchers)(listeners, thisArgs, disposables);
+      }, "onDidStartTaskProblemMatchers"),
+      onDidEndTaskProblemMatchers: /* @__PURE__ */ __name((listeners, thisArgs, disposables) => {
+        checkProposedApiEnabled(extension, "taskProblemMatcherStatus");
+        return _asExtensionEvent(extHostTask.onDidEndTaskProblemMatchers)(listeners, thisArgs, disposables);
+      }, "onDidEndTaskProblemMatchers")
+    };
+    const notebooks = {
+      createNotebookController(id, notebookType, label, handler, rendererScripts) {
+        return extHostNotebookKernels.createNotebookController(extension, id, notebookType, label, handler, isProposedApiEnabled(extension, "notebookMessaging") ? rendererScripts : void 0);
+      },
+      registerNotebookCellStatusBarItemProvider: /* @__PURE__ */ __name((notebookType, provider) => {
+        return extHostNotebook.registerNotebookCellStatusBarItemProvider(extension, notebookType, provider);
+      }, "registerNotebookCellStatusBarItemProvider"),
+      createRendererMessaging(rendererId) {
+        return extHostNotebookRenderers.createRendererMessaging(extension, rendererId);
+      },
+      createNotebookControllerDetectionTask(notebookType) {
+        checkProposedApiEnabled(extension, "notebookKernelSource");
+        return extHostNotebookKernels.createNotebookControllerDetectionTask(extension, notebookType);
+      },
+      registerKernelSourceActionProvider(notebookType, provider) {
+        checkProposedApiEnabled(extension, "notebookKernelSource");
+        return extHostNotebookKernels.registerKernelSourceActionProvider(extension, notebookType, provider);
+      },
+      onDidChangeNotebookCellExecutionState(listener, thisArgs, disposables) {
+        checkProposedApiEnabled(extension, "notebookCellExecutionState");
+        return _asExtensionEvent(extHostNotebookKernels.onDidChangeNotebookCellExecutionState)(listener, thisArgs, disposables);
+      }
+    };
+    const l10n = {
+      t(...params) {
+        if (typeof params[0] === "string") {
+          const key = params.shift();
+          const argsFormatted = !params || typeof params[0] !== "object" ? params : params[0];
+          return extHostLocalization.getMessage(extension.identifier.value, { message: key, args: argsFormatted });
+        }
+        return extHostLocalization.getMessage(extension.identifier.value, params[0]);
+      },
+      get bundle() {
+        return extHostLocalization.getBundle(extension.identifier.value);
+      },
+      get uri() {
+        return extHostLocalization.getBundleUri(extension.identifier.value);
+      }
+    };
+    const interactive = {
+      transferActiveChat(toWorkspace) {
+        checkProposedApiEnabled(extension, "interactive");
+        return extHostChatAgents2.transferActiveChat(toWorkspace);
+      }
+    };
+    const ai = {
+      getRelatedInformation(query, types) {
+        checkProposedApiEnabled(extension, "aiRelatedInformation");
+        return extHostAiRelatedInformation.getRelatedInformation(extension, query, types);
+      },
+      registerRelatedInformationProvider(type, provider) {
+        checkProposedApiEnabled(extension, "aiRelatedInformation");
+        return extHostAiRelatedInformation.registerRelatedInformationProvider(extension, type, provider);
+      },
+      registerEmbeddingVectorProvider(model, provider) {
+        checkProposedApiEnabled(extension, "aiRelatedInformation");
+        return extHostAiEmbeddingVector.registerEmbeddingVectorProvider(extension, model, provider);
+      }
+    };
+    const chat = {
+      registerMappedEditsProvider(_selector, _provider) {
+        checkProposedApiEnabled(extension, "mappedEditsProvider");
+        return { dispose() {
+        } };
+      },
+      registerMappedEditsProvider2(provider) {
+        checkProposedApiEnabled(extension, "mappedEditsProvider");
+        return extHostCodeMapper.registerMappedEditsProvider(extension, provider);
+      },
+      createChatParticipant(id, handler) {
+        return extHostChatAgents2.createChatAgent(extension, id, handler);
+      },
+      createDynamicChatParticipant(id, dynamicProps, handler) {
+        checkProposedApiEnabled(extension, "chatParticipantPrivate");
+        return extHostChatAgents2.createDynamicChatAgent(extension, id, dynamicProps, handler);
+      },
+      registerChatParticipantDetectionProvider(provider) {
+        checkProposedApiEnabled(extension, "chatParticipantPrivate");
+        return extHostChatAgents2.registerChatParticipantDetectionProvider(extension, provider);
+      },
+      registerRelatedFilesProvider(provider, metadata) {
+        checkProposedApiEnabled(extension, "chatEditing");
+        return extHostChatAgents2.registerRelatedFilesProvider(extension, provider, metadata);
+      },
+      onDidDisposeChatSession: /* @__PURE__ */ __name((listeners, thisArgs, disposables) => {
+        checkProposedApiEnabled(extension, "chatParticipantPrivate");
+        return _asExtensionEvent(extHostChatAgents2.onDidDisposeChatSession)(listeners, thisArgs, disposables);
+      }, "onDidDisposeChatSession")
+    };
+    const lm = {
+      selectChatModels: /* @__PURE__ */ __name((selector) => {
+        return extHostLanguageModels.selectLanguageModels(extension, selector ?? {});
+      }, "selectChatModels"),
+      onDidChangeChatModels: /* @__PURE__ */ __name((listener, thisArgs, disposables) => {
+        return extHostLanguageModels.onDidChangeProviders(listener, thisArgs, disposables);
+      }, "onDidChangeChatModels"),
+      registerChatModelProvider: /* @__PURE__ */ __name((id, provider, metadata) => {
+        checkProposedApiEnabled(extension, "chatProvider");
+        return extHostLanguageModels.registerLanguageModel(extension, id, provider, metadata);
+      }, "registerChatModelProvider"),
+      // --- embeddings
+      get embeddingModels() {
+        checkProposedApiEnabled(extension, "embeddings");
+        return extHostEmbeddings.embeddingsModels;
+      },
+      onDidChangeEmbeddingModels: /* @__PURE__ */ __name((listener, thisArgs, disposables) => {
+        checkProposedApiEnabled(extension, "embeddings");
+        return extHostEmbeddings.onDidChange(listener, thisArgs, disposables);
+      }, "onDidChangeEmbeddingModels"),
+      registerEmbeddingsProvider(embeddingsModel, provider) {
+        checkProposedApiEnabled(extension, "embeddings");
+        return extHostEmbeddings.registerEmbeddingsProvider(extension, embeddingsModel, provider);
+      },
+      async computeEmbeddings(embeddingsModel, input, token) {
+        checkProposedApiEnabled(extension, "embeddings");
+        if (typeof input === "string") {
+          return extHostEmbeddings.computeEmbeddings(embeddingsModel, input, token);
+        } else {
+          return extHostEmbeddings.computeEmbeddings(embeddingsModel, input, token);
+        }
+      },
+      registerTool(name, tool) {
+        return extHostLanguageModelTools.registerTool(extension, name, tool);
+      },
+      invokeTool(name, parameters, token) {
+        return extHostLanguageModelTools.invokeTool(extension, name, parameters, token);
+      },
+      get tools() {
+        return extHostLanguageModelTools.getTools(extension);
+      },
+      fileIsIgnored(uri, token) {
+        return extHostLanguageModels.fileIsIgnored(extension, uri, token);
+      },
+      registerIgnoredFileProvider(provider) {
+        return extHostLanguageModels.registerIgnoredFileProvider(extension, provider);
+      },
+      registerMcpConfigurationProvider(id, provider) {
+        checkProposedApiEnabled(extension, "mcpConfigurationProvider");
+        return extHostMcp.registerMcpConfigurationProvider(extension, id, provider);
+      }
+    };
+    const speech = {
+      registerSpeechProvider(id, provider) {
+        checkProposedApiEnabled(extension, "speech");
+        return extHostSpeech.registerProvider(extension.identifier, id, provider);
+      }
+    };
+    return {
+      version: initData.version,
+      // namespaces
+      ai,
+      authentication,
+      commands,
+      comments,
+      chat,
+      debug,
+      env,
+      extensions,
+      interactive,
+      l10n,
+      languages,
+      lm,
+      notebooks,
+      scm,
+      speech,
+      tasks,
+      tests,
+      window,
+      workspace,
+      // types
+      Breakpoint: extHostTypes.Breakpoint,
+      TerminalOutputAnchor: extHostTypes.TerminalOutputAnchor,
+      ChatResultFeedbackKind: extHostTypes.ChatResultFeedbackKind,
+      ChatVariableLevel: extHostTypes.ChatVariableLevel,
+      ChatCompletionItem: extHostTypes.ChatCompletionItem,
+      ChatReferenceDiagnostic: extHostTypes.ChatReferenceDiagnostic,
+      CallHierarchyIncomingCall: extHostTypes.CallHierarchyIncomingCall,
+      CallHierarchyItem: extHostTypes.CallHierarchyItem,
+      CallHierarchyOutgoingCall: extHostTypes.CallHierarchyOutgoingCall,
+      CancellationError: errors.CancellationError,
+      CancellationTokenSource,
+      CandidatePortSource,
+      CodeAction: extHostTypes.CodeAction,
+      CodeActionKind: extHostTypes.CodeActionKind,
+      CodeActionTriggerKind: extHostTypes.CodeActionTriggerKind,
+      CodeLens: extHostTypes.CodeLens,
+      Color: extHostTypes.Color,
+      ColorInformation: extHostTypes.ColorInformation,
+      ColorPresentation: extHostTypes.ColorPresentation,
+      ColorThemeKind: extHostTypes.ColorThemeKind,
+      CommentMode: extHostTypes.CommentMode,
+      CommentState: extHostTypes.CommentState,
+      CommentThreadCollapsibleState: extHostTypes.CommentThreadCollapsibleState,
+      CommentThreadState: extHostTypes.CommentThreadState,
+      CommentThreadApplicability: extHostTypes.CommentThreadApplicability,
+      CommentThreadFocus: extHostTypes.CommentThreadFocus,
+      CompletionItem: extHostTypes.CompletionItem,
+      CompletionItemKind: extHostTypes.CompletionItemKind,
+      CompletionItemTag: extHostTypes.CompletionItemTag,
+      CompletionList: extHostTypes.CompletionList,
+      CompletionTriggerKind: extHostTypes.CompletionTriggerKind,
+      ConfigurationTarget: extHostTypes.ConfigurationTarget,
+      CustomExecution: extHostTypes.CustomExecution,
+      DebugAdapterExecutable: extHostTypes.DebugAdapterExecutable,
+      DebugAdapterInlineImplementation: extHostTypes.DebugAdapterInlineImplementation,
+      DebugAdapterNamedPipeServer: extHostTypes.DebugAdapterNamedPipeServer,
+      DebugAdapterServer: extHostTypes.DebugAdapterServer,
+      DebugConfigurationProviderTriggerKind,
+      DebugConsoleMode: extHostTypes.DebugConsoleMode,
+      DebugVisualization: extHostTypes.DebugVisualization,
+      DecorationRangeBehavior: extHostTypes.DecorationRangeBehavior,
+      Diagnostic: extHostTypes.Diagnostic,
+      DiagnosticRelatedInformation: extHostTypes.DiagnosticRelatedInformation,
+      DiagnosticSeverity: extHostTypes.DiagnosticSeverity,
+      DiagnosticTag: extHostTypes.DiagnosticTag,
+      Disposable: extHostTypes.Disposable,
+      DocumentHighlight: extHostTypes.DocumentHighlight,
+      DocumentHighlightKind: extHostTypes.DocumentHighlightKind,
+      MultiDocumentHighlight: extHostTypes.MultiDocumentHighlight,
+      DocumentLink: extHostTypes.DocumentLink,
+      DocumentSymbol: extHostTypes.DocumentSymbol,
+      EndOfLine: extHostTypes.EndOfLine,
+      EnvironmentVariableMutatorType: extHostTypes.EnvironmentVariableMutatorType,
+      EvaluatableExpression: extHostTypes.EvaluatableExpression,
+      InlineValueText: extHostTypes.InlineValueText,
+      InlineValueVariableLookup: extHostTypes.InlineValueVariableLookup,
+      InlineValueEvaluatableExpression: extHostTypes.InlineValueEvaluatableExpression,
+      InlineCompletionTriggerKind: extHostTypes.InlineCompletionTriggerKind,
+      EventEmitter: Emitter,
+      ExtensionKind: extHostTypes.ExtensionKind,
+      ExtensionMode: extHostTypes.ExtensionMode,
+      ExternalUriOpenerPriority: extHostTypes.ExternalUriOpenerPriority,
+      FileChangeType: extHostTypes.FileChangeType,
+      FileDecoration: extHostTypes.FileDecoration,
+      FileDecoration2: extHostTypes.FileDecoration,
+      FileSystemError: extHostTypes.FileSystemError,
+      FileType: files.FileType,
+      FilePermission: files.FilePermission,
+      FoldingRange: extHostTypes.FoldingRange,
+      FoldingRangeKind: extHostTypes.FoldingRangeKind,
+      FunctionBreakpoint: extHostTypes.FunctionBreakpoint,
+      InlineCompletionItem: extHostTypes.InlineSuggestion,
+      InlineCompletionList: extHostTypes.InlineSuggestionList,
+      Hover: extHostTypes.Hover,
+      VerboseHover: extHostTypes.VerboseHover,
+      HoverVerbosityAction: extHostTypes.HoverVerbosityAction,
+      IndentAction: languageConfiguration.IndentAction,
+      Location: extHostTypes.Location,
+      MarkdownString: extHostTypes.MarkdownString,
+      OverviewRulerLane,
+      ParameterInformation: extHostTypes.ParameterInformation,
+      PortAutoForwardAction: extHostTypes.PortAutoForwardAction,
+      Position: extHostTypes.Position,
+      ProcessExecution: extHostTypes.ProcessExecution,
+      ProgressLocation: extHostTypes.ProgressLocation,
+      QuickInputButtonLocation: extHostTypes.QuickInputButtonLocation,
+      QuickInputButtons: extHostTypes.QuickInputButtons,
+      Range: extHostTypes.Range,
+      RelativePattern: extHostTypes.RelativePattern,
+      Selection: extHostTypes.Selection,
+      SelectionRange: extHostTypes.SelectionRange,
+      SemanticTokens: extHostTypes.SemanticTokens,
+      SemanticTokensBuilder: extHostTypes.SemanticTokensBuilder,
+      SemanticTokensEdit: extHostTypes.SemanticTokensEdit,
+      SemanticTokensEdits: extHostTypes.SemanticTokensEdits,
+      SemanticTokensLegend: extHostTypes.SemanticTokensLegend,
+      ShellExecution: extHostTypes.ShellExecution,
+      ShellQuoting: extHostTypes.ShellQuoting,
+      SignatureHelp: extHostTypes.SignatureHelp,
+      SignatureHelpTriggerKind: extHostTypes.SignatureHelpTriggerKind,
+      SignatureInformation: extHostTypes.SignatureInformation,
+      SnippetString: extHostTypes.SnippetString,
+      SourceBreakpoint: extHostTypes.SourceBreakpoint,
+      StandardTokenType: extHostTypes.StandardTokenType,
+      StatusBarAlignment: extHostTypes.StatusBarAlignment,
+      SymbolInformation: extHostTypes.SymbolInformation,
+      SymbolKind: extHostTypes.SymbolKind,
+      SymbolTag: extHostTypes.SymbolTag,
+      Task: extHostTypes.Task,
+      TaskEventKind: extHostTypes.TaskEventKind,
+      TaskGroup: extHostTypes.TaskGroup,
+      TaskPanelKind: extHostTypes.TaskPanelKind,
+      TaskRevealKind: extHostTypes.TaskRevealKind,
+      TaskScope: extHostTypes.TaskScope,
+      TerminalLink: extHostTypes.TerminalLink,
+      TerminalQuickFixTerminalCommand: extHostTypes.TerminalQuickFixCommand,
+      TerminalQuickFixOpener: extHostTypes.TerminalQuickFixOpener,
+      TerminalLocation: extHostTypes.TerminalLocation,
+      TerminalProfile: extHostTypes.TerminalProfile,
+      TerminalExitReason: extHostTypes.TerminalExitReason,
+      TerminalShellExecutionCommandLineConfidence: extHostTypes.TerminalShellExecutionCommandLineConfidence,
+      TerminalCompletionItem: extHostTypes.TerminalCompletionItem,
+      TerminalCompletionItemKind: extHostTypes.TerminalCompletionItemKind,
+      TerminalCompletionList: extHostTypes.TerminalCompletionList,
+      TerminalShellType: extHostTypes.TerminalShellType,
+      TextDocumentSaveReason: extHostTypes.TextDocumentSaveReason,
+      TextEdit: extHostTypes.TextEdit,
+      SnippetTextEdit: extHostTypes.SnippetTextEdit,
+      TextEditorCursorStyle,
+      TextEditorChangeKind: extHostTypes.TextEditorChangeKind,
+      TextEditorLineNumbersStyle: extHostTypes.TextEditorLineNumbersStyle,
+      TextEditorRevealType: extHostTypes.TextEditorRevealType,
+      TextEditorSelectionChangeKind: extHostTypes.TextEditorSelectionChangeKind,
+      SyntaxTokenType: extHostTypes.SyntaxTokenType,
+      TextDocumentChangeReason: extHostTypes.TextDocumentChangeReason,
+      ThemeColor: extHostTypes.ThemeColor,
+      ThemeIcon: extHostTypes.ThemeIcon,
+      TreeItem: extHostTypes.TreeItem,
+      TreeItemCheckboxState: extHostTypes.TreeItemCheckboxState,
+      TreeItemCollapsibleState: extHostTypes.TreeItemCollapsibleState,
+      TypeHierarchyItem: extHostTypes.TypeHierarchyItem,
+      UIKind,
+      Uri: URI,
+      ViewColumn: extHostTypes.ViewColumn,
+      WorkspaceEdit: extHostTypes.WorkspaceEdit,
+      // proposed api types
+      DocumentPasteTriggerKind: extHostTypes.DocumentPasteTriggerKind,
+      DocumentDropEdit: extHostTypes.DocumentDropEdit,
+      DocumentDropOrPasteEditKind: extHostTypes.DocumentDropOrPasteEditKind,
+      DocumentPasteEdit: extHostTypes.DocumentPasteEdit,
+      InlayHint: extHostTypes.InlayHint,
+      InlayHintLabelPart: extHostTypes.InlayHintLabelPart,
+      InlayHintKind: extHostTypes.InlayHintKind,
+      RemoteAuthorityResolverError: extHostTypes.RemoteAuthorityResolverError,
+      ResolvedAuthority: extHostTypes.ResolvedAuthority,
+      ManagedResolvedAuthority: extHostTypes.ManagedResolvedAuthority,
+      SourceControlInputBoxValidationType: extHostTypes.SourceControlInputBoxValidationType,
+      ExtensionRuntime: extHostTypes.ExtensionRuntime,
+      TimelineItem: extHostTypes.TimelineItem,
+      NotebookRange: extHostTypes.NotebookRange,
+      NotebookCellKind: extHostTypes.NotebookCellKind,
+      NotebookCellExecutionState: extHostTypes.NotebookCellExecutionState,
+      NotebookCellData: extHostTypes.NotebookCellData,
+      NotebookData: extHostTypes.NotebookData,
+      NotebookRendererScript: extHostTypes.NotebookRendererScript,
+      NotebookCellStatusBarAlignment: extHostTypes.NotebookCellStatusBarAlignment,
+      NotebookEditorRevealType: extHostTypes.NotebookEditorRevealType,
+      NotebookCellOutput: extHostTypes.NotebookCellOutput,
+      NotebookCellOutputItem: extHostTypes.NotebookCellOutputItem,
+      CellErrorStackFrame: extHostTypes.CellErrorStackFrame,
+      NotebookCellStatusBarItem: extHostTypes.NotebookCellStatusBarItem,
+      NotebookControllerAffinity: extHostTypes.NotebookControllerAffinity,
+      NotebookControllerAffinity2: extHostTypes.NotebookControllerAffinity2,
+      NotebookEdit: extHostTypes.NotebookEdit,
+      NotebookKernelSourceAction: extHostTypes.NotebookKernelSourceAction,
+      NotebookVariablesRequestKind: extHostTypes.NotebookVariablesRequestKind,
+      PortAttributes: extHostTypes.PortAttributes,
+      LinkedEditingRanges: extHostTypes.LinkedEditingRanges,
+      TestResultState: extHostTypes.TestResultState,
+      TestRunRequest: extHostTypes.TestRunRequest,
+      TestMessage: extHostTypes.TestMessage,
+      TestMessageStackFrame: extHostTypes.TestMessageStackFrame,
+      TestTag: extHostTypes.TestTag,
+      TestRunProfileKind: extHostTypes.TestRunProfileKind,
+      TextSearchCompleteMessageType,
+      DataTransfer: extHostTypes.DataTransfer,
+      DataTransferItem: extHostTypes.DataTransferItem,
+      TestCoverageCount: extHostTypes.TestCoverageCount,
+      FileCoverage: extHostTypes.FileCoverage,
+      StatementCoverage: extHostTypes.StatementCoverage,
+      BranchCoverage: extHostTypes.BranchCoverage,
+      DeclarationCoverage: extHostTypes.DeclarationCoverage,
+      WorkspaceTrustState: extHostTypes.WorkspaceTrustState,
+      LanguageStatusSeverity: extHostTypes.LanguageStatusSeverity,
+      QuickPickItemKind: extHostTypes.QuickPickItemKind,
+      InputBoxValidationSeverity: extHostTypes.InputBoxValidationSeverity,
+      TabInputText: extHostTypes.TextTabInput,
+      TabInputTextDiff: extHostTypes.TextDiffTabInput,
+      TabInputTextMerge: extHostTypes.TextMergeTabInput,
+      TabInputCustom: extHostTypes.CustomEditorTabInput,
+      TabInputNotebook: extHostTypes.NotebookEditorTabInput,
+      TabInputNotebookDiff: extHostTypes.NotebookDiffEditorTabInput,
+      TabInputWebview: extHostTypes.WebviewEditorTabInput,
+      TabInputTerminal: extHostTypes.TerminalEditorTabInput,
+      TabInputInteractiveWindow: extHostTypes.InteractiveWindowInput,
+      TabInputChat: extHostTypes.ChatEditorTabInput,
+      TabInputTextMultiDiff: extHostTypes.TextMultiDiffTabInput,
+      TelemetryTrustedValue,
+      LogLevel,
+      EditSessionIdentityMatch,
+      InteractiveSessionVoteDirection: extHostTypes.InteractiveSessionVoteDirection,
+      ChatCopyKind: extHostTypes.ChatCopyKind,
+      ChatEditingSessionActionOutcome: extHostTypes.ChatEditingSessionActionOutcome,
+      InteractiveEditorResponseFeedbackKind: extHostTypes.InteractiveEditorResponseFeedbackKind,
+      DebugStackFrame: extHostTypes.DebugStackFrame,
+      DebugThread: extHostTypes.DebugThread,
+      RelatedInformationType: extHostTypes.RelatedInformationType,
+      SpeechToTextStatus: extHostTypes.SpeechToTextStatus,
+      TextToSpeechStatus: extHostTypes.TextToSpeechStatus,
+      PartialAcceptTriggerKind: extHostTypes.PartialAcceptTriggerKind,
+      KeywordRecognitionStatus: extHostTypes.KeywordRecognitionStatus,
+      ChatResponseMarkdownPart: extHostTypes.ChatResponseMarkdownPart,
+      ChatResponseFileTreePart: extHostTypes.ChatResponseFileTreePart,
+      ChatResponseAnchorPart: extHostTypes.ChatResponseAnchorPart,
+      ChatResponseProgressPart: extHostTypes.ChatResponseProgressPart,
+      ChatResponseProgressPart2: extHostTypes.ChatResponseProgressPart2,
+      ChatResponseReferencePart: extHostTypes.ChatResponseReferencePart,
+      ChatResponseReferencePart2: extHostTypes.ChatResponseReferencePart,
+      ChatResponseCodeCitationPart: extHostTypes.ChatResponseCodeCitationPart,
+      ChatResponseCodeblockUriPart: extHostTypes.ChatResponseCodeblockUriPart,
+      ChatResponseWarningPart: extHostTypes.ChatResponseWarningPart,
+      ChatResponseTextEditPart: extHostTypes.ChatResponseTextEditPart,
+      ChatResponseNotebookEditPart: extHostTypes.ChatResponseNotebookEditPart,
+      ChatResponseMarkdownWithVulnerabilitiesPart: extHostTypes.ChatResponseMarkdownWithVulnerabilitiesPart,
+      ChatResponseCommandButtonPart: extHostTypes.ChatResponseCommandButtonPart,
+      ChatResponseConfirmationPart: extHostTypes.ChatResponseConfirmationPart,
+      ChatResponseMovePart: extHostTypes.ChatResponseMovePart,
+      ChatResponseReferencePartStatusKind: extHostTypes.ChatResponseReferencePartStatusKind,
+      ChatRequestTurn: extHostTypes.ChatRequestTurn,
+      ChatResponseTurn: extHostTypes.ChatResponseTurn,
+      ChatLocation: extHostTypes.ChatLocation,
+      ChatRequestEditorData: extHostTypes.ChatRequestEditorData,
+      ChatRequestNotebookData: extHostTypes.ChatRequestNotebookData,
+      ChatReferenceBinaryData: extHostTypes.ChatReferenceBinaryData,
+      LanguageModelChatMessageRole: extHostTypes.LanguageModelChatMessageRole,
+      LanguageModelChatMessage: extHostTypes.LanguageModelChatMessage,
+      LanguageModelChatMessage2: extHostTypes.LanguageModelChatMessage2,
+      LanguageModelToolResultPart: extHostTypes.LanguageModelToolResultPart,
+      LanguageModelTextPart: extHostTypes.LanguageModelTextPart,
+      LanguageModelToolCallPart: extHostTypes.LanguageModelToolCallPart,
+      LanguageModelError: extHostTypes.LanguageModelError,
+      LanguageModelToolResult: extHostTypes.LanguageModelToolResult,
+      LanguageModelDataPart: extHostTypes.LanguageModelDataPart,
+      ChatImageMimeType: extHostTypes.ChatImageMimeType,
+      ExtendedLanguageModelToolResult: extHostTypes.ExtendedLanguageModelToolResult,
+      PreparedTerminalToolInvocation: extHostTypes.PreparedTerminalToolInvocation,
+      LanguageModelChatToolMode: extHostTypes.LanguageModelChatToolMode,
+      LanguageModelPromptTsxPart: extHostTypes.LanguageModelPromptTsxPart,
+      NewSymbolName: extHostTypes.NewSymbolName,
+      NewSymbolNameTag: extHostTypes.NewSymbolNameTag,
+      NewSymbolNameTriggerKind: extHostTypes.NewSymbolNameTriggerKind,
+      InlineEdit: extHostTypes.InlineEdit,
+      InlineEditTriggerKind: extHostTypes.InlineEditTriggerKind,
+      ExcludeSettingOptions,
+      TextSearchContext2,
+      TextSearchMatch2,
+      TextSearchCompleteMessageTypeNew: TextSearchCompleteMessageType,
+      ChatErrorLevel: extHostTypes.ChatErrorLevel,
+      McpSSEServerDefinition: extHostTypes.McpSSEServerDefinition,
+      McpStdioServerDefinition: extHostTypes.McpStdioServerDefinition
+    };
+  };
+}
+__name(createApiFactoryAndRegisterActors, "createApiFactoryAndRegisterActors");
+export {
+  createApiFactoryAndRegisterActors
+};
+//# sourceMappingURL=extHost.api.impl.js.map

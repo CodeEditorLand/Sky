@@ -1,1 +1,481 @@
-var K=Object.defineProperty;var k=Object.getOwnPropertyDescriptor;var b=(m,u,e,t)=>{for(var i=t>1?void 0:t?k(u,e):u,r=m.length-1,o;r>=0;r--)(o=m[r])&&(i=(t?o(u,e,i):o(i))||i);return t&&i&&K(u,e,i),i},n=(m,u)=>(e,t)=>u(e,t,m);import"./output.css";import*as E from"../../../../nls.js";import"../../../../editor/browser/editorBrowser.js";import"../../../../editor/common/config/editorOptions.js";import{ITelemetryService as N}from"../../../../platform/telemetry/common/telemetry.js";import{IStorageService as L,StorageScope as P,StorageTarget as V}from"../../../../platform/storage/common/storage.js";import{ITextResourceConfigurationService as W}from"../../../../editor/common/services/textResourceConfiguration.js";import{IInstantiationService as O}from"../../../../platform/instantiation/common/instantiation.js";import{IContextKeyService as D,ContextKeyExpr as T}from"../../../../platform/contextkey/common/contextkey.js";import"../../../common/editor.js";import{AbstractTextResourceEditor as H}from"../../../browser/parts/editor/textResourceEditor.js";import{OUTPUT_VIEW_ID as y,CONTEXT_IN_OUTPUT as U,CONTEXT_OUTPUT_SCROLL_LOCK as $,IOutputService as w,OUTPUT_FILTER_FOCUS_CONTEXT as B,HIDE_CATEGORY_FILTER_CONTEXT as z}from"../../../services/output/common/output.js";import{IThemeService as M}from"../../../../platform/theme/common/themeService.js";import{IConfigurationService as _}from"../../../../platform/configuration/common/configuration.js";import{IEditorGroupsService as G}from"../../../services/editor/common/editorGroupsService.js";import"../../../../base/common/cancellation.js";import{IEditorService as X}from"../../../services/editor/common/editorService.js";import{CursorChangeReason as j}from"../../../../editor/common/cursorEvents.js";import{FilterViewPane as q}from"../../../browser/parts/views/viewPane.js";import{IKeybindingService as Y}from"../../../../platform/keybinding/common/keybinding.js";import{IContextMenuService as J}from"../../../../platform/contextview/browser/contextView.js";import{IViewDescriptorService as Q}from"../../../common/views.js";import{TextResourceEditorInput as Z}from"../../../common/editor/textResourceEditorInput.js";import{IOpenerService as ee}from"../../../../platform/opener/common/opener.js";import{Dimension as te}from"../../../../base/browser/dom.js";import"../../../../platform/editor/common/editor.js";import{createCancelablePromise as ie}from"../../../../base/common/async.js";import{IFileService as re}from"../../../../platform/files/common/files.js";import{ResourceContextKey as oe}from"../../../common/contextkeys.js";import{ServiceCollection as ne}from"../../../../platform/instantiation/common/serviceCollection.js";import"../../../browser/parts/editor/textEditor.js";import{computeEditorAriaLabel as se}from"../../../browser/editor.js";import{IHoverService as ae}from"../../../../platform/hover/browser/hover.js";import{localize as ce}from"../../../../nls.js";import{Disposable as le,DisposableStore as de}from"../../../../base/common/lifecycle.js";import{LogLevel as C}from"../../../../platform/log/common/log.js";import{EditorExtensionsRegistry as ue,EditorContributionInstantiation as pe}from"../../../../editor/browser/editorExtensions.js";import"../../../../editor/browser/widget/codeEditor/codeEditorWidget.js";import"../../../../editor/common/editorCommon.js";import"../../../../editor/common/model.js";import{Range as he}from"../../../../editor/common/core/range.js";import{FindDecorations as A}from"../../../../editor/contrib/find/browser/findDecorations.js";import{Memento as ge}from"../../../common/memento.js";import{Markers as me}from"../../markers/common/markers.js";import{Action2 as fe,registerAction2 as Ie}from"../../../../platform/actions/common/actions.js";import{viewFilterSubmenu as ve}from"../../../browser/parts/views/viewFilter.js";import{escapeRegExpCharacters as Ce}from"../../../../base/common/strings.js";let x=class extends q{constructor(e,t,i,r,o,a,s,l,I,p,h,d){const c=new ge(me.MARKERS_VIEW_STORAGE_ID,d),v=c.getMemento(P.WORKSPACE,V.MACHINE);super({...e,filterOptions:{placeholder:ce("outputView.filter.placeholder","Filter"),focusContextKey:B.key,text:v.filter||"",history:[]}},t,i,r,o,a,s,l,I,p);this.outputService=h;this.memento=c,this.panelState=v;const g=h.filters;g.text=this.panelState.filter||"",g.trace=this.panelState.showTrace??!0,g.debug=this.panelState.showDebug??!0,g.info=this.panelState.showInfo??!0,g.warning=this.panelState.showWarning??!0,g.error=this.panelState.showError??!0,g.categories=this.panelState.categories??"",this.scrollLockContextKey=$.bindTo(this.contextKeyService);const R=this._register(s.createChild(new ne([D,this.scopedContextKeyService])));this.editor=this._register(R.createInstance(S)),this._register(this.editor.onTitleAreaUpdate(()=>{this.updateTitle(this.editor.getTitle()),this.updateActions()})),this._register(this.onDidChangeBodyVisibility(()=>this.onDidChangeVisibility(this.isBodyVisible()))),this._register(this.filterWidget.onDidChangeFilterText(F=>h.filters.text=F)),this.checkMoreFilters(),this._register(h.filters.onDidChange(()=>this.checkMoreFilters()))}editor;channelId;editorPromise=null;scrollLockContextKey;get scrollLock(){return!!this.scrollLockContextKey.get()}set scrollLock(e){this.scrollLockContextKey.set(e)}memento;panelState;showChannel(e,t){this.channelId!==e.id&&this.setInput(e),t||this.focus()}focus(){super.focus(),this.editorPromise?.then(()=>this.editor.focus())}clearFilterText(){this.filterWidget.setFilterText("")}renderBody(e){super.renderBody(e),this.editor.create(e),e.classList.add("output-view");const t=this.editor.getControl();t.setAriaOptions({role:"document",activeDescendant:void 0}),this._register(t.onDidChangeModelContent(()=>{this.scrollLock||this.editor.revealLastLine()})),this._register(t.onDidChangeCursorPosition(i=>{if(i.reason!==j.Explicit||!this.configurationService.getValue("output.smartScroll.enabled"))return;const r=t.getModel();if(r){const o=i.position.lineNumber,a=r.getLineCount();this.scrollLock=a!==o}}))}layoutBodyContent(e,t){this.editor.layout(new te(t,e))}onDidChangeVisibility(e){this.editor.setVisible(e),e||this.clearInput()}setInput(e){this.channelId=e.id,this.checkMoreFilters();const t=this.createInput(e);(!this.editor.input||!t.matches(this.editor.input))&&(this.editorPromise?.cancel(),this.editorPromise=ie(i=>this.editor.setInput(this.createInput(e),{preserveFocus:!0},Object.create(null),i).then(()=>this.editor)))}checkMoreFilters(){const e=this.outputService.filters;this.filterWidget.checkMoreFilters(!e.trace||!e.debug||!e.info||!e.warning||!e.error||!!this.channelId&&e.categories.includes(`,${this.channelId}:`))}clearInput(){this.channelId=void 0,this.editor.clearInput(),this.editorPromise=null}createInput(e){return this.instantiationService.createInstance(Z,e.uri,E.localize("output model title","{0} - Output",e.label),E.localize("channel","Output channel for '{0}'",e.label),void 0,void 0)}saveState(){const e=this.outputService.filters;this.panelState.filter=e.text,this.panelState.showTrace=e.trace,this.panelState.showDebug=e.debug,this.panelState.showInfo=e.info,this.panelState.showWarning=e.warning,this.panelState.showError=e.error,this.panelState.categories=e.categories,this.memento.saveMemento(),super.saveState()}};x=b([n(1,Y),n(2,J),n(3,_),n(4,D),n(5,Q),n(6,O),n(7,ee),n(8,M),n(9,ae),n(10,w),n(11,L)],x);let S=class extends H{constructor(e,t,i,r,o,a,s,l,I){super(y,s.activeGroup,e,t,i,o,a,s,l,I);this.configurationService=r;this.resourceContext=this._register(t.createInstance(oe))}resourceContext;getId(){return y}getTitle(){return E.localize("output","Output")}getConfigurationOverrides(e){const t=super.getConfigurationOverrides(e);t.wordWrap="on",t.lineNumbers="off",t.glyphMargin=!1,t.lineDecorationsWidth=20,t.rulers=[],t.folding=!1,t.scrollBeyondLastLine=!1,t.renderLineHighlight="none",t.minimap={enabled:!1},t.renderValidationDecorations="editable",t.padding=void 0,t.readOnly=!0,t.domReadOnly=!0,t.unicodeHighlight={nonBasicASCII:!1,invisibleCharacters:!1,ambiguousCharacters:!1};const i=this.configurationService.getValue("[Log]");return i&&(i["editor.minimap.enabled"]&&(t.minimap={enabled:!0}),"editor.wordWrap"in i&&(t.wordWrap=i["editor.wordWrap"])),t}getAriaLabel(){return this.input?this.input.getAriaLabel():E.localize("outputViewAriaLabel","Output panel")}computeAriaLabel(){return this.input?se(this.input,void 0,void 0,this.editorGroupService.count):this.getAriaLabel()}async setInput(e,t,i,r){const o=!(t&&t.preserveFocus);this.input&&e.matches(this.input)||(this.input&&this.input.dispose(),await super.setInput(e,t,i,r),this.resourceContext.set(e.resource),o&&this.focus(),this.revealLastLine())}clearInput(){this.input&&this.input.dispose(),super.clearInput(),this.resourceContext.reset()}createEditor(e){e.setAttribute("role","document"),super.createEditor(e);const t=this.scopedContextKeyService;t&&U.bindTo(t).set(!0)}_getContributions(){return[...ue.getEditorContributions(),{id:f.ID,ctor:f,instantiation:pe.Eager}]}getCodeEditorWidgetOptions(){return{contributions:this._getContributions()}}};S=b([n(0,N),n(1,O),n(2,L),n(3,_),n(4,W),n(5,M),n(6,G),n(7,X),n(8,re)],S);let f=class extends le{constructor(e,t){super();this.editor=e;this.outputService=t;this.decorationsCollection=e.createDecorationsCollection(),this._register(e.onDidChangeModel(()=>this.onDidChangeModel())),this._register(this.outputService.filters.onDidChange(()=>e.hasModel()&&this.filter(e.getModel())))}static ID="output.editor.contrib.filterController";modelDisposables=this._register(new de);hiddenAreas=[];categories=new Map;decorationsCollection;onDidChangeModel(){if(this.modelDisposables.clear(),this.hiddenAreas=[],this.categories.clear(),!this.editor.hasModel())return;const e=this.editor.getModel();this.filter(e);const t=()=>{const r=e.getLineCount();return r>1&&e.getLineMaxColumn(r)===1?r-1:r};let i=t();this.modelDisposables.add(e.onDidChangeContent(r=>{r.changes.every(o=>o.range.startLineNumber>i)?this.filterIncremental(e,i+1):this.filter(e),i=t()}))}filter(e){this.hiddenAreas=[],this.decorationsCollection.clear(),this.filterIncremental(e,1)}filterIncremental(e,t){const{findMatches:i,hiddenAreas:r,categories:o}=this.compute(e,t);if(this.hiddenAreas.push(...r),this.editor.setHiddenAreas(this.hiddenAreas,this),i.length&&this.decorationsCollection.append(i),o.size){const a=this;for(const[s,l]of o)this.categories.has(s)||(this.categories.set(s,l),this.modelDisposables.add(Ie(class extends fe{constructor(){super({id:`workbench.actions.${y}.toggle.${s}`,title:l,toggled:T.regex(z.key,new RegExp(`.*,${Ce(s)},.*`)).negate(),menu:{id:ve,group:"1_category_filter",when:T.and(T.equals("view",y))}})}async run(){a.outputService.filters.toggleCategory(s)}})))}}compute(e,t){const i=this.outputService.filters,r=this.outputService.getActiveChannel(),o=[],a=[],s=new Map,l=r?.getLogEntries();if(r&&l?.length){const p=!i.trace||!i.debug||!i.info||!i.warning||!i.error,h=l.findIndex(d=>t>=d.range.startLineNumber&&t<=d.range.endLineNumber);if(h===-1)return{findMatches:o,hiddenAreas:a,categories:s};for(let d=h;d<l.length;d++){const c=l[d];if(c.category&&s.set(`${r.id}:${c.category}`,c.category),p&&!this.shouldShowLogLevel(c,i)){a.push(c.range);continue}if(!this.shouldShowCategory(r.id,c,i)){a.push(c.range);continue}if(i.text){const v=e.findMatches(i.text,c.range,!1,!1,null,!1);if(v.length)for(const g of v)o.push({range:g.range,options:A._FIND_MATCH_DECORATION});else a.push(c.range)}}return{findMatches:o,hiddenAreas:a,categories:s}}if(!i.text)return{findMatches:o,hiddenAreas:a,categories:s};const I=e.getLineCount();for(let p=t;p<=I;p++){const h=new he(p,1,p,e.getLineMaxColumn(p)),d=e.findMatches(i.text,h,!1,!1,null,!1);if(d.length)for(const c of d)o.push({range:c.range,options:A._FIND_MATCH_DECORATION});else a.push(h)}return{findMatches:o,hiddenAreas:a,categories:s}}shouldShowLogLevel(e,t){switch(e.logLevel){case C.Trace:return t.trace;case C.Debug:return t.debug;case C.Info:return t.info;case C.Warning:return t.warning;case C.Error:return t.error}return!0}shouldShowCategory(e,t,i){return t.category?!i.hasCategory(`${e}:${t.category}`):!0}};f=b([n(1,w)],f);export{f as FilterController,S as OutputEditor,x as OutputViewPane};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import "./output.css";
+import * as nls from "../../../../nls.js";
+import { ICodeEditor } from "../../../../editor/browser/editorBrowser.js";
+import { IEditorOptions as ICodeEditorOptions } from "../../../../editor/common/config/editorOptions.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { ITextResourceConfigurationService } from "../../../../editor/common/services/textResourceConfiguration.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IContextKeyService, IContextKey, ContextKeyExpr } from "../../../../platform/contextkey/common/contextkey.js";
+import { IEditorOpenContext } from "../../../common/editor.js";
+import { AbstractTextResourceEditor } from "../../../browser/parts/editor/textResourceEditor.js";
+import { OUTPUT_VIEW_ID, CONTEXT_IN_OUTPUT, IOutputChannel, CONTEXT_OUTPUT_SCROLL_LOCK, IOutputService, IOutputViewFilters, OUTPUT_FILTER_FOCUS_CONTEXT, ILogEntry, HIDE_CATEGORY_FILTER_CONTEXT } from "../../../services/output/common/output.js";
+import { IThemeService } from "../../../../platform/theme/common/themeService.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IEditorGroupsService } from "../../../services/editor/common/editorGroupsService.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { CursorChangeReason } from "../../../../editor/common/cursorEvents.js";
+import { IViewPaneOptions, FilterViewPane } from "../../../browser/parts/views/viewPane.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { IContextMenuService } from "../../../../platform/contextview/browser/contextView.js";
+import { IViewDescriptorService } from "../../../common/views.js";
+import { TextResourceEditorInput } from "../../../common/editor/textResourceEditorInput.js";
+import { IOpenerService } from "../../../../platform/opener/common/opener.js";
+import { Dimension } from "../../../../base/browser/dom.js";
+import { ITextEditorOptions } from "../../../../platform/editor/common/editor.js";
+import { CancelablePromise, createCancelablePromise } from "../../../../base/common/async.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { ResourceContextKey } from "../../../common/contextkeys.js";
+import { ServiceCollection } from "../../../../platform/instantiation/common/serviceCollection.js";
+import { IEditorConfiguration } from "../../../browser/parts/editor/textEditor.js";
+import { computeEditorAriaLabel } from "../../../browser/editor.js";
+import { IHoverService } from "../../../../platform/hover/browser/hover.js";
+import { localize } from "../../../../nls.js";
+import { Disposable, DisposableStore } from "../../../../base/common/lifecycle.js";
+import { LogLevel } from "../../../../platform/log/common/log.js";
+import { IEditorContributionDescription, EditorExtensionsRegistry, EditorContributionInstantiation, EditorContributionCtor } from "../../../../editor/browser/editorExtensions.js";
+import { ICodeEditorWidgetOptions } from "../../../../editor/browser/widget/codeEditor/codeEditorWidget.js";
+import { IEditorContribution, IEditorDecorationsCollection } from "../../../../editor/common/editorCommon.js";
+import { IModelDeltaDecoration, ITextModel } from "../../../../editor/common/model.js";
+import { Range } from "../../../../editor/common/core/range.js";
+import { FindDecorations } from "../../../../editor/contrib/find/browser/findDecorations.js";
+import { Memento, MementoObject } from "../../../common/memento.js";
+import { Markers } from "../../markers/common/markers.js";
+import { Action2, registerAction2 } from "../../../../platform/actions/common/actions.js";
+import { viewFilterSubmenu } from "../../../browser/parts/views/viewFilter.js";
+import { escapeRegExpCharacters } from "../../../../base/common/strings.js";
+let OutputViewPane = class extends FilterViewPane {
+  constructor(options, keybindingService, contextMenuService, configurationService, contextKeyService, viewDescriptorService, instantiationService, openerService, themeService, hoverService, outputService, storageService) {
+    const memento = new Memento(Markers.MARKERS_VIEW_STORAGE_ID, storageService);
+    const viewState = memento.getMemento(StorageScope.WORKSPACE, StorageTarget.MACHINE);
+    super({
+      ...options,
+      filterOptions: {
+        placeholder: localize("outputView.filter.placeholder", "Filter"),
+        focusContextKey: OUTPUT_FILTER_FOCUS_CONTEXT.key,
+        text: viewState["filter"] || "",
+        history: []
+      }
+    }, keybindingService, contextMenuService, configurationService, contextKeyService, viewDescriptorService, instantiationService, openerService, themeService, hoverService);
+    this.outputService = outputService;
+    this.memento = memento;
+    this.panelState = viewState;
+    const filters = outputService.filters;
+    filters.text = this.panelState["filter"] || "";
+    filters.trace = this.panelState["showTrace"] ?? true;
+    filters.debug = this.panelState["showDebug"] ?? true;
+    filters.info = this.panelState["showInfo"] ?? true;
+    filters.warning = this.panelState["showWarning"] ?? true;
+    filters.error = this.panelState["showError"] ?? true;
+    filters.categories = this.panelState["categories"] ?? "";
+    this.scrollLockContextKey = CONTEXT_OUTPUT_SCROLL_LOCK.bindTo(this.contextKeyService);
+    const editorInstantiationService = this._register(instantiationService.createChild(new ServiceCollection([IContextKeyService, this.scopedContextKeyService])));
+    this.editor = this._register(editorInstantiationService.createInstance(OutputEditor));
+    this._register(this.editor.onTitleAreaUpdate(() => {
+      this.updateTitle(this.editor.getTitle());
+      this.updateActions();
+    }));
+    this._register(this.onDidChangeBodyVisibility(() => this.onDidChangeVisibility(this.isBodyVisible())));
+    this._register(this.filterWidget.onDidChangeFilterText((text) => outputService.filters.text = text));
+    this.checkMoreFilters();
+    this._register(outputService.filters.onDidChange(() => this.checkMoreFilters()));
+  }
+  static {
+    __name(this, "OutputViewPane");
+  }
+  editor;
+  channelId;
+  editorPromise = null;
+  scrollLockContextKey;
+  get scrollLock() {
+    return !!this.scrollLockContextKey.get();
+  }
+  set scrollLock(scrollLock) {
+    this.scrollLockContextKey.set(scrollLock);
+  }
+  memento;
+  panelState;
+  showChannel(channel, preserveFocus) {
+    if (this.channelId !== channel.id) {
+      this.setInput(channel);
+    }
+    if (!preserveFocus) {
+      this.focus();
+    }
+  }
+  focus() {
+    super.focus();
+    this.editorPromise?.then(() => this.editor.focus());
+  }
+  clearFilterText() {
+    this.filterWidget.setFilterText("");
+  }
+  renderBody(container) {
+    super.renderBody(container);
+    this.editor.create(container);
+    container.classList.add("output-view");
+    const codeEditor = this.editor.getControl();
+    codeEditor.setAriaOptions({ role: "document", activeDescendant: void 0 });
+    this._register(codeEditor.onDidChangeModelContent(() => {
+      if (!this.scrollLock) {
+        this.editor.revealLastLine();
+      }
+    }));
+    this._register(codeEditor.onDidChangeCursorPosition((e) => {
+      if (e.reason !== CursorChangeReason.Explicit) {
+        return;
+      }
+      if (!this.configurationService.getValue("output.smartScroll.enabled")) {
+        return;
+      }
+      const model = codeEditor.getModel();
+      if (model) {
+        const newPositionLine = e.position.lineNumber;
+        const lastLine = model.getLineCount();
+        this.scrollLock = lastLine !== newPositionLine;
+      }
+    }));
+  }
+  layoutBodyContent(height, width) {
+    this.editor.layout(new Dimension(width, height));
+  }
+  onDidChangeVisibility(visible) {
+    this.editor.setVisible(visible);
+    if (!visible) {
+      this.clearInput();
+    }
+  }
+  setInput(channel) {
+    this.channelId = channel.id;
+    this.checkMoreFilters();
+    const input = this.createInput(channel);
+    if (!this.editor.input || !input.matches(this.editor.input)) {
+      this.editorPromise?.cancel();
+      this.editorPromise = createCancelablePromise((token) => this.editor.setInput(this.createInput(channel), { preserveFocus: true }, /* @__PURE__ */ Object.create(null), token).then(() => this.editor));
+    }
+  }
+  checkMoreFilters() {
+    const filters = this.outputService.filters;
+    this.filterWidget.checkMoreFilters(!filters.trace || !filters.debug || !filters.info || !filters.warning || !filters.error || !!this.channelId && filters.categories.includes(`,${this.channelId}:`));
+  }
+  clearInput() {
+    this.channelId = void 0;
+    this.editor.clearInput();
+    this.editorPromise = null;
+  }
+  createInput(channel) {
+    return this.instantiationService.createInstance(TextResourceEditorInput, channel.uri, nls.localize("output model title", "{0} - Output", channel.label), nls.localize("channel", "Output channel for '{0}'", channel.label), void 0, void 0);
+  }
+  saveState() {
+    const filters = this.outputService.filters;
+    this.panelState["filter"] = filters.text;
+    this.panelState["showTrace"] = filters.trace;
+    this.panelState["showDebug"] = filters.debug;
+    this.panelState["showInfo"] = filters.info;
+    this.panelState["showWarning"] = filters.warning;
+    this.panelState["showError"] = filters.error;
+    this.panelState["categories"] = filters.categories;
+    this.memento.saveMemento();
+    super.saveState();
+  }
+};
+OutputViewPane = __decorateClass([
+  __decorateParam(1, IKeybindingService),
+  __decorateParam(2, IContextMenuService),
+  __decorateParam(3, IConfigurationService),
+  __decorateParam(4, IContextKeyService),
+  __decorateParam(5, IViewDescriptorService),
+  __decorateParam(6, IInstantiationService),
+  __decorateParam(7, IOpenerService),
+  __decorateParam(8, IThemeService),
+  __decorateParam(9, IHoverService),
+  __decorateParam(10, IOutputService),
+  __decorateParam(11, IStorageService)
+], OutputViewPane);
+let OutputEditor = class extends AbstractTextResourceEditor {
+  constructor(telemetryService, instantiationService, storageService, configurationService, textResourceConfigurationService, themeService, editorGroupService, editorService, fileService) {
+    super(OUTPUT_VIEW_ID, editorGroupService.activeGroup, telemetryService, instantiationService, storageService, textResourceConfigurationService, themeService, editorGroupService, editorService, fileService);
+    this.configurationService = configurationService;
+    this.resourceContext = this._register(instantiationService.createInstance(ResourceContextKey));
+  }
+  static {
+    __name(this, "OutputEditor");
+  }
+  resourceContext;
+  getId() {
+    return OUTPUT_VIEW_ID;
+  }
+  getTitle() {
+    return nls.localize("output", "Output");
+  }
+  getConfigurationOverrides(configuration) {
+    const options = super.getConfigurationOverrides(configuration);
+    options.wordWrap = "on";
+    options.lineNumbers = "off";
+    options.glyphMargin = false;
+    options.lineDecorationsWidth = 20;
+    options.rulers = [];
+    options.folding = false;
+    options.scrollBeyondLastLine = false;
+    options.renderLineHighlight = "none";
+    options.minimap = { enabled: false };
+    options.renderValidationDecorations = "editable";
+    options.padding = void 0;
+    options.readOnly = true;
+    options.domReadOnly = true;
+    options.unicodeHighlight = {
+      nonBasicASCII: false,
+      invisibleCharacters: false,
+      ambiguousCharacters: false
+    };
+    const outputConfig = this.configurationService.getValue("[Log]");
+    if (outputConfig) {
+      if (outputConfig["editor.minimap.enabled"]) {
+        options.minimap = { enabled: true };
+      }
+      if ("editor.wordWrap" in outputConfig) {
+        options.wordWrap = outputConfig["editor.wordWrap"];
+      }
+    }
+    return options;
+  }
+  getAriaLabel() {
+    return this.input ? this.input.getAriaLabel() : nls.localize("outputViewAriaLabel", "Output panel");
+  }
+  computeAriaLabel() {
+    return this.input ? computeEditorAriaLabel(this.input, void 0, void 0, this.editorGroupService.count) : this.getAriaLabel();
+  }
+  async setInput(input, options, context, token) {
+    const focus = !(options && options.preserveFocus);
+    if (this.input && input.matches(this.input)) {
+      return;
+    }
+    if (this.input) {
+      this.input.dispose();
+    }
+    await super.setInput(input, options, context, token);
+    this.resourceContext.set(input.resource);
+    if (focus) {
+      this.focus();
+    }
+    this.revealLastLine();
+  }
+  clearInput() {
+    if (this.input) {
+      this.input.dispose();
+    }
+    super.clearInput();
+    this.resourceContext.reset();
+  }
+  createEditor(parent) {
+    parent.setAttribute("role", "document");
+    super.createEditor(parent);
+    const scopedContextKeyService = this.scopedContextKeyService;
+    if (scopedContextKeyService) {
+      CONTEXT_IN_OUTPUT.bindTo(scopedContextKeyService).set(true);
+    }
+  }
+  _getContributions() {
+    return [
+      ...EditorExtensionsRegistry.getEditorContributions(),
+      {
+        id: FilterController.ID,
+        ctor: FilterController,
+        instantiation: EditorContributionInstantiation.Eager
+      }
+    ];
+  }
+  getCodeEditorWidgetOptions() {
+    return { contributions: this._getContributions() };
+  }
+};
+OutputEditor = __decorateClass([
+  __decorateParam(0, ITelemetryService),
+  __decorateParam(1, IInstantiationService),
+  __decorateParam(2, IStorageService),
+  __decorateParam(3, IConfigurationService),
+  __decorateParam(4, ITextResourceConfigurationService),
+  __decorateParam(5, IThemeService),
+  __decorateParam(6, IEditorGroupsService),
+  __decorateParam(7, IEditorService),
+  __decorateParam(8, IFileService)
+], OutputEditor);
+let FilterController = class extends Disposable {
+  constructor(editor, outputService) {
+    super();
+    this.editor = editor;
+    this.outputService = outputService;
+    this.decorationsCollection = editor.createDecorationsCollection();
+    this._register(editor.onDidChangeModel(() => this.onDidChangeModel()));
+    this._register(this.outputService.filters.onDidChange(() => editor.hasModel() && this.filter(editor.getModel())));
+  }
+  static {
+    __name(this, "FilterController");
+  }
+  static ID = "output.editor.contrib.filterController";
+  modelDisposables = this._register(new DisposableStore());
+  hiddenAreas = [];
+  categories = /* @__PURE__ */ new Map();
+  decorationsCollection;
+  onDidChangeModel() {
+    this.modelDisposables.clear();
+    this.hiddenAreas = [];
+    this.categories.clear();
+    if (!this.editor.hasModel()) {
+      return;
+    }
+    const model = this.editor.getModel();
+    this.filter(model);
+    const computeEndLineNumber = /* @__PURE__ */ __name(() => {
+      const endLineNumber2 = model.getLineCount();
+      return endLineNumber2 > 1 && model.getLineMaxColumn(endLineNumber2) === 1 ? endLineNumber2 - 1 : endLineNumber2;
+    }, "computeEndLineNumber");
+    let endLineNumber = computeEndLineNumber();
+    this.modelDisposables.add(model.onDidChangeContent((e) => {
+      if (e.changes.every((e2) => e2.range.startLineNumber > endLineNumber)) {
+        this.filterIncremental(model, endLineNumber + 1);
+      } else {
+        this.filter(model);
+      }
+      endLineNumber = computeEndLineNumber();
+    }));
+  }
+  filter(model) {
+    this.hiddenAreas = [];
+    this.decorationsCollection.clear();
+    this.filterIncremental(model, 1);
+  }
+  filterIncremental(model, fromLineNumber) {
+    const { findMatches, hiddenAreas, categories: sources } = this.compute(model, fromLineNumber);
+    this.hiddenAreas.push(...hiddenAreas);
+    this.editor.setHiddenAreas(this.hiddenAreas, this);
+    if (findMatches.length) {
+      this.decorationsCollection.append(findMatches);
+    }
+    if (sources.size) {
+      const that = this;
+      for (const [categoryFilter, categoryName] of sources) {
+        if (this.categories.has(categoryFilter)) {
+          continue;
+        }
+        this.categories.set(categoryFilter, categoryName);
+        this.modelDisposables.add(registerAction2(class extends Action2 {
+          constructor() {
+            super({
+              id: `workbench.actions.${OUTPUT_VIEW_ID}.toggle.${categoryFilter}`,
+              title: categoryName,
+              toggled: ContextKeyExpr.regex(HIDE_CATEGORY_FILTER_CONTEXT.key, new RegExp(`.*,${escapeRegExpCharacters(categoryFilter)},.*`)).negate(),
+              menu: {
+                id: viewFilterSubmenu,
+                group: "1_category_filter",
+                when: ContextKeyExpr.and(ContextKeyExpr.equals("view", OUTPUT_VIEW_ID))
+              }
+            });
+          }
+          async run() {
+            that.outputService.filters.toggleCategory(categoryFilter);
+          }
+        }));
+      }
+    }
+  }
+  compute(model, fromLineNumber) {
+    const filters = this.outputService.filters;
+    const activeChannel = this.outputService.getActiveChannel();
+    const findMatches = [];
+    const hiddenAreas = [];
+    const categories = /* @__PURE__ */ new Map();
+    const logEntries = activeChannel?.getLogEntries();
+    if (activeChannel && logEntries?.length) {
+      const hasLogLevelFilter = !filters.trace || !filters.debug || !filters.info || !filters.warning || !filters.error;
+      const fromLogLevelEntryIndex = logEntries.findIndex((entry) => fromLineNumber >= entry.range.startLineNumber && fromLineNumber <= entry.range.endLineNumber);
+      if (fromLogLevelEntryIndex === -1) {
+        return { findMatches, hiddenAreas, categories };
+      }
+      for (let i = fromLogLevelEntryIndex; i < logEntries.length; i++) {
+        const entry = logEntries[i];
+        if (entry.category) {
+          categories.set(`${activeChannel.id}:${entry.category}`, entry.category);
+        }
+        if (hasLogLevelFilter && !this.shouldShowLogLevel(entry, filters)) {
+          hiddenAreas.push(entry.range);
+          continue;
+        }
+        if (!this.shouldShowCategory(activeChannel.id, entry, filters)) {
+          hiddenAreas.push(entry.range);
+          continue;
+        }
+        if (filters.text) {
+          const matches = model.findMatches(filters.text, entry.range, false, false, null, false);
+          if (matches.length) {
+            for (const match of matches) {
+              findMatches.push({ range: match.range, options: FindDecorations._FIND_MATCH_DECORATION });
+            }
+          } else {
+            hiddenAreas.push(entry.range);
+          }
+        }
+      }
+      return { findMatches, hiddenAreas, categories };
+    }
+    if (!filters.text) {
+      return { findMatches, hiddenAreas, categories };
+    }
+    const lineCount = model.getLineCount();
+    for (let lineNumber = fromLineNumber; lineNumber <= lineCount; lineNumber++) {
+      const lineRange = new Range(lineNumber, 1, lineNumber, model.getLineMaxColumn(lineNumber));
+      const matches = model.findMatches(filters.text, lineRange, false, false, null, false);
+      if (matches.length) {
+        for (const match of matches) {
+          findMatches.push({ range: match.range, options: FindDecorations._FIND_MATCH_DECORATION });
+        }
+      } else {
+        hiddenAreas.push(lineRange);
+      }
+    }
+    return { findMatches, hiddenAreas, categories };
+  }
+  shouldShowLogLevel(entry, filters) {
+    switch (entry.logLevel) {
+      case LogLevel.Trace:
+        return filters.trace;
+      case LogLevel.Debug:
+        return filters.debug;
+      case LogLevel.Info:
+        return filters.info;
+      case LogLevel.Warning:
+        return filters.warning;
+      case LogLevel.Error:
+        return filters.error;
+    }
+    return true;
+  }
+  shouldShowCategory(activeChannelId, entry, filters) {
+    if (!entry.category) {
+      return true;
+    }
+    return !filters.hasCategory(`${activeChannelId}:${entry.category}`);
+  }
+};
+FilterController = __decorateClass([
+  __decorateParam(1, IOutputService)
+], FilterController);
+export {
+  FilterController,
+  OutputEditor,
+  OutputViewPane
+};
+//# sourceMappingURL=outputView.js.map

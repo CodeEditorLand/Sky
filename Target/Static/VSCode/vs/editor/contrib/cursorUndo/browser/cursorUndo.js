@@ -1,1 +1,158 @@
-import{KeyCode as u,KeyMod as h}from"../../../../base/common/keyCodes.js";import{Disposable as p}from"../../../../base/common/lifecycle.js";import"../../../browser/editorBrowser.js";import{EditorAction as c,EditorContributionInstantiation as S,registerEditorAction as l,registerEditorContribution as _}from"../../../browser/editorExtensions.js";import"../../../common/core/selection.js";import"../../../common/editorCommon.js";import{EditorContextKeys as C}from"../../../common/editorContextKeys.js";import*as a from"../../../../nls.js";import{KeybindingWeight as g}from"../../../../platform/keybinding/common/keybindingsRegistry.js";class n{selections;constructor(o){this.selections=o}equals(o){const t=this.selections.length,e=o.selections.length;if(t!==e)return!1;for(let i=0;i<t;i++)if(!this.selections[i].equalsSelection(o.selections[i]))return!1;return!0}}class d{constructor(o,t,e){this.cursorState=o;this.scrollTop=t;this.scrollLeft=e}}class r extends p{static ID="editor.contrib.cursorUndoRedoController";static get(o){return o.getContribution(r.ID)}_editor;_isCursorUndoRedo;_undoStack;_redoStack;constructor(o){super(),this._editor=o,this._isCursorUndoRedo=!1,this._undoStack=[],this._redoStack=[],this._register(o.onDidChangeModel(t=>{this._undoStack=[],this._redoStack=[]})),this._register(o.onDidChangeModelContent(t=>{this._undoStack=[],this._redoStack=[]})),this._register(o.onDidChangeCursorSelection(t=>{if(this._isCursorUndoRedo||!t.oldSelections||t.oldModelVersionId!==t.modelVersionId)return;const e=new n(t.oldSelections);this._undoStack.length>0&&this._undoStack[this._undoStack.length-1].cursorState.equals(e)||(this._undoStack.push(new d(e,o.getScrollTop(),o.getScrollLeft())),this._redoStack=[],this._undoStack.length>50&&this._undoStack.shift())}))}cursorUndo(){!this._editor.hasModel()||this._undoStack.length===0||(this._redoStack.push(new d(new n(this._editor.getSelections()),this._editor.getScrollTop(),this._editor.getScrollLeft())),this._applyState(this._undoStack.pop()))}cursorRedo(){!this._editor.hasModel()||this._redoStack.length===0||(this._undoStack.push(new d(new n(this._editor.getSelections()),this._editor.getScrollTop(),this._editor.getScrollLeft())),this._applyState(this._redoStack.pop()))}_applyState(o){this._isCursorUndoRedo=!0,this._editor.setSelections(o.cursorState.selections),this._editor.setScrollPosition({scrollTop:o.scrollTop,scrollLeft:o.scrollLeft}),this._isCursorUndoRedo=!1}}class f extends c{constructor(){super({id:"cursorUndo",label:a.localize2("cursor.undo","Cursor Undo"),precondition:void 0,kbOpts:{kbExpr:C.textInputFocus,primary:h.CtrlCmd|u.KeyU,weight:g.EditorContrib}})}run(o,t,e){r.get(t)?.cursorUndo()}}class b extends c{constructor(){super({id:"cursorRedo",label:a.localize2("cursor.redo","Cursor Redo"),precondition:void 0})}run(o,t,e){r.get(t)?.cursorRedo()}}_(r.ID,r,S.Eager),l(f),l(b);export{b as CursorRedo,f as CursorUndo,r as CursorUndoRedoController};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { KeyCode, KeyMod } from "../../../../base/common/keyCodes.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { ICodeEditor } from "../../../browser/editorBrowser.js";
+import { EditorAction, EditorContributionInstantiation, registerEditorAction, registerEditorContribution, ServicesAccessor } from "../../../browser/editorExtensions.js";
+import { Selection } from "../../../common/core/selection.js";
+import { IEditorContribution } from "../../../common/editorCommon.js";
+import { EditorContextKeys } from "../../../common/editorContextKeys.js";
+import * as nls from "../../../../nls.js";
+import { KeybindingWeight } from "../../../../platform/keybinding/common/keybindingsRegistry.js";
+class CursorState {
+  static {
+    __name(this, "CursorState");
+  }
+  selections;
+  constructor(selections) {
+    this.selections = selections;
+  }
+  equals(other) {
+    const thisLen = this.selections.length;
+    const otherLen = other.selections.length;
+    if (thisLen !== otherLen) {
+      return false;
+    }
+    for (let i = 0; i < thisLen; i++) {
+      if (!this.selections[i].equalsSelection(other.selections[i])) {
+        return false;
+      }
+    }
+    return true;
+  }
+}
+class StackElement {
+  constructor(cursorState, scrollTop, scrollLeft) {
+    this.cursorState = cursorState;
+    this.scrollTop = scrollTop;
+    this.scrollLeft = scrollLeft;
+  }
+  static {
+    __name(this, "StackElement");
+  }
+}
+class CursorUndoRedoController extends Disposable {
+  static {
+    __name(this, "CursorUndoRedoController");
+  }
+  static ID = "editor.contrib.cursorUndoRedoController";
+  static get(editor) {
+    return editor.getContribution(CursorUndoRedoController.ID);
+  }
+  _editor;
+  _isCursorUndoRedo;
+  _undoStack;
+  _redoStack;
+  constructor(editor) {
+    super();
+    this._editor = editor;
+    this._isCursorUndoRedo = false;
+    this._undoStack = [];
+    this._redoStack = [];
+    this._register(editor.onDidChangeModel((e) => {
+      this._undoStack = [];
+      this._redoStack = [];
+    }));
+    this._register(editor.onDidChangeModelContent((e) => {
+      this._undoStack = [];
+      this._redoStack = [];
+    }));
+    this._register(editor.onDidChangeCursorSelection((e) => {
+      if (this._isCursorUndoRedo) {
+        return;
+      }
+      if (!e.oldSelections) {
+        return;
+      }
+      if (e.oldModelVersionId !== e.modelVersionId) {
+        return;
+      }
+      const prevState = new CursorState(e.oldSelections);
+      const isEqualToLastUndoStack = this._undoStack.length > 0 && this._undoStack[this._undoStack.length - 1].cursorState.equals(prevState);
+      if (!isEqualToLastUndoStack) {
+        this._undoStack.push(new StackElement(prevState, editor.getScrollTop(), editor.getScrollLeft()));
+        this._redoStack = [];
+        if (this._undoStack.length > 50) {
+          this._undoStack.shift();
+        }
+      }
+    }));
+  }
+  cursorUndo() {
+    if (!this._editor.hasModel() || this._undoStack.length === 0) {
+      return;
+    }
+    this._redoStack.push(new StackElement(new CursorState(this._editor.getSelections()), this._editor.getScrollTop(), this._editor.getScrollLeft()));
+    this._applyState(this._undoStack.pop());
+  }
+  cursorRedo() {
+    if (!this._editor.hasModel() || this._redoStack.length === 0) {
+      return;
+    }
+    this._undoStack.push(new StackElement(new CursorState(this._editor.getSelections()), this._editor.getScrollTop(), this._editor.getScrollLeft()));
+    this._applyState(this._redoStack.pop());
+  }
+  _applyState(stackElement) {
+    this._isCursorUndoRedo = true;
+    this._editor.setSelections(stackElement.cursorState.selections);
+    this._editor.setScrollPosition({
+      scrollTop: stackElement.scrollTop,
+      scrollLeft: stackElement.scrollLeft
+    });
+    this._isCursorUndoRedo = false;
+  }
+}
+class CursorUndo extends EditorAction {
+  static {
+    __name(this, "CursorUndo");
+  }
+  constructor() {
+    super({
+      id: "cursorUndo",
+      label: nls.localize2("cursor.undo", "Cursor Undo"),
+      precondition: void 0,
+      kbOpts: {
+        kbExpr: EditorContextKeys.textInputFocus,
+        primary: KeyMod.CtrlCmd | KeyCode.KeyU,
+        weight: KeybindingWeight.EditorContrib
+      }
+    });
+  }
+  run(accessor, editor, args) {
+    CursorUndoRedoController.get(editor)?.cursorUndo();
+  }
+}
+class CursorRedo extends EditorAction {
+  static {
+    __name(this, "CursorRedo");
+  }
+  constructor() {
+    super({
+      id: "cursorRedo",
+      label: nls.localize2("cursor.redo", "Cursor Redo"),
+      precondition: void 0
+    });
+  }
+  run(accessor, editor, args) {
+    CursorUndoRedoController.get(editor)?.cursorRedo();
+  }
+}
+registerEditorContribution(CursorUndoRedoController.ID, CursorUndoRedoController, EditorContributionInstantiation.Eager);
+registerEditorAction(CursorUndo);
+registerEditorAction(CursorRedo);
+export {
+  CursorRedo,
+  CursorUndo,
+  CursorUndoRedoController
+};
+//# sourceMappingURL=cursorUndo.js.map

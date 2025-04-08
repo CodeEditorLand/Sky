@@ -1,1 +1,261 @@
-import{SequenceDiff as B}from"./algorithms/diffAlgorithm.js";import{LineRangeMapping as w}from"../rangeMapping.js";import{pushMany as F,compareBy as S,numberComparator as T,reverseOrder as P}from"../../../../base/common/arrays.js";import{MonotonousArray as D,findLastMonotonous as C}from"../../../../base/common/arraysFind.js";import{SetMap as q}from"../../../../base/common/map.js";import{LineRange as b,LineRangeSet as y}from"../../core/lineRange.js";import{LinesSliceCharSequence as A}from"./linesSliceCharSequence.js";import{LineRangeFragment as I,isSpace as k}from"./utils.js";import{MyersDiffAlgorithm as j}from"./algorithms/myersDiffAlgorithm.js";import{Range as O}from"../../core/range.js";function oe(e,n,i,r,t,o){let{moves:a,excludedChanges:s}=W(e,n,i,o);if(!o.isValid())return[];const m=H(e.filter((e=>!s.has(e))),r,t,n,i,o);return F(a,m),a=U(a),a=a.filter((e=>{const i=e.original.toOffsetRange().slice(n).map((e=>e.trim()));return i.join("\n").length>=15&&V(i,(e=>e.length>=2))>=2})),a=z(e,a),a}function V(e,n){let i=0;for(const r of e)n(r)&&i++;return i}function W(e,n,i,r){const t=[],o=e.filter((e=>e.modified.isEmpty&&e.original.length>=3)).map((e=>new I(e.original,n,e))),a=new Set(e.filter((e=>e.original.isEmpty&&e.modified.length>=3)).map((e=>new I(e.modified,i,e)))),s=new Set;for(const e of o){let n,i=-1;for(const r of a){const t=e.computeSimilarity(r);t>i&&(i=t,n=r)}if(i>.9&&n&&(a.delete(n),t.push(new w(e.range,n.range)),s.add(e.source),s.add(n.source)),!r.isValid())return{moves:t,excludedChanges:s}}return{moves:t,excludedChanges:s}}function H(e,n,i,r,t,o){const a=[],s=new q;for(const i of e)for(let e=i.original.startLineNumber;e<i.original.endLineNumberExclusive-2;e++){const i=`${n[e-1]}:${n[e+1-1]}:${n[e+2-1]}`;s.add(i,{range:new b(e,e+3)})}const m=[];e.sort(S((e=>e.modified.startLineNumber),T));for(const n of e){let e=[];for(let r=n.modified.startLineNumber;r<n.modified.endLineNumberExclusive-2;r++){const n=`${i[r-1]}:${i[r+1-1]}:${i[r+2-1]}`,t=new b(r,r+3),o=[];s.forEach(n,(({range:n})=>{for(const i of e)if(i.originalLineRange.endLineNumberExclusive+1===n.endLineNumberExclusive&&i.modifiedLineRange.endLineNumberExclusive+1===t.endLineNumberExclusive)return i.originalLineRange=new b(i.originalLineRange.startLineNumber,n.endLineNumberExclusive),i.modifiedLineRange=new b(i.modifiedLineRange.startLineNumber,t.endLineNumberExclusive),void o.push(i);const i={modifiedLineRange:t,originalLineRange:n};m.push(i),o.push(i)})),e=o}if(!o.isValid())return[]}m.sort(P(S((e=>e.modifiedLineRange.length),T)));const u=new y,d=new y;for(const e of m){const n=e.modifiedLineRange.startLineNumber-e.originalLineRange.startLineNumber,i=u.subtractFrom(e.modifiedLineRange),r=d.subtractFrom(e.originalLineRange).getWithDelta(n),t=i.getIntersection(r);for(const e of t.ranges){if(e.length<3)continue;const i=e,r=e.delta(-n);a.push(new w(r,i)),u.addRange(i),d.addRange(r)}}a.sort(S((e=>e.original.startLineNumber),T));const l=new D(e);for(let n=0;n<a.length;n++){const i=a[n],s=l.findLastMonotonous((e=>e.original.startLineNumber<=i.original.startLineNumber)),m=C(e,(e=>e.modified.startLineNumber<=i.modified.startLineNumber)),f=Math.max(i.original.startLineNumber-s.original.startLineNumber,i.modified.startLineNumber-m.modified.startLineNumber),g=l.findLastMonotonous((e=>e.original.startLineNumber<i.original.endLineNumberExclusive)),c=C(e,(e=>e.modified.startLineNumber<i.modified.endLineNumberExclusive)),L=Math.max(g.original.endLineNumberExclusive-i.original.endLineNumberExclusive,c.modified.endLineNumberExclusive-i.modified.endLineNumberExclusive);let N,h;for(N=0;N<f;N++){const e=i.original.startLineNumber-N-1,n=i.modified.startLineNumber-N-1;if(e>r.length||n>t.length||u.contains(n)||d.contains(e)||!$(r[e-1],t[n-1],o))break}for(N>0&&(d.addRange(new b(i.original.startLineNumber-N,i.original.startLineNumber)),u.addRange(new b(i.modified.startLineNumber-N,i.modified.startLineNumber))),h=0;h<L;h++){const e=i.original.endLineNumberExclusive+h,n=i.modified.endLineNumberExclusive+h;if(e>r.length||n>t.length||u.contains(n)||d.contains(e)||!$(r[e-1],t[n-1],o))break}h>0&&(d.addRange(new b(i.original.endLineNumberExclusive,i.original.endLineNumberExclusive+h)),u.addRange(new b(i.modified.endLineNumberExclusive,i.modified.endLineNumberExclusive+h))),(N>0||h>0)&&(a[n]=new w(new b(i.original.startLineNumber-N,i.original.endLineNumberExclusive+h),new b(i.modified.startLineNumber-N,i.modified.endLineNumberExclusive+h)))}return a}function $(e,n,i){if(e.trim()===n.trim())return!0;if(e.length>300&&n.length>300)return!1;const r=(new j).compute(new A([e],new O(1,1,1,e.length),!1),new A([n],new O(1,1,1,n.length),!1),i);let t=0;const o=B.invert(r.diffs,e.length);for(const n of o)n.seq1Range.forEach((n=>{k(e.charCodeAt(n))||t++}));const a=function(n){let i=0;for(let r=0;r<e.length;r++)k(n.charCodeAt(r))||i++;return i}(e.length>n.length?e:n);return t/a>.6&&a>10}function U(e){if(0===e.length)return e;e.sort(S((e=>e.original.startLineNumber),T));const n=[e[0]];for(let i=1;i<e.length;i++){const r=n[n.length-1],t=e[i],o=t.original.startLineNumber-r.original.endLineNumberExclusive,a=t.modified.startLineNumber-r.modified.endLineNumberExclusive;o>=0&&a>=0&&o+a<=2?n[n.length-1]=r.join(t):n.push(t)}return n}function z(e,n){const i=new D(e);return n=n.filter((n=>(i.findLastMonotonous((e=>e.original.startLineNumber<n.original.endLineNumberExclusive))||new w(new b(1,1),new b(1,1)))!==C(e,(e=>e.modified.startLineNumber<n.modified.endLineNumberExclusive))))}export{oe as computeMovedLines};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { ITimeout, SequenceDiff } from "./algorithms/diffAlgorithm.js";
+import { DetailedLineRangeMapping, LineRangeMapping } from "../rangeMapping.js";
+import { pushMany, compareBy, numberComparator, reverseOrder } from "../../../../base/common/arrays.js";
+import { MonotonousArray, findLastMonotonous } from "../../../../base/common/arraysFind.js";
+import { SetMap } from "../../../../base/common/map.js";
+import { LineRange, LineRangeSet } from "../../core/lineRange.js";
+import { LinesSliceCharSequence } from "./linesSliceCharSequence.js";
+import { LineRangeFragment, isSpace } from "./utils.js";
+import { MyersDiffAlgorithm } from "./algorithms/myersDiffAlgorithm.js";
+import { Range } from "../../core/range.js";
+function computeMovedLines(changes, originalLines, modifiedLines, hashedOriginalLines, hashedModifiedLines, timeout) {
+  let { moves, excludedChanges } = computeMovesFromSimpleDeletionsToSimpleInsertions(changes, originalLines, modifiedLines, timeout);
+  if (!timeout.isValid()) {
+    return [];
+  }
+  const filteredChanges = changes.filter((c) => !excludedChanges.has(c));
+  const unchangedMoves = computeUnchangedMoves(filteredChanges, hashedOriginalLines, hashedModifiedLines, originalLines, modifiedLines, timeout);
+  pushMany(moves, unchangedMoves);
+  moves = joinCloseConsecutiveMoves(moves);
+  moves = moves.filter((current) => {
+    const lines = current.original.toOffsetRange().slice(originalLines).map((l) => l.trim());
+    const originalText = lines.join("\n");
+    return originalText.length >= 15 && countWhere(lines, (l) => l.length >= 2) >= 2;
+  });
+  moves = removeMovesInSameDiff(changes, moves);
+  return moves;
+}
+__name(computeMovedLines, "computeMovedLines");
+function countWhere(arr, predicate) {
+  let count = 0;
+  for (const t of arr) {
+    if (predicate(t)) {
+      count++;
+    }
+  }
+  return count;
+}
+__name(countWhere, "countWhere");
+function computeMovesFromSimpleDeletionsToSimpleInsertions(changes, originalLines, modifiedLines, timeout) {
+  const moves = [];
+  const deletions = changes.filter((c) => c.modified.isEmpty && c.original.length >= 3).map((d) => new LineRangeFragment(d.original, originalLines, d));
+  const insertions = new Set(changes.filter((c) => c.original.isEmpty && c.modified.length >= 3).map((d) => new LineRangeFragment(d.modified, modifiedLines, d)));
+  const excludedChanges = /* @__PURE__ */ new Set();
+  for (const deletion of deletions) {
+    let highestSimilarity = -1;
+    let best;
+    for (const insertion of insertions) {
+      const similarity = deletion.computeSimilarity(insertion);
+      if (similarity > highestSimilarity) {
+        highestSimilarity = similarity;
+        best = insertion;
+      }
+    }
+    if (highestSimilarity > 0.9 && best) {
+      insertions.delete(best);
+      moves.push(new LineRangeMapping(deletion.range, best.range));
+      excludedChanges.add(deletion.source);
+      excludedChanges.add(best.source);
+    }
+    if (!timeout.isValid()) {
+      return { moves, excludedChanges };
+    }
+  }
+  return { moves, excludedChanges };
+}
+__name(computeMovesFromSimpleDeletionsToSimpleInsertions, "computeMovesFromSimpleDeletionsToSimpleInsertions");
+function computeUnchangedMoves(changes, hashedOriginalLines, hashedModifiedLines, originalLines, modifiedLines, timeout) {
+  const moves = [];
+  const original3LineHashes = new SetMap();
+  for (const change of changes) {
+    for (let i = change.original.startLineNumber; i < change.original.endLineNumberExclusive - 2; i++) {
+      const key = `${hashedOriginalLines[i - 1]}:${hashedOriginalLines[i + 1 - 1]}:${hashedOriginalLines[i + 2 - 1]}`;
+      original3LineHashes.add(key, { range: new LineRange(i, i + 3) });
+    }
+  }
+  const possibleMappings = [];
+  changes.sort(compareBy((c) => c.modified.startLineNumber, numberComparator));
+  for (const change of changes) {
+    let lastMappings = [];
+    for (let i = change.modified.startLineNumber; i < change.modified.endLineNumberExclusive - 2; i++) {
+      const key = `${hashedModifiedLines[i - 1]}:${hashedModifiedLines[i + 1 - 1]}:${hashedModifiedLines[i + 2 - 1]}`;
+      const currentModifiedRange = new LineRange(i, i + 3);
+      const nextMappings = [];
+      original3LineHashes.forEach(key, ({ range }) => {
+        for (const lastMapping of lastMappings) {
+          if (lastMapping.originalLineRange.endLineNumberExclusive + 1 === range.endLineNumberExclusive && lastMapping.modifiedLineRange.endLineNumberExclusive + 1 === currentModifiedRange.endLineNumberExclusive) {
+            lastMapping.originalLineRange = new LineRange(lastMapping.originalLineRange.startLineNumber, range.endLineNumberExclusive);
+            lastMapping.modifiedLineRange = new LineRange(lastMapping.modifiedLineRange.startLineNumber, currentModifiedRange.endLineNumberExclusive);
+            nextMappings.push(lastMapping);
+            return;
+          }
+        }
+        const mapping = {
+          modifiedLineRange: currentModifiedRange,
+          originalLineRange: range
+        };
+        possibleMappings.push(mapping);
+        nextMappings.push(mapping);
+      });
+      lastMappings = nextMappings;
+    }
+    if (!timeout.isValid()) {
+      return [];
+    }
+  }
+  possibleMappings.sort(reverseOrder(compareBy((m) => m.modifiedLineRange.length, numberComparator)));
+  const modifiedSet = new LineRangeSet();
+  const originalSet = new LineRangeSet();
+  for (const mapping of possibleMappings) {
+    const diffOrigToMod = mapping.modifiedLineRange.startLineNumber - mapping.originalLineRange.startLineNumber;
+    const modifiedSections = modifiedSet.subtractFrom(mapping.modifiedLineRange);
+    const originalTranslatedSections = originalSet.subtractFrom(mapping.originalLineRange).getWithDelta(diffOrigToMod);
+    const modifiedIntersectedSections = modifiedSections.getIntersection(originalTranslatedSections);
+    for (const s of modifiedIntersectedSections.ranges) {
+      if (s.length < 3) {
+        continue;
+      }
+      const modifiedLineRange = s;
+      const originalLineRange = s.delta(-diffOrigToMod);
+      moves.push(new LineRangeMapping(originalLineRange, modifiedLineRange));
+      modifiedSet.addRange(modifiedLineRange);
+      originalSet.addRange(originalLineRange);
+    }
+  }
+  moves.sort(compareBy((m) => m.original.startLineNumber, numberComparator));
+  const monotonousChanges = new MonotonousArray(changes);
+  for (let i = 0; i < moves.length; i++) {
+    const move = moves[i];
+    const firstTouchingChangeOrig = monotonousChanges.findLastMonotonous((c) => c.original.startLineNumber <= move.original.startLineNumber);
+    const firstTouchingChangeMod = findLastMonotonous(changes, (c) => c.modified.startLineNumber <= move.modified.startLineNumber);
+    const linesAbove = Math.max(
+      move.original.startLineNumber - firstTouchingChangeOrig.original.startLineNumber,
+      move.modified.startLineNumber - firstTouchingChangeMod.modified.startLineNumber
+    );
+    const lastTouchingChangeOrig = monotonousChanges.findLastMonotonous((c) => c.original.startLineNumber < move.original.endLineNumberExclusive);
+    const lastTouchingChangeMod = findLastMonotonous(changes, (c) => c.modified.startLineNumber < move.modified.endLineNumberExclusive);
+    const linesBelow = Math.max(
+      lastTouchingChangeOrig.original.endLineNumberExclusive - move.original.endLineNumberExclusive,
+      lastTouchingChangeMod.modified.endLineNumberExclusive - move.modified.endLineNumberExclusive
+    );
+    let extendToTop;
+    for (extendToTop = 0; extendToTop < linesAbove; extendToTop++) {
+      const origLine = move.original.startLineNumber - extendToTop - 1;
+      const modLine = move.modified.startLineNumber - extendToTop - 1;
+      if (origLine > originalLines.length || modLine > modifiedLines.length) {
+        break;
+      }
+      if (modifiedSet.contains(modLine) || originalSet.contains(origLine)) {
+        break;
+      }
+      if (!areLinesSimilar(originalLines[origLine - 1], modifiedLines[modLine - 1], timeout)) {
+        break;
+      }
+    }
+    if (extendToTop > 0) {
+      originalSet.addRange(new LineRange(move.original.startLineNumber - extendToTop, move.original.startLineNumber));
+      modifiedSet.addRange(new LineRange(move.modified.startLineNumber - extendToTop, move.modified.startLineNumber));
+    }
+    let extendToBottom;
+    for (extendToBottom = 0; extendToBottom < linesBelow; extendToBottom++) {
+      const origLine = move.original.endLineNumberExclusive + extendToBottom;
+      const modLine = move.modified.endLineNumberExclusive + extendToBottom;
+      if (origLine > originalLines.length || modLine > modifiedLines.length) {
+        break;
+      }
+      if (modifiedSet.contains(modLine) || originalSet.contains(origLine)) {
+        break;
+      }
+      if (!areLinesSimilar(originalLines[origLine - 1], modifiedLines[modLine - 1], timeout)) {
+        break;
+      }
+    }
+    if (extendToBottom > 0) {
+      originalSet.addRange(new LineRange(move.original.endLineNumberExclusive, move.original.endLineNumberExclusive + extendToBottom));
+      modifiedSet.addRange(new LineRange(move.modified.endLineNumberExclusive, move.modified.endLineNumberExclusive + extendToBottom));
+    }
+    if (extendToTop > 0 || extendToBottom > 0) {
+      moves[i] = new LineRangeMapping(
+        new LineRange(move.original.startLineNumber - extendToTop, move.original.endLineNumberExclusive + extendToBottom),
+        new LineRange(move.modified.startLineNumber - extendToTop, move.modified.endLineNumberExclusive + extendToBottom)
+      );
+    }
+  }
+  return moves;
+}
+__name(computeUnchangedMoves, "computeUnchangedMoves");
+function areLinesSimilar(line1, line2, timeout) {
+  if (line1.trim() === line2.trim()) {
+    return true;
+  }
+  if (line1.length > 300 && line2.length > 300) {
+    return false;
+  }
+  const myersDiffingAlgorithm = new MyersDiffAlgorithm();
+  const result = myersDiffingAlgorithm.compute(
+    new LinesSliceCharSequence([line1], new Range(1, 1, 1, line1.length), false),
+    new LinesSliceCharSequence([line2], new Range(1, 1, 1, line2.length), false),
+    timeout
+  );
+  let commonNonSpaceCharCount = 0;
+  const inverted = SequenceDiff.invert(result.diffs, line1.length);
+  for (const seq of inverted) {
+    seq.seq1Range.forEach((idx) => {
+      if (!isSpace(line1.charCodeAt(idx))) {
+        commonNonSpaceCharCount++;
+      }
+    });
+  }
+  function countNonWsChars(str) {
+    let count = 0;
+    for (let i = 0; i < line1.length; i++) {
+      if (!isSpace(str.charCodeAt(i))) {
+        count++;
+      }
+    }
+    return count;
+  }
+  __name(countNonWsChars, "countNonWsChars");
+  const longerLineLength = countNonWsChars(line1.length > line2.length ? line1 : line2);
+  const r = commonNonSpaceCharCount / longerLineLength > 0.6 && longerLineLength > 10;
+  return r;
+}
+__name(areLinesSimilar, "areLinesSimilar");
+function joinCloseConsecutiveMoves(moves) {
+  if (moves.length === 0) {
+    return moves;
+  }
+  moves.sort(compareBy((m) => m.original.startLineNumber, numberComparator));
+  const result = [moves[0]];
+  for (let i = 1; i < moves.length; i++) {
+    const last = result[result.length - 1];
+    const current = moves[i];
+    const originalDist = current.original.startLineNumber - last.original.endLineNumberExclusive;
+    const modifiedDist = current.modified.startLineNumber - last.modified.endLineNumberExclusive;
+    const currentMoveAfterLast = originalDist >= 0 && modifiedDist >= 0;
+    if (currentMoveAfterLast && originalDist + modifiedDist <= 2) {
+      result[result.length - 1] = last.join(current);
+      continue;
+    }
+    result.push(current);
+  }
+  return result;
+}
+__name(joinCloseConsecutiveMoves, "joinCloseConsecutiveMoves");
+function removeMovesInSameDiff(changes, moves) {
+  const changesMonotonous = new MonotonousArray(changes);
+  moves = moves.filter((m) => {
+    const diffBeforeEndOfMoveOriginal = changesMonotonous.findLastMonotonous((c) => c.original.startLineNumber < m.original.endLineNumberExclusive) || new LineRangeMapping(new LineRange(1, 1), new LineRange(1, 1));
+    const diffBeforeEndOfMoveModified = findLastMonotonous(changes, (c) => c.modified.startLineNumber < m.modified.endLineNumberExclusive);
+    const differentDiffs = diffBeforeEndOfMoveOriginal !== diffBeforeEndOfMoveModified;
+    return differentDiffs;
+  });
+  return moves;
+}
+__name(removeMovesInSameDiff, "removeMovesInSameDiff");
+export {
+  computeMovedLines
+};
+//# sourceMappingURL=computeMovedLines.js.map

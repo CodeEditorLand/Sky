@@ -1,1 +1,38 @@
-import{VSBuffer as o}from"../../../base/common/buffer.js";import"../../../base/common/cancellation.js";import"../../../base/common/uri.js";import"../common/webContentExtractor.js";class l{_serviceBrand;async readImage(n,r){if(!r.isCancellationRequested)try{const e=await fetch(n.toString(!0),{headers:{Accept:"image/*","User-Agent":"Mozilla/5.0"}}),t=e.headers.get("content-type");return!e.ok||!t?.startsWith("image/")||!/(webp|jpg|jpeg|gif|png|bmp)$/i.test(t)?void 0:o.wrap(await e.bytes())}catch(e){console.log(e);return}}}export{l as SharedWebContentExtractorService};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { VSBuffer } from "../../../base/common/buffer.js";
+import { CancellationToken } from "../../../base/common/cancellation.js";
+import { URI } from "../../../base/common/uri.js";
+import { ISharedWebContentExtractorService } from "../common/webContentExtractor.js";
+class SharedWebContentExtractorService {
+  static {
+    __name(this, "SharedWebContentExtractorService");
+  }
+  _serviceBrand;
+  async readImage(uri, token) {
+    if (token.isCancellationRequested) {
+      return void 0;
+    }
+    try {
+      const response = await fetch(uri.toString(true), {
+        headers: {
+          "Accept": "image/*",
+          "User-Agent": "Mozilla/5.0"
+        }
+      });
+      const contentType = response.headers.get("content-type");
+      if (!response.ok || !contentType?.startsWith("image/") || !/(webp|jpg|jpeg|gif|png|bmp)$/i.test(contentType)) {
+        return void 0;
+      }
+      const content = VSBuffer.wrap(await response.bytes());
+      return content;
+    } catch (err) {
+      console.log(err);
+      return void 0;
+    }
+  }
+}
+export {
+  SharedWebContentExtractorService
+};
+//# sourceMappingURL=sharedWebContentExtractorService.js.map

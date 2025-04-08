@@ -1,1 +1,16 @@
-import{Registry as r}from"../../../../platform/registry/common/platform.js";import{Extensions as o}from"../../../common/configuration.js";r.as(o.ConfigurationMigration).registerConfigurationMigrations([{key:"debug.autoExpandLazyVariables",migrateFn:o=>!0===o?{value:"on"}:!1===o?{value:"off"}:[]}]);
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { Extensions, IConfigurationMigrationRegistry } from "../../../common/configuration.js";
+Registry.as(Extensions.ConfigurationMigration).registerConfigurationMigrations([{
+  key: "debug.autoExpandLazyVariables",
+  migrateFn: /* @__PURE__ */ __name((value) => {
+    if (value === true) {
+      return { value: "on" };
+    } else if (value === false) {
+      return { value: "off" };
+    }
+    return [];
+  }, "migrateFn")
+}]);
+//# sourceMappingURL=debugSettingMigration.js.map

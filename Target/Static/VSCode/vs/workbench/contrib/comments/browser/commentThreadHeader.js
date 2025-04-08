@@ -1,1 +1,153 @@
-var g=Object.defineProperty;var v=Object.getOwnPropertyDescriptor;var d=(r,s,e,t)=>{for(var n=t>1?void 0:t?v(s,e):s,i=r.length-1,o;i>=0;i--)(o=r[i])&&(n=(t?o(s,e,n):o(n))||n);return t&&n&&g(s,e,n),n},m=(r,s)=>(e,t)=>s(e,t,r);import*as a from"../../../../base/browser/dom.js";import{ActionBar as A}from"../../../../base/browser/ui/actionbar/actionbar.js";import{Action as C,ActionRunner as T}from"../../../../base/common/actions.js";import{Codicon as p}from"../../../../base/common/codicons.js";import{Disposable as f,MutableDisposable as b,toDisposable as M}from"../../../../base/common/lifecycle.js";import*as I from"../../../../base/common/strings.js";import"../../../../editor/common/languages.js";import"../../../../editor/common/core/range.js";import*as l from"../../../../nls.js";import{createActionViewItem as x}from"../../../../platform/actions/browser/menuEntryActionViewItem.js";import"../../../../platform/actions/common/actions.js";import{IContextKeyService as E}from"../../../../platform/contextkey/common/contextkey.js";import{IInstantiationService as S}from"../../../../platform/instantiation/common/instantiation.js";import{registerIcon as L}from"../../../../platform/theme/common/iconRegistry.js";import{ThemeIcon as _}from"../../../../base/common/themables.js";import"./commentMenus.js";import{IContextMenuService as w}from"../../../../platform/contextview/browser/contextView.js";import{MarshalledId as y}from"../../../../base/common/marshallingIds.js";import{StandardMouseEvent as D}from"../../../../base/browser/mouseEvent.js";import"../../../common/comments.js";import{CommentCommandId as H}from"../common/commentCommandIds.js";const R=L("review-comment-collapse",p.chevronUp,l.localize("collapseIcon","Icon to collapse a review comment.")),u="expand-review-action "+_.asClassName(R),W="expand-review-action "+_.asClassName(p.trashcan);function h(r){return!!r&&r.length>0}let c=class extends f{constructor(e,t,n,i,o,N,$){super();this._delegate=t;this._commentMenus=n;this._commentThread=i;this._contextKeyService=o;this._instantiationService=N;this._contextMenuService=$;this._headElement=a.$(".head"),e.appendChild(this._headElement),this._register(M(()=>this._headElement.remove())),this._fillHead()}_headElement;_headingLabel;_actionbarWidget;_collapseAction;_contextMenuActionRunner;_fillHead(){const e=a.append(this._headElement,a.$(".review-title"));this._headingLabel=a.append(e,a.$("span.filename")),this.createThreadLabel();const t=a.append(this._headElement,a.$(".review-actions"));this._actionbarWidget=new A(t,{actionViewItemProvider:x.bind(void 0,this._instantiationService)}),this._register(this._actionbarWidget);const n=h(this._commentThread.comments)?u:W;if(this._collapseAction=new C(H.Hide,l.localize("label.collapse","Collapse"),n,!0,()=>this._delegate.collapse()),!h(this._commentThread.comments)){const o=this._register(new b);o.value=this._commentThread.onDidChangeComments(()=>{h(this._commentThread.comments)&&(this._collapseAction.class=u,o.clear())})}const i=this._commentMenus.getCommentThreadTitleActions(this._contextKeyService);this._register(i),this.setActionBarActions(i),this._register(i),this._register(i.onDidChange(o=>{this.setActionBarActions(i)})),this._register(a.addDisposableListener(this._headElement,a.EventType.CONTEXT_MENU,o=>this.onContextMenu(o))),this._actionbarWidget.context=this._commentThread}setActionBarActions(e){const t=e.getActions({shouldForwardArgs:!0}).reduce((n,[,i])=>[...n,...i],[]);this._actionbarWidget.clear(),this._actionbarWidget.push([...t,this._collapseAction],{label:!1,icon:!0})}updateCommentThread(e){this._commentThread=e,this._actionbarWidget.context=this._commentThread,this.createThreadLabel()}createThreadLabel(){let e;e=this._commentThread.label,e===void 0&&(this._commentThread.comments&&this._commentThread.comments.length||(e=l.localize("startThread","Start discussion"))),e&&(this._headingLabel.textContent=I.escape(e),this._headingLabel.setAttribute("aria-label",e))}updateHeight(e){this._headElement.style.height=`${e}px`,this._headElement.style.lineHeight=this._headElement.style.height}onContextMenu(e){const t=this._commentMenus.getCommentThreadTitleContextActions(this._contextKeyService);if(!t.length)return;const n=new D(a.getWindow(this._headElement),e);this._contextMenuActionRunner||(this._contextMenuActionRunner=this._register(new T)),this._contextMenuService.showContextMenu({getAnchor:()=>n,getActions:()=>t,actionRunner:this._contextMenuActionRunner,getActionsContext:()=>({commentControlHandle:this._commentThread.controllerHandle,commentThreadHandle:this._commentThread.commentThreadHandle,$mid:y.CommentThread})})}};c=d([m(4,E),m(5,S),m(6,w)],c);export{c as CommentThreadHeader};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import * as dom from "../../../../base/browser/dom.js";
+import { ActionBar } from "../../../../base/browser/ui/actionbar/actionbar.js";
+import { Action, ActionRunner } from "../../../../base/common/actions.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { Disposable, IDisposable, MutableDisposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import * as strings from "../../../../base/common/strings.js";
+import * as languages from "../../../../editor/common/languages.js";
+import { IRange } from "../../../../editor/common/core/range.js";
+import * as nls from "../../../../nls.js";
+import { createActionViewItem } from "../../../../platform/actions/browser/menuEntryActionViewItem.js";
+import { IMenu, MenuItemAction, SubmenuItemAction } from "../../../../platform/actions/common/actions.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { registerIcon } from "../../../../platform/theme/common/iconRegistry.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { CommentMenus } from "./commentMenus.js";
+import { IContextMenuService } from "../../../../platform/contextview/browser/contextView.js";
+import { MarshalledId } from "../../../../base/common/marshallingIds.js";
+import { StandardMouseEvent } from "../../../../base/browser/mouseEvent.js";
+import { MarshalledCommentThread } from "../../../common/comments.js";
+import { CommentCommandId } from "../common/commentCommandIds.js";
+const collapseIcon = registerIcon("review-comment-collapse", Codicon.chevronUp, nls.localize("collapseIcon", "Icon to collapse a review comment."));
+const COLLAPSE_ACTION_CLASS = "expand-review-action " + ThemeIcon.asClassName(collapseIcon);
+const DELETE_ACTION_CLASS = "expand-review-action " + ThemeIcon.asClassName(Codicon.trashcan);
+function threadHasComments(comments) {
+  return !!comments && comments.length > 0;
+}
+__name(threadHasComments, "threadHasComments");
+let CommentThreadHeader = class extends Disposable {
+  constructor(container, _delegate, _commentMenus, _commentThread, _contextKeyService, _instantiationService, _contextMenuService) {
+    super();
+    this._delegate = _delegate;
+    this._commentMenus = _commentMenus;
+    this._commentThread = _commentThread;
+    this._contextKeyService = _contextKeyService;
+    this._instantiationService = _instantiationService;
+    this._contextMenuService = _contextMenuService;
+    this._headElement = dom.$(".head");
+    container.appendChild(this._headElement);
+    this._register(toDisposable(() => this._headElement.remove()));
+    this._fillHead();
+  }
+  static {
+    __name(this, "CommentThreadHeader");
+  }
+  _headElement;
+  _headingLabel;
+  _actionbarWidget;
+  _collapseAction;
+  _contextMenuActionRunner;
+  _fillHead() {
+    const titleElement = dom.append(this._headElement, dom.$(".review-title"));
+    this._headingLabel = dom.append(titleElement, dom.$("span.filename"));
+    this.createThreadLabel();
+    const actionsContainer = dom.append(this._headElement, dom.$(".review-actions"));
+    this._actionbarWidget = new ActionBar(actionsContainer, {
+      actionViewItemProvider: createActionViewItem.bind(void 0, this._instantiationService)
+    });
+    this._register(this._actionbarWidget);
+    const collapseClass = threadHasComments(this._commentThread.comments) ? COLLAPSE_ACTION_CLASS : DELETE_ACTION_CLASS;
+    this._collapseAction = new Action(CommentCommandId.Hide, nls.localize("label.collapse", "Collapse"), collapseClass, true, () => this._delegate.collapse());
+    if (!threadHasComments(this._commentThread.comments)) {
+      const commentsChanged = this._register(new MutableDisposable());
+      commentsChanged.value = this._commentThread.onDidChangeComments(() => {
+        if (threadHasComments(this._commentThread.comments)) {
+          this._collapseAction.class = COLLAPSE_ACTION_CLASS;
+          commentsChanged.clear();
+        }
+      });
+    }
+    const menu = this._commentMenus.getCommentThreadTitleActions(this._contextKeyService);
+    this._register(menu);
+    this.setActionBarActions(menu);
+    this._register(menu);
+    this._register(menu.onDidChange((e) => {
+      this.setActionBarActions(menu);
+    }));
+    this._register(dom.addDisposableListener(this._headElement, dom.EventType.CONTEXT_MENU, (e) => {
+      return this.onContextMenu(e);
+    }));
+    this._actionbarWidget.context = this._commentThread;
+  }
+  setActionBarActions(menu) {
+    const groups = menu.getActions({ shouldForwardArgs: true }).reduce((r, [, actions]) => [...r, ...actions], []);
+    this._actionbarWidget.clear();
+    this._actionbarWidget.push([...groups, this._collapseAction], { label: false, icon: true });
+  }
+  updateCommentThread(commentThread) {
+    this._commentThread = commentThread;
+    this._actionbarWidget.context = this._commentThread;
+    this.createThreadLabel();
+  }
+  createThreadLabel() {
+    let label;
+    label = this._commentThread.label;
+    if (label === void 0) {
+      if (!(this._commentThread.comments && this._commentThread.comments.length)) {
+        label = nls.localize("startThread", "Start discussion");
+      }
+    }
+    if (label) {
+      this._headingLabel.textContent = strings.escape(label);
+      this._headingLabel.setAttribute("aria-label", label);
+    }
+  }
+  updateHeight(headHeight) {
+    this._headElement.style.height = `${headHeight}px`;
+    this._headElement.style.lineHeight = this._headElement.style.height;
+  }
+  onContextMenu(e) {
+    const actions = this._commentMenus.getCommentThreadTitleContextActions(this._contextKeyService);
+    if (!actions.length) {
+      return;
+    }
+    const event = new StandardMouseEvent(dom.getWindow(this._headElement), e);
+    if (!this._contextMenuActionRunner) {
+      this._contextMenuActionRunner = this._register(new ActionRunner());
+    }
+    this._contextMenuService.showContextMenu({
+      getAnchor: /* @__PURE__ */ __name(() => event, "getAnchor"),
+      getActions: /* @__PURE__ */ __name(() => actions, "getActions"),
+      actionRunner: this._contextMenuActionRunner,
+      getActionsContext: /* @__PURE__ */ __name(() => {
+        return {
+          commentControlHandle: this._commentThread.controllerHandle,
+          commentThreadHandle: this._commentThread.commentThreadHandle,
+          $mid: MarshalledId.CommentThread
+        };
+      }, "getActionsContext")
+    });
+  }
+};
+CommentThreadHeader = __decorateClass([
+  __decorateParam(4, IContextKeyService),
+  __decorateParam(5, IInstantiationService),
+  __decorateParam(6, IContextMenuService)
+], CommentThreadHeader);
+export {
+  CommentThreadHeader
+};
+//# sourceMappingURL=commentThreadHeader.js.map

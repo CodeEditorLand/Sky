@@ -1,1 +1,181 @@
-var E=Object.defineProperty,T=Object.getOwnPropertyDescriptor,S=(e,t,o,n)=>{for(var a,i=n>1?void 0:n?T(t,o):t,r=e.length-1;r>=0;r--)(a=e[r])&&(i=(n?a(t,o,i):a(i))||i);return n&&i&&E(t,o,i),i},a=(e,t)=>(o,n)=>t(o,n,e);import"../../../../../../base/common/cancellation.js";import{Disposable as x}from"../../../../../../base/common/lifecycle.js";import{ResourceMap as R}from"../../../../../../base/common/map.js";import"../../../../../../base/common/uri.js";import{ILanguageService as N}from"../../../../../../editor/common/languages/language.js";import{localize as v}from"../../../../../../nls.js";import{IConfigurationService as w}from"../../../../../../platform/configuration/common/configuration.js";import{IInstantiationService as A}from"../../../../../../platform/instantiation/common/instantiation.js";import{IKeybindingService as K}from"../../../../../../platform/keybinding/common/keybinding.js";import{Registry as D}from"../../../../../../platform/registry/common/platform.js";import{Extensions as M}from"../../../../../common/contributions.js";import{CHANGE_CELL_LANGUAGE as G,DETECT_CELL_LANGUAGE as L}from"../../notebookBrowser.js";import{INotebookCellStatusBarService as U}from"../../../common/notebookCellStatusBarService.js";import{CellKind as _,CellStatusbarAlignment as f}from"../../../common/notebookCommon.js";import{INotebookKernelService as V}from"../../../common/notebookKernelService.js";import{INotebookService as C}from"../../../common/notebookService.js";import{ILanguageDetectionService as B}from"../../../../../services/languageDetection/common/languageDetectionWorkerService.js";import{LifecyclePhase as W}from"../../../../../services/lifecycle/common/lifecycle.js";let u=class{constructor(e,t){this._notebookService=e,this._languageService=t}viewType="*";async provideCellStatusBarItems(e,t,o){const n=this._notebookService.getNotebookTextModel(e)?.cells[t];if(!n)return;const a=[];let i=n.language;if(n.cellKind===_.Markup)i="markdown";else if(this._languageService.getLanguageIdByLanguageName(n.language))i=this._languageService.getLanguageName(i)??i;else{const e=v("notebook.cell.status.searchLanguageExtensions","Unknown cell language. Click to search for '{0}' extensions",n.language);a.push({text:"$(dialog-warning)",command:{id:"workbench.extensions.search",arguments:[`@tag:${n.language}`],title:"Search Extensions"},tooltip:e,alignment:f.Right,priority:1-Number.MAX_SAFE_INTEGER})}return a.push({text:i,command:G,tooltip:v("notebook.cell.status.language","Select Cell Language Mode"),alignment:f.Right,priority:-Number.MAX_SAFE_INTEGER}),{items:a}}};u=S([a(0,C),a(1,N)],u);let m=class{constructor(e,t,o,n,a,i){this._notebookService=e,this._notebookKernelService=t,this._languageService=o,this._configurationService=n,this._languageDetectionService=a,this._keybindingService=i}viewType="*";cache=new R;async provideCellStatusBarItems(e,t,o){const n=this._notebookService.getNotebookTextModel(e),a=n?.cells[t];if(!a)return;const i=this._configurationService.getValue("workbench.editor.languageDetectionHints");if("object"!=typeof i||!i?.notebookEditors)return;const r=a.uri,s=a.textModel?.getVersionId();if(!s)return;const c=a.cellKind===_.Markup?"markdown":this._languageService.getLanguageIdByLanguageName(a.language)||a.language;this.cache.has(r)||this.cache.set(r,{cellLanguage:c,updateTimestamp:0,contentVersion:1});const g=this.cache.get(r);if(g.cellLanguage!==c||g.updateTimestamp<Date.now()-1e3&&g.contentVersion!==s){g.updateTimestamp=Date.now(),g.cellLanguage=c,g.contentVersion=s;const e=this._notebookKernelService.getSelectedOrSuggestedKernel(n);if(e){const t=[...e.supportedLanguages,"markdown"];g.guess=await this._languageDetectionService.detectLanguage(a.uri,t)}}const l=[];if(g.guess&&c!==g.guess){const e=this._languageService.getLanguageName(g.guess)||g.guess;let t=v("notebook.cell.status.autoDetectLanguage","Accept Detected Language: {0}",e);const o=this._keybindingService.lookupKeybinding(L)?.getLabel();o&&(t+=` (${o})`),l.push({text:"$(lightbulb-autofix)",command:L,tooltip:t,alignment:f.Right,priority:1-Number.MAX_SAFE_INTEGER})}return{items:l}}};m=S([a(0,C),a(1,V),a(2,N),a(3,w),a(4,B),a(5,K)],m);let d=class extends x{constructor(e,t){super(),[u,m].forEach((o=>{this._register(t.registerCellStatusBarItemProvider(e.createInstance(o)))}))}};d=S([a(0,A),a(1,U)],d),D.as(M.Workbench).registerWorkbenchContribution(d,W.Restored);
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { CancellationToken } from "../../../../../../base/common/cancellation.js";
+import { Disposable } from "../../../../../../base/common/lifecycle.js";
+import { ResourceMap } from "../../../../../../base/common/map.js";
+import { URI } from "../../../../../../base/common/uri.js";
+import { ILanguageService } from "../../../../../../editor/common/languages/language.js";
+import { localize } from "../../../../../../nls.js";
+import { IConfigurationService } from "../../../../../../platform/configuration/common/configuration.js";
+import { IInstantiationService } from "../../../../../../platform/instantiation/common/instantiation.js";
+import { IKeybindingService } from "../../../../../../platform/keybinding/common/keybinding.js";
+import { Registry } from "../../../../../../platform/registry/common/platform.js";
+import { Extensions as WorkbenchExtensions, IWorkbenchContributionsRegistry } from "../../../../../common/contributions.js";
+import { CHANGE_CELL_LANGUAGE, DETECT_CELL_LANGUAGE } from "../../notebookBrowser.js";
+import { INotebookCellStatusBarService } from "../../../common/notebookCellStatusBarService.js";
+import { CellKind, CellStatusbarAlignment, INotebookCellStatusBarItem, INotebookCellStatusBarItemList, INotebookCellStatusBarItemProvider } from "../../../common/notebookCommon.js";
+import { INotebookKernelService } from "../../../common/notebookKernelService.js";
+import { INotebookService } from "../../../common/notebookService.js";
+import { ILanguageDetectionService, LanguageDetectionHintConfig } from "../../../../../services/languageDetection/common/languageDetectionWorkerService.js";
+import { LifecyclePhase } from "../../../../../services/lifecycle/common/lifecycle.js";
+let CellStatusBarLanguagePickerProvider = class {
+  constructor(_notebookService, _languageService) {
+    this._notebookService = _notebookService;
+    this._languageService = _languageService;
+  }
+  static {
+    __name(this, "CellStatusBarLanguagePickerProvider");
+  }
+  viewType = "*";
+  async provideCellStatusBarItems(uri, index, _token) {
+    const doc = this._notebookService.getNotebookTextModel(uri);
+    const cell = doc?.cells[index];
+    if (!cell) {
+      return;
+    }
+    const statusBarItems = [];
+    let displayLanguage = cell.language;
+    if (cell.cellKind === CellKind.Markup) {
+      displayLanguage = "markdown";
+    } else {
+      const registeredId = this._languageService.getLanguageIdByLanguageName(cell.language);
+      if (registeredId) {
+        displayLanguage = this._languageService.getLanguageName(displayLanguage) ?? displayLanguage;
+      } else {
+        const searchTooltip = localize("notebook.cell.status.searchLanguageExtensions", "Unknown cell language. Click to search for '{0}' extensions", cell.language);
+        statusBarItems.push({
+          text: `$(dialog-warning)`,
+          command: { id: "workbench.extensions.search", arguments: [`@tag:${cell.language}`], title: "Search Extensions" },
+          tooltip: searchTooltip,
+          alignment: CellStatusbarAlignment.Right,
+          priority: -Number.MAX_SAFE_INTEGER + 1
+        });
+      }
+    }
+    statusBarItems.push({
+      text: displayLanguage,
+      command: CHANGE_CELL_LANGUAGE,
+      tooltip: localize("notebook.cell.status.language", "Select Cell Language Mode"),
+      alignment: CellStatusbarAlignment.Right,
+      priority: -Number.MAX_SAFE_INTEGER
+    });
+    return {
+      items: statusBarItems
+    };
+  }
+};
+CellStatusBarLanguagePickerProvider = __decorateClass([
+  __decorateParam(0, INotebookService),
+  __decorateParam(1, ILanguageService)
+], CellStatusBarLanguagePickerProvider);
+let CellStatusBarLanguageDetectionProvider = class {
+  constructor(_notebookService, _notebookKernelService, _languageService, _configurationService, _languageDetectionService, _keybindingService) {
+    this._notebookService = _notebookService;
+    this._notebookKernelService = _notebookKernelService;
+    this._languageService = _languageService;
+    this._configurationService = _configurationService;
+    this._languageDetectionService = _languageDetectionService;
+    this._keybindingService = _keybindingService;
+  }
+  static {
+    __name(this, "CellStatusBarLanguageDetectionProvider");
+  }
+  viewType = "*";
+  cache = new ResourceMap();
+  async provideCellStatusBarItems(uri, index, token) {
+    const doc = this._notebookService.getNotebookTextModel(uri);
+    const cell = doc?.cells[index];
+    if (!cell) {
+      return;
+    }
+    const enablementConfig = this._configurationService.getValue("workbench.editor.languageDetectionHints");
+    const enabled = typeof enablementConfig === "object" && enablementConfig?.notebookEditors;
+    if (!enabled) {
+      return;
+    }
+    const cellUri = cell.uri;
+    const contentVersion = cell.textModel?.getVersionId();
+    if (!contentVersion) {
+      return;
+    }
+    const currentLanguageId = cell.cellKind === CellKind.Markup ? "markdown" : this._languageService.getLanguageIdByLanguageName(cell.language) || cell.language;
+    if (!this.cache.has(cellUri)) {
+      this.cache.set(cellUri, {
+        cellLanguage: currentLanguageId,
+        // force a re-compute upon a change in configured language
+        updateTimestamp: 0,
+        // facilitates a disposable-free debounce operation
+        contentVersion: 1
+        // dont run for the initial contents, only on update
+      });
+    }
+    const cached = this.cache.get(cellUri);
+    if (cached.cellLanguage !== currentLanguageId || cached.updateTimestamp < Date.now() - 1e3 && cached.contentVersion !== contentVersion) {
+      cached.updateTimestamp = Date.now();
+      cached.cellLanguage = currentLanguageId;
+      cached.contentVersion = contentVersion;
+      const kernel = this._notebookKernelService.getSelectedOrSuggestedKernel(doc);
+      if (kernel) {
+        const supportedLangs = [...kernel.supportedLanguages, "markdown"];
+        cached.guess = await this._languageDetectionService.detectLanguage(cell.uri, supportedLangs);
+      }
+    }
+    const items = [];
+    if (cached.guess && currentLanguageId !== cached.guess) {
+      const detectedName = this._languageService.getLanguageName(cached.guess) || cached.guess;
+      let tooltip = localize("notebook.cell.status.autoDetectLanguage", "Accept Detected Language: {0}", detectedName);
+      const keybinding = this._keybindingService.lookupKeybinding(DETECT_CELL_LANGUAGE);
+      const label = keybinding?.getLabel();
+      if (label) {
+        tooltip += ` (${label})`;
+      }
+      items.push({
+        text: "$(lightbulb-autofix)",
+        command: DETECT_CELL_LANGUAGE,
+        tooltip,
+        alignment: CellStatusbarAlignment.Right,
+        priority: -Number.MAX_SAFE_INTEGER + 1
+      });
+    }
+    return { items };
+  }
+};
+CellStatusBarLanguageDetectionProvider = __decorateClass([
+  __decorateParam(0, INotebookService),
+  __decorateParam(1, INotebookKernelService),
+  __decorateParam(2, ILanguageService),
+  __decorateParam(3, IConfigurationService),
+  __decorateParam(4, ILanguageDetectionService),
+  __decorateParam(5, IKeybindingService)
+], CellStatusBarLanguageDetectionProvider);
+let BuiltinCellStatusBarProviders = class extends Disposable {
+  static {
+    __name(this, "BuiltinCellStatusBarProviders");
+  }
+  constructor(instantiationService, notebookCellStatusBarService) {
+    super();
+    const builtinProviders = [
+      CellStatusBarLanguagePickerProvider,
+      CellStatusBarLanguageDetectionProvider
+    ];
+    builtinProviders.forEach((p) => {
+      this._register(notebookCellStatusBarService.registerCellStatusBarItemProvider(instantiationService.createInstance(p)));
+    });
+  }
+};
+BuiltinCellStatusBarProviders = __decorateClass([
+  __decorateParam(0, IInstantiationService),
+  __decorateParam(1, INotebookCellStatusBarService)
+], BuiltinCellStatusBarProviders);
+Registry.as(WorkbenchExtensions.Workbench).registerWorkbenchContribution(BuiltinCellStatusBarProviders, LifecyclePhase.Restored);
+//# sourceMappingURL=statusBarProviders.js.map

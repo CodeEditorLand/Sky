@@ -1,1 +1,672 @@
-var L=Object.defineProperty;var N=Object.getOwnPropertyDescriptor;var x=(g,i,t,e)=>{for(var n=e>1?void 0:e?N(i,t):i,s=g.length-1,r;s>=0;s--)(r=g[s])&&(n=(e?r(i,t,n):r(n))||n);return e&&n&&L(i,t,n),n},p=(g,i)=>(t,e)=>i(t,e,g);import{ITreeSitterImporter as O}from"../treeSitterParserService.js";import{Disposable as F,DisposableMap as k,DisposableStore as j,dispose as S}from"../../../../base/common/lifecycle.js";import"../../model.js";import"../../textModelEvents.js";import{ITelemetryService as U}from"../../../../platform/telemetry/common/telemetry.js";import{ILogService as q}from"../../../../platform/log/common/log.js";import{setTimeout0 as C}from"../../../../base/common/platform.js";import{Emitter as R,Event as A}from"../../../../base/common/event.js";import{cancelOnDispose as Q}from"../../../../base/common/cancellation.js";import{Range as f}from"../../core/range.js";import{LimitedQueue as V}from"../../../../base/common/async.js";import{TextLength as y}from"../../core/textLength.js";import"./treeSitterLanguages.js";import{FileAccess as W}from"../../../../base/common/network.js";import{IFileService as Y}from"../../../../platform/files/common/files.js";import{CancellationError as z,isCancellationError as $}from"../../../../base/common/errors.js";import{getClosestPreviousNodes as b,gotoNthChild as B,gotoParent as K,nextSiblingOrParentSibling as E}from"./cursorUtils.js";var G=(t=>(t.Full="fullParse",t.Incremental="incrementalParse",t))(G||{});let m=class extends F{constructor(t,e,n=!0,s,r,a,o){super();this.textModel=t;this._treeSitterLanguages=e;this._treeSitterImporter=s;this._logService=r;this._telemetryService=a;this._fileService=o;n?this._register(A.runAndSubscribe(this.textModel.onDidChangeLanguage,d=>this._onDidChangeLanguage(d?d.newLanguage:this.textModel.getLanguageId()))):this._register(this.textModel.onDidChangeLanguage(d=>this._onDidChangeLanguage(d?d.newLanguage:this.textModel.getLanguageId())))}_onDidChangeParseResult=this._register(new R);onDidChangeParseResult=this._onDidChangeParseResult.event;_rootTreeSitterTree;_query;_injectionTreeSitterTrees=this._register(new k);_versionId=0;get parseResult(){return this._rootTreeSitterTree}_parseSessionDisposables=this._register(new j);async _onDidChangeLanguage(t){this.parse(t)}async parse(t=this.textModel.getLanguageId()){this._parseSessionDisposables.clear(),this._rootTreeSitterTree=void 0;const e=Q(this._parseSessionDisposables);let n;try{n=await this._getLanguage(t,e)}catch(a){if($(a))return;throw a}const s=await this._treeSitterImporter.getParserClass();if(e.isCancellationRequested)return;const r=this._parseSessionDisposables.add(new D(new s,t,n,this._logService,this._telemetryService));if(this._rootTreeSitterTree=r,this._parseSessionDisposables.add(r.onDidUpdate(a=>this._handleTreeUpdate(a))),this._parseSessionDisposables.add(this.textModel.onDidChangeContent(a=>this._onDidChangeContent(r,[a]))),this._onDidChangeContent(r,void 0),!e.isCancellationRequested)return this._rootTreeSitterTree}_getLanguage(t,e){const n=this._treeSitterLanguages.getOrInitLanguage(t);if(n)return Promise.resolve(n);const s=[];return new Promise((r,a)=>{s.push(this._treeSitterLanguages.onDidAddLanguage(o=>{o.id===t&&(S(s),r(o.language))})),e.onCancellationRequested(()=>{S(s),a(new z)},void 0,s)})}async _handleTreeUpdate(t,e,n){if(t.ranges&&t.versionId>=this._versionId){this._versionId=t.versionId;const s=e??this._rootTreeSitterTree;let r;s.tree&&(r=await this._collectInjections(s.tree),r&&this._processInjections(r,s,n??this.textModel.getLanguageId(),t.includedModelChanges)),this._onDidChangeParseResult.fire({ranges:t.ranges,versionId:t.versionId,tree:this,languageId:this.textModel.getLanguageId(),hasInjections:!!r&&r.size>0})}}_queries;async _ensureInjectionQueries(){if(!this._queries){const t=`vs/editor/common/languages/injections/${this.textModel.getLanguageId()}.scm`,e=W.asFileUri(t);if(!await this._fileService.exists(e))this._queries="";else if(this._fileService.hasProvider(e)){const n=await this._fileService.readFile(e);this._queries=n.value.toString()}else this._queries=""}return this._queries}async _getQuery(){if(!this._query){const t=await this._treeSitterLanguages.getLanguage(this.textModel.getLanguageId());if(!t)return;const e=await this._ensureInjectionQueries();if(e==="")return;const n=await this._treeSitterImporter.getQueryClass();this._query=new n(t,e)}return this._query}async _collectInjections(t){const e=await this._getQuery();if(!e||!t?.rootNode)return;const n=t.walk(),s=new Map;let r=!0;for(;r;)r=await this._processNode(n,e,s),await new Promise(a=>C(a));return this._mergeAdjacentRanges(s)}_processNode(t,e,n){const s=t.currentNode;return s.endPosition.row-s.startPosition.row<=1e3?(this._processCaptures(e,s,n),t.gotoNextSibling()||this.gotoNextSiblingOfAncestor(t)):t.gotoFirstChild()||t.gotoNextSibling()||this.gotoNextSiblingOfAncestor(t)}_processCaptures(t,e,n){const s=t.captures(e);for(const r of s){const a=r.setProperties?.["injection.language"];if(a){const o=this._createRangeFromNode(r.node);n.has(a)||n.set(a,[]),n.get(a)?.push(o)}}}_createRangeFromNode(t){return{startIndex:t.startIndex,endIndex:t.endIndex,startPosition:{row:t.startPosition.row,column:t.startPosition.column},endPosition:{row:t.endPosition.row,column:t.endPosition.column}}}_mergeAdjacentRanges(t){for(const[e,n]of t){if(n.length<=1)continue;const s=[];let r=n[0];for(let a=1;a<n.length;a++){const o=n[a];o.startIndex<=r.endIndex?r=this._mergeRanges(r,o):(s.push(r),r=o)}s.push(r),t.set(e,s)}return t}_mergeRanges(t,e){return{startIndex:t.startIndex,endIndex:Math.max(t.endIndex,e.endIndex),startPosition:t.startPosition,endPosition:e.endPosition.row>t.endPosition.row?e.endPosition:t.endPosition}}async _processInjections(t,e,n,s){if(t.size===0){this._injectionTreeSitterTrees.clearAndDisposeAll();return}const r=new Set(this._injectionTreeSitterTrees.keys());for(const[a,o]of t){const d=await this._treeSitterLanguages.getLanguage(a);if(!d)continue;const l=await this._getOrCreateInjectedTree(a,d,e,n);l&&(r.delete(a),this._onDidChangeContent(l,s,o))}for(const a of r)this._injectionTreeSitterTrees.deleteAndDispose(a)}async _getOrCreateInjectedTree(t,e,n,s){let r=this._injectionTreeSitterTrees.get(t);if(!r){const a=await this._treeSitterImporter.getParserClass();r=new D(new a,t,e,this._logService,this._telemetryService),this._parseSessionDisposables.add(r.onDidUpdate(o=>this._handleTreeUpdate(o,n,s))),this._injectionTreeSitterTrees.set(t,r)}return r}gotoNextSiblingOfAncestor(t){for(;t.gotoParent();)if(t.gotoNextSibling())return!0;return!1}getInjection(t,e){if(this._injectionTreeSitterTrees.size===0)return;let n=e===this.textModel.getLanguageId();for(const[s,r]of this._injectionTreeSitterTrees)if(r.tree){if(n&&r.ranges?.find(a=>a.startIndex<=t&&a.endIndex>=t))return r;!n&&r.languageId===e&&(n=!0)}}_onDidChangeContent(t,e,n){t.onDidChangeContent(this.textModel,e,n)}};m=x([p(3,O),p(4,q),p(5,U),p(6,Y)],m);class D{constructor(i,t,e,n,s){this.parser=i;this.languageId=t;this.language=e;this._logService=n;this._telemetryService=s;this.parser.setLanguage(e)}_tree;_lastFullyParsed;_lastFullyParsedWithEdits;_onDidUpdate=new R;onDidUpdate=this._onDidUpdate.event;_versionId=0;_editVersion=0;get versionId(){return this._versionId}_isDisposed=!1;dispose(){this._isDisposed=!0,this._onDidUpdate.dispose(),this._tree?.delete(),this._lastFullyParsed?.delete(),this._lastFullyParsedWithEdits?.delete(),this.parser?.delete()}get tree(){return this._lastFullyParsed}get isDisposed(){return this._isDisposed}findChangedNodes(i,t){const e=i.walk(),n=t.walk(),s=[];let r=!0;do if(e.currentNode.hasChanges){const a=e.currentNode.children,o=[],d=a.filter((l,u)=>l?.hasChanges||n.currentNode.children.length<=u?(o.push(u),!0):!1);if(d.length===0||e.currentNode.hasError!==n.currentNode.hasError){for(;e.currentNode.parent&&r&&!e.currentNode.isNamed;)r=K(e,n);const l=e.currentNode,u=b(e,i)??l;s.push({startIndex:u.startIndex,endIndex:l.endIndex,startPosition:u.startPosition,endPosition:l.endPosition}),r=E(e,n)}else d.length>=1&&(r=B(e,n,o[0]))}else r=E(e,n);while(r);return s}findTreeChanges(i,t,e){let n=0;const s=[];for(let r=0;r<t.length;r++){const a=t[r];if(s.length>0&&a.startIndex>=s[s.length-1].newRangeStartOffset&&a.endIndex<=s[s.length-1].newRangeEndOffset)continue;const o=i.walk(),d=()=>o.startIndex<a.startIndex&&o.endIndex>a.endIndex;for(;d();){let c=o.gotoFirstChild(),w=!1;for(;c;)if(d()&&o.currentNode.isNamed){w=!0;break}else c=o.gotoNextSibling();if(!w){o.gotoParent();break}if(o.currentNode.childCount===0)break}let l;if(o.endIndex-o.startIndex>5e3){let c=o.gotoFirstChild();for(l=[];c;){if(o.endIndex>a.startIndex){l.push(o.currentNode);do c=o.gotoNextSibling();while(c&&o.endIndex<a.endIndex);l.push(o.currentNode);break}c=o.gotoNextSibling()}}else l=[o.currentNode];for(;o.currentNode.id!==l[0].id;)o.gotoPreviousSibling();const P=b(o,i),_=P?P.endPosition:l[0].startPosition,T=P?P.endIndex:l[0].startIndex,I=l[l.length-1].endPosition,v=l[l.length-1].endIndex,h={newRange:new f(_.row+1,_.column+1,I.row+1,I.column+1),newRangeStartOffset:T,newRangeEndOffset:v};n<e.length&&M(e[n],{startIndex:T,endIndex:v,startPosition:_,endPosition:I})?(e[n].startIndex<h.newRangeStartOffset&&(h.newRange=h.newRange.setStartPosition(e[n].startPosition.row+1,e[n].startPosition.column+1),h.newRangeStartOffset=e[n].startIndex),e[n].endIndex>h.newRangeEndOffset&&(h.newRange=h.newRange.setEndPosition(e[n].endPosition.row+1,e[n].endPosition.column+1),h.newRangeEndOffset=e[n].endIndex),n++):n<e.length&&e[n].endIndex<h.newRangeStartOffset&&s.push({newRange:new f(e[n].startPosition.row+1,e[n].startPosition.column+1,e[n].endPosition.row+1,e[n].endPosition.column+1),newRangeStartOffset:e[n].startIndex,newRangeEndOffset:e[n].endIndex}),s.length>0&&s[s.length-1].newRangeEndOffset>=h.newRangeStartOffset?(s[s.length-1].newRange=f.fromPositions(s[s.length-1].newRange.getStartPosition(),h.newRange.getEndPosition()),s[s.length-1].newRangeEndOffset=h.newRangeEndOffset):s.push(h)}return this._constrainRanges(s)}_constrainRanges(i){if(!this.ranges)return i;const t=[];let e=0,n=0;for(;e<i.length&&n<this.ranges.length;){const s=i[e],r=this.ranges[n];if(s.newRangeEndOffset<r.startIndex)e++;else if(s.newRangeStartOffset>r.endIndex)n++;else{const a=Math.max(s.newRangeStartOffset,r.startIndex),o=Math.min(s.newRangeEndOffset,r.endIndex),d=s.newRange.intersectRanges(new f(r.startPosition.row+1,r.startPosition.column+1,r.endPosition.row+1,r.endPosition.column+1));t.push({newRange:d,newRangeEndOffset:o,newRangeStartOffset:a}),o<s.newRangeEndOffset?(s.newRange=f.fromPositions(d.getEndPosition(),s.newRange.getEndPosition()),s.newRangeStartOffset=o+1):e++}}return t}_unfiredChanges;_onDidChangeContentQueue=new V;onDidChangeContent(i,t,e){const n=i.getVersionId();if(n===this._editVersion)return;let s=[];if(e&&(s=this._setRanges(e)),t&&t.length>0){this._unfiredChanges?this._unfiredChanges.push(...t):this._unfiredChanges=t;for(const r of t)this._applyEdits(r.changes,n)}else this._applyEdits([],n);this._onDidChangeContentQueue.queue(async()=>{if(this.isDisposed)return;const r=this._lastFullyParsed;let a;this._lastFullyParsedWithEdits&&this._lastFullyParsed&&(a=this.findChangedNodes(this._lastFullyParsedWithEdits,this._lastFullyParsed));const o=await this._parseAndUpdateTree(i,n);if(o){let d;a?r&&a&&(d=this.findTreeChanges(o,a,s)):this._ranges?d=this._ranges.map(u=>({newRange:new f(u.startPosition.row+1,u.startPosition.column+1,u.endPosition.row+1,u.endPosition.column+1),oldRangeLength:u.endIndex-u.startIndex,newRangeStartOffset:u.startIndex,newRangeEndOffset:u.endIndex})):d=[{newRange:i.getFullModelRange(),newRangeStartOffset:0,newRangeEndOffset:i.getValueLength()}];const l=this._unfiredChanges??[];this._unfiredChanges=void 0,this._onDidUpdate.fire({language:this.languageId,ranges:d,versionId:n,tree:o,includedModelChanges:l})}})}_applyEdits(i,t){for(const e of i){const n=y.ofRange(f.lift(e.range)),s=y.ofText(e.text),r=e.text.length===0?s:n.add(s),a={startIndex:e.rangeOffset,oldEndIndex:e.rangeOffset+e.rangeLength,newEndIndex:e.rangeOffset+e.text.length,startPosition:{row:e.range.startLineNumber-1,column:e.range.startColumn-1},oldEndPosition:{row:e.range.endLineNumber-1,column:e.range.endColumn-1},newEndPosition:{row:e.range.startLineNumber+r.lineCount-1,column:r.lineCount?r.columnCount:e.range.endColumn+r.columnCount}};this._tree?.edit(a),this._lastFullyParsedWithEdits?.edit(a)}this._editVersion=t}async _parseAndUpdateTree(i,t){const e=await this._parse(i);if(e)return this._tree?.delete(),this._tree=e,this._lastFullyParsed?.delete(),this._lastFullyParsed=e.copy(),this._lastFullyParsedWithEdits?.delete(),this._lastFullyParsedWithEdits=e.copy(),this._versionId=t,e;this._tree||this.parser.reset()}_parse(i){let t="fullParse";return this.tree&&(t="incrementalParse"),this._parseAndYield(i,t)}async _parseAndYield(i,t){let e=0,n=0;const s=this._editVersion;let r;this._lastYieldTime=performance.now();do{const a=performance.now();try{r=this.parser.parse((o,d)=>this._parseCallback(i,o),this._tree,{progressCallback:this._parseProgressCallback.bind(this),includedRanges:this._ranges})}catch{}finally{e+=performance.now()-a,n++}await new Promise(o=>C(o))}while(!i.isDisposed()&&!this.isDisposed&&!r&&s===i.getVersionId());return this.sendParseTimeTelemetry(t,e,n),r&&s===i.getVersionId()?r:void 0}_lastYieldTime=0;_parseProgressCallback(i){const t=performance.now();return t-this._lastYieldTime>50?(this._lastYieldTime=t,!0):!1}_parseCallback(i,t){try{return i.getTextBuffer().getNearestChunk(t)}catch(e){this._logService.debug("Error getting chunk for tree-sitter parsing",e)}}_ranges;_setRanges(i){const t=[];if(this._ranges)for(const e of i){let n=!1;for(let s=0;s<this._ranges.length;s++){const r=this._ranges[s];if(H(r,e)||M(r,e)){n=!0;break}}n||t.push(e)}else t.push(...i);return this._ranges=i,t}get ranges(){return this._ranges}sendParseTimeTelemetry(i,t,e){this._logService.debug(`Tree parsing (${i}) took ${t} ms and ${e} passes.`),i==="fullParse"?this._telemetryService.publicLog2("treeSitter.fullParse",{languageId:this.languageId,time:t,passes:e}):this._telemetryService.publicLog2("treeSitter.incrementalParse",{languageId:this.languageId,time:t,passes:e})}}function H(g,i){return g.startPosition.row===i.startPosition.row&&g.startPosition.column===i.startPosition.column&&g.endPosition.row===i.endPosition.row&&g.endPosition.column===i.endPosition.column&&g.startIndex===i.startIndex&&g.endIndex===i.endIndex}function M(g,i){return g.startIndex<=i.startIndex&&g.endIndex>=i.startIndex||i.startIndex<=g.startIndex&&i.endIndex>=g.startIndex}export{m as TextModelTreeSitter,D as TreeSitterParseResult};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { ITreeSitterParseResult, ITextModelTreeSitter, RangeChange, TreeParseUpdateEvent, ITreeSitterImporter, ModelTreeUpdateEvent } from "../treeSitterParserService.js";
+import { Disposable, DisposableMap, DisposableStore, dispose, IDisposable } from "../../../../base/common/lifecycle.js";
+import { ITextModel } from "../../model.js";
+import { IModelContentChange, IModelContentChangedEvent } from "../../textModelEvents.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { setTimeout0 } from "../../../../base/common/platform.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { CancellationToken, cancelOnDispose } from "../../../../base/common/cancellation.js";
+import { Range } from "../../core/range.js";
+import { LimitedQueue } from "../../../../base/common/async.js";
+import { TextLength } from "../../core/textLength.js";
+import { TreeSitterLanguages } from "./treeSitterLanguages.js";
+import { AppResourcePath, FileAccess } from "../../../../base/common/network.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+import { CancellationError, isCancellationError } from "../../../../base/common/errors.js";
+import { getClosestPreviousNodes, gotoNthChild, gotoParent, nextSiblingOrParentSibling } from "./cursorUtils.js";
+var TelemetryParseType = /* @__PURE__ */ ((TelemetryParseType2) => {
+  TelemetryParseType2["Full"] = "fullParse";
+  TelemetryParseType2["Incremental"] = "incrementalParse";
+  return TelemetryParseType2;
+})(TelemetryParseType || {});
+let TextModelTreeSitter = class extends Disposable {
+  constructor(textModel, _treeSitterLanguages, parseImmediately = true, _treeSitterImporter, _logService, _telemetryService, _fileService) {
+    super();
+    this.textModel = textModel;
+    this._treeSitterLanguages = _treeSitterLanguages;
+    this._treeSitterImporter = _treeSitterImporter;
+    this._logService = _logService;
+    this._telemetryService = _telemetryService;
+    this._fileService = _fileService;
+    if (parseImmediately) {
+      this._register(Event.runAndSubscribe(this.textModel.onDidChangeLanguage, (e) => this._onDidChangeLanguage(e ? e.newLanguage : this.textModel.getLanguageId())));
+    } else {
+      this._register(this.textModel.onDidChangeLanguage((e) => this._onDidChangeLanguage(e ? e.newLanguage : this.textModel.getLanguageId())));
+    }
+  }
+  static {
+    __name(this, "TextModelTreeSitter");
+  }
+  _onDidChangeParseResult = this._register(new Emitter());
+  onDidChangeParseResult = this._onDidChangeParseResult.event;
+  _rootTreeSitterTree;
+  _query;
+  // TODO: @alexr00 use a better data structure for this
+  _injectionTreeSitterTrees = this._register(new DisposableMap());
+  _versionId = 0;
+  get parseResult() {
+    return this._rootTreeSitterTree;
+  }
+  _parseSessionDisposables = this._register(new DisposableStore());
+  async _onDidChangeLanguage(languageId) {
+    this.parse(languageId);
+  }
+  /**
+   * Be very careful when making changes to this method as it is easy to introduce race conditions.
+   */
+  async parse(languageId = this.textModel.getLanguageId()) {
+    this._parseSessionDisposables.clear();
+    this._rootTreeSitterTree = void 0;
+    const token = cancelOnDispose(this._parseSessionDisposables);
+    let language;
+    try {
+      language = await this._getLanguage(languageId, token);
+    } catch (e) {
+      if (isCancellationError(e)) {
+        return;
+      }
+      throw e;
+    }
+    const Parser = await this._treeSitterImporter.getParserClass();
+    if (token.isCancellationRequested) {
+      return;
+    }
+    const treeSitterTree = this._parseSessionDisposables.add(new TreeSitterParseResult(new Parser(), languageId, language, this._logService, this._telemetryService));
+    this._rootTreeSitterTree = treeSitterTree;
+    this._parseSessionDisposables.add(treeSitterTree.onDidUpdate((e) => this._handleTreeUpdate(e)));
+    this._parseSessionDisposables.add(this.textModel.onDidChangeContent((e) => this._onDidChangeContent(treeSitterTree, [e])));
+    this._onDidChangeContent(treeSitterTree, void 0);
+    if (token.isCancellationRequested) {
+      return;
+    }
+    return this._rootTreeSitterTree;
+  }
+  _getLanguage(languageId, token) {
+    const language = this._treeSitterLanguages.getOrInitLanguage(languageId);
+    if (language) {
+      return Promise.resolve(language);
+    }
+    const disposables = [];
+    return new Promise((resolve, reject) => {
+      disposables.push(this._treeSitterLanguages.onDidAddLanguage((e) => {
+        if (e.id === languageId) {
+          dispose(disposables);
+          resolve(e.language);
+        }
+      }));
+      token.onCancellationRequested(() => {
+        dispose(disposables);
+        reject(new CancellationError());
+      }, void 0, disposables);
+    });
+  }
+  async _handleTreeUpdate(e, parentTreeResult, parentLanguage) {
+    if (e.ranges && e.versionId >= this._versionId) {
+      this._versionId = e.versionId;
+      const tree = parentTreeResult ?? this._rootTreeSitterTree;
+      let injections;
+      if (tree.tree) {
+        injections = await this._collectInjections(tree.tree);
+        if (injections) {
+          this._processInjections(injections, tree, parentLanguage ?? this.textModel.getLanguageId(), e.includedModelChanges);
+        }
+      }
+      this._onDidChangeParseResult.fire({ ranges: e.ranges, versionId: e.versionId, tree: this, languageId: this.textModel.getLanguageId(), hasInjections: !!injections && injections.size > 0 });
+    }
+  }
+  _queries;
+  async _ensureInjectionQueries() {
+    if (!this._queries) {
+      const injectionsQueriesLocation = `vs/editor/common/languages/injections/${this.textModel.getLanguageId()}.scm`;
+      const uri = FileAccess.asFileUri(injectionsQueriesLocation);
+      if (!await this._fileService.exists(uri)) {
+        this._queries = "";
+      } else if (this._fileService.hasProvider(uri)) {
+        const query = await this._fileService.readFile(uri);
+        this._queries = query.value.toString();
+      } else {
+        this._queries = "";
+      }
+    }
+    return this._queries;
+  }
+  async _getQuery() {
+    if (!this._query) {
+      const language = await this._treeSitterLanguages.getLanguage(this.textModel.getLanguageId());
+      if (!language) {
+        return;
+      }
+      const queries = await this._ensureInjectionQueries();
+      if (queries === "") {
+        return;
+      }
+      const Query = await this._treeSitterImporter.getQueryClass();
+      this._query = new Query(language, queries);
+    }
+    return this._query;
+  }
+  async _collectInjections(tree) {
+    const query = await this._getQuery();
+    if (!query) {
+      return;
+    }
+    if (!tree?.rootNode) {
+      return;
+    }
+    const cursor = tree.walk();
+    const injections = /* @__PURE__ */ new Map();
+    let hasNext = true;
+    while (hasNext) {
+      hasNext = await this._processNode(cursor, query, injections);
+      await new Promise((resolve) => setTimeout0(resolve));
+    }
+    return this._mergeAdjacentRanges(injections);
+  }
+  _processNode(cursor, query, injections) {
+    const node = cursor.currentNode;
+    const nodeLineCount = node.endPosition.row - node.startPosition.row;
+    if (nodeLineCount <= 1e3) {
+      this._processCaptures(query, node, injections);
+      return cursor.gotoNextSibling() || this.gotoNextSiblingOfAncestor(cursor);
+    } else {
+      return cursor.gotoFirstChild() || cursor.gotoNextSibling() || this.gotoNextSiblingOfAncestor(cursor);
+    }
+  }
+  _processCaptures(query, node, injections) {
+    const captures = query.captures(node);
+    for (const capture of captures) {
+      const injectionLanguage = capture.setProperties?.["injection.language"];
+      if (injectionLanguage) {
+        const range = this._createRangeFromNode(capture.node);
+        if (!injections.has(injectionLanguage)) {
+          injections.set(injectionLanguage, []);
+        }
+        injections.get(injectionLanguage)?.push(range);
+      }
+    }
+  }
+  _createRangeFromNode(node) {
+    return {
+      startIndex: node.startIndex,
+      endIndex: node.endIndex,
+      startPosition: { row: node.startPosition.row, column: node.startPosition.column },
+      endPosition: { row: node.endPosition.row, column: node.endPosition.column }
+    };
+  }
+  _mergeAdjacentRanges(injections) {
+    for (const [languageId, ranges] of injections) {
+      if (ranges.length <= 1) {
+        continue;
+      }
+      const mergedRanges = [];
+      let current = ranges[0];
+      for (let i = 1; i < ranges.length; i++) {
+        const next = ranges[i];
+        if (next.startIndex <= current.endIndex) {
+          current = this._mergeRanges(current, next);
+        } else {
+          mergedRanges.push(current);
+          current = next;
+        }
+      }
+      mergedRanges.push(current);
+      injections.set(languageId, mergedRanges);
+    }
+    return injections;
+  }
+  _mergeRanges(current, next) {
+    return {
+      startIndex: current.startIndex,
+      endIndex: Math.max(current.endIndex, next.endIndex),
+      startPosition: current.startPosition,
+      endPosition: next.endPosition.row > current.endPosition.row ? next.endPosition : current.endPosition
+    };
+  }
+  async _processInjections(injections, parentTree, parentLanguage, modelChanges) {
+    if (injections.size === 0) {
+      this._injectionTreeSitterTrees.clearAndDisposeAll();
+      return;
+    }
+    const unseenInjections = new Set(this._injectionTreeSitterTrees.keys());
+    for (const [languageId, ranges] of injections) {
+      const language = await this._treeSitterLanguages.getLanguage(languageId);
+      if (!language) {
+        continue;
+      }
+      const treeSitterTree = await this._getOrCreateInjectedTree(languageId, language, parentTree, parentLanguage);
+      if (treeSitterTree) {
+        unseenInjections.delete(languageId);
+        this._onDidChangeContent(treeSitterTree, modelChanges, ranges);
+      }
+    }
+    for (const unseenInjection of unseenInjections) {
+      this._injectionTreeSitterTrees.deleteAndDispose(unseenInjection);
+    }
+  }
+  async _getOrCreateInjectedTree(languageId, language, parentTree, parentLanguage) {
+    let treeSitterTree = this._injectionTreeSitterTrees.get(languageId);
+    if (!treeSitterTree) {
+      const Parser = await this._treeSitterImporter.getParserClass();
+      treeSitterTree = new TreeSitterParseResult(new Parser(), languageId, language, this._logService, this._telemetryService);
+      this._parseSessionDisposables.add(treeSitterTree.onDidUpdate((e) => this._handleTreeUpdate(e, parentTree, parentLanguage)));
+      this._injectionTreeSitterTrees.set(languageId, treeSitterTree);
+    }
+    return treeSitterTree;
+  }
+  gotoNextSiblingOfAncestor(cursor) {
+    while (cursor.gotoParent()) {
+      if (cursor.gotoNextSibling()) {
+        return true;
+      }
+    }
+    return false;
+  }
+  getInjection(offset, parentLanguage) {
+    if (this._injectionTreeSitterTrees.size === 0) {
+      return void 0;
+    }
+    let hasFoundParentLanguage = parentLanguage === this.textModel.getLanguageId();
+    for (const [_, treeSitterTree] of this._injectionTreeSitterTrees) {
+      if (treeSitterTree.tree) {
+        if (hasFoundParentLanguage && treeSitterTree.ranges?.find((r) => r.startIndex <= offset && r.endIndex >= offset)) {
+          return treeSitterTree;
+        }
+        if (!hasFoundParentLanguage && treeSitterTree.languageId === parentLanguage) {
+          hasFoundParentLanguage = true;
+        }
+      }
+    }
+    return void 0;
+  }
+  _onDidChangeContent(treeSitterTree, change, ranges) {
+    treeSitterTree.onDidChangeContent(this.textModel, change, ranges);
+  }
+};
+TextModelTreeSitter = __decorateClass([
+  __decorateParam(3, ITreeSitterImporter),
+  __decorateParam(4, ILogService),
+  __decorateParam(5, ITelemetryService),
+  __decorateParam(6, IFileService)
+], TextModelTreeSitter);
+class TreeSitterParseResult {
+  constructor(parser, languageId, language, _logService, _telemetryService) {
+    this.parser = parser;
+    this.languageId = languageId;
+    this.language = language;
+    this._logService = _logService;
+    this._telemetryService = _telemetryService;
+    this.parser.setLanguage(language);
+  }
+  static {
+    __name(this, "TreeSitterParseResult");
+  }
+  _tree;
+  _lastFullyParsed;
+  _lastFullyParsedWithEdits;
+  _onDidUpdate = new Emitter();
+  onDidUpdate = this._onDidUpdate.event;
+  _versionId = 0;
+  _editVersion = 0;
+  get versionId() {
+    return this._versionId;
+  }
+  _isDisposed = false;
+  dispose() {
+    this._isDisposed = true;
+    this._onDidUpdate.dispose();
+    this._tree?.delete();
+    this._lastFullyParsed?.delete();
+    this._lastFullyParsedWithEdits?.delete();
+    this.parser?.delete();
+  }
+  get tree() {
+    return this._lastFullyParsed;
+  }
+  get isDisposed() {
+    return this._isDisposed;
+  }
+  findChangedNodes(newTree, oldTree) {
+    const newCursor = newTree.walk();
+    const oldCursor = oldTree.walk();
+    const nodes = [];
+    let next = true;
+    do {
+      if (newCursor.currentNode.hasChanges) {
+        const newChildren = newCursor.currentNode.children;
+        const indexChangedChildren = [];
+        const changedChildren = newChildren.filter((c, index) => {
+          if (c?.hasChanges || oldCursor.currentNode.children.length <= index) {
+            indexChangedChildren.push(index);
+            return true;
+          }
+          return false;
+        });
+        if (changedChildren.length === 0 || newCursor.currentNode.hasError !== oldCursor.currentNode.hasError) {
+          while (newCursor.currentNode.parent && next && !newCursor.currentNode.isNamed) {
+            next = gotoParent(newCursor, oldCursor);
+          }
+          const newNode = newCursor.currentNode;
+          const closestPreviousNode = getClosestPreviousNodes(newCursor, newTree) ?? newNode;
+          nodes.push({
+            startIndex: closestPreviousNode.startIndex,
+            endIndex: newNode.endIndex,
+            startPosition: closestPreviousNode.startPosition,
+            endPosition: newNode.endPosition
+          });
+          next = nextSiblingOrParentSibling(newCursor, oldCursor);
+        } else if (changedChildren.length >= 1) {
+          next = gotoNthChild(newCursor, oldCursor, indexChangedChildren[0]);
+        }
+      } else {
+        next = nextSiblingOrParentSibling(newCursor, oldCursor);
+      }
+    } while (next);
+    return nodes;
+  }
+  findTreeChanges(newTree, changedNodes, newRanges) {
+    let newRangeIndex = 0;
+    const mergedChanges = [];
+    for (let nodeIndex = 0; nodeIndex < changedNodes.length; nodeIndex++) {
+      const node = changedNodes[nodeIndex];
+      if (mergedChanges.length > 0) {
+        if (node.startIndex >= mergedChanges[mergedChanges.length - 1].newRangeStartOffset && node.endIndex <= mergedChanges[mergedChanges.length - 1].newRangeEndOffset) {
+          continue;
+        }
+      }
+      const cursor = newTree.walk();
+      const cursorContainersNode = /* @__PURE__ */ __name(() => cursor.startIndex < node.startIndex && cursor.endIndex > node.endIndex, "cursorContainersNode");
+      while (cursorContainersNode()) {
+        let child = cursor.gotoFirstChild();
+        let foundChild = false;
+        while (child) {
+          if (cursorContainersNode() && cursor.currentNode.isNamed) {
+            foundChild = true;
+            break;
+          } else {
+            child = cursor.gotoNextSibling();
+          }
+        }
+        if (!foundChild) {
+          cursor.gotoParent();
+          break;
+        }
+        if (cursor.currentNode.childCount === 0) {
+          break;
+        }
+      }
+      let nodesInRange;
+      const foundNodeSize = cursor.endIndex - cursor.startIndex;
+      if (foundNodeSize > 5e3) {
+        let child = cursor.gotoFirstChild();
+        nodesInRange = [];
+        while (child) {
+          if (cursor.endIndex > node.startIndex) {
+            nodesInRange.push(cursor.currentNode);
+            do {
+              child = cursor.gotoNextSibling();
+            } while (child && cursor.endIndex < node.endIndex);
+            nodesInRange.push(cursor.currentNode);
+            break;
+          }
+          child = cursor.gotoNextSibling();
+        }
+      } else {
+        nodesInRange = [cursor.currentNode];
+      }
+      while (cursor.currentNode.id !== nodesInRange[0].id) {
+        cursor.gotoPreviousSibling();
+      }
+      const previousNode = getClosestPreviousNodes(cursor, newTree);
+      const startPosition = previousNode ? previousNode.endPosition : nodesInRange[0].startPosition;
+      const startIndex = previousNode ? previousNode.endIndex : nodesInRange[0].startIndex;
+      const endPosition = nodesInRange[nodesInRange.length - 1].endPosition;
+      const endIndex = nodesInRange[nodesInRange.length - 1].endIndex;
+      const newChange = { newRange: new Range(startPosition.row + 1, startPosition.column + 1, endPosition.row + 1, endPosition.column + 1), newRangeStartOffset: startIndex, newRangeEndOffset: endIndex };
+      if (newRangeIndex < newRanges.length && rangesIntersect(newRanges[newRangeIndex], { startIndex, endIndex, startPosition, endPosition })) {
+        if (newRanges[newRangeIndex].startIndex < newChange.newRangeStartOffset) {
+          newChange.newRange = newChange.newRange.setStartPosition(newRanges[newRangeIndex].startPosition.row + 1, newRanges[newRangeIndex].startPosition.column + 1);
+          newChange.newRangeStartOffset = newRanges[newRangeIndex].startIndex;
+        }
+        if (newRanges[newRangeIndex].endIndex > newChange.newRangeEndOffset) {
+          newChange.newRange = newChange.newRange.setEndPosition(newRanges[newRangeIndex].endPosition.row + 1, newRanges[newRangeIndex].endPosition.column + 1);
+          newChange.newRangeEndOffset = newRanges[newRangeIndex].endIndex;
+        }
+        newRangeIndex++;
+      } else if (newRangeIndex < newRanges.length && newRanges[newRangeIndex].endIndex < newChange.newRangeStartOffset) {
+        mergedChanges.push({
+          newRange: new Range(newRanges[newRangeIndex].startPosition.row + 1, newRanges[newRangeIndex].startPosition.column + 1, newRanges[newRangeIndex].endPosition.row + 1, newRanges[newRangeIndex].endPosition.column + 1),
+          newRangeStartOffset: newRanges[newRangeIndex].startIndex,
+          newRangeEndOffset: newRanges[newRangeIndex].endIndex
+        });
+      }
+      if (mergedChanges.length > 0 && mergedChanges[mergedChanges.length - 1].newRangeEndOffset >= newChange.newRangeStartOffset) {
+        mergedChanges[mergedChanges.length - 1].newRange = Range.fromPositions(mergedChanges[mergedChanges.length - 1].newRange.getStartPosition(), newChange.newRange.getEndPosition());
+        mergedChanges[mergedChanges.length - 1].newRangeEndOffset = newChange.newRangeEndOffset;
+      } else {
+        mergedChanges.push(newChange);
+      }
+    }
+    return this._constrainRanges(mergedChanges);
+  }
+  _constrainRanges(changes) {
+    if (!this.ranges) {
+      return changes;
+    }
+    const constrainedChanges = [];
+    let changesIndex = 0;
+    let rangesIndex = 0;
+    while (changesIndex < changes.length && rangesIndex < this.ranges.length) {
+      const change = changes[changesIndex];
+      const range = this.ranges[rangesIndex];
+      if (change.newRangeEndOffset < range.startIndex) {
+        changesIndex++;
+      } else if (change.newRangeStartOffset > range.endIndex) {
+        rangesIndex++;
+      } else {
+        const newRangeStartOffset = Math.max(change.newRangeStartOffset, range.startIndex);
+        const newRangeEndOffset = Math.min(change.newRangeEndOffset, range.endIndex);
+        const newRange = change.newRange.intersectRanges(new Range(range.startPosition.row + 1, range.startPosition.column + 1, range.endPosition.row + 1, range.endPosition.column + 1));
+        constrainedChanges.push({
+          newRange,
+          newRangeEndOffset,
+          newRangeStartOffset
+        });
+        if (newRangeEndOffset < change.newRangeEndOffset) {
+          change.newRange = Range.fromPositions(newRange.getEndPosition(), change.newRange.getEndPosition());
+          change.newRangeStartOffset = newRangeEndOffset + 1;
+        } else {
+          changesIndex++;
+        }
+      }
+    }
+    return constrainedChanges;
+  }
+  _unfiredChanges;
+  _onDidChangeContentQueue = new LimitedQueue();
+  onDidChangeContent(model, changes, ranges) {
+    const version = model.getVersionId();
+    if (version === this._editVersion) {
+      return;
+    }
+    let newRanges = [];
+    if (ranges) {
+      newRanges = this._setRanges(ranges);
+    }
+    if (changes && changes.length > 0) {
+      if (this._unfiredChanges) {
+        this._unfiredChanges.push(...changes);
+      } else {
+        this._unfiredChanges = changes;
+      }
+      for (const change of changes) {
+        this._applyEdits(change.changes, version);
+      }
+    } else {
+      this._applyEdits([], version);
+    }
+    this._onDidChangeContentQueue.queue(async () => {
+      if (this.isDisposed) {
+        return;
+      }
+      const oldTree = this._lastFullyParsed;
+      let changedNodes;
+      if (this._lastFullyParsedWithEdits && this._lastFullyParsed) {
+        changedNodes = this.findChangedNodes(this._lastFullyParsedWithEdits, this._lastFullyParsed);
+      }
+      const completed = await this._parseAndUpdateTree(model, version);
+      if (completed) {
+        let ranges2;
+        if (!changedNodes) {
+          if (this._ranges) {
+            ranges2 = this._ranges.map((r) => ({ newRange: new Range(r.startPosition.row + 1, r.startPosition.column + 1, r.endPosition.row + 1, r.endPosition.column + 1), oldRangeLength: r.endIndex - r.startIndex, newRangeStartOffset: r.startIndex, newRangeEndOffset: r.endIndex }));
+          } else {
+            ranges2 = [{ newRange: model.getFullModelRange(), newRangeStartOffset: 0, newRangeEndOffset: model.getValueLength() }];
+          }
+        } else if (oldTree && changedNodes) {
+          ranges2 = this.findTreeChanges(completed, changedNodes, newRanges);
+        }
+        const changes2 = this._unfiredChanges ?? [];
+        this._unfiredChanges = void 0;
+        this._onDidUpdate.fire({ language: this.languageId, ranges: ranges2, versionId: version, tree: completed, includedModelChanges: changes2 });
+      }
+    });
+  }
+  _applyEdits(changes, version) {
+    for (const change of changes) {
+      const originalTextLength = TextLength.ofRange(Range.lift(change.range));
+      const newTextLength = TextLength.ofText(change.text);
+      const summedTextLengths = change.text.length === 0 ? newTextLength : originalTextLength.add(newTextLength);
+      const edit = {
+        startIndex: change.rangeOffset,
+        oldEndIndex: change.rangeOffset + change.rangeLength,
+        newEndIndex: change.rangeOffset + change.text.length,
+        startPosition: { row: change.range.startLineNumber - 1, column: change.range.startColumn - 1 },
+        oldEndPosition: { row: change.range.endLineNumber - 1, column: change.range.endColumn - 1 },
+        newEndPosition: { row: change.range.startLineNumber + summedTextLengths.lineCount - 1, column: summedTextLengths.lineCount ? summedTextLengths.columnCount : change.range.endColumn + summedTextLengths.columnCount }
+      };
+      this._tree?.edit(edit);
+      this._lastFullyParsedWithEdits?.edit(edit);
+    }
+    this._editVersion = version;
+  }
+  async _parseAndUpdateTree(model, version) {
+    const tree = await this._parse(model);
+    if (tree) {
+      this._tree?.delete();
+      this._tree = tree;
+      this._lastFullyParsed?.delete();
+      this._lastFullyParsed = tree.copy();
+      this._lastFullyParsedWithEdits?.delete();
+      this._lastFullyParsedWithEdits = tree.copy();
+      this._versionId = version;
+      return tree;
+    } else if (!this._tree) {
+      this.parser.reset();
+    }
+    return void 0;
+  }
+  _parse(model) {
+    let parseType = "fullParse" /* Full */;
+    if (this.tree) {
+      parseType = "incrementalParse" /* Incremental */;
+    }
+    return this._parseAndYield(model, parseType);
+  }
+  async _parseAndYield(model, parseType) {
+    let time = 0;
+    let passes = 0;
+    const inProgressVersion = this._editVersion;
+    let newTree;
+    this._lastYieldTime = performance.now();
+    do {
+      const timer = performance.now();
+      try {
+        newTree = this.parser.parse((index, position) => this._parseCallback(model, index), this._tree, { progressCallback: this._parseProgressCallback.bind(this), includedRanges: this._ranges });
+      } catch (e) {
+      } finally {
+        time += performance.now() - timer;
+        passes++;
+      }
+      await new Promise((resolve) => setTimeout0(resolve));
+    } while (!model.isDisposed() && !this.isDisposed && !newTree && inProgressVersion === model.getVersionId());
+    this.sendParseTimeTelemetry(parseType, time, passes);
+    return newTree && inProgressVersion === model.getVersionId() ? newTree : void 0;
+  }
+  _lastYieldTime = 0;
+  _parseProgressCallback(state) {
+    const now = performance.now();
+    if (now - this._lastYieldTime > 50) {
+      this._lastYieldTime = now;
+      return true;
+    }
+    return false;
+  }
+  _parseCallback(textModel, index) {
+    try {
+      return textModel.getTextBuffer().getNearestChunk(index);
+    } catch (e) {
+      this._logService.debug("Error getting chunk for tree-sitter parsing", e);
+    }
+    return void 0;
+  }
+  _ranges;
+  _setRanges(newRanges) {
+    const unKnownRanges = [];
+    if (this._ranges) {
+      for (const newRange of newRanges) {
+        let isFullyIncluded = false;
+        for (let i = 0; i < this._ranges.length; i++) {
+          const existingRange = this._ranges[i];
+          if (rangesEqual(existingRange, newRange) || rangesIntersect(existingRange, newRange)) {
+            isFullyIncluded = true;
+            break;
+          }
+        }
+        if (!isFullyIncluded) {
+          unKnownRanges.push(newRange);
+        }
+      }
+    } else {
+      unKnownRanges.push(...newRanges);
+    }
+    this._ranges = newRanges;
+    return unKnownRanges;
+  }
+  get ranges() {
+    return this._ranges;
+  }
+  sendParseTimeTelemetry(parseType, time, passes) {
+    this._logService.debug(`Tree parsing (${parseType}) took ${time} ms and ${passes} passes.`);
+    if (parseType === "fullParse" /* Full */) {
+      this._telemetryService.publicLog2(`treeSitter.fullParse`, { languageId: this.languageId, time, passes });
+    } else {
+      this._telemetryService.publicLog2(`treeSitter.incrementalParse`, { languageId: this.languageId, time, passes });
+    }
+  }
+}
+function rangesEqual(a, b) {
+  return a.startPosition.row === b.startPosition.row && a.startPosition.column === b.startPosition.column && a.endPosition.row === b.endPosition.row && a.endPosition.column === b.endPosition.column && a.startIndex === b.startIndex && a.endIndex === b.endIndex;
+}
+__name(rangesEqual, "rangesEqual");
+function rangesIntersect(a, b) {
+  return a.startIndex <= b.startIndex && a.endIndex >= b.startIndex || b.startIndex <= a.startIndex && b.endIndex >= a.startIndex;
+}
+__name(rangesIntersect, "rangesIntersect");
+export {
+  TextModelTreeSitter,
+  TreeSitterParseResult
+};
+//# sourceMappingURL=textModelTreeSitter.js.map

@@ -1,1 +1,39 @@
-var m=Object.defineProperty,l=Object.getOwnPropertyDescriptor,p=(o,t,e,i)=>{for(var n,r=i>1?void 0:i?l(t,e):t,s=o.length-1;s>=0;s--)(n=o[s])&&(r=(i?n(t,e,r):n(r))||r);return i&&r&&m(t,e,r),r},c=(o,t)=>(e,i)=>t(e,i,o);import{Disposable as d}from"../../../../../base/common/lifecycle.js";import{IInstantiationService as g}from"../../../../../platform/instantiation/common/instantiation.js";import"../../../../common/contributions.js";import{ILanguageModelToolsService as f}from"../../common/languageModelToolsService.js";import{EditTool as h,EditToolData as I}from"./editFileTool.js";let n=class extends d{static ID="chat.builtinTools";constructor(o,t){super();const e=t.createInstance(h);this._register(o.registerToolData(I)),this._register(o.registerToolImplementation(I.id,e))}};n=p([c(0,f),c(1,g)],n);const _="vscode_fetchWebPage_internal";export{n as BuiltinToolsContribution,_ as InternalFetchWebPageToolId};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { IWorkbenchContribution } from "../../../../common/contributions.js";
+import { ILanguageModelToolsService } from "../../common/languageModelToolsService.js";
+import { EditTool, EditToolData } from "./editFileTool.js";
+let BuiltinToolsContribution = class extends Disposable {
+  static {
+    __name(this, "BuiltinToolsContribution");
+  }
+  static ID = "chat.builtinTools";
+  constructor(toolsService, instantiationService) {
+    super();
+    const editTool = instantiationService.createInstance(EditTool);
+    this._register(toolsService.registerToolData(EditToolData));
+    this._register(toolsService.registerToolImplementation(EditToolData.id, editTool));
+  }
+};
+BuiltinToolsContribution = __decorateClass([
+  __decorateParam(0, ILanguageModelToolsService),
+  __decorateParam(1, IInstantiationService)
+], BuiltinToolsContribution);
+const InternalFetchWebPageToolId = "vscode_fetchWebPage_internal";
+export {
+  BuiltinToolsContribution,
+  InternalFetchWebPageToolId
+};
+//# sourceMappingURL=tools.js.map

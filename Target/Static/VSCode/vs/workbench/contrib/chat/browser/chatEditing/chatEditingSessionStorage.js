@@ -1,1 +1,223 @@
-var R=Object.defineProperty;var x=Object.getOwnPropertyDescriptor;var T=(l,n,r,o)=>{for(var a=o>1?void 0:o?x(n,r):n,d=l.length-1,S;d>=0;d--)(S=l[d])&&(a=(o?S(n,r,a):S(a))||a);return o&&a&&R(n,r,a),a},p=(l,n)=>(r,o)=>n(r,o,l);import{VSBuffer as C}from"../../../../../base/common/buffer.js";import{StringSHA1 as H}from"../../../../../base/common/hash.js";import{ResourceMap as v}from"../../../../../base/common/map.js";import{joinPath as h}from"../../../../../base/common/resources.js";import{URI as f}from"../../../../../base/common/uri.js";import{OffsetEdit as M}from"../../../../../editor/common/core/offsetEdit.js";import{IEnvironmentService as b}from"../../../../../platform/environment/common/environment.js";import{IFileService as q}from"../../../../../platform/files/common/files.js";import{ILogService as P}from"../../../../../platform/log/common/log.js";import{IWorkspaceContextService as k}from"../../../../../platform/workspace/common/workspace.js";import"./chatEditingModifiedFileEntry.js";import"../../common/chatEditingService.js";const O="contents",D="state.json";let E=class{constructor(n,r,o,a,d){this.chatSessionId=n;this._fileService=r;this._environmentService=o;this._logService=a;this._workspaceContextService=d}_getStorageLocation(){const n=this._workspaceContextService.getWorkspace().id;return h(this._environmentService.workspaceStorageHome,n,"chatEditingSessions",this.chatSessionId)}async restoreState(){const n=this._getStorageLocation(),r=new Map,o=t=>{let s=r.get(t);return s||(s=this._fileService.readFile(h(n,O,t)).then(e=>e.value.toString()),r.set(t,s)),s},a=async t=>{const s=new v;for(const e of t){const i=await g(e);s.set(i.resource,i)}return s},d=async t=>{const s=await a(t.entries);return{stopId:"stopId"in t?t.stopId:void 0,entries:s}},S=t=>"stops"in t?t:{requestId:t.requestId,stops:[{stopId:void 0,entries:t.entries}],postEdit:void 0},y=async(t,s)=>{const e=await Promise.all(s.stops.map(d));return{startIndex:t,requestId:s.requestId,stops:e,postEdit:s.postEdit&&await a(s.postEdit)}},g=async t=>({resource:f.parse(t.resource),languageId:t.languageId,original:await o(t.originalHash),current:await o(t.currentHash),originalToCurrentEdit:M.fromJson(t.originalToCurrentEdit),state:t.state,snapshotUri:f.parse(t.snapshotUri),telemetryInfo:{requestId:t.telemetryInfo.requestId,agentId:t.telemetryInfo.agentId,command:t.telemetryInfo.command,sessionId:this.chatSessionId,result:void 0}});try{const t=h(n,D);if(!await this._fileService.exists(t)){this._logService.debug(`chatEditingSession: No editing session state found at ${t.toString()}`);return}this._logService.debug(`chatEditingSession: Restoring editing session at ${t.toString()}`);const s=await this._fileService.readFile(t),e=JSON.parse(s.value.toString());if(!z.includes(e.version))return;let i=0;const c=await Promise.all(e.linearHistory.map(u=>{const m=S(u),F=y(i,m);return i+=m.stops.length,F})),I=new v;for(const u of e.initialFileContents)I.set(f.parse(u[0]),await o(u[1]));const _=e.pendingSnapshot?await d(e.pendingSnapshot):void 0,w=await d(e.recentSnapshot);return{initialFileContents:I,pendingSnapshot:_,recentSnapshot:w,linearHistoryIndex:e.linearHistoryIndex,linearHistory:c}}catch(t){this._logService.error(`Error restoring chat editing session from ${n.toString()}`,t)}}async storeState(n){const r=this._getStorageLocation(),o=f.joinPath(r,O),a=new Set;try{(await this._fileService.resolve(o)).children?.forEach(i=>{i.isFile&&a.add(i.name)})}catch{try{await this._fileService.createFolder(o)}catch(i){this._logService.error(`Error creating chat editing session content folder ${o.toString()}`,i);return}}const d=new Map,S=e=>{const i=new H;i.update(e);const c=i.digest().substring(0,7);return d.set(c,e),c},y=(e,i)=>Array.from(e.entries()).map(([c,I])=>[c.toString(),i(I)]),g=e=>({stopId:e.stopId,entries:Array.from(e.entries.values()).map(s)}),t=e=>({requestId:e.requestId,stops:e.stops.map(g),postEdit:e.postEdit?Array.from(e.postEdit.values()).map(s):void 0}),s=e=>({resource:e.resource.toString(),languageId:e.languageId,originalHash:S(e.original),currentHash:S(e.current),originalToCurrentEdit:e.originalToCurrentEdit.edits.map(i=>({pos:i.replaceRange.start,len:i.replaceRange.length,txt:i.newText})),state:e.state,snapshotUri:e.snapshotUri.toString(),telemetryInfo:{requestId:e.telemetryInfo.requestId,agentId:e.telemetryInfo.agentId,command:e.telemetryInfo.command}});try{const e={version:A,sessionId:this.chatSessionId,linearHistory:n.linearHistory.map(t),linearHistoryIndex:n.linearHistoryIndex,initialFileContents:y(n.initialFileContents,i=>S(i)),pendingSnapshot:n.pendingSnapshot?g(n.pendingSnapshot):void 0,recentSnapshot:g(n.recentSnapshot)};this._logService.debug(`chatEditingSession: Storing editing session at ${r.toString()}: ${d.size} files`);for(const[i,c]of d)a.has(i)||await this._fileService.writeFile(h(o,i),C.fromString(c));await this._fileService.writeFile(h(r,D),C.fromString(JSON.stringify(e)))}catch(e){this._logService.debug(`Error storing chat editing session to ${r.toString()}`,e)}}async clearState(){const n=this._getStorageLocation();if(await this._fileService.exists(n)){this._logService.debug(`chatEditingSession: Clearing editing session at ${n.toString()}`);try{await this._fileService.del(n,{recursive:!0})}catch(r){this._logService.debug(`Error clearing chat editing session from ${n.toString()}`,r)}}}};E=T([p(1,q),p(2,b),p(3,P),p(4,k)],E);const z=[1,2],A=2;export{E as ChatEditingSessionStorage};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { VSBuffer } from "../../../../../base/common/buffer.js";
+import { StringSHA1 } from "../../../../../base/common/hash.js";
+import { ResourceMap } from "../../../../../base/common/map.js";
+import { joinPath } from "../../../../../base/common/resources.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { OffsetEdit, ISingleOffsetEdit, IOffsetEdit } from "../../../../../editor/common/core/offsetEdit.js";
+import { IEnvironmentService } from "../../../../../platform/environment/common/environment.js";
+import { IFileService } from "../../../../../platform/files/common/files.js";
+import { ILogService } from "../../../../../platform/log/common/log.js";
+import { IWorkspaceContextService } from "../../../../../platform/workspace/common/workspace.js";
+import { ISnapshotEntry } from "./chatEditingModifiedFileEntry.js";
+import { WorkingSetDisplayMetadata, ModifiedFileEntryState } from "../../common/chatEditingService.js";
+const STORAGE_CONTENTS_FOLDER = "contents";
+const STORAGE_STATE_FILE = "state.json";
+let ChatEditingSessionStorage = class {
+  constructor(chatSessionId, _fileService, _environmentService, _logService, _workspaceContextService) {
+    this.chatSessionId = chatSessionId;
+    this._fileService = _fileService;
+    this._environmentService = _environmentService;
+    this._logService = _logService;
+    this._workspaceContextService = _workspaceContextService;
+  }
+  static {
+    __name(this, "ChatEditingSessionStorage");
+  }
+  _getStorageLocation() {
+    const workspaceId = this._workspaceContextService.getWorkspace().id;
+    return joinPath(this._environmentService.workspaceStorageHome, workspaceId, "chatEditingSessions", this.chatSessionId);
+  }
+  async restoreState() {
+    const storageLocation = this._getStorageLocation();
+    const fileContents = /* @__PURE__ */ new Map();
+    const getFileContent = /* @__PURE__ */ __name((hash) => {
+      let readPromise = fileContents.get(hash);
+      if (!readPromise) {
+        readPromise = this._fileService.readFile(joinPath(storageLocation, STORAGE_CONTENTS_FOLDER, hash)).then((content) => content.value.toString());
+        fileContents.set(hash, readPromise);
+      }
+      return readPromise;
+    }, "getFileContent");
+    const deserializeSnapshotEntriesDTO = /* @__PURE__ */ __name(async (dtoEntries) => {
+      const entries = new ResourceMap();
+      for (const entryDTO of dtoEntries) {
+        const entry = await deserializeSnapshotEntry(entryDTO);
+        entries.set(entry.resource, entry);
+      }
+      return entries;
+    }, "deserializeSnapshotEntriesDTO");
+    const deserializeChatEditingStopDTO = /* @__PURE__ */ __name(async (stopDTO) => {
+      const entries = await deserializeSnapshotEntriesDTO(stopDTO.entries);
+      return { stopId: "stopId" in stopDTO ? stopDTO.stopId : void 0, entries };
+    }, "deserializeChatEditingStopDTO");
+    const normalizeSnapshotDtos = /* @__PURE__ */ __name((snapshot) => {
+      if ("stops" in snapshot) {
+        return snapshot;
+      }
+      return { requestId: snapshot.requestId, stops: [{ stopId: void 0, entries: snapshot.entries }], postEdit: void 0 };
+    }, "normalizeSnapshotDtos");
+    const deserializeChatEditingSessionSnapshot = /* @__PURE__ */ __name(async (startIndex, snapshot) => {
+      const stops = await Promise.all(snapshot.stops.map(deserializeChatEditingStopDTO));
+      return { startIndex, requestId: snapshot.requestId, stops, postEdit: snapshot.postEdit && await deserializeSnapshotEntriesDTO(snapshot.postEdit) };
+    }, "deserializeChatEditingSessionSnapshot");
+    const deserializeSnapshotEntry = /* @__PURE__ */ __name(async (entry) => {
+      return {
+        resource: URI.parse(entry.resource),
+        languageId: entry.languageId,
+        original: await getFileContent(entry.originalHash),
+        current: await getFileContent(entry.currentHash),
+        originalToCurrentEdit: OffsetEdit.fromJson(entry.originalToCurrentEdit),
+        state: entry.state,
+        snapshotUri: URI.parse(entry.snapshotUri),
+        telemetryInfo: { requestId: entry.telemetryInfo.requestId, agentId: entry.telemetryInfo.agentId, command: entry.telemetryInfo.command, sessionId: this.chatSessionId, result: void 0 }
+      };
+    }, "deserializeSnapshotEntry");
+    try {
+      const stateFilePath = joinPath(storageLocation, STORAGE_STATE_FILE);
+      if (!await this._fileService.exists(stateFilePath)) {
+        this._logService.debug(`chatEditingSession: No editing session state found at ${stateFilePath.toString()}`);
+        return void 0;
+      }
+      this._logService.debug(`chatEditingSession: Restoring editing session at ${stateFilePath.toString()}`);
+      const stateFileContent = await this._fileService.readFile(stateFilePath);
+      const data = JSON.parse(stateFileContent.value.toString());
+      if (!COMPATIBLE_STORAGE_VERSIONS.includes(data.version)) {
+        return void 0;
+      }
+      let linearHistoryIndex = 0;
+      const linearHistory = await Promise.all(data.linearHistory.map((snapshot) => {
+        const norm = normalizeSnapshotDtos(snapshot);
+        const result = deserializeChatEditingSessionSnapshot(linearHistoryIndex, norm);
+        linearHistoryIndex += norm.stops.length;
+        return result;
+      }));
+      const initialFileContents = new ResourceMap();
+      for (const fileContentDTO of data.initialFileContents) {
+        initialFileContents.set(URI.parse(fileContentDTO[0]), await getFileContent(fileContentDTO[1]));
+      }
+      const pendingSnapshot = data.pendingSnapshot ? await deserializeChatEditingStopDTO(data.pendingSnapshot) : void 0;
+      const recentSnapshot = await deserializeChatEditingStopDTO(data.recentSnapshot);
+      return {
+        initialFileContents,
+        pendingSnapshot,
+        recentSnapshot,
+        linearHistoryIndex: data.linearHistoryIndex,
+        linearHistory
+      };
+    } catch (e) {
+      this._logService.error(`Error restoring chat editing session from ${storageLocation.toString()}`, e);
+    }
+    return void 0;
+  }
+  async storeState(state) {
+    const storageFolder = this._getStorageLocation();
+    const contentsFolder = URI.joinPath(storageFolder, STORAGE_CONTENTS_FOLDER);
+    const existingContents = /* @__PURE__ */ new Set();
+    try {
+      const stat = await this._fileService.resolve(contentsFolder);
+      stat.children?.forEach((child) => {
+        if (child.isFile) {
+          existingContents.add(child.name);
+        }
+      });
+    } catch (e) {
+      try {
+        await this._fileService.createFolder(contentsFolder);
+      } catch (e2) {
+        this._logService.error(`Error creating chat editing session content folder ${contentsFolder.toString()}`, e2);
+        return;
+      }
+    }
+    const fileContents = /* @__PURE__ */ new Map();
+    const addFileContent = /* @__PURE__ */ __name((content) => {
+      const shaComputer = new StringSHA1();
+      shaComputer.update(content);
+      const sha = shaComputer.digest().substring(0, 7);
+      fileContents.set(sha, content);
+      return sha;
+    }, "addFileContent");
+    const serializeResourceMap = /* @__PURE__ */ __name((resourceMap, serialize) => {
+      return Array.from(resourceMap.entries()).map(([resourceURI, value]) => [resourceURI.toString(), serialize(value)]);
+    }, "serializeResourceMap");
+    const serializeChatEditingSessionStop = /* @__PURE__ */ __name((stop) => {
+      return {
+        stopId: stop.stopId,
+        entries: Array.from(stop.entries.values()).map(serializeSnapshotEntry)
+      };
+    }, "serializeChatEditingSessionStop");
+    const serializeChatEditingSessionSnapshot = /* @__PURE__ */ __name((snapshot) => {
+      return {
+        requestId: snapshot.requestId,
+        stops: snapshot.stops.map(serializeChatEditingSessionStop),
+        postEdit: snapshot.postEdit ? Array.from(snapshot.postEdit.values()).map(serializeSnapshotEntry) : void 0
+      };
+    }, "serializeChatEditingSessionSnapshot");
+    const serializeSnapshotEntry = /* @__PURE__ */ __name((entry) => {
+      return {
+        resource: entry.resource.toString(),
+        languageId: entry.languageId,
+        originalHash: addFileContent(entry.original),
+        currentHash: addFileContent(entry.current),
+        originalToCurrentEdit: entry.originalToCurrentEdit.edits.map((edit) => ({ pos: edit.replaceRange.start, len: edit.replaceRange.length, txt: edit.newText })),
+        state: entry.state,
+        snapshotUri: entry.snapshotUri.toString(),
+        telemetryInfo: { requestId: entry.telemetryInfo.requestId, agentId: entry.telemetryInfo.agentId, command: entry.telemetryInfo.command }
+      };
+    }, "serializeSnapshotEntry");
+    try {
+      const data = {
+        version: STORAGE_VERSION,
+        sessionId: this.chatSessionId,
+        linearHistory: state.linearHistory.map(serializeChatEditingSessionSnapshot),
+        linearHistoryIndex: state.linearHistoryIndex,
+        initialFileContents: serializeResourceMap(state.initialFileContents, (value) => addFileContent(value)),
+        pendingSnapshot: state.pendingSnapshot ? serializeChatEditingSessionStop(state.pendingSnapshot) : void 0,
+        recentSnapshot: serializeChatEditingSessionStop(state.recentSnapshot)
+      };
+      this._logService.debug(`chatEditingSession: Storing editing session at ${storageFolder.toString()}: ${fileContents.size} files`);
+      for (const [hash, content] of fileContents) {
+        if (!existingContents.has(hash)) {
+          await this._fileService.writeFile(joinPath(contentsFolder, hash), VSBuffer.fromString(content));
+        }
+      }
+      await this._fileService.writeFile(joinPath(storageFolder, STORAGE_STATE_FILE), VSBuffer.fromString(JSON.stringify(data)));
+    } catch (e) {
+      this._logService.debug(`Error storing chat editing session to ${storageFolder.toString()}`, e);
+    }
+  }
+  async clearState() {
+    const storageFolder = this._getStorageLocation();
+    if (await this._fileService.exists(storageFolder)) {
+      this._logService.debug(`chatEditingSession: Clearing editing session at ${storageFolder.toString()}`);
+      try {
+        await this._fileService.del(storageFolder, { recursive: true });
+      } catch (e) {
+        this._logService.debug(`Error clearing chat editing session from ${storageFolder.toString()}`, e);
+      }
+    }
+  }
+};
+ChatEditingSessionStorage = __decorateClass([
+  __decorateParam(1, IFileService),
+  __decorateParam(2, IEnvironmentService),
+  __decorateParam(3, ILogService),
+  __decorateParam(4, IWorkspaceContextService)
+], ChatEditingSessionStorage);
+const COMPATIBLE_STORAGE_VERSIONS = [1, 2];
+const STORAGE_VERSION = 2;
+export {
+  ChatEditingSessionStorage
+};
+//# sourceMappingURL=chatEditingSessionStorage.js.map

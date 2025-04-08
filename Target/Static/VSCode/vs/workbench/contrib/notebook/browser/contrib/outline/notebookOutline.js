@@ -1,1 +1,889 @@
-var Z=Object.defineProperty;var ee=Object.getOwnPropertyDescriptor;var S=(s,e,o,t)=>{for(var i=t>1?void 0:t?ee(e,o):e,r=s.length-1,l;r>=0;r--)(l=s[r])&&(i=(t?l(e,o,i):l(i))||i);return t&&i&&Z(e,o,i),i},d=(s,e)=>(o,t)=>e(o,t,s);import{localize as b}from"../../../../../../nls.js";import*as U from"../../../../../../base/browser/dom.js";import{ToolBar as oe}from"../../../../../../base/browser/ui/toolbar/toolbar.js";import{IconLabel as te}from"../../../../../../base/browser/ui/iconLabel/iconLabel.js";import"../../../../../../base/browser/ui/list/list.js";import"../../../../../../base/browser/ui/list/listWidget.js";import"../../../../../../base/browser/ui/tree/tree.js";import{Emitter as ie}from"../../../../../../base/common/event.js";import{createMatches as ne}from"../../../../../../base/common/filters.js";import{Disposable as le,DisposableStore as C,toDisposable as $}from"../../../../../../base/common/lifecycle.js";import{ThemeIcon as G}from"../../../../../../base/common/themables.js";import"../../../../../../base/common/uri.js";import{getIconClassesForLanguageId as J}from"../../../../../../editor/common/services/getIconClasses.js";import{IConfigurationService as g}from"../../../../../../platform/configuration/common/configuration.js";import{Extensions as re}from"../../../../../../platform/configuration/common/configurationRegistry.js";import"../../../../../../platform/editor/common/editor.js";import{IInstantiationService as x}from"../../../../../../platform/instantiation/common/instantiation.js";import"../../../../../../platform/list/browser/listService.js";import{MarkerSeverity as se}from"../../../../../../platform/markers/common/markers.js";import{Registry as X}from"../../../../../../platform/registry/common/platform.js";import{listErrorForeground as ae,listWarningForeground as de}from"../../../../../../platform/theme/common/colorRegistry.js";import{IThemeService as H}from"../../../../../../platform/theme/common/themeService.js";import{Extensions as ce}from"../../../../../common/contributions.js";import"../../../../../common/editor.js";import{CellFoldingState as Y,CellRevealType as ue}from"../../notebookBrowser.js";import{NotebookEditor as he}from"../../notebookEditor.js";import"../../viewModel/notebookOutlineDataSource.js";import{CellKind as m,NotebookCellsChangeType as L,NotebookSetting as n}from"../../../common/notebookCommon.js";import{IEditorService as me,SIDE_GROUP as be}from"../../../../../services/editor/common/editorService.js";import{LifecyclePhase as pe}from"../../../../../services/lifecycle/common/lifecycle.js";import{IOutlineService as ge,OutlineConfigCollapseItemsValues as Se,OutlineConfigKeys as A,OutlineTarget as f}from"../../../../../services/outline/browser/outline.js";import"../../viewModel/OutlineEntry.js";import{CancellationToken as Ce}from"../../../../../../base/common/cancellation.js";import"../../../../../../editor/common/model.js";import{Range as ye}from"../../../../../../editor/common/core/range.js";import{mainWindow as fe}from"../../../../../../base/browser/window.js";import{IContextMenuService as ve}from"../../../../../../platform/contextview/browser/contextView.js";import{Action2 as F,IMenuService as we,MenuId as v,MenuItemAction as Ie,MenuRegistry as _e,registerAction2 as P}from"../../../../../../platform/actions/common/actions.js";import{ContextKeyExpr as O,IContextKeyService as Oe,RawContextKey as k}from"../../../../../../platform/contextkey/common/contextkey.js";import{MenuEntryActionViewItem as ke,getActionBarActions as De}from"../../../../../../platform/actions/browser/menuEntryActionViewItem.js";import"../../../../../../base/common/actions.js";import"../../controller/sectionActions.js";import"../../viewModel/markupCellViewModel.js";import{Delayer as K,disposableTimeout as Ee}from"../../../../../../base/common/async.js";import{IOutlinePane as Me}from"../../../../outline/browser/outline.js";import{Codicon as Te}from"../../../../../../base/common/codicons.js";import{NOTEBOOK_IS_ACTIVE_EDITOR as Ne}from"../../../common/notebookContextKeys.js";import{NotebookOutlineConstants as w}from"../../viewModel/notebookOutlineEntryFactory.js";import{INotebookCellOutlineDataSourceFactory as Re}from"../../viewModel/notebookOutlineDataSourceFactory.js";import{INotebookExecutionStateService as Le,NotebookExecutionType as Ve}from"../../../common/notebookExecutionStateService.js";import{ILanguageFeaturesService as xe}from"../../../../../../editor/common/services/languageFeatures.js";class W{constructor(e,o,t,i,r,l){this.container=e;this.iconClass=o;this.iconLabel=t;this.decoration=i;this.actionMenu=r;this.elementDisposables=l}static templateId="NotebookOutlineRenderer"}let D=class{constructor(e,o,t,i,r,l,a,c){this._editor=e;this._target=o;this._themeService=t;this._configurationService=i;this._contextMenuService=r;this._contextKeyService=l;this._menuService=a;this._instantiationService=c}templateId=W.templateId;renderTemplate(e){const o=new C;e.classList.add("notebook-outline-element","show-file-icons");const t=document.createElement("div");e.append(t);const i=new te(e,{supportHighlights:!0}),r=document.createElement("div");r.className="element-decoration",e.append(r);const l=document.createElement("div");return l.className="action-menu",e.append(l),new W(e,t,i,r,l,o)}renderElement(e,o,t,i){const r=[],l={matches:ne(e.filterData),labelEscapeNewLines:!0,extraClasses:r},a=e.element.cell.cellKind===m.Code;e.element.level>=8?t.iconClass.className="element-icon "+G.asClassNameArray(e.element.icon).join(" "):a&&this._themeService.getFileIconTheme().hasFileIcons&&!e.element.isExecuting?(t.iconClass.className="",r.push(...J(e.element.cell.language??""))):t.iconClass.className="element-icon "+G.asClassNameArray(e.element.icon).join(" "),t.iconLabel.setLabel(" "+e.element.label,void 0,l);const{markerInfo:c}=e.element;if(t.container.style.removeProperty("--outline-element-color"),t.decoration.innerText="",c){const u=this._configurationService.getValue("problems.visibility");!this._configurationService.getValue(A.problemsBadges)||!u?(t.decoration.classList.remove("bubble"),t.decoration.innerText=""):c.count===0?(t.decoration.classList.add("bubble"),t.decoration.innerText="\uEA71"):(t.decoration.classList.remove("bubble"),t.decoration.innerText=c.count>9?"9+":String(c.count));const y=this._themeService.getColorTheme().getColor(c.topSev===se.Error?ae:de);if(u===void 0)return;!this._configurationService.getValue(A.problemsColors)||!u?(t.container.style.removeProperty("--outline-element-color"),t.decoration.style.setProperty("--outline-element-color",y?.toString()??"inherit")):t.container.style.setProperty("--outline-element-color",y?.toString()??"inherit")}if(this._target===f.OutlinePane){if(!this._editor)return;const u=e.element.cell,h=this._editor.getViewModel();if(!h)return;const y=h.getCellIndex(u),R=a?0:h.getFoldedLength(y),p=t.elementDisposables.add(this._contextKeyService.createScoped(t.container));_.CellKind.bindTo(p).set(a?m.Code:m.Markup),_.CellHasChildren.bindTo(p).set(R>0),_.CellHasHeader.bindTo(p).set(e.element.level!==w.NonHeaderOutlineLevel),_.OutlineElementTarget.bindTo(p).set(this._target),this.setupFolding(a,h,p,t,u);const B=t.elementDisposables.add(new oe(t.actionMenu,this._contextMenuService,{actionViewItemProvider:Q=>{if(Q instanceof Ie)return this._instantiationService.createInstance(ke,Q,void 0)}})),q=t.elementDisposables.add(this._menuService.createMenu(v.NotebookOutlineActionMenu,p)),V=j(q,{notebookEditor:this._editor,outlineEntry:e.element});B.setActions(V.primary,V.secondary),this.setupToolbarListeners(this._editor,B,q,V,e.element,t),t.actionMenu.style.padding="0 0.8em 0 0.4em"}}disposeTemplate(e){e.iconLabel.dispose(),e.elementDisposables.dispose()}disposeElement(e,o,t,i){t.elementDisposables.clear(),U.clearNode(t.actionMenu)}setupFolding(e,o,t,i,r){const l=e?Y.None:r.foldingState,a=_.CellFoldingState.bindTo(t);a.set(l),e||i.elementDisposables.add(o.onDidFoldingStateChanged(()=>{const c=r.foldingState;_.CellFoldingState.bindTo(t).set(c),a.set(c)}))}setupToolbarListeners(e,o,t,i,r,l){let a=!1,c;o.setActions(i.primary,i.secondary),l.elementDisposables.add(t.onDidChange(()=>{if(a){const h=j(t,{notebookEditor:e,outlineEntry:r});c=()=>o.setActions(h.primary,h.secondary);return}const u=j(t,{notebookEditor:e,outlineEntry:r});o.setActions(u.primary,u.secondary)})),l.container.classList.remove("notebook-outline-toolbar-dropdown-active"),l.elementDisposables.add(o.onDidChangeDropdownVisibility(u=>{a=u,u?l.container.classList.add("notebook-outline-toolbar-dropdown-active"):l.container.classList.remove("notebook-outline-toolbar-dropdown-active"),c&&!u&&(Ee(()=>{c?.()},0,l.elementDisposables),c=void 0)}))}};D=S([d(2,H),d(3,g),d(4,ve),d(5,Oe),d(6,we),d(7,x)],D);function j(s,e){return De(s.getActions({shouldForwardArgs:!0,arg:e}),o=>/^inline/.test(o))}class He{getAriaLabel(e){return e.label}getWidgetAriaLabel(){return""}}class Ae{getKeyboardNavigationLabel(e){return e.label}}class Fe{getHeight(e){return 22}getTemplateId(e){return W.templateId}}let E=class{constructor(e,o,t){this.notebookCellOutlineDataSourceRef=e;this._configurationService=o;this._themeService=t;this.gotoShowCodeCellSymbols=this._configurationService.getValue(n.gotoSymbolsAllSymbols),this._disposables.add(this._configurationService.onDidChangeConfiguration(i=>{i.affectsConfiguration(n.gotoSymbolsAllSymbols)&&(this.gotoShowCodeCellSymbols=this._configurationService.getValue(n.gotoSymbolsAllSymbols))}))}_disposables=new C;gotoShowCodeCellSymbols;getQuickPickElements(){const e=[];for(const l of this.notebookCellOutlineDataSourceRef?.object?.entries??[])l.asFlatList(e);const o=[],{hasFileIcons:t}=this._themeService.getFileIconTheme(),i=l=>!!l.symbolKind,r=l=>l.cell.cellKind===m.Code&&l.level===w.NonHeaderOutlineLevel;for(let l=0;l<e.length;l++){const a=e[l],c=e[l+1];if(!this.gotoShowCodeCellSymbols&&i(a)||this.gotoShowCodeCellSymbols&&r(a)&&c&&i(c))continue;const u=t&&!a.symbolKind;o.push({element:a,label:u?a.label:`$(${a.icon.id}) ${a.label}`,ariaLabel:a.label,iconClasses:u?J(a.cell.language??""):void 0})}return o}dispose(){this._disposables.dispose()}};E=S([d(1,g),d(2,H)],E);function z(s,e,o,t){return!!(e&&s.cell.cellKind===m.Markup&&s.level===w.NonHeaderOutlineLevel||!o&&s.cell.cellKind===m.Code||!t&&s.cell.cellKind===m.Code&&s.level>w.NonHeaderOutlineLevel)}let M=class{constructor(e,o){this.outlineDataSourceRef=e;this._configurationService=o;this.showCodeCells=this._configurationService.getValue(n.outlineShowCodeCells),this.showCodeCellSymbols=this._configurationService.getValue(n.outlineShowCodeCellSymbols),this.showMarkdownHeadersOnly=this._configurationService.getValue(n.outlineShowMarkdownHeadersOnly),this._disposables.add(this._configurationService.onDidChangeConfiguration(t=>{t.affectsConfiguration(n.outlineShowCodeCells)&&(this.showCodeCells=this._configurationService.getValue(n.outlineShowCodeCells)),t.affectsConfiguration(n.outlineShowCodeCellSymbols)&&(this.showCodeCellSymbols=this._configurationService.getValue(n.outlineShowCodeCellSymbols)),t.affectsConfiguration(n.outlineShowMarkdownHeadersOnly)&&(this.showMarkdownHeadersOnly=this._configurationService.getValue(n.outlineShowMarkdownHeadersOnly))}))}_disposables=new C;showCodeCells;showCodeCellSymbols;showMarkdownHeadersOnly;getActiveEntry(){const e=this.outlineDataSourceRef?.object?.activeElement;if(!e)return;if(!z(e,this.showMarkdownHeadersOnly,this.showCodeCells,this.showCodeCellSymbols))return e;let o=e.parent;for(;o;)if(z(o,this.showMarkdownHeadersOnly,this.showCodeCells,this.showCodeCellSymbols))o=o.parent;else return o}*getChildren(e){const t=e instanceof I?this.outlineDataSourceRef?.object?.entries??[]:e.children;for(const i of t)i.cell.cellKind===m.Markup?this.showMarkdownHeadersOnly?i.level<w.NonHeaderOutlineLevel&&(yield i):yield i:this.showCodeCells&&i.cell.cellKind===m.Code&&(this.showCodeCellSymbols?yield i:i.level===w.NonHeaderOutlineLevel&&(yield i))}dispose(){this._disposables.dispose()}};M=S([d(1,g)],M);let T=class{constructor(e,o){this.outlineDataSourceRef=e;this._configurationService=o;this.showCodeCells=this._configurationService.getValue(n.breadcrumbsShowCodeCells),this._disposables.add(this._configurationService.onDidChangeConfiguration(t=>{t.affectsConfiguration(n.breadcrumbsShowCodeCells)&&(this.showCodeCells=this._configurationService.getValue(n.breadcrumbsShowCodeCells))}))}_disposables=new C;showCodeCells;getBreadcrumbElements(){const e=[];let o=this.outlineDataSourceRef?.object?.activeElement;for(;o;)(this.showCodeCells||o.cell.cellKind!==m.Code)&&e.unshift(o),o=o.parent;return e}dispose(){this._disposables.dispose()}};T=S([d(1,g)],T);class Pe{_collator=new U.WindowIdleValue(fe,()=>new Intl.Collator(void 0,{numeric:!0}));compareByPosition(e,o){return e.index-o.index}compareByType(e,o){return e.cell.cellKind-o.cell.cellKind||this._collator.value.compare(e.label,o.label)}compareByName(e,o){return this._collator.value.compare(e.label,o.label)}}let I=class{constructor(e,o,t,i,r,l,a,c){this._editor=e;this._target=o;this._themeService=t;this._editorService=i;this._instantiationService=r;this._configurationService=l;this._languageFeaturesService=a;this._notebookExecutionStateService=c;this.outlineShowCodeCells=this._configurationService.getValue(n.outlineShowCodeCells),this.outlineShowCodeCellSymbols=this._configurationService.getValue(n.outlineShowCodeCellSymbols),this.outlineShowMarkdownHeadersOnly=this._configurationService.getValue(n.outlineShowMarkdownHeadersOnly),this.initializeOutline();const u=new Fe,h=[this._instantiationService.createInstance(D,this._editor.getControl(),this._target)],y=new Pe,R={collapseByDefault:this._target===f.Breadcrumbs||this._target===f.OutlinePane&&this._configurationService.getValue(A.collapseItems)===Se.Collapsed,expandOnlyOnTwistieClick:!0,multipleSelectionSupport:!1,accessibilityProvider:new He,identityProvider:{getId:p=>p.cell.uri.toString()},keyboardNavigationLabelProvider:new Ae};this.config={treeDataSource:this._treeDataSource,quickPickDataSource:this._quickPickDataSource,breadcrumbsDataSource:this._breadcrumbsDataSource,delegate:u,renderers:h,comparator:y,options:R}}outlineKind="notebookCells";_disposables=new C;_modelDisposables=new C;_dataSourceDisposables=new C;_onDidChange=new ie;onDidChange=this._onDidChange.event;delayerRecomputeState=this._disposables.add(new K(300));delayerRecomputeActive=this._disposables.add(new K(200));delayerRecomputeSymbols=this._disposables.add(new K(2e3));config;_outlineDataSourceReference;_treeDataSource;_quickPickDataSource;_breadcrumbsDataSource;outlineShowCodeCells;outlineShowCodeCellSymbols;outlineShowMarkdownHeadersOnly;get activeElement(){if(this.checkDelayer(),this._target===f.OutlinePane)return this.config.treeDataSource.getActiveEntry();console.error("activeElement should not be called outside of the OutlinePane")}get entries(){return this.checkDelayer(),this._outlineDataSourceReference?.object?.entries??[]}get uri(){return this._outlineDataSourceReference?.object?.uri}get isEmpty(){return this._outlineDataSourceReference?.object?.entries?!this._outlineDataSourceReference.object.entries.some(e=>!z(e,this.outlineShowMarkdownHeadersOnly,this.outlineShowCodeCells,this.outlineShowCodeCellSymbols)):!0}checkDelayer(){this.delayerRecomputeState.isTriggered()&&(this.delayerRecomputeState.cancel(),this.recomputeState())}initializeOutline(){this.setDataSources(),this.setModelListeners(),this._disposables.add(this._editor.onDidChangeModel(()=>{this.setDataSources(),this.setModelListeners(),this.computeSymbols()})),this._disposables.add(this._languageFeaturesService.documentSymbolProvider.onDidChange(()=>{this.delayedComputeSymbols()})),this._disposables.add(this._editor.onDidChangeSelection(()=>{this.delayedRecomputeActive()})),this._disposables.add(this._configurationService.onDidChangeConfiguration(e=>{(e.affectsConfiguration(n.outlineShowMarkdownHeadersOnly)||e.affectsConfiguration(n.outlineShowCodeCells)||e.affectsConfiguration(n.outlineShowCodeCellSymbols)||e.affectsConfiguration(n.breadcrumbsShowCodeCells))&&(this.outlineShowCodeCells=this._configurationService.getValue(n.outlineShowCodeCells),this.outlineShowCodeCellSymbols=this._configurationService.getValue(n.outlineShowCodeCellSymbols),this.outlineShowMarkdownHeadersOnly=this._configurationService.getValue(n.outlineShowMarkdownHeadersOnly),this.delayedRecomputeState())})),this._disposables.add(this._notebookExecutionStateService.onDidChangeExecution(e=>{e.type===Ve.cell&&this._editor.textModel&&e.affectsNotebook(this._editor.textModel?.uri)&&this.delayedRecomputeState()})),this._disposables.add(this._configurationService.onDidChangeConfiguration(e=>{e.affectsConfiguration(n.outlineShowCodeCellSymbols)&&(this.outlineShowCodeCellSymbols=this._configurationService.getValue(n.outlineShowCodeCellSymbols),this.computeSymbols())})),this._disposables.add(this._themeService.onDidFileIconThemeChange(()=>{this._onDidChange.fire({})})),this.recomputeState()}setDataSources(){const e=this._editor.getControl();this._outlineDataSourceReference?.dispose(),this._dataSourceDisposables.clear(),e?.hasModel()?(this._outlineDataSourceReference=this._dataSourceDisposables.add(this._instantiationService.invokeFunction(o=>o.get(Re).getOrCreate(e))),this._dataSourceDisposables.add(this._outlineDataSourceReference.object.onDidChange(()=>{this._onDidChange.fire({})}))):this._outlineDataSourceReference=void 0,this._treeDataSource=this._dataSourceDisposables.add(this._instantiationService.createInstance(M,this._outlineDataSourceReference)),this._quickPickDataSource=this._dataSourceDisposables.add(this._instantiationService.createInstance(E,this._outlineDataSourceReference)),this._breadcrumbsDataSource=this._dataSourceDisposables.add(this._instantiationService.createInstance(T,this._outlineDataSourceReference))}setModelListeners(){this._modelDisposables.clear(),this._editor.textModel&&(this.entries.length||this.computeSymbols(),this._modelDisposables.add(this._editor.textModel.onDidChangeContent(e=>{e.rawEvents.some(o=>o.kind===L.ChangeCellContent||o.kind===L.ChangeCellInternalMetadata||o.kind===L.Move||o.kind===L.ModelChange)&&this.delayedRecomputeState()})))}async computeSymbols(e=Ce.None){this._target===f.OutlinePane&&this.outlineShowCodeCellSymbols&&this.doComputeSymbols(e)}async doComputeSymbols(e){await this._outlineDataSourceReference?.object?.computeFullSymbols(e)}async delayedComputeSymbols(){this.delayerRecomputeState.cancel(),this.delayerRecomputeActive.cancel(),this.delayerRecomputeSymbols.trigger(()=>{this.computeSymbols()})}recomputeState(){this._outlineDataSourceReference?.object?.recomputeState()}delayedRecomputeState(){this.delayerRecomputeActive.cancel(),this.delayerRecomputeState.trigger(()=>{this.recomputeState()})}recomputeActive(){this._outlineDataSourceReference?.object?.recomputeActive()}delayedRecomputeActive(){this.delayerRecomputeActive.trigger(()=>{this.recomputeActive()})}async reveal(e,o,t){const i={...o,override:this._editor.input?.editorId,cellRevealType:ue.NearTopIfOutsideViewport,selection:e.position,viewState:void 0};await this._editorService.openEditor({resource:e.cell.uri,options:i},t?be:void 0)}preview(e){const o=this._editor.getControl();if(!o)return le.None;if(e.range){const r=ye.lift(e.range);o.revealRangeInCenterIfOutsideViewportAsync(e.cell,r)}else o.revealInCenterIfOutsideViewport(e.cell);const t=o.deltaCellDecorations([],[{handle:e.cell.handle,options:{className:"nb-symbolHighlight",outputClassName:"nb-symbolHighlight"}}]);let i;return o.changeModelDecorations(r=>{if(e.range){const l=[{range:e.range,options:{description:"document-symbols-outline-range-highlight",className:"rangeHighlight",isWholeLine:!0}}],a={ownerId:e.cell.handle,decorations:l};i=r.deltaDecorations([],[a])}}),$(()=>{o.deltaCellDecorations(t,[]),i?.length&&o.changeModelDecorations(r=>{r.deltaDecorations(i,[])})})}captureViewState(){const e=this._editor.getControl(),o=e?.getEditorViewState();return $(()=>{o&&e?.restoreListViewState(o)})}dispose(){this._onDidChange.dispose(),this._disposables.dispose(),this._modelDisposables.dispose(),this._dataSourceDisposables.dispose(),this._outlineDataSourceReference?.dispose()}};I=S([d(2,H),d(3,me),d(4,x),d(5,g),d(6,xe),d(7,Le)],I);let N=class{constructor(e,o){this._instantiationService=o;const t=e.registerOutlineCreator(this);this.dispose=()=>t.dispose()}dispose;matches(e){return e.getId()===he.ID}async createOutline(e,o,t){const i=this._instantiationService.createInstance(I,e,o);return o===f.QuickPick&&await i.doComputeSymbols(t),i}};N=S([d(0,ge),d(1,x)],N);const _={CellKind:new k("notebookCellKind",void 0),CellHasChildren:new k("notebookCellHasChildren",!1),CellHasHeader:new k("notebookCellHasHeader",!1),CellFoldingState:new k("notebookCellFoldingState",Y.None),OutlineElementTarget:new k("notebookOutlineElementTarget",void 0)};X.as(ce.Workbench).registerWorkbenchContribution(N,pe.Eventually),X.as(re.Configuration).registerConfiguration({id:"notebook",order:100,type:"object",properties:{[n.outlineShowMarkdownHeadersOnly]:{type:"boolean",default:!0,markdownDescription:b("outline.showMarkdownHeadersOnly","When enabled, notebook outline will show only markdown cells containing a header.")},[n.outlineShowCodeCells]:{type:"boolean",default:!1,markdownDescription:b("outline.showCodeCells","When enabled, notebook outline shows code cells.")},[n.outlineShowCodeCellSymbols]:{type:"boolean",default:!0,markdownDescription:b("outline.showCodeCellSymbols","When enabled, notebook outline shows code cell symbols. Relies on `notebook.outline.showCodeCells` being enabled.")},[n.breadcrumbsShowCodeCells]:{type:"boolean",default:!0,markdownDescription:b("breadcrumbs.showCodeCells","When enabled, notebook breadcrumbs contain code cells.")},[n.gotoSymbolsAllSymbols]:{type:"boolean",default:!0,markdownDescription:b("notebook.gotoSymbols.showAllSymbols","When enabled, the Go to Symbol Quick Pick will display full code symbols from the notebook, as well as Markdown headers.")}}}),_e.appendMenuItem(v.ViewTitle,{submenu:v.NotebookOutlineFilter,title:b("filter","Filter Entries"),icon:Te.filter,group:"navigation",order:-1,when:O.and(O.equals("view",Me.Id),Ne)}),P(class extends F{constructor(){super({id:"notebook.outline.toggleShowMarkdownHeadersOnly",title:b("toggleShowMarkdownHeadersOnly","Markdown Headers Only"),f1:!1,toggled:{condition:O.equals("config.notebook.outline.showMarkdownHeadersOnly",!0)},menu:{id:v.NotebookOutlineFilter,group:"0_markdown_cells"}})}run(e,...o){const t=e.get(g),i=t.getValue(n.outlineShowMarkdownHeadersOnly);t.updateValue(n.outlineShowMarkdownHeadersOnly,!i)}}),P(class extends F{constructor(){super({id:"notebook.outline.toggleCodeCells",title:b("toggleCodeCells","Code Cells"),f1:!1,toggled:{condition:O.equals("config.notebook.outline.showCodeCells",!0)},menu:{id:v.NotebookOutlineFilter,order:1,group:"1_code_cells"}})}run(e,...o){const t=e.get(g),i=t.getValue(n.outlineShowCodeCells);t.updateValue(n.outlineShowCodeCells,!i)}}),P(class extends F{constructor(){super({id:"notebook.outline.toggleCodeCellSymbols",title:b("toggleCodeCellSymbols","Code Cell Symbols"),f1:!1,toggled:{condition:O.equals("config.notebook.outline.showCodeCellSymbols",!0)},menu:{id:v.NotebookOutlineFilter,order:2,group:"1_code_cells"}})}run(e,...o){const t=e.get(g),i=t.getValue(n.outlineShowCodeCellSymbols);t.updateValue(n.outlineShowCodeCellSymbols,!i)}});export{T as NotebookBreadcrumbsProvider,I as NotebookCellOutline,_ as NotebookOutlineContext,N as NotebookOutlineCreator,M as NotebookOutlinePaneProvider,E as NotebookQuickPickProvider};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { localize } from "../../../../../../nls.js";
+import * as DOM from "../../../../../../base/browser/dom.js";
+import { ToolBar } from "../../../../../../base/browser/ui/toolbar/toolbar.js";
+import { IIconLabelValueOptions, IconLabel } from "../../../../../../base/browser/ui/iconLabel/iconLabel.js";
+import { IKeyboardNavigationLabelProvider, IListVirtualDelegate } from "../../../../../../base/browser/ui/list/list.js";
+import { IListAccessibilityProvider } from "../../../../../../base/browser/ui/list/listWidget.js";
+import { IDataSource, ITreeNode, ITreeRenderer } from "../../../../../../base/browser/ui/tree/tree.js";
+import { Emitter, Event } from "../../../../../../base/common/event.js";
+import { FuzzyScore, createMatches } from "../../../../../../base/common/filters.js";
+import { Disposable, DisposableStore, IDisposable, toDisposable } from "../../../../../../base/common/lifecycle.js";
+import { ThemeIcon } from "../../../../../../base/common/themables.js";
+import { URI } from "../../../../../../base/common/uri.js";
+import { getIconClassesForLanguageId } from "../../../../../../editor/common/services/getIconClasses.js";
+import { IConfigurationService } from "../../../../../../platform/configuration/common/configuration.js";
+import { Extensions as ConfigurationExtensions, IConfigurationRegistry } from "../../../../../../platform/configuration/common/configurationRegistry.js";
+import { IEditorOptions } from "../../../../../../platform/editor/common/editor.js";
+import { IInstantiationService, ServicesAccessor } from "../../../../../../platform/instantiation/common/instantiation.js";
+import { IWorkbenchDataTreeOptions } from "../../../../../../platform/list/browser/listService.js";
+import { MarkerSeverity } from "../../../../../../platform/markers/common/markers.js";
+import { Registry } from "../../../../../../platform/registry/common/platform.js";
+import { listErrorForeground, listWarningForeground } from "../../../../../../platform/theme/common/colorRegistry.js";
+import { IThemeService } from "../../../../../../platform/theme/common/themeService.js";
+import { IWorkbenchContributionsRegistry, Extensions as WorkbenchExtensions } from "../../../../../common/contributions.js";
+import { IEditorPane } from "../../../../../common/editor.js";
+import { CellFoldingState, CellRevealType, ICellModelDecorations, ICellModelDeltaDecorations, ICellViewModel, INotebookEditor, INotebookEditorOptions, INotebookEditorPane, INotebookViewModel } from "../../notebookBrowser.js";
+import { NotebookEditor } from "../../notebookEditor.js";
+import { INotebookCellOutlineDataSource, NotebookCellOutlineDataSource } from "../../viewModel/notebookOutlineDataSource.js";
+import { CellKind, NotebookCellsChangeType, NotebookSetting } from "../../../common/notebookCommon.js";
+import { IEditorService, SIDE_GROUP } from "../../../../../services/editor/common/editorService.js";
+import { LifecyclePhase } from "../../../../../services/lifecycle/common/lifecycle.js";
+import { IBreadcrumbsDataSource, IOutline, IOutlineComparator, IOutlineCreator, IOutlineListConfig, IOutlineService, IQuickPickDataSource, IQuickPickOutlineElement, OutlineChangeEvent, OutlineConfigCollapseItemsValues, OutlineConfigKeys, OutlineTarget } from "../../../../../services/outline/browser/outline.js";
+import { OutlineEntry } from "../../viewModel/OutlineEntry.js";
+import { CancellationToken } from "../../../../../../base/common/cancellation.js";
+import { IModelDeltaDecoration } from "../../../../../../editor/common/model.js";
+import { Range } from "../../../../../../editor/common/core/range.js";
+import { mainWindow } from "../../../../../../base/browser/window.js";
+import { IContextMenuService } from "../../../../../../platform/contextview/browser/contextView.js";
+import { Action2, IMenu, IMenuService, MenuId, MenuItemAction, MenuRegistry, registerAction2 } from "../../../../../../platform/actions/common/actions.js";
+import { ContextKeyExpr, IContextKeyService, RawContextKey } from "../../../../../../platform/contextkey/common/contextkey.js";
+import { MenuEntryActionViewItem, getActionBarActions } from "../../../../../../platform/actions/browser/menuEntryActionViewItem.js";
+import { IAction } from "../../../../../../base/common/actions.js";
+import { NotebookOutlineEntryArgs } from "../../controller/sectionActions.js";
+import { MarkupCellViewModel } from "../../viewModel/markupCellViewModel.js";
+import { Delayer, disposableTimeout } from "../../../../../../base/common/async.js";
+import { IOutlinePane } from "../../../../outline/browser/outline.js";
+import { Codicon } from "../../../../../../base/common/codicons.js";
+import { NOTEBOOK_IS_ACTIVE_EDITOR } from "../../../common/notebookContextKeys.js";
+import { NotebookOutlineConstants } from "../../viewModel/notebookOutlineEntryFactory.js";
+import { INotebookCellOutlineDataSourceFactory } from "../../viewModel/notebookOutlineDataSourceFactory.js";
+import { INotebookExecutionStateService, NotebookExecutionType } from "../../../common/notebookExecutionStateService.js";
+import { ILanguageFeaturesService } from "../../../../../../editor/common/services/languageFeatures.js";
+class NotebookOutlineTemplate {
+  constructor(container, iconClass, iconLabel, decoration, actionMenu, elementDisposables) {
+    this.container = container;
+    this.iconClass = iconClass;
+    this.iconLabel = iconLabel;
+    this.decoration = decoration;
+    this.actionMenu = actionMenu;
+    this.elementDisposables = elementDisposables;
+  }
+  static {
+    __name(this, "NotebookOutlineTemplate");
+  }
+  static templateId = "NotebookOutlineRenderer";
+}
+let NotebookOutlineRenderer = class {
+  constructor(_editor, _target, _themeService, _configurationService, _contextMenuService, _contextKeyService, _menuService, _instantiationService) {
+    this._editor = _editor;
+    this._target = _target;
+    this._themeService = _themeService;
+    this._configurationService = _configurationService;
+    this._contextMenuService = _contextMenuService;
+    this._contextKeyService = _contextKeyService;
+    this._menuService = _menuService;
+    this._instantiationService = _instantiationService;
+  }
+  static {
+    __name(this, "NotebookOutlineRenderer");
+  }
+  templateId = NotebookOutlineTemplate.templateId;
+  renderTemplate(container) {
+    const elementDisposables = new DisposableStore();
+    container.classList.add("notebook-outline-element", "show-file-icons");
+    const iconClass = document.createElement("div");
+    container.append(iconClass);
+    const iconLabel = new IconLabel(container, { supportHighlights: true });
+    const decoration = document.createElement("div");
+    decoration.className = "element-decoration";
+    container.append(decoration);
+    const actionMenu = document.createElement("div");
+    actionMenu.className = "action-menu";
+    container.append(actionMenu);
+    return new NotebookOutlineTemplate(container, iconClass, iconLabel, decoration, actionMenu, elementDisposables);
+  }
+  renderElement(node, _index, template, _height) {
+    const extraClasses = [];
+    const options = {
+      matches: createMatches(node.filterData),
+      labelEscapeNewLines: true,
+      extraClasses
+    };
+    const isCodeCell = node.element.cell.cellKind === CellKind.Code;
+    if (node.element.level >= 8) {
+      template.iconClass.className = "element-icon " + ThemeIcon.asClassNameArray(node.element.icon).join(" ");
+    } else if (isCodeCell && this._themeService.getFileIconTheme().hasFileIcons && !node.element.isExecuting) {
+      template.iconClass.className = "";
+      extraClasses.push(...getIconClassesForLanguageId(node.element.cell.language ?? ""));
+    } else {
+      template.iconClass.className = "element-icon " + ThemeIcon.asClassNameArray(node.element.icon).join(" ");
+    }
+    template.iconLabel.setLabel(" " + node.element.label, void 0, options);
+    const { markerInfo } = node.element;
+    template.container.style.removeProperty("--outline-element-color");
+    template.decoration.innerText = "";
+    if (markerInfo) {
+      const problem = this._configurationService.getValue("problems.visibility");
+      const useBadges = this._configurationService.getValue(OutlineConfigKeys.problemsBadges);
+      if (!useBadges || !problem) {
+        template.decoration.classList.remove("bubble");
+        template.decoration.innerText = "";
+      } else if (markerInfo.count === 0) {
+        template.decoration.classList.add("bubble");
+        template.decoration.innerText = "\uEA71";
+      } else {
+        template.decoration.classList.remove("bubble");
+        template.decoration.innerText = markerInfo.count > 9 ? "9+" : String(markerInfo.count);
+      }
+      const color = this._themeService.getColorTheme().getColor(markerInfo.topSev === MarkerSeverity.Error ? listErrorForeground : listWarningForeground);
+      if (problem === void 0) {
+        return;
+      }
+      const useColors = this._configurationService.getValue(OutlineConfigKeys.problemsColors);
+      if (!useColors || !problem) {
+        template.container.style.removeProperty("--outline-element-color");
+        template.decoration.style.setProperty("--outline-element-color", color?.toString() ?? "inherit");
+      } else {
+        template.container.style.setProperty("--outline-element-color", color?.toString() ?? "inherit");
+      }
+    }
+    if (this._target === OutlineTarget.OutlinePane) {
+      if (!this._editor) {
+        return;
+      }
+      const nbCell = node.element.cell;
+      const nbViewModel = this._editor.getViewModel();
+      if (!nbViewModel) {
+        return;
+      }
+      const idx = nbViewModel.getCellIndex(nbCell);
+      const length = isCodeCell ? 0 : nbViewModel.getFoldedLength(idx);
+      const scopedContextKeyService = template.elementDisposables.add(this._contextKeyService.createScoped(template.container));
+      NotebookOutlineContext.CellKind.bindTo(scopedContextKeyService).set(isCodeCell ? CellKind.Code : CellKind.Markup);
+      NotebookOutlineContext.CellHasChildren.bindTo(scopedContextKeyService).set(length > 0);
+      NotebookOutlineContext.CellHasHeader.bindTo(scopedContextKeyService).set(node.element.level !== NotebookOutlineConstants.NonHeaderOutlineLevel);
+      NotebookOutlineContext.OutlineElementTarget.bindTo(scopedContextKeyService).set(this._target);
+      this.setupFolding(isCodeCell, nbViewModel, scopedContextKeyService, template, nbCell);
+      const outlineEntryToolbar = template.elementDisposables.add(new ToolBar(template.actionMenu, this._contextMenuService, {
+        actionViewItemProvider: /* @__PURE__ */ __name((action) => {
+          if (action instanceof MenuItemAction) {
+            return this._instantiationService.createInstance(MenuEntryActionViewItem, action, void 0);
+          }
+          return void 0;
+        }, "actionViewItemProvider")
+      }));
+      const menu = template.elementDisposables.add(this._menuService.createMenu(MenuId.NotebookOutlineActionMenu, scopedContextKeyService));
+      const actions = getOutlineToolbarActions(menu, { notebookEditor: this._editor, outlineEntry: node.element });
+      outlineEntryToolbar.setActions(actions.primary, actions.secondary);
+      this.setupToolbarListeners(this._editor, outlineEntryToolbar, menu, actions, node.element, template);
+      template.actionMenu.style.padding = "0 0.8em 0 0.4em";
+    }
+  }
+  disposeTemplate(templateData) {
+    templateData.iconLabel.dispose();
+    templateData.elementDisposables.dispose();
+  }
+  disposeElement(element, index, templateData, height) {
+    templateData.elementDisposables.clear();
+    DOM.clearNode(templateData.actionMenu);
+  }
+  setupFolding(isCodeCell, nbViewModel, scopedContextKeyService, template, nbCell) {
+    const foldingState = isCodeCell ? CellFoldingState.None : nbCell.foldingState;
+    const foldingStateCtx = NotebookOutlineContext.CellFoldingState.bindTo(scopedContextKeyService);
+    foldingStateCtx.set(foldingState);
+    if (!isCodeCell) {
+      template.elementDisposables.add(nbViewModel.onDidFoldingStateChanged(() => {
+        const foldingState2 = nbCell.foldingState;
+        NotebookOutlineContext.CellFoldingState.bindTo(scopedContextKeyService).set(foldingState2);
+        foldingStateCtx.set(foldingState2);
+      }));
+    }
+  }
+  setupToolbarListeners(editor, toolbar, menu, initActions, entry, templateData) {
+    let dropdownIsVisible = false;
+    let deferredUpdate;
+    toolbar.setActions(initActions.primary, initActions.secondary);
+    templateData.elementDisposables.add(menu.onDidChange(() => {
+      if (dropdownIsVisible) {
+        const actions2 = getOutlineToolbarActions(menu, { notebookEditor: editor, outlineEntry: entry });
+        deferredUpdate = /* @__PURE__ */ __name(() => toolbar.setActions(actions2.primary, actions2.secondary), "deferredUpdate");
+        return;
+      }
+      const actions = getOutlineToolbarActions(menu, { notebookEditor: editor, outlineEntry: entry });
+      toolbar.setActions(actions.primary, actions.secondary);
+    }));
+    templateData.container.classList.remove("notebook-outline-toolbar-dropdown-active");
+    templateData.elementDisposables.add(toolbar.onDidChangeDropdownVisibility((visible) => {
+      dropdownIsVisible = visible;
+      if (visible) {
+        templateData.container.classList.add("notebook-outline-toolbar-dropdown-active");
+      } else {
+        templateData.container.classList.remove("notebook-outline-toolbar-dropdown-active");
+      }
+      if (deferredUpdate && !visible) {
+        disposableTimeout(() => {
+          deferredUpdate?.();
+        }, 0, templateData.elementDisposables);
+        deferredUpdate = void 0;
+      }
+    }));
+  }
+};
+NotebookOutlineRenderer = __decorateClass([
+  __decorateParam(2, IThemeService),
+  __decorateParam(3, IConfigurationService),
+  __decorateParam(4, IContextMenuService),
+  __decorateParam(5, IContextKeyService),
+  __decorateParam(6, IMenuService),
+  __decorateParam(7, IInstantiationService)
+], NotebookOutlineRenderer);
+function getOutlineToolbarActions(menu, args) {
+  return getActionBarActions(menu.getActions({ shouldForwardArgs: true, arg: args }), (g) => /^inline/.test(g));
+}
+__name(getOutlineToolbarActions, "getOutlineToolbarActions");
+class NotebookOutlineAccessibility {
+  static {
+    __name(this, "NotebookOutlineAccessibility");
+  }
+  getAriaLabel(element) {
+    return element.label;
+  }
+  getWidgetAriaLabel() {
+    return "";
+  }
+}
+class NotebookNavigationLabelProvider {
+  static {
+    __name(this, "NotebookNavigationLabelProvider");
+  }
+  getKeyboardNavigationLabel(element) {
+    return element.label;
+  }
+}
+class NotebookOutlineVirtualDelegate {
+  static {
+    __name(this, "NotebookOutlineVirtualDelegate");
+  }
+  getHeight(_element) {
+    return 22;
+  }
+  getTemplateId(_element) {
+    return NotebookOutlineTemplate.templateId;
+  }
+}
+let NotebookQuickPickProvider = class {
+  constructor(notebookCellOutlineDataSourceRef, _configurationService, _themeService) {
+    this.notebookCellOutlineDataSourceRef = notebookCellOutlineDataSourceRef;
+    this._configurationService = _configurationService;
+    this._themeService = _themeService;
+    this.gotoShowCodeCellSymbols = this._configurationService.getValue(NotebookSetting.gotoSymbolsAllSymbols);
+    this._disposables.add(this._configurationService.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration(NotebookSetting.gotoSymbolsAllSymbols)) {
+        this.gotoShowCodeCellSymbols = this._configurationService.getValue(NotebookSetting.gotoSymbolsAllSymbols);
+      }
+    }));
+  }
+  static {
+    __name(this, "NotebookQuickPickProvider");
+  }
+  _disposables = new DisposableStore();
+  gotoShowCodeCellSymbols;
+  getQuickPickElements() {
+    const bucket = [];
+    for (const entry of this.notebookCellOutlineDataSourceRef?.object?.entries ?? []) {
+      entry.asFlatList(bucket);
+    }
+    const result = [];
+    const { hasFileIcons } = this._themeService.getFileIconTheme();
+    const isSymbol = /* @__PURE__ */ __name((element) => !!element.symbolKind, "isSymbol");
+    const isCodeCell = /* @__PURE__ */ __name((element) => element.cell.cellKind === CellKind.Code && element.level === NotebookOutlineConstants.NonHeaderOutlineLevel, "isCodeCell");
+    for (let i = 0; i < bucket.length; i++) {
+      const element = bucket[i];
+      const nextElement = bucket[i + 1];
+      if (!this.gotoShowCodeCellSymbols && isSymbol(element)) {
+        continue;
+      }
+      if (this.gotoShowCodeCellSymbols && isCodeCell(element) && nextElement && isSymbol(nextElement)) {
+        continue;
+      }
+      const useFileIcon = hasFileIcons && !element.symbolKind;
+      result.push({
+        element,
+        label: useFileIcon ? element.label : `$(${element.icon.id}) ${element.label}`,
+        ariaLabel: element.label,
+        iconClasses: useFileIcon ? getIconClassesForLanguageId(element.cell.language ?? "") : void 0
+      });
+    }
+    return result;
+  }
+  dispose() {
+    this._disposables.dispose();
+  }
+};
+NotebookQuickPickProvider = __decorateClass([
+  __decorateParam(1, IConfigurationService),
+  __decorateParam(2, IThemeService)
+], NotebookQuickPickProvider);
+function filterEntry(entry, showMarkdownHeadersOnly, showCodeCells, showCodeCellSymbols) {
+  if (showMarkdownHeadersOnly && entry.cell.cellKind === CellKind.Markup && entry.level === NotebookOutlineConstants.NonHeaderOutlineLevel || // show headers only   + cell is mkdn + is level 7 (not header)
+  !showCodeCells && entry.cell.cellKind === CellKind.Code || // show code cells off + cell is code
+  !showCodeCellSymbols && entry.cell.cellKind === CellKind.Code && entry.level > NotebookOutlineConstants.NonHeaderOutlineLevel) {
+    return true;
+  }
+  return false;
+}
+__name(filterEntry, "filterEntry");
+let NotebookOutlinePaneProvider = class {
+  constructor(outlineDataSourceRef, _configurationService) {
+    this.outlineDataSourceRef = outlineDataSourceRef;
+    this._configurationService = _configurationService;
+    this.showCodeCells = this._configurationService.getValue(NotebookSetting.outlineShowCodeCells);
+    this.showCodeCellSymbols = this._configurationService.getValue(NotebookSetting.outlineShowCodeCellSymbols);
+    this.showMarkdownHeadersOnly = this._configurationService.getValue(NotebookSetting.outlineShowMarkdownHeadersOnly);
+    this._disposables.add(this._configurationService.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration(NotebookSetting.outlineShowCodeCells)) {
+        this.showCodeCells = this._configurationService.getValue(NotebookSetting.outlineShowCodeCells);
+      }
+      if (e.affectsConfiguration(NotebookSetting.outlineShowCodeCellSymbols)) {
+        this.showCodeCellSymbols = this._configurationService.getValue(NotebookSetting.outlineShowCodeCellSymbols);
+      }
+      if (e.affectsConfiguration(NotebookSetting.outlineShowMarkdownHeadersOnly)) {
+        this.showMarkdownHeadersOnly = this._configurationService.getValue(NotebookSetting.outlineShowMarkdownHeadersOnly);
+      }
+    }));
+  }
+  static {
+    __name(this, "NotebookOutlinePaneProvider");
+  }
+  _disposables = new DisposableStore();
+  showCodeCells;
+  showCodeCellSymbols;
+  showMarkdownHeadersOnly;
+  getActiveEntry() {
+    const newActive = this.outlineDataSourceRef?.object?.activeElement;
+    if (!newActive) {
+      return void 0;
+    }
+    if (!filterEntry(newActive, this.showMarkdownHeadersOnly, this.showCodeCells, this.showCodeCellSymbols)) {
+      return newActive;
+    }
+    let parent = newActive.parent;
+    while (parent) {
+      if (filterEntry(parent, this.showMarkdownHeadersOnly, this.showCodeCells, this.showCodeCellSymbols)) {
+        parent = parent.parent;
+      } else {
+        return parent;
+      }
+    }
+    return void 0;
+  }
+  *getChildren(element) {
+    const isOutline = element instanceof NotebookCellOutline;
+    const entries = isOutline ? this.outlineDataSourceRef?.object?.entries ?? [] : element.children;
+    for (const entry of entries) {
+      if (entry.cell.cellKind === CellKind.Markup) {
+        if (!this.showMarkdownHeadersOnly) {
+          yield entry;
+        } else if (entry.level < NotebookOutlineConstants.NonHeaderOutlineLevel) {
+          yield entry;
+        }
+      } else if (this.showCodeCells && entry.cell.cellKind === CellKind.Code) {
+        if (this.showCodeCellSymbols) {
+          yield entry;
+        } else if (entry.level === NotebookOutlineConstants.NonHeaderOutlineLevel) {
+          yield entry;
+        }
+      }
+    }
+  }
+  dispose() {
+    this._disposables.dispose();
+  }
+};
+NotebookOutlinePaneProvider = __decorateClass([
+  __decorateParam(1, IConfigurationService)
+], NotebookOutlinePaneProvider);
+let NotebookBreadcrumbsProvider = class {
+  constructor(outlineDataSourceRef, _configurationService) {
+    this.outlineDataSourceRef = outlineDataSourceRef;
+    this._configurationService = _configurationService;
+    this.showCodeCells = this._configurationService.getValue(NotebookSetting.breadcrumbsShowCodeCells);
+    this._disposables.add(this._configurationService.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration(NotebookSetting.breadcrumbsShowCodeCells)) {
+        this.showCodeCells = this._configurationService.getValue(NotebookSetting.breadcrumbsShowCodeCells);
+      }
+    }));
+  }
+  static {
+    __name(this, "NotebookBreadcrumbsProvider");
+  }
+  _disposables = new DisposableStore();
+  showCodeCells;
+  getBreadcrumbElements() {
+    const result = [];
+    let candidate = this.outlineDataSourceRef?.object?.activeElement;
+    while (candidate) {
+      if (this.showCodeCells || candidate.cell.cellKind !== CellKind.Code) {
+        result.unshift(candidate);
+      }
+      candidate = candidate.parent;
+    }
+    return result;
+  }
+  dispose() {
+    this._disposables.dispose();
+  }
+};
+NotebookBreadcrumbsProvider = __decorateClass([
+  __decorateParam(1, IConfigurationService)
+], NotebookBreadcrumbsProvider);
+class NotebookComparator {
+  static {
+    __name(this, "NotebookComparator");
+  }
+  _collator = new DOM.WindowIdleValue(mainWindow, () => new Intl.Collator(void 0, { numeric: true }));
+  compareByPosition(a, b) {
+    return a.index - b.index;
+  }
+  compareByType(a, b) {
+    return a.cell.cellKind - b.cell.cellKind || this._collator.value.compare(a.label, b.label);
+  }
+  compareByName(a, b) {
+    return this._collator.value.compare(a.label, b.label);
+  }
+}
+let NotebookCellOutline = class {
+  constructor(_editor, _target, _themeService, _editorService, _instantiationService, _configurationService, _languageFeaturesService, _notebookExecutionStateService) {
+    this._editor = _editor;
+    this._target = _target;
+    this._themeService = _themeService;
+    this._editorService = _editorService;
+    this._instantiationService = _instantiationService;
+    this._configurationService = _configurationService;
+    this._languageFeaturesService = _languageFeaturesService;
+    this._notebookExecutionStateService = _notebookExecutionStateService;
+    this.outlineShowCodeCells = this._configurationService.getValue(NotebookSetting.outlineShowCodeCells);
+    this.outlineShowCodeCellSymbols = this._configurationService.getValue(NotebookSetting.outlineShowCodeCellSymbols);
+    this.outlineShowMarkdownHeadersOnly = this._configurationService.getValue(NotebookSetting.outlineShowMarkdownHeadersOnly);
+    this.initializeOutline();
+    const delegate = new NotebookOutlineVirtualDelegate();
+    const renderers = [this._instantiationService.createInstance(NotebookOutlineRenderer, this._editor.getControl(), this._target)];
+    const comparator = new NotebookComparator();
+    const options = {
+      collapseByDefault: this._target === OutlineTarget.Breadcrumbs || this._target === OutlineTarget.OutlinePane && this._configurationService.getValue(OutlineConfigKeys.collapseItems) === OutlineConfigCollapseItemsValues.Collapsed,
+      expandOnlyOnTwistieClick: true,
+      multipleSelectionSupport: false,
+      accessibilityProvider: new NotebookOutlineAccessibility(),
+      identityProvider: { getId: /* @__PURE__ */ __name((element) => element.cell.uri.toString(), "getId") },
+      keyboardNavigationLabelProvider: new NotebookNavigationLabelProvider()
+    };
+    this.config = {
+      treeDataSource: this._treeDataSource,
+      quickPickDataSource: this._quickPickDataSource,
+      breadcrumbsDataSource: this._breadcrumbsDataSource,
+      delegate,
+      renderers,
+      comparator,
+      options
+    };
+  }
+  static {
+    __name(this, "NotebookCellOutline");
+  }
+  outlineKind = "notebookCells";
+  _disposables = new DisposableStore();
+  _modelDisposables = new DisposableStore();
+  _dataSourceDisposables = new DisposableStore();
+  _onDidChange = new Emitter();
+  onDidChange = this._onDidChange.event;
+  delayerRecomputeState = this._disposables.add(new Delayer(300));
+  delayerRecomputeActive = this._disposables.add(new Delayer(200));
+  // this can be long, because it will force a recompute at the end, so ideally we only do this once all nb language features are registered
+  delayerRecomputeSymbols = this._disposables.add(new Delayer(2e3));
+  config;
+  _outlineDataSourceReference;
+  // These three fields will always be set via setDataSources() on L475
+  _treeDataSource;
+  _quickPickDataSource;
+  _breadcrumbsDataSource;
+  // view settings
+  outlineShowCodeCells;
+  outlineShowCodeCellSymbols;
+  outlineShowMarkdownHeadersOnly;
+  // getters
+  get activeElement() {
+    this.checkDelayer();
+    if (this._target === OutlineTarget.OutlinePane) {
+      return this.config.treeDataSource.getActiveEntry();
+    } else {
+      console.error("activeElement should not be called outside of the OutlinePane");
+      return void 0;
+    }
+  }
+  get entries() {
+    this.checkDelayer();
+    return this._outlineDataSourceReference?.object?.entries ?? [];
+  }
+  get uri() {
+    return this._outlineDataSourceReference?.object?.uri;
+  }
+  get isEmpty() {
+    if (!this._outlineDataSourceReference?.object?.entries) {
+      return true;
+    }
+    return !this._outlineDataSourceReference.object.entries.some((entry) => {
+      return !filterEntry(entry, this.outlineShowMarkdownHeadersOnly, this.outlineShowCodeCells, this.outlineShowCodeCellSymbols);
+    });
+  }
+  checkDelayer() {
+    if (this.delayerRecomputeState.isTriggered()) {
+      this.delayerRecomputeState.cancel();
+      this.recomputeState();
+    }
+  }
+  initializeOutline() {
+    this.setDataSources();
+    this.setModelListeners();
+    this._disposables.add(this._editor.onDidChangeModel(() => {
+      this.setDataSources();
+      this.setModelListeners();
+      this.computeSymbols();
+    }));
+    this._disposables.add(this._languageFeaturesService.documentSymbolProvider.onDidChange(() => {
+      this.delayedComputeSymbols();
+    }));
+    this._disposables.add(this._editor.onDidChangeSelection(() => {
+      this.delayedRecomputeActive();
+    }));
+    this._disposables.add(this._configurationService.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration(NotebookSetting.outlineShowMarkdownHeadersOnly) || e.affectsConfiguration(NotebookSetting.outlineShowCodeCells) || e.affectsConfiguration(NotebookSetting.outlineShowCodeCellSymbols) || e.affectsConfiguration(NotebookSetting.breadcrumbsShowCodeCells)) {
+        this.outlineShowCodeCells = this._configurationService.getValue(NotebookSetting.outlineShowCodeCells);
+        this.outlineShowCodeCellSymbols = this._configurationService.getValue(NotebookSetting.outlineShowCodeCellSymbols);
+        this.outlineShowMarkdownHeadersOnly = this._configurationService.getValue(NotebookSetting.outlineShowMarkdownHeadersOnly);
+        this.delayedRecomputeState();
+      }
+    }));
+    this._disposables.add(this._notebookExecutionStateService.onDidChangeExecution((e) => {
+      if (e.type === NotebookExecutionType.cell && !!this._editor.textModel && e.affectsNotebook(this._editor.textModel?.uri)) {
+        this.delayedRecomputeState();
+      }
+    }));
+    this._disposables.add(this._configurationService.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration(NotebookSetting.outlineShowCodeCellSymbols)) {
+        this.outlineShowCodeCellSymbols = this._configurationService.getValue(NotebookSetting.outlineShowCodeCellSymbols);
+        this.computeSymbols();
+      }
+    }));
+    this._disposables.add(this._themeService.onDidFileIconThemeChange(() => {
+      this._onDidChange.fire({});
+    }));
+    this.recomputeState();
+  }
+  /**
+   * set up the primary data source + three viewing sources for the various outline views
+   */
+  setDataSources() {
+    const notebookEditor = this._editor.getControl();
+    this._outlineDataSourceReference?.dispose();
+    this._dataSourceDisposables.clear();
+    if (!notebookEditor?.hasModel()) {
+      this._outlineDataSourceReference = void 0;
+    } else {
+      this._outlineDataSourceReference = this._dataSourceDisposables.add(this._instantiationService.invokeFunction((accessor) => accessor.get(INotebookCellOutlineDataSourceFactory).getOrCreate(notebookEditor)));
+      this._dataSourceDisposables.add(this._outlineDataSourceReference.object.onDidChange(() => {
+        this._onDidChange.fire({});
+      }));
+    }
+    this._treeDataSource = this._dataSourceDisposables.add(this._instantiationService.createInstance(NotebookOutlinePaneProvider, this._outlineDataSourceReference));
+    this._quickPickDataSource = this._dataSourceDisposables.add(this._instantiationService.createInstance(NotebookQuickPickProvider, this._outlineDataSourceReference));
+    this._breadcrumbsDataSource = this._dataSourceDisposables.add(this._instantiationService.createInstance(NotebookBreadcrumbsProvider, this._outlineDataSourceReference));
+  }
+  /**
+   * set up the listeners for the outline content, these respond to model changes in the notebook
+   */
+  setModelListeners() {
+    this._modelDisposables.clear();
+    if (!this._editor.textModel) {
+      return;
+    }
+    if (!this.entries.length) {
+      this.computeSymbols();
+    }
+    this._modelDisposables.add(this._editor.textModel.onDidChangeContent((contentChanges) => {
+      if (contentChanges.rawEvents.some((c) => c.kind === NotebookCellsChangeType.ChangeCellContent || c.kind === NotebookCellsChangeType.ChangeCellInternalMetadata || c.kind === NotebookCellsChangeType.Move || c.kind === NotebookCellsChangeType.ModelChange)) {
+        this.delayedRecomputeState();
+      }
+    }));
+  }
+  async computeSymbols(cancelToken = CancellationToken.None) {
+    if (this._target === OutlineTarget.OutlinePane && this.outlineShowCodeCellSymbols) {
+      void this.doComputeSymbols(cancelToken);
+    }
+  }
+  async doComputeSymbols(cancelToken) {
+    await this._outlineDataSourceReference?.object?.computeFullSymbols(cancelToken);
+  }
+  async delayedComputeSymbols() {
+    this.delayerRecomputeState.cancel();
+    this.delayerRecomputeActive.cancel();
+    this.delayerRecomputeSymbols.trigger(() => {
+      this.computeSymbols();
+    });
+  }
+  recomputeState() {
+    this._outlineDataSourceReference?.object?.recomputeState();
+  }
+  delayedRecomputeState() {
+    this.delayerRecomputeActive.cancel();
+    this.delayerRecomputeState.trigger(() => {
+      this.recomputeState();
+    });
+  }
+  recomputeActive() {
+    this._outlineDataSourceReference?.object?.recomputeActive();
+  }
+  delayedRecomputeActive() {
+    this.delayerRecomputeActive.trigger(() => {
+      this.recomputeActive();
+    });
+  }
+  async reveal(entry, options, sideBySide) {
+    const notebookEditorOptions = {
+      ...options,
+      override: this._editor.input?.editorId,
+      cellRevealType: CellRevealType.NearTopIfOutsideViewport,
+      selection: entry.position,
+      viewState: void 0
+    };
+    await this._editorService.openEditor({
+      resource: entry.cell.uri,
+      options: notebookEditorOptions
+    }, sideBySide ? SIDE_GROUP : void 0);
+  }
+  preview(entry) {
+    const widget = this._editor.getControl();
+    if (!widget) {
+      return Disposable.None;
+    }
+    if (entry.range) {
+      const range = Range.lift(entry.range);
+      widget.revealRangeInCenterIfOutsideViewportAsync(entry.cell, range);
+    } else {
+      widget.revealInCenterIfOutsideViewport(entry.cell);
+    }
+    const ids = widget.deltaCellDecorations([], [{
+      handle: entry.cell.handle,
+      options: { className: "nb-symbolHighlight", outputClassName: "nb-symbolHighlight" }
+    }]);
+    let editorDecorations;
+    widget.changeModelDecorations((accessor) => {
+      if (entry.range) {
+        const decorations = [
+          {
+            range: entry.range,
+            options: {
+              description: "document-symbols-outline-range-highlight",
+              className: "rangeHighlight",
+              isWholeLine: true
+            }
+          }
+        ];
+        const deltaDecoration = {
+          ownerId: entry.cell.handle,
+          decorations
+        };
+        editorDecorations = accessor.deltaDecorations([], [deltaDecoration]);
+      }
+    });
+    return toDisposable(() => {
+      widget.deltaCellDecorations(ids, []);
+      if (editorDecorations?.length) {
+        widget.changeModelDecorations((accessor) => {
+          accessor.deltaDecorations(editorDecorations, []);
+        });
+      }
+    });
+  }
+  captureViewState() {
+    const widget = this._editor.getControl();
+    const viewState = widget?.getEditorViewState();
+    return toDisposable(() => {
+      if (viewState) {
+        widget?.restoreListViewState(viewState);
+      }
+    });
+  }
+  dispose() {
+    this._onDidChange.dispose();
+    this._disposables.dispose();
+    this._modelDisposables.dispose();
+    this._dataSourceDisposables.dispose();
+    this._outlineDataSourceReference?.dispose();
+  }
+};
+NotebookCellOutline = __decorateClass([
+  __decorateParam(2, IThemeService),
+  __decorateParam(3, IEditorService),
+  __decorateParam(4, IInstantiationService),
+  __decorateParam(5, IConfigurationService),
+  __decorateParam(6, ILanguageFeaturesService),
+  __decorateParam(7, INotebookExecutionStateService)
+], NotebookCellOutline);
+let NotebookOutlineCreator = class {
+  constructor(outlineService, _instantiationService) {
+    this._instantiationService = _instantiationService;
+    const reg = outlineService.registerOutlineCreator(this);
+    this.dispose = () => reg.dispose();
+  }
+  static {
+    __name(this, "NotebookOutlineCreator");
+  }
+  dispose;
+  matches(candidate) {
+    return candidate.getId() === NotebookEditor.ID;
+  }
+  async createOutline(editor, target, cancelToken) {
+    const outline = this._instantiationService.createInstance(NotebookCellOutline, editor, target);
+    if (target === OutlineTarget.QuickPick) {
+      await outline.doComputeSymbols(cancelToken);
+    }
+    return outline;
+  }
+};
+NotebookOutlineCreator = __decorateClass([
+  __decorateParam(0, IOutlineService),
+  __decorateParam(1, IInstantiationService)
+], NotebookOutlineCreator);
+const NotebookOutlineContext = {
+  CellKind: new RawContextKey("notebookCellKind", void 0),
+  CellHasChildren: new RawContextKey("notebookCellHasChildren", false),
+  CellHasHeader: new RawContextKey("notebookCellHasHeader", false),
+  CellFoldingState: new RawContextKey("notebookCellFoldingState", CellFoldingState.None),
+  OutlineElementTarget: new RawContextKey("notebookOutlineElementTarget", void 0)
+};
+Registry.as(WorkbenchExtensions.Workbench).registerWorkbenchContribution(NotebookOutlineCreator, LifecyclePhase.Eventually);
+Registry.as(ConfigurationExtensions.Configuration).registerConfiguration({
+  id: "notebook",
+  order: 100,
+  type: "object",
+  "properties": {
+    [NotebookSetting.outlineShowMarkdownHeadersOnly]: {
+      type: "boolean",
+      default: true,
+      markdownDescription: localize("outline.showMarkdownHeadersOnly", "When enabled, notebook outline will show only markdown cells containing a header.")
+    },
+    [NotebookSetting.outlineShowCodeCells]: {
+      type: "boolean",
+      default: false,
+      markdownDescription: localize("outline.showCodeCells", "When enabled, notebook outline shows code cells.")
+    },
+    [NotebookSetting.outlineShowCodeCellSymbols]: {
+      type: "boolean",
+      default: true,
+      markdownDescription: localize("outline.showCodeCellSymbols", "When enabled, notebook outline shows code cell symbols. Relies on `notebook.outline.showCodeCells` being enabled.")
+    },
+    [NotebookSetting.breadcrumbsShowCodeCells]: {
+      type: "boolean",
+      default: true,
+      markdownDescription: localize("breadcrumbs.showCodeCells", "When enabled, notebook breadcrumbs contain code cells.")
+    },
+    [NotebookSetting.gotoSymbolsAllSymbols]: {
+      type: "boolean",
+      default: true,
+      markdownDescription: localize("notebook.gotoSymbols.showAllSymbols", "When enabled, the Go to Symbol Quick Pick will display full code symbols from the notebook, as well as Markdown headers.")
+    }
+  }
+});
+MenuRegistry.appendMenuItem(MenuId.ViewTitle, {
+  submenu: MenuId.NotebookOutlineFilter,
+  title: localize("filter", "Filter Entries"),
+  icon: Codicon.filter,
+  group: "navigation",
+  order: -1,
+  when: ContextKeyExpr.and(ContextKeyExpr.equals("view", IOutlinePane.Id), NOTEBOOK_IS_ACTIVE_EDITOR)
+});
+registerAction2(class ToggleShowMarkdownHeadersOnly extends Action2 {
+  static {
+    __name(this, "ToggleShowMarkdownHeadersOnly");
+  }
+  constructor() {
+    super({
+      id: "notebook.outline.toggleShowMarkdownHeadersOnly",
+      title: localize("toggleShowMarkdownHeadersOnly", "Markdown Headers Only"),
+      f1: false,
+      toggled: {
+        condition: ContextKeyExpr.equals("config.notebook.outline.showMarkdownHeadersOnly", true)
+      },
+      menu: {
+        id: MenuId.NotebookOutlineFilter,
+        group: "0_markdown_cells"
+      }
+    });
+  }
+  run(accessor, ...args) {
+    const configurationService = accessor.get(IConfigurationService);
+    const showMarkdownHeadersOnly = configurationService.getValue(NotebookSetting.outlineShowMarkdownHeadersOnly);
+    configurationService.updateValue(NotebookSetting.outlineShowMarkdownHeadersOnly, !showMarkdownHeadersOnly);
+  }
+});
+registerAction2(class ToggleCodeCellEntries extends Action2 {
+  static {
+    __name(this, "ToggleCodeCellEntries");
+  }
+  constructor() {
+    super({
+      id: "notebook.outline.toggleCodeCells",
+      title: localize("toggleCodeCells", "Code Cells"),
+      f1: false,
+      toggled: {
+        condition: ContextKeyExpr.equals("config.notebook.outline.showCodeCells", true)
+      },
+      menu: {
+        id: MenuId.NotebookOutlineFilter,
+        order: 1,
+        group: "1_code_cells"
+      }
+    });
+  }
+  run(accessor, ...args) {
+    const configurationService = accessor.get(IConfigurationService);
+    const showCodeCells = configurationService.getValue(NotebookSetting.outlineShowCodeCells);
+    configurationService.updateValue(NotebookSetting.outlineShowCodeCells, !showCodeCells);
+  }
+});
+registerAction2(class ToggleCodeCellSymbolEntries extends Action2 {
+  static {
+    __name(this, "ToggleCodeCellSymbolEntries");
+  }
+  constructor() {
+    super({
+      id: "notebook.outline.toggleCodeCellSymbols",
+      title: localize("toggleCodeCellSymbols", "Code Cell Symbols"),
+      f1: false,
+      toggled: {
+        condition: ContextKeyExpr.equals("config.notebook.outline.showCodeCellSymbols", true)
+      },
+      menu: {
+        id: MenuId.NotebookOutlineFilter,
+        order: 2,
+        group: "1_code_cells"
+      }
+    });
+  }
+  run(accessor, ...args) {
+    const configurationService = accessor.get(IConfigurationService);
+    const showCodeCellSymbols = configurationService.getValue(NotebookSetting.outlineShowCodeCellSymbols);
+    configurationService.updateValue(NotebookSetting.outlineShowCodeCellSymbols, !showCodeCellSymbols);
+  }
+});
+export {
+  NotebookBreadcrumbsProvider,
+  NotebookCellOutline,
+  NotebookOutlineContext,
+  NotebookOutlineCreator,
+  NotebookOutlinePaneProvider,
+  NotebookQuickPickProvider
+};
+//# sourceMappingURL=notebookOutline.js.map

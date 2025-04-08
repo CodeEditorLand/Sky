@@ -1,1 +1,41 @@
-var l=Object.defineProperty,p=Object.getOwnPropertyDescriptor,c=(e,r,t,o)=>{for(var s,i=o>1?void 0:o?p(r,t):r,a=e.length-1;a>=0;a--)(s=e[a])&&(i=(o?s(r,t,i):s(i))||i);return o&&i&&l(r,t,i),i},o=(e,r)=>(t,o)=>r(t,o,e);import{generateUuid as u}from"../../../base/common/uuid.js";import{IExtHostRpcService as d}from"../common/extHostRpcService.js";import{BaseExtHostTerminalService as I,ExtHostTerminal as T}from"../common/extHostTerminalService.js";import{IExtHostCommands as v}from"../common/extHostCommands.js";let i=class extends I{constructor(e,r){super(!0,e,r)}createTerminal(e,r,t){return this.createTerminalFromOptions({name:e,shellPath:r,shellArgs:t})}createTerminalFromOptions(e,r){const t=new T(this._proxy,u(),e,e.name);return this._terminals.push(t),t.create(e,this._serializeParentTerminal(e,r)),t.value}};i=c([o(0,v),o(1,d)],i);export{i as ExtHostTerminalService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { generateUuid } from "../../../base/common/uuid.js";
+import { IExtHostRpcService } from "../common/extHostRpcService.js";
+import { BaseExtHostTerminalService, ExtHostTerminal, ITerminalInternalOptions } from "../common/extHostTerminalService.js";
+import { IExtHostCommands } from "../common/extHostCommands.js";
+let ExtHostTerminalService = class extends BaseExtHostTerminalService {
+  static {
+    __name(this, "ExtHostTerminalService");
+  }
+  constructor(extHostCommands, extHostRpc) {
+    super(true, extHostCommands, extHostRpc);
+  }
+  createTerminal(name, shellPath, shellArgs) {
+    return this.createTerminalFromOptions({ name, shellPath, shellArgs });
+  }
+  createTerminalFromOptions(options, internalOptions) {
+    const terminal = new ExtHostTerminal(this._proxy, generateUuid(), options, options.name);
+    this._terminals.push(terminal);
+    terminal.create(options, this._serializeParentTerminal(options, internalOptions));
+    return terminal.value;
+  }
+};
+ExtHostTerminalService = __decorateClass([
+  __decorateParam(0, IExtHostCommands),
+  __decorateParam(1, IExtHostRpcService)
+], ExtHostTerminalService);
+export {
+  ExtHostTerminalService
+};
+//# sourceMappingURL=extHostTerminalService.js.map

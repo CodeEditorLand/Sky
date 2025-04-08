@@ -1,1 +1,98 @@
-var u=Object.defineProperty,v=Object.getOwnPropertyDescriptor,l=(e,t,r,s)=>{for(var i,a=s>1?void 0:s?v(t,r):t,n=e.length-1;n>=0;n--)(i=e[n])&&(a=(s?i(t,r,a):i(a))||a);return s&&a&&u(t,r,a),a},h=(e,t)=>(r,s)=>t(r,s,e);import{Emitter as g}from"../../../../base/common/event.js";import"../../../../base/common/history.js";import{IStorageService as c,StorageScope as m,StorageTarget as S}from"../../../../platform/storage/common/storage.js";let r=class{constructor(e){this.storageService=e,this._onDidChangeEmitter=new g,this.onDidChange=this._onDidChangeEmitter.event,this.load()}static FIND_HISTORY_KEY="workbench.find.history";inMemoryValues=new Set;onDidChange;_onDidChangeEmitter;static _instance=null;static getOrCreate(e){return r._instance||(r._instance=new r(e)),r._instance}delete(e){const t=this.inMemoryValues.delete(e);return this.save(),t}add(e){return this.inMemoryValues.add(e),this.save(),this}has(e){return this.inMemoryValues.has(e)}clear(){this.inMemoryValues.clear(),this.save()}forEach(e,t){return this.load(),this.inMemoryValues.forEach(e)}replace(e){this.inMemoryValues=new Set(e),this.save()}load(){let e;const t=this.storageService.get(r.FIND_HISTORY_KEY,m.WORKSPACE);if(t)try{e=JSON.parse(t)}catch{}this.inMemoryValues=new Set(e||[])}save(){const e=[];return this.inMemoryValues.forEach((t=>e.push(t))),new Promise((t=>{this.storageService.store(r.FIND_HISTORY_KEY,JSON.stringify(e),m.WORKSPACE,S.USER),this._onDidChangeEmitter.fire(e),t()}))}};r=l([h(0,c)],r);export{r as FindWidgetSearchHistory};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { IHistory } from "../../../../base/common/history.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+let FindWidgetSearchHistory = class {
+  constructor(storageService) {
+    this.storageService = storageService;
+    this._onDidChangeEmitter = new Emitter();
+    this.onDidChange = this._onDidChangeEmitter.event;
+    this.load();
+  }
+  static {
+    __name(this, "FindWidgetSearchHistory");
+  }
+  static FIND_HISTORY_KEY = "workbench.find.history";
+  inMemoryValues = /* @__PURE__ */ new Set();
+  onDidChange;
+  _onDidChangeEmitter;
+  static _instance = null;
+  static getOrCreate(storageService) {
+    if (!FindWidgetSearchHistory._instance) {
+      FindWidgetSearchHistory._instance = new FindWidgetSearchHistory(storageService);
+    }
+    return FindWidgetSearchHistory._instance;
+  }
+  delete(t) {
+    const result = this.inMemoryValues.delete(t);
+    this.save();
+    return result;
+  }
+  add(t) {
+    this.inMemoryValues.add(t);
+    this.save();
+    return this;
+  }
+  has(t) {
+    return this.inMemoryValues.has(t);
+  }
+  clear() {
+    this.inMemoryValues.clear();
+    this.save();
+  }
+  forEach(callbackfn, thisArg) {
+    this.load();
+    return this.inMemoryValues.forEach(callbackfn);
+  }
+  replace(t) {
+    this.inMemoryValues = new Set(t);
+    this.save();
+  }
+  load() {
+    let result;
+    const raw = this.storageService.get(
+      FindWidgetSearchHistory.FIND_HISTORY_KEY,
+      StorageScope.WORKSPACE
+    );
+    if (raw) {
+      try {
+        result = JSON.parse(raw);
+      } catch (e) {
+      }
+    }
+    this.inMemoryValues = new Set(result || []);
+  }
+  // Run saves async
+  save() {
+    const elements = [];
+    this.inMemoryValues.forEach((e) => elements.push(e));
+    return new Promise((resolve) => {
+      this.storageService.store(
+        FindWidgetSearchHistory.FIND_HISTORY_KEY,
+        JSON.stringify(elements),
+        StorageScope.WORKSPACE,
+        StorageTarget.USER
+      );
+      this._onDidChangeEmitter.fire(elements);
+      resolve();
+    });
+  }
+};
+FindWidgetSearchHistory = __decorateClass([
+  __decorateParam(0, IStorageService)
+], FindWidgetSearchHistory);
+export {
+  FindWidgetSearchHistory
+};
+//# sourceMappingURL=findWidgetSearchHistory.js.map

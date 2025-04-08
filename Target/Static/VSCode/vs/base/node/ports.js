@@ -1,1 +1,263 @@
-import*as s from"net";function E(e,u,o,t=1){let r=!1;return new Promise(i=>{const d=setTimeout(()=>{if(!r)return r=!0,i(0)},o);f(e,u,t,n=>{if(!r)return r=!0,clearTimeout(d),i(n)})})}function f(e,u,o,t){if(u===0)return t(0);const r=new s.Socket;r.once("connect",()=>(b(r),f(e+o,u-1,o,t))),r.once("data",()=>{}),r.once("error",i=>(b(r),i.code!=="ECONNREFUSED"?f(e+o,u-1,o,t):t(e))),r.connect(e,"127.0.0.1")}const a={1:!0,7:!0,9:!0,11:!0,13:!0,15:!0,17:!0,19:!0,20:!0,21:!0,22:!0,23:!0,25:!0,37:!0,42:!0,43:!0,53:!0,69:!0,77:!0,79:!0,87:!0,95:!0,101:!0,102:!0,103:!0,104:!0,109:!0,110:!0,111:!0,113:!0,115:!0,117:!0,119:!0,123:!0,135:!0,137:!0,139:!0,143:!0,161:!0,179:!0,389:!0,427:!0,465:!0,512:!0,513:!0,514:!0,515:!0,526:!0,530:!0,531:!0,532:!0,540:!0,548:!0,554:!0,556:!0,563:!0,587:!0,601:!0,636:!0,989:!0,990:!0,993:!0,995:!0,1719:!0,1720:!0,1723:!0,2049:!0,3659:!0,4045:!0,5060:!0,5061:!0,6e3:!0,6566:!0,6665:!0,6666:!0,6667:!0,6668:!0,6669:!0,6697:!0,10080:!0};function S(e,u,o,t="127.0.0.1"){let r=!1,i,d=1;const n=s.createServer({pauseOnConnect:!0});function l(m,c){r||(r=!0,n.removeAllListeners(),n.close(),i&&clearTimeout(i),c(m))}return new Promise(m=>{i=setTimeout(()=>{l(0,m)},o),n.on("listening",()=>{l(e,m)}),n.on("error",c=>{c&&(c.code==="EADDRINUSE"||c.code==="EACCES")&&d<u?(e++,d++,n.listen(e,t)):l(0,m)}),n.on("close",()=>{l(0,m)}),n.listen(e,t)})}function b(e){try{e.removeAllListeners("connect"),e.removeAllListeners("error"),e.end(),e.destroy(),e.unref()}catch(u){console.error(u)}}export{a as BROWSER_RESTRICTED_PORTS,E as findFreePort,S as findFreePortFaster};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as net from "net";
+function findFreePort(startPort, giveUpAfter, timeout, stride = 1) {
+  let done = false;
+  return new Promise((resolve) => {
+    const timeoutHandle = setTimeout(() => {
+      if (!done) {
+        done = true;
+        return resolve(0);
+      }
+    }, timeout);
+    doFindFreePort(startPort, giveUpAfter, stride, (port) => {
+      if (!done) {
+        done = true;
+        clearTimeout(timeoutHandle);
+        return resolve(port);
+      }
+    });
+  });
+}
+__name(findFreePort, "findFreePort");
+function doFindFreePort(startPort, giveUpAfter, stride, clb) {
+  if (giveUpAfter === 0) {
+    return clb(0);
+  }
+  const client = new net.Socket();
+  client.once("connect", () => {
+    dispose(client);
+    return doFindFreePort(startPort + stride, giveUpAfter - 1, stride, clb);
+  });
+  client.once("data", () => {
+  });
+  client.once("error", (err) => {
+    dispose(client);
+    if (err.code !== "ECONNREFUSED") {
+      return doFindFreePort(startPort + stride, giveUpAfter - 1, stride, clb);
+    }
+    return clb(startPort);
+  });
+  client.connect(startPort, "127.0.0.1");
+}
+__name(doFindFreePort, "doFindFreePort");
+const BROWSER_RESTRICTED_PORTS = {
+  1: true,
+  // tcpmux
+  7: true,
+  // echo
+  9: true,
+  // discard
+  11: true,
+  // systat
+  13: true,
+  // daytime
+  15: true,
+  // netstat
+  17: true,
+  // qotd
+  19: true,
+  // chargen
+  20: true,
+  // ftp data
+  21: true,
+  // ftp access
+  22: true,
+  // ssh
+  23: true,
+  // telnet
+  25: true,
+  // smtp
+  37: true,
+  // time
+  42: true,
+  // name
+  43: true,
+  // nicname
+  53: true,
+  // domain
+  69: true,
+  // tftp
+  77: true,
+  // priv-rjs
+  79: true,
+  // finger
+  87: true,
+  // ttylink
+  95: true,
+  // supdup
+  101: true,
+  // hostriame
+  102: true,
+  // iso-tsap
+  103: true,
+  // gppitnp
+  104: true,
+  // acr-nema
+  109: true,
+  // pop2
+  110: true,
+  // pop3
+  111: true,
+  // sunrpc
+  113: true,
+  // auth
+  115: true,
+  // sftp
+  117: true,
+  // uucp-path
+  119: true,
+  // nntp
+  123: true,
+  // NTP
+  135: true,
+  // loc-srv /epmap
+  137: true,
+  // netbios
+  139: true,
+  // netbios
+  143: true,
+  // imap2
+  161: true,
+  // snmp
+  179: true,
+  // BGP
+  389: true,
+  // ldap
+  427: true,
+  // SLP (Also used by Apple Filing Protocol)
+  465: true,
+  // smtp+ssl
+  512: true,
+  // print / exec
+  513: true,
+  // login
+  514: true,
+  // shell
+  515: true,
+  // printer
+  526: true,
+  // tempo
+  530: true,
+  // courier
+  531: true,
+  // chat
+  532: true,
+  // netnews
+  540: true,
+  // uucp
+  548: true,
+  // AFP (Apple Filing Protocol)
+  554: true,
+  // rtsp
+  556: true,
+  // remotefs
+  563: true,
+  // nntp+ssl
+  587: true,
+  // smtp (rfc6409)
+  601: true,
+  // syslog-conn (rfc3195)
+  636: true,
+  // ldap+ssl
+  989: true,
+  // ftps-data
+  990: true,
+  // ftps
+  993: true,
+  // ldap+ssl
+  995: true,
+  // pop3+ssl
+  1719: true,
+  // h323gatestat
+  1720: true,
+  // h323hostcall
+  1723: true,
+  // pptp
+  2049: true,
+  // nfs
+  3659: true,
+  // apple-sasl / PasswordServer
+  4045: true,
+  // lockd
+  5060: true,
+  // sip
+  5061: true,
+  // sips
+  6e3: true,
+  // X11
+  6566: true,
+  // sane-port
+  6665: true,
+  // Alternate IRC [Apple addition]
+  6666: true,
+  // Alternate IRC [Apple addition]
+  6667: true,
+  // Standard IRC [Apple addition]
+  6668: true,
+  // Alternate IRC [Apple addition]
+  6669: true,
+  // Alternate IRC [Apple addition]
+  6697: true,
+  // IRC + TLS
+  10080: true
+  // Amanda
+};
+function findFreePortFaster(startPort, giveUpAfter, timeout, hostname = "127.0.0.1") {
+  let resolved = false;
+  let timeoutHandle = void 0;
+  let countTried = 1;
+  const server = net.createServer({ pauseOnConnect: true });
+  function doResolve(port, resolve) {
+    if (!resolved) {
+      resolved = true;
+      server.removeAllListeners();
+      server.close();
+      if (timeoutHandle) {
+        clearTimeout(timeoutHandle);
+      }
+      resolve(port);
+    }
+  }
+  __name(doResolve, "doResolve");
+  return new Promise((resolve) => {
+    timeoutHandle = setTimeout(() => {
+      doResolve(0, resolve);
+    }, timeout);
+    server.on("listening", () => {
+      doResolve(startPort, resolve);
+    });
+    server.on("error", (err) => {
+      if (err && (err.code === "EADDRINUSE" || err.code === "EACCES") && countTried < giveUpAfter) {
+        startPort++;
+        countTried++;
+        server.listen(startPort, hostname);
+      } else {
+        doResolve(0, resolve);
+      }
+    });
+    server.on("close", () => {
+      doResolve(0, resolve);
+    });
+    server.listen(startPort, hostname);
+  });
+}
+__name(findFreePortFaster, "findFreePortFaster");
+function dispose(socket) {
+  try {
+    socket.removeAllListeners("connect");
+    socket.removeAllListeners("error");
+    socket.end();
+    socket.destroy();
+    socket.unref();
+  } catch (error) {
+    console.error(error);
+  }
+}
+__name(dispose, "dispose");
+export {
+  BROWSER_RESTRICTED_PORTS,
+  findFreePort,
+  findFreePortFaster
+};
+//# sourceMappingURL=ports.js.map

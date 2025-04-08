@@ -1,1 +1,82 @@
-import{createDecorator as s}from"../../../../platform/instantiation/common/instantiation.js";import{SyncStatus as r,SyncResource as n}from"../../../../platform/userDataSync/common/userDataSync.js";import"../../../../base/common/event.js";import{ContextKeyExpr as a,RawContextKey as o}from"../../../../platform/contextkey/common/contextkey.js";import{localize as e,localize2 as i}from"../../../../nls.js";import"../../../../base/common/uri.js";import{Codicon as l}from"../../../../base/common/codicons.js";import{registerIcon as S}from"../../../../platform/theme/common/iconRegistry.js";import"../../../common/views.js";import{Categories as y}from"../../../../platform/action/common/actionCommonCategories.js";import"../../../../platform/actions/common/actions.js";import"../../../../platform/action/common/action.js";const k=s("IUserDataSyncWorkbenchService");function L(t){switch(t){case n.Settings:return e("settings","Settings");case n.Keybindings:return e("keybindings","Keyboard Shortcuts");case n.Snippets:return e("snippets","Snippets");case n.Prompts:return e("prompts","Prompts");case n.Tasks:return e("tasks","Tasks");case n.Extensions:return e("extensions","Extensions");case n.GlobalState:return e("ui state label","UI State");case n.Profiles:return e("profiles","Profiles");case n.WorkspaceState:return e("workspace state label","Workspace State")}}var d=(e=>(e.Uninitialized="uninitialized",e.Unavailable="unavailable",e.Available="available",e))(d||{});const V=i("sync category","Settings Sync"),W=S("settings-sync-view-icon",l.sync,e("syncViewIcon","View icon of the Settings Sync view.")),u=new o("syncStatus",r.Uninitialized),Y=new o("syncEnabled",!1),p=new o("userDataSyncAccountStatus","uninitialized"),z=new o("enableSyncActivityViews",!1),X=new o("enableSyncConflictsView",!1),M=new o("hasConflicts",!1),B="workbench.userDataSync.actions.configure",F="workbench.userDataSync.actions.showLog",K="workbench.view.sync",G="workbench.views.sync.conflicts",q={id:"workbench.userDataSync.actions.downloadSyncActivity",title:i("download sync activity title","Download Settings Sync Activity"),category:y.Developer,f1:!0,precondition:a.and(p.isEqualTo("available"),u.notEqualsTo(r.Uninitialized))};export{d as AccountStatus,B as CONFIGURE_SYNC_COMMAND_ID,p as CONTEXT_ACCOUNT_STATE,z as CONTEXT_ENABLE_ACTIVITY_VIEWS,X as CONTEXT_ENABLE_SYNC_CONFLICTS_VIEW,M as CONTEXT_HAS_CONFLICTS,Y as CONTEXT_SYNC_ENABLEMENT,u as CONTEXT_SYNC_STATE,q as DOWNLOAD_ACTIVITY_ACTION_DESCRIPTOR,k as IUserDataSyncWorkbenchService,F as SHOW_SYNC_LOG_COMMAND_ID,G as SYNC_CONFLICTS_VIEW_ID,V as SYNC_TITLE,K as SYNC_VIEW_CONTAINER_ID,W as SYNC_VIEW_ICON,L as getSyncAreaLabel};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { IAuthenticationProvider, SyncStatus, SyncResource, IUserDataSyncResource, IResourcePreview } from "../../../../platform/userDataSync/common/userDataSync.js";
+import { Event } from "../../../../base/common/event.js";
+import { ContextKeyExpr, RawContextKey } from "../../../../platform/contextkey/common/contextkey.js";
+import { localize, localize2 } from "../../../../nls.js";
+import { URI } from "../../../../base/common/uri.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { registerIcon } from "../../../../platform/theme/common/iconRegistry.js";
+import { IView } from "../../../common/views.js";
+import { Categories } from "../../../../platform/action/common/actionCommonCategories.js";
+import { IAction2Options } from "../../../../platform/actions/common/actions.js";
+import { ILocalizedString } from "../../../../platform/action/common/action.js";
+const IUserDataSyncWorkbenchService = createDecorator("IUserDataSyncWorkbenchService");
+function getSyncAreaLabel(source) {
+  switch (source) {
+    case SyncResource.Settings:
+      return localize("settings", "Settings");
+    case SyncResource.Keybindings:
+      return localize("keybindings", "Keyboard Shortcuts");
+    case SyncResource.Snippets:
+      return localize("snippets", "Snippets");
+    case SyncResource.Prompts:
+      return localize("prompts", "Prompts");
+    case SyncResource.Tasks:
+      return localize("tasks", "Tasks");
+    case SyncResource.Extensions:
+      return localize("extensions", "Extensions");
+    case SyncResource.GlobalState:
+      return localize("ui state label", "UI State");
+    case SyncResource.Profiles:
+      return localize("profiles", "Profiles");
+    case SyncResource.WorkspaceState:
+      return localize("workspace state label", "Workspace State");
+  }
+}
+__name(getSyncAreaLabel, "getSyncAreaLabel");
+var AccountStatus = /* @__PURE__ */ ((AccountStatus2) => {
+  AccountStatus2["Uninitialized"] = "uninitialized";
+  AccountStatus2["Unavailable"] = "unavailable";
+  AccountStatus2["Available"] = "available";
+  return AccountStatus2;
+})(AccountStatus || {});
+const SYNC_TITLE = localize2("sync category", "Settings Sync");
+const SYNC_VIEW_ICON = registerIcon("settings-sync-view-icon", Codicon.sync, localize("syncViewIcon", "View icon of the Settings Sync view."));
+const CONTEXT_SYNC_STATE = new RawContextKey("syncStatus", SyncStatus.Uninitialized);
+const CONTEXT_SYNC_ENABLEMENT = new RawContextKey("syncEnabled", false);
+const CONTEXT_ACCOUNT_STATE = new RawContextKey("userDataSyncAccountStatus", "uninitialized" /* Uninitialized */);
+const CONTEXT_ENABLE_ACTIVITY_VIEWS = new RawContextKey(`enableSyncActivityViews`, false);
+const CONTEXT_ENABLE_SYNC_CONFLICTS_VIEW = new RawContextKey(`enableSyncConflictsView`, false);
+const CONTEXT_HAS_CONFLICTS = new RawContextKey("hasConflicts", false);
+const CONFIGURE_SYNC_COMMAND_ID = "workbench.userDataSync.actions.configure";
+const SHOW_SYNC_LOG_COMMAND_ID = "workbench.userDataSync.actions.showLog";
+const SYNC_VIEW_CONTAINER_ID = "workbench.view.sync";
+const SYNC_CONFLICTS_VIEW_ID = "workbench.views.sync.conflicts";
+const DOWNLOAD_ACTIVITY_ACTION_DESCRIPTOR = {
+  id: "workbench.userDataSync.actions.downloadSyncActivity",
+  title: localize2("download sync activity title", "Download Settings Sync Activity"),
+  category: Categories.Developer,
+  f1: true,
+  precondition: ContextKeyExpr.and(CONTEXT_ACCOUNT_STATE.isEqualTo("available" /* Available */), CONTEXT_SYNC_STATE.notEqualsTo(SyncStatus.Uninitialized))
+};
+export {
+  AccountStatus,
+  CONFIGURE_SYNC_COMMAND_ID,
+  CONTEXT_ACCOUNT_STATE,
+  CONTEXT_ENABLE_ACTIVITY_VIEWS,
+  CONTEXT_ENABLE_SYNC_CONFLICTS_VIEW,
+  CONTEXT_HAS_CONFLICTS,
+  CONTEXT_SYNC_ENABLEMENT,
+  CONTEXT_SYNC_STATE,
+  DOWNLOAD_ACTIVITY_ACTION_DESCRIPTOR,
+  IUserDataSyncWorkbenchService,
+  SHOW_SYNC_LOG_COMMAND_ID,
+  SYNC_CONFLICTS_VIEW_ID,
+  SYNC_TITLE,
+  SYNC_VIEW_CONTAINER_ID,
+  SYNC_VIEW_ICON,
+  getSyncAreaLabel
+};
+//# sourceMappingURL=userDataSync.js.map

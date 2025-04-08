@@ -1,1 +1,233 @@
-var C=Object.defineProperty,W=Object.getOwnPropertyDescriptor,y=(i,e,t,n)=>{for(var r,o=n>1?void 0:n?W(e,t):e,a=i.length-1;a>=0;a--)(r=i[a])&&(o=(n?r(e,t,o):r(o))||o);return n&&o&&C(e,t,o),o},u=(i,e)=>(t,n)=>e(t,n,i);import"../../../../../base/browser/dom.js";import{KeyCode as a,KeyMod as o}from"../../../../../base/common/keyCodes.js";import{Lazy as b}from"../../../../../base/common/lazy.js";import{Disposable as w}from"../../../../../base/common/lifecycle.js";import{localize2 as l}from"../../../../../nls.js";import{ContextKeyExpr as c}from"../../../../../platform/contextkey/common/contextkey.js";import{IInstantiationService as F}from"../../../../../platform/instantiation/common/instantiation.js";import{KeybindingWeight as m}from"../../../../../platform/keybinding/common/keybindingsRegistry.js";import{findInFilesCommand as I}from"../../../search/browser/searchActionsFind.js";import{ITerminalService as v,isDetachedTerminalInstance as k}from"../../../terminal/browser/terminal.js";import{registerActiveInstanceAction as T,registerActiveXtermAction as p}from"../../../terminal/browser/terminalActions.js";import{registerTerminalContribution as S}from"../../../terminal/browser/terminalExtensions.js";import{TerminalContextKeys as i}from"../../../terminal/common/terminalContextKey.js";import{TerminalFindCommandId as g}from"../common/terminal.find.js";import"./media/terminalFind.css";import{TerminalFindWidget as x}from"./terminalFindWidget.js";let r=class extends w{static ID="terminal.find";static activeFindWidget;static get(i){return i.getContribution(r.ID)}_findWidget;_lastLayoutDimensions;get findWidget(){return this._findWidget.value}constructor(i,e,t){super(),this._findWidget=new b((()=>{const n=e.createInstance(x,i.instance);if(n.focusTracker.onDidFocus((()=>{r.activeFindWidget=this,i.instance.forceScrollbarVisibility(),k(i.instance)||t.setActiveInstance(i.instance)})),n.focusTracker.onDidBlur((()=>{r.activeFindWidget=void 0,i.instance.resetScrollbarVisibility()})),!i.instance.domElement)throw new Error("FindWidget expected terminal DOM to be initialized");return i.instance.domElement?.appendChild(n.getDomNode()),this._lastLayoutDimensions&&n.layout(this._lastLayoutDimensions.width),n}))}layout(i,e){this._lastLayoutDimensions=e,this._findWidget.rawValue?.layout(e.width)}xtermReady(i){this._register(i.onDidChangeFindResults((()=>this._findWidget.rawValue?.updateResultCount())))}dispose(){r.activeFindWidget===this&&(r.activeFindWidget=void 0),super.dispose(),this._findWidget.rawValue?.dispose()}};r=y([u(1,F),u(2,v)],r),S(r.ID,r,!0),p({id:g.FindFocus,title:l("workbench.action.terminal.focusFind","Focus Find"),keybinding:{primary:o.CtrlCmd|a.KeyF,when:c.or(i.findFocus,i.focusInAny),weight:m.WorkbenchContrib},precondition:c.or(i.processSupported,i.terminalHasBeenCreated),run:(i,e,t)=>{(r.activeFindWidget||r.get(t))?.findWidget.reveal()}}),p({id:g.FindHide,title:l("workbench.action.terminal.hideFind","Hide Find"),keybinding:{primary:a.Escape,secondary:[o.Shift|a.Escape],when:c.and(i.focusInAny,i.findVisible),weight:m.WorkbenchContrib},precondition:c.or(i.processSupported,i.terminalHasBeenCreated),run:(i,e,t)=>{(r.activeFindWidget||r.get(t))?.findWidget.hide()}}),p({id:g.ToggleFindRegex,title:l("workbench.action.terminal.toggleFindRegex","Toggle Find Using Regex"),keybinding:{primary:o.Alt|a.KeyR,mac:{primary:o.CtrlCmd|o.Alt|a.KeyR},when:i.findVisible,weight:m.WorkbenchContrib},precondition:c.or(i.processSupported,i.terminalHasBeenCreated),run:(i,e,t)=>{const n=(r.activeFindWidget||r.get(t))?.findWidget.state;n?.change({isRegex:!n.isRegex},!1)}}),p({id:g.ToggleFindWholeWord,title:l("workbench.action.terminal.toggleFindWholeWord","Toggle Find Using Whole Word"),keybinding:{primary:o.Alt|a.KeyW,mac:{primary:o.CtrlCmd|o.Alt|a.KeyW},when:i.findVisible,weight:m.WorkbenchContrib},precondition:c.or(i.processSupported,i.terminalHasBeenCreated),run:(i,e,t)=>{const n=(r.activeFindWidget||r.get(t))?.findWidget.state;n?.change({wholeWord:!n.wholeWord},!1)}}),p({id:g.ToggleFindCaseSensitive,title:l("workbench.action.terminal.toggleFindCaseSensitive","Toggle Find Using Case Sensitive"),keybinding:{primary:o.Alt|a.KeyC,mac:{primary:o.CtrlCmd|o.Alt|a.KeyC},when:i.findVisible,weight:m.WorkbenchContrib},precondition:c.or(i.processSupported,i.terminalHasBeenCreated),run:(i,e,t)=>{const n=(r.activeFindWidget||r.get(t))?.findWidget.state;n?.change({matchCase:!n.matchCase},!1)}}),p({id:g.FindNext,title:l("workbench.action.terminal.findNext","Find Next"),keybinding:[{primary:a.F3,mac:{primary:o.CtrlCmd|a.KeyG,secondary:[a.F3]},when:c.or(i.focusInAny,i.findFocus),weight:m.WorkbenchContrib},{primary:o.Shift|a.Enter,when:i.findInputFocus,weight:m.WorkbenchContrib}],precondition:c.or(i.processSupported,i.terminalHasBeenCreated),run:(i,e,t)=>{const n=(r.activeFindWidget||r.get(t))?.findWidget;n&&(n.show(),n.find(!1))}}),p({id:g.FindPrevious,title:l("workbench.action.terminal.findPrevious","Find Previous"),keybinding:[{primary:o.Shift|a.F3,mac:{primary:o.CtrlCmd|o.Shift|a.KeyG,secondary:[o.Shift|a.F3]},when:c.or(i.focusInAny,i.findFocus),weight:m.WorkbenchContrib},{primary:a.Enter,when:i.findInputFocus,weight:m.WorkbenchContrib}],precondition:c.or(i.processSupported,i.terminalHasBeenCreated),run:(i,e,t)=>{const n=(r.activeFindWidget||r.get(t))?.findWidget;n&&(n.show(),n.find(!0))}}),T({id:g.SearchWorkspace,title:l("workbench.action.terminal.searchWorkspace","Search Workspace"),keybinding:[{primary:o.CtrlCmd|o.Shift|a.KeyF,when:c.and(i.processSupported,i.focus,i.textSelected),weight:m.WorkbenchContrib+50}],run:(i,e,t)=>I(t,{query:i.selection})});
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { IDimension } from "../../../../../base/browser/dom.js";
+import { KeyCode, KeyMod } from "../../../../../base/common/keyCodes.js";
+import { Lazy } from "../../../../../base/common/lazy.js";
+import { Disposable } from "../../../../../base/common/lifecycle.js";
+import { localize2 } from "../../../../../nls.js";
+import { ContextKeyExpr } from "../../../../../platform/contextkey/common/contextkey.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { KeybindingWeight } from "../../../../../platform/keybinding/common/keybindingsRegistry.js";
+import { findInFilesCommand } from "../../../search/browser/searchActionsFind.js";
+import { IDetachedTerminalInstance, ITerminalContribution, ITerminalInstance, ITerminalService, IXtermTerminal, isDetachedTerminalInstance } from "../../../terminal/browser/terminal.js";
+import { registerActiveInstanceAction, registerActiveXtermAction } from "../../../terminal/browser/terminalActions.js";
+import { registerTerminalContribution } from "../../../terminal/browser/terminalExtensions.js";
+import { TerminalContextKeys } from "../../../terminal/common/terminalContextKey.js";
+import { TerminalFindCommandId } from "../common/terminal.find.js";
+import "./media/terminalFind.css";
+import { TerminalFindWidget } from "./terminalFindWidget.js";
+let TerminalFindContribution = class extends Disposable {
+  static {
+    __name(this, "TerminalFindContribution");
+  }
+  static ID = "terminal.find";
+  /**
+   * Currently focused find widget. This is used to track action context since
+   * 'active terminals' are only tracked for non-detached terminal instanecs.
+   */
+  static activeFindWidget;
+  static get(instance) {
+    return instance.getContribution(TerminalFindContribution.ID);
+  }
+  _findWidget;
+  _lastLayoutDimensions;
+  get findWidget() {
+    return this._findWidget.value;
+  }
+  constructor(ctx, instantiationService, terminalService) {
+    super();
+    this._findWidget = new Lazy(() => {
+      const findWidget = instantiationService.createInstance(TerminalFindWidget, ctx.instance);
+      findWidget.focusTracker.onDidFocus(() => {
+        TerminalFindContribution.activeFindWidget = this;
+        ctx.instance.forceScrollbarVisibility();
+        if (!isDetachedTerminalInstance(ctx.instance)) {
+          terminalService.setActiveInstance(ctx.instance);
+        }
+      });
+      findWidget.focusTracker.onDidBlur(() => {
+        TerminalFindContribution.activeFindWidget = void 0;
+        ctx.instance.resetScrollbarVisibility();
+      });
+      if (!ctx.instance.domElement) {
+        throw new Error("FindWidget expected terminal DOM to be initialized");
+      }
+      ctx.instance.domElement?.appendChild(findWidget.getDomNode());
+      if (this._lastLayoutDimensions) {
+        findWidget.layout(this._lastLayoutDimensions.width);
+      }
+      return findWidget;
+    });
+  }
+  layout(_xterm, dimension) {
+    this._lastLayoutDimensions = dimension;
+    this._findWidget.rawValue?.layout(dimension.width);
+  }
+  xtermReady(xterm) {
+    this._register(xterm.onDidChangeFindResults(() => this._findWidget.rawValue?.updateResultCount()));
+  }
+  dispose() {
+    if (TerminalFindContribution.activeFindWidget === this) {
+      TerminalFindContribution.activeFindWidget = void 0;
+    }
+    super.dispose();
+    this._findWidget.rawValue?.dispose();
+  }
+};
+TerminalFindContribution = __decorateClass([
+  __decorateParam(1, IInstantiationService),
+  __decorateParam(2, ITerminalService)
+], TerminalFindContribution);
+registerTerminalContribution(TerminalFindContribution.ID, TerminalFindContribution, true);
+registerActiveXtermAction({
+  id: TerminalFindCommandId.FindFocus,
+  title: localize2("workbench.action.terminal.focusFind", "Focus Find"),
+  keybinding: {
+    primary: KeyMod.CtrlCmd | KeyCode.KeyF,
+    when: ContextKeyExpr.or(TerminalContextKeys.findFocus, TerminalContextKeys.focusInAny),
+    weight: KeybindingWeight.WorkbenchContrib
+  },
+  precondition: ContextKeyExpr.or(TerminalContextKeys.processSupported, TerminalContextKeys.terminalHasBeenCreated),
+  run: /* @__PURE__ */ __name((_xterm, _accessor, activeInstance) => {
+    const contr = TerminalFindContribution.activeFindWidget || TerminalFindContribution.get(activeInstance);
+    contr?.findWidget.reveal();
+  }, "run")
+});
+registerActiveXtermAction({
+  id: TerminalFindCommandId.FindHide,
+  title: localize2("workbench.action.terminal.hideFind", "Hide Find"),
+  keybinding: {
+    primary: KeyCode.Escape,
+    secondary: [KeyMod.Shift | KeyCode.Escape],
+    when: ContextKeyExpr.and(TerminalContextKeys.focusInAny, TerminalContextKeys.findVisible),
+    weight: KeybindingWeight.WorkbenchContrib
+  },
+  precondition: ContextKeyExpr.or(TerminalContextKeys.processSupported, TerminalContextKeys.terminalHasBeenCreated),
+  run: /* @__PURE__ */ __name((_xterm, _accessor, activeInstance) => {
+    const contr = TerminalFindContribution.activeFindWidget || TerminalFindContribution.get(activeInstance);
+    contr?.findWidget.hide();
+  }, "run")
+});
+registerActiveXtermAction({
+  id: TerminalFindCommandId.ToggleFindRegex,
+  title: localize2("workbench.action.terminal.toggleFindRegex", "Toggle Find Using Regex"),
+  keybinding: {
+    primary: KeyMod.Alt | KeyCode.KeyR,
+    mac: { primary: KeyMod.CtrlCmd | KeyMod.Alt | KeyCode.KeyR },
+    when: TerminalContextKeys.findVisible,
+    weight: KeybindingWeight.WorkbenchContrib
+  },
+  precondition: ContextKeyExpr.or(TerminalContextKeys.processSupported, TerminalContextKeys.terminalHasBeenCreated),
+  run: /* @__PURE__ */ __name((_xterm, _accessor, activeInstance) => {
+    const contr = TerminalFindContribution.activeFindWidget || TerminalFindContribution.get(activeInstance);
+    const state = contr?.findWidget.state;
+    state?.change({ isRegex: !state.isRegex }, false);
+  }, "run")
+});
+registerActiveXtermAction({
+  id: TerminalFindCommandId.ToggleFindWholeWord,
+  title: localize2("workbench.action.terminal.toggleFindWholeWord", "Toggle Find Using Whole Word"),
+  keybinding: {
+    primary: KeyMod.Alt | KeyCode.KeyW,
+    mac: { primary: KeyMod.CtrlCmd | KeyMod.Alt | KeyCode.KeyW },
+    when: TerminalContextKeys.findVisible,
+    weight: KeybindingWeight.WorkbenchContrib
+  },
+  precondition: ContextKeyExpr.or(TerminalContextKeys.processSupported, TerminalContextKeys.terminalHasBeenCreated),
+  run: /* @__PURE__ */ __name((_xterm, _accessor, activeInstance) => {
+    const contr = TerminalFindContribution.activeFindWidget || TerminalFindContribution.get(activeInstance);
+    const state = contr?.findWidget.state;
+    state?.change({ wholeWord: !state.wholeWord }, false);
+  }, "run")
+});
+registerActiveXtermAction({
+  id: TerminalFindCommandId.ToggleFindCaseSensitive,
+  title: localize2("workbench.action.terminal.toggleFindCaseSensitive", "Toggle Find Using Case Sensitive"),
+  keybinding: {
+    primary: KeyMod.Alt | KeyCode.KeyC,
+    mac: { primary: KeyMod.CtrlCmd | KeyMod.Alt | KeyCode.KeyC },
+    when: TerminalContextKeys.findVisible,
+    weight: KeybindingWeight.WorkbenchContrib
+  },
+  precondition: ContextKeyExpr.or(TerminalContextKeys.processSupported, TerminalContextKeys.terminalHasBeenCreated),
+  run: /* @__PURE__ */ __name((_xterm, _accessor, activeInstance) => {
+    const contr = TerminalFindContribution.activeFindWidget || TerminalFindContribution.get(activeInstance);
+    const state = contr?.findWidget.state;
+    state?.change({ matchCase: !state.matchCase }, false);
+  }, "run")
+});
+registerActiveXtermAction({
+  id: TerminalFindCommandId.FindNext,
+  title: localize2("workbench.action.terminal.findNext", "Find Next"),
+  keybinding: [
+    {
+      primary: KeyCode.F3,
+      mac: { primary: KeyMod.CtrlCmd | KeyCode.KeyG, secondary: [KeyCode.F3] },
+      when: ContextKeyExpr.or(TerminalContextKeys.focusInAny, TerminalContextKeys.findFocus),
+      weight: KeybindingWeight.WorkbenchContrib
+    },
+    {
+      primary: KeyMod.Shift | KeyCode.Enter,
+      when: TerminalContextKeys.findInputFocus,
+      weight: KeybindingWeight.WorkbenchContrib
+    }
+  ],
+  precondition: ContextKeyExpr.or(TerminalContextKeys.processSupported, TerminalContextKeys.terminalHasBeenCreated),
+  run: /* @__PURE__ */ __name((_xterm, _accessor, activeInstance) => {
+    const contr = TerminalFindContribution.activeFindWidget || TerminalFindContribution.get(activeInstance);
+    const widget = contr?.findWidget;
+    if (widget) {
+      widget.show();
+      widget.find(false);
+    }
+  }, "run")
+});
+registerActiveXtermAction({
+  id: TerminalFindCommandId.FindPrevious,
+  title: localize2("workbench.action.terminal.findPrevious", "Find Previous"),
+  keybinding: [
+    {
+      primary: KeyMod.Shift | KeyCode.F3,
+      mac: { primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyG, secondary: [KeyMod.Shift | KeyCode.F3] },
+      when: ContextKeyExpr.or(TerminalContextKeys.focusInAny, TerminalContextKeys.findFocus),
+      weight: KeybindingWeight.WorkbenchContrib
+    },
+    {
+      primary: KeyCode.Enter,
+      when: TerminalContextKeys.findInputFocus,
+      weight: KeybindingWeight.WorkbenchContrib
+    }
+  ],
+  precondition: ContextKeyExpr.or(TerminalContextKeys.processSupported, TerminalContextKeys.terminalHasBeenCreated),
+  run: /* @__PURE__ */ __name((_xterm, _accessor, activeInstance) => {
+    const contr = TerminalFindContribution.activeFindWidget || TerminalFindContribution.get(activeInstance);
+    const widget = contr?.findWidget;
+    if (widget) {
+      widget.show();
+      widget.find(true);
+    }
+  }, "run")
+});
+registerActiveInstanceAction({
+  id: TerminalFindCommandId.SearchWorkspace,
+  title: localize2("workbench.action.terminal.searchWorkspace", "Search Workspace"),
+  keybinding: [
+    {
+      primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyF,
+      when: ContextKeyExpr.and(TerminalContextKeys.processSupported, TerminalContextKeys.focus, TerminalContextKeys.textSelected),
+      weight: KeybindingWeight.WorkbenchContrib + 50
+    }
+  ],
+  run: /* @__PURE__ */ __name((activeInstance, c, accessor) => findInFilesCommand(accessor, { query: activeInstance.selection }), "run")
+});
+//# sourceMappingURL=terminal.find.contribution.js.map

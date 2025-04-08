@@ -1,1 +1,93 @@
-var p=Object.defineProperty,M=Object.getOwnPropertyDescriptor,m=(o,t,i,r)=>{for(var e,s=r>1?void 0:r?M(t,i):t,n=o.length-1;n>=0;n--)(e=o[n])&&(s=(r?e(t,i,s):e(s))||s);return r&&s&&p(t,i,s),s},l=(o,t)=>(i,r)=>t(i,r,o);import{Disposable as h}from"../../../../base/common/lifecycle.js";import{isMacintosh as b}from"../../../../base/common/platform.js";import{localize as a,localize2 as I}from"../../../../nls.js";import{Action2 as v,MenuId as C,MenuRegistry as f,registerAction2 as y}from"../../../../platform/actions/common/actions.js";import{IConfigurationService as g}from"../../../../platform/configuration/common/configuration.js";import{IContextKeyService as S,RawContextKey as k}from"../../../../platform/contextkey/common/contextkey.js";import"../../../../platform/instantiation/common/instantiation.js";import{Registry as w}from"../../../../platform/registry/common/platform.js";import{Extensions as x}from"../../../common/contributions.js";import{LifecyclePhase as K}from"../../../services/lifecycle/common/lifecycle.js";class e extends v{static ID="workbench.action.toggleMultiCursorModifier";static multiCursorModifierConfigurationKey="editor.multiCursorModifier";constructor(){super({id:e.ID,title:I("toggleLocation","Toggle Multi-Cursor Modifier"),f1:!0})}run(o){const t=o.get(g),i="ctrlCmd"===t.getValue("editor").multiCursorModifier?"alt":"ctrlCmd";return t.updateValue(e.multiCursorModifierConfigurationKey,i)}}const d=new k("multiCursorModifier","altKey");let s=class extends h{constructor(o,t){super(),this.configurationService=o,this._multiCursorModifier=d.bindTo(t),this._update(),this._register(o.onDidChangeConfiguration((o=>{o.affectsConfiguration("editor.multiCursorModifier")&&this._update()})))}_multiCursorModifier;_update(){const o="ctrlCmd"===this.configurationService.getValue("editor").multiCursorModifier?"ctrlCmd":"altKey";this._multiCursorModifier.set(o)}};s=m([l(0,g),l(1,S)],s),w.as(x.Workbench).registerWorkbenchContribution(s,K.Restored),y(e),f.appendMenuItem(C.MenubarSelectionMenu,{group:"4_config",command:{id:e.ID,title:a("miMultiCursorAlt","Switch to Alt+Click for Multi-Cursor")},when:d.isEqualTo("ctrlCmd"),order:1}),f.appendMenuItem(C.MenubarSelectionMenu,{group:"4_config",command:{id:e.ID,title:b?a("miMultiCursorCmd","Switch to Cmd+Click for Multi-Cursor"):a("miMultiCursorCtrl","Switch to Ctrl+Click for Multi-Cursor")},when:d.isEqualTo("altKey"),order:1});export{e as ToggleMultiCursorModifierAction};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { isMacintosh } from "../../../../base/common/platform.js";
+import { localize, localize2 } from "../../../../nls.js";
+import { Action2, MenuId, MenuRegistry, registerAction2 } from "../../../../platform/actions/common/actions.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IContextKey, IContextKeyService, RawContextKey } from "../../../../platform/contextkey/common/contextkey.js";
+import { ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { IWorkbenchContribution, IWorkbenchContributionsRegistry, Extensions as WorkbenchExtensions } from "../../../common/contributions.js";
+import { LifecyclePhase } from "../../../services/lifecycle/common/lifecycle.js";
+class ToggleMultiCursorModifierAction extends Action2 {
+  static {
+    __name(this, "ToggleMultiCursorModifierAction");
+  }
+  static ID = "workbench.action.toggleMultiCursorModifier";
+  static multiCursorModifierConfigurationKey = "editor.multiCursorModifier";
+  constructor() {
+    super({
+      id: ToggleMultiCursorModifierAction.ID,
+      title: localize2("toggleLocation", "Toggle Multi-Cursor Modifier"),
+      f1: true
+    });
+  }
+  run(accessor) {
+    const configurationService = accessor.get(IConfigurationService);
+    const editorConf = configurationService.getValue("editor");
+    const newValue = editorConf.multiCursorModifier === "ctrlCmd" ? "alt" : "ctrlCmd";
+    return configurationService.updateValue(ToggleMultiCursorModifierAction.multiCursorModifierConfigurationKey, newValue);
+  }
+}
+const multiCursorModifier = new RawContextKey("multiCursorModifier", "altKey");
+let MultiCursorModifierContextKeyController = class extends Disposable {
+  constructor(configurationService, contextKeyService) {
+    super();
+    this.configurationService = configurationService;
+    this._multiCursorModifier = multiCursorModifier.bindTo(contextKeyService);
+    this._update();
+    this._register(configurationService.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration("editor.multiCursorModifier")) {
+        this._update();
+      }
+    }));
+  }
+  static {
+    __name(this, "MultiCursorModifierContextKeyController");
+  }
+  _multiCursorModifier;
+  _update() {
+    const editorConf = this.configurationService.getValue("editor");
+    const value = editorConf.multiCursorModifier === "ctrlCmd" ? "ctrlCmd" : "altKey";
+    this._multiCursorModifier.set(value);
+  }
+};
+MultiCursorModifierContextKeyController = __decorateClass([
+  __decorateParam(0, IConfigurationService),
+  __decorateParam(1, IContextKeyService)
+], MultiCursorModifierContextKeyController);
+Registry.as(WorkbenchExtensions.Workbench).registerWorkbenchContribution(MultiCursorModifierContextKeyController, LifecyclePhase.Restored);
+registerAction2(ToggleMultiCursorModifierAction);
+MenuRegistry.appendMenuItem(MenuId.MenubarSelectionMenu, {
+  group: "4_config",
+  command: {
+    id: ToggleMultiCursorModifierAction.ID,
+    title: localize("miMultiCursorAlt", "Switch to Alt+Click for Multi-Cursor")
+  },
+  when: multiCursorModifier.isEqualTo("ctrlCmd"),
+  order: 1
+});
+MenuRegistry.appendMenuItem(MenuId.MenubarSelectionMenu, {
+  group: "4_config",
+  command: {
+    id: ToggleMultiCursorModifierAction.ID,
+    title: isMacintosh ? localize("miMultiCursorCmd", "Switch to Cmd+Click for Multi-Cursor") : localize("miMultiCursorCtrl", "Switch to Ctrl+Click for Multi-Cursor")
+  },
+  when: multiCursorModifier.isEqualTo("altKey"),
+  order: 1
+});
+export {
+  ToggleMultiCursorModifierAction
+};
+//# sourceMappingURL=toggleMultiCursorModifier.js.map

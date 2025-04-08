@@ -1,1 +1,237 @@
-import{RunOnceScheduler as S}from"../../../base/common/async.js";import{Codicon as f}from"../../../base/common/codicons.js";import{getCodiconFontCharacters as x}from"../../../base/common/codiconsUtil.js";import{ThemeIcon as s}from"../../../base/common/themables.js";import{Emitter as b}from"../../../base/common/event.js";import"../../../base/common/jsonSchema.js";import{isString as h}from"../../../base/common/types.js";import{URI as C}from"../../../base/common/uri.js";import{localize as d}from"../../../nls.js";import{Extensions as D}from"../../jsonschemas/common/jsonContributionRegistry.js";import*as g from"../../registry/common/platform.js";const R={IconContribution:"base.contributions.icons"};var F,w;(F||={}).getDefinition=function(e,o){let n=e.defaults;for(;s.isThemeIcon(n);){const e=a.getIcon(n.id);if(!e)return;n=e.defaults}return n},(e=>{e.toJSONObject=function(e){return{weight:e.weight,style:e.style,src:e.src.map((e=>({format:e.format,location:e.location.toString()})))}},e.fromJSONObject=function(e){const o=e=>h(e)?e:void 0;if(e&&Array.isArray(e.src)&&e.src.every((e=>h(e.format)&&h(e.location))))return{weight:o(e.weight),style:o(e.style),src:e.src.map((e=>({format:e.format,location:C.parse(e.location)})))}}})(w||={});const v=/^([\w_-]+)$/,G=/^(normal|italic|(oblique[ \w\s-]+))$/,H=/^(normal|bold|lighter|bolder|(\d{0-1000}))$/,K=/^([\w_.%+-]+)$/,Q=/^woff|woff2|truetype|opentype|embedded-opentype|svg$/,V=/^#[0-9a-fA-F]{0,6}$/,O=d("schema.fontId.formatError","The font ID must only contain letters, numbers, underscores and dashes.");class ${_onDidChange=new b;onDidChange=this._onDidChange.event;iconsById;iconSchema={definitions:{icons:{type:"object",properties:{fontId:{type:"string",description:d("iconDefinition.fontId","The id of the font to use. If not set, the font that is defined first is used."),pattern:v.source,patternErrorMessage:O},fontCharacter:{type:"string",description:d("iconDefinition.fontCharacter","The font character associated with the icon definition.")}},additionalProperties:!1,defaultSnippets:[{body:{fontCharacter:"\\\\e030"}}]}},type:"object",properties:{}};iconReferenceSchema={type:"string",pattern:`^${s.iconNameExpression}$`,enum:[],enumDescriptions:[]};iconFontsById;constructor(){this.iconsById={},this.iconFontsById={}}registerIcon(e,o,n,t){const i=this.iconsById[e];if(i){if(n&&!i.description){i.description=n,this.iconSchema.properties[e].markdownDescription=`${n} $(${e})`;const o=this.iconReferenceSchema.enum.indexOf(e);-1!==o&&(this.iconReferenceSchema.enumDescriptions[o]=n),this._onDidChange.fire()}return i}const s={id:e,description:n,defaults:o,deprecationMessage:t};this.iconsById[e]=s;const r={$ref:"#/definitions/icons"};return t&&(r.deprecationMessage=t),n&&(r.markdownDescription=`${n}: $(${e})`),this.iconSchema.properties[e]=r,this.iconReferenceSchema.enum.push(e),this.iconReferenceSchema.enumDescriptions.push(n||""),this._onDidChange.fire(),{id:e}}deregisterIcon(e){delete this.iconsById[e],delete this.iconSchema.properties[e];const o=this.iconReferenceSchema.enum.indexOf(e);-1!==o&&(this.iconReferenceSchema.enum.splice(o,1),this.iconReferenceSchema.enumDescriptions.splice(o,1)),this._onDidChange.fire()}getIcons(){return Object.keys(this.iconsById).map((e=>this.iconsById[e]))}getIcon(e){return this.iconsById[e]}getIconSchema(){return this.iconSchema}getIconReferenceSchema(){return this.iconReferenceSchema}registerIconFont(e,o){return this.iconFontsById[e]||(this.iconFontsById[e]=o,this._onDidChange.fire(),o)}deregisterIconFont(e){delete this.iconFontsById[e]}getIconFont(e){return this.iconFontsById[e]}toString(){const e=(e,o)=>e.id.localeCompare(o.id),o=e=>{for(;s.isThemeIcon(e.defaults);)e=this.iconsById[e.defaults.id];return`codicon codicon-${e?e.id:""}`},n=[];n.push("| preview     | identifier                        | default codicon ID                | description"),n.push("| ----------- | --------------------------------- | --------------------------------- | --------------------------------- |");const t=Object.keys(this.iconsById).map((e=>this.iconsById[e]));for(const i of t.filter((e=>!!e.description)).sort(e))n.push(`|<i class="${o(i)}"></i>|${i.id}|${s.isThemeIcon(i.defaults)?i.defaults.id:i.id}|${i.description||""}|`);n.push("| preview     | identifier                        "),n.push("| ----------- | --------------------------------- |");for(const i of t.filter((e=>!s.isThemeIcon(e.defaults))).sort(e))n.push(`|<i class="${o(i)}"></i>|${i.id}|`);return n.join("\n")}}const a=new $;function p(e,o,n,t){return a.registerIcon(e,o,n,t)}function X(){return a}function N(){const e=x();for(const o in e){const n="\\"+e[o].toString(16);a.registerIcon(o,{fontCharacter:n})}}g.Registry.add(R.IconContribution,a),N();const m="vscode://schemas/icons",l=g.Registry.as(D.JSONContribution);l.registerSchema(m,a.getIconSchema());const y=new S((()=>l.notifySchemaChanged(m)),200);a.onDidChange((()=>{y.isScheduled()||y.schedule()}));const Y=p("widget-close",f.close,d("widgetClose","Icon for the close action in widgets.")),Z=p("goto-previous-location",f.arrowUp,d("previousChangeIcon","Icon for goto previous editor location.")),nn=p("goto-next-location",f.arrowDown,d("nextChangeIcon","Icon for goto next editor location.")),en=s.modify(f.sync,"spin"),on=s.modify(f.loading,"spin");export{R as Extensions,F as IconContribution,w as IconFontDefinition,V as fontColorRegex,Q as fontFormatRegex,O as fontIdErrorMessage,v as fontIdRegex,K as fontSizeRegex,G as fontStyleRegex,H as fontWeightRegex,X as getIconRegistry,nn as gotoNextLocation,Z as gotoPreviousLocation,m as iconsSchemaId,p as registerIcon,on as spinningLoading,en as syncing,Y as widgetClose};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { RunOnceScheduler } from "../../../base/common/async.js";
+import { Codicon } from "../../../base/common/codicons.js";
+import { getCodiconFontCharacters } from "../../../base/common/codiconsUtil.js";
+import { ThemeIcon, IconIdentifier } from "../../../base/common/themables.js";
+import { Emitter, Event } from "../../../base/common/event.js";
+import { IJSONSchema, IJSONSchemaMap } from "../../../base/common/jsonSchema.js";
+import { isString } from "../../../base/common/types.js";
+import { URI } from "../../../base/common/uri.js";
+import { localize } from "../../../nls.js";
+import { Extensions as JSONExtensions, IJSONContributionRegistry } from "../../jsonschemas/common/jsonContributionRegistry.js";
+import * as platform from "../../registry/common/platform.js";
+const Extensions = {
+  IconContribution: "base.contributions.icons"
+};
+var IconContribution;
+((IconContribution2) => {
+  function getDefinition(contribution, registry) {
+    let definition = contribution.defaults;
+    while (ThemeIcon.isThemeIcon(definition)) {
+      const c = iconRegistry.getIcon(definition.id);
+      if (!c) {
+        return void 0;
+      }
+      definition = c.defaults;
+    }
+    return definition;
+  }
+  IconContribution2.getDefinition = getDefinition;
+  __name(getDefinition, "getDefinition");
+})(IconContribution || (IconContribution = {}));
+var IconFontDefinition;
+((IconFontDefinition2) => {
+  function toJSONObject(iconFont) {
+    return {
+      weight: iconFont.weight,
+      style: iconFont.style,
+      src: iconFont.src.map((s) => ({ format: s.format, location: s.location.toString() }))
+    };
+  }
+  IconFontDefinition2.toJSONObject = toJSONObject;
+  __name(toJSONObject, "toJSONObject");
+  function fromJSONObject(json) {
+    const stringOrUndef = /* @__PURE__ */ __name((s) => isString(s) ? s : void 0, "stringOrUndef");
+    if (json && Array.isArray(json.src) && json.src.every((s) => isString(s.format) && isString(s.location))) {
+      return {
+        weight: stringOrUndef(json.weight),
+        style: stringOrUndef(json.style),
+        src: json.src.map((s) => ({ format: s.format, location: URI.parse(s.location) }))
+      };
+    }
+    return void 0;
+  }
+  IconFontDefinition2.fromJSONObject = fromJSONObject;
+  __name(fromJSONObject, "fromJSONObject");
+})(IconFontDefinition || (IconFontDefinition = {}));
+const fontIdRegex = /^([\w_-]+)$/;
+const fontStyleRegex = /^(normal|italic|(oblique[ \w\s-]+))$/;
+const fontWeightRegex = /^(normal|bold|lighter|bolder|(\d{0-1000}))$/;
+const fontSizeRegex = /^([\w_.%+-]+)$/;
+const fontFormatRegex = /^woff|woff2|truetype|opentype|embedded-opentype|svg$/;
+const fontColorRegex = /^#[0-9a-fA-F]{0,6}$/;
+const fontIdErrorMessage = localize("schema.fontId.formatError", "The font ID must only contain letters, numbers, underscores and dashes.");
+class IconRegistry {
+  static {
+    __name(this, "IconRegistry");
+  }
+  _onDidChange = new Emitter();
+  onDidChange = this._onDidChange.event;
+  iconsById;
+  iconSchema = {
+    definitions: {
+      icons: {
+        type: "object",
+        properties: {
+          fontId: { type: "string", description: localize("iconDefinition.fontId", "The id of the font to use. If not set, the font that is defined first is used."), pattern: fontIdRegex.source, patternErrorMessage: fontIdErrorMessage },
+          fontCharacter: { type: "string", description: localize("iconDefinition.fontCharacter", "The font character associated with the icon definition.") }
+        },
+        additionalProperties: false,
+        defaultSnippets: [{ body: { fontCharacter: "\\\\e030" } }]
+      }
+    },
+    type: "object",
+    properties: {}
+  };
+  iconReferenceSchema = { type: "string", pattern: `^${ThemeIcon.iconNameExpression}$`, enum: [], enumDescriptions: [] };
+  iconFontsById;
+  constructor() {
+    this.iconsById = {};
+    this.iconFontsById = {};
+  }
+  registerIcon(id, defaults, description, deprecationMessage) {
+    const existing = this.iconsById[id];
+    if (existing) {
+      if (description && !existing.description) {
+        existing.description = description;
+        this.iconSchema.properties[id].markdownDescription = `${description} $(${id})`;
+        const enumIndex = this.iconReferenceSchema.enum.indexOf(id);
+        if (enumIndex !== -1) {
+          this.iconReferenceSchema.enumDescriptions[enumIndex] = description;
+        }
+        this._onDidChange.fire();
+      }
+      return existing;
+    }
+    const iconContribution = { id, description, defaults, deprecationMessage };
+    this.iconsById[id] = iconContribution;
+    const propertySchema = { $ref: "#/definitions/icons" };
+    if (deprecationMessage) {
+      propertySchema.deprecationMessage = deprecationMessage;
+    }
+    if (description) {
+      propertySchema.markdownDescription = `${description}: $(${id})`;
+    }
+    this.iconSchema.properties[id] = propertySchema;
+    this.iconReferenceSchema.enum.push(id);
+    this.iconReferenceSchema.enumDescriptions.push(description || "");
+    this._onDidChange.fire();
+    return { id };
+  }
+  deregisterIcon(id) {
+    delete this.iconsById[id];
+    delete this.iconSchema.properties[id];
+    const index = this.iconReferenceSchema.enum.indexOf(id);
+    if (index !== -1) {
+      this.iconReferenceSchema.enum.splice(index, 1);
+      this.iconReferenceSchema.enumDescriptions.splice(index, 1);
+    }
+    this._onDidChange.fire();
+  }
+  getIcons() {
+    return Object.keys(this.iconsById).map((id) => this.iconsById[id]);
+  }
+  getIcon(id) {
+    return this.iconsById[id];
+  }
+  getIconSchema() {
+    return this.iconSchema;
+  }
+  getIconReferenceSchema() {
+    return this.iconReferenceSchema;
+  }
+  registerIconFont(id, definition) {
+    const existing = this.iconFontsById[id];
+    if (existing) {
+      return existing;
+    }
+    this.iconFontsById[id] = definition;
+    this._onDidChange.fire();
+    return definition;
+  }
+  deregisterIconFont(id) {
+    delete this.iconFontsById[id];
+  }
+  getIconFont(id) {
+    return this.iconFontsById[id];
+  }
+  toString() {
+    const sorter = /* @__PURE__ */ __name((i1, i2) => {
+      return i1.id.localeCompare(i2.id);
+    }, "sorter");
+    const classNames = /* @__PURE__ */ __name((i) => {
+      while (ThemeIcon.isThemeIcon(i.defaults)) {
+        i = this.iconsById[i.defaults.id];
+      }
+      return `codicon codicon-${i ? i.id : ""}`;
+    }, "classNames");
+    const reference = [];
+    reference.push(`| preview     | identifier                        | default codicon ID                | description`);
+    reference.push(`| ----------- | --------------------------------- | --------------------------------- | --------------------------------- |`);
+    const contributions = Object.keys(this.iconsById).map((key) => this.iconsById[key]);
+    for (const i of contributions.filter((i2) => !!i2.description).sort(sorter)) {
+      reference.push(`|<i class="${classNames(i)}"></i>|${i.id}|${ThemeIcon.isThemeIcon(i.defaults) ? i.defaults.id : i.id}|${i.description || ""}|`);
+    }
+    reference.push(`| preview     | identifier                        `);
+    reference.push(`| ----------- | --------------------------------- |`);
+    for (const i of contributions.filter((i2) => !ThemeIcon.isThemeIcon(i2.defaults)).sort(sorter)) {
+      reference.push(`|<i class="${classNames(i)}"></i>|${i.id}|`);
+    }
+    return reference.join("\n");
+  }
+}
+const iconRegistry = new IconRegistry();
+platform.Registry.add(Extensions.IconContribution, iconRegistry);
+function registerIcon(id, defaults, description, deprecationMessage) {
+  return iconRegistry.registerIcon(id, defaults, description, deprecationMessage);
+}
+__name(registerIcon, "registerIcon");
+function getIconRegistry() {
+  return iconRegistry;
+}
+__name(getIconRegistry, "getIconRegistry");
+function initialize() {
+  const codiconFontCharacters = getCodiconFontCharacters();
+  for (const icon in codiconFontCharacters) {
+    const fontCharacter = "\\" + codiconFontCharacters[icon].toString(16);
+    iconRegistry.registerIcon(icon, { fontCharacter });
+  }
+}
+__name(initialize, "initialize");
+initialize();
+const iconsSchemaId = "vscode://schemas/icons";
+const schemaRegistry = platform.Registry.as(JSONExtensions.JSONContribution);
+schemaRegistry.registerSchema(iconsSchemaId, iconRegistry.getIconSchema());
+const delayer = new RunOnceScheduler(() => schemaRegistry.notifySchemaChanged(iconsSchemaId), 200);
+iconRegistry.onDidChange(() => {
+  if (!delayer.isScheduled()) {
+    delayer.schedule();
+  }
+});
+const widgetClose = registerIcon("widget-close", Codicon.close, localize("widgetClose", "Icon for the close action in widgets."));
+const gotoPreviousLocation = registerIcon("goto-previous-location", Codicon.arrowUp, localize("previousChangeIcon", "Icon for goto previous editor location."));
+const gotoNextLocation = registerIcon("goto-next-location", Codicon.arrowDown, localize("nextChangeIcon", "Icon for goto next editor location."));
+const syncing = ThemeIcon.modify(Codicon.sync, "spin");
+const spinningLoading = ThemeIcon.modify(Codicon.loading, "spin");
+export {
+  Extensions,
+  IconContribution,
+  IconFontDefinition,
+  fontColorRegex,
+  fontFormatRegex,
+  fontIdErrorMessage,
+  fontIdRegex,
+  fontSizeRegex,
+  fontStyleRegex,
+  fontWeightRegex,
+  getIconRegistry,
+  gotoNextLocation,
+  gotoPreviousLocation,
+  iconsSchemaId,
+  registerIcon,
+  spinningLoading,
+  syncing,
+  widgetClose
+};
+//# sourceMappingURL=iconRegistry.js.map

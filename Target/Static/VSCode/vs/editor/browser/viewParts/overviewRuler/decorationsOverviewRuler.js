@@ -1,1 +1,472 @@
-import{createFastDomNode as T}from"../../../../base/browser/fastDomNode.js";import{Color as x}from"../../../../base/common/color.js";import"../../../../base/common/lifecycle.js";import{ViewPart as M}from"../../view/viewPart.js";import{Position as P}from"../../../common/core/position.js";import"../../../common/config/editorConfiguration.js";import{TokenizationRegistry as D}from"../../../common/languages.js";import{editorCursorForeground as L,editorOverviewRulerBorder as F,editorOverviewRulerBackground as V,editorMultiCursorSecondaryForeground as O,editorMultiCursorPrimaryForeground as B}from"../../../common/core/editorColorRegistry.js";import"../../view/renderingContext.js";import"../../../common/viewModel/viewContext.js";import"../../../common/editorTheme.js";import"../../../common/viewEvents.js";import{EditorOption as y}from"../../../common/config/editorOptions.js";import{OverviewRulerDecorationsGroup as W}from"../../../common/viewModel.js";import{equals as A}from"../../../../base/common/arrays.js";class q{lineHeight;pixelRatio;overviewRulerLanes;renderBorder;borderColor;hideCursor;cursorColorSingle;cursorColorPrimary;cursorColorSecondary;themeType;backgroundColor;top;right;domWidth;domHeight;canvasWidth;canvasHeight;x;w;constructor(e,t){const o=e.options;this.lineHeight=o.get(y.lineHeight),this.pixelRatio=o.get(y.pixelRatio),this.overviewRulerLanes=o.get(y.overviewRulerLanes),this.renderBorder=o.get(y.overviewRulerBorder);const i=t.getColor(F);this.borderColor=i?i.toString():null,this.hideCursor=o.get(y.hideCursorInOverviewRuler);const r=t.getColor(L);this.cursorColorSingle=r?r.transparent(.7).toString():null;const s=t.getColor(B);this.cursorColorPrimary=s?s.transparent(.7).toString():null;const n=t.getColor(O);this.cursorColorSecondary=n?n.transparent(.7).toString():null,this.themeType=t.type;const d=o.get(y.minimap),h=d.enabled,a=d.side,l=t.getColor(V),c=D.getDefaultBackground();this.backgroundColor=l||(h&&"right"===a?c:null);const u=o.get(y.layoutInfo).overviewRuler;this.top=u.top,this.right=u.right,this.domWidth=u.width,this.domHeight=u.height,0===this.overviewRulerLanes?(this.canvasWidth=0,this.canvasHeight=0):(this.canvasWidth=this.domWidth*this.pixelRatio|0,this.canvasHeight=this.domHeight*this.pixelRatio|0);const[g,m]=this._initLanes(1,this.canvasWidth,this.overviewRulerLanes);this.x=g,this.w=m}_initLanes(e,t,o){const i=t-e;if(o>=3){const t=Math.floor(i/3),o=Math.floor(i/3),r=i-t-o,s=e+t;return[[0,e,s,e,e+t+r,e,s,e],[0,t,r,t+r,o,t+r+o,r+o,t+r+o]]}if(2===o){const t=Math.floor(i/2),o=i-t;return[[0,e,e,e,e+t,e,e,e],[0,t,t,t,o,t+o,t+o,t+o]]}return[[0,e,e,e,e,e,e,e],[0,i,i,i,i,i,i,i]]}equals(e){return this.lineHeight===e.lineHeight&&this.pixelRatio===e.pixelRatio&&this.overviewRulerLanes===e.overviewRulerLanes&&this.renderBorder===e.renderBorder&&this.borderColor===e.borderColor&&this.hideCursor===e.hideCursor&&this.cursorColorSingle===e.cursorColorSingle&&this.cursorColorPrimary===e.cursorColorPrimary&&this.cursorColorSecondary===e.cursorColorSecondary&&this.themeType===e.themeType&&x.equals(this.backgroundColor,e.backgroundColor)&&this.top===e.top&&this.right===e.right&&this.domWidth===e.domWidth&&this.domHeight===e.domHeight&&this.canvasWidth===e.canvasWidth&&this.canvasHeight===e.canvasHeight}}var G=(e=>(e[e.MIN_DECORATION_HEIGHT=6]="MIN_DECORATION_HEIGHT",e))(G||{}),Y=(e=>(e[e.Left=1]="Left",e[e.Center=2]="Center",e[e.Right=4]="Right",e[e.Full=7]="Full",e))(Y||{}),Z=(e=>(e[e.NotNeeded=0]="NotNeeded",e[e.Maybe=1]="Maybe",e[e.Needed=2]="Needed",e))(Z||{});class me extends M{_actualShouldRender=0;_tokensColorTrackerListener;_domNode;_settings;_cursorPositions;_renderedDecorations=[];_renderedCursorPositions=[];constructor(e){super(e),this._domNode=T(document.createElement("canvas")),this._domNode.setClassName("decorationsOverviewRuler"),this._domNode.setPosition("absolute"),this._domNode.setLayerHinting(!0),this._domNode.setContain("strict"),this._domNode.setAttribute("aria-hidden","true"),this._updateSettings(!1),this._tokensColorTrackerListener=D.onDidChange((e=>{e.changedColorMap&&this._updateSettings(!0)})),this._cursorPositions=[{position:new P(1,1),color:this._settings.cursorColorSingle}]}dispose(){super.dispose(),this._tokensColorTrackerListener.dispose()}_updateSettings(e){const t=new q(this._context.configuration,this._context.theme);return(!this._settings||!this._settings.equals(t))&&(this._settings=t,this._domNode.setTop(this._settings.top),this._domNode.setRight(this._settings.right),this._domNode.setWidth(this._settings.domWidth),this._domNode.setHeight(this._settings.domHeight),this._domNode.domNode.width=this._settings.canvasWidth,this._domNode.domNode.height=this._settings.canvasHeight,e&&this._render(),!0)}_markRenderingIsNeeded(){return this._actualShouldRender=2,!0}_markRenderingIsMaybeNeeded(){return this._actualShouldRender=1,!0}onConfigurationChanged(e){return!!this._updateSettings(!1)&&this._markRenderingIsNeeded()}onCursorStateChanged(e){this._cursorPositions=[];for(let t=0,o=e.selections.length;t<o;t++){let i=this._settings.cursorColorSingle;o>1&&(i=0===t?this._settings.cursorColorPrimary:this._settings.cursorColorSecondary),this._cursorPositions.push({position:e.selections[t].getPosition(),color:i})}return this._cursorPositions.sort(((e,t)=>P.compare(e.position,t.position))),this._markRenderingIsMaybeNeeded()}onDecorationsChanged(e){return!!e.affectsOverviewRuler&&this._markRenderingIsMaybeNeeded()}onFlushed(e){return this._markRenderingIsNeeded()}onScrollChanged(e){return!!e.scrollHeightChanged&&this._markRenderingIsNeeded()}onZonesChanged(e){return this._markRenderingIsNeeded()}onThemeChanged(e){return!!this._updateSettings(!1)&&this._markRenderingIsNeeded()}getDomNode(){return this._domNode.domNode}prepareRender(e){}render(e){this._render(),this._actualShouldRender=0}_render(){const e=this._settings.backgroundColor;if(0===this._settings.overviewRulerLanes)return this._domNode.setBackgroundColor(e?x.Format.CSS.formatHexA(e):""),void this._domNode.setDisplay("none");const t=this._context.viewModel.getAllOverviewRulerDecorations(this._context.theme);if(t.sort(W.compareByRenderingProps),1===this._actualShouldRender&&!W.equalsArr(this._renderedDecorations,t)&&(this._actualShouldRender=2),1===this._actualShouldRender&&!A(this._renderedCursorPositions,this._cursorPositions,((e,t)=>e.position.lineNumber===t.position.lineNumber&&e.color===t.color))&&(this._actualShouldRender=2),1===this._actualShouldRender)return;this._renderedDecorations=t,this._renderedCursorPositions=this._cursorPositions,this._domNode.setDisplay("block");const o=this._settings.canvasWidth,i=this._settings.canvasHeight,r=this._settings.lineHeight,s=this._context.viewLayout,n=i/this._context.viewLayout.getScrollHeight(),d=6*this._settings.pixelRatio|0,h=d/2|0,a=this._domNode.domNode.getContext("2d");e?e.isOpaque()?(a.fillStyle=x.Format.CSS.formatHexA(e),a.fillRect(0,0,o,i)):(a.clearRect(0,0,o,i),a.fillStyle=x.Format.CSS.formatHexA(e),a.fillRect(0,0,o,i)):a.clearRect(0,0,o,i);const l=this._settings.x,c=this._settings.w;for(const e of t){const t=e.color,o=e.data;a.fillStyle=t;let u=0,g=0,m=0;for(let e=0,t=o.length/3;e<t;e++){const t=o[3*e],_=o[3*e+1],C=o[3*e+2];let p=s.getVerticalOffsetForLineNumber(_)*n|0,v=(s.getVerticalOffsetForLineNumber(C)+r)*n|0;if(v-p<d){let e=(p+v)/2|0;e<h?e=h:e+h>i&&(e=i-h),p=e-h,v=e+h}p>m+1||t!==u?(0!==e&&a.fillRect(l[u],g,c[u],m-g),u=t,g=p,m=v):v>m&&(m=v)}a.fillRect(l[u],g,c[u],m-g)}if(!this._settings.hideCursor){const e=2*this._settings.pixelRatio|0,t=e/2|0,o=this._settings.x[7],r=this._settings.w[7];let d=-100,h=-100,l=null;for(let c=0,u=this._cursorPositions.length;c<u;c++){const u=this._cursorPositions[c].color;if(!u)continue;const g=this._cursorPositions[c].position;let m=s.getVerticalOffsetForLineNumber(g.lineNumber)*n|0;m<t?m=t:m+t>i&&(m=i-t);const _=m-t,C=_+e;_>h+1||u!==l?(0!==c&&l&&a.fillRect(o,d,r,h-d),d=_,h=C):C>h&&(h=C),l=u,a.fillStyle=u}l&&a.fillRect(o,d,r,h-d)}this._settings.renderBorder&&this._settings.borderColor&&this._settings.overviewRulerLanes>0&&(a.beginPath(),a.lineWidth=1,a.strokeStyle=this._settings.borderColor,a.moveTo(0,0),a.lineTo(0,i),a.moveTo(1,0),a.lineTo(o,0),a.stroke())}}export{me as DecorationsOverviewRuler};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { FastDomNode, createFastDomNode } from "../../../../base/browser/fastDomNode.js";
+import { Color } from "../../../../base/common/color.js";
+import { IDisposable } from "../../../../base/common/lifecycle.js";
+import { ViewPart } from "../../view/viewPart.js";
+import { Position } from "../../../common/core/position.js";
+import { IEditorConfiguration } from "../../../common/config/editorConfiguration.js";
+import { TokenizationRegistry } from "../../../common/languages.js";
+import { editorCursorForeground, editorOverviewRulerBorder, editorOverviewRulerBackground, editorMultiCursorSecondaryForeground, editorMultiCursorPrimaryForeground } from "../../../common/core/editorColorRegistry.js";
+import { RenderingContext, RestrictedRenderingContext } from "../../view/renderingContext.js";
+import { ViewContext } from "../../../common/viewModel/viewContext.js";
+import { EditorTheme } from "../../../common/editorTheme.js";
+import * as viewEvents from "../../../common/viewEvents.js";
+import { EditorOption } from "../../../common/config/editorOptions.js";
+import { OverviewRulerDecorationsGroup } from "../../../common/viewModel.js";
+import { equals } from "../../../../base/common/arrays.js";
+class Settings {
+  static {
+    __name(this, "Settings");
+  }
+  lineHeight;
+  pixelRatio;
+  overviewRulerLanes;
+  renderBorder;
+  borderColor;
+  hideCursor;
+  cursorColorSingle;
+  cursorColorPrimary;
+  cursorColorSecondary;
+  themeType;
+  backgroundColor;
+  top;
+  right;
+  domWidth;
+  domHeight;
+  canvasWidth;
+  canvasHeight;
+  x;
+  w;
+  constructor(config, theme) {
+    const options = config.options;
+    this.lineHeight = options.get(EditorOption.lineHeight);
+    this.pixelRatio = options.get(EditorOption.pixelRatio);
+    this.overviewRulerLanes = options.get(EditorOption.overviewRulerLanes);
+    this.renderBorder = options.get(EditorOption.overviewRulerBorder);
+    const borderColor = theme.getColor(editorOverviewRulerBorder);
+    this.borderColor = borderColor ? borderColor.toString() : null;
+    this.hideCursor = options.get(EditorOption.hideCursorInOverviewRuler);
+    const cursorColorSingle = theme.getColor(editorCursorForeground);
+    this.cursorColorSingle = cursorColorSingle ? cursorColorSingle.transparent(0.7).toString() : null;
+    const cursorColorPrimary = theme.getColor(editorMultiCursorPrimaryForeground);
+    this.cursorColorPrimary = cursorColorPrimary ? cursorColorPrimary.transparent(0.7).toString() : null;
+    const cursorColorSecondary = theme.getColor(editorMultiCursorSecondaryForeground);
+    this.cursorColorSecondary = cursorColorSecondary ? cursorColorSecondary.transparent(0.7).toString() : null;
+    this.themeType = theme.type;
+    const minimapOpts = options.get(EditorOption.minimap);
+    const minimapEnabled = minimapOpts.enabled;
+    const minimapSide = minimapOpts.side;
+    const themeColor = theme.getColor(editorOverviewRulerBackground);
+    const defaultBackground = TokenizationRegistry.getDefaultBackground();
+    if (themeColor) {
+      this.backgroundColor = themeColor;
+    } else if (minimapEnabled && minimapSide === "right") {
+      this.backgroundColor = defaultBackground;
+    } else {
+      this.backgroundColor = null;
+    }
+    const layoutInfo = options.get(EditorOption.layoutInfo);
+    const position = layoutInfo.overviewRuler;
+    this.top = position.top;
+    this.right = position.right;
+    this.domWidth = position.width;
+    this.domHeight = position.height;
+    if (this.overviewRulerLanes === 0) {
+      this.canvasWidth = 0;
+      this.canvasHeight = 0;
+    } else {
+      this.canvasWidth = this.domWidth * this.pixelRatio | 0;
+      this.canvasHeight = this.domHeight * this.pixelRatio | 0;
+    }
+    const [x, w] = this._initLanes(1, this.canvasWidth, this.overviewRulerLanes);
+    this.x = x;
+    this.w = w;
+  }
+  _initLanes(canvasLeftOffset, canvasWidth, laneCount) {
+    const remainingWidth = canvasWidth - canvasLeftOffset;
+    if (laneCount >= 3) {
+      const leftWidth = Math.floor(remainingWidth / 3);
+      const rightWidth = Math.floor(remainingWidth / 3);
+      const centerWidth = remainingWidth - leftWidth - rightWidth;
+      const leftOffset = canvasLeftOffset;
+      const centerOffset = leftOffset + leftWidth;
+      const rightOffset = leftOffset + leftWidth + centerWidth;
+      return [
+        [
+          0,
+          leftOffset,
+          // Left
+          centerOffset,
+          // Center
+          leftOffset,
+          // Left | Center
+          rightOffset,
+          // Right
+          leftOffset,
+          // Left | Right
+          centerOffset,
+          // Center | Right
+          leftOffset
+          // Left | Center | Right
+        ],
+        [
+          0,
+          leftWidth,
+          // Left
+          centerWidth,
+          // Center
+          leftWidth + centerWidth,
+          // Left | Center
+          rightWidth,
+          // Right
+          leftWidth + centerWidth + rightWidth,
+          // Left | Right
+          centerWidth + rightWidth,
+          // Center | Right
+          leftWidth + centerWidth + rightWidth
+          // Left | Center | Right
+        ]
+      ];
+    } else if (laneCount === 2) {
+      const leftWidth = Math.floor(remainingWidth / 2);
+      const rightWidth = remainingWidth - leftWidth;
+      const leftOffset = canvasLeftOffset;
+      const rightOffset = leftOffset + leftWidth;
+      return [
+        [
+          0,
+          leftOffset,
+          // Left
+          leftOffset,
+          // Center
+          leftOffset,
+          // Left | Center
+          rightOffset,
+          // Right
+          leftOffset,
+          // Left | Right
+          leftOffset,
+          // Center | Right
+          leftOffset
+          // Left | Center | Right
+        ],
+        [
+          0,
+          leftWidth,
+          // Left
+          leftWidth,
+          // Center
+          leftWidth,
+          // Left | Center
+          rightWidth,
+          // Right
+          leftWidth + rightWidth,
+          // Left | Right
+          leftWidth + rightWidth,
+          // Center | Right
+          leftWidth + rightWidth
+          // Left | Center | Right
+        ]
+      ];
+    } else {
+      const offset = canvasLeftOffset;
+      const width = remainingWidth;
+      return [
+        [
+          0,
+          offset,
+          // Left
+          offset,
+          // Center
+          offset,
+          // Left | Center
+          offset,
+          // Right
+          offset,
+          // Left | Right
+          offset,
+          // Center | Right
+          offset
+          // Left | Center | Right
+        ],
+        [
+          0,
+          width,
+          // Left
+          width,
+          // Center
+          width,
+          // Left | Center
+          width,
+          // Right
+          width,
+          // Left | Right
+          width,
+          // Center | Right
+          width
+          // Left | Center | Right
+        ]
+      ];
+    }
+  }
+  equals(other) {
+    return this.lineHeight === other.lineHeight && this.pixelRatio === other.pixelRatio && this.overviewRulerLanes === other.overviewRulerLanes && this.renderBorder === other.renderBorder && this.borderColor === other.borderColor && this.hideCursor === other.hideCursor && this.cursorColorSingle === other.cursorColorSingle && this.cursorColorPrimary === other.cursorColorPrimary && this.cursorColorSecondary === other.cursorColorSecondary && this.themeType === other.themeType && Color.equals(this.backgroundColor, other.backgroundColor) && this.top === other.top && this.right === other.right && this.domWidth === other.domWidth && this.domHeight === other.domHeight && this.canvasWidth === other.canvasWidth && this.canvasHeight === other.canvasHeight;
+  }
+}
+var Constants = /* @__PURE__ */ ((Constants2) => {
+  Constants2[Constants2["MIN_DECORATION_HEIGHT"] = 6] = "MIN_DECORATION_HEIGHT";
+  return Constants2;
+})(Constants || {});
+var OverviewRulerLane = /* @__PURE__ */ ((OverviewRulerLane2) => {
+  OverviewRulerLane2[OverviewRulerLane2["Left"] = 1] = "Left";
+  OverviewRulerLane2[OverviewRulerLane2["Center"] = 2] = "Center";
+  OverviewRulerLane2[OverviewRulerLane2["Right"] = 4] = "Right";
+  OverviewRulerLane2[OverviewRulerLane2["Full"] = 7] = "Full";
+  return OverviewRulerLane2;
+})(OverviewRulerLane || {});
+var ShouldRenderValue = /* @__PURE__ */ ((ShouldRenderValue2) => {
+  ShouldRenderValue2[ShouldRenderValue2["NotNeeded"] = 0] = "NotNeeded";
+  ShouldRenderValue2[ShouldRenderValue2["Maybe"] = 1] = "Maybe";
+  ShouldRenderValue2[ShouldRenderValue2["Needed"] = 2] = "Needed";
+  return ShouldRenderValue2;
+})(ShouldRenderValue || {});
+class DecorationsOverviewRuler extends ViewPart {
+  static {
+    __name(this, "DecorationsOverviewRuler");
+  }
+  _actualShouldRender = 0 /* NotNeeded */;
+  _tokensColorTrackerListener;
+  _domNode;
+  _settings;
+  _cursorPositions;
+  _renderedDecorations = [];
+  _renderedCursorPositions = [];
+  constructor(context) {
+    super(context);
+    this._domNode = createFastDomNode(document.createElement("canvas"));
+    this._domNode.setClassName("decorationsOverviewRuler");
+    this._domNode.setPosition("absolute");
+    this._domNode.setLayerHinting(true);
+    this._domNode.setContain("strict");
+    this._domNode.setAttribute("aria-hidden", "true");
+    this._updateSettings(false);
+    this._tokensColorTrackerListener = TokenizationRegistry.onDidChange((e) => {
+      if (e.changedColorMap) {
+        this._updateSettings(true);
+      }
+    });
+    this._cursorPositions = [{ position: new Position(1, 1), color: this._settings.cursorColorSingle }];
+  }
+  dispose() {
+    super.dispose();
+    this._tokensColorTrackerListener.dispose();
+  }
+  _updateSettings(renderNow) {
+    const newSettings = new Settings(this._context.configuration, this._context.theme);
+    if (this._settings && this._settings.equals(newSettings)) {
+      return false;
+    }
+    this._settings = newSettings;
+    this._domNode.setTop(this._settings.top);
+    this._domNode.setRight(this._settings.right);
+    this._domNode.setWidth(this._settings.domWidth);
+    this._domNode.setHeight(this._settings.domHeight);
+    this._domNode.domNode.width = this._settings.canvasWidth;
+    this._domNode.domNode.height = this._settings.canvasHeight;
+    if (renderNow) {
+      this._render();
+    }
+    return true;
+  }
+  // ---- begin view event handlers
+  _markRenderingIsNeeded() {
+    this._actualShouldRender = 2 /* Needed */;
+    return true;
+  }
+  _markRenderingIsMaybeNeeded() {
+    this._actualShouldRender = 1 /* Maybe */;
+    return true;
+  }
+  onConfigurationChanged(e) {
+    return this._updateSettings(false) ? this._markRenderingIsNeeded() : false;
+  }
+  onCursorStateChanged(e) {
+    this._cursorPositions = [];
+    for (let i = 0, len = e.selections.length; i < len; i++) {
+      let color = this._settings.cursorColorSingle;
+      if (len > 1) {
+        color = i === 0 ? this._settings.cursorColorPrimary : this._settings.cursorColorSecondary;
+      }
+      this._cursorPositions.push({ position: e.selections[i].getPosition(), color });
+    }
+    this._cursorPositions.sort((a, b) => Position.compare(a.position, b.position));
+    return this._markRenderingIsMaybeNeeded();
+  }
+  onDecorationsChanged(e) {
+    if (e.affectsOverviewRuler) {
+      return this._markRenderingIsMaybeNeeded();
+    }
+    return false;
+  }
+  onFlushed(e) {
+    return this._markRenderingIsNeeded();
+  }
+  onScrollChanged(e) {
+    return e.scrollHeightChanged ? this._markRenderingIsNeeded() : false;
+  }
+  onZonesChanged(e) {
+    return this._markRenderingIsNeeded();
+  }
+  onThemeChanged(e) {
+    return this._updateSettings(false) ? this._markRenderingIsNeeded() : false;
+  }
+  // ---- end view event handlers
+  getDomNode() {
+    return this._domNode.domNode;
+  }
+  prepareRender(ctx) {
+  }
+  render(editorCtx) {
+    this._render();
+    this._actualShouldRender = 0 /* NotNeeded */;
+  }
+  _render() {
+    const backgroundColor = this._settings.backgroundColor;
+    if (this._settings.overviewRulerLanes === 0) {
+      this._domNode.setBackgroundColor(backgroundColor ? Color.Format.CSS.formatHexA(backgroundColor) : "");
+      this._domNode.setDisplay("none");
+      return;
+    }
+    const decorations = this._context.viewModel.getAllOverviewRulerDecorations(this._context.theme);
+    decorations.sort(OverviewRulerDecorationsGroup.compareByRenderingProps);
+    if (this._actualShouldRender === 1 /* Maybe */ && !OverviewRulerDecorationsGroup.equalsArr(this._renderedDecorations, decorations)) {
+      this._actualShouldRender = 2 /* Needed */;
+    }
+    if (this._actualShouldRender === 1 /* Maybe */ && !equals(this._renderedCursorPositions, this._cursorPositions, (a, b) => a.position.lineNumber === b.position.lineNumber && a.color === b.color)) {
+      this._actualShouldRender = 2 /* Needed */;
+    }
+    if (this._actualShouldRender === 1 /* Maybe */) {
+      return;
+    }
+    this._renderedDecorations = decorations;
+    this._renderedCursorPositions = this._cursorPositions;
+    this._domNode.setDisplay("block");
+    const canvasWidth = this._settings.canvasWidth;
+    const canvasHeight = this._settings.canvasHeight;
+    const lineHeight = this._settings.lineHeight;
+    const viewLayout = this._context.viewLayout;
+    const outerHeight = this._context.viewLayout.getScrollHeight();
+    const heightRatio = canvasHeight / outerHeight;
+    const minDecorationHeight = 6 /* MIN_DECORATION_HEIGHT */ * this._settings.pixelRatio | 0;
+    const halfMinDecorationHeight = minDecorationHeight / 2 | 0;
+    const canvasCtx = this._domNode.domNode.getContext("2d");
+    if (backgroundColor) {
+      if (backgroundColor.isOpaque()) {
+        canvasCtx.fillStyle = Color.Format.CSS.formatHexA(backgroundColor);
+        canvasCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+      } else {
+        canvasCtx.clearRect(0, 0, canvasWidth, canvasHeight);
+        canvasCtx.fillStyle = Color.Format.CSS.formatHexA(backgroundColor);
+        canvasCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+      }
+    } else {
+      canvasCtx.clearRect(0, 0, canvasWidth, canvasHeight);
+    }
+    const x = this._settings.x;
+    const w = this._settings.w;
+    for (const decorationGroup of decorations) {
+      const color = decorationGroup.color;
+      const decorationGroupData = decorationGroup.data;
+      canvasCtx.fillStyle = color;
+      let prevLane = 0;
+      let prevY1 = 0;
+      let prevY2 = 0;
+      for (let i = 0, len = decorationGroupData.length / 3; i < len; i++) {
+        const lane = decorationGroupData[3 * i];
+        const startLineNumber = decorationGroupData[3 * i + 1];
+        const endLineNumber = decorationGroupData[3 * i + 2];
+        let y1 = viewLayout.getVerticalOffsetForLineNumber(startLineNumber) * heightRatio | 0;
+        let y2 = (viewLayout.getVerticalOffsetForLineNumber(endLineNumber) + lineHeight) * heightRatio | 0;
+        const height = y2 - y1;
+        if (height < minDecorationHeight) {
+          let yCenter = (y1 + y2) / 2 | 0;
+          if (yCenter < halfMinDecorationHeight) {
+            yCenter = halfMinDecorationHeight;
+          } else if (yCenter + halfMinDecorationHeight > canvasHeight) {
+            yCenter = canvasHeight - halfMinDecorationHeight;
+          }
+          y1 = yCenter - halfMinDecorationHeight;
+          y2 = yCenter + halfMinDecorationHeight;
+        }
+        if (y1 > prevY2 + 1 || lane !== prevLane) {
+          if (i !== 0) {
+            canvasCtx.fillRect(x[prevLane], prevY1, w[prevLane], prevY2 - prevY1);
+          }
+          prevLane = lane;
+          prevY1 = y1;
+          prevY2 = y2;
+        } else {
+          if (y2 > prevY2) {
+            prevY2 = y2;
+          }
+        }
+      }
+      canvasCtx.fillRect(x[prevLane], prevY1, w[prevLane], prevY2 - prevY1);
+    }
+    if (!this._settings.hideCursor) {
+      const cursorHeight = 2 * this._settings.pixelRatio | 0;
+      const halfCursorHeight = cursorHeight / 2 | 0;
+      const cursorX = this._settings.x[7 /* Full */];
+      const cursorW = this._settings.w[7 /* Full */];
+      let prevY1 = -100;
+      let prevY2 = -100;
+      let prevColor = null;
+      for (let i = 0, len = this._cursorPositions.length; i < len; i++) {
+        const color = this._cursorPositions[i].color;
+        if (!color) {
+          continue;
+        }
+        const cursor = this._cursorPositions[i].position;
+        let yCenter = viewLayout.getVerticalOffsetForLineNumber(cursor.lineNumber) * heightRatio | 0;
+        if (yCenter < halfCursorHeight) {
+          yCenter = halfCursorHeight;
+        } else if (yCenter + halfCursorHeight > canvasHeight) {
+          yCenter = canvasHeight - halfCursorHeight;
+        }
+        const y1 = yCenter - halfCursorHeight;
+        const y2 = y1 + cursorHeight;
+        if (y1 > prevY2 + 1 || color !== prevColor) {
+          if (i !== 0 && prevColor) {
+            canvasCtx.fillRect(cursorX, prevY1, cursorW, prevY2 - prevY1);
+          }
+          prevY1 = y1;
+          prevY2 = y2;
+        } else {
+          if (y2 > prevY2) {
+            prevY2 = y2;
+          }
+        }
+        prevColor = color;
+        canvasCtx.fillStyle = color;
+      }
+      if (prevColor) {
+        canvasCtx.fillRect(cursorX, prevY1, cursorW, prevY2 - prevY1);
+      }
+    }
+    if (this._settings.renderBorder && this._settings.borderColor && this._settings.overviewRulerLanes > 0) {
+      canvasCtx.beginPath();
+      canvasCtx.lineWidth = 1;
+      canvasCtx.strokeStyle = this._settings.borderColor;
+      canvasCtx.moveTo(0, 0);
+      canvasCtx.lineTo(0, canvasHeight);
+      canvasCtx.moveTo(1, 0);
+      canvasCtx.lineTo(canvasWidth, 0);
+      canvasCtx.stroke();
+    }
+  }
+}
+export {
+  DecorationsOverviewRuler
+};
+//# sourceMappingURL=decorationsOverviewRuler.js.map

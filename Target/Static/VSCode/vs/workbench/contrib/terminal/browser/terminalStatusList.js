@@ -1,1 +1,148 @@
-var h=Object.defineProperty,S=Object.getOwnPropertyDescriptor,u=(t,e,i,s)=>{for(var o,r=s>1?void 0:s?S(e,i):e,n=t.length-1;n>=0;n--)(o=t[n])&&(r=(s?o(e,i,r):o(r))||r);return s&&r&&h(e,i,r),r},l=(t,e)=>(i,s)=>e(i,s,t);import{Codicon as p}from"../../../../base/common/codicons.js";import{Emitter as d}from"../../../../base/common/event.js";import{Disposable as c}from"../../../../base/common/lifecycle.js";import v from"../../../../base/common/severity.js";import{IConfigurationService as y}from"../../../../platform/configuration/common/configuration.js";import{TerminalSettingId as I}from"../../../../platform/terminal/common/terminal.js";import{listErrorForeground as _,listWarningForeground as T}from"../../../../platform/theme/common/colorRegistry.js";import{spinningLoading as D}from"../../../../platform/theme/common/iconRegistry.js";import{ThemeIcon as f}from"../../../../base/common/themables.js";import"../common/terminal.js";import{mainWindow as g}from"../../../../base/browser/window.js";var E=(t=>(t.Bell="bell",t.Disconnected="disconnected",t.RelaunchNeeded="relaunch-needed",t.EnvironmentVariableInfoChangesActive="env-var-info-changes-active",t.ShellIntegrationInfo="shell-integration-info",t.ShellIntegrationAttentionNeeded="shell-integration-attention-needed",t))(E||{});let s=class extends c{constructor(t){super(),this._configurationService=t}_statuses=new Map;_statusTimeouts=new Map;_onDidAddStatus=this._register(new d);get onDidAddStatus(){return this._onDidAddStatus.event}_onDidRemoveStatus=this._register(new d);get onDidRemoveStatus(){return this._onDidRemoveStatus.event}_onDidChangePrimaryStatus=this._register(new d);get onDidChangePrimaryStatus(){return this._onDidChangePrimaryStatus.event}get primary(){let t;for(const e of this._statuses.values())(!t||e.severity>=t.severity)&&(e.icon||!t?.icon)&&(t=e);return t}get statuses(){return Array.from(this._statuses.values())}add(t,e){t=this._applyAnimationSetting(t);const i=this._statusTimeouts.get(t.id);if(i&&(g.clearTimeout(i),this._statusTimeouts.delete(t.id)),e&&e>0){const i=g.setTimeout((()=>this.remove(t)),e);this._statusTimeouts.set(t.id,i)}const s=this._statuses.get(t.id);if(s&&s!==t&&(this._onDidRemoveStatus.fire(s),this._statuses.delete(s.id)),!this._statuses.has(t.id)){const e=this.primary;this._statuses.set(t.id,t),this._onDidAddStatus.fire(t);const i=this.primary;e!==i&&this._onDidChangePrimaryStatus.fire(i)}}remove(t){const e="string"==typeof t?this._statuses.get(t):t;if(e&&this._statuses.get(e.id)){const t=this.primary?.id===e.id;this._statuses.delete(e.id),this._onDidRemoveStatus.fire(e),t&&this._onDidChangePrimaryStatus.fire(this.primary)}}toggle(t,e){e?this.add(t):this.remove(t)}_applyAnimationSetting(t){if(!t.icon||"spin"!==f.getModifier(t.icon)||this._configurationService.getValue(I.TabsEnableAnimation))return t;let e;return e=t.icon.id===D.id?p.play:f.modify(t.icon,void 0),{...t,icon:e}}};function k(t){switch(t){case v.Error:return _;case v.Warning:return T;default:return""}}s=u([l(0,y)],s);export{E as TerminalStatus,s as TerminalStatusList,k as getColorForSeverity};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Codicon } from "../../../../base/common/codicons.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import Severity from "../../../../base/common/severity.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { TerminalSettingId } from "../../../../platform/terminal/common/terminal.js";
+import { listErrorForeground, listWarningForeground } from "../../../../platform/theme/common/colorRegistry.js";
+import { spinningLoading } from "../../../../platform/theme/common/iconRegistry.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { ITerminalStatus } from "../common/terminal.js";
+import { mainWindow } from "../../../../base/browser/window.js";
+var TerminalStatus = /* @__PURE__ */ ((TerminalStatus2) => {
+  TerminalStatus2["Bell"] = "bell";
+  TerminalStatus2["Disconnected"] = "disconnected";
+  TerminalStatus2["RelaunchNeeded"] = "relaunch-needed";
+  TerminalStatus2["EnvironmentVariableInfoChangesActive"] = "env-var-info-changes-active";
+  TerminalStatus2["ShellIntegrationInfo"] = "shell-integration-info";
+  TerminalStatus2["ShellIntegrationAttentionNeeded"] = "shell-integration-attention-needed";
+  return TerminalStatus2;
+})(TerminalStatus || {});
+let TerminalStatusList = class extends Disposable {
+  constructor(_configurationService) {
+    super();
+    this._configurationService = _configurationService;
+  }
+  static {
+    __name(this, "TerminalStatusList");
+  }
+  _statuses = /* @__PURE__ */ new Map();
+  _statusTimeouts = /* @__PURE__ */ new Map();
+  _onDidAddStatus = this._register(new Emitter());
+  get onDidAddStatus() {
+    return this._onDidAddStatus.event;
+  }
+  _onDidRemoveStatus = this._register(new Emitter());
+  get onDidRemoveStatus() {
+    return this._onDidRemoveStatus.event;
+  }
+  _onDidChangePrimaryStatus = this._register(new Emitter());
+  get onDidChangePrimaryStatus() {
+    return this._onDidChangePrimaryStatus.event;
+  }
+  get primary() {
+    let result;
+    for (const s of this._statuses.values()) {
+      if (!result || s.severity >= result.severity) {
+        if (s.icon || !result?.icon) {
+          result = s;
+        }
+      }
+    }
+    return result;
+  }
+  get statuses() {
+    return Array.from(this._statuses.values());
+  }
+  add(status, duration) {
+    status = this._applyAnimationSetting(status);
+    const outTimeout = this._statusTimeouts.get(status.id);
+    if (outTimeout) {
+      mainWindow.clearTimeout(outTimeout);
+      this._statusTimeouts.delete(status.id);
+    }
+    if (duration && duration > 0) {
+      const timeout = mainWindow.setTimeout(() => this.remove(status), duration);
+      this._statusTimeouts.set(status.id, timeout);
+    }
+    const existingStatus = this._statuses.get(status.id);
+    if (existingStatus && existingStatus !== status) {
+      this._onDidRemoveStatus.fire(existingStatus);
+      this._statuses.delete(existingStatus.id);
+    }
+    if (!this._statuses.has(status.id)) {
+      const oldPrimary = this.primary;
+      this._statuses.set(status.id, status);
+      this._onDidAddStatus.fire(status);
+      const newPrimary = this.primary;
+      if (oldPrimary !== newPrimary) {
+        this._onDidChangePrimaryStatus.fire(newPrimary);
+      }
+    }
+  }
+  remove(statusOrId) {
+    const status = typeof statusOrId === "string" ? this._statuses.get(statusOrId) : statusOrId;
+    if (status && this._statuses.get(status.id)) {
+      const wasPrimary = this.primary?.id === status.id;
+      this._statuses.delete(status.id);
+      this._onDidRemoveStatus.fire(status);
+      if (wasPrimary) {
+        this._onDidChangePrimaryStatus.fire(this.primary);
+      }
+    }
+  }
+  toggle(status, value) {
+    if (value) {
+      this.add(status);
+    } else {
+      this.remove(status);
+    }
+  }
+  _applyAnimationSetting(status) {
+    if (!status.icon || ThemeIcon.getModifier(status.icon) !== "spin" || this._configurationService.getValue(TerminalSettingId.TabsEnableAnimation)) {
+      return status;
+    }
+    let icon;
+    if (status.icon.id === spinningLoading.id) {
+      icon = Codicon.play;
+    } else {
+      icon = ThemeIcon.modify(status.icon, void 0);
+    }
+    return {
+      ...status,
+      icon
+    };
+  }
+};
+TerminalStatusList = __decorateClass([
+  __decorateParam(0, IConfigurationService)
+], TerminalStatusList);
+function getColorForSeverity(severity) {
+  switch (severity) {
+    case Severity.Error:
+      return listErrorForeground;
+    case Severity.Warning:
+      return listWarningForeground;
+    default:
+      return "";
+  }
+}
+__name(getColorForSeverity, "getColorForSeverity");
+export {
+  TerminalStatus,
+  TerminalStatusList,
+  getColorForSeverity
+};
+//# sourceMappingURL=terminalStatusList.js.map

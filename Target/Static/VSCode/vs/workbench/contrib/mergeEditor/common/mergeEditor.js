@@ -1,1 +1,23 @@
-import{localize as e}from"../../../../nls.js";import{RawContextKey as t}from"../../../../platform/contextkey/common/contextkey.js";const i=new t("isMergeEditor",!1,{type:"boolean",description:e("is","The editor is a merge editor")}),s=new t("isMergeResultEditor",!1,{type:"boolean",description:e("isr","The editor is a the result editor of a merge editor.")}),n=new t("mergeEditorLayout","mixed",{type:"string",description:e("editorLayout","The layout mode of a merge editor")}),a=new t("mergeEditorShowBase",!1,{type:"boolean",description:e("showBase","If the merge editor shows the base version")}),g=new t("mergeEditorShowBaseAtTop",!1,{type:"boolean",description:e("showBaseAtTop","If base should be shown at the top")}),d=new t("mergeEditorShowNonConflictingChanges",!1,{type:"boolean",description:e("showNonConflictingChanges","If the merge editor shows non-conflicting changes")}),l=new t("mergeEditorBaseUri","",{type:"string",description:e("baseUri","The uri of the baser of a merge editor")}),c=new t("mergeEditorResultUri","",{type:"string",description:e("resultUri","The uri of the result of a merge editor")}),p="mergeEditorCloseWithConflicts";export{p as StorageCloseWithConflicts,i as ctxIsMergeEditor,s as ctxIsMergeResultEditor,l as ctxMergeBaseUri,n as ctxMergeEditorLayout,a as ctxMergeEditorShowBase,g as ctxMergeEditorShowBaseAtTop,d as ctxMergeEditorShowNonConflictingChanges,c as ctxMergeResultUri};
+import { localize } from "../../../../nls.js";
+import { RawContextKey } from "../../../../platform/contextkey/common/contextkey.js";
+const ctxIsMergeEditor = new RawContextKey("isMergeEditor", false, { type: "boolean", description: localize("is", "The editor is a merge editor") });
+const ctxIsMergeResultEditor = new RawContextKey("isMergeResultEditor", false, { type: "boolean", description: localize("isr", "The editor is a the result editor of a merge editor.") });
+const ctxMergeEditorLayout = new RawContextKey("mergeEditorLayout", "mixed", { type: "string", description: localize("editorLayout", "The layout mode of a merge editor") });
+const ctxMergeEditorShowBase = new RawContextKey("mergeEditorShowBase", false, { type: "boolean", description: localize("showBase", "If the merge editor shows the base version") });
+const ctxMergeEditorShowBaseAtTop = new RawContextKey("mergeEditorShowBaseAtTop", false, { type: "boolean", description: localize("showBaseAtTop", "If base should be shown at the top") });
+const ctxMergeEditorShowNonConflictingChanges = new RawContextKey("mergeEditorShowNonConflictingChanges", false, { type: "boolean", description: localize("showNonConflictingChanges", "If the merge editor shows non-conflicting changes") });
+const ctxMergeBaseUri = new RawContextKey("mergeEditorBaseUri", "", { type: "string", description: localize("baseUri", "The uri of the baser of a merge editor") });
+const ctxMergeResultUri = new RawContextKey("mergeEditorResultUri", "", { type: "string", description: localize("resultUri", "The uri of the result of a merge editor") });
+const StorageCloseWithConflicts = "mergeEditorCloseWithConflicts";
+export {
+  StorageCloseWithConflicts,
+  ctxIsMergeEditor,
+  ctxIsMergeResultEditor,
+  ctxMergeBaseUri,
+  ctxMergeEditorLayout,
+  ctxMergeEditorShowBase,
+  ctxMergeEditorShowBaseAtTop,
+  ctxMergeEditorShowNonConflictingChanges,
+  ctxMergeResultUri
+};
+//# sourceMappingURL=mergeEditor.js.map

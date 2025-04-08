@@ -1,1 +1,119 @@
-var f=Object.defineProperty,h=Object.getOwnPropertyDescriptor,v=(e,o,t,r)=>{for(var s,i=r>1?void 0:r?h(o,t):o,n=e.length-1;n>=0;n--)(s=e[n])&&(i=(r?s(o,t,i):s(i))||i);return r&&i&&f(o,t,i),i},d=(e,o)=>(t,r)=>o(t,r,e);import"../../../../base/common/uri.js";import{localize as u}from"../../../../nls.js";import{getMimeTypes as I}from"../../../../editor/common/services/languagesAssociations.js";import"../../../../editor/common/model.js";import{IModelService as M}from"../../../../editor/common/services/model.js";import{ILanguageService as b}from"../../../../editor/common/languages/language.js";import{ITextModelService as T}from"../../../../editor/common/services/resolverService.js";import"../../../common/contributions.js";import{DEBUG_SCHEME as E,IDebugService as y}from"./debug.js";import{Source as C}from"./debugSource.js";import{IEditorWorkerService as x}from"../../../../editor/common/services/editorWorker.js";import{EditOperation as N}from"../../../../editor/common/core/editOperation.js";import{Range as U}from"../../../../editor/common/core/range.js";import{CancellationTokenSource as k}from"../../../../base/common/cancellation.js";import{PLAINTEXT_LANGUAGE_ID as A}from"../../../../editor/common/languages/modesRegistry.js";import{ErrorNoTelemetry as D}from"../../../../base/common/errors.js";import{Disposable as R}from"../../../../base/common/lifecycle.js";let l=class extends R{constructor(e,o,t,r,s){super(),this.debugService=o,this.modelService=t,this.languageService=r,this.editorWorkerService=s,this._store.add(e.registerTextModelContentProvider(E,this)),l.INSTANCE=this}static INSTANCE;pendingUpdates=new Map;dispose(){this.pendingUpdates.forEach((e=>e.dispose())),super.dispose()}provideTextContent(e){return this.createOrUpdateContentModel(e,!0)}static refreshDebugContent(e){l.INSTANCE?.createOrUpdateContentModel(e,!1)}createOrUpdateContentModel(e,o){const t=this.modelService.getModel(e);if(!t&&!o)return null;let r;if(e.query){const o=C.getEncodedDebugData(e);r=this.debugService.getModel().getSession(o.sessionId)}if(r||(r=this.debugService.getViewModel().focusedSession),!r)return Promise.reject(new D(u("unable","Unable to resolve the resource without a debug session")));const s=o=>{this.debugService.sourceIsNotAvailable(e);const t=this.languageService.createById(A),r=o?u("canNotResolveSourceWithError","Could not load source '{0}': {1}.",e.path,o):u("canNotResolveSource","Could not load source '{0}'.",e.path);return this.modelService.createModel(r,t,e)};return r.loadSource(e).then((o=>{if(o&&o.body){if(t){const e=o.body.content;this.pendingUpdates.get(t.id)?.cancel();const r=new k;return this.pendingUpdates.set(t.id,r),this.editorWorkerService.computeMoreMinimalEdits(t.uri,[{text:e,range:t.getFullModelRange()}]).then((e=>(this.pendingUpdates.delete(t.id),!r.token.isCancellationRequested&&e&&e.length>0&&t.applyEdits(e.map((e=>N.replace(U.lift(e.range),e.text)))),t)))}{const t=o.body.mimeType||I(e)[0],r=this.languageService.createByMimeType(t);return this.modelService.createModel(o.body.content,r,e)}}return s()}),(e=>s(e.message)))}};l=v([d(0,T),d(1,y),d(2,M),d(3,b),d(4,x)],l);export{l as DebugContentProvider};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { URI as uri } from "../../../../base/common/uri.js";
+import { localize } from "../../../../nls.js";
+import { getMimeTypes } from "../../../../editor/common/services/languagesAssociations.js";
+import { ITextModel } from "../../../../editor/common/model.js";
+import { IModelService } from "../../../../editor/common/services/model.js";
+import { ILanguageService } from "../../../../editor/common/languages/language.js";
+import { ITextModelService, ITextModelContentProvider } from "../../../../editor/common/services/resolverService.js";
+import { IWorkbenchContribution } from "../../../common/contributions.js";
+import { DEBUG_SCHEME, IDebugService, IDebugSession } from "./debug.js";
+import { Source } from "./debugSource.js";
+import { IEditorWorkerService } from "../../../../editor/common/services/editorWorker.js";
+import { EditOperation } from "../../../../editor/common/core/editOperation.js";
+import { Range } from "../../../../editor/common/core/range.js";
+import { CancellationTokenSource } from "../../../../base/common/cancellation.js";
+import { PLAINTEXT_LANGUAGE_ID } from "../../../../editor/common/languages/modesRegistry.js";
+import { ErrorNoTelemetry } from "../../../../base/common/errors.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+let DebugContentProvider = class extends Disposable {
+  constructor(textModelResolverService, debugService, modelService, languageService, editorWorkerService) {
+    super();
+    this.debugService = debugService;
+    this.modelService = modelService;
+    this.languageService = languageService;
+    this.editorWorkerService = editorWorkerService;
+    this._store.add(textModelResolverService.registerTextModelContentProvider(DEBUG_SCHEME, this));
+    DebugContentProvider.INSTANCE = this;
+  }
+  static {
+    __name(this, "DebugContentProvider");
+  }
+  static INSTANCE;
+  pendingUpdates = /* @__PURE__ */ new Map();
+  dispose() {
+    this.pendingUpdates.forEach((cancellationSource) => cancellationSource.dispose());
+    super.dispose();
+  }
+  provideTextContent(resource) {
+    return this.createOrUpdateContentModel(resource, true);
+  }
+  /**
+   * Reload the model content of the given resource.
+   * If there is no model for the given resource, this method does nothing.
+   */
+  static refreshDebugContent(resource) {
+    DebugContentProvider.INSTANCE?.createOrUpdateContentModel(resource, false);
+  }
+  /**
+   * Create or reload the model content of the given resource.
+   */
+  createOrUpdateContentModel(resource, createIfNotExists) {
+    const model = this.modelService.getModel(resource);
+    if (!model && !createIfNotExists) {
+      return null;
+    }
+    let session;
+    if (resource.query) {
+      const data = Source.getEncodedDebugData(resource);
+      session = this.debugService.getModel().getSession(data.sessionId);
+    }
+    if (!session) {
+      session = this.debugService.getViewModel().focusedSession;
+    }
+    if (!session) {
+      return Promise.reject(new ErrorNoTelemetry(localize("unable", "Unable to resolve the resource without a debug session")));
+    }
+    const createErrModel = /* @__PURE__ */ __name((errMsg) => {
+      this.debugService.sourceIsNotAvailable(resource);
+      const languageSelection = this.languageService.createById(PLAINTEXT_LANGUAGE_ID);
+      const message = errMsg ? localize("canNotResolveSourceWithError", "Could not load source '{0}': {1}.", resource.path, errMsg) : localize("canNotResolveSource", "Could not load source '{0}'.", resource.path);
+      return this.modelService.createModel(message, languageSelection, resource);
+    }, "createErrModel");
+    return session.loadSource(resource).then((response) => {
+      if (response && response.body) {
+        if (model) {
+          const newContent = response.body.content;
+          const cancellationSource = this.pendingUpdates.get(model.id);
+          cancellationSource?.cancel();
+          const myToken = new CancellationTokenSource();
+          this.pendingUpdates.set(model.id, myToken);
+          return this.editorWorkerService.computeMoreMinimalEdits(model.uri, [{ text: newContent, range: model.getFullModelRange() }]).then((edits) => {
+            this.pendingUpdates.delete(model.id);
+            if (!myToken.token.isCancellationRequested && edits && edits.length > 0) {
+              model.applyEdits(edits.map((edit) => EditOperation.replace(Range.lift(edit.range), edit.text)));
+            }
+            return model;
+          });
+        } else {
+          const mime = response.body.mimeType || getMimeTypes(resource)[0];
+          const languageSelection = this.languageService.createByMimeType(mime);
+          return this.modelService.createModel(response.body.content, languageSelection, resource);
+        }
+      }
+      return createErrModel();
+    }, (err) => createErrModel(err.message));
+  }
+};
+DebugContentProvider = __decorateClass([
+  __decorateParam(0, ITextModelService),
+  __decorateParam(1, IDebugService),
+  __decorateParam(2, IModelService),
+  __decorateParam(3, ILanguageService),
+  __decorateParam(4, IEditorWorkerService)
+], DebugContentProvider);
+export {
+  DebugContentProvider
+};
+//# sourceMappingURL=debugContentProvider.js.map

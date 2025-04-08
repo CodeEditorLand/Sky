@@ -1,2 +1,221 @@
-var x=Object.defineProperty;var S=Object.getOwnPropertyDescriptor;var g=(m,t,n,i)=>{for(var e=i>1?void 0:i?S(t,n):t,s=m.length-1,c;s>=0;s--)(c=m[s])&&(e=(i?c(t,n,e):c(e))||e);return i&&e&&x(t,n,e),e},u=(m,t)=>(n,i)=>t(n,i,m);import{Codicon as k}from"../../../../../base/common/codicons.js";import{fromNow as A}from"../../../../../base/common/date.js";import{DisposableStore as E}from"../../../../../base/common/lifecycle.js";import{ThemeIcon as _}from"../../../../../base/common/themables.js";import{localize as a,localize2 as I}from"../../../../../nls.js";import{Action2 as w}from"../../../../../platform/actions/common/actions.js";import{ICommandService as y}from"../../../../../platform/commands/common/commands.js";import{IDialogService as b}from"../../../../../platform/dialogs/common/dialogs.js";import{IInstantiationService as P}from"../../../../../platform/instantiation/common/instantiation.js";import{IProductService as Q}from"../../../../../platform/product/common/productService.js";import{IQuickInputService as T}from"../../../../../platform/quickinput/common/quickInput.js";import{IAuthenticationAccessService as L}from"../../../../services/authentication/browser/authenticationAccessService.js";import{IAuthenticationUsageService as U}from"../../../../services/authentication/browser/authenticationUsageService.js";import{IAuthenticationService as D}from"../../../../services/authentication/common/authentication.js";import{IExtensionService as C}from"../../../../services/extensions/common/extensions.js";class ie extends w{constructor(){super({id:"_manageTrustedExtensionsForAccount",title:I("manageTrustedExtensionsForAccount","Manage Trusted Extensions For Account"),category:I("accounts","Accounts"),f1:!0})}run(t,n){return t.get(P).createInstance(h).run(n)}}let h=class{constructor(t,n,i,e,s,c,r,p){this._productService=t;this._extensionService=n;this._dialogService=i;this._quickInputService=e;this._authenticationService=s;this._authenticationUsageService=c;this._authenticationAccessService=r;this._commandService=p}async run(t){const{providerId:n,accountLabel:i}=await this._resolveProviderAndAccountLabel(t?.providerId,t?.accountLabel);if(!n||!i)return;const e=await this._getItems(n,i);if(!e.length)return;const s=new E,c=this._createQuickPick(s,n,i);c.items=e,c.selectedItems=e.filter(r=>r.type!=="separator"&&!!r.picked),c.show()}async _resolveProviderAndAccountLabel(t,n){if(!t||!n){const i=new Array;for(const s of this._authenticationService.getProviderIds()){const c=this._authenticationService.getProvider(s).label,r=await this._authenticationService.getSessions(s),p=new Set;for(const v of r)p.has(v.account.label)||(p.add(v.account.label),i.push({providerId:s,providerLabel:c,accountLabel:v.account.label}))}const e=await this._quickInputService.pick(i.map(s=>({providerId:s.providerId,label:s.accountLabel,description:s.providerLabel})),{placeHolder:a("pickAccount","Pick an account to manage trusted extensions for"),matchOnDescription:!0});if(e)t=e.providerId,n=e.label;else return{providerId:void 0,accountLabel:void 0}}return{providerId:t,accountLabel:n}}async _getItems(t,n){let i=this._authenticationAccessService.readAllowedExtensions(t,n);i=(await Promise.all(i.map(o=>this._extensionService.getExtension(o.id)))).map((o,d)=>o?i[d]:void 0).filter(o=>!!o);const s=this._productService.trustedExtensionAuthAccess,c=Array.isArray(s)?s:typeof s=="object"?s[t]??[]:[];for(const o of c){const d=i.find(l=>l.id===o);if(d)d.allowed=!0,d.trusted=!0;else{const l=await this._extensionService.getExtension(o);l&&i.push({id:o,name:l.displayName||l.name,allowed:!0,trusted:!0})}}if(!i.length)return this._dialogService.info(a("noTrustedExtensions","This account has not been used by any extensions.")),[];const r=this._authenticationUsageService.readAccountUsages(t,n),p=[],v=[];for(const o of i){const d=r.find(l=>o.id===l.extensionId);o.lastUsed=d?.lastUsed,o.trusted?p.push(o):v.push(o)}const f=(o,d)=>(d.lastUsed||0)-(o.lastUsed||0);return[...v.sort(f).map(this._toQuickPickItem),{type:"separator",label:a("trustedExtensions","Trusted by Microsoft")},...p.sort(f).map(this._toQuickPickItem)]}_toQuickPickItem(t){const n=t.lastUsed,i=n?a({key:"accountLastUsedDate",comment:['The placeholder {0} is a string with time information, such as "3 days ago"']},"Last used this account {0}",A(n,!0)):a("notUsed","Has not used this account");let e,s;return t.trusted&&(e=a("trustedExtensionTooltip",`This extension is trusted by Microsoft and
-always has access to this account`),s=!0),{label:t.name,extension:t,description:i,tooltip:e,disabled:s,buttons:[{tooltip:a("accountPreferences","Manage account preferences for this extension"),iconClass:_.asClassName(k.settingsGear)}],picked:t.allowed===void 0||t.allowed}}_createQuickPick(t,n,i){const e=t.add(this._quickInputService.createQuickPick({useSeparators:!0}));return e.canSelectMany=!0,e.customButton=!0,e.customLabel=a("manageTrustedExtensions.cancel","Cancel"),e.title=a("manageTrustedExtensions","Manage Trusted Extensions"),e.placeholder=a("manageExtensions","Choose which extensions can access this account"),t.add(e.onDidAccept(()=>{const s=e.items.filter(r=>r.type!=="separator").map(r=>r.extension),c=new Set(e.selectedItems.map(r=>r.extension));s.forEach(r=>{r.allowed=c.has(r)}),this._authenticationAccessService.updateAllowedExtensions(n,i,s),e.hide()})),t.add(e.onDidHide(()=>{t.dispose()})),t.add(e.onDidCustom(()=>{e.hide()})),t.add(e.onDidTriggerItemButton(s=>this._commandService.executeCommand("_manageAccountPreferencesForExtension",s.item.extension.id,n))),e}};h=g([u(0,Q),u(1,C),u(2,b),u(3,T),u(4,D),u(5,U),u(6,L),u(7,y)],h);export{ie as ManageTrustedExtensionsForAccountAction};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Codicon } from "../../../../../base/common/codicons.js";
+import { fromNow } from "../../../../../base/common/date.js";
+import { DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { ThemeIcon } from "../../../../../base/common/themables.js";
+import { localize, localize2 } from "../../../../../nls.js";
+import { Action2 } from "../../../../../platform/actions/common/actions.js";
+import { ICommandService } from "../../../../../platform/commands/common/commands.js";
+import { IDialogService } from "../../../../../platform/dialogs/common/dialogs.js";
+import { IInstantiationService, ServicesAccessor } from "../../../../../platform/instantiation/common/instantiation.js";
+import { IProductService } from "../../../../../platform/product/common/productService.js";
+import { IQuickInputService, IQuickPickItem, IQuickPickSeparator } from "../../../../../platform/quickinput/common/quickInput.js";
+import { IAuthenticationAccessService } from "../../../../services/authentication/browser/authenticationAccessService.js";
+import { IAuthenticationUsageService } from "../../../../services/authentication/browser/authenticationUsageService.js";
+import { AllowedExtension, IAuthenticationService } from "../../../../services/authentication/common/authentication.js";
+import { IExtensionService } from "../../../../services/extensions/common/extensions.js";
+class ManageTrustedExtensionsForAccountAction extends Action2 {
+  static {
+    __name(this, "ManageTrustedExtensionsForAccountAction");
+  }
+  constructor() {
+    super({
+      id: "_manageTrustedExtensionsForAccount",
+      title: localize2("manageTrustedExtensionsForAccount", "Manage Trusted Extensions For Account"),
+      category: localize2("accounts", "Accounts"),
+      f1: true
+    });
+  }
+  run(accessor, options) {
+    const instantiationService = accessor.get(IInstantiationService);
+    return instantiationService.createInstance(ManageTrustedExtensionsForAccountActionImpl).run(options);
+  }
+}
+let ManageTrustedExtensionsForAccountActionImpl = class {
+  constructor(_productService, _extensionService, _dialogService, _quickInputService, _authenticationService, _authenticationUsageService, _authenticationAccessService, _commandService) {
+    this._productService = _productService;
+    this._extensionService = _extensionService;
+    this._dialogService = _dialogService;
+    this._quickInputService = _quickInputService;
+    this._authenticationService = _authenticationService;
+    this._authenticationUsageService = _authenticationUsageService;
+    this._authenticationAccessService = _authenticationAccessService;
+    this._commandService = _commandService;
+  }
+  static {
+    __name(this, "ManageTrustedExtensionsForAccountActionImpl");
+  }
+  async run(options) {
+    const { providerId, accountLabel } = await this._resolveProviderAndAccountLabel(options?.providerId, options?.accountLabel);
+    if (!providerId || !accountLabel) {
+      return;
+    }
+    const items = await this._getItems(providerId, accountLabel);
+    if (!items.length) {
+      return;
+    }
+    const disposables = new DisposableStore();
+    const picker = this._createQuickPick(disposables, providerId, accountLabel);
+    picker.items = items;
+    picker.selectedItems = items.filter((i) => i.type !== "separator" && !!i.picked);
+    picker.show();
+  }
+  async _resolveProviderAndAccountLabel(providerId, accountLabel) {
+    if (!providerId || !accountLabel) {
+      const accounts = new Array();
+      for (const id of this._authenticationService.getProviderIds()) {
+        const providerLabel = this._authenticationService.getProvider(id).label;
+        const sessions = await this._authenticationService.getSessions(id);
+        const uniqueAccountLabels = /* @__PURE__ */ new Set();
+        for (const session of sessions) {
+          if (!uniqueAccountLabels.has(session.account.label)) {
+            uniqueAccountLabels.add(session.account.label);
+            accounts.push({ providerId: id, providerLabel, accountLabel: session.account.label });
+          }
+        }
+      }
+      const pick = await this._quickInputService.pick(
+        accounts.map((account) => ({
+          providerId: account.providerId,
+          label: account.accountLabel,
+          description: account.providerLabel
+        })),
+        {
+          placeHolder: localize("pickAccount", "Pick an account to manage trusted extensions for"),
+          matchOnDescription: true
+        }
+      );
+      if (pick) {
+        providerId = pick.providerId;
+        accountLabel = pick.label;
+      } else {
+        return { providerId: void 0, accountLabel: void 0 };
+      }
+    }
+    return { providerId, accountLabel };
+  }
+  async _getItems(providerId, accountLabel) {
+    let allowedExtensions = this._authenticationAccessService.readAllowedExtensions(providerId, accountLabel);
+    const resolvedExtensions = await Promise.all(allowedExtensions.map((ext) => this._extensionService.getExtension(ext.id)));
+    allowedExtensions = resolvedExtensions.map((ext, i) => ext ? allowedExtensions[i] : void 0).filter((ext) => !!ext);
+    const trustedExtensionAuthAccess = this._productService.trustedExtensionAuthAccess;
+    const trustedExtensionIds = (
+      // Case 1: trustedExtensionAuthAccess is an array
+      Array.isArray(trustedExtensionAuthAccess) ? trustedExtensionAuthAccess : typeof trustedExtensionAuthAccess === "object" ? trustedExtensionAuthAccess[providerId] ?? [] : []
+    );
+    for (const extensionId of trustedExtensionIds) {
+      const allowedExtension = allowedExtensions.find((ext) => ext.id === extensionId);
+      if (!allowedExtension) {
+        const extension = await this._extensionService.getExtension(extensionId);
+        if (extension) {
+          allowedExtensions.push({
+            id: extensionId,
+            name: extension.displayName || extension.name,
+            allowed: true,
+            trusted: true
+          });
+        }
+      } else {
+        allowedExtension.allowed = true;
+        allowedExtension.trusted = true;
+      }
+    }
+    if (!allowedExtensions.length) {
+      this._dialogService.info(localize("noTrustedExtensions", "This account has not been used by any extensions."));
+      return [];
+    }
+    const usages = this._authenticationUsageService.readAccountUsages(providerId, accountLabel);
+    const trustedExtensions = [];
+    const otherExtensions = [];
+    for (const extension of allowedExtensions) {
+      const usage = usages.find((usage2) => extension.id === usage2.extensionId);
+      extension.lastUsed = usage?.lastUsed;
+      if (extension.trusted) {
+        trustedExtensions.push(extension);
+      } else {
+        otherExtensions.push(extension);
+      }
+    }
+    const sortByLastUsed = /* @__PURE__ */ __name((a, b) => (b.lastUsed || 0) - (a.lastUsed || 0), "sortByLastUsed");
+    const items = [
+      ...otherExtensions.sort(sortByLastUsed).map(this._toQuickPickItem),
+      { type: "separator", label: localize("trustedExtensions", "Trusted by Microsoft") },
+      ...trustedExtensions.sort(sortByLastUsed).map(this._toQuickPickItem)
+    ];
+    return items;
+  }
+  _toQuickPickItem(extension) {
+    const lastUsed = extension.lastUsed;
+    const description = lastUsed ? localize({ key: "accountLastUsedDate", comment: ['The placeholder {0} is a string with time information, such as "3 days ago"'] }, "Last used this account {0}", fromNow(lastUsed, true)) : localize("notUsed", "Has not used this account");
+    let tooltip;
+    let disabled;
+    if (extension.trusted) {
+      tooltip = localize("trustedExtensionTooltip", "This extension is trusted by Microsoft and\nalways has access to this account");
+      disabled = true;
+    }
+    return {
+      label: extension.name,
+      extension,
+      description,
+      tooltip,
+      disabled,
+      buttons: [{
+        tooltip: localize("accountPreferences", "Manage account preferences for this extension"),
+        iconClass: ThemeIcon.asClassName(Codicon.settingsGear)
+      }],
+      picked: extension.allowed === void 0 || extension.allowed
+    };
+  }
+  _createQuickPick(disposableStore, providerId, accountLabel) {
+    const quickPick = disposableStore.add(this._quickInputService.createQuickPick({ useSeparators: true }));
+    quickPick.canSelectMany = true;
+    quickPick.customButton = true;
+    quickPick.customLabel = localize("manageTrustedExtensions.cancel", "Cancel");
+    quickPick.title = localize("manageTrustedExtensions", "Manage Trusted Extensions");
+    quickPick.placeholder = localize("manageExtensions", "Choose which extensions can access this account");
+    disposableStore.add(quickPick.onDidAccept(() => {
+      const updatedAllowedList = quickPick.items.filter((item) => item.type !== "separator").map((i) => i.extension);
+      const allowedExtensionsSet = new Set(quickPick.selectedItems.map((i) => i.extension));
+      updatedAllowedList.forEach((extension) => {
+        extension.allowed = allowedExtensionsSet.has(extension);
+      });
+      this._authenticationAccessService.updateAllowedExtensions(providerId, accountLabel, updatedAllowedList);
+      quickPick.hide();
+    }));
+    disposableStore.add(quickPick.onDidHide(() => {
+      disposableStore.dispose();
+    }));
+    disposableStore.add(quickPick.onDidCustom(() => {
+      quickPick.hide();
+    }));
+    disposableStore.add(quickPick.onDidTriggerItemButton(
+      (e) => this._commandService.executeCommand("_manageAccountPreferencesForExtension", e.item.extension.id, providerId)
+    ));
+    return quickPick;
+  }
+};
+ManageTrustedExtensionsForAccountActionImpl = __decorateClass([
+  __decorateParam(0, IProductService),
+  __decorateParam(1, IExtensionService),
+  __decorateParam(2, IDialogService),
+  __decorateParam(3, IQuickInputService),
+  __decorateParam(4, IAuthenticationService),
+  __decorateParam(5, IAuthenticationUsageService),
+  __decorateParam(6, IAuthenticationAccessService),
+  __decorateParam(7, ICommandService)
+], ManageTrustedExtensionsForAccountActionImpl);
+export {
+  ManageTrustedExtensionsForAccountAction
+};
+//# sourceMappingURL=manageTrustedExtensionsForAccountAction.js.map

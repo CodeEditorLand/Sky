@@ -1,1 +1,291 @@
-import{Emitter as D,AsyncEmitter as F}from"../../../base/common/event.js";import{GLOBSTAR as C,GLOB_SPLIT as S,parse as w}from"../../../base/common/glob.js";import{URI as s}from"../../../base/common/uri.js";import"./extHostDocumentsAndEditors.js";import{MainContext as b}from"./extHost.protocol.js";import*as W from"./extHostTypeConverters.js";import{Disposable as _,WorkspaceEdit as R}from"./extHostTypes.js";import"../../../platform/extensions/common/extensions.js";import{FileChangeFilter as g,FileOperation as p}from"../../../platform/files/common/files.js";import"../../../base/common/cancellation.js";import"../../../platform/log/common/log.js";import"./extHostWorkspace.js";import{Lazy as y}from"../../../base/common/lazy.js";import"./extHostConfiguration.js";import{rtrim as P}from"../../../base/common/strings.js";import{normalizeWatcherPattern as U}from"../../../platform/files/common/watcher.js";class O{session=Math.random();_onDidCreate=new D;_onDidChange=new D;_onDidDelete=new D;_disposable;_config;get ignoreCreateEvents(){return!!(1&this._config)}get ignoreChangeEvents(){return!!(2&this._config)}get ignoreDeleteEvents(){return!!(4&this._config)}constructor(e,t,i,n,o,r,a){this._config=0,a.ignoreCreateEvents&&(this._config+=1),a.ignoreChangeEvents&&(this._config+=2),a.ignoreDeleteEvents&&(this._config+=4);const l=w(r),c="string"==typeof r,m=o((e=>{if("number"!=typeof e.session||e.session===this.session){if(!a.ignoreCreateEvents)for(const t of e.created){const e=s.revive(t);l(e.fsPath)&&(!c||i.getWorkspaceFolder(e))&&this._onDidCreate.fire(e)}if(!a.ignoreChangeEvents)for(const t of e.changed){const e=s.revive(t);l(e.fsPath)&&(!c||i.getWorkspaceFolder(e))&&this._onDidChange.fire(e)}if(!a.ignoreDeleteEvents)for(const t of e.deleted){const e=s.revive(t);l(e.fsPath)&&(!c||i.getWorkspaceFolder(e))&&this._onDidDelete.fire(e)}}}));this._disposable=_.from(this.ensureWatching(e,i,t,n,r,a,!1),this._onDidCreate,this._onDidChange,this._onDidDelete,m)}ensureWatching(e,t,i,n,o,r,a){const l=_.from();if("string"==typeof o||r.ignoreChangeEvents&&r.ignoreCreateEvents&&r.ignoreDeleteEvents)return l;const c=e.getProxy(b.MainThreadFileSystemEventService);let m=!1;(o.pattern.includes(C)||o.pattern.includes(S))&&(m=!0);const h=[];let f,v;if(a)(r.ignoreChangeEvents||r.ignoreCreateEvents||r.ignoreDeleteEvents)&&(v=g.UPDATED|g.ADDED|g.DELETED,r.ignoreChangeEvents&&(v&=~g.UPDATED),r.ignoreCreateEvents&&(v&=~g.ADDED),r.ignoreDeleteEvents&&(v&=~g.DELETED));else if(m&&0===h.length){const e=t.getWorkspaceFolder(s.revive(o.baseUri)),n=i.getConfiguration("files",e).get("watcherExclude");if(n)for(const e in n)e&&!0===n[e]&&h.push(e)}else if(!m){const e=t.getWorkspaceFolder(s.revive(o.baseUri));if(e){const t=i.getConfiguration("files",e).get("watcherExclude");if(t)for(const i in t)if(i&&!0===t[i]){const t=`${P(i,"/")}/${C}`;f||(f=[]),f.push(U(e.uri.fsPath,t))}if(!f||0===f.length)return l}}return c.$watch(n.identifier.value,this.session,o.baseUri,{recursive:m,excludes:h,includes:f,filter:v},!!a),_.from({dispose:()=>c.$unwatch(this.session)})}dispose(){this._disposable.dispose()}get onDidCreate(){return this._onDidCreate.event}get onDidChange(){return this._onDidChange.event}get onDidDelete(){return this._onDidDelete.event}}class k{constructor(e){this._events=e,this.session=this._events.session}session;_created=new y((()=>this._events.created.map(s.revive)));get created(){return this._created.value}_changed=new y((()=>this._events.changed.map(s.revive)));get changed(){return this._changed.value}_deleted=new y((()=>this._events.deleted.map(s.revive)));get deleted(){return this._deleted.value}}class me{constructor(e,t,i){this._mainContext=e,this._logService=t,this._extHostDocumentsAndEditors=i}_onFileSystemEvent=new D;_onDidRenameFile=new D;_onDidCreateFile=new D;_onDidDeleteFile=new D;_onWillRenameFile=new F;_onWillCreateFile=new F;_onWillDeleteFile=new F;onDidRenameFile=this._onDidRenameFile.event;onDidCreateFile=this._onDidCreateFile.event;onDidDeleteFile=this._onDidDeleteFile.event;createFileSystemWatcher(e,t,i,n,s){return new O(this._mainContext,t,e,i,this._onFileSystemEvent.event,W.GlobPattern.from(n),s)}$onFileEvent(e){this._onFileSystemEvent.fire(new k(e))}$onDidRunFileOperation(e,t){switch(e){case p.MOVE:this._onDidRenameFile.fire(Object.freeze({files:t.map((e=>({oldUri:s.revive(e.source),newUri:s.revive(e.target)})))}));break;case p.DELETE:this._onDidDeleteFile.fire(Object.freeze({files:t.map((e=>s.revive(e.target)))}));break;case p.CREATE:case p.COPY:this._onDidCreateFile.fire(Object.freeze({files:t.map((e=>s.revive(e.target)))}))}}getOnWillRenameFileEvent(e){return this._createWillExecuteEvent(e,this._onWillRenameFile)}getOnWillCreateFileEvent(e){return this._createWillExecuteEvent(e,this._onWillCreateFile)}getOnWillDeleteFileEvent(e){return this._createWillExecuteEvent(e,this._onWillDeleteFile)}_createWillExecuteEvent(e,t){return(i,n,s)=>{const o=function(e){i.call(n,e)};return o.extension=e,t.event(o,void 0,s)}}async $onWillRunFileOperation(e,t,i,n){switch(e){case p.MOVE:return await this._fireWillEvent(this._onWillRenameFile,{files:t.map((e=>({oldUri:s.revive(e.source),newUri:s.revive(e.target)})))},i,n);case p.DELETE:return await this._fireWillEvent(this._onWillDeleteFile,{files:t.map((e=>s.revive(e.target)))},i,n);case p.CREATE:case p.COPY:return await this._fireWillEvent(this._onWillCreateFile,{files:t.map((e=>s.revive(e.target)))},i,n)}}async _fireWillEvent(e,t,i,n){const s=new Set,o=[];if(await e.fireAsync(t,n,(async(e,t)=>{const n=Date.now(),r=await Promise.resolve(e);r instanceof R&&(o.push([t.extension,r]),s.add(t.extension.displayName??t.extension.identifier.value)),Date.now()-n>i&&this._logService.warn("SLOW file-participant",t.extension.identifier)})),n.isCancellationRequested||0===o.length)return;const r={edits:[]};for(const[,e]of o){const{edits:t}=W.WorkspaceEdit.from(e,{getTextDocumentVersion:e=>this._extHostDocumentsAndEditors.getDocument(e)?.version,getNotebookDocumentVersion:()=>{}});r.edits=r.edits.concat(t)}return{edit:r,extensionNames:Array.from(s)}}}export{me as ExtHostFileSystemEventService};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Emitter, Event, AsyncEmitter, IWaitUntil, IWaitUntilData } from "../../../base/common/event.js";
+import { GLOBSTAR, GLOB_SPLIT, IRelativePattern, parse } from "../../../base/common/glob.js";
+import { URI } from "../../../base/common/uri.js";
+import { ExtHostDocumentsAndEditors } from "./extHostDocumentsAndEditors.js";
+import { ExtHostFileSystemEventServiceShape, FileSystemEvents, IMainContext, SourceTargetPair, IWorkspaceEditDto, IWillRunFileOperationParticipation, MainContext, IRelativePatternDto } from "./extHost.protocol.js";
+import * as typeConverter from "./extHostTypeConverters.js";
+import { Disposable, WorkspaceEdit } from "./extHostTypes.js";
+import { IExtensionDescription } from "../../../platform/extensions/common/extensions.js";
+import { FileChangeFilter, FileOperation, IGlobPatterns } from "../../../platform/files/common/files.js";
+import { CancellationToken } from "../../../base/common/cancellation.js";
+import { ILogService } from "../../../platform/log/common/log.js";
+import { IExtHostWorkspace } from "./extHostWorkspace.js";
+import { Lazy } from "../../../base/common/lazy.js";
+import { ExtHostConfigProvider } from "./extHostConfiguration.js";
+import { rtrim } from "../../../base/common/strings.js";
+import { normalizeWatcherPattern } from "../../../platform/files/common/watcher.js";
+class FileSystemWatcher {
+  static {
+    __name(this, "FileSystemWatcher");
+  }
+  session = Math.random();
+  _onDidCreate = new Emitter();
+  _onDidChange = new Emitter();
+  _onDidDelete = new Emitter();
+  _disposable;
+  _config;
+  get ignoreCreateEvents() {
+    return Boolean(this._config & 1);
+  }
+  get ignoreChangeEvents() {
+    return Boolean(this._config & 2);
+  }
+  get ignoreDeleteEvents() {
+    return Boolean(this._config & 4);
+  }
+  constructor(mainContext, configuration, workspace, extension, dispatcher, globPattern, options) {
+    this._config = 0;
+    if (options.ignoreCreateEvents) {
+      this._config += 1;
+    }
+    if (options.ignoreChangeEvents) {
+      this._config += 2;
+    }
+    if (options.ignoreDeleteEvents) {
+      this._config += 4;
+    }
+    const parsedPattern = parse(globPattern);
+    const excludeOutOfWorkspaceEvents = typeof globPattern === "string";
+    const excludeUncorrelatedEvents = false;
+    const subscription = dispatcher((events) => {
+      if (typeof events.session === "number" && events.session !== this.session) {
+        return;
+      }
+      if (excludeUncorrelatedEvents && typeof events.session === "undefined") {
+        return;
+      }
+      if (!options.ignoreCreateEvents) {
+        for (const created of events.created) {
+          const uri = URI.revive(created);
+          if (parsedPattern(uri.fsPath) && (!excludeOutOfWorkspaceEvents || workspace.getWorkspaceFolder(uri))) {
+            this._onDidCreate.fire(uri);
+          }
+        }
+      }
+      if (!options.ignoreChangeEvents) {
+        for (const changed of events.changed) {
+          const uri = URI.revive(changed);
+          if (parsedPattern(uri.fsPath) && (!excludeOutOfWorkspaceEvents || workspace.getWorkspaceFolder(uri))) {
+            this._onDidChange.fire(uri);
+          }
+        }
+      }
+      if (!options.ignoreDeleteEvents) {
+        for (const deleted of events.deleted) {
+          const uri = URI.revive(deleted);
+          if (parsedPattern(uri.fsPath) && (!excludeOutOfWorkspaceEvents || workspace.getWorkspaceFolder(uri))) {
+            this._onDidDelete.fire(uri);
+          }
+        }
+      }
+    });
+    this._disposable = Disposable.from(this.ensureWatching(mainContext, workspace, configuration, extension, globPattern, options, false), this._onDidCreate, this._onDidChange, this._onDidDelete, subscription);
+  }
+  ensureWatching(mainContext, workspace, configuration, extension, globPattern, options, correlate) {
+    const disposable = Disposable.from();
+    if (typeof globPattern === "string") {
+      return disposable;
+    }
+    if (options.ignoreChangeEvents && options.ignoreCreateEvents && options.ignoreDeleteEvents) {
+      return disposable;
+    }
+    const proxy = mainContext.getProxy(MainContext.MainThreadFileSystemEventService);
+    let recursive = false;
+    if (globPattern.pattern.includes(GLOBSTAR) || globPattern.pattern.includes(GLOB_SPLIT)) {
+      recursive = true;
+    }
+    const excludes = [];
+    let includes = void 0;
+    let filter;
+    if (correlate) {
+      if (options.ignoreChangeEvents || options.ignoreCreateEvents || options.ignoreDeleteEvents) {
+        filter = FileChangeFilter.UPDATED | FileChangeFilter.ADDED | FileChangeFilter.DELETED;
+        if (options.ignoreChangeEvents) {
+          filter &= ~FileChangeFilter.UPDATED;
+        }
+        if (options.ignoreCreateEvents) {
+          filter &= ~FileChangeFilter.ADDED;
+        }
+        if (options.ignoreDeleteEvents) {
+          filter &= ~FileChangeFilter.DELETED;
+        }
+      }
+    } else {
+      if (recursive && excludes.length === 0) {
+        const workspaceFolder = workspace.getWorkspaceFolder(URI.revive(globPattern.baseUri));
+        const watcherExcludes = configuration.getConfiguration("files", workspaceFolder).get("watcherExclude");
+        if (watcherExcludes) {
+          for (const key in watcherExcludes) {
+            if (key && watcherExcludes[key] === true) {
+              excludes.push(key);
+            }
+          }
+        }
+      } else if (!recursive) {
+        const workspaceFolder = workspace.getWorkspaceFolder(URI.revive(globPattern.baseUri));
+        if (workspaceFolder) {
+          const watcherExcludes = configuration.getConfiguration("files", workspaceFolder).get("watcherExclude");
+          if (watcherExcludes) {
+            for (const key in watcherExcludes) {
+              if (key && watcherExcludes[key] === true) {
+                const includePattern = `${rtrim(key, "/")}/${GLOBSTAR}`;
+                if (!includes) {
+                  includes = [];
+                }
+                includes.push(normalizeWatcherPattern(workspaceFolder.uri.fsPath, includePattern));
+              }
+            }
+          }
+          if (!includes || includes.length === 0) {
+            return disposable;
+          }
+        }
+      }
+    }
+    proxy.$watch(extension.identifier.value, this.session, globPattern.baseUri, { recursive, excludes, includes, filter }, Boolean(correlate));
+    return Disposable.from({ dispose: /* @__PURE__ */ __name(() => proxy.$unwatch(this.session), "dispose") });
+  }
+  dispose() {
+    this._disposable.dispose();
+  }
+  get onDidCreate() {
+    return this._onDidCreate.event;
+  }
+  get onDidChange() {
+    return this._onDidChange.event;
+  }
+  get onDidDelete() {
+    return this._onDidDelete.event;
+  }
+}
+class LazyRevivedFileSystemEvents {
+  constructor(_events) {
+    this._events = _events;
+    this.session = this._events.session;
+  }
+  static {
+    __name(this, "LazyRevivedFileSystemEvents");
+  }
+  session;
+  _created = new Lazy(() => this._events.created.map(URI.revive));
+  get created() {
+    return this._created.value;
+  }
+  _changed = new Lazy(() => this._events.changed.map(URI.revive));
+  get changed() {
+    return this._changed.value;
+  }
+  _deleted = new Lazy(() => this._events.deleted.map(URI.revive));
+  get deleted() {
+    return this._deleted.value;
+  }
+}
+class ExtHostFileSystemEventService {
+  constructor(_mainContext, _logService, _extHostDocumentsAndEditors) {
+    this._mainContext = _mainContext;
+    this._logService = _logService;
+    this._extHostDocumentsAndEditors = _extHostDocumentsAndEditors;
+  }
+  static {
+    __name(this, "ExtHostFileSystemEventService");
+  }
+  _onFileSystemEvent = new Emitter();
+  _onDidRenameFile = new Emitter();
+  _onDidCreateFile = new Emitter();
+  _onDidDeleteFile = new Emitter();
+  _onWillRenameFile = new AsyncEmitter();
+  _onWillCreateFile = new AsyncEmitter();
+  _onWillDeleteFile = new AsyncEmitter();
+  onDidRenameFile = this._onDidRenameFile.event;
+  onDidCreateFile = this._onDidCreateFile.event;
+  onDidDeleteFile = this._onDidDeleteFile.event;
+  //--- file events
+  createFileSystemWatcher(workspace, configProvider, extension, globPattern, options) {
+    return new FileSystemWatcher(this._mainContext, configProvider, workspace, extension, this._onFileSystemEvent.event, typeConverter.GlobPattern.from(globPattern), options);
+  }
+  $onFileEvent(events) {
+    this._onFileSystemEvent.fire(new LazyRevivedFileSystemEvents(events));
+  }
+  //--- file operations
+  $onDidRunFileOperation(operation, files) {
+    switch (operation) {
+      case FileOperation.MOVE:
+        this._onDidRenameFile.fire(Object.freeze({ files: files.map((f) => ({ oldUri: URI.revive(f.source), newUri: URI.revive(f.target) })) }));
+        break;
+      case FileOperation.DELETE:
+        this._onDidDeleteFile.fire(Object.freeze({ files: files.map((f) => URI.revive(f.target)) }));
+        break;
+      case FileOperation.CREATE:
+      case FileOperation.COPY:
+        this._onDidCreateFile.fire(Object.freeze({ files: files.map((f) => URI.revive(f.target)) }));
+        break;
+      default:
+    }
+  }
+  getOnWillRenameFileEvent(extension) {
+    return this._createWillExecuteEvent(extension, this._onWillRenameFile);
+  }
+  getOnWillCreateFileEvent(extension) {
+    return this._createWillExecuteEvent(extension, this._onWillCreateFile);
+  }
+  getOnWillDeleteFileEvent(extension) {
+    return this._createWillExecuteEvent(extension, this._onWillDeleteFile);
+  }
+  _createWillExecuteEvent(extension, emitter) {
+    return (listener, thisArg, disposables) => {
+      const wrappedListener = /* @__PURE__ */ __name(function wrapped(e) {
+        listener.call(thisArg, e);
+      }, "wrapped");
+      wrappedListener.extension = extension;
+      return emitter.event(wrappedListener, void 0, disposables);
+    };
+  }
+  async $onWillRunFileOperation(operation, files, timeout, token) {
+    switch (operation) {
+      case FileOperation.MOVE:
+        return await this._fireWillEvent(this._onWillRenameFile, { files: files.map((f) => ({ oldUri: URI.revive(f.source), newUri: URI.revive(f.target) })) }, timeout, token);
+      case FileOperation.DELETE:
+        return await this._fireWillEvent(this._onWillDeleteFile, { files: files.map((f) => URI.revive(f.target)) }, timeout, token);
+      case FileOperation.CREATE:
+      case FileOperation.COPY:
+        return await this._fireWillEvent(this._onWillCreateFile, { files: files.map((f) => URI.revive(f.target)) }, timeout, token);
+    }
+    return void 0;
+  }
+  async _fireWillEvent(emitter, data, timeout, token) {
+    const extensionNames = /* @__PURE__ */ new Set();
+    const edits = [];
+    await emitter.fireAsync(data, token, async (thenable, listener) => {
+      const now = Date.now();
+      const result = await Promise.resolve(thenable);
+      if (result instanceof WorkspaceEdit) {
+        edits.push([listener.extension, result]);
+        extensionNames.add(listener.extension.displayName ?? listener.extension.identifier.value);
+      }
+      if (Date.now() - now > timeout) {
+        this._logService.warn("SLOW file-participant", listener.extension.identifier);
+      }
+    });
+    if (token.isCancellationRequested) {
+      return void 0;
+    }
+    if (edits.length === 0) {
+      return void 0;
+    }
+    const dto = { edits: [] };
+    for (const [, edit] of edits) {
+      const { edits: edits2 } = typeConverter.WorkspaceEdit.from(edit, {
+        getTextDocumentVersion: /* @__PURE__ */ __name((uri) => this._extHostDocumentsAndEditors.getDocument(uri)?.version, "getTextDocumentVersion"),
+        getNotebookDocumentVersion: /* @__PURE__ */ __name(() => void 0, "getNotebookDocumentVersion")
+      });
+      dto.edits = dto.edits.concat(edits2);
+    }
+    return { edit: dto, extensionNames: Array.from(extensionNames) };
+  }
+}
+export {
+  ExtHostFileSystemEventService
+};
+//# sourceMappingURL=extHostFileSystemEventService.js.map

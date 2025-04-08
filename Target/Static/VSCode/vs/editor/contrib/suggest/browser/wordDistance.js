@@ -1,1 +1,72 @@
-import{binarySearch as w,isFalsyOrEmpty as I}from"../../../../base/common/arrays.js";import"../../../browser/editorBrowser.js";import{EditorOption as P}from"../../../common/config/editorOptions.js";import"../../../common/core/position.js";import{Range as c}from"../../../common/core/range.js";import{CompletionItemKind as R}from"../../../common/languages.js";import"../../../common/services/editorWorker.js";import{BracketSelectionRangeProvider as y}from"../../smartSelect/browser/bracketSelections.js";class o{static None=new class extends o{distance(){return 0}};static async create(e,t){if(!t.getOption(P.suggest).localityBonus||!t.hasModel())return o.None;const r=t.getModel(),n=t.getPosition();if(!e.canComputeWordRanges(r.uri))return o.None;const[s]=await(new y).provideSelectionRanges(r,[n]);if(0===s.length)return o.None;const i=await e.computeWordRanges(r.uri,s[0].range);if(!i)return o.None;const a=r.getWordUntilPosition(n);return delete i[a.word],new class extends o{distance(o,e){if(!n.equals(t.getPosition()))return 0;if(e.kind===R.Keyword)return 2<<20;const r="string"==typeof e.label?e.label:e.label.label,a=i[r];if(I(a))return 2<<20;const m=w(a,c.fromPositions(o),c.compareRangesUsingStarts),l=m>=0?a[m]:a[Math.max(0,~m-1)];let g=s.length;for(const o of s){if(!c.containsRange(o.range,l))break;g-=1}return g}}}}export{o as WordDistance};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { binarySearch, isFalsyOrEmpty } from "../../../../base/common/arrays.js";
+import { ICodeEditor } from "../../../browser/editorBrowser.js";
+import { EditorOption } from "../../../common/config/editorOptions.js";
+import { IPosition } from "../../../common/core/position.js";
+import { Range } from "../../../common/core/range.js";
+import { CompletionItem, CompletionItemKind } from "../../../common/languages.js";
+import { IEditorWorkerService } from "../../../common/services/editorWorker.js";
+import { BracketSelectionRangeProvider } from "../../smartSelect/browser/bracketSelections.js";
+class WordDistance {
+  static {
+    __name(this, "WordDistance");
+  }
+  static None = new class extends WordDistance {
+    distance() {
+      return 0;
+    }
+  }();
+  static async create(service, editor) {
+    if (!editor.getOption(EditorOption.suggest).localityBonus) {
+      return WordDistance.None;
+    }
+    if (!editor.hasModel()) {
+      return WordDistance.None;
+    }
+    const model = editor.getModel();
+    const position = editor.getPosition();
+    if (!service.canComputeWordRanges(model.uri)) {
+      return WordDistance.None;
+    }
+    const [ranges] = await new BracketSelectionRangeProvider().provideSelectionRanges(model, [position]);
+    if (ranges.length === 0) {
+      return WordDistance.None;
+    }
+    const wordRanges = await service.computeWordRanges(model.uri, ranges[0].range);
+    if (!wordRanges) {
+      return WordDistance.None;
+    }
+    const wordUntilPos = model.getWordUntilPosition(position);
+    delete wordRanges[wordUntilPos.word];
+    return new class extends WordDistance {
+      distance(anchor, item) {
+        if (!position.equals(editor.getPosition())) {
+          return 0;
+        }
+        if (item.kind === CompletionItemKind.Keyword) {
+          return 2 << 20;
+        }
+        const word = typeof item.label === "string" ? item.label : item.label.label;
+        const wordLines = wordRanges[word];
+        if (isFalsyOrEmpty(wordLines)) {
+          return 2 << 20;
+        }
+        const idx = binarySearch(wordLines, Range.fromPositions(anchor), Range.compareRangesUsingStarts);
+        const bestWordRange = idx >= 0 ? wordLines[idx] : wordLines[Math.max(0, ~idx - 1)];
+        let blockDistance = ranges.length;
+        for (const range of ranges) {
+          if (!Range.containsRange(range.range, bestWordRange)) {
+            break;
+          }
+          blockDistance -= 1;
+        }
+        return blockDistance;
+      }
+    }();
+  }
+}
+export {
+  WordDistance
+};
+//# sourceMappingURL=wordDistance.js.map

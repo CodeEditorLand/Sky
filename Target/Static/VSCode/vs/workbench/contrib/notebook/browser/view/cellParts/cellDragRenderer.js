@@ -1,1 +1,107 @@
-import*as u from"../../../../../../base/browser/dom.js";import{createTrustedTypesPolicy as C}from"../../../../../../base/browser/trustedTypes.js";import{Color as L}from"../../../../../../base/common/color.js";import*as h from"../../../../../../base/common/platform.js";import"../../../../../../editor/browser/editorBrowser.js";import{EditorOption as M}from"../../../../../../editor/common/config/editorOptions.js";import{Range as y}from"../../../../../../editor/common/core/range.js";import{ColorId as p}from"../../../../../../editor/common/encodedTokenAttributes.js";import*as I from"../../../../../../editor/common/languages.js";import{tokenizeLineToHTML as H}from"../../../../../../editor/common/languages/textToHtmlTokenizer.js";import"../../../../../../editor/common/model.js";import"../notebookRenderingCommon.js";class d{static _ttPolicy=C("cellRendererEditorText",{createHTML:e=>e});getRichText(e,t){const o=e.getModel();if(!o)return null;const r=this.getDefaultColorMap(),n=e.getOptions().get(M.fontInfo),i="--notebook-editor-font-family",s="--notebook-editor-font-size",a="--notebook-editor-font-weight",l=`color: ${r[p.DefaultForeground]};background-color: ${r[p.DefaultBackground]};font-family: var(${i});font-weight: var(${a});font-size: var(${s});line-height: ${n.lineHeight}px;white-space: pre;`,m=u.$("div",{style:l}),c=n.fontSize,g=n.fontWeight;m.style.setProperty(i,n.fontFamily),m.style.setProperty(s,`${c}px`),m.style.setProperty(a,g);const d=this.getRichTextLinesAsHtml(o,t,r);return m.innerHTML=d,m}getRichTextLinesAsHtml(e,t,o){const r=t.startLineNumber,n=t.startColumn,i=t.endLineNumber,s=t.endColumn,a=e.getOptions().tabSize;let l="";for(let t=r;t<=i;t++){const m=e.tokenization.getLineTokens(t),c=m.getLineContent(),g=t===r?n-1:0,d=t===i?s-1:c.length;l+=""===c?"<br>":H(c,m.inflate(),o,g,d,a,h.isWindows)}return d._ttPolicy?.createHTML(l)??l}getDefaultColorMap(){const e=I.TokenizationRegistry.getColorMap(),t=["#000000"];if(e)for(let o=1,r=e.length;o<r;o++)t[o]=L.Format.CSS.formatHex(e[o]);return t}}class P{getDragImage(e,t,o){let r=this.getDragImageImpl(e,t,o);return r||(r=document.createElement("div"),r.textContent="1 cell"),r}getDragImageImpl(e,t,o){const r=e.container.cloneNode(!0);r.classList.forEach((e=>r.classList.remove(e))),r.classList.add("cell-drag-image","monaco-list-row","focused",`${o}-cell-row`);const n=r.querySelector(".cell-editor-container");if(!n)return null;const i=(new d).getRichText(t,new y(1,1,1,1e3));return i?(u.reset(n,i),r):null}}export{P as CodeCellDragImageRenderer};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as DOM from "../../../../../../base/browser/dom.js";
+import { createTrustedTypesPolicy } from "../../../../../../base/browser/trustedTypes.js";
+import { Color } from "../../../../../../base/common/color.js";
+import * as platform from "../../../../../../base/common/platform.js";
+import { ICodeEditor } from "../../../../../../editor/browser/editorBrowser.js";
+import { EditorOption } from "../../../../../../editor/common/config/editorOptions.js";
+import { Range } from "../../../../../../editor/common/core/range.js";
+import { ColorId } from "../../../../../../editor/common/encodedTokenAttributes.js";
+import * as languages from "../../../../../../editor/common/languages.js";
+import { tokenizeLineToHTML } from "../../../../../../editor/common/languages/textToHtmlTokenizer.js";
+import { ITextModel } from "../../../../../../editor/common/model.js";
+import { BaseCellRenderTemplate } from "../notebookRenderingCommon.js";
+class EditorTextRenderer {
+  static {
+    __name(this, "EditorTextRenderer");
+  }
+  static _ttPolicy = createTrustedTypesPolicy("cellRendererEditorText", {
+    createHTML(input) {
+      return input;
+    }
+  });
+  getRichText(editor, modelRange) {
+    const model = editor.getModel();
+    if (!model) {
+      return null;
+    }
+    const colorMap = this.getDefaultColorMap();
+    const fontInfo = editor.getOptions().get(EditorOption.fontInfo);
+    const fontFamilyVar = "--notebook-editor-font-family";
+    const fontSizeVar = "--notebook-editor-font-size";
+    const fontWeightVar = "--notebook-editor-font-weight";
+    const style = `color: ${colorMap[ColorId.DefaultForeground]};background-color: ${colorMap[ColorId.DefaultBackground]};font-family: var(${fontFamilyVar});font-weight: var(${fontWeightVar});font-size: var(${fontSizeVar});line-height: ${fontInfo.lineHeight}px;white-space: pre;`;
+    const element = DOM.$("div", { style });
+    const fontSize = fontInfo.fontSize;
+    const fontWeight = fontInfo.fontWeight;
+    element.style.setProperty(fontFamilyVar, fontInfo.fontFamily);
+    element.style.setProperty(fontSizeVar, `${fontSize}px`);
+    element.style.setProperty(fontWeightVar, fontWeight);
+    const linesHtml = this.getRichTextLinesAsHtml(model, modelRange, colorMap);
+    element.innerHTML = linesHtml;
+    return element;
+  }
+  getRichTextLinesAsHtml(model, modelRange, colorMap) {
+    const startLineNumber = modelRange.startLineNumber;
+    const startColumn = modelRange.startColumn;
+    const endLineNumber = modelRange.endLineNumber;
+    const endColumn = modelRange.endColumn;
+    const tabSize = model.getOptions().tabSize;
+    let result = "";
+    for (let lineNumber = startLineNumber; lineNumber <= endLineNumber; lineNumber++) {
+      const lineTokens = model.tokenization.getLineTokens(lineNumber);
+      const lineContent = lineTokens.getLineContent();
+      const startOffset = lineNumber === startLineNumber ? startColumn - 1 : 0;
+      const endOffset = lineNumber === endLineNumber ? endColumn - 1 : lineContent.length;
+      if (lineContent === "") {
+        result += "<br>";
+      } else {
+        result += tokenizeLineToHTML(lineContent, lineTokens.inflate(), colorMap, startOffset, endOffset, tabSize, platform.isWindows);
+      }
+    }
+    return EditorTextRenderer._ttPolicy?.createHTML(result) ?? result;
+  }
+  getDefaultColorMap() {
+    const colorMap = languages.TokenizationRegistry.getColorMap();
+    const result = ["#000000"];
+    if (colorMap) {
+      for (let i = 1, len = colorMap.length; i < len; i++) {
+        result[i] = Color.Format.CSS.formatHex(colorMap[i]);
+      }
+    }
+    return result;
+  }
+}
+class CodeCellDragImageRenderer {
+  static {
+    __name(this, "CodeCellDragImageRenderer");
+  }
+  getDragImage(templateData, editor, type) {
+    let dragImage = this.getDragImageImpl(templateData, editor, type);
+    if (!dragImage) {
+      dragImage = document.createElement("div");
+      dragImage.textContent = "1 cell";
+    }
+    return dragImage;
+  }
+  getDragImageImpl(templateData, editor, type) {
+    const dragImageContainer = templateData.container.cloneNode(true);
+    dragImageContainer.classList.forEach((c) => dragImageContainer.classList.remove(c));
+    dragImageContainer.classList.add("cell-drag-image", "monaco-list-row", "focused", `${type}-cell-row`);
+    const editorContainer = dragImageContainer.querySelector(".cell-editor-container");
+    if (!editorContainer) {
+      return null;
+    }
+    const richEditorText = new EditorTextRenderer().getRichText(editor, new Range(1, 1, 1, 1e3));
+    if (!richEditorText) {
+      return null;
+    }
+    DOM.reset(editorContainer, richEditorText);
+    return dragImageContainer;
+  }
+}
+export {
+  CodeCellDragImageRenderer
+};
+//# sourceMappingURL=cellDragRenderer.js.map

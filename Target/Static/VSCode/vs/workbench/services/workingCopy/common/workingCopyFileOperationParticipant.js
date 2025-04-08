@@ -1,1 +1,59 @@
-var f=Object.defineProperty,d=Object.getOwnPropertyDescriptor,c=(i,t,o,r)=>{for(var e,s=r>1?void 0:r?d(t,o):t,a=i.length-1;a>=0;a--)(e=i[a])&&(s=(r?e(t,o,s):e(s))||s);return r&&s&&f(t,o,s),s},s=(i,t)=>(o,r)=>t(o,r,i);import"../../../../base/common/cancellation.js";import{ILogService as u}from"../../../../platform/log/common/log.js";import{Disposable as v,toDisposable as I}from"../../../../base/common/lifecycle.js";import"./workingCopyFileService.js";import"../../../../platform/files/common/files.js";import{IConfigurationService as g}from"../../../../platform/configuration/common/configuration.js";import{LinkedList as S}from"../../../../base/common/linkedList.js";let p=class extends v{constructor(i,t){super(),this.logService=i,this.configurationService=t}participants=new S;addFileOperationParticipant(i){const t=this.participants.push(i);return I((()=>t()))}async participate(i,t,o,r){const e=this.configurationService.getValue("files.participants.timeout");if(!("number"!=typeof e||e<=0))for(const s of this.participants)try{await s.participate(i,t,o,e,r)}catch(i){this.logService.warn(i)}}dispose(){this.participants.clear(),super.dispose()}};p=c([s(0,u),s(1,g)],p);export{p as WorkingCopyFileOperationParticipant};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { IDisposable, Disposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { IWorkingCopyFileOperationParticipant, SourceTargetPair, IFileOperationUndoRedoInfo } from "./workingCopyFileService.js";
+import { FileOperation } from "../../../../platform/files/common/files.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { LinkedList } from "../../../../base/common/linkedList.js";
+let WorkingCopyFileOperationParticipant = class extends Disposable {
+  constructor(logService, configurationService) {
+    super();
+    this.logService = logService;
+    this.configurationService = configurationService;
+  }
+  static {
+    __name(this, "WorkingCopyFileOperationParticipant");
+  }
+  participants = new LinkedList();
+  addFileOperationParticipant(participant) {
+    const remove = this.participants.push(participant);
+    return toDisposable(() => remove());
+  }
+  async participate(files, operation, undoInfo, token) {
+    const timeout = this.configurationService.getValue("files.participants.timeout");
+    if (typeof timeout !== "number" || timeout <= 0) {
+      return;
+    }
+    for (const participant of this.participants) {
+      try {
+        await participant.participate(files, operation, undoInfo, timeout, token);
+      } catch (err) {
+        this.logService.warn(err);
+      }
+    }
+  }
+  dispose() {
+    this.participants.clear();
+    super.dispose();
+  }
+};
+WorkingCopyFileOperationParticipant = __decorateClass([
+  __decorateParam(0, ILogService),
+  __decorateParam(1, IConfigurationService)
+], WorkingCopyFileOperationParticipant);
+export {
+  WorkingCopyFileOperationParticipant
+};
+//# sourceMappingURL=workingCopyFileOperationParticipant.js.map

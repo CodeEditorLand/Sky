@@ -1,1 +1,120 @@
-function f(e,t,n=!0){for(let s=t.length-1;s>=0;s--){const r=t.slice(0,s),c=p(e,t[s],r,n);if(c)return c}return null}function p(e,t,n,s){let r=null;for(let c=e.tokenColors.length-1;c>=0;c--){const o=e.tokenColors[c];if(s&&!o.settings.foreground)continue;let i;if("string"==typeof o.scope)i=o.scope.split(/,/).map((e=>e.trim()));else{if(!Array.isArray(o.scope))continue;i=o.scope}for(let e=0,s=i.length;e<s;e++){const s=i[e],c=new a(s,o.settings);c.matches(t,n)&&c.isMoreSpecific(r)&&(r=c)}}return r}class a{rawSelector;settings;scope;parentScopes;constructor(e,t){this.rawSelector=e,this.settings=t;const n=this.rawSelector.split(/ /);this.scope=n[n.length-1],this.parentScopes=n.slice(0,n.length-1)}matches(e,t){return a._matches(this.scope,this.parentScopes,e,t)}static _cmp(e,t){if(null===e&&null===t)return 0;if(null===e)return-1;if(null===t)return 1;if(e.scope.length!==t.scope.length)return e.scope.length-t.scope.length;const n=e.parentScopes.length,s=t.parentScopes.length;if(n!==s)return n-s;for(let s=0;s<n;s++){const n=e.parentScopes[s].length,r=t.parentScopes[s].length;if(n!==r)return n-r}return 0}isMoreSpecific(e){return a._cmp(this,e)>0}static _matchesOne(e,t){const n=e+".";return e===t||t.substring(0,n.length)===n}static _matches(e,t,n,s){if(!this._matchesOne(e,n))return!1;let r=t.length-1,c=s.length-1;for(;r>=0&&c>=0;)this._matchesOne(t[r],s[c])&&r--,c--;return-1===r}}export{a as ThemeRule,f as findMatchingThemeRule};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+function findMatchingThemeRule(theme, scopes, onlyColorRules = true) {
+  for (let i = scopes.length - 1; i >= 0; i--) {
+    const parentScopes = scopes.slice(0, i);
+    const scope = scopes[i];
+    const r = findMatchingThemeRule2(theme, scope, parentScopes, onlyColorRules);
+    if (r) {
+      return r;
+    }
+  }
+  return null;
+}
+__name(findMatchingThemeRule, "findMatchingThemeRule");
+function findMatchingThemeRule2(theme, scope, parentScopes, onlyColorRules) {
+  let result = null;
+  for (let i = theme.tokenColors.length - 1; i >= 0; i--) {
+    const rule = theme.tokenColors[i];
+    if (onlyColorRules && !rule.settings.foreground) {
+      continue;
+    }
+    let selectors;
+    if (typeof rule.scope === "string") {
+      selectors = rule.scope.split(/,/).map((scope2) => scope2.trim());
+    } else if (Array.isArray(rule.scope)) {
+      selectors = rule.scope;
+    } else {
+      continue;
+    }
+    for (let j = 0, lenJ = selectors.length; j < lenJ; j++) {
+      const rawSelector = selectors[j];
+      const themeRule = new ThemeRule(rawSelector, rule.settings);
+      if (themeRule.matches(scope, parentScopes)) {
+        if (themeRule.isMoreSpecific(result)) {
+          result = themeRule;
+        }
+      }
+    }
+  }
+  return result;
+}
+__name(findMatchingThemeRule2, "findMatchingThemeRule2");
+class ThemeRule {
+  static {
+    __name(this, "ThemeRule");
+  }
+  rawSelector;
+  settings;
+  scope;
+  parentScopes;
+  constructor(rawSelector, settings) {
+    this.rawSelector = rawSelector;
+    this.settings = settings;
+    const rawSelectorPieces = this.rawSelector.split(/ /);
+    this.scope = rawSelectorPieces[rawSelectorPieces.length - 1];
+    this.parentScopes = rawSelectorPieces.slice(0, rawSelectorPieces.length - 1);
+  }
+  matches(scope, parentScopes) {
+    return ThemeRule._matches(this.scope, this.parentScopes, scope, parentScopes);
+  }
+  static _cmp(a, b) {
+    if (a === null && b === null) {
+      return 0;
+    }
+    if (a === null) {
+      return -1;
+    }
+    if (b === null) {
+      return 1;
+    }
+    if (a.scope.length !== b.scope.length) {
+      return a.scope.length - b.scope.length;
+    }
+    const aParentScopesLen = a.parentScopes.length;
+    const bParentScopesLen = b.parentScopes.length;
+    if (aParentScopesLen !== bParentScopesLen) {
+      return aParentScopesLen - bParentScopesLen;
+    }
+    for (let i = 0; i < aParentScopesLen; i++) {
+      const aLen = a.parentScopes[i].length;
+      const bLen = b.parentScopes[i].length;
+      if (aLen !== bLen) {
+        return aLen - bLen;
+      }
+    }
+    return 0;
+  }
+  isMoreSpecific(other) {
+    return ThemeRule._cmp(this, other) > 0;
+  }
+  static _matchesOne(selectorScope, scope) {
+    const selectorPrefix = selectorScope + ".";
+    if (selectorScope === scope || scope.substring(0, selectorPrefix.length) === selectorPrefix) {
+      return true;
+    }
+    return false;
+  }
+  static _matches(selectorScope, selectorParentScopes, scope, parentScopes) {
+    if (!this._matchesOne(selectorScope, scope)) {
+      return false;
+    }
+    let selectorParentIndex = selectorParentScopes.length - 1;
+    let parentIndex = parentScopes.length - 1;
+    while (selectorParentIndex >= 0 && parentIndex >= 0) {
+      if (this._matchesOne(selectorParentScopes[selectorParentIndex], parentScopes[parentIndex])) {
+        selectorParentIndex--;
+      }
+      parentIndex--;
+    }
+    if (selectorParentIndex === -1) {
+      return true;
+    }
+    return false;
+  }
+}
+export {
+  ThemeRule,
+  findMatchingThemeRule
+};
+//# sourceMappingURL=TMHelper.js.map

@@ -1,1 +1,94 @@
-import{ResizableHTMLElement as l}from"../../../../base/browser/ui/resizable/resizable.js";import{Disposable as h}from"../../../../base/common/lifecycle.js";import{ContentWidgetPositionPreference as s}from"../../../browser/editorBrowser.js";import{EditorOption as c}from"../../../common/config/editorOptions.js";import{Position as m}from"../../../common/core/position.js";import*as i from"../../../../base/browser/dom.js";const b=30,u=24;class E extends h{constructor(o,e=new i.Dimension(10,10)){super();this._editor=o;this._resizableNode.domNode.style.position="absolute",this._resizableNode.minSize=i.Dimension.lift(e),this._resizableNode.layout(e.height,e.width),this._resizableNode.enableSashes(!0,!0,!0,!0),this._register(this._resizableNode.onDidResize(t=>{this._resize(new i.Dimension(t.dimension.width,t.dimension.height)),t.done&&(this._isResizing=!1)})),this._register(this._resizableNode.onDidWillResize(()=>{this._isResizing=!0}))}allowEditorOverflow=!0;suppressMouseDown=!1;_resizableNode=this._register(new l);_contentPosition=null;_isResizing=!1;get isResizing(){return this._isResizing}getDomNode(){return this._resizableNode.domNode}getPosition(){return this._contentPosition}get position(){return this._contentPosition?.position?m.lift(this._contentPosition.position):void 0}_availableVerticalSpaceAbove(o){const e=this._editor.getDomNode(),t=this._editor.getScrolledVisiblePosition(o);return!e||!t?void 0:i.getDomNodePagePosition(e).top+t.top-b}_availableVerticalSpaceBelow(o){const e=this._editor.getDomNode(),t=this._editor.getScrolledVisiblePosition(o);if(!e||!t)return;const n=i.getDomNodePagePosition(e),a=i.getClientArea(e.ownerDocument.body),r=n.top+t.top+t.height;return a.height-r-u}_findPositionPreference(o,e){const t=Math.min(this._availableVerticalSpaceBelow(e)??1/0,o),n=Math.min(this._availableVerticalSpaceAbove(e)??1/0,o),a=Math.min(Math.max(n,t),o),r=Math.min(o,a);let d;return this._editor.getOption(c.hover).above?d=r<=n?s.ABOVE:s.BELOW:d=r<=t?s.BELOW:s.ABOVE,d===s.ABOVE?this._resizableNode.enableSashes(!0,!0,!1,!1):this._resizableNode.enableSashes(!1,!0,!0,!1),d}_resize(o){this._resizableNode.layout(o.height,o.width)}}export{E as ResizableContentWidget};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { ResizableHTMLElement } from "../../../../base/browser/ui/resizable/resizable.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { ContentWidgetPositionPreference, ICodeEditor, IContentWidget, IContentWidgetPosition } from "../../../browser/editorBrowser.js";
+import { EditorOption } from "../../../common/config/editorOptions.js";
+import { IPosition, Position } from "../../../common/core/position.js";
+import * as dom from "../../../../base/browser/dom.js";
+const TOP_HEIGHT = 30;
+const BOTTOM_HEIGHT = 24;
+class ResizableContentWidget extends Disposable {
+  constructor(_editor, minimumSize = new dom.Dimension(10, 10)) {
+    super();
+    this._editor = _editor;
+    this._resizableNode.domNode.style.position = "absolute";
+    this._resizableNode.minSize = dom.Dimension.lift(minimumSize);
+    this._resizableNode.layout(minimumSize.height, minimumSize.width);
+    this._resizableNode.enableSashes(true, true, true, true);
+    this._register(this._resizableNode.onDidResize((e) => {
+      this._resize(new dom.Dimension(e.dimension.width, e.dimension.height));
+      if (e.done) {
+        this._isResizing = false;
+      }
+    }));
+    this._register(this._resizableNode.onDidWillResize(() => {
+      this._isResizing = true;
+    }));
+  }
+  static {
+    __name(this, "ResizableContentWidget");
+  }
+  allowEditorOverflow = true;
+  suppressMouseDown = false;
+  _resizableNode = this._register(new ResizableHTMLElement());
+  _contentPosition = null;
+  _isResizing = false;
+  get isResizing() {
+    return this._isResizing;
+  }
+  getDomNode() {
+    return this._resizableNode.domNode;
+  }
+  getPosition() {
+    return this._contentPosition;
+  }
+  get position() {
+    return this._contentPosition?.position ? Position.lift(this._contentPosition.position) : void 0;
+  }
+  _availableVerticalSpaceAbove(position) {
+    const editorDomNode = this._editor.getDomNode();
+    const mouseBox = this._editor.getScrolledVisiblePosition(position);
+    if (!editorDomNode || !mouseBox) {
+      return;
+    }
+    const editorBox = dom.getDomNodePagePosition(editorDomNode);
+    return editorBox.top + mouseBox.top - TOP_HEIGHT;
+  }
+  _availableVerticalSpaceBelow(position) {
+    const editorDomNode = this._editor.getDomNode();
+    const mouseBox = this._editor.getScrolledVisiblePosition(position);
+    if (!editorDomNode || !mouseBox) {
+      return;
+    }
+    const editorBox = dom.getDomNodePagePosition(editorDomNode);
+    const bodyBox = dom.getClientArea(editorDomNode.ownerDocument.body);
+    const mouseBottom = editorBox.top + mouseBox.top + mouseBox.height;
+    return bodyBox.height - mouseBottom - BOTTOM_HEIGHT;
+  }
+  _findPositionPreference(widgetHeight, showAtPosition) {
+    const maxHeightBelow = Math.min(this._availableVerticalSpaceBelow(showAtPosition) ?? Infinity, widgetHeight);
+    const maxHeightAbove = Math.min(this._availableVerticalSpaceAbove(showAtPosition) ?? Infinity, widgetHeight);
+    const maxHeight = Math.min(Math.max(maxHeightAbove, maxHeightBelow), widgetHeight);
+    const height = Math.min(widgetHeight, maxHeight);
+    let renderingAbove;
+    if (this._editor.getOption(EditorOption.hover).above) {
+      renderingAbove = height <= maxHeightAbove ? ContentWidgetPositionPreference.ABOVE : ContentWidgetPositionPreference.BELOW;
+    } else {
+      renderingAbove = height <= maxHeightBelow ? ContentWidgetPositionPreference.BELOW : ContentWidgetPositionPreference.ABOVE;
+    }
+    if (renderingAbove === ContentWidgetPositionPreference.ABOVE) {
+      this._resizableNode.enableSashes(true, true, false, false);
+    } else {
+      this._resizableNode.enableSashes(false, true, true, false);
+    }
+    return renderingAbove;
+  }
+  _resize(dimension) {
+    this._resizableNode.layout(dimension.height, dimension.width);
+  }
+}
+export {
+  ResizableContentWidget
+};
+//# sourceMappingURL=resizableContentWidget.js.map

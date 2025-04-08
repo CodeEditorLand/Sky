@@ -1,1 +1,59 @@
-import{safeIntl as g}from"../../../base/common/date.js";function c(e,t){return e.isBasicASCII&&t.useMonospaceOptimizations?new a(e):new d(e)}class a{_content;constructor(e){this._content=e.content}getSegmentAtIndex(e){return this._content[e]}getSegmentData(e){}}class d{_segments=[];constructor(e){const t=e.content,n=g.Segmenter(void 0,{granularity:"grapheme"}),s=Array.from(n.segment(t));let r=0;for(let e=0;e<t.length;e++){const t=s[r];if(!t)break;t.index===e?(r++,this._segments.push(t)):this._segments.push(void 0)}}getSegmentAtIndex(e){return this._segments[e]?.segment}getSegmentData(e){return this._segments[e]}}export{c as createContentSegmenter};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { safeIntl } from "../../../base/common/date.js";
+function createContentSegmenter(lineData, options) {
+  if (lineData.isBasicASCII && options.useMonospaceOptimizations) {
+    return new AsciiContentSegmenter(lineData);
+  }
+  return new GraphemeContentSegmenter(lineData);
+}
+__name(createContentSegmenter, "createContentSegmenter");
+class AsciiContentSegmenter {
+  static {
+    __name(this, "AsciiContentSegmenter");
+  }
+  _content;
+  constructor(lineData) {
+    this._content = lineData.content;
+  }
+  getSegmentAtIndex(index) {
+    return this._content[index];
+  }
+  getSegmentData(index) {
+    return void 0;
+  }
+}
+class GraphemeContentSegmenter {
+  static {
+    __name(this, "GraphemeContentSegmenter");
+  }
+  _segments = [];
+  constructor(lineData) {
+    const content = lineData.content;
+    const segmenter = safeIntl.Segmenter(void 0, { granularity: "grapheme" });
+    const segmentedContent = Array.from(segmenter.segment(content));
+    let segmenterIndex = 0;
+    for (let x = 0; x < content.length; x++) {
+      const segment = segmentedContent[segmenterIndex];
+      if (!segment) {
+        break;
+      }
+      if (segment.index !== x) {
+        this._segments.push(void 0);
+        continue;
+      }
+      segmenterIndex++;
+      this._segments.push(segment);
+    }
+  }
+  getSegmentAtIndex(index) {
+    return this._segments[index]?.segment;
+  }
+  getSegmentData(index) {
+    return this._segments[index];
+  }
+}
+export {
+  createContentSegmenter
+};
+//# sourceMappingURL=contentSegmenter.js.map

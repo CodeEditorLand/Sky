@@ -1,1 +1,26 @@
-import"../../../base/common/event.js";import"../../../base/common/lifecycle.js";import"../../../base/common/uri.js";import{createDecorator as t}from"../../instantiation/common/instantiation.js";var o=(e=>(e[e.Local=0]="Local",e[e.Remote=1]="Remote",e))(o||{});const l=t("workspaceTrustEnablementService"),T=t("workspaceTrustManagementService");var s=(e=>(e[e.Open=1]="Open",e[e.OpenInNewWindow=2]="OpenInNewWindow",e[e.Cancel=3]="Cancel",e))(s||{});const v=t("workspaceTrustRequestService");export{l as IWorkspaceTrustEnablementService,T as IWorkspaceTrustManagementService,v as IWorkspaceTrustRequestService,o as WorkspaceTrustScope,s as WorkspaceTrustUriResponse};
+import { Event } from "../../../base/common/event.js";
+import { IDisposable } from "../../../base/common/lifecycle.js";
+import { URI } from "../../../base/common/uri.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+var WorkspaceTrustScope = /* @__PURE__ */ ((WorkspaceTrustScope2) => {
+  WorkspaceTrustScope2[WorkspaceTrustScope2["Local"] = 0] = "Local";
+  WorkspaceTrustScope2[WorkspaceTrustScope2["Remote"] = 1] = "Remote";
+  return WorkspaceTrustScope2;
+})(WorkspaceTrustScope || {});
+const IWorkspaceTrustEnablementService = createDecorator("workspaceTrustEnablementService");
+const IWorkspaceTrustManagementService = createDecorator("workspaceTrustManagementService");
+var WorkspaceTrustUriResponse = /* @__PURE__ */ ((WorkspaceTrustUriResponse2) => {
+  WorkspaceTrustUriResponse2[WorkspaceTrustUriResponse2["Open"] = 1] = "Open";
+  WorkspaceTrustUriResponse2[WorkspaceTrustUriResponse2["OpenInNewWindow"] = 2] = "OpenInNewWindow";
+  WorkspaceTrustUriResponse2[WorkspaceTrustUriResponse2["Cancel"] = 3] = "Cancel";
+  return WorkspaceTrustUriResponse2;
+})(WorkspaceTrustUriResponse || {});
+const IWorkspaceTrustRequestService = createDecorator("workspaceTrustRequestService");
+export {
+  IWorkspaceTrustEnablementService,
+  IWorkspaceTrustManagementService,
+  IWorkspaceTrustRequestService,
+  WorkspaceTrustScope,
+  WorkspaceTrustUriResponse
+};
+//# sourceMappingURL=workspaceTrust.js.map

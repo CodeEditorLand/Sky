@@ -1,1 +1,205 @@
-import{createTrustedTypesPolicy as S}from"../../../base/browser/trustedTypes.js";import*as C from"../../../base/common/strings.js";import{ColorId as h,FontStyle as k,MetadataConsts as I}from"../../common/encodedTokenAttributes.js";import{TokenizationRegistry as b}from"../../common/languages.js";import"../../common/languages/language.js";import"../../common/model.js";import{LineTokens as d}from"../../common/tokens/lineTokens.js";import{RenderLineInput as T,renderViewLine2 as L}from"../../common/viewLayout/viewLineRenderer.js";import{ViewLineRenderingData as f}from"../../common/viewModel.js";import{MonarchTokenizer as R}from"../common/monarch/monarchLexer.js";import"../common/standaloneTheme.js";const O=S("standaloneColorizer",{createHTML:e=>e});class W{static colorizeElement(e,n,t,o){const s=(o=o||{}).theme||"vs",i=o.mimeType||t.getAttribute("lang")||t.getAttribute("data-lang");if(!i)return console.error("Mode not detected"),Promise.resolve();const r=n.getLanguageIdByMimeType(i)||i;e.setTheme(s);const a=t.firstChild?t.firstChild.nodeValue:"";t.className+=" "+s;return this.colorize(n,a||"",r,o).then((e=>{const n=O?.createHTML(e)??e;t.innerHTML=n}),(e=>console.error(e)))}static async colorize(e,n,t,o){const s=e.languageIdCodec;let i=4;o&&"number"==typeof o.tabSize&&(i=o.tabSize),C.startsWithUTF8BOM(n)&&(n=n.substr(1));const r=C.splitLines(n);if(!e.isRegisteredLanguageId(t))return p(r,i,s);const a=await b.getOrCreate(t);return a?w(r,i,a,s):p(r,i,s)}static colorizeLine(e,n,t,o,s=4){const i=f.isBasicASCII(e,n),r=f.containsRTL(e,i,t);return L(new T(!1,!0,e,!1,i,r,0,o,[],s,0,0,0,0,-1,"none",!1,!1,null)).html}static colorizeModelLine(e,n,t=4){const o=e.getLineContent(n);e.tokenization.forceTokenization(n);const s=e.tokenization.getLineTokens(n).inflate();return this.colorizeLine(o,e.mightContainNonBasicASCII(),e.mightContainRTL(),s,t)}}function w(e,n,t,o){return new Promise(((s,i)=>{const r=()=>{const a=y(e,n,t,o);if(t instanceof R){const e=t.getLoadStatus();if(!1===e.loaded)return void e.promise.then(r,i)}s(a)};r()}))}function p(e,n,t){let o=[];const s=(k.None<<I.FONT_STYLE_OFFSET|h.DefaultForeground<<I.FOREGROUND_OFFSET|h.DefaultBackground<<I.BACKGROUND_OFFSET)>>>0,i=new Uint32Array(2);i[0]=0,i[1]=s;for(let s=0,r=e.length;s<r;s++){const r=e[s];i[0]=r.length;const a=new d(i,r,t),c=f.isBasicASCII(r,!0),m=f.containsRTL(r,c,!0),l=L(new T(!1,!0,r,!1,c,m,0,a,[],n,0,0,0,0,-1,"none",!1,!1,null));o=o.concat(l.html),o.push("<br/>")}return o.join("")}function y(e,n,t,o){let s=[],i=t.getInitialState();for(let r=0,a=e.length;r<a;r++){const a=e[r],c=t.tokenizeEncoded(a,!0,i);d.convertToEndOffset(c.tokens,a.length);const m=new d(c.tokens,a,o),l=f.isBasicASCII(a,!0),u=f.containsRTL(a,l,!0),g=L(new T(!1,!0,a,!1,l,u,0,m.inflate(),[],n,0,0,0,0,-1,"none",!1,!1,null));s=s.concat(g.html),s.push("<br/>"),i=c.endState}return s.join("")}export{W as Colorizer};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { createTrustedTypesPolicy } from "../../../base/browser/trustedTypes.js";
+import * as strings from "../../../base/common/strings.js";
+import { ColorId, FontStyle, MetadataConsts } from "../../common/encodedTokenAttributes.js";
+import { ILanguageIdCodec, ITokenizationSupport, TokenizationRegistry } from "../../common/languages.js";
+import { ILanguageService } from "../../common/languages/language.js";
+import { ITextModel } from "../../common/model.js";
+import { IViewLineTokens, LineTokens } from "../../common/tokens/lineTokens.js";
+import { RenderLineInput, renderViewLine2 as renderViewLine } from "../../common/viewLayout/viewLineRenderer.js";
+import { ViewLineRenderingData } from "../../common/viewModel.js";
+import { MonarchTokenizer } from "../common/monarch/monarchLexer.js";
+import { IStandaloneThemeService } from "../common/standaloneTheme.js";
+const ttPolicy = createTrustedTypesPolicy("standaloneColorizer", { createHTML: /* @__PURE__ */ __name((value) => value, "createHTML") });
+class Colorizer {
+  static {
+    __name(this, "Colorizer");
+  }
+  static colorizeElement(themeService, languageService, domNode, options) {
+    options = options || {};
+    const theme = options.theme || "vs";
+    const mimeType = options.mimeType || domNode.getAttribute("lang") || domNode.getAttribute("data-lang");
+    if (!mimeType) {
+      console.error("Mode not detected");
+      return Promise.resolve();
+    }
+    const languageId = languageService.getLanguageIdByMimeType(mimeType) || mimeType;
+    themeService.setTheme(theme);
+    const text = domNode.firstChild ? domNode.firstChild.nodeValue : "";
+    domNode.className += " " + theme;
+    const render = /* @__PURE__ */ __name((str) => {
+      const trustedhtml = ttPolicy?.createHTML(str) ?? str;
+      domNode.innerHTML = trustedhtml;
+    }, "render");
+    return this.colorize(languageService, text || "", languageId, options).then(render, (err) => console.error(err));
+  }
+  static async colorize(languageService, text, languageId, options) {
+    const languageIdCodec = languageService.languageIdCodec;
+    let tabSize = 4;
+    if (options && typeof options.tabSize === "number") {
+      tabSize = options.tabSize;
+    }
+    if (strings.startsWithUTF8BOM(text)) {
+      text = text.substr(1);
+    }
+    const lines = strings.splitLines(text);
+    if (!languageService.isRegisteredLanguageId(languageId)) {
+      return _fakeColorize(lines, tabSize, languageIdCodec);
+    }
+    const tokenizationSupport = await TokenizationRegistry.getOrCreate(languageId);
+    if (tokenizationSupport) {
+      return _colorize(lines, tabSize, tokenizationSupport, languageIdCodec);
+    }
+    return _fakeColorize(lines, tabSize, languageIdCodec);
+  }
+  static colorizeLine(line, mightContainNonBasicASCII, mightContainRTL, tokens, tabSize = 4) {
+    const isBasicASCII = ViewLineRenderingData.isBasicASCII(line, mightContainNonBasicASCII);
+    const containsRTL = ViewLineRenderingData.containsRTL(line, isBasicASCII, mightContainRTL);
+    const renderResult = renderViewLine(new RenderLineInput(
+      false,
+      true,
+      line,
+      false,
+      isBasicASCII,
+      containsRTL,
+      0,
+      tokens,
+      [],
+      tabSize,
+      0,
+      0,
+      0,
+      0,
+      -1,
+      "none",
+      false,
+      false,
+      null
+    ));
+    return renderResult.html;
+  }
+  static colorizeModelLine(model, lineNumber, tabSize = 4) {
+    const content = model.getLineContent(lineNumber);
+    model.tokenization.forceTokenization(lineNumber);
+    const tokens = model.tokenization.getLineTokens(lineNumber);
+    const inflatedTokens = tokens.inflate();
+    return this.colorizeLine(content, model.mightContainNonBasicASCII(), model.mightContainRTL(), inflatedTokens, tabSize);
+  }
+}
+function _colorize(lines, tabSize, tokenizationSupport, languageIdCodec) {
+  return new Promise((c, e) => {
+    const execute = /* @__PURE__ */ __name(() => {
+      const result = _actualColorize(lines, tabSize, tokenizationSupport, languageIdCodec);
+      if (tokenizationSupport instanceof MonarchTokenizer) {
+        const status = tokenizationSupport.getLoadStatus();
+        if (status.loaded === false) {
+          status.promise.then(execute, e);
+          return;
+        }
+      }
+      c(result);
+    }, "execute");
+    execute();
+  });
+}
+__name(_colorize, "_colorize");
+function _fakeColorize(lines, tabSize, languageIdCodec) {
+  let html = [];
+  const defaultMetadata = (FontStyle.None << MetadataConsts.FONT_STYLE_OFFSET | ColorId.DefaultForeground << MetadataConsts.FOREGROUND_OFFSET | ColorId.DefaultBackground << MetadataConsts.BACKGROUND_OFFSET) >>> 0;
+  const tokens = new Uint32Array(2);
+  tokens[0] = 0;
+  tokens[1] = defaultMetadata;
+  for (let i = 0, length = lines.length; i < length; i++) {
+    const line = lines[i];
+    tokens[0] = line.length;
+    const lineTokens = new LineTokens(tokens, line, languageIdCodec);
+    const isBasicASCII = ViewLineRenderingData.isBasicASCII(
+      line,
+      /* check for basic ASCII */
+      true
+    );
+    const containsRTL = ViewLineRenderingData.containsRTL(
+      line,
+      isBasicASCII,
+      /* check for RTL */
+      true
+    );
+    const renderResult = renderViewLine(new RenderLineInput(
+      false,
+      true,
+      line,
+      false,
+      isBasicASCII,
+      containsRTL,
+      0,
+      lineTokens,
+      [],
+      tabSize,
+      0,
+      0,
+      0,
+      0,
+      -1,
+      "none",
+      false,
+      false,
+      null
+    ));
+    html = html.concat(renderResult.html);
+    html.push("<br/>");
+  }
+  return html.join("");
+}
+__name(_fakeColorize, "_fakeColorize");
+function _actualColorize(lines, tabSize, tokenizationSupport, languageIdCodec) {
+  let html = [];
+  let state = tokenizationSupport.getInitialState();
+  for (let i = 0, length = lines.length; i < length; i++) {
+    const line = lines[i];
+    const tokenizeResult = tokenizationSupport.tokenizeEncoded(line, true, state);
+    LineTokens.convertToEndOffset(tokenizeResult.tokens, line.length);
+    const lineTokens = new LineTokens(tokenizeResult.tokens, line, languageIdCodec);
+    const isBasicASCII = ViewLineRenderingData.isBasicASCII(
+      line,
+      /* check for basic ASCII */
+      true
+    );
+    const containsRTL = ViewLineRenderingData.containsRTL(
+      line,
+      isBasicASCII,
+      /* check for RTL */
+      true
+    );
+    const renderResult = renderViewLine(new RenderLineInput(
+      false,
+      true,
+      line,
+      false,
+      isBasicASCII,
+      containsRTL,
+      0,
+      lineTokens.inflate(),
+      [],
+      tabSize,
+      0,
+      0,
+      0,
+      0,
+      -1,
+      "none",
+      false,
+      false,
+      null
+    ));
+    html = html.concat(renderResult.html);
+    html.push("<br/>");
+    state = tokenizeResult.endState;
+  }
+  return html.join("");
+}
+__name(_actualColorize, "_actualColorize");
+export {
+  Colorizer
+};
+//# sourceMappingURL=colorizer.js.map

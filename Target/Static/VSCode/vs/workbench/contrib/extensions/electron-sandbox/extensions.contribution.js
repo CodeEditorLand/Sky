@@ -1,1 +1,81 @@
-var b=Object.defineProperty,g=Object.getOwnPropertyDescriptor,f=(o,e,t,n)=>{for(var i,s=n>1?void 0:n?g(e,t):e,r=o.length-1;r>=0;r--)(i=o[r])&&(s=(n?i(e,t,s):i(s))||s);return n&&s&&b(e,t,s),s},E=(o,e)=>(t,n)=>e(t,n,o);import{Disposable as x}from"../../../../base/common/lifecycle.js";import{localize as R}from"../../../../nls.js";import{registerAction2 as o}from"../../../../platform/actions/common/actions.js";import{IExtensionRecommendationNotificationService as S}from"../../../../platform/extensionRecommendations/common/extensionRecommendations.js";import{ExtensionRecommendationNotificationServiceChannel as h}from"../../../../platform/extensionRecommendations/common/extensionRecommendationsIpc.js";import{SyncDescriptor as y}from"../../../../platform/instantiation/common/descriptors.js";import{InstantiationType as P,registerSingleton as C}from"../../../../platform/instantiation/common/extensions.js";import"../../../../platform/instantiation/common/instantiation.js";import{ISharedProcessService as k}from"../../../../platform/ipc/electron-sandbox/services.js";import{Registry as l}from"../../../../platform/registry/common/platform.js";import{EditorPaneDescriptor as v}from"../../../browser/editor.js";import{Extensions as W}from"../../../common/contributions.js";import{EditorExtensions as u}from"../../../common/editor.js";import"../../../common/editor/editorInput.js";import{LifecyclePhase as s}from"../../../services/lifecycle/common/lifecycle.js";import{RuntimeExtensionsInput as d}from"../common/runtimeExtensionsInput.js";import{DebugExtensionHostAction as z,DebugExtensionsContribution as A}from"./debugExtensionHostAction.js";import{ExtensionHostProfileService as D}from"./extensionProfileService.js";import{CleanUpExtensionsFolderAction as H,OpenExtensionsFolderAction as F}from"./extensionsActions.js";import{ExtensionsAutoProfiler as N}from"./extensionsAutoProfiler.js";import{InstallRemoteExtensionsContribution as w,RemoteExtensionsInitializerContribution as O}from"./remoteExtensionsInit.js";import{IExtensionHostProfileService as _,OpenExtensionHostProfileACtion as L,RuntimeExtensionsEditor as I,SaveExtensionHostProfileAction as T,StartExtensionHostProfileAction as U,StopExtensionHostProfileAction as j}from"./runtimeExtensionsEditor.js";C(_,D,P.Delayed),l.as(u.EditorPane).registerEditorPane(v.create(I,I.ID,R("runtimeExtension","Running Extensions")),[new y(d)]);class q{canSerialize(o){return!0}serialize(o){return""}deserialize(o){return d.instance}}l.as(u.EditorFactory).registerEditorSerializer(d.ID,q);let m=class extends x{constructor(e,t){super(),t.registerChannel("extensionRecommendationNotification",new h(e)),this._register(o(F)),this._register(o(H))}};m=f([E(0,S),E(1,k)],m);const c=l.as(W.Workbench);c.registerWorkbenchContribution(m,s.Restored),c.registerWorkbenchContribution(N,s.Eventually),c.registerWorkbenchContribution(O,s.Restored),c.registerWorkbenchContribution(w,s.Restored),c.registerWorkbenchContribution(A,s.Restored),o(z),o(U),o(j),o(T),o(L);
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { localize } from "../../../../nls.js";
+import { registerAction2 } from "../../../../platform/actions/common/actions.js";
+import { IExtensionRecommendationNotificationService } from "../../../../platform/extensionRecommendations/common/extensionRecommendations.js";
+import { ExtensionRecommendationNotificationServiceChannel } from "../../../../platform/extensionRecommendations/common/extensionRecommendationsIpc.js";
+import { SyncDescriptor } from "../../../../platform/instantiation/common/descriptors.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { ISharedProcessService } from "../../../../platform/ipc/electron-sandbox/services.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { EditorPaneDescriptor, IEditorPaneRegistry } from "../../../browser/editor.js";
+import { IWorkbenchContribution, IWorkbenchContributionsRegistry, Extensions as WorkbenchExtensions } from "../../../common/contributions.js";
+import { EditorExtensions, IEditorFactoryRegistry, IEditorSerializer } from "../../../common/editor.js";
+import { EditorInput } from "../../../common/editor/editorInput.js";
+import { LifecyclePhase } from "../../../services/lifecycle/common/lifecycle.js";
+import { RuntimeExtensionsInput } from "../common/runtimeExtensionsInput.js";
+import { DebugExtensionHostAction, DebugExtensionsContribution } from "./debugExtensionHostAction.js";
+import { ExtensionHostProfileService } from "./extensionProfileService.js";
+import { CleanUpExtensionsFolderAction, OpenExtensionsFolderAction } from "./extensionsActions.js";
+import { ExtensionsAutoProfiler } from "./extensionsAutoProfiler.js";
+import { InstallRemoteExtensionsContribution, RemoteExtensionsInitializerContribution } from "./remoteExtensionsInit.js";
+import { IExtensionHostProfileService, OpenExtensionHostProfileACtion, RuntimeExtensionsEditor, SaveExtensionHostProfileAction, StartExtensionHostProfileAction, StopExtensionHostProfileAction } from "./runtimeExtensionsEditor.js";
+registerSingleton(IExtensionHostProfileService, ExtensionHostProfileService, InstantiationType.Delayed);
+Registry.as(EditorExtensions.EditorPane).registerEditorPane(
+  EditorPaneDescriptor.create(RuntimeExtensionsEditor, RuntimeExtensionsEditor.ID, localize("runtimeExtension", "Running Extensions")),
+  [new SyncDescriptor(RuntimeExtensionsInput)]
+);
+class RuntimeExtensionsInputSerializer {
+  static {
+    __name(this, "RuntimeExtensionsInputSerializer");
+  }
+  canSerialize(editorInput) {
+    return true;
+  }
+  serialize(editorInput) {
+    return "";
+  }
+  deserialize(instantiationService) {
+    return RuntimeExtensionsInput.instance;
+  }
+}
+Registry.as(EditorExtensions.EditorFactory).registerEditorSerializer(RuntimeExtensionsInput.ID, RuntimeExtensionsInputSerializer);
+let ExtensionsContributions = class extends Disposable {
+  static {
+    __name(this, "ExtensionsContributions");
+  }
+  constructor(extensionRecommendationNotificationService, sharedProcessService) {
+    super();
+    sharedProcessService.registerChannel("extensionRecommendationNotification", new ExtensionRecommendationNotificationServiceChannel(extensionRecommendationNotificationService));
+    this._register(registerAction2(OpenExtensionsFolderAction));
+    this._register(registerAction2(CleanUpExtensionsFolderAction));
+  }
+};
+ExtensionsContributions = __decorateClass([
+  __decorateParam(0, IExtensionRecommendationNotificationService),
+  __decorateParam(1, ISharedProcessService)
+], ExtensionsContributions);
+const workbenchRegistry = Registry.as(WorkbenchExtensions.Workbench);
+workbenchRegistry.registerWorkbenchContribution(ExtensionsContributions, LifecyclePhase.Restored);
+workbenchRegistry.registerWorkbenchContribution(ExtensionsAutoProfiler, LifecyclePhase.Eventually);
+workbenchRegistry.registerWorkbenchContribution(RemoteExtensionsInitializerContribution, LifecyclePhase.Restored);
+workbenchRegistry.registerWorkbenchContribution(InstallRemoteExtensionsContribution, LifecyclePhase.Restored);
+workbenchRegistry.registerWorkbenchContribution(DebugExtensionsContribution, LifecyclePhase.Restored);
+registerAction2(DebugExtensionHostAction);
+registerAction2(StartExtensionHostProfileAction);
+registerAction2(StopExtensionHostProfileAction);
+registerAction2(SaveExtensionHostProfileAction);
+registerAction2(OpenExtensionHostProfileACtion);
+//# sourceMappingURL=extensions.contribution.js.map

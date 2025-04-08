@@ -1,1 +1,149 @@
-var C=Object.defineProperty;var E=Object.getOwnPropertyDescriptor;var g=(l,r,t,n)=>{for(var o=n>1?void 0:n?E(r,t):r,e=l.length-1,i;e>=0;e--)(i=l[e])&&(o=(n?i(r,t,o):i(o))||o);return n&&o&&C(r,t,o),o},m=(l,r)=>(t,n)=>r(t,n,l);import*as p from"../../../../base/browser/dom.js";import{status as I}from"../../../../base/browser/ui/aria/aria.js";import{KeybindingLabel as N}from"../../../../base/browser/ui/keybindingLabel/keybindingLabel.js";import{Event as x}from"../../../../base/common/event.js";import"../../../../base/common/keybindings.js";import{Disposable as L}from"../../../../base/common/lifecycle.js";import{OS as S}from"../../../../base/common/platform.js";import{ContentWidgetPositionPreference as k}from"../../../../editor/browser/editorBrowser.js";import{EditorOption as K}from"../../../../editor/common/config/editorOptions.js";import{localize as c}from"../../../../nls.js";import{IConfigurationService as D}from"../../../../platform/configuration/common/configuration.js";import{IKeybindingService as H}from"../../../../platform/keybinding/common/keybinding.js";import{AccessibilityVerbositySettingId as y}from"../../accessibility/browser/accessibilityConfiguration.js";import{AccessibilityCommandId as P}from"../../accessibility/common/accessibilityCommands.js";import{ReplEditorSettings as b}from"./interactiveCommon.js";let s=class extends L{constructor(t,n,o){super();this.editor=t;this.configurationService=n;this.keybindingService=o;this._register(this.editor.onDidChangeConfiguration(i=>{this.domNode&&i.hasChanged(K.fontInfo)&&this.editor.applyFontInfo(this.domNode)}));const e=x.debounce(this.editor.onDidFocusEditorText,()=>{},500);this._register(e(()=>{this.editor.hasTextFocus()&&this.ariaLabel&&n.getValue(y.ReplEditor)&&I(this.ariaLabel)})),this._register(n.onDidChangeConfiguration(i=>{i.affectsConfiguration(b.executeWithShiftEnter)&&this.setHint()})),this.editor.addContentWidget(this)}static ID="replInput.widget.emptyHint";domNode;ariaLabel="";getId(){return s.ID}getPosition(){return{position:{lineNumber:1,column:1},preference:[k.EXACT]}}getDomNode(){return this.domNode||(this.domNode=p.$(".empty-editor-hint"),this.domNode.style.width="max-content",this.domNode.style.paddingLeft="4px",this.setHint(),this._register(p.addDisposableListener(this.domNode,"click",()=>{this.editor.focus()})),this.editor.applyFontInfo(this.domNode)),this.domNode}setHint(){if(!this.domNode)return;for(;this.domNode.firstChild;)this.domNode.removeChild(this.domNode.firstChild);const t=p.$("div.empty-hint-text");t.style.cursor="text",t.style.whiteSpace="nowrap";const n=this.getKeybinding(),o=n?.getLabel();if(n&&o){const e=c("emptyHintText","Press {0} to execute. ",o),[i,d]=e.split(o).map(v=>{const f=p.$("span",void 0,v);return f.style.fontStyle="italic",f});t.appendChild(i);const a=new N(t,S);a.set(n),a.element.style.width="min-content",a.element.style.display="inline",t.appendChild(d),this.domNode.append(t);const h=this.keybindingService.lookupKeybinding(P.OpenAccessibilityHelp)?.getLabel(),u=h?c("ReplInputAriaLabelHelp","Use {0} for accessibility help. ",h):c("ReplInputAriaLabelHelpNoKb","Run the Open Accessibility Help command for more information. ");this.ariaLabel=e.concat(u,c("disableHint"," Toggle {0} in settings to disable this hint.",y.ReplEditor))}}getKeybinding(){const t=this.keybindingService.lookupKeybindings("interactive.execute"),n=this.configurationService.getValue(b.executeWithShiftEnter),o=(e,i="")=>{const d=e.getDispatchChords(),a=i+"Enter",h=i+"[Enter]";return d.length===1&&(d[0]===a||d[0]===h)};if(n){const e=t.find(i=>o(i,"shift+"));if(e)return e}else{let e=t.find(i=>o(i));if(e||(e=this.keybindingService.lookupKeybindings("python.execInREPLEnter").find(i=>o(i)),e))return e}return t?.[0]}dispose(){super.dispose(),this.editor.removeContentWidget(this)}};s=g([m(1,D),m(2,H)],s);export{s as ReplInputHintContentWidget};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import * as dom from "../../../../base/browser/dom.js";
+import { status } from "../../../../base/browser/ui/aria/aria.js";
+import { KeybindingLabel } from "../../../../base/browser/ui/keybindingLabel/keybindingLabel.js";
+import { Event } from "../../../../base/common/event.js";
+import { ResolvedKeybinding } from "../../../../base/common/keybindings.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { OS } from "../../../../base/common/platform.js";
+import { ContentWidgetPositionPreference, ICodeEditor, IContentWidget, IContentWidgetPosition } from "../../../../editor/browser/editorBrowser.js";
+import { ConfigurationChangedEvent, EditorOption } from "../../../../editor/common/config/editorOptions.js";
+import { localize } from "../../../../nls.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { AccessibilityVerbositySettingId } from "../../accessibility/browser/accessibilityConfiguration.js";
+import { AccessibilityCommandId } from "../../accessibility/common/accessibilityCommands.js";
+import { ReplEditorSettings } from "./interactiveCommon.js";
+let ReplInputHintContentWidget = class extends Disposable {
+  constructor(editor, configurationService, keybindingService) {
+    super();
+    this.editor = editor;
+    this.configurationService = configurationService;
+    this.keybindingService = keybindingService;
+    this._register(this.editor.onDidChangeConfiguration((e) => {
+      if (this.domNode && e.hasChanged(EditorOption.fontInfo)) {
+        this.editor.applyFontInfo(this.domNode);
+      }
+    }));
+    const onDidFocusEditorText = Event.debounce(this.editor.onDidFocusEditorText, () => void 0, 500);
+    this._register(onDidFocusEditorText(() => {
+      if (this.editor.hasTextFocus() && this.ariaLabel && configurationService.getValue(AccessibilityVerbositySettingId.ReplEditor)) {
+        status(this.ariaLabel);
+      }
+    }));
+    this._register(configurationService.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration(ReplEditorSettings.executeWithShiftEnter)) {
+        this.setHint();
+      }
+    }));
+    this.editor.addContentWidget(this);
+  }
+  static {
+    __name(this, "ReplInputHintContentWidget");
+  }
+  static ID = "replInput.widget.emptyHint";
+  domNode;
+  ariaLabel = "";
+  getId() {
+    return ReplInputHintContentWidget.ID;
+  }
+  getPosition() {
+    return {
+      position: { lineNumber: 1, column: 1 },
+      preference: [ContentWidgetPositionPreference.EXACT]
+    };
+  }
+  getDomNode() {
+    if (!this.domNode) {
+      this.domNode = dom.$(".empty-editor-hint");
+      this.domNode.style.width = "max-content";
+      this.domNode.style.paddingLeft = "4px";
+      this.setHint();
+      this._register(dom.addDisposableListener(this.domNode, "click", () => {
+        this.editor.focus();
+      }));
+      this.editor.applyFontInfo(this.domNode);
+    }
+    return this.domNode;
+  }
+  setHint() {
+    if (!this.domNode) {
+      return;
+    }
+    while (this.domNode.firstChild) {
+      this.domNode.removeChild(this.domNode.firstChild);
+    }
+    const hintElement = dom.$("div.empty-hint-text");
+    hintElement.style.cursor = "text";
+    hintElement.style.whiteSpace = "nowrap";
+    const keybinding = this.getKeybinding();
+    const keybindingHintLabel = keybinding?.getLabel();
+    if (keybinding && keybindingHintLabel) {
+      const actionPart = localize("emptyHintText", "Press {0} to execute. ", keybindingHintLabel);
+      const [before, after] = actionPart.split(keybindingHintLabel).map((fragment) => {
+        const hintPart = dom.$("span", void 0, fragment);
+        hintPart.style.fontStyle = "italic";
+        return hintPart;
+      });
+      hintElement.appendChild(before);
+      const label = new KeybindingLabel(hintElement, OS);
+      label.set(keybinding);
+      label.element.style.width = "min-content";
+      label.element.style.display = "inline";
+      hintElement.appendChild(after);
+      this.domNode.append(hintElement);
+      const helpKeybinding = this.keybindingService.lookupKeybinding(AccessibilityCommandId.OpenAccessibilityHelp)?.getLabel();
+      const helpInfo = helpKeybinding ? localize("ReplInputAriaLabelHelp", "Use {0} for accessibility help. ", helpKeybinding) : localize("ReplInputAriaLabelHelpNoKb", "Run the Open Accessibility Help command for more information. ");
+      this.ariaLabel = actionPart.concat(helpInfo, localize("disableHint", " Toggle {0} in settings to disable this hint.", AccessibilityVerbositySettingId.ReplEditor));
+    }
+  }
+  getKeybinding() {
+    const keybindings = this.keybindingService.lookupKeybindings("interactive.execute");
+    const shiftEnterConfig = this.configurationService.getValue(ReplEditorSettings.executeWithShiftEnter);
+    const hasEnterChord = /* @__PURE__ */ __name((kb, modifier = "") => {
+      const chords = kb.getDispatchChords();
+      const chord = modifier + "Enter";
+      const chordAlt = modifier + "[Enter]";
+      return chords.length === 1 && (chords[0] === chord || chords[0] === chordAlt);
+    }, "hasEnterChord");
+    if (shiftEnterConfig) {
+      const keybinding = keybindings.find((kb) => hasEnterChord(kb, "shift+"));
+      if (keybinding) {
+        return keybinding;
+      }
+    } else {
+      let keybinding = keybindings.find((kb) => hasEnterChord(kb));
+      if (keybinding) {
+        return keybinding;
+      }
+      keybinding = this.keybindingService.lookupKeybindings("python.execInREPLEnter").find((kb) => hasEnterChord(kb));
+      if (keybinding) {
+        return keybinding;
+      }
+    }
+    return keybindings?.[0];
+  }
+  dispose() {
+    super.dispose();
+    this.editor.removeContentWidget(this);
+  }
+};
+ReplInputHintContentWidget = __decorateClass([
+  __decorateParam(1, IConfigurationService),
+  __decorateParam(2, IKeybindingService)
+], ReplInputHintContentWidget);
+export {
+  ReplInputHintContentWidget
+};
+//# sourceMappingURL=replInputHintContentWidget.js.map

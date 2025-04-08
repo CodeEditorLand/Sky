@@ -1,1 +1,58 @@
-import{BugIndicatingError as l}from"../../../base/common/errors.js";import{toDisposable as b}from"../../../base/common/lifecycle.js";const a=new Float32Array([1,0,1,1,0,1,0,0,0,1,1,0]);function f(e){if(!e)throw new Error(`Value "${e}" cannot be null`);return e}function v(e,r,s){let n=new r.ResizeObserver(c=>{const i=c.find(d=>d.target===e);if(!i)return;if(!("devicePixelContentBoxSize"in i)){n?.disconnect(),n=void 0;return}const o=i.devicePixelContentBoxSize[0].inlineSize,t=i.devicePixelContentBoxSize[0].blockSize;o>0&&t>0&&s(o,t)});try{n.observe(e,{box:["device-pixel-content-box"]})}catch{throw n.disconnect(),n=void 0,new l("Could not observe device pixel dimensions")}return b(()=>n?.disconnect())}export{f as ensureNonNullable,v as observeDevicePixelDimensions,a as quadVertices};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { BugIndicatingError } from "../../../base/common/errors.js";
+import { toDisposable } from "../../../base/common/lifecycle.js";
+const quadVertices = new Float32Array([
+  1,
+  0,
+  1,
+  1,
+  0,
+  1,
+  0,
+  0,
+  0,
+  1,
+  1,
+  0
+]);
+function ensureNonNullable(value) {
+  if (!value) {
+    throw new Error(`Value "${value}" cannot be null`);
+  }
+  return value;
+}
+__name(ensureNonNullable, "ensureNonNullable");
+function observeDevicePixelDimensions(element, parentWindow, callback) {
+  let observer = new parentWindow.ResizeObserver((entries) => {
+    const entry = entries.find((entry2) => entry2.target === element);
+    if (!entry) {
+      return;
+    }
+    if (!("devicePixelContentBoxSize" in entry)) {
+      observer?.disconnect();
+      observer = void 0;
+      return;
+    }
+    const width = entry.devicePixelContentBoxSize[0].inlineSize;
+    const height = entry.devicePixelContentBoxSize[0].blockSize;
+    if (width > 0 && height > 0) {
+      callback(width, height);
+    }
+  });
+  try {
+    observer.observe(element, { box: ["device-pixel-content-box"] });
+  } catch {
+    observer.disconnect();
+    observer = void 0;
+    throw new BugIndicatingError("Could not observe device pixel dimensions");
+  }
+  return toDisposable(() => observer?.disconnect());
+}
+__name(observeDevicePixelDimensions, "observeDevicePixelDimensions");
+export {
+  ensureNonNullable,
+  observeDevicePixelDimensions,
+  quadVertices
+};
+//# sourceMappingURL=gpuUtils.js.map

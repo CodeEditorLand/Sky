@@ -1,5 +1,134 @@
-import*as t from"../../../../nls.js";import"../../../../platform/quickinput/common/quickInput.js";const r={id:"dotnetCore",label:".NET Core",sort:"NET Core",autoDetect:!1,description:t.localize("dotnetCore","Executes .NET Core build command"),content:["{","	// See https://go.microsoft.com/fwlink/?LinkId=733558","	// for the documentation about the tasks.json format",'	"version": "2.0.0",','	"tasks": [',"		{",'			"label": "build",','			"command": "dotnet",','			"type": "shell",','			"args": [','				"build",',"				// Ask dotnet build to generate full paths for file names.",'				"/property:GenerateFullPaths=true",',"				// Do not generate summary otherwise it leads to duplicate errors in Problems panel",'				"/consoleloggerparameters:NoSummary"',"			],",'			"group": "build",','			"presentation": {','				"reveal": "silent"',"			},",'			"problemMatcher": "$msCompile"',"		}","	]","}"].join(`
-`)},a={id:"msbuild",label:"MSBuild",autoDetect:!1,description:t.localize("msbuild","Executes the build target"),content:["{","	// See https://go.microsoft.com/fwlink/?LinkId=733558","	// for the documentation about the tasks.json format",'	"version": "2.0.0",','	"tasks": [',"		{",'			"label": "build",','			"type": "shell",','			"command": "msbuild",','			"args": [',"				// Ask msbuild to generate full paths for file names.",'				"/property:GenerateFullPaths=true",','				"/t:build",',"				// Do not generate summary otherwise it leads to duplicate errors in Problems panel",'				"/consoleloggerparameters:NoSummary"',"			],",'			"group": "build",','			"presentation": {',"				// Reveal the output only if unrecognized errors occur.",'				"reveal": "silent"',"			},","			// Use the standard MS compiler pattern to detect errors, warnings and infos",'			"problemMatcher": "$msCompile"',"		}","	]","}"].join(`
-`)},s={id:"externalCommand",label:"Others",autoDetect:!1,description:t.localize("externalCommand","Example to run an arbitrary external command"),content:["{","	// See https://go.microsoft.com/fwlink/?LinkId=733558","	// for the documentation about the tasks.json format",'	"version": "2.0.0",','	"tasks": [',"		{",'			"label": "echo",','			"type": "shell",','			"command": "echo Hello"',"		}","	]","}"].join(`
-`)},l={id:"maven",label:"maven",sort:"MVN",autoDetect:!1,description:t.localize("Maven","Executes common maven commands"),content:["{","	// See https://go.microsoft.com/fwlink/?LinkId=733558","	// for the documentation about the tasks.json format",'	"version": "2.0.0",','	"tasks": [',"		{",'			"label": "verify",','			"type": "shell",','			"command": "mvn -B verify",','			"group": "build"',"		},","		{",'			"label": "test",','			"type": "shell",','			"command": "mvn -B test",','			"group": "test"',"		}","	]","}"].join(`
-`)};let e=null;function c(){return e||(e=[r,a,l].sort((o,n)=>(o.sort||o.label).localeCompare(n.sort||n.label)),e.push(s)),e}export{c as getTemplates};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as nls from "../../../../nls.js";
+import { IQuickPickItem } from "../../../../platform/quickinput/common/quickInput.js";
+const dotnetBuild = {
+  id: "dotnetCore",
+  label: ".NET Core",
+  sort: "NET Core",
+  autoDetect: false,
+  description: nls.localize("dotnetCore", "Executes .NET Core build command"),
+  content: [
+    "{",
+    "	// See https://go.microsoft.com/fwlink/?LinkId=733558",
+    "	// for the documentation about the tasks.json format",
+    '	"version": "2.0.0",',
+    '	"tasks": [',
+    "		{",
+    '			"label": "build",',
+    '			"command": "dotnet",',
+    '			"type": "shell",',
+    '			"args": [',
+    '				"build",',
+    "				// Ask dotnet build to generate full paths for file names.",
+    '				"/property:GenerateFullPaths=true",',
+    "				// Do not generate summary otherwise it leads to duplicate errors in Problems panel",
+    '				"/consoleloggerparameters:NoSummary"',
+    "			],",
+    '			"group": "build",',
+    '			"presentation": {',
+    '				"reveal": "silent"',
+    "			},",
+    '			"problemMatcher": "$msCompile"',
+    "		}",
+    "	]",
+    "}"
+  ].join("\n")
+};
+const msbuild = {
+  id: "msbuild",
+  label: "MSBuild",
+  autoDetect: false,
+  description: nls.localize("msbuild", "Executes the build target"),
+  content: [
+    "{",
+    "	// See https://go.microsoft.com/fwlink/?LinkId=733558",
+    "	// for the documentation about the tasks.json format",
+    '	"version": "2.0.0",',
+    '	"tasks": [',
+    "		{",
+    '			"label": "build",',
+    '			"type": "shell",',
+    '			"command": "msbuild",',
+    '			"args": [',
+    "				// Ask msbuild to generate full paths for file names.",
+    '				"/property:GenerateFullPaths=true",',
+    '				"/t:build",',
+    "				// Do not generate summary otherwise it leads to duplicate errors in Problems panel",
+    '				"/consoleloggerparameters:NoSummary"',
+    "			],",
+    '			"group": "build",',
+    '			"presentation": {',
+    "				// Reveal the output only if unrecognized errors occur.",
+    '				"reveal": "silent"',
+    "			},",
+    "			// Use the standard MS compiler pattern to detect errors, warnings and infos",
+    '			"problemMatcher": "$msCompile"',
+    "		}",
+    "	]",
+    "}"
+  ].join("\n")
+};
+const command = {
+  id: "externalCommand",
+  label: "Others",
+  autoDetect: false,
+  description: nls.localize("externalCommand", "Example to run an arbitrary external command"),
+  content: [
+    "{",
+    "	// See https://go.microsoft.com/fwlink/?LinkId=733558",
+    "	// for the documentation about the tasks.json format",
+    '	"version": "2.0.0",',
+    '	"tasks": [',
+    "		{",
+    '			"label": "echo",',
+    '			"type": "shell",',
+    '			"command": "echo Hello"',
+    "		}",
+    "	]",
+    "}"
+  ].join("\n")
+};
+const maven = {
+  id: "maven",
+  label: "maven",
+  sort: "MVN",
+  autoDetect: false,
+  description: nls.localize("Maven", "Executes common maven commands"),
+  content: [
+    "{",
+    "	// See https://go.microsoft.com/fwlink/?LinkId=733558",
+    "	// for the documentation about the tasks.json format",
+    '	"version": "2.0.0",',
+    '	"tasks": [',
+    "		{",
+    '			"label": "verify",',
+    '			"type": "shell",',
+    '			"command": "mvn -B verify",',
+    '			"group": "build"',
+    "		},",
+    "		{",
+    '			"label": "test",',
+    '			"type": "shell",',
+    '			"command": "mvn -B test",',
+    '			"group": "test"',
+    "		}",
+    "	]",
+    "}"
+  ].join("\n")
+};
+let _templates = null;
+function getTemplates() {
+  if (!_templates) {
+    _templates = [dotnetBuild, msbuild, maven].sort((a, b) => {
+      return (a.sort || a.label).localeCompare(b.sort || b.label);
+    });
+    _templates.push(command);
+  }
+  return _templates;
+}
+__name(getTemplates, "getTemplates");
+export {
+  getTemplates
+};
+//# sourceMappingURL=taskTemplates.js.map

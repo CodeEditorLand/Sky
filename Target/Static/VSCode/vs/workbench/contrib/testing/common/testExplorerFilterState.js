@@ -1,1 +1,158 @@
-var m=Object.defineProperty,f=Object.getOwnPropertyDescriptor,c=(e,t,s,r)=>{for(var i,o=r>1?void 0:r?f(t,s):t,l=e.length-1;l>=0;l--)(i=e[l])&&(o=(r?i(t,s,o):i(o))||o);return r&&o&&m(t,s,o),o},u=(e,t)=>(s,r)=>t(s,r,e);import{Emitter as g}from"../../../../base/common/event.js";import{splitGlobAware as T}from"../../../../base/common/glob.js";import{Disposable as h}from"../../../../base/common/lifecycle.js";import{observableValue as F}from"../../../../base/common/observable.js";import{createDecorator as v}from"../../../../platform/instantiation/common/instantiation.js";import{IStorageService as x,StorageScope as S,StorageTarget as I}from"../../../../platform/storage/common/storage.js";import{MutableObservableValue as p}from"./observableValue.js";import{StoredValue as y}from"./storedValue.js";import{namespaceTestTag as b}from"./testTypes.js";const k=v("testingFilterState"),E=/!?@([^ ,:]+)/g,O=e=>e.replace(/\s\s+/g," ").trim();let d=class extends h{focusEmitter=new g;termFilterState={};globList=[];includeTags=new Set;excludeTags=new Set;text=this._register(new p(""));fuzzy;reveal=F("TestExplorerFilterState.reveal",void 0);onDidRequestInputFocus=this.focusEmitter.event;selectTestInExplorerEmitter=this._register(new g);onDidSelectTestInExplorer=this.selectTestInExplorerEmitter.event;constructor(e){super(),this.fuzzy=this._register(p.stored(new y({key:"testHistoryFuzzy",scope:S.PROFILE,target:I.USER},e),!1))}didSelectTestInExplorer(e){this.selectTestInExplorerEmitter.fire(e)}focusInput(){this.focusEmitter.fire()}setText(e){if(e===this.text.value)return;this.termFilterState={},this.globList=[],this.includeTags.clear(),this.excludeTags.clear();let t="",s=0;for(const r of e.matchAll(E)){let i=r.index+r[0].length;const o=r[0];if(z.includes(o)&&(this.termFilterState[o]=!0),":"===e[i]){i++;let t=e[i];'"'!==t&&"'"!==t?t=" ":i++;let s="";for(;i<e.length&&e[i]!==t;)"\\"===e[i]?(s+=e[i+1],i+=2):(s+=e[i],i++);r[0].startsWith("!")?this.excludeTags.add(b(r[1],s)):this.includeTags.add(b(r[1],s)),i++}t+=e.slice(s,r.index),s=i}if(t+=e.slice(s).trim(),t.length)for(const e of T(t,",").map((e=>e.trim())).filter((e=>!!e.length)))e.startsWith("!")?this.globList.push({include:!1,text:e.slice(1).toLowerCase()}):this.globList.push({include:!0,text:e.toLowerCase()});this.text.value=e}isFilteringFor(e){return!!this.termFilterState[e]}toggleFilteringFor(e,t){const s=this.text.value.trim();!1===t||this.termFilterState[e]?!0!==t&&this.termFilterState[e]&&this.setText(O(s.replace(e,""))):this.setText(s?`${s} ${e}`:e)}};d=c([u(0,x)],d);var w=(e=>(e.Failed="@failed",e.Executed="@executed",e.CurrentDoc="@doc",e.OpenedFiles="@openedFiles",e.Hidden="@hidden",e))(w||{});const z=["@failed","@executed","@doc","@openedFiles","@hidden"];export{k as ITestExplorerFilterState,d as TestExplorerFilterState,w as TestFilterTerm};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { splitGlobAware } from "../../../../base/common/glob.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { ISettableObservable, observableValue } from "../../../../base/common/observable.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { IObservableValue, MutableObservableValue } from "./observableValue.js";
+import { StoredValue } from "./storedValue.js";
+import { namespaceTestTag } from "./testTypes.js";
+const ITestExplorerFilterState = createDecorator("testingFilterState");
+const tagRe = /!?@([^ ,:]+)/g;
+const trimExtraWhitespace = /* @__PURE__ */ __name((str) => str.replace(/\s\s+/g, " ").trim(), "trimExtraWhitespace");
+let TestExplorerFilterState = class extends Disposable {
+  static {
+    __name(this, "TestExplorerFilterState");
+  }
+  focusEmitter = new Emitter();
+  /**
+   * Mapping of terms to whether they're included in the text.
+   */
+  termFilterState = {};
+  /** @inheritdoc */
+  globList = [];
+  /** @inheritdoc */
+  includeTags = /* @__PURE__ */ new Set();
+  /** @inheritdoc */
+  excludeTags = /* @__PURE__ */ new Set();
+  /** @inheritdoc */
+  text = this._register(new MutableObservableValue(""));
+  /** @inheritdoc */
+  fuzzy;
+  reveal = observableValue("TestExplorerFilterState.reveal", void 0);
+  onDidRequestInputFocus = this.focusEmitter.event;
+  selectTestInExplorerEmitter = this._register(new Emitter());
+  onDidSelectTestInExplorer = this.selectTestInExplorerEmitter.event;
+  constructor(storageService) {
+    super();
+    this.fuzzy = this._register(MutableObservableValue.stored(new StoredValue({
+      key: "testHistoryFuzzy",
+      scope: StorageScope.PROFILE,
+      target: StorageTarget.USER
+    }, storageService), false));
+  }
+  /** @inheritdoc */
+  didSelectTestInExplorer(testId) {
+    this.selectTestInExplorerEmitter.fire(testId);
+  }
+  /** @inheritdoc */
+  focusInput() {
+    this.focusEmitter.fire();
+  }
+  /** @inheritdoc */
+  setText(text) {
+    if (text === this.text.value) {
+      return;
+    }
+    this.termFilterState = {};
+    this.globList = [];
+    this.includeTags.clear();
+    this.excludeTags.clear();
+    let globText = "";
+    let lastIndex = 0;
+    for (const match of text.matchAll(tagRe)) {
+      let nextIndex = match.index + match[0].length;
+      const tag = match[0];
+      if (allTestFilterTerms.includes(tag)) {
+        this.termFilterState[tag] = true;
+      }
+      if (text[nextIndex] === ":") {
+        nextIndex++;
+        let delimiter = text[nextIndex];
+        if (delimiter !== `"` && delimiter !== `'`) {
+          delimiter = " ";
+        } else {
+          nextIndex++;
+        }
+        let tagId = "";
+        while (nextIndex < text.length && text[nextIndex] !== delimiter) {
+          if (text[nextIndex] === "\\") {
+            tagId += text[nextIndex + 1];
+            nextIndex += 2;
+          } else {
+            tagId += text[nextIndex];
+            nextIndex++;
+          }
+        }
+        if (match[0].startsWith("!")) {
+          this.excludeTags.add(namespaceTestTag(match[1], tagId));
+        } else {
+          this.includeTags.add(namespaceTestTag(match[1], tagId));
+        }
+        nextIndex++;
+      }
+      globText += text.slice(lastIndex, match.index);
+      lastIndex = nextIndex;
+    }
+    globText += text.slice(lastIndex).trim();
+    if (globText.length) {
+      for (const filter of splitGlobAware(globText, ",").map((s) => s.trim()).filter((s) => !!s.length)) {
+        if (filter.startsWith("!")) {
+          this.globList.push({ include: false, text: filter.slice(1).toLowerCase() });
+        } else {
+          this.globList.push({ include: true, text: filter.toLowerCase() });
+        }
+      }
+    }
+    this.text.value = text;
+  }
+  /** @inheritdoc */
+  isFilteringFor(term) {
+    return !!this.termFilterState[term];
+  }
+  /** @inheritdoc */
+  toggleFilteringFor(term, shouldFilter) {
+    const text = this.text.value.trim();
+    if (shouldFilter !== false && !this.termFilterState[term]) {
+      this.setText(text ? `${text} ${term}` : term);
+    } else if (shouldFilter !== true && this.termFilterState[term]) {
+      this.setText(trimExtraWhitespace(text.replace(term, "")));
+    }
+  }
+};
+TestExplorerFilterState = __decorateClass([
+  __decorateParam(0, IStorageService)
+], TestExplorerFilterState);
+var TestFilterTerm = /* @__PURE__ */ ((TestFilterTerm2) => {
+  TestFilterTerm2["Failed"] = "@failed";
+  TestFilterTerm2["Executed"] = "@executed";
+  TestFilterTerm2["CurrentDoc"] = "@doc";
+  TestFilterTerm2["OpenedFiles"] = "@openedFiles";
+  TestFilterTerm2["Hidden"] = "@hidden";
+  return TestFilterTerm2;
+})(TestFilterTerm || {});
+const allTestFilterTerms = [
+  "@failed" /* Failed */,
+  "@executed" /* Executed */,
+  "@doc" /* CurrentDoc */,
+  "@openedFiles" /* OpenedFiles */,
+  "@hidden" /* Hidden */
+];
+export {
+  ITestExplorerFilterState,
+  TestExplorerFilterState,
+  TestFilterTerm
+};
+//# sourceMappingURL=testExplorerFilterState.js.map

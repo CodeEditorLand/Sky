@@ -1,1 +1,44 @@
-var p=Object.defineProperty,v=Object.getOwnPropertyDescriptor,m=(e,o,t,r)=>{for(var n,s=r>1?void 0:r?v(o,t):o,i=e.length-1;i>=0;i--)(n=e[i])&&(s=(r?n(o,t,s):n(s))||s);return r&&s&&p(o,t,s),s},c=(e,o)=>(t,r)=>o(t,r,e);import{extHostCustomer as E}from"../../services/extensions/common/extHostCustomers.js";import{ExtHostContext as S}from"../common/extHost.protocol.js";import{IRemoteAuthorityResolverService as h}from"../../../platform/remote/common/remoteAuthorityResolver.js";import{Disposable as y}from"../../../base/common/lifecycle.js";import{IWorkbenchEnvironmentService as f}from"../../services/environment/common/environmentService.js";let x=class extends y{constructor(e,o,t){super(),this._environmentService=o,this._proxy=e.getProxy(S.ExtHostExtensionService);const r=this._environmentService.remoteAuthority;r&&this._register(t.onDidChangeConnectionData((()=>{const e=t.getConnectionData(r);e&&this._proxy.$updateRemoteConnectionData(e)})))}_proxy};x=m([E,c(1,f),c(2,h)],x);export{x as MainThreadRemoteConnectionData};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { extHostCustomer, IExtHostContext } from "../../services/extensions/common/extHostCustomers.js";
+import { ExtHostContext, ExtHostExtensionServiceShape } from "../common/extHost.protocol.js";
+import { IRemoteAuthorityResolverService } from "../../../platform/remote/common/remoteAuthorityResolver.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { IWorkbenchEnvironmentService } from "../../services/environment/common/environmentService.js";
+let MainThreadRemoteConnectionData = class extends Disposable {
+  constructor(extHostContext, _environmentService, remoteAuthorityResolverService) {
+    super();
+    this._environmentService = _environmentService;
+    this._proxy = extHostContext.getProxy(ExtHostContext.ExtHostExtensionService);
+    const remoteAuthority = this._environmentService.remoteAuthority;
+    if (remoteAuthority) {
+      this._register(remoteAuthorityResolverService.onDidChangeConnectionData(() => {
+        const connectionData = remoteAuthorityResolverService.getConnectionData(remoteAuthority);
+        if (connectionData) {
+          this._proxy.$updateRemoteConnectionData(connectionData);
+        }
+      }));
+    }
+  }
+  _proxy;
+};
+__name(MainThreadRemoteConnectionData, "MainThreadRemoteConnectionData");
+MainThreadRemoteConnectionData = __decorateClass([
+  extHostCustomer,
+  __decorateParam(1, IWorkbenchEnvironmentService),
+  __decorateParam(2, IRemoteAuthorityResolverService)
+], MainThreadRemoteConnectionData);
+export {
+  MainThreadRemoteConnectionData
+};
+//# sourceMappingURL=mainThreadRemoteConnectionData.js.map

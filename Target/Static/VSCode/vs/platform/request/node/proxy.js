@@ -1,1 +1,42 @@
-import{parse as i}from"url";import{isBoolean as c}from"../../../base/common/types.js";function u(t,o){return"http:"===t.protocol?o.HTTP_PROXY||o.http_proxy||null:"https:"===t.protocol&&(o.HTTPS_PROXY||o.https_proxy||o.HTTP_PROXY||o.http_proxy)||null}async function x(t,o,r={}){const p=i(t),n=r.proxyUrl||u(p,o);if(!n)return null;const e=i(n);if(!/^https?:$/.test(e.protocol||""))return null;const s={host:e.hostname||"",port:(e.port?+e.port:0)||("https"===e.protocol?443:80),auth:e.auth,rejectUnauthorized:!c(r.strictSSL)||r.strictSSL};if("http:"===p.protocol){const{default:t}=await import("http-proxy-agent");return new t.HttpProxyAgent(n,s)}{const{default:t}=await import("https-proxy-agent");return new t.HttpsProxyAgent(n,s)}}export{x as getProxyAgent};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { parse as parseUrl, Url } from "url";
+import { isBoolean } from "../../../base/common/types.js";
+function getSystemProxyURI(requestURL, env) {
+  if (requestURL.protocol === "http:") {
+    return env.HTTP_PROXY || env.http_proxy || null;
+  } else if (requestURL.protocol === "https:") {
+    return env.HTTPS_PROXY || env.https_proxy || env.HTTP_PROXY || env.http_proxy || null;
+  }
+  return null;
+}
+__name(getSystemProxyURI, "getSystemProxyURI");
+async function getProxyAgent(rawRequestURL, env, options = {}) {
+  const requestURL = parseUrl(rawRequestURL);
+  const proxyURL = options.proxyUrl || getSystemProxyURI(requestURL, env);
+  if (!proxyURL) {
+    return null;
+  }
+  const proxyEndpoint = parseUrl(proxyURL);
+  if (!/^https?:$/.test(proxyEndpoint.protocol || "")) {
+    return null;
+  }
+  const opts = {
+    host: proxyEndpoint.hostname || "",
+    port: (proxyEndpoint.port ? +proxyEndpoint.port : 0) || (proxyEndpoint.protocol === "https" ? 443 : 80),
+    auth: proxyEndpoint.auth,
+    rejectUnauthorized: isBoolean(options.strictSSL) ? options.strictSSL : true
+  };
+  if (requestURL.protocol === "http:") {
+    const { default: mod } = await import("http-proxy-agent");
+    return new mod.HttpProxyAgent(proxyURL, opts);
+  } else {
+    const { default: mod } = await import("https-proxy-agent");
+    return new mod.HttpsProxyAgent(proxyURL, opts);
+  }
+}
+__name(getProxyAgent, "getProxyAgent");
+export {
+  getProxyAgent
+};
+//# sourceMappingURL=proxy.js.map

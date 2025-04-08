@@ -1,1 +1,92 @@
-var p=Object.defineProperty,v=Object.getOwnPropertyDescriptor,a=(e,r,s,o)=>{for(var i,t=o>1?void 0:o?v(r,s):r,n=e.length-1;n>=0;n--)(i=e[n])&&(t=(o?i(r,s,t):i(t))||t);return o&&t&&p(r,s,t),t},m=(e,r)=>(s,o)=>r(s,o,e);import"../../../base/common/cancellation.js";import{Emitter as l}from"../../../base/common/event.js";import{DisposableMap as b,DisposableStore as c}from"../../../base/common/lifecycle.js";import{InstantiationType as E,registerSingleton as u}from"../../../platform/instantiation/common/extensions.js";import{createDecorator as h}from"../../../platform/instantiation/common/instantiation.js";import{ExtHostContext as P,MainContext as C}from"../common/extHost.protocol.js";import{extHostNamedCustomer as I}from"../../services/extensions/common/extHostCustomers.js";const g=h("embeddingsService");class x{_serviceBrand;providers;_onDidChange=new l;onDidChange=this._onDidChange.event;constructor(){this.providers=new Map}get allProviders(){return this.providers.keys()}registerProvider(e,r){return this.providers.set(e,r),this._onDidChange.fire(),{dispose:()=>{this.providers.delete(e),this._onDidChange.fire()}}}computeEmbeddings(e,r,s){const o=this.providers.get(e);return o?o.provideEmbeddings(r,s):Promise.reject(new Error(`No embeddings provider registered with id: ${e}`))}}u(g,x,E.Delayed);let o=class{constructor(e,r){this.embeddingsService=r,this._proxy=e.getProxy(P.ExtHostEmbeddings),this._store.add(r.onDidChange((()=>{this._proxy.$acceptEmbeddingModels(Array.from(r.allProviders))})))}_store=new c;_providers=this._store.add(new b);_proxy;dispose(){this._store.dispose()}$registerEmbeddingProvider(e,r){const s=this.embeddingsService.registerProvider(r,{provideEmbeddings:(r,s)=>this._proxy.$provideEmbeddings(e,r,s)});this._providers.set(e,s)}$unregisterEmbeddingProvider(e){this._providers.deleteAndDispose(e)}$computeEmbeddings(e,r,s){return this.embeddingsService.computeEmbeddings(e,r,s)}};o=a([I(C.MainThreadEmbeddings),m(1,g)],o);export{o as MainThreadEmbeddings};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { CancellationToken } from "../../../base/common/cancellation.js";
+import { Emitter, Event } from "../../../base/common/event.js";
+import { DisposableMap, DisposableStore, IDisposable } from "../../../base/common/lifecycle.js";
+import { InstantiationType, registerSingleton } from "../../../platform/instantiation/common/extensions.js";
+import { createDecorator } from "../../../platform/instantiation/common/instantiation.js";
+import { ExtHostContext, ExtHostEmbeddingsShape, MainContext, MainThreadEmbeddingsShape } from "../common/extHost.protocol.js";
+import { extHostNamedCustomer, IExtHostContext } from "../../services/extensions/common/extHostCustomers.js";
+const IEmbeddingsService = createDecorator("embeddingsService");
+class EmbeddingsService {
+  static {
+    __name(this, "EmbeddingsService");
+  }
+  _serviceBrand;
+  providers;
+  _onDidChange = new Emitter();
+  onDidChange = this._onDidChange.event;
+  constructor() {
+    this.providers = /* @__PURE__ */ new Map();
+  }
+  get allProviders() {
+    return this.providers.keys();
+  }
+  registerProvider(id, provider) {
+    this.providers.set(id, provider);
+    this._onDidChange.fire();
+    return {
+      dispose: /* @__PURE__ */ __name(() => {
+        this.providers.delete(id);
+        this._onDidChange.fire();
+      }, "dispose")
+    };
+  }
+  computeEmbeddings(id, input, token) {
+    const provider = this.providers.get(id);
+    if (provider) {
+      return provider.provideEmbeddings(input, token);
+    } else {
+      return Promise.reject(new Error(`No embeddings provider registered with id: ${id}`));
+    }
+  }
+}
+registerSingleton(IEmbeddingsService, EmbeddingsService, InstantiationType.Delayed);
+let MainThreadEmbeddings = class {
+  constructor(context, embeddingsService) {
+    this.embeddingsService = embeddingsService;
+    this._proxy = context.getProxy(ExtHostContext.ExtHostEmbeddings);
+    this._store.add(embeddingsService.onDidChange(() => {
+      this._proxy.$acceptEmbeddingModels(Array.from(embeddingsService.allProviders));
+    }));
+  }
+  _store = new DisposableStore();
+  _providers = this._store.add(new DisposableMap());
+  _proxy;
+  dispose() {
+    this._store.dispose();
+  }
+  $registerEmbeddingProvider(handle, identifier) {
+    const registration = this.embeddingsService.registerProvider(identifier, {
+      provideEmbeddings: /* @__PURE__ */ __name((input, token) => {
+        return this._proxy.$provideEmbeddings(handle, input, token);
+      }, "provideEmbeddings")
+    });
+    this._providers.set(handle, registration);
+  }
+  $unregisterEmbeddingProvider(handle) {
+    this._providers.deleteAndDispose(handle);
+  }
+  $computeEmbeddings(embeddingsModel, input, token) {
+    return this.embeddingsService.computeEmbeddings(embeddingsModel, input, token);
+  }
+};
+__name(MainThreadEmbeddings, "MainThreadEmbeddings");
+MainThreadEmbeddings = __decorateClass([
+  extHostNamedCustomer(MainContext.MainThreadEmbeddings),
+  __decorateParam(1, IEmbeddingsService)
+], MainThreadEmbeddings);
+export {
+  MainThreadEmbeddings
+};
+//# sourceMappingURL=mainThreadEmbeddings.js.map

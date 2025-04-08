@@ -1,1 +1,173 @@
-var I=Object.defineProperty;var y=Object.getOwnPropertyDescriptor;var m=(c,n,e,r)=>{for(var t=r>1?void 0:r?y(n,e):n,i=c.length-1,s;i>=0;i--)(s=c[i])&&(t=(r?s(n,e,t):s(t))||t);return r&&t&&I(n,e,t),t},a=(c,n)=>(e,r)=>n(e,r,c);import{InstantiationType as g,registerSingleton as S}from"../../../../platform/instantiation/common/extensions.js";import{IWorkspacesService as k,restoreRecentlyOpened as R,isRecentFile as O,isRecentFolder as p,toStoreData as u,getStoredWorkspaceFolder as W,isRecentWorkspace as E}from"../../../../platform/workspaces/common/workspaces.js";import"../../../../base/common/uri.js";import{Emitter as P}from"../../../../base/common/event.js";import{IStorageService as C,StorageScope as d,StorageTarget as F}from"../../../../platform/storage/common/storage.js";import{isTemporaryWorkspace as l,IWorkspaceContextService as N,WorkbenchState as v,WORKSPACE_EXTENSION as U}from"../../../../platform/workspace/common/workspace.js";import{ILogService as D}from"../../../../platform/log/common/log.js";import{Disposable as _}from"../../../../base/common/lifecycle.js";import{getWorkspaceIdentifier as w}from"./workspaces.js";import{IFileService as T,FileOperationResult as L}from"../../../../platform/files/common/files.js";import{IWorkbenchEnvironmentService as A}from"../../environment/common/environmentService.js";import{joinPath as x}from"../../../../base/common/resources.js";import{VSBuffer as Y}from"../../../../base/common/buffer.js";import{IUriIdentityService as b}from"../../../../platform/uriIdentity/common/uriIdentity.js";import"../../../../platform/backup/common/backup.js";import{Schemas as K}from"../../../../base/common/network.js";let o=class extends _{constructor(e,r,t,i,s,f){super();this.storageService=e;this.contextService=r;this.logService=t;this.fileService=i;this.environmentService=s;this.uriIdentityService=f;this.addWorkspaceToRecentlyOpened(),this.registerListeners()}static RECENTLY_OPENED_KEY="recently.opened";_onRecentlyOpenedChange=this._register(new P);onDidChangeRecentlyOpened=this._onRecentlyOpenedChange.event;registerListeners(){this._register(this.storageService.onDidChangeValue(d.APPLICATION,o.RECENTLY_OPENED_KEY,this._store)(()=>this._onRecentlyOpenedChange.fire())),this._register(this.contextService.onDidChangeWorkspaceFolders(e=>this.onDidChangeWorkspaceFolders(e)))}onDidChangeWorkspaceFolders(e){if(l(this.contextService.getWorkspace()))for(const r of e.added)this.addRecentlyOpened([{folderUri:r.uri}])}addWorkspaceToRecentlyOpened(){const e=this.contextService.getWorkspace(),r=this.environmentService.remoteAuthority;switch(this.contextService.getWorkbenchState()){case v.FOLDER:this.addRecentlyOpened([{folderUri:e.folders[0].uri,remoteAuthority:r}]);break;case v.WORKSPACE:this.addRecentlyOpened([{workspace:{id:e.id,configPath:e.configuration},remoteAuthority:r}]);break}}async getRecentlyOpened(){const e=this.storageService.get(o.RECENTLY_OPENED_KEY,d.APPLICATION);if(e){const r=R(JSON.parse(e),this.logService);return r.workspaces=r.workspaces.filter(t=>!(p(t)&&t.folderUri.scheme===K.file&&!l(this.contextService.getWorkspace())||E(t)&&l(t.workspace.configPath))),r}return{workspaces:[],files:[]}}async addRecentlyOpened(e){const r=await this.getRecentlyOpened();for(const t of e)O(t)?(this.doRemoveRecentlyOpened(r,[t.fileUri]),r.files.unshift(t)):p(t)?(this.doRemoveRecentlyOpened(r,[t.folderUri]),r.workspaces.unshift(t)):(this.doRemoveRecentlyOpened(r,[t.workspace.configPath]),r.workspaces.unshift(t));return this.saveRecentlyOpened(r)}async removeRecentlyOpened(e){const r=await this.getRecentlyOpened();return this.doRemoveRecentlyOpened(r,e),this.saveRecentlyOpened(r)}doRemoveRecentlyOpened(e,r){e.files=e.files.filter(t=>!r.some(i=>i.toString()===t.fileUri.toString())),e.workspaces=e.workspaces.filter(t=>!r.some(i=>i.toString()===(p(t)?t.folderUri.toString():t.workspace.configPath.toString())))}async saveRecentlyOpened(e){return this.storageService.store(o.RECENTLY_OPENED_KEY,JSON.stringify(u(e)),d.APPLICATION,F.USER)}async clearRecentlyOpened(){this.storageService.remove(o.RECENTLY_OPENED_KEY,d.APPLICATION)}async enterWorkspace(e){return{workspace:await this.getWorkspaceIdentifier(e)}}async createUntitledWorkspace(e,r){const t=(Date.now()+Math.round(Math.random()*1e3)).toString(),i=x(this.environmentService.untitledWorkspacesHome,`Untitled-${t}.${U}`),s=[];if(e)for(const h of e)s.push(W(h.uri,!0,h.name,this.environmentService.untitledWorkspacesHome,this.uriIdentityService.extUri));const f={folders:s,remoteAuthority:r};return await this.fileService.writeFile(i,Y.fromString(JSON.stringify(f,null,"	"))),this.getWorkspaceIdentifier(i)}async deleteUntitledWorkspace(e){try{await this.fileService.del(e.configPath)}catch(r){if(r.fileOperationResult!==L.FILE_NOT_FOUND)throw r}}async getWorkspaceIdentifier(e){return w(e)}async getDirtyWorkspaces(){return[]}};o=m([a(0,C),a(1,N),a(2,D),a(3,T),a(4,A),a(5,b)],o),S(k,o,g.Delayed);export{o as BrowserWorkspacesService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { IWorkspacesService, IWorkspaceFolderCreationData, IEnterWorkspaceResult, IRecentlyOpened, restoreRecentlyOpened, IRecent, isRecentFile, isRecentFolder, toStoreData, IStoredWorkspaceFolder, getStoredWorkspaceFolder, IStoredWorkspace, isRecentWorkspace } from "../../../../platform/workspaces/common/workspaces.js";
+import { URI } from "../../../../base/common/uri.js";
+import { Emitter } from "../../../../base/common/event.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { isTemporaryWorkspace, IWorkspaceContextService, IWorkspaceFoldersChangeEvent, IWorkspaceIdentifier, WorkbenchState, WORKSPACE_EXTENSION } from "../../../../platform/workspace/common/workspace.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { getWorkspaceIdentifier } from "./workspaces.js";
+import { IFileService, FileOperationError, FileOperationResult } from "../../../../platform/files/common/files.js";
+import { IWorkbenchEnvironmentService } from "../../environment/common/environmentService.js";
+import { joinPath } from "../../../../base/common/resources.js";
+import { VSBuffer } from "../../../../base/common/buffer.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+import { IWorkspaceBackupInfo, IFolderBackupInfo } from "../../../../platform/backup/common/backup.js";
+import { Schemas } from "../../../../base/common/network.js";
+let BrowserWorkspacesService = class extends Disposable {
+  constructor(storageService, contextService, logService, fileService, environmentService, uriIdentityService) {
+    super();
+    this.storageService = storageService;
+    this.contextService = contextService;
+    this.logService = logService;
+    this.fileService = fileService;
+    this.environmentService = environmentService;
+    this.uriIdentityService = uriIdentityService;
+    this.addWorkspaceToRecentlyOpened();
+    this.registerListeners();
+  }
+  static {
+    __name(this, "BrowserWorkspacesService");
+  }
+  static RECENTLY_OPENED_KEY = "recently.opened";
+  _onRecentlyOpenedChange = this._register(new Emitter());
+  onDidChangeRecentlyOpened = this._onRecentlyOpenedChange.event;
+  registerListeners() {
+    this._register(this.storageService.onDidChangeValue(StorageScope.APPLICATION, BrowserWorkspacesService.RECENTLY_OPENED_KEY, this._store)(() => this._onRecentlyOpenedChange.fire()));
+    this._register(this.contextService.onDidChangeWorkspaceFolders((e) => this.onDidChangeWorkspaceFolders(e)));
+  }
+  onDidChangeWorkspaceFolders(e) {
+    if (!isTemporaryWorkspace(this.contextService.getWorkspace())) {
+      return;
+    }
+    for (const folder of e.added) {
+      this.addRecentlyOpened([{ folderUri: folder.uri }]);
+    }
+  }
+  addWorkspaceToRecentlyOpened() {
+    const workspace = this.contextService.getWorkspace();
+    const remoteAuthority = this.environmentService.remoteAuthority;
+    switch (this.contextService.getWorkbenchState()) {
+      case WorkbenchState.FOLDER:
+        this.addRecentlyOpened([{ folderUri: workspace.folders[0].uri, remoteAuthority }]);
+        break;
+      case WorkbenchState.WORKSPACE:
+        this.addRecentlyOpened([{ workspace: { id: workspace.id, configPath: workspace.configuration }, remoteAuthority }]);
+        break;
+    }
+  }
+  //#region Workspaces History
+  async getRecentlyOpened() {
+    const recentlyOpenedRaw = this.storageService.get(BrowserWorkspacesService.RECENTLY_OPENED_KEY, StorageScope.APPLICATION);
+    if (recentlyOpenedRaw) {
+      const recentlyOpened = restoreRecentlyOpened(JSON.parse(recentlyOpenedRaw), this.logService);
+      recentlyOpened.workspaces = recentlyOpened.workspaces.filter((recent) => {
+        if (isRecentFolder(recent) && recent.folderUri.scheme === Schemas.file && !isTemporaryWorkspace(this.contextService.getWorkspace())) {
+          return false;
+        }
+        if (isRecentWorkspace(recent) && isTemporaryWorkspace(recent.workspace.configPath)) {
+          return false;
+        }
+        return true;
+      });
+      return recentlyOpened;
+    }
+    return { workspaces: [], files: [] };
+  }
+  async addRecentlyOpened(recents) {
+    const recentlyOpened = await this.getRecentlyOpened();
+    for (const recent of recents) {
+      if (isRecentFile(recent)) {
+        this.doRemoveRecentlyOpened(recentlyOpened, [recent.fileUri]);
+        recentlyOpened.files.unshift(recent);
+      } else if (isRecentFolder(recent)) {
+        this.doRemoveRecentlyOpened(recentlyOpened, [recent.folderUri]);
+        recentlyOpened.workspaces.unshift(recent);
+      } else {
+        this.doRemoveRecentlyOpened(recentlyOpened, [recent.workspace.configPath]);
+        recentlyOpened.workspaces.unshift(recent);
+      }
+    }
+    return this.saveRecentlyOpened(recentlyOpened);
+  }
+  async removeRecentlyOpened(paths) {
+    const recentlyOpened = await this.getRecentlyOpened();
+    this.doRemoveRecentlyOpened(recentlyOpened, paths);
+    return this.saveRecentlyOpened(recentlyOpened);
+  }
+  doRemoveRecentlyOpened(recentlyOpened, paths) {
+    recentlyOpened.files = recentlyOpened.files.filter((file) => {
+      return !paths.some((path) => path.toString() === file.fileUri.toString());
+    });
+    recentlyOpened.workspaces = recentlyOpened.workspaces.filter((workspace) => {
+      return !paths.some((path) => path.toString() === (isRecentFolder(workspace) ? workspace.folderUri.toString() : workspace.workspace.configPath.toString()));
+    });
+  }
+  async saveRecentlyOpened(data) {
+    return this.storageService.store(BrowserWorkspacesService.RECENTLY_OPENED_KEY, JSON.stringify(toStoreData(data)), StorageScope.APPLICATION, StorageTarget.USER);
+  }
+  async clearRecentlyOpened() {
+    this.storageService.remove(BrowserWorkspacesService.RECENTLY_OPENED_KEY, StorageScope.APPLICATION);
+  }
+  //#endregion
+  //#region Workspace Management
+  async enterWorkspace(workspaceUri) {
+    return { workspace: await this.getWorkspaceIdentifier(workspaceUri) };
+  }
+  async createUntitledWorkspace(folders, remoteAuthority) {
+    const randomId = (Date.now() + Math.round(Math.random() * 1e3)).toString();
+    const newUntitledWorkspacePath = joinPath(this.environmentService.untitledWorkspacesHome, `Untitled-${randomId}.${WORKSPACE_EXTENSION}`);
+    const storedWorkspaceFolder = [];
+    if (folders) {
+      for (const folder of folders) {
+        storedWorkspaceFolder.push(getStoredWorkspaceFolder(folder.uri, true, folder.name, this.environmentService.untitledWorkspacesHome, this.uriIdentityService.extUri));
+      }
+    }
+    const storedWorkspace = { folders: storedWorkspaceFolder, remoteAuthority };
+    await this.fileService.writeFile(newUntitledWorkspacePath, VSBuffer.fromString(JSON.stringify(storedWorkspace, null, "	")));
+    return this.getWorkspaceIdentifier(newUntitledWorkspacePath);
+  }
+  async deleteUntitledWorkspace(workspace) {
+    try {
+      await this.fileService.del(workspace.configPath);
+    } catch (error) {
+      if (error.fileOperationResult !== FileOperationResult.FILE_NOT_FOUND) {
+        throw error;
+      }
+    }
+  }
+  async getWorkspaceIdentifier(workspaceUri) {
+    return getWorkspaceIdentifier(workspaceUri);
+  }
+  //#endregion
+  //#region Dirty Workspaces
+  async getDirtyWorkspaces() {
+    return [];
+  }
+  //#endregion
+};
+BrowserWorkspacesService = __decorateClass([
+  __decorateParam(0, IStorageService),
+  __decorateParam(1, IWorkspaceContextService),
+  __decorateParam(2, ILogService),
+  __decorateParam(3, IFileService),
+  __decorateParam(4, IWorkbenchEnvironmentService),
+  __decorateParam(5, IUriIdentityService)
+], BrowserWorkspacesService);
+registerSingleton(IWorkspacesService, BrowserWorkspacesService, InstantiationType.Delayed);
+export {
+  BrowserWorkspacesService
+};
+//# sourceMappingURL=workspacesService.js.map

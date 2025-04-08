@@ -1,1 +1,4 @@
-import"./collections.js";import"./platform.js";import"./policy.js";
+import { IStringDictionary } from "./collections.js";
+import { PlatformName } from "./platform.js";
+import { IPolicy } from "./policy.js";
+//# sourceMappingURL=product.js.map

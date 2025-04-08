@@ -1,1 +1,9 @@
-import{Extensions as n}from"../../../../platform/configuration/common/configurationRegistry.js";import{Registry as e}from"../../../../platform/registry/common/platform.js";import{registerWorkbenchContribution2 as o,WorkbenchPhase as r}from"../../../common/contributions.js";import{DropOrPasteIntoCommands as i}from"./commands.js";import{DropOrPasteSchemaContribution as t,editorConfiguration as a}from"./configurationSchema.js";o(i.ID,i,r.Eventually),o(t.ID,t,r.Eventually),e.as(n.Configuration).registerConfiguration(a);
+import { Extensions, IConfigurationRegistry } from "../../../../platform/configuration/common/configurationRegistry.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { registerWorkbenchContribution2, WorkbenchPhase } from "../../../common/contributions.js";
+import { DropOrPasteIntoCommands } from "./commands.js";
+import { DropOrPasteSchemaContribution, editorConfiguration } from "./configurationSchema.js";
+registerWorkbenchContribution2(DropOrPasteIntoCommands.ID, DropOrPasteIntoCommands, WorkbenchPhase.Eventually);
+registerWorkbenchContribution2(DropOrPasteSchemaContribution.ID, DropOrPasteSchemaContribution, WorkbenchPhase.Eventually);
+Registry.as(Extensions.Configuration).registerConfiguration(editorConfiguration);
+//# sourceMappingURL=dropOrPasteInto.contribution.js.map

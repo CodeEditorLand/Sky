@@ -1,1 +1,117 @@
-var w=Object.defineProperty,x=Object.getOwnPropertyDescriptor,f=(e,r,o,t)=>{for(var n,i=t>1?void 0:t?x(r,o):r,s=e.length-1;s>=0;s--)(n=e[s])&&(i=(t?n(r,o,i):n(i))||i);return t&&i&&w(r,o,i),i},i=(e,r)=>(o,t)=>r(o,t,e);import*as v from"../../../../nls.js";import{ITunnelService as E,TunnelProtocol as g,TunnelPrivacyId as I}from"../../../../platform/tunnel/common/tunnel.js";import{Disposable as O}from"../../../../base/common/lifecycle.js";import"../../../common/contributions.js";import{IBrowserWorkbenchEnvironmentService as R}from"../../../services/environment/browser/environmentService.js";import{IOpenerService as k}from"../../../../platform/opener/common/opener.js";import{URI as A}from"../../../../base/common/uri.js";import{IRemoteExplorerService as S}from"../../../services/remote/common/remoteExplorerService.js";import{ILogService as W}from"../../../../platform/log/common/log.js";import{IContextKeyService as U}from"../../../../platform/contextkey/common/contextkey.js";import{forwardedPortsFeaturesEnabled as C}from"../../../services/remote/common/tunnelModel.js";let u=class extends O{constructor(e,r,o,t,n,i){super(),this.openerService=o;const s=r.options?.tunnelProvider?.tunnelFactory;if(s){i.createKey(C.key,!0);let o=r.options?.tunnelProvider?.features?.privacyOptions??[];r.options?.tunnelProvider?.features?.public&&0===o.length&&(o=[{id:"private",label:v.localize("tunnelPrivacy.private","Private"),themeIcon:"lock"},{id:"public",label:v.localize("tunnelPrivacy.public","Public"),themeIcon:"eye"}]),this._register(e.setTunnelProvider({forwardPort:async(e,r)=>{let o,t;try{o=s(e,r)}catch{n.trace("tunnelFactory: tunnel provider error")}if(!o)return;try{t=await o}catch(e){return n.trace("tunnelFactory: tunnel provider promise error"),e instanceof Error?e.message:void 0}const i=t.localAddress.startsWith("http")?t.localAddress:`http://${t.localAddress}`;return{tunnelRemotePort:t.remoteAddress.port,tunnelRemoteHost:t.remoteAddress.host,localAddress:await this.resolveExternalUri(i),privacy:t.privacy??(t.public?I.Public:I.Private),protocol:t.protocol??g.Http,dispose:async()=>{await t.dispose()}}}}));const c=r.options?.tunnelProvider?.features?{features:{elevation:!!r.options?.tunnelProvider?.features?.elevation,public:!!r.options?.tunnelProvider?.features?.public,privacyOptions:o,protocol:void 0===r.options?.tunnelProvider?.features?.protocol||!!r.options?.tunnelProvider?.features?.protocol}}:void 0;t.setTunnelInformation(c)}}static ID="workbench.contrib.tunnelFactory";async resolveExternalUri(e){try{return(await this.openerService.resolveExternalUri(A.parse(e))).resolved.toString()}catch{return e}}};u=f([i(0,E),i(1,R),i(2,k),i(3,S),i(4,W),i(5,U)],u);export{u as TunnelFactoryContribution};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import * as nls from "../../../../nls.js";
+import { ITunnelService, TunnelOptions, RemoteTunnel, TunnelCreationOptions, ITunnel, TunnelProtocol, TunnelPrivacyId } from "../../../../platform/tunnel/common/tunnel.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { IWorkbenchContribution } from "../../../common/contributions.js";
+import { IBrowserWorkbenchEnvironmentService } from "../../../services/environment/browser/environmentService.js";
+import { IOpenerService } from "../../../../platform/opener/common/opener.js";
+import { URI } from "../../../../base/common/uri.js";
+import { IRemoteExplorerService } from "../../../services/remote/common/remoteExplorerService.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { forwardedPortsFeaturesEnabled } from "../../../services/remote/common/tunnelModel.js";
+let TunnelFactoryContribution = class extends Disposable {
+  constructor(tunnelService, environmentService, openerService, remoteExplorerService, logService, contextKeyService) {
+    super();
+    this.openerService = openerService;
+    const tunnelFactory = environmentService.options?.tunnelProvider?.tunnelFactory;
+    if (tunnelFactory) {
+      contextKeyService.createKey(forwardedPortsFeaturesEnabled.key, true);
+      let privacyOptions = environmentService.options?.tunnelProvider?.features?.privacyOptions ?? [];
+      if (environmentService.options?.tunnelProvider?.features?.public && privacyOptions.length === 0) {
+        privacyOptions = [
+          {
+            id: "private",
+            label: nls.localize("tunnelPrivacy.private", "Private"),
+            themeIcon: "lock"
+          },
+          {
+            id: "public",
+            label: nls.localize("tunnelPrivacy.public", "Public"),
+            themeIcon: "eye"
+          }
+        ];
+      }
+      this._register(tunnelService.setTunnelProvider({
+        forwardPort: /* @__PURE__ */ __name(async (tunnelOptions, tunnelCreationOptions) => {
+          let tunnelPromise;
+          try {
+            tunnelPromise = tunnelFactory(tunnelOptions, tunnelCreationOptions);
+          } catch (e) {
+            logService.trace("tunnelFactory: tunnel provider error");
+          }
+          if (!tunnelPromise) {
+            return void 0;
+          }
+          let tunnel;
+          try {
+            tunnel = await tunnelPromise;
+          } catch (e) {
+            logService.trace("tunnelFactory: tunnel provider promise error");
+            if (e instanceof Error) {
+              return e.message;
+            }
+            return void 0;
+          }
+          const localAddress = tunnel.localAddress.startsWith("http") ? tunnel.localAddress : `http://${tunnel.localAddress}`;
+          const remoteTunnel = {
+            tunnelRemotePort: tunnel.remoteAddress.port,
+            tunnelRemoteHost: tunnel.remoteAddress.host,
+            // The tunnel factory may give us an inaccessible local address.
+            // To make sure this doesn't happen, resolve the uri immediately.
+            localAddress: await this.resolveExternalUri(localAddress),
+            privacy: tunnel.privacy ?? (tunnel.public ? TunnelPrivacyId.Public : TunnelPrivacyId.Private),
+            protocol: tunnel.protocol ?? TunnelProtocol.Http,
+            dispose: /* @__PURE__ */ __name(async () => {
+              await tunnel.dispose();
+            }, "dispose")
+          };
+          return remoteTunnel;
+        }, "forwardPort")
+      }));
+      const tunnelInformation = environmentService.options?.tunnelProvider?.features ? {
+        features: {
+          elevation: !!environmentService.options?.tunnelProvider?.features?.elevation,
+          public: !!environmentService.options?.tunnelProvider?.features?.public,
+          privacyOptions,
+          protocol: environmentService.options?.tunnelProvider?.features?.protocol === void 0 ? true : !!environmentService.options?.tunnelProvider?.features?.protocol
+        }
+      } : void 0;
+      remoteExplorerService.setTunnelInformation(tunnelInformation);
+    }
+  }
+  static {
+    __name(this, "TunnelFactoryContribution");
+  }
+  static ID = "workbench.contrib.tunnelFactory";
+  async resolveExternalUri(uri) {
+    try {
+      return (await this.openerService.resolveExternalUri(URI.parse(uri))).resolved.toString();
+    } catch {
+      return uri;
+    }
+  }
+};
+TunnelFactoryContribution = __decorateClass([
+  __decorateParam(0, ITunnelService),
+  __decorateParam(1, IBrowserWorkbenchEnvironmentService),
+  __decorateParam(2, IOpenerService),
+  __decorateParam(3, IRemoteExplorerService),
+  __decorateParam(4, ILogService),
+  __decorateParam(5, IContextKeyService)
+], TunnelFactoryContribution);
+export {
+  TunnelFactoryContribution
+};
+//# sourceMappingURL=tunnelFactory.js.map

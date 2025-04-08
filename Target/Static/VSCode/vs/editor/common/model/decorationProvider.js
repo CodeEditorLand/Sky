@@ -1,1 +1,4 @@
-import"../../../base/common/event.js";import"../core/range.js";import"../model.js";
+import { Event } from "../../../base/common/event.js";
+import { Range } from "../core/range.js";
+import { IModelDecoration } from "../model.js";
+//# sourceMappingURL=decorationProvider.js.map

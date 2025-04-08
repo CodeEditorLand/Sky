@@ -1,1 +1,178 @@
-var O=Object.defineProperty,w=Object.getOwnPropertyDescriptor,m=(e,t,o,r)=>{for(var i,s=r>1?void 0:r?w(t,o):t,n=e.length-1;n>=0;n--)(i=e[n])&&(s=(r?i(t,o,s):i(s))||s);return r&&s&&O(t,o,s),s},o=(e,t)=>(o,r)=>t(o,r,e);import{assertIsDefined as b}from"../../../../base/common/types.js";import"../../../../editor/browser/editorBrowser.js";import{isTextEditorViewState as G}from"../../../common/editor.js";import"../../../common/editor/editorInput.js";import{applyTextEditorOptions as N}from"../../../common/editor/editorOptions.js";import{TextResourceEditorInput as D}from"../../../common/editor/textResourceEditorInput.js";import{BaseTextEditorModel as P}from"../../../common/editor/textEditorModel.js";import{UntitledTextEditorInput as p}from"../../../services/untitled/common/untitledTextEditorInput.js";import{AbstractTextCodeEditor as F}from"./textCodeEditor.js";import{ITelemetryService as f}from"../../../../platform/telemetry/common/telemetry.js";import{IStorageService as v}from"../../../../platform/storage/common/storage.js";import{ITextResourceConfigurationService as S}from"../../../../editor/common/services/textResourceConfiguration.js";import{IInstantiationService as E}from"../../../../platform/instantiation/common/instantiation.js";import{IThemeService as C}from"../../../../platform/theme/common/themeService.js";import{ScrollType as L}from"../../../../editor/common/editorCommon.js";import{IEditorGroupsService as h}from"../../../services/editor/common/editorGroupsService.js";import"../../../../base/common/cancellation.js";import{IEditorService as T}from"../../../services/editor/common/editorService.js";import{IModelService as V}from"../../../../editor/common/services/model.js";import{ILanguageService as _}from"../../../../editor/common/languages/language.js";import{PLAINTEXT_LANGUAGE_ID as x}from"../../../../editor/common/languages/modesRegistry.js";import{EditorOption as R}from"../../../../editor/common/config/editorOptions.js";import{ModelConstants as k}from"../../../../editor/common/model.js";import"../../../../platform/editor/common/editor.js";import{IFileService as M}from"../../../../platform/files/common/files.js";let l=class extends F{constructor(e,t,o,r,i,s,n,a,m,c){super(e,t,o,r,i,s,n,m,a,c)}async setInput(e,t,o,r){await super.setInput(e,t,o,r);const i=await e.resolve();if(r.isCancellationRequested)return;if(!(i instanceof P))throw new Error("Unable to open file as text");const s=b(this.editorControl),n=i.textEditorModel;if(s.setModel(n),!G(t?.viewState)){const r=this.loadEditorViewState(e,o);r&&(t?.selection&&(r.cursorState=[]),s.restoreViewState(r))}t&&N(t,s,L.Immediate),s.updateOptions(this.getReadonlyConfiguration(i.isReadonly()))}revealLastLine(){const e=this.editorControl;if(!e)return;const t=e.getModel();if(t){const o=t.getLineCount();e.revealPosition({lineNumber:o,column:t.getLineMaxColumn(o)},L.Smooth)}}clearInput(){super.clearInput(),this.editorControl?.setModel(null)}tracksEditorViewState(e){return e instanceof p||e instanceof D}};l=m([o(2,f),o(3,E),o(4,v),o(5,S),o(6,C),o(7,h),o(8,T),o(9,M)],l);let c=class extends l{constructor(e,t,o,r,i,s,n,a,m,d,l){super(c.ID,e,t,o,r,i,s,a,n,l),this.modelService=m,this.languageService=d}static ID="workbench.editors.textResourceEditor";createEditorControl(e,t){super.createEditorControl(e,t);const o=this.editorControl;o&&this._register(o.onDidPaste((e=>this.onDidEditorPaste(e,o))))}onDidEditorPaste(e,t){if(this.input instanceof p&&this.input.hasLanguageSetExplicitly||1!==e.range.startLineNumber||1!==e.range.startColumn||t.getOption(R.readOnly))return;const o=t.getModel();if(!o||o.getLineCount()!==e.range.endLineNumber||o.getLineMaxColumn(e.range.endLineNumber)!==e.range.endColumn||o.getLanguageId()!==x)return;let r;if(e.languageId)r={id:e.languageId,source:"event"};else{const e=this.languageService.guessLanguageIdByFilepathOrFirstLine(o.uri,o.getLineContent(1).substr(0,k.FIRST_LINE_DETECTION_LENGTH_LIMIT))??void 0;e&&(r={id:e,source:"guess"})}if(r&&r.id!==x){this.input instanceof p&&"event"===r.source?this.input.setLanguageId(r.id):o.setLanguage(this.languageService.createById(r.id));const e=this.modelService.getCreationOptions(o.getLanguageId(),o.uri,o.isForSimpleWidget);o.detectIndentation(e.insertSpaces,e.tabSize)}}};c=m([o(1,f),o(2,E),o(3,v),o(4,S),o(5,C),o(6,T),o(7,h),o(8,V),o(9,_),o(10,M)],c);export{l as AbstractTextResourceEditor,c as TextResourceEditor};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { assertIsDefined } from "../../../../base/common/types.js";
+import { ICodeEditor, IPasteEvent } from "../../../../editor/browser/editorBrowser.js";
+import { IEditorOpenContext, isTextEditorViewState } from "../../../common/editor.js";
+import { EditorInput } from "../../../common/editor/editorInput.js";
+import { applyTextEditorOptions } from "../../../common/editor/editorOptions.js";
+import { AbstractTextResourceEditorInput, TextResourceEditorInput } from "../../../common/editor/textResourceEditorInput.js";
+import { BaseTextEditorModel } from "../../../common/editor/textEditorModel.js";
+import { UntitledTextEditorInput } from "../../../services/untitled/common/untitledTextEditorInput.js";
+import { AbstractTextCodeEditor } from "./textCodeEditor.js";
+import { ITelemetryService } from "../../../../platform/telemetry/common/telemetry.js";
+import { IStorageService } from "../../../../platform/storage/common/storage.js";
+import { ITextResourceConfigurationService } from "../../../../editor/common/services/textResourceConfiguration.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IThemeService } from "../../../../platform/theme/common/themeService.js";
+import { ScrollType, ICodeEditorViewState } from "../../../../editor/common/editorCommon.js";
+import { IEditorGroup, IEditorGroupsService } from "../../../services/editor/common/editorGroupsService.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { IModelService } from "../../../../editor/common/services/model.js";
+import { ILanguageService } from "../../../../editor/common/languages/language.js";
+import { PLAINTEXT_LANGUAGE_ID } from "../../../../editor/common/languages/modesRegistry.js";
+import { EditorOption, IEditorOptions as ICodeEditorOptions } from "../../../../editor/common/config/editorOptions.js";
+import { ModelConstants } from "../../../../editor/common/model.js";
+import { ITextEditorOptions } from "../../../../platform/editor/common/editor.js";
+import { IFileService } from "../../../../platform/files/common/files.js";
+let AbstractTextResourceEditor = class extends AbstractTextCodeEditor {
+  static {
+    __name(this, "AbstractTextResourceEditor");
+  }
+  constructor(id, group, telemetryService, instantiationService, storageService, textResourceConfigurationService, themeService, editorGroupService, editorService, fileService) {
+    super(id, group, telemetryService, instantiationService, storageService, textResourceConfigurationService, themeService, editorService, editorGroupService, fileService);
+  }
+  async setInput(input, options, context, token) {
+    await super.setInput(input, options, context, token);
+    const resolvedModel = await input.resolve();
+    if (token.isCancellationRequested) {
+      return void 0;
+    }
+    if (!(resolvedModel instanceof BaseTextEditorModel)) {
+      throw new Error("Unable to open file as text");
+    }
+    const control = assertIsDefined(this.editorControl);
+    const textEditorModel = resolvedModel.textEditorModel;
+    control.setModel(textEditorModel);
+    if (!isTextEditorViewState(options?.viewState)) {
+      const editorViewState = this.loadEditorViewState(input, context);
+      if (editorViewState) {
+        if (options?.selection) {
+          editorViewState.cursorState = [];
+        }
+        control.restoreViewState(editorViewState);
+      }
+    }
+    if (options) {
+      applyTextEditorOptions(options, control, ScrollType.Immediate);
+    }
+    control.updateOptions(this.getReadonlyConfiguration(resolvedModel.isReadonly()));
+  }
+  /**
+   * Reveals the last line of this editor if it has a model set.
+   */
+  revealLastLine() {
+    const control = this.editorControl;
+    if (!control) {
+      return;
+    }
+    const model = control.getModel();
+    if (model) {
+      const lastLine = model.getLineCount();
+      control.revealPosition({ lineNumber: lastLine, column: model.getLineMaxColumn(lastLine) }, ScrollType.Smooth);
+    }
+  }
+  clearInput() {
+    super.clearInput();
+    this.editorControl?.setModel(null);
+  }
+  tracksEditorViewState(input) {
+    return input instanceof UntitledTextEditorInput || input instanceof TextResourceEditorInput;
+  }
+};
+AbstractTextResourceEditor = __decorateClass([
+  __decorateParam(2, ITelemetryService),
+  __decorateParam(3, IInstantiationService),
+  __decorateParam(4, IStorageService),
+  __decorateParam(5, ITextResourceConfigurationService),
+  __decorateParam(6, IThemeService),
+  __decorateParam(7, IEditorGroupsService),
+  __decorateParam(8, IEditorService),
+  __decorateParam(9, IFileService)
+], AbstractTextResourceEditor);
+let TextResourceEditor = class extends AbstractTextResourceEditor {
+  constructor(group, telemetryService, instantiationService, storageService, textResourceConfigurationService, themeService, editorService, editorGroupService, modelService, languageService, fileService) {
+    super(TextResourceEditor.ID, group, telemetryService, instantiationService, storageService, textResourceConfigurationService, themeService, editorGroupService, editorService, fileService);
+    this.modelService = modelService;
+    this.languageService = languageService;
+  }
+  static {
+    __name(this, "TextResourceEditor");
+  }
+  static ID = "workbench.editors.textResourceEditor";
+  createEditorControl(parent, configuration) {
+    super.createEditorControl(parent, configuration);
+    const control = this.editorControl;
+    if (control) {
+      this._register(control.onDidPaste((e) => this.onDidEditorPaste(e, control)));
+    }
+  }
+  onDidEditorPaste(e, codeEditor) {
+    if (this.input instanceof UntitledTextEditorInput && this.input.hasLanguageSetExplicitly) {
+      return;
+    }
+    if (e.range.startLineNumber !== 1 || e.range.startColumn !== 1) {
+      return;
+    }
+    if (codeEditor.getOption(EditorOption.readOnly)) {
+      return;
+    }
+    const textModel = codeEditor.getModel();
+    if (!textModel) {
+      return;
+    }
+    const pasteIsWholeContents = textModel.getLineCount() === e.range.endLineNumber && textModel.getLineMaxColumn(e.range.endLineNumber) === e.range.endColumn;
+    if (!pasteIsWholeContents) {
+      return;
+    }
+    const currentLanguageId = textModel.getLanguageId();
+    if (currentLanguageId !== PLAINTEXT_LANGUAGE_ID) {
+      return;
+    }
+    let candidateLanguage = void 0;
+    if (e.languageId) {
+      candidateLanguage = { id: e.languageId, source: "event" };
+    } else {
+      const guess = this.languageService.guessLanguageIdByFilepathOrFirstLine(textModel.uri, textModel.getLineContent(1).substr(0, ModelConstants.FIRST_LINE_DETECTION_LENGTH_LIMIT)) ?? void 0;
+      if (guess) {
+        candidateLanguage = { id: guess, source: "guess" };
+      }
+    }
+    if (candidateLanguage && candidateLanguage.id !== PLAINTEXT_LANGUAGE_ID) {
+      if (this.input instanceof UntitledTextEditorInput && candidateLanguage.source === "event") {
+        this.input.setLanguageId(candidateLanguage.id);
+      } else {
+        textModel.setLanguage(this.languageService.createById(candidateLanguage.id));
+      }
+      const opts = this.modelService.getCreationOptions(textModel.getLanguageId(), textModel.uri, textModel.isForSimpleWidget);
+      textModel.detectIndentation(opts.insertSpaces, opts.tabSize);
+    }
+  }
+};
+TextResourceEditor = __decorateClass([
+  __decorateParam(1, ITelemetryService),
+  __decorateParam(2, IInstantiationService),
+  __decorateParam(3, IStorageService),
+  __decorateParam(4, ITextResourceConfigurationService),
+  __decorateParam(5, IThemeService),
+  __decorateParam(6, IEditorService),
+  __decorateParam(7, IEditorGroupsService),
+  __decorateParam(8, IModelService),
+  __decorateParam(9, ILanguageService),
+  __decorateParam(10, IFileService)
+], TextResourceEditor);
+export {
+  AbstractTextResourceEditor,
+  TextResourceEditor
+};
+//# sourceMappingURL=textResourceEditor.js.map

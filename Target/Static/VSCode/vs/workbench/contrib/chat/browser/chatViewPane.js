@@ -1,1 +1,276 @@
-var A=Object.defineProperty,D=Object.getOwnPropertyDescriptor,u=(e,t,i,s)=>{for(var o,r=s>1?void 0:s?D(t,i):t,a=e.length-1;a>=0;a--)(o=e[a])&&(r=(s?o(t,i,r):o(r))||r);return s&&r&&A(t,i,r),r},o=(e,t)=>(i,s)=>t(i,s,e);import{$ as O,getWindow as b}from"../../../../base/browser/dom.js";import{CancellationToken as x}from"../../../../base/common/cancellation.js";import{DisposableStore as R}from"../../../../base/common/lifecycle.js";import{MarshalledId as E}from"../../../../base/common/marshallingIds.js";import{IConfigurationService as W}from"../../../../platform/configuration/common/configuration.js";import{IContextKeyService as m}from"../../../../platform/contextkey/common/contextkey.js";import{IContextMenuService as B}from"../../../../platform/contextview/browser/contextView.js";import{IHoverService as k}from"../../../../platform/hover/browser/hover.js";import{IInstantiationService as T}from"../../../../platform/instantiation/common/instantiation.js";import{ServiceCollection as L}from"../../../../platform/instantiation/common/serviceCollection.js";import{IKeybindingService as $}from"../../../../platform/keybinding/common/keybinding.js";import{ILayoutService as F}from"../../../../platform/layout/browser/layoutService.js";import{ILogService as K}from"../../../../platform/log/common/log.js";import{IOpenerService as H}from"../../../../platform/opener/common/opener.js";import{IStorageService as N,StorageScope as w,StorageTarget as f}from"../../../../platform/storage/common/storage.js";import{editorBackground as U}from"../../../../platform/theme/common/colorRegistry.js";import{IThemeService as z}from"../../../../platform/theme/common/themeService.js";import{ViewPane as j}from"../../../browser/parts/views/viewPane.js";import{Memento as I}from"../../../common/memento.js";import{SIDE_BAR_FOREGROUND as G}from"../../../common/theme.js";import{IViewDescriptorService as q}from"../../../common/views.js";import"../common/chatActions.js";import{IChatAgentService as J}from"../common/chatAgents.js";import{ChatContextKeys as C}from"../common/chatContextKeys.js";import{ChatModelInitState as Q}from"../common/chatModel.js";import{CHAT_PROVIDER_ID as V}from"../common/chatParticipantContribTypes.js";import{IChatService as X}from"../common/chatService.js";import{ChatAgentLocation as l,ChatMode as g}from"../common/constants.js";import{ChatWidget as Y}from"./chatWidget.js";import{ChatViewWelcomeController as Z}from"./viewsWelcome/chatViewWelcomeController.js";const Ke="workbench.panel.chatSidebar",He="workbench.panel.chat";let S=class extends j{constructor(e,t,i,s,o,r,a,n,c,h,d,m,p,S,v,u){if(super(t,i,s,o,r,a,n,c,h,d),this.chatOptions=e,this.storageService=m,this.chatService=p,this.chatAgentService=S,this.logService=v,this.layoutService=u,this.memento=new I("interactive-session-view-"+V,this.storageService),this.viewState=this.memento.getMemento(w.WORKSPACE,f.MACHINE),this.chatOptions.location===l.Panel&&!this.viewState.hasMigratedCurrentSession){const e=new I("interactive-session-view-"+V+"-edits",this.storageService).getMemento(w.WORKSPACE,f.MACHINE);e.sessionId&&(this.logService.trace(`ChatViewPane: last edits session was ${e.sessionId}`),this.chatService.isPersistedSessionEmpty(e.sessionId)||(this.logService.info(`ChatViewPane: migrating ${e.sessionId} to unified view`),this.viewState.sessionId=e.sessionId,this.viewState.inputValue=e.inputValue,this.viewState.inputState={...e.inputState,chatMode:e.inputState?.chatMode??g.Edit},this.viewState.hasMigratedCurrentSession=!0))}this._register(this.chatAgentService.onDidChangeAgents((()=>{if(this.chatAgentService.getDefaultAgent(this.chatOptions?.location)){if(!this._widget?.viewModel&&!this._restoringSession){const e=this.getTransferredOrPersistedSessionInfo();this._restoringSession=(e.sessionId?this.chatService.getOrRestoreSession(e.sessionId):Promise.resolve(void 0)).then((async t=>{const i=this._widget.visible;try{this._widget.setVisible(!1),await this.updateModel(t,e.inputValue||e.mode?{inputState:{chatMode:e.mode},inputValue:e.inputValue}:void 0),this.defaultParticipantRegistrationFailed=!1,this.didUnregisterProvider=!1,this._onDidChangeViewWelcomeState.fire()}finally{this.widget.setVisible(i)}})),this._restoringSession.finally((()=>this._restoringSession=void 0))}}else this._widget?.viewModel?.initState===Q.Initialized&&(this.didUnregisterProvider=!0);this._onDidChangeViewWelcomeState.fire()}))),this._register(this.contextKeyService.onDidChangeContext((e=>{e.affectsSome(C.SetupViewKeys)&&this._onDidChangeViewWelcomeState.fire()})))}_widget;get widget(){return this._widget}modelDisposables=this._register(new R);memento;viewState;defaultParticipantRegistrationFailed=!1;didUnregisterProvider=!1;_restoringSession;getActionsContext(){return this.widget?.viewModel?{sessionId:this.widget.viewModel.sessionId,$mid:E.ChatViewContext}:void 0}async updateModel(e,t){if(this.modelDisposables.clear(),!(e=e??(this.chatService.transferredSessionData?.sessionId&&this.chatService.transferredSessionData?.location===this.chatOptions.location?await this.chatService.getOrRestoreSession(this.chatService.transferredSessionData.sessionId):this.chatService.startSession(this.chatOptions.location,x.None))))throw new Error("Could not start chat session");t&&this.updateViewState(t),this.viewState.sessionId=e.sessionId,this._widget.setModel(e,{...this.viewState}),this.updateActions()}shouldShowWelcome(){const e=this.contextKeyService.contextMatchesRules(C.SetupViewCondition),t=!this.chatService.hasSessions(),i=this.chatAgentService.getAgents().some((e=>e.isCore&&e.locations.includes(this.chatOptions.location))),s=!i&&(this.didUnregisterProvider||!this._widget?.viewModel&&t||this.defaultParticipantRegistrationFailed||e);return this.logService.trace(`ChatViewPane#shouldShowWelcome(${this.chatOptions.location}) = ${s}: hasCoreAgent=${i} didUnregister=${this.didUnregisterProvider} || noViewModel=${!this._widget?.viewModel} && noPersistedSessions=${t} || defaultParticipantRegistrationFailed=${this.defaultParticipantRegistrationFailed} || showSetup=${e}`),!!s}getTransferredOrPersistedSessionInfo(){return this.chatService.transferredSessionData?.location===this.chatOptions.location?{sessionId:this.chatService.transferredSessionData.sessionId,inputValue:this.chatService.transferredSessionData.inputValue,mode:this.chatService.transferredSessionData.mode}:{sessionId:this.viewState.sessionId}}async renderBody(e){try{super.renderBody(e),this._register(this.instantiationService.createInstance(Z,e,this,this.chatOptions.location));const t=this._register(this.instantiationService.createChild(new L([m,this.scopedContextKeyService]))),i=this.getLocationBasedColors(),s=this.layoutService.getContainer(b(e)).appendChild(O(".chat-editor-overflow.monaco-editor"));this._register({dispose:()=>s.remove()}),this._widget=this._register(t.createInstance(Y,this.chatOptions.location,{viewId:this.id},{autoScroll:e=>e!==g.Ask,renderFollowups:this.chatOptions.location===l.Panel,supportsFileReferences:!0,supportsAdditionalParticipants:this.chatOptions.location===l.Panel,rendererOptions:{renderTextEditsAsSummary:e=>!0,referencesExpandedWhenEmptyResponse:!1,progressMessageAtBottomOfResponse:e=>e!==g.Ask},editorOverflowWidgetsDomNode:s,enableImplicitContext:this.chatOptions.location===l.Panel,enableWorkingSet:"explicit",supportsChangingModes:!0},{listForeground:G,listBackground:i.background,overlayBackground:i.overlayBackground,inputEditorBackground:i.background,resultEditorBackground:U})),this._register(this.onDidChangeBodyVisibility((e=>{this._widget.setVisible(e)}))),this._register(this._widget.onDidClear((()=>this.clear()))),this._widget.render(e);const o=this.getTransferredOrPersistedSessionInfo(),r=this._register(this.chatService.onDidDisposeSession((e=>{"initializationFailed"===e.reason&&(this.defaultParticipantRegistrationFailed=!0,r?.dispose(),this._onDidChangeViewWelcomeState.fire())}))),a=o.sessionId?await this.chatService.getOrRestoreSession(o.sessionId):void 0;await this.updateModel(a,o.inputValue||o.mode?{inputState:{chatMode:o.mode},inputValue:o.inputValue}:void 0)}catch(e){throw this.logService.error(e),e}}acceptInput(e){this._widget.acceptInput(e)}async clear(){this.widget.viewModel&&await this.chatService.clearSession(this.widget.viewModel.sessionId),this.updateViewState(),await this.updateModel(void 0),this.updateActions()}async loadSession(e,t){this.widget.viewModel&&await this.chatService.clearSession(this.widget.viewModel.sessionId);const i=await this.chatService.getOrRestoreSession(e);await this.updateModel(i,t)}focusInput(){this._widget.focusInput()}focus(){super.focus(),this._widget.focusInput()}layoutBody(e,t){super.layoutBody(e,t),this._widget.layout(e,t)}saveState(){this._widget&&(this._widget.saveState(),this.updateViewState(),this.memento.saveMemento()),super.saveState()}updateViewState(e){const t=e??this._widget.getViewState();for(const[e,i]of Object.entries(t))this.viewState[e]=i}};S=u([o(2,$),o(3,B),o(4,W),o(5,m),o(6,q),o(7,T),o(8,H),o(9,z),o(10,k),o(11,N),o(12,X),o(13,J),o(14,K),o(15,F)],S);export{Ke as CHAT_SIDEBAR_OLD_VIEW_PANEL_ID,He as CHAT_SIDEBAR_PANEL_ID,S as ChatViewPane};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { $, getWindow } from "../../../../base/browser/dom.js";
+import { CancellationToken } from "../../../../base/common/cancellation.js";
+import { DisposableStore } from "../../../../base/common/lifecycle.js";
+import { MarshalledId } from "../../../../base/common/marshallingIds.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IContextMenuService } from "../../../../platform/contextview/browser/contextView.js";
+import { IHoverService } from "../../../../platform/hover/browser/hover.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { ServiceCollection } from "../../../../platform/instantiation/common/serviceCollection.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { ILayoutService } from "../../../../platform/layout/browser/layoutService.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { IOpenerService } from "../../../../platform/opener/common/opener.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { editorBackground } from "../../../../platform/theme/common/colorRegistry.js";
+import { IThemeService } from "../../../../platform/theme/common/themeService.js";
+import { IViewPaneOptions, ViewPane } from "../../../browser/parts/views/viewPane.js";
+import { Memento } from "../../../common/memento.js";
+import { SIDE_BAR_FOREGROUND } from "../../../common/theme.js";
+import { IViewDescriptorService } from "../../../common/views.js";
+import { IChatViewTitleActionContext } from "../common/chatActions.js";
+import { IChatAgentService } from "../common/chatAgents.js";
+import { ChatContextKeys } from "../common/chatContextKeys.js";
+import { ChatModelInitState, IChatModel } from "../common/chatModel.js";
+import { CHAT_PROVIDER_ID } from "../common/chatParticipantContribTypes.js";
+import { IChatService } from "../common/chatService.js";
+import { ChatAgentLocation, ChatMode } from "../common/constants.js";
+import { ChatWidget, IChatViewState } from "./chatWidget.js";
+import { ChatViewWelcomeController, IViewWelcomeDelegate } from "./viewsWelcome/chatViewWelcomeController.js";
+const CHAT_SIDEBAR_OLD_VIEW_PANEL_ID = "workbench.panel.chatSidebar";
+const CHAT_SIDEBAR_PANEL_ID = "workbench.panel.chat";
+let ChatViewPane = class extends ViewPane {
+  constructor(chatOptions, options, keybindingService, contextMenuService, configurationService, contextKeyService, viewDescriptorService, instantiationService, openerService, themeService, hoverService, storageService, chatService, chatAgentService, logService, layoutService) {
+    super(options, keybindingService, contextMenuService, configurationService, contextKeyService, viewDescriptorService, instantiationService, openerService, themeService, hoverService);
+    this.chatOptions = chatOptions;
+    this.storageService = storageService;
+    this.chatService = chatService;
+    this.chatAgentService = chatAgentService;
+    this.logService = logService;
+    this.layoutService = layoutService;
+    this.memento = new Memento("interactive-session-view-" + CHAT_PROVIDER_ID, this.storageService);
+    this.viewState = this.memento.getMemento(StorageScope.WORKSPACE, StorageTarget.MACHINE);
+    if (this.chatOptions.location === ChatAgentLocation.Panel && !this.viewState.hasMigratedCurrentSession) {
+      const editsMemento = new Memento("interactive-session-view-" + CHAT_PROVIDER_ID + `-edits`, this.storageService);
+      const lastEditsState = editsMemento.getMemento(StorageScope.WORKSPACE, StorageTarget.MACHINE);
+      if (lastEditsState.sessionId) {
+        this.logService.trace(`ChatViewPane: last edits session was ${lastEditsState.sessionId}`);
+        if (!this.chatService.isPersistedSessionEmpty(lastEditsState.sessionId)) {
+          this.logService.info(`ChatViewPane: migrating ${lastEditsState.sessionId} to unified view`);
+          this.viewState.sessionId = lastEditsState.sessionId;
+          this.viewState.inputValue = lastEditsState.inputValue;
+          this.viewState.inputState = {
+            ...lastEditsState.inputState,
+            chatMode: lastEditsState.inputState?.chatMode ?? ChatMode.Edit
+          };
+          this.viewState.hasMigratedCurrentSession = true;
+        }
+      }
+    }
+    this._register(this.chatAgentService.onDidChangeAgents(() => {
+      if (this.chatAgentService.getDefaultAgent(this.chatOptions?.location)) {
+        if (!this._widget?.viewModel && !this._restoringSession) {
+          const info = this.getTransferredOrPersistedSessionInfo();
+          this._restoringSession = (info.sessionId ? this.chatService.getOrRestoreSession(info.sessionId) : Promise.resolve(void 0)).then(async (model) => {
+            const wasVisible = this._widget.visible;
+            try {
+              this._widget.setVisible(false);
+              await this.updateModel(model, info.inputValue || info.mode ? { inputState: { chatMode: info.mode }, inputValue: info.inputValue } : void 0);
+              this.defaultParticipantRegistrationFailed = false;
+              this.didUnregisterProvider = false;
+              this._onDidChangeViewWelcomeState.fire();
+            } finally {
+              this.widget.setVisible(wasVisible);
+            }
+          });
+          this._restoringSession.finally(() => this._restoringSession = void 0);
+        }
+      } else if (this._widget?.viewModel?.initState === ChatModelInitState.Initialized) {
+        this.didUnregisterProvider = true;
+      }
+      this._onDidChangeViewWelcomeState.fire();
+    }));
+    this._register(this.contextKeyService.onDidChangeContext((e) => {
+      if (e.affectsSome(ChatContextKeys.SetupViewKeys)) {
+        this._onDidChangeViewWelcomeState.fire();
+      }
+    }));
+  }
+  static {
+    __name(this, "ChatViewPane");
+  }
+  _widget;
+  get widget() {
+    return this._widget;
+  }
+  modelDisposables = this._register(new DisposableStore());
+  memento;
+  viewState;
+  defaultParticipantRegistrationFailed = false;
+  didUnregisterProvider = false;
+  _restoringSession;
+  getActionsContext() {
+    return this.widget?.viewModel ? {
+      sessionId: this.widget.viewModel.sessionId,
+      $mid: MarshalledId.ChatViewContext
+    } : void 0;
+  }
+  async updateModel(model, viewState) {
+    this.modelDisposables.clear();
+    model = model ?? (this.chatService.transferredSessionData?.sessionId && this.chatService.transferredSessionData?.location === this.chatOptions.location ? await this.chatService.getOrRestoreSession(this.chatService.transferredSessionData.sessionId) : this.chatService.startSession(this.chatOptions.location, CancellationToken.None));
+    if (!model) {
+      throw new Error("Could not start chat session");
+    }
+    if (viewState) {
+      this.updateViewState(viewState);
+    }
+    this.viewState.sessionId = model.sessionId;
+    this._widget.setModel(model, { ...this.viewState });
+    this.updateActions();
+  }
+  shouldShowWelcome() {
+    const showSetup = this.contextKeyService.contextMatchesRules(ChatContextKeys.SetupViewCondition);
+    const noPersistedSessions = !this.chatService.hasSessions();
+    const hasCoreAgent = this.chatAgentService.getAgents().some((agent) => agent.isCore && agent.locations.includes(this.chatOptions.location));
+    const shouldShow = !hasCoreAgent && (this.didUnregisterProvider || !this._widget?.viewModel && noPersistedSessions || this.defaultParticipantRegistrationFailed || showSetup);
+    this.logService.trace(`ChatViewPane#shouldShowWelcome(${this.chatOptions.location}) = ${shouldShow}: hasCoreAgent=${hasCoreAgent} didUnregister=${this.didUnregisterProvider} || noViewModel=${!this._widget?.viewModel} && noPersistedSessions=${noPersistedSessions} || defaultParticipantRegistrationFailed=${this.defaultParticipantRegistrationFailed} || showSetup=${showSetup}`);
+    return !!shouldShow;
+  }
+  getTransferredOrPersistedSessionInfo() {
+    if (this.chatService.transferredSessionData?.location === this.chatOptions.location) {
+      const sessionId = this.chatService.transferredSessionData.sessionId;
+      return {
+        sessionId,
+        inputValue: this.chatService.transferredSessionData.inputValue,
+        mode: this.chatService.transferredSessionData.mode
+      };
+    } else {
+      return { sessionId: this.viewState.sessionId };
+    }
+  }
+  async renderBody(parent) {
+    try {
+      super.renderBody(parent);
+      this._register(this.instantiationService.createInstance(ChatViewWelcomeController, parent, this, this.chatOptions.location));
+      const scopedInstantiationService = this._register(this.instantiationService.createChild(new ServiceCollection([IContextKeyService, this.scopedContextKeyService])));
+      const locationBasedColors = this.getLocationBasedColors();
+      const editorOverflowNode = this.layoutService.getContainer(getWindow(parent)).appendChild($(".chat-editor-overflow.monaco-editor"));
+      this._register({ dispose: /* @__PURE__ */ __name(() => editorOverflowNode.remove(), "dispose") });
+      this._widget = this._register(scopedInstantiationService.createInstance(
+        ChatWidget,
+        this.chatOptions.location,
+        { viewId: this.id },
+        {
+          autoScroll: /* @__PURE__ */ __name((mode) => mode !== ChatMode.Ask, "autoScroll"),
+          renderFollowups: this.chatOptions.location === ChatAgentLocation.Panel,
+          supportsFileReferences: true,
+          supportsAdditionalParticipants: this.chatOptions.location === ChatAgentLocation.Panel,
+          rendererOptions: {
+            renderTextEditsAsSummary: /* @__PURE__ */ __name((uri) => {
+              return true;
+            }, "renderTextEditsAsSummary"),
+            referencesExpandedWhenEmptyResponse: false,
+            progressMessageAtBottomOfResponse: /* @__PURE__ */ __name((mode) => mode !== ChatMode.Ask, "progressMessageAtBottomOfResponse")
+          },
+          editorOverflowWidgetsDomNode: editorOverflowNode,
+          enableImplicitContext: this.chatOptions.location === ChatAgentLocation.Panel,
+          enableWorkingSet: "explicit",
+          supportsChangingModes: true
+        },
+        {
+          listForeground: SIDE_BAR_FOREGROUND,
+          listBackground: locationBasedColors.background,
+          overlayBackground: locationBasedColors.overlayBackground,
+          inputEditorBackground: locationBasedColors.background,
+          resultEditorBackground: editorBackground
+        }
+      ));
+      this._register(this.onDidChangeBodyVisibility((visible) => {
+        this._widget.setVisible(visible);
+      }));
+      this._register(this._widget.onDidClear(() => this.clear()));
+      this._widget.render(parent);
+      const info = this.getTransferredOrPersistedSessionInfo();
+      const disposeListener = this._register(this.chatService.onDidDisposeSession((e) => {
+        if (e.reason === "initializationFailed") {
+          this.defaultParticipantRegistrationFailed = true;
+          disposeListener?.dispose();
+          this._onDidChangeViewWelcomeState.fire();
+        }
+      }));
+      const model = info.sessionId ? await this.chatService.getOrRestoreSession(info.sessionId) : void 0;
+      await this.updateModel(model, info.inputValue || info.mode ? { inputState: { chatMode: info.mode }, inputValue: info.inputValue } : void 0);
+    } catch (e) {
+      this.logService.error(e);
+      throw e;
+    }
+  }
+  acceptInput(query) {
+    this._widget.acceptInput(query);
+  }
+  async clear() {
+    if (this.widget.viewModel) {
+      await this.chatService.clearSession(this.widget.viewModel.sessionId);
+    }
+    this.updateViewState();
+    await this.updateModel(void 0);
+    this.updateActions();
+  }
+  async loadSession(sessionId, viewState) {
+    if (this.widget.viewModel) {
+      await this.chatService.clearSession(this.widget.viewModel.sessionId);
+    }
+    const newModel = await this.chatService.getOrRestoreSession(sessionId);
+    await this.updateModel(newModel, viewState);
+  }
+  focusInput() {
+    this._widget.focusInput();
+  }
+  focus() {
+    super.focus();
+    this._widget.focusInput();
+  }
+  layoutBody(height, width) {
+    super.layoutBody(height, width);
+    this._widget.layout(height, width);
+  }
+  saveState() {
+    if (this._widget) {
+      this._widget.saveState();
+      this.updateViewState();
+      this.memento.saveMemento();
+    }
+    super.saveState();
+  }
+  updateViewState(viewState) {
+    const newViewState = viewState ?? this._widget.getViewState();
+    for (const [key, value] of Object.entries(newViewState)) {
+      this.viewState[key] = value;
+    }
+  }
+};
+ChatViewPane = __decorateClass([
+  __decorateParam(2, IKeybindingService),
+  __decorateParam(3, IContextMenuService),
+  __decorateParam(4, IConfigurationService),
+  __decorateParam(5, IContextKeyService),
+  __decorateParam(6, IViewDescriptorService),
+  __decorateParam(7, IInstantiationService),
+  __decorateParam(8, IOpenerService),
+  __decorateParam(9, IThemeService),
+  __decorateParam(10, IHoverService),
+  __decorateParam(11, IStorageService),
+  __decorateParam(12, IChatService),
+  __decorateParam(13, IChatAgentService),
+  __decorateParam(14, ILogService),
+  __decorateParam(15, ILayoutService)
+], ChatViewPane);
+export {
+  CHAT_SIDEBAR_OLD_VIEW_PANEL_ID,
+  CHAT_SIDEBAR_PANEL_ID,
+  ChatViewPane
+};
+//# sourceMappingURL=chatViewPane.js.map

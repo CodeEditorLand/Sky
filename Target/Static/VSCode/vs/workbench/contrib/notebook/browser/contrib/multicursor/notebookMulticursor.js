@@ -1,1 +1,1077 @@
-var G=Object.defineProperty,X=Object.getOwnPropertyDescriptor,L=(e,t,o,i)=>{for(var s,n=i>1?void 0:i?X(t,o):t,r=e.length-1;r>=0;r--)(s=e[r])&&(n=(i?s(t,o,n):s(n))||n);return i&&n&&G(t,o,n),n},b=(e,t)=>(o,i)=>t(o,i,e);import{localize as y}from"../../../../../../nls.js";import{Emitter as Y}from"../../../../../../base/common/event.js";import{KeyCode as I,KeyMod as D}from"../../../../../../base/common/keyCodes.js";import{Disposable as _,DisposableStore as W}from"../../../../../../base/common/lifecycle.js";import{ResourceMap as B}from"../../../../../../base/common/map.js";import"../../../../../../base/common/uri.js";import{EditorConfiguration as j}from"../../../../../../editor/browser/config/editorConfiguration.js";import{CoreEditingCommands as Z}from"../../../../../../editor/browser/coreCommands.js";import"../../../../../../editor/browser/editorBrowser.js";import{RedoCommand as J,UndoCommand as Q}from"../../../../../../editor/browser/editorExtensions.js";import{CodeEditorWidget as A}from"../../../../../../editor/browser/widget/codeEditor/codeEditorWidget.js";import"../../../../../../editor/common/config/editorConfiguration.js";import{cursorBlinkingStyleFromString as $,cursorStyleFromString as ee,TextEditorCursorBlinkingStyle as N,TextEditorCursorStyle as k}from"../../../../../../editor/common/config/editorOptions.js";import{Position as F}from"../../../../../../editor/common/core/position.js";import"../../../../../../editor/common/core/range.js";import{Selection as C,SelectionDirection as g}from"../../../../../../editor/common/core/selection.js";import{USUAL_WORD_SEPARATORS as V}from"../../../../../../editor/common/core/wordHelper.js";import{CommandExecutor as q,CursorsController as te}from"../../../../../../editor/common/cursor/cursor.js";import{DeleteOperations as K}from"../../../../../../editor/common/cursor/cursorDeleteOperations.js";import{CursorConfiguration as oe}from"../../../../../../editor/common/cursorCommon.js";import{CursorChangeReason as p}from"../../../../../../editor/common/cursorEvents.js";import{Handler as E}from"../../../../../../editor/common/editorCommon.js";import{ILanguageConfigurationService as ie}from"../../../../../../editor/common/languages/languageConfigurationRegistry.js";import"../../../../../../editor/common/model.js";import{indentOfLine as re}from"../../../../../../editor/common/model/textModel.js";import{ITextModelService as ne}from"../../../../../../editor/common/services/resolverService.js";import"../../../../../../editor/common/viewModel.js";import{ViewModelEventsCollector as S}from"../../../../../../editor/common/viewModelEventDispatcher.js";import{IAccessibilityService as se}from"../../../../../../platform/accessibility/common/accessibility.js";import{MenuId as le,registerAction2 as x}from"../../../../../../platform/actions/common/actions.js";import{IConfigurationService as U}from"../../../../../../platform/configuration/common/configuration.js";import{ContextKeyExpr as n,IContextKeyService as ae,RawContextKey as z}from"../../../../../../platform/contextkey/common/contextkey.js";import"../../../../../../platform/instantiation/common/instantiation.js";import{KeybindingWeight as T}from"../../../../../../platform/keybinding/common/keybindingsRegistry.js";import{IUndoRedoService as ce,UndoRedoElementType as de}from"../../../../../../platform/undoRedo/common/undoRedo.js";import{registerWorkbenchContribution2 as ue,WorkbenchPhase as he}from"../../../../../common/contributions.js";import{IEditorService as w}from"../../../../../services/editor/common/editorService.js";import{KEYBINDING_CONTEXT_NOTEBOOK_FIND_WIDGET_FOCUSED as Ce,NOTEBOOK_CELL_EDITOR_FOCUSED as O,NOTEBOOK_IS_ACTIVE_EDITOR as m}from"../../../common/notebookContextKeys.js";import{NotebookAction as P}from"../../controller/coreActions.js";import{getNotebookEditorFromEditorPane as M}from"../../notebookBrowser.js";import{registerNotebookContribution as me}from"../../notebookEditorExtensions.js";import{CellEditorOptions as fe}from"../../view/cellParts/cellEditorOptions.js";import{NotebookFindContrib as be}from"../find/notebookFindWidget.js";import"../../../common/model/notebookTextModel.js";import{NotebookCellTextModel as pe}from"../../../common/model/notebookCellTextModel.js";const Se="notebook.addFindMatchToSelection",ge="notebook.selectAllFindMatches";var Me=(e=>(e[e.Idle=0]="Idle",e[e.Selecting=1]="Selecting",e[e.Editing=2]="Editing",e))(Me||{});const c={IsNotebookMultiCursor:new z("isNotebookMultiSelect",!1),NotebookMultiSelectCursorState:new z("notebookMultiSelectCursorState",0)};let u=class extends _{constructor(e,t,o,i,s,n,r){super(),this.notebookEditor=e,this.contextKeyService=t,this.textModelService=o,this.languageConfigurationService=i,this.accessibilityService=s,this.configurationService=n,this.undoRedoService=r,this.anchorCell=this.notebookEditor.activeCellAndCodeEditor,this._register(this.onDidChangeAnchorCell((async()=>{await this.syncCursorsControllers(),this.syncAnchorListeners()})))}static id="notebook.multiCursorController";word="";startPosition;trackedCells=[];_onDidChangeAnchorCell=this._register(new Y);onDidChangeAnchorCell=this._onDidChangeAnchorCell.event;anchorCell;anchorDisposables=this._register(new W);cursorsDisposables=this._register(new W);cursorsControllers=new B;state=0;getState(){return this.state}_nbIsMultiSelectSession=c.IsNotebookMultiCursor.bindTo(this.contextKeyService);_nbMultiSelectState=c.NotebookMultiSelectCursorState.bindTo(this.contextKeyService);syncAnchorListeners(){if(this.anchorDisposables.clear(),!this.anchorCell)throw new Error("Anchor cell is undefined");this.anchorDisposables.add(this.anchorCell[1].onWillType((e=>{const t=new S;this.trackedCells.forEach((o=>{const i=this.cursorsControllers.get(o.cellViewModel.uri);i&&o.cellViewModel.handle!==this.anchorCell?.[0].handle&&i.type(t,e,"keyboard")}))}))),this.anchorDisposables.add(this.anchorCell[1].onDidType((()=>{this.state=2,this._nbMultiSelectState.set(2);const e=this.cursorsControllers.get(this.anchorCell[0].uri);if(!e)return;const t=this.notebookEditor.activeCodeEditor?.getSelections();t&&(e.setSelections(new S,"keyboard",t,p.Explicit),this.trackedCells.forEach((e=>{const t=this.cursorsControllers.get(e.cellViewModel.uri);t&&(e.initialSelection=t.getSelection(),e.matchSelections=[])})),this.updateLazyDecorations())}))),this.anchorDisposables.add(this.anchorCell[1].onDidChangeCursorSelection((e=>{if("mouse"===e.source)return void this.resetToIdleState();if(!e.oldSelections||e.reason===p.NotSet||e.reason===p.RecoverFromMarkers)return;const t=e.selection.startColumn-e.oldSelections[0].startColumn,o=e.selection.startLineNumber-e.oldSelections[0].startLineNumber,i=e.selection.endColumn-e.oldSelections[0].endColumn,s=e.selection.endLineNumber-e.oldSelections[0].endLineNumber,n=e.selection.getDirection();this.trackedCells.forEach((r=>{const l=this.cursorsControllers.get(r.cellViewModel.uri);if(!l)return;const c=l.getSelections().map((e=>{const r=e.startColumn+t,l=e.startLineNumber+o,c=e.endColumn+i,a=e.endLineNumber+s;return C.createWithDirection(l,r,a,c,n)}));l.setSelections(new S,e.source,c,p.Explicit)})),this.updateLazyDecorations()}))),this.anchorDisposables.add(this.anchorCell[1].onWillTriggerEditorOperationEvent((e=>{this.handleEditorOperationEvent(e)}))),this.anchorDisposables.add(this.anchorCell[1].onDidBlurEditorWidget((()=>{(1===this.state||2===this.state)&&this.resetToIdleState()})))}async syncCursorsControllers(){this.cursorsDisposables.clear(),await Promise.all(this.trackedCells.map((async e=>{const t=await this.createCursorController(e);if(!t)return;this.cursorsControllers.set(e.cellViewModel.uri,t);const o=e.matchSelections;t.setSelections(new S,void 0,o,p.Explicit)}))),this.updateLazyDecorations()}async createCursorController(e){const t=(await this.textModelService.createModelReference(e.cellViewModel.uri)).object.textEditorModel;if(!t)return;const o=this.constructCursorSimpleModel(e.cellViewModel),i=this.constructCoordinatesConverter(),s=e.editorConfig,n=this.cursorsDisposables.add(new te(t,o,i,new oe(t.getLanguageId(),t.getOptions(),s,this.languageConfigurationService)));return n.setSelections(new S,void 0,e.matchSelections,p.Explicit),n}constructCoordinatesConverter(){return{convertViewPositionToModelPosition:e=>e,convertViewRangeToModelRange:e=>e,validateViewPosition:(e,t)=>e,validateViewRange:(e,t)=>e,convertModelPositionToViewPosition:(e,t,o,i)=>e,convertModelRangeToViewRange:(e,t)=>e,modelPositionIsVisible:e=>!0,getModelLineViewLineCount:e=>1,getViewLineNumberOfModelPosition:(e,t)=>e}}constructCursorSimpleModel(e){return{getLineCount:()=>e.textBuffer.getLineCount(),getLineContent:t=>e.textBuffer.getLineContent(t),getLineMinColumn:t=>e.textBuffer.getLineMinColumn(t),getLineMaxColumn:t=>e.textBuffer.getLineMaxColumn(t),getLineFirstNonWhitespaceColumn:t=>e.textBuffer.getLineFirstNonWhitespaceColumn(t),getLineLastNonWhitespaceColumn:t=>e.textBuffer.getLineLastNonWhitespaceColumn(t),normalizePosition:(e,t)=>e,getLineIndentColumn:t=>re(e.textBuffer.getLineContent(t))+1}}async handleEditorOperationEvent(e){this.trackedCells.forEach((t=>{if(t.cellViewModel.handle===this.anchorCell?.[0].handle)return;const o=new S,i=this.cursorsControllers.get(t.cellViewModel.uri);i&&this.executeEditorOperation(i,o,e)}))}executeEditorOperation(e,t,o){switch(o.handlerId){case E.CompositionStart:e.startComposition(t);break;case E.CompositionEnd:e.endComposition(t,o.source);break;case E.ReplacePreviousChar:{const i=o.payload;e.compositionType(t,i.text||"",i.replaceCharCnt||0,0,0,o.source);break}case E.CompositionType:{const i=o.payload;e.compositionType(t,i.text||"",i.replacePrevCharCnt||0,i.replaceNextCharCnt||0,i.positionDelta||0,o.source);break}case E.Paste:{const i=o.payload;e.paste(t,i.text||"",i.pasteOnNewLine||!1,i.multicursorText||null,o.source);break}case E.Cut:e.cut(t,o.source)}}updateViewModelSelections(){for(const e of this.trackedCells){const t=this.cursorsControllers.get(e.cellViewModel.uri);if(!t)return;e.cellViewModel.setSelections(t.getSelections())}}updateFinalUndoRedo(){if(!this.anchorCell?.[1].getModel())return;const e=new B,t=[];this.trackedCells.forEach((o=>{if(!o.undoRedoHistory)return;t.push(o.cellViewModel.uri);const i=this.undoRedoService.getElements(o.cellViewModel.uri).past.slice(),s=o.undoRedoHistory.past.slice(),n=i.slice(s.length);0!==n.length&&(e.set(o.cellViewModel.uri,n),this.undoRedoService.removeElements(o.cellViewModel.uri),s.forEach((e=>{this.undoRedoService.pushElement(e)})))})),this.undoRedoService.pushElement({type:de.Workspace,resources:t,label:"Multi Cursor Edit",code:"multiCursorEdit",confirmBeforeUndo:!1,undo:async()=>{e.forEach((async e=>{e.reverse().forEach((async e=>{await e.undo()}))}))},redo:async()=>{e.forEach((async e=>{e.forEach((async e=>{await e.redo()}))}))}})}resetToIdleState(){this.state=0,this._nbMultiSelectState.set(0),this._nbIsMultiSelectSession.set(!1),this.updateFinalUndoRedo(),this.trackedCells.forEach((e=>{this.clearDecorations(e),e.cellViewModel.setSelections([e.initialSelection])})),this.anchorDisposables.clear(),this.anchorCell=void 0,this.cursorsDisposables.clear(),this.cursorsControllers.clear(),this.trackedCells=[],this.startPosition=void 0,this.word=""}async findAndTrackNextSelection(e){if(0===this.state){const t=e.textModel;if(!t)return;const o=e.getSelections()[0],i=this.getWord(o,t);if(!i)return;this.word=i.word;const s=this.notebookEditor.getCellIndex(e);if(void 0===s)return;this.startPosition={cellIndex:s,position:new F(o.startLineNumber,i.startColumn)};const n=new C(o.startLineNumber,i.startColumn,o.startLineNumber,i.endColumn);if(e.setSelections([n]),this.anchorCell=this.notebookEditor.activeCellAndCodeEditor,!this.anchorCell||this.anchorCell[0].handle!==e.handle)throw new Error("Active cell is not the same as the cell passed as context");if(!(this.anchorCell[1]instanceof A))throw new Error("Active cell is not an instance of CodeEditorWidget");await this.updateTrackedCell(e,[n]),this._nbIsMultiSelectSession.set(!0),this.state=1,this._nbMultiSelectState.set(1),this._onDidChangeAnchorCell.fire()}else if(1===this.state){const t=this.notebookEditor.textModel;if(!t)return;const o=this.notebookEditor.getCellIndex(e);if(void 0===o||!this.startPosition)return;const i=t.findNextMatch(this.word,{cellIndex:o,position:e.getSelections()[e.getSelections().length-1].getEndPosition()},!1,!0,V,this.startPosition);if(!i)return;const s=this.notebookEditor.getCellByHandle(i.cell.handle);if(!s)return;if(i.cell.handle===e.handle){const t=[...e.getSelections(),C.fromRange(i.match.range,g.LTR)],o=await this.updateTrackedCell(e,t);s.setSelections(o.matchSelections)}else if(i.cell.handle!==e.handle){await this.notebookEditor.revealRangeInViewAsync(s,i.match.range),await this.notebookEditor.focusNotebookCell(s,"editor");const t=await this.updateTrackedCell(s,[C.fromRange(i.match.range,g.LTR)]);if(s.setSelections(t.matchSelections),this.anchorCell=this.notebookEditor.activeCellAndCodeEditor,!(this.anchorCell&&this.anchorCell[1]instanceof A))throw new Error("Active cell is not an instance of CodeEditorWidget");this._onDidChangeAnchorCell.fire(),this.initializeMultiSelectDecorations(this.trackedCells.find((t=>t.cellViewModel.handle===e.handle)))}}}async selectAllMatches(e,t){const o=this.notebookEditor.textModel;o&&(t?await this.handleFindWidgetSelectAllMatches(t):await this.handleCellEditorSelectAllMatches(o,e),await this.syncCursorsControllers(),this.syncAnchorListeners(),this.updateLazyDecorations())}async handleFindWidgetSelectAllMatches(e){if(0===this.state&&e.length){await this.notebookEditor.focusNotebookCell(e[0].cell,"editor"),this.anchorCell=this.notebookEditor.activeCellAndCodeEditor,this.trackedCells=[];for(const t of e)this.updateTrackedCell(t.cell,t.contentMatches.map((e=>C.fromRange(e.range,g.LTR)))),this.anchorCell&&t.cell.handle===this.anchorCell[0].handle&&t.cell.setSelections(t.contentMatches.map((e=>C.fromRange(e.range,g.LTR))));this._nbIsMultiSelectSession.set(!0),this.state=1,this._nbMultiSelectState.set(1)}}async handleCellEditorSelectAllMatches(e,t){if(0===this.state){const o=t.textModel;if(!o)return;const i=t.getSelections()[0],s=this.getWord(i,o);if(!s)return;this.word=s.word;const n=this.notebookEditor.getCellIndex(t);if(void 0===n)return;if(this.startPosition={cellIndex:n,position:new F(i.startLineNumber,s.startColumn)},this.anchorCell=this.notebookEditor.activeCellAndCodeEditor,!this.anchorCell||this.anchorCell[0].handle!==t.handle)throw new Error("Active cell is not the same as the cell passed as context");if(!(this.anchorCell[1]instanceof A))throw new Error("Active cell is not an instance of CodeEditorWidget");const r=e.findMatches(this.word,!1,!0,V);this.trackedCells=[];for(const e of r)if(await this.updateTrackedCell(e.cell,e.matches.map((e=>C.fromRange(e.range,g.LTR)))),e.cell.handle===t.handle){const t=this.notebookEditor.getCellByHandle(e.cell.handle);t&&t.setSelections(e.matches.map((e=>C.fromRange(e.range,g.LTR))))}this._nbIsMultiSelectSession.set(!0),this.state=1,this._nbMultiSelectState.set(1)}else if(1===this.state){const t=e.findMatches(this.word,!1,!0,V);for(const e of t)await this.updateTrackedCell(e.cell,e.matches.map((e=>C.fromRange(e.range,g.LTR))))}}async updateTrackedCell(e,t){const o=e instanceof pe?this.notebookEditor.getCellByHandle(e.handle):e;if(!o)throw new Error("Cell not found");let i=this.trackedCells.find((e=>e.cellViewModel.handle===o.handle));if(i)this.clearDecorations(i),i.matchSelections=t;else{const e=o.getSelections()[0];(await o.resolveTextModel()).pushStackElement();const s=this.constructCellEditorOptions(o),n=s.getRawOptions(),r={cursorStyle:ee(n.cursorStyle),cursorBlinking:$(n.cursorBlinking),cursorSmoothCaretAnimation:n.cursorSmoothCaretAnimation};i={cellViewModel:o,initialSelection:e,matchSelections:t,editorConfig:s,cursorConfig:r,decorationIds:[],undoRedoHistory:this.undoRedoService.getElements(o.uri)},this.trackedCells.push(i)}return i}async deleteLeft(){this.trackedCells.forEach((e=>{const t=this.cursorsControllers.get(e.cellViewModel.uri);if(!t)return;const[,o]=K.deleteLeft(t.getPrevEditOperationType(),t.context.cursorConfig,t.context.model,t.getSelections(),t.getAutoClosedCharacters()),i=q.executeCommands(t.context.model,t.getSelections(),o);i&&t.setSelections(new S,void 0,i,p.Explicit)})),this.updateLazyDecorations()}async deleteRight(){this.trackedCells.forEach((e=>{const t=this.cursorsControllers.get(e.cellViewModel.uri);if(!t)return;const[,o]=K.deleteRight(t.getPrevEditOperationType(),t.context.cursorConfig,t.context.model,t.getSelections());if(e.cellViewModel.handle!==this.anchorCell?.[0].handle){const e=q.executeCommands(t.context.model,t.getSelections(),o);if(!e)return;t.setSelections(new S,void 0,e,p.Explicit)}else t.setSelections(new S,void 0,e.cellViewModel.getSelections(),p.Explicit)})),this.updateLazyDecorations()}async undo(){const e=[];for(const t of this.trackedCells){const o=await t.cellViewModel.resolveTextModel();o&&e.push(o)}await Promise.all(e.map((e=>e.undo()))),this.updateViewModelSelections(),this.updateLazyDecorations()}async redo(){const e=[];for(const t of this.trackedCells){const o=await t.cellViewModel.resolveTextModel();o&&e.push(o)}await Promise.all(e.map((e=>e.redo()))),this.updateViewModelSelections(),this.updateLazyDecorations()}constructCellEditorOptions(e){const t=new fe(this.notebookEditor.getBaseCellEditorOptions(e.language),this.notebookEditor.notebookOptions,this.configurationService),o=t.getUpdatedValue(e.internalMetadata,e.uri);return t.dispose(),new j(!1,le.EditorContent,o,null,this.accessibilityService)}initializeMultiSelectDecorations(e){if(!e)return;const t=[];e.matchSelections.forEach((o=>{t.push({range:C.fromPositions(o.getEndPosition()),options:{description:"",className:this.getClassName(e.cursorConfig,!0)}})})),e.decorationIds=e.cellViewModel.deltaModelDecorations(e.decorationIds,t)}updateLazyDecorations(){this.trackedCells.forEach((e=>{if(e.cellViewModel.handle===this.anchorCell?.[0].handle)return;const t=this.cursorsControllers.get(e.cellViewModel.uri);if(!t)return;const o=t.getSelections(),i=[];o?.map((t=>{t.isEmpty()||i.push({range:t,options:{description:"",className:this.getClassName(e.cursorConfig,!1)}}),i.push({range:C.fromPositions(t.getPosition()),options:{description:"",zIndex:1e4,className:this.getClassName(e.cursorConfig,!0)}})})),e.decorationIds=e.cellViewModel.deltaModelDecorations(e.decorationIds,i)}))}clearDecorations(e){e.decorationIds=e.cellViewModel.deltaModelDecorations(e.decorationIds,[])}getWord(e,t){const o=e.startLineNumber,i=e.startColumn;return t.isDisposed()?null:t.getWordAtPosition({lineNumber:o,column:i})}getClassName(e,t){let o=t?".nb-multicursor-cursor":".nb-multicursor-selection";if(t){switch(e.cursorStyle){case k.Line:break;case k.Block:o+=".nb-cursor-block-style";break;case k.Underline:o+=".nb-cursor-underline-style";break;case k.LineThin:o+=".nb-cursor-line-thin-style";break;case k.BlockOutline:o+=".nb-cursor-block-outline-style";break;case k.UnderlineThin:o+=".nb-cursor-underline-thin-style"}switch(e.cursorBlinking){case N.Blink:o+=".nb-blink";break;case N.Smooth:o+=".nb-smooth";break;case N.Phase:o+=".nb-phase";break;case N.Expand:o+=".nb-expand";break;case N.Solid:default:o+=".nb-solid"}("on"===e.cursorSmoothCaretAnimation||"explicit"===e.cursorSmoothCaretAnimation)&&(o+=".nb-smooth-caret-animation")}return o}dispose(){super.dispose(),this.anchorDisposables.dispose(),this.cursorsDisposables.dispose(),this.trackedCells.forEach((e=>{this.clearDecorations(e)})),this.trackedCells=[]}};u=L([b(1,ae),b(2,ne),b(3,ie),b(4,se),b(5,U),b(6,ce)],u);class ke extends P{constructor(){super({id:ge,title:y("selectAllFindMatches","Select All Occurrences of Find Match"),precondition:n.and(n.equals("config.notebook.multiCursor.enabled",!0)),keybinding:{when:n.or(n.and(n.equals("config.notebook.multiCursor.enabled",!0),m,O),n.and(n.equals("config.notebook.multiCursor.enabled",!0),Ce)),primary:D.CtrlCmd|D.Shift|I.KeyL,weight:T.WorkbenchContrib}})}async runWithContext(e,t){const o=e.get(w),i=M(o.activeEditorPane);if(!i||!t.cell)return;const s=i.getContribution(u.id),n=i.getContribution(be.id);if(n.widget.isFocused){const e=n.widget.findModel;s.selectAllMatches(t.cell,e.findMatches)}else s.selectAllMatches(t.cell)}}class Ee extends P{constructor(){super({id:Se,title:y("addFindMatchToSelection","Add Selection to Next Find Match"),precondition:n.and(n.equals("config.notebook.multiCursor.enabled",!0),m,O),keybinding:{when:n.and(n.equals("config.notebook.multiCursor.enabled",!0),m,O),primary:D.CtrlCmd|I.KeyD,weight:T.WorkbenchContrib}})}async runWithContext(e,t){const o=e.get(w),i=M(o.activeEditorPane);i&&t.cell&&i.getContribution(u.id).findAndTrackNextSelection(t.cell)}}class we extends P{constructor(){super({id:"noteMultiCursor.exit",title:y("exitMultiSelection","Exit Multi Cursor Mode"),precondition:n.and(n.equals("config.notebook.multiCursor.enabled",!0),m,c.IsNotebookMultiCursor),keybinding:{when:n.and(n.equals("config.notebook.multiCursor.enabled",!0),m,c.IsNotebookMultiCursor),primary:I.Escape,weight:T.WorkbenchContrib}})}async runWithContext(e,t){const o=e.get(w),i=M(o.activeEditorPane);i&&i.getContribution(u.id).resetToIdleState()}}class ve extends P{constructor(){super({id:"noteMultiCursor.deleteLeft",title:y("deleteLeftMultiSelection","Delete Left"),precondition:n.and(n.equals("config.notebook.multiCursor.enabled",!0),m,c.IsNotebookMultiCursor,n.or(c.NotebookMultiSelectCursorState.isEqualTo(1),c.NotebookMultiSelectCursorState.isEqualTo(2))),keybinding:{when:n.and(n.equals("config.notebook.multiCursor.enabled",!0),m,c.IsNotebookMultiCursor,n.or(c.NotebookMultiSelectCursorState.isEqualTo(1),c.NotebookMultiSelectCursorState.isEqualTo(2))),primary:I.Backspace,weight:T.WorkbenchContrib}})}async runWithContext(e,t){const o=e.get(w),i=M(o.activeEditorPane);i&&i.getContribution(u.id).deleteLeft()}}class ye extends P{constructor(){super({id:"noteMultiCursor.deleteRight",title:y("deleteRightMultiSelection","Delete Right"),precondition:n.and(n.equals("config.notebook.multiCursor.enabled",!0),m,c.IsNotebookMultiCursor,n.or(c.NotebookMultiSelectCursorState.isEqualTo(1),c.NotebookMultiSelectCursorState.isEqualTo(2))),keybinding:{when:n.and(n.equals("config.notebook.multiCursor.enabled",!0),m,c.IsNotebookMultiCursor,n.or(c.NotebookMultiSelectCursorState.isEqualTo(1),c.NotebookMultiSelectCursorState.isEqualTo(2))),primary:I.Delete,weight:T.WorkbenchContrib}})}async runWithContext(e,t){const o=e.get(w),i=M(o.activeEditorPane);if(!i)return;const s=i.activeCodeEditor;s&&(Z.DeleteRight.runEditorCommand(e,s,null),i.getContribution(u.id).deleteRight())}}let v=class extends _{constructor(e,t){if(super(),this._editorService=e,this.configurationService=t,!this.configurationService.getValue("notebook.multiCursor.enabled"))return;this._register(Q.addImplementation(10005,"notebook-multicursor-undo-redo",(()=>{const e=M(this._editorService.activeEditorPane);return!(!e||!e.hasModel())&&e.getContribution(u.id).undo()}),n.and(n.equals("config.notebook.multiCursor.enabled",!0),m,c.IsNotebookMultiCursor))),this._register(J.addImplementation(10005,"notebook-multicursor-undo-redo",(()=>{const e=M(this._editorService.activeEditorPane);return!(!e||!e.hasModel())&&e.getContribution(u.id).redo()}),n.and(n.equals("config.notebook.multiCursor.enabled",!0),m,c.IsNotebookMultiCursor)))}static ID="workbench.contrib.notebook.multiCursorUndoRedo"};v=L([b(0,w),b(1,U)],v),me(u.id,u),ue(v.ID,v,he.BlockRestore),x(ke),x(Ee),x(we),x(ve),x(ye);export{c as NOTEBOOK_MULTI_CURSOR_CONTEXT,u as NotebookMultiCursorController,Me as NotebookMultiCursorState};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { localize } from "../../../../../../nls.js";
+import { Emitter, Event } from "../../../../../../base/common/event.js";
+import { KeyCode, KeyMod } from "../../../../../../base/common/keyCodes.js";
+import { Disposable, DisposableStore } from "../../../../../../base/common/lifecycle.js";
+import { ResourceMap } from "../../../../../../base/common/map.js";
+import { URI } from "../../../../../../base/common/uri.js";
+import { EditorConfiguration } from "../../../../../../editor/browser/config/editorConfiguration.js";
+import { CoreEditingCommands } from "../../../../../../editor/browser/coreCommands.js";
+import { ICodeEditor, PastePayload } from "../../../../../../editor/browser/editorBrowser.js";
+import { RedoCommand, UndoCommand } from "../../../../../../editor/browser/editorExtensions.js";
+import { CodeEditorWidget } from "../../../../../../editor/browser/widget/codeEditor/codeEditorWidget.js";
+import { IEditorConfiguration } from "../../../../../../editor/common/config/editorConfiguration.js";
+import { cursorBlinkingStyleFromString, cursorStyleFromString, TextEditorCursorBlinkingStyle, TextEditorCursorStyle } from "../../../../../../editor/common/config/editorOptions.js";
+import { Position } from "../../../../../../editor/common/core/position.js";
+import { Range } from "../../../../../../editor/common/core/range.js";
+import { Selection, SelectionDirection } from "../../../../../../editor/common/core/selection.js";
+import { IWordAtPosition, USUAL_WORD_SEPARATORS } from "../../../../../../editor/common/core/wordHelper.js";
+import { CommandExecutor, CursorsController } from "../../../../../../editor/common/cursor/cursor.js";
+import { DeleteOperations } from "../../../../../../editor/common/cursor/cursorDeleteOperations.js";
+import { CursorConfiguration, ICursorSimpleModel } from "../../../../../../editor/common/cursorCommon.js";
+import { CursorChangeReason } from "../../../../../../editor/common/cursorEvents.js";
+import { CompositionTypePayload, Handler, ReplacePreviousCharPayload } from "../../../../../../editor/common/editorCommon.js";
+import { ILanguageConfigurationService } from "../../../../../../editor/common/languages/languageConfigurationRegistry.js";
+import { IModelDeltaDecoration, ITextModel, PositionAffinity } from "../../../../../../editor/common/model.js";
+import { indentOfLine } from "../../../../../../editor/common/model/textModel.js";
+import { ITextModelService } from "../../../../../../editor/common/services/resolverService.js";
+import { ICoordinatesConverter } from "../../../../../../editor/common/viewModel.js";
+import { ViewModelEventsCollector } from "../../../../../../editor/common/viewModelEventDispatcher.js";
+import { IAccessibilityService } from "../../../../../../platform/accessibility/common/accessibility.js";
+import { MenuId, registerAction2 } from "../../../../../../platform/actions/common/actions.js";
+import { IConfigurationService } from "../../../../../../platform/configuration/common/configuration.js";
+import { ContextKeyExpr, IContextKeyService, RawContextKey } from "../../../../../../platform/contextkey/common/contextkey.js";
+import { ServicesAccessor } from "../../../../../../platform/instantiation/common/instantiation.js";
+import { KeybindingWeight } from "../../../../../../platform/keybinding/common/keybindingsRegistry.js";
+import { IPastFutureElements, IUndoRedoElement, IUndoRedoService, UndoRedoElementType } from "../../../../../../platform/undoRedo/common/undoRedo.js";
+import { registerWorkbenchContribution2, WorkbenchPhase } from "../../../../../common/contributions.js";
+import { IEditorService } from "../../../../../services/editor/common/editorService.js";
+import { KEYBINDING_CONTEXT_NOTEBOOK_FIND_WIDGET_FOCUSED, NOTEBOOK_CELL_EDITOR_FOCUSED, NOTEBOOK_IS_ACTIVE_EDITOR } from "../../../common/notebookContextKeys.js";
+import { INotebookActionContext, NotebookAction } from "../../controller/coreActions.js";
+import { CellFindMatchWithIndex, getNotebookEditorFromEditorPane, ICellViewModel, INotebookEditor, INotebookEditorContribution } from "../../notebookBrowser.js";
+import { registerNotebookContribution } from "../../notebookEditorExtensions.js";
+import { CellEditorOptions } from "../../view/cellParts/cellEditorOptions.js";
+import { NotebookFindContrib } from "../find/notebookFindWidget.js";
+import { NotebookTextModel } from "../../../common/model/notebookTextModel.js";
+import { NotebookCellTextModel } from "../../../common/model/notebookCellTextModel.js";
+const NOTEBOOK_ADD_FIND_MATCH_TO_SELECTION_ID = "notebook.addFindMatchToSelection";
+const NOTEBOOK_SELECT_ALL_FIND_MATCHES_ID = "notebook.selectAllFindMatches";
+var NotebookMultiCursorState = /* @__PURE__ */ ((NotebookMultiCursorState2) => {
+  NotebookMultiCursorState2[NotebookMultiCursorState2["Idle"] = 0] = "Idle";
+  NotebookMultiCursorState2[NotebookMultiCursorState2["Selecting"] = 1] = "Selecting";
+  NotebookMultiCursorState2[NotebookMultiCursorState2["Editing"] = 2] = "Editing";
+  return NotebookMultiCursorState2;
+})(NotebookMultiCursorState || {});
+const NOTEBOOK_MULTI_CURSOR_CONTEXT = {
+  IsNotebookMultiCursor: new RawContextKey("isNotebookMultiSelect", false),
+  NotebookMultiSelectCursorState: new RawContextKey("notebookMultiSelectCursorState", 0 /* Idle */)
+};
+let NotebookMultiCursorController = class extends Disposable {
+  constructor(notebookEditor, contextKeyService, textModelService, languageConfigurationService, accessibilityService, configurationService, undoRedoService) {
+    super();
+    this.notebookEditor = notebookEditor;
+    this.contextKeyService = contextKeyService;
+    this.textModelService = textModelService;
+    this.languageConfigurationService = languageConfigurationService;
+    this.accessibilityService = accessibilityService;
+    this.configurationService = configurationService;
+    this.undoRedoService = undoRedoService;
+    this.anchorCell = this.notebookEditor.activeCellAndCodeEditor;
+    this._register(this.onDidChangeAnchorCell(async () => {
+      await this.syncCursorsControllers();
+      this.syncAnchorListeners();
+    }));
+  }
+  static {
+    __name(this, "NotebookMultiCursorController");
+  }
+  static id = "notebook.multiCursorController";
+  word = "";
+  startPosition;
+  trackedCells = [];
+  _onDidChangeAnchorCell = this._register(new Emitter());
+  onDidChangeAnchorCell = this._onDidChangeAnchorCell.event;
+  anchorCell;
+  anchorDisposables = this._register(new DisposableStore());
+  cursorsDisposables = this._register(new DisposableStore());
+  cursorsControllers = new ResourceMap();
+  state = 0 /* Idle */;
+  getState() {
+    return this.state;
+  }
+  _nbIsMultiSelectSession = NOTEBOOK_MULTI_CURSOR_CONTEXT.IsNotebookMultiCursor.bindTo(this.contextKeyService);
+  _nbMultiSelectState = NOTEBOOK_MULTI_CURSOR_CONTEXT.NotebookMultiSelectCursorState.bindTo(this.contextKeyService);
+  syncAnchorListeners() {
+    this.anchorDisposables.clear();
+    if (!this.anchorCell) {
+      throw new Error("Anchor cell is undefined");
+    }
+    this.anchorDisposables.add(this.anchorCell[1].onWillType((input) => {
+      const collector = new ViewModelEventsCollector();
+      this.trackedCells.forEach((cell) => {
+        const controller = this.cursorsControllers.get(cell.cellViewModel.uri);
+        if (!controller) {
+          return;
+        }
+        if (cell.cellViewModel.handle !== this.anchorCell?.[0].handle) {
+          controller.type(collector, input, "keyboard");
+        }
+      });
+    }));
+    this.anchorDisposables.add(this.anchorCell[1].onDidType(() => {
+      this.state = 2 /* Editing */;
+      this._nbMultiSelectState.set(2 /* Editing */);
+      const anchorController = this.cursorsControllers.get(this.anchorCell[0].uri);
+      if (!anchorController) {
+        return;
+      }
+      const activeSelections = this.notebookEditor.activeCodeEditor?.getSelections();
+      if (!activeSelections) {
+        return;
+      }
+      anchorController.setSelections(new ViewModelEventsCollector(), "keyboard", activeSelections, CursorChangeReason.Explicit);
+      this.trackedCells.forEach((cell) => {
+        const controller = this.cursorsControllers.get(cell.cellViewModel.uri);
+        if (!controller) {
+          return;
+        }
+        cell.initialSelection = controller.getSelection();
+        cell.matchSelections = [];
+      });
+      this.updateLazyDecorations();
+    }));
+    this.anchorDisposables.add(this.anchorCell[1].onDidChangeCursorSelection((e) => {
+      if (e.source === "mouse") {
+        this.resetToIdleState();
+        return;
+      }
+      if (!e.oldSelections || e.reason === CursorChangeReason.NotSet || e.reason === CursorChangeReason.RecoverFromMarkers) {
+        return;
+      }
+      const translation = {
+        deltaStartCol: e.selection.startColumn - e.oldSelections[0].startColumn,
+        deltaStartLine: e.selection.startLineNumber - e.oldSelections[0].startLineNumber,
+        deltaEndCol: e.selection.endColumn - e.oldSelections[0].endColumn,
+        deltaEndLine: e.selection.endLineNumber - e.oldSelections[0].endLineNumber
+      };
+      const translationDir = e.selection.getDirection();
+      this.trackedCells.forEach((cell) => {
+        const controller = this.cursorsControllers.get(cell.cellViewModel.uri);
+        if (!controller) {
+          return;
+        }
+        const newSelections = controller.getSelections().map((selection) => {
+          const newStartCol = selection.startColumn + translation.deltaStartCol;
+          const newStartLine = selection.startLineNumber + translation.deltaStartLine;
+          const newEndCol = selection.endColumn + translation.deltaEndCol;
+          const newEndLine = selection.endLineNumber + translation.deltaEndLine;
+          return Selection.createWithDirection(newStartLine, newStartCol, newEndLine, newEndCol, translationDir);
+        });
+        controller.setSelections(new ViewModelEventsCollector(), e.source, newSelections, CursorChangeReason.Explicit);
+      });
+      this.updateLazyDecorations();
+    }));
+    this.anchorDisposables.add(this.anchorCell[1].onWillTriggerEditorOperationEvent((e) => {
+      this.handleEditorOperationEvent(e);
+    }));
+    this.anchorDisposables.add(this.anchorCell[1].onDidBlurEditorWidget(() => {
+      if (this.state === 1 /* Selecting */ || this.state === 2 /* Editing */) {
+        this.resetToIdleState();
+      }
+    }));
+  }
+  async syncCursorsControllers() {
+    this.cursorsDisposables.clear();
+    await Promise.all(this.trackedCells.map(async (cell) => {
+      const controller = await this.createCursorController(cell);
+      if (!controller) {
+        return;
+      }
+      this.cursorsControllers.set(cell.cellViewModel.uri, controller);
+      const selections = cell.matchSelections;
+      controller.setSelections(new ViewModelEventsCollector(), void 0, selections, CursorChangeReason.Explicit);
+    }));
+    this.updateLazyDecorations();
+  }
+  async createCursorController(cell) {
+    const textModelRef = await this.textModelService.createModelReference(cell.cellViewModel.uri);
+    const textModel = textModelRef.object.textEditorModel;
+    if (!textModel) {
+      return void 0;
+    }
+    const cursorSimpleModel = this.constructCursorSimpleModel(cell.cellViewModel);
+    const converter = this.constructCoordinatesConverter();
+    const editorConfig = cell.editorConfig;
+    const controller = this.cursorsDisposables.add(new CursorsController(
+      textModel,
+      cursorSimpleModel,
+      converter,
+      new CursorConfiguration(textModel.getLanguageId(), textModel.getOptions(), editorConfig, this.languageConfigurationService)
+    ));
+    controller.setSelections(new ViewModelEventsCollector(), void 0, cell.matchSelections, CursorChangeReason.Explicit);
+    return controller;
+  }
+  constructCoordinatesConverter() {
+    return {
+      convertViewPositionToModelPosition(viewPosition) {
+        return viewPosition;
+      },
+      convertViewRangeToModelRange(viewRange) {
+        return viewRange;
+      },
+      validateViewPosition(viewPosition, expectedModelPosition) {
+        return viewPosition;
+      },
+      validateViewRange(viewRange, expectedModelRange) {
+        return viewRange;
+      },
+      convertModelPositionToViewPosition(modelPosition, affinity, allowZeroLineNumber, belowHiddenRanges) {
+        return modelPosition;
+      },
+      convertModelRangeToViewRange(modelRange, affinity) {
+        return modelRange;
+      },
+      modelPositionIsVisible(modelPosition) {
+        return true;
+      },
+      getModelLineViewLineCount(modelLineNumber) {
+        return 1;
+      },
+      getViewLineNumberOfModelPosition(modelLineNumber, modelColumn) {
+        return modelLineNumber;
+      }
+    };
+  }
+  constructCursorSimpleModel(cell) {
+    return {
+      getLineCount() {
+        return cell.textBuffer.getLineCount();
+      },
+      getLineContent(lineNumber) {
+        return cell.textBuffer.getLineContent(lineNumber);
+      },
+      getLineMinColumn(lineNumber) {
+        return cell.textBuffer.getLineMinColumn(lineNumber);
+      },
+      getLineMaxColumn(lineNumber) {
+        return cell.textBuffer.getLineMaxColumn(lineNumber);
+      },
+      getLineFirstNonWhitespaceColumn(lineNumber) {
+        return cell.textBuffer.getLineFirstNonWhitespaceColumn(lineNumber);
+      },
+      getLineLastNonWhitespaceColumn(lineNumber) {
+        return cell.textBuffer.getLineLastNonWhitespaceColumn(lineNumber);
+      },
+      normalizePosition(position, affinity) {
+        return position;
+      },
+      getLineIndentColumn(lineNumber) {
+        return indentOfLine(cell.textBuffer.getLineContent(lineNumber)) + 1;
+      }
+    };
+  }
+  async handleEditorOperationEvent(e) {
+    this.trackedCells.forEach((cell) => {
+      if (cell.cellViewModel.handle === this.anchorCell?.[0].handle) {
+        return;
+      }
+      const eventsCollector = new ViewModelEventsCollector();
+      const controller = this.cursorsControllers.get(cell.cellViewModel.uri);
+      if (!controller) {
+        return;
+      }
+      this.executeEditorOperation(controller, eventsCollector, e);
+    });
+  }
+  executeEditorOperation(controller, eventsCollector, e) {
+    switch (e.handlerId) {
+      case Handler.CompositionStart:
+        controller.startComposition(eventsCollector);
+        break;
+      case Handler.CompositionEnd:
+        controller.endComposition(eventsCollector, e.source);
+        break;
+      case Handler.ReplacePreviousChar: {
+        const args = e.payload;
+        controller.compositionType(eventsCollector, args.text || "", args.replaceCharCnt || 0, 0, 0, e.source);
+        break;
+      }
+      case Handler.CompositionType: {
+        const args = e.payload;
+        controller.compositionType(eventsCollector, args.text || "", args.replacePrevCharCnt || 0, args.replaceNextCharCnt || 0, args.positionDelta || 0, e.source);
+        break;
+      }
+      case Handler.Paste: {
+        const args = e.payload;
+        controller.paste(eventsCollector, args.text || "", args.pasteOnNewLine || false, args.multicursorText || null, e.source);
+        break;
+      }
+      case Handler.Cut:
+        controller.cut(eventsCollector, e.source);
+        break;
+    }
+  }
+  updateViewModelSelections() {
+    for (const cell of this.trackedCells) {
+      const controller = this.cursorsControllers.get(cell.cellViewModel.uri);
+      if (!controller) {
+        return;
+      }
+      cell.cellViewModel.setSelections(controller.getSelections());
+    }
+  }
+  updateFinalUndoRedo() {
+    const anchorCellModel = this.anchorCell?.[1].getModel();
+    if (!anchorCellModel) {
+      return;
+    }
+    const newElementsMap = new ResourceMap();
+    const resources = [];
+    this.trackedCells.forEach((trackedMatch) => {
+      const undoRedoState = trackedMatch.undoRedoHistory;
+      if (!undoRedoState) {
+        return;
+      }
+      resources.push(trackedMatch.cellViewModel.uri);
+      const currentPastElements = this.undoRedoService.getElements(trackedMatch.cellViewModel.uri).past.slice();
+      const oldPastElements = trackedMatch.undoRedoHistory.past.slice();
+      const newElements = currentPastElements.slice(oldPastElements.length);
+      if (newElements.length === 0) {
+        return;
+      }
+      newElementsMap.set(trackedMatch.cellViewModel.uri, newElements);
+      this.undoRedoService.removeElements(trackedMatch.cellViewModel.uri);
+      oldPastElements.forEach((element) => {
+        this.undoRedoService.pushElement(element);
+      });
+    });
+    this.undoRedoService.pushElement({
+      type: UndoRedoElementType.Workspace,
+      resources,
+      label: "Multi Cursor Edit",
+      code: "multiCursorEdit",
+      confirmBeforeUndo: false,
+      undo: /* @__PURE__ */ __name(async () => {
+        newElementsMap.forEach(async (value) => {
+          value.reverse().forEach(async (element) => {
+            await element.undo();
+          });
+        });
+      }, "undo"),
+      redo: /* @__PURE__ */ __name(async () => {
+        newElementsMap.forEach(async (value) => {
+          value.forEach(async (element) => {
+            await element.redo();
+          });
+        });
+      }, "redo")
+    });
+  }
+  resetToIdleState() {
+    this.state = 0 /* Idle */;
+    this._nbMultiSelectState.set(0 /* Idle */);
+    this._nbIsMultiSelectSession.set(false);
+    this.updateFinalUndoRedo();
+    this.trackedCells.forEach((cell) => {
+      this.clearDecorations(cell);
+      cell.cellViewModel.setSelections([cell.initialSelection]);
+    });
+    this.anchorDisposables.clear();
+    this.anchorCell = void 0;
+    this.cursorsDisposables.clear();
+    this.cursorsControllers.clear();
+    this.trackedCells = [];
+    this.startPosition = void 0;
+    this.word = "";
+  }
+  async findAndTrackNextSelection(focusedCell) {
+    if (this.state === 0 /* Idle */) {
+      const textModel = focusedCell.textModel;
+      if (!textModel) {
+        return;
+      }
+      const inputSelection = focusedCell.getSelections()[0];
+      const word = this.getWord(inputSelection, textModel);
+      if (!word) {
+        return;
+      }
+      this.word = word.word;
+      const index = this.notebookEditor.getCellIndex(focusedCell);
+      if (index === void 0) {
+        return;
+      }
+      this.startPosition = {
+        cellIndex: index,
+        position: new Position(inputSelection.startLineNumber, word.startColumn)
+      };
+      const newSelection = new Selection(
+        inputSelection.startLineNumber,
+        word.startColumn,
+        inputSelection.startLineNumber,
+        word.endColumn
+      );
+      focusedCell.setSelections([newSelection]);
+      this.anchorCell = this.notebookEditor.activeCellAndCodeEditor;
+      if (!this.anchorCell || this.anchorCell[0].handle !== focusedCell.handle) {
+        throw new Error("Active cell is not the same as the cell passed as context");
+      }
+      if (!(this.anchorCell[1] instanceof CodeEditorWidget)) {
+        throw new Error("Active cell is not an instance of CodeEditorWidget");
+      }
+      await this.updateTrackedCell(focusedCell, [newSelection]);
+      this._nbIsMultiSelectSession.set(true);
+      this.state = 1 /* Selecting */;
+      this._nbMultiSelectState.set(1 /* Selecting */);
+      this._onDidChangeAnchorCell.fire();
+    } else if (this.state === 1 /* Selecting */) {
+      const notebookTextModel = this.notebookEditor.textModel;
+      if (!notebookTextModel) {
+        return;
+      }
+      const index = this.notebookEditor.getCellIndex(focusedCell);
+      if (index === void 0) {
+        return;
+      }
+      if (!this.startPosition) {
+        return;
+      }
+      const findResult = notebookTextModel.findNextMatch(
+        this.word,
+        { cellIndex: index, position: focusedCell.getSelections()[focusedCell.getSelections().length - 1].getEndPosition() },
+        false,
+        true,
+        USUAL_WORD_SEPARATORS,
+        this.startPosition
+      );
+      if (!findResult) {
+        return;
+      }
+      const findResultCellViewModel = this.notebookEditor.getCellByHandle(findResult.cell.handle);
+      if (!findResultCellViewModel) {
+        return;
+      }
+      if (findResult.cell.handle === focusedCell.handle) {
+        const selections = [...focusedCell.getSelections(), Selection.fromRange(findResult.match.range, SelectionDirection.LTR)];
+        const trackedCell = await this.updateTrackedCell(focusedCell, selections);
+        findResultCellViewModel.setSelections(trackedCell.matchSelections);
+      } else if (findResult.cell.handle !== focusedCell.handle) {
+        await this.notebookEditor.revealRangeInViewAsync(findResultCellViewModel, findResult.match.range);
+        await this.notebookEditor.focusNotebookCell(findResultCellViewModel, "editor");
+        const trackedCell = await this.updateTrackedCell(findResultCellViewModel, [Selection.fromRange(findResult.match.range, SelectionDirection.LTR)]);
+        findResultCellViewModel.setSelections(trackedCell.matchSelections);
+        this.anchorCell = this.notebookEditor.activeCellAndCodeEditor;
+        if (!this.anchorCell || !(this.anchorCell[1] instanceof CodeEditorWidget)) {
+          throw new Error("Active cell is not an instance of CodeEditorWidget");
+        }
+        this._onDidChangeAnchorCell.fire();
+        this.initializeMultiSelectDecorations(this.trackedCells.find((trackedCell2) => trackedCell2.cellViewModel.handle === focusedCell.handle));
+      }
+    }
+  }
+  async selectAllMatches(focusedCell, matches) {
+    const notebookTextModel = this.notebookEditor.textModel;
+    if (!notebookTextModel) {
+      return;
+    }
+    if (matches) {
+      await this.handleFindWidgetSelectAllMatches(matches);
+    } else {
+      await this.handleCellEditorSelectAllMatches(notebookTextModel, focusedCell);
+    }
+    await this.syncCursorsControllers();
+    this.syncAnchorListeners();
+    this.updateLazyDecorations();
+  }
+  async handleFindWidgetSelectAllMatches(matches) {
+    if (this.state !== 0 /* Idle */) {
+      return;
+    }
+    if (!matches.length) {
+      return;
+    }
+    await this.notebookEditor.focusNotebookCell(matches[0].cell, "editor");
+    this.anchorCell = this.notebookEditor.activeCellAndCodeEditor;
+    this.trackedCells = [];
+    for (const match of matches) {
+      this.updateTrackedCell(match.cell, match.contentMatches.map((match2) => Selection.fromRange(match2.range, SelectionDirection.LTR)));
+      if (this.anchorCell && match.cell.handle === this.anchorCell[0].handle) {
+        match.cell.setSelections(match.contentMatches.map((match2) => Selection.fromRange(match2.range, SelectionDirection.LTR)));
+      }
+    }
+    this._nbIsMultiSelectSession.set(true);
+    this.state = 1 /* Selecting */;
+    this._nbMultiSelectState.set(1 /* Selecting */);
+  }
+  async handleCellEditorSelectAllMatches(notebookTextModel, focusedCell) {
+    if (this.state === 0 /* Idle */) {
+      const textModel = focusedCell.textModel;
+      if (!textModel) {
+        return;
+      }
+      const inputSelection = focusedCell.getSelections()[0];
+      const word = this.getWord(inputSelection, textModel);
+      if (!word) {
+        return;
+      }
+      this.word = word.word;
+      const index = this.notebookEditor.getCellIndex(focusedCell);
+      if (index === void 0) {
+        return;
+      }
+      this.startPosition = {
+        cellIndex: index,
+        position: new Position(inputSelection.startLineNumber, word.startColumn)
+      };
+      this.anchorCell = this.notebookEditor.activeCellAndCodeEditor;
+      if (!this.anchorCell || this.anchorCell[0].handle !== focusedCell.handle) {
+        throw new Error("Active cell is not the same as the cell passed as context");
+      }
+      if (!(this.anchorCell[1] instanceof CodeEditorWidget)) {
+        throw new Error("Active cell is not an instance of CodeEditorWidget");
+      }
+      const findResults = notebookTextModel.findMatches(this.word, false, true, USUAL_WORD_SEPARATORS);
+      this.trackedCells = [];
+      for (const res of findResults) {
+        await this.updateTrackedCell(res.cell, res.matches.map((match) => Selection.fromRange(match.range, SelectionDirection.LTR)));
+        if (res.cell.handle === focusedCell.handle) {
+          const cellViewModel = this.notebookEditor.getCellByHandle(res.cell.handle);
+          if (cellViewModel) {
+            cellViewModel.setSelections(res.matches.map((match) => Selection.fromRange(match.range, SelectionDirection.LTR)));
+          }
+        }
+      }
+      this._nbIsMultiSelectSession.set(true);
+      this.state = 1 /* Selecting */;
+      this._nbMultiSelectState.set(1 /* Selecting */);
+    } else if (this.state === 1 /* Selecting */) {
+      const findResults = notebookTextModel.findMatches(this.word, false, true, USUAL_WORD_SEPARATORS);
+      for (const res of findResults) {
+        await this.updateTrackedCell(res.cell, res.matches.map((match) => Selection.fromRange(match.range, SelectionDirection.LTR)));
+      }
+    }
+  }
+  async updateTrackedCell(cell, selections) {
+    const cellViewModel = cell instanceof NotebookCellTextModel ? this.notebookEditor.getCellByHandle(cell.handle) : cell;
+    if (!cellViewModel) {
+      throw new Error("Cell not found");
+    }
+    let trackedMatch = this.trackedCells.find((trackedCell) => trackedCell.cellViewModel.handle === cellViewModel.handle);
+    if (trackedMatch) {
+      this.clearDecorations(trackedMatch);
+      trackedMatch.matchSelections = selections;
+    } else {
+      const initialSelection = cellViewModel.getSelections()[0];
+      const textModel = await cellViewModel.resolveTextModel();
+      textModel.pushStackElement();
+      const editorConfig = this.constructCellEditorOptions(cellViewModel);
+      const rawEditorOptions = editorConfig.getRawOptions();
+      const cursorConfig = {
+        cursorStyle: cursorStyleFromString(rawEditorOptions.cursorStyle),
+        cursorBlinking: cursorBlinkingStyleFromString(rawEditorOptions.cursorBlinking),
+        cursorSmoothCaretAnimation: rawEditorOptions.cursorSmoothCaretAnimation
+      };
+      trackedMatch = {
+        cellViewModel,
+        initialSelection,
+        matchSelections: selections,
+        editorConfig,
+        cursorConfig,
+        decorationIds: [],
+        undoRedoHistory: this.undoRedoService.getElements(cellViewModel.uri)
+      };
+      this.trackedCells.push(trackedMatch);
+    }
+    return trackedMatch;
+  }
+  async deleteLeft() {
+    this.trackedCells.forEach((cell) => {
+      const controller = this.cursorsControllers.get(cell.cellViewModel.uri);
+      if (!controller) {
+        return;
+      }
+      const [, commands] = DeleteOperations.deleteLeft(
+        controller.getPrevEditOperationType(),
+        controller.context.cursorConfig,
+        controller.context.model,
+        controller.getSelections(),
+        controller.getAutoClosedCharacters()
+      );
+      const delSelections = CommandExecutor.executeCommands(controller.context.model, controller.getSelections(), commands);
+      if (!delSelections) {
+        return;
+      }
+      controller.setSelections(new ViewModelEventsCollector(), void 0, delSelections, CursorChangeReason.Explicit);
+    });
+    this.updateLazyDecorations();
+  }
+  async deleteRight() {
+    this.trackedCells.forEach((cell) => {
+      const controller = this.cursorsControllers.get(cell.cellViewModel.uri);
+      if (!controller) {
+        return;
+      }
+      const [, commands] = DeleteOperations.deleteRight(
+        controller.getPrevEditOperationType(),
+        controller.context.cursorConfig,
+        controller.context.model,
+        controller.getSelections()
+      );
+      if (cell.cellViewModel.handle !== this.anchorCell?.[0].handle) {
+        const delSelections = CommandExecutor.executeCommands(controller.context.model, controller.getSelections(), commands);
+        if (!delSelections) {
+          return;
+        }
+        controller.setSelections(new ViewModelEventsCollector(), void 0, delSelections, CursorChangeReason.Explicit);
+      } else {
+        controller.setSelections(new ViewModelEventsCollector(), void 0, cell.cellViewModel.getSelections(), CursorChangeReason.Explicit);
+      }
+    });
+    this.updateLazyDecorations();
+  }
+  async undo() {
+    const models = [];
+    for (const cell of this.trackedCells) {
+      const model = await cell.cellViewModel.resolveTextModel();
+      if (model) {
+        models.push(model);
+      }
+    }
+    await Promise.all(models.map((model) => model.undo()));
+    this.updateViewModelSelections();
+    this.updateLazyDecorations();
+  }
+  async redo() {
+    const models = [];
+    for (const cell of this.trackedCells) {
+      const model = await cell.cellViewModel.resolveTextModel();
+      if (model) {
+        models.push(model);
+      }
+    }
+    await Promise.all(models.map((model) => model.redo()));
+    this.updateViewModelSelections();
+    this.updateLazyDecorations();
+  }
+  constructCellEditorOptions(cell) {
+    const cellEditorOptions = new CellEditorOptions(this.notebookEditor.getBaseCellEditorOptions(cell.language), this.notebookEditor.notebookOptions, this.configurationService);
+    const options = cellEditorOptions.getUpdatedValue(cell.internalMetadata, cell.uri);
+    cellEditorOptions.dispose();
+    return new EditorConfiguration(false, MenuId.EditorContent, options, null, this.accessibilityService);
+  }
+  /**
+   * Updates the multicursor selection decorations for a specific matched cell
+   *
+   * @param cell -- match object containing the viewmodel + selections
+   */
+  initializeMultiSelectDecorations(cell) {
+    if (!cell) {
+      return;
+    }
+    const decorations = [];
+    cell.matchSelections.forEach((selection) => {
+      decorations.push({
+        range: Selection.fromPositions(selection.getEndPosition()),
+        options: {
+          description: "",
+          className: this.getClassName(cell.cursorConfig, true)
+        }
+      });
+    });
+    cell.decorationIds = cell.cellViewModel.deltaModelDecorations(
+      cell.decorationIds,
+      decorations
+    );
+  }
+  updateLazyDecorations() {
+    this.trackedCells.forEach((cell) => {
+      if (cell.cellViewModel.handle === this.anchorCell?.[0].handle) {
+        return;
+      }
+      const controller = this.cursorsControllers.get(cell.cellViewModel.uri);
+      if (!controller) {
+        return;
+      }
+      const selections = controller.getSelections();
+      const newDecorations = [];
+      selections?.map((selection) => {
+        const isEmpty = selection.isEmpty();
+        if (!isEmpty) {
+          newDecorations.push({
+            range: selection,
+            options: {
+              description: "",
+              className: this.getClassName(cell.cursorConfig, false)
+            }
+          });
+        }
+        newDecorations.push({
+          range: Selection.fromPositions(selection.getPosition()),
+          options: {
+            description: "",
+            zIndex: 1e4,
+            className: this.getClassName(cell.cursorConfig, true)
+          }
+        });
+      });
+      cell.decorationIds = cell.cellViewModel.deltaModelDecorations(
+        cell.decorationIds,
+        newDecorations
+      );
+    });
+  }
+  clearDecorations(cell) {
+    cell.decorationIds = cell.cellViewModel.deltaModelDecorations(
+      cell.decorationIds,
+      []
+    );
+  }
+  getWord(selection, model) {
+    const lineNumber = selection.startLineNumber;
+    const startColumn = selection.startColumn;
+    if (model.isDisposed()) {
+      return null;
+    }
+    return model.getWordAtPosition({
+      lineNumber,
+      column: startColumn
+    });
+  }
+  getClassName(cursorConfig, isCursor) {
+    let result = isCursor ? ".nb-multicursor-cursor" : ".nb-multicursor-selection";
+    if (isCursor) {
+      switch (cursorConfig.cursorStyle) {
+        case TextEditorCursorStyle.Line:
+          break;
+        // default style, no additional class needed (handled by base css style)
+        case TextEditorCursorStyle.Block:
+          result += ".nb-cursor-block-style";
+          break;
+        case TextEditorCursorStyle.Underline:
+          result += ".nb-cursor-underline-style";
+          break;
+        case TextEditorCursorStyle.LineThin:
+          result += ".nb-cursor-line-thin-style";
+          break;
+        case TextEditorCursorStyle.BlockOutline:
+          result += ".nb-cursor-block-outline-style";
+          break;
+        case TextEditorCursorStyle.UnderlineThin:
+          result += ".nb-cursor-underline-thin-style";
+          break;
+        default:
+          break;
+      }
+      switch (cursorConfig.cursorBlinking) {
+        case TextEditorCursorBlinkingStyle.Blink:
+          result += ".nb-blink";
+          break;
+        case TextEditorCursorBlinkingStyle.Smooth:
+          result += ".nb-smooth";
+          break;
+        case TextEditorCursorBlinkingStyle.Phase:
+          result += ".nb-phase";
+          break;
+        case TextEditorCursorBlinkingStyle.Expand:
+          result += ".nb-expand";
+          break;
+        case TextEditorCursorBlinkingStyle.Solid:
+          result += ".nb-solid";
+          break;
+        default:
+          result += ".nb-solid";
+          break;
+      }
+      if (cursorConfig.cursorSmoothCaretAnimation === "on" || cursorConfig.cursorSmoothCaretAnimation === "explicit") {
+        result += ".nb-smooth-caret-animation";
+      }
+    }
+    return result;
+  }
+  dispose() {
+    super.dispose();
+    this.anchorDisposables.dispose();
+    this.cursorsDisposables.dispose();
+    this.trackedCells.forEach((cell) => {
+      this.clearDecorations(cell);
+    });
+    this.trackedCells = [];
+  }
+};
+NotebookMultiCursorController = __decorateClass([
+  __decorateParam(1, IContextKeyService),
+  __decorateParam(2, ITextModelService),
+  __decorateParam(3, ILanguageConfigurationService),
+  __decorateParam(4, IAccessibilityService),
+  __decorateParam(5, IConfigurationService),
+  __decorateParam(6, IUndoRedoService)
+], NotebookMultiCursorController);
+class NotebookSelectAllFindMatches extends NotebookAction {
+  static {
+    __name(this, "NotebookSelectAllFindMatches");
+  }
+  constructor() {
+    super({
+      id: NOTEBOOK_SELECT_ALL_FIND_MATCHES_ID,
+      title: localize("selectAllFindMatches", "Select All Occurrences of Find Match"),
+      precondition: ContextKeyExpr.and(
+        ContextKeyExpr.equals("config.notebook.multiCursor.enabled", true)
+      ),
+      keybinding: {
+        when: ContextKeyExpr.or(
+          ContextKeyExpr.and(
+            ContextKeyExpr.equals("config.notebook.multiCursor.enabled", true),
+            NOTEBOOK_IS_ACTIVE_EDITOR,
+            NOTEBOOK_CELL_EDITOR_FOCUSED
+          ),
+          ContextKeyExpr.and(
+            ContextKeyExpr.equals("config.notebook.multiCursor.enabled", true),
+            KEYBINDING_CONTEXT_NOTEBOOK_FIND_WIDGET_FOCUSED
+          )
+        ),
+        primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyL,
+        weight: KeybindingWeight.WorkbenchContrib
+      }
+    });
+  }
+  async runWithContext(accessor, context) {
+    const editorService = accessor.get(IEditorService);
+    const editor = getNotebookEditorFromEditorPane(editorService.activeEditorPane);
+    if (!editor) {
+      return;
+    }
+    if (!context.cell) {
+      return;
+    }
+    const cursorController = editor.getContribution(NotebookMultiCursorController.id);
+    const findController = editor.getContribution(NotebookFindContrib.id);
+    if (findController.widget.isFocused) {
+      const findModel = findController.widget.findModel;
+      cursorController.selectAllMatches(context.cell, findModel.findMatches);
+    } else {
+      cursorController.selectAllMatches(context.cell);
+    }
+  }
+}
+class NotebookAddMatchToMultiSelectionAction extends NotebookAction {
+  static {
+    __name(this, "NotebookAddMatchToMultiSelectionAction");
+  }
+  constructor() {
+    super({
+      id: NOTEBOOK_ADD_FIND_MATCH_TO_SELECTION_ID,
+      title: localize("addFindMatchToSelection", "Add Selection to Next Find Match"),
+      precondition: ContextKeyExpr.and(
+        ContextKeyExpr.equals("config.notebook.multiCursor.enabled", true),
+        NOTEBOOK_IS_ACTIVE_EDITOR,
+        NOTEBOOK_CELL_EDITOR_FOCUSED
+      ),
+      keybinding: {
+        when: ContextKeyExpr.and(
+          ContextKeyExpr.equals("config.notebook.multiCursor.enabled", true),
+          NOTEBOOK_IS_ACTIVE_EDITOR,
+          NOTEBOOK_CELL_EDITOR_FOCUSED
+        ),
+        primary: KeyMod.CtrlCmd | KeyCode.KeyD,
+        weight: KeybindingWeight.WorkbenchContrib
+      }
+    });
+  }
+  async runWithContext(accessor, context) {
+    const editorService = accessor.get(IEditorService);
+    const editor = getNotebookEditorFromEditorPane(editorService.activeEditorPane);
+    if (!editor) {
+      return;
+    }
+    if (!context.cell) {
+      return;
+    }
+    const controller = editor.getContribution(NotebookMultiCursorController.id);
+    controller.findAndTrackNextSelection(context.cell);
+  }
+}
+class NotebookExitMultiSelectionAction extends NotebookAction {
+  static {
+    __name(this, "NotebookExitMultiSelectionAction");
+  }
+  constructor() {
+    super({
+      id: "noteMultiCursor.exit",
+      title: localize("exitMultiSelection", "Exit Multi Cursor Mode"),
+      precondition: ContextKeyExpr.and(
+        ContextKeyExpr.equals("config.notebook.multiCursor.enabled", true),
+        NOTEBOOK_IS_ACTIVE_EDITOR,
+        NOTEBOOK_MULTI_CURSOR_CONTEXT.IsNotebookMultiCursor
+      ),
+      keybinding: {
+        when: ContextKeyExpr.and(
+          ContextKeyExpr.equals("config.notebook.multiCursor.enabled", true),
+          NOTEBOOK_IS_ACTIVE_EDITOR,
+          NOTEBOOK_MULTI_CURSOR_CONTEXT.IsNotebookMultiCursor
+        ),
+        primary: KeyCode.Escape,
+        weight: KeybindingWeight.WorkbenchContrib
+      }
+    });
+  }
+  async runWithContext(accessor, context) {
+    const editorService = accessor.get(IEditorService);
+    const editor = getNotebookEditorFromEditorPane(editorService.activeEditorPane);
+    if (!editor) {
+      return;
+    }
+    const controller = editor.getContribution(NotebookMultiCursorController.id);
+    controller.resetToIdleState();
+  }
+}
+class NotebookDeleteLeftMultiSelectionAction extends NotebookAction {
+  static {
+    __name(this, "NotebookDeleteLeftMultiSelectionAction");
+  }
+  constructor() {
+    super({
+      id: "noteMultiCursor.deleteLeft",
+      title: localize("deleteLeftMultiSelection", "Delete Left"),
+      precondition: ContextKeyExpr.and(
+        ContextKeyExpr.equals("config.notebook.multiCursor.enabled", true),
+        NOTEBOOK_IS_ACTIVE_EDITOR,
+        NOTEBOOK_MULTI_CURSOR_CONTEXT.IsNotebookMultiCursor,
+        ContextKeyExpr.or(
+          NOTEBOOK_MULTI_CURSOR_CONTEXT.NotebookMultiSelectCursorState.isEqualTo(1 /* Selecting */),
+          NOTEBOOK_MULTI_CURSOR_CONTEXT.NotebookMultiSelectCursorState.isEqualTo(2 /* Editing */)
+        )
+      ),
+      keybinding: {
+        when: ContextKeyExpr.and(
+          ContextKeyExpr.equals("config.notebook.multiCursor.enabled", true),
+          NOTEBOOK_IS_ACTIVE_EDITOR,
+          NOTEBOOK_MULTI_CURSOR_CONTEXT.IsNotebookMultiCursor,
+          ContextKeyExpr.or(
+            NOTEBOOK_MULTI_CURSOR_CONTEXT.NotebookMultiSelectCursorState.isEqualTo(1 /* Selecting */),
+            NOTEBOOK_MULTI_CURSOR_CONTEXT.NotebookMultiSelectCursorState.isEqualTo(2 /* Editing */)
+          )
+        ),
+        primary: KeyCode.Backspace,
+        weight: KeybindingWeight.WorkbenchContrib
+      }
+    });
+  }
+  async runWithContext(accessor, context) {
+    const editorService = accessor.get(IEditorService);
+    const editor = getNotebookEditorFromEditorPane(editorService.activeEditorPane);
+    if (!editor) {
+      return;
+    }
+    const controller = editor.getContribution(NotebookMultiCursorController.id);
+    controller.deleteLeft();
+  }
+}
+class NotebookDeleteRightMultiSelectionAction extends NotebookAction {
+  static {
+    __name(this, "NotebookDeleteRightMultiSelectionAction");
+  }
+  constructor() {
+    super({
+      id: "noteMultiCursor.deleteRight",
+      title: localize("deleteRightMultiSelection", "Delete Right"),
+      precondition: ContextKeyExpr.and(
+        ContextKeyExpr.equals("config.notebook.multiCursor.enabled", true),
+        NOTEBOOK_IS_ACTIVE_EDITOR,
+        NOTEBOOK_MULTI_CURSOR_CONTEXT.IsNotebookMultiCursor,
+        ContextKeyExpr.or(
+          NOTEBOOK_MULTI_CURSOR_CONTEXT.NotebookMultiSelectCursorState.isEqualTo(1 /* Selecting */),
+          NOTEBOOK_MULTI_CURSOR_CONTEXT.NotebookMultiSelectCursorState.isEqualTo(2 /* Editing */)
+        )
+      ),
+      keybinding: {
+        when: ContextKeyExpr.and(
+          ContextKeyExpr.equals("config.notebook.multiCursor.enabled", true),
+          NOTEBOOK_IS_ACTIVE_EDITOR,
+          NOTEBOOK_MULTI_CURSOR_CONTEXT.IsNotebookMultiCursor,
+          ContextKeyExpr.or(
+            NOTEBOOK_MULTI_CURSOR_CONTEXT.NotebookMultiSelectCursorState.isEqualTo(1 /* Selecting */),
+            NOTEBOOK_MULTI_CURSOR_CONTEXT.NotebookMultiSelectCursorState.isEqualTo(2 /* Editing */)
+          )
+        ),
+        primary: KeyCode.Delete,
+        weight: KeybindingWeight.WorkbenchContrib
+      }
+    });
+  }
+  async runWithContext(accessor, context) {
+    const editorService = accessor.get(IEditorService);
+    const nbEditor = getNotebookEditorFromEditorPane(editorService.activeEditorPane);
+    if (!nbEditor) {
+      return;
+    }
+    const cellEditor = nbEditor.activeCodeEditor;
+    if (!cellEditor) {
+      return;
+    }
+    CoreEditingCommands.DeleteRight.runEditorCommand(accessor, cellEditor, null);
+    const controller = nbEditor.getContribution(NotebookMultiCursorController.id);
+    controller.deleteRight();
+  }
+}
+let NotebookMultiCursorUndoRedoContribution = class extends Disposable {
+  constructor(_editorService, configurationService) {
+    super();
+    this._editorService = _editorService;
+    this.configurationService = configurationService;
+    if (!this.configurationService.getValue("notebook.multiCursor.enabled")) {
+      return;
+    }
+    const PRIORITY = 10005;
+    this._register(UndoCommand.addImplementation(PRIORITY, "notebook-multicursor-undo-redo", () => {
+      const editor = getNotebookEditorFromEditorPane(this._editorService.activeEditorPane);
+      if (!editor) {
+        return false;
+      }
+      if (!editor.hasModel()) {
+        return false;
+      }
+      const controller = editor.getContribution(NotebookMultiCursorController.id);
+      return controller.undo();
+    }, ContextKeyExpr.and(
+      ContextKeyExpr.equals("config.notebook.multiCursor.enabled", true),
+      NOTEBOOK_IS_ACTIVE_EDITOR,
+      NOTEBOOK_MULTI_CURSOR_CONTEXT.IsNotebookMultiCursor
+    )));
+    this._register(RedoCommand.addImplementation(PRIORITY, "notebook-multicursor-undo-redo", () => {
+      const editor = getNotebookEditorFromEditorPane(this._editorService.activeEditorPane);
+      if (!editor) {
+        return false;
+      }
+      if (!editor.hasModel()) {
+        return false;
+      }
+      const controller = editor.getContribution(NotebookMultiCursorController.id);
+      return controller.redo();
+    }, ContextKeyExpr.and(
+      ContextKeyExpr.equals("config.notebook.multiCursor.enabled", true),
+      NOTEBOOK_IS_ACTIVE_EDITOR,
+      NOTEBOOK_MULTI_CURSOR_CONTEXT.IsNotebookMultiCursor
+    )));
+  }
+  static {
+    __name(this, "NotebookMultiCursorUndoRedoContribution");
+  }
+  static ID = "workbench.contrib.notebook.multiCursorUndoRedo";
+};
+NotebookMultiCursorUndoRedoContribution = __decorateClass([
+  __decorateParam(0, IEditorService),
+  __decorateParam(1, IConfigurationService)
+], NotebookMultiCursorUndoRedoContribution);
+registerNotebookContribution(NotebookMultiCursorController.id, NotebookMultiCursorController);
+registerWorkbenchContribution2(NotebookMultiCursorUndoRedoContribution.ID, NotebookMultiCursorUndoRedoContribution, WorkbenchPhase.BlockRestore);
+registerAction2(NotebookSelectAllFindMatches);
+registerAction2(NotebookAddMatchToMultiSelectionAction);
+registerAction2(NotebookExitMultiSelectionAction);
+registerAction2(NotebookDeleteLeftMultiSelectionAction);
+registerAction2(NotebookDeleteRightMultiSelectionAction);
+export {
+  NOTEBOOK_MULTI_CURSOR_CONTEXT,
+  NotebookMultiCursorController,
+  NotebookMultiCursorState
+};
+//# sourceMappingURL=notebookMulticursor.js.map

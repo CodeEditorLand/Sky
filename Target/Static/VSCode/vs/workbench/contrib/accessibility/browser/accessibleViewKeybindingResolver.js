@@ -1,1 +1,42 @@
-import{MarkdownString as m}from"../../../../base/common/htmlContent.js";import"../../../../platform/keybinding/common/keybinding.js";import"../../../../platform/quickinput/browser/pickerQuickAccess.js";function y(n,e){if(!e)return;const i=[],o=[],t=e.matchAll(/(\<keybinding:(?<commandId>[^\<]*)\>)/gm);for(const s of[...t]){const t=s?.groups?.commandId;let r;if(s?.length&&t){const m=n.lookupKeybinding(t)?.getAriaLabel();m?(r=" ("+m+")",o.push({label:t,id:t})):(r=" (unassigned keybinding)",i.push({label:t,id:t})),e=e.replace(s[0],r)}}const s=new m(e);return s.isTrusted=!0,{content:s,configureKeybindingItems:i.length?i:void 0,configuredKeybindingItems:o.length?o:void 0}}export{y as resolveContentAndKeybindingItems};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { MarkdownString } from "../../../../base/common/htmlContent.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { IPickerQuickAccessItem } from "../../../../platform/quickinput/browser/pickerQuickAccess.js";
+function resolveContentAndKeybindingItems(keybindingService, value) {
+  if (!value) {
+    return;
+  }
+  const configureKeybindingItems = [];
+  const configuredKeybindingItems = [];
+  const matches = value.matchAll(/(\<keybinding:(?<commandId>[^\<]*)\>)/gm);
+  for (const match of [...matches]) {
+    const commandId = match?.groups?.commandId;
+    let kbLabel;
+    if (match?.length && commandId) {
+      const keybinding = keybindingService.lookupKeybinding(commandId)?.getAriaLabel();
+      if (!keybinding) {
+        kbLabel = ` (unassigned keybinding)`;
+        configureKeybindingItems.push({
+          label: commandId,
+          id: commandId
+        });
+      } else {
+        kbLabel = " (" + keybinding + ")";
+        configuredKeybindingItems.push({
+          label: commandId,
+          id: commandId
+        });
+      }
+      value = value.replace(match[0], kbLabel);
+    }
+  }
+  const content = new MarkdownString(value);
+  content.isTrusted = true;
+  return { content, configureKeybindingItems: configureKeybindingItems.length ? configureKeybindingItems : void 0, configuredKeybindingItems: configuredKeybindingItems.length ? configuredKeybindingItems : void 0 };
+}
+__name(resolveContentAndKeybindingItems, "resolveContentAndKeybindingItems");
+export {
+  resolveContentAndKeybindingItems
+};
+//# sourceMappingURL=accessibleViewKeybindingResolver.js.map

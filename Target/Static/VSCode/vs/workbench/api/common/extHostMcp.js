@@ -1,1 +1,210 @@
-var y=Object.defineProperty;var _=Object.getOwnPropertyDescriptor;var v=(c,e,t,i)=>{for(var r=i>1?void 0:i?_(e,t):e,o=c.length-1,n;o>=0;o--)(n=c[o])&&(r=(i?n(e,t,r):n(r))||r);return i&&r&&y(e,t,r),r},l=(c,e)=>(t,i)=>e(t,i,c);import"vscode";import{importAMDNodeModule as M}from"../../../amdX.js";import{DeferredPromise as x,Sequencer as D}from"../../../base/common/async.js";import{CancellationToken as w}from"../../../base/common/cancellation.js";import{Lazy as C}from"../../../base/common/lazy.js";import{Disposable as f,DisposableMap as P,DisposableStore as b,toDisposable as g}from"../../../base/common/lifecycle.js";import{ExtensionIdentifier as $}from"../../../platform/extensions/common/extensions.js";import{createDecorator as T}from"../../../platform/instantiation/common/instantiation.js";import{StorageScope as I}from"../../../platform/storage/common/storage.js";import{extensionPrefixedIdentifier as L,McpConnectionState as d,McpServerLaunch as H,McpServerTransportType as u}from"../../contrib/mcp/common/mcpTypes.js";import{MainContext as K}from"./extHost.protocol.js";import{IExtHostRpcService as R}from"./extHostRpcService.js";import{LogLevel as q}from"../../../platform/log/common/log.js";const ne=T("IExtHostMpcService");let S=class extends f{_proxy;_initialProviderPromises=new Set;_sseEventSources=this._register(new P);_eventSource=new C(async()=>(await M("@c4312/eventsource-umd","dist/index.umd.js")).EventSource);constructor(e){super(),this._proxy=e.getProxy(K.MainThreadMcp)}$startMcp(e,t){this._startMcp(e,H.fromSerialized(t))}_startMcp(e,t){if(t.type===u.SSE){this._sseEventSources.set(e,new j(this._eventSource.value,e,t,this._proxy));return}throw new Error("not implemented")}$stopMcp(e){this._sseEventSources.has(e)&&(this._sseEventSources.deleteAndDispose(e),this._proxy.$onDidChangeState(e,{state:d.Kind.Stopped}))}$sendMessage(e,t){this._sseEventSources.get(e)?.send(t)}async $waitForInitialCollectionProviders(){await Promise.all(this._initialProviderPromises)}registerMcpConfigurationProvider(e,t,i){const r=new b,o=e.contributes?.modelContextServerCollections?.find(p=>p.id===t);if(!o)throw new Error(`MCP configuration providers must be registered in the contributes.modelContextServerCollections array within your package.json, but "${t}" was not`);const n={id:L(e.identifier,t),isTrustedByDefault:!0,label:o?.label??e.displayName??e.name,scope:I.WORKSPACE},s=async()=>{const p=await i.provideMcpServerDefinitions(w.None);function E(a){return!!a.uri}const h=[];for(const a of p??[])h.push({id:$.toKey(e.identifier),label:a.label,launch:E(a)?{type:u.SSE,uri:a.uri,headers:a.headers}:{type:u.Stdio,cwd:a.cwd,args:a.args,command:a.command,env:a.env,envFile:void 0}});this._proxy.$upsertMcpCollection(n,h)};r.add(g(()=>{this._proxy.$deleteMcpCollection(n.id)})),i.onDidChange&&r.add(i.onDidChange(s));const m=new Promise(p=>{setTimeout(()=>s().finally(()=>{this._initialProviderPromises.delete(m),p()}),0)});return this._initialProviderPromises.add(m),r}};S=v([l(0,R)],S);class j extends f{constructor(t,i,r,o){super();this._id=i;this._proxy=o;t.then(n=>this._attach(n,r))}_requestSequencer=new D;_postEndpoint=new x;_attach(t,i){if(this._store.isDisposed)return;const r=new t(i.uri.toString(),{fetch:(o,n)=>fetch(o,{...n,headers:{...Object.fromEntries(i.headers),...n?.headers}}).then(async s=>(s.status>=300&&(this._proxy.$onDidChangeState(this._id,{state:d.Kind.Error,message:`${s.status} status connecting to ${i.uri}: ${await this._getErrText(s)}`}),r.close()),s),s=>(this._proxy.$onDidChangeState(this._id,{state:d.Kind.Error,message:`Error connecting to ${i.uri}: ${String(s)}`}),r.close(),Promise.reject(s)))});this._register(g(()=>r.close())),r.addEventListener("endpoint",o=>{this._postEndpoint.complete(new URL(o.data,i.uri.toString()).toString())}),r.addEventListener("message",o=>{this._proxy.$onDidReceiveMessage(this._id,o.data)}),r.addEventListener("open",()=>{this._proxy.$onDidChangeState(this._id,{state:d.Kind.Running})}),r.addEventListener("error",o=>{this._postEndpoint.cancel(),this._proxy.$onDidChangeState(this._id,{state:d.Kind.Error,message:`Error connecting to ${i.uri}: ${o.code||0} ${o.message||JSON.stringify(o)}`}),r.close()})}async send(t){try{const i=await this._requestSequencer.queue(async()=>{const r=await this._postEndpoint.p,o=new TextEncoder().encode(t);return fetch(r,{method:"POST",headers:{"Content-Type":"application/json","Content-Length":String(o.length)},body:o})});i.status>=300&&this._proxy.$onDidPublishLog(this._id,q.Warning,`${i.status} status sending message to ${this._postEndpoint}: ${await this._getErrText(i)}`)}catch{}}async _getErrText(t){try{return await t.text()}catch{return t.statusText}}}export{S as ExtHostMcpService,ne as IExtHostMpcService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import * as vscode from "vscode";
+import { importAMDNodeModule } from "../../../amdX.js";
+import { DeferredPromise, Sequencer } from "../../../base/common/async.js";
+import { CancellationToken } from "../../../base/common/cancellation.js";
+import { Lazy } from "../../../base/common/lazy.js";
+import { Disposable, DisposableMap, DisposableStore, IDisposable, toDisposable } from "../../../base/common/lifecycle.js";
+import { ExtensionIdentifier, IExtensionDescription } from "../../../platform/extensions/common/extensions.js";
+import { createDecorator } from "../../../platform/instantiation/common/instantiation.js";
+import { StorageScope } from "../../../platform/storage/common/storage.js";
+import { extensionPrefixedIdentifier, McpCollectionDefinition, McpConnectionState, McpServerDefinition, McpServerLaunch, McpServerTransportSSE, McpServerTransportType } from "../../contrib/mcp/common/mcpTypes.js";
+import { ExtHostMcpShape, MainContext, MainThreadMcpShape } from "./extHost.protocol.js";
+import { IExtHostRpcService } from "./extHostRpcService.js";
+import { LogLevel } from "../../../platform/log/common/log.js";
+const IExtHostMpcService = createDecorator("IExtHostMpcService");
+let ExtHostMcpService = class extends Disposable {
+  static {
+    __name(this, "ExtHostMcpService");
+  }
+  _proxy;
+  _initialProviderPromises = /* @__PURE__ */ new Set();
+  _sseEventSources = this._register(new DisposableMap());
+  _eventSource = new Lazy(async () => {
+    const es = await importAMDNodeModule("@c4312/eventsource-umd", "dist/index.umd.js");
+    return es.EventSource;
+  });
+  constructor(extHostRpc) {
+    super();
+    this._proxy = extHostRpc.getProxy(MainContext.MainThreadMcp);
+  }
+  $startMcp(id, launch) {
+    this._startMcp(id, McpServerLaunch.fromSerialized(launch));
+  }
+  _startMcp(id, launch) {
+    if (launch.type === McpServerTransportType.SSE) {
+      this._sseEventSources.set(id, new McpSSEHandle(this._eventSource.value, id, launch, this._proxy));
+      return;
+    }
+    throw new Error("not implemented");
+  }
+  $stopMcp(id) {
+    if (this._sseEventSources.has(id)) {
+      this._sseEventSources.deleteAndDispose(id);
+      this._proxy.$onDidChangeState(id, { state: McpConnectionState.Kind.Stopped });
+    }
+  }
+  $sendMessage(id, message) {
+    this._sseEventSources.get(id)?.send(message);
+  }
+  async $waitForInitialCollectionProviders() {
+    await Promise.all(this._initialProviderPromises);
+  }
+  /** {@link vscode.lm.registerMcpConfigurationProvider} */
+  registerMcpConfigurationProvider(extension, id, provider) {
+    const store = new DisposableStore();
+    const metadata = extension.contributes?.modelContextServerCollections?.find((m) => m.id === id);
+    if (!metadata) {
+      throw new Error(`MCP configuration providers must be registered in the contributes.modelContextServerCollections array within your package.json, but "${id}" was not`);
+    }
+    const mcp = {
+      id: extensionPrefixedIdentifier(extension.identifier, id),
+      isTrustedByDefault: true,
+      label: metadata?.label ?? extension.displayName ?? extension.name,
+      scope: StorageScope.WORKSPACE
+    };
+    const update = /* @__PURE__ */ __name(async () => {
+      const list = await provider.provideMcpServerDefinitions(CancellationToken.None);
+      function isSSEConfig(candidate) {
+        return !!candidate.uri;
+      }
+      __name(isSSEConfig, "isSSEConfig");
+      const servers = [];
+      for (const item of list ?? []) {
+        servers.push({
+          id: ExtensionIdentifier.toKey(extension.identifier),
+          label: item.label,
+          launch: isSSEConfig(item) ? {
+            type: McpServerTransportType.SSE,
+            uri: item.uri,
+            headers: item.headers
+          } : {
+            type: McpServerTransportType.Stdio,
+            cwd: item.cwd,
+            args: item.args,
+            command: item.command,
+            env: item.env,
+            envFile: void 0
+          }
+        });
+      }
+      this._proxy.$upsertMcpCollection(mcp, servers);
+    }, "update");
+    store.add(toDisposable(() => {
+      this._proxy.$deleteMcpCollection(mcp.id);
+    }));
+    if (provider.onDidChange) {
+      store.add(provider.onDidChange(update));
+    }
+    const promise = new Promise((resolve) => {
+      setTimeout(() => update().finally(() => {
+        this._initialProviderPromises.delete(promise);
+        resolve();
+      }), 0);
+    });
+    this._initialProviderPromises.add(promise);
+    return store;
+  }
+};
+ExtHostMcpService = __decorateClass([
+  __decorateParam(0, IExtHostRpcService)
+], ExtHostMcpService);
+class McpSSEHandle extends Disposable {
+  constructor(eventSourceCtor, _id, launch, _proxy) {
+    super();
+    this._id = _id;
+    this._proxy = _proxy;
+    eventSourceCtor.then((EventSourceCtor) => this._attach(EventSourceCtor, launch));
+  }
+  static {
+    __name(this, "McpSSEHandle");
+  }
+  _requestSequencer = new Sequencer();
+  _postEndpoint = new DeferredPromise();
+  _attach(EventSourceCtor, launch) {
+    if (this._store.isDisposed) {
+      return;
+    }
+    const eventSource = new EventSourceCtor(launch.uri.toString(), {
+      // recommended way to do things https://github.com/EventSource/eventsource?tab=readme-ov-file#setting-http-request-headers
+      fetch: /* @__PURE__ */ __name((input, init) => fetch(input, {
+        ...init,
+        headers: {
+          ...Object.fromEntries(launch.headers),
+          ...init?.headers
+        }
+      }).then(async (res) => {
+        if (res.status >= 300) {
+          this._proxy.$onDidChangeState(this._id, { state: McpConnectionState.Kind.Error, message: `${res.status} status connecting to ${launch.uri}: ${await this._getErrText(res)}` });
+          eventSource.close();
+        }
+        return res;
+      }, (err) => {
+        this._proxy.$onDidChangeState(this._id, { state: McpConnectionState.Kind.Error, message: `Error connecting to ${launch.uri}: ${String(err)}` });
+        eventSource.close();
+        return Promise.reject(err);
+      }), "fetch")
+    });
+    this._register(toDisposable(() => eventSource.close()));
+    eventSource.addEventListener("endpoint", (e) => {
+      this._postEndpoint.complete(new URL(e.data, launch.uri.toString()).toString());
+    });
+    eventSource.addEventListener("message", (e) => {
+      this._proxy.$onDidReceiveMessage(this._id, e.data);
+    });
+    eventSource.addEventListener("open", () => {
+      this._proxy.$onDidChangeState(this._id, { state: McpConnectionState.Kind.Running });
+    });
+    eventSource.addEventListener("error", (err) => {
+      this._postEndpoint.cancel();
+      this._proxy.$onDidChangeState(this._id, {
+        state: McpConnectionState.Kind.Error,
+        message: `Error connecting to ${launch.uri}: ${err.code || 0} ${err.message || JSON.stringify(err)}`
+      });
+      eventSource.close();
+    });
+  }
+  async send(message) {
+    try {
+      const res = await this._requestSequencer.queue(async () => {
+        const endpoint = await this._postEndpoint.p;
+        const asBytes = new TextEncoder().encode(message);
+        return fetch(endpoint, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Content-Length": String(asBytes.length)
+          },
+          body: asBytes
+        });
+      });
+      if (res.status >= 300) {
+        this._proxy.$onDidPublishLog(this._id, LogLevel.Warning, `${res.status} status sending message to ${this._postEndpoint}: ${await this._getErrText(res)}`);
+      }
+    } catch (err) {
+    }
+  }
+  async _getErrText(res) {
+    try {
+      return await res.text();
+    } catch {
+      return res.statusText;
+    }
+  }
+}
+export {
+  ExtHostMcpService,
+  IExtHostMpcService
+};
+//# sourceMappingURL=extHostMcp.js.map

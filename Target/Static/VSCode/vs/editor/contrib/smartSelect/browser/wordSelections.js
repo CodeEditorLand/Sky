@@ -1,1 +1,78 @@
-import{CharCode as d}from"../../../../base/common/charCode.js";import{isLowerAsciiLetter as m,isUpperAsciiLetter as h}from"../../../../base/common/strings.js";import"../../../common/core/position.js";import{Range as g}from"../../../common/core/range.js";import"../../../common/model.js";import"../../../common/languages.js";class w{constructor(e=!0){this.selectSubwords=e}provideSelectionRanges(e,n){const o=[];for(const r of n){const n=[];o.push(n),this.selectSubwords&&this._addInWordRanges(n,e,r),this._addWordRanges(n,e,r),this._addWhitespaceLine(n,e,r),n.push({range:e.getFullModelRange()})}return o}_addInWordRanges(e,n,o){const r=n.getWordAtPosition(o);if(!r)return;const{word:s,startColumn:t}=r,i=o.column-t;let a=i,c=i,l=0;for(;a>=0;a--){const e=s.charCodeAt(a);if(a!==i&&(e===d.Underline||e===d.Dash))break;if(m(e)&&h(l))break;l=e}for(a+=1;c<s.length;c++){const e=s.charCodeAt(c);if(h(e)&&m(l))break;if(e===d.Underline||e===d.Dash)break;l=e}a<c&&e.push({range:new g(o.lineNumber,t+a,o.lineNumber,t+c)})}_addWordRanges(e,n,o){const r=n.getWordAtPosition(o);r&&e.push({range:new g(o.lineNumber,r.startColumn,o.lineNumber,r.endColumn)})}_addWhitespaceLine(e,n,o){n.getLineLength(o.lineNumber)>0&&0===n.getLineFirstNonWhitespaceColumn(o.lineNumber)&&0===n.getLineLastNonWhitespaceColumn(o.lineNumber)&&e.push({range:new g(o.lineNumber,1,o.lineNumber,n.getLineMaxColumn(o.lineNumber))})}}export{w as WordSelectionRangeProvider};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { CharCode } from "../../../../base/common/charCode.js";
+import { isLowerAsciiLetter, isUpperAsciiLetter } from "../../../../base/common/strings.js";
+import { Position } from "../../../common/core/position.js";
+import { Range } from "../../../common/core/range.js";
+import { ITextModel } from "../../../common/model.js";
+import { SelectionRange, SelectionRangeProvider } from "../../../common/languages.js";
+class WordSelectionRangeProvider {
+  constructor(selectSubwords = true) {
+    this.selectSubwords = selectSubwords;
+  }
+  static {
+    __name(this, "WordSelectionRangeProvider");
+  }
+  provideSelectionRanges(model, positions) {
+    const result = [];
+    for (const position of positions) {
+      const bucket = [];
+      result.push(bucket);
+      if (this.selectSubwords) {
+        this._addInWordRanges(bucket, model, position);
+      }
+      this._addWordRanges(bucket, model, position);
+      this._addWhitespaceLine(bucket, model, position);
+      bucket.push({ range: model.getFullModelRange() });
+    }
+    return result;
+  }
+  _addInWordRanges(bucket, model, pos) {
+    const obj = model.getWordAtPosition(pos);
+    if (!obj) {
+      return;
+    }
+    const { word, startColumn } = obj;
+    const offset = pos.column - startColumn;
+    let start = offset;
+    let end = offset;
+    let lastCh = 0;
+    for (; start >= 0; start--) {
+      const ch = word.charCodeAt(start);
+      if (start !== offset && (ch === CharCode.Underline || ch === CharCode.Dash)) {
+        break;
+      } else if (isLowerAsciiLetter(ch) && isUpperAsciiLetter(lastCh)) {
+        break;
+      }
+      lastCh = ch;
+    }
+    start += 1;
+    for (; end < word.length; end++) {
+      const ch = word.charCodeAt(end);
+      if (isUpperAsciiLetter(ch) && isLowerAsciiLetter(lastCh)) {
+        break;
+      } else if (ch === CharCode.Underline || ch === CharCode.Dash) {
+        break;
+      }
+      lastCh = ch;
+    }
+    if (start < end) {
+      bucket.push({ range: new Range(pos.lineNumber, startColumn + start, pos.lineNumber, startColumn + end) });
+    }
+  }
+  _addWordRanges(bucket, model, pos) {
+    const word = model.getWordAtPosition(pos);
+    if (word) {
+      bucket.push({ range: new Range(pos.lineNumber, word.startColumn, pos.lineNumber, word.endColumn) });
+    }
+  }
+  _addWhitespaceLine(bucket, model, pos) {
+    if (model.getLineLength(pos.lineNumber) > 0 && model.getLineFirstNonWhitespaceColumn(pos.lineNumber) === 0 && model.getLineLastNonWhitespaceColumn(pos.lineNumber) === 0) {
+      bucket.push({ range: new Range(pos.lineNumber, 1, pos.lineNumber, model.getLineMaxColumn(pos.lineNumber)) });
+    }
+  }
+}
+export {
+  WordSelectionRangeProvider
+};
+//# sourceMappingURL=wordSelections.js.map

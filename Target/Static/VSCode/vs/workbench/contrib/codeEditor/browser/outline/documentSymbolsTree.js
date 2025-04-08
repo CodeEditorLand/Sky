@@ -1,1 +1,371 @@
-var L=Object.defineProperty,C=Object.getOwnPropertyDescriptor,b=(e,o,t,r)=>{for(var s,n=r>1?void 0:r?C(o,t):o,a=e.length-1;a>=0;a--)(s=e[a])&&(n=(r?s(o,t,n):s(n))||n);return r&&n&&L(o,t,n),n},p=(e,o)=>(t,r)=>o(t,r,e);import"../../../../../base/browser/dnd.js";import*as c from"../../../../../base/browser/dom.js";import{HighlightedLabel as E}from"../../../../../base/browser/ui/highlightedlabel/highlightedLabel.js";import{IconLabel as O}from"../../../../../base/browser/ui/iconLabel/iconLabel.js";import"../../../../../base/browser/ui/list/list.js";import"../../../../../base/browser/ui/list/listView.js";import"../../../../../base/browser/ui/list/listWidget.js";import"../../../../../base/browser/ui/tree/tree.js";import{mainWindow as P}from"../../../../../base/browser/window.js";import{createMatches as T}from"../../../../../base/common/filters.js";import{ThemeIcon as _}from"../../../../../base/common/themables.js";import"../../../../../base/common/uri.js";import{Range as w}from"../../../../../editor/common/core/range.js";import{getAriaLabelForSymbol as x,SymbolKind as n,symbolKindNames as N,SymbolKinds as k,SymbolTag as M}from"../../../../../editor/common/languages.js";import{ITextResourceConfigurationService as R}from"../../../../../editor/common/services/textResourceConfiguration.js";import{OutlineElement as a,OutlineGroup as u,OutlineModel as S}from"../../../../../editor/contrib/documentSymbols/browser/outlineModel.js";import"../../../../../editor/contrib/symbolIcons/browser/symbolIcons.js";import{localize as y}from"../../../../../nls.js";import{IConfigurationService as A}from"../../../../../platform/configuration/common/configuration.js";import{fillInSymbolsDragData as F}from"../../../../../platform/dnd/browser/dnd.js";import{IInstantiationService as V}from"../../../../../platform/instantiation/common/instantiation.js";import{MarkerSeverity as z}from"../../../../../platform/markers/common/markers.js";import{withSelection as G}from"../../../../../platform/opener/common/opener.js";import{listErrorForeground as H,listWarningForeground as K}from"../../../../../platform/theme/common/colorRegistry.js";import{IThemeService as B}from"../../../../../platform/theme/common/themeService.js";import{fillEditorsDragData as U}from"../../../../browser/dnd.js";import{OutlineConfigKeys as h}from"../../../../services/outline/browser/outline.js";import"./documentSymbolsTree.css";class ze{getKeyboardNavigationLabel(e){return e instanceof u?e.label:e.symbol.name}}class Ge{constructor(e){this._ariaLabel=e}getWidgetAriaLabel(){return this._ariaLabel}getAriaLabel(e){return e instanceof u?e.label:x(e.symbol.name,e.symbol.kind)}}class He{getId(e){return e.id}}let f=class{constructor(e){this._instantiationService=e}getDragURI(e){const o=S.get(e)?.uri;if(!o)return null;if(e instanceof a){const t=$(o,e.symbol);return t.fsPath+(t.fragment?"#"+t.fragment:"")}return o.fsPath}getDragLabel(e,o){if(1!==e.length)return;const t=e[0];return t instanceof a?t.symbol.name:t.label}onDragStart(e,o){const t=e.elements[0];if(!t||!o.dataTransfer)return;const r=S.get(t)?.uri;if(!r)return;const s=t instanceof a?[t]:Array.from(t.children.values());F(s.map((e=>({name:e.symbol.name,fsPath:r.fsPath,range:e.symbol.range,kind:e.symbol.kind}))),o),this._instantiationService.invokeFunction((e=>U(e,s.map((e=>({resource:r,selection:e.symbol.range}))),o)))}onDragOver(){return!1}drop(){}dispose(){}};function $(e,o){return G(e,o.range)}f=b([p(0,V)],f);class v{constructor(e,o){this.labelContainer=e,this.label=o}static id="DocumentSymbolGroupTemplate";dispose(){this.label.dispose()}}class D{constructor(e,o,t,r){this.container=e,this.iconLabel=o,this.iconClass=t,this.decoration=r}static id="DocumentSymbolTemplate"}class Ke{getHeight(e){return 22}getTemplateId(e){return e instanceof u?v.id:D.id}}class Be{templateId=v.id;renderTemplate(e){const o=c.$(".outline-element-label");return e.classList.add("outline-element"),c.append(e,o),new v(o,new E(o))}renderElement(e,o,t){t.label.set(e.element.label,T(e.filterData))}disposeTemplate(e){e.dispose()}}let g=class{constructor(e,o,t,r){this._renderMarker=e,this._configurationService=t,this._themeService=r}templateId=D.id;renderTemplate(e){e.classList.add("outline-element");const o=new O(e,{supportHighlights:!0}),t=c.$(".outline-element-icon"),r=c.$(".outline-element-decoration");return e.prepend(t),e.appendChild(r),new D(e,o,t,r)}renderElement(e,o,t){const{element:r}=e,s=["nowrap"],n={matches:T(e.filterData),labelEscapeNewLines:!0,extraClasses:s,title:y("title.template","{0} ({1})",r.symbol.name,N[r.symbol.kind])};this._configurationService.getValue(h.icons)&&(t.iconClass.className="",t.iconClass.classList.add("outline-element-icon","inline",..._.asClassNameArray(k.toIcon(r.symbol.kind)))),r.symbol.tags.indexOf(M.Deprecated)>=0&&(s.push("deprecated"),n.matches=[]),t.iconLabel.setLabel(r.symbol.name,r.symbol.detail,n),this._renderMarker&&this._renderMarkerInfo(r,t)}_renderMarkerInfo(e,o){if(!e.marker)return c.hide(o.decoration),void o.container.style.removeProperty("--outline-element-color");const{count:t,topSev:r}=e.marker,s=this._themeService.getColorTheme().getColor(r===z.Error?H:K),n=s?s.toString():"inherit",a=this._configurationService.getValue("problems.visibility"),i=this._configurationService.getValue(h.problemsColors);a&&i?o.container.style.setProperty("--outline-element-color",n):o.container.style.removeProperty("--outline-element-color"),void 0!==a&&(this._configurationService.getValue(h.problemsBadges)&&a?t>0?(c.show(o.decoration),o.decoration.classList.remove("bubble"),o.decoration.innerText=t<10?t.toString():"+9",o.decoration.title=1===t?y("1.problem","1 problem in this element"):y("N.problem","{0} problems in this element",t),o.decoration.style.setProperty("--outline-element-color",n)):(c.show(o.decoration),o.decoration.classList.add("bubble"),o.decoration.innerText="",o.decoration.title=y("deep.problem","Contains elements with problems"),o.decoration.style.setProperty("--outline-element-color",n)):c.hide(o.decoration))}disposeTemplate(e){e.iconLabel.dispose()}};g=b([p(2,A),p(3,B)],g);let d=class{constructor(e,o){this._prefix=e,this._textResourceConfigService=o}static kindToConfigName=Object.freeze({[n.File]:"showFiles",[n.Module]:"showModules",[n.Namespace]:"showNamespaces",[n.Package]:"showPackages",[n.Class]:"showClasses",[n.Method]:"showMethods",[n.Property]:"showProperties",[n.Field]:"showFields",[n.Constructor]:"showConstructors",[n.Enum]:"showEnums",[n.Interface]:"showInterfaces",[n.Function]:"showFunctions",[n.Variable]:"showVariables",[n.Constant]:"showConstants",[n.String]:"showStrings",[n.Number]:"showNumbers",[n.Boolean]:"showBooleans",[n.Array]:"showArrays",[n.Object]:"showObjects",[n.Key]:"showKeys",[n.Null]:"showNull",[n.EnumMember]:"showEnumMembers",[n.Struct]:"showStructs",[n.Event]:"showEvents",[n.Operator]:"showOperators",[n.TypeParameter]:"showTypeParameters"});filter(e){const o=S.get(e);if(!(e instanceof a))return!0;const t=d.kindToConfigName[e.symbol.kind],r=`${this._prefix}.${t}`;return this._textResourceConfigService.getValue(o?.uri,r)}};d=b([p(1,R)],d);class Ue{_collator=new c.WindowIdleValue(P,(()=>new Intl.Collator(void 0,{numeric:!0})));compareByPosition(e,o){return e instanceof u&&o instanceof u?e.order-o.order:e instanceof a&&o instanceof a?w.compareRangesUsingStarts(e.symbol.range,o.symbol.range)||this._collator.value.compare(e.symbol.name,o.symbol.name):0}compareByType(e,o){return e instanceof u&&o instanceof u?e.order-o.order:e instanceof a&&o instanceof a?e.symbol.kind-o.symbol.kind||this._collator.value.compare(e.symbol.name,o.symbol.name):0}compareByName(e,o){return e instanceof u&&o instanceof u?e.order-o.order:e instanceof a&&o instanceof a?this._collator.value.compare(e.symbol.name,o.symbol.name)||w.compareRangesUsingStarts(e.symbol.range,o.symbol.range):0}}export{Ge as DocumentSymbolAccessibilityProvider,Ue as DocumentSymbolComparator,f as DocumentSymbolDragAndDrop,d as DocumentSymbolFilter,Be as DocumentSymbolGroupRenderer,He as DocumentSymbolIdentityProvider,ze as DocumentSymbolNavigationLabelProvider,g as DocumentSymbolRenderer,Ke as DocumentSymbolVirtualDelegate};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { IDragAndDropData } from "../../../../../base/browser/dnd.js";
+import * as dom from "../../../../../base/browser/dom.js";
+import { HighlightedLabel } from "../../../../../base/browser/ui/highlightedlabel/highlightedLabel.js";
+import { IconLabel, IIconLabelValueOptions } from "../../../../../base/browser/ui/iconLabel/iconLabel.js";
+import { IIdentityProvider, IKeyboardNavigationLabelProvider, IListVirtualDelegate } from "../../../../../base/browser/ui/list/list.js";
+import { ElementsDragAndDropData } from "../../../../../base/browser/ui/list/listView.js";
+import { IListAccessibilityProvider } from "../../../../../base/browser/ui/list/listWidget.js";
+import { ITreeDragAndDrop, ITreeDragOverReaction, ITreeFilter, ITreeNode, ITreeRenderer } from "../../../../../base/browser/ui/tree/tree.js";
+import { mainWindow } from "../../../../../base/browser/window.js";
+import { createMatches, FuzzyScore } from "../../../../../base/common/filters.js";
+import { ThemeIcon } from "../../../../../base/common/themables.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { Range } from "../../../../../editor/common/core/range.js";
+import { DocumentSymbol, getAriaLabelForSymbol, SymbolKind, symbolKindNames, SymbolKinds, SymbolTag } from "../../../../../editor/common/languages.js";
+import { ITextResourceConfigurationService } from "../../../../../editor/common/services/textResourceConfiguration.js";
+import { OutlineElement, OutlineGroup, OutlineModel } from "../../../../../editor/contrib/documentSymbols/browser/outlineModel.js";
+import "../../../../../editor/contrib/symbolIcons/browser/symbolIcons.js";
+import { localize } from "../../../../../nls.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { fillInSymbolsDragData, IResourceStat } from "../../../../../platform/dnd/browser/dnd.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { MarkerSeverity } from "../../../../../platform/markers/common/markers.js";
+import { withSelection } from "../../../../../platform/opener/common/opener.js";
+import { listErrorForeground, listWarningForeground } from "../../../../../platform/theme/common/colorRegistry.js";
+import { IThemeService } from "../../../../../platform/theme/common/themeService.js";
+import { fillEditorsDragData } from "../../../../browser/dnd.js";
+import { IOutlineComparator, OutlineConfigKeys, OutlineTarget } from "../../../../services/outline/browser/outline.js";
+import "./documentSymbolsTree.css";
+class DocumentSymbolNavigationLabelProvider {
+  static {
+    __name(this, "DocumentSymbolNavigationLabelProvider");
+  }
+  getKeyboardNavigationLabel(element) {
+    if (element instanceof OutlineGroup) {
+      return element.label;
+    } else {
+      return element.symbol.name;
+    }
+  }
+}
+class DocumentSymbolAccessibilityProvider {
+  constructor(_ariaLabel) {
+    this._ariaLabel = _ariaLabel;
+  }
+  static {
+    __name(this, "DocumentSymbolAccessibilityProvider");
+  }
+  getWidgetAriaLabel() {
+    return this._ariaLabel;
+  }
+  getAriaLabel(element) {
+    if (element instanceof OutlineGroup) {
+      return element.label;
+    } else {
+      return getAriaLabelForSymbol(element.symbol.name, element.symbol.kind);
+    }
+  }
+}
+class DocumentSymbolIdentityProvider {
+  static {
+    __name(this, "DocumentSymbolIdentityProvider");
+  }
+  getId(element) {
+    return element.id;
+  }
+}
+let DocumentSymbolDragAndDrop = class {
+  constructor(_instantiationService) {
+    this._instantiationService = _instantiationService;
+  }
+  static {
+    __name(this, "DocumentSymbolDragAndDrop");
+  }
+  getDragURI(element) {
+    const resource = OutlineModel.get(element)?.uri;
+    if (!resource) {
+      return null;
+    }
+    if (element instanceof OutlineElement) {
+      const symbolUri = symbolRangeUri(resource, element.symbol);
+      return symbolUri.fsPath + (symbolUri.fragment ? "#" + symbolUri.fragment : "");
+    } else {
+      return resource.fsPath;
+    }
+  }
+  getDragLabel(elements, originalEvent) {
+    if (elements.length !== 1) {
+      return void 0;
+    }
+    const element = elements[0];
+    return element instanceof OutlineElement ? element.symbol.name : element.label;
+  }
+  onDragStart(data, originalEvent) {
+    const elements = data.elements;
+    const item = elements[0];
+    if (!item || !originalEvent.dataTransfer) {
+      return;
+    }
+    const resource = OutlineModel.get(item)?.uri;
+    if (!resource) {
+      return;
+    }
+    const outlineElements = item instanceof OutlineElement ? [item] : Array.from(item.children.values());
+    fillInSymbolsDragData(outlineElements.map((oe) => ({
+      name: oe.symbol.name,
+      fsPath: resource.fsPath,
+      range: oe.symbol.range,
+      kind: oe.symbol.kind
+    })), originalEvent);
+    this._instantiationService.invokeFunction((accessor) => fillEditorsDragData(accessor, outlineElements.map((oe) => ({
+      resource,
+      selection: oe.symbol.range
+    })), originalEvent));
+  }
+  onDragOver() {
+    return false;
+  }
+  drop() {
+  }
+  dispose() {
+  }
+};
+DocumentSymbolDragAndDrop = __decorateClass([
+  __decorateParam(0, IInstantiationService)
+], DocumentSymbolDragAndDrop);
+function symbolRangeUri(resource, symbol) {
+  return withSelection(resource, symbol.range);
+}
+__name(symbolRangeUri, "symbolRangeUri");
+class DocumentSymbolGroupTemplate {
+  constructor(labelContainer, label) {
+    this.labelContainer = labelContainer;
+    this.label = label;
+  }
+  static {
+    __name(this, "DocumentSymbolGroupTemplate");
+  }
+  static id = "DocumentSymbolGroupTemplate";
+  dispose() {
+    this.label.dispose();
+  }
+}
+class DocumentSymbolTemplate {
+  constructor(container, iconLabel, iconClass, decoration) {
+    this.container = container;
+    this.iconLabel = iconLabel;
+    this.iconClass = iconClass;
+    this.decoration = decoration;
+  }
+  static {
+    __name(this, "DocumentSymbolTemplate");
+  }
+  static id = "DocumentSymbolTemplate";
+}
+class DocumentSymbolVirtualDelegate {
+  static {
+    __name(this, "DocumentSymbolVirtualDelegate");
+  }
+  getHeight(_element) {
+    return 22;
+  }
+  getTemplateId(element) {
+    return element instanceof OutlineGroup ? DocumentSymbolGroupTemplate.id : DocumentSymbolTemplate.id;
+  }
+}
+class DocumentSymbolGroupRenderer {
+  static {
+    __name(this, "DocumentSymbolGroupRenderer");
+  }
+  templateId = DocumentSymbolGroupTemplate.id;
+  renderTemplate(container) {
+    const labelContainer = dom.$(".outline-element-label");
+    container.classList.add("outline-element");
+    dom.append(container, labelContainer);
+    return new DocumentSymbolGroupTemplate(labelContainer, new HighlightedLabel(labelContainer));
+  }
+  renderElement(node, _index, template) {
+    template.label.set(node.element.label, createMatches(node.filterData));
+  }
+  disposeTemplate(_template) {
+    _template.dispose();
+  }
+}
+let DocumentSymbolRenderer = class {
+  constructor(_renderMarker, target, _configurationService, _themeService) {
+    this._renderMarker = _renderMarker;
+    this._configurationService = _configurationService;
+    this._themeService = _themeService;
+  }
+  static {
+    __name(this, "DocumentSymbolRenderer");
+  }
+  templateId = DocumentSymbolTemplate.id;
+  renderTemplate(container) {
+    container.classList.add("outline-element");
+    const iconLabel = new IconLabel(container, { supportHighlights: true });
+    const iconClass = dom.$(".outline-element-icon");
+    const decoration = dom.$(".outline-element-decoration");
+    container.prepend(iconClass);
+    container.appendChild(decoration);
+    return new DocumentSymbolTemplate(container, iconLabel, iconClass, decoration);
+  }
+  renderElement(node, _index, template) {
+    const { element } = node;
+    const extraClasses = ["nowrap"];
+    const options = {
+      matches: createMatches(node.filterData),
+      labelEscapeNewLines: true,
+      extraClasses,
+      title: localize("title.template", "{0} ({1})", element.symbol.name, symbolKindNames[element.symbol.kind])
+    };
+    if (this._configurationService.getValue(OutlineConfigKeys.icons)) {
+      template.iconClass.className = "";
+      template.iconClass.classList.add("outline-element-icon", "inline", ...ThemeIcon.asClassNameArray(SymbolKinds.toIcon(element.symbol.kind)));
+    }
+    if (element.symbol.tags.indexOf(SymbolTag.Deprecated) >= 0) {
+      extraClasses.push(`deprecated`);
+      options.matches = [];
+    }
+    template.iconLabel.setLabel(element.symbol.name, element.symbol.detail, options);
+    if (this._renderMarker) {
+      this._renderMarkerInfo(element, template);
+    }
+  }
+  _renderMarkerInfo(element, template) {
+    if (!element.marker) {
+      dom.hide(template.decoration);
+      template.container.style.removeProperty("--outline-element-color");
+      return;
+    }
+    const { count, topSev } = element.marker;
+    const color = this._themeService.getColorTheme().getColor(topSev === MarkerSeverity.Error ? listErrorForeground : listWarningForeground);
+    const cssColor = color ? color.toString() : "inherit";
+    const problem = this._configurationService.getValue("problems.visibility");
+    const configProblems = this._configurationService.getValue(OutlineConfigKeys.problemsColors);
+    if (!problem || !configProblems) {
+      template.container.style.removeProperty("--outline-element-color");
+    } else {
+      template.container.style.setProperty("--outline-element-color", cssColor);
+    }
+    if (problem === void 0) {
+      return;
+    }
+    const configBadges = this._configurationService.getValue(OutlineConfigKeys.problemsBadges);
+    if (!configBadges || !problem) {
+      dom.hide(template.decoration);
+    } else if (count > 0) {
+      dom.show(template.decoration);
+      template.decoration.classList.remove("bubble");
+      template.decoration.innerText = count < 10 ? count.toString() : "+9";
+      template.decoration.title = count === 1 ? localize("1.problem", "1 problem in this element") : localize("N.problem", "{0} problems in this element", count);
+      template.decoration.style.setProperty("--outline-element-color", cssColor);
+    } else {
+      dom.show(template.decoration);
+      template.decoration.classList.add("bubble");
+      template.decoration.innerText = "\uEA71";
+      template.decoration.title = localize("deep.problem", "Contains elements with problems");
+      template.decoration.style.setProperty("--outline-element-color", cssColor);
+    }
+  }
+  disposeTemplate(_template) {
+    _template.iconLabel.dispose();
+  }
+};
+DocumentSymbolRenderer = __decorateClass([
+  __decorateParam(2, IConfigurationService),
+  __decorateParam(3, IThemeService)
+], DocumentSymbolRenderer);
+let DocumentSymbolFilter = class {
+  constructor(_prefix, _textResourceConfigService) {
+    this._prefix = _prefix;
+    this._textResourceConfigService = _textResourceConfigService;
+  }
+  static {
+    __name(this, "DocumentSymbolFilter");
+  }
+  static kindToConfigName = Object.freeze({
+    [SymbolKind.File]: "showFiles",
+    [SymbolKind.Module]: "showModules",
+    [SymbolKind.Namespace]: "showNamespaces",
+    [SymbolKind.Package]: "showPackages",
+    [SymbolKind.Class]: "showClasses",
+    [SymbolKind.Method]: "showMethods",
+    [SymbolKind.Property]: "showProperties",
+    [SymbolKind.Field]: "showFields",
+    [SymbolKind.Constructor]: "showConstructors",
+    [SymbolKind.Enum]: "showEnums",
+    [SymbolKind.Interface]: "showInterfaces",
+    [SymbolKind.Function]: "showFunctions",
+    [SymbolKind.Variable]: "showVariables",
+    [SymbolKind.Constant]: "showConstants",
+    [SymbolKind.String]: "showStrings",
+    [SymbolKind.Number]: "showNumbers",
+    [SymbolKind.Boolean]: "showBooleans",
+    [SymbolKind.Array]: "showArrays",
+    [SymbolKind.Object]: "showObjects",
+    [SymbolKind.Key]: "showKeys",
+    [SymbolKind.Null]: "showNull",
+    [SymbolKind.EnumMember]: "showEnumMembers",
+    [SymbolKind.Struct]: "showStructs",
+    [SymbolKind.Event]: "showEvents",
+    [SymbolKind.Operator]: "showOperators",
+    [SymbolKind.TypeParameter]: "showTypeParameters"
+  });
+  filter(element) {
+    const outline = OutlineModel.get(element);
+    if (!(element instanceof OutlineElement)) {
+      return true;
+    }
+    const configName = DocumentSymbolFilter.kindToConfigName[element.symbol.kind];
+    const configKey = `${this._prefix}.${configName}`;
+    return this._textResourceConfigService.getValue(outline?.uri, configKey);
+  }
+};
+DocumentSymbolFilter = __decorateClass([
+  __decorateParam(1, ITextResourceConfigurationService)
+], DocumentSymbolFilter);
+class DocumentSymbolComparator {
+  static {
+    __name(this, "DocumentSymbolComparator");
+  }
+  _collator = new dom.WindowIdleValue(mainWindow, () => new Intl.Collator(void 0, { numeric: true }));
+  compareByPosition(a, b) {
+    if (a instanceof OutlineGroup && b instanceof OutlineGroup) {
+      return a.order - b.order;
+    } else if (a instanceof OutlineElement && b instanceof OutlineElement) {
+      return Range.compareRangesUsingStarts(a.symbol.range, b.symbol.range) || this._collator.value.compare(a.symbol.name, b.symbol.name);
+    }
+    return 0;
+  }
+  compareByType(a, b) {
+    if (a instanceof OutlineGroup && b instanceof OutlineGroup) {
+      return a.order - b.order;
+    } else if (a instanceof OutlineElement && b instanceof OutlineElement) {
+      return a.symbol.kind - b.symbol.kind || this._collator.value.compare(a.symbol.name, b.symbol.name);
+    }
+    return 0;
+  }
+  compareByName(a, b) {
+    if (a instanceof OutlineGroup && b instanceof OutlineGroup) {
+      return a.order - b.order;
+    } else if (a instanceof OutlineElement && b instanceof OutlineElement) {
+      return this._collator.value.compare(a.symbol.name, b.symbol.name) || Range.compareRangesUsingStarts(a.symbol.range, b.symbol.range);
+    }
+    return 0;
+  }
+}
+export {
+  DocumentSymbolAccessibilityProvider,
+  DocumentSymbolComparator,
+  DocumentSymbolDragAndDrop,
+  DocumentSymbolFilter,
+  DocumentSymbolGroupRenderer,
+  DocumentSymbolIdentityProvider,
+  DocumentSymbolNavigationLabelProvider,
+  DocumentSymbolRenderer,
+  DocumentSymbolVirtualDelegate
+};
+//# sourceMappingURL=documentSymbolsTree.js.map

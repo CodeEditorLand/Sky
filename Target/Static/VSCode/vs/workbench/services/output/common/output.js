@@ -1,1 +1,116 @@
-import{Emitter as i}from"../../../../base/common/event.js";import{Registry as u}from"../../../../platform/registry/common/platform.js";import"../../../../base/common/uri.js";import{RawContextKey as e}from"../../../../platform/contextkey/common/contextkey.js";import{createDecorator as a}from"../../../../platform/instantiation/common/instantiation.js";import"../../../../platform/log/common/log.js";import"../../../../editor/common/core/range.js";const L="text/x-code-output",f="Log",x="text/x-code-log-output",y="log",R="workbench.panel.output",b=new e("inOutput",!1),m=new e("activeLogOutput",!1),S=new e("activeLogOutput.isLog",!1),U=new e("activeLogOutput.levelSettable",!1),w=new e("activeLogOutput.level",""),A=new e("activeLogOutput.levelIsDefault",!1),N=new e("outputView.scrollLock",!1),F=new e("activeOutputChannel",""),X=new e("output.filter.trace",!0),P=new e("output.filter.debug",!0),V=new e("output.filter.info",!0),M=new e("output.filter.warning",!0),H=new e("output.filter.error",!0),W=new e("outputFilterFocus",!1),G=new e("output.filter.categories",""),k=a("outputService");var l=(n=>(n[n.Append=1]="Append",n[n.Replace=2]="Replace",n[n.Clear=3]="Clear",n))(l||{});const s={OutputChannels:"workbench.contributions.outputChannels"};function B(r){return!!r.source&&!Array.isArray(r.source)}function p(r){return Array.isArray(r.source)}class c{channels=new Map;_onDidRegisterChannel=new i;onDidRegisterChannel=this._onDidRegisterChannel.event;_onDidRemoveChannel=new i;onDidRemoveChannel=this._onDidRemoveChannel.event;_onDidUpdateChannelFiles=new i;onDidUpdateChannelSources=this._onDidUpdateChannelFiles.event;registerChannel(t){this.channels.has(t.id)||(this.channels.set(t.id,t),this._onDidRegisterChannel.fire(t.id))}getChannels(){const t=[];return this.channels.forEach(o=>t.push(o)),t}getChannel(t){return this.channels.get(t)}updateChannelSources(t,o){const n=this.channels.get(t);n&&p(n)&&(n.source=o,this._onDidUpdateChannelFiles.fire(n))}removeChannel(t){const o=this.channels.get(t);o&&(this.channels.delete(t),this._onDidRemoveChannel.fire(o))}}u.add(s.OutputChannels,new c);export{F as ACTIVE_OUTPUT_CHANNEL_CONTEXT,m as CONTEXT_ACTIVE_FILE_OUTPUT,S as CONTEXT_ACTIVE_LOG_FILE_OUTPUT,w as CONTEXT_ACTIVE_OUTPUT_LEVEL,A as CONTEXT_ACTIVE_OUTPUT_LEVEL_IS_DEFAULT,U as CONTEXT_ACTIVE_OUTPUT_LEVEL_SETTABLE,b as CONTEXT_IN_OUTPUT,N as CONTEXT_OUTPUT_SCROLL_LOCK,s as Extensions,G as HIDE_CATEGORY_FILTER_CONTEXT,k as IOutputService,x as LOG_MIME,y as LOG_MODE_ID,W as OUTPUT_FILTER_FOCUS_CONTEXT,L as OUTPUT_MIME,f as OUTPUT_MODE_ID,R as OUTPUT_VIEW_ID,l as OutputChannelUpdateMode,P as SHOW_DEBUG_FILTER_CONTEXT,H as SHOW_ERROR_FILTER_CONTEXT,V as SHOW_INFO_FILTER_CONTEXT,X as SHOW_TRACE_FILTER_CONTEXT,M as SHOW_WARNING_FILTER_CONTEXT,p as isMultiSourceOutputChannelDescriptor,B as isSingleSourceOutputChannelDescriptor};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Event, Emitter } from "../../../../base/common/event.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+import { URI } from "../../../../base/common/uri.js";
+import { RawContextKey } from "../../../../platform/contextkey/common/contextkey.js";
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { LogLevel } from "../../../../platform/log/common/log.js";
+import { Range } from "../../../../editor/common/core/range.js";
+const OUTPUT_MIME = "text/x-code-output";
+const OUTPUT_MODE_ID = "Log";
+const LOG_MIME = "text/x-code-log-output";
+const LOG_MODE_ID = "log";
+const OUTPUT_VIEW_ID = "workbench.panel.output";
+const CONTEXT_IN_OUTPUT = new RawContextKey("inOutput", false);
+const CONTEXT_ACTIVE_FILE_OUTPUT = new RawContextKey("activeLogOutput", false);
+const CONTEXT_ACTIVE_LOG_FILE_OUTPUT = new RawContextKey("activeLogOutput.isLog", false);
+const CONTEXT_ACTIVE_OUTPUT_LEVEL_SETTABLE = new RawContextKey("activeLogOutput.levelSettable", false);
+const CONTEXT_ACTIVE_OUTPUT_LEVEL = new RawContextKey("activeLogOutput.level", "");
+const CONTEXT_ACTIVE_OUTPUT_LEVEL_IS_DEFAULT = new RawContextKey("activeLogOutput.levelIsDefault", false);
+const CONTEXT_OUTPUT_SCROLL_LOCK = new RawContextKey(`outputView.scrollLock`, false);
+const ACTIVE_OUTPUT_CHANNEL_CONTEXT = new RawContextKey("activeOutputChannel", "");
+const SHOW_TRACE_FILTER_CONTEXT = new RawContextKey("output.filter.trace", true);
+const SHOW_DEBUG_FILTER_CONTEXT = new RawContextKey("output.filter.debug", true);
+const SHOW_INFO_FILTER_CONTEXT = new RawContextKey("output.filter.info", true);
+const SHOW_WARNING_FILTER_CONTEXT = new RawContextKey("output.filter.warning", true);
+const SHOW_ERROR_FILTER_CONTEXT = new RawContextKey("output.filter.error", true);
+const OUTPUT_FILTER_FOCUS_CONTEXT = new RawContextKey("outputFilterFocus", false);
+const HIDE_CATEGORY_FILTER_CONTEXT = new RawContextKey("output.filter.categories", "");
+const IOutputService = createDecorator("outputService");
+var OutputChannelUpdateMode = /* @__PURE__ */ ((OutputChannelUpdateMode2) => {
+  OutputChannelUpdateMode2[OutputChannelUpdateMode2["Append"] = 1] = "Append";
+  OutputChannelUpdateMode2[OutputChannelUpdateMode2["Replace"] = 2] = "Replace";
+  OutputChannelUpdateMode2[OutputChannelUpdateMode2["Clear"] = 3] = "Clear";
+  return OutputChannelUpdateMode2;
+})(OutputChannelUpdateMode || {});
+const Extensions = {
+  OutputChannels: "workbench.contributions.outputChannels"
+};
+function isSingleSourceOutputChannelDescriptor(descriptor) {
+  return !!descriptor.source && !Array.isArray(descriptor.source);
+}
+__name(isSingleSourceOutputChannelDescriptor, "isSingleSourceOutputChannelDescriptor");
+function isMultiSourceOutputChannelDescriptor(descriptor) {
+  return Array.isArray(descriptor.source);
+}
+__name(isMultiSourceOutputChannelDescriptor, "isMultiSourceOutputChannelDescriptor");
+class OutputChannelRegistry {
+  static {
+    __name(this, "OutputChannelRegistry");
+  }
+  channels = /* @__PURE__ */ new Map();
+  _onDidRegisterChannel = new Emitter();
+  onDidRegisterChannel = this._onDidRegisterChannel.event;
+  _onDidRemoveChannel = new Emitter();
+  onDidRemoveChannel = this._onDidRemoveChannel.event;
+  _onDidUpdateChannelFiles = new Emitter();
+  onDidUpdateChannelSources = this._onDidUpdateChannelFiles.event;
+  registerChannel(descriptor) {
+    if (!this.channels.has(descriptor.id)) {
+      this.channels.set(descriptor.id, descriptor);
+      this._onDidRegisterChannel.fire(descriptor.id);
+    }
+  }
+  getChannels() {
+    const result = [];
+    this.channels.forEach((value) => result.push(value));
+    return result;
+  }
+  getChannel(id) {
+    return this.channels.get(id);
+  }
+  updateChannelSources(id, sources) {
+    const channel = this.channels.get(id);
+    if (channel && isMultiSourceOutputChannelDescriptor(channel)) {
+      channel.source = sources;
+      this._onDidUpdateChannelFiles.fire(channel);
+    }
+  }
+  removeChannel(id) {
+    const channel = this.channels.get(id);
+    if (channel) {
+      this.channels.delete(id);
+      this._onDidRemoveChannel.fire(channel);
+    }
+  }
+}
+Registry.add(Extensions.OutputChannels, new OutputChannelRegistry());
+export {
+  ACTIVE_OUTPUT_CHANNEL_CONTEXT,
+  CONTEXT_ACTIVE_FILE_OUTPUT,
+  CONTEXT_ACTIVE_LOG_FILE_OUTPUT,
+  CONTEXT_ACTIVE_OUTPUT_LEVEL,
+  CONTEXT_ACTIVE_OUTPUT_LEVEL_IS_DEFAULT,
+  CONTEXT_ACTIVE_OUTPUT_LEVEL_SETTABLE,
+  CONTEXT_IN_OUTPUT,
+  CONTEXT_OUTPUT_SCROLL_LOCK,
+  Extensions,
+  HIDE_CATEGORY_FILTER_CONTEXT,
+  IOutputService,
+  LOG_MIME,
+  LOG_MODE_ID,
+  OUTPUT_FILTER_FOCUS_CONTEXT,
+  OUTPUT_MIME,
+  OUTPUT_MODE_ID,
+  OUTPUT_VIEW_ID,
+  OutputChannelUpdateMode,
+  SHOW_DEBUG_FILTER_CONTEXT,
+  SHOW_ERROR_FILTER_CONTEXT,
+  SHOW_INFO_FILTER_CONTEXT,
+  SHOW_TRACE_FILTER_CONTEXT,
+  SHOW_WARNING_FILTER_CONTEXT,
+  isMultiSourceOutputChannelDescriptor,
+  isSingleSourceOutputChannelDescriptor
+};
+//# sourceMappingURL=output.js.map

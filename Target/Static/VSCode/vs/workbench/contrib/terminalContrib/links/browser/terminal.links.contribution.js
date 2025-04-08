@@ -1,1 +1,142 @@
-var I=Object.defineProperty,_=Object.getOwnPropertyDescriptor,L=(i,e,n,t)=>{for(var r,a=t>1?void 0:t?_(e,n):e,s=i.length-1;s>=0;s--)(r=i[s])&&(a=(t?r(e,n,a):r(a))||a);return t&&a&&I(e,n,a),a},k=(i,e)=>(n,t)=>e(n,t,i);import{Event as b}from"../../../../../base/common/event.js";import{KeyCode as v,KeyMod as o}from"../../../../../base/common/keyCodes.js";import{DisposableStore as C}from"../../../../../base/common/lifecycle.js";import{localize2 as s}from"../../../../../nls.js";import{AccessibleViewProviderId as w}from"../../../../../platform/accessibility/browser/accessibleView.js";import{ContextKeyExpr as g}from"../../../../../platform/contextkey/common/contextkey.js";import{InstantiationType as y,registerSingleton as T}from"../../../../../platform/instantiation/common/extensions.js";import{IInstantiationService as x}from"../../../../../platform/instantiation/common/instantiation.js";import{KeybindingWeight as u}from"../../../../../platform/keybinding/common/keybindingsRegistry.js";import{accessibleViewCurrentProviderId as P,accessibleViewIsShown as M}from"../../../accessibility/browser/accessibilityConfiguration.js";import{isDetachedTerminalInstance as S}from"../../../terminal/browser/terminal.js";import{registerActiveInstanceAction as d}from"../../../terminal/browser/terminalActions.js";import{registerTerminalContribution as R}from"../../../terminal/browser/terminalExtensions.js";import{isTerminalProcessManager as D}from"../../../terminal/common/terminal.js";import{TerminalContextKeys as c}from"../../../terminal/common/terminalContextKey.js";import{terminalStrings as Q}from"../../../terminal/common/terminalStrings.js";import{TerminalLinksCommandId as p}from"../common/terminal.links.js";import{ITerminalLinkProviderService as f}from"./links.js";import{TerminalLinkManager as O}from"./terminalLinkManager.js";import{TerminalLinkProviderService as K}from"./terminalLinkProviderService.js";import{TerminalLinkQuickpick as W}from"./terminalLinkQuickpick.js";import{TerminalLinkResolver as F}from"./terminalLinkResolver.js";T(f,K,y.Delayed);let t=class extends C{constructor(i,e,n){super(),this._ctx=i,this._instantiationService=e,this._terminalLinkProviderService=n,this._linkResolver=this._instantiationService.createInstance(F)}static ID="terminal.link";static get(i){return i.getContribution(t.ID)}_linkManager;_terminalLinkQuickpick;_linkResolver;xtermReady(i){const e=this._linkManager=this.add(this._instantiationService.createInstance(O,i.raw,this._ctx.processManager,this._ctx.instance.capabilities,this._linkResolver));if(D(this._ctx.processManager)){const i=e.add(b.once(this._ctx.processManager.onProcessReady)((()=>{e.setWidgetManager(this._ctx.widgetManager),this.delete(i)})))}else e.setWidgetManager(this._ctx.widgetManager);if(!S(this._ctx.instance)){for(const i of this._terminalLinkProviderService.linkProviders)e.externalProvideLinksCb=i.provideLinks.bind(i,this._ctx.instance);e.add(this._terminalLinkProviderService.onDidAddLinkProvider((i=>{e.externalProvideLinksCb=i.provideLinks.bind(i,this._ctx.instance)})))}e.add(this._terminalLinkProviderService.onDidRemoveLinkProvider((()=>e.externalProvideLinksCb=void 0)))}async showLinkQuickpick(i){this._terminalLinkQuickpick||(this._terminalLinkQuickpick=this.add(this._instantiationService.createInstance(W)),this._terminalLinkQuickpick.onDidRequestMoreLinks((()=>{this.showLinkQuickpick(!0)})));const e=await this._getLinks();return await this._terminalLinkQuickpick.show(this._ctx.instance,e)}async _getLinks(){if(!this._linkManager)throw new Error("terminal links are not ready, cannot generate link quick pick");return this._linkManager.getLinks()}async openRecentLink(i){if(!this._linkManager)throw new Error("terminal links are not ready, cannot open a link");this._linkManager.openRecentLink(i)}};t=L([k(1,x),k(2,f)],t),R(t.ID,t,!0);const h=Q.actionCategory;d({id:p.OpenDetectedLink,title:s("workbench.action.terminal.openDetectedLink","Open Detected Link..."),f1:!0,category:h,precondition:c.terminalHasBeenCreated,keybinding:[{primary:o.CtrlCmd|o.Shift|v.KeyO,weight:u.WorkbenchContrib+1,when:c.focus},{primary:o.CtrlCmd|o.Shift|v.KeyG,weight:u.WorkbenchContrib+1,when:g.and(M,g.equals(P.key,w.Terminal))}],run:i=>t.get(i)?.showLinkQuickpick()}),d({id:p.OpenWebLink,title:s("workbench.action.terminal.openLastUrlLink","Open Last URL Link"),metadata:{description:s("workbench.action.terminal.openLastUrlLink.description","Opens the last detected URL/URI link in the terminal")},f1:!0,category:h,precondition:c.terminalHasBeenCreated,run:i=>t.get(i)?.openRecentLink("url")}),d({id:p.OpenFileLink,title:s("workbench.action.terminal.openLastLocalFileLink","Open Last Local File Link"),f1:!0,category:h,precondition:c.terminalHasBeenCreated,run:i=>t.get(i)?.openRecentLink("localFile")});
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Event } from "../../../../../base/common/event.js";
+import { KeyCode, KeyMod } from "../../../../../base/common/keyCodes.js";
+import { DisposableStore } from "../../../../../base/common/lifecycle.js";
+import { localize2 } from "../../../../../nls.js";
+import { AccessibleViewProviderId } from "../../../../../platform/accessibility/browser/accessibleView.js";
+import { ContextKeyExpr } from "../../../../../platform/contextkey/common/contextkey.js";
+import { InstantiationType, registerSingleton } from "../../../../../platform/instantiation/common/extensions.js";
+import { IInstantiationService } from "../../../../../platform/instantiation/common/instantiation.js";
+import { KeybindingWeight } from "../../../../../platform/keybinding/common/keybindingsRegistry.js";
+import { accessibleViewCurrentProviderId, accessibleViewIsShown } from "../../../accessibility/browser/accessibilityConfiguration.js";
+import { ITerminalContribution, ITerminalInstance, IXtermTerminal, isDetachedTerminalInstance } from "../../../terminal/browser/terminal.js";
+import { registerActiveInstanceAction } from "../../../terminal/browser/terminalActions.js";
+import { registerTerminalContribution } from "../../../terminal/browser/terminalExtensions.js";
+import { isTerminalProcessManager } from "../../../terminal/common/terminal.js";
+import { TerminalContextKeys } from "../../../terminal/common/terminalContextKey.js";
+import { terminalStrings } from "../../../terminal/common/terminalStrings.js";
+import { TerminalLinksCommandId } from "../common/terminal.links.js";
+import { ITerminalLinkProviderService } from "./links.js";
+import { IDetectedLinks, TerminalLinkManager } from "./terminalLinkManager.js";
+import { TerminalLinkProviderService } from "./terminalLinkProviderService.js";
+import { TerminalLinkQuickpick } from "./terminalLinkQuickpick.js";
+import { TerminalLinkResolver } from "./terminalLinkResolver.js";
+registerSingleton(ITerminalLinkProviderService, TerminalLinkProviderService, InstantiationType.Delayed);
+let TerminalLinkContribution = class extends DisposableStore {
+  constructor(_ctx, _instantiationService, _terminalLinkProviderService) {
+    super();
+    this._ctx = _ctx;
+    this._instantiationService = _instantiationService;
+    this._terminalLinkProviderService = _terminalLinkProviderService;
+    this._linkResolver = this._instantiationService.createInstance(TerminalLinkResolver);
+  }
+  static {
+    __name(this, "TerminalLinkContribution");
+  }
+  static ID = "terminal.link";
+  static get(instance) {
+    return instance.getContribution(TerminalLinkContribution.ID);
+  }
+  _linkManager;
+  _terminalLinkQuickpick;
+  _linkResolver;
+  xtermReady(xterm) {
+    const linkManager = this._linkManager = this.add(this._instantiationService.createInstance(TerminalLinkManager, xterm.raw, this._ctx.processManager, this._ctx.instance.capabilities, this._linkResolver));
+    if (isTerminalProcessManager(this._ctx.processManager)) {
+      const disposable = linkManager.add(Event.once(this._ctx.processManager.onProcessReady)(() => {
+        linkManager.setWidgetManager(this._ctx.widgetManager);
+        this.delete(disposable);
+      }));
+    } else {
+      linkManager.setWidgetManager(this._ctx.widgetManager);
+    }
+    if (!isDetachedTerminalInstance(this._ctx.instance)) {
+      for (const linkProvider of this._terminalLinkProviderService.linkProviders) {
+        linkManager.externalProvideLinksCb = linkProvider.provideLinks.bind(linkProvider, this._ctx.instance);
+      }
+      linkManager.add(this._terminalLinkProviderService.onDidAddLinkProvider((e) => {
+        linkManager.externalProvideLinksCb = e.provideLinks.bind(e, this._ctx.instance);
+      }));
+    }
+    linkManager.add(this._terminalLinkProviderService.onDidRemoveLinkProvider(() => linkManager.externalProvideLinksCb = void 0));
+  }
+  async showLinkQuickpick(extended) {
+    if (!this._terminalLinkQuickpick) {
+      this._terminalLinkQuickpick = this.add(this._instantiationService.createInstance(TerminalLinkQuickpick));
+      this._terminalLinkQuickpick.onDidRequestMoreLinks(() => {
+        this.showLinkQuickpick(true);
+      });
+    }
+    const links = await this._getLinks();
+    return await this._terminalLinkQuickpick.show(this._ctx.instance, links);
+  }
+  async _getLinks() {
+    if (!this._linkManager) {
+      throw new Error("terminal links are not ready, cannot generate link quick pick");
+    }
+    return this._linkManager.getLinks();
+  }
+  async openRecentLink(type) {
+    if (!this._linkManager) {
+      throw new Error("terminal links are not ready, cannot open a link");
+    }
+    this._linkManager.openRecentLink(type);
+  }
+};
+TerminalLinkContribution = __decorateClass([
+  __decorateParam(1, IInstantiationService),
+  __decorateParam(2, ITerminalLinkProviderService)
+], TerminalLinkContribution);
+registerTerminalContribution(TerminalLinkContribution.ID, TerminalLinkContribution, true);
+const category = terminalStrings.actionCategory;
+registerActiveInstanceAction({
+  id: TerminalLinksCommandId.OpenDetectedLink,
+  title: localize2("workbench.action.terminal.openDetectedLink", "Open Detected Link..."),
+  f1: true,
+  category,
+  precondition: TerminalContextKeys.terminalHasBeenCreated,
+  keybinding: [
+    {
+      primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyO,
+      weight: KeybindingWeight.WorkbenchContrib + 1,
+      when: TerminalContextKeys.focus
+    },
+    {
+      primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyG,
+      weight: KeybindingWeight.WorkbenchContrib + 1,
+      when: ContextKeyExpr.and(accessibleViewIsShown, ContextKeyExpr.equals(accessibleViewCurrentProviderId.key, AccessibleViewProviderId.Terminal))
+    }
+  ],
+  run: /* @__PURE__ */ __name((activeInstance) => TerminalLinkContribution.get(activeInstance)?.showLinkQuickpick(), "run")
+});
+registerActiveInstanceAction({
+  id: TerminalLinksCommandId.OpenWebLink,
+  title: localize2("workbench.action.terminal.openLastUrlLink", "Open Last URL Link"),
+  metadata: {
+    description: localize2("workbench.action.terminal.openLastUrlLink.description", "Opens the last detected URL/URI link in the terminal")
+  },
+  f1: true,
+  category,
+  precondition: TerminalContextKeys.terminalHasBeenCreated,
+  run: /* @__PURE__ */ __name((activeInstance) => TerminalLinkContribution.get(activeInstance)?.openRecentLink("url"), "run")
+});
+registerActiveInstanceAction({
+  id: TerminalLinksCommandId.OpenFileLink,
+  title: localize2("workbench.action.terminal.openLastLocalFileLink", "Open Last Local File Link"),
+  f1: true,
+  category,
+  precondition: TerminalContextKeys.terminalHasBeenCreated,
+  run: /* @__PURE__ */ __name((activeInstance) => TerminalLinkContribution.get(activeInstance)?.openRecentLink("localFile"), "run")
+});
+//# sourceMappingURL=terminal.links.contribution.js.map

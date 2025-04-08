@@ -1,2 +1,41 @@
-import{ICodeEditorService as c}from"../../../../editor/browser/services/codeEditorService.js";import{localize as e}from"../../../../nls.js";import{AccessibleContentProvider as d,AccessibleViewProviderId as s,AccessibleViewType as i}from"../../../../platform/accessibility/browser/accessibleView.js";import"../../../../platform/accessibility/browser/accessibleViewRegistry.js";import{ContextKeyEqualsExpr as l}from"../../../../platform/contextkey/common/contextkey.js";import"../../../../platform/instantiation/common/instantiation.js";import{AccessibilityVerbositySettingId as m}from"../../accessibility/browser/accessibilityConfiguration.js";class v{name="mergeEditor";type=i.Help;priority=125;when=l.create("isMergeEditor",!0);getProvider(r){const o=r.get(c),t=o.getActiveCodeEditor()||o.getFocusedCodeEditor();if(!t)return;const n=[e("msg1","You are in a merge editor."),e("msg2","Navigate between merge conflicts using the commands Go to Next Unhandled Conflict{0} and Go to Previous Unhandled Conflict{1}.","<keybinding:merge.goToNextUnhandledConflict>","<keybinding:merge.goToPreviousUnhandledConflict>"),e("msg3","Run the command Merge Editor: Accept All Changes from the Left{0} and Merge Editor: Accept All Changes from the Right{1}","<keybinding:merge.acceptAllInput1>","<keybinding:merge.acceptAllInput2>")];return new d(s.MergeEditor,{type:i.Help},()=>n.join(`
-`),()=>t.focus(),m.MergeEditor)}}export{v as MergeEditorAccessibilityHelpProvider};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { ICodeEditorService } from "../../../../editor/browser/services/codeEditorService.js";
+import { localize } from "../../../../nls.js";
+import { AccessibleContentProvider, AccessibleViewProviderId, AccessibleViewType } from "../../../../platform/accessibility/browser/accessibleView.js";
+import { IAccessibleViewImplementation } from "../../../../platform/accessibility/browser/accessibleViewRegistry.js";
+import { ContextKeyEqualsExpr } from "../../../../platform/contextkey/common/contextkey.js";
+import { ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+import { AccessibilityVerbositySettingId } from "../../accessibility/browser/accessibilityConfiguration.js";
+class MergeEditorAccessibilityHelpProvider {
+  static {
+    __name(this, "MergeEditorAccessibilityHelpProvider");
+  }
+  name = "mergeEditor";
+  type = AccessibleViewType.Help;
+  priority = 125;
+  when = ContextKeyEqualsExpr.create("isMergeEditor", true);
+  getProvider(accessor) {
+    const codeEditorService = accessor.get(ICodeEditorService);
+    const codeEditor = codeEditorService.getActiveCodeEditor() || codeEditorService.getFocusedCodeEditor();
+    if (!codeEditor) {
+      return;
+    }
+    const content = [
+      localize("msg1", "You are in a merge editor."),
+      localize("msg2", "Navigate between merge conflicts using the commands Go to Next Unhandled Conflict{0} and Go to Previous Unhandled Conflict{1}.", "<keybinding:merge.goToNextUnhandledConflict>", "<keybinding:merge.goToPreviousUnhandledConflict>"),
+      localize("msg3", "Run the command Merge Editor: Accept All Changes from the Left{0} and Merge Editor: Accept All Changes from the Right{1}", "<keybinding:merge.acceptAllInput1>", "<keybinding:merge.acceptAllInput2>")
+    ];
+    return new AccessibleContentProvider(
+      AccessibleViewProviderId.MergeEditor,
+      { type: AccessibleViewType.Help },
+      () => content.join("\n"),
+      () => codeEditor.focus(),
+      AccessibilityVerbositySettingId.MergeEditor
+    );
+  }
+}
+export {
+  MergeEditorAccessibilityHelpProvider
+};
+//# sourceMappingURL=mergeEditorAccessibilityHelp.js.map

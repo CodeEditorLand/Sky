@@ -1,1 +1,386 @@
-import*as l from"../../../../nls.js";import"../../../../platform/commands/common/commands.js";import"../../../../platform/instantiation/common/instantiation.js";import{WorkbenchListFocusContextKey as N}from"../../../../platform/list/browser/listService.js";import{IViewsService as S}from"../../../services/views/common/viewsService.js";import{searchClearIcon as M,searchCollapseAllIcon as q,searchExpandAllIcon as P,searchRefreshIcon as W,searchShowAsList as k,searchShowAsTree as z,searchStopIcon as D}from"./searchIcons.js";import*as t from"../common/constants.js";import{ISearchHistoryService as U}from"../common/searchHistoryService.js";import{VIEW_ID as w}from"../../../services/search/common/search.js";import{ContextKeyExpr as c}from"../../../../platform/contextkey/common/contextkey.js";import{Action2 as h,MenuId as f,registerAction2 as d}from"../../../../platform/actions/common/actions.js";import{KeybindingWeight as K}from"../../../../platform/keybinding/common/keybindingsRegistry.js";import{KeyCode as E,KeyMod as Q}from"../../../../base/common/keyCodes.js";import{SearchStateKey as I,SearchUIState as V}from"../common/search.js";import{category as u,getSearchView as m}from"./searchActionsBase.js";import{isSearchTreeMatch as R,isSearchTreeFolderMatch as T,isSearchTreeFolderMatchNoRoot as F,isSearchTreeFolderMatchWorkspaceRoot as b,isSearchResult as v,isTextSearchHeading as C,isSearchTreeFileMatch as L}from"./searchTreeModel/searchTreeCommon.js";d(class extends h{constructor(){super({id:t.SearchCommandIds.ClearSearchHistoryCommandId,title:l.localize2("clearSearchHistoryLabel","Clear Search History"),category:u,f1:!0})}async run(e){_(e)}}),d(class extends h{constructor(){super({id:t.SearchCommandIds.CancelSearchActionId,title:l.localize2("CancelSearchAction.label","Cancel Search"),icon:D,category:u,f1:!0,precondition:I.isEqualTo(V.Idle).negate(),keybinding:{weight:K.WorkbenchContrib,when:c.and(t.SearchContext.SearchViewVisibleKey,N),primary:E.Escape},menu:[{id:f.ViewTitle,group:"navigation",order:0,when:c.and(c.equals("view",w),I.isEqualTo(V.SlowSearch))}]})}run(e){return G(e)}}),d(class extends h{constructor(){super({id:t.SearchCommandIds.RefreshSearchResultsActionId,title:l.localize2("RefreshAction.label","Refresh"),icon:W,precondition:t.SearchContext.ViewHasSearchPatternKey,category:u,f1:!0,menu:[{id:f.ViewTitle,group:"navigation",order:0,when:c.and(c.equals("view",w),I.isEqualTo(V.SlowSearch).negate())}]})}run(e,...t){return J(e)}}),d(class extends h{constructor(){super({id:t.SearchCommandIds.CollapseSearchResultsActionId,title:l.localize2("CollapseDeepestExpandedLevelAction.label","Collapse All"),category:u,icon:q,f1:!0,precondition:c.and(t.SearchContext.HasSearchResults,t.SearchContext.ViewHasSomeCollapsibleKey),menu:[{id:f.ViewTitle,group:"navigation",order:4,when:c.and(c.equals("view",w),c.or(t.SearchContext.HasSearchResults.negate(),t.SearchContext.ViewHasSomeCollapsibleKey))}]})}run(e,...t){return O(e)}}),d(class extends h{constructor(){super({id:t.SearchCommandIds.ExpandSearchResultsActionId,title:l.localize2("ExpandAllAction.label","Expand All"),category:u,icon:P,f1:!0,precondition:c.and(t.SearchContext.HasSearchResults,t.SearchContext.ViewHasSomeCollapsibleKey.toNegated()),menu:[{id:f.ViewTitle,group:"navigation",order:4,when:c.and(c.equals("view",w),t.SearchContext.HasSearchResults,t.SearchContext.ViewHasSomeCollapsibleKey.toNegated())}]})}async run(e,...t){return j(e)}}),d(class extends h{constructor(){super({id:t.SearchCommandIds.ClearSearchResultsActionId,title:l.localize2("ClearSearchResultsAction.label","Clear Search Results"),category:u,icon:M,f1:!0,precondition:c.or(t.SearchContext.HasSearchResults,t.SearchContext.ViewHasSearchPatternKey,t.SearchContext.ViewHasReplacePatternKey,t.SearchContext.ViewHasFilePatternKey),menu:[{id:f.ViewTitle,group:"navigation",order:1,when:c.equals("view",w)}]})}run(e,...t){return B(e)}}),d(class extends h{constructor(){super({id:t.SearchCommandIds.ViewAsTreeActionId,title:l.localize2("ViewAsTreeAction.label","View as Tree"),category:u,icon:k,f1:!0,precondition:c.and(t.SearchContext.HasSearchResults,t.SearchContext.InTreeViewKey.toNegated()),menu:[{id:f.ViewTitle,group:"navigation",order:2,when:c.and(c.equals("view",w),t.SearchContext.InTreeViewKey.toNegated())}]})}async run(e,...t){const a=m(e.get(S));a&&await a.setTreeView(!0)}}),d(class extends h{constructor(){super({id:t.SearchCommandIds.ViewAsListActionId,title:l.localize2("ViewAsListAction.label","View as List"),category:u,icon:z,f1:!0,precondition:c.and(t.SearchContext.HasSearchResults,t.SearchContext.InTreeViewKey),menu:[{id:f.ViewTitle,group:"navigation",order:2,when:c.and(c.equals("view",w),t.SearchContext.InTreeViewKey)}]})}async run(e,...t){const a=m(e.get(S));a&&await a.setTreeView(!1)}}),d(class extends h{constructor(){super({id:t.SearchCommandIds.SearchWithAIActionId,title:l.localize2("SearchWithAIAction.label","Search with AI"),category:u,f1:!0,precondition:t.SearchContext.hasAIResultProvider,keybinding:{weight:K.WorkbenchContrib,when:c.and(t.SearchContext.hasAIResultProvider,t.SearchContext.SearchViewFocusedKey),primary:Q.CtrlCmd|E.KeyI}})}async run(e,...t){const a=m(e.get(S));if(a){const e=a.getControl();a.model.searchResult.aiTextSearchResult.hidden=!1,a.model.cancelAISearch(!0),a.model.clearAiSearchResults(),await a.queueRefreshTree(),await x(e,a.model.searchResult.aiTextSearchResult)}}});const _=e=>{e.get(U).clearHistory()};async function j(e){const t=e.get(S),a=m(t);if(a){const e=a.getControl();a.shouldShowAIResults()?a.model.hasAIResults?await x(e,void 0):await x(e,a.model.searchResult.plainTextSearchResult):await x(e,void 0)}}async function x(e,t){if(t){if(!e.hasNode(t))return;await e.expand(t,!0)}const a=e.getNode(t)?.children;if(a)for(const t of a){if(v(t.element))throw Error("SearchResult should not be a child of a RenderableMatch");x(e,t.element)}}function B(e){const t=e.get(S);m(t)?.clearSearchResults()}function G(e){const t=e.get(S);m(t)?.cancelSearch()}function J(e){const t=e.get(S),a=m(t);a?.triggerQueryChange({preserveFocus:!1,shouldUpdateAISearch:!a.model.searchResult.aiTextSearchResult.hidden})}function O(e){const t=e.get(S),a=m(t);if(a){const e=a.getControl(),t=e.navigate();let o=t.first(),r=!1,s=!1;do{o=t.next()}while(C(o));if(b(o)||a.isTreeLayoutViewVisible)for(;o=t.next();)if(!C(o)){if(R(o)){r=!0;break}if(a.isTreeLayoutViewVisible&&!s){let t=o;if(T(o)){const a=e.getCompressedTreeNode(o)?.elements[0].element;t=!a||R(a)||C(a)||v(a)?o:a}const a=t.parent();C(a)||b(a)||F(a)||v(a)||(s=!0)}}if(r){o=t.first();do{L(o)&&e.collapse(o)}while(o=t.next())}else if(s){if(o=t.first(),o)do{let t=o;if(T(o)){const a=e.getCompressedTreeNode(o)?.elements[0].element;t=!a||R(a)||v(a)?o:a}const a=t.parent();(b(a)||F(a))&&(e.hasNode(o)?e.collapse(o,!0):e.collapseAll())}while(o=t.next())}else if(C(t.first())){o=t.first();do{if(!o)break;C(e.getParentElement(o))&&e.collapse(o)}while(o=t.next())}else e.collapseAll();const c=e.getFocus()[0]?.parent();c&&(T(c)||L(c))&&e.hasNode(c)&&e.isCollapsed(c)&&(e.domFocus(),e.focusFirst(),e.setSelection(e.getFocus()))}}export{x as forcedExpandRecursively};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as nls from "../../../../nls.js";
+import { ICommandHandler } from "../../../../platform/commands/common/commands.js";
+import { ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+import { WorkbenchCompressibleAsyncDataTree, WorkbenchListFocusContextKey } from "../../../../platform/list/browser/listService.js";
+import { IViewsService } from "../../../services/views/common/viewsService.js";
+import { searchClearIcon, searchCollapseAllIcon, searchExpandAllIcon, searchRefreshIcon, searchShowAsList, searchShowAsTree, searchStopIcon } from "./searchIcons.js";
+import * as Constants from "../common/constants.js";
+import { ISearchHistoryService } from "../common/searchHistoryService.js";
+import { VIEW_ID } from "../../../services/search/common/search.js";
+import { ContextKeyExpr } from "../../../../platform/contextkey/common/contextkey.js";
+import { Action2, MenuId, registerAction2 } from "../../../../platform/actions/common/actions.js";
+import { KeybindingWeight } from "../../../../platform/keybinding/common/keybindingsRegistry.js";
+import { KeyCode, KeyMod } from "../../../../base/common/keyCodes.js";
+import { SearchStateKey, SearchUIState } from "../common/search.js";
+import { category, getSearchView } from "./searchActionsBase.js";
+import { isSearchTreeMatch, RenderableMatch, ISearchResult, isSearchTreeFolderMatch, isSearchTreeFolderMatchNoRoot, isSearchTreeFolderMatchWorkspaceRoot, isSearchResult, isTextSearchHeading, isSearchTreeFileMatch } from "./searchTreeModel/searchTreeCommon.js";
+registerAction2(class ClearSearchHistoryCommandAction extends Action2 {
+  static {
+    __name(this, "ClearSearchHistoryCommandAction");
+  }
+  constructor() {
+    super({
+      id: Constants.SearchCommandIds.ClearSearchHistoryCommandId,
+      title: nls.localize2("clearSearchHistoryLabel", "Clear Search History"),
+      category,
+      f1: true
+    });
+  }
+  async run(accessor) {
+    clearHistoryCommand(accessor);
+  }
+});
+registerAction2(class CancelSearchAction extends Action2 {
+  static {
+    __name(this, "CancelSearchAction");
+  }
+  constructor() {
+    super({
+      id: Constants.SearchCommandIds.CancelSearchActionId,
+      title: nls.localize2("CancelSearchAction.label", "Cancel Search"),
+      icon: searchStopIcon,
+      category,
+      f1: true,
+      precondition: SearchStateKey.isEqualTo(SearchUIState.Idle).negate(),
+      keybinding: {
+        weight: KeybindingWeight.WorkbenchContrib,
+        when: ContextKeyExpr.and(Constants.SearchContext.SearchViewVisibleKey, WorkbenchListFocusContextKey),
+        primary: KeyCode.Escape
+      },
+      menu: [{
+        id: MenuId.ViewTitle,
+        group: "navigation",
+        order: 0,
+        when: ContextKeyExpr.and(ContextKeyExpr.equals("view", VIEW_ID), SearchStateKey.isEqualTo(SearchUIState.SlowSearch))
+      }]
+    });
+  }
+  run(accessor) {
+    return cancelSearch(accessor);
+  }
+});
+registerAction2(class RefreshAction extends Action2 {
+  static {
+    __name(this, "RefreshAction");
+  }
+  constructor() {
+    super({
+      id: Constants.SearchCommandIds.RefreshSearchResultsActionId,
+      title: nls.localize2("RefreshAction.label", "Refresh"),
+      icon: searchRefreshIcon,
+      precondition: Constants.SearchContext.ViewHasSearchPatternKey,
+      category,
+      f1: true,
+      menu: [{
+        id: MenuId.ViewTitle,
+        group: "navigation",
+        order: 0,
+        when: ContextKeyExpr.and(ContextKeyExpr.equals("view", VIEW_ID), SearchStateKey.isEqualTo(SearchUIState.SlowSearch).negate())
+      }]
+    });
+  }
+  run(accessor, ...args) {
+    return refreshSearch(accessor);
+  }
+});
+registerAction2(class CollapseDeepestExpandedLevelAction extends Action2 {
+  static {
+    __name(this, "CollapseDeepestExpandedLevelAction");
+  }
+  constructor() {
+    super({
+      id: Constants.SearchCommandIds.CollapseSearchResultsActionId,
+      title: nls.localize2("CollapseDeepestExpandedLevelAction.label", "Collapse All"),
+      category,
+      icon: searchCollapseAllIcon,
+      f1: true,
+      precondition: ContextKeyExpr.and(Constants.SearchContext.HasSearchResults, Constants.SearchContext.ViewHasSomeCollapsibleKey),
+      menu: [{
+        id: MenuId.ViewTitle,
+        group: "navigation",
+        order: 4,
+        when: ContextKeyExpr.and(ContextKeyExpr.equals("view", VIEW_ID), ContextKeyExpr.or(Constants.SearchContext.HasSearchResults.negate(), Constants.SearchContext.ViewHasSomeCollapsibleKey))
+      }]
+    });
+  }
+  run(accessor, ...args) {
+    return collapseDeepestExpandedLevel(accessor);
+  }
+});
+registerAction2(class ExpandAllAction extends Action2 {
+  static {
+    __name(this, "ExpandAllAction");
+  }
+  constructor() {
+    super({
+      id: Constants.SearchCommandIds.ExpandSearchResultsActionId,
+      title: nls.localize2("ExpandAllAction.label", "Expand All"),
+      category,
+      icon: searchExpandAllIcon,
+      f1: true,
+      precondition: ContextKeyExpr.and(Constants.SearchContext.HasSearchResults, Constants.SearchContext.ViewHasSomeCollapsibleKey.toNegated()),
+      menu: [{
+        id: MenuId.ViewTitle,
+        group: "navigation",
+        order: 4,
+        when: ContextKeyExpr.and(ContextKeyExpr.equals("view", VIEW_ID), Constants.SearchContext.HasSearchResults, Constants.SearchContext.ViewHasSomeCollapsibleKey.toNegated())
+      }]
+    });
+  }
+  async run(accessor, ...args) {
+    return expandAll(accessor);
+  }
+});
+registerAction2(class ClearSearchResultsAction extends Action2 {
+  static {
+    __name(this, "ClearSearchResultsAction");
+  }
+  constructor() {
+    super({
+      id: Constants.SearchCommandIds.ClearSearchResultsActionId,
+      title: nls.localize2("ClearSearchResultsAction.label", "Clear Search Results"),
+      category,
+      icon: searchClearIcon,
+      f1: true,
+      precondition: ContextKeyExpr.or(Constants.SearchContext.HasSearchResults, Constants.SearchContext.ViewHasSearchPatternKey, Constants.SearchContext.ViewHasReplacePatternKey, Constants.SearchContext.ViewHasFilePatternKey),
+      menu: [{
+        id: MenuId.ViewTitle,
+        group: "navigation",
+        order: 1,
+        when: ContextKeyExpr.equals("view", VIEW_ID)
+      }]
+    });
+  }
+  run(accessor, ...args) {
+    return clearSearchResults(accessor);
+  }
+});
+registerAction2(class ViewAsTreeAction extends Action2 {
+  static {
+    __name(this, "ViewAsTreeAction");
+  }
+  constructor() {
+    super({
+      id: Constants.SearchCommandIds.ViewAsTreeActionId,
+      title: nls.localize2("ViewAsTreeAction.label", "View as Tree"),
+      category,
+      icon: searchShowAsList,
+      f1: true,
+      precondition: ContextKeyExpr.and(Constants.SearchContext.HasSearchResults, Constants.SearchContext.InTreeViewKey.toNegated()),
+      menu: [{
+        id: MenuId.ViewTitle,
+        group: "navigation",
+        order: 2,
+        when: ContextKeyExpr.and(ContextKeyExpr.equals("view", VIEW_ID), Constants.SearchContext.InTreeViewKey.toNegated())
+      }]
+    });
+  }
+  async run(accessor, ...args) {
+    const searchView = getSearchView(accessor.get(IViewsService));
+    if (searchView) {
+      await searchView.setTreeView(true);
+    }
+  }
+});
+registerAction2(class ViewAsListAction extends Action2 {
+  static {
+    __name(this, "ViewAsListAction");
+  }
+  constructor() {
+    super({
+      id: Constants.SearchCommandIds.ViewAsListActionId,
+      title: nls.localize2("ViewAsListAction.label", "View as List"),
+      category,
+      icon: searchShowAsTree,
+      f1: true,
+      precondition: ContextKeyExpr.and(Constants.SearchContext.HasSearchResults, Constants.SearchContext.InTreeViewKey),
+      menu: [{
+        id: MenuId.ViewTitle,
+        group: "navigation",
+        order: 2,
+        when: ContextKeyExpr.and(ContextKeyExpr.equals("view", VIEW_ID), Constants.SearchContext.InTreeViewKey)
+      }]
+    });
+  }
+  async run(accessor, ...args) {
+    const searchView = getSearchView(accessor.get(IViewsService));
+    if (searchView) {
+      await searchView.setTreeView(false);
+    }
+  }
+});
+registerAction2(class SearchWithAIAction extends Action2 {
+  static {
+    __name(this, "SearchWithAIAction");
+  }
+  constructor() {
+    super({
+      id: Constants.SearchCommandIds.SearchWithAIActionId,
+      title: nls.localize2("SearchWithAIAction.label", "Search with AI"),
+      category,
+      f1: true,
+      precondition: Constants.SearchContext.hasAIResultProvider,
+      keybinding: {
+        weight: KeybindingWeight.WorkbenchContrib,
+        when: ContextKeyExpr.and(Constants.SearchContext.hasAIResultProvider, Constants.SearchContext.SearchViewFocusedKey),
+        primary: KeyMod.CtrlCmd | KeyCode.KeyI
+      }
+    });
+  }
+  async run(accessor, ...args) {
+    const searchView = getSearchView(accessor.get(IViewsService));
+    if (searchView) {
+      const viewer = searchView.getControl();
+      searchView.model.searchResult.aiTextSearchResult.hidden = false;
+      searchView.model.cancelAISearch(true);
+      searchView.model.clearAiSearchResults();
+      await searchView.queueRefreshTree();
+      await forcedExpandRecursively(viewer, searchView.model.searchResult.aiTextSearchResult);
+    }
+  }
+});
+const clearHistoryCommand = /* @__PURE__ */ __name((accessor) => {
+  const searchHistoryService = accessor.get(ISearchHistoryService);
+  searchHistoryService.clearHistory();
+}, "clearHistoryCommand");
+async function expandAll(accessor) {
+  const viewsService = accessor.get(IViewsService);
+  const searchView = getSearchView(viewsService);
+  if (searchView) {
+    const viewer = searchView.getControl();
+    if (searchView.shouldShowAIResults()) {
+      if (searchView.model.hasAIResults) {
+        await forcedExpandRecursively(viewer, void 0);
+      } else {
+        await forcedExpandRecursively(viewer, searchView.model.searchResult.plainTextSearchResult);
+      }
+    } else {
+      await forcedExpandRecursively(viewer, void 0);
+    }
+  }
+}
+__name(expandAll, "expandAll");
+async function forcedExpandRecursively(viewer, element) {
+  if (element) {
+    if (!viewer.hasNode(element)) {
+      return;
+    }
+    await viewer.expand(element, true);
+  }
+  const children = viewer.getNode(element)?.children;
+  if (children) {
+    for (const child of children) {
+      if (isSearchResult(child.element)) {
+        throw Error("SearchResult should not be a child of a RenderableMatch");
+      }
+      forcedExpandRecursively(viewer, child.element);
+    }
+  }
+}
+__name(forcedExpandRecursively, "forcedExpandRecursively");
+function clearSearchResults(accessor) {
+  const viewsService = accessor.get(IViewsService);
+  const searchView = getSearchView(viewsService);
+  searchView?.clearSearchResults();
+}
+__name(clearSearchResults, "clearSearchResults");
+function cancelSearch(accessor) {
+  const viewsService = accessor.get(IViewsService);
+  const searchView = getSearchView(viewsService);
+  searchView?.cancelSearch();
+}
+__name(cancelSearch, "cancelSearch");
+function refreshSearch(accessor) {
+  const viewsService = accessor.get(IViewsService);
+  const searchView = getSearchView(viewsService);
+  searchView?.triggerQueryChange({ preserveFocus: false, shouldUpdateAISearch: !searchView.model.searchResult.aiTextSearchResult.hidden });
+}
+__name(refreshSearch, "refreshSearch");
+function collapseDeepestExpandedLevel(accessor) {
+  const viewsService = accessor.get(IViewsService);
+  const searchView = getSearchView(viewsService);
+  if (searchView) {
+    const viewer = searchView.getControl();
+    const navigator = viewer.navigate();
+    let node = navigator.first();
+    let canCollapseFileMatchLevel = false;
+    let canCollapseFirstLevel = false;
+    do {
+      node = navigator.next();
+    } while (isTextSearchHeading(node));
+    if (isSearchTreeFolderMatchWorkspaceRoot(node) || searchView.isTreeLayoutViewVisible) {
+      while (node = navigator.next()) {
+        if (isTextSearchHeading(node)) {
+          continue;
+        }
+        if (isSearchTreeMatch(node)) {
+          canCollapseFileMatchLevel = true;
+          break;
+        }
+        if (searchView.isTreeLayoutViewVisible && !canCollapseFirstLevel) {
+          let nodeToTest = node;
+          if (isSearchTreeFolderMatch(node)) {
+            const compressionStartNode = viewer.getCompressedTreeNode(node)?.elements[0].element;
+            nodeToTest = compressionStartNode && !isSearchTreeMatch(compressionStartNode) && !isTextSearchHeading(compressionStartNode) && !isSearchResult(compressionStartNode) ? compressionStartNode : node;
+          }
+          const immediateParent = nodeToTest.parent();
+          if (!(isTextSearchHeading(immediateParent) || isSearchTreeFolderMatchWorkspaceRoot(immediateParent) || isSearchTreeFolderMatchNoRoot(immediateParent) || isSearchResult(immediateParent))) {
+            canCollapseFirstLevel = true;
+          }
+        }
+      }
+    }
+    if (canCollapseFileMatchLevel) {
+      node = navigator.first();
+      do {
+        if (isSearchTreeFileMatch(node)) {
+          viewer.collapse(node);
+        }
+      } while (node = navigator.next());
+    } else if (canCollapseFirstLevel) {
+      node = navigator.first();
+      if (node) {
+        do {
+          let nodeToTest = node;
+          if (isSearchTreeFolderMatch(node)) {
+            const compressionStartNode = viewer.getCompressedTreeNode(node)?.elements[0].element;
+            nodeToTest = compressionStartNode && !isSearchTreeMatch(compressionStartNode) && !isSearchResult(compressionStartNode) ? compressionStartNode : node;
+          }
+          const immediateParent = nodeToTest.parent();
+          if (isSearchTreeFolderMatchWorkspaceRoot(immediateParent) || isSearchTreeFolderMatchNoRoot(immediateParent)) {
+            if (viewer.hasNode(node)) {
+              viewer.collapse(node, true);
+            } else {
+              viewer.collapseAll();
+            }
+          }
+        } while (node = navigator.next());
+      }
+    } else if (isTextSearchHeading(navigator.first())) {
+      node = navigator.first();
+      do {
+        if (!node) {
+          break;
+        }
+        if (isTextSearchHeading(viewer.getParentElement(node))) {
+          viewer.collapse(node);
+        }
+      } while (node = navigator.next());
+    } else {
+      viewer.collapseAll();
+    }
+    const firstFocusParent = viewer.getFocus()[0]?.parent();
+    if (firstFocusParent && (isSearchTreeFolderMatch(firstFocusParent) || isSearchTreeFileMatch(firstFocusParent)) && viewer.hasNode(firstFocusParent) && viewer.isCollapsed(firstFocusParent)) {
+      viewer.domFocus();
+      viewer.focusFirst();
+      viewer.setSelection(viewer.getFocus());
+    }
+  }
+}
+__name(collapseDeepestExpandedLevel, "collapseDeepestExpandedLevel");
+export {
+  forcedExpandRecursively
+};
+//# sourceMappingURL=searchActionsTopBar.js.map

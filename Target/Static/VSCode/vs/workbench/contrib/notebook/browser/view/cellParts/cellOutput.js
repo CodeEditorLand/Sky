@@ -1,1 +1,674 @@
-var N=Object.defineProperty;var D=Object.getOwnPropertyDescriptor;var T=(g,v,e,t)=>{for(var i=t>1?void 0:t?D(v,e):v,n=g.length-1,r;n>=0;n--)(r=g[n])&&(i=(t?r(v,e,i):r(i))||i);return t&&i&&N(v,e,i),i},m=(g,v)=>(e,t)=>v(e,t,g);import*as h from"../../../../../../base/browser/dom.js";import"../../../../../../base/browser/fastDomNode.js";import{renderMarkdown as V}from"../../../../../../base/browser/markdownRenderer.js";import{Action as L}from"../../../../../../base/common/actions.js";import"../../../../../../base/common/htmlContent.js";import{Disposable as A,DisposableStore as k}from"../../../../../../base/common/lifecycle.js";import{MarshalledId as P}from"../../../../../../base/common/marshallingIds.js";import*as C from"../../../../../../nls.js";import{getActionBarActions as U}from"../../../../../../platform/actions/browser/menuEntryActionViewItem.js";import{WorkbenchToolBar as K}from"../../../../../../platform/actions/browser/toolbar.js";import{IMenuService as j,MenuId as F}from"../../../../../../platform/actions/common/actions.js";import{IContextKeyService as $}from"../../../../../../platform/contextkey/common/contextkey.js";import{IInstantiationService as S}from"../../../../../../platform/instantiation/common/instantiation.js";import{IOpenerService as B}from"../../../../../../platform/opener/common/opener.js";import{IQuickInputService as z}from"../../../../../../platform/quickinput/common/quickInput.js";import{ThemeIcon as W}from"../../../../../../base/common/themables.js";import{IExtensionsWorkbenchService as Y}from"../../../../extensions/common/extensions.js";import{JUPYTER_EXTENSION_ID as J,RenderOutputType as O}from"../../notebookBrowser.js";import{mimetypeIcon as Q}from"../../notebookIcons.js";import{CellContentPart as q}from"../cellPart.js";import"../notebookRenderingCommon.js";import"../../viewModel/codeCellViewModel.js";import"../../../common/model/notebookTextModel.js";import{CellUri as x,NotebookCellExecutionState as G,RENDERER_NOT_AVAILABLE as X,isTextStreamMime as H}from"../../../common/notebookCommon.js";import{INotebookExecutionStateService as Z}from"../../../common/notebookExecutionStateService.js";import"../../../common/notebookKernelService.js";import{INotebookService as ee}from"../../../common/notebookService.js";import{COPY_OUTPUT_COMMAND_ID as te}from"../../controller/cellOutputActions.js";import{autorun as R,observableValue as ie}from"../../../../../../base/common/observable.js";import{NOTEBOOK_CELL_HAS_HIDDEN_OUTPUTS as oe,NOTEBOOK_CELL_IS_FIRST_OUTPUT as ne,NOTEBOOK_CELL_OUTPUT_MIMETYPE as re}from"../../../common/notebookContextKeys.js";import{TEXT_BASED_MIMETYPES as se}from"../../viewModel/cellOutputTextHelper.js";let f=class extends A{constructor(e,t,i,n,r,l,u,s,d,o,a){super();this.notebookEditor=e;this.viewCell=t;this.cellOutputContainer=i;this.outputContainer=n;this.output=r;this.notebookService=l;this.quickInputService=u;this.menuService=d;this.extensionsWorkbenchService=o;this.instantiationService=a;this.contextKeyService=s,this._register(this.output.model.onDidChangeData(()=>{this.rerender()})),this._register(this.output.onDidResetRenderer(()=>{this.rerender()}))}toolbarDisposables=this._register(new k);innerContainer;renderedOutputContainer;renderResult;contextKeyService;toolbarAttached=!1;detach(){this.renderedOutputContainer?.remove();let e=0;if(this.innerContainer){for(let t=0;t<this.innerContainer.childNodes.length&&(this.innerContainer.childNodes[t].className==="rendered-output"&&e++,!(e>1));t++);e===0&&this.innerContainer.remove()}this.notebookEditor.removeInset(this.output)}updateDOMTop(e){this.innerContainer&&(this.innerContainer.style.top=`${e}px`)}rerender(){if(this.notebookEditor.hasModel()&&this.innerContainer&&this.renderResult&&this.renderResult.type===O.Extension){const[e,t]=this.output.resolveMimeTypes(this.notebookEditor.textModel,this.notebookEditor.activeKernel?.preloadProvides),i=e[t];if(i.mimeType===this.renderResult.mimeType&&i.rendererId===this.renderResult.renderer.id){const n=this.viewCell.outputsViewModels.indexOf(this.output);this.notebookEditor.updateOutput(this.viewCell,this.renderResult,this.viewCell.getOutputOffset(n));return}}if(this.innerContainer){const e=this.innerContainer.nextElementSibling;this.toolbarDisposables.clear();const t=this.innerContainer;t&&(t.remove(),this.notebookEditor.removeInset(this.output)),this.render(e)}else{const e=this.cellOutputContainer.renderedOutputEntries.findIndex(i=>i.element===this),t=e>0&&this.cellOutputContainer.renderedOutputEntries[e-1].element.innerContainer?.parentElement?this.cellOutputContainer.renderedOutputEntries[e-1].element.innerContainer:void 0;this.render(t)}this._relayoutCell()}_generateInnerOutputContainer(e,t){return this.innerContainer=h.$(".output-inner-container"),e&&e.nextElementSibling?this.outputContainer.domNode.insertBefore(this.innerContainer,e.nextElementSibling):this.outputContainer.domNode.appendChild(this.innerContainer),this.innerContainer.setAttribute("output-mime-type",t.mimeType),this.innerContainer}render(e){const t=this.viewCell.outputsViewModels.indexOf(this.output);if(this.viewCell.isOutputCollapsed||!this.notebookEditor.hasModel()){this.cellOutputContainer.flagAsStale();return}if(!x.parse(this.viewCell.uri)?.notebook)return;const n=this.notebookEditor.textModel,[r,l]=this.output.resolveMimeTypes(n,this.notebookEditor.activeKernel?.preloadProvides);if(!r.find(o=>o.isTrusted)||r.length===0){this.viewCell.updateOutputHeight(t,0,"CellOutputElement#noMimeType");return}const u=r[l];let s=this.notebookService.getRendererInfo(u.rendererId);!s&&u.mimeType.indexOf("text/")>-1&&(s=this.notebookService.getRendererInfo("vscode.builtin-renderer"));const d=this._generateInnerOutputContainer(e,u);if(t===0||this.output.visible.get()?this._attachToolbar(d,n,this.notebookEditor.activeKernel,t,r):(this._register(R(o=>{const a=o.readObservable(this.output.visible);a&&!this.toolbarAttached?this._attachToolbar(d,n,this.notebookEditor.activeKernel,t,r):a||this.toolbarDisposables.clear(),this.cellOutputContainer.checkForHiddenOutputs()})),this.cellOutputContainer.hasHiddenOutputs.set(!0,void 0)),this.renderedOutputContainer=h.append(d,h.$(".rendered-output")),this.renderResult=s?{type:O.Extension,renderer:s,source:this.output,mimeType:u.mimeType}:this._renderMissingRenderer(this.output,u.mimeType),this.output.pickedMimeType=u,!this.renderResult){this.viewCell.updateOutputHeight(t,0,"CellOutputElement#renderResultUndefined");return}return this.notebookEditor.createOutput(this.viewCell,this.renderResult,this.viewCell.getOutputOffset(t),!1),d.classList.add("background"),{initRenderIsSynchronous:!1}}_renderMissingRenderer(e,t){if(!e.model.outputs.length)return this._renderMessage(e,C.localize("empty","Cell has no output"));if(!t){const n=e.model.outputs.map(r=>r.mime).join(", ");return this._renderMessage(e,C.localize("noRenderer.2","No renderer could be found for output. It has the following mimetypes: {0}",n))}return this._renderSearchForMimetype(e,t)}_renderSearchForMimetype(e,t){const i=`@tag:notebookRenderer ${t}`,n=h.$("p",void 0,`No renderer could be found for mimetype "${t}", but one might be available on the Marketplace.`),r=h.$("a",{href:`command:workbench.extensions.search?%22${i}%22`,class:"monaco-button monaco-text-button",tabindex:0,role:"button",style:"padding: 8px; text-decoration: none; color: rgb(255, 255, 255); background-color: rgb(14, 99, 156); max-width: 200px;"},"Search Marketplace");return{type:O.Html,source:e,htmlContent:n.outerHTML+r.outerHTML}}_renderMessage(e,t){const i=h.$("p",void 0,t);return{type:O.Html,source:e,htmlContent:i.outerHTML}}shouldEnableCopy(e){if(!e.find(t=>se.indexOf(t.mimeType)||t.mimeType.startsWith("image/")))return!1;if(H(e[0].mimeType)){const t=this.output.cellViewModel,i=t.outputsViewModels.indexOf(this.output);if(i>0){const n=t.model.outputs[i-1];return!H(n.outputs[0].mime)}}return!0}async _attachToolbar(e,t,i,n,r){const l=r.filter(c=>c.isTrusted).length>1,u=this.shouldEnableCopy(r);if(n>0&&!l&&!u||!this.notebookEditor.hasModel())return;e.style.position="relative";const s=h.$(".cell-output-toolbar");e.appendChild(s);const d=this.toolbarDisposables.add(this.instantiationService.createInstance(K,s,{renderDropdownAsChildElement:!1}));d.context={ui:!0,cell:this.output.cellViewModel,outputViewModel:this.output,notebookEditor:this.notebookEditor,$mid:P.NotebookCellActionContext};const o=this.toolbarDisposables.add(new L("notebook.output.pickMimetype",C.localize("pickMimeType","Change Presentation"),W.asClassName(Q),void 0,async c=>this._pickActiveMimeTypeRenderer(e,t,i,this.output))),a=this.toolbarDisposables.add(this.contextKeyService.createScoped(e)),y=oe.bindTo(a),E=ne.bindTo(a),M=re.bindTo(a);E.set(n===0),r[n]&&M.set(r[n].mimeType),this.toolbarDisposables.add(R(c=>{y.set(c.readObservable(this.cellOutputContainer.hasHiddenOutputs))}));const w=this.toolbarDisposables.add(this.menuService.createMenu(F.NotebookOutputToolbar,a)),p=()=>{let{secondary:c}=U(w.getActions({shouldForwardArgs:!0}),()=>!1);u||(c=c.filter(_=>_.id!==te)),l&&(c=[o,...c]),d.setActions([],c)};p(),this.toolbarDisposables.add(w.onDidChange(p))}async _pickActiveMimeTypeRenderer(e,t,i,n){const[r,l]=n.resolveMimeTypes(t,i?.preloadProvides),u=[],s=[];r.forEach((p,c)=>{p.isTrusted&&(p.rendererId===X?s:u).push({label:p.mimeType,id:p.mimeType,index:c,picked:c===l,detail:this._generateRendererInfo(p.rendererId),description:c===l?C.localize("curruentActiveMimeType","Currently Active"):void 0})}),s.some(p=>ue.includes(p.id))&&s.push({label:C.localize("installJupyterPrompt","Install additional renderers from the marketplace"),id:"installRenderers",index:r.length});const d=new k,o=d.add(this.quickInputService.createQuickPick({useSeparators:!0}));o.items=[...u,{type:"separator"},...s],o.activeItems=u.filter(p=>!!p.picked),o.placeholder=u.length!==r.length?C.localize("promptChooseMimeTypeInSecure.placeHolder","Select mimetype to render for current output"):C.localize("promptChooseMimeType.placeHolder","Select mimetype to render for current output");const a=await new Promise(p=>{d.add(o.onDidAccept(()=>{p(o.selectedItems.length===1?o.selectedItems[0]:void 0),d.dispose()})),o.show()});if(a===void 0||a.index===l)return;if(a.id==="installRenderers"){this._showJupyterExtension();return}const y=e.nextElementSibling;this.toolbarDisposables.clear();const E=this.innerContainer;E&&(E.remove(),this.notebookEditor.removeInset(n)),n.pickedMimeType=r[a.index],this.viewCell.updateOutputMinHeight(this.viewCell.layoutInfo.outputTotalHeight);const{mimeType:M,rendererId:w}=r[a.index];this.notebookService.updateMimePreferredRenderer(t.viewType,M,w,r.map(p=>p.mimeType)),this.render(y),this._validateFinalOutputHeight(!1),this._relayoutCell()}async _showJupyterExtension(){await this.extensionsWorkbenchService.openSearch(`@id:${J}`)}_generateRendererInfo(e){const t=this.notebookService.getRendererInfo(e);return t?`${t.displayName!==""?t.displayName:t.id} (${t.extensionId.value})`:C.localize("unavailableRenderInfo","renderer not available")}_outputHeightTimer=null;_validateFinalOutputHeight(e){this._outputHeightTimer!==null&&clearTimeout(this._outputHeightTimer),e?this.viewCell.unlockOutputHeight():this._outputHeightTimer=setTimeout(()=>{this.viewCell.unlockOutputHeight()},1e3)}_relayoutCell(){this.notebookEditor.layoutNotebookCell(this.viewCell,this.viewCell.layoutInfo.totalHeight)}dispose(){this._outputHeightTimer&&(this.viewCell.unlockOutputHeight(),clearTimeout(this._outputHeightTimer)),super.dispose()}};f=T([m(5,ee),m(6,z),m(7,$),m(8,j),m(9,Y),m(10,S)],f);class b{constructor(v,e){this.model=v;this.element=e}}var le=(e=>(e[e.Execution=1]="Execution",e[e.Other=2]="Other",e))(le||{});let I=class extends q{constructor(e,t,i,n,r,l,u){super();this.notebookEditor=e;this.viewCell=t;this.templateData=i;this.options=n;this.openerService=r;this._notebookExecutionStateService=l;this.instantiationService=u;this._register(t.onDidStartExecution(()=>{t.updateOutputMinHeight(t.layoutInfo.outputTotalHeight)})),this._register(t.onDidStopExecution(()=>{this._validateFinalOutputHeight(!1)})),this._register(t.onDidChangeOutputs(s=>{const o=this._notebookExecutionStateService.getCellExecution(t.uri)?1:2;this._updateOutputs(s,o)})),this._register(t.onDidChangeLayout(()=>{this.updateInternalLayoutNow(t)}))}_outputEntries=[];_hasStaleOutputs=!1;hasHiddenOutputs=ie("hasHiddenOutputs",!1);checkForHiddenOutputs(){this._outputEntries.find(e=>e.model.visible)?this.hasHiddenOutputs.set(!0,void 0):this.hasHiddenOutputs.set(!1,void 0)}get renderedOutputEntries(){return this._outputEntries}updateInternalLayoutNow(e){this.templateData.outputContainer.setTop(e.layoutInfo.outputContainerOffset),this.templateData.outputShowMoreContainer.setTop(e.layoutInfo.outputShowMoreContainerOffset),this._outputEntries.forEach(t=>{const i=this.viewCell.outputsViewModels.indexOf(t.model);if(i>=0){const n=this.viewCell.getOutputOffsetInContainer(i);t.element.updateDOMTop(n)}})}render(){try{this._doRender()}finally{this._relayoutCell()}}flagAsStale(){this._hasStaleOutputs=!0}_doRender(){if(this.viewCell.outputsViewModels.length>0){this.viewCell.layoutInfo.outputTotalHeight!==0&&this.viewCell.updateOutputMinHeight(this.viewCell.layoutInfo.outputTotalHeight),h.show(this.templateData.outputContainer.domNode);for(let e=0;e<Math.min(this.options.limit,this.viewCell.outputsViewModels.length);e++){const t=this.viewCell.outputsViewModels[e],i=this.instantiationService.createInstance(f,this.notebookEditor,this.viewCell,this,this.templateData.outputContainer,t);this._outputEntries.push(new b(t,i)),i.render(void 0)}this.viewCell.outputsViewModels.length>this.options.limit&&(h.show(this.templateData.outputShowMoreContainer.domNode),this.viewCell.updateOutputShowMoreContainerHeight(46)),this._validateFinalOutputHeight(!1)}else h.hide(this.templateData.outputContainer.domNode);this.templateData.outputShowMoreContainer.domNode.innerText="",this.viewCell.outputsViewModels.length>this.options.limit?this.templateData.outputShowMoreContainer.domNode.appendChild(this._generateShowMoreElement(this.templateData.templateDisposables)):(h.hide(this.templateData.outputShowMoreContainer.domNode),this.viewCell.updateOutputShowMoreContainerHeight(0))}viewUpdateShowOutputs(e){this._hasStaleOutputs&&(this._hasStaleOutputs=!1,this._outputEntries.forEach(t=>{t.element.rerender()}));for(let t=0;t<this._outputEntries.length;t++){const n=this._outputEntries[t].element;n.renderResult?this.notebookEditor.createOutput(this.viewCell,n.renderResult,this.viewCell.getOutputOffset(t),!1):n.render(void 0)}this._relayoutCell()}viewUpdateHideOuputs(){for(let e=0;e<this._outputEntries.length;e++)this.notebookEditor.hideInset(this._outputEntries[e].model)}_outputHeightTimer=null;_validateFinalOutputHeight(e){this._outputHeightTimer!==null&&clearTimeout(this._outputHeightTimer);const t=this._notebookExecutionStateService.getCellExecution(this.viewCell.uri);e?this.viewCell.unlockOutputHeight():t?.state!==G.Executing&&(this._outputHeightTimer=setTimeout(()=>{this.viewCell.unlockOutputHeight()},200))}_updateOutputs(e,t=2){const i=this.viewCell.layoutInfo.outputTotalHeight;this.viewCell.updateOutputMinHeight(i),this.viewCell.outputsViewModels.length?h.show(this.templateData.outputContainer.domNode):h.hide(this.templateData.outputContainer.domNode),this.viewCell.spliceOutputHeights(e.start,e.deleteCount,e.newOutputs.map(n=>0)),this._renderNow(e,t)}_renderNow(e,t){if(e.start>=this.options.limit)return;const i=this._outputEntries.slice(0,e.start),n=this._outputEntries.slice(e.start,e.start+e.deleteCount),r=this._outputEntries.slice(e.start+e.deleteCount);let l=this.viewCell.outputsViewModels.slice(e.start,e.start+e.newOutputs.length);if(i.length+l.length+r.length>this.options.limit)if(i.length+l.length>this.options.limit){[...n,...r].forEach(s=>{s.element.detach(),s.element.dispose()}),l=l.slice(0,this.options.limit-i.length);const u=l.map(s=>new b(s,this.instantiationService.createInstance(f,this.notebookEditor,this.viewCell,this,this.templateData.outputContainer,s)));this._outputEntries=[...i,...u];for(let s=i.length;s<this._outputEntries.length;s++)this._outputEntries[s].element.render(void 0)}else{const u=r.slice(this.options.limit-i.length-l.length);[...n,...u].forEach(o=>{o.element.detach(),o.element.dispose()});const s=i.length+l.length,d=l.map(o=>new b(o,this.instantiationService.createInstance(f,this.notebookEditor,this.viewCell,this,this.templateData.outputContainer,o)));this._outputEntries=[...i,...d,...r.slice(0,this.options.limit-i.length-l.length)];for(let o=i.length;o<s;o++){const a=o-1>=0&&this._outputEntries[o-1]&&this._outputEntries[o-1].element.innerContainer?.parentElement?this._outputEntries[o-1].element.innerContainer:void 0;this._outputEntries[o].element.render(a)}}else{n.forEach(o=>{o.element.detach(),o.element.dispose()});const u=i.length+l.length,s=l.map(o=>new b(o,this.instantiationService.createInstance(f,this.notebookEditor,this.viewCell,this,this.templateData.outputContainer,o)));let d=[];if(i.length+s.length+r.length<this.viewCell.outputsViewModels.length){const o=Math.min(this.options.limit,this.viewCell.outputsViewModels.length);d=this.viewCell.outputsViewModels.slice(i.length+s.length+r.length,o).map(a=>new b(a,this.instantiationService.createInstance(f,this.notebookEditor,this.viewCell,this,this.templateData.outputContainer,a)))}this._outputEntries=[...i,...s,...r,...d];for(let o=i.length;o<u;o++){const a=o-1>=0&&this._outputEntries[o-1]&&this._outputEntries[o-1].element.innerContainer?.parentElement?this._outputEntries[o-1].element.innerContainer:void 0;this._outputEntries[o].element.render(a)}for(let o=0;o<d.length;o++)this._outputEntries[i.length+l.length+r.length+o].element.render(void 0)}this.viewCell.outputsViewModels.length>this.options.limit?(h.show(this.templateData.outputShowMoreContainer.domNode),this.templateData.outputShowMoreContainer.domNode.hasChildNodes()||this.templateData.outputShowMoreContainer.domNode.appendChild(this._generateShowMoreElement(this.templateData.templateDisposables)),this.viewCell.updateOutputShowMoreContainerHeight(46)):h.hide(this.templateData.outputShowMoreContainer.domNode),this._relayoutCell(),this._validateFinalOutputHeight(t===2&&this.viewCell.outputsViewModels.length===0)}_generateShowMoreElement(e){const t={value:`There are more than ${this.options.limit} outputs, [show more (open the raw output data in a text editor) ...](command:workbench.action.openLargeOutput)`,isTrusted:!0,supportThemeIcons:!0},i=V(t,{actionHandler:{callback:n=>{n==="command:workbench.action.openLargeOutput"&&this.openerService.open(x.generateCellOutputUriWithId(this.notebookEditor.textModel.uri))},disposables:e}});return e.add(i),i.element.classList.add("output-show-more"),i.element}_relayoutCell(){this.notebookEditor.layoutNotebookCell(this.viewCell,this.viewCell.layoutInfo.totalHeight)}dispose(){this.viewCell.updateOutputMinHeight(0),this._outputHeightTimer&&clearTimeout(this._outputHeightTimer),this._outputEntries.forEach(e=>{e.element.dispose()}),super.dispose()}};I=T([m(4,B),m(5,Z),m(6,S)],I);const ue=["application/geo+json","application/vdom.v1+json","application/vnd.dataresource+json","application/vnd.plotly.v1+json","application/vnd.vega.v2+json","application/vnd.vega.v3+json","application/vnd.vega.v4+json","application/vnd.vega.v5+json","application/vnd.vegalite.v1+json","application/vnd.vegalite.v2+json","application/vnd.vegalite.v3+json","application/vnd.vegalite.v4+json","application/x-nteract-model-debug+json","image/svg+xml","text/latex","text/vnd.plotly.v1+html","application/vnd.jupyter.widget-view+json","application/vnd.code.notebook.error"];export{I as CellOutputContainer};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import * as DOM from "../../../../../../base/browser/dom.js";
+import { FastDomNode } from "../../../../../../base/browser/fastDomNode.js";
+import { renderMarkdown } from "../../../../../../base/browser/markdownRenderer.js";
+import { Action } from "../../../../../../base/common/actions.js";
+import { IMarkdownString } from "../../../../../../base/common/htmlContent.js";
+import { Disposable, DisposableStore } from "../../../../../../base/common/lifecycle.js";
+import { MarshalledId } from "../../../../../../base/common/marshallingIds.js";
+import * as nls from "../../../../../../nls.js";
+import { getActionBarActions } from "../../../../../../platform/actions/browser/menuEntryActionViewItem.js";
+import { WorkbenchToolBar } from "../../../../../../platform/actions/browser/toolbar.js";
+import { IMenuService, MenuId } from "../../../../../../platform/actions/common/actions.js";
+import { IContextKeyService } from "../../../../../../platform/contextkey/common/contextkey.js";
+import { IInstantiationService } from "../../../../../../platform/instantiation/common/instantiation.js";
+import { IOpenerService } from "../../../../../../platform/opener/common/opener.js";
+import { IQuickInputService, IQuickPickItem } from "../../../../../../platform/quickinput/common/quickInput.js";
+import { ThemeIcon } from "../../../../../../base/common/themables.js";
+import { IExtensionsWorkbenchService } from "../../../../extensions/common/extensions.js";
+import { ICellOutputViewModel, ICellViewModel, IInsetRenderOutput, INotebookEditorDelegate, JUPYTER_EXTENSION_ID, RenderOutputType } from "../../notebookBrowser.js";
+import { mimetypeIcon } from "../../notebookIcons.js";
+import { CellContentPart } from "../cellPart.js";
+import { CodeCellRenderTemplate } from "../notebookRenderingCommon.js";
+import { CodeCellViewModel } from "../../viewModel/codeCellViewModel.js";
+import { NotebookTextModel } from "../../../common/model/notebookTextModel.js";
+import { CellUri, IOrderedMimeType, NotebookCellExecutionState, NotebookCellOutputsSplice, RENDERER_NOT_AVAILABLE, isTextStreamMime } from "../../../common/notebookCommon.js";
+import { INotebookExecutionStateService } from "../../../common/notebookExecutionStateService.js";
+import { INotebookKernel } from "../../../common/notebookKernelService.js";
+import { INotebookService } from "../../../common/notebookService.js";
+import { COPY_OUTPUT_COMMAND_ID } from "../../controller/cellOutputActions.js";
+import { autorun, observableValue } from "../../../../../../base/common/observable.js";
+import { NOTEBOOK_CELL_HAS_HIDDEN_OUTPUTS, NOTEBOOK_CELL_IS_FIRST_OUTPUT, NOTEBOOK_CELL_OUTPUT_MIMETYPE } from "../../../common/notebookContextKeys.js";
+import { TEXT_BASED_MIMETYPES } from "../../viewModel/cellOutputTextHelper.js";
+let CellOutputElement = class extends Disposable {
+  constructor(notebookEditor, viewCell, cellOutputContainer, outputContainer, output, notebookService, quickInputService, parentContextKeyService, menuService, extensionsWorkbenchService, instantiationService) {
+    super();
+    this.notebookEditor = notebookEditor;
+    this.viewCell = viewCell;
+    this.cellOutputContainer = cellOutputContainer;
+    this.outputContainer = outputContainer;
+    this.output = output;
+    this.notebookService = notebookService;
+    this.quickInputService = quickInputService;
+    this.menuService = menuService;
+    this.extensionsWorkbenchService = extensionsWorkbenchService;
+    this.instantiationService = instantiationService;
+    this.contextKeyService = parentContextKeyService;
+    this._register(this.output.model.onDidChangeData(() => {
+      this.rerender();
+    }));
+    this._register(this.output.onDidResetRenderer(() => {
+      this.rerender();
+    }));
+  }
+  static {
+    __name(this, "CellOutputElement");
+  }
+  toolbarDisposables = this._register(new DisposableStore());
+  innerContainer;
+  renderedOutputContainer;
+  renderResult;
+  contextKeyService;
+  toolbarAttached = false;
+  detach() {
+    this.renderedOutputContainer?.remove();
+    let count = 0;
+    if (this.innerContainer) {
+      for (let i = 0; i < this.innerContainer.childNodes.length; i++) {
+        if (this.innerContainer.childNodes[i].className === "rendered-output") {
+          count++;
+        }
+        if (count > 1) {
+          break;
+        }
+      }
+      if (count === 0) {
+        this.innerContainer.remove();
+      }
+    }
+    this.notebookEditor.removeInset(this.output);
+  }
+  updateDOMTop(top) {
+    if (this.innerContainer) {
+      this.innerContainer.style.top = `${top}px`;
+    }
+  }
+  rerender() {
+    if (this.notebookEditor.hasModel() && this.innerContainer && this.renderResult && this.renderResult.type === RenderOutputType.Extension) {
+      const [mimeTypes, pick] = this.output.resolveMimeTypes(this.notebookEditor.textModel, this.notebookEditor.activeKernel?.preloadProvides);
+      const pickedMimeType = mimeTypes[pick];
+      if (pickedMimeType.mimeType === this.renderResult.mimeType && pickedMimeType.rendererId === this.renderResult.renderer.id) {
+        const index = this.viewCell.outputsViewModels.indexOf(this.output);
+        this.notebookEditor.updateOutput(this.viewCell, this.renderResult, this.viewCell.getOutputOffset(index));
+        return;
+      }
+    }
+    if (!this.innerContainer) {
+      const currOutputIndex = this.cellOutputContainer.renderedOutputEntries.findIndex((entry) => entry.element === this);
+      const previousSibling = currOutputIndex > 0 && !!this.cellOutputContainer.renderedOutputEntries[currOutputIndex - 1].element.innerContainer?.parentElement ? this.cellOutputContainer.renderedOutputEntries[currOutputIndex - 1].element.innerContainer : void 0;
+      this.render(previousSibling);
+    } else {
+      const nextElement = this.innerContainer.nextElementSibling;
+      this.toolbarDisposables.clear();
+      const element = this.innerContainer;
+      if (element) {
+        element.remove();
+        this.notebookEditor.removeInset(this.output);
+      }
+      this.render(nextElement);
+    }
+    this._relayoutCell();
+  }
+  // insert after previousSibling
+  _generateInnerOutputContainer(previousSibling, pickedMimeTypeRenderer) {
+    this.innerContainer = DOM.$(".output-inner-container");
+    if (previousSibling && previousSibling.nextElementSibling) {
+      this.outputContainer.domNode.insertBefore(this.innerContainer, previousSibling.nextElementSibling);
+    } else {
+      this.outputContainer.domNode.appendChild(this.innerContainer);
+    }
+    this.innerContainer.setAttribute("output-mime-type", pickedMimeTypeRenderer.mimeType);
+    return this.innerContainer;
+  }
+  render(previousSibling) {
+    const index = this.viewCell.outputsViewModels.indexOf(this.output);
+    if (this.viewCell.isOutputCollapsed || !this.notebookEditor.hasModel()) {
+      this.cellOutputContainer.flagAsStale();
+      return void 0;
+    }
+    const notebookUri = CellUri.parse(this.viewCell.uri)?.notebook;
+    if (!notebookUri) {
+      return void 0;
+    }
+    const notebookTextModel = this.notebookEditor.textModel;
+    const [mimeTypes, pick] = this.output.resolveMimeTypes(notebookTextModel, this.notebookEditor.activeKernel?.preloadProvides);
+    if (!mimeTypes.find((mimeType) => mimeType.isTrusted) || mimeTypes.length === 0) {
+      this.viewCell.updateOutputHeight(index, 0, "CellOutputElement#noMimeType");
+      return void 0;
+    }
+    const selectedPresentation = mimeTypes[pick];
+    let renderer = this.notebookService.getRendererInfo(selectedPresentation.rendererId);
+    if (!renderer && selectedPresentation.mimeType.indexOf("text/") > -1) {
+      renderer = this.notebookService.getRendererInfo("vscode.builtin-renderer");
+    }
+    const innerContainer = this._generateInnerOutputContainer(previousSibling, selectedPresentation);
+    if (index === 0 || this.output.visible.get()) {
+      this._attachToolbar(innerContainer, notebookTextModel, this.notebookEditor.activeKernel, index, mimeTypes);
+    } else {
+      this._register(autorun((reader) => {
+        const visible = reader.readObservable(this.output.visible);
+        if (visible && !this.toolbarAttached) {
+          this._attachToolbar(innerContainer, notebookTextModel, this.notebookEditor.activeKernel, index, mimeTypes);
+        } else if (!visible) {
+          this.toolbarDisposables.clear();
+        }
+        this.cellOutputContainer.checkForHiddenOutputs();
+      }));
+      this.cellOutputContainer.hasHiddenOutputs.set(true, void 0);
+    }
+    this.renderedOutputContainer = DOM.append(innerContainer, DOM.$(".rendered-output"));
+    this.renderResult = renderer ? { type: RenderOutputType.Extension, renderer, source: this.output, mimeType: selectedPresentation.mimeType } : this._renderMissingRenderer(this.output, selectedPresentation.mimeType);
+    this.output.pickedMimeType = selectedPresentation;
+    if (!this.renderResult) {
+      this.viewCell.updateOutputHeight(index, 0, "CellOutputElement#renderResultUndefined");
+      return void 0;
+    }
+    this.notebookEditor.createOutput(this.viewCell, this.renderResult, this.viewCell.getOutputOffset(index), false);
+    innerContainer.classList.add("background");
+    return { initRenderIsSynchronous: false };
+  }
+  _renderMissingRenderer(viewModel, preferredMimeType) {
+    if (!viewModel.model.outputs.length) {
+      return this._renderMessage(viewModel, nls.localize("empty", "Cell has no output"));
+    }
+    if (!preferredMimeType) {
+      const mimeTypes = viewModel.model.outputs.map((op) => op.mime);
+      const mimeTypesMessage = mimeTypes.join(", ");
+      return this._renderMessage(viewModel, nls.localize("noRenderer.2", "No renderer could be found for output. It has the following mimetypes: {0}", mimeTypesMessage));
+    }
+    return this._renderSearchForMimetype(viewModel, preferredMimeType);
+  }
+  _renderSearchForMimetype(viewModel, mimeType) {
+    const query = `@tag:notebookRenderer ${mimeType}`;
+    const p = DOM.$("p", void 0, `No renderer could be found for mimetype "${mimeType}", but one might be available on the Marketplace.`);
+    const a = DOM.$("a", { href: `command:workbench.extensions.search?%22${query}%22`, class: "monaco-button monaco-text-button", tabindex: 0, role: "button", style: "padding: 8px; text-decoration: none; color: rgb(255, 255, 255); background-color: rgb(14, 99, 156); max-width: 200px;" }, `Search Marketplace`);
+    return {
+      type: RenderOutputType.Html,
+      source: viewModel,
+      htmlContent: p.outerHTML + a.outerHTML
+    };
+  }
+  _renderMessage(viewModel, message) {
+    const el = DOM.$("p", void 0, message);
+    return { type: RenderOutputType.Html, source: viewModel, htmlContent: el.outerHTML };
+  }
+  shouldEnableCopy(mimeTypes) {
+    if (!mimeTypes.find((mimeType) => TEXT_BASED_MIMETYPES.indexOf(mimeType.mimeType) || mimeType.mimeType.startsWith("image/"))) {
+      return false;
+    }
+    if (isTextStreamMime(mimeTypes[0].mimeType)) {
+      const cellViewModel = this.output.cellViewModel;
+      const index = cellViewModel.outputsViewModels.indexOf(this.output);
+      if (index > 0) {
+        const previousOutput = cellViewModel.model.outputs[index - 1];
+        return !isTextStreamMime(previousOutput.outputs[0].mime);
+      }
+    }
+    return true;
+  }
+  async _attachToolbar(outputItemDiv, notebookTextModel, kernel, index, mimeTypes) {
+    const hasMultipleMimeTypes = mimeTypes.filter((mimeType) => mimeType.isTrusted).length > 1;
+    const isCopyEnabled = this.shouldEnableCopy(mimeTypes);
+    if (index > 0 && !hasMultipleMimeTypes && !isCopyEnabled) {
+      return;
+    }
+    if (!this.notebookEditor.hasModel()) {
+      return;
+    }
+    outputItemDiv.style.position = "relative";
+    const mimeTypePicker = DOM.$(".cell-output-toolbar");
+    outputItemDiv.appendChild(mimeTypePicker);
+    const toolbar = this.toolbarDisposables.add(this.instantiationService.createInstance(WorkbenchToolBar, mimeTypePicker, {
+      renderDropdownAsChildElement: false
+    }));
+    toolbar.context = {
+      ui: true,
+      cell: this.output.cellViewModel,
+      outputViewModel: this.output,
+      notebookEditor: this.notebookEditor,
+      $mid: MarshalledId.NotebookCellActionContext
+    };
+    const pickAction = this.toolbarDisposables.add(new Action(
+      "notebook.output.pickMimetype",
+      nls.localize("pickMimeType", "Change Presentation"),
+      ThemeIcon.asClassName(mimetypeIcon),
+      void 0,
+      async (_context) => this._pickActiveMimeTypeRenderer(outputItemDiv, notebookTextModel, kernel, this.output)
+    ));
+    const menuContextKeyService = this.toolbarDisposables.add(this.contextKeyService.createScoped(outputItemDiv));
+    const hasHiddenOutputs = NOTEBOOK_CELL_HAS_HIDDEN_OUTPUTS.bindTo(menuContextKeyService);
+    const isFirstCellOutput = NOTEBOOK_CELL_IS_FIRST_OUTPUT.bindTo(menuContextKeyService);
+    const cellOutputMimetype = NOTEBOOK_CELL_OUTPUT_MIMETYPE.bindTo(menuContextKeyService);
+    isFirstCellOutput.set(index === 0);
+    if (mimeTypes[index]) {
+      cellOutputMimetype.set(mimeTypes[index].mimeType);
+    }
+    this.toolbarDisposables.add(autorun((reader) => {
+      hasHiddenOutputs.set(reader.readObservable(this.cellOutputContainer.hasHiddenOutputs));
+    }));
+    const menu = this.toolbarDisposables.add(this.menuService.createMenu(MenuId.NotebookOutputToolbar, menuContextKeyService));
+    const updateMenuToolbar = /* @__PURE__ */ __name(() => {
+      let { secondary } = getActionBarActions(menu.getActions({ shouldForwardArgs: true }), () => false);
+      if (!isCopyEnabled) {
+        secondary = secondary.filter((action) => action.id !== COPY_OUTPUT_COMMAND_ID);
+      }
+      if (hasMultipleMimeTypes) {
+        secondary = [pickAction, ...secondary];
+      }
+      toolbar.setActions([], secondary);
+    }, "updateMenuToolbar");
+    updateMenuToolbar();
+    this.toolbarDisposables.add(menu.onDidChange(updateMenuToolbar));
+  }
+  async _pickActiveMimeTypeRenderer(outputItemDiv, notebookTextModel, kernel, viewModel) {
+    const [mimeTypes, currIndex] = viewModel.resolveMimeTypes(notebookTextModel, kernel?.preloadProvides);
+    const items = [];
+    const unsupportedItems = [];
+    mimeTypes.forEach((mimeType2, index) => {
+      if (mimeType2.isTrusted) {
+        const arr = mimeType2.rendererId === RENDERER_NOT_AVAILABLE ? unsupportedItems : items;
+        arr.push({
+          label: mimeType2.mimeType,
+          id: mimeType2.mimeType,
+          index,
+          picked: index === currIndex,
+          detail: this._generateRendererInfo(mimeType2.rendererId),
+          description: index === currIndex ? nls.localize("curruentActiveMimeType", "Currently Active") : void 0
+        });
+      }
+    });
+    if (unsupportedItems.some((m) => JUPYTER_RENDERER_MIMETYPES.includes(m.id))) {
+      unsupportedItems.push({
+        label: nls.localize("installJupyterPrompt", "Install additional renderers from the marketplace"),
+        id: "installRenderers",
+        index: mimeTypes.length
+      });
+    }
+    const disposables = new DisposableStore();
+    const picker = disposables.add(this.quickInputService.createQuickPick({ useSeparators: true }));
+    picker.items = [
+      ...items,
+      { type: "separator" },
+      ...unsupportedItems
+    ];
+    picker.activeItems = items.filter((item) => !!item.picked);
+    picker.placeholder = items.length !== mimeTypes.length ? nls.localize("promptChooseMimeTypeInSecure.placeHolder", "Select mimetype to render for current output") : nls.localize("promptChooseMimeType.placeHolder", "Select mimetype to render for current output");
+    const pick = await new Promise((resolve) => {
+      disposables.add(picker.onDidAccept(() => {
+        resolve(picker.selectedItems.length === 1 ? picker.selectedItems[0] : void 0);
+        disposables.dispose();
+      }));
+      picker.show();
+    });
+    if (pick === void 0 || pick.index === currIndex) {
+      return;
+    }
+    if (pick.id === "installRenderers") {
+      this._showJupyterExtension();
+      return;
+    }
+    const nextElement = outputItemDiv.nextElementSibling;
+    this.toolbarDisposables.clear();
+    const element = this.innerContainer;
+    if (element) {
+      element.remove();
+      this.notebookEditor.removeInset(viewModel);
+    }
+    viewModel.pickedMimeType = mimeTypes[pick.index];
+    this.viewCell.updateOutputMinHeight(this.viewCell.layoutInfo.outputTotalHeight);
+    const { mimeType, rendererId } = mimeTypes[pick.index];
+    this.notebookService.updateMimePreferredRenderer(notebookTextModel.viewType, mimeType, rendererId, mimeTypes.map((m) => m.mimeType));
+    this.render(nextElement);
+    this._validateFinalOutputHeight(false);
+    this._relayoutCell();
+  }
+  async _showJupyterExtension() {
+    await this.extensionsWorkbenchService.openSearch(`@id:${JUPYTER_EXTENSION_ID}`);
+  }
+  _generateRendererInfo(renderId) {
+    const renderInfo = this.notebookService.getRendererInfo(renderId);
+    if (renderInfo) {
+      const displayName = renderInfo.displayName !== "" ? renderInfo.displayName : renderInfo.id;
+      return `${displayName} (${renderInfo.extensionId.value})`;
+    }
+    return nls.localize("unavailableRenderInfo", "renderer not available");
+  }
+  _outputHeightTimer = null;
+  _validateFinalOutputHeight(synchronous) {
+    if (this._outputHeightTimer !== null) {
+      clearTimeout(this._outputHeightTimer);
+    }
+    if (synchronous) {
+      this.viewCell.unlockOutputHeight();
+    } else {
+      this._outputHeightTimer = setTimeout(() => {
+        this.viewCell.unlockOutputHeight();
+      }, 1e3);
+    }
+  }
+  _relayoutCell() {
+    this.notebookEditor.layoutNotebookCell(this.viewCell, this.viewCell.layoutInfo.totalHeight);
+  }
+  dispose() {
+    if (this._outputHeightTimer) {
+      this.viewCell.unlockOutputHeight();
+      clearTimeout(this._outputHeightTimer);
+    }
+    super.dispose();
+  }
+};
+CellOutputElement = __decorateClass([
+  __decorateParam(5, INotebookService),
+  __decorateParam(6, IQuickInputService),
+  __decorateParam(7, IContextKeyService),
+  __decorateParam(8, IMenuService),
+  __decorateParam(9, IExtensionsWorkbenchService),
+  __decorateParam(10, IInstantiationService)
+], CellOutputElement);
+class OutputEntryViewHandler {
+  constructor(model, element) {
+    this.model = model;
+    this.element = element;
+  }
+  static {
+    __name(this, "OutputEntryViewHandler");
+  }
+}
+var CellOutputUpdateContext = /* @__PURE__ */ ((CellOutputUpdateContext2) => {
+  CellOutputUpdateContext2[CellOutputUpdateContext2["Execution"] = 1] = "Execution";
+  CellOutputUpdateContext2[CellOutputUpdateContext2["Other"] = 2] = "Other";
+  return CellOutputUpdateContext2;
+})(CellOutputUpdateContext || {});
+let CellOutputContainer = class extends CellContentPart {
+  constructor(notebookEditor, viewCell, templateData, options, openerService, _notebookExecutionStateService, instantiationService) {
+    super();
+    this.notebookEditor = notebookEditor;
+    this.viewCell = viewCell;
+    this.templateData = templateData;
+    this.options = options;
+    this.openerService = openerService;
+    this._notebookExecutionStateService = _notebookExecutionStateService;
+    this.instantiationService = instantiationService;
+    this._register(viewCell.onDidStartExecution(() => {
+      viewCell.updateOutputMinHeight(viewCell.layoutInfo.outputTotalHeight);
+    }));
+    this._register(viewCell.onDidStopExecution(() => {
+      this._validateFinalOutputHeight(false);
+    }));
+    this._register(viewCell.onDidChangeOutputs((splice) => {
+      const executionState = this._notebookExecutionStateService.getCellExecution(viewCell.uri);
+      const context = executionState ? 1 /* Execution */ : 2 /* Other */;
+      this._updateOutputs(splice, context);
+    }));
+    this._register(viewCell.onDidChangeLayout(() => {
+      this.updateInternalLayoutNow(viewCell);
+    }));
+  }
+  static {
+    __name(this, "CellOutputContainer");
+  }
+  _outputEntries = [];
+  _hasStaleOutputs = false;
+  hasHiddenOutputs = observableValue("hasHiddenOutputs", false);
+  checkForHiddenOutputs() {
+    if (this._outputEntries.find((entry) => {
+      return entry.model.visible;
+    })) {
+      this.hasHiddenOutputs.set(true, void 0);
+    } else {
+      this.hasHiddenOutputs.set(false, void 0);
+    }
+  }
+  get renderedOutputEntries() {
+    return this._outputEntries;
+  }
+  updateInternalLayoutNow(viewCell) {
+    this.templateData.outputContainer.setTop(viewCell.layoutInfo.outputContainerOffset);
+    this.templateData.outputShowMoreContainer.setTop(viewCell.layoutInfo.outputShowMoreContainerOffset);
+    this._outputEntries.forEach((entry) => {
+      const index = this.viewCell.outputsViewModels.indexOf(entry.model);
+      if (index >= 0) {
+        const top = this.viewCell.getOutputOffsetInContainer(index);
+        entry.element.updateDOMTop(top);
+      }
+    });
+  }
+  render() {
+    try {
+      this._doRender();
+    } finally {
+      this._relayoutCell();
+    }
+  }
+  /**
+   * Notify that an output may have been swapped out without the model getting rendered.
+   */
+  flagAsStale() {
+    this._hasStaleOutputs = true;
+  }
+  _doRender() {
+    if (this.viewCell.outputsViewModels.length > 0) {
+      if (this.viewCell.layoutInfo.outputTotalHeight !== 0) {
+        this.viewCell.updateOutputMinHeight(this.viewCell.layoutInfo.outputTotalHeight);
+      }
+      DOM.show(this.templateData.outputContainer.domNode);
+      for (let index = 0; index < Math.min(this.options.limit, this.viewCell.outputsViewModels.length); index++) {
+        const currOutput = this.viewCell.outputsViewModels[index];
+        const entry = this.instantiationService.createInstance(CellOutputElement, this.notebookEditor, this.viewCell, this, this.templateData.outputContainer, currOutput);
+        this._outputEntries.push(new OutputEntryViewHandler(currOutput, entry));
+        entry.render(void 0);
+      }
+      if (this.viewCell.outputsViewModels.length > this.options.limit) {
+        DOM.show(this.templateData.outputShowMoreContainer.domNode);
+        this.viewCell.updateOutputShowMoreContainerHeight(46);
+      }
+      this._validateFinalOutputHeight(false);
+    } else {
+      DOM.hide(this.templateData.outputContainer.domNode);
+    }
+    this.templateData.outputShowMoreContainer.domNode.innerText = "";
+    if (this.viewCell.outputsViewModels.length > this.options.limit) {
+      this.templateData.outputShowMoreContainer.domNode.appendChild(this._generateShowMoreElement(this.templateData.templateDisposables));
+    } else {
+      DOM.hide(this.templateData.outputShowMoreContainer.domNode);
+      this.viewCell.updateOutputShowMoreContainerHeight(0);
+    }
+  }
+  viewUpdateShowOutputs(initRendering) {
+    if (this._hasStaleOutputs) {
+      this._hasStaleOutputs = false;
+      this._outputEntries.forEach((entry) => {
+        entry.element.rerender();
+      });
+    }
+    for (let index = 0; index < this._outputEntries.length; index++) {
+      const viewHandler = this._outputEntries[index];
+      const outputEntry = viewHandler.element;
+      if (outputEntry.renderResult) {
+        this.notebookEditor.createOutput(this.viewCell, outputEntry.renderResult, this.viewCell.getOutputOffset(index), false);
+      } else {
+        outputEntry.render(void 0);
+      }
+    }
+    this._relayoutCell();
+  }
+  viewUpdateHideOuputs() {
+    for (let index = 0; index < this._outputEntries.length; index++) {
+      this.notebookEditor.hideInset(this._outputEntries[index].model);
+    }
+  }
+  _outputHeightTimer = null;
+  _validateFinalOutputHeight(synchronous) {
+    if (this._outputHeightTimer !== null) {
+      clearTimeout(this._outputHeightTimer);
+    }
+    const executionState = this._notebookExecutionStateService.getCellExecution(this.viewCell.uri);
+    if (synchronous) {
+      this.viewCell.unlockOutputHeight();
+    } else if (executionState?.state !== NotebookCellExecutionState.Executing) {
+      this._outputHeightTimer = setTimeout(() => {
+        this.viewCell.unlockOutputHeight();
+      }, 200);
+    }
+  }
+  _updateOutputs(splice, context = 2 /* Other */) {
+    const previousOutputHeight = this.viewCell.layoutInfo.outputTotalHeight;
+    this.viewCell.updateOutputMinHeight(previousOutputHeight);
+    if (this.viewCell.outputsViewModels.length) {
+      DOM.show(this.templateData.outputContainer.domNode);
+    } else {
+      DOM.hide(this.templateData.outputContainer.domNode);
+    }
+    this.viewCell.spliceOutputHeights(splice.start, splice.deleteCount, splice.newOutputs.map((_) => 0));
+    this._renderNow(splice, context);
+  }
+  _renderNow(splice, context) {
+    if (splice.start >= this.options.limit) {
+      return;
+    }
+    const firstGroupEntries = this._outputEntries.slice(0, splice.start);
+    const deletedEntries = this._outputEntries.slice(splice.start, splice.start + splice.deleteCount);
+    const secondGroupEntries = this._outputEntries.slice(splice.start + splice.deleteCount);
+    let newlyInserted = this.viewCell.outputsViewModels.slice(splice.start, splice.start + splice.newOutputs.length);
+    if (firstGroupEntries.length + newlyInserted.length + secondGroupEntries.length > this.options.limit) {
+      if (firstGroupEntries.length + newlyInserted.length > this.options.limit) {
+        [...deletedEntries, ...secondGroupEntries].forEach((entry) => {
+          entry.element.detach();
+          entry.element.dispose();
+        });
+        newlyInserted = newlyInserted.slice(0, this.options.limit - firstGroupEntries.length);
+        const newlyInsertedEntries = newlyInserted.map((insert) => {
+          return new OutputEntryViewHandler(insert, this.instantiationService.createInstance(CellOutputElement, this.notebookEditor, this.viewCell, this, this.templateData.outputContainer, insert));
+        });
+        this._outputEntries = [...firstGroupEntries, ...newlyInsertedEntries];
+        for (let i = firstGroupEntries.length; i < this._outputEntries.length; i++) {
+          this._outputEntries[i].element.render(void 0);
+        }
+      } else {
+        const elementsPushedOutOfView = secondGroupEntries.slice(this.options.limit - firstGroupEntries.length - newlyInserted.length);
+        [...deletedEntries, ...elementsPushedOutOfView].forEach((entry) => {
+          entry.element.detach();
+          entry.element.dispose();
+        });
+        const reRenderRightBoundary = firstGroupEntries.length + newlyInserted.length;
+        const newlyInsertedEntries = newlyInserted.map((insert) => {
+          return new OutputEntryViewHandler(insert, this.instantiationService.createInstance(CellOutputElement, this.notebookEditor, this.viewCell, this, this.templateData.outputContainer, insert));
+        });
+        this._outputEntries = [...firstGroupEntries, ...newlyInsertedEntries, ...secondGroupEntries.slice(0, this.options.limit - firstGroupEntries.length - newlyInserted.length)];
+        for (let i = firstGroupEntries.length; i < reRenderRightBoundary; i++) {
+          const previousSibling = i - 1 >= 0 && this._outputEntries[i - 1] && !!this._outputEntries[i - 1].element.innerContainer?.parentElement ? this._outputEntries[i - 1].element.innerContainer : void 0;
+          this._outputEntries[i].element.render(previousSibling);
+        }
+      }
+    } else {
+      deletedEntries.forEach((entry) => {
+        entry.element.detach();
+        entry.element.dispose();
+      });
+      const reRenderRightBoundary = firstGroupEntries.length + newlyInserted.length;
+      const newlyInsertedEntries = newlyInserted.map((insert) => {
+        return new OutputEntryViewHandler(insert, this.instantiationService.createInstance(CellOutputElement, this.notebookEditor, this.viewCell, this, this.templateData.outputContainer, insert));
+      });
+      let outputsNewlyAvailable = [];
+      if (firstGroupEntries.length + newlyInsertedEntries.length + secondGroupEntries.length < this.viewCell.outputsViewModels.length) {
+        const last = Math.min(this.options.limit, this.viewCell.outputsViewModels.length);
+        outputsNewlyAvailable = this.viewCell.outputsViewModels.slice(firstGroupEntries.length + newlyInsertedEntries.length + secondGroupEntries.length, last).map((output) => {
+          return new OutputEntryViewHandler(output, this.instantiationService.createInstance(CellOutputElement, this.notebookEditor, this.viewCell, this, this.templateData.outputContainer, output));
+        });
+      }
+      this._outputEntries = [...firstGroupEntries, ...newlyInsertedEntries, ...secondGroupEntries, ...outputsNewlyAvailable];
+      for (let i = firstGroupEntries.length; i < reRenderRightBoundary; i++) {
+        const previousSibling = i - 1 >= 0 && this._outputEntries[i - 1] && !!this._outputEntries[i - 1].element.innerContainer?.parentElement ? this._outputEntries[i - 1].element.innerContainer : void 0;
+        this._outputEntries[i].element.render(previousSibling);
+      }
+      for (let i = 0; i < outputsNewlyAvailable.length; i++) {
+        this._outputEntries[firstGroupEntries.length + newlyInserted.length + secondGroupEntries.length + i].element.render(void 0);
+      }
+    }
+    if (this.viewCell.outputsViewModels.length > this.options.limit) {
+      DOM.show(this.templateData.outputShowMoreContainer.domNode);
+      if (!this.templateData.outputShowMoreContainer.domNode.hasChildNodes()) {
+        this.templateData.outputShowMoreContainer.domNode.appendChild(this._generateShowMoreElement(this.templateData.templateDisposables));
+      }
+      this.viewCell.updateOutputShowMoreContainerHeight(46);
+    } else {
+      DOM.hide(this.templateData.outputShowMoreContainer.domNode);
+    }
+    this._relayoutCell();
+    this._validateFinalOutputHeight(context === 2 /* Other */ && this.viewCell.outputsViewModels.length === 0);
+  }
+  _generateShowMoreElement(disposables) {
+    const md = {
+      value: `There are more than ${this.options.limit} outputs, [show more (open the raw output data in a text editor) ...](command:workbench.action.openLargeOutput)`,
+      isTrusted: true,
+      supportThemeIcons: true
+    };
+    const rendered = renderMarkdown(md, {
+      actionHandler: {
+        callback: /* @__PURE__ */ __name((content) => {
+          if (content === "command:workbench.action.openLargeOutput") {
+            this.openerService.open(CellUri.generateCellOutputUriWithId(this.notebookEditor.textModel.uri));
+          }
+          return;
+        }, "callback"),
+        disposables
+      }
+    });
+    disposables.add(rendered);
+    rendered.element.classList.add("output-show-more");
+    return rendered.element;
+  }
+  _relayoutCell() {
+    this.notebookEditor.layoutNotebookCell(this.viewCell, this.viewCell.layoutInfo.totalHeight);
+  }
+  dispose() {
+    this.viewCell.updateOutputMinHeight(0);
+    if (this._outputHeightTimer) {
+      clearTimeout(this._outputHeightTimer);
+    }
+    this._outputEntries.forEach((entry) => {
+      entry.element.dispose();
+    });
+    super.dispose();
+  }
+};
+CellOutputContainer = __decorateClass([
+  __decorateParam(4, IOpenerService),
+  __decorateParam(5, INotebookExecutionStateService),
+  __decorateParam(6, IInstantiationService)
+], CellOutputContainer);
+const JUPYTER_RENDERER_MIMETYPES = [
+  "application/geo+json",
+  "application/vdom.v1+json",
+  "application/vnd.dataresource+json",
+  "application/vnd.plotly.v1+json",
+  "application/vnd.vega.v2+json",
+  "application/vnd.vega.v3+json",
+  "application/vnd.vega.v4+json",
+  "application/vnd.vega.v5+json",
+  "application/vnd.vegalite.v1+json",
+  "application/vnd.vegalite.v2+json",
+  "application/vnd.vegalite.v3+json",
+  "application/vnd.vegalite.v4+json",
+  "application/x-nteract-model-debug+json",
+  "image/svg+xml",
+  "text/latex",
+  "text/vnd.plotly.v1+html",
+  "application/vnd.jupyter.widget-view+json",
+  "application/vnd.code.notebook.error"
+];
+export {
+  CellOutputContainer
+};
+//# sourceMappingURL=cellOutput.js.map

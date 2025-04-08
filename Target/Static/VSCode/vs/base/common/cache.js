@@ -1,1 +1,97 @@
-import{CancellationTokenSource as s}from"./cancellation.js";import"./lifecycle.js";class c{constructor(t){this.task=t}result=null;get(){if(this.result)return this.result;const t=new s,e=this.task(t.token);return this.result={promise:e,dispose:()=>{this.result=null,t.cancel(),t.dispose()}},this.result}}function o(t){return t}class T{lastCache=void 0;lastArgKey=void 0;_fn;_computeKey;constructor(t,s){"function"==typeof t?(this._fn=t,this._computeKey=o):(this._fn=s,this._computeKey=t.getCacheKey)}get(t){const s=this._computeKey(t);return this.lastArgKey!==s&&(this.lastArgKey=s,this.lastCache=this._fn(t)),this.lastCache}}class l{_map=new Map;_map2=new Map;get cachedValues(){return this._map}_fn;_computeKey;constructor(t,s){"function"==typeof t?(this._fn=t,this._computeKey=o):(this._fn=s,this._computeKey=t.getCacheKey)}get(t){const s=this._computeKey(t);if(this._map2.has(s))return this._map2.get(s);const e=this._fn(t);return this._map.set(t,e),this._map2.set(s,e),e}}export{c as Cache,l as CachedFunction,T as LRUCachedFunction,o as identity};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { CancellationToken, CancellationTokenSource } from "./cancellation.js";
+import { IDisposable } from "./lifecycle.js";
+class Cache {
+  constructor(task) {
+    this.task = task;
+  }
+  static {
+    __name(this, "Cache");
+  }
+  result = null;
+  get() {
+    if (this.result) {
+      return this.result;
+    }
+    const cts = new CancellationTokenSource();
+    const promise = this.task(cts.token);
+    this.result = {
+      promise,
+      dispose: /* @__PURE__ */ __name(() => {
+        this.result = null;
+        cts.cancel();
+        cts.dispose();
+      }, "dispose")
+    };
+    return this.result;
+  }
+}
+function identity(t) {
+  return t;
+}
+__name(identity, "identity");
+class LRUCachedFunction {
+  static {
+    __name(this, "LRUCachedFunction");
+  }
+  lastCache = void 0;
+  lastArgKey = void 0;
+  _fn;
+  _computeKey;
+  constructor(arg1, arg2) {
+    if (typeof arg1 === "function") {
+      this._fn = arg1;
+      this._computeKey = identity;
+    } else {
+      this._fn = arg2;
+      this._computeKey = arg1.getCacheKey;
+    }
+  }
+  get(arg) {
+    const key = this._computeKey(arg);
+    if (this.lastArgKey !== key) {
+      this.lastArgKey = key;
+      this.lastCache = this._fn(arg);
+    }
+    return this.lastCache;
+  }
+}
+class CachedFunction {
+  static {
+    __name(this, "CachedFunction");
+  }
+  _map = /* @__PURE__ */ new Map();
+  _map2 = /* @__PURE__ */ new Map();
+  get cachedValues() {
+    return this._map;
+  }
+  _fn;
+  _computeKey;
+  constructor(arg1, arg2) {
+    if (typeof arg1 === "function") {
+      this._fn = arg1;
+      this._computeKey = identity;
+    } else {
+      this._fn = arg2;
+      this._computeKey = arg1.getCacheKey;
+    }
+  }
+  get(arg) {
+    const key = this._computeKey(arg);
+    if (this._map2.has(key)) {
+      return this._map2.get(key);
+    }
+    const value = this._fn(arg);
+    this._map.set(arg, value);
+    this._map2.set(key, value);
+    return value;
+  }
+}
+export {
+  Cache,
+  CachedFunction,
+  LRUCachedFunction,
+  identity
+};
+//# sourceMappingURL=cache.js.map

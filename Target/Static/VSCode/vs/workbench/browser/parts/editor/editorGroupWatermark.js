@@ -1,1 +1,173 @@
-var R=Object.defineProperty,M=Object.getOwnPropertyDescriptor,f=(e,t,i,r)=>{for(var o,n=r>1?void 0:r?M(t,i):t,s=e.length-1;s>=0;s--)(o=e[s])&&(n=(r?o(t,i,n):o(n))||n);return r&&n&&R(t,i,n),n},c=(e,t)=>(i,r)=>t(i,r,e);import{$ as g,append as d,clearNode as S,h as w}from"../../../../base/browser/dom.js";import{KeybindingLabel as N}from"../../../../base/browser/ui/keybindingLabel/keybindingLabel.js";import{coalesce as U,shuffle as q}from"../../../../base/common/arrays.js";import{Disposable as A,DisposableStore as v}from"../../../../base/common/lifecycle.js";import{isMacintosh as u,isWeb as h,OS as P}from"../../../../base/common/platform.js";import{localize as i}from"../../../../nls.js";import{CommandsRegistry as _}from"../../../../platform/commands/common/commands.js";import{IConfigurationService as j}from"../../../../platform/configuration/common/configuration.js";import{ContextKeyExpr as m,IContextKeyService as V}from"../../../../platform/contextkey/common/contextkey.js";import{IKeybindingService as Y}from"../../../../platform/keybinding/common/keybinding.js";import{IStorageService as z,StorageScope as E,StorageTarget as J,WillSaveStateReason as $}from"../../../../platform/storage/common/storage.js";import{defaultKeybindingLabelStyles as B}from"../../../../platform/theme/browser/defaultStyles.js";import{editorForeground as b,registerColor as Q,transparent as x}from"../../../../platform/theme/common/colorRegistry.js";import{IWorkspaceContextService as X,WorkbenchState as W}from"../../../../platform/workspace/common/workspace.js";const C={text:i("watermark.showCommands","Show All Commands"),id:"workbench.action.showCommands"},Z={text:i("watermark.quickAccess","Go to File"),id:"workbench.action.quickOpen"},G={text:i("watermark.openFile","Open File"),id:"workbench.action.files.openFile"},ee={text:i("watermark.openFolder","Open Folder"),id:"workbench.action.files.openFolder"},te={text:i("watermark.openFileFolder","Open File or Folder"),id:"workbench.action.files.openFileFolder"},re={text:i("watermark.openRecent","Open Recent"),id:"workbench.action.openRecent"},ne={text:i("watermark.newUntitledFile","New Untitled Text File"),id:"workbench.action.files.newUntitledFile"},ie={text:i("watermark.findInFiles","Find in Files"),id:"workbench.action.findInFiles"},oe={text:i({key:"watermark.toggleTerminal",comment:["toggle is a verb here"]},"Toggle Terminal"),id:"workbench.action.terminal.toggleTerminal",when:{web:m.equals("terminalProcessSupported",!0)}},ae={text:i("watermark.startDebugging","Start Debugging"),id:"workbench.action.debug.start",when:{web:m.equals("terminalProcessSupported",!0)}},se={text:i("watermark.openSettings","Open Settings"),id:"workbench.action.openSettings"},F=m.or(m.equals("chatSetupHidden",!1),m.equals("chatSetupInstalled",!0)),I={text:i("watermark.openChat","Open Chat"),id:"workbench.action.chat.open",when:{native:F,web:F}},D=U([C,...u&&!h?[te]:[G,ee],re,u&&!h?ne:void 0,I]),K=[],O=[C,Z,I],L=[ie,ae,oe,se];let s=class extends A{constructor(e,t,i,r,o,n){super(),this.keybindingService=t,this.contextService=i,this.contextKeyService=r,this.configurationService=o,this.storageService=n,this.cachedWhen=this.storageService.getObject(s.CACHED_WHEN,E.PROFILE,Object.create(null)),this.workbenchState=this.contextService.getWorkbenchState();const a=w(".editor-group-watermark",[w(".letterpress"),w(".shortcuts@shortcuts")]);d(e,a.root),this.shortcuts=a.shortcuts,this.registerListeners(),this.render()}static CACHED_WHEN="editorGroupWatermark.whenConditions";cachedWhen;shortcuts;transientDisposables=this._register(new v);keybindingLabels=this._register(new v);enabled=!1;workbenchState;registerListeners(){this._register(this.configurationService.onDidChangeConfiguration((e=>{e.affectsConfiguration("workbench.tips.enabled")&&this.enabled!==this.configurationService.getValue("workbench.tips.enabled")&&this.render()}))),this._register(this.contextService.onDidChangeWorkbenchState((e=>{this.workbenchState!==e&&(this.workbenchState=e,this.render())}))),this._register(this.storageService.onWillSaveState((e=>{if(e.reason===$.SHUTDOWN){const e=[...D,...K,...O,...L];for(const t of e){const e=h?t.when?.web:t.when?.native;e&&(this.cachedWhen[t.id]=this.contextKeyService.contextMatchesRules(e))}this.storageService.store(s.CACHED_WHEN,JSON.stringify(this.cachedWhen),E.PROFILE,J.MACHINE)}})))}render(){if(this.enabled=this.configurationService.getValue("workbench.tips.enabled"),S(this.shortcuts),this.transientDisposables.clear(),!this.enabled)return;const e=this.filterEntries(this.workbenchState!==W.EMPTY?O:D,!1),t=this.filterEntries(this.workbenchState!==W.EMPTY?L:K,!0).slice(0,Math.max(0,5-e.length)),i=[...e,...t],r=d(this.shortcuts,g(".watermark-box")),o=()=>{S(r),this.keybindingLabels.clear();for(const e of i){const t=this.keybindingService.lookupKeybinding(e.id);if(!t)continue;const i=d(r,g("dl"));d(i,g("dt")).textContent=e.text;const o=d(i,g("dd"));this.keybindingLabels.add(new N(o,P,{renderUnboundKeybindings:!0,...B})).set(t)}};o(),this.transientDisposables.add(this.keybindingService.onDidUpdateKeybindings(o))}filterEntries(e,t){const i=e.filter((e=>h&&!e.when?.web||!h&&!e.when?.native||this.cachedWhen[e.id])).filter((e=>!!_.getCommand(e.id))).filter((e=>!!this.keybindingService.lookupKeybinding(e.id)));return t&&q(i),i}};s=f([c(1,Y),c(2,X),c(3,V),c(4,j),c(5,z)],s),Q("editorWatermark.foreground",{dark:x(b,.6),light:x(b,.68),hcDark:b,hcLight:b},i("editorLineHighlight","Foreground color for the labels in the editor watermark."));export{s as EditorGroupWatermark};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { $, append, clearNode, h } from "../../../../base/browser/dom.js";
+import { KeybindingLabel } from "../../../../base/browser/ui/keybindingLabel/keybindingLabel.js";
+import { coalesce, shuffle } from "../../../../base/common/arrays.js";
+import { Disposable, DisposableStore } from "../../../../base/common/lifecycle.js";
+import { isMacintosh, isWeb, OS } from "../../../../base/common/platform.js";
+import { localize } from "../../../../nls.js";
+import { CommandsRegistry } from "../../../../platform/commands/common/commands.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { ContextKeyExpr, ContextKeyExpression, IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { IStorageService, StorageScope, StorageTarget, WillSaveStateReason } from "../../../../platform/storage/common/storage.js";
+import { defaultKeybindingLabelStyles } from "../../../../platform/theme/browser/defaultStyles.js";
+import { editorForeground, registerColor, transparent } from "../../../../platform/theme/common/colorRegistry.js";
+import { IWorkspaceContextService, WorkbenchState } from "../../../../platform/workspace/common/workspace.js";
+const showCommands = { text: localize("watermark.showCommands", "Show All Commands"), id: "workbench.action.showCommands" };
+const gotoFile = { text: localize("watermark.quickAccess", "Go to File"), id: "workbench.action.quickOpen" };
+const openFile = { text: localize("watermark.openFile", "Open File"), id: "workbench.action.files.openFile" };
+const openFolder = { text: localize("watermark.openFolder", "Open Folder"), id: "workbench.action.files.openFolder" };
+const openFileOrFolder = { text: localize("watermark.openFileFolder", "Open File or Folder"), id: "workbench.action.files.openFileFolder" };
+const openRecent = { text: localize("watermark.openRecent", "Open Recent"), id: "workbench.action.openRecent" };
+const newUntitledFile = { text: localize("watermark.newUntitledFile", "New Untitled Text File"), id: "workbench.action.files.newUntitledFile" };
+const findInFiles = { text: localize("watermark.findInFiles", "Find in Files"), id: "workbench.action.findInFiles" };
+const toggleTerminal = { text: localize({ key: "watermark.toggleTerminal", comment: ["toggle is a verb here"] }, "Toggle Terminal"), id: "workbench.action.terminal.toggleTerminal", when: { web: ContextKeyExpr.equals("terminalProcessSupported", true) } };
+const startDebugging = { text: localize("watermark.startDebugging", "Start Debugging"), id: "workbench.action.debug.start", when: { web: ContextKeyExpr.equals("terminalProcessSupported", true) } };
+const openSettings = { text: localize("watermark.openSettings", "Open Settings"), id: "workbench.action.openSettings" };
+const showCopilot = ContextKeyExpr.or(ContextKeyExpr.equals("chatSetupHidden", false), ContextKeyExpr.equals("chatSetupInstalled", true));
+const openChat = { text: localize("watermark.openChat", "Open Chat"), id: "workbench.action.chat.open", when: { native: showCopilot, web: showCopilot } };
+const emptyWindowEntries = coalesce([
+  showCommands,
+  ...isMacintosh && !isWeb ? [openFileOrFolder] : [openFile, openFolder],
+  openRecent,
+  isMacintosh && !isWeb ? newUntitledFile : void 0,
+  // fill in one more on macOS to get to 5 entries
+  openChat
+]);
+const randomEmptyWindowEntries = [
+  /* Nothing yet */
+];
+const workspaceEntries = [
+  showCommands,
+  gotoFile,
+  openChat
+];
+const randomWorkspaceEntries = [
+  findInFiles,
+  startDebugging,
+  toggleTerminal,
+  openSettings
+];
+let EditorGroupWatermark = class extends Disposable {
+  constructor(container, keybindingService, contextService, contextKeyService, configurationService, storageService) {
+    super();
+    this.keybindingService = keybindingService;
+    this.contextService = contextService;
+    this.contextKeyService = contextKeyService;
+    this.configurationService = configurationService;
+    this.storageService = storageService;
+    this.cachedWhen = this.storageService.getObject(EditorGroupWatermark.CACHED_WHEN, StorageScope.PROFILE, /* @__PURE__ */ Object.create(null));
+    this.workbenchState = this.contextService.getWorkbenchState();
+    const elements = h(".editor-group-watermark", [
+      h(".letterpress"),
+      h(".shortcuts@shortcuts")
+    ]);
+    append(container, elements.root);
+    this.shortcuts = elements.shortcuts;
+    this.registerListeners();
+    this.render();
+  }
+  static {
+    __name(this, "EditorGroupWatermark");
+  }
+  static CACHED_WHEN = "editorGroupWatermark.whenConditions";
+  cachedWhen;
+  shortcuts;
+  transientDisposables = this._register(new DisposableStore());
+  keybindingLabels = this._register(new DisposableStore());
+  enabled = false;
+  workbenchState;
+  registerListeners() {
+    this._register(this.configurationService.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration("workbench.tips.enabled") && this.enabled !== this.configurationService.getValue("workbench.tips.enabled")) {
+        this.render();
+      }
+    }));
+    this._register(this.contextService.onDidChangeWorkbenchState((workbenchState) => {
+      if (this.workbenchState !== workbenchState) {
+        this.workbenchState = workbenchState;
+        this.render();
+      }
+    }));
+    this._register(this.storageService.onWillSaveState((e) => {
+      if (e.reason === WillSaveStateReason.SHUTDOWN) {
+        const entries = [...emptyWindowEntries, ...randomEmptyWindowEntries, ...workspaceEntries, ...randomWorkspaceEntries];
+        for (const entry of entries) {
+          const when = isWeb ? entry.when?.web : entry.when?.native;
+          if (when) {
+            this.cachedWhen[entry.id] = this.contextKeyService.contextMatchesRules(when);
+          }
+        }
+        this.storageService.store(EditorGroupWatermark.CACHED_WHEN, JSON.stringify(this.cachedWhen), StorageScope.PROFILE, StorageTarget.MACHINE);
+      }
+    }));
+  }
+  render() {
+    this.enabled = this.configurationService.getValue("workbench.tips.enabled");
+    clearNode(this.shortcuts);
+    this.transientDisposables.clear();
+    if (!this.enabled) {
+      return;
+    }
+    const fixedEntries = this.filterEntries(
+      this.workbenchState !== WorkbenchState.EMPTY ? workspaceEntries : emptyWindowEntries,
+      false
+      /* not shuffled */
+    );
+    const randomEntries = this.filterEntries(
+      this.workbenchState !== WorkbenchState.EMPTY ? randomWorkspaceEntries : randomEmptyWindowEntries,
+      true
+      /* shuffled */
+    ).slice(0, Math.max(0, 5 - fixedEntries.length));
+    const entries = [...fixedEntries, ...randomEntries];
+    const box = append(this.shortcuts, $(".watermark-box"));
+    const update = /* @__PURE__ */ __name(() => {
+      clearNode(box);
+      this.keybindingLabels.clear();
+      for (const entry of entries) {
+        const keys = this.keybindingService.lookupKeybinding(entry.id);
+        if (!keys) {
+          continue;
+        }
+        const dl = append(box, $("dl"));
+        const dt = append(dl, $("dt"));
+        dt.textContent = entry.text;
+        const dd = append(dl, $("dd"));
+        const label = this.keybindingLabels.add(new KeybindingLabel(dd, OS, { renderUnboundKeybindings: true, ...defaultKeybindingLabelStyles }));
+        label.set(keys);
+      }
+    }, "update");
+    update();
+    this.transientDisposables.add(this.keybindingService.onDidUpdateKeybindings(update));
+  }
+  filterEntries(entries, shuffleEntries) {
+    const filteredEntries = entries.filter((entry) => isWeb && !entry.when?.web || !isWeb && !entry.when?.native || this.cachedWhen[entry.id]).filter((entry) => !!CommandsRegistry.getCommand(entry.id)).filter((entry) => !!this.keybindingService.lookupKeybinding(entry.id));
+    if (shuffleEntries) {
+      shuffle(filteredEntries);
+    }
+    return filteredEntries;
+  }
+};
+EditorGroupWatermark = __decorateClass([
+  __decorateParam(1, IKeybindingService),
+  __decorateParam(2, IWorkspaceContextService),
+  __decorateParam(3, IContextKeyService),
+  __decorateParam(4, IConfigurationService),
+  __decorateParam(5, IStorageService)
+], EditorGroupWatermark);
+registerColor("editorWatermark.foreground", { dark: transparent(editorForeground, 0.6), light: transparent(editorForeground, 0.68), hcDark: editorForeground, hcLight: editorForeground }, localize("editorLineHighlight", "Foreground color for the labels in the editor watermark."));
+export {
+  EditorGroupWatermark
+};
+//# sourceMappingURL=editorGroupWatermark.js.map

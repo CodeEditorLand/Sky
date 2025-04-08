@@ -1,4 +1,157 @@
-import{AccessibleViewType as p,AccessibleViewProviderId as m}from"../../../../platform/accessibility/browser/accessibleView.js";import"../../../../platform/accessibility/browser/accessibleViewRegistry.js";import{IContextKeyService as g}from"../../../../platform/contextkey/common/contextkey.js";import"../../../../platform/instantiation/common/instantiation.js";import{GettingStartedPage as u,inWelcomeContext as S}from"./gettingStarted.js";import{Disposable as v}from"../../../../base/common/lifecycle.js";import{IWalkthroughsService as f}from"./gettingStartedService.js";import{AccessibilityVerbositySettingId as I}from"../../accessibility/browser/accessibilityConfiguration.js";import{IEditorService as _}from"../../../services/editor/common/editorService.js";import{GettingStartedInput as y}from"./gettingStartedInput.js";import{localize as d}from"../../../../nls.js";import{Action as C}from"../../../../base/common/actions.js";import"../../../../base/common/linkedText.js";import{ICommandService as k}from"../../../../platform/commands/common/commands.js";import{URI as x}from"../../../../base/common/uri.js";import{parse as h}from"../../../../base/common/marshalling.js";import{IOpenerService as W}from"../../../../platform/opener/common/opener.js";import{ThemeIcon as b}from"../../../../base/common/themables.js";import{Codicon as w}from"../../../../base/common/codicons.js";class ie{type=p.View;priority=110;name="walkthroughs";when=S;getProvider=c=>{const r=c.get(_).activeEditorPane;if(!(r instanceof u))return;const i=r.input;if(!(i instanceof y)||!i.selectedCategory)return;const e=c.get(f).getWalkthrough(i.selectedCategory),s=i.selectedStep;if(e)return new A(c.get(g),c.get(k),c.get(W),r,e,s)}}class A extends v{constructor(t,r,i,n,e,s){super();this.contextService=t;this.commandService=r;this.openerService=i;this._gettingStartedPage=n;this._walkthrough=e;this._focusedStep=s;this._activeWalkthroughSteps=e.steps.filter(o=>!o.when||this.contextService.contextMatchesRules(o.when))}_currentStepIndex=0;_activeWalkthroughSteps=[];id=m.Walkthrough;verbositySettingKey=I.Walkthrough;options={type:p.View};get actions(){const t=[],i=this._activeWalkthroughSteps[this._currentStepIndex].description.map(n=>n.nodes.filter(e=>typeof e!="string").map(e=>({href:e.href,label:e.label}))).flat();if(i.length===1){const n=i[0];t.push(new C("walthrough.step.action",n.label,b.asClassName(w.run),!0,()=>{const e=n.href.startsWith("command:"),s=n.href.replace(/command:(toSide:)?/,"command:");if(e){const o=x.parse(s);let a=[];try{a=h(decodeURIComponent(o.query))}catch{try{a=h(o.query)}catch{}}Array.isArray(a)||(a=[a]),this.commandService.executeCommand(o.path,...a)}else this.openerService.open(s,{allowCommands:!0})}))}return t}provideContent(){if(this._focusedStep){const t=this._activeWalkthroughSteps.findIndex(r=>r.id===this._focusedStep);t!==-1&&(this._currentStepIndex=t)}return this._getContent(this._walkthrough,this._activeWalkthroughSteps[this._currentStepIndex],!0)}_getContent(t,r,i){const n=r.description.map(s=>s.nodes.filter(o=>typeof o=="string")).join(`
-`),e=d("gettingStarted.step",`{0}
-{1}`,r.title,n);return i?[d("gettingStarted.title","Title: {0}",t.title),d("gettingStarted.description","Description: {0}",t.description),e].join(`
-`):e}provideNextContent(){if(++this._currentStepIndex>=this._activeWalkthroughSteps.length){--this._currentStepIndex;return}return this._getContent(this._walkthrough,this._activeWalkthroughSteps[this._currentStepIndex])}providePreviousContent(){if(--this._currentStepIndex<0){++this._currentStepIndex;return}return this._getContent(this._walkthrough,this._activeWalkthroughSteps[this._currentStepIndex])}onClose(){if(this._currentStepIndex>-1){const t=this._activeWalkthroughSteps[this._currentStepIndex];this._gettingStartedPage.makeCategoryVisibleWhenAvailable(this._walkthrough.id,t.id)}}}export{ie as GettingStartedAccessibleView};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { AccessibleViewType, AccessibleContentProvider, ExtensionContentProvider, IAccessibleViewContentProvider, AccessibleViewProviderId } from "../../../../platform/accessibility/browser/accessibleView.js";
+import { IAccessibleViewImplementation } from "../../../../platform/accessibility/browser/accessibleViewRegistry.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+import { GettingStartedPage, inWelcomeContext } from "./gettingStarted.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { IResolvedWalkthrough, IResolvedWalkthroughStep, IWalkthroughsService } from "./gettingStartedService.js";
+import { AccessibilityVerbositySettingId } from "../../accessibility/browser/accessibilityConfiguration.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { GettingStartedInput } from "./gettingStartedInput.js";
+import { localize } from "../../../../nls.js";
+import { Action, IAction } from "../../../../base/common/actions.js";
+import { ILink } from "../../../../base/common/linkedText.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { URI } from "../../../../base/common/uri.js";
+import { parse } from "../../../../base/common/marshalling.js";
+import { IOpenerService } from "../../../../platform/opener/common/opener.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+class GettingStartedAccessibleView {
+  static {
+    __name(this, "GettingStartedAccessibleView");
+  }
+  type = AccessibleViewType.View;
+  priority = 110;
+  name = "walkthroughs";
+  when = inWelcomeContext;
+  getProvider = /* @__PURE__ */ __name((accessor) => {
+    const editorService = accessor.get(IEditorService);
+    const editorPane = editorService.activeEditorPane;
+    if (!(editorPane instanceof GettingStartedPage)) {
+      return;
+    }
+    const gettingStartedInput = editorPane.input;
+    if (!(gettingStartedInput instanceof GettingStartedInput) || !gettingStartedInput.selectedCategory) {
+      return;
+    }
+    const gettingStartedService = accessor.get(IWalkthroughsService);
+    const currentWalkthrough = gettingStartedService.getWalkthrough(gettingStartedInput.selectedCategory);
+    const currentStepIds = gettingStartedInput.selectedStep;
+    if (currentWalkthrough) {
+      return new GettingStartedAccessibleProvider(
+        accessor.get(IContextKeyService),
+        accessor.get(ICommandService),
+        accessor.get(IOpenerService),
+        editorPane,
+        currentWalkthrough,
+        currentStepIds
+      );
+    }
+    return;
+  }, "getProvider");
+}
+class GettingStartedAccessibleProvider extends Disposable {
+  constructor(contextService, commandService, openerService, _gettingStartedPage, _walkthrough, _focusedStep) {
+    super();
+    this.contextService = contextService;
+    this.commandService = commandService;
+    this.openerService = openerService;
+    this._gettingStartedPage = _gettingStartedPage;
+    this._walkthrough = _walkthrough;
+    this._focusedStep = _focusedStep;
+    this._activeWalkthroughSteps = _walkthrough.steps.filter((step) => !step.when || this.contextService.contextMatchesRules(step.when));
+  }
+  static {
+    __name(this, "GettingStartedAccessibleProvider");
+  }
+  _currentStepIndex = 0;
+  _activeWalkthroughSteps = [];
+  id = AccessibleViewProviderId.Walkthrough;
+  verbositySettingKey = AccessibilityVerbositySettingId.Walkthrough;
+  options = { type: AccessibleViewType.View };
+  get actions() {
+    const actions = [];
+    const step = this._activeWalkthroughSteps[this._currentStepIndex];
+    const nodes = step.description.map((lt) => lt.nodes.filter((node) => typeof node !== "string").map((node) => ({ href: node.href, label: node.label }))).flat();
+    if (nodes.length === 1) {
+      const node = nodes[0];
+      actions.push(new Action("walthrough.step.action", node.label, ThemeIcon.asClassName(Codicon.run), true, () => {
+        const isCommand = node.href.startsWith("command:");
+        const command = node.href.replace(/command:(toSide:)?/, "command:");
+        if (isCommand) {
+          const commandURI = URI.parse(command);
+          let args = [];
+          try {
+            args = parse(decodeURIComponent(commandURI.query));
+          } catch {
+            try {
+              args = parse(commandURI.query);
+            } catch {
+            }
+          }
+          if (!Array.isArray(args)) {
+            args = [args];
+          }
+          this.commandService.executeCommand(commandURI.path, ...args);
+        } else {
+          this.openerService.open(command, { allowCommands: true });
+        }
+      }));
+    }
+    return actions;
+  }
+  provideContent() {
+    if (this._focusedStep) {
+      const stepIndex = this._activeWalkthroughSteps.findIndex((step) => step.id === this._focusedStep);
+      if (stepIndex !== -1) {
+        this._currentStepIndex = stepIndex;
+      }
+    }
+    return this._getContent(
+      this._walkthrough,
+      this._activeWalkthroughSteps[this._currentStepIndex],
+      /* includeTitle */
+      true
+    );
+  }
+  _getContent(waltkrough, step, includeTitle) {
+    const description = step.description.map((lt) => lt.nodes.filter((node) => typeof node === "string")).join("\n");
+    const stepsContent = localize("gettingStarted.step", "{0}\n{1}", step.title, description);
+    if (includeTitle) {
+      return [
+        localize("gettingStarted.title", "Title: {0}", waltkrough.title),
+        localize("gettingStarted.description", "Description: {0}", waltkrough.description),
+        stepsContent
+      ].join("\n");
+    } else {
+      return stepsContent;
+    }
+  }
+  provideNextContent() {
+    if (++this._currentStepIndex >= this._activeWalkthroughSteps.length) {
+      --this._currentStepIndex;
+      return;
+    }
+    return this._getContent(this._walkthrough, this._activeWalkthroughSteps[this._currentStepIndex]);
+  }
+  providePreviousContent() {
+    if (--this._currentStepIndex < 0) {
+      ++this._currentStepIndex;
+      return;
+    }
+    return this._getContent(this._walkthrough, this._activeWalkthroughSteps[this._currentStepIndex]);
+  }
+  onClose() {
+    if (this._currentStepIndex > -1) {
+      const currentStep = this._activeWalkthroughSteps[this._currentStepIndex];
+      this._gettingStartedPage.makeCategoryVisibleWhenAvailable(this._walkthrough.id, currentStep.id);
+    }
+  }
+}
+export {
+  GettingStartedAccessibleView
+};
+//# sourceMappingURL=gettingStartedAccessibleView.js.map

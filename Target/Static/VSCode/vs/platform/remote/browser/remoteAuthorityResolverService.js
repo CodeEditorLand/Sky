@@ -1,1 +1,129 @@
-var p=Object.defineProperty,v=Object.getOwnPropertyDescriptor,m=(e,o,t,n)=>{for(var s,r=n>1?void 0:n?v(o,t):o,i=e.length-1;i>=0;i--)(s=e[i])&&(r=(n?s(o,t,r):s(r))||r);return n&&r&&p(o,t,r),r},h=(e,o)=>(t,n)=>o(t,n,e);import{mainWindow as f}from"../../../base/browser/window.js";import{DeferredPromise as g}from"../../../base/common/async.js";import*as _ from"../../../base/common/errors.js";import{Emitter as k}from"../../../base/common/event.js";import{Disposable as T}from"../../../base/common/lifecycle.js";import{RemoteAuthorities as r}from"../../../base/common/network.js";import*as d from"../../../base/common/performance.js";import{StopWatch as C}from"../../../base/common/stopwatch.js";import"../../../base/common/uri.js";import{ILogService as y}from"../../log/common/log.js";import{IProductService as D}from"../../product/common/productService.js";import{RemoteConnectionType as I,WebSocketRemoteConnection as P,getRemoteAuthorityPrefix as q}from"../common/remoteAuthorityResolver.js";import{parseAuthorityWithOptionalPort as A}from"../common/remoteHosts.js";let a=class extends T{constructor(e,o,t,n,s,i){super(),this._logService=i,this._connectionToken=o,this._connectionTokens=new Map,this._isWorkbenchOptionsBasedResolution=e,t&&r.setDelegate(t),r.setServerRootPath(s,n)}_onDidChangeConnectionData=this._register(new k);onDidChangeConnectionData=this._onDidChangeConnectionData.event;_resolveAuthorityRequests=new Map;_cache=new Map;_connectionToken;_connectionTokens;_isWorkbenchOptionsBasedResolution;async resolveAuthority(e){let o=this._resolveAuthorityRequests.get(e);return o||(o=new g,this._resolveAuthorityRequests.set(e,o),this._isWorkbenchOptionsBasedResolution&&this._doResolveAuthority(e).then((e=>o.complete(e)),(e=>o.error(e)))),o.p}async getCanonicalURI(e){return e}getConnectionData(e){if(!this._cache.has(e))return null;const o=this._cache.get(e),t=this._connectionTokens.get(e)||o.authority.connectionToken;return{connectTo:o.authority.connectTo,connectionToken:t}}async _doResolveAuthority(e){const o=q(e),t=C.create(!1);this._logService.info(`Resolving connection token (${o})...`),d.mark(`code/willResolveConnectionToken/${o}`);const n=await Promise.resolve(this._connectionTokens.get(e)||this._connectionToken);d.mark(`code/didResolveConnectionToken/${o}`),this._logService.info(`Resolved connection token (${o}) after ${t.elapsed()} ms`);const s=/^https:/.test(f.location.href)?443:80,{host:i,port:c}=A(e,s),a={authority:{authority:e,connectTo:new P(i,c),connectionToken:n}};return r.set(e,i,c),this._cache.set(e,a),this._onDidChangeConnectionData.fire(),a}_clearResolvedAuthority(e){this._resolveAuthorityRequests.has(e)&&(this._resolveAuthorityRequests.get(e).cancel(),this._resolveAuthorityRequests.delete(e))}_setResolvedAuthority(e,o){if(this._resolveAuthorityRequests.has(e.authority)){const t=this._resolveAuthorityRequests.get(e.authority);e.connectTo.type===I.WebSocket&&r.set(e.authority,e.connectTo.host,e.connectTo.port),e.connectionToken&&r.setConnectionToken(e.authority,e.connectionToken),t.complete({authority:e,options:o}),this._onDidChangeConnectionData.fire()}}_setResolvedAuthorityError(e,o){this._resolveAuthorityRequests.has(e)&&this._resolveAuthorityRequests.get(e).error(_.ErrorNoTelemetry.fromError(o))}_setAuthorityConnectionToken(e,o){this._connectionTokens.set(e,o),r.setConnectionToken(e,o),this._onDidChangeConnectionData.fire()}_setCanonicalURIProvider(e){}};a=m([h(4,D),h(5,y)],a);export{a as RemoteAuthorityResolverService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { mainWindow } from "../../../base/browser/window.js";
+import { DeferredPromise } from "../../../base/common/async.js";
+import * as errors from "../../../base/common/errors.js";
+import { Emitter } from "../../../base/common/event.js";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { RemoteAuthorities } from "../../../base/common/network.js";
+import * as performance from "../../../base/common/performance.js";
+import { StopWatch } from "../../../base/common/stopwatch.js";
+import { URI } from "../../../base/common/uri.js";
+import { ILogService } from "../../log/common/log.js";
+import { IProductService } from "../../product/common/productService.js";
+import { IRemoteAuthorityResolverService, IRemoteConnectionData, RemoteConnectionType, ResolvedAuthority, ResolvedOptions, ResolverResult, WebSocketRemoteConnection, getRemoteAuthorityPrefix } from "../common/remoteAuthorityResolver.js";
+import { parseAuthorityWithOptionalPort } from "../common/remoteHosts.js";
+let RemoteAuthorityResolverService = class extends Disposable {
+  constructor(isWorkbenchOptionsBasedResolution, connectionToken, resourceUriProvider, serverBasePath, productService, _logService) {
+    super();
+    this._logService = _logService;
+    this._connectionToken = connectionToken;
+    this._connectionTokens = /* @__PURE__ */ new Map();
+    this._isWorkbenchOptionsBasedResolution = isWorkbenchOptionsBasedResolution;
+    if (resourceUriProvider) {
+      RemoteAuthorities.setDelegate(resourceUriProvider);
+    }
+    RemoteAuthorities.setServerRootPath(productService, serverBasePath);
+  }
+  static {
+    __name(this, "RemoteAuthorityResolverService");
+  }
+  _onDidChangeConnectionData = this._register(new Emitter());
+  onDidChangeConnectionData = this._onDidChangeConnectionData.event;
+  _resolveAuthorityRequests = /* @__PURE__ */ new Map();
+  _cache = /* @__PURE__ */ new Map();
+  _connectionToken;
+  _connectionTokens;
+  _isWorkbenchOptionsBasedResolution;
+  async resolveAuthority(authority) {
+    let result = this._resolveAuthorityRequests.get(authority);
+    if (!result) {
+      result = new DeferredPromise();
+      this._resolveAuthorityRequests.set(authority, result);
+      if (this._isWorkbenchOptionsBasedResolution) {
+        this._doResolveAuthority(authority).then((v) => result.complete(v), (err) => result.error(err));
+      }
+    }
+    return result.p;
+  }
+  async getCanonicalURI(uri) {
+    return uri;
+  }
+  getConnectionData(authority) {
+    if (!this._cache.has(authority)) {
+      return null;
+    }
+    const resolverResult = this._cache.get(authority);
+    const connectionToken = this._connectionTokens.get(authority) || resolverResult.authority.connectionToken;
+    return {
+      connectTo: resolverResult.authority.connectTo,
+      connectionToken
+    };
+  }
+  async _doResolveAuthority(authority) {
+    const authorityPrefix = getRemoteAuthorityPrefix(authority);
+    const sw = StopWatch.create(false);
+    this._logService.info(`Resolving connection token (${authorityPrefix})...`);
+    performance.mark(`code/willResolveConnectionToken/${authorityPrefix}`);
+    const connectionToken = await Promise.resolve(this._connectionTokens.get(authority) || this._connectionToken);
+    performance.mark(`code/didResolveConnectionToken/${authorityPrefix}`);
+    this._logService.info(`Resolved connection token (${authorityPrefix}) after ${sw.elapsed()} ms`);
+    const defaultPort = /^https:/.test(mainWindow.location.href) ? 443 : 80;
+    const { host, port } = parseAuthorityWithOptionalPort(authority, defaultPort);
+    const result = { authority: { authority, connectTo: new WebSocketRemoteConnection(host, port), connectionToken } };
+    RemoteAuthorities.set(authority, host, port);
+    this._cache.set(authority, result);
+    this._onDidChangeConnectionData.fire();
+    return result;
+  }
+  _clearResolvedAuthority(authority) {
+    if (this._resolveAuthorityRequests.has(authority)) {
+      this._resolveAuthorityRequests.get(authority).cancel();
+      this._resolveAuthorityRequests.delete(authority);
+    }
+  }
+  _setResolvedAuthority(resolvedAuthority, options) {
+    if (this._resolveAuthorityRequests.has(resolvedAuthority.authority)) {
+      const request = this._resolveAuthorityRequests.get(resolvedAuthority.authority);
+      if (resolvedAuthority.connectTo.type === RemoteConnectionType.WebSocket) {
+        RemoteAuthorities.set(resolvedAuthority.authority, resolvedAuthority.connectTo.host, resolvedAuthority.connectTo.port);
+      }
+      if (resolvedAuthority.connectionToken) {
+        RemoteAuthorities.setConnectionToken(resolvedAuthority.authority, resolvedAuthority.connectionToken);
+      }
+      request.complete({ authority: resolvedAuthority, options });
+      this._onDidChangeConnectionData.fire();
+    }
+  }
+  _setResolvedAuthorityError(authority, err) {
+    if (this._resolveAuthorityRequests.has(authority)) {
+      const request = this._resolveAuthorityRequests.get(authority);
+      request.error(errors.ErrorNoTelemetry.fromError(err));
+    }
+  }
+  _setAuthorityConnectionToken(authority, connectionToken) {
+    this._connectionTokens.set(authority, connectionToken);
+    RemoteAuthorities.setConnectionToken(authority, connectionToken);
+    this._onDidChangeConnectionData.fire();
+  }
+  _setCanonicalURIProvider(provider) {
+  }
+};
+RemoteAuthorityResolverService = __decorateClass([
+  __decorateParam(4, IProductService),
+  __decorateParam(5, ILogService)
+], RemoteAuthorityResolverService);
+export {
+  RemoteAuthorityResolverService
+};
+//# sourceMappingURL=remoteAuthorityResolverService.js.map

@@ -1,1 +1,55 @@
-import"../../../base/common/json.js";import{setProperty as f}from"../../../base/common/jsonEdit.js";import"../../../base/common/jsonFormatter.js";function m(t,n,r,e){const o=f(t,n,r,e)[0];return o&&(t=t.substring(0,o.offset)+o.content+t.substring(o.offset+o.length)),t}function p(t,n,r){let e=r;for(;e>=0;){if(t.charAt(e)===n.charAt(n.length-1)&&1===n.length)return e+1;if(e--,2===n.length&&e>=0&&t.charAt(e)===n.charAt(0))return e+2}return 0}function A(t,n,r){let e=r;for(;e>=0;)if(t.charAt(e)===n.charAt(n.length-1)&&1===n.length||(e++,2===n.length&&e>=0&&t.charAt(e)===n.charAt(1)))return e;return t.length-1}export{m as edit,A as getLineEndOffset,p as getLineStartOffset};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { JSONPath } from "../../../base/common/json.js";
+import { setProperty } from "../../../base/common/jsonEdit.js";
+import { FormattingOptions } from "../../../base/common/jsonFormatter.js";
+function edit(content, originalPath, value, formattingOptions) {
+  const edit2 = setProperty(content, originalPath, value, formattingOptions)[0];
+  if (edit2) {
+    content = content.substring(0, edit2.offset) + edit2.content + content.substring(edit2.offset + edit2.length);
+  }
+  return content;
+}
+__name(edit, "edit");
+function getLineStartOffset(content, eol, atOffset) {
+  let lineStartingOffset = atOffset;
+  while (lineStartingOffset >= 0) {
+    if (content.charAt(lineStartingOffset) === eol.charAt(eol.length - 1)) {
+      if (eol.length === 1) {
+        return lineStartingOffset + 1;
+      }
+    }
+    lineStartingOffset--;
+    if (eol.length === 2) {
+      if (lineStartingOffset >= 0 && content.charAt(lineStartingOffset) === eol.charAt(0)) {
+        return lineStartingOffset + 2;
+      }
+    }
+  }
+  return 0;
+}
+__name(getLineStartOffset, "getLineStartOffset");
+function getLineEndOffset(content, eol, atOffset) {
+  let lineEndOffset = atOffset;
+  while (lineEndOffset >= 0) {
+    if (content.charAt(lineEndOffset) === eol.charAt(eol.length - 1)) {
+      if (eol.length === 1) {
+        return lineEndOffset;
+      }
+    }
+    lineEndOffset++;
+    if (eol.length === 2) {
+      if (lineEndOffset >= 0 && content.charAt(lineEndOffset) === eol.charAt(1)) {
+        return lineEndOffset;
+      }
+    }
+  }
+  return content.length - 1;
+}
+__name(getLineEndOffset, "getLineEndOffset");
+export {
+  edit,
+  getLineEndOffset,
+  getLineStartOffset
+};
+//# sourceMappingURL=content.js.map

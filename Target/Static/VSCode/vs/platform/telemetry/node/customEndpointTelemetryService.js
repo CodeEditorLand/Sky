@@ -1,1 +1,85 @@
-var v=Object.defineProperty,y=Object.getOwnPropertyDescriptor,l=(e,r,t,o)=>{for(var i,c=o>1?void 0:o?y(r,t):r,s=e.length-1;s>=0;s--)(i=e[s])&&(c=(o?i(r,t,c):i(c))||c);return o&&c&&v(r,t,c),c},c=(e,r)=>(t,o)=>r(t,o,e);import{FileAccess as a}from"../../../base/common/network.js";import{Client as S}from"../../../base/parts/ipc/node/ipc.cp.js";import{IConfigurationService as p}from"../../configuration/common/configuration.js";import{IEnvironmentService as d}from"../../environment/common/environment.js";import{ILoggerService as g}from"../../log/common/log.js";import{IProductService as u}from"../../product/common/productService.js";import{ITelemetryService as T}from"../common/telemetry.js";import{TelemetryAppenderClient as I}from"../common/telemetryIpc.js";import{TelemetryLogAppender as f}from"../common/telemetryLogAppender.js";import{TelemetryService as h}from"../common/telemetryService.js";let s=class{constructor(e,r,t,o,i){this.configurationService=e,this.telemetryService=r,this.loggerService=t,this.environmentService=o,this.productService=i}customTelemetryServices=new Map;getCustomTelemetryService(e){if(!this.customTelemetryServices.has(e.id)){const r=Object.create(null);r["common.vscodemachineid"]=this.telemetryService.machineId,r["common.vscodesessionid"]=this.telemetryService.sessionId;const t=[e.id,JSON.stringify(r),e.aiKey],o=new S(a.asFileUri("bootstrap-fork").fsPath,{serverName:"Debug Telemetry",timeout:3e5,args:t,env:{ELECTRON_RUN_AS_NODE:1,VSCODE_PIPE_LOGGING:"true",VSCODE_ESM_ENTRYPOINT:"vs/workbench/contrib/debug/node/telemetryApp"}}).getChannel("telemetryAppender"),i=[new I(o),new f(`[${e.id}] `,!1,this.loggerService,this.environmentService,this.productService)];this.customTelemetryServices.set(e.id,new h({appenders:i,sendErrorTelemetry:e.sendErrorTelemetry},this.configurationService,this.productService))}return this.customTelemetryServices.get(e.id)}publicLog(e,r,t){this.getCustomTelemetryService(e).publicLog(r,t)}publicLogError(e,r,t){this.getCustomTelemetryService(e).publicLogError(r,t)}};s=l([c(0,p),c(1,T),c(2,g),c(3,d),c(4,u)],s);export{s as CustomEndpointTelemetryService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { FileAccess } from "../../../base/common/network.js";
+import { Client as TelemetryClient } from "../../../base/parts/ipc/node/ipc.cp.js";
+import { IConfigurationService } from "../../configuration/common/configuration.js";
+import { IEnvironmentService } from "../../environment/common/environment.js";
+import { ILoggerService } from "../../log/common/log.js";
+import { IProductService } from "../../product/common/productService.js";
+import { ICustomEndpointTelemetryService, ITelemetryData, ITelemetryEndpoint, ITelemetryService } from "../common/telemetry.js";
+import { TelemetryAppenderClient } from "../common/telemetryIpc.js";
+import { TelemetryLogAppender } from "../common/telemetryLogAppender.js";
+import { TelemetryService } from "../common/telemetryService.js";
+let CustomEndpointTelemetryService = class {
+  constructor(configurationService, telemetryService, loggerService, environmentService, productService) {
+    this.configurationService = configurationService;
+    this.telemetryService = telemetryService;
+    this.loggerService = loggerService;
+    this.environmentService = environmentService;
+    this.productService = productService;
+  }
+  static {
+    __name(this, "CustomEndpointTelemetryService");
+  }
+  customTelemetryServices = /* @__PURE__ */ new Map();
+  getCustomTelemetryService(endpoint) {
+    if (!this.customTelemetryServices.has(endpoint.id)) {
+      const telemetryInfo = /* @__PURE__ */ Object.create(null);
+      telemetryInfo["common.vscodemachineid"] = this.telemetryService.machineId;
+      telemetryInfo["common.vscodesessionid"] = this.telemetryService.sessionId;
+      const args = [endpoint.id, JSON.stringify(telemetryInfo), endpoint.aiKey];
+      const client = new TelemetryClient(
+        FileAccess.asFileUri("bootstrap-fork").fsPath,
+        {
+          serverName: "Debug Telemetry",
+          timeout: 1e3 * 60 * 5,
+          args,
+          env: {
+            ELECTRON_RUN_AS_NODE: 1,
+            VSCODE_PIPE_LOGGING: "true",
+            VSCODE_ESM_ENTRYPOINT: "vs/workbench/contrib/debug/node/telemetryApp"
+          }
+        }
+      );
+      const channel = client.getChannel("telemetryAppender");
+      const appenders = [
+        new TelemetryAppenderClient(channel),
+        new TelemetryLogAppender(`[${endpoint.id}] `, false, this.loggerService, this.environmentService, this.productService)
+      ];
+      this.customTelemetryServices.set(endpoint.id, new TelemetryService({
+        appenders,
+        sendErrorTelemetry: endpoint.sendErrorTelemetry
+      }, this.configurationService, this.productService));
+    }
+    return this.customTelemetryServices.get(endpoint.id);
+  }
+  publicLog(telemetryEndpoint, eventName, data) {
+    const customTelemetryService = this.getCustomTelemetryService(telemetryEndpoint);
+    customTelemetryService.publicLog(eventName, data);
+  }
+  publicLogError(telemetryEndpoint, errorEventName, data) {
+    const customTelemetryService = this.getCustomTelemetryService(telemetryEndpoint);
+    customTelemetryService.publicLogError(errorEventName, data);
+  }
+};
+CustomEndpointTelemetryService = __decorateClass([
+  __decorateParam(0, IConfigurationService),
+  __decorateParam(1, ITelemetryService),
+  __decorateParam(2, ILoggerService),
+  __decorateParam(3, IEnvironmentService),
+  __decorateParam(4, IProductService)
+], CustomEndpointTelemetryService);
+export {
+  CustomEndpointTelemetryService
+};
+//# sourceMappingURL=customEndpointTelemetryService.js.map

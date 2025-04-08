@@ -1,1 +1,68 @@
-var f=Object.defineProperty,p=Object.getOwnPropertyDescriptor,v=(e,o,r,t)=>{for(var n,i=t>1?void 0:t?p(o,r):o,m=e.length-1;m>=0;m--)(n=e[m])&&(i=(t?n(o,r,i):n(i))||i);return t&&i&&f(o,r,i),i},m=(e,o)=>(r,t)=>o(r,t,e);import"../../../../base/common/uri.js";import{IConfigurationService as l}from"../../../../platform/configuration/common/configuration.js";import{ITextResourcePropertiesService as h}from"../../../../editor/common/services/textResourceConfiguration.js";import{OperatingSystem as c,OS as g}from"../../../../base/common/platform.js";import{Schemas as I}from"../../../../base/common/network.js";import{IStorageService as u,StorageScope as S,StorageTarget as y}from"../../../../platform/storage/common/storage.js";import{IWorkbenchEnvironmentService as E}from"../../environment/common/environmentService.js";import{InstantiationType as d,registerSingleton as A}from"../../../../platform/instantiation/common/extensions.js";import"../../../../platform/remote/common/remoteAgentEnvironment.js";import{IRemoteAgentService as O}from"../../remote/common/remoteAgentService.js";let a=class{constructor(e,o,r,t){this.configurationService=e,this.environmentService=r,this.storageService=t,o.getEnvironment().then((e=>this.remoteEnvironment=e))}remoteEnvironment=null;getEOL(e,o){const r=this.configurationService.getValue("files.eol",{overrideIdentifier:o,resource:e});if(r&&"string"==typeof r&&"auto"!==r)return r;const t=this.getOS(e);return t===c.Linux||t===c.Macintosh?"\n":"\r\n"}getOS(e){let o=g;const r=this.environmentService.remoteAuthority;if(r&&e&&e.scheme!==I.file){const e=`resource.authority.os.${r}`;o=this.remoteEnvironment?this.remoteEnvironment.os:this.storageService.getNumber(e,S.WORKSPACE,g),this.storageService.store(e,o,S.WORKSPACE,y.MACHINE)}return o}};a=v([m(0,l),m(1,O),m(2,E),m(3,u)],a),A(h,a,d.Delayed);export{a as TextResourcePropertiesService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { URI } from "../../../../base/common/uri.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { ITextResourcePropertiesService } from "../../../../editor/common/services/textResourceConfiguration.js";
+import { OperatingSystem, OS } from "../../../../base/common/platform.js";
+import { Schemas } from "../../../../base/common/network.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { IWorkbenchEnvironmentService } from "../../environment/common/environmentService.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { IRemoteAgentEnvironment } from "../../../../platform/remote/common/remoteAgentEnvironment.js";
+import { IRemoteAgentService } from "../../remote/common/remoteAgentService.js";
+let TextResourcePropertiesService = class {
+  constructor(configurationService, remoteAgentService, environmentService, storageService) {
+    this.configurationService = configurationService;
+    this.environmentService = environmentService;
+    this.storageService = storageService;
+    remoteAgentService.getEnvironment().then((remoteEnv) => this.remoteEnvironment = remoteEnv);
+  }
+  static {
+    __name(this, "TextResourcePropertiesService");
+  }
+  remoteEnvironment = null;
+  getEOL(resource, language) {
+    const eol = this.configurationService.getValue("files.eol", { overrideIdentifier: language, resource });
+    if (eol && typeof eol === "string" && eol !== "auto") {
+      return eol;
+    }
+    const os = this.getOS(resource);
+    return os === OperatingSystem.Linux || os === OperatingSystem.Macintosh ? "\n" : "\r\n";
+  }
+  getOS(resource) {
+    let os = OS;
+    const remoteAuthority = this.environmentService.remoteAuthority;
+    if (remoteAuthority) {
+      if (resource && resource.scheme !== Schemas.file) {
+        const osCacheKey = `resource.authority.os.${remoteAuthority}`;
+        os = this.remoteEnvironment ? this.remoteEnvironment.os : (
+          /* Get it from cache */
+          this.storageService.getNumber(osCacheKey, StorageScope.WORKSPACE, OS)
+        );
+        this.storageService.store(osCacheKey, os, StorageScope.WORKSPACE, StorageTarget.MACHINE);
+      }
+    }
+    return os;
+  }
+};
+TextResourcePropertiesService = __decorateClass([
+  __decorateParam(0, IConfigurationService),
+  __decorateParam(1, IRemoteAgentService),
+  __decorateParam(2, IWorkbenchEnvironmentService),
+  __decorateParam(3, IStorageService)
+], TextResourcePropertiesService);
+registerSingleton(ITextResourcePropertiesService, TextResourcePropertiesService, InstantiationType.Delayed);
+export {
+  TextResourcePropertiesService
+};
+//# sourceMappingURL=textResourcePropertiesService.js.map

@@ -1,1 +1,54 @@
-var p=Object.defineProperty,a=Object.getOwnPropertyDescriptor,l=(e,t,r,n)=>{for(var s,o=n>1?void 0:n?a(t,r):t,i=e.length-1;i>=0;i--)(s=e[i])&&(o=(n?s(t,r,o):s(o))||o);return n&&o&&p(t,r,o),o};import{memoize as g}from"./decorators.js";class d{constructor(e){this.nodes=e}toString(){return this.nodes.map((e=>"string"==typeof e?e:e.label)).join("")}}l([g],d.prototype,"toString",1);const x=/\[([^\]]+)\]\(((?:https?:\/\/|command:|file:)[^\)\s]+)(?: (["'])(.+?)(\3))?\)/gi;function u(e){const t=[];let r,n=0;for(;r=x.exec(e);){r.index-n>0&&t.push(e.substring(n,r.index));const[,s,o,,i]=r;i?t.push({label:s,href:o,title:i}):t.push({label:s,href:o}),n=r.index+r[0].length}return n<e.length&&t.push(e.substring(n)),new d(t)}export{d as LinkedText,u as parseLinkedText};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+import { memoize } from "./decorators.js";
+class LinkedText {
+  constructor(nodes) {
+    this.nodes = nodes;
+  }
+  static {
+    __name(this, "LinkedText");
+  }
+  toString() {
+    return this.nodes.map((node) => typeof node === "string" ? node : node.label).join("");
+  }
+}
+__decorateClass([
+  memoize
+], LinkedText.prototype, "toString", 1);
+const LINK_REGEX = /\[([^\]]+)\]\(((?:https?:\/\/|command:|file:)[^\)\s]+)(?: (["'])(.+?)(\3))?\)/gi;
+function parseLinkedText(text) {
+  const result = [];
+  let index = 0;
+  let match;
+  while (match = LINK_REGEX.exec(text)) {
+    if (match.index - index > 0) {
+      result.push(text.substring(index, match.index));
+    }
+    const [, label, href, , title] = match;
+    if (title) {
+      result.push({ label, href, title });
+    } else {
+      result.push({ label, href });
+    }
+    index = match.index + match[0].length;
+  }
+  if (index < text.length) {
+    result.push(text.substring(index));
+  }
+  return new LinkedText(result);
+}
+__name(parseLinkedText, "parseLinkedText");
+export {
+  LinkedText,
+  parseLinkedText
+};
+//# sourceMappingURL=linkedText.js.map

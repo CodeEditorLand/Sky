@@ -1,1 +1,5 @@
-import{InstantiationType as e,registerSingleton as r}from"../../../../platform/instantiation/common/extensions.js";import{ISearchService as i}from"../common/search.js";import{SearchService as o}from"../common/searchService.js";r(i,o,e.Delayed);
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { ISearchService } from "../common/search.js";
+import { SearchService } from "../common/searchService.js";
+registerSingleton(ISearchService, SearchService, InstantiationType.Delayed);
+//# sourceMappingURL=searchService.js.map

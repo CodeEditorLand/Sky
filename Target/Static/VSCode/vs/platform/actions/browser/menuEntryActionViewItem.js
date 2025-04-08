@@ -1,1 +1,509 @@
-var q=Object.defineProperty,U=Object.getOwnPropertyDescriptor,b=(e,t,i,n)=>{for(var s,o=n>1?void 0:n?U(t,i):t,a=e.length-1;a>=0;a--)(s=e[a])&&(o=(n?s(t,i,o):s(o))||o);return n&&o&&q(t,i,o),o},a=(e,t)=>(i,n)=>t(i,n,e);import{asCSSUrl as v}from"../../../base/browser/cssValue.js";import{$ as w,addDisposableListener as S,append as k,EventType as D,ModifierKeyEmitter as L,prepend as Y}from"../../../base/browser/dom.js";import{StandardKeyboardEvent as E}from"../../../base/browser/keyboardEvent.js";import{ActionViewItem as G,BaseActionViewItem as j,SelectActionViewItem as J}from"../../../base/browser/ui/actionbar/actionViewItems.js";import{DropdownMenuActionViewItem as T}from"../../../base/browser/ui/dropdown/dropdownActionViewItem.js";import"../../../base/browser/ui/hover/hoverDelegate.js";import{ActionRunner as R,Separator as C,SubmenuAction as Q}from"../../../base/common/actions.js";import"../../../base/common/event.js";import{UILabelProvider as X}from"../../../base/common/keybindingLabels.js";import"../../../base/common/keybindings.js";import{KeyCode as O}from"../../../base/common/keyCodes.js";import{combinedDisposable as Z,DisposableStore as ee,MutableDisposable as te,toDisposable as P}from"../../../base/common/lifecycle.js";import{isLinux as ie,isWindows as ne,OS as oe}from"../../../base/common/platform.js";import{ThemeIcon as f}from"../../../base/common/themables.js";import{assertType as re}from"../../../base/common/types.js";import{localize as g}from"../../../nls.js";import{IAccessibilityService as se}from"../../accessibility/common/accessibility.js";import{isICommandActionToggleInfo as ae}from"../../action/common/action.js";import{IContextKeyService as ce}from"../../contextkey/common/contextkey.js";import{IContextMenuService as x,IContextViewService as de}from"../../contextview/browser/contextView.js";import{IInstantiationService as le}from"../../instantiation/common/instantiation.js";import{IKeybindingService as K}from"../../keybinding/common/keybinding.js";import{INotificationService as V}from"../../notification/common/notification.js";import{IStorageService as me,StorageScope as N,StorageTarget as ue}from"../../storage/common/storage.js";import{defaultSelectBoxStyles as pe}from"../../theme/browser/defaultStyles.js";import{asCssVariable as Ae,selectBorder as he}from"../../theme/common/colorRegistry.js";import{isDark as B}from"../../theme/common/theme.js";import{IThemeService as W}from"../../theme/common/themeService.js";import{IMenuService as be,MenuItemAction as M,SubmenuItemAction as fe}from"../common/actions.js";import"./menuEntryActionViewItem.css";function it(e,t){const i={primary:[],secondary:[]};return H(e,i,t),i}function nt(e,t){const i=[];return H(e,i,t),i}function H(e,t,i){const n=L.getInstance();F(e,t,n.keyStatus.altKey||(ne||ie)&&n.keyStatus.shiftKey,i?e=>e===i:e=>"navigation"===e)}function ot(e,t,i,n){const s={primary:[],secondary:[]};return z(e,s,t,i,n),s}function rt(e,t,i,n){const s=[];return z(e,s,t,i,n),s}function z(e,t,i,n,s){F(e,t,!1,"string"==typeof i?e=>e===i:i,n,s)}function F(e,t,i,n=e=>"navigation"===e,s=()=>!1,o=!1){let a,r;Array.isArray(t)?(a=t,r=t):(a=t.primary,r=t.secondary);const c=new Set;for(const[t,s]of e){let e;n(t)?(e=a,e.length>0&&o&&e.push(new C)):(e=r,e.length>0&&e.push(new C));for(let n of s){i&&(n=n instanceof M&&n.alt?n.alt:n);const s=e.push(n);n instanceof Q&&c.add({group:t,action:n,index:s-1})}}for(const{group:e,action:t,index:i}of c){const o=n(e)?a:r,c=t.actions;s(t,e,o.length)&&o.splice(i,1,...c)}}let h=class extends G{constructor(e,t,i,n,s,o,a,r){super(void 0,e,{icon:!(!e.class&&!e.item.icon),label:!e.class&&!e.item.icon,draggable:t?.draggable,keybinding:t?.keybinding,hoverDelegate:t?.hoverDelegate,keybindingNotRenderedWithLabel:t?.keybindingNotRenderedWithLabel}),this._options=t,this._keybindingService=i,this._notificationService=n,this._contextKeyService=s,this._themeService=o,this._contextMenuService=a,this._accessibilityService=r,this._altKey=L.getInstance()}_wantsAltCommand=!1;_itemClassDispose=this._register(new te);_altKey;get _menuItemAction(){return this._action}get _commandAction(){return this._wantsAltCommand&&this._menuItemAction.alt||this._menuItemAction}async onClick(e){e.preventDefault(),e.stopPropagation();try{await this.actionRunner.run(this._commandAction,this._context)}catch(e){this._notificationService.error(e)}}render(e){if(super.render(e),e.classList.add("menu-entry"),this.options.icon&&this._updateItemClass(this._menuItemAction.item),this._menuItemAction.alt){let t=!1;const i=()=>{const e=!!this._menuItemAction.alt?.enabled&&(!this._accessibilityService.isMotionReduced()||t)&&(this._altKey.keyStatus.altKey||this._altKey.keyStatus.shiftKey&&t);e!==this._wantsAltCommand&&(this._wantsAltCommand=e,this.updateLabel(),this.updateTooltip(),this.updateClass())};this._register(this._altKey.event(i)),this._register(S(e,"mouseleave",(e=>{t=!1,i()}))),this._register(S(e,"mouseenter",(e=>{t=!0,i()}))),i()}}updateLabel(){this.options.label&&this.label&&(this.label.textContent=this._commandAction.label)}getTooltip(){const e=this._keybindingService.lookupKeybinding(this._commandAction.id,this._contextKeyService),t=e&&e.getLabel(),i=this._commandAction.tooltip||this._commandAction.label;let n=t?g("titleAndKb","{0} ({1})",i,t):i;if(!this._wantsAltCommand&&this._menuItemAction.alt?.enabled){const e=this._menuItemAction.alt.tooltip||this._menuItemAction.alt.label,t=this._keybindingService.lookupKeybinding(this._menuItemAction.alt.id,this._contextKeyService),i=t&&t.getLabel(),s=i?g("titleAndKb","{0} ({1})",e,i):e;n=g("titleAndKbAndAlt","{0}\n[{1}] {2}",n,X.modifierLabels[oe].altKey,s)}return n}updateClass(){this.options.icon&&(this._commandAction!==this._menuItemAction?this._menuItemAction.alt&&this._updateItemClass(this._menuItemAction.alt.item):this._updateItemClass(this._menuItemAction.item))}_updateItemClass(e){this._itemClassDispose.value=void 0;const{element:t,label:i}=this;if(!t||!i)return;const n=this._commandAction.checked&&ae(e.toggled)&&e.toggled.icon?e.toggled.icon:e.icon;if(n)if(f.isThemeIcon(n)){const e=f.asClassNameArray(n);i.classList.add(...e),this._itemClassDispose.value=P((()=>{i.classList.remove(...e)}))}else i.style.backgroundImage=B(this._themeService.getColorTheme().type)?v(n.dark):v(n.light),i.classList.add("icon"),this._itemClassDispose.value=Z(P((()=>{i.style.backgroundImage="",i.classList.remove("icon")})),this._themeService.onDidColorThemeChange((()=>{this.updateClass()})))}};h=b([a(2,K),a(3,V),a(4,ce),a(5,W),a(6,x),a(7,se)],h);class $ extends h{render(e){this.options.label=!0,this.options.icon=!1,super.render(e),e.classList.add("text-only"),e.classList.toggle("use-comma",this._options?.useComma??!1)}updateLabel(){const e=this._keybindingService.lookupKeybinding(this._action.id,this._contextKeyService);if(!e)return super.updateLabel();if(this.label){const t=$._symbolPrintEnter(e);this._options?.conversational?this.label.textContent=g({key:"content2",comment:['A label with keybindg like "ESC to dismiss"']},"{1} to {0}",this._action.label,t):this.label.textContent=g({key:"content",comment:["A label","A keybinding"]},"{0} ({1})",this._action.label,t)}}static _symbolPrintEnter(e){return e.getLabel()?.replace(/\benter\b/gi,"⏎").replace(/\bEscape\b/gi,"Esc")}}let I=class extends T{constructor(e,t,i,n,s){const o={...t,menuAsChild:t?.menuAsChild??!1,classNames:t?.classNames??(f.isThemeIcon(e.item.icon)?f.asClassName(e.item.icon):void 0),keybindingProvider:t?.keybindingProvider??(e=>i.lookupKeybinding(e.id))};super(e,{getActions:()=>e.actions},n,o),this._keybindingService=i,this._contextMenuService=n,this._themeService=s}render(e){super.render(e),re(this.element),e.classList.add("menu-entry");const t=this._action,{icon:i}=t.item;if(i&&!f.isThemeIcon(i)){this.element.classList.add("icon");const e=()=>{this.element&&(this.element.style.backgroundImage=B(this._themeService.getColorTheme().type)?v(i.dark):v(i.light))};e(),this._register(this._themeService.onDidColorThemeChange((()=>{e()})))}}};I=b([a(2,K),a(3,x),a(4,W)],I);let y=class extends j{constructor(e,t,i,n,s,o,a,r){let c;super(null,e),this._keybindingService=i,this._notificationService=n,this._contextMenuService=s,this._menuService=o,this._instaService=a,this._storageService=r,this._options=t,this._storageKey=`${e.item.submenu.id}_lastActionId`;const l=t?.persistLastActionId?r.get(this._storageKey,N.WORKSPACE):void 0;l&&(c=e.actions.find((e=>l===e.id))),c||(c=e.actions[0]),this._defaultAction=this._defaultActionDisposables.add(this._instaService.createInstance(h,c,{keybinding:this._getDefaultActionKeybindingLabel(c)}));const m={keybindingProvider:e=>this._keybindingService.lookupKeybinding(e.id),...t,menuAsChild:t?.menuAsChild??!0,classNames:t?.classNames??["codicon","codicon-chevron-down"],actionRunner:t?.actionRunner??this._register(new R)};this._dropdown=this._register(new T(e,e.actions,this._contextMenuService,m)),this._register(this._dropdown.actionRunner.onDidRun((e=>{e.action instanceof M&&this.update(e.action)})))}_options;_defaultAction;_defaultActionDisposables=this._register(new ee);_dropdown;_container=null;_storageKey;get onDidChangeDropdownVisibility(){return this._dropdown.onDidChangeVisibility}update(e){this._options?.persistLastActionId&&this._storageService.store(this._storageKey,e.id,N.WORKSPACE,ue.MACHINE),this._defaultActionDisposables.clear(),this._defaultAction=this._defaultActionDisposables.add(this._instaService.createInstance(h,e,{keybinding:this._getDefaultActionKeybindingLabel(e)})),this._defaultAction.actionRunner=this._defaultActionDisposables.add(new class extends R{async runAction(e,t){await e.run(void 0)}}),this._container&&this._defaultAction.render(Y(this._container,w(".action-container")))}_getDefaultActionKeybindingLabel(e){let t;if(this._options?.renderKeybindingWithDefaultActionLabel){const i=this._keybindingService.lookupKeybinding(e.id);i&&(t=`(${i.getLabel()})`)}return t}setActionContext(e){super.setActionContext(e),this._defaultAction.setActionContext(e),this._dropdown.setActionContext(e)}render(e){this._container=e,super.render(this._container),this._container.classList.add("monaco-dropdown-with-default");const t=w(".action-container");this._defaultAction.render(k(this._container,t)),this._register(S(t,D.KEY_DOWN,(e=>{const t=new E(e);t.equals(O.RightArrow)&&(this._defaultAction.element.tabIndex=-1,this._dropdown.focus(),t.stopPropagation())})));const i=w(".dropdown-action-container");this._dropdown.render(k(this._container,i)),this._register(S(i,D.KEY_DOWN,(e=>{const t=new E(e);t.equals(O.LeftArrow)&&(this._defaultAction.element.tabIndex=0,this._dropdown.setFocusable(!1),this._defaultAction.element?.focus(),t.stopPropagation())})))}focus(e){e?this._dropdown.focus():(this._defaultAction.element.tabIndex=0,this._defaultAction.element.focus())}blur(){this._defaultAction.element.tabIndex=-1,this._dropdown.blur(),this._container.blur()}setFocusable(e){e?this._defaultAction.element.tabIndex=0:(this._defaultAction.element.tabIndex=-1,this._dropdown.setFocusable(!1))}};y=b([a(2,K),a(3,V),a(4,x),a(5,be),a(6,le),a(7,me)],y);let _=class extends J{constructor(e,t){super(null,e,e.actions.map((e=>({text:e.id===C.ID?"─────────":e.label,isDisabled:!e.enabled}))),0,t,pe,{ariaLabel:e.tooltip,optionsAsChildren:!0}),this.select(Math.max(0,e.actions.findIndex((e=>e.checked))))}render(e){super.render(e),e.style.borderColor=Ae(he)}runAction(e,t){const i=this.action.actions[t];i&&this.actionRunner.run(i)}};function st(e,t,i){return t instanceof M?e.createInstance(h,t,i):t instanceof fe?t.item.isSelection?e.createInstance(_,t):t.item.rememberDefaultAction?e.createInstance(y,t,{...i,persistLastActionId:!0}):e.createInstance(I,t,i):void 0}_=b([a(1,de)],_);export{y as DropdownWithDefaultActionViewItem,h as MenuEntryActionViewItem,I as SubmenuEntryActionViewItem,$ as TextOnlyMenuEntryActionViewItem,st as createActionViewItem,z as fillInActionBarActions,ot as getActionBarActions,it as getContextMenuActions,rt as getFlatActionBarActions,nt as getFlatContextMenuActions};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { asCSSUrl } from "../../../base/browser/cssValue.js";
+import { $, addDisposableListener, append, EventType, ModifierKeyEmitter, prepend } from "../../../base/browser/dom.js";
+import { StandardKeyboardEvent } from "../../../base/browser/keyboardEvent.js";
+import { ActionViewItem, BaseActionViewItem, SelectActionViewItem } from "../../../base/browser/ui/actionbar/actionViewItems.js";
+import { DropdownMenuActionViewItem, IDropdownMenuActionViewItemOptions } from "../../../base/browser/ui/dropdown/dropdownActionViewItem.js";
+import { IHoverDelegate } from "../../../base/browser/ui/hover/hoverDelegate.js";
+import { ActionRunner, IAction, IRunEvent, Separator, SubmenuAction } from "../../../base/common/actions.js";
+import { Event } from "../../../base/common/event.js";
+import { UILabelProvider } from "../../../base/common/keybindingLabels.js";
+import { ResolvedKeybinding } from "../../../base/common/keybindings.js";
+import { KeyCode } from "../../../base/common/keyCodes.js";
+import { combinedDisposable, DisposableStore, MutableDisposable, toDisposable } from "../../../base/common/lifecycle.js";
+import { isLinux, isWindows, OS } from "../../../base/common/platform.js";
+import { ThemeIcon } from "../../../base/common/themables.js";
+import { assertType } from "../../../base/common/types.js";
+import { localize } from "../../../nls.js";
+import { IAccessibilityService } from "../../accessibility/common/accessibility.js";
+import { ICommandAction, isICommandActionToggleInfo } from "../../action/common/action.js";
+import { IContextKeyService } from "../../contextkey/common/contextkey.js";
+import { IContextMenuService, IContextViewService } from "../../contextview/browser/contextView.js";
+import { IInstantiationService } from "../../instantiation/common/instantiation.js";
+import { IKeybindingService } from "../../keybinding/common/keybinding.js";
+import { INotificationService } from "../../notification/common/notification.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../storage/common/storage.js";
+import { defaultSelectBoxStyles } from "../../theme/browser/defaultStyles.js";
+import { asCssVariable, selectBorder } from "../../theme/common/colorRegistry.js";
+import { isDark } from "../../theme/common/theme.js";
+import { IThemeService } from "../../theme/common/themeService.js";
+import { IMenuService, MenuItemAction, SubmenuItemAction } from "../common/actions.js";
+import "./menuEntryActionViewItem.css";
+function getContextMenuActions(groups, primaryGroup) {
+  const target = { primary: [], secondary: [] };
+  getContextMenuActionsImpl(groups, target, primaryGroup);
+  return target;
+}
+__name(getContextMenuActions, "getContextMenuActions");
+function getFlatContextMenuActions(groups, primaryGroup) {
+  const target = [];
+  getContextMenuActionsImpl(groups, target, primaryGroup);
+  return target;
+}
+__name(getFlatContextMenuActions, "getFlatContextMenuActions");
+function getContextMenuActionsImpl(groups, target, primaryGroup) {
+  const modifierKeyEmitter = ModifierKeyEmitter.getInstance();
+  const useAlternativeActions = modifierKeyEmitter.keyStatus.altKey || (isWindows || isLinux) && modifierKeyEmitter.keyStatus.shiftKey;
+  fillInActions(groups, target, useAlternativeActions, primaryGroup ? (actionGroup) => actionGroup === primaryGroup : (actionGroup) => actionGroup === "navigation");
+}
+__name(getContextMenuActionsImpl, "getContextMenuActionsImpl");
+function getActionBarActions(groups, primaryGroup, shouldInlineSubmenu, useSeparatorsInPrimaryActions) {
+  const target = { primary: [], secondary: [] };
+  fillInActionBarActions(groups, target, primaryGroup, shouldInlineSubmenu, useSeparatorsInPrimaryActions);
+  return target;
+}
+__name(getActionBarActions, "getActionBarActions");
+function getFlatActionBarActions(groups, primaryGroup, shouldInlineSubmenu, useSeparatorsInPrimaryActions) {
+  const target = [];
+  fillInActionBarActions(groups, target, primaryGroup, shouldInlineSubmenu, useSeparatorsInPrimaryActions);
+  return target;
+}
+__name(getFlatActionBarActions, "getFlatActionBarActions");
+function fillInActionBarActions(groups, target, primaryGroup, shouldInlineSubmenu, useSeparatorsInPrimaryActions) {
+  const isPrimaryAction = typeof primaryGroup === "string" ? (actionGroup) => actionGroup === primaryGroup : primaryGroup;
+  fillInActions(groups, target, false, isPrimaryAction, shouldInlineSubmenu, useSeparatorsInPrimaryActions);
+}
+__name(fillInActionBarActions, "fillInActionBarActions");
+function fillInActions(groups, target, useAlternativeActions, isPrimaryAction = (actionGroup) => actionGroup === "navigation", shouldInlineSubmenu = () => false, useSeparatorsInPrimaryActions = false) {
+  let primaryBucket;
+  let secondaryBucket;
+  if (Array.isArray(target)) {
+    primaryBucket = target;
+    secondaryBucket = target;
+  } else {
+    primaryBucket = target.primary;
+    secondaryBucket = target.secondary;
+  }
+  const submenuInfo = /* @__PURE__ */ new Set();
+  for (const [group, actions] of groups) {
+    let target2;
+    if (isPrimaryAction(group)) {
+      target2 = primaryBucket;
+      if (target2.length > 0 && useSeparatorsInPrimaryActions) {
+        target2.push(new Separator());
+      }
+    } else {
+      target2 = secondaryBucket;
+      if (target2.length > 0) {
+        target2.push(new Separator());
+      }
+    }
+    for (let action of actions) {
+      if (useAlternativeActions) {
+        action = action instanceof MenuItemAction && action.alt ? action.alt : action;
+      }
+      const newLen = target2.push(action);
+      if (action instanceof SubmenuAction) {
+        submenuInfo.add({ group, action, index: newLen - 1 });
+      }
+    }
+  }
+  for (const { group, action, index } of submenuInfo) {
+    const target2 = isPrimaryAction(group) ? primaryBucket : secondaryBucket;
+    const submenuActions = action.actions;
+    if (shouldInlineSubmenu(action, group, target2.length)) {
+      target2.splice(index, 1, ...submenuActions);
+    }
+  }
+}
+__name(fillInActions, "fillInActions");
+let MenuEntryActionViewItem = class extends ActionViewItem {
+  constructor(action, _options, _keybindingService, _notificationService, _contextKeyService, _themeService, _contextMenuService, _accessibilityService) {
+    super(void 0, action, { icon: !!(action.class || action.item.icon), label: !action.class && !action.item.icon, draggable: _options?.draggable, keybinding: _options?.keybinding, hoverDelegate: _options?.hoverDelegate, keybindingNotRenderedWithLabel: _options?.keybindingNotRenderedWithLabel });
+    this._options = _options;
+    this._keybindingService = _keybindingService;
+    this._notificationService = _notificationService;
+    this._contextKeyService = _contextKeyService;
+    this._themeService = _themeService;
+    this._contextMenuService = _contextMenuService;
+    this._accessibilityService = _accessibilityService;
+    this._altKey = ModifierKeyEmitter.getInstance();
+  }
+  static {
+    __name(this, "MenuEntryActionViewItem");
+  }
+  _wantsAltCommand = false;
+  _itemClassDispose = this._register(new MutableDisposable());
+  _altKey;
+  get _menuItemAction() {
+    return this._action;
+  }
+  get _commandAction() {
+    return this._wantsAltCommand && this._menuItemAction.alt || this._menuItemAction;
+  }
+  async onClick(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    try {
+      await this.actionRunner.run(this._commandAction, this._context);
+    } catch (err) {
+      this._notificationService.error(err);
+    }
+  }
+  render(container) {
+    super.render(container);
+    container.classList.add("menu-entry");
+    if (this.options.icon) {
+      this._updateItemClass(this._menuItemAction.item);
+    }
+    if (this._menuItemAction.alt) {
+      let isMouseOver = false;
+      const updateAltState = /* @__PURE__ */ __name(() => {
+        const wantsAltCommand = !!this._menuItemAction.alt?.enabled && (!this._accessibilityService.isMotionReduced() || isMouseOver) && (this._altKey.keyStatus.altKey || this._altKey.keyStatus.shiftKey && isMouseOver);
+        if (wantsAltCommand !== this._wantsAltCommand) {
+          this._wantsAltCommand = wantsAltCommand;
+          this.updateLabel();
+          this.updateTooltip();
+          this.updateClass();
+        }
+      }, "updateAltState");
+      this._register(this._altKey.event(updateAltState));
+      this._register(addDisposableListener(container, "mouseleave", (_) => {
+        isMouseOver = false;
+        updateAltState();
+      }));
+      this._register(addDisposableListener(container, "mouseenter", (_) => {
+        isMouseOver = true;
+        updateAltState();
+      }));
+      updateAltState();
+    }
+  }
+  updateLabel() {
+    if (this.options.label && this.label) {
+      this.label.textContent = this._commandAction.label;
+    }
+  }
+  getTooltip() {
+    const keybinding = this._keybindingService.lookupKeybinding(this._commandAction.id, this._contextKeyService);
+    const keybindingLabel = keybinding && keybinding.getLabel();
+    const tooltip = this._commandAction.tooltip || this._commandAction.label;
+    let title = keybindingLabel ? localize("titleAndKb", "{0} ({1})", tooltip, keybindingLabel) : tooltip;
+    if (!this._wantsAltCommand && this._menuItemAction.alt?.enabled) {
+      const altTooltip = this._menuItemAction.alt.tooltip || this._menuItemAction.alt.label;
+      const altKeybinding = this._keybindingService.lookupKeybinding(this._menuItemAction.alt.id, this._contextKeyService);
+      const altKeybindingLabel = altKeybinding && altKeybinding.getLabel();
+      const altTitleSection = altKeybindingLabel ? localize("titleAndKb", "{0} ({1})", altTooltip, altKeybindingLabel) : altTooltip;
+      title = localize("titleAndKbAndAlt", "{0}\n[{1}] {2}", title, UILabelProvider.modifierLabels[OS].altKey, altTitleSection);
+    }
+    return title;
+  }
+  updateClass() {
+    if (this.options.icon) {
+      if (this._commandAction !== this._menuItemAction) {
+        if (this._menuItemAction.alt) {
+          this._updateItemClass(this._menuItemAction.alt.item);
+        }
+      } else {
+        this._updateItemClass(this._menuItemAction.item);
+      }
+    }
+  }
+  _updateItemClass(item) {
+    this._itemClassDispose.value = void 0;
+    const { element, label } = this;
+    if (!element || !label) {
+      return;
+    }
+    const icon = this._commandAction.checked && isICommandActionToggleInfo(item.toggled) && item.toggled.icon ? item.toggled.icon : item.icon;
+    if (!icon) {
+      return;
+    }
+    if (ThemeIcon.isThemeIcon(icon)) {
+      const iconClasses = ThemeIcon.asClassNameArray(icon);
+      label.classList.add(...iconClasses);
+      this._itemClassDispose.value = toDisposable(() => {
+        label.classList.remove(...iconClasses);
+      });
+    } else {
+      label.style.backgroundImage = isDark(this._themeService.getColorTheme().type) ? asCSSUrl(icon.dark) : asCSSUrl(icon.light);
+      label.classList.add("icon");
+      this._itemClassDispose.value = combinedDisposable(
+        toDisposable(() => {
+          label.style.backgroundImage = "";
+          label.classList.remove("icon");
+        }),
+        this._themeService.onDidColorThemeChange(() => {
+          this.updateClass();
+        })
+      );
+    }
+  }
+};
+MenuEntryActionViewItem = __decorateClass([
+  __decorateParam(2, IKeybindingService),
+  __decorateParam(3, INotificationService),
+  __decorateParam(4, IContextKeyService),
+  __decorateParam(5, IThemeService),
+  __decorateParam(6, IContextMenuService),
+  __decorateParam(7, IAccessibilityService)
+], MenuEntryActionViewItem);
+class TextOnlyMenuEntryActionViewItem extends MenuEntryActionViewItem {
+  static {
+    __name(this, "TextOnlyMenuEntryActionViewItem");
+  }
+  render(container) {
+    this.options.label = true;
+    this.options.icon = false;
+    super.render(container);
+    container.classList.add("text-only");
+    container.classList.toggle("use-comma", this._options?.useComma ?? false);
+  }
+  updateLabel() {
+    const kb = this._keybindingService.lookupKeybinding(this._action.id, this._contextKeyService);
+    if (!kb) {
+      return super.updateLabel();
+    }
+    if (this.label) {
+      const kb2 = TextOnlyMenuEntryActionViewItem._symbolPrintEnter(kb);
+      if (this._options?.conversational) {
+        this.label.textContent = localize({ key: "content2", comment: ['A label with keybindg like "ESC to dismiss"'] }, "{1} to {0}", this._action.label, kb2);
+      } else {
+        this.label.textContent = localize({ key: "content", comment: ["A label", "A keybinding"] }, "{0} ({1})", this._action.label, kb2);
+      }
+    }
+  }
+  static _symbolPrintEnter(kb) {
+    return kb.getLabel()?.replace(/\benter\b/gi, "\u23CE").replace(/\bEscape\b/gi, "Esc");
+  }
+}
+let SubmenuEntryActionViewItem = class extends DropdownMenuActionViewItem {
+  constructor(action, options, _keybindingService, _contextMenuService, _themeService) {
+    const dropdownOptions = {
+      ...options,
+      menuAsChild: options?.menuAsChild ?? false,
+      classNames: options?.classNames ?? (ThemeIcon.isThemeIcon(action.item.icon) ? ThemeIcon.asClassName(action.item.icon) : void 0),
+      keybindingProvider: options?.keybindingProvider ?? ((action2) => _keybindingService.lookupKeybinding(action2.id))
+    };
+    super(action, { getActions: /* @__PURE__ */ __name(() => action.actions, "getActions") }, _contextMenuService, dropdownOptions);
+    this._keybindingService = _keybindingService;
+    this._contextMenuService = _contextMenuService;
+    this._themeService = _themeService;
+  }
+  static {
+    __name(this, "SubmenuEntryActionViewItem");
+  }
+  render(container) {
+    super.render(container);
+    assertType(this.element);
+    container.classList.add("menu-entry");
+    const action = this._action;
+    const { icon } = action.item;
+    if (icon && !ThemeIcon.isThemeIcon(icon)) {
+      this.element.classList.add("icon");
+      const setBackgroundImage = /* @__PURE__ */ __name(() => {
+        if (this.element) {
+          this.element.style.backgroundImage = isDark(this._themeService.getColorTheme().type) ? asCSSUrl(icon.dark) : asCSSUrl(icon.light);
+        }
+      }, "setBackgroundImage");
+      setBackgroundImage();
+      this._register(this._themeService.onDidColorThemeChange(() => {
+        setBackgroundImage();
+      }));
+    }
+  }
+};
+SubmenuEntryActionViewItem = __decorateClass([
+  __decorateParam(2, IKeybindingService),
+  __decorateParam(3, IContextMenuService),
+  __decorateParam(4, IThemeService)
+], SubmenuEntryActionViewItem);
+let DropdownWithDefaultActionViewItem = class extends BaseActionViewItem {
+  constructor(submenuAction, options, _keybindingService, _notificationService, _contextMenuService, _menuService, _instaService, _storageService) {
+    super(null, submenuAction);
+    this._keybindingService = _keybindingService;
+    this._notificationService = _notificationService;
+    this._contextMenuService = _contextMenuService;
+    this._menuService = _menuService;
+    this._instaService = _instaService;
+    this._storageService = _storageService;
+    this._options = options;
+    this._storageKey = `${submenuAction.item.submenu.id}_lastActionId`;
+    let defaultAction;
+    const defaultActionId = options?.persistLastActionId ? _storageService.get(this._storageKey, StorageScope.WORKSPACE) : void 0;
+    if (defaultActionId) {
+      defaultAction = submenuAction.actions.find((a) => defaultActionId === a.id);
+    }
+    if (!defaultAction) {
+      defaultAction = submenuAction.actions[0];
+    }
+    this._defaultAction = this._defaultActionDisposables.add(this._instaService.createInstance(MenuEntryActionViewItem, defaultAction, { keybinding: this._getDefaultActionKeybindingLabel(defaultAction) }));
+    const dropdownOptions = {
+      keybindingProvider: /* @__PURE__ */ __name((action) => this._keybindingService.lookupKeybinding(action.id), "keybindingProvider"),
+      ...options,
+      menuAsChild: options?.menuAsChild ?? true,
+      classNames: options?.classNames ?? ["codicon", "codicon-chevron-down"],
+      actionRunner: options?.actionRunner ?? this._register(new ActionRunner())
+    };
+    this._dropdown = this._register(new DropdownMenuActionViewItem(submenuAction, submenuAction.actions, this._contextMenuService, dropdownOptions));
+    this._register(this._dropdown.actionRunner.onDidRun((e) => {
+      if (e.action instanceof MenuItemAction) {
+        this.update(e.action);
+      }
+    }));
+  }
+  static {
+    __name(this, "DropdownWithDefaultActionViewItem");
+  }
+  _options;
+  _defaultAction;
+  _defaultActionDisposables = this._register(new DisposableStore());
+  _dropdown;
+  _container = null;
+  _storageKey;
+  get onDidChangeDropdownVisibility() {
+    return this._dropdown.onDidChangeVisibility;
+  }
+  update(lastAction) {
+    if (this._options?.persistLastActionId) {
+      this._storageService.store(this._storageKey, lastAction.id, StorageScope.WORKSPACE, StorageTarget.MACHINE);
+    }
+    this._defaultActionDisposables.clear();
+    this._defaultAction = this._defaultActionDisposables.add(this._instaService.createInstance(MenuEntryActionViewItem, lastAction, { keybinding: this._getDefaultActionKeybindingLabel(lastAction) }));
+    this._defaultAction.actionRunner = this._defaultActionDisposables.add(new class extends ActionRunner {
+      async runAction(action, context) {
+        await action.run(void 0);
+      }
+    }());
+    if (this._container) {
+      this._defaultAction.render(prepend(this._container, $(".action-container")));
+    }
+  }
+  _getDefaultActionKeybindingLabel(defaultAction) {
+    let defaultActionKeybinding;
+    if (this._options?.renderKeybindingWithDefaultActionLabel) {
+      const kb = this._keybindingService.lookupKeybinding(defaultAction.id);
+      if (kb) {
+        defaultActionKeybinding = `(${kb.getLabel()})`;
+      }
+    }
+    return defaultActionKeybinding;
+  }
+  setActionContext(newContext) {
+    super.setActionContext(newContext);
+    this._defaultAction.setActionContext(newContext);
+    this._dropdown.setActionContext(newContext);
+  }
+  render(container) {
+    this._container = container;
+    super.render(this._container);
+    this._container.classList.add("monaco-dropdown-with-default");
+    const primaryContainer = $(".action-container");
+    this._defaultAction.render(append(this._container, primaryContainer));
+    this._register(addDisposableListener(primaryContainer, EventType.KEY_DOWN, (e) => {
+      const event = new StandardKeyboardEvent(e);
+      if (event.equals(KeyCode.RightArrow)) {
+        this._defaultAction.element.tabIndex = -1;
+        this._dropdown.focus();
+        event.stopPropagation();
+      }
+    }));
+    const dropdownContainer = $(".dropdown-action-container");
+    this._dropdown.render(append(this._container, dropdownContainer));
+    this._register(addDisposableListener(dropdownContainer, EventType.KEY_DOWN, (e) => {
+      const event = new StandardKeyboardEvent(e);
+      if (event.equals(KeyCode.LeftArrow)) {
+        this._defaultAction.element.tabIndex = 0;
+        this._dropdown.setFocusable(false);
+        this._defaultAction.element?.focus();
+        event.stopPropagation();
+      }
+    }));
+  }
+  focus(fromRight) {
+    if (fromRight) {
+      this._dropdown.focus();
+    } else {
+      this._defaultAction.element.tabIndex = 0;
+      this._defaultAction.element.focus();
+    }
+  }
+  blur() {
+    this._defaultAction.element.tabIndex = -1;
+    this._dropdown.blur();
+    this._container.blur();
+  }
+  setFocusable(focusable) {
+    if (focusable) {
+      this._defaultAction.element.tabIndex = 0;
+    } else {
+      this._defaultAction.element.tabIndex = -1;
+      this._dropdown.setFocusable(false);
+    }
+  }
+};
+DropdownWithDefaultActionViewItem = __decorateClass([
+  __decorateParam(2, IKeybindingService),
+  __decorateParam(3, INotificationService),
+  __decorateParam(4, IContextMenuService),
+  __decorateParam(5, IMenuService),
+  __decorateParam(6, IInstantiationService),
+  __decorateParam(7, IStorageService)
+], DropdownWithDefaultActionViewItem);
+let SubmenuEntrySelectActionViewItem = class extends SelectActionViewItem {
+  static {
+    __name(this, "SubmenuEntrySelectActionViewItem");
+  }
+  constructor(action, contextViewService) {
+    super(null, action, action.actions.map((a) => ({
+      text: a.id === Separator.ID ? "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500" : a.label,
+      isDisabled: !a.enabled
+    })), 0, contextViewService, defaultSelectBoxStyles, { ariaLabel: action.tooltip, optionsAsChildren: true });
+    this.select(Math.max(0, action.actions.findIndex((a) => a.checked)));
+  }
+  render(container) {
+    super.render(container);
+    container.style.borderColor = asCssVariable(selectBorder);
+  }
+  runAction(option, index) {
+    const action = this.action.actions[index];
+    if (action) {
+      this.actionRunner.run(action);
+    }
+  }
+};
+SubmenuEntrySelectActionViewItem = __decorateClass([
+  __decorateParam(1, IContextViewService)
+], SubmenuEntrySelectActionViewItem);
+function createActionViewItem(instaService, action, options) {
+  if (action instanceof MenuItemAction) {
+    return instaService.createInstance(MenuEntryActionViewItem, action, options);
+  } else if (action instanceof SubmenuItemAction) {
+    if (action.item.isSelection) {
+      return instaService.createInstance(SubmenuEntrySelectActionViewItem, action);
+    } else {
+      if (action.item.rememberDefaultAction) {
+        return instaService.createInstance(DropdownWithDefaultActionViewItem, action, { ...options, persistLastActionId: true });
+      } else {
+        return instaService.createInstance(SubmenuEntryActionViewItem, action, options);
+      }
+    }
+  } else {
+    return void 0;
+  }
+}
+__name(createActionViewItem, "createActionViewItem");
+export {
+  DropdownWithDefaultActionViewItem,
+  MenuEntryActionViewItem,
+  SubmenuEntryActionViewItem,
+  TextOnlyMenuEntryActionViewItem,
+  createActionViewItem,
+  fillInActionBarActions,
+  getActionBarActions,
+  getContextMenuActions,
+  getFlatActionBarActions,
+  getFlatContextMenuActions
+};
+//# sourceMappingURL=menuEntryActionViewItem.js.map

@@ -1,1 +1,234 @@
-import{ActionRunner as d}from"../../base/common/actions.js";import{Component as c}from"../common/component.js";import"../../platform/telemetry/common/telemetry.js";import"../common/composite.js";import{Emitter as n}from"../../base/common/event.js";import"../../platform/theme/common/themeService.js";import"../../platform/instantiation/common/instantiation.js";import{trackFocus as a}from"../../base/browser/dom.js";import"../../platform/storage/common/storage.js";import{Disposable as u}from"../../base/common/lifecycle.js";import{assertIsDefined as p}from"../../base/common/types.js";import"../../base/browser/ui/actionbar/actionbar.js";import"../../platform/actions/common/actions.js";import"../../base/browser/ui/sash/sash.js";import"../../base/browser/ui/actionbar/actionViewItems.js";class G extends c{constructor(e,i,o,r){super(e,o,r);this.telemetryService=i}_onTitleAreaUpdate=this._register(new n);onTitleAreaUpdate=this._onTitleAreaUpdate.event;_onDidFocus;get onDidFocus(){return this._onDidFocus||(this._onDidFocus=this.registerFocusTrackEvents().onDidFocus),this._onDidFocus.event}_onDidBlur;get onDidBlur(){return this._onDidBlur||(this._onDidBlur=this.registerFocusTrackEvents().onDidBlur),this._onDidBlur.event}_hasFocus=!1;hasFocus(){return this._hasFocus}registerFocusTrackEvents(){const e=p(this.getContainer()),i=this._register(a(e)),o=this._onDidFocus=this._register(new n);this._register(i.onDidFocus(()=>{this._hasFocus=!0,o.fire()}));const r=this._onDidBlur=this._register(new n);return this._register(i.onDidBlur(()=>{this._hasFocus=!1,r.fire()})),{onDidFocus:o,onDidBlur:r}}actionRunner;visible=!1;parent;getTitle(){}create(e){this.parent=e}getContainer(){return this.parent}setVisible(e){this.visible!==!!e&&(this.visible=e)}focus(){}getMenuIds(){return[]}getActions(){return[]}getSecondaryActions(){return[]}getContextMenuActions(){return[]}getActionViewItem(e,i){}getActionsContext(){return null}getActionRunner(){return this.actionRunner||(this.actionRunner=this._register(new d)),this.actionRunner}updateTitleArea(){this._onTitleAreaUpdate.fire()}isVisible(){return this.visible}getControl(){}}class J{constructor(t,e,i,o,r,m){this.ctor=t;this.id=e;this.name=i;this.cssClass=o;this.order=r;this.requestedIndex=m}instantiate(t){return t.createInstance(this.ctor)}}class K extends u{_onDidRegister=this._register(new n);onDidRegister=this._onDidRegister.event;_onDidDeregister=this._register(new n);onDidDeregister=this._onDidDeregister.event;composites=[];registerComposite(t){this.compositeById(t.id)||(this.composites.push(t),this._onDidRegister.fire(t))}deregisterComposite(t){const e=this.compositeById(t);e&&(this.composites.splice(this.composites.indexOf(e),1),this._onDidDeregister.fire(e))}getComposite(t){return this.compositeById(t)}getComposites(){return this.composites.slice(0)}compositeById(t){return this.composites.find(e=>e.id===t)}}export{G as Composite,J as CompositeDescriptor,K as CompositeRegistry};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { IAction, IActionRunner, ActionRunner } from "../../base/common/actions.js";
+import { Component } from "../common/component.js";
+import { ITelemetryService } from "../../platform/telemetry/common/telemetry.js";
+import { IComposite, ICompositeControl } from "../common/composite.js";
+import { Event, Emitter } from "../../base/common/event.js";
+import { IThemeService } from "../../platform/theme/common/themeService.js";
+import { IConstructorSignature, IInstantiationService } from "../../platform/instantiation/common/instantiation.js";
+import { trackFocus, Dimension, IDomPosition } from "../../base/browser/dom.js";
+import { IStorageService } from "../../platform/storage/common/storage.js";
+import { Disposable } from "../../base/common/lifecycle.js";
+import { assertIsDefined } from "../../base/common/types.js";
+import { IActionViewItem } from "../../base/browser/ui/actionbar/actionbar.js";
+import { MenuId } from "../../platform/actions/common/actions.js";
+import { IBoundarySashes } from "../../base/browser/ui/sash/sash.js";
+import { IBaseActionViewItemOptions } from "../../base/browser/ui/actionbar/actionViewItems.js";
+class Composite extends Component {
+  constructor(id, telemetryService, themeService, storageService) {
+    super(id, themeService, storageService);
+    this.telemetryService = telemetryService;
+  }
+  static {
+    __name(this, "Composite");
+  }
+  _onTitleAreaUpdate = this._register(new Emitter());
+  onTitleAreaUpdate = this._onTitleAreaUpdate.event;
+  _onDidFocus;
+  get onDidFocus() {
+    if (!this._onDidFocus) {
+      this._onDidFocus = this.registerFocusTrackEvents().onDidFocus;
+    }
+    return this._onDidFocus.event;
+  }
+  _onDidBlur;
+  get onDidBlur() {
+    if (!this._onDidBlur) {
+      this._onDidBlur = this.registerFocusTrackEvents().onDidBlur;
+    }
+    return this._onDidBlur.event;
+  }
+  _hasFocus = false;
+  hasFocus() {
+    return this._hasFocus;
+  }
+  registerFocusTrackEvents() {
+    const container = assertIsDefined(this.getContainer());
+    const focusTracker = this._register(trackFocus(container));
+    const onDidFocus = this._onDidFocus = this._register(new Emitter());
+    this._register(focusTracker.onDidFocus(() => {
+      this._hasFocus = true;
+      onDidFocus.fire();
+    }));
+    const onDidBlur = this._onDidBlur = this._register(new Emitter());
+    this._register(focusTracker.onDidBlur(() => {
+      this._hasFocus = false;
+      onDidBlur.fire();
+    }));
+    return { onDidFocus, onDidBlur };
+  }
+  actionRunner;
+  visible = false;
+  parent;
+  getTitle() {
+    return void 0;
+  }
+  /**
+   * Note: Clients should not call this method, the workbench calls this
+   * method. Calling it otherwise may result in unexpected behavior.
+   *
+   * Called to create this composite on the provided parent. This method is only
+   * called once during the lifetime of the workbench.
+   * Note that DOM-dependent calculations should be performed from the setVisible()
+   * call. Only then the composite will be part of the DOM.
+   */
+  create(parent) {
+    this.parent = parent;
+  }
+  /**
+   * Returns the container this composite is being build in.
+   */
+  getContainer() {
+    return this.parent;
+  }
+  /**
+   * Note: Clients should not call this method, the workbench calls this
+   * method. Calling it otherwise may result in unexpected behavior.
+   *
+   * Called to indicate that the composite has become visible or hidden. This method
+   * is called more than once during workbench lifecycle depending on the user interaction.
+   * The composite will be on-DOM if visible is set to true and off-DOM otherwise.
+   *
+   * Typically this operation should be fast though because setVisible might be called many times during a session.
+   * If there is a long running operation it is fine to have it running in the background asyncly and return before.
+   */
+  setVisible(visible) {
+    if (this.visible !== !!visible) {
+      this.visible = visible;
+    }
+  }
+  /**
+   * Called when this composite should receive keyboard focus.
+   */
+  focus() {
+  }
+  /**
+   *
+   * @returns the action runner for this composite
+   */
+  getMenuIds() {
+    return [];
+  }
+  /**
+   * Returns an array of actions to show in the action bar of the composite.
+   */
+  getActions() {
+    return [];
+  }
+  /**
+   * Returns an array of actions to show in the action bar of the composite
+   * in a less prominent way then action from getActions.
+   */
+  getSecondaryActions() {
+    return [];
+  }
+  /**
+   * Returns an array of actions to show in the context menu of the composite
+   */
+  getContextMenuActions() {
+    return [];
+  }
+  /**
+   * For any of the actions returned by this composite, provide an IActionViewItem in
+   * cases where the implementor of the composite wants to override the presentation
+   * of an action. Returns undefined to indicate that the action is not rendered through
+   * an action item.
+   */
+  getActionViewItem(action, options) {
+    return void 0;
+  }
+  /**
+   * Provide a context to be passed to the toolbar.
+   */
+  getActionsContext() {
+    return null;
+  }
+  /**
+   * Returns the instance of IActionRunner to use with this composite for the
+   * composite tool bar.
+   */
+  getActionRunner() {
+    if (!this.actionRunner) {
+      this.actionRunner = this._register(new ActionRunner());
+    }
+    return this.actionRunner;
+  }
+  /**
+   * Method for composite implementors to indicate to the composite container that the title or the actions
+   * of the composite have changed. Calling this method will cause the container to ask for title (getTitle())
+   * and actions (getActions(), getSecondaryActions()) if the composite is visible or the next time the composite
+   * gets visible.
+   */
+  updateTitleArea() {
+    this._onTitleAreaUpdate.fire();
+  }
+  /**
+   * Returns true if this composite is currently visible and false otherwise.
+   */
+  isVisible() {
+    return this.visible;
+  }
+  /**
+   * Returns the underlying composite control or `undefined` if it is not accessible.
+   */
+  getControl() {
+    return void 0;
+  }
+}
+class CompositeDescriptor {
+  constructor(ctor, id, name, cssClass, order, requestedIndex) {
+    this.ctor = ctor;
+    this.id = id;
+    this.name = name;
+    this.cssClass = cssClass;
+    this.order = order;
+    this.requestedIndex = requestedIndex;
+  }
+  static {
+    __name(this, "CompositeDescriptor");
+  }
+  instantiate(instantiationService) {
+    return instantiationService.createInstance(this.ctor);
+  }
+}
+class CompositeRegistry extends Disposable {
+  static {
+    __name(this, "CompositeRegistry");
+  }
+  _onDidRegister = this._register(new Emitter());
+  onDidRegister = this._onDidRegister.event;
+  _onDidDeregister = this._register(new Emitter());
+  onDidDeregister = this._onDidDeregister.event;
+  composites = [];
+  registerComposite(descriptor) {
+    if (this.compositeById(descriptor.id)) {
+      return;
+    }
+    this.composites.push(descriptor);
+    this._onDidRegister.fire(descriptor);
+  }
+  deregisterComposite(id) {
+    const descriptor = this.compositeById(id);
+    if (!descriptor) {
+      return;
+    }
+    this.composites.splice(this.composites.indexOf(descriptor), 1);
+    this._onDidDeregister.fire(descriptor);
+  }
+  getComposite(id) {
+    return this.compositeById(id);
+  }
+  getComposites() {
+    return this.composites.slice(0);
+  }
+  compositeById(id) {
+    return this.composites.find((composite) => composite.id === id);
+  }
+}
+export {
+  Composite,
+  CompositeDescriptor,
+  CompositeRegistry
+};
+//# sourceMappingURL=composite.js.map

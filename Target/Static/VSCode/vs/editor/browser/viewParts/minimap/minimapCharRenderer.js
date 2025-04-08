@@ -1,1 +1,95 @@
-import"../../../common/core/rgba.js";import{Constants as s,getCharIndex as L}from"./minimapCharSheet.js";import{toUint8 as U}from"../../../../base/common/uint.js";class S{constructor(t,a){this.scale=a,this.charDataNormal=S.soften(t,.8),this.charDataLight=S.soften(t,50/60)}_minimapCharRendererBrand=void 0;charDataNormal;charDataLight;static soften(t,a){const r=new Uint8ClampedArray(t.length);for(let e=0,s=t.length;e<s;e++)r[e]=U(t[e]*a);return r}renderChar(t,a,r,e,o,i,n,h,c,d,l){const m=s.BASE_CHAR_WIDTH*this.scale,C=s.BASE_CHAR_HEIGHT*this.scale,A=l?1:C;if(a+m>t.width||r+A>t.height)return void console.warn("bad render request outside image data");const _=d?this.charDataLight:this.charDataNormal,g=L(e,c),N=t.width*s.RGBA_CHANNELS_CNT,H=n.r,S=n.g,f=n.b,R=o.r-H,E=o.g-S,b=o.b-f,u=Math.max(i,h),B=t.data;let p=g*m*C,D=r*N+a*s.RGBA_CHANNELS_CNT;for(let t=0;t<A;t++){let t=D;for(let a=0;a<m;a++){const a=_[p++]/255*(i/255);B[t++]=H+R*a,B[t++]=S+E*a,B[t++]=f+b*a,B[t++]=u}D+=N}}blockRenderChar(t,a,r,e,o,i,n,h){const c=s.BASE_CHAR_WIDTH*this.scale,d=s.BASE_CHAR_HEIGHT*this.scale,l=h?1:d;if(a+c>t.width||r+l>t.height)return void console.warn("bad render request outside image data");const m=t.width*s.RGBA_CHANNELS_CNT,C=o/255*.5,A=i.r,_=i.g,g=i.b,N=A+(e.r-A)*C,H=_+(e.g-_)*C,S=g+(e.b-g)*C,f=Math.max(o,n),R=t.data;let E=r*m+a*s.RGBA_CHANNELS_CNT;for(let t=0;t<l;t++){let t=E;for(let a=0;a<c;a++)R[t++]=N,R[t++]=H,R[t++]=S,R[t++]=f;E+=m}}}export{S as MinimapCharRenderer};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { RGBA8 } from "../../../common/core/rgba.js";
+import { Constants, getCharIndex } from "./minimapCharSheet.js";
+import { toUint8 } from "../../../../base/common/uint.js";
+class MinimapCharRenderer {
+  constructor(charData, scale) {
+    this.scale = scale;
+    this.charDataNormal = MinimapCharRenderer.soften(charData, 12 / 15);
+    this.charDataLight = MinimapCharRenderer.soften(charData, 50 / 60);
+  }
+  static {
+    __name(this, "MinimapCharRenderer");
+  }
+  _minimapCharRendererBrand = void 0;
+  charDataNormal;
+  charDataLight;
+  static soften(input, ratio) {
+    const result = new Uint8ClampedArray(input.length);
+    for (let i = 0, len = input.length; i < len; i++) {
+      result[i] = toUint8(input[i] * ratio);
+    }
+    return result;
+  }
+  renderChar(target, dx, dy, chCode, color, foregroundAlpha, backgroundColor, backgroundAlpha, fontScale, useLighterFont, force1pxHeight) {
+    const charWidth = Constants.BASE_CHAR_WIDTH * this.scale;
+    const charHeight = Constants.BASE_CHAR_HEIGHT * this.scale;
+    const renderHeight = force1pxHeight ? 1 : charHeight;
+    if (dx + charWidth > target.width || dy + renderHeight > target.height) {
+      console.warn("bad render request outside image data");
+      return;
+    }
+    const charData = useLighterFont ? this.charDataLight : this.charDataNormal;
+    const charIndex = getCharIndex(chCode, fontScale);
+    const destWidth = target.width * Constants.RGBA_CHANNELS_CNT;
+    const backgroundR = backgroundColor.r;
+    const backgroundG = backgroundColor.g;
+    const backgroundB = backgroundColor.b;
+    const deltaR = color.r - backgroundR;
+    const deltaG = color.g - backgroundG;
+    const deltaB = color.b - backgroundB;
+    const destAlpha = Math.max(foregroundAlpha, backgroundAlpha);
+    const dest = target.data;
+    let sourceOffset = charIndex * charWidth * charHeight;
+    let row = dy * destWidth + dx * Constants.RGBA_CHANNELS_CNT;
+    for (let y = 0; y < renderHeight; y++) {
+      let column = row;
+      for (let x = 0; x < charWidth; x++) {
+        const c = charData[sourceOffset++] / 255 * (foregroundAlpha / 255);
+        dest[column++] = backgroundR + deltaR * c;
+        dest[column++] = backgroundG + deltaG * c;
+        dest[column++] = backgroundB + deltaB * c;
+        dest[column++] = destAlpha;
+      }
+      row += destWidth;
+    }
+  }
+  blockRenderChar(target, dx, dy, color, foregroundAlpha, backgroundColor, backgroundAlpha, force1pxHeight) {
+    const charWidth = Constants.BASE_CHAR_WIDTH * this.scale;
+    const charHeight = Constants.BASE_CHAR_HEIGHT * this.scale;
+    const renderHeight = force1pxHeight ? 1 : charHeight;
+    if (dx + charWidth > target.width || dy + renderHeight > target.height) {
+      console.warn("bad render request outside image data");
+      return;
+    }
+    const destWidth = target.width * Constants.RGBA_CHANNELS_CNT;
+    const c = 0.5 * (foregroundAlpha / 255);
+    const backgroundR = backgroundColor.r;
+    const backgroundG = backgroundColor.g;
+    const backgroundB = backgroundColor.b;
+    const deltaR = color.r - backgroundR;
+    const deltaG = color.g - backgroundG;
+    const deltaB = color.b - backgroundB;
+    const colorR = backgroundR + deltaR * c;
+    const colorG = backgroundG + deltaG * c;
+    const colorB = backgroundB + deltaB * c;
+    const destAlpha = Math.max(foregroundAlpha, backgroundAlpha);
+    const dest = target.data;
+    let row = dy * destWidth + dx * Constants.RGBA_CHANNELS_CNT;
+    for (let y = 0; y < renderHeight; y++) {
+      let column = row;
+      for (let x = 0; x < charWidth; x++) {
+        dest[column++] = colorR;
+        dest[column++] = colorG;
+        dest[column++] = colorB;
+        dest[column++] = destAlpha;
+      }
+      row += destWidth;
+    }
+  }
+}
+export {
+  MinimapCharRenderer
+};
+//# sourceMappingURL=minimapCharRenderer.js.map

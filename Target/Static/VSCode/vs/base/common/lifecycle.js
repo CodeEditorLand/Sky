@@ -1,1 +1,683 @@
-import{compareBy as S,numberComparator as j}from"./arrays.js";import{groupBy as E}from"./collections.js";import{SetMap as P}from"./map.js";import{createSingleCallFunction as k}from"./functional.js";import{Iterable as R}from"./iterator.js";const O=!1;let p=null;class F{_registry=new FinalizationRegistry((s=>{console.warn(`[LEAKED DISPOSABLE] ${s}`)}));trackDisposable(s){const e=new Error("CREATED via:").stack;this._registry.register(s,e,s)}setParent(s,e){e?this._registry.unregister(s):this.trackDisposable(s)}markAsDisposed(s){this._registry.unregister(s)}markAsSingleton(s){this._registry.unregister(s)}}class x{static idx=0;livingDisposables=new Map;getDisposableData(s){let e=this.livingDisposables.get(s);return e||(e={parent:null,source:null,isSingleton:!1,value:s,idx:x.idx++},this.livingDisposables.set(s,e)),e}trackDisposable(s){const e=this.getDisposableData(s);e.source||(e.source=(new Error).stack)}setParent(s,e){this.getDisposableData(s).parent=e}markAsDisposed(s){this.livingDisposables.delete(s)}markAsSingleton(s){this.getDisposableData(s).isSingleton=!0}getRootParent(s,e){const t=e.get(s);if(t)return t;const i=s.parent?this.getRootParent(this.getDisposableData(s.parent),e):s;return e.set(s,i),i}getTrackedDisposables(){const s=new Map;return[...this.livingDisposables.entries()].filter((([,e])=>null!==e.source&&!this.getRootParent(e,s).isSingleton)).flatMap((([s])=>s))}computeLeakingDisposables(s=10,e){let t;if(e)t=e;else{const s=new Map,e=[...this.livingDisposables.values()].filter((e=>null!==e.source&&!this.getRootParent(e,s).isSingleton));if(0===e.length)return;const i=new Set(e.map((s=>s.value)));if(t=e.filter((s=>!(s.parent&&i.has(s.parent)))),0===t.length)throw new Error("There are cyclic diposable chains!")}if(!t)return;function i(s){const e=s.source.split("\n").map((s=>s.trim().replace("at ",""))).filter((s=>""!==s));return function(s,e){for(;s.length>0&&e.some((e=>"string"==typeof e?e===s[0]:s[0].match(e)));)s.shift()}(e,["Error",/^trackDisposable \(.*\)$/,/^DisposableTracker.trackDisposable \(.*\)$/]),e.reverse()}const o=new P;for(const s of t){const e=i(s);for(let t=0;t<=e.length;t++)o.add(e.slice(0,t).join("\n"),s)}t.sort(S((s=>s.idx),j));let r="",n=0;for(const e of t.slice(0,s)){n++;const s=i(e),a=[];for(let e=0;e<s.length;e++){let r=s[e];r=`(shared with ${o.get(s.slice(0,e+1).join("\n")).size}/${t.length} leaks) at ${r}`;const n=o.get(s.slice(0,e).join("\n")),l=E([...n].map((s=>i(s)[e])),(s=>s));delete l[s[e]];for(const[s,e]of Object.entries(l))a.unshift(`    - stacktraces of ${e.length} other leaks continue with ${s}`);a.unshift(r)}r+=`\n\n\n==================== Leaking disposable ${n}/${t.length}: ${e.value.constructor.name} ====================\n${a.join("\n")}\n============================================================\n\n`}return t.length>s&&(r+=`\n\n\n... and ${t.length-s} more leaking disposables\n\n`),{leaks:t,details:r}}}function C(s){p=s}function d(s){return p?.trackDisposable(s),s}function c(s){p?.markAsDisposed(s)}function D(s,e){p?.setParent(s,e)}function M(s,e){if(p)for(const t of s)p.setParent(t,e)}function q(s){return p?.markAsSingleton(s),s}function $(s){return"object"==typeof s&&null!==s&&"function"==typeof s.dispose&&0===s.dispose.length}function v(s){if(R.is(s)){const e=[];for(const t of s)if(t)try{t.dispose()}catch(s){e.push(s)}if(1===e.length)throw e[0];if(e.length>1)throw new AggregateError(e,"Encountered errors while disposing of store");return Array.isArray(s)?[]:s}if(s)return s.dispose(),s}function G(s){for(const e of s)$(e)&&e.dispose();return[]}function W(...s){const e=m((()=>v(s)));return M(s,e),e}function m(s){const e=d({dispose:k((()=>{c(e),s()}))});return e}class I{static DISABLE_DISPOSED_WARNING=!1;_toDispose=new Set;_isDisposed=!1;constructor(){d(this)}dispose(){this._isDisposed||(c(this),this._isDisposed=!0,this.clear())}get isDisposed(){return this._isDisposed}clear(){if(0!==this._toDispose.size)try{v(this._toDispose)}finally{this._toDispose.clear()}}add(s){if(!s)return s;if(s===this)throw new Error("Cannot register a disposable on itself!");return D(s,this),this._isDisposed?I.DISABLE_DISPOSED_WARNING||console.warn(new Error("Trying to add a disposable to a DisposableStore that has already been disposed of. The added object will be leaked!").stack):this._toDispose.add(s),s}delete(s){if(s){if(s===this)throw new Error("Cannot dispose a disposable on itself!");this._toDispose.delete(s),s.dispose()}}deleteAndLeak(s){s&&this._toDispose.has(s)&&(this._toDispose.delete(s),D(s,null))}}class y{static None=Object.freeze({dispose(){}});_store=new I;constructor(){d(this),D(this._store,this)}dispose(){c(this),this._store.dispose()}_register(s){if(s===this)throw new Error("Cannot register a disposable on itself!");return this._store.add(s)}}class K{_value;_isDisposed=!1;constructor(){d(this)}get value(){return this._isDisposed?void 0:this._value}set value(s){this._isDisposed||s===this._value||(this._value?.dispose(),s&&D(s,this),this._value=s)}clear(){this.value=void 0}dispose(){this._isDisposed=!0,c(this),this._value?.dispose(),this._value=void 0}clearAndLeak(){const s=this._value;return this._value=void 0,s&&D(s,null),s}}class H{_disposable=new K;_isDisposed=!1;constructor(s){this._disposable.value=s}get value(){return this._disposable.value}set value(s){this._isDisposed||s===this._disposable.value||(this._disposable.value=s)}dispose(){this._isDisposed=!0,this._disposable.dispose()}}class J{constructor(s){this._disposable=s}_counter=1;acquire(){return this._counter++,this}release(){return 0==--this._counter&&this._disposable.dispose(),this}}class Q{dispose=()=>{};unset=()=>{};isset=()=>!1;constructor(){d(this)}set(s){let e=s;return this.unset=()=>e=void 0,this.isset=()=>void 0!==e,this.dispose=()=>{e&&(e(),e=void 0,c(this))},this}}class U{references=new Map;acquire(s,...e){let t=this.references.get(s);t||(t={counter:0,object:this.createReferencedObject(s,...e)},this.references.set(s,t));const{object:i}=t,o=k((()=>{0==--t.counter&&(this.destroyReferencedObject(s,t.object),this.references.delete(s))}));return t.counter++,{object:i,dispose:o}}}class X{constructor(s){this.referenceCollection=s}async acquire(s,...e){const t=this.referenceCollection.acquire(s,...e);try{return{object:await t.object,dispose:()=>t.dispose()}}catch(s){throw t.dispose(),s}}}class Y{constructor(s){this.object=s}dispose(){}}function Z(s){const e=new I;try{s(e)}finally{e.dispose()}}class ee{_store=new Map;_isDisposed=!1;constructor(){d(this)}dispose(){c(this),this._isDisposed=!0,this.clearAndDisposeAll()}clearAndDisposeAll(){if(this._store.size)try{v(this._store.values())}finally{this._store.clear()}}has(s){return this._store.has(s)}get size(){return this._store.size}get(s){return this._store.get(s)}set(s,e,t=!1){this._isDisposed&&console.warn(new Error("Trying to add a disposable to a DisposableMap that has already been disposed of. The added object will be leaked!").stack),t||this._store.get(s)?.dispose(),this._store.set(s,e)}deleteAndDispose(s){this._store.get(s)?.dispose(),this._store.delete(s)}deleteAndLeak(s){const e=this._store.get(s);return this._store.delete(s),e}keys(){return this._store.keys()}values(){return this._store.values()}[Symbol.iterator](){return this._store[Symbol.iterator]()}}function se(s,e){let t=!1;return s.then((s=>{t||e(s)})),m((()=>{t=!0}))}export{X as AsyncReferenceCollection,y as Disposable,ee as DisposableMap,I as DisposableStore,x as DisposableTracker,F as GCBasedDisposableTracker,Y as ImmortalReference,H as MandatoryMutableDisposable,K as MutableDisposable,J as RefCountedDisposable,U as ReferenceCollection,Q as SafeDisposable,W as combinedDisposable,v as dispose,G as disposeIfDisposable,Z as disposeOnReturn,$ as isDisposable,c as markAsDisposed,q as markAsSingleton,C as setDisposableTracker,se as thenIfNotDisposed,m as toDisposable,d as trackDisposable};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { compareBy, numberComparator } from "./arrays.js";
+import { groupBy } from "./collections.js";
+import { SetMap } from "./map.js";
+import { createSingleCallFunction } from "./functional.js";
+import { Iterable } from "./iterator.js";
+const TRACK_DISPOSABLES = false;
+let disposableTracker = null;
+class GCBasedDisposableTracker {
+  static {
+    __name(this, "GCBasedDisposableTracker");
+  }
+  _registry = new FinalizationRegistry((heldValue) => {
+    console.warn(`[LEAKED DISPOSABLE] ${heldValue}`);
+  });
+  trackDisposable(disposable) {
+    const stack = new Error("CREATED via:").stack;
+    this._registry.register(disposable, stack, disposable);
+  }
+  setParent(child, parent) {
+    if (parent) {
+      this._registry.unregister(child);
+    } else {
+      this.trackDisposable(child);
+    }
+  }
+  markAsDisposed(disposable) {
+    this._registry.unregister(disposable);
+  }
+  markAsSingleton(disposable) {
+    this._registry.unregister(disposable);
+  }
+}
+class DisposableTracker {
+  static {
+    __name(this, "DisposableTracker");
+  }
+  static idx = 0;
+  livingDisposables = /* @__PURE__ */ new Map();
+  getDisposableData(d) {
+    let val = this.livingDisposables.get(d);
+    if (!val) {
+      val = { parent: null, source: null, isSingleton: false, value: d, idx: DisposableTracker.idx++ };
+      this.livingDisposables.set(d, val);
+    }
+    return val;
+  }
+  trackDisposable(d) {
+    const data = this.getDisposableData(d);
+    if (!data.source) {
+      data.source = new Error().stack;
+    }
+  }
+  setParent(child, parent) {
+    const data = this.getDisposableData(child);
+    data.parent = parent;
+  }
+  markAsDisposed(x) {
+    this.livingDisposables.delete(x);
+  }
+  markAsSingleton(disposable) {
+    this.getDisposableData(disposable).isSingleton = true;
+  }
+  getRootParent(data, cache) {
+    const cacheValue = cache.get(data);
+    if (cacheValue) {
+      return cacheValue;
+    }
+    const result = data.parent ? this.getRootParent(this.getDisposableData(data.parent), cache) : data;
+    cache.set(data, result);
+    return result;
+  }
+  getTrackedDisposables() {
+    const rootParentCache = /* @__PURE__ */ new Map();
+    const leaking = [...this.livingDisposables.entries()].filter(([, v]) => v.source !== null && !this.getRootParent(v, rootParentCache).isSingleton).flatMap(([k]) => k);
+    return leaking;
+  }
+  computeLeakingDisposables(maxReported = 10, preComputedLeaks) {
+    let uncoveredLeakingObjs;
+    if (preComputedLeaks) {
+      uncoveredLeakingObjs = preComputedLeaks;
+    } else {
+      const rootParentCache = /* @__PURE__ */ new Map();
+      const leakingObjects = [...this.livingDisposables.values()].filter((info) => info.source !== null && !this.getRootParent(info, rootParentCache).isSingleton);
+      if (leakingObjects.length === 0) {
+        return;
+      }
+      const leakingObjsSet = new Set(leakingObjects.map((o) => o.value));
+      uncoveredLeakingObjs = leakingObjects.filter((l) => {
+        return !(l.parent && leakingObjsSet.has(l.parent));
+      });
+      if (uncoveredLeakingObjs.length === 0) {
+        throw new Error("There are cyclic diposable chains!");
+      }
+    }
+    if (!uncoveredLeakingObjs) {
+      return void 0;
+    }
+    function getStackTracePath(leaking) {
+      function removePrefix(array, linesToRemove) {
+        while (array.length > 0 && linesToRemove.some((regexp) => typeof regexp === "string" ? regexp === array[0] : array[0].match(regexp))) {
+          array.shift();
+        }
+      }
+      __name(removePrefix, "removePrefix");
+      const lines = leaking.source.split("\n").map((p) => p.trim().replace("at ", "")).filter((l) => l !== "");
+      removePrefix(lines, ["Error", /^trackDisposable \(.*\)$/, /^DisposableTracker.trackDisposable \(.*\)$/]);
+      return lines.reverse();
+    }
+    __name(getStackTracePath, "getStackTracePath");
+    const stackTraceStarts = new SetMap();
+    for (const leaking of uncoveredLeakingObjs) {
+      const stackTracePath = getStackTracePath(leaking);
+      for (let i2 = 0; i2 <= stackTracePath.length; i2++) {
+        stackTraceStarts.add(stackTracePath.slice(0, i2).join("\n"), leaking);
+      }
+    }
+    uncoveredLeakingObjs.sort(compareBy((l) => l.idx, numberComparator));
+    let message = "";
+    let i = 0;
+    for (const leaking of uncoveredLeakingObjs.slice(0, maxReported)) {
+      i++;
+      const stackTracePath = getStackTracePath(leaking);
+      const stackTraceFormattedLines = [];
+      for (let i2 = 0; i2 < stackTracePath.length; i2++) {
+        let line = stackTracePath[i2];
+        const starts = stackTraceStarts.get(stackTracePath.slice(0, i2 + 1).join("\n"));
+        line = `(shared with ${starts.size}/${uncoveredLeakingObjs.length} leaks) at ${line}`;
+        const prevStarts = stackTraceStarts.get(stackTracePath.slice(0, i2).join("\n"));
+        const continuations = groupBy([...prevStarts].map((d) => getStackTracePath(d)[i2]), (v) => v);
+        delete continuations[stackTracePath[i2]];
+        for (const [cont, set] of Object.entries(continuations)) {
+          stackTraceFormattedLines.unshift(`    - stacktraces of ${set.length} other leaks continue with ${cont}`);
+        }
+        stackTraceFormattedLines.unshift(line);
+      }
+      message += `
+
+
+==================== Leaking disposable ${i}/${uncoveredLeakingObjs.length}: ${leaking.value.constructor.name} ====================
+${stackTraceFormattedLines.join("\n")}
+============================================================
+
+`;
+    }
+    if (uncoveredLeakingObjs.length > maxReported) {
+      message += `
+
+
+... and ${uncoveredLeakingObjs.length - maxReported} more leaking disposables
+
+`;
+    }
+    return { leaks: uncoveredLeakingObjs, details: message };
+  }
+}
+function setDisposableTracker(tracker) {
+  disposableTracker = tracker;
+}
+__name(setDisposableTracker, "setDisposableTracker");
+if (TRACK_DISPOSABLES) {
+  const __is_disposable_tracked__ = "__is_disposable_tracked__";
+  setDisposableTracker(new class {
+    trackDisposable(x) {
+      const stack = new Error("Potentially leaked disposable").stack;
+      setTimeout(() => {
+        if (!x[__is_disposable_tracked__]) {
+          console.log(stack);
+        }
+      }, 3e3);
+    }
+    setParent(child, parent) {
+      if (child && child !== Disposable.None) {
+        try {
+          child[__is_disposable_tracked__] = true;
+        } catch {
+        }
+      }
+    }
+    markAsDisposed(disposable) {
+      if (disposable && disposable !== Disposable.None) {
+        try {
+          disposable[__is_disposable_tracked__] = true;
+        } catch {
+        }
+      }
+    }
+    markAsSingleton(disposable) {
+    }
+  }());
+}
+function trackDisposable(x) {
+  disposableTracker?.trackDisposable(x);
+  return x;
+}
+__name(trackDisposable, "trackDisposable");
+function markAsDisposed(disposable) {
+  disposableTracker?.markAsDisposed(disposable);
+}
+__name(markAsDisposed, "markAsDisposed");
+function setParentOfDisposable(child, parent) {
+  disposableTracker?.setParent(child, parent);
+}
+__name(setParentOfDisposable, "setParentOfDisposable");
+function setParentOfDisposables(children, parent) {
+  if (!disposableTracker) {
+    return;
+  }
+  for (const child of children) {
+    disposableTracker.setParent(child, parent);
+  }
+}
+__name(setParentOfDisposables, "setParentOfDisposables");
+function markAsSingleton(singleton) {
+  disposableTracker?.markAsSingleton(singleton);
+  return singleton;
+}
+__name(markAsSingleton, "markAsSingleton");
+function isDisposable(thing) {
+  return typeof thing === "object" && thing !== null && typeof thing.dispose === "function" && thing.dispose.length === 0;
+}
+__name(isDisposable, "isDisposable");
+function dispose(arg) {
+  if (Iterable.is(arg)) {
+    const errors = [];
+    for (const d of arg) {
+      if (d) {
+        try {
+          d.dispose();
+        } catch (e) {
+          errors.push(e);
+        }
+      }
+    }
+    if (errors.length === 1) {
+      throw errors[0];
+    } else if (errors.length > 1) {
+      throw new AggregateError(errors, "Encountered errors while disposing of store");
+    }
+    return Array.isArray(arg) ? [] : arg;
+  } else if (arg) {
+    arg.dispose();
+    return arg;
+  }
+}
+__name(dispose, "dispose");
+function disposeIfDisposable(disposables) {
+  for (const d of disposables) {
+    if (isDisposable(d)) {
+      d.dispose();
+    }
+  }
+  return [];
+}
+__name(disposeIfDisposable, "disposeIfDisposable");
+function combinedDisposable(...disposables) {
+  const parent = toDisposable(() => dispose(disposables));
+  setParentOfDisposables(disposables, parent);
+  return parent;
+}
+__name(combinedDisposable, "combinedDisposable");
+function toDisposable(fn) {
+  const self = trackDisposable({
+    dispose: createSingleCallFunction(() => {
+      markAsDisposed(self);
+      fn();
+    })
+  });
+  return self;
+}
+__name(toDisposable, "toDisposable");
+class DisposableStore {
+  static {
+    __name(this, "DisposableStore");
+  }
+  static DISABLE_DISPOSED_WARNING = false;
+  _toDispose = /* @__PURE__ */ new Set();
+  _isDisposed = false;
+  constructor() {
+    trackDisposable(this);
+  }
+  /**
+   * Dispose of all registered disposables and mark this object as disposed.
+   *
+   * Any future disposables added to this object will be disposed of on `add`.
+   */
+  dispose() {
+    if (this._isDisposed) {
+      return;
+    }
+    markAsDisposed(this);
+    this._isDisposed = true;
+    this.clear();
+  }
+  /**
+   * @return `true` if this object has been disposed of.
+   */
+  get isDisposed() {
+    return this._isDisposed;
+  }
+  /**
+   * Dispose of all registered disposables but do not mark this object as disposed.
+   */
+  clear() {
+    if (this._toDispose.size === 0) {
+      return;
+    }
+    try {
+      dispose(this._toDispose);
+    } finally {
+      this._toDispose.clear();
+    }
+  }
+  /**
+   * Add a new {@link IDisposable disposable} to the collection.
+   */
+  add(o) {
+    if (!o) {
+      return o;
+    }
+    if (o === this) {
+      throw new Error("Cannot register a disposable on itself!");
+    }
+    setParentOfDisposable(o, this);
+    if (this._isDisposed) {
+      if (!DisposableStore.DISABLE_DISPOSED_WARNING) {
+        console.warn(new Error("Trying to add a disposable to a DisposableStore that has already been disposed of. The added object will be leaked!").stack);
+      }
+    } else {
+      this._toDispose.add(o);
+    }
+    return o;
+  }
+  /**
+   * Deletes a disposable from store and disposes of it. This will not throw or warn and proceed to dispose the
+   * disposable even when the disposable is not part in the store.
+   */
+  delete(o) {
+    if (!o) {
+      return;
+    }
+    if (o === this) {
+      throw new Error("Cannot dispose a disposable on itself!");
+    }
+    this._toDispose.delete(o);
+    o.dispose();
+  }
+  /**
+   * Deletes the value from the store, but does not dispose it.
+   */
+  deleteAndLeak(o) {
+    if (!o) {
+      return;
+    }
+    if (this._toDispose.has(o)) {
+      this._toDispose.delete(o);
+      setParentOfDisposable(o, null);
+    }
+  }
+}
+class Disposable {
+  static {
+    __name(this, "Disposable");
+  }
+  /**
+   * A disposable that does nothing when it is disposed of.
+   *
+   * TODO: This should not be a static property.
+   */
+  static None = Object.freeze({ dispose() {
+  } });
+  _store = new DisposableStore();
+  constructor() {
+    trackDisposable(this);
+    setParentOfDisposable(this._store, this);
+  }
+  dispose() {
+    markAsDisposed(this);
+    this._store.dispose();
+  }
+  /**
+   * Adds `o` to the collection of disposables managed by this object.
+   */
+  _register(o) {
+    if (o === this) {
+      throw new Error("Cannot register a disposable on itself!");
+    }
+    return this._store.add(o);
+  }
+}
+class MutableDisposable {
+  static {
+    __name(this, "MutableDisposable");
+  }
+  _value;
+  _isDisposed = false;
+  constructor() {
+    trackDisposable(this);
+  }
+  get value() {
+    return this._isDisposed ? void 0 : this._value;
+  }
+  set value(value) {
+    if (this._isDisposed || value === this._value) {
+      return;
+    }
+    this._value?.dispose();
+    if (value) {
+      setParentOfDisposable(value, this);
+    }
+    this._value = value;
+  }
+  /**
+   * Resets the stored value and disposed of the previously stored value.
+   */
+  clear() {
+    this.value = void 0;
+  }
+  dispose() {
+    this._isDisposed = true;
+    markAsDisposed(this);
+    this._value?.dispose();
+    this._value = void 0;
+  }
+  /**
+   * Clears the value, but does not dispose it.
+   * The old value is returned.
+  */
+  clearAndLeak() {
+    const oldValue = this._value;
+    this._value = void 0;
+    if (oldValue) {
+      setParentOfDisposable(oldValue, null);
+    }
+    return oldValue;
+  }
+}
+class MandatoryMutableDisposable {
+  static {
+    __name(this, "MandatoryMutableDisposable");
+  }
+  _disposable = new MutableDisposable();
+  _isDisposed = false;
+  constructor(initialValue) {
+    this._disposable.value = initialValue;
+  }
+  get value() {
+    return this._disposable.value;
+  }
+  set value(value) {
+    if (this._isDisposed || value === this._disposable.value) {
+      return;
+    }
+    this._disposable.value = value;
+  }
+  dispose() {
+    this._isDisposed = true;
+    this._disposable.dispose();
+  }
+}
+class RefCountedDisposable {
+  constructor(_disposable) {
+    this._disposable = _disposable;
+  }
+  static {
+    __name(this, "RefCountedDisposable");
+  }
+  _counter = 1;
+  acquire() {
+    this._counter++;
+    return this;
+  }
+  release() {
+    if (--this._counter === 0) {
+      this._disposable.dispose();
+    }
+    return this;
+  }
+}
+class SafeDisposable {
+  static {
+    __name(this, "SafeDisposable");
+  }
+  dispose = /* @__PURE__ */ __name(() => {
+  }, "dispose");
+  unset = /* @__PURE__ */ __name(() => {
+  }, "unset");
+  isset = /* @__PURE__ */ __name(() => false, "isset");
+  constructor() {
+    trackDisposable(this);
+  }
+  set(fn) {
+    let callback = fn;
+    this.unset = () => callback = void 0;
+    this.isset = () => callback !== void 0;
+    this.dispose = () => {
+      if (callback) {
+        callback();
+        callback = void 0;
+        markAsDisposed(this);
+      }
+    };
+    return this;
+  }
+}
+class ReferenceCollection {
+  static {
+    __name(this, "ReferenceCollection");
+  }
+  references = /* @__PURE__ */ new Map();
+  acquire(key, ...args) {
+    let reference = this.references.get(key);
+    if (!reference) {
+      reference = { counter: 0, object: this.createReferencedObject(key, ...args) };
+      this.references.set(key, reference);
+    }
+    const { object } = reference;
+    const dispose2 = createSingleCallFunction(() => {
+      if (--reference.counter === 0) {
+        this.destroyReferencedObject(key, reference.object);
+        this.references.delete(key);
+      }
+    });
+    reference.counter++;
+    return { object, dispose: dispose2 };
+  }
+}
+class AsyncReferenceCollection {
+  constructor(referenceCollection) {
+    this.referenceCollection = referenceCollection;
+  }
+  static {
+    __name(this, "AsyncReferenceCollection");
+  }
+  async acquire(key, ...args) {
+    const ref = this.referenceCollection.acquire(key, ...args);
+    try {
+      const object = await ref.object;
+      return {
+        object,
+        dispose: /* @__PURE__ */ __name(() => ref.dispose(), "dispose")
+      };
+    } catch (error) {
+      ref.dispose();
+      throw error;
+    }
+  }
+}
+class ImmortalReference {
+  constructor(object) {
+    this.object = object;
+  }
+  static {
+    __name(this, "ImmortalReference");
+  }
+  dispose() {
+  }
+}
+function disposeOnReturn(fn) {
+  const store = new DisposableStore();
+  try {
+    fn(store);
+  } finally {
+    store.dispose();
+  }
+}
+__name(disposeOnReturn, "disposeOnReturn");
+class DisposableMap {
+  static {
+    __name(this, "DisposableMap");
+  }
+  _store = /* @__PURE__ */ new Map();
+  _isDisposed = false;
+  constructor() {
+    trackDisposable(this);
+  }
+  /**
+   * Disposes of all stored values and mark this object as disposed.
+   *
+   * Trying to use this object after it has been disposed of is an error.
+   */
+  dispose() {
+    markAsDisposed(this);
+    this._isDisposed = true;
+    this.clearAndDisposeAll();
+  }
+  /**
+   * Disposes of all stored values and clear the map, but DO NOT mark this object as disposed.
+   */
+  clearAndDisposeAll() {
+    if (!this._store.size) {
+      return;
+    }
+    try {
+      dispose(this._store.values());
+    } finally {
+      this._store.clear();
+    }
+  }
+  has(key) {
+    return this._store.has(key);
+  }
+  get size() {
+    return this._store.size;
+  }
+  get(key) {
+    return this._store.get(key);
+  }
+  set(key, value, skipDisposeOnOverwrite = false) {
+    if (this._isDisposed) {
+      console.warn(new Error("Trying to add a disposable to a DisposableMap that has already been disposed of. The added object will be leaked!").stack);
+    }
+    if (!skipDisposeOnOverwrite) {
+      this._store.get(key)?.dispose();
+    }
+    this._store.set(key, value);
+  }
+  /**
+   * Delete the value stored for `key` from this map and also dispose of it.
+   */
+  deleteAndDispose(key) {
+    this._store.get(key)?.dispose();
+    this._store.delete(key);
+  }
+  /**
+   * Delete the value stored for `key` from this map but return it. The caller is
+   * responsible for disposing of the value.
+   */
+  deleteAndLeak(key) {
+    const value = this._store.get(key);
+    this._store.delete(key);
+    return value;
+  }
+  keys() {
+    return this._store.keys();
+  }
+  values() {
+    return this._store.values();
+  }
+  [Symbol.iterator]() {
+    return this._store[Symbol.iterator]();
+  }
+}
+function thenIfNotDisposed(promise, then) {
+  let disposed = false;
+  promise.then((result) => {
+    if (disposed) {
+      return;
+    }
+    then(result);
+  });
+  return toDisposable(() => {
+    disposed = true;
+  });
+}
+__name(thenIfNotDisposed, "thenIfNotDisposed");
+export {
+  AsyncReferenceCollection,
+  Disposable,
+  DisposableMap,
+  DisposableStore,
+  DisposableTracker,
+  GCBasedDisposableTracker,
+  ImmortalReference,
+  MandatoryMutableDisposable,
+  MutableDisposable,
+  RefCountedDisposable,
+  ReferenceCollection,
+  SafeDisposable,
+  combinedDisposable,
+  dispose,
+  disposeIfDisposable,
+  disposeOnReturn,
+  isDisposable,
+  markAsDisposed,
+  markAsSingleton,
+  setDisposableTracker,
+  thenIfNotDisposed,
+  toDisposable,
+  trackDisposable
+};
+//# sourceMappingURL=lifecycle.js.map

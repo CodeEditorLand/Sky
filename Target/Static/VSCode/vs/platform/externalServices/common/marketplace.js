@@ -1,1 +1,28 @@
-import"../../../base/parts/request/common/request.js";import"../../configuration/common/configuration.js";import"../../environment/common/environment.js";import{getServiceMachineId as a}from"./serviceMachineId.js";import"../../files/common/files.js";import"../../product/common/productService.js";import"../../storage/common/storage.js";import{TelemetryLevel as S}from"../../telemetry/common/telemetry.js";import{getTelemetryLevel as d,supportsTelemetry as s}from"../../telemetry/common/telemetryUtils.js";async function V(e,o,t,r,m,n,i){const c={"X-Market-Client-Id":`VSCode ${e}`,"User-Agent":`VSCode ${e} (${o.nameShort})`};if(s(o,t)&&d(r)===S.USAGE){const e=await a(t,m,n);c["X-Market-User-Id"]=e,c["VSCode-SessionId"]=i.machineId||e}return c}export{V as resolveMarketplaceHeaders};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { IHeaders } from "../../../base/parts/request/common/request.js";
+import { IConfigurationService } from "../../configuration/common/configuration.js";
+import { IEnvironmentService } from "../../environment/common/environment.js";
+import { getServiceMachineId } from "./serviceMachineId.js";
+import { IFileService } from "../../files/common/files.js";
+import { IProductService } from "../../product/common/productService.js";
+import { IStorageService } from "../../storage/common/storage.js";
+import { ITelemetryService, TelemetryLevel } from "../../telemetry/common/telemetry.js";
+import { getTelemetryLevel, supportsTelemetry } from "../../telemetry/common/telemetryUtils.js";
+async function resolveMarketplaceHeaders(version, productService, environmentService, configurationService, fileService, storageService, telemetryService) {
+  const headers = {
+    "X-Market-Client-Id": `VSCode ${version}`,
+    "User-Agent": `VSCode ${version} (${productService.nameShort})`
+  };
+  if (supportsTelemetry(productService, environmentService) && getTelemetryLevel(configurationService) === TelemetryLevel.USAGE) {
+    const serviceMachineId = await getServiceMachineId(environmentService, fileService, storageService);
+    headers["X-Market-User-Id"] = serviceMachineId;
+    headers["VSCode-SessionId"] = telemetryService.machineId || serviceMachineId;
+  }
+  return headers;
+}
+__name(resolveMarketplaceHeaders, "resolveMarketplaceHeaders");
+export {
+  resolveMarketplaceHeaders
+};
+//# sourceMappingURL=marketplace.js.map

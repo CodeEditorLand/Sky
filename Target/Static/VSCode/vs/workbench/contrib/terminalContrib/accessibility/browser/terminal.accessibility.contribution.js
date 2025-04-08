@@ -1,1 +1,379 @@
-var H=Object.defineProperty;var q=Object.getOwnPropertyDescriptor;var A=(c,r,e,i)=>{for(var n=i>1?void 0:i?q(r,e):r,a=c.length-1,o;a>=0;a--)(o=c[a])&&(n=(i?o(r,e,n):o(n))||n);return i&&n&&H(r,e,n),n},b=(c,r)=>(e,i)=>r(e,i,c);import{Event as K}from"../../../../../base/common/event.js";import{KeyCode as f,KeyMod as l}from"../../../../../base/common/keyCodes.js";import{Disposable as B,DisposableStore as O,MutableDisposable as R}from"../../../../../base/common/lifecycle.js";import{isWindows as G}from"../../../../../base/common/platform.js";import{Position as x}from"../../../../../editor/common/core/position.js";import{localize2 as g}from"../../../../../nls.js";import{AccessibleViewProviderId as m,IAccessibleViewService as y,NavigationType as k}from"../../../../../platform/accessibility/browser/accessibleView.js";import{CONTEXT_ACCESSIBILITY_MODE_ENABLED as M}from"../../../../../platform/accessibility/common/accessibility.js";import{AccessibilitySignal as N,IAccessibilitySignalService as X}from"../../../../../platform/accessibilitySignal/browser/accessibilitySignalService.js";import{Action2 as U,registerAction2 as Y}from"../../../../../platform/actions/common/actions.js";import{IConfigurationService as z}from"../../../../../platform/configuration/common/configuration.js";import{ContextKeyExpr as t,IContextKeyService as j}from"../../../../../platform/contextkey/common/contextkey.js";import{IInstantiationService as P}from"../../../../../platform/instantiation/common/instantiation.js";import{KeybindingWeight as T}from"../../../../../platform/keybinding/common/keybindingsRegistry.js";import{TerminalCapability as w}from"../../../../../platform/terminal/common/capabilities/capabilities.js";import"../../../../../platform/terminal/common/capabilities/commandDetection/terminalCommand.js";import{TerminalSettingId as J}from"../../../../../platform/terminal/common/terminal.js";import{accessibleViewCurrentProviderId as p,accessibleViewIsShown as C}from"../../../accessibility/browser/accessibilityConfiguration.js";import{AccessibilityHelpAction as Q,AccessibleViewAction as Z}from"../../../accessibility/browser/accessibleViewActions.js";import{ITerminalService as V}from"../../../terminal/browser/terminal.js";import{registerTerminalAction as I}from"../../../terminal/browser/terminalActions.js";import{registerTerminalContribution as E}from"../../../terminal/browser/terminalExtensions.js";import{TerminalContextKeys as s}from"../../../terminal/common/terminalContextKey.js";import{TerminalAccessibilityCommandId as S}from"../common/terminal.accessibility.js";import{TerminalAccessibilitySettingId as D}from"../common/terminalAccessibilityConfiguration.js";import{BufferContentTracker as $}from"./bufferContentTracker.js";import{TerminalAccessibilityHelpProvider as L}from"./terminalAccessibilityHelp.js";import{TerminalAccessibleBufferProvider as ee}from"./terminalAccessibleBufferProvider.js";import{TextAreaSyncAddon as F}from"./textAreaSyncAddon.js";import{alert as ie}from"../../../../../base/browser/ui/aria/aria.js";let v=class extends O{constructor(e,i){super();this._ctx=e;this._instantiationService=i}static ID="terminal.textAreaSync";static get(e){return e.getContribution(v.ID)}_addon;layout(e){this._addon||(this._addon=this.add(this._instantiationService.createInstance(F,this._ctx.instance.capabilities)),e.raw.loadAddon(this._addon),this._addon.activate(e.raw))}};v=A([b(1,P)],v),E(v.ID,v);let d=class extends B{constructor(e,i,n,a,o,_,h){super();this._ctx=e;this._accessibilitySignalService=i;this._accessibleViewService=n;this._configurationService=a;this._contextKeyService=o;this._instantiationService=_;this._terminalService=h;this._register(Z.addImplementation(90,"terminal",()=>this._terminalService.activeInstance!==this._ctx.instance?!1:(this.show(),!0),s.focus)),this._register(this._ctx.instance.onDidExecuteText(()=>{const u=a.getValue(J.FocusAfterRun);u==="terminal"?this._ctx.instance.focus(!0):u==="accessible-buffer"&&this.show()})),this._register(this._configurationService.onDidChangeConfiguration(u=>{u.affectsConfiguration(D.AccessibleViewFocusOnCommandExecution)&&this._updateCommandExecutedListener()})),this._register(this._ctx.instance.capabilities.onDidAddCapability(u=>{u.capability.type===w.CommandDetection&&this._updateCommandExecutedListener()}))}static ID="terminal.accessibleBufferProvider";static get(e){return e.getContribution(d.ID)}_bufferTracker;_bufferProvider;_xterm;_onDidRunCommand=this._register(new R);xtermReady(e){const i=this._instantiationService.createInstance(F,this._ctx.instance.capabilities);e.raw.loadAddon(i),i.activate(e.raw),this._xterm=e,this._register(this._xterm.raw.onWriteParsed(async()=>{this._terminalService.activeInstance===this._ctx.instance&&this._isTerminalAccessibleViewOpen()&&this._xterm.raw.buffer.active.baseY===0&&this.show()}));const n=K.latch(this._xterm.raw.onScroll);this._register(n(()=>{this._terminalService.activeInstance===this._ctx.instance&&this._isTerminalAccessibleViewOpen()&&this.show()}))}_updateCommandExecutedListener(){if(!this._ctx.instance.capabilities.has(w.CommandDetection))return;if(this._configurationService.getValue(D.AccessibleViewFocusOnCommandExecution)){if(this._onDidRunCommand.value)return}else{this._onDidRunCommand.clear();return}const e=this._ctx.instance.capabilities.get(w.CommandDetection);this._onDidRunCommand.value=e.onCommandExecuted(()=>{this._ctx.instance.hasFocus&&this.show()})}_isTerminalAccessibleViewOpen(){return p.getValue(this._contextKeyService)===m.Terminal}show(){if(!this._xterm)return;this._bufferTracker||(this._bufferTracker=this._register(this._instantiationService.createInstance($,this._xterm))),this._bufferProvider||(this._bufferProvider=this._register(this._instantiationService.createInstance(ee,this._ctx.instance,this._bufferTracker,()=>this._register(this._instantiationService.createInstance(L,this._ctx.instance,this._xterm)).provideContent())));const e=this._configurationService.getValue(D.AccessibleViewPreserveCursorPosition)?this._accessibleViewService.getPosition(m.Terminal):void 0;this._accessibleViewService.show(this._bufferProvider,e)}navigateToCommand(e){const i=this._accessibleViewService.getPosition(m.Terminal)?.lineNumber,n=this._getCommandsWithEditorLine();if(!n?.length||!i)return;const a=e===k.Previous?n.filter(h=>h.lineNumber<i).sort((h,u)=>u.lineNumber-h.lineNumber):n.filter(h=>h.lineNumber>i).sort((h,u)=>h.lineNumber-u.lineNumber);if(!a.length)return;const o=a[0],_=o.command.command;!G&&_?(this._accessibleViewService.setPosition(new x(o.lineNumber,1),!0),ie(_)):this._accessibleViewService.setPosition(new x(o.lineNumber,1),!0,!0),o.exitCode?this._accessibilitySignalService.playSignal(N.terminalCommandFailed):this._accessibilitySignalService.playSignal(N.terminalCommandSucceeded)}_getCommandsWithEditorLine(){const e=this._ctx.instance.capabilities.get(w.CommandDetection),i=e?.commands,n=e?.currentCommand;if(!i?.length)return;const a=[];for(const o of i){const _=this._getEditorLineForCommand(o);_&&a.push({command:o,lineNumber:_,exitCode:o.exitCode})}if(n){const o=this._getEditorLineForCommand(n);o&&a.push({command:n,lineNumber:o})}return a}_getEditorLineForCommand(e){if(!this._bufferTracker)return;let i;if("marker"in e?i=e.marker?.line:"commandStartMarker"in e&&(i=e.commandStartMarker?.line),!(i===void 0||i<0)&&(i=this._bufferTracker.bufferToEditorLineMapping.get(i),i!==void 0))return i+1}};d=A([b(1,X),b(2,y),b(3,z),b(4,j),b(5,P),b(6,V)],d),E(d.ID,d);class W extends B{static ID;constructor(){super(),this._register(Q.addImplementation(105,"terminal",async r=>{const e=r.get(P),i=r.get(V),n=r.get(y),a=await i.getActiveOrCreateInstance();await i.revealActiveTerminal();const o=a?.xterm;o&&n.show(e.createInstance(L,a,o))},t.or(s.focus,t.and(C,t.equals(p.key,m.Terminal)))))}}E(W.ID,W);class te extends U{constructor(){super({id:S.FocusAccessibleBuffer,title:g("workbench.action.terminal.focusAccessibleBuffer","Focus Accessible Terminal View"),precondition:t.or(s.processSupported,s.terminalHasBeenCreated),keybinding:[{primary:l.Alt|f.F2,secondary:[l.CtrlCmd|f.UpArrow],linux:{primary:l.Alt|f.F2|l.Shift,secondary:[l.CtrlCmd|f.UpArrow]},weight:T.WorkbenchContrib,when:t.and(M,s.focus)}]})}async run(r,...e){const n=await r.get(V).getActiveOrCreateInstance();n?.xterm&&d.get(n)?.show()}}Y(te),I({id:S.AccessibleBufferGoToNextCommand,title:g("workbench.action.terminal.accessibleBufferGoToNextCommand","Accessible Buffer Go to Next Command"),precondition:t.or(s.processSupported,s.terminalHasBeenCreated,t.and(C,t.equals(p.key,m.Terminal))),keybinding:[{primary:l.Alt|f.DownArrow,when:t.and(t.and(C,t.equals(p.key,m.Terminal))),weight:T.WorkbenchContrib+2}],run:async c=>{const r=c.service.activeInstance;r&&d.get(r)?.navigateToCommand(k.Next)}}),I({id:S.AccessibleBufferGoToPreviousCommand,title:g("workbench.action.terminal.accessibleBufferGoToPreviousCommand","Accessible Buffer Go to Previous Command"),precondition:t.and(t.or(s.processSupported,s.terminalHasBeenCreated),t.and(C,t.equals(p.key,m.Terminal))),keybinding:[{primary:l.Alt|f.UpArrow,when:t.and(t.and(C,t.equals(p.key,m.Terminal))),weight:T.WorkbenchContrib+2}],run:async c=>{const r=c.service.activeInstance;r&&d.get(r)?.navigateToCommand(k.Previous)}}),I({id:S.ScrollToBottomAccessibleView,title:g("workbench.action.terminal.scrollToBottomAccessibleView","Scroll to Accessible View Bottom"),precondition:t.and(t.or(s.processSupported,s.terminalHasBeenCreated),t.and(C,t.equals(p.key,m.Terminal))),keybinding:{primary:l.CtrlCmd|f.End,linux:{primary:l.Shift|f.End},when:p.isEqualTo(m.Terminal),weight:T.WorkbenchContrib},run:(c,r)=>{const e=r.get(y),i=e.getLastPosition();i&&e.setPosition(i,!0)}}),I({id:S.ScrollToTopAccessibleView,title:g("workbench.action.terminal.scrollToTopAccessibleView","Scroll to Accessible View Top"),precondition:t.and(t.or(s.processSupported,s.terminalHasBeenCreated),t.and(C,t.equals(p.key,m.Terminal))),keybinding:{primary:l.CtrlCmd|f.Home,linux:{primary:l.Shift|f.Home},when:p.isEqualTo(m.Terminal),weight:T.WorkbenchContrib},run:(c,r)=>r.get(y)?.setPosition(new x(1,1),!0)});export{W as TerminalAccessibilityHelpContribution,d as TerminalAccessibleViewContribution};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Event } from "../../../../../base/common/event.js";
+import { KeyCode, KeyMod } from "../../../../../base/common/keyCodes.js";
+import { Disposable, DisposableStore, MutableDisposable } from "../../../../../base/common/lifecycle.js";
+import { isWindows } from "../../../../../base/common/platform.js";
+import { Position } from "../../../../../editor/common/core/position.js";
+import { localize2 } from "../../../../../nls.js";
+import { AccessibleViewProviderId, IAccessibleViewService, NavigationType } from "../../../../../platform/accessibility/browser/accessibleView.js";
+import { CONTEXT_ACCESSIBILITY_MODE_ENABLED } from "../../../../../platform/accessibility/common/accessibility.js";
+import { AccessibilitySignal, IAccessibilitySignalService } from "../../../../../platform/accessibilitySignal/browser/accessibilitySignalService.js";
+import { Action2, registerAction2 } from "../../../../../platform/actions/common/actions.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { ContextKeyExpr, IContextKeyService } from "../../../../../platform/contextkey/common/contextkey.js";
+import { IInstantiationService, ServicesAccessor } from "../../../../../platform/instantiation/common/instantiation.js";
+import { KeybindingWeight } from "../../../../../platform/keybinding/common/keybindingsRegistry.js";
+import { ITerminalCommand, TerminalCapability } from "../../../../../platform/terminal/common/capabilities/capabilities.js";
+import { ICurrentPartialCommand } from "../../../../../platform/terminal/common/capabilities/commandDetection/terminalCommand.js";
+import { TerminalSettingId } from "../../../../../platform/terminal/common/terminal.js";
+import { accessibleViewCurrentProviderId, accessibleViewIsShown } from "../../../accessibility/browser/accessibilityConfiguration.js";
+import { AccessibilityHelpAction, AccessibleViewAction } from "../../../accessibility/browser/accessibleViewActions.js";
+import { ITerminalContribution, ITerminalInstance, ITerminalService, IXtermTerminal } from "../../../terminal/browser/terminal.js";
+import { registerTerminalAction } from "../../../terminal/browser/terminalActions.js";
+import { registerTerminalContribution } from "../../../terminal/browser/terminalExtensions.js";
+import { TerminalContextKeys } from "../../../terminal/common/terminalContextKey.js";
+import { TerminalAccessibilityCommandId } from "../common/terminal.accessibility.js";
+import { TerminalAccessibilitySettingId } from "../common/terminalAccessibilityConfiguration.js";
+import { BufferContentTracker } from "./bufferContentTracker.js";
+import { TerminalAccessibilityHelpProvider } from "./terminalAccessibilityHelp.js";
+import { ICommandWithEditorLine, TerminalAccessibleBufferProvider } from "./terminalAccessibleBufferProvider.js";
+import { TextAreaSyncAddon } from "./textAreaSyncAddon.js";
+import { alert } from "../../../../../base/browser/ui/aria/aria.js";
+let TextAreaSyncContribution = class extends DisposableStore {
+  constructor(_ctx, _instantiationService) {
+    super();
+    this._ctx = _ctx;
+    this._instantiationService = _instantiationService;
+  }
+  static {
+    __name(this, "TextAreaSyncContribution");
+  }
+  static ID = "terminal.textAreaSync";
+  static get(instance) {
+    return instance.getContribution(TextAreaSyncContribution.ID);
+  }
+  _addon;
+  layout(xterm) {
+    if (this._addon) {
+      return;
+    }
+    this._addon = this.add(this._instantiationService.createInstance(TextAreaSyncAddon, this._ctx.instance.capabilities));
+    xterm.raw.loadAddon(this._addon);
+    this._addon.activate(xterm.raw);
+  }
+};
+TextAreaSyncContribution = __decorateClass([
+  __decorateParam(1, IInstantiationService)
+], TextAreaSyncContribution);
+registerTerminalContribution(TextAreaSyncContribution.ID, TextAreaSyncContribution);
+let TerminalAccessibleViewContribution = class extends Disposable {
+  constructor(_ctx, _accessibilitySignalService, _accessibleViewService, _configurationService, _contextKeyService, _instantiationService, _terminalService) {
+    super();
+    this._ctx = _ctx;
+    this._accessibilitySignalService = _accessibilitySignalService;
+    this._accessibleViewService = _accessibleViewService;
+    this._configurationService = _configurationService;
+    this._contextKeyService = _contextKeyService;
+    this._instantiationService = _instantiationService;
+    this._terminalService = _terminalService;
+    this._register(AccessibleViewAction.addImplementation(90, "terminal", () => {
+      if (this._terminalService.activeInstance !== this._ctx.instance) {
+        return false;
+      }
+      this.show();
+      return true;
+    }, TerminalContextKeys.focus));
+    this._register(this._ctx.instance.onDidExecuteText(() => {
+      const focusAfterRun = _configurationService.getValue(TerminalSettingId.FocusAfterRun);
+      if (focusAfterRun === "terminal") {
+        this._ctx.instance.focus(true);
+      } else if (focusAfterRun === "accessible-buffer") {
+        this.show();
+      }
+    }));
+    this._register(this._configurationService.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration(TerminalAccessibilitySettingId.AccessibleViewFocusOnCommandExecution)) {
+        this._updateCommandExecutedListener();
+      }
+    }));
+    this._register(this._ctx.instance.capabilities.onDidAddCapability((e) => {
+      if (e.capability.type === TerminalCapability.CommandDetection) {
+        this._updateCommandExecutedListener();
+      }
+    }));
+  }
+  static {
+    __name(this, "TerminalAccessibleViewContribution");
+  }
+  static ID = "terminal.accessibleBufferProvider";
+  static get(instance) {
+    return instance.getContribution(TerminalAccessibleViewContribution.ID);
+  }
+  _bufferTracker;
+  _bufferProvider;
+  _xterm;
+  _onDidRunCommand = this._register(new MutableDisposable());
+  xtermReady(xterm) {
+    const addon = this._instantiationService.createInstance(TextAreaSyncAddon, this._ctx.instance.capabilities);
+    xterm.raw.loadAddon(addon);
+    addon.activate(xterm.raw);
+    this._xterm = xterm;
+    this._register(this._xterm.raw.onWriteParsed(async () => {
+      if (this._terminalService.activeInstance !== this._ctx.instance) {
+        return;
+      }
+      if (this._isTerminalAccessibleViewOpen() && this._xterm.raw.buffer.active.baseY === 0) {
+        this.show();
+      }
+    }));
+    const onRequestUpdateEditor = Event.latch(this._xterm.raw.onScroll);
+    this._register(onRequestUpdateEditor(() => {
+      if (this._terminalService.activeInstance !== this._ctx.instance) {
+        return;
+      }
+      if (this._isTerminalAccessibleViewOpen()) {
+        this.show();
+      }
+    }));
+  }
+  _updateCommandExecutedListener() {
+    if (!this._ctx.instance.capabilities.has(TerminalCapability.CommandDetection)) {
+      return;
+    }
+    if (!this._configurationService.getValue(TerminalAccessibilitySettingId.AccessibleViewFocusOnCommandExecution)) {
+      this._onDidRunCommand.clear();
+      return;
+    } else if (this._onDidRunCommand.value) {
+      return;
+    }
+    const capability = this._ctx.instance.capabilities.get(TerminalCapability.CommandDetection);
+    this._onDidRunCommand.value = capability.onCommandExecuted(() => {
+      if (this._ctx.instance.hasFocus) {
+        this.show();
+      }
+    });
+  }
+  _isTerminalAccessibleViewOpen() {
+    return accessibleViewCurrentProviderId.getValue(this._contextKeyService) === AccessibleViewProviderId.Terminal;
+  }
+  show() {
+    if (!this._xterm) {
+      return;
+    }
+    if (!this._bufferTracker) {
+      this._bufferTracker = this._register(this._instantiationService.createInstance(BufferContentTracker, this._xterm));
+    }
+    if (!this._bufferProvider) {
+      this._bufferProvider = this._register(this._instantiationService.createInstance(TerminalAccessibleBufferProvider, this._ctx.instance, this._bufferTracker, () => {
+        return this._register(this._instantiationService.createInstance(TerminalAccessibilityHelpProvider, this._ctx.instance, this._xterm)).provideContent();
+      }));
+    }
+    const position = this._configurationService.getValue(TerminalAccessibilitySettingId.AccessibleViewPreserveCursorPosition) ? this._accessibleViewService.getPosition(AccessibleViewProviderId.Terminal) : void 0;
+    this._accessibleViewService.show(this._bufferProvider, position);
+  }
+  navigateToCommand(type) {
+    const currentLine = this._accessibleViewService.getPosition(AccessibleViewProviderId.Terminal)?.lineNumber;
+    const commands = this._getCommandsWithEditorLine();
+    if (!commands?.length || !currentLine) {
+      return;
+    }
+    const filteredCommands = type === NavigationType.Previous ? commands.filter((c) => c.lineNumber < currentLine).sort((a, b) => b.lineNumber - a.lineNumber) : commands.filter((c) => c.lineNumber > currentLine).sort((a, b) => a.lineNumber - b.lineNumber);
+    if (!filteredCommands.length) {
+      return;
+    }
+    const command = filteredCommands[0];
+    const commandLine = command.command.command;
+    if (!isWindows && commandLine) {
+      this._accessibleViewService.setPosition(new Position(command.lineNumber, 1), true);
+      alert(commandLine);
+    } else {
+      this._accessibleViewService.setPosition(new Position(command.lineNumber, 1), true, true);
+    }
+    if (command.exitCode) {
+      this._accessibilitySignalService.playSignal(AccessibilitySignal.terminalCommandFailed);
+    } else {
+      this._accessibilitySignalService.playSignal(AccessibilitySignal.terminalCommandSucceeded);
+    }
+  }
+  _getCommandsWithEditorLine() {
+    const capability = this._ctx.instance.capabilities.get(TerminalCapability.CommandDetection);
+    const commands = capability?.commands;
+    const currentCommand = capability?.currentCommand;
+    if (!commands?.length) {
+      return;
+    }
+    const result = [];
+    for (const command of commands) {
+      const lineNumber = this._getEditorLineForCommand(command);
+      if (!lineNumber) {
+        continue;
+      }
+      result.push({ command, lineNumber, exitCode: command.exitCode });
+    }
+    if (currentCommand) {
+      const lineNumber = this._getEditorLineForCommand(currentCommand);
+      if (!!lineNumber) {
+        result.push({ command: currentCommand, lineNumber });
+      }
+    }
+    return result;
+  }
+  _getEditorLineForCommand(command) {
+    if (!this._bufferTracker) {
+      return;
+    }
+    let line;
+    if ("marker" in command) {
+      line = command.marker?.line;
+    } else if ("commandStartMarker" in command) {
+      line = command.commandStartMarker?.line;
+    }
+    if (line === void 0 || line < 0) {
+      return;
+    }
+    line = this._bufferTracker.bufferToEditorLineMapping.get(line);
+    if (line === void 0) {
+      return;
+    }
+    return line + 1;
+  }
+};
+TerminalAccessibleViewContribution = __decorateClass([
+  __decorateParam(1, IAccessibilitySignalService),
+  __decorateParam(2, IAccessibleViewService),
+  __decorateParam(3, IConfigurationService),
+  __decorateParam(4, IContextKeyService),
+  __decorateParam(5, IInstantiationService),
+  __decorateParam(6, ITerminalService)
+], TerminalAccessibleViewContribution);
+registerTerminalContribution(TerminalAccessibleViewContribution.ID, TerminalAccessibleViewContribution);
+class TerminalAccessibilityHelpContribution extends Disposable {
+  static {
+    __name(this, "TerminalAccessibilityHelpContribution");
+  }
+  static ID;
+  constructor() {
+    super();
+    this._register(AccessibilityHelpAction.addImplementation(105, "terminal", async (accessor) => {
+      const instantiationService = accessor.get(IInstantiationService);
+      const terminalService = accessor.get(ITerminalService);
+      const accessibleViewService = accessor.get(IAccessibleViewService);
+      const instance = await terminalService.getActiveOrCreateInstance();
+      await terminalService.revealActiveTerminal();
+      const terminal = instance?.xterm;
+      if (!terminal) {
+        return;
+      }
+      accessibleViewService.show(instantiationService.createInstance(TerminalAccessibilityHelpProvider, instance, terminal));
+    }, ContextKeyExpr.or(TerminalContextKeys.focus, ContextKeyExpr.and(accessibleViewIsShown, ContextKeyExpr.equals(accessibleViewCurrentProviderId.key, AccessibleViewProviderId.Terminal)))));
+  }
+}
+registerTerminalContribution(TerminalAccessibilityHelpContribution.ID, TerminalAccessibilityHelpContribution);
+class FocusAccessibleBufferAction extends Action2 {
+  static {
+    __name(this, "FocusAccessibleBufferAction");
+  }
+  constructor() {
+    super({
+      id: TerminalAccessibilityCommandId.FocusAccessibleBuffer,
+      title: localize2("workbench.action.terminal.focusAccessibleBuffer", "Focus Accessible Terminal View"),
+      precondition: ContextKeyExpr.or(TerminalContextKeys.processSupported, TerminalContextKeys.terminalHasBeenCreated),
+      keybinding: [
+        {
+          primary: KeyMod.Alt | KeyCode.F2,
+          secondary: [KeyMod.CtrlCmd | KeyCode.UpArrow],
+          linux: {
+            primary: KeyMod.Alt | KeyCode.F2 | KeyMod.Shift,
+            secondary: [KeyMod.CtrlCmd | KeyCode.UpArrow]
+          },
+          weight: KeybindingWeight.WorkbenchContrib,
+          when: ContextKeyExpr.and(CONTEXT_ACCESSIBILITY_MODE_ENABLED, TerminalContextKeys.focus)
+        }
+      ]
+    });
+  }
+  async run(accessor, ...args) {
+    const terminalService = accessor.get(ITerminalService);
+    const terminal = await terminalService.getActiveOrCreateInstance();
+    if (!terminal?.xterm) {
+      return;
+    }
+    TerminalAccessibleViewContribution.get(terminal)?.show();
+  }
+}
+registerAction2(FocusAccessibleBufferAction);
+registerTerminalAction({
+  id: TerminalAccessibilityCommandId.AccessibleBufferGoToNextCommand,
+  title: localize2("workbench.action.terminal.accessibleBufferGoToNextCommand", "Accessible Buffer Go to Next Command"),
+  precondition: ContextKeyExpr.or(TerminalContextKeys.processSupported, TerminalContextKeys.terminalHasBeenCreated, ContextKeyExpr.and(accessibleViewIsShown, ContextKeyExpr.equals(accessibleViewCurrentProviderId.key, AccessibleViewProviderId.Terminal))),
+  keybinding: [
+    {
+      primary: KeyMod.Alt | KeyCode.DownArrow,
+      when: ContextKeyExpr.and(ContextKeyExpr.and(accessibleViewIsShown, ContextKeyExpr.equals(accessibleViewCurrentProviderId.key, AccessibleViewProviderId.Terminal))),
+      weight: KeybindingWeight.WorkbenchContrib + 2
+    }
+  ],
+  run: /* @__PURE__ */ __name(async (c) => {
+    const instance = c.service.activeInstance;
+    if (!instance) {
+      return;
+    }
+    TerminalAccessibleViewContribution.get(instance)?.navigateToCommand(NavigationType.Next);
+  }, "run")
+});
+registerTerminalAction({
+  id: TerminalAccessibilityCommandId.AccessibleBufferGoToPreviousCommand,
+  title: localize2("workbench.action.terminal.accessibleBufferGoToPreviousCommand", "Accessible Buffer Go to Previous Command"),
+  precondition: ContextKeyExpr.and(ContextKeyExpr.or(TerminalContextKeys.processSupported, TerminalContextKeys.terminalHasBeenCreated), ContextKeyExpr.and(accessibleViewIsShown, ContextKeyExpr.equals(accessibleViewCurrentProviderId.key, AccessibleViewProviderId.Terminal))),
+  keybinding: [
+    {
+      primary: KeyMod.Alt | KeyCode.UpArrow,
+      when: ContextKeyExpr.and(ContextKeyExpr.and(accessibleViewIsShown, ContextKeyExpr.equals(accessibleViewCurrentProviderId.key, AccessibleViewProviderId.Terminal))),
+      weight: KeybindingWeight.WorkbenchContrib + 2
+    }
+  ],
+  run: /* @__PURE__ */ __name(async (c) => {
+    const instance = c.service.activeInstance;
+    if (!instance) {
+      return;
+    }
+    TerminalAccessibleViewContribution.get(instance)?.navigateToCommand(NavigationType.Previous);
+  }, "run")
+});
+registerTerminalAction({
+  id: TerminalAccessibilityCommandId.ScrollToBottomAccessibleView,
+  title: localize2("workbench.action.terminal.scrollToBottomAccessibleView", "Scroll to Accessible View Bottom"),
+  precondition: ContextKeyExpr.and(ContextKeyExpr.or(TerminalContextKeys.processSupported, TerminalContextKeys.terminalHasBeenCreated), ContextKeyExpr.and(accessibleViewIsShown, ContextKeyExpr.equals(accessibleViewCurrentProviderId.key, AccessibleViewProviderId.Terminal))),
+  keybinding: {
+    primary: KeyMod.CtrlCmd | KeyCode.End,
+    linux: { primary: KeyMod.Shift | KeyCode.End },
+    when: accessibleViewCurrentProviderId.isEqualTo(AccessibleViewProviderId.Terminal),
+    weight: KeybindingWeight.WorkbenchContrib
+  },
+  run: /* @__PURE__ */ __name((c, accessor) => {
+    const accessibleViewService = accessor.get(IAccessibleViewService);
+    const lastPosition = accessibleViewService.getLastPosition();
+    if (!lastPosition) {
+      return;
+    }
+    accessibleViewService.setPosition(lastPosition, true);
+  }, "run")
+});
+registerTerminalAction({
+  id: TerminalAccessibilityCommandId.ScrollToTopAccessibleView,
+  title: localize2("workbench.action.terminal.scrollToTopAccessibleView", "Scroll to Accessible View Top"),
+  precondition: ContextKeyExpr.and(ContextKeyExpr.or(TerminalContextKeys.processSupported, TerminalContextKeys.terminalHasBeenCreated), ContextKeyExpr.and(accessibleViewIsShown, ContextKeyExpr.equals(accessibleViewCurrentProviderId.key, AccessibleViewProviderId.Terminal))),
+  keybinding: {
+    primary: KeyMod.CtrlCmd | KeyCode.Home,
+    linux: { primary: KeyMod.Shift | KeyCode.Home },
+    when: accessibleViewCurrentProviderId.isEqualTo(AccessibleViewProviderId.Terminal),
+    weight: KeybindingWeight.WorkbenchContrib
+  },
+  run: /* @__PURE__ */ __name((c, accessor) => accessor.get(IAccessibleViewService)?.setPosition(new Position(1, 1), true), "run")
+});
+export {
+  TerminalAccessibilityHelpContribution,
+  TerminalAccessibleViewContribution
+};
+//# sourceMappingURL=terminal.accessibility.contribution.js.map

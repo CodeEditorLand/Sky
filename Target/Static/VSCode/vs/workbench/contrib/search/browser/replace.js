@@ -1,1 +1,8 @@
-import{createDecorator as e}from"../../../../platform/instantiation/common/instantiation.js";import"../../../../platform/progress/common/progress.js";import"./searchTreeModel/searchTreeCommon.js";const s=e("replaceService");export{s as IReplaceService};
+import { createDecorator } from "../../../../platform/instantiation/common/instantiation.js";
+import { IProgress, IProgressStep } from "../../../../platform/progress/common/progress.js";
+import { ISearchTreeFileMatch, ISearchTreeMatch, FileMatchOrMatch } from "./searchTreeModel/searchTreeCommon.js";
+const IReplaceService = createDecorator("replaceService");
+export {
+  IReplaceService
+};
+//# sourceMappingURL=replace.js.map

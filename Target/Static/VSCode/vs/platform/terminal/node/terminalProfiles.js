@@ -1,1 +1,400 @@
-import*as F from"fs";import*as W from"child_process";import{Codicon as h}from"../../../base/common/codicons.js";import{basename as y,delimiter as R,normalize as E}from"../../../base/common/path.js";import{isLinux as b,isWindows as v}from"../../../base/common/platform.js";import{findExecutable as U}from"../../../base/node/processes.js";import{isString as O}from"../../../base/common/types.js";import"../../../base/common/uri.js";import*as M from"../../../base/node/pfs.js";import{enumeratePowerShellInstallations as L}from"../../../base/node/powershell.js";import"../../configuration/common/configuration.js";import"../../log/common/log.js";import{ProfileSource as w,TerminalSettingId as P}from"../common/terminal.js";import{getWindowsBuildNumber as C}from"./terminalEnvironment.js";import"../../../base/common/themables.js";import{dirname as k,resolve as V}from"path";var B=(e=>(e.UnixShellsPath="/etc/shells",e))(B||{});let I,S=!0;function Ie(e,t,s,i,o=process.env,n,r,a,c){return n=n||{existsFile:M.SymlinkSupport.existsFile,readFile:F.promises.readFile},v?q(s,n,o,r,!1!==i.getValue(P.UseWslProfiles),e&&"object"==typeof e?{...e}:i.getValue(P.ProfilesWindows),"string"==typeof t?t:i.getValue(P.DefaultProfileWindows),c,a):K(n,r,s,e&&"object"==typeof e?{...e}:i.getValue(b?P.ProfilesLinux:P.ProfilesMacOs),"string"==typeof t?t:i.getValue(b?P.DefaultProfileLinux:P.DefaultProfileMacOs),c,a,o)}async function q(e,t,s,i,o,n,r,a,c){const l=process.env.hasOwnProperty("PROCESSOR_ARCHITEW6432"),p=`${process.env.windir}\\${l?"Sysnative":"System32"}`;let f=!1;C()>=16299&&(f=!0),await H(a);const u=new Map;if(e){u.set("PowerShell",{source:w.Pwsh,icon:h.terminalPowershell,isAutoDetected:!0}),u.set("Windows PowerShell",{path:`${p}\\WindowsPowerShell\\v1.0\\powershell.exe`,icon:h.terminalPowershell,isAutoDetected:!0}),u.set("Git Bash",{source:w.GitBash,isAutoDetected:!0}),u.set("Command Prompt",{path:`${p}\\cmd.exe`,icon:h.terminalCmd,isAutoDetected:!0}),u.set("Cygwin",{path:[{path:`${process.env.HOMEDRIVE}\\cygwin64\\bin\\bash.exe`,isUnsafe:!0},{path:`${process.env.HOMEDRIVE}\\cygwin\\bin\\bash.exe`,isUnsafe:!0}],args:["--login"],isAutoDetected:!0}),u.set("bash (MSYS2)",{path:[{path:`${process.env.HOMEDRIVE}\\msys64\\usr\\bin\\bash.exe`,isUnsafe:!0}],args:["--login","-i"],env:{CHERE_INVOKING:"1"},icon:h.terminalBash,isAutoDetected:!0});const e=`${process.env.CMDER_ROOT||`${process.env.HOMEDRIVE}\\cmder`}\\vendor\\bin\\vscode_init.cmd`;u.set("Cmder",{path:`${p}\\cmd.exe`,args:["/K",e],requiresPath:process.env.CMDER_ROOT?e:{path:e,isUnsafe:!0},isAutoDetected:!0})}$(n,u);const m=await D(u.entries(),r,t,s,i,c);if(e&&o)try{const e=await N(`${p}\\${f?"wsl":"bash"}.exe`,r);for(const t of e)(!n||!(t.profileName in n))&&m.push(t)}catch{S&&(i?.trace("WSL is not installed, so could not detect WSL profiles"),S=!1)}return m}async function D(e,t,s,i=process.env,o,n){const r=[];for(const[a,c]of e)r.push(G(a,c,t,s,i,o,n));return(await Promise.all(r)).filter((e=>!!e))}async function G(e,t,s,i,o=process.env,n,r){if(null===t)return;let a,c,l,p,f;if("source"in t&&!("path"in t)){const e=I?.get(t.source);if(!e)return;a=e.paths,c=t.args||e.args,t.icon?l=A(t.icon):e.icon&&(l=e.icon)}else a=Array.isArray(t.path)?t.path:[t.path],c=v||Array.isArray(t.args)?t.args:void 0,l=A(t.icon);if(r){const e=a.map((e=>"string"==typeof e?e:e.path)),t=await r(e);p=new Array(a.length);for(let e=0;e<a.length;e++)"string"==typeof a[e]?p[e]=t[e]:p[e]={path:t[e],isUnsafe:!0}}else p=a.slice();if(t.requiresPath){let e;if(O(t.requiresPath)?e=t.requiresPath:(e=t.requiresPath.path,t.requiresPath.isUnsafe&&(f=e)),!await i.existsFile(e))return}const u=await T(e,s,p,i,o,c,t.env,t.overrideName,t.isAutoDetected,f);if(u)return u.isAutoDetected=t.isAutoDetected,u.icon=l,u.color=t.color,u;n?.debug("Terminal profile not validated",e,a)}function A(e){return"string"==typeof e?{id:e}:e}async function H(e){if(I&&!e)return;const[t,s]=await Promise.all([_(),e||j()]);I=new Map,I.set(w.GitBash,{profileName:"Git Bash",paths:t,args:["--login","-i"]}),I.set(w.Pwsh,{profileName:"PowerShell",paths:s,icon:h.terminalPowershell})}async function _(){const e=new Set,t=await U("git.exe");if(t){const s=k(t);e.add(V(s,"../.."))}function s(e,t){t&&e.add(t)}s(e,process.env.ProgramW6432),s(e,process.env.ProgramFiles),s(e,process.env["ProgramFiles(X86)"]),s(e,`${process.env.LocalAppData}\\Program`);const i=[];for(const t of e)i.push(`${t}\\Git\\bin\\bash.exe`,`${t}\\Git\\usr\\bin\\bash.exe`,`${t}\\usr\\bin\\bash.exe`);return i.push(`${process.env.UserProfile}\\scoop\\apps\\git\\current\\bin\\bash.exe`),i.push(`${process.env.UserProfile}\\scoop\\apps\\git-with-openssh\\current\\bin\\bash.exe`),i}async function j(){const e=[];for await(const t of L())e.push(t.exePath);return e}async function N(e,t){const s=[],i=await new Promise(((e,t)=>{W.exec("wsl.exe -l -q",{encoding:"utf16le",timeout:1e3},((s,i)=>{if(s)return t("Problem occurred when getting wsl distros");e(i)}))}));if(!i)return[];const o=new RegExp(/[\r?\n]/),n=i.split(o).filter((e=>e.trim().length>0&&""!==e));for(const i of n){if(""===i||i.startsWith("docker-desktop"))continue;const o=`${i} (WSL)`,n={profileName:o,path:e,args:["-d",`${i}`],isDefault:o===t,icon:z(i),isAutoDetected:!1};s.push(n)}return s}function z(e){return e.includes("Ubuntu")?h.terminalUbuntu:e.includes("Debian")?h.terminalDebian:h.terminalLinux}async function K(e,t,s,i,o,n,r,a){const c=new Map;if(s&&await e.existsFile("/etc/shells")){const t=(await e.readFile("/etc/shells")).toString(),s=(n||t.split("\n")).map((e=>{const t=e.indexOf("#");return-1===t?e:e.substring(0,t)})).filter((e=>e.trim().length>0)),i=new Map;for(const e of s){let t=y(e),s=i.get(t)||0;s++,s>1&&(t=`${t} (${s})`),i.set(t,s),c.set(t,{path:e,isAutoDetected:!0})}}return $(i,c),await D(c.entries(),o,e,a,t,r)}function $(e,t){if(e)for(const[s,i]of Object.entries(e))null===i||"object"!=typeof i||!("path"in i)&&!("source"in i)?t.delete(s):(i.icon=i.icon||t.get(s)?.icon,t.set(s,i))}async function T(e,t,s,i,o,n,r,a,c,l){if(0===s.length)return Promise.resolve(void 0);const p=s.shift();if(""===p)return T(e,t,s,i,o,n,r,a,c);const f="string"!=typeof p&&p.isUnsafe,u="string"==typeof p?p:p.path,m={profileName:e,path:u,args:n,env:r,overrideName:a,isAutoDetected:c,isDefault:e===t,isUnsafePath:f,requiresUnsafePath:l};if(y(u)===u){const r=o.PATH?o.PATH.split(R):void 0,a=await U(u,void 0,r,void 0,i.existsFile);return a?(m.path=a,m.isFromPath=!0,m):T(e,t,s,i,o,n)}return await i.existsFile(E(u))?m:T(e,t,s,i,o,n,r,a,c)}export{Ie as detectAvailableProfiles};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import * as fs from "fs";
+import * as cp from "child_process";
+import { Codicon } from "../../../base/common/codicons.js";
+import { basename, delimiter, normalize } from "../../../base/common/path.js";
+import { isLinux, isWindows } from "../../../base/common/platform.js";
+import { findExecutable } from "../../../base/node/processes.js";
+import { isString } from "../../../base/common/types.js";
+import { URI } from "../../../base/common/uri.js";
+import * as pfs from "../../../base/node/pfs.js";
+import { enumeratePowerShellInstallations } from "../../../base/node/powershell.js";
+import { IConfigurationService } from "../../configuration/common/configuration.js";
+import { ILogService } from "../../log/common/log.js";
+import { ITerminalEnvironment, ITerminalExecutable, ITerminalProfile, ITerminalProfileSource, ITerminalUnsafePath, ProfileSource, TerminalIcon, TerminalSettingId } from "../common/terminal.js";
+import { getWindowsBuildNumber } from "./terminalEnvironment.js";
+import { ThemeIcon } from "../../../base/common/themables.js";
+import { dirname, resolve } from "path";
+var Constants = /* @__PURE__ */ ((Constants2) => {
+  Constants2["UnixShellsPath"] = "/etc/shells";
+  return Constants2;
+})(Constants || {});
+let profileSources;
+let logIfWslNotInstalled = true;
+function detectAvailableProfiles(profiles, defaultProfile, includeDetectedProfiles, configurationService, shellEnv = process.env, fsProvider, logService, variableResolver, testPwshSourcePaths) {
+  fsProvider = fsProvider || {
+    existsFile: pfs.SymlinkSupport.existsFile,
+    readFile: fs.promises.readFile
+  };
+  if (isWindows) {
+    return detectAvailableWindowsProfiles(
+      includeDetectedProfiles,
+      fsProvider,
+      shellEnv,
+      logService,
+      configurationService.getValue(TerminalSettingId.UseWslProfiles) !== false,
+      profiles && typeof profiles === "object" ? { ...profiles } : configurationService.getValue(TerminalSettingId.ProfilesWindows),
+      typeof defaultProfile === "string" ? defaultProfile : configurationService.getValue(TerminalSettingId.DefaultProfileWindows),
+      testPwshSourcePaths,
+      variableResolver
+    );
+  }
+  return detectAvailableUnixProfiles(
+    fsProvider,
+    logService,
+    includeDetectedProfiles,
+    profiles && typeof profiles === "object" ? { ...profiles } : configurationService.getValue(isLinux ? TerminalSettingId.ProfilesLinux : TerminalSettingId.ProfilesMacOs),
+    typeof defaultProfile === "string" ? defaultProfile : configurationService.getValue(isLinux ? TerminalSettingId.DefaultProfileLinux : TerminalSettingId.DefaultProfileMacOs),
+    testPwshSourcePaths,
+    variableResolver,
+    shellEnv
+  );
+}
+__name(detectAvailableProfiles, "detectAvailableProfiles");
+async function detectAvailableWindowsProfiles(includeDetectedProfiles, fsProvider, shellEnv, logService, useWslProfiles, configProfiles, defaultProfileName, testPwshSourcePaths, variableResolver) {
+  const is32ProcessOn64Windows = process.env.hasOwnProperty("PROCESSOR_ARCHITEW6432");
+  const system32Path = `${process.env["windir"]}\\${is32ProcessOn64Windows ? "Sysnative" : "System32"}`;
+  let useWSLexe = false;
+  if (getWindowsBuildNumber() >= 16299) {
+    useWSLexe = true;
+  }
+  await initializeWindowsProfiles(testPwshSourcePaths);
+  const detectedProfiles = /* @__PURE__ */ new Map();
+  if (includeDetectedProfiles) {
+    detectedProfiles.set("PowerShell", {
+      source: ProfileSource.Pwsh,
+      icon: Codicon.terminalPowershell,
+      isAutoDetected: true
+    });
+    detectedProfiles.set("Windows PowerShell", {
+      path: `${system32Path}\\WindowsPowerShell\\v1.0\\powershell.exe`,
+      icon: Codicon.terminalPowershell,
+      isAutoDetected: true
+    });
+    detectedProfiles.set("Git Bash", {
+      source: ProfileSource.GitBash,
+      isAutoDetected: true
+    });
+    detectedProfiles.set("Command Prompt", {
+      path: `${system32Path}\\cmd.exe`,
+      icon: Codicon.terminalCmd,
+      isAutoDetected: true
+    });
+    detectedProfiles.set("Cygwin", {
+      path: [
+        { path: `${process.env["HOMEDRIVE"]}\\cygwin64\\bin\\bash.exe`, isUnsafe: true },
+        { path: `${process.env["HOMEDRIVE"]}\\cygwin\\bin\\bash.exe`, isUnsafe: true }
+      ],
+      args: ["--login"],
+      isAutoDetected: true
+    });
+    detectedProfiles.set("bash (MSYS2)", {
+      path: [
+        { path: `${process.env["HOMEDRIVE"]}\\msys64\\usr\\bin\\bash.exe`, isUnsafe: true }
+      ],
+      args: ["--login", "-i"],
+      // CHERE_INVOKING retains current working directory
+      env: { CHERE_INVOKING: "1" },
+      icon: Codicon.terminalBash,
+      isAutoDetected: true
+    });
+    const cmderPath = `${process.env["CMDER_ROOT"] || `${process.env["HOMEDRIVE"]}\\cmder`}\\vendor\\bin\\vscode_init.cmd`;
+    detectedProfiles.set("Cmder", {
+      path: `${system32Path}\\cmd.exe`,
+      args: ["/K", cmderPath],
+      // The path is safe if it was derived from CMDER_ROOT
+      requiresPath: process.env["CMDER_ROOT"] ? cmderPath : { path: cmderPath, isUnsafe: true },
+      isAutoDetected: true
+    });
+  }
+  applyConfigProfilesToMap(configProfiles, detectedProfiles);
+  const resultProfiles = await transformToTerminalProfiles(detectedProfiles.entries(), defaultProfileName, fsProvider, shellEnv, logService, variableResolver);
+  if (includeDetectedProfiles && useWslProfiles) {
+    try {
+      const result = await getWslProfiles(`${system32Path}\\${useWSLexe ? "wsl" : "bash"}.exe`, defaultProfileName);
+      for (const wslProfile of result) {
+        if (!configProfiles || !(wslProfile.profileName in configProfiles)) {
+          resultProfiles.push(wslProfile);
+        }
+      }
+    } catch (e) {
+      if (logIfWslNotInstalled) {
+        logService?.trace("WSL is not installed, so could not detect WSL profiles");
+        logIfWslNotInstalled = false;
+      }
+    }
+  }
+  return resultProfiles;
+}
+__name(detectAvailableWindowsProfiles, "detectAvailableWindowsProfiles");
+async function transformToTerminalProfiles(entries, defaultProfileName, fsProvider, shellEnv = process.env, logService, variableResolver) {
+  const promises = [];
+  for (const [profileName, profile] of entries) {
+    promises.push(getValidatedProfile(profileName, profile, defaultProfileName, fsProvider, shellEnv, logService, variableResolver));
+  }
+  return (await Promise.all(promises)).filter((e) => !!e);
+}
+__name(transformToTerminalProfiles, "transformToTerminalProfiles");
+async function getValidatedProfile(profileName, profile, defaultProfileName, fsProvider, shellEnv = process.env, logService, variableResolver) {
+  if (profile === null) {
+    return void 0;
+  }
+  let originalPaths;
+  let args;
+  let icon = void 0;
+  if ("source" in profile && !("path" in profile)) {
+    const source = profileSources?.get(profile.source);
+    if (!source) {
+      return void 0;
+    }
+    originalPaths = source.paths;
+    args = profile.args || source.args;
+    if (profile.icon) {
+      icon = validateIcon(profile.icon);
+    } else if (source.icon) {
+      icon = source.icon;
+    }
+  } else {
+    originalPaths = Array.isArray(profile.path) ? profile.path : [profile.path];
+    args = isWindows ? profile.args : Array.isArray(profile.args) ? profile.args : void 0;
+    icon = validateIcon(profile.icon);
+  }
+  let paths;
+  if (variableResolver) {
+    const mapped = originalPaths.map((e) => typeof e === "string" ? e : e.path);
+    const resolved = await variableResolver(mapped);
+    paths = new Array(originalPaths.length);
+    for (let i = 0; i < originalPaths.length; i++) {
+      if (typeof originalPaths[i] === "string") {
+        paths[i] = resolved[i];
+      } else {
+        paths[i] = {
+          path: resolved[i],
+          isUnsafe: true
+        };
+      }
+    }
+  } else {
+    paths = originalPaths.slice();
+  }
+  let requiresUnsafePath;
+  if (profile.requiresPath) {
+    let actualRequiredPath;
+    if (isString(profile.requiresPath)) {
+      actualRequiredPath = profile.requiresPath;
+    } else {
+      actualRequiredPath = profile.requiresPath.path;
+      if (profile.requiresPath.isUnsafe) {
+        requiresUnsafePath = actualRequiredPath;
+      }
+    }
+    const result = await fsProvider.existsFile(actualRequiredPath);
+    if (!result) {
+      return;
+    }
+  }
+  const validatedProfile = await validateProfilePaths(profileName, defaultProfileName, paths, fsProvider, shellEnv, args, profile.env, profile.overrideName, profile.isAutoDetected, requiresUnsafePath);
+  if (!validatedProfile) {
+    logService?.debug("Terminal profile not validated", profileName, originalPaths);
+    return void 0;
+  }
+  validatedProfile.isAutoDetected = profile.isAutoDetected;
+  validatedProfile.icon = icon;
+  validatedProfile.color = profile.color;
+  return validatedProfile;
+}
+__name(getValidatedProfile, "getValidatedProfile");
+function validateIcon(icon) {
+  if (typeof icon === "string") {
+    return { id: icon };
+  }
+  return icon;
+}
+__name(validateIcon, "validateIcon");
+async function initializeWindowsProfiles(testPwshSourcePaths) {
+  if (profileSources && !testPwshSourcePaths) {
+    return;
+  }
+  const [gitBashPaths, pwshPaths] = await Promise.all([getGitBashPaths(), testPwshSourcePaths || getPowershellPaths()]);
+  profileSources = /* @__PURE__ */ new Map();
+  profileSources.set(
+    ProfileSource.GitBash,
+    {
+      profileName: "Git Bash",
+      paths: gitBashPaths,
+      args: ["--login", "-i"]
+    }
+  );
+  profileSources.set(ProfileSource.Pwsh, {
+    profileName: "PowerShell",
+    paths: pwshPaths,
+    icon: Codicon.terminalPowershell
+  });
+}
+__name(initializeWindowsProfiles, "initializeWindowsProfiles");
+async function getGitBashPaths() {
+  const gitDirs = /* @__PURE__ */ new Set();
+  const gitExePath = await findExecutable("git.exe");
+  if (gitExePath) {
+    const gitExeDir = dirname(gitExePath);
+    gitDirs.add(resolve(gitExeDir, "../.."));
+  }
+  function addTruthy(set, value) {
+    if (value) {
+      set.add(value);
+    }
+  }
+  __name(addTruthy, "addTruthy");
+  addTruthy(gitDirs, process.env["ProgramW6432"]);
+  addTruthy(gitDirs, process.env["ProgramFiles"]);
+  addTruthy(gitDirs, process.env["ProgramFiles(X86)"]);
+  addTruthy(gitDirs, `${process.env["LocalAppData"]}\\Program`);
+  const gitBashPaths = [];
+  for (const gitDir of gitDirs) {
+    gitBashPaths.push(
+      `${gitDir}\\Git\\bin\\bash.exe`,
+      `${gitDir}\\Git\\usr\\bin\\bash.exe`,
+      `${gitDir}\\usr\\bin\\bash.exe`
+      // using Git for Windows SDK
+    );
+  }
+  gitBashPaths.push(`${process.env["UserProfile"]}\\scoop\\apps\\git\\current\\bin\\bash.exe`);
+  gitBashPaths.push(`${process.env["UserProfile"]}\\scoop\\apps\\git-with-openssh\\current\\bin\\bash.exe`);
+  return gitBashPaths;
+}
+__name(getGitBashPaths, "getGitBashPaths");
+async function getPowershellPaths() {
+  const paths = [];
+  for await (const pwshExe of enumeratePowerShellInstallations()) {
+    paths.push(pwshExe.exePath);
+  }
+  return paths;
+}
+__name(getPowershellPaths, "getPowershellPaths");
+async function getWslProfiles(wslPath, defaultProfileName) {
+  const profiles = [];
+  const distroOutput = await new Promise((resolve2, reject) => {
+    cp.exec("wsl.exe -l -q", { encoding: "utf16le", timeout: 1e3 }, (err, stdout) => {
+      if (err) {
+        return reject("Problem occurred when getting wsl distros");
+      }
+      resolve2(stdout);
+    });
+  });
+  if (!distroOutput) {
+    return [];
+  }
+  const regex = new RegExp(/[\r?\n]/);
+  const distroNames = distroOutput.split(regex).filter((t) => t.trim().length > 0 && t !== "");
+  for (const distroName of distroNames) {
+    if (distroName === "") {
+      continue;
+    }
+    if (distroName.startsWith("docker-desktop")) {
+      continue;
+    }
+    const profileName = `${distroName} (WSL)`;
+    const profile = {
+      profileName,
+      path: wslPath,
+      args: [`-d`, `${distroName}`],
+      isDefault: profileName === defaultProfileName,
+      icon: getWslIcon(distroName),
+      isAutoDetected: false
+    };
+    profiles.push(profile);
+  }
+  return profiles;
+}
+__name(getWslProfiles, "getWslProfiles");
+function getWslIcon(distroName) {
+  if (distroName.includes("Ubuntu")) {
+    return Codicon.terminalUbuntu;
+  } else if (distroName.includes("Debian")) {
+    return Codicon.terminalDebian;
+  } else {
+    return Codicon.terminalLinux;
+  }
+}
+__name(getWslIcon, "getWslIcon");
+async function detectAvailableUnixProfiles(fsProvider, logService, includeDetectedProfiles, configProfiles, defaultProfileName, testPaths, variableResolver, shellEnv) {
+  const detectedProfiles = /* @__PURE__ */ new Map();
+  if (includeDetectedProfiles && await fsProvider.existsFile("/etc/shells" /* UnixShellsPath */)) {
+    const contents = (await fsProvider.readFile("/etc/shells" /* UnixShellsPath */)).toString();
+    const profiles = (testPaths || contents.split("\n")).map((e) => {
+      const index = e.indexOf("#");
+      return index === -1 ? e : e.substring(0, index);
+    }).filter((e) => e.trim().length > 0);
+    const counts = /* @__PURE__ */ new Map();
+    for (const profile of profiles) {
+      let profileName = basename(profile);
+      let count = counts.get(profileName) || 0;
+      count++;
+      if (count > 1) {
+        profileName = `${profileName} (${count})`;
+      }
+      counts.set(profileName, count);
+      detectedProfiles.set(profileName, { path: profile, isAutoDetected: true });
+    }
+  }
+  applyConfigProfilesToMap(configProfiles, detectedProfiles);
+  return await transformToTerminalProfiles(detectedProfiles.entries(), defaultProfileName, fsProvider, shellEnv, logService, variableResolver);
+}
+__name(detectAvailableUnixProfiles, "detectAvailableUnixProfiles");
+function applyConfigProfilesToMap(configProfiles, profilesMap) {
+  if (!configProfiles) {
+    return;
+  }
+  for (const [profileName, value] of Object.entries(configProfiles)) {
+    if (value === null || typeof value !== "object" || !("path" in value) && !("source" in value)) {
+      profilesMap.delete(profileName);
+    } else {
+      value.icon = value.icon || profilesMap.get(profileName)?.icon;
+      profilesMap.set(profileName, value);
+    }
+  }
+}
+__name(applyConfigProfilesToMap, "applyConfigProfilesToMap");
+async function validateProfilePaths(profileName, defaultProfileName, potentialPaths, fsProvider, shellEnv, args, env, overrideName, isAutoDetected, requiresUnsafePath) {
+  if (potentialPaths.length === 0) {
+    return Promise.resolve(void 0);
+  }
+  const path = potentialPaths.shift();
+  if (path === "") {
+    return validateProfilePaths(profileName, defaultProfileName, potentialPaths, fsProvider, shellEnv, args, env, overrideName, isAutoDetected);
+  }
+  const isUnsafePath = typeof path !== "string" && path.isUnsafe;
+  const actualPath = typeof path === "string" ? path : path.path;
+  const profile = {
+    profileName,
+    path: actualPath,
+    args,
+    env,
+    overrideName,
+    isAutoDetected,
+    isDefault: profileName === defaultProfileName,
+    isUnsafePath,
+    requiresUnsafePath
+  };
+  if (basename(actualPath) === actualPath) {
+    const envPaths = shellEnv.PATH ? shellEnv.PATH.split(delimiter) : void 0;
+    const executable = await findExecutable(actualPath, void 0, envPaths, void 0, fsProvider.existsFile);
+    if (!executable) {
+      return validateProfilePaths(profileName, defaultProfileName, potentialPaths, fsProvider, shellEnv, args);
+    }
+    profile.path = executable;
+    profile.isFromPath = true;
+    return profile;
+  }
+  const result = await fsProvider.existsFile(normalize(actualPath));
+  if (result) {
+    return profile;
+  }
+  return validateProfilePaths(profileName, defaultProfileName, potentialPaths, fsProvider, shellEnv, args, env, overrideName, isAutoDetected);
+}
+__name(validateProfilePaths, "validateProfilePaths");
+export {
+  detectAvailableProfiles
+};
+//# sourceMappingURL=terminalProfiles.js.map

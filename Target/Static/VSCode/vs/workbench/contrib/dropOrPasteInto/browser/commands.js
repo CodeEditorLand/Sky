@@ -1,1 +1,56 @@
-var a=Object.defineProperty,g=Object.getOwnPropertyDescriptor,u=(e,r,o,t)=>{for(var n,i=t>1?void 0:t?g(r,o):r,s=e.length-1;s>=0;s--)(n=e[s])&&(i=(t?n(r,o,i):n(i))||i);return t&&i&&a(r,o,i),i},p=(e,r)=>(o,t)=>r(o,t,e);import{toAction as s}from"../../../../base/common/actions.js";import{CopyPasteController as d,pasteAsPreferenceConfig as b}from"../../../../editor/contrib/dropOrPasteInto/browser/copyPasteController.js";import{DropIntoEditorController as P,dropAsPreferenceConfig as A}from"../../../../editor/contrib/dropOrPasteInto/browser/dropIntoEditorController.js";import{localize as l}from"../../../../nls.js";import"../../../common/contributions.js";import{IPreferencesService as v}from"../../../services/preferences/common/preferences.js";let n=class{constructor(e){this._preferencesService=e,d.setConfigureDefaultAction(s({id:"workbench.action.configurePreferredPasteAction",label:l("configureDefaultPaste.label","Configure preferred paste action..."),run:()=>this.configurePreferredPasteAction()})),P.setConfigureDefaultAction(s({id:"workbench.action.configurePreferredDropAction",label:l("configureDefaultDrop.label","Configure preferred drop action..."),run:()=>this.configurePreferredDropAction()}))}static ID="workbench.contrib.dropOrPasteInto";configurePreferredPasteAction(){return this._preferencesService.openUserSettings({jsonEditor:!0,revealSetting:{key:b,edit:!0}})}configurePreferredDropAction(){return this._preferencesService.openUserSettings({jsonEditor:!0,revealSetting:{key:A,edit:!0}})}};n=u([p(0,v)],n);export{n as DropOrPasteIntoCommands};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { toAction } from "../../../../base/common/actions.js";
+import { CopyPasteController, pasteAsPreferenceConfig } from "../../../../editor/contrib/dropOrPasteInto/browser/copyPasteController.js";
+import { DropIntoEditorController, dropAsPreferenceConfig } from "../../../../editor/contrib/dropOrPasteInto/browser/dropIntoEditorController.js";
+import { localize } from "../../../../nls.js";
+import { IWorkbenchContribution } from "../../../common/contributions.js";
+import { IPreferencesService } from "../../../services/preferences/common/preferences.js";
+let DropOrPasteIntoCommands = class {
+  constructor(_preferencesService) {
+    this._preferencesService = _preferencesService;
+    CopyPasteController.setConfigureDefaultAction(toAction({
+      id: "workbench.action.configurePreferredPasteAction",
+      label: localize("configureDefaultPaste.label", "Configure preferred paste action..."),
+      run: /* @__PURE__ */ __name(() => this.configurePreferredPasteAction(), "run")
+    }));
+    DropIntoEditorController.setConfigureDefaultAction(toAction({
+      id: "workbench.action.configurePreferredDropAction",
+      label: localize("configureDefaultDrop.label", "Configure preferred drop action..."),
+      run: /* @__PURE__ */ __name(() => this.configurePreferredDropAction(), "run")
+    }));
+  }
+  static {
+    __name(this, "DropOrPasteIntoCommands");
+  }
+  static ID = "workbench.contrib.dropOrPasteInto";
+  configurePreferredPasteAction() {
+    return this._preferencesService.openUserSettings({
+      jsonEditor: true,
+      revealSetting: { key: pasteAsPreferenceConfig, edit: true }
+    });
+  }
+  configurePreferredDropAction() {
+    return this._preferencesService.openUserSettings({
+      jsonEditor: true,
+      revealSetting: { key: dropAsPreferenceConfig, edit: true }
+    });
+  }
+};
+DropOrPasteIntoCommands = __decorateClass([
+  __decorateParam(0, IPreferencesService)
+], DropOrPasteIntoCommands);
+export {
+  DropOrPasteIntoCommands
+};
+//# sourceMappingURL=commands.js.map

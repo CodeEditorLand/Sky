@@ -1,1 +1,50 @@
-import"../../../../../editor/common/model.js";import{TextSearchMatch as l}from"../../../../services/search/common/search.js";import{Range as i}from"../../../../../editor/common/core/range.js";import{genericCellMatchesToTextSearchMatches as r,rawCellPrefix as c}from"../../common/searchNotebookHelpers.js";import"../../../notebook/browser/notebookBrowser.js";import"../../../../../base/common/uri.js";function C(e){return t(e)?e.cell.id:`${c}${e.index}`}function F(e){return"cellResults"in e&&e.cellResults instanceof Array&&e.cellResults.every(t)}function t(e){return"cell"in e}function m(e,o){return r(e,o.textBuffer)}function T(e){return e.map(o=>o.searchPreviewInfo?new l(o.searchPreviewInfo.line,new i(0,o.searchPreviewInfo.range.start,0,o.searchPreviewInfo.range.end),void 0,o.index):void 0).filter(o=>!!o)}export{m as contentMatchesToTextSearchMatches,C as getIDFromINotebookCellMatch,t as isINotebookCellMatchWithModel,F as isINotebookFileMatchWithModel,T as webviewMatchesToTextSearchMatches};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { FindMatch } from "../../../../../editor/common/model.js";
+import { IFileMatch, ITextSearchMatch, TextSearchMatch } from "../../../../services/search/common/search.js";
+import { Range } from "../../../../../editor/common/core/range.js";
+import { INotebookCellMatchNoModel, INotebookFileMatchNoModel, genericCellMatchesToTextSearchMatches, rawCellPrefix } from "../../common/searchNotebookHelpers.js";
+import { CellWebviewFindMatch, ICellViewModel } from "../../../notebook/browser/notebookBrowser.js";
+import { URI } from "../../../../../base/common/uri.js";
+function getIDFromINotebookCellMatch(match) {
+  if (isINotebookCellMatchWithModel(match)) {
+    return match.cell.id;
+  } else {
+    return `${rawCellPrefix}${match.index}`;
+  }
+}
+__name(getIDFromINotebookCellMatch, "getIDFromINotebookCellMatch");
+function isINotebookFileMatchWithModel(object) {
+  return "cellResults" in object && object.cellResults instanceof Array && object.cellResults.every(isINotebookCellMatchWithModel);
+}
+__name(isINotebookFileMatchWithModel, "isINotebookFileMatchWithModel");
+function isINotebookCellMatchWithModel(object) {
+  return "cell" in object;
+}
+__name(isINotebookCellMatchWithModel, "isINotebookCellMatchWithModel");
+function contentMatchesToTextSearchMatches(contentMatches, cell) {
+  return genericCellMatchesToTextSearchMatches(
+    contentMatches,
+    cell.textBuffer
+  );
+}
+__name(contentMatchesToTextSearchMatches, "contentMatchesToTextSearchMatches");
+function webviewMatchesToTextSearchMatches(webviewMatches) {
+  return webviewMatches.map(
+    (rawMatch) => rawMatch.searchPreviewInfo ? new TextSearchMatch(
+      rawMatch.searchPreviewInfo.line,
+      new Range(0, rawMatch.searchPreviewInfo.range.start, 0, rawMatch.searchPreviewInfo.range.end),
+      void 0,
+      rawMatch.index
+    ) : void 0
+  ).filter((e) => !!e);
+}
+__name(webviewMatchesToTextSearchMatches, "webviewMatchesToTextSearchMatches");
+export {
+  contentMatchesToTextSearchMatches,
+  getIDFromINotebookCellMatch,
+  isINotebookCellMatchWithModel,
+  isINotebookFileMatchWithModel,
+  webviewMatchesToTextSearchMatches
+};
+//# sourceMappingURL=searchNotebookHelpers.js.map

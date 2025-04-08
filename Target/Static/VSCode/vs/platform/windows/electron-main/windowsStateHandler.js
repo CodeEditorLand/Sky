@@ -1,1 +1,356 @@
-var P=Object.defineProperty;var A=Object.getOwnPropertyDescriptor;var y=(n,s,e,t)=>{for(var i=t>1?void 0:t?A(s,e):s,r=n.length-1,o;r>=0;r--)(o=n[r])&&(i=(t?o(s,e,i):o(i))||i);return t&&i&&P(s,e,i),i},f=(n,s)=>(e,t)=>s(e,t,n);import p from"electron";import{Disposable as x}from"../../../base/common/lifecycle.js";import{isMacintosh as S}from"../../../base/common/platform.js";import{extUriBiasedIgnorePathCase as D}from"../../../base/common/resources.js";import{URI as k}from"../../../base/common/uri.js";import{IConfigurationService as C}from"../../configuration/common/configuration.js";import{ILifecycleMainService as M}from"../../lifecycle/electron-main/lifecycleMainService.js";import{ILogService as b}from"../../log/common/log.js";import{IStateService as H}from"../../state/node/state.js";import"../../window/common/window.js";import{IWindowsMainService as U}from"./windows.js";import{defaultWindowState as F,WindowMode as l}from"../../window/electron-main/window.js";import{isSingleFolderWorkspaceIdentifier as h,isWorkspaceIdentifier as v}from"../../workspace/common/workspace.js";let w=class extends x{constructor(e,t,i,r,o){super();this.windowsMainService=e;this.stateService=t;this.lifecycleMainService=i;this.logService=r;this.configurationService=o;this._state=N(this.stateService.getItem(w.windowsStateStorageKey)),this.registerListeners()}static windowsStateStorageKey="windowsState";get state(){return this._state}_state;lastClosedState=void 0;shuttingDown=!1;registerListeners(){p.app.on("browser-window-blur",()=>{this.shuttingDown||this.saveWindowsState()}),this._register(this.lifecycleMainService.onBeforeCloseWindow(e=>this.onBeforeCloseWindow(e))),this._register(this.lifecycleMainService.onBeforeShutdown(()=>this.onBeforeShutdown())),this._register(this.windowsMainService.onDidChangeWindowsCount(e=>{e.newCount-e.oldCount>0&&(this.lastClosedState=void 0)})),this._register(this.windowsMainService.onDidDestroyWindow(e=>this.onBeforeCloseWindow(e)))}onBeforeShutdown(){this.shuttingDown=!0,this.saveWindowsState()}saveWindowsState(){const e=new Set,t={openedWindows:[],lastPluginDevelopmentHostWindow:this._state.lastPluginDevelopmentHostWindow,lastActiveWindow:this.lastClosedState};if(!t.lastActiveWindow){let o=this.windowsMainService.getLastActiveWindow();(!o||o.isExtensionDevelopmentHost)&&(o=this.windowsMainService.getWindows().find(a=>!a.isExtensionDevelopmentHost)),o&&(t.lastActiveWindow=this.toWindowState(o),t.lastActiveWindow.uiState.mode===l.Fullscreen&&e.add(t.lastActiveWindow.uiState.display))}const i=this.windowsMainService.getWindows().find(o=>o.isExtensionDevelopmentHost&&!o.isExtensionTestHost);i&&(t.lastPluginDevelopmentHostWindow=this.toWindowState(i),t.lastPluginDevelopmentHostWindow.uiState.mode===l.Fullscreen&&(e.has(t.lastPluginDevelopmentHostWindow.uiState.display)?S&&!i.win?.isSimpleFullScreen()&&(t.lastPluginDevelopmentHostWindow.uiState.mode=l.Normal):e.add(t.lastPluginDevelopmentHostWindow.uiState.display))),this.windowsMainService.getWindowCount()>1&&(t.openedWindows=this.windowsMainService.getWindows().filter(o=>!o.isExtensionDevelopmentHost).map(o=>{const a=this.toWindowState(o);return a.uiState.mode===l.Fullscreen&&(e.has(a.uiState.display)?S&&a.windowId!==t.lastActiveWindow?.windowId&&!o.win?.isSimpleFullScreen()&&(a.uiState.mode=l.Normal):e.add(a.uiState.display)),a}));const r=z(t);this.stateService.setItem(w.windowsStateStorageKey,r),this.shuttingDown&&this.logService.trace("[WindowsStateHandler] onBeforeShutdown",r)}onBeforeCloseWindow(e){if(this.lifecycleMainService.quitRequested)return;const t=this.toWindowState(e);e.isExtensionDevelopmentHost&&!e.isExtensionTestHost?this._state.lastPluginDevelopmentHostWindow=t:!e.isExtensionDevelopmentHost&&e.openedWorkspace&&this._state.openedWindows.forEach(i=>{const r=v(e.openedWorkspace)&&i.workspace?.id===e.openedWorkspace.id,o=h(e.openedWorkspace)&&i.folderUri&&D.isEqual(i.folderUri,e.openedWorkspace.uri);(r||o)&&(i.uiState=t.uiState)}),this.windowsMainService.getWindowCount()===1&&(this.lastClosedState=t)}toWindowState(e){return{windowId:e.id,workspace:v(e.openedWorkspace)?e.openedWorkspace:void 0,folderUri:h(e.openedWorkspace)?e.openedWorkspace.uri:void 0,backupPath:e.backupPath,remoteAuthority:e.remoteAuthority,uiState:e.serializeWindowState()}}getNewWindowState(e){const t=this.doGetNewWindowState(e),i=this.configurationService.getValue("window");if(t.mode===l.Fullscreen){let r;t.hasDefaultState?r=!!(i?.newWindowDimensions&&["fullscreen","inherit","offset"].indexOf(i.newWindowDimensions)>=0):r=!!(this.lifecycleMainService.wasRestarted||i?.restoreFullscreen),r||(t.mode=l.Normal)}return t}doGetNewWindowState(e){const t=this.windowsMainService.getLastActiveWindow();if(!e.extensionTestsPath){if(e.extensionDevelopmentPath&&this.state.lastPluginDevelopmentHostWindow)return this.state.lastPluginDevelopmentHostWindow.uiState;const c=e.workspace;if(v(c)){const u=this.state.openedWindows.filter(d=>d.workspace&&d.workspace.id===c.id).map(d=>d.uiState);if(u.length)return u[0]}if(h(c)){const u=this.state.openedWindows.filter(d=>d.folderUri&&D.isEqual(d.folderUri,c.uri)).map(d=>d.uiState);if(u.length)return u[0]}else if(e.backupPath){const u=this.state.openedWindows.filter(d=>d.backupPath===e.backupPath).map(d=>d.uiState);if(u.length)return u[0]}const I=this.lastClosedState||this.state.lastActiveWindow;if(!t&&I)return I.uiState}let i;const r=p.screen.getAllDisplays();if(r.length===1)i=r[0];else{if(S){const c=p.screen.getCursorScreenPoint();i=p.screen.getDisplayNearestPoint(c)}!i&&t&&(i=p.screen.getDisplayMatching(t.getBounds())),i||(i=p.screen.getPrimaryDisplay()||r[0])}let o=F();o.x=Math.round(i.bounds.x+i.bounds.width/2-o.width/2),o.y=Math.round(i.bounds.y+i.bounds.height/2-o.height/2);const a=this.configurationService.getValue("window");let W=!0;if(a?.newWindowDimensions){if(a.newWindowDimensions==="maximized")o.mode=l.Maximized,W=!1;else if(a.newWindowDimensions==="fullscreen")o.mode=l.Fullscreen,W=!1;else if((a.newWindowDimensions==="inherit"||a.newWindowDimensions==="offset")&&t){const c=t.serializeWindowState();c.mode===l.Fullscreen?o.mode=l.Fullscreen:o={...c,zoomLevel:void 0},W=o.mode!==l.Fullscreen&&a.newWindowDimensions==="offset"}}return W&&(o=this.ensureNoOverlap(o)),o.hasDefaultState=!0,o}ensureNoOverlap(e){if(this.windowsMainService.getWindows().length===0)return e;e.x=typeof e.x=="number"?e.x:0,e.y=typeof e.y=="number"?e.y:0;const t=this.windowsMainService.getWindows().map(i=>i.getBounds());for(;t.some(i=>i.x===e.x||i.y===e.y);)e.x+=30,e.y+=30;return e}};w=y([f(0,U),f(1,H),f(2,M),f(3,b),f(4,C)],w);function N(n){const s={openedWindows:[]},e=n||{openedWindows:[]};return e.lastActiveWindow&&(s.lastActiveWindow=m(e.lastActiveWindow)),e.lastPluginDevelopmentHostWindow&&(s.lastPluginDevelopmentHostWindow=m(e.lastPluginDevelopmentHostWindow)),Array.isArray(e.openedWindows)&&(s.openedWindows=e.openedWindows.map(t=>m(t))),s}function m(n){const s={uiState:n.uiState};return n.backupPath&&(s.backupPath=n.backupPath),n.remoteAuthority&&(s.remoteAuthority=n.remoteAuthority),n.folder&&(s.folderUri=k.parse(n.folder)),n.workspaceIdentifier&&(s.workspace={id:n.workspaceIdentifier.id,configPath:k.parse(n.workspaceIdentifier.configURIPath)}),s}function z(n){return{lastActiveWindow:n.lastActiveWindow&&g(n.lastActiveWindow),lastPluginDevelopmentHostWindow:n.lastPluginDevelopmentHostWindow&&g(n.lastPluginDevelopmentHostWindow),openedWindows:n.openedWindows.map(s=>g(s))}}function g(n){return{workspaceIdentifier:n.workspace&&{id:n.workspace.id,configURIPath:n.workspace.configPath.toString()},folder:n.folderUri&&n.folderUri.toString(),backupPath:n.backupPath,remoteAuthority:n.remoteAuthority,uiState:n.uiState}}export{w as WindowsStateHandler,z as getWindowsStateStoreData,N as restoreWindowsState};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import electron from "electron";
+import { Disposable } from "../../../base/common/lifecycle.js";
+import { isMacintosh } from "../../../base/common/platform.js";
+import { extUriBiasedIgnorePathCase } from "../../../base/common/resources.js";
+import { URI } from "../../../base/common/uri.js";
+import { IConfigurationService } from "../../configuration/common/configuration.js";
+import { ILifecycleMainService } from "../../lifecycle/electron-main/lifecycleMainService.js";
+import { ILogService } from "../../log/common/log.js";
+import { IStateService } from "../../state/node/state.js";
+import { INativeWindowConfiguration, IWindowSettings } from "../../window/common/window.js";
+import { IWindowsMainService } from "./windows.js";
+import { defaultWindowState, ICodeWindow, IWindowState as IWindowUIState, WindowMode } from "../../window/electron-main/window.js";
+import { isSingleFolderWorkspaceIdentifier, isWorkspaceIdentifier, IWorkspaceIdentifier } from "../../workspace/common/workspace.js";
+let WindowsStateHandler = class extends Disposable {
+  constructor(windowsMainService, stateService, lifecycleMainService, logService, configurationService) {
+    super();
+    this.windowsMainService = windowsMainService;
+    this.stateService = stateService;
+    this.lifecycleMainService = lifecycleMainService;
+    this.logService = logService;
+    this.configurationService = configurationService;
+    this._state = restoreWindowsState(this.stateService.getItem(WindowsStateHandler.windowsStateStorageKey));
+    this.registerListeners();
+  }
+  static {
+    __name(this, "WindowsStateHandler");
+  }
+  static windowsStateStorageKey = "windowsState";
+  get state() {
+    return this._state;
+  }
+  _state;
+  lastClosedState = void 0;
+  shuttingDown = false;
+  registerListeners() {
+    electron.app.on("browser-window-blur", () => {
+      if (!this.shuttingDown) {
+        this.saveWindowsState();
+      }
+    });
+    this._register(this.lifecycleMainService.onBeforeCloseWindow((window) => this.onBeforeCloseWindow(window)));
+    this._register(this.lifecycleMainService.onBeforeShutdown(() => this.onBeforeShutdown()));
+    this._register(this.windowsMainService.onDidChangeWindowsCount((e) => {
+      if (e.newCount - e.oldCount > 0) {
+        this.lastClosedState = void 0;
+      }
+    }));
+    this._register(this.windowsMainService.onDidDestroyWindow((window) => this.onBeforeCloseWindow(window)));
+  }
+  // Note that onBeforeShutdown() and onBeforeCloseWindow() are fired in different order depending on the OS:
+  // - macOS: since the app will not quit when closing the last window, you will always first get
+  //          the onBeforeShutdown() event followed by N onBeforeCloseWindow() events for each window
+  // - other: on other OS, closing the last window will quit the app so the order depends on the
+  //          user interaction: closing the last window will first trigger onBeforeCloseWindow()
+  //          and then onBeforeShutdown(). Using the quit action however will first issue onBeforeShutdown()
+  //          and then onBeforeCloseWindow().
+  //
+  // Here is the behavior on different OS depending on action taken (Electron 1.7.x):
+  //
+  // Legend
+  // -  quit(N): quit application with N windows opened
+  // - close(1): close one window via the window close button
+  // - closeAll: close all windows via the taskbar command
+  // - onBeforeShutdown(N): number of windows reported in this event handler
+  // - onBeforeCloseWindow(N, M): number of windows reported and quitRequested boolean in this event handler
+  //
+  // macOS
+  // 	-     quit(1): onBeforeShutdown(1), onBeforeCloseWindow(1, true)
+  // 	-     quit(2): onBeforeShutdown(2), onBeforeCloseWindow(2, true), onBeforeCloseWindow(2, true)
+  // 	-     quit(0): onBeforeShutdown(0)
+  // 	-    close(1): onBeforeCloseWindow(1, false)
+  //
+  // Windows
+  // 	-     quit(1): onBeforeShutdown(1), onBeforeCloseWindow(1, true)
+  // 	-     quit(2): onBeforeShutdown(2), onBeforeCloseWindow(2, true), onBeforeCloseWindow(2, true)
+  // 	-    close(1): onBeforeCloseWindow(2, false)[not last window]
+  // 	-    close(1): onBeforeCloseWindow(1, false), onBeforeShutdown(0)[last window]
+  // 	- closeAll(2): onBeforeCloseWindow(2, false), onBeforeCloseWindow(2, false), onBeforeShutdown(0)
+  //
+  // Linux
+  // 	-     quit(1): onBeforeShutdown(1), onBeforeCloseWindow(1, true)
+  // 	-     quit(2): onBeforeShutdown(2), onBeforeCloseWindow(2, true), onBeforeCloseWindow(2, true)
+  // 	-    close(1): onBeforeCloseWindow(2, false)[not last window]
+  // 	-    close(1): onBeforeCloseWindow(1, false), onBeforeShutdown(0)[last window]
+  // 	- closeAll(2): onBeforeCloseWindow(2, false), onBeforeCloseWindow(2, false), onBeforeShutdown(0)
+  //
+  onBeforeShutdown() {
+    this.shuttingDown = true;
+    this.saveWindowsState();
+  }
+  saveWindowsState() {
+    const displaysWithFullScreenWindow = /* @__PURE__ */ new Set();
+    const currentWindowsState = {
+      openedWindows: [],
+      lastPluginDevelopmentHostWindow: this._state.lastPluginDevelopmentHostWindow,
+      lastActiveWindow: this.lastClosedState
+    };
+    if (!currentWindowsState.lastActiveWindow) {
+      let activeWindow = this.windowsMainService.getLastActiveWindow();
+      if (!activeWindow || activeWindow.isExtensionDevelopmentHost) {
+        activeWindow = this.windowsMainService.getWindows().find((window) => !window.isExtensionDevelopmentHost);
+      }
+      if (activeWindow) {
+        currentWindowsState.lastActiveWindow = this.toWindowState(activeWindow);
+        if (currentWindowsState.lastActiveWindow.uiState.mode === WindowMode.Fullscreen) {
+          displaysWithFullScreenWindow.add(currentWindowsState.lastActiveWindow.uiState.display);
+        }
+      }
+    }
+    const extensionHostWindow = this.windowsMainService.getWindows().find((window) => window.isExtensionDevelopmentHost && !window.isExtensionTestHost);
+    if (extensionHostWindow) {
+      currentWindowsState.lastPluginDevelopmentHostWindow = this.toWindowState(extensionHostWindow);
+      if (currentWindowsState.lastPluginDevelopmentHostWindow.uiState.mode === WindowMode.Fullscreen) {
+        if (displaysWithFullScreenWindow.has(currentWindowsState.lastPluginDevelopmentHostWindow.uiState.display)) {
+          if (isMacintosh && !extensionHostWindow.win?.isSimpleFullScreen()) {
+            currentWindowsState.lastPluginDevelopmentHostWindow.uiState.mode = WindowMode.Normal;
+          }
+        } else {
+          displaysWithFullScreenWindow.add(currentWindowsState.lastPluginDevelopmentHostWindow.uiState.display);
+        }
+      }
+    }
+    if (this.windowsMainService.getWindowCount() > 1) {
+      currentWindowsState.openedWindows = this.windowsMainService.getWindows().filter((window) => !window.isExtensionDevelopmentHost).map((window) => {
+        const windowState = this.toWindowState(window);
+        if (windowState.uiState.mode === WindowMode.Fullscreen) {
+          if (displaysWithFullScreenWindow.has(windowState.uiState.display)) {
+            if (isMacintosh && windowState.windowId !== currentWindowsState.lastActiveWindow?.windowId && !window.win?.isSimpleFullScreen()) {
+              windowState.uiState.mode = WindowMode.Normal;
+            }
+          } else {
+            displaysWithFullScreenWindow.add(windowState.uiState.display);
+          }
+        }
+        return windowState;
+      });
+    }
+    const state = getWindowsStateStoreData(currentWindowsState);
+    this.stateService.setItem(WindowsStateHandler.windowsStateStorageKey, state);
+    if (this.shuttingDown) {
+      this.logService.trace("[WindowsStateHandler] onBeforeShutdown", state);
+    }
+  }
+  // See note on #onBeforeShutdown() for details how these events are flowing
+  onBeforeCloseWindow(window) {
+    if (this.lifecycleMainService.quitRequested) {
+      return;
+    }
+    const state = this.toWindowState(window);
+    if (window.isExtensionDevelopmentHost && !window.isExtensionTestHost) {
+      this._state.lastPluginDevelopmentHostWindow = state;
+    } else if (!window.isExtensionDevelopmentHost && window.openedWorkspace) {
+      this._state.openedWindows.forEach((openedWindow) => {
+        const sameWorkspace = isWorkspaceIdentifier(window.openedWorkspace) && openedWindow.workspace?.id === window.openedWorkspace.id;
+        const sameFolder = isSingleFolderWorkspaceIdentifier(window.openedWorkspace) && openedWindow.folderUri && extUriBiasedIgnorePathCase.isEqual(openedWindow.folderUri, window.openedWorkspace.uri);
+        if (sameWorkspace || sameFolder) {
+          openedWindow.uiState = state.uiState;
+        }
+      });
+    }
+    if (this.windowsMainService.getWindowCount() === 1) {
+      this.lastClosedState = state;
+    }
+  }
+  toWindowState(window) {
+    return {
+      windowId: window.id,
+      workspace: isWorkspaceIdentifier(window.openedWorkspace) ? window.openedWorkspace : void 0,
+      folderUri: isSingleFolderWorkspaceIdentifier(window.openedWorkspace) ? window.openedWorkspace.uri : void 0,
+      backupPath: window.backupPath,
+      remoteAuthority: window.remoteAuthority,
+      uiState: window.serializeWindowState()
+    };
+  }
+  getNewWindowState(configuration) {
+    const state = this.doGetNewWindowState(configuration);
+    const windowConfig = this.configurationService.getValue("window");
+    if (state.mode === WindowMode.Fullscreen) {
+      let allowFullscreen;
+      if (state.hasDefaultState) {
+        allowFullscreen = !!(windowConfig?.newWindowDimensions && ["fullscreen", "inherit", "offset"].indexOf(windowConfig.newWindowDimensions) >= 0);
+      } else {
+        allowFullscreen = !!(this.lifecycleMainService.wasRestarted || windowConfig?.restoreFullscreen);
+      }
+      if (!allowFullscreen) {
+        state.mode = WindowMode.Normal;
+      }
+    }
+    return state;
+  }
+  doGetNewWindowState(configuration) {
+    const lastActive = this.windowsMainService.getLastActiveWindow();
+    if (!configuration.extensionTestsPath) {
+      if (!!configuration.extensionDevelopmentPath && this.state.lastPluginDevelopmentHostWindow) {
+        return this.state.lastPluginDevelopmentHostWindow.uiState;
+      }
+      const workspace = configuration.workspace;
+      if (isWorkspaceIdentifier(workspace)) {
+        const stateForWorkspace = this.state.openedWindows.filter((openedWindow) => openedWindow.workspace && openedWindow.workspace.id === workspace.id).map((openedWindow) => openedWindow.uiState);
+        if (stateForWorkspace.length) {
+          return stateForWorkspace[0];
+        }
+      }
+      if (isSingleFolderWorkspaceIdentifier(workspace)) {
+        const stateForFolder = this.state.openedWindows.filter((openedWindow) => openedWindow.folderUri && extUriBiasedIgnorePathCase.isEqual(openedWindow.folderUri, workspace.uri)).map((openedWindow) => openedWindow.uiState);
+        if (stateForFolder.length) {
+          return stateForFolder[0];
+        }
+      } else if (configuration.backupPath) {
+        const stateForEmptyWindow = this.state.openedWindows.filter((openedWindow) => openedWindow.backupPath === configuration.backupPath).map((openedWindow) => openedWindow.uiState);
+        if (stateForEmptyWindow.length) {
+          return stateForEmptyWindow[0];
+        }
+      }
+      const lastActiveState = this.lastClosedState || this.state.lastActiveWindow;
+      if (!lastActive && lastActiveState) {
+        return lastActiveState.uiState;
+      }
+    }
+    let displayToUse;
+    const displays = electron.screen.getAllDisplays();
+    if (displays.length === 1) {
+      displayToUse = displays[0];
+    } else {
+      if (isMacintosh) {
+        const cursorPoint = electron.screen.getCursorScreenPoint();
+        displayToUse = electron.screen.getDisplayNearestPoint(cursorPoint);
+      }
+      if (!displayToUse && lastActive) {
+        displayToUse = electron.screen.getDisplayMatching(lastActive.getBounds());
+      }
+      if (!displayToUse) {
+        displayToUse = electron.screen.getPrimaryDisplay() || displays[0];
+      }
+    }
+    let state = defaultWindowState();
+    state.x = Math.round(displayToUse.bounds.x + displayToUse.bounds.width / 2 - state.width / 2);
+    state.y = Math.round(displayToUse.bounds.y + displayToUse.bounds.height / 2 - state.height / 2);
+    const windowConfig = this.configurationService.getValue("window");
+    let ensureNoOverlap = true;
+    if (windowConfig?.newWindowDimensions) {
+      if (windowConfig.newWindowDimensions === "maximized") {
+        state.mode = WindowMode.Maximized;
+        ensureNoOverlap = false;
+      } else if (windowConfig.newWindowDimensions === "fullscreen") {
+        state.mode = WindowMode.Fullscreen;
+        ensureNoOverlap = false;
+      } else if ((windowConfig.newWindowDimensions === "inherit" || windowConfig.newWindowDimensions === "offset") && lastActive) {
+        const lastActiveState = lastActive.serializeWindowState();
+        if (lastActiveState.mode === WindowMode.Fullscreen) {
+          state.mode = WindowMode.Fullscreen;
+        } else {
+          state = {
+            ...lastActiveState,
+            zoomLevel: void 0
+            // do not inherit zoom level
+          };
+        }
+        ensureNoOverlap = state.mode !== WindowMode.Fullscreen && windowConfig.newWindowDimensions === "offset";
+      }
+    }
+    if (ensureNoOverlap) {
+      state = this.ensureNoOverlap(state);
+    }
+    state.hasDefaultState = true;
+    return state;
+  }
+  ensureNoOverlap(state) {
+    if (this.windowsMainService.getWindows().length === 0) {
+      return state;
+    }
+    state.x = typeof state.x === "number" ? state.x : 0;
+    state.y = typeof state.y === "number" ? state.y : 0;
+    const existingWindowBounds = this.windowsMainService.getWindows().map((window) => window.getBounds());
+    while (existingWindowBounds.some((bounds) => bounds.x === state.x || bounds.y === state.y)) {
+      state.x += 30;
+      state.y += 30;
+    }
+    return state;
+  }
+};
+WindowsStateHandler = __decorateClass([
+  __decorateParam(0, IWindowsMainService),
+  __decorateParam(1, IStateService),
+  __decorateParam(2, ILifecycleMainService),
+  __decorateParam(3, ILogService),
+  __decorateParam(4, IConfigurationService)
+], WindowsStateHandler);
+function restoreWindowsState(data) {
+  const result = { openedWindows: [] };
+  const windowsState = data || { openedWindows: [] };
+  if (windowsState.lastActiveWindow) {
+    result.lastActiveWindow = restoreWindowState(windowsState.lastActiveWindow);
+  }
+  if (windowsState.lastPluginDevelopmentHostWindow) {
+    result.lastPluginDevelopmentHostWindow = restoreWindowState(windowsState.lastPluginDevelopmentHostWindow);
+  }
+  if (Array.isArray(windowsState.openedWindows)) {
+    result.openedWindows = windowsState.openedWindows.map((windowState) => restoreWindowState(windowState));
+  }
+  return result;
+}
+__name(restoreWindowsState, "restoreWindowsState");
+function restoreWindowState(windowState) {
+  const result = { uiState: windowState.uiState };
+  if (windowState.backupPath) {
+    result.backupPath = windowState.backupPath;
+  }
+  if (windowState.remoteAuthority) {
+    result.remoteAuthority = windowState.remoteAuthority;
+  }
+  if (windowState.folder) {
+    result.folderUri = URI.parse(windowState.folder);
+  }
+  if (windowState.workspaceIdentifier) {
+    result.workspace = { id: windowState.workspaceIdentifier.id, configPath: URI.parse(windowState.workspaceIdentifier.configURIPath) };
+  }
+  return result;
+}
+__name(restoreWindowState, "restoreWindowState");
+function getWindowsStateStoreData(windowsState) {
+  return {
+    lastActiveWindow: windowsState.lastActiveWindow && serializeWindowState(windowsState.lastActiveWindow),
+    lastPluginDevelopmentHostWindow: windowsState.lastPluginDevelopmentHostWindow && serializeWindowState(windowsState.lastPluginDevelopmentHostWindow),
+    openedWindows: windowsState.openedWindows.map((ws) => serializeWindowState(ws))
+  };
+}
+__name(getWindowsStateStoreData, "getWindowsStateStoreData");
+function serializeWindowState(windowState) {
+  return {
+    workspaceIdentifier: windowState.workspace && { id: windowState.workspace.id, configURIPath: windowState.workspace.configPath.toString() },
+    folder: windowState.folderUri && windowState.folderUri.toString(),
+    backupPath: windowState.backupPath,
+    remoteAuthority: windowState.remoteAuthority,
+    uiState: windowState.uiState
+  };
+}
+__name(serializeWindowState, "serializeWindowState");
+export {
+  WindowsStateHandler,
+  getWindowsStateStoreData,
+  restoreWindowsState
+};
+//# sourceMappingURL=windowsStateHandler.js.map

@@ -1,1 +1,37 @@
-var l=Object.defineProperty,h=Object.getOwnPropertyDescriptor,n=(e,i,s,c)=>{for(var t,r=c>1?void 0:c?h(i,s):i,o=e.length-1;o>=0;o--)(t=e[o])&&(r=(c?t(i,s,r):t(r))||r);return c&&r&&l(i,s,r),r},a=(e,i)=>(s,c)=>i(s,c,e);import{Disposable as v}from"../../../../base/common/lifecycle.js";import{AccessibilitySignal as p,IAccessibilitySignalService as d}from"../../../../platform/accessibilitySignal/browser/accessibilitySignalService.js";import"../../../common/contributions.js";import{ISpeechService as g}from"../common/speechService.js";let t=class extends v{constructor(e,i){super(),this._accessibilitySignalService=e,this._speechService=i,this._register(this._speechService.onDidStartSpeechToTextSession((()=>this._accessibilitySignalService.playSignal(p.voiceRecordingStarted)))),this._register(this._speechService.onDidEndSpeechToTextSession((()=>this._accessibilitySignalService.playSignal(p.voiceRecordingStopped))))}static ID="workbench.contrib.speechAccessibilitySignal"};t=n([a(0,d),a(1,g)],t);export{t as SpeechAccessibilitySignalContribution};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { AccessibilitySignal, IAccessibilitySignalService } from "../../../../platform/accessibilitySignal/browser/accessibilitySignalService.js";
+import { IWorkbenchContribution } from "../../../common/contributions.js";
+import { ISpeechService } from "../common/speechService.js";
+let SpeechAccessibilitySignalContribution = class extends Disposable {
+  constructor(_accessibilitySignalService, _speechService) {
+    super();
+    this._accessibilitySignalService = _accessibilitySignalService;
+    this._speechService = _speechService;
+    this._register(this._speechService.onDidStartSpeechToTextSession(() => this._accessibilitySignalService.playSignal(AccessibilitySignal.voiceRecordingStarted)));
+    this._register(this._speechService.onDidEndSpeechToTextSession(() => this._accessibilitySignalService.playSignal(AccessibilitySignal.voiceRecordingStopped)));
+  }
+  static {
+    __name(this, "SpeechAccessibilitySignalContribution");
+  }
+  static ID = "workbench.contrib.speechAccessibilitySignal";
+};
+SpeechAccessibilitySignalContribution = __decorateClass([
+  __decorateParam(0, IAccessibilitySignalService),
+  __decorateParam(1, ISpeechService)
+], SpeechAccessibilitySignalContribution);
+export {
+  SpeechAccessibilitySignalContribution
+};
+//# sourceMappingURL=speechAccessibilitySignal.js.map

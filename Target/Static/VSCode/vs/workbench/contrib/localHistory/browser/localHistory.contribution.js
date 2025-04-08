@@ -1,1 +1,10 @@
-import"./localHistoryCommands.js";import{WorkbenchPhase as r,registerWorkbenchContribution2 as e}from"../../../common/contributions.js";import{LocalHistoryTimeline as o}from"./localHistoryTimeline.js";e(o.ID,o,r.BlockRestore);
+import "./localHistoryCommands.js";
+import { WorkbenchPhase, registerWorkbenchContribution2 } from "../../../common/contributions.js";
+import { LocalHistoryTimeline } from "./localHistoryTimeline.js";
+registerWorkbenchContribution2(
+  LocalHistoryTimeline.ID,
+  LocalHistoryTimeline,
+  WorkbenchPhase.BlockRestore
+  /* registrations only */
+);
+//# sourceMappingURL=localHistory.contribution.js.map

@@ -1,1 +1,321 @@
-import{hostname as oe,release as ie}from"os";import{Emitter as se}from"../../base/common/event.js";import{toDisposable as me}from"../../base/common/lifecycle.js";import{Schemas as H}from"../../base/common/network.js";import*as x from"../../base/common/path.js";import"../../base/common/uriIpc.js";import{getMachineId as ce,getSqmMachineId as ae,getdevDeviceId as le}from"../../base/node/id.js";import{Promises as $}from"../../base/node/pfs.js";import{IPCServer as ve,StaticRouter as fe}from"../../base/parts/ipc/common/ipc.js";import{ProtocolConstants as U}from"../../base/parts/ipc/common/ipc.net.js";import{IConfigurationService as ge}from"../../platform/configuration/common/configuration.js";import{ConfigurationService as Se}from"../../platform/configuration/common/configurationService.js";import{ExtensionHostDebugBroadcastChannel as _}from"../../platform/debug/common/extensionHostDebugIpc.js";import{IDownloadService as pe}from"../../platform/download/common/download.js";import{DownloadServiceChannelClient as de}from"../../platform/download/common/downloadIpc.js";import{IEnvironmentService as Ce,INativeEnvironmentService as ue}from"../../platform/environment/common/environment.js";import{ExtensionGalleryServiceWithNoStorageService as he}from"../../platform/extensionManagement/common/extensionGalleryService.js";import{IAllowedExtensionsService as Ie,IExtensionGalleryService as G}from"../../platform/extensionManagement/common/extensionManagement.js";import{ExtensionSignatureVerificationService as Ee,IExtensionSignatureVerificationService as we}from"../../platform/extensionManagement/node/extensionSignatureVerificationService.js";import{ExtensionManagementCLI as ye}from"../../platform/extensionManagement/common/extensionManagementCLI.js";import{ExtensionManagementChannel as xe}from"../../platform/extensionManagement/common/extensionManagementIpc.js";import{ExtensionManagementService as Le,INativeServerExtensionManagementService as k}from"../../platform/extensionManagement/node/extensionManagementService.js";import{IFileService as Te}from"../../platform/files/common/files.js";import{FileService as Pe}from"../../platform/files/common/fileService.js";import{DiskFileSystemProvider as Ae}from"../../platform/files/node/diskFileSystemProvider.js";import{SyncDescriptor as v}from"../../platform/instantiation/common/descriptors.js";import"../../platform/instantiation/common/instantiation.js";import{InstantiationService as Re}from"../../platform/instantiation/common/instantiationService.js";import{ServiceCollection as De}from"../../platform/instantiation/common/serviceCollection.js";import{ILanguagePackService as F}from"../../platform/languagePacks/common/languagePacks.js";import{NativeLanguagePackService as be}from"../../platform/languagePacks/node/languagePacks.js";import{AbstractLogger as Ne,DEFAULT_LOG_LEVEL as Me,getLogLevel as O,ILoggerService as He,ILogService as $e,log as Ue,LogLevel as I,LogLevelToString as _e}from"../../platform/log/common/log.js";import Ge from"../../platform/product/common/product.js";import{IProductService as ke}from"../../platform/product/common/productService.js";import"../../platform/remote/common/remoteAgentEnvironment.js";import{IRequestService as q}from"../../platform/request/common/request.js";import{RequestChannel as Fe}from"../../platform/request/common/requestIpc.js";import{RequestService as Oe}from"../../platform/request/node/requestService.js";import{resolveCommonProperties as qe}from"../../platform/telemetry/common/commonProperties.js";import{ITelemetryService as j,TelemetryLevel as E}from"../../platform/telemetry/common/telemetry.js";import"../../platform/telemetry/common/telemetryService.js";import{getPiiPathsFromEnvironment as je,isInternalTelemetry as Ve,isLoggingOnly as Be,NullAppender as ze,supportsTelemetry as Ke}from"../../platform/telemetry/common/telemetryUtils.js";import We from"../../platform/telemetry/node/errorTelemetry.js";import{IPtyService as Ye,TerminalSettingId as Je}from"../../platform/terminal/common/terminal.js";import{PtyHostService as Qe}from"../../platform/terminal/node/ptyHostService.js";import{IUriIdentityService as Xe}from"../../platform/uriIdentity/common/uriIdentity.js";import{UriIdentityService as Ze}from"../../platform/uriIdentity/common/uriIdentityService.js";import{RemoteAgentEnvironmentChannel as er}from"./remoteAgentEnvironmentImpl.js";import{RemoteAgentFileSystemProviderChannel as rr}from"./remoteFileSystemProviderServer.js";import{ServerTelemetryChannel as tr}from"../../platform/telemetry/common/remoteTelemetryChannel.js";import{IServerTelemetryService as L,ServerNullTelemetryService as nr,ServerTelemetryService as or}from"../../platform/telemetry/common/serverTelemetryService.js";import{RemoteTerminalChannel as ir}from"./remoteTerminalChannel.js";import{createURITransformer as sr}from"../../workbench/api/node/uriTransformer.js";import"./serverConnectionToken.js";import{ServerEnvironmentService as mr}from"./serverEnvironmentService.js";import{REMOTE_TERMINAL_CHANNEL_NAME as cr}from"../../workbench/contrib/terminal/common/remote/remoteTerminalChannel.js";import{REMOTE_FILE_SYSTEM_CHANNEL_NAME as ar}from"../../workbench/services/remote/common/remoteFileSystemProviderClient.js";import{ExtensionHostStatusService as lr,IExtensionHostStatusService as vr}from"./extensionHostStatusService.js";import{IExtensionsScannerService as V}from"../../platform/extensionManagement/common/extensionsScannerService.js";import{ExtensionsScannerService as fr}from"./extensionsScannerService.js";import{IExtensionsProfileScannerService as gr}from"../../platform/extensionManagement/common/extensionsProfileScannerService.js";import{IUserDataProfilesService as Sr}from"../../platform/userDataProfile/common/userDataProfile.js";import{NullPolicyService as pr}from"../../platform/policy/common/policy.js";import{OneDataSystemAppender as dr}from"../../platform/telemetry/node/1dsAppender.js";import{LoggerService as Cr}from"../../platform/log/node/loggerService.js";import{ServerUserDataProfilesService as ur}from"../../platform/userDataProfile/node/userDataProfile.js";import{ExtensionsProfileScannerService as hr}from"../../platform/extensionManagement/node/extensionsProfileScannerService.js";import{LogService as Ir}from"../../platform/log/common/logService.js";import{LoggerChannel as Er}from"../../platform/log/common/logIpc.js";import{localize as wr}from"../../nls.js";import{RemoteExtensionsScannerChannel as yr,RemoteExtensionsScannerService as xr}from"./remoteExtensionsScanner.js";import{RemoteExtensionsScannerChannelName as Lr}from"../../platform/remote/common/remoteExtensionsScanner.js";import{RemoteUserDataProfilesServiceChannel as Tr}from"../../platform/userDataProfile/common/userDataProfileIpc.js";import{NodePtyHostStarter as Pr}from"../../platform/terminal/node/nodePtyHostStarter.js";import{CSSDevelopmentService as Ar,ICSSDevelopmentService as Rr}from"../../platform/cssDev/node/cssDevService.js";import{AllowedExtensionsService as Dr}from"../../platform/extensionManagement/common/allowedExtensionsService.js";import{TelemetryLogAppender as br}from"../../platform/telemetry/common/telemetryLogAppender.js";import{INativeMcpDiscoveryHelperService as Nr,NativeMcpDiscoveryHelperChannelName as Mr}from"../../platform/mcp/common/nativeMcpDiscoveryHelper.js";import{NativeMcpDiscoveryHelperChannel as Hr}from"../../platform/mcp/node/nativeMcpDiscoveryHelperChannel.js";import{NativeMcpDiscoveryHelperService as $r}from"../../platform/mcp/node/nativeMcpDiscoveryHelperService.js";import{IExtensionGalleryManifestService as Ur}from"../../platform/extensionManagement/common/extensionGalleryManifest.js";import{ExtensionGalleryManifestIPCService as _r}from"../../platform/extensionManagement/common/extensionGalleryManifestServiceIpc.js";const Gr="monacoworkbench";async function Pn(e,r,o,t){const n=new De,s=new kr,i={_serviceBrand:void 0,...Ge};n.set(ke,i);const a=new mr(r,i);n.set(Ce,a),n.set(ue,a);const m=new Cr(O(a),a.logsHome);n.set(He,m),s.registerChannel("logger",new Er(m,(e=>d(e.remoteAuthority))));const c=m.createLogger("remoteagent",{name:wr("remoteExtensionLog","Server")}),l=new Ir(c,[new Fr(O(a))]);n.set($e,l),setTimeout((()=>Or(a.logsHome.with({scheme:H.file}).fsPath).then(null,(e=>l.error(e)))),1e4),l.onDidChangeLogLevel((e=>Ue(l,e,`Log level changed to ${_e(l.getLevel())}`))),l.trace(`Remote configuration data at ${o}`),l.trace("process arguments:",a.args),Array.isArray(i.serverGreeting)&&l.info(`\n\n${i.serverGreeting.join("\n")}\n\n`),s.registerChannel(_.ChannelName,new _);const p=new fe((e=>"renderer"===e.clientId)),f=t.add(new Pe(l));n.set(Te,f),f.registerProvider(H.file,t.add(new Ae(l)));const g=new Ze(f);n.set(Xe,g);const S=new Se(a.machineSettingsResource,f,new pr,l);n.set(ge,S);const u=new ur(g,a,f,l);n.set(Sr,u),s.registerChannel("userDataProfiles",new Tr(u,(e=>d(e.remoteAuthority)))),n.set(Rr,new v(Ar,void 0,!0));const[,,h,y,w]=await Promise.all([S.initialize(),u.init(),ce(l.error.bind(l)),ae(l.error.bind(l)),le(l.error.bind(l))]),I=new lr;n.set(vr,I);const C=new Oe("remote",S,a,l);n.set(q,C);let x=ze;const P=Ve(i,S);if(Ke(i,a)){!Be(i,a)&&i.aiConfig?.ariaKey&&(x=new dr(C,P,Gr,null,i.aiConfig.ariaKey),t.add(me((()=>x?.flush()))));const e={appenders:[x,new br("",!0,m,a,i)],commonProperties:qe(ie(),oe(),process.arch,i.commit,i.version+"-remote",h,y,w,P,"remoteAgent"),piiPaths:je(a)},r=a.args["telemetry-level"];let o=E.USAGE;"all"===r?o=E.USAGE:"error"===r?o=E.ERROR:"crash"===r?o=E.CRASH:void 0!==r&&(o=E.NONE),n.set(L,new v(or,[e,o]))}else n.set(L,nr);n.set(Ur,new _r(s,i)),n.set(G,new v(he));const M=s.getChannel("download",p);n.set(pe,new de(M,(()=>d("renderer")))),n.set(gr,new v(hr)),n.set(V,new v(fr)),n.set(we,new v(Ee)),n.set(Ie,new v(Dr)),n.set(k,new v(Le)),n.set(Nr,new v($r));const D=new Re(n);n.set(F,D.createInstance(be));const T=D.createInstance(Pr,{graceTime:U.ReconnectionGraceTime,shortGraceTime:U.ReconnectionShortGraceTime,scrollback:S.getValue(Je.PersistentSessionScrollback)??100}),A=D.createInstance(Qe,T);return n.set(Ye,A),D.invokeFunction((r=>{const o=r.get(k),n=r.get(V),m=r.get(G),c=r.get(F),p=new er(e,a,u,I);s.registerChannel("remoteextensionsenvironment",p);const f=new tr(r.get(L),x);s.registerChannel("telemetry",f),s.registerChannel(cr,new ir(a,l,A,i,o,S));const v=new xr(D.createInstance(ye,l),a,u,n,l,m,c,o);s.registerChannel(Lr,new yr(v,(e=>d(e.remoteAuthority)))),s.registerChannel(Mr,D.createInstance(Hr,(e=>d(e.remoteAuthority))));const g=t.add(new rr(l,a,S));s.registerChannel(ar,g),s.registerChannel("request",new Fe(r.get(q)));const h=new xe(o,(e=>d(e.remoteAuthority)));return s.registerChannel("extensions",h),v.whenExtensionsReady().then((()=>o.cleanUp())),t.add(new We(r.get(j))),{telemetryService:r.get(j)}})),{socketServer:s,instantiationService:D}}const T=Object.create(null);function d(e){return T[e]||(T[e]=sr(e)),T[e]}class kr extends ve{_onDidConnectEmitter;constructor(){const e=new se;super(e.event),this._onDidConnectEmitter=e}acceptConnection(e,r){this._onDidConnectEmitter.fire({protocol:e,onDidClientDisconnect:r})}}class Fr extends Ne{useColors;constructor(e=Me){super(),this.setLevel(e),this.useColors=!!process.stdout.isTTY}trace(e,...r){this.canLog(I.Trace)&&(this.useColors?console.log(`[90m[${a()}][0m`,e,...r):console.log(`[${a()}]`,e,...r))}debug(e,...r){this.canLog(I.Debug)&&(this.useColors?console.log(`[90m[${a()}][0m`,e,...r):console.log(`[${a()}]`,e,...r))}info(e,...r){this.canLog(I.Info)&&(this.useColors?console.log(`[90m[${a()}][0m`,e,...r):console.log(`[${a()}]`,e,...r))}warn(e,...r){this.canLog(I.Warning)&&(this.useColors?console.warn(`[93m[${a()}][0m`,e,...r):console.warn(`[${a()}]`,e,...r))}error(e,...r){this.canLog(I.Error)&&(this.useColors?console.error(`[91m[${a()}][0m`,e,...r):console.error(`[${a()}]`,e,...r))}flush(){}}function a(){const e=new Date;return`${P(e.getHours())}:${P(e.getMinutes())}:${P(e.getSeconds())}`}function P(e){return e<10?`0${e}`:String(e)}async function Or(e){const r=x.basename(e),o=x.dirname(e),t=(await $.readdir(o)).filter((e=>/^\d{8}T\d{6}$/.test(e))).sort().filter((e=>e!==r)),n=t.slice(0,Math.max(0,t.length-9));await Promise.all(n.map((e=>$.rm(x.join(o,e)))))}export{kr as SocketServer,Pn as setupServerServices};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { hostname, release } from "os";
+import { Emitter, Event } from "../../base/common/event.js";
+import { DisposableStore, toDisposable } from "../../base/common/lifecycle.js";
+import { Schemas } from "../../base/common/network.js";
+import * as path from "../../base/common/path.js";
+import { IURITransformer } from "../../base/common/uriIpc.js";
+import { getMachineId, getSqmMachineId, getdevDeviceId } from "../../base/node/id.js";
+import { Promises } from "../../base/node/pfs.js";
+import { ClientConnectionEvent, IMessagePassingProtocol, IPCServer, StaticRouter } from "../../base/parts/ipc/common/ipc.js";
+import { ProtocolConstants } from "../../base/parts/ipc/common/ipc.net.js";
+import { IConfigurationService } from "../../platform/configuration/common/configuration.js";
+import { ConfigurationService } from "../../platform/configuration/common/configurationService.js";
+import { ExtensionHostDebugBroadcastChannel } from "../../platform/debug/common/extensionHostDebugIpc.js";
+import { IDownloadService } from "../../platform/download/common/download.js";
+import { DownloadServiceChannelClient } from "../../platform/download/common/downloadIpc.js";
+import { IEnvironmentService, INativeEnvironmentService } from "../../platform/environment/common/environment.js";
+import { ExtensionGalleryServiceWithNoStorageService } from "../../platform/extensionManagement/common/extensionGalleryService.js";
+import { IAllowedExtensionsService, IExtensionGalleryService } from "../../platform/extensionManagement/common/extensionManagement.js";
+import { ExtensionSignatureVerificationService, IExtensionSignatureVerificationService } from "../../platform/extensionManagement/node/extensionSignatureVerificationService.js";
+import { ExtensionManagementCLI } from "../../platform/extensionManagement/common/extensionManagementCLI.js";
+import { ExtensionManagementChannel } from "../../platform/extensionManagement/common/extensionManagementIpc.js";
+import { ExtensionManagementService, INativeServerExtensionManagementService } from "../../platform/extensionManagement/node/extensionManagementService.js";
+import { IFileService } from "../../platform/files/common/files.js";
+import { FileService } from "../../platform/files/common/fileService.js";
+import { DiskFileSystemProvider } from "../../platform/files/node/diskFileSystemProvider.js";
+import { SyncDescriptor } from "../../platform/instantiation/common/descriptors.js";
+import { IInstantiationService } from "../../platform/instantiation/common/instantiation.js";
+import { InstantiationService } from "../../platform/instantiation/common/instantiationService.js";
+import { ServiceCollection } from "../../platform/instantiation/common/serviceCollection.js";
+import { ILanguagePackService } from "../../platform/languagePacks/common/languagePacks.js";
+import { NativeLanguagePackService } from "../../platform/languagePacks/node/languagePacks.js";
+import { AbstractLogger, DEFAULT_LOG_LEVEL, getLogLevel, ILoggerService, ILogService, log, LogLevel, LogLevelToString } from "../../platform/log/common/log.js";
+import product from "../../platform/product/common/product.js";
+import { IProductService } from "../../platform/product/common/productService.js";
+import { RemoteAgentConnectionContext } from "../../platform/remote/common/remoteAgentEnvironment.js";
+import { IRequestService } from "../../platform/request/common/request.js";
+import { RequestChannel } from "../../platform/request/common/requestIpc.js";
+import { RequestService } from "../../platform/request/node/requestService.js";
+import { resolveCommonProperties } from "../../platform/telemetry/common/commonProperties.js";
+import { ITelemetryService, TelemetryLevel } from "../../platform/telemetry/common/telemetry.js";
+import { ITelemetryServiceConfig } from "../../platform/telemetry/common/telemetryService.js";
+import { getPiiPathsFromEnvironment, isInternalTelemetry, isLoggingOnly, ITelemetryAppender, NullAppender, supportsTelemetry } from "../../platform/telemetry/common/telemetryUtils.js";
+import ErrorTelemetry from "../../platform/telemetry/node/errorTelemetry.js";
+import { IPtyService, TerminalSettingId } from "../../platform/terminal/common/terminal.js";
+import { PtyHostService } from "../../platform/terminal/node/ptyHostService.js";
+import { IUriIdentityService } from "../../platform/uriIdentity/common/uriIdentity.js";
+import { UriIdentityService } from "../../platform/uriIdentity/common/uriIdentityService.js";
+import { RemoteAgentEnvironmentChannel } from "./remoteAgentEnvironmentImpl.js";
+import { RemoteAgentFileSystemProviderChannel } from "./remoteFileSystemProviderServer.js";
+import { ServerTelemetryChannel } from "../../platform/telemetry/common/remoteTelemetryChannel.js";
+import { IServerTelemetryService, ServerNullTelemetryService, ServerTelemetryService } from "../../platform/telemetry/common/serverTelemetryService.js";
+import { RemoteTerminalChannel } from "./remoteTerminalChannel.js";
+import { createURITransformer } from "../../workbench/api/node/uriTransformer.js";
+import { ServerConnectionToken } from "./serverConnectionToken.js";
+import { ServerEnvironmentService, ServerParsedArgs } from "./serverEnvironmentService.js";
+import { REMOTE_TERMINAL_CHANNEL_NAME } from "../../workbench/contrib/terminal/common/remote/remoteTerminalChannel.js";
+import { REMOTE_FILE_SYSTEM_CHANNEL_NAME } from "../../workbench/services/remote/common/remoteFileSystemProviderClient.js";
+import { ExtensionHostStatusService, IExtensionHostStatusService } from "./extensionHostStatusService.js";
+import { IExtensionsScannerService } from "../../platform/extensionManagement/common/extensionsScannerService.js";
+import { ExtensionsScannerService } from "./extensionsScannerService.js";
+import { IExtensionsProfileScannerService } from "../../platform/extensionManagement/common/extensionsProfileScannerService.js";
+import { IUserDataProfilesService } from "../../platform/userDataProfile/common/userDataProfile.js";
+import { NullPolicyService } from "../../platform/policy/common/policy.js";
+import { OneDataSystemAppender } from "../../platform/telemetry/node/1dsAppender.js";
+import { LoggerService } from "../../platform/log/node/loggerService.js";
+import { ServerUserDataProfilesService } from "../../platform/userDataProfile/node/userDataProfile.js";
+import { ExtensionsProfileScannerService } from "../../platform/extensionManagement/node/extensionsProfileScannerService.js";
+import { LogService } from "../../platform/log/common/logService.js";
+import { LoggerChannel } from "../../platform/log/common/logIpc.js";
+import { localize } from "../../nls.js";
+import { RemoteExtensionsScannerChannel, RemoteExtensionsScannerService } from "./remoteExtensionsScanner.js";
+import { RemoteExtensionsScannerChannelName } from "../../platform/remote/common/remoteExtensionsScanner.js";
+import { RemoteUserDataProfilesServiceChannel } from "../../platform/userDataProfile/common/userDataProfileIpc.js";
+import { NodePtyHostStarter } from "../../platform/terminal/node/nodePtyHostStarter.js";
+import { CSSDevelopmentService, ICSSDevelopmentService } from "../../platform/cssDev/node/cssDevService.js";
+import { AllowedExtensionsService } from "../../platform/extensionManagement/common/allowedExtensionsService.js";
+import { TelemetryLogAppender } from "../../platform/telemetry/common/telemetryLogAppender.js";
+import { INativeMcpDiscoveryHelperService, NativeMcpDiscoveryHelperChannelName } from "../../platform/mcp/common/nativeMcpDiscoveryHelper.js";
+import { NativeMcpDiscoveryHelperChannel } from "../../platform/mcp/node/nativeMcpDiscoveryHelperChannel.js";
+import { NativeMcpDiscoveryHelperService } from "../../platform/mcp/node/nativeMcpDiscoveryHelperService.js";
+import { IExtensionGalleryManifestService } from "../../platform/extensionManagement/common/extensionGalleryManifest.js";
+import { ExtensionGalleryManifestIPCService } from "../../platform/extensionManagement/common/extensionGalleryManifestServiceIpc.js";
+const eventPrefix = "monacoworkbench";
+async function setupServerServices(connectionToken, args, REMOTE_DATA_FOLDER, disposables) {
+  const services = new ServiceCollection();
+  const socketServer = new SocketServer();
+  const productService = { _serviceBrand: void 0, ...product };
+  services.set(IProductService, productService);
+  const environmentService = new ServerEnvironmentService(args, productService);
+  services.set(IEnvironmentService, environmentService);
+  services.set(INativeEnvironmentService, environmentService);
+  const loggerService = new LoggerService(getLogLevel(environmentService), environmentService.logsHome);
+  services.set(ILoggerService, loggerService);
+  socketServer.registerChannel("logger", new LoggerChannel(loggerService, (ctx) => getUriTransformer(ctx.remoteAuthority)));
+  const logger = loggerService.createLogger("remoteagent", { name: localize("remoteExtensionLog", "Server") });
+  const logService = new LogService(logger, [new ServerLogger(getLogLevel(environmentService))]);
+  services.set(ILogService, logService);
+  setTimeout(() => cleanupOlderLogs(environmentService.logsHome.with({ scheme: Schemas.file }).fsPath).then(null, (err) => logService.error(err)), 1e4);
+  logService.onDidChangeLogLevel((logLevel) => log(logService, logLevel, `Log level changed to ${LogLevelToString(logService.getLevel())}`));
+  logService.trace(`Remote configuration data at ${REMOTE_DATA_FOLDER}`);
+  logService.trace("process arguments:", environmentService.args);
+  if (Array.isArray(productService.serverGreeting)) {
+    logService.info(`
+
+${productService.serverGreeting.join("\n")}
+
+`);
+  }
+  socketServer.registerChannel(ExtensionHostDebugBroadcastChannel.ChannelName, new ExtensionHostDebugBroadcastChannel());
+  const router = new StaticRouter((ctx) => ctx.clientId === "renderer");
+  const fileService = disposables.add(new FileService(logService));
+  services.set(IFileService, fileService);
+  fileService.registerProvider(Schemas.file, disposables.add(new DiskFileSystemProvider(logService)));
+  const uriIdentityService = new UriIdentityService(fileService);
+  services.set(IUriIdentityService, uriIdentityService);
+  const configurationService = new ConfigurationService(environmentService.machineSettingsResource, fileService, new NullPolicyService(), logService);
+  services.set(IConfigurationService, configurationService);
+  const userDataProfilesService = new ServerUserDataProfilesService(uriIdentityService, environmentService, fileService, logService);
+  services.set(IUserDataProfilesService, userDataProfilesService);
+  socketServer.registerChannel("userDataProfiles", new RemoteUserDataProfilesServiceChannel(userDataProfilesService, (ctx) => getUriTransformer(ctx.remoteAuthority)));
+  services.set(ICSSDevelopmentService, new SyncDescriptor(CSSDevelopmentService, void 0, true));
+  const [, , machineId, sqmId, devDeviceId] = await Promise.all([
+    configurationService.initialize(),
+    userDataProfilesService.init(),
+    getMachineId(logService.error.bind(logService)),
+    getSqmMachineId(logService.error.bind(logService)),
+    getdevDeviceId(logService.error.bind(logService))
+  ]);
+  const extensionHostStatusService = new ExtensionHostStatusService();
+  services.set(IExtensionHostStatusService, extensionHostStatusService);
+  const requestService = new RequestService("remote", configurationService, environmentService, logService);
+  services.set(IRequestService, requestService);
+  let oneDsAppender = NullAppender;
+  const isInternal = isInternalTelemetry(productService, configurationService);
+  if (supportsTelemetry(productService, environmentService)) {
+    if (!isLoggingOnly(productService, environmentService) && productService.aiConfig?.ariaKey) {
+      oneDsAppender = new OneDataSystemAppender(requestService, isInternal, eventPrefix, null, productService.aiConfig.ariaKey);
+      disposables.add(toDisposable(() => oneDsAppender?.flush()));
+    }
+    const config = {
+      appenders: [oneDsAppender, new TelemetryLogAppender("", true, loggerService, environmentService, productService)],
+      commonProperties: resolveCommonProperties(release(), hostname(), process.arch, productService.commit, productService.version + "-remote", machineId, sqmId, devDeviceId, isInternal, "remoteAgent"),
+      piiPaths: getPiiPathsFromEnvironment(environmentService)
+    };
+    const initialTelemetryLevelArg = environmentService.args["telemetry-level"];
+    let injectedTelemetryLevel = TelemetryLevel.USAGE;
+    if (initialTelemetryLevelArg === "all") {
+      injectedTelemetryLevel = TelemetryLevel.USAGE;
+    } else if (initialTelemetryLevelArg === "error") {
+      injectedTelemetryLevel = TelemetryLevel.ERROR;
+    } else if (initialTelemetryLevelArg === "crash") {
+      injectedTelemetryLevel = TelemetryLevel.CRASH;
+    } else if (initialTelemetryLevelArg !== void 0) {
+      injectedTelemetryLevel = TelemetryLevel.NONE;
+    }
+    services.set(IServerTelemetryService, new SyncDescriptor(ServerTelemetryService, [config, injectedTelemetryLevel]));
+  } else {
+    services.set(IServerTelemetryService, ServerNullTelemetryService);
+  }
+  services.set(IExtensionGalleryManifestService, new ExtensionGalleryManifestIPCService(socketServer, productService));
+  services.set(IExtensionGalleryService, new SyncDescriptor(ExtensionGalleryServiceWithNoStorageService));
+  const downloadChannel = socketServer.getChannel("download", router);
+  services.set(IDownloadService, new DownloadServiceChannelClient(
+    downloadChannel,
+    () => getUriTransformer("renderer")
+    /* TODO: @Sandy @Joao need dynamic context based router */
+  ));
+  services.set(IExtensionsProfileScannerService, new SyncDescriptor(ExtensionsProfileScannerService));
+  services.set(IExtensionsScannerService, new SyncDescriptor(ExtensionsScannerService));
+  services.set(IExtensionSignatureVerificationService, new SyncDescriptor(ExtensionSignatureVerificationService));
+  services.set(IAllowedExtensionsService, new SyncDescriptor(AllowedExtensionsService));
+  services.set(INativeServerExtensionManagementService, new SyncDescriptor(ExtensionManagementService));
+  services.set(INativeMcpDiscoveryHelperService, new SyncDescriptor(NativeMcpDiscoveryHelperService));
+  const instantiationService = new InstantiationService(services);
+  services.set(ILanguagePackService, instantiationService.createInstance(NativeLanguagePackService));
+  const ptyHostStarter = instantiationService.createInstance(
+    NodePtyHostStarter,
+    {
+      graceTime: ProtocolConstants.ReconnectionGraceTime,
+      shortGraceTime: ProtocolConstants.ReconnectionShortGraceTime,
+      scrollback: configurationService.getValue(TerminalSettingId.PersistentSessionScrollback) ?? 100
+    }
+  );
+  const ptyHostService = instantiationService.createInstance(PtyHostService, ptyHostStarter);
+  services.set(IPtyService, ptyHostService);
+  instantiationService.invokeFunction((accessor) => {
+    const extensionManagementService = accessor.get(INativeServerExtensionManagementService);
+    const extensionsScannerService = accessor.get(IExtensionsScannerService);
+    const extensionGalleryService = accessor.get(IExtensionGalleryService);
+    const languagePackService = accessor.get(ILanguagePackService);
+    const remoteExtensionEnvironmentChannel = new RemoteAgentEnvironmentChannel(connectionToken, environmentService, userDataProfilesService, extensionHostStatusService);
+    socketServer.registerChannel("remoteextensionsenvironment", remoteExtensionEnvironmentChannel);
+    const telemetryChannel = new ServerTelemetryChannel(accessor.get(IServerTelemetryService), oneDsAppender);
+    socketServer.registerChannel("telemetry", telemetryChannel);
+    socketServer.registerChannel(REMOTE_TERMINAL_CHANNEL_NAME, new RemoteTerminalChannel(environmentService, logService, ptyHostService, productService, extensionManagementService, configurationService));
+    const remoteExtensionsScanner = new RemoteExtensionsScannerService(instantiationService.createInstance(ExtensionManagementCLI, logService), environmentService, userDataProfilesService, extensionsScannerService, logService, extensionGalleryService, languagePackService, extensionManagementService);
+    socketServer.registerChannel(RemoteExtensionsScannerChannelName, new RemoteExtensionsScannerChannel(remoteExtensionsScanner, (ctx) => getUriTransformer(ctx.remoteAuthority)));
+    socketServer.registerChannel(NativeMcpDiscoveryHelperChannelName, instantiationService.createInstance(NativeMcpDiscoveryHelperChannel, (ctx) => getUriTransformer(ctx.remoteAuthority)));
+    const remoteFileSystemChannel = disposables.add(new RemoteAgentFileSystemProviderChannel(logService, environmentService, configurationService));
+    socketServer.registerChannel(REMOTE_FILE_SYSTEM_CHANNEL_NAME, remoteFileSystemChannel);
+    socketServer.registerChannel("request", new RequestChannel(accessor.get(IRequestService)));
+    const channel = new ExtensionManagementChannel(extensionManagementService, (ctx) => getUriTransformer(ctx.remoteAuthority));
+    socketServer.registerChannel("extensions", channel);
+    remoteExtensionsScanner.whenExtensionsReady().then(() => extensionManagementService.cleanUp());
+    disposables.add(new ErrorTelemetry(accessor.get(ITelemetryService)));
+    return {
+      telemetryService: accessor.get(ITelemetryService)
+    };
+  });
+  return { socketServer, instantiationService };
+}
+__name(setupServerServices, "setupServerServices");
+const _uriTransformerCache = /* @__PURE__ */ Object.create(null);
+function getUriTransformer(remoteAuthority) {
+  if (!_uriTransformerCache[remoteAuthority]) {
+    _uriTransformerCache[remoteAuthority] = createURITransformer(remoteAuthority);
+  }
+  return _uriTransformerCache[remoteAuthority];
+}
+__name(getUriTransformer, "getUriTransformer");
+class SocketServer extends IPCServer {
+  static {
+    __name(this, "SocketServer");
+  }
+  _onDidConnectEmitter;
+  constructor() {
+    const emitter = new Emitter();
+    super(emitter.event);
+    this._onDidConnectEmitter = emitter;
+  }
+  acceptConnection(protocol, onDidClientDisconnect) {
+    this._onDidConnectEmitter.fire({ protocol, onDidClientDisconnect });
+  }
+}
+class ServerLogger extends AbstractLogger {
+  static {
+    __name(this, "ServerLogger");
+  }
+  useColors;
+  constructor(logLevel = DEFAULT_LOG_LEVEL) {
+    super();
+    this.setLevel(logLevel);
+    this.useColors = Boolean(process.stdout.isTTY);
+  }
+  trace(message, ...args) {
+    if (this.canLog(LogLevel.Trace)) {
+      if (this.useColors) {
+        console.log(`\x1B[90m[${now()}]\x1B[0m`, message, ...args);
+      } else {
+        console.log(`[${now()}]`, message, ...args);
+      }
+    }
+  }
+  debug(message, ...args) {
+    if (this.canLog(LogLevel.Debug)) {
+      if (this.useColors) {
+        console.log(`\x1B[90m[${now()}]\x1B[0m`, message, ...args);
+      } else {
+        console.log(`[${now()}]`, message, ...args);
+      }
+    }
+  }
+  info(message, ...args) {
+    if (this.canLog(LogLevel.Info)) {
+      if (this.useColors) {
+        console.log(`\x1B[90m[${now()}]\x1B[0m`, message, ...args);
+      } else {
+        console.log(`[${now()}]`, message, ...args);
+      }
+    }
+  }
+  warn(message, ...args) {
+    if (this.canLog(LogLevel.Warning)) {
+      if (this.useColors) {
+        console.warn(`\x1B[93m[${now()}]\x1B[0m`, message, ...args);
+      } else {
+        console.warn(`[${now()}]`, message, ...args);
+      }
+    }
+  }
+  error(message, ...args) {
+    if (this.canLog(LogLevel.Error)) {
+      if (this.useColors) {
+        console.error(`\x1B[91m[${now()}]\x1B[0m`, message, ...args);
+      } else {
+        console.error(`[${now()}]`, message, ...args);
+      }
+    }
+  }
+  flush() {
+  }
+}
+function now() {
+  const date = /* @__PURE__ */ new Date();
+  return `${twodigits(date.getHours())}:${twodigits(date.getMinutes())}:${twodigits(date.getSeconds())}`;
+}
+__name(now, "now");
+function twodigits(n) {
+  if (n < 10) {
+    return `0${n}`;
+  }
+  return String(n);
+}
+__name(twodigits, "twodigits");
+async function cleanupOlderLogs(logsPath) {
+  const currentLog = path.basename(logsPath);
+  const logsRoot = path.dirname(logsPath);
+  const children = await Promises.readdir(logsRoot);
+  const allSessions = children.filter((name) => /^\d{8}T\d{6}$/.test(name));
+  const oldSessions = allSessions.sort().filter((d) => d !== currentLog);
+  const toDelete = oldSessions.slice(0, Math.max(0, oldSessions.length - 9));
+  await Promise.all(toDelete.map((name) => Promises.rm(path.join(logsRoot, name))));
+}
+__name(cleanupOlderLogs, "cleanupOlderLogs");
+export {
+  SocketServer,
+  setupServerServices
+};
+//# sourceMappingURL=serverServices.js.map

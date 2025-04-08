@@ -1,1 +1,166 @@
-import"../common/history.js";import"../common/scm.js";import{MenuItemAction as I}from"../../../../platform/actions/common/actions.js";import"../../../../base/browser/ui/actionbar/actionbar.js";import"../../../../base/common/lifecycle.js";import{Action as p}from"../../../../base/common/actions.js";import{createActionViewItem as M,getActionBarActions as S,getContextMenuActions as l}from"../../../../platform/actions/browser/menuEntryActionViewItem.js";import{equals as a}from"../../../../base/common/arrays.js";import{ActionViewItem as C}from"../../../../base/browser/ui/actionbar/actionViewItems.js";import{renderLabelWithIcons as f}from"../../../../base/browser/ui/iconLabel/iconLabels.js";import"../../../../platform/commands/common/commands.js";import"../../../../editor/common/languages.js";import{reset as y}from"../../../../base/browser/dom.js";import"../../../../platform/instantiation/common/instantiation.js";import{ResourceTree as A}from"../../../../base/common/resourceTree.js";function ie(e){return Array.isArray(e.repositories)&&Array.isArray(e.visibleRepositories)}function ne(e){return!!e.provider&&!!e.input}function se(e){return!!e.validateInput&&"string"==typeof e.value}function ce(e){return"actionButton"===e.type}function m(e){return!!e.provider&&!!e.resources}function ue(e){return!!e.sourceUri&&m(e.resourceGroup)}function Ie(e){return A.isResourceNode(e)&&m(e.context)}function ae(e){return"historyItemViewModel"===e.type}function me(e){return"historyItemLoadMore"===e.type}const d=(e,t)=>e instanceof I&&t instanceof I?e.id===t.id&&e.enabled===t.enabled&&e.hideActions?.isHidden===t.hideActions?.isHidden:e.id===t.id&&e.enabled===t.enabled;function de(e,t,o){let r=[],i=[];const s=()=>{const{primary:s,secondary:n}=S(e.getActions({shouldForwardArgs:!0}),o);a(r,s,d)&&a(i,n,d)||(r=s,i=n,t(s,n))};return s(),e.onDidChange(s)}function pe(e){return l(e.getActions({shouldForwardArgs:!0}),"inline").secondary}class R extends p{constructor(e,t){super(`statusbaraction{${e.id}}`,e.title,"",!0),this.command=e,this.commandService=t,this.tooltip=e.tooltip||""}run(){return this.commandService.executeCommand(this.command.id,...this.command.arguments||[])}}class v extends C{constructor(e,t){super(null,e,{...t,icon:!1,label:!0})}updateLabel(){this.options.label&&this.label&&y(this.label,...f(this.action.label))}}function Me(e){return(t,o)=>t instanceof R?new v(t,o):M(e,t,o)}function Se(e){return`${e.contextValue}:${e.label}${e.rootUri?`:${e.rootUri.toString()}`:""}`}function le(e){return e.groups.reduce(((e,t)=>e+t.resources.length),0)}function Ce(e,t=20){const o=e.subject.length<=t?e.subject:`${e.subject.substring(0,t)}…`;return`${e.displayId??e.id} - ${o}`}function fe(e,t,o,r,i){const s=e=>e.id===o?.id?1:e.id===r?.id?2:e.id===i?.id?3:void 0!==e.color?4:99;return s(e)-s(t)}export{R as StatusBarAction,pe as collectContextMenuActions,fe as compareHistoryItemRefs,de as connectPrimaryMenu,Me as getActionViewItemProvider,Ce as getHistoryItemEditorTitle,Se as getProviderKey,le as getRepositoryResourceCount,ce as isSCMActionButton,me as isSCMHistoryItemLoadMoreTreeElement,ae as isSCMHistoryItemViewModelTreeElement,se as isSCMInput,ne as isSCMRepository,ue as isSCMResource,m as isSCMResourceGroup,Ie as isSCMResourceNode,ie as isSCMViewService};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { ISCMHistoryItem, ISCMHistoryItemRef, SCMHistoryItemLoadMoreTreeElement, SCMHistoryItemViewModelTreeElement } from "../common/history.js";
+import { ISCMResource, ISCMRepository, ISCMResourceGroup, ISCMInput, ISCMActionButton, ISCMViewService, ISCMProvider } from "../common/scm.js";
+import { IMenu, MenuItemAction } from "../../../../platform/actions/common/actions.js";
+import { IActionViewItemProvider } from "../../../../base/browser/ui/actionbar/actionbar.js";
+import { IDisposable } from "../../../../base/common/lifecycle.js";
+import { Action, IAction } from "../../../../base/common/actions.js";
+import { createActionViewItem, getActionBarActions, getContextMenuActions } from "../../../../platform/actions/browser/menuEntryActionViewItem.js";
+import { equals } from "../../../../base/common/arrays.js";
+import { ActionViewItem, IBaseActionViewItemOptions } from "../../../../base/browser/ui/actionbar/actionViewItems.js";
+import { renderLabelWithIcons } from "../../../../base/browser/ui/iconLabel/iconLabels.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { Command } from "../../../../editor/common/languages.js";
+import { reset } from "../../../../base/browser/dom.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { IResourceNode, ResourceTree } from "../../../../base/common/resourceTree.js";
+function isSCMViewService(element) {
+  return Array.isArray(element.repositories) && Array.isArray(element.visibleRepositories);
+}
+__name(isSCMViewService, "isSCMViewService");
+function isSCMRepository(element) {
+  return !!element.provider && !!element.input;
+}
+__name(isSCMRepository, "isSCMRepository");
+function isSCMInput(element) {
+  return !!element.validateInput && typeof element.value === "string";
+}
+__name(isSCMInput, "isSCMInput");
+function isSCMActionButton(element) {
+  return element.type === "actionButton";
+}
+__name(isSCMActionButton, "isSCMActionButton");
+function isSCMResourceGroup(element) {
+  return !!element.provider && !!element.resources;
+}
+__name(isSCMResourceGroup, "isSCMResourceGroup");
+function isSCMResource(element) {
+  return !!element.sourceUri && isSCMResourceGroup(element.resourceGroup);
+}
+__name(isSCMResource, "isSCMResource");
+function isSCMResourceNode(element) {
+  return ResourceTree.isResourceNode(element) && isSCMResourceGroup(element.context);
+}
+__name(isSCMResourceNode, "isSCMResourceNode");
+function isSCMHistoryItemViewModelTreeElement(element) {
+  return element.type === "historyItemViewModel";
+}
+__name(isSCMHistoryItemViewModelTreeElement, "isSCMHistoryItemViewModelTreeElement");
+function isSCMHistoryItemLoadMoreTreeElement(element) {
+  return element.type === "historyItemLoadMore";
+}
+__name(isSCMHistoryItemLoadMoreTreeElement, "isSCMHistoryItemLoadMoreTreeElement");
+const compareActions = /* @__PURE__ */ __name((a, b) => {
+  if (a instanceof MenuItemAction && b instanceof MenuItemAction) {
+    return a.id === b.id && a.enabled === b.enabled && a.hideActions?.isHidden === b.hideActions?.isHidden;
+  }
+  return a.id === b.id && a.enabled === b.enabled;
+}, "compareActions");
+function connectPrimaryMenu(menu, callback, primaryGroup) {
+  let cachedPrimary = [];
+  let cachedSecondary = [];
+  const updateActions = /* @__PURE__ */ __name(() => {
+    const { primary, secondary } = getActionBarActions(menu.getActions({ shouldForwardArgs: true }), primaryGroup);
+    if (equals(cachedPrimary, primary, compareActions) && equals(cachedSecondary, secondary, compareActions)) {
+      return;
+    }
+    cachedPrimary = primary;
+    cachedSecondary = secondary;
+    callback(primary, secondary);
+  }, "updateActions");
+  updateActions();
+  return menu.onDidChange(updateActions);
+}
+__name(connectPrimaryMenu, "connectPrimaryMenu");
+function collectContextMenuActions(menu) {
+  return getContextMenuActions(menu.getActions({ shouldForwardArgs: true }), "inline").secondary;
+}
+__name(collectContextMenuActions, "collectContextMenuActions");
+class StatusBarAction extends Action {
+  constructor(command, commandService) {
+    super(`statusbaraction{${command.id}}`, command.title, "", true);
+    this.command = command;
+    this.commandService = commandService;
+    this.tooltip = command.tooltip || "";
+  }
+  static {
+    __name(this, "StatusBarAction");
+  }
+  run() {
+    return this.commandService.executeCommand(this.command.id, ...this.command.arguments || []);
+  }
+}
+class StatusBarActionViewItem extends ActionViewItem {
+  static {
+    __name(this, "StatusBarActionViewItem");
+  }
+  constructor(action, options) {
+    super(null, action, { ...options, icon: false, label: true });
+  }
+  updateLabel() {
+    if (this.options.label && this.label) {
+      reset(this.label, ...renderLabelWithIcons(this.action.label));
+    }
+  }
+}
+function getActionViewItemProvider(instaService) {
+  return (action, options) => {
+    if (action instanceof StatusBarAction) {
+      return new StatusBarActionViewItem(action, options);
+    }
+    return createActionViewItem(instaService, action, options);
+  };
+}
+__name(getActionViewItemProvider, "getActionViewItemProvider");
+function getProviderKey(provider) {
+  return `${provider.contextValue}:${provider.label}${provider.rootUri ? `:${provider.rootUri.toString()}` : ""}`;
+}
+__name(getProviderKey, "getProviderKey");
+function getRepositoryResourceCount(provider) {
+  return provider.groups.reduce((r, g) => r + g.resources.length, 0);
+}
+__name(getRepositoryResourceCount, "getRepositoryResourceCount");
+function getHistoryItemEditorTitle(historyItem, maxLength = 20) {
+  const title = historyItem.subject.length <= maxLength ? historyItem.subject : `${historyItem.subject.substring(0, maxLength)}\u2026`;
+  return `${historyItem.displayId ?? historyItem.id} - ${title}`;
+}
+__name(getHistoryItemEditorTitle, "getHistoryItemEditorTitle");
+function compareHistoryItemRefs(ref1, ref2, currentHistoryItemRef, currentHistoryItemRemoteRef, currentHistoryItemBaseRef) {
+  const getHistoryItemRefOrder = /* @__PURE__ */ __name((ref) => {
+    if (ref.id === currentHistoryItemRef?.id) {
+      return 1;
+    } else if (ref.id === currentHistoryItemRemoteRef?.id) {
+      return 2;
+    } else if (ref.id === currentHistoryItemBaseRef?.id) {
+      return 3;
+    } else if (ref.color !== void 0) {
+      return 4;
+    }
+    return 99;
+  }, "getHistoryItemRefOrder");
+  const ref1Order = getHistoryItemRefOrder(ref1);
+  const ref2Order = getHistoryItemRefOrder(ref2);
+  return ref1Order - ref2Order;
+}
+__name(compareHistoryItemRefs, "compareHistoryItemRefs");
+export {
+  StatusBarAction,
+  collectContextMenuActions,
+  compareHistoryItemRefs,
+  connectPrimaryMenu,
+  getActionViewItemProvider,
+  getHistoryItemEditorTitle,
+  getProviderKey,
+  getRepositoryResourceCount,
+  isSCMActionButton,
+  isSCMHistoryItemLoadMoreTreeElement,
+  isSCMHistoryItemViewModelTreeElement,
+  isSCMInput,
+  isSCMRepository,
+  isSCMResource,
+  isSCMResourceGroup,
+  isSCMResourceNode,
+  isSCMViewService
+};
+//# sourceMappingURL=util.js.map

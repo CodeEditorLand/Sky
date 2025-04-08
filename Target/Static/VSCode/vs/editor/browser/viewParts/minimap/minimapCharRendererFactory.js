@@ -1,1 +1,119 @@
-import{MinimapCharRenderer as R}from"./minimapCharRenderer.js";import{allCharCodes as P,Constants as t}from"./minimapCharSheet.js";import{prebakedMiniMaps as f}from"./minimapPreBaked.js";import{toUint8 as g}from"../../../../base/common/uint.js";class m{static lastCreated;static lastFontFamily;static create(t,e){if(this.lastCreated&&t===this.lastCreated.scale&&e===this.lastFontFamily)return this.lastCreated;let a;return a=f[t]?new R(f[t](),t):m.createFromSampleData(m.createSampleData(e).data,t),this.lastFontFamily=e,this.lastCreated=a,a}static createSampleData(e){const a=document.createElement("canvas"),r=a.getContext("2d");a.style.height=`${t.SAMPLED_CHAR_HEIGHT}px`,a.height=t.SAMPLED_CHAR_HEIGHT,a.width=t.CHAR_COUNT*t.SAMPLED_CHAR_WIDTH,a.style.width=t.CHAR_COUNT*t.SAMPLED_CHAR_WIDTH+"px",r.fillStyle="#ffffff",r.font=`bold ${t.SAMPLED_CHAR_HEIGHT}px ${e}`,r.textBaseline="middle";let o=0;for(const e of P)r.fillText(String.fromCharCode(e),o,t.SAMPLED_CHAR_HEIGHT/2),o+=t.SAMPLED_CHAR_WIDTH;return r.getImageData(0,0,t.CHAR_COUNT*t.SAMPLED_CHAR_WIDTH,t.SAMPLED_CHAR_HEIGHT)}static createFromSampleData(e,a){const r=t.SAMPLED_CHAR_HEIGHT*t.SAMPLED_CHAR_WIDTH*t.RGBA_CHANNELS_CNT*t.CHAR_COUNT;if(e.length!==r)throw new Error("Unexpected source in MinimapCharRenderer");const o=m._downsample(e,a);return new R(o,a)}static _downsampleChar(e,a,r,o,s){const H=t.BASE_CHAR_WIDTH*s,_=t.BASE_CHAR_HEIGHT*s;let C=o,n=0;for(let o=0;o<_;o++){const s=o/_*t.SAMPLED_CHAR_HEIGHT,A=(o+1)/_*t.SAMPLED_CHAR_HEIGHT;for(let o=0;o<H;o++){const _=o/H*t.SAMPLED_CHAR_WIDTH,i=(o+1)/H*t.SAMPLED_CHAR_WIDTH;let l=0,m=0;for(let r=s;r<A;r++){const o=a+Math.floor(r)*t.RGBA_SAMPLED_ROW_WIDTH,s=1-(r-Math.floor(r));for(let a=_;a<i;a++){const r=1-(a-Math.floor(a)),H=o+Math.floor(a)*t.RGBA_CHANNELS_CNT,_=r*s;m+=_,l+=e[H]*e[H+3]/255*_}}const R=l/m;n=Math.max(n,R),r[C++]=g(R)}}return n}static _downsample(e,a){const r=t.BASE_CHAR_HEIGHT*a*t.BASE_CHAR_WIDTH*a,o=r*t.CHAR_COUNT,s=new Uint8ClampedArray(o);let H=0,_=0,C=0;for(let o=0;o<t.CHAR_COUNT;o++)C=Math.max(C,this._downsampleChar(e,_,s,H,a)),H+=r,_+=t.SAMPLED_CHAR_WIDTH*t.RGBA_CHANNELS_CNT;if(C>0){const t=255/C;for(let e=0;e<o;e++)s[e]*=t}return s}}export{m as MinimapCharRendererFactory};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { MinimapCharRenderer } from "./minimapCharRenderer.js";
+import { allCharCodes, Constants } from "./minimapCharSheet.js";
+import { prebakedMiniMaps } from "./minimapPreBaked.js";
+import { toUint8 } from "../../../../base/common/uint.js";
+class MinimapCharRendererFactory {
+  static {
+    __name(this, "MinimapCharRendererFactory");
+  }
+  static lastCreated;
+  static lastFontFamily;
+  /**
+   * Creates a new character renderer factory with the given scale.
+   */
+  static create(scale, fontFamily) {
+    if (this.lastCreated && scale === this.lastCreated.scale && fontFamily === this.lastFontFamily) {
+      return this.lastCreated;
+    }
+    let factory;
+    if (prebakedMiniMaps[scale]) {
+      factory = new MinimapCharRenderer(prebakedMiniMaps[scale](), scale);
+    } else {
+      factory = MinimapCharRendererFactory.createFromSampleData(
+        MinimapCharRendererFactory.createSampleData(fontFamily).data,
+        scale
+      );
+    }
+    this.lastFontFamily = fontFamily;
+    this.lastCreated = factory;
+    return factory;
+  }
+  /**
+   * Creates the font sample data, writing to a canvas.
+   */
+  static createSampleData(fontFamily) {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    canvas.style.height = `${Constants.SAMPLED_CHAR_HEIGHT}px`;
+    canvas.height = Constants.SAMPLED_CHAR_HEIGHT;
+    canvas.width = Constants.CHAR_COUNT * Constants.SAMPLED_CHAR_WIDTH;
+    canvas.style.width = Constants.CHAR_COUNT * Constants.SAMPLED_CHAR_WIDTH + "px";
+    ctx.fillStyle = "#ffffff";
+    ctx.font = `bold ${Constants.SAMPLED_CHAR_HEIGHT}px ${fontFamily}`;
+    ctx.textBaseline = "middle";
+    let x = 0;
+    for (const code of allCharCodes) {
+      ctx.fillText(String.fromCharCode(code), x, Constants.SAMPLED_CHAR_HEIGHT / 2);
+      x += Constants.SAMPLED_CHAR_WIDTH;
+    }
+    return ctx.getImageData(0, 0, Constants.CHAR_COUNT * Constants.SAMPLED_CHAR_WIDTH, Constants.SAMPLED_CHAR_HEIGHT);
+  }
+  /**
+   * Creates a character renderer from the canvas sample data.
+   */
+  static createFromSampleData(source, scale) {
+    const expectedLength = Constants.SAMPLED_CHAR_HEIGHT * Constants.SAMPLED_CHAR_WIDTH * Constants.RGBA_CHANNELS_CNT * Constants.CHAR_COUNT;
+    if (source.length !== expectedLength) {
+      throw new Error("Unexpected source in MinimapCharRenderer");
+    }
+    const charData = MinimapCharRendererFactory._downsample(source, scale);
+    return new MinimapCharRenderer(charData, scale);
+  }
+  static _downsampleChar(source, sourceOffset, dest, destOffset, scale) {
+    const width = Constants.BASE_CHAR_WIDTH * scale;
+    const height = Constants.BASE_CHAR_HEIGHT * scale;
+    let targetIndex = destOffset;
+    let brightest = 0;
+    for (let y = 0; y < height; y++) {
+      const sourceY1 = y / height * Constants.SAMPLED_CHAR_HEIGHT;
+      const sourceY2 = (y + 1) / height * Constants.SAMPLED_CHAR_HEIGHT;
+      for (let x = 0; x < width; x++) {
+        const sourceX1 = x / width * Constants.SAMPLED_CHAR_WIDTH;
+        const sourceX2 = (x + 1) / width * Constants.SAMPLED_CHAR_WIDTH;
+        let value = 0;
+        let samples = 0;
+        for (let sy = sourceY1; sy < sourceY2; sy++) {
+          const sourceRow = sourceOffset + Math.floor(sy) * Constants.RGBA_SAMPLED_ROW_WIDTH;
+          const yBalance = 1 - (sy - Math.floor(sy));
+          for (let sx = sourceX1; sx < sourceX2; sx++) {
+            const xBalance = 1 - (sx - Math.floor(sx));
+            const sourceIndex = sourceRow + Math.floor(sx) * Constants.RGBA_CHANNELS_CNT;
+            const weight = xBalance * yBalance;
+            samples += weight;
+            value += source[sourceIndex] * source[sourceIndex + 3] / 255 * weight;
+          }
+        }
+        const final = value / samples;
+        brightest = Math.max(brightest, final);
+        dest[targetIndex++] = toUint8(final);
+      }
+    }
+    return brightest;
+  }
+  static _downsample(data, scale) {
+    const pixelsPerCharacter = Constants.BASE_CHAR_HEIGHT * scale * Constants.BASE_CHAR_WIDTH * scale;
+    const resultLen = pixelsPerCharacter * Constants.CHAR_COUNT;
+    const result = new Uint8ClampedArray(resultLen);
+    let resultOffset = 0;
+    let sourceOffset = 0;
+    let brightest = 0;
+    for (let charIndex = 0; charIndex < Constants.CHAR_COUNT; charIndex++) {
+      brightest = Math.max(brightest, this._downsampleChar(data, sourceOffset, result, resultOffset, scale));
+      resultOffset += pixelsPerCharacter;
+      sourceOffset += Constants.SAMPLED_CHAR_WIDTH * Constants.RGBA_CHANNELS_CNT;
+    }
+    if (brightest > 0) {
+      const adjust = 255 / brightest;
+      for (let i = 0; i < resultLen; i++) {
+        result[i] *= adjust;
+      }
+    }
+    return result;
+  }
+}
+export {
+  MinimapCharRendererFactory
+};
+//# sourceMappingURL=minimapCharRendererFactory.js.map

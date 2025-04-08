@@ -1,2 +1,210 @@
-import"../../../../../../../base/browser/mouseEvent.js";import{Emitter as O}from"../../../../../../../base/common/event.js";import{Disposable as S}from"../../../../../../../base/common/lifecycle.js";import{autorunWithStore as F,derived as V,observableFromEvent as A}from"../../../../../../../base/common/observable.js";import{MouseTargetType as I}from"../../../../../../browser/editorBrowser.js";import{observableCodeEditor as h}from"../../../../../../browser/observableCodeEditor.js";import{rangeIsSingleLine as R}from"../../../../../../browser/widget/diffEditor/components/diffEditorViewZones/diffEditorViewZones.js";import{OffsetRange as c}from"../../../../../../common/core/offsetRange.js";import{Range as W}from"../../../../../../common/core/range.js";import"../../../../../../common/core/textEdit.js";import"../../../../../../common/diff/rangeMapping.js";import{EndOfLinePreference as z,InjectedTextCursorStops as B}from"../../../../../../common/model.js";import{ModelDecorationOptions as f}from"../../../../../../common/model/textModel.js";import"../inlineEditsViewInterface.js";import{classNames as u}from"../utils/utils.js";class ce extends S{constructor(o,n,D){super();this._originalEditor=o;this._state=n;this._modifiedTextModel=D;this._register(h(this._originalEditor).setDecorations(this._decorations.map(t=>t?.originalDecorations??[])));const p=this._state.map(t=>t?.modifiedCodeEditor);this._register(F((t,s)=>{const r=p.read(t);r&&s.add(h(r).setDecorations(this._decorations.map(l=>l?.modifiedDecorations??[])))})),this._register(this._originalEditor.onMouseUp(t=>{if(t.target.type!==I.CONTENT_TEXT)return;const s=t.target.detail.injectedText?.options.attachedData;s instanceof C&&s.owner===this&&this._onDidClick.fire(t.event)}))}static supportsInlineDiffRendering(o){return E(o)}_onDidClick=this._register(new O);onDidClick=this._onDidClick.event;isHovered=h(this._originalEditor).isTargetHovered(o=>o.target.type===I.CONTENT_TEXT&&o.target.detail.injectedText?.options.attachedData instanceof C&&o.target.detail.injectedText.options.attachedData.owner===this,this._store);_tokenizationFinished=P(this._modifiedTextModel);_decorations=V(this,o=>{const n=this._state.read(o);if(!n)return;const D=n.modifiedText,p=n.mode==="insertionInline",t=n.diff.length===1&&n.diff[0].innerChanges?.length===1,s=!0,r=[],l=[],x=f.register({className:"inlineCompletions-line-insert",description:"line-insert",isWholeLine:!0,marginClassName:"gutter-insert"}),T=f.register({className:"inlineCompletions-line-delete",description:"line-delete",isWholeLine:!0,marginClassName:"gutter-delete"}),y=f.register({className:"inlineCompletions-char-delete",description:"char-delete",isWholeLine:!1}),L=f.register({className:"inlineCompletions-char-insert",description:"char-insert",isWholeLine:!0}),_=f.register({className:"inlineCompletions-char-insert",description:"char-insert",shouldFillLineOnLineBreak:!0}),v=f.register({className:"inlineCompletions-char-insert diff-range-empty",description:"char-insert diff-range-empty"});for(const i of n.diff)if(n.mode!=="sideBySide"&&n.mode!=="deletion"&&n.mode!=="insertionInline"&&(i.original.isEmpty||r.push({range:i.original.toInclusiveRange(),options:T}),i.modified.isEmpty||l.push({range:i.modified.toInclusiveRange(),options:x})),i.modified.isEmpty||i.original.isEmpty)i.original.isEmpty||r.push({range:i.original.toInclusiveRange(),options:y}),i.modified.isEmpty||l.push({range:i.modified.toInclusiveRange(),options:L});else{const g=p&&E(i);for(const e of i.innerChanges||[]){if(i.original.contains(e.originalRange.startLineNumber)){const a=this._originalEditor.getModel()?.getValueInRange(e.originalRange,z.LF);r.push({range:e.originalRange,options:{description:"char-delete",shouldFillLineOnLineBreak:!1,className:u("inlineCompletions-char-delete",e.originalRange.isSingleLine()&&n.mode==="insertionInline"&&"single-line-inline",e.originalRange.isEmpty()&&"empty",(e.originalRange.isEmpty()&&t||n.mode==="deletion"&&a===`
-`)&&s&&!g&&"diff-range-empty"),inlineClassName:g?u("strike-through","inlineCompletions"):null,zIndex:1}})}if(i.modified.contains(e.modifiedRange.startLineNumber)&&l.push({range:e.modifiedRange,options:e.modifiedRange.isEmpty()&&s&&!g&&t?v:_}),g){const a=D.getValueOfRange(e.modifiedRange),b=a.length>3?[{text:a.slice(0,1),extraClasses:["start"],offsetRange:new c(e.modifiedRange.startColumn-1,e.modifiedRange.startColumn)},{text:a.slice(1,-1),extraClasses:[],offsetRange:new c(e.modifiedRange.startColumn,e.modifiedRange.endColumn-2)},{text:a.slice(-1),extraClasses:["end"],offsetRange:new c(e.modifiedRange.endColumn-2,e.modifiedRange.endColumn-1)}]:[{text:a,extraClasses:["start","end"],offsetRange:new c(e.modifiedRange.startColumn-1,e.modifiedRange.endColumn)}];this._tokenizationFinished.read(o);const w=this._modifiedTextModel.tokenization.getLineTokens(e.modifiedRange.startLineNumber);for(const{text:N,extraClasses:M,offsetRange:k}of b)r.push({range:W.fromPositions(e.originalRange.getEndPosition()),options:{description:"inserted-text",before:{tokens:w.getTokensInRange(k),content:N,inlineClassName:u("inlineCompletions-char-insert",e.modifiedRange.isSingleLine()&&n.mode==="insertionInline"&&"single-line-inline",...M),cursorStops:B.None,attachedData:new C(this)},zIndex:2,showIfCollapsed:!0}})}}}return{originalDecorations:r,modifiedDecorations:l}})}class C{constructor(m){this.owner=m}}function E(d){return d.innerChanges?d.innerChanges.every(m=>R(m.modifiedRange)&&R(m.originalRange)):!1}let j=0;function P(d){return A(d.onDidChangeTokens,()=>j++)}export{ce as OriginalEditorInlineDiffView};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { IMouseEvent } from "../../../../../../../base/browser/mouseEvent.js";
+import { Emitter } from "../../../../../../../base/common/event.js";
+import { Disposable } from "../../../../../../../base/common/lifecycle.js";
+import { autorunWithStore, derived, IObservable, observableFromEvent } from "../../../../../../../base/common/observable.js";
+import { ICodeEditor, MouseTargetType } from "../../../../../../browser/editorBrowser.js";
+import { observableCodeEditor } from "../../../../../../browser/observableCodeEditor.js";
+import { rangeIsSingleLine } from "../../../../../../browser/widget/diffEditor/components/diffEditorViewZones/diffEditorViewZones.js";
+import { OffsetRange } from "../../../../../../common/core/offsetRange.js";
+import { Range } from "../../../../../../common/core/range.js";
+import { AbstractText } from "../../../../../../common/core/textEdit.js";
+import { DetailedLineRangeMapping } from "../../../../../../common/diff/rangeMapping.js";
+import { EndOfLinePreference, IModelDeltaDecoration, InjectedTextCursorStops, ITextModel } from "../../../../../../common/model.js";
+import { ModelDecorationOptions } from "../../../../../../common/model/textModel.js";
+import { IInlineEditsView } from "../inlineEditsViewInterface.js";
+import { classNames } from "../utils/utils.js";
+class OriginalEditorInlineDiffView extends Disposable {
+  constructor(_originalEditor, _state, _modifiedTextModel) {
+    super();
+    this._originalEditor = _originalEditor;
+    this._state = _state;
+    this._modifiedTextModel = _modifiedTextModel;
+    this._register(observableCodeEditor(this._originalEditor).setDecorations(this._decorations.map((d) => d?.originalDecorations ?? [])));
+    const modifiedCodeEditor = this._state.map((s) => s?.modifiedCodeEditor);
+    this._register(autorunWithStore((reader, store) => {
+      const e = modifiedCodeEditor.read(reader);
+      if (e) {
+        store.add(observableCodeEditor(e).setDecorations(this._decorations.map((d) => d?.modifiedDecorations ?? [])));
+      }
+    }));
+    this._register(this._originalEditor.onMouseUp((e) => {
+      if (e.target.type !== MouseTargetType.CONTENT_TEXT) {
+        return;
+      }
+      const a = e.target.detail.injectedText?.options.attachedData;
+      if (a instanceof InlineEditAttachedData && a.owner === this) {
+        this._onDidClick.fire(e.event);
+      }
+    }));
+  }
+  static {
+    __name(this, "OriginalEditorInlineDiffView");
+  }
+  static supportsInlineDiffRendering(mapping) {
+    return allowsTrueInlineDiffRendering(mapping);
+  }
+  _onDidClick = this._register(new Emitter());
+  onDidClick = this._onDidClick.event;
+  isHovered = observableCodeEditor(this._originalEditor).isTargetHovered(
+    (p) => p.target.type === MouseTargetType.CONTENT_TEXT && p.target.detail.injectedText?.options.attachedData instanceof InlineEditAttachedData && p.target.detail.injectedText.options.attachedData.owner === this,
+    this._store
+  );
+  _tokenizationFinished = modelTokenizationFinished(this._modifiedTextModel);
+  _decorations = derived(this, (reader) => {
+    const diff = this._state.read(reader);
+    if (!diff) {
+      return void 0;
+    }
+    const modified = diff.modifiedText;
+    const showInline = diff.mode === "insertionInline";
+    const hasOneInnerChange = diff.diff.length === 1 && diff.diff[0].innerChanges?.length === 1;
+    const showEmptyDecorations = true;
+    const originalDecorations = [];
+    const modifiedDecorations = [];
+    const diffLineAddDecorationBackground = ModelDecorationOptions.register({
+      className: "inlineCompletions-line-insert",
+      description: "line-insert",
+      isWholeLine: true,
+      marginClassName: "gutter-insert"
+    });
+    const diffLineDeleteDecorationBackground = ModelDecorationOptions.register({
+      className: "inlineCompletions-line-delete",
+      description: "line-delete",
+      isWholeLine: true,
+      marginClassName: "gutter-delete"
+    });
+    const diffWholeLineDeleteDecoration = ModelDecorationOptions.register({
+      className: "inlineCompletions-char-delete",
+      description: "char-delete",
+      isWholeLine: false
+    });
+    const diffWholeLineAddDecoration = ModelDecorationOptions.register({
+      className: "inlineCompletions-char-insert",
+      description: "char-insert",
+      isWholeLine: true
+    });
+    const diffAddDecoration = ModelDecorationOptions.register({
+      className: "inlineCompletions-char-insert",
+      description: "char-insert",
+      shouldFillLineOnLineBreak: true
+    });
+    const diffAddDecorationEmpty = ModelDecorationOptions.register({
+      className: "inlineCompletions-char-insert diff-range-empty",
+      description: "char-insert diff-range-empty"
+    });
+    for (const m of diff.diff) {
+      const showFullLineDecorations = diff.mode !== "sideBySide" && diff.mode !== "deletion" && diff.mode !== "insertionInline";
+      if (showFullLineDecorations) {
+        if (!m.original.isEmpty) {
+          originalDecorations.push({
+            range: m.original.toInclusiveRange(),
+            options: diffLineDeleteDecorationBackground
+          });
+        }
+        if (!m.modified.isEmpty) {
+          modifiedDecorations.push({
+            range: m.modified.toInclusiveRange(),
+            options: diffLineAddDecorationBackground
+          });
+        }
+      }
+      if (m.modified.isEmpty || m.original.isEmpty) {
+        if (!m.original.isEmpty) {
+          originalDecorations.push({ range: m.original.toInclusiveRange(), options: diffWholeLineDeleteDecoration });
+        }
+        if (!m.modified.isEmpty) {
+          modifiedDecorations.push({ range: m.modified.toInclusiveRange(), options: diffWholeLineAddDecoration });
+        }
+      } else {
+        const useInlineDiff = showInline && allowsTrueInlineDiffRendering(m);
+        for (const i2 of m.innerChanges || []) {
+          if (m.original.contains(i2.originalRange.startLineNumber)) {
+            const replacedText = this._originalEditor.getModel()?.getValueInRange(i2.originalRange, EndOfLinePreference.LF);
+            originalDecorations.push({
+              range: i2.originalRange,
+              options: {
+                description: "char-delete",
+                shouldFillLineOnLineBreak: false,
+                className: classNames(
+                  "inlineCompletions-char-delete",
+                  i2.originalRange.isSingleLine() && diff.mode === "insertionInline" && "single-line-inline",
+                  i2.originalRange.isEmpty() && "empty",
+                  (i2.originalRange.isEmpty() && hasOneInnerChange || diff.mode === "deletion" && replacedText === "\n") && showEmptyDecorations && !useInlineDiff && "diff-range-empty"
+                ),
+                inlineClassName: useInlineDiff ? classNames("strike-through", "inlineCompletions") : null,
+                zIndex: 1
+              }
+            });
+          }
+          if (m.modified.contains(i2.modifiedRange.startLineNumber)) {
+            modifiedDecorations.push({
+              range: i2.modifiedRange,
+              options: i2.modifiedRange.isEmpty() && showEmptyDecorations && !useInlineDiff && hasOneInnerChange ? diffAddDecorationEmpty : diffAddDecoration
+            });
+          }
+          if (useInlineDiff) {
+            const insertedText = modified.getValueOfRange(i2.modifiedRange);
+            const textSegments = insertedText.length > 3 ? [
+              { text: insertedText.slice(0, 1), extraClasses: ["start"], offsetRange: new OffsetRange(i2.modifiedRange.startColumn - 1, i2.modifiedRange.startColumn) },
+              { text: insertedText.slice(1, -1), extraClasses: [], offsetRange: new OffsetRange(i2.modifiedRange.startColumn, i2.modifiedRange.endColumn - 2) },
+              { text: insertedText.slice(-1), extraClasses: ["end"], offsetRange: new OffsetRange(i2.modifiedRange.endColumn - 2, i2.modifiedRange.endColumn - 1) }
+            ] : [
+              { text: insertedText, extraClasses: ["start", "end"], offsetRange: new OffsetRange(i2.modifiedRange.startColumn - 1, i2.modifiedRange.endColumn) }
+            ];
+            this._tokenizationFinished.read(reader);
+            const lineTokens = this._modifiedTextModel.tokenization.getLineTokens(i2.modifiedRange.startLineNumber);
+            for (const { text, extraClasses, offsetRange } of textSegments) {
+              originalDecorations.push({
+                range: Range.fromPositions(i2.originalRange.getEndPosition()),
+                options: {
+                  description: "inserted-text",
+                  before: {
+                    tokens: lineTokens.getTokensInRange(offsetRange),
+                    content: text,
+                    inlineClassName: classNames(
+                      "inlineCompletions-char-insert",
+                      i2.modifiedRange.isSingleLine() && diff.mode === "insertionInline" && "single-line-inline",
+                      ...extraClasses
+                      // include extraClasses for additional styling if provided
+                    ),
+                    cursorStops: InjectedTextCursorStops.None,
+                    attachedData: new InlineEditAttachedData(this)
+                  },
+                  zIndex: 2,
+                  showIfCollapsed: true
+                }
+              });
+            }
+          }
+        }
+      }
+    }
+    return { originalDecorations, modifiedDecorations };
+  });
+}
+class InlineEditAttachedData {
+  constructor(owner) {
+    this.owner = owner;
+  }
+  static {
+    __name(this, "InlineEditAttachedData");
+  }
+}
+function allowsTrueInlineDiffRendering(mapping) {
+  if (!mapping.innerChanges) {
+    return false;
+  }
+  return mapping.innerChanges.every((c) => rangeIsSingleLine(c.modifiedRange) && rangeIsSingleLine(c.originalRange));
+}
+__name(allowsTrueInlineDiffRendering, "allowsTrueInlineDiffRendering");
+let i = 0;
+function modelTokenizationFinished(model) {
+  return observableFromEvent(model.onDidChangeTokens, () => i++);
+}
+__name(modelTokenizationFinished, "modelTokenizationFinished");
+export {
+  OriginalEditorInlineDiffView
+};
+//# sourceMappingURL=originalEditorInlineDiffView.js.map

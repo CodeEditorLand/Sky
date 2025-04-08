@@ -1,1 +1,22 @@
-import"../../../../platform/contextkey/common/contextkey.js";import{CONTEXT_DEBUG_PROTOCOL_VARIABLE_MENU_CONTEXT as i,CONTEXT_VARIABLE_EVALUATE_NAME_PRESENT as E,CONTEXT_CAN_VIEW_MEMORY as s,CONTEXT_VARIABLE_IS_READONLY as _,CONTEXT_DEBUG_TYPE as T}from"./debug.js";import"./debugModel.js";function N(e,t,a=[]){const o=t.getSession(),n=[[i.key,t.variableMenuContext||""],[E.key,!!t.evaluateName],[s.key,!!o?.capabilities.supportsReadMemoryRequest&&void 0!==t.memoryReference],[_.key,!!t.presentationHint?.attributes?.includes("readOnly")||t.presentationHint?.lazy],[T.key,o?.configuration.type],...a];return e.createOverlay(n)}export{N as getContextForVariable};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { CONTEXT_DEBUG_PROTOCOL_VARIABLE_MENU_CONTEXT, CONTEXT_VARIABLE_EVALUATE_NAME_PRESENT, CONTEXT_CAN_VIEW_MEMORY, CONTEXT_VARIABLE_IS_READONLY, CONTEXT_DEBUG_TYPE } from "./debug.js";
+import { Variable } from "./debugModel.js";
+function getContextForVariable(parentContext, variable, additionalContext = []) {
+  const session = variable.getSession();
+  const contextKeys = [
+    [CONTEXT_DEBUG_PROTOCOL_VARIABLE_MENU_CONTEXT.key, variable.variableMenuContext || ""],
+    [CONTEXT_VARIABLE_EVALUATE_NAME_PRESENT.key, !!variable.evaluateName],
+    [CONTEXT_CAN_VIEW_MEMORY.key, !!session?.capabilities.supportsReadMemoryRequest && variable.memoryReference !== void 0],
+    [CONTEXT_VARIABLE_IS_READONLY.key, !!variable.presentationHint?.attributes?.includes("readOnly") || variable.presentationHint?.lazy],
+    [CONTEXT_DEBUG_TYPE.key, session?.configuration.type],
+    ...additionalContext
+  ];
+  return parentContext.createOverlay(contextKeys);
+}
+__name(getContextForVariable, "getContextForVariable");
+export {
+  getContextForVariable
+};
+//# sourceMappingURL=debugContext.js.map

@@ -1,1 +1,612 @@
-import{CancellationToken as D}from"../../../../../base/common/cancellation.js";import{Codicon as f}from"../../../../../base/common/codicons.js";import{KeyCode as k,KeyMod as U}from"../../../../../base/common/keyCodes.js";import{basename as W}from"../../../../../base/common/resources.js";import{URI as L}from"../../../../../base/common/uri.js";import{isCodeEditor as re}from"../../../../../editor/browser/editorBrowser.js";import"../../../../../editor/browser/editorExtensions.js";import{Position as se}from"../../../../../editor/common/core/position.js";import{EditorContextKeys as z}from"../../../../../editor/common/editorContextKeys.js";import{isLocation as ae}from"../../../../../editor/common/languages.js";import"../../../../../editor/common/model.js";import{ILanguageFeaturesService as de}from"../../../../../editor/common/services/languageFeatures.js";import{ITextModelService as ce}from"../../../../../editor/common/services/resolverService.js";import{localize as r,localize2 as C}from"../../../../../nls.js";import{Action2 as M,MenuId as l,registerAction2 as u}from"../../../../../platform/actions/common/actions.js";import{IConfigurationService as le}from"../../../../../platform/configuration/common/configuration.js";import{ContextKeyExpr as a}from"../../../../../platform/contextkey/common/contextkey.js";import{IDialogService as B}from"../../../../../platform/dialogs/common/dialogs.js";import{EditorActivation as ge}from"../../../../../platform/editor/common/editor.js";import{KeybindingWeight as K}from"../../../../../platform/keybinding/common/keybindingsRegistry.js";import{IEditorService as O}from"../../../../services/editor/common/editorService.js";import{isChatViewTitleActionContext as me}from"../../common/chatActions.js";import{ChatContextKeys as m}from"../../common/chatContextKeys.js";import{applyingChatEditsFailedContextKey as T,CHAT_EDITING_MULTI_DIFF_SOURCE_RESOLVER_SCHEME as G,chatEditingResourceContextKey as J,chatEditingWidgetFileStateContextKey as V,decidedChatEditingResourceContextKey as Q,hasAppliedChatEditsContextKey as H,hasUndecidedChatEditingResourceContextKey as p,IChatEditingService as X,ModifiedFileEntryState as x}from"../../common/chatEditingService.js";import{IChatService as Z}from"../../common/chatService.js";import{isRequestVM as $,isResponseVM as _}from"../../common/chatViewModel.js";import{ChatAgentLocation as ue,ChatMode as he}from"../../common/constants.js";import{CHAT_CATEGORY as N}from"../actions/chatActions.js";import{IChatWidgetService as ee}from"../chat.js";class S extends M{constructor(e){super({category:N,...e})}run(e,...t){const i=fe(e,t);if(i&&i.editingSession)return this.runEditingSessionAction(e,i.editingSession,i.chatWidget,...t)}}function fe(e,t){const i=t.at(0),o=me(i)?i:void 0,n=e.get(ee),a=e.get(X);let r=o?n.getWidgetBySessionId(o.sessionId):void 0;if(r||(r=n.lastFocusedWidget??n.getWidgetsByLocations(ue.Panel).find((e=>e.supportsChangingModes))),!r?.viewModel)return;const s=r.viewModel.model.sessionId,d=a.getEditingSession(s);return d?{editingSession:d,chatWidget:r}:void 0}class P extends S{runEditingSessionAction(e,t,i,...o){const n=[];if(L.isUri(o[0])?n.push(o[0]):i&&n.push(...i.input.selectedElements),n.length)return this.runWorkingSetAction(e,t,i,...n)}}u(class extends P{constructor(){super({id:"chatEditing.removeFileFromWorkingSet",title:C("removeFileFromWorkingSet","Remove File"),icon:f.close,precondition:m.requestInProgress.negate(),menu:[{id:l.ChatEditingWidgetModifiedFilesToolbar,order:5,group:"navigation"}]})}async runWorkingSetAction(e,t,i,...o){const n=e.get(B),a=t.entries.get().filter((e=>o.includes(e.modifiedURI)&&e.state.get()===x.Modified));if(a.length>0){const e=a.length>1?r("chat.editing.removeFile.confirmationmanyFiles","{0} files",a.length):W(a[0].modifiedURI);if(!(await n.confirm({title:r("chat.editing.removeFile.confirmation.title","Remove {0} from working set?",e),message:r("chat.editing.removeFile.confirmation.message","This will remove {0} from your working set and undo the edits made to it. Do you want to proceed?",e),primaryButton:r("chat.editing.removeFile.confirmation.primaryButton","Yes"),type:"info"})).confirmed)return}await t.reject(...o),t.remove(...o);for(const e of o)i.attachmentModel.delete(e.toString());0===i.attachmentModel.fileAttachments.length&&i.input.relatedFiles?.clear()}}),u(class extends P{constructor(){super({id:"chatEditing.openFileInDiff",title:C("open.fileInDiff","Open Changes in Diff Editor"),icon:f.diffSingle,menu:[{id:l.ChatEditingWidgetModifiedFilesToolbar,when:a.equals(V.key,x.Modified),order:2,group:"navigation"}]})}async runWorkingSetAction(e,t,i,...o){const n=e.get(O);for(const e of o){const i=t.getEntry(e);i?.state.get()===x.Modified?await n.openEditor({original:{resource:L.from(i.originalURI,!0)},modified:{resource:L.from(i.modifiedURI,!0)}}):await n.openEditor({resource:e})}}}),u(class extends P{constructor(){super({id:"chatEditing.acceptFile",title:C("accept.file","Keep"),icon:f.check,precondition:m.requestInProgress.negate(),menu:[{when:a.and(a.equals("resourceScheme",G),a.notIn(J.key,Q.key)),id:l.MultiDiffEditorFileToolbar,order:0,group:"navigation"},{id:l.ChatEditingWidgetModifiedFilesToolbar,when:a.equals(V.key,x.Modified),order:0,group:"navigation"}]})}async runWorkingSetAction(e,t,i,...o){await t.accept(...o)}}),u(class extends P{constructor(){super({id:"chatEditing.discardFile",title:C("discard.file","Undo"),icon:f.discard,precondition:m.requestInProgress.negate(),menu:[{when:a.and(a.equals("resourceScheme",G),a.notIn(J.key,Q.key)),id:l.MultiDiffEditorFileToolbar,order:2,group:"navigation"},{id:l.ChatEditingWidgetModifiedFilesToolbar,when:a.equals(V.key,x.Modified),order:1,group:"navigation"}]})}async runWorkingSetAction(e,t,i,...o){await t.reject(...o)}});class pe extends S{constructor(){super({id:"chatEditing.acceptAllFiles",title:r("accept","Keep"),icon:f.check,tooltip:r("acceptAllEdits","Keep All Edits"),precondition:a.and(m.requestInProgress.negate(),p),keybinding:{primary:U.CtrlCmd|k.Enter,when:a.and(m.requestInProgress.negate(),p,m.inChatInput),weight:K.WorkbenchContrib},menu:[{id:l.ChatEditingWidgetToolbar,group:"navigation",order:0,when:a.and(T.negate(),a.and(p))}]})}async runEditingSessionAction(e,t,i,...o){await t.accept()}}u(pe);class ve extends S{constructor(){super({id:"chatEditing.discardAllFiles",title:r("discard","Undo"),icon:f.discard,tooltip:r("discardAllEdits","Undo All Edits"),precondition:a.and(m.requestInProgress.negate(),p),menu:[{id:l.ChatEditingWidgetToolbar,group:"navigation",order:1,when:a.and(T.negate(),p)}],keybinding:{when:a.and(m.requestInProgress.negate(),p,m.inChatInput,m.inputHasText.negate()),weight:K.WorkbenchContrib,primary:U.CtrlCmd|k.Backspace}})}async runEditingSessionAction(e,t,i,...o){await Ie(e,t)}}async function Ie(e,t){const i=e.get(B),o=t.entries.get();return!(o.length>0&&!(await i.confirm({title:r("chat.editing.discardAll.confirmation.title","Undo all edits?"),message:1===o.length?r("chat.editing.discardAll.confirmation.oneFile","This will undo changes made by {0} in {1}. Do you want to proceed?","Copilot Edits",W(o[0].modifiedURI)):r("chat.editing.discardAll.confirmation.manyFiles","This will undo changes made by {0} in {1} files. Do you want to proceed?","Copilot Edits",o.length),primaryButton:r("chat.editing.discardAll.confirmation.primaryButton","Yes"),type:"info"})).confirmed)&&(await t.reject(),!0)}u(ve);class j extends S{static ID="chatEditing.clearWorkingSet";constructor(){super({id:j.ID,title:r("clearWorkingSet","Clear Working Set"),icon:f.clearAll,tooltip:r("clearWorkingSet","Clear Working Set"),precondition:a.and(m.requestInProgress.negate()),menu:[{id:l.ChatEditingWidgetToolbar,group:"navigation",order:5,when:H.negate()}]})}async runEditingSessionAction(e,t,i,...o){const n=[...t.entries.get()].map((e=>e.modifiedURI));t.remove(...n);const a=(i.attachmentModel?i.attachmentModel.fileAttachments:[]).map((e=>e.toString()));i.attachmentModel.delete(...a)}}u(j);class R extends S{static ID="chatEditing.viewChanges";static LABEL=r("chatEditing.viewChanges","View All Edits");constructor(){super({id:R.ID,title:R.LABEL,tooltip:R.LABEL,f1:!1,icon:f.diffMultiple,precondition:p,menu:[{id:l.ChatEditingWidgetToolbar,group:"navigation",order:4,when:a.and(T.negate(),a.and(H,p))}]})}async runEditingSessionAction(e,t,i,...o){await t.show()}}u(R),u(class extends M{constructor(){super({id:"workbench.action.chat.undoEdits",title:C("chat.undoEdits.label","Undo Requests"),f1:!1,category:N,icon:f.x,keybinding:{primary:k.Delete,mac:{primary:U.CtrlCmd|k.Backspace},when:a.and(m.inChatSession,z.textInputFocus.negate()),weight:K.WorkbenchContrib},menu:[{id:l.ChatMessageTitle,group:"navigation",order:2,when:m.isRequest}]})}async run(e,...t){let i=t[0];if(!_(i)&&!$(i)&&(i=e.get(ee).lastFocusedWidget?.getFocus()),!i)return;const o=e.get(le),n=e.get(B),a=e.get(Z).getSession(i.sessionId);if(!a)return;const s=a.editingSession;if(!s)return;const d=$(i)?i.id:_(i)?i.requestId:void 0;if(d){const e=a.getRequests(),t=e.findIndex((e=>e.id===d)),i=e.length-t,c=e.slice(t),l=new Set(c.map((e=>e.id))),m=s.entries.get().filter((e=>l.has(e.lastModifyingRequestId)))??[],g=m.length>0&&!0===o.getValue("chat.editing.confirmEditRequestRemoval");let u;u=1===i?1===m.length?r("chat.removeLast.confirmation.message2","This will remove your last request and undo the edits made to {0}. Do you want to proceed?",W(m[0].modifiedURI)):r("chat.removeLast.confirmation.multipleEdits.message","This will remove your last request and undo edits made to {0} files in your working set. Do you want to proceed?",m.length):1===m.length?r("chat.remove.confirmation.message2","This will remove all subsequent requests and undo edits made to {0}. Do you want to proceed?",W(m[0].modifiedURI)):r("chat.remove.confirmation.multipleEdits.message","This will remove all subsequent requests and undo edits made to {0} files in your working set. Do you want to proceed?",m.length);const p=g?await n.confirm({title:1===i?r("chat.removeLast.confirmation.title","Do you want to undo your last edit?"):r("chat.remove.confirmation.title","Do you want to undo {0} edits?",i),message:u,primaryButton:r("chat.remove.confirmation.primaryButton","Yes"),checkbox:{label:r("chat.remove.confirmation.checkbox","Don't ask again"),checked:!1},type:"info"}):{confirmed:!0};if(!p.confirmed)return;p.checkboxChecked&&await o.updateValue("chat.editing.confirmEditRequestRemoval",!1);const h=e[t].id;await s.restoreSnapshot(h,void 0)}}}),u(class e extends M{static id="chat.openFileUpdatedBySnapshot";constructor(){super({id:e.id,title:r("chat.openFileUpdatedBySnapshot.label","Open File"),menu:[{id:l.ChatEditingCodeBlockContext,group:"navigation",order:0}]})}async run(e,...t){const i=t[0];i?.sessionId&&await e.get(O).openEditor({resource:i.uri})}}),u(class e extends M{static id="chat.openFileSnapshot";constructor(){super({id:e.id,title:r("chat.openSnapshot.label","Open File Snapshot"),menu:[{id:l.ChatEditingCodeBlockContext,group:"navigation",order:1}]})}async run(e,...t){const i=t[0];if(!i?.sessionId)return;const o=e.get(Z),n=e.get(X),a=e.get(O),s=o.getSession(i.sessionId);if(!s)return;const d=n.getEditingSession(s.sessionId)?.getSnapshotUri(i.requestId,i.uri,i.stopId);if(d){const e=await a.openEditor({resource:d,label:r("chatEditing.snapshot","{0} (Snapshot)",W(i.uri)),options:{transient:!0,activation:ge.ACTIVATE}});re(e)&&e.updateOptions({readOnly:!0})}}}),u(class extends S{constructor(){super({id:"workbench.action.edits.addFilesFromReferences",title:C("addFilesFromReferences","Add Files From References"),f1:!1,category:N,menu:{id:l.ChatInputSymbolAttachmentContext,group:"navigation",order:1,when:a.and(m.chatMode.isEqualTo(he.Ask),z.hasReferenceProvider)}})}async runEditingSessionAction(e,t,i,...o){if(0===o.length||!ae(o[0]))return;const n=e.get(ce),a=e.get(de),r=o[0],s=(await n.createModelReference(r.uri)).object.textEditorModel;if(!s)return;const d=new se(r.range.startLineNumber,r.range.startColumn),[c,l,m]=await Promise.all([this.getReferences(d,s,a),this.getDefinitions(d,s,a),this.getImplementations(d,s,a)]),g=[];for(const e of[...l,...m,...c])g.push(i.attachmentModel.asVariableEntry(e.uri));i.attachmentModel.addContext(...g)}async getReferences(e,t,i){const o=i.referenceProvider.all(t);return(await Promise.all(o.map((async i=>await i.provideReferences(t,e,{includeDeclaration:!0},D.None)??[])))).flat()}async getDefinitions(e,t,i){const o=i.definitionProvider.all(t);return(await Promise.all(o.map((async i=>await i.provideDefinition(t,e,D.None)??[])))).flat()}async getImplementations(e,t,i){const o=i.implementationProvider.all(t);return(await Promise.all(o.map((async i=>await i.provideImplementation(t,e,D.None)??[])))).flat()}});class F extends S{static Id="chatEditing.viewPreviousEdits";static Label=r("chatEditing.viewPreviousEdits","View Previous Edits");constructor(){super({id:F.Id,title:F.Label,tooltip:F.Label,f1:!1,icon:f.diffMultiple,precondition:p.negate(),menu:[{id:l.ChatEditingWidgetToolbar,group:"navigation",order:4,when:a.and(T.negate(),a.and(H,p.negate()))}]})}async runEditingSessionAction(e,t,i,...o){await t.show(!0)}}u(F);export{pe as ChatEditingAcceptAllAction,ve as ChatEditingDiscardAllAction,j as ChatEditingRemoveAllFilesAction,R as ChatEditingShowChangesAction,S as EditingSessionAction,F as ViewPreviousEditsAction,Ie as discardAllEditsWithConfirmation,fe as getEditingSessionContext};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { CancellationToken } from "../../../../../base/common/cancellation.js";
+import { Codicon } from "../../../../../base/common/codicons.js";
+import { KeyCode, KeyMod } from "../../../../../base/common/keyCodes.js";
+import { basename } from "../../../../../base/common/resources.js";
+import { URI } from "../../../../../base/common/uri.js";
+import { isCodeEditor } from "../../../../../editor/browser/editorBrowser.js";
+import { ServicesAccessor } from "../../../../../editor/browser/editorExtensions.js";
+import { Position } from "../../../../../editor/common/core/position.js";
+import { EditorContextKeys } from "../../../../../editor/common/editorContextKeys.js";
+import { isLocation, Location } from "../../../../../editor/common/languages.js";
+import { ITextModel } from "../../../../../editor/common/model.js";
+import { ILanguageFeaturesService } from "../../../../../editor/common/services/languageFeatures.js";
+import { ITextModelService } from "../../../../../editor/common/services/resolverService.js";
+import { localize, localize2 } from "../../../../../nls.js";
+import { Action2, IAction2Options, MenuId, registerAction2 } from "../../../../../platform/actions/common/actions.js";
+import { IConfigurationService } from "../../../../../platform/configuration/common/configuration.js";
+import { ContextKeyExpr } from "../../../../../platform/contextkey/common/contextkey.js";
+import { IDialogService } from "../../../../../platform/dialogs/common/dialogs.js";
+import { EditorActivation } from "../../../../../platform/editor/common/editor.js";
+import { KeybindingWeight } from "../../../../../platform/keybinding/common/keybindingsRegistry.js";
+import { IEditorService } from "../../../../services/editor/common/editorService.js";
+import { isChatViewTitleActionContext } from "../../common/chatActions.js";
+import { ChatContextKeys } from "../../common/chatContextKeys.js";
+import { applyingChatEditsFailedContextKey, CHAT_EDITING_MULTI_DIFF_SOURCE_RESOLVER_SCHEME, chatEditingResourceContextKey, chatEditingWidgetFileStateContextKey, decidedChatEditingResourceContextKey, hasAppliedChatEditsContextKey, hasUndecidedChatEditingResourceContextKey, IChatEditingService, IChatEditingSession, ModifiedFileEntryState } from "../../common/chatEditingService.js";
+import { IChatService } from "../../common/chatService.js";
+import { isRequestVM, isResponseVM } from "../../common/chatViewModel.js";
+import { ChatAgentLocation, ChatMode } from "../../common/constants.js";
+import { CHAT_CATEGORY } from "../actions/chatActions.js";
+import { ChatTreeItem, IChatWidget, IChatWidgetService } from "../chat.js";
+class EditingSessionAction extends Action2 {
+  static {
+    __name(this, "EditingSessionAction");
+  }
+  constructor(opts) {
+    super({
+      category: CHAT_CATEGORY,
+      ...opts
+    });
+  }
+  run(accessor, ...args) {
+    const context = getEditingSessionContext(accessor, args);
+    if (!context || !context.editingSession) {
+      return;
+    }
+    return this.runEditingSessionAction(accessor, context.editingSession, context.chatWidget, ...args);
+  }
+}
+function getEditingSessionContext(accessor, args) {
+  const arg0 = args.at(0);
+  const context = isChatViewTitleActionContext(arg0) ? arg0 : void 0;
+  const chatWidgetService = accessor.get(IChatWidgetService);
+  const chatEditingService = accessor.get(IChatEditingService);
+  let chatWidget = context ? chatWidgetService.getWidgetBySessionId(context.sessionId) : void 0;
+  if (!chatWidget) {
+    chatWidget = chatWidgetService.lastFocusedWidget ?? chatWidgetService.getWidgetsByLocations(ChatAgentLocation.Panel).find((w) => w.supportsChangingModes);
+  }
+  if (!chatWidget?.viewModel) {
+    return;
+  }
+  const chatSessionId = chatWidget.viewModel.model.sessionId;
+  const editingSession = chatEditingService.getEditingSession(chatSessionId);
+  if (!editingSession) {
+    return;
+  }
+  return { editingSession, chatWidget };
+}
+__name(getEditingSessionContext, "getEditingSessionContext");
+class WorkingSetAction extends EditingSessionAction {
+  static {
+    __name(this, "WorkingSetAction");
+  }
+  runEditingSessionAction(accessor, editingSession, chatWidget, ...args) {
+    const uris = [];
+    if (URI.isUri(args[0])) {
+      uris.push(args[0]);
+    } else if (chatWidget) {
+      uris.push(...chatWidget.input.selectedElements);
+    }
+    if (!uris.length) {
+      return;
+    }
+    return this.runWorkingSetAction(accessor, editingSession, chatWidget, ...uris);
+  }
+}
+registerAction2(class RemoveFileFromWorkingSet extends WorkingSetAction {
+  static {
+    __name(this, "RemoveFileFromWorkingSet");
+  }
+  constructor() {
+    super({
+      id: "chatEditing.removeFileFromWorkingSet",
+      title: localize2("removeFileFromWorkingSet", "Remove File"),
+      icon: Codicon.close,
+      precondition: ChatContextKeys.requestInProgress.negate(),
+      menu: [{
+        id: MenuId.ChatEditingWidgetModifiedFilesToolbar,
+        // when: ContextKeyExpr.or(ContextKeyExpr.equals(chatEditingWidgetFileStateContextKey.key, WorkingSetEntryState.Attached), ContextKeyExpr.equals(chatEditingWidgetFileStateContextKey.key, WorkingSetEntryState.Suggested), ContextKeyExpr.equals(chatEditingWidgetFileStateContextKey.key, WorkingSetEntryState.Transient)),
+        order: 5,
+        group: "navigation"
+      }]
+    });
+  }
+  async runWorkingSetAction(accessor, currentEditingSession, chatWidget, ...uris) {
+    const dialogService = accessor.get(IDialogService);
+    const pendingEntries = currentEditingSession.entries.get().filter((entry) => uris.includes(entry.modifiedURI) && entry.state.get() === ModifiedFileEntryState.Modified);
+    if (pendingEntries.length > 0) {
+      const file = pendingEntries.length > 1 ? localize("chat.editing.removeFile.confirmationmanyFiles", "{0} files", pendingEntries.length) : basename(pendingEntries[0].modifiedURI);
+      const confirmation = await dialogService.confirm({
+        title: localize("chat.editing.removeFile.confirmation.title", "Remove {0} from working set?", file),
+        message: localize("chat.editing.removeFile.confirmation.message", "This will remove {0} from your working set and undo the edits made to it. Do you want to proceed?", file),
+        primaryButton: localize("chat.editing.removeFile.confirmation.primaryButton", "Yes"),
+        type: "info"
+      });
+      if (!confirmation.confirmed) {
+        return;
+      }
+    }
+    await currentEditingSession.reject(...uris);
+    currentEditingSession.remove(...uris);
+    for (const uri of uris) {
+      chatWidget.attachmentModel.delete(uri.toString());
+    }
+    if (chatWidget.attachmentModel.fileAttachments.length === 0) {
+      chatWidget.input.relatedFiles?.clear();
+    }
+  }
+});
+registerAction2(class OpenFileInDiffAction extends WorkingSetAction {
+  static {
+    __name(this, "OpenFileInDiffAction");
+  }
+  constructor() {
+    super({
+      id: "chatEditing.openFileInDiff",
+      title: localize2("open.fileInDiff", "Open Changes in Diff Editor"),
+      icon: Codicon.diffSingle,
+      menu: [{
+        id: MenuId.ChatEditingWidgetModifiedFilesToolbar,
+        when: ContextKeyExpr.equals(chatEditingWidgetFileStateContextKey.key, ModifiedFileEntryState.Modified),
+        order: 2,
+        group: "navigation"
+      }]
+    });
+  }
+  async runWorkingSetAction(accessor, currentEditingSession, _chatWidget, ...uris) {
+    const editorService = accessor.get(IEditorService);
+    for (const uri of uris) {
+      const editedFile = currentEditingSession.getEntry(uri);
+      if (editedFile?.state.get() === ModifiedFileEntryState.Modified) {
+        await editorService.openEditor({
+          original: { resource: URI.from(editedFile.originalURI, true) },
+          modified: { resource: URI.from(editedFile.modifiedURI, true) }
+        });
+      } else {
+        await editorService.openEditor({ resource: uri });
+      }
+    }
+  }
+});
+registerAction2(class AcceptAction extends WorkingSetAction {
+  static {
+    __name(this, "AcceptAction");
+  }
+  constructor() {
+    super({
+      id: "chatEditing.acceptFile",
+      title: localize2("accept.file", "Keep"),
+      icon: Codicon.check,
+      precondition: ChatContextKeys.requestInProgress.negate(),
+      menu: [{
+        when: ContextKeyExpr.and(ContextKeyExpr.equals("resourceScheme", CHAT_EDITING_MULTI_DIFF_SOURCE_RESOLVER_SCHEME), ContextKeyExpr.notIn(chatEditingResourceContextKey.key, decidedChatEditingResourceContextKey.key)),
+        id: MenuId.MultiDiffEditorFileToolbar,
+        order: 0,
+        group: "navigation"
+      }, {
+        id: MenuId.ChatEditingWidgetModifiedFilesToolbar,
+        when: ContextKeyExpr.equals(chatEditingWidgetFileStateContextKey.key, ModifiedFileEntryState.Modified),
+        order: 0,
+        group: "navigation"
+      }]
+    });
+  }
+  async runWorkingSetAction(accessor, currentEditingSession, chatWidget, ...uris) {
+    await currentEditingSession.accept(...uris);
+  }
+});
+registerAction2(class DiscardAction extends WorkingSetAction {
+  static {
+    __name(this, "DiscardAction");
+  }
+  constructor() {
+    super({
+      id: "chatEditing.discardFile",
+      title: localize2("discard.file", "Undo"),
+      icon: Codicon.discard,
+      precondition: ChatContextKeys.requestInProgress.negate(),
+      menu: [{
+        when: ContextKeyExpr.and(ContextKeyExpr.equals("resourceScheme", CHAT_EDITING_MULTI_DIFF_SOURCE_RESOLVER_SCHEME), ContextKeyExpr.notIn(chatEditingResourceContextKey.key, decidedChatEditingResourceContextKey.key)),
+        id: MenuId.MultiDiffEditorFileToolbar,
+        order: 2,
+        group: "navigation"
+      }, {
+        id: MenuId.ChatEditingWidgetModifiedFilesToolbar,
+        when: ContextKeyExpr.equals(chatEditingWidgetFileStateContextKey.key, ModifiedFileEntryState.Modified),
+        order: 1,
+        group: "navigation"
+      }]
+    });
+  }
+  async runWorkingSetAction(accessor, currentEditingSession, chatWidget, ...uris) {
+    await currentEditingSession.reject(...uris);
+  }
+});
+class ChatEditingAcceptAllAction extends EditingSessionAction {
+  static {
+    __name(this, "ChatEditingAcceptAllAction");
+  }
+  constructor() {
+    super({
+      id: "chatEditing.acceptAllFiles",
+      title: localize("accept", "Keep"),
+      icon: Codicon.check,
+      tooltip: localize("acceptAllEdits", "Keep All Edits"),
+      precondition: ContextKeyExpr.and(ChatContextKeys.requestInProgress.negate(), hasUndecidedChatEditingResourceContextKey),
+      keybinding: {
+        primary: KeyMod.CtrlCmd | KeyCode.Enter,
+        when: ContextKeyExpr.and(ChatContextKeys.requestInProgress.negate(), hasUndecidedChatEditingResourceContextKey, ChatContextKeys.inChatInput),
+        weight: KeybindingWeight.WorkbenchContrib
+      },
+      menu: [
+        {
+          id: MenuId.ChatEditingWidgetToolbar,
+          group: "navigation",
+          order: 0,
+          when: ContextKeyExpr.and(applyingChatEditsFailedContextKey.negate(), ContextKeyExpr.and(hasUndecidedChatEditingResourceContextKey))
+        }
+      ]
+    });
+  }
+  async runEditingSessionAction(accessor, editingSession, chatWidget, ...args) {
+    await editingSession.accept();
+  }
+}
+registerAction2(ChatEditingAcceptAllAction);
+class ChatEditingDiscardAllAction extends EditingSessionAction {
+  static {
+    __name(this, "ChatEditingDiscardAllAction");
+  }
+  constructor() {
+    super({
+      id: "chatEditing.discardAllFiles",
+      title: localize("discard", "Undo"),
+      icon: Codicon.discard,
+      tooltip: localize("discardAllEdits", "Undo All Edits"),
+      precondition: ContextKeyExpr.and(ChatContextKeys.requestInProgress.negate(), hasUndecidedChatEditingResourceContextKey),
+      menu: [
+        {
+          id: MenuId.ChatEditingWidgetToolbar,
+          group: "navigation",
+          order: 1,
+          when: ContextKeyExpr.and(applyingChatEditsFailedContextKey.negate(), hasUndecidedChatEditingResourceContextKey)
+        }
+      ],
+      keybinding: {
+        when: ContextKeyExpr.and(ChatContextKeys.requestInProgress.negate(), hasUndecidedChatEditingResourceContextKey, ChatContextKeys.inChatInput, ChatContextKeys.inputHasText.negate()),
+        weight: KeybindingWeight.WorkbenchContrib,
+        primary: KeyMod.CtrlCmd | KeyCode.Backspace
+      }
+    });
+  }
+  async runEditingSessionAction(accessor, editingSession, chatWidget, ...args) {
+    await discardAllEditsWithConfirmation(accessor, editingSession);
+  }
+}
+registerAction2(ChatEditingDiscardAllAction);
+async function discardAllEditsWithConfirmation(accessor, currentEditingSession) {
+  const dialogService = accessor.get(IDialogService);
+  const entries = currentEditingSession.entries.get();
+  if (entries.length > 0) {
+    const confirmation = await dialogService.confirm({
+      title: localize("chat.editing.discardAll.confirmation.title", "Undo all edits?"),
+      message: entries.length === 1 ? localize("chat.editing.discardAll.confirmation.oneFile", "This will undo changes made by {0} in {1}. Do you want to proceed?", "Copilot Edits", basename(entries[0].modifiedURI)) : localize("chat.editing.discardAll.confirmation.manyFiles", "This will undo changes made by {0} in {1} files. Do you want to proceed?", "Copilot Edits", entries.length),
+      primaryButton: localize("chat.editing.discardAll.confirmation.primaryButton", "Yes"),
+      type: "info"
+    });
+    if (!confirmation.confirmed) {
+      return false;
+    }
+  }
+  await currentEditingSession.reject();
+  return true;
+}
+__name(discardAllEditsWithConfirmation, "discardAllEditsWithConfirmation");
+class ChatEditingRemoveAllFilesAction extends EditingSessionAction {
+  static {
+    __name(this, "ChatEditingRemoveAllFilesAction");
+  }
+  static ID = "chatEditing.clearWorkingSet";
+  constructor() {
+    super({
+      id: ChatEditingRemoveAllFilesAction.ID,
+      title: localize("clearWorkingSet", "Clear Working Set"),
+      icon: Codicon.clearAll,
+      tooltip: localize("clearWorkingSet", "Clear Working Set"),
+      precondition: ContextKeyExpr.and(ChatContextKeys.requestInProgress.negate()),
+      menu: [
+        {
+          id: MenuId.ChatEditingWidgetToolbar,
+          group: "navigation",
+          order: 5,
+          when: hasAppliedChatEditsContextKey.negate()
+        }
+      ]
+    });
+  }
+  async runEditingSessionAction(accessor, editingSession, chatWidget, ...args) {
+    const uris = [...editingSession.entries.get()].map((e) => e.modifiedURI);
+    editingSession.remove(...uris);
+    const fileAttachments = chatWidget.attachmentModel ? chatWidget.attachmentModel.fileAttachments : [];
+    const attachmentIdsToRemove = fileAttachments.map((attachment) => attachment.toString());
+    chatWidget.attachmentModel.delete(...attachmentIdsToRemove);
+  }
+}
+registerAction2(ChatEditingRemoveAllFilesAction);
+class ChatEditingShowChangesAction extends EditingSessionAction {
+  static {
+    __name(this, "ChatEditingShowChangesAction");
+  }
+  static ID = "chatEditing.viewChanges";
+  static LABEL = localize("chatEditing.viewChanges", "View All Edits");
+  constructor() {
+    super({
+      id: ChatEditingShowChangesAction.ID,
+      title: ChatEditingShowChangesAction.LABEL,
+      tooltip: ChatEditingShowChangesAction.LABEL,
+      f1: false,
+      icon: Codicon.diffMultiple,
+      precondition: hasUndecidedChatEditingResourceContextKey,
+      menu: [
+        {
+          id: MenuId.ChatEditingWidgetToolbar,
+          group: "navigation",
+          order: 4,
+          when: ContextKeyExpr.and(applyingChatEditsFailedContextKey.negate(), ContextKeyExpr.and(hasAppliedChatEditsContextKey, hasUndecidedChatEditingResourceContextKey))
+        }
+      ]
+    });
+  }
+  async runEditingSessionAction(accessor, editingSession, chatWidget, ...args) {
+    await editingSession.show();
+  }
+}
+registerAction2(ChatEditingShowChangesAction);
+registerAction2(class RemoveAction extends Action2 {
+  static {
+    __name(this, "RemoveAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.chat.undoEdits",
+      title: localize2("chat.undoEdits.label", "Undo Requests"),
+      f1: false,
+      category: CHAT_CATEGORY,
+      icon: Codicon.x,
+      keybinding: {
+        primary: KeyCode.Delete,
+        mac: {
+          primary: KeyMod.CtrlCmd | KeyCode.Backspace
+        },
+        when: ContextKeyExpr.and(ChatContextKeys.inChatSession, EditorContextKeys.textInputFocus.negate()),
+        weight: KeybindingWeight.WorkbenchContrib
+      },
+      menu: [
+        {
+          id: MenuId.ChatMessageTitle,
+          group: "navigation",
+          order: 2,
+          when: ChatContextKeys.isRequest
+        }
+      ]
+    });
+  }
+  async run(accessor, ...args) {
+    let item = args[0];
+    if (!isResponseVM(item) && !isRequestVM(item)) {
+      const chatWidgetService = accessor.get(IChatWidgetService);
+      const widget = chatWidgetService.lastFocusedWidget;
+      item = widget?.getFocus();
+    }
+    if (!item) {
+      return;
+    }
+    const configurationService = accessor.get(IConfigurationService);
+    const dialogService = accessor.get(IDialogService);
+    const chatService = accessor.get(IChatService);
+    const chatModel = chatService.getSession(item.sessionId);
+    if (!chatModel) {
+      return;
+    }
+    const session = chatModel.editingSession;
+    if (!session) {
+      return;
+    }
+    const requestId = isRequestVM(item) ? item.id : isResponseVM(item) ? item.requestId : void 0;
+    if (requestId) {
+      const chatRequests = chatModel.getRequests();
+      const itemIndex = chatRequests.findIndex((request) => request.id === requestId);
+      const editsToUndo = chatRequests.length - itemIndex;
+      const requestsToRemove = chatRequests.slice(itemIndex);
+      const requestIdsToRemove = new Set(requestsToRemove.map((request) => request.id));
+      const entriesModifiedInRequestsToRemove = session.entries.get().filter((entry) => requestIdsToRemove.has(entry.lastModifyingRequestId)) ?? [];
+      const shouldPrompt = entriesModifiedInRequestsToRemove.length > 0 && configurationService.getValue("chat.editing.confirmEditRequestRemoval") === true;
+      let message;
+      if (editsToUndo === 1) {
+        if (entriesModifiedInRequestsToRemove.length === 1) {
+          message = localize("chat.removeLast.confirmation.message2", "This will remove your last request and undo the edits made to {0}. Do you want to proceed?", basename(entriesModifiedInRequestsToRemove[0].modifiedURI));
+        } else {
+          message = localize("chat.removeLast.confirmation.multipleEdits.message", "This will remove your last request and undo edits made to {0} files in your working set. Do you want to proceed?", entriesModifiedInRequestsToRemove.length);
+        }
+      } else {
+        if (entriesModifiedInRequestsToRemove.length === 1) {
+          message = localize("chat.remove.confirmation.message2", "This will remove all subsequent requests and undo edits made to {0}. Do you want to proceed?", basename(entriesModifiedInRequestsToRemove[0].modifiedURI));
+        } else {
+          message = localize("chat.remove.confirmation.multipleEdits.message", "This will remove all subsequent requests and undo edits made to {0} files in your working set. Do you want to proceed?", entriesModifiedInRequestsToRemove.length);
+        }
+      }
+      const confirmation = shouldPrompt ? await dialogService.confirm({
+        title: editsToUndo === 1 ? localize("chat.removeLast.confirmation.title", "Do you want to undo your last edit?") : localize("chat.remove.confirmation.title", "Do you want to undo {0} edits?", editsToUndo),
+        message,
+        primaryButton: localize("chat.remove.confirmation.primaryButton", "Yes"),
+        checkbox: { label: localize("chat.remove.confirmation.checkbox", "Don't ask again"), checked: false },
+        type: "info"
+      }) : { confirmed: true };
+      if (!confirmation.confirmed) {
+        return;
+      }
+      if (confirmation.checkboxChecked) {
+        await configurationService.updateValue("chat.editing.confirmEditRequestRemoval", false);
+      }
+      const snapshotRequestId = chatRequests[itemIndex].id;
+      await session.restoreSnapshot(snapshotRequestId, void 0);
+    }
+  }
+});
+registerAction2(class OpenWorkingSetHistoryAction extends Action2 {
+  static {
+    __name(this, "OpenWorkingSetHistoryAction");
+  }
+  static id = "chat.openFileUpdatedBySnapshot";
+  constructor() {
+    super({
+      id: OpenWorkingSetHistoryAction.id,
+      title: localize("chat.openFileUpdatedBySnapshot.label", "Open File"),
+      menu: [{
+        id: MenuId.ChatEditingCodeBlockContext,
+        group: "navigation",
+        order: 0
+      }]
+    });
+  }
+  async run(accessor, ...args) {
+    const context = args[0];
+    if (!context?.sessionId) {
+      return;
+    }
+    const editorService = accessor.get(IEditorService);
+    await editorService.openEditor({ resource: context.uri });
+  }
+});
+registerAction2(class OpenWorkingSetHistoryAction2 extends Action2 {
+  static {
+    __name(this, "OpenWorkingSetHistoryAction");
+  }
+  static id = "chat.openFileSnapshot";
+  constructor() {
+    super({
+      id: OpenWorkingSetHistoryAction2.id,
+      title: localize("chat.openSnapshot.label", "Open File Snapshot"),
+      menu: [{
+        id: MenuId.ChatEditingCodeBlockContext,
+        group: "navigation",
+        order: 1
+      }]
+    });
+  }
+  async run(accessor, ...args) {
+    const context = args[0];
+    if (!context?.sessionId) {
+      return;
+    }
+    const chatService = accessor.get(IChatService);
+    const chatEditingService = accessor.get(IChatEditingService);
+    const editorService = accessor.get(IEditorService);
+    const chatModel = chatService.getSession(context.sessionId);
+    if (!chatModel) {
+      return;
+    }
+    const snapshot = chatEditingService.getEditingSession(chatModel.sessionId)?.getSnapshotUri(context.requestId, context.uri, context.stopId);
+    if (snapshot) {
+      const editor = await editorService.openEditor({ resource: snapshot, label: localize("chatEditing.snapshot", "{0} (Snapshot)", basename(context.uri)), options: { transient: true, activation: EditorActivation.ACTIVATE } });
+      if (isCodeEditor(editor)) {
+        editor.updateOptions({ readOnly: true });
+      }
+    }
+  }
+});
+registerAction2(class ResolveSymbolsContextAction extends EditingSessionAction {
+  static {
+    __name(this, "ResolveSymbolsContextAction");
+  }
+  constructor() {
+    super({
+      id: "workbench.action.edits.addFilesFromReferences",
+      title: localize2("addFilesFromReferences", "Add Files From References"),
+      f1: false,
+      category: CHAT_CATEGORY,
+      menu: {
+        id: MenuId.ChatInputSymbolAttachmentContext,
+        group: "navigation",
+        order: 1,
+        when: ContextKeyExpr.and(ChatContextKeys.chatMode.isEqualTo(ChatMode.Ask), EditorContextKeys.hasReferenceProvider)
+      }
+    });
+  }
+  async runEditingSessionAction(accessor, editingSession, chatWidget, ...args) {
+    if (args.length === 0 || !isLocation(args[0])) {
+      return;
+    }
+    const textModelService = accessor.get(ITextModelService);
+    const languageFeaturesService = accessor.get(ILanguageFeaturesService);
+    const symbol = args[0];
+    const modelReference = await textModelService.createModelReference(symbol.uri);
+    const textModel = modelReference.object.textEditorModel;
+    if (!textModel) {
+      return;
+    }
+    const position = new Position(symbol.range.startLineNumber, symbol.range.startColumn);
+    const [references, definitions, implementations] = await Promise.all([
+      this.getReferences(position, textModel, languageFeaturesService),
+      this.getDefinitions(position, textModel, languageFeaturesService),
+      this.getImplementations(position, textModel, languageFeaturesService)
+    ]);
+    const attachments = [];
+    for (const reference of [...definitions, ...implementations, ...references]) {
+      attachments.push(chatWidget.attachmentModel.asVariableEntry(reference.uri));
+    }
+    chatWidget.attachmentModel.addContext(...attachments);
+  }
+  async getReferences(position, textModel, languageFeaturesService) {
+    const referenceProviders = languageFeaturesService.referenceProvider.all(textModel);
+    const references = await Promise.all(referenceProviders.map(async (referenceProvider) => {
+      return await referenceProvider.provideReferences(textModel, position, { includeDeclaration: true }, CancellationToken.None) ?? [];
+    }));
+    return references.flat();
+  }
+  async getDefinitions(position, textModel, languageFeaturesService) {
+    const definitionProviders = languageFeaturesService.definitionProvider.all(textModel);
+    const definitions = await Promise.all(definitionProviders.map(async (definitionProvider) => {
+      return await definitionProvider.provideDefinition(textModel, position, CancellationToken.None) ?? [];
+    }));
+    return definitions.flat();
+  }
+  async getImplementations(position, textModel, languageFeaturesService) {
+    const implementationProviders = languageFeaturesService.implementationProvider.all(textModel);
+    const implementations = await Promise.all(implementationProviders.map(async (implementationProvider) => {
+      return await implementationProvider.provideImplementation(textModel, position, CancellationToken.None) ?? [];
+    }));
+    return implementations.flat();
+  }
+});
+class ViewPreviousEditsAction extends EditingSessionAction {
+  static {
+    __name(this, "ViewPreviousEditsAction");
+  }
+  static Id = "chatEditing.viewPreviousEdits";
+  static Label = localize("chatEditing.viewPreviousEdits", "View Previous Edits");
+  constructor() {
+    super({
+      id: ViewPreviousEditsAction.Id,
+      title: ViewPreviousEditsAction.Label,
+      tooltip: ViewPreviousEditsAction.Label,
+      f1: false,
+      icon: Codicon.diffMultiple,
+      precondition: hasUndecidedChatEditingResourceContextKey.negate(),
+      menu: [
+        {
+          id: MenuId.ChatEditingWidgetToolbar,
+          group: "navigation",
+          order: 4,
+          when: ContextKeyExpr.and(applyingChatEditsFailedContextKey.negate(), ContextKeyExpr.and(hasAppliedChatEditsContextKey, hasUndecidedChatEditingResourceContextKey.negate()))
+        }
+      ]
+    });
+  }
+  async runEditingSessionAction(accessor, editingSession, chatWidget, ...args) {
+    await editingSession.show(true);
+  }
+}
+registerAction2(ViewPreviousEditsAction);
+export {
+  ChatEditingAcceptAllAction,
+  ChatEditingDiscardAllAction,
+  ChatEditingRemoveAllFilesAction,
+  ChatEditingShowChangesAction,
+  EditingSessionAction,
+  ViewPreviousEditsAction,
+  discardAllEditsWithConfirmation,
+  getEditingSessionContext
+};
+//# sourceMappingURL=chatEditingActions.js.map

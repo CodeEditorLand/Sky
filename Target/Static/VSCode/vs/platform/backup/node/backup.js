@@ -1,1 +1,46 @@
-import{URI as a}from"../../../base/common/uri.js";import"../common/backup.js";function d(o){return typeof o?.backupFolder=="string"}function I(o){let r=[];try{Array.isArray(o.workspaces)&&(r=o.workspaces.map(e=>({workspace:{id:e.id,configPath:a.parse(e.configURIPath)},remoteAuthority:e.remoteAuthority})))}catch{}return r}function f(o){let r=[];try{Array.isArray(o.folders)&&(r=o.folders.map(e=>({folderUri:a.parse(e.folderUri),remoteAuthority:e.remoteAuthority})))}catch{}return r}export{f as deserializeFolderInfos,I as deserializeWorkspaceInfos,d as isEmptyWindowBackupInfo};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { URI } from "../../../base/common/uri.js";
+import { IBaseBackupInfo, IFolderBackupInfo, IWorkspaceBackupInfo } from "../common/backup.js";
+function isEmptyWindowBackupInfo(obj) {
+  const candidate = obj;
+  return typeof candidate?.backupFolder === "string";
+}
+__name(isEmptyWindowBackupInfo, "isEmptyWindowBackupInfo");
+function deserializeWorkspaceInfos(serializedBackupWorkspaces) {
+  let workspaceBackupInfos = [];
+  try {
+    if (Array.isArray(serializedBackupWorkspaces.workspaces)) {
+      workspaceBackupInfos = serializedBackupWorkspaces.workspaces.map((workspace) => ({
+        workspace: {
+          id: workspace.id,
+          configPath: URI.parse(workspace.configURIPath)
+        },
+        remoteAuthority: workspace.remoteAuthority
+      }));
+    }
+  } catch (e) {
+  }
+  return workspaceBackupInfos;
+}
+__name(deserializeWorkspaceInfos, "deserializeWorkspaceInfos");
+function deserializeFolderInfos(serializedBackupWorkspaces) {
+  let folderBackupInfos = [];
+  try {
+    if (Array.isArray(serializedBackupWorkspaces.folders)) {
+      folderBackupInfos = serializedBackupWorkspaces.folders.map((folder) => ({
+        folderUri: URI.parse(folder.folderUri),
+        remoteAuthority: folder.remoteAuthority
+      }));
+    }
+  } catch (e) {
+  }
+  return folderBackupInfos;
+}
+__name(deserializeFolderInfos, "deserializeFolderInfos");
+export {
+  deserializeFolderInfos,
+  deserializeWorkspaceInfos,
+  isEmptyWindowBackupInfo
+};
+//# sourceMappingURL=backup.js.map

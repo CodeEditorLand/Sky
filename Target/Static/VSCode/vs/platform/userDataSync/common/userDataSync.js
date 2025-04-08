@@ -1,1 +1,314 @@
-import{distinct as v}from"../../../base/common/arrays.js";import"../../../base/common/buffer.js";import"../../../base/common/collections.js";import"../../../base/common/event.js";import"../../../base/common/jsonFormatter.js";import"../../../base/common/jsonSchema.js";import"../../../base/common/lifecycle.js";import"../../../base/common/resources.js";import{isObject as D,isString as I}from"../../../base/common/types.js";import"../../../base/common/uri.js";import"../../../base/parts/request/common/request.js";import{localize as l}from"../../../nls.js";import{allSettings as U,ConfigurationScope as d,Extensions as g,getAllConfigurationProperties as P,parseScope as x}from"../../configuration/common/configurationRegistry.js";import"../../environment/common/environment.js";import{EXTENSION_IDENTIFIER_PATTERN as b}from"../../extensionManagement/common/extensionManagement.js";import"../../extensions/common/extensions.js";import{createDecorator as a}from"../../instantiation/common/instantiation.js";import{Extensions as E}from"../../jsonschemas/common/jsonContributionRegistry.js";import"../../log/common/log.js";import{Registry as u}from"../../registry/common/platform.js";import"../../userDataProfile/common/userDataProfile.js";import"./userDataSyncMachines.js";function f(){const e=u.as(g.Configuration).getConfigurationProperties();return Object.keys(e).filter((n=>!!e[n].disallowSyncIgnore))}function h(e=!1){const n=p(u.as(g.Configuration).getConfigurationProperties(),e),t=f();return v([...n,...t])}function Pe(e){if(!e.contributes?.configuration)return[];const n=Array.isArray(e.contributes.configuration)?e.contributes.configuration:[e.contributes.configuration];if(!n.length)return[];return p(P(n),!1)}function p(e,n){const t=new Set;for(const o in e){if(n&&e[o].source)continue;const s=I(e[o].scope)?x(e[o].scope):e[o].scope;(e[o].ignoreSync||s===d.MACHINE||s===d.MACHINE_OVERRIDABLE)&&t.add(o)}return[...t.values()]}const xe="settingsSync",C="settingsSync.keybindingsPerPlatform";function be(){const e="vscode://schemas/ignoredSettings",n=u.as(g.Configuration);n.registerConfiguration({id:"settingsSync",order:30,title:l("settings sync","Settings Sync"),type:"object",properties:{[C]:{type:"boolean",description:l("settingsSync.keybindingsPerPlatform","Synchronize keybindings for each platform."),default:!0,scope:d.APPLICATION,tags:["sync","usesOnlineServices"]},"settingsSync.ignoredExtensions":{type:"array",markdownDescription:l("settingsSync.ignoredExtensions","List of extensions to be ignored while synchronizing. The identifier of an extension is always `${publisher}.${name}`. For example: `vscode.csharp`."),items:[{type:"string",pattern:b,errorMessage:l("app.extension.identifier.errorMessage","Expected format '${publisher}.${name}'. Example: 'vscode.csharp'.")}],default:[],scope:d.APPLICATION,uniqueItems:!0,disallowSyncIgnore:!0,tags:["sync","usesOnlineServices"]},"settingsSync.ignoredSettings":{type:"array",description:l("settingsSync.ignoredSettings","Configure settings to be ignored while synchronizing."),default:[],scope:d.APPLICATION,$ref:e,additionalProperties:!0,uniqueItems:!0,disallowSyncIgnore:!0,tags:["sync","usesOnlineServices"]}}});const t=u.as(E.JSONContribution);return n.onDidUpdateConfiguration((()=>(()=>{const n=f(),o=h(),s={items:{type:"string",enum:[...Object.keys(U.properties).filter((e=>!o.includes(e))),...o.filter((e=>!n.includes(e))).map((e=>`-${e}`))]}};t.registerSchema(e,s)})()))}function Ee(e){return e&&D(e)&&I(e.id)&&Array.isArray(e.scopes)}var A=(e=>(e.Settings="settings",e.Keybindings="keybindings",e.Snippets="snippets",e.Prompts="prompts",e.Tasks="tasks",e.Extensions="extensions",e.GlobalState="globalState",e.Profiles="profiles",e.WorkspaceState="workspaceState",e))(A||{});const he=["settings","keybindings","snippets","prompts","tasks","extensions","globalState","profiles"];function L(e,...n){return e?[e,...n]:n}function Ce(e,n,t,o){return o.joinPath(t.userDataSyncHome,...L(e,n,`lastSync${n}.json`))}const Ae=a("IUserDataSyncStoreManagementService"),Le=a("IUserDataSyncStoreService"),Te=a("IUserDataSyncLocalStoreService"),Ne="x-operation-id",T="X-Execution-Id";function Me(e){const n={};return n[T]=e,n}var N=(e=>(e.Unauthorized="Unauthorized",e.Forbidden="Forbidden",e.NotFound="NotFound",e.MethodNotFound="MethodNotFound",e.Conflict="Conflict",e.Gone="Gone",e.PreconditionFailed="PreconditionFailed",e.TooLarge="TooLarge",e.UpgradeRequired="UpgradeRequired",e.PreconditionRequired="PreconditionRequired",e.TooManyRequests="RemoteTooManyRequests",e.TooManyRequestsAndRetryAfter="TooManyRequestsAndRetryAfter",e.RequestFailed="RequestFailed",e.RequestCanceled="RequestCanceled",e.RequestTimeout="RequestTimeout",e.RequestProtocolNotSupported="RequestProtocolNotSupported",e.RequestPathNotEscaped="RequestPathNotEscaped",e.RequestHeadersNotObject="RequestHeadersNotObject",e.NoCollection="NoCollection",e.NoRef="NoRef",e.EmptyResponse="EmptyResponse",e.TurnedOff="TurnedOff",e.SessionExpired="SessionExpired",e.ServiceChanged="ServiceChanged",e.DefaultServiceChanged="DefaultServiceChanged",e.LocalTooManyProfiles="LocalTooManyProfiles",e.LocalTooManyRequests="LocalTooManyRequests",e.LocalPreconditionFailed="LocalPreconditionFailed",e.LocalInvalidContent="LocalInvalidContent",e.LocalError="LocalError",e.IncompatibleLocalContent="IncompatibleLocalContent",e.IncompatibleRemoteContent="IncompatibleRemoteContent",e.Unknown="Unknown",e))(N||{});class y extends Error{constructor(e,n,t,o){super(e),this.code=n,this.resource=t,this.operationId=o,this.name=`${this.code} (UserDataSyncError) syncResource:${this.resource||"unknown"} operationId:${this.operationId||"unknown"}`}}class we extends y{constructor(e,n,t,o,s){super(e,t,void 0,s),this.url=n,this.serverCode=o}}class ke extends y{constructor(e,n){super(e,n)}}(e=>{e.toUserDataSyncError=function(n){if(n instanceof e)return n;const t=/^(.+) \(UserDataSyncError\) syncResource:(.+) operationId:(.+)$/.exec(n.name);if(t&&t[1]){const o="unknown"===t[2]?void 0:t[2],s="unknown"===t[3]?void 0:t[3];return new e(n.message,t[1],o,s)}return new e(n.message,"Unknown")}})(y||={});var M=(e=>(e.Uninitialized="uninitialized",e.Idle="idle",e.Syncing="syncing",e.HasConflicts="hasConflicts",e))(M||{}),w=(e=>(e[e.None=0]="None",e[e.Added=1]="Added",e[e.Modified=2]="Modified",e[e.Deleted=3]="Deleted",e))(w||{}),k=(e=>(e.Preview="preview",e.Conflict="conflict",e.Accepted="accepted",e))(k||{});const He="sync.store.url.type";function Oe(e){return`sync.enable.${e}`}const _e=a("IUserDataSyncEnablementService"),Fe=a("IUserDataSyncService"),qe=a("IUserDataSyncResourceProviderService"),Be=a("IUserDataAutoSyncService"),Ve=a("IUserDataSyncUtilService"),$e=a("IUserDataSyncLogService"),ze="userDataSync",je="vscode-userdata-sync",Ge="preview";export{he as ALL_SYNC_RESOURCES,C as CONFIG_SYNC_KEYBINDINGS_PER_PLATFORM,w as Change,T as HEADER_EXECUTION_ID,Ne as HEADER_OPERATION_ID,Be as IUserDataAutoSyncService,_e as IUserDataSyncEnablementService,Te as IUserDataSyncLocalStoreService,$e as IUserDataSyncLogService,qe as IUserDataSyncResourceProviderService,Fe as IUserDataSyncService,Ae as IUserDataSyncStoreManagementService,Le as IUserDataSyncStoreService,Ve as IUserDataSyncUtilService,k as MergeState,Ge as PREVIEW_DIR_NAME,He as SYNC_SERVICE_URL_TYPE,A as SyncResource,M as SyncStatus,xe as USER_DATA_SYNC_CONFIGURATION_SCOPE,ze as USER_DATA_SYNC_LOG_ID,je as USER_DATA_SYNC_SCHEME,ke as UserDataAutoSyncError,y as UserDataSyncError,N as UserDataSyncErrorCode,we as UserDataSyncStoreError,Me as createSyncHeaders,h as getDefaultIgnoredSettings,f as getDisallowedIgnoredSettings,Oe as getEnablementKey,Pe as getIgnoredSettingsForExtension,Ce as getLastSyncResourceUri,L as getPathSegments,Ee as isAuthenticationProvider,be as registerConfiguration};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { distinct } from "../../../base/common/arrays.js";
+import { VSBufferReadableStream } from "../../../base/common/buffer.js";
+import { IStringDictionary } from "../../../base/common/collections.js";
+import { Event } from "../../../base/common/event.js";
+import { FormattingOptions } from "../../../base/common/jsonFormatter.js";
+import { IJSONSchema } from "../../../base/common/jsonSchema.js";
+import { IDisposable } from "../../../base/common/lifecycle.js";
+import { IExtUri } from "../../../base/common/resources.js";
+import { isObject, isString } from "../../../base/common/types.js";
+import { URI } from "../../../base/common/uri.js";
+import { IHeaders } from "../../../base/parts/request/common/request.js";
+import { localize } from "../../../nls.js";
+import { allSettings, ConfigurationScope, Extensions as ConfigurationExtensions, IConfigurationRegistry, IRegisteredConfigurationPropertySchema, getAllConfigurationProperties, parseScope } from "../../configuration/common/configurationRegistry.js";
+import { IEnvironmentService } from "../../environment/common/environment.js";
+import { EXTENSION_IDENTIFIER_PATTERN, IExtensionIdentifier } from "../../extensionManagement/common/extensionManagement.js";
+import { IExtensionManifest } from "../../extensions/common/extensions.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+import { Extensions as JSONExtensions, IJSONContributionRegistry } from "../../jsonschemas/common/jsonContributionRegistry.js";
+import { ILogService } from "../../log/common/log.js";
+import { Registry } from "../../registry/common/platform.js";
+import { IUserDataProfile, UseDefaultProfileFlags } from "../../userDataProfile/common/userDataProfile.js";
+import { IUserDataSyncMachine } from "./userDataSyncMachines.js";
+function getDisallowedIgnoredSettings() {
+  const allSettings2 = Registry.as(ConfigurationExtensions.Configuration).getConfigurationProperties();
+  return Object.keys(allSettings2).filter((setting) => !!allSettings2[setting].disallowSyncIgnore);
+}
+__name(getDisallowedIgnoredSettings, "getDisallowedIgnoredSettings");
+function getDefaultIgnoredSettings(excludeExtensions = false) {
+  const allSettings2 = Registry.as(ConfigurationExtensions.Configuration).getConfigurationProperties();
+  const ignoredSettings = getIgnoredSettings(allSettings2, excludeExtensions);
+  const disallowedSettings = getDisallowedIgnoredSettings();
+  return distinct([...ignoredSettings, ...disallowedSettings]);
+}
+__name(getDefaultIgnoredSettings, "getDefaultIgnoredSettings");
+function getIgnoredSettingsForExtension(manifest) {
+  if (!manifest.contributes?.configuration) {
+    return [];
+  }
+  const configurations = Array.isArray(manifest.contributes.configuration) ? manifest.contributes.configuration : [manifest.contributes.configuration];
+  if (!configurations.length) {
+    return [];
+  }
+  const properties = getAllConfigurationProperties(configurations);
+  return getIgnoredSettings(properties, false);
+}
+__name(getIgnoredSettingsForExtension, "getIgnoredSettingsForExtension");
+function getIgnoredSettings(properties, excludeExtensions) {
+  const ignoredSettings = /* @__PURE__ */ new Set();
+  for (const key in properties) {
+    if (excludeExtensions && !!properties[key].source) {
+      continue;
+    }
+    const scope = isString(properties[key].scope) ? parseScope(properties[key].scope) : properties[key].scope;
+    if (properties[key].ignoreSync || scope === ConfigurationScope.MACHINE || scope === ConfigurationScope.MACHINE_OVERRIDABLE) {
+      ignoredSettings.add(key);
+    }
+  }
+  return [...ignoredSettings.values()];
+}
+__name(getIgnoredSettings, "getIgnoredSettings");
+const USER_DATA_SYNC_CONFIGURATION_SCOPE = "settingsSync";
+const CONFIG_SYNC_KEYBINDINGS_PER_PLATFORM = "settingsSync.keybindingsPerPlatform";
+function registerConfiguration() {
+  const ignoredSettingsSchemaId = "vscode://schemas/ignoredSettings";
+  const configurationRegistry = Registry.as(ConfigurationExtensions.Configuration);
+  configurationRegistry.registerConfiguration({
+    id: "settingsSync",
+    order: 30,
+    title: localize("settings sync", "Settings Sync"),
+    type: "object",
+    properties: {
+      [CONFIG_SYNC_KEYBINDINGS_PER_PLATFORM]: {
+        type: "boolean",
+        description: localize("settingsSync.keybindingsPerPlatform", "Synchronize keybindings for each platform."),
+        default: true,
+        scope: ConfigurationScope.APPLICATION,
+        tags: ["sync", "usesOnlineServices"]
+      },
+      "settingsSync.ignoredExtensions": {
+        "type": "array",
+        markdownDescription: localize("settingsSync.ignoredExtensions", "List of extensions to be ignored while synchronizing. The identifier of an extension is always `${publisher}.${name}`. For example: `vscode.csharp`."),
+        items: [{
+          type: "string",
+          pattern: EXTENSION_IDENTIFIER_PATTERN,
+          errorMessage: localize("app.extension.identifier.errorMessage", "Expected format '${publisher}.${name}'. Example: 'vscode.csharp'.")
+        }],
+        "default": [],
+        "scope": ConfigurationScope.APPLICATION,
+        uniqueItems: true,
+        disallowSyncIgnore: true,
+        tags: ["sync", "usesOnlineServices"]
+      },
+      "settingsSync.ignoredSettings": {
+        "type": "array",
+        description: localize("settingsSync.ignoredSettings", "Configure settings to be ignored while synchronizing."),
+        "default": [],
+        "scope": ConfigurationScope.APPLICATION,
+        $ref: ignoredSettingsSchemaId,
+        additionalProperties: true,
+        uniqueItems: true,
+        disallowSyncIgnore: true,
+        tags: ["sync", "usesOnlineServices"]
+      }
+    }
+  });
+  const jsonRegistry = Registry.as(JSONExtensions.JSONContribution);
+  const registerIgnoredSettingsSchema = /* @__PURE__ */ __name(() => {
+    const disallowedIgnoredSettings = getDisallowedIgnoredSettings();
+    const defaultIgnoredSettings = getDefaultIgnoredSettings();
+    const settings = Object.keys(allSettings.properties).filter((setting) => !defaultIgnoredSettings.includes(setting));
+    const ignoredSettings = defaultIgnoredSettings.filter((setting) => !disallowedIgnoredSettings.includes(setting));
+    const ignoredSettingsSchema = {
+      items: {
+        type: "string",
+        enum: [...settings, ...ignoredSettings.map((setting) => `-${setting}`)]
+      }
+    };
+    jsonRegistry.registerSchema(ignoredSettingsSchemaId, ignoredSettingsSchema);
+  }, "registerIgnoredSettingsSchema");
+  return configurationRegistry.onDidUpdateConfiguration(() => registerIgnoredSettingsSchema());
+}
+__name(registerConfiguration, "registerConfiguration");
+function isAuthenticationProvider(thing) {
+  return thing && isObject(thing) && isString(thing.id) && Array.isArray(thing.scopes);
+}
+__name(isAuthenticationProvider, "isAuthenticationProvider");
+var SyncResource = /* @__PURE__ */ ((SyncResource2) => {
+  SyncResource2["Settings"] = "settings";
+  SyncResource2["Keybindings"] = "keybindings";
+  SyncResource2["Snippets"] = "snippets";
+  SyncResource2["Prompts"] = "prompts";
+  SyncResource2["Tasks"] = "tasks";
+  SyncResource2["Extensions"] = "extensions";
+  SyncResource2["GlobalState"] = "globalState";
+  SyncResource2["Profiles"] = "profiles";
+  SyncResource2["WorkspaceState"] = "workspaceState";
+  return SyncResource2;
+})(SyncResource || {});
+const ALL_SYNC_RESOURCES = ["settings" /* Settings */, "keybindings" /* Keybindings */, "snippets" /* Snippets */, "prompts" /* Prompts */, "tasks" /* Tasks */, "extensions" /* Extensions */, "globalState" /* GlobalState */, "profiles" /* Profiles */];
+function getPathSegments(collection, ...paths) {
+  return collection ? [collection, ...paths] : paths;
+}
+__name(getPathSegments, "getPathSegments");
+function getLastSyncResourceUri(collection, syncResource, environmentService, extUri) {
+  return extUri.joinPath(environmentService.userDataSyncHome, ...getPathSegments(collection, syncResource, `lastSync${syncResource}.json`));
+}
+__name(getLastSyncResourceUri, "getLastSyncResourceUri");
+const IUserDataSyncStoreManagementService = createDecorator("IUserDataSyncStoreManagementService");
+const IUserDataSyncStoreService = createDecorator("IUserDataSyncStoreService");
+const IUserDataSyncLocalStoreService = createDecorator("IUserDataSyncLocalStoreService");
+const HEADER_OPERATION_ID = "x-operation-id";
+const HEADER_EXECUTION_ID = "X-Execution-Id";
+function createSyncHeaders(executionId) {
+  const headers = {};
+  headers[HEADER_EXECUTION_ID] = executionId;
+  return headers;
+}
+__name(createSyncHeaders, "createSyncHeaders");
+var UserDataSyncErrorCode = /* @__PURE__ */ ((UserDataSyncErrorCode2) => {
+  UserDataSyncErrorCode2["Unauthorized"] = "Unauthorized";
+  UserDataSyncErrorCode2["Forbidden"] = "Forbidden";
+  UserDataSyncErrorCode2["NotFound"] = "NotFound";
+  UserDataSyncErrorCode2["MethodNotFound"] = "MethodNotFound";
+  UserDataSyncErrorCode2["Conflict"] = "Conflict";
+  UserDataSyncErrorCode2["Gone"] = "Gone";
+  UserDataSyncErrorCode2["PreconditionFailed"] = "PreconditionFailed";
+  UserDataSyncErrorCode2["TooLarge"] = "TooLarge";
+  UserDataSyncErrorCode2["UpgradeRequired"] = "UpgradeRequired";
+  UserDataSyncErrorCode2["PreconditionRequired"] = "PreconditionRequired";
+  UserDataSyncErrorCode2["TooManyRequests"] = "RemoteTooManyRequests";
+  UserDataSyncErrorCode2["TooManyRequestsAndRetryAfter"] = "TooManyRequestsAndRetryAfter";
+  UserDataSyncErrorCode2["RequestFailed"] = "RequestFailed";
+  UserDataSyncErrorCode2["RequestCanceled"] = "RequestCanceled";
+  UserDataSyncErrorCode2["RequestTimeout"] = "RequestTimeout";
+  UserDataSyncErrorCode2["RequestProtocolNotSupported"] = "RequestProtocolNotSupported";
+  UserDataSyncErrorCode2["RequestPathNotEscaped"] = "RequestPathNotEscaped";
+  UserDataSyncErrorCode2["RequestHeadersNotObject"] = "RequestHeadersNotObject";
+  UserDataSyncErrorCode2["NoCollection"] = "NoCollection";
+  UserDataSyncErrorCode2["NoRef"] = "NoRef";
+  UserDataSyncErrorCode2["EmptyResponse"] = "EmptyResponse";
+  UserDataSyncErrorCode2["TurnedOff"] = "TurnedOff";
+  UserDataSyncErrorCode2["SessionExpired"] = "SessionExpired";
+  UserDataSyncErrorCode2["ServiceChanged"] = "ServiceChanged";
+  UserDataSyncErrorCode2["DefaultServiceChanged"] = "DefaultServiceChanged";
+  UserDataSyncErrorCode2["LocalTooManyProfiles"] = "LocalTooManyProfiles";
+  UserDataSyncErrorCode2["LocalTooManyRequests"] = "LocalTooManyRequests";
+  UserDataSyncErrorCode2["LocalPreconditionFailed"] = "LocalPreconditionFailed";
+  UserDataSyncErrorCode2["LocalInvalidContent"] = "LocalInvalidContent";
+  UserDataSyncErrorCode2["LocalError"] = "LocalError";
+  UserDataSyncErrorCode2["IncompatibleLocalContent"] = "IncompatibleLocalContent";
+  UserDataSyncErrorCode2["IncompatibleRemoteContent"] = "IncompatibleRemoteContent";
+  UserDataSyncErrorCode2["Unknown"] = "Unknown";
+  return UserDataSyncErrorCode2;
+})(UserDataSyncErrorCode || {});
+class UserDataSyncError extends Error {
+  constructor(message, code, resource, operationId) {
+    super(message);
+    this.code = code;
+    this.resource = resource;
+    this.operationId = operationId;
+    this.name = `${this.code} (UserDataSyncError) syncResource:${this.resource || "unknown"} operationId:${this.operationId || "unknown"}`;
+  }
+  static {
+    __name(this, "UserDataSyncError");
+  }
+}
+class UserDataSyncStoreError extends UserDataSyncError {
+  constructor(message, url, code, serverCode, operationId) {
+    super(message, code, void 0, operationId);
+    this.url = url;
+    this.serverCode = serverCode;
+  }
+  static {
+    __name(this, "UserDataSyncStoreError");
+  }
+}
+class UserDataAutoSyncError extends UserDataSyncError {
+  static {
+    __name(this, "UserDataAutoSyncError");
+  }
+  constructor(message, code) {
+    super(message, code);
+  }
+}
+((UserDataSyncError2) => {
+  function toUserDataSyncError(error) {
+    if (error instanceof UserDataSyncError2) {
+      return error;
+    }
+    const match = /^(.+) \(UserDataSyncError\) syncResource:(.+) operationId:(.+)$/.exec(error.name);
+    if (match && match[1]) {
+      const syncResource = match[2] === "unknown" ? void 0 : match[2];
+      const operationId = match[3] === "unknown" ? void 0 : match[3];
+      return new UserDataSyncError2(error.message, match[1], syncResource, operationId);
+    }
+    return new UserDataSyncError2(error.message, "Unknown" /* Unknown */);
+  }
+  UserDataSyncError2.toUserDataSyncError = toUserDataSyncError;
+  __name(toUserDataSyncError, "toUserDataSyncError");
+})(UserDataSyncError || (UserDataSyncError = {}));
+var SyncStatus = /* @__PURE__ */ ((SyncStatus2) => {
+  SyncStatus2["Uninitialized"] = "uninitialized";
+  SyncStatus2["Idle"] = "idle";
+  SyncStatus2["Syncing"] = "syncing";
+  SyncStatus2["HasConflicts"] = "hasConflicts";
+  return SyncStatus2;
+})(SyncStatus || {});
+var Change = /* @__PURE__ */ ((Change2) => {
+  Change2[Change2["None"] = 0] = "None";
+  Change2[Change2["Added"] = 1] = "Added";
+  Change2[Change2["Modified"] = 2] = "Modified";
+  Change2[Change2["Deleted"] = 3] = "Deleted";
+  return Change2;
+})(Change || {});
+var MergeState = /* @__PURE__ */ ((MergeState2) => {
+  MergeState2["Preview"] = "preview";
+  MergeState2["Conflict"] = "conflict";
+  MergeState2["Accepted"] = "accepted";
+  return MergeState2;
+})(MergeState || {});
+const SYNC_SERVICE_URL_TYPE = "sync.store.url.type";
+function getEnablementKey(resource) {
+  return `sync.enable.${resource}`;
+}
+__name(getEnablementKey, "getEnablementKey");
+const IUserDataSyncEnablementService = createDecorator("IUserDataSyncEnablementService");
+const IUserDataSyncService = createDecorator("IUserDataSyncService");
+const IUserDataSyncResourceProviderService = createDecorator("IUserDataSyncResourceProviderService");
+const IUserDataAutoSyncService = createDecorator("IUserDataAutoSyncService");
+const IUserDataSyncUtilService = createDecorator("IUserDataSyncUtilService");
+const IUserDataSyncLogService = createDecorator("IUserDataSyncLogService");
+const USER_DATA_SYNC_LOG_ID = "userDataSync";
+const USER_DATA_SYNC_SCHEME = "vscode-userdata-sync";
+const PREVIEW_DIR_NAME = "preview";
+export {
+  ALL_SYNC_RESOURCES,
+  CONFIG_SYNC_KEYBINDINGS_PER_PLATFORM,
+  Change,
+  HEADER_EXECUTION_ID,
+  HEADER_OPERATION_ID,
+  IUserDataAutoSyncService,
+  IUserDataSyncEnablementService,
+  IUserDataSyncLocalStoreService,
+  IUserDataSyncLogService,
+  IUserDataSyncResourceProviderService,
+  IUserDataSyncService,
+  IUserDataSyncStoreManagementService,
+  IUserDataSyncStoreService,
+  IUserDataSyncUtilService,
+  MergeState,
+  PREVIEW_DIR_NAME,
+  SYNC_SERVICE_URL_TYPE,
+  SyncResource,
+  SyncStatus,
+  USER_DATA_SYNC_CONFIGURATION_SCOPE,
+  USER_DATA_SYNC_LOG_ID,
+  USER_DATA_SYNC_SCHEME,
+  UserDataAutoSyncError,
+  UserDataSyncError,
+  UserDataSyncErrorCode,
+  UserDataSyncStoreError,
+  createSyncHeaders,
+  getDefaultIgnoredSettings,
+  getDisallowedIgnoredSettings,
+  getEnablementKey,
+  getIgnoredSettingsForExtension,
+  getLastSyncResourceUri,
+  getPathSegments,
+  isAuthenticationProvider,
+  registerConfiguration
+};
+//# sourceMappingURL=userDataSync.js.map

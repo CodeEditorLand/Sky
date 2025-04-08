@@ -1,1 +1,505 @@
-var U=Object.defineProperty;var K=Object.getOwnPropertyDescriptor;var O=(h,w,e,o)=>{for(var t=o>1?void 0:o?K(w,e):w,r=h.length-1,i;r>=0;r--)(i=h[r])&&(t=(o?i(w,e,t):i(t))||t);return o&&t&&U(w,e,t),t},p=(h,w)=>(e,o)=>w(e,o,h);import"./media/progressService.css";import{localize as m}from"../../../../nls.js";import{dispose as S,DisposableStore as V,Disposable as x,toDisposable as z}from"../../../../base/common/lifecycle.js";import{IProgressService as G,ProgressLocation as P,Progress as X}from"../../../../platform/progress/common/progress.js";import{StatusbarAlignment as j,IStatusbarService as q}from"../../statusbar/browser/statusbar.js";import{DeferredPromise as J,RunOnceScheduler as Q,timeout as L}from"../../../../base/common/async.js";import{ProgressBadge as Y,IActivityService as Z}from"../../activity/common/activity.js";import{INotificationService as ee,Severity as re,NotificationPriority as b,isNotificationSource as ie,NotificationsFilter as _}from"../../../../platform/notification/common/notification.js";import{Action as T}from"../../../../base/common/actions.js";import{Event as C,Emitter as B}from"../../../../base/common/event.js";import{InstantiationType as se,registerSingleton as te}from"../../../../platform/instantiation/common/extensions.js";import{ILayoutService as oe}from"../../../../platform/layout/browser/layoutService.js";import{Dialog as ne}from"../../../../base/browser/ui/dialog/dialog.js";import{IKeybindingService as ae}from"../../../../platform/keybinding/common/keybinding.js";import{parseLinkedText as H}from"../../../../base/common/linkedText.js";import{IViewDescriptorService as ce,ViewContainerLocation as E}from"../../../common/views.js";import{IViewsService as de}from"../../views/common/viewsService.js";import{IPaneCompositePartService as le}from"../../panecomposite/browser/panecomposite.js";import{stripIcons as M}from"../../../../base/common/iconLabels.js";import{IUserActivityService as ge}from"../../userActivity/common/userActivityService.js";import{createWorkbenchDialogOptions as pe}from"../../../../platform/dialogs/browser/dialog.js";let D=class extends x{constructor(e,o,t,r,i,d,s,a,c){super();this.activityService=e;this.paneCompositeService=o;this.viewDescriptorService=t;this.viewsService=r;this.notificationService=i;this.statusbarService=d;this.layoutService=s;this.keybindingService=a;this.userActivityService=c}async withProgress(e,o,t){const{location:r}=e,i=async s=>{const a=this.userActivityService.markActive({whenHeldFor:15e3});try{return await o(s)}finally{a.dispose()}},d=s=>{const a=this.viewDescriptorService.getViewContainerById(s);if(a){const c=this.viewDescriptorService.getViewContainerLocation(a);if(c!==null)return this.withPaneCompositeProgress(s,c,i,{...e,location:s})}if(this.viewDescriptorService.getViewDescriptorById(s)!==null)return this.withViewProgress(s,i,{...e,location:s});throw new Error(`Bad progress location: ${s}`)};if(typeof r=="string")return d(r);switch(r){case P.Notification:{let s=e.priority;return s!==b.URGENT&&(this.notificationService.getFilter()===_.ERROR?s=b.SILENT:ie(e.source)&&this.notificationService.getFilter(e.source)===_.ERROR&&(s=b.SILENT)),this.withNotificationProgress({...e,location:r,priority:s},i,t)}case P.Window:{const s=e.type;return e.command?this.withWindowProgress({...e,location:r,type:s},i):this.withNotificationProgress({delay:150,...e,priority:b.SILENT,location:P.Notification,type:s},i,t)}case P.Explorer:return this.withPaneCompositeProgress("workbench.view.explorer",E.Sidebar,i,{...e,location:r});case P.Scm:return d("workbench.scm");case P.Extensions:return this.withPaneCompositeProgress("workbench.view.extensions",E.Sidebar,i,{...e,location:r});case P.Dialog:return this.withDialogProgress(e,i,t);default:throw new Error(`Bad progress location: ${r}`)}}windowProgressStack=[];windowProgressStatusEntry=void 0;withWindowProgress(e,o){const t=[e,new X(()=>this.updateWindowProgress())],r=o(t[1]);let i=setTimeout(()=>{i=void 0,this.windowProgressStack.unshift(t),this.updateWindowProgress(),Promise.all([L(150),r]).finally(()=>{const d=this.windowProgressStack.indexOf(t);this.windowProgressStack.splice(d,1),this.updateWindowProgress()})},150);return r.finally(()=>clearTimeout(i))}updateWindowProgress(e=0){if(e<this.windowProgressStack.length){const[o,t]=this.windowProgressStack[e],r=o.title,i=t.value&&t.value.message,d=o.command;let s,a;const c=o.source&&typeof o.source!="string"?o.source.label:o.source;if(r&&i)s=m("progress.text2","{0}: {1}",r,i),a=c?m("progress.title3","[{0}] {1}: {2}",c,r,i):s;else if(r)s=r,a=c?m("progress.title2","[{0}]: {1}",c,r):s;else if(i)s=i,a=c?m("progress.title2","[{0}]: {1}",c,i):s;else{this.updateWindowProgress(e+1);return}const l={name:m("status.progress","Progress Message"),text:s,showProgress:o.type||!0,ariaLabel:s,tooltip:M(a).trim(),command:d};this.windowProgressStatusEntry?this.windowProgressStatusEntry.update(l):this.windowProgressStatusEntry=this.statusbarService.addEntry(l,"status.progress",j.LEFT,-Number.MAX_VALUE)}else this.windowProgressStatusEntry?.dispose(),this.windowProgressStatusEntry=void 0}withNotificationProgress(e,o,t){const r=new class extends x{_onDidReport=this._register(new B);onDidReport=this._onDidReport.event;_onWillDispose=this._register(new B);onWillDispose=this._onWillDispose.event;_step=void 0;get step(){return this._step}_done=!1;get done(){return this._done}promise;constructor(){super(),this.promise=o(this),this.promise.finally(()=>{this.dispose()})}report(n){this._step=n,this._onDidReport.fire(n)}cancel(n){t?.(n),this.dispose()}dispose(){this._done=!0,this._onWillDispose.fire(),super.dispose()}},i=()=>{const n=new J;return this.withWindowProgress({location:P.Window,title:e.title?H(e.title).toString():void 0,command:"notifications.showList",type:e.type},g=>{function u(f){f.message&&g.report({message:H(f.message).toString()})}r.step&&u(r.step);const v=r.onDidReport(f=>u(f));return n.p.finally(()=>v.dispose()),C.once(r.onWillDispose)(()=>n.complete()),n.p}),z(()=>n.complete())},d=(n,g,u)=>{const v=new V,f=e.primaryActions?Array.from(e.primaryActions):[],F=e.secondaryActions?Array.from(e.secondaryActions):[];if(e.buttons&&e.buttons.forEach((y,$)=>{const W=new class extends T{constructor(){super(`progress.button.${y}`,y,void 0,!0)}async run(){r.cancel($)}};v.add(W),f.push(W)}),e.cancellable){const y=new class extends T{constructor(){super("progress.cancel",typeof e.cancellable=="string"?e.cancellable:m("cancel","Cancel"),void 0,!0)}async run(){r.cancel()}};v.add(y),f.push(y)}const k=this.notificationService.notify({severity:re.Info,message:M(n),source:e.source,actions:{primary:f,secondary:F},progress:typeof u=="number"&&u>=0?{total:100,worked:u}:{infinite:!0},priority:g});let A;const N=y=>{S(A),!y&&!r.done&&(A=i())};return v.add(k.onDidChangeVisibility(N)),g===b.SILENT&&N(!1),C.once(k.onDidClose)(()=>{v.dispose(),S(A)}),k},s=(n,g)=>{typeof g=="number"&&g>=0?(n.progress.total(100),n.progress.worked(g)):n.progress.infinite()};let a,c,l;const I=n=>{n?.message&&e.title?l=`${e.title}: ${n.message}`:l=e.title||n?.message,!a&&l&&(typeof e.delay=="number"&&e.delay>0?typeof c!="number"&&(c=setTimeout(()=>a=d(l,e.priority,n?.increment),e.delay)):a=d(l,e.priority,n?.increment)),a&&(l&&a.updateMessage(l),typeof n?.increment=="number"&&s(a,n.increment))};I(r.step);const R=r.onDidReport(n=>I(n));return C.once(r.onWillDispose)(()=>R.dispose()),(async()=>{try{typeof e.delay=="number"&&e.delay>0?await r.promise:await Promise.all([L(800),r.promise])}finally{clearTimeout(c),a?.close()}})(),r.promise}withPaneCompositeProgress(e,o,t,r){const i=this.paneCompositeService.getProgressIndicator(e,o),d=i?this.withCompositeProgress(i,t,r):t({report:()=>{}});return o===E.Sidebar&&this.showOnActivityBar(e,r,d),d}withViewProgress(e,o,t){const r=this.viewsService.getViewProgressIndicator(e),i=r?this.withCompositeProgress(r,o,t):o({report:()=>{}}),d=this.viewDescriptorService.getViewContainerByViewId(e)?.id;return d===void 0||this.showOnActivityBar(d,t,i),i}showOnActivityBar(e,o,t){let r,i=setTimeout(()=>{i=void 0;const d=this.activityService.showViewContainerActivity(e,{badge:new Y(()=>"")}),s=Date.now(),a=300;r={dispose(){const c=Date.now()-s;c<a?setTimeout(()=>d.dispose(),a-c):d.dispose()}}},o.delay||300);t.finally(()=>{clearTimeout(i),S(r)})}withCompositeProgress(e,o,t){let r;function i(s){let a,c;return typeof s<"u"&&(typeof s=="number"?a=s:typeof s.increment=="number"&&(a=s.total??100,c=s.increment)),typeof a=="number"?(r||(r=e.show(a,t.delay),d.catch(()=>{}).finally(()=>r?.done())),typeof c=="number"&&r.worked(c)):(r?.done(),e.showWhile(d,t.delay)),r}const d=o({report:s=>{i(s)}});return i(t.total),d}withDialogProgress(e,o,t){const r=new V;let i,d=!1;const s=n=>{const g=e.buttons||[];return e.sticky||g.push(e.cancellable?typeof e.cancellable=="boolean"?m("cancel","Cancel"):e.cancellable:m("dismiss","Dismiss")),i=new ne(this.layoutService.activeContainer,n,g,pe({type:"pending",detail:e.detail,cancelId:g.length-1,disableCloseAction:e.sticky,disableDefaultAction:e.sticky},this.keybindingService,this.layoutService)),r.add(i),i.show().then(u=>{d||t?.(u.button),S(i)}),i};let a=e.delay??0,c;const l=r.add(new Q(()=>{a=0,c&&!i?i=s(c):c&&i.updateMessage(c)},0)),I=function(n){c=n,l.isScheduled()||l.schedule(a)},R=o({report:n=>{I(n.message)}});return R.finally(()=>{d=!0,S(r)}),e.title&&I(e.title),R}};D=O([p(0,Z),p(1,le),p(2,ce),p(3,de),p(4,ee),p(5,q),p(6,oe),p(7,ae),p(8,ge)],D),te(G,D,se.Delayed);export{D as ProgressService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import "./media/progressService.css";
+import { localize } from "../../../../nls.js";
+import { IDisposable, dispose, DisposableStore, Disposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { IProgressService, IProgressOptions, IProgressStep, ProgressLocation, IProgress, Progress, IProgressCompositeOptions, IProgressNotificationOptions, IProgressRunner, IProgressIndicator, IProgressWindowOptions, IProgressDialogOptions } from "../../../../platform/progress/common/progress.js";
+import { StatusbarAlignment, IStatusbarService, IStatusbarEntryAccessor, IStatusbarEntry } from "../../statusbar/browser/statusbar.js";
+import { DeferredPromise, RunOnceScheduler, timeout } from "../../../../base/common/async.js";
+import { ProgressBadge, IActivityService } from "../../activity/common/activity.js";
+import { INotificationService, Severity, INotificationHandle, NotificationPriority, isNotificationSource, NotificationsFilter } from "../../../../platform/notification/common/notification.js";
+import { Action } from "../../../../base/common/actions.js";
+import { Event, Emitter } from "../../../../base/common/event.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { ILayoutService } from "../../../../platform/layout/browser/layoutService.js";
+import { Dialog } from "../../../../base/browser/ui/dialog/dialog.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { parseLinkedText } from "../../../../base/common/linkedText.js";
+import { IViewDescriptorService, ViewContainerLocation } from "../../../common/views.js";
+import { IViewsService } from "../../views/common/viewsService.js";
+import { IPaneCompositePartService } from "../../panecomposite/browser/panecomposite.js";
+import { stripIcons } from "../../../../base/common/iconLabels.js";
+import { IUserActivityService } from "../../userActivity/common/userActivityService.js";
+import { createWorkbenchDialogOptions } from "../../../../platform/dialogs/browser/dialog.js";
+let ProgressService = class extends Disposable {
+  constructor(activityService, paneCompositeService, viewDescriptorService, viewsService, notificationService, statusbarService, layoutService, keybindingService, userActivityService) {
+    super();
+    this.activityService = activityService;
+    this.paneCompositeService = paneCompositeService;
+    this.viewDescriptorService = viewDescriptorService;
+    this.viewsService = viewsService;
+    this.notificationService = notificationService;
+    this.statusbarService = statusbarService;
+    this.layoutService = layoutService;
+    this.keybindingService = keybindingService;
+    this.userActivityService = userActivityService;
+  }
+  static {
+    __name(this, "ProgressService");
+  }
+  async withProgress(options, originalTask, onDidCancel) {
+    const { location } = options;
+    const task = /* @__PURE__ */ __name(async (progress) => {
+      const activeLock = this.userActivityService.markActive({ whenHeldFor: 15e3 });
+      try {
+        return await originalTask(progress);
+      } finally {
+        activeLock.dispose();
+      }
+    }, "task");
+    const handleStringLocation = /* @__PURE__ */ __name((location2) => {
+      const viewContainer = this.viewDescriptorService.getViewContainerById(location2);
+      if (viewContainer) {
+        const viewContainerLocation = this.viewDescriptorService.getViewContainerLocation(viewContainer);
+        if (viewContainerLocation !== null) {
+          return this.withPaneCompositeProgress(location2, viewContainerLocation, task, { ...options, location: location2 });
+        }
+      }
+      if (this.viewDescriptorService.getViewDescriptorById(location2) !== null) {
+        return this.withViewProgress(location2, task, { ...options, location: location2 });
+      }
+      throw new Error(`Bad progress location: ${location2}`);
+    }, "handleStringLocation");
+    if (typeof location === "string") {
+      return handleStringLocation(location);
+    }
+    switch (location) {
+      case ProgressLocation.Notification: {
+        let priority = options.priority;
+        if (priority !== NotificationPriority.URGENT) {
+          if (this.notificationService.getFilter() === NotificationsFilter.ERROR) {
+            priority = NotificationPriority.SILENT;
+          } else if (isNotificationSource(options.source) && this.notificationService.getFilter(options.source) === NotificationsFilter.ERROR) {
+            priority = NotificationPriority.SILENT;
+          }
+        }
+        return this.withNotificationProgress({ ...options, location, priority }, task, onDidCancel);
+      }
+      case ProgressLocation.Window: {
+        const type = options.type;
+        if (options.command) {
+          return this.withWindowProgress({ ...options, location, type }, task);
+        }
+        return this.withNotificationProgress({ delay: 150, ...options, priority: NotificationPriority.SILENT, location: ProgressLocation.Notification, type }, task, onDidCancel);
+      }
+      case ProgressLocation.Explorer:
+        return this.withPaneCompositeProgress("workbench.view.explorer", ViewContainerLocation.Sidebar, task, { ...options, location });
+      case ProgressLocation.Scm:
+        return handleStringLocation("workbench.scm");
+      case ProgressLocation.Extensions:
+        return this.withPaneCompositeProgress("workbench.view.extensions", ViewContainerLocation.Sidebar, task, { ...options, location });
+      case ProgressLocation.Dialog:
+        return this.withDialogProgress(options, task, onDidCancel);
+      default:
+        throw new Error(`Bad progress location: ${location}`);
+    }
+  }
+  windowProgressStack = [];
+  windowProgressStatusEntry = void 0;
+  withWindowProgress(options, callback) {
+    const task = [options, new Progress(() => this.updateWindowProgress())];
+    const promise = callback(task[1]);
+    let delayHandle = setTimeout(() => {
+      delayHandle = void 0;
+      this.windowProgressStack.unshift(task);
+      this.updateWindowProgress();
+      Promise.all([
+        timeout(150),
+        promise
+      ]).finally(() => {
+        const idx = this.windowProgressStack.indexOf(task);
+        this.windowProgressStack.splice(idx, 1);
+        this.updateWindowProgress();
+      });
+    }, 150);
+    return promise.finally(() => clearTimeout(delayHandle));
+  }
+  updateWindowProgress(idx = 0) {
+    if (idx < this.windowProgressStack.length) {
+      const [options, progress] = this.windowProgressStack[idx];
+      const progressTitle = options.title;
+      const progressMessage = progress.value && progress.value.message;
+      const progressCommand = options.command;
+      let text;
+      let title;
+      const source = options.source && typeof options.source !== "string" ? options.source.label : options.source;
+      if (progressTitle && progressMessage) {
+        text = localize("progress.text2", "{0}: {1}", progressTitle, progressMessage);
+        title = source ? localize("progress.title3", "[{0}] {1}: {2}", source, progressTitle, progressMessage) : text;
+      } else if (progressTitle) {
+        text = progressTitle;
+        title = source ? localize("progress.title2", "[{0}]: {1}", source, progressTitle) : text;
+      } else if (progressMessage) {
+        text = progressMessage;
+        title = source ? localize("progress.title2", "[{0}]: {1}", source, progressMessage) : text;
+      } else {
+        this.updateWindowProgress(idx + 1);
+        return;
+      }
+      const statusEntryProperties = {
+        name: localize("status.progress", "Progress Message"),
+        text,
+        showProgress: options.type || true,
+        ariaLabel: text,
+        tooltip: stripIcons(title).trim(),
+        command: progressCommand
+      };
+      if (this.windowProgressStatusEntry) {
+        this.windowProgressStatusEntry.update(statusEntryProperties);
+      } else {
+        this.windowProgressStatusEntry = this.statusbarService.addEntry(
+          statusEntryProperties,
+          "status.progress",
+          StatusbarAlignment.LEFT,
+          -Number.MAX_VALUE
+          /* almost last entry */
+        );
+      }
+    } else {
+      this.windowProgressStatusEntry?.dispose();
+      this.windowProgressStatusEntry = void 0;
+    }
+  }
+  withNotificationProgress(options, callback, onDidCancel) {
+    const progressStateModel = new class extends Disposable {
+      _onDidReport = this._register(new Emitter());
+      onDidReport = this._onDidReport.event;
+      _onWillDispose = this._register(new Emitter());
+      onWillDispose = this._onWillDispose.event;
+      _step = void 0;
+      get step() {
+        return this._step;
+      }
+      _done = false;
+      get done() {
+        return this._done;
+      }
+      promise;
+      constructor() {
+        super();
+        this.promise = callback(this);
+        this.promise.finally(() => {
+          this.dispose();
+        });
+      }
+      report(step) {
+        this._step = step;
+        this._onDidReport.fire(step);
+      }
+      cancel(choice) {
+        onDidCancel?.(choice);
+        this.dispose();
+      }
+      dispose() {
+        this._done = true;
+        this._onWillDispose.fire();
+        super.dispose();
+      }
+    }();
+    const createWindowProgress = /* @__PURE__ */ __name(() => {
+      const promise = new DeferredPromise();
+      this.withWindowProgress({
+        location: ProgressLocation.Window,
+        title: options.title ? parseLinkedText(options.title).toString() : void 0,
+        // convert markdown links => string
+        command: "notifications.showList",
+        type: options.type
+      }, (progress) => {
+        function reportProgress(step) {
+          if (step.message) {
+            progress.report({
+              message: parseLinkedText(step.message).toString()
+              // convert markdown links => string
+            });
+          }
+        }
+        __name(reportProgress, "reportProgress");
+        if (progressStateModel.step) {
+          reportProgress(progressStateModel.step);
+        }
+        const onDidReportListener = progressStateModel.onDidReport((step) => reportProgress(step));
+        promise.p.finally(() => onDidReportListener.dispose());
+        Event.once(progressStateModel.onWillDispose)(() => promise.complete());
+        return promise.p;
+      });
+      return toDisposable(() => promise.complete());
+    }, "createWindowProgress");
+    const createNotification = /* @__PURE__ */ __name((message, priority, increment) => {
+      const notificationDisposables = new DisposableStore();
+      const primaryActions = options.primaryActions ? Array.from(options.primaryActions) : [];
+      const secondaryActions = options.secondaryActions ? Array.from(options.secondaryActions) : [];
+      if (options.buttons) {
+        options.buttons.forEach((button, index) => {
+          const buttonAction = new class extends Action {
+            constructor() {
+              super(`progress.button.${button}`, button, void 0, true);
+            }
+            async run() {
+              progressStateModel.cancel(index);
+            }
+          }();
+          notificationDisposables.add(buttonAction);
+          primaryActions.push(buttonAction);
+        });
+      }
+      if (options.cancellable) {
+        const cancelAction = new class extends Action {
+          constructor() {
+            super("progress.cancel", typeof options.cancellable === "string" ? options.cancellable : localize("cancel", "Cancel"), void 0, true);
+          }
+          async run() {
+            progressStateModel.cancel();
+          }
+        }();
+        notificationDisposables.add(cancelAction);
+        primaryActions.push(cancelAction);
+      }
+      const notification = this.notificationService.notify({
+        severity: Severity.Info,
+        message: stripIcons(message),
+        // status entries support codicons, but notifications do not (https://github.com/microsoft/vscode/issues/145722)
+        source: options.source,
+        actions: { primary: primaryActions, secondary: secondaryActions },
+        progress: typeof increment === "number" && increment >= 0 ? { total: 100, worked: increment } : { infinite: true },
+        priority
+      });
+      let windowProgressDisposable = void 0;
+      const onVisibilityChange = /* @__PURE__ */ __name((visible) => {
+        dispose(windowProgressDisposable);
+        if (!visible && !progressStateModel.done) {
+          windowProgressDisposable = createWindowProgress();
+        }
+      }, "onVisibilityChange");
+      notificationDisposables.add(notification.onDidChangeVisibility(onVisibilityChange));
+      if (priority === NotificationPriority.SILENT) {
+        onVisibilityChange(false);
+      }
+      Event.once(notification.onDidClose)(() => {
+        notificationDisposables.dispose();
+        dispose(windowProgressDisposable);
+      });
+      return notification;
+    }, "createNotification");
+    const updateProgress = /* @__PURE__ */ __name((notification, increment) => {
+      if (typeof increment === "number" && increment >= 0) {
+        notification.progress.total(100);
+        notification.progress.worked(increment);
+      } else {
+        notification.progress.infinite();
+      }
+    }, "updateProgress");
+    let notificationHandle;
+    let notificationTimeout;
+    let titleAndMessage;
+    const updateNotification = /* @__PURE__ */ __name((step) => {
+      if (step?.message && options.title) {
+        titleAndMessage = `${options.title}: ${step.message}`;
+      } else {
+        titleAndMessage = options.title || step?.message;
+      }
+      if (!notificationHandle && titleAndMessage) {
+        if (typeof options.delay === "number" && options.delay > 0) {
+          if (typeof notificationTimeout !== "number") {
+            notificationTimeout = setTimeout(() => notificationHandle = createNotification(titleAndMessage, options.priority, step?.increment), options.delay);
+          }
+        } else {
+          notificationHandle = createNotification(titleAndMessage, options.priority, step?.increment);
+        }
+      }
+      if (notificationHandle) {
+        if (titleAndMessage) {
+          notificationHandle.updateMessage(titleAndMessage);
+        }
+        if (typeof step?.increment === "number") {
+          updateProgress(notificationHandle, step.increment);
+        }
+      }
+    }, "updateNotification");
+    updateNotification(progressStateModel.step);
+    const listener = progressStateModel.onDidReport((step) => updateNotification(step));
+    Event.once(progressStateModel.onWillDispose)(() => listener.dispose());
+    (async () => {
+      try {
+        if (typeof options.delay === "number" && options.delay > 0) {
+          await progressStateModel.promise;
+        } else {
+          await Promise.all([timeout(800), progressStateModel.promise]);
+        }
+      } finally {
+        clearTimeout(notificationTimeout);
+        notificationHandle?.close();
+      }
+    })();
+    return progressStateModel.promise;
+  }
+  withPaneCompositeProgress(paneCompositeId, viewContainerLocation, task, options) {
+    const progressIndicator = this.paneCompositeService.getProgressIndicator(paneCompositeId, viewContainerLocation);
+    const promise = progressIndicator ? this.withCompositeProgress(progressIndicator, task, options) : task({ report: /* @__PURE__ */ __name(() => {
+    }, "report") });
+    if (viewContainerLocation === ViewContainerLocation.Sidebar) {
+      this.showOnActivityBar(paneCompositeId, options, promise);
+    }
+    return promise;
+  }
+  withViewProgress(viewId, task, options) {
+    const progressIndicator = this.viewsService.getViewProgressIndicator(viewId);
+    const promise = progressIndicator ? this.withCompositeProgress(progressIndicator, task, options) : task({ report: /* @__PURE__ */ __name(() => {
+    }, "report") });
+    const viewletId = this.viewDescriptorService.getViewContainerByViewId(viewId)?.id;
+    if (viewletId === void 0) {
+      return promise;
+    }
+    this.showOnActivityBar(viewletId, options, promise);
+    return promise;
+  }
+  showOnActivityBar(viewletId, options, promise) {
+    let activityProgress;
+    let delayHandle = setTimeout(() => {
+      delayHandle = void 0;
+      const handle = this.activityService.showViewContainerActivity(viewletId, { badge: new ProgressBadge(() => "") });
+      const startTimeVisible = Date.now();
+      const minTimeVisible = 300;
+      activityProgress = {
+        dispose() {
+          const d = Date.now() - startTimeVisible;
+          if (d < minTimeVisible) {
+            setTimeout(() => handle.dispose(), minTimeVisible - d);
+          } else {
+            handle.dispose();
+          }
+        }
+      };
+    }, options.delay || 300);
+    promise.finally(() => {
+      clearTimeout(delayHandle);
+      dispose(activityProgress);
+    });
+  }
+  withCompositeProgress(progressIndicator, task, options) {
+    let discreteProgressRunner = void 0;
+    function updateProgress(stepOrTotal) {
+      let total = void 0;
+      let increment = void 0;
+      if (typeof stepOrTotal !== "undefined") {
+        if (typeof stepOrTotal === "number") {
+          total = stepOrTotal;
+        } else if (typeof stepOrTotal.increment === "number") {
+          total = stepOrTotal.total ?? 100;
+          increment = stepOrTotal.increment;
+        }
+      }
+      if (typeof total === "number") {
+        if (!discreteProgressRunner) {
+          discreteProgressRunner = progressIndicator.show(total, options.delay);
+          promise.catch(
+            () => void 0
+            /* ignore */
+          ).finally(() => discreteProgressRunner?.done());
+        }
+        if (typeof increment === "number") {
+          discreteProgressRunner.worked(increment);
+        }
+      } else {
+        discreteProgressRunner?.done();
+        progressIndicator.showWhile(promise, options.delay);
+      }
+      return discreteProgressRunner;
+    }
+    __name(updateProgress, "updateProgress");
+    const promise = task({
+      report: /* @__PURE__ */ __name((progress) => {
+        updateProgress(progress);
+      }, "report")
+    });
+    updateProgress(options.total);
+    return promise;
+  }
+  withDialogProgress(options, task, onDidCancel) {
+    const disposables = new DisposableStore();
+    let dialog;
+    let taskCompleted = false;
+    const createDialog = /* @__PURE__ */ __name((message) => {
+      const buttons = options.buttons || [];
+      if (!options.sticky) {
+        buttons.push(
+          options.cancellable ? typeof options.cancellable === "boolean" ? localize("cancel", "Cancel") : options.cancellable : localize("dismiss", "Dismiss")
+        );
+      }
+      dialog = new Dialog(
+        this.layoutService.activeContainer,
+        message,
+        buttons,
+        createWorkbenchDialogOptions({
+          type: "pending",
+          detail: options.detail,
+          cancelId: buttons.length - 1,
+          disableCloseAction: options.sticky,
+          disableDefaultAction: options.sticky
+        }, this.keybindingService, this.layoutService)
+      );
+      disposables.add(dialog);
+      dialog.show().then((dialogResult) => {
+        if (!taskCompleted) {
+          onDidCancel?.(dialogResult.button);
+        }
+        dispose(dialog);
+      });
+      return dialog;
+    }, "createDialog");
+    let delay = options.delay ?? 0;
+    let latestMessage = void 0;
+    const scheduler = disposables.add(new RunOnceScheduler(() => {
+      delay = 0;
+      if (latestMessage && !dialog) {
+        dialog = createDialog(latestMessage);
+      } else if (latestMessage) {
+        dialog.updateMessage(latestMessage);
+      }
+    }, 0));
+    const updateDialog = /* @__PURE__ */ __name(function(message) {
+      latestMessage = message;
+      if (!scheduler.isScheduled()) {
+        scheduler.schedule(delay);
+      }
+    }, "updateDialog");
+    const promise = task({
+      report: /* @__PURE__ */ __name((progress) => {
+        updateDialog(progress.message);
+      }, "report")
+    });
+    promise.finally(() => {
+      taskCompleted = true;
+      dispose(disposables);
+    });
+    if (options.title) {
+      updateDialog(options.title);
+    }
+    return promise;
+  }
+};
+ProgressService = __decorateClass([
+  __decorateParam(0, IActivityService),
+  __decorateParam(1, IPaneCompositePartService),
+  __decorateParam(2, IViewDescriptorService),
+  __decorateParam(3, IViewsService),
+  __decorateParam(4, INotificationService),
+  __decorateParam(5, IStatusbarService),
+  __decorateParam(6, ILayoutService),
+  __decorateParam(7, IKeybindingService),
+  __decorateParam(8, IUserActivityService)
+], ProgressService);
+registerSingleton(IProgressService, ProgressService, InstantiationType.Delayed);
+export {
+  ProgressService
+};
+//# sourceMappingURL=progressService.js.map

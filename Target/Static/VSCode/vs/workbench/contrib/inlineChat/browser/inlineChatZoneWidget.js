@@ -1,1 +1,294 @@
-var C=Object.defineProperty;var E=Object.getOwnPropertyDescriptor;var b=(h,s,e,t)=>{for(var i=t>1?void 0:t?E(s,e):s,n=h.length-1,a;n>=0;n--)(a=h[n])&&(i=(t?a(s,e,i):a(i))||i);return t&&i&&C(s,e,i),i},g=(h,s)=>(e,t)=>s(e,t,h);import{addDisposableListener as T,Dimension as y}from"../../../../base/browser/dom.js";import*as H from"../../../../base/browser/ui/aria/aria.js";import{MutableDisposable as N,toDisposable as L}from"../../../../base/common/lifecycle.js";import{autorun as O}from"../../../../base/common/observable.js";import{isEqual as P}from"../../../../base/common/resources.js";import{assertType as I}from"../../../../base/common/types.js";import"../../../../editor/browser/editorBrowser.js";import{StableEditorBottomScrollState as S}from"../../../../editor/browser/stableEditorScroll.js";import{EditorOption as f}from"../../../../editor/common/config/editorOptions.js";import"../../../../editor/common/core/position.js";import"../../../../editor/common/core/range.js";import{ScrollType as w}from"../../../../editor/common/editorCommon.js";import{ZoneWidget as x}from"../../../../editor/contrib/zoneWidget/browser/zoneWidget.js";import{localize as R}from"../../../../nls.js";import{IContextKeyService as A}from"../../../../platform/contextkey/common/contextkey.js";import{IInstantiationService as D}from"../../../../platform/instantiation/common/instantiation.js";import{ILogService as U}from"../../../../platform/log/common/log.js";import"../../chat/browser/chat.js";import"../../chat/browser/chatWidget.js";import{isResponseVM as W}from"../../chat/common/chatViewModel.js";import{ACTION_REGENERATE_RESPONSE as V,ACTION_REPORT_ISSUE as F,ACTION_TOGGLE_DIFF as M,CTX_INLINE_CHAT_OUTER_CURSOR_POSITION as z,MENU_INLINE_CHAT_SIDE as B,MENU_INLINE_CHAT_WIDGET_SECONDARY as k,MENU_INLINE_CHAT_WIDGET_STATUS as G}from"../common/inlineChat.js";import{EditorBasedInlineChatWidget as K}from"./inlineChatWidget.js";let l=class extends x{constructor(e,t,i,n,a,m){super(i,l._options);this._instaService=n;this._logService=a;this._ctxCursorPosition=z.bindTo(m),this._disposables.add(L(()=>{this._ctxCursorPosition.reset()})),this.widget=this._instaService.createInstance(K,e,this.editor,{statusMenuId:{menu:G,options:{buttonConfigProvider:(o,d)=>{const p=d>0;return new Set([V,M,F]).has(o.id)?{isSecondary:p,showIcon:!0,showLabel:!1}:{isSecondary:p}}}},secondaryMenuId:k,inZoneWidget:!0,chatWidgetViewOptions:{menus:{telemetrySource:"interactiveEditorWidget-toolbar",inputSideToolbar:B},...t,rendererOptions:{renderTextEditsAsSummary:o=>P(o,i.getModel()?.uri),renderDetectedCommandsWithRequest:!0,...t?.rendererOptions}}}),this._disposables.add(this.widget);let c;this._disposables.add(this.widget.chatWidget.onWillMaybeChangeHeight(()=>{this.position&&(c=this._createZoneAndScrollRestoreFn(this.position))})),this._disposables.add(this.widget.onDidChangeHeight(()=>{if(this.position&&!this._usesResizeHeight){c??=this._createZoneAndScrollRestoreFn(this.position);const o=this._computeHeight();this._relayout(o.linesValue),c?.(),c=void 0}})),this.create(),this._disposables.add(O(o=>{const d=this.widget.requestInProgress.read(o);this.domNode.firstElementChild?.classList.toggle("busy",d)})),this._disposables.add(T(this.domNode,"click",o=>{!this.editor.hasWidgetFocus()&&!this.widget.hasFocus()&&this.editor.focus()},!0));const r=()=>{!this.position||!this.editor.hasModel()?this._ctxCursorPosition.reset():this.position.lineNumber===this.editor.getPosition().lineNumber?this._ctxCursorPosition.set("above"):this.position.lineNumber+1===this.editor.getPosition().lineNumber?this._ctxCursorPosition.set("below"):this._ctxCursorPosition.reset()};this._disposables.add(this.editor.onDidChangeCursorPosition(o=>r())),this._disposables.add(this.editor.onDidFocusEditorText(o=>r())),r()}static _options={showFrame:!0,frameWidth:1,isResizeable:!0,showArrow:!1,isAccessible:!0,className:"inline-chat-widget",keepEditorSelection:!0,showInHiddenAreas:!0,ordinal:5e4};widget;_scrollUp=this._disposables.add(new Z(this.editor));_ctxCursorPosition;_dimension;_fillContainer(e){e.style.setProperty("--vscode-inlineChat-background","var(--vscode-editor-background)"),e.appendChild(this.widget.domNode)}_doLayout(e){this._updatePadding();const t=this.editor.getLayoutInfo(),i=t.contentWidth-t.verticalScrollbarWidth;this._dimension=new y(i,e),this.widget.layout(this._dimension)}_computeHeight(){const e=this.widget.contentHeight,t=this.editor.getLayoutInfo().height,i=this._decoratingElementsHeight()+Math.min(e,Math.max(this.widget.minHeight,t*.42));return{linesValue:i/this.editor.getOption(f.lineHeight),pixelsValue:i}}_getResizeBounds(){const e=this.editor.getOption(f.lineHeight),t=this._decoratingElementsHeight(),i=t+this.widget.minHeight,n=t+this.widget.contentHeight;return{minLines:i/e,maxLines:n/e}}_onWidth(e){this._dimension&&this._doLayout(this._dimension.height)}show(e){I(this.container),this._updatePadding();const t=this._createZoneAndScrollRestoreFn(e);super.show(e,this._computeHeight().linesValue),this.widget.chatWidget.setVisible(!0),this.widget.focus(),t(),this._scrollUp.enable()}_updatePadding(){I(this.container);const e=this.editor.getLayoutInfo(),t=e.glyphMarginWidth+e.lineNumbersWidth+e.decorationsWidth;this.container.style.paddingLeft=`${t}px`}reveal(e){const t=this.editor.getOption(f.stickyScroll),i=t.enabled?t.maxLineCount:0;this.editor.revealLines(e.lineNumber+i,e.lineNumber+i,w.Immediate),this._scrollUp.reset(),this.updatePositionAndHeight(e)}updatePositionAndHeight(e){const t=this._createZoneAndScrollRestoreFn(e);super.updatePositionAndHeight(e,this._usesResizeHeight?void 0:this._computeHeight().linesValue),t()}_createZoneAndScrollRestoreFn(e){const t=S.capture(this.editor),i=e.lineNumber<=1?1:1+e.lineNumber,n=this.editor.getScrollTop(),m=this.editor.getTopForLineNumber(i)-this._computeHeight().pixelsValue;return this.widget.chatWidget.viewModel?.getItems().find(r=>W(r)&&r.response.value.length>0)&&m<n||this._scrollUp.didScrollUpOrDown?this._scrollUp.runIgnored(()=>{t.restore(this.editor)}):this._scrollUp.runIgnored(()=>{t.restore(this.editor);const r=this.editor.getScrollTop(),o=this.editor.getTopForLineNumber(i),d=o-this._computeHeight().pixelsValue,p=this.editor.getLayoutInfo().height,_=this.editor.getBottomForLineNumber(i);let u=d,v=!1;_>=r+p&&(u=_-p,v=!0),(u<r||v)&&(this._logService.trace("[IE] REVEAL zone",{zoneTop:d,lineTop:o,lineBottom:_,scrollTop:r,newScrollTop:u,forceScrollTop:v}),this.editor.setScrollTop(u,w.Immediate))})}revealRange(e,t){}hide(){const e=S.capture(this.editor);this._scrollUp.disable(),this._ctxCursorPosition.reset(),this.widget.reset(),this.widget.chatWidget.setVisible(!1),super.hide(),H.status(R("inlineChatClosed","Closed inline chat widget")),e.restore(this.editor)}};l=b([g(3,D),g(4,U),g(5,A)],l);class Z{constructor(s){this._editor=s}_didScrollUpOrDown;_ignoreEvents=!1;_listener=new N;dispose(){this._listener.dispose()}reset(){this._didScrollUpOrDown=void 0}enable(){this._didScrollUpOrDown=void 0,this._listener.value=this._editor.onDidScrollChange(s=>{!s.scrollTopChanged||this._ignoreEvents||(this._listener.clear(),this._didScrollUpOrDown=!0)})}disable(){this._listener.clear(),this._didScrollUpOrDown=void 0}runIgnored(s){return()=>{this._ignoreEvents=!0;try{return s()}finally{this._ignoreEvents=!1}}}get didScrollUpOrDown(){return this._didScrollUpOrDown}}export{l as InlineChatZoneWidget};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { addDisposableListener, Dimension } from "../../../../base/browser/dom.js";
+import * as aria from "../../../../base/browser/ui/aria/aria.js";
+import { MutableDisposable, toDisposable } from "../../../../base/common/lifecycle.js";
+import { autorun } from "../../../../base/common/observable.js";
+import { isEqual } from "../../../../base/common/resources.js";
+import { assertType } from "../../../../base/common/types.js";
+import { ICodeEditor } from "../../../../editor/browser/editorBrowser.js";
+import { StableEditorBottomScrollState } from "../../../../editor/browser/stableEditorScroll.js";
+import { EditorOption } from "../../../../editor/common/config/editorOptions.js";
+import { Position } from "../../../../editor/common/core/position.js";
+import { Range } from "../../../../editor/common/core/range.js";
+import { ScrollType } from "../../../../editor/common/editorCommon.js";
+import { IOptions, ZoneWidget } from "../../../../editor/contrib/zoneWidget/browser/zoneWidget.js";
+import { localize } from "../../../../nls.js";
+import { IContextKey, IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { IChatWidgetViewOptions } from "../../chat/browser/chat.js";
+import { IChatWidgetLocationOptions } from "../../chat/browser/chatWidget.js";
+import { isResponseVM } from "../../chat/common/chatViewModel.js";
+import { ACTION_REGENERATE_RESPONSE, ACTION_REPORT_ISSUE, ACTION_TOGGLE_DIFF, CTX_INLINE_CHAT_OUTER_CURSOR_POSITION, MENU_INLINE_CHAT_SIDE, MENU_INLINE_CHAT_WIDGET_SECONDARY, MENU_INLINE_CHAT_WIDGET_STATUS } from "../common/inlineChat.js";
+import { EditorBasedInlineChatWidget } from "./inlineChatWidget.js";
+let InlineChatZoneWidget = class extends ZoneWidget {
+  constructor(location, options, editor, _instaService, _logService, contextKeyService) {
+    super(editor, InlineChatZoneWidget._options);
+    this._instaService = _instaService;
+    this._logService = _logService;
+    this._ctxCursorPosition = CTX_INLINE_CHAT_OUTER_CURSOR_POSITION.bindTo(contextKeyService);
+    this._disposables.add(toDisposable(() => {
+      this._ctxCursorPosition.reset();
+    }));
+    this.widget = this._instaService.createInstance(EditorBasedInlineChatWidget, location, this.editor, {
+      statusMenuId: {
+        menu: MENU_INLINE_CHAT_WIDGET_STATUS,
+        options: {
+          buttonConfigProvider: /* @__PURE__ */ __name((action, index) => {
+            const isSecondary = index > 0;
+            if ((/* @__PURE__ */ new Set([ACTION_REGENERATE_RESPONSE, ACTION_TOGGLE_DIFF, ACTION_REPORT_ISSUE])).has(action.id)) {
+              return { isSecondary, showIcon: true, showLabel: false };
+            } else {
+              return { isSecondary };
+            }
+          }, "buttonConfigProvider")
+        }
+      },
+      secondaryMenuId: MENU_INLINE_CHAT_WIDGET_SECONDARY,
+      inZoneWidget: true,
+      chatWidgetViewOptions: {
+        menus: {
+          telemetrySource: "interactiveEditorWidget-toolbar",
+          inputSideToolbar: MENU_INLINE_CHAT_SIDE
+        },
+        ...options,
+        rendererOptions: {
+          renderTextEditsAsSummary: /* @__PURE__ */ __name((uri) => {
+            return isEqual(uri, editor.getModel()?.uri);
+          }, "renderTextEditsAsSummary"),
+          renderDetectedCommandsWithRequest: true,
+          ...options?.rendererOptions
+        }
+      }
+    });
+    this._disposables.add(this.widget);
+    let revealFn;
+    this._disposables.add(this.widget.chatWidget.onWillMaybeChangeHeight(() => {
+      if (this.position) {
+        revealFn = this._createZoneAndScrollRestoreFn(this.position);
+      }
+    }));
+    this._disposables.add(this.widget.onDidChangeHeight(() => {
+      if (this.position && !this._usesResizeHeight) {
+        revealFn ??= this._createZoneAndScrollRestoreFn(this.position);
+        const height = this._computeHeight();
+        this._relayout(height.linesValue);
+        revealFn?.();
+        revealFn = void 0;
+      }
+    }));
+    this.create();
+    this._disposables.add(autorun((r) => {
+      const isBusy = this.widget.requestInProgress.read(r);
+      this.domNode.firstElementChild?.classList.toggle("busy", isBusy);
+    }));
+    this._disposables.add(addDisposableListener(this.domNode, "click", (e) => {
+      if (!this.editor.hasWidgetFocus() && !this.widget.hasFocus()) {
+        this.editor.focus();
+      }
+    }, true));
+    const updateCursorIsAboveContextKey = /* @__PURE__ */ __name(() => {
+      if (!this.position || !this.editor.hasModel()) {
+        this._ctxCursorPosition.reset();
+      } else if (this.position.lineNumber === this.editor.getPosition().lineNumber) {
+        this._ctxCursorPosition.set("above");
+      } else if (this.position.lineNumber + 1 === this.editor.getPosition().lineNumber) {
+        this._ctxCursorPosition.set("below");
+      } else {
+        this._ctxCursorPosition.reset();
+      }
+    }, "updateCursorIsAboveContextKey");
+    this._disposables.add(this.editor.onDidChangeCursorPosition((e) => updateCursorIsAboveContextKey()));
+    this._disposables.add(this.editor.onDidFocusEditorText((e) => updateCursorIsAboveContextKey()));
+    updateCursorIsAboveContextKey();
+  }
+  static {
+    __name(this, "InlineChatZoneWidget");
+  }
+  static _options = {
+    showFrame: true,
+    frameWidth: 1,
+    // frameColor: 'var(--vscode-inlineChat-border)',
+    isResizeable: true,
+    showArrow: false,
+    isAccessible: true,
+    className: "inline-chat-widget",
+    keepEditorSelection: true,
+    showInHiddenAreas: true,
+    ordinal: 5e4
+  };
+  widget;
+  _scrollUp = this._disposables.add(new ScrollUpState(this.editor));
+  _ctxCursorPosition;
+  _dimension;
+  _fillContainer(container) {
+    container.style.setProperty("--vscode-inlineChat-background", "var(--vscode-editor-background)");
+    container.appendChild(this.widget.domNode);
+  }
+  _doLayout(heightInPixel) {
+    this._updatePadding();
+    const info = this.editor.getLayoutInfo();
+    const width = info.contentWidth - info.verticalScrollbarWidth;
+    this._dimension = new Dimension(width, heightInPixel);
+    this.widget.layout(this._dimension);
+  }
+  _computeHeight() {
+    const chatContentHeight = this.widget.contentHeight;
+    const editorHeight = this.editor.getLayoutInfo().height;
+    const contentHeight = this._decoratingElementsHeight() + Math.min(chatContentHeight, Math.max(this.widget.minHeight, editorHeight * 0.42));
+    const heightInLines = contentHeight / this.editor.getOption(EditorOption.lineHeight);
+    return { linesValue: heightInLines, pixelsValue: contentHeight };
+  }
+  _getResizeBounds() {
+    const lineHeight = this.editor.getOption(EditorOption.lineHeight);
+    const decoHeight = this._decoratingElementsHeight();
+    const minHeightPx = decoHeight + this.widget.minHeight;
+    const maxHeightPx = decoHeight + this.widget.contentHeight;
+    return {
+      minLines: minHeightPx / lineHeight,
+      maxLines: maxHeightPx / lineHeight
+    };
+  }
+  _onWidth(_widthInPixel) {
+    if (this._dimension) {
+      this._doLayout(this._dimension.height);
+    }
+  }
+  show(position) {
+    assertType(this.container);
+    this._updatePadding();
+    const revealZone = this._createZoneAndScrollRestoreFn(position);
+    super.show(position, this._computeHeight().linesValue);
+    this.widget.chatWidget.setVisible(true);
+    this.widget.focus();
+    revealZone();
+    this._scrollUp.enable();
+  }
+  _updatePadding() {
+    assertType(this.container);
+    const info = this.editor.getLayoutInfo();
+    const marginWithoutIndentation = info.glyphMarginWidth + info.lineNumbersWidth + info.decorationsWidth;
+    this.container.style.paddingLeft = `${marginWithoutIndentation}px`;
+  }
+  reveal(position) {
+    const stickyScroll = this.editor.getOption(EditorOption.stickyScroll);
+    const magicValue = stickyScroll.enabled ? stickyScroll.maxLineCount : 0;
+    this.editor.revealLines(position.lineNumber + magicValue, position.lineNumber + magicValue, ScrollType.Immediate);
+    this._scrollUp.reset();
+    this.updatePositionAndHeight(position);
+  }
+  updatePositionAndHeight(position) {
+    const revealZone = this._createZoneAndScrollRestoreFn(position);
+    super.updatePositionAndHeight(position, !this._usesResizeHeight ? this._computeHeight().linesValue : void 0);
+    revealZone();
+  }
+  _createZoneAndScrollRestoreFn(position) {
+    const scrollState = StableEditorBottomScrollState.capture(this.editor);
+    const lineNumber = position.lineNumber <= 1 ? 1 : 1 + position.lineNumber;
+    const scrollTop = this.editor.getScrollTop();
+    const lineTop = this.editor.getTopForLineNumber(lineNumber);
+    const zoneTop = lineTop - this._computeHeight().pixelsValue;
+    const hasResponse = this.widget.chatWidget.viewModel?.getItems().find((candidate) => {
+      return isResponseVM(candidate) && candidate.response.value.length > 0;
+    });
+    if (hasResponse && zoneTop < scrollTop || this._scrollUp.didScrollUpOrDown) {
+      return this._scrollUp.runIgnored(() => {
+        scrollState.restore(this.editor);
+      });
+    }
+    return this._scrollUp.runIgnored(() => {
+      scrollState.restore(this.editor);
+      const scrollTop2 = this.editor.getScrollTop();
+      const lineTop2 = this.editor.getTopForLineNumber(lineNumber);
+      const zoneTop2 = lineTop2 - this._computeHeight().pixelsValue;
+      const editorHeight = this.editor.getLayoutInfo().height;
+      const lineBottom = this.editor.getBottomForLineNumber(lineNumber);
+      let newScrollTop = zoneTop2;
+      let forceScrollTop = false;
+      if (lineBottom >= scrollTop2 + editorHeight) {
+        newScrollTop = lineBottom - editorHeight;
+        forceScrollTop = true;
+      }
+      if (newScrollTop < scrollTop2 || forceScrollTop) {
+        this._logService.trace("[IE] REVEAL zone", { zoneTop: zoneTop2, lineTop: lineTop2, lineBottom, scrollTop: scrollTop2, newScrollTop, forceScrollTop });
+        this.editor.setScrollTop(newScrollTop, ScrollType.Immediate);
+      }
+    });
+  }
+  revealRange(range, isLastLine) {
+  }
+  hide() {
+    const scrollState = StableEditorBottomScrollState.capture(this.editor);
+    this._scrollUp.disable();
+    this._ctxCursorPosition.reset();
+    this.widget.reset();
+    this.widget.chatWidget.setVisible(false);
+    super.hide();
+    aria.status(localize("inlineChatClosed", "Closed inline chat widget"));
+    scrollState.restore(this.editor);
+  }
+};
+InlineChatZoneWidget = __decorateClass([
+  __decorateParam(3, IInstantiationService),
+  __decorateParam(4, ILogService),
+  __decorateParam(5, IContextKeyService)
+], InlineChatZoneWidget);
+class ScrollUpState {
+  constructor(_editor) {
+    this._editor = _editor;
+  }
+  static {
+    __name(this, "ScrollUpState");
+  }
+  _didScrollUpOrDown;
+  _ignoreEvents = false;
+  _listener = new MutableDisposable();
+  dispose() {
+    this._listener.dispose();
+  }
+  reset() {
+    this._didScrollUpOrDown = void 0;
+  }
+  enable() {
+    this._didScrollUpOrDown = void 0;
+    this._listener.value = this._editor.onDidScrollChange((e) => {
+      if (!e.scrollTopChanged || this._ignoreEvents) {
+        return;
+      }
+      this._listener.clear();
+      this._didScrollUpOrDown = true;
+    });
+  }
+  disable() {
+    this._listener.clear();
+    this._didScrollUpOrDown = void 0;
+  }
+  runIgnored(callback) {
+    return () => {
+      this._ignoreEvents = true;
+      try {
+        return callback();
+      } finally {
+        this._ignoreEvents = false;
+      }
+    };
+  }
+  get didScrollUpOrDown() {
+    return this._didScrollUpOrDown;
+  }
+}
+export {
+  InlineChatZoneWidget
+};
+//# sourceMappingURL=inlineChatZoneWidget.js.map

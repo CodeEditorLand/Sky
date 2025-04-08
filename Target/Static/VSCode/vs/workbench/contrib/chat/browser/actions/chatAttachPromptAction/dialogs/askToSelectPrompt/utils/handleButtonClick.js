@@ -1,1 +1,70 @@
-import{localize as g}from"../../../../../../../../../nls.js";import{DELETE_BUTTON as P,EDIT_BUTTON as S}from"../constants.js";import{assert as m}from"../../../../../../../../../base/common/assert.js";import"../../../../../../../../../base/common/types.js";import"../../../../../../../../../platform/files/common/files.js";import"../../../../../../../../../platform/opener/common/opener.js";import"../../../../../../../../../platform/dialogs/common/dialogs.js";import{getCleanPromptName as h}from"../../../../../../../../../platform/prompts/common/constants.js";import"../../../../../../../../../platform/quickinput/common/quickInput.js";async function A(t,e){const{quickPick:o,openerService:s,fileService:i,dialogService:a}=t,{item:n,button:r}=e,{value:c}=n;if(r===S)return await s.open(c);if(r!==P)throw new Error(`Unknown button '${JSON.stringify(r)}'.`);{m(o.activeItems.length<2,`Expected maximum one active item, got '${o.activeItems.length}'.`);const t=o.activeItems[0],e=await i.stat(c);m(!1===e.isDirectory,`'${c.fsPath}' points to a folder.`);const s=o.ignoreFocusOut;o.ignoreFocusOut=!0;const r=h(c),{confirmed:p}=await a.confirm({message:g("commands.prompts.use.select-dialog.delete-prompt.confirm.message","Are you sure you want to delete '{0}'?",r)});if(o.ignoreFocusOut=s,!p)return;await i.del(c);let l=-1;if(o.items=o.items.filter(((t,e)=>t!==n||(l=e,!1))),t&&t===n){m(l>=0,"Removed item index must be a valid index.");const t=Math.max(l-1,0),e=o.items[t];o.activeItems=e?[e]:[]}}}export{A as handleButtonClick};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { localize } from "../../../../../../../../../nls.js";
+import { DELETE_BUTTON, EDIT_BUTTON } from "../constants.js";
+import { assert } from "../../../../../../../../../base/common/assert.js";
+import { WithUriValue } from "../../../../../../../../../base/common/types.js";
+import { IFileService } from "../../../../../../../../../platform/files/common/files.js";
+import { IOpenerService } from "../../../../../../../../../platform/opener/common/opener.js";
+import { IDialogService } from "../../../../../../../../../platform/dialogs/common/dialogs.js";
+import { getCleanPromptName } from "../../../../../../../../../platform/prompts/common/constants.js";
+import { IQuickPick, IQuickPickItem, IQuickPickItemButtonEvent } from "../../../../../../../../../platform/quickinput/common/quickInput.js";
+async function handleButtonClick(options, context) {
+  const { quickPick, openerService, fileService, dialogService } = options;
+  const { item, button } = context;
+  const { value } = item;
+  if (button === EDIT_BUTTON) {
+    return await openerService.open(value);
+  }
+  if (button === DELETE_BUTTON) {
+    assert(
+      quickPick.activeItems.length < 2,
+      `Expected maximum one active item, got '${quickPick.activeItems.length}'.`
+    );
+    const activeItem = quickPick.activeItems[0];
+    const info = await fileService.stat(value);
+    assert(
+      info.isDirectory === false,
+      `'${value.fsPath}' points to a folder.`
+    );
+    const previousIgnoreFocusOut = quickPick.ignoreFocusOut;
+    quickPick.ignoreFocusOut = true;
+    const filename = getCleanPromptName(value);
+    const { confirmed } = await dialogService.confirm({
+      message: localize(
+        "commands.prompts.use.select-dialog.delete-prompt.confirm.message",
+        "Are you sure you want to delete '{0}'?",
+        filename
+      )
+    });
+    quickPick.ignoreFocusOut = previousIgnoreFocusOut;
+    if (!confirmed) {
+      return;
+    }
+    await fileService.del(value);
+    let removedIndex = -1;
+    quickPick.items = quickPick.items.filter((option, index) => {
+      if (option === item) {
+        removedIndex = index;
+        return false;
+      }
+      return true;
+    });
+    if (activeItem && activeItem === item) {
+      assert(
+        removedIndex >= 0,
+        "Removed item index must be a valid index."
+      );
+      const newActiveItemIndex = Math.max(removedIndex - 1, 0);
+      const newActiveItem = quickPick.items[newActiveItemIndex];
+      quickPick.activeItems = newActiveItem ? [newActiveItem] : [];
+    }
+    return;
+  }
+  throw new Error(`Unknown button '${JSON.stringify(button)}'.`);
+}
+__name(handleButtonClick, "handleButtonClick");
+export {
+  handleButtonClick
+};
+//# sourceMappingURL=handleButtonClick.js.map

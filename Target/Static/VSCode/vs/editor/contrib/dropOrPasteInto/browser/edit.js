@@ -1,1 +1,87 @@
-import"../../../../base/common/uri.js";import{ResourceTextEdit as c}from"../../../browser/services/bulkEditService.js";import"../../../common/languages.js";import"../../../common/core/range.js";import{SnippetParser as f}from"../../snippet/browser/snippetParser.js";import"../../../../base/common/hierarchicalKind.js";function w(n,p,t){return(typeof t.insertText=="string"?t.insertText==="":t.insertText.snippet==="")?{edits:t.additionalEdit?.edits??[]}:{edits:[...p.map(s=>new c(n,{range:s,text:typeof t.insertText=="string"?f.escape(t.insertText)+"$0":t.insertText.snippet,insertAsSnippet:!0})),...t.additionalEdit?.edits??[]]}}function M(n){function p(e,i){return"mimeType"in e?e.mimeType===i.handledMimeType:!!i.kind&&e.kind.contains(i.kind)}const t=new Map;for(const e of n)for(const i of e.yieldTo??[])for(const o of n)if(o!==e&&p(i,o)){let r=t.get(e);r||(r=[],t.set(e,r)),r.push(o)}if(!t.size)return Array.from(n);const s=new Set,a=[];function d(e){if(!e.length)return[];const i=e[0];if(a.includes(i))return console.warn("Yield to cycle detected",i),e;if(s.has(i))return d(e.slice(1));let o=[];const r=t.get(i);return r&&(a.push(i),o=d(r),a.pop()),s.add(i),[...o,i,...d(e.slice(1))]}return d(Array.from(n))}export{w as createCombinedWorkspaceEdit,M as sortEditsByYieldTo};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { URI } from "../../../../base/common/uri.js";
+import { ResourceTextEdit } from "../../../browser/services/bulkEditService.js";
+import { DocumentDropEdit, DocumentPasteEdit, DropYieldTo, WorkspaceEdit } from "../../../common/languages.js";
+import { Range } from "../../../common/core/range.js";
+import { SnippetParser } from "../../snippet/browser/snippetParser.js";
+import { HierarchicalKind } from "../../../../base/common/hierarchicalKind.js";
+function createCombinedWorkspaceEdit(uri, ranges, edit) {
+  if (typeof edit.insertText === "string" ? edit.insertText === "" : edit.insertText.snippet === "") {
+    return {
+      edits: edit.additionalEdit?.edits ?? []
+    };
+  }
+  return {
+    edits: [
+      ...ranges.map((range) => new ResourceTextEdit(
+        uri,
+        { range, text: typeof edit.insertText === "string" ? SnippetParser.escape(edit.insertText) + "$0" : edit.insertText.snippet, insertAsSnippet: true }
+      )),
+      ...edit.additionalEdit?.edits ?? []
+    ]
+  };
+}
+__name(createCombinedWorkspaceEdit, "createCombinedWorkspaceEdit");
+function sortEditsByYieldTo(edits) {
+  function yieldsTo(yTo, other) {
+    if ("mimeType" in yTo) {
+      return yTo.mimeType === other.handledMimeType;
+    }
+    return !!other.kind && yTo.kind.contains(other.kind);
+  }
+  __name(yieldsTo, "yieldsTo");
+  const yieldsToMap = /* @__PURE__ */ new Map();
+  for (const edit of edits) {
+    for (const yTo of edit.yieldTo ?? []) {
+      for (const other of edits) {
+        if (other === edit) {
+          continue;
+        }
+        if (yieldsTo(yTo, other)) {
+          let arr = yieldsToMap.get(edit);
+          if (!arr) {
+            arr = [];
+            yieldsToMap.set(edit, arr);
+          }
+          arr.push(other);
+        }
+      }
+    }
+  }
+  if (!yieldsToMap.size) {
+    return Array.from(edits);
+  }
+  const visited = /* @__PURE__ */ new Set();
+  const tempStack = [];
+  function visit(nodes) {
+    if (!nodes.length) {
+      return [];
+    }
+    const node = nodes[0];
+    if (tempStack.includes(node)) {
+      console.warn("Yield to cycle detected", node);
+      return nodes;
+    }
+    if (visited.has(node)) {
+      return visit(nodes.slice(1));
+    }
+    let pre = [];
+    const yTo = yieldsToMap.get(node);
+    if (yTo) {
+      tempStack.push(node);
+      pre = visit(yTo);
+      tempStack.pop();
+    }
+    visited.add(node);
+    return [...pre, node, ...visit(nodes.slice(1))];
+  }
+  __name(visit, "visit");
+  return visit(Array.from(edits));
+}
+__name(sortEditsByYieldTo, "sortEditsByYieldTo");
+export {
+  createCombinedWorkspaceEdit,
+  sortEditsByYieldTo
+};
+//# sourceMappingURL=edit.js.map

@@ -1,1 +1,264 @@
-var R=Object.defineProperty,D=Object.getOwnPropertyDescriptor,y=(e,i,t,o)=>{for(var r,s=o>1?void 0:o?D(i,t):i,a=e.length-1;a>=0;a--)(r=e[a])&&(s=(o?r(i,t,s):r(s))||s);return o&&s&&R(i,t,s),s},A=(e,i)=>(t,o)=>i(t,o,e);import{localize as E}from"../../../../nls.js";import{INotificationService as _,Severity as I,NoOpNotification as T,NeverShowAgainScope as F,NotificationsFilter as s,isNotificationSource as C}from"../../../../platform/notification/common/notification.js";import{NotificationsModel as P,ChoiceAction as L,NotificationChangeType as p}from"../../../common/notifications.js";import{Disposable as M,DisposableStore as w}from"../../../../base/common/lifecycle.js";import{Emitter as m,Event as b}from"../../../../base/common/event.js";import{InstantiationType as k,registerSingleton as G}from"../../../../platform/instantiation/common/extensions.js";import{Action as K}from"../../../../base/common/actions.js";import{IStorageService as B,StorageScope as c,StorageTarget as u}from"../../../../platform/storage/common/storage.js";let r=class extends M{constructor(e){super(),this.storageService=e,this.globalFilterEnabled=this.storageService.getBoolean(r.GLOBAL_FILTER_SETTINGS_KEY,c.APPLICATION,!1),this.updateFilters(),this.registerListeners()}model=this._register(new P);_onDidAddNotification=this._register(new m);onDidAddNotification=this._onDidAddNotification.event;_onDidRemoveNotification=this._register(new m);onDidRemoveNotification=this._onDidRemoveNotification.event;registerListeners(){this._register(this.model.onDidChangeNotification((e=>{switch(e.kind){case p.ADD:case p.REMOVE:{const i="string"==typeof e.item.sourceId&&"string"==typeof e.item.source?{id:e.item.sourceId,label:e.item.source}:e.item.source,t={message:e.item.message.original,severity:e.item.severity,source:i,priority:e.item.priority};e.kind===p.ADD&&(C(i)&&(this.mapSourceToFilter.has(i.id)?this.updateSourceFilter(i):this.setFilter({...i,filter:s.OFF})),this._onDidAddNotification.fire(t)),e.kind===p.REMOVE&&this._onDidRemoveNotification.fire(t);break}}})))}static GLOBAL_FILTER_SETTINGS_KEY="notifications.doNotDisturbMode";static PER_SOURCE_FILTER_SETTINGS_KEY="notifications.perSourceDoNotDisturbMode";_onDidChangeFilter=this._register(new m);onDidChangeFilter=this._onDidChangeFilter.event;globalFilterEnabled;mapSourceToFilter=(()=>{const e=new Map;for(const i of this.storageService.getObject(r.PER_SOURCE_FILTER_SETTINGS_KEY,c.APPLICATION,[]))e.set(i.id,i);return e})();setFilter(e){if("number"==typeof e){if(this.globalFilterEnabled===(e===s.ERROR))return;this.globalFilterEnabled=e===s.ERROR,this.storageService.store(r.GLOBAL_FILTER_SETTINGS_KEY,this.globalFilterEnabled,c.APPLICATION,u.MACHINE),this.updateFilters(),this._onDidChangeFilter.fire()}else{const i=this.mapSourceToFilter.get(e.id);if(i?.filter===e.filter&&i.label===e.label)return;this.mapSourceToFilter.set(e.id,{id:e.id,label:e.label,filter:e.filter}),this.saveSourceFilters(),this.updateFilters()}}getFilter(e){return e?this.mapSourceToFilter.get(e.id)?.filter??s.OFF:this.globalFilterEnabled?s.ERROR:s.OFF}updateSourceFilter(e){const i=this.mapSourceToFilter.get(e.id);i&&i.label!==e.label&&(this.mapSourceToFilter.set(e.id,{id:e.id,label:e.label,filter:i.filter}),this.saveSourceFilters())}saveSourceFilters(){this.storageService.store(r.PER_SOURCE_FILTER_SETTINGS_KEY,JSON.stringify([...this.mapSourceToFilter.values()]),c.APPLICATION,u.MACHINE)}getFilters(){return[...this.mapSourceToFilter.values()]}updateFilters(){this.model.setFilter({global:this.globalFilterEnabled?s.ERROR:s.OFF,sources:new Map([...this.mapSourceToFilter.values()].map((e=>[e.id,e.filter])))})}removeFilter(e){this.mapSourceToFilter.delete(e)&&(this.saveSourceFilters(),this.updateFilters())}info(e){if(Array.isArray(e))for(const i of e)this.info(i);else this.model.addNotification({severity:I.Info,message:e})}warn(e){if(Array.isArray(e))for(const i of e)this.warn(i);else this.model.addNotification({severity:I.Warning,message:e})}error(e){if(Array.isArray(e))for(const i of e)this.error(i);else this.model.addNotification({severity:I.Error,message:e})}notify(e){const i=new w;if(e.neverShowAgain){const o=this.toStorageScope(e.neverShowAgain),r=e.neverShowAgain.id;if(this.storageService.getBoolean(r,o))return new T;const s=i.add(new K("workbench.notification.neverShowAgain",E("neverShowAgain","Don't Show Again"),void 0,!0,(async()=>{t.close(),this.storageService.store(r,!0,o,u.USER)}))),a={primary:e.actions?.primary||[],secondary:e.actions?.secondary||[]};e.neverShowAgain.isSecondary?a.secondary=[...a.secondary,s]:a.primary=[s,...a.primary],e.actions=a}const t=this.model.addNotification(e);return b.once(t.onDidClose)((()=>i.dispose())),t}toStorageScope(e){switch(e.scope){case F.APPLICATION:return c.APPLICATION;case F.PROFILE:return c.PROFILE;case F.WORKSPACE:return c.WORKSPACE;default:return c.APPLICATION}}prompt(e,i,t,o){if(o?.neverShowAgain){const e=this.toStorageScope(o.neverShowAgain),i=o.neverShowAgain.id;if(this.storageService.getBoolean(i,e))return new T;const r={label:E("neverShowAgain","Don't Show Again"),run:()=>this.storageService.store(i,!0,e,u.USER),isSecondary:o.neverShowAgain.isSecondary};t=o.neverShowAgain.isSecondary?[...t,r]:[r,...t]}let r=!1;const s=new w,a=[],n=[];t.forEach(((e,i)=>{const t=new L(`workbench.dialog.choice.${i}`,e);e.isSecondary?n.push(t):a.push(t),s.add(t.onDidRun((()=>{r=!0,e.keepOpen||l.close()}))),s.add(t)}));const c={primary:a,secondary:n},l=this.notify({severity:e,message:i,actions:c,sticky:o?.sticky,priority:o?.priority});return b.once(l.onDidClose)((()=>{s.dispose(),o&&"function"==typeof o.onCancel&&!r&&o.onCancel()})),l}status(e,i){return this.model.showStatusMessage(e,i)}};r=y([A(0,B)],r),G(_,r,k.Delayed);export{r as NotificationService};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { localize } from "../../../../nls.js";
+import { INotificationService, INotification, INotificationHandle, Severity, NotificationMessage, INotificationActions, IPromptChoice, IPromptOptions, IStatusMessageOptions, NoOpNotification, NeverShowAgainScope, NotificationsFilter, INeverShowAgainOptions, INotificationSource, INotificationSourceFilter, isNotificationSource } from "../../../../platform/notification/common/notification.js";
+import { NotificationsModel, ChoiceAction, NotificationChangeType } from "../../../common/notifications.js";
+import { Disposable, DisposableStore, IDisposable } from "../../../../base/common/lifecycle.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { InstantiationType, registerSingleton } from "../../../../platform/instantiation/common/extensions.js";
+import { IAction, Action } from "../../../../base/common/actions.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+let NotificationService = class extends Disposable {
+  constructor(storageService) {
+    super();
+    this.storageService = storageService;
+    this.globalFilterEnabled = this.storageService.getBoolean(NotificationService.GLOBAL_FILTER_SETTINGS_KEY, StorageScope.APPLICATION, false);
+    this.updateFilters();
+    this.registerListeners();
+  }
+  static {
+    __name(this, "NotificationService");
+  }
+  model = this._register(new NotificationsModel());
+  _onDidAddNotification = this._register(new Emitter());
+  onDidAddNotification = this._onDidAddNotification.event;
+  _onDidRemoveNotification = this._register(new Emitter());
+  onDidRemoveNotification = this._onDidRemoveNotification.event;
+  registerListeners() {
+    this._register(this.model.onDidChangeNotification((e) => {
+      switch (e.kind) {
+        case NotificationChangeType.ADD:
+        case NotificationChangeType.REMOVE: {
+          const source = typeof e.item.sourceId === "string" && typeof e.item.source === "string" ? { id: e.item.sourceId, label: e.item.source } : e.item.source;
+          const notification = {
+            message: e.item.message.original,
+            severity: e.item.severity,
+            source,
+            priority: e.item.priority
+          };
+          if (e.kind === NotificationChangeType.ADD) {
+            if (isNotificationSource(source)) {
+              if (!this.mapSourceToFilter.has(source.id)) {
+                this.setFilter({ ...source, filter: NotificationsFilter.OFF });
+              } else {
+                this.updateSourceFilter(source);
+              }
+            }
+            this._onDidAddNotification.fire(notification);
+          }
+          if (e.kind === NotificationChangeType.REMOVE) {
+            this._onDidRemoveNotification.fire(notification);
+          }
+          break;
+        }
+      }
+    }));
+  }
+  //#region Filters
+  static GLOBAL_FILTER_SETTINGS_KEY = "notifications.doNotDisturbMode";
+  static PER_SOURCE_FILTER_SETTINGS_KEY = "notifications.perSourceDoNotDisturbMode";
+  _onDidChangeFilter = this._register(new Emitter());
+  onDidChangeFilter = this._onDidChangeFilter.event;
+  globalFilterEnabled;
+  mapSourceToFilter = (() => {
+    const map = /* @__PURE__ */ new Map();
+    for (const sourceFilter of this.storageService.getObject(NotificationService.PER_SOURCE_FILTER_SETTINGS_KEY, StorageScope.APPLICATION, [])) {
+      map.set(sourceFilter.id, sourceFilter);
+    }
+    return map;
+  })();
+  setFilter(filter) {
+    if (typeof filter === "number") {
+      if (this.globalFilterEnabled === (filter === NotificationsFilter.ERROR)) {
+        return;
+      }
+      this.globalFilterEnabled = filter === NotificationsFilter.ERROR;
+      this.storageService.store(NotificationService.GLOBAL_FILTER_SETTINGS_KEY, this.globalFilterEnabled, StorageScope.APPLICATION, StorageTarget.MACHINE);
+      this.updateFilters();
+      this._onDidChangeFilter.fire();
+    } else {
+      const existing = this.mapSourceToFilter.get(filter.id);
+      if (existing?.filter === filter.filter && existing.label === filter.label) {
+        return;
+      }
+      this.mapSourceToFilter.set(filter.id, { id: filter.id, label: filter.label, filter: filter.filter });
+      this.saveSourceFilters();
+      this.updateFilters();
+    }
+  }
+  getFilter(source) {
+    if (source) {
+      return this.mapSourceToFilter.get(source.id)?.filter ?? NotificationsFilter.OFF;
+    }
+    return this.globalFilterEnabled ? NotificationsFilter.ERROR : NotificationsFilter.OFF;
+  }
+  updateSourceFilter(source) {
+    const existing = this.mapSourceToFilter.get(source.id);
+    if (!existing) {
+      return;
+    }
+    if (existing.label !== source.label) {
+      this.mapSourceToFilter.set(source.id, { id: source.id, label: source.label, filter: existing.filter });
+      this.saveSourceFilters();
+    }
+  }
+  saveSourceFilters() {
+    this.storageService.store(NotificationService.PER_SOURCE_FILTER_SETTINGS_KEY, JSON.stringify([...this.mapSourceToFilter.values()]), StorageScope.APPLICATION, StorageTarget.MACHINE);
+  }
+  getFilters() {
+    return [...this.mapSourceToFilter.values()];
+  }
+  updateFilters() {
+    this.model.setFilter({
+      global: this.globalFilterEnabled ? NotificationsFilter.ERROR : NotificationsFilter.OFF,
+      sources: new Map([...this.mapSourceToFilter.values()].map((source) => [source.id, source.filter]))
+    });
+  }
+  removeFilter(sourceId) {
+    if (this.mapSourceToFilter.delete(sourceId)) {
+      this.saveSourceFilters();
+      this.updateFilters();
+    }
+  }
+  //#endregion
+  info(message) {
+    if (Array.isArray(message)) {
+      for (const messageEntry of message) {
+        this.info(messageEntry);
+      }
+      return;
+    }
+    this.model.addNotification({ severity: Severity.Info, message });
+  }
+  warn(message) {
+    if (Array.isArray(message)) {
+      for (const messageEntry of message) {
+        this.warn(messageEntry);
+      }
+      return;
+    }
+    this.model.addNotification({ severity: Severity.Warning, message });
+  }
+  error(message) {
+    if (Array.isArray(message)) {
+      for (const messageEntry of message) {
+        this.error(messageEntry);
+      }
+      return;
+    }
+    this.model.addNotification({ severity: Severity.Error, message });
+  }
+  notify(notification) {
+    const toDispose = new DisposableStore();
+    if (notification.neverShowAgain) {
+      const scope = this.toStorageScope(notification.neverShowAgain);
+      const id = notification.neverShowAgain.id;
+      if (this.storageService.getBoolean(id, scope)) {
+        return new NoOpNotification();
+      }
+      const neverShowAgainAction = toDispose.add(new Action(
+        "workbench.notification.neverShowAgain",
+        localize("neverShowAgain", "Don't Show Again"),
+        void 0,
+        true,
+        async () => {
+          handle.close();
+          this.storageService.store(id, true, scope, StorageTarget.USER);
+        }
+      ));
+      const actions = {
+        primary: notification.actions?.primary || [],
+        secondary: notification.actions?.secondary || []
+      };
+      if (!notification.neverShowAgain.isSecondary) {
+        actions.primary = [neverShowAgainAction, ...actions.primary];
+      } else {
+        actions.secondary = [...actions.secondary, neverShowAgainAction];
+      }
+      notification.actions = actions;
+    }
+    const handle = this.model.addNotification(notification);
+    Event.once(handle.onDidClose)(() => toDispose.dispose());
+    return handle;
+  }
+  toStorageScope(options) {
+    switch (options.scope) {
+      case NeverShowAgainScope.APPLICATION:
+        return StorageScope.APPLICATION;
+      case NeverShowAgainScope.PROFILE:
+        return StorageScope.PROFILE;
+      case NeverShowAgainScope.WORKSPACE:
+        return StorageScope.WORKSPACE;
+      default:
+        return StorageScope.APPLICATION;
+    }
+  }
+  prompt(severity, message, choices, options) {
+    if (options?.neverShowAgain) {
+      const scope = this.toStorageScope(options.neverShowAgain);
+      const id = options.neverShowAgain.id;
+      if (this.storageService.getBoolean(id, scope)) {
+        return new NoOpNotification();
+      }
+      const neverShowAgainChoice = {
+        label: localize("neverShowAgain", "Don't Show Again"),
+        run: /* @__PURE__ */ __name(() => this.storageService.store(id, true, scope, StorageTarget.USER), "run"),
+        isSecondary: options.neverShowAgain.isSecondary
+      };
+      if (!options.neverShowAgain.isSecondary) {
+        choices = [neverShowAgainChoice, ...choices];
+      } else {
+        choices = [...choices, neverShowAgainChoice];
+      }
+    }
+    let choiceClicked = false;
+    const toDispose = new DisposableStore();
+    const primaryActions = [];
+    const secondaryActions = [];
+    choices.forEach((choice, index) => {
+      const action = new ChoiceAction(`workbench.dialog.choice.${index}`, choice);
+      if (!choice.isSecondary) {
+        primaryActions.push(action);
+      } else {
+        secondaryActions.push(action);
+      }
+      toDispose.add(action.onDidRun(() => {
+        choiceClicked = true;
+        if (!choice.keepOpen) {
+          handle.close();
+        }
+      }));
+      toDispose.add(action);
+    });
+    const actions = { primary: primaryActions, secondary: secondaryActions };
+    const handle = this.notify({ severity, message, actions, sticky: options?.sticky, priority: options?.priority });
+    Event.once(handle.onDidClose)(() => {
+      toDispose.dispose();
+      if (options && typeof options.onCancel === "function" && !choiceClicked) {
+        options.onCancel();
+      }
+    });
+    return handle;
+  }
+  status(message, options) {
+    return this.model.showStatusMessage(message, options);
+  }
+};
+NotificationService = __decorateClass([
+  __decorateParam(0, IStorageService)
+], NotificationService);
+registerSingleton(INotificationService, NotificationService, InstantiationType.Delayed);
+export {
+  NotificationService
+};
+//# sourceMappingURL=notificationService.js.map

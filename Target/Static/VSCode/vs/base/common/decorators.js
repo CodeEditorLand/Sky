@@ -1,1 +1,116 @@
-function r(l){return(i,t,o)=>{let e=null,s=null;if(typeof o.value=="function"?(e="value",s=o.value):typeof o.get=="function"&&(e="get",s=o.get),!s||typeof t=="symbol")throw new Error("not supported");o[e]=l(s,t)}}function a(l,i,t){let o=null,e=null;if(typeof t.value=="function"?(o="value",e=t.value,e.length!==0&&console.warn("Memoize should only be used in functions with zero parameters")):typeof t.get=="function"&&(o="get",e=t.get),!e)throw new Error("not supported");const s=`$memoize$${i}`;t[o]=function(...n){return this.hasOwnProperty(s)||Object.defineProperty(this,s,{configurable:!1,enumerable:!1,writable:!1,value:e.apply(this,n)}),this[s]}}function y(l,i,t){return r((o,e)=>{const s=`$debounce$${e}`,n=`$debounce$result$${e}`;return function(...u){this[n]||(this[n]=t?t():void 0),clearTimeout(this[s]),i&&(this[n]=i(this[n],...u),u=[this[n]]),this[s]=setTimeout(()=>{o.apply(this,u),this[n]=t?t():void 0},l)}})}function $(l,i,t){return r((o,e)=>{const s=`$throttle$timer$${e}`,n=`$throttle$result$${e}`,u=`$throttle$lastRun$${e}`,f=`$throttle$pending$${e}`;return function(...c){if(this[n]||(this[n]=t?t():void 0),(this[u]===null||this[u]===void 0)&&(this[u]=-Number.MAX_VALUE),i&&(this[n]=i(this[n],...c)),this[f])return;const h=this[u]+l;h<=Date.now()?(this[u]=Date.now(),o.apply(this,[this[n]]),this[n]=t?t():void 0):(this[f]=!0,this[s]=setTimeout(()=>{this[f]=!1,this[u]=Date.now(),o.apply(this,[this[n]]),this[n]=t?t():void 0},h-Date.now()))}})}import{cancelPreviousCalls as b}from"./decorators/cancelPreviousCalls.js";export{b as cancelPreviousCalls,y as debounce,a as memoize,$ as throttle};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+function createDecorator(mapFn) {
+  return (_target, key, descriptor) => {
+    let fnKey = null;
+    let fn = null;
+    if (typeof descriptor.value === "function") {
+      fnKey = "value";
+      fn = descriptor.value;
+    } else if (typeof descriptor.get === "function") {
+      fnKey = "get";
+      fn = descriptor.get;
+    }
+    if (!fn || typeof key === "symbol") {
+      throw new Error("not supported");
+    }
+    descriptor[fnKey] = mapFn(fn, key);
+  };
+}
+__name(createDecorator, "createDecorator");
+function memoize(_target, key, descriptor) {
+  let fnKey = null;
+  let fn = null;
+  if (typeof descriptor.value === "function") {
+    fnKey = "value";
+    fn = descriptor.value;
+    if (fn.length !== 0) {
+      console.warn("Memoize should only be used in functions with zero parameters");
+    }
+  } else if (typeof descriptor.get === "function") {
+    fnKey = "get";
+    fn = descriptor.get;
+  }
+  if (!fn) {
+    throw new Error("not supported");
+  }
+  const memoizeKey = `$memoize$${key}`;
+  descriptor[fnKey] = function(...args) {
+    if (!this.hasOwnProperty(memoizeKey)) {
+      Object.defineProperty(this, memoizeKey, {
+        configurable: false,
+        enumerable: false,
+        writable: false,
+        value: fn.apply(this, args)
+      });
+    }
+    return this[memoizeKey];
+  };
+}
+__name(memoize, "memoize");
+function debounce(delay, reducer, initialValueProvider) {
+  return createDecorator((fn, key) => {
+    const timerKey = `$debounce$${key}`;
+    const resultKey = `$debounce$result$${key}`;
+    return function(...args) {
+      if (!this[resultKey]) {
+        this[resultKey] = initialValueProvider ? initialValueProvider() : void 0;
+      }
+      clearTimeout(this[timerKey]);
+      if (reducer) {
+        this[resultKey] = reducer(this[resultKey], ...args);
+        args = [this[resultKey]];
+      }
+      this[timerKey] = setTimeout(() => {
+        fn.apply(this, args);
+        this[resultKey] = initialValueProvider ? initialValueProvider() : void 0;
+      }, delay);
+    };
+  });
+}
+__name(debounce, "debounce");
+function throttle(delay, reducer, initialValueProvider) {
+  return createDecorator((fn, key) => {
+    const timerKey = `$throttle$timer$${key}`;
+    const resultKey = `$throttle$result$${key}`;
+    const lastRunKey = `$throttle$lastRun$${key}`;
+    const pendingKey = `$throttle$pending$${key}`;
+    return function(...args) {
+      if (!this[resultKey]) {
+        this[resultKey] = initialValueProvider ? initialValueProvider() : void 0;
+      }
+      if (this[lastRunKey] === null || this[lastRunKey] === void 0) {
+        this[lastRunKey] = -Number.MAX_VALUE;
+      }
+      if (reducer) {
+        this[resultKey] = reducer(this[resultKey], ...args);
+      }
+      if (this[pendingKey]) {
+        return;
+      }
+      const nextTime = this[lastRunKey] + delay;
+      if (nextTime <= Date.now()) {
+        this[lastRunKey] = Date.now();
+        fn.apply(this, [this[resultKey]]);
+        this[resultKey] = initialValueProvider ? initialValueProvider() : void 0;
+      } else {
+        this[pendingKey] = true;
+        this[timerKey] = setTimeout(() => {
+          this[pendingKey] = false;
+          this[lastRunKey] = Date.now();
+          fn.apply(this, [this[resultKey]]);
+          this[resultKey] = initialValueProvider ? initialValueProvider() : void 0;
+        }, nextTime - Date.now());
+      }
+    };
+  });
+}
+__name(throttle, "throttle");
+import { cancelPreviousCalls } from "./decorators/cancelPreviousCalls.js";
+export {
+  cancelPreviousCalls,
+  debounce,
+  memoize,
+  throttle
+};
+//# sourceMappingURL=decorators.js.map

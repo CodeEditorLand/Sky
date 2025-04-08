@@ -1,1 +1,146 @@
-var g=Object.defineProperty;var p=Object.getOwnPropertyDescriptor;var u=(r,e,n,t)=>{for(var i=t>1?void 0:t?p(e,n):e,a=r.length-1,o;a>=0;a--)(o=r[a])&&(i=(t?o(e,n,i):o(i))||i);return t&&i&&g(e,n,i),i},d=(r,e)=>(n,t)=>e(n,t,r);import{ArrayQueue as c,CompareResult as s}from"../../../../base/common/arrays.js";import{onUnexpectedError as T}from"../../../../base/common/errors.js";import{DisposableStore as y}from"../../../../base/common/lifecycle.js";import{autorunOpts as m}from"../../../../base/common/observable.js";import"../../../../editor/browser/widget/codeEditor/codeEditorWidget.js";import"../../../../editor/common/model.js";import{IStorageService as b,StorageScope as h,StorageTarget as v}from"../../../../platform/storage/common/storage.js";function w(r,e){Object.entries(e).forEach(([n,t])=>{r.style.setProperty(n,I(t))})}function I(r){return typeof r=="number"?`${r}px`:r}function G(r,e){const n=new y;let t=[];return n.add(m({debugName:()=>`Apply decorations from ${e.debugName}`},i=>{const a=e.read(i);r.changeDecorations(o=>{t=o.deltaDecorations(t,a)})})),n.add({dispose:()=>{r.changeDecorations(i=>{t=i.deltaDecorations(t,[])})}}),n}function*M(r,e,n){const t=new c(e);for(const i of r){t.takeWhile(o=>s.isGreaterThan(n(i,o)));const a=t.takeWhile(o=>s.isNeitherLessOrGreaterThan(n(i,o)));yield{left:i,rights:a||[]}}}function*V(r,e,n){const t=new c(e);for(const i of r){const a=t.takeWhile(f=>s.isGreaterThan(n(i,f)));a&&(yield{rights:a});const o=t.takeWhile(f=>s.isNeitherLessOrGreaterThan(n(i,f)));yield{left:i,rights:o||[]}}}function F(...r){return[].concat(...r)}function J(r,e){return r[e]}function Q(r,e){return Object.assign(r,e)}function R(r,e){const n={};for(const t in r)n[t]=r[t];for(const t in e){const i=e[t];typeof n[t]=="object"&&i&&typeof i=="object"?n[t]=R(n[t],i):n[t]=i}return n}let l=class{constructor(e,n){this.key=e;this.storageService=n}hasValue=!1;value=void 0;get(){if(!this.hasValue){const e=this.storageService.get(this.key,h.PROFILE);if(e!==void 0)try{this.value=JSON.parse(e)}catch(n){T(n)}this.hasValue=!0}return this.value}set(e){this.value=e,this.storageService.store(this.key,JSON.stringify(this.value),h.PROFILE,v.USER)}};l=u([d(1,b)],l);export{l as PersistentStore,G as applyObservableDecorations,F as concatArrays,R as deepMerge,J as elementAtOrUndefined,V as join,M as leftJoin,Q as setFields,w as setStyle};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { ArrayQueue, CompareResult } from "../../../../base/common/arrays.js";
+import { onUnexpectedError } from "../../../../base/common/errors.js";
+import { DisposableStore, IDisposable } from "../../../../base/common/lifecycle.js";
+import { IObservable, autorunOpts } from "../../../../base/common/observable.js";
+import { CodeEditorWidget } from "../../../../editor/browser/widget/codeEditor/codeEditorWidget.js";
+import { IModelDeltaDecoration } from "../../../../editor/common/model.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+function setStyle(element, style) {
+  Object.entries(style).forEach(([key, value]) => {
+    element.style.setProperty(key, toSize(value));
+  });
+}
+__name(setStyle, "setStyle");
+function toSize(value) {
+  return typeof value === "number" ? `${value}px` : value;
+}
+__name(toSize, "toSize");
+function applyObservableDecorations(editor, decorations) {
+  const d = new DisposableStore();
+  let decorationIds = [];
+  d.add(autorunOpts({ debugName: /* @__PURE__ */ __name(() => `Apply decorations from ${decorations.debugName}`, "debugName") }, (reader) => {
+    const d2 = decorations.read(reader);
+    editor.changeDecorations((a) => {
+      decorationIds = a.deltaDecorations(decorationIds, d2);
+    });
+  }));
+  d.add({
+    dispose: /* @__PURE__ */ __name(() => {
+      editor.changeDecorations((a) => {
+        decorationIds = a.deltaDecorations(decorationIds, []);
+      });
+    }, "dispose")
+  });
+  return d;
+}
+__name(applyObservableDecorations, "applyObservableDecorations");
+function* leftJoin(left, right, compare) {
+  const rightQueue = new ArrayQueue(right);
+  for (const leftElement of left) {
+    rightQueue.takeWhile((rightElement) => CompareResult.isGreaterThan(compare(leftElement, rightElement)));
+    const equals = rightQueue.takeWhile((rightElement) => CompareResult.isNeitherLessOrGreaterThan(compare(leftElement, rightElement)));
+    yield { left: leftElement, rights: equals || [] };
+  }
+}
+__name(leftJoin, "leftJoin");
+function* join(left, right, compare) {
+  const rightQueue = new ArrayQueue(right);
+  for (const leftElement of left) {
+    const skipped = rightQueue.takeWhile((rightElement) => CompareResult.isGreaterThan(compare(leftElement, rightElement)));
+    if (skipped) {
+      yield { rights: skipped };
+    }
+    const equals = rightQueue.takeWhile((rightElement) => CompareResult.isNeitherLessOrGreaterThan(compare(leftElement, rightElement)));
+    yield { left: leftElement, rights: equals || [] };
+  }
+}
+__name(join, "join");
+function concatArrays(...arrays) {
+  return [].concat(...arrays);
+}
+__name(concatArrays, "concatArrays");
+function elementAtOrUndefined(arr, index) {
+  return arr[index];
+}
+__name(elementAtOrUndefined, "elementAtOrUndefined");
+function setFields(obj, fields) {
+  return Object.assign(obj, fields);
+}
+__name(setFields, "setFields");
+function deepMerge(source1, source2) {
+  const result = {};
+  for (const key in source1) {
+    result[key] = source1[key];
+  }
+  for (const key in source2) {
+    const source2Value = source2[key];
+    if (typeof result[key] === "object" && source2Value && typeof source2Value === "object") {
+      result[key] = deepMerge(result[key], source2Value);
+    } else {
+      result[key] = source2Value;
+    }
+  }
+  return result;
+}
+__name(deepMerge, "deepMerge");
+let PersistentStore = class {
+  constructor(key, storageService) {
+    this.key = key;
+    this.storageService = storageService;
+  }
+  static {
+    __name(this, "PersistentStore");
+  }
+  hasValue = false;
+  value = void 0;
+  get() {
+    if (!this.hasValue) {
+      const value = this.storageService.get(this.key, StorageScope.PROFILE);
+      if (value !== void 0) {
+        try {
+          this.value = JSON.parse(value);
+        } catch (e) {
+          onUnexpectedError(e);
+        }
+      }
+      this.hasValue = true;
+    }
+    return this.value;
+  }
+  set(newValue) {
+    this.value = newValue;
+    this.storageService.store(
+      this.key,
+      JSON.stringify(this.value),
+      StorageScope.PROFILE,
+      StorageTarget.USER
+    );
+  }
+};
+PersistentStore = __decorateClass([
+  __decorateParam(1, IStorageService)
+], PersistentStore);
+export {
+  PersistentStore,
+  applyObservableDecorations,
+  concatArrays,
+  deepMerge,
+  elementAtOrUndefined,
+  join,
+  leftJoin,
+  setFields,
+  setStyle
+};
+//# sourceMappingURL=utils.js.map

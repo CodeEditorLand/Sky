@@ -1,1 +1,127 @@
-var _=Object.defineProperty;var I=Object.getOwnPropertyDescriptor;var S=(c,e,n,r)=>{for(var s=r>1?void 0:r?I(e,n):e,t=c.length-1,a;t>=0;t--)(a=c[t])&&(s=(r?a(e,n,s):a(s))||s);return r&&s&&_(e,n,s),s},o=(c,e)=>(n,r)=>e(n,r,c);import*as g from"../../../../base/common/platform.js";import"../../../../platform/extensions/common/extensions.js";import{dedupExtensions as y}from"../common/extensionsUtil.js";import{IExtensionsScannerService as D,toExtensionDescription as d}from"../../../../platform/extensionManagement/common/extensionsScannerService.js";import{ILogService as w}from"../../../../platform/log/common/log.js";import P from"../../../../base/common/severity.js";import{localize as E}from"../../../../nls.js";import{INotificationService as k}from"../../../../platform/notification/common/notification.js";import{IHostService as b}from"../../host/browser/host.js";import{timeout as R}from"../../../../base/common/async.js";import{IUserDataProfileService as W}from"../../userDataProfile/common/userDataProfile.js";import{getErrorMessage as x}from"../../../../base/common/errors.js";import{IWorkbenchExtensionManagementService as M}from"../../extensionManagement/common/extensionManagement.js";import{toExtensionDescription as U}from"../common/extensions.js";import{IWorkbenchEnvironmentService as j}from"../../environment/common/environmentService.js";let v=class{constructor(e,n,r,s,t,a,l){this._notificationService=e;this._hostService=n;this._extensionsScannerService=r;this._userDataProfileService=s;this._extensionManagementService=t;this._environmentService=a;this._logService=l;this.scannedExtensions=new Promise((m,p)=>{this._scannedExtensionsResolve=m,this._scannedExtensionsReject=p})}scannedExtensions;_scannedExtensionsResolve;_scannedExtensionsReject;async startScanningExtensions(){try{const e=await this._scanInstalledExtensions();this._scannedExtensionsResolve(e)}catch(e){this._scannedExtensionsReject(e)}}async _scanInstalledExtensions(){try{const e=g.language,n=await Promise.allSettled([this._extensionsScannerService.scanSystemExtensions({language:e,checkControlFile:!0}),this._extensionsScannerService.scanUserExtensions({language:e,profileLocation:this._userDataProfileService.currentProfile.extensionsResource,useCache:!0}),this._environmentService.remoteAuthority?[]:this._extensionManagementService.getInstalledWorkspaceExtensions(!1)]);let r=[],s=[],t=[],a=[],l=!1;n[0].status==="fulfilled"?r=n[0].value:(l=!0,this._logService.error("Error scanning system extensions:",x(n[0].reason))),n[1].status==="fulfilled"?s=n[1].value:(l=!0,this._logService.error("Error scanning user extensions:",x(n[1].reason))),n[2].status==="fulfilled"?t=n[2].value:(l=!0,this._logService.error("Error scanning workspace extensions:",x(n[2].reason)));try{a=await this._extensionsScannerService.scanExtensionsUnderDevelopment([...r,...s],{language:e})}catch(i){this._logService.error(i)}const m=r.map(i=>d(i,!1)),p=s.map(i=>d(i,!1)),f=t.map(i=>U(i,!1)),h=a.map(i=>d(i,!0)),u=y(m,p,f,h,this._logService);if(!l){const i=this._extensionsScannerService.onDidChangeCache(()=>{i.dispose(),this._notificationService.prompt(P.Error,E("extensionCache.invalid","Extensions have been modified on disk. Please reload the window."),[{label:E("reloadWindow","Reload Window"),run:()=>this._hostService.reload()}])});R(5e3).then(()=>i.dispose())}return u}catch(e){return this._logService.error("Error scanning installed extensions:"),this._logService.error(e),[]}}};v=S([o(0,k),o(1,b),o(2,D),o(3,W),o(4,M),o(5,j),o(6,w)],v);export{v as CachedExtensionScanner};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import * as platform from "../../../../base/common/platform.js";
+import { IExtensionDescription, IExtension } from "../../../../platform/extensions/common/extensions.js";
+import { dedupExtensions } from "../common/extensionsUtil.js";
+import { IExtensionsScannerService, IScannedExtension, toExtensionDescription as toExtensionDescriptionFromScannedExtension } from "../../../../platform/extensionManagement/common/extensionsScannerService.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import Severity from "../../../../base/common/severity.js";
+import { localize } from "../../../../nls.js";
+import { INotificationService } from "../../../../platform/notification/common/notification.js";
+import { IHostService } from "../../host/browser/host.js";
+import { timeout } from "../../../../base/common/async.js";
+import { IUserDataProfileService } from "../../userDataProfile/common/userDataProfile.js";
+import { getErrorMessage } from "../../../../base/common/errors.js";
+import { IWorkbenchExtensionManagementService } from "../../extensionManagement/common/extensionManagement.js";
+import { toExtensionDescription } from "../common/extensions.js";
+import { IWorkbenchEnvironmentService } from "../../environment/common/environmentService.js";
+let CachedExtensionScanner = class {
+  constructor(_notificationService, _hostService, _extensionsScannerService, _userDataProfileService, _extensionManagementService, _environmentService, _logService) {
+    this._notificationService = _notificationService;
+    this._hostService = _hostService;
+    this._extensionsScannerService = _extensionsScannerService;
+    this._userDataProfileService = _userDataProfileService;
+    this._extensionManagementService = _extensionManagementService;
+    this._environmentService = _environmentService;
+    this._logService = _logService;
+    this.scannedExtensions = new Promise((resolve, reject) => {
+      this._scannedExtensionsResolve = resolve;
+      this._scannedExtensionsReject = reject;
+    });
+  }
+  static {
+    __name(this, "CachedExtensionScanner");
+  }
+  scannedExtensions;
+  _scannedExtensionsResolve;
+  _scannedExtensionsReject;
+  async startScanningExtensions() {
+    try {
+      const extensions = await this._scanInstalledExtensions();
+      this._scannedExtensionsResolve(extensions);
+    } catch (err) {
+      this._scannedExtensionsReject(err);
+    }
+  }
+  async _scanInstalledExtensions() {
+    try {
+      const language = platform.language;
+      const result = await Promise.allSettled([
+        this._extensionsScannerService.scanSystemExtensions({ language, checkControlFile: true }),
+        this._extensionsScannerService.scanUserExtensions({ language, profileLocation: this._userDataProfileService.currentProfile.extensionsResource, useCache: true }),
+        this._environmentService.remoteAuthority ? [] : this._extensionManagementService.getInstalledWorkspaceExtensions(false)
+      ]);
+      let scannedSystemExtensions = [], scannedUserExtensions = [], workspaceExtensions = [], scannedDevelopedExtensions = [], hasErrors = false;
+      if (result[0].status === "fulfilled") {
+        scannedSystemExtensions = result[0].value;
+      } else {
+        hasErrors = true;
+        this._logService.error(`Error scanning system extensions:`, getErrorMessage(result[0].reason));
+      }
+      if (result[1].status === "fulfilled") {
+        scannedUserExtensions = result[1].value;
+      } else {
+        hasErrors = true;
+        this._logService.error(`Error scanning user extensions:`, getErrorMessage(result[1].reason));
+      }
+      if (result[2].status === "fulfilled") {
+        workspaceExtensions = result[2].value;
+      } else {
+        hasErrors = true;
+        this._logService.error(`Error scanning workspace extensions:`, getErrorMessage(result[2].reason));
+      }
+      try {
+        scannedDevelopedExtensions = await this._extensionsScannerService.scanExtensionsUnderDevelopment([...scannedSystemExtensions, ...scannedUserExtensions], { language });
+      } catch (error) {
+        this._logService.error(error);
+      }
+      const system = scannedSystemExtensions.map((e) => toExtensionDescriptionFromScannedExtension(e, false));
+      const user = scannedUserExtensions.map((e) => toExtensionDescriptionFromScannedExtension(e, false));
+      const workspace = workspaceExtensions.map((e) => toExtensionDescription(e, false));
+      const development = scannedDevelopedExtensions.map((e) => toExtensionDescriptionFromScannedExtension(e, true));
+      const r = dedupExtensions(system, user, workspace, development, this._logService);
+      if (!hasErrors) {
+        const disposable = this._extensionsScannerService.onDidChangeCache(() => {
+          disposable.dispose();
+          this._notificationService.prompt(
+            Severity.Error,
+            localize("extensionCache.invalid", "Extensions have been modified on disk. Please reload the window."),
+            [{
+              label: localize("reloadWindow", "Reload Window"),
+              run: /* @__PURE__ */ __name(() => this._hostService.reload(), "run")
+            }]
+          );
+        });
+        timeout(5e3).then(() => disposable.dispose());
+      }
+      return r;
+    } catch (err) {
+      this._logService.error(`Error scanning installed extensions:`);
+      this._logService.error(err);
+      return [];
+    }
+  }
+};
+CachedExtensionScanner = __decorateClass([
+  __decorateParam(0, INotificationService),
+  __decorateParam(1, IHostService),
+  __decorateParam(2, IExtensionsScannerService),
+  __decorateParam(3, IUserDataProfileService),
+  __decorateParam(4, IWorkbenchExtensionManagementService),
+  __decorateParam(5, IWorkbenchEnvironmentService),
+  __decorateParam(6, ILogService)
+], CachedExtensionScanner);
+export {
+  CachedExtensionScanner
+};
+//# sourceMappingURL=cachedExtensionScanner.js.map

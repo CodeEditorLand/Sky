@@ -1,1 +1,100 @@
-import{Emitter as t}from"../../../../base/common/event.js";import{Disposable as n}from"../../../../base/common/lifecycle.js";import{mark as i}from"../../../../base/common/performance.js";import{URI as a}from"../../../../base/common/uri.js";import{ProcessPropertyType as s}from"../../../../platform/terminal/common/terminal.js";class P extends n{constructor(e,s){super(),this.id=e,this.shouldPersist=s}_properties={cwd:"",initialCwd:"",fixedDimensions:{cols:void 0,rows:void 0},title:"",shellType:void 0,hasChildProcesses:!0,resolvedShellLaunchConfig:{},overrideDimensions:void 0,failedShellIntegrationActivation:!1,usedShellIntegrationInjection:void 0,shellIntegrationInjectionFailureReason:void 0};_lastDimensions={cols:-1,rows:-1};_inReplay=!1;_onProcessData=this._register(new t);onProcessData=this._onProcessData.event;_onProcessReplayComplete=this._register(new t);onProcessReplayComplete=this._onProcessReplayComplete.event;_onProcessReady=this._register(new t);onProcessReady=this._onProcessReady.event;_onDidChangeProperty=this._register(new t);onDidChangeProperty=this._onDidChangeProperty.event;_onProcessExit=this._register(new t);onProcessExit=this._onProcessExit.event;_onRestoreCommands=this._register(new t);onRestoreCommands=this._onRestoreCommands.event;async getInitialCwd(){return this._properties.initialCwd}async getCwd(){return this._properties.cwd||this._properties.initialCwd}handleData(e){this._onProcessData.fire(e)}handleExit(e){this._onProcessExit.fire(e)}handleReady(e){this._onProcessReady.fire(e)}handleDidChangeProperty({type:e,value:i}){switch(e){case s.Cwd:this._properties.cwd=i;break;case s.InitialCwd:this._properties.initialCwd=i;break;case s.ResolvedShellLaunchConfig:i.cwd&&"string"!=typeof i.cwd&&(i.cwd=a.revive(i.cwd))}this._onDidChangeProperty.fire({type:e,value:i})}async handleReplay(e){i(`code/terminal/willHandleReplay/${this.id}`);try{this._inReplay=!0;for(const i of e.events){(0!==i.cols||0!==i.rows)&&this._onDidChangeProperty.fire({type:s.OverrideDimensions,value:{cols:i.cols,rows:i.rows,forceExactSize:!0}});const e={data:i.data,trackCommit:!0};this._onProcessData.fire(e),await e.writePromise}}finally{this._inReplay=!1}e.commands&&this._onRestoreCommands.fire(e.commands),this._onDidChangeProperty.fire({type:s.OverrideDimensions,value:void 0}),i(`code/terminal/didHandleReplay/${this.id}`),this._onProcessReplayComplete.fire()}}export{P as BasePty};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Emitter } from "../../../../base/common/event.js";
+import { Disposable } from "../../../../base/common/lifecycle.js";
+import { mark } from "../../../../base/common/performance.js";
+import { URI } from "../../../../base/common/uri.js";
+import { ProcessPropertyType } from "../../../../platform/terminal/common/terminal.js";
+class BasePty extends Disposable {
+  constructor(id, shouldPersist) {
+    super();
+    this.id = id;
+    this.shouldPersist = shouldPersist;
+  }
+  static {
+    __name(this, "BasePty");
+  }
+  _properties = {
+    cwd: "",
+    initialCwd: "",
+    fixedDimensions: { cols: void 0, rows: void 0 },
+    title: "",
+    shellType: void 0,
+    hasChildProcesses: true,
+    resolvedShellLaunchConfig: {},
+    overrideDimensions: void 0,
+    failedShellIntegrationActivation: false,
+    usedShellIntegrationInjection: void 0,
+    shellIntegrationInjectionFailureReason: void 0
+  };
+  _lastDimensions = { cols: -1, rows: -1 };
+  _inReplay = false;
+  _onProcessData = this._register(new Emitter());
+  onProcessData = this._onProcessData.event;
+  _onProcessReplayComplete = this._register(new Emitter());
+  onProcessReplayComplete = this._onProcessReplayComplete.event;
+  _onProcessReady = this._register(new Emitter());
+  onProcessReady = this._onProcessReady.event;
+  _onDidChangeProperty = this._register(new Emitter());
+  onDidChangeProperty = this._onDidChangeProperty.event;
+  _onProcessExit = this._register(new Emitter());
+  onProcessExit = this._onProcessExit.event;
+  _onRestoreCommands = this._register(new Emitter());
+  onRestoreCommands = this._onRestoreCommands.event;
+  async getInitialCwd() {
+    return this._properties.initialCwd;
+  }
+  async getCwd() {
+    return this._properties.cwd || this._properties.initialCwd;
+  }
+  handleData(e) {
+    this._onProcessData.fire(e);
+  }
+  handleExit(e) {
+    this._onProcessExit.fire(e);
+  }
+  handleReady(e) {
+    this._onProcessReady.fire(e);
+  }
+  handleDidChangeProperty({ type, value }) {
+    switch (type) {
+      case ProcessPropertyType.Cwd:
+        this._properties.cwd = value;
+        break;
+      case ProcessPropertyType.InitialCwd:
+        this._properties.initialCwd = value;
+        break;
+      case ProcessPropertyType.ResolvedShellLaunchConfig:
+        if (value.cwd && typeof value.cwd !== "string") {
+          value.cwd = URI.revive(value.cwd);
+        }
+    }
+    this._onDidChangeProperty.fire({ type, value });
+  }
+  async handleReplay(e) {
+    mark(`code/terminal/willHandleReplay/${this.id}`);
+    try {
+      this._inReplay = true;
+      for (const innerEvent of e.events) {
+        if (innerEvent.cols !== 0 || innerEvent.rows !== 0) {
+          this._onDidChangeProperty.fire({ type: ProcessPropertyType.OverrideDimensions, value: { cols: innerEvent.cols, rows: innerEvent.rows, forceExactSize: true } });
+        }
+        const e2 = { data: innerEvent.data, trackCommit: true };
+        this._onProcessData.fire(e2);
+        await e2.writePromise;
+      }
+    } finally {
+      this._inReplay = false;
+    }
+    if (e.commands) {
+      this._onRestoreCommands.fire(e.commands);
+    }
+    this._onDidChangeProperty.fire({ type: ProcessPropertyType.OverrideDimensions, value: void 0 });
+    mark(`code/terminal/didHandleReplay/${this.id}`);
+    this._onProcessReplayComplete.fire();
+  }
+}
+export {
+  BasePty
+};
+//# sourceMappingURL=basePty.js.map

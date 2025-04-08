@@ -1,1 +1,99 @@
-import{ContextKeyExpr as e,RawContextKey as o}from"../../../../platform/contextkey/common/contextkey.js";import{INTERACTIVE_WINDOW_EDITOR_ID as n,NOTEBOOK_EDITOR_ID as t,REPL_EDITOR_ID as O}from"./notebookCommon.js";const l=new o("userHasOpenedNotebook",!1),s=new o("notebookFindWidgetFocused",!1),T=new o("interactiveWindowOpen",!1),a=new o("mostRecentReplEditor",void 0),r=e.equals("activeEditor",t),N=e.equals("activeEditor",n),C=e.equals("activeEditor",O),b=new o("isCompositeNotebook",!1),p=new o("notebookEditorFocused",!1),L=new o("notebookCellListFocused",!1),i=new o("notebookOutputFocused",!1),I=new o("notebookOutputInputFocused",!1),c=new o("notebookEditable",!0),K=new o("notebookHasRunningCell",!1),u=new o("notebookHasSomethingRunning",!1),x=new o("notebookUseConsolidatedOutputButton",!1),B=new o("notebookBreakpointMargin",!1),d=new o("notebookCellToolbarLocation","left"),R=new o("notebookCursorNavigationMode",!1),S=new o("notebookLastCellFailed",!1),w=new o("notebookType",void 0),k=new o("notebookCellType",void 0),f=new o("notebookCellEditable",!1),D=new o("notebookCellFocused",!1),U=new o("notebookCellEditorFocused",!1),A=new o("notebookCellMarkdownEditMode",!1),P=new o("notebookCellLineNumbers","inherit"),F=new o("notebookCellExecutionState",void 0),H=new o("notebookCellExecuting",!1),M=new o("notebookCellHasOutputs",!1),g=new o("notebookCellIsFirstOutput",!1),m=new o("hasHiddenOutputs",!1),G=new o("notebookCellOutputMimeType",void 0),V=new o("notebookCellInputIsCollapsed",!1),W=new o("notebookCellOutputIsCollapsed",!1),h=new o("notebookCellResource",""),y=new o("notebookCellGenerateByChat",!1),v=new o("notebookCellHasErrorDiagnostics",!1),Y=new o("notebookCellOutputMimeTypeListForChat",[]),X=new o("notebookKernel",void 0),q=new o("notebookKernelCount",0),j=new o("notebookKernelSourceCount",0),z=new o("notebookKernelSelected",!1),J=new o("notebookInterruptibleKernel",!1),Q=new o("notebookMissingKernelExtension",!1),Z=new o("notebookHasOutputs",!1),$=new o("kernelHasVariableProvider",!1);export{l as HAS_OPENED_NOTEBOOK,N as INTERACTIVE_WINDOW_IS_ACTIVE_EDITOR,b as IS_COMPOSITE_NOTEBOOK,T as InteractiveWindowOpen,$ as KERNEL_HAS_VARIABLE_PROVIDER,s as KEYBINDING_CONTEXT_NOTEBOOK_FIND_WIDGET_FOCUSED,a as MOST_RECENT_REPL_EDITOR,B as NOTEBOOK_BREAKPOINT_MARGIN_ACTIVE,f as NOTEBOOK_CELL_EDITABLE,U as NOTEBOOK_CELL_EDITOR_FOCUSED,H as NOTEBOOK_CELL_EXECUTING,F as NOTEBOOK_CELL_EXECUTION_STATE,D as NOTEBOOK_CELL_FOCUSED,y as NOTEBOOK_CELL_GENERATED_BY_CHAT,v as NOTEBOOK_CELL_HAS_ERROR_DIAGNOSTICS,m as NOTEBOOK_CELL_HAS_HIDDEN_OUTPUTS,M as NOTEBOOK_CELL_HAS_OUTPUTS,V as NOTEBOOK_CELL_INPUT_COLLAPSED,g as NOTEBOOK_CELL_IS_FIRST_OUTPUT,P as NOTEBOOK_CELL_LINE_NUMBERS,L as NOTEBOOK_CELL_LIST_FOCUSED,A as NOTEBOOK_CELL_MARKDOWN_EDIT_MODE,W as NOTEBOOK_CELL_OUTPUT_COLLAPSED,G as NOTEBOOK_CELL_OUTPUT_MIMETYPE,Y as NOTEBOOK_CELL_OUTPUT_MIME_TYPE_LIST_FOR_CHAT,h as NOTEBOOK_CELL_RESOURCE,d as NOTEBOOK_CELL_TOOLBAR_LOCATION,k as NOTEBOOK_CELL_TYPE,R as NOTEBOOK_CURSOR_NAVIGATION_MODE,c as NOTEBOOK_EDITOR_EDITABLE,p as NOTEBOOK_EDITOR_FOCUSED,Z as NOTEBOOK_HAS_OUTPUTS,K as NOTEBOOK_HAS_RUNNING_CELL,u as NOTEBOOK_HAS_SOMETHING_RUNNING,J as NOTEBOOK_INTERRUPTIBLE_KERNEL,r as NOTEBOOK_IS_ACTIVE_EDITOR,X as NOTEBOOK_KERNEL,q as NOTEBOOK_KERNEL_COUNT,z as NOTEBOOK_KERNEL_SELECTED,j as NOTEBOOK_KERNEL_SOURCE_COUNT,S as NOTEBOOK_LAST_CELL_FAILED,Q as NOTEBOOK_MISSING_KERNEL_EXTENSION,i as NOTEBOOK_OUTPUT_FOCUSED,I as NOTEBOOK_OUTPUT_INPUT_FOCUSED,x as NOTEBOOK_USE_CONSOLIDATED_OUTPUT_BUTTON,w as NOTEBOOK_VIEW_TYPE,C as REPL_NOTEBOOK_IS_ACTIVE_EDITOR};
+import { ContextKeyExpr, RawContextKey } from "../../../../platform/contextkey/common/contextkey.js";
+import { INTERACTIVE_WINDOW_EDITOR_ID, NOTEBOOK_EDITOR_ID, REPL_EDITOR_ID } from "./notebookCommon.js";
+const HAS_OPENED_NOTEBOOK = new RawContextKey("userHasOpenedNotebook", false);
+const KEYBINDING_CONTEXT_NOTEBOOK_FIND_WIDGET_FOCUSED = new RawContextKey("notebookFindWidgetFocused", false);
+const InteractiveWindowOpen = new RawContextKey("interactiveWindowOpen", false);
+const MOST_RECENT_REPL_EDITOR = new RawContextKey("mostRecentReplEditor", void 0);
+const NOTEBOOK_IS_ACTIVE_EDITOR = ContextKeyExpr.equals("activeEditor", NOTEBOOK_EDITOR_ID);
+const INTERACTIVE_WINDOW_IS_ACTIVE_EDITOR = ContextKeyExpr.equals("activeEditor", INTERACTIVE_WINDOW_EDITOR_ID);
+const REPL_NOTEBOOK_IS_ACTIVE_EDITOR = ContextKeyExpr.equals("activeEditor", REPL_EDITOR_ID);
+const IS_COMPOSITE_NOTEBOOK = new RawContextKey("isCompositeNotebook", false);
+const NOTEBOOK_EDITOR_FOCUSED = new RawContextKey("notebookEditorFocused", false);
+const NOTEBOOK_CELL_LIST_FOCUSED = new RawContextKey("notebookCellListFocused", false);
+const NOTEBOOK_OUTPUT_FOCUSED = new RawContextKey("notebookOutputFocused", false);
+const NOTEBOOK_OUTPUT_INPUT_FOCUSED = new RawContextKey("notebookOutputInputFocused", false);
+const NOTEBOOK_EDITOR_EDITABLE = new RawContextKey("notebookEditable", true);
+const NOTEBOOK_HAS_RUNNING_CELL = new RawContextKey("notebookHasRunningCell", false);
+const NOTEBOOK_HAS_SOMETHING_RUNNING = new RawContextKey("notebookHasSomethingRunning", false);
+const NOTEBOOK_USE_CONSOLIDATED_OUTPUT_BUTTON = new RawContextKey("notebookUseConsolidatedOutputButton", false);
+const NOTEBOOK_BREAKPOINT_MARGIN_ACTIVE = new RawContextKey("notebookBreakpointMargin", false);
+const NOTEBOOK_CELL_TOOLBAR_LOCATION = new RawContextKey("notebookCellToolbarLocation", "left");
+const NOTEBOOK_CURSOR_NAVIGATION_MODE = new RawContextKey("notebookCursorNavigationMode", false);
+const NOTEBOOK_LAST_CELL_FAILED = new RawContextKey("notebookLastCellFailed", false);
+const NOTEBOOK_VIEW_TYPE = new RawContextKey("notebookType", void 0);
+const NOTEBOOK_CELL_TYPE = new RawContextKey("notebookCellType", void 0);
+const NOTEBOOK_CELL_EDITABLE = new RawContextKey("notebookCellEditable", false);
+const NOTEBOOK_CELL_FOCUSED = new RawContextKey("notebookCellFocused", false);
+const NOTEBOOK_CELL_EDITOR_FOCUSED = new RawContextKey("notebookCellEditorFocused", false);
+const NOTEBOOK_CELL_MARKDOWN_EDIT_MODE = new RawContextKey("notebookCellMarkdownEditMode", false);
+const NOTEBOOK_CELL_LINE_NUMBERS = new RawContextKey("notebookCellLineNumbers", "inherit");
+const NOTEBOOK_CELL_EXECUTION_STATE = new RawContextKey("notebookCellExecutionState", void 0);
+const NOTEBOOK_CELL_EXECUTING = new RawContextKey("notebookCellExecuting", false);
+const NOTEBOOK_CELL_HAS_OUTPUTS = new RawContextKey("notebookCellHasOutputs", false);
+const NOTEBOOK_CELL_IS_FIRST_OUTPUT = new RawContextKey("notebookCellIsFirstOutput", false);
+const NOTEBOOK_CELL_HAS_HIDDEN_OUTPUTS = new RawContextKey("hasHiddenOutputs", false);
+const NOTEBOOK_CELL_OUTPUT_MIMETYPE = new RawContextKey("notebookCellOutputMimeType", void 0);
+const NOTEBOOK_CELL_INPUT_COLLAPSED = new RawContextKey("notebookCellInputIsCollapsed", false);
+const NOTEBOOK_CELL_OUTPUT_COLLAPSED = new RawContextKey("notebookCellOutputIsCollapsed", false);
+const NOTEBOOK_CELL_RESOURCE = new RawContextKey("notebookCellResource", "");
+const NOTEBOOK_CELL_GENERATED_BY_CHAT = new RawContextKey("notebookCellGenerateByChat", false);
+const NOTEBOOK_CELL_HAS_ERROR_DIAGNOSTICS = new RawContextKey("notebookCellHasErrorDiagnostics", false);
+const NOTEBOOK_CELL_OUTPUT_MIME_TYPE_LIST_FOR_CHAT = new RawContextKey("notebookCellOutputMimeTypeListForChat", []);
+const NOTEBOOK_KERNEL = new RawContextKey("notebookKernel", void 0);
+const NOTEBOOK_KERNEL_COUNT = new RawContextKey("notebookKernelCount", 0);
+const NOTEBOOK_KERNEL_SOURCE_COUNT = new RawContextKey("notebookKernelSourceCount", 0);
+const NOTEBOOK_KERNEL_SELECTED = new RawContextKey("notebookKernelSelected", false);
+const NOTEBOOK_INTERRUPTIBLE_KERNEL = new RawContextKey("notebookInterruptibleKernel", false);
+const NOTEBOOK_MISSING_KERNEL_EXTENSION = new RawContextKey("notebookMissingKernelExtension", false);
+const NOTEBOOK_HAS_OUTPUTS = new RawContextKey("notebookHasOutputs", false);
+const KERNEL_HAS_VARIABLE_PROVIDER = new RawContextKey("kernelHasVariableProvider", false);
+export {
+  HAS_OPENED_NOTEBOOK,
+  INTERACTIVE_WINDOW_IS_ACTIVE_EDITOR,
+  IS_COMPOSITE_NOTEBOOK,
+  InteractiveWindowOpen,
+  KERNEL_HAS_VARIABLE_PROVIDER,
+  KEYBINDING_CONTEXT_NOTEBOOK_FIND_WIDGET_FOCUSED,
+  MOST_RECENT_REPL_EDITOR,
+  NOTEBOOK_BREAKPOINT_MARGIN_ACTIVE,
+  NOTEBOOK_CELL_EDITABLE,
+  NOTEBOOK_CELL_EDITOR_FOCUSED,
+  NOTEBOOK_CELL_EXECUTING,
+  NOTEBOOK_CELL_EXECUTION_STATE,
+  NOTEBOOK_CELL_FOCUSED,
+  NOTEBOOK_CELL_GENERATED_BY_CHAT,
+  NOTEBOOK_CELL_HAS_ERROR_DIAGNOSTICS,
+  NOTEBOOK_CELL_HAS_HIDDEN_OUTPUTS,
+  NOTEBOOK_CELL_HAS_OUTPUTS,
+  NOTEBOOK_CELL_INPUT_COLLAPSED,
+  NOTEBOOK_CELL_IS_FIRST_OUTPUT,
+  NOTEBOOK_CELL_LINE_NUMBERS,
+  NOTEBOOK_CELL_LIST_FOCUSED,
+  NOTEBOOK_CELL_MARKDOWN_EDIT_MODE,
+  NOTEBOOK_CELL_OUTPUT_COLLAPSED,
+  NOTEBOOK_CELL_OUTPUT_MIMETYPE,
+  NOTEBOOK_CELL_OUTPUT_MIME_TYPE_LIST_FOR_CHAT,
+  NOTEBOOK_CELL_RESOURCE,
+  NOTEBOOK_CELL_TOOLBAR_LOCATION,
+  NOTEBOOK_CELL_TYPE,
+  NOTEBOOK_CURSOR_NAVIGATION_MODE,
+  NOTEBOOK_EDITOR_EDITABLE,
+  NOTEBOOK_EDITOR_FOCUSED,
+  NOTEBOOK_HAS_OUTPUTS,
+  NOTEBOOK_HAS_RUNNING_CELL,
+  NOTEBOOK_HAS_SOMETHING_RUNNING,
+  NOTEBOOK_INTERRUPTIBLE_KERNEL,
+  NOTEBOOK_IS_ACTIVE_EDITOR,
+  NOTEBOOK_KERNEL,
+  NOTEBOOK_KERNEL_COUNT,
+  NOTEBOOK_KERNEL_SELECTED,
+  NOTEBOOK_KERNEL_SOURCE_COUNT,
+  NOTEBOOK_LAST_CELL_FAILED,
+  NOTEBOOK_MISSING_KERNEL_EXTENSION,
+  NOTEBOOK_OUTPUT_FOCUSED,
+  NOTEBOOK_OUTPUT_INPUT_FOCUSED,
+  NOTEBOOK_USE_CONSOLIDATED_OUTPUT_BUTTON,
+  NOTEBOOK_VIEW_TYPE,
+  REPL_NOTEBOOK_IS_ACTIVE_EDITOR
+};
+//# sourceMappingURL=notebookContextKeys.js.map

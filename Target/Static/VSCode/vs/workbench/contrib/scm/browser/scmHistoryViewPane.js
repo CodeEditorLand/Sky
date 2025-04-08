@@ -1,11 +1,1421 @@
-var He=Object.defineProperty;var Te=Object.getOwnPropertyDescriptor;var f=(h,o,e,t)=>{for(var r=t>1?void 0:t?Te(o,e):o,i=h.length-1,s;i>=0;i--)(s=h[i])&&(r=(t?s(o,e,r):s(r))||r);return t&&r&&He(o,e,r),r},c=(h,o)=>(e,t)=>o(e,t,h);import"./media/scm.css";import*as Re from"../../../../base/common/platform.js";import{$ as v,append as g,h as b,reset as Z}from"../../../../base/browser/dom.js";import"../../../../base/browser/ui/hover/hover.js";import"../../../../base/browser/ui/hover/hoverDelegate.js";import{IconLabel as ee}from"../../../../base/browser/ui/iconLabel/iconLabel.js";import"../../../../base/browser/ui/list/list.js";import"../../../../base/browser/ui/tree/abstractTree.js";import"../../../../base/browser/ui/tree/tree.js";import{fromNow as Pe,safeIntl as ke}from"../../../../base/common/date.js";import{createMatches as te}from"../../../../base/common/filters.js";import{MarkdownString as Ee}from"../../../../base/common/htmlContent.js";import{Disposable as z,DisposableStore as H,MutableDisposable as Ve}from"../../../../base/common/lifecycle.js";import{autorun as T,autorunWithStore as Fe,derived as W,observableValue as Q,waitForState as Le,constObservable as xe,latestChangedValue as Ae,observableFromEvent as re,runOnChange as G,observableSignal as De}from"../../../../base/common/observable.js";import{ThemeIcon as I}from"../../../../base/common/themables.js";import{localize as p}from"../../../../nls.js";import{IConfigurationService as F}from"../../../../platform/configuration/common/configuration.js";import{ContextKeyExpr as L,IContextKeyService as U}from"../../../../platform/contextkey/common/contextkey.js";import{IContextMenuService as Oe}from"../../../../platform/contextview/browser/contextView.js";import{IHoverService as j,WorkbenchHoverDelegate as $e}from"../../../../platform/hover/browser/hover.js";import{IInstantiationService as ie}from"../../../../platform/instantiation/common/instantiation.js";import{IKeybindingService as Ke}from"../../../../platform/keybinding/common/keybinding.js";import{WorkbenchAsyncDataTree as Qe}from"../../../../platform/list/browser/listService.js";import{IOpenerService as Be}from"../../../../platform/opener/common/opener.js";import{asCssVariable as S,foreground as Ne}from"../../../../platform/theme/common/colorRegistry.js";import{IThemeService as oe}from"../../../../platform/theme/common/themeService.js";import{ViewAction as B,ViewPane as qe,ViewPaneShowActions as ze}from"../../../browser/parts/views/viewPane.js";import{IViewDescriptorService as We,ViewContainerLocation as se}from"../../../common/views.js";import{renderSCMHistoryItemGraph as Ge,toISCMHistoryItemViewModelArray as Ue,SWIMLANE_WIDTH as je,renderSCMHistoryGraphPlaceholder as Ye,historyItemHoverDeletionsForeground as Je,historyItemHoverLabelForeground as ne,historyItemHoverAdditionsForeground as Xe,historyItemHoverDefaultLabelForeground as Ze,historyItemHoverDefaultLabelBackground as ae}from"./scmHistory.js";import{getHistoryItemEditorTitle as le,getProviderKey as R,isSCMHistoryItemLoadMoreTreeElement as N,isSCMHistoryItemViewModelTreeElement as P,isSCMRepository as Y}from"./util.js";import"../common/history.js";import{HISTORY_VIEW_PANE_ID as x,ISCMService as et,ISCMViewService as ce}from"../common/scm.js";import"../../../../base/browser/ui/list/listWidget.js";import{stripIcons as tt}from"../../../../base/common/iconLabels.js";import{IWorkbenchLayoutService as rt,Position as de}from"../../../services/layout/browser/layoutService.js";import{HoverPosition as A}from"../../../../base/browser/ui/hover/hoverWidget.js";import{Action2 as me,IMenuService as pe,isIMenuItem as it,MenuId as u,MenuRegistry as he,registerAction2 as k}from"../../../../platform/actions/common/actions.js";import{Sequencer as ye,Throttler as ot}from"../../../../base/common/async.js";import{URI as J}from"../../../../base/common/uri.js";import{ICommandService as X}from"../../../../platform/commands/common/commands.js";import{ActionRunner as st}from"../../../../base/common/actions.js";import{delta as nt,groupBy as at}from"../../../../base/common/arrays.js";import{Codicon as E}from"../../../../base/common/codicons.js";import{IProgressService as ue}from"../../../../platform/progress/common/progress.js";import{ContextKeys as M}from"./scmViewPane.js";import"../../../../base/browser/ui/actionbar/actionbar.js";import"../../../../base/browser/ui/dropdown/dropdownActionViewItem.js";import{ActionViewItem as Ie}from"../../../../base/browser/ui/actionbar/actionViewItems.js";import{IQuickInputService as ve}from"../../../../platform/quickinput/common/quickInput.js";import{Event as lt}from"../../../../base/common/event.js";import{Iterable as fe}from"../../../../base/common/iterator.js";import{clamp as ct}from"../../../../base/common/numbers.js";import{observableConfigValue as dt}from"../../../../platform/observable/common/platformObservableUtils.js";import{compare as ge}from"../../../../base/common/strings.js";import{IClipboardService as mt}from"../../../../platform/clipboard/common/clipboardService.js";import{getDefaultHoverDelegate as pt}from"../../../../base/browser/ui/hover/hoverDelegateFactory.js";import{IStorageService as ht,StorageScope as Se,StorageTarget as yt}from"../../../../platform/storage/common/storage.js";import{IExtensionService as ut}from"../../../services/extensions/common/extensions.js";import{groupBy as Ce}from"../../../../base/common/collections.js";import{getFlatContextMenuActions as It}from"../../../../platform/actions/browser/menuEntryActionViewItem.js";const _e="workbench.scm.action.graph.pickRepository",Me="workbench.scm.action.graph.pickHistoryItemRefs";class vt extends Ie{constructor(e,t,r){super(null,t,{...r,icon:!1,label:!0});this._repository=e}updateLabel(){if(this.options.label&&this.label){this.label.classList.add("scm-graph-repository-picker");const e=v(".icon");e.classList.add(...I.asClassNameArray(E.repo));const t=v(".name");t.textContent=this._repository.provider.name,Z(this.label,e,t)}}getTooltip(){return this._repository.provider.name}}class ft extends Ie{constructor(e,t,r,i){super(null,r,{...i,icon:!1,label:!0});this._repository=e;this._historyItemsFilter=t}updateLabel(){if(this.options.label&&this.label){this.label.classList.add("scm-graph-history-item-picker");const e=v(".icon");e.classList.add(...I.asClassNameArray(E.gitBranch));const t=v(".name");this._historyItemsFilter==="all"?t.textContent=p("all","All"):this._historyItemsFilter==="auto"?t.textContent=p("auto","Auto"):this._historyItemsFilter.length===1?t.textContent=this._historyItemsFilter[0].name:t.textContent=p("items","{0} Items",this._historyItemsFilter.length),Z(this.label,e,t)}}getTooltip(){if(this._historyItemsFilter==="all")return p("allHistoryItemRefs","All history item references");if(this._historyItemsFilter==="auto"){const e=this._repository.provider.historyProvider.get();return[e?.historyItemRef.get()?.name,e?.historyItemRemoteRef.get()?.name,e?.historyItemBaseRef.get()?.name].filter(t=>!!t).join(", ")}else return this._historyItemsFilter.length===1?this._historyItemsFilter[0].name:this._historyItemsFilter.map(e=>e.name).join(", ")}}k(class extends B{constructor(){super({id:_e,title:p("repositoryPicker","Repository Picker"),viewId:x,f1:!1,menu:{id:u.SCMHistoryTitle,when:L.and(L.has("scm.providerCount"),L.greater("scm.providerCount",1)),group:"navigation",order:0}})}async runInView(h,o){o.pickRepository()}}),k(class extends B{constructor(){super({id:Me,title:p("referencePicker","History Item Reference Picker"),icon:E.gitBranch,viewId:x,precondition:M.SCMHistoryItemCount.notEqualsTo(0),f1:!1,menu:{id:u.SCMHistoryTitle,group:"navigation",order:1}})}async runInView(h,o){o.pickHistoryItemRef()}}),k(class extends B{constructor(){super({id:"workbench.scm.action.graph.revealCurrentHistoryItem",title:p("goToCurrentHistoryItem","Go to Current History Item"),icon:E.target,viewId:x,precondition:L.and(M.SCMHistoryItemCount.notEqualsTo(0),M.SCMCurrentHistoryItemRefInFilter.isEqualTo(!0)),f1:!1,menu:{id:u.SCMHistoryTitle,group:"navigation",order:2}})}async runInView(h,o){o.revealCurrentHistoryItem()}}),k(class extends B{constructor(){super({id:"workbench.scm.action.graph.refresh",title:p("refreshGraph","Refresh"),viewId:x,f1:!1,icon:E.refresh,menu:{id:u.SCMHistoryTitle,group:"navigation",order:1e3}})}async runInView(h,o){o.refresh()}}),k(class extends me{constructor(){super({id:"workbench.scm.action.graph.viewChanges",title:p("openChanges","Open Changes"),f1:!1,menu:[{id:u.SCMHistoryItemContext,when:L.equals("config.multiDiffEditor.experimental.enabled",!0),group:"0_view",order:1}]})}async run(h,o,...e){const t=h.get(X);if(!o||e.length===0)return;const r=e[0],i=e[e.length-1],s=o.historyProvider.get();if(e.length>1){const V=await s?.resolveHistoryItemRefsCommonAncestor([r.id,i.id]);if(!V||V!==r.id&&V!==i.id)return}const n=i.parentIds.length>0?i.parentIds[0]:void 0,a=await s?.provideHistoryItemChanges(r.id,n);if(!a?.length)return;const d=e.length===1?le(r):p("historyItemChangesEditorTitle","All Changes ({0} \u2194 {1})",i.displayId??i.id,r.displayId??r.id),m=o.rootUri,l=m?m.path:o.label,y=J.from({scheme:"scm-history-item",path:`${l}/${n}..${r.id}`},!0);t.executeCommand("_workbench.openMultiDiffEditor",{title:d,multiDiffSourceUri:y,resources:a})}});class gt{getHeight(){return 22}getTemplateId(o){if(P(o))return C.TEMPLATE_ID;if(N(o))return _.TEMPLATE_ID;throw new Error("Unknown element")}}let C=class{constructor(o,e,t,r,i,s,n){this.hoverDelegate=o;this._clipboardService=e;this._configurationService=t;this._contextKeyService=r;this._hoverService=i;this._menuService=s;this._themeService=n;this._badgesConfig=dt("scm.graph.badges","filter",this._configurationService)}static TEMPLATE_ID="history-item";get templateId(){return C.TEMPLATE_ID}_badgesConfig;renderTemplate(o){o.parentElement.parentElement.querySelector(".monaco-tl-twistie").classList.add("force-no-twistie");const e=g(o,v(".history-item")),t=g(e,v(".graph-container")),r=new ee(e,{supportIcons:!0,supportHighlights:!0,supportDescriptionHighlights:!0}),i=g(e,v(".label-container"));return e.appendChild(i),{element:e,graphContainer:t,label:r,labelContainer:i,elementDisposables:new H,disposables:new H}}renderElement(o,e,t,r){const i=o.element.repository.provider,s=o.element.historyItemViewModel,n=s.historyItem,a=this._hoverService.setupManagedHover(this.hoverDelegate,t.element,this._getHoverContent(o.element),{actions:this._getHoverActions(i,n)});t.elementDisposables.add(a),t.graphContainer.textContent="",t.graphContainer.classList.toggle("current",s.isCurrent),t.graphContainer.appendChild(Ge(s));const m=i.historyProvider.get()?.historyItemRef?.get()?.revision===n.id?["history-item-current"]:[],[l,y]=this._processMatches(s,o.filterData);t.label.setLabel(n.subject,n.author,{matches:l,descriptionMatches:y,extraClasses:m}),this._renderBadges(n,t)}_renderBadges(o,e){e.elementDisposables.add(T(t=>{const r=this._badgesConfig.read(t);e.labelContainer.textContent="";const i=o.references?o.references.slice(0):[];i.length>0&&i[0].color&&(this._renderBadge([i[0]],!0,e),i.splice(0,1));const s=Ce(i,n=>n.color?n.color:"");for(const[n,a]of Object.entries(s)){if(n===""&&r!=="all")continue;const d=Ce(a,m=>I.isThemeIcon(m.icon)?m.icon.id:"");for(const[m,l]of Object.entries(d))m!==""&&this._renderBadge(l,!1,e)}}))}_renderBadge(o,e,t){if(o.length===0||!I.isThemeIcon(o[0].icon))return;const r=b("div.label",{style:{color:o[0].color?S(ne):S(Ne),backgroundColor:o[0].color?S(o[0].color):S(ae)}},[b("div.count@count",{style:{display:o.length>1?"":"none"}}),b("div.icon@icon"),b("div.description@description",{style:{display:e?"":"none"}})]);r.count.textContent=o.length>1?o.length.toString():"",r.icon.classList.add(...I.asClassNameArray(o[0].icon)),r.description.textContent=e?o[0].name:"",g(t.labelContainer,r.root)}_getHoverActions(o,e){const t=this._menuService.getMenuActions(u.SCMHistoryItemHover,this._contextKeyService,{arg:o,shouldForwardArgs:!0}).flatMap(r=>r[1]);return[{commandId:"workbench.scm.action.graph.copyHistoryItemId",iconClass:"codicon.codicon-copy",label:e.displayId??e.id,run:()=>this._clipboardService.writeText(e.id)},...t.map(r=>{const i=I.isThemeIcon(r.item.icon)?I.asClassNameArray(r.item.icon).join("."):void 0;return{commandId:r.id,label:r.label,iconClass:i,run:()=>r.run(e)}})]}_getHoverContent(o){const e=this._themeService.getColorTheme(),t=o.historyItemViewModel.historyItem,r=new Ee("",{isTrusted:!0,supportThemeIcons:!0});if(t.author){const i=J.isUri(t.authorIcon)?`![${t.author}](${t.authorIcon.toString()}|width=20,height=20)`:I.isThemeIcon(t.authorIcon)?`$(${t.authorIcon.id})`:"$(account)";if(t.authorEmail){const s=p("emailLinkTitle","Email");r.appendMarkdown(`${i} [**${t.author}**](mailto:${t.authorEmail} "${s} ${t.author}")`)}else r.appendMarkdown(`${i} **${t.author}**`);if(t.timestamp){const s=ke.DateTimeFormat(Re.language,{year:"numeric",month:"long",day:"numeric",hour:"numeric",minute:"numeric"});r.appendMarkdown(`, $(history) ${Pe(t.timestamp,!0,!0)} (${s.format(t.timestamp)})`)}r.appendMarkdown(`
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import "./media/scm.css";
+import * as platform from "../../../../base/common/platform.js";
+import { $, append, h, reset } from "../../../../base/browser/dom.js";
+import { IHoverAction, IHoverOptions, IManagedHoverTooltipMarkdownString } from "../../../../base/browser/ui/hover/hover.js";
+import { IHoverDelegate } from "../../../../base/browser/ui/hover/hoverDelegate.js";
+import { IconLabel } from "../../../../base/browser/ui/iconLabel/iconLabel.js";
+import { IIdentityProvider, IKeyboardNavigationLabelProvider, IListVirtualDelegate } from "../../../../base/browser/ui/list/list.js";
+import { LabelFuzzyScore } from "../../../../base/browser/ui/tree/abstractTree.js";
+import { IAsyncDataSource, ITreeContextMenuEvent, ITreeNode, ITreeRenderer } from "../../../../base/browser/ui/tree/tree.js";
+import { fromNow, safeIntl } from "../../../../base/common/date.js";
+import { createMatches, FuzzyScore, IMatch } from "../../../../base/common/filters.js";
+import { MarkdownString } from "../../../../base/common/htmlContent.js";
+import { Disposable, DisposableStore, IDisposable, MutableDisposable } from "../../../../base/common/lifecycle.js";
+import { autorun, autorunWithStore, derived, IObservable, observableValue, waitForState, constObservable, latestChangedValue, observableFromEvent, runOnChange, observableSignal } from "../../../../base/common/observable.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import { localize } from "../../../../nls.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { ContextKeyExpr, IContextKey, IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IContextMenuService } from "../../../../platform/contextview/browser/contextView.js";
+import { IHoverService, WorkbenchHoverDelegate } from "../../../../platform/hover/browser/hover.js";
+import { IInstantiationService, ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+import { IKeybindingService } from "../../../../platform/keybinding/common/keybinding.js";
+import { IOpenEvent, WorkbenchAsyncDataTree } from "../../../../platform/list/browser/listService.js";
+import { IOpenerService } from "../../../../platform/opener/common/opener.js";
+import { asCssVariable, ColorIdentifier, foreground } from "../../../../platform/theme/common/colorRegistry.js";
+import { IThemeService } from "../../../../platform/theme/common/themeService.js";
+import { IViewPaneOptions, ViewAction, ViewPane, ViewPaneShowActions } from "../../../browser/parts/views/viewPane.js";
+import { IViewDescriptorService, ViewContainerLocation } from "../../../common/views.js";
+import { renderSCMHistoryItemGraph, toISCMHistoryItemViewModelArray, SWIMLANE_WIDTH, renderSCMHistoryGraphPlaceholder, historyItemHoverDeletionsForeground, historyItemHoverLabelForeground, historyItemHoverAdditionsForeground, historyItemHoverDefaultLabelForeground, historyItemHoverDefaultLabelBackground } from "./scmHistory.js";
+import { getHistoryItemEditorTitle, getProviderKey, isSCMHistoryItemLoadMoreTreeElement, isSCMHistoryItemViewModelTreeElement, isSCMRepository } from "./util.js";
+import { ISCMHistoryItem, ISCMHistoryItemRef, ISCMHistoryItemViewModel, ISCMHistoryProvider, SCMHistoryItemLoadMoreTreeElement, SCMHistoryItemViewModelTreeElement } from "../common/history.js";
+import { HISTORY_VIEW_PANE_ID, ISCMProvider, ISCMRepository, ISCMService, ISCMViewService } from "../common/scm.js";
+import { IListAccessibilityProvider } from "../../../../base/browser/ui/list/listWidget.js";
+import { stripIcons } from "../../../../base/common/iconLabels.js";
+import { IWorkbenchLayoutService, Position } from "../../../services/layout/browser/layoutService.js";
+import { HoverPosition } from "../../../../base/browser/ui/hover/hoverWidget.js";
+import { Action2, IMenuService, isIMenuItem, MenuId, MenuRegistry, registerAction2 } from "../../../../platform/actions/common/actions.js";
+import { Sequencer, Throttler } from "../../../../base/common/async.js";
+import { URI } from "../../../../base/common/uri.js";
+import { ICommandService } from "../../../../platform/commands/common/commands.js";
+import { ActionRunner, IAction, IActionRunner } from "../../../../base/common/actions.js";
+import { delta, groupBy } from "../../../../base/common/arrays.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { IProgressService } from "../../../../platform/progress/common/progress.js";
+import { ContextKeys } from "./scmViewPane.js";
+import { IActionViewItem } from "../../../../base/browser/ui/actionbar/actionbar.js";
+import { IDropdownMenuActionViewItemOptions } from "../../../../base/browser/ui/dropdown/dropdownActionViewItem.js";
+import { ActionViewItem } from "../../../../base/browser/ui/actionbar/actionViewItems.js";
+import { IQuickInputService, IQuickPickItem, IQuickPickSeparator } from "../../../../platform/quickinput/common/quickInput.js";
+import { Event } from "../../../../base/common/event.js";
+import { Iterable } from "../../../../base/common/iterator.js";
+import { clamp } from "../../../../base/common/numbers.js";
+import { observableConfigValue } from "../../../../platform/observable/common/platformObservableUtils.js";
+import { compare } from "../../../../base/common/strings.js";
+import { IClipboardService } from "../../../../platform/clipboard/common/clipboardService.js";
+import { getDefaultHoverDelegate } from "../../../../base/browser/ui/hover/hoverDelegateFactory.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { IExtensionService } from "../../../services/extensions/common/extensions.js";
+import { groupBy as groupBy2 } from "../../../../base/common/collections.js";
+import { getFlatContextMenuActions } from "../../../../platform/actions/browser/menuEntryActionViewItem.js";
+const PICK_REPOSITORY_ACTION_ID = "workbench.scm.action.graph.pickRepository";
+const PICK_HISTORY_ITEM_REFS_ACTION_ID = "workbench.scm.action.graph.pickHistoryItemRefs";
+class SCMRepositoryActionViewItem extends ActionViewItem {
+  constructor(_repository, action, options) {
+    super(null, action, { ...options, icon: false, label: true });
+    this._repository = _repository;
+  }
+  static {
+    __name(this, "SCMRepositoryActionViewItem");
+  }
+  updateLabel() {
+    if (this.options.label && this.label) {
+      this.label.classList.add("scm-graph-repository-picker");
+      const icon = $(".icon");
+      icon.classList.add(...ThemeIcon.asClassNameArray(Codicon.repo));
+      const name = $(".name");
+      name.textContent = this._repository.provider.name;
+      reset(this.label, icon, name);
+    }
+  }
+  getTooltip() {
+    return this._repository.provider.name;
+  }
+}
+class SCMHistoryItemRefsActionViewItem extends ActionViewItem {
+  constructor(_repository, _historyItemsFilter, action, options) {
+    super(null, action, { ...options, icon: false, label: true });
+    this._repository = _repository;
+    this._historyItemsFilter = _historyItemsFilter;
+  }
+  static {
+    __name(this, "SCMHistoryItemRefsActionViewItem");
+  }
+  updateLabel() {
+    if (this.options.label && this.label) {
+      this.label.classList.add("scm-graph-history-item-picker");
+      const icon = $(".icon");
+      icon.classList.add(...ThemeIcon.asClassNameArray(Codicon.gitBranch));
+      const name = $(".name");
+      if (this._historyItemsFilter === "all") {
+        name.textContent = localize("all", "All");
+      } else if (this._historyItemsFilter === "auto") {
+        name.textContent = localize("auto", "Auto");
+      } else if (this._historyItemsFilter.length === 1) {
+        name.textContent = this._historyItemsFilter[0].name;
+      } else {
+        name.textContent = localize("items", "{0} Items", this._historyItemsFilter.length);
+      }
+      reset(this.label, icon, name);
+    }
+  }
+  getTooltip() {
+    if (this._historyItemsFilter === "all") {
+      return localize("allHistoryItemRefs", "All history item references");
+    } else if (this._historyItemsFilter === "auto") {
+      const historyProvider = this._repository.provider.historyProvider.get();
+      return [
+        historyProvider?.historyItemRef.get()?.name,
+        historyProvider?.historyItemRemoteRef.get()?.name,
+        historyProvider?.historyItemBaseRef.get()?.name
+      ].filter((ref) => !!ref).join(", ");
+    } else if (this._historyItemsFilter.length === 1) {
+      return this._historyItemsFilter[0].name;
+    } else {
+      return this._historyItemsFilter.map((ref) => ref.name).join(", ");
+    }
+  }
+}
+registerAction2(class extends ViewAction {
+  constructor() {
+    super({
+      id: PICK_REPOSITORY_ACTION_ID,
+      title: localize("repositoryPicker", "Repository Picker"),
+      viewId: HISTORY_VIEW_PANE_ID,
+      f1: false,
+      menu: {
+        id: MenuId.SCMHistoryTitle,
+        when: ContextKeyExpr.and(ContextKeyExpr.has("scm.providerCount"), ContextKeyExpr.greater("scm.providerCount", 1)),
+        group: "navigation",
+        order: 0
+      }
+    });
+  }
+  async runInView(_, view) {
+    view.pickRepository();
+  }
+});
+registerAction2(class extends ViewAction {
+  constructor() {
+    super({
+      id: PICK_HISTORY_ITEM_REFS_ACTION_ID,
+      title: localize("referencePicker", "History Item Reference Picker"),
+      icon: Codicon.gitBranch,
+      viewId: HISTORY_VIEW_PANE_ID,
+      precondition: ContextKeys.SCMHistoryItemCount.notEqualsTo(0),
+      f1: false,
+      menu: {
+        id: MenuId.SCMHistoryTitle,
+        group: "navigation",
+        order: 1
+      }
+    });
+  }
+  async runInView(_, view) {
+    view.pickHistoryItemRef();
+  }
+});
+registerAction2(class extends ViewAction {
+  constructor() {
+    super({
+      id: "workbench.scm.action.graph.revealCurrentHistoryItem",
+      title: localize("goToCurrentHistoryItem", "Go to Current History Item"),
+      icon: Codicon.target,
+      viewId: HISTORY_VIEW_PANE_ID,
+      precondition: ContextKeyExpr.and(
+        ContextKeys.SCMHistoryItemCount.notEqualsTo(0),
+        ContextKeys.SCMCurrentHistoryItemRefInFilter.isEqualTo(true)
+      ),
+      f1: false,
+      menu: {
+        id: MenuId.SCMHistoryTitle,
+        group: "navigation",
+        order: 2
+      }
+    });
+  }
+  async runInView(_, view) {
+    view.revealCurrentHistoryItem();
+  }
+});
+registerAction2(class extends ViewAction {
+  constructor() {
+    super({
+      id: "workbench.scm.action.graph.refresh",
+      title: localize("refreshGraph", "Refresh"),
+      viewId: HISTORY_VIEW_PANE_ID,
+      f1: false,
+      icon: Codicon.refresh,
+      menu: {
+        id: MenuId.SCMHistoryTitle,
+        group: "navigation",
+        order: 1e3
+      }
+    });
+  }
+  async runInView(_, view) {
+    view.refresh();
+  }
+});
+registerAction2(class extends Action2 {
+  constructor() {
+    super({
+      id: "workbench.scm.action.graph.viewChanges",
+      title: localize("openChanges", "Open Changes"),
+      f1: false,
+      menu: [
+        {
+          id: MenuId.SCMHistoryItemContext,
+          when: ContextKeyExpr.equals("config.multiDiffEditor.experimental.enabled", true),
+          group: "0_view",
+          order: 1
+        }
+      ]
+    });
+  }
+  async run(accessor, provider, ...historyItems) {
+    const commandService = accessor.get(ICommandService);
+    if (!provider || historyItems.length === 0) {
+      return;
+    }
+    const historyItem = historyItems[0];
+    const historyItemLast = historyItems[historyItems.length - 1];
+    const historyProvider = provider.historyProvider.get();
+    if (historyItems.length > 1) {
+      const ancestor = await historyProvider?.resolveHistoryItemRefsCommonAncestor([historyItem.id, historyItemLast.id]);
+      if (!ancestor || ancestor !== historyItem.id && ancestor !== historyItemLast.id) {
+        return;
+      }
+    }
+    const historyItemParentId = historyItemLast.parentIds.length > 0 ? historyItemLast.parentIds[0] : void 0;
+    const historyItemChanges = await historyProvider?.provideHistoryItemChanges(historyItem.id, historyItemParentId);
+    if (!historyItemChanges?.length) {
+      return;
+    }
+    const title = historyItems.length === 1 ? getHistoryItemEditorTitle(historyItem) : localize("historyItemChangesEditorTitle", "All Changes ({0} \u2194 {1})", historyItemLast.displayId ?? historyItemLast.id, historyItem.displayId ?? historyItem.id);
+    const rootUri = provider.rootUri;
+    const path = rootUri ? rootUri.path : provider.label;
+    const multiDiffSourceUri = URI.from({ scheme: "scm-history-item", path: `${path}/${historyItemParentId}..${historyItem.id}` }, true);
+    commandService.executeCommand("_workbench.openMultiDiffEditor", { title, multiDiffSourceUri, resources: historyItemChanges });
+  }
+});
+class ListDelegate {
+  static {
+    __name(this, "ListDelegate");
+  }
+  getHeight() {
+    return 22;
+  }
+  getTemplateId(element) {
+    if (isSCMHistoryItemViewModelTreeElement(element)) {
+      return HistoryItemRenderer.TEMPLATE_ID;
+    } else if (isSCMHistoryItemLoadMoreTreeElement(element)) {
+      return HistoryItemLoadMoreRenderer.TEMPLATE_ID;
+    } else {
+      throw new Error("Unknown element");
+    }
+  }
+}
+let HistoryItemRenderer = class {
+  constructor(hoverDelegate, _clipboardService, _configurationService, _contextKeyService, _hoverService, _menuService, _themeService) {
+    this.hoverDelegate = hoverDelegate;
+    this._clipboardService = _clipboardService;
+    this._configurationService = _configurationService;
+    this._contextKeyService = _contextKeyService;
+    this._hoverService = _hoverService;
+    this._menuService = _menuService;
+    this._themeService = _themeService;
+    this._badgesConfig = observableConfigValue("scm.graph.badges", "filter", this._configurationService);
+  }
+  static {
+    __name(this, "HistoryItemRenderer");
+  }
+  static TEMPLATE_ID = "history-item";
+  get templateId() {
+    return HistoryItemRenderer.TEMPLATE_ID;
+  }
+  _badgesConfig;
+  renderTemplate(container) {
+    container.parentElement.parentElement.querySelector(".monaco-tl-twistie").classList.add("force-no-twistie");
+    const element = append(container, $(".history-item"));
+    const graphContainer = append(element, $(".graph-container"));
+    const iconLabel = new IconLabel(element, { supportIcons: true, supportHighlights: true, supportDescriptionHighlights: true });
+    const labelContainer = append(element, $(".label-container"));
+    element.appendChild(labelContainer);
+    return { element, graphContainer, label: iconLabel, labelContainer, elementDisposables: new DisposableStore(), disposables: new DisposableStore() };
+  }
+  renderElement(node, index, templateData, height) {
+    const provider = node.element.repository.provider;
+    const historyItemViewModel = node.element.historyItemViewModel;
+    const historyItem = historyItemViewModel.historyItem;
+    const historyItemHover = this._hoverService.setupManagedHover(this.hoverDelegate, templateData.element, this._getHoverContent(node.element), {
+      actions: this._getHoverActions(provider, historyItem)
+    });
+    templateData.elementDisposables.add(historyItemHover);
+    templateData.graphContainer.textContent = "";
+    templateData.graphContainer.classList.toggle("current", historyItemViewModel.isCurrent);
+    templateData.graphContainer.appendChild(renderSCMHistoryItemGraph(historyItemViewModel));
+    const historyItemRef = provider.historyProvider.get()?.historyItemRef?.get();
+    const extraClasses = historyItemRef?.revision === historyItem.id ? ["history-item-current"] : [];
+    const [matches, descriptionMatches] = this._processMatches(historyItemViewModel, node.filterData);
+    templateData.label.setLabel(historyItem.subject, historyItem.author, { matches, descriptionMatches, extraClasses });
+    this._renderBadges(historyItem, templateData);
+  }
+  _renderBadges(historyItem, templateData) {
+    templateData.elementDisposables.add(autorun((reader) => {
+      const labelConfig = this._badgesConfig.read(reader);
+      templateData.labelContainer.textContent = "";
+      const references = historyItem.references ? historyItem.references.slice(0) : [];
+      if (references.length > 0 && references[0].color) {
+        this._renderBadge([references[0]], true, templateData);
+        references.splice(0, 1);
+      }
+      const historyItemRefsByColor = groupBy2(references, (ref) => ref.color ? ref.color : "");
+      for (const [key, historyItemRefs] of Object.entries(historyItemRefsByColor)) {
+        if (key === "" && labelConfig !== "all") {
+          continue;
+        }
+        const historyItemRefByIconId = groupBy2(historyItemRefs, (ref) => ThemeIcon.isThemeIcon(ref.icon) ? ref.icon.id : "");
+        for (const [key2, historyItemRefs2] of Object.entries(historyItemRefByIconId)) {
+          if (key2 === "") {
+            continue;
+          }
+          this._renderBadge(historyItemRefs2, false, templateData);
+        }
+      }
+    }));
+  }
+  _renderBadge(historyItemRefs, showDescription, templateData) {
+    if (historyItemRefs.length === 0 || !ThemeIcon.isThemeIcon(historyItemRefs[0].icon)) {
+      return;
+    }
+    const elements = h("div.label", {
+      style: {
+        color: historyItemRefs[0].color ? asCssVariable(historyItemHoverLabelForeground) : asCssVariable(foreground),
+        backgroundColor: historyItemRefs[0].color ? asCssVariable(historyItemRefs[0].color) : asCssVariable(historyItemHoverDefaultLabelBackground)
+      }
+    }, [
+      h("div.count@count", {
+        style: {
+          display: historyItemRefs.length > 1 ? "" : "none"
+        }
+      }),
+      h("div.icon@icon"),
+      h("div.description@description", {
+        style: {
+          display: showDescription ? "" : "none"
+        }
+      })
+    ]);
+    elements.count.textContent = historyItemRefs.length > 1 ? historyItemRefs.length.toString() : "";
+    elements.icon.classList.add(...ThemeIcon.asClassNameArray(historyItemRefs[0].icon));
+    elements.description.textContent = showDescription ? historyItemRefs[0].name : "";
+    append(templateData.labelContainer, elements.root);
+  }
+  _getHoverActions(provider, historyItem) {
+    const actions = this._menuService.getMenuActions(MenuId.SCMHistoryItemHover, this._contextKeyService, {
+      arg: provider,
+      shouldForwardArgs: true
+    }).flatMap((item) => item[1]);
+    return [
+      {
+        commandId: "workbench.scm.action.graph.copyHistoryItemId",
+        iconClass: "codicon.codicon-copy",
+        label: historyItem.displayId ?? historyItem.id,
+        run: /* @__PURE__ */ __name(() => this._clipboardService.writeText(historyItem.id), "run")
+      },
+      ...actions.map((action) => {
+        const iconClass = ThemeIcon.isThemeIcon(action.item.icon) ? ThemeIcon.asClassNameArray(action.item.icon).join(".") : void 0;
+        return {
+          commandId: action.id,
+          label: action.label,
+          iconClass,
+          run: /* @__PURE__ */ __name(() => action.run(historyItem), "run")
+        };
+      })
+    ];
+  }
+  _getHoverContent(element) {
+    const colorTheme = this._themeService.getColorTheme();
+    const historyItem = element.historyItemViewModel.historyItem;
+    const markdown = new MarkdownString("", { isTrusted: true, supportThemeIcons: true });
+    if (historyItem.author) {
+      const icon = URI.isUri(historyItem.authorIcon) ? `![${historyItem.author}](${historyItem.authorIcon.toString()}|width=20,height=20)` : ThemeIcon.isThemeIcon(historyItem.authorIcon) ? `$(${historyItem.authorIcon.id})` : "$(account)";
+      if (historyItem.authorEmail) {
+        const emailTitle = localize("emailLinkTitle", "Email");
+        markdown.appendMarkdown(`${icon} [**${historyItem.author}**](mailto:${historyItem.authorEmail} "${emailTitle} ${historyItem.author}")`);
+      } else {
+        markdown.appendMarkdown(`${icon} **${historyItem.author}**`);
+      }
+      if (historyItem.timestamp) {
+        const dateFormatter = safeIntl.DateTimeFormat(platform.language, { year: "numeric", month: "long", day: "numeric", hour: "numeric", minute: "numeric" });
+        markdown.appendMarkdown(`, $(history) ${fromNow(historyItem.timestamp, true, true)} (${dateFormatter.format(historyItem.timestamp)})`);
+      }
+      markdown.appendMarkdown("\n\n");
+    }
+    markdown.appendMarkdown(`${historyItem.message}
 
-`)}if(r.appendMarkdown(`${t.message}
+`);
+    if (historyItem.statistics) {
+      markdown.appendMarkdown(`---
 
-`),t.statistics){if(r.appendMarkdown(`---
-
-`),r.appendMarkdown(`<span>${t.statistics.files===1?p("fileChanged","{0} file changed",t.statistics.files):p("filesChanged","{0} files changed",t.statistics.files)}</span>`),t.statistics.insertions){const i=e.getColor(Xe);r.appendMarkdown(`,&nbsp;<span style="color:${i};">${t.statistics.insertions===1?p("insertion","{0} insertion{1}",t.statistics.insertions,"(+)"):p("insertions","{0} insertions{1}",t.statistics.insertions,"(+)")}</span>`)}if(t.statistics.deletions){const i=e.getColor(Je);r.appendMarkdown(`,&nbsp;<span style="color:${i};">${t.statistics.deletions===1?p("deletion","{0} deletion{1}",t.statistics.deletions,"(-)"):p("deletions","{0} deletions{1}",t.statistics.deletions,"(-)")}</span>`)}}return(t.references??[]).length>0&&(r.appendMarkdown(`
+`);
+      markdown.appendMarkdown(`<span>${historyItem.statistics.files === 1 ? localize("fileChanged", "{0} file changed", historyItem.statistics.files) : localize("filesChanged", "{0} files changed", historyItem.statistics.files)}</span>`);
+      if (historyItem.statistics.insertions) {
+        const additionsForegroundColor = colorTheme.getColor(historyItemHoverAdditionsForeground);
+        markdown.appendMarkdown(`,&nbsp;<span style="color:${additionsForegroundColor};">${historyItem.statistics.insertions === 1 ? localize("insertion", "{0} insertion{1}", historyItem.statistics.insertions, "(+)") : localize("insertions", "{0} insertions{1}", historyItem.statistics.insertions, "(+)")}</span>`);
+      }
+      if (historyItem.statistics.deletions) {
+        const deletionsForegroundColor = colorTheme.getColor(historyItemHoverDeletionsForeground);
+        markdown.appendMarkdown(`,&nbsp;<span style="color:${deletionsForegroundColor};">${historyItem.statistics.deletions === 1 ? localize("deletion", "{0} deletion{1}", historyItem.statistics.deletions, "(-)") : localize("deletions", "{0} deletions{1}", historyItem.statistics.deletions, "(-)")}</span>`);
+      }
+    }
+    if ((historyItem.references ?? []).length > 0) {
+      markdown.appendMarkdown(`
 
 ---
 
-`),r.appendMarkdown((t.references??[]).map(i=>{const s=I.isThemeIcon(i.icon)?i.icon.id:"",n=i.color?S(i.color):S(ae);return`<span style="color:${i.color?S(ne):S(Ze)};background-color:${n};border-radius:10px;">&nbsp;$(${s})&nbsp;${i.name}&nbsp;&nbsp;</span>`}).join("&nbsp;&nbsp;"))),{markdown:r,markdownNotSupportedFallback:t.message}}_processMatches(o,e){return e?[o.historyItem.message===e.label?te(e.score):void 0,o.historyItem.author===e.label?te(e.score):void 0]:[void 0,void 0]}disposeElement(o,e,t,r){t.elementDisposables.clear()}disposeTemplate(o){o.disposables.dispose()}};C=f([c(1,mt),c(2,F),c(3,U),c(4,j),c(5,pe),c(6,oe)],C);let _=class{constructor(o,e,t){this._isLoadingMore=o;this._loadMoreCallback=e;this._configurationService=t}static TEMPLATE_ID="historyItemLoadMore";get templateId(){return _.TEMPLATE_ID}renderTemplate(o){o.parentElement.parentElement.querySelector(".monaco-tl-twistie").classList.add("force-no-twistie");const e=g(o,v(".history-item-load-more")),t=g(e,v(".graph-placeholder")),r=g(e,v(".history-item-placeholder")),i=new ee(r,{supportIcons:!0});return{element:e,graphPlaceholder:t,historyItemPlaceholderContainer:r,historyItemPlaceholderLabel:i,elementDisposables:new H,disposables:new H}}renderElement(o,e,t,r){t.graphPlaceholder.textContent="",t.graphPlaceholder.style.width=`${je*(o.element.graphColumns.length+1)}px`,t.graphPlaceholder.appendChild(Ye(o.element.graphColumns));const i=this._configurationService.getValue("scm.graph.pageOnScroll")===!0;t.historyItemPlaceholderContainer.classList.toggle("shimmer",i),i?(t.historyItemPlaceholderLabel.setLabel(""),this._loadMoreCallback()):t.elementDisposables.add(T(s=>{const a=`$(${this._isLoadingMore.read(s)?"loading~spin":"fold-down"})`;t.historyItemPlaceholderLabel.setLabel(p("loadMore","{0} Load More...",a))}))}disposeElement(o,e,t,r){t.elementDisposables.clear()}disposeTemplate(o){o.disposables.dispose()}};_=f([c(2,F)],_);let D=class extends $e{constructor(e,t,r,i){super("element",{instantHover:!0},()=>this.getHoverOptions(),r,i);this._viewContainerLocation=e;this.layoutService=t}getHoverOptions(){const e=this.layoutService.getSideBarPosition();let t;return this._viewContainerLocation===se.Sidebar?t=e===de.LEFT?A.RIGHT:A.LEFT:this._viewContainerLocation===se.AuxiliaryBar?t=e===de.LEFT?A.LEFT:A.RIGHT:t=A.RIGHT,{additionalClasses:["history-item-hover"],position:{hoverPosition:t,forcePosition:!0}}}};D=f([c(1,rt),c(2,F),c(3,j)],D);let O=class extends st{constructor(e){super();this._progressService=e}runAction(e,t){return this._progressService.withProgress({location:x},async()=>await super.runAction(e,t))}};O=f([c(0,ue)],O);class St{getWidgetAriaLabel(){return p("scm history","Source Control History")}getAriaLabel(o){if(Y(o))return`${o.provider.name} ${o.provider.label}`;if(P(o)){const e=o.historyItemViewModel.historyItem;return`${tt(e.message).trim()}${e.author?`, ${e.author}`:""}`}else return""}}class Ct{getId(o){if(Y(o))return`repo:${o.provider.id}`;if(P(o)){const e=o.repository.provider,t=o.historyItemViewModel.historyItem;return`historyItem:${e.id}/${t.id}/${t.parentIds.join(",")}`}else{if(N(o))return`historyItemLoadMore:${o.repository.provider.id}}`;throw new Error("Invalid tree element")}}}class _t{getKeyboardNavigationLabel(o){if(!Y(o)){if(P(o))return[o.historyItemViewModel.historyItem.message,o.historyItemViewModel.historyItem.author];if(N(o))return"";throw new Error("Invalid tree element")}}}class Mt extends z{async getChildren(o){if(!(o instanceof w))return[];const e=[],t=await o.getHistoryItems();e.push(...t);const r=o.repository.get(),i=t.at(-1);return r&&i&&i.historyItemViewModel.outputSwimlanes.length>0&&e.push({repository:r,graphColumns:i.historyItemViewModel.outputSwimlanes,type:"historyItemLoadMore"}),e}hasChildren(o){return o instanceof w}}let w=class extends z{constructor(e,t,r,i,s,n){super();this._configurationService=e;this._contextKeyService=t;this._extensionService=r;this._scmService=i;this._scmViewService=s;this._storageService=n;this._repositoryFilterState=this._loadHistoryItemsFilterState(),this._extensionService.onWillStop(this._saveHistoryItemsFilterState,this,this._store),this._storageService.onWillSaveState(this._saveHistoryItemsFilterState,this,this._store),this._scmHistoryItemCountCtx=M.SCMHistoryItemCount.bindTo(this._contextKeyService);const a=this._scmService.repositoryCount>0?xe(fe.first(this._scmService.repositories)):re(this,lt.once(this._scmService.onDidAddRepository),l=>l),d=W(l=>{const y=this._selectedRepository.read(l);return y!=="auto"?y:this._scmViewService.activeRepository.read(l)});this.repository=Ae(this,[a,d]);const m=re(this,this._scmService.onDidRemoveRepository,l=>l);this._register(T(l=>{const y=m.read(l);y&&(this.repository.get()===y&&this._selectedRepository.set(fe.first(this._scmService.repositories)??"auto",void 0),this._repositoryState.delete(y))}))}repository;_selectedRepository=Q(this,"auto");onDidChangeHistoryItemsFilter=De(this);isViewModelEmpty=Q(this,!1);_repositoryState=new Map;_repositoryFilterState=new Map;_scmHistoryItemCountCtx;clearRepositoryState(){const e=this.repository.get();e&&this._repositoryState.delete(e)}getHistoryItemsFilter(){const e=this.repository.get();if(!e)return;const t=this._repositoryFilterState.get(R(e.provider))??"auto";return t==="all"||t==="auto"?t:this._repositoryState.get(e)?.historyItemsFilter}getCurrentHistoryItemTreeElement(){const e=this.repository.get();if(!e)return;const t=this._repositoryState.get(e);if(!t)return;const i=e?.provider.historyProvider.get()?.historyItemRef.get();return t.viewModels.find(s=>s.historyItemViewModel.historyItem.id===i?.revision)}loadMore(e){const t=this.repository.get();if(!t)return;const r=this._repositoryState.get(t);r&&this._repositoryState.set(t,{...r,loadMore:e??!0})}async getHistoryItems(){const e=this.repository.get(),t=e?.provider.historyProvider.get();if(!e||!t)return this._scmHistoryItemCountCtx.set(0),this.isViewModelEmpty.set(!0,void 0),[];let r=this._repositoryState.get(e);if(!r||r.loadMore!==!1){const i=r?.viewModels.map(l=>l.historyItemViewModel.historyItem)??[],s=r?.historyItemsFilter??await this._resolveHistoryItemFilter(e,t),n=ct(this._configurationService.getValue("scm.graph.pageSize"),1,1e3),a=s.map(l=>l.revision??l.id);do i.push(...await t.provideHistoryItems({historyItemRefs:a,limit:n,skip:i.length})??[]);while(typeof r?.loadMore=="string"&&!i.find(l=>l.id===r?.loadMore));const d=this._getGraphColorMap(s),m=Ue(i,d,t.historyItemRef.get()).map(l=>({repository:e,historyItemViewModel:l,type:"historyItemViewModel"}));r={historyItemsFilter:s,viewModels:m,loadMore:!1},this._repositoryState.set(e,r),this._scmHistoryItemCountCtx.set(m.length),this.isViewModelEmpty.set(m.length===0,void 0)}return r.viewModels}setRepository(e){this._selectedRepository.set(e,void 0)}setHistoryItemsFilter(e){const t=this.repository.get();t&&(e!=="auto"?this._repositoryFilterState.set(R(t.provider),e):this._repositoryFilterState.delete(R(t.provider)),this._saveHistoryItemsFilterState(),this.onDidChangeHistoryItemsFilter.trigger(void 0))}_getGraphColorMap(e){const r=this.repository.get()?.provider.historyProvider.get(),i=r?.historyItemRef.get(),s=r?.historyItemRemoteRef.get(),n=r?.historyItemBaseRef.get(),a=new Map;i&&(a.set(i.id,i.color),s&&a.set(s.id,s.color),n&&a.set(n.id,n.color));for(const d of e)a.has(d.id)||a.set(d.id,void 0);return a}async _resolveHistoryItemFilter(e,t){const r=[],i=this._repositoryFilterState.get(R(e.provider))??"auto";switch(i){case"all":r.push(...await t.provideHistoryItemRefs()??[]);break;case"auto":r.push(...[t.historyItemRef.get(),t.historyItemRemoteRef.get(),t.historyItemBaseRef.get()].filter(s=>!!s));break;default:{const s=(await t.provideHistoryItemRefs(i)??[]).filter(n=>i.some(a=>a===n.id));s.length===0?(r.push(...[t.historyItemRef.get(),t.historyItemRemoteRef.get(),t.historyItemBaseRef.get()].filter(n=>!!n)),this._repositoryFilterState.delete(R(e.provider))):(r.push(...s),this._repositoryFilterState.set(R(e.provider),s.map(n=>n.id))),this._saveHistoryItemsFilterState();break}}return r}_loadHistoryItemsFilterState(){try{const e=this._storageService.get("scm.graphView.referencesFilter",Se.WORKSPACE);if(e)return new Map(JSON.parse(e))}catch{}return new Map}_saveHistoryItemsFilterState(){const e=Array.from(this._repositoryFilterState.entries());this._storageService.store("scm.graphView.referencesFilter",JSON.stringify(e),Se.WORKSPACE,yt.USER)}dispose(){this._repositoryState.clear(),super.dispose()}};w=f([c(0,F),c(1,U),c(2,ut),c(3,et),c(4,ce),c(5,ht)],w);let $=class{constructor(o,e){this._quickInputService=o;this._scmViewService=e}_autoQuickPickItem={label:p("auto","Auto"),description:p("activeRepository","Show the source control graph for the active repository"),repository:"auto"};async pickRepository(){const o=[this._autoQuickPickItem,{type:"separator"}];return o.push(...this._scmViewService.repositories.map(e=>({label:e.provider.name,description:e.provider.rootUri?.fsPath,iconClass:I.asClassName(E.repo),repository:e}))),this._quickInputService.pick(o,{placeHolder:p("scmGraphRepository","Select the repository to view, type to filter all repositories")})}};$=f([c(0,ve),c(1,ce)],$);let K=class extends z{constructor(e,t,r){super();this._historyProvider=e;this._historyItemsFilter=t;this._quickInputService=r}_allQuickPickItem={id:"all",label:p("all","All"),description:p("allHistoryItemRefs","All history item references"),historyItemRef:"all"};_autoQuickPickItem={id:"auto",label:p("auto","Auto"),description:p("currentHistoryItemRef","Current history item reference(s)"),historyItemRef:"auto"};async pickHistoryItemRef(){const e=this._quickInputService.createQuickPick({useSeparators:!0});this._store.add(e),e.placeholder=p("scmGraphHistoryItemRef","Select one/more history item references to view, type to filter"),e.canSelectMany=!0,e.hideCheckAll=!0,e.busy=!0,e.show();const t=await this._createQuickPickItems();let r=[];if(this._historyItemsFilter==="all")r.push(this._allQuickPickItem);else if(this._historyItemsFilter==="auto")r.push(this._autoQuickPickItem);else{let i=0;for(;i<t.length;){if(t[i].type==="separator"){i++;continue}if(this._historyItemsFilter.some(s=>s.id===t[i].id)){const s=t.splice(i,1);r.push(...s)}else i++}t.splice(2,0,{type:"separator"},...r)}return e.items=t,e.selectedItems=r,e.busy=!1,new Promise(i=>{this._store.add(e.onDidChangeSelection(s=>{const{added:n}=nt(r,s,(a,d)=>ge(a.id??"",d.id??""));n.length>0&&(n[0].historyItemRef==="all"||n[0].historyItemRef==="auto"?e.selectedItems=[n[0]]:e.selectedItems=[...e.selectedItems.filter(a=>a.historyItemRef!=="all"&&a.historyItemRef!=="auto")]),r=[...e.selectedItems]})),this._store.add(e.onDidAccept(()=>{r.length===0?i(void 0):r.length===1&&r[0].historyItemRef==="all"?i("all"):r.length===1&&r[0].historyItemRef==="auto"?i("auto"):i(r.map(s=>s.historyItemRef.id)),e.hide()})),this._store.add(e.onDidHide(()=>{i(void 0),this.dispose()}))})}async _createQuickPickItems(){const e=[this._allQuickPickItem,this._autoQuickPickItem],t=await this._historyProvider.provideHistoryItemRefs()??[],r=at(t,(i,s)=>ge(i.category??"",s.category??""));for(const i of r)i.length!==0&&(e.push({type:"separator",label:i[0].category}),e.push(...i.map(s=>({id:s.id,label:s.name,description:s.description,iconClass:I.isThemeIcon(s.icon)?I.asClassName(s.icon):void 0,historyItemRef:s}))));return e}};K=f([c(2,ve)],K);let q=class extends qe{constructor(e,t,r,i,s,n,a,d,m,l,y,V,we,be){super({...e,titleMenuId:u.SCMHistoryTitle,showActions:ze.WhenExpanded},d,a,n,y,l,m,V,we,be);this._commandService=t;this._instantiationService=r;this._menuService=i;this._progressService=s;this._scmProviderCtx=M.SCMProvider.bindTo(this.scopedContextKeyService),this._scmCurrentHistoryItemRefHasRemote=M.SCMCurrentHistoryItemRefHasRemote.bindTo(this.scopedContextKeyService),this._scmCurrentHistoryItemRefInFilter=M.SCMCurrentHistoryItemRefInFilter.bindTo(this.scopedContextKeyService),this._actionRunner=this.instantiationService.createInstance(O),this._register(this._actionRunner),this._register(this._updateChildrenThrottler)}_treeContainer;_tree;_treeViewModel;_treeDataSource;_treeIdentityProvider;_repositoryIsLoadingMore=Q(this,!1);_repositoryOutdated=Q(this,!1);_actionRunner;_visibilityDisposables=new H;_treeOperationSequencer=new ye;_treeLoadMoreSequencer=new ye;_updateChildrenThrottler=new ot;_scmProviderCtx;_scmCurrentHistoryItemRefHasRemote;_scmCurrentHistoryItemRefInFilter;_contextMenuDisposables=new Ve;renderHeaderTitle(e){super.renderHeaderTitle(e,this.title);const t=b("div.scm-graph-view-badge-container",[b("div.scm-graph-view-badge.monaco-count-badge.long@badge")]);t.badge.textContent="Outdated",e.appendChild(t.root),this._register(this.hoverService.setupManagedHover(pt("mouse"),t.root,{markdown:{value:p("scmGraphViewOutdated","Please refresh the graph using the refresh action ($(refresh))."),supportThemeIcons:!0},markdownNotSupportedFallback:void 0})),this._register(T(r=>{const i=this._repositoryOutdated.read(r);t.root.style.display=i?"":"none"}))}renderBody(e){super.renderBody(e),this._treeContainer=g(e,v(".scm-view.scm-history-view")),this._treeContainer.classList.add("file-icon-themable-tree"),this._createTree(this._treeContainer),this.onDidChangeBodyVisibility(async t=>{if(!t){this._visibilityDisposables.clear();return}this._treeViewModel=this.instantiationService.createInstance(w),this._visibilityDisposables.add(this._treeViewModel);const r=W(this,s=>this._treeViewModel.repository.read(s)?.provider.historyProvider.read(s)?.historyItemRef.read(s)!==void 0?!0:void 0);await Le(r),await this._progressService.withProgress({location:this.id},async()=>{await this._treeOperationSequencer.queue(async()=>{await this._tree.setInput(this._treeViewModel),this._tree.scrollTop=0})}),this._visibilityDisposables.add(T(s=>{this._treeViewModel.isViewModelEmpty.read(s),this._onDidChangeViewWelcomeState.fire()}));let i=!0;this._visibilityDisposables.add(Fe((s,n)=>{const a=this._treeViewModel.repository.read(s),d=a?.provider.historyProvider.read(s);if(!a||!d)return;const m=W(l=>d.historyItemRef.read(l)?.id);n.add(G(m,async l=>{await this.refresh(),this._scmCurrentHistoryItemRefInFilter.set(this._isCurrentHistoryItemInFilter(l))})),n.add(G(d.historyItemRefChanges,l=>{if(l.silent){if(this._tree.scrollTop===0){this.refresh();return}this._repositoryOutdated.set(!0,void 0);return}this.refresh()})),n.add(G(this._treeViewModel.onDidChangeHistoryItemsFilter,async()=>{await this.refresh(),this._scmCurrentHistoryItemRefInFilter.set(this._isCurrentHistoryItemInFilter(m.get()))})),n.add(T(l=>{this._scmCurrentHistoryItemRefHasRemote.set(!!d.historyItemRemoteRef.read(l))})),this._scmProviderCtx.set(a.provider.contextValue),this._scmCurrentHistoryItemRefInFilter.set(this._isCurrentHistoryItemInFilter(m.get())),i||this.refresh(),i=!1}))},this,this._store)}layoutBody(e,t){super.layoutBody(e,t),this._tree.layout(e,t)}getActionRunner(){return this._actionRunner}getActionsContext(){return this._treeViewModel?.repository.get()?.provider}createActionViewItem(e,t){if(e.id===_e){const r=this._treeViewModel?.repository.get();if(r)return new vt(r,e,t)}else if(e.id===Me){const r=this._treeViewModel?.repository.get(),i=this._treeViewModel?.getHistoryItemsFilter();if(r&&i)return new ft(r,i,e,t)}return super.createActionViewItem(e,t)}focus(){super.focus();const e=new KeyboardEvent("keydown");this._tree.focusFirst(e),this._tree.domFocus()}shouldShowWelcome(){return this._treeViewModel?.isViewModelEmpty.get()===!0}async refresh(){this._treeViewModel.clearRepositoryState(),await this._updateChildren(),this.updateActions(),this._repositoryOutdated.set(!1,void 0),this._tree.scrollTop=0}async pickRepository(){const t=await this._instantiationService.createInstance($).pickRepository();t&&this._treeViewModel.setRepository(t.repository)}async pickHistoryItemRef(){const t=this._treeViewModel.repository.get()?.provider.historyProvider.get(),r=this._treeViewModel.getHistoryItemsFilter();if(!t||!r)return;const s=await this._instantiationService.createInstance(K,t,r).pickHistoryItemRef();s&&this._treeViewModel.setHistoryItemsFilter(s)}async revealCurrentHistoryItem(){const e=this._treeViewModel.repository.get(),r=e?.provider.historyProvider.get()?.historyItemRef.get();if(!e||!r?.id||!r?.revision||!this._isCurrentHistoryItemInFilter(r.id))return;const i=()=>{const s=this._treeViewModel.getCurrentHistoryItemTreeElement();return s&&this._tree.hasNode(s)?(this._tree.reveal(s,.5),this._tree.setSelection([s]),this._tree.setFocus([s]),!0):!1};i()||(await this._loadMore(r.revision),i())}_createTree(e){this._treeIdentityProvider=new Ct;const t=this.instantiationService.createInstance(D,this.viewDescriptorService.getViewLocationById(this.id));this._register(t),this._treeDataSource=this.instantiationService.createInstance(Mt),this._register(this._treeDataSource),this._tree=this.instantiationService.createInstance(Qe,"SCM History Tree",e,new gt,[this.instantiationService.createInstance(C,t),this.instantiationService.createInstance(_,this._repositoryIsLoadingMore,()=>this._loadMore())],this._treeDataSource,{accessibilityProvider:new St,identityProvider:this._treeIdentityProvider,collapseByDefault:r=>!1,keyboardNavigationLabelProvider:new _t,horizontalScrolling:!1,multipleSelectionSupport:!1}),this._register(this._tree),this._tree.onDidOpen(this._onDidOpen,this,this._store),this._tree.onContextMenu(this._onContextMenu,this,this._store)}_isCurrentHistoryItemInFilter(e){if(!e)return!1;const t=this._treeViewModel.getHistoryItemsFilter();return t==="all"||t==="auto"?!0:Array.isArray(t)&&!!t.find(r=>r.id===e)}async _onDidOpen(e){if(e.element)if(P(e.element)){const t=e.element.historyItemViewModel.historyItem,r=t.parentIds.length>0?t.parentIds[0]:void 0,s=await e.element.repository.provider.historyProvider.get()?.provideHistoryItemChanges(t.id,r);if(s){const n=le(t),a=e.element.repository.provider.rootUri,d=a?a.path:e.element.repository.provider.label,m=J.from({scheme:"scm-history-item",path:`${d}/${r}..${t.id}`},!0);await this._commandService.executeCommand("_workbench.openMultiDiffEditor",{title:n,multiDiffSourceUri:m,resources:s})}}else N(e.element)&&(this.configurationService.getValue("scm.graph.pageOnScroll")===!0||(this._loadMore(),this._tree.setSelection([])));else return}_onContextMenu(e){const t=e.element;if(!t||!P(t))return;this._contextMenuDisposables.value=new H;const r=he.getMenuItems(u.SCMHistoryItemRefContext).filter(s=>it(s));if(r.length>0&&t.historyItemViewModel.historyItem.references?.length){const s=new Map;for(const n of t.historyItemViewModel.historyItem.references){const a=this.scopedContextKeyService.createOverlay([["scmHistoryItemRef",n.id]]),d=this._menuService.getMenuActions(u.SCMHistoryItemRefContext,a);for(const m of d.flatMap(l=>l[1]))s.has(m.id)||s.set(m.id,[]),s.get(m.id).push(n)}for(const n of r){const a=n.command.id;if(s.has(a)){this._contextMenuDisposables.value.add(he.appendMenuItem(u.SCMHistoryItemContext,{title:n.command.title,submenu:u.for(a),group:n?.group,order:n?.order}));for(const d of s.get(a)??[])this._contextMenuDisposables.value.add(k(class extends me{constructor(){super({id:`${a}.${d.id}`,title:d.name,menu:{id:u.for(a),group:d.category}})}run(m,...l){m.get(X).executeCommand(a,...l,d.id)}}))}}}const i=this._menuService.getMenuActions(u.SCMHistoryItemContext,this.scopedContextKeyService,{arg:t.repository.provider,shouldForwardArgs:!0});this.contextMenuService.showContextMenu({contextKeyService:this.scopedContextKeyService,getAnchor:()=>e.anchor,getActions:()=>It(i),getActionsContext:()=>t.historyItemViewModel.historyItem})}async _loadMore(e){return this._treeLoadMoreSequencer.queue(async()=>{this._repositoryIsLoadingMore.get()||(this._repositoryIsLoadingMore.set(!0,void 0),this._treeViewModel.loadMore(e),await this._updateChildren(),this._repositoryIsLoadingMore.set(!1,void 0))})}_updateChildren(){return this._updateChildrenThrottler.queue(()=>this._treeOperationSequencer.queue(async()=>{await this._progressService.withProgress({location:this.id},async()=>{await this._tree.updateChildren(void 0,void 0,void 0,{})})}))}dispose(){this._contextMenuDisposables.dispose(),this._visibilityDisposables.dispose(),super.dispose()}};q=f([c(1,X),c(2,ie),c(3,pe),c(4,ue),c(5,F),c(6,Oe),c(7,Ke),c(8,ie),c(9,We),c(10,U),c(11,Be),c(12,oe),c(13,j)],q);export{q as SCMHistoryViewPane};
+`);
+      markdown.appendMarkdown((historyItem.references ?? []).map((ref) => {
+        const labelIconId = ThemeIcon.isThemeIcon(ref.icon) ? ref.icon.id : "";
+        const labelBackgroundColor = ref.color ? asCssVariable(ref.color) : asCssVariable(historyItemHoverDefaultLabelBackground);
+        const labelForegroundColor = ref.color ? asCssVariable(historyItemHoverLabelForeground) : asCssVariable(historyItemHoverDefaultLabelForeground);
+        return `<span style="color:${labelForegroundColor};background-color:${labelBackgroundColor};border-radius:10px;">&nbsp;$(${labelIconId})&nbsp;${ref.name}&nbsp;&nbsp;</span>`;
+      }).join("&nbsp;&nbsp;"));
+    }
+    return { markdown, markdownNotSupportedFallback: historyItem.message };
+  }
+  _processMatches(historyItemViewModel, filterData) {
+    if (!filterData) {
+      return [void 0, void 0];
+    }
+    return [
+      historyItemViewModel.historyItem.message === filterData.label ? createMatches(filterData.score) : void 0,
+      historyItemViewModel.historyItem.author === filterData.label ? createMatches(filterData.score) : void 0
+    ];
+  }
+  disposeElement(element, index, templateData, height) {
+    templateData.elementDisposables.clear();
+  }
+  disposeTemplate(templateData) {
+    templateData.disposables.dispose();
+  }
+};
+HistoryItemRenderer = __decorateClass([
+  __decorateParam(1, IClipboardService),
+  __decorateParam(2, IConfigurationService),
+  __decorateParam(3, IContextKeyService),
+  __decorateParam(4, IHoverService),
+  __decorateParam(5, IMenuService),
+  __decorateParam(6, IThemeService)
+], HistoryItemRenderer);
+let HistoryItemLoadMoreRenderer = class {
+  constructor(_isLoadingMore, _loadMoreCallback, _configurationService) {
+    this._isLoadingMore = _isLoadingMore;
+    this._loadMoreCallback = _loadMoreCallback;
+    this._configurationService = _configurationService;
+  }
+  static {
+    __name(this, "HistoryItemLoadMoreRenderer");
+  }
+  static TEMPLATE_ID = "historyItemLoadMore";
+  get templateId() {
+    return HistoryItemLoadMoreRenderer.TEMPLATE_ID;
+  }
+  renderTemplate(container) {
+    container.parentElement.parentElement.querySelector(".monaco-tl-twistie").classList.add("force-no-twistie");
+    const element = append(container, $(".history-item-load-more"));
+    const graphPlaceholder = append(element, $(".graph-placeholder"));
+    const historyItemPlaceholderContainer = append(element, $(".history-item-placeholder"));
+    const historyItemPlaceholderLabel = new IconLabel(historyItemPlaceholderContainer, { supportIcons: true });
+    return { element, graphPlaceholder, historyItemPlaceholderContainer, historyItemPlaceholderLabel, elementDisposables: new DisposableStore(), disposables: new DisposableStore() };
+  }
+  renderElement(element, index, templateData, height) {
+    templateData.graphPlaceholder.textContent = "";
+    templateData.graphPlaceholder.style.width = `${SWIMLANE_WIDTH * (element.element.graphColumns.length + 1)}px`;
+    templateData.graphPlaceholder.appendChild(renderSCMHistoryGraphPlaceholder(element.element.graphColumns));
+    const pageOnScroll = this._configurationService.getValue("scm.graph.pageOnScroll") === true;
+    templateData.historyItemPlaceholderContainer.classList.toggle("shimmer", pageOnScroll);
+    if (pageOnScroll) {
+      templateData.historyItemPlaceholderLabel.setLabel("");
+      this._loadMoreCallback();
+    } else {
+      templateData.elementDisposables.add(autorun((reader) => {
+        const isLoadingMore = this._isLoadingMore.read(reader);
+        const icon = `$(${isLoadingMore ? "loading~spin" : "fold-down"})`;
+        templateData.historyItemPlaceholderLabel.setLabel(localize("loadMore", "{0} Load More...", icon));
+      }));
+    }
+  }
+  disposeElement(element, index, templateData, height) {
+    templateData.elementDisposables.clear();
+  }
+  disposeTemplate(templateData) {
+    templateData.disposables.dispose();
+  }
+};
+HistoryItemLoadMoreRenderer = __decorateClass([
+  __decorateParam(2, IConfigurationService)
+], HistoryItemLoadMoreRenderer);
+let HistoryItemHoverDelegate = class extends WorkbenchHoverDelegate {
+  constructor(_viewContainerLocation, layoutService, configurationService, hoverService) {
+    super("element", { instantHover: true }, () => this.getHoverOptions(), configurationService, hoverService);
+    this._viewContainerLocation = _viewContainerLocation;
+    this.layoutService = layoutService;
+  }
+  static {
+    __name(this, "HistoryItemHoverDelegate");
+  }
+  getHoverOptions() {
+    const sideBarPosition = this.layoutService.getSideBarPosition();
+    let hoverPosition;
+    if (this._viewContainerLocation === ViewContainerLocation.Sidebar) {
+      hoverPosition = sideBarPosition === Position.LEFT ? HoverPosition.RIGHT : HoverPosition.LEFT;
+    } else if (this._viewContainerLocation === ViewContainerLocation.AuxiliaryBar) {
+      hoverPosition = sideBarPosition === Position.LEFT ? HoverPosition.LEFT : HoverPosition.RIGHT;
+    } else {
+      hoverPosition = HoverPosition.RIGHT;
+    }
+    return { additionalClasses: ["history-item-hover"], position: { hoverPosition, forcePosition: true } };
+  }
+};
+HistoryItemHoverDelegate = __decorateClass([
+  __decorateParam(1, IWorkbenchLayoutService),
+  __decorateParam(2, IConfigurationService),
+  __decorateParam(3, IHoverService)
+], HistoryItemHoverDelegate);
+let SCMHistoryViewPaneActionRunner = class extends ActionRunner {
+  constructor(_progressService) {
+    super();
+    this._progressService = _progressService;
+  }
+  static {
+    __name(this, "SCMHistoryViewPaneActionRunner");
+  }
+  runAction(action, context) {
+    return this._progressService.withProgress(
+      { location: HISTORY_VIEW_PANE_ID },
+      async () => await super.runAction(action, context)
+    );
+  }
+};
+SCMHistoryViewPaneActionRunner = __decorateClass([
+  __decorateParam(0, IProgressService)
+], SCMHistoryViewPaneActionRunner);
+class SCMHistoryTreeAccessibilityProvider {
+  static {
+    __name(this, "SCMHistoryTreeAccessibilityProvider");
+  }
+  getWidgetAriaLabel() {
+    return localize("scm history", "Source Control History");
+  }
+  getAriaLabel(element) {
+    if (isSCMRepository(element)) {
+      return `${element.provider.name} ${element.provider.label}`;
+    } else if (isSCMHistoryItemViewModelTreeElement(element)) {
+      const historyItem = element.historyItemViewModel.historyItem;
+      return `${stripIcons(historyItem.message).trim()}${historyItem.author ? `, ${historyItem.author}` : ""}`;
+    } else {
+      return "";
+    }
+  }
+}
+class SCMHistoryTreeIdentityProvider {
+  static {
+    __name(this, "SCMHistoryTreeIdentityProvider");
+  }
+  getId(element) {
+    if (isSCMRepository(element)) {
+      const provider = element.provider;
+      return `repo:${provider.id}`;
+    } else if (isSCMHistoryItemViewModelTreeElement(element)) {
+      const provider = element.repository.provider;
+      const historyItem = element.historyItemViewModel.historyItem;
+      return `historyItem:${provider.id}/${historyItem.id}/${historyItem.parentIds.join(",")}`;
+    } else if (isSCMHistoryItemLoadMoreTreeElement(element)) {
+      const provider = element.repository.provider;
+      return `historyItemLoadMore:${provider.id}}`;
+    } else {
+      throw new Error("Invalid tree element");
+    }
+  }
+}
+class SCMHistoryTreeKeyboardNavigationLabelProvider {
+  static {
+    __name(this, "SCMHistoryTreeKeyboardNavigationLabelProvider");
+  }
+  getKeyboardNavigationLabel(element) {
+    if (isSCMRepository(element)) {
+      return void 0;
+    } else if (isSCMHistoryItemViewModelTreeElement(element)) {
+      return [element.historyItemViewModel.historyItem.message, element.historyItemViewModel.historyItem.author];
+    } else if (isSCMHistoryItemLoadMoreTreeElement(element)) {
+      return "";
+    } else {
+      throw new Error("Invalid tree element");
+    }
+  }
+}
+class SCMHistoryTreeDataSource extends Disposable {
+  static {
+    __name(this, "SCMHistoryTreeDataSource");
+  }
+  async getChildren(inputOrElement) {
+    if (!(inputOrElement instanceof SCMHistoryViewModel)) {
+      return [];
+    }
+    const children = [];
+    const historyItems = await inputOrElement.getHistoryItems();
+    children.push(...historyItems);
+    const repository = inputOrElement.repository.get();
+    const lastHistoryItem = historyItems.at(-1);
+    if (repository && lastHistoryItem && lastHistoryItem.historyItemViewModel.outputSwimlanes.length > 0) {
+      children.push({
+        repository,
+        graphColumns: lastHistoryItem.historyItemViewModel.outputSwimlanes,
+        type: "historyItemLoadMore"
+      });
+    }
+    return children;
+  }
+  hasChildren(inputOrElement) {
+    return inputOrElement instanceof SCMHistoryViewModel;
+  }
+}
+let SCMHistoryViewModel = class extends Disposable {
+  constructor(_configurationService, _contextKeyService, _extensionService, _scmService, _scmViewService, _storageService) {
+    super();
+    this._configurationService = _configurationService;
+    this._contextKeyService = _contextKeyService;
+    this._extensionService = _extensionService;
+    this._scmService = _scmService;
+    this._scmViewService = _scmViewService;
+    this._storageService = _storageService;
+    this._repositoryFilterState = this._loadHistoryItemsFilterState();
+    this._extensionService.onWillStop(this._saveHistoryItemsFilterState, this, this._store);
+    this._storageService.onWillSaveState(this._saveHistoryItemsFilterState, this, this._store);
+    this._scmHistoryItemCountCtx = ContextKeys.SCMHistoryItemCount.bindTo(this._contextKeyService);
+    const firstRepository = this._scmService.repositoryCount > 0 ? constObservable(Iterable.first(this._scmService.repositories)) : observableFromEvent(
+      this,
+      Event.once(this._scmService.onDidAddRepository),
+      (repository) => repository
+    );
+    const graphRepository = derived((reader) => {
+      const selectedRepository = this._selectedRepository.read(reader);
+      if (selectedRepository !== "auto") {
+        return selectedRepository;
+      }
+      return this._scmViewService.activeRepository.read(reader);
+    });
+    this.repository = latestChangedValue(this, [firstRepository, graphRepository]);
+    const closedRepository = observableFromEvent(
+      this,
+      this._scmService.onDidRemoveRepository,
+      (repository) => repository
+    );
+    this._register(autorun((reader) => {
+      const repository = closedRepository.read(reader);
+      if (!repository) {
+        return;
+      }
+      if (this.repository.get() === repository) {
+        this._selectedRepository.set(Iterable.first(this._scmService.repositories) ?? "auto", void 0);
+      }
+      this._repositoryState.delete(repository);
+    }));
+  }
+  static {
+    __name(this, "SCMHistoryViewModel");
+  }
+  /**
+   * The active | selected repository takes precedence over the first repository when the observable
+   * values are updated in the same transaction (or during the initial read of the observable value).
+   */
+  repository;
+  _selectedRepository = observableValue(this, "auto");
+  onDidChangeHistoryItemsFilter = observableSignal(this);
+  isViewModelEmpty = observableValue(this, false);
+  _repositoryState = /* @__PURE__ */ new Map();
+  _repositoryFilterState = /* @__PURE__ */ new Map();
+  _scmHistoryItemCountCtx;
+  clearRepositoryState() {
+    const repository = this.repository.get();
+    if (!repository) {
+      return;
+    }
+    this._repositoryState.delete(repository);
+  }
+  getHistoryItemsFilter() {
+    const repository = this.repository.get();
+    if (!repository) {
+      return;
+    }
+    const filterState = this._repositoryFilterState.get(getProviderKey(repository.provider)) ?? "auto";
+    if (filterState === "all" || filterState === "auto") {
+      return filterState;
+    }
+    const repositoryState = this._repositoryState.get(repository);
+    return repositoryState?.historyItemsFilter;
+  }
+  getCurrentHistoryItemTreeElement() {
+    const repository = this.repository.get();
+    if (!repository) {
+      return void 0;
+    }
+    const state = this._repositoryState.get(repository);
+    if (!state) {
+      return void 0;
+    }
+    const historyProvider = repository?.provider.historyProvider.get();
+    const historyItemRef = historyProvider?.historyItemRef.get();
+    return state.viewModels.find((viewModel) => viewModel.historyItemViewModel.historyItem.id === historyItemRef?.revision);
+  }
+  loadMore(cursor) {
+    const repository = this.repository.get();
+    if (!repository) {
+      return;
+    }
+    const state = this._repositoryState.get(repository);
+    if (!state) {
+      return;
+    }
+    this._repositoryState.set(repository, { ...state, loadMore: cursor ?? true });
+  }
+  async getHistoryItems() {
+    const repository = this.repository.get();
+    const historyProvider = repository?.provider.historyProvider.get();
+    if (!repository || !historyProvider) {
+      this._scmHistoryItemCountCtx.set(0);
+      this.isViewModelEmpty.set(true, void 0);
+      return [];
+    }
+    let state = this._repositoryState.get(repository);
+    if (!state || state.loadMore !== false) {
+      const historyItems = state?.viewModels.map((vm) => vm.historyItemViewModel.historyItem) ?? [];
+      const historyItemRefs = state?.historyItemsFilter ?? await this._resolveHistoryItemFilter(repository, historyProvider);
+      const limit = clamp(this._configurationService.getValue("scm.graph.pageSize"), 1, 1e3);
+      const historyItemRefIds = historyItemRefs.map((ref) => ref.revision ?? ref.id);
+      do {
+        historyItems.push(...await historyProvider.provideHistoryItems({
+          historyItemRefs: historyItemRefIds,
+          limit,
+          skip: historyItems.length
+        }) ?? []);
+      } while (typeof state?.loadMore === "string" && !historyItems.find((item) => item.id === state?.loadMore));
+      const colorMap = this._getGraphColorMap(historyItemRefs);
+      const viewModels = toISCMHistoryItemViewModelArray(historyItems, colorMap, historyProvider.historyItemRef.get()).map((historyItemViewModel) => ({
+        repository,
+        historyItemViewModel,
+        type: "historyItemViewModel"
+      }));
+      state = { historyItemsFilter: historyItemRefs, viewModels, loadMore: false };
+      this._repositoryState.set(repository, state);
+      this._scmHistoryItemCountCtx.set(viewModels.length);
+      this.isViewModelEmpty.set(viewModels.length === 0, void 0);
+    }
+    return state.viewModels;
+  }
+  setRepository(repository) {
+    this._selectedRepository.set(repository, void 0);
+  }
+  setHistoryItemsFilter(filter) {
+    const repository = this.repository.get();
+    if (!repository) {
+      return;
+    }
+    if (filter !== "auto") {
+      this._repositoryFilterState.set(getProviderKey(repository.provider), filter);
+    } else {
+      this._repositoryFilterState.delete(getProviderKey(repository.provider));
+    }
+    this._saveHistoryItemsFilterState();
+    this.onDidChangeHistoryItemsFilter.trigger(void 0);
+  }
+  _getGraphColorMap(historyItemRefs) {
+    const repository = this.repository.get();
+    const historyProvider = repository?.provider.historyProvider.get();
+    const historyItemRef = historyProvider?.historyItemRef.get();
+    const historyItemRemoteRef = historyProvider?.historyItemRemoteRef.get();
+    const historyItemBaseRef = historyProvider?.historyItemBaseRef.get();
+    const colorMap = /* @__PURE__ */ new Map();
+    if (historyItemRef) {
+      colorMap.set(historyItemRef.id, historyItemRef.color);
+      if (historyItemRemoteRef) {
+        colorMap.set(historyItemRemoteRef.id, historyItemRemoteRef.color);
+      }
+      if (historyItemBaseRef) {
+        colorMap.set(historyItemBaseRef.id, historyItemBaseRef.color);
+      }
+    }
+    for (const ref of historyItemRefs) {
+      if (!colorMap.has(ref.id)) {
+        colorMap.set(ref.id, void 0);
+      }
+    }
+    return colorMap;
+  }
+  async _resolveHistoryItemFilter(repository, historyProvider) {
+    const historyItemRefs = [];
+    const historyItemsFilter = this._repositoryFilterState.get(getProviderKey(repository.provider)) ?? "auto";
+    switch (historyItemsFilter) {
+      case "all":
+        historyItemRefs.push(...await historyProvider.provideHistoryItemRefs() ?? []);
+        break;
+      case "auto":
+        historyItemRefs.push(...[
+          historyProvider.historyItemRef.get(),
+          historyProvider.historyItemRemoteRef.get(),
+          historyProvider.historyItemBaseRef.get()
+        ].filter((ref) => !!ref));
+        break;
+      default: {
+        const refs = (await historyProvider.provideHistoryItemRefs(historyItemsFilter) ?? []).filter((ref) => historyItemsFilter.some((filter) => filter === ref.id));
+        if (refs.length === 0) {
+          historyItemRefs.push(...[
+            historyProvider.historyItemRef.get(),
+            historyProvider.historyItemRemoteRef.get(),
+            historyProvider.historyItemBaseRef.get()
+          ].filter((ref) => !!ref));
+          this._repositoryFilterState.delete(getProviderKey(repository.provider));
+        } else {
+          historyItemRefs.push(...refs);
+          this._repositoryFilterState.set(getProviderKey(repository.provider), refs.map((ref) => ref.id));
+        }
+        this._saveHistoryItemsFilterState();
+        break;
+      }
+    }
+    return historyItemRefs;
+  }
+  _loadHistoryItemsFilterState() {
+    try {
+      const filterData = this._storageService.get("scm.graphView.referencesFilter", StorageScope.WORKSPACE);
+      if (filterData) {
+        return new Map(JSON.parse(filterData));
+      }
+    } catch {
+    }
+    return /* @__PURE__ */ new Map();
+  }
+  _saveHistoryItemsFilterState() {
+    const filter = Array.from(this._repositoryFilterState.entries());
+    this._storageService.store("scm.graphView.referencesFilter", JSON.stringify(filter), StorageScope.WORKSPACE, StorageTarget.USER);
+  }
+  dispose() {
+    this._repositoryState.clear();
+    super.dispose();
+  }
+};
+SCMHistoryViewModel = __decorateClass([
+  __decorateParam(0, IConfigurationService),
+  __decorateParam(1, IContextKeyService),
+  __decorateParam(2, IExtensionService),
+  __decorateParam(3, ISCMService),
+  __decorateParam(4, ISCMViewService),
+  __decorateParam(5, IStorageService)
+], SCMHistoryViewModel);
+let RepositoryPicker = class {
+  constructor(_quickInputService, _scmViewService) {
+    this._quickInputService = _quickInputService;
+    this._scmViewService = _scmViewService;
+  }
+  static {
+    __name(this, "RepositoryPicker");
+  }
+  _autoQuickPickItem = {
+    label: localize("auto", "Auto"),
+    description: localize("activeRepository", "Show the source control graph for the active repository"),
+    repository: "auto"
+  };
+  async pickRepository() {
+    const picks = [
+      this._autoQuickPickItem,
+      { type: "separator" }
+    ];
+    picks.push(...this._scmViewService.repositories.map((r) => ({
+      label: r.provider.name,
+      description: r.provider.rootUri?.fsPath,
+      iconClass: ThemeIcon.asClassName(Codicon.repo),
+      repository: r
+    })));
+    return this._quickInputService.pick(picks, {
+      placeHolder: localize("scmGraphRepository", "Select the repository to view, type to filter all repositories")
+    });
+  }
+};
+RepositoryPicker = __decorateClass([
+  __decorateParam(0, IQuickInputService),
+  __decorateParam(1, ISCMViewService)
+], RepositoryPicker);
+let HistoryItemRefPicker = class extends Disposable {
+  constructor(_historyProvider, _historyItemsFilter, _quickInputService) {
+    super();
+    this._historyProvider = _historyProvider;
+    this._historyItemsFilter = _historyItemsFilter;
+    this._quickInputService = _quickInputService;
+  }
+  static {
+    __name(this, "HistoryItemRefPicker");
+  }
+  _allQuickPickItem = {
+    id: "all",
+    label: localize("all", "All"),
+    description: localize("allHistoryItemRefs", "All history item references"),
+    historyItemRef: "all"
+  };
+  _autoQuickPickItem = {
+    id: "auto",
+    label: localize("auto", "Auto"),
+    description: localize("currentHistoryItemRef", "Current history item reference(s)"),
+    historyItemRef: "auto"
+  };
+  async pickHistoryItemRef() {
+    const quickPick = this._quickInputService.createQuickPick({ useSeparators: true });
+    this._store.add(quickPick);
+    quickPick.placeholder = localize("scmGraphHistoryItemRef", "Select one/more history item references to view, type to filter");
+    quickPick.canSelectMany = true;
+    quickPick.hideCheckAll = true;
+    quickPick.busy = true;
+    quickPick.show();
+    const items = await this._createQuickPickItems();
+    let selectedItems = [];
+    if (this._historyItemsFilter === "all") {
+      selectedItems.push(this._allQuickPickItem);
+    } else if (this._historyItemsFilter === "auto") {
+      selectedItems.push(this._autoQuickPickItem);
+    } else {
+      let index = 0;
+      while (index < items.length) {
+        if (items[index].type === "separator") {
+          index++;
+          continue;
+        }
+        if (this._historyItemsFilter.some((ref) => ref.id === items[index].id)) {
+          const item = items.splice(index, 1);
+          selectedItems.push(...item);
+        } else {
+          index++;
+        }
+      }
+      items.splice(2, 0, { type: "separator" }, ...selectedItems);
+    }
+    quickPick.items = items;
+    quickPick.selectedItems = selectedItems;
+    quickPick.busy = false;
+    return new Promise((resolve) => {
+      this._store.add(quickPick.onDidChangeSelection((items2) => {
+        const { added } = delta(selectedItems, items2, (a, b) => compare(a.id ?? "", b.id ?? ""));
+        if (added.length > 0) {
+          if (added[0].historyItemRef === "all" || added[0].historyItemRef === "auto") {
+            quickPick.selectedItems = [added[0]];
+          } else {
+            quickPick.selectedItems = [...quickPick.selectedItems.filter((i) => i.historyItemRef !== "all" && i.historyItemRef !== "auto")];
+          }
+        }
+        selectedItems = [...quickPick.selectedItems];
+      }));
+      this._store.add(quickPick.onDidAccept(() => {
+        if (selectedItems.length === 0) {
+          resolve(void 0);
+        } else if (selectedItems.length === 1 && selectedItems[0].historyItemRef === "all") {
+          resolve("all");
+        } else if (selectedItems.length === 1 && selectedItems[0].historyItemRef === "auto") {
+          resolve("auto");
+        } else {
+          resolve(selectedItems.map((item) => item.historyItemRef.id));
+        }
+        quickPick.hide();
+      }));
+      this._store.add(quickPick.onDidHide(() => {
+        resolve(void 0);
+        this.dispose();
+      }));
+    });
+  }
+  async _createQuickPickItems() {
+    const picks = [
+      this._allQuickPickItem,
+      this._autoQuickPickItem
+    ];
+    const historyItemRefs = await this._historyProvider.provideHistoryItemRefs() ?? [];
+    const historyItemRefsByCategory = groupBy(historyItemRefs, (a, b) => compare(a.category ?? "", b.category ?? ""));
+    for (const refs of historyItemRefsByCategory) {
+      if (refs.length === 0) {
+        continue;
+      }
+      picks.push({ type: "separator", label: refs[0].category });
+      picks.push(...refs.map((ref) => {
+        return {
+          id: ref.id,
+          label: ref.name,
+          description: ref.description,
+          iconClass: ThemeIcon.isThemeIcon(ref.icon) ? ThemeIcon.asClassName(ref.icon) : void 0,
+          historyItemRef: ref
+        };
+      }));
+    }
+    return picks;
+  }
+};
+HistoryItemRefPicker = __decorateClass([
+  __decorateParam(2, IQuickInputService)
+], HistoryItemRefPicker);
+let SCMHistoryViewPane = class extends ViewPane {
+  constructor(options, _commandService, _instantiationService, _menuService, _progressService, configurationService, contextMenuService, keybindingService, instantiationService, viewDescriptorService, contextKeyService, openerService, themeService, hoverService) {
+    super({
+      ...options,
+      titleMenuId: MenuId.SCMHistoryTitle,
+      showActions: ViewPaneShowActions.WhenExpanded
+    }, keybindingService, contextMenuService, configurationService, contextKeyService, viewDescriptorService, instantiationService, openerService, themeService, hoverService);
+    this._commandService = _commandService;
+    this._instantiationService = _instantiationService;
+    this._menuService = _menuService;
+    this._progressService = _progressService;
+    this._scmProviderCtx = ContextKeys.SCMProvider.bindTo(this.scopedContextKeyService);
+    this._scmCurrentHistoryItemRefHasRemote = ContextKeys.SCMCurrentHistoryItemRefHasRemote.bindTo(this.scopedContextKeyService);
+    this._scmCurrentHistoryItemRefInFilter = ContextKeys.SCMCurrentHistoryItemRefInFilter.bindTo(this.scopedContextKeyService);
+    this._actionRunner = this.instantiationService.createInstance(SCMHistoryViewPaneActionRunner);
+    this._register(this._actionRunner);
+    this._register(this._updateChildrenThrottler);
+  }
+  static {
+    __name(this, "SCMHistoryViewPane");
+  }
+  _treeContainer;
+  _tree;
+  _treeViewModel;
+  _treeDataSource;
+  _treeIdentityProvider;
+  _repositoryIsLoadingMore = observableValue(this, false);
+  _repositoryOutdated = observableValue(this, false);
+  _actionRunner;
+  _visibilityDisposables = new DisposableStore();
+  _treeOperationSequencer = new Sequencer();
+  _treeLoadMoreSequencer = new Sequencer();
+  _updateChildrenThrottler = new Throttler();
+  _scmProviderCtx;
+  _scmCurrentHistoryItemRefHasRemote;
+  _scmCurrentHistoryItemRefInFilter;
+  _contextMenuDisposables = new MutableDisposable();
+  renderHeaderTitle(container) {
+    super.renderHeaderTitle(container, this.title);
+    const element = h("div.scm-graph-view-badge-container", [
+      h("div.scm-graph-view-badge.monaco-count-badge.long@badge")
+    ]);
+    element.badge.textContent = "Outdated";
+    container.appendChild(element.root);
+    this._register(this.hoverService.setupManagedHover(getDefaultHoverDelegate("mouse"), element.root, {
+      markdown: {
+        value: localize("scmGraphViewOutdated", "Please refresh the graph using the refresh action ($(refresh))."),
+        supportThemeIcons: true
+      },
+      markdownNotSupportedFallback: void 0
+    }));
+    this._register(autorun((reader) => {
+      const outdated = this._repositoryOutdated.read(reader);
+      element.root.style.display = outdated ? "" : "none";
+    }));
+  }
+  renderBody(container) {
+    super.renderBody(container);
+    this._treeContainer = append(container, $(".scm-view.scm-history-view"));
+    this._treeContainer.classList.add("file-icon-themable-tree");
+    this._createTree(this._treeContainer);
+    this.onDidChangeBodyVisibility(async (visible) => {
+      if (!visible) {
+        this._visibilityDisposables.clear();
+        return;
+      }
+      this._treeViewModel = this.instantiationService.createInstance(SCMHistoryViewModel);
+      this._visibilityDisposables.add(this._treeViewModel);
+      const firstRepositoryInitialized = derived(this, (reader) => {
+        const repository = this._treeViewModel.repository.read(reader);
+        const historyProvider = repository?.provider.historyProvider.read(reader);
+        const historyItemRef = historyProvider?.historyItemRef.read(reader);
+        return historyItemRef !== void 0 ? true : void 0;
+      });
+      await waitForState(firstRepositoryInitialized);
+      await this._progressService.withProgress({ location: this.id }, async () => {
+        await this._treeOperationSequencer.queue(async () => {
+          await this._tree.setInput(this._treeViewModel);
+          this._tree.scrollTop = 0;
+        });
+      });
+      this._visibilityDisposables.add(autorun((reader) => {
+        this._treeViewModel.isViewModelEmpty.read(reader);
+        this._onDidChangeViewWelcomeState.fire();
+      }));
+      let isFirstRun = true;
+      this._visibilityDisposables.add(autorunWithStore((reader, store) => {
+        const repository = this._treeViewModel.repository.read(reader);
+        const historyProvider = repository?.provider.historyProvider.read(reader);
+        if (!repository || !historyProvider) {
+          return;
+        }
+        const historyItemRefId = derived((reader2) => {
+          return historyProvider.historyItemRef.read(reader2)?.id;
+        });
+        store.add(runOnChange(historyItemRefId, async (historyItemRefIdValue) => {
+          await this.refresh();
+          this._scmCurrentHistoryItemRefInFilter.set(this._isCurrentHistoryItemInFilter(historyItemRefIdValue));
+        }));
+        store.add(runOnChange(historyProvider.historyItemRefChanges, (changes) => {
+          if (changes.silent) {
+            if (this._tree.scrollTop === 0) {
+              this.refresh();
+              return;
+            }
+            this._repositoryOutdated.set(true, void 0);
+            return;
+          }
+          this.refresh();
+        }));
+        store.add(runOnChange(this._treeViewModel.onDidChangeHistoryItemsFilter, async () => {
+          await this.refresh();
+          this._scmCurrentHistoryItemRefInFilter.set(this._isCurrentHistoryItemInFilter(historyItemRefId.get()));
+        }));
+        store.add(autorun((reader2) => {
+          this._scmCurrentHistoryItemRefHasRemote.set(!!historyProvider.historyItemRemoteRef.read(reader2));
+        }));
+        this._scmProviderCtx.set(repository.provider.contextValue);
+        this._scmCurrentHistoryItemRefInFilter.set(this._isCurrentHistoryItemInFilter(historyItemRefId.get()));
+        if (!isFirstRun) {
+          this.refresh();
+        }
+        isFirstRun = false;
+      }));
+    }, this, this._store);
+  }
+  layoutBody(height, width) {
+    super.layoutBody(height, width);
+    this._tree.layout(height, width);
+  }
+  getActionRunner() {
+    return this._actionRunner;
+  }
+  getActionsContext() {
+    return this._treeViewModel?.repository.get()?.provider;
+  }
+  createActionViewItem(action, options) {
+    if (action.id === PICK_REPOSITORY_ACTION_ID) {
+      const repository = this._treeViewModel?.repository.get();
+      if (repository) {
+        return new SCMRepositoryActionViewItem(repository, action, options);
+      }
+    } else if (action.id === PICK_HISTORY_ITEM_REFS_ACTION_ID) {
+      const repository = this._treeViewModel?.repository.get();
+      const historyItemsFilter = this._treeViewModel?.getHistoryItemsFilter();
+      if (repository && historyItemsFilter) {
+        return new SCMHistoryItemRefsActionViewItem(repository, historyItemsFilter, action, options);
+      }
+    }
+    return super.createActionViewItem(action, options);
+  }
+  focus() {
+    super.focus();
+    const fakeKeyboardEvent = new KeyboardEvent("keydown");
+    this._tree.focusFirst(fakeKeyboardEvent);
+    this._tree.domFocus();
+  }
+  shouldShowWelcome() {
+    return this._treeViewModel?.isViewModelEmpty.get() === true;
+  }
+  async refresh() {
+    this._treeViewModel.clearRepositoryState();
+    await this._updateChildren();
+    this.updateActions();
+    this._repositoryOutdated.set(false, void 0);
+    this._tree.scrollTop = 0;
+  }
+  async pickRepository() {
+    const picker = this._instantiationService.createInstance(RepositoryPicker);
+    const result = await picker.pickRepository();
+    if (result) {
+      this._treeViewModel.setRepository(result.repository);
+    }
+  }
+  async pickHistoryItemRef() {
+    const repository = this._treeViewModel.repository.get();
+    const historyProvider = repository?.provider.historyProvider.get();
+    const historyItemsFilter = this._treeViewModel.getHistoryItemsFilter();
+    if (!historyProvider || !historyItemsFilter) {
+      return;
+    }
+    const picker = this._instantiationService.createInstance(HistoryItemRefPicker, historyProvider, historyItemsFilter);
+    const result = await picker.pickHistoryItemRef();
+    if (result) {
+      this._treeViewModel.setHistoryItemsFilter(result);
+    }
+  }
+  async revealCurrentHistoryItem() {
+    const repository = this._treeViewModel.repository.get();
+    const historyProvider = repository?.provider.historyProvider.get();
+    const historyItemRef = historyProvider?.historyItemRef.get();
+    if (!repository || !historyItemRef?.id || !historyItemRef?.revision) {
+      return;
+    }
+    if (!this._isCurrentHistoryItemInFilter(historyItemRef.id)) {
+      return;
+    }
+    const revealTreeNode = /* @__PURE__ */ __name(() => {
+      const historyItemTreeElement = this._treeViewModel.getCurrentHistoryItemTreeElement();
+      if (historyItemTreeElement && this._tree.hasNode(historyItemTreeElement)) {
+        this._tree.reveal(historyItemTreeElement, 0.5);
+        this._tree.setSelection([historyItemTreeElement]);
+        this._tree.setFocus([historyItemTreeElement]);
+        return true;
+      }
+      return false;
+    }, "revealTreeNode");
+    if (revealTreeNode()) {
+      return;
+    }
+    await this._loadMore(historyItemRef.revision);
+    revealTreeNode();
+  }
+  _createTree(container) {
+    this._treeIdentityProvider = new SCMHistoryTreeIdentityProvider();
+    const historyItemHoverDelegate = this.instantiationService.createInstance(HistoryItemHoverDelegate, this.viewDescriptorService.getViewLocationById(this.id));
+    this._register(historyItemHoverDelegate);
+    this._treeDataSource = this.instantiationService.createInstance(SCMHistoryTreeDataSource);
+    this._register(this._treeDataSource);
+    this._tree = this.instantiationService.createInstance(
+      WorkbenchAsyncDataTree,
+      "SCM History Tree",
+      container,
+      new ListDelegate(),
+      [
+        this.instantiationService.createInstance(HistoryItemRenderer, historyItemHoverDelegate),
+        this.instantiationService.createInstance(
+          HistoryItemLoadMoreRenderer,
+          this._repositoryIsLoadingMore,
+          () => this._loadMore()
+        )
+      ],
+      this._treeDataSource,
+      {
+        accessibilityProvider: new SCMHistoryTreeAccessibilityProvider(),
+        identityProvider: this._treeIdentityProvider,
+        collapseByDefault: /* @__PURE__ */ __name((e) => false, "collapseByDefault"),
+        keyboardNavigationLabelProvider: new SCMHistoryTreeKeyboardNavigationLabelProvider(),
+        horizontalScrolling: false,
+        multipleSelectionSupport: false
+      }
+    );
+    this._register(this._tree);
+    this._tree.onDidOpen(this._onDidOpen, this, this._store);
+    this._tree.onContextMenu(this._onContextMenu, this, this._store);
+  }
+  _isCurrentHistoryItemInFilter(historyItemRefId) {
+    if (!historyItemRefId) {
+      return false;
+    }
+    const historyItemFilter = this._treeViewModel.getHistoryItemsFilter();
+    if (historyItemFilter === "all" || historyItemFilter === "auto") {
+      return true;
+    }
+    return Array.isArray(historyItemFilter) && !!historyItemFilter.find((ref) => ref.id === historyItemRefId);
+  }
+  async _onDidOpen(e) {
+    if (!e.element) {
+      return;
+    } else if (isSCMHistoryItemViewModelTreeElement(e.element)) {
+      const historyItem = e.element.historyItemViewModel.historyItem;
+      const historyItemParentId = historyItem.parentIds.length > 0 ? historyItem.parentIds[0] : void 0;
+      const historyProvider = e.element.repository.provider.historyProvider.get();
+      const historyItemChanges = await historyProvider?.provideHistoryItemChanges(historyItem.id, historyItemParentId);
+      if (historyItemChanges) {
+        const title = getHistoryItemEditorTitle(historyItem);
+        const rootUri = e.element.repository.provider.rootUri;
+        const path = rootUri ? rootUri.path : e.element.repository.provider.label;
+        const multiDiffSourceUri = URI.from({ scheme: "scm-history-item", path: `${path}/${historyItemParentId}..${historyItem.id}` }, true);
+        await this._commandService.executeCommand("_workbench.openMultiDiffEditor", { title, multiDiffSourceUri, resources: historyItemChanges });
+      }
+    } else if (isSCMHistoryItemLoadMoreTreeElement(e.element)) {
+      const pageOnScroll = this.configurationService.getValue("scm.graph.pageOnScroll") === true;
+      if (!pageOnScroll) {
+        this._loadMore();
+        this._tree.setSelection([]);
+      }
+    }
+  }
+  _onContextMenu(e) {
+    const element = e.element;
+    if (!element || !isSCMHistoryItemViewModelTreeElement(element)) {
+      return;
+    }
+    this._contextMenuDisposables.value = new DisposableStore();
+    const historyItemRefMenuItems = MenuRegistry.getMenuItems(MenuId.SCMHistoryItemRefContext).filter((item) => isIMenuItem(item));
+    if (historyItemRefMenuItems.length > 0 && element.historyItemViewModel.historyItem.references?.length) {
+      const historyItemRefActions = /* @__PURE__ */ new Map();
+      for (const ref of element.historyItemViewModel.historyItem.references) {
+        const contextKeyService = this.scopedContextKeyService.createOverlay([
+          ["scmHistoryItemRef", ref.id]
+        ]);
+        const menuActions = this._menuService.getMenuActions(
+          MenuId.SCMHistoryItemRefContext,
+          contextKeyService
+        );
+        for (const action of menuActions.flatMap((a) => a[1])) {
+          if (!historyItemRefActions.has(action.id)) {
+            historyItemRefActions.set(action.id, []);
+          }
+          historyItemRefActions.get(action.id).push(ref);
+        }
+      }
+      for (const historyItemRefMenuItem of historyItemRefMenuItems) {
+        const actionId = historyItemRefMenuItem.command.id;
+        if (!historyItemRefActions.has(actionId)) {
+          continue;
+        }
+        this._contextMenuDisposables.value.add(MenuRegistry.appendMenuItem(MenuId.SCMHistoryItemContext, {
+          title: historyItemRefMenuItem.command.title,
+          submenu: MenuId.for(actionId),
+          group: historyItemRefMenuItem?.group,
+          order: historyItemRefMenuItem?.order
+        }));
+        for (const historyItemRef of historyItemRefActions.get(actionId) ?? []) {
+          this._contextMenuDisposables.value.add(registerAction2(class extends Action2 {
+            constructor() {
+              super({
+                id: `${actionId}.${historyItemRef.id}`,
+                title: historyItemRef.name,
+                menu: {
+                  id: MenuId.for(actionId),
+                  group: historyItemRef.category
+                }
+              });
+            }
+            run(accessor, ...args) {
+              const commandService = accessor.get(ICommandService);
+              commandService.executeCommand(actionId, ...args, historyItemRef.id);
+            }
+          }));
+        }
+      }
+    }
+    const historyItemMenuActions = this._menuService.getMenuActions(MenuId.SCMHistoryItemContext, this.scopedContextKeyService, {
+      arg: element.repository.provider,
+      shouldForwardArgs: true
+    });
+    this.contextMenuService.showContextMenu({
+      contextKeyService: this.scopedContextKeyService,
+      getAnchor: /* @__PURE__ */ __name(() => e.anchor, "getAnchor"),
+      getActions: /* @__PURE__ */ __name(() => getFlatContextMenuActions(historyItemMenuActions), "getActions"),
+      getActionsContext: /* @__PURE__ */ __name(() => element.historyItemViewModel.historyItem, "getActionsContext")
+    });
+  }
+  async _loadMore(cursor) {
+    return this._treeLoadMoreSequencer.queue(async () => {
+      if (this._repositoryIsLoadingMore.get()) {
+        return;
+      }
+      this._repositoryIsLoadingMore.set(true, void 0);
+      this._treeViewModel.loadMore(cursor);
+      await this._updateChildren();
+      this._repositoryIsLoadingMore.set(false, void 0);
+    });
+  }
+  _updateChildren() {
+    return this._updateChildrenThrottler.queue(
+      () => this._treeOperationSequencer.queue(
+        async () => {
+          await this._progressService.withProgress(
+            { location: this.id },
+            async () => {
+              await this._tree.updateChildren(void 0, void 0, void 0, {
+                // diffIdentityProvider: this._treeIdentityProvider
+              });
+            }
+          );
+        }
+      )
+    );
+  }
+  dispose() {
+    this._contextMenuDisposables.dispose();
+    this._visibilityDisposables.dispose();
+    super.dispose();
+  }
+};
+SCMHistoryViewPane = __decorateClass([
+  __decorateParam(1, ICommandService),
+  __decorateParam(2, IInstantiationService),
+  __decorateParam(3, IMenuService),
+  __decorateParam(4, IProgressService),
+  __decorateParam(5, IConfigurationService),
+  __decorateParam(6, IContextMenuService),
+  __decorateParam(7, IKeybindingService),
+  __decorateParam(8, IInstantiationService),
+  __decorateParam(9, IViewDescriptorService),
+  __decorateParam(10, IContextKeyService),
+  __decorateParam(11, IOpenerService),
+  __decorateParam(12, IThemeService),
+  __decorateParam(13, IHoverService)
+], SCMHistoryViewPane);
+export {
+  SCMHistoryViewPane
+};
+//# sourceMappingURL=scmHistoryViewPane.js.map

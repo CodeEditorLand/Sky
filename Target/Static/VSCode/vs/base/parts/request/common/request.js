@@ -1,1 +1,25 @@
-import"../../../common/buffer.js";const r="Offline";function i(s){return s instanceof t||s instanceof Error&&s.name===r&&s.message===r}class t extends Error{constructor(){super(r),this.name=this.message}}export{t as OfflineError,i as isOfflineError};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { VSBufferReadableStream } from "../../../common/buffer.js";
+const offlineName = "Offline";
+function isOfflineError(error) {
+  if (error instanceof OfflineError) {
+    return true;
+  }
+  return error instanceof Error && error.name === offlineName && error.message === offlineName;
+}
+__name(isOfflineError, "isOfflineError");
+class OfflineError extends Error {
+  static {
+    __name(this, "OfflineError");
+  }
+  constructor() {
+    super(offlineName);
+    this.name = this.message;
+  }
+}
+export {
+  OfflineError,
+  isOfflineError
+};
+//# sourceMappingURL=request.js.map

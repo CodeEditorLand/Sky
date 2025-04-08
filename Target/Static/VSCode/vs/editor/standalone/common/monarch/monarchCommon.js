@@ -1,1 +1,137 @@
-var p=(n=>(n[n.None=0]="None",n[n.Open=1]="Open",n[n.Close=-1]="Close",n))(p||{});function z(n){return Array.isArray(n)}function h(n){return!z(n)}function d(n){return"string"==typeof n}function m(n){return!d(n)}function o(n){return!n}function u(n,t){return n.ignoreCase&&t?t.toLowerCase():t}function F(n){return n.replace(/[&<>'"_]/g,"-")}function L(n,t){console.log(`${n.languageId}: ${t}`)}function w(n,t){return new Error(`${n.languageId}: ${t}`)}function k(n,t,e,r,s){let i=null;return t.replace(/\$((\$)|(#)|(\d\d?)|[sS](\d\d?)|@(\w+))/g,(function(t,a,l,c,f,g,d,p,h){return o(l)?o(c)?!o(f)&&f<r.length?u(n,r[f]):!o(d)&&n&&"string"==typeof n[d]?n[d]:(null===i&&(i=s.split("."),i.unshift(s)),!o(g)&&g<i.length?u(n,i[g]):""):u(n,e):"$"}))}function $(n,t,e){let r=null;return t.replace(/\$[sS](\d\d?)/g,(function(t,s){return null===r&&(r=e.split("."),r.unshift(e)),!o(s)&&s<r.length?u(n,r[s]):""}))}function E(n,t){let e=t;for(;e&&e.length>0;){const t=n.tokenizer[e];if(t)return t;const r=e.lastIndexOf(".");e=r<0?null:e.substr(0,r)}return null}function M(n,t){let e=t;for(;e&&e.length>0;){if(n.stateNames[e])return!0;const t=e.lastIndexOf(".");e=t<0?null:e.substr(0,t)}return!1}export{p as MonarchBracket,w as createError,o as empty,E as findRules,u as fixCase,h as isFuzzyAction,z as isFuzzyActionArr,m as isIAction,d as isString,L as log,F as sanitize,M as stateExists,k as substituteMatches,$ as substituteMatchesRe};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var MonarchBracket = /* @__PURE__ */ ((MonarchBracket2) => {
+  MonarchBracket2[MonarchBracket2["None"] = 0] = "None";
+  MonarchBracket2[MonarchBracket2["Open"] = 1] = "Open";
+  MonarchBracket2[MonarchBracket2["Close"] = -1] = "Close";
+  return MonarchBracket2;
+})(MonarchBracket || {});
+function isFuzzyActionArr(what) {
+  return Array.isArray(what);
+}
+__name(isFuzzyActionArr, "isFuzzyActionArr");
+function isFuzzyAction(what) {
+  return !isFuzzyActionArr(what);
+}
+__name(isFuzzyAction, "isFuzzyAction");
+function isString(what) {
+  return typeof what === "string";
+}
+__name(isString, "isString");
+function isIAction(what) {
+  return !isString(what);
+}
+__name(isIAction, "isIAction");
+function empty(s) {
+  return s ? false : true;
+}
+__name(empty, "empty");
+function fixCase(lexer, str) {
+  return lexer.ignoreCase && str ? str.toLowerCase() : str;
+}
+__name(fixCase, "fixCase");
+function sanitize(s) {
+  return s.replace(/[&<>'"_]/g, "-");
+}
+__name(sanitize, "sanitize");
+function log(lexer, msg) {
+  console.log(`${lexer.languageId}: ${msg}`);
+}
+__name(log, "log");
+function createError(lexer, msg) {
+  return new Error(`${lexer.languageId}: ${msg}`);
+}
+__name(createError, "createError");
+function substituteMatches(lexer, str, id, matches, state) {
+  const re = /\$((\$)|(#)|(\d\d?)|[sS](\d\d?)|@(\w+))/g;
+  let stateMatches = null;
+  return str.replace(re, function(full, sub, dollar, hash, n, s, attr, ofs, total) {
+    if (!empty(dollar)) {
+      return "$";
+    }
+    if (!empty(hash)) {
+      return fixCase(lexer, id);
+    }
+    if (!empty(n) && n < matches.length) {
+      return fixCase(lexer, matches[n]);
+    }
+    if (!empty(attr) && lexer && typeof lexer[attr] === "string") {
+      return lexer[attr];
+    }
+    if (stateMatches === null) {
+      stateMatches = state.split(".");
+      stateMatches.unshift(state);
+    }
+    if (!empty(s) && s < stateMatches.length) {
+      return fixCase(lexer, stateMatches[s]);
+    }
+    return "";
+  });
+}
+__name(substituteMatches, "substituteMatches");
+function substituteMatchesRe(lexer, str, state) {
+  const re = /\$[sS](\d\d?)/g;
+  let stateMatches = null;
+  return str.replace(re, function(full, s) {
+    if (stateMatches === null) {
+      stateMatches = state.split(".");
+      stateMatches.unshift(state);
+    }
+    if (!empty(s) && s < stateMatches.length) {
+      return fixCase(lexer, stateMatches[s]);
+    }
+    return "";
+  });
+}
+__name(substituteMatchesRe, "substituteMatchesRe");
+function findRules(lexer, inState) {
+  let state = inState;
+  while (state && state.length > 0) {
+    const rules = lexer.tokenizer[state];
+    if (rules) {
+      return rules;
+    }
+    const idx = state.lastIndexOf(".");
+    if (idx < 0) {
+      state = null;
+    } else {
+      state = state.substr(0, idx);
+    }
+  }
+  return null;
+}
+__name(findRules, "findRules");
+function stateExists(lexer, inState) {
+  let state = inState;
+  while (state && state.length > 0) {
+    const exist = lexer.stateNames[state];
+    if (exist) {
+      return true;
+    }
+    const idx = state.lastIndexOf(".");
+    if (idx < 0) {
+      state = null;
+    } else {
+      state = state.substr(0, idx);
+    }
+  }
+  return false;
+}
+__name(stateExists, "stateExists");
+export {
+  MonarchBracket,
+  createError,
+  empty,
+  findRules,
+  fixCase,
+  isFuzzyAction,
+  isFuzzyActionArr,
+  isIAction,
+  isString,
+  log,
+  sanitize,
+  stateExists,
+  substituteMatches,
+  substituteMatchesRe
+};
+//# sourceMappingURL=monarchCommon.js.map

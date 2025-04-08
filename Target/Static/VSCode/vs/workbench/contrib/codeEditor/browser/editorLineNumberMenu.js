@@ -1,1 +1,126 @@
-var y=Object.defineProperty;var f=Object.getOwnPropertyDescriptor;var A=(a,r,t,i)=>{for(var e=i>1?void 0:i?f(r,t):r,o=a.length-1,u;o>=0;o--)(u=a[o])&&(e=(i?u(r,t,e):u(e))||e);return i&&e&&y(r,t,e),e},m=(a,r)=>(t,i)=>r(t,i,a);import{Separator as M}from"../../../../base/common/actions.js";import{Disposable as E}from"../../../../base/common/lifecycle.js";import{isMacintosh as b}from"../../../../base/common/platform.js";import{MouseTargetType as g}from"../../../../editor/browser/editorBrowser.js";import{registerEditorContribution as R,EditorContributionInstantiation as x}from"../../../../editor/browser/editorExtensions.js";import"../../../../editor/common/editorCommon.js";import{IMenuService as C,MenuId as w}from"../../../../platform/actions/common/actions.js";import{IContextKeyService as _}from"../../../../platform/contextkey/common/contextkey.js";import{IContextMenuService as N}from"../../../../platform/contextview/browser/contextView.js";import{TextEditorSelectionSource as T}from"../../../../platform/editor/common/editor.js";import{IInstantiationService as L}from"../../../../platform/instantiation/common/instantiation.js";import{Registry as S}from"../../../../platform/registry/common/platform.js";class D{_registeredGutterActionsGenerators=new Set;registerGutterActionsGenerator(r){return this._registeredGutterActionsGenerators.add(r),{dispose:()=>{this._registeredGutterActionsGenerators.delete(r)}}}getGutterActionsGenerators(){return Array.from(this._registeredGutterActionsGenerators.values())}}S.add("gutterActionsRegistry",new D);const K=S.as("gutterActionsRegistry");let d=class extends E{constructor(t,i,e,o,u){super();this.editor=t;this.contextMenuService=i;this.menuService=e;this.contextKeyService=o;this.instantiationService=u;this._register(this.editor.onMouseDown(p=>this.doShow(p,!1)))}static ID="workbench.contrib.editorLineNumberContextMenu";show(t){this.doShow(t,!0)}doShow(t,i){const e=this.editor.getModel();if(!t.event.rightButton&&!(b&&t.event.leftButton&&t.event.ctrlKey)&&!i||t.target.type!==g.GUTTER_LINE_NUMBERS&&t.target.type!==g.GUTTER_GLYPH_MARGIN||!t.target.position||!e)return;const o=t.target.position.lineNumber,u=this.contextKeyService.createOverlay([["editorLineNumber",o]]),p=this.menuService.createMenu(w.EditorLineNumberContext,u),l=[];this.instantiationService.invokeFunction(h=>{for(const s of K.getGutterActionsGenerators()){const n=new Map;s({lineNumber:o,editor:this.editor,accessor:h},{push:(I,c="navigation")=>{const v=n.get(c)??[];v.push(I),n.set(c,v)}});for(const[I,c]of n.entries())l.push([I,c])}l.sort((s,n)=>s[0].localeCompare(n[0]));const G=p.getActions({arg:{lineNumber:o,uri:e.uri},shouldForwardArgs:!0});if(l.push(...G),t.target.type===g.GUTTER_LINE_NUMBERS){const s=this.editor.getSelections(),n={startLineNumber:o,endLineNumber:o,startColumn:1,endColumn:e.getLineLength(o)+1};s?.some(c=>!c.isEmpty()&&c.intersectRanges(n)!==null)||this.editor.setSelection(n,T.PROGRAMMATIC)}this.contextMenuService.showContextMenu({getAnchor:()=>t.event,getActions:()=>M.join(...l.map(s=>s[1])),onHide:()=>p.dispose()})})}};d=A([m(1,N),m(2,C),m(3,_),m(4,L)],d),R(d.ID,d,x.AfterFirstRender);export{d as EditorLineNumberContextMenu,K as GutterActionsRegistry,D as GutterActionsRegistryImpl};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { IAction, Separator } from "../../../../base/common/actions.js";
+import { Disposable, IDisposable } from "../../../../base/common/lifecycle.js";
+import { isMacintosh } from "../../../../base/common/platform.js";
+import { ICodeEditor, IEditorMouseEvent, MouseTargetType } from "../../../../editor/browser/editorBrowser.js";
+import { registerEditorContribution, EditorContributionInstantiation } from "../../../../editor/browser/editorExtensions.js";
+import { IEditorContribution } from "../../../../editor/common/editorCommon.js";
+import { IMenuService, MenuId, MenuItemAction, SubmenuItemAction } from "../../../../platform/actions/common/actions.js";
+import { IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IContextMenuService } from "../../../../platform/contextview/browser/contextView.js";
+import { TextEditorSelectionSource } from "../../../../platform/editor/common/editor.js";
+import { IInstantiationService, ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+import { Registry } from "../../../../platform/registry/common/platform.js";
+class GutterActionsRegistryImpl {
+  static {
+    __name(this, "GutterActionsRegistryImpl");
+  }
+  _registeredGutterActionsGenerators = /* @__PURE__ */ new Set();
+  /**
+   *
+   * This exists solely to allow the debug and test contributions to add actions to the gutter context menu
+   * which cannot be trivially expressed using when clauses and therefore cannot be statically registered.
+   * If you want an action to show up in the gutter context menu, you should generally use MenuId.EditorLineNumberMenu instead.
+   */
+  registerGutterActionsGenerator(gutterActionsGenerator) {
+    this._registeredGutterActionsGenerators.add(gutterActionsGenerator);
+    return {
+      dispose: /* @__PURE__ */ __name(() => {
+        this._registeredGutterActionsGenerators.delete(gutterActionsGenerator);
+      }, "dispose")
+    };
+  }
+  getGutterActionsGenerators() {
+    return Array.from(this._registeredGutterActionsGenerators.values());
+  }
+}
+Registry.add("gutterActionsRegistry", new GutterActionsRegistryImpl());
+const GutterActionsRegistry = Registry.as("gutterActionsRegistry");
+let EditorLineNumberContextMenu = class extends Disposable {
+  constructor(editor, contextMenuService, menuService, contextKeyService, instantiationService) {
+    super();
+    this.editor = editor;
+    this.contextMenuService = contextMenuService;
+    this.menuService = menuService;
+    this.contextKeyService = contextKeyService;
+    this.instantiationService = instantiationService;
+    this._register(this.editor.onMouseDown((e) => this.doShow(e, false)));
+  }
+  static {
+    __name(this, "EditorLineNumberContextMenu");
+  }
+  static ID = "workbench.contrib.editorLineNumberContextMenu";
+  show(e) {
+    this.doShow(e, true);
+  }
+  doShow(e, force) {
+    const model = this.editor.getModel();
+    if (!e.event.rightButton && !(isMacintosh && e.event.leftButton && e.event.ctrlKey) && !force || e.target.type !== MouseTargetType.GUTTER_LINE_NUMBERS && e.target.type !== MouseTargetType.GUTTER_GLYPH_MARGIN || !e.target.position || !model) {
+      return;
+    }
+    const lineNumber = e.target.position.lineNumber;
+    const contextKeyService = this.contextKeyService.createOverlay([["editorLineNumber", lineNumber]]);
+    const menu = this.menuService.createMenu(MenuId.EditorLineNumberContext, contextKeyService);
+    const allActions = [];
+    this.instantiationService.invokeFunction((accessor) => {
+      for (const generator of GutterActionsRegistry.getGutterActionsGenerators()) {
+        const collectedActions = /* @__PURE__ */ new Map();
+        generator({ lineNumber, editor: this.editor, accessor }, {
+          push: /* @__PURE__ */ __name((action, group = "navigation") => {
+            const actions = collectedActions.get(group) ?? [];
+            actions.push(action);
+            collectedActions.set(group, actions);
+          }, "push")
+        });
+        for (const [group, actions] of collectedActions.entries()) {
+          allActions.push([group, actions]);
+        }
+      }
+      allActions.sort((a, b) => a[0].localeCompare(b[0]));
+      const menuActions = menu.getActions({ arg: { lineNumber, uri: model.uri }, shouldForwardArgs: true });
+      allActions.push(...menuActions);
+      if (e.target.type === MouseTargetType.GUTTER_LINE_NUMBERS) {
+        const currentSelections = this.editor.getSelections();
+        const lineRange = {
+          startLineNumber: lineNumber,
+          endLineNumber: lineNumber,
+          startColumn: 1,
+          endColumn: model.getLineLength(lineNumber) + 1
+        };
+        const containsSelection = currentSelections?.some((selection) => !selection.isEmpty() && selection.intersectRanges(lineRange) !== null);
+        if (!containsSelection) {
+          this.editor.setSelection(lineRange, TextEditorSelectionSource.PROGRAMMATIC);
+        }
+      }
+      this.contextMenuService.showContextMenu({
+        getAnchor: /* @__PURE__ */ __name(() => e.event, "getAnchor"),
+        getActions: /* @__PURE__ */ __name(() => Separator.join(...allActions.map((a) => a[1])), "getActions"),
+        onHide: /* @__PURE__ */ __name(() => menu.dispose(), "onHide")
+      });
+    });
+  }
+};
+EditorLineNumberContextMenu = __decorateClass([
+  __decorateParam(1, IContextMenuService),
+  __decorateParam(2, IMenuService),
+  __decorateParam(3, IContextKeyService),
+  __decorateParam(4, IInstantiationService)
+], EditorLineNumberContextMenu);
+registerEditorContribution(EditorLineNumberContextMenu.ID, EditorLineNumberContextMenu, EditorContributionInstantiation.AfterFirstRender);
+export {
+  EditorLineNumberContextMenu,
+  GutterActionsRegistry,
+  GutterActionsRegistryImpl
+};
+//# sourceMappingURL=editorLineNumberMenu.js.map

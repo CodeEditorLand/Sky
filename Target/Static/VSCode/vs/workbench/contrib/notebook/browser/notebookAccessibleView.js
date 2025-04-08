@@ -1,1 +1,58 @@
-import{AccessibleViewProviderId as l,AccessibleViewType as s,AccessibleContentProvider as p}from"../../../../platform/accessibility/browser/accessibleView.js";import"../../../../platform/accessibility/browser/accessibleViewRegistry.js";import{ContextKeyExpr as d}from"../../../../platform/contextkey/common/contextkey.js";import"../../../../platform/instantiation/common/instantiation.js";import{AccessibilityVerbositySettingId as b}from"../../accessibility/browser/accessibilityConfiguration.js";import{getNotebookEditorFromEditorPane as u}from"./notebookBrowser.js";import{NOTEBOOK_CELL_LIST_FOCUSED as a}from"../common/notebookContextKeys.js";import{IEditorService as f}from"../../../services/editor/common/editorService.js";import{InputFocusedContext as v}from"../../../../platform/contextkey/common/contextkeys.js";import{getAllOutputsText as w}from"./viewModel/cellOutputTextHelper.js";class F{priority=100;name="notebook";type=s.View;when=d.and(a,v.toNegated());getProvider(e){return y(e.get(f))}}function y(e){const o=e.activeEditorPane,t=u(o),i=t?.getViewModel(),r=i?.getSelections(),c=i?.notebookDocument;if(!r||!c||!t?.textModel)return;const n=i.viewCells[r[0].start],a=w(c,n);return a?new p(l.Notebook,{type:s.View},(()=>a),(()=>{t?.setFocus(r[0]),t.focus()}),b.Notebook):void 0}export{F as NotebookAccessibleView,y as getAccessibleOutputProvider};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { AccessibleViewProviderId, AccessibleViewType, AccessibleContentProvider } from "../../../../platform/accessibility/browser/accessibleView.js";
+import { IAccessibleViewImplementation } from "../../../../platform/accessibility/browser/accessibleViewRegistry.js";
+import { ContextKeyExpr } from "../../../../platform/contextkey/common/contextkey.js";
+import { ServicesAccessor } from "../../../../platform/instantiation/common/instantiation.js";
+import { AccessibilityVerbositySettingId } from "../../accessibility/browser/accessibilityConfiguration.js";
+import { getNotebookEditorFromEditorPane } from "./notebookBrowser.js";
+import { NOTEBOOK_CELL_LIST_FOCUSED } from "../common/notebookContextKeys.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { InputFocusedContext } from "../../../../platform/contextkey/common/contextkeys.js";
+import { getAllOutputsText } from "./viewModel/cellOutputTextHelper.js";
+class NotebookAccessibleView {
+  static {
+    __name(this, "NotebookAccessibleView");
+  }
+  priority = 100;
+  name = "notebook";
+  type = AccessibleViewType.View;
+  when = ContextKeyExpr.and(NOTEBOOK_CELL_LIST_FOCUSED, InputFocusedContext.toNegated());
+  getProvider(accessor) {
+    const editorService = accessor.get(IEditorService);
+    return getAccessibleOutputProvider(editorService);
+  }
+}
+function getAccessibleOutputProvider(editorService) {
+  const activePane = editorService.activeEditorPane;
+  const notebookEditor = getNotebookEditorFromEditorPane(activePane);
+  const notebookViewModel = notebookEditor?.getViewModel();
+  const selections = notebookViewModel?.getSelections();
+  const notebookDocument = notebookViewModel?.notebookDocument;
+  if (!selections || !notebookDocument || !notebookEditor?.textModel) {
+    return;
+  }
+  const viewCell = notebookViewModel.viewCells[selections[0].start];
+  const outputContent = getAllOutputsText(notebookDocument, viewCell);
+  if (!outputContent) {
+    return;
+  }
+  return new AccessibleContentProvider(
+    AccessibleViewProviderId.Notebook,
+    { type: AccessibleViewType.View },
+    () => {
+      return outputContent;
+    },
+    () => {
+      notebookEditor?.setFocus(selections[0]);
+      notebookEditor.focus();
+    },
+    AccessibilityVerbositySettingId.Notebook
+  );
+}
+__name(getAccessibleOutputProvider, "getAccessibleOutputProvider");
+export {
+  NotebookAccessibleView,
+  getAccessibleOutputProvider
+};
+//# sourceMappingURL=notebookAccessibleView.js.map

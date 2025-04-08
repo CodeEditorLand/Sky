@@ -1,1 +1,49 @@
-import{isCancellationError as s,isSigPipeError as c,onUnexpectedError as i,setUnexpectedErrorHandler as d}from"../../../base/common/errors.js";import a from"../common/errorTelemetry.js";class l extends a{installErrorListeners(){d(e=>console.error(e));const o=[];process.on("unhandledRejection",(e,r)=>{o.push(r),setTimeout(()=>{const t=o.indexOf(r);t>=0&&r.catch(n=>{o.splice(t,1),s(n)||(console.warn(`rejected promise not handled within 1 second: ${n}`),n.stack&&console.warn(`stack trace: ${n.stack}`),e&&i(e))})},1e3)}),process.on("rejectionHandled",e=>{const r=o.indexOf(e);r>=0&&o.splice(r,1)}),process.on("uncaughtException",e=>{c(e)||i(e)})}}export{l as default};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { isCancellationError, isSigPipeError, onUnexpectedError, setUnexpectedErrorHandler } from "../../../base/common/errors.js";
+import BaseErrorTelemetry from "../common/errorTelemetry.js";
+class ErrorTelemetry extends BaseErrorTelemetry {
+  static {
+    __name(this, "ErrorTelemetry");
+  }
+  installErrorListeners() {
+    setUnexpectedErrorHandler((err) => console.error(err));
+    const unhandledPromises = [];
+    process.on("unhandledRejection", (reason, promise) => {
+      unhandledPromises.push(promise);
+      setTimeout(() => {
+        const idx = unhandledPromises.indexOf(promise);
+        if (idx >= 0) {
+          promise.catch((e) => {
+            unhandledPromises.splice(idx, 1);
+            if (!isCancellationError(e)) {
+              console.warn(`rejected promise not handled within 1 second: ${e}`);
+              if (e.stack) {
+                console.warn(`stack trace: ${e.stack}`);
+              }
+              if (reason) {
+                onUnexpectedError(reason);
+              }
+            }
+          });
+        }
+      }, 1e3);
+    });
+    process.on("rejectionHandled", (promise) => {
+      const idx = unhandledPromises.indexOf(promise);
+      if (idx >= 0) {
+        unhandledPromises.splice(idx, 1);
+      }
+    });
+    process.on("uncaughtException", (err) => {
+      if (isSigPipeError(err)) {
+        return;
+      }
+      onUnexpectedError(err);
+    });
+  }
+}
+export {
+  ErrorTelemetry as default
+};
+//# sourceMappingURL=errorTelemetry.js.map

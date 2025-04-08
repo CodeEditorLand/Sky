@@ -1,1 +1,39 @@
-import{MainContext as i}from"./extHost.protocol.js";import{DocumentSelector as a,Range as n}from"./extHostTypeConverters.js";import"../../../base/common/uriIpc.js";import"../../../base/common/cancellation.js";import{URI as s}from"../../../base/common/uri.js";class t{constructor(o,e){this.uriTransformer=e;this.proxy=o.getProxy(i.MainThreadShare)}static handlePool=0;proxy;providers=new Map;async $provideShare(o,e,r){return await this.providers.get(o)?.provideShare({selection:n.to(e.selection),resourceUri:s.revive(e.resourceUri)},r)??void 0}registerShareProvider(o,e){const r=t.handlePool++;return this.providers.set(r,e),this.proxy.$registerShareProvider(r,a.from(o,this.uriTransformer),e.id,e.label,e.priority),{dispose:()=>{this.proxy.$unregisterShareProvider(r),this.providers.delete(r)}}}}export{t as ExtHostShare};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { ExtHostShareShape, IMainContext, IShareableItemDto, MainContext, MainThreadShareShape } from "./extHost.protocol.js";
+import { DocumentSelector, Range } from "./extHostTypeConverters.js";
+import { IURITransformer } from "../../../base/common/uriIpc.js";
+import { CancellationToken } from "../../../base/common/cancellation.js";
+import { URI, UriComponents } from "../../../base/common/uri.js";
+class ExtHostShare {
+  constructor(mainContext, uriTransformer) {
+    this.uriTransformer = uriTransformer;
+    this.proxy = mainContext.getProxy(MainContext.MainThreadShare);
+  }
+  static {
+    __name(this, "ExtHostShare");
+  }
+  static handlePool = 0;
+  proxy;
+  providers = /* @__PURE__ */ new Map();
+  async $provideShare(handle, shareableItem, token) {
+    const provider = this.providers.get(handle);
+    const result = await provider?.provideShare({ selection: Range.to(shareableItem.selection), resourceUri: URI.revive(shareableItem.resourceUri) }, token);
+    return result ?? void 0;
+  }
+  registerShareProvider(selector, provider) {
+    const handle = ExtHostShare.handlePool++;
+    this.providers.set(handle, provider);
+    this.proxy.$registerShareProvider(handle, DocumentSelector.from(selector, this.uriTransformer), provider.id, provider.label, provider.priority);
+    return {
+      dispose: /* @__PURE__ */ __name(() => {
+        this.proxy.$unregisterShareProvider(handle);
+        this.providers.delete(handle);
+      }, "dispose")
+    };
+  }
+}
+export {
+  ExtHostShare
+};
+//# sourceMappingURL=extHostShare.js.map

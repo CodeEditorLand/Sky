@@ -1,1 +1,109 @@
-var f=Object.defineProperty,h=Object.getOwnPropertyDescriptor,m=(t,e,r,o)=>{for(var i,s=o>1?void 0:o?h(e,r):e,n=t.length-1;n>=0;n--)(i=t[n])&&(s=(o?i(e,r,s):i(s))||s);return o&&s&&f(e,r,s),s},d=(t,e)=>(r,o)=>e(r,o,t);import"../../../../../../base/common/uri.js";import{VSBuffer as c}from"../../../../../../base/common/buffer.js";import"../../../../../../editor/common/model.js";import{CancellationError as u}from"../../../../../../base/common/errors.js";import{FilePromptContentProvider as v}from"./filePromptContentsProvider.js";import{PromptContentsProviderBase as I}from"./promptContentsProviderBase.js";import{TextModel as g}from"../../../../../../editor/common/model/textModel.js";import"../../../../../../base/common/cancellation.js";import{newWriteableStream as C}from"../../../../../../base/common/stream.js";import"../../../../../../editor/common/textModelEvents.js";import{IInstantiationService as S}from"../../../../../../platform/instantiation/common/instantiation.js";let s=class extends I{constructor(t,e){super(),this.model=t,this.initService=e,this._register(this.model.onWillDispose(this.dispose.bind(this))),this._register(this.model.onDidChangeContent(this.onChangeEmitter.fire))}get uri(){return this.model.uri}async getContentsStream(t,e){const r=C(null),o=this.model.getLineCount();let i=1;const s=setInterval((()=>{if(i>=o&&(clearInterval(s),r.end(),r.destroy()),this.model.isDisposed()||e?.isCancellationRequested)return clearInterval(s),r.error(new u),void r.destroy();try{r.write(c.fromString(this.model.getLineContent(i))),i!==o&&r.write(c.fromString(this.model.getEOL()))}catch(t){console.log(this.uri,i,t)}i++}),1);return r}createNew(t){return t instanceof g?this.initService.createInstance(s,t):this.initService.createInstance(v,t.uri)}toString(){return`text-model-prompt-contents-provider:${this.uri.path}`}};s=m([d(1,S)],s);export{s as TextModelContentsProvider};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { URI } from "../../../../../../base/common/uri.js";
+import { VSBuffer } from "../../../../../../base/common/buffer.js";
+import { ITextModel } from "../../../../../../editor/common/model.js";
+import { CancellationError } from "../../../../../../base/common/errors.js";
+import { FilePromptContentProvider } from "./filePromptContentsProvider.js";
+import { PromptContentsProviderBase } from "./promptContentsProviderBase.js";
+import { TextModel } from "../../../../../../editor/common/model/textModel.js";
+import { CancellationToken } from "../../../../../../base/common/cancellation.js";
+import { newWriteableStream, ReadableStream } from "../../../../../../base/common/stream.js";
+import { IModelContentChangedEvent } from "../../../../../../editor/common/textModelEvents.js";
+import { IInstantiationService } from "../../../../../../platform/instantiation/common/instantiation.js";
+let TextModelContentsProvider = class extends PromptContentsProviderBase {
+  constructor(model, initService) {
+    super();
+    this.model = model;
+    this.initService = initService;
+    this._register(this.model.onWillDispose(this.dispose.bind(this)));
+    this._register(this.model.onDidChangeContent(this.onChangeEmitter.fire));
+  }
+  static {
+    __name(this, "TextModelContentsProvider");
+  }
+  /**
+   * URI component of the prompt associated with this contents provider.
+   */
+  get uri() {
+    return this.model.uri;
+  }
+  /**
+   * Creates a stream of binary data from the text model based on the changes
+   * listed in the provided event.
+   *
+   * Note! this method implements a basic logic which does not take into account
+   * 		 the `_event` argument for incremental updates. This needs to be improved.
+   *
+   * @param _event - event that describes the changes in the text model; `'full'` is
+   * 				   the special value that means that all contents have changed
+   * @param cancellationToken - token that cancels this operation
+   */
+  async getContentsStream(_event, cancellationToken) {
+    const stream = newWriteableStream(null);
+    const linesCount = this.model.getLineCount();
+    let i = 1;
+    const interval = setInterval(() => {
+      if (i >= linesCount) {
+        clearInterval(interval);
+        stream.end();
+        stream.destroy();
+      }
+      if (this.model.isDisposed() || cancellationToken?.isCancellationRequested) {
+        clearInterval(interval);
+        stream.error(new CancellationError());
+        stream.destroy();
+        return;
+      }
+      try {
+        stream.write(
+          VSBuffer.fromString(this.model.getLineContent(i))
+        );
+        if (i !== linesCount) {
+          stream.write(
+            VSBuffer.fromString(this.model.getEOL())
+          );
+        }
+      } catch (error) {
+        console.log(this.uri, i, error);
+      }
+      i++;
+    }, 1);
+    return stream;
+  }
+  createNew(promptContentsSource) {
+    if (promptContentsSource instanceof TextModel) {
+      return this.initService.createInstance(
+        TextModelContentsProvider,
+        promptContentsSource
+      );
+    }
+    return this.initService.createInstance(
+      FilePromptContentProvider,
+      promptContentsSource.uri
+    );
+  }
+  /**
+   * String representation of this object.
+   */
+  toString() {
+    return `text-model-prompt-contents-provider:${this.uri.path}`;
+  }
+};
+TextModelContentsProvider = __decorateClass([
+  __decorateParam(1, IInstantiationService)
+], TextModelContentsProvider);
+export {
+  TextModelContentsProvider
+};
+//# sourceMappingURL=textModelContentsProvider.js.map

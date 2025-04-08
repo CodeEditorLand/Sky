@@ -1,1 +1,153 @@
-var f=Object.defineProperty,I=Object.getOwnPropertyDescriptor,m=(e,t,o,i)=>{for(var s,r=i>1?void 0:i?I(t,o):t,n=e.length-1;n>=0;n--)(s=e[n])&&(r=(i?s(t,o,r):s(r))||r);return i&&r&&f(t,o,r),r},g=(e,t)=>(o,i)=>t(o,i,e);import*as a from"../../../../base/browser/dom.js";import{disposableTimeout as C}from"../../../../base/common/async.js";import{Codicon as y}from"../../../../base/common/codicons.js";import{Disposable as u,MutableDisposable as v}from"../../../../base/common/lifecycle.js";import{noBreakWhitespace as _}from"../../../../base/common/strings.js";import{ThemeIcon as D}from"../../../../base/common/themables.js";import"./inlineProgressWidget.css";import{ContentWidgetPositionPreference as w}from"../../../browser/editorBrowser.js";import{EditorOption as l}from"../../../common/config/editorOptions.js";import"../../../common/core/position.js";import{Range as P}from"../../../common/core/range.js";import"../../../common/editorCommon.js";import{TrackedRangeStickiness as N}from"../../../common/model.js";import{ModelDecorationOptions as W}from"../../../common/model/textModel.js";import{IInstantiationService as b}from"../../../../platform/instantiation/common/instantiation.js";const E=W.register({description:"inline-progress-widget",stickiness:N.NeverGrowsWhenTypingAtEdges,showIfCollapsed:!0,after:{content:_,inlineClassName:"inline-editor-progress-decoration",inlineClassNameAffectsLetterSpacing:!0}});class c extends u{constructor(e,t,o,i,s){super(),this.typeId=e,this.editor=t,this.range=o,this.delegate=s,this.create(i),this.editor.addContentWidget(this),this.editor.layoutContentWidget(this)}static baseId="editor.widget.inlineProgressWidget";allowEditorOverflow=!1;suppressMouseDown=!0;domNode;create(e){this.domNode=a.$(".inline-progress-widget"),this.domNode.role="button",this.domNode.title=e;const t=a.$("span.icon");this.domNode.append(t),t.classList.add(...D.asClassNameArray(y.loading),"codicon-modifier-spin");const o=()=>{const e=this.editor.getOption(l.lineHeight);this.domNode.style.height=`${e}px`,this.domNode.style.width=`${Math.ceil(.8*e)}px`};o(),this._register(this.editor.onDidChangeConfiguration((e=>{(e.hasChanged(l.fontSize)||e.hasChanged(l.lineHeight))&&o()}))),this._register(a.addDisposableListener(this.domNode,a.EventType.CLICK,(e=>{this.delegate.cancel()})))}getId(){return c.baseId+"."+this.typeId}getDomNode(){return this.domNode}getPosition(){return{position:{lineNumber:this.range.startLineNumber,column:this.range.startColumn},preference:[w.EXACT]}}dispose(){super.dispose(),this.editor.removeContentWidget(this)}}let d=class extends u{constructor(e,t,o){super(),this.id=e,this._editor=t,this._instantiationService=o,this._currentDecorations=t.createDecorationsCollection()}_showDelay=500;_showPromise=this._register(new v);_currentDecorations;_currentWidget=this._register(new v);_operationIdPool=0;_currentOperation;dispose(){super.dispose(),this._currentDecorations.clear()}async showWhile(e,t,o,i,s){const r=this._operationIdPool++;this._currentOperation=r,this.clear(),this._showPromise.value=C((()=>{const o=P.fromPositions(e);this._currentDecorations.set([{range:o,options:E}]).length>0&&(this._currentWidget.value=this._instantiationService.createInstance(c,this.id,this._editor,o,t,i))}),s??this._showDelay);try{return await o}finally{this._currentOperation===r&&(this.clear(),this._currentOperation=void 0)}}clear(){this._showPromise.clear(),this._currentDecorations.clear(),this._currentWidget.clear()}};d=m([g(2,b)],d);export{d as InlineProgressManager};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import * as dom from "../../../../base/browser/dom.js";
+import { disposableTimeout } from "../../../../base/common/async.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { Disposable, MutableDisposable } from "../../../../base/common/lifecycle.js";
+import { noBreakWhitespace } from "../../../../base/common/strings.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import "./inlineProgressWidget.css";
+import { ContentWidgetPositionPreference, ICodeEditor, IContentWidget, IContentWidgetPosition } from "../../../browser/editorBrowser.js";
+import { EditorOption } from "../../../common/config/editorOptions.js";
+import { IPosition } from "../../../common/core/position.js";
+import { Range } from "../../../common/core/range.js";
+import { IEditorDecorationsCollection } from "../../../common/editorCommon.js";
+import { TrackedRangeStickiness } from "../../../common/model.js";
+import { ModelDecorationOptions } from "../../../common/model/textModel.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+const inlineProgressDecoration = ModelDecorationOptions.register({
+  description: "inline-progress-widget",
+  stickiness: TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
+  showIfCollapsed: true,
+  after: {
+    content: noBreakWhitespace,
+    inlineClassName: "inline-editor-progress-decoration",
+    inlineClassNameAffectsLetterSpacing: true
+  }
+});
+class InlineProgressWidget extends Disposable {
+  constructor(typeId, editor, range, title, delegate) {
+    super();
+    this.typeId = typeId;
+    this.editor = editor;
+    this.range = range;
+    this.delegate = delegate;
+    this.create(title);
+    this.editor.addContentWidget(this);
+    this.editor.layoutContentWidget(this);
+  }
+  static {
+    __name(this, "InlineProgressWidget");
+  }
+  static baseId = "editor.widget.inlineProgressWidget";
+  allowEditorOverflow = false;
+  suppressMouseDown = true;
+  domNode;
+  create(title) {
+    this.domNode = dom.$(".inline-progress-widget");
+    this.domNode.role = "button";
+    this.domNode.title = title;
+    const iconElement = dom.$("span.icon");
+    this.domNode.append(iconElement);
+    iconElement.classList.add(...ThemeIcon.asClassNameArray(Codicon.loading), "codicon-modifier-spin");
+    const updateSize = /* @__PURE__ */ __name(() => {
+      const lineHeight = this.editor.getOption(EditorOption.lineHeight);
+      this.domNode.style.height = `${lineHeight}px`;
+      this.domNode.style.width = `${Math.ceil(0.8 * lineHeight)}px`;
+    }, "updateSize");
+    updateSize();
+    this._register(this.editor.onDidChangeConfiguration((c) => {
+      if (c.hasChanged(EditorOption.fontSize) || c.hasChanged(EditorOption.lineHeight)) {
+        updateSize();
+      }
+    }));
+    this._register(dom.addDisposableListener(this.domNode, dom.EventType.CLICK, (e) => {
+      this.delegate.cancel();
+    }));
+  }
+  getId() {
+    return InlineProgressWidget.baseId + "." + this.typeId;
+  }
+  getDomNode() {
+    return this.domNode;
+  }
+  getPosition() {
+    return {
+      position: { lineNumber: this.range.startLineNumber, column: this.range.startColumn },
+      preference: [ContentWidgetPositionPreference.EXACT]
+    };
+  }
+  dispose() {
+    super.dispose();
+    this.editor.removeContentWidget(this);
+  }
+}
+let InlineProgressManager = class extends Disposable {
+  constructor(id, _editor, _instantiationService) {
+    super();
+    this.id = id;
+    this._editor = _editor;
+    this._instantiationService = _instantiationService;
+    this._currentDecorations = _editor.createDecorationsCollection();
+  }
+  static {
+    __name(this, "InlineProgressManager");
+  }
+  /** Delay before showing the progress widget */
+  _showDelay = 500;
+  // ms
+  _showPromise = this._register(new MutableDisposable());
+  _currentDecorations;
+  _currentWidget = this._register(new MutableDisposable());
+  _operationIdPool = 0;
+  _currentOperation;
+  dispose() {
+    super.dispose();
+    this._currentDecorations.clear();
+  }
+  async showWhile(position, title, promise, delegate, delayOverride) {
+    const operationId = this._operationIdPool++;
+    this._currentOperation = operationId;
+    this.clear();
+    this._showPromise.value = disposableTimeout(() => {
+      const range = Range.fromPositions(position);
+      const decorationIds = this._currentDecorations.set([{
+        range,
+        options: inlineProgressDecoration
+      }]);
+      if (decorationIds.length > 0) {
+        this._currentWidget.value = this._instantiationService.createInstance(InlineProgressWidget, this.id, this._editor, range, title, delegate);
+      }
+    }, delayOverride ?? this._showDelay);
+    try {
+      return await promise;
+    } finally {
+      if (this._currentOperation === operationId) {
+        this.clear();
+        this._currentOperation = void 0;
+      }
+    }
+  }
+  clear() {
+    this._showPromise.clear();
+    this._currentDecorations.clear();
+    this._currentWidget.clear();
+  }
+};
+InlineProgressManager = __decorateClass([
+  __decorateParam(2, IInstantiationService)
+], InlineProgressManager);
+export {
+  InlineProgressManager
+};
+//# sourceMappingURL=inlineProgress.js.map

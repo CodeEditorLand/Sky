@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../../../Dependency/Microsoft/Dependency/Editor/src/vs/workbench/contrib/search/common/notebookSearch.ts"],
+  "sourcesContent": ["/*---------------------------------------------------------------------------------------------\r\n *  Copyright (c) Microsoft Corporation. All rights reserved.\r\n *  Licensed under the MIT License. See License.txt in the project root for license information.\r\n *--------------------------------------------------------------------------------------------*/\r\n\r\nimport { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';\r\nimport { CancellationToken } from '../../../../base/common/cancellation.js';\r\nimport { ResourceSet } from '../../../../base/common/map.js';\r\nimport { ITextQuery, ISearchProgressItem, ISearchComplete } from '../../../services/search/common/search.js';\r\n\r\nexport const INotebookSearchService = createDecorator<INotebookSearchService>('notebookSearchService');\r\n\r\nexport interface INotebookSearchService {\r\n\r\n\treadonly _serviceBrand: undefined;\r\n\r\n\tnotebookSearch(query: ITextQuery, token: CancellationToken | undefined, searchInstanceID: string, onProgress?: (result: ISearchProgressItem) => void): {\r\n\t\topenFilesToScan: ResourceSet;\r\n\t\tcompleteData: Promise<ISearchComplete>;\r\n\t\tallScannedFiles: Promise<ResourceSet>;\r\n\t};\r\n}\r\n"],
+  "mappings": "AAKA,SAAS,uBAAuB;AAChC,SAAS,yBAAyB;AAClC,SAAS,mBAAmB;AAC5B,SAAS,YAAY,qBAAqB,uBAAuB;AAE1D,MAAM,yBAAyB,gBAAwC,uBAAuB;",
+  "names": []
+}

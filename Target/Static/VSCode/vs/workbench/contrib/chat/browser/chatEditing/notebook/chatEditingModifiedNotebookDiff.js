@@ -1,1 +1,81 @@
-var p=Object.defineProperty,m=Object.getOwnPropertyDescriptor,l=(o,e,i,t)=>{for(var r,s=t>1?void 0:t?m(e,i):e,n=o.length-1;n>=0;n--)(r=o[n])&&(s=(t?r(e,i,s):r(s))||s);return t&&s&&p(e,i,s),s},a=(o,e)=>(i,t)=>e(i,t,o);import{DisposableStore as f}from"../../../../../../base/common/lifecycle.js";import{computeDiff as v}from"../../../../notebook/common/notebookDiff.js";import{INotebookEditorModelResolverService as b}from"../../../../notebook/common/notebookEditorModelResolverService.js";import{INotebookLoggingService as k}from"../../../../notebook/common/notebookLoggingService.js";import{INotebookEditorWorkerService as h}from"../../../../notebook/common/services/notebookWorkerService.js";import"../../../common/chatEditingService.js";import"../chatEditingModifiedFileEntry.js";let d=class{constructor(o,e,i,t,r){this.original=o,this.modified=e,this.notebookEditorWorkerService=i,this.notebookLoggingService=t,this.notebookEditorModelService=r}static NewModelCounter=0;async computeDiff(){let o=0,e=0;const i=new f;try{const[t,r]=await Promise.all([this.notebookEditorModelService.resolve(this.modified.snapshotUri),this.notebookEditorModelService.resolve(this.original.snapshotUri)]);i.add(t),i.add(r);const s=await this.notebookEditorWorkerService.computeDiff(this.original.snapshotUri,this.modified.snapshotUri);v(r.object.notebook,t.object.notebook,s).cellDiffInfo.forEach((i=>{switch(i.type){case"modified":case"insert":o++;break;case"delete":e++}}))}catch(o){this.notebookLoggingService.error("Notebook Chat","Error computing diff:\n"+o)}finally{i.dispose()}return{added:o,removed:e,identical:0===o&&0===e,quitEarly:!1,modifiedURI:this.modified.snapshotUri,originalURI:this.original.snapshotUri}}};d=l([a(2,h),a(3,k),a(4,b)],d);export{d as ChatEditingModifiedNotebookDiff};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { DisposableStore } from "../../../../../../base/common/lifecycle.js";
+import { computeDiff } from "../../../../notebook/common/notebookDiff.js";
+import { INotebookEditorModelResolverService } from "../../../../notebook/common/notebookEditorModelResolverService.js";
+import { INotebookLoggingService } from "../../../../notebook/common/notebookLoggingService.js";
+import { INotebookEditorWorkerService } from "../../../../notebook/common/services/notebookWorkerService.js";
+import { IEditSessionEntryDiff } from "../../../common/chatEditingService.js";
+import { ISnapshotEntry } from "../chatEditingModifiedFileEntry.js";
+let ChatEditingModifiedNotebookDiff = class {
+  constructor(original, modified, notebookEditorWorkerService, notebookLoggingService, notebookEditorModelService) {
+    this.original = original;
+    this.modified = modified;
+    this.notebookEditorWorkerService = notebookEditorWorkerService;
+    this.notebookLoggingService = notebookLoggingService;
+    this.notebookEditorModelService = notebookEditorModelService;
+  }
+  static {
+    __name(this, "ChatEditingModifiedNotebookDiff");
+  }
+  static NewModelCounter = 0;
+  async computeDiff() {
+    let added = 0;
+    let removed = 0;
+    const disposables = new DisposableStore();
+    try {
+      const [modifiedRef, originalRef] = await Promise.all([
+        this.notebookEditorModelService.resolve(this.modified.snapshotUri),
+        this.notebookEditorModelService.resolve(this.original.snapshotUri)
+      ]);
+      disposables.add(modifiedRef);
+      disposables.add(originalRef);
+      const notebookDiff = await this.notebookEditorWorkerService.computeDiff(this.original.snapshotUri, this.modified.snapshotUri);
+      const result = computeDiff(originalRef.object.notebook, modifiedRef.object.notebook, notebookDiff);
+      result.cellDiffInfo.forEach((diff) => {
+        switch (diff.type) {
+          case "modified":
+          case "insert":
+            added++;
+            break;
+          case "delete":
+            removed++;
+            break;
+          default:
+            break;
+        }
+      });
+    } catch (e) {
+      this.notebookLoggingService.error("Notebook Chat", "Error computing diff:\n" + e);
+    } finally {
+      disposables.dispose();
+    }
+    return {
+      added,
+      removed,
+      identical: added === 0 && removed === 0,
+      quitEarly: false,
+      modifiedURI: this.modified.snapshotUri,
+      originalURI: this.original.snapshotUri
+    };
+  }
+};
+ChatEditingModifiedNotebookDiff = __decorateClass([
+  __decorateParam(2, INotebookEditorWorkerService),
+  __decorateParam(3, INotebookLoggingService),
+  __decorateParam(4, INotebookEditorModelResolverService)
+], ChatEditingModifiedNotebookDiff);
+export {
+  ChatEditingModifiedNotebookDiff
+};
+//# sourceMappingURL=chatEditingModifiedNotebookDiff.js.map

@@ -1,1 +1,424 @@
-var D=Object.defineProperty;var K=Object.getOwnPropertyDescriptor;var x=(p,h,e,i)=>{for(var t=i>1?void 0:i?K(h,e):h,r=p.length-1,n;r>=0;r--)(n=p[r])&&(t=(i?n(h,e,t):n(t))||t);return i&&t&&D(h,e,t),t},o=(p,h)=>(e,i)=>h(e,i,p);import{LayoutPriority as y,Orientation as b,Sizing as V,SplitView as H}from"../../../../base/browser/ui/splitview/splitview.js";import{Disposable as S,DisposableStore as O,dispose as A}from"../../../../base/common/lifecycle.js";import{IConfigurationService as G}from"../../../../platform/configuration/common/configuration.js";import{IInstantiationService as F}from"../../../../platform/instantiation/common/instantiation.js";import{ITerminalConfigurationService as z,ITerminalGroupService as N,ITerminalService as R,TerminalConnectionState as k}from"./terminal.js";import{TerminalTabsListSizes as a,TerminalTabList as P}from"./terminalTabsList.js";import*as s from"../../../../base/browser/dom.js";import{Action as T,Separator as B}from"../../../../base/common/actions.js";import{IMenuService as $,MenuId as C}from"../../../../platform/actions/common/actions.js";import{IContextKeyService as U}from"../../../../platform/contextkey/common/contextkey.js";import{IContextMenuService as j}from"../../../../platform/contextview/browser/contextView.js";import{TerminalSettingId as _}from"../../../../platform/terminal/common/terminal.js";import{IStorageService as Y,StorageScope as E,StorageTarget as Z}from"../../../../platform/storage/common/storage.js";import{localize as I}from"../../../../nls.js";import{openContextMenu as W}from"./terminalContextMenu.js";import{TerminalStorageKeys as v}from"../common/terminalStorageKeys.js";import{TerminalContextKeys as L}from"../common/terminalContextKey.js";import{getInstanceHoverInfo as q}from"./terminalTooltip.js";import{IHoverService as J}from"../../../../platform/hover/browser/hover.js";const f=s.$;var Q=(h=>(h.ViewIsVertical="terminal-side-view",h))(Q||{}),X=(e=>(e[e.StatusIcon=30]="StatusIcon",e[e.SplitAnnotation=30]="SplitAnnotation",e))(X||{});let g=class extends S{constructor(e,i,t,r,n,c,d,l,ee,u,te){super();this._terminalService=i;this._terminalConfigurationService=t;this._terminalGroupService=r;this._instantiationService=n;this._contextMenuService=c;this._configurationService=d;this._storageService=ee;this._hoverService=te;this._tabContainer=f(".tabs-container");const w=f(".tabs-list-container");this._tabListElement=f(".tabs-list"),w.appendChild(this._tabListElement),this._tabContainer.appendChild(w),this._instanceMenu=this._register(l.createMenu(C.TerminalInstanceContext,u)),this._tabsListMenu=this._register(l.createMenu(C.TerminalTabContext,u)),this._tabsListEmptyMenu=this._register(l.createMenu(C.TerminalTabEmptyAreaContext,u)),this._tabList=this._register(this._instantiationService.createInstance(P,this._tabListElement,this._register(new O)));const M=f(".terminal-outer-container");this._terminalContainer=f(".terminal-groups-container"),M.appendChild(this._terminalContainer),this._terminalService.setContainers(e,this._terminalContainer),this._terminalIsTabsNarrowContextKey=L.tabsNarrow.bindTo(u),this._terminalTabsFocusContextKey=L.tabsFocus.bindTo(u),this._terminalTabsMouseContextKey=L.tabsMouse.bindTo(u),this._tabTreeIndex=this._terminalConfigurationService.config.tabs.location==="left"?0:1,this._terminalContainerIndex=this._terminalConfigurationService.config.tabs.location==="left"?1:0,this._register(d.onDidChangeConfiguration(m=>{m.affectsConfiguration(_.TabsEnabled)||m.affectsConfiguration(_.TabsHideCondition)?this._refreshShowTabs():m.affectsConfiguration(_.TabsLocation)&&(this._tabTreeIndex=this._terminalConfigurationService.config.tabs.location==="left"?0:1,this._terminalContainerIndex=this._terminalConfigurationService.config.tabs.location==="left"?1:0,this._shouldShowTabs()&&(this._splitView.swapViews(0,1),this._removeSashListener(),this._addSashListener(),this._splitView.resizeView(this._tabTreeIndex,this._getLastListWidth())))})),this._register(this._terminalGroupService.onDidChangeInstances(()=>this._refreshShowTabs())),this._register(this._terminalGroupService.onDidChangeGroups(()=>this._refreshShowTabs())),this._attachEventListeners(e,this._terminalContainer),this._register(this._terminalGroupService.onDidChangePanelOrientation(m=>{this._panelOrientation=m,this._panelOrientation===b.VERTICAL?this._terminalContainer.classList.add("terminal-side-view"):this._terminalContainer.classList.remove("terminal-side-view")})),this._splitView=new H(e,{orientation:b.HORIZONTAL,proportionalLayout:!1}),this._setupSplitView(M)}_splitView;_terminalContainer;_tabListElement;_tabContainer;_tabList;_sashDisposables;_plusButton;_tabTreeIndex;_terminalContainerIndex;_height;_width;_cancelContextMenu=!1;_instanceMenu;_tabsListMenu;_tabsListEmptyMenu;_terminalIsTabsNarrowContextKey;_terminalTabsFocusContextKey;_terminalTabsMouseContextKey;_panelOrientation;_shouldShowTabs(){const e=this._terminalConfigurationService.config.tabs.enabled,i=this._terminalConfigurationService.config.tabs.hideCondition;return e?i==="never"||i==="singleTerminal"&&this._terminalGroupService.instances.length>1||i==="singleGroup"&&this._terminalGroupService.groups.length>1:!1}_refreshShowTabs(){this._shouldShowTabs()?this._splitView.length===1&&(this._addTabTree(),this._addSashListener(),this._splitView.resizeView(this._tabTreeIndex,this._getLastListWidth()),this.rerenderTabs()):this._splitView.length===2&&!this._terminalTabsMouseContextKey.get()&&(this._splitView.removeView(this._tabTreeIndex),this._plusButton?.remove(),this._removeSashListener())}_getLastListWidth(){const e=this._panelOrientation===b.VERTICAL?v.TabsListWidthVertical:v.TabsListWidthHorizontal,i=this._storageService.get(e,E.PROFILE);return!i||!parseInt(i)?this._panelOrientation===b.VERTICAL?a.NarrowViewWidth:a.DefaultWidth:parseInt(i)}_handleOnDidSashReset(){let e=a.WideViewMinimumWidth;const i=document.createElement("canvas");i.width=1,i.height=1;const t=i.getContext("2d");if(t){const n=s.getWindow(this._tabListElement).getComputedStyle(this._tabListElement);t.font=`${n.fontStyle} ${n.fontSize} ${n.fontFamily}`;const c=this._terminalGroupService.instances.reduce((d,l)=>Math.max(d,t.measureText(l.title+(l.description||"")).width+this._getAdditionalWidth(l)),0);e=Math.ceil(Math.max(c,a.WideViewMinimumWidth))}Math.ceil(this._splitView.getViewSize(this._tabTreeIndex))===e&&(e=a.NarrowViewWidth),this._splitView.resizeView(this._tabTreeIndex,e),this._updateListWidth(e)}_getAdditionalWidth(e){const t=e.statusList.statuses.length>0?30:0;return 40+((this._terminalGroupService.getGroupForInstance(e)?.terminalInstances.length||0)>1?30:0)+t}_handleOnDidSashChange(){const e=this._splitView.getViewSize(this._tabTreeIndex);!this._width||e<=0||this._updateListWidth(e)}_updateListWidth(e){e<a.MidpointViewWidth&&e>=a.NarrowViewWidth?(e=a.NarrowViewWidth,this._splitView.resizeView(this._tabTreeIndex,e)):e>=a.MidpointViewWidth&&e<a.WideViewMinimumWidth&&(e=a.WideViewMinimumWidth,this._splitView.resizeView(this._tabTreeIndex,e)),this.rerenderTabs();const i=this._panelOrientation===b.VERTICAL?v.TabsListWidthVertical:v.TabsListWidthHorizontal;this._storageService.store(i,e,E.PROFILE,Z.USER)}_setupSplitView(e){this._register(this._splitView.onDidSashReset(()=>this._handleOnDidSashReset())),this._register(this._splitView.onDidSashChange(()=>this._handleOnDidSashChange())),this._shouldShowTabs()&&this._addTabTree(),this._splitView.addView({element:e,layout:i=>this._terminalGroupService.groups.forEach(t=>t.layout(i,this._height||0)),minimumSize:120,maximumSize:Number.POSITIVE_INFINITY,onDidChange:()=>S.None,priority:y.High},V.Distribute,this._terminalContainerIndex),this._shouldShowTabs()&&this._addSashListener()}_addTabTree(){this._splitView.addView({element:this._tabContainer,layout:e=>this._tabList.layout(this._height||0,e),minimumSize:a.NarrowViewWidth,maximumSize:a.MaximumWidth,onDidChange:()=>S.None,priority:y.Low},V.Distribute,this._tabTreeIndex),this.rerenderTabs()}rerenderTabs(){this._updateHasText(),this._tabList.refresh()}_addSashListener(){let e;this._sashDisposables=[this._splitView.sashes[0].onDidStart(i=>{e=s.disposableWindowInterval(s.getWindow(this._splitView.el),()=>{this.rerenderTabs()},100)}),this._splitView.sashes[0].onDidEnd(i=>{e.dispose()})]}_removeSashListener(){this._sashDisposables&&(A(this._sashDisposables),this._sashDisposables=void 0)}_updateHasText(){const e=this._tabListElement.clientWidth>a.MidpointViewWidth;this._tabContainer.classList.toggle("has-text",e),this._terminalIsTabsNarrowContextKey.set(!e)}layout(e,i){this._height=i,this._width=e,this._splitView.layout(e),this._shouldShowTabs()&&this._splitView.resizeView(this._tabTreeIndex,this._getLastListWidth()),this._updateHasText()}_attachEventListeners(e,i){this._register(s.addDisposableListener(this._tabContainer,"mouseleave",async t=>{this._terminalTabsMouseContextKey.set(!1),this._refreshShowTabs(),t.stopPropagation()})),this._register(s.addDisposableListener(this._tabContainer,"mouseenter",async t=>{this._terminalTabsMouseContextKey.set(!0),t.stopPropagation()})),this._register(s.addDisposableListener(i,"mousedown",async t=>{const r=this._terminalGroupService.activeInstance;if(this._terminalGroupService.instances.length>0&&r){const n=await r.handleMouseEvent(t,this._instanceMenu);typeof n=="object"&&n.cancelContextMenu&&(this._cancelContextMenu=!0)}})),this._register(s.addDisposableListener(i,"contextmenu",t=>{this._terminalConfigurationService.config.rightClickBehavior==="nothing"&&!t.shiftKey&&(this._cancelContextMenu=!0),i.focus(),this._cancelContextMenu||W(s.getWindow(i),t,this._terminalGroupService.activeInstance,this._instanceMenu,this._contextMenuService),t.preventDefault(),t.stopImmediatePropagation(),this._cancelContextMenu=!1})),this._register(s.addDisposableListener(this._tabContainer,"contextmenu",t=>{if(this._terminalConfigurationService.config.rightClickBehavior==="nothing"&&!t.shiftKey&&(this._cancelContextMenu=!0),!this._cancelContextMenu){const n=this._tabList.getFocus().length===0;n||(this._terminalGroupService.lastAccessedMenu="tab-list");const c=this._tabList.getSelectedElements(),d=this._tabList.getFocusedElements()?.[0];d&&(c.splice(c.findIndex(l=>l.instanceId===d.instanceId),1),c.unshift(d)),W(s.getWindow(this._tabContainer),t,c,n?this._tabsListEmptyMenu:this._tabsListMenu,this._contextMenuService,n?this._getTabActions():void 0)}t.preventDefault(),t.stopImmediatePropagation(),this._cancelContextMenu=!1})),this._register(s.addDisposableListener(i.ownerDocument,"keydown",t=>{i.classList.toggle("alt-active",!!t.altKey)})),this._register(s.addDisposableListener(i.ownerDocument,"keyup",t=>{i.classList.toggle("alt-active",!!t.altKey)})),this._register(s.addDisposableListener(e,"keyup",t=>{t.keyCode===27&&t.stopPropagation()})),this._register(s.addDisposableListener(this._tabContainer,s.EventType.FOCUS_IN,()=>{this._terminalTabsFocusContextKey.set(!0)})),this._register(s.addDisposableListener(this._tabContainer,s.EventType.FOCUS_OUT,()=>{this._terminalTabsFocusContextKey.set(!1)}))}_getTabActions(){return[new B,this._configurationService.inspect(_.TabsLocation).userValue==="left"?new T("moveRight",I("moveTabsRight","Move Tabs Right"),void 0,void 0,async()=>{this._configurationService.updateValue(_.TabsLocation,"right")}):new T("moveLeft",I("moveTabsLeft","Move Tabs Left"),void 0,void 0,async()=>{this._configurationService.updateValue(_.TabsLocation,"left")}),new T("hideTabs",I("hideTabs","Hide Tabs"),void 0,void 0,async()=>{this._configurationService.updateValue(_.TabsEnabled,!1)})]}setEditable(e){e||this._tabList.domFocus(),this._tabList.refresh(!1)}focusTabs(){if(!this._shouldShowTabs())return;this._terminalTabsFocusContextKey.set(!0);const e=this._tabList.getSelection();this._tabList.domFocus(),e&&this._tabList.setFocus(e)}focus(){if(this._terminalService.connectionState===k.Connected){this._focus();return}const e=this._tabListElement.ownerDocument.activeElement;e&&this._register(this._terminalService.onDidChangeConnectionState(()=>{s.isActiveElement(e)&&this._focus()}))}focusHover(){if(this._shouldShowTabs()){this._tabList.focusHover();return}const e=this._terminalGroupService.activeInstance;e&&this._hoverService.showInstantHover({...q(e,this._storageService),target:this._terminalContainer,trapFocus:!0},!0)}_focus(){this._terminalGroupService.activeInstance?.focusWhenReady()}};g=x([o(1,R),o(2,z),o(3,N),o(4,F),o(5,j),o(6,G),o(7,$),o(8,Y),o(9,U),o(10,J)],g);export{g as TerminalTabbedView};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { LayoutPriority, Orientation, Sizing, SplitView } from "../../../../base/browser/ui/splitview/splitview.js";
+import { Disposable, DisposableStore, dispose, IDisposable } from "../../../../base/common/lifecycle.js";
+import { IConfigurationService } from "../../../../platform/configuration/common/configuration.js";
+import { IInstantiationService } from "../../../../platform/instantiation/common/instantiation.js";
+import { ITerminalConfigurationService, ITerminalGroupService, ITerminalInstance, ITerminalService, TerminalConnectionState } from "./terminal.js";
+import { TerminalTabsListSizes, TerminalTabList } from "./terminalTabsList.js";
+import * as dom from "../../../../base/browser/dom.js";
+import { Action, IAction, Separator } from "../../../../base/common/actions.js";
+import { IMenu, IMenuService, MenuId } from "../../../../platform/actions/common/actions.js";
+import { IContextKey, IContextKeyService } from "../../../../platform/contextkey/common/contextkey.js";
+import { IContextMenuService } from "../../../../platform/contextview/browser/contextView.js";
+import { TerminalSettingId } from "../../../../platform/terminal/common/terminal.js";
+import { IStorageService, StorageScope, StorageTarget } from "../../../../platform/storage/common/storage.js";
+import { localize } from "../../../../nls.js";
+import { openContextMenu } from "./terminalContextMenu.js";
+import { TerminalStorageKeys } from "../common/terminalStorageKeys.js";
+import { TerminalContextKeys } from "../common/terminalContextKey.js";
+import { getInstanceHoverInfo } from "./terminalTooltip.js";
+import { IHoverService } from "../../../../platform/hover/browser/hover.js";
+const $ = dom.$;
+var CssClass = /* @__PURE__ */ ((CssClass2) => {
+  CssClass2["ViewIsVertical"] = "terminal-side-view";
+  return CssClass2;
+})(CssClass || {});
+var WidthConstants = /* @__PURE__ */ ((WidthConstants2) => {
+  WidthConstants2[WidthConstants2["StatusIcon"] = 30] = "StatusIcon";
+  WidthConstants2[WidthConstants2["SplitAnnotation"] = 30] = "SplitAnnotation";
+  return WidthConstants2;
+})(WidthConstants || {});
+let TerminalTabbedView = class extends Disposable {
+  constructor(parentElement, _terminalService, _terminalConfigurationService, _terminalGroupService, _instantiationService, _contextMenuService, _configurationService, menuService, _storageService, contextKeyService, _hoverService) {
+    super();
+    this._terminalService = _terminalService;
+    this._terminalConfigurationService = _terminalConfigurationService;
+    this._terminalGroupService = _terminalGroupService;
+    this._instantiationService = _instantiationService;
+    this._contextMenuService = _contextMenuService;
+    this._configurationService = _configurationService;
+    this._storageService = _storageService;
+    this._hoverService = _hoverService;
+    this._tabContainer = $(".tabs-container");
+    const tabListContainer = $(".tabs-list-container");
+    this._tabListElement = $(".tabs-list");
+    tabListContainer.appendChild(this._tabListElement);
+    this._tabContainer.appendChild(tabListContainer);
+    this._instanceMenu = this._register(menuService.createMenu(MenuId.TerminalInstanceContext, contextKeyService));
+    this._tabsListMenu = this._register(menuService.createMenu(MenuId.TerminalTabContext, contextKeyService));
+    this._tabsListEmptyMenu = this._register(menuService.createMenu(MenuId.TerminalTabEmptyAreaContext, contextKeyService));
+    this._tabList = this._register(this._instantiationService.createInstance(TerminalTabList, this._tabListElement, this._register(new DisposableStore())));
+    const terminalOuterContainer = $(".terminal-outer-container");
+    this._terminalContainer = $(".terminal-groups-container");
+    terminalOuterContainer.appendChild(this._terminalContainer);
+    this._terminalService.setContainers(parentElement, this._terminalContainer);
+    this._terminalIsTabsNarrowContextKey = TerminalContextKeys.tabsNarrow.bindTo(contextKeyService);
+    this._terminalTabsFocusContextKey = TerminalContextKeys.tabsFocus.bindTo(contextKeyService);
+    this._terminalTabsMouseContextKey = TerminalContextKeys.tabsMouse.bindTo(contextKeyService);
+    this._tabTreeIndex = this._terminalConfigurationService.config.tabs.location === "left" ? 0 : 1;
+    this._terminalContainerIndex = this._terminalConfigurationService.config.tabs.location === "left" ? 1 : 0;
+    this._register(_configurationService.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration(TerminalSettingId.TabsEnabled) || e.affectsConfiguration(TerminalSettingId.TabsHideCondition)) {
+        this._refreshShowTabs();
+      } else if (e.affectsConfiguration(TerminalSettingId.TabsLocation)) {
+        this._tabTreeIndex = this._terminalConfigurationService.config.tabs.location === "left" ? 0 : 1;
+        this._terminalContainerIndex = this._terminalConfigurationService.config.tabs.location === "left" ? 1 : 0;
+        if (this._shouldShowTabs()) {
+          this._splitView.swapViews(0, 1);
+          this._removeSashListener();
+          this._addSashListener();
+          this._splitView.resizeView(this._tabTreeIndex, this._getLastListWidth());
+        }
+      }
+    }));
+    this._register(this._terminalGroupService.onDidChangeInstances(() => this._refreshShowTabs()));
+    this._register(this._terminalGroupService.onDidChangeGroups(() => this._refreshShowTabs()));
+    this._attachEventListeners(parentElement, this._terminalContainer);
+    this._register(this._terminalGroupService.onDidChangePanelOrientation((orientation) => {
+      this._panelOrientation = orientation;
+      if (this._panelOrientation === Orientation.VERTICAL) {
+        this._terminalContainer.classList.add("terminal-side-view" /* ViewIsVertical */);
+      } else {
+        this._terminalContainer.classList.remove("terminal-side-view" /* ViewIsVertical */);
+      }
+    }));
+    this._splitView = new SplitView(parentElement, { orientation: Orientation.HORIZONTAL, proportionalLayout: false });
+    this._setupSplitView(terminalOuterContainer);
+  }
+  static {
+    __name(this, "TerminalTabbedView");
+  }
+  _splitView;
+  _terminalContainer;
+  _tabListElement;
+  _tabContainer;
+  _tabList;
+  _sashDisposables;
+  _plusButton;
+  _tabTreeIndex;
+  _terminalContainerIndex;
+  _height;
+  _width;
+  _cancelContextMenu = false;
+  _instanceMenu;
+  _tabsListMenu;
+  _tabsListEmptyMenu;
+  _terminalIsTabsNarrowContextKey;
+  _terminalTabsFocusContextKey;
+  _terminalTabsMouseContextKey;
+  _panelOrientation;
+  _shouldShowTabs() {
+    const enabled = this._terminalConfigurationService.config.tabs.enabled;
+    const hide = this._terminalConfigurationService.config.tabs.hideCondition;
+    if (!enabled) {
+      return false;
+    }
+    if (hide === "never") {
+      return true;
+    }
+    if (hide === "singleTerminal" && this._terminalGroupService.instances.length > 1) {
+      return true;
+    }
+    if (hide === "singleGroup" && this._terminalGroupService.groups.length > 1) {
+      return true;
+    }
+    return false;
+  }
+  _refreshShowTabs() {
+    if (this._shouldShowTabs()) {
+      if (this._splitView.length === 1) {
+        this._addTabTree();
+        this._addSashListener();
+        this._splitView.resizeView(this._tabTreeIndex, this._getLastListWidth());
+        this.rerenderTabs();
+      }
+    } else {
+      if (this._splitView.length === 2 && !this._terminalTabsMouseContextKey.get()) {
+        this._splitView.removeView(this._tabTreeIndex);
+        this._plusButton?.remove();
+        this._removeSashListener();
+      }
+    }
+  }
+  _getLastListWidth() {
+    const widthKey = this._panelOrientation === Orientation.VERTICAL ? TerminalStorageKeys.TabsListWidthVertical : TerminalStorageKeys.TabsListWidthHorizontal;
+    const storedValue = this._storageService.get(widthKey, StorageScope.PROFILE);
+    if (!storedValue || !parseInt(storedValue)) {
+      return this._panelOrientation === Orientation.VERTICAL ? TerminalTabsListSizes.NarrowViewWidth : TerminalTabsListSizes.DefaultWidth;
+    }
+    return parseInt(storedValue);
+  }
+  _handleOnDidSashReset() {
+    let idealWidth = TerminalTabsListSizes.WideViewMinimumWidth;
+    const offscreenCanvas = document.createElement("canvas");
+    offscreenCanvas.width = 1;
+    offscreenCanvas.height = 1;
+    const ctx = offscreenCanvas.getContext("2d");
+    if (ctx) {
+      const style = dom.getWindow(this._tabListElement).getComputedStyle(this._tabListElement);
+      ctx.font = `${style.fontStyle} ${style.fontSize} ${style.fontFamily}`;
+      const maxInstanceWidth = this._terminalGroupService.instances.reduce((p, c) => {
+        return Math.max(p, ctx.measureText(c.title + (c.description || "")).width + this._getAdditionalWidth(c));
+      }, 0);
+      idealWidth = Math.ceil(Math.max(maxInstanceWidth, TerminalTabsListSizes.WideViewMinimumWidth));
+    }
+    const currentWidth = Math.ceil(this._splitView.getViewSize(this._tabTreeIndex));
+    if (currentWidth === idealWidth) {
+      idealWidth = TerminalTabsListSizes.NarrowViewWidth;
+    }
+    this._splitView.resizeView(this._tabTreeIndex, idealWidth);
+    this._updateListWidth(idealWidth);
+  }
+  _getAdditionalWidth(instance) {
+    const additionalWidth = 40;
+    const statusIconWidth = instance.statusList.statuses.length > 0 ? 30 /* StatusIcon */ : 0;
+    const splitAnnotationWidth = (this._terminalGroupService.getGroupForInstance(instance)?.terminalInstances.length || 0) > 1 ? 30 /* SplitAnnotation */ : 0;
+    return additionalWidth + splitAnnotationWidth + statusIconWidth;
+  }
+  _handleOnDidSashChange() {
+    const listWidth = this._splitView.getViewSize(this._tabTreeIndex);
+    if (!this._width || listWidth <= 0) {
+      return;
+    }
+    this._updateListWidth(listWidth);
+  }
+  _updateListWidth(width) {
+    if (width < TerminalTabsListSizes.MidpointViewWidth && width >= TerminalTabsListSizes.NarrowViewWidth) {
+      width = TerminalTabsListSizes.NarrowViewWidth;
+      this._splitView.resizeView(this._tabTreeIndex, width);
+    } else if (width >= TerminalTabsListSizes.MidpointViewWidth && width < TerminalTabsListSizes.WideViewMinimumWidth) {
+      width = TerminalTabsListSizes.WideViewMinimumWidth;
+      this._splitView.resizeView(this._tabTreeIndex, width);
+    }
+    this.rerenderTabs();
+    const widthKey = this._panelOrientation === Orientation.VERTICAL ? TerminalStorageKeys.TabsListWidthVertical : TerminalStorageKeys.TabsListWidthHorizontal;
+    this._storageService.store(widthKey, width, StorageScope.PROFILE, StorageTarget.USER);
+  }
+  _setupSplitView(terminalOuterContainer) {
+    this._register(this._splitView.onDidSashReset(() => this._handleOnDidSashReset()));
+    this._register(this._splitView.onDidSashChange(() => this._handleOnDidSashChange()));
+    if (this._shouldShowTabs()) {
+      this._addTabTree();
+    }
+    this._splitView.addView({
+      element: terminalOuterContainer,
+      layout: /* @__PURE__ */ __name((width) => this._terminalGroupService.groups.forEach((tab) => tab.layout(width, this._height || 0)), "layout"),
+      minimumSize: 120,
+      maximumSize: Number.POSITIVE_INFINITY,
+      onDidChange: /* @__PURE__ */ __name(() => Disposable.None, "onDidChange"),
+      priority: LayoutPriority.High
+    }, Sizing.Distribute, this._terminalContainerIndex);
+    if (this._shouldShowTabs()) {
+      this._addSashListener();
+    }
+  }
+  _addTabTree() {
+    this._splitView.addView({
+      element: this._tabContainer,
+      layout: /* @__PURE__ */ __name((width) => this._tabList.layout(this._height || 0, width), "layout"),
+      minimumSize: TerminalTabsListSizes.NarrowViewWidth,
+      maximumSize: TerminalTabsListSizes.MaximumWidth,
+      onDidChange: /* @__PURE__ */ __name(() => Disposable.None, "onDidChange"),
+      priority: LayoutPriority.Low
+    }, Sizing.Distribute, this._tabTreeIndex);
+    this.rerenderTabs();
+  }
+  rerenderTabs() {
+    this._updateHasText();
+    this._tabList.refresh();
+  }
+  _addSashListener() {
+    let interval;
+    this._sashDisposables = [
+      this._splitView.sashes[0].onDidStart((e) => {
+        interval = dom.disposableWindowInterval(dom.getWindow(this._splitView.el), () => {
+          this.rerenderTabs();
+        }, 100);
+      }),
+      this._splitView.sashes[0].onDidEnd((e) => {
+        interval.dispose();
+      })
+    ];
+  }
+  _removeSashListener() {
+    if (this._sashDisposables) {
+      dispose(this._sashDisposables);
+      this._sashDisposables = void 0;
+    }
+  }
+  _updateHasText() {
+    const hasText = this._tabListElement.clientWidth > TerminalTabsListSizes.MidpointViewWidth;
+    this._tabContainer.classList.toggle("has-text", hasText);
+    this._terminalIsTabsNarrowContextKey.set(!hasText);
+  }
+  layout(width, height) {
+    this._height = height;
+    this._width = width;
+    this._splitView.layout(width);
+    if (this._shouldShowTabs()) {
+      this._splitView.resizeView(this._tabTreeIndex, this._getLastListWidth());
+    }
+    this._updateHasText();
+  }
+  _attachEventListeners(parentDomElement, terminalContainer) {
+    this._register(dom.addDisposableListener(this._tabContainer, "mouseleave", async (event) => {
+      this._terminalTabsMouseContextKey.set(false);
+      this._refreshShowTabs();
+      event.stopPropagation();
+    }));
+    this._register(dom.addDisposableListener(this._tabContainer, "mouseenter", async (event) => {
+      this._terminalTabsMouseContextKey.set(true);
+      event.stopPropagation();
+    }));
+    this._register(dom.addDisposableListener(terminalContainer, "mousedown", async (event) => {
+      const terminal = this._terminalGroupService.activeInstance;
+      if (this._terminalGroupService.instances.length > 0 && terminal) {
+        const result = await terminal.handleMouseEvent(event, this._instanceMenu);
+        if (typeof result === "object" && result.cancelContextMenu) {
+          this._cancelContextMenu = true;
+        }
+      }
+    }));
+    this._register(dom.addDisposableListener(terminalContainer, "contextmenu", (event) => {
+      const rightClickBehavior = this._terminalConfigurationService.config.rightClickBehavior;
+      if (rightClickBehavior === "nothing" && !event.shiftKey) {
+        this._cancelContextMenu = true;
+      }
+      terminalContainer.focus();
+      if (!this._cancelContextMenu) {
+        openContextMenu(dom.getWindow(terminalContainer), event, this._terminalGroupService.activeInstance, this._instanceMenu, this._contextMenuService);
+      }
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      this._cancelContextMenu = false;
+    }));
+    this._register(dom.addDisposableListener(this._tabContainer, "contextmenu", (event) => {
+      const rightClickBehavior = this._terminalConfigurationService.config.rightClickBehavior;
+      if (rightClickBehavior === "nothing" && !event.shiftKey) {
+        this._cancelContextMenu = true;
+      }
+      if (!this._cancelContextMenu) {
+        const emptyList = this._tabList.getFocus().length === 0;
+        if (!emptyList) {
+          this._terminalGroupService.lastAccessedMenu = "tab-list";
+        }
+        const selectedInstances = this._tabList.getSelectedElements();
+        const focusedInstance = this._tabList.getFocusedElements()?.[0];
+        if (focusedInstance) {
+          selectedInstances.splice(selectedInstances.findIndex((e) => e.instanceId === focusedInstance.instanceId), 1);
+          selectedInstances.unshift(focusedInstance);
+        }
+        openContextMenu(dom.getWindow(this._tabContainer), event, selectedInstances, emptyList ? this._tabsListEmptyMenu : this._tabsListMenu, this._contextMenuService, emptyList ? this._getTabActions() : void 0);
+      }
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      this._cancelContextMenu = false;
+    }));
+    this._register(dom.addDisposableListener(terminalContainer.ownerDocument, "keydown", (event) => {
+      terminalContainer.classList.toggle("alt-active", !!event.altKey);
+    }));
+    this._register(dom.addDisposableListener(terminalContainer.ownerDocument, "keyup", (event) => {
+      terminalContainer.classList.toggle("alt-active", !!event.altKey);
+    }));
+    this._register(dom.addDisposableListener(parentDomElement, "keyup", (event) => {
+      if (event.keyCode === 27) {
+        event.stopPropagation();
+      }
+    }));
+    this._register(dom.addDisposableListener(this._tabContainer, dom.EventType.FOCUS_IN, () => {
+      this._terminalTabsFocusContextKey.set(true);
+    }));
+    this._register(dom.addDisposableListener(this._tabContainer, dom.EventType.FOCUS_OUT, () => {
+      this._terminalTabsFocusContextKey.set(false);
+    }));
+  }
+  _getTabActions() {
+    return [
+      new Separator(),
+      this._configurationService.inspect(TerminalSettingId.TabsLocation).userValue === "left" ? new Action("moveRight", localize("moveTabsRight", "Move Tabs Right"), void 0, void 0, async () => {
+        this._configurationService.updateValue(TerminalSettingId.TabsLocation, "right");
+      }) : new Action("moveLeft", localize("moveTabsLeft", "Move Tabs Left"), void 0, void 0, async () => {
+        this._configurationService.updateValue(TerminalSettingId.TabsLocation, "left");
+      }),
+      new Action("hideTabs", localize("hideTabs", "Hide Tabs"), void 0, void 0, async () => {
+        this._configurationService.updateValue(TerminalSettingId.TabsEnabled, false);
+      })
+    ];
+  }
+  setEditable(isEditing) {
+    if (!isEditing) {
+      this._tabList.domFocus();
+    }
+    this._tabList.refresh(false);
+  }
+  focusTabs() {
+    if (!this._shouldShowTabs()) {
+      return;
+    }
+    this._terminalTabsFocusContextKey.set(true);
+    const selected = this._tabList.getSelection();
+    this._tabList.domFocus();
+    if (selected) {
+      this._tabList.setFocus(selected);
+    }
+  }
+  focus() {
+    if (this._terminalService.connectionState === TerminalConnectionState.Connected) {
+      this._focus();
+      return;
+    }
+    const previousActiveElement = this._tabListElement.ownerDocument.activeElement;
+    if (previousActiveElement) {
+      this._register(this._terminalService.onDidChangeConnectionState(() => {
+        if (dom.isActiveElement(previousActiveElement)) {
+          this._focus();
+        }
+      }));
+    }
+  }
+  focusHover() {
+    if (this._shouldShowTabs()) {
+      this._tabList.focusHover();
+      return;
+    }
+    const instance = this._terminalGroupService.activeInstance;
+    if (!instance) {
+      return;
+    }
+    this._hoverService.showInstantHover({
+      ...getInstanceHoverInfo(instance, this._storageService),
+      target: this._terminalContainer,
+      trapFocus: true
+    }, true);
+  }
+  _focus() {
+    this._terminalGroupService.activeInstance?.focusWhenReady();
+  }
+};
+TerminalTabbedView = __decorateClass([
+  __decorateParam(1, ITerminalService),
+  __decorateParam(2, ITerminalConfigurationService),
+  __decorateParam(3, ITerminalGroupService),
+  __decorateParam(4, IInstantiationService),
+  __decorateParam(5, IContextMenuService),
+  __decorateParam(6, IConfigurationService),
+  __decorateParam(7, IMenuService),
+  __decorateParam(8, IStorageService),
+  __decorateParam(9, IContextKeyService),
+  __decorateParam(10, IHoverService)
+], TerminalTabbedView);
+export {
+  TerminalTabbedView
+};
+//# sourceMappingURL=terminalTabbedView.js.map

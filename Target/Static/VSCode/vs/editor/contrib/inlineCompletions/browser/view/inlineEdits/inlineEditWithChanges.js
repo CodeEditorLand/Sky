@@ -1,1 +1,29 @@
-import{SingleLineEdit as n}from"../../../../../common/core/lineEdit.js";import"../../../../../common/core/position.js";import"../../../../../common/core/textEdit.js";import"../../../../../common/languages.js";import"../../model/provideInlineCompletions.js";class h{constructor(i,t,e,n,o){this.originalText=i,this.edit=t,this.cursorPosition=e,this.commands=n,this.inlineCompletion=o}lineEdit=n.fromSingleTextEdit(this.edit.toSingle(this.originalText),this.originalText);originalLineRange=this.lineEdit.lineRange;modifiedLineRange=this.lineEdit.toLineEdit().getNewLineRanges()[0];equals(i){return this.originalText.getValue()===i.originalText.getValue()&&this.edit.equals(i.edit)&&this.cursorPosition.equals(i.cursorPosition)&&this.commands===i.commands&&this.inlineCompletion===i.inlineCompletion}}export{h as InlineEditWithChanges};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { SingleLineEdit } from "../../../../../common/core/lineEdit.js";
+import { Position } from "../../../../../common/core/position.js";
+import { AbstractText, TextEdit } from "../../../../../common/core/textEdit.js";
+import { Command } from "../../../../../common/languages.js";
+import { InlineCompletionItem } from "../../model/provideInlineCompletions.js";
+class InlineEditWithChanges {
+  constructor(originalText, edit, cursorPosition, commands, inlineCompletion) {
+    this.originalText = originalText;
+    this.edit = edit;
+    this.cursorPosition = cursorPosition;
+    this.commands = commands;
+    this.inlineCompletion = inlineCompletion;
+  }
+  static {
+    __name(this, "InlineEditWithChanges");
+  }
+  lineEdit = SingleLineEdit.fromSingleTextEdit(this.edit.toSingle(this.originalText), this.originalText);
+  originalLineRange = this.lineEdit.lineRange;
+  modifiedLineRange = this.lineEdit.toLineEdit().getNewLineRanges()[0];
+  equals(other) {
+    return this.originalText.getValue() === other.originalText.getValue() && this.edit.equals(other.edit) && this.cursorPosition.equals(other.cursorPosition) && this.commands === other.commands && this.inlineCompletion === other.inlineCompletion;
+  }
+}
+export {
+  InlineEditWithChanges
+};
+//# sourceMappingURL=inlineEditWithChanges.js.map

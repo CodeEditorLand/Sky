@@ -1,1 +1,620 @@
-import{Codicon as m}from"../../../../../base/common/codicons.js";import{basename as R}from"../../../../../base/common/resources.js";import{URI as C}from"../../../../../base/common/uri.js";import{localize as h,localize2 as s}from"../../../../../nls.js";import"../../../../../platform/action/common/action.js";import{Action2 as g,MenuId as d}from"../../../../../platform/actions/common/actions.js";import{ContextKeyExpr as v}from"../../../../../platform/contextkey/common/contextkey.js";import{IDialogService as V}from"../../../../../platform/dialogs/common/dialogs.js";import"../../../../../platform/editor/common/editor.js";import"../../../../../platform/instantiation/common/instantiation.js";import{IOpenerService as W}from"../../../../../platform/opener/common/opener.js";import{IStorageService as U,StorageScope as N}from"../../../../../platform/storage/common/storage.js";import"../../../../common/editor.js";import{MergeEditorInputData as A}from"../mergeEditorInput.js";import"../mergeEditorInputModel.js";import{MergeEditor as f}from"../view/mergeEditor.js";import"../view/viewModel.js";import{ctxIsMergeEditor as n,ctxMergeEditorLayout as M,ctxMergeEditorShowBase as y,ctxMergeEditorShowBaseAtTop as T,ctxMergeEditorShowNonConflictingChanges as b,StorageCloseWithConflicts as L}from"../../common/mergeEditor.js";import{IEditorService as a}from"../../../../services/editor/common/editorService.js";class l extends g{constructor(e){super(e)}run(e){const{activeEditorPane:t}=e.get(a);if(t instanceof f){const o=t.viewModel.get();if(!o)return;this.runWithViewModel(o,e)}}}class O extends g{constructor(e){super(e)}run(e,...t){const{activeEditorPane:o}=e.get(a);if(o instanceof f){const r=o.viewModel.get();return r?this.runWithMergeEditor({viewModel:r,inputModel:o.inputModel.get(),input:o.input,editorIdentifier:{editor:o.input,groupId:o.group.id}},e,...t):void 0}}}class pe extends g{constructor(){super({id:"_open.mergeEditor",title:s("title","Open Merge Editor")})}run(e,...t){const o=S.validate(t[0]),r={base:{resource:o.base},input1:{resource:o.input1.uri,label:o.input1.title,description:o.input1.description,detail:o.input1.detail},input2:{resource:o.input2.uri,label:o.input2.title,description:o.input2.description,detail:o.input2.detail},result:{resource:o.output},options:{preserveFocus:!0}};e.get(a).openEditor(r)}}var S;(()=>{function e(e){if("string"==typeof e)return new A(C.parse(e,!0),void 0,void 0,void 0);if(!e||"object"!=typeof e)throw new TypeError("invalid argument");if(function(e){if(!e||"object"!=typeof e)return!1;const t=e;return"string"==typeof t.scheme&&"string"==typeof t.authority&&"string"==typeof t.path&&"string"==typeof t.query&&"string"==typeof t.fragment}(e))return new A(C.revive(e),void 0,void 0,void 0);const o=e,r=o.title,i=t(o.uri),n=o.detail,s=o.description;return new A(i,r,n,s)}function t(e){if("string"==typeof e)return C.parse(e,!0);if(e&&"object"==typeof e)return C.revive(e);throw new TypeError("invalid argument")}(S||={}).validate=function(o){if(!o||"object"!=typeof o)throw new TypeError("invalid argument");const r=o,i=t(r.base),n=t(r.output);return{base:i,input1:e(r.input1),input2:e(r.input2),output:n}}})();class ge extends g{constructor(){super({id:"merge.mixedLayout",title:s("layout.mixed","Mixed Layout"),toggled:M.isEqualTo("mixed"),menu:[{id:d.EditorTitle,when:n,group:"1_merge",order:9}],precondition:n})}run(e){const{activeEditorPane:t}=e.get(a);t instanceof f&&t.setLayoutKind("mixed")}}class me extends g{constructor(){super({id:"merge.columnLayout",title:s("layout.column","Column Layout"),toggled:M.isEqualTo("columns"),menu:[{id:d.EditorTitle,when:n,group:"1_merge",order:10}],precondition:n})}run(e){const{activeEditorPane:t}=e.get(a);t instanceof f&&t.setLayoutKind("columns")}}class fe extends g{constructor(){super({id:"merge.showNonConflictingChanges",title:s("showNonConflictingChanges","Show Non-Conflicting Changes"),toggled:b.isEqualTo(!0),menu:[{id:d.EditorTitle,when:n,group:"3_merge",order:9}],precondition:n})}run(e){const{activeEditorPane:t}=e.get(a);t instanceof f&&t.toggleShowNonConflictingChanges()}}class he extends g{constructor(){super({id:"merge.showBase",title:s("layout.showBase","Show Base"),toggled:y.isEqualTo(!0),menu:[{id:d.EditorTitle,when:v.and(n,M.isEqualTo("columns")),group:"2_merge",order:9}]})}run(e){const{activeEditorPane:t}=e.get(a);t instanceof f&&t.toggleBase()}}class Ee extends g{constructor(){super({id:"merge.showBaseTop",title:s("layout.showBaseTop","Show Base Top"),toggled:v.and(y,T),menu:[{id:d.EditorTitle,when:v.and(n,M.isEqualTo("mixed")),group:"2_merge",order:10}]})}run(e){const{activeEditorPane:t}=e.get(a);t instanceof f&&t.toggleShowBaseTop()}}class ve extends g{constructor(){super({id:"merge.showBaseCenter",title:s("layout.showBaseCenter","Show Base Center"),toggled:v.and(y,T.negate()),menu:[{id:d.EditorTitle,when:v.and(n,M.isEqualTo("mixed")),group:"2_merge",order:11}]})}run(e){const{activeEditorPane:t}=e.get(a);t instanceof f&&t.toggleShowBaseCenter()}}const u=s("mergeEditor","Merge Editor");class Me extends l{constructor(){super({id:"merge.openResult",icon:m.goToFile,title:s("openfile","Open File"),category:u,menu:[{id:d.EditorTitle,when:n,group:"navigation",order:1}],precondition:n})}runWithViewModel(e,t){t.get(a).openEditor({resource:e.model.resultTextModel.uri})}}class Ce extends l{constructor(){super({id:"merge.goToNextUnhandledConflict",category:u,title:s("merge.goToNextUnhandledConflict","Go to Next Unhandled Conflict"),icon:m.arrowDown,menu:[{id:d.EditorTitle,when:n,group:"navigation",order:3}],f1:!0,precondition:n})}runWithViewModel(e){e.model.telemetry.reportNavigationToNextConflict(),e.goToNextModifiedBaseRange((t=>!e.model.isHandled(t).get()))}}class we extends l{constructor(){super({id:"merge.goToPreviousUnhandledConflict",category:u,title:s("merge.goToPreviousUnhandledConflict","Go to Previous Unhandled Conflict"),icon:m.arrowUp,menu:[{id:d.EditorTitle,when:n,group:"navigation",order:2}],f1:!0,precondition:n})}runWithViewModel(e){e.model.telemetry.reportNavigationToPreviousConflict(),e.goToPreviousModifiedBaseRange((t=>!e.model.isHandled(t).get()))}}class Ie extends l{constructor(){super({id:"merge.toggleActiveConflictInput1",category:u,title:s("merge.toggleCurrentConflictFromLeft","Toggle Current Conflict from Left"),f1:!0,precondition:n})}runWithViewModel(e){e.toggleActiveConflict(1)}}class xe extends l{constructor(){super({id:"merge.toggleActiveConflictInput2",category:u,title:s("merge.toggleCurrentConflictFromRight","Toggle Current Conflict from Right"),f1:!0,precondition:n})}runWithViewModel(e){e.toggleActiveConflict(2)}}class Ae extends l{constructor(){super({id:"mergeEditor.compareInput1WithBase",category:u,title:s("mergeEditor.compareInput1WithBase","Compare Input 1 With Base"),shortTitle:h("mergeEditor.compareWithBase","Compare With Base"),f1:!0,precondition:n,menu:{id:d.MergeInput1Toolbar,group:"primary"},icon:m.compareChanges})}runWithViewModel(e,t){B(e,t.get(a),1)}}class ye extends l{constructor(){super({id:"mergeEditor.compareInput2WithBase",category:u,title:s("mergeEditor.compareInput2WithBase","Compare Input 2 With Base"),shortTitle:h("mergeEditor.compareWithBase","Compare With Base"),f1:!0,precondition:n,menu:{id:d.MergeInput2Toolbar,group:"primary"},icon:m.compareChanges})}runWithViewModel(e,t){B(e,t.get(a),2)}}async function B(e,t,o){t.openEditor(t.activeEditor,{pinned:!0});const r=e.model.base,i=1===o?e.inputCodeEditorView1.editor:e.inputCodeEditorView2.editor,n=i.getPosition().lineNumber;await t.openEditor({original:{resource:r.uri},modified:{resource:i.getModel().uri},options:{selection:{startLineNumber:n,startColumn:1},revealIfOpened:!0,revealIfVisible:!0}})}class Te extends l{constructor(){super({id:"merge.openBaseEditor",category:u,title:s("merge.openBaseEditor","Open Base File"),f1:!0,precondition:n})}runWithViewModel(e,t){t.get(W).open(e.model.base.uri)}}class Se extends l{constructor(){super({id:"merge.acceptAllInput1",category:u,title:s("merge.acceptAllInput1","Accept All Changes from Left"),f1:!0,precondition:n,menu:{id:d.MergeInput1Toolbar,group:"primary"},icon:m.checkAll})}runWithViewModel(e){e.acceptAll(1)}}class Be extends l{constructor(){super({id:"merge.acceptAllInput2",category:u,title:s("merge.acceptAllInput2","Accept All Changes from Right"),f1:!0,precondition:n,menu:{id:d.MergeInput2Toolbar,group:"primary"},icon:m.checkAll})}runWithViewModel(e){e.acceptAll(2)}}class Re extends l{constructor(){super({id:"mergeEditor.resetResultToBaseAndAutoMerge",category:u,title:s("mergeEditor.resetResultToBaseAndAutoMerge","Reset Result"),shortTitle:h("mergeEditor.resetResultToBaseAndAutoMerge.short","Reset"),f1:!0,precondition:n,menu:{id:d.MergeInputResultToolbar,group:"primary"},icon:m.discard})}runWithViewModel(e,t){e.model.reset()}}class Ve extends g{constructor(){super({id:"mergeEditor.resetCloseWithConflictsChoice",category:u,title:s("mergeEditor.resetChoice","Reset Choice for 'Close with Conflicts'"),f1:!0})}run(e){e.get(U).remove(L,N.PROFILE)}}class We extends O{constructor(){super({id:"mergeEditor.acceptMerge",category:u,title:s("mergeEditor.acceptMerge","Complete Merge"),f1:!1,precondition:n})}async runWithMergeEditor({inputModel:e,editorIdentifier:t,viewModel:o},r){const i=r.get(V),n=r.get(a);if(o.model.unhandledConflictsCount.get()>0){const{confirmed:t}=await i.confirm({message:h("mergeEditor.acceptMerge.unhandledConflicts.message","Do you want to complete the merge of {0}?",R(e.resultUri)),detail:h("mergeEditor.acceptMerge.unhandledConflicts.detail","The file contains unhandled conflicts."),primaryButton:h({key:"mergeEditor.acceptMerge.unhandledConflicts.accept",comment:["&& denotes a mnemonic"]},"&&Complete with Conflicts")});if(!t)return{successful:!1}}return await e.accept(),await n.closeEditor(t),{successful:!0}}}export{Se as AcceptAllInput1,Be as AcceptAllInput2,We as AcceptMerge,Ae as CompareInput1WithBaseCommand,ye as CompareInput2WithBaseCommand,Ce as GoToNextUnhandledConflict,we as GoToPreviousUnhandledConflict,Te as OpenBaseFile,pe as OpenMergeEditor,Me as OpenResultResource,Ve as ResetCloseWithConflictsChoice,Re as ResetToBaseAndAutoMergeCommand,me as SetColumnLayout,ge as SetMixedLayout,he as ShowHideBase,ve as ShowHideCenterBase,Ee as ShowHideTopBase,fe as ShowNonConflictingChanges,Ie as ToggleActiveConflictInput1,xe as ToggleActiveConflictInput2};
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+import { Codicon } from "../../../../../base/common/codicons.js";
+import { basename } from "../../../../../base/common/resources.js";
+import { URI, UriComponents } from "../../../../../base/common/uri.js";
+import { localize, localize2 } from "../../../../../nls.js";
+import { ILocalizedString } from "../../../../../platform/action/common/action.js";
+import { Action2, IAction2Options, MenuId } from "../../../../../platform/actions/common/actions.js";
+import { ContextKeyExpr } from "../../../../../platform/contextkey/common/contextkey.js";
+import { IDialogService } from "../../../../../platform/dialogs/common/dialogs.js";
+import { ITextEditorOptions } from "../../../../../platform/editor/common/editor.js";
+import { ServicesAccessor } from "../../../../../platform/instantiation/common/instantiation.js";
+import { IOpenerService } from "../../../../../platform/opener/common/opener.js";
+import { IStorageService, StorageScope } from "../../../../../platform/storage/common/storage.js";
+import { IEditorIdentifier, IResourceMergeEditorInput } from "../../../../common/editor.js";
+import { MergeEditorInput, MergeEditorInputData } from "../mergeEditorInput.js";
+import { IMergeEditorInputModel } from "../mergeEditorInputModel.js";
+import { MergeEditor } from "../view/mergeEditor.js";
+import { MergeEditorViewModel } from "../view/viewModel.js";
+import { ctxIsMergeEditor, ctxMergeEditorLayout, ctxMergeEditorShowBase, ctxMergeEditorShowBaseAtTop, ctxMergeEditorShowNonConflictingChanges, StorageCloseWithConflicts } from "../../common/mergeEditor.js";
+import { IEditorService } from "../../../../services/editor/common/editorService.js";
+class MergeEditorAction extends Action2 {
+  static {
+    __name(this, "MergeEditorAction");
+  }
+  constructor(desc) {
+    super(desc);
+  }
+  run(accessor) {
+    const { activeEditorPane } = accessor.get(IEditorService);
+    if (activeEditorPane instanceof MergeEditor) {
+      const vm = activeEditorPane.viewModel.get();
+      if (!vm) {
+        return;
+      }
+      this.runWithViewModel(vm, accessor);
+    }
+  }
+}
+class MergeEditorAction2 extends Action2 {
+  static {
+    __name(this, "MergeEditorAction2");
+  }
+  constructor(desc) {
+    super(desc);
+  }
+  run(accessor, ...args) {
+    const { activeEditorPane } = accessor.get(IEditorService);
+    if (activeEditorPane instanceof MergeEditor) {
+      const vm = activeEditorPane.viewModel.get();
+      if (!vm) {
+        return;
+      }
+      return this.runWithMergeEditor({
+        viewModel: vm,
+        inputModel: activeEditorPane.inputModel.get(),
+        input: activeEditorPane.input,
+        editorIdentifier: {
+          editor: activeEditorPane.input,
+          groupId: activeEditorPane.group.id
+        }
+      }, accessor, ...args);
+    }
+  }
+}
+class OpenMergeEditor extends Action2 {
+  static {
+    __name(this, "OpenMergeEditor");
+  }
+  constructor() {
+    super({
+      id: "_open.mergeEditor",
+      title: localize2("title", "Open Merge Editor")
+    });
+  }
+  run(accessor, ...args) {
+    const validatedArgs = IRelaxedOpenArgs.validate(args[0]);
+    const input = {
+      base: { resource: validatedArgs.base },
+      input1: { resource: validatedArgs.input1.uri, label: validatedArgs.input1.title, description: validatedArgs.input1.description, detail: validatedArgs.input1.detail },
+      input2: { resource: validatedArgs.input2.uri, label: validatedArgs.input2.title, description: validatedArgs.input2.description, detail: validatedArgs.input2.detail },
+      result: { resource: validatedArgs.output },
+      options: { preserveFocus: true }
+    };
+    accessor.get(IEditorService).openEditor(input);
+  }
+}
+var IRelaxedOpenArgs;
+((IRelaxedOpenArgs2) => {
+  function validate(obj) {
+    if (!obj || typeof obj !== "object") {
+      throw new TypeError("invalid argument");
+    }
+    const o = obj;
+    const base = toUri(o.base);
+    const output = toUri(o.output);
+    const input1 = toInputData(o.input1);
+    const input2 = toInputData(o.input2);
+    return { base, input1, input2, output };
+  }
+  IRelaxedOpenArgs2.validate = validate;
+  __name(validate, "validate");
+  function toInputData(obj) {
+    if (typeof obj === "string") {
+      return new MergeEditorInputData(URI.parse(obj, true), void 0, void 0, void 0);
+    }
+    if (!obj || typeof obj !== "object") {
+      throw new TypeError("invalid argument");
+    }
+    if (isUriComponents(obj)) {
+      return new MergeEditorInputData(URI.revive(obj), void 0, void 0, void 0);
+    }
+    const o = obj;
+    const title = o.title;
+    const uri = toUri(o.uri);
+    const detail = o.detail;
+    const description = o.description;
+    return new MergeEditorInputData(uri, title, detail, description);
+  }
+  __name(toInputData, "toInputData");
+  function toUri(obj) {
+    if (typeof obj === "string") {
+      return URI.parse(obj, true);
+    } else if (obj && typeof obj === "object") {
+      return URI.revive(obj);
+    }
+    throw new TypeError("invalid argument");
+  }
+  __name(toUri, "toUri");
+  function isUriComponents(obj) {
+    if (!obj || typeof obj !== "object") {
+      return false;
+    }
+    const o = obj;
+    return typeof o.scheme === "string" && typeof o.authority === "string" && typeof o.path === "string" && typeof o.query === "string" && typeof o.fragment === "string";
+  }
+  __name(isUriComponents, "isUriComponents");
+})(IRelaxedOpenArgs || (IRelaxedOpenArgs = {}));
+class SetMixedLayout extends Action2 {
+  static {
+    __name(this, "SetMixedLayout");
+  }
+  constructor() {
+    super({
+      id: "merge.mixedLayout",
+      title: localize2("layout.mixed", "Mixed Layout"),
+      toggled: ctxMergeEditorLayout.isEqualTo("mixed"),
+      menu: [
+        {
+          id: MenuId.EditorTitle,
+          when: ctxIsMergeEditor,
+          group: "1_merge",
+          order: 9
+        }
+      ],
+      precondition: ctxIsMergeEditor
+    });
+  }
+  run(accessor) {
+    const { activeEditorPane } = accessor.get(IEditorService);
+    if (activeEditorPane instanceof MergeEditor) {
+      activeEditorPane.setLayoutKind("mixed");
+    }
+  }
+}
+class SetColumnLayout extends Action2 {
+  static {
+    __name(this, "SetColumnLayout");
+  }
+  constructor() {
+    super({
+      id: "merge.columnLayout",
+      title: localize2("layout.column", "Column Layout"),
+      toggled: ctxMergeEditorLayout.isEqualTo("columns"),
+      menu: [{
+        id: MenuId.EditorTitle,
+        when: ctxIsMergeEditor,
+        group: "1_merge",
+        order: 10
+      }],
+      precondition: ctxIsMergeEditor
+    });
+  }
+  run(accessor) {
+    const { activeEditorPane } = accessor.get(IEditorService);
+    if (activeEditorPane instanceof MergeEditor) {
+      activeEditorPane.setLayoutKind("columns");
+    }
+  }
+}
+class ShowNonConflictingChanges extends Action2 {
+  static {
+    __name(this, "ShowNonConflictingChanges");
+  }
+  constructor() {
+    super({
+      id: "merge.showNonConflictingChanges",
+      title: localize2("showNonConflictingChanges", "Show Non-Conflicting Changes"),
+      toggled: ctxMergeEditorShowNonConflictingChanges.isEqualTo(true),
+      menu: [
+        {
+          id: MenuId.EditorTitle,
+          when: ctxIsMergeEditor,
+          group: "3_merge",
+          order: 9
+        }
+      ],
+      precondition: ctxIsMergeEditor
+    });
+  }
+  run(accessor) {
+    const { activeEditorPane } = accessor.get(IEditorService);
+    if (activeEditorPane instanceof MergeEditor) {
+      activeEditorPane.toggleShowNonConflictingChanges();
+    }
+  }
+}
+class ShowHideBase extends Action2 {
+  static {
+    __name(this, "ShowHideBase");
+  }
+  constructor() {
+    super({
+      id: "merge.showBase",
+      title: localize2("layout.showBase", "Show Base"),
+      toggled: ctxMergeEditorShowBase.isEqualTo(true),
+      menu: [
+        {
+          id: MenuId.EditorTitle,
+          when: ContextKeyExpr.and(ctxIsMergeEditor, ctxMergeEditorLayout.isEqualTo("columns")),
+          group: "2_merge",
+          order: 9
+        }
+      ]
+    });
+  }
+  run(accessor) {
+    const { activeEditorPane } = accessor.get(IEditorService);
+    if (activeEditorPane instanceof MergeEditor) {
+      activeEditorPane.toggleBase();
+    }
+  }
+}
+class ShowHideTopBase extends Action2 {
+  static {
+    __name(this, "ShowHideTopBase");
+  }
+  constructor() {
+    super({
+      id: "merge.showBaseTop",
+      title: localize2("layout.showBaseTop", "Show Base Top"),
+      toggled: ContextKeyExpr.and(ctxMergeEditorShowBase, ctxMergeEditorShowBaseAtTop),
+      menu: [
+        {
+          id: MenuId.EditorTitle,
+          when: ContextKeyExpr.and(ctxIsMergeEditor, ctxMergeEditorLayout.isEqualTo("mixed")),
+          group: "2_merge",
+          order: 10
+        }
+      ]
+    });
+  }
+  run(accessor) {
+    const { activeEditorPane } = accessor.get(IEditorService);
+    if (activeEditorPane instanceof MergeEditor) {
+      activeEditorPane.toggleShowBaseTop();
+    }
+  }
+}
+class ShowHideCenterBase extends Action2 {
+  static {
+    __name(this, "ShowHideCenterBase");
+  }
+  constructor() {
+    super({
+      id: "merge.showBaseCenter",
+      title: localize2("layout.showBaseCenter", "Show Base Center"),
+      toggled: ContextKeyExpr.and(ctxMergeEditorShowBase, ctxMergeEditorShowBaseAtTop.negate()),
+      menu: [
+        {
+          id: MenuId.EditorTitle,
+          when: ContextKeyExpr.and(ctxIsMergeEditor, ctxMergeEditorLayout.isEqualTo("mixed")),
+          group: "2_merge",
+          order: 11
+        }
+      ]
+    });
+  }
+  run(accessor) {
+    const { activeEditorPane } = accessor.get(IEditorService);
+    if (activeEditorPane instanceof MergeEditor) {
+      activeEditorPane.toggleShowBaseCenter();
+    }
+  }
+}
+const mergeEditorCategory = localize2("mergeEditor", "Merge Editor");
+class OpenResultResource extends MergeEditorAction {
+  static {
+    __name(this, "OpenResultResource");
+  }
+  constructor() {
+    super({
+      id: "merge.openResult",
+      icon: Codicon.goToFile,
+      title: localize2("openfile", "Open File"),
+      category: mergeEditorCategory,
+      menu: [{
+        id: MenuId.EditorTitle,
+        when: ctxIsMergeEditor,
+        group: "navigation",
+        order: 1
+      }],
+      precondition: ctxIsMergeEditor
+    });
+  }
+  runWithViewModel(viewModel, accessor) {
+    const editorService = accessor.get(IEditorService);
+    editorService.openEditor({ resource: viewModel.model.resultTextModel.uri });
+  }
+}
+class GoToNextUnhandledConflict extends MergeEditorAction {
+  static {
+    __name(this, "GoToNextUnhandledConflict");
+  }
+  constructor() {
+    super({
+      id: "merge.goToNextUnhandledConflict",
+      category: mergeEditorCategory,
+      title: localize2("merge.goToNextUnhandledConflict", "Go to Next Unhandled Conflict"),
+      icon: Codicon.arrowDown,
+      menu: [
+        {
+          id: MenuId.EditorTitle,
+          when: ctxIsMergeEditor,
+          group: "navigation",
+          order: 3
+        }
+      ],
+      f1: true,
+      precondition: ctxIsMergeEditor
+    });
+  }
+  runWithViewModel(viewModel) {
+    viewModel.model.telemetry.reportNavigationToNextConflict();
+    viewModel.goToNextModifiedBaseRange((r) => !viewModel.model.isHandled(r).get());
+  }
+}
+class GoToPreviousUnhandledConflict extends MergeEditorAction {
+  static {
+    __name(this, "GoToPreviousUnhandledConflict");
+  }
+  constructor() {
+    super({
+      id: "merge.goToPreviousUnhandledConflict",
+      category: mergeEditorCategory,
+      title: localize2("merge.goToPreviousUnhandledConflict", "Go to Previous Unhandled Conflict"),
+      icon: Codicon.arrowUp,
+      menu: [
+        {
+          id: MenuId.EditorTitle,
+          when: ctxIsMergeEditor,
+          group: "navigation",
+          order: 2
+        }
+      ],
+      f1: true,
+      precondition: ctxIsMergeEditor
+    });
+  }
+  runWithViewModel(viewModel) {
+    viewModel.model.telemetry.reportNavigationToPreviousConflict();
+    viewModel.goToPreviousModifiedBaseRange((r) => !viewModel.model.isHandled(r).get());
+  }
+}
+class ToggleActiveConflictInput1 extends MergeEditorAction {
+  static {
+    __name(this, "ToggleActiveConflictInput1");
+  }
+  constructor() {
+    super({
+      id: "merge.toggleActiveConflictInput1",
+      category: mergeEditorCategory,
+      title: localize2("merge.toggleCurrentConflictFromLeft", "Toggle Current Conflict from Left"),
+      f1: true,
+      precondition: ctxIsMergeEditor
+    });
+  }
+  runWithViewModel(viewModel) {
+    viewModel.toggleActiveConflict(1);
+  }
+}
+class ToggleActiveConflictInput2 extends MergeEditorAction {
+  static {
+    __name(this, "ToggleActiveConflictInput2");
+  }
+  constructor() {
+    super({
+      id: "merge.toggleActiveConflictInput2",
+      category: mergeEditorCategory,
+      title: localize2("merge.toggleCurrentConflictFromRight", "Toggle Current Conflict from Right"),
+      f1: true,
+      precondition: ctxIsMergeEditor
+    });
+  }
+  runWithViewModel(viewModel) {
+    viewModel.toggleActiveConflict(2);
+  }
+}
+class CompareInput1WithBaseCommand extends MergeEditorAction {
+  static {
+    __name(this, "CompareInput1WithBaseCommand");
+  }
+  constructor() {
+    super({
+      id: "mergeEditor.compareInput1WithBase",
+      category: mergeEditorCategory,
+      title: localize2("mergeEditor.compareInput1WithBase", "Compare Input 1 With Base"),
+      shortTitle: localize("mergeEditor.compareWithBase", "Compare With Base"),
+      f1: true,
+      precondition: ctxIsMergeEditor,
+      menu: { id: MenuId.MergeInput1Toolbar, group: "primary" },
+      icon: Codicon.compareChanges
+    });
+  }
+  runWithViewModel(viewModel, accessor) {
+    const editorService = accessor.get(IEditorService);
+    mergeEditorCompare(viewModel, editorService, 1);
+  }
+}
+class CompareInput2WithBaseCommand extends MergeEditorAction {
+  static {
+    __name(this, "CompareInput2WithBaseCommand");
+  }
+  constructor() {
+    super({
+      id: "mergeEditor.compareInput2WithBase",
+      category: mergeEditorCategory,
+      title: localize2("mergeEditor.compareInput2WithBase", "Compare Input 2 With Base"),
+      shortTitle: localize("mergeEditor.compareWithBase", "Compare With Base"),
+      f1: true,
+      precondition: ctxIsMergeEditor,
+      menu: { id: MenuId.MergeInput2Toolbar, group: "primary" },
+      icon: Codicon.compareChanges
+    });
+  }
+  runWithViewModel(viewModel, accessor) {
+    const editorService = accessor.get(IEditorService);
+    mergeEditorCompare(viewModel, editorService, 2);
+  }
+}
+async function mergeEditorCompare(viewModel, editorService, inputNumber) {
+  editorService.openEditor(editorService.activeEditor, { pinned: true });
+  const model = viewModel.model;
+  const base = model.base;
+  const input = inputNumber === 1 ? viewModel.inputCodeEditorView1.editor : viewModel.inputCodeEditorView2.editor;
+  const lineNumber = input.getPosition().lineNumber;
+  await editorService.openEditor({
+    original: { resource: base.uri },
+    modified: { resource: input.getModel().uri },
+    options: {
+      selection: {
+        startLineNumber: lineNumber,
+        startColumn: 1
+      },
+      revealIfOpened: true,
+      revealIfVisible: true
+    }
+  });
+}
+__name(mergeEditorCompare, "mergeEditorCompare");
+class OpenBaseFile extends MergeEditorAction {
+  static {
+    __name(this, "OpenBaseFile");
+  }
+  constructor() {
+    super({
+      id: "merge.openBaseEditor",
+      category: mergeEditorCategory,
+      title: localize2("merge.openBaseEditor", "Open Base File"),
+      f1: true,
+      precondition: ctxIsMergeEditor
+    });
+  }
+  runWithViewModel(viewModel, accessor) {
+    const openerService = accessor.get(IOpenerService);
+    openerService.open(viewModel.model.base.uri);
+  }
+}
+class AcceptAllInput1 extends MergeEditorAction {
+  static {
+    __name(this, "AcceptAllInput1");
+  }
+  constructor() {
+    super({
+      id: "merge.acceptAllInput1",
+      category: mergeEditorCategory,
+      title: localize2("merge.acceptAllInput1", "Accept All Changes from Left"),
+      f1: true,
+      precondition: ctxIsMergeEditor,
+      menu: { id: MenuId.MergeInput1Toolbar, group: "primary" },
+      icon: Codicon.checkAll
+    });
+  }
+  runWithViewModel(viewModel) {
+    viewModel.acceptAll(1);
+  }
+}
+class AcceptAllInput2 extends MergeEditorAction {
+  static {
+    __name(this, "AcceptAllInput2");
+  }
+  constructor() {
+    super({
+      id: "merge.acceptAllInput2",
+      category: mergeEditorCategory,
+      title: localize2("merge.acceptAllInput2", "Accept All Changes from Right"),
+      f1: true,
+      precondition: ctxIsMergeEditor,
+      menu: { id: MenuId.MergeInput2Toolbar, group: "primary" },
+      icon: Codicon.checkAll
+    });
+  }
+  runWithViewModel(viewModel) {
+    viewModel.acceptAll(2);
+  }
+}
+class ResetToBaseAndAutoMergeCommand extends MergeEditorAction {
+  static {
+    __name(this, "ResetToBaseAndAutoMergeCommand");
+  }
+  constructor() {
+    super({
+      id: "mergeEditor.resetResultToBaseAndAutoMerge",
+      category: mergeEditorCategory,
+      title: localize2("mergeEditor.resetResultToBaseAndAutoMerge", "Reset Result"),
+      shortTitle: localize("mergeEditor.resetResultToBaseAndAutoMerge.short", "Reset"),
+      f1: true,
+      precondition: ctxIsMergeEditor,
+      menu: { id: MenuId.MergeInputResultToolbar, group: "primary" },
+      icon: Codicon.discard
+    });
+  }
+  runWithViewModel(viewModel, accessor) {
+    viewModel.model.reset();
+  }
+}
+class ResetCloseWithConflictsChoice extends Action2 {
+  static {
+    __name(this, "ResetCloseWithConflictsChoice");
+  }
+  constructor() {
+    super({
+      id: "mergeEditor.resetCloseWithConflictsChoice",
+      category: mergeEditorCategory,
+      title: localize2("mergeEditor.resetChoice", "Reset Choice for 'Close with Conflicts'"),
+      f1: true
+    });
+  }
+  run(accessor) {
+    accessor.get(IStorageService).remove(StorageCloseWithConflicts, StorageScope.PROFILE);
+  }
+}
+class AcceptMerge extends MergeEditorAction2 {
+  static {
+    __name(this, "AcceptMerge");
+  }
+  constructor() {
+    super({
+      id: "mergeEditor.acceptMerge",
+      category: mergeEditorCategory,
+      title: localize2("mergeEditor.acceptMerge", "Complete Merge"),
+      f1: false,
+      precondition: ctxIsMergeEditor
+    });
+  }
+  async runWithMergeEditor({ inputModel, editorIdentifier, viewModel }, accessor) {
+    const dialogService = accessor.get(IDialogService);
+    const editorService = accessor.get(IEditorService);
+    if (viewModel.model.unhandledConflictsCount.get() > 0) {
+      const { confirmed } = await dialogService.confirm({
+        message: localize("mergeEditor.acceptMerge.unhandledConflicts.message", "Do you want to complete the merge of {0}?", basename(inputModel.resultUri)),
+        detail: localize("mergeEditor.acceptMerge.unhandledConflicts.detail", "The file contains unhandled conflicts."),
+        primaryButton: localize({ key: "mergeEditor.acceptMerge.unhandledConflicts.accept", comment: ["&& denotes a mnemonic"] }, "&&Complete with Conflicts")
+      });
+      if (!confirmed) {
+        return {
+          successful: false
+        };
+      }
+    }
+    await inputModel.accept();
+    await editorService.closeEditor(editorIdentifier);
+    return {
+      successful: true
+    };
+  }
+}
+export {
+  AcceptAllInput1,
+  AcceptAllInput2,
+  AcceptMerge,
+  CompareInput1WithBaseCommand,
+  CompareInput2WithBaseCommand,
+  GoToNextUnhandledConflict,
+  GoToPreviousUnhandledConflict,
+  OpenBaseFile,
+  OpenMergeEditor,
+  OpenResultResource,
+  ResetCloseWithConflictsChoice,
+  ResetToBaseAndAutoMergeCommand,
+  SetColumnLayout,
+  SetMixedLayout,
+  ShowHideBase,
+  ShowHideCenterBase,
+  ShowHideTopBase,
+  ShowNonConflictingChanges,
+  ToggleActiveConflictInput1,
+  ToggleActiveConflictInput2
+};
+//# sourceMappingURL=commands.js.map

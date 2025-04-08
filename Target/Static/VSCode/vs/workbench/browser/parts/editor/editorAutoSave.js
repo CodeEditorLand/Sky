@@ -1,1 +1,228 @@
-var p=Object.defineProperty;var C=Object.getOwnPropertyDescriptor;var S=(c,v,e,i)=>{for(var t=i>1?void 0:i?C(v,e):v,o=c.length-1,r;o>=0;o--)(r=c[o])&&(t=(i?r(v,e,t):r(t))||t);return i&&t&&p(v,e,t),t},n=(c,v)=>(e,i)=>v(e,i,c);import"../../../common/contributions.js";import{Disposable as A,DisposableStore as f,dispose as D,toDisposable as y}from"../../../../base/common/lifecycle.js";import{IFilesConfigurationService as I,AutoSaveMode as s,AutoSaveDisabledReason as d}from"../../../services/filesConfiguration/common/filesConfigurationService.js";import{IHostService as m}from"../../../services/host/browser/host.js";import{SaveReason as a,EditorInputCapabilities as E}from"../../../common/editor.js";import"../../../common/editor/editorInput.js";import{IEditorService as O}from"../../../services/editor/common/editorService.js";import{IEditorGroupsService as W}from"../../../services/editor/common/editorGroupsService.js";import{IWorkingCopyService as R}from"../../../services/workingCopy/common/workingCopyService.js";import{WorkingCopyCapabilities as h}from"../../../services/workingCopy/common/workingCopy.js";import{ILogService as b}from"../../../../platform/log/common/log.js";import{IMarkerService as _}from"../../../../platform/markers/common/markers.js";import"../../../../base/common/uri.js";import{ResourceMap as g}from"../../../../base/common/map.js";import{IUriIdentityService as G}from"../../../../platform/uriIdentity/common/uriIdentity.js";let u=class extends A{constructor(e,i,t,o,r,N,k,F){super();this.filesConfigurationService=e;this.hostService=i;this.editorService=t;this.editorGroupService=o;this.workingCopyService=r;this.logService=N;this.markerService=k;this.uriIdentityService=F;for(const l of this.workingCopyService.dirtyWorkingCopies)this.onDidRegister(l);this.registerListeners()}static ID="workbench.contrib.editorAutoSave";scheduledAutoSavesAfterDelay=new Map;lastActiveEditor=void 0;lastActiveGroupId=void 0;lastActiveEditorControlDisposable=this._register(new f);waitingOnConditionAutoSaveWorkingCopies=new g(e=>this.uriIdentityService.extUri.getComparisonKey(e));waitingOnConditionAutoSaveEditors=new g(e=>this.uriIdentityService.extUri.getComparisonKey(e));registerListeners(){this._register(this.hostService.onDidChangeFocus(e=>this.onWindowFocusChange(e))),this._register(this.hostService.onDidChangeActiveWindow(()=>this.onActiveWindowChange())),this._register(this.editorService.onDidActiveEditorChange(()=>this.onDidActiveEditorChange())),this._register(this.filesConfigurationService.onDidChangeAutoSaveConfiguration(()=>this.onDidChangeAutoSaveConfiguration())),this._register(this.workingCopyService.onDidRegister(e=>this.onDidRegister(e))),this._register(this.workingCopyService.onDidUnregister(e=>this.onDidUnregister(e))),this._register(this.workingCopyService.onDidChangeDirty(e=>this.onDidChangeDirty(e))),this._register(this.workingCopyService.onDidChangeContent(e=>this.onDidChangeContent(e))),this._register(this.markerService.onMarkerChanged(e=>this.onConditionChanged(e,d.ERRORS))),this._register(this.filesConfigurationService.onDidChangeAutoSaveDisabled(e=>this.onConditionChanged([e],d.DISABLED)))}onConditionChanged(e,i){for(const t of e){const o=this.waitingOnConditionAutoSaveWorkingCopies.get(t);if(o?.condition===i)o.workingCopy.isDirty()&&this.filesConfigurationService.getAutoSaveMode(o.workingCopy.resource,o.reason).mode!==s.OFF&&(this.discardAutoSave(o.workingCopy),this.logService.trace("[editor auto save] running auto save from condition change event",o.workingCopy.resource.toString(),o.workingCopy.typeId),o.workingCopy.save({reason:o.reason}));else{const r=this.waitingOnConditionAutoSaveEditors.get(t);r?.condition===i&&!r.editor.editor.isDisposed()&&r.editor.editor.isDirty()&&this.filesConfigurationService.getAutoSaveMode(r.editor.editor,r.reason).mode!==s.OFF&&(this.waitingOnConditionAutoSaveEditors.delete(t),this.logService.trace(`[editor auto save] running auto save from condition change event with reason ${r.reason}`),this.editorService.save(r.editor,{reason:r.reason}))}}}onWindowFocusChange(e){e||this.maybeTriggerAutoSave(a.WINDOW_CHANGE)}onActiveWindowChange(){this.maybeTriggerAutoSave(a.WINDOW_CHANGE)}onDidActiveEditorChange(){this.lastActiveEditor&&typeof this.lastActiveGroupId=="number"&&this.maybeTriggerAutoSave(a.FOCUS_CHANGE,{groupId:this.lastActiveGroupId,editor:this.lastActiveEditor});const e=this.editorGroupService.activeGroup,i=this.lastActiveEditor=e.activeEditor??void 0;this.lastActiveGroupId=e.id,this.lastActiveEditorControlDisposable.clear();const t=this.editorService.activeEditorPane;i&&t&&this.lastActiveEditorControlDisposable.add(t.onDidBlur(()=>{this.maybeTriggerAutoSave(a.FOCUS_CHANGE,{groupId:e.id,editor:i})}))}maybeTriggerAutoSave(e,i){if(i){if(!i.editor.isDirty()||i.editor.isReadonly()||i.editor.hasCapability(E.Untitled))return;const t=this.filesConfigurationService.getAutoSaveMode(i.editor,e);t.mode!==s.OFF?(e===a.WINDOW_CHANGE&&(t.mode===s.ON_FOCUS_CHANGE||t.mode===s.ON_WINDOW_CHANGE)||e===a.FOCUS_CHANGE&&t.mode===s.ON_FOCUS_CHANGE)&&(this.logService.trace(`[editor auto save] triggering auto save with reason ${e}`),this.editorService.save(i,{reason:e})):i.editor.resource&&(t.reason===d.ERRORS||t.reason===d.DISABLED)&&this.waitingOnConditionAutoSaveEditors.set(i.editor.resource,{editor:i,reason:e,condition:t.reason})}else this.saveAllDirtyAutoSaveables(e)}onDidChangeAutoSaveConfiguration(){let e;switch(this.filesConfigurationService.getAutoSaveMode(void 0).mode){case s.ON_FOCUS_CHANGE:e=a.FOCUS_CHANGE;break;case s.ON_WINDOW_CHANGE:e=a.WINDOW_CHANGE;break;case s.AFTER_SHORT_DELAY:case s.AFTER_LONG_DELAY:e=a.AUTO;break}e&&this.saveAllDirtyAutoSaveables(e)}saveAllDirtyAutoSaveables(e){for(const i of this.workingCopyService.dirtyWorkingCopies){if(i.capabilities&h.Untitled)continue;const t=this.filesConfigurationService.getAutoSaveMode(i.resource,e);t.mode!==s.OFF?i.save({reason:e}):(t.reason===d.ERRORS||t.reason===d.DISABLED)&&this.waitingOnConditionAutoSaveWorkingCopies.set(i.resource,{workingCopy:i,reason:e,condition:t.reason})}}onDidRegister(e){e.isDirty()&&this.scheduleAutoSave(e)}onDidUnregister(e){this.discardAutoSave(e)}onDidChangeDirty(e){e.isDirty()?this.scheduleAutoSave(e):this.discardAutoSave(e)}onDidChangeContent(e){e.isDirty()&&this.scheduleAutoSave(e)}scheduleAutoSave(e){if(e.capabilities&h.Untitled)return;const i=this.filesConfigurationService.getAutoSaveConfiguration(e.resource).autoSaveDelay;if(typeof i!="number")return;this.discardAutoSave(e),this.logService.trace(`[editor auto save] scheduling auto save after ${i}ms`,e.resource.toString(),e.typeId);const t=setTimeout(()=>{if(this.discardAutoSave(e),e.isDirty()){const o=a.AUTO,r=this.filesConfigurationService.getAutoSaveMode(e.resource,o);r.mode!==s.OFF?(this.logService.trace("[editor auto save] running auto save",e.resource.toString(),e.typeId),e.save({reason:o})):(r.reason===d.ERRORS||r.reason===d.DISABLED)&&this.waitingOnConditionAutoSaveWorkingCopies.set(e.resource,{workingCopy:e,reason:o,condition:r.reason})}},i);this.scheduledAutoSavesAfterDelay.set(e,y(()=>{this.logService.trace("[editor auto save] clearing pending auto save",e.resource.toString(),e.typeId),clearTimeout(t)}))}discardAutoSave(e){D(this.scheduledAutoSavesAfterDelay.get(e)),this.scheduledAutoSavesAfterDelay.delete(e),this.waitingOnConditionAutoSaveWorkingCopies.delete(e.resource),this.waitingOnConditionAutoSaveEditors.delete(e.resource)}};u=S([n(0,I),n(1,m),n(2,O),n(3,W),n(4,R),n(5,b),n(6,_),n(7,G)],u);export{u as EditorAutoSave};
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
+import { IWorkbenchContribution } from "../../../common/contributions.js";
+import { Disposable, DisposableStore, IDisposable, dispose, toDisposable } from "../../../../base/common/lifecycle.js";
+import { IFilesConfigurationService, AutoSaveMode, AutoSaveDisabledReason } from "../../../services/filesConfiguration/common/filesConfigurationService.js";
+import { IHostService } from "../../../services/host/browser/host.js";
+import { SaveReason, IEditorIdentifier, GroupIdentifier, EditorInputCapabilities } from "../../../common/editor.js";
+import { EditorInput } from "../../../common/editor/editorInput.js";
+import { IEditorService } from "../../../services/editor/common/editorService.js";
+import { IEditorGroupsService } from "../../../services/editor/common/editorGroupsService.js";
+import { IWorkingCopyService } from "../../../services/workingCopy/common/workingCopyService.js";
+import { IWorkingCopy, WorkingCopyCapabilities } from "../../../services/workingCopy/common/workingCopy.js";
+import { ILogService } from "../../../../platform/log/common/log.js";
+import { IMarkerService } from "../../../../platform/markers/common/markers.js";
+import { URI } from "../../../../base/common/uri.js";
+import { ResourceMap } from "../../../../base/common/map.js";
+import { IUriIdentityService } from "../../../../platform/uriIdentity/common/uriIdentity.js";
+let EditorAutoSave = class extends Disposable {
+  constructor(filesConfigurationService, hostService, editorService, editorGroupService, workingCopyService, logService, markerService, uriIdentityService) {
+    super();
+    this.filesConfigurationService = filesConfigurationService;
+    this.hostService = hostService;
+    this.editorService = editorService;
+    this.editorGroupService = editorGroupService;
+    this.workingCopyService = workingCopyService;
+    this.logService = logService;
+    this.markerService = markerService;
+    this.uriIdentityService = uriIdentityService;
+    for (const dirtyWorkingCopy of this.workingCopyService.dirtyWorkingCopies) {
+      this.onDidRegister(dirtyWorkingCopy);
+    }
+    this.registerListeners();
+  }
+  static {
+    __name(this, "EditorAutoSave");
+  }
+  static ID = "workbench.contrib.editorAutoSave";
+  // Auto save: after delay
+  scheduledAutoSavesAfterDelay = /* @__PURE__ */ new Map();
+  // Auto save: focus change & window change
+  lastActiveEditor = void 0;
+  lastActiveGroupId = void 0;
+  lastActiveEditorControlDisposable = this._register(new DisposableStore());
+  // Auto save: waiting on specific condition
+  waitingOnConditionAutoSaveWorkingCopies = new ResourceMap((resource) => this.uriIdentityService.extUri.getComparisonKey(resource));
+  waitingOnConditionAutoSaveEditors = new ResourceMap((resource) => this.uriIdentityService.extUri.getComparisonKey(resource));
+  registerListeners() {
+    this._register(this.hostService.onDidChangeFocus((focused) => this.onWindowFocusChange(focused)));
+    this._register(this.hostService.onDidChangeActiveWindow(() => this.onActiveWindowChange()));
+    this._register(this.editorService.onDidActiveEditorChange(() => this.onDidActiveEditorChange()));
+    this._register(this.filesConfigurationService.onDidChangeAutoSaveConfiguration(() => this.onDidChangeAutoSaveConfiguration()));
+    this._register(this.workingCopyService.onDidRegister((workingCopy) => this.onDidRegister(workingCopy)));
+    this._register(this.workingCopyService.onDidUnregister((workingCopy) => this.onDidUnregister(workingCopy)));
+    this._register(this.workingCopyService.onDidChangeDirty((workingCopy) => this.onDidChangeDirty(workingCopy)));
+    this._register(this.workingCopyService.onDidChangeContent((workingCopy) => this.onDidChangeContent(workingCopy)));
+    this._register(this.markerService.onMarkerChanged((e) => this.onConditionChanged(e, AutoSaveDisabledReason.ERRORS)));
+    this._register(this.filesConfigurationService.onDidChangeAutoSaveDisabled((resource) => this.onConditionChanged([resource], AutoSaveDisabledReason.DISABLED)));
+  }
+  onConditionChanged(resources, condition) {
+    for (const resource of resources) {
+      const workingCopyResult = this.waitingOnConditionAutoSaveWorkingCopies.get(resource);
+      if (workingCopyResult?.condition === condition) {
+        if (workingCopyResult.workingCopy.isDirty() && this.filesConfigurationService.getAutoSaveMode(workingCopyResult.workingCopy.resource, workingCopyResult.reason).mode !== AutoSaveMode.OFF) {
+          this.discardAutoSave(workingCopyResult.workingCopy);
+          this.logService.trace(`[editor auto save] running auto save from condition change event`, workingCopyResult.workingCopy.resource.toString(), workingCopyResult.workingCopy.typeId);
+          workingCopyResult.workingCopy.save({ reason: workingCopyResult.reason });
+        }
+      } else {
+        const editorResult = this.waitingOnConditionAutoSaveEditors.get(resource);
+        if (editorResult?.condition === condition && !editorResult.editor.editor.isDisposed() && editorResult.editor.editor.isDirty() && this.filesConfigurationService.getAutoSaveMode(editorResult.editor.editor, editorResult.reason).mode !== AutoSaveMode.OFF) {
+          this.waitingOnConditionAutoSaveEditors.delete(resource);
+          this.logService.trace(`[editor auto save] running auto save from condition change event with reason ${editorResult.reason}`);
+          this.editorService.save(editorResult.editor, { reason: editorResult.reason });
+        }
+      }
+    }
+  }
+  onWindowFocusChange(focused) {
+    if (!focused) {
+      this.maybeTriggerAutoSave(SaveReason.WINDOW_CHANGE);
+    }
+  }
+  onActiveWindowChange() {
+    this.maybeTriggerAutoSave(SaveReason.WINDOW_CHANGE);
+  }
+  onDidActiveEditorChange() {
+    if (this.lastActiveEditor && typeof this.lastActiveGroupId === "number") {
+      this.maybeTriggerAutoSave(SaveReason.FOCUS_CHANGE, { groupId: this.lastActiveGroupId, editor: this.lastActiveEditor });
+    }
+    const activeGroup = this.editorGroupService.activeGroup;
+    const activeEditor = this.lastActiveEditor = activeGroup.activeEditor ?? void 0;
+    this.lastActiveGroupId = activeGroup.id;
+    this.lastActiveEditorControlDisposable.clear();
+    const activeEditorPane = this.editorService.activeEditorPane;
+    if (activeEditor && activeEditorPane) {
+      this.lastActiveEditorControlDisposable.add(activeEditorPane.onDidBlur(() => {
+        this.maybeTriggerAutoSave(SaveReason.FOCUS_CHANGE, { groupId: activeGroup.id, editor: activeEditor });
+      }));
+    }
+  }
+  maybeTriggerAutoSave(reason, editorIdentifier) {
+    if (editorIdentifier) {
+      if (!editorIdentifier.editor.isDirty() || editorIdentifier.editor.isReadonly() || editorIdentifier.editor.hasCapability(EditorInputCapabilities.Untitled)) {
+        return;
+      }
+      const autoSaveMode = this.filesConfigurationService.getAutoSaveMode(editorIdentifier.editor, reason);
+      if (autoSaveMode.mode !== AutoSaveMode.OFF) {
+        if (reason === SaveReason.WINDOW_CHANGE && (autoSaveMode.mode === AutoSaveMode.ON_FOCUS_CHANGE || autoSaveMode.mode === AutoSaveMode.ON_WINDOW_CHANGE) || reason === SaveReason.FOCUS_CHANGE && autoSaveMode.mode === AutoSaveMode.ON_FOCUS_CHANGE) {
+          this.logService.trace(`[editor auto save] triggering auto save with reason ${reason}`);
+          this.editorService.save(editorIdentifier, { reason });
+        }
+      } else if (editorIdentifier.editor.resource && (autoSaveMode.reason === AutoSaveDisabledReason.ERRORS || autoSaveMode.reason === AutoSaveDisabledReason.DISABLED)) {
+        this.waitingOnConditionAutoSaveEditors.set(editorIdentifier.editor.resource, { editor: editorIdentifier, reason, condition: autoSaveMode.reason });
+      }
+    } else {
+      this.saveAllDirtyAutoSaveables(reason);
+    }
+  }
+  onDidChangeAutoSaveConfiguration() {
+    let reason = void 0;
+    switch (this.filesConfigurationService.getAutoSaveMode(void 0).mode) {
+      case AutoSaveMode.ON_FOCUS_CHANGE:
+        reason = SaveReason.FOCUS_CHANGE;
+        break;
+      case AutoSaveMode.ON_WINDOW_CHANGE:
+        reason = SaveReason.WINDOW_CHANGE;
+        break;
+      case AutoSaveMode.AFTER_SHORT_DELAY:
+      case AutoSaveMode.AFTER_LONG_DELAY:
+        reason = SaveReason.AUTO;
+        break;
+    }
+    if (reason) {
+      this.saveAllDirtyAutoSaveables(reason);
+    }
+  }
+  saveAllDirtyAutoSaveables(reason) {
+    for (const workingCopy of this.workingCopyService.dirtyWorkingCopies) {
+      if (workingCopy.capabilities & WorkingCopyCapabilities.Untitled) {
+        continue;
+      }
+      const autoSaveMode = this.filesConfigurationService.getAutoSaveMode(workingCopy.resource, reason);
+      if (autoSaveMode.mode !== AutoSaveMode.OFF) {
+        workingCopy.save({ reason });
+      } else if (autoSaveMode.reason === AutoSaveDisabledReason.ERRORS || autoSaveMode.reason === AutoSaveDisabledReason.DISABLED) {
+        this.waitingOnConditionAutoSaveWorkingCopies.set(workingCopy.resource, { workingCopy, reason, condition: autoSaveMode.reason });
+      }
+    }
+  }
+  onDidRegister(workingCopy) {
+    if (workingCopy.isDirty()) {
+      this.scheduleAutoSave(workingCopy);
+    }
+  }
+  onDidUnregister(workingCopy) {
+    this.discardAutoSave(workingCopy);
+  }
+  onDidChangeDirty(workingCopy) {
+    if (workingCopy.isDirty()) {
+      this.scheduleAutoSave(workingCopy);
+    } else {
+      this.discardAutoSave(workingCopy);
+    }
+  }
+  onDidChangeContent(workingCopy) {
+    if (workingCopy.isDirty()) {
+      this.scheduleAutoSave(workingCopy);
+    }
+  }
+  scheduleAutoSave(workingCopy) {
+    if (workingCopy.capabilities & WorkingCopyCapabilities.Untitled) {
+      return;
+    }
+    const autoSaveAfterDelay = this.filesConfigurationService.getAutoSaveConfiguration(workingCopy.resource).autoSaveDelay;
+    if (typeof autoSaveAfterDelay !== "number") {
+      return;
+    }
+    this.discardAutoSave(workingCopy);
+    this.logService.trace(`[editor auto save] scheduling auto save after ${autoSaveAfterDelay}ms`, workingCopy.resource.toString(), workingCopy.typeId);
+    const handle = setTimeout(() => {
+      this.discardAutoSave(workingCopy);
+      if (workingCopy.isDirty()) {
+        const reason = SaveReason.AUTO;
+        const autoSaveMode = this.filesConfigurationService.getAutoSaveMode(workingCopy.resource, reason);
+        if (autoSaveMode.mode !== AutoSaveMode.OFF) {
+          this.logService.trace(`[editor auto save] running auto save`, workingCopy.resource.toString(), workingCopy.typeId);
+          workingCopy.save({ reason });
+        } else if (autoSaveMode.reason === AutoSaveDisabledReason.ERRORS || autoSaveMode.reason === AutoSaveDisabledReason.DISABLED) {
+          this.waitingOnConditionAutoSaveWorkingCopies.set(workingCopy.resource, { workingCopy, reason, condition: autoSaveMode.reason });
+        }
+      }
+    }, autoSaveAfterDelay);
+    this.scheduledAutoSavesAfterDelay.set(workingCopy, toDisposable(() => {
+      this.logService.trace(`[editor auto save] clearing pending auto save`, workingCopy.resource.toString(), workingCopy.typeId);
+      clearTimeout(handle);
+    }));
+  }
+  discardAutoSave(workingCopy) {
+    dispose(this.scheduledAutoSavesAfterDelay.get(workingCopy));
+    this.scheduledAutoSavesAfterDelay.delete(workingCopy);
+    this.waitingOnConditionAutoSaveWorkingCopies.delete(workingCopy.resource);
+    this.waitingOnConditionAutoSaveEditors.delete(workingCopy.resource);
+  }
+};
+EditorAutoSave = __decorateClass([
+  __decorateParam(0, IFilesConfigurationService),
+  __decorateParam(1, IHostService),
+  __decorateParam(2, IEditorService),
+  __decorateParam(3, IEditorGroupsService),
+  __decorateParam(4, IWorkingCopyService),
+  __decorateParam(5, ILogService),
+  __decorateParam(6, IMarkerService),
+  __decorateParam(7, IUriIdentityService)
+], EditorAutoSave);
+export {
+  EditorAutoSave
+};
+//# sourceMappingURL=editorAutoSave.js.map
